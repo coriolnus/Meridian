@@ -1,0 +1,26 @@
+# WP7/24b SOUL kilidi sınaması — koşulan komutlar (2026-08-22, ajan; salt-okuma)
+# Kart: EDG-2026-019 (ön-koşul ölçümü). Canlıya hiçbir dosya yazılmadı, state/'e dokunulmadı.
+
+# (1) ANA ÇEKİM — ssh-stdin salt-okunur desen (emsal: exe007_broker_teyit_2026-08-22)
+ssh -i ~/.ssh/oci-a1.key -o BatchMode=yes -o ConnectTimeout=15 ubuntu@130.61.126.87 \
+  'cd /opt/meridian && ./.venv/bin/python -' \
+  < research/olcumler/edg019_24b_sinama_2026-08-22/canli_cek.py \
+  > research/olcumler/edg019_24b_sinama_2026-08-22/sonuc.json
+
+# (2) KEŞİF/DOĞRULAMA grep'leri (salt-okuma; log biçimi + kimliksiz satır bağlamı)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 \
+  'ls -la ~/.hermes/logs/ ~/.hermes/SOUL.md*; head -c 600 ~/.hermes/logs/agent.log; \
+   grep -h "tool_executor" ~/.hermes/logs/agent.log | tail -3'
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 \
+  'grep -h "tool skill_view" ~/.hermes/logs/agent.log | grep -v "^\S* \S* INFO \[" | head -6; \
+   grep -B2 "2026-08-20 20:34:25.*skill_view" ~/.hermes/logs/agent.log | head -12'
+
+# (3) Yerel kıyas: repo SOUL.md sha256 == canlı ~/.hermes/SOUL.md sha256 (kablo teyidi)
+shasum -a 256 deploy/hermes/SOUL.md
+#   -> 943c631f318a03ccbd048eef8cd38948a2eaabbb8d37fc7244b55a898470ac0c (canlıyla BİREBİR)
+
+# Pencere sınırları (betiğe donuk gömülü; sunucu tz=UTC ölçüldü):
+#   SINIR1 = 2026-08-13 18:17:00  (SOUL kurulumu: mtime 18:17:34 + SOUL.md.bak-202608131817)
+#   SINIR2 = 2026-08-15 00:00:00  (v244 OpenRouter sonrası temiz pencere başı — muhafazakâr;
+#            gerekçe: docs/OLCUM-WP7-24B-SKILL-CAGRI-IZI-2026-08-14.md "düzeltme kesintinin
+#            içine indi", 550x404 gölgesi dışarıda bırakıldı)

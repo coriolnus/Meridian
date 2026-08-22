@@ -1,0 +1,2708 @@
+{
+ "kalem": "WP7-24b SOUL kilidi sinamasi",
+ "kart": "EDG-2026-019 (on-kosul olcumu)",
+ "cekim_zamani_utc": "2026-08-22T16:57:32+00:00",
+ "sunucu_utc_offset_s": 0,
+ "sunucu_tzname": [
+  "UTC",
+  "UTC"
+ ],
+ "pencere_sinirlari_sunucu_yerel": {
+  "SINIR1_soul_kurulumu": "2026-08-13 18:17:00",
+  "SINIR2_temiz_pencere": "2026-08-15 00:00:00"
+ },
+ "soul": {
+  "yol": "/home/ubuntu/.hermes/SOUL.md",
+  "sha256": "943c631f318a03ccbd048eef8cd38948a2eaabbb8d37fc7244b55a898470ac0c",
+  "bayt": 2233,
+  "mtime_sunucu_yerel": "2026-08-13T18:17:34",
+  "kilit_acik_cumle_var": true,
+  "eski_yasak_cumle_var": false,
+  "yedekler": [
+   "SOUL.md.bak-202608131817",
+   "SOUL.md.taze-kurulum-yedek"
+  ]
+ },
+ "agent_log": {
+  "dosyalar": {
+   "agent.log.3": {
+    "satir_n": 32577,
+    "ilk_ts": "2026-07-30 14:40:41",
+    "son_ts": "2026-08-07 11:40:02"
+   },
+   "agent.log.2": {
+    "satir_n": 29791,
+    "ilk_ts": "2026-08-07 11:40:02",
+    "son_ts": "2026-08-09 15:33:25"
+   },
+   "agent.log.1": {
+    "satir_n": 29754,
+    "ilk_ts": "2026-08-09 15:33:25",
+    "son_ts": "2026-08-12 00:04:14"
+   },
+   "agent.log": {
+    "satir_n": 31098,
+    "ilk_ts": "2026-08-12 00:04:14",
+    "son_ts": "2026-08-21 20:40:49"
+   }
+  }
+ },
+ "pencereler": {
+  "taban_once": {
+   "n_oturum": 1136,
+   "n_arac_cagrisi": 255,
+   "arac_dagilimi": {
+    "search_files": 155,
+    "read_file": 56,
+    "execute_code": 29,
+    "skill_view": 11,
+    "session_search": 3,
+    "skills_list": 1
+   },
+   "n_skill_arac": 12,
+   "skill_arac_oturum_n": 7,
+   "oran_skill_arac_bolu_oturum_pct": 1.06,
+   "durum_dagilimi": {
+    "completed": 255
+   }
+  },
+  "golge": {
+   "n_oturum": 301,
+   "n_arac_cagrisi": 452,
+   "arac_dagilimi": {
+    "skill_view": 408,
+    "terminal": 36,
+    "execute_code": 3,
+    "search_files": 2,
+    "read_file": 1,
+    "skills_list": 1,
+    "write_file": 1
+   },
+   "n_skill_arac": 409,
+   "skill_arac_oturum_n": 116,
+   "oran_skill_arac_bolu_oturum_pct": 135.88,
+   "durum_dagilimi": {
+    "completed": 451,
+    "failed": 1
+   }
+  },
+  "temiz": {
+   "n_oturum": 6,
+   "n_arac_cagrisi": 29,
+   "arac_dagilimi": {
+    "skill_view": 13,
+    "terminal": 13,
+    "search_files": 3
+   },
+   "n_skill_arac": 13,
+   "skill_arac_oturum_n": 5,
+   "oran_skill_arac_bolu_oturum_pct": 216.67,
+   "durum_dagilimi": {
+    "completed": 29
+   }
+  }
+ },
+ "temiz_skill_arac_cagrilari": [
+  {
+   "ts": "2026-08-16 21:39:46",
+   "oturum": "20260816_213937_12f127",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-16 21:40:22",
+   "oturum": "20260816_214015_e9033d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-19 20:33:26",
+   "oturum": "20260819_203311_5b73e5",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-19 20:33:33",
+   "oturum": "20260819_203311_5b73e5",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-20 20:34:25",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-20 20:34:25",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-20 20:34:25",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-20 20:34:25",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-20 20:34:55",
+   "oturum": "20260820_203416_916bab",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-21 20:34:40",
+   "oturum": "20260821_203232_e6b641",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-21 20:35:26",
+   "oturum": "20260821_203232_e6b641",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-21 20:36:51",
+   "oturum": "20260821_203232_e6b641",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-21 20:37:07",
+   "oturum": "20260821_203232_e6b641",
+   "arac": "skill_view",
+   "durum": "completed"
+  }
+ ],
+ "golge_skill_arac_cagrilari": [
+  {
+   "ts": "2026-08-13 22:34:37",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 22:34:37",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 22:34:37",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 22:34:37",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 22:39:20",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 22:39:20",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 22:53:10",
+   "oturum": "20260813_224620_bf5020",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 23:13:38",
+   "oturum": "20260813_231301_e1172e",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 23:21:12",
+   "oturum": "20260813_231505_471734",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 23:21:36",
+   "oturum": "20260813_231505_471734",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-13 23:21:39",
+   "oturum": "20260813_231505_471734",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:49:38",
+   "oturum": "20260814_064919_e77503",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:50:05",
+   "oturum": "20260814_064919_e77503",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:50:20",
+   "oturum": "20260814_064919_e77503",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:51:31",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:51:31",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:51:31",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:51:31",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:52:14",
+   "oturum": "20260814_065205_4dcfda",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:52:29",
+   "oturum": "20260814_065205_4dcfda",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:53:02",
+   "oturum": "20260814_065257_001cc0",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:53:49",
+   "oturum": "20260814_065257_001cc0",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:54:02",
+   "oturum": "20260814_065257_001cc0",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:54:54",
+   "oturum": "20260814_065446_3d69b7",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:55:08",
+   "oturum": "20260814_065446_3d69b7",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:55:47",
+   "oturum": "20260814_065529_62121d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:56:00",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:56:00",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:56:00",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:56:09",
+   "oturum": "20260814_065529_62121d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:57:05",
+   "oturum": "20260814_065646_ada794",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:57:23",
+   "oturum": "20260814_065646_ada794",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:57:49",
+   "oturum": "20260814_065742_6f363d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:57:53",
+   "oturum": "20260814_065742_6f363d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:58:04",
+   "oturum": "20260814_065742_6f363d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:59:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:59:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 06:59:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:00:09",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:00:09",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:00:09",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:01:48",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:01:48",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:01:48",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:01:48",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:03:42",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:03:42",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:03:42",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:04:58",
+   "oturum": "20260814_070430_fc22d5",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:06:02",
+   "oturum": "20260814_070533_04e073",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:07:31",
+   "oturum": "20260814_070704_854687",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:07:59",
+   "oturum": "20260814_070704_854687",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:08:59",
+   "oturum": "20260814_070848_17287b",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:09:08",
+   "oturum": "20260814_070848_17287b",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:09:46",
+   "oturum": "20260814_070933_f3c311",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:10:44",
+   "oturum": "20260814_070933_f3c311",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:10:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:10:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:10:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:10:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:11:11",
+   "oturum": "20260814_070933_f3c311",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:12:59",
+   "oturum": "20260814_071156_93e645",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:13:10",
+   "oturum": "20260814_071156_93e645",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:13:23",
+   "oturum": "20260814_071241_e555d7",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:13:26",
+   "oturum": "20260814_071156_93e645",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:13:35",
+   "oturum": "20260814_071241_e555d7",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:14:27",
+   "oturum": "20260814_071241_e555d7",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:14:33",
+   "oturum": "20260814_071413_3020db",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:15:23",
+   "oturum": "20260814_071413_3020db",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:16:10",
+   "oturum": "20260814_071413_3020db",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:18:50",
+   "oturum": "20260814_071829_a61ed2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:19:07",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:19:07",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:19:07",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:19:10",
+   "oturum": "20260814_071829_a61ed2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:19:51",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:19:51",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:19:51",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:21:10",
+   "oturum": "20260814_072034_2653c8",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:21:30",
+   "oturum": "20260814_072048_3d1674",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:21:36",
+   "oturum": "20260814_072034_2653c8",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:22:33",
+   "oturum": "20260814_072034_2653c8",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:23:20",
+   "oturum": "20260814_072240_907c28",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:24:11",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:24:11",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:24:11",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:24:11",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:24:18",
+   "oturum": "20260814_072240_907c28",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:24:34",
+   "oturum": "20260814_072240_907c28",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:25:16",
+   "oturum": "20260814_072447_18874c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:25:35",
+   "oturum": "20260814_072447_18874c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:25:55",
+   "oturum": "20260814_072526_3106ab",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:26:03",
+   "oturum": "20260814_072526_3106ab",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:26:27",
+   "oturum": "20260814_072526_3106ab",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:26:36",
+   "oturum": "20260814_072625_80b558",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:27:15",
+   "oturum": "20260814_072625_80b558",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:28:23",
+   "oturum": "20260814_072747_c31957",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:28:32",
+   "oturum": "20260814_072818_605551",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:28:33",
+   "oturum": "20260814_072747_c31957",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:28:48",
+   "oturum": "20260814_072747_c31957",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:28:50",
+   "oturum": "20260814_072818_605551",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:29:19",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:29:19",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:29:19",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:29:43",
+   "oturum": "20260814_072747_c31957",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:30:12",
+   "oturum": "20260814_072953_b2300d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:31:03",
+   "oturum": "20260814_073038_aeef44",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:31:24",
+   "oturum": "20260814_073038_aeef44",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:32:24",
+   "oturum": "20260814_073207_14cec0",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:32:47",
+   "oturum": "20260814_073229_7e5105",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:33:00",
+   "oturum": "20260814_073207_14cec0",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:33:16",
+   "oturum": "20260814_073229_7e5105",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:34:02",
+   "oturum": "20260814_073229_7e5105",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:34:36",
+   "oturum": "20260814_073414_5f98bf",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:35:00",
+   "oturum": "20260814_073229_7e5105",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:35:48",
+   "oturum": "20260814_073524_dc3bdd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:36:25",
+   "oturum": "20260814_073551_ff4e6c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:36:41",
+   "oturum": "20260814_073551_ff4e6c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:37:29",
+   "oturum": "20260814_073708_c5984d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:37:43",
+   "oturum": "20260814_073719_d5a13f",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:37:56",
+   "oturum": "20260814_073719_d5a13f",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:38:00",
+   "oturum": "20260814_073708_c5984d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:38:10",
+   "oturum": "20260814_073719_d5a13f",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:38:11",
+   "oturum": "20260814_073708_c5984d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:38:54",
+   "oturum": "20260814_073708_c5984d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:39:06",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:39:06",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:39:06",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:39:07",
+   "oturum": "20260814_073719_d5a13f",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:39:32",
+   "oturum": "20260814_073708_c5984d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:40:07",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:40:07",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:40:07",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:40:07",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:40:17",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:40:17",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:40:34",
+   "oturum": "20260814_074025_ec4553",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:41:09",
+   "oturum": "20260814_074103_48a0cd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:41:18",
+   "oturum": "20260814_074103_48a0cd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:41:47",
+   "oturum": "20260814_074103_48a0cd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:41:52",
+   "oturum": "20260814_074103_48a0cd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:41:52",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:41:52",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:41:52",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:41:52",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:42:21",
+   "oturum": "20260814_074145_b2e5f3",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:42:33",
+   "oturum": "20260814_074137_4092a8",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:43:08",
+   "oturum": "20260814_074245_fda021",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:43:51",
+   "oturum": "20260814_074245_fda021",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:43:58",
+   "oturum": "20260814_074349_6f409f",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:44:04",
+   "oturum": "20260814_074349_6f409f",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:44:26",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:44:26",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:44:26",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:44:26",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:44:34",
+   "oturum": "20260814_074349_6f409f",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:45:09",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:45:09",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:45:09",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:45:28",
+   "oturum": "20260814_074441_919c70",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:46:17",
+   "oturum": "20260814_074528_fa9b61",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:46:25",
+   "oturum": "20260814_074556_4f3008",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:46:53",
+   "oturum": "20260814_074556_4f3008",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:47:09",
+   "oturum": "20260814_074628_3e5ca7",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:47:19",
+   "oturum": "20260814_074650_cb87be",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:47:31",
+   "oturum": "20260814_074628_3e5ca7",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:48:10",
+   "oturum": "20260814_074745_59cdf6",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:48:17",
+   "oturum": "20260814_074805_b59426",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:48:21",
+   "oturum": "20260814_074745_59cdf6",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:48:30",
+   "oturum": "20260814_074806_ddfb9d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:48:47",
+   "oturum": "20260814_074805_b59426",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:48:52",
+   "oturum": "20260814_074745_59cdf6",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:49:00",
+   "oturum": "20260814_074806_ddfb9d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:49:13",
+   "oturum": "20260814_074904_2a91dd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:49:27",
+   "oturum": "20260814_074904_2a91dd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:50:01",
+   "oturum": "20260814_074937_9e9609",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:50:20",
+   "oturum": "20260814_074904_2a91dd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:50:29",
+   "oturum": "20260814_074937_9e9609",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:50:50",
+   "oturum": "20260814_075016_ad8d9e",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:50:52",
+   "oturum": "20260814_075016_ad8d9e",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:50:55",
+   "oturum": "20260814_075043_b02a09",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:51:09",
+   "oturum": "20260814_075043_b02a09",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:51:17",
+   "oturum": "20260814_074937_9e9609",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:51:41",
+   "oturum": "20260814_075043_b02a09",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:52:56",
+   "oturum": "20260814_075157_da6ddd",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:53:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:53:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:53:47",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:53:52",
+   "oturum": "20260814_075342_7bba1b",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:53:59",
+   "oturum": "20260814_075342_7bba1b",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:54:05",
+   "oturum": "20260814_075353_5447d2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:54:40",
+   "oturum": "20260814_075434_64efba",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:54:41",
+   "oturum": "20260814_075353_5447d2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:54:59",
+   "oturum": "20260814_075353_5447d2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:55:21",
+   "oturum": "20260814_075353_5447d2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 07:55:33",
+   "oturum": "20260814_075434_64efba",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:11:44",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:11:44",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:11:44",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:12:43",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:12:43",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:12:43",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:12:43",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:14:19",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:14:19",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:14:19",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "failed"
+  },
+  {
+   "ts": "2026-08-14 20:14:39",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:14:39",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:14:39",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:15:10",
+   "oturum": "20260814_201453_1399b6",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:15:35",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:15:35",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:15:35",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:15:35",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:15:35",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:16:51",
+   "oturum": "20260814_201641_3e4e8c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:17:35",
+   "oturum": "20260814_201730_ee8f23",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:17:44",
+   "oturum": "20260814_201730_ee8f23",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:18:05",
+   "oturum": "20260814_201759_925640",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:18:12",
+   "oturum": "20260814_201759_925640",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:18:35",
+   "oturum": "20260814_201828_f57ad1",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:19:16",
+   "oturum": "20260814_201828_f57ad1",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:19:19",
+   "oturum": "20260814_201828_f57ad1",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:19:53",
+   "oturum": "20260814_201947_6dd672",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:19:57",
+   "oturum": "20260814_201947_6dd672",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:19:59",
+   "oturum": "20260814_201947_6dd672",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:20:09",
+   "oturum": "20260814_201947_6dd672",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:20:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:20:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:20:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:20:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:13",
+   "oturum": "20260814_202059_8a6033",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:16",
+   "oturum": "20260814_202059_8a6033",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:25",
+   "oturum": "20260814_202059_8a6033",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:28",
+   "oturum": "20260814_202059_8a6033",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:55",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:55",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:55",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:55",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:21:55",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:22:20",
+   "oturum": "20260814_202214_1cd465",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:22:51",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:22:51",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:22:51",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:22:56",
+   "oturum": "20260814_202235_3d0259",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:23:06",
+   "oturum": "20260814_202235_3d0259",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:23:09",
+   "oturum": "20260814_202235_3d0259",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:23:45",
+   "oturum": "20260814_202334_2efab5",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:23:50",
+   "oturum": "20260814_202334_2efab5",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:23:57",
+   "oturum": "20260814_202334_2efab5",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:24:16",
+   "oturum": "20260814_202411_fd8a39",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:24:43",
+   "oturum": "20260814_202434_580698",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:24:45",
+   "oturum": "20260814_202434_580698",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:25:03",
+   "oturum": "20260814_202456_e4378b",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:25:58",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:25:58",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:25:58",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:26:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:26:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:26:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:26:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:26:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:26:28",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:27:12",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:27:12",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:27:12",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:27:12",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:27:18",
+   "oturum": "20260814_202705_27b620",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:27:45",
+   "oturum": "20260814_202735_8cd7a1",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:27:56",
+   "oturum": "20260814_202735_8cd7a1",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:28:14",
+   "oturum": "20260814_202735_8cd7a1",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:28:28",
+   "oturum": "20260814_202822_efbd8d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:28:38",
+   "oturum": "20260814_202822_efbd8d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:29:01",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:29:01",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:29:01",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:29:12",
+   "oturum": "20260814_202855_80a109",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:29:44",
+   "oturum": "20260814_202939_9450bb",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:29:48",
+   "oturum": "20260814_202939_9450bb",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:31:48",
+   "oturum": "20260814_203137_3ab7fb",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:31:56",
+   "oturum": "20260814_203137_3ab7fb",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:32:14",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:32:14",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:32:14",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:32:29",
+   "oturum": "20260814_203223_c0d571",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:32:32",
+   "oturum": "20260814_203223_c0d571",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:32:59",
+   "oturum": "20260814_203252_482449",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:33:12",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:33:12",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:33:32",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:33:32",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:33:32",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:33:53",
+   "oturum": "20260814_203346_5f4eca",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:34:41",
+   "oturum": "20260814_203433_361316",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:34:53",
+   "oturum": "20260814_203433_361316",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:35:08",
+   "oturum": "20260814_203433_361316",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:35:25",
+   "oturum": "20260814_203518_5faeff",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:35:30",
+   "oturum": "20260814_203518_5faeff",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:35:37",
+   "oturum": "20260814_203518_5faeff",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:36:15",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:36:15",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:36:15",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:36:36",
+   "oturum": "20260814_203631_cfef98",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:36:40",
+   "oturum": "20260814_203631_cfef98",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:36:58",
+   "oturum": "20260814_203651_6d48c4",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:37:05",
+   "oturum": "20260814_203651_6d48c4",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:37:24",
+   "oturum": "20260814_203717_3452bb",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:37:28",
+   "oturum": "20260814_203717_3452bb",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:37:48",
+   "oturum": "20260814_203742_5225f9",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:37:52",
+   "oturum": "20260814_203742_5225f9",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:38:16",
+   "oturum": "20260814_203801_bd210c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:38:22",
+   "oturum": "20260814_203801_bd210c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:38:24",
+   "oturum": "20260814_203801_bd210c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:38:50",
+   "oturum": "20260814_203839_08c9be",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:38:57",
+   "oturum": "20260814_203839_08c9be",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:39:03",
+   "oturum": "20260814_203839_08c9be",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:39:40",
+   "oturum": "20260814_203935_77c811",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:39:43",
+   "oturum": "20260814_203935_77c811",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:40:03",
+   "oturum": "20260814_203957_15a747",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:40:09",
+   "oturum": "20260814_203957_15a747",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:40:13",
+   "oturum": "20260814_203957_15a747",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:40:37",
+   "oturum": "20260814_204026_518111",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:40:44",
+   "oturum": "20260814_204026_518111",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:40:47",
+   "oturum": "20260814_204026_518111",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:40:54",
+   "oturum": "20260814_204026_518111",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:41:03",
+   "oturum": "20260814_204026_518111",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:41:21",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:41:21",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:41:21",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:41:27",
+   "oturum": "20260814_204116_b6e22b",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:41:52",
+   "oturum": "20260814_204145_57e45a",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:41:56",
+   "oturum": "20260814_204145_57e45a",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:42:07",
+   "oturum": "20260814_204145_57e45a",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:42:18",
+   "oturum": "20260814_204145_57e45a",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:42:22",
+   "oturum": "20260814_204145_57e45a",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:42:34",
+   "oturum": "20260814_204145_57e45a",
+   "arac": "skills_list",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:43:01",
+   "oturum": "20260814_204254_597158",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:43:07",
+   "oturum": "20260814_204254_597158",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:43:18",
+   "oturum": "20260814_204254_597158",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:43:34",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:43:34",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:43:34",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:44:24",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:44:24",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:44:24",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:44:39",
+   "oturum": "20260814_204434_227933",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:44:43",
+   "oturum": "20260814_204434_227933",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:44:50",
+   "oturum": "20260814_204434_227933",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:45:36",
+   "oturum": "20260814_204528_a77f19",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:45:45",
+   "oturum": "20260814_204528_a77f19",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:45:49",
+   "oturum": "20260814_204528_a77f19",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:45:54",
+   "oturum": "20260814_204528_a77f19",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:46:09",
+   "oturum": "20260814_204528_a77f19",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:46:39",
+   "oturum": "20260814_204634_c840da",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:46:43",
+   "oturum": "20260814_204634_c840da",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:47:02",
+   "oturum": "20260814_204634_c840da",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:47:29",
+   "oturum": "20260814_204720_4a5084",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:47:33",
+   "oturum": "20260814_204720_4a5084",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:48:23",
+   "oturum": "20260814_204815_142fed",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:48:31",
+   "oturum": "20260814_204815_142fed",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:49:21",
+   "oturum": "20260814_204917_51171d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:49:25",
+   "oturum": "20260814_204917_51171d",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:49:57",
+   "oturum": "20260814_204949_9dd76a",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:50:13",
+   "oturum": "20260814_204949_9dd76a",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:50:17",
+   "oturum": "20260814_204949_9dd76a",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:51:01",
+   "oturum": "20260814_205051_848604",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:51:06",
+   "oturum": "20260814_205051_848604",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:51:11",
+   "oturum": "20260814_205051_848604",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:51:32",
+   "oturum": "20260814_205125_196a29",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:51:34",
+   "oturum": "20260814_205125_196a29",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:51:54",
+   "oturum": "20260814_205148_1ca251",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:52:01",
+   "oturum": "20260814_205148_1ca251",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:52:22",
+   "oturum": "20260814_205213_651b38",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:52:31",
+   "oturum": "20260814_205213_651b38",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:52:49",
+   "oturum": "20260814_205239_70583e",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:53:05",
+   "oturum": "20260814_205300_ce0fd9",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:53:14",
+   "oturum": "20260814_205300_ce0fd9",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:53:20",
+   "oturum": "20260814_205300_ce0fd9",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:53:29",
+   "oturum": "20260814_205300_ce0fd9",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:53:52",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:53:52",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:53:52",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:53:52",
+   "oturum": null,
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:54:22",
+   "oturum": "20260814_205417_1212b2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:54:31",
+   "oturum": "20260814_205417_1212b2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:54:39",
+   "oturum": "20260814_205417_1212b2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:55:12",
+   "oturum": "20260814_205417_1212b2",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:55:58",
+   "oturum": "20260814_205547_218f82",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:56:02",
+   "oturum": "20260814_205547_218f82",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:56:19",
+   "oturum": "20260814_205613_0d438c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:56:27",
+   "oturum": "20260814_205613_0d438c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:56:40",
+   "oturum": "20260814_205613_0d438c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:57:58",
+   "oturum": "20260814_205750_d6e8e5",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:58:01",
+   "oturum": "20260814_205750_d6e8e5",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:58:20",
+   "oturum": "20260814_205814_21f30c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:58:27",
+   "oturum": "20260814_205814_21f30c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:58:45",
+   "oturum": "20260814_205814_21f30c",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:59:17",
+   "oturum": "20260814_205903_f6d110",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:59:21",
+   "oturum": "20260814_205903_f6d110",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:59:37",
+   "oturum": "20260814_205903_f6d110",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 20:59:52",
+   "oturum": "20260814_205903_f6d110",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 21:00:30",
+   "oturum": "20260814_210011_32d2d6",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 21:00:54",
+   "oturum": "20260814_210047_e7bfa3",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 21:01:11",
+   "oturum": "20260814_210047_e7bfa3",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 21:01:36",
+   "oturum": "20260814_210047_e7bfa3",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 21:01:46",
+   "oturum": "20260814_210047_e7bfa3",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 21:02:06",
+   "oturum": "20260814_210202_577e24",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 21:02:21",
+   "oturum": "20260814_210202_577e24",
+   "arac": "skill_view",
+   "durum": "completed"
+  },
+  {
+   "ts": "2026-08-14 21:02:39",
+   "oturum": "20260814_210202_577e24",
+   "arac": "skill_view",
+   "durum": "completed"
+  }
+ ],
+ "usage_json": {
+  "goruntulenen_skiller": {
+   "market-environment-analysis": {
+    "view_count": 5,
+    "last_viewed_at": "2026-08-14T21:01:36.492863+00:00",
+    "inject_count": null,
+    "last_injected_at": null
+   },
+   "position-sizer": {
+    "view_count": 61,
+    "last_viewed_at": "2026-08-21T20:36:51.303294+00:00",
+    "inject_count": null,
+    "last_injected_at": null
+   },
+   "pre-trade-discipline-gate": {
+    "view_count": 59,
+    "last_viewed_at": "2026-08-21T20:34:40.800039+00:00",
+    "inject_count": null,
+    "last_injected_at": null
+   },
+   "pullback-screener": {
+    "view_count": 2,
+    "last_viewed_at": "2026-08-14T20:50:13.945332+00:00",
+    "inject_count": null,
+    "last_injected_at": null
+   },
+   "stockbee-episodic-pivot-analyzer": {
+    "view_count": 5,
+    "last_viewed_at": "2026-08-20T20:34:55.642799+00:00",
+    "inject_count": null,
+    "last_injected_at": null
+   },
+   "stockbee-exhaustion-hammer-screener": {
+    "view_count": 104,
+    "last_viewed_at": "2026-08-21T20:35:26.911591+00:00",
+    "inject_count": null,
+    "last_injected_at": null
+   },
+   "stockbee-momentum-burst-screener": {
+    "view_count": 122,
+    "last_viewed_at": "2026-08-21T20:37:07.870465+00:00",
+    "inject_count": null,
+    "last_injected_at": null
+   },
+   "vcp-screener": {
+    "view_count": 73,
+    "last_viewed_at": "2026-08-20T20:34:25.026611+00:00",
+    "inject_count": null,
+    "last_injected_at": null
+   }
+  },
+  "toplam_view_count": 431
+ },
+ "request_dump_gun_sayimi": {
+  "20260802": 14,
+  "20260803": 7,
+  "20260804": 8,
+  "20260805": 10,
+  "20260806": 147,
+  "20260807": 151,
+  "20260808": 150,
+  "20260809": 150,
+  "20260810": 150,
+  "20260811": 150,
+  "20260812": 20,
+  "20260813": 79
+ }
+}
