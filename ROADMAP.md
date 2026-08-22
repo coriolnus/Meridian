@@ -402,7 +402,7 @@ _(denetim C2: Ö-23 WP-E'nin alt-cephesidir, ayrı backlog kalemi değil. D5: **
     **23b ÇIKIŞ SLİPAJI** — n=0, sebebi TIF değil TUTUŞ SÜRESİ (5 seansta hiçbir stop/hedef değmedi);
     örneklem beklenecek, eşik oynatarak hızlandırmak YASAK · **23c REPLAY'DE DİNLENEN LİMİT DALI** —
     replay limit emrinin dinlenmesini modellemiyor, kaçan-işlem maliyetini ABARTIYOR; iki ölçüm zıt
-    işaretli (E1 grid vs 885-kesim) ve bu düzeltilmeden hiçbir limit-tavanı kararı verilemez ·
+    işaretli (E1 grid vs 885-kesim) ve bu düzeltilmeden hiçbir limit-tavanı kararı verilemez · **[2026-08-23 GÜNCEL — SATIR BAYATTI, yedinci vaka: modelleme ZATEN KAPANDI (EXE-2026-005 H3 bar_low düzeltmesi, çivili) ve EXE-2026-006 K=8 grid'i onunla yeniden koştu → E1 hükmü YENİDEN AÇIK ama H2 ölçülemedi + Ö3 ΔP&L CI'ları 4/4 sıfır-içi: 'bacağı aç' bu ölçümden ÇIKARILAMAZ. Kalan iş ölçüm değil OPERATÖR KARARI (canlı execution_v2 yapılandırması; düşük-güç şerhiyle) — EXE-001 K1 şerhi kalkmış sayılır, karar kalemi §5'e adaydır.]** ·
     **23d BAR-İÇİ STOP VARSAYIMI** — `broker.py:596` stop dokunuşunu `eff_stop`ta dolmuş sayıyor,
     stop-tetik slipajı SIFIR; giriş LİMİT (tavanlı) ↔ çıkış stop→MARKET (tavansız) asimetrisiyle
     birleşince adı konmuş bir iyimserlik · **23e GÜN-İÇİ PENCERE** — 13:30-13:45 menzili 146,7 bps,

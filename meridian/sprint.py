@@ -522,7 +522,11 @@ def _systemd_baslat(sid: str, sbroot: Path, ortam: dict) -> tuple[int | None, st
     if str(ortam_dosyasi) != beklenen:
         return None, "yol_uyusmazligi", f"birim '{beklenen}' okur, kum havuzu '{ortam_dosyasi}'"
     try:
-        ortam_dosyasi.write_text(_ortam_metni(ortam))
+        # sır penceresi yok: dosya 0600 İZNİYLE DOĞAR — write_text+chmod çifti kısa bir
+        # herkes-okur penceresi bırakıyordu (WP6/H9 süpürmesi 2026-08-23; secrets._write emsali)
+        fd = os.open(ortam_dosyasi, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as f:
+            f.write(_ortam_metni(ortam))
         os.chmod(ortam_dosyasi, 0o600)
     except (OSError, ValueError) as e:
         return None, "ortam_yazilamadi", f"{type(e).__name__}: {e}"
