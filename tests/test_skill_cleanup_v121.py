@@ -470,3 +470,50 @@ def test_c10c_public_summary_computes_skill_counts_from_the_registry():
     assert d["skills_live"] == sum(1 for i in reg.values() if not i.get("retired"))
     assert d["skills_enabled"] == sum(
         1 for i in reg.values() if i.get("enabled") and not i.get("retired"))
+
+
+# ==================================================================================================
+# C10e / C10f — KAPSAM GENİŞLETMESİ (envanter #24/#25, docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md).
+# ÖLÇÜLEN KAÇIŞ: C10 yalnız SKILL sayısını tarıyordu; `landing.html` üç yerde sabit tarama/evren
+# boyu (üstelik sayfa kendi içinde iki FARKLI sayıyla çelişik) ve bir yerde goal'daki gerçek
+# değerden ayrık düşmüş sabit bir örneklem eşiği taşıyordu. Aynı kusur sınıfı, farklı nicelik:
+# sabit sayı sunum katmanına yazılamaz — sayı ya canlı uçtan/adresten gelir ya hiç görünmez.
+# Regexler bilerek DARDIR: "hisse"/"örneklem" sözcüğüne bitişik RAKAM ararlar; nitel cümleler
+# ("ABD hisseleri", "örneklem dışı") eşleşmez — kurt-masalı sınıfı yanlış alarm üretilmez.
+# ==================================================================================================
+UNIVERSE_COUNT_RE = re.compile(r"\d[\d.,]*\s*hisse", re.IGNORECASE)
+SAMPLE_THRESHOLD_RE = re.compile(r"örneklem\s+\d+", re.IGNORECASE)
+
+
+@pytest.mark.parametrize("page", PRESENTATION_PAGES)
+def test_c10e_presentation_carries_no_hardcoded_universe_count(page):
+    """Sabit tarama/evren boyu sunuma geri yazılamaz: gerçek evren DEĞİŞKENDİR (yürürlükteki
+    kaynak `adapters/data.py REPLAY_UNIVERSE` + `/api/market` — workflow.js:28 ile aynı desen)
+    ve sabit yazılan her sayı bir delist/arşiv dalgasında yalana döner — skill sayısının
+    2026-07-30'da başına gelen aynen buydu."""
+    stale = UNIVERSE_COUNT_RE.findall((REPO / page).read_text())
+    assert not stale, f"{page} sabit evren/tarama sayısı taşıyor: {stale}"
+
+
+@pytest.mark.parametrize("page", PRESENTATION_PAGES)
+def test_c10f_presentation_carries_no_hardcoded_sample_threshold(page):
+    """Sabit örneklem eşiği sunuma geri yazılamaz: yürürlükteki eşik `state/goal.yaml →
+    min_sample`. `/api/public/summary` bu alanı taşımadığı için doğru kapanış sayının TAMAMEN
+    kaldırılmasıdır — niteliksel ifade kalır (envanter #25 reçetesi)."""
+    stale = SAMPLE_THRESHOLD_RE.findall((REPO / page).read_text())
+    assert not stale, f"{page} sabit örneklem eşiği taşıyor: {stale}"
+
+
+def test_c10ef_regexler_eski_bicimleri_hala_yakaliyor():
+    """KARŞI-TEST (v204 kuralı): desen gevşetilirse GENİŞLEMELİ, daralmamalı. İlk üçlü landing'in
+    ölçülen üç kaçışıdır; sonraki bloklar yanlış-pozitif sınırını korur."""
+    for yakalanmali in ("3.000 hisseyi tarar", "2.847 hisse", "251 hisse taranır"):
+        assert UNIVERSE_COUNT_RE.search(yakalanmali), f"desen daraltılmış: {yakalanmali!r} kaçıyor"
+    for yakalanmamali in ("ABD hisseleri", "as-of hisse sayımı", "tek bir hisseye bakmadan",
+                          "izleme evreninin tamamı"):
+        assert not UNIVERSE_COUNT_RE.search(yakalanmamali), (
+            f"desen yanlış pozitif üretiyor: {yakalanmamali!r}")
+    assert SAMPLE_THRESHOLD_RE.search("örneklem 20'ye ulaşmadan"), "desen daraltılmış: eşik kaçıyor"
+    for yakalanmamali in ("örneklem dışı test", "örneklem eşiği dolmadan", "ince örneklem"):
+        assert not SAMPLE_THRESHOLD_RE.search(yakalanmamali), (
+            f"desen yanlış pozitif üretiyor: {yakalanmamali!r}")

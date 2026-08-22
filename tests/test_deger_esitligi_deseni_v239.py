@@ -361,3 +361,50 @@ def test_7j_MALIYET_olculdu(sandbox_state):
           f"({r['esit']} eşit / {len(r['ayrik'])} ayrık / {len(r['olculemeyen'])} ölçülemedi "
           f"/ {len(r['beyanli'])} beyanlı)")
     assert medyan > 0 and r["total"] == len(wd.EQUIVALENT_TRUTHS)
+
+
+# ==================================================================================================
+# (8) ENVANTER KAPANIŞLARI (docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md) — dedektörün OKUYAMADIĞI
+# iki yüzeyin statik çivisi. #16: `goal.get("min_sample", N)` ÇAĞRI-İÇİ yedek literal — dedektör
+# modül sabitini okuyabilir (`_sabit`), bir çağrı ifadesinin içindeki yedeği okuyamaz
+# (adreslenebilir yüzey yok); kapı ancak kaynak taramasıdır. #10: PRODUCT.md anlatısı
+# `equity_curve.json`u "state/ dosyası" sayıyordu; `storage.py` onu altı DB varlığından biri
+# ilan eder — anlatı varlık kaydından koparsa belgeye güvenen biri canlıda boş yol arar.
+# ==================================================================================================
+
+def test_8a_min_sample_yedek_literalleri_goal_ile_esit():
+    """Envanter #16 (LATENT ayrıklık): `score.py:108` ve `shadow_variants.py:532` yedeği 20
+    taşıyordu, goal 30 der — goal'da anahtar durdukça ısırmaz, anahtar düşerse iki modül sessizce
+    yanlış tabana döner. Kural: yedek, goal'daki değerle EŞİT tutulur. Çivi elle liste tutmaz,
+    TÜM `meridian/**/*.py` yedeklerini tarar — bir sonraki modül aynı sınıfı yeniden açamaz."""
+    import re as _re
+    from pathlib import Path as _Path
+
+    import yaml as _yaml
+    repo = _Path(__file__).resolve().parent.parent
+    gercek = int(_yaml.safe_load((repo / "state" / "goal.yaml").read_text())["min_sample"])
+    desen = _re.compile(r'\.get\(\s*"min_sample"\s*,\s*(\d+)')
+    bulunan: dict = {}
+    for p in sorted((repo / "meridian").rglob("*.py")):
+        for m in desen.finditer(p.read_text()):
+            bulunan.setdefault(p.name, []).append(int(m.group(1)))
+    assert bulunan, "hiç yedek literal bulunamadı — desen mi, kod mu değişti? çivi boşa koşuyor"
+    ayrik = {ad: v for ad, v in bulunan.items() if any(x != gercek for x in v)}
+    assert not ayrik, f"min_sample yedeği goal'daki değerden ({gercek}) ayrık: {ayrik}"
+
+
+def test_8b_PRODUCT_anlatisi_DB_varligini_dosya_diye_satamaz():
+    """Envanter #10: PRODUCT.md "gerçek sayıların tek kaynağı state/ dosyaları" derken
+    `equity_curve.json`u örnek gösteriyordu — canlıda o bir dosya DEĞİL, `state/meridian.db`
+    varlığıdır (kanonik dosya arşivde). Çivi elle liste tutmaz, `storage.ENTITIES`ten TÜRETİR:
+    anlatı bir DB varlığının kanonik adını anıyorsa DB gerçeğini de anmak zorundadır."""
+    from pathlib import Path as _Path
+
+    from meridian import storage
+    repo = _Path(__file__).resolve().parent.parent
+    metin = (repo / "PRODUCT.md").read_text()
+    anilan = [ad for ad in storage.ENTITIES if ad in metin]
+    if anilan:
+        assert "meridian.db" in metin, (
+            f"PRODUCT.md DB varlıklarını anıyor ({anilan}) ama meridian.db gerçeğini anmıyor — "
+            "belgeye güvenen biri canlıda boş yol arar")

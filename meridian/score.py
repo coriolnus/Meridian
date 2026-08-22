@@ -105,7 +105,10 @@ def score_detail(trades: list[dict], goal: dict, start_equity: float = START_EQU
     sqrt-scaled Sharpe absurdly (regime slices cluster by construction, so this mattered).
     mtm_equity: the replay's daily mark-to-market curve [(date, eq)] — drawdown becomes the WORSE of the
     closed-trade curve and the daily M2M curve, so open-position drawdowns can't hide."""
-    min_sample = int(goal.get("min_sample", 20))
+    # goal anahtarı düşerse bu yedek konuşur; goal'daki değerle EŞİT tutulur (envanter #16,
+    # 2026-08-22). Yedek 20 iken goal 30'du — latent ayrıklık: anahtar durdukça ısırmaz, düşerse
+    # modül sessizce yanlış tabana döner. Çivi: test_deger_esitligi_deseni_v239::test_8a.
+    min_sample = int(goal.get("min_sample", 30))
     n = len(trades)
     if n < min_sample:
         return {"score": None, "n": n, "min_sample": min_sample,

@@ -666,7 +666,12 @@ footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var
     <span class="cred">Oracle Cloud'da 7/24</span>
   </div>
   <h1 class="rise">Ajan tarar.<br><span class="g">Kararı sen verirsin.</span></h1>
-  <p class="hero-sub rise">Meridian gece boyunca rejimi okur, 3.000 hisseyi tarar, adayları disiplin kapısından geçirir ve pozisyonu boyutlandırır. Sabah masanda sadece onaylanacak bir liste bulursun — ve neden orada olduklarının gerekçesi.</p>
+  <!-- EVREN BOYU SAYIYLA YAZILMAZ (envanter #24, 2026-08-22): burada ve iki bölümde daha sabit
+       bir tarama boyu yazılıydı — gerçek evrenle ayrıktı ve sayfa kendi içinde iki FARKLI sayı
+       taşıyordu. Yürürlükteki evren DEĞİŞKENDİR ve adapters/data.py REPLAY_UNIVERSE + /api/market
+       kaynağından okunur (workflow.js ile aynı "sayı yerine adres" deseni); C10e çivisi
+       (test_skill_cleanup_v121) sabit sayının geri yazılmasını yasaklar. -->
+  <p class="hero-sub rise">Meridian gece boyunca rejimi okur, izleme evreninin tamamını tarar, adayları disiplin kapısından geçirir ve pozisyonu boyutlandırır. Sabah masanda sadece onaylanacak bir liste bulursun — ve neden orada olduklarının gerekçesi.</p>
   <div class="hero-cta rise">
     <button class="btn-f">Hesaplarını bağla</button>
     <button class="btn-g">Bir sabah brifingi gör</button>
@@ -744,7 +749,7 @@ footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var
     <div class="case rise"><div class="bgv"></div>
       <div class="cpill"><b>Gece pipeline'ı</b><span>04:10 ET</span></div>
       <h3>Sen uyurken çalışır</h3>
-      <p>Breadth, uptrend, macro rejim → exposure tavanı. Sonra 3.000 hisse VCP, PEAD, CANSLIM ve momentum taramalarından geçer. Sabaha 12 aday, öğlene kadar beklemez.</p>
+      <p>Breadth, uptrend, macro rejim → exposure tavanı. Sonra izleme evrenindeki her hisse VCP, PEAD, CANSLIM ve momentum taramalarından geçer. Sabaha bir avuç aday, öğlene kadar beklemez.</p>
     </div>
     <div class="case rise"><div class="bgv"></div>
       <div class="cpill"><b>Disiplin kapısı</b><span>GO / REVIEW / NO_GO</span></div>
@@ -859,9 +864,13 @@ footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var
       </div>
     </div>
     <div class="pane rise">
-      <p class="pcap">pipeline · 13 Tem 04:22 → 05:06</p>
+      <!-- ÖRNEK AKIŞ MAKETİ (envanter #24, 2026-08-22): bu pane K1 sınıfı bir makettir ve artık
+           görünür etiket taşır (:719 etiketi yalnız cihaz-ekranı blokunu kapsıyordu — kapsam
+           sınırı 08-13'te ölçülmüştü). Tarama boyu ise maket içinde bile SAYIYLA YAZILMAZ:
+           sabit yazılmış evren sayısı gerçek evrenle ayrık düşmüştü (C10e). -->
+      <p class="pcap">pipeline · örnek akış · sayılar ölçüm değildir</p>
       <div class="mono">
-        <span class="k">tarama</span> 2.847 hisse<br>
+        <span class="k">tarama</span> izleme evreninin tamamı<br>
         &nbsp;&nbsp;vcp-screener ......... 31<br>
         &nbsp;&nbsp;pead-screener ........ 14<br>
         &nbsp;&nbsp;canslim-screener ..... 9<br><br>
@@ -881,7 +890,12 @@ footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var
     <div class="txt rise">
       <div class="ico">◐</div>
       <h3>Sonucundan <span class="g">öğrenir</span></h3>
-      <p>Pozisyon kapanır, postmortem yazılır, hipotezin gerçekleşen skoru geri yazılır. Beş kapanan işlemde bir öneri gelir; ama örneklem 20'ye ulaşmadan hiçbir öneri canlıya çıkmaz. Beş işlem kanıt değil, fikirdir.</p>
+      <!-- ÖRNEKLEM EŞİĞİ SAYIYLA YAZILMAZ (envanter #25, 2026-08-22): burada sabit bir eşik
+           yazılıydı ve goal'daki gerçek değerden ayrık düşmüştü — kodun dört yüzeyi olguya bağlı
+           ve eşitken en çok okunan pazarlama cümlesi eski sayıyı taşıyordu. Yürürlükteki eşik
+           state/goal.yaml → min_sample; /api/public/summary bu alanı taşımadığı için sayı tamamen
+           kaldırıldı, niteliksel ifade bırakıldı (C10f çivisi geri yazılmasını yasaklar). -->
+      <p>Pozisyon kapanır, postmortem yazılır, hipotezin gerçekleşen skoru geri yazılır. Beş kapanan işlemde bir öneri gelir; ama örneklem eşiği dolmadan hiçbir öneri canlıya çıkmaz. Beş işlem kanıt değil, fikirdir.</p>
       <!-- trader-memory-core emekli; signal-postmortem → backtest-expert'e,
            trade-performance-coach → weekly-performance-digest'e katlandı (2026-07-30). -->
       <div class="checks">

@@ -162,9 +162,11 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
 
 ## Evidence on Hand
 
-- Live state files under `state/` (`heartbeat.json`, `hermes_status.json`, `equity_curve.json`,
-  `events.jsonl`, `hypotheses.jsonl`, etc.) are the only source of real numbers/content — never
-  invent metrics.
+- Live state under `state/` is the only source of real numbers/content — never invent metrics.
+  That is the state files (`heartbeat.json`, `hermes_status.json`, `events.jsonl`,
+  `hypotheses.jsonl`, etc.) plus the ledger entities served from `state/meridian.db` via
+  `storage.py` — `equity_curve.json` among them: on the live host a DB entity, not a file on
+  disk.
 - `README.md` is the authoritative product description.
 
 ## Product Principles

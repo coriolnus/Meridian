@@ -318,11 +318,24 @@ def test_runbook_html_yonlendirme_birakti_ama_YER_TUTUCULARI_korudu():
 
 def test_workflow_html_emekli_ve_halefini_adlandiriyor():
     """Statik boru-hattı resmi emekli; halefi ③'ün canlı zaman çizelgesi. Dosya duruyor (silme
-    D5) ama bayat olduğunu SÖYLEMELİ — tazelenmeyen bir resim, tazelenmediğini söylemezse
-    güncel sanılır."""
+    D5) ama bayat olduğunu SÖYLEMELİ — canlı ölçümden beslenmeyen bir resim bunu söylemezse
+    güncel sanılır.
+
+    ÇİVİ GÜNCELLENDİ (envanter #26, docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md): eski çivi
+    yalnız "tazelenmiyor" dizgisinin VARLIĞINA bakıyordu; afiş tarih damgalıydı ("2026-07-20
+    sürümüdür ve o günden beri …") ve dosya iki onarım turu geçirince (workflow.js 08-12 içerik
+    + 08-13 "SAYIYLA YAZILMAZ" düzeltmeleri) İDDİANIN KENDİSİ bayatladı — "emekli ama bazı
+    satırları güncel" üçüncü hâl, denetimin en kötü dediği. Kendini tarihleyemeyen statik sayfa
+    tarih İDDİA ETMEZ: kalıcı-doğru beyan "canlı ölçümden beslenmez"dir; tarih-damgalı tazelik
+    iddiası artık NEGATİF çivilidir."""
     assert "EMEKLİ" in WORKFLOW_HTML, "emeklilik ekranda yazmıyor"
     assert 'href="/#saglik"' in WORKFLOW_HTML, "halefine bağ yok"
-    assert "tazelenmiyor" in WORKFLOW_HTML, "bayatlık beyan edilmiyor"
+    assert "canlı ölçümden beslenmez" in WORKFLOW_HTML, "bayatlık beyan edilmiyor"
+    assert "tazelenmiyor" not in WORKFLOW_HTML, (
+        "mutlak 'tazelenmiyor' iddiası geri gelmiş — dosya bir kez daha tazelendiğinde afişin "
+        "kendisi yalan olur (envanter #26 vakasının aynısı)")
+    assert not re.search(r"20\d\d-\d\d-\d\d sürümüdür", WORKFLOW_HTML), (
+        "tarih-damgalı sürüm iddiası geri gelmiş — statik sayfa kendi tarihini doğrulayamaz")
 
 
 def test_canli_zaman_cizelgesi_yuzeyi_kuruldu():

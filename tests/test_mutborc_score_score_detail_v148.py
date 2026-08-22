@@ -111,20 +111,23 @@ def _islemler(n: int, pnl: float = 500.0, r: float = 0.5, gun: int = 3) -> list[
 
 
 # =================================================================================================
-# test_m01 — min_sample varsayılanı 20'dir ve tamsayıya çevrilir      (mutant 4, 6, 9)
+# test_m01 — min_sample varsayılanı goal ile eşittir ve tamsayıya çevrilir   (mutant 4, 6, 9)
 # =================================================================================================
-def test_m01_min_sample_varsayilani_yirmidir():
-    """goal içinde min_sample YOKSA eşik 20'dir. Varsayılan kalkarsa (`get("min_sample")` →
-    None) `int(None)` patlar; 21 olursa 20 işlemlik bir küme sessizce 'ölçülemedi'ye düşer —
-    yani kapı, elinde yeterli örnek varken adayı reddeder."""
+def test_m01_min_sample_varsayilani_goal_ile_esittir():
+    """goal içinde min_sample YOKSA eşik, goal.yaml'daki gerçek değerle EŞİT yedekten gelir
+    (envanter #16, 2026-08-22: yedek 20 iken goal 30'du — anahtar düşerse modül sessizce daha
+    GEVŞEK bir tabana dönüyordu; v239 test_8a tüm yedekleri goal'a çiviler). Mutasyon koruması
+    aynen durur: varsayılan kalkarsa (`get("min_sample")` → None) `int(None)` patlar; bir
+    yukarı kayarsa eşik-tam-dolu küme sessizce 'ölçülemedi'ye düşer — yani kapı, elinde
+    yeterli örnek varken adayı reddeder."""
     goal = {"target_return_30d": 0.03, "max_drawdown": 0.12, "min_sharpe": 1.0}  # min_sample YOK
 
-    d20 = sc.score_detail(_islemler(20), goal, span_days=60.0)
-    assert d20["min_sample"] == 20
-    assert d20["score"] is not None, "20 işlem varsayılan eşiği KARŞILAR (n < min_sample değil)"
+    d30 = sc.score_detail(_islemler(30), goal, span_days=60.0)
+    assert d30["min_sample"] == 30
+    assert d30["score"] is not None, "30 işlem varsayılan eşiği KARŞILAR (n < min_sample değil)"
 
-    d19 = sc.score_detail(_islemler(19), goal, span_days=60.0)
-    assert d19["min_sample"] == 20 and d19["score"] is None
+    d29 = sc.score_detail(_islemler(29), goal, span_days=60.0)
+    assert d29["min_sample"] == 30 and d29["score"] is None
 
 
 # =================================================================================================

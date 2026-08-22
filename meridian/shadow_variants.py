@@ -529,7 +529,9 @@ def summarize_books(books: dict, trades: list[dict], goal: dict, k_lifecycle: in
             p[f"{alan}_delta"] = round(a - c, 4) if (a is not None and c is not None) else None
     return {"k_lifecycle": int(k_lifecycle or len(per)), "arms": len(per), "per_variant": per,
             "trades": len(trades), "seeded": sum(1 for t in trades if t.get("seeded")),
-            "min_sample": int(goal.get("min_sample", 20))}
+            # goal anahtarı düşerse bu yedek konuşur; goal'daki değerle EŞİT tutulur (envanter
+            # #16, 2026-08-22; latent 20≠30 ayrıklığı burada kapatıldı — v239 test_8a çivisi).
+            "min_sample": int(goal.get("min_sample", 30))}
 
 
 def arms_label(vid: str) -> str | None:

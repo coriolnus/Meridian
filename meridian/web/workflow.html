@@ -375,10 +375,18 @@ svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
     NEDEN SİLİNMEDİ: silme D5'in işi ve orada bağ denetimiyle birlikte yapılır. Bu tur yalnız
     yönlendirme bırakır — dışarıda kalmış bir yer imi kırık bağa düşmesin diye.
+
+    TARİH İDDİASI KALDIRILDI (envanter #26, 2026-08-22): afiş tarih-damgalı bir sürüm iddiası
+    ("07-20'den beri değişmedi") taşıyordu; oysa workflow.js 08-12'de içerikçe, 08-13 denetimi
+    sonrasında da "SAYIYLA YAZILMAZ" düzeltmeleriyle iki kez elden geçti — iddianın KENDİSİ
+    bayatladı ve dosya "emekli ama bazı satırları güncel" üçüncü hâle (denetimin en kötü dediği)
+    düştü. Kendini tarihleyemeyen statik sayfa tarih iddia etmez; kalıcı-doğru beyan "canlı
+    ölçümden beslenmez"dir. Çivi iki yönlü: test_ia_v199 beyanı ZORUNLU, tarih-damgalı tazelik
+    iddiasını YASAK kılar.
   ======================================================================================= -->
   <div class="tasindi" role="note">
     <p><b>Bu şema emekli oldu; içeriği panonun canlı zaman çizelgesine taşındı.</b>
-      Aşağıdaki resim <b>2026-07-20 sürümüdür</b> ve o günden beri tazelenmiyor — sayılarını
+      Aşağıdaki resim statik bir arşivdir: canlı ölçümden beslenmez — sayılarını
       güncel sanma.</p>
     <p>Canlı hâli: <a href="/#saglik">③ Sağlık → Gece hattı · canlı zaman çizelgesi →</a>
       (her adımın yanında bekçinin ÖLÇTÜĞÜ gecikme durur).</p>
