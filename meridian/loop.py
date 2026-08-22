@@ -1733,6 +1733,17 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             sector_ct = {}
             for t in b.positions:
                 sector_ct[SECTORS.get(t, "?")] = sector_ct.get(SECTORS.get(t, "?"), 0) + 1
+            # ── EZILEN-DAMGA[25b-3] · limits.max_open_positions — FİİLEN SEKTÖR-ÇEŞİTLENDİRME DÜĞMESİ
+            # (Envanter 2026-08-13 §D-2 + EDG-2026-035; yeniden ölçüm 2026-08-22: hâlâ eziliyor.)
+            # NEDEN ATIL (kapasite düğmesi olarak): eşzamanlı pozisyon tepesi 13 < 20; slot25 kolu
+            #   tabanla BAYT-ÖZDEŞ (ΔCI=[0,0]) — bu satırdaki slot payı pratikte hiç tükenmez.
+            # EZEN KATMAN: ısı zarfı `heat_hard_r=5,0R` — `position_size_r=0,5` ile zarf ~10
+            #   pozisyonda dolar, 20 slota ulaşılamaz (goal.yaml limits bloğu aynı hükmü taşır:
+            #   "sert tavan bağlayan taraf, slot sayısı değil"; gerçekleşen ısı tepesi tam 5,000R).
+            # TEK CANLI ETKİSİ: sektör tavanının paydası (`guard.sector_cap_basis` türetmesi) —
+            #   yani bu anahtar kapasite değil ÇEŞİTLENDİRME ayarıdır (payda 20 → sektör başına 8 isim).
+            # CANLANMA KOŞULU: `heat_hard_r` ya da `position_size_r` yükselip ısı zarfı 20 slotu
+            #   aşarsa slot sayısı yeniden bağlayan taraf olur — o gün bu damga kaldırılır.
             slots = limits["max_open_positions"] - len(b.positions)
             # OPERATÖR ONAYI TAŞINIR. `merge_dated_jsonl` bu TARİHİN tüm satırlarını yeniden
             # yazar; aynı seans yeniden işlenirse (re-seed sonu ya da elle tetik — monotonluk bekçisi

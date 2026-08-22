@@ -40,11 +40,19 @@ from . import obs, store
 from .adapters import data as data_adapter
 
 # ---------------------------------------------------------------- şasi sabitleri (BİREBİR)
-FRICTION_BPS = 10.0        # engine.py:21  — 10 bps / bacak (alış ve satış)
-ATR_LEN = 22               # engine.py:22  — ATR22
-CHANDELIER_K = 3.5         # engine.py:23  — chandelier = tepe - 3.5 × ATR22
+# DIŞ-ARTEFAKT BEYANI (ÇAPA SEMBOLDÜR — satır çapası YOK): referans şasi `engine.py` REPODA
+# DEĞİL, EDG-2026-009'un DONMUŞ ölçüm artefaktıdır; tek kimliği
+#   sha256 = 579eade52aeb2d4b2e07211de4a823bc8f1b2722cb7c6c6c76f0b97ebc712568
+# (research/olcumler/trend_rafine/kod_damgasi.json → kod_sha256["engine.py"]). Şasi repo
+# içinden okunamadığı için ona atılan her satır çapası ölçülemezdi ve bayatlamaya mahkûmdu
+# (Ö-49/G3, 2026-08-22): aşağıdaki atıflar bu yüzden SEMBOL/İÇERİK atfıdır, satır numarası
+# değil. Güvence bu künye + sabitlerin BURADAKİ sayı değerleridir — künye↔damga birebirliği
+# test_trend_shadow_v144'te çivili (yasa 7: ÇAPA SEMBOLDÜR).
+FRICTION_BPS = 10.0        # şasi sürtünme sabiti — 10 bps / bacak (alış ve satış)
+ATR_LEN = 22               # şasi ATR penceresi — ATR22
+CHANDELIER_K = 3.5         # şasi çıkış katsayısı — chandelier = tepe - 3.5 × ATR22
 N_SLOTS = 10               # incumbent hücresi (N=10)
-MOM_LOOKBACK = 12          # 12-1: P(ay-sonu t-1) / P(ay-sonu t-12) - 1  (engine.py:171-190)
+MOM_LOOKBACK = 12          # 12-1: P(ay-sonu t-1) / P(ay-sonu t-12) - 1  (şasinin ay-sonu momentum tanımı)
 INIT_EQUITY = 100_000.0    # SANAL sermaye (brief); şaside 1M — oransal muhasebe, getiri aynı
 
 BOOK = "trend_book.json"
@@ -170,7 +178,8 @@ def _bayat_mi(bar_tarihi, s, mpos: dict) -> bool:
 def _dilim(per: dict, semboller, tail: pd.DatetimeIndex) -> dict:
     """Şasinin `build_panel` semantiği, kuyruk penceresinde: her sembol ANA TAKVİME yeniden
     indekslenir ve KENDİ ÖMRÜ İÇİNDE ffill edilir (listelenmeden önce/sonrası NaN kalır —
-    bakma-ileri yok, engine.py:55-61).
+    bakma-ileri yok; şasinin panel-kurulum bölümüyle birebir — sha-künyeli dış-artefakt
+    beyanı dosya başında, şasi sabitleri bloğunda).
 
     HÜCRE DÜZEYİNDE KÖKEN BAYRAĞI. Bu ffill EKRANA
     ULAŞIYOR — sıralama buradan çıkıyor, karar oradan, defter oradan, `api.py`nin `trend_kitabi`
@@ -216,7 +225,8 @@ def dolduruldu_n(r) -> int:
 
 def _atr(r: pd.DataFrame):
     """ATR22 — şasi ile aynı: TR = max(h-l, |h-pc|, |l-pc|), rolling(22, min_periods=22).mean()
-    (engine.py:75-78). Son değeri NaN ise aday/çıkış kuralı onu 'ölçülemedi' sayar."""
+    (şasinin ATR bölümüyle birebir — dış-artefakt beyanı dosya başında). Son değeri NaN ise
+    aday/çıkış kuralı onu 'ölçülemedi' sayar."""
     pc = r["close"].shift(1)
     tr = pd.concat([(r["high"] - r["low"]).abs(), (r["high"] - pc).abs(), (r["low"] - pc).abs()],
                    axis=1).max(axis=1)
@@ -250,7 +260,7 @@ def _uygun(harita: dict, t: str, rd) -> bool:
 
 # ---------------------------------------------------------------- seans işleme
 def _icra(kitap: dict, xd, per: dict, mpos: dict) -> None:
-    """AY-SONU KARARININ İCRASI — ERTESİ SEANS AÇILIŞI (engine.py:198-260 ile aynı sıra):
+    """AY-SONU KARARININ İCRASI — ERTESİ SEANS AÇILIŞI (şasinin icra bölümüyle aynı sıra):
     çıkışlar → 1/N'e denkleştirme → girişler. Açılış yoksa şasinin yedeği: karar gününün kapanışı."""
     bekleyen = kitap.get("pending") or {}
     rd = pd.Timestamp(bekleyen["date"])
@@ -385,7 +395,7 @@ def _isaretle(kitap: dict, s, per: dict) -> list:
 
 
 def _karar(kitap: dict, rd, per: dict, master: pd.DatetimeIndex, mpos: dict, uni: list) -> dict | None:
-    """AY-SONU KARARI (engine.py:151-196 ile aynı sıra): çıkış kararı → 12-1 sıralaması → slot dolumu.
+    """AY-SONU KARARI (şasinin ay-sonu karar bölümüyle aynı sıra): çıkış → 12-1 sıralaması → slot dolumu.
     İcra ETMEZ; kararı `pending` olarak bırakır (icra ertesi seans açılışında — bakma-ileri yok)."""
     i = mpos[rd]
     tail = master[max(0, i - TAIL_SESSIONS + 1): i + 1]

@@ -6627,6 +6627,7 @@ RENDER.operasyon = async () => {
     <div class="card rise"><h2 class="t">Alarm gelen kutusu</h2>
       <div id="bp-alerts"><div class="empty">yükleniyor…</div></div></div>
     ${firsatAlarmTaksonomi(((_DIAG || {}).watchdog || {}).alarm_gunluk)}
+    ${bekciDurumlari((_DIAG || {}).bekci_durumlari)}
     ${p.sOgr}
     <div class="card rise"><h2 class="t">Olay akışı · son 8</h2>
       <div id="bp-events"><div class="empty">yükleniyor…</div></div></div>`;
@@ -7742,6 +7743,99 @@ function firsatAlarmTaksonomi(ag) {
                nAsk ? ` · ${trn(nAsk)} askıda` : ""}. Bastırma tavanı mekanizma BAŞINADIR (küresel değil):
                bir mekanizmanın çırpınması diğerini susturmaz. $ ya da ham defter satırı bu karttan DIŞARI
                VERİLMEZ; taksonomi yalnız sayımdır.</p>`))}</div>`;
+}
+
+// ---- BEKÇİ DURUM YÜZEYLERİ (WP8 · YASA 6 kapanışı — TASARIM-F8 §T2, 2026-08-22) --------------
+// ÖLÇÜLEN BOŞLUK: goal_failure · kitap_damga · mutabakat_tazelik · onayli_gonderim dördü de
+// watchdog'da üretiliyor ve alarm satırı akışa düşüyordu ama DURUM yüzeyi yoktu — operatör
+// "şu an ne âlemde" sorusunu ancak son alarmı bularak cevaplayabiliyordu (emsal: sessiz_hat
+// `askida` dalı aynı sınıftı, v195-a'da kapatıldı). Kart HÜKÜM KURMAZ: dört raporun üç değerli
+// hükümleri uçtan (`/api/diagnostics` bekci_durumlari) olduğu gibi okunur; hüküm kelimeleri F8
+// kanonik sözlüğü §4b'den (TEMİZ · İHLAL-etiketi · ÖLÇÜLEMEDİ · KAPSAM DIŞI). null ≠ 0 (v196):
+// ölçülemeyen her sayı ADIYLA yazılır, 0'a bulaştırılmaz. Renk yalnız anomalide ve yalnız
+// hesaplanmış sınıf/çip değişkeniyle basılır (v197 tarayıcı sözleşmesi — süssüz if gövdesi yok).
+// Kitap-damga sınıf adları MAKİNE-OKUNUR hâliyle de satırda durur (integrity panelinin kuralı:
+// panodan okunan ad, günlükte greplenen adla aynı olmalı) — Türkçesi sözlükten gelir, tanınmayan
+// sınıf HAM basılır (pano tanımadığını sessizce düşürmez).
+const BEKCI_SINIF_TR = { degisim_yok: "değişim yok", damgali_degisim: "damgalı değişim", damga_ilerledi_icerik_ayni: "İÇERİK-AYNI YENİDEN YAZIM", damgasiz_yazim: "DAMGASIZ YAZIM", taban_yok: "ilk gözlem", olculemedi: "ölçülemedi" };
+function bekciDurumlari(bd) {
+  const b = bd && typeof bd === "object" ? bd : null;
+  const BASLIK = `<h2 class="t">Bekçi durumları · sözleşme + kitap + ayna tazeliği <span class="tx3" style="font-weight:400">(alarm düşmeden "şu an ne âlemde?")</span></h2>`;
+  if (!b) {
+    // Uç bloğu hiç vermedi: dört bekçinin ŞU ANKİ durumu bilinmiyor — bu "temiz" DEĞİL.
+    return `<div class="card rise">${BASLIK}
+      <p class="hint">teşhis ucu <code>bekci_durumlari</code> bloğunu vermedi — dört bekçinin durumu
+      bu turda ÖLÇÜLEMEDİ (temiz DEĞİL; son hükümler yalnız alarm akışında).</p></div>`;
+  }
+  // Üç değerli hüküm + KAPSAM DIŞI dördüncü hâl (yapılandırma — ne temiz ne arıza; koruma
+  // dedektörünün üç-hâl disiplini). `ok == null` undefined'ı da yakalar: uçta düşen raporun
+  // iskeleti (`olculemedi` + `olculemedi_neden`) aynı kapıdan ÖLÇÜLEMEDİ'ye düşer.
+  const hukum = (r, ihlalLbl) => {
+    if (!r) { return ["ÖLÇÜLEMEDİ", "t-vi"]; }
+    if (r.kapsam_disi) { return ["KAPSAM DIŞI", "t-vi"]; }
+    if (r.ok == null) { return ["ÖLÇÜLEMEDİ", "t-vi"]; }
+    return r.ok === false ? [ihlalLbl, "t-no"] : ["TEMİZ", "t-go"];
+  };
+  // Uç iskeletinin nedeni satırda ADIYLA durur — "rapor yok" ile "rapor düştü" ayrı şeyler.
+  const ucNotu = r => (r && r.olculemedi_neden ? ` · uç: ${esc(String(r.olculemedi_neden))}` : "");
+  const satir = (ad, r, ihlalLbl, metin, ipucu) => {
+    const [lbl, kls] = r === undefined ? ["ÖLÇÜLEMEDİ", "t-vi"] : hukum(r, ihlalLbl);
+    const sonuk = kls === "t-vi";
+    return `<div class="trow" style="grid-template-columns:168px 1fr auto">
+      <span class="tick">${esc(ad)}</span>
+      <span class="chain${sonuk ? " mut" : ""}"${ipucu ? ` title="${esc(ipucu)}"` : ""}>${r === undefined
+        ? "uç bu raporu hiç göndermedi — yüzey yarım (temiz değil)" : metin}</span>
+      ${_chip(lbl, kls)}</div>`;
+  };
+  // ① SÖZLEŞME HÜKMÜ — hüküm alanı `failed` (`ok` DEĞİL) ve işareti terstir; F8 geçiş haritası
+  // "önce yüzey, sonra ad" dediği için alan BURADA çevrilir, uçta değil. null = henüz ölçülemiyor.
+  const g = b.goal_failure;
+  const gOk = !g || g.failed == null ? null : !g.failed;
+  const gMetin = !g ? "" : (g.realized_30d == null
+    ? `${esc(String(g.detail == null ? "30g getiri henüz ölçülemiyor" : g.detail))}${ucNotu(g)}`
+    : `30g getiri %${trn(g.realized_30d * 100, 2)}${g.threshold == null ? ""
+        : ` · başarısızlık eşiği %${trn(g.threshold * 100, 2)}`} · ${trn(g.n)} kapanan işlem`);
+  // ② KİTAP DAMGASI (#9) — 6 değerli sınıf taksonomisi belge başına ADIYLA yazılır.
+  const k = b.kitap_damga;
+  const kRows = k && Array.isArray(k.rows) ? k.rows : [];
+  const kMetin = !k ? "" : (kRows.length
+    ? kRows.map(r => `${esc(String(r.ad))}: ${esc(String(BEKCI_SINIF_TR[r.sinif] == null ? r.sinif : BEKCI_SINIF_TR[r.sinif]))}`).join(" · ")
+    : `izlenen belge yok${ucNotu(k)}`);
+  // ③ MUTABAKAT TAZELİĞİ (#10) — yaş null ise 0 BASILMAZ; seans kıyası asıl ölçü.
+  const m = b.mutabakat_tazelik;
+  const mYas = !m ? "" : (m.yas_h == null ? "yaş ölçülemedi" : `${trn(m.yas_h, 1)} sa önce yazıldı`);
+  const mMetin = !m ? "" : [
+    m.kayit_seansi == null ? null : `kayıt ${esc(String(m.kayit_seansi))} seansından`,
+    m.kitap_seansi == null ? null : `kitap ${esc(String(m.kitap_seansi))} işledi`,
+    mYas,
+    m.neden ? esc(String(m.neden)) : null,
+  ].filter(Boolean).join(" · ") + ucNotu(m);
+  // T2.3'ün üç değerli yardımcı alanları (checked/api_ok/skip_reason) ipucunda okunur: TAZE ama
+  // `checked=false` bir kayıt ayna görünümü DEĞİLDİR — bu ayrım görünmezse eski kusur geri gelir.
+  const mIpucu = !m ? "" : `reconcile: checked ${m.checked == null ? "ölçülemedi" : m.checked
+    } · api_ok ${m.api_ok == null ? "ölçülemedi" : m.api_ok}${m.skip_reason
+    ? ` · skip: ${String(m.skip_reason)}` : ""}${m.max_yas_h == null ? ""
+    : ` · mutlak yaş tavanı ${trn(m.max_yas_h)} sa`}`;
+  // ④ ONAYLI GÖNDERİM (#11) — payda beyanlı sayaç + ihlal listesi (ticker/plan/iz/onay-anı).
+  const o = b.onayli_gonderim;
+  const oIhlal = o && Array.isArray(o.ihlaller) ? o.ihlaller : [];
+  const oMetin = !o ? "" : (o.ok == null
+    ? `${esc(String(o.neden == null ? "bu turda hüküm yok" : o.neden))}${ucNotu(o)}`
+    : `${trn(o.kontrol_edilen)} onaylı açık pozisyon kontrol edildi${oIhlal.length
+        ? " · " + oIhlal.map(v => `${esc(String(v.ticker))} (${esc(String(v.plan_id))}) — ${
+            v.gonderim_izi ? "gönderim izi VAR, broker'da yok" : "emir hiç çıkmamış"} · onay ${
+            esc(String(v.onay_ts == null ? "ts?" : v.onay_ts))}`).join(" · ")
+        : ""}`);
+  return `<div class="card rise">${BASLIK}
+    <p class="hint" style="margin-top:0">Dört bekçinin ŞU ANKİ hükmü — alarm akışından bağımsız
+    durum yüzeyi (YASA 6). Hüküm uçtan okunur, panoda kurulmaz; ölçülemeyen satır sönük yazılır
+    ve asla "temiz" sayılmaz.</p>
+    ${satir("Sözleşme hükmü (goal)", g == null ? g : { ok: gOk, kapsam_disi: false }, "İHLAL",
+            gMetin, g && g.detail && g.realized_30d != null ? String(g.detail) : "")}
+    ${satir("Kitap damgası (#9)", k, "DAMGASIZ YAZIM", kMetin)}
+    ${satir("Mutabakat tazeliği (#10)", m, "BAYAT", mMetin, mIpucu)}
+    ${satir("Onaylı gönderim (#11)", o, "GÖNDERİLMEMİŞ", oMetin,
+            o && o.payda_beyani ? String(o.payda_beyani) : "")}</div>`;
 }
 
 // ---- PORTFÖY · MUTABAKAT MASASI (ADR: "dolum akışı/mutabakat … reddedilen emirler") ----------

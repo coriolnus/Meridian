@@ -184,6 +184,17 @@ def entry_limit_price(trigger: float, atr: float | None = None, cfg: dict | None
         a = float(atr) if atr is not None else 0.0
     except (TypeError, ValueError):  # sessiz-yutma: biçimsiz ATR = ölçülemedi; `offset_kaynak` alanı bunu satıra yazar
         a = 0.0
+    # ── EZILEN-DAMGA[25b-4] · execution_v2.limit_atr_mult — ATIL EKSEN (BİLİNÇLİ) ────────────
+    # (Envanter 2026-08-13 §D-2; yeniden ölçüm 2026-08-22: goal.yaml hâlâ 100.0 — değişmedi.)
+    # NEDEN ATIL: goal.yaml `limit_atr_mult: 100.0` → 100·ATR, gerçekçi her ATR/fiyat oranında
+    #   (~%1) tetiğin %4'ünden büyüktür; aşağıdaki `min()` HER ZAMAN `limit_pct_cap`ı seçer.
+    # EZEN KATMAN: `limit_pct_cap=0.04` (MAX_ENTRY_GAP_PCT dış zarfıyla aynı değer).
+    # BİLİNÇLİ EZİLME: operatör kararı 2026-08-03 ("E1 bacağı bağlamaz kılındı", goal.yaml
+    #   execution_v2 blok yorumu) — ama satır ayarlanabilir bir düğme gibi durur; bu damga o
+    #   yanılsamayı kapatır. Değeri oynatmak, 0,0004·tetik'ten büyük ATR'lerde HİÇBİR ŞEYİ değiştirmez.
+    # CANLANMA KOŞULU: `limit_atr_mult`, mult·ATR < pct_cap·tetik olacak düzeye (ör. eski kart
+    #   varsayılanı 0,5) indirilirse eksen yeniden bağlar; hangi tarafın bağladığı zaten her
+    #   kararda `offset_kaynak` alanına yazılır (okuyucusu E2 defteri).
     off = min(float(cfg["limit_atr_mult"]) * a, pct_off) if a > 0 else pct_off
     return t + off
 
@@ -211,6 +222,19 @@ def entry_order_decision(trigger: float, ref_price: float | None = None,
         a = float(atr) if atr is not None else 0.0
     except (TypeError, ValueError):  # sessiz-yutma: aynı gerekçe — `offset_kaynak` alanı taşıyor
         a = 0.0
+    # ── EZILEN-DAMGA[25b-5] · execution_v2.gap_behavior — KOŞULU TOTOLOJİ ────────────────────
+    # (Envanter 2026-08-13 §D-2; yeniden ölçüm 2026-08-22: kod yolu birebir aynı, aşağıya bak.)
+    # NEDEN ATIL (gap filtresi olarak): silahlı kurulumların HEPSİ `entry_trigger = float(c)` =
+    #   sinyal barı KAPANIŞI verir (strategy.py — bugün 6 kurulum; envanter gününde 7) ve canlı
+    #   yolda `ref_price` aynı kapanıştır → `rp >= t` YAPISAL olarak doğru; `rp is None`
+    #   (ölçülemedi) dalı da bilinçli olarak gap sayılır. Canlı E2 ölçümü (2026-08-13):
+    #   4/4 satırda `gap_at_submit: true`.
+    # YANİ: `gap_behavior` bir gap FİLTRESİ değil GİRİŞ MOTORU ANAHTARIDIR — `cancel` seçmek
+    #   nadir gap'i değil TÜM girişleri keser. EZEN KATMAN: tetik tanımının kendisi
+    #   (kapanış = tetik → gönderim anında fiyat tetiğin altında olamaz).
+    # CANLANMA KOŞULU: tetik sinyal-barı-kapanışından farklı bir pivota (ör. gün-içi kırılım
+    #   fiyatı) taşınırsa `stop_limit` dalı yeniden erişilebilir olur ve bayrak gerçek filtreye
+    #   döner — o gün bu damga kaldırılır, `EV_STOP_LIMIT` olayı defterde görünmeye başlar.
     gap = (rp is None) or (t > 0 and rp >= t)
     if not gap:
         mode, olay = "stop_limit", EV_STOP_LIMIT

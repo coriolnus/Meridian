@@ -1,7 +1,7 @@
 """test_trend_shadow_v144.py — WP-K TREND KOLU GÖLGE-KİTABI (2026-07-31).
 
 EDG-2026-009'un incumbent kolu (chandelier × full_251 × N=10) canlı barlarda SANAL bir defterde
-yürüyor. Bu dosya altı yasayı çiviler:
+yürüyor. Bu dosya yedi yasayı çiviler:
 
   1. SIFIR YETKİ (AST) — modül broker/alpaca/emir yolunu IMPORT BİLE ETMEZ ve kendi defteri
      dışında hiçbir dosyaya yazmaz. Kaynak-metin değil AST: bir yorum satırındaki "broker"
@@ -13,6 +13,8 @@ yürüyor. Bu dosya altı yasayı çiviler:
      iki bacakta da ödenir.
   5. YASA 6 — defterin DIŞ okuyucusu (api.py) var ve PIT şerhi okuyucuya ULAŞIYOR.
   6. HATA İZOLASYONU — gölge-kitap patlarsa `daily_cycle` SÜRER ve olay adıyla kaydedilir.
+  7. ÇAPA SEMBOLDÜR — şasi dosyası repoda yok; ona satır çapası atılmaz, sha-künyeli
+     DIŞ-ARTEFAKT BEYANI atılır ve künye donmuş damgayla birebir ölçülür.
 """
 from __future__ import annotations
 
@@ -170,7 +172,8 @@ def test_secim_determinizmi_ve_n10(seeded, monkeypatch):
     assert kararlar[0] == kararlar[1], f"seçim deterministik değil: {kararlar}"
     assert 0 < len(kararlar[0]) <= ts.N_SLOTS, f"slot yasası bozuldu: {len(kararlar[0])}"
     assert ts.N_SLOTS == 10 and ts.CHANDELIER_K == 3.5 and ts.ATR_LEN == 22 \
-        and ts.FRICTION_BPS == 10.0, "şasi sabiti sürüklendi (engine.py:21-23 ile birebirlik)"
+        and ts.FRICTION_BPS == 10.0, ("şasi sabiti sürüklendi (donmuş şasi sabitleriyle "
+                                      "birebirlik — sha-künyeli beyan trend_shadow başında)")
 
 
 def test_secim_momentum_siralamasini_izler(seeded, monkeypatch):
@@ -418,3 +421,33 @@ def test_api_teshis_ucu_defteri_servis_eder(seeded, monkeypatch):
     assert '"trend_kitabi"' in src and 'store.read_json("trend_book.json"' in src
     o = ts.ozet(store.read_json(ts.BOOK, None))
     assert o["var"] and o["pit_serh"] and o["equity"] == ts.INIT_EQUITY
+
+
+# ---------------------------------------------------------------- 7. ÇAPA SEMBOLDÜR (Ö-49)
+def test_capa_semboldur_sha_kunyeli_dis_artefakt_beyani():
+    """Şasi dosyası REPODA HİÇ YOK — EDG-2026-009'un donmuş ölçüm artefaktıdır; tek kimliği
+    `research/olcumler/trend_rafine/kod_damgasi.json` içindeki sha256. Ona satır numarasıyla
+    çapa atmak, hiçbir aracın ölçemediği ve hedefinin her (varsayımsal) düzenlemesinde
+    bayatlayan bir iddia üretir — codelaw'un `line_anchor_unresolved` kovasında 9 kayıtlık
+    G3 ailesi tam buydu (Ö-49 envanteri, 2026-08-22).
+
+    İki çivi (test_beyan_bayatligi_v246 deseni — beyan kaynakla eşleşmezse test düşer,
+    sessizlik yapısal olarak imkânsızdır):
+      a) trend_shadow kaynağı VE bu test dosyası, şasiye satır-numaralı çapa TAŞIMAZ;
+      b) trend_shadow'daki sha-künyeli DIŞ-ARTEFAKT BEYANI, donmuş damganın kaydettiği
+         sha256 ile birebir aynıdır (künye kopyalanırken bozulursa/damga taşınırsa kırmızı).
+    """
+    import json
+    import re
+
+    sasi_capasi = re.compile(r"engine\.py:\d")            # kendi literalimiz eşleşmez: \. ≠ .
+    src = pathlib.Path("meridian/trend_shadow.py").read_text()
+    assert not sasi_capasi.search(src), "trend_shadow.py şasiye satır çapası taşıyor (ÇAPA SEMBOLDÜR)"
+    assert not sasi_capasi.search(pathlib.Path(__file__).read_text()), \
+        "test dosyasına şasi satır çapası geri sızdı"
+
+    damga = json.loads(pathlib.Path("research/olcumler/trend_rafine/kod_damgasi.json").read_text())
+    sha = damga["kod_sha256"]["engine.py"]
+    assert re.fullmatch(r"[0-9a-f]{64}", sha), "damga sha256 biçimi bozuk"
+    assert sha in src, ("trend_shadow.py'de sha-künyeli DIŞ-ARTEFAKT BEYANI yok ya da künye "
+                        "donmuş damgayla ayrıştı")

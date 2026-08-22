@@ -162,6 +162,17 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
                                f"kuyruğuna YÖNLENDİRİLDİ; tek-değişken yasası KALDIRILMADI, canlı "
                                f"değişiklik YAPILMADI"])
 
+    # ── EZILEN-DAMGA[25b-1] · goal.one_variable_only — YASA BEYANI, DÜĞME DEĞİL ──────────────
+    # (DENETIM-OLU-BILESEN-ENVANTERI-2026-08-13 §D-2; yeniden ölçüm 2026-08-22: değişmedi.)
+    # NEDEN ATIL: `state/goal.yaml` `one_variable_only: true` yazar ama DEĞERİ HİÇBİR KOD OKUMAZ —
+    #   bugünkü tarama da yalnız GOAL_KEYS üyeliğini (bu dosya, değişmezlik listesi), aşağıdaki
+    #   ret metnini ve doc-string atıflarını buluyor; `goal["one_variable_only"]` okuyan satır SIFIR.
+    # EZEN KATMAN: hemen aşağıdaki KOŞULSUZ kural (`len(changes) != 1` → ret) — yasa bayrağa
+    #   bakmadan uygulanır; goal.yaml'a `false` yazmak yasayı GEVŞETMEZ (iyi ki: yasa doğru,
+    #   düğme yalan). goal.yaml'daki blok yorumu aynı beyanı taşır; PANO tarafı ayrı kalemdir
+    #   (rozet, app.js — bu turda başka ajanın dosyası, WP6/25b raporunda).
+    # CANLANMA KOŞULU: bir kod yolu değeri okuyup bu kuralı ona bağlarsa gerçek düğme olur —
+    #   o gün bu damga ve v262 çivisi birlikte güncellenir.
     # --- shape: exactly one variable ---
     if "changes" in proposal and isinstance(proposal["changes"], dict):
         if len(proposal["changes"]) != 1:
@@ -465,6 +476,19 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
          (sc.get(sec, 0) + 1) / max(1, sector_basis) > limits["max_sector_exposure_pct"] / 100.0,
          f"'{sec}' sektör tavanı %{limits['max_sector_exposure_pct']:.0f} aşılıyor", "hard",
          value=sc.get(sec, 0) + 1, threshold=f"%{limits['max_sector_exposure_pct']:.0f}")
+    # ── EZILEN-DAMGA[25b-2] · limits.max_position_r + limits.max_daily_loss_pct — ZARF, BAĞLAYAN DEĞİL
+    # (Envanter 2026-08-13 §D-2; ölçüm: 409 planlık kapı defterinde `daily_loss_breaker` 0/409,
+    #   `position_size` 0/409 düştü — kâğıt defterinde hiçbir gün −%3'e inmedi, hiçbir plan 1,0R'a çıkmadı.)
+    # NEDEN ATIL: boyutu fiilen strateji yüzeyi belirler — `position_size_r=0,5`
+    #   (state/strategy.yaml) × derisk rampası ≤ 1,0 hiçbir planda `max_position_r=1,0`a ulaşmaz
+    #   (ölçülen size_r 0,25–0,97); günlük kayıp da ölçülen defterde eşiğe hiç yaklaşmadı.
+    # EZEN KATMAN: strateji boyut politikası + derisk rampası (boyut için); portföyün ölçülen
+    #   kayıp dağılımı (kesici için) — ikisi de eşiğe ulaşmadan bağlıyor.
+    # YİNE DE KALIRLAR (envanter §e, fail-safe): yapılandırma/politika değişirse SON savunma hattı.
+    #   Panoda "aktif kısıt" gibi GÖSTERİLMEMELİ (pano kalemi başka ajanın dosyasında).
+    # NOT (2026-08-22): kesici penceresi iki motorda EŞİTLENDİ (loop.py "GÜNLÜK KESİCİ PENCERESİ"
+    #   bloğu) — semantik düzeldi; 0/409 son ölçümdür. CANLANMA KOŞULU: defterde ilk gerçek
+    #   bağlama (breaker/size reddi) — o gün "zarf" sıfatı düşer, damga güncellenir.
     _chk("daily_loss_breaker", portfolio.get("day_pnl_pct", 0.0) <= -limits["max_daily_loss_pct"] / 100.0,
          f"günlük kayıp devre kesici %{limits['max_daily_loss_pct']:.0f}", "hard",
          value=round(portfolio.get("day_pnl_pct", 0.0) * 100, 2), threshold=f">-%{limits['max_daily_loss_pct']:.0f}")

@@ -3318,6 +3318,44 @@ def _ogrenme_blogu(ogr: dict, sieve_rep: dict | None) -> dict:
     return out
 
 
+def _bekci_durumlari() -> dict:
+    """DÖRT OKUYUCUSUZ BEKÇİ RAPORUNUN SERVİS YÜZEYİ (WP8 · YASA 6 kapanışı — ölçüm:
+    docs/TASARIM-F8-DURUM-SOZLUGU-2026-08-22.md §T2). `goal_failure` · `kitap_damga` ·
+    `mutabakat_tazelik` · `onayli_gonderim` dördü de watchdog'da üretiliyordu, alarm satırı
+    akışa düşüyordu ama DURUM YÜZEYİ yoktu — operatör "şu an ne âlemde" sorusunu ancak son
+    alarmı bularak cevaplayabiliyordu. Dördü fonksiyon olduğu için `codelaw.artifact_graph`
+    onları göremez (parity `artifact_unread` yalnız dosya-artefaktı tarar); okuyucu zinciri
+    bu yüzden ELLE kurulur: watchdog üretir → bu uç servis eder → pano `bekciDurumlari` okur.
+
+    EVİ /api/diagnostics, /api/today DEĞİL — maliyet ÖLÇÜLDÜ: dördü de yalnız yerel state
+    okur (goal: trades.jsonl + goal.yaml skoru; kitap: damga tabanı + içerik özeti; mutabakat/
+    onay: iki json + trade_plans.jsonl), broker/ağ çağrısı YOK; yine de soğuk-yol maliyeti
+    /api/today'e taşınmaz (16,7 sn vakasının dersi) ve 45 sn'lik teşhis önbelleği burada doğru
+    amortisman.
+
+    RAPORLAR OLDUĞU GİBİ SERVİS EDİLİR (alan çevrilmez): F8 geçiş haritası "ÖNCE yüzey aç,
+    sonra adlandır" der — goal_failure hükmü `failed` taşır (`ok` değil) ve pano onu üç değerli
+    okur. `kitap_damga_report` PERSIST'SİZ çağrılır: tabanı yalnız `check_kitap_damga_and_alarm`
+    ilerletir; okuma yolu tabana yazsaydı '/api/diagnostics'i açık tutmak dedektörü körleştirirdi
+    (raporun kendi sözleşmesi).
+
+    RAPOR BAŞINA YALITIM (integrity_report'un dedektör-yalıtım deseni): biri düşerse üçü ayakta
+    kalır ve düşen, iskeletiyle GÖRÜNÜR — `ok=None + olculemedi + olculemedi_neden`; 0'a/temiz'e
+    çevrilmez (uydurma yasağı)."""
+    from . import watchdog as _w
+    out = {}
+    for ad, fn in (("goal_failure", _w.goal_failure_report),
+                   ("kitap_damga", _w.kitap_damga_report),
+                   ("mutabakat_tazelik", _w.mutabakat_tazelik_report),
+                   ("onayli_gonderim", _w.onayli_gonderim_report)):
+        try:
+            out[ad] = fn()
+        except Exception as e:  # sessiz-yutma: tek bekçinin düşmesi teşhis ucunun tamamını düşürmemeli; düşüş iskeletle (olculemedi + neden) panoda GÖRÜNÜR kalır, temiz'e çevrilmez
+            out[ad] = {"ok": None, "olculemedi": True,
+                       "olculemedi_neden": f"{type(e).__name__}: {e}"}
+    return out
+
+
 def _alarm_gunluk() -> dict:
     """Alarm hijyeninin GÜNLÜK sayacı — bekçi defterinin DIŞ okuyucusu burasıdır.
 
@@ -4435,6 +4473,9 @@ def api_diagnostics(request: Request, taze: int = 0):
         # GERÇEĞE bağlanır (sprint orphan + öğrenme durması, ölçülüp BEYAN edilerek). Alarm geçişi
         # `check_liveness_and_alarm` (300 sn poll); bu satır teşhis paneline okunur.
         "liveness": _wd.liveness_report(),
+        # BEKÇİ DURUM YÜZEYLERİ — T2.1-T2.4 YASA-6 kapanışı: dört raporun alarm satırı vardı,
+        # durum yüzeyi yoktu. Maliyet/yalıtım/persist şerhleri `_bekci_durumlari`nın kendisinde.
+        "bekci_durumlari": _bekci_durumlari(),
         # CANLI ZAMAN ÇİZELGESİ — BEKÇİNİN YANINDA, İÇİNDE DEĞİL. Bekçi raporu
         # "geciken var mı?" der; çizelge "adım adım NE ZAMAN koştu?" der. İkisi aynı dosyadan
         # (mechanism_beats.json) beslenir ama farklı soruların cevabıdır; `watchdog` içine
