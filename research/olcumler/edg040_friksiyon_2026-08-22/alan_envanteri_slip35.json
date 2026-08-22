@@ -1,0 +1,209 @@
+{
+ "n_satir": 862,
+ "alanlar": {
+  "bars_held": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "int": 862
+   }
+  },
+  "costs": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float64": 862
+   }
+  },
+  "entry": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float64": 862
+   }
+  },
+  "exit": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float64": 473,
+    "float": 389
+   }
+  },
+  "exit_reason": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  },
+  "exploration": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "bool": 862
+   }
+  },
+  "id": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  },
+  "mae_r": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float64": 862
+   }
+  },
+  "mfe_r": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float64": 862
+   }
+  },
+  "plan_id": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  },
+  "pnl_dollars": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float64": 862
+   }
+  },
+  "pnl_pct": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float64": 862
+   }
+  },
+  "qty": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "int": 862
+   }
+  },
+  "r_multiple": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float64": 862
+   }
+  },
+  "r_multiple_expected": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "float": 862
+   }
+  },
+  "regime": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  },
+  "scaled_out": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "bool": 862
+   }
+  },
+  "score": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "int": 862
+   }
+  },
+  "setup": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  },
+  "side": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  },
+  "skill_chain": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "list": 862
+   }
+  },
+  "strategy_version": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "int": 862
+   }
+  },
+  "ticker": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  },
+  "ts_close": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  },
+  "ts_open": {
+   "var": 862,
+   "dolu": 862,
+   "tipler": {
+    "str": 862
+   }
+  }
+ },
+ "satir_anahtar_sirasi": [
+  "id",
+  "ts_open",
+  "ts_close",
+  "ticker",
+  "side",
+  "entry",
+  "exit",
+  "qty",
+  "r_multiple",
+  "pnl_pct",
+  "pnl_dollars",
+  "costs",
+  "exit_reason",
+  "strategy_version",
+  "regime",
+  "setup",
+  "score",
+  "r_multiple_expected",
+  "exploration",
+  "plan_id",
+  "skill_chain",
+  "bars_held",
+  "scaled_out",
+  "mfe_r",
+  "mae_r"
+ ],
+ "tum_satirlar_ayni_anahtar_kumesi": true
+}

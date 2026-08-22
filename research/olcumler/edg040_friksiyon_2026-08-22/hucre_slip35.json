@@ -1,0 +1,89 @@
+{
+ "kosum": "slip35",
+ "slippage_bps": 35.0,
+ "smoke": false,
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "mbsiz_kol": false,
+ "suzulen_mb_sinyal": null,
+ "mb_islem_n": 330,
+ "islem_n": 862,
+ "net_pnl_trades": -25681.42,
+ "net_pnl_equity": -25681.42,
+ "pf": 0.8112,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": 0.2568,
+ "maxdd_m2m": 0.2568,
+ "sharpe": -1.097,
+ "sharpe_measurable": true,
+ "avg_r": -0.096,
+ "win_rate": 0.352,
+ "total_return": -0.2568,
+ "kompozisyon": {
+  "toplam_plan": 1532,
+  "silahlanan_plan": 911,
+  "verdict_dagilim": {
+   "GO": 62,
+   "REVIEW": 849,
+   "NO_GO": 621
+  },
+  "nogo_neden_dagilim": {
+   "heat_hard": 621,
+   "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 621,
+   "sector_cap": 12
+  },
+  "entry_rejects": {
+   "open_below_stop": 22,
+   "max_chase": 25
+  },
+  "exit_reason_dagilim": {
+   "stop": 352,
+   "regime_flip": 170,
+   "time_stop": 158,
+   "target": 98,
+   "stop_gap": 54,
+   "target_gap": 30
+  },
+  "setup_bazinda": {
+   "breakout_vcp": {
+    "n": 309,
+    "pnl": -7441.42,
+    "avg_r": -0.0841
+   },
+   "exhaustion_hammer": {
+    "n": 216,
+    "pnl": -13456.71,
+    "avg_r": -0.1996
+   },
+   "momentum_burst": {
+    "n": 330,
+    "pnl": -3031.83,
+    "avg_r": -0.0242
+   },
+   "pullback": {
+    "n": 7,
+    "pnl": -1751.46,
+    "avg_r": -0.7957
+   }
+  },
+  "silahli_plan_size_r": {
+   "min": 0.305,
+   "max": 0.5,
+   "ort": 0.409
+  }
+ },
+ "butunluk_gecerli": true,
+ "kill3_temiz": true,
+ "oz_sinama_kill2_gecti": true,
+ "oz_sinama_olculemedi": null,
+ "cost_model_kaydi": {
+  "slippage_bps": 35.0,
+  "commission_per_share": 0.0,
+  "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+ }
+}

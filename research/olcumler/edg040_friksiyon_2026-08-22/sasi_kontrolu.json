@@ -1,0 +1,35 @@
+{
+ "bayt_kiyas_edg032b": {
+  "islemler_tam": {
+   "yerel_sha256": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+   "edg032b_sha256": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+   "bayt_ozdes": true,
+   "olculemedi_nedeni": null
+  },
+  "islemler_slim": {
+   "yerel_sha256": "d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d",
+   "edg032b_sha256": "d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d",
+   "bayt_ozdes": true,
+   "olculemedi_nedeni": null
+  },
+  "seanslar": {
+   "yerel_sha256": "f0c8df928e20979d8b959d009cfbc4e363ed43cce1d27d1b5ed615bf50e432a4",
+   "edg032b_sha256": "f0c8df928e20979d8b959d009cfbc4e363ed43cce1d27d1b5ed615bf50e432a4",
+   "bayt_ozdes": true,
+   "olculemedi_nedeni": null
+  }
+ },
+ "kill1_bayt_gecti": true,
+ "referans_ozdeslik_032cmb": {
+  "kostu": true,
+  "gecti": true,
+  "neden": "ozdeslik exit=2",
+  "aciklanmis_fark": {
+   "alan": "replay.n_endeks_satir",
+   "yerel": 1408,
+   "ref_032": 1403,
+   "neden": "endeks önbelleği koşum-günü uzunluğu (pencereye kırpılmaz); pencere-içi dünya defter/seans BAYT kıyasıyla sınandı ve ÖZDEŞ"
+  }
+ },
+ "kill1_gecti": true
+}

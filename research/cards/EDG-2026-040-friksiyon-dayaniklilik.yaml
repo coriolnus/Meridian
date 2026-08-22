@@ -77,4 +77,28 @@ beyanlı_sinirlar: >
 
 k_registry: {registered_at: "2026-08-13T3x", trial_ids: [pending-040-slip15, pending-040-slip25, pending-040-slip35, conditional-040-B-slip15, conditional-040-C-slip15]}
 
-status: registered   # 2026-08-13 Rol-1 — ön-kayıt. Ölçüm v243 dağıtımı sonrası TEMİZ ağaçta koşulur (EDG-033 dersi).
+status: measured     # 2026-08-22 Rol-1 HÜKMÜ — aşağıda. (ön-kayıt 2026-08-13)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-22): **Ö1 DÜŞTÜ — BENİMSENEN PAKET ÖLÇÜLEN FRİKSİYON MERTEBESİNDE
+  NEGATİF.** Kartın kendi cümlesiyle: bu bir bulgudur, gizlenmez, ROADMAP'e ACİL kalem olarak
+  girer (işlendi: §2 TAHTA).
+  SAYILAR (research/olcumler/edg040_friksiyon_2026-08-22/): taban slip=5 → +20.684,69 (PF 1,1119,
+  n=885; donmuş edg032b ile BAYT-ÖZDEŞ — şasi kapısı geçti). slip=15 → **−3.067,14** (PF 0,9822,
+  n=884) · slip=25 → −13.722,13 (PF 0,9169) · slip=35 → −25.681,42 (PF 0,8112). ΔP&L eşlenik
+  ay-kümeli bootstrap (B=5000, seed 20260812, 55 ay) ÜÇÜNDE DE sıfırın DIŞINDA (CI-üst < 0):
+  slip15 [−35.326, −12.881] · slip25 [−52.238, −16.894] · slip35 [−73.463, −19.415].
+  Ö2 BAŞABAŞ BANDI: işaret 5 ile 15 bps ARASINDA dönüyor — "5-15 bps/bacak" (interpolasyon YOK,
+  kartın yasağı). İşlem sayısı neredeyse sabit (885→862) → hasar SEÇİLİM değil FİYAT kaynaklı.
+  Ö3 ÖLÇÜLMEDİ: Aşama-2 kapısı DONUK kurala göre KAPALI (slip15 ≤ 0) → K'dan 2 düşer;
+  koşulan K = 3 (Aşama-1 hücreleri).
+  KILL DEFTERİ: kill#1 şasi bayt-özdeş GEÇTİ · kill#2 İLK koşumda DÜŞTÜ ve koşum DURDU —
+  teşhis: çıplak (fill/next_open−1)==slip sınaması dolumdaki likidite terimini
+  (broker.py IMPACT_COEF·qty/adv) ve defterin 4-hane yuvarlamasını bilmiyordu; sınama
+  GEVŞETİLMEDİ, TAMAMLANDI (ham girdiler sarmalanıp likidite terimi ayrıştırıldı, tolerans
+  hâlâ 1e-9, kalıntı satır satır açık) · kill#4 motor sha değişmedi GEÇTİ.
+  BAĞLAM (kartın kendi beyanlı sınırı korunur): bu kart friksiyonun NE OLDUĞUNU ölçmez —
+  "şu kadar olsaydı ne olurdu"yu ölçer. Gerçek friksiyon tahmini hâlâ n=4 (EDG-037 kill#1
+  damgası AYAKTA). AMA: EDG-038'in kanonik ölçütü giriş bacağında medyan +29 bps demişti;
+  o tahmin doğruysa sistem slip25-35 bandındadır ve oradaki sayılar −13.7k/−25.7k'dır.
+  Dokuz replay hükmüne düşülen §E şerhi artık RAKAMLIDIR.

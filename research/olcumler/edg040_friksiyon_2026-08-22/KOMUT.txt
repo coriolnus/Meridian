@@ -1,0 +1,50 @@
+# EDG-2026-040 · friksiyon-dayanıklılık taraması (2026-08-22)
+# Kart: research/cards/EDG-2026-040-friksiyon-dayaniklilik.yaml (OKU-DOKUNMA; eşik/kill/kapı
+#   ORADA DONUK — hüküm Rol-1'in, bu koşum yalnız SAYI getirir)
+#
+# ŞASİ: edg032b_tamsatir_2026-08-13/olcum.py YENİDEN KURULMADI — importlib ile modül olarak
+#   yüklendi, `SANDBOX`ı bu dizine çevrildi (exe006b deseni AYNEN; artefakt koruması YAPISAL),
+#   `kosum(run, smoke)` yolu olduğu gibi çağrıldı. İmza tahmini yok (exe006 2026-08-17 dersi).
+#
+# ENJEKSİYON NASIL: TEK değişken `goal.slippage_bps`. Okuyucu zinciri koddan okundu:
+#   backtest.py:238 `slip = float(goal.get("slippage_bps", 5))` → :240 PaperBroker(...) →
+#   broker.py:452 `self.slip = slippage_bps/10000`. Şasi goal'ü `config.goal()` derin
+#   kopyasından alır ve kendi enjeksiyonlarını (slot/size/zarf) O SÖZLÜĞE yapar; bu ölçüm
+#   `config.goal`u sarmalayıp AYNI sözlüğe `slippage_bps` yazar — edg032b'nin goal/param
+#   yolunun kendisi, bir adım önce. DOSYA DEĞİŞMEZ (şasinin config-sha assert'leri 032
+#   kaydıyla bayt-aynı kalır); sarmalayıcıya `cache_clear` taşınır (reload_config okuyucusu).
+#   Motor dosyaları YAMASIZ; tüm kancalar süreç-içi ve bloklu (finally ile geri alınır).
+#
+# KONTROL@5 ENJEKSİYON AÇIKKEN koşuldu: bayt-özdeşlik böylece şasiyi VE enjeksiyon yüzeyinin
+#   nötrlüğünü BİRLİKTE kanıtlar — hücreler tabandan yalnız SAYIYLA ayrılır.
+#
+# ÖZ-SINAMA (kill#2) NEDEN KAYNAKTAN: defter `entry` 4 haneye yuvarlı VE replay `adv=`
+#   geçirdiği için dolumda likidite terimi var (broker.py:600, IMPACT_COEF·qty/adv; donmuş
+#   edg032b defterinde ölçüldü: giriş kalıntısı 5,0017–5,3639 bps). (fill/next_open−1)==slip
+#   1e-9'da ancak yuvarlanmamış dolumla ve likidite terimi ayrıştırılarak sınanır →
+#   PaperBroker.fill_entry/close_position sarmalanıp ham girdiler yakalandı. Dört sınama:
+#   G1 broker.slip==bps/1e4 · G2 |fill/(next_open·(1+cf·qty/adv))−1−slip|≤1e-9 ·
+#   Ç1 round(raw_exit·(1−slip),4)==defter['exit'] (deftere çivili) · Ç2 çıkış özdeşliği ≤1e-9.
+#   Ham kalıntı (likidite terimi) her satırda AÇIK raporlanır — gizlenmez. Alan adları
+#   DEFTERDEN okundu (entry/exit/qty/ts_open/pnl_dollars); islem.net_pnl alanı YOK, net P&L
+#   `performans.net_pnl_trades`ten (exe006 2026-08-17 tuzağı). PF şaside yok → tam defterden
+#   Σ(pnl>0)/|Σ(pnl<0)| (EDG-037 tanımı; donmuş defterde 1,1119 birebir doğrulandı).
+#
+# ΔP&L CI: EŞLENİK ay-kümeli bootstrap — birim=AY, iki kol AYNI ayı görür, B=5000,
+#   seed=20260812, yüzdelik (edg035 yöntemi; exe006 O3_delta_pnl_ci.json biçimi).
+#
+# AŞAMA-2 (kartta donuk kapı: slip15'te C+mb net P&L > 0 ise): B = slot5+1,0R (edg023/026
+#   "B_slot5_r10"), C(mb'siz) = slot20+0,5R + mb süzülü. mb bugünkü motorda ARMED_SETUPS'ta
+#   ve SONDA (strategy.py:1050); şasi buna assert koyar → liste DEĞİŞTİRİLMEZ, `scan_entry`
+#   sarmalanıp momentum_burst sinyali None'a süzülür. scan_entry ilk-eşleşme sıralı ve mb
+#   SONDA olduğundan (strategy.py:1090) süzme listeden çıkarmakla BİREBİR eşdeğerdir.
+#
+# K DEFTERİ: Aşama-1 K=3 (slip15/25/35, kartta kayıtlı). Kapı kapalıysa Aşama-2'nin 2
+#   hücresi KOŞULMAZ ve K'dan 2 düşer (kart success_metric, donuk). Kontrol@5 hücre DEĞİL,
+#   şasi kontrolüdür (kart: "ŞASİ KONTROLÜ (hücre DEĞİL)").
+#
+# [1] DUMAN (~2×2 dk) — kablo: kontrol@5 duman + slip15 duman, duman bayt-kıyas + öz-sınama
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg040_friksiyon_2026-08-22/olcum.py --smoke 2>&1 | tee research/olcumler/edg040_friksiyon_2026-08-22/kosum_smoke.log
+#
+# [2] TAM (~13 dk/koşum · Aşama-1: kontrol+3 hücre ≈ 55 dk · kapı açılırsa +2 hücre ≈ +27 dk)
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg040_friksiyon_2026-08-22/olcum.py 2>&1 | tee research/olcumler/edg040_friksiyon_2026-08-22/kosum_tam.log
