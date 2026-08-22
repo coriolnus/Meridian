@@ -58,3 +58,8 @@ research/olcumler/*/seanslar_*.json
 research/olcumler/*/kosum_*.log
 research/olcumler/*/state_*/
 research/olcumler/*/sandbox/
+
+# SQLite okuma yan-ürünleri (2026-08-22): ajanlar donmuş DB kopyalarını okuyunca doğar,
+# kanıt değildir ve her okumada yeniden doğar — dagit temiz-ağaç kapısını gereksiz kirletiyordu
+*.db-shm
+*.db-wal
