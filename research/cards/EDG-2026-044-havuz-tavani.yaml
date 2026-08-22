@@ -1,0 +1,42 @@
+card_id: EDG-2026-044
+family: kaynak_tavani
+thesis: >
+  Prefill havuzunun cpu−2 tavanı bir tasarım tercihi değil, 2026-08-03 vakasının YAMASIDIR:
+  iki işçi iki saat %99,9 CPU'da koşup panoyu 8,8-10,4 sn'ye boğmuştu (o gün öğrenme API
+  sürecinin İÇİNDE ipliklerdi). Ö-50 (2026-08-22 ölçümü) riski OTOMATİK YOL İÇİN YAPISAL
+  değiştirdi: öğrenme ayrı süreçte (CPUWeight=50), API'de hermes ipliği 0. Ö-50'nin kendi
+  şartı: "kazanç duvar-saati cinsinden ölçülmeden eşik değişmez" — bu kart tam onu ölçer.
+  TEZ: 4 çekirdekli A1'de işçi 2→3 (cpu−1), arama duvar-saatini anlamlı kısaltır VE API'yi
+  bozmaz. YAN ŞART (kanıttan): sprint.py:672'deki İKİZ FORMÜL — tavan değişirse o kopya
+  sessizce ayrışır; herhangi bir uygulama İKİSİNİ TEK KAYNAĞA indirmeden geçersizdir.
+evidence_refs:
+  - "research/olcumler/wp3_havuz_tavani_kanit_2026-08-22/ (01-04: vaka + canlı CPU/PSI/iplik ölçümleri)"
+  - "reflect.py _havuz_tavani: max(1, min(tavan, cpu-2)); çağıranlar 4-tavanlı prefill + 3-tavanlı eksik-sonda"
+  - "Ö-50 ölçümü: API'de 8 iplik hepsi uvicorn, hermes 0; learn ayrı süreç CPUWeight=50"
+  - "atıfsız 0,8-çekirdeklik API patlamaları gözlendi (5 sn pencere) — kill eşiği bunu hesaba katar"
+universe: >
+  AŞAMA-1 (yerel, koşulsuz): SABİT bir arama iş yükü (aynı tohum/aynı aday kümesi) 2 vs 3
+  işçiyle, YEREL makinede — duvar-saati + işçi başına CPU. Kazanç < %20 ise kart burada
+  KAPANIR (değmez). AŞAMA-2 (canlı A1, KOŞULLU + OPERATÖR ONAYLI): bakım penceresinde tek
+  kontrollü koşum — arama sırasında API p95 (curl döngüsü) + PSI cpu. CANLI VARSAYILAN
+  DEĞİŞMEZ: bu kart ölçer; tavanı değiştirme kararı ayrı operatör kalemidir.
+features_asof: >
+  Ö1 duvar-saati oranı (3-işçi/2-işçi) · Ö2 arama sırasında API p95 ve PSI (aşama-2) ·
+  Ö3 ikiz-formül teklemesi: uygulama önerisi tek-kaynaklı mı (sprint.py:672 dahil).
+parameter_grid:
+  isci: [3]   # K += 1 (taban 2-işçi bugünkü davranış, K harcamaz)
+cost_model: yok
+success_metric: >
+  KARAR KURALI (donuk): Aşama-1 kazanç ≥ %20 VE Aşama-2'de arama-sırası API p95 ≤ 1 sn VE
+  PSI cpu full birikimi 0 → tavan cpu−1 OPERATÖR KALEMİ olarak açılır (tek-kaynak şartıyla).
+  Kazanç < %20 → kart kapanır, tavan kalır. p95/PSI bozulursa → kapanır, tavan kalır.
+kill_criteria:
+  - "aşama-2 operatör onayı olmadan canlıda koşulursa geçersiz"
+  - "ikiz formül (sprint.py:672) tek kaynağa inmeden tavan değişikliği önerilirse geçersiz"
+  - "API p95 ölçümü arama koşarken alınmazsa geçersiz (boşta p95 anlamsız)"
+k_registry: {registered_at: "2026-08-22", trial_ids: [pending-044-isci3]}
+status: registered   # 2026-08-22 Rol-1 — ön-kayıt (kanıt: wp3_havuz_tavani_kanit).
+beyanlı_sinirlar: >
+  (1) Yerel makine A1 değil — aşama-1 yalnız KABA eleme; nihai sayı A1'den. (2) Atıfsız API
+  patlamaları (0,8 çekirdek) bu kartın konusu değil ama p95 ölçümünü kirletebilir — koşumda
+  eşzamanlılık künyelenir. (3) 4 çekirdekte cpu−1=3; çekirdek sayısı değişirse kart geçersiz.

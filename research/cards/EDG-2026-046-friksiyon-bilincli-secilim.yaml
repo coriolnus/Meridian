@@ -1,0 +1,48 @@
+card_id: EDG-2026-046
+family: secilim_friksiyon
+thesis: >
+  EDG-040 ACİL kaleminin (b) bacağı. Keşif (2026-08-22, n=13 betimleyici) iki şey gösterdi:
+  |friksiyon| TAHMİN EDİLEBİLİR (menzil% Spearman +0,90 · ATR% +0,82 — ATR bir PLAN ALANI,
+  seçilim anında elde), İŞARET edilemez; ve naif likidite hipotezi TERS (en pahalı dolumlar
+  en likit isimlerde — MRVL ADV$ 4,7 mlr +327 bps). Motorun tek isim-değişken friksiyon
+  terimi (katılım 0,02-0,38 bps) gerçek varyansı temsil etmiyor. TEZ: seçilim ATR%-cezalı
+  hâle getirilirse (beklenen-|friksiyon| terimi), paket YÜKSEK-friksiyon dünyasında korunur
+  ve DÜŞÜK-friksiyon dünyasında bozulmaz. İki dünya × iki seçilim = 4 hücre; "yaltaklanan
+  dünya seçimi" tuzağına karşı karar kuralı İKİ dünyada birden şart koşar.
+evidence_refs:
+  - "docs/KESIF-FRIKSIYON-BILINCLI-SECILIM-2026-08-22.md (aile tablosu + ön-kanıt; çekim sha 85d5ace2…)"
+  - "EDG-2026-040: paket +10bps'te negatif, hasar FİYAT kanallı"
+  - "EDG-2026-038: isim-içi varyans 15↔134 bps; kanonik ölçüt D1"
+  - "EDG-2026-042: K1 betimleyici medyan +15, uçlar −131..+327 — ilişki n≥30'da bağımsız sınanacak"
+universe: >
+  edg032b şasisi AYNEN; İKİ knob: (1) friksiyon dünyası — {sabit-5bps (bugünkü model),
+  ATR%-orantılı: slip_i = 5bps × (ATR%_i / medyan-ATR%), edg040 enjeksiyon deseni+öz-sınama} ·
+  (2) seçilim — {mevcut skor, ATR%-cezalı: skor' = skor − λ·z(ATR%), λ TEK NOKTA donuk: z-skor
+  başına 5 puan}. λ taraması YOK (grid şişirme; başka λ ayrı kart). CANLI DEĞİŞMEZ.
+features_asof: >
+  4 hücre: {sabit, ATR-orantılı} × {mevcut, cezalı}. Hücre başına n · net P&L · PF · dd ·
+  seçilim farkı (kaç plan yer değiştirdi) · ΔP&L eşlenik ay-kümeli bootstrap (B=5000, seed
+  20260812) — cezalının kıyası AYNI dünyadaki mevcut-seçilim hücresine karşı.
+parameter_grid:
+  hucreler: [sabit_mevcut, sabit_cezali, atr_mevcut, atr_cezali]   # K += 4
+cost_model: gercek_olculen_bant
+success_metric: >
+  KARAR KURALI (donuk, iki-dünya şartı): Δ(cezalı−mevcut | ATR-dünyası) CI-alt > 0 VE
+  Δ(cezalı−mevcut | sabit-dünya) CI-üst > −(kayıp toleransı 0) → "friksiyon-bilinçli seçilim
+  ADAY" (operatör kalemi; canlıya alma kararı ayrı). ATR-dünyasında ayrışmıyorsa → mekanizma
+  kanıtsız, kart kapanır. Sabit-dünyada ANLAMLI kaybediyorsa → aday DEĞİL (sağlam dünyada
+  bedel ödenmez). EDG-042 bağı: gerçek |bps|~ATR% ilişkisi n≥30'da ÇÜRÜRSE (Spearman CI 0-içi)
+  bu kartın hükmü ne olursa olsun ŞERHLENİR — ilişki varsayım değil, paralel ölçülen öncüldür.
+kill_criteria:
+  - "şasi bayt-özdeş kontrol (sabit_mevcut ≡ edg032b) düşerse DURUR"
+  - "ATR-orantılı enjeksiyonun öz-sınaması (satır başına beklenen slip, 1e-9) geçmezse hücre geçersiz"
+  - "λ ölçüm sırasında değiştirilirse geçersiz (tek nokta donuk)"
+  - "seçilim cezası ATR dışı bir alana genişletilirse geçersiz (menzil% seçilim anında YOK — PIT)"
+  - "iki-dünya şartı atlanıp tek dünyadan hüküm çıkarılırsa geçersiz (yaltaklanan-dünya tuzağı)"
+k_registry: {registered_at: "2026-08-22", trial_ids: [pending-046-sm, pending-046-sc, pending-046-am, pending-046-ac]}
+status: registered   # 2026-08-22 Rol-1 — ön-kayıt (ACİL (b) bacağı; hammadde: keşif belgesi).
+beyanlı_sinirlar: >
+  (1) |bps|~ATR% ilişkisi n=13 betimleyici — kart ilişkiyi VARSAYMAZ, koşullu dünyayı ölçer;
+  öncül EDG-042'de bağımsız birikir. (2) İşaret tahmin edilemediği için ceza |friksiyon|
+  beklentisine — yön alfası iddiası YOK. (3) ATR%-orantılı dünya da bir MODELDİR (gerçek
+  isim-dinamiği değil); iki-dünya tasarımı bu belirsizliği sınır içinde tutar.

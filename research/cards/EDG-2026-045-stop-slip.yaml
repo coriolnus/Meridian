@@ -1,0 +1,47 @@
+card_id: EDG-2026-045
+family: friksiyon_olcumu
+thesis: >
+  Replay'in bar-içi stop dolumu TAM eff_stop seviyesinde gerçekleşmiş sayılır (broker.py
+  _touch_exit kademe-2; kademe-1 stop_gap açılışta GERÇEK fiyat basar, o dürüst) — yani
+  stop-tetik slipajı SIFIR varsayılır. Bu varsayımın dokunduğu para BÜYÜK: holdout teşhisi
+  stop payının %48→%72'ye çıktığını ve stop_gap 11 işlemin hasarın YARISI olduğunu ölçtü;
+  EDG-040 paketi friksiyona ölümcül duyarlı buldu ama enjeksiyonu İKİ BACAĞA simetrikti —
+  stop-tetik kanalını AYRICA sınamadı. TEZ: bar-içi stop dolumlarına ek slipaj {5,10,20} bps
+  enjekte edildiğinde paket P&L'i nasıl davranır — stop-slip varsayımı başabaşı kaydırıyor mu?
+  23b MUTABAKATI (kanıttan): 23b'nin "çıkış slipajı örneklemi" sorusu GERÇEK dolum tarafında
+  EDG-2026-042 K2/K3'te yaşıyor; bu kart REPLAY-VARSAYIM tarafıdır — iki kart AYNI gerçeğin
+  iki yüzü ve hükümleri birlikte okunur (042'nin K3 bandı geldiğinde).
+evidence_refs:
+  - "research/olcumler/wp1_23d_kanit_2026-08-22/ (kod yolu + örneklem/etki sayıları + 23b mutabakatı)"
+  - "wp3_holdout_teshis: stop payı %48→%72, stop_gap 11 işlem = hasarın yarısı"
+  - "EDG-2026-040: simetrik enjeksiyon deseni + öz-sınama (likidite-ayrıştırmalı, 1e-9) — AYNEN devralınır"
+  - "EDG-2026-042 K3 (çıkış-stop kovası): gerçek stop dolumları biriktikçe gerçek bant"
+universe: >
+  edg032b şasisi AYNEN; TEK değişken: bar-içi stop dolumuna ("stop" reason, kademe-2) ek
+  aleyhte slipaj — eff_stop×(1−ek_slip) satış dolumu. stop_gap (kademe-1) DOKUNULMAZ (zaten
+  gerçek fiyat). Enjeksiyon edg040 deseniyle (motor yamasız, param kanalı; öz-sınama uyarlanır:
+  stop dolumlarında (1 − fill/eff_stop) == ek_slip, 1e-9). Kapı-kapalı/mevcut yasa aynen.
+features_asof: >
+  Üç hücre vs taban(ek_slip=0, edg032b donmuş): n · net P&L · PF · max-dd · stop-çıkış R
+  dağılımı · ΔP&L eşlenik ay-kümeli bootstrap (B=5000, seed 20260812).
+parameter_grid:
+  stop_ek_slip_bps: [5, 10, 20]   # K += 3
+cost_model: gercek_olculen_bant
+success_metric: >
+  Ö1 (donuk): ek_slip=10 hücresinde paket net P&L işareti ve ΔP&L CI'sı. CI-üst < 0 → "stop-slip
+  varsayımı P&L'i ANLAMLI şişiriyor" → EDG-040 başabaş bandı şerhlenir (gerçek başabaş daha da
+  aşağıda) ve replay hükümlerine stop-slip şerhi düşer. CI 0-içi → şerh yok, varsayım bugünkü
+  kanıtla taşınabilir. Ö2: EDG-042 K3 gerçek bandı geldiğinde hangi hücrenin konuştuğu — iki
+  kaynaklı okuma (043 deseni; bant gelmeden replay hücresinden tek başına hüküm çıkarılmaz).
+kill_criteria:
+  - "şasi kontrolü: ek_slip=0 koşumu edg032b ile bayt-özdeş değilse DURUR"
+  - "öz-sınama: stop dolumlarında (1−fill/eff_stop)==ek_slip 1e-9'da gösterilemezse hücre geçersiz"
+  - "stop_gap dolumlarına enjeksiyon sızarsa geçersiz (kademe-1 gerçek fiyattır)"
+  - "motor sha koşum içinde değişirse geçersiz (bugünkü uçuş-commit dersi: koşum sırasında motor commit'i de yasak)"
+  - "Ö2 okuma kuralı ihlali: 042-K3 bandı gelmeden bu kartla EDG-040 hükmü revize edilirse geçersiz"
+k_registry: {registered_at: "2026-08-22", trial_ids: [pending-045-s5, pending-045-s10, pending-045-s20]}
+status: registered   # 2026-08-22 Rol-1 — ön-kayıt (23d'nin kartı; kanıt wp1_23d_kanit).
+beyanlı_sinirlar: >
+  (1) Sabit-bps ek-slip gerçek stop dinamiğini (hızlı piyasada kayma likiditeye bağlı) temsil
+  etmez — alt sınır sınıfı. (2) trail_stop aynı kademeden geçer, ayrı kova açılmadı (grid
+  şişirme); trail payı sonuçta künyelenir. (3) Gerçek stop-slip bandı 042-K3'ün işidir.
