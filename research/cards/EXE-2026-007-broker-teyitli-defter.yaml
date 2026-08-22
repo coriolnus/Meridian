@@ -70,9 +70,23 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-21", trial_ids: [pending-EXE-007-broker-teyitli-defter]}
 
-status: registered   # yazım 2026-08-21, repoya KAYIT 2026-08-22 Rol-1 (arada dosya
-                     # scratchpad'de bekledi; eşik/K/kill-list yazıldığı gibi, hiç dokunulmadı).
-                     # Bulgu ölçüldü; kart o ölçümü SÜREKLİ hâle getirir.
+status: measured     # 2026-08-22 Rol-1 HÜKMÜ — aşağıda. (ön-kayıt 2026-08-22, ölçüm aynı gün)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-22): ölçüm ajanı ön-ölçümü BİREBİR yeniden üretti
+  (research/olcumler/exe007_broker_teyit_2026-08-22/ — canlı defter A1'den salt-okunur çekildi,
+  yazım koruması yapısal, engellenen deneme 0).
+  Ö1 = 2/8 = %25 (teyitli 6 · karşılıksız 2 · olculemedi 0 · tohum penceresinde 0 — kill
+  kriteri tetiklenmedi). Ö2 = +277,99 (ALL T00096 −450,38 · VLO T00097 +728,37).
+  Ö3 = taban 887 (`hermes_status.last_reflect_at`; _horizon_ok hermes_runtime.py'de — kartın
+  "reflect" varsayımı ölçümde düzeltildi) · karşılıksız indeksler 885/886 TABANIN ALTINDA ·
+  bugünkü ufku besleyen 6 satırın 0'ı karşılıksız · gerçekleşen TEK yansıma (2026-08-17) iki
+  karşılıksız satırı penceresinde TÜKETTİ.
+  KARAR KURALI ATEŞLEDİ (Ö1 > 0): damga sözleşmesi YETERSİZ → `ledgerstamp`e broker-teyit
+  boyutu EKLENDİ (commit 55d72b3: TEYIT_FIELD dört değerli eksen · reconcile'da kendi kendini
+  iyileştiren damgalayıcı · kırpık defterde "karşılıksız" DENMEZ kuralı · pano okuyucusu).
+  Damga geçmişe UYGULANMADI: dağıtım sonrası ilk reconcile turu damgasız satırları kendisi
+  damgalar (tek-atış yerine kuyruk deseni — E2 yamasının dersi).
 
 beyanlı_sinirlar: >
   (1) Bu kart "işlem broker'da VAR MI" sorusunu ölçer; "doğru fiyattan/miktardan mı" sorusunu

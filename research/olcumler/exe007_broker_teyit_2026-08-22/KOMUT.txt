@@ -1,0 +1,59 @@
+# EXE-2026-007 — broker-teyitli defter ölçümü (2026-08-22)
+# Kart: research/cards/EXE-2026-007-broker-teyitli-defter.yaml (OKU-DOKUNMA; eşleşme kuralı
+#   ve kill kriterleri ORADA DONUK, betik yalnız uygular)
+#
+# NEDEN İKİ AŞAMA: ölçümün iki defteri iki ayrı makinede yaşıyor.
+#   (a) CANLI defter A1'de (Oracle) — yereldeki state/trades.jsonl 95 satırlık DONUK KALINTIDIR
+#       (store.py "bayat-defter-kalıntısı" bulgusunun ta kendisi); onu okumak "ölçüm bağlamı
+#       tuzağı"na düşmek, yani SAHTE sayı üretmek olurdu. Canlı okuma A1'de `meridian.store`
+#       üzerinden yapılır (DB devredeyse otoriter kaynak DB'dir; store bunu kendisi çözer).
+#   (b) BROKER defteri Alpaca'da — yerelden salt-okunur GET (anahtarlar yerelde çözülüyor;
+#       çıplak urllib macOS'ta sertifika hatası veriyor, adaptörün kendi kullandığı httpx kullanıldı).
+#
+# [1] CANLI HAM KANIT — ssh-stdin deseni (emsal: edg037/edg038 canli_cek.py). Canlıya DOSYA
+#     YAZILMAZ, hiçbir POST/emir yok; A1'de yalnız store.read_jsonl + store.read_json koşar:
+ssh -i ~/.ssh/oci-a1.key -o BatchMode=yes ubuntu@130.61.126.87 \
+    'cd /opt/meridian && ./.venv/bin/python -' \
+    < research/olcumler/exe007_broker_teyit_2026-08-22/canli_cek.py \
+    > research/olcumler/exe007_broker_teyit_2026-08-22/canli_ham.json
+#     Çekilen: trades.jsonl TAMAMI (893 satır; Ö3 indeks kıyası ham liste üzerinde) +
+#     hermes_status.json {last_reflect_at, reflections, ...}. Ö3'ün taban kaynağı TAHMİN DEĞİL,
+#     koddan okundu: hermes_runtime._restored_baseline (hermes_runtime.py:360)
+#     `store.read_json("hermes_status.json").get("last_reflect_at")` okur ve _horizon_ok
+#     `trades[last_at:]` dilimini BU değerle kurar (hermes_runtime.py:493).
+#
+# [2] ÖLÇÜM — broker çekimi + kovalama + Ö1/Ö2/Ö3 (~10 sn):
+uv run python research/olcumler/exe007_broker_teyit_2026-08-22/olcum.py
+#
+# TASARIM KARARLARI (hepsi beyanlı, hiçbiri kuralı gevşetmez):
+#   - TAM SAYFALAMA: page_size=100 SABİT (>100 yanıtı SÖZLÜĞE çevirir — kill kriteri; yanıt tipi
+#     her sayfada isinstance(list) ile denetlenir, sözlük gelirse ölçüm "broker okunamadı"ya düşer,
+#     eksik veriyle 'karşılıksız' DENMEZ). page_token=son kaydın id'si; sayfa <100 dönünce biter.
+#     after=2026-07-14T00:00:00Z (tam ISO — çıplak tarih boş döndürür; pencere başı kartın beyanlı
+#     sınırı). Bu koşumda 58 aktivite tek sayfada geldi (44 FILL) → sayfalama tetiklenmeden tamdır.
+#   - TARİH GRANÜLERLİĞİ: defter ts_open/ts_close ÇIPLAK TARİH; fill transaction_time UTC ISO.
+#     Eşleşme GÜN düzeyinde: transaction_time[:10] ∈ [ts_open, ts_close] (iki uç dahil). Normal
+#     seans dolumları (13:30–20:00 UTC) UTC gününde piyasa gününe eşittir — varsayım beyanlı.
+#   - ÜÇ KOVA kartta donuk: teyitli = ≥1 FILL · karşılıksız = 0 FILL · olculemedi = satır
+#     2026-07-14 öncesine taşıyor YA DA broker okunamadı. olculemedi hiçbir kovaya katılmaz.
+#   - TOHUM: kaynak==replay_seed satırlar kıyasa GİRMEZ (kill kriteri); bu koşumda reset-sonrası
+#     pencerede 0 tohum satırı var (kova_sayilari.tohum_kiyas_disi=0).
+#   - YAZMA GÜVENLİĞİ (yapısal): ölçüm süreci meridian.store'un yazım fonksiyonlarını
+#     (append_jsonl/write_json/...) SAYAÇLI no-op'a bağlar — obs.warn'ın state/events.jsonl
+#     aynalaması dahil hiçbir kütüphane yan etkisi yerel state'e satır düşüremez. Bu koşumda
+#     engellenen deneme sayısı: 0 (sonuc.json yazim_guvenligi).
+#   - Miktar/fiyat eşleşmesi ARANMADI — kart bunu açıkça dışlıyor ("var mı yok mu"; "doğru mu"
+#     mirror_divergence'ın işi ve o alan ölçülmüş biçimde güvenilmez).
+#
+# ÇIKTILAR (bu dizinde): canli_ham.json (sha256_16 sonuc.json'da) · broker_ham.json (tam aktivite
+#   dökümü, denetlenebilir) · sonuc.json (O1/O2/O3 + kova_sayilari + satir_dokumu +
+#   olculemedi_nedenleri + on_olcum_kiyasi).
+#
+# SONUÇ ÖZETİ (sayılar; hüküm Rol-1'in):
+#   Ö1 = 2/8 = 0.25 · Ö2 = +277.99 (ALL T00096 −450.38 · VLO T00097 +728.37)
+#   Ö3 = taban 887 (hermes_status.last_reflect_at) · defter 893 · karşılıksız indeksler 885/886
+#        (ikisi de tabanın ALTINDA) · tabandan sonraki 6 satırın 0'ı karşılıksız ·
+#        reflections=1 (2026-08-17) ve iki karşılıksız satır o TEK yansımanın penceresindeydi
+#   ÖN-ÖLÇÜMLE TUTARLI: on_olcum_kiyasi.tutarli = true (defter/taban/indeksler/oran/P&L birebir).
+#   Not: ön-ölçüm 55 aktivite görmüştü (2026-08-21, after=2026-06-01); bu koşum 58 gördü —
+#   fark 08-21 kapanışlarının (MRVL/LLY) yeni aktiviteleri, ayrışma değil.
