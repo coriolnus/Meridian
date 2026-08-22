@@ -64,7 +64,23 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-14T2x", trial_ids: [pending-EXE-005-dinlenen-limit]}
 
-status: registered   # 2026-08-14 Rol-1 — ön-kayıt. Ölçüm v245 dağıtımı sonrası TEMİZ ağaçta (EDG-033 dersi).
+status: measured     # 2026-08-22 Rol-1 HÜKMÜ (Ö-51d) — aşağıda. (ön-kayıt 2026-08-14)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-22): kartın sorusu GEÇERLİ ama CANLI YASADA CEVAPLANAMAZ — B kolu
+  örneklemi YAPISAL olarak boş (limit = trigger·1,04 = max_chase tavanıyla birebir; max_chase
+  ÖNCE sınanır → kapının ateşleyebileceği aralık BOŞ KÜME; BULGU-B-KOLU.md, ölçüldü:
+  trigger=100, atr ∈ {None,1,2,4} dördünde de ulaşılmaz). Bu bir ölçüm başarısızlığı DEĞİL,
+  kendisi bir bulgudur: E1 hükmünün canlı yapılandırmayı BAĞLAMADIĞINI gösterdi.
+  BULGU'nun (a)/(b) sorusu ARDIL KARTTA cevaplandı: dar-tavan bölgesi `EXE-2026-006` olarak
+  AYRI ön-kayıtla koşuldu (K=8 ORADA sayıldı) ve E1 hükmü YENİDEN AÇILDI (H1 monotonluk düştü,
+  H2 ölçülemedi, Ö1 kimlikli ölçümde %61-74 → K1 şerhi AÇIK).
+  K-DEFTERİ KARARI: bu karta EK K YAZILMAZ — dar-tavan grid'i bu kartın grid'ini değiştirmek
+  yerine ardıl kartta ön-kayıtlandı; doğru yol da buydu (eşik sonradan değişmez, bölge beyanı
+  yeni karttır). A kolu bit-özdeşlik kapısı bu kartın kalıcı mirası: 2026-08-22'de yeniden
+  koşuldu ve dört tavanda da BAYT ÖZDEŞ çıktı.
+  AÇIK KALAN TEK ŞEY OPERATÖR KALEMİ: D5 limit-tavanı kararı (canlı yasada tavan max_chase'ten
+  KÜÇÜK seçilirse kapı canlanır) — o karar B4 ile birlikte §5'te durur; bu kart onu VERMEZ.
 
 ozdeslik_hukmu: >
   **A KOLU ÖZDEŞLİK KAPISININ TANIMI DARALTILDI — ROL-1 HÜKMÜ, operatör onaylı (2026-08-17).**
