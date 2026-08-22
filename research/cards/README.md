@@ -34,4 +34,4 @@ registered → measuring → promoted | archived.
   okuması bile (+21,1bps) eşiğin altında — EAP hükmünü değiştirmez, ölçüm-altyapısını iyileştirir.
 
 ## Numara notu
-- EDG-2026-019 KULLANILMADI (2026-08-03 tespiti: 018→020 atlandı, kasıtsız boşluk; retro doldurma YAPILMAZ — numara emekli).
+- EDG-2026-019: 2026-08-03'te "kasıtsız boşluk, numara emekli" ilan edilmişti; **2026-08-13'te BİLİNÇLİ yeniden kullanıldı** (`EDG-2026-019-skill-gorus-defteri` — numara grep'lenip boş doğrulanarak; tarihçe `test_kart_kimlik_v219` docstring'inde). Emeklilik notu o gün GÜNCELLENMEMİŞTİ — çelişki 2026-08-22'de yakalandı (Ö-49 bayat-beyan sınıfı) ve BU satırla kapatıldı: kart kimliği kalır (yeniden adlandırmak 151-atıf sınıfı kırılma yaratırdı), bayat olan emeklilik beyanıydı.
