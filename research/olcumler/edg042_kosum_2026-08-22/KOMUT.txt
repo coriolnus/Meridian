@@ -1,0 +1,58 @@
+EDG-2026-042 — HAFTALIK OTOMATİK KOŞUM (2026-08-22, zamanlanmış görev `edg042-friksiyon-haftalik`)
+Bu, otomatik takvimin İLK fire'ı. Aynı gün içinde (13:36Z) yapılan betimleyici ara-koşumdan
+~1,5 saat sonra (15:05Z) koştu; 2026-08-22 CUMARTESİ olduğu için arada seans/reconcile turu YOK.
+
+[0] Reçete kopyası (kartın donuk reçetesi: research/olcumler/edg042_betimleyici_2026-08-22/)
+    canli_cek.py  sha256 = 4c6b85a53f5efeb47234612e90f6e70ebee1ead62cad0ed6ccb8a66f9929e96d
+                  (BAYT-ÖZDEŞ kopya — değiştirilmedi)
+    olcum.py      donuk kopya (olcum.py.donuk_kopya)
+                  sha256 = eaf45a03aea037064438e31377ab96c2159a35a1652acde28cf518c99dc6a597
+    olcum.py      KOŞULAN sürüm (aşağıdaki [0b] işaret düzeltmesiyle)
+                  sha256 = 6d33a58cde6b54c72d302d0df398b6606ab2a802a8ac8ae1b44d7e448621008f
+
+[0b] REÇETE DÜZELTMESİ (Rol-1, ÖLÇÜMDEN ÖNCE — eşik/karar kuralı DEĞİŞMEDİ)
+    NE: K2/K3 çıkış bps'inin İŞARETİ. Donuk kopyada `bps_delta(alpaca_fill_price, exit)`;
+        kartta (universe, DÜZELTME 2026-08-22) `aleyhte_bps = −bps_delta(alpaca_fill_price, exit)`.
+    NEDEN: kart kazanır (CLAUDE.md §3 + görev talimatı [0]). Kartın DÜZELTME notu bu çelişkiyi
+        zaten kayda geçirmişti; donmuş betik güncellenmemişti. Hata MADDİ: örn. T00103 LLY
+        exit=1229,8848 / afp=1244,7433 — long satışta DAHA YÜKSEK dolum yani LEHTE; eski formül
+        bunu "+120 bps ALEYHTE" diye yazardı, yani hükmü ters yöne çevirirdi.
+    NE ZAMAN: ölçülebilir teyitli çıkış satırı sayısı HÂLÂ 0 iken. Hiçbir sonuç sayısına
+        bakılarak seçilmedi; gerçek snapshot üzerindeki çıktı yama öncesi/sonrası ÖZDEŞ.
+    DOĞRULAMA: sentetik iki teyitli satırla işaret sınaması (scratchpad, state'e dokunmadan) —
+        düşük dolum → +100,0 bps (aleyhte), yüksek dolum → −100,0 bps (lehte). GEÇTİ.
+    SINIR: kartın işaret cümlesi yalnız LONG için yazılıdır; bugünkü live_paper örnekleminin
+        8/8'i long. Short satır çıkarsa reçete KARTSIZ genişletilemez.
+
+[1] Canlı ham çekim (salt-okuma, ssh-stdin; canlıya ve state/'e TEK BAYT yazılmadı):
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 \
+        'cd /opt/meridian && ./.venv/bin/python -' \
+        < research/olcumler/edg042_kosum_2026-08-22/canli_cek.py \
+        > research/olcumler/edg042_kosum_2026-08-22/canli_ham.json
+    çekim zamanı : 2026-08-22T15:05:40+00:00 (UTC)
+    sha256(canli_ham.json) = 155a0da2f6a600490f1f9f2de56fafa8b78caf45edb91cfc33249460a2925323
+    goal.slippage_bps (koşum günü künyesi) = 5
+    NOT: içerik, ara-koşumun snapshot'ıyla (d7eaf4b1…) `cekim_zamani` dışında AYNEN aynı
+    (diff 0 satır) — Cumartesi, defterlere yeni satır girmemiş, reconcile turu geçmemiş.
+
+[2] Ölçüm: cd research/olcumler/edg042_kosum_2026-08-22 && python3 olcum.py → sonuc.json
+
+[3] EŞİK KONTROLÜ — ÜÇ KOVADA DA EŞİK DOLMADI, HÜKÜMLÜ KOŞUM TETİKLENMEDİ. CI hesaplanmadı.
+  K1 giriş      : n=13 (eşik 30), seans=4 (eşik 10)
+                  "ÖLÇÜLEMEDİ (n=13 < 30) — sayılar betimleyicidir, istatistiksel hüküm taşımaz."
+                  medyan +15,017 bps · p25/p75 −43,038/+40,839 · min/maks −130,739/+327,46
+                  en büyük seans payı %38,5 (kill #7 eşiği %40'ın ALTINDA — şerh gerekmedi)
+                  medyan model-farkı +10,017 bps (goal.slippage_bps=5'e göre)
+  K2 çıkış-hedef: ölçülebilen n=0 (eşik 15) — 2 afp-dolu aday, İKİSİ DE broker_teyit damgasız
+                  → kill #3 gereği olculemedi; bps HESAPLANMADI.
+                  "ÖLÇÜLEMEDİ (n=0 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz."
+  K3 çıkış-stop : ölçülebilen n=0 (eşik 15) — 3 afp-dolu aday, ÜÇÜ DE damgasız (aynı neden).
+                  "ÖLÇÜLEMEDİ (n=0 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz."
+
+[4] Kıyasa girmeyenler (kartın kill kriterleri aynen uygulandı):
+    replay_seed 885 (kill #4) · alpaca_fill_beyan 0 (kill #6) · ayna+submitted fill-boş 2
+    (kart filtresi) · live_paper afp-boş 3 (kart filtresi) · sınıflanamayan exit_reason 0.
+
+[5] AÇIK KALEM (bir sonraki koşumun bağlayıcı kısıtı): 5 afp-dolu çıkış satırının 5'inde de
+    `broker_teyit` alanı BOŞ. Ö-52 teyit boyutu dağıtıldı; damga ilk reconcile turunda basılır.
+    Damga basılana dek K2/K3 ölçülemez — bu bir kusur değil SIRALAMADIR.
