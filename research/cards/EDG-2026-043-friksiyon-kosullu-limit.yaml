@@ -1,0 +1,89 @@
+card_id: EDG-2026-043
+family: friksiyon_kosullu_limit
+thesis: >
+  B4 operatör kararı (2026-08-22): E1 limit bacağı KAPALI KALIR — gerekçe artık E1'in çürüyen
+  hükmü değil, ÖLÇÜM: kapıyı açmak slip=5 modelinde dört tavanda da taban altında
+  (A kolu −8,4k…−11,1k; en iyi B hücresi bile −1,2k), kurtarılanların ort-R'si ~0, hiçbir delta
+  anlamlı değil. AMA bu gerekçenin tamamı 5 bps'lik friksiyon MODELİNDE ölçüldü — ve aynı gün
+  iki şey daha ölçüldü: (1) EDG-040: sistem friksiyona ölümcül duyarlı (başabaş 5-15 bps/bacak;
+  slip=15'te paket NEGATİF), (2) EDG-042 betimleyici: gerçek giriş friksiyonu medyan +15 bps
+  (n=13, hüküm değil) ve dağılım vahşi — en pahalı dolum +327 bps (MRVL).
+  TEZ: limit kapısının kestiği şey TAM OLARAK o pahalı-dolum kuyruğudur. Düşük friksiyonda
+  kapı net kayıp (ölçüldü); yüksek friksiyonda kesilen kuyruk pahalandıkça kapının değeri
+  İŞARET DEĞİŞTİREBİLİR. Bu kart o işaret dönüşünü ölçer: kapı-açık vs kapı-kapalı farkı,
+  slip {15, 25, 35} altında. B4'ün veriyle yeniden açılmasının ya da kalıcı kapanışının
+  TEK meşru yolu budur (operatör kararının C bacağı). EDG-040 ACİL kaleminin (b) bacağına
+  ("friksiyon-bilinçli eşik tasarımı") da ilk somut adımdır.
+
+evidence_refs:
+  - "B4 karar kaydı (ROADMAP §7, 2026-08-22): A+C — kapalı kalır + bu kart"
+  - "EXE-2026-006 + exe006b: kapı açık A kolu cap=0,01 → +12.289 (taban 20.685'e karşı −8.396); B kolu → +19.452 (−1.233); kurtarılanlar ort-R −0,08…+0,07"
+  - "EDG-2026-040 verdict: taban +20.685 → slip15 −3.067 · slip25 −13.722 · slip35 −25.681; ΔP&L CI'ları üçünde de sıfırın dışında; hasar FİYAT kanallı"
+  - "EDG-2026-042 ara-koşum: gerçek giriş friksiyonu medyan +15,0 bps (n=13, BETİMLEYİCİ); maks +327 bps — kapının keseceği kuyruk fiilen var"
+  - "23c/BULGU-B-KOLU: dinlenen-limit dolumu iç motorda modellenemiyor (yapısal) — kol ayrımı bu yüzden zorunlu"
+
+universe: >
+  edg032b şasisi AYNEN (C+mb @5R · 251 sembol · 2022-01→2026-07 · 1147 seans), İKİ knob BİRLİKTE:
+  (1) slippage_bps enjeksiyonu — EDG-040'ın reçetesi ve ÖZ-SINAMASI AYNEN (likidite terimi
+  ayrıştırılmış, tolerans 1e-9; edg040_friksiyon_2026-08-22/olcum.py deseni);
+  (2) giriş yasası — exe006 deseni AYNEN (yasa_silahli: limit_pct_cap=0,01 · limit_atr_mult=0,5
+  kod varsayılanı; goal.yaml'a DOKUNULMAZ).
+  KAPALI-KAPI HÜCRELERİ YENİDEN KOŞULMAZ: slip {15,25,35} kapı-kapalı sonuçları
+  `edg040_friksiyon_2026-08-22/` DONMUŞ kanıtından okunur (K oraya sayıldı; yeniden koşmak
+  çift sayım olurdu). Bu kartın koştuğu yalnız kapı-AÇIK hücrelerdir.
+  CANLI DAVRANIŞ DEĞİŞMEZ: ölçüm kartı; goal/emir yolu/seçilime dokunmaz.
+
+features_asof: >
+  ALTI YENİ HÜCRE: slip {15, 25, 35} × dolum kuralı {yalniz_acilis (A), dinlenen_limit (B)},
+  hepsi cap=0,01 silahlı. İKİ KOL DA GEREKLİ ve AYRI OKUNUR (exe006 kol-kimliği damgası aynen:
+  `dolum_kurali` sonucun kendisinden doğrulanır): A = iç motorun modelleyebildiği semantik,
+  B = canlı dinlenen emrin gerçeğe daha yakın semantiği; ikisinin farkı ayrıca 23c model-boşluğu
+  bandını friksiyon altında da künyeler. Her hücre: n · net P&L · PF · max-dd · NO_GO sayaçları.
+  Ö1 kıyası: Δ(açık − kapalı) aynı slip'te, EŞLENİK ay-kümeli bootstrap (B=5000, seed=20260812,
+  birim=AY, 55 ay — edg040 damgası aynen; kapalı kol edg040'ın donmuş defterinden).
+
+parameter_grid:
+  hucreler: [slip15_A, slip15_B, slip25_A, slip25_B, slip35_A, slip35_B]   # K += 6
+  # Tavan TEK (0,01 — exe006'nın en iyi hücresi; tavan taraması DEĞİL, beyanlı sınır).
+  # Kapalı-kapı hücreleri edg040'tan okunur, K harcamaz.
+
+cost_model: gercek_olculen_bant
+
+success_metric: >
+  Ö1 — İŞARET DÖNÜŞÜ (birincil, donuk): her slip'te Δ(açık−kapalı) + CI.
+  KARAR KURALI (ölçümden ÖNCE donuk; hüküm İKİ KAYNAKLI okunur):
+    (a) Ölçüm hükmü: bir slip hücresinde CI-alt > 0 → "kapı o friksiyonda ANLAMLI İYİ";
+        CI 0-içi → ayrışmadı; CI-üst < 0 → "kapı orada da zararlı".
+    (b) OKUMA KURALI: B4 kararı YALNIZ EDG-2026-042'nin gerçek-friksiyon bandına düşen slip
+        hücre(ler)inden okunur — gerçek bant gelmeden (K1 eşiği ~4 hafta) bu kartın hükmü
+        B4'ü YENİDEN AÇAMAZ. Bant geldiğinde: banttaki hücrede CI-alt>0 → B4 VERİYLE YENİDEN
+        AÇILIR (operatör kalemi; D5 tavan adayı 0,01) · banttaki hücrede CI 0-içi ya da
+        CI-üst<0 → B4 kalıcı kapanış adayı (kill-list'e taşıma OPERATÖR onayıyla, bu kart
+        taşımaz).
+  ASİMETRİ: "kapı iyi" hükmü tek başına canlıyı DEĞİŞTİRMEZ (operatör kalemi + 23c model-boşluğu
+  şerhi); "kapı zararlı" hükmü bugünkü durumu yalnız pekiştirir. Bedeller eşit değil, önceden yazıldı.
+
+kill_criteria:
+  - "şasi kontrolü: slip=5 kapı-KAPALI koşum edg032b ile bayt-özdeş değilse DURUR (edg040 kapısı aynen)"
+  - "slip öz-sınaması (likidite-ayrıştırmalı, 1e-9) her hücrede geçmezse o hücre geçersiz (edg040 kill#2 aynen)"
+  - "kol kimliği damgası (dolum_kurali) sonuçtan doğrulanmazsa hücre geçersiz (exe006 Kritik-1 aynen)"
+  - "edg040'ın kapalı-kapı hücreleri YENİDEN KOŞULURSA geçersiz — donmuş kanıt referanstır, çift sayım yasak"
+  - "goal.yaml/motor dosyaları değişirse geçersiz (mtime/sha kanıtı zorunlu)"
+  - "bütünlük (frame_miss=0, dup=0, scan==plan, yasak modül yok) bozuksa geçersiz"
+  - "OKUMA KURALI ihlali: EDG-042 bandı gelmeden bu kartın hükmüyle B4 yeniden açılırsa geçersiz"
+
+k_registry: {registered_at: "2026-08-22", trial_ids: [pending-043-s15A, pending-043-s15B, pending-043-s25A, pending-043-s25B, pending-043-s35A, pending-043-s35B]}
+
+status: registered   # 2026-08-22 Rol-1 — ön-kayıt (B4 kararının C bacağı). Ölçüm ~75 dk;
+                     # HEMEN koşulabilir (hüküm zaten EDG-042 bandını beklemek zorunda —
+                     # okuma kuralı) ya da bantla birlikte koşulur; operatör tercihi.
+
+beyanlı_sinirlar: >
+  (1) TEK TAVAN (0,01): tavan taraması değil — "en iyi bilinen nokta" sınanıyor; başka tavanda
+  işaret dönüyorsa bu kart onu GÖRMEZ (genişletme yeni kart + K ister).
+  (2) B kolunun canlı karşılığı yaklaşıktır: gerçek dinlenen emir gün içi fiyat yoluna bağlı
+  dolar, replay bar_low'a bakar (23c beyanı aynen) — B hücreleri iyimser ALT SINIR sınıfıdır.
+  (3) Sabit-bps varsayımı (edg040'ın üç beyanı aynen geçerli): gerçek friksiyon isim/likidite
+  bağımlı; kapının asıl kestiği kuyruk sabit-bps'te TEMSİL EDİLMEZ, yani kapının yüksek-friksiyon
+  değeri burada EKSİK ölçülüyor olabilir — bu kart o yüzden "kapı zararlı" yönünde muhafazakâr,
+  "kapı iyi" yönünde güvenilirdir (asimetri beyanı).
