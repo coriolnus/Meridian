@@ -25,6 +25,9 @@ kaynağı değil — tipi uymayan alan (−0.0 dahil: REAL kolon işaret bitini 
 YANLIŞLANDI): kaynaklar `.migrated` adında dururken anahtarı çeken operatör altı defteri BOŞ okur
 ve ilk yazımda ayrışık ikinci bir kitap doğar — geri dönüş kolu `dbmigrate --geri-al`dır; yarım
 hâl varsayılmaz, ÖLÇÜLÜR ve süreç başına bir kez beyan edilir (`db_off_kaynaklar_arsivde`).
+SİMETRİĞİ (P2): DB dosyası hiç YOKKEN kanonik defter dosyaları duruyorsa süreç başına bir kez
+`yerel_donmus_defter` damgalanır — bu makinedeki defter donmuş fotoğraf olabilir, canlı DB başka
+makinede olabilir; süreç-içi dedektör bu ayrışmayı yapısal olarak göremez (envanter 2026-08-22 #4).
 Okur/yazar: yalnız `state/meridian.db` (+ -wal/-shm).
 """
 from __future__ import annotations
@@ -119,6 +122,8 @@ _SCHEMA_OK: set = set()
 # `MERIDIAN_DB=off` uyarısı YOL BAŞINA BİR KEZ ölçülür (C5). `active()` her okumada çağrılır;
 # ölçümü önbelleğe almasaydık her `read_json` altı `stat()` ve potansiyel bir olay satırı üretirdi.
 _OFF_OLCULDU: set = set()
+# `yerel_donmus_defter` damgası da YOL BAŞINA BİR KEZ (P2 — `db_off`un simetriği, aynı gerekçe).
+_YEREL_OLCULDU: set = set()
 
 PRAGMAS = (("journal_mode", "wal"), ("synchronous", "normal"),
            ("busy_timeout", 5000), ("foreign_keys", 1))
@@ -342,6 +347,47 @@ def _acil_anahtar_beyani() -> None:
         pass
 
 
+def _yerel_defter_beyani(p: Path) -> None:
+    """DB dosyası YOKKEN kanonik defter dosyaları duruyorsa SÜREÇ BAŞINA BİR KEZ damgala (P2).
+
+    `db_off_kaynaklar_arsivde`nin SİMETRİĞİ (denetim P2; envanter 2026-08-22 §4.2-#4): o beyan
+    "DB dünyasında defterler arşivde, boş okunuyor" yarım hâlini anlatır; bu damga TERSİNİ —
+    süreç `meridian.db` OLMAYAN bir makinede altı defteri DOSYADAN kanonik okuyor. Süreç-içi
+    hiçbir dedektör bunu ayrışma olarak GÖREMEZ: kendi gördüğü tek kitap zaten bu dosyalar
+    ("göç hiç olmamış" dünyasından ayırt edilemez). Ölçülen vaka (08-22): yerel `trades.jsonl`
+    95 satır / `portfolio.last_date` 2026-07-28'de DONUK, canlı DB başka makinede 97/409 —
+    yani bu makinedeki defter donmuş bir FOTOĞRAF olabilir. Damga o körlüğün beyanıdır.
+
+    KARAR DEĞİL BEYAN: okuma davranışı bit-bit aynı kalır (dosyadan sürer) — `db_off` beyanıyla
+    aynı gerekçe: istisna fırlatmak panoyu/worker'ı düşürür, eksik olan karar değil beyandı.
+    OKUYUCUSU (YASA 6): `obs.warn` → `state/events.jsonl` → pano + `obs.recent` —
+    `db_off_kaynaklar_arsivde` ile AYNI teşhis yüzeyi.
+
+    ÖNBELLEK SİMETRİSİ: `_acil_anahtar_beyani` DB dosyası VARKEN önbelleğe alır ("dosya yoksa
+    hâl migrasyonla değişebilir"); burası tam tersi — DB YOKKEN, ve yalnız anlatılacak hâl
+    (en az bir kanonik dosya) varken alır: boş sandbox'ta alınmaz, çünkü dosyalar aynı süreçte
+    yazılıp hâl sonradan doğabilir. `MERIDIAN_DB=off` dünyası buraya hiç gelmez (`active()`
+    daha önce döner) — o dünyanın beyanı `_acil_anahtar_beyani`nındır."""
+    key = str(p)
+    if key in _YEREL_OLCULDU:
+        return
+    state = Path(config.STATE)
+    mevcut = [n for n in ENTITIES if (state / n).exists()]
+    if not mevcut:
+        return                      # anlatılacak hâl yok — önbellek ALINMAZ, hâl bu süreçte doğabilir
+    _YEREL_OLCULDU.add(key)         # obs'tan ÖNCE: beyan denemesi tekrar giriş üretmesin
+    try:
+        from . import obs
+        obs.warn("yerel_donmus_defter", db=key, mevcut=mevcut, n=len(mevcut),
+                 detail=("Bu makinede `meridian.db` YOK; bu defterler DOSYADAN kanonik okunuyor. "
+                         "Migrasyon-sonrası dünyada bu, defterin DONMUŞ bir fotoğraf olabileceği "
+                         "anlamına gelir — canlı DB başka bir makinede olabilir ve süreç-içi "
+                         "dedektör bu ayrışmayı göremez. Okuma davranışı değişmedi; buradan "
+                         "okunan sayıları canlıya dayandırmadan önce bu damgayı yan yana okuyun."))
+    except Exception:  # sessiz-yutma: kayıt kanalı düştü; beyan bir okuma kapısını düşüremez — okuma dosyadan aynen sürer, hâl her yeni süreçte yeniden ölçülür
+        pass
+
+
 def active(name: str | None = None) -> bool:
     """Bu varlık ŞU AN DB'den mi okunuyor? (DB dosyası yoksa: HAYIR — davranış birebir bugünkü.)"""
     if name is not None and name not in _TABLE:
@@ -353,6 +399,7 @@ def active(name: str | None = None) -> bool:
     key = str(p)
     if not p.exists():
         _SCHEMA_OK.discard(key)
+        _yerel_defter_beyani(p)     # P2 damgası: DB'siz dünyada dosyalar kanonik — donmuş fotoğraf olabilir
         return False
     if key in _SCHEMA_OK:
         return True

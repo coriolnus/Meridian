@@ -127,7 +127,7 @@ limits:
   # 0,285 → 0,037). Tutarlılık çivisi `heat_hard_r <= max_open × max_position_r` (v166) artık
   # eşitlik değil BOL: 5,0 <= 20,0 — sert tavan bağlayan taraf, slot sayısı değil.
   # YAN ETKİ (bilinçli, 026 kartında beyanlı): `max_sector_exposure_pct` kuralının paydası
-  # `max_open_positions`tır (guard.py:352) — sektör başına fiili tavan 2 isimden 8 isme çıkar.
+  # `max_open_positions`tır (guard.py:359 `sector_cap_basis`; A17: eski `:352` çapası bayattı) — sektör başına fiili tavan 2 isimden 8 isme çıkar.
   max_open_positions: 20
   max_daily_loss_pct: 3.0
   max_sector_exposure_pct: 40.0

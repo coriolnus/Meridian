@@ -551,11 +551,23 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     return "GO", []
 
 
-# Y3 PORTFÖY TAVANLARININ BANTLARI (sektör ≤ %25-30, ısı ≤ NAV %6-8). Knob DEĞERİ
-# bandın içinden seçilir ve bounds.yaml onu zorlar; buradaki sabitler yalnız "knob verilmemişse
-# hangi değer varsayılır" sorusunun cevabıdır ve kapı KAPALIYKEN hiç okunmaz.
-SECTOR_CAP_DEFAULT_PCT = 25.0     # bandın ALT ucu (muhafazakâr): açılırsa en sıkı hâliyle açılır
-HEAT_CAP_DEFAULT_PCT = 6.0        # NAV yüzdesi — bandın alt ucu, aynı gerekçe
+# --- MEZAR TAŞI: SECTOR_CAP_DEFAULT_PCT / HEAT_CAP_DEFAULT_PCT — KALDIRILDI (2026-08-23) --------
+# Düşen satırlar: `SECTOR_CAP_DEFAULT_PCT = 25.0` ve `HEAT_CAP_DEFAULT_PCT = 6.0` ("Y3 portföy
+#   tavanlarının bantlarının alt ucu — knob verilmemişse varsayılan" iddiasıyla).
+# NEDEN: repo+test genelinde OKUYUCUSUZDULAR (tek geçiş tanım satırlarıydı — envanter
+#   docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md #11/§4.3 ölçtü; denetim P3 "ya bağla ya kaldır"
+#   demişti). Kod o varsayılan yolunu hiç yazmadı: `_y3_portfolio_caps` knob yokken
+#   `p.get("portfolio.sector_cap", 0)` ile 0'a (KAPALI) düşer — sabitler "açılırsa şu değerden
+#   açılır" DİYORDU ama hiçbir yol onları okumuyordu (YASA 6: okuyucusuz yazım yok).
+# NEDEN BAĞLANMADI: okunmayan bir "varsayılanı" davranışa sokmak, knob'suz dünyada kapıyı 0'dan
+#   25,0/6,0'a sessizce açmak olurdu — strateji-kimliği değişikliğidir ve KART-ÖNCE ölçüm ister
+#   (envanter §4.3 hükmü: dört sayı dört FARKLI soruyu cevaplar — pozisyon-sayısı paydalı
+#   maruziyet tavanı `goal.max_sector_exposure_pct`=40,0 · NOTIONAL pay tavanının arama bandı
+#   `bounds.yaml portfolio.sector_cap.max`=30,0 · bu sabitlerin iddia ettiği bant alt-ucu
+#   25,0/6,0 · runtime'ın knob'suz hâli 0="kapalı" — bunları tek olguda eşitlemek yanlış alarm
+#   üretirdi). Bantların belgesi `_y3_portfolio_caps` docstring'inde YAŞIYOR (%25-30 / NAV %6-8);
+#   knob açılacaksa değer bounds.yaml bandından ölçümle seçilir, buradan değil.
+# Sessiz-diriliş çivisi: tests/test_wp6_kucuk_kalemler_v268.py (sabitler GERİ GELEMEZ, taş DURUR).
 
 
 # --- Y3 ÜRETİCİ↔TÜKETİCİ SÖZLEŞMESİ --------------------------------------------------------------
