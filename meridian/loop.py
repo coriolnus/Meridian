@@ -2999,6 +2999,66 @@ def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: di
 # modelinden geçer (`close_position` raw fiyata slipajı kendisi uygular — dokunuş çıkışlarıyla
 # aynı desen); GERÇEK dolum satıra `alpaca_fill_price` olarak ayrıca yazılır ve `mirror_divergence`
 # model↔gerçek farkını ölçer.
+def _defter_teyit_yamasi(by_coid: dict, pencere: dict, out: dict, dstr: str) -> None:
+    """Damgasız `live_paper` satırlarına broker-teyit damgası basar — Ö-52 (kart EXE-2026-007).
+
+    NEDEN: `kaynak: live_paper` bir KOD YOLU beyanı, broker teyidi DEĞİL. Ölçüldü (2026-08-21):
+    reset sonrası 8 canlı işlemin 2'si broker'da hiç var olmamış ve iki tüketici de (pano,
+    öğrenmenin ufku) bunu bilmiyordu. Kartın DONUK karar kuralı: Ö1 > 0 ⇒ bu boyut eklenir.
+
+    KENDİ KENDİNİ İYİLEŞTİRİR: damgasız her canlı satır HER turda yeniden denenir — tek atış
+    değil (E2 yamasının kuyruk dersi). Damga bir kez basılır, `teyit_stamp` ezmeyi reddeder.
+
+    EN KRİTİK KURAL — KIRPIK DEFTERDE "KARŞILIKSIZ" DENMEZ: emir penceresinin tavanı var
+    (`_EMIR_PENCERESI_SAYFA_TAVANI`); "emri görmedim" ancak defter TAM taranmışken "emir yok"
+    demektir. `pencere["kapsandi"]` False ise ya da satır pencerenin en eskisinden yaşlıysa
+    hüküm `olculemedi` + nedendir — karşılıksız damgası uydurulmaz (koruma_report'un
+    `emir_tavani_dolu` deseni). Eşleşme kimliği plan_id == client_order_id (E2 ile aynı kanal).
+    """
+    from . import ledgerstamp as _ls
+    kapsandi = bool((pencere or {}).get("kapsandi"))
+    en_eski = str((pencere or {}).get("en_eski") or "")[:10] or None
+    sayaç = {"teyitli": 0, "karsiliksiz": 0, "olculemedi": 0}
+
+    def _yama(rows):
+        hit = False
+        for r in rows:
+            if _ls.teyit_of(r) != _ls.TEYIT_OLCULEMEDI or r.get(_ls.TEYIT_FIELD):
+                continue                       # kapsam dışı ya da zaten damgalı
+            pid = r.get("plan_id")
+            if not pid:
+                _ls.teyit_stamp(r, _ls.TEYIT_OLCULEMEDI,
+                                neden="satır plan_id taşımıyor — broker eşleşmesi kurulamaz")
+                sayaç["olculemedi"] += 1; hit = True; continue
+            o = by_coid.get(pid)
+            if o is not None and float(o.get("filled_qty") or 0) > 0:
+                _ls.teyit_stamp(r, _ls.TEYITLI)
+                sayaç["teyitli"] += 1; hit = True; continue
+            # emir görünmüyor — ama defter TAM MI taranmış?
+            satir_g = str(r.get("ts_open") or "")[:10]
+            pencere_tam = kapsandi and (en_eski is None or (satir_g and satir_g >= en_eski))
+            if o is None and pencere_tam:
+                _ls.teyit_stamp(r, _ls.KARSILIKSIZ)
+                sayaç["karsiliksiz"] += 1; hit = True
+                obs.alarm(obs.ALARM_MIRROR_DRIFT,
+                          f"karşılıksız canlı işlem: {r.get('ticker')} ({pid}) — kitapta kapandı, "
+                          f"broker emir defterinde HİÇ İZ YOK (pencere tam taranmışken)",
+                          ticker=r.get("ticker"), plan_id=pid, drift_sinifi="karsiliksiz_islem")
+            else:
+                _ls.teyit_stamp(r, _ls.TEYIT_OLCULEMEDI,
+                                neden=("emir penceresi kırpık ya da satır pencereden yaşlı — "
+                                       "'görmedim' burada 'yok' demek DEĞİL; sonraki tur yeniden denenir"))
+                sayaç["olculemedi"] += 1; hit = True
+        return hit
+
+    try:
+        store.update_jsonl("trades.jsonl", _yama)   # kilitli oku-değiştir-yaz (E2 yamasıyla aynı yol)
+    except Exception as e:  # sessiz-yutma: defter yazımı düşerse reconcile'ın kalanı (pozisyon/koruma) ayakta kalmalı; damga bir sonraki turda yeniden denenir, sayaç panoda eksikliğiyle görünür
+        obs.warn("defter_teyit_yamasi_dusdu", hata=f"{type(e).__name__}: {e}"[:160])
+        return
+    out["defter_teyit"] = dict(sayaç, tarih=dstr, pencere_kapsandi=kapsandi)
+
+
 def _koruma_dolumu_bul(all_orders: list, sym: str) -> dict | None:
     """Sembolün KORUMA-SINIFI emirlerinde dolmuş bacak ara. Sınıf hükmü `alpaca.coid_sinifi`den
     (v220 aile+yön, v221 grup kemerleri — süzgeç KOPYALANMAZ, yeniden kullanılır); dolum okuma
@@ -3204,6 +3264,8 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     out["checked"] = True
     by_coid = {o.get("client_order_id"): o for o in (all_orders or []) if o.get("client_order_id")}
     by_id = {str(o.get("id")): o for o in (all_orders or []) if o.get("id")}   # kapatma emri kimlikle
+    # Ö-52: damgasız canlı satırlara broker-teyit damgası (kendi kendini iyileştiren tur).
+    _defter_teyit_yamasi(by_coid, out.get("emir_penceresi") or {}, out, dstr)
     DEAD = {"rejected", "canceled", "cancelled", "expired", "done_for_day"}
 
     # (1.1) E2 — GİRİŞ SLİPAJ DEFTERİNİN DOLUM YARISI. Emirler ZATEN okundu; ikinci bir çağrı yok.

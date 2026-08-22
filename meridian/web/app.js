@@ -852,6 +852,20 @@ function mutabakatSatirlari(today) {
     // Renk yalnız anomalide basılır ve kapının GÖRÜNÜR olması kuralın parçası.
     out.push(`<div class="r"><span>Poz. ayrışması</span><b class="warn" title="${esc(dokum)}">${n} sembol</b></div>`);
   }
+  // ── Ö-52: defter teyidi — "canlı" damgalı işlemlerin kaçı GERÇEKTEN broker'da ──────────────
+  // `karsiliksiz > 0` panoda kırmızıdır: kitap, broker'da hiç var olmamış işlem taşıyor demektir
+  // (ALL/VLO vakası). `olculemedi` ayrı görünür — "bakılamadı" ile "yok" karışmaz.
+  const dt_ = today.defter_teyit;
+  if (dt_) {
+    const kk = Number(dt_.karsiliksiz || 0), tt = Number(dt_.teyitli || 0), oo = Number(dt_.olculemedi || 0);
+    const ipu = `teyitli ${tt} · karşılıksız ${kk} · ölçülemedi ${oo} · kapsam dışı ${dt_.kapsam_disi ?? 0}`;
+    if (kk > 0)
+      out.push(`<div class="r"><span>Defter teyidi</span><b class="neg" title="${esc(ipu)}">${kk} karşılıksız</b></div>`);
+    else if (oo > 0)
+      out.push(`<div class="r"><span>Defter teyidi</span><b class="mut" title="${esc(ipu)}">${tt} teyitli · ${oo} ölçülemedi</b></div>`);
+    else if (tt > 0)
+      out.push(`<div class="r"><span>Defter teyidi</span><b class="pos" title="${esc(ipu)}">tam (${tt})</b></div>`);
+  }
   return out.join("");
 }
 

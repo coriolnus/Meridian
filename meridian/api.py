@@ -1543,6 +1543,10 @@ def api_today(request: Request):
         # HER pozisyonu `yalniz_kitapta` saymak olurdu — yedi sahte ayrışma. `watchdog.koruma_report`
         # aynı dalı `transport()["ok"]` ile çözüyor; burası da o kapıdan geçer.
         _tasima_ok = bool((_alp.transport() or {}).get("ok"))
+        # Ö-52: defterin broker-teyit sayaçları — "canlı" damgasının kaçı GERÇEKTEN broker'da.
+        # Damgayı reconcile basar (loop._defter_teyit_yamasi); burası yalnız sayar (okuyucu).
+        from . import ledgerstamp as _lst
+        d["defter_teyit"] = _lst.teyit_counts()
         d["pozisyon_mutabakati"] = _sr.pozisyon_mutabakati(
             kitap_pozisyonlar=(_kpos if (_pf or {}).get("positions") is not None else None),
             broker_pozisyonlar=({x["symbol"]: float(x["qty"]) for x in _bpos}

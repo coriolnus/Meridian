@@ -40,6 +40,20 @@ REPLAY_SEED = "replay_seed"      # replay tohumunun ürettiği işlem — "train
 BELIRSIZ = "belirsiz"            # ayırt edilemedi; uydurma yerine dürüst boşluk
 GECERLI = frozenset({LIVE_PAPER, REPLAY_SEED, BELIRSIZ})
 
+# ── BROKER-TEYİT BOYUTU (Ö-52 · kart EXE-2026-007 karar kuralı, 2026-08-22) ──────────────────
+# `kaynak` damgası bir KOD YOLU beyanıdır ve öyle KALIR: `loop._persist_trade`ten geçen her satır
+# `live_paper` alır ve fonksiyon broker'a hiç sormaz. Ölçüldü (2026-08-21): reset sonrası 8 "canlı"
+# işlemin 2'si broker'da HİÇ VAR OLMAMIŞ — yani "canlı" damgası broker teyidi TAŞIMIYOR ve iki
+# tüketici de (operatör panosu, öğrenmenin ufku) bunu bilmiyordu. Kartın ölçümden ÖNCE donan karar
+# kuralı: Ö1 > 0 ⇒ bu boyut eklenir; ön-ölçüm Ö1 = %25.
+# Bu boyut `kaynak`ı DÜZELTMEZ, ona DİK ikinci bir eksendir: kod-yolu beyanı × broker gerçeği.
+TEYIT_FIELD = "broker_teyit"
+TEYITLI = "teyitli"                # broker emir defterinde plan kimliğiyle DOLMUŞ emir var
+KARSILIKSIZ = "karsiliksiz"        # broker'da hiç iz yok — ve defter KIRPIK DEĞİLKEN bakıldı
+TEYIT_OLCULEMEDI = "olculemedi"    # bakılamadı (pencere/kimlik/kırpık defter) — karşılıksız DEĞİL
+TEYIT_KAPSAM_DISI = "kapsam_disi"  # tohum/belirsiz satır: kill kriteri gereği kıyasa GİRMEZ
+TEYIT_GECERLI = frozenset({TEYITLI, KARSILIKSIZ, TEYIT_OLCULEMEDI})
+
 LEDGER = "trades.jsonl"
 EQUITY = "equity_curve.json"
 
@@ -77,6 +91,42 @@ def kaynak_of(row: dict) -> str:
     """Satırın damgası; yoksa/tanınmıyorsa BELİRSİZ (uydurma yok)."""
     v = row.get(FIELD)
     return v if v in GECERLI else BELIRSIZ
+
+
+def teyit_of(row: dict) -> str:
+    """Satırın broker-teyit hâli. Tohum/belirsiz satır KAPSAM DIŞI (kill kriteri: kıyasa girmez);
+    damgasız canlı satır `olculemedi` — alan yokluğu 'teyitli' DEĞİL 'henüz ölçülmedi'dir
+    (`mirror_divergence`in None-kusuru burada tekrarlanmaz)."""
+    if kaynak_of(row) != LIVE_PAPER:
+        return TEYIT_KAPSAM_DISI
+    v = row.get(TEYIT_FIELD)
+    return v if v in TEYIT_GECERLI else TEYIT_OLCULEMEDI
+
+
+def teyit_stamp(row: dict, teyit: str, neden: str | None = None) -> dict:
+    """İleri yol: damga BİR KEZ basılır, var olan ASLA ezilmez (kaynak damgasıyla aynı yasa —
+    sonraki tur farklı hüküm bulsa bile ilk hüküm kanıttır, sessizce değişmez).
+    `olculemedi` nedensiz basılamaz (YASA 4: gerekçe ≥20 karakter)."""
+    if teyit not in TEYIT_GECERLI:
+        raise ValueError(f"geçersiz teyit değeri: {teyit!r}")
+    if teyit == TEYIT_OLCULEMEDI and (not neden or len(str(neden)) < 20):
+        raise ValueError("olculemedi damgası ≥20 karakter neden ister (YASA 4)")
+    if row.get(TEYIT_FIELD) in TEYIT_GECERLI:
+        return row
+    row[TEYIT_FIELD] = teyit
+    if neden:
+        row["broker_teyit_neden"] = str(neden)[:200]
+    return row
+
+
+def teyit_counts(rows: list[dict] | None = None) -> dict:
+    """Dört kovanın sayacı — okuyucuların payda ayırdığı tek yüzey (counts ile aynı görev)."""
+    if rows is None:
+        rows = store.read_jsonl(LEDGER)
+    out = {TEYITLI: 0, KARSILIKSIZ: 0, TEYIT_OLCULEMEDI: 0, TEYIT_KAPSAM_DISI: 0}
+    for r in rows or []:
+        out[teyit_of(r)] += 1
+    return out
 
 
 def counts(rows: list[dict] | None = None) -> dict:

@@ -541,7 +541,7 @@ def test_canli_agacta_hicbir_kayit_curuk_degil():
 #      DIŞINDAN değişti" damgası. Okuyucusu yazarla AYNI modüldedir (dedektör kendi önceki
 #      ölçümünü okur), o yüzden `unread` tetiklenir ve muafiyet beyanı ŞART.
 # W3'ün `skill_gorusleri.jsonl` defteri BU LİSTEYE GİRMEDİ ve girmemeliydi: ÖLÇÜLDÜ, dış okuyucusu
-# VAR (`api.py:2548`; artifact_graph `unread: False` diyor). Muafiyet listesi bir kaçış yoludur ve
+# VAR (`api.py` `_GORUS_DEFTERI` sembolü; artifact_graph `unread: False` diyor — satır çapası 2026-08-22'de İKİNCİ kez çürüyünce sembole çevrildi, çapa doktrini). Muafiyet listesi bir kaçış yoludur ve
 # kapatılabilen yerde kullanılmaz (test_ajan_telemetri_v197'nin aynı hükmü).
 SINK_TABANI = frozenset({
     "agent_tooluse.json", "agent_traces.jsonl", "approvals.jsonl", "auth.json",
