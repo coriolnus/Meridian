@@ -1,0 +1,103 @@
+{
+ "kosum": "stopslip20",
+ "stop_ek_slip_bps": 20.0,
+ "smoke": false,
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 885,
+ "net_pnl_trades": 12769.15,
+ "net_pnl_equity": 12769.15,
+ "pf": 1.0689,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": 0.1353,
+ "maxdd_m2m": 0.1353,
+ "sharpe": 0.333,
+ "sharpe_measurable": true,
+ "avg_r": 0.045,
+ "win_rate": 0.365,
+ "total_return": 0.1277,
+ "exit_reason_dagilim": {
+  "stop": 380,
+  "regime_flip": 168,
+  "time_stop": 152,
+  "target": 101,
+  "stop_gap": 57,
+  "target_gap": 27
+ },
+ "stop_kirilimi": {
+  "stop_n": 380,
+  "stop_gap_n": 57,
+  "trail_kunyesi": {
+   "stop_trail_ustte_n": 89,
+   "stop_hard_n": 291,
+   "trail_pay_pct": 23.42,
+   "belirsiz_n": 0,
+   "beyan": "trail_ustte = kapanış ANINDA pos.trail_stop > pos.stop (breakeven kilidi dahil) — aynı kademe-2 kanalı, künye amaçlı; ayrı kova açılmadı"
+  }
+ },
+ "stop_r_dagilim": {
+  "n": 380,
+  "ort": -0.8584,
+  "min": -4.394,
+  "max": 0.712,
+  "p10": -1.1411,
+  "p25": -1.083,
+  "p50": -1.046,
+  "p75": -0.9935,
+  "p90": -0.052,
+  "r_none_n": 0
+ },
+ "stop_r_dagilim_trail": {
+  "n": 89,
+  "ort": -0.0264,
+  "min": -0.185,
+  "max": 0.712,
+  "p10": -0.1294,
+  "p25": -0.086,
+  "p50": -0.06,
+  "p75": -0.036,
+  "p90": -0.011,
+  "r_none_n": 0
+ },
+ "stop_r_dagilim_hard": {
+  "n": 291,
+  "ort": -1.1128,
+  "min": -4.394,
+  "max": -0.917,
+  "p10": -1.158,
+  "p25": -1.1025,
+  "p50": -1.057,
+  "p75": -1.038,
+  "p90": -1.013,
+  "r_none_n": 0
+ },
+ "butunluk_gecerli": true,
+ "kill3_sasi_mtime_temiz": true,
+ "oz_sinama_kill2_gecti": true,
+ "oz_sinama_kill2_olculemedi": null,
+ "sizinti_yok_kill3": true,
+ "hucre_motor_sha_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "hucre_motor_sha_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "hucre_motor_ayni_kill4": true,
+ "hucre_motor_kunye_esit_edg032c": true,
+ "cost_model_kaydi": {
+  "slippage_bps": 5.0,
+  "commission_per_share": 0.0,
+  "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+ }
+}

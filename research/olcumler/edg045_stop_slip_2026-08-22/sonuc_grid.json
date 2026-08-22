@@ -1,0 +1,567 @@
+{
+ "kart": "EDG-2026-045",
+ "smoke": false,
+ "kosum_no": "2-tamamlama",
+ "taban": "edg032c_taban_2026-08-22 (künye TABAN_KUNYESI.json)",
+ "olcum_zamani": "2026-08-22T21:35:59+00:00",
+ "rol1_talimati": "2026-08-23: kill#3 bayrağı aletin bağ-yuvarlama kusuruydu (kartın sızıntı ölçütü 505/505 temiz); alet düzeltildi (defter_yuvarla), kayıtlı koşumlar diskten yeniden doğrulandı, kalan hücreler koşuldu. K muhasebesi değişmedi. Tarihçe: DURDU_kill3_z1_defter_yenidenkurma.json",
+ "motor_sha256_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_kunye_esit_edg032c": true,
+ "armed_uyarlama": {
+  "eski_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "yeni_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "motor_ARMED_SETUPS": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ]
+ },
+ "kaynak_civileri": {
+  "civiler": [
+   "return o, \"stop_gap\"",
+   "return eff_stop, \"stop\"",
+   "exit_fill = raw_exit * (1.0 - self.slip)",
+   "eff_stop = max(pos.stop, pos.trail_stop)"
+  ],
+  "hepsi_bulundu": true
+ },
+ "alet_dogrulama_kayitli": {
+  "kontrol": {
+   "stop_ek_slip_bps": 0.0,
+   "kill2_gecti": true,
+   "kill3_sizinti_yok": true,
+   "S1_max_mutlak_fark": 0.0,
+   "S2_defter_esit_n": 380,
+   "n_stop": 380,
+   "S3_eff_stop_esit_n": 380,
+   "Z1_defter_esit_n": 505,
+   "n_stop_disi": 505,
+   "stop_bozuk_n": 0,
+   "sizinti_bozuk_n": 0
+  },
+  "stopslip5": {
+   "stop_ek_slip_bps": 5.0,
+   "kill2_gecti": true,
+   "kill3_sizinti_yok": true,
+   "S1_max_mutlak_fark": 1.6609977282477928e-16,
+   "S2_defter_esit_n": 380,
+   "n_stop": 380,
+   "S3_eff_stop_esit_n": 380,
+   "Z1_defter_esit_n": 505,
+   "n_stop_disi": 505,
+   "stop_bozuk_n": 0,
+   "sizinti_bozuk_n": 0
+  }
+ },
+ "sasi_kontrolu": {
+  "taban": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/kosum1",
+  "bayt_kiyas_edg032c": {
+   "islemler_tam": {
+    "yerel_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+    "edg032c_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   },
+   "islemler_slim": {
+    "yerel_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+    "edg032c_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   },
+   "seanslar": {
+    "yerel_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+    "edg032c_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   }
+  },
+  "kill1_bayt_gecti": true,
+  "referans_ozdeslik_032cmb": {
+   "kostu": false,
+   "neden": "BİLEREK ÇAĞRILMADI — 032-cmb kapısı ESKİ dünyanın kimlik kapısıydı; yeniden-çapalama (kart bloğu sasi_capasi_guncellemesi_2026_08_22) sonrası kill#1 kimliği edg032c defter bayt-özdeşliğidir. edg032c künyesi de aynı gerekçeyle bu kapıyı çağırmadan determinizm çift-kapısıyla donduruldu. n_endeks_satir istisnası da onunla birlikte düştü — bu kıyasta istisna YOK."
+  },
+  "kill1_gecti": true
+ },
+ "kontrol_ek0": {
+  "kosum": "kontrol",
+  "stop_ek_slip_bps": 0.0,
+  "smoke": false,
+  "hucre_sasi": {
+   "eksen": "merkez",
+   "slot": 20,
+   "position_size_r": 0.5,
+   "heat_hard_r": 5.0,
+   "zarf_enjekte": false
+  },
+  "islem_n": 885,
+  "net_pnl_trades": 23806.13,
+  "net_pnl_equity": 23806.13,
+  "pf": 1.1293,
+  "pf_olculemedi_nedeni": null,
+  "maxdd_kanonik": 0.1263,
+  "maxdd_m2m": 0.1263,
+  "sharpe": 0.594,
+  "sharpe_measurable": true,
+  "avg_r": 0.083,
+  "win_rate": 0.365,
+  "total_return": 0.2381,
+  "exit_reason_dagilim": {
+   "stop": 380,
+   "regime_flip": 168,
+   "time_stop": 152,
+   "target": 101,
+   "stop_gap": 57,
+   "target_gap": 27
+  },
+  "stop_kirilimi": {
+   "stop_n": 380,
+   "stop_gap_n": 57,
+   "trail_kunyesi": {
+    "stop_trail_ustte_n": 89,
+    "stop_hard_n": 291,
+    "trail_pay_pct": 23.42,
+    "belirsiz_n": 0,
+    "beyan": "trail_ustte = kapanış ANINDA pos.trail_stop > pos.stop (breakeven kilidi dahil) — aynı kademe-2 kanalı, künye amaçlı; ayrı kova açılmadı"
+   }
+  },
+  "stop_r_dagilim": {
+   "n": 380,
+   "ort": -0.7712,
+   "min": -1.72,
+   "max": 0.763,
+   "p10": -1.027,
+   "p25": -1.013,
+   "p50": -1.004,
+   "p75": -0.9665,
+   "p90": -0.01,
+   "r_none_n": 0
+  },
+  "stop_r_dagilim_trail": {
+   "n": 89,
+   "ort": 0.0314,
+   "min": -0.037,
+   "max": 0.763,
+   "p10": -0.026,
+   "p25": -0.017,
+   "p50": -0.012,
+   "p75": -0.007,
+   "p90": 0.0042,
+   "r_none_n": 0
+  },
+  "stop_r_dagilim_hard": {
+   "n": 291,
+   "ort": -1.0167,
+   "min": -1.72,
+   "max": -0.939,
+   "p10": -1.032,
+   "p25": -1.017,
+   "p50": -1.008,
+   "p75": -1.0005,
+   "p90": -0.988,
+   "r_none_n": 0
+  },
+  "butunluk_gecerli": true,
+  "kill3_sasi_mtime_temiz": true,
+  "oz_sinama_kill2_gecti": true,
+  "oz_sinama_kill2_olculemedi": null,
+  "sizinti_yok_kill3": false,
+  "hucre_motor_sha_once": {
+   "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+   "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+   "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+   "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+  },
+  "hucre_motor_sha_sonra": {
+   "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+   "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+   "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+   "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+  },
+  "hucre_motor_ayni_kill4": true,
+  "hucre_motor_kunye_esit_edg032c": true,
+  "cost_model_kaydi": {
+   "slippage_bps": 5.0,
+   "commission_per_share": 0.0,
+   "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+  }
+ },
+ "hucreler": {
+  "stopslip5": {
+   "kosum": "stopslip5",
+   "stop_ek_slip_bps": 5.0,
+   "smoke": false,
+   "hucre_sasi": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 885,
+   "net_pnl_trades": 20721.37,
+   "net_pnl_equity": 20721.37,
+   "pf": 1.1125,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": 0.1289,
+   "maxdd_m2m": 0.1289,
+   "sharpe": 0.524,
+   "sharpe_measurable": true,
+   "avg_r": 0.073,
+   "win_rate": 0.365,
+   "total_return": 0.2072,
+   "exit_reason_dagilim": {
+    "stop": 380,
+    "regime_flip": 168,
+    "time_stop": 152,
+    "target": 101,
+    "stop_gap": 57,
+    "target_gap": 27
+   },
+   "stop_kirilimi": {
+    "stop_n": 380,
+    "stop_gap_n": 57,
+    "trail_kunyesi": {
+     "stop_trail_ustte_n": 89,
+     "stop_hard_n": 291,
+     "trail_pay_pct": 23.42,
+     "belirsiz_n": 0,
+     "beyan": "trail_ustte = kapanış ANINDA pos.trail_stop > pos.stop (breakeven kilidi dahil) — aynı kademe-2 kanalı, künye amaçlı; ayrı kova açılmadı"
+    }
+   },
+   "stop_r_dagilim": {
+    "n": 380,
+    "ort": -0.7928,
+    "min": -2.388,
+    "max": 0.74,
+    "p10": -1.056,
+    "p25": -1.0303,
+    "p50": -1.014,
+    "p75": -0.9715,
+    "p90": -0.021,
+    "r_none_n": 0
+   },
+   "stop_r_dagilim_trail": {
+    "n": 89,
+    "ort": 0.0171,
+    "min": -0.074,
+    "max": 0.74,
+    "p10": -0.052,
+    "p25": -0.034,
+    "p50": -0.024,
+    "p75": -0.014,
+    "p90": 0.0004,
+    "r_none_n": 0
+   },
+   "stop_r_dagilim_hard": {
+    "n": 291,
+    "ort": -1.0405,
+    "min": -2.388,
+    "max": -0.93,
+    "p10": -1.063,
+    "p25": -1.0375,
+    "p50": -1.021,
+    "p75": -1.009,
+    "p90": -0.994,
+    "r_none_n": 0
+   },
+   "butunluk_gecerli": true,
+   "kill3_sasi_mtime_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "oz_sinama_kill2_olculemedi": null,
+   "sizinti_yok_kill3": true,
+   "hucre_motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "hucre_motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "hucre_motor_ayni_kill4": true,
+   "hucre_motor_kunye_esit_edg032c": true,
+   "cost_model_kaydi": {
+    "slippage_bps": 5.0,
+    "commission_per_share": 0.0,
+    "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+   },
+   "alet_dogrulamasi": "2026-08-23: eski kill#3 bayrağı aletin defter-yeniden-kurma bağ-yuvarlama kusuruydu; kayıtlı defter düzeltilmiş aletle yeniden doğrulandı (yeniden KOŞULMADI — Rol-1 talimatı [3])"
+  },
+  "stopslip10": {
+   "kosum": "stopslip10",
+   "stop_ek_slip_bps": 10.0,
+   "smoke": false,
+   "hucre_sasi": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 885,
+   "net_pnl_trades": 18108.95,
+   "net_pnl_equity": 18108.95,
+   "pf": 1.098,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": 0.131,
+   "maxdd_m2m": 0.131,
+   "sharpe": 0.462,
+   "sharpe_measurable": true,
+   "avg_r": 0.064,
+   "win_rate": 0.365,
+   "total_return": 0.1811,
+   "exit_reason_dagilim": {
+    "stop": 380,
+    "regime_flip": 168,
+    "time_stop": 152,
+    "target": 101,
+    "stop_gap": 57,
+    "target_gap": 27
+   },
+   "stop_kirilimi": {
+    "stop_n": 380,
+    "stop_gap_n": 57,
+    "trail_kunyesi": {
+     "stop_trail_ustte_n": 89,
+     "stop_hard_n": 291,
+     "trail_pay_pct": 23.42,
+     "belirsiz_n": 0,
+     "beyan": "trail_ustte = kapanış ANINDA pos.trail_stop > pos.stop (breakeven kilidi dahil) — aynı kademe-2 kanalı, künye amaçlı; ayrı kova açılmadı"
+    }
+   },
+   "stop_r_dagilim": {
+    "n": 380,
+    "ort": -0.814,
+    "min": -3.057,
+    "max": 0.731,
+    "p10": -1.0831,
+    "p25": -1.0473,
+    "p50": -1.025,
+    "p75": -0.9617,
+    "p90": -0.031,
+    "r_none_n": 0
+   },
+   "stop_r_dagilim_trail": {
+    "n": 89,
+    "ort": 0.0029,
+    "min": -0.111,
+    "max": 0.731,
+    "p10": -0.0782,
+    "p25": -0.052,
+    "p50": -0.036,
+    "p75": -0.021,
+    "p90": -0.0034,
+    "r_none_n": 0
+   },
+   "stop_r_dagilim_hard": {
+    "n": 291,
+    "ort": -1.0638,
+    "min": -3.057,
+    "max": -0.862,
+    "p10": -1.095,
+    "p25": -1.0585,
+    "p50": -1.033,
+    "p75": -1.018,
+    "p90": -1.0,
+    "r_none_n": 0
+   },
+   "butunluk_gecerli": true,
+   "kill3_sasi_mtime_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "oz_sinama_kill2_olculemedi": null,
+   "sizinti_yok_kill3": true,
+   "hucre_motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "hucre_motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "hucre_motor_ayni_kill4": true,
+   "hucre_motor_kunye_esit_edg032c": true,
+   "cost_model_kaydi": {
+    "slippage_bps": 5.0,
+    "commission_per_share": 0.0,
+    "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+   }
+  },
+  "stopslip20": {
+   "kosum": "stopslip20",
+   "stop_ek_slip_bps": 20.0,
+   "smoke": false,
+   "hucre_sasi": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 885,
+   "net_pnl_trades": 12769.15,
+   "net_pnl_equity": 12769.15,
+   "pf": 1.0689,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": 0.1353,
+   "maxdd_m2m": 0.1353,
+   "sharpe": 0.333,
+   "sharpe_measurable": true,
+   "avg_r": 0.045,
+   "win_rate": 0.365,
+   "total_return": 0.1277,
+   "exit_reason_dagilim": {
+    "stop": 380,
+    "regime_flip": 168,
+    "time_stop": 152,
+    "target": 101,
+    "stop_gap": 57,
+    "target_gap": 27
+   },
+   "stop_kirilimi": {
+    "stop_n": 380,
+    "stop_gap_n": 57,
+    "trail_kunyesi": {
+     "stop_trail_ustte_n": 89,
+     "stop_hard_n": 291,
+     "trail_pay_pct": 23.42,
+     "belirsiz_n": 0,
+     "beyan": "trail_ustte = kapanış ANINDA pos.trail_stop > pos.stop (breakeven kilidi dahil) — aynı kademe-2 kanalı, künye amaçlı; ayrı kova açılmadı"
+    }
+   },
+   "stop_r_dagilim": {
+    "n": 380,
+    "ort": -0.8584,
+    "min": -4.394,
+    "max": 0.712,
+    "p10": -1.1411,
+    "p25": -1.083,
+    "p50": -1.046,
+    "p75": -0.9935,
+    "p90": -0.052,
+    "r_none_n": 0
+   },
+   "stop_r_dagilim_trail": {
+    "n": 89,
+    "ort": -0.0264,
+    "min": -0.185,
+    "max": 0.712,
+    "p10": -0.1294,
+    "p25": -0.086,
+    "p50": -0.06,
+    "p75": -0.036,
+    "p90": -0.011,
+    "r_none_n": 0
+   },
+   "stop_r_dagilim_hard": {
+    "n": 291,
+    "ort": -1.1128,
+    "min": -4.394,
+    "max": -0.917,
+    "p10": -1.158,
+    "p25": -1.1025,
+    "p50": -1.057,
+    "p75": -1.038,
+    "p90": -1.013,
+    "r_none_n": 0
+   },
+   "butunluk_gecerli": true,
+   "kill3_sasi_mtime_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "oz_sinama_kill2_olculemedi": null,
+   "sizinti_yok_kill3": true,
+   "hucre_motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "hucre_motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "hucre_motor_ayni_kill4": true,
+   "hucre_motor_kunye_esit_edg032c": true,
+   "cost_model_kaydi": {
+    "slippage_bps": 5.0,
+    "commission_per_share": 0.0,
+    "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+   }
+  }
+ },
+ "delta_pnl_vs_donmus_taban": {
+  "stopslip5": {
+   "delta_pnl": -3084.76,
+   "ci95": [
+    -4131.07,
+    -2168.37
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "evet (CI-üst < 0)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · yeniden örneklenen birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  },
+  "stopslip10": {
+   "delta_pnl": -5697.18,
+   "ci95": [
+    -7603.55,
+    -4004.18
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "evet (CI-üst < 0)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · yeniden örneklenen birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  },
+  "stopslip20": {
+   "delta_pnl": -11036.98,
+   "ci95": [
+    -14748.99,
+    -7739.62
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "evet (CI-üst < 0)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · yeniden örneklenen birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  }
+ },
+ "taban_kaynagi": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/kosum1/islemler_tam_kontrol.json (DONMUŞ; kill#1 bayt-özdeş)",
+ "motor_sha256_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "kill4_motor_ayni": true,
+ "kill4_motor_kunye_esit_edg032c": true
+}

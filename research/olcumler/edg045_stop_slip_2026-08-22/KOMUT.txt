@@ -75,3 +75,82 @@ cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg045_stop_
 #
 # [2] TAM (~12-13 dk/koşum · kontrol@0 + 3 hücre ≈ 50 dk)
 cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg045_stop_slip_2026-08-22/olcum.py 2>&1 | tee research/olcumler/edg045_stop_slip_2026-08-22/kosum_tam.log
+
+# ════════════════════════════════════════════════════════════════════════════════════════
+# YENİDEN-ÇAPALAMA — KOŞUM #2 (2026-08-22, ölçüm ajanı #2) — taban edg032b → edg032c
+# Rol-1 kararı + kart bloğu: sasi_capasi_guncellemesi_2026_08_22 (eşik/K/karar kuralları AYNEN).
+# Yukarıdaki DURDU bloğu TARİHSELDİR (ilk koşumun kanıtı); bu blok geçerli koşumu tanımlar.
+#
+# BETİK DEĞİŞİKLİĞİ (olcum.py — ölçüm-dizini dosyasıdır, motor değil):
+#   sha256 ÖNCE : 3cf732755ab33ba709658db6dc1246a12972f3ba7298c40d496f956932650c05
+#   sha256 SONRA: d213e60f13247a78c3617c6c656f8b59757c73c48bf3d23e4183f6031d7f7d2f
+#   (a) kill#1 bayt-kıyas hedefi + Δ/CI taban defteri: edg032b → edg032c_taban_2026-08-22/
+#       kosum1 (smoke: kosum1_smoke) — TABAN_DIR/TABAN_DIR_SMOKE sabitleri; taban_yol değişti.
+#   (b) referans_modul(): şasinin ARMED_BEKLENEN dünya-beklentisi B1 yasasına
+#       ('breakout_vcp','exhaustion_hammer','momentum_burst') çevrilir — edg032c künyesindeki
+#       BEYANLI TEK UYARLAMA deseni AYNEN (motor DEĞİL; motor B1'den saparsa BAŞLAMADAN durur).
+#   (c) sasi_kontrolu(): referansın ozdeslik() (032-cmb) kapısı ÇAĞRILMAZ — eski dünyanın
+#       kimlik kapısı (edg032c künyesi aynı gerekçeyle çağırmadı); onunla birlikte edg040'ın
+#       daraltılmış n_endeks_satir istisnası da düştü — kill#1 = ÜÇ defterin edg032c/kosum1
+#       ile sha256 bayt-özdeşliği, istisnasız.
+#   (d) MOTOR_SHA_DOSYALAR 2 → 4 (broker/backtest/strategy/guard); TABAN_MOTOR_SHA =
+#       edg032c/TABAN_KUNYESI.json motor_sha256 değerlerine ÇİVİLİ — koşum başında eşleşmezse
+#       BAŞLAMADAN DUR; hücre içinde değişme YA DA künyeden sapma = kill#4 (hücre geçersiz).
+#   Bunların dışında şasi çağrısı, enjeksiyon sarmalayıcısı, öz-sınamalar (S1/S2/S3/Z1/T/A),
+#   bootstrap (B=5000, seed=20260812, eşlenik ay-kümeli) ve eşikler DEĞİŞMEDİ.
+#
+# TABAN KİMLİĞİ (edg032c/TABAN_KUNYESI.json):
+#   islemler_tam_kontrol.json 5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96
+#   islemler_kontrol.json     447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3
+#   seanslar_kontrol.json     983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83
+#   motor: broker 52e67c5db43f52d5… · backtest b59c059f43d4e410… · strategy 263eb8fef7d10089…
+#          · guard 467034e580311150… (tam değerler betikte TABAN_MOTOR_SHA)
+#
+# [1] DUMAN (~2×2 dk) — kablo: kontrol@0 duman + stopslip10 duman; duman bayt-kıyası
+#     edg032c/kosum1_smoke ile (log YENİ dosyaya — kosum_smoke.log ilk koşumun DURDU kanıtı)
+uv run python research/olcumler/edg045_stop_slip_2026-08-22/olcum.py --smoke 2>&1 | tee research/olcumler/edg045_stop_slip_2026-08-22/kosum_smoke2.log
+#
+# [2] TAM (~12-13 dk/koşum · kontrol@0 + 3 hücre ≈ 50 dk)
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg045_stop_slip_2026-08-22/olcum.py 2>&1 | tee research/olcumler/edg045_stop_slip_2026-08-22/kosum_tam.log
+
+# ── KOŞUM #2 SONUCU (2026-08-23 00:23): duman GEÇTİ (kosum_smoke2.log) · TAM koşumda
+#    kill#1 GEÇTİ (edg032c bayt-özdeş) · kill#2 GEÇTİ · stopslip5'te betiğin Z1 bayrağı düştü
+#    → kill#3 DURDU (exit 2); stopslip10/20 KOŞULMADI, Δ/CI üretilmedi. Bileşen kırılımı:
+#    sızıntı (enjekte==orig) SIFIR ihlal; düşen, Z1'in defter-yeniden-kurma alt-sınaması —
+#    13 satır, hepsi 5.hane .xxxx5 bağ değeri, kontrol@0'da da AYNI (enjeksiyondan bağımsız).
+#    Teşhis + sayılar: DURDU_kill3_z1_defter_yenidenkurma.json — karar Rol-1'in.
+
+# ════════════════════════════════════════════════════════════════════════════════════════
+# ALET DÜZELTMESİ (2026-08-23, Rol-1 hükmü — EDG-040 kill#2 emsali: alet GEVŞETİLMEZ,
+# TAMAMLANIR). Rol-1: alt-sınama (ii) kartın kill#3'üne DAHİL DEĞİL; kartın ölçütü
+# (enjekte==orig, stop_gap sızmazlığı) 505/505 TEMİZDİ. DURDU_kill3 artefaktı TARİHÇE.
+#
+# NE BOZUKTU: S2/Z1'in defter-yeniden-kurma modeli deftere Python round() ile bakıyordu;
+#   13 satır (hepsi .xxxx5 bağ değeri; regime_flip 7 · time_stop 4 · target_gap 2) motorla
+#   farklı yöne yuvarlanıyordu — kontrol@0'da da AYNI 13 satır (enjeksiyondan bağımsız).
+# MOTOR YUVARLAMASI NE ÇIKTI (koddan okundu + kayıtlı defterde doğrulandı):
+#   broker.py:790 `"exit": round(exit_fill, 4)` · exit_fill = raw_exit×(1−slip) (:765).
+#   Mekanizma round() AMA işlenen TİPİ reason yoluna göre değişir:
+#     bar-fiyatı yolları (stop_gap/target_gap/time_stop/regime_flip/eod|delisted_markout;
+#       backtest.py:312/364/556/563 pandas .loc) → np.float64 → np.float64.__round__
+#     plan-alanı yolları (stop=eff_stop broker.py:684; target=pos.target :693;
+#       strategy.py:333/335 round(float,4)) → Python float → Python round()
+#   Kanıt: 13/13 bağ satırı np yolunda deftere birebir; META 2025-02-14 'target' Python
+#   yolunda birebir (np'de değil); karma model kontrol@0 + stopslip5'te 885/885.
+# DÜZELTME: olcum.py'ye defter_yuvarla(x, reason) eklendi; S2/Z1 yeniden-kurması onu
+#   kullanır. FORMÜLLER, S1 TOLERANSI (1e-9) VE SINAMALAR AYNEN — hiçbiri kaldırılmadı.
+#   sha256 ÖNCE : d213e60f13247a78c3617c6c656f8b59757c73c48bf3d23e4183f6031d7f7d2f
+#   sha256 SONRA: ab3a5dcc805c78e7e94781b66bc3f43a6f4f35ac79913a94efab0e8b4f3bc4d9
+#
+# [3] TAMAMLAMA (Rol-1 talimatı; K muhasebesi DEĞİŞMEZ): kayıtlı kontrol@0+stopslip5
+#     diskten yeniden doğrulanır (replay YOK) → kill#1 disk bayt-kıyası → stopslip10+20
+#     koşulur (aynı kapılar) → ÜÇ hücrenin Δ+CI'sı → sonuc_grid.json (eski DURDU grid
+#     arşivi: sonuc_grid_kill3_durdu_arsiv.json). oz_sinama_*_duzeltilmis.json yenidir;
+#     orijinal oz_sinama_* dosyaları kill tarihçesi olarak DOKUNULMAMIŞTIR.
+uv run python research/olcumler/edg045_stop_slip_2026-08-22/olcum.py --tamamla 2>&1 | tee research/olcumler/edg045_stop_slip_2026-08-22/kosum_tamamla.log
+
+# ── TAMAMLAMA SONUCU (2026-08-23, exit 0): alet doğrulama kontrol@0 505/505+380/380 TEMİZ ·
+#    stopslip5 kayıtlı defter TEMİZ (koşulmadı) · kill#1 disk bayt-kıyası GEÇTİ · stopslip10
+#    ve stopslip20 koşuldu (kill#2/3/4 temiz, künye eşit) · ÜÇ hücre Δ+CI üretildi (B=5000,
+#    seed 20260812, taban=edg032c). Kanonik grid: sonuc_grid.json (DURDU arşivi:
+#    sonuc_grid_kill3_durdu_arsiv.json). Log: kosum_tamamla.log. HÜKÜM YOK — Rol-1'e.

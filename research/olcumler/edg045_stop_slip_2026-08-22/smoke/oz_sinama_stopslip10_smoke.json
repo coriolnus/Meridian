@@ -1,0 +1,60 @@
+{
+ "beklenen_ek_slip": 0.001,
+ "n_cikis_yakalanan": 8,
+ "reason_dagilim_yakalanan": {
+  "regime_flip": 7,
+  "stop": 1
+ },
+ "n_stop": 1,
+ "n_stop_gap": 0,
+ "n_diger": 7,
+ "pos_okunamadi_n": 0,
+ "S1_max_mutlak_fark": 1.1015494072452725e-16,
+ "S2_defter_esit_n": 1,
+ "S3_eff_stop_esit_n": 1,
+ "stop_bozuk_satirlar": [],
+ "stop_bozuk_n": 0,
+ "kill2_gecti": true,
+ "kill2_olculemedi_nedeni": null,
+ "Z1_stop_gap_max_fark": null,
+ "Z1_diger_max_fark": 0.0,
+ "Z1_defter_esit_n": 7,
+ "sizinti_bozuk_satirlar": [],
+ "sizinti_bozuk_n": 0,
+ "kill3_sizinti_yok": true,
+ "trail_kunyesi": {
+  "stop_trail_ustte_n": 0,
+  "stop_hard_n": 1,
+  "trail_pay_pct": 0.0,
+  "belirsiz_n": 0,
+  "beyan": "trail_ustte = kapanış ANINDA pos.trail_stop > pos.stop (breakeven kilidi dahil) — aynı kademe-2 kanalı, künye amaçlı; ayrı kova açılmadı"
+ },
+ "A_ayirt_min": 0.0009999999999998899,
+ "A_ayirt_max": 0.0009999999999998899,
+ "stop_r_dagilim": {
+  "n": 1,
+  "ort": -1.011,
+  "min": -1.011,
+  "max": -1.011,
+  "p10": -1.011,
+  "p25": -1.011,
+  "p50": -1.011,
+  "p75": -1.011,
+  "p90": -1.011,
+  "r_none_n": 0
+ },
+ "stop_r_dagilim_trail": null,
+ "stop_r_dagilim_hard": {
+  "n": 1,
+  "ort": -1.011,
+  "min": -1.011,
+  "max": -1.011,
+  "p10": -1.011,
+  "p25": -1.011,
+  "p50": -1.011,
+  "p75": -1.011,
+  "p90": -1.011,
+  "r_none_n": 0
+ },
+ "beyan": "S1 kart formülü: fill = enjekte stop-dolum seviyesi (genel 5bps modelinden ÖNCE), eff_stop = orig raw_exit (= broker.py:692'nin döndürdüğü değer; S3 bunu max(stop,trail)'e karşı ayrıca sınar). S2 defterin KENDİSİNE çivili: enjekte seviye × (1−broker.slip) 4 hanede defter['exit'] ile birebir. Z1 sızmazlık: stop dışı HİÇBİR kapanışta raw_exit değişmedi (fark ≡ 0) ve defter, motorun yamasız aritmetiğiyle birebir. Tüm sınamalar TÜM kapanışlar üstünde."
+}

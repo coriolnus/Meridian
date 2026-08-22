@@ -1,0 +1,42 @@
+{
+ "kart": "EDG-2026-045",
+ "kosum_no": 2,
+ "taban": "edg032c_taban_2026-08-22 (Rol-1 yeniden-çapalama; kart bloğu sasi_capasi_guncellemesi_2026_08_22)",
+ "olcum_zamani": "2026-08-22 → 2026-08-23 gecesi; kosum_tam.log + sonuc_grid.json mtime kanıt",
+ "DURDU": "kill#3 (betiğin KODLANDIĞI haliyle) — stopslip5 hücresinde 'sizinti_yok=False'; stopslip10 ve stopslip20 KOŞULMADI, hiçbir Δ/CI üretilmedi (betik bootstrap'a gelmeden çıktı, exit 2)",
+ "gecen_kapilar_once": {
+  "motor_kunye": "DÖRT dosya (broker/backtest/strategy/guard) koşum başında edg032c/TABAN_KUNYESI.json ile birebir; her hücrede önce/sonra sabit VE künyeye eşit (kill#4 temiz)",
+  "kill1_sasi_kapisi": "kontrol@0 TAM koşumu edg032c/kosum1 ile ÜÇ dosyada sha256 BAYT-ÖZDEŞ (islemler_tam/islemler_slim/seanslar) — GEÇTİ (sasi_kontrolu.json)",
+  "kill2_oz_sinama": "HER İKİ koşumda GEÇTİ: S1 max|fark| kontrol=0.0, stopslip5=1.66e-16 (eşik 1e-9); S2 defter-çivisi 380/380; S3 kanal kimliği (orig==max(stop,trail)) 380/380",
+  "A_ayirt_edicilik": "kontrol@0: 0.0 · stopslip5: [4.9999999999983e-04, 5.0000000000006e-04] ≈ 5e-4 — sınama enjeksiyonu GÖRÜYOR, boş geçmiyor"
+ },
+ "dusen_bilesenin_anatomisi": {
+  "z1_iki_alt_sinama_bantliyor": "betiğin Z1'i (i) enjekte==orig [kartın kill#3 metni: 'stop_gap dolumlarına enjeksiyon sızarsa'] ve (ii) defter-aritmetiği yeniden-kurma round(orig×(1−0.0005),4)==defter['exit'] alt-sınamalarını TEK bayrakta birleştirir; kill zinciri bayrağa bakar",
+  "alt_sinama_i_sizinti": "SIFIR İHLAL: stop-dışı 505 satırın TAMAMINDA (stop_gap 57 dahil) enjekte==orig, max|fark| ≡ 0.0 her iki koşumda — kartın kill#3 metnindeki ölçüt İHLAL EDİLMEDİ (ölçüldü)",
+  "alt_sinama_ii_defter_yenidenkurma": "13/505 satırda düştü — fark HEP son basamakta ±0.0001; reason dağılımı: regime_flip 7 · time_stop 4 · target_gap 2; stop_gap satırı YOK (57/57 her iki alt-sınamadan geçti)"
+ },
+ "mekanik_kok_neden_olculdu": {
+  "bag_degeri": "13/13 satırda orig×(1−0.0005) TAM 5. hanede .xxxx5 bağ değeri (Decimal ile doğrulandı); orig'ler temiz tek-haneli fiyatlar (195.5, 241.7, 230.1, 173.7, 137.9, 96.3, 346.7, 183.5, 43.5, 47.1, 30.7, 30.7, 147.5) — açılış/kapanış fiyatı basan reason'lar",
+  "yon": "motorun bağ-yuvarlaması ile öz-sınamanın Python round() yeniden-kurması (ikili double üstünde banker's rounding) bu bağlarda FARKLI yöne düşüyor; yön iki tarafta da tutarlı değil (VMC 195.4022 defter < 195.4023 round4; SPOT 241.5792 defter > 241.5791 round4)",
+  "enjeksiyondan_bagimsiz": "AYNI 13 satır, AYNI değerlerle hem kontrol@0 hem stopslip5'te düşüyor (küme eşitliği doğrulandı) — ve kontrol@0 kill#1 BAYT-ÖZDEŞLİĞİ geçtiği için bu 13 defter satırı DONMUŞ edg032c tabanının kendisiyle de birebir aynı: fark sarmalayıcının DEĞİL, yeniden-kurma modelinin",
+  "neden_stop_S2_dusmedi": "stop satırlarının eff_stop'u çarpım ürünü 'kirli' float — 380 satırın HİÇBİRİ 5.hane bağına denk gelmedi (S2 380/380 iki koşumda; duman da 2022-01→06 penceresinde bağ satırı görmediği için geçmişti)"
+ },
+ "olculen_hucreler_betimleyici": {
+  "kontrol_ek0": {"n": 885, "net_pnl_trades": 23806.13, "pf": 1.1293, "maxdd_kanonik": 0.1263, "sharpe": 0.594, "avg_r": 0.083, "win_rate": 0.365, "exit": {"stop": 380, "stop_gap": 57, "target": 101, "target_gap": 27, "time_stop": 152, "regime_flip": 168}, "trail_kunyesi": {"trail_ustte_n": 89, "hard_n": 291, "trail_pay_pct": 23.42}, "stop_r_ort": -0.7712},
+  "stopslip5": {"n": 885, "net_pnl_trades": 20721.37, "pf": 1.1125, "maxdd_kanonik": 0.1289, "sharpe": 0.524, "avg_r": 0.073, "win_rate": 0.365, "exit_dagilim_ayni": true, "trail_kunyesi_ayni": true, "stop_r_ort": -0.7928, "stop_r_hard_ort": -1.0405, "stop_r_trail_ort": 0.0171},
+  "betimleyici_fark_CI_YOK": "stopslip5 − taban = −3084.76 (NOKTA farkı, tek koşum; bootstrap/CI KOŞULMADI — betik kill'de durdu; hücre betiğin kill bayrağıyla işaretli — bu sayıdan çıkarım yapılmaz)",
+  "stopslip10": null,
+  "stopslip20": null,
+  "kosulmayan_nedeni": "kill zinciri stopslip5'te durdurdu; trial_ids pending-045-s5/s10/s20 K muhasebesi Rol-1'in"
+ },
+ "esik_disiplini_beyani": "Z1 tanımı ölçüm SIRASINDA gevşetilmedi/değiştirilmedi; betik kodlandığı gibi durdu (eşik sonradan değişmez). 'Alt-sınama (ii) kartın kill#3 metnine dahil mi, yoksa öz-sınamanın kendi yeniden-kurma modelinin bağ-değeri kusuru mu' kararı ve olası düzeltilmiş-sınamayla yeniden koşum kararı ROL-1'İN.",
+ "dosyalar": {
+  "grid": "sonuc_grid.json (DURDU alanıyla)",
+  "hucreler": ["hucre_kontrol.json", "hucre_stopslip5.json"],
+  "oz_sinamalar": ["oz_sinama_kontrol.json", "oz_sinama_stopslip5.json"],
+  "ham_yakalamalar": ["yakalama_kontrol.json", "yakalama_stopslip5.json"],
+  "sasi_kapisi": "sasi_kontrolu.json",
+  "log": "kosum_tam.log (duman: kosum_smoke2.log; ilk koşumun kanıtları DURDU_kill1_sasi_kapisi.json + kosum_smoke.log DOKUNULMADI)"
+ },
+ "hukum_yok": "Bu dosya HÜKÜM İÇERMEZ. Sayılar yukarıda; kill'in gerçek sızıntı mı öz-sınama-modeli kusuru mu sayılacağı, hücrelerin geçerliliği ve yeniden koşum kararı Rol-1'in. Ö2 okuma kuralı gereği EDG-040 hükmüne dair HİÇBİR çıkarım yapılmadı."
+}

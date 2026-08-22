@@ -40,16 +40,24 @@ kill_criteria:
   - "motor sha koşum içinde değişirse geçersiz (bugünkü uçuş-commit dersi: koşum sırasında motor commit'i de yasak)"
   - "Ö2 okuma kuralı ihlali: 042-K3 bandı gelmeden bu kartla EDG-040 hükmü revize edilirse geçersiz"
 k_registry: {registered_at: "2026-08-22", trial_ids: [pending-045-s5, pending-045-s10, pending-045-s20]}
-status: registered   # 2026-08-22 Rol-1 — ön-kayıt (23d'nin kartı; kanıt wp1_23d_kanit).
-sasi_capasi_guncellemesi_2026_08_22: >
-  ROL-1 YENİDEN-ÇAPALAMA (ölçümden ÖNCE — bu kartta HİÇBİR hücre ölçülmemişken; veri bakılmadı).
-  Kartın şasi referansı edg032b → **edg032c_taban_2026-08-22** olarak güncellenir. NEDEN: B1
-  operatör kararı (pullback silahsız, c150902) dünyayı değiştirdi — edg032b tabanı 6 pullback
-  işlemi içerir ve bugünkü motorla yeniden üretilemez; EDG-2026-045'in ilk koşumu kill#1'de
-  DOĞRU şekilde durdu (DURDU_kill1_sasi_kapisi.json). Eski dünyayı ölçmek yaşamadığımız bir
-  soruyu cevaplamak olurdu. EŞİKLER/K/KARAR KURALLARI DEĞİŞMEDİ — yalnız kıyas tabanının adı.
-  edg032c determinizm çift-kapısıyla donduruluyor; künyesi TABAN_KUNYESI.json'da.
+status: measured     # 2026-08-23 Rol-1 HÜKMÜ — aşağıda. (ön-kayıt 08-22; iki DURDU + alet-tamamlama tarihçesi dizinde)
 
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-23): **Ö1 KURALI ATEŞLEDİ — sıfır-stop-slip varsayımı P&L'i ANLAMLI
+  ŞİŞİRİYOR.** Taban edg032c (+23.806) → stop-slip 5/10/20 bps: +20.721 / +18.109 / +12.769;
+  ΔP&L eşlenik ay-kümeli CI'ların ÜÇÜ DE sıfırın altında: −3.085 [−4.131,−2.168] ·
+  **−5.697 [−7.604,−4.004] (Ö1 hücresi)** · −11.037 [−14.749,−7.740]. Paket 10 bps'te pozitif
+  KALIYOR (+18.109) — yani varsayım paketi öldürmüyor ama defteri sistematik parlatıyor.
+  KARAR KURALI GEREĞİ ŞERH DÜŞÜLDÜ: (a) EDG-2026-040'ın başabaş bandına ("5-15 bps/bacak"
+  cümlesi stop-slip=0 dünyasında ölçülmüştü — gerçek başabaş DAHA AŞAĞIDA), (b) replay
+  hükümlerine genel stop-slip şerhi. Ö2 ASKIDA: gerçek stop-slip bandı EDG-2026-042 K3'ten
+  gelecek; bant gelmeden hangi hücrenin konuştuğu seçilmez (okuma kuralı).
+  TARİHÇE (iki DURDU, ikisi de DOĞRU davranış): #1 kill#1 — B1 dünya değişimi, edg032c tabanı
+  donduruldu; #2 kill#3 — aletin yeniden-kurma modeli bağ-yuvarlamada eksikti; motorun KARMA
+  yuvarlama yolu koddan okundu (np.float64.__round__ bar-fiyat yollarında, Python round plan-alanı
+  yollarında), model tamamlandı (885/885 iki defterde), tolerans 1e-9 AYNEN. EDG-040 kill#2
+  emsalinin üçüncü vakası: alet gevşetilmez, tamamlanır. K: 3 (plan aynen), alet doğrulaması
+  ölçüm sayılmadı.
 beyanlı_sinirlar: >
   (1) Sabit-bps ek-slip gerçek stop dinamiğini (hızlı piyasada kayma likiditeye bağlı) temsil
   etmez — alt sınır sınıfı. (2) trail_stop aynı kademeden geçer, ayrı kova açılmadı (grid

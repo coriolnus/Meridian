@@ -102,3 +102,8 @@ verdict: >
   damgası AYAKTA). AMA: EDG-038'in kanonik ölçütü giriş bacağında medyan +29 bps demişti;
   o tahmin doğruysa sistem slip25-35 bandındadır ve oradaki sayılar −13.7k/−25.7k'dır.
   Dokuz replay hükmüne düşülen §E şerhi artık RAKAMLIDIR.
+  ── ŞERH (EDG-2026-045 hükmüyle, 2026-08-23 — Rol-1): bu kartın tüm hücreleri STOP-SLIP=0
+  varsayımıyla koştu; 045 o varsayımın defteri ANLAMLI şişirdiğini ölçtü (10 bps stop-slip
+  tek başına −5.697$, CI sıfır-dışı). Yani buradaki "başabaş 5-15 bps/bacak" bandı İYİMSER
+  tarafta — gerçek başabaş daha aşağıda olabilir. Bant, 042-K1 (giriş) + 042-K3 (stop) gerçek
+  bantları geldiğinde birlikte yeniden okunur.
