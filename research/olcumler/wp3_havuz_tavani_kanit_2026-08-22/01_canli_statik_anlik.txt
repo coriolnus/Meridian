@@ -1,0 +1,102 @@
+== nproc ==
+4
+== loadavg ==
+0.10 0.11 0.09 1/296 401218
+== uptime ==
+ 18:25:44 up 20 days,  8:40,  2 users,  load average: 0.10, 0.11, 0.09
+== birimler ==
+meridian: active
+meridian-learn: active
+meridian-barsarchive: active
+== meridian.service show ==
+MainPID=400836
+CPUWeight=[not set]
+CPUQuotaPerSecUSec=infinity
+ActiveEnterTimestamp=Sat 2026-08-22 18:07:26 UTC
+== meridian-learn.service show ==
+MainPID=305928
+CPUWeight=50
+CPUQuotaPerSecUSec=infinity
+ActiveEnterTimestamp=Sun 2026-08-16 23:27:06 UTC
+== hermes_status ==
+{
+  "reflections": 1,
+  "last_reflection": "2026-08-17T01:21:35+00:00",
+  "last_poll": "2026-08-22T18:21:56+00:00",
+  "last_result": "no_clearing_candidate",
+  "last_variable": null,
+  "started_at": "2026-08-16T23:27:07+00:00",
+  "poll_seconds": 300,
+  "last_reflect_at": 887,
+  "local_agent_sync": {
+    "yapildi": false,
+    "sebep": "cli_zaten_yapilandirilmis",
+    "model": "gemini-flash-latest",
+    "senkron_ts": "2026-08-16T23:27:07+00:00"
+  },
+  "kalp": "2026-08-22T18:21:56+00:00",
+  "horizon_ready": false,
+  "horizon_regime": "trend_up",
+  "_warm_skip": null,
+  "bg_reflect_by_regime": {
+    "chop": 887
+  },
+  "_warm_ticks": 1497,
+  "last_warmup": {
+    "at": "2026-08-22T17:36:55+00:00",
+    "evaluated": 40,
+    "cleared": 0,
+    "best": null,
+    "kesildi": false,
+    "sebep": null,
+    "tavan_dk": 300.0,
+    "kalan_sonda": null,
+    "butce": 10,
+    "butce_carpani": 1,
+    "k_max": 2,
+    "butce_formulu": "taban 10 (varsay\u0131lan) \u00d7 \u00e7arpan 1 [duvar \u00d71] = 10; k_max 2+0 = 2"
+  },
+  "brain": "nous",
+  "model": "nvidia/nemotron-3-super-120b-a12b:free",
+  "updated": "2026-08-22T18:21:57+00:00",
+  "brain_availability": {
+    "claude": {
+      "credentials": false,
+      "cooling_s": 0.0,
+      "ready": false,
+      "reason": null,
+      "model_id": "claude-opus-4-8"
+    },
+    "nous": {
+      "credentials": true,
+      "cooling_s": 0.0,
+      "ready": true,
+      "reason": null,
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free"
+    },
+    "gemini": {
+      "credentials": true,
+      "cooling_s": 0.0,
+      "ready": true,
+      "reason": null,
+      "model_id": "gemini-flash-latest"
+    }
+  },
+  "brain_chain": {
+    "order": [
+      "claude",
+      "nous",
+      "gemini"
+    ],
+    "ready": [
+      "nous",
+      "gemini"
+    ],
+    "models": {
+      "claude": "claude-opus-4-8",
+      "nous": "nvidia/nemotron-3-super-120b-a12b:free",
+      "gemini": "gemini-flash-latest"
+    },
+    "same_model_ids": [],
+    "nous_mode": "portal",
+    "agent_c

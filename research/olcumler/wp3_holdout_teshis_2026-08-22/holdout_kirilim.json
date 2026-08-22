@@ -1,0 +1,185 @@
+{
+ "holdout_ay": {
+  "2026-04": {
+   "n": 1,
+   "avg_r": 2.194,
+   "sum_r": 2.19
+  },
+  "2026-05": {
+   "n": 30,
+   "avg_r": -0.329,
+   "sum_r": -9.86
+  },
+  "2026-06": {
+   "n": 38,
+   "avg_r": -0.36,
+   "sum_r": -13.69
+  },
+  "2026-07": {
+   "n": 18,
+   "avg_r": -0.398,
+   "sum_r": -7.17
+  }
+ },
+ "holdout_cikis": {
+  "regime_flip": {
+   "n": 12,
+   "avg_r": -0.028,
+   "sum_r": -0.34
+  },
+  "stop": {
+   "n": 52,
+   "avg_r": -0.708,
+   "sum_r": -36.83
+  },
+  "stop_gap": {
+   "n": 11,
+   "avg_r": -1.341,
+   "sum_r": -14.76
+  },
+  "target": {
+   "n": 7,
+   "avg_r": 1.789,
+   "sum_r": 12.53
+  },
+  "target_gap": {
+   "n": 3,
+   "avg_r": 2.654,
+   "sum_r": 7.96
+  },
+  "time_stop": {
+   "n": 2,
+   "avg_r": 1.46,
+   "sum_r": 2.92
+  }
+ },
+ "confirm_cikis": {
+  "regime_flip": {
+   "n": 49,
+   "avg_r": 0.858,
+   "sum_r": 42.04
+  },
+  "stop": {
+   "n": 87,
+   "avg_r": -0.83,
+   "sum_r": -72.17
+  },
+  "stop_gap": {
+   "n": 12,
+   "avg_r": -1.09,
+   "sum_r": -13.09
+  },
+  "target": {
+   "n": 28,
+   "avg_r": 2.334,
+   "sum_r": 65.34
+  },
+  "target_gap": {
+   "n": 8,
+   "avg_r": 3.314,
+   "sum_r": 26.51
+  },
+  "time_stop": {
+   "n": 21,
+   "avg_r": 0.416,
+   "sum_r": 8.73
+  }
+ },
+ "holdout_en_kotu8": [
+  {
+   "t": "AVGO",
+   "open": "2026-06-03",
+   "r": -2.873,
+   "exit": "stop_gap",
+   "setup": "momentum_burst"
+  },
+  {
+   "t": "MRVL",
+   "open": "2026-06-22",
+   "r": -1.856,
+   "exit": "stop_gap",
+   "setup": "momentum_burst"
+  },
+  {
+   "t": "TXN",
+   "open": "2026-06-04",
+   "r": -1.803,
+   "exit": "stop_gap",
+   "setup": "exhaustion_hammer"
+  },
+  {
+   "t": "NVDA",
+   "open": "2026-07-16",
+   "r": -1.729,
+   "exit": "stop_gap",
+   "setup": "exhaustion_hammer"
+  },
+  {
+   "t": "MCHP",
+   "open": "2026-06-04",
+   "r": -1.517,
+   "exit": "stop_gap",
+   "setup": "exhaustion_hammer"
+  },
+  {
+   "t": "INTC",
+   "open": "2026-05-22",
+   "r": -1.484,
+   "exit": "stop_gap",
+   "setup": "exhaustion_hammer"
+  },
+  {
+   "t": "AAPL",
+   "open": "2026-06-12",
+   "r": -1.257,
+   "exit": "stop_gap",
+   "setup": "exhaustion_hammer"
+  },
+  {
+   "t": "QCOM",
+   "open": "2026-05-12",
+   "r": -1.056,
+   "exit": "stop",
+   "setup": "momentum_burst"
+  }
+ ],
+ "holdout_setup": {
+  "breakout_vcp": {
+   "n": 17,
+   "avg_r": -0.403,
+   "sum_r": -6.84
+  },
+  "exhaustion_hammer": {
+   "n": 39,
+   "avg_r": -0.281,
+   "sum_r": -10.96
+  },
+  "momentum_burst": {
+   "n": 30,
+   "avg_r": -0.341,
+   "sum_r": -10.24
+  },
+  "pullback": {
+   "n": 1,
+   "avg_r": -0.471,
+   "sum_r": -0.47
+  }
+ },
+ "confirm_setup": {
+  "breakout_vcp": {
+   "n": 59,
+   "avg_r": 0.101,
+   "sum_r": 5.95
+  },
+  "exhaustion_hammer": {
+   "n": 63,
+   "avg_r": 0.618,
+   "sum_r": 38.96
+  },
+  "momentum_burst": {
+   "n": 83,
+   "avg_r": 0.15,
+   "sum_r": 12.46
+  }
+ }
+}

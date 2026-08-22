@@ -1,0 +1,138 @@
+{
+  "kart_kaniti": "WP3/28d — kapı çapraz-doğrulama sayımı (hüküm yok)",
+  "olcum_ts": "2026-08-22T18:33:27+00:00",
+  "capraz_dogrulama_chop_islemleri": {
+    "aciklama": "inc_cache global girdisindeki chop-etiketli işlemler vs yerel gün-serisi (plan günü = ts_open'dan önceki işlem günü)",
+    "islemler": [
+      {
+        "ticker": "T",
+        "ts_open": "2024-09-11",
+        "plan_gunu": "2024-09-10",
+        "gun_serisi_etiketi": "chop",
+        "tutarli": true
+      },
+      {
+        "ticker": "CHTR",
+        "ts_open": "2025-05-19",
+        "plan_gunu": "2025-05-16",
+        "gun_serisi_etiketi": "chop",
+        "tutarli": true
+      },
+      {
+        "ticker": "WMB",
+        "ts_open": "2025-06-03",
+        "plan_gunu": "2025-06-02",
+        "gun_serisi_etiketi": "chop",
+        "tutarli": true
+      },
+      {
+        "ticker": "LHX",
+        "ts_open": "2025-05-22",
+        "plan_gunu": "2025-05-21",
+        "gun_serisi_etiketi": "chop",
+        "tutarli": true
+      },
+      {
+        "ticker": "DIS",
+        "ts_open": "2025-06-11",
+        "plan_gunu": "2025-06-10",
+        "gun_serisi_etiketi": "chop",
+        "tutarli": true
+      }
+    ],
+    "tutarli_sayisi": 5,
+    "toplam": 5
+  },
+  "chop_gunlerinde_butce": {
+    "aciklama": "build_regime_json (üretim) ile; budget=0 → regime_ok=False → giriş yok (backtest.py:382, loop.py:1597)",
+    "params_kaynagi": "state/strategy.yaml params",
+    "min_exposure_score": 40,
+    "toplam_chop_gunu": 324,
+    "girise_acik_chop_gunu(budget>0)": 62,
+    "girise_kapali_chop_gunu(budget=0)": 262,
+    "kapali_gunlerin_dd_dagilimi": {
+      "6": 59,
+      "5": 33,
+      "8": 42,
+      "7": 59,
+      "9": 43,
+      "10": 16,
+      "11": 9,
+      "12": 1
+    },
+    "claim_sonrasi(2025-07-01+)": {
+      "chop_gunu": 52,
+      "girise_acik": 0,
+      "girise_kapali": 52
+    }
+  },
+  "kapi_dilim_sayilari_yerel_inc_cache": [
+    {
+      "eval_regime": null,
+      "oos_split": {
+        "search_start": "2023-07-11",
+        "search_end": "2025-04-01",
+        "confirm_start": "2025-04-01",
+        "confirm_end": "2025-12-31"
+      },
+      "n_graded": 162,
+      "search": {
+        "trend_up": 89,
+        "chop": 1
+      },
+      "confirm": {
+        "chop": 4,
+        "trend_up": 17
+      }
+    },
+    {
+      "eval_regime": "chop",
+      "oos_split": {
+        "search_start": "2023-07-11",
+        "search_end": "2025-04-01",
+        "confirm_start": "2025-04-01",
+        "confirm_end": "2025-12-31"
+      },
+      "n_graded": 24,
+      "search": {
+        "chop": 1
+      },
+      "confirm": {
+        "chop": 4
+      }
+    },
+    {
+      "eval_regime": null,
+      "oos_split": {
+        "search_start": "2024-01-11",
+        "search_end": "2025-08-18",
+        "confirm_start": "2025-08-18",
+        "confirm_end": "2026-04-30"
+      },
+      "n_graded": 163,
+      "search": {
+        "trend_up": 66,
+        "chop": 5
+      },
+      "confirm": {
+        "trend_up": 17
+      }
+    }
+  ],
+  "confirm_tabani": {
+    "kod_satiri": "meridian/oos_pipeline.py:79  _floor = max(10, int(0.7 * min_sample))",
+    "ikinci_kopya": "meridian/reflect.py:580  floor = max(10, int(min_sample * 0.7)) (arama dilimi)",
+    "bos_dilim_davranisi": "meridian/oos_pipeline.py:83-86: _n < _floor → GateResult(False, law='legacy', why='teyit dilimi ince (N < F işlem) — ship yetkisi bu kanıtla verilemez') — FAIL-CLOSED; ayrıca reflect.py:628-637 dilim VAR + ölçüm YOK → law='olculemedi', magnitude_ok=False (28f)",
+    "min_sample_guncel": 30,
+    "floor_guncel": 21,
+    "on_bagladigi_bolge": "max'ın 10 kolu ancak min_sample<=14 iken bağlar (int(0.7*14)=9); min_sample>=15'te bağlayıcı kol 0.7·min_sample'dır",
+    "floor_tablosu": {
+      "5": 10,
+      "10": 10,
+      "14": 10,
+      "15": 10,
+      "20": 14,
+      "30": 21
+    }
+  }
+}

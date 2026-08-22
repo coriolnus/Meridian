@@ -1,0 +1,21 @@
+== ps: iki birimin agaci ==
+ 400848  400836   0 15.3  5.5    1121 0::/system.slice/meridian.service                            /opt/meridian/.venv/bin/python /opt/meridian/.venv/bin/uvicorn meridian.api:app --host 127.0.0.1 --port 8080 --log-level warning
+ 305928       1   0  7.4  2.8  500341 0::/system.slice/meridian-learn.service                      /opt/meridian/.venv/bin/python -m meridian.learn_run
+ 400849  400838   0  0.0  0.2    1121 0::/system.slice/meridian-barsarchive.service                /opt/meridian/.venv/bin/python3 -m meridian.barsarchive
+  21867       1   0  0.0  0.2 1692223 0::/system.slice/meridian-litestream.service                 /usr/local/bin/litestream replicate -config /etc/litestream.yml
+ 400836       1   0  0.0  0.3    1121 0::/system.slice/meridian.service                            /home/ubuntu/.local/bin/uv run uvicorn meridian.api:app --host 127.0.0.1 --port 8080 --log-level warning
+ 400838       1   0  0.0  0.2    1121 0::/system.slice/meridian-barsarchive.service                /home/ubuntu/.local/bin/uv run python -m meridian.barsarchive
+ 306051  305928   0  0.0  0.0  500284 0::/system.slice/meridian-learn.service                      /opt/meridian/.venv/bin/python -c from multiprocessing.resource_tracker import main;main(10)
+== cgroup cpu.stat delta (5 sn) ==
+api_usec_delta=4021718 learn_usec_delta=0 total_usec_delta=4047000 pencere_usec=5000000 cekirdek=4
+== canli reflect.py tavan formulu ==
+1512:    return max(1, min(tavan, (os.cpu_count() or 4) - 2))
+1500:def _havuz_tavani(tavan: int = 4) -> int:
+== canli birim env: PARALLEL_PROBES iki birimde ==
+MERIDIAN_PARALLEL_PROBES=1
+MERIDIAN_SEARCH_MAX_MIN=60
+HERMES_SEARCH_BUDGET=8
+---
+MERIDIAN_PARALLEL_PROBES=1
+MERIDIAN_SEARCH_MAX_MIN=60
+HERMES_SEARCH_BUDGET=8

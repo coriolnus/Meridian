@@ -1,0 +1,126 @@
+{
+ "IS 2022-01-01..2024-01-01": {
+  "n": 216,
+  "rejim_dagilimi": {
+   "trend_up": 148,
+   "chop": 68
+  },
+  "exploration_n": 0,
+  "avg_r": 0.0651,
+  "win_pct": 37.0,
+  "pnl_dolar": 6151.75,
+  "score_detail": {
+   "score": 0.247,
+   "n": 216,
+   "min_sample": 30,
+   "total_return": 0.0615,
+   "realized_30d": 0.0025,
+   "max_drawdown": 0.0665,
+   "sharpe": 0.649,
+   "sharpe_measurable": true,
+   "avg_r": 0.065,
+   "win_rate": 0.37,
+   "components": {
+    "ret": 0.035,
+    "dd": 0.585,
+    "sharpe": 0.271
+   }
+  }
+ },
+ "OOS-search 2024-01-11..2025-08-18": {
+  "n": 347,
+  "rejim_dagilimi": {
+   "trend_up": 320,
+   "chop": 27
+  },
+  "exploration_n": 0,
+  "avg_r": 0.0492,
+  "win_pct": 35.7,
+  "pnl_dolar": 5363.35,
+  "score_detail": {
+   "score": 0.1445,
+   "n": 347,
+   "min_sample": 30,
+   "total_return": 0.0536,
+   "realized_30d": 0.0027,
+   "max_drawdown": 0.1108,
+   "sharpe": 0.396,
+   "sharpe_measurable": true,
+   "avg_r": 0.049,
+   "win_rate": 0.357,
+   "components": {
+    "ret": 0.038,
+    "dd": 0.308,
+    "sharpe": 0.165
+   }
+  }
+ },
+ "OOS-confirm 2025-08-18..2026-04-30": {
+  "n": 205,
+  "rejim_dagilimi": {
+   "trend_up": 205
+  },
+  "exploration_n": 0,
+  "avg_r": 0.2798,
+  "win_pct": 39.5,
+  "pnl_dolar": 19879.03,
+  "score_detail": {
+   "score": 0.5342,
+   "n": 205,
+   "min_sample": 30,
+   "total_return": 0.1988,
+   "realized_30d": 0.0216,
+   "max_drawdown": 0.0459,
+   "sharpe": 1.994,
+   "sharpe_measurable": true,
+   "avg_r": 0.28,
+   "win_rate": 0.395,
+   "components": {
+    "ret": 0.308,
+    "dd": 0.713,
+    "sharpe": 0.831
+   }
+  }
+ },
+ "HOLDOUT 2026-04-30..2026-07-30": {
+  "n": 87,
+  "rejim_dagilimi": {
+   "trend_up": 87
+  },
+  "exploration_n": 0,
+  "avg_r": -0.3278,
+  "win_pct": 21.8,
+  "pnl_dolar": -13896.79,
+  "score_detail": {
+   "score": -0.5365,
+   "n": 87,
+   "min_sample": 30,
+   "total_return": -0.139,
+   "realized_30d": -0.0481,
+   "max_drawdown": 0.1561,
+   "sharpe": -4.898,
+   "sharpe_measurable": true,
+   "avg_r": -0.328,
+   "win_rate": 0.218,
+   "components": {
+    "ret": -0.688,
+    "dd": 0.024,
+    "sharpe": -1.0
+   }
+  }
+ },
+ "aylik_2025-08_sonrasi": {
+  "2025-08": 27,
+  "2025-09": 32,
+  "2025-10": 35,
+  "2025-11": 15,
+  "2025-12": 23,
+  "2026-01": 36,
+  "2026-02": 35,
+  "2026-04": 31,
+  "2026-05": 30,
+  "2026-06": 38,
+  "2026-07": 18,
+  "2026-08": 8
+ }
+}

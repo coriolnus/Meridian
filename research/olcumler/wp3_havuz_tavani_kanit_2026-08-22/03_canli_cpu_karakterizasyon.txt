@@ -1,0 +1,14 @@
+== kümülatif CPU (birim başlangıcından beri) ==
+CPUUsageNSec=179824138000
+CPUUsageNSec=78240293923000
+== 10sn delta x2 ==
+pencere1: api=105733usec learn=0usec /10000000usec
+pencere2: api=138537usec learn=148611usec /10000000usec
+== API sureci iplik dokumu (%cpu ile) ==
+    TID COMMAND         %CPU STAT
+ 400848 uvicorn         15.2 Sl
+== loadavg tekrar ==
+0.06 0.10 0.09 1/296 401351
+== PSI cpu ==
+some avg10=0.00 avg60=0.06 avg300=0.41 total=3999316154
+full avg10=0.00 avg60=0.00 avg300=0.00 total=0

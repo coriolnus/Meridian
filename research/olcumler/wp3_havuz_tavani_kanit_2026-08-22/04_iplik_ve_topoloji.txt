@@ -1,0 +1,12 @@
+== API sureci (400848) iplik adlari ==
+      8 uvicorn
+== learn sureci (305928) iplik adlari ==
+      5 python
+== lscpu ozet ==
+CPU(s):                                  4
+Model name:                              Neoverse-N1
+Thread(s) per core:                      1
+Core(s) per socket:                      4
+Socket(s):                               1
+== learn gunlugu: son arama/warmup izleri (salt-okuma) ==
+Aug 22 17:36:55 meridian-app-instance python[305928]: {"ts": "2026-08-22T17:36:55+00:00", "level": "info", "event": "warmup_sprint", "evaluated": 40, "cleared": 0, "best": null, "kesildi": false, "tavan_dk": 300.0, "kalan_sonda": null, "butce": 10, "butce_carpani": 1, "k_max": 2}

@@ -1,0 +1,115 @@
+{
+  "gorev": "WP3/28d KART-KANITI — 'kapı ÖLÇEMİYOR, kök: chop 2025-07'den beri hiç oluşmadı' premisinin sayımla sınanması (analiz; kart Rol-1'de)",
+  "olcum_ts": "2026-08-22T18:55:00+00:00",
+  "betikler": [
+    "olcum_rejim_tarihce.py (yerel barlar, gün-serisi + ham-dal + marjlar → sonuc_rejim_tarihce.json, gunluk_rejim.csv)",
+    "olcum_kapi_capraz.py (işlem-etiketi çapraz doğrulama + chop günü bütçeleri → sonuc_kapi_capraz.json)",
+    "canli_cek.py / canli_cek2_spy_tam.py / canli_cek3_agustos_rejim.py (A1 ssh-stdin SALT-OKUMA → canli_ham.json, canli_spy_2021p.json, canli_agustos_rejim.json)",
+    "olcum_rejim_canli_seri.py (canlı barlarla otoriter seri → sonuc_canli_seri.json, gunluk_rejim_canli.csv)"
+  ],
+
+  "kod_yolu_rejim_etiketi": {
+    "siniflayici": "meridian/regime.py:41 classify — trend_up: c>sma50 ∧ sma50>sma200 ∧ sma200≥sma200_prev(20 bar); trend_down: c<sma50 ∧ sma50<sma200; DEĞİLSE chop; bindirme: atr_pct ≥ serinin q0.80'i ∧ dal≠trend_up → high_vol (regime.py:82-90)",
+    "kapi_yolu": "meridian/backtest.py:373 build_regime_json(idx.loc[:d]) — genişleyen dilim, seri başı dataset.py:40 FETCH_START=2021-01-01 (adapters/data.py:2552 _window kırpar)",
+    "canli_yolu": "meridian/loop.py:1592 aynı çağrı",
+    "islem_etiketi": "plan kurulan günün kapanış rejimi → pos.regime_at_plan → trade['regime']; @rejim notlama backtest.py:723 _regime_slice",
+    "giris_kapisi": "backtest.py:382 ve loop.py:1597: regime_ok = regime ∈ (trend_up, chop) ∧ exposure_budget_pct > 0 — bütçe 0 ise chop gününde plan/giriş YOK"
+  },
+
+  "veri_dunyalari": {
+    "yerel": "state/bars/spy.csv (mtime 2026-08-13), son bar 2026-08-12",
+    "canli": "A1 state/bars/spy.csv (ssh salt-okuma, 2026-08-22), son bar 2026-08-21",
+    "fark": "2021-01-01→2026-07-28 BİRE BİR AYNI; 2026-07-29'dan itibaren 43 alan revizyonlu (ör. 07-29 close 729.46→731.74, hacimler farklı) — otoriter seri CANLI barlardan hesaplandı",
+    "iki_seri_chop_sayisi_ayni": "claim penceresi chop 52/52 her iki dünyada; revizyonlar etiket değiştirmedi"
+  },
+
+  "soru1_rejim_tarihcesi": {
+    "pencere": ["2022-01-01", "2026-08-21"],
+    "gun_toplam": 1163,
+    "dagilim_toplam": {"trend_up": 618, "chop": 324, "high_vol": 187, "trend_down": 34},
+    "dagilim_yil": {
+      "2022": {"trend_up": 6, "chop": 69, "high_vol": 148, "trend_down": 28},
+      "2023": {"trend_up": 135, "chop": 109, "trend_down": 6},
+      "2024": {"trend_up": 216, "chop": 34, "high_vol": 2},
+      "2025": {"trend_up": 146, "chop": 67, "high_vol": 37},
+      "2026_08_21e_kadar": {"trend_up": 115, "chop": 45}
+    },
+    "iddia_chop_2025_07_sonrasi_sifir_mi": {
+      "HUKUM_DEGIL_SAYIM": "HAYIR — gün düzeyinde 52 chop günü var",
+      "pencere": ["2025-07-01", "2026-08-21"],
+      "gun": 288, "chop_gunu": 52, "oran": 0.181,
+      "kumeler": {"2025-11": 6, "2025-12": 1, "2026-01": 1, "2026-02": 9, "2026-03": 22, "2026-04": 4, "2026-06": 1, "2026-07": 8},
+      "son_chop_gunu": "2026-07-30",
+      "canli_bugun": "trend_up (regime.json 2026-08-21, budget 80, dd 4; heartbeat 2026-08-22 trend_up)"
+    },
+    "premisin_kaynagi_uc_kavram_karisikligi": {
+      "islem_duzeyi": "TESHIS-OGRENME-TIKANIKLIGI-2026-08-13 §6.4 tablosu ts_close İŞLEM sayar: OOS 572 işlem, 27 chop, fold3 0/255 — DOĞRU ve bizim sayımla mekanik uyumlu",
+      "gun_duzeyi": "ROADMAP:1740-1746 bunu '2025-07-01'den sonraki 394 günde hiç chop yok / chop rejimi bir yıldır oluşmuyor' diye GÜN diline çevirmiş — YANLIŞ (52 gün var)",
+      "bg_sertifika": "TESHIS'in 'Canlı rejim chop' cümlesi bg-sertifika rejimi: canlı events.jsonl'da 2026-08-12→16'daki tüm 'chop' kayıtları bg_reflection_start/hermes_search_start (detay: 'canlı ufuk dolu değil — birikmiş kanıtlı rejim arka planda işleniyor'); aynı günlerin günlük döngü kaydı trend_up (canli_agustos_rejim.json)"
+    }
+  },
+
+  "soru2_ayristirma": {
+    "H1_piyasadan_chop_gercekten_yok": "DÜŞTÜ — claim penceresinde 52 chop günü (%18,1); 2026-02→04 tek başına 35 gün",
+    "H2_dedektorden_esikler_chopu_imkansiz_kiliyor": "DÜŞTÜ (sınıflayıcı düzeyinde) — chop else-dalıdır, eşiği yok; 2022→bugün 324 kez üretti; high_vol bindirmesinin claim penceresinde yediği chop 0 (sonuc_rejim_tarihce.json ham_dal_ayristirmasi)",
+    "OLCULEN_UCUNCU_MEKANIZMA_butce_baglasimi": {
+      "zincir": "chop taban 45 (regime.py exposure_score) − dd≥5 cezası 20 (regime.py build_regime_json 'score = max(0, score - 20)') = 25 < min_exposure_score 40 (state/strategy.yaml:13) → budget 0 → regime_ok False (backtest.py:382) → chop planı kurulamaz → chop İŞLEMİ doğamaz → @chop dilimi aç kalır",
+      "sayilar": {
+        "tum_donem_chop_gunu": 324,
+        "girise_acik_chop_gunu_budget_pozitif": 62,
+        "girise_kapali_chop_gunu": 262,
+        "claim_penceresi": "52 chop gününün 52'si de girişe KAPALI (hepsinin score'u tam 25 — 45−20)",
+        "son_girise_acik_chop_gunu": "2025-06-12",
+        "kapinin_son_chop_islemi_ts_open": "2025-06-13 (canlı inc_cache — birebir ertesi gün)",
+        "girise_acik_chop_gunleri_2024_sonrasi": "2024-09-10 (1 gün) + 2025-05-16→2025-06-12 (19 gün) = 20 gün → kapının 27 chop işleminin ts_open kümeleri 2024-09-11 (9 işlem) + 2025-05-19→06-13 — MEKANİK EŞLEŞME",
+        "R1_arama_dilimi_2024_01_11__2025_08_18": {"gun": 400, "chop_gunu": 94, "girise_acik_chop": 20, "kapida_chop_islem": 27},
+        "R1_confirm_dilimi_2025_08_18__2026_04_30": {"gun": 176, "chop_gunu": 43, "girise_acik_chop": 0, "kapida_chop_islem": 0}
+      },
+      "capraz_dogrulama": "yerel inc_cache'in 5 chop işleminin plan günü etiketi 5/5 yerel seriyle tutarlı (sonuc_kapi_capraz.json)"
+    }
+  },
+
+  "soru3_kapi_ham_verisi": {
+    "confirm_tabani_kod": "meridian/oos_pipeline.py:79  _floor = max(10, int(0.7 * int(goal.min_sample)))  (arama tarafı kopyası reflect.py:580)",
+    "aritmetik": {
+      "bugun": "min_sample=30 (state/goal.yaml:33) → floor=21; bağlayıcı kol 0.7·min_sample",
+      "on_kolu_ne_zaman_baglar": "yalnız min_sample≤14 iken (int(0.7·14)=9)",
+      "floor_tablosu": {"5": 10, "10": 10, "14": 10, "15": 10, "20": 14, "30": 21},
+      "roadmap45_teyidi": "min_sample 30→10 indirilse bile floor=10 > confirm-chop dilimi 0 → @chop teyitte ÖLÇÜLEMEZ kalır — eşik düşürmek açmaz (sayımla teyit)"
+    },
+    "fiili_baglanma": {
+      "chop": "confirm dilimi 0 işlem (canlı inc_cache, rev 1787344310) → taban HER değerde bağlanır; arama dilimi 27 ≥ 21 → arama tabanı geçilir ama oos_score min_sample'ı (30>27) skoru None bırakır (TESHIS §6.2 inc_cache alıntısı: score null, n 27, min_sample 30)",
+      "global_ve_trend_up": "confirm dilimi 205 işlem (tamamı trend_up) → taban bağlamaz",
+      "yerel_inc_cache_bayat_uyarisi": "yereldeki 30 Temmuz kopyasında global confirm 17-21 idi; fiili sayılar canlıdan alındı"
+    },
+    "bos_dilim_davranisi_kod_satiri": [
+      "oos_pipeline.py:83-86: _n < _floor → GateResult(False, law='legacy', why='teyit dilimi ince (N < F işlem) — ship yetkisi bu kanıtla verilemez') — FAIL-CLOSED red",
+      "reflect.py:580-581: arama dilimi < floor → thin → magnitude_ok False ('arama dilimi ince')",
+      "reflect.py:621-631: dilim VAR + ölçüm YOK → law='olculemedi', magnitude_ok=False — legacy marja DÜŞMEZ (28f düzeltmesi)",
+      "reflect.py:613: cand/inc OOS skoru None (min_sample altı) → 'ölçülmemiş aday ship edilemez'"
+    ]
+  },
+
+  "soru4_esik_adayi_envanteri": {
+    "beyan": "ENVANTER — seçim/öneri YOK; hangi eşik donacaksa kartta Rol-1 seçer. Her satır: ad · bugünkü değer · kod çapası (repo) · ölçülmüş kaldıraç.",
+    "adaylar": [
+      {"ad": "regime.min_exposure_score", "deger": 40, "capa": "state/strategy.yaml:13; bounds satırı VAR: state/bounds.yaml:16 {min 0, max 80, step 5}", "olculen": "claim penceresindeki 52 chop gününün TÜMÜ score=25; min_exp≤25 olsaydı 52/52 girişe açılırdı, 30-40 aralığında 0/52"},
+      {"ad": "dd cezası (büyüklük 20)", "deger": 20, "capa": "meridian/regime.py build_regime_json 'if dd >= 5: score = max(0, score - 20)' (sabit, bounds'ta YOK)", "olculen": "262/324 chop gününü tek başına kapatan terim; kapalı günlerin dd dağılımı {5:33, 6:59, 7:59, 8:42, 9:43, 10:16, 11:9, 12:1}"},
+      {"ad": "dd tetiği (eşik 5)", "deger": 5, "capa": "aynı satır (dd >= 5)", "olculen": "chop dönemleri distribution-day-yoğun: claim penceresi chop günlerinin 52/52'si dd≥5"},
+      {"ad": "chop maruziyet tabanı", "deger": 45, "capa": "meridian/regime.py exposure_score base haritası", "olculen": "45−20=25'in min_exp 40 altında kalması bağlaşımın aritmetiği; taban ≥60 olsaydı dd cezalı chop 40'ı geçerdi"},
+      {"ad": "goal.min_sample", "deger": 30, "capa": "state/goal.yaml:33; reflect.py yorumu 'DEĞİŞMEZ sözleşme'", "olculen": "@chop graded OOS 27 < 30 → oos_score None; 30→10 inse bile confirm 0 açılmaz (ROADMAP-45 + bu sayım)"},
+      {"ad": "confirm taban formülü (10 ve 0.7)", "deger": "max(10, 0.7·min_sample)", "capa": "oos_pipeline.py:79; reflect.py:580", "olculen": "chop confirm dilimi 0 → formülün HİÇBİR değeri açmaz; boş dilimde davranış fail-closed"},
+      {"ad": "OOS geometrisi (confirm %30 dilimi)", "deger": "SEARCH_FRACTION=0.70; R1 confirm 2025-08-18→2026-04-30", "capa": "oos_pipeline.py:27; dataset.py:110-131", "olculen": "confirm diliminde 43 chop GÜNÜ var ama 0'ı girişe açık — geometri değil bütçe bağlayıcı"},
+      {"ad": "high_vol bindirmesi (q0.80)", "deger": 0.8, "capa": "regime.py:79 hi_vol_thresh", "olculen": "claim penceresinde chop'u yiyen bindirme 0 gün — bu pencerede kaldıraçsız"}
+    ]
+  },
+
+  "bilerek_yapilmayanlar": [
+    "walk_forward YENİDEN KOŞULMADI — kapının işlem örneklemi canlı inc_cache'ten okundu (tohum sonrası DB tablosu TESHIS §6.4'ten referans alındı, yeniden sayılmadı)",
+    "tam test suite koşulmadı (sözleşme); kapsam testi gerekmedi — üretim fonksiyonları salt-okuma çağrıldı, koda dokunulmadı",
+    "karta/ROADMAP'e yazılmadı, git komutu koşulmadı (sözleşme)",
+    "canlıya hiçbir yazma yapılmadı — üç ssh çekimi de stdin-betik + stdout, emsal exe007",
+    "eşik SEÇİLMEDİ — envanter bırakıldı (kart Rol-1'de)",
+    "2026-08-13 bg-sertifika 'chop' turlarının hermes tarafı (sertifika yaşlanması) ölçülmedi — ayrı kalem, 28a sahasında"
+  ]
+}

@@ -895,6 +895,120 @@ def _ucb_rank(candidates: list, hyps: list, c: float = 1.2) -> list:
     return sorted(candidates, key=lambda v: (-ucb(v), v))
 
 
+# ==================================== Ö-48 HAYALET SÜZGECİ ======================================
+# VAKA (ROADMAP §48, 2026-08-14): keşif bütçesinin %62'si (29/47 öneri) canlı params'ta taşınmayan
+# düğmelere gitti. O iki düğme motorda KABLOLUYDU (okuyucuları var) — ama aynı vaka daha sert bir
+# sınıfı görünür kıldı: iki düğme bounds.yaml'a kablolanmadan GÜNLER ÖNCE girmişti. bounds'a motor
+# okuyucusu OLMAYAN bir anahtar girerse arama bütçesi yapısal-ölü sondalara akar ve hiçbir kapı
+# bunu söylemez. Bu süzgeç o sınıfın kalıcı bekçisidir.
+#
+# TANIM — HAYALET: motor zinciri modüllerinin hiçbirinde string sabiti olarak GEÇMEYEN bounds
+# anahtarı. Motor, params anahtarlarını dotted-string literaliyle okur (`_f(params, "entry.w_rs",
+# 0.35)` — strategy.py deseni); dolayısıyla "kaynak AST'sinde sabit yok" = "okuyucu yok".
+# Yorum ve docstring OKUYUCU SAYILMAZ (AST docstring'leri dışlar; yorumlar AST'ye hiç girmez).
+# ÖLÇÜM 2026-08-22: bugünkü 32 bounds anahtarının 32'sinde de okuyucu VAR — bugünkü hayalet
+# listesi BOŞ (test_hayalet_dugme_v263 N2 bunu çiviler; süzgeç bugün davranış DEĞİŞTİRMEZ,
+# yarının regresyonunu keser).
+#
+# KAPSAM: arama uzayı = bounds anahtarları (goal.yaml yasadır, öneriye hiç girmez — iki
+# enumerasyon noktası da yalnız bounds.keys() üzerinde yürür). Süzgeç DOSYAYA DEĞİL bellekteki
+# sözlüğe uygulanır: bounds.yaml İZLİ state'tir ve operatör/dagit kanalıdır, buradan yazılmaz.
+MOTOR_ZINCIRI = ("strategy", "backtest", "broker", "guard", "regime", "loop",
+                 "faz5_cikis", "sieve", "indicators", "intraday_cycle")
+
+_HAYALET_SAYAC = 0            # süreç-içi kümülatif süzülen-anahtar sayacı (olay alanı `sayac_toplam`)
+_MOTOR_SABIT_CACHE: dict = {}  # {(dosya, mtime_ns) demeti: frozenset} — kaynak değişmedikçe tek tarama
+
+
+def _motor_sabitleri_olc() -> tuple:
+    """(sabitler, hata) döner: motor zinciri kaynaklarındaki TÜM string sabitlerinin kümesi
+    (docstring hariç) ya da (None, neden). None = ÖLÇÜLEMEDİ — hayalet hükmü VERİLEMEZ; çağıran
+    fail-open davranır. Önbellek (dosya, mtime) anahtarlıdır: kaynak değişirse yeniden ölçülür,
+    hata ASLA önbelleklenmez (geçici bir G/Ç arızası kalıcı körlüğe dönmesin)."""
+    import ast as _ast
+    import pathlib as _pl
+    kok = _pl.Path(__file__).resolve().parent
+    try:
+        kimlik = tuple((str(kok / f"{m}.py"), (kok / f"{m}.py").stat().st_mtime_ns)
+                       for m in MOTOR_ZINCIRI)
+    except OSError as e:
+        return None, f"{type(e).__name__}: {e}"
+    if kimlik in _MOTOR_SABIT_CACHE:
+        return _MOTOR_SABIT_CACHE[kimlik], None
+    sabitler: set = set()
+    try:
+        for yol, _mt in kimlik:
+            agac = _ast.parse(_pl.Path(yol).read_text())
+            docstringler = set()
+            for dugum in _ast.walk(agac):
+                if isinstance(dugum, (_ast.Module, _ast.FunctionDef, _ast.AsyncFunctionDef,
+                                      _ast.ClassDef)):
+                    d = _ast.get_docstring(dugum, clean=False)
+                    if d:
+                        docstringler.add(d)
+            for dugum in _ast.walk(agac):
+                if isinstance(dugum, _ast.Constant) and isinstance(dugum.value, str) \
+                        and dugum.value not in docstringler:
+                    sabitler.add(dugum.value)
+    except (OSError, SyntaxError, ValueError) as e:
+        return None, f"{type(e).__name__}: {e}"
+    donuk = frozenset(sabitler)
+    _MOTOR_SABIT_CACHE[kimlik] = donuk
+    return donuk, None
+
+
+def motor_okunan_sabitler() -> frozenset | None:
+    """Motor zincirinin okuduğu string sabitleri; None = ölçülemedi (neden `hayalet_suzgeci`
+    olayında). Rapor/teşhis yüzeyi — süzgecin kendisi `hayalet_suzgeci` üzerinden çalışır."""
+    sabitler, _neden = _motor_sabitleri_olc()
+    return sabitler
+
+
+def hayalet_suzgeci(bounds: dict, kaynak: str) -> tuple:
+    """Arama uzayı kurulumunun HAYALET kapısı: (temiz_anahtarlar, hayalet) döner.
+
+    * hayalet = [..]  → bu anahtarların motor okuyucusu YOK; arama uzayından çıkarıldılar ve
+      süzüm `reflect_hayalet_dugme_suzuldu` olayıyla (adlar + kümülatif sayaç) görünür kılındı.
+    * hayalet = []    → ölçüldü, temiz: hiçbir anahtar süzülmedi.
+    * hayalet = None  → okuyucu kümesi ÖLÇÜLEMEDİ (null=ölçülemedi≠0): süzgeç FAIL-OPEN —
+      hiçbir anahtar süzülmez ve `reflect_hayalet_olculemedi` uyarısı basılır. Kör bir
+      tarayıcının aramayı SESSİZCE daraltma yetkisi yoktur; yanlış-pozitif hayalet damgası
+      (gerçek düğmeyi aramadan düşürmek) kaçırılmış hayaletten pahalıdır.
+
+    bounds SÖZLÜĞÜNE ve bounds.yaml DOSYASINA DOKUNULMAZ — süzgeç yalnız dönen listeyi daraltır."""
+    global _HAYALET_SAYAC
+    anahtarlar = list(bounds.keys())
+    sabitler, neden = _motor_sabitleri_olc()
+    if sabitler is None:
+        try:
+            from . import obs as _obs_h
+            _obs_h.warn("reflect_hayalet_olculemedi", kaynak=kaynak, error=neden,
+                        n_bounds=len(anahtarlar),
+                        detail="motor okuyucu kümesi ÖLÇÜLEMEDİ (kaynak okunamadı/parse edilemedi)"
+                               " — süzgeç FAIL-OPEN: hiçbir anahtar süzülmedi, hayalet=None "
+                               "(ölçülemedi, sıfır DEĞİL). Arama tam uzayda sürüyor.")
+        except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; telemetri denemesi aramayı düşüremez ve fail-open dönüş zaten çağırana gidiyor
+            pass
+        return anahtarlar, None
+    hayalet = [k for k in anahtarlar if k not in sabitler]
+    if not hayalet:
+        return anahtarlar, []
+    temiz = [k for k in anahtarlar if k in sabitler]
+    _HAYALET_SAYAC += len(hayalet)
+    try:
+        from . import obs as _obs_h
+        _obs_h.warn("reflect_hayalet_dugme_suzuldu", kaynak=kaynak, hayalet=hayalet,
+                    n_hayalet=len(hayalet), n_bounds=len(anahtarlar),
+                    sayac_toplam=_HAYALET_SAYAC,
+                    detail="bounds'ta duran ama MOTOR ZİNCİRİNDE okuyucusu olmayan anahtar(lar) "
+                           "arama uzayına ALINMADI — keşif bütçesi yapısal-ölü sondaya akmasın "
+                           "(Ö-48; %62 vakasının sert sınıfı). bounds.yaml'a dokunulmadı; kalıcı "
+                           "çözüm operatör kanalında (anahtarı kablola ya da bounds'tan düşür).")
+    except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; süzüm izi coordinate_descent_search dönüşündeki `hayalet_suzulen` alanında AYRICA taşınıyor
+        pass
+    return temiz, hayalet
+
+
 def propose_deterministic(explore: bool = False) -> dict:
     """Form ONE single-variable hypothesis. No LLM, one_variable_only preserved.
 
@@ -968,7 +1082,13 @@ def propose_deterministic(explore: bool = False) -> dict:
         live_regime = store.read_json("regime.json", {}).get("regime")
         suffix = f"@{live_regime}" if live_regime in config.VALID_REGIMES and live_regime != "trend_up" else ""
         # walk the UCB ranking, skipping no-ops and known-failed values; fall back to the heuristic
-        for var in _ucb_rank(list(bounds.keys()), hyps):
+        # Ö-48: uzay HAYALET SÜZGECİNDEN geçer — motor-okuyucusuz anahtar UCB sırasına hiç girmez
+        # (süzüm olayla görünür; ölçülemezse fail-open, tam uzay). Exploit sezgiselinin 4 sabit
+        # düğmesi süzgeçten BİLEREK geçmez: dördü de okuyucusu ölçülmüş kod sabitidir ve sezgisel
+        # bir enumerasyon değil teşhistir — hayaletleşmeleri ancak motordan okuyucu SİLİNMESİYLE
+        # mümkün olur, o da bu süzgecin değil o değişikliğin turunun işidir.
+        arama_uzayi, _hayalet_e = hayalet_suzgeci(bounds, kaynak="propose_deterministic.explore")
+        for var in _ucb_rank(arama_uzayi, hyps):
             direction = hdir if var == hvar else explore_dir(var)
             new = move(var, direction)
             if guard._equalish(params.get(var), new, bounds[var]["type"]) \
@@ -1860,7 +1980,10 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     inc = _wf_cached(params, version, bars, index, goal, current.get("params_by_regime"), windows=w,
                      eval_regime=regime)
     inc_oos = inc.get("oos_score")
-    ranked = _ucb_rank(list(bounds.keys()), hyps)   # untried knobs first (+inf), then by historical reward
+    # Ö-48 HAYALET SÜZGECİ: motor-okuyucusuz anahtar sonda listesine hiç girmez; süzülenler hem
+    # olayla hem bu fonksiyonun dönüşündeki `hayalet_suzulen` alanıyla görünür (None = ölçülemedi).
+    arama_uzayi, hayalet_suzulen = hayalet_suzgeci(bounds, kaynak="coordinate_descent_search")
+    ranked = _ucb_rank(arama_uzayi, hyps)           # untried knobs first (+inf), then by historical reward
 
     probes, seen = [], set()
     for k in range(k_max, 0, -1):                   # magnitude-first: biggest moves of every knob first
@@ -2002,6 +2125,10 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     return {"incumbent_oos": inc_oos, "evaluated": evaluated, "cleared": cleared,
             "fresh": _fresh_done, "cached_hits": evaluated - _fresh_done, "skipped_wallclock": _skipped_fresh,
             "best": best, "trace": trace[-40:], "regime": regime, "planlanan_sonda": total,
+            # Ö-48 İZ ALANI (YASA 6 okuyucuları: `search_and_submit` sonucu `search` altında taşır,
+            # ısınma log'u/pano aynı sözlüğü basar): [] = ölçüldü-temiz · [..] = süzülen anahtar
+            # adları · None = okuyucu kümesi ölçülemedi (fail-open koşuldu, hiçbir anahtar süzülmedi).
+            "hayalet_suzulen": hayalet_suzulen,
             # KAYDIN AKIBETİ SONUÇTA GÖRÜNÜR: `None` = bu oturum resmî kayıt düşürmedi (ya kapıyı
             # geçen aday `submit`e gitti, ya çağıran ship edemez, ya hiç sonda koşmadı). Alanın
             # yokluğu ile "yazılamadı" birbirine karışmasın diye her hâlde yazılır.
