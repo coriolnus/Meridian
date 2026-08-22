@@ -161,6 +161,12 @@ class BacktestResult:
     # TÜKETİCİ (YASA 6): ölçüm koşumları bu alanı sonuç JSON'una yazar ve kol kimliğini oradan
     # okur; `test_dinlenen_limit_v250` de bağlantının kopmadığını buradan sınar.
     dolum_kurali: str = None
+    # RET KİMLİĞİ (Ö-51b, 2026-08-21). `entry_rejects` bir OLAY sayacıdır: aynı plan günlerce
+    # reddedilebilir. EXE-2026-006'nın Ö1 ürünü tam bu yüzden hesaplanamadı — payda olay,
+    # pay distinkt işlemdi ve ham bölme %132/%141 verdi (bir oran %100'ü aşamaz).
+    # Bu alan reddedilen PLANIN kimliğini (neden → [(ticker, tarih), …]) tutar, böylece payda
+    # DİSTİNKT PLAN olarak sayılabilir. None = eski çağrı; {} = doldu ve hiç ret olmadı.
+    entry_reject_ids: dict = None
 
     def detail(self, goal: dict) -> dict:
         """Sonucun işlemlerinden hedef sözleşmesine göre ayrıntılı karneyi (`score.score_detail`) üretir
@@ -265,6 +271,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     # burada birikir; `BacktestResult.entry_rejects` iki motorun kaçırdığı dolumları kıyaslanabilir
     # kılar (canlı taraf aynı sayacı `entry_exec` defterine `karar` alanıyla zaten yazıyor).
     entry_rejects: dict[str, int] = {}
+    entry_reject_ids: dict[str, list] = {}      # neden → [(ticker, tarih)] · Ö-51b
     # Replay'de kazanç-kapısının SAYACI. Gerekçe karar satırının
     # yanında; burada yalnız kabı var. Boş kalırsa ({}) "hiç plan değerlendirilmedi" demektir ve
     # bu, "kapı konuştu ve hiçbir şey bulmadı"dan farklı bir olgudur.
@@ -329,7 +336,12 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                                   atr=armed_atr.get(t),             # E1 limitinin ATR bacağı
                                   reject_out=_rej)
                 if _rej.get("reason"):
-                    entry_rejects[_rej["reason"]] = entry_rejects.get(_rej["reason"], 0) + 1
+                    # SAYAÇ ve KİMLİK AYNI OLAYDAN beslenir. Ayrı yerlerden yazılsalardı
+                    # ayrışabilirlerdi ve bu "aynı gerçek iki yerde" kusurunun (WP6-26) yeni bir
+                    # vakası olurdu — kartın Ö1'i o ayrışmanın üstüne kurulamaz.
+                    _rr = _rej["reason"]
+                    entry_rejects[_rr] = entry_rejects.get(_rr, 0) + 1
+                    entry_reject_ids.setdefault(_rr, []).append((t, str(d.date())))
         # KASITLI REPLAY↔CANLI FARKI (tarama "diverged" işaretledi ama sürüklenme DEĞİL):
         # canlı loop._carry_armed_without_bar bar-yok planı bir seans TAŞIR, replay burada
         # armed'ı SIFIRLAR. İki senaryo AYRIdır: canlıda bar-yok = EOD YAYIN GECİKMESİ (geçici, plan
@@ -558,7 +570,8 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     return BacktestResult(trades=broker.closed, equity=equity_curve, params=params, start=start,
                           end=end, plan_log=plan_log, candidate_log=candidate_log,
                           entry_rejects=entry_rejects, earnings_gate=_eg,
-                          dolum_kurali=("dinlenen_limit" if DINLENEN_LIMIT else "yalniz_acilis"))
+                          dolum_kurali=("dinlenen_limit" if DINLENEN_LIMIT else "yalniz_acilis"),
+                          entry_reject_ids=entry_reject_ids)
 
 
 def holding_day_r_curve(trades: list, max_day: int = 40) -> dict:

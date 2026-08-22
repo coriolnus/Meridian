@@ -1,5 +1,5 @@
 """test_dsr_hard_gate_v130.py — Y1 DSR/PBO SERT KAPI (2026-07-30, operatör onaylı MOD-FARKINDALIKLI
-tasarım · ROADMAP §3.1 Y1 hard-gate kalemi + §7 tur notu).
+tasarım · ROADMAP §5.1 Y1 hard-gate kalemi + §7 tur notu).
 
 NE ÇİVİLENİYOR VE NEDEN. Bu tur bir kapıyı SERTLEŞTİRİYOR ve sertleşen kapıların sessizce gevşemesi
 bu depodaki en pahalı hata sınıfıdır (2026-07-22: olasılıksal yasa kendi `min_sample` tabanını icat
@@ -424,7 +424,7 @@ def test_6c_operator_kilidi_ELLE_acilan_bayragi_okur(sandbox_state):
 
 def test_6d_edge_ve_sonuc_kilidi_TAM_hukum_ister(sandbox_state):
     """5/5 ve 4/4 dışında hiçbir hâl açık değildir: 'sermaye/silahlanma İKİSİNE bakar' cümlesi
-    (ROADMAP §3.1) kısmi bir hükmü kabul etmez."""
+    (ROADMAP §5.1) kısmi bir hükmü kabul etmez."""
     f = health.faz6_kilitleri(edge=_sahte_hukum(4, 5), sonuc=_sahte_hukum(4, 4),
                               trio=_trio(YUKSEK_DSR))
     assert f["kilitler"]["edge_kaniti"]["gecer"] is False

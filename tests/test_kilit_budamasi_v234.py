@@ -1,4 +1,4 @@
-"""test_kilit_budamasi_v234.py — `.locks` budaması (ROADMAP §2-5).
+"""test_kilit_budamasi_v234.py — `.locks` budaması (ROADMAP Ö-5).
 
 NE ÖLÇER: budayıcının TEK tehlikeli hatası yanlış silmedir — tutulan kilidi silmek dışlamayı
 kırar (yol silinince sonraki `open(O_CREAT)` YENİ inode yaratır; iki "sahip" aynı anda içeride

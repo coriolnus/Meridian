@@ -1,0 +1,77 @@
+{
+ "kart": "EXE-2026-006",
+ "kalem": "Ö-51b",
+ "tarih": "2026-08-22",
+ "smoke": false,
+ "karar_kurali_donuk": "Ö1 > %20 ⇒ K1 şerhi açılır (ölçümden ÖNCE yazıldı)",
+ "tavanlar": {
+  "0.005": {
+   "bayt_ozdeslik": {
+    "ozdes": true,
+    "n": 765
+   },
+   "O1": {
+    "O1_yuzde": 60.8,
+    "pay_KURTARILAN_distinkt_islem": 208,
+    "payda_DISTINKT_reddedilen_plan": 342,
+    "red_OLAY_sayisi_gecersiz_payda": 342,
+    "olay_plan_carpani": 1.0,
+    "yerinden_etme_PAYA_GIRMEDI": 43,
+    "kurtarilanlarin_ort_r": -0.0789,
+    "kurtarilan_ort_r_olculemedi": null,
+    "K1_serhi": "AÇILIR (Ö1 > %20)"
+   }
+  },
+  "0.01": {
+   "bayt_ozdeslik": {
+    "ozdes": true,
+    "n": 836
+   },
+   "O1": {
+    "O1_yuzde": 66.9,
+    "pay_KURTARILAN_distinkt_islem": 121,
+    "payda_DISTINKT_reddedilen_plan": 181,
+    "red_OLAY_sayisi_gecersiz_payda": 181,
+    "olay_plan_carpani": 1.0,
+    "yerinden_etme_PAYA_GIRMEDI": 54,
+    "kurtarilanlarin_ort_r": 0.0016,
+    "kurtarilan_ort_r_olculemedi": null,
+    "K1_serhi": "AÇILIR (Ö1 > %20)"
+   }
+  },
+  "0.02": {
+   "bayt_ozdeslik": {
+    "ozdes": true,
+    "n": 869
+   },
+   "O1": {
+    "O1_yuzde": 73.8,
+    "pay_KURTARILAN_distinkt_islem": 59,
+    "payda_DISTINKT_reddedilen_plan": 80,
+    "red_OLAY_sayisi_gecersiz_payda": 80,
+    "olay_plan_carpani": 1.0,
+    "yerinden_etme_PAYA_GIRMEDI": 47,
+    "kurtarilanlarin_ort_r": -0.005,
+    "kurtarilan_ort_r_olculemedi": null,
+    "K1_serhi": "AÇILIR (Ö1 > %20)"
+   }
+  },
+  "0.03": {
+   "bayt_ozdeslik": {
+    "ozdes": true,
+    "n": 871
+   },
+   "O1": {
+    "O1_yuzde": 73.6,
+    "pay_KURTARILAN_distinkt_islem": 53,
+    "payda_DISTINKT_reddedilen_plan": 72,
+    "red_OLAY_sayisi_gecersiz_payda": 72,
+    "olay_plan_carpani": 1.0,
+    "yerinden_etme_PAYA_GIRMEDI": 49,
+    "kurtarilanlarin_ort_r": 0.0725,
+    "kurtarilan_ort_r_olculemedi": null,
+    "K1_serhi": "AÇILIR (Ö1 > %20)"
+   }
+  }
+ }
+}

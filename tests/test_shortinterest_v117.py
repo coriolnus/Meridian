@@ -1,4 +1,4 @@
-"""test_shortinterest_v117.py — FINRA KISA POZİSYON ADAPTÖRÜ (ROADMAP §3.4 Y4, 2026-07-29).
+"""test_shortinterest_v117.py — FINRA KISA POZİSYON ADAPTÖRÜ (ROADMAP §5.4 Y4, 2026-07-29).
 
 Tasarım sözleşmesi (meridian/adapters/shortinterest.py):
   1. BAYATLIK GÖRÜNÜR — yayın tarihi ve gecikme damgası dosyanın İÇİNDE. FINRA ayda iki kez,

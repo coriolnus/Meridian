@@ -11,8 +11,8 @@
   "zarf_enjekte": false
  },
  "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py",
- "olcum_zamani": "2026-08-17T12:56:46+00:00",
- "sure_sn": 7.8,
+ "olcum_zamani": "2026-08-21T22:09:07+00:00",
+ "sure_sn": 8.0,
  "rampa_kablolu": {
   "monkeypatch": false,
   "kaynak": {
@@ -60,8 +60,8 @@
     "mtime_ns": 1786968262941079764
    },
    "backtest.py": {
-    "sha256_16": "bb57b99dd9f03af7",
-    "mtime_ns": 1786968202649369869
+    "sha256_16": "b59c059f43d4e410",
+    "mtime_ns": 1787349934977599301
    },
    "strategy.py": {
     "sha256_16": "cba15854a42414c2",
@@ -94,8 +94,8 @@
     "mtime_ns": 1786968262941079764
    },
    "backtest.py": {
-    "sha256_16": "bb57b99dd9f03af7",
-    "mtime_ns": 1786968202649369869
+    "sha256_16": "b59c059f43d4e410",
+    "mtime_ns": 1787349934977599301
    },
    "strategy.py": {
     "sha256_16": "cba15854a42414c2",
@@ -127,7 +127,7 @@
  },
  "motor_sha256_16": {
   "broker.py": "212b273d849f8f4d",
-  "backtest.py": "bb57b99dd9f03af7",
+  "backtest.py": "b59c059f43d4e410",
   "strategy.py": "cba15854a42414c2",
   "guard.py": "009a13c29755b318"
  },

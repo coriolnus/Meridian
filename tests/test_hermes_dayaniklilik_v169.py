@@ -1,4 +1,4 @@
-"""test_hermes_dayaniklilik_v169.py — HERMES-CLI YAPILANDIRMA DAYANIKLILIĞI (ROADMAP §1 (a)/(c)/(d)).
+"""test_hermes_dayaniklilik_v169.py — HERMES-CLI YAPILANDIRMA DAYANIKLILIĞI (ROADMAP §3 (a)/(c)/(d)).
 
 CANLI VAKA (2026-08-02, 6 gün sessiz ölüm): A1 taşınmasında `~/.hermes` yapılandırması taşınmadı
 (hiçbir dağıtım kanalının parçası değildi). Yerel CLI her çağrıda ilk-koşum rehberini basıp

@@ -552,7 +552,7 @@ SINK_TABANI = frozenset({
     "massive_verify.json", "monotonic_amnesty.json", "notify_sent.json", "oos_erosion.json",
     "ownership_state.json", "pool_exhausted_seen.json", "probe_cache.json", "regime_trigger.json",
     "scan_debt.json",
-    # 2026-08-17 EKLENDİ (ROADMAP §2-50): `search_progress.json`. Yazan/okuyan aynı modülde
+    # 2026-08-17 EKLENDİ (ROADMAP Ö-50): `search_progress.json`. Yazan/okuyan aynı modülde
     # (`hermes._progress_aynala` ↔ `hermes.search_progress_oku`), o yüzden statik graf dış okuyucu
     # göremiyor — muafiyetin sebebi bu. Ama artefakt ÖLÜ DEĞİL: gerçek tüketicileri
     # `hermes_runtime.status` (→ pano) ve `sprint._arama_durumu` (→ sprint kapısı, EMNİYET).

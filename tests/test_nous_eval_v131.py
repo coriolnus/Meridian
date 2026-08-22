@@ -1,4 +1,4 @@
-"""test_nous_eval_v131.py — NOUS SİSTEM-DEĞERLENDİRME KATMANI (ROADMAP §3.2, 2026-07-30).
+"""test_nous_eval_v131.py — NOUS SİSTEM-DEĞERLENDİRME KATMANI (ROADMAP §5.2, 2026-07-30).
 
 Bu turun çivileri. HİÇBİR TEST CANLI STATE'E YAZMAZ (canlı worker koşuyor) ve HİÇBİR TEST LLM
 ÇAĞIRMAZ (`hermes.chain_text` monkeypatch'lenir — ağa çıkan bir test, geçtiğinde bir şey

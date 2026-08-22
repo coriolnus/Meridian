@@ -75,6 +75,9 @@ k_registry: {registered_at: "2026-08-17", trial_ids: [EXE-006-limit-bacagi-hukum
 # KÜME, K defterine sayılmaz"). Ö3'ün eksik ΔP&L CI'ı K harcamaz (aynı hücreler, yeniden koşum yok).
 
 status: measured   # 2026-08-17 Rol-1 — ölçüldü + hüküm: E1 YENİDEN AÇILIR (H1 düştü, H2 ölçülemedi).
+                   # 2026-08-21 EK (Ö-51c): Ö3 ΔP&L CI'ı hesaplandı — DÖRT tavanda da 0 İÇİNDE.
+                   # Hüküm DEĞİŞMEDİ (H1 hâlâ kırık) ama tek dayanağı H1 kaldı: ne H2 ne Ö3
+                   # anlamlılığa ulaşıyor. 'Bacağı aç' bu ölçümden tek başına ÇIKARILAMAZ.
                    # Ön-kayıt notu (tarihçe): "ölçüm TEMİZ ağaçta ve EXE-2026-005 H4 kapısı yeşile
                    # döndükten SONRA koşulur" — İKİSİ DE sağlandı, kill kriterlerinde doğrulandı.
 

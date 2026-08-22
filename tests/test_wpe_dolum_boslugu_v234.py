@@ -11,7 +11,7 @@
        gelen gerçek dolum hâlâ yamanabilsin).
   B5 — kismi_dolum: (a) E2 satırı ilk kısmi fotoğrafta DONMAZ (terminal olana dek tazelenir);
        (b) adet sapmasında `kismi_dolum` sınıfı emrin KENDİ kanıtından (filled_qty<qty) türetilir;
-       (c) makbuzsuz sapmanın adı `makbuzsuz_boyut` (ROADMAP §2-7 — sb2 dosyasında da sınanır).
+       (c) makbuzsuz sapmanın adı `makbuzsuz_boyut` (ROADMAP Ö-7 — sb2 dosyasında da sınanır).
   B6 — fill_eq_now_anakronizmi: yaşlı pozisyonun adet sapması BUGÜNÜN sermayesiyle KIYASLANMAZ —
        makbuzda `dolum_eq` damgası varsa o, pozisyon bu seansta dolduysa bugünün açılış tabanı,
        yoksa dürüst `olculemedi` (+anakronizm nedeni). İç dolum anı makbuza damga basar.

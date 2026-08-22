@@ -227,7 +227,7 @@ def test_28e_noop_ile_felaket_ARTIK_ayri_hukum(seeded):
     """Defterin beş `P=0,000`ından DÖRDÜ no-op'tu (H00046/49/50/51 — yapısal olarak atıl düğmeler),
     biri gerçek felaketti (H00031, ort.Δ −0,0921). İkisi de aynı `p` ve aynı `why` alıyordu.
     Artık `ayrim` ikisini AYIRIR — ve 'düğme atıl' bir kalite reddi DEĞİL, kendi başına bir
-    hükümdür (§2-25a atıl-düğme ayıklama adayı)."""
+    hükümdür (Ö-25a atıl-düğme ayıklama adayı)."""
     r_noop, r_bad = _noop_ve_felaket(config.goal())
     assert r_noop.p == r_bad.p == 0.0, "kurgu geçersiz: iki taraf aynı p'yi vermiyor"
 

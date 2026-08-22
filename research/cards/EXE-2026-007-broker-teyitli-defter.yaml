@@ -1,0 +1,84 @@
+card_id: EXE-2026-007
+family: defter_broker_teyidi   # KANIT TANIMI kartı — edge hipotezi değil
+thesis: >
+  `trades.jsonl`in `kaynak: live_paper` damgası bir BROKER TEYİDİ DEĞİL, bir KOD YOLU beyanıdır:
+  `loop._persist_trade`ten geçen her satır o damgayı alır ve fonksiyon broker'a hiç sormaz.
+  ÖLÇÜLDÜ (2026-08-21): 2026-08-01 reset'inden sonraki 8 "canlı" işlemin İKİSİ (`ALL` T00096,
+  `VLO` T00097) broker'da HİÇ VAR OLMAMIŞ — 62 emirlik defterde 0 emir, 55 aktivitede 0 fill,
+  61.511 satırlık olay defterinde 0 `alpaca_submit`. Kök neden zinciri kapandı: `submit_plan`
+  ONAY ANINDA çağrılıyor (`loop.py:743`), iç motor ise stratejiyi onaydan BAĞIMSIZ koşuyor;
+  onaylanmayan plan iç defterde açılıp kapanıyor ve `live_paper` damgalanıyor.
+  SONUÇ: canlı kanıt tabanının **%25'i** broker-karşılıksız ve iki tüketici de bunu bilmiyor —
+  operatör panoda "canlı işlem" okuyor, öğrenme `_horizon_ok` ile onu canlı KANIT sayıyor.
+
+evidence_refs:
+  - "docs/BULGU-KARSILIKSIZ-CANLI-ISLEM-2026-08-21.md (tam ölçüm zinciri)"
+  - "ÖLÇÜLDÜ: /v2/orders?status=all&after=2026-08-01 → 62 emir; ALL 0, VLO 0"
+  - "ÖLÇÜLDÜ: /v2/account/activities (tam sayfalanmış, 55 kayıt) → ALL 0 fill, VLO 0 fill"
+  - "ÖLÇÜLDÜ: events.jsonl 61.511 satır (2026-07-14→08-21) · alpaca_submit 19 olay/17 sembol, ALL ve VLO YOK"
+  - "ÖLÇÜLDÜ: plan_operator_approved 7 olay — ALL/VLO hiç onaylanmamış"
+  - "loop.py:743 — 'aynaya gönderim ONAY ANINDA tek kapıdan denendi'"
+
+universe: >
+  Canlı kâğıt defter (`trades.jsonl`), 2026-08-01 reset'i sonrası. KIYAS KAYNAĞI Alpaca'nın
+  KENDİ defteri: `/v2/orders` + `/v2/account/activities` (ikisi de SALT-OKUNUR, tam sayfalanmış —
+  `page_size` tavanı 100'dür ve aşılırsa yanıt liste değil SÖZLÜK döner, bu tuzağa 2026-08-21'de
+  bir kez düşüldü).
+  CANLI DAVRANIŞ DEĞİŞMEZ: bu kart bir ÖLÇÜM ve DAMGA kartıdır; emir gönderimine, onay kapısına
+  ya da iç motorun onaysız koşmasına DOKUNMAZ.
+
+features_asof: >
+  Her canlı defter satırı için ÜÇ DEĞERLİ bir teyit alanı ölçülür:
+    broker_teyitli   — sembol+tarih için broker'da eşleşen fill VAR
+    broker_karsiliksiz — emir defterinde ve aktivitede HİÇ iz YOK (ALL/VLO sınıfı)
+    olculemedi       — broker geçmişi okunamadı / pencere dışı  → UYDURMA YASAĞI: sessizce
+                       "teyitli" ya da "karşılıksız" sayılmaz
+  EŞLEŞME KURALI ölçümden ÖNCE donuyor: (ticker, ts_open..ts_close aralığında en az bir fill).
+  Miktar/fiyat eşleşmesi ARANMAZ — bu kart "var mı yok mu"yu ölçer, "doğru mu"yu değil (o ayrı).
+
+parameter_grid:
+  pencere: [reset_sonrasi]        # K += 1 — tek pencere; genişletme ayrı kart
+  # K TOPLAM = 1
+
+cost_model: yok   # bu bir defter-bütünlüğü ölçümüdür, P&L iddiası taşımaz
+
+success_metric: >
+  Ürün üç sayı ve BİR karar:
+  Ö1 — KARŞILIKSIZ ORAN: canlı defterdeki satırların yüzde kaçı broker-karşılıksız.
+       BUGÜN ÖLÇÜLEN: 2/8 = **%25** (kartın kendi ön-ölçümü; koşum bunu YENİDEN üretmeli).
+  Ö2 — P&L ETKİSİ: karşılıksız satırların `realized_pnl`e katkısı. Ön-ölçüm **+277,99**.
+  Ö3 — ÖĞRENME ETKİSİ: bu satırlar `_horizon_ok`un saydığı işlem sayısına giriyor mu (evet/hayır,
+       ve giriyorsa kaç yansımayı tetiklemiş olabilir).
+       ÖN-ÖLÇÜM (2026-08-21, koşum bunu YENİDEN üretmeli): defter 893 · yansıma tabanı 887 ·
+       tabandan sonraki 6 satırın **0'ı** karşılıksız. Karşılıksız ALL indeks 885, VLO indeks 886
+       → TABANIN ALTINDA. Yani BUGÜNKÜ ufuk penceresi TEMİZ; iki satır 2026-08-17'de koşan TEK
+       yansımanın penceresindeydi ve orada tüketildi. Cevap: "evet, girdi — ama GEÇMİŞTE; bir
+       yansımayı besledi, gelecek yansımaları beslemiyor."
+       Bu ÖN-ÖLÇÜM KARAR KURALINI DEĞİŞTİRMEZ: karar Ö1'e bağlı ve Ö1 donuk.
+  KARAR KURALI (ölçümden ÖNCE yazıldı): Ö1 > 0 ise defterin damga sözleşmesi YETERSİZDİR ve
+  `ledgerstamp`e broker-teyit boyutu EKLENİR. Ö1 = 0 çıkarsa bu kart kapanır ve ön-ölçüm
+  bir ölçüm hatası olarak kayda geçer.
+  ASİMETRİ: "hepsi teyitli" sonucu hiçbir şeyi değiştirmez; "karşılıksız var" sonucu kanıt
+  tabanının kirli olduğu anlamına gelir ve ÖĞRENMENİN GİRDİSİNİ etkiler.
+
+kill_criteria:
+  - "broker geçmişi TAM SAYFALANMADAN kıyaslanırsa geçersiz: page_size>100 yanıtı SÖZLÜĞE çevirir ve eksik veriyle 'karşılıksız' denir (2026-08-21'de yaşandı)"
+  - "eşleşme kuralı ölçüm sırasında gevşetilirse geçersiz — kural ön-kayıtlıdır"
+  - "`olculemedi` kovası 'teyitli' ya da 'karşılıksız'a katılırsa geçersiz (uydurma yasağı)"
+  - "canlı emir gönderimine ya da onay kapısına dokunulursa geçersiz: bu kart ÖLÇER, davranış değiştirmez"
+  - "tohum (`replay_seed`) satırları kıyasa girerse geçersiz — onların broker karşılığı OLMAMASI beklenir"
+
+k_registry: {registered_at: "2026-08-21", trial_ids: [pending-EXE-007-broker-teyitli-defter]}
+
+status: registered   # yazım 2026-08-21, repoya KAYIT 2026-08-22 Rol-1 (arada dosya
+                     # scratchpad'de bekledi; eşik/K/kill-list yazıldığı gibi, hiç dokunulmadı).
+                     # Bulgu ölçüldü; kart o ölçümü SÜREKLİ hâle getirir.
+
+beyanlı_sinirlar: >
+  (1) Bu kart "işlem broker'da VAR MI" sorusunu ölçer; "doğru fiyattan/miktardan mı" sorusunu
+  ÖLÇMEZ. İkincisi `mirror_divergence`in işidir ve o alan bugün GÜVENİLMEZ (ölçüldü: NUE'nin
+  7 fill'i var ama `mirror_divergence` yine `None` — yani `None` "karşılık yok" demek DEĞİL).
+  (2) Alpaca aktivite penceresi sınırlı: en eski kayıt 2026-07-14. Daha eski satırlar
+  `olculemedi` kovasına düşer ve KARŞILIKSIZ SAYILMAZ.
+  (3) Kart onaysız planların iç motorda koşmasını KUSUR SAYMAZ — o bir tasarım tercihi olabilir.
+  Kusur saydığı tek şey, iki sınıfın TEK DAMGA altında toplanmasıdır.

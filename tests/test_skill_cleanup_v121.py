@@ -1,4 +1,4 @@
-"""test_skill_cleanup_v121.py — 2026-07-30 skill temizlik turu (ROADMAP §3.2 kalemi).
+"""test_skill_cleanup_v121.py — 2026-07-30 skill temizlik turu (ROADMAP §5.2 kalemi).
 
 Denetim 68 skill klasörünü inceledi: 22 EMEKLİ, 16 BİRLEŞTİR, 8 ÖLÇÜMLE-AKTİVE, 22 OLDUĞU-GİBİ.
 Temizliğin asıl amacı bir SAYIM değil DÜRÜSTLÜK: zincirde durup hiç koşmayan skill her koşuda

@@ -1,4 +1,4 @@
-"""Öğrenme döngüsünün API sürecinden ayrılması — birim/bayrak çivileri (ROADMAP §2-50).
+"""Öğrenme döngüsünün API sürecinden ayrılması — birim/bayrak çivileri (ROADMAP Ö-50).
 
 NEDEN ÇİVİ: ayrımın tamamı İKİ systemd birimindeki bayrakların karşıtlığına dayanıyor. Bir gün
 biri `meridian.service`teki bayrağı "düzeltmek" için 1 yaparsa ölçülen arıza (GIL çekişmesi, pano
@@ -36,13 +36,13 @@ def _env(yol: pathlib.Path) -> dict[str, str]:
 
 def test_iki_birim_de_var():
     assert ANA.exists(), "meridian.service yok"
-    assert OGRENME.exists(), "meridian-learn.service yok — §2-50 ayrımı birimsiz kalamaz"
+    assert OGRENME.exists(), "meridian-learn.service yok — Ö-50 ayrımı birimsiz kalamaz"
 
 
 def test_ogrenme_bayragi_karsit():
     """Ana birim döngüyü KOŞTURMAZ, öğrenme birimi KOŞTURUR. Karşıtlık ayrımın kendisidir."""
     assert _env(ANA).get("MERIDIAN_AUTOSTART_HERMES") == "0", (
-        "meridian.service öğrenme döngüsünü koşturuyor — §2-50 ayrımı bozuldu, GIL çekişmesi geri geldi")
+        "meridian.service öğrenme döngüsünü koşturuyor — Ö-50 ayrımı bozuldu, GIL çekişmesi geri geldi")
     assert _env(OGRENME).get("MERIDIAN_AUTOSTART_HERMES") == "1", (
         "meridian-learn.service döngüyü koşturmuyor — öğrenme HİÇBİR yerde koşmaz")
 

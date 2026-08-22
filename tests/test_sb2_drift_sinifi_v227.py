@@ -16,7 +16,7 @@ GÜNCELLEME (WP-E dolum boşlukları turu, teşhis docs/TESHIS-WPE-AYNA-DOLUM-20
   * B6 — `fill_eq_now` yalnız pozisyon BU SEANSTA dolduysa dolum tabanıdır; saf çağrılar artık
     `dolum_taze=True` geçirir, e2e pozisyon anlık görüntüsü `ts_open` taşır. Yaşlı pozisyonda
     kıyas YAPILMAZ (yeni testler test_wpe_dolum_boslugu_v234.py'de).
-  * B5/ROADMAP §2-7 — makbuzsuz sapmanın adı `olculemedi` değil `makbuzsuz_boyut`.
+  * B5/ROADMAP Ö-7 — makbuzsuz sapmanın adı `olculemedi` değil `makbuzsuz_boyut`.
   * B8 — `motor_yetimi` üçe ayrıldı; buradaki yetim testi `giris_yetimi` alt-adını doğrular.
   * B2 — 1.3 kuyruk-güdümlü oldu: `icra` sapma testi artık yamalanacak trades SATIRINI da yazar
     (satırsız kapanış yamalanamaz ve `exit_fill_patch_satirsiz` uyarısıyla düşer).
@@ -100,7 +100,7 @@ def test_kitap_kaydi_rev_gonderim_dolum_arasinda_degisti(sandbox_state, monkeypa
 
 
 def test_makbuzsuz_boyut_makbuz_yok_restart_oncesi(sandbox_state):
-    """Makbuz YOK (restart-öncesi / makbuzsuz gönderim) → `makbuzsuz_boyut` + neden (ROADMAP §2-7,
+    """Makbuz YOK (restart-öncesi / makbuzsuz gönderim) → `makbuzsuz_boyut` + neden (ROADMAP Ö-7,
     2026-08-12 forensiği: jenerik `olculemedi` bu alt-hâli gizliyordu; ad artık teşhisin kendisi).
     dolum_taze geçirilmese bile ad değişmez — makbuzsuzluk yaş sorusundan ÖNCE gelir."""
     sinif, neden = loop._drift_sinifi_adet(None, fill_eq_now=100000.0, fill_peak=100000.0)
@@ -175,7 +175,7 @@ def test_eski_cagiran_fill_eq_now_suz_olculemedi_ama_alarm_yine_oter(sandbox_sta
 
 def test_makbuzsuz_plan_reconcile_uzerinden_makbuzsuz_boyut(sandbox_state, monkeypatch):
     """restart-öncesi plan: `size_law` YOK → sapma yine yakalanır, sınıf ADIYLA `makbuzsuz_boyut`
-    (eski jenerik `olculemedi` — ROADMAP §2-7 forensiğinin kapattığı okunmazlık)."""
+    (eski jenerik `olculemedi` — ROADMAP Ö-7 forensiğinin kapattığı okunmazlık)."""
     _wire(monkeypatch, orders=[], positions=[{"symbol": "NUE", "qty": "25"}])
     meta = {"armed": [], "peak_equity": 100000.0}          # size_law YOK
     out = loop.reconcile_broker_state(

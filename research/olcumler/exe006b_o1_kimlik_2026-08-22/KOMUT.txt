@@ -1,0 +1,27 @@
+# EXE-2026-006 · Ö-51b — Ö1'in KİMLİKLİ yeniden ölçümü (2026-08-22)
+# Kart: research/cards/EXE-2026-006-limit-bacagi-hukum-sinamasi.yaml (OKU-DOKUNMA)
+#
+# NEDEN AYRI DİZİN: exe006_limit_bacagi_2026-08-17/ bir `measured` kartın DONMUŞ kanıtıdır ve
+#   HUKUM.md oradaki dosyalara dayanır. `olcum.py` çıktısını `BURASI`ya (kendi dizinine) yazar,
+#   yani onu YERİNDE koşmak o kanıtı ÜZERİNE YAZARDI. Betik buraya KOPYALANDI; tek bayt
+#   değiştirilmedi (sha256 aşağıda). Koruma YAPISAL, sonradan-temizlik değil.
+#
+# NEDEN YENİDEN KOŞUM: Ö1 (`O1_ABARTI_ORANI`) 2026-08-17'de ÖLÇÜLEMEDİ — payda `entry_missed_limit`
+#   bir RED OLAYI sayacıydı, pay DİSTİNKT İŞLEM; ham bölme %132/%141 verdi (bir oran %100'ü aşamaz).
+#   Çözüm `backtest.BacktestResult.entry_reject_ids` (2026-08-17 gecesi eklendi, v253 çivileri):
+#   neden → [(ticker, tarih)]. Betik onu ZATEN yakalıyor (`red_kimlik`); eksik olan tek şey KOŞUM.
+#   Kayıtlı çıktılar bu alandan ÖNCE üretildi, o yüzden `red_kimlik` orada boş.
+#
+# K DEFTERİ: K HARCANMAZ. Aynı 8 hücre, aynı tavanlar, aynı dolum kuralları, aynı eşikler —
+#   yeni grid noktası YOK. Kaydedilen alan yeni, ÖLÇÜLEN uzay aynı. (Ö-51c için de aynı hüküm
+#   verilmişti: "Aynı hücreler → K harcamaz.")
+#
+# KENDİ KONTROLÜNÜ TAŞIR: `backtest.py` bu gece değişti. Koşum bitince A kolu defterleri
+#   2026-08-17'nin donmuş defterleriyle BAYT KIYASINA girer. Özdeş → tek yenilik red kimliği,
+#   Ö1 dürüstçe hesaplanır. Özdeş DEĞİL → bu başlı başına bir BULGUDUR ve Ö1'den önce o işlenir.
+#
+# [1] DUMAN (K=8, ~1 dk) — kablo sınaması: `red_kimlik` gerçekten doluyor mu
+.venv/bin/python research/olcumler/exe006b_o1_kimlik_2026-08-22/olcum.py --smoke
+#
+# [2] TAM pencere (~100 dk)
+.venv/bin/python research/olcumler/exe006b_o1_kimlik_2026-08-22/olcum.py

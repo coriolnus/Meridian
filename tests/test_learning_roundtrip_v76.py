@@ -50,7 +50,7 @@ REPLAY_START, REPLAY_END = "2022-01-03", "2022-12-30"
 # Turu kapatan tek değişkenli hamle ve onun tersi. İkisi de bounds.yaml içinde, adım üstünde.
 KNOB = "position_size_r"
 SMALL, FULL = 0.1, 1.0          # ölçülen: küçük pozisyon popülasyonu ebeveyninden ~0.21 skor geride
-# TOHUM DEĞERİ KAYNAKTAN OKUNUR, LİTERAL DEĞİL (v246-C · ROADMAP §2-30). `seeded` fikstürü v1'i
+# TOHUM DEĞERİ KAYNAKTAN OKUNUR, LİTERAL DEĞİL (v246-C · ROADMAP Ö-30). `seeded` fikstürü v1'i
 # `run.bootstrap_v01()` ile kurar, yani v1'in boyutu `config.default_strategy()`ten gelir. Burada
 # 1,0 literali yazılıydı ve yedek canlıyla hizalanınca (1,0 → 0,5) rollback testi ÖLÇTÜĞÜ ŞEY
 # yüzünden değil, TOHUMUN ADINI yanlış bildiği için kırmızıya döndü. Testin cümlesi bir SAYI değil

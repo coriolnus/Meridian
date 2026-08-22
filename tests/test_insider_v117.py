@@ -1,4 +1,4 @@
-"""test_insider_v117.py — FORM 4 İÇERİDEN İŞLEM ADAPTÖRÜ (ROADMAP §3.4 Y4, 2026-07-29).
+"""test_insider_v117.py — FORM 4 İÇERİDEN İŞLEM ADAPTÖRÜ (ROADMAP §5.4 Y4, 2026-07-29).
 
 Tasarım sözleşmesi (meridian/adapters/insider.py):
   1. UYDURMA YASAĞI — geçmiş penceresi KAPSANMIYORSA cevap `siniflanamadi`'dır, `firsatci` DEĞİL.

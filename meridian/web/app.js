@@ -811,6 +811,50 @@ function sermayeKokenSatiri(k, { kisa = false, ibareyle = false } = {}) {
 // (`loop.ayna_sapma_alanlari` — satır numarası değil AD verilir: bu turun kendi dersi).
 // GERİYE UYUM: dağıtım öncesi yazılmış bir nabızda `position_drift` anahtarı YOKTUR (undefined) →
 // adet boyutu "ölçülmedi" okunur. Eski nabzı "temiz" saymak, kapatılan kusuru geri açmak olurdu.
+
+// ── BROKER ↔ KİTAP MUTABAKATI (Ö-52/Ö-53, 2026-08-22) ────────────────────────────────────────
+// ÖLÇÜLEN KUSUR: operatör "alpacadaki toplam para ile panodaki tutar birbirinden farklı" dedi ve
+// panoda farkı açıklayan HİÇBİR ŞEY yoktu. `/api/today` köprüyü 2026-08-22'de üretmeye başladı
+// ama OKUYUCUSU YOKTU (YASA 6 borcu) — yani cevap yalnız API yükünde duruyordu, panoda değil.
+// İki satır: farkın BÜYÜKLÜĞÜ (köprü) ve NEREDEN geldiği (pozisyon adetleri).
+// `null` "fark yok" DEĞİL "ölçülemedi" demektir ve bu ikisi ASLA aynı görünmez — `mirror_divergence`
+// tam bu ayrımı yapmadığı için yedide yedi ayrışmayı sessizce yuttu.
+function mutabakatSatirlari(today) {
+  const bm = today.broker_mutabakati || {}, pm = today.pozisyon_mutabakati || {};
+  const out = [];
+  if (bm.aciklanamayan == null) {
+    if (bm.olculemedi_neden)
+      out.push(`<div class="r"><span>Broker farkı</span><b class="mut" title="${esc(bm.olculemedi_neden)}">ölçülemedi</b></div>`);
+  } else {
+    const v = Number(bm.aciklanamayan);
+    const ipucu = [
+      `broker equity ${money(bm.broker_equity)}`,
+      `− gerçekleşmemiş ${money(bm.gerceklesmemis_pnl)} = maliyet bazlı ${money(bm.broker_maliyet_bazli)}`,
+      `reset günü ${money(bm.broker_reset_gunu_equity)} → broker kazancı ${money(bm.broker_reset_sonrasi)}`,
+      `kitap ${money(bm.kitap_cash)} − taban ${money(bm.sermaye_tabani)} = ${money(bm.kitap_reset_sonrasi)}`,
+      `AÇIKLANAMAYAN ${money(v)}`].join("\n");
+    out.push(`<div class="r"><span>Broker farkı</span><b class="${Math.abs(v) < 1 ? "" : "warn"}" title="${esc(ipucu)}">${money(v)}</b></div>`);
+  }
+  const dokum = []
+    .concat((pm.ayrisan || []).map(x => `${x.ticker}: kitap ${x.kitap} / broker ${x.broker}`))
+    .concat((pm.yalniz_kitapta || []).map(x => `${x.ticker}: YALNIZ KİTAPTA (${x.kitap})`))
+    .concat((pm.yalniz_brokerda || []).map(x => `${x.ticker}: YALNIZ BROKER'DA (${x.broker})`))
+    .join("\n");
+  const n = pm.ayrisan_sayisi;
+  if (n == null) {
+    if (pm.olculemedi_neden)
+      out.push(`<div class="r"><span>Poz. ayrışması</span><b class="mut" title="${esc(pm.olculemedi_neden)}">ölçülemedi</b></div>`);
+  } else if (n === 0) {
+    out.push(`<div class="r"><span>Poz. ayrışması</span><b class="pos" title="kitap ve broker adetleri BİREBİR">yok</b></div>`);
+  } else {
+    // `dok` YUKARIDA hesaplanır: emisyon satırının HEMEN önüne bir deyim koymak, koşulsuz-emisyon
+    // tarayıcısının geriye yürüyüşünü kesiyor ve rengi "kapısız" gösteriyordu (v197 çivisi yakaladı).
+    // Renk yalnız anomalide basılır ve kapının GÖRÜNÜR olması kuralın parçası.
+    out.push(`<div class="r"><span>Poz. ayrışması</span><b class="warn" title="${esc(dokum)}">${n} sembol</b></div>`);
+  }
+  return out.join("");
+}
+
 function aynaRozeti(hb) {
   const _boyut = v => (v === true ? "sapma" : v === false ? "uyumlu" : "olculemedi");
   const fiyat = _boyut(hb.mirror_drift), adet = _boyut(hb.position_drift);
@@ -941,6 +985,7 @@ async function buildSidebar(today, x) {
            değil, ve aynı harf 200 piksel arayla üç kez basılıyordu. -->
       <div class="r"><span>Mod</span><b>${esc(today.mode || MOD_OLCULEMEDI)}</b></div>
       <div class="r"><span>Nabız</span><b class="${today.stale ? 'warn' : 'pos'}">${today.stale ? 'gecikmiş' : 'canlı'}</b></div>
+      ${mutabakatSatirlari(today)}
     </div>
     <p class="slab">GÖRÜNÜM</p>${items}
     ${_temaDugmesiHTML()}
@@ -9188,13 +9233,22 @@ function tradeRows(trades) {
       : '<span class="mut">—</span>';
     // Satır altı sütuna sığar; işlemin geri kalanı (giriş/çıkış fiyatı, MFE/MAE, plan, zincir,
     // maliyet) çekmecede. Kırpmak yerine yanında açmak — matrisin hareketi, defterde.
+    // PARA SÜTUNU (operatör şikâyeti 2026-08-21: "hangi işlemin ne kadar kazandırdığını net
+    // göremiyorum"). Önce yalnız R vardı ve `pnl_dollars` ÇEKMECEDEYDİ — operatör her işlemin
+    // parasını görmek için satırı tek tek açmak zorundaydı. Kuzey yıldızı bunu ayrıca yasaklıyor:
+    // "R-birimi geniş stopa YAPISAL ÖNYARGILIDIR; dolar merceği olmadan sermaye kararı verilemez."
+    // R KALDIRILMADI — ikisi yan yana: R karşılaştırılabilirlik, dolar gerçeklik verir.
+    // `null` ise "—" yazılır, 0 YAZILMAZ: sıfır dolar "başabaş kapandı" demektir, ölçülmemiş değil.
+    const pd = tr.pnl_dollars;
+    const pdTxt = (pd == null) ? "—" : money(pd);
     const k = rec("trade", tr);
-    return `<button ${rowAttrs(k, `${tr.ticker || "?"} · ${String(tr.ts_close || "").slice(0, 10)} · ${rTxt} · ${EXIT_TR[tr.exit_reason] || tr.exit_reason || ""}. Kaydı aç.`)}
-      class="trow rowbtn" style="grid-template-columns:78px 60px 1fr 64px 96px 96px">
+    return `<button ${rowAttrs(k, `${tr.ticker || "?"} · ${String(tr.ts_close || "").slice(0, 10)} · ${rTxt} · ${pdTxt} · ${EXIT_TR[tr.exit_reason] || tr.exit_reason || ""}. Kaydı aç.`)}
+      class="trow rowbtn" style="grid-template-columns:78px 60px 1fr 64px 92px 96px 96px">
       <span class="mono-num mut">${esc(String(tr.ts_close || "").slice(0, 10))}</span>
       <span class="tick">${esc(tr.ticker || "?")}</span>
       <span class="mut">${esc(EXIT_TR[tr.exit_reason] || tr.exit_reason || "")}</span>
       <span class="mono-num ${cls(r)}">${rTxt}</span>
+      <span class="mono-num ${pd == null ? "mut" : cls(Number(pd))}" style="text-align:right">${pdTxt}</span>
       <span><span class="tag t-vi">${esc(REGIME_TR[tr.regime] || tr.regime || "—")}</span></span>
       <span style="text-align:right">${div}</span></button>`;
   }).join("");

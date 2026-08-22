@@ -736,8 +736,18 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
             # gerçek kaynağı YOK: meta["size_law"] `_save_broker`ın 14. anahtarı olarak kalıcılaşır.
             # Gönderim SONUCUNDAN bağımsız yazılır — reddedilen/veto edilen planın da boyut TABANI
             # kanıttır (bayat-sermaye turunda sapmayı çözmek üç deftere bakmayı gerektirmişti).
+            # `eq_ayna` (2026-08-22, Ö-53): makbuz bugüne dek YALNIZ kitabın sermayesini (`eq_now`)
+            # yazıyordu, oysa `submit_plan` AYNAYA `eq`yi (broker hesabının equity'si) veriyor —
+            # yani makbuz, aynanın FİİLEN boyutlandığı sayıyı hiç taşımıyordu. Sonuç ölçüldü:
+            # yedi açık pozisyonun yedisinde de adet ayrıştı (kitap 15.661,22 fazla maliyet) ve
+            # makbuzu OLAN planlarda bile (CRM·BDX·MRK·MRNA) sapma açıklanamadı — `MIRROR_DRIFT`
+            # tam bunu "gönderim↔dolum kıyası kurulamaz" diye kaydediyordu.
+            # İKİ TABANIN FARKLI OLMASI KUSUR DEĞİL (her defter kendi parasına göre boyutlanır);
+            # kusur farkın KAYITSIZ olmasıydı. İki alan AYRI durur: aynı ada yazmak, iki tabanı
+            # ayırt edilemez kılardı.
             meta.setdefault("size_law", {})[pl.get("id")] = {
                 "eq_kaynak": _eq_kaynak, "eq_now": round(float(eq_now), 2),
+                "eq_ayna": round(float(eq), 2),
                 "peak": round(float(_peak), 2), "size_mult": round(float(_smult), 4),
                 "kitap_rev": _kitap_rev}
             res = alpaca.submit_plan(pl, eq, size_mult=_smult,
@@ -2617,6 +2627,29 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak,
         if f_rev is not None and r_rev != f_rev:
             return "kitap_kaydi", (f"makbuz kitap_rev {r_rev} ≠ dolum-anı rev {f_rev} — kitap "
                                    f"gönderim↔dolum arasında DEĞİŞTİ (boyut tabanı kaymadı)")
+    # ayna_taban (2026-08-22, Ö-53): buraya gelindiyse kitabın KENDİ girdileri iki bacakta eşit
+    # demektir — ama kitap ile AYNA aynı sermayeyle boyutlanmaz. `submit_plan`e `eq`
+    # (broker hesabının equity'si) gider, kitap ise `eq_now` ile boyutlanır. İki tabanın farklı
+    # olması KUSUR DEĞİL (her defter kendi parasına göre boyutlanır); açıklanmadan bırakılması
+    # kusurdu: 2026-08-22'de yedi açık pozisyonun YEDİSİNDE de adet ayrıştı ve sebep bu tabloda
+    # ADSIZDI, hepsi son daldaki jenerik `olculemedi`ye düşüyordu.
+    # YERİ BİLEREK SON: önceki sınıflar kitabın İÇ tutarsızlığını açıklar ve daha kesindir; bu
+    # sınıf yalnız tablonun PES ETTİĞİ yerde konuşur, hiçbirini yerinden etmez.
+    # ALAN YOKLUĞU AYRIŞMA DEĞİLDİR: 2026-08-22 öncesi makbuzlar `eq_ayna` taşımaz (canlıda dördü)
+    # ve onları "taban ayrıştı" saymak uydurma olurdu — sessizce eski hükme düşerler.
+    _r_ayna = receipt.get("eq_ayna")
+    if _r_ayna is not None and r_eqn is not None:
+        try:
+            if abs(float(_r_ayna) - float(r_eqn)) > _DRIFT_EPS_EQ:
+                # BİÇİM `.2f`, `:g` DEĞİL: `:g` altı anlamlı basamağa yuvarlar ve 107288,55$'ı
+                # "107289" diye basardı — mutabakat mesajında kuruş kaybetmek, mesajın kendisini
+                # kanıt olmaktan çıkarır (çivi bunu yakaladı).
+                return "ayna_taban", (
+                    f"kitap {float(r_eqn):.2f}$ ile boyutlandı, AYNA {float(_r_ayna):.2f}$ ile "
+                    f"(fark {float(r_eqn) - float(_r_ayna):+.2f}$) — iki defter FARKLI sermaye "
+                    f"tabanına göre boyutlandı; adet sapmasının sebebi bu, icra değil")
+        except (TypeError, ValueError):  # sessiz-yutma: eq_ayna sayıya çevrilemedi (biçimsiz makbuz) — "taban ayrıştı" hükmü UYDURULMAZ, eski son-dal hükmü geçerli kalır
+            pass
     # tüm ölçülebilir girdiler eşit → icra VEYA beyan_kaydi; makbuz beyanı ölçmez → olculemedi
     return "olculemedi", ("eq_now/size_mult/kitap_rev eşit; kalan fark icra (limit/slipaj/kısmi "
                           "dolum) VEYA beyan_kaydi olabilir — size_law makbuzu beyan_n/ofset "

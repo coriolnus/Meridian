@@ -1,4 +1,4 @@
-"""G3b kod-seviyesi çıkış reformu (ROADMAP §3.2 "G3b", 2026-07-30) — DÖRT MEKANİZMA, HEPSİ DEFAULT-OFF.
+"""G3b kod-seviyesi çıkış reformu (ROADMAP §5.2 "G3b", 2026-07-30) — DÖRT MEKANİZMA, HEPSİ DEFAULT-OFF.
 
 ① exit.early_kill_pivot   — pivot-altı kapanış → ertesi açılış çık (TEK yasa, iki tüketici)
 ② stop_mode / stop_buffer_atr — yapı-tabanlı stop (pivot − tampon), R-nötr

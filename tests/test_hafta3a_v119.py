@@ -1,5 +1,5 @@
 """test_hafta3a_v119.py — HAFTA 3a: dolar merceği + kuyruk ölçütü + ısı + doğrulama üçlüsü
-(ROADMAP §3.1'in ilk yarısı, 2026-07-30)
+(ROADMAP §5.1'in ilk yarısı, 2026-07-30)
 
 BU TURUN ORTAK SINIFI: **ölçüt, ölçtüğünü sandığı şeyi ölçmüyordu.**
 
@@ -186,7 +186,7 @@ def test_A_zayif_durumu_MUMKUN_ve_anlamlilik_beyani_dogru(sandbox_state):
 
 
 def test_A_karar_kullanimi_hukmun_ICINDE_yazili(sandbox_state):
-    """Rafineri kararı EDGE'e, sermaye/silahlanma İKİSİNE bakar (ROADMAP §3.1). Bu kural bir
+    """Rafineri kararı EDGE'e, sermaye/silahlanma İKİSİNE bakar (ROADMAP §5.1). Bu kural bir
     oturum notunda kalırsa bir sonraki turda kaybolur — hükmün kendi payload'ında durur."""
     _yaz(_kazanan_defter())
     rv = analytics.result_verdict()
@@ -347,7 +347,7 @@ def test_C_eksik_alanli_pozisyon_SAYILIR_ve_UYARIR(sandbox_state, monkeypatch):
 def test_C_ISI_BU_TURDA_HICBIR_KAPIYA_BAGLI_DEGIL():
     """3B'nin yazılı sınırı: ısı YALNIZ GÖSTERGEdir. Isı TAVANI (açık risk ≤ NAV %6-8) Hafta 3b'nin
     default-OFF knob'u olacak; bu turda emir akışına dokunması ölçülmemiş bir eşiğin canlı kararı
-    kesmesi demekti (ROADMAP §4: ölçüm ÖNCE, kapı SONRA). Karar veren modüller taranır."""
+    kesmesi demekti (ROADMAP §6: ölçüm ÖNCE, kapı SONRA). Karar veren modüller taranır."""
     for mod in ("guard.py", "broker.py", "reflect.py", "loop.py", "arming.py", "risk.py"):
         p = pathlib.Path("meridian") / mod
         if not p.exists():
@@ -574,7 +574,7 @@ def test_E_segment_score_docstringi_FORMULU_duz_yaziyla_tasir():
         assert parca in d, f"formülün '{parca}' parçası docstring'de yok"
     # NOMİNAL ≠ GERÇEK ağırlık: ret_c yarısını taşır ama aralığı ~1/20'ye sıkışmıştır
     assert "NOMİNAL" in d and "1/20" in d
-    # ROADMAP §3.1 kararına referans: bu bir HATA raporu değil ÖLÇÜM
+    # ROADMAP §5.1 kararına referans: bu bir HATA raporu değil ÖLÇÜM
     assert "büyüklük yasası revizyonu" in d
 
 
