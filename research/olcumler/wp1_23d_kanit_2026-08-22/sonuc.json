@@ -1,0 +1,171 @@
+{
+  "kalem": "WP1-23d kart-kaniti",
+  "tarih": "2026-08-22",
+  "canli_cekim_zamani": "2026-08-22T18:40:43+00:00",
+  "canli_goal_slippage_bps": 5,
+  "canli_toplam_satir": 893,
+  "canli_kaynak_dagilimi": {
+    "replay_seed": 885,
+    "live_paper": 8
+  },
+  "canli_live_paper_n": 8,
+  "canli_live_paper_exit_reason": {
+    "stop": 4,
+    "target": 2,
+    "target_gap": 1,
+    "stop_gap": 1
+  },
+  "canli_stop_cikis_n": 5,
+  "canli_stop_cikis_satirlar": [
+    {
+      "id": "T00096",
+      "ticker": "ALL",
+      "ts_close": "2026-08-07",
+      "exit_reason": "stop",
+      "exit": 266.6893,
+      "alpaca_fill_price": null,
+      "broker_teyit": null,
+      "side": "long"
+    },
+    {
+      "id": "T00098",
+      "ticker": "NUE",
+      "ts_close": "2026-08-19",
+      "exit_reason": "stop",
+      "exit": 257.2746,
+      "alpaca_fill_price": null,
+      "broker_teyit": null,
+      "side": "long"
+    },
+    {
+      "id": "T00101",
+      "ticker": "HUM",
+      "ts_close": "2026-08-19",
+      "exit_reason": "stop",
+      "exit": 380.0992,
+      "alpaca_fill_price": 380.0,
+      "broker_teyit": null,
+      "side": "long"
+    },
+    {
+      "id": "T00102",
+      "ticker": "MRVL",
+      "ts_close": "2026-08-21",
+      "exit_reason": "stop",
+      "exit": 237.19,
+      "alpaca_fill_price": 237.1308,
+      "broker_teyit": null,
+      "side": "long"
+    },
+    {
+      "id": "T00103",
+      "ticker": "LLY",
+      "ts_close": "2026-08-21",
+      "exit_reason": "stop_gap",
+      "exit": 1229.8848,
+      "alpaca_fill_price": 1244.7433,
+      "broker_teyit": null,
+      "side": "long"
+    }
+  ],
+  "canli_stop_afp_dolu_n": 3,
+  "canli_stop_afp_dolu_teyitli_n": 0,
+  "canli_stop_olculebilir_n_edg042_k3": 0,
+  "canli_k2_cikis_n": 3,
+  "canli_k2_afp_dolu_n": 2,
+  "canli_k2_afp_dolu_teyitli_n": 0,
+  "replay_defter": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032b_tamsatir_2026-08-13/islemler_tam_kontrol.json",
+  "replay_n": 885,
+  "replay_toplam_pnl": 20684.69,
+  "replay_exit_reason_tablosu": {
+    "stop": {
+      "n": 379,
+      "n_pay_pct": 42.82,
+      "pnl": -129302.53,
+      "neg_pnl": -131305.2,
+      "neg_pnl_pay_pct": 71.03,
+      "exit_notyonel": 5246528.9,
+      "bps_basina_dolar": 524.65
+    },
+    "regime_flip": {
+      "n": 171,
+      "n_pay_pct": 19.32,
+      "pnl": 10203.48,
+      "neg_pnl": -16151.32,
+      "neg_pnl_pay_pct": 8.74,
+      "exit_notyonel": 1753350.64,
+      "bps_basina_dolar": 175.34
+    },
+    "time_stop": {
+      "n": 152,
+      "n_pay_pct": 17.18,
+      "pnl": 35899.8,
+      "neg_pnl": -9614.71,
+      "neg_pnl_pay_pct": 5.2,
+      "exit_notyonel": 1437067.37,
+      "bps_basina_dolar": 143.71
+    },
+    "target": {
+      "n": 99,
+      "n_pay_pct": 11.19,
+      "pnl": 96499.88,
+      "neg_pnl": 0.0,
+      "neg_pnl_pay_pct": -0.0,
+      "exit_notyonel": 1399406.13,
+      "bps_basina_dolar": 139.94
+    },
+    "stop_gap": {
+      "n": 57,
+      "n_pay_pct": 6.44,
+      "pnl": -27600.11,
+      "neg_pnl": -27778.15,
+      "neg_pnl_pay_pct": 15.03,
+      "exit_notyonel": 714369.4,
+      "bps_basina_dolar": 71.44
+    },
+    "target_gap": {
+      "n": 27,
+      "n_pay_pct": 3.05,
+      "pnl": 34984.17,
+      "neg_pnl": -18.37,
+      "neg_pnl_pay_pct": 0.01,
+      "exit_notyonel": 350183.66,
+      "bps_basina_dolar": 35.02
+    }
+  },
+  "replay_toplam_neg_pnl": -184867.75,
+  "replay_kova_stop_bar_ici": {
+    "n": 379,
+    "n_pay_pct": 42.82,
+    "pnl": -129302.53,
+    "neg_pnl": -131305.2,
+    "neg_pnl_pay_pct": 71.03,
+    "exit_notyonel": 5246528.9,
+    "bps_basina_dolar": 524.65
+  },
+  "replay_kova_stop_gap": {
+    "n": 57,
+    "n_pay_pct": 6.44,
+    "pnl": -27600.11,
+    "neg_pnl": -27778.15,
+    "neg_pnl_pay_pct": 15.03,
+    "exit_notyonel": 714369.4,
+    "bps_basina_dolar": 71.44
+  },
+  "replay_kova_stop_birlesik": {
+    "n": 436,
+    "n_pay_pct": 49.27,
+    "pnl": -156902.64,
+    "neg_pnl": -159083.35,
+    "neg_pnl_pay_pct": 86.05,
+    "exit_notyonel": 5960898.3,
+    "bps_basina_dolar": 596.09
+  },
+  "replay_kova_edg040_basabas_baglami": {
+    "aciklama": "EDG-040 basabas 5-15 bps/BACAK (tum bacaklar). Bu tablo YALNIZ stop-cikis bacagina ek slip uygulansa kaci goturur sorusunun statik (yeniden-olcekleme) cevabini verir; motor tepkisi (boyut/secilim) ICINDE DEGIL — EDG-040'in kendi uyarisi aynen gecerli.",
+    "stop_bar_ici_10bps_statik_dolar": 5246.53,
+    "stop_birlesik_10bps_statik_dolar": 5960.9,
+    "edg032b_taban_pnl": 20684.69
+  },
+  "replay_stop_scaled_out_n": 0
+}

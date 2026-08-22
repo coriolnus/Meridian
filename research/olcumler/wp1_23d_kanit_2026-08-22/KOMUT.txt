@@ -1,0 +1,42 @@
+WP1-23d KART-KANITI — koşum kimliği (2026-08-22, salt-okuma; kanıt toplama, HÜKÜM YOK)
+Görev: 23d "bar-içi stop dolumu = stop slipajı SIFIR" varsayımının kod yolu + örneklem envanteri.
+Bu dizin KANIT üretir; kart yazımı ve hüküm Rol-1'in.
+
+[1] Canlı ham çekim (ssh-stdin, exe007/edg042 deseni; canlıya ve state/'e TEK BAYT yazılmadı):
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 \
+        'cd /opt/meridian && ./.venv/bin/python -' \
+        < research/olcumler/wp1_23d_kanit_2026-08-22/canli_cek.py \
+        > research/olcumler/wp1_23d_kanit_2026-08-22/canli_ham.json
+    çekim zamanı: 2026-08-22T18:40:43+00:00 · goal.slippage_bps=5
+    sha256(canli_cek.py)  = 7d20c0e7473bcad377d1664b7c59c377cee5e6c3018627b4a18c7ed387cda39e
+    sha256(canli_ham.json)= 1c32b3dfa5f47da5ee915ee2421ed98020cf6e6b22b61c00247a14fcb20a243a
+    (İçerik edg042_kosum 15:05Z snapshot'ıyla tutarlı: 893 satır = 885 replay_seed + 8 live_paper;
+     Cumartesi, arada seans yok.)
+
+[2] Ölçüm: cd research/olcumler/wp1_23d_kanit_2026-08-22 && python3 olcum.py → sonuc.json
+    sha256(olcum.py)   = 273468d773847d7999474f5b70053cbb564c773aec3c2719b18f86e19d5e15ff
+    sha256(sonuc.json) = 6f6b58e7453efa7ea399c5733e936386f23726c8a5b5490a69f0b7ac7097b07a
+    Replay kaynağı: DONMUŞ edg032b tam defteri
+    research/olcumler/edg032b_tamsatir_2026-08-13/islemler_tam_kontrol.json (885 satır; yeniden koşum YOK).
+
+[3] ÖZET SAYILAR (ayrıntı sonuc.json):
+    CANLI: live_paper n=8 · stop-mekaniği çıkış (stop 4 + stop_gap 1) = 5 · afp dolu 3 (HUM/MRVL/LLY)
+           · broker_teyit'li 0 → EDG-042-K3 ölçülebilir n=0. koruma_* çıkışı 0.
+           (3 afp'li satır TEYİTSİZ — EDG-042 kill#3 gereği kıyasa GİREMEZ; burada yalnız envanter.)
+    REPLAY (edg032b, taban P&L +20.684,69):
+           bar-içi "stop": n=379 (%42,8) · P&L −129.302,53 · negatif P&L'in %71,0'i
+             · çıkış notyoneli 5.246.528,90$ → 1 bps ek stop-slip = 524,65$/bps (STATİK)
+           "stop_gap": n=57 (%6,4) · P&L −27.600,11 · negatif P&L'in %15,0'i → 71,44$/bps
+           birleşik: n=436 (%49,3) · −156.902,64 · negatif P&L'in %86,1'i → 596,09$/bps
+           STATİK türevler (yeniden-ölçekleme, motor tepkisi YOK — EDG-040 uyarısı aynen):
+             +10 bps stop-only ≈ −5.246,53$ (taban P&L'in %25,4'ü)
+             stop-only statik başabaş: 39,43 bps (bar-içi) · 34,70 bps (birleşik)
+
+[4] Kod yolu satırları (2026-08-22 çalışma ağacı; kartlardaki :596/:669/:515/:414 atıfları ESKİ
+    satır numaralarıdır, dosya evrildi):
+    broker.py:684 eff_stop = max(stop, trail_stop) · :686-687 açılış gap'i → open'da "stop_gap"
+    · :691-692 bar-içi dokunuş → EFF_STOP'ta "stop" (23d varsayımı) · :765 exit_fill =
+    raw_exit*(1−slip) (tek friksiyon, neden-körü) · giriş kıyası: :611 base_fill + :624 IMPACT_COEF
+    katkısı (çıkışta likidite/impact terimi YOK) · çağıranlar: backtest.py:364 · loop.py:1577 ·
+    counterfactual.py:273 · shadow_lifecycle.py:281 · canlı ayna: adapters/alpaca.py:394/:1073
+    stop bacağı stop_price-yalnız (limit_price yok → tetiklenince MARKET, TAVANSIZ).
