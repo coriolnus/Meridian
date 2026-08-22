@@ -111,7 +111,10 @@ def _olcum_modulu():
 #                     "dış okuyucusu api.py'dir" der → pano çizmiyordu, YASA 6 boşluğu])
 #   karar 27 · ogrenme 45 · kilitler 5 (değişmedi — F5 ③'e düştü)
 # Kapak altında: `KAPAK_TABANI` saglik ÖLÇÜLEN 7→8, taban 4 KORUNUYOR (`>=`).
-KART_TABANI = {"karar": 27, "saglik": 18, "ogrenme": 45, "kilitler": 5}
+KART_TABANI = {"karar": 27, "saglik": 20, "ogrenme": 45, "kilitler": 5}
+# 2026-08-22 BEYANLI ARTIŞ: saglik 18→20 — dört okuyucusuz bekçi raporu panoya bağlandı (YASA 6
+# kapanışı, v261: goal_failure/kitap_damga/mutabakat_tazelik/onayli_gonderim) ve sağlık ailesine
+# iki yeni kapaklı kart getirdi. Taban DÜŞMEDİ, büyüdü; sökülme hâlâ kırmızıya döner.
 # Bu turda kapağa geçirilen kart sayısı — UX denetimi §5.3'ün 2/3/4 numaralı öncelikleri.
 # Öncelik 1 (Bölüm 5'i beşe bölmek) bir İÇERİK kararıdır ve D2-b'ye bırakıldı; bu tur sözleşmeyi
 # kurar, kart bölmez. Sayı bir TABAN: düşerse (kapak sökülürse) test kırmızıya döner.
