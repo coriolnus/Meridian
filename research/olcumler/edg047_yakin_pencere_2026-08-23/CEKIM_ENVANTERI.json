@@ -1,0 +1,172 @@
+{
+ "kart": "EDG-2026-047",
+ "cekim_kaynagi": "ubuntu@130.61.126.87:/opt/meridian/state/bars_intraday/",
+ "cekim_yontemi": "ssh-stdin salt-okuma (gzip -c uzak | > yerel .gz; exe007 emsali cat deseninin sikistirilmis hali; canliya yazim yok)",
+ "cekim_damgasi_utc": "2026-08-22T23:42:38Z",
+ "dosya_sayisi": 20,
+ "toplam_canli_satir": 1358129,
+ "tum_satirlar_eslesti": true,
+ "yerel_eski_kopya_notu": "state/bars_intraday/ yerelinde 4 eski dosya vardi; 07-27/28/29 bayt-aynen, 07-30 BAYAT (2364865 vs canli 10245327) — talimat geregi tum olcum taze canli cekimden yapildi",
+ "dosyalar": [
+  {
+   "dosya": "2026-07-27.jsonl",
+   "canli_bayt": 10088437,
+   "canli_satir": 73432,
+   "yerel_gz_bayt": 1563343,
+   "yerel_satir": 73432,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-07-28.jsonl",
+   "canli_bayt": 7850246,
+   "canli_satir": 57042,
+   "yerel_gz_bayt": 1249673,
+   "yerel_satir": 57042,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-07-29.jsonl",
+   "canli_bayt": 6379387,
+   "canli_satir": 46330,
+   "yerel_gz_bayt": 1048608,
+   "yerel_satir": 46330,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-07-30.jsonl",
+   "canli_bayt": 10245327,
+   "canli_satir": 74518,
+   "yerel_gz_bayt": 1937189,
+   "yerel_satir": 74518,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-07-31.jsonl",
+   "canli_bayt": 9943018,
+   "canli_satir": 72446,
+   "yerel_gz_bayt": 1853985,
+   "yerel_satir": 72446,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-03.jsonl",
+   "canli_bayt": 10063626,
+   "canli_satir": 73340,
+   "yerel_gz_bayt": 1872077,
+   "yerel_satir": 73340,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-04.jsonl",
+   "canli_bayt": 10577596,
+   "canli_satir": 76909,
+   "yerel_gz_bayt": 1981608,
+   "yerel_satir": 76909,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-05.jsonl",
+   "canli_bayt": 10015739,
+   "canli_satir": 72936,
+   "yerel_gz_bayt": 1862450,
+   "yerel_satir": 72936,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-06.jsonl",
+   "canli_bayt": 9758908,
+   "canli_satir": 71129,
+   "yerel_gz_bayt": 1804780,
+   "yerel_satir": 71129,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-07.jsonl",
+   "canli_bayt": 9354712,
+   "canli_satir": 68252,
+   "yerel_gz_bayt": 1709134,
+   "yerel_satir": 68252,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-10.jsonl",
+   "canli_bayt": 9389530,
+   "canli_satir": 68549,
+   "yerel_gz_bayt": 1706639,
+   "yerel_satir": 68549,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-11.jsonl",
+   "canli_bayt": 9088032,
+   "canli_satir": 66380,
+   "yerel_gz_bayt": 1643302,
+   "yerel_satir": 66380,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-12.jsonl",
+   "canli_bayt": 9131171,
+   "canli_satir": 66619,
+   "yerel_gz_bayt": 1654372,
+   "yerel_satir": 66619,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-13.jsonl",
+   "canli_bayt": 8922020,
+   "canli_satir": 65096,
+   "yerel_gz_bayt": 1622093,
+   "yerel_satir": 65096,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-14.jsonl",
+   "canli_bayt": 8696892,
+   "canli_satir": 63481,
+   "yerel_gz_bayt": 1564249,
+   "yerel_satir": 63481,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-17.jsonl",
+   "canli_bayt": 9288882,
+   "canli_satir": 67713,
+   "yerel_gz_bayt": 1686860,
+   "yerel_satir": 67713,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-18.jsonl",
+   "canli_bayt": 9353602,
+   "canli_satir": 68171,
+   "yerel_gz_bayt": 1715242,
+   "yerel_satir": 68171,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-19.jsonl",
+   "canli_bayt": 9663588,
+   "canli_satir": 70327,
+   "yerel_gz_bayt": 1792101,
+   "yerel_satir": 70327,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-20.jsonl",
+   "canli_bayt": 9387007,
+   "canli_satir": 68416,
+   "yerel_gz_bayt": 1720804,
+   "yerel_satir": 68416,
+   "satir_eslesme": true
+  },
+  {
+   "dosya": "2026-08-21.jsonl",
+   "canli_bayt": 9199424,
+   "canli_satir": 67043,
+   "yerel_gz_bayt": 1673180,
+   "yerel_satir": 67043,
+   "satir_eslesme": true
+  }
+ ]
+}

@@ -1,0 +1,293 @@
+{
+ "kart": "EDG-2026-047",
+ "hucre": "yakin_pencere_L1",
+ "olcum_tarihi": "2026-08-23",
+ "betik": "olcum.py",
+ "betik_sha256": "3c50780b805e5adce840c16fa3d864323b14c2e323f712dec940a8326e0cdafa",
+ "veri": {
+  "kaynak": "canlı /opt/meridian/state/bars_intraday (ssh-stdin salt-okuma, damga 2026-08-22T23:42:38Z)",
+  "toplam_satir": 1358129,
+  "json_bozuk_satir": 0,
+  "t_alani_eksik_satir": 0
+ },
+ "saat_dilimi_ozet": {
+  "sonuc_utc_mi": true,
+  "acilisli_seans": "19/20",
+  "sicrama_min": 67.0,
+  "detay": "dogrulama_saat_dilimi.json"
+ },
+ "kapsam": {
+  "seans_sayisi_arsiv": 20,
+  "seans_araligi": [
+   "2026-07-27",
+   "2026-08-21"
+  ],
+  "seans_sayisi_acilis_verili": 19,
+  "seans_sayisi_r_ureten": 19,
+  "uniq_ticker_arsiv_geneli": 252,
+  "uniq_ticker_AB_penceresinde": 252,
+  "kill3_esik": {
+   "seans_min": 15,
+   "ticker_min": 200
+  },
+  "kill3_esik_karsilastirma_mekanik": {
+   "seans_arsiv_esik_ustunde": true,
+   "seans_r_ureten_esik_ustunde": true,
+   "ticker_esik_ustunde": true,
+   "not": "mekanik kıyas — kill#3 okuması Rol-1'in"
+  }
+ },
+ "kenar_durumlari": {
+  "pencere_satir_alan_eksik_veya_open_sifir": 0,
+  "pencere_A_bar_yetersiz_dusen": 762,
+  "pencere_B_bar_yetersiz_dusen": 583,
+  "cift_m1A_sifir_dusen": 0,
+  "m3_payda_sifir": 0,
+  "seans_v_negatif_veya_eksik_satir": 0
+ },
+ "pencere_tanimi": {
+  "A": "13:30-13:44 UTC",
+  "B": "13:45-13:59 UTC",
+  "min_bar": 5,
+  "bar": "[başlangıç,60sn) dakika barı"
+ },
+ "O1": {
+  "tanim": "Δ%menzil = medyan[(m1_B−m1_A)/m1_A] (ticker×seans havuzu); seans-kümeli eşlenik bootstrap birim=SEANS",
+  "B": 5000,
+  "seed": 20260823,
+  "rng": "python random.Random (MT19937)",
+  "n_cift": 4038,
+  "n_seans": 19,
+  "nokta_oran": -0.4228582882661638,
+  "nokta_yuzde": -42.28582882661638,
+  "ci95_oran": [
+   -0.44312178957352494,
+   -0.4009173321069635
+  ],
+  "ci95_yuzde": [
+   -44.312178957352494,
+   -40.091733210696354
+  ],
+  "okuma_notu": "Ö1 okuması Rol-1'in — burada yalnız sayı"
+ },
+ "O2_betimleyici": {
+  "m2_isaretli_medyan_bps": 4.6544829050385905,
+  "m2_p25_bps": -51.62349063160104,
+  "m2_p75_bps": 58.128631451838245,
+  "abs_m2_medyan_bps": 55.38802146567966,
+  "n_m2": 4038
+ },
+ "m1_betimleyici_bps": {
+  "A_medyan": 105.70904197304006,
+  "n_A": 4240,
+  "B_medyan": 60.457709095199114,
+  "n_B": 4419
+ },
+ "m3_betimleyici_seans_hacim_payi": {
+  "A_medyan": 0.04622246384195983,
+  "B_medyan": 0.0415450600208106
+ },
+ "L2_plan_capali": {
+  "defter": "/Users/erdemozturk/AI-Trading/state/trade_plans.jsonl",
+  "defter_satir": 390,
+  "defter_bozuk_satir": 0,
+  "defter_son_plan_tarihi": "2026-07-28",
+  "arsiv_penceresi": [
+   "2026-07-27",
+   "2026-08-21"
+  ],
+  "kesisen_plan_sayisi": 26,
+  "uniq_ticker_seans_cifti": 23,
+  "arsivde_eslesen_ticker_seans_n": 23,
+  "kesisen_planlar": [
+   {
+    "id": "P-2026-07-06-MRNA",
+    "date": "2026-07-06",
+    "ticker": "MRNA",
+    "gate_verdict": "GO",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-14-GS",
+    "date": "2026-07-14",
+    "ticker": "GS",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-16-MNST",
+    "date": "2026-07-16",
+    "ticker": "MNST",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-21-MMM",
+    "date": "2026-07-21",
+    "ticker": "MMM",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-21-MMM-episodic_pivot",
+    "date": "2026-07-21",
+    "ticker": "MMM",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-23-UNP",
+    "date": "2026-07-23",
+    "ticker": "UNP",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-23-CSX-momentum_burst",
+    "date": "2026-07-23",
+    "ticker": "CSX",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-23-UNP-momentum_burst",
+    "date": "2026-07-23",
+    "ticker": "UNP",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-23-NSC-momentum_burst",
+    "date": "2026-07-23",
+    "ticker": "NSC",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-23-RTX-momentum_burst",
+    "date": "2026-07-23",
+    "ticker": "RTX",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-23-TMO-momentum_burst",
+    "date": "2026-07-23",
+    "ticker": "TMO",
+    "gate_verdict": "GO",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-23-NSC",
+    "date": "2026-07-23",
+    "ticker": "NSC",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-24-PKG-momentum_burst",
+    "date": "2026-07-24",
+    "ticker": "PKG",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-27"
+   },
+   {
+    "id": "P-2026-07-27-ROK-exhaustion_hammer",
+    "date": "2026-07-27",
+    "ticker": "ROK",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-28"
+   },
+   {
+    "id": "P-2026-07-27-RTX",
+    "date": "2026-07-27",
+    "ticker": "RTX",
+    "gate_verdict": "REVIEW",
+    "sinyal_ertesi_seans": "2026-07-28"
+   },
+   {
+    "id": "P-2026-07-27-NCLH-exhaustion_hammer",
+    "date": "2026-07-27",
+    "ticker": "NCLH",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-28"
+   },
+   {
+    "id": "P-2026-07-28-PANW-exhaustion_hammer",
+    "date": "2026-07-28",
+    "ticker": "PANW",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-NUE-momentum_burst",
+    "date": "2026-07-28",
+    "ticker": "NUE",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-PM",
+    "date": "2026-07-28",
+    "ticker": "PM",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-KO-momentum_burst",
+    "date": "2026-07-28",
+    "ticker": "KO",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-ALL-momentum_burst",
+    "date": "2026-07-28",
+    "ticker": "ALL",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-TTWO-exhaustion_hammer",
+    "date": "2026-07-28",
+    "ticker": "TTWO",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-AMGN-momentum_burst",
+    "date": "2026-07-28",
+    "ticker": "AMGN",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-IRM-exhaustion_hammer",
+    "date": "2026-07-28",
+    "ticker": "IRM",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-KHC",
+    "date": "2026-07-28",
+    "ticker": "KHC",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   },
+   {
+    "id": "P-2026-07-28-MAR-exhaustion_hammer",
+    "date": "2026-07-28",
+    "ticker": "MAR",
+    "gate_verdict": "NO_GO",
+    "sinyal_ertesi_seans": "2026-07-29"
+   }
+  ],
+  "istatistikler": null,
+  "istatistik_neden": "n=23 < 30 — kart kuralı: yalnız sayı beyanı (yerel defter 2026-07-28'de donuk, arşiv penceresiyle kesişim doğal olarak dar)"
+ },
+ "beyanlar": [
+  "2026-07-28: arşiv 13:55'te başlamış — A penceresi YOK (r/m2 üretilmez); B penceresi kısmi kapsanabilir, ≥5 barlı B satırları kart kuralı gereği m1_B/m3_B betimleyicisine girer (kısmi-kapsam beyanı)"
+ ],
+ "olculemeyenler": []
+}

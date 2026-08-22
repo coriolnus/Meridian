@@ -42,7 +42,23 @@ kill_criteria:
   - "eşik/pencere sınırları ölçümden sonra değişirse geçersiz (A/B tanımı donuk)"
   - "canlı state'e tek bayt yazım → geçersiz (salt-okuma sözleşmesi)"
 k_registry: {registered_at: "2026-08-23", trial_ids: [pending-047-L1]}
-status: registered   # 2026-08-23 Rol-1 — ön-kayıt (gece filosu; ölçüm ajanı karta dokunmaz)
+status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (aynı gece ölçüldü; K=1 aynen, kill 0)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-23): **Ö1 ATEŞLEDİ — yakın-pencere daralması BİZİM VERİDE DE ANLAMLI.**
+  Δ%menzil nokta −%42,29, seans-kümeli CI95 [−%44,31, −%40,09]; CI-üst < −%20 eşiği net aşıldı.
+  Dış ölçümün (−%42, n=401, konsolide 15-dk) neredeyse birebir replikasyonu — kendi dakika
+  arşivimizden, 19 açılış-verili seans × 252 ticker, 4.038 ticker×seans çifti. Kural gereği:
+  beyan tahtaya düşer ve PENCERE-KAYDIRMA kalemi §5 OPERATÖR KARARINA döner. FİYAT ETİKETİ (Ö2,
+  betimleyici): 15 dk beklemenin bedeli işaretli medyan sürüklenme +4,65 bps (p25 −51,6 /
+  p75 +58,1; |m2| medyan 55,4 bps — dağılım geniş, beklenen bedel küçük ama tekil-gün oynaklığı
+  büyük); menzil medyanı 105,7 → 60,5 bps. L2 plan-çapalı dilim n=23 < 30 → kural gereği yalnız
+  sayı beyanı (donuk yerel defterle arşiv kesişimi küçük). KAPILAR: saat dilimi VERİDEN UTC
+  doğrulandı (açılış sıçraması ≥67×, ET hipotezi 0 satırla çürük); ajanın ilk vekil-ölçütü bir
+  arşiv-kesintisine takılınca ölçüt kartın kendi şartına bağlandı — eşik/veri DEĞİŞMEDİ, betikte
+  beyanlı (alet-tamamlama sınıfı, EDG-040 kill#2 emsalinin dördüncü küçük vakası). 2026-07-28
+  seansı açılış-verisiz (arşiv 13:55'te başlamış) — 19/20 beyanlı. Beyanlı sınırlar aynen:
+  tek dönem (~4 hafta), menzil risk vekilidir, karar HER DURUMDA operatörde.
 beyanli_sinirlar: >
   (1) Arşiv ~20 seans TEK piyasa dönemi (2026 yazı) — mevsimsellik/rejim genellemesi iddia
   edilmez; dış n=401 ölçümüyle yönsel kıyas yapılır, birleştirilmez. (2) Menzil bps bir RİSK
