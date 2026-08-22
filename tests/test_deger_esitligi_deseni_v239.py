@@ -373,7 +373,7 @@ def test_7j_MALIYET_olculdu(sandbox_state):
 # ==================================================================================================
 
 def test_8a_min_sample_yedek_literalleri_goal_ile_esit():
-    """Envanter #16 (LATENT ayrıklık): `score.py:108` ve `shadow_variants.py:532` yedeği 20
+    """Envanter #16 (LATENT ayrıklık): `score.py` ve `shadow_variants.py` `min_sample` yedeği 20
     taşıyordu, goal 30 der — goal'da anahtar durdukça ısırmaz, anahtar düşerse iki modül sessizce
     yanlış tabana döner. Kural: yedek, goal'daki değerle EŞİT tutulur. Çivi elle liste tutmaz,
     TÜM `meridian/**/*.py` yedeklerini tarar — bir sonraki modül aynı sınıfı yeniden açamaz."""
