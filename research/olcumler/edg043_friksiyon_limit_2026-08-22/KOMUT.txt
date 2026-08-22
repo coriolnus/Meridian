@@ -1,0 +1,54 @@
+# EDG-2026-043 · friksiyon-koşullu limit kapısı (2026-08-22)
+# Kart: research/cards/EDG-2026-043-friksiyon-kosullu-limit.yaml (OKU-DOKUNMA; hücreler/kill/
+#   CI yöntemi/beyanlı sınırlar ORADA DONUK — hüküm Rol-1'in, bu koşum yalnız SAYI getirir.
+#   OKUMA KURALI: bu ölçümden B4 hükmü ÇIKARILMAZ — EDG-042 gerçek-friksiyon bandı beklenir.)
+#
+# TASARIM: İKİ DONMUŞ REÇETE BİRLEŞTİRİLDİ (yeniden icat yok):
+#   1) edg040_friksiyon_2026-08-22/olcum.py — slip enjeksiyonu (config.goal sarmalayıcı +
+#      cache_clear) · ÖZ-SINAMA (likidite ayrıştırmalı, 1e-9, kill#2) · şasi bayt-kıyası
+#      (kill#1, n_endeks_satir DARALTILMIŞ istisnası) · eşlenik ay-kümeli bootstrap
+#      (B=5000, seed=20260812, birim=AY).
+#   2) exe006b_o1_kimlik_2026-08-22/olcum.py — yasa_silahli(cap=0,01 + atr_mult=0,5 kod
+#      varsayılanı; goal.yaml DOKUNULMAZ) · MERIDIAN_DINLENEN_LIMIT bayrağı (backtest reload)
+#      · KOL KİMLİĞİ DAMGASI (dolum_kurali BacktestResult'ın KENDİSİNDEN; tutmazsa DUR).
+#   Şasi (edg032b) importlib ile modül olarak yüklendi, SANDBOX bu dizine çevrildi
+#   (artefakt koruması YAPISAL); kosum(run, smoke) OLDUĞU GİBİ çağrıldı. İmza tahmini YOK.
+#
+# EDG040'TAN TEK SAPMA — ÖZ-SINAMANIN B-KOLU DALI (koddan okundu, varsayılmadı):
+#   dinlenen dolumda motor `next_open`ı yerel olarak `_limit`e bağlar (broker.py:571-573) —
+#   kancanın kaydettiği next_open ARGÜMANI o dolumda etkin taban DEĞİL. Rekonstrüksiyon
+#   tabanı motorun KENDİ `entry_limit_price(trigger, atr, yasa)` fonksiyonuyla ve motorun
+#   kendi dallanma koşullarıyla (trigger>0 · open>limit · bar_low≤limit) kurar; girdiler
+#   çağrı anında yakalanır (plan['entry_trigger'], kw['atr'], kw['bar_low'], yürürlükteki
+#   entry_law()). Her satırda dolum_yolu açık; A hücrelerinde dinlenen_dolum_n==0 (yapısal:
+#   bayrak kapalıyken backtest bar_low GEÇMEZ). Çıkış sınamaları (Ç1/Ç2) iki kolda DEĞİŞMEZ.
+#
+# KAPALI-KAPI HÜCRELERİ KOŞULMADI (kill#4): slip {15,25,35} kapı-kapalı sonuçları
+#   edg040'ın DONMUŞ defterlerinden (islemler_tam_slip*.json) okundu — K oraya sayıldı,
+#   yeniden koşmak çift sayım olurdu. Envanter [1] önce sayımlandı: üçü de MEVCUT
+#   (n=884/876/862; edg040 kapıları kill1/kill2/bütünlük/kill3/kill4 hepsi geçmiş).
+#
+# KONTROL@5 KAPI-KAPALI, TÜM TELLER AÇIKKEN koşuldu (slip sarmalayıcı @5 + backtest reload
+#   bayrak=0 + replay damga teli + fiyat kancaları; yasa YAMASIZ — sandbox goal'ün etkisiz
+#   yasası atr_mult=100/cap=0.04 yürürlükte): bayt-özdeşlik şasiyi VE bu betiğin tel
+#   donanımının nötrlüğünü BİRLİKTE kanıtlar. Kontrol hücre DEĞİL, K harcamaz (K=6).
+#
+# NET P&L: performans.net_pnl_trades (islem.net_pnl YOK — exe006 tuzağı). PF tam defterden
+#   Σ(pnl>0)/|Σ(pnl<0)| (EDG-037). Sabitler (IMPACT_COEF, ADV_CAP_PCT, RISK_PCT_PER_R,
+#   ENTRY_LIMIT_ATR_MULT) KODDAN okundu, elle yazılmadı.
+#
+# [1] DUMAN (~6 dk) — kablo: kontrol@5 duman bayt-kıyas + slip15_A + slip15_B duman
+#     (bayrak + yasa + slip üçlüsü birlikte; kol kimliği + öz-sınama duman ölçeğinde)
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg043_friksiyon_limit_2026-08-22/olcum.py --smoke 2>&1 | tee research/olcumler/edg043_friksiyon_limit_2026-08-22/kosum_smoke.log
+#
+# [2] TAM (~13 dk/koşum · kontrol + 6 hücre ≈ 91 dk)
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg043_friksiyon_limit_2026-08-22/olcum.py 2>&1 | tee research/olcumler/edg043_friksiyon_limit_2026-08-22/kosum_tam.log
+#
+# [3] DEVAM (kesinti telafisi, 2026-08-22): ilk tam koşum slip25_B SIRASINDA arka plan görev
+#     altyapısınca öldürüldü (slip25_B çıktısı yazılmamıştı — temiz kesinti). devam.py
+#     İDEMPOTENT: tamamlanmış koşumları DİSKTEN okur (bayraklarını doğrular), eksikleri koşar;
+#     kontrol YENİDEN KOŞULMAZ (şasi kapısı kaydı diskte), kapalı-kapı hücreleri hiçbir aşamada
+#     koşulmaz; kesintinin iki yakası motor-sha ZİNCİRİYLE bağlanır (duman kaydı == devam-önce
+#     == koşum-sonu; kırıksa DUR). Yeniden icat yok: olcum.py modül olarak yüklenir, aynı
+#     fonksiyonlar (hucre_kos/delta_pnl_ci/motor_sha) çağrılır.
+.venv/bin/python research/olcumler/edg043_friksiyon_limit_2026-08-22/devam.py 2>&1 | tee -a research/olcumler/edg043_friksiyon_limit_2026-08-22/kosum_tam.log

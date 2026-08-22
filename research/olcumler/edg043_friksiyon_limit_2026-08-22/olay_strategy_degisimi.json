@@ -1,0 +1,35 @@
+{
+ "olay": "PARALEL OTURUM MOTOR DOSYASI DEĞİŞTİRDİ — koşum sırasında (2026-08-22)",
+ "ne_oldu": "devam koşumu slip25_B hücresini koşarken ana oturum B1 operatör kararını işledi: commit c150902 (19:48:24) meridian/strategy.py'de ARMED_SETUPS'tan 'pullback' çıkardı (dosya mtime 19:47:29). Bu içerik-aynı git yeniden-yazımı DEĞİL, gerçek davranışsal değişiklik.",
+ "hangi_hucreler_etkilendi": {
+  "kontrol_slip15A_slip15B_slip25A": "TEMİZ — 19:47:29'dan ÖNCE bitti; şasi kill3 dosya kanıtı iki uçta da ESKİ sha (cba15854a42414c2), bütünlük geçerli.",
+  "slip25_B": "şasi kill3 DÜŞTÜ (dosya kanıtı: önce=cba15854a42414c2 sonra=263eb8fef7d10089) → bütünlük.gecerli=false. Kart kill listesi bu hücreyi dosya-kanıtı düzeyinde GEÇERSİZ sayar.",
+  "slip35_A_slip35_B": "şasi kill3 bu hücrelerde TEMİZ görünecek (koşum penceresi boyunca dosya YENİ sha'da sabit) — AMA dosya-sha kanıtı bu hücrelerde KOŞAN KODUN kimliği değildir (aşağıdaki bellek kanıtı). Dosya kanıtı bu iki hücrede YANILTICI-temiz olarak şerh edilir; temiz diye sunulamaz."
+ },
+ "kosan_kodun_kimligi_SONUCTAN": {
+  "mekanizma": "Python modül önbelleği: devam süreci 19:42:19'da başladı (ps lstart), meridian.strategy İLK import'ta (süreç başında) ESKİ içerikle yüklendi; hucre_kos yalnız meridian.backtest'i reload eder, strategy reload EDİLMEZ — bellekteki modül süreç ömrü boyunca ESKİ (pullback SİLAHLI).",
+  "sasi_taniklygi": "edg032b şasisi HER kosum'da assert tuple(strat.ARMED_SETUPS) == ('breakout_vcp','pullback','exhaustion_hammer','momentum_burst') koşar (olcum.py:386) ve replay sonrası yeniden kontrol eder (:503). YENİ modül yüklenmiş olsaydı koşum AssertionError ile ÇÖKERDİ — çökmedi.",
+  "defter_taniklygi": "slip25_B TAM defterinde setup=pullback 5 işlem VAR (kontrol 6 · slip15_A 5 · slip15_B 7 · slip25_A 5). Silahsız dünyada pullback işlemi DOĞAMAZ. slip35 hücreleri bitince aynı sayım onlara da uygulanır.",
+  "sonuc": "Bu süreçteki TÜM hücreler donmuş edg032b dünyasını (pullback silahlı) koştu. Bunu söyleyen dosya-sha değil, sonucun kendisi + şasinin kendi assert'idir."
+ },
+ "neden_durdurulmadi": "Kartın şasi/motor kill davranışı 'edg040 kapısı aynen'dir; edg040'ın donmuş reçetesi motor-sha değişiminde koşumu KESMEZ, ilgili hücreleri raporda geçersiz İŞARETLER (edg040 olcum.py:599-601 deseni). Ayrıca süreç, donmuş dünyayı bellekte tutan SON yürütücüdür: taze bir süreç yeni strategy.py ile şasinin ARMED assert'ine takılır — kesilen hücre bir daha bu şasiyle koşulamazdı. Karar: koşum tamamlanır, hiçbir düşük-kapılı hücre temiz gibi sunulmaz, hüküm Rol-1'in.",
+ "kill5_yuzeyi_bu_betik": "broker.py + backtest.py + state/goal.yaml sha'ları koşum boyunca DEĞİŞMEDİ (zincir: duman-önce == devam-önce == şimdi). Değişen tek motor dosyası strategy.py'dir ve şasinin 8-dosyalık kill3 izlemesi onu yakaladı.",
+ "kanit": {
+  "strategy_sha16_eski": "cba15854a42414c2",
+  "strategy_sha16_yeni": "263eb8fef7d10089",
+  "strategy_mtime_yeni": "2026-08-22T19:47:29",
+  "devam_sureci_baslangic": "2026-08-22T19:42:19",
+  "commit": "c150902 'B1 KARARI (operatör, A): pullback SİLAHSIZLANDI' (yalnız strategy.py + kart + test dosyaları; broker/backtest DOKUNULMADI)",
+  "pullback_islem_sayilari": {
+   "kontrol": 6,
+   "slip15_A": 5,
+   "slip15_B": 7,
+   "slip25_A": 5,
+   "slip25_B": 5,
+   "slip35_A": 4,
+   "slip35_B": 6
+  },
+  "slip35_kill3_gozlemi": "slip35_A/B kill3 dosya kaydı iki uçta da YENİ sha (263eb8fef7d10089) — öngörüldüğü gibi YANILTICI-temiz; koşan kodun kimliğini defter tanıklığı (pullback 4/6 işlem) + şasinin ARMED assert'inin çökmemesi + süreç ömrü (19:42:19 < 19:47:29) kanıtlar",
+  "edg040_donmus_defterler_dokunulmadi": "islemler_tam_slip15/25/35 sha16 koşum sonrası 1c7702abaf99e1be / 729c01bb891a7918 / e8e1e6fb8ec8a3a3 — envanterdekiyle aynı"
+ }
+}

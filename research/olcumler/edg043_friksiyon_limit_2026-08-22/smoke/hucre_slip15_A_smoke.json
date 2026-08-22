@@ -1,0 +1,97 @@
+{
+ "kosum": "slip15_A",
+ "slippage_bps": 15.0,
+ "smoke": true,
+ "dolum_kurali": "yalniz_acilis",
+ "dolum_kurali_damgasi": "yalniz_acilis",
+ "kol_kimligi_gecti": true,
+ "yasa": {
+  "limit_atr_mult": 0.5,
+  "limit_pct_cap": 0.01,
+  "version": "E1-v2"
+ },
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 7,
+ "net_pnl_trades": -1942.25,
+ "net_pnl_equity": -1942.25,
+ "pf": 0.0,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": null,
+ "maxdd_m2m": 0.0194,
+ "sharpe": null,
+ "sharpe_measurable": null,
+ "avg_r": null,
+ "win_rate": null,
+ "total_return": null,
+ "kompozisyon": {
+  "toplam_plan": 9,
+  "silahlanan_plan": 9,
+  "verdict_dagilim": {
+   "GO": 3,
+   "REVIEW": 6,
+   "NO_GO": 0
+  },
+  "nogo_neden_dagilim": {},
+  "entry_rejects": {
+   "open_below_stop": 1,
+   "entry_missed_limit": 1
+  },
+  "exit_reason_dagilim": {
+   "regime_flip": 6,
+   "stop": 1
+  },
+  "setup_bazinda": {
+   "breakout_vcp": {
+    "n": 1,
+    "pnl": -120.7,
+    "avg_r": -0.319
+   },
+   "exhaustion_hammer": {
+    "n": 2,
+    "pnl": -433.64,
+    "avg_r": -0.573
+   },
+   "momentum_burst": {
+    "n": 4,
+    "pnl": -1387.91,
+    "avg_r": -0.8918
+   }
+  }
+ },
+ "entry_missed_limit_olay": 1,
+ "entry_missed_limit_distinkt_plan": 1,
+ "red_kimlik_distinkt_n": {
+  "open_below_stop": 1,
+  "entry_missed_limit": 1
+ },
+ "red_kimlik": {
+  "open_below_stop": [
+   [
+    "LLY",
+    "2022-01-12"
+   ]
+  ],
+  "entry_missed_limit": [
+   [
+    "AMAT",
+    "2022-01-13"
+   ]
+  ]
+ },
+ "dinlenen_dolum_n": 0,
+ "butunluk_gecerli": true,
+ "kill3_temiz": true,
+ "oz_sinama_kill2_gecti": false,
+ "oz_sinama_olculemedi": "ilk-20 dolmadı: giriş=7 çıkış=7 — pencere kısa (duman?)",
+ "cost_model_kaydi": {
+  "slippage_bps": 15.0,
+  "commission_per_share": 0.0,
+  "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+ }
+}

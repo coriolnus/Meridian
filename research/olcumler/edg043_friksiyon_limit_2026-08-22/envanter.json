@@ -1,0 +1,65 @@
+{
+ "kaynak_dizin": "/Users/erdemozturk/AI-Trading/research/olcumler/edg040_friksiyon_2026-08-22",
+ "kapali_hucreler": {
+  "slip15": {
+   "islemler_tam_dosyasi": "/Users/erdemozturk/AI-Trading/research/olcumler/edg040_friksiyon_2026-08-22/islemler_tam_slip15.json",
+   "mevcut": true,
+   "sha256": "1c7702abaf99e1bea404de88ef4de3882cf9a39c6bf3a3fd03d6a5c971c39b13",
+   "n_islem": 884,
+   "edg040_hucre_ozeti": {
+    "islem_n": 884,
+    "net_pnl_trades": -3067.14,
+    "pf": 0.9822,
+    "maxdd_kanonik": 0.1625,
+    "oz_sinama_kill2_gecti": true,
+    "butunluk_gecerli": true,
+    "kill3_temiz": true
+   },
+   "ci_kurulabilir": true,
+   "ci_kurulamaz_nedeni": null
+  },
+  "slip25": {
+   "islemler_tam_dosyasi": "/Users/erdemozturk/AI-Trading/research/olcumler/edg040_friksiyon_2026-08-22/islemler_tam_slip25.json",
+   "mevcut": true,
+   "sha256": "729c01bb891a79187888770ae4486df2d9ae57eb2949a6a4ba2ea988f4d1db75",
+   "n_islem": 876,
+   "edg040_hucre_ozeti": {
+    "islem_n": 876,
+    "net_pnl_trades": -13722.13,
+    "pf": 0.9169,
+    "maxdd_kanonik": 0.1842,
+    "oz_sinama_kill2_gecti": true,
+    "butunluk_gecerli": true,
+    "kill3_temiz": true
+   },
+   "ci_kurulabilir": true,
+   "ci_kurulamaz_nedeni": null
+  },
+  "slip35": {
+   "islemler_tam_dosyasi": "/Users/erdemozturk/AI-Trading/research/olcumler/edg040_friksiyon_2026-08-22/islemler_tam_slip35.json",
+   "mevcut": true,
+   "sha256": "e8e1e6fb8ec8a3a39142e1931672120c365f3c2fe6b2b4543207dbf7a35aca0b",
+   "n_islem": 862,
+   "edg040_hucre_ozeti": {
+    "islem_n": 862,
+    "net_pnl_trades": -25681.42,
+    "pf": 0.8112,
+    "maxdd_kanonik": 0.2568,
+    "oz_sinama_kill2_gecti": true,
+    "butunluk_gecerli": true,
+    "kill3_temiz": true
+   },
+   "ci_kurulabilir": true,
+   "ci_kurulamaz_nedeni": null
+  }
+ },
+ "beyan": "CI, Δ(açık−kapalı) eşlenik ay-kümelidir ve kapalı kolun İŞLEM DEFTERİNİ ister. Defteri olmayan slip için CI=None+neden; nokta tahmini (hucre özetinden) yine raporlanır. Kapalı hücreler ASLA yeniden koşulmaz (kill#4 — çift sayım yasak).",
+ "edg040_kapilari": {
+  "sasi_kill1_gecti": true,
+  "kill4_motor_ayni": true,
+  "motor_sha256": {
+   "broker.py": "212b273d849f8f4d4b17086d7e9e464df126a3140c56407a5f62ddff9b628ce4",
+   "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5"
+  }
+ }
+}

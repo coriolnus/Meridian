@@ -1,0 +1,15 @@
+{
+ "kaynak_dizin": "/Users/erdemozturk/AI-Trading/research/olcumler/edg040_friksiyon_2026-08-22",
+ "kapali_hucreler": {
+  "slip15": {
+   "islemler_tam_dosyasi": "/Users/erdemozturk/AI-Trading/research/olcumler/edg040_friksiyon_2026-08-22/smoke/islemler_tam_slip15_smoke.json",
+   "mevcut": true,
+   "sha256": "a1917e227a84101ee26ddc6f886221f71b40f88a9ee06848604868b6fcfa5fa6",
+   "n_islem": 8,
+   "edg040_hucre_ozeti": null,
+   "ci_kurulabilir": true,
+   "ci_kurulamaz_nedeni": null
+  }
+ },
+ "beyan": "CI, Δ(açık−kapalı) eşlenik ay-kümelidir ve kapalı kolun İŞLEM DEFTERİNİ ister. Defteri olmayan slip için CI=None+neden; nokta tahmini (hucre özetinden) yine raporlanır. Kapalı hücreler ASLA yeniden koşulmaz (kill#4 — çift sayım yasak)."
+}

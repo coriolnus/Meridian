@@ -74,9 +74,28 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-22", trial_ids: [pending-043-s15A, pending-043-s15B, pending-043-s25A, pending-043-s25B, pending-043-s35A, pending-043-s35B]}
 
-status: registered   # 2026-08-22 Rol-1 — ön-kayıt (B4 kararının C bacağı). Ölçüm ~75 dk;
-                     # HEMEN koşulabilir (hüküm zaten EDG-042 bandını beklemek zorunda —
-                     # okuma kuralı) ya da bantla birlikte koşulur; operatör tercihi.
+status: measured     # 2026-08-22 Rol-1 — ALTI HÜCRE ÖLÇÜLDÜ; HÜKÜM ASKIDA (okuma kuralı:
+                     # EDG-2026-042'nin gerçek friksiyon bandı gelmeden B4 hükmü OKUNMAZ — kill'de).
+
+verdict: >
+  ÖLÇÜM TAMAM, HÜKÜM ASKIDA (Rol-1, 2026-08-22). Kapılar: şasi bayt-özdeş (edg032b sha birebir) ·
+  öz-sınama 7/7 hücrede G1+G2 geçti (likidite-ayrıştırmalı, 1e-9) · kol kimliği damgaları doğru ·
+  motor sha değişmedi · kapalı hücreler edg040 DONMUŞ kanıtından (yeniden koşulmadı). Kesinti şerhi:
+  ilk tam koşum slip25_B sırasında altyapıca öldürüldü; tamamlanmış hücreler diskten okundu,
+  eksikler devam koşumunda — hücre çıktıları atomik, çift sayım yok.
+  HÜCRELER (cap=0,01 silahlı): A kolu (yalnız-açılış): slip15 −10.327 (PF 0,93) · slip25 −19.506
+  (0,86) · slip35 −26.982 (0,75). B kolu (dinlenen): slip15 **+895 (PF 1,005 — altı hücrenin tek
+  pozitifi)** · slip25 −9.951 (0,94) · slip35 −23.362 (0,84).
+  Δ(açık−kapalı), eşlenik ay-kümeli bootstrap (B=5000, seed 20260812, 55 ay) — ALTI CI DE 0-İÇİ:
+  A: −7.260 [−25.194, +10.578] · −5.784 [−20.311, +8.659] · −1.301 [−13.679, +10.634]
+  B: +3.962 [−3.699, +11.975] · +3.771 [−4.002, +11.448] · +2.319 [−2.956, +7.975]
+  YÖN GÖZLEMİ (hüküm değil): tezin işaret-dönüşü deseni B kolunun NOKTA tahminlerinde görünüyor
+  (üç slip'te de pozitif; slip15'te kapı-açık tek başına kâra dönüyor: kapalı −3.067 → açık-B +895)
+  ve A kolunda kapının zararı slip arttıkça KÜÇÜLÜYOR (−7,3k → −1,3k) — ama HİÇBİR delta sıfırdan
+  ayrışmadı. Kartın karar kuralı "CI-alt > 0" ister; bu örneklemle hiçbir hücre o eşiği geçmiyor.
+  OKUMA GÜNÜ NOTU: EDG-042 bandı geldiğinde banttaki hücre okunacak; bugünkü CI'larla o okumanın
+  muhtemel sonucu "ayrışmadı → B4 kapalı kalır"dır — ama o hüküm BUGÜN VERİLMEZ (kill kriteri) ve
+  23c model-boşluğu şerhi (B kolunun canlı karşılığı iyimser alt sınır) her okumada geçerlidir.
 
 beyanlı_sinirlar: >
   (1) TEK TAVAN (0,01): tavan taraması değil — "en iyi bilinen nokta" sınanıyor; başka tavanda

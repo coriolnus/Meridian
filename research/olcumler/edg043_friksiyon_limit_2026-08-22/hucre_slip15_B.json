@@ -1,0 +1,426 @@
+{
+ "kosum": "slip15_B",
+ "slippage_bps": 15.0,
+ "smoke": false,
+ "dolum_kurali": "dinlenen_limit",
+ "dolum_kurali_damgasi": "dinlenen_limit",
+ "kol_kimligi_gecti": true,
+ "yasa": {
+  "limit_atr_mult": 0.5,
+  "limit_pct_cap": 0.01,
+  "version": "E1-v2"
+ },
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 880,
+ "net_pnl_trades": 894.95,
+ "net_pnl_equity": 894.95,
+ "pf": 1.005,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": 0.1595,
+ "maxdd_m2m": 0.1595,
+ "sharpe": 0.025,
+ "sharpe_measurable": true,
+ "avg_r": 0.014,
+ "win_rate": 0.348,
+ "total_return": 0.0089,
+ "kompozisyon": {
+  "toplam_plan": 1537,
+  "silahlanan_plan": 961,
+  "verdict_dagilim": {
+   "GO": 63,
+   "REVIEW": 898,
+   "NO_GO": 576
+  },
+  "nogo_neden_dagilim": {
+   "heat_hard": 576,
+   "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 576,
+   "sector_cap": 12
+  },
+  "entry_rejects": {
+   "open_below_stop": 20,
+   "entry_missed_limit": 30,
+   "max_chase": 30
+  },
+  "exit_reason_dagilim": {
+   "stop": 389,
+   "regime_flip": 165,
+   "time_stop": 150,
+   "target": 90,
+   "stop_gap": 60,
+   "target_gap": 26
+  },
+  "setup_bazinda": {
+   "breakout_vcp": {
+    "n": 313,
+    "pnl": -1118.37,
+    "avg_r": -0.0125
+   },
+   "exhaustion_hammer": {
+    "n": 221,
+    "pnl": -4632.87,
+    "avg_r": -0.0009
+   },
+   "momentum_burst": {
+    "n": 339,
+    "pnl": 9083.14,
+    "avg_r": 0.0632
+   },
+   "pullback": {
+    "n": 7,
+    "pnl": -2436.95,
+    "avg_r": -0.7611
+   }
+  }
+ },
+ "entry_missed_limit_olay": 30,
+ "entry_missed_limit_distinkt_plan": 30,
+ "red_kimlik_distinkt_n": {
+  "open_below_stop": 20,
+  "entry_missed_limit": 30,
+  "max_chase": 30
+ },
+ "red_kimlik": {
+  "open_below_stop": [
+   [
+    "ALB",
+    "2025-09-09"
+   ],
+   [
+    "ALB",
+    "2026-02-26"
+   ],
+   [
+    "AMAT",
+    "2026-07-22"
+   ],
+   [
+    "AMZN",
+    "2023-02-24"
+   ],
+   [
+    "DLTR",
+    "2025-06-04"
+   ],
+   [
+    "ECL",
+    "2025-02-12"
+   ],
+   [
+    "FANG",
+    "2022-11-21"
+   ],
+   [
+    "HAL",
+    "2022-11-23"
+   ],
+   [
+    "LIN",
+    "2023-12-13"
+   ],
+   [
+    "LLY",
+    "2022-01-12"
+   ],
+   [
+    "LYB",
+    "2026-05-07"
+   ],
+   [
+    "MRVL",
+    "2024-12-30"
+   ],
+   [
+    "MRVL",
+    "2025-11-14"
+   ],
+   [
+    "MU",
+    "2026-07-01"
+   ],
+   [
+    "NOW",
+    "2024-02-21"
+   ],
+   [
+    "NXPI",
+    "2024-07-23"
+   ],
+   [
+    "ON",
+    "2026-06-26"
+   ],
+   [
+    "ORCL",
+    "2023-09-12"
+   ],
+   [
+    "UAL",
+    "2025-06-13"
+   ],
+   [
+    "WMT",
+    "2023-11-16"
+   ]
+  ],
+  "entry_missed_limit": [
+   [
+    "AMAT",
+    "2023-02-02"
+   ],
+   [
+    "AVGO",
+    "2024-12-16"
+   ],
+   [
+    "AVGO",
+    "2025-09-08"
+   ],
+   [
+    "BX",
+    "2023-06-02"
+   ],
+   [
+    "DE",
+    "2022-11-23"
+   ],
+   [
+    "DLTR",
+    "2025-12-04"
+   ],
+   [
+    "FCX",
+    "2022-11-22"
+   ],
+   [
+    "FCX",
+    "2026-01-06"
+   ],
+   [
+    "GOOGL",
+    "2023-05-11"
+   ],
+   [
+    "IRM",
+    "2024-08-01"
+   ],
+   [
+    "KLAC",
+    "2026-06-22"
+   ],
+   [
+    "LRCX",
+    "2026-02-11"
+   ],
+   [
+    "LYB",
+    "2026-04-13"
+   ],
+   [
+    "MCHP",
+    "2023-02-02"
+   ],
+   [
+    "MDT",
+    "2023-04-24"
+   ],
+   [
+    "MRVL",
+    "2026-04-09"
+   ],
+   [
+    "MU",
+    "2025-09-12"
+   ],
+   [
+    "MU",
+    "2025-12-19"
+   ],
+   [
+    "NVDA",
+    "2025-10-29"
+   ],
+   [
+    "OMC",
+    "2023-02-02"
+   ],
+   [
+    "ON",
+    "2026-02-11"
+   ],
+   [
+    "ON",
+    "2026-05-22"
+   ],
+   [
+    "ROKU",
+    "2024-09-11"
+   ],
+   [
+    "TER",
+    "2023-02-02"
+   ],
+   [
+    "TGT",
+    "2024-03-06"
+   ],
+   [
+    "TSLA",
+    "2024-07-29"
+   ],
+   [
+    "TSLA",
+    "2024-12-24"
+   ],
+   [
+    "TTWO",
+    "2023-11-14"
+   ],
+   [
+    "UAL",
+    "2024-10-16"
+   ],
+   [
+    "UAL",
+    "2026-06-25"
+   ]
+  ],
+  "max_chase": [
+   [
+    "ADBE",
+    "2023-06-09"
+   ],
+   [
+    "AMD",
+    "2025-10-07"
+   ],
+   [
+    "BKNG",
+    "2024-10-31"
+   ],
+   [
+    "CMI",
+    "2024-11-06"
+   ],
+   [
+    "EA",
+    "2025-09-29"
+   ],
+   [
+    "INTC",
+    "2026-05-11"
+   ],
+   [
+    "INTC",
+    "2026-05-18"
+   ],
+   [
+    "INTC",
+    "2026-06-03"
+   ],
+   [
+    "LRCX",
+    "2022-12-13"
+   ],
+   [
+    "LULU",
+    "2024-12-06"
+   ],
+   [
+    "MRNA",
+    "2026-05-11"
+   ],
+   [
+    "MRVL",
+    "2026-05-27"
+   ],
+   [
+    "MRVL",
+    "2026-06-03"
+   ],
+   [
+    "MRVL",
+    "2026-06-25"
+   ],
+   [
+    "MU",
+    "2025-12-22"
+   ],
+   [
+    "MU",
+    "2026-05-27"
+   ],
+   [
+    "MU",
+    "2026-06-09"
+   ],
+   [
+    "NEM",
+    "2022-12-13"
+   ],
+   [
+    "ON",
+    "2026-06-15"
+   ],
+   [
+    "ON",
+    "2026-06-25"
+   ],
+   [
+    "ORCL",
+    "2023-06-12"
+   ],
+   [
+    "ORCL",
+    "2023-06-13"
+   ],
+   [
+    "ORCL",
+    "2025-09-10"
+   ],
+   [
+    "SPOT",
+    "2024-11-13"
+   ],
+   [
+    "TER",
+    "2026-06-22"
+   ],
+   [
+    "TSLA",
+    "2024-11-11"
+   ],
+   [
+    "TSLA",
+    "2025-09-15"
+   ],
+   [
+    "TXN",
+    "2026-04-23"
+   ],
+   [
+    "WBD",
+    "2025-09-12"
+   ],
+   [
+    "WBD",
+    "2025-12-08"
+   ]
+  ]
+ },
+ "dinlenen_dolum_n": 129,
+ "butunluk_gecerli": true,
+ "kill3_temiz": true,
+ "oz_sinama_kill2_gecti": true,
+ "oz_sinama_olculemedi": null,
+ "cost_model_kaydi": {
+  "slippage_bps": 15.0,
+  "commission_per_share": 0.0,
+  "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+ }
+}
