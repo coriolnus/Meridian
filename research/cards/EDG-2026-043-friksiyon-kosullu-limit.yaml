@@ -89,6 +89,16 @@ verdict: >
   Δ(açık−kapalı), eşlenik ay-kümeli bootstrap (B=5000, seed 20260812, 55 ay) — ALTI CI DE 0-İÇİ:
   A: −7.260 [−25.194, +10.578] · −5.784 [−20.311, +8.659] · −1.301 [−13.679, +10.634]
   B: +3.962 [−3.699, +11.975] · +3.771 [−4.002, +11.448] · +2.319 [−2.956, +7.975]
+  ── HÜKÜM DÜZELTMESİ (Rol-1, 2026-08-22 akşamı — ilk yazımdan SONRA gelen ajan raporuyla) ──
+  İlk hüküm "kapılar 7/7 temiz" diyordu; EKSİKTİ. OLAY: ölçüm uçuştayken Rol-1'in KENDİ B1
+  commit'i (c150902, 19:48) strategy.py'yi değiştirdi (pullback silahsızlanması) — kill kriteri
+  "motor dosyaları değişirse geçersiz" DOSYA DÜZEYİNDE slip25_B'de TETİKLENDİ (sha cba15854→263eb8fe),
+  slip35_A/B'nin dosya-kanıtı ise yanıltıcı-temiz. ROL-1 GEÇERLİLİK HÜKMÜ: üç hücre SÜREÇ-KANITIYLA
+  GEÇERLİ sayılır — (a) süreç 19:42:19'da, değişiklikten ÖNCE başladı ve Python yüklü modülü koşar;
+  (b) şasinin ARMED_SETUPS==beklenen assert'i her hücrede geçti; (c) slip25_B/35_A/35_B defterlerinde
+  5/4/6 PULLBACK işlemi var — silahsız dünyada İMKÂNSIZ, yani ölçülen dünya donmuş dünyaydı.
+  Dosya-kanıt zinciri o pencerede KIRIKTIR ve bu ŞERH kalıcıdır (olay_strategy_degisimi.json).
+  KÖK NEDEN BENİM: ölçüm uçuştayken motor dosyasına commit atılmaz — ders günlüğe ve hafızaya işlendi.
   YÖN GÖZLEMİ (hüküm değil): tezin işaret-dönüşü deseni B kolunun NOKTA tahminlerinde görünüyor
   (üç slip'te de pozitif; slip15'te kapı-açık tek başına kâra dönüyor: kapalı −3.067 → açık-B +895)
   ve A kolunda kapının zararı slip arttıkça KÜÇÜLÜYOR (−7,3k → −1,3k) — ama HİÇBİR delta sıfırdan
