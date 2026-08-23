@@ -117,7 +117,9 @@ k_registry: {registered_at: "2026-08-13T18:0x", trial_ids: [pending-038-tca2]}
 
 status: measured   # 2026-08-13 Rol-1 — ölçüldü + hüküm aşağıda.   # ölçüm bu satır yazıldıktan SONRA koşuldu
 
-verdict:   # Rol-1 doldurur — ölçüm ajanı BURAYA DOKUNMAZ.
+# 2026-08-24 KART-LİNT (WP5 eleme bulgusu, tek vaka/65): BOŞ `verdict:` placeholder'ı KALDIRILDI —
+# aşağıda gerçek hüküm bloğu var; zarar bugüne dek TESADÜFEN yoktu (PyYAML last-wins ikinci bloğu
+# kazandırıyordu), sıra ters olsaydı gerçek hüküm sessizce yutulurdu. Dup-anahtar çivisi teste girdi.
 
 verdict:   # Rol-1 hükmü (2026-08-13).
   olcut: >

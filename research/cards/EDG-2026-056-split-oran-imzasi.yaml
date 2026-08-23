@@ -1,0 +1,38 @@
+card_id: EDG-2026-056
+family: veri_butunlugu_split
+thesis: >
+  WP4 eleme bulgusu (2026-08-24): MNST split teşhisi TAM ama kart ve kod YOK (oran-imza taraması
+  repoda 0 eşleşme). Canlı semptom bugün sessiz (data_quality 08-21 temiz) fakat KÖRLÜK YAPISAL:
+  bölünme-düzeltmesi kaçırılan bir sembol, sonraki split'te aynı sessiz bozulmayı üretir.
+  BU KART oran-imza dedektörünün ölçülmüş temelini kurar: bilinen split oranlarının (2:1, 3:1,
+  3:2, 4:1, 10:1, 1:2 ters vb.) fiyat-serisinde bıraktığı imza, arşivde RETRO olarak ne kadar
+  yakalanıyor — yanlış-pozitif/yanlış-negatif dengesiyle.
+evidence_refs:
+  - "docs/ELEME-WP4-HAVUZ-2026-08-23.md A4: teşhis tam, kart yok, kod yok; canlı semptom sustu ama körlük yapısal"
+  - "WP4-B karantina hattı: bar_unadjusted_row_quarantined kuralı (|hareket|>%35 + ertesi bar dönüşü + hacim tutarsızlığı) — komşu sınıf, oran-imza ONDAN FARKLI"
+universe: >
+  Yerel bar arşivi (SALT-OKUMA; motor import edilmez) × bilinen split olayları (kaynak: mevcut
+  karantina/temizlik kayıtları + arşivdeki oran-imzalı sıçramalar). Pencere: arşivin tamamı.
+features_asof: >
+  İmza tanımı: ardışık iki kapanış oranı r = c[t-1]/c[t]; r'nin bilinen split oranları kümesine
+  ± tolerans (kart-önce donuk: %2) yakınlığı VE hacim-tersine-oranı teyidi (v = v[t]/v[t-1] ≈ r).
+  Çıktı: aday n · bilinen-split ile eşleşen n (doğru-pozitif vekili) · eşleşmeyen aday n
+  (yanlış-pozitif adayı, ADIYLA listeli) · bilinen split olup imzası YAKALANMAYAN n (yanlış-negatif).
+parameter_grid:
+  hucreler: [oran_imza_retro]   # K += 1
+cost_model: dogrudan_bar_taramasi
+success_metric: >
+  KARAR KURALI (donuk): yanlış-pozitif oranı ≤ %20 VE bilinen split'lerin ≥ %80'i yakalanıyorsa →
+  "oran-imza dedektörü UYGULANABİLİR" → dedektör kablolaması ayrı turda (karantina hattına ek
+  sınıf; kart-önce değil, hijyen). Eşikler tutmazsa → "imza tek başına yetersiz" hükmü: kalem
+  kapanır, körlük BEYANLI kalır (veri sağlayıcı düzeltmesine bağlanır).
+kill_criteria:
+  - "tolerans ölçümden sonra değişirse geçersiz (%2 donuk)"
+  - "hacim teyidi atlanırsa geçersiz (yalnız fiyat oranı bölünmeyi temettü/hatadan ayıramaz)"
+  - "bilinen-split listesi ölçüm sırasında genişletilirse geçersiz (liste önce donar, sha rapora)"
+  - "karantina kuralına dokunulursa geçersiz (komşu sınıf; bu kart ayrı imza ölçer)"
+k_registry: {registered_at: "2026-08-24", trial_ids: [pending-056-oran-imza]}
+status: registered   # 2026-08-24 Rol-1 — ön-kayıt (WP4 eleme ÖLÇ sınıfı)
+beyanli_sinirlar: >
+  (1) "Bilinen split" listesi bizim kayıtlarımız kadardır — eksikse yanlış-negatif abartılı ölçülür
+  (beyanla). (2) Ters-split ve %2 altı oranlar bu imza sınıfının dışında (tanım gereği).

@@ -1,0 +1,36 @@
+card_id: EDG-2026-055
+family: veri_kapsama_bedeli
+thesis: >
+  WP4 eleme bulgusu (2026-08-24): earnings takvimi kapsamı bugün 216/251 (%86,1) — 35 sembolde
+  fail-open (kazanç-penceresi bilinmediğinde kapı GEÇİRİYOR; fail-closed olsaydı işlem kaçardı).
+  Tasarım bilinçli ama BEDELİ HİÇ ÖLÇÜLMEDİ: fail-open geçen bir planın kazanç gününe denk gelip
+  gelmediği ve o vakaların P&L'i bilinmiyor. BU KART retro sayım yapar: "fail-open gerçekleşmiş
+  bedeli" — kapı tasarımını DEĞİŞTİRMEZ, bedeli rakamlandırır.
+evidence_refs:
+  - "docs/ELEME-WP4-HAVUZ-2026-08-23.md A3: kapsam 216/251 ölçüldü (194 sayısı eskimişti); 35 fail-open sembol listeli; tazeleme sağlıklı (son arıza 2026-07-19)"
+  - "guard earnings_blackout kontrolü (gate_checks: coverage='known'/fail-open dalı)"
+universe: >
+  Replay defteri (edg032c dünyası) + earnings takvimi PIT snapshot'ları. Gözlem: fail-open
+  damgasıyla geçmiş plan/işlem. PIT ZORUNLU: o günkü takvim bilgisi kullanılır — BUGÜNKÜ takvimle
+  geçmişi yargılamak yasak (retro-kapsama tuzağı; ölçülemeyen sembol-dönem None+neden).
+features_asof: >
+  Vaka tanımı: fail-open ile geçen ve gerçekte kazanç-penceresine (t±1 seans) denk gelmiş işlem.
+  Sayım: vaka n · toplam P&L · toplam R · aynı dönemin fail-open-olmayan işlemlerine göre
+  dağılım farkı (betimleyici). Ek: bugünkü 35 sembolün tarihsel işlem payı (maruziyet vekili).
+parameter_grid:
+  hucreler: [failopen_retro_sayim]   # K += 1
+cost_model: dogrudan_defter_sayimi
+success_metric: >
+  KARAR KURALI (donuk): vaka N ≥ 1 VE bu vakaların toplam R'si negatifse → "fail-open ölçülmüş
+  bedel taşıyor" → kapıyı DARALTMA tasarımı (kapsama-şartlı fail-closed) ayrı kartla gündeme
+  gelir. N = 0 → "ölçülmüş-ret": fail-open bedelsiz, kalem kapanır ve kapsama borcu yalnız
+  görünürlük kalemi olur. N ≥ 1 ama toplam R pozitif/nötr → betimleyici şerh, tasarım değişmez.
+kill_criteria:
+  - "bugünkü takvimle geçmiş yargılanırsa geçersiz (PIT snapshot zorunlu; yoksa o sembol-dönem None+neden)"
+  - "fail-open damgası olmayan işlemler vakaya sayılırsa geçersiz"
+  - "kapı tasarımına dokunulursa geçersiz (bu kart ÖLÇER, değiştirmez)"
+k_registry: {registered_at: "2026-08-24", trial_ids: [pending-055-failopen]}
+status: registered   # 2026-08-24 Rol-1 — ön-kayıt (WP4 eleme ÖLÇ sınıfı)
+beyanli_sinirlar: >
+  (1) PIT snapshot derinliği takvim arşivimiz kadardır — kapsanamayan dönem beyanla dışarıda.
+  (2) "Kazanç gününe denk gelmek" zarar demek değildir; kart bedeli SAYAR, nedensellik iddia etmez.

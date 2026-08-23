@@ -1,0 +1,45 @@
+card_id: EDG-2026-054
+family: veri_butunlugu_ogrenme
+thesis: >
+  E-turu kararı 1/12 (operatör, 2026-08-23: "kartla ölç"): `bars_integrity` 98 kırık dönem/61
+  sembol buldu ve kanonik tüketiciler (component_ic/cf_backfill/trend_shadow) o dönemleri
+  DIŞLIYOR — ama `dataset.load` BAĞLANMADI: walk-forward/prescreen/reflect hattı kirli dönemi
+  HÂLÂ GÖRÜYOR (46.256 satır/57 sembol). Bağlamak öğrenmenin gördüğü tarihi değiştirir: temizlik
+  kazancı ↔ örneklem kaybı TAKASI ölçülmeden yapılmaz. BU KART takası ölçer; bağlama kararı
+  operatörün (ARSENAL çıtası: kart-önce + imza). CANLI DEĞİŞMEZ.
+evidence_refs:
+  - "WP4-B gövdesi: bars_integrity sevk (2026-07-31 adapters/data.py) + teyit (wpd_bars_integrity_teyit): 98 kırılma/61 sembol, 46.256 satır dışlanıyor, ayrışma 0"
+  - "AÇIK BİLET: dataset.load bilerek bağlanmadı — kapsam kararı operatörde (ROADMAP WP4-B)"
+  - "Operatör kararı 2026-08-23 (E-1): kartla ölç, sıra 042-zinciri sonrası"
+universe: >
+  edg032c şasisi (künye 2026-08-24 tazelenmiş hâliyle; ölçüm ajanı EDG-048/049 künye-tazeleme
+  protokolünü uygular: üç-yönlü bayt-özdeşlik geçmezse DURUR). İki kol: kontrol (bugünkü dünya —
+  dataset.load kirli dönemi görür) ↔ dislamali (dataset.load bars_integrity kapısına bağlı;
+  enjeksiyon süreç-içi sarmalayıcı, motor dosyası değişmez).
+features_asof: >
+  Hücre başına: n · net P&L · PF · maxdd · sharpe. ZORUNLU İKİNCİ EKSEN (kartın asıl sorusu —
+  takas): ÖRNEKLEM MUHASEBESİ — dışlanan satır/sembol/gün sayısı, etkilenen işlem sayısı, ve
+  öğrenme-tarafı kuraklık göstergeleri (walk-forward pencere sayısı, prescreen aday debisi,
+  confirm dilimi n). Δ(dislamali−kontrol) eşlenik ay-kümeli bootstrap (B=5000, seed 20260812).
+parameter_grid:
+  hucreler: [dislamali]   # K += 1 (kontrol = şasi kapısı, K harcamaz)
+cost_model: sasi_ile_ayni
+success_metric: >
+  KARAR KURALI (donuk, İKİ ŞARTLI — takasın iki yakası): (A) P&L tarafı: Δ CI-alt > 0 → temizlik
+  ÖLÇÜLEBİLİR KAZANÇ; CI 0-içi → nötr; CI-üst < 0 → temizlik ZARARLI (örneklem kaybı baskın).
+  (B) Örneklem tarafı: confirm dilimi n VEYA walk-forward pencere sayısı %20'den fazla düşerse
+  "kuraklık bedeli AĞIR" şerhi zorunludur. BAĞLAMA ÖNERİSİ ancak (A) nötr-ya-da-pozitif VE (B)
+  şerhi ateşlemiyorsa verilir — aksi hâlde kalem "beyanlı-bağlanmamış" olarak kapanır ve
+  bars_integrity'nin dışlama listesi dataset.load tarafında YALNIZ RAPORLANIR (görünürlük).
+kill_criteria:
+  - "kontrol hücresi künye ile üç defterde bayt-özdeş değilse DURUR"
+  - "bars_integrity dışlama listesi ölçüm sırasında yeniden hesaplanırsa geçersiz (liste DONUK çekilir; koşum-anı sha rapora)"
+  - "dataset.load DIŞINDA bir tüketici bağlanırsa geçersiz (tek-değişken sözleşmesi)"
+  - "örneklem muhasebesi üretilmeden hüküm yazılırsa geçersiz (takasın yarısı ölçülmemiş olur)"
+  - "motor sha hücre başı sabit değilse geçersiz"
+k_registry: {registered_at: "2026-08-24", trial_ids: [pending-054-dislamali]}
+status: registered   # 2026-08-24 Rol-1 — ön-kayıt (E-1 operatör kararı; ölçüm 042-zinciri sonrası)
+beyanli_sinirlar: >
+  (1) Kirli-dönem tanımı bars_integrity'nin bugünkü kuralıdır — kural değişirse kart yeniden
+  okunur. (2) Öğrenme-tarafı göstergeler replay-vekildir; canlı kuraklık ayrı sınıftır (WP3).
+  (3) Bu kart dışlamanın DOĞRULUĞUNU değil ETKİSİNİ ölçer.
