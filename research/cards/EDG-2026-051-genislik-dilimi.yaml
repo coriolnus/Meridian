@@ -33,7 +33,19 @@ kill_criteria:
   - "breadth türetimi gelecek-bar okursa geçersiz (PIT öz-sınaması: seri yalnız t−1'e dek barlarla)"
   - "medyan eşiği ölçümden sonra oynatılırsa geçersiz"
 k_registry: {registered_at: "2026-08-23", trial_ids: [pending-051-breadth]}
-status: registered   # 2026-08-23 Rol-1 — ön-kayıt (ölçüm 049/050 sonrası sırayla)
+status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (aynı gece ölçüldü; K=1 aynen; kill 0)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-23): **BREADTH AYIRMIYOR — hipotez ARŞİVE (donuk kural: CI 0-içi).**
+  ΔortR(dar−genis) = −0,158, CI95 [−0,652, +0,335]. Dar dilim sayıca daha kötü (−0,426 vs −0,268)
+  ama anlamsız; iki dilim de ağır negatif (−14,5R / −14,1R) — kayıp genişlik-bağımsız, teşhisin
+  "genele yayılı" bulgusuyla tutarlı. HÜKMÜN SINIRI (betimleyiciden, önemli): holdout penceresi
+  tarihsel anlamda DAR-BREADTH REJİMİ HİÇ İÇERMİYOR (işlem-kovaryat aralığı 47,6–62,8; tarihsel
+  dağılım 2,0–94,0; holdout medyanı %51,6 yüzdelik) — bu ölçüm "dar bandın İÇ ayrışması yok"
+  der; gerçek dar-breadth dönemindeki davranış SINANMAMIŞTIR. Canlanma: yalnız yeni kartla ve
+  ancak gerçek dar-breadth günleri içeren bir pencerede. İncumbent bozulmasının bağlam-değişkeni
+  avı SÜRÜYOR: breadth elenmiştir; bir sonraki aday ayrı kartla (Rol-1 sırasında). Disiplin:
+  medyan-bölme ölçüm-öncesi fsync-beyanlı, PIT üç sınamayla kanıtlı, HON paydası beyanlı (250).
 beyanli_sinirlar: >
   (1) n=87 küçük örneklem — CI'lar geniş olabilir; kart bunu peşinen kabul eder. (2) Dilim
   ayrışması NEDENSELLİK değildir; pozitif sonuç yalnız bir bağlam-değişkeni ADAYI üretir.

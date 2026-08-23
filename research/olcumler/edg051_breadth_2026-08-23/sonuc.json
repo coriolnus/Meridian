@@ -1,0 +1,1048 @@
+{
+ "bolme_beyani": {
+  "kart": "EDG-2026-051",
+  "faz": "A-beyan (SONUÇ ALANLARI OKUNMADI)",
+  "beyan_ts": "2026-08-23T19:12:20+00:00",
+  "pit_sozlesmesi": "breadth(t) = t'den ÖNCEKİ son seansın (d*) kapanışlarıyla; d*<t kod-içi assert; MA50 penceresi d*'de biter",
+  "taban": {
+   "db": "/Users/erdemozturk/AI-Trading/research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/meridian.db",
+   "db_sha256": "e4cce4804ca2e17ddd5c602588fd3c3d4e45f4ffe97dd67a6110b5db7782467e",
+   "bar_kapisi": "data.REPLAY_UNIVERSE(251) + sanitize_bars + measurement_bars (component_ic._load_universe ile aynı yol)",
+   "segment_yasasi": "lo <= ts_open[:10] < hi and (not ts_close or ts_close[:10] <= hi) — wp3 teşhisle AYNI"
+  },
+  "evren": {
+   "n_evren": 251,
+   "n_seride": 251,
+   "okunamayan": [],
+   "ma_hic_olusamayan": [
+    "HON"
+   ]
+  },
+  "medyan_breadth_pct": 54.4,
+  "bolme_kurali": "genis: breadth >= medyan | dar: breadth < medyan (kart; DEĞİŞMEZ)",
+  "n_genis": 54,
+  "n_dar": 33,
+  "kill1_n20": {
+   "tetiklendi": false,
+   "kural": "dilimlerden biri n<20 → hüküm YOK, betimleyici damga (bölme değişmez)"
+  },
+  "dokum": [
+   {
+    "id": "T00795",
+    "ticker": "INTC",
+    "giris_gunu": "2026-04-30",
+    "breadth_kaynak_seans": "2026-04-29",
+    "payda_n": 250,
+    "breadth_pct": 50.0,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00793",
+    "ticker": "LYB",
+    "giris_gunu": "2026-05-05",
+    "breadth_kaynak_seans": "2026-05-04",
+    "payda_n": 250,
+    "breadth_pct": 54.0,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00796",
+    "ticker": "MU",
+    "giris_gunu": "2026-05-06",
+    "breadth_kaynak_seans": "2026-05-05",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00798",
+    "ticker": "LRCX",
+    "giris_gunu": "2026-05-07",
+    "breadth_kaynak_seans": "2026-05-06",
+    "payda_n": 250,
+    "breadth_pct": 57.6,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00809",
+    "ticker": "AMD",
+    "giris_gunu": "2026-05-07",
+    "breadth_kaynak_seans": "2026-05-06",
+    "payda_n": 250,
+    "breadth_pct": 57.6,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00806",
+    "ticker": "HWM",
+    "giris_gunu": "2026-05-08",
+    "breadth_kaynak_seans": "2026-05-07",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00799",
+    "ticker": "MU",
+    "giris_gunu": "2026-05-12",
+    "breadth_kaynak_seans": "2026-05-11",
+    "payda_n": 250,
+    "breadth_pct": 51.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00800",
+    "ticker": "QCOM",
+    "giris_gunu": "2026-05-12",
+    "breadth_kaynak_seans": "2026-05-11",
+    "payda_n": 250,
+    "breadth_pct": 51.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00824",
+    "ticker": "NXPI",
+    "giris_gunu": "2026-05-12",
+    "breadth_kaynak_seans": "2026-05-11",
+    "payda_n": 250,
+    "breadth_pct": 51.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00807",
+    "ticker": "TER",
+    "giris_gunu": "2026-05-13",
+    "breadth_kaynak_seans": "2026-05-12",
+    "payda_n": 250,
+    "breadth_pct": 51.2,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00808",
+    "ticker": "C",
+    "giris_gunu": "2026-05-13",
+    "breadth_kaynak_seans": "2026-05-12",
+    "payda_n": 250,
+    "breadth_pct": 51.2,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00802",
+    "ticker": "SNAP",
+    "giris_gunu": "2026-05-14",
+    "breadth_kaynak_seans": "2026-05-13",
+    "payda_n": 250,
+    "breadth_pct": 47.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00810",
+    "ticker": "ON",
+    "giris_gunu": "2026-05-14",
+    "breadth_kaynak_seans": "2026-05-13",
+    "payda_n": 250,
+    "breadth_pct": 47.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00811",
+    "ticker": "ENPH",
+    "giris_gunu": "2026-05-15",
+    "breadth_kaynak_seans": "2026-05-14",
+    "payda_n": 250,
+    "breadth_pct": 48.8,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00812",
+    "ticker": "ALL",
+    "giris_gunu": "2026-05-20",
+    "breadth_kaynak_seans": "2026-05-19",
+    "payda_n": 250,
+    "breadth_pct": 48.4,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00813",
+    "ticker": "COST",
+    "giris_gunu": "2026-05-20",
+    "breadth_kaynak_seans": "2026-05-19",
+    "payda_n": 250,
+    "breadth_pct": 48.4,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00815",
+    "ticker": "MU",
+    "giris_gunu": "2026-05-21",
+    "breadth_kaynak_seans": "2026-05-20",
+    "payda_n": 250,
+    "breadth_pct": 53.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00836",
+    "ticker": "GS",
+    "giris_gunu": "2026-05-21",
+    "breadth_kaynak_seans": "2026-05-20",
+    "payda_n": 250,
+    "breadth_pct": 53.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00842",
+    "ticker": "DAL",
+    "giris_gunu": "2026-05-21",
+    "breadth_kaynak_seans": "2026-05-20",
+    "payda_n": 250,
+    "breadth_pct": 53.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00814",
+    "ticker": "ON",
+    "giris_gunu": "2026-05-22",
+    "breadth_kaynak_seans": "2026-05-21",
+    "payda_n": 250,
+    "breadth_pct": 56.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00819",
+    "ticker": "ENPH",
+    "giris_gunu": "2026-05-22",
+    "breadth_kaynak_seans": "2026-05-21",
+    "payda_n": 250,
+    "breadth_pct": 56.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00820",
+    "ticker": "INTC",
+    "giris_gunu": "2026-05-22",
+    "breadth_kaynak_seans": "2026-05-21",
+    "payda_n": 250,
+    "breadth_pct": 56.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00816",
+    "ticker": "ROST",
+    "giris_gunu": "2026-05-26",
+    "breadth_kaynak_seans": "2026-05-22",
+    "payda_n": 250,
+    "breadth_pct": 58.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00825",
+    "ticker": "F",
+    "giris_gunu": "2026-05-26",
+    "breadth_kaynak_seans": "2026-05-22",
+    "payda_n": 250,
+    "breadth_pct": 58.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00821",
+    "ticker": "ADI",
+    "giris_gunu": "2026-05-27",
+    "breadth_kaynak_seans": "2026-05-26",
+    "payda_n": 250,
+    "breadth_pct": 55.6,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00822",
+    "ticker": "SWKS",
+    "giris_gunu": "2026-05-27",
+    "breadth_kaynak_seans": "2026-05-26",
+    "payda_n": 250,
+    "breadth_pct": 55.6,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00829",
+    "ticker": "QCOM",
+    "giris_gunu": "2026-05-27",
+    "breadth_kaynak_seans": "2026-05-26",
+    "payda_n": 250,
+    "breadth_pct": 55.6,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00817",
+    "ticker": "ETN",
+    "giris_gunu": "2026-05-28",
+    "breadth_kaynak_seans": "2026-05-27",
+    "payda_n": 250,
+    "breadth_pct": 55.2,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00818",
+    "ticker": "SNAP",
+    "giris_gunu": "2026-05-29",
+    "breadth_kaynak_seans": "2026-05-28",
+    "payda_n": 250,
+    "breadth_pct": 54.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00823",
+    "ticker": "TER",
+    "giris_gunu": "2026-05-29",
+    "breadth_kaynak_seans": "2026-05-28",
+    "payda_n": 250,
+    "breadth_pct": 54.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00830",
+    "ticker": "ETN",
+    "giris_gunu": "2026-05-29",
+    "breadth_kaynak_seans": "2026-05-28",
+    "payda_n": 250,
+    "breadth_pct": 54.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00837",
+    "ticker": "PANW",
+    "giris_gunu": "2026-06-01",
+    "breadth_kaynak_seans": "2026-05-29",
+    "payda_n": 250,
+    "breadth_pct": 52.0,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00826",
+    "ticker": "CMI",
+    "giris_gunu": "2026-06-02",
+    "breadth_kaynak_seans": "2026-06-01",
+    "payda_n": 250,
+    "breadth_pct": 49.2,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00831",
+    "ticker": "CDNS",
+    "giris_gunu": "2026-06-02",
+    "breadth_kaynak_seans": "2026-06-01",
+    "payda_n": 250,
+    "breadth_pct": 49.2,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00827",
+    "ticker": "AVGO",
+    "giris_gunu": "2026-06-03",
+    "breadth_kaynak_seans": "2026-06-02",
+    "payda_n": 250,
+    "breadth_pct": 49.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00828",
+    "ticker": "SNAP",
+    "giris_gunu": "2026-06-04",
+    "breadth_kaynak_seans": "2026-06-03",
+    "payda_n": 250,
+    "breadth_pct": 48.4,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00832",
+    "ticker": "MCHP",
+    "giris_gunu": "2026-06-04",
+    "breadth_kaynak_seans": "2026-06-03",
+    "payda_n": 250,
+    "breadth_pct": 48.4,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00833",
+    "ticker": "PINS",
+    "giris_gunu": "2026-06-04",
+    "breadth_kaynak_seans": "2026-06-03",
+    "payda_n": 250,
+    "breadth_pct": 48.4,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00834",
+    "ticker": "TXN",
+    "giris_gunu": "2026-06-04",
+    "breadth_kaynak_seans": "2026-06-03",
+    "payda_n": 250,
+    "breadth_pct": 48.4,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00835",
+    "ticker": "MRVL",
+    "giris_gunu": "2026-06-05",
+    "breadth_kaynak_seans": "2026-06-04",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00843",
+    "ticker": "UNH",
+    "giris_gunu": "2026-06-05",
+    "breadth_kaynak_seans": "2026-06-04",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00848",
+    "ticker": "AVB",
+    "giris_gunu": "2026-06-05",
+    "breadth_kaynak_seans": "2026-06-04",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00838",
+    "ticker": "MRVL",
+    "giris_gunu": "2026-06-09",
+    "breadth_kaynak_seans": "2026-06-08",
+    "payda_n": 250,
+    "breadth_pct": 52.0,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00839",
+    "ticker": "INTC",
+    "giris_gunu": "2026-06-09",
+    "breadth_kaynak_seans": "2026-06-08",
+    "payda_n": 250,
+    "breadth_pct": 52.0,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00840",
+    "ticker": "MPWR",
+    "giris_gunu": "2026-06-09",
+    "breadth_kaynak_seans": "2026-06-08",
+    "payda_n": 250,
+    "breadth_pct": 52.0,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00841",
+    "ticker": "PINS",
+    "giris_gunu": "2026-06-10",
+    "breadth_kaynak_seans": "2026-06-09",
+    "payda_n": 250,
+    "breadth_pct": 56.0,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00844",
+    "ticker": "PANW",
+    "giris_gunu": "2026-06-10",
+    "breadth_kaynak_seans": "2026-06-09",
+    "payda_n": 250,
+    "breadth_pct": 56.0,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00849",
+    "ticker": "NVDA",
+    "giris_gunu": "2026-06-10",
+    "breadth_kaynak_seans": "2026-06-09",
+    "payda_n": 250,
+    "breadth_pct": 56.0,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00854",
+    "ticker": "MCHP",
+    "giris_gunu": "2026-06-10",
+    "breadth_kaynak_seans": "2026-06-09",
+    "payda_n": 250,
+    "breadth_pct": 56.0,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00845",
+    "ticker": "KLAC",
+    "giris_gunu": "2026-06-12",
+    "breadth_kaynak_seans": "2026-06-11",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00846",
+    "ticker": "INTC",
+    "giris_gunu": "2026-06-12",
+    "breadth_kaynak_seans": "2026-06-11",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00855",
+    "ticker": "AAPL",
+    "giris_gunu": "2026-06-12",
+    "breadth_kaynak_seans": "2026-06-11",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00858",
+    "ticker": "LRCX",
+    "giris_gunu": "2026-06-12",
+    "breadth_kaynak_seans": "2026-06-11",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00859",
+    "ticker": "F",
+    "giris_gunu": "2026-06-12",
+    "breadth_kaynak_seans": "2026-06-11",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00860",
+    "ticker": "CVS",
+    "giris_gunu": "2026-06-12",
+    "breadth_kaynak_seans": "2026-06-11",
+    "payda_n": 250,
+    "breadth_pct": 54.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00847",
+    "ticker": "SWKS",
+    "giris_gunu": "2026-06-16",
+    "breadth_kaynak_seans": "2026-06-15",
+    "payda_n": 250,
+    "breadth_pct": 62.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00856",
+    "ticker": "MS",
+    "giris_gunu": "2026-06-18",
+    "breadth_kaynak_seans": "2026-06-17",
+    "payda_n": 250,
+    "breadth_pct": 51.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00861",
+    "ticker": "MRNA",
+    "giris_gunu": "2026-06-18",
+    "breadth_kaynak_seans": "2026-06-17",
+    "payda_n": 250,
+    "breadth_pct": 51.6,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00850",
+    "ticker": "MRVL",
+    "giris_gunu": "2026-06-22",
+    "breadth_kaynak_seans": "2026-06-18",
+    "payda_n": 250,
+    "breadth_pct": 53.2,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00851",
+    "ticker": "KLAC",
+    "giris_gunu": "2026-06-22",
+    "breadth_kaynak_seans": "2026-06-18",
+    "payda_n": 250,
+    "breadth_pct": 53.2,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00852",
+    "ticker": "SWKS",
+    "giris_gunu": "2026-06-22",
+    "breadth_kaynak_seans": "2026-06-18",
+    "payda_n": 250,
+    "breadth_pct": 53.2,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00853",
+    "ticker": "CDNS",
+    "giris_gunu": "2026-06-23",
+    "breadth_kaynak_seans": "2026-06-22",
+    "payda_n": 250,
+    "breadth_pct": 53.2,
+    "dilim": "dar"
+   },
+   {
+    "id": "T00857",
+    "ticker": "LLY",
+    "giris_gunu": "2026-06-24",
+    "breadth_kaynak_seans": "2026-06-23",
+    "payda_n": 250,
+    "breadth_pct": 57.6,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00862",
+    "ticker": "UAL",
+    "giris_gunu": "2026-06-25",
+    "breadth_kaynak_seans": "2026-06-24",
+    "payda_n": 250,
+    "breadth_pct": 58.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00863",
+    "ticker": "LUV",
+    "giris_gunu": "2026-06-25",
+    "breadth_kaynak_seans": "2026-06-24",
+    "payda_n": 250,
+    "breadth_pct": 58.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00864",
+    "ticker": "VMC",
+    "giris_gunu": "2026-06-25",
+    "breadth_kaynak_seans": "2026-06-24",
+    "payda_n": 250,
+    "breadth_pct": 58.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00865",
+    "ticker": "AMAT",
+    "giris_gunu": "2026-06-26",
+    "breadth_kaynak_seans": "2026-06-25",
+    "payda_n": 250,
+    "breadth_pct": 59.2,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00866",
+    "ticker": "MU",
+    "giris_gunu": "2026-06-26",
+    "breadth_kaynak_seans": "2026-06-25",
+    "payda_n": 250,
+    "breadth_pct": 59.2,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00867",
+    "ticker": "TER",
+    "giris_gunu": "2026-06-26",
+    "breadth_kaynak_seans": "2026-06-25",
+    "payda_n": 250,
+    "breadth_pct": 59.2,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00868",
+    "ticker": "AMAT",
+    "giris_gunu": "2026-07-01",
+    "breadth_kaynak_seans": "2026-06-30",
+    "payda_n": 250,
+    "breadth_pct": 56.0,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00872",
+    "ticker": "MRNA",
+    "giris_gunu": "2026-07-01",
+    "breadth_kaynak_seans": "2026-06-30",
+    "payda_n": 250,
+    "breadth_pct": 56.0,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00869",
+    "ticker": "TGT",
+    "giris_gunu": "2026-07-02",
+    "breadth_kaynak_seans": "2026-07-01",
+    "payda_n": 250,
+    "breadth_pct": 57.2,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00870",
+    "ticker": "VMC",
+    "giris_gunu": "2026-07-02",
+    "breadth_kaynak_seans": "2026-07-01",
+    "payda_n": 250,
+    "breadth_pct": 57.2,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00871",
+    "ticker": "AMAT",
+    "giris_gunu": "2026-07-08",
+    "breadth_kaynak_seans": "2026-07-07",
+    "payda_n": 250,
+    "breadth_pct": 62.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00873",
+    "ticker": "CAT",
+    "giris_gunu": "2026-07-08",
+    "breadth_kaynak_seans": "2026-07-07",
+    "payda_n": 250,
+    "breadth_pct": 62.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00874",
+    "ticker": "MU",
+    "giris_gunu": "2026-07-08",
+    "breadth_kaynak_seans": "2026-07-07",
+    "payda_n": 250,
+    "breadth_pct": 62.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00875",
+    "ticker": "UAL",
+    "giris_gunu": "2026-07-09",
+    "breadth_kaynak_seans": "2026-07-08",
+    "payda_n": 250,
+    "breadth_pct": 59.6,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00876",
+    "ticker": "DAL",
+    "giris_gunu": "2026-07-09",
+    "breadth_kaynak_seans": "2026-07-08",
+    "payda_n": 250,
+    "breadth_pct": 59.6,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00877",
+    "ticker": "BIIB",
+    "giris_gunu": "2026-07-14",
+    "breadth_kaynak_seans": "2026-07-13",
+    "payda_n": 250,
+    "breadth_pct": 60.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00878",
+    "ticker": "MU",
+    "giris_gunu": "2026-07-15",
+    "breadth_kaynak_seans": "2026-07-14",
+    "payda_n": 250,
+    "breadth_pct": 58.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00881",
+    "ticker": "BAX",
+    "giris_gunu": "2026-07-15",
+    "breadth_kaynak_seans": "2026-07-14",
+    "payda_n": 250,
+    "breadth_pct": 58.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00882",
+    "ticker": "GS",
+    "giris_gunu": "2026-07-15",
+    "breadth_kaynak_seans": "2026-07-14",
+    "payda_n": 250,
+    "breadth_pct": 58.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00879",
+    "ticker": "MRNA",
+    "giris_gunu": "2026-07-16",
+    "breadth_kaynak_seans": "2026-07-15",
+    "payda_n": 250,
+    "breadth_pct": 60.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00880",
+    "ticker": "C",
+    "giris_gunu": "2026-07-16",
+    "breadth_kaynak_seans": "2026-07-15",
+    "payda_n": 250,
+    "breadth_pct": 60.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00883",
+    "ticker": "NVDA",
+    "giris_gunu": "2026-07-16",
+    "breadth_kaynak_seans": "2026-07-15",
+    "payda_n": 250,
+    "breadth_pct": 60.4,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00884",
+    "ticker": "MNST",
+    "giris_gunu": "2026-07-17",
+    "breadth_kaynak_seans": "2026-07-16",
+    "payda_n": 250,
+    "breadth_pct": 62.8,
+    "dilim": "genis"
+   },
+   {
+    "id": "T00885",
+    "ticker": "MMM",
+    "giris_gunu": "2026-07-22",
+    "breadth_kaynak_seans": "2026-07-21",
+    "payda_n": 250,
+    "breadth_pct": 54.0,
+    "dilim": "dar"
+   }
+  ],
+  "pit_oz_sinama": {
+   "ma_pencere_10ornek": [
+    {
+     "sembol": "MDLZ",
+     "idx": 526,
+     "tarih": "2006-02-03",
+     "ma_esit": true
+    },
+    {
+     "sembol": "T",
+     "idx": 3944,
+     "tarih": "2019-09-04",
+     "ma_esit": true
+    },
+    {
+     "sembol": "APD",
+     "idx": 5271,
+     "tarih": "2024-12-11",
+     "ma_esit": true
+    },
+    {
+     "sembol": "HLT",
+     "idx": 1849,
+     "tarih": "2024-05-13",
+     "ma_esit": true
+    },
+    {
+     "sembol": "AMAT",
+     "idx": 3688,
+     "tarih": "2018-08-27",
+     "ma_esit": true
+    },
+    {
+     "sembol": "CDNS",
+     "idx": 4653,
+     "tarih": "2022-06-28",
+     "ma_esit": true
+    },
+    {
+     "sembol": "REGN",
+     "idx": 4826,
+     "tarih": "2023-03-07",
+     "ma_esit": true
+    },
+    {
+     "sembol": "ZBH",
+     "idx": 1199,
+     "tarih": "2020-04-02",
+     "ma_esit": true
+    },
+    {
+     "sembol": "HUM",
+     "idx": 2905,
+     "tarih": "2015-07-20",
+     "ma_esit": true
+    },
+    {
+     "sembol": "TXN",
+     "idx": 3167,
+     "tarih": "2016-08-02",
+     "ma_esit": true
+    }
+   ],
+   "nokta_sinama_12gun": [
+    {
+     "giris_gunu": "2026-06-03",
+     "beklenen": 49.6,
+     "yeniden_hesap": 49.6,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-06-22",
+     "beklenen": 53.2,
+     "yeniden_hesap": 53.2,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-07-08",
+     "beklenen": 62.4,
+     "yeniden_hesap": 62.4,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-05-06",
+     "beklenen": 54.4,
+     "yeniden_hesap": 54.4,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-06-09",
+     "beklenen": 52.0,
+     "yeniden_hesap": 52.0,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-07-17",
+     "beklenen": 62.8,
+     "yeniden_hesap": 62.8,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-05-29",
+     "beklenen": 54.8,
+     "yeniden_hesap": 54.8,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-07-08",
+     "beklenen": 62.4,
+     "yeniden_hesap": 62.4,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-05-12",
+     "beklenen": 51.6,
+     "yeniden_hesap": 51.6,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-05-28",
+     "beklenen": 55.2,
+     "yeniden_hesap": 55.2,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-05-21",
+     "beklenen": 53.6,
+     "yeniden_hesap": 53.6,
+     "esit": true
+    },
+    {
+     "giris_gunu": "2026-06-04",
+     "beklenen": 48.4,
+     "yeniden_hesap": 48.4,
+     "esit": true
+    }
+   ]
+  }
+ },
+ "bolme_beyani_disk_sha256_fazB_oncesi": "a1fcec37d448b3e5f7f1f9b9f8a341439c7899312596e2f11e18bbdd5d5b929d",
+ "fazB_ts": "2026-08-23T19:12:20+00:00",
+ "dilimler": {
+  "genis_breadth_yuksek": {
+   "n": 54,
+   "toplam_R": -14.465,
+   "ort_R": -0.2679,
+   "stop_payi_pct": 61.1,
+   "stop_gap_payi_pct": 9.3,
+   "stop_veya_gap_payi_pct": 70.4,
+   "kazanma_pct": 20.4,
+   "cikis_dagilimi": {
+    "regime_flip": 10,
+    "stop": 33,
+    "stop_gap": 5,
+    "target": 4,
+    "target_gap": 2
+   },
+   "setup_dagilimi": {
+    "breakout_vcp": 11,
+    "exhaustion_hammer": 25,
+    "momentum_burst": 17,
+    "pullback": 1
+   }
+  },
+  "dar_breadth_dusuk": {
+   "n": 33,
+   "toplam_R": -14.052,
+   "ort_R": -0.4258,
+   "stop_payi_pct": 57.6,
+   "stop_gap_payi_pct": 18.2,
+   "stop_veya_gap_payi_pct": 75.8,
+   "kazanma_pct": 24.2,
+   "cikis_dagilimi": {
+    "regime_flip": 2,
+    "stop": 19,
+    "stop_gap": 6,
+    "target": 3,
+    "target_gap": 1,
+    "time_stop": 2
+   },
+   "setup_dagilimi": {
+    "breakout_vcp": 6,
+    "exhaustion_hammer": 14,
+    "momentum_burst": 13
+   }
+  }
+ },
+ "ayrisma": {
+  "delta_ortR_dar_eksi_genis": -0.1579,
+  "bootstrap": {
+   "B": 5000,
+   "seed": 20260812,
+   "yontem": "işlem-düzeyi, dilim-içi yeniden örnekleme; yüzdelik CI",
+   "ci95": [
+    -0.6516,
+    0.3354
+   ]
+  },
+  "karar_kurali_hatirlatma_HUKUM_DEGIL": "kart: CI-üst < 0 → 'ayırıyor'; CI 0-içi → 'ayırmıyor' — hüküm Rol-1'in"
+ },
+ "kill1_damga": "tetiklenmedi (iki dilim de n>=20)",
+ "betimleyici_breadth_seyri_HUKUM_DEGIL": {
+  "holdout_penceresi": {
+   "pencere": "2026-04-30..2026-07-30",
+   "seans_n": 62,
+   "min": 47.6,
+   "q25": 52.9,
+   "medyan": 56.2,
+   "q75": 59.5,
+   "maks": 68.4,
+   "payda_araligi": [
+    44,
+    250
+   ]
+  },
+  "tam_pencere_2022_2026": {
+   "pencere": "2022-01-01..2026-07-30",
+   "seans_n": 1146,
+   "min": 2.02,
+   "q25": 42.4,
+   "medyan": 55.42,
+   "q75": 67.17,
+   "maks": 93.95,
+   "payda_araligi": [
+    44,
+    250
+   ]
+  },
+  "holdout_medyaninin_tam_penceredeki_yuzdeligi": 51.6
+ },
+ "dosyalar": {
+  "olcum_py_sha256": "75a24a4171a2216cbbc0281c578e49a0f37dc7ebb0da79b88cb5a371d63969ef",
+  "db_sha256": "e4cce4804ca2e17ddd5c602588fd3c3d4e45f4ffe97dd67a6110b5db7782467e"
+ }
+}

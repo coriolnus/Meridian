@@ -1,0 +1,168 @@
+== [1] evren barları (kanonik kapı: sanitize_bars + measurement_bars) ==
+[obs->warn] bar_ghost_session_dropped {'ticker': 'AAPL', 'dates': '2025-05-26', 'n': 1, 'calendar': 'XNYS', 'detail': 'takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'NVDA', 'safe_start': '2006-04-10', 'rows': 571, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_unadjusted_row_quarantined {'ticker': 'AVGO', 'dates': '2008-06-12', 'n': 1, 'calendar': 'XNYS', 'detail': 'geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'AVGO', 'safe_start': '2009-08-21', 'rows': 23, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_ghost_session_dropped {'ticker': 'CRM', 'dates': '2018-11-22', 'n': 1, 'calendar': 'XNYS', 'detail': 'takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'GOOGL', 'safe_start': '2014-04-03', 'rows': 347, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'NKE', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'LOW', 'safe_start': '2006-07-05', 'rows': 630, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'DE', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'HON', 'safe_start': '2026-06-30', 'rows': 5657, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'HRL', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_unadjusted_row_quarantined {'ticker': 'CMCSA', 'dates': '2013-12-18', 'n': 1, 'calendar': 'XNYS', 'detail': 'geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CMCSA', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CHTR', 'safe_start': '2010-09-16', 'rows': 2, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'WBD', 'safe_start': '2014-08-08', 'rows': 2287, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'OMC', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_unadjusted_row_quarantined {'ticker': 'PINS', 'dates': '2013-07-15,2013-08-02', 'n': 2, 'calendar': 'XNYS', 'detail': 'geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'PINS', 'safe_start': '2019-06-04', 'rows': 71, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'MAR', 'safe_start': '2006-06-13', 'rows': 615, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'HLT', 'safe_start': '2017-01-05', 'rows': 771, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'EXPE', 'safe_start': '2006-01-04', 'rows': 115, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_unadjusted_row_quarantined {'ticker': 'DLTR', 'dates': '2012-06-26', 'n': 1, 'calendar': 'XNYS', 'detail': 'geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'SLB', 'safe_start': '2006-04-11', 'rows': 572, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'HAL', 'safe_start': '2006-07-18', 'rows': 639, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'OXY', 'safe_start': '2006-08-17', 'rows': 661, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'EQT', 'safe_start': '2018-11-14', 'rows': 3744, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'WFC', 'safe_start': '2006-08-15', 'rows': 659, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'C', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'APO', 'safe_start': '2011-05-06', 'rows': 648, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CB', 'safe_start': '2006-04-20', 'rows': 578, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'PGR', 'safe_start': '2006-05-22', 'rows': 600, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'AIG', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'FISV', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'ABT', 'safe_start': '2013-01-03', 'rows': 2266, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'GILD', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CI', 'safe_start': '2007-04-27', 'rows': 834, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_unadjusted_row_quarantined {'ticker': 'UNP', 'dates': '2014-06-06', 'n': 1, 'calendar': 'XNYS', 'detail': 'geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'UNP', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CSX', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'RTX', 'safe_start': '2020-04-06', 'rows': 226, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'GD', 'safe_start': '2006-03-28', 'rows': 562, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'LHX', 'safe_start': '2005-04-01', 'rows': 313, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_unadjusted_row_quarantined {'ticker': 'TDG', 'dates': '2011-12-01,2011-12-09', 'n': 2, 'calendar': 'XNYS', 'detail': 'geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'TDG', 'safe_start': '2012-01-24', 'rows': 32, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'EMR', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'ITW', 'safe_start': '2006-05-30', 'rows': 605, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CMI', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'PCAR', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'NUE', 'safe_start': '2006-06-02', 'rows': 608, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'STLD', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'DD', 'safe_start': '2025-11-04', 'rows': 5172, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_unadjusted_row_quarantined {'ticker': 'ALB', 'dates': '2006-10-30', 'n': 1, 'calendar': 'XNYS', 'detail': 'geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'ALB', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'O', 'safe_start': '2005-01-04', 'rows': 253, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'IRM', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CBRE', 'safe_start': '2006-01-04', 'rows': 395, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'MO', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'HSY', 'safe_start': '2004-06-17', 'rows': 114, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CHD', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bar_unadjusted_row_quarantined {'ticker': 'EL', 'dates': '2012-01-20', 'n': 1, 'calendar': 'XNYS', 'detail': 'geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'MNST', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'MRVL', 'safe_start': '2006-07-26', 'rows': 645, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'CTSH', 'safe_start': '2007-10-18', 'rows': 955, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'INTU', 'safe_start': '2006-07-10', 'rows': 633, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'NEE', 'safe_start': '2005-03-17', 'rows': 303, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'DUK', 'safe_start': '2006-01-04', 'rows': 505, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'D', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+[obs->warn] bars_integrity_period_excluded {'ticker': 'PEG', 'safe_start': '2006-10-25', 'rows': 709, 'detail': 'çözülmemiş ölçek/kimlik kırılması öncesi dönem ÖLÇÜMDEN dışlandı (satır silinmedi; defter: state/bars_integrity.json)'}
+PIT öz-sınama 1 (MA penceresi, 10 örnek): GEÇTİ
+== [2] FAZ A: giriş-günü breadth + medyan bölmesi (döküm ölçüm-ÖNCE beyan) ==
+PIT öz-sınama 2 (12 giriş günü, t-öncesi dilimle yeniden hesap): GEÇTİ
+FAZ A beyan diske yazıldı: medyan=54.4000 n_genis=54 n_dar=33 kill1=False
+beyan sha256: a1fcec37d448b3e5f7f1f9b9f8a341439c7899312596e2f11e18bbdd5d5b929d
+== [3] FAZ B: dilim metrikleri + bootstrap ==
+{
+ "dilimler": {
+  "genis_breadth_yuksek": {
+   "n": 54,
+   "toplam_R": -14.465,
+   "ort_R": -0.2679,
+   "stop_payi_pct": 61.1,
+   "stop_gap_payi_pct": 9.3,
+   "stop_veya_gap_payi_pct": 70.4,
+   "kazanma_pct": 20.4,
+   "cikis_dagilimi": {
+    "regime_flip": 10,
+    "stop": 33,
+    "stop_gap": 5,
+    "target": 4,
+    "target_gap": 2
+   },
+   "setup_dagilimi": {
+    "breakout_vcp": 11,
+    "exhaustion_hammer": 25,
+    "momentum_burst": 17,
+    "pullback": 1
+   }
+  },
+  "dar_breadth_dusuk": {
+   "n": 33,
+   "toplam_R": -14.052,
+   "ort_R": -0.4258,
+   "stop_payi_pct": 57.6,
+   "stop_gap_payi_pct": 18.2,
+   "stop_veya_gap_payi_pct": 75.8,
+   "kazanma_pct": 24.2,
+   "cikis_dagilimi": {
+    "regime_flip": 2,
+    "stop": 19,
+    "stop_gap": 6,
+    "target": 3,
+    "target_gap": 1,
+    "time_stop": 2
+   },
+   "setup_dagilimi": {
+    "breakout_vcp": 6,
+    "exhaustion_hammer": 14,
+    "momentum_burst": 13
+   }
+  }
+ },
+ "ayrisma": {
+  "delta_ortR_dar_eksi_genis": -0.1579,
+  "bootstrap": {
+   "B": 5000,
+   "seed": 20260812,
+   "yontem": "işlem-düzeyi, dilim-içi yeniden örnekleme; yüzdelik CI",
+   "ci95": [
+    -0.6516,
+    0.3354
+   ]
+  },
+  "karar_kurali_hatirlatma_HUKUM_DEGIL": "kart: CI-üst < 0 → 'ayırıyor'; CI 0-içi → 'ayırmıyor' — hüküm Rol-1'in"
+ },
+ "kill1_damga": "tetiklenmedi (iki dilim de n>=20)",
+ "betimleyici_breadth_seyri_HUKUM_DEGIL": {
+  "holdout_penceresi": {
+   "pencere": "2026-04-30..2026-07-30",
+   "seans_n": 62,
+   "min": 47.6,
+   "q25": 52.9,
+   "medyan": 56.2,
+   "q75": 59.5,
+   "maks": 68.4,
+   "payda_araligi": [
+    44,
+    250
+   ]
+  },
+  "tam_pencere_2022_2026": {
+   "pencere": "2022-01-01..2026-07-30",
+   "seans_n": 1146,
+   "min": 2.02,
+   "q25": 42.4,
+   "medyan": 55.42,
+   "q75": 67.17,
+   "maks": 93.95,
+   "payda_araligi": [
+    44,
+    250
+   ]
+  },
+  "holdout_medyaninin_tam_penceredeki_yuzdeligi": 51.6
+ }
+}
+
+OK -> /Users/erdemozturk/AI-Trading/research/olcumler/edg051_breadth_2026-08-23/sonuc.json
