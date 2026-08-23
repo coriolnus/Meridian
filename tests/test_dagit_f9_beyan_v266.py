@@ -204,8 +204,14 @@ def test_dropin_FAZ2_seccomp_ve_yetenek_sifirlama():
         m = p.read_text()
         assert re.search(r"^SystemCallFilter=@system-service$", m, re.M), \
             f"{p.name} ({birim}): seccomp satırı kayıp"
-        assert re.search(r"^CapabilityBoundingSet=$", m, re.M), \
-            f"{p.name} ({birim}): boş CapabilityBoundingSet kayıp"
+        # 2026-08-23 CANLI ÖLÇÜMLE DÜZELTİLDİ (tetik-testi bulgusu): "boş küme" beklentisi
+        # root-koşan tick-watchdog'da OKUMAYI kırdı (ubuntu-0600 state dosyasına EACCES) —
+        # çivi artık birime göre: root birimi YALNIZ salt-okuma DAC yeteneği taşır (yazma
+        # yetenekleri geri gelirse kırmızı), User=ubuntu birimi boş küme taşır.
+        beklenen = (r"^CapabilityBoundingSet=CAP_DAC_READ_SEARCH$"
+                    if birim == "meridian-tick-watchdog" else r"^CapabilityBoundingSet=$")
+        assert re.search(beklenen, m, re.M), \
+            f"{p.name} ({birim}): CapabilityBoundingSet satırı beklenenden farklı ({beklenen})"
 
 
 def test_MEVCUT_birim_dosyalari_DEGISMEDI():
