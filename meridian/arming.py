@@ -152,7 +152,23 @@ def setup_report() -> dict:
 
 
 def _dormant_setups() -> list[str]:
-    """Motorun tanıdığı ama HENÜZ SİLAHLANMAMIŞ (canlı deftere risk yazmayan) setup adlarını verir."""
+    """Motorun tanıdığı ama HENÜZ SİLAHLANMAMIŞ (canlı deftere risk yazmayan) setup adlarını verir.
+
+    BEYANLI BOŞLUK — E-kod [3] ölçümü (2026-08-23), DAVRANIŞ BU TURDA DEĞİŞMEDİ. Aşağıdaki
+    `engine` tuple'ı elle yazılmıştır ve kanonik türetimden (setup→screener eşlemesi
+    `skills._SCREENER_BY_SETUP` ∩ `skills.ENGINE_IMPLEMENTED`) İKİ adla ayrışır:
+      * `exhaustion_hammer` — 2026-08-11'de motor-uygulandı VE silahlandı. Bugün ZARARSIZ
+        (silahlı olduğu için türetim de onu uyuyan saymazdı) ama LATENT: bir gün silahtan
+        düşerse hem uyuyan kümeden hem kurulum kırılımından SESSİZCE kaybolurdu.
+      * `pead` — motor-uygulanmış (strategy.py:883 `setup="pead"`, screener ENGINE_IMPLEMENTED)
+        ve SİLAHSIZ, yani TANIM GEREĞİ uyuyandır; karşı-olgusal deftere satır yazar ama
+        silahlanma kapısı onu HİÇ değerlendirmiyor.
+    İkinci adı eklemek uyuyan-kanıt kanalının kapsamını genişletir (kapı yeni bir kurulumu
+    tartmaya başlar) — bu bir ÖLÇÜM/KAPI kararıdır, kart-önce ve Rol-1'de. Bu yüzden burada
+    yalnız BEYAN var, değişiklik yok; ayrışmanın büyümesi `tests/test_e_partisi_v278.py`
+    (test_3d) ile çivili: kümeye üçüncü bir ad girerse kırmızı yanar.
+    `canslim` BİLEREK dışarıda: motor onu koşturur ama `evaluate_canslim` daima None döner
+    (strategy.py:900) — ENGINE_IMPLEMENTED'a da bu yüzden alınmadı."""
     from . import strategy as strat
     engine = ("breakout_vcp", "momentum_burst", "pullback", "episodic_pivot")
     return [s for s in engine if s not in strat.ARMED_SETUPS]

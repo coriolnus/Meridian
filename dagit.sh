@@ -7,7 +7,8 @@
 #   [1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
 #   [1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
 #   [F9] dagit-kapsamı-dışı canlı artefaktlar (sprint@ birimi · polkit kuralı · SOUL.md ·
-#        tick-watchdog service+timer): içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
+#        tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya service+timer):
+#        içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
 #   [2] rsync (state/backups/.venv/.git HARİÇ)
 #   [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
 #   [4] bakım penceresi: durdur → versiyonlu state kopyası ([1b] KOPYALA dediyse) → başlat
@@ -262,6 +263,8 @@ fi
 #   * deploy/hermes/SOUL.md     → ~ubuntu/.hermes/SOUL.md  (v242 — hermes brifingi)
 #   * meridian-tick-watchdog.service + .timer → /etc/systemd/system/  (asılı-tick bekçisi)
 #   * litestream.yml → /etc/litestream.yml (kurulum litestream_kur.sh — 2026-08-23 eklendi, altıncı dosya)
+#   * meridian-aylik-bucket-kopya.service + .timer → /etc/systemd/system/  (E-kod [4] 2026-08-23,
+#     yedinci-sekizinci dosya: aylık bar-arşivi bucket kopyası; kurulumu birim başlığında)
 # Bu, OB-2'yi doğuran "kurulu ≠ çalışır" sınıfıdır: repo ilerler, canlı kopya yerinde sayar ve
 # hiçbir kapı bağırmazdı — denetim ölçtü: dagit'te bu dosyalara sıfır atıf vardı. [1c] yalnız
 # *.service YÖNERGELERİNİ kıyaslar; bu kapı BEŞ dosyanın TAM İÇERİĞİNİ kıyaslar (timer/polkit/
@@ -280,7 +283,9 @@ deploy/oracle-a1/50-meridian-sprint.rules|/etc/polkit-1/rules.d/50-meridian-spri
 deploy/hermes/SOUL.md|/home/ubuntu/.hermes/SOUL.md
 deploy/oracle-a1/meridian-tick-watchdog.service|/etc/systemd/system/meridian-tick-watchdog.service
 deploy/oracle-a1/meridian-tick-watchdog.timer|/etc/systemd/system/meridian-tick-watchdog.timer
-deploy/oracle-a1/litestream.yml|/etc/litestream.yml"
+deploy/oracle-a1/litestream.yml|/etc/litestream.yml
+deploy/oracle-a1/meridian-aylik-bucket-kopya.service|/etc/systemd/system/meridian-aylik-bucket-kopya.service
+deploy/oracle-a1/meridian-aylik-bucket-kopya.timer|/etc/systemd/system/meridian-aylik-bucket-kopya.timer"
 for _cift in $F9_LISTE; do
   _f9_repo="${_cift%%|*}"; _f9_canli="${_cift##*|}"; _f9_ad="$(basename "$_f9_repo")"
   if [[ ! -f "$REPO/$_f9_repo" ]]; then

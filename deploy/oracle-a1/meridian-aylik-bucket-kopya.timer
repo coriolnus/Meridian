@@ -1,0 +1,25 @@
+# meridian-aylik-bucket-kopya.timer — aylık bucket kopyasını ayda bir tetikler.
+#
+# SAAT SEÇİMİ: ayın 3'ü 04:00 UTC. ÜÇÜ, BİRİ DEĞİL — betik ÖNCEKİ ayı arşivler ve ayın ilk
+# gününde bir bar dosyası hâlâ geç yazılıyor olabilir (arşivci ACK'lenmemiş girişleri PEL'den
+# yeniden teslim alır); iki günlük pay, "eksik ayı tam sanmak" hatasını kapatır. 04:00 UTC =
+# 23:00/00:00 NY — piyasa kapalı, gece tar'ı (23:30 UTC) ve kapanış-sonrası işler bitmiş olur,
+# yani 178M+165M'lik okuma I/O'su hiçbir seans işine binmez.
+[Unit]
+Description=Monthly trigger for Meridian intraday bar archive bucket copy
+
+[Timer]
+OnCalendar=*-*-03 04:00:00 UTC
+# Persistent: VM ayın 3'ünde kapalıysa atış AÇILIŞTA telafi edilir. Aylık bir yedeğin sessizce
+# hiç koşmaması, geç koşmasından çok daha pahalıdır; betik zaten idempotenttir (kovada aynı
+# özetli nesne varsa "atlandı" beyanıyla döner).
+Persistent=true
+# Aynı dakikada başka işlerle çakışmasın; tar iki dizini okurken I/O'yu tek başına almasın.
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — BU DOSYADA YAPILACAK BİR ŞEY YOK: timer birimlerinin `[Service]` bölümü
+# olmaz, sertleştirme süreç yürütmeye aittir ve tetiklenen birimde (meridian-aylik-bucket-kopya.
+# service) yapıldı. Aynı gerekçe meridian-backup.timer'da da yazılıdır.

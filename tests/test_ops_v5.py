@@ -114,7 +114,7 @@ def test_learn_halt_blocks_ship_not_trading(seeded_sandbox):
     from meridian import reflect
     health.set_learn_halt(True)
     res = reflect.submit({"variable": "stop_loss_atr_mult", "new": 2.1, "source": "t"})
-    assert res["status"] == "learning_halted"                            # ship YOK
+    assert res["status"] == "halt_learning"                              # ship YOK (F8-A3: kanonik ad, 2026-08-23)
     assert health.halted() is False                                      # işlem durdurma AYRI bayrak
 
 

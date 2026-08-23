@@ -2576,6 +2576,20 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
             r["fill_vs_resmi_acilis_bps"] = _bps(af, op)
             r["fill_vs_limit_bps"] = _bps(af, r.get("limit"))
             r["fill_kaydedildi"] = dstr
+            # E-kod [5] (EDG-2026-052'nin doğurduğu; 13-A2/A3 ön-şartı): DOLUM-ZAMANI alanı.
+            # Kaynak Alpaca emir GÖVDESİNİN `filled_at`i — ŞEMA ÖLÇÜLDÜ (edg038 canli_ham.json +
+            # 2026-08-23 canlı okumalar): `transaction_time` emir gövdesinde YOK, yalnız
+            # /v2/account/activities'te yaşar ve bu yol o ucu çağırmaz. Görünürlük alanıdır,
+            # DAVRANIŞ DEĞİŞMEZ; okuyucusu EDG-052'nin haftalık tekrarı (YASA 6). Kısmi dolumda
+            # Alpaca `filled_at`i ancak TERMİNAL dolumda basar — o güne dek None + neden
+            # (UYDURMA YASAĞI: zaman ikame edilmez, `ts`/`fill_kaydedildi` zaten ayrı alanlar).
+            _fts = o.get("filled_at")
+            r["dolum_ts"] = str(_fts) if _fts else None
+            if r["dolum_ts"] is None:
+                r["dolum_ts_neden"] = ("emir gövdesinde filled_at boş — kısmi dolum sürüyor ya da "
+                                       "iptal-artığı; zaman uydurulmadı, terminal dolumda yazılır")
+            else:
+                r.pop("dolum_ts_neden", None)
             changed = True
             out["yazilan"] += 1
         if changed:
@@ -2961,7 +2975,7 @@ def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: di
         row = trades[i]
         if row.get("alpaca_fill_price") is not None:
             continue                               # zaten yamalı (ör. koruma_dolumu satırı) — düş
-        af, af_neden = None, None
+        af, af_neden, dts = None, None, None
         if info.get("kaynak") == "karar":
             oid = info.get("order_id")
             if oid:
@@ -2970,6 +2984,12 @@ def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: di
                 if af is None:
                     af_neden = (f"kapatma emri {str(oid)[:20]}… bu tur okunamadı/dolum fiyatı yok "
                                 f"(status={str((o or {}).get('status') or 'okunamadı')})")
+                else:
+                    # E-kod [5]: karar-kapatma DÜZ bir emirdir, dolum zamanı kendi gövdesinde.
+                    # `transaction_time` emir şemasında YOK (ölçüldü — yalnız activities'te);
+                    # bu yolun dürüst zaman alanı `filled_at`tir.
+                    _ts = (o or {}).get("filled_at")
+                    dts = str(_ts) if _ts else None
             else:
                 af_neden = ("kapatma emrinin kimliği yok — "
                             + str(info.get("order_id_neden") or "DELETE cevabı kimlik taşımadı"))
@@ -2979,10 +2999,20 @@ def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: di
             if af is None:
                 af_neden = ("parent emir pencerede yok" if o is None
                             else "bracket bacağında dolum fiyatı yok (bacak henüz dolmadı / iptal)")
+            else:
+                dts = alpaca_mod.exit_fill_ts(o)   # fiyatla AYNI bacak-seçim ölçütü (zaman ikizi)
         if af is not None:
             sim = float(row.get("exit") or 0.0)
             div = abs(af - sim) / sim if sim else 0.0
-            yamalar[pid] = {"alpaca_fill_price": round(af, 4), "mirror_divergence": round(div, 5)}
+            # E-kod [5]: `dolum_ts` görünürlük alanı — davranış değişmez, okuyucusu EDG-052'nin
+            # haftalık tekrarı. Zaman okunamadıysa None + neden (UYDURMA YASAĞI); fiyat yaması
+            # yine işlenir (zamansız gerçek fiyat, fiyatsız zamandan değerlidir).
+            yamalar[pid] = {"alpaca_fill_price": round(af, 4), "mirror_divergence": round(div, 5),
+                            "dolum_ts": dts}
+            if dts is None:
+                yamalar[pid]["dolum_ts_neden"] = ("dolum bulundu ama filled_at okunamadı — zaman "
+                                                  "uydurulmadı (kaynak: "
+                                                  + str(info.get("kaynak") or "?") + ")")
             out["exit_fill"]["yamalanan"] += 1
             obs.log("mirror_exit_fill_patched", plan_id=pid, ticker=info.get("ticker"),
                     kaynak=info.get("kaynak"), reason=info.get("reason"), tries=info["tries"],

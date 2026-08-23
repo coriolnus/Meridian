@@ -18,6 +18,16 @@ import pytest
 from meridian import api, skill_gorus as sg, skills, store
 
 
+# EDG-2026-019 KILL#1 (Rol-1 hükmü 2026-08-23): katman canlıda KAPALI (config.SKILL_GORUS_URETIM_ACIK
+# = False). Bu dosyanın çivileri MEKANİZMAYI ölçer (toplama/çözücü/p95 düzeneği) — kapanış hükmünün
+# kendi çivisi tests/test_e_partisi_v278.py'dedir. Mekanizma testleri bayrağı süreç-yerel AÇAR;
+# üretim varsayılanına dokunulmaz.
+@pytest.fixture(autouse=True)
+def _gorus_uretimi_test_icin_acik(monkeypatch):
+    from meridian import config as _cfg
+    monkeypatch.setattr(_cfg, "SKILL_GORUS_URETIM_ACIK", True)
+
+
 # =================================================================================================
 # FİKSTÜRLER — kayıt defteri: aktif / arşiv / korumalı / LLM-bağlamlı dördü de temsil edilir
 # =================================================================================================

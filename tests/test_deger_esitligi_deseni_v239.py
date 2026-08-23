@@ -93,7 +93,12 @@ def test_4b_tek_olculen_kaynak_kiyas_URETMEZ(sandbox_state, monkeypatch):
 
 # ============================== (5) SUNUM ANLATISI TARAMASI ==============================
 
-ARMED = ("breakout_vcp", "pullback", "exhaustion_hammer", "momentum_burst")
+# TEK-KAYNAK (E-kod [3], 2026-08-23): burada elle yazılmış (ve B1 sonrası BAYATLAMIŞ — pullback
+# içeren) bir dörtlü vardı; silahlı-kümenin ikinci sabit tanımı yasak, kanonik `strategy.ARMED_SETUPS`.
+# 5a-5c'nin iddiaları kanonik kümeyle de birebir geçerlidir (momentum_burst silahlı, episodic_pivot
+# değil); tuple değişirse buradaki kırmızı bir REGRESYON değil, tarama iddialarının yeniden
+# tartılması gereğinin sinyalidir.
+from meridian.strategy import ARMED_SETUPS as ARMED  # noqa: E402  (kanonik küme — kopya değil)
 
 TARIHI_BAYAT = ('tip:"breakout_vcp ve pullback <b>SİLAHLI</b>; momentum_burst ve episodik pivot '
                 '<b>UYUYAN</b> (kapı silahlanma kararını verene dek ölçülür). EP\'de kazanç raporu '

@@ -1229,12 +1229,17 @@ def submit(proposal: dict, goal: dict | None = None, windows: tuple | None = Non
     """Ship yetkisinin TEK KAPISI: öğrenme-durdurma bayrağını ve süreçler-arası yansıma kilidini
     kontrol edip asıl boru hattını (`_submit_locked`) çağırır.
 
-    LEARN_HALT aktifse hiç ilerlemez ("learning_halted"); kilit başkasındaysa bloklamadan
+    LEARN_HALT aktifse hiç ilerlemez ("halt_learning"); kilit başkasındaysa bloklamadan
     "locked" döner — iki eşzamanlı yansıma strategy.yaml/sürüm durumunu ezemez."""
     from . import health as _health, obs as _obs
     if _health.learn_halted():                 # Faz 3: öğrenme durduruldu — işlemler sürer,
         _obs.log("submit_blocked_learn_halt")  # ama YENİ versiyon ship edilemez (operatör bayrağı)
-        return {"status": "learning_halted", "detail": "state/LEARN_HALT aktif — ship engellendi"}
+        # F8-A3 (operatör kararı 2026-08-23): üretici KANONİK kol adını yazar — eski
+        # "learning_halted" dönem sonuna dek EŞANLAMLI-OKUNUR (durum_sozlugu.KOL_KANONIK
+        # listesinde; okuyucu `kol_adi()` sayaçlı çevirir). Değer değişikliği davranış
+        # değiştirmez: bu status'u Python tarafında karşılaştıran üretim okuyucusu yok
+        # (grep 2026-08-23 — yalnız pano f8KolAd, o da kanoniği aynen geçirir).
+        return {"status": "halt_learning", "detail": "state/LEARN_HALT aktif — ship engellendi"}
     with _ProcessLock() as pl:
         if not pl.held:
             return {"status": "locked", "detail": "başka bir süreçte yansıma sürüyor — bu öneri atlandı"}

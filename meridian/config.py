@@ -121,6 +121,17 @@ def limits() -> dict:
 # alanları goal.yaml'a yazmaya karar verirse GOAL_KEYS'e de eklenmelidir — aksi hâlde GU1
 # sürüklenme testi "goal.yaml'da tanınmayan anahtar" diye kırmızı yanar. Bu, unutulmasın diye
 # burada yazılıdır ve `docs/olcum_standartlari.md`de tekrarlanır.
+# ── SKILL-GÖRÜŞ KATMANI KAPALI — EDG-2026-019 KILL#1 UYGULAMASI (Rol-1 hükmü, 2026-08-23) ──
+# Kartın DONUK kill#1'i canlıda tetiklendi: state/skill_gorus_durum.json `kill_p95=KILL`,
+# p95_pay 6,57 > tavan 0,10 (2026-08-21'den beri) — görüş üretimi öğrenme kadansını +%557
+# uzatıyordu ve kural "katman KAPATILIR" der (GÖZLEM İCRAYI YAVAŞLATAMAZ yasası). Bayrak
+# VARSAYILAN-KAPALI: skill_gorus.topla/kadans YAZIMLARI durur (skill_gorusleri.jsonl +
+# skill_gorus_durum.json üreticileri birlikte susar); defterlere DOKUNULMAZ — son KILL kaydı
+# kanıt olarak yerinde kalır, okuma yüzeyleri (api._eksen2_gorus, rapor) açık kalır.
+# AÇILIŞ YALNIZ kartın RESMİLEŞMİŞ YENİ ÖLÇÜMÜYLE (kart-önce) — elle True yapmak yasak.
+# Çivi: tests/test_e_partisi_v278.py (bayrak kapalıyken yazım yolu ölü + defter dokunulmamış).
+SKILL_GORUS_URETIM_ACIK = False
+
 LIVE_EXPECTANCY_CAP_MULT = 0.5    # canlıdan BEKLENEN tavan = backtest beklentisi × bu katsayı
 LIVE_SUSPEND_RATIO = 0.4          # canlı/backtest bu oranın ALTINA düşerse süspansiyon değerlendirmesi
 _LIVE_EXPECTANCY_ALANLARI = (("live_expectancy_cap_mult", LIVE_EXPECTANCY_CAP_MULT),
@@ -304,7 +315,10 @@ def resolve_params(params: dict, by_regime: dict | None, regime: str) -> dict:
     block above) — are overlaid, so an override can retune a real knob but never invent one. With no
     overrides (the default) this returns an unchanged copy and behavior is byte-identical to the
     flat-param engine. Overrides live at strategy['params_by_regime'][regime], keeping params itself a
-    flat float map (so the reflect cache key and scoreboard stay simple)."""
+    flat float map (so the reflect cache key and scoreboard stay simple).
+
+    OKUYUCU ŞERHİ (E-kod [2], 2026-08-23): canlı harita BİLEREK BOŞ — chop, EDG-2026-048 NO-GO
+    politikasına bağlı; canlanma yalnız yeni kartla (damganın tamamı `default_strategy` içinde)."""
     eff = dict(params)
     if by_regime:
         for k, v in (by_regime.get(regime) or {}).items():
@@ -377,6 +391,12 @@ def default_strategy() -> dict:
         # Maps start EMPTY on purpose — identity-seeding them with copies of the global values would make
         # every later gate-approved GLOBAL change silently shadowed per-regime (regimes frozen at old
         # values). A regime map gains an entry ONLY when a var@regime hypothesis clears the OOS gate.
+        # ── DAMGA (operatör E-kod partisi [2], 2026-08-23): BİLEREK BOŞ ──────────────────────
+        # Bu haritanın bugünkü boşluğu bir eksik değil ÖLÇÜLMÜŞ POLİTİKAdır: chop kapalılığı
+        # `EDG-2026-048` ile sınandı ve NO-GO çıktı (Δ(taban60−taban45) nokta −18.266$, CI 0-içi;
+        # chop açılımı hem kendi kaybediyor hem chop-dışı +22,6R'lik işlemleri yerinden ediyordu).
+        # Haritanın CANLANMASI yalnız YENİ ölçüm kartıyla olur (kart-önce; 048'in kendi kuralı) —
+        # elle/varsayılan doldurma YASAK. ROADMAP:1476-bağlı kalemin kapanış dili Rol-1'de.
         "params_by_regime": {r: {} for r in VALID_REGIMES},
     }
 
