@@ -1080,6 +1080,44 @@ def _oturum_cerezi_yazilmis(basliklar) -> bool:
                for ad, deger in basliklar)
 
 
+# ---- session_refresh SEL KESİMİ (2026-08-23 canlı pano ihlal triyajı) --------------------------
+# ÖLÇÜLEN SEL: canlıda 127.0.0.1'den gelen çerezli yoklayıcı (repo-içi iz: deploy/cutover.sh +
+# deploy.sh'ın önerdiği `ssh -L 8080:127.0.0.1:8080` tüneli üzerinden açık pano sekmesi — tünelde
+# XFF yoktur, istemci 127.0.0.1 görünür; pano 15 sn'de bir birden çok ucu anketler) saatte ~420
+# `session_refresh` olayı bastırıyordu. Olay defteri gelen kutusunun ve TÜM makullük
+# dedektörlerinin okuduğu kaynaktır — sel, sinyali gömer (notify_suppressed'in pencere-başına-tek-
+# satır dersiyle aynı sınıf). KESİM ÖRNEKLEMEDİR, SANSÜR DEĞİL: aynı (ip, yol) çifti için en fazla
+# ~5 dk'da BİR olay yazılır; aradakiler sayaçta birikir ve bir SONRAKİ örneklem olayına
+# `atlanan_n` alanıyla girer — bilgi kaybı yok (toplam = satır sayısı + Σ atlanan_n), sel yok.
+REFRESH_ORNEKLEM_S = 300.0
+_REFRESH_SON: dict[tuple[str, str], list] = {}   # (ip, yol) → [son_kayit_monotonic, atlanan_n]
+_REFRESH_TAVAN = 4096                            # bellek tavanı: en eski kayıt düşer (aşağıda)
+
+
+def _session_refresh_ornekle(ip: str, yol: str, now: float | None = None) -> int | None:
+    """Bu tazeleme olayı LOGLANMALI MI? None → pencere içinde, sayaç birikti (yazma);
+    int → yaz, dönen değer bu örneklemin kapsadığı ATLANAN olay sayısıdır (0 dahil — ölçülmüş sıfır).
+
+    Saat `time.monotonic`tir (duvar saati geri alınırsa pencere şişmez). Sözlük (ip, yol) başına
+    TEK girdi tutar; `_REFRESH_TAVAN` aşılırsa en eski girdi düşer — düşen girdinin biriken sayacı
+    bir olay olarak DEĞİL, yeni penceresinin ilk örnekleminde 0'dan sayılır (tavan ancak binlerce
+    ayrık (ip, yol) çiftiyle aşılır; pano yoklayıcısı tek çifttir)."""
+    import time as _t
+    now = _t.monotonic() if now is None else now
+    k = (str(ip), str(yol))
+    rec = _REFRESH_SON.get(k)
+    if rec is None:
+        if len(_REFRESH_SON) >= _REFRESH_TAVAN:
+            _REFRESH_SON.pop(min(_REFRESH_SON, key=lambda x: _REFRESH_SON[x][0]), None)
+        _REFRESH_SON[k] = [now, 0]
+        return 0
+    if now - rec[0] >= REFRESH_ORNEKLEM_S:
+        atlanan, rec[0], rec[1] = rec[1], now, 0
+        return atlanan
+    rec[1] += 1
+    return None
+
+
 class KayanOturumMiddleware:
     """KAYAN OTURUM — yetkili istek geldikçe çerezi tazeler.
 
@@ -1163,8 +1201,15 @@ class KayanOturumMiddleware:
             # ZATEN tazelenmiş olur; önce yazsaydık bir kayıt arızası, düzeltmeye çalıştığımız
             # arızanın ta kendisini (oturum düşmesi) geri getirebilirdi.
             # PAROLA DA JETON DA GEÇMEZ — yalnız kim/nereye/ne kadar kaldı.
+            # SEL KESİMİ: aynı (ip, yol) çifti ~5 dk'da bir yazılır; aradakiler `atlanan_n`
+            # sayacında taşınır (gerekçe `_session_refresh_ornekle` üstündeki blokta). Tazelemenin
+            # KENDİSİ örneklenmez — çerez her istekte yenilenir; yalnız KAYDI seyreltilir.
             if yazilacak:
-                obs.log("session_refresh", ip=ip, kalan_s=kalan, yol=scope.get("path", ""))
+                _yol = scope.get("path", "")
+                _atlanan = _session_refresh_ornekle(ip, _yol)
+                if _atlanan is not None:
+                    obs.log("session_refresh", ip=ip, kalan_s=kalan, yol=_yol,
+                            atlanan_n=_atlanan, orneklem_s=int(REFRESH_ORNEKLEM_S))
 
         await self.app(scope, receive, _send)
 
@@ -2580,9 +2625,14 @@ async def api_set_secret(name: str, request: Request):
             # burada BİLİNİYOR. Damgayı atlamak, bilinen bir zamanı bilinmiyor göstermekti.
             local_agent = {"ok": False, "detail": f"senkron hatası ({type(e).__name__})",
                            "senkron_ts": memory.now_iso()}
+    # [6] LİTESTREAM ÇİFTİ: iki anahtar da mevcutsa env dosyası üretilir, değilse kaldırılır —
+    # değer asla loglanmaz; olayı `litestream_env_sync` kendisi basar (durum, değer değil).
+    litestream_env = (secrets_mod.litestream_env_sync()
+                      if name in secrets_mod.LITESTREAM_PAIR else None)
     _diag_onbellek_bosalt("secret_set")           # sağlayıcı/beceri durumu değişti (maskeli alanlar)
     return {"ok": True, "name": name, "status": secrets_mod.status().get(name),
-            "skills_enabled": rec["changed"], "local_agent": local_agent}
+            "skills_enabled": rec["changed"], "local_agent": local_agent,
+            "litestream_env": litestream_env}
 
 
 @app.delete("/api/secrets/{name}")
@@ -2608,9 +2658,14 @@ def api_delete_secret(name: str, request: Request):
         except Exception as e:
             local_agent = {"ok": False, "detail": f"senkron hatası ({type(e).__name__})",
                            "senkron_ts": memory.now_iso()}          # bkz. POST dalındaki gerekçe
+    # [6] LİTESTREAM ÇİFTİ: üyelerden biri silindiyse env dosyası KALDIRILIR — yarım kimlik
+    # dosyası bırakmak birimi eski/eksik kimlikle koşturmak olurdu (POST dalıyla aynı kanca).
+    litestream_env = (secrets_mod.litestream_env_sync()
+                      if name in secrets_mod.LITESTREAM_PAIR else None)
     _diag_onbellek_bosalt("secret_cleared")       # POST dalıyla aynı gerekçe, ters yön
     return {"ok": True, "name": name, "status": secrets_mod.status().get(name),
-            "skills_disabled": rec["changed"], "local_agent": local_agent}
+            "skills_disabled": rec["changed"], "local_agent": local_agent,
+            "litestream_env": litestream_env}
 
 
 @app.get("/api/secrets/test/{provider}")
@@ -4601,6 +4656,15 @@ def api_diagnostics(request: Request, taze: int = 0):
         # taze gibi göstermez. 0.0 = bu istekte hesaplandı.
         "integrity": _integrity_rep,
         "integrity_age_s": _integrity_age,
+        # DAĞITIM BEYANI — YASA-6 orphan kapaması (2026-08-23): `dagit.sh` [B] adımı canlıya
+        # `state/dagitim.json` yazıyor (deployed_sha + dagitildi_utc + dagitan_host +
+        # kirli_gec_kullanildi) ama hiçbir canlı yüzey onu OKUMUYORDU — üretilip tüketilmeyen
+        # kanıt. Okuyucu burasıdır; pano (app.js Gözetim) tek satırla basar. Dosya yoksa None
+        # DEĞİL, adlı boşluk: "hiç dağıtım olmadı" ile "beyan yazılamadı" ayrımını dagit.sh'ın
+        # kendi düşme mesajı taşır; buradan söylenebilecek dürüst cümle yalnız beyanın YOKLUĞUDUR.
+        "dagitim": (store.read_json("dagitim.json", None)
+                    or {"olculemedi": "state/dagitim.json yok — henüz beyanlı dağıtım yok "
+                                      "(dagit.sh [B] adımı ilk koşumda yazar)"}),
         "coverage": __import__("meridian.integrity_registry", fromlist=["coverage_report"]).coverage_report(),
         # evren sapması: elle bakımlı 250'lik listede endeksten düşmüş isim var mı
         "universe_drift": store.read_json("universe_drift.json", None),

@@ -296,28 +296,56 @@ def test_D3b_gerileme_YOKSA_af_verilmez(sandbox_state):
 # =================================================================================================
 # E — MUTABAKAT (recompute kimlikleri)
 # =================================================================================================
-def test_E1_reset_ONCESI_uc_kimlik_yesil(sandbox_state):
-    """Taban ölçümü: tohumlanmış dünya zaten tutarlıdır (run._reset_book_to kimliği yazıyor)."""
+def test_E1_reset_ONCESI_kaynak_kimligi_tohum_yukunu_GOSTERIR(sandbox_state):
+    """DAVRANIŞ DEĞİŞTİ (v274, kaynak-farkındalı kimlik) — TARİHÇESİYLE. Eski hüküm "tohumlanmış
+    dünya zaten tutarlıdır" idi: kaynak-körü kimlik İÇ tutarlılığı ölçüyordu ve `run.
+    _reset_book_to` onu yazıyordu. v274 kimliği KAYNAK tutarlılığını ölçer: DAMGALI tohum
+    K/Z'si kitapta beyansız duruyorsa (tam bu dünya — reset henüz koşmamış, boyut tabanı tohum
+    zararıyla kısık; 08-05'te ayna yarım boyut emri TAM bu hâlde gönderdi) iki para kimliği
+    KIRMIZI yanar ve operatörü ayrıştırma aracına getirir. Eğri kimliği yeşil kalır (eğri tüm
+    defterden türer). DAMGASIZ dünyada davranış ESKİSİYLE AYNI: `belirsiz` satır canlı-sınıftır,
+    Σ'ya girer, üç kimlik de yeşildir — damga basılmamış eski depo cezalandırılmaz."""
     _tohumlanmis_dunya()
+    for c in ("realized_pnl", "cash_identity"):
+        satir = _rc(c)
+        assert satir["ok"] is False, (c, satir["detail"])
+    assert _rc("equity_curve_tail")["ok"] is True
+    # damgasız aynı dünya: köken ölçülmemiş satır tohum SAYILMAZ → eski (iç-tutarlılık) hüküm
+    _tohumlanmis_dunya(kaynak=None)
     for c in ("realized_pnl", "cash_identity", "equity_curve_tail"):
         assert _rc(c)["ok"] is True, c
 
 
 def test_E2_reset_SONRASI_uc_kimlik_HALA_yesil(sandbox_state, monkeypatch):
-    """Reset üç kimliği birden bozar — çünkü kitap yeni tabanda, defter eski tabanda. Ofset BEYAN
-    edildiği için kimlik ölçmeye devam eder. Susturulsalardı bu satır bir şey kanıtlamazdı."""
+    """Reset sonrası üç kimlik yeşildir ve yeşillik SUSTURMA değildir — yükü taşıyan parçalar
+    tek tek söküldüğünde satırlar kırmızıya döner.
+
+    v274 yük dağılımı: iki para kimliğinde yükü KAYNAK SINIFLANDIRMASI + beyanın canlı payı
+    (`sermaye.canli_ofset`) taşır; eğri kimliğinde eskisi gibi TAM ofset (`sermaye.ofset`) —
+    eğri tüm defterden türediği için tohumu da taşır, kitabınsa tabanı taşınmıştır."""
     _tohumlanmis_dunya()
     sermaye.uygula()
     for c in ("realized_pnl", "cash_identity", "equity_curve_tail"):
         satir = _rc(c)
         assert satir["ok"] is True, (c, satir["detail"])
-        assert "sermaye reset ofseti" in (satir["a_yol"] + satir["b_yol"])
-        assert "beyanlı sermaye reset ofseti +3,000.00$" in satir["detail"]
-    # OFSET YÜK TAŞIYOR MU? Beyan okunamazsa ÜÇÜ DE kırmızı yanar — yani reset gerçekten üç kimliği
-    # birden bozuyor ve yeşilliği ofset sağlıyor (kimlikler susturulmuş DEĞİL).
+    assert "canlı-sınıf" in (_rc("realized_pnl")["a_yol"] + _rc("realized_pnl")["b_yol"])
+    egri = _rc("equity_curve_tail")
+    assert "sermaye reset ofseti" in (egri["a_yol"] + egri["b_yol"])
+    assert "beyanlı sermaye reset ofseti +3,000.00$" in egri["detail"]
+    # YÜK PROBU 1 — para kimliklerinde yükü kaynak damgası taşıyor: damgalar silinirse (satırlar
+    # `belirsiz` → Σ'ya girer) kitap 100.000 tabanında kaldığı için ayrışma açığa çıkar:
+    trades = store.read_jsonl(ledgerstamp.LEDGER)
+    for t in trades:
+        t.pop("kaynak", None)
+    store.write_jsonl(ledgerstamp.LEDGER, trades)
+    assert _rc("realized_pnl")["ok"] is False
+    assert _rc("cash_identity")["ok"] is False
+    # YÜK PROBU 2 — eğri kimliğinde beyan okunamazsa satır kırmızı (ofset yük taşıyor).
+    # `monkeypatch.undo()` BURADA YASAKTIR: fikstür örneği `sandbox_state` ile PAYLAŞILIR ve
+    # undo sandbox yönlendirmesini de söker — bu satırların CANLI state'e yazması demektir
+    # (2026-08-23'te bir kez tam böyle oldu; bekçi yakaladı). Patch en sona konur, teardown söker.
     monkeypatch.setattr(recompute, "_sermaye_ofseti", lambda pf: 0.0)
-    for c in ("realized_pnl", "cash_identity", "equity_curve_tail"):
-        assert _rc(c)["ok"] is False, c
+    assert _rc("equity_curve_tail")["ok"] is False
 
 
 def test_E3_kimlik_SUSTURULMADI_resetten_sonraki_kayip_YAKALANIR(sandbox_state):

@@ -30,6 +30,12 @@ import meridian.adapters.fmp as _fmp_mod
 # ikisinin de modül düzeyinde G/Ç yan etkisi yok.
 import meridian.adapters.alpaca as _alp_mod
 import meridian.obs as _obs_mod
+# v274 SEL-KESİMİ SAYACI (2026-08-23): api._REFRESH_SON — session_refresh örnekleme penceresi
+# (ip, yol) başına süreç-içi durum tutar. TestClient'ın IP'si her testte aynıdır ("testclient"),
+# yani tazeleme olayını ölçen bir test pencereyi doldurunca SONRAKİ testin refresh olayı sessizce
+# örneklenirdi — `auth._FAILS` vakasının birebir tekrarı. api zaten suite'in her yerinde yüklü;
+# marjinal ithal maliyeti yok.
+import meridian.api as _api_mod
 
 # (modül, öznitelik) — hepsi SÖZLÜK ve hepsi YERİNDE sıfırlanır (clear+update): yeni bir dict
 # atamak, o sözlüğe başka modüllerden tutulan referansları koparır ve sıfırlama hiçbir şeye
@@ -72,6 +78,8 @@ _MODUL_DURUMLARI = (
     # `monkeypatch.setattr(obs, "_SUPPRESS_LOGGED", {})` ile kendi başına çözüyor — yani sızıntı
     # zaten BİLİNİYOR, yalnız tek yerden kapatılmamıştı.
     (_obs_mod, "_SUPPRESS_LOGGED"),
+    # api._REFRESH_SON — session_refresh sel-kesimi penceresi (gerekçe ithal bloğunda, v274).
+    (_api_mod, "_REFRESH_SON"),
 )
 _MODUL_DURUMU0 = {f"{m.__name__}.{a}": dict(getattr(m, a)) for m, a in _MODUL_DURUMLARI}
 

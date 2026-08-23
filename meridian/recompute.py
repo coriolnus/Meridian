@@ -297,28 +297,73 @@ def report(deep: bool = False) -> dict:
     _ofs = _sermaye_ofseti(pf)
     _ofs_not = _ofset_notu(_ofs)
 
-    # 1) GERÇEKLEŞEN K/Z — broker'ın koşan muhasebesi ile işlem defterinin toplamı
+    # KAYNAK-FARKINDALI DİLİM + OFSETİN CANLI PAYI (2026-08-23 canlı pano ihlal triyajı).
+    # ESKİ FORMÜL (TARİHÇE — kaynak-körü): B = Σ TÜM trades.pnl_dollars + ofsetin TAMAMI. Bu
+    # kimlik yalnız "defterdeki her tohum satırı beyanlı bir ofsetle örtülü" olduğu sürece tutar;
+    # gerçek muhasebe kaynak-etiketlidir ve `replay_seed` satırı kitaba HİÇ girmez (`sermaye
+    # --durum` kanıtlı) — yani bir re-seed'in EKLEDİĞİ tohum satırları Σ'yı büyütür, realized'ı
+    # kıpırdatmaz ve eski formül SAHTE ayrışma alarmlar (2026-08-22/23 vakası). Yeni kıyas:
+    # A = portfolio.realized_pnl ↔ B = Σ pnl_dollars WHERE kaynak ∈ canlı-sınıf (live_paper +
+    # `belirsiz`; damgasız köken tohum SAYILMAZ — pano yolunun aynı kararı) + ofsetlerin yalnız
+    # kendi çağlarının CANLI satırlarına düşen payı (`sermaye.canli_ofset`, kayıttan ölçülür).
+    from . import ledgerstamp as _lsk
+    _canli = [t for t in trades if _lsk.kaynak_of(t) != _lsk.REPLAY_SEED]
+    _tohum_haric = len(trades) - len(_canli)
+    try:
+        from .sermaye import canli_ofset as _co_fn
+        _co = _co_fn(pf)
+    except Exception:  # sessiz-yutma: SESSİZ DEĞİL — pay okunamazsa aşağıdaki satırlar "ölçülemedi" beyanına düşer; payı 0 uydurup kimliği boyamak yasağın kendisi olurdu
+        _co = {"deger": None, "neden": "sermaye.canli_ofset okunamadı", "n_reset": None}
+    _co_not = ("" if not _co.get("deger") else
+               f" [beyanlı ofsetin canlı payı {_co['deger']:+,.2f}$ eklendi]")
+
+    def _tohum_notu(haric: int) -> str:
+        """Kimlik satırlarının dışlama beyanı — dışlama KOŞULSUZDUR (deep dahil), o yüzden
+        `_seed_notu`nun "--deep görür" cümlesi burada yanlış olurdu; sessiz filtre de yasak."""
+        return "" if not haric else f"  · tohum (replay_seed) dilimi hariç: {haric} satır"
+
+    # 1) GERÇEKLEŞEN K/Z — broker'ın koşan muhasebesi ile işlem defterinin CANLI-SINIF toplamı
     #    A: broker her kapanışta portfolio.realized_pnl'i artırır (durum makinesi)
-    #    B: trades.jsonl satırlarındaki pnl_dollars toplamı (defter) + beyanlı reset ofseti
-    #    Ayrışma = kaybolmuş ya da iki kez sayılmış işlem. Hiçbir istisna fırlatmaz.
+    #    B: canlı-sınıf trades.pnl_dollars toplamı + ofsetin canlı payı (kaynak-farkındalı; üstte)
+    #    Ayrışma = kaybolmuş ya da iki kez sayılmış CANLI işlem. Hiçbir istisna fırlatmaz.
     if trades:
         a = _f(pf.get("realized_pnl"))
-        b = sum(_f(t.get("pnl_dollars")) for t in trades) + _ofs
-        rows.append(_row("realized_pnl", abs(a - b) <= MONEY_TOL, round(a, 2), round(b, 2),
-                         f"broker muhasebesi {a:,.2f}$ · defter toplamı {b:,.2f}${_ofs_not}"
-                         + ("" if abs(a - b) <= MONEY_TOL
-                            else f" — {abs(a-b):,.2f}$ AYRIŞMA: işlem kaybolmuş ya da çift sayılmış"),
-                         "portfolio.realized_pnl", "Σ trades.pnl_dollars + sermaye reset ofseti"))
+        if _co["deger"] is None:
+            rows.append(_row("realized_pnl", True, round(a, 2), None,
+                             f"kaynak-farkındalı kıyas YAPILAMADI: {_co['neden']} — bu satır bu "
+                             f"turda ölçülemedi (uydurma yasağı; kaynak-körü eski formüle dönmek "
+                             f"bilinen yanlış-alarm sınıfını geri getirirdi)" + _tohum_notu(_tohum_haric),
+                             "portfolio.realized_pnl",
+                             "Σ canlı-sınıf pnl_dollars + ofsetin canlı payı (ölçülemedi)"))
+        else:
+            b = sum(_f(t.get("pnl_dollars")) for t in _canli) + _co["deger"]
+            rows.append(_row("realized_pnl", abs(a - b) <= MONEY_TOL, round(a, 2), round(b, 2),
+                             f"broker muhasebesi {a:,.2f}$ · canlı-sınıf defter toplamı {b:,.2f}${_co_not}"
+                             + _tohum_notu(_tohum_haric)
+                             + ("" if abs(a - b) <= MONEY_TOL
+                                else f" — {abs(a-b):,.2f}$ AYRIŞMA: canlı işlem kaybolmuş ya da çift sayılmış"),
+                             "portfolio.realized_pnl",
+                             "Σ canlı-sınıf trades.pnl_dollars + ofsetin canlı payı"))
 
     # 2) NAKİT — pozisyon yokken nakit, başlangıç sermayesi + gerçekleşen K/Z olmak ZORUNDA
-    #    A: broker'ın nakit hesabı   B: sermaye kimliği (başlangıç + gerçekleşen + beyanlı ofset)
+    #    A: broker'ın nakit hesabı   B: sermaye kimliği (başlangıç + CANLI-SINIF K/Z + canlı pay)
+    #    (kaynak-farkındalı: nakit de realized gibi tohum satırından etkilenmez — aynı gerekçe)
     if trades and not (pf.get("positions") or {}):
         a = _f(pf.get("cash"))
-        b = _start_equity() + sum(_f(t.get("pnl_dollars")) for t in trades) + _ofs
-        rows.append(_row("cash_identity", abs(a - b) <= MONEY_TOL, round(a, 2), round(b, 2),
-                         f"nakit {a:,.2f}$ · kimlik {b:,.2f}$ (açık pozisyon yok){_ofs_not}"
-                         + ("" if abs(a - b) <= MONEY_TOL else " — sermaye kimliği BOZUK"),
-                         "portfolio.cash", "başlangıç + Σ pnl_dollars + sermaye reset ofseti"))
+        if _co["deger"] is None:
+            rows.append(_row("cash_identity", True, round(a, 2), None,
+                             f"kaynak-farkındalı kıyas YAPILAMADI: {_co['neden']} — bu satır bu "
+                             f"turda ölçülemedi (uydurma yasağı)" + _tohum_notu(_tohum_haric),
+                             "portfolio.cash",
+                             "başlangıç + Σ canlı-sınıf pnl + ofsetin canlı payı (ölçülemedi)"))
+        else:
+            b = _start_equity() + sum(_f(t.get("pnl_dollars")) for t in _canli) + _co["deger"]
+            rows.append(_row("cash_identity", abs(a - b) <= MONEY_TOL, round(a, 2), round(b, 2),
+                             f"nakit {a:,.2f}$ · kimlik {b:,.2f}$ (açık pozisyon yok){_co_not}"
+                             + _tohum_notu(_tohum_haric)
+                             + ("" if abs(a - b) <= MONEY_TOL else " — sermaye kimliği BOZUK"),
+                             "portfolio.cash",
+                             "başlangıç + Σ canlı-sınıf pnl_dollars + ofsetin canlı payı"))
 
     # 3) SERMAYE EĞRİSİ ↔ KİTAP — eğrinin son noktası kitabın söylediği sermaye mi?
     #    A: equity_curve.json son nokta + beyanlı ofset   B: kitap nakdi
@@ -336,38 +381,60 @@ def report(deep: bool = False) -> dict:
                              "equity_curve.json[-1] + sermaye reset ofseti", "portfolio.cash"))
 
     # 3b) TABAN KAYMASI — kitabın ZIMNİ tabanı, BEYAN EDİLMİŞ tabanla aynı mı?
-    #    A: realized_pnl − Σ trades.pnl_dollars  (kitabın zımni tabanı — "defterin dışından gelen $")
-    #    B: sermaye.ofset()                      (beyan edilmiş taban — operatörün YAZILI kaydı)
+    #    A: sermaye.sermaye_taban()  = realized_pnl − Σ CANLI-SINIF trades.pnl_dollars
+    #                                  (kitabın zımni tabanı — "canlı defterin dışından gelen $";
+    #                                  kanonik sent-tam türetim, kaynak-farkındalı)
+    #    B: sermaye.canli_ofset()    (beyanlı tabanın CANLI payı — operatörün YAZILI kaydından)
+    #
+    #    ESKİ FORMÜL (TARİHÇE — kaynak-körü, 2026-08-23'e kadar): A = realized − Σ TÜM trades,
+    #    B = ofsetin tamamı. Bir re-seed'in eklediği tohum satırları A'yı düşürüp B'yi yerinde
+    #    bıraktığı için satır SAHTE "beyansız taban" alarmı veriyordu — kimliklerle aynı vaka.
     #
     #    NE EKLER: yukarıdaki üç kimlik tabanı hep bir DÜZELTME TERİMİ olarak taşıyordu; hiçbiri onu
     #    ADIYLA YAYIMLAMIYORDU. "Kitabın tabanı bugün kaç dolar ve bunun ne kadarı beyanlı?"
     #    sorusunun makine-okunur bir cevabı yoktu — 2026-08-04 soruşturmasının ilk yarısı tam olarak
     #    bu sayıyı elle yeniden kurmakla geçti.
     #
-    #    NE EKLEMEZ — VE BU BEYAN EDİLİYOR (önerinin ölçülen kusuru): bu satır 2026-08-04'ün
-    #    TERS ONARIMINI YAKALAYAMAZ ve yakalayamadığı için susturulmuyor, adlandırılıyor. O gün
-    #    beyan ZATEN silinmişti (ofset 0) ve onarım kitabı defterin eski tabanına çekerken
-    #    DENKLEMİN İKİ TARAFINI birlikte taşıdı: A = 0, B = 0 → satır YEŞİL. Bu bir uygulama hatası
-    #    değil YAPISAL bir sınırdır — tek bir ANIN kimliği, iki tarafı birlikte kaydıran bir yazımı
-    #    tanım gereği göremez (`tests/test_bayat_sermaye_koku_v213.py::test_ters_onarilmis_kitap_
-    #    uc_kimligi_de_YESIL_birakir` aynı olguyu üç kimlik için çiviliyor).
-    #    O VAKAYI YAKALAYAN SATIR BAŞKA BİR YERDE VE VAR: `watchdog.monotonicity_report`ın
-    #    `sermaye_taban` sayacı AYNI büyüklüğü ZAMAN İÇİNDE izler; zımni taban normal işletimde
-    #    SABİTTİR (kapanan her işlem iki tarafı eşit artırır) ve yalnız bir beyanla YÜKSELİR, yani
-    #    düşmesi tanım gereği beyansız bir taban kaymasıdır. 08-04'te 5.542,09 → 0,0 düşerdi.
-    #    Bu satır o sayacın YAYIMLANMIŞ hâlidir: dedektör orada, okunabilirlik burada.
+    #    ESKİ YAPISAL SINIR KAPANDI (2026-08-23) — TARİHÇESİYLE: kaynak-körü hâliyle bu satır
+    #    2026-08-04'ün TERS ONARIMINI yakalayamazdı — onarım kitabı defterin eski tabanına
+    #    çekerken denklemin İKİ TARAFINI birlikte taşıyordu (A = 0, B = 0 → YEŞİL) ve bu bir
+    #    uygulama hatası değil, "tek anın İÇ tutarlılık kimliği" olmasının sonucuydu. Kaynak-
+    #    farkındalı kimlik İÇ tutarlılığı değil KAYNAK tutarlılığını ölçer: damgalı tohum K/Z'si
+    #    kitaba tanım gereği GİREMEZ, girdiyse (ters onarım tam budur) realized ile Σ canlı-sınıf
+    #    ayrışır ve realized_pnl/cash_identity satırları KIRMIZI yanar — v213'ün güncellenmiş
+    #    çivisi (`test_ters_onarilmis_kitap_kaynak_farkindali_kimlikte_YAKALANIR`).
+    #    ZAMAN-İÇİ İZLEYİCİ YİNE AYRI VE YERİNDE: `watchdog.monotonicity_report`ın `sermaye_taban`
+    #    sayacı aynı büyüklüğü ZAMAN İÇİNDE izler (ileri-only; düşmesi beyansız kayma) — bu satır
+    #    o sayacın tek-an YAYIMIDIR: dedektör orada, okunabilirlik burada.
     if trades:
-        a = round(_f(pf.get("realized_pnl")) - sum(_f(t.get("pnl_dollars")) for t in trades), 2)
-        b = round(_ofs, 2)
-        rows.append(_row("taban_kaymasi", abs(a - b) <= MONEY_TOL, a, b,
-                         f"kitabın zımni tabanı {a:,.2f}$ · beyanlı taban {b:,.2f}$"
-                         + ("" if abs(a - b) <= MONEY_TOL
-                            else f" — {abs(a-b):,.2f}$ BEYANSIZ taban: kitabın defterden sapan "
-                                 f"kısmını açıklayan bir kayıt YOK")
-                         + "  · bu satır TEK ANIN kimliğidir; tabanın ZAMAN İÇİNDE kaymasını "
-                           "`watchdog.monotonicity_report.sermaye_taban` izler",
-                         "portfolio.realized_pnl − Σ trades.pnl_dollars",
-                         "sermaye.ofset() (portfolio.sermaye_resetleri)"))
+        # A KANONİK TÜRETİMDEN OKUNUR (`sermaye.sermaye_taban`, kaynak-farkındalı + sent-tam):
+        # burada Σ'yı yeniden yazmak "aynı yasanın iki uygulaması" olurdu — watchdog sayacıyla
+        # bit-bit aynı sayı ancak tek fonksiyonla garanti edilir.
+        try:
+            from .sermaye import sermaye_taban as _staban_fn
+            a = round(_staban_fn(pf, trades), 2)
+        except Exception:  # sessiz-yutma: SESSİZ DEĞİL — taban türetilemezse satır "ölçülemedi" beyanına düşer (aşağıda), sahte bir 0 uydurulmaz
+            a = None
+        if a is None or _co["deger"] is None:
+            rows.append(_row("taban_kaymasi", True, a, None,
+                             "kaynak-farkındalı kıyas YAPILAMADI: "
+                             + ("zımni taban türetilemedi (sermaye_taban istisnası)" if a is None
+                                else str(_co["neden"]))
+                             + " — bu satır bu turda ölçülemedi (uydurma yasağı)",
+                             "sermaye.sermaye_taban (realized − Σ canlı-sınıf pnl)",
+                             "sermaye.canli_ofset (ölçülemedi)"))
+        else:
+            b = round(_co["deger"], 2)
+            rows.append(_row("taban_kaymasi", abs(a - b) <= MONEY_TOL, a, b,
+                             f"kitabın zımni tabanı {a:,.2f}$ · beyanlı tabanın canlı payı {b:,.2f}$"
+                             + _tohum_notu(_tohum_haric)
+                             + ("" if abs(a - b) <= MONEY_TOL
+                                else f" — {abs(a-b):,.2f}$ BEYANSIZ taban: kitabın canlı defterden "
+                                     f"sapan kısmını açıklayan bir kayıt YOK")
+                             + "  · bu satır TEK ANIN kimliğidir; tabanın ZAMAN İÇİNDE kaymasını "
+                               "`watchdog.monotonicity_report.sermaye_taban` izler",
+                             "sermaye.sermaye_taban (realized − Σ canlı-sınıf trades.pnl_dollars)",
+                             "sermaye.canli_ofset (portfolio.sermaye_resetleri, canlı pay)"))
 
     # 4) KARNE ↔ DEFTER — karnedeki işlem sayısı defterin uzunluğuna eşit mi?
     #    Karne, terfi/geri-alma kararlarının dayanağı: yanlış n, yanlış skor demektir.

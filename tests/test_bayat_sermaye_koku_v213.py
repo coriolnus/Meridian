@@ -162,14 +162,19 @@ def test_ayna_bacagi_kitap_tabani_yerindeyken_sapmazdi():
 
 
 # =================================================================================================
-# K3 — DEDEKTÖR BOŞLUĞU: "ters onarılmış" kitap üç kimliği de YEŞİL bırakır
+# K3 — ESKİ DEDEKTÖR BOŞLUĞU (2026-08-23'te KAPANDI): "ters onarılmış" kitap artık YAKALANIR
 # =================================================================================================
-def test_ters_onarilmis_kitap_uc_kimligi_de_YESIL_birakir(sandbox_state):
-    """Kitap defterin eski tabanına çekilir ve beyan defteri BOŞSA `recompute` hiçbir şey
-    söylemez — çünkü kimlikler İÇ TUTARLILIĞI ölçer, TABANI değil.
+def test_ters_onarilmis_kitap_kaynak_farkindali_kimlikte_YAKALANIR(sandbox_state):
+    """TARİHÇE + YENİ HÜKÜM. Kaynak-körü kimlik (2026-08-23'e kadar) bu vakada SESSİZDİ: kitap
+    defterin eski tabanına çekilip beyan defteri boşken A ile B birlikte taşınıyor, üç satır da
+    YEŞİL kalıyordu (canlı pencere 2026-08-04T21:47 → 08-05T22:31; ayna o pencerede yarım
+    boyutla emir gönderdi). Bu test o sessizliği çiviliyordu.
 
-    Canlı karşılığı: 2026-08-04T21:47:54Z → 2026-08-05T22:31:56Z penceresi. Üç MAKULLÜK satırı
-    yeşildi, `broker.equity()` ise 94.457,91$ idi ve ayna o pencerede emir gönderdi."""
+    KAYNAK-FARKINDALI kimlik (v274) İÇ tutarlılığı değil KAYNAK tutarlılığını ölçer: DAMGALI
+    tohum K/Z'si kitaba tanım gereği GİREMEZ. Ters onarım tam olarak "realized'a tohum K/Z'sini
+    geri yazmak" olduğu için realized ile Σ canlı-sınıf ayrışır ve iki para kimliği KIRMIZI
+    yanar — 08-04 vakası artık beyana muhtaç olmadan görünür. `equity_curve_tail` yeşil kalır
+    (eğri tüm defterden türer; o kimlik gerçekten iç tutarlılıktır ve bu kitapla tutar)."""
     _tohum_defteri()
     store.write_json("portfolio.json", {
         "cash": DEFTER_TABANI, "realized_pnl": TOHUM_PNL, "last_id": 3, "positions": {},
@@ -180,24 +185,30 @@ def test_ters_onarilmis_kitap_uc_kimligi_de_YESIL_birakir(sandbox_state):
                                                       ["2023-02-03", DEFTER_TABANI]]})
 
     rows = {r["check"]: r for r in recompute.report()["rows"]}
-    for ad in ("realized_pnl", "cash_identity", "equity_curve_tail"):
-        assert rows[ad]["ok"] is True, f"{ad} kırık çıktı — vakanın sessizliği yeniden üretilemedi"
+    for ad in ("realized_pnl", "cash_identity"):
+        assert rows[ad]["ok"] is False,             f"{ad} YEŞİL — kaynak-farkındalı kimlik ters onarımı kaçırdı (K3 boşluğu geri açıldı)"
+    # ayrışmanın büyüklüğü kitaba geri yazılmış tohum K/Z'sinin kendisidir
+    assert abs(rows["realized_pnl"]["a"] - rows["realized_pnl"]["b"]) == pytest.approx(
+        abs(TOHUM_PNL), abs=0.01)
+    assert rows["equity_curve_tail"]["ok"] is True
 
-    # …ve TAM O ANDA boyut tabanı 5.542,09$ aşağıdadır. Kimlikler bunu görmez.
+    # …ve dedektörün koruduğu şey tam bu: boyut tabanı 5.542,09$ aşağıda.
     pf = store.read_json("portfolio.json", {})
     b = PaperBroker(START_EQUITY, slippage_bps=5, commission_per_share=0.0)
     b.cash, b.realized_pnl = pf["cash"], pf["realized_pnl"]
     assert b.equity() == pytest.approx(DEFTER_TABANI, abs=1e-6)
     assert derisk_mult(b.equity(), pf["peak_equity"], RAMPA_2026_08) == CANLI_CARPAN
-    assert sermaye.ofset(pf) == 0.0        # beyan yok → ofset 0 → kimlikler "tutuyor" der
+    assert sermaye.ofset(pf) == 0.0        # beyan hâlâ yok — yakalayan artık beyan değil, kaynak
 
 
 def test_beyan_yerindeyken_ayni_kitap_kimligi_KIRAR(sandbox_state):
-    """AYNI kitap + beyan defteri DOLU → `realized_pnl` kimliği KIRILIR.
+    """AYNI kitap + beyan defteri DOLU → `realized_pnl` kimliği yine KIRILIR.
 
-    Yani beyan yalnız bir muhasebe notu değil, tek DEDEKTÖR koludur: silindiği anda ters onarım
-    görünmez hâle gelir. Bu, 2026-08-04 vakasının neden 5-6 Ağustos'ta emir boyutuna dönüştüğünü
-    tek satırda açıklar."""
+    Kaynak-körü çağda beyan TEK dedektör koluydu (silinince ters onarım görünmezdi — üstteki
+    test); v274'te kaynak kimliği beyansız hâli de yakalar. Beyan yerindeyken ayrışma İKİ KAT
+    okunur: realized tohum tabanına ÇEKİLMİŞ (−5.542,09) VE beyan hâlâ "taban taşındı" diyor
+    (canlı payı +5.542,09; asgari kayıtta damgalı-tohum etkisi alanı yok → pay tam ofsettir) —
+    iki anomali üst üste."""
     _tohum_defteri()
     store.write_json("portfolio.json", {
         "cash": DEFTER_TABANI, "realized_pnl": TOHUM_PNL, "last_id": 3, "positions": {},
@@ -208,6 +219,7 @@ def test_beyan_yerindeyken_ayni_kitap_kimligi_KIRAR(sandbox_state):
     rows = {r["check"]: r for r in recompute.report()["rows"]}
     assert rows["realized_pnl"]["ok"] is False
     assert rows["cash_identity"]["ok"] is False
-    # Ayrışmanın BÜYÜKLÜĞÜ canlı alarm metnindeki sayının aynısı: "5.542,09$ AYRIŞMA".
+    # Büyüklük 2×|tohum|: kaynak-körü çağın "5.542,09$ AYRIŞMA" metni tek anomaliyi (beyan ↔
+    # kitap) ölçüyordu; kaynak-farkındalı kıyas ters onarımı VE ayakta duran beyanı birden görür.
     assert abs(rows["realized_pnl"]["a"] - rows["realized_pnl"]["b"]) == pytest.approx(
-        abs(TOHUM_PNL), abs=0.01)
+        2 * abs(TOHUM_PNL), abs=0.01)

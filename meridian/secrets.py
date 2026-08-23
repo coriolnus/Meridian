@@ -67,7 +67,51 @@ ALLOWED: frozenset[str] = frozenset({
     # devre dışı ve zincir FMP→Cboe→Nasdaq ile aynen sürer (adapters/massive.py). Anahtar girilse
     # bile barları YAZMAYA ancak `--dogrula` ölçümü ayarlama ölçeği uyumunu kanıtlarsa başlar.
     "MASSIVE_API_KEY",
+    # LİTESTREAM S3 KİMLİĞİ (2026-08-23): canlıdaki litestream birimi `state/litestream.env`i
+    # drop-in ile ZATEN okuyordu (deploy/oracle-a1/meridian-litestream.service.d/10-s3-env.conf)
+    # ama dosyayı üreten yol yoktu — sır zincirinin pano ucu bu iki addır. İKİSİ DE mevcutken
+    # `litestream_env_sync` env dosyasını 0600 doğumla üretir; biri silinirse dosya kalkar
+    # (yarım kimlik sessiz arıza olurdu). İcraya karşı ETKİSİZ: yalnız DB yedeğinin kimliği.
+    "LITESTREAM_ACCESS_KEY_ID",
+    "LITESTREAM_SECRET_ACCESS_KEY",
 })
+
+# ---- litestream env dosyası (birimin okuduğu tek yüzey) ----------------------------------------
+LITESTREAM_ENV = "litestream.env"
+LITESTREAM_PAIR = ("LITESTREAM_ACCESS_KEY_ID", "LITESTREAM_SECRET_ACCESS_KEY")
+
+
+def litestream_env_sync() -> dict:
+    """İki litestream anahtarı da mevcutsa `state/litestream.env`i üretir; biri eksikse kaldırır.
+
+    Dosya 0600 İZNİYLE DOĞAR (sprint v270 deseni — `sprint._systemd_baslat`: write_text+chmod
+    çifti kısa bir herkes-okur penceresi bırakır, `os.open(..., 0o600)` bırakmaz). İçerik systemd
+    `EnvironmentFile` sözdizimidir; DEĞER hiçbir logda/olayda geçmez — dönen sözlük ve obs olayı
+    yalnız DURUM taşır. Çağıran: api `/api/secrets/{name}` set/delete yolları (çift üyesi için)."""
+    path = config.STATE / LITESTREAM_ENV
+    kid, sec = get(LITESTREAM_PAIR[0]), get(LITESTREAM_PAIR[1])
+    if kid and sec:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(path, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as f:
+            f.write(f"LITESTREAM_ACCESS_KEY_ID={kid}\nLITESTREAM_SECRET_ACCESS_KEY={sec}\n")
+        os.chmod(path, 0o600)             # önceden var olan dosyanın izni de 0600'e çekilir
+        durum = "yazildi"
+    elif path.exists():
+        os.unlink(path)                   # yarım kimlik dosyası BIRAKILMAZ — birim eski/eksik kimlikle koşmasın
+        durum = "kaldirildi"
+    else:
+        durum = "yok"
+    try:
+        from . import obs
+        obs.log("litestream_env_sync", durum=durum,
+                detail="state/litestream.env " + ("üretildi (0600; iki anahtar da mevcut)"
+                       if durum == "yazildi" else
+                       ("kaldırıldı (çiftin bir üyesi eksik)" if durum == "kaldirildi"
+                        else "yok ve üretilmedi (çift eksik)")))
+    except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi sır yazımını düşüremez
+        pass
+    return {"durum": durum, "path": str(path)}
 
 def _path():
     """Resolved at call time so a relocated state dir (tests, MERIDIAN_ROOT) is always honored."""

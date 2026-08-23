@@ -6611,6 +6611,22 @@ async function opParcalar() {
            sSelale, sTrend, sGolgeVaryant, sCark, sIntra, s4, s5, s6, sSag, sOgr };
 }
 
+// [3] DAĞITIM BEYANI SATIRI (YASA-6 kapaması, 2026-08-23): dagit.sh [B] canlıya
+// state/dagitim.json yazar; okuyucusu /api/diagnostics `dagitim` bloğu + bu satırdır. Beyan
+// yoksa satır boş dönmez — "ölçülemedi" adıyla basılır (yokluk da bir bilgidir: operatör
+// "canlıda hangi sha koşuyor?" sorusuna cevapsız kalmamalı).
+function dagitimSatiri(dg) {
+  const B = `<h2 class="t">Canlıdaki dağıtım <span class="tx3" style="font-weight:400">(dagit.sh beyanı)</span></h2>`;
+  if (!dg || typeof dg !== "object" || dg.olculemedi) {
+    return `<div class="card rise">${B}<p class="hint">ölçülemedi: ${esc((dg || {}).olculemedi
+      || "teşhis ucu `dagitim` bloğunu vermedi (eski API?)")}</p></div>`;
+  }
+  const sha = String(dg.deployed_sha || "?").slice(0, 9);
+  return `<div class="card rise">${B}
+    <div class="srow"><span>Canlıdaki dağıtım</span><b><code>${esc(sha)}</code> · ${esc(dg.dagitildi_utc || "?")}${
+      dg.kirli_gec_kullanildi ? ' · <span class="warn">kirli-geç ile dağıtıldı (çalışma ağacı temiz değildi)</span>' : ""}</b></div></div>`;
+}
+
 // ---- GÖZETİM & ALARMLAR (eski `operasyon` adı, yeni ve DAR kapsam) ---------------------------
 // ADR: "alarm gelen kutusu (runbook bağlı), bekçi ayrıntıları, alarm-bütçesi detayı, olay
 // günlüğü." Gelen kutusu ve olay akışı S2R-2'de Portföy'ün (eski Bugün) içinden BURAYA taşındı:
@@ -6627,6 +6643,7 @@ RENDER.operasyon = async () => {
     <div class="card rise"><h2 class="t">Alarm gelen kutusu</h2>
       <div id="bp-alerts"><div class="empty">yükleniyor…</div></div></div>
     ${firsatAlarmTaksonomi(((_DIAG || {}).watchdog || {}).alarm_gunluk)}
+    ${dagitimSatiri((_DIAG || {}).dagitim)}
     ${bekciDurumlari((_DIAG || {}).bekci_durumlari)}
     ${f8SozlukSatiri((_DIAG || {}).durum_sozlugu)}
     ${p.sOgr}
@@ -8276,7 +8293,7 @@ async function intraParcalar() {
   const s1 = `<div class="card rise"><h2 class="t">Intraday gözlem <span class="tx3" style="font-weight:400">(kapanmış-bar tüketicisi)</span> ${armChip}</h2>
     <div class="srow"><span>Mod</span><b class="${armed ? "neg" : "pos"}">${armed ? "SİLAHLI — otonom intraday emir kapısı AÇIK" : "gözlem-modu · yalnız ölçüm, emir YOK"}</b></div>
     <div class="srow"><span>İzlenen sembol / işlenen olay</span><b>${iq.watched ?? 0} sembol · ${iq.events_handled ?? 0} olay</b></div>
-    <div class="srow"><span>Yazılan ölçüm / tetik-geçişi</span><b>${iq.decisions_written ?? 0} ölçüm · ${dec.fired ?? 0} geçiş · ${iq.shadow_written ?? 0} gölge kararı</b></div>
+    <div class="srow"><span>Yazılan ölçüm / tetik-geçişi</span><b>${iq.decisions_written ?? 0} ölçüm · ${dec.fired ?? 0} geçiş · ${iq.shadow_written ?? 0} gölge kararı · ${iq.submitted_4b ?? 0} gerçek 4b emri</b></div>
     ${(sk.session || sk.pencere || sk.halt || sk.stale || sk.no_bars) ? `<div class="srow"><span>Atlanan</span><b class="mut">seans ${sk.session || 0} · pencere-öncesi ${sk.pencere || 0} · halt ${sk.halt || 0} · bayat ${sk.stale || 0} · bar-yok ${sk.no_bars || 0}</b></div>` : ""}
     ${iq.pencere_gonderim_n ? `<div class="srow"><span>Sabah penceresi gönderimi (EXE-009 · 13:45)</span><b>${iq.pencere_gonderim_n} emir</b></div>` : ""}
     ${iq.last_error ? `<div class="srow"><span>Son hata</span><b class="neg">${esc(iq.last_error)}</b></div>` : ""}
@@ -8284,9 +8301,13 @@ async function intraParcalar() {
       <button class="dlbtn" data-act="intradayArm" data-a1="${armed ? "false" : "true"}">${armed ? "■ Silahlamayı KAPAT (gözleme dön)" : "Intraday silahlamayı AÇ"}</button>
       <span class="hint" id="intraday-arm-msg" style="margin:0"></span></div>
     <p class="hint" style="margin-top:10px">Gözlem-modu (Faz 4a) canlı dakikalık <b>kapanmış</b> barlarda EOD-silahlı planların tetik-geçişini ÖLÇER ve
-    <code>intraday_decisions.jsonl</code>'e yazar — <b>emir göndermez, iç deftere dokunmaz</b> (sıfır yetki). Gerçek intraday
-    silahlanma (Faz 4b) yalnız bu bayrak + EOD ile aynı güvenlik kapılarıyla açılır ve <b>henüz uygulanmadı</b> — bayrağı
-    açmak şu an yalnız hazırlıktır (emir çıkmaz).</p></div>`;
+    <code>intraday_decisions.jsonl</code>'e yazar — bu kip <b>emir göndermez, iç deftere dokunmaz</b> (sıfır yetki).
+    <b>Faz 4b UYGULANDI (2026-08-11'den beri):</b> bayrak AÇIKKEN, tetik kesen SİLAHLI planın gölge satırı
+    "gönderilirdi" derse ve plan icra-uygunsa (setup silahlı + kapı GO, ya da operatör onayı) <b>GERÇEK bracket emri</b>
+    EOD ile AYNI tek kapıdan gider (HALT + E1-v2 + de-risk + çift-gönderim dedup'ı; fail-closed) — bayrak artık
+    hazırlık değil, gerçek emir yetkisidir. Sabah penceresi gönderimi (EXE-009 · 13:45) ise <b>AYRI yetkili</b> bir
+    yoldur ve bu bayrağa bağlı DEĞİLDİR: EOD'nin zaten göndereceği ertelenmiş planları pencere açılınca aynı tek
+    kapıdan gönderir (yetki EOD'den devralınır, yalnız zamanlama penceredir).</p></div>`;
   // ---- 2) Son intraday ölçümleri ----
   const rows = (dec.recent || []).map(r => `<div class="trow" style="grid-template-columns:70px 1fr 90px 74px">
     <span class="tick">${esc(r.ticker || "?")}</span>
@@ -8496,11 +8517,11 @@ window.ackRejectAll = () => _ackRejects({ all: true }, r => `${r.acked_n} ret ka
 
 window.intradayArm = async (on) => {
   const msg = $("intraday-arm-msg");
-  if (on && !confirm("Intraday silahlamayı AÇ?\n\nBu, otonom intraday emir KAPISINI kaldırır. Faz 4b (gerçek silahlanma) HENÜZ uygulanmadığı için şu an emir GÖNDERMEZ — yalnız bir hazırlık bayrağıdır; ama açık bırakmak ileride Faz 4b gelince otonom intraday emri etkinleştirir. Emin misin?")) return;
+  if (on && !confirm("Intraday silahlamayı AÇ?\n\nBu, otonom intraday emir KAPISINI kaldırır. Faz 4b UYGULANDI: bayrak açıkken tetik kesen icra-uygun SİLAHLI planlar için GERÇEK bracket emri gönderilir (EOD ile aynı tek kapı: HALT + E1-v2 + de-risk + dedup). Bu bir hazırlık bayrağı DEĞİL, gerçek emir yetkisidir. Emin misin?")) return;
   if (msg) msg.textContent = "uygulanıyor…";
   try {
     const r = await apiFetch("/api/intraday-arm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ on }) }).then(x => x.json());
-    if (msg) msg.innerHTML = r.intraday_armed ? '<span class="neg">⚠ SİLAHLI (Faz 4b yok — yalnız hazırlık)</span>' : '<span class="pos">✓ gözlem-modu (silahsız)</span>';
+    if (msg) msg.innerHTML = r.intraday_armed ? '<span class="neg">⚠ SİLAHLI — Faz 4b AKTİF: icra-uygun tetik kesişimleri GERÇEK emir gönderir</span>' : '<span class="pos">✓ gözlem-modu (silahsız)</span>';
     // Düğme ve mesaj kutusu (`#intraday-arm-msg`) artık EMİR yarısındadır — `RENDER.intraday()`
     // (akış yarısı) çizilseydi düğmenin yeni durumu ekranda hiç güncellenmezdi.
     await RENDER.intraemir(); revealActive();
@@ -10324,6 +10345,22 @@ const KEY_GROUPS = [
      "Telegram YERİNE: alarm metnini POST edeceğin kendi adresin (Slack/Discord incoming webhook "
      + "ya da kendi ucun). Gövde JSON `{\"text\": \"...\"}` biçiminde gider. Telegram alanları "
      + "doluysa buna GEREK YOK — ikisinden biri yeterlidir, ikisi de doluysa ikisine de gider."],
+  ]],
+  // [6] LİTESTREAM S3 KİMLİĞİ (2026-08-23): birim drop-in'i (deploy/oracle-a1/
+  // meridian-litestream.service.d/10-s3-env.conf) `state/litestream.env`i ZATEN okuyordu ama
+  // dosyayı üreten hiçbir yol yoktu — sır zincirinin pano ucu buydu. İKİ anahtar da girilince
+  // api dosyayı 0600 iznİYLE DOĞARAK üretir (sprint v270 deseni), biri silinirse dosya kalkar;
+  // değerler hiçbir yerde loglanmaz (secrets yasası).
+  ["DB yedeği (Litestream)", "SQLite defterinin (state/meridian.db) sürekli S3 yedeği için kimlik. "
+   + "İKİ anahtar da girilince sunucu state/litestream.env (0600) dosyasını üretir ve litestream "
+   + "birimi bir sonraki (yeniden) başlatmada bu kimlikle koşar; biri silinirse dosya kaldırılır — "
+   + "yarım kimlik dosyası bırakılmaz.", [
+    ["LITESTREAM_ACCESS_KEY_ID", "S3 Access Key ID",
+     "Litestream replikasının S3-uyumlu kimliği (ör. Oracle Object Storage 'Customer Secret Key' "
+     + "çiftinin Access Key yarısı). Tek başına yetmez — Secret alanı da dolmalı."],
+    ["LITESTREAM_SECRET_ACCESS_KEY", "S3 Secret Access Key",
+     "Kimliğin gizli yarısı. İkisinden biri eksikken env dosyası ÜRETİLMEZ (yarım kimlik sessiz "
+     + "arıza olurdu); ikisi de dolunca dosya kendiliğinden yazılır."],
   ]],
   ["Kağıt broker", "Alpaca KAĞIT hesabı (sanal para). Girmen CANLI işlemi AÇMAZ — sistem L0 kağıt modunda kalır, motor içsel simülatörü kullanır. Not: Alpaca genelde Key ID + Secret ister (Secret üretimde bir kez gösterilir; görmediysen anahtarı yeniden üret). Yalnızca Endpoint + Key'in varsa ikisini gir, Secret'ı boş bırak.", [
     ["ALPACA_PAPER_ENDPOINT", "Endpoint (isteğe bağlı)", "Boş bırakılırsa paper-api.alpaca.markets kullanılır."],

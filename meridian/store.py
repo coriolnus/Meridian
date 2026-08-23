@@ -628,10 +628,33 @@ def merge_dated_jsonl(name: str, date_value: str, new_rows: list[dict], cap: int
     KİLİT: bu bir OKU-DEĞİŞTİR-YAZdır ve kilitsizdi. `loop.daily_cycle` bunu
     `trade_plans.jsonl` için çağırırken Hermes'in görüş damgası (`update_jsonl`, KİLİTLİ) aynı
     deftere yazabiliyordu — kilitli taraf kilitsiz tarafı bekletemez, yani kilit tek taraflıysa
-    kilit YOKTUR. Aynı ada bağlanır, böylece iki yol aynı sırayı paylaşır."""
+    kilit YOKTUR. Aynı ada bağlanır, böylece iki yol aynı sırayı paylaşır.
+
+    RETENTION KURALI — PLAN, İŞLEMİ YAŞADIKÇA YAŞAR (2026-08-23 canlı pano triyajı, kalem 4):
+    `cap` sabiti `trade_plans.jsonl`de İŞLEME DÖNÜŞMÜŞ planları da süpürüyordu — canlıda defter
+    TAM 500 satıra kırpılmış, 893 işlemin 535'i var olmayan bir plana işaret eder olmuştu
+    (plan_join_yok). Oysa işlem defteri (`trades.jsonl`) HİÇ kırpılmıyor; işleme dönüşen planın
+    kırpılması, LLM görüş kalibrasyonundan gölge-model terfi ölçümüne kadar her plan⇄işlem
+    birleştirmesini sessizce eksiltir (run.replay_seed aynı yasayı tohum yazımında 2026-07-22'den
+    beri uyguluyor — "Son 300'e ek olarak İŞLEME DÖNÜŞEN her plan korunur"; kırpan taraf olan bu
+    fonksiyon o yasadan habersizdi, tohumun koruduğunu ilk günlük döngü süpürüyordu). Kural
+    SABİT DEĞİL: kırpma tavanı yalnız işleme dönüşmemiş satırlara uygulanır; `trades.jsonl`
+    kırpılmadığı sürece işleme dönüşen plan da kırpılmaz — işlem defteri bir gün kırpılırsa
+    planların ufku da onunla birlikte daralır (ayrı bir sabit tutulmaz)."""
     with file_lock(name):
         existing = [r for r in read_jsonl(name) if r.get("date") != date_value]
-        write_jsonl(name, (existing + new_rows)[-cap:])
+        kept = existing + new_rows
+        if len(kept) > cap:
+            tail = kept[-cap:]
+            if name == "trade_plans.jsonl":
+                # işleme dönüşen plan_id kümesi: okuma kilitsizdir (read yolu zaten kilitsiz) ve
+                # trades.jsonl'in kilidi AYRI addadır — burada onu almak kilit sırası doğurmaz.
+                need = {t.get("plan_id") for t in read_jsonl("trades.jsonl") if t.get("plan_id")}
+                have = {p.get("id") for p in tail}
+                kept = [p for p in kept if p.get("id") in need and p.get("id") not in have] + tail
+            else:
+                kept = tail
+        write_jsonl(name, kept)
 
 
 def write_jsonl(name: str, rows: list[dict]) -> None:

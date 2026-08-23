@@ -2548,11 +2548,18 @@ def monotonicity_report(persist: bool = False, olaylar: list[dict] | None = None
         # ters onarım DENKLEMİN İKİ TARAFINI birlikte taşır: tek bir ANIN kimliği bunu yapısal
         # olarak göremez (bkz. `recompute.report` `taban_kaymasi` satırının beyanı).
         #
-        # ZIMNİ TABAN = realized_pnl − Σ trades.pnl_dollars. Bu büyüklük NORMAL İŞLETİMDE SABİTTİR:
-        # bir pozisyon kapandığında `realized_pnl` ve `Σ trades` AYNI miktarda artar, fark
+        # ZIMNİ TABAN = realized_pnl − Σ CANLI-SINIF trades.pnl_dollars (kaynak-farkındalı,
+        # 2026-08-23). Bu büyüklük NORMAL İŞLETİMDE SABİTTİR:
+        # bir pozisyon kapandığında `realized_pnl` ve `Σ canlı-sınıf` AYNI miktarda artar, fark
         # değişmez. Yalnız bir BEYAN onu hareket ettirir ve beyanlar deftere yalnız EKLENİR — yani
         # zımni taban ileri-only'dir ve DÜŞMESİ tanım gereği beyansız bir taban kaymasıdır.
         # 08-04'te 5.542,09 → 0,0 düşerdi: aynı döngüde tek satırlık GERİLEME.
+        # ESKİ FORMÜL (TARİHÇE — kaynak-körü): taban = realized − Σ TÜM trades. O formülde bir
+        # re-seed'in EKLEDİĞİ `replay_seed` satırları (realized'a hiç girmedikleri hâlde — gerçek
+        # muhasebe kaynak-etiketlidir, `sermaye --durum` kanıtı) Σ'yı büyütüp tabanı DÜŞÜRÜYOR ve
+        # dedektör beyansız kayıp diye YANLIŞ alarmlıyordu (2026-08-22/23 canlı pano triyajı).
+        # Kaynak süzgeci `sermaye.sermaye_taban`ın İÇİNDEDİR (kanonik tek yer; ledgerstamp.kaynak_of
+        # ile, `belirsiz` canlı-sınıfta) — burada satır süzmek ikinci bir uygulama olurdu.
         # MEŞRU KÜÇÜLME YOLU KAPALI DEĞİL: `grant_amnesty("sermaye_taban", …)` — re-seed defteri
         # kısaltırsa af YAZILI olarak verilir (akranlarıyla aynı disiplin).
         _tr = store.read_jsonl("trades.jsonl")

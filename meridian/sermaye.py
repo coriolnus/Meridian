@@ -181,11 +181,24 @@ def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> flo
     Bozuk satır SEMANTİĞİ watchdog ifadesiyle BİREBİR: `pnl_dollars` None/boş → 0; sayıya
     çevrilemeyen değer istisna fırlatır (watchdog kendi try'ında 'kaynak okunamadı' der — sahte bir
     0 uydurulmaz). Tüketiciler: `durum()` (CLI/pano yüzeyi) + watchdog:1976 (tek satırlık yama
-    planı: `cur["sermaye_taban"] = _srm.sermaye_taban(pf, _tr)`)."""
+    planı: `cur["sermaye_taban"] = _srm.sermaye_taban(pf, _tr)`).
+
+    KAYNAK-FARKINDALI (2026-08-23, canlı pano ihlal triyajı): Σ artık yalnız CANLI-SINIF satırları
+    (kaynak != replay_seed; `belirsiz` içeride — köken ölçülmemiş satırı tohum SAYMAK ölçülmemiş
+    bir kökeni uydurmak olurdu, recompute pano yolunun aynı kararı) toplar. Gerekçe: gerçek muhasebe
+    kaynak-etiketlidir — `replay_seed` satırı kitaba HİÇ girmez (yeni tohum yolu `ledgerstamp` damgalı
+    yazar, `_reset_book_to` tam re-seed dışında realized'a dokunmaz; `sermaye --durum` kanıtı). Eski
+    kaynak-körü formül (TARİHÇE): taban = realized_pnl − Σ TÜM trades.pnl_dollars — bir re-seed'in
+    EKLEDİĞİ tohum satırları realized'ı kıpırdatmadığı için bu formülde taban DÜŞER ve dedektör
+    beyansız kayıp diye alarmlar (2026-08-22/23 canlı yanlış-alarm sınıfı). GEÇİŞ NOTU (tek-seferlik):
+    ilk kaynak-farkındalı ölçüm, defterde tohum satırı varsa eski tabandan SAPAR ve monotonluk
+    dedektörü bir kez GERİLEME diyebilir — yol hazır: grant_amnesty('sermaye_taban', was, now, …);
+    af BURADAN çağrılmaz, canlı karar operatörün/canlı turun elindedir."""
     pf = store.read_json(PORTFOLIO, {}) if pf is None else (pf or {})
     rows = store.read_jsonl(ledgerstamp.LEDGER) if rows is None else rows
+    canli = [t for t in rows if ledgerstamp.kaynak_of(t) != ledgerstamp.REPLAY_SEED]
     r_sent = round(float(pf.get("realized_pnl") or 0.0) * 100)
-    defter_sent = sum(round(float(t.get("pnl_dollars") or 0.0) * 100) for t in rows)
+    defter_sent = sum(round(float(t.get("pnl_dollars") or 0.0) * 100) for t in canli)
     return (r_sent - defter_sent) / 100.0
 
 
@@ -212,6 +225,53 @@ def ofset(pf: dict | None = None) -> float:
     `recompute`in üç kimliği bu sayıyı GEÇMİŞTEN türeyen tarafa ekler. Kayıt yoksa 0.0'dır ve
     hiçbir davranış değişmez (reset yapılmamış bir depoda modül tamamen görünmezdir)."""
     return round(sum(float(r.get("ofset") or 0.0) for r in resetler(pf)), 2)
+
+
+def canli_ofset(pf: dict | None = None) -> dict:
+    """Beyanlı reset ofsetlerinin CANLI-SINIF satırlara düşen payı → {"deger", "neden", "n_reset"}.
+
+    NEDEN VAR (2026-08-23 triyajı): `recompute`in kaynak-körü kimliği ofsetin TAMAMINI Σ TÜM
+    trades'e ekliyordu; kaynak-farkındalı kıyasta (B = Σ canlı-sınıf pnl) ofsetin yalnız kendi
+    çağının CANLI satırlarını sıfırlayan payı sayılabilir — tohumu sıfırlayan pay, tohum satırları
+    B'ye zaten girmediği için ikinci kez düşülemez.
+
+    PAY KAYITTAN ÖLÇÜLÜR, VARSAYILMAZ: pay_i = −(onceki_realized_pnl_i − tohum_etkisi_usd_i).
+    Buradaki `tohum_etkisi_usd`, reset ANINDA DAMGALI (`kaynak == replay_seed`) satırların
+    toplamıdır (koken → _pnl_ayristir) — yani kaynak-farkındalı Σ'nın DIŞLADIĞI kümeyle AYNI
+    sınıflandırıcı. Bu eşleşme kuralın kendisidir: ofsetin "canlı payı" = resetin sıfırladığı
+    realized'ın, Σ'ya GİREN (canlı-sınıf: live_paper + belirsiz) satırlara düşen kısmı. Damgasız
+    (belirsiz) satırlar Σ'ya girdiği için onların payı DÜŞÜLMEZ. Türetim her kayıt için
+    geçerlidir çünkü YAPISAL olarak her reset kaynak-körü bir kitaba uygulanır: `uygula()` kayıt
+    varken `zaten_ayrisik` engeliyle İKİNCİ reseti reddeder ve kayıtlar yalnız tam re-seed'de
+    silinir (`run._reset_book_to` kitabı TÜM defterden yeniden kurar).
+
+    ALAN YOKLUĞU HÂLLERİ (uydurma yasağı — her düşüş adlı):
+      * kayıt yok → 0.0 (beyan yok, pay yok).
+      * `tohum_etkisi_usd` None ve `tohum_islem_n` 0/yok → ÖLÇÜLMÜŞ SIFIR: reset anında damgalı
+        tohum satırı yoktu (koken bu alanı tam o durumda None yazar); dışlanan küme boş, pay tam.
+      * `tohum_etkisi_usd` None ama `tohum_islem_n` > 0 → deger=None + neden (elle bozulmuş/yarım
+        kayıt: damgalı satır VARDI ama etkisi yazılmamış — pay AYRIŞTIRILAMAZ, 0 uydurulmaz).
+      * `onceki_realized_pnl` yok (eski/asgari kayıt) → `−ofset` kimliğinden okunur: reset yalnız
+        düz kitapta uygulanır (dolu_pozisyon engeli), düz kitapta cash = start + realized, yani
+        ofset = hedef − cash = −realized. Bu bir varsayım değil, uygulanan engelin sonucudur."""
+    kayitlar = resetler(pf)
+    if not kayitlar:
+        return {"deger": 0.0, "neden": None, "n_reset": 0}
+    toplam_sent = 0
+    for r in kayitlar:
+        onceki = r.get("onceki_realized_pnl")
+        if onceki is None:
+            onceki = -float(r.get("ofset") or 0.0)     # düz-kitap kimliği (docstring'de gerekçe)
+        tohum = r.get("tohum_etkisi_usd")
+        if tohum is None:
+            if int(r.get("tohum_islem_n") or 0) > 0:
+                return {"deger": None, "n_reset": len(kayitlar),
+                        "neden": (f"reset kaydı {r.get('id') or '?'} damgalı tohum etkisini ölçmeden "
+                                  f"yazılmış (tohum_islem_n={r.get('tohum_islem_n')}, "
+                                  f"tohum_etkisi_usd=None) — ofsetin canlı payı ayrıştırılamıyor")}
+            tohum = 0.0                       # ölçülmüş sıfır: reset anında DAMGALI tohum satırı yoktu
+        toplam_sent += -(round(float(onceki) * 100) - round(float(tohum) * 100))
+    return {"deger": toplam_sent / 100.0, "neden": None, "n_reset": len(kayitlar)}
 
 
 def ayrisik(pf: dict | None = None) -> bool:
