@@ -1,0 +1,38 @@
+card_id: EDG-2026-053
+family: pit_faktor
+thesis: >
+  15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli
+  çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ (Δbüyüme) yavaş fiyatlanır mı? 014'ün ölen tezi
+  kârlılık-SEVİYESİydi; büyüme/değişim AYRI ailedir. PIT: filed as-of (medyan gecikme 33-37g,
+  arşivde kayıtlı). Veri TAMAMEN YEREL (edgar fundamentals 248/251). CANLI DEĞİŞMEZ; skor
+  bağlaması ancak GO + operatör imzasıyla (POLITIKA-ARSENAL).
+evidence_refs:
+  - "docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md (K2 taslağı + riskler: etiket ikiliği, restatement, frame hizası)"
+  - "EDG-2026-016 (SUCCESS — sabit-kalibrasyon yüzdelik deseni) · EDG-2026-014 (bilgisiz — seviye ailesi, ayrışma beyanı)"
+  - "docs/POLITIKA-ARSENAL.md"
+universe: >
+  full_251 kapsam-beyanlı (fundamentals 248/251; eksik 3 sembol None+neden). Gözlem AYLIK
+  (sembol-ay paneli); her ayda o an PIT-görünür son çeyrek değeri kullanılır (filed-as-of).
+features_asof: >
+  Dilimler: yoy_buyume_ust_30pct · ivme_ust_30pct (yüzdelikler ay-içi kesitten). Ufuklar 20/60g
+  fazla-getiri (aynı-gün evren ortalaması tabanı); 21g blok-bootstrap CI (seed 20260812);
+  10/20bps maliyet duyarlılığı. GUARDS (taslak zorunlulukları): İLK-İFŞA filtresi ZORUNLU ·
+  etiket önceliği Revenues→contract yazılı ve kodda tek yerde · `frame` alanıyla mali-yıl hizası ·
+  A4 dosyalama-gecikmesi sütunu eşiksiz TANI olarak rapora.
+parameter_grid:
+  dilim: [yoy_buyume_ust_30pct, ivme_ust_30pct]   # K += 2 (taslak aynen)
+cost_model: fazla_getiri_maliyet_duyarli
+success_metric: >
+  KARAR KURALI (donuk): herhangi bir dilim @60g anlamlı POZİTİF (CI 0-dışı) VE 10bps-sonrası
+  net > 0 → "temel-momentum sinyali VAR — ARSENAL adayı" (bağlama ayrı kart + imza). İki dilim
+  de @20 VE @60 CI-0-içi → BİLGİSİZ, arşiv. Ters-anlamlı → arşiv + not.
+kill_criteria:
+  - "sembol-ay < 3.000 → ASKI, K harcanmaz"
+  - "ilk-ifşa filtresi atlanırsa geçersiz (restatement panzehiri)"
+  - "etiket önceliği tek-kaynak değilse geçersiz"
+  - "pozitif kontrol (rvol20 IC, 050 ile aynı düzenek) yeniden üretilemezse düzenek geçersiz"
+k_registry: {registered_at: "2026-08-23", trial_ids: [pending-053-yoy, pending-053-ivme]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
+beyanli_sinirlar: >
+  (1) Survivorship üst-sınır kelimesi hükümde zorunlu. (2) 014-ayrışması: bu kart SEVİYE değil
+  DEĞİŞİM ölçer — hüküm cümlesi bu ayrımı açıkça taşır. (3) Faktör portföy-bağlamsızdır.

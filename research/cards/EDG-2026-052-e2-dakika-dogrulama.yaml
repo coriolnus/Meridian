@@ -1,0 +1,43 @@
+card_id: EDG-2026-052
+family: icra_dakika_dogrulama
+thesis: >
+  13-A1 (tasarım: docs/TASARIM-13-INTRADAY-DOLUM-SOZLESMESI-2026-08-23.md §3-A1): dakika arşivi
+  İCRA ZEMİNİ olarak güvenilir mi? Her E2 ayna dolumu (gerçek Alpaca fiyatı) kendi dolum
+  dakikasının barıyla eşlenir: fiyat ∈ [low, high] mi · dakika-açılışa bps farkı · `pencere`
+  rejimine göre dağılım. EDG-042 ile ÇİFT-SAYIM DEĞİL: 042 friksiyonu ölçer, bu kart arşivin o
+  ANI YAKALAYIP yakalamadığını. 13-A2/A3 aşamalarının (stop-tetik dakika-testi, replay
+  dakika-modu) ön-şart aleti burada doğar. CANLI DEĞİŞMEZ; çekimler salt-okuma.
+evidence_refs:
+  - "docs/TASARIM-13-INTRADAY-DOLUM-SOZLESMESI-2026-08-23.md §3-A1 (kart-adayı parametreleri aynen)"
+  - "EDG-2026-047 çekim deseni + saat-dilimi doğrulama kapısı (yoğunluk-sıçrama)"
+  - "EDG-2026-042:71 örneklem eşiği emsali (n≥30 dolum ∧ ≥10 seans)"
+universe: >
+  E2 icra defteri (canlıdan salt-okuma çekim, exe007/047 deseni) × dakika arşivi (yerel 047
+  çekimi + gerekirse taze seanslar canlıdan salt-okuma). Eşleme birimi: dolum-olayı (giriş ve
+  çıkış bacakları ayrı sayılır, bacak türü beyanlı).
+features_asof: >
+  Dolum başına: dakika-barı bulundu mu · fiyat ∈ [l,h] · |dolum − dakika-açılış| bps ·
+  |dolum − dakika-VWAP-vekili (h+l+c)/3| bps · pencere rejimi (1330/1345/damgasız). Özet:
+  eşlenen/eşlenemeyen sayımı (eşlenemeyenler ADIYLA listelenir) + bant-içi oranı + bps dağılımı
+  (medyan/p25/p75).
+parameter_grid:
+  hucreler: [e2_dakika_eslesme]   # K += 1
+cost_model: dogrudan_bar_olcumu
+success_metric: >
+  Ö1 (BETİMLEYİCİ BAŞLAR — tasarım gereği): bugünkü örneklem (~13 dolum) eşik altında; tüm
+  çıktı betimleyici damgalı. HÜKÜMLÜ EŞİK ŞİMDİDEN DONUK (042-K1 emsali): n≥30 dolum ∧ ≥10 seans
+  dolduğunda → bant-içi oranı ≥ %95 VE eşlenemeyen dolum = 0 → "arşiv icra-zemini GÜVENİLİR"
+  beyanı (13-A2 kartının ön-şartı sağlanır). Oran < %95 ya da eşlenemeyen > 0 → adlı vaka listesi
+  + arşiv-güvenilirlik şerhi (A2/A3 aşamaları bloklanır). Haftalık 042 koşumuyla AYNI kadansta
+  yeniden okunabilir (betimleyici tekrar K harcamaz — aynı hücre, biriken örneklem).
+kill_criteria:
+  - "eşlenemeyen dolum SESSİZCE düşürülürse geçersiz — her biri adıyla raporlanır"
+  - "saat-dilimi yoğunluk-sıçrama kapısı (047 aynen) doğrulanmadan pencere/bar eşlemesi yapılırsa geçersiz"
+  - "canlı state'e tek bayt yazım → geçersiz"
+  - "hükümlü eşik örneklem dolmadan uygulanırsa geçersiz (betimleyici damga zorunlu)"
+k_registry: {registered_at: "2026-08-23", trial_ids: [pending-052-eslesme]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt (F-stok açılışı; operatör 'F'ye başla')
+beyanli_sinirlar: >
+  (1) E2 örneklemi bugün küçük (~13) — kart bunu bilerek betimleyici başlatır. (2) VWAP vekili
+  gerçek VWAP değildir (hacim-ağırlıksız üçlü ortalama); ad hep 'vekil' ile anılır. (3) IEX-tek-
+  kaynak şerhi (tasarım §2-ilke-7) aynen taşınır.
