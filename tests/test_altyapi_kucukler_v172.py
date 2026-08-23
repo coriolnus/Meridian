@@ -113,7 +113,7 @@ def test_conftest_sifirlama_TABANI_uretim_modulunun_KENDI_literalinden_gelir():
 # ② MUTASYON KOŞUMU — düşen dedektör "bulgu yok" DEĞİL, "ÖLÇÜLEMEDİ"
 # =================================================================================================
 def _dusuk_rapor(dusen_ad: str) -> dict:
-    """`integrity_report`in C21 yalıtım biçimi: iskelet + `dedektor_dustu` (watchdog.py:863)."""
+    """`integrity_report`in C21 yalıtım biçimi: iskelet + `dedektor_dustu` (watchdog.py:870)."""
     from meridian import watchdog as wd
     rep = {}
     # 8. DESEN BEYANLI EKLENDİ (2026-08-13) — aile artık üreticiden türetiliyor (mutation.py).

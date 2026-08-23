@@ -3072,6 +3072,14 @@ def _sessiz_hat(wd: dict, hb: dict) -> dict:
         "asof": son_bar, "nabiz_yas_s": (round(yas) if yas is not None else None),
         "n_sapma": len(v_sapma), "sapmalar": v_sapma})
 
+    # F8 ÇİFT-ALAN GEÇİŞİ (WP8-C · T1.4): sapma satırlarının `detay`ı kanonik `neden` adıyla DA
+    # taşınır; `detay` dönem sonuna dek eşanlamlı kalır (okuyucu-ölümü durum_sozlugu sayaçlarıyla
+    # ölçülür, düşürme Rol-1'de). Askıda satırları ZATEN iki adı da taşıyor (:3010 civarı).
+    # `saglikli` alanı KALIR-şerhlidir: bilinçli İKİ değerli, fail-closed (docstring sözleşmesi) —
+    # sözlük onu yeniden adlandırmaz, şerhiyle kaydeder (meridian/durum_sozlugu.py).
+    for _seg in segmentler:
+        for _s in _seg.get("sapmalar") or []:
+            _s.setdefault("neden", _s.get("detay"))
     saglikli = all(s["saglikli"] for s in segmentler)
     return {
         "saglikli": saglikli,
@@ -3397,6 +3405,39 @@ def _bekci_durumlari() -> dict:
             out[ad] = {"ok": None, "olculemedi": True,
                        "olculemedi_neden": f"{type(e).__name__}: {e}"}
     return out
+
+
+def _durum_sozlugu(bd: dict) -> dict:
+    """F8 KANONİK DURUM SÖZLÜĞÜNÜN SERVİS YÜZEYİ (WP8-C — tasarım §5/§6; sözlüğün kendisi
+    `meridian/durum_sozlugu.py`). İKİ İŞ, İKİSİ DE ÖLÇÜM:
+
+    1) `satirlar` — dört bekçi raporunun (bd) kanonik-okuyucudan geçmiş normalize hükümleri.
+       SENTEZ YOK: her satır hükmün OKUNDUĞU alanın adını (`kaynak_alan`) taşır — üretici
+       kanonik alanı taşıdığı sürece "ok" yazar; eski adlı bir yük sızarsa alan adı ve aşağıdaki
+       sayaç onu GÖRÜNÜR kılar (geçiş haritası canlıda izlenir olur).
+    2) `esanlamli_okumalar` — eski adların okunma sayaçları (ölüm tarihi ölçümü): uzun süre 0
+       kalan eski ad, okuyucusu ölmüş demektir ve dönem sonunda DÜŞÜRÜLEBİLİR (karar Rol-1'de).
+       Sayaç süreç-içidir (gerekçe modül başlığında); restart sıfırlar — tek artış bile "eski ad
+       hâlâ okunuyor" hükmü için yeter, sıfırlanma o hükmü çürütmez ve bu beyan yanıtta taşınır.
+
+    Okuyucu zinciri (YASA 6, elle kurulu — fonksiyon-düzeyi yüzeyleri codelaw göremez):
+    durum_sozlugu modülü → bu uç → app.js `f8SozlukSatiri`. Çivi: tests/test_f8_durum_sozlugu_v271.py."""
+    from . import durum_sozlugu as _dsz
+    return {
+        "kanonik": {
+            "hukum": {"kanonik": _dsz.HUKUM_KANONIK, "esanlamli": list(_dsz.HUKUM_ESANLAMLI)},
+            "neden": {"kanonik": _dsz.NEDEN_KANONIK, "esanlamli": list(_dsz.NEDEN_ESANLAMLI)},
+            "beyan": _dsz.BEYAN_KANONIK,
+            "kol": {k: list(v) for k, v in _dsz.KOL_KANONIK.items()},
+        },
+        "satirlar": [_dsz.normalize_satir(ad, rapor) for ad, rapor in (bd or {}).items()],
+        "esanlamli_okumalar": _dsz.esanlamli_okumalar(),
+        "sayac_rejimi": ("süreç-içi — restart sıfırlar (bekçi süreç-içi mandallarıyla aynı "
+                         "beyanlı karar: diske yazmak artifact_unread yüzeyi doğururdu)"),
+        "beyan": ("F8 geçiş rejimi: üretici kanonik adı ÇİFT alan taşır, okuyucu önce kanonik "
+                  "okur; eşanlamlı okuma sayaçlıdır. Sayaç 0 = bu süreçte hiçbir eski ad "
+                  "okunmadı; eski adı DÜŞÜRME kararı Rol-1'de."),
+    }
 
 
 def _alarm_gunluk() -> dict:
@@ -4518,7 +4559,14 @@ def api_diagnostics(request: Request, taze: int = 0):
         "liveness": _wd.liveness_report(),
         # BEKÇİ DURUM YÜZEYLERİ — T2.1-T2.4 YASA-6 kapanışı: dört raporun alarm satırı vardı,
         # durum yüzeyi yoktu. Maliyet/yalıtım/persist şerhleri `_bekci_durumlari`nın kendisinde.
-        "bekci_durumlari": _bekci_durumlari(),
+        # WALRUS BİLEREK: aynı dört rapor hem burada olduğu gibi hem `durum_sozlugu.satirlar`da
+        # normalize servis edilir — ikinci bir `_bekci_durumlari()` çağrısı dört bekçiyi aynı
+        # istekte İKİ kez koşturmak olurdu (45 sn önbelleğin kapattığı maliyeti geri açardı).
+        "bekci_durumlari": (_bd := _bekci_durumlari()),
+        # F8 KANONİK DURUM SÖZLÜĞÜ (WP8-C) — kanonik ad kümeleri + normalize hükümler +
+        # eşanlamlı-okuma sayaçları (eski adların ölüm tarihi ölçümü). Okuyucu: app.js
+        # `f8SozlukSatiri` (Gözetim & Alarmlar). Şerhler `_durum_sozlugu`nun kendisinde.
+        "durum_sozlugu": _durum_sozlugu(_bd),
         # CANLI ZAMAN ÇİZELGESİ — BEKÇİNİN YANINDA, İÇİNDE DEĞİL. Bekçi raporu
         # "geciken var mı?" der; çizelge "adım adım NE ZAMAN koştu?" der. İkisi aynı dosyadan
         # (mechanism_beats.json) beslenir ama farklı soruların cevabıdır; `watchdog` içine
