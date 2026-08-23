@@ -134,9 +134,18 @@ def test_e_yerel_donmus_defter_damgasi_uretiliyor(sandbox_state, monkeypatch):
     assert storage.active("trades.jsonl") is False
     assert _olaylar(sandbox_state, "yerel_donmus_defter") == []
 
-    # (ii) kanonik dosya doğunca damga düşer — (i)'in susması önbellekten DEĞİLDİ (aynı süreç)
+    # (ii-a) FOTOĞRAF ŞARTI (2026-08-23 düzeltmesi — v150 vakası): bu SÜREÇTE doğan dosya
+    # "donmuş fotoğraf" değildir; damga SUSMALI (aksi her taze test kum-havuzunda gürültü seliydi
+    # ve makine-okunur CLI stdout'unu kirletti). Şart: en yeni defter mtime'ı < süreç başlangıcı.
     (sandbox_state / "trades.jsonl").write_text('{"id": 1}\n')
     assert storage.active("trades.jsonl") is False, "damga karar DEĞİL beyan: dosya yolu sürmeli"
+    assert _olaylar(sandbox_state, "yerel_donmus_defter") == [], "süreç-çağı dosyada damga = gürültü"
+
+    # (ii-b) dosya süreçten ESKİYSE (donmuş fotoğraf) damga düşer — mtime geçmişe alınarak
+    import os as _os, time as _time
+    eski_ts = storage._SUREC_BASI - 3600
+    _os.utime(sandbox_state / "trades.jsonl", (eski_ts, eski_ts))
+    assert storage.active("trades.jsonl") is False
     kayit = _olaylar(sandbox_state, "yerel_donmus_defter")
     assert len(kayit) == 1, f"damga yok ya da tekrarlıyor: {len(kayit)}"
     assert kayit[0]["mevcut"] == ["trades.jsonl"]

@@ -124,6 +124,7 @@ _SCHEMA_OK: set = set()
 _OFF_OLCULDU: set = set()
 # `yerel_donmus_defter` damgası da YOL BAŞINA BİR KEZ (P2 — `db_off`un simetriği, aynı gerekçe).
 _YEREL_OLCULDU: set = set()
+_SUREC_BASI = time.time()   # fotoğraf şartının çapası: bu süreç doğduğunda duvar saati
 
 PRAGMAS = (("journal_mode", "wal"), ("synchronous", "normal"),
            ("busy_timeout", 5000), ("foreign_keys", 1))
@@ -375,6 +376,17 @@ def _yerel_defter_beyani(p: Path) -> None:
     mevcut = [n for n in ENTITIES if (state / n).exists()]
     if not mevcut:
         return                      # anlatılacak hâl yok — önbellek ALINMAZ, hâl bu süreçte doğabilir
+    # FOTOĞRAF ŞARTI (2026-08-23 düzeltmesi; v150 yakaladı): tehlike "DONMUŞ fotoğraf"tır — bu
+    # sürecin ÇAĞINDA doğmuş dosyalar (test kum-havuzları, taze tohumlama) o tehlikeyi TANIMSIZ
+    # kılar ve damga her taze sandbox'ta bir gürültü satırına dönerdi (yol-başına önbellek ×
+    # test-başına taze yol = süreç boyu sel). En yeni defter mtime'ı süreç başlangıcından
+    # YENİYSE sus — önbelleksiz (dosyalar eskiyebilir, hâl sonraki çağrıda yeniden ölçülür).
+    try:
+        en_yeni = max((state / n).stat().st_mtime for n in mevcut)
+    except OSError:
+        return                      # sessiz-yutma: mtime okunamayan dosya yarış/silinme anıdır; beyan bir sonraki çağrıya kalır
+    if en_yeni >= _SUREC_BASI:
+        return
     _YEREL_OLCULDU.add(key)         # obs'tan ÖNCE: beyan denemesi tekrar giriş üretmesin
     try:
         from . import obs

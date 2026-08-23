@@ -662,8 +662,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--zorla", action="store_true",
                     help="canlı süreç görülse de yaz (riski sen alırsın)")
     a = ap.parse_args(argv)
+    # MAKİNE KİPİ stdout'un TEK sahibidir: hesap sırasında ateşlenen obs olayları da stdout'a
+    # yankılanır (obs._emit sözleşmesi — systemd yakalasın diye; v34 çivili, DEĞİŞMEZ) ve JSON'u
+    # kirletirdi (ilk vaka: `yerel_donmus_defter` damgası, 2026-08-23 — v150 yakaladı). Çözüm
+    # kanal ayrımı: --json'da hesap stderr'e konuşur, stdout'a yalnız nihai rapor basılır.
+    import contextlib
     if a.durum:
-        d = durum()
+        with (contextlib.redirect_stdout(sys.stderr) if a.json else contextlib.nullcontext()):
+            d = durum()
         if a.json:
             print(json.dumps(d, ensure_ascii=False, indent=1, default=str))
         else:
@@ -676,7 +682,8 @@ def main(argv: list[str] | None = None) -> int:
               "önler, geri-yazımı önlemez). Önce `./ops/stop-worker.sh`, sonra tekrar dene "
               "(ya da --zorla).", file=sys.stderr)
         return 2
-    rapor = uygula(a.gerekce) if a.uygula else plan(a.gerekce)
+    with (contextlib.redirect_stdout(sys.stderr) if a.json else contextlib.nullcontext()):
+        rapor = uygula(a.gerekce) if a.uygula else plan(a.gerekce)
     if a.json:
         print(json.dumps(rapor, ensure_ascii=False, indent=1, default=str))
     else:

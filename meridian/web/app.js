@@ -7896,7 +7896,7 @@ function f8SozlukSatiri(dz) {
       kollar: ${kollar || "—"}.</p>
     <p class="hint">Bekçi hükümlerinin okunduğu alan — ${satirlar || "satır yok"}.</p>
     <p class="hint">Eşanlamlı okuma (${esc(dz.sayac_rejimi == null ? "sayaç rejimi beyan edilmedi" : dz.sayac_rejimi)}): ${canli.length
-      ? canli.map(k => `<b class="warn">${esc(k)} ×${trn(say[k])}</b>`).join(" · ")
+      ? canli.map(k => say[k] ? `<b class="warn">${esc(k)} ×${trn(say[k])}</b>` : "").join(" · ")
         + " — eski ad HÂLÂ okunuyor; düşürmek için erken (karar Rol-1'de)"
       : "<b>hepsi 0</b> — bu süreçte hiçbir eski ad okunmadı (düşürme kararı Rol-1'de)"}.</p></div>`;
 }

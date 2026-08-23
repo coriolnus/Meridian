@@ -6,6 +6,7 @@ import socket
 
 import pandas as pd
 import numpy as np
+from pathlib import Path as _Path
 import pytest
 
 from meridian import config
@@ -346,6 +347,13 @@ def _kancalari_kur(kayit) -> list:
 @pytest.fixture(autouse=True)
 def _no_live_state_writes(request):
     """KATMAN 1 her zaman açık; KATMAN 2 yalnız uygulama kapalıyken anlamlı (yukarıdaki gerekçe)."""
+    # CANLI-YOL DAMGA MUAFİYETİ (2026-08-23, v21 vakası): `yerel_donmus_defter` damgası gerçek
+    # state'e karşı İLK storage.active() çağrısında tembel ateşler ve obs yazımı GERÇEK
+    # events.jsonl'a düşer — tam bu bekçinin yasakladığı sınıf. Damganın sahibi üretim
+    # süreçleridir, testler değil; gerçek db-yolu önbelleğe önden eklenir. Kum-havuzu damgaları
+    # ETKİLENMEZ (anahtar yol-bazlı; v268 kendi set'ini kurarak sınar).
+    from meridian import config as _cfg, storage as _st
+    _st._YEREL_OLCULDU.add(str(_Path(_cfg.STATE) / "meridian.db"))
     kayit = _CanliYazimKaydi()
     geri = _kancalari_kur(kayit)
     before = None if _APP_RUNNING else _live_fingerprint()
