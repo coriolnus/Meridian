@@ -75,7 +75,7 @@ beyanlı_sinirlar: >
   Seçilen {15,25,35} noktaları o tahminin BANDIDIR, ölçülmüş gerçeği değil — bu kart "friksiyon şu
   kadardır" DEMEZ, "şu kadar olsaydı sistem ne yapardı" der. İki cümle karıştırılırsa UYDURMA olur.
 
-k_registry: {registered_at: "2026-08-13T3x", trial_ids: [pending-040-slip15, pending-040-slip25, pending-040-slip35, conditional-040-B-slip15, conditional-040-C-slip15]}
+k_registry: {registered_at: "2026-08-13T3x", trial_ids: [edg040_friksiyon_2026-08-22/slip15, edg040_friksiyon_2026-08-22/slip25, edg040_friksiyon_2026-08-22/slip35, conditional-040-B-slip15, conditional-040-C-slip15]}   # U2 2026-08-23: 3 pending -> gercek trial_id (grid hucreleri; conditional-* kosulmadi, aynen kalir)
 
 status: measured     # 2026-08-22 Rol-1 HÜKMÜ — aşağıda. (ön-kayıt 2026-08-13)
 

@@ -34,7 +34,7 @@ kill_criteria:
   - "trend_up işlem sayısı taban-defterde <30 → olculemedi"
   - "şasi bütünlüğü bozuksa geçersiz"
 
-k_registry: {registered_at: "2026-08-12T4x", trial_ids: [pending-033-h1, pending-033-h2]}
+k_registry: {registered_at: "2026-08-12T4x", trial_ids: [edg033_rejim_boyut_2026-08-12/h1, edg033_rejim_boyut_2026-08-12/h2]}   # U2 2026-08-23: 2 pending -> gercek trial_id (sonuc.json hucreler)
 
 status: measured   # 2026-08-12 Rol-1 — iki hücre ölçüldü + hüküm: DÜZ-0.5R KANITLA DOĞRULANDI.
 

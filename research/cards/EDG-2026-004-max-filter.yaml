@@ -16,7 +16,7 @@ success_metric: "yüksek-MAX dilimin ileri getirisi anlamlı DÜŞÜK (CI 0-dı�
 kill_criteria:
   - "eleme net beklentiyi düşürüyorsa (kazananları da eliyorsa) arşiv"
   - "dilim farkı CI-0-içi → bilgisiz, arşiv"
-k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [pending]}
+k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [max_olcum/evren_kesiti_p90, max_olcum/evren_kesiti_p95]}   # U2 2026-08-23: 1 pending -> gercek trial_id (max_olcum birincil esik hucreleri)
 status: archived   # 2026-07-31: iki kill de tetiklendi — yön TERS (yüksek-MAX @20 +1,46pp DAHA İYİ,
 #   CI[+0,66,+2,27]); eleme beklentiyi DÜŞÜRÜR (−0,34pp anlamlı; elenen dilim hedef-çıkışların %27,9'unu taşıyor);
 #   false-breakout iyileşmesi yok. Pozitif kontrol geçti (rvol20 0,0645 birebir). Hüküm "bu evrende işe yaramaz" —

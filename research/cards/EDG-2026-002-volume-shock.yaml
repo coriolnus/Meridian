@@ -18,7 +18,7 @@ success_metric: "temiz-bar tablosunda bant yapısı yeniden doğrulanır VE seç
 kill_criteria:
   - "temiz-bar yeniden-üretimi bant yapısını çürütürse (hayalet-artefaktıysa) mevcut sezgisel eşik KALIR, kart arşivlenir"
   - "hiçbir grid noktası katkı vermezse arşiv; canlı eşik değişikliği ANCAK prescreen+PARA-v3 kapısından"
-k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [pending-S1-retro]}
+k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [s1_retro/edg_2026_002_volshock]}   # U2 2026-08-23: 1 pending -> gercek trial_id (s1_retro/sonuc.json hucre adi)
 status: archived   # 2026-07-31: bant yapısı hayalet-artefaktı DEĞİL (A/B max 0.047pp) AMA 18 hücrenin 0'ı ham
 #   rvol20'yi geçemedi (ham @20 IC=0.0645 CI[+0.017,+0.111] ANLAMLI) → canlı min_volume_ratio=1.5 KALIR, gölge kolu açılmaz.
 #   TORUN-KART ADAYI (yeni ön-kayıt gerektirir): "tepe/monoton-değil" iddiası desteklenmedi; üçgenin 0'ladığı rvol≥2.5

@@ -17,7 +17,7 @@ success_metric: "P(ΔS>0) >= K=4-cezalı eşik (0.95 tabanından) HERHANGİ bir 
 kill_criteria:
   - "iki rampa koşulunda da P<0.60 → paket ölür; rampa-değil-paket suçlanır, WP-R kod turu yine yapılabilir (rampa bounds'a taşınır) ama P3 arşive"
   - "rampa-kapalı koşulda maxDD veto sınırını aşarsa (DD_VETO_MARGIN) → rampanın koruması GERÇEK, gevşetme sınırlı kalır"
-k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [pending]}
+k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [wpr_olcum/gevsek_6_15, wpr_olcum/kapali]}   # U2 2026-08-23: 1 pending -> gercek trial_id (wpr_olcum/sonuc.json hucreler)
 status: measured   # 2026-07-31 03:19 (6.322s, K=4): P3 PAKETİ ÖLDÜ — kill#1 (P=0,202 gevşek / 0,482
 #   kapalı rampa; ikisi de <0,60): rampa suçlu DEĞİLMİŞ, tam serbestlikte bile paket kendini kanıtlayamıyor →
 #   P3 arşiv. early_kill-tek SAĞ (rampa-kapalı P=0,606 — kill üstü, geçiş altı) → gölge-v2 V3 kolunda birikime

@@ -50,7 +50,7 @@ kill_criteria:
   - "replay friksiyon modeli koddan OKUNAMAZSA kıyas yapılmaz — uydurulmaz"
   - "kâğıt-icra ile replay'i AYNI potaya koymak yasak: kâğıt dolumları iyimser olabilir, bu kartın konusu tam da o"
 
-k_registry: {registered_at: "2026-08-13T1x", trial_ids: [pending-037-tca]}
+k_registry: {registered_at: "2026-08-13T1x", trial_ids: [edg037_tca_2026-08-13/tca]}   # U2 2026-08-23: 1 pending -> gercek trial_id (tek betimsel kosum)
 
 status: measured   # 2026-08-13 Rol-1 — ölçüldü + hüküm: EŞİK TARTIŞMASI KAPANDI (eşik lehine, ama asıl bulgu daha ağır).
 

@@ -39,7 +39,7 @@ kill_criteria:
   - "stop_gap dolumlarına enjeksiyon sızarsa geçersiz (kademe-1 gerçek fiyattır)"
   - "motor sha koşum içinde değişirse geçersiz (bugünkü uçuş-commit dersi: koşum sırasında motor commit'i de yasak)"
   - "Ö2 okuma kuralı ihlali: 042-K3 bandı gelmeden bu kartla EDG-040 hükmü revize edilirse geçersiz"
-k_registry: {registered_at: "2026-08-22", trial_ids: [pending-045-s5, pending-045-s10, pending-045-s20]}
+k_registry: {registered_at: "2026-08-22", trial_ids: [edg045_stop_slip_2026-08-22/stopslip5, edg045_stop_slip_2026-08-22/stopslip10, edg045_stop_slip_2026-08-22/stopslip20]}   # U2 2026-08-23: 3 pending -> gercek trial_id (sonuc_stopslip*.json hucreleri)
 status: measured     # 2026-08-23 Rol-1 HÜKMÜ — aşağıda. (ön-kayıt 08-22; iki DURDU + alet-tamamlama tarihçesi dizinde)
 
 verdict: >

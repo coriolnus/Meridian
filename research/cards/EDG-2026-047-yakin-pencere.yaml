@@ -41,7 +41,7 @@ kill_criteria:
   - "kapsam <15 seans YA DA <200 ticker → Ö1 hükmü YOK, tüm çıktı betimleyici damgalı"
   - "eşik/pencere sınırları ölçümden sonra değişirse geçersiz (A/B tanımı donuk)"
   - "canlı state'e tek bayt yazım → geçersiz (salt-okuma sözleşmesi)"
-k_registry: {registered_at: "2026-08-23", trial_ids: [pending-047-L1]}
+k_registry: {registered_at: "2026-08-23", trial_ids: [edg047_yakin_pencere_2026-08-23/yakin_pencere_L1]}   # U2 2026-08-23: 1 pending -> gercek trial_id (sonuc.json hucre alani)
 status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (aynı gece ölçüldü; K=1 aynen, kill 0)
 
 verdict: >

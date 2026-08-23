@@ -69,7 +69,7 @@ kill_criteria:
   - "sadakat farkı düzeltme SONRASI artMIŞSA (dört tip modeli gerçeği daha KÖTÜ tahmin ediyorsa)
      → model yanlış, GERİ AL — 'ekledik çünkü eksikti' bir başarı ölçütü değildir."
 
-k_registry: {registered_at: "2026-08-09T13:0x", trial_ids: [pending-EXE-004-asama1-olcum]}
+k_registry: {registered_at: "2026-08-09T13:0x", trial_ids: [cf_cikis_sadakati_2026-08-09/asama1]}   # U2 2026-08-23: 1 pending -> gercek trial_id (asama-1 olcumu; kosum dizini)
 
 status: measured_partial   # 2026-08-09 Rol-1 — AŞAMA 1 ÖLÇÜLDÜ; Aşama-2 eşiğine ULAŞILMADI (eşikler ölçümden ÖNCE donmuştu, DEĞİŞMEDİ).
 

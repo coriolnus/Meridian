@@ -33,7 +33,7 @@ kill_criteria:
   - "slot-yarışması seans sayısı <20 → olculemedi (politika hiç devreye girmiyor)"
   - "şasi bütünlüğü bozuksa geçersiz"
 
-k_registry: {registered_at: "2026-08-12T4x", trial_ids: [pending-034-skor-sirali]}
+k_registry: {registered_at: "2026-08-12T4x", trial_ids: [none-olculmedi-faz0-erken-cikis]}   # U2 2026-08-23: 1 pending -> gercek trial_id (FAZ-0 inert cikisi; faz1 kosulmadi (sonuc_faz0.json faz1=null))
 
 status: measured   # 2026-08-12 Rol-1 — FAZ-0 betimsel ölçüm + hüküm: İNERT-KAPANIŞ.
 

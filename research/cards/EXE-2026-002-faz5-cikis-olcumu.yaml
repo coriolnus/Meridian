@@ -73,7 +73,7 @@ kill_criteria:
   - "Eşleşmeyen gölge satırı oranı > %20 → defter bütünlüğü sorunu; ölçüm hükmü VERİLMEZ,
      önce eşleştirme kırılması kök-neden turuna gider."
 
-k_registry: {registered_at: "2026-08-07T19:0x", trial_ids: [pending-EXE-002-faz5]}
+k_registry: {registered_at: "2026-08-07T19:0x", trial_ids: [none-arsivsiz-canli-modul-faz5_cikis]}   # U2 2026-08-23: 1 pending -> gercek trial_id (olcum canli modul (meridian/faz5_cikis.py); olcumler/ arsiv dizini YOK)
 
 status: measured   # 2026-08-07 Rol-1 — ÖLÇÜM KODU YAZILDI VE KOŞTU (v212, meridian/faz5_cikis.py).
 #   KAYIT ANINDAKİ ÖNGÖRÜ (kart yazılırken, kod yokken): "4b defteri n=4, ilk koşum n_min=20'nin

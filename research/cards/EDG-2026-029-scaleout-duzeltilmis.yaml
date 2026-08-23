@@ -31,7 +31,7 @@ kill_criteria:
   - "şasi bütünlüğü bozuksa hücre geçersiz"
   - "monkeypatch'in DAVRANIŞ tanımı öz-sınamayla kanıtlanamazsa (bankalama-barında trail değişmiyor + sonraki bar güncelleniyor) → koşulmaz, araç turu"
 
-k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-029-B-fix, pending-029-C-fix]}
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [edg029_scaleout_fix_2026-08-12/F1x, edg029_scaleout_fix_2026-08-12/F2x]}   # U2 2026-08-23: 2 pending -> gercek trial_id (artefakt hucre trial_id eslesmesi B=F1x C=F2x)
 
 status: measured   # 2026-08-12 Rol-1 — iki hücre ölçüldü + hüküm: KAVRAM ELENDİ.
 

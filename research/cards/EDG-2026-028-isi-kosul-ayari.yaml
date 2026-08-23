@@ -53,7 +53,7 @@ kill_criteria:
   - "her iki yöntemde de (iii) işlem-debisi %60 tabanının altına düşerse otomatik-benimseme YAPILMAZ —
      sayılar pencereye gider (debi öğrenme yakıtı; operatör görmeli)"
 
-k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-028-rejim-haritali, pending-028-vol-hedef]}
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [edg028_isi_ayari_2026-08-12/y1, edg028_isi_ayari_2026-08-12/y2]}   # U2 2026-08-23: 2 pending -> gercek trial_id (Y1=rejim-haritali, Y2=vol-hedef (t10=referans))
 
 status: measured   # 2026-08-12 Rol-1 — üç hücre ölçüldü + hüküm.
 

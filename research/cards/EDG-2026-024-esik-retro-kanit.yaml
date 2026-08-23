@@ -37,7 +37,7 @@ kill_criteria:
   - "eklenen işlem sayısı hücre başına <15 ise o hücre 'olculemedi' (örneklem yetersiz — CI anlamsız)"
   - "taban koşum mevcut canlı/022 davranışını yeniden üretemezse ölçüm geçersiz (şasi onarımı önce)"
 
-k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-024-hacim125, pending-EDG-024-rs65, pending-EDG-024-ikisi]}
+k_registry: {registered_at: "2026-08-12T1x", trial_ids: [edg024_esik_retro_2026-08-12/hacim_125, edg024_esik_retro_2026-08-12/rs_65, edg024_esik_retro_2026-08-12/ikisi]}   # U2 2026-08-23: 3 pending -> gercek trial_id (sonuc.json hucreler)
 
 status: measured   # 2026-08-12 Rol-1 — üç hücre ölçüldü + hüküm: EŞİKLER DOĞRULANDI (kill#1).
 

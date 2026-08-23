@@ -32,7 +32,7 @@ kill_criteria:
   - "teşhis artefaktı ezilirse geçersiz"
   - "breadth türetimi gelecek-bar okursa geçersiz (PIT öz-sınaması: seri yalnız t−1'e dek barlarla)"
   - "medyan eşiği ölçümden sonra oynatılırsa geçersiz"
-k_registry: {registered_at: "2026-08-23", trial_ids: [pending-051-breadth]}
+k_registry: {registered_at: "2026-08-23", trial_ids: [edg051_breadth_2026-08-23/breadth_medyan]}   # U2 2026-08-23: 1 pending -> gercek trial_id (tek dilim ekseni; kosum dizini)
 status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (aynı gece ölçüldü; K=1 aynen; kill 0)
 
 verdict: >

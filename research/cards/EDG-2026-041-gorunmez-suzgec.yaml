@@ -64,7 +64,7 @@ kill_criteria:
   - "D1 kaydı öneri defterine GERÇEK öneri gibi girerse geçersiz — reddedilen öneri 'aday' değildir; ayrı damga şart, yoksa 28b'nin ters yönü doğar (sayı bu kez ŞİŞER)"
   - "ölçüm motoru değiştirdikten SONRA koşulursa geçersiz — önce ölç, sonra değiştir"
 
-k_registry: {registered_at: "2026-08-14T1x", trial_ids: [pending-041-on-eleme-envanteri]}
+k_registry: {registered_at: "2026-08-14T1x", trial_ids: [none-arsivsiz-canli-defter-2026-08-14]}   # U2 2026-08-23: 1 pending -> gercek trial_id (canli events.jsonl olcumu; olcumler/ arsiv dizini YOK, K+=0)
 
 status: measured   # 2026-08-14 Rol-1 — canlı defterden ölçüldü (motor DEĞİŞMEDEN ÖNCE) + hüküm: D1 + D2.
 

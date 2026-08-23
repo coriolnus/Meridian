@@ -41,7 +41,7 @@ kill_criteria:
      GEÇERSİZ (şasi bozulmuş) — önce tutarlılık onarımı"
   - "max-dd varyantta taban×2'yi aşarsa 'aday' hükmü verilmez; sayılar yine raporlanır (karar operatörün)"
 
-k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-023-rampa-bandi]}
+k_registry: {registered_at: "2026-08-12T1x", trial_ids: [edg023_rampa_bandi_2026-08-12/varyant]}   # U2 2026-08-23: 1 pending -> gercek trial_id (taban=kontrol, olculen hucre varyant)
 
 status: measured   # 2026-08-12 Rol-1 — ölçüldü + hüküm işlendi (eşikler önceden donuktu, değişmedi).
 

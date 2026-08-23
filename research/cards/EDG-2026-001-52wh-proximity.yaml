@@ -15,7 +15,7 @@ success_metric: "cf-katmanlı IC: CI 0'ı dışlar VE |IC|>=0.03 (large-cap alt-
 kill_criteria:
   - "large-cap alt-örnekte anlamsız → aile kapanır (Barroso-Wang doğrulanmış olur), kalıcı arşiv"
   - "VCP skoruyla korelasyon > 0.8 → bağımsız kol AÇILMAZ (mevcut maruziyetin yeni adı olurdu); yalnız skor-özelliği adayı kalır"
-k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [pending-S1-retro]}
+k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [s1_retro/edg_2026_001_52wh]}   # U2 2026-08-23: 1 pending -> gercek trial_id (s1_retro/sonuc.json hucre adi)
 status: archived   # 2026-07-31: 9/9 hücre anlamsız (tarih-kümeli bootstrap; en iyi cf@20 IC=0.037 CI[-0.030,+0.100]);
 #   panel tanısı aralık-kısıtı artefaktını dışladı (işaret tez yönünde bile değil); survivorship hükmü GÜÇLENDİRİYOR.
 #   Kill#2 TETİKLENMEDİ: ρ(52wh,VCP)=-0.036 — özellik bağımsız ama bilgisiz. METİN DÜZELTMESİ: "Barroso-Wang

@@ -45,7 +45,7 @@ kill_criteria:
   - "replay bacağında momentum_burst işlem sayısı <30 ise 'olculemedi' — otomatik silahlanma TETİKLENMEZ"
   - "replay şasisi taban davranışı yeniden üretemezse ölçüm geçersiz"
 
-k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-025-mb-karne]}
+k_registry: {registered_at: "2026-08-12T1x", trial_ids: [edg025_mb_karne_2026-08-12/mb_karne]}   # U2 2026-08-23: 1 pending -> gercek trial_id (tek kurulum; kosum dizini)
 
 status: measured   # 2026-08-12 Rol-1 — ölçüldü + hüküm: OTOMATİK SİLAHLANMA YAPILMAZ (ölçüt-i kıl payı düştü).
 

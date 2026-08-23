@@ -36,7 +36,7 @@ kill_criteria:
   - "taban DIŞINDA herhangi bir knob'a dokunulursa geçersiz (min_exp/ceza/tetik AYNEN — tek-kaldıraç sözleşmesi)"
   - "motor sha (broker/backtest/strategy/guard) künyeyle tutarsızsa geçersiz"
   - "yer-değiştirme raporu üretilmeden hüküm yazılırsa geçersiz"
-k_registry: {registered_at: "2026-08-23", trial_ids: [pending-048-t60]}
+k_registry: {registered_at: "2026-08-23", trial_ids: [edg048_chop_tabani_2026-08-23/taban60]}   # U2 2026-08-23: 1 pending -> gercek trial_id (kosulan tek hucre (taban45 kosulmadi))
 status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (aynı gün ölçüldü; K=1 aynen; kill-tarihçesi: künye sagası)
 
 verdict: >

@@ -26,7 +26,7 @@ kill_criteria:
   - "turnover-kaynak payda %50'nin altındaysa (çok sembalde ölçülemiyor) → olculemedi"
   - "şasi bütünlüğü bozuksa geçersiz"
 
-k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-031-w005, pending-031-w010]}
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [edg031_turnover_w_2026-08-12/w005, edg031_turnover_w_2026-08-12/w010]}   # U2 2026-08-23: 2 pending -> gercek trial_id (sonuc.json hucreler)
 
 status: measured   # 2026-08-12 Rol-1 — iki hücre ölçüldü + hüküm: w=0 DOĞRULANDI.
 

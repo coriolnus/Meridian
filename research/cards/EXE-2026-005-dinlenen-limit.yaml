@@ -62,7 +62,7 @@ kill_criteria:
   - "gün içi sıralama iddiası yapılırsa geçersiz: günlük barla 'önce stop mu, önce limit mi' BİLİNEMEZ. Belirsizlik KÖTÜMSER tarafa yazılır ve bu BEYAN edilir (broker.py'nin kendi 'bar içi — sıra bilinemez, stop önce' emsali)"
   - "şasi bütünlüğü (frame_miss=0, dup=0, scan==plan) bozuksa geçersiz"
 
-k_registry: {registered_at: "2026-08-14T2x", trial_ids: [pending-EXE-005-dinlenen-limit]}
+k_registry: {registered_at: "2026-08-14T2x", trial_ids: [exe005_23c_a_kolu_2026-08-17/b_kolu]}   # U2 2026-08-23: 1 pending -> gercek trial_id (dinlenen-limit = B kolu (A kolu sasi kontrolu))
 
 status: measured     # 2026-08-22 Rol-1 HÜKMÜ (Ö-51d) — aşağıda. (ön-kayıt 2026-08-14)
 

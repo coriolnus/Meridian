@@ -68,7 +68,7 @@ kill_criteria:
   - "canlı emir gönderimine ya da onay kapısına dokunulursa geçersiz: bu kart ÖLÇER, davranış değiştirmez"
   - "tohum (`replay_seed`) satırları kıyasa girerse geçersiz — onların broker karşılığı OLMAMASI beklenir"
 
-k_registry: {registered_at: "2026-08-21", trial_ids: [pending-EXE-007-broker-teyitli-defter]}
+k_registry: {registered_at: "2026-08-21", trial_ids: [exe007_broker_teyit_2026-08-22/broker_teyitli_defter]}   # U2 2026-08-23: 1 pending -> gercek trial_id (tek kosum dizini)
 
 status: measured     # 2026-08-22 Rol-1 HÜKMÜ — aşağıda. (ön-kayıt 2026-08-22, ölçüm aynı gün)
 

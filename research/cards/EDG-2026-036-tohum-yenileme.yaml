@@ -45,7 +45,7 @@ kill_criteria:
   - "kâğıt-icra satırlarına dokunma riski gösterilirse → DUR (icra defteri kutsaldır)"
   - "yeni tohum yürürlükteki paketle üretilmemişse (sha uyuşmazlığı) → geçersiz"
 
-k_registry: {registered_at: "2026-08-13T0x", trial_ids: [pending-036-kuru-kosum]}
+k_registry: {registered_at: "2026-08-13T0x", trial_ids: [edg036b_yenileme_kuru_2026-08-13/kuru_kosum]}   # U2 2026-08-23: 1 pending -> gercek trial_id (kuru-kosum kiyasi; 036b dizini)
 
 status: measured   # 2026-08-13 Rol-1 — hüküm İKİ KEZ verildi: önce "yapılamaz", sonra ÖLÇÜMLE DÜZELTİLDİ.
 

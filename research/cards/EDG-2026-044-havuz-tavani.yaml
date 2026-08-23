@@ -34,7 +34,7 @@ kill_criteria:
   - "aşama-2 operatör onayı olmadan canlıda koşulursa geçersiz"
   - "ikiz formül (sprint.py:672) tek kaynağa inmeden tavan değişikliği önerilirse geçersiz"
   - "API p95 ölçümü arama koşarken alınmazsa geçersiz (boşta p95 anlamsız)"
-k_registry: {registered_at: "2026-08-22", trial_ids: [pending-044-isci3]}
+k_registry: {registered_at: "2026-08-22", trial_ids: [edg044_havuz_tavani_2026-08-23/B1, edg044_havuz_tavani_2026-08-23/B2]}   # U2 2026-08-23: 1 pending -> gercek trial_id (isci=3 hucreleri (A1/A2 = isci2 kontrol))
 status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (aşama-1 yerel; aşama-2 HİÇ AÇILMADI)
 
 verdict: >

@@ -113,7 +113,7 @@ kill_criteria:
   - "PAYDA KARIŞTIRMA YASAĞI (EDG-037 kill#3'ün devamı): replay/simüle dolumlar (`replay_seed`, `live_paper`, iç motor) TCA paydasına GİRMEZ; yalnız broker'ın gerçek dolum kayıtları."
   - "MOTOR-DIŞI EMİR YASAĞI: operatörün kendi emirleri (`P-` öneksiz coid) ve tatbikat/smoke emirleri paydadan ÇIKARILIR."
 
-k_registry: {registered_at: "2026-08-13T18:0x", trial_ids: [pending-038-tca2]}
+k_registry: {registered_at: "2026-08-13T18:0x", trial_ids: [edg038_tca2_2026-08-13/tca2]}   # U2 2026-08-23: 1 pending -> gercek trial_id (tek betimsel kosum)
 
 status: measured   # 2026-08-13 Rol-1 — ölçüldü + hüküm aşağıda.   # ölçüm bu satır yazıldıktan SONRA koşuldu
 

@@ -25,7 +25,7 @@ kill_criteria:
   - "eklenen işlem <30/hücre → olculemedi"
   - "şasi bütünlüğü bozuksa geçersiz"
 
-k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-030-esik30, pending-030-esik20]}
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [edg030_rejim_esigi_2026-08-12/e30, edg030_rejim_esigi_2026-08-12/e20]}   # U2 2026-08-23: 2 pending -> gercek trial_id (sonuc.json hucreler)
 
 status: measured   # 2026-08-12 Rol-1 — hüküm: GEVŞETME ÖNERİLMEZ, eşik-40 kanıtla yerinde.
 

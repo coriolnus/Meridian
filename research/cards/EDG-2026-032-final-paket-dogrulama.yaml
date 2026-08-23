@@ -30,7 +30,7 @@ kill_criteria:
   - "şasi bütünlüğü bozuksa geçersiz"
   - "mb işlem sayısı <20 ise mb-karnesi 'olculemedi' — ama paket-kapısı yine üç ölçütle işler"
 
-k_registry: {registered_at: "2026-08-12T3x", trial_ids: [pending-032-c-mb]}
+k_registry: {registered_at: "2026-08-12T3x", trial_ids: [edg032_final_paket_2026-08-12/cmb]}   # U2 2026-08-23: 1 pending -> gercek trial_id (tek dogrulama hucresi (sonuc_cmb.json))
 
 status: measured   # 2026-08-12 Rol-1 — ölçüldü + hüküm: KAPI 3/3 GEÇTİ, dağıtım ilerler.
 

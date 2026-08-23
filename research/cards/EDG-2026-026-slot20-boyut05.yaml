@@ -36,7 +36,7 @@ kill_criteria:
   - "max-dd B'nin ×1.5'ini aşarsa 'öneri' dili kullanılmaz; sayılar yine tam raporlanır (karar operatörün)"
   - "şasi bütünlüğü (frame_miss=0, dup=0, scan==plan) bozuksa ölçüm geçersiz"
 
-k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-EDG-026-slot20-r05]}
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [edg026_slot20_2026-08-12/slot20_r05]}   # U2 2026-08-23: 1 pending -> gercek trial_id (kartin tek hucresi; kosum dizini)
 
 status: measured   # 2026-08-12 Rol-1 — ölçüldü + hüküm işlendi.
 

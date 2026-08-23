@@ -37,7 +37,7 @@ kill_criteria:
   - "dormant-dışı işlemlerin giriş yasası değişirse geçersiz (öz-sınama: kontrol-ortak işlemler alan-alan özdeş)"
   - "motor sha hücre başı sabit değilse geçersiz"
   - "yer-değiştirme raporu üretilmeden hüküm yazılırsa geçersiz"
-k_registry: {registered_at: "2026-08-23", trial_ids: [pending-049-da]}
+k_registry: {registered_at: "2026-08-23", trial_ids: [edg049_dormant_2026-08-23/dormant_acik]}   # U2 2026-08-23: 1 pending -> gercek trial_id (sonuc_dormant_acik.json hucresi)
 status: measured     # 2026-08-24 Rol-1 HÜKMÜ aşağıda (ölçüm 23:23'te tamamlandı; ajan kredi
                      # kesintisiyle raporlayamadan düştü — sonuçlar diskten Rol-1'ce okundu, sonuc_grid.json)
 

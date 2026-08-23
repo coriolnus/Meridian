@@ -39,7 +39,7 @@ kill_criteria:
   - "şasi bütünlüğü (frame_miss=0, dup=0, scan==plan) bozuksa hücre geçersiz"
   - "C-taban 026 koşumu şasi-geçersiz çıkarsa C hücreleri 'bekliyor' — yalnız B hücreleriyle pencereye gidilir"
 
-k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-027-B-scaleout, pending-027-B-chandelier, pending-027-C-scaleout, pending-027-C-chandelier]}
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [edg027_cikis_paketi_2026-08-12/h1_scaleout, edg027_cikis_paketi_2026-08-12/h2_chandelier, edg027_cikis_paketi_2026-08-12/C_scaleout, edg027_cikis_paketi_2026-08-12/C_chandelier]}   # U2 2026-08-23: 4 pending -> gercek trial_id (sonuc.json + sonuc_C_hucreler.json hucreler)
 
 status: measured   # 2026-08-12 Rol-1 — DÖRT hücre tamam (F1+F2) + nihai hüküm.
 

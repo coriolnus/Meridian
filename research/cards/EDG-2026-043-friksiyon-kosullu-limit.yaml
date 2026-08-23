@@ -72,7 +72,7 @@ kill_criteria:
   - "bütünlük (frame_miss=0, dup=0, scan==plan, yasak modül yok) bozuksa geçersiz"
   - "OKUMA KURALI ihlali: EDG-042 bandı gelmeden bu kartın hükmüyle B4 yeniden açılırsa geçersiz"
 
-k_registry: {registered_at: "2026-08-22", trial_ids: [pending-043-s15A, pending-043-s15B, pending-043-s25A, pending-043-s25B, pending-043-s35A, pending-043-s35B]}
+k_registry: {registered_at: "2026-08-22", trial_ids: [edg043_friksiyon_limit_2026-08-22/slip15_A, edg043_friksiyon_limit_2026-08-22/slip15_B, edg043_friksiyon_limit_2026-08-22/slip25_A, edg043_friksiyon_limit_2026-08-22/slip25_B, edg043_friksiyon_limit_2026-08-22/slip35_A, edg043_friksiyon_limit_2026-08-22/slip35_B]}   # U2 2026-08-23: 6 pending -> gercek trial_id (sonuc_slip*_[AB].json hucreleri)
 
 status: measured     # 2026-08-22 Rol-1 — ALTI HÜCRE ÖLÇÜLDÜ; HÜKÜM ASKIDA (okuma kuralı:
                      # EDG-2026-042'nin gerçek friksiyon bandı gelmeden B4 hükmü OKUNMAZ — kill'de).

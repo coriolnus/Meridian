@@ -46,7 +46,7 @@ kill_criteria:
   - "ARMED kümesi enjeksiyonu strategy.py'yi DEĞİŞTİRİYORSA geçersiz — ölçüm kanalı repo koduna dokunmaz"
   - "pullback'in 6 işlemi taban defterde bulunamazsa (sha uyuşmazlığı) geçersiz"
 
-k_registry: {registered_at: "2026-08-13T2x", trial_ids: [pending-039-pullback-cikar]}
+k_registry: {registered_at: "2026-08-13T2x", trial_ids: [edg039_pullback_2026-08-13/eksipb]}   # U2 2026-08-23: 1 pending -> gercek trial_id (TEK HUCRE (sonuc_eksipb.json))
 
 status: measured   # 2026-08-13 Rol-1 hükmü → 2026-08-22 OPERATÖR KARARI: A (UYGULANDI).
 

@@ -39,7 +39,7 @@ kill_criteria:
   - "λ ölçüm sırasında değiştirilirse geçersiz (tek nokta donuk)"
   - "seçilim cezası ATR dışı bir alana genişletilirse geçersiz (menzil% seçilim anında YOK — PIT)"
   - "iki-dünya şartı atlanıp tek dünyadan hüküm çıkarılırsa geçersiz (yaltaklanan-dünya tuzağı)"
-k_registry: {registered_at: "2026-08-22", trial_ids: [pending-046-sm, pending-046-sc, pending-046-am, pending-046-ac]}
+k_registry: {registered_at: "2026-08-22", trial_ids: [edg046_secilim_2026-08-23/sabit_mevcut, edg046_secilim_2026-08-23/sabit_cezali, edg046_secilim_2026-08-23/atr_mevcut, edg046_secilim_2026-08-23/atr_cezali]}   # U2 2026-08-23: 4 pending -> gercek trial_id (kart grid hucreleri = sonuc_*.json dosya adlari)
 status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda. (ön-kayıt 08-22; K=4 aynen, kill 0)
 
 verdict: >

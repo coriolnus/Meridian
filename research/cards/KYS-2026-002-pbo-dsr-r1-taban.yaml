@@ -45,7 +45,7 @@ kill_criteria:
      → ölçüm DURUR, 'araç turu gerekir' raporlanır; basitleştirilmiş yeniden-implementasyon YASAK"
   - "donmuş kopya ile canlı arasında satır-sayısı uyuşmazlığı çıkarsa (kopya bozuk) → ölçüm geçersiz, kopya tazelenir"
 
-k_registry: {registered_at: "2026-08-10T00:2x", trial_ids: [pending-KYS-002-r1-taban]}
+k_registry: {registered_at: "2026-08-10T00:2x", trial_ids: [kys002_pbo_dsr_taban_2026-08-10/r1_taban]}   # U2 2026-08-23: 1 pending -> gercek trial_id (R1 taban kosumu; DSR yarisi kill#2)
 
 status: measured_partial   # 2026-08-10 Rol-1 — PBO yarısı ÖLÇÜLDÜ, DSR yarısı kill#2 (araç turu).
 

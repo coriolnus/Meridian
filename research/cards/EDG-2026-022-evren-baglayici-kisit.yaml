@@ -50,7 +50,7 @@ kill_criteria:
   - "rejim kırılımı sınıfı TERSİNE çeviriyorsa (bull'da evren, bear'da de-risk gibi) tek havuz
      hükmü YANILTICI — rejim-koşullu hüküm yazılır, tek sayı değil"
 
-k_registry: {registered_at: "2026-08-09T14:3x", trial_ids: [pending-EDG-022-kisit-teshisi]}
+k_registry: {registered_at: "2026-08-09T14:3x", trial_ids: [edg022_evren_kisit_2026-08-09/kisit_teshisi]}   # U2 2026-08-23: 1 pending -> gercek trial_id (tek hucre; kosum dizini)
 
 status: measured   # 2026-08-09 Rol-1 — ölçüm KOŞULDU + hüküm işlendi (eşikler ölçümden ÖNCE donmuştu, DEĞİŞMEDİ).
 

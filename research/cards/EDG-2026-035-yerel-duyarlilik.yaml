@@ -42,7 +42,7 @@ kill_criteria:
   - "şasi bütünlüğü (frame/dup/scan==plan) bozuksa geçersiz"
   - "motor dosyalarında koşum sırasında mtime değişimi → o hücre geçersiz, yeniden koşulur (033 dersi)"
 
-k_registry: {registered_at: "2026-08-12T5x", trial_ids: [pending-035-slot15, pending-035-slot25, pending-035-size040, pending-035-size065, pending-035-zarf65, pending-035-zarf80]}
+k_registry: {registered_at: "2026-08-12T5x", trial_ids: [edg035_duyarlilik_2026-08-12/slot15, edg035_duyarlilik_2026-08-12/slot25, edg035_duyarlilik_2026-08-12/size040, edg035_duyarlilik_2026-08-12/size065, edg035_duyarlilik_2026-08-12/zarf65, edg035_duyarlilik_2026-08-12/zarf80]}   # U2 2026-08-23: 6 pending -> gercek trial_id (sonuc.json hucre_tablosu)
 
 status: measured   # 2026-08-13 Rol-1 — 6 hücre ölçüldü + hüküm: C+mb YEREL-OPTİMUM KANITLA.
 
