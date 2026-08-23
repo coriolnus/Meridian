@@ -1,0 +1,150 @@
+# EDG-2026-049 · uyuyan-kurulum karşı-olgusu — 2 hücre {kontrol, dormant_acik} (2026-08-23)
+# Kart: research/cards/EDG-2026-049-uyuyan-kurulum-karsi-olgu.yaml (OKU-DOKUNMA; hüküm Rol-1'in).
+# Şasi çapası: edg032c_taban_2026-08-22 — kapı kıyası kosum1/ kanonik dosyalarına +
+# TABAN_KUNYESI.json kapı sha'larına (edg046/edg048 emsali birebir).
+#
+# ── [0] KÜNYE-TAZELEME PROTOKOLÜ ÖNDE (kart universe bloğu; EDG-048 emsali AYNEN) ──
+# Bugünkü K2/K5 dalgası motor sha'larını değiştirdi — künye kıyası (koşum günü ölçüldü):
+#   broker.py   künye 52e67c5db43f52d5… → şimdi 09f5d0850122376a… (K5 8324177 v273)
+#   backtest.py künye b59c059f43d4e410… = şimdi AYNI (değişmedi)
+#   strategy.py künye 263eb8fef7d10089… → şimdi 449039624127c66d… (K5 8324177 v273)
+#   guard.py    künye 185b467f33f08150… (v268) → şimdi bb984356798278a5… (K5 8324177 v273)
+# STATİK TEŞHİS (İMLER, kanıtlamaz — kanıt bayt-özdeşlik):
+#   * K5 (8324177, v273): broker.py +7 satır = 2 YORUM bloğu (EZER damgaları: entry_limit_price
+#     ATR bacağı + ADV katılım); strategy.py +4 satır = ARMED_SETUPS üstü EZER YORUM bloğu
+#     (tuple DEĞERİ değişmedi — B1 aynen); guard.py +42/−12 = GOAL_KEYS/LIMIT_KEYS 25a mezar
+#     taşları + REPLAY_WARMUP_KEYS (25c sınıf damgası) + validate_change reddi (Hermes yolu —
+#     replay ÇAĞIRMAZ) + classify_gate içi EZER YORUMU (kod değil).
+#   * K2 (d8030c0, v272 — giriş penceresi 13:45): meridian/barclock.py + intraday_cycle.py +
+#     loop/api katmanı — künye 4'lüsüne DOKUNMADI (backtest.py sha AYNI). "Pencere yasası
+#     canlı-yol koduna dokunur, replay'e DEĞMEMELİ" iddiasını özdeşlik SINAR — statik iddia
+#     yeterli SAYILMAZ.
+# PROTOKOL (Rol-1 devri, EDG-048 emsali): TAM pencerede kontrol koşumu İKİ KEZ (taze süreç +
+# bakir sandbox); kontrol1 ↔ kontrol2 ↔ edg032c/kosum1 ÜÇ DEFTERDE (islemler_tam / islemler /
+# seanslar) bayt-özdeşse TABAN_KUNYESI.json'un broker/strategy/guard kayıtları v273'e tazelenir
+# (eski sha'lar kunye_tarihcesi bloğuna + neden + kanıt yolu; yedek kunye_yedek_pre049.json;
+# kosum1_once + kosum2_sonra birlikte — dort_noktada_sabit iç tutarlılığı). ÖZDEŞ DEĞİLSE künye
+# TAZELENMEZ → DUR (dünya değişmiş demektir; özellikle K2 sızıntısı burada YAKALANIR — durma
+# başarıdır). Ölçüm dizini dışına TEK yazım bu künye güncellemesidir; kart DOKUNULMAZ.
+# Motor pin kapısı (her fazda): backtest.py künyeyle BİREBİR; broker/strategy/guard ya künye
+# sha'sı ya v273 pin'i — başka her değer bilinmeyen sürüklenme → DUR.
+#   broker v273:   09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b
+#   strategy v273: 449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877
+#   guard v273:    bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392
+#
+# ── HÜCRELER (K += 1; ikisi de merkez: slot 20 · 0,5R · 5R zarf — şasi parametre enjeksiyonu YOK):
+#   kontrol     = bugünkü dünya, dormant icrasız (şasi kapısı + künye-tazeleme hücresi; K harcamaz)
+#   dormant_acik = dormant_setup planların icra-yolu kapısı AÇIK — TEK yeni hücre
+#
+# ── ENJEKSİYON NOKTASI (koddan OKUNDU, varsayılmadı; koşum günü assert'le doğrulanır) ──
+#   * Replay'in plan→icra süzgeci: meridian/strategy.py:1095 `def scan_entry(...)` — gövde
+#     :1099 `by_setup = scan_all(...)` (TÜM ekranlar HER ZAMAN koşar; doğum burada) +
+#     :1103 `for setup in ARMED_SETUPS + extra:` (İCRA süzgeci: yalnız silahlı kurulum aday
+#     üretir; extra = params["entry.armed_extra"] ölçüm kanalı, frozen strategy.yaml'da YOK →
+#     boş). scan_entry kaynak pini (sha256, inspect.getsource):
+#     e945d7d66f43f8de4e198ef6b5d97291c0235894def2ecba0c2e033fd52fa7e7 — kaynak kayarsa DUR.
+#   * Replay çağrı yeri: meridian/backtest.py:435
+#     `sig = strat.scan_entry(sub.tail(340), eff, rs_map.get(t, 50), ticker=t)` — ticker başına
+#     günde EN ÇOK BİR sinyal; çağrı yalnız bütçe-açık + slot>0 + ısınma-sonrası seanslarda
+#     (backtest.py:401). Dönen HER sinyal aday → plan → kapı → silahlanma (plan_log'a hepsi).
+#   * Enjeksiyon SÜREÇ-İÇİ (edg048 replika deseni; motor DOSYASI DEĞİŞMEZ): YALNIZ dormant_acik
+#     hücresinde `strategy.scan_entry` yerine :1095-1107'nin BİREBİR replikası konur — tek fark
+#     süzgeç sırası `ARMED_SETUPS + extra + DORMANT_EKSTRA`. scan_all/evaluator'lara (plan
+#     DOĞUMUNA) DOKUNULMAZ: dormant sinyaller nasıl doğuyorlarsa öyle doğar (kartın "yalnız
+#     arka bağ" şartı); silahlı kurulumlar MUTLAK öncelikli kalır (v92 sıra disiplini: sonradan
+#     silahlanan ARKAYA — mb/armed_extra emsalinin birebir kendisi). Kontrol hücresinde
+#     scan_entry'ye HİÇ dokunulmaz (kanca dahi YOK — kill#1 özdeşliği bunun kanıtı).
+#   * DORMANT_EKSTRA = (pullback, episodic_pivot, pead, canslim) — scan_all evren pini
+#     (strategy.py `setup="…"` üreticileri: 7 ad) − B1 silahlı üçlüsü; sıra = scan_all
+#     değerlendirme sırası (strategy.py:1086-1088). Koşum günü kaynaktan yeniden türetilip
+#     assert'lenir. pead FMP/earnings.csv-kapılı: sandbox state'inde earnings.csv YOK (hazirla
+#     yalnız 3 yaml kopyalar) → pead PIT-temiz olarak yapısal None (assert + kayıt; PIT'siz
+#     proxy YASAK — dosya varsa DUR). canslim fundamentals-helper'sız DAİMA None (motor beyanı).
+#     İkisi de kümede TUTULUR: ateşlememeleri ölçülür, varsayılmaz.
+#
+# ── BEYANLI SINIRLAR (karta ek — replay süzgecinin yapısı; ölçüm öncesi yazıldı) ──
+#   (1) Replay ticker-günü başına TEK sinyal seçer (canlı dormant doğumu aynı ticker'da silahlı
+#       planla YAN YANA olabilir; replay'de silahlı ateşlediyse dormant o ticker-günde doğamaz).
+#   (2) Replay yalnız bütçe-açık günlerde tarar (canlı keşif-modu dormant doğumları burada yok).
+#   İkisi de kartın beyanlı sınırı-1'in ("replay doğum sıklığı canlıyla aynı olmayabilir")
+#   somut mekanizmalarıdır; dilim n bu beyanla okunur.
+#
+# ── ÖZ-SINAMALAR ──
+#   * Replika ön-sınaması (koşumdan ÖNCE, sentetik seçim-tablosu): kapalı-kip seçim yasası ≡
+#     motor scan_entry yasası (ARMED+extra, sıra); açık-kip yalnız "hiçbir silahlı ateşlemedi"
+#     durumunda dormant döndürür; sıra çivileri (armed>dormant; dormant içinde scan_all sırası).
+#   * kill#3 (kart, donuk): "dormant-dışı işlemlerin giriş yasası değişirse geçersiz — öz-sınama:
+#     kontrol-ortak işlemler alan-alan özdeş". UYGULAMA (ölçümden ÖNCE beyan): ortak anahtar
+#     (ticker, ts_open); TÜM 25 alan için fark sayımı TAM raporlanır (hiçbir alan dışlanmaz);
+#     kapı İKİ KATMANDA okunur çünkü satırın bir kısmı ÖZ-SERMAYE-EŞLENİĞİDİR (broker.py:504-515
+#     size_position: qty = f(equity); fill_entry: giriş fiyatı katılım-etkili = f(qty) — dormant
+#     işlemler equity yolunu değiştirir, ortak işlemlerin qty/pnl'i mekanik olarak sürüklenir;
+#     bu yer-değiştirme mekanizmasının muhasebe izidir, giriş yasası DEĞİLDİR):
+#       - GİRİŞ-YASASI KATMANI (kapı — biri bile farklıysa hücre geçersiz, DUR): ticker, ts_open,
+#         side, setup, score, r_multiple_expected, regime, strategy_version, plan_id,
+#         skill_chain, exploration (plan/sinyal-belirlenimli, portföy-bağımsız 11 alan).
+#       - SERMAYE-EŞLENİK KATMANI (kill DEĞİL — TAM sayım + örnekler raporda; hüküm Rol-1'in):
+#         id, ts_close, entry, exit, qty, r_multiple, pnl_pct, pnl_dollars, costs, exit_reason,
+#         bars_held, scaled_out, mfe_r, mae_r (14 alan).
+#     Ayrıca strict tüm-alan özdeşlik sonucu AYRICA raporlanır (saklanmaz).
+#   * Dormant-yokluk kanıtı (kontrol): kontrol defterinde + plan dağılımında dormant kurulum
+#     SIFIR olmalı (süzgeç kapalıyken sızıntı = enjeksiyon kaçağı → DUR).
+#   * Doğum-sayım mutabakatı (dormant_acik): replika-yakalanan dormant seçim sayısı ==
+#     plan_setup_dagilim'daki dormant plan toplamı (iki bağımsız sayaç).
+#
+# ── KİLL'LER (karttan, donuk) ──
+#   kill#1 kontrol hücresi künye (gerekirse tazelenmiş haliyle) ile ÜÇ defterde bayt-özdeş
+#          değilse DUR (künye-tazeleme çift kapısı bu kıyasın kendisi; exit 2).
+#   kill#2 dormant üretim mantığına dokunulursa geçersiz (yalnız arka-bağ: scan_all/evaluator
+#          yamasız — replika kaynak pini + scan_all'a dokunulmadığının beyanı + kontrol özdeşliği).
+#   kill#3 dormant-dışı giriş yasası değişirse geçersiz (yukarıdaki iki-katmanlı öz-sınama).
+#   kill#4 motor sha hücre başı sabit değilse geçersiz (hücre önce/sonra + künye kıyası).
+#   kill#5 yer-değiştirme raporu üretilmeden hüküm yazılamaz (bu betik raporu ÜRETİR; edg048
+#          deseni — dormant-DIŞI işlem kümesi (setup ∈ B1; anahtar ticker+ts_open) dormant_acik
+#          ↔ kontrol: çıkan/giren/ortak TAM listeleri + sayıları + özetleri; dormant-dilim n her
+#          iki hücrede [kontrolde yapısal 0]).
+#
+# ── DORMANT-DİLİM KESİTİ (kart features_asof): dormant_acik defterinde setup ∈ DORMANT_EKSTRA
+#   işlemler — n · toplam-R · PF (paydası boşsa None+neden) · çıkış dağılımı · setup kırılımı ·
+#   net_pnl · win_rate.
+#
+# ── Δ+CI (kart, donuk): Δ(dormant_acik − kontrol) EŞLENİK ay-kümeli bootstrap · birim=AY ·
+#   B=5000 · seed=20260812 (edg040/045/046/048 delta_pnl_ci reçetesi AYNEN; aylar kontrol
+#   seanslarından).
+#
+# ── n=0 KURALI (kart, donuk): dormant_acik hücresinde dormant PLAN doğumu 0 ise sonuç
+#   "replay'de ölçülemez + neden" damgalanır, karar canlı-birikim yoluna devredilir (hüküm yine
+#   Rol-1'in; yer-değiştirme raporu yine üretilir — sıfır-fark nötrlük kanıtıdır).
+#
+# ── KARAR KURALI (karttan, DONUK — okunması Rol-1'in; bu betik HÜKÜM VERMEZ):
+#   Δ CI-alt > 0 VE dilim n ≥ 30 → "GO adayı" (bağlama kararı operatöre; ARSENAL imza şartı) ·
+#   değilse NO-GO/yetersiz · plan n=0 → ölçülemez damgası.
+#
+# ── KOŞUM (sıra zorunlu; her faz AYRI süreç; uzun fazlar arka plan görevi, log dosyasından okunur):
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg049_dormant_2026-08-23/olcum.py smoke         # [1] duman: dar pencere (2022-01→06) iki hücre + kapılar (kill#1 duman = erken nötrlük sinyali)
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg049_dormant_2026-08-23/olcum.py kontrol1      # [2] TAM kontrol #1 (bakir sandbox) → kontrol_kosum1/
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg049_dormant_2026-08-23/olcum.py kontrol2      # [3] TAM kontrol #2 (bakir sandbox) → kontrol_kosum2/
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg049_dormant_2026-08-23/olcum.py kunye_tazele  # [4] üç-yönlü çift kapı → GEÇERSE künye v273'e tazelenir; DÜŞERSE DUR
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg049_dormant_2026-08-23/olcum.py dormant_acik  # [5] TAM dormant_acik + kill kapıları + dilim + Δ/CI + yer-değiştirme + sonuc_grid.json
+# Loglar: kosum_smoke.log · kosum_kontrol1.log · kosum_kontrol2.log · kosum_kunye.log ·
+# kosum_dormant.log — rapor: sonuc_grid.json (+ hucre_*.json, dormant_dilim*.json,
+# oz_sinama_kill3*.json, yer_degistirme*.json, determinizm_kunye.json, dormant_dogumlar*.json)
+#
+# DİSİPLİN: UYDURMA YASAĞI (ölçülemeyen None + neden) · YASA-4 (sessiz-yutma işaretli) · git
+# KOŞULMAZ · canlı state/ YAZILMAZ (şasi kendi sandbox'ına yönlendirir) · test suite KOŞULMAZ ·
+# motor dosyalarına DOKUNULMAZ (yama süreç-içi; restorasyon finally) · karta/ROADMAP'e YAZILMAZ ·
+# HÜKÜM YOK.
+
+# ── EK (2026-08-23 ~22:15, BEYANLI SÜRDÜRME — edg044/edg048 emsali) ──
+# KESİNTİ KAYDI: [1] duman fazı 20:20-20:26'da TAMAMLANDI (arka plan görevi exit 0;
+# sonuc_grid_smoke.json + kosum_smoke.log). Kesinti FAZLAR ARASINDA oldu: duman sonrası
+# kontrol1/kontrol2/kunye_tazele/dormant_acik hiç BAŞLATILMAMIŞTI (oturum duraklaması;
+# yarım/kesik faz YOK — hiçbir çıktı yarım yazılmadı, state_kontrol dizini yok).
+# DUMAN BULGULARI (damga): kill#1 duman kapısı GEÇTİ (kontrol duman defterleri
+# edg032c/kosum1_smoke ile bayt-özdeş — v273 nötrlüğünün erken sinyali; otoriter kapı TAM
+# çift-koşum). Dar pencerede (2022-01→06) dormant_plan_n=0 — iki hücre defteri birebir özdeş;
+# TAM pencerede de 0 çıkarsa kartın n=0 kuralı işler ("replay'de ölçülemez + neden").
+# SÜRDÜRME KURALI: tamamlanan duman ATLANIR (yeniden koşulmaz — çıktıları damgalı duruyor);
+# akış [2] kontrol1'den AYNEN devam eder. Her faz AYRI arka-plan görevi olarak koşulur
+# (60-dk görev sınırına tek faz sığar; kontrol1 ~13 dk emsal edg048). Betikte değişiklik YOK —
+# ön-uçuş artık-kontrolleri yarım koşumu zaten reddeder (fail-closed).

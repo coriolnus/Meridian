@@ -1,0 +1,42 @@
+{
+ "beyan": "KOMUT.txt ön-beyanı: kapı GİRİŞ-YASASI katmanında (plan/sinyal-belirlenimli 11 alan); SERMAYE-EŞLENİK katman farkları kill DEĞİL (broker.py:504-515 qty=f(equity); fill katılım-etkisi=f(qty) — dormant işlemler equity yolunu değiştirir, ortak işlemlerin boyut/pnl'i mekanik sürüklenir; yer-değiştirme mekanizmasının muhasebe izi). Strict tüm-alan sonucu saklanmadan raporda.",
+ "ortak_n": 8,
+ "yalniz_kontrol_n": 0,
+ "yalniz_dormant_n": 0,
+ "giris_yasasi_alanlari": [
+  "ticker",
+  "ts_open",
+  "side",
+  "setup",
+  "score",
+  "r_multiple_expected",
+  "regime",
+  "strategy_version",
+  "plan_id",
+  "skill_chain",
+  "exploration"
+ ],
+ "sermaye_eslenik_alanlari": [
+  "id",
+  "ts_close",
+  "entry",
+  "exit",
+  "qty",
+  "r_multiple",
+  "pnl_pct",
+  "pnl_dollars",
+  "costs",
+  "exit_reason",
+  "bars_held",
+  "scaled_out",
+  "mfe_r",
+  "mae_r"
+ ],
+ "alan_fark_sayimi": {},
+ "alan_fark_ornekleri": {},
+ "strict_tum_alan_ozdes": true,
+ "strict_farkli_satir_n": 0,
+ "giris_yasasi_ihlal_n": 0,
+ "giris_yasasi_ihlal": [],
+ "kill3_gecti": true
+}

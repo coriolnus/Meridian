@@ -1,0 +1,362 @@
+{
+ "beyan": "KOMUT.txt ön-beyanı: kapı GİRİŞ-YASASI katmanında (plan/sinyal-belirlenimli 11 alan); SERMAYE-EŞLENİK katman farkları kill DEĞİL (broker.py:504-515 qty=f(equity); fill katılım-etkisi=f(qty) — dormant işlemler equity yolunu değiştirir, ortak işlemlerin boyut/pnl'i mekanik sürüklenir; yer-değiştirme mekanizmasının muhasebe izi). Strict tüm-alan sonucu saklanmadan raporda.",
+ "ortak_n": 875,
+ "yalniz_kontrol_n": 10,
+ "yalniz_dormant_n": 10,
+ "giris_yasasi_alanlari": [
+  "ticker",
+  "ts_open",
+  "side",
+  "setup",
+  "score",
+  "r_multiple_expected",
+  "regime",
+  "strategy_version",
+  "plan_id",
+  "skill_chain",
+  "exploration"
+ ],
+ "sermaye_eslenik_alanlari": [
+  "id",
+  "ts_close",
+  "entry",
+  "exit",
+  "qty",
+  "r_multiple",
+  "pnl_pct",
+  "pnl_dollars",
+  "costs",
+  "exit_reason",
+  "bars_held",
+  "scaled_out",
+  "mfe_r",
+  "mae_r"
+ ],
+ "alan_fark_sayimi": {
+  "costs": 341,
+  "entry": 19,
+  "exit": 1,
+  "id": 480,
+  "mae_r": 2,
+  "mfe_r": 2,
+  "pnl_dollars": 340,
+  "pnl_pct": 1,
+  "qty": 340,
+  "r_multiple": 511
+ },
+ "alan_fark_ornekleri": {
+  "costs": [
+   {
+    "anahtar": [
+     "AAPL",
+     "2024-06-12"
+    ],
+    "kontrol": 6.87,
+    "dormant_acik": 6.65
+   },
+   {
+    "anahtar": [
+     "AAPL",
+     "2026-06-12"
+    ],
+    "kontrol": 19.85,
+    "dormant_acik": 19.26
+   },
+   {
+    "anahtar": [
+     "ADI",
+     "2024-05-23"
+    ],
+    "kontrol": 7.78,
+    "dormant_acik": 7.54
+   },
+   {
+    "anahtar": [
+     "AFL",
+     "2024-09-03"
+    ],
+    "kontrol": 16.7,
+    "dormant_acik": 16.59
+   },
+   {
+    "anahtar": [
+     "ALL",
+     "2024-01-05"
+    ],
+    "kontrol": 10.31,
+    "dormant_acik": 10.16
+   }
+  ],
+  "id": [
+   {
+    "anahtar": [
+     "AAPL",
+     "2024-06-12"
+    ],
+    "kontrol": "T00330",
+    "dormant_acik": "T00329"
+   },
+   {
+    "anahtar": [
+     "AAPL",
+     "2026-06-12"
+    ],
+    "kontrol": "T00856",
+    "dormant_acik": "T00855"
+   },
+   {
+    "anahtar": [
+     "ABT",
+     "2024-02-21"
+    ],
+    "kontrol": "T00265",
+    "dormant_acik": "T00264"
+   },
+   {
+    "anahtar": [
+     "ADBE",
+     "2023-06-13"
+    ],
+    "kontrol": "T00130",
+    "dormant_acik": "T00129"
+   },
+   {
+    "anahtar": [
+     "ADI",
+     "2024-05-23"
+    ],
+    "kontrol": "T00314",
+    "dormant_acik": "T00313"
+   }
+  ],
+  "pnl_dollars": [
+   {
+    "anahtar": [
+     "AAPL",
+     "2024-06-12"
+    ],
+    "kontrol": 449.13,
+    "dormant_acik": 435.1
+   },
+   {
+    "anahtar": [
+     "AAPL",
+     "2026-06-12"
+    ],
+    "kontrol": -600.57,
+    "dormant_acik": -582.9
+   },
+   {
+    "anahtar": [
+     "ADI",
+     "2024-05-23"
+    ],
+    "kontrol": -363.52,
+    "dormant_acik": -352.5
+   },
+   {
+    "anahtar": [
+     "AFL",
+     "2024-09-03"
+    ],
+    "kontrol": -163.17,
+    "dormant_acik": -162.09
+   },
+   {
+    "anahtar": [
+     "ALL",
+     "2024-01-05"
+    ],
+    "kontrol": 521.67,
+    "dormant_acik": 513.88
+   }
+  ],
+  "qty": [
+   {
+    "anahtar": [
+     "AAPL",
+     "2024-06-12"
+    ],
+    "kontrol": 32,
+    "dormant_acik": 31
+   },
+   {
+    "anahtar": [
+     "AAPL",
+     "2026-06-12"
+    ],
+    "kontrol": 68,
+    "dormant_acik": 66
+   },
+   {
+    "anahtar": [
+     "ADI",
+     "2024-05-23"
+    ],
+    "kontrol": 33,
+    "dormant_acik": 32
+   },
+   {
+    "anahtar": [
+     "AFL",
+     "2024-09-03"
+    ],
+    "kontrol": 151,
+    "dormant_acik": 150
+   },
+   {
+    "anahtar": [
+     "ALL",
+     "2024-01-05"
+    ],
+    "kontrol": 67,
+    "dormant_acik": 66
+   }
+  ],
+  "r_multiple": [
+   {
+    "anahtar": [
+     "AAPL",
+     "2024-06-12"
+    ],
+    "kontrol": 0.943,
+    "dormant_acik": 0.918
+   },
+   {
+    "anahtar": [
+     "AAPL",
+     "2026-06-12"
+    ],
+    "kontrol": -1.265,
+    "dormant_acik": -1.257
+   },
+   {
+    "anahtar": [
+     "ABT",
+     "2024-02-21"
+    ],
+    "kontrol": 1.416,
+    "dormant_acik": 1.424
+   },
+   {
+    "anahtar": [
+     "ABT",
+     "2025-01-27"
+    ],
+    "kontrol": 0.5,
+    "dormant_acik": 0.504
+   },
+   {
+    "anahtar": [
+     "ADBE",
+     "2023-06-13"
+    ],
+    "kontrol": -0.209,
+    "dormant_acik": -0.21
+   }
+  ],
+  "entry": [
+   {
+    "anahtar": [
+     "ALL",
+     "2026-05-20"
+    ],
+    "kontrol": 224.8531,
+    "dormant_acik": 224.853
+   },
+   {
+    "anahtar": [
+     "BURL",
+     "2024-03-08"
+    ],
+    "kontrol": 223.7133,
+    "dormant_acik": 223.7132
+   },
+   {
+    "anahtar": [
+     "BURL",
+     "2024-08-26"
+    ],
+    "kontrol": 275.639,
+    "dormant_acik": 275.6389
+   },
+   {
+    "anahtar": [
+     "CAT",
+     "2026-07-08"
+    ],
+    "kontrol": 937.9792,
+    "dormant_acik": 937.9791
+   },
+   {
+    "anahtar": [
+     "CF",
+     "2023-09-06"
+    ],
+    "kontrol": 82.2328,
+    "dormant_acik": 82.2327
+   }
+  ],
+  "mae_r": [
+   {
+    "anahtar": [
+     "APO",
+     "2024-08-01"
+    ],
+    "kontrol": 11.172,
+    "dormant_acik": 11.173
+   },
+   {
+    "anahtar": [
+     "MPWR",
+     "2023-08-08"
+    ],
+    "kontrol": 5.074,
+    "dormant_acik": 5.075
+   }
+  ],
+  "mfe_r": [
+   {
+    "anahtar": [
+     "APO",
+     "2024-08-01"
+    ],
+    "kontrol": 6.541,
+    "dormant_acik": 6.542
+   },
+   {
+    "anahtar": [
+     "DIS",
+     "2023-02-24"
+    ],
+    "kontrol": 10.832,
+    "dormant_acik": 10.831
+   }
+  ],
+  "pnl_pct": [
+   {
+    "anahtar": [
+     "IP",
+     "2026-02-26"
+    ],
+    "kontrol": -0.01489,
+    "dormant_acik": -0.01488
+   }
+  ],
+  "exit": [
+   {
+    "anahtar": [
+     "KMB",
+     "2023-04-26"
+    ],
+    "kontrol": 143.3811,
+    "dormant_acik": 143.3812
+   }
+  ]
+ },
+ "strict_tum_alan_ozdes": false,
+ "strict_farkli_satir_n": 681,
+ "giris_yasasi_ihlal_n": 0,
+ "giris_yasasi_ihlal": [],
+ "kill3_gecti": true
+}

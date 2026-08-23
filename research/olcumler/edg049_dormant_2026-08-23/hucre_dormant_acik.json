@@ -1,0 +1,166 @@
+{
+ "kosum": "dormant_acik",
+ "smoke": false,
+ "kol_kimligi": {
+  "dormant_icra_kapisi": "ACIK — strategy.scan_entry süreç-içi replika (B1 + ['pullback', 'episodic_pivot', 'pead', 'canslim']); doğum yamasız"
+ },
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 885,
+ "net_pnl_trades": 20684.69,
+ "net_pnl_equity": 20684.69,
+ "pf": 1.1119,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": 0.1268,
+ "maxdd_m2m": 0.1268,
+ "sharpe": 0.521,
+ "avg_r": 0.076,
+ "win_rate": 0.363,
+ "total_return": 0.2068,
+ "setup_bazinda": {
+  "breakout_vcp": {
+   "n": 315,
+   "pnl": 7460.7,
+   "avg_r": 0.0468
+  },
+  "exhaustion_hammer": {
+   "n": 225,
+   "pnl": 3153.7,
+   "avg_r": 0.1308
+  },
+  "momentum_burst": {
+   "n": 339,
+   "pnl": 12488.14,
+   "avg_r": 0.0829
+  },
+  "pullback": {
+   "n": 6,
+   "pnl": -2417.85,
+   "avg_r": -0.7875
+  }
+ },
+ "exit_reason_dagilim": {
+  "stop": 379,
+  "regime_flip": 171,
+  "time_stop": 152,
+  "target": 99,
+  "stop_gap": 57,
+  "target_gap": 27
+ },
+ "toplam_plan": 1543,
+ "silahlanan_plan": 936,
+ "plan_setup_dagilim": {
+  "momentum_burst": 603,
+  "breakout_vcp": 580,
+  "exhaustion_hammer": 348,
+  "pullback": 12
+ },
+ "verdict_dagilim": {
+  "GO": 63,
+  "REVIEW": 873,
+  "NO_GO": 607
+ },
+ "entry_rejects": {
+  "open_below_stop": 22,
+  "max_chase": 29
+ },
+ "dormant_plan_n": 12,
+ "dormant_dilim": {
+  "n": 6,
+  "toplam_r": -4.725,
+  "pf": 0.0,
+  "pf_olculemedi_nedeni": null,
+  "net_pnl": -2417.85,
+  "win_rate": 0.0,
+  "exit_reason": {
+   "regime_flip": 3,
+   "stop": 2,
+   "stop_gap": 1
+  },
+  "setup": {
+   "pullback": 6
+  },
+  "aylik_ts_open": {
+   "2023-02": 1,
+   "2023-05": 1,
+   "2025-01": 2,
+   "2026-04": 1,
+   "2026-06": 1
+  },
+  "regime_dagilim": {
+   "chop": 1,
+   "trend_up": 5
+  }
+ },
+ "butunluk_gecerli": true,
+ "sasi_kill_mtime_temiz": true,
+ "motor_sha_once": {
+  "broker.py": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+  "guard.py": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392"
+ },
+ "motor_sha_sonra": {
+  "broker.py": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+  "guard.py": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392"
+ },
+ "motor_sha_ayni": true,
+ "motor_kunye_kill4_once": {
+  "dosyalar": {
+   "broker.py": {
+    "simdi": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "kunye": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "esit": true
+   },
+   "backtest.py": {
+    "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "esit": true
+   },
+   "strategy.py": {
+    "simdi": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "kunye": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "esit": true
+   },
+   "guard.py": {
+    "simdi": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "kunye": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "esit": true
+   }
+  },
+  "kill4_tutarli": true
+ },
+ "motor_kunye_kill4_sonra": {
+  "dosyalar": {
+   "broker.py": {
+    "simdi": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "kunye": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "esit": true
+   },
+   "backtest.py": {
+    "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "esit": true
+   },
+   "strategy.py": {
+    "simdi": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "kunye": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "esit": true
+   },
+   "guard.py": {
+    "simdi": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "kunye": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "esit": true
+   }
+  },
+  "kill4_tutarli": true
+ },
+ "sandbox_earnings_csv_yok": true
+}

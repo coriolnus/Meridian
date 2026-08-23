@@ -21,9 +21,9 @@
  "motor_sha256": {
   "kosum1_once": {
    "broker.py": {
-    "sha256": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
-    "sha256_16": "09f5d0850122376a",
-    "mtime_ns": 1787496823142538157
+    "sha256": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "sha256_16": "52e67c5db43f52d5",
+    "mtime_ns": 1787422741457650475
    },
    "backtest.py": {
     "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
@@ -31,21 +31,21 @@
     "mtime_ns": 1787349934977599301
    },
    "strategy.py": {
-    "sha256": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
-    "sha256_16": "449039624127c66d",
-    "mtime_ns": 1787496823150661208
+    "sha256": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "sha256_16": "263eb8fef7d10089",
+    "mtime_ns": 1787417249039052433
    },
    "guard.py": {
-    "sha256": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
-    "sha256_16": "bb984356798278a5",
-    "mtime_ns": 1787496823143898742
+    "sha256": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+    "sha256_16": "185b467f33f08150",
+    "mtime_ns": 1787441289085301076
    }
   },
   "kosum2_sonra": {
    "broker.py": {
-    "sha256": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
-    "sha256_16": "09f5d0850122376a",
-    "mtime_ns": 1787496823142538157
+    "sha256": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "sha256_16": "52e67c5db43f52d5",
+    "mtime_ns": 1787422741457650475
    },
    "backtest.py": {
     "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
@@ -53,14 +53,14 @@
     "mtime_ns": 1787349934977599301
    },
    "strategy.py": {
-    "sha256": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
-    "sha256_16": "449039624127c66d",
-    "mtime_ns": 1787496823150661208
+    "sha256": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "sha256_16": "263eb8fef7d10089",
+    "mtime_ns": 1787417249039052433
    },
    "guard.py": {
-    "sha256": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
-    "sha256_16": "bb984356798278a5",
-    "mtime_ns": 1787496823143898742
+    "sha256": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+    "sha256_16": "185b467f33f08150",
+    "mtime_ns": 1787441289085301076
    }
   },
   "dort_noktada_sabit": true
@@ -174,39 +174,6 @@
    "kanit": "/Users/erdemozturk/AI-Trading/research/olcumler/edg048_chop_tabani_2026-08-23/determinizm_kunye.json",
    "yedek": "/Users/erdemozturk/AI-Trading/research/olcumler/edg048_chop_tabani_2026-08-23/kunye_yedek_pre048.json",
    "yetki": "Rol-1 devri (EDG-048 ölçüm turu koordinatör mesajı, 2026-08-23)"
-  },
-  {
-   "tarih_utc": "2026-08-23T20:11:01+00:00",
-   "dosya": "broker.py",
-   "eski_sha256": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
-   "eski_mtime_ns": 1787422741457650475,
-   "yeni_sha256": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
-   "neden": "K5 (8324177, v273): +7 satır = 2 YORUM bloğu (EZER damgaları — entry_limit_price ATR bacağı :182-184 + ADV katılım :619-622); kod yolu DEĞİŞMEDİ. Davranış bayt-nötr KANITLI — TAM-pencere çift-koşum (edg049 kontrol_kosum1/2) birbirleriyle VE edg032c/kosum1 ile üç defterde bayt-özdeş. kosum1_once + kosum2_sonra kayıtları birlikte güncellendi (dort_noktada_sabit iç tutarlılığı).",
-   "kanit": "/Users/erdemozturk/AI-Trading/research/olcumler/edg049_dormant_2026-08-23/determinizm_kunye.json",
-   "yedek": "/Users/erdemozturk/AI-Trading/research/olcumler/edg049_dormant_2026-08-23/kunye_yedek_pre049.json",
-   "yetki": "Rol-1 devri (EDG-2026-049 ölçüm turu koordinatör mesajı, 2026-08-23)"
-  },
-  {
-   "tarih_utc": "2026-08-23T20:11:01+00:00",
-   "dosya": "strategy.py",
-   "eski_sha256": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
-   "eski_mtime_ns": 1787417249039052433,
-   "yeni_sha256": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
-   "neden": "K5 (8324177, v273): +4 satır = ARMED_SETUPS üstü EZER YORUM bloğu (registry bayrakları); tuple DEĞERİ değişmedi (B1 aynen — koşum başı assert). Davranış bayt-nötr KANITLI — aynı üç-defter özdeşliği. kosum1_once + kosum2_sonra kayıtları birlikte güncellendi (dort_noktada_sabit iç tutarlılığı).",
-   "kanit": "/Users/erdemozturk/AI-Trading/research/olcumler/edg049_dormant_2026-08-23/determinizm_kunye.json",
-   "yedek": "/Users/erdemozturk/AI-Trading/research/olcumler/edg049_dormant_2026-08-23/kunye_yedek_pre049.json",
-   "yetki": "Rol-1 devri (EDG-2026-049 ölçüm turu koordinatör mesajı, 2026-08-23)"
-  },
-  {
-   "tarih_utc": "2026-08-23T20:11:01+00:00",
-   "dosya": "guard.py",
-   "eski_sha256": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
-   "eski_mtime_ns": 1787441289085301076,
-   "yeni_sha256": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
-   "neden": "K5 (8324177, v273): GOAL_KEYS/LIMIT_KEYS 25a mezar taşları + REPLAY_WARMUP_KEYS (25c sınıf damgası) + validate_change reddi — HEPSİ Hermes/yönetişim yolu, replay ÇAĞIRMAZ; classify_gate içi fark YORUM. Davranış bayt-nötr KANITLI — aynı üç-defter özdeşliği. NOT: K2 (d8030c0, v272 giriş penceresi) künye 4'lüsüne HİÇ dokunmadı (barclock/intraday_cycle); replay'e sızmadığı da bu özdeşlikle SINANDI. kosum1_once + kosum2_sonra kayıtları birlikte güncellendi (dort_noktada_sabit iç tutarlılığı).",
-   "kanit": "/Users/erdemozturk/AI-Trading/research/olcumler/edg049_dormant_2026-08-23/determinizm_kunye.json",
-   "yedek": "/Users/erdemozturk/AI-Trading/research/olcumler/edg049_dormant_2026-08-23/kunye_yedek_pre049.json",
-   "yetki": "Rol-1 devri (EDG-2026-049 ölçüm turu koordinatör mesajı, 2026-08-23)"
   }
  ]
 }

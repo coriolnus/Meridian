@@ -1,0 +1,117 @@
+{
+ "tanim": "dormant-DIŞI işlem kümesi (setup ∈ B1 silahlı üçlüsü; anahtar ticker+ts_open) dormant_acik ↔ kontrol. Kart: kill değil ZORUNLU rapor (kill#5).",
+ "dormant_disi": {
+  "kontrol_n": 885,
+  "dormant_acik_n": 879,
+  "ortak_n": 875,
+  "cikan_n": 10,
+  "giren_n": 4,
+  "cikan_listesi": [
+   [
+    "AVGO",
+    "2026-06-01"
+   ],
+   [
+    "CDNS",
+    "2023-02-16"
+   ],
+   [
+    "GOOGL",
+    "2023-05-11"
+   ],
+   [
+    "IRM",
+    "2026-04-29"
+   ],
+   [
+    "IRM",
+    "2026-05-01"
+   ],
+   [
+    "MCD",
+    "2025-02-11"
+   ],
+   [
+    "META",
+    "2023-02-14"
+   ],
+   [
+    "PH",
+    "2025-01-31"
+   ],
+   [
+    "ROKU",
+    "2026-06-15"
+   ],
+   [
+    "TTWO",
+    "2026-06-03"
+   ]
+  ],
+  "giren_listesi": [
+   [
+    "AVGO",
+    "2026-06-03"
+   ],
+   [
+    "NXPI",
+    "2026-05-12"
+   ],
+   [
+    "PM",
+    "2025-02-07"
+   ],
+   [
+    "TER",
+    "2026-06-26"
+   ]
+  ],
+  "cikan_ozet": {
+   "setup": {
+    "breakout_vcp": 4,
+    "exhaustion_hammer": 3,
+    "momentum_burst": 3
+   },
+   "net_pnl": 367.1,
+   "toplam_r": 0.178
+  },
+  "giren_ozet": {
+   "setup": {
+    "breakout_vcp": 1,
+    "momentum_burst": 3
+   },
+   "net_pnl": -242.7,
+   "toplam_r": -0.339
+  }
+ },
+ "dormant_dilimi": {
+  "kontrol_n": 0,
+  "dormant_acik_n": 6,
+  "dormant_acik_listesi": [
+   [
+    "F",
+    "2026-06-12"
+   ],
+   [
+    "LNG",
+    "2025-01-31"
+   ],
+   [
+    "OXY",
+    "2026-04-29"
+   ],
+   [
+    "V",
+    "2023-02-14"
+   ],
+   [
+    "WBD",
+    "2025-01-07"
+   ],
+   [
+    "ZBH",
+    "2023-05-11"
+   ]
+  ]
+ }
+}

@@ -1,0 +1,80 @@
+{
+ "adim": "EDG-049 KÜNYE TAZELEME ÇİFT KAPISI (Rol-1 devri 2026-08-23; EDG-048 emsali)",
+ "olcum_zamani": "2026-08-23T20:11:01+00:00",
+ "tanim": "TAM kontrol iki kez, taze süreç + bakir sandbox, v273 motorla (K2/K5 dalgası sonrası); üç defter kosum1 ↔ kosum2 ↔ edg032c/kosum1 BAYT-ÖZDEŞ olmalı. Ek kanıt: alan_envanteri üç yönlü bayt + sonuc ölçüm blokları k1↔k2 derin-eşit + motor dört noktada sabit + v273 pin doğrulaması. K2'nin (giriş penceresi 13:45) replay'e sızmadığı iddiasını bu özdeşlik SINAR.",
+ "kapi_defterleri": {
+  "islemler_tam_kontrol.json": {
+   "kosum1_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "kosum2_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "edg032c_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "uc_yonlu_ozdes": true
+  },
+  "islemler_kontrol.json": {
+   "kosum1_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "kosum2_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "edg032c_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "uc_yonlu_ozdes": true
+  },
+  "seanslar_kontrol.json": {
+   "kosum1_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "kosum2_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "edg032c_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "uc_yonlu_ozdes": true
+  }
+ },
+ "kapi_uc_yonlu_ozdes": true,
+ "kunye_civisi_tutarli": true,
+ "ek_kanit_alan_envanteri": {
+  "kontrol_kosum1": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "kontrol_kosum2": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "edg032c": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "uc_yonlu_ozdes": true
+ },
+ "ek_kanit_sonuc_bloklari_k1k2": {
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true,
+  "islem": true,
+  "replay": true,
+  "hucre": true
+ },
+ "bilgi_sonuc_bloklari_k1_edg032c": {
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true,
+  "islem": true,
+  "replay": true,
+  "hucre": true
+ },
+ "motor_dort_noktada_sabit": true,
+ "v273_pin_dogrulandi": true,
+ "TAZELEME_GECTI": true,
+ "hukum": null,
+ "kunye_guncellendi": {
+  "dosya": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/TABAN_KUNYESI.json",
+  "once_sha256": "e30ac653facf3028f642d93001898139de9c02f9cbbc0c050cd007404cee38b3",
+  "sonra_sha256": "dcb8f3b8a59b8984a6d0e82034009143d1b3d77ee0d3ead0e74072ca5e180af4",
+  "dosyalar": {
+   "broker.py": {
+    "eski": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "yeni": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b"
+   },
+   "strategy.py": {
+    "eski": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "yeni": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877"
+   },
+   "guard.py": {
+    "eski": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+    "yeni": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392"
+   }
+  }
+ }
+}

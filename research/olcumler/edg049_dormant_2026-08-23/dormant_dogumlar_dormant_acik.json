@@ -1,0 +1,60 @@
+{
+ "n": 12,
+ "setup_dagilim": {
+  "pullback": 12,
+  "episodic_pivot": 0,
+  "pead": 0,
+  "canslim": 0
+ },
+ "ticker_n": 8,
+ "dogumlar": [
+  {
+   "ticker": "V",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "ZBH",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "TRV",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "WBD",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "LNG",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "LNG",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "LNG",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "QCOM",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "QCOM",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "QCOM",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "OXY",
+   "setup": "pullback"
+  },
+  {
+   "ticker": "F",
+   "setup": "pullback"
+  }
+ ]
+}

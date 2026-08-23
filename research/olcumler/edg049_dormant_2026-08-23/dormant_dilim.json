@@ -1,0 +1,27 @@
+{
+ "n": 6,
+ "toplam_r": -4.725,
+ "pf": 0.0,
+ "pf_olculemedi_nedeni": null,
+ "net_pnl": -2417.85,
+ "win_rate": 0.0,
+ "exit_reason": {
+  "regime_flip": 3,
+  "stop": 2,
+  "stop_gap": 1
+ },
+ "setup": {
+  "pullback": 6
+ },
+ "aylik_ts_open": {
+  "2023-02": 1,
+  "2023-05": 1,
+  "2025-01": 2,
+  "2026-04": 1,
+  "2026-06": 1
+ },
+ "regime_dagilim": {
+  "chop": 1,
+  "trend_up": 5
+ }
+}

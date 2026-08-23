@@ -38,7 +38,30 @@ kill_criteria:
   - "motor sha hücre başı sabit değilse geçersiz"
   - "yer-değiştirme raporu üretilmeden hüküm yazılırsa geçersiz"
 k_registry: {registered_at: "2026-08-23", trial_ids: [pending-049-da]}
-status: registered   # 2026-08-23 Rol-1 — ön-kayıt (K6; ölçüm dağıtım-sonrası sessiz pencerede)
+status: measured     # 2026-08-24 Rol-1 HÜKMÜ aşağıda (ölçüm 23:23'te tamamlandı; ajan kredi
+                     # kesintisiyle raporlayamadan düştü — sonuçlar diskten Rol-1'ce okundu, sonuc_grid.json)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-24): **NO-GO, İKİ KAT GEREKÇEYLE — yol "TEŞHİS-KATMANI" damgasıyla kapanır.**
+  (1) Δ(dormant_acik−kontrol) = −3.121,44$, CI95 [−10.780,65, +2.098,97] → CI 0-içi (GO şartı
+  CI-alt>0 sağlanmadı) VE nokta tahmini NEGATİF. (2) Dormant dilim n=6 < 30 → kartın ikinci
+  şartı da düştü; dilim toplam −4,725R, PF 0,0, kazanma %0 (6/6 kayıp; çıkışlar 3 regime_flip,
+  2 stop, 1 stop_gap).
+  ── ASIL BULGU (kartın öngörmediği, hükmü mühürleyen): **DORMANT DİLİMİN 6/6'SI `pullback`
+  KURULUMU.** Yani "uyuyan kurulum yolunu icraya bağlamak", operatörün 2026-08-22'de ÖLÇÜMLE
+  silahsızlandırdığı (B1 kararı, c150902) pullback kolunu ARKA KAPIDAN yeniden silahlandırmak
+  demekti. Sayı da bunu mühürlüyor: Δ = −3.121,44$ ≡ edg032b→edg032c taban geçişindeki
+  +3.121,44$'ın kuruşu kuruşuna TERSİ (aynı 6 işlem, EDG-039'un rakamı). Üç bağımsız ölçüm
+  (039 · B1 · 049) aynı 6 işlemi aynı yönde işaretledi.
+  ── SONUÇ: dormant_setup üretimi TEŞHİS katmanıdır ve öyle kalır; icraya bağlama kalemi
+  KAPANIR. Canlanma yalnız (a) pullback kolunun B1 yeniden-silahlanma kapısını ARSENAL çıtasıyla
+  geçmesi (kart-önce, n≥30 ∧ CI-alt>0) VE (b) o gün dormant yolunun ayrı kartla yeniden
+  ölçülmesiyle mümkündür — bu kart yeniden açılmaz.
+  ── DİSİPLİN: künye-tazeleme protokolü UYGULANDI ve üç-yönlü özdeşlik GEÇTİ (K2/K5 dalgasının
+  replay'e sızmadığının kanıtı; TABAN_KUNYESI e30ac653→dcb8f3b8, tarihçe korunarak). kill3
+  geçti (giriş-yasası ihlali 0; 681 satırın alan farkları dormant işlemlerin slot/ısı etkisinden —
+  beklenen). Yer-değiştirme: çıkan 10 (+367,10$/+0,178R), giren 4 — küçük, mekanizma dilimin
+  kendisinde. K=1 aynen.
 beyanli_sinirlar: >
   (1) Replay'deki dormant doğum sıklığı canlıyla aynı olmayabilir — dilim n'i beyanla okunur.
   (2) Karşı-olgu icra maliyeti şasinin modelidir (045/046 şerhleri aynen). (3) GO çıksa bile

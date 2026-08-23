@@ -1,0 +1,57 @@
+{
+ "ad": "kontrol_kosum2",
+ "amac": "künye tazeleme çift-koşumu (EDG-049; Rol-1 devri 2026-08-23, EDG-048 emsali)",
+ "baslangic_utc": "2026-08-23T19:57:54+00:00",
+ "bitis_utc": "2026-08-23T20:10:53+00:00",
+ "sure_sn": 778.3,
+ "motor_sha_pin": {
+  "broker.py": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+  "guard.py": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392"
+ },
+ "v273_pin": {
+  "broker.py": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+  "strategy.py": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+  "guard.py": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392"
+ },
+ "uyarlama_beyani": {
+  "eski_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "yeni_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "motor_ARMED_SETUPS": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ]
+ },
+ "enjeksiyon_noktalari": {
+  "scan_entry_def_satiri": 1095,
+  "scan_entry_kaynak_sha256": "e945d7d66f43f8de4e198ef6b5d97291c0235894def2ecba0c2e033fd52fa7e7",
+  "backtest_cagri_satiri": 435,
+  "dormant_ekstra": [
+   "pullback",
+   "episodic_pivot",
+   "pead",
+   "canslim"
+  ]
+ },
+ "replika_on_sinamasi_gecti": true,
+ "sandbox": "state_kontrol koşum öncesi silindi (bakir); şasi hazirla() EDG-022 donmuş kopyalarından kurdu",
+ "tasinan_dosyalar_sha256": {
+  "sonuc_kontrol.json": "2c67c9358803ac5a4421bf93b3b6c0b3766e32c5f5c979097cf50fa2b94ed60e",
+  "seanslar_kontrol.json": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+  "islemler_kontrol.json": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+  "islemler_tam_kontrol.json": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+  "alan_envanteri_kontrol.json": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "hucre_kontrol.json": "f614c6b3da0e8914fc2039572e8a7b3ddbdfecaad5138e9b349e68636b9f1c71"
+ }
+}

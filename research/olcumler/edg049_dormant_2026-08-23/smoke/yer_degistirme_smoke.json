@@ -1,0 +1,27 @@
+{
+ "tanim": "dormant-DIŞI işlem kümesi (setup ∈ B1 silahlı üçlüsü; anahtar ticker+ts_open) dormant_acik ↔ kontrol. Kart: kill değil ZORUNLU rapor (kill#5).",
+ "dormant_disi": {
+  "kontrol_n": 8,
+  "dormant_acik_n": 8,
+  "ortak_n": 8,
+  "cikan_n": 0,
+  "giren_n": 0,
+  "cikan_listesi": [],
+  "giren_listesi": [],
+  "cikan_ozet": {
+   "setup": {},
+   "net_pnl": 0,
+   "toplam_r": 0
+  },
+  "giren_ozet": {
+   "setup": {},
+   "net_pnl": 0,
+   "toplam_r": 0
+  }
+ },
+ "dormant_dilimi": {
+  "kontrol_n": 0,
+  "dormant_acik_n": 0,
+  "dormant_acik_listesi": []
+ }
+}

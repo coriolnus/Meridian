@@ -1,0 +1,140 @@
+{
+ "kosum": "kontrol",
+ "smoke": true,
+ "kol_kimligi": {
+  "dormant_icra_kapisi": "KAPALI — motor scan_entry olduğu gibi (kanca dahi yok)"
+ },
+ "hucre_sasi": {
+  "eksen": "merkez",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 8,
+ "net_pnl_trades": -2163.48,
+ "net_pnl_equity": -2163.48,
+ "pf": 0.0,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": null,
+ "maxdd_m2m": 0.0216,
+ "sharpe": null,
+ "avg_r": null,
+ "win_rate": null,
+ "total_return": null,
+ "setup_bazinda": {
+  "breakout_vcp": {
+   "n": 1,
+   "pnl": -108.28,
+   "avg_r": -0.286
+  },
+  "exhaustion_hammer": {
+   "n": 2,
+   "pnl": -403.44,
+   "avg_r": -0.534
+  },
+  "momentum_burst": {
+   "n": 5,
+   "pnl": -1651.76,
+   "avg_r": -0.845
+  }
+ },
+ "exit_reason_dagilim": {
+  "regime_flip": 7,
+  "stop": 1
+ },
+ "toplam_plan": 9,
+ "silahlanan_plan": 9,
+ "plan_setup_dagilim": {
+  "momentum_burst": 5,
+  "exhaustion_hammer": 3,
+  "breakout_vcp": 1
+ },
+ "verdict_dagilim": {
+  "GO": 3,
+  "REVIEW": 6,
+  "NO_GO": 0
+ },
+ "entry_rejects": {
+  "open_below_stop": 1
+ },
+ "dormant_plan_n": 0,
+ "dormant_dilim": {
+  "n": 0,
+  "toplam_r": 0,
+  "pf": null,
+  "pf_olculemedi_nedeni": "dormant-dilim işlemi yok",
+  "net_pnl": 0,
+  "win_rate": null,
+  "exit_reason": {},
+  "setup": {},
+  "aylik_ts_open": {},
+  "regime_dagilim": {}
+ },
+ "butunluk_gecerli": true,
+ "sasi_kill_mtime_temiz": true,
+ "motor_sha_once": {
+  "broker.py": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+  "guard.py": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392"
+ },
+ "motor_sha_sonra": {
+  "broker.py": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+  "guard.py": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392"
+ },
+ "motor_sha_ayni": true,
+ "motor_kunye_kill4_once": {
+  "dosyalar": {
+   "broker.py": {
+    "simdi": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "kunye": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "esit": false
+   },
+   "backtest.py": {
+    "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "esit": true
+   },
+   "strategy.py": {
+    "simdi": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "kunye": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "esit": false
+   },
+   "guard.py": {
+    "simdi": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "kunye": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+    "esit": false
+   }
+  },
+  "kill4_tutarli": false
+ },
+ "motor_kunye_kill4_sonra": {
+  "dosyalar": {
+   "broker.py": {
+    "simdi": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "kunye": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "esit": false
+   },
+   "backtest.py": {
+    "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "esit": true
+   },
+   "strategy.py": {
+    "simdi": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "kunye": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "esit": false
+   },
+   "guard.py": {
+    "simdi": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "kunye": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+    "esit": false
+   }
+  },
+  "kill4_tutarli": false
+ },
+ "sandbox_earnings_csv_yok": true
+}
