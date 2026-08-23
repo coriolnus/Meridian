@@ -314,6 +314,10 @@ READ_CALLS = frozenset({"read_json", "read_jsonl"})
 # okumayı yazan modüle sayar), ya dosya modülün KENDİ işletim durumudur (önbellek, alarm tekilleştirme,
 # iş kuyruğu) ve dışarıdan okunması zaten anlamsızdır.
 DECLARED_SINKS: dict[str, str] = {
+    "litestream.env": "yazarı api/secrets.litestream_env_sync (0600 doğum); OKUYUCUSU MODÜL "
+        "DEĞİL systemd'dir — meridian-litestream.service.d/10-s3-env.conf EnvironmentFile= ile "
+        "yükler (S3 kimliği, AŞAMA-2 2026-08-23). Statik graf birim dosyalarını okuyamaz; beyan "
+        "kalkarsa (S3 replica emekli olursa) bu satır da kalkar — stale_sinks bekçisi izler",
     "pool_exhausted_seen.json": "hermes kimlik-havuzu son-tükenme-zamanı çivisi (v188) — okuyucu "
         "aynı modülde (_pool_seen_at, süreç-yeniden-başlatma sonrası kota-sıfırlama kıyası için "
         "kalıcı olmak ZORUNDA); statik graf modül-içi okumayı göremiyor (finviz vakasındaki sınıf)",

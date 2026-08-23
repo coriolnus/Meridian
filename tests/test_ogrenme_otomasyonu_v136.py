@@ -459,7 +459,7 @@ def test_sprint_kapida_kalinca_SUREC_BASLATMAZ(sandbox_state, monkeypatch):
 def test_elle_tik_ASLA_sprint_alt_sureci_baslatmaz(sandbox_state, monkeypatch):
     """ÖLÇÜLMÜŞ KAZA (2026-07-30 23:52). Sprint kadansı zamanlayıcının boşta dalına bağlandığında
     `advance_once`ın İKİ çağıranı olduğu gözetilmemişti: daemon döngüsü VE panonun elle tik düğmesi
-    (api.py:1823). Testler `advance_once()`ı doğrudan çağırıyor; saat 22:00'yi geçince gece kapısı
+    (api'nin `scheduler.advance_once` elle-tik ucu; satır-çapası 2026-08-23 sembole çevrildi). Testler `advance_once()`ı doğrudan çağırıyor; saat 22:00'yi geçince gece kapısı
     açıldı ve kadans GERÇEKTEN bir `meridian.sprint_run` alt süreci başlattı (canlı state'i kum
     havuzuna kopyalayan, 4 işçilik). Paket 18:00-21:00 arası yeşil, 22:00'den sonra kırmızıydı —
     SAAT BAĞIMLI bir suite, geçtiğinde hiçbir şey kanıtlamaz.

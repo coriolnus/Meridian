@@ -8293,7 +8293,7 @@ async function intraParcalar() {
   const s1 = `<div class="card rise"><h2 class="t">Intraday gözlem <span class="tx3" style="font-weight:400">(kapanmış-bar tüketicisi)</span> ${armChip}</h2>
     <div class="srow"><span>Mod</span><b class="${armed ? "neg" : "pos"}">${armed ? "SİLAHLI — otonom intraday emir kapısı AÇIK" : "gözlem-modu · yalnız ölçüm, emir YOK"}</b></div>
     <div class="srow"><span>İzlenen sembol / işlenen olay</span><b>${iq.watched ?? 0} sembol · ${iq.events_handled ?? 0} olay</b></div>
-    <div class="srow"><span>Yazılan ölçüm / tetik-geçişi</span><b>${iq.decisions_written ?? 0} ölçüm · ${dec.fired ?? 0} geçiş · ${iq.shadow_written ?? 0} gölge kararı · ${iq.submitted_4b ?? 0} gerçek 4b emri</b></div>
+    <div class="srow"><span>Yazılan ölçüm / tetik-geçişi</span><b>${trn(iq.decisions_written)} ölçüm · ${trn(dec.fired)} geçiş · ${trn(iq.shadow_written)} gölge kararı · ${trn(iq.submitted_4b)} gerçek 4b emri</b></div>
     ${(sk.session || sk.pencere || sk.halt || sk.stale || sk.no_bars) ? `<div class="srow"><span>Atlanan</span><b class="mut">seans ${sk.session || 0} · pencere-öncesi ${sk.pencere || 0} · halt ${sk.halt || 0} · bayat ${sk.stale || 0} · bar-yok ${sk.no_bars || 0}</b></div>` : ""}
     ${iq.pencere_gonderim_n ? `<div class="srow"><span>Sabah penceresi gönderimi (EXE-009 · 13:45)</span><b>${iq.pencere_gonderim_n} emir</b></div>` : ""}
     ${iq.last_error ? `<div class="srow"><span>Son hata</span><b class="neg">${esc(iq.last_error)}</b></div>` : ""}

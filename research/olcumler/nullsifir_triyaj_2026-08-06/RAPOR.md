@@ -38,7 +38,7 @@ ile kapatılan alanlardadır. Bu yüzden (a) düzeltmelerinin çoğu bir EKLEME 
 | — **(b) güvenli** | **44** |
 | Bu turda DÜZELTİLEN (a) | **30** |
 | **KUYRUKTA KALAN (a)** | **137** |
-| `app.js` kalan eşleşme (düzeltme SONRASI) | **192** |
+| `app.js` kalan eşleşme (düzeltme SONRASI) | **190** |
 
 **KUYRUK ÖDEMESİ — v207 (2026-08-07), 4 satır.** Eksen-2 kartının dört `?? 0`ı
 (`app.js:5185 #0`, `5186 #0`, `5186 #1`, `5187 #0` — kuyruk tablosunda **ÖDENDİ (v207)** olarak
@@ -422,3 +422,5 @@ yani guard zaten ölü savunmaydı; tek işlevi, gerçekleşmesi hâlinde YALAN 
 **SAYIM SONRASI:** `app.js` = **192** eşleşme (v239 öncesiyle aynı) — §1 tablosundaki
 "kalan eşleşme" satırı DEĞİŞMEZ ve `NULLSIFIR_TAVAN` 192'de KALIR. Kuyrukta kalan (a): **133**
 (v239 iki tane ekleyip aynı turda ikisini de ödediği için kuyruk büyümedi).
+
+> 2026-08-23 GÜNCELLEME: triyaj turu bir satırda 2 yeni `?? 0` ekledi (v196 yakaladı); satır trn()'e çevrilirken satırdaki 2 eski borç da ödendi → 192−2 kayıt = 190. Tavan (192) DEĞİŞMEDİ.

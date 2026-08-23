@@ -6,7 +6,7 @@ Bu dosya o verinin PANO/KALICILIK tarafını çiviler — üçü de "üretildi a
 değil" sınıfından:
 
   SB-1 — PANO BACAĞI KALICILIĞI. `api_alpaca_submit_armed` `mirror_submit_armed`i çağırıp plan
-  başına BOYUT MAKBUZU (`meta["size_law"]`, loop.py:592) üretir; ama kalıcılık yaması yalnız
+  başına BOYUT MAKBUZU (`meta["size_law"]` — `_save_broker` kalıcılaşma zinciri; satır-çapası 2026-08-23 sembole çevrildi) üretir; ama kalıcılık yaması yalnız
   `alpaca_submitted`/`armed`/`broker_rejected`i yamalıyordu → makbuz restart'ı ATLAYAMIYORDU
   (döngü bacağı `_save_broker`ın 14. anahtarıyla zaten kalıcı; pano bacağının eşdeğeri eksikti —
   08-06 AMGN pano/nabız vakası). Tek satır, `broker_rejected` ile AYNI kilit-altı desen.

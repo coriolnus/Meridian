@@ -544,6 +544,7 @@ def test_canli_agacta_hicbir_kayit_curuk_degil():
 # VAR (`api.py` `_GORUS_DEFTERI` sembolü; artifact_graph `unread: False` diyor — satır çapası 2026-08-22'de İKİNCİ kez çürüyünce sembole çevrildi, çapa doktrini). Muafiyet listesi bir kaçış yoludur ve
 # kapatılabilen yerde kullanılmaz (test_ajan_telemetri_v197'nin aynı hükmü).
 SINK_TABANI = frozenset({
+    "litestream.env",   # 2026-08-23 AŞAMA-2: okuyucu systemd EnvironmentFile (modül-dışı) — codelaw.DECLARED_SINKS gerekçesiyle birlikte
     "agent_tooluse.json", "agent_traces.jsonl", "approvals.jsonl", "auth.json",
     "bar_source_seams.json", "bars_fingerprint.json", "bars_source.json", "brain_cooldown.json",
     "composite_budget.json", "entity_damga.json", "fmp_usage.json", "hypothesis_id_hwm.json",

@@ -1949,7 +1949,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             # skor sırası (havuz zaten skor-sıralı adaylardan doldu) — fail-open.
             # EZER: (ezen kod değil ÜRETİCİ KURAKLIĞI — havuz nadiren doluyor) EXPLORE_MAX_POS /
             # EXPLORE_MAX_R / EXPLORE_TOTAL_R keşif bütçesi ezilen taraf — 25d zinciri c-4
-            # (canlı bir ay: explore_slot_llm_pick 102 ↔ exploration_armed 1; tavanı 50 yapmak
+            # (canlı bir ay: explore_slot_llm_pick 102 ↔ armed-keşif 1; tavanı 50 yapmak
             # hiçbir şeyi değiştirmezdi — tavan bağlamıyor, kaynak kurumuş), 2026-08-23
             if explore_pool:
                 open_expl = [pos for pos in b.positions.values() if getattr(pos, "exploration", False)]

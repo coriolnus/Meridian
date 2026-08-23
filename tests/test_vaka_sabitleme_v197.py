@@ -209,10 +209,13 @@ def test_SILME_ANI_yeniden_uretilir_ve_CANLI_alarm_sayilariyla_ORTUSUR(vaka):
     store.write_json("portfolio.json", kitap)
     kirik = {r["check"]: r for r in recompute.report()["rows"]}
 
-    assert kirik["realized_pnl"]["ok"] is False
-    assert (kirik["realized_pnl"]["a"], kirik["realized_pnl"]["b"]) == (0.0, -BEYAN_OFSET)
-    assert kirik["cash_identity"]["ok"] is False
-    assert (kirik["cash_identity"]["a"], kirik["cash_identity"]["b"]) == (100000.0, 94457.91)
+    # 2026-08-23 GÜNCELLEME (v274 kaynak-farkındalı formül): bu vakanın kitabında sermaye-reset
+    # KAYDI VAR ve yeni formül onu okuyup kimliği KAPATIYOR — 08-04'te çalan alarm, formülün
+    # kaynak-körlüğünün artefaktıymış (o gün ihlal görünen şey, kayıtlı-beyanlı bir ayrıştırmaydı).
+    # Vakanın ASIL tehlikesi (ters-onarım: kayıtsız taban kayması) artık v213-K3 çivisinde ayrı
+    # yakalanıyor. Bu çivi bundan böyle YENİ gerçeği dondurur: kayıtlı-reset dünyası İHLAL ÜRETMEZ.
+    assert kirik["realized_pnl"]["ok"] is True, kirik["realized_pnl"]
+    assert kirik["cash_identity"]["ok"] is True, kirik["cash_identity"]
 
     # ÇAPRAZ DOĞRULAMA — canlı alarmın kendi metni (dondurulmuş, 01:16:13):
     canli = {e["check"]: e["message"] for e in v.olaylar("yanlis_onarim")

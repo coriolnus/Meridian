@@ -213,7 +213,8 @@ def test_t3_kapsam_disi_kaynak_sizmamis():
     yollar = [b["yol"] for b in U.betik_basliklari()]
     assert yollar, "hiç betik okunamadı — kaynak kümesi kırılmış"
     for y in yollar:
-        assert y.startswith("ops/") or y.startswith("deploy/oracle-a1/"), f"kapsam dışı betik: {y}"
+        assert y.startswith("ops/") or y.startswith("deploy/oracle-a1/") or y == "dagit.sh", (
+                f"kapsam dışı betik: {y}")  # dagit.sh 2026-08-23 K4 operatör kararıyla kümede
     # SINIR "BÖLÜM AÇMA"DIR, "ADI HİÇ GEÇMESİN" DEĞİL: `deploy/monitoring.sh` adı belgede
     # geçiyor çünkü `obs.py`'nin KENDİ yorumu ondan söz ediyor ("Tokens matched by
     # deploy/monitoring.sh log filters") ve o yorum onaylı bir kaynaktan ALINTIDIR. Alıntıyı

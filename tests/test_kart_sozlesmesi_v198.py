@@ -111,7 +111,10 @@ def _olcum_modulu():
 #                     "dış okuyucusu api.py'dir" der → pano çizmiyordu, YASA 6 boşluğu])
 #   karar 27 · ogrenme 45 · kilitler 5 (değişmedi — F5 ③'e düştü)
 # Kapak altında: `KAPAK_TABANI` saglik ÖLÇÜLEN 7→8, taban 4 KORUNUYOR (`>=`).
-KART_TABANI = {"karar": 27, "saglik": 22, "ogrenme": 45, "kilitler": 5}
+KART_TABANI = {"karar": 27, "saglik": 24, "ogrenme": 45, "kilitler": 5}
+# 2026-08-23 BEYANLI ARTIŞ #2: saglik 22→24 — triyaj turu iki yeni sağlık yüzeyi ekledi:
+# dagitimSatiri (dagitim.json YASA-6 okuyucusu: canlıdaki dağıtım sha'sı) + litestream sır
+# grubu (Ayarlar, S3 kimlik çifti). İkisi de bu turun operatör-onaylı işleri.
 # 2026-08-23 BEYANLI ARTIŞ: saglik 20→22 — F8 kanonik durum sözlüğü kartı (f8SozlukSatiri,
 # eşanlamlı-okuma sayaçlarının YASA-6 okuyucusu). TEK kart ailesi ama İKİ dönüş yolu
 # (ÖLÇÜLEMEDİ iskeleti + dolu kart); sayım kaynak-düzeyi olduğundan 2 sayılır.
