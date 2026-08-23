@@ -62,7 +62,10 @@ from meridian.codelaw import _site_key as _cagri_yeri_anahtari   # noqa: E402 (y
 # Sentinel — brief'in çivilediği ifade. Testler bu dizgeyi arar; değiştirilirse test kırılır.
 YAZILMADI = "runbook girdisi henüz yazılmadı"
 
-BETIK_KUMESI = ("ops/*.sh", "deploy/oracle-a1/*.sh")
+# 2026-08-23 KAPSAM GENİŞLEMESİ (operatör kararı K4, docs/KARAR-2026-08-23-YEDI-KARAR.md):
+# kök dagit.sh kümeye girdi — sürüm-terfisi sözleşmesi başlığında yaşıyor, belgeye kaynağından
+# akar. Sessiz genişleme değil: sınır beyanı üretilen belgede de güncellenir (aşağıda).
+BETIK_KUMESI = ("ops/*.sh", "deploy/oracle-a1/*.sh", "dagit.sh")
 LOG_BOLUMLERI = ("AÇIK KALANLAR", "KALICI RİSKLER", "BU OTURUMDA BULUNAN")
 
 
@@ -482,7 +485,7 @@ def uret() -> str:
         "",
         "Onaylı kaynaklar (WP0 §6.3, operatör onayı) — bunların DIŞINDA hiçbir yerden içerik alınmaz:",
         "",
-        "- `ops/*.sh` ve `deploy/oracle-a1/*.sh` **başlık yorumları** (shebang'dan sonraki ilk `#` bloğu)",
+        "- `ops/*.sh`, `deploy/oracle-a1/*.sh` ve kök `dagit.sh` **başlık yorumları** (shebang'dan sonraki ilk `#` bloğu; dagit.sh 2026-08-23 operatör kararıyla — K4)",
         "- `MERIDIAN_ENGINEERING_LOG.md` → " + " · ".join(f"“{b}…”" for b in LOG_BOLUMLERI),
         "- envanter kaynakları: `meridian/obs.py` (ALARM_ sabitleri) · `meridian/watchdog.py`",
         "  (EXPECTED pencereleri + `beat()` nabız yerleri) · `meridian/api.py::_sessiz_hat`",

@@ -1,0 +1,45 @@
+card_id: EDG-2026-049
+family: dormant_karsi_olgu
+thesis: >
+  K6 operatör kararı (2026-08-23 brainstorm 6/7): uyuyan-kurulum yolu önden bağlı arkadan bağsız —
+  31 plan / 0 icra (1'i GO). BU KART karşı-olguyu ölçer: dormant planlar icraya bağlı OLSAYDI
+  (arka bağ kurulu), donmuş şaside ne üretirlerdi? GO çıkarsa bağlama kararı kanıtla operatöre
+  döner (ARSENAL çıtası: kart-önce + n≥30 ∧ CI-alt>0 + operatör imzası); NO-GO ise yol
+  "teşhis-katmanı" damgasıyla kapanır. CANLI DEĞİŞMEZ.
+evidence_refs:
+  - "memory/uyuyan-kurulum-yolu: 31 plan / 0 işlem (1 GO) — önden bağlı arkadan bağsız"
+  - "docs/KARAR-2026-08-23-YEDI-KARAR.md K6 (operatör: önce karşı-olgu kartı)"
+  - "docs/POLITIKA-ARSENAL.md (GO okuma çıtası buradan)"
+universe: >
+  edg032c şasisi (künye 2026-08-23 tazelenmiş; NOT: K5 merge'i motor sha'larını değiştirdi —
+  ölçüm ajanı EDG-048 künye-tazeleme protokolünü UYGULAR: tam-pencere çift-koşum üç-yönlü
+  bayt-özdeşse künyeyi tarihçe-koruyarak tazeler, değilse DURUR). Enjeksiyon süreç-içi:
+  dormant_setup=true planların icra-yolu kapısı YALNIZ ölçüm kolunda açılır; dormant planların
+  üretim mantığına dokunulmaz (nasıl doğuyorlarsa öyle doğarlar — yalnız arka bağ).
+features_asof: >
+  İki hücre: kontrol (bugünkü dünya — dormant icrasız) ↔ dormant_acik. Hücre başına: n · net
+  P&L · PF · dd · dormant-dilim kesiti (n, toplam-R, PF, çıkış dağılımı) · yer-değiştirme raporu
+  (EDG-048 deseni: dormant işlemler slot/ısı tüketip dormant-dışı kümeyi değiştirebilir — kill
+  değil ZORUNLU rapor). Δ(dormant_acik−kontrol) eşlenik ay-kümeli bootstrap (B=5000, seed
+  20260812, birim=AY).
+parameter_grid:
+  hucreler: [dormant_acik]   # K += 1 (kontrol = şasi kapısı, K harcamaz)
+cost_model: sasi_ile_ayni
+success_metric: >
+  KARAR KURALI (donuk, ARSENAL çıtasıyla): Δ CI-alt > 0 VE dormant-dilim n ≥ 30 → "GO adayı" —
+  bağlama kararı operatöre kanıtla döner (kart bağlamaz). Δ CI 0-içi ya da negatif YA DA dilim
+  n < 30 → NO-GO/yetersiz: yol "teşhis-katmanı" damgası alır, kalem kapanır; canlanma yalnız
+  yeni kartla. Replay'de dormant plan hiç doğmuyorsa (n=0) sonuç "replay'de ölçülemez + neden"
+  olarak damgalanır ve karar canlı-birikim yoluna devredilir.
+kill_criteria:
+  - "kontrol hücresi künye (gerekirse tazelenmiş haliyle) ile üç defterde bayt-özdeş değilse DURUR"
+  - "dormant üretim mantığına dokunulursa geçersiz (yalnız arka-bağ açılır; plan doğumu aynen)"
+  - "dormant-dışı işlemlerin giriş yasası değişirse geçersiz (öz-sınama: kontrol-ortak işlemler alan-alan özdeş)"
+  - "motor sha hücre başı sabit değilse geçersiz"
+  - "yer-değiştirme raporu üretilmeden hüküm yazılırsa geçersiz"
+k_registry: {registered_at: "2026-08-23", trial_ids: [pending-049-da]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt (K6; ölçüm dağıtım-sonrası sessiz pencerede)
+beyanli_sinirlar: >
+  (1) Replay'deki dormant doğum sıklığı canlıyla aynı olmayabilir — dilim n'i beyanla okunur.
+  (2) Karşı-olgu icra maliyeti şasinin modelidir (045/046 şerhleri aynen). (3) GO çıksa bile
+  canlı bağlama ayrı operatör kararı + ARSENAL imza şartıdır.
