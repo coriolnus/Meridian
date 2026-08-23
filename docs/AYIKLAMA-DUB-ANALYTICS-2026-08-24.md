@@ -83,3 +83,42 @@ açıkça yazılması şartıyla. Öncelik: düşük.
 5. **A1-olay akışı** yüzeyi
 6. **B3 damgalı export** · **B4 % etiketleri** (ikisi de küçük)
 7. C2 ancak damgayla, en sonda
+
+---
+
+## EK · CANLI DEMODAN ÖLÇÜLEN YAPI (2026-08-24)
+_Kaynak: operatörün paylaştığı `app.dub.co/share/dash_6NSA6vNm017MZwfzt8SubNSZ` — DOM'dan okundu,
+ekran görüntüsünden tahmin edilmedi._
+
+Yukarıdaki A1 "Top Views" soyut kalmıştı. Demo üç şeyi kesinleştirdi:
+
+### E1 · Facet AİLESİ kartı — sekmeli, tek metrik sütunlu
+Toplulaştırma tek bir liste değil, **üç panel kartı**; her kart bir AİLE, kartın üstündeki
+sekmeler o ailenin boyutları, sağda tek metrik sütunu (`CLICKS`), satırlar azalan sırada,
+kesildiğinde `View All`:
+
+| Dub kartı | sekmeleri | **Meridian karşılığı** | sekmeleri |
+|---|---|---|---|
+| Referrers | Domain · URL | **KAYNAK** | Kurulum · Rejim · Sektör |
+| Countries | Cities · Regions · Continents | **SONUÇ** | Çıkış nedeni · Tutma süresi · R kovası |
+| Devices | Browsers · OS · Triggers | **KAPI** | Kapı reddi · Kapı hükmü · Kaynak (replay/canlı) |
+
+Metrik sütunu Meridian'da `CLICKS` değil **n** (varsayılan) — sütun başlığı metriği ADIYLA yazar
+ve değiştirilebilir (n · toplam R · PF · kazanma). Bu, "hangi metriğe bakıyorum" sorusunu
+yüzeyde tutar; Dub tek metrikli olduğu için bu soruyu hiç sormuyor, biz sormak zorundayız.
+
+### E2 · Oran çubuğu AYRI SÜTUN DEĞİL, SATIRIN ZEMİNİ
+Ölçülen DOM: satırın içinde mutlak konumlu bir kutu, `width:40.8%`, `-z-10`, yumuşak mavi dolgu.
+Yani sayı ve etiket çubuğun ÜSTÜNDE durur; tablo bir sütun genişliği kaybetmez.
+Meridian'da bu dolgu **ROL 6** jetonudur (`--nav-t`) — gezinme/seçim kanalı. Bir para değeri
+ya da şiddet ASLA bu çubuğa binmez; çubuk "bu satır kümenin ne kadarı" der, "iyi/kötü" demez.
+
+### E3 · SATIRIN KENDİSİ BİR FİLTRE KONTROLÜ
+Ölçülen DOM: `aria-label="Add filter: United States"`, `aria-pressed`. Satıra tıklamak o değeri
+**filtreye ekler**; hover'da sol kenar 2px vurgulanır ve içerik sağa yer açacak şekilde daralır.
+A3'ün ("filtrelerin görünümler arası taşınması") somut hâli budur ve **bizde daha değerlidir**:
+"kapı reddi" listesinde `earnings_blackout` satırına tıklamak tüm panoyu o redde filtreler —
+"neden az işlem açılıyor" sorusu tek tıkla cevaplanır.
+
+**Erişilebilirlik borcu (Dub'da var, bizde olacak):** satır bir `button` ve `aria-pressed`
+taşıyor. Tıklanabilir satırı `div` yapmak bu deponun civilerinden geçmez.
