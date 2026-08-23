@@ -21,8 +21,8 @@ hiçbiri birbirini bloke etmiyor, sıra önerisi kolaydan zora. Kimlikler §5 ta
    hedef iki birim: tick-watchdog (ROOT koşuyor!) + fail-notify. Adımlar betiğin başlığında.
 2. **DASH_TOKEN → LoadCredential** (rotasyonla aynı pencerede): `dash_token_credential.sh` hazır;
    api tarafı CREDENTIALS_DIRECTORY-önce okuyor (v184).
-3. **EDG-2026-044 aşama-2 (koşullu)**: yerel eleme ≥%20 geçtiyse canlı cpu−1 denemesi — aşama-1
-   sonucu tur özetinde.
+3. ~~EDG-2026-044 aşama-2~~ **DÜŞTÜ (2026-08-23 sabahına doğru):** aşama-1 kazancı %17,49 < %20 —
+   kart kapandı, tavan kalır; canlı denemesi gündemden çıktı.
 4. Hepsi tek pencerede birleştirilebilir; sırası RUNBOOK + betik başlıklarında.
 
 ## C. Erişim / para / veri kararları

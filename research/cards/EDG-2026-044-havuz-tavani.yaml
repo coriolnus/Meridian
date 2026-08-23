@@ -35,7 +35,20 @@ kill_criteria:
   - "ikiz formül (sprint.py:672) tek kaynağa inmeden tavan değişikliği önerilirse geçersiz"
   - "API p95 ölçümü arama koşarken alınmazsa geçersiz (boşta p95 anlamsız)"
 k_registry: {registered_at: "2026-08-22", trial_ids: [pending-044-isci3]}
-status: registered   # 2026-08-22 Rol-1 — ön-kayıt (kanıt: wp3_havuz_tavani_kanit).
+status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (aşama-1 yerel; aşama-2 HİÇ AÇILMADI)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-23): **AŞAMA-1 EŞİĞİ KARŞILANMADI — KART KAPANIR, TAVAN KALIR (donuk
+  kural).** Sabit 6-sondalık arama iş yükünde 2-işçi (bugünkü cpu−2) ort 2676,74 sn ↔ 3-işçi
+  (cpu−1) ort 2208,50 sn → kazanç %17,49 < %20. Tekrarlar tutarlı (A↔A %1,3, B↔B %1,5),
+  determinizm 4 hücrede birebir, işçiler tam doygun (~%99,3 CPU) — kayanç sınırı boşta-işçi
+  değil, sonda-dalga süresinin işçi sayısıyla uzaması. Aşama-2 (canlı p95/PSI) kural gereği
+  HİÇ AÇILMADI; sabah masasındaki koşullu bakım-penceresi kalemi DÜŞTÜ. YAN-BULGU (Ö3):
+  ikiz formülün tabanları bugün ZATEN farklı — reflect.py:1632 `max(1, cpu−2)` ↔ sprint.py:676
+  `max(2, min(4, cpu−2))`; tavan değişmiyorken bile tek-kaynağa indirme XS hijyen adayıdır
+  (kill'in şartı yalnız tavan-değişikliği önerisine bağlıydı, öneri yok → kill tetiklenmedi).
+  Kart çapası sprint.py:672→676 kaymış (satır kayması, içerik aynı). Beyanlı sınır aynen:
+  yerel M3 ölçümü kaba elemeydi — eleme gerçekleşti, A1'e hiç gidilmedi.
 beyanlı_sinirlar: >
   (1) Yerel makine A1 değil — aşama-1 yalnız KABA eleme; nihai sayı A1'den. (2) Atıfsız API
   patlamaları (0,8 çekirdek) bu kartın konusu değil ama p95 ölçümünü kirletebilir — koşumda

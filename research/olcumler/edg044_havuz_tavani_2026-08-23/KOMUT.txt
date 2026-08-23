@@ -1,0 +1,92 @@
+EDG-2026-044 AŞAMA-1 YEREL ÖLÇÜMÜ — KOMUT VE ÇAPA KAYDI (2026-08-23)
+Kart: research/cards/EDG-2026-044-havuz-tavani.yaml (DONUK; bu ölçüm karta dokunmadı)
+Ölçüm ajanı hüküm vermez — sayılar + eşiğin mekanik kıyası sonuc.json'da; okuma Rol-1'in.
+
+== FORMÜL SATIR ÇAPALARI (2026-08-23 günü koddan doğrulanan GERÇEK satırlar) ==
+
+1) reflect.py havuz tavanı (kanıt referansındaki formül):
+   meridian/reflect.py:1620  def _havuz_tavani(tavan: int = 4) -> int:
+   meridian/reflect.py:1632      return max(1, min(tavan, (os.cpu_count() or 4) - 2))
+   Çağıranlar (kartın andığı iki kullanım):
+   meridian/reflect.py:1756      workers = _havuz_tavani(4)     # prefill (4 tavanlı)
+   meridian/reflect.py:1820      ... _havuz_tavani(3) ...       # incumbent/eksik-sonda (3 tavanlı)
+
+2) İKİZ FORMÜL (kill kriterindeki tek-kaynak şartının konusu) — kart "sprint.py:672" diyor,
+   BUGÜNKÜ GERÇEK KONUM (satırlar kaymış):
+   meridian/sprint.py:673   def _workers() -> int:
+   meridian/sprint.py:676       return max(2, min(4, (os.cpu_count() or 4) - 2))
+   Mekanik gözlem (Ö3 verisi, hüküm değil): iki formülün TABANLARI bugün zaten farklı —
+   reflect max(1, ...) (2026-08-03 sonrası taban 1'e indirilmiş), sprint max(2, ...)
+   (docstring'i "kopyalanır" diye beyan ediyor; içe aktarılamama gerekçesi satır 674-675).
+   Tavan cpu−1'e çekilirse bu kopya sessizce ayrışır — kartın kill'i: ikisi tek kaynağa
+   inmeden tavan değişikliği önerilirse geçersiz.
+
+== İŞ YÜKÜ TANIMI (kart: "SABİT bir arama iş yükü — aynı tohum/aynı aday kümesi") ==
+- 6 sabit tek-değişken sonda (olcum.py PROBES listesi — donuk): v5 stratejisinden
+  versioning.bump ile türetilen adaylar; anahtar reflect._probe_key; iş sözlüğü şeması
+  _parallel_prefill_probes (reflect.py:1734-1760) ile birebir.
+- 6 boyu üretim gerçeğine çekildi: A1'de (4 çekirdek) sprint._workers()=2 →
+  budget = BUDGET_PER_WORKER(3) × 2 = 6 sonda (sprint.py:669-671).
+- Koşum mekaniği üretimin TA KENDİSİ: spawn ctx + reflect._pool_worker_init (nice(15) +
+  dataset.load_cached) + reflect._havuz_sonuclari (atalet bekçili sonuç akışı, tavan 1800 sn).
+- BİLİNÇLİ SAPMA (yazım yasağı gereği): _probe_disk_load/_probe_disk_save ATLANDI — sonuçlar
+  yalnız bellek-içi + bu klasöre. state/'e sıfır yazım. İşçi yolu zaten yazmaz
+  (reflect._havuzu_oldur docstring'i: "yazım ebeveynde").
+
+== KOŞUM SIRASI (sıralı; paralel hücre yok; arka planda başka ağır iş başlatılmadı) ==
+0) Kuru doğrulama: build_jobs() → 6 iş, pencereler ('2022-01-01','2024-01-01','2026-04-30',
+   '2026-07-30', 3 fold, embargo 10) doğrulandı; havuz koşulmadı.
+1) KAL — kalibrasyon/ısınma (SAYILMAZ): 1 işçi × 1 sonda; T_wf + işçi-açılış maliyeti
+   görünür olsun ve FS/spawn önbellekleri ısınsın (ilk sayılan hücreye soğuk-başlangıç
+   cezası binmesin) diye.
+2) A1: 2 işçi × 6 sonda   (taban — bugünkü davranış, K harcamaz)
+3) B1: 3 işçi × 6 sonda   (cpu−1 adayı; grid isci:[3], K += 1)
+4) A2: 2 işçi × 6 sonda   (A-B-A-B tekrarı — duvar-saati hijyeni; kartın K sayımına dahil
+5) B2: 3 işçi × 6 sonda    değil: grid hücresi değil, tekil dalgalanma yakalama tekrarı)
+Her hücre öncesi/sonrası: ps -A -o %cpu toplamı + loadavg → sonuc.json'daki yuk_once/yuk_sonra.
+İşçi başına CPU: ~1.5 sn'de bir ps -o pid,pcpu örneklemesi + getrusage(RUSAGE_CHILDREN) deltası.
+Determinizm kanıtı: hücreler arası sonuç parmak izleri (sha256) kıyaslanır → aynı iş yükü beyanı.
+
+Komut: .venv/bin/python research/olcumler/edg044_havuz_tavani_2026-08-23/olcum.py
+       > .../kosum.log 2>&1   (arka plan görevi; çıktı dosyadan okundu — waiter yok)
+
+== ORTAM KÜNYESİ / BEYANLI SINIRLAR (kartın beyanlı_sinirlar (1) maddesi) ==
+- Yerel makine: Apple M3, 8 mantıksal çekirdek (4P+4E) — A1 DEĞİL (A1: 4 OCPU). Aşama-1
+  yalnız KABA eleme; nihai sayı A1'den (aşama-2, operatör onaylı).
+- M3'te nice(15)'li işçiler E-çekirdeğe düşebilir (zamanlayıcı kararı) — işçi başına CPU
+  örnekleri bu yüzden künyeye yazıldı; yorum Rol-1'in.
+- Ölçüm sırasında yerelde uvicorn/meridian süreci YOK (ps ile doğrulandı; yalnız A1'e SSH
+  tüneli — hesap yükü değil). Arka plan yükü başlangıçta ~%117/800 (çoğu WindowServer),
+  hücre başı yük kayıtları sonuc.json'da.
+- Yerel defter donmuş fotoğraf uyarısı (yerel_donmus_defter) ölçümü etkilemez: iş yükü
+  strategy.yaml v5 + bar CSV önbelleğinden kurulur, defterden değil.
+- CANLIYA HİÇ DOKUNULMADI. Aşama-2 (A1'de p95/PSI) bu ölçümün kapsamı DIŞINDA — operatör kalemi.
+
+== KESİNTİ VE DEVAM KAYDI (2026-08-23) ==
+- İlk koşum (olcum.py, tek süreçte KAL→A1→B1→A2→B2 planı) başlangıçtan ~60 dk sonra
+  (03:22:38 → 04:22) dışarıdan öldürüldü — arka plan görev süre sınırıyla uyumlu; ölçüm
+  ajanı durdurmadı. O ana kadar KAL (765,87 sn) ve A1 (2659,73 sn) TAMAMLANMIŞ ve
+  sonuc_partial.json'a inmişti; B1 ~2 dk'dayken kesildi (kalıcı yazım yok, yarım hücre atıldı).
+- Kalibrasyonun gösterdiği gerçek: T_wf ≈ 766 sn/sonda (yerelde) → tam dizi ~3,5 saat; tek
+  arka plan görevine sığmaz. DEVAM: kalan hücreler devam.py ile TEK TEK, yine SIRAYLA ve
+  aynı iş yükü/mekanikle koşuldu (her hücre < 60 dk): B1(3işçi) → A2(2işçi) → B2(3işçi).
+  Hiçbir eşik/tanım/aday kümesi değişmedi; devam.py yalnız koşum zarfıdır.
+- Çift-koşum koruması: devam.py aynı etiketi ikinci kez kaydetmez.
+
+== KAPANIŞ KAYDI (2026-08-23, ölçüm tamamlandı) ==
+Koşum gerçekleşen sırası: KAL(1i×1s, 765,87 sn) → A1(2i, 2659,73 sn) → [kesinti, B1 yeniden]
+→ B1(3i, 2192,43 sn) → A2(2i, 2693,76 sn) → B2(3i, 2224,57 sn). Hepsi sıralı, paralel hücre yok.
+MEKANİK EŞİK KIYASI (sonuc.json'dan): T2ort=2676,74 sn, T3ort=2208,50 sn,
+Ö1 oran=0,8251, kazanç=%17,49 → esik_pct20_karsilandi=false (ortalama VE medyan aynı).
+Determinizm: 4 hücrede 6 sondanın sonuç parmak izleri BİREBİR aynı (aynı iş yükü kanıtı).
+Mekanik gözlemler (yorum değil, türetilmiş sayı):
+- İşçi doygunluğu her hücrede tam: işçi başına ort. %99,3-99,4 CPU; ort. kullanılan çekirdek
+  2 işçide 1,99, 3 işçide 2,98 — kayıp boşta-işçiden DEĞİL.
+- Sonda-başı dalga süresi işçi sayısıyla uzuyor: 1 işçi 766 sn → 2 işçi ~887-900 sn →
+  3 işçi ~1075-1110 sn (aynı sabit sondalar). Yani ölçek kaybı işçi-içi yavaşlamadan geliyor
+  (makine: M3 4P+4E, işçiler nice(15); yorum Rol-1'in — beyanlı sınır (1): yerel yalnız kaba eleme).
+- Hücre-başı arka plan yükü kayıtlı (yuk_once/yuk_sonra, sonuc.json): toplam ps %CPU 59,6-141,4
+  aralığı (800 kapasitede), A-B-A-B deseni tekil dalgalanmayı dengeler; A1↔A2 farkı %1,3,
+  B1↔B2 farkı %1,5 — tekrarlar tutarlı.
+Yazım sınırı doğrulaması: git status --porcelain → yalnız bu klasör untracked; karta, state'e,
+motor dosyalarına, canlıya SIFIR dokunuş. Git komutu koşulmadı (salt-okunur status hariç).

@@ -1,0 +1,354 @@
+{
+ "kart": "EDG-2026-044",
+ "asama": 1,
+ "tarih": "2026-08-23 03:22:59",
+ "kunye": {
+  "n_ticker": 251,
+  "index_satir": 1408,
+  "fetch_end": "2026-08-23",
+  "cpu_count": 8,
+  "makine": "Apple M3 (4P+4E, 8 mantıksal)",
+  "platform": "darwin",
+  "python": "3.12.7",
+  "havuz_atalet_sn": 1800.0,
+  "strateji_surumu": 5
+ },
+ "sabit_aday_kumesi": [
+  [
+   "entry.rs_rating_min",
+   75
+  ],
+  [
+   "entry.pivot_proximity_pct",
+   2.0
+  ],
+  [
+   "entry.min_volume_ratio",
+   1.8
+  ],
+  [
+   "exit.profit_target_r",
+   3.0
+  ],
+  [
+   "exit.trail_atr_mult",
+   2.0
+  ],
+  [
+   "stop_loss_atr_mult",
+   2.5
+  ]
+ ],
+ "baslangic_yuku": {
+  "ts": 1787444576.943527,
+  "toplam_ps_cpu_pct": 151.1,
+  "loadavg": [
+   1.796875,
+   2.27001953125,
+   2.3564453125
+  ]
+ },
+ "hucreler": [
+  {
+   "hucre": "A1",
+   "isci": 2,
+   "n_sonda": 6,
+   "duvar_saati_sn": 2659.73,
+   "sonda_tamamlanma_sn": [
+    866.74,
+    869.64,
+    1757.55,
+    1760.14,
+    2656.63,
+    2659.73
+   ],
+   "cocuk_cpu_sn_toplam": 5294.8,
+   "ort_kullanilan_cekirdek": 1.99,
+   "isci_basina_cpu": {
+    "79956": {
+     "ort_pcpu": 99.4,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1756
+    },
+    "79957": {
+     "ort_pcpu": 99.3,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1756
+    }
+   },
+   "yuk_once": {
+    "ts": 1787445345.844861,
+    "toplam_ps_cpu_pct": 60.9,
+    "loadavg": [
+     2.482421875,
+     2.7451171875,
+     2.62060546875
+    ]
+   },
+   "yuk_sonra": {
+    "ts": 1787448006.716799,
+    "toplam_ps_cpu_pct": 59.6,
+    "loadavg": [
+     3.71044921875,
+     3.78125,
+     3.69921875
+    ]
+   },
+   "sonuc_parmak_izleri": {
+    " {}}', 'entry.pivot_proximity_pct', 2.0)": "d37d1704755459ac",
+    "_up\": {}}', 'entry.rs_rating_min', 75.0)": "15589549b79991d2",
+    "p\": {}}', 'entry.min_volume_ratio', 1.8)": "c8a393f38e2229bf",
+    "_up\": {}}', 'exit.profit_target_r', 3.0)": "bcdd0df759d6c09d",
+    "d_up\": {}}', 'exit.trail_atr_mult', 2.0)": "a9198ff436015ade",
+    "nd_up\": {}}', 'stop_loss_atr_mult', 2.5)": "d6d2b3a785294d08"
+   }
+  },
+  {
+   "hucre": "B1",
+   "isci": 3,
+   "n_sonda": 6,
+   "duvar_saati_sn": 2192.43,
+   "sonda_tamamlanma_sn": [
+    1075.05,
+    1076.78,
+    1082.39,
+    2182.53,
+    2186.84,
+    2192.43
+   ],
+   "cocuk_cpu_sn_toplam": 6529.6,
+   "ort_kullanilan_cekirdek": 2.98,
+   "isci_basina_cpu": {
+    "82550": {
+     "ort_pcpu": 98.9,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1446
+    },
+    "82551": {
+     "ort_pcpu": 99.1,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1446
+    },
+    "82552": {
+     "ort_pcpu": 99.3,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1446
+    }
+   },
+   "yuk_once": {
+    "ts": 1787448262.1236749,
+    "toplam_ps_cpu_pct": 139.7,
+    "loadavg": [
+     2.65380859375,
+     3.78125,
+     3.76513671875
+    ]
+   },
+   "yuk_sonra": {
+    "ts": 1787450455.4473312,
+    "toplam_ps_cpu_pct": 58.5,
+    "loadavg": [
+     4.38037109375,
+     4.630859375,
+     4.6767578125
+    ]
+   },
+   "sonuc_parmak_izleri": {
+    "_up\": {}}', 'entry.rs_rating_min', 75.0)": "15589549b79991d2",
+    " {}}', 'entry.pivot_proximity_pct', 2.0)": "d37d1704755459ac",
+    "p\": {}}', 'entry.min_volume_ratio', 1.8)": "c8a393f38e2229bf",
+    "_up\": {}}', 'exit.profit_target_r', 3.0)": "bcdd0df759d6c09d",
+    "d_up\": {}}', 'exit.trail_atr_mult', 2.0)": "a9198ff436015ade",
+    "nd_up\": {}}', 'stop_loss_atr_mult', 2.5)": "d6d2b3a785294d08"
+   }
+  },
+  {
+   "hucre": "A2",
+   "isci": 2,
+   "n_sonda": 6,
+   "duvar_saati_sn": 2693.76,
+   "sonda_tamamlanma_sn": [
+    900.82,
+    903.77,
+    1789.49,
+    1792.89,
+    2689.06,
+    2693.76
+   ],
+   "cocuk_cpu_sn_toplam": 5365.4,
+   "ort_kullanilan_cekirdek": 1.99,
+   "isci_basina_cpu": {
+    "84538": {
+     "ort_pcpu": 99.3,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1779
+    },
+    "84539": {
+     "ort_pcpu": 99.4,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1779
+    }
+   },
+   "yuk_once": {
+    "ts": 1787450475.571604,
+    "toplam_ps_cpu_pct": 141.4,
+    "loadavg": [
+     3.6357421875,
+     4.44384765625,
+     4.60791015625
+    ]
+   },
+   "yuk_sonra": {
+    "ts": 1787453170.440481,
+    "toplam_ps_cpu_pct": 52.9,
+    "loadavg": [
+     3.5830078125,
+     3.56494140625,
+     3.65771484375
+    ]
+   },
+   "sonuc_parmak_izleri": {
+    " {}}', 'entry.pivot_proximity_pct', 2.0)": "d37d1704755459ac",
+    "_up\": {}}', 'entry.rs_rating_min', 75.0)": "15589549b79991d2",
+    "p\": {}}', 'entry.min_volume_ratio', 1.8)": "c8a393f38e2229bf",
+    "_up\": {}}', 'exit.profit_target_r', 3.0)": "bcdd0df759d6c09d",
+    "d_up\": {}}', 'exit.trail_atr_mult', 2.0)": "a9198ff436015ade",
+    "nd_up\": {}}', 'stop_loss_atr_mult', 2.5)": "d6d2b3a785294d08"
+   }
+  },
+  {
+   "hucre": "B2",
+   "isci": 3,
+   "n_sonda": 6,
+   "duvar_saati_sn": 2224.57,
+   "sonda_tamamlanma_sn": [
+    1109.47,
+    1109.75,
+    1113.65,
+    2219.92,
+    2220.3,
+    2224.57
+   ],
+   "cocuk_cpu_sn_toplam": 6634.4,
+   "ort_kullanilan_cekirdek": 2.98,
+   "isci_basina_cpu": {
+    "87186": {
+     "ort_pcpu": 99.2,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1467
+    },
+    "87187": {
+     "ort_pcpu": 99.4,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1467
+    },
+    "87188": {
+     "ort_pcpu": 99.2,
+     "maks_pcpu": 100.0,
+     "n_ornek": 1467
+    }
+   },
+   "yuk_once": {
+    "ts": 1787453179.82422,
+    "toplam_ps_cpu_pct": 109.8,
+    "loadavg": [
+     3.78125,
+     3.61083984375,
+     3.6728515625
+    ]
+   },
+   "yuk_sonra": {
+    "ts": 1787455405.3802009,
+    "toplam_ps_cpu_pct": 55.5,
+    "loadavg": [
+     4.57861328125,
+     4.74951171875,
+     4.60400390625
+    ]
+   },
+   "sonuc_parmak_izleri": {
+    " {}}', 'entry.pivot_proximity_pct', 2.0)": "d37d1704755459ac",
+    "p\": {}}', 'entry.min_volume_ratio', 1.8)": "c8a393f38e2229bf",
+    "_up\": {}}', 'entry.rs_rating_min', 75.0)": "15589549b79991d2",
+    "d_up\": {}}', 'exit.trail_atr_mult', 2.0)": "a9198ff436015ade",
+    "_up\": {}}', 'exit.profit_target_r', 3.0)": "bcdd0df759d6c09d",
+    "nd_up\": {}}', 'stop_loss_atr_mult', 2.5)": "d6d2b3a785294d08"
+   }
+  }
+ ],
+ "kalibrasyon": {
+  "hucre": "KAL",
+  "isci": 1,
+  "n_sonda": 1,
+  "duvar_saati_sn": 765.87,
+  "sonda_tamamlanma_sn": [
+   765.86
+  ],
+  "cocuk_cpu_sn_toplam": 762.7,
+  "ort_kullanilan_cekirdek": 1.0,
+  "isci_basina_cpu": {
+   "79163": {
+    "ort_pcpu": 99.3,
+    "maks_pcpu": 100.0,
+    "n_ornek": 507
+   }
+  },
+  "yuk_once": {
+   "ts": 1787444579.5266838,
+   "toplam_ps_cpu_pct": 210.9,
+   "loadavg": [
+    1.796875,
+    2.27001953125,
+    2.3564453125
+   ]
+  },
+  "yuk_sonra": {
+   "ts": 1787445345.8291872,
+   "toplam_ps_cpu_pct": 60.5,
+   "loadavg": [
+    2.482421875,
+    2.7451171875,
+    2.62060546875
+   ]
+  },
+  "sonuc_parmak_izleri": {
+   "_up\": {}}', 'entry.rs_rating_min', 75.0)": "15589549b79991d2"
+  }
+ },
+ "kesinti_notu": "İlk koşum (KAL+A1+B1-başlangıcı) arka plan görev sınırında ~60 dk'da öldürüldü (03:22:38→04:22 kill; B1 ~2 dk'da kesildi, kalıcı yazım yok). Kalan hücreler aynı iş yükü/mekanikle devam.py üzerinden TEK TEK, yine SIRAYLA koşuldu.",
+ "determinizm_ayni_sonuclar": true,
+ "esik_kiyasi": {
+  "kural": "kart success_metric aşama-1: kazanç ≥ %20 değilse kart kapanır",
+  "t2_kosumlari_sn": [
+   2659.73,
+   2693.76
+  ],
+  "t3_kosumlari_sn": [
+   2192.43,
+   2224.57
+  ],
+  "ortalama": {
+   "t2_sn": 2676.74,
+   "t3_sn": 2208.5,
+   "oran_O1_3isci_bolu_2isci": 0.8251,
+   "kazanc_pct": 17.49,
+   "esik_pct20_karsilandi": false
+  },
+  "medyan": {
+   "t2_sn": 2676.74,
+   "t3_sn": 2208.5,
+   "oran_O1_3isci_bolu_2isci": 0.8251,
+   "kazanc_pct": 17.49,
+   "esik_pct20_karsilandi": false
+  }
+ },
+ "bitis_yuku": {
+  "ts": 1787455405.3951528,
+  "toplam_ps_cpu_pct": 55.5,
+  "loadavg": [
+   4.57861328125,
+   4.74951171875,
+   4.60400390625
+  ]
+ }
+}
