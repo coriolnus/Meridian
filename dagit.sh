@@ -6,10 +6,13 @@
 #   [0d] import taraması (dev-grubu daraltması hâlâ güvenli mi — WP-H; kırmızıysa DAĞITIM YOK)
 #   [1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
 #   [1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
+#   [F9] dagit-kapsamı-dışı canlı artefaktlar (sprint@ birimi · polkit kuralı · SOUL.md ·
+#        tick-watchdog service+timer): içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
 #   [2] rsync (state/backups/.venv/.git HARİÇ)
 #   [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
 #   [4] bakım penceresi: durdur → versiyonlu state kopyası ([1b] KOPYALA dediyse) → başlat
 #   [5] doğrulama: servisler active + healthz 200 + son olay yaşı
+#   [B] dağıtım-beyanı: canlıya state/dagitim.json (deployed_sha + damga — P0-b, ortamlar-arası #2)
 # Kullanım: ./dagit.sh            → dry-run'a kadar gider, ONAY İSTER
 #           ./dagit.sh --uygula   → tam dağıtım
 set -euo pipefail
@@ -19,15 +22,22 @@ RSYNC_EXC=(--exclude '.venv' --exclude '.git' --exclude 'state' --exclude 'backu
 
 echo "=== [0a/5] git temiz-ağaç kapısı ==="
 cd "$REPO"
+KIRLI_GEC=false   # dağıtım-beyanına ([B]) yazılır: true = istisna GERÇEKTEN kullanıldı (bayrak
+                  # temiz ağaçla verilmişse istisna işlememiştir ve beyan false kalır)
 if [[ -n "$(git status --porcelain)" ]]; then
   if [[ "${2:-}" == "--kirli-gec" || "${1:-}" == "--kirli-gec" ]]; then
     echo "  ⚠ KİRLİ AĞAÇLA dağıtım (bilinçli --kirli-gec)"; git status --short | head -10
+    KIRLI_GEC=true
   else
     echo "!! Çalışma ağacı KİRLİ — önce commit'le (yarım-iş canlıya gitmesin)."
     echo "   Bilinçli istisna için: ./dagit.sh --uygula --kirli-gec"; git status --short | head -15; exit 1
   fi
 fi
 echo "  ✓ dağıtılacak commit: $(git rev-parse --short HEAD) — $(git log -1 --format=%s | head -c 60)"
+# BEYAN İÇİN BURADA DONDURULUR ([B] adımında değil): 660dc10 dersi — paralel oturum trafiği ana
+# checkout'u dağıtım SIRASINDA taşıyabilir; beyan "dağıtımın kapılardan geçtiği andaki tepe"yi
+# söylemeli, betiğin bittiği andakini değil.
+DAGIT_SHA="$(git rev-parse HEAD)"
 
 echo "=== [0b/5] uv audit (tedarik-zinciri kapısı) ==="
 uv audit --preview-features audit-command || { echo "!! AUDIT KIRMIZI — dağıtım İPTAL"; exit 1; }
@@ -235,6 +245,71 @@ if [[ -n "$BIRIM_AYRIK" ]]; then
   echo "  ——————————————————————————————————————————————————————————————"
 fi
 
+# =================================================================================================
+# [F9] DAGİT-KAPSAMI-DIŞI CANLI ARTEFAKTLAR — içerik kapısı (denetim §F9 2026-08-13; kablo 2026-08-23)
+# =================================================================================================
+# DÖRT ARTEFAKT rsync kapsamının DIŞINDA yaşar ve ELLE kurulur (deploy/oracle-a1/deploy.sh):
+#   * meridian-sprint@.service  → /etc/systemd/system/     (v241 — sprint'in kendi cgroup birimi)
+#   * 50-meridian-sprint.rules  → /etc/polkit-1/rules.d/   (v241 — NoNewPrivileges altında tetik izni)
+#   * deploy/hermes/SOUL.md     → ~ubuntu/.hermes/SOUL.md  (v242 — hermes brifingi)
+#   * meridian-tick-watchdog.service + .timer → /etc/systemd/system/  (asılı-tick bekçisi)
+# Bu, OB-2'yi doğuran "kurulu ≠ çalışır" sınıfıdır: repo ilerler, canlı kopya yerinde sayar ve
+# hiçbir kapı bağırmazdı — denetim ölçtü: dagit'te bu dosyalara sıfır atıf vardı. [1c] yalnız
+# *.service YÖNERGELERİNİ kıyaslar; bu kapı BEŞ dosyanın TAM İÇERİĞİNİ kıyaslar (timer/polkit/
+# brifing [1c]'nin tür kapsamının dışındadır, yorum-düzeyi sürüklenme de burada görünür).
+#
+# KAPI RAPORLAR, ENGELLEMEZ — BİLİNÇLİ: bu artefaktlar dagit'in kopyalama kapsamında DEĞİL;
+# ayrıklıkta dağıtımı durdurmak, elle-kurulum akışını (bakım penceresi + daemon-reload + doğrulama)
+# dagit'e kilitlerdi. Kapının işi sürüklenmeyi GÖRÜNÜR yapmaktır; hüküm operatörün. Karşılaştırma
+# [1b]'nin idiomuyla (`ssh cat | cmp` — karşılaştırma tek yerde, iki tarafta ayrı sha aracı
+# aranmaz); "içerik-sha kapısı" sınıf adıdır, ölçü bayt-özdeşliktir (sha eşitliğinden güçlü).
+echo "=== [F9] dagit-kapsamı-dışı canlı artefaktlar (içerik kapısı) ==="
+F9_AYRIK=""; F9_OLCULEMEDI=""     # bash 3.2: boş DİZİ + `set -u` patlar → boşluklu dizge ([1b] gibi)
+F9_LISTE="
+deploy/oracle-a1/meridian-sprint@.service|/etc/systemd/system/meridian-sprint@.service
+deploy/oracle-a1/50-meridian-sprint.rules|/etc/polkit-1/rules.d/50-meridian-sprint.rules
+deploy/hermes/SOUL.md|/home/ubuntu/.hermes/SOUL.md
+deploy/oracle-a1/meridian-tick-watchdog.service|/etc/systemd/system/meridian-tick-watchdog.service
+deploy/oracle-a1/meridian-tick-watchdog.timer|/etc/systemd/system/meridian-tick-watchdog.timer"
+for _cift in $F9_LISTE; do
+  _f9_repo="${_cift%%|*}"; _f9_canli="${_cift##*|}"; _f9_ad="$(basename "$_f9_repo")"
+  if [[ ! -f "$REPO/$_f9_repo" ]]; then
+    # Repo tarafı yoksa kıyas zemini yok — bu bir sürüklenme hükmü değil, LİSTENİN bayatlamasıdır.
+    echo "  ⚠ $_f9_ad: ölçülemedi — REPODA YOK ($_f9_repo); kapı listesi bayat, listeyi güncelle"
+    F9_OLCULEMEDI="$F9_OLCULEMEDI $_f9_ad"; continue
+  fi
+  _f9_tmp="$(mktemp)"
+  # Önce düz cat; düşerse `sudo -n cat` (polkit rules.d dizini çoğu kurulumda root-dışına kapalıdır;
+  # -n: parola sorusu ssh altında asılı kalmasın — NOPASSWD yoksa dal temiz düşer, aşağıda ayrışır).
+  if ! "${SSH[@]}" "cat $_f9_canli" > "$_f9_tmp" 2>/dev/null && \
+     ! "${SSH[@]}" "sudo -n cat $_f9_canli" > "$_f9_tmp" 2>/dev/null; then
+    # ÖLÇÜLEMEYEN ne "aynı"dır ne "ayrık" (uydurma yasağı) — ama nedeni AYRIŞTIRILIR: yok mu,
+    # okunamıyor mu? İkisi farklı iş kalemidir (kurulum vs. erişim/sudo arızası).
+    if "${SSH[@]}" "sudo -n test -e $_f9_canli" 2>/dev/null; then
+      echo "  ⚠ $_f9_ad: ölçülemedi — canlıda VAR ama OKUNAMADI (izin/sudo); elle bak: $_f9_canli"
+    else
+      echo "  ⚠ $_f9_ad: ölçülemedi — canlıda DOSYA YOK ($_f9_canli); hiç kurulmamış olabilir," \
+           "kurulum elle: deploy/oracle-a1/deploy.sh"
+    fi
+    F9_OLCULEMEDI="$F9_OLCULEMEDI $_f9_ad"; rm -f "$_f9_tmp"; continue
+  fi
+  if cmp -s "$_f9_tmp" "$REPO/$_f9_repo"; then
+    echo "  ✓ $_f9_ad: canlı ile repo BİREBİR"
+  else
+    echo "  ⚠ $_f9_ad: AYRIK — repodaki hâli canlıda DEĞİL (rsync bu dosyayı TAŞIMAZ; elle kurulum ister)"
+    diff -u "$_f9_tmp" "$REPO/$_f9_repo" | head -12 || true
+    F9_AYRIK="$F9_AYRIK $_f9_ad"
+  fi
+  rm -f "$_f9_tmp"
+done
+if [[ -n "${F9_AYRIK// /}" ]]; then
+  echo "  ——————————————————————————————————————————————————————————————"
+  echo "  [F9] AYRIK ARTEFAKT VAR:$F9_AYRIK"
+  echo "  dagit bunları TAŞIMAZ; kurulum elle + bakım penceresi (deploy/oracle-a1/deploy.sh"
+  echo "  ilgili adımları; birimler daemon-reload ister). Dağıtım ENGELLENMEDİ — özet sonda tekrarlanır."
+  echo "  ——————————————————————————————————————————————————————————————"
+fi
+
 if [[ "${1:-}" != "--uygula" ]]; then
   # KURU KOŞUMDA YALNIZ DIFF: yukarıdaki blok hiçbir şey yazmadı (tek yazımı $STATE_TMP'ye okuma).
   # Kopyalama --uygula'ya ve BAKIM PENCERESİNE bağlıdır — koşan bir worker'ın altından yapılandırma
@@ -330,4 +405,46 @@ else
   echo "  ⚠ yedek artığı VAR → orphan_state_files dedektörü bunları sayar."
   echo "    Temizlik (TAŞIR, silmez): bash ops/state_yetim_temizle.sh   # kuru koşu; sonra --uygula"
 fi
+
+# [F9 ÖZETİ] DAĞITIM ÖZETİNE TAŞINIR: kapı [F9] kuru-koşum tarafında koştu ve bulgusunu orada
+# bastı; burada bir kez daha yazılır ki "DAĞITIM TAMAM" satırını okuyan göz onu kaçırmasın —
+# raporlanan ama görülmeyen sürüklenme, hiç raporlanmamış gibidir.
+if [[ -n "${F9_AYRIK// /}" || -n "${F9_OLCULEMEDI// /}" ]]; then
+  echo "--- [F9] dagit-kapsamı-dışı artefakt özeti ---"
+  if [[ -n "${F9_AYRIK// /}" ]];      then echo "  ⚠ AYRIK (repo ≠ canlı):$F9_AYRIK"; fi
+  if [[ -n "${F9_OLCULEMEDI// /}" ]]; then echo "  ⚠ ölçülemedi:$F9_OLCULEMEDI"; fi
+  echo "  Kurulum elle + bakım penceresi: deploy/oracle-a1/deploy.sh (dagit bu dosyaları taşımaz)."
+fi
+
+# =================================================================================================
+# [B] DAĞITIM-BEYANI (P0-b — docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md §4.2). Ortamlar-arası #2
+# ("repo-ağacı ↔ canlı-ağacı hangi tepede?") bugüne dek dedektörün YAPISAL kör noktasıydı: süreç-içi
+# hiçbir kıyas iki ortamı aynı anda göremez. Kapısı bu beyandır: dagit her başarılı dağıtımın
+# SONUNDA canlıya `state/dagitim.json` yazar. OKUYUCUSU (YASA 6): envanter/denetim turlarının
+# ortamlar-arası kıyası + "canlıda hangi sha koşuyor" sorusunu soran operatör (660dc10 dersinin
+# kalıcılaşması: beyan, kapılardan geçen tepeyi [0a]'da dondurulmuş DAGIT_SHA'dan söyler).
+#
+# CANLI STATE'E YAZIM — BİLİNÇLİ İSTİSNA: "canlı worker koşarken state'e yazma" yasağının konusu
+# worker'ın OKUDUĞU/YAZDIĞI defter ve yapılandırma dosyalarıdır; dağıtım anı zaten bakım anıdır ve
+# `dagitim.json`u hiçbir canlı süreç okumaz/yazmaz (salt dağıtım kaydı — okuyucusu yukarıda).
+# Yazım yine de ATOMİKTİR (tmp + mv): yarım JSON, ortamlar-arası kapıyı "ölçülemedi"ye değil
+# YANLIŞ hükme götürürdü. Yazıldığı bayt-özdeş DOĞRULANIR ([1b] kopya disiplini, satır ~298).
+echo "=== [B] dağıtım-beyanı (state/dagitim.json → canlı) ==="
+_beyan_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+_beyan_host="$(hostname)"
+_beyan_tmp="$(mktemp)"
+printf '{"deployed_sha": "%s", "dagitildi_utc": "%s", "dagitan_host": "%s", "kirli_gec_kullanildi": %s}\n' \
+  "$DAGIT_SHA" "$_beyan_utc" "$_beyan_host" "$KIRLI_GEC" > "$_beyan_tmp"
+sed 's/^/  /' "$_beyan_tmp"   # aynı beyan dağıtım çıktısına da basılır (yerel kopya dosyaya YAZILMAZ:
+                              # repoda state dosyası biriktirmek [1b]'nin kapattığı ayrışmayı geri açar)
+if "${SSH[@]}" "cat > /opt/meridian/state/.dagitim.json.tmp && mv /opt/meridian/state/.dagitim.json.tmp /opt/meridian/state/dagitim.json" < "$_beyan_tmp" \
+   && "${SSH[@]}" "cat /opt/meridian/state/dagitim.json" | cmp -s - "$_beyan_tmp"; then
+  echo "  ✓ beyan canlıya yazıldı — bayt-özdeş doğrulandı"
+else
+  # ENGEL DEĞİL — dağıtım bu noktada ZATEN tamam ([4] başlattı, [5] doğruladı); beyanın yazılamaması
+  # dağıtımı geri almaz, yalnız ortamlar-arası kıyası BU TUR İÇİN kör bırakır. Sessiz de bırakılmaz.
+  echo "  !! BEYAN YAZILAMADI/DOĞRULANAMADI — ortamlar-arası kıyas bu dağıtımı GÖREMEZ."
+  echo "     Elle yaz (yukarıdaki JSON'la): ssh ubuntu@$IP 'cat > /opt/meridian/state/dagitim.json'"
+fi
+rm -f "$_beyan_tmp"
 echo "=== DAĞITIM TAMAM ==="

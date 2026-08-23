@@ -9,6 +9,12 @@
 #
 # Not: normalde bu betiği ELLE koşman gerekmez — yereldeki cutover.sh (aynı dizinde) durdurma +
 # rsync + bu betik + token + doğrulama sırasını tek komutta yürütür.
+#
+# DAGİT KAPSAMI DIŞI DÖRT CANLI ARTEFAKT (F9): `meridian-sprint@.service` · `50-meridian-sprint.rules`
+# (polkit) · `deploy/hermes/SOUL.md` (→ ~/.hermes/SOUL.md) · tick-watchdog (service + timer).
+# Bu dört dosya dagit kapsamı dışıdır, ELLE kurulur — kurulum adımları bu betiğin gövdesindedir
+# (sudo cp + daemon-reload); dagit.sh [F9] içerik kapısı her dağıtımda repo↔canlı sürüklenmesini
+# RAPORLAR (engellemez — kurulum kararı ve bakım penceresi operatörün).
 set -euo pipefail
 cd "$(dirname "$0")/../.."   # repo kökü (/opt/meridian)
 REPO="$(pwd)"

@@ -41,7 +41,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **16 ops betiği** başlığıyla okundu
+- **17 ops betiği** başlığıyla okundu
 - **79 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -1050,6 +1050,77 @@ cd /opt/meridian && bash deploy/oracle-a1/deploy.sh
 
 Not: normalde bu betiği ELLE koşman gerekmez — yereldeki cutover.sh (aynı dizinde) durdurma +
 rsync + bu betik + token + doğrulama sırasını tek komutta yürütür.
+
+DAGİT KAPSAMI DIŞI DÖRT CANLI ARTEFAKT (F9): `meridian-sprint@.service` · `50-meridian-sprint.rules`
+(polkit) · `deploy/hermes/SOUL.md` (→ ~/.hermes/SOUL.md) · tick-watchdog (service + timer).
+Bu dört dosya dagit kapsamı dışıdır, ELLE kurulur — kurulum adımları bu betiğin gövdesindedir
+(sudo cp + daemon-reload); dagit.sh [F9] içerik kapısı her dağıtımda repo↔canlı sürüklenmesini
+RAPORLAR (engellemez — kurulum kararı ve bakım penceresi operatörün).
+```
+
+## SÜRÜM TERFİSİ — canlıya yeni sürüm nasıl çıkar (WP5-B borcu; kaynak: dagit.sh'ın kendisi) {#surum-terfisi}
+
+Tek meşru yol `./dagit.sh --uygula` (yerelden). Adımlar betikteki sırayla; hiçbiri atlanamaz:
+
+1. **[0a] temiz-ağaç kapısı** — kirli ağaç = dağıtım YOK (bilinçli istisna `--kirli-gec`, beyana
+   `kirli_gec_kullanildi: true` yazılır). Dağıtılacak tepe bu anda `DAGIT_SHA` olarak DONDURULUR.
+2. **[0b] `uv audit`** (tedarik zinciri) · **[0c] mimari sözleşmeler** (`ops/kapilar.sh`) ·
+   **[0d] import taraması** (dev-grubu daraltması) — herhangi biri kırmızı → İPTAL.
+3. **[1] rsync DRY-RUN** — ne değişeceği gözle onaylanır (mtime/yarım-iş tuzağı burada görünür).
+4. **[1b] versiyonlu state farkı** — canlı↔repo `goal.yaml` + `bounds.yaml` diff'i; kopya ancak
+   onayla ve bakım penceresinde. (ÖLÇÜM 2026-08-23: git-izli state YALNIZ bu ikisi —
+   `git ls-files state/` → goal.yaml, bounds.yaml; başka "versiyonlu state" adımı bilerek YOK.)
+5. **[1c]+[F9] sürüklenme kapıları** — birim yönergeleri + dagit-kapsamı-dışı beş dosya
+   raporlanır (engellemez; elle kurulum operatörün).
+6. **[2] rsync** (state/backups/.venv/.git HARİÇ) · **[3] `uv sync --frozen`** (dev grubu hariç).
+7. **[4] bakım penceresi** — servisler durdurulur, [1b] kopyası (varsa) yapılır, başlatılır.
+8. **[5] doğrulama** — servisler active + healthz 200 + son olay yaşı; düşerse GERİ AL:
+   önceki commit'e dönüp aynı akışı koş (`git checkout <önceki-sha>` yerelde; state'e dokunulmaz).
+9. **[B] dağıtım-beyanı** — canlıya `state/dagitim.json` (deployed_sha=DAGIT_SHA + damga);
+   bayt-doğrulamalı; yazılamazsa dağıtım geri alınmaz, ortamlar-arası kıyas o tur kör kalır.
+
+`git push` dağıtım DEĞİLDİR (cloud görünürlüğü içindir); canlı yalnız dagit.sh ile değişir.
+
+
+## `deploy/oracle-a1/h3_tur2_sertlestir.sh` {#deploy-oracle-a1-h3-tur2-sertlestir-sh}
+
+```
+=================================================================================================
+h3_tur2_sertlestir.sh — H3 tur-2 uygulama adımları (bakım penceresi): tick-watchdog + fail-notify
+sertleştirme drop-in'lerinin FAZLI kurulumu / doğrulaması / geri alınması
+=================================================================================================
+SUNUCUDA (A1) KOŞAR — deploy.sh / dash_token_credential.sh ile aynı sözleşme. Otomatik ÇAĞRILMAZ:
+bakım penceresinde, operatör eliyle. dagit.sh bu dosyaları NE TAŞIR NE KURAR ([1c]/[F9] kapıları
+yalnız repo↔canlı farkını raporlar).
+
+KAPSAM — filoda sertleştirmesiz kalan İKİ birim (ölçüm 2026-08-23: altı çekirdek birim kümeyi
+birim dosyasının İÇİNDE taşıyor, bu ikisi taşımıyor):
+* meridian-tick-watchdog.service — `User=` yok → ROOT koşar; en yetkili, en az kısıtlı birim.
+* meridian-fail-notify.service   — birim dosyasında "BİLİNÇLİ sertleştirilmedi" bloğu var;
+drop-in ancak oradaki ön-şart dolunca kurulur ve bu betik ön-şartı journal'dan ÖLÇER
+("gonderim sonucu: True" satırı) — sözle geçilmez.
+
+FAZLAR (ROADMAP H3: "NoNewPrivileges/ProtectSystem=strict/PrivateTmp/ProtectHome önce; seccomp
+EN SON ve dikkatli") — kaynak: deploy/oracle-a1/<birim>.service.d/:
+faz 1 = 10-sertlestirme-faz1.conf (dosya-sistemi/temel küme)
+faz 2 = 20-sertlestirme-faz2.conf (CapabilityBoundingSet= + SystemCallFilter=@system-service)
+
+H3 tur-2 uygulama adımları (bakım penceresi, birim başına — sıra bozulmaz):
+1. ./h3_tur2_sertlestir.sh                                 → DURUM (hiçbir şey değiştirmez)
+2. ./h3_tur2_sertlestir.sh --faz1 meridian-tick-watchdog   → kur + daemon-reload + yönerge teyidi
+3. sudo systemctl start meridian-tick-watchdog && journalctl -u meridian-tick-watchdog -n 5
+→ "ilerleme var" / YAS / ÖLÇÜLEMEDİ satırlarından biri görünmeli; EROFS/EACCES → --geri-al.
+4. ./h3_tur2_sertlestir.sh --faz2 meridian-tick-watchdog   → seccomp (faz 1 kuruluyken)
+5. ./h3_tur2_sertlestir.sh --tetik-testi meridian-tick-watchdog
+→ ZORLAMALI ateşleme: meridian'ı GERÇEKTEN restart eder (yalnız bakım penceresinde).
+Geçici eşik runtime drop-in'le kurulur/sökülür, kalıcı iz bırakmaz. Journal'da "yeniden
+başlatılıyor" + meridian'ın yeni ActiveEnterTimestamp'ı görülmeden faz 2 YÜRÜRLÜKTE
+SAYILMAZ (drop-in'deki dikkat kalemi: polkit UID'ye bakar, yeteneğe değil — beklenti,
+ölçüm değil; bu adım o beklentiyi ölçüme çevirir).
+6. fail-notify için aynı sıra (--faz1/--faz2): ön-şart journal'dan ölçülür, her fazdan sonra
+betik test-ateşlemesini kendisi koşar; bildirimin TELEFONA düştüğünü operatör doğrular.
+GERİ ALMA: ./h3_tur2_sertlestir.sh --geri-al <birim> → iki conf da silinir + daemon-reload
+(drop-in'in meziyeti budur: geri alma bir dosya silmek kadar ucuz; birim dosyasına dokunulmaz).
 ```
 
 ## `deploy/oracle-a1/litestream_kur.sh` {#deploy-oracle-a1-litestream-kur-sh}
