@@ -187,4 +187,9 @@ revizyonlar:
       kendi şerhi geçerlidir: "limit fiyatı işlem gördü" ≠ "emrimiz doldu" (kuyruk önceliği ve paper
       motorunun davranışı SİMÜLE EDİLMEDİ).
       ŞERH NE ZAMAN KALKAR: ROADMAP §2-23c (K1 — replayde dinlenen limitin modellenmesi) kapandığında.
+      ── ŞERH KALKIŞ KAYDI (Rol-1, 2026-08-23): koşul GERÇEKLEŞTİ — dinlenen limit EXE-2026-005
+      H3'te modellendi (bar_low, çivili) ve EXE-2026-006 K=8 grid'i onunla yeniden koştu. ŞERH
+      KALKMIŞTIR; ancak yerine EXE-006'nın kendi hükmü geçer: E1 hükmü YENİDEN AÇIK (H1 düştü,
+      H2 ölçülemedi, Ö3 CI'ları 4/4 sıfır-içi) — yani bu grid'e dayanan eski hüküm İPTAL ama
+      "bacağı aç" da ÇIKARILAMAZ. Limit-tavanı kararı artık §5 [B-E1-LIMIT] operatör kalemidir.
       O güne dek hiçbir limit-tavanı KARARI bu grid'e dayandırılamaz.
