@@ -59,7 +59,43 @@ alarm ışıkla değil **renk+kontrast+ikon üçlüsüyle** taşınır — açı
 | ③ anlamsız sayı | **MetricCell**: her sayı bağlamıyla doğar (eşik/dün/n) ya da "ölçülemedi + neden" — dürüstlük yasası bileşene gömülür |
 | ④ acil öne çıkmıyor | önem YALNIZ dikkat şeridi + rozet renginde ifade edilir; başka hiçbir yüzey "bağırmaz" |
 
-## DEĞİŞMEZLER (kırılamaz)
+## ~~DEĞİŞMEZLER (kırılamaz)~~ — 2026-08-24 OPERATÖR DÜZELTMESİ: yanlış çerçeve
+_Operatör: "UI tasarımında değişmeyecek hiçbir şey olamaz." HAKLI. Bu liste 'duvar' değildi,_
+_benim onu duvar diye okumam hataydı: her biri BİZİM verdiğimiz karar ve yeniden verilebilir._
+_Doğru ayrım aşağıda — GARANTİ (biçimi değişir, kendisi kalır) ↔ KARAR (tamamen serbest)._
+
+### A) GARANTİLER — biçimi serbest, kendisi korunur
+Bunlar estetik değil, **operatöre yalan söylememe** taahhütleri; yeni tasarım bunları BAŞKA bir
+görsel mekanizmayla taşıyabilir ama taşımalıdır:
+- **None ≠ 0** ve **"ölçülemedi" ≠ "sıfır" ≠ "kapsam dışı"** — bugün `v196` çırçır tavanı ve
+  `v197` koşulsuz-emisyon kapısıyla korunuyor; yarın başka bir bileşenle (ör. MetricCell'in
+  kendi hâl makinesi) korunabilir. Mekanizma değişirse çivi de değişir — gerekçesiyle.
+- **Provenance/kaynak beyanı** (sayı nereden geldi, ne kadar taze) · **sermaye-köken** ·
+  **nabız-bayat beyanı**.
+- **Kontrast/erişilebilirlik**: WCAG 2.2, en kötü GERÇEK bileşke zemine karşı ölçülür
+  (`docs/kontrast-denetimi.md` usulü). Yeni palet = yeni ölçüm, istisna yok.
+- **CSP**: harici origin yok (font/asset self-host). Bu bir güvenlik taahhüdü, estetik değil.
+
+### B) KARARLAR — hepsi masada, hiçbiri kutsal değil
+Warm-vs-cool nötrler · gölgesizlik · üç-yarıçap sözlüğü · yoğunluk/gövde boyu · kart dili sayısı
+(bugün 4 ayrı dil!) · ızgara stratejisi (`v205` ratchet) · kart sayısı (`v198` tabanı) ·
+**ve evet: aksan rengi** (`v197`'nin bugünkü tavanı=0 kuralı dahil).
+**Kural:** bir kararı değiştirmek = çiviyi BEYANLI gerekçeyle güncellemek (bu gece 4 kez yapıldı:
+v198 20→22→24, v266 CAP_DAC, v197 aynı-satır kapısı, v154 kapsam). Çivi tasarımı dondurmaz,
+**değişikliğin bilinçli olduğunu kanıtlar**.
+
+### AKSAN RENGİ — yeniden açılan karar ve Rol-1 önerisi
+Bugüne dek renk YALNIZ ölçüme aitti (*Money Rule*: yeşil/amber/kırmızı) ve etkileşim rengi YOKTU
+(birincil eylem siyah hap). Bu, kontrolleri görsel olarak görünmez kılıyor — operatörün
+"acil olan öne çıkmıyor" ve "hangisine bakacağımı bilmiyorum" dertlerini BESLİYOR.
+**ÖNERİ:** Dub'ın elektrik mavisi TEK ve AYRIK bir dil olarak girsin —
+`mavi = etkileşilebilir/aktif konum` (kontrol, sekme, bağlantı, odak), **asla bir ölçüm değeri**;
+`yeşil/amber/kırmızı = ölçüm`, asla bir kontrol. İki dil kesişmez. Bu, bugünkü tek-dilden DAHA
+dürüst: renk gördüğünde ne tür bir şeye baktığını bilirsin. `v197` kuralı buna göre yeniden
+yazılır: 'koşulsuz emisyon' yasağı ÖLÇÜM renkleri için AYNEN kalır (veri yokken yeşil boyamak
+hâlâ yalan), etkileşim rengi için geçerli değildir (kontrolün rengi veriye bağlı değildir).
+
+### ~~eski liste~~ (tarihçe)
 None ≠ 0 · "ölçülemedi" ayrımı · provenance/kaynak rozetleri · nabız-bayat beyanı · sermaye-köken ·
 v196 çırçır tavanı · v197 koşulsuz-emisyon kapısı · v198 kart tabanı (yeni sayı BEYANLI güncellenir) ·
 v194/v205 yerleşim-taşma · CSP `script-src 'self'` (CDN/inline yok; font yerel ya da sistem yığını) ·
