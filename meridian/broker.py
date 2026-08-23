@@ -65,7 +65,9 @@ DERISK_FLOOR_DD = 0.36     # at/beyond this drawdown from peak, take no new size
 #
 # YASA (tek yer, iki okuyucu — kopyalanmaz):
 #   1. LİMİT   : limit = tetik + min(atr_mult·ATR14, pct_cap·tetik). ATR ölçülemezse yalnız
-#                yüzde tavanı bağlar ve bu `offset_kaynak` alanıyla BEYAN EDİLİR (uydurma ATR yok).
+#                yüzde tavanı bağlar ve bu `offset_kaynak` alanına YAZILIR (uydurma ATR yok).
+#                KAYIT ≠ OKUYUCU (M11): alanın üretimde tüketicisi yoktur — ÖLÜ-ALAN DAMGASI[M11],
+#                `entry_order_decision` içinde.
 #   2. DOLUM   : hiçbir motor limitin ÜSTÜNDE dolum yazamaz — İFADE SLİPAJ ÖNCESİDİR
 #                (inceleme Küçük 7, 2026-08-17). Baz fiyat limiti aşamaz; `base_fill`
 #                ona slipajı EKLER, yani dinlenen dolumda gerçekleşen fiyat daima
@@ -185,7 +187,7 @@ def entry_limit_price(trigger: float, atr: float | None = None, cfg: dict | None
     pct_off = t * float(cfg["limit_pct_cap"])
     try:
         a = float(atr) if atr is not None else 0.0
-    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz ATR = ölçülemedi; `offset_kaynak` alanı bunu satıra yazar
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz ATR = ölçülemedi; `offset_kaynak` bunu yan tabloya yazar (üretimde okunmaz — DAMGA[M11]), limit yine pct_cap ile bağlanır
         a = 0.0
     # ── EZILEN-DAMGA[25b-4] · execution_v2.limit_atr_mult — ATIL EKSEN (BİLİNÇLİ) ────────────
     # (Envanter 2026-08-13 §D-2; yeniden ölçüm 2026-08-22: goal.yaml hâlâ 100.0 — değişmedi.)
@@ -197,7 +199,10 @@ def entry_limit_price(trigger: float, atr: float | None = None, cfg: dict | None
     #   yanılsamayı kapatır. Değeri oynatmak, 0,0004·tetik'ten büyük ATR'lerde HİÇBİR ŞEYİ değiştirmez.
     # CANLANMA KOŞULU: `limit_atr_mult`, mult·ATR < pct_cap·tetik olacak düzeye (ör. eski kart
     #   varsayılanı 0,5) indirilirse eksen yeniden bağlar; hangi tarafın bağladığı zaten her
-    #   kararda `offset_kaynak` alanına yazılır (okuyucusu E2 defteri).
+    #   kararda `offset_kaynak` alanına yazılır — ama BU ALAN ÜRETİMDE OKUNMAZ (ÖLÜ-ALAN
+    #   DAMGASI[M11], aşağıda): yan tabloda durur, tüketicisi yalnız testler + elle teşhis.
+    #   ESKİ BEYAN E2 DEFTERİNİ BU ALANIN OKUYUCUSU DİYE GÖSTERİYORDU VE ÇÜRÜKTÜ: E2 satırı
+    #   (`entry_execution.jsonl`) bu alanı hiç taşımaz.
     off = min(float(cfg["limit_atr_mult"]) * a, pct_off) if a > 0 else pct_off
     return t + off
 
@@ -212,18 +217,20 @@ def entry_order_decision(trigger: float, ref_price: float | None = None,
     ÖLÇÜLEMEYEN REFERANS GAP DALINA DÜŞER (bilinçli): buy-stop'un tek katkısı "fiyat tetiği YUKARI
     kırana kadar girme" teyididir; referans bilinmiyorsa o teyit zaten yapılamaz, ama stop-limit
     göndermek bugünkü retlerin (95/95) riskini geri getirir. Limit tavanı her iki dalda da aynı
-    olduğu için ÖDENEN FİYAT değişmez — değişen yalnız teyidin kaybıdır ve `ref_kaynak` alanıyla
-    beyan edilir."""
+    olduğu için ÖDENEN FİYAT değişmez — değişen yalnız teyidin kaybıdır ve `ref_kaynak` alanına
+    YAZILIR. BEYANIN SINIRI (M11, 2026-08-24): bu alanı üretimde HİÇBİR okuyucu okumaz — yan
+    tabloda (`portfolio.json["entry_law"]`) durur, tüketicisi yalnız testler + elle teşhistir.
+    Yani kayıt gerçek, ama "beyan edilir" bir OKUYUCU vaat etmez (bkz. ÖLÜ-ALAN DAMGASI[M11])."""
     cfg = cfg or entry_law()
     t = float(trigger or 0.0)
     limit = entry_limit_price(t, atr, cfg)
     try:
         rp = None if ref_price is None else float(ref_price)
-    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz referans = ölçülemedi; `ref_kaynak` alanı satıra yazılıyor
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz referans = ölçülemedi; `ref_kaynak` bunu yan tabloya yazar (üretimde okunmaz — DAMGA[M11]) ve karar gap dalına düşer
         rp = None
     try:
         a = float(atr) if atr is not None else 0.0
-    except (TypeError, ValueError):  # sessiz-yutma: aynı gerekçe — `offset_kaynak` alanı taşıyor
+    except (TypeError, ValueError):  # sessiz-yutma: aynı gerekçe — ölçülemeyen ATR `offset_kaynak` ile yan tabloya geçer (üretimde okunmaz — DAMGA[M11]); limit tavanı değişmez
         a = 0.0
     # ── EZILEN-DAMGA[25b-5] · execution_v2.gap_behavior — KOŞULU TOTOLOJİ ────────────────────
     # (Envanter 2026-08-13 §D-2; yeniden ölçüm 2026-08-22: kod yolu birebir aynı, aşağıya bak.)
@@ -245,6 +252,38 @@ def entry_order_decision(trigger: float, ref_price: float | None = None,
         mode, olay = "veto", EV_GAP_VETO
     else:
         mode, olay = "marketable_limit", EV_GAP_MARKETABLE
+    # ── ÖLÜ-ALAN DAMGASI[M11] · `olay` · `offset_kaynak` · `ref_kaynak` · `limit_bps` ─────────
+    # (docs/TARAMA-KOVA6-ALAN-MERCEGI-2026-08-24.md §4; bağımsız yeniden ölçüm 2026-08-24.)
+    # GERÇEK DURUM: bu dört alan ÜRETİLİR ve `portfolio.json["entry_law"][plan_id]` yan tablosuna
+    #   DOLU yazılır (`loop.py` silahlanma anında bu sözlüğü OLDUĞU GİBİ saklar), ama
+    #   ÜRETİMDE OKUNMAZ: `meridian/` altında (py + web/js) sıfır okuyucu. Tüketicileri testlerdir
+    #   (`tests/test_mutborc_broker_entry_order_decision_v148.py`, `tests/test_icra_gercekligi_v141.py`,
+    #   `tests/test_alpaca_exec.py`) + elle teşhis. Sınıf: "test-tek-tüketici" (ÖLÜ).
+    # ÖNCEKİ BEYAN ÇÜRÜKTÜ (Ö-49 bayat-beyan sınıfı): iki yorum E2 defterini bu alanların
+    #   OKUYUCUSU diye gösteriyordu.
+    #   E2 defterine (`entry_execution.jsonl`) satırı `loop._entry_exec_write` yazar ve karar
+    #   sözlüğünden YALNIZ `limit/atr/law/mode(→emir_tipi)/tif/gap_at_submit` alanlarını seçer;
+    #   bu dört alan o satıra HİÇ girmez — bu KOD düzeyinde doğrulandı (2026-08-24). Canlı
+    #   `entry_execution.jsonl`ın 30 satırının alan listesi de taşımıyor (tarama §4'ün ÖLÇÜMÜ;
+    #   bu oturumda canlıya bakılmadı, kod yolu bağımsız doğrulandı).
+    #   Yani beyan bir okuyucu VAAT EDİYOR, kod onu üretmiyordu.
+    # KALDIRILMADI — BİLİNÇLİ: kaldırma kararı Rol-1'indir (25a emsali). Gerekçe:
+    #   (a) `offset_kaynak`/`ref_kaynak` bir "ölçülemedi" BEYANIDIR (UYDURMA YASAĞI'nın kanıtı) —
+    #       silinirse limiti hangi tarafın bağladığı ve referansın ölçülüp ölçülmediği geri
+    #       izlenemez olur. `entry_limit_price`ın ezilen-eksen damgası (25b-4) CANLANMA
+    #       KOŞULU'nun kanıt alanı olarak tam bunu gösterir: eksen yeniden bağlarsa orada görünür.
+    #   (b) `olay` E1 kararının kendi olay adıdır (`EV_STOP_LIMIT`/`EV_GAP_VETO`/
+    #       `EV_GAP_MARKETABLE`) ve `mode`↔`olay` eşlemesi iki sözleşme testinin gözlemlediği
+    #       tek yüzeydir; silmek o sözleşmeyi gözlemlenemez kılar.
+    #   (c) Maliyet ~sıfır: küme SINIRLI ve her seans SIFIRDAN kurulur (`loop.py`, silahlı ≤ tavan
+    #       + o seansın REVIEW planları) — birikim yok, karar yüzeyi yok.
+    #   (d) Kaldırma BEDELİ var: `tests/..._entry_order_decision_v148.py:_ALANLAR` alan kümesini
+    #       SÖZLEŞME olarak çiviler ve `tests/fikstur/vaka_2026-08-04_.../portfolio.json` bu
+    #       alanlarla donmuştur — ikisi de Rol-1 kalemidir.
+    #   NOT: `test_differential_v60` BU KARARA DEĞMEZ — o PLAN sözlüklerini kıyaslar; `entry_law`
+    #   plan şemasının bilerek DIŞINDADIR (`loop.py`: "Plan SÖZLÜĞÜNE konmaz").
+    #   ÇİVİ: `tests/test_pano_durustluk_v280.py` §E — alan bir gün gerçekten üretime bağlanırsa
+    #   bu damga BAYATLAR ve test kırmızıya döner.
     return {
         "mode": mode, "olay": olay, "trigger": round(t, 4), "limit": round(limit, 4),
         "atr": (round(a, 4) if a > 0 else None),
