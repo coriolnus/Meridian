@@ -51,3 +51,6 @@ H3 tur-2 canlıda (tetik-testi kanıtlı; iki alet vakası yakalandı-düzeltild
 - **bars_intraday retention** 🆕: arşivde tavan yok (~2,3GB/yıl; disk 39G boş — acele değil). Karar: retention süresi (öneri: 180 gün + bucket'a aylık arşiv) — 13-tasarımının açık sorusu.
 - **registry budaması uygulaması** (dry-run temiz: 3 alan × 133 örnek) — tek komut, istediğin an:
   `ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && .venv/bin/python ops/registry_olu_alan_budamasi.py --uygula'`
+
+## F. Insider (15d-A6) fizibilite soruları (2026-08-23 gece — belge: TASARIM-15D-A6-INSIDER)
+Öneri EDGAR-ingest (bedava, M-boy). Beş ayrık onay: (1) yol onayı (EDGAR mi) · (2) hedef katman (research-arşiv mi canlı-defter mi — öneri: research) · (3) ~9k isteklik dikiş koşusu izni (kibar kadanslı, bir gece) · (4) derivative-tablo kapsam kararı · (5) kart sırası (A2 gelir-momentumundan önce mi sonra mı — öneri: sonra).
