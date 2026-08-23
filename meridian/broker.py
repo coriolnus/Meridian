@@ -705,7 +705,16 @@ class PaperBroker:
         """#8 partial scale-out: once the bar's high reaches entry + exit.scale_out_r·R, bank
         exit.scale_out_frac of the position at that level and ratchet the stop to breakeven for the rest.
         The banked P&L is folded into the SINGLE final closed-trade row (one trade, qty-weighted R), so
-        min_sample / per-fold n are unaffected. exit.scale_out_frac=0 → off (default)."""
+        min_sample / per-fold n are unaffected. exit.scale_out_frac=0 → off (default).
+
+        SİLAHLANMA BEYANI (OPT Faz-1 kablolama şartı, 2026-08-23): kablo (bounds satırları +
+        buradaki params okuması) TAMDIR ama alet KAPALIDIR ve silahlanması EDG-2026-027 hükmüne
+        tabidir — 027 (çıkış paketi OAT) + EDG-2026-029 (düzeltilmiş scale-out) kavramı CI-negatif
+        ölçtü (B −0.053 / C −0.045), TCA hükmü GÜÇLENDİRDİ (ek dolum bacağı gerçek friksiyonda
+        daha zararlı). ZORUNLULUK ŞARTI (ROADMAP WP1-C latent kusur): `exit.scale_out_frac` bir
+        gün açılacaksa ÖNCE bankalama-barı trail=entry_fill → aynı-bar stop_gap kusuru düzeltilir;
+        motor değişikliği = yeni kart + yeniden ölçüm. Arama bu düğmeyi bulup açamaz: açılış
+        DONUK-EŞİK-OTOMATİĞE sınıfında bile 027 hükmünün bilinçli iptalini ister (operatör)."""
         if pos.scaled_out:
             return False
         frac = float(params.get("exit.scale_out_frac", 0.0))
