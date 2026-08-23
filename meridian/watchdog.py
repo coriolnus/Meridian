@@ -190,13 +190,19 @@ def _askida_mi(name: str) -> dict | None:
 
 
 def report() -> dict:
-    """{stale: [{name, gap_h, expected_h}], askida: [...], ok: n, never: [adlar]} — teşhis paneli
-    buradan okur. Hiç damgalanmamış mekanizma 'never' listesinde (kurulumdan beri hiç koşmadı — en
-    yüksek sesli hal). Penceresini aşmış AMA sistemin kendi beyanıyla beklemeye alınmış mekanizma
-    `askida` listesindedir: ne OK'tir ne alarmlıktır."""
+    """{stale: [{name, gap_h, expected_h}], askida: [...], ok: hüküm, n_ok: n, never: [adlar]} —
+    teşhis paneli buradan okur. Hiç damgalanmamış mekanizma 'never' listesinde (kurulumdan beri hiç
+    koşmadı — en yüksek sesli hal). Penceresini aşmış AMA sistemin kendi beyanıyla beklemeye alınmış
+    mekanizma `askida` listesindedir: ne OK'tir ne alarmlıktır.
+
+    T3.1/A4 (Rol-1 kararı 2026-08-23): `ok` YALNIZ HÜKÜM taşır — True: her mekanizma penceresinde ·
+    False: geciken ya da hiç koşmamış var · None: ihlal yok ama askıda bekleyen var (askıda ne OK ne
+    ihlaldir, tasarım §4a; sebep `askida` listesinde adıyla durur — "temiz" UYDURULMAZ). Sayaç
+    kanonik `n_ok`a taşındı; eski sayı-taşıyan `ok` okuyucularda bir dönem eşanlamlı okunur
+    (`durum_sozlugu.n_ok_oku`, sayaçlı — düşürme kararı Rol-1'de)."""
     beats = store.read_json(BEATS_FILE, {})
     now = _now()
-    stale, never, askida, ok = [], [], [], 0
+    stale, never, askida, n_ok = [], [], [], 0
     for name, max_gap in EXPECTED.items():
         ts = beats.get(name)
         if ts is None:
@@ -216,14 +222,19 @@ def report() -> dict:
             else:
                 stale.append(satir)
         else:
-            ok += 1
+            n_ok += 1
     stale.sort(key=lambda x: -x["gap_h"])
     askida.sort(key=lambda x: -x["gap_h"])
     # GÜNLÜK SAYAÇ BURADAN DÖNMEZ (bilinçli): `watchdog_alarm_gunluk.json`ın DIŞ okuyucusu
     # `api.py`dir (codelaw: kendi yazdığını kendi okuyan tüketici sayılmaz). Raporun içine de
     # koymak aynı dosyayı tek istekte İKİ AYRI ANDA okumak olurdu — panoda iki farklı "kaç alarm
     # bastırıldı" cevabı doğabilirdi.
-    return {"stale": stale, "never": never, "askida": askida, "ok": ok, "total": len(EXPECTED)}
+    # HÜKÜM ÜÇ DEĞERLİ (docstring sözleşmesi): ihlal (stale/never) > askıda > temiz. Askıda hâli
+    # False'a boyanmaz (alarm değildir) ama True'ya da katlanmaz (bekleyen mekanizma "penceresinde"
+    # değildir) — hükümsüzlüğün sebebi `askida` listesinde beyanlıdır, `olculemedi` DEĞİLDİR.
+    hukum = False if (stale or never) else (None if askida else True)
+    return {"stale": stale, "never": never, "askida": askida,
+            "ok": hukum, "n_ok": n_ok, "total": len(EXPECTED)}
 
 
 ALARMED_FILE = "watchdog_alarmed.json"

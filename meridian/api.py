@@ -1733,6 +1733,11 @@ def api_skills(request: Request):
     # sabit sayı yazmasın. `counts.total` kayıt TOPLAMIDIR (aktif+arşiv) ve tek başına
     # yaşam döngüsünü gizler; `envanter` üç paydayı da ayrı ayrı taşır.
     reg["envanter"] = skills.envanter()
+    # 25b SON DAMGA (WP7-24h · denetim D-2 "En acil damga"): `shadow` bayrağının davranışsızlık
+    # BEYANI kayıt yüzeyinde taşınır — pano "gölge" rozeti bu metni tooltip'te basar (YASA 6
+    # okuyucusu app.js RENDER.skiller). Metin tek kaynaktan (skills.GOLGE_BEYANI) gelir ki rozet
+    # ile registry aynı cümleyi kursun; davranışsızlık çivisi tests/test_kucuk_paket_v275.py'de.
+    reg["golge_beyani"] = skills.GOLGE_BEYANI
     return reg
 
 
@@ -3055,12 +3060,19 @@ def _sessiz_hat(wd: dict, hb: dict) -> dict:
     # meşru bir beklemeyle boyamak, hattın anlamını yine alarm-yorgunluğuna çevirirdi. Ama GİZLİ de
     # değildir: `ok/total` oranında eksik görünen mekanizmanın nedeni burada yazar.
     askida = list(wd.get("askida") or [])
+    # F8/T3.1 (A4 kararı 2026-08-23): penceresinde-sayaç kanonik `n_ok`tan okunur; eski
+    # sayı-taşıyan `ok` eşanlamlıdır ve okunursa SAYILIR (durum_sozlugu — okuyucu-ölümü ölçümü).
+    # `ok` artık HÜKÜM taşır ve sayaç yerine geçemez (bool `n_ok_oku`da tip emniyetiyle elenir).
+    from . import durum_sozlugu as _dsz
+    n_ok, _ = _dsz.n_ok_oku(wd)
     segmentler.append({
         "ad": "bekçiler", "saglikli": not b_sapma,
         # KRİTİK = "hiç koşmadı". watchdog.report'un kendi ifadesiyle en yüksek sesli hâl:
         # geciken bir mekanizma yavaşlamıştır, hiç koşmamış bir mekanizma KABLOLANMAMIŞTIR.
         "kritik": bool(never),
-        "ozet": (f"{wd.get('ok')}/{toplam}" if toplam is not None else "—"),
+        # SAYI YOKSA SAYI YAZILMAZ (v196): `n_ok` okunamadıysa özet "—" der — "None/17" basmak
+        # ölçülemezliği bir sayıymış gibi giydirmek olurdu.
+        "ozet": (f"{n_ok}/{toplam}" if toplam is not None and n_ok is not None else "—"),
         "n_sapma": len(stale) + len(never), "sapmalar": b_sapma,
         "askida": [{"ad": a.get("name"), "neden": a.get("neden"), "detay": a.get("detay"),
                     "sure": _sure_metni((a.get("gap_h") or 0) * 3600.0)} for a in askida[:4]],
@@ -3482,6 +3494,9 @@ def _durum_sozlugu(bd: dict) -> dict:
         "kanonik": {
             "hukum": {"kanonik": _dsz.HUKUM_KANONIK, "esanlamli": list(_dsz.HUKUM_ESANLAMLI)},
             "neden": {"kanonik": _dsz.NEDEN_KANONIK, "esanlamli": list(_dsz.NEDEN_ESANLAMLI)},
+            # T3.1/A4 (2026-08-23): sayaç ailesi de sözlüğe girdi — `report().ok` sayısı `n_ok`
+            # oldu; eski ad eşanlamlı okunur ve "sayac:ok" anahtarıyla aşağıdaki sayaçta görünür.
+            "sayac": {"kanonik": _dsz.SAYAC_KANONIK, "esanlamli": list(_dsz.SAYAC_ESANLAMLI)},
             "beyan": _dsz.BEYAN_KANONIK,
             "kol": {k: list(v) for k, v in _dsz.KOL_KANONIK.items()},
         },
@@ -3900,7 +3915,11 @@ def _hat_cizelgesi(wd: dict, sched: dict) -> dict:
             "son_dongu": _son_dongu(), "donguler": pencere_dongu,
             "olay_penceresi": len(olaylar),
             "scheduler_updated": sched.get("updated"),
-            "bekci_ok": wd.get("ok"), "bekci_total": wd.get("total")}
+            # F8/T3.1 (A4): `bekci_ok` bir SAYIDIR ve kanonik `n_ok`tan okunur; eski sayı-taşıyan
+            # `ok` eşanlamlı (sayaçlı). Hüküm-ok buraya sızamaz — n_ok_oku bool'u elemekle yükümlü.
+            "bekci_ok": __import__("meridian.durum_sozlugu",
+                                   fromlist=["n_ok_oku"]).n_ok_oku(wd)[0],
+            "bekci_total": wd.get("total")}
 
 
 def _spend_detay() -> dict:

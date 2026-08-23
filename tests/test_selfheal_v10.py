@@ -31,7 +31,7 @@ def test_watchdog_beats_and_staleness(seeded_sandbox, monkeypatch):
     watchdog.beat("scheduler_poll")
     watchdog.beat("bilinmeyen-mekanizma")                          # zararsız — rapor denetlemez
     rep = watchdog.report()
-    assert rep["ok"] >= 1 and "scheduler_poll" not in [x["name"] for x in rep["stale"]]
+    assert rep["n_ok"] >= 1 and "scheduler_poll" not in [x["name"] for x in rep["stale"]]   # F8/T3.1: sayaç `n_ok` (A4)
     assert "warmup_sprint" in rep["never"]                         # hiç koşmamış = en yüksek sesli
     beats = store.read_json(watchdog.BEATS_FILE, {})
     beats["scheduler_poll"] = time.time() - 3600                   # 1 saat önce (pencere 30 dk)

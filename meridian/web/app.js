@@ -3234,8 +3234,12 @@ const OLAY_YUZEYLERI = {
     degerler: d => {
       const wd = (d || {}).watchdog || {}, sch = (d || {}).scheduler || {};
       const st = wd.stale || [], nv = wd.never || [], ask = wd.askida || [];
+      // F8/T3.1 (A4, 2026-08-23): penceresinde-sayaç kanonik `n_ok`; eski sayı-taşıyan `ok`
+      // eşanlamlı okunur ama YALNIZ gerçekten sayıysa — yeni üreticide `ok` HÜKÜMDÜR (bool|null)
+      // ve sayaç yerine geçemez ("true/17" basmak tip karışmasını ekrana taşımak olurdu).
+      const wdN = wd.n_ok ?? (typeof wd.ok === "number" ? wd.ok : null);
       return [
-        ["Penceresinde", wd.ok == null ? null : `${wd.ok}/${wd.total ?? "—"} mekanizma`],
+        ["Penceresinde", wdN == null ? null : `${wdN}/${wd.total ?? "—"} mekanizma`],
         ["Geciken", st.length ? st.map(x => `${x.name} · ${trn(x.gap_h, 1)}sa (pencere ${trn(x.expected_h, 1)}sa)`).join("<br>") : (st.length === 0 ? "yok" : null)],
         ["Hiç koşmamış", nv.length ? nv.join(", ") : "yok"],
         ["Askıda (beyanlı)", ask.length ? ask.map(a => `${a.name} · ${esc(a.neden || a.detay || "neden bildirilmedi")}`).join("<br>") : "yok"],
@@ -6725,6 +6729,9 @@ RENDER.cizelge = async () => {
   let d = _DIAG;
   if (!d) { try { d = await j("/api/diagnostics"); _DIAG = d; } catch (e) { d = null; } }
   const wd = (d || {}).watchdog || {}, sch = (d || {}).scheduler || {};
+  // F8/T3.1 (A4): sayaç kanonik `n_ok`tan; eski sayı-taşıyan `ok` yalnız GERÇEK sayıysa okunur
+  // (yeni üreticide `ok` hükümdür — bool sayaç sayılmaz, besleme kartıyla aynı kural).
+  const wdN = wd.n_ok ?? (typeof wd.ok === "number" ? wd.ok : null);
   const gecikenN = (wd.stale || []).length + (wd.never || []).length;
   const bas = bolumBasHTML("cizelge", "Gece hattı · canlı zaman çizelgesi",
     "Boru hattının statik resmi (<code>/workflow</code>) EMEKLİ: adımlar buraya taşındı ve "
@@ -6745,7 +6752,7 @@ RENDER.cizelge = async () => {
   $("page-cizelge").innerHTML = bas + `<div class="card rise">
     <h2 class="t">Hattın adımları <span class="tx3" style="font-weight:400">(${
       HAT_ADIMLARI.length} adım · ${wd.total ?? "—"} bekçi mekanizması)</span></h2>
-    <p class="hint" style="margin-top:0">Bekçi ${wd.ok == null ? "<b>ölçülemedi</b>" : `<b>${wd.ok}/${
+    <p class="hint" style="margin-top:0">Bekçi ${wdN == null ? "<b>ölçülemedi</b>" : `<b>${wdN}/${
       wd.total ?? "—"}</b> mekanizmayı penceresinde`} buldu${gecikenN ? ` · <b>${gecikenN}</b> geciken` : ""}${
       sch.updated ? ` · zamanlayıcı son tur <b>${esc(String(sch.updated).slice(11, 19))}</b>` : ""}.
       Penceresinde olanlar bekçi raporunda ADLA gelmez (yalnız sayıyla) — "penceresinde" ibaresi
@@ -7910,6 +7917,8 @@ function f8SozlukSatiri(dz) {
       (eşanlamlı: ${((kan.hukum || {}).esanlamli || []).map(esc).join(", ") || "—"}) ·
       açıklama <code>${esc(kan.neden && kan.neden.kanonik != null ? kan.neden.kanonik : "?")}</code> + <code>${esc(kan.beyan == null ? "?" : kan.beyan)}</code>
       (eşanlamlı: ${((kan.neden || {}).esanlamli || []).map(esc).join(", ") || "—"}) ·
+      sayaç <code>${esc(kan.sayac && kan.sayac.kanonik != null ? kan.sayac.kanonik : "?")}</code>
+      (eşanlamlı: ${((kan.sayac || {}).esanlamli || []).map(esc).join(", ") || "—"}) ·
       kollar: ${kollar || "—"}.</p>
     <p class="hint">Bekçi hükümlerinin okunduğu alan — ${satirlar || "satır yok"}.</p>
     <p class="hint">Eşanlamlı okuma (${esc(dz.sayac_rejimi == null ? "sayaç rejimi beyan edilmedi" : dz.sayac_rejimi)}): ${canli.length
@@ -8700,6 +8709,13 @@ RENDER.skiller = async () => {
   const d = await j("/api/skills");
   const skills = d.skills || {}, c = d.counts || {};
   const STATE_TR = { active: "aktif", available: "hazır", disabled: "kapalı", shadow: "gölge" };
+  // 25b SON DAMGA (WP7-24h · denetim D-2 "En acil damga"): "gölge" bir GÖZLEM katmanı işaretidir —
+  // deterministik motor kayıt defterinin bayrağını OKUMAZ, yani rozet bir trading davranışı
+  // anlatmaz. Beyan kayıt yüzeyinden gelir (/api/skills `golge_beyani` ← skills.GOLGE_BEYANI);
+  // uç eski sürümse yerel eş metin basılır — gölge rozeti beyansız kalamaz (dürüstlük-UI).
+  const GOLGE_BEYAN = d.golge_beyani || "gölge bayrağı trading'i DEĞİŞTİRMEZ — gözlem katmanı: "
+    + "deterministik motor kayıt defterinin bayrağını okumaz; bayrak yalnız LLM-yüzeyi ve "
+    + "pano/teşhis yüzeylerinde anlam taşır.";
   const tumu = Object.entries(skills);
   const aktif = tumu.filter(([, i]) => i.enabled);
   const emekli = tumu.filter(([, i]) => !i.enabled);
@@ -8718,7 +8734,7 @@ RENDER.skiller = async () => {
     return `<div class="trow" style="grid-template-columns:1fr 120px 78px 1fr">
       <span><b style="font-weight:500">${esc(n)}</b>${i.agent_authored ? ' <span class="tag t-vi" style="font-size:10px">ajan yazdı</span>' : ''}</span>
       <span class="mut" style="font-size:11px">${i.fmp !== '-' && i.fmp != null ? `FMP:${esc(i.fmp)} ` : ''}${i.alpaca !== '-' && i.alpaca != null ? `ALPACA:${esc(i.alpaca)}` : ''}</span>
-      <span><span class="tag ${tag}">${STATE_TR[st] || esc(st)}</span></span>
+      <span><span class="tag ${tag}"${st === "shadow" ? ` title="${esc(GOLGE_BEYAN)}"` : ""}>${STATE_TR[st] || esc(st)}</span></span>
       <span class="mut" style="font-size:11px">${esc(i.reason || '')}</span></div>`;
   };
   const cats = Object.entries(byCat).sort().map(([cat, list]) => {
