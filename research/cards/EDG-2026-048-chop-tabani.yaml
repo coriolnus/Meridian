@@ -1,0 +1,44 @@
+card_id: EDG-2026-048
+family: rejim_butce
+thesis: >
+  B-CHOP-BUTCE operatör kararı (2026-08-23): chop kapanması "kazara-aritmetik" sayıldı, yeniden
+  açılma KANIT-KAPILI. Tek izole kaldıraç chop tabanıdır (regime.py:127, bugün 45): taban 60
+  olursa dd-cezalı chop günü 60−20=40 ≥ min_exposure_score 40 → bütçe 40 (girişe açık); trend_up/
+  high_vol/trend_down aritmetiği DEĞİŞMEZ (brief §4 tablosu: yan etki YOK). BU KART o açılımın
+  P&L kanıtını donmuş şaside ölçer. GO çıkarsa canlıya alma AYRI operatör kararıdır; NO-GO
+  çıkarsa kalem "ölçülmüş ret"le kapanır. CANLI DEĞİŞMEZ.
+evidence_refs:
+  - "docs/KARAR-BRIEF-CHOP-BUTCE-2026-08-22.md (mekanizma zinciri + eşik taraması + iki yüzlü kanıt)"
+  - "research/olcumler/wp3_28d_kanit_2026-08-22/ (gün-serisi + kapı çapraz-doğrulaması)"
+  - "Operatör kararı 2026-08-23: kanıta bağlı açılsın + kartı şimdi koş (brainstorm 1/7)"
+universe: >
+  edg032c şasisi AYNEN (TABAN_KUNYESI.json künyesi; ARMED üçlü dünya). Enjeksiyon süreç-içi
+  sarmalayıcıyla (edg040/046 deseni): regime chop-taban değeri yalnız ölçüm kolunda 60'a çekilir;
+  motor dosyalarına dokunulmaz. Kontrol hücresi = bugünkü taban 45 (şasi kapısı).
+features_asof: >
+  Hücre başına: n · net P&L · PF · maxdd · sharpe · chop-dilim işlem sayısı/toplam-R ·
+  ZORUNLU YER-DEĞİŞTİRME RAPORU: taban=60 hücresinde chop-dışı işlem kümesinin kontrole göre
+  farkı (çıkan/giren/ortak) — bu fark KILL DEĞİLDİR (chop işlemleri slot/ısı tüketir; chop-dışı
+  kümenin değişmesi mekanizmanın kendisidir) ama RAPORLANMADAN hüküm yazılamaz.
+  Δ(taban60−taban45) eşlenik ay-kümeli bootstrap (B=5000, seed 20260812, birim=AY).
+parameter_grid:
+  chop_taban: [45, 60]   # K += 1 (45 = kontrol/şasi kapısı, K harcamaz; 60 tek yeni hücre)
+cost_model: sasi_ile_ayni
+success_metric: >
+  KARAR KURALI (donuk): Δ(taban60−taban45) CI-alt > 0 → "chop açılımı KANITLI — GO" (canlıya
+  alma operatör kararı; kart yalnız kanıtı üretir). CI 0-içi ya da CI-üst < 0 → NO-GO: kalem
+  "ölçülmüş ret" ile kapanır, chop kapalılığı ölçülmüş politikaya döner; canlanma ancak yeni
+  dünya/yeni kartla. İkincil okuma (hüküm değil): chop-dilim n<10 ise sonuç "örneklem-zayıf"
+  şerhi taşır — GO bile olsa şerh canlı kararına eşlik eder.
+kill_criteria:
+  - "kontrol hücresi (taban=45) edg032c/kosum1 ile üç defterde bayt-özdeş değilse DURUR"
+  - "bütçe öz-sınaması: her gün için uygulanan exposure_budget beklenen formülle (taban−ceza, eşik) birebir değilse hücre geçersiz"
+  - "taban DIŞINDA herhangi bir knob'a dokunulursa geçersiz (min_exp/ceza/tetik AYNEN — tek-kaldıraç sözleşmesi)"
+  - "motor sha (broker/backtest/strategy/guard) künyeyle tutarsızsa geçersiz"
+  - "yer-değiştirme raporu üretilmeden hüküm yazılırsa geçersiz"
+k_registry: {registered_at: "2026-08-23", trial_ids: [pending-048-t60]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt (operatör brainstorm 1/7 kararıyla; ölçüm ajanı karta dokunmaz)
+beyanli_sinirlar: >
+  (1) Replay chop kanıtı 2022-2026 penceresinin rejim karışımına bağlıdır — GO, "her chop'ta
+  kazanılır" demez. (2) Kart yalnız TABAN kaldıracını ölçer; dd-tetiği/ceza-büyüklüğü ayrı
+  kartların işidir. (3) Canlı icra maliyeti dahil değildir (canlı chop işlemi hiç doğmadı).
