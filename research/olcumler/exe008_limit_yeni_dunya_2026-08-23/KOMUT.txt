@@ -1,0 +1,22 @@
+# EXE-2026-008 — limit bacağının B1-DÜNYASI tekrarı · komut zinciri (2026-08-23)
+# Kart: research/cards/EXE-2026-008-limit-bacagi-yeni-dunya.yaml (OKU-DOKUNMA; hüküm Rol-1'in)
+#
+# TASARIM: şasi YENİDEN KURULMAZ — edg032b/olcum.py modül olarak yüklenir (edg032c/edg046
+#   deseni AYNEN: SANDBOX bu dizine, ARMED_BEKLENEN=B1 tek beyanlı uyarlama), kosum(run, smoke)
+#   yolu OLDUĞU GİBİ çağrılır. İki silah EXE-006'dan AYNEN: yasa_silahli(cap) entry_law yaması +
+#   MERIDIAN_DINLENEN_LIMIT bayrağı (bar_low, EXE-005 H3). Kol kimliği damgası + Ö-51b red
+#   kimlikleri replay sarmalayıcısından; dolum-kuralı öz-sınaması fill_entry sarmalayıcısından.
+# ŞASİ KAPISI (kill): silahsız kontrol ↔ edg032c/kosum1 üç defterde sha256 bayt-özdeş
+#   (tam koşumda TABAN_KUNYESI 2026-08-23 tazelenmiş kaydına çivili; duman ↔ kosum1_smoke).
+# Δ/CI: eşlenik ay-kümeli bootstrap B=5000 seed 20260812 birim=AY (edg040/045/046/048 AYNEN;
+#   Ö3 ayları kontrol seanslarından — EXE-006'nın 42-aylık işlemli-ay tabanından farkı BEYANLI).
+#
+# SIRA (zorunlu; her adım ayrı süreç):
+# [1] DUMAN (dar pencere 2022-01→06): silahsız kontrol + şasi kapısı(smoke) + 1 silahlı hücre
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/exe008_limit_yeni_dunya_2026-08-23/olcum.py duman 2>&1 | tee research/olcumler/exe008_limit_yeni_dunya_2026-08-23/kosum_duman.log
+# [2] TAM silahsız kontrol + şasi kapısı (kill — düşerse DUR)
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/exe008_limit_yeni_dunya_2026-08-23/olcum.py kontrol 2>&1 | tee research/olcumler/exe008_limit_yeni_dunya_2026-08-23/kosum_kontrol.log
+# [3] 8 hücre TAM (4 tavan × 2 dolum; cap<0.04 assert + öz-sınama + motor-sha künye kıyası her hücrede)
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/exe008_limit_yeni_dunya_2026-08-23/olcum.py grid 2>&1 | tee research/olcumler/exe008_limit_yeni_dunya_2026-08-23/kosum_grid.log
+# [4-6] H1 eğrisi · H2 kol farkı + CI · H3 oranları · Ö3 Δ+CI · motor sha dökümü → sonuc_grid.json
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/exe008_limit_yeni_dunya_2026-08-23/olcum.py analiz 2>&1 | tee research/olcumler/exe008_limit_yeni_dunya_2026-08-23/kosum_analiz.log

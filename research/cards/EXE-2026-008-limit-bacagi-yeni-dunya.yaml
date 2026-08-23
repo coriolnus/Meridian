@@ -41,7 +41,24 @@ kill_criteria:
   - "EXE-006'nın çıktısı EZİLİRSE geçersiz — yeni koşum, eski kanıt dokunulmaz"
   - "H1/H2 tek tavandan okunursa geçersiz (monotonluk eğri iddiasıdır)"
 k_registry: {registered_at: "2026-08-23", trial_ids: [EXE-008-yeni-dunya/K8-4tavan-x-2dolum]}
-status: registered   # 2026-08-23 Rol-1 — ön-kayıt (K3 operatör kararı; ölçüm ajanı karta dokunmaz)
+status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (K=8 aynen; kill 0; şasi bayt-özdeş)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-23): **ÜÇÜNCÜ DAL — "İKİ DÜNYADA DA BELİRSİZ"; kalem EDG-2026-042
+  gerçek-bandına PARK, bacak KAPALI kalır.** H1 DÜŞTÜ: dinlenen kolda eğri monoton değil (tepe
+  cap=0.01: 11.819 → 24.281 → 22.853 → 22.516) — E1'in "monoton zararlı" iddiası B1-dünyasında
+  da kırık (EXE-006'yla aynı sınıf, aynı tepe). H2 YİNE ANLAMSIZ: kaçanların ort-R'si 8/8 CI
+  sıfır-içi (iki süzgeçte de). Ö3-devri: Δ(dinlenen−açılış) 4/4 CI sıfır-içi — nokta tahminleri
+  4/4 pozitif (en güçlüsü cap=0.01'de +11.861 [−4.404, +29.201]) ama hiçbiri anlamlılığa
+  ulaşmıyor. Kural gereği hüküm hiçbir yöne OTURMAZ: "bacağı aç" yine çıkarılamaz, "kapalı doğru"
+  da kanıtlanamaz — varsayılan (kapalı) sürer. ÜÇÜNCÜ TEKRAR ANCAK YENİ BİLGİYLE: 042'nin gerçek
+  friksiyon bandı (K1 eşiği ~4-6 hafta) maliyet modelinin iyimserlik şerhini rakamlayınca 043
+  askısıyla BİRLİKTE tek turda okunur. BETİMLEYİCİ NOT (hüküm değil): dinlenen-dolum mekanizması
+  güçlü çalışıyor (kaçan planların %61-74'ü dinlenmede doluyor) ve yerinden-olanlar 4/4 tavanda
+  negatif ort-R'li — E1'in orijinal korkusunun (iyi işlemleri kaçırma) yönü bu dünyada görünmüyor,
+  yalnız kanıt gücü yetmiyor. Beyanlı fark: Ö3 ay tabanı edg048 reçetesi (55 seans-ayı), H2 CI'ı
+  EXE-006 yöntemi aynen. Grid 4. hücrede dış kesinti gördü; beyanlı sürdürme kapısıyla tamamlandı
+  (hücreler yapısal bağımsız — bakir sandbox + reload).
 beyanli_sinirlar: >
   (1) Maliyet bandı EXE-006'yla aynı iyimserliği taşır (045 şerhi) — mutlak P&L değil GÖRECELİ
   kıyas okunur. (2) Düşük-güç riski baki: B1 dünyası işlem sayısını değiştirdi ama CI'lar yine

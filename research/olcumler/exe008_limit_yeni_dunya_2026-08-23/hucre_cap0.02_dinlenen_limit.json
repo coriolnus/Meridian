@@ -1,0 +1,359 @@
+{
+ "run": "cap0.02_dinlenen_limit",
+ "smoke": false,
+ "limit_pct_cap": 0.02,
+ "dolum_kurali": "dinlenen_limit",
+ "dolum_kurali_damgasi": "dinlenen_limit",
+ "yasa": {
+  "limit_atr_mult": 0.5,
+  "limit_pct_cap": 0.02,
+  "version": "E1-v2"
+ },
+ "entry_rejects": {
+  "open_below_stop": 23,
+  "entry_missed_limit": 15,
+  "max_chase": 29
+ },
+ "entry_missed_limit": 15,
+ "red_kimlik": {
+  "open_below_stop": [
+   [
+    "ALB",
+    "2025-09-09"
+   ],
+   [
+    "ALB",
+    "2026-02-26"
+   ],
+   [
+    "AMAT",
+    "2026-07-22"
+   ],
+   [
+    "AMZN",
+    "2023-02-24"
+   ],
+   [
+    "COST",
+    "2024-03-08"
+   ],
+   [
+    "DECK",
+    "2025-01-31"
+   ],
+   [
+    "DLTR",
+    "2025-06-04"
+   ],
+   [
+    "ECL",
+    "2025-02-12"
+   ],
+   [
+    "FANG",
+    "2022-11-21"
+   ],
+   [
+    "HAL",
+    "2022-11-23"
+   ],
+   [
+    "LIN",
+    "2023-12-13"
+   ],
+   [
+    "LLY",
+    "2022-01-12"
+   ],
+   [
+    "LYB",
+    "2026-05-07"
+   ],
+   [
+    "MRVL",
+    "2024-12-30"
+   ],
+   [
+    "MRVL",
+    "2025-11-14"
+   ],
+   [
+    "MU",
+    "2026-07-01"
+   ],
+   [
+    "NOW",
+    "2024-02-21"
+   ],
+   [
+    "NXPI",
+    "2024-07-23"
+   ],
+   [
+    "ON",
+    "2026-06-26"
+   ],
+   [
+    "ORCL",
+    "2023-09-12"
+   ],
+   [
+    "ORCL",
+    "2025-09-25"
+   ],
+   [
+    "UAL",
+    "2025-06-13"
+   ],
+   [
+    "WMT",
+    "2023-11-16"
+   ]
+  ],
+  "entry_missed_limit": [
+   [
+    "AVGO",
+    "2024-12-16"
+   ],
+   [
+    "AVGO",
+    "2025-09-08"
+   ],
+   [
+    "DE",
+    "2022-11-23"
+   ],
+   [
+    "FCX",
+    "2026-01-06"
+   ],
+   [
+    "GOOGL",
+    "2023-05-11"
+   ],
+   [
+    "IRM",
+    "2024-08-01"
+   ],
+   [
+    "MDT",
+    "2023-04-24"
+   ],
+   [
+    "MRVL",
+    "2026-04-09"
+   ],
+   [
+    "NVDA",
+    "2025-10-29"
+   ],
+   [
+    "OMC",
+    "2023-02-02"
+   ],
+   [
+    "ON",
+    "2026-02-11"
+   ],
+   [
+    "TGT",
+    "2024-03-06"
+   ],
+   [
+    "TSLA",
+    "2024-07-29"
+   ],
+   [
+    "TTWO",
+    "2023-11-14"
+   ],
+   [
+    "UAL",
+    "2024-10-16"
+   ]
+  ],
+  "max_chase": [
+   [
+    "ADBE",
+    "2023-06-09"
+   ],
+   [
+    "AMD",
+    "2025-10-07"
+   ],
+   [
+    "BKNG",
+    "2024-10-31"
+   ],
+   [
+    "CMI",
+    "2024-11-06"
+   ],
+   [
+    "EA",
+    "2025-09-29"
+   ],
+   [
+    "INTC",
+    "2026-05-11"
+   ],
+   [
+    "INTC",
+    "2026-05-18"
+   ],
+   [
+    "INTC",
+    "2026-06-03"
+   ],
+   [
+    "LRCX",
+    "2022-12-13"
+   ],
+   [
+    "LULU",
+    "2024-12-06"
+   ],
+   [
+    "MRNA",
+    "2026-05-11"
+   ],
+   [
+    "MRVL",
+    "2026-05-27"
+   ],
+   [
+    "MRVL",
+    "2026-06-03"
+   ],
+   [
+    "MRVL",
+    "2026-06-25"
+   ],
+   [
+    "MU",
+    "2025-12-22"
+   ],
+   [
+    "MU",
+    "2026-05-27"
+   ],
+   [
+    "MU",
+    "2026-06-09"
+   ],
+   [
+    "NEM",
+    "2022-12-13"
+   ],
+   [
+    "ON",
+    "2026-06-15"
+   ],
+   [
+    "ON",
+    "2026-06-25"
+   ],
+   [
+    "ORCL",
+    "2023-06-12"
+   ],
+   [
+    "ORCL",
+    "2023-06-13"
+   ],
+   [
+    "ORCL",
+    "2025-09-10"
+   ],
+   [
+    "SPOT",
+    "2024-11-13"
+   ],
+   [
+    "TER",
+    "2026-06-22"
+   ],
+   [
+    "TSLA",
+    "2024-11-11"
+   ],
+   [
+    "TXN",
+    "2026-04-23"
+   ],
+   [
+    "WBD",
+    "2025-09-12"
+   ],
+   [
+    "WBD",
+    "2025-12-08"
+   ]
+  ]
+ },
+ "net_pnl_trades": 22852.52,
+ "net_pnl_equity": 22852.52,
+ "islem_n": 883,
+ "maxdd_kanonik": 0.1271,
+ "sharpe": 0.573,
+ "avg_r": 0.081,
+ "win_rate": 0.358,
+ "setup_bazinda": {
+  "breakout_vcp": {
+   "n": 309,
+   "pnl": 3809.78,
+   "avg_r": 0.0252
+  },
+  "exhaustion_hammer": {
+   "n": 230,
+   "pnl": 5049.7,
+   "avg_r": 0.1437
+  },
+  "momentum_burst": {
+   "n": 344,
+   "pnl": 13993.04,
+   "avg_r": 0.0891
+  }
+ },
+ "butunluk_gecerli": true,
+ "oz_sinama_gecti": true,
+ "dinlenen_dolum_n": 64,
+ "motor_sha_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+ },
+ "motor_sha_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+ },
+ "motor_sha_ayni": true,
+ "motor_kunye_kiyas": {
+  "dosyalar": {
+   "broker.py": {
+    "olculen": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "kunye": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "esit": true
+   },
+   "backtest.py": {
+    "olculen": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "esit": true
+   },
+   "strategy.py": {
+    "olculen": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "kunye": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "esit": true
+   },
+   "guard.py": {
+    "olculen": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+    "kunye": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+    "esit": true
+   }
+  },
+  "kunyeyle_ayni": true
+ }
+}

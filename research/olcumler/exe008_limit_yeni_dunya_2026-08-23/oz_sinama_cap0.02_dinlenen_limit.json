@@ -1,0 +1,187 @@
+{
+ "kural": "dinlenen_limit",
+ "cap": 0.02,
+ "yasa_gorulen": {
+  "limit_atr_mult": 0.5,
+  "limit_pct_cap": 0.02,
+  "version": "E1-v2",
+  "gap_behavior": "marketable_limit"
+ },
+ "yasa_dogru": true,
+ "sayimlar": {
+  "n_cagri": 950,
+  "n_tetiksiz": 0,
+  "n_acilis_limit_alti": 842,
+  "n_acilis_limit_ustu": 0,
+  "n_dinlenen_dolum": 64,
+  "n_dinlenen_dolum_yolu_baska_red": 15,
+  "n_dinlenen_kacan": 29
+ },
+ "dinlenen_dolum_ornekleri": [
+  {
+   "ticker": "AMAT",
+   "ts": "2022-01-13",
+   "open": 164.0,
+   "limit": 162.4192,
+   "bar_low": 156.5,
+   "entry": 162.5005
+  },
+  {
+   "ticker": "FCX",
+   "ts": "2022-11-22",
+   "open": 37.08,
+   "limit": 36.8526,
+   "bar_low": 36.81,
+   "entry": 36.8711
+  },
+  {
+   "ticker": "COP",
+   "ts": "2022-11-22",
+   "open": 128.0,
+   "limit": 127.9244,
+   "bar_low": 126.46,
+   "entry": 127.9884
+  },
+  {
+   "ticker": "MLM",
+   "ts": "2023-05-05",
+   "open": 395.48,
+   "limit": 394.3703,
+   "bar_low": 391.24,
+   "entry": 394.5712
+  },
+  {
+   "ticker": "VMC",
+   "ts": "2023-05-05",
+   "open": 192.98,
+   "limit": 192.6335,
+   "bar_low": 191.01,
+   "entry": 192.7312
+  },
+  {
+   "ticker": "NOW",
+   "ts": "2023-05-18",
+   "open": 100.0,
+   "limit": 99.9984,
+   "bar_low": 99.16,
+   "entry": 100.0484
+  },
+  {
+   "ticker": "AVGO",
+   "ts": "2023-05-30",
+   "open": 83.61,
+   "limit": 82.3267,
+   "bar_low": 79.88,
+   "entry": 82.3679
+  },
+  {
+   "ticker": "MRVL",
+   "ts": "2023-05-30",
+   "open": 67.49,
+   "limit": 66.8165,
+   "bar_low": 61.31,
+   "entry": 66.8499
+  },
+  {
+   "ticker": "KLAC",
+   "ts": "2023-05-30",
+   "open": 46.781,
+   "limit": 46.7694,
+   "bar_low": 45.366,
+   "entry": 46.7928
+  },
+  {
+   "ticker": "BX",
+   "ts": "2023-06-02",
+   "open": 88.75,
+   "limit": 88.5835,
+   "bar_low": 88.45,
+   "entry": 88.628
+  },
+  {
+   "ticker": "CCL",
+   "ts": "2023-06-13",
+   "open": 15.06,
+   "limit": 15.0144,
+   "bar_low": 14.73,
+   "entry": 15.0219
+  },
+  {
+   "ticker": "ADBE",
+   "ts": "2023-06-13",
+   "open": 489.71,
+   "limit": 482.0638,
+   "bar_low": 470.36,
+   "entry": 482.3049
+  },
+  {
+   "ticker": "ROKU",
+   "ts": "2023-07-12",
+   "open": 78.0,
+   "limit": 76.9386,
+   "bar_low": 75.67,
+   "entry": 76.9771
+  },
+  {
+   "ticker": "AMD",
+   "ts": "2023-07-19",
+   "open": 121.25,
+   "limit": 120.1563,
+   "bar_low": 115.55,
+   "entry": 120.2164
+  },
+  {
+   "ticker": "SHW",
+   "ts": "2023-07-26",
+   "open": 279.46,
+   "limit": 278.6358,
+   "bar_low": 277.33,
+   "entry": 278.7757
+  },
+  {
+   "ticker": "GOOG",
+   "ts": "2023-07-27",
+   "open": 131.95,
+   "limit": 131.35,
+   "bar_low": 129.18,
+   "entry": 131.4157
+  },
+  {
+   "ticker": "TTWO",
+   "ts": "2023-11-09",
+   "open": 148.72,
+   "limit": 145.6267,
+   "bar_low": 144.26,
+   "entry": 145.7004
+  },
+  {
+   "ticker": "TDG",
+   "ts": "2023-11-10",
+   "open": 985.33,
+   "limit": 984.6061,
+   "bar_low": 973.22,
+   "entry": 985.1015
+  },
+  {
+   "ticker": "LLY",
+   "ts": "2024-01-04",
+   "open": 626.83,
+   "limit": 624.4676,
+   "bar_low": 613.27,
+   "entry": 624.7801
+  },
+  {
+   "ticker": "QCOM",
+   "ts": "2024-01-19",
+   "open": 147.265,
+   "limit": 146.8606,
+   "bar_low": 146.74,
+   "entry": 146.9342
+  }
+ ],
+ "dinlenen_dolum_n": 64,
+ "ihlal_n": 0,
+ "ihlaller_ilk50": [],
+ "gecti": true,
+ "beyan": "fiyat bandı: limit·(1+slip) ≤ entry ≤ limit·(1+slip)·(1+IMPACT_COEF·ADV_CAP_PCT) — katılım ≤ ADV_CAP_PCT olduğundan üst sınır yapısal; birebir rekonstrüksiyon (edg046 kill#2 modeli) bu kartın kapsamında değil, bant mekanik ve tavizsiz"
+}

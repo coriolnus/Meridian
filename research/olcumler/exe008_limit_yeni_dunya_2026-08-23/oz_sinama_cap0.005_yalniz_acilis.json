@@ -1,0 +1,26 @@
+{
+ "kural": "yalniz_acilis",
+ "cap": 0.005,
+ "yasa_gorulen": {
+  "limit_atr_mult": 0.5,
+  "limit_pct_cap": 0.005,
+  "version": "E1-v2",
+  "gap_behavior": "marketable_limit"
+ },
+ "yasa_dogru": true,
+ "sayimlar": {
+  "n_cagri": 1161,
+  "n_tetiksiz": 0,
+  "n_acilis_limit_alti": 790,
+  "n_acilis_limit_ustu": 371,
+  "n_dinlenen_dolum": 0,
+  "n_dinlenen_dolum_yolu_baska_red": 0,
+  "n_dinlenen_kacan": 0
+ },
+ "dinlenen_dolum_ornekleri": [],
+ "dinlenen_dolum_n": 0,
+ "ihlal_n": 0,
+ "ihlaller_ilk50": [],
+ "gecti": true,
+ "beyan": "fiyat bandı: limit·(1+slip) ≤ entry ≤ limit·(1+slip)·(1+IMPACT_COEF·ADV_CAP_PCT) — katılım ≤ ADV_CAP_PCT olduğundan üst sınır yapısal; birebir rekonstrüksiyon (edg046 kill#2 modeli) bu kartın kapsamında değil, bant mekanik ve tavizsiz"
+}

@@ -1,0 +1,11 @@
+{
+ "once": {
+  "goal.yaml": "8610282c4fbf6304d756ecc0ba813c43a8ee5e7134b50e6dfcccf8799410761b",
+  "bounds.yaml": "3acb44b141e092274c5e84b79d63a6c34bdb94d532090052d167dfa7ce59a3b0"
+ },
+ "sonra": {
+  "goal.yaml": "8610282c4fbf6304d756ecc0ba813c43a8ee5e7134b50e6dfcccf8799410761b",
+  "bounds.yaml": "3acb44b141e092274c5e84b79d63a6c34bdb94d532090052d167dfa7ce59a3b0"
+ },
+ "ayni": true
+}

@@ -1,0 +1,414 @@
+{
+ "kart": "EXE-2026-008",
+ "olcum_zamani": "2026-08-23T14:51:11+00:00",
+ "pencere": {
+  "start": "2022-01-01",
+  "end": "2026-07-30"
+ },
+ "sasi_kapisi": {
+  "bayt_kiyas_edg032c": {
+   "islemler_tam": {
+    "yerel_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+    "edg032c_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   },
+   "islemler_slim": {
+    "yerel_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+    "edg032c_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   },
+   "seanslar": {
+    "yerel_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+    "edg032c_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   }
+  },
+  "kunye_sha_tutarli": true,
+  "kill_gecti": true
+ },
+ "kontrol_net_pnl": 23806.13,
+ "hucre_tablosu": [
+  {
+   "cap": 0.005,
+   "kural": "yalniz_acilis",
+   "islem_n": 766,
+   "net_pnl_trades": 9563.82,
+   "entry_missed_limit": 342,
+   "dinlenen_dolum_n": 0,
+   "oz_sinama_gecti": true,
+   "butunluk_gecerli": true,
+   "motor_sha_ayni": true
+  },
+  {
+   "cap": 0.005,
+   "kural": "dinlenen_limit",
+   "islem_n": 863,
+   "net_pnl_trades": 11819.08,
+   "entry_missed_limit": 70,
+   "dinlenen_dolum_n": 214,
+   "oz_sinama_gecti": true,
+   "butunluk_gecerli": true,
+   "motor_sha_ayni": true
+  },
+  {
+   "cap": 0.01,
+   "kural": "yalniz_acilis",
+   "islem_n": 836,
+   "net_pnl_trades": 12420.02,
+   "entry_missed_limit": 178,
+   "dinlenen_dolum_n": 0,
+   "oz_sinama_gecti": true,
+   "butunluk_gecerli": true,
+   "motor_sha_ayni": true
+  },
+  {
+   "cap": 0.01,
+   "kural": "dinlenen_limit",
+   "islem_n": 876,
+   "net_pnl_trades": 24280.77,
+   "entry_missed_limit": 29,
+   "dinlenen_dolum_n": 127,
+   "oz_sinama_gecti": true,
+   "butunluk_gecerli": true,
+   "motor_sha_ayni": true
+  },
+  {
+   "cap": 0.02,
+   "kural": "yalniz_acilis",
+   "islem_n": 868,
+   "net_pnl_trades": 14817.08,
+   "entry_missed_limit": 80,
+   "dinlenen_dolum_n": 0,
+   "oz_sinama_gecti": true,
+   "butunluk_gecerli": true,
+   "motor_sha_ayni": true
+  },
+  {
+   "cap": 0.02,
+   "kural": "dinlenen_limit",
+   "islem_n": 883,
+   "net_pnl_trades": 22852.52,
+   "entry_missed_limit": 15,
+   "dinlenen_dolum_n": 64,
+   "oz_sinama_gecti": true,
+   "butunluk_gecerli": true,
+   "motor_sha_ayni": true
+  },
+  {
+   "cap": 0.03,
+   "kural": "yalniz_acilis",
+   "islem_n": 871,
+   "net_pnl_trades": 15079.11,
+   "entry_missed_limit": 72,
+   "dinlenen_dolum_n": 0,
+   "oz_sinama_gecti": true,
+   "butunluk_gecerli": true,
+   "motor_sha_ayni": true
+  },
+  {
+   "cap": 0.03,
+   "kural": "dinlenen_limit",
+   "islem_n": 884,
+   "net_pnl_trades": 22516.26,
+   "entry_missed_limit": 14,
+   "dinlenen_dolum_n": 57,
+   "oz_sinama_gecti": true,
+   "butunluk_gecerli": true,
+   "motor_sha_ayni": true
+  }
+ ],
+ "H1_egri": {
+  "dinlenen_limit": {
+   "tavanlar": [
+    0.005,
+    0.01,
+    0.02,
+    0.03
+   ],
+   "net_pnl": [
+    11819.08,
+    24280.77,
+    22852.52,
+    22516.26
+   ],
+   "ardisik_fark": [
+    12461.69,
+    -1428.25,
+    -336.26
+   ],
+   "mekanik_monoton_artan": false,
+   "mekanik_monoton_azalan": false
+  },
+  "yalniz_acilis": {
+   "tavanlar": [
+    0.005,
+    0.01,
+    0.02,
+    0.03
+   ],
+   "net_pnl": [
+    9563.82,
+    12420.02,
+    14817.08,
+    15079.11
+   ],
+   "ardisik_fark": [
+    2856.2,
+    2397.06,
+    262.03
+   ],
+   "mekanik_monoton_artan": true,
+   "mekanik_monoton_azalan": false
+  },
+  "beyan": "mekanik_monoton_* alanları aritmetik işarettir, hüküm DEĞİL; H1 hükmünü kartın success_metric kuralıyla Rol-1 verir"
+ },
+ "kol_farki_H2": {
+  "0.005": {
+   "kacan_olay_acilis": 342,
+   "kacan_distinkt_plan_acilis": 342,
+   "dinlenen_kolda_DOLAN_ek_islem": 249,
+   "yerinden_olan_yalniz_acilis": 152,
+   "yerinden_olan_ort_r": -0.0795,
+   "H2_ek_islem": {
+    "ort_r": -0.0428,
+    "ci95": [
+     -0.1875,
+     0.0996
+    ],
+    "n_islem": 249,
+    "n_ay_kumesi": 41,
+    "r_multiple_bos_n": 0,
+    "sifir_disinda": "hayır (0 içinde)",
+    "yontem": "ay-kümeli bootstrap · B=5000 · seed=20260812 · yüzdelik aralığı"
+   },
+   "H2_kimlik_suzulu_kacan_dolan": {
+    "ort_r": -0.0723,
+    "ci95": [
+     -0.2151,
+     0.0646
+    ],
+    "n_islem": 208,
+    "n_ay_kumesi": 41,
+    "r_multiple_bos_n": 0,
+    "sifir_disinda": "hayır (0 içinde)",
+    "yontem": "ay-kümeli bootstrap · B=5000 · seed=20260812 · yüzdelik aralığı"
+   },
+   "net_pnl_yalniz_acilis": 9563.82,
+   "net_pnl_dinlenen": 11819.08,
+   "delta_pnl_nokta": 2255.26
+  },
+  "0.01": {
+   "kacan_olay_acilis": 178,
+   "kacan_distinkt_plan_acilis": 178,
+   "dinlenen_kolda_DOLAN_ek_islem": 171,
+   "yerinden_olan_yalniz_acilis": 131,
+   "yerinden_olan_ort_r": -0.1017,
+   "H2_ek_islem": {
+    "ort_r": 0.0515,
+    "ci95": [
+     -0.1626,
+     0.2814
+    ],
+    "n_islem": 171,
+    "n_ay_kumesi": 38,
+    "r_multiple_bos_n": 0,
+    "sifir_disinda": "hayır (0 içinde)",
+    "yontem": "ay-kümeli bootstrap · B=5000 · seed=20260812 · yüzdelik aralığı"
+   },
+   "H2_kimlik_suzulu_kacan_dolan": {
+    "ort_r": 0.0107,
+    "ci95": [
+     -0.2217,
+     0.2507
+    ],
+    "n_islem": 120,
+    "n_ay_kumesi": 36,
+    "r_multiple_bos_n": 0,
+    "sifir_disinda": "hayır (0 içinde)",
+    "yontem": "ay-kümeli bootstrap · B=5000 · seed=20260812 · yüzdelik aralığı"
+   },
+   "net_pnl_yalniz_acilis": 12420.02,
+   "net_pnl_dinlenen": 24280.77,
+   "delta_pnl_nokta": 11860.75
+  },
+  "0.02": {
+   "kacan_olay_acilis": 80,
+   "kacan_distinkt_plan_acilis": 80,
+   "dinlenen_kolda_DOLAN_ek_islem": 107,
+   "yerinden_olan_yalniz_acilis": 92,
+   "yerinden_olan_ort_r": -0.0724,
+   "H2_ek_islem": {
+    "ort_r": 0.0791,
+    "ci95": [
+     -0.2255,
+     0.3633
+    ],
+    "n_islem": 107,
+    "n_ay_kumesi": 31,
+    "r_multiple_bos_n": 0,
+    "sifir_disinda": "hayır (0 içinde)",
+    "yontem": "ay-kümeli bootstrap · B=5000 · seed=20260812 · yüzdelik aralığı"
+   },
+   "H2_kimlik_suzulu_kacan_dolan": {
+    "ort_r": -0.0002,
+    "ci95": [
+     -0.2626,
+     0.2951
+    ],
+    "n_islem": 59,
+    "n_ay_kumesi": 27,
+    "r_multiple_bos_n": 0,
+    "sifir_disinda": "hayır (0 içinde)",
+    "yontem": "ay-kümeli bootstrap · B=5000 · seed=20260812 · yüzdelik aralığı"
+   },
+   "net_pnl_yalniz_acilis": 14817.08,
+   "net_pnl_dinlenen": 22852.52,
+   "delta_pnl_nokta": 8035.44
+  },
+  "0.03": {
+   "kacan_olay_acilis": 72,
+   "kacan_distinkt_plan_acilis": 72,
+   "dinlenen_kolda_DOLAN_ek_islem": 101,
+   "yerinden_olan_yalniz_acilis": 88,
+   "yerinden_olan_ort_r": -0.0452,
+   "H2_ek_islem": {
+    "ort_r": 0.0924,
+    "ci95": [
+     -0.193,
+     0.361
+    ],
+    "n_islem": 101,
+    "n_ay_kumesi": 31,
+    "r_multiple_bos_n": 0,
+    "sifir_disinda": "hayır (0 içinde)",
+    "yontem": "ay-kümeli bootstrap · B=5000 · seed=20260812 · yüzdelik aralığı"
+   },
+   "H2_kimlik_suzulu_kacan_dolan": {
+    "ort_r": 0.0736,
+    "ci95": [
+     -0.1768,
+     0.3508
+    ],
+    "n_islem": 53,
+    "n_ay_kumesi": 27,
+    "r_multiple_bos_n": 0,
+    "sifir_disinda": "hayır (0 içinde)",
+    "yontem": "ay-kümeli bootstrap · B=5000 · seed=20260812 · yüzdelik aralığı"
+   },
+   "net_pnl_yalniz_acilis": 15079.11,
+   "net_pnl_dinlenen": 22516.26,
+   "delta_pnl_nokta": 7437.15
+  }
+ },
+ "H3_dinlenen_dolum": {
+  "0.005": {
+   "dinlenen_dolum_n": 214,
+   "dinlenen_islem_n": 863,
+   "oran_kol_ici": 0.248,
+   "kacan_plan_dinlenende_dolan_n": 208,
+   "oran_kacan_plan_dolumu": 0.6082,
+   "oran_olculemedi_nedeni": null,
+   "tanim": "oran_kol_ici = dinlenen kolda 'açılış limitüstü ama gün içi limit dokunuşuyla dolan' işlem / kol işlem sayısı (öz-sınama sayacından); oran_kacan_plan_dolumu = açılış kolunun DİSTİNKT kaçan planlarından dinlenen kolda (ticker, gün) kimliğiyle dolanların payı (Ö-51b)"
+  },
+  "0.01": {
+   "dinlenen_dolum_n": 127,
+   "dinlenen_islem_n": 876,
+   "oran_kol_ici": 0.145,
+   "kacan_plan_dinlenende_dolan_n": 120,
+   "oran_kacan_plan_dolumu": 0.6742,
+   "oran_olculemedi_nedeni": null,
+   "tanim": "oran_kol_ici = dinlenen kolda 'açılış limitüstü ama gün içi limit dokunuşuyla dolan' işlem / kol işlem sayısı (öz-sınama sayacından); oran_kacan_plan_dolumu = açılış kolunun DİSTİNKT kaçan planlarından dinlenen kolda (ticker, gün) kimliğiyle dolanların payı (Ö-51b)"
+  },
+  "0.02": {
+   "dinlenen_dolum_n": 64,
+   "dinlenen_islem_n": 883,
+   "oran_kol_ici": 0.0725,
+   "kacan_plan_dinlenende_dolan_n": 59,
+   "oran_kacan_plan_dolumu": 0.7375,
+   "oran_olculemedi_nedeni": null,
+   "tanim": "oran_kol_ici = dinlenen kolda 'açılış limitüstü ama gün içi limit dokunuşuyla dolan' işlem / kol işlem sayısı (öz-sınama sayacından); oran_kacan_plan_dolumu = açılış kolunun DİSTİNKT kaçan planlarından dinlenen kolda (ticker, gün) kimliğiyle dolanların payı (Ö-51b)"
+  },
+  "0.03": {
+   "dinlenen_dolum_n": 57,
+   "dinlenen_islem_n": 884,
+   "oran_kol_ici": 0.0645,
+   "kacan_plan_dinlenende_dolan_n": 53,
+   "oran_kacan_plan_dolumu": 0.7361,
+   "oran_olculemedi_nedeni": null,
+   "tanim": "oran_kol_ici = dinlenen kolda 'açılış limitüstü ama gün içi limit dokunuşuyla dolan' işlem / kol işlem sayısı (öz-sınama sayacından); oran_kacan_plan_dolumu = açılış kolunun DİSTİNKT kaçan planlarından dinlenen kolda (ticker, gün) kimliğiyle dolanların payı (Ö-51b)"
+  }
+ },
+ "O3_delta_pnl_ci": {
+  "0.005": {
+   "delta_pnl": 2255.26,
+   "ci95": [
+    -14298.84,
+    18305.23
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "hayır (0 içinde)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  },
+  "0.01": {
+   "delta_pnl": 11860.75,
+   "ci95": [
+    -4404.43,
+    29200.96
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "hayır (0 içinde)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  },
+  "0.02": {
+   "delta_pnl": 8035.44,
+   "ci95": [
+    -6933.34,
+    23399.68
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "hayır (0 içinde)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  },
+  "0.03": {
+   "delta_pnl": 7437.15,
+   "ci95": [
+    -4096.74,
+    20292.37
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "hayır (0 içinde)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  }
+ },
+ "ci_taban_beyani": "Ö3 ayları kontrol seanslarından (edg048 reçetesi AYNEN; n_ay=55); EXE-006'nın Ö3'ü 42 aylık işlemli-ay tabanındaydı — fark BEYANLIDIR, iki CI ailesi aynı yöntem farklı ay tabanı. H2 CI'ı exe006 O2 yöntemi AYNEN (işlem aylarından).",
+ "motor_sha_hucre_ozeti": {
+  "cap0.005_yalniz_acilis": true,
+  "cap0.005_dinlenen_limit": true,
+  "cap0.01_yalniz_acilis": true,
+  "cap0.01_dinlenen_limit": true,
+  "cap0.02_yalniz_acilis": true,
+  "cap0.02_dinlenen_limit": true,
+  "cap0.03_yalniz_acilis": true,
+  "cap0.03_dinlenen_limit": true
+ },
+ "hukum_yok": "Bu dosya HÜKÜM İÇERMEZ; kartın success_metric/kill kurallarını Rol-1 işletir. UYDURMA YASAĞI gereği ölçülemeyenler None + neden taşır."
+}

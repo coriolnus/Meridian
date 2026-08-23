@@ -21,7 +21,7 @@ Uygulama kart-önce (EXE-ailesi ön-kayıt) + pazartesi açılışından önce d
 `EXE-2026-008`: EXE-006'nın grid'i BİREBİR (cap {0.005,0.01,0.02,0.03} × dolum {yalnız_açılış,
 dinlenen_limit} = K8) — şasi edg032c, aynı maliyet bandı (045 stop-slip şerhi beyanlı taşınır),
 kill listesi EXE-006'dan devir, H1/H2/H3 + asimetri beyanı aynen. Koşum 048 inince (ardışık).
-Canlı bacak ölçüm sonuçlanana dek KAPALI.
+Canlı bacak ölçüm sonuçlanana dek KAPALI. *Durum: SONUÇLANDI — üçüncü dal: iki dünyada da belirsiz (H1 kırık, H2+Ö3 tümü CI 0-içi); bacak kapalı, kalem 042 bandına park (043 askısıyla birlikte okunacak).*
 
 ## K4 — RUNBOOK kapsamı (`B-RUNBOOK-KAPSAM`): EVET
 `ops/runbook_uret.py` BETIK_KUMESI'ne `dagit.sh` (kök) eklenir + sınır beyanı güncellenir;
