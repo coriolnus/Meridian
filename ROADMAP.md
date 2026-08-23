@@ -672,6 +672,21 @@ OPT'un freni "PBO 0.6286" cümlesine ek: **fren ancak kapı ÖLÇEBİLİYORSA fr
   doğrulama koşumu → TEK goal/bounds dağıtımı → **hemen OPT Faz-1 kablolama**" — pencerenin ilk üç
   adımı 2026-08-12'de TAMAMLANDI (§8 arşiv), kalan tek adım OPT Faz-1'dir.
 
+- **🆕 M11 TARAMASI BULGUSU (2026-08-24, kova-6; `docs/TARAMA-KOVA6-ALAN-MERCEGI-2026-08-24.md`):
+  GÖLGE-MODEL TERFİ KAPISI YAPISAL OLARAK ERİŞİLEMEZ.** Canlı ölçüm: 893 işlemin **535'i** hiçbir
+  plan satırına birleşmiyor (plan defteri tam 500'e kırpılmış); `p_win_shadow` damgalı 25 planın
+  yalnız **6'sı** birleşiyor, `PROMOTE_MIN_N=30` → kapı hiçbir zaman dolamaz. ZİNCİR: EDG-052'nin
+  bulduğu retention kusuru → v274 kırpma KURALI indi (02c91ca, ileriye dönük) ama GEÇMİŞ kırpılmış
+  kaldı → `ops/plan_geri_doldur.py` kaynak-engelli (kırpma-öncesi yedek yok; şasi yeniden-koşumu
+  kaynak olabilir). SONUÇ: gölge-model terfi hattı geri-doldurma yapılana dek ÖLÇÜLEMEZ; bu bir
+  kapı arızası değil VERİ arızasıdır. *öncelik: yüksek (öğrenme hattının sessiz tıkacı) · sahibi
+  WP3 + WP4 (geri-doldurma kaynağı).*
+- **🆕 M11 BULGUSU — `exploration` + `carried` ÜRETİMİ SIFIR:** ikisi de gerçek davranış dalı
+  (`loop.py:1636` çıkış gevşetmesi · `loop.py:1239` plan düşürme) ama 41 günde `exploration_armed`
+  **1**, `armed_no_bar_carried` **0**; 0/500 plan, 0/893 işlem, 0/7 pozisyon. Pano keşif çipini
+  gösterdiği için sistem "keşif yapıyor gibi" görünüyor — 25d ezilme zincirinin (c-4 keşif kuraklığı)
+  canlı ölçümlü teyidi. *karar: damgala mı, debiyi aç mı — kart-önce; ROADMAP-25d ile aynı aile.*
+
 #### WP3-C · Merdiven ve Faz-6 kilitleri _(eski WP-L gövdesi; tetik-şartlı basamaklar)_
 - Y5 meta-labeling (tetik: işlem birikimi — WP-R rampayı serbestleştirirse hızlanır) · Y7 ML
   sıralama (tetik: evren genişlemesi WP-U) · intraday 4a saha kanıtı (tetik: ilk silahlı plan) →
@@ -1748,6 +1763,18 @@ _(taşındı: §4-40, eski satır :1876-1880 — 2026-08-23)_
 - ~~🆕 AÇIK ÜRETİM ARIZASI (2026-08-13)~~ ✅ **v243 KAPATTI (08-14; üç kopyanın üçü de 08-22 Ö-49 taramasında kapatıldı):** pano açılışı `/api/diagnostics`
   üzerinden tıkanıyor — `parity_report` soğuk çağrıda **16,7s** (tohum sonrası defter 9× büyüdü);
   v243 turu bunu kapatıyor. *öncelik: yüksek (operatörün ilk gördüğü yüzey).*
+
+- **🆕 M11 TARAMASI BULGUSU (2026-08-24): `broker_status` PANO YANLIŞ-GÜVENİ — yazan bacak indi,
+  okuyan bacak inmedi.** `gap_veto` ve `armed_dropped_*` değerlerinin ÜRETİMDE hiçbir tüketicisi
+  yok; `app.js:1218`'in `else` dalı bu planları **"gönderilecek"** rozetiyle çiziyor ve
+  `app.js:2499` `bekleyen` sayacına yazıyor — yani VETO EDİLMİŞ/DÜŞÜRÜLMÜŞ plan, operatöre
+  "sırada bekliyor" diye görünür. Bugün soğuk (41 günde 0 olay) = UYUYAN yanlış-güven; bir sonraki
+  gap-veto gününde yanıltır. Düzeltme S-boyut (else dalına değer-farkındalı rozet + sayaç
+  dışlaması) — dürüstlük-UI sınıfı, kart istemez. *öncelik: yüksek (operatör yanılgısı üretir).*
+- **🆕 M11 BULGUSU — `entry_law` yan tablosunda 4 ÖLÜ alt-alan + İKİ ÇÜRÜK BEYAN:** `offset_kaynak`,
+  `ref_kaynak`, `limit_bps`, `olay` diske yazılıyor ama üretimde hiç okunmuyor (tek tüketicileri
+  testler); ikisi kodda *"okuyucusu E2 defteri"* diyor — canlı `entry_execution.jsonl`'ın 30
+  satırında o alanlar YOK (çürük beyan, Ö-49 sınıfı). *işlem: damgala ya da kaldır — 25a emsali.*
 
 #### WP8-B · Kontrol-odası doktrini / kabul çıtası _(eski WP-P gövdesi; 2026-08-01 UI el kitabı — gerçekle çarpıştırılmış; kontrol-odası + finans-izleme kanıt tabanı: HP-HMI/ISA-101, Airbus dark-cockpit, EEMUA 191, Few/Tufte)_
 - **ZATEN VAR:** tabular-nums (19 kullanım) · dürüstlük-UI (None≠0 = YASA, provenance rozetleri,
@@ -2851,6 +2878,7 @@ v237-v243 dağıtımları vardı; hepsi yalnız §4 maddelerinin İÇİNDE yaş�
 neden-kaydı da silinecekti. Aşağıdaki girişler madde başına TEK SATIRDIR; ayrıntı kartlarda/§3'de.)_
 
 - **2026-08-22 `EDG-2026-042` HAFTALIK TAKVİM İLK FIRE (`Ö-54`):** üç kovada da eşik dolmadı (K1 n=13/4 seans, K2/K3 ölçülebilen n=0 — beş çıkış adayının beşi `broker_teyit` damgasız) → hükümlü koşum TETİKLENMEDİ, CI yok, `status: measuring` sürüyor; snapshot aynı günkü ara-koşumla bayt-özdeş olduğu için ÖNCEKİNE GÖRE DEĞİŞİM SIFIR (Cumartesi — takvimin çalıştığının kanıtı, yeni kanıt değil; ilk anlamlı tekrar 2026-08-29). ÖLÇÜM-ÖNCESİ REÇETE DÜZELTMESİ: donmuş `olcum.py`nin K2/K3 işareti kartın DÜZELTME formülüyle çelişiyordu ve MADDİ hataydı (LEHTE dolumu aleyhte yazardı) — teyitli satır 0 iken kart lehine düzeltildi, eşik/karar kuralı değişmedi, donuk reçete `edg042_kosum_2026-08-22/`ya taşındı.
+- **2026-08-24 M11 KOVA-6 ALAN MERCEĞİ TARAMASI (K=0):** 26 plan alanı + 14 `entry_law` alt-alanı sınıflandı (CANLI-BAĞLI 25 · GÖRÜNÜRLÜK 10 · ÖLÜ 5 · değer-düzeyi HAYALET 2). KALİBRASYON 1/3 DÜŞTÜ, iki onarımla 3/3'e çıktı (yüzey ayrımı + değer-düzeyi çapraz kontrol) — kova-4 dersi işledi. ÜÇ TEHLİKELİ BULGU tahtaya işlendi: gölge-terfi kapısı yapısal erişilemez (535/893 plan-birleşmesi yok) · broker_status pano yanlış-güveni (veto edilen plan 'gönderilecek' görünüyor) · exploration/carried üretimi sıfır ama pano keşif çipi yanıyor. Bonus: entry_law'da 4 ölü alan + 2 çürük 'okuyucusu var' beyanı.
 - **2026-08-24 ELEME KAPANIŞLARI TAHTAYA İŞLENDİ (28/28, 69 damga):** 14 KAPAT-BAYAT · 8 KAPAT-TASARIMDA · 4 KART-ADAYI (ikisi aynı gece ön-kayıtlandı: 055 earnings fail-open, 056 split oran-imzası; 054 kirli-dönem E-1 kararından) · 2 BİRLEŞTİR. Ajan iki BAYAT NOKTA daha yakaladı (H1 '24b-24d' sayımı artık yalnız 24b; §4 havuz 'DOKUNULMAYANLAR' paragrafı) — kanıt-atıflı not düşüldü. Stok kampanyasının ilk gecesi: ~35 kalem → 22 kapanış + 4 ölçüm-kuyruğu + 2 birleştirme.
 - **2026-08-24 `EDG-2026-050` (PEAD) ÖLÇÜLDÜ — KURAL ATEŞLEDİ, AMA KIL PAYI:** üst dilim @60g +52,4 bps CI [+1,6; +106,4], 10bps sonrası +42,4 → 'ARSENAL ADAYI' — ÜÇ ŞERHLE: (1) tohum-kırılgan (6 tohumun 2'sinde alt sınır ≤0; P=0,0239 ↔ çıta 0,025) → skor bağlaması İÇİN YETMEZ, ön-kayıtlı sağlamlık tekrarı şart; (2) survivorship ÜST-SINIR; (3) olay popülasyonu bir bütün olarak evrene karşı NEGATİF (−26,4 @60g) — bulgu olaylar İÇİNDEKİ göreli üstünlük. 15.838 olay, PIT yıkıcı sınaması ihlal 0, pozitif kontroller geçti. 15d'nin ilk faktörü ölçüldü.
 - **2026-08-24 `EDG-2026-049` ÖLÇÜLDÜ — NO-GO (iki kat): uyuyan yol = ARKA KAPIDAN PULLBACK.** Δ −3.121,44 [CI 0-içi] + dilim n=6<30 (6/6 kayıp, −4,725R). ASIL BULGU: dormant dilimin 6/6'sı `pullback` — yani yolu bağlamak B1'in ölçümle silahsızlandırdığı kolu geri açmakmış; Δ, edg032b→c geçişindeki +3.121,44'ün kuruşu kuruşuna tersi (EDG-039'un rakamı, aynı 6 işlem). Üç bağımsız ölçüm aynı yeri işaretledi. Yol TEŞHİS-KATMANI damgasıyla kapandı; canlanma yalnız pullback'in ARSENAL çıtasını geçmesi + ayrı kartla. Künye tazeleme üç-yönlü özdeş (K2/K5 replay'e sızmadı).
