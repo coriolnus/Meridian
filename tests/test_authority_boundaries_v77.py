@@ -481,7 +481,7 @@ def test_c3_llm_proposal_cannot_reach_the_ship_path(sandbox_state, monkeypatch):
     ]
     for proposal in hostile:
         res = reflect.submit({**proposal, "source": "hermes"})
-        assert res["status"] in ("rejected_by_guard", "learning_halted", "locked"), \
+        assert res["status"] in ("rejected_by_guard", "halt_learning", "locked"), \
             f"{proposal} → {res['status']} (kapı yasası delindi)"
 
 

@@ -510,7 +510,10 @@ def _run(poll_seconds: int) -> None:
                 # burada tokenle yaz ki pano "koşmadı" ile "koşamaz"ı ayırt edebilsin.
                 _state["_warm_skip"] = None
                 if health.learn_halted():
-                    _state["last_result"] = "learning_halted"      # ısınma da duraklar: operatör tam sessizlik istedi
+                    # F8-A3 (operatör kararı 2026-08-23): kanonik kol adı yazılır; eski
+                    # "learning_halted" dönem sonuna dek eşanlamlı-okunur (status() içindeki
+                    # kol_adi çevirisi eski PERSİST edilmiş değerleri de sayaçla yakalar).
+                    _state["last_result"] = "halt_learning"        # ısınma da duraklar: operatör tam sessizlik istedi
                     _state["_warm_skip"] = "learn_halted"
                 elif n - last_at >= every and horizon and _reflect_lock.acquire(blocking=False):
                     try:
@@ -635,6 +638,14 @@ def status() -> dict:
     icerde = bool(_thread and _thread.is_alive())
     disk = (store.read_json(STATUS_FILE, {}) or {}) if not icerde else {}
     taban = {**_state, **disk} if not icerde else dict(_state)
+    # F8-A3 GEÇİŞ OKUYUCUSU (2026-08-23): üretici artık kanonik "halt_learning" yazar; diskte
+    # RESTART-ÖNCESİ persist edilmiş eski "learning_halted" hâlâ yaşayabilir. Okuyucu deseni
+    # (durum_sozlugu geçiş rejimi): eşanlamlıyı kanonik ada çevir ve SAY — sayaç uzun süre 0
+    # kalınca eski adın ölümü kanıtlanır, düşürme kararı Rol-1'de. `kol_adi` tanımadığını
+    # DEĞİŞTİRMEZ ("rejected_by_backtest" gibi kol-olmayan değerler aynen geçer, sayılmaz).
+    if isinstance(taban.get("last_result"), str):
+        from . import durum_sozlugu as _dsz
+        taban["last_result"] = _dsz.kol_adi(taban["last_result"])
     try:
         from . import hermes
         model = hermes.active_model()

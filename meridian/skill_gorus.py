@@ -69,6 +69,29 @@ P95_MIN_ORNEK = 5
 P_ARAMA_ADIM = 7            # bootstrap p ikili aramasının adım sayısı → çözünürlük 2^-7 ≈ 0,008
 
 
+# EDG-2026-019 KILL#1 KAPATMA OLAYI — TEK ATIŞ (süreç-içi mandal; bekçi mandallarıyla aynı
+# gerekçe): kadans günde bir koşar ama api/CLI yolları da buradan geçebilir; olayı her çağrıda
+# basmak aynı kapanışı yüzlerce kez tekrarlamak olurdu. Restart mandalı sıfırlar — kabul edilen
+# bedel: süreç başına en fazla bir olay (kapanış olgusu değişmez, yalnız kaydı tekrarlanabilir).
+_KAPATMA_OLAYI_BASILDI = False
+
+
+def _kapatma_olayi() -> None:
+    global _KAPATMA_OLAYI_BASILDI
+    if _KAPATMA_OLAYI_BASILDI:
+        return
+    _KAPATMA_OLAYI_BASILDI = True
+    try:
+        from . import obs
+        obs.log("skill_gorus_katmani_kapatildi", kart=KART,
+                detail=("EDG-2026-019 kill#1 uygulandı: canlı p95_pay 6,57 > tavan 0,10 "
+                        "(skill_gorus_durum.json, 2026-08-21'den beri) — görüş ÜRETİMİ durdu; "
+                        "defterler dokunulmadı, okuma yüzeyleri açık. Açılış yalnız kartın "
+                        "resmileşmiş yeni ölçümüyle (config.SKILL_GORUS_URETIM_ACIK)"))
+    except Exception:  # sessiz-yutma: kapanışın KAYDI düşerse kapanışın KENDİSİ yine geçerlidir — olay basımının arızası, katmanı geri açmanın gerekçesi olamaz; obs kendi fail-open sözleşmesini taşır, burada ikinci alarm zinciri kurmak arızayı çoğaltırdı
+        pass
+
+
 def _now() -> str:
     """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -229,7 +252,18 @@ def _gozlemler() -> dict:
 def topla(apply: bool = True, tavan: int | None = YAZIM_TAVANI) -> dict:
     """Evrendeki skill'lerin görüşlerini defterle — yalnız YENİ olanları (anahtar: skill+yüzey+hedef).
 
-    `apply=False`: hiçbir şey yazılmaz, ne yazılacağı döner (testler + kuru koşu)."""
+    `apply=False`: hiçbir şey yazılmaz, ne yazılacağı döner (testler + kuru koşu).
+
+    KATMAN KAPISI (EDG-2026-019 kill#1, Rol-1 hükmü 2026-08-23): `config.SKILL_GORUS_URETIM_ACIK`
+    kapalıyken YAZIM YOLU ÖLÜDÜR — apply=True bile deftere dokunmaz (gerekçe bayrağın kendi
+    yorumunda; gözlem icrayı yavaşlatamaz). apply=False kuru koşusu ölçüm aracı olarak açık kalır."""
+    from . import config as _cfg
+    if apply and not _cfg.SKILL_GORUS_URETIM_ACIK:
+        _kapatma_olayi()
+        return {"yazilan": 0, "kirpilan": 0, "tavan": tavan, "atlanan": None, "evren": None,
+                "uygulandi_mi": False, "defter_toplam": None, "kapali": True,
+                "neden": ("EDG-2026-019 kill#1: katman KAPALI (p95_pay 6,57 > 0,10 canlıda "
+                          "ölçüldü) — yazım durdu, defterlere dokunulmadı")}
     ev = evren()
     izinli = set(ev["evren"])
     var = {_anahtar(g) for g in defter()}
@@ -590,7 +624,20 @@ def kadans(apply: bool = True, oncesi_ms: float | None = None,
       * `sure_ms` — bu adımın kendi süresi (her koşuda halkaya yazılır, tavanı `SURE_ORNEK_TAVANI`),
       * `pay` = sure_ms / oncesi_ms — adımın, KENDİSİNDEN ÖNCE koşan kadansın üstüne eklediği oran.
     Kill hükmü `p95(pay) > KART_P95_TAVAN` ile verilir. `oncesi_ms` ölçülemediyse `pay` None'dır
-    ve kill "ÖLÇÜLEMEDİ" der — 0 demez (uydurma yasağı: ölçülmemiş bir gecikme, yok sayılmaz)."""
+    ve kill "ÖLÇÜLEMEDİ" der — 0 demez (uydurma yasağı: ölçülmemiş bir gecikme, yok sayılmaz).
+
+    KATMAN KAPISI (EDG-2026-019 kill#1 TETİKLENDİ — Rol-1 hükmü 2026-08-23): bayrak kapalıyken
+    bu adım HİÇ KOŞMAZ — ne görüş toplanır ne DURUM_DEFTERI yazılır (son KILL kaydı kanıt olarak
+    yerinde kalır). Kadans defterine `kapali` beyanı döner ki gece döngüsü kapanışı sessizce
+    değil ADIYLA taşısın."""
+    from . import config as _cfg
+    if not _cfg.SKILL_GORUS_URETIM_ACIK:
+        _kapatma_olayi()
+        return {"ts": _now(), "kart": KART, "kapali": True, "uygulandi_mi": False,
+                "sure_ms": None, "oncesi_ms": oncesi_ms, "pay": None,
+                "neden": ("EDG-2026-019 kill#1: p95_pay 6,57 > tavan 0,10 canlıda ölçüldü "
+                          "(skill_gorus_durum.json, 2026-08-21'den beri) — katman KAPALI; "
+                          "açılış yalnız kartın resmileşmiş yeni ölçümüyle")}
     t0 = time.perf_counter()
     t = topla(apply=apply, tavan=tavan)
     r = rapor()

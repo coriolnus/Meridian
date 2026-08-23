@@ -911,6 +911,25 @@ def exit_fill_price(order: dict) -> float | None:
     return None
 
 
+def exit_fill_ts(order: dict) -> str | None:
+    """DOLAN çıkış bacağının `filled_at` damgası — `exit_fill_price`in ZAMAN ikizi (E-kod [5],
+    2026-08-23; EDG-2026-052'nin doğurduğu görünürlük alanı, okuyucusu kartın haftalık tekrarı).
+
+    ŞEMA ÖLÇÜMÜ (varsayılmadı): canlı emir gövdeleri (GET /v2/orders, nested) parent VE her
+    bacakta `filled_at` taşır (edg038 canli_ham.json + 2026-08-23 HUM/NUE canlı okumaları);
+    `transaction_time` bu yolda YOKTUR — o alan yalnız /v2/account/activities kayıtlarında yaşar
+    ve reconcile o ucu hiç çağırmaz. Bacak SEÇİM ölçütü exit_fill_price ile BİREBİR AYNIDIR
+    (ayrışırlarsa fiyat bir bacaktan, zaman başka bacaktan gelirdi). Dolum yok/okunamıyorsa None —
+    zaman UYDURULMAZ."""
+    if not isinstance(order, dict):
+        return None
+    for leg in (order.get("legs") or []):
+        if str(leg.get("status")) in ("filled", "partially_filled") and leg.get("filled_avg_price") not in (None, ""):
+            ts = leg.get("filled_at")
+            return str(ts) if ts else None
+    return None
+
+
 def koruma_fill(order: dict) -> dict | None:
     """Koruma emrinde DOLMUŞ bacağı bul — okuma ucu (`exit_fill_price`in koruma kardeşi).
 

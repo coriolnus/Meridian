@@ -23,6 +23,21 @@ from . import store, analytics, counterfactual as cf
 MIN_N = 30           # bir edge iddiasının anlamlı sayılması için asgari örneklem
 
 
+def izlenen_setuplar() -> tuple[str, ...]:
+    """Kurulum-kırılımının izlediği setup listesi — TEK KAYNAKTAN türetilir (E-kod [3], 2026-08-23).
+
+    Eskiden burada elle yazılmış bir dörtlü vardı ("breakout_vcp","pullback","momentum_burst",
+    "episodic_pivot") ve iki yönde de BAYATLAMIŞTI: pullback B1 kararıyla (2026-08-22)
+    silahsızlanmış, exhaustion_hammer 2026-08-11'de SİLAHLANMIŞTI ama kırılımda hiç görünmüyordu —
+    yani SİLAHLI bir kurulumun edge'i bu karşı-yüzeyde ölçülemiyordu. Kanonik tanım
+    `strategy.ARMED_SETUPS`tır; uyuyan küme `arming._dormant_setups()` zaten aynı kanonikten
+    TÜRER (motor listesi − silahlılar). Burada ikisi birleştirilir: silahlılar ÖNDE (tuple sırası
+    silahlanma önceliğidir), uyuyanlar arkada. İkinci bir sabit tanım BİLEREK yok — ayrışma
+    çivisi tests/test_e_partisi_v278.py'de."""
+    from . import strategy as strat, arming
+    return tuple(dict.fromkeys(tuple(strat.ARMED_SETUPS) + tuple(arming._dormant_setups())))
+
+
 def _edge(rows: list) -> dict:
     """Bir satır kümesinin edge özeti: girilen ve `r_multiple`ı ölçülmüş satırlarda n, ortalama R ve
     kazanma oranı. Ölçülecek satır yoksa n=0 ve diğerleri None — sıfır YAZILMAZ."""
@@ -53,7 +68,7 @@ def build() -> dict:
     # 3) EKRAN/KURULUM KATKISI
     attr = analytics.skill_attribution()
     setup_edge = {}
-    for su in ("breakout_vcp", "pullback", "momentum_burst", "episodic_pivot"):
+    for su in izlenen_setuplar():          # tek kaynak: strategy.ARMED_SETUPS + uyuyan türetimi
         setup_edge[su] = _edge([r for r in rows if r.get("setup") == su])
 
     # 4) REJİM EDGE (chop gerçekten zararlı mı? trend_up pozitif mi?)

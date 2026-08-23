@@ -82,7 +82,7 @@ def test_learning_halt_is_a_recorded_refusal_not_a_silent_drop(seeded, monkeypat
     from meridian import health
     monkeypatch.setattr(health, "learn_halted", lambda: True)
     res = reflect.submit({"variable": "entry.min_score", "new": 65})
-    assert res["status"] == "learning_halted"
+    assert res["status"] == "halt_learning"    # F8-A3 (2026-08-23): üretici kanonik kol adını yazar
     assert memory.all_hypotheses() == []                      # değerlendirme HİÇ yapılmadı
     assert any(e.get("event") == "submit_blocked_learn_halt" for e in store.read_jsonl("events.jsonl"))
 

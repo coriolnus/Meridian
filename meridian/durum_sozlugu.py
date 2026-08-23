@@ -47,8 +47,11 @@ NEDEN_ESANLAMLI = ("detail", "detay", "note", "reason", "error")
 # `halt_learning`. API alan adları (`halted` ×4 yüzey, `learn_halted`) ve dosya adları
 # (`state/HALT`, `state/LEARN_HALT`) KIRILMAZ — buradaki liste onları kanonik kimliğe bağlayan
 # eşleme kaydıdır; okuyucu `kol_adi()` eşanlamlıyı kanonik ada çevirir (sayarak).
-# hermes `last_result="learning_halted"` değerinin ÜRETİCİDE kanonikleştirilmesi Açık Soru A3
-# (operatör kararı) — o karara dek pano okuyucu tarafında çevirir (app.js `f8KolAd`).
+# Açık Soru A3 KAPANDI (operatör kararı 2026-08-23, E-kod partisi [1]): hermes ÜRETİCİSİ artık
+# kanonik `halt_learning` yazar (hermes_runtime.py ısınma dalı + reflect.submit LEARN_HALT dalı).
+# Eski "learning_halted" DÖNEM SONUNA DEK eşanlamlı-okunur: diskte restart-öncesi persist edilmiş
+# değerler için hermes_runtime.status() `kol_adi()` üzerinden sayaçlı çevirir; pano (app.js
+# `f8KolAd`) ikinci emniyet olarak kalır. Ad listeden SİLİNMEDİ — düşürme kararı sayaçla Rol-1'de.
 KOL_KANONIK = {
     "soft_halt": ("HALT", "halted", "HALT_ACTIVE", "meridian_halted", "halt"),
     "halt_learning": ("LEARN_HALT", "learn_halted", "learning_halted"),

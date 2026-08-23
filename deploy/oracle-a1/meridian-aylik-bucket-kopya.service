@@ -1,0 +1,80 @@
+# meridian-aylik-bucket-kopya.service — seans-içi bar arşivinin ÖNCEKİ AY tar'ı → OCI bucket.
+#
+# NEDEN VAR (E-kod [4], operatör partisi 2026-08-23). Gerekçenin tamamı
+# `deploy/oracle-a1/aylik_bucket_kopya.py` başlığındadır — BURADA TEKRAR EDİLMEZ. Özeti:
+# `state/bars_intraday` + `state/intraday_bars`, TTL'li Redis akışının tek KALICI arşividir ve
+# bugün yalnız tek-medya kopyaları var (gece tar + Mac pull). Litestream aşama-2 SQLite'ı
+# bucket'a çoğaltıyor; bu iki dizin SQLite DEĞİL, yani off-box kopyaları YOKTU.
+#
+# YEREL SİLME YOK — YAPISAL. Bu birimde `ReadWritePaths=` BİLEREK YOKTUR: ProtectSystem=strict
+# altında süreç yalnız PrivateTmp'e yazabilir, `/opt/meridian/state` ona SALT-OKUNURDUR. Yani
+# "bucket'a taşıdık, yereli budayalım" hatası bu birim üzerinden YAPILAMAZ — yorum değil, çekirdek
+# kısıtı. (Kardeş birimlerin ReadWritePaths gerekçeleri kendi dosyalarında.)
+#
+# KİMLİK: `state/litestream.env` (0600, pano Ayarlar → api üretir). `-` öneki BİLİNÇLİ ve
+# `10-s3-env.conf` ile AYNI gerekçe: dosya yokken birim açılabilsin, kimlik yokluğu betiğin
+# kendi ölçülü hatasına düşsün (LoadCredential faz-1 dersi: kaynak-yokken-ilk-dağıtım).
+#
+# `uv run` YOK — sistem python3'ü. Betik saf stdlib'dir (A1'de ölçüldü 2026-08-23: aws/rclone/
+# s3cmd/boto3 kurulu DEĞİL). Yedek alma yolu, yedeği alınan ortamın .venv sağlığına bağlı olmamalı.
+#
+# KURULUM ELLE — F9 SINIFI (dagit bu dosyayı TAŞIMAZ; içerik kapısı [F9] ayrıklığı RAPORLAR):
+#   sudo cp deploy/oracle-a1/meridian-aylik-bucket-kopya.service /etc/systemd/system/
+#   sudo cp deploy/oracle-a1/meridian-aylik-bucket-kopya.timer   /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now meridian-aylik-bucket-kopya.timer
+# DOĞRULAMA (kurulum, birimi ELLE bir kez tetikleyip ÇIKTIYI görmeden tamamlanmış SAYILMAZ —
+# meridian-backup.service'in aynı sınıftaki dersi: sessiz yedek kaybı ancak restore'da görülür):
+#   sudo systemctl start meridian-aylik-bucket-kopya.service
+#   journalctl -u meridian-aylik-bucket-kopya -n 40 --no-pager     # JSON rapor: yuklendi/sha256/etag
+#   systemctl list-timers meridian-aylik-bucket-kopya.timer
+# KURU ÖLÇÜM (yükleme yapmaz, kimlik istemez):
+#   MERIDIAN_STATE=/opt/meridian/state python3 /opt/meridian/deploy/oracle-a1/aylik_bucket_kopya.py --kuru
+[Unit]
+Description=Meridian intraday bar archive monthly copy to OCI bucket (previous month)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/meridian
+Environment=MERIDIAN_STATE=/opt/meridian/state
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=-/opt/meridian/state/litestream.env
+ExecStart=/usr/bin/python3 /opt/meridian/deploy/oracle-a1/aylik_bucket_kopya.py
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (meridian.service · meridian-barsarchive.service ·
+# meridian-backup.service ile BİREBİR). Gerekçelerin TAM METNİ meridian.service'tedir; burada
+# YALNIZ ayrışan kalem yazılıdır. Dışarıda bırakılanlar (MemoryDenyWriteExecute · PrivateDevices ·
+# PrivateUsers · ProtectProc/ProcSubset · IPAddressDeny · SystemCallErrorNumber=EPERM) ve
+# gerekçeleri: meridian.service.
+#
+# ARIZA ŞEKLİ UYARISI: `OnFailure=` YOK ve birim ayda BİR koşar — sessiz bir arıza, bir sonraki
+# felakete kadar görülmez. Bu yüzden ölçüsü `is-active` DEĞİL, KOVADAKİ NESNEDİR:
+#   journalctl -u meridian-aylik-bucket-kopya --since "2 months ago" | grep '"yuklendi"'
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA — `ReadWritePaths=` SATIRI YOK (kardeşlerin hepsinde var). Bu bir unutma değil,
+#     BU BİRİMİN SÖZLEŞMESİDİR: yükleyici hiçbir kalıcı yola yazmaz; tar PrivateTmp'te doğar ve
+#     süreçle birlikte ölür. `uv run` kullanılmadığı için /home/ubuntu/.cache da GEREKMEZ.
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target
