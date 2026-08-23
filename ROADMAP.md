@@ -1041,7 +1041,15 @@ sertleştirme, ölü/ezilen bileşenlerin budanması ve "aynı gerçek iki yerde
   kurulum ÖNCESİ lockfile+audit'ten geçer (slopsquatting %19,7).
 - **H3 systemd sertleştirme** tur-1 ✅ (2026-07-31): 9.2 UNSAFE → 6.3 MEDIUM (iki servis;
   dosya-sistemi/ad-alanı seti + pano token'ı unit'ten 0600 .dash.env'e taşındı+rotasyon).
-  Tur-2 📋: seccomp @system-service + CapabilityBoundingSet; hedef <4
+  ~~Tur-2 📋~~ **Tur-2 ✅ CANLIDA (2026-08-23 bakım penceresi, operatör+Rol-1 birlikte):**
+  tick-watchdog + fail-notify faz-1+faz-2 kurulu (durum: 4/4 repo-özdeş). İKİ ALET/TASARIM VAKASI
+  YAKALANDI VE DÜZELTİLDİ: (a) boş CapabilityBoundingSet root-bekçinin ubuntu-0600 state okumasını
+  kırdı — tetik-testi tam bu sınıf için vardı ve yakaladı; CAP_DAC_READ_SEARCH geri kondu, v266
+  çivisi birim-bazlı kilitledi; (b) h3 betiğinin ön-şart ölçümünde pipefail+grep-q SIGPIPE kusuru
+  (kanıt varken 'ölçülemedi' diyordu) — grep akış-tüketir hale getirildi. TETİK-TESTİ KANITLI:
+  sertleştirilmiş bekçi 'durum 105s bayat → yeniden başlatılıyor' bastı, meridian 10:47:42'de
+  bekçi eliyle yeniden doğdu. N1 zinciri de uçtan uca ölçüldü (fail-notify → Telegram, üç gerçek
+  gönderim). Eski hedef metni: seccomp @system-service + CapabilityBoundingSet; hedef <4
   (NoNewPrivileges/ProtectSystem=strict/PrivateTmp/ProtectHome önce; seccomp EN SON ve dikkatli).
   + `MERIDIAN_DASH_TOKEN` unit dosyasında DÜZ METİN (herkes-okur) → rotasyon + LoadCredential'a
   taşıma AYNI bakım penceresinde.
@@ -1086,7 +1094,7 @@ sertleştirme, ölü/ezilen bileşenlerin budanması ve "aynı gerçek iki yerde
   77 passed). YENİ AÇIK UÇ (XS): `sprint.py:525` ortam dosyası düz write_text + SONRADAN chmod —
   kısa 0644 sır penceresi; secrets.py'nin fd-önce-0600 desenine çevrilmeli (motor-dosya penceresi:
   046 inince). **[2026-08-23: ✅ v270 damgası (3d95f8f, aynı gece) — `sprint.py:527` `os.open(O_CREAT, 0o600)` ile doğuyor]**
-- **DASH-TOKEN LoadCredential HAZIR-BEKLEMEDE (2026-08-03; etkinleştirme OPERATÖR bakım-penceresi):**
+- ~~DASH-TOKEN LoadCredential HAZIR-BEKLEMEDE~~ **FAZ-1 CANLIDA (2026-08-23 penceresi, operatör koştu):** rotasyon + credential kanalı kuruldu (50-dash-credential.conf), yanlış-token→401 canlıdan kanıtlı; faz-2 (ortam-kanalı-sıfır) opsiyonel sonraki adım. _(eski metin: 2026-08-03; etkinleştirme OPERATÖR bakım-penceresi):_
   drop-in'ler deploy/oracle-a1/meridian.service.d/ (faz-1 LoadCredential, faz-2 ortam-kanalı-sıfır)
   + dash_token_credential.sh (rotasyon/kurulum/doğrulama/geri-alma; faz-2 farksal ölçümlü).
   LoadCredential ana birime BİLEREK yazılmadı (kaynak-dosya-yokken ilk dağıtım panoyu düşürürdü).
@@ -2559,6 +2567,7 @@ v237-v243 dağıtımları vardı; hepsi yalnız §4 maddelerinin İÇİNDE yaş�
 neden-kaydı da silinecekti. Aşağıdaki girişler madde başına TEK SATIRDIR; ayrıntı kartlarda/§3'de.)_
 
 - **2026-08-22 `EDG-2026-042` HAFTALIK TAKVİM İLK FIRE (`Ö-54`):** üç kovada da eşik dolmadı (K1 n=13/4 seans, K2/K3 ölçülebilen n=0 — beş çıkış adayının beşi `broker_teyit` damgasız) → hükümlü koşum TETİKLENMEDİ, CI yok, `status: measuring` sürüyor; snapshot aynı günkü ara-koşumla bayt-özdeş olduğu için ÖNCEKİNE GÖRE DEĞİŞİM SIFIR (Cumartesi — takvimin çalıştığının kanıtı, yeni kanıt değil; ilk anlamlı tekrar 2026-08-29). ÖLÇÜM-ÖNCESİ REÇETE DÜZELTMESİ: donmuş `olcum.py`nin K2/K3 işareti kartın DÜZELTME formülüyle çelişiyordu ve MADDİ hataydı (LEHTE dolumu aleyhte yazardı) — teyitli satır 0 iken kart lehine düzeltildi, eşik/karar kuralı değişmedi, donuk reçete `edg042_kosum_2026-08-22/`ya taşındı.
+- **2026-08-23 ~10:50 BAKIM PENCERESİ KAPANDI (operatör 'hafta sonundayız' dedi, birlikte yürüdü):** H3 tur-2 CANLIDA (4/4 drop-in; tetik-testi bekçi-eliyle-restart KANITLI; iki alet vakası yakalandı-düzeltildi: CAP_DAC boş-küme okuma kırması + h3 pipefail/SIGPIPE) · LoadCredential faz-1 canlıda (401-kanıt) · N1 zinciri uçtan uca ölçüldü (üç Telegram gönderimi) · SuccessExitStatus zaten 08-09'da yapılmıştı (süpürme) · 044 aşama-2 düştü. Canlı bface8e.
 - **2026-08-23 ~05:00 TUR KAPANIŞI (dağıtım + canlı doğrulama):** otoriter suite 0 kırmızı (beş kırmızı kök-nedenli kapandı: sermaye --json kanal ayrımı · yerel_donmus_defter FOTOĞRAF ŞARTI · conftest canlı-yol muafiyeti + 12 artık satır temizliği · korpus tazeleme · F8 emisyon kapısı + kart tabanı 20→22 beyanlı). `cbf6197` dagit ile canlıda: [F9] ilk koşum 5/5 BİREBİR · [B] beyanı bayt-doğrulamalı · goal.yaml A17 yorumu yedekli kopyalandı. Canlı doğrulama: 4 servis aktif, 0 restart, journal sessiz, healthz 200, diagnostics 32 anahtar (durum_sozlugu VAR, 4 YASA-6 raporu servis'te), damga canlıda 0. Sabah masası: docs/KARAR-MASASI-2026-08-23.md · friksiyon haritası: docs/FRIKSIYON-PROGRAMI-HARITA-2026-08-23.md.
 - **2026-08-23 `EDG-2026-044` AŞAMA-1 ÖLÇÜLDÜ — KART KAPANDI:** havuz tavanı cpu−1 yerel kazancı %17,49 < %20 donuk eşiği; tavan kalır, canlı aşaması hiç açılmadı (sabah masasının koşullu bakım kalemi düştü). Yan-bulgu: ikiz formül tabanları bugün zaten farklı — tek-kaynak XS adayı.
 - **2026-08-23 GECE FİLOSU (operatör: "benden karar beklemeyen bütün paketleri bitir"):** `EDG-2026-047` yakın-pencere AYNI GECE kart→ölçüm→hüküm (Ö1 ateşledi, −%42 replikasyon; pencere-kaydırma §5 [B-PENCERE-KAYDIR]) · §4 havuz boşaltıldı (8 gövde WP'lere; 5 KART-ADAYI + 1 §5-adayı etiketi) · §5'e 19 kalıcı kimlik + tablo (kimliklendirme H6) · 15d PIT-faktör tasarım belgesi indi · sprint ortam dosyası yaratma-anı 0600 (v270) · 23c YEDİNCİ bayat vaka olarak düzeltildi (modelleme EXE-005/006'da zaten kapalıymış). Uçuşta: F8 sözlüğü · Ö-49 tam süpürme · WP6-① (F9+P0-b+H3) · sırada 044 aşama-1 + suite + dağıtım + canlı doğrulama + sabah KARAR MASASI.

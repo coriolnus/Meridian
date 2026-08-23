@@ -15,7 +15,9 @@ hiçbiri birbirini bloke etmiyor, sıra önerisi kolaydan zora. Kimlikler §5 ta
 | 6 | Uyuyan kurulum (dormant_setup) | Ön-bağ arkaya bağlansın mı? | Bağla (kart-önce) · Bağlama · Damgala | Ölçüm kartı yazılmadan bağlanmaz; istersen kartı yazarım (31 plan / 0 işlem envanteri hazır) |
 | 7 | ARSENAL politikası | 15e giriş + 29 çıkış kanıt çıtası | çerçeve senin | 15d tasarımı indi (`docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md`) — ARSENAL çerçevesine girdi olur |
 
-## B. Bakım penceresi isteyen uygulamalar (dosyalar HAZIR)
+## B. Bakım penceresi ✅ KAPANDI (2026-08-23 ~10:50 — operatör+Rol-1 birlikte yürüttü)
+
+H3 tur-2 canlıda (tetik-testi kanıtlı; iki alet vakası yakalandı-düzeltildi) · LoadCredential faz-1 canlıda (401-kanıt) · N1 uçtan uca ölçüldü. OPSİYONEL kalan: LoadCredential --faz2 (ortam kanalını kapatır; betik şartı kendisi ölçer). Eski liste:
 
 1. **H3 tur-2**: `deploy/oracle-a1/h3_tur2_sertlestir.sh` — fazlı kur/doğrula/geri-al + tetik-testi;
    hedef iki birim: tick-watchdog (ROOT koşuyor!) + fail-notify. Adımlar betiğin başlığında.
