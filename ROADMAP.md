@@ -165,7 +165,7 @@ varırdı. Bu satır burada bir **hatıra değil kapı gerekçesidir**.
 aşamasında) · `H6 ✅` = kapandı ve kanıtı §7'de yazılı · `BLOKE`/`ASKIDA` = aşama değil **dik
 durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'dır.
 
-#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (6 kalem; **`Ö-51b` ve `Ö-51c` 2026-08-22'de H6 ✅'e geçti, satırları tarihçe olarak yerinde bırakıldı** → fiilen 4 açık)
+#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (6 kalem; **`Ö-51b` ve `Ö-51c` 2026-08-22'de H6 ✅'e geçti, satırları tarihçe olarak yerinde bırakıldı** → ~~fiilen 4 açık~~ **[2026-08-23 süpürme: sayım bayattı — fiilen 5 açık (Ö-55 · F8 · Ö-54 · gölge · 24b-24d); 23e'nin H0'dan taşınmasıyla 6]**)
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
@@ -175,17 +175,18 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 | ~~**`Ö-52` `live_paper` damgası broker teyidi TAŞIMIYOR**~~ **H6 ✅ KAPANDI 2026-08-22 (DAĞITILDI)** | WP1 | `EXE-2026-007` + `docs/BULGU-KARSILIKSIZ-CANLI-ISLEM-2026-08-21.md` | 🆕 **ÖLÇÜLDÜ 2026-08-21, kart ön-kayıtlı 2026-08-22.** Damga bir BROKER TEYİDİ değil bir **KOD YOLU** beyanı: `loop._persist_trade`ten geçen her satır onu alır ve fonksiyon broker'a hiç sormaz. Reset sonrası 8 "canlı" işlemin **2'si** (`ALL` T00096 · `VLO` T00097) broker'da HİÇ VAR OLMAMIŞ — 62 emirde 0, 55 aktivitede 0 fill, 61.511 olayda 0 `alpaca_submit`. **Kök neden zinciri KAPALI:** `submit_plan` ONAY ANINDA çağrılıyor (`loop.py:743`), iç motor stratejiyi onaydan BAĞIMSIZ koşuyor → onaylanmayan plan iç defterde açılıp kapanıyor ve `live_paper` damgalanıyor (`plan_operator_approved` 7 olay, ALL/VLO yok). **Öğrenme etkisi ÖLÇÜLDÜ ve DAR:** karşılıksız satırlar indeks 885/886, yansıma tabanı 887 → **bugünkü ufuk penceresi TEMİZ** (besleyen 6 işlemin 0'ı karşılıksız); iki satır 2026-08-17'de koşan TEK yansımanın penceresindeydi. P&L etkisi **+277,99**. ⚠ Bu kalem **davranış DEĞİŞTİRMEZ** — onaysız planın iç motorda koşması bir tasarım tercihi olabilir; kusur sayılan tek şey iki sınıfın TEK DAMGA altında toplanmasıdır. Bir sonraki adım: `ledgerstamp`e broker-teyit boyutu → **ATILDI (2026-08-22):** kart `measured` (ölçüm ajanı ön-ölçümü BİREBİR üretti: Ö1=%25 · Ö2=+277,99 · 885/886<887, tohum 0, olculemedi 0) ve karar kuralı ateşledi → boyut EKLENDİ (55d72b3: dört değerli eksen · reconcile'da kendi kendini iyileştiren damgalayıcı · KIRPIK DEFTERDE KARŞILIKSIZ DENMEZ · pano satırı + alarm). Kalan tek adım DAĞITIM — ilk reconcile turu damgasız satırları kendisi damgalar → **DAĞITILDI (cbcdeed):** canlı doğrulandı — `defter_teyit = {teyitli 0 · karşılıksız 0 · olculemedi 8 · kapsam_disi 885}`; sekiz canlı satır dürüstçe 'henüz ölçülmedi', damga İLK reconcile turunda kendiliğinden basılır (beklenen: 6 teyitli + 2 karşılıksız → pano kırmızı satır) |
 | **`Ö-55` friksiyon-koşullu limit sınaması** | WP1 | `EDG-2026-043-friksiyon-kosullu-limit` | 🆕 **KART ÖN-KAYITLI 2026-08-22** (B4 kararının C bacağı; EDG-040 ACİL kaleminin (b) bacağına ilk somut adım). Altı hücre (K=6): slip {15,25,35} × dolum {A,B}, cap=0,01 silahlı; kapalı-kapı hücreleri edg040'ın DONMUŞ kanıtından (yeniden koşmak kill). OKUMA KURALI DONUK: hüküm yalnız EDG-042'nin gerçek-friksiyon bandına düşen hücreden okunur — bant gelmeden (~4 hafta) B4 yeniden açılamaz. Ölçüm ~75 dk, hemen ya da bantla birlikte koşulabilir (operatör tercihi) → **ÖLÇÜLDÜ (aynı gün, K=6 harcandı): altı CI de 0-içi.** A kolu hep negatif (−7,3k/−5,8k/−1,3k) · B kolu hep pozitif NOKTA (+4,0k/+3,8k/+2,3k; slip15_B altı hücrenin tek kârlısı +895) — işaret-dönüşü deseni görünüyor ama HİÇBİRİ ayrışmıyor. HÜKÜM ASKIDA (okuma kuralı): EDG-042 bandı ~4 haftada; muhtemel okuma "ayrışmadı → B4 kapalı kalır" |
 
-| **F8 durum sözlüğü** | WP8 | `docs/TASARIM-F8-DURUM-SOZLUGU-2026-08-22.md` | 🆕 **H0→H1: TASARIM BELGESİ YAZILDI (2026-08-22, ajan ölçtü Rol-1 inceledi).** "15 bekçi" iddiası BAYATTI — ölçüm: EXPECTED kadans 17 · bütünlük 8 · alarm-geçişli 8 · rapor ailesi 19. 16 tutarsızlık 4 sınıfta (öğrenme mandalı 4 yazım · acil durdurma 5+ ad · hüküm alanı 5 ad · açıklama 7 ad/2 dil). **4 YASA-6 adayı:** goal_failure/kitap_damga/mutabakat_tazelik/onayli_gonderim raporları hiçbir uçtan servis edilmiyor + codelaw bu sınıfa YAPISAL KÖR (fonksiyon-düzeyi). Sıradaki: kanonik sözlük uygulaması (kod işi, ayrı tur) |
+| **F8 durum sözlüğü** | WP8 | `docs/TASARIM-F8-DURUM-SOZLUGU-2026-08-22.md` | 🆕 **H0→H1: TASARIM BELGESİ YAZILDI (2026-08-22, ajan ölçtü Rol-1 inceledi).** "15 bekçi" iddiası BAYATTI — ölçüm: EXPECTED kadans 17 · bütünlük 8 · alarm-geçişli 8 · rapor ailesi 19. 16 tutarsızlık 4 sınıfta (öğrenme mandalı 4 yazım · acil durdurma 5+ ad · hüküm alanı 5 ad · açıklama 7 ad/2 dil). **4 YASA-6 adayı:** goal_failure/kitap_damga/mutabakat_tazelik/onayli_gonderim raporları hiçbir uçtan servis edilmiyor + codelaw bu sınıfa YAPISAL KÖR (fonksiyon-düzeyi). **[2026-08-23 GÜNCEL — "hiçbir uçtan servis edilmiyor" BAYATLADI: 4 rapor v261'de bağlandı (`meridian/api.py:3390-3393`, 987b552; pano tabanı 18→20, e73241f); kalan yalnız kanonik sözlük]** Sıradaki: kanonik sözlük uygulaması (kod işi, ayrı tur) |
 | **`Ö-54` gerçek friksiyon tahmini (n=4'ten çıkış)** | WP1 | `EDG-2026-042-gercek-friksiyon-tahmini` | 🆕 **KART ÖN-KAYITLI 2026-08-22** (EDG-040 ACİL kaleminin (a) bacağı). Kanonik ölçüt EDG-038'den AYNEN (D1 konsolide açılış; E2'de KAYITLI alan — PIT, koşum günü tarihçe çekilmez). Üç kova (K=3): giriş · çıkış-hedef · çıkış-stop — karıştırılamaz. Örneklem eşikleri DONUK: K1 n≥30 & ≥10 seans, K2/K3 n≥15 & ≥6 seans; ALTINDA çıktı BETİMLEYİCİ (EDG-037 damga biçimi aynen). Karar kuralı EDG-040 başabaşına [5-15] karşı: CI-alt>15 → paket negatif işliyor sinyali · CI bandı kesiyor → hüküm yok, ölçüm sürer · CI-üst<5 → model muhafazakâr şerhi. SAYIM (değer bakılmadan): bugün K1=13 · K2+K3=5 → kart BUGÜN hüküm üretemez ve bunu beyan eder; K1 eşiği kabaca +4-6 hafta. Ö-52 bağı kill'de: teyitsiz satırın dolumu kıyasa giremez→ **BETİMLEYİCİ ARA-KOŞUM YAPILDI (aynı gün, operatör istedi — hüküm YOK):** K1 n=13/4 seans: **medyan +15,0 bps** (model 5'in üç katı, başabaş bandının [5-15] ÜST SINIRINDA) · p25/p75 −43/+41 · min/maks −131/+327 (dağılım vahşi, EDG-038'in 15↔134'üyle tutarlı) · en büyük seans %38,5 (<%40 şerh eşiği). K2/K3: beş aday satırın BEŞİ de `broker_teyit` damgasız → kill kriteri hepsini olculemedi'ye düşürdü (bps hiç hesaplanmadı) — damga ilk reconcile turunda basılınca ölçülebilirler. Damgalar aynen: "ÖLÇÜLEMEDİ (n<eşik) — betimleyici". ⏰ **OTOMATİK TAKVİM (2026-08-22):** her Cumartesi ~10:29 zamanlanmış görev `edg042-friksiyon-haftalik` — betimleyici tekrar + eşik dolan kovada hükümlü koşum OTOMATİK (CI-alt>15 çıkarsa ACİL kaleme 'rakamla doğrulandı' düşer, operatör penceresi raporlanır). YAN KAZANÇ: ajan K2/K3 işaret çelişkisini hücreler hiç ölçülmeden yakaladı, kart ölçüm-öncesi düzeltmeyle netleşti → **İLK OTOMATİK FIRE KOŞTU 2026-08-22 15:05Z** (`edg042_kosum_2026-08-22/`, snapshot sha 155a0da2…): üç kovada da EŞİK DOLMADI → hükümlü koşum tetiklenmedi, CI hesaplanmadı, karar kuralı uygulanmadı, `status: measuring` kalır. K1 n=13/4 seans (medyan +15,017 · p25/p75 −43,0/+40,8 · seans payı %38,5), K2/K3 ölçülebilen n=0 (beş adayın beşi damgasız). **ÖNCEKİ KOŞUMA GÖRE DEĞİŞİM SIFIR** — snapshot ara-koşumunkiyle bayt-özdeş (Cumartesi, arada seans/reconcile yok); bu takvimin çalıştığının kanıtı, yeni kanıt DEĞİL. İlk anlamlı tekrar **2026-08-29**. ⚠️ REÇETE DÜZELTİLDİ (Rol-1, ölçümden önce, eşik DEĞİŞMEDİ): donmuş `olcum.py` K2/K3 işareti kartın DÜZELTME formülüyle çelişiyordu (`bps_delta` → `−bps_delta`); MADDİ hataydı — LLY T00103'te LEHTE dolumu '+120 bps aleyhte' yazıp hükmü ters çevirirdi. Teyitli satır 0 iken düzeltildi, sentetik satırla sınandı, gerçek çıktı değişmedi. Donuk reçete artık `edg042_kosum_2026-08-22/`. YENİ AÇIK KALEM: kartın işaret cümlesi yalnız LONG için yazılı (bugün 8/8 long) — short satır çıkarsa reçete kartsız genişletilemez |
 | ~~friksiyon dayanıklılığı~~ **H6 ✅ (040 measured 2026-08-22 — satır hijyeni; işi ACİL şemsiyesi + 042/043/045/046 kartları taşıyor)** | WP1 | `EDG-2026-040` hükmü tahtanın 🔴 ACİL kalemi olarak yaşıyor |
 | gölge kapsam / planlı kol | WP3 | `EXE-2026-003-golge-planli-kol` | **measuring (2026-08-22):** ilk koşum yapıldı — pencere 2/20 dolmadı ama gözlenen her şey olumlu (5/5 dolum yazıldı · silahlı kol bayt-düzeyi etkilenmemiş · 002 hattına sızıntı 0 · kill tetiklenmedi). Yan teşhis: gölge×cf eşleşmezliğinin 12/13'ü cf_open'da AÇIK bekliyor — boru-hattı gecikmesi, kapsam deliği değil. Pencere dolunca aynı betik yeniden koşulur |
-| `24b-24d` skill görüş defteri | WP7 | `EDG-2026-019-skill-gorus-defteri` | kart ön-kayıtlı · 24b SOUL kilidi açıldı ama **HİÇ SINANMADI** |
+| `24b-24d` skill görüş defteri | WP7 | `EDG-2026-019-skill-gorus-defteri` | kart ön-kayıtlı · 24b SOUL kilidi açıldı ama **HİÇ SINANMADI** **[2026-08-23 GÜNCEL — kısmi bayat: kilit CANLIDA DOĞRULANDI 08-22 (sha birebir, kilit cümlesi yerinde; `research/olcumler/edg019_24b_sinama_2026-08-22/`); ETKİ ölçümü hâlâ yok — kart `registered`]** |
+| `23e` gün-içi pencere **[2026-08-23: H0'dan taşındı]** | WP1 | `EDG-2026-047` (1afdfd9) | kart ön-kayıtlı ve aynı gece ölçüldü — Ö1 ateşledi (bkz. WP1-B 23e eki); pencere-kaydırma kararı §5 `[B-PENCERE-KAYDIR]` |
 
-#### H2 — PLAN VAR, icra bekliyor (2 kalem)
+#### H2 — PLAN VAR, icra bekliyor (~~2 kalem~~ **[2026-08-23 süpürme: sayım bayattı — tests satırı zaten H6 idi (fiilen 1); aynı süpürmede 23c da kapanışa çekildi → fiilen 0 açık]**)
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
-| `23c` dinlenen limit sadakati | WP1 | `EXE-2026-005` + `docs/superpowers/plans/2026-08-17-23c-dinlenen-limit-plan.md` | **H3 İCRADA — A KOLU KAPISI GEÇTİ 2026-08-17** (`research/olcumler/exe005_23c_a_kolu_2026-08-17/`: işlemler+seanslar bayt-özdeş, tek ayrışan alan `n_endeks_satir` ve o ADIYLA muaf). Çiviler **6/6** · `bar_low` uygulandı · bayrak kuruldu · **B KOLU DA KOŞULDU (a83c5e9)** ve örneklem BOŞ çıktı — sebebi yapısal, bkz. `Ö-51`. **H5 incelemesi yapıldı (2026-08-17): 2 kritik + 4 önemli bulgu, HEPSİ KAPATILDI** (kol kimliği damgası · AST sızıntı taraması · tolerans totolojisi · YASA 6 ret alanı). ⚠ **`Ö-51` KAPANDI 2026-08-17 (`EXE-2026-006` measured) — ama 23c'nin kendi Ö1/Ö2/Ö3'ü BUNUNLA ÜRETİLMİŞ SAYILMAZ:** 006 DAR tavanlı (0,005-0,03) bir ölçüm kolunda koştu, 23c'nin sorusu CANLI yasadaki (`limit_pct_cap=0,04` · `limit_atr_mult=100,0`) sadakattir ve orada kapı hâlâ YAPISAL OLARAK ÖLÜ (`BULGU-B-KOLU.md`: limit = `trigger·1.04` = `max_chase` tavanıyla birebir, `max_chase` ÖNCE sınanır → boş küme). Yani 006 hükmü 23c'yi ÇÖZMEDİ, sorusunun canlı yasada CEVAPLANAMAZ olduğunu TEYİT etti; 005'in kendi Rol-1 hükmü hâlâ AÇIK (aşağıda). Ön-koşullar ölçüldü (temiz ağaç · edg032b tabanı · `low` erişilebilir). Kill riski somutlaştı ve çözüldü: `fill_entry`nin **6 çağıranı** var, biri CANLI → kural tek yerde, davranışı `bar_low` parametresi seçer (bayrak DEĞİL — canlıda o veri yok, yani değişmezlik YAPISAL). H3 sırası bağlayıcı: **çivi önce**, sonra A kolu bit-özdeşlik kapısı. · **D5: kapanmadan limit-tavanı kararı YOK** |
+| ~~`23c` dinlenen limit sadakati~~ **KAPANIŞA ÇEKİLDİ 2026-08-23 (süpürme; H6-benzeri)** | WP1 | `EXE-2026-005` + `docs/superpowers/plans/2026-08-17-23c-dinlenen-limit-plan.md` | **H3 İCRADA — A KOLU KAPISI GEÇTİ 2026-08-17** (`research/olcumler/exe005_23c_a_kolu_2026-08-17/`: işlemler+seanslar bayt-özdeş, tek ayrışan alan `n_endeks_satir` ve o ADIYLA muaf). Çiviler **6/6** · `bar_low` uygulandı · bayrak kuruldu · **B KOLU DA KOŞULDU (a83c5e9)** ve örneklem BOŞ çıktı — sebebi yapısal, bkz. `Ö-51`. **H5 incelemesi yapıldı (2026-08-17): 2 kritik + 4 önemli bulgu, HEPSİ KAPATILDI** (kol kimliği damgası · AST sızıntı taraması · tolerans totolojisi · YASA 6 ret alanı). ⚠ **`Ö-51` KAPANDI 2026-08-17 (`EXE-2026-006` measured) — ama 23c'nin kendi Ö1/Ö2/Ö3'ü BUNUNLA ÜRETİLMİŞ SAYILMAZ:** 006 DAR tavanlı (0,005-0,03) bir ölçüm kolunda koştu, 23c'nin sorusu CANLI yasadaki (`limit_pct_cap=0,04` · `limit_atr_mult=100,0`) sadakattir ve orada kapı hâlâ YAPISAL OLARAK ÖLÜ (`BULGU-B-KOLU.md`: limit = `trigger·1.04` = `max_chase` tavanıyla birebir, `max_chase` ÖNCE sınanır → boş küme). Yani 006 hükmü 23c'yi ÇÖZMEDİ, sorusunun canlı yasada CEVAPLANAMAZ olduğunu TEYİT etti; 005'in kendi Rol-1 hükmü hâlâ AÇIK (aşağıda). Ön-koşullar ölçüldü (temiz ağaç · edg032b tabanı · `low` erişilebilir). Kill riski somutlaştı ve çözüldü: `fill_entry`nin **6 çağıranı** var, biri CANLI → kural tek yerde, davranışı `bar_low` parametresi seçer (bayrak DEĞİL — canlıda o veri yok, yani değişmezlik YAPISAL). H3 sırası bağlayıcı: **çivi önce**, sonra A kolu bit-özdeşlik kapısı. · **D5: kapanmadan limit-tavanı kararı YOK** **[2026-08-23 GÜNCEL — SATIR BAYATTI: EXE-2026-005 `measured`, Rol-1 hükmü Ö-51d 2026-08-22'de verildi (kartta; tahtanın H6 bölümünde kapanış satırı var). "H3 İCRADA / hüküm hâlâ AÇIK" okuması mükerrer tur açtırmasın: kalan TEK iş D5 OPERATÖR KARARI — §5 `[B-E1-LIMIT]`]** |
 | ~~`tests/` §-atıf çevrimi (120 satır)~~ **H6 ✅ — BU SATIR BAYATTI (2026-08-22'de fark edildi)** | WP6 | `scratchpad/roadmap_donusum.py` | ✅ İş 2026-08-21'de ZATEN KAPANMIŞTI (bkz. aşağıdaki H6 satırı + commit a81a3dd): çıplak `§N`'lerin çoğu ROADMAP atfı DEĞİLMİŞ, yalnız `§2-N`/`ROADMAP §N` çevrildi (23 dosya), 88 çıplak atıf BİLEREK bırakıldı, tam suite doğruladı. Bu H2 satırı güncellenmeden kalmıştı — dördüncü bayat-beyan vakası (A17/Ö-49 sınıfı). _(eski metin: meridian/ ÇEVRİLDİ ✅ 10 dosya/18 satır; tests/ bekliyor: 86 satır assert içinde olabilir)_ |
 
 #### H0 — TASARIM ARTEFAKTI YOK (kart-önce açılacaklar)
@@ -198,7 +199,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 | 🔴 **ACİL: C+mb paketi +10 bps ek friksiyonda NEGATİF** (`EDG-2026-040` hükmü) | WP1 | **KARTIN DONUK KURALI BU KALEMİ AÇTI** ("aksi hâlde hüküm … ROADMAP'e ACİL kalem olarak girer"). Taban slip=5 → **+20.685** · slip=15 → **−3.067** · slip=25 → −13.722 · slip=35 → −25.681; ΔP&L CI'ları ÜÇÜNDE DE sıfırın dışında (CI-üst<0). Başabaş bandı **5-15 bps/bacak** (interpolasyon yok). Hasar FİYAT kaynaklı (n 885→862, seçilim değişmedi). BAĞLAM: gerçek friksiyon hâlâ n=4 TAHMİN (EDG-037 kill#1 ayakta) ama EDG-038 kanonik ölçütü giriş bacağında medyan +29 bps demişti — o doğruysa sistem slip25-35 bandındadır. Dokuz replay hükmündeki §E şerhi artık RAKAMLI. SIRADAKİ İŞ: (b) ✅ **KARTI ÖN-KAYITLI: `EDG-2026-046`** (iki-dünya × iki-seçilim, K=4; yaltaklanan-dünya tuzağı kill'de; |bps|~ATR% öncülü 042'de paralel sınanır). KEŞİF BELGESİ (`docs/KESIF-FRIKSIYON-BILINCLI-SECILIM-2026-08-22.md`): |bps| TAHMİN EDİLEBİLİR (menzil% ρ=+0,90 · ATR% +0,82 — ATR plan alanı!), işaret değil; naif likidite hipotezi TERS (en pahalı dolumlar en likit isimlerde). (b) kartının hammaddesi hazır. (a) ✅ **KARTI YAZILDI 2026-08-22: `EDG-2026-042`** — friksiyon TAHMİNİNİ n=4'ten çıkarmak (E2 defteri doldukça kanonik ölçüt yeniden), (b) friksiyon-bilinçli seçilim/eşik tasarımı — İKİSİ DE YENİ KART İSTER; bu hüküm canlı davranışı DEĞİŞTİRMEZ (kâğıt mod + karar operatörde) **(b) BACAĞI KAPANDI 2026-08-23 (`EDG-2026-046` measured):** iki-dünya kuralı ateşledi — ATR-dünyası Δ +11.490 ama CI [−868, +26.147] 0-içi → MEKANİZMA KANITSIZ, kart kapandı (aday değil; kazanç iki dünyada neredeyse aynı = friksiyon kanalı değil stil eğimi). Betimleyici yan-bulgu: dünya etkisi −2.115 [−4.056, −547] CI-üst<0 — sabit-5bps modeli ATR-dünyası modeline göre defteri şişiriyor (045 ile aynı yönde 3. iyimser-varsayım göstergesi, model-şartlı). Canlanma: 042 n≥30 bandı + yeni λ-kartı. |
 | ~~**`Ö-53` kitap↔broker ADET AYRIŞMASI**~~ **H6 ✅ KAPANDI 2026-08-22 (OPERATÖR KARARI + B/D UYGULANDI)** | WP2 | 🆕 **ÖLÇÜLDÜ 2026-08-22** (`docs/BULGU-KALINTI-AYRISTIRMASI-2026-08-22.md`). Açık pozisyonların **YEDİSİNDE DE** kitap ile broker adet tutmuyor (AMGN 33/22 · BDX 43/40 · BKNG 43/22 · CRM 17/19 · EMR 64/37 · MRK 76/65 · MRNA 13/8), üstelik broker'da kitabın hiç bilmediği bir **NVDA** var. Kitap **15.661,22** fazla maliyet taşıyor. Yön TEK YÖNLÜ DEĞİL (CRM'de broker fazla) → basit "kısmî dolum" hikâyesi DEĞİL. Bu sembollerde broker SATIŞI YOK → fark satıştan değil **GİRİŞTEN**. Panonun "açıklanamayan 2.623,34"ünün ezici çoğunluğu bu. **KÖK NEDEN ÖLÇÜLMEDİ ve UYDURULMADI** — adaylar (hiçbiri sınanmadı): kısmî dolum · boyutlandırmanın broker equity'si yerine kitap equity'siyle hesaplanması · `scaled_out`un tek defterde işlenmesi · `Ö-52`nin kök nedeninin (iç motor onaydan bağımsız koşuyor) adet düzeyindeki karşılığı — sonuncusu EN OLASI, aynı zincir zaten iki tam işlemi karşılıksız üretti. ⚠ **`mirror_divergence` bu işi YAPMIYOR:** yedide yedi ayrışma varken alan `None` — ve panoda `None` "ayrışma yok" gibi okunuyor, oysa "ölçülmedi" demek. 🆕 **KÖK NEDEN AYNI GÜN BULUNDU (2026-08-22):** "kısmî dolum" hipotezi ÇÜRÜTÜLDÜ (her giriş emri TAM doldu: AMGN 22→22 · BDX 40→40 · CRM 19→19 · EMR 37→37 · BKNG 22→22). Gerçek sebep `loop.py`de: `eq_now=_hb["equity"]` KİTABI, `eq=acct["equity"]` AYNAYI boyutlandırıyor — aynı `1R=%1` kuralı İKİ FARKLI sermaye tabanına uygulanıyor, oran da bu yüzden sabit değil. Farkın kendisi kusur DEĞİL; **kayıtsız** olması kusurdu (makbuz aynanın kullandığı sayıyı hiç yazmıyordu → makbuzu OLAN dört planda bile sapma açıklanamıyordu). **KAPATILDI:** makbuza `eq_ayna` + sapma tablosuna `ayna_taban` sınıfı (v257, 10 çivi, kasıtlı-kırmızı doğrulandı, 74 mevcut sınıflandırıcı testi yerinden oynamadı). ⚠ İLERİYE DÖNÜK: bugünkü yedi makbuz alanı taşımıyor, geriye doldurmak uydurma olurdu. **KALAN AÇIK — POLİTİKA (operatörde):** iki taban ayrı mı kalsın, tek tabana mı geçilsin? Ayrı kalırsa adetler ayrışmaya ve köprüde kalıntı üretmeye devam eder; tek tabana geçmek "hangisi doğru" sorusunu açar (broker'ınki gerçek para, kitabınki stratejinin muhasebesi) | → **KAPANIŞ:** operatör iki tabanın BİRLEŞTİRİLMESİNE karar verdi; ikinci mekanizma önce ÖLÇÜLDÜ ve baskın çıktı (per_share: ayna tetik−stop, kitap dolum−stop; CRM'de sente doğrulandı 19 vs 17). **B** ayna kitabın tabanıyla boyutlanır (`min(eq_now, eq)` guard'lı; makbuz ÜÇ tabanı da yazar) · **D** kitap dolumdan sonra aynanın adedini benimser (`_adet_benimse`: eşikten bağımsız, kapsamı dar, her benimseme kayıtlı). v258 10 çivi + K5 7-alan sözleşmesi; suite 6281/0 |
 | ~~`23d` bar-içi stop varsayımı~~ **H6 ✅ ÖLÇÜLDÜ+HÜKÜM 2026-08-23 (`EDG-2026-045` measured)** | WP1 | **Ö1 ateşledi: sıfır-stop-slip DEFTERİ ANLAMLI ŞİŞİRİYOR** — 10 bps'te −5.697$ [−7.604,−4.004]; üç CI de sıfır-dışı; paket 10 bps'te pozitif kalıyor (+18.109). ŞERH düşüldü: EDG-040 bandı iyimser tarafta + replay hükümlerine genel stop-slip şerhi. Ö2 askıda (042-K3 bandı). İki DURDU tarihçesi kartta (B1-taban + bağ-yuvarlama alet-tamamlaması — üçüncü alet vakası) |
-| `23e` gün-içi pencere · `23f` `gap_behavior:cancel` · `13` scale-out | WP1 | **H0→H1: TASARIM BELGESİ YAZILDI** (`docs/TASARIM-23E-23F-13-2026-08-22.md`). ÖNCÜL GÜNCELLENDİ: "1Day tek yol" kod düzeyinde doğru AMA gün-içi veri BİRİKİYORMUŞ — `state/bars_intraday` 20 dosya/186 MB, dakikalık, 249/251 ticker, açılış penceresi tam kapsanıyor; derinlik 20 seans (replay 2022'den koşar → 23e ancak YAKIN pencere için modellenebilir, tam-tarih için değil). Kart-adayı envanterler belgede → **23f KAPANDI (2026-08-22, kayıt-düşme):** cancel anlamlı tanımla ZATEN kanonik ölçülmüştü (%51 işlem kaybı, +11.233$ bırakır — ELENİR); yürürlük tanımı yapısal-totolojik (E2 gap 15/15). Hüküm EXE-2026-001'in gap-ekseni kapanışına işlendi; canlanma koşulu beyanlı (pivot değişirse). Kalan: 23e (yakın-pencere kart adayı) + 13 (tasarım) |
+| `23e` gün-içi pencere · `23f` `gap_behavior:cancel` · `13` scale-out | WP1 | **H0→H1: TASARIM BELGESİ YAZILDI** (`docs/TASARIM-23E-23F-13-2026-08-22.md`). ÖNCÜL GÜNCELLENDİ: "1Day tek yol" kod düzeyinde doğru AMA gün-içi veri BİRİKİYORMUŞ — `state/bars_intraday` 20 dosya/186 MB, dakikalık, 249/251 ticker, açılış penceresi tam kapsanıyor; derinlik 20 seans (replay 2022'den koşar → 23e ancak YAKIN pencere için modellenebilir, tam-tarih için değil). Kart-adayı envanterler belgede → **23f KAPANDI (2026-08-22, kayıt-düşme):** cancel anlamlı tanımla ZATEN kanonik ölçülmüştü (%51 işlem kaybı, +11.233$ bırakır — ELENİR); yürürlük tanımı yapısal-totolojik (E2 gap 15/15). Hüküm EXE-2026-001'in gap-ekseni kapanışına işlendi; canlanma koşulu beyanlı (pivot değişirse). Kalan: 23e (yakın-pencere kart adayı) + 13 (tasarım) **[2026-08-23: 23e H0→H1'e TAŞINDI — kart aynı gece ön-kayıtlandı (`EDG-2026-047`, 1afdfd9) ve ölçüm koştu (Ö1 ateşledi; §5 `[B-PENCERE-KAYDIR]`); bu satırda kalan tasarım işi yalnız 13]** |
 | ~~WP-E 6 boşluk sınıfı + E2 canlı-geçiş~~ **H6 ✅ SATIR BAYATTI — İŞ 2026-08-12'DE KAPANMIŞ (v234/531ea2b)** | WP1 | Envanter ölçtü (`docs/ENVANTER-WPE-BOSLUK-2026-08-22.md`): commit gövdesi 6 sınıfı TEK TEK sayıp kapatmış ve mekanizmalar bugün CANLIDA koşuyor (exit_fill kuyruğu · kapsamlı emir penceresi · kısmi-dolum sınıflaması · anakronizm kapısı…). On gün boyunca açık göründü — Ö-49 bayat-beyan sınıfının en büyüğü. E2 canlı fotoğrafı ve kalan kart-adayları belgede |
 | ~~`equity_curve` zinciri / `seed_boundary` kadanslı yazar~~ **H6 ✅ KAPANDI 2026-08-22 (v264)** | WP2 | gerçek borç ölçümle bulunup kapandı: tohum sınırı beyansızdı (882 nokta) · `defter.sinir` v245'ten beri okuyucusuzdu (YASA 6) · `yollar_ayrisik` panosuzdu — üçü bağlandı |
 | ~~`SB-2` `drift_sinifi` · davranışsal EOD süpürme kanıtı~~ **H6 ✅ KAPANDI 2026-08-22 (v265)** | WP2 | drift_sinifi zaten v257'de (ayna_taban); EOD kanıtı: davranış 10/10 seansta ölçüldü (koruma dokunulmamış, v220 sonrası akşam iptali 0) ve `eod_supurme_report` bekçisiyle KAYITLI |
@@ -209,8 +210,8 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 | OPT Faz-1 (serbest) · Faz-2 (28d'ye bağımlı) | WP3 | |
 | türetilmiş artefakt yeniden üretimi · seans-içi boşluk · earnings kapsama · MNST split | WP4 | |
 | `M2` DSR-yarısı (`Ö-4` aracı) · `M7/M8/M9` · `M11` · `2B/2C/2D/A4` · kill#4 · `20c/20d` · korunum kovası (3) | WP5 | |
-| `26` değer-eşitliği — **kalan 9 çiftin GEREKÇE ENVANTERİ** | WP6 | ⚡ **2026-08-21 YENİDEN ÖLÇÜLDÜ, "26 kapısız çift" BAYAT.** Envanter v245'te yapılmış: **13'ü kaynağında zaten kapanmış · 5'i bağlanmış · 9'u bağlanmamış (her biri NEDENİYLE)**. `watchdog.EQUIVALENT_TRUTHS` bugün tam **9 olgu** taşıyor ve `_divergence_hesapla()` ÖLÇÜLDÜ: **ayrık 0 · eşit 7 · beyanlı-ayrı 2 · ölçülemeyen 0** — yani KAPILI taraf SAĞLAM. GERÇEKTEN AÇIK OLAN: bağlanmayan 9 çiftin gerekçeleri tek bir belgede TOPLANMAMIŞ; "her biri nedeniyle" deniyor ama neden nerede yazılı BİLİNMİYOR. Kalem artık "26 kapı kur" değil **"9 gerekçeyi bul, yazılı hâle getir, hâlâ geçerli mi ölç"**→ **YAPILDI (2026-08-22):** `docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md` — 26 = 12 kaynağında kapanmış + 5 bağlı + 9 bağlanmamış (gerekçeler yeniden türetildi, yazılı). **5 🔴 ayrık-değer bulgusu AYNI GÜN kapatıldı** (952dd2c) ve bekçiler genişletildi (C10e/C10f · v199 iki yönlü · v239 8a/8b). KALAN AÇIK: ortamlar-arası 3 çift (P0-b/P2 reçetesi belgede) + #11 guard.py okuyucusuz alanı |
-| `25a` KALDIR(14) / `25b` DAMGALA(6) / `25c` DİRİLT(3) / `25d` ezilme zinciri | WP6 | operatör 2026-08-16'da **beklet** dedi |
+| `26` değer-eşitliği — **kalan 9 çiftin GEREKÇE ENVANTERİ** | WP6 | ⚡ **2026-08-21 YENİDEN ÖLÇÜLDÜ, "26 kapısız çift" BAYAT.** Envanter v245'te yapılmış: **13'ü kaynağında zaten kapanmış · 5'i bağlanmış · 9'u bağlanmamış (her biri NEDENİYLE)**. `watchdog.EQUIVALENT_TRUTHS` bugün tam **9 olgu** taşıyor ve `_divergence_hesapla()` ÖLÇÜLDÜ: **ayrık 0 · eşit 7 · beyanlı-ayrı 2 · ölçülemeyen 0** — yani KAPILI taraf SAĞLAM. GERÇEKTEN AÇIK OLAN: bağlanmayan 9 çiftin gerekçeleri tek bir belgede TOPLANMAMIŞ; "her biri nedeniyle" deniyor ama neden nerede yazılı BİLİNMİYOR. Kalem artık "26 kapı kur" değil **"9 gerekçeyi bul, yazılı hâle getir, hâlâ geçerli mi ölç"**→ **YAPILDI (2026-08-22):** `docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md` — 26 = 12 kaynağında kapanmış + 5 bağlı + 9 bağlanmamış (gerekçeler yeniden türetildi, yazılı). **5 🔴 ayrık-değer bulgusu AYNI GÜN kapatıldı** (952dd2c) ve bekçiler genişletildi (C10e/C10f · v199 iki yönlü · v239 8a/8b). KALAN AÇIK: ortamlar-arası 3 çift (P0-b/P2 reçetesi belgede) + #11 guard.py okuyucusuz alanı **[2026-08-23 GÜNCEL: #11 v268'de MEZAR TAŞIYLA KAPANDI (`guard.py:554` — SECTOR_CAP_DEFAULT_PCT/HEAT_CAP_DEFAULT_PCT kaldırıldı; 375abd5); kalan yalnız ortamlar-arası 3 çift (`EQUIVALENT_TRUTHS` bugün de 9 olgu)]** |
+| `25a` KALDIR(14) / `25b` DAMGALA(6) / `25c` DİRİLT(3) / `25d` ezilme zinciri | WP6 | operatör 2026-08-16'da **beklet** dedi **[2026-08-23 GÜNCEL — kısmi: 25b fiilen 5/6 DAMGALANDI (987b552, 08-22; `tests/test_ezilen_damga_v262.py`); beklet yalnız 25a/25c/25d için sürüyor]** |
 | `F9` dagit kapsamı dışı 4 canlı artefakt · `H3` tur-2 seccomp · ~~gözlemlenebilirlik a-e~~ **a-e ✅ 2026-08-23: yedisi de ZATEN KAPALIYMIŞ (bayat-beyan #5; kanıt WP6-D arşiv bloğunda)** | WP6 | F9+H3-hazırlık ajanı uçuşta (2026-08-23); versiyonlu-state adımı da ona devredildi |
 | `Ö-49` çapa/beyan çürümesi kalanı | WP6 | yasa kuruldu, sınıf TAM kapanmadı |
 | ~~operatör bloklarının kimliklendirilmesi~~ **H6 ✅ 2026-08-23** | WP6 | 19 kalıcı `B-…` kimliği + §5 başında KİMLİK TABLOSU; tahtada 8 satıra atıf-kimliği eklendi; kimlik konumdan ayrıldı (blok kapansa da kimlik yeniden kullanılmaz) |
@@ -232,7 +233,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 
 | PIT mid-cap üst-sınır | WP4 | **ASKIDA: veri kapısı** · `EDG-2026-018` status=`askiya_veri_kapisi` |
 | delist-bar kaynağı + FINVIZ · `dataset.load↔bars_integrity` `[B-DELIST-KAYNAK · B-FINVIZ-TOKEN]` | WP4 | **BLOKE: erişim** |
-| `C2-4` LEAN fizibilite · notebook koşumu `[B-QC-LOGIN]` | WP9 | **BLOKE: erişim** (QC login) |
+| `C2-4` LEAN fizibilite · notebook koşumu `[B-QC-LOGIN]` | WP9 | ~~**BLOKE: erişim** (QC login)~~ **[2026-08-23 GÜNCEL — blok gerekçesi yanlıştı: QC FREE hesap-açma bloğu 2026-08-03'te KALKMIŞTI (WP9 keşfi); gerçek blok MAKİNE KURULUMU (dotnet YOK, docker YOK; boyut L). Notebook-koşumu operatör-bloğu ayrı ve geçerli]** |
 | `23b` çıkış slipajı | WP1 | ASKIDA: örneklem bekliyor → **MUTABIK KILINDI (2026-08-22):** sorusu iki kartta yaşıyor — gerçek-dolum bandı `EDG-2026-042` K2/K3 (birikiyor), replay-varsayım tarafı `EDG-2026-045`; ayrı iş üretmez, o ikisiyle kapanır |
 | Faz-6 BEŞ KİLİT `[B-FAZ6-KILIT]` | WP3 | **ASKIDA: kanıt-şartlı** |
 
@@ -326,16 +327,18 @@ detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kal�
 > bayat bir örneği yakalandı (M1 'en yüksek kaldıraç' derken kart 15 gündür kill#1'le arşivdeydi).
 > Metin SİLİNMEDİ (tarihçe-koru) — yetkisi daraltıldı.
 
+**SON TAZELEME: 2026-08-13 — hücreler fotoğraftır, yetkili kaynak §2 TAHTA + WP gövdeleridir (2026-08-23 süpürme: en az 6 hücre bayat; barizleri aşağıda köşeli-ayraçla damgalandı).**
+
 | WP | durum | kapsam | açık kalemler | dosya-sınırı | kanıt-kartı |
 |---|---|---|---|---|---|
-| **WP1 İcra ve Friksiyon** _(eski: WP-E + Ö-23 + Ö-13)_ | 🔴 aktif | emrin doğduğu andan dolduğu ana kadar: iki-motor icra sadakati · E1-E5 hattı · gerçek TCA/friksiyon defteri | **23c K1 dinlenen limit (D5 — kapanmadan hiçbir limit-tavanı kararı verilemez)** · 23d bar-içi stop varsayımı · 23e gün-içi pencere (altyapı) · 23f `gap_behavior:cancel` elenmeli · 23b çıkış slipajı (örneklem bekler) · WP-E 6 boşluk sınıfı (#1/#2/#5/#6/#7/#8) + E2 canlı-geçiş · 13 scale-out latent (düşük) · A6 şerh önerisi (Rol-1 kararı) | `loop.py` · `adapters/alpaca.py` · `broker.py` · `analytics`(cf) | EXE-2026-001(+R1/R2) · EXE-2026-002 · EDG-2026-037/038 |
-| **WP2 Sermaye ve Koruma** _(eski: WP-S + Ö-27 + Ö-7 + Ö-9/Ö-18)_ | 🔴 aktif — **ACİL** | sermaye defterinin, pozisyon korumasının ve P&L görünürlüğünün aynı gerçeği söylemesi | **koruma yeniden-kurulumu — 4 pozisyon ÇIPLAK (§5 KOVA-1)** · **equity_curve zinciri (D1 ACİL: `seed_boundary` ONARIMI → kadanslı yazar → pano reset-penceresi)** · davranışsal EOD süpürme kanıtı hâlâ KAYITSIZ (A4) · SB-2 `drift_sinifi` · 4 pozisyon adet-sapması (operatör yön kararı) · melez pozisyonlar + dormant icra (§5) | `adapters/alpaca.py` · `store.py` · `obs.py` · `ledgerstamp.py` · `loop.py` | EXE-2026-001-R1/R2 · EXE-2026-002(+R1) · EDG-2026-036/038 |
-| **WP3 Öğrenme Döngüsü** _(eski: WP-L + Ö-28 + Ö-10 + Ö-19)_ | 🔴 aktif _(eski "📋 tetik-şartlı" — A1 ile ÇÜRÜDÜ)_ | hipotez üretiminden ship'e giden döngünün kendisi + OPT parametre-evrim boru hattı + Faz-6 merdiveni | **28a görünmez süzgeç (EN ÜST — 2026-08-13 17:26'da hâlâ ateşliyordu)** · **28d kapı ÖLÇEMİYOR (chop 27 < 30)** · 28c tek satır / 21 tekrar · 28e/28f/28g/28h · 28i incumbent holdout −0,5366 · OPT Faz-1 serbest / Faz-2 28d'ye bağımlı · Faz-6 BEŞ KİLİT kanıt-şartlı | `hermes.py` · `reflect.py` · `probgate.py` · `bounds.yaml` | EDG-2026-036 · KYS-2026-002 |
+| **WP1 İcra ve Friksiyon** _(eski: WP-E + Ö-23 + Ö-13)_ | 🔴 aktif | emrin doğduğu andan dolduğu ana kadar: iki-motor icra sadakati · E1-E5 hattı · gerçek TCA/friksiyon defteri | **23c K1 dinlenen limit (D5 — kapanmadan hiçbir limit-tavanı kararı verilemez)** · 23d bar-içi stop varsayımı **[2026-08-23: KAPANDI — `EDG-2026-045` measured, 9d2cfb9]** · 23e gün-içi pencere (altyapı) · 23f `gap_behavior:cancel` elenmeli **[2026-08-23: KAPANDI — 746cbe8, hüküm EXE-001 gap-eksenine işlendi]** · 23b çıkış slipajı (örneklem bekler) · WP-E 6 boşluk sınıfı (#1/#2/#5/#6/#7/#8) **[2026-08-23: sınıf v234'le 08-12'de kapanmıştı — §7 2026-08-22 kaydı]** + E2 canlı-geçiş · 13 scale-out latent (düşük) · A6 şerh önerisi (Rol-1 kararı) | `loop.py` · `adapters/alpaca.py` · `broker.py` · `analytics`(cf) | EXE-2026-001(+R1/R2) · EXE-2026-002 · EDG-2026-037/038 |
+| **WP2 Sermaye ve Koruma** _(eski: WP-S + Ö-27 + Ö-7 + Ö-9/Ö-18)_ | 🔴 ~~aktif — **ACİL**~~ **[2026-08-23: cephe 08-22'de TAM KAPANDI — §7]** | sermaye defterinin, pozisyon korumasının ve P&L görünürlüğünün aynı gerçeği söylemesi | **koruma yeniden-kurulumu — 4 pozisyon ÇIPLAK (§5 KOVA-1)** **[2026-08-23: BAYAT — 08-22 ölçümü korumasız 0/7]** · **equity_curve zinciri (D1 ACİL: `seed_boundary` ONARIMI → kadanslı yazar → pano reset-penceresi)** **[2026-08-23: KAPANDI v264]** · davranışsal EOD süpürme kanıtı hâlâ KAYITSIZ (A4) · SB-2 `drift_sinifi` · 4 pozisyon adet-sapması (operatör yön kararı) · melez pozisyonlar + dormant icra (§5) | `adapters/alpaca.py` · `store.py` · `obs.py` · `ledgerstamp.py` · `loop.py` | EXE-2026-001-R1/R2 · EXE-2026-002(+R1) · EDG-2026-036/038 |
+| **WP3 Öğrenme Döngüsü** _(eski: WP-L + Ö-28 + Ö-10 + Ö-19)_ | 🔴 aktif _(eski "📋 tetik-şartlı" — A1 ile ÇÜRÜDÜ)_ | hipotez üretiminden ship'e giden döngünün kendisi + OPT parametre-evrim boru hattı + Faz-6 merdiveni | **28a görünmez süzgeç (EN ÜST — 2026-08-13 17:26'da hâlâ ateşliyordu)** · **28d kapı ÖLÇEMİYOR (chop 27 < 30)** **[2026-08-23: BAYAT — teşhis 08-22'de TAMAM, öncül çürüdü (gerçek mekanizma bütçe bağlaşımı); dönüşen kalem chop bütçe-kapalılığı OPERATÖR KARARI — §2 TAHTA]** · 28c tek satır / 21 tekrar · 28e/28f/28g/28h · 28i incumbent holdout −0,5366 · OPT Faz-1 serbest / Faz-2 28d'ye bağımlı · Faz-6 BEŞ KİLİT kanıt-şartlı | `hermes.py` · `reflect.py` · `probgate.py` · `bounds.yaml` | EDG-2026-036 · KYS-2026-002 |
 | **WP4 Veri ve Evren** _(eski: WP-U + WP-D + Ö-8)_ | 🔶 aktif (stratejik ana cephe) | girdi verisinin bütünlüğü + ölçülen evrenin kendisi (PIT üyelik, delist-bar, karantina, split) | PIT mid-cap üst-sınır (EDG-018 veri-kapısı) · delist-bar kaynağı + FINVIZ (§5) · `dataset.load↔bars_integrity` bağlama (§5) · türetilmiş artefakt yeniden üretimi · seans-içi boşluk · earnings kapsama+fail-open · MNST split düzeltmesi (kart-önce) | `research/pit_universe/` · `adapters/data.py` | EDG-2026-018/021/022 |
 | **WP5 Ölçüm Altyapısı** _(eski: WP-M + WP-S2 + Ö-4 + Ö-14 + Ö-20 + Ö-16)_ | 📋 aktif | ölçümün kendisinin doğru olması: metodoloji/yasa borçları · görünürlük borçları · K-defteri · paket-bağımlı eşikler · korunum kovaları | ~~M1 kıyas-kirlenmesi~~ **KAPANDI: kill#1, KYS-2026-001, 2026-08-02 — yanlılık pratik-önemsiz** · M2 DSR-yarısı → Ö-4 aracı (D6) · M7/M8/M9 · M11 · 2B/2C/2D/A4 · kill#4 uygulama · Faz-5 örneklem (iş ister, kod değil) · 20c yönetişim asimetrisi · 20d ince marjlar · korunum kovası (kalan **3**) · kart biçim/lint | `analytics` · `reflect` · `dataset` · `api.py` · `web/app.js` · `guard.py` | KYS-2026-001(ARŞİV) · KYS-2026-002 · EXE-2026-002-R1 |
-| **WP6 Sistem Bütünlüğü** _(eski: WP-H + Ö-25 + Ö-26 + Ö-2)_ | 🟡 aktif | kodun ve dağıtımın kendine sadakati: sürüm kontrolü · atomik yazım · sertleştirme · ölü/ezilen bileşen · "aynı gerçek iki yerde" kapıları | **26 değer-eşitliği kapısı (D3 ACİL — 26 kapısız çift)** · 25a KALDIR(14) / 25b DAMGALA(6) / 25c DİRİLT(3) / 25d ezilme zinciri / 25e öğrenme 0 ship → WP3 · **F9 dagit kapsamı dışı dört canlı artefakt** · H3 tur-2 seccomp · LoadCredential+OCI (§5) · gözlemlenebilirlik adayları a-e · A17 kaynak-içi çapa bayatlığı | `store.py` · `auth.py` · `watchdog.py` · `hermes.py` · `deploy/` · `dagit.sh` | — |
+| **WP6 Sistem Bütünlüğü** _(eski: WP-H + Ö-25 + Ö-26 + Ö-2)_ | 🟡 aktif | kodun ve dağıtımın kendine sadakati: sürüm kontrolü · atomik yazım · sertleştirme · ölü/ezilen bileşen · "aynı gerçek iki yerde" kapıları | **26 değer-eşitliği kapısı (D3 ACİL — 26 kapısız çift)** **[2026-08-23: "26 kapısız çift" BAYAT — envanter: 12 kaynağında kapanmış + 5 bağlı + 9 gerekçeli-bağlanmamış; `EQUIVALENT_TRUTHS` 9 olgu; kalan ortamlar-arası 3 çift]** · 25a KALDIR(14) / 25b DAMGALA(6) / 25c DİRİLT(3) / 25d ezilme zinciri / 25e öğrenme 0 ship → WP3 · **F9 dagit kapsamı dışı dört canlı artefakt** · H3 tur-2 seccomp · LoadCredential+OCI (§5) · gözlemlenebilirlik adayları a-e · A17 kaynak-içi çapa bayatlığı | `store.py` · `auth.py` · `watchdog.py` · `hermes.py` · `deploy/` · `dagit.sh` | — |
 | **WP7 Skill Katmanı** _(YENİ CEPHE 2026-08-13; eski: Ö-24 — bugüne dek WP'si yoktu)_ | 🆕 aktif | skill'in çağrılıp çağrılmadığı, izinin tutulduğu ve karar yüzeyine bağlandığı hat | 24b SOUL kilidi açıldı ama **HİÇ SINANMADI** · 24c ana danışma yolu ÖLÜ (§5 KOVA-3) · 24d pilot-S1 A/B · **24e çekimser teşviki (terfinin ASIL duvarı)** · 24f SKILL.md↔kod bağı yok · 24g sprint sızıntısı · skill rozeti damgası (C10, eski Ö-25b) | `skills.py` · `hermes.py` · `SOUL.md` · `skills/` | EDG-2026-019 |
-| **WP8 Pano ve Operatör** _(eski: WP-UX + WP-P + Ö-3)_ | 🟡 frontend esasen bitti | operatörün gördüğü yüzey (icra) + kontrol-odası doktrini (kabul çıtası) | ~~AÇIK ÜRETİM ARIZASI: `/api/diagnostics` 16,7s~~ ✅ v243 kapattı (08-14; dördüncü kopya, 08-22 Ö-49 süpürmesi) · D3-b F3-F13/F15 · D3-c C2-4/C2-5/6. çalışma · F8 durum sözlüğü (kanonik okuyucu ön-şartlı) · 15 bekçi mekanizması + halt_learning | `web/app.js` · `api.py` · `docs/RUNBOOK.md` | harita: WP8 detayı |
+| **WP8 Pano ve Operatör** _(eski: WP-UX + WP-P + Ö-3)_ | 🟡 frontend esasen bitti | operatörün gördüğü yüzey (icra) + kontrol-odası doktrini (kabul çıtası) | ~~AÇIK ÜRETİM ARIZASI: `/api/diagnostics` 16,7s~~ ✅ v243 kapattı (08-14; dördüncü kopya, 08-22 Ö-49 süpürmesi) · D3-b F3-F13/F15 · D3-c C2-4/C2-5/6. çalışma · F8 durum sözlüğü (kanonik okuyucu ön-şartlı) **[2026-08-23: tasarım belgesi yazıldı — H0→H1]** · 15 bekçi mekanizması **[2026-08-23: "15" bayat — F8 ölçümü 17]** + halt_learning | `web/app.js` · `api.py` · `docs/RUNBOOK.md` | harita: WP8 detayı |
 | **WP9 QuantConnect** _(eski: WP-QC)_ | 🆕 aktif | platform-içi ölçüm + LEAN yerel motor (asla arşiv-kaynağı değil) | C2-4 `lean init` QC-login-bloklu (§5) VEYA dotnet-CLI'sız L-boyut · FREE fizibilite ②③④⑥⑦ · notebook koşumu (§5) | `research/qc_dogrulama/` | EDG-2026-021/022 |
 | **WP10 Referans Verisi** _(eski: WP2 — EDGAR)_ | 🟢 borç yok | EDGAR PIT fundamentals adayları | açık borç YOK; yeni PIT-aday özniteliği ancak KART-önce açılır | skor bileşeni + `bounds.yaml` | EDG-2026-016(SUCCESS) · 012/013/014 |
 | **WP11 Strateji ve Seçilim** _(eski: Ö-15 + Ö-29 + Ö-12)_ | 🔶 aktif | ne alıp sattığımızın kendisi: kurulum arsenali · seçilim kalitesi · boyutlama · rejim | ARSENAL POLİTİKASI (15e giriş + 29 çıkış, ortak kanıt çıtası; **pullback kararı §5 KOVA-2**) · 15d PIT-temiz faktör seti (OPT Faz-2'nin yeni ilk müşteri adayı) · 15g slot↔sektör tavanı yapışıklığı · **15c evren genişletme ASKIDA (C6 çözülene dek)** · C6 uzlaştırma: evren mi ısı mı bağlıyor | `strategy.py` · `guard.py` · `bounds.yaml` | EDG-2026-026/033/034/035/039 |
@@ -391,7 +394,7 @@ sadakati, giriş/çıkış limit rejimi, gerçek slipaj/TCA defteri ve replay'in
   abartılmış maliyetle verilmiştir." Fırsat kanıtı `:335-345`: 100 bps tavanla EMR/BKNG/AMGN limit
   fiyatı aynı seansta işlem gördü. **Canlı davranış DEĞİŞMEDİ** — işletim noktası REF·limitsiz
   rejiminde kaldı (operatör hükmü 2026-08-07), K defterine etki YOK; askıya alınan tek şey
-  gerekçenin gücü. Şerh, WP1-B/23c (K1 kapanışı) tamamlandığında kalkar.
+  gerekçenin gücü. Şerh, WP1-B/23c (K1 kapanışı) tamamlandığında kalkar. **[2026-08-23: şerh KALKTI — kalkış kaydı kartta (`EXE-2026-001` `k1_serhi` bloğu); yerine EXE-006 hükmü geçer: E1 yeniden açık, karar §5 `[B-E1-LIMIT]`]**
 
 #### WP1-B · İCRA/FRİKSİYON HATTI _(taşındı: Ö-23, eski satır :1006-1020 — 2026-08-13; §4 boşaltıldı)_
 _(denetim C2: Ö-23 WP-E'nin alt-cephesidir, ayrı backlog kalemi değil. D5: **Ö-23'ün TAMAMININ
@@ -405,12 +408,12 @@ _(denetim C2: Ö-23 WP-E'nin alt-cephesidir, ayrı backlog kalemi değil. D5: **
     işaretli (E1 grid vs 885-kesim) ve bu düzeltilmeden hiçbir limit-tavanı kararı verilemez · **[2026-08-23 GÜNCEL — SATIR BAYATTI, yedinci vaka: modelleme ZATEN KAPANDI (EXE-2026-005 H3 bar_low düzeltmesi, çivili) ve EXE-2026-006 K=8 grid'i onunla yeniden koştu → E1 hükmü YENİDEN AÇIK ama H2 ölçülemedi + Ö3 ΔP&L CI'ları 4/4 sıfır-içi: 'bacağı aç' bu ölçümden ÇIKARILAMAZ. Kalan iş ölçüm değil OPERATÖR KARARI (canlı execution_v2 yapılandırması; düşük-güç şerhiyle) — EXE-001 K1 şerhi kalkmış sayılır, karar kalemi §5'e adaydır.]** ·
     **23d BAR-İÇİ STOP VARSAYIMI** — `broker.py:596` stop dokunuşunu `eff_stop`ta dolmuş sayıyor,
     stop-tetik slipajı SIFIR; giriş LİMİT (tavanlı) ↔ çıkış stop→MARKET (tavansız) asimetrisiyle
-    birleşince adı konmuş bir iyimserlik · **23e GÜN-İÇİ PENCERE** — 13:30-13:45 menzili 146,7 bps,
+    birleşince adı konmuş bir iyimserlik **[2026-08-23 KAPANDI: `EDG-2026-045` measured (9d2cfb9)]** · **23e GÜN-İÇİ PENCERE** — 13:30-13:45 menzili 146,7 bps,
     13:45-14:00'te 84,9 (−%42), bedeli +3,4 bps sürüklenme; AMA bugünkü replayde MODELLENEMEZ
     (dakika barı yolu yok, `timeframe=1Day` tek yol) → altyapı kalemi **[2026-08-23 GÜNCEL — ÖLÇÜLDÜ: replay engeli VERİ tarafında eridi (canlı bars_intraday dakika arşivi); `EDG-2026-047` K=1 ölçtü, Ö1 ATEŞLEDİ: Δ%menzil −%42,3 CI [−%44,3, −%40,1] — dış n=401 ölçümünün birebir replikasyonu. Fiyat etiketi: sürüklenme medyan +4,65 bps (|m2| 55,4 geniş). Pencere-kaydırma artık §5 kalemi [B-PENCERE-KAYDIR]; karar+kart operatörde.]** · **23f `gap_behavior: cancel`
     ELENMELİ** — koşulu TOTOLOJİ (`entry_trigger`=sinyal barı kapanışı, referans aynı → hep true);
-    filtre değil KAPATMA DÜĞMESİ (%51 ya da %100 işlem keser) · **23g ADV/likidite sıkılaştırma ATIL**
-    (etki ≤0,8 bps — kapatılan kalem). *öncelik: 23c>23d>23e; 23f/23g karar-gerektirmez.*
+    filtre değil KAPATMA DÜĞMESİ (%51 ya da %100 işlem keser) **[2026-08-23 KAPANDI: 746cbe8 (08-22) — hüküm `EXE-2026-001` gap-eksenine işlendi, canlanma koşulu beyanlı]** · **23g ADV/likidite sıkılaştırma ATIL**
+    (etki ≤0,8 bps — kapatılan kalem). *öncelik: ~~23c>23d>23e; 23f/23g karar-gerektirmez~~ **[2026-08-23: sıralama bayatladı — 23c/23d/23f kapandı, 23e karar+kart operatörde (§5 `[B-PENCERE-KAYDIR]`); hatta açık ölçüm kalemi yalnız 23b (örneklem bekler)]**.*
 
 #### WP1-C · Scale-out latent kusuru _(taşındı: Ö-13, eski satır :833-842 — 2026-08-13)_
 _(denetim D13: **düşük KALIR** — ve TCA bunu pekiştirdi: scale-out ek dolum bacağı üretir, gerçek
@@ -426,7 +429,7 @@ friksiyonda daha da zararlı; EDG-027/029 hükümleri güçlenir.)_
     alet kapalı). *gerekçe: büyük gap-kazananlar budanıyor (ENPH +12.3R→0.72R) · boyut: S-M ·
     bağımlılık: kart · öncelik: yüksek (çıkış-kanaması ailesi).*
 
-### WP2 — Sermaye ve Koruma 🔴 _(eski: WP-S + Ö-27 koruma-elle + Ö-7 adet-sapması + Ö-9/Ö-18 equity_curve)_
+### WP2 — Sermaye ve Koruma 🔴 **[2026-08-23: KAPANMIŞ CEPHE — "WP2 CEPHESİ TAM KAPANDI" 2026-08-22 (§7; 2af0e65, 6b29087); aşağıdaki gövde tarihçedir]** _(eski: WP-S + Ö-27 koruma-elle + Ö-7 adet-sapması + Ö-9/Ö-18 equity_curve)_
 
 **KAPSAM (tek cümle):** Sermayenin defteri, pozisyonun koruması ve P&L'in görünürlüğü — kitap ↔
 broker ↔ pano üçlüsünün aynı gerçeği söylemesi.
@@ -435,6 +438,7 @@ broker ↔ pano üçlüsünün aynı gerçeği söylemesi.
 > EMR/NUE **dördü de açık ve broker'da canlı koruyucu stop YOK** (`korumasiz_motor_disi_pozisyon`
 > son 7 günde **26 kez**). §3 GÜNCEL DURUM'un "4 pozisyon KORUMALI" iddiası (2026-08-09) bugün
 > YANLIŞ ve düzeltildi. Operatör kalemi §5 KOVA-1'de.
+> **[2026-08-23 TARİHÇE DAMGASI: bu blok 08-07→13 penceresinin fotoğrafıdır — 08-22 A1 ölçümü korumasız 0/7 (yedi motor pozisyonu TAM korumalı; §2 TAHTA H6 satırı). ACİL DEĞİL; bunu okuyup acil koruma-kurulum turu AÇMAYIN (çift-emir riski, CLAUDE.md §5)]**
 
 #### WP2-A · Sermaye/defter bütünlüğü + koruma çekirdeği _(eski WP-S gövdesi; 2026-08-07 gecesi, kaynak: canlı risk turu)_
 **BU WP'NİN DOĞUŞ SEBEBİ:** 2026-08-06 gecesi dört motor pozisyonu KORUMASIZ kaldı ve sistem
@@ -485,7 +489,7 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   reddedilen planda da yazılır. v226 `api.py._yama` bacağı makbuzun restart'ı atlatmasını sağladı
   (loop bacağı zaten kalıcıydı, eksik olan pano/nabız bacağıydı — 08-06 AMGN vakası).
   Gerekçe: 08-05 sapmasını çözmek üç ayrı deftere bakmayı gerektirdi; makbuz tek satırda söylerdi.
-- **📋 SB-2 — `MIRROR_DRIFT`e `drift_sinifi` alanı:** `boyutlama_tabani` / `derisk_carpani` /
+- **📋 SB-2 — `MIRROR_DRIFT`e `drift_sinifi` alanı:** **[2026-08-23: ✅ v257 damgası — `ayna_taban` sınıfıyla İNDİ]** `boyutlama_tabani` / `derisk_carpani` /
   `sermaye_kaynagi` / `kitap_kaydi` / `beyan_kaydi` / `icra` / `olculemedi`. Ölçülen gerekçe:
   08-05 gecesi DÖRT MIRROR_DRIFT alarmı bastı ve HİÇBİRİ sebebi adlandırmadı — belirti görüldü,
   sınıf söylenmedi. Aynı jeton koruma alarmıyla da paylaşılıyor (6 saatlik susturma penceresi
@@ -496,7 +500,7 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   cevaplanabilir kılar; geçmiş vaka için kanıt yok ve uydurulmayacak.
 - **🔒 OPERATÖR — melez pozisyonlar:** iç defter 54/64/43/33, ayna 25/37/22/22 (ayna hedef riskin
   ~%49'unu taşıyor; taban yerinde olsaydı 51/76/45/45 giderdi). Korumalar DOĞRU tarafa (broker
-  adedine) kuruldu. Farkın kapatılıp kapatılmayacağı operatör kararı.
+  adedine) kuruldu. Farkın kapatılıp kapatılmayacağı operatör kararı. **[2026-08-23 KAPANDI: Ö-53 kararı (08-22, B+D) — taban birleştirme + `_adet_benimse` sınıfı (v258) çözdü; 54/64/43/33 ↔ 25/37/22/22 sayıları 08-07 penceresinindi — tarihçe]**
 - **🔒 OPERATÖR — uyuyan kurulum yolu:** `dormant_setup` 31 plan üretti, **0 işlem** çıktı, biri
   GO hükmü aldı ve yine işleme dönmedi (kapı geçirdi, arkasında tüketen yok). `conservation.
   unexplained = 14` = 31 uyuyan − 17 NO_GO; hesap tam kapanıyor. İcraya bağlamak SİSTEMİN NE
@@ -507,7 +511,7 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   koruma×süpürücü" maddesi `:213-217`'de "davranışsal EOD kanıtı Pazartesi 13:30 UTC sonrası ilk
   gerçek süpürmede" diye söz vermişti — **o Pazartesi (2026-08-10) geçti, kayıt YOK.** Kapanış
   hükmü süpürücünün korumayı süpürmemesi hakkındaydı ve o hâliyle tarihçe olarak GEÇERLİ; ama bugün
-  koruma **hiç kurulmuyor** (yukarıdaki acil blok) — iki ayrı kusur, ikisi de açık.
+  koruma **hiç kurulmuyor** (yukarıdaki acil blok) — iki ayrı kusur, ikisi de açık. **[2026-08-23 KAPANDI: v265 — davranış 10/10 seansta ölçüldü + `eod_supurme_report` bekçisi (`wp2_eod_supurme_2026-08-22/`); "koruma hiç kurulmuyor" tarafı da 08-22'de kapandı (korumasız 0/7)]**
 
 #### WP2-B · KORUMA KURULUMU ELLE — OPERATÖR KALEMİ _(taşındı: Ö-27, eski satır :1066-1073 — 2026-08-13)_
 _(denetim C3: Ö-27 bir SERMAYE RİSKİ kalemidir ve WP-S'in doğuş sebebiyle birebir aynı sınıf —
@@ -519,7 +523,7 @@ canlı risk kalemi backlog'da yaşamaz. Karar bacağı §5 KOVA-2'de, acil eylem
     bekçi çıplaklığı GÖRÜP alarm üretiyor ama KURMUYOR. Ölçülen: `day` TIF bracket'ları gece öldürüyor,
     yeniden kurulum elle. Seans-içi çıplaklık 2,895 saat ölçüldü (0,445 seans — eşiği aşmadı).
     *karar: koruma yeniden-kurulumu otomatikleşmeli mi (risk AZALTAN yön, api.py'nin kendi şerhi bu
-    sınıfı onaya bağlamamayı savunuyor) — OPERATÖR.*
+    sınıfı onaya bağlamamayı savunuyor) — OPERATÖR.* **[2026-08-23 KAPANDI: karar VERİLDİ — B2=(c) (operatör 08-17, §7); A1 ölçümüyle 08-22'de kapandı (korumasız 0/7, "4 pozisyonun stop'u YOK" beyanı bayat) — tarihçe]**
 
 #### WP2-C · 4 pozisyon adet-sapması muhasebeli true-up _(taşındı: Ö-7, eski satır :765-773 — 2026-08-13)_
 7. **4 pozisyon adet-sapması muhasebeli true-up (NUE 54/25 · EMR 64/37 · BKNG 43/22 · AMGN 33/22)** —
@@ -530,9 +534,9 @@ canlı risk kalemi backlog'da yaşamaz. Karar bacağı §5 KOVA-2'de, acil eylem
    operatörde: (a) kitabı broker-gerçeğine indir (25/37/22/22; iç R-muhasebesi düzeltme-satırlı) ya da
    (b) iki-motor kabulü + drift_sinifi 'makbuzsuz_boyut' (olculemedi yerine açıklanmış sınıf, alarm
    anlamlı kalır). Uygulama her iki yönde de muhasebe-satırlı, SESSİZ DEĞİL. *gerekçe: kitap↔broker
-   bütünlüğü · boyut: S-M (kök artık belli) · bağımlılık: operatör yön kararı (§5) · öncelik: yüksek.*
+   bütünlüğü · boyut: S-M (kök artık belli) · bağımlılık: operatör yön kararı (§5) · öncelik: yüksek.* **[2026-08-23 KAPANDI: yön kararı VERİLDİ — Ö-53 (08-22, B+D; v258); NUE artık ayrışma listesinde bile değil (08-22: AMGN/BDX/BKNG/CRM/EMR/MRK/MRNA); kalan olsa olsa geriye dönük makbuzsuz-dönem beyanı]**
 
-#### WP2-D · equity_curve ZİNCİRİ — üç bacaklı TEK kalem _(BİRLEŞTİRİLDİ: Ö-9 [:783-789] + Ö-18 [:996-1002], denetim C1 — "aynı nesne, iki madde")_
+#### WP2-D · equity_curve ZİNCİRİ — üç bacaklı TEK kalem _(BİRLEŞTİRİLDİ: Ö-9 [:783-789] + Ö-18 [:996-1002], denetim C1 — "aynı nesne, iki madde")_ **[2026-08-23: ✅ v264 damgası — üç bacak 08-22'de KAPANDI (`loop.py:2291+` kadanslı yazar · `ledgerstamp.seed_boundary:269` donmuş-kanıt okuması · pano beyanı); §2 TAHTA H6 satırı — gövde tarihçedir]**
 
 **ÖNCELİK: ACİL (denetim D1 — eski "orta-yüksek"/"yüksek").** Gerekçe: risk artık gelecekte değil
 **bugün**. `EDG-2026-036…yaml:175-178`: "`equity_curve` YAZILMADI … Canlı eğri 2026-07-20'de
@@ -596,7 +600,7 @@ karşı-gerekçesini taşıyor (`hermes.py:4003-4007`) — "tek satır aç" diye
       her öneriyi atıyor. Aynı pencerede deftere giren: **1**. İlk 2026-08-02T14:00, **son bugün
       17:26**. Yani "52 hipotez" üretimin değil, ÖN-ELEMENİN hayatta kalanları. *öncelik: ACİL.*
       **DURUM (2026-08-14): düzeltme v247'de yazıldı ama DAĞITILMADI — canlıda hâlâ akıyor;
-      kuru-koşum akıbet ölçümü Ö-48'de.**
+      kuru-koşum akıbet ölçümü Ö-48'de.** **[2026-08-23 GÜNCEL: v247 CANLIDA — 08-22'de en az iki tam dağıtım indi (cbcdeed tur-kapanışı + 5d75dcf Ö-53; rsync tüm repoyu taşır); kart `EDG-2026-041` measured (D1+D2), 28a tahtada H6]**
     · **28b "52 RET" ASLINDA 23:** 22'si TEKRAR (guard hafızası kesti, hepsi tek gün 07-14), 4'ü
       NO-OP (aday bit-bit aynı), 1 ölçülemeyen, 2 ship. Sayı olduğundan büyük görünüyordu.
     · **28c TEKRAR DESENİNİN KÖKÜ TEK SATIR:** `reflect.propose_deterministic`de `already_failed`
@@ -726,7 +730,7 @@ OPT'un freni "PBO 0.6286" cümlesine ek: **fren ancak kapı ÖLÇEBİLİYORSA fr
   günlerin **%92**'sinde pozisyonu 1'e kısıyor (ROADMAP:425) → **"evren +X → işlem +Y" ÖLÇÜLEMEDİ**
   (bilerek uydurulmuyor: aday-havuzu mu, tavan mı bağlıyor belirsiz). ÖNERİ **EDG-2026-022** ("Evren
   bağlayıcı kısıt mı?" — OTONOM/bloksuz; altyapı hazır: `backtest.py` candidate_log + eff_max_open +
-  plan_log; yeni bar GEREKMEZ): FINVIZ harcamasını **DE-RISK eder** (evren bağlamıyorsa para boşa).
+  plan_log; yeni bar GEREKMEZ): FINVIZ harcamasını **DE-RISK eder** (evren bağlamıyorsa para boşa). **[2026-08-23: kart 08-09'da ÖLÇÜLDÜ — status: measured; öneri metni tarihçedir]**
   PIT fundamentals **EDGAR'la ÇÖZÜLÜ** (evrene bağlı otonom kol, blok değil). Delist-bar: 703 çıkıştan
   yalnız 12'si arşivde barlı (%1,71); EDG-016 penceresi %96,57 sıfır-bar (kaynak kararı §8-9'da).
 
@@ -892,7 +896,7 @@ görünürlük borçları, K-defteri muhasebesi, paket-bağımlı eşik envanter
     YAZILDI (v225) ama CANLI systemd hâlâ boş `SuccessExitStatus=` ile koşuyor — birim dosyası
     değişikliği reload+restart bekliyor ("kurulu ≠ çalışır" doktrini). N1 bildirim kanalı açılmadan
     ÖNCE inmeli, yoksa her restart "FAILED" sayılıp OnFailure bildirir. Bakım penceresi + elle
-    test-ateşleme. *Kalem 1 (SABAH TRİYAJI en ucuz + kanal-kapılayan).*
+    test-ateşleme. *Kalem 1 (SABAH TRİYAJI en ucuz + kanal-kapılayan).* **[2026-08-23: ✅ 08-09 KAPANDI — OB-2 operatörce yapıldı, canlı `SuccessExitStatus=143` doğrulandı (Result=success; §5 `[B-SYSTEMD-143]`); bu gövde kopyası güncellenmeden kalmıştı]**
   · **skill görüş canlı-kanıt (P3, ölçüm-borcu):** N2b/EDG-2026-019 kod indi (v218) ama R-figürleri
     kuru-koşu (`eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi); birkaç EOD penceresi +
     EDG-2026-019 ölçüm kodu bekliyor.
@@ -910,7 +914,7 @@ görünürlük borçları, K-defteri muhasebesi, paket-bağımlı eşik envanter
   `strategy.yaml` scp + scoreboard DB yazımı AYRI adımdır; scp'lenen `scoreboard.json`'u bayat-defter
   migrasyonu `.migrated`'a taşır ve DB'ye YAZMAZ" prosedürü RUNBOOK'a yazılmadı —
   `grep "sürüm terfisi" docs/RUNBOOK.md` = **0**, RUNBOOK 2026-08-13 21:58'de yeniden üretilmiş
-  olmasına rağmen. **Aynı turda WP6/F9'un RUNBOOK satırıyla birlikte kapatılır.**
+  olmasına rağmen. **Aynı turda WP6/F9'un RUNBOOK satırıyla birlikte kapatılır.** **[2026-08-23 KAPANDI — SON HAL 0e1c11a: sözleşme kaynağına taşındı (dagit.sh BAŞLIĞI — RUNBOOK 'yazılmaz, üretilir' olduğundan elle bölüm üreticide silinirdi); RUNBOOK'a girişi üretici-kapsam kararına bağlı → §5 [B-RUNBOOK-KAPSAM]]**
 
 #### WP5-C · DSR girdi-serisi donmuş-çekim aracı _(taşındı: Ö-4, eski satır :742-747 — 2026-08-13)_
 _(denetim D6: öncelik **orta → orta-yüksek.** DSR artık anlamlı bir sayı (1e-06 → **0,0391**,
@@ -1024,7 +1028,7 @@ sertleştirme, ölü/ezilen bileşenlerin budanması ve "aynı gerçek iki yerde
   sınıfı düz yazımlar `memory.py:212` lessons.md + `run.py:172` scoreboard. systemd `SuccessExitStatus=143`
   birim dosyasında YAZILI (`meridian.service:82`) ama **CANLIDA DEĞİL** — A1 /etc birimi 08-02 tarihli,
   her restart exit-143 ile "FAILED" (son 3 günde 6 kez, fail-notify NO-OP kurtarıyor); **N1 bildirim
-  kanalının ÖN-ŞARTI** (daemon-reload + bakım penceresi + elle test-ateşleme — §8). H10 aşama-2 = saf
+  kanalının ÖN-ŞARTI** (daemon-reload + bakım penceresi + elle test-ateşleme — §8) **[2026-08-23: ✅ 08-09 KAPANDI — OB-2; canlıda doğrulandı, §5 `[B-SYSTEMD-143]`]**. H10 aşama-2 = saf
   OCI-bucket operatör-bloğu (§8-10). **WP-D'de otonom kod deliği KALMADI gibi** (bars_integrity sevk+
   kablolu, seans-içi boşluk dedektörü kurulu); açık kalan iki kalem OPERATÖR-bloklu (`dataset.load↔
   bars_integrity` bağlama = kapsam kararı + FMP planı). POZİTİF: E2 defteri kilit-8 kod düzeyinde kapanmış görünüyor.
@@ -1081,7 +1085,7 @@ sertleştirme, ölü/ezilen bileşenlerin budanması ve "aynı gerçek iki yerde
   kapı-dışı yazımı yakalar + auth._write 2-iplik×20 eşzamanlılık kanıtı + pozitif kontrol 4/4;
   77 passed). YENİ AÇIK UÇ (XS): `sprint.py:525` ortam dosyası düz write_text + SONRADAN chmod —
   kısa 0644 sır penceresi; secrets.py'nin fd-önce-0600 desenine çevrilmeli (motor-dosya penceresi:
-  046 inince).
+  046 inince). **[2026-08-23: ✅ v270 damgası (3d95f8f, aynı gece) — `sprint.py:527` `os.open(O_CREAT, 0o600)` ile doğuyor]**
 - **DASH-TOKEN LoadCredential HAZIR-BEKLEMEDE (2026-08-03; etkinleştirme OPERATÖR bakım-penceresi):**
   drop-in'ler deploy/oracle-a1/meridian.service.d/ (faz-1 LoadCredential, faz-2 ortam-kanalı-sıfır)
   + dash_token_credential.sh (rotasyon/kurulum/doğrulama/geri-alma; faz-2 farksal ölçümlü).
@@ -1117,14 +1121,14 @@ sertleştirme, ölü/ezilen bileşenlerin budanması ve "aynı gerçek iki yerde
   `deploy/oracle-a1/meridian-sprint@.service`, `deploy/oracle-a1/50-meridian-sprint.rules` (polkit),
   `SOUL.md` ve tick-watchdog **`deploy/oracle-a1/deploy.sh:111-119`** ile ELLE kuruluyor. `dagit.sh`ta
   bu dosyalara **sıfır atıf** (`grep "deploy/oracle-a1\|SOUL\|tick_watchdog\|polkit" dagit.sh` = 0);
-  `dagit.sh:224/267` yalnız `meridian meridian-barsarchive` durdurup başlatıyor. Bu **tam olarak
+  `dagit.sh:224/267` yalnız `meridian meridian-barsarchive` durdurup başlatıyor. **[2026-08-23 KAPANDI: [F9] içerik kapısı dagit.sh'ta, v266; 82b84a0]** Bu **tam olarak
   OB-2'yi doğuran "kurulu ≠ çalışır" sınıfı** — dört artefakt için sürüklenme bekçisi YOK.
   ÖNERİ: `dagit.sh`a repo↔canlı içerik-sha kapısı; en azından RUNBOOK'a "bu dört dosya dagit kapsamı
   dışıdır" satırı (WP5-B'nin "sürüm terfisi" RUNBOOK borcuyla **AYNI TURDA**). *öncelik: yüksek.*
 - **🆕 A17 — KAYNAK-İÇİ ÇAPA BAYATLIĞI (denetim A17, 2026-08-13; davranış YOK, yalnız yorum):**
   `state/goal.yaml:130` sektör-tavanı kuralını `guard.py:352` diye anıyor, gerçeği `guard.py:359`
   (WP11/15g doğru çapayı taşıyor) · `meridian/api.py:1890` "goal.yaml:**27** slippage_bps: 5" diyor,
-  gerçek `state/goal.yaml:58`. Tek turda düzeltilir (kod yorumu). *boyut: XS · öncelik: düşük.*
+  gerçek `state/goal.yaml:58`. Tek turda düzeltilir (kod yorumu). *boyut: XS · öncelik: düşük.* **[2026-08-23: ✅ v268 damgası (375abd5) — `state/goal.yaml:130` ve `api.py:2170` çapaları düzeltildi]**
 
 #### WP6-B · ÖLÜ/EZİLEN BİLEŞEN BUDAMASI _(taşındı: Ö-25, eski satır :1037-1058 — 2026-08-13)_
 25. **ÖLÜ/EZİLEN BİLEŞEN BUDAMASI (`docs/DENETIM-OLU-BILESEN-ENVANTERI-2026-08-13.md`)** — operatör
@@ -1173,7 +1177,7 @@ Kapı **Ö-20'nin yapısal panzehiridir**; her ekleme tek satır.)_
     (3 eşit / 0 ayrık / 1 beyanlı) ama `EQUIVALENT_TRUTHS` yalnız 4 çift taşıyor; split denetiminin
     **26 KAPISIZ çifti** onun genişleme listesi (sektör tavanı dörtlüsü, `DISCIPLINE_MIN_RR`,
     `min_sample` yedeği, alarm jetonları, registry-bayrağı↔ARMED_SETUPS…). Her ekleme tek satır.
-    *öncelik: yüksek — bugün bulunan split'lerin çoğu bu kapıyla kendiliğinden yakalanırdı.*
+    *öncelik: yüksek — bugün bulunan split'lerin çoğu bu kapıyla kendiliğinden yakalanırdı.* **[2026-08-23 GÜNCEL — GÖVDE BAYATTI, yetkili hâl §2 TAHTA/26 satırı: `EQUIVALENT_TRUTHS` bugün 9 olgu (`watchdog.py:2221`; ayrık 0); "26 KAPISIZ çift" çürüdü — envanter 08-22: 12 kaynağında kapanmış + 5 bağlı + 9 gerekçeli-bağlanmamış (`docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md`); kalan açık yalnız ortamlar-arası 3 çift]**
 
 #### WP6-D · Gözlemlenebilirlik/dağıtım iyileştirme adayları ✅ ARŞİV _(taşındı: Ö-2; 2026-08-23 KAPANDI — YEDİ KALEMİN YEDİSİ DE ZATEN KAPALIYMIŞ, beşinci bayat-beyan vakası)_
 _(2026-08-23 ölçümü: a-e + hermes:1965 göçü + CREDENTIALS_DIRECTORY okuyucusu — hepsi 08-02→08-09
@@ -1537,7 +1541,7 @@ _(taşındı: §4-40, eski satır :1876-1880 — 2026-08-23)_
   dilini kullanıp kullanmadığı denetlenmedi — denetim §I.)_ İkinci rol: **WP-P ≠ WP-UX** — WP-P =
   gereksinim/doktrin (HP-HMI/ISA-101/EEMUA-191/Few-Tufte kontrol-odası) = **WP-UX D6 kabul çıtası**;
   WP-UX = yüzey/icra. WP-P yüzey işi YENİDEN AÇILMAZ (WP-UX aynı yüzeyleri düzenler).
-- **KALAN (WP-P kolu):** 15 bekçi mekanizması + `halt_learning` (aynı desen, ayrı tur).
+- **KALAN (WP-P kolu):** 15 bekçi mekanizması + `halt_learning` (aynı desen, ayrı tur). **[2026-08-23: "15" sayısı bayat — F8 tasarım ölçümü 17 bekçi (kalem açık, sayı düzeltildi)]**
 
 #### WP8-C · F8 pano durum-sözlüğü _(taşındı: Ö-3, eski satır :736-740 — 2026-08-13)_
 3. **F8 pano durum-sözlüğü (WP-UX kalan F-kartlarının en iyi frontend adayı)** — dağınık `durum`
@@ -1684,7 +1688,7 @@ kalitesi, boyutlama ve rejim koşulluluğu.
       okunur. **ÖNCELİK: orta → ASKIYA** (denetim D9) — çünkü `EDG-2026-026:47-49` AYNI paket için
       "bağlayıcı kısıt **EVREN** (%99.55)" diyor: iki kart iki ayrı tasnifle **zıt manşet** üretiyor
       (bkz. WP11-D uzlaştırma kalemi). 15c'nin ve §5/FINVIZ'in önceliği bu çelişki çözülmeden
-      belirlenemez.
+      belirlenemez. **[2026-08-23: ASKI KALKTI — C6 uzlaştırma KAPANDI (çelişki DEĞİLMİŞ: iki tasnif aynı huninin İKİ KATIYMIŞ; §2 TAHTA H6 satırı)]**
     · **15d PIT-TEMİZ FAKTÖR SETİ + hermes arama yakıtı (OPT Faz-2'nin girdisi):** 031 dersi — elle
       bileşik-ağırlık YOK; yeni faktörler (EDGAR filed-tarihli earnings-drift, sektör-görece momentum)
       indicators'a kablolanır w=0 ile, hermes arama uzayına bırakılır; benimseme OOS-kapılı. *boyut: M ·
@@ -1706,7 +1710,7 @@ yönde: 15e "yeni aile EKLE (kanıt-önce)", 29 "bir aile ÇIKAR". Tek başlık 
     işlem n sabit (kapasite doldu). ZAYIFLIK: sonuç tek işleme bağlı (IRM/hammer +2.247$). Pullback'in
     ZARARI ise üç kaynakta tutarlı (replay n=6 **kazanma %0,0** · canlı n=4 −1,00R · cf n=21 −0,97R).
     Uygulanırsa: `ARMED_SETUPS`ten çıkar + yeniden-silahlanma eşiği yaz (cf'de n≥30 ∧ ort-R CI-alt>0).
-    Beklerken bedel: her seans slot+ısı+sermaye. *durum: KARAR BEKLİYOR (operatör sıraya aldı).*
+    Beklerken bedel: her seans slot+ısı+sermaye. *durum: KARAR BEKLİYOR (operatör sıraya aldı).* **[2026-08-23 GÜNCEL: karar VERİLDİ ve UYGULANDI — B1=A (operatör 08-22; c150902): `strategy.py:1059` `ARMED_SETUPS` üçlü (pullback yok), çiviler v260/v92; kalan yalnız canlı dağıtım (043 sonrası suite — kuyrukta)]**
     · **🆕 KAYIT (denetim §E.1/025, 2026-08-13):** EDG-025 "dormant kalır" derken canlı
       `strategy.py:1029` (repo) `ARMED_SETUPS`'ta **momentum_burst VAR** — operatör takdiri, kartta
       yazılı. ROADMAP'te bugüne dek görünmüyordu; arsenal politikasının kaydı olarak burada durur.
@@ -1720,14 +1724,14 @@ yönde: 15e "yeni aile EKLE (kanıt-önce)", 29 "bir aile ÇIKAR". Tek başlık 
       max_open'dan ayrılıp kendi parametresine bağlansın (kart-önce ölçüm: mevcut davranış korunacak
       şekilde payda sabitlenip slot serbest bırakılırsa ne değişir). *boyut: S-M · öncelik: orta
       (ölü knobu diriltmez ama iki tercihi ayırır) · not: 035 slot15 nokta-farkı (+354$, dd 0.1179)
-      tam bu kanaldan geldi — CI 0-içi olduğu için hüküm değil, işaret.*
+      tam bu kanaldan geldi — CI 0-içi olduğu için hüküm değil, işaret.* **[2026-08-23: ✅ YAPILDI — `sector_cap_basis` ayrıldı (`guard.py:359`); 620-hücre kalıcı matris; §2 TAHTA H6 satırı]**
 
-#### WP11-D · 🆕 UZLAŞTIRMA KALEMİ — bağlayıcı kısıt EVREN mi ISI mı? _(denetim C6, 2026-08-13; ÖLÇÜM GEREKMEZ — tasnif eşleme turu)_
+#### WP11-D · 🆕 UZLAŞTIRMA KALEMİ — bağlayıcı kısıt EVREN mi ISI mı? ✅ **[2026-08-23 KAPANDI]** _(denetim C6, 2026-08-13; ÖLÇÜM GEREKMEZ — tasnif eşleme turu)_
 `EDG-2026-026:47-49` "bağlayıcı kısıt **EVREN** (%99.55)" ↔ `EDG-2026-035:57-59` "Bağlayıcı kaynak
 **ısı zarfı**" ↔ `EDG-2026-039:63-64` "Bağlayan kısıt SLOT DEĞİL **ISI**". İki farklı tasnif
 (EDG-022'nin kısıt-sınıfı vs `heat_hard` NO_GO sayımı) **aynı pakete zıt manşet** veriyor. Bu bir
 ölçüm işi değil, iki tasnifin paydasını eşleme işidir. **BAĞLI KALEMLER:** WP11-A/15c önceliği ·
-§5 KOVA-3 FINVIZ kararı. _(Denetim §I sınır beyanı: hangisinin doğru payda olduğu ÖLÇÜLMEDİ.)_
+§5 KOVA-3 FINVIZ kararı. _(Denetim §I sınır beyanı: hangisinin doğru payda olduğu ÖLÇÜLMEDİ.)_ **[2026-08-23: ✅ KAPANDI — C6 uzlaştırma H6 (§2 TAHTA): çelişki DEĞİLMİŞ, iki tasnif aynı huninin İKİ KATIYMIŞ; 15c askısı kalktı]**
 
 #### WP11-E · Kapanmış kalemin izi _(Ö-12 ISI'nın piyasa-koşullu otomatik ayarı)_
 **✅ ÖLÇÜLDÜ-KAPANDI (EDG-2026-028, 2026-08-12; denetim B2/D11):** "DOSYA HÜKMÜ: sabit-5R + mevcut
@@ -2043,6 +2047,7 @@ envanter — hepsi AYNI kimliği taşır. Kimlikler kalıcıdır; blok kapansa d
 
 | kimlik | tek-cümle konu | beklediği şey (karar/anahtar/pencere) |
 |---|---|---|
+| `B-RUNBOOK-KAPSAM` | RUNBOOK üreticisinin onaylı betik kümesine `dagit.sh` eklensin mi (sürüm-terfisi sözleşmesi belgeye girsin diye; emsal: seçenek-C genişlemesi operatör onaylıydı) | operatör kararı (evet/hayır — tek satır BETIK_KUMESI değişikliği) |
 | `B-PENCERE-KAYDIR` | canlı tarama/emir penceresinin ~13:45 UTC'ye kaydırılması (23e; `EDG-2026-047` Ö1 ateşledi: risk −%42, bedel medyan +4,65 bps) | operatör kararı — strateji-kimliği değişikliği; EVET derse kart-önce uygulanır |
 | `B-CHOP-BUTCE` | chop bütçe-kapalılığı: kasıtlı politika mı (A) yan etki mi (B) — brief `docs/KARAR-BRIEF-CHOP-BUTCE-2026-08-22.md`; Rol-1 tavsiyesi: üçüncü yol (@chop üretimini kes + 'chop tabanı kartıyla açılır' notu) | operatör kararı (A / B / üçüncü yol) |
 | `B-KORUMA-KUR` | çıplak motor pozisyonlarının korumasının panodan `koruma_kur` ile yeniden kurulması (KOVA-1/A1) | operatör icrası (tek oturum) — tahta 2026-08-22: ölçümle kapandı (korumasız 0/7), blok tarihçe |
