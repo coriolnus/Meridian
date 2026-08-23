@@ -32,7 +32,13 @@ FAKE_SECRET = "SKKOVABFAKESECRET2233445566778899"
 
 @pytest.fixture
 def paper(sandbox_state, monkeypatch):
-    """Sahte kimlik + `alpaca_paper` arka ucu; taşıma SAĞLIKLI kabul edilir."""
+    """Sahte kimlik + `alpaca_paper` arka ucu; taşıma SAĞLIKLI kabul edilir.
+
+    Saat pencere İÇİNE donar (EXE-009+K2): giriş gönderimi artık sabah tetik penceresine bağlı;
+    buradaki çiviler gönderim/iptal MEKANİĞİNİ ölçer, pencereyi değil — koşum saatinden bağımsız
+    kalsınlar (pencerenin kendi çivileri test_pencere_kaydirma_v272'de)."""
+    import datetime as _dt
+    from meridian import barclock as _bc
     from meridian import secrets as secrets_mod
     monkeypatch.setenv("ALPACA_PAPER_KEY", FAKE_KEY)
     monkeypatch.setenv("ALPACA_PAPER_SECRET", FAKE_SECRET)
@@ -40,7 +46,9 @@ def paper(sandbox_state, monkeypatch):
     secrets_mod.clear_cache()
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     alpaca._note(True)
+    _bc.set_clock(lambda: _dt.datetime(2026, 7, 23, 14, 0, tzinfo=_dt.timezone.utc))
     yield sandbox_state
+    _bc.reset_clock()
     secrets_mod.clear_cache()
     alpaca._note(True)
 
