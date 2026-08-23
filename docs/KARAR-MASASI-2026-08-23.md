@@ -47,7 +47,7 @@ H3 tur-2 canlıda (tetik-testi kanıtlı; iki alet vakası yakalandı-düzeltild
 - İki yasak bekleyici betiği (dün 16:14, benim hatam) 10 saat sonra yakalandı, öldürüldü,
   ders kalıcı hafızada.
 
-## E. Gece-2 eklemeleri (2026-08-23 geç)
+## E. Gece-2 eklemeleri ✅ HEPSİ SONUÇLANDI (12/12 — brainstorm turu + iki canlı op kanıtla bitti) (2026-08-23 geç)
 - **bars_intraday retention** 🆕: arşivde tavan yok (~2,3GB/yıl; disk 39G boş — acele değil). Karar: retention süresi (öneri: 180 gün + bucket'a aylık arşiv) — 13-tasarımının açık sorusu.
 - **registry budaması uygulaması** (dry-run temiz: 3 alan × 133 örnek) — tek komut, istediğin an:
   `ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && .venv/bin/python ops/registry_olu_alan_budamasi.py --uygula'`
