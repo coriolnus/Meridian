@@ -54,3 +54,7 @@ H3 tur-2 canlıda (tetik-testi kanıtlı; iki alet vakası yakalandı-düzeltild
 
 ## F. Insider (15d-A6) fizibilite soruları (2026-08-23 gece — belge: TASARIM-15D-A6-INSIDER)
 Öneri EDGAR-ingest (bedava, M-boy). Beş ayrık onay: (1) yol onayı (EDGAR mi) · (2) hedef katman (research-arşiv mi canlı-defter mi — öneri: research) · (3) ~9k isteklik dikiş koşusu izni (kibar kadanslı, bir gece) · (4) derivative-tablo kapsam kararı · (5) kart sırası (A2 gelir-momentumundan önce mi sonra mı — öneri: sonra).
+
+## G. Eleme-gecesi eklemeleri (2026-08-24)
+- **C4/NOUS_MODEL kapanış adayı:** 24c'nin kapanışı KOVA-3'ün gerekçesini düşürdü — C4 bloğunun kapanış onayı senden.
+- **EDG-019 vakası bilgin:** görüş katmanı kill#1 ile kapatıldı (kartsız sevk + p95 ihlali); yeniden açılış resmî kart koşumuyla — istersen o ölçümü kampanya ÖLÇ sınıfına ekleriz.
