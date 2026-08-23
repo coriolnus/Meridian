@@ -1,4 +1,4 @@
-card_id: EXE-2026-007
+card_id: EXE-2026-008
 family: limit_bacagi_hukum_sinamasi   # EXE-006'nın B1-dünyası tekrarı — hüküm sınaması, tercih üretmez
 thesis: >
   B-E1-LIMIT operatör kararı (2026-08-23 brainstorm 3/7): E1 hükmü EXE-006'yla yeniden açık ama
@@ -40,7 +40,7 @@ kill_criteria:
   - "dolum kuralı broker.fill_entry DIŞINDA uygulanırsa geçersiz"
   - "EXE-006'nın çıktısı EZİLİRSE geçersiz — yeni koşum, eski kanıt dokunulmaz"
   - "H1/H2 tek tavandan okunursa geçersiz (monotonluk eğri iddiasıdır)"
-k_registry: {registered_at: "2026-08-23", trial_ids: [EXE-007-yeni-dunya/K8-4tavan-x-2dolum]}
+k_registry: {registered_at: "2026-08-23", trial_ids: [EXE-008-yeni-dunya/K8-4tavan-x-2dolum]}
 status: registered   # 2026-08-23 Rol-1 — ön-kayıt (K3 operatör kararı; ölçüm ajanı karta dokunmaz)
 beyanli_sinirlar: >
   (1) Maliyet bandı EXE-006'yla aynı iyimserliği taşır (045 şerhi) — mutlak P&L değil GÖRECELİ

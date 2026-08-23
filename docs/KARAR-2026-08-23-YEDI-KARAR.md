@@ -18,7 +18,7 @@ yüksek-AYRIK → haftalık rapor operatöre "geri-al önerisi" düşürür (ger
 Uygulama kart-önce (EXE-ailesi ön-kayıt) + pazartesi açılışından önce dağıtım.
 
 ## K3 — Limit bacağı (`B-E1-LIMIT`): YENİ DÜNYADA YENİDEN ÖLÇ
-`EXE-2026-007`: EXE-006'nın grid'i BİREBİR (cap {0.005,0.01,0.02,0.03} × dolum {yalnız_açılış,
+`EXE-2026-008`: EXE-006'nın grid'i BİREBİR (cap {0.005,0.01,0.02,0.03} × dolum {yalnız_açılış,
 dinlenen_limit} = K8) — şasi edg032c, aynı maliyet bandı (045 stop-slip şerhi beyanlı taşınır),
 kill listesi EXE-006'dan devir, H1/H2/H3 + asimetri beyanı aynen. Koşum 048 inince (ardışık).
 Canlı bacak ölçüm sonuçlanana dek KAPALI.
