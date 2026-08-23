@@ -8,8 +8,7 @@ Kapanma "kazara-aritmetik" ilan edildi (politika değil); yeniden açılma kanı
 **Paket:** (a) hermes `@chop` hipotez üretimi DURAKLATILIR (bugünkü üretim yapısal israf;
 notlandırma/teyit kapıları AYNEN) · (b) `EDG-2026-048` kartı: donmuş şaside chop-tabanı {45,60},
 GO = Δ CI-alt>0; GO çıkarsa canlıya alma AYRI operatör kararı · (c) 28d @chop dilimi "kart
-sonucuna bağlı" diline çekilir. — *Durum: kart koşuyor (kill#4 künye-tazeleme sagasıyla;
-protokol devredildi).*
+sonucuna bağlı" diline çekilir. — *Durum: SONUÇLANDI — NO-GO (Δ −18.266$, CI 0-içi; chop dilimi −26,3R + 99 iyi işlemi yerinden etti). Kapanma artık ölçülmüş politika; @chop duraklatması yürürlüğe girer, canlanma yalnız yeni kartla.*
 
 ## K2 — Pencere-kaydırma (`B-PENCERE-KAYDIR`): EVET, 042-HAKEMLİ SÜRESİZ
 Canlı sabah tarama/emir tetiği 13:30→**13:45 UTC** (EDG-047 kanıtı: risk −%42,3, bedel medyan

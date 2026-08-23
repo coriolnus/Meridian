@@ -1,0 +1,550 @@
+{
+ "kart": "EDG-2026-048",
+ "smoke": true,
+ "olcum_zamani": "2026-08-23T11:18:45+00:00",
+ "motor_sha256_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+ },
+ "motor_kunye_kill4_baslangic": {
+  "dosyalar": {
+   "broker.py": {
+    "simdi": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "kunye": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "esit": true
+   },
+   "backtest.py": {
+    "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "esit": true
+   },
+   "strategy.py": {
+    "simdi": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "kunye": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "esit": true
+   },
+   "guard.py": {
+    "simdi": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+    "kunye": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+    "esit": false
+   }
+  },
+  "kill4_tutarli": false
+ },
+ "kill4_teshis": {
+  "tutarsiz_dosyalar": [
+   "guard.py"
+  ],
+  "guard_mtime": "2026-08-22T23:28:09+00:00",
+  "olcum_ajani_teshisi": "guard.py künye-sonrası TEK hunk değişti (git 987b552→HEAD): v268 mezar taşı (commit 375abd5, 'WP6 küçük kalemler … #11 mezar taşı') — OKUYUCUSUZ SECTOR_CAP_DEFAULT_PCT/HEAT_CAP_DEFAULT_PCT sabitlerinin kaldırılması + yorum bloğu. broker/backtest/strategy/regime/config/dataset/score: fark YOK. Sabitlerin kod okuyucusu grep'le DOĞRULANDI: yalnız mezar-taşı testi (tests/test_wp6_kucuk_kalemler_v268.py, YOKLUĞU assert'ler). Statik teşhis davranış-nötr İMLER; bayt-özdeşlik kanıtı duman kill#1 kapısındadır. Künyeyi yenilemek/kabul Rol-1 kararıdır — bu betik HÜKÜM VERMEZ."
+ },
+ "uyarlama_beyani": {
+  "eski_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "yeni_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "motor_ARMED_SETUPS": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "beyan": "edg032c TEK uyarlaması AYNEN: yüklenen şasi modülünün ARMED_BEKLENEN sabiti B1 yasasına çevrildi (dünya-beklentisi; motor DEĞİL). Şasi parametre enjeksiyonu YOK."
+ },
+ "enjeksiyon_noktalari": {
+  "chop_taban": "meridian/regime.py:127 `base = {TREND_UP: 80, CHOP: 45, TREND_DOWN: 15, HIGH_VOL: 25}[regime]` — taban60 hücresinde regime_mod.exposure_score süreç-içi replika(60) ile; kontrol hücresinde DOKUNULMADI",
+  "replay_cagri": "meridian/backtest.py:373 `build_regime_json` (günde bir); yakalama sarmalayıcısı salt-geçirgen, iki hücrede AYNI",
+  "dd_ceza_min_exp": "regime.py:151-154 — motorda KALDI, replika dokunmadı (tek-kaldıraç sözleşmesi; doğruluk-tablosu + min_exp=40 kanıtı)"
+ },
+ "replika_on_sinamasi": {
+  "gecti": true,
+  "n_kombinasyon": 12,
+  "tablo": [
+   {
+    "regime": "trend_up",
+    "metrics": {},
+    "motor": 80,
+    "replika45": 80,
+    "replika60": 80
+   },
+   {
+    "regime": "trend_up",
+    "metrics": {
+     "high_vol": false
+    },
+    "motor": 80,
+    "replika45": 80,
+    "replika60": 80
+   },
+   {
+    "regime": "trend_up",
+    "metrics": {
+     "high_vol": true
+    },
+    "motor": 55,
+    "replika45": 55,
+    "replika60": 55
+   },
+   {
+    "regime": "chop",
+    "metrics": {},
+    "motor": 45,
+    "replika45": 45,
+    "replika60": 60
+   },
+   {
+    "regime": "chop",
+    "metrics": {
+     "high_vol": false
+    },
+    "motor": 45,
+    "replika45": 45,
+    "replika60": 60
+   },
+   {
+    "regime": "chop",
+    "metrics": {
+     "high_vol": true
+    },
+    "motor": 20,
+    "replika45": 20,
+    "replika60": 35
+   },
+   {
+    "regime": "trend_down",
+    "metrics": {},
+    "motor": 15,
+    "replika45": 15,
+    "replika60": 15
+   },
+   {
+    "regime": "trend_down",
+    "metrics": {
+     "high_vol": false
+    },
+    "motor": 15,
+    "replika45": 15,
+    "replika60": 15
+   },
+   {
+    "regime": "trend_down",
+    "metrics": {
+     "high_vol": true
+    },
+    "motor": 0,
+    "replika45": 0,
+    "replika60": 0
+   },
+   {
+    "regime": "high_vol",
+    "metrics": {},
+    "motor": 25,
+    "replika45": 25,
+    "replika60": 25
+   },
+   {
+    "regime": "high_vol",
+    "metrics": {
+     "high_vol": false
+    },
+    "motor": 25,
+    "replika45": 25,
+    "replika60": 25
+   },
+   {
+    "regime": "high_vol",
+    "metrics": {
+     "high_vol": true
+    },
+    "motor": 25,
+    "replika45": 25,
+    "replika60": 25
+   }
+  ]
+ },
+ "hucreler": {
+  "kontrol": {
+   "kosum": "kontrol",
+   "smoke": true,
+   "kol_kimligi": {
+    "chop_taban": 45,
+    "enjeksiyon": "YOK — motor exposure_score olduğu gibi (kontrol/şasi kapısı)",
+    "min_exp_sapan_n": 0
+   },
+   "hucre_sasi": {
+    "eksen": "merkez",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 8,
+   "net_pnl_trades": -2163.48,
+   "net_pnl_equity": -2163.48,
+   "pf": 0.0,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": null,
+   "maxdd_m2m": 0.0216,
+   "sharpe": null,
+   "avg_r": null,
+   "win_rate": null,
+   "total_return": null,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 1,
+     "pnl": -108.28,
+     "avg_r": -0.286
+    },
+    "exhaustion_hammer": {
+     "n": 2,
+     "pnl": -403.44,
+     "avg_r": -0.534
+    },
+    "momentum_burst": {
+     "n": 5,
+     "pnl": -1651.76,
+     "avg_r": -0.845
+    }
+   },
+   "exit_reason_dagilim": {
+    "regime_flip": 7,
+    "stop": 1
+   },
+   "toplam_plan": 9,
+   "silahlanan_plan": 9,
+   "entry_rejects": {
+    "open_below_stop": 1
+   },
+   "chop_dilim": {
+    "n": 0,
+    "toplam_r": 0,
+    "pf": null,
+    "pf_olculemedi_nedeni": "chop-dilim işlemi yok",
+    "net_pnl": 0,
+    "win_rate": null,
+    "exit_reason": {},
+    "setup": {}
+   },
+   "rejim_gun_sayaclari": {
+    "chop_gun_n": 13,
+    "chop_acik_gun_n": 0,
+    "chop_kapali_gun_n": 13,
+    "chop_dd5_gun_n": 13,
+    "n_yakalanan_gun": 124,
+    "n_seans": 124
+   },
+   "butce_dagilimi_rejim_bazinda": {
+    "trend_up": {
+     "60": 6
+    },
+    "chop": {
+     "0": 13
+    },
+    "high_vol": {
+     "0": 102
+    },
+    "trend_down": {
+     "0": 3
+    }
+   },
+   "butunluk_gecerli": true,
+   "sasi_kill3_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+   },
+   "motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+   },
+   "motor_sha_ayni": true,
+   "motor_kunye_kill4_once": {
+    "dosyalar": {
+     "broker.py": {
+      "simdi": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+      "kunye": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+      "esit": true
+     },
+     "backtest.py": {
+      "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+      "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+      "esit": true
+     },
+     "strategy.py": {
+      "simdi": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+      "kunye": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+      "esit": true
+     },
+     "guard.py": {
+      "simdi": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+      "kunye": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+      "esit": false
+     }
+    },
+    "kill4_tutarli": false
+   },
+   "motor_kunye_kill4_sonra": {
+    "dosyalar": {
+     "broker.py": {
+      "simdi": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+      "kunye": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+      "esit": true
+     },
+     "backtest.py": {
+      "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+      "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+      "esit": true
+     },
+     "strategy.py": {
+      "simdi": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+      "kunye": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+      "esit": true
+     },
+     "guard.py": {
+      "simdi": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+      "kunye": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+      "esit": false
+     }
+    },
+    "kill4_tutarli": false
+   }
+  },
+  "taban60": {
+   "kosum": "taban60",
+   "smoke": true,
+   "kol_kimligi": {
+    "chop_taban": 60,
+    "enjeksiyon": "regime_mod.exposure_score → replika(60); SÜREÇ-İÇİ, dosya yamasız",
+    "min_exp_sapan_n": 0
+   },
+   "hucre_sasi": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 30,
+   "net_pnl_trades": -1949.66,
+   "net_pnl_equity": -1949.66,
+   "pf": 0.5141,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": 0.0315,
+   "maxdd_m2m": 0.0315,
+   "sharpe": -1.874,
+   "avg_r": -0.171,
+   "win_rate": 0.333,
+   "total_return": -0.0195,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 10,
+     "pnl": -595.12,
+     "avg_r": -0.1561
+    },
+    "exhaustion_hammer": {
+     "n": 12,
+     "pnl": 67.87,
+     "avg_r": 0.0031
+    },
+    "momentum_burst": {
+     "n": 8,
+     "pnl": -1422.41,
+     "avg_r": -0.4494
+    }
+   },
+   "exit_reason_dagilim": {
+    "regime_flip": 20,
+    "stop": 9,
+    "stop_gap": 1
+   },
+   "toplam_plan": 34,
+   "silahlanan_plan": 31,
+   "entry_rejects": {
+    "open_below_stop": 1
+   },
+   "chop_dilim": {
+    "n": 23,
+    "toplam_r": 0.07,
+    "pf": 1.0487,
+    "pf_olculemedi_nedeni": null,
+    "net_pnl": 82.48,
+    "win_rate": 0.3913,
+    "exit_reason": {
+     "regime_flip": 18,
+     "stop": 5
+    },
+    "setup": {
+     "breakout_vcp": 9,
+     "exhaustion_hammer": 10,
+     "momentum_burst": 4
+    }
+   },
+   "rejim_gun_sayaclari": {
+    "chop_gun_n": 13,
+    "chop_acik_gun_n": 13,
+    "chop_kapali_gun_n": 0,
+    "chop_dd5_gun_n": 13,
+    "n_yakalanan_gun": 124,
+    "n_seans": 124
+   },
+   "butce_dagilimi_rejim_bazinda": {
+    "trend_up": {
+     "60": 6
+    },
+    "chop": {
+     "40": 13
+    },
+    "high_vol": {
+     "0": 102
+    },
+    "trend_down": {
+     "0": 3
+    }
+   },
+   "butunluk_gecerli": true,
+   "sasi_kill3_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+   },
+   "motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+   },
+   "motor_sha_ayni": true,
+   "motor_kunye_kill4_once": {
+    "dosyalar": {
+     "broker.py": {
+      "simdi": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+      "kunye": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+      "esit": true
+     },
+     "backtest.py": {
+      "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+      "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+      "esit": true
+     },
+     "strategy.py": {
+      "simdi": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+      "kunye": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+      "esit": true
+     },
+     "guard.py": {
+      "simdi": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+      "kunye": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+      "esit": false
+     }
+    },
+    "kill4_tutarli": false
+   },
+   "motor_kunye_kill4_sonra": {
+    "dosyalar": {
+     "broker.py": {
+      "simdi": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+      "kunye": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+      "esit": true
+     },
+     "backtest.py": {
+      "simdi": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+      "kunye": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+      "esit": true
+     },
+     "strategy.py": {
+      "simdi": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+      "kunye": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+      "esit": true
+     },
+     "guard.py": {
+      "simdi": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+      "kunye": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+      "esit": false
+     }
+    },
+    "kill4_tutarli": false
+   }
+  }
+ },
+ "sasi_kapisi": {
+  "bayt_kiyas_edg032c": {
+   "islemler_tam": {
+    "yerel_sha256": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+    "edg032c_sha256": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   },
+   "islemler_slim": {
+    "yerel_sha256": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+    "edg032c_sha256": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   },
+   "seanslar": {
+    "yerel_sha256": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+    "edg032c_sha256": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   }
+  },
+  "kunye_sha_tutarli": null,
+  "kill1_gecti": true
+ },
+ "yer_degistirme": {
+  "dosya": "/Users/erdemozturk/AI-Trading/research/olcumler/edg048_chop_tabani_2026-08-23/smoke/yer_degistirme_smoke.json",
+  "chop_disi_ozet": {
+   "kontrol_n": 8,
+   "taban60_n": 7,
+   "ortak_n": 7,
+   "cikan_n": 1,
+   "giren_n": 0,
+   "cikan_ozet": {
+    "setup": {
+     "momentum_burst": 1
+    },
+    "net_pnl": -408.35,
+    "toplam_r": -1.0
+   },
+   "giren_ozet": {
+    "setup": {},
+    "net_pnl": 0,
+    "toplam_r": 0
+   }
+  },
+  "chop_dilimi_ozet": {
+   "kontrol_n": 0,
+   "taban60_n": 23,
+   "ortak_n": 0,
+   "yalniz_kontrol_n": 0,
+   "yalniz_taban60_n": 23
+  }
+ },
+ "delta_ci": {
+  "degerlendirilmedi": "duman — kablo sınaması; Δ/CI yalnız TAM koşumda"
+ },
+ "hukum_yok": "Bu rapor HÜKÜM İÇERMEZ. Karar kuralının (CI-alt) okunması ve kill#5 raporu eşliğinde hüküm Rol-1'in işidir.",
+ "DURDU": "kill#4: motor sha (guard.py) TABAN_KUNYESI ile tutarsız — bu duman YALNIZ TEŞHİS koşumudur (kill#1 duman kapısı sonucu dahil); ölçüm GEÇERSİZ, TAM koşum YAPILMADI",
+ "motor_sha256_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+ },
+ "motor_sha_ayni_toplam": true
+}

@@ -37,7 +37,24 @@ kill_criteria:
   - "motor sha (broker/backtest/strategy/guard) künyeyle tutarsızsa geçersiz"
   - "yer-değiştirme raporu üretilmeden hüküm yazılırsa geçersiz"
 k_registry: {registered_at: "2026-08-23", trial_ids: [pending-048-t60]}
-status: registered   # 2026-08-23 Rol-1 — ön-kayıt (operatör brainstorm 1/7 kararıyla; ölçüm ajanı karta dokunmaz)
+status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda (aynı gün ölçüldü; K=1 aynen; kill-tarihçesi: künye sagası)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-23): **NO-GO — ÖLÇÜLMÜŞ RET, KALEM KAPANIR.** Δ(taban60−taban45) =
+  −18.265,65$, CI95 [−47.733,81, +10.589,40] → CI 0-içi (GO şartı CI-alt>0 sağlanmadı); nokta
+  tahmini ağır negatif. Karar kuralı gereği chop kapalılığı artık ÖLÇÜLMÜŞ POLİTİKADIR: kazara-
+  aritmetik olarak doğmuştu, kanıt kapısından geçemedi. MEKANİZMA (yer-değiştirme raporundan,
+  betimleyici): chop açılımı 417 chop işlemi doğurdu (−26,3R, PF 0,936; çıkışların yarısı stop)
+  ve slot/ısı tüketimiyle chop-dışı kümeden +22,6R'lik 99 işlemi YERİNDEN ETTİ (giren 24 işlem
+  −3,0R) — zarar iki kanaldan: chop'un kendisi kaybediyor VE iyi işlemleri kovuyor. Paket:
+  23.806→5.540, dd %12,6→%17,5, Sharpe 0,594→0,143. Örneklem-zayıf şerhi OLUŞMADI (chop n=417).
+  CANLANMA: yalnız yeni dünya/yeni kartla (kartın kendi kuralı). @chop hipotez üretiminin
+  duraklatılması (K1 paketi) bu hükümle daha da gerekçeli — 28d kapısının @chop dilimi kapanır.
+  KILL-TARİHÇESİ (bir DOĞRU durma): kill#4 ön-uçuşta düştü — künye guard sha'sı v268 mezar-taşı
+  commit'inden eskiydi; Rol-1 protokolüyle künye TAZELENDİ (tam-pencere çift-koşum: kontrol1 ↔
+  kontrol2 ↔ edg032c/kosum1 üç defterde ÜÇ-YÖNLÜ BAYT-ÖZDEŞ → v268 farkının davranış-nötrlüğü
+  ima değil ÖLÇÜM; eski sha kunye_tarihcesi bloğunda, yedek kunye_yedek_pre048.json). Ölçüm
+  güncel künye arkasında koşuldu; kill 0.
 beyanli_sinirlar: >
   (1) Replay chop kanıtı 2022-2026 penceresinin rejim karışımına bağlıdır — GO, "her chop'ta
   kazanılır" demez. (2) Kart yalnız TABAN kaldıracını ölçer; dd-tetiği/ceza-büyüklüğü ayrı

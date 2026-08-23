@@ -1,0 +1,82 @@
+# EDG-2026-048 · chop tabanı — 2 hücre {45=kontrol, 60} + şasi kapısı (2026-08-23)
+# Kart: research/cards/EDG-2026-048-chop-tabani.yaml (OKU-DOKUNMA; hüküm Rol-1'in).
+# Şasi çapası: edg032c_taban_2026-08-22 — kapı kıyası kosum1/ kanonik dosyalarına +
+# TABAN_KUNYESI.json kapı sha'larına (edg046 emsali birebir).
+#
+# HÜCRELER (K += 1; ikisi de merkez: slot 20 · 0,5R · 5R zarf — şasi parametre enjeksiyonu YOK):
+#   kontrol  = bugünkü dünya, chop taban 45 (şasi kapısı hücresi; K harcamaz)
+#   taban60  = chop taban 60 — TEK yeni hücre
+#
+# ENJEKSİYON NOKTASI (koddan OKUNDU, varsayılmadı; satırlar koşum günü assert'le doğrulanır):
+#   * meridian/regime.py:127
+#       `base = {TREND_UP: 80, CHOP: 45, TREND_DOWN: 15, HIGH_VOL: 25}[regime]`
+#     exposure_score gövdesi regime.py:124-130; TEK tüketicisi build_regime_json
+#     (regime.py:150 `score = exposure_score(regime, metrics)`); dd-cezası regime.py:151-152
+#     (`if dd >= 5: score = max(0, score - 20)`); eşik+bütçe regime.py:153-154
+#     (`min_exp = int(params.get("regime.min_exposure_score", 40))` · `budget = score if
+#     score >= min_exp else 0`). Replay'de günde BİR çağrı: backtest.py:373
+#     `rj = regime_mod.build_regime_json(idx_slice.reset_index(), params, str(d.date()))`.
+#   * Enjeksiyon SÜREÇ-İÇİ (edg040/046 deseni; motor DOSYASI DEĞİŞMEZ): YALNIZ taban60
+#     hücresinde `regime_mod.exposure_score` yerine regime.py:124-130'un BİREBİR replikası
+#     konur — tek fark CHOP tabanı 45→60. Kontrol hücresinde exposure_score'a HİÇ dokunulmaz
+#     (motorun kendi fonksiyonu koşar). dd-cezası/min_exp/tetik motorun kendi
+#     build_regime_json'unda kalır — replika onlara DOKUNMAZ (tek-kaldıraç sözleşmesi,
+#     kill#3). Replika koşumdan ÖNCE sentetik doğruluk-tablosuyla sınanır: 4 rejim ×
+#     high_vol {yok, False, True} için replika(45) ≡ motor exposure_score; replika(60)
+#     yalnız chop'ta +15 sapar (60 / high_vol'de 35).
+#   * YAKALAMA (iki hücrede AYNI, salt-geçirgen): `regime_mod.build_regime_json` sarmalanır,
+#     günün {date, regime, distribution_days, high_vol, exposure_score, exposure_budget_pct,
+#     min_exposure_score} kaydı alınır; dönüş değeri DEĞİŞMEZ (nötrlük kanıtı = kontrol
+#     hücresinin kill#1 bayt-özdeşliği — edg046 sabit_mevcut emsali).
+#
+# ÖZ-SINAMA (kill#2): her seans satırı için uygulanan exposure_budget_pct beklenen formülle
+#   (KARAR-BRIEF-CHOP-BUTCE §0 zinciri: taban[hücre] − high_vol-düzeltmesi − dd≥5 cezası 20,
+#   [0,100] kırp, min_exposure_score 40 eşiği; brief §0) SATIR SATIR kıyaslanır — hem yakalanan
+#   rejim-günü kaydına hem SEANS DEFTERİNİN KENDİSİNE (seanslar_*.json exposure_budget_pct +
+#   regime alanları) çivili. min_exp≠40 görülürse tek-kaldıraç ihlali → hücre geçersiz (kill#3).
+#   Birebir değilse hücre geçersiz → DUR.
+#
+# KİLL'LER (karttan, donuk):
+#   kill#1 kontrol hücresi ≢ edg032c/kosum1 (üç defter sha256 + künye sha çivisi) → DUR exit 2
+#   kill#2 bütçe öz-sınaması satır-başına birebir değilse hücre geçersiz
+#   kill#3 taban DIŞINDA knob'a dokunulursa geçersiz (min_exp/ceza/tetik AYNEN — replika +
+#          doğruluk-tablosu + min_exp=40 assert kanıtı)
+#   kill#4 motor sha (broker/backtest/strategy/guard) TABAN_KUNYESI ile tutarsızsa geçersiz
+#          (hücre başı önce/sonra alınır + künyenin kosum1_once kaydıyla kıyaslanır)
+#   kill#5 yer-değiştirme raporu üretilmeden hüküm yazılamaz (bu betik raporu ÜRETİR;
+#          hüküm zaten Rol-1'in)
+#
+# Δ+CI (kart, donuk): Δ(taban60−taban45) EŞLENİK ay-kümeli bootstrap · birim=AY · B=5000 ·
+#   seed=20260812 (edg040/045/046 delta_pnl_ci reçetesi AYNEN; aylar kontrol seanslarından).
+#
+# ZORUNLU YER-DEĞİŞTİRME RAPORU (kill#5): taban60 hücresinde chop-DIŞI işlem kümesinin
+#   (anahtar: ticker, ts_open) kontrole göre farkı — çıkan/giren/ortak listeleri + sayıları
+#   (yer_degistirme*.json'da TAM listeler) + chop-dilim işlem sayısı/toplam-R/PF her iki hücrede.
+#
+# KOŞUM (sıra zorunlu; her adım ayrı süreç; yeniden koşumda state_* ve çıktı dosyaları elle
+# kaldırılır — şasi hazirla() var-olan state'i yeniden kullanır):
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg048_chop_tabani_2026-08-23/olcum.py --smoke   # [1] duman: dar pencere (2022-01→06), iki hücre
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg048_chop_tabani_2026-08-23/olcum.py           # [2] tam (2 hücre ~30 dk)
+# Loglar: kosum_smoke.log · kosum_tam.log — rapor: sonuc_grid.json (+ hucre_*.json,
+# oz_sinama_*.json, rejim_gunluk_*.json, yer_degistirme*.json, sasi_kapisi*.json)
+
+# ── EK (2026-08-23, Rol-1 devri — kill#4 sonrası KÜNYE TAZELEME PROTOKOLÜ) ──
+# Duman teşhisi kill#4'ü doğruladı (guard.py v268 mezar-taşı, künye-sonrası değişim;
+# sonuc_grid_smoke.json DURDU kaydı). Rol-1 hükmü: nötrlük İMA yetmez, ÖLÇÜLÜR.
+# Yeni akış (sıra zorunlu; her faz AYRI süreç):
+#   [1] kontrol1          TAM kontrol koşumu #1 (bakir sandbox) → kontrol_kosum1/
+#   [2] kontrol2          TAM kontrol koşumu #2 (bakir sandbox) → kontrol_kosum2/
+#   [3] determinizm_kunye çift kapı: kosum1 ↔ kosum2 ↔ edg032c/kosum1 üç defter bayt-özdeş
+#                         → GEÇERSE TABAN_KUNYESI.json guard kaydı v268'e güncellenir (eski
+#                         sha kunye_tarihcesi bloğuna; yedek: kunye_yedek_pre048.json) —
+#                         ölçüm dizini dışına TEK yazım (Rol-1 yetki devri; kart DOKUNULMAZ).
+#                         DÜŞERSE künye TAZELENMEZ → DUR (dünya değişmiş demektir).
+#   [4] taban60           kartın kalan akışı AYNEN: TAM hücre + kill kapıları + Δ/CI +
+#                         yer-değiştirme + sonuc_grid.json
+# guard v268 pin: 185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6
+# (commit 375abd5; fark tek hunk — okuyucusuz SECTOR_CAP/HEAT_CAP sabitlerinin mezar taşı)
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg048_chop_tabani_2026-08-23/olcum.py kontrol1
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg048_chop_tabani_2026-08-23/olcum.py kontrol2
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg048_chop_tabani_2026-08-23/olcum.py determinizm_kunye
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg048_chop_tabani_2026-08-23/olcum.py taban60
+# Loglar: kosum_kontrol1.log · kosum_kontrol2.log · kosum_determinizm.log · kosum_taban60.log

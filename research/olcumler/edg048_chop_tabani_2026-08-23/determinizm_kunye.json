@@ -1,0 +1,72 @@
+{
+ "adim": "EDG-048 KÜNYE TAZELEME ÇİFT KAPISI (Rol-1 devri 2026-08-23)",
+ "olcum_zamani": "2026-08-23T12:09:54+00:00",
+ "tanim": "TAM kontrol (taban=45) iki kez, taze süreç + bakir sandbox, v268 guard ile; üç defter kosum1 ↔ kosum2 ↔ edg032c/kosum1 BAYT-ÖZDEŞ olmalı. Ek kanıt: alan_envanteri üç yönlü bayt + sonuc ölçüm blokları k1↔k2 derin-eşit + motor sha dört noktada sabit + iki koşumda kill#2 öz-sınama.",
+ "kapi_defterleri": {
+  "islemler_tam_kontrol.json": {
+   "kosum1_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "kosum2_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "edg032c_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "uc_yonlu_ozdes": true
+  },
+  "islemler_kontrol.json": {
+   "kosum1_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "kosum2_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "edg032c_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "uc_yonlu_ozdes": true
+  },
+  "seanslar_kontrol.json": {
+   "kosum1_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "kosum2_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "edg032c_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "uc_yonlu_ozdes": true
+  }
+ },
+ "kapi_uc_yonlu_ozdes": true,
+ "kunye_civisi_tutarli": true,
+ "ek_kanit_alan_envanteri": {
+  "kontrol_kosum1": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "kontrol_kosum2": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "edg032c": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "uc_yonlu_ozdes": true
+ },
+ "ek_kanit_sonuc_bloklari_k1k2": {
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true,
+  "islem": true,
+  "replay": true,
+  "hucre": true
+ },
+ "bilgi_sonuc_bloklari_k1_edg032c": {
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true,
+  "islem": true,
+  "replay": true,
+  "hucre": true
+ },
+ "motor_dort_noktada_sabit": true,
+ "guard_v268_dogrulandi": true,
+ "kill2_iki_kosum": [
+  true,
+  true
+ ],
+ "TAZELEME_GECTI": true,
+ "hukum": null,
+ "kunye_guncellendi": {
+  "dosya": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/TABAN_KUNYESI.json",
+  "once_sha256": "34a7695bc23996daf7203dbe7d42757b9cbed5d96658ee3edcc4fc85bff04b59",
+  "sonra_sha256": "e30ac653facf3028f642d93001898139de9c02f9cbbc0c050cd007404cee38b3",
+  "guard_eski": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+  "guard_yeni": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "chop_taban": 60,
+ "n_yakalanan_cagri": 124,
+ "n_yakalanan_gun": 124,
+ "n_seans": 124,
+ "cok_cagri_gun_n": 0,
+ "cok_cagri_tutarsiz": [],
+ "gun_formul_bozuk_n": 0,
+ "gun_formul_bozuk": [],
+ "seans_defter_bozuk_n": 0,
+ "seans_defter_bozuk": [],
+ "seans_gunsuz_n": 0,
+ "seans_gunsuz": [],
+ "min_exp_beklenen": 40,
+ "min_exp_sapan_n": 0,
+ "min_exp_sapan": [],
+ "butce_dagilimi_rejim_bazinda": {
+  "trend_up": {
+   "60": 6
+  },
+  "chop": {
+   "40": 13
+  },
+  "high_vol": {
+   "0": 102
+  },
+  "trend_down": {
+   "0": 3
+  }
+ },
+ "chop_gun_n": 13,
+ "chop_acik_gun_n": 13,
+ "chop_kapali_gun_n": 0,
+ "chop_dd5_gun_n": 13,
+ "kill2_gecti": true,
+ "beyan": "Beklenen formül brief §0 zincirinin bağımsız kopyası: taban[hücre] − high_vol-düzeltmesi 25, [0,100] kırp, dd≥5 → −20 (0 taban), min_exp eşiği. Kıyas HEM yakalanan rejim-gününe HEM seans defterinin kendisine çivili; TÜM satırlara uygulanır (kart: satır satır)."
+}

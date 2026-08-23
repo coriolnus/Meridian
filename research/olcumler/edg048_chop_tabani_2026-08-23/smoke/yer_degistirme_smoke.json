@@ -1,0 +1,131 @@
+{
+ "tanim": "chop-DIŞI işlem kümesi (regime != 'chop'; anahtar ticker+ts_open) taban60 ↔ kontrol. Bu fark KILL DEĞİLDİR (chop işlemleri slot/ısı tüketir; chop-dışı kümenin değişmesi mekanizmanın kendisidir) ama RAPORLANMADAN hüküm yazılamaz — kart features_asof/kill#5.",
+ "chop_disi": {
+  "kontrol_n": 8,
+  "taban60_n": 7,
+  "ortak_n": 7,
+  "cikan_n": 1,
+  "giren_n": 0,
+  "cikan_listesi": [
+   [
+    "MRVL",
+    "2022-01-12"
+   ]
+  ],
+  "giren_listesi": [],
+  "cikan_ozet": {
+   "setup": {
+    "momentum_burst": 1
+   },
+   "net_pnl": -408.35,
+   "toplam_r": -1.0
+  },
+  "giren_ozet": {
+   "setup": {},
+   "net_pnl": 0,
+   "toplam_r": 0
+  }
+ },
+ "chop_dilimi": {
+  "kontrol_n": 0,
+  "taban60_n": 23,
+  "ortak_n": 0,
+  "yalniz_kontrol_n": 0,
+  "yalniz_taban60_n": 23,
+  "yalniz_taban60_listesi": [
+   [
+    "AFL",
+    "2022-01-11"
+   ],
+   [
+    "BKR",
+    "2022-04-14"
+   ],
+   [
+    "EW",
+    "2022-01-11"
+   ],
+   [
+    "F",
+    "2022-01-14"
+   ],
+   [
+    "FANG",
+    "2022-04-08"
+   ],
+   [
+    "FCX",
+    "2022-04-08"
+   ],
+   [
+    "HAL",
+    "2022-01-14"
+   ],
+   [
+    "KR",
+    "2022-01-14"
+   ],
+   [
+    "LLY",
+    "2022-04-07"
+   ],
+   [
+    "LRCX",
+    "2022-01-18"
+   ],
+   [
+    "LULU",
+    "2022-04-14"
+   ],
+   [
+    "LYV",
+    "2022-01-18"
+   ],
+   [
+    "MAR",
+    "2022-04-14"
+   ],
+   [
+    "MAR",
+    "2022-04-21"
+   ],
+   [
+    "MRVL",
+    "2022-01-11"
+   ],
+   [
+    "PFE",
+    "2022-01-11"
+   ],
+   [
+    "PGR",
+    "2022-01-11"
+   ],
+   [
+    "PGR",
+    "2022-04-08"
+   ],
+   [
+    "QCOM",
+    "2022-01-11"
+   ],
+   [
+    "SLB",
+    "2022-04-08"
+   ],
+   [
+    "STLD",
+    "2022-04-07"
+   ],
+   [
+    "TMUS",
+    "2022-04-07"
+   ],
+   [
+    "WFC",
+    "2022-01-18"
+   ]
+  ],
+  "yalniz_kontrol_listesi": []
+ }
+}

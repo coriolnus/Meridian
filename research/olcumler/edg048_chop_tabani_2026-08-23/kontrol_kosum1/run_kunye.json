@@ -1,0 +1,49 @@
+{
+ "ad": "kontrol_kosum1",
+ "amac": "künye tazeleme çift-koşumu (Rol-1 devri 2026-08-23)",
+ "baslangic_utc": "2026-08-23T11:43:46+00:00",
+ "bitis_utc": "2026-08-23T11:56:12+00:00",
+ "sure_sn": 746.2,
+ "motor_sha_pin": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6"
+ },
+ "guard_v268_pin": "185b467f33f08150f63261841b834db5886b4361e3f89afe88e9938715ccd1a6",
+ "uyarlama_beyani": {
+  "eski_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "yeni_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "motor_ARMED_SETUPS": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ]
+ },
+ "enjeksiyon_noktalari": {
+  "regime_taban_satiri": 127,
+  "backtest_cagri_satiri": 373,
+  "taban_satir_icerigi": "base = {TREND_UP: 80, CHOP: 45, TREND_DOWN: 15, HIGH_VOL: 25}[regime]"
+ },
+ "replika_on_sinamasi_gecti": true,
+ "sandbox": "state_kontrol koşum öncesi silindi (bakir); şasi hazirla() EDG-022 donmuş kopyalarından kurdu",
+ "tasinan_dosyalar_sha256": {
+  "sonuc_kontrol.json": "40d218a0f09492396ee33cd2e35c822c3417c99da733b7025f632216091d7100",
+  "seanslar_kontrol.json": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+  "islemler_kontrol.json": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+  "islemler_tam_kontrol.json": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+  "alan_envanteri_kontrol.json": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "oz_sinama_kontrol.json": "8bd50a4f8c8463db2d799ad874e60b4165b83b5eeac8597d9979834042f699fc",
+  "rejim_gunluk_kontrol.json": "bd635c19dea4b813aff2d0c3a8e5919ab365c1746914ae394be6f08816aad1fa",
+  "hucre_kontrol.json": "2a48a1783b2699af87ad9aaf06bbf65c521bd5cb2c4eab24de6e333d77d5facb"
+ }
+}
