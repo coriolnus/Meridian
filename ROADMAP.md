@@ -331,7 +331,7 @@ detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kal�
 
 | WP | durum | kapsam | açık kalemler | dosya-sınırı | kanıt-kartı |
 |---|---|---|---|---|---|
-| **WP1 İcra ve Friksiyon** _(eski: WP-E + Ö-23 + Ö-13)_ | 🔴 aktif | emrin doğduğu andan dolduğu ana kadar: iki-motor icra sadakati · E1-E5 hattı · gerçek TCA/friksiyon defteri | **23c K1 dinlenen limit (D5 — kapanmadan hiçbir limit-tavanı kararı verilemez)** · 23d bar-içi stop varsayımı **[2026-08-23: KAPANDI — `EDG-2026-045` measured, 9d2cfb9]** · 23e gün-içi pencere (altyapı) · 23f `gap_behavior:cancel` elenmeli **[2026-08-23: KAPANDI — 746cbe8, hüküm EXE-001 gap-eksenine işlendi]** · 23b çıkış slipajı (örneklem bekler) · WP-E 6 boşluk sınıfı (#1/#2/#5/#6/#7/#8) **[2026-08-23: sınıf v234'le 08-12'de kapanmıştı — §7 2026-08-22 kaydı]** + E2 canlı-geçiş · 13 scale-out latent (düşük) · A6 şerh önerisi (Rol-1 kararı) | `loop.py` · `adapters/alpaca.py` · `broker.py` · `analytics`(cf) | EXE-2026-001(+R1/R2) · EXE-2026-002 · EDG-2026-037/038 |
+| **WP1 İcra ve Friksiyon** _(eski: WP-E + Ö-23 + Ö-13)_ | 🔴 aktif | emrin doğduğu andan dolduğu ana kadar: iki-motor icra sadakati · E1-E5 hattı · gerçek TCA/friksiyon defteri | **23c K1 dinlenen limit (D5 — kapanmadan hiçbir limit-tavanı kararı verilemez)** · 23d bar-içi stop varsayımı **[2026-08-23: KAPANDI — `EDG-2026-045` measured, 9d2cfb9]** · 23e gün-içi pencere (altyapı) · 23f `gap_behavior:cancel` elenmeli **[2026-08-23: KAPANDI — 746cbe8, hüküm EXE-001 gap-eksenine işlendi]** · 23b çıkış slipajı (örneklem bekler) · WP-E 6 boşluk sınıfı (#1/#2/#5/#6/#7/#8) **[2026-08-23: sınıf v234'le 08-12'de kapanmıştı — §7 2026-08-22 kaydı]** + E2 canlı-geçiş · 13 scale-out latent (düşük) · ~~A6 şerh önerisi~~ **[2026-08-23 KAPANDI-BAYAT: şerh 08-13'te İŞLENMİŞTİ (ROADMAP:389 ✅) ve konusu EXE-005/006/008 zinciriyle tümüyle tüketildi — hücre kalıntıydı]** | `loop.py` · `adapters/alpaca.py` · `broker.py` · `analytics`(cf) | EXE-2026-001(+R1/R2) · EXE-2026-002 · EDG-2026-037/038 |
 | **WP2 Sermaye ve Koruma** _(eski: WP-S + Ö-27 + Ö-7 + Ö-9/Ö-18)_ | 🔴 ~~aktif — **ACİL**~~ **[2026-08-23: cephe 08-22'de TAM KAPANDI — §7]** | sermaye defterinin, pozisyon korumasının ve P&L görünürlüğünün aynı gerçeği söylemesi | **koruma yeniden-kurulumu — 4 pozisyon ÇIPLAK (§5 KOVA-1)** **[2026-08-23: BAYAT — 08-22 ölçümü korumasız 0/7]** · **equity_curve zinciri (D1 ACİL: `seed_boundary` ONARIMI → kadanslı yazar → pano reset-penceresi)** **[2026-08-23: KAPANDI v264]** · davranışsal EOD süpürme kanıtı hâlâ KAYITSIZ (A4) · SB-2 `drift_sinifi` · 4 pozisyon adet-sapması (operatör yön kararı) · melez pozisyonlar + dormant icra (§5) | `adapters/alpaca.py` · `store.py` · `obs.py` · `ledgerstamp.py` · `loop.py` | EXE-2026-001-R1/R2 · EXE-2026-002(+R1) · EDG-2026-036/038 |
 | **WP3 Öğrenme Döngüsü** _(eski: WP-L + Ö-28 + Ö-10 + Ö-19)_ | 🔴 aktif _(eski "📋 tetik-şartlı" — A1 ile ÇÜRÜDÜ)_ | hipotez üretiminden ship'e giden döngünün kendisi + OPT parametre-evrim boru hattı + Faz-6 merdiveni | **28a görünmez süzgeç (EN ÜST — 2026-08-13 17:26'da hâlâ ateşliyordu)** · **28d kapı ÖLÇEMİYOR (chop 27 < 30)** **[2026-08-23: BAYAT — teşhis 08-22'de TAMAM, öncül çürüdü (gerçek mekanizma bütçe bağlaşımı); dönüşen kalem chop bütçe-kapalılığı OPERATÖR KARARI — §2 TAHTA]** · 28c tek satır / 21 tekrar · 28e/28f/28g/28h · 28i incumbent holdout −0,5366 · OPT Faz-1 serbest / Faz-2 28d'ye bağımlı · Faz-6 BEŞ KİLİT kanıt-şartlı | `hermes.py` · `reflect.py` · `probgate.py` · `bounds.yaml` | EDG-2026-036 · KYS-2026-002 |
 | **WP4 Veri ve Evren** _(eski: WP-U + WP-D + Ö-8)_ | 🔶 aktif (stratejik ana cephe) | girdi verisinin bütünlüğü + ölçülen evrenin kendisi (PIT üyelik, delist-bar, karantina, split) | PIT mid-cap üst-sınır (EDG-018 veri-kapısı) · delist-bar kaynağı + FINVIZ (§5) · `dataset.load↔bars_integrity` bağlama (§5) · türetilmiş artefakt yeniden üretimi · seans-içi boşluk · earnings kapsama+fail-open · MNST split düzeltmesi (kart-önce) | `research/pit_universe/` · `adapters/data.py` | EDG-2026-018/021/022 |
@@ -1984,17 +1984,7 @@ kararı gerektirenler §5'e geçer.
 
 - ~~**🆕 40. `nous_eval` yeni künye alanlarını defterine taşımıyor**~~ _(taşındı: §4-40 → WP7, 2026-08-23)_
 
-- **🔴 36. FAZ-6 KİLİDİ MEŞRU BİÇİMDE DÜŞEBİLİR — KADANSLI YAZARIN YAN ETKİSİ** _(2026-08-14, v245-D; sahibi WP5/WP2; **operatör bilgilendirmesi**)_ **[§5 ADAYI (operatör) — 2026-08-23]**
-  `equity_curve` kadanslı yazarı devreye girince `analytics._realized_drawdown`ın **m2m bacağı
-  körlükten çıkıyor**: seri kitabın seansını kapsar hâle gelince `m2m_durum` `"donem_disi"` →
-  **`"olculdu"`**, `max_dd_alt_sinir` False olur (`analytics.py:1696-1707`). Yani `edge_verdict` /
-  `result_verdict`in maks-düşüş girdisi **"bilinmiyor"dan "ölçüldü"ye** dönüyor.
-  **SONUÇ:** ajanın ölçtüğü %8,04, `EDGE_MAXDD_MAX = 0,08`i **kıl payı** aşıyor → dağıtımdan sonra
-  bir Faz-6 kilidi düşebilir.
-  **BU BİR ARIZA DEĞİL, KAPININ ÇALIŞMASIDIR.** Hiçbir eşiğe dokunulmadı; sistem ilk kez
-  ölçebildiği bir şeyi ölçüyor ve ölçüm eşiği aşıyor. Eşiği gevşetmek YASAK (EDG-037'nin
-  `RESULT_PF_MIN` emsali: "kilidin kapalı kalması ARIZA DEĞİL KORUMA").
-  *aksiyon: dağıtımdan sonra `edge_verdict` çıktısı okunur; düşen ayak ADIYLA raporlanır.*
+- ~~**🔴 36. FAZ-6 KİLİDİ MEŞRU BİÇİMDE DÜŞEBİLİR**~~ _(taşındı: §5 [B-FAZ6-KILIT] altına, 2026-08-23 — operatör E-turu kararı 2/12; gövde AYNEN orada)_
 
 - **🆕 37. `seed_boundary` İKİ YOLU FARKLI ŞEY ÖLÇÜYOR — HANGİSİ OTORİTE?** _(2026-08-14, v245-D'nin ÖLÇTÜĞÜ ayrışma; Rol-1 kararı bekliyor)_ **[KART ADAYI — 2026-08-23]**
   Onarım sonrası sınır iki kaynaktan okunabiliyor ve **ayrışıyorlar**:
@@ -2073,6 +2063,18 @@ envanter — hepsi AYNI kimliği taşır. Kimlikler kalıcıdır; blok kapansa d
 | `B-AJAN-GIT` | ajan-git mekanik kapısı (PATH-shim/wrapper) | süreç/araç kararı |
 | `B-ORACLE-TASIMA` | Oracle sunucu taşıma (envanter-4; Faz-6 ön şartı) | operatör aksiyonu/pencere |
 | `B-FAZ6-KILIT` | Faz-6 kapısı: beş kilit dolunca INTRADAY_ARM + emir bacağı onayı (envanter-5) | onay (kanıt-şartlı) |
+- **🔴 36. FAZ-6 KİLİDİ MEŞRU BİÇİMDE DÜŞEBİLİR — KADANSLI YAZARIN YAN ETKİSİ** _(2026-08-14, v245-D; sahibi WP5/WP2; **operatör bilgilendirmesi**)_ _(§4-36'dan taşındı 2026-08-23; B-FAZ6-KILIT ailesi — operatör bilgilendirmesi: kilit düşerse ARIZA DEĞİL kapının çalışmasıdır)_
+  `equity_curve` kadanslı yazarı devreye girince `analytics._realized_drawdown`ın **m2m bacağı
+  körlükten çıkıyor**: seri kitabın seansını kapsar hâle gelince `m2m_durum` `"donem_disi"` →
+  **`"olculdu"`**, `max_dd_alt_sinir` False olur (`analytics.py:1696-1707`). Yani `edge_verdict` /
+  `result_verdict`in maks-düşüş girdisi **"bilinmiyor"dan "ölçüldü"ye** dönüyor.
+  **SONUÇ:** ajanın ölçtüğü %8,04, `EDGE_MAXDD_MAX = 0,08`i **kıl payı** aşıyor → dağıtımdan sonra
+  bir Faz-6 kilidi düşebilir.
+  **BU BİR ARIZA DEĞİL, KAPININ ÇALIŞMASIDIR.** Hiçbir eşiğe dokunulmadı; sistem ilk kez
+  ölçebildiği bir şeyi ölçüyor ve ölçüm eşiği aşıyor. Eşiği gevşetmek YASAK (EDG-037'nin
+  `RESULT_PF_MIN` emsali: "kilidin kapalı kalması ARIZA DEĞİL KORUMA").
+  *aksiyon: dağıtımdan sonra `edge_verdict` çıktısı okunur; düşen ayak ADIYLA raporlanır.*
+
 | `B-AJAN-TAVAN` | ajan tavanı 15 (envanter-6) | karar (mevcut değer: 15) |
 | `B-DELIST-KAYNAK` | Massive/QC delist-bar kaynağı kararı (envanter-9) | karar + para (QC platform-içi VEYA Massive plan) |
 | `B-OCI-BUCKET` | OCI Object Storage bucket + S3-uyumlu anahtar — Litestream aşama-2 (envanter-10) | hesap/anahtar |
