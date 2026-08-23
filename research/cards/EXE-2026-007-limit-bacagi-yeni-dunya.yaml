@@ -1,0 +1,49 @@
+card_id: EXE-2026-007
+family: limit_bacagi_hukum_sinamasi   # EXE-006'nın B1-dünyası tekrarı — hüküm sınaması, tercih üretmez
+thesis: >
+  B-E1-LIMIT operatör kararı (2026-08-23 brainstorm 3/7): E1 hükmü EXE-006'yla yeniden açık ama
+  düşük-güçlü kaldı (H1 kırık, H2 ölçülemedi, Ö3 CI'ları 4/4 sıfır-içi) ve o ölçüm ESKİ dünyada
+  (edg032b, pullback'li) koşmuştu. BU KART aynı soruyu B1-dünyasında (ARMED üçlü, edg032c)
+  yeniden ölçer: limit bacağı bu dünyada da mı belirsiz, yoksa hüküm bir yöne mi oturuyor?
+  CANLI DEĞİŞMEZ; sonuç ne olursa olsun canlı yapılandırma kararı operatörde kalır.
+evidence_refs:
+  - "EXE-2026-006 (measured 2026-08-17 + Ö-51c eki): H1 düştü, H2 ölçülemedi, Ö3 4/4 0-içi"
+  - "EXE-2026-005 H3: dinlenen limit (bar_low) modeli — çivili, devralınır"
+  - "EDG-2026-045 hükmü: stop-slip=0 şerhi (maliyet bandı kıyaslanabilirlik için AYNEN, şerh beyanlı)"
+  - "Operatör kararı 2026-08-23: yeni dünyada yeniden ölç (docs/KARAR-2026-08-23-YEDI-KARAR.md K3)"
+universe: >
+  edg032c şasisi AYNEN (TABAN_KUNYESI.json — 2026-08-23 tazelenmiş künye, guard=v268); ARMED
+  üçlü dünya. Bacak YALNIZ ölçüm kolunda silahlandırılır (entry_law override deseni, EXE-006
+  emsali); `state/goal.yaml` DEĞİŞMEZ.
+features_asof: >
+  EXE-006 ile BİREBİR aynı iki eksen (kıyaslanabilirlik sözleşmesi): (1) limit tavanı — 4 nokta;
+  (2) dolum kuralı — {yalniz_acilis, dinlenen_limit (bar_low, EXE-005 H3)}. Hücre başına: net
+  P&L, işlem n, entry_missed_limit sayısı, kaçanların ort-R'si; Ö3 devri: ΔP&L eşlenik ay-kümeli
+  CI (B=5000, seed 20260812) her tavanda dinlenen−açılış kıyası.
+parameter_grid:
+  limit_pct_cap: [0.005, 0.01, 0.02, 0.03]   # K += 4 · hepsi MAX_ENTRY_GAP_PCT(0.04) ALTINDA
+  dolum_kurali: [yalniz_acilis, dinlenen_limit]   # K += 2 → K TOPLAM = 8 (ÇARPILARAK)
+cost_model: pessimistic_band_v2   # EXE-006 ile AYNI — kıyas ölmesin; EDG-045 stop-slip şerhi
+                                  # beyanlıdır: bant iyimser taraftadır, iki kart AYNI iyimserlikle kıyaslanır
+success_metric: >
+  EXE-006'nın H1/H2/H3 yapısı AYNEN: H1 monotonluk (dinlenen kolda net P&L tavana göre monoton mu)
+  · H2 kaçanların ort-R'si pozitif mi (CI ile) · H3 dinlenen dolum oranı. HÜKÜM KURALI: H1 VE H2
+  ayakta → E1 doğrulanır, bacağın kapalılığı yeni dünyada da gerekçelidir. Biri düşer VE Ö3-devri
+  CI'larından en az biri sıfır-dışı → hüküm o yönde OTURUR ve canlı yapılandırma kararı KANITLI
+  operatör kalemine döner. Hepsi yine 0-içi → "iki dünyada da belirsiz" damgası: kalem 042
+  gerçek-bandına park edilir, üçüncü tekrar ancak yeni bilgiyle. ASİMETRİ BEYANI (EXE-006'dan
+  aynen): "hüküm düştü" tarafı canlıda para bırakıyor olabileceğimiz anlamına gelir.
+kill_criteria:
+  - "cap >= MAX_ENTRY_GAP_PCT hücresi ölçülürse geçersiz (kapı yapısal ateşlemez)"
+  - "şasi kapısı: silahsız kontrol edg032c/kosum1 ile bayt-özdeş değilse DURUR (künye 2026-08-23 haliyle)"
+  - "state/goal.yaml değişirse geçersiz — ölçüm kartıdır"
+  - "dolum kuralı broker.fill_entry DIŞINDA uygulanırsa geçersiz"
+  - "EXE-006'nın çıktısı EZİLİRSE geçersiz — yeni koşum, eski kanıt dokunulmaz"
+  - "H1/H2 tek tavandan okunursa geçersiz (monotonluk eğri iddiasıdır)"
+k_registry: {registered_at: "2026-08-23", trial_ids: [EXE-007-yeni-dunya/K8-4tavan-x-2dolum]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt (K3 operatör kararı; ölçüm ajanı karta dokunmaz)
+beyanli_sinirlar: >
+  (1) Maliyet bandı EXE-006'yla aynı iyimserliği taşır (045 şerhi) — mutlak P&L değil GÖRECELİ
+  kıyas okunur. (2) Düşük-güç riski baki: B1 dünyası işlem sayısını değiştirdi ama CI'lar yine
+  geniş çıkabilir; kart bunu peşinen kabul eder. (3) Dinlenen-limit modeli kuyruk önceliğini
+  simüle etmez (EXE-001 şerhi sınıfı) — iyimser taraf beyanlı.
