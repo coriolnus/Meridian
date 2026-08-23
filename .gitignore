@@ -63,3 +63,7 @@ research/olcumler/*/sandbox/
 # kanıt değildir ve her okumada yeniden doğar — dagit temiz-ağaç kapısını gereksiz kirletiyordu
 *.db-shm
 *.db-wal
+
+# ölçüm ajanlarının yerel önbellekleri (yeniden üretilebilir; 140MB bars.pkl vakası 2026-08-24)
+research/olcumler/**/_cache/
+research/olcumler/**/__pycache__/
