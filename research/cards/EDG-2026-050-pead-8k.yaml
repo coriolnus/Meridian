@@ -1,0 +1,44 @@
+card_id: EDG-2026-050
+family: pit_faktor
+thesis: >
+  15d-A1 (ARSENAL çıtasına bağlı ilk faktör kartı; taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-
+  2026-08-23.md K1'den AYNEN): 8-K Item-2.02 duyuru-tepkisine EKSİK-TEPKİ sonraki haftalara
+  sızar (PEAD). t0 = filed günü; tepki = [t0−1, t0+1] getirisi − aynı-pencere evren ortalaması
+  (BMO/AMC bilinmediği için ±1 ZORUNLU); faktör = tepki uçları → 20/60g sürüklenme. PIT:
+  filed'dan itibaren (gecikme 0-1g). Veri TAMAMEN YEREL (earnings_8k_tarihleri.csv 17.535 satır +
+  bar arşivi) — sıfır yeni çekim. Sistemin PEAD/EP kurulumlarına (strategy.py:652,811) doğrudan
+  besleme adayı; CANLI DEĞİŞMEZ, skor bağlaması ancak GO + operatör imzasıyla (POLITIKA-ARSENAL).
+evidence_refs:
+  - "docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md (K1 taslağı + riskler: pencere bulanıklığı, CIK-kesiği 41 sembol, 14g kümeleme)"
+  - "research/pit_universe/ + adapters/edgar_shares deseni (PIT filed-as-of disiplini, EDG-016 emsali)"
+  - "docs/POLITIKA-ARSENAL.md (GO okuma çıtası)"
+universe: >
+  full_251 KAPSAM-BEYANLI: CIK-halefiyet kesiği olan 41 sembolün erken dönemleri None+neden;
+  survivorship şerhi hükümde ZORUNLU kelime ("üst-sınır"). Gözlem OLAY-bazlı: 8-K 2.02 başına bir;
+  aynı-çeyrek çift-2.02 için 14 gün kümeleme (taslak zorunluluğu) → beklenen ~16,8k olay.
+features_asof: >
+  Her olay: tepki = [t0−1, t0+1] kümülatif getiri − aynı-pencere evren-ortalama getirisi.
+  Dilimler: tepki_ust_20pct · tepki_alt_20pct (uçlar). Ufuklar: t0+2 → t0+20 ve t0+60 (işlem
+  günü); getiri tabanı aynı-gün evren ortalaması (fazla-getiri). CI: 21g blok-bootstrap.
+  Pozitif kontroller: rvol20@20g IC ≈ 0,064 yeniden-üretimi + wp2_olcum şablonunun PK4/PK5'i.
+parameter_grid:
+  dilim: [tepki_ust_20pct, tepki_alt_20pct]   # K += 2 (taslak aynen; ufuklar dilim-içi okuma, K harcamaz)
+cost_model: fazla_getiri_maliyet_duyarli   # 10bps ve 20bps tek-yön maliyet duyarlılığı hükümde zorunlu
+success_metric: >
+  KARAR KURALI (donuk, taslaktan): üst-dilim fazla-getirisi @60g anlamlı POZİTİF (CI 0-dışı)
+  VE 10bps maliyet-sonrası net > 0 (20bps duyarlılık raporda) → "PEAD sinyali VAR — ARSENAL
+  adayı" (skor bağlaması ayrı kart + operatör imzası; bu kart bağlamaz). Alt-dilim simetrik
+  okunur (negatif sürüklenme bilgisi — short yok, kaçınma sinyali olarak raporlanır).
+kill_criteria:
+  - "iki uç @20 VE @60 CI-0-içi → BİLGİSİZ, kart arşive (taslak kill-i)"
+  - "yön ters-anlamlı (üst-dilim anlamlı NEGATİF) → arşiv + not (öğrenilen şey budur)"
+  - "geçerli olay < 8.000 → ASKI, K harcanmaz (kapsam yetersiz)"
+  - "±1g pencere daraltılırsa geçersiz (BMO/AMC hükmü — bulanıklık bilinçli taşınır)"
+  - "14g kümeleme atlanırsa geçersiz"
+  - "pozitif kontrol (rvol20 IC) yeniden üretilemezse ölçüm düzeneği geçersiz"
+k_registry: {registered_at: "2026-08-23", trial_ids: [pending-050-ust, pending-050-alt]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt (operatör 'WP açık kalemlerine devam' talimatı; ölçüm 049 sonrası)
+beyanli_sinirlar: >
+  (1) Survivorship: evren bugünün 251'i — hüküm "üst-sınır" kelimesiyle yazılır. (2) 2.02-işaretsiz
+  duyurular kaçar (kapsam beyanı). (3) Faktör-ölçümü portföy-bağlamsız fazla-getiridir; paket-içi
+  etki ayrı kartın işidir.

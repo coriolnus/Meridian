@@ -1,0 +1,39 @@
+card_id: EDG-2026-051
+family: rejim_genislik
+thesis: >
+  28g teşhisinin bıraktığı boşluk: incumbent'ın holdout bozulması GERÇEK, kayıp GENELE YAYILI
+  (4/4 setup, 3/3 ay) ve SPY yükselirken oluştu — endeks-türevi rejim bu sınıfı GÖREMEZ (teşhisin
+  kendi cümlesi). HİPOTEZ: evren-İÇİ GENİŞLİK (breadth — sembollerin %kaçı kendi 50g MA'sının
+  üstünde) kayıp dilimini AYIRIR: bozulma dar-genişlik günlerinde yoğunlaşıyorsa, öğrenme-değerleme
+  bağlamına breadth eklemek gerekçelenir (o ekleme AYRI kart + ARSENAL çıtası). BU KART yalnız
+  DİLİM-AYRIŞMASINI ölçer; hiçbir şey bağlamaz, CANLI DEĞİŞMEZ.
+evidence_refs:
+  - "ROADMAP 28g/h/i H6 teşhisi (2026-08-22): −0,5365 yeniden-üretim; %64 ret_c; stop payı %48→%72; endeks-rejim kör"
+  - "research/olcumler/ 28g teşhis dizini (vekil taban + exe003 DB kopyası)"
+universe: >
+  28g teşhisinin AYNI vekil tabanı ve AYNI holdout dilimi (n=87 işlem penceresi); breadth serisi
+  YEREL bar arşivinden türetilir (251 sembol × 50g MA — PIT-doğal: yalnız geçmiş barlar).
+  Teşhis artefaktları DONUK kanıttır, EZİLMEZ — bu kart üstüne dilim katmanı koyar.
+features_asof: >
+  Her holdout işlemi giriş-günü breadth'ine göre iki dilime: genis (breadth ≥ medyan) ·
+  dar (breadth < medyan) — medyan holdout-penceresi İÇİNDEN, ölçümden önce döküm beyanlı.
+  Dilim başına: n · toplam R · ort R · stop payı · stop_gap payı. Ayrışma ölçüsü:
+  ΔortR(dar−genis) + işlem-düzeyi bootstrap CI (B=5000, seed 20260812).
+parameter_grid:
+  dilim_ekseni: [breadth_medyan]   # K += 1 (tek eksen, iki dilim tek kıyas)
+cost_model: teshis_ile_ayni
+success_metric: >
+  KARAR KURALI (donuk): ΔortR(dar−genis) CI-üst < 0 (kayıp dar-genişlikte anlamlı yoğun) →
+  "breadth AYIRIYOR" beyanı: öğrenme-bağlamı breadth kartı (ayrı, kart-önce) gündeme alınır.
+  CI 0-içi → "ayırmıyor" — hipotez arşive, incumbent bozulması bağlam-değişkeni aramaya devam
+  eder (bir sonraki aday ayrı kartla). Her iki sonuç da bilgidir; kalem sürünmez.
+kill_criteria:
+  - "dilimlerden biri n < 20 → hüküm YOK, betimleyici damga (medyan bölmesi buna düşürülemez — bölme değişmez)"
+  - "teşhis artefaktı ezilirse geçersiz"
+  - "breadth türetimi gelecek-bar okursa geçersiz (PIT öz-sınaması: seri yalnız t−1'e dek barlarla)"
+  - "medyan eşiği ölçümden sonra oynatılırsa geçersiz"
+k_registry: {registered_at: "2026-08-23", trial_ids: [pending-051-breadth]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt (ölçüm 049/050 sonrası sırayla)
+beyanli_sinirlar: >
+  (1) n=87 küçük örneklem — CI'lar geniş olabilir; kart bunu peşinen kabul eder. (2) Dilim
+  ayrışması NEDENSELLİK değildir; pozitif sonuç yalnız bir bağlam-değişkeni ADAYI üretir.
