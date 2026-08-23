@@ -183,3 +183,53 @@ tur özetinde ADIYLA listelenir (SİLME YOK ilkesi belgeye taşınır).
 3. **Y1/Y2** (canlı grafik + aday kartı), **Y3/Y4** (Top Views + %)
 4. Tam suite (Rol-1, tek-otoriter) → `dagit.sh` → canlı doğrulama
 
+
+---
+
+## 7 · EK (2026-08-24, aynı gün) — YÜZ DEVRALMA VE İKİ DOĞRULAMA
+
+### 7.1 Operatör yetkisi: yazı tipleri indirilecek
+Operatör talimatı: _"yazı tiplerini internetten bul ve indir ilgili yere koy"_ + _"yazı
+tiplerinde satoshi de olması lazım"_. §3'teki "AÇIK BORÇ, OPERATÖRE" kalemi böylece **kapandı**:
+indirme yetkisi verildi. Dub'ın üç yüzü ediniliyor — **Inter** (gövde/UI iş atı), **Geist Mono**
+(mono), **Satoshi** (display başlık, ağırlık 500, 36-48px).
+
+### 7.2 KÖRLEMESİNE DEĞİL — ölçülmüş bir geçmişe çarpıyor
+2026-08-07 turunda **yirmi bir** değişken yazı tipi indirilmiş, kesit alınmış, tarayıcıda
+ölçülmüş ve Recursive ÖLÇÜLMÜŞ gerekçeyle seçilmiş. Geist Mono o turda **elenmiş**:
+
+| `1`/`l` mürekkep ayrım oranı | 10px | 28px |
+|---|---|---|
+| Recursive Mono | 1.00 | **0.817** |
+| Geist Mono | 0.92 | **0.57** |
+
+Depoda bunu koruyan bir çivi var: `test_hicbir_yuzey_CANLI_bildirimde_Geist_tasimaz`.
+**Inter hiç ölçülmedi** — o yirmi bir adayın arasında yok.
+
+Bu yüzden edinme, deponun KENDİ 2026-08-07 düzeneğiyle (`build_web_fonts.py`, `turkish_test.py`,
+`tnum_proof.py`, `weights_and_stems.py`, `tarayici/olcum.js`) yeniden ölçülüyor. **Geçerlilik
+kapısı**: Recursive'in bu turda yeniden ölçülen sayıları donmuş sayıları (1.00 / 0.817 / 0.663)
+yeniden üretmezse düzenek bozuktur ve YENİ sayılar da geçersizdir.
+
+**Satoshi'nin lisansı ötekilerden FARKLI** — SIL OFL değil, ITF/Fontshare kendi lisansı.
+Self-host, kesit alma ve depoya commit'leme ayrı ayrı, lisans METNİNDEN doğrulanıyor.
+Belirsiz çıkarsa "muhtemelen tamam" denmez; BELİRSİZ yazılır ve operatöre gider.
+
+### 7.3 İki doğrulama — kararname iddialarının denetimi
+Tasarım kancası iki değeri sorguladı; ikisi de **Dub kaynağından** doğrulandı, uydurma çıkmadı:
+
+| İddia | Nerede doğrulandı |
+|---|---|
+| `--r-input:6px` Dub'ın değeri | `variables.css` → `--radius-inputs: 6px`; DESIGN.md yarıçap tablosu → `\| inputs \| 6px \|` |
+| Birincil eylem dolgusu `#0a0a0a` (§1.1) | Dub DESIGN.md, Primary Button: _"Near-black background (#0a0a0a or #171717), white text"_ |
+
+İkincisi §1.1'i güçlendirir: `#000000 → #0a0a0a` bir kaçamak değil, **Dub'ın kendi yazılı
+değeri**. Kancanın 6px bulgusu yanlış pozitiftir — kanca BİZİM `DESIGN.md`'mizle kıyaslıyor,
+o da hâlâ emekli Omega ölçeğini (12/10/2) yazıyor. Düzeltilecek olan değer değil, BELGE
+(§3 gereği jeton turunda güncelleniyor).
+
+### 7.4 Bağlanma sırası
+Dosyalar `meridian/web/fonts/` altına iner ama **bu turda bağlanmaz**: `index.html`,
+`landing.html`, `workflow.html`, `api.py::_FONT_DOSYALARI` ve `tests/test_yazitipi_v201.py`
+şu an başka ajanların elinde. Ölçüm raporu bağlanma listesini satır numarasıyla verir;
+bağlama, ajanlar indikten sonra Rol-1'de tek elden yapılır.
