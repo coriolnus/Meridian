@@ -1894,7 +1894,7 @@ kararı gerektirenler §5'e geçer.
   yoksa gerçekten chop yok mu (o zaman @chop öğrenmesi **yapısal olarak beklemede**). *öncelik:
   yüksek · gerekli iş: sınıflayıcının chop tanımını ölçmek — kart-önce.*
 
-- **🆕 46. 28f — DELİK İKİ NÜSHALIYDI, İKİNCİSİ ROADMAP'TE YOKTU** _(2026-08-14, v247-B)_
+- **🆕 46. 28f — DELİK İKİ NÜSHALIYDI, İKİNCİSİ ROADMAP'TE YOKTU** _(2026-08-14, v247-B)_ **[2026-08-23 Rol-1 SINIFLANDIRMA: ARŞİV — reflect.py fail-closed ayrımı kodda; H00029 bilinçli retro-düzeltilmedi; kaynak: docs/RAPOR-HAVUZ-SINIFLANDIRMA-2026-08-23.md; gövde SİLİNMEDİ]**
   **(a) TEYİT ayağı** (bilinen): `if conf.law == "probabilistic":` — teyit olasılıksal hüküm
   veremeyince blok **tamamen atlanıyor**, aday **teyitsiz ship** ediliyordu. Dört yol `law="legacy"`
   döndürüyor, hepsi `p=None, n_valid=0`. **[B] dalında kod LİTERAL OLARAK *"ship yetkisi bu kanıtla
@@ -1922,7 +1922,7 @@ kararı gerektirenler §5'e geçer.
 
 - ~~**🆕 44. RENK ROL-SIZINTISININ ÖLÇÜLMEMİŞ İKİNCİ EVİ**~~ _(taşındı: §4-44 → WP8-D, 2026-08-23)_
 
-- **🔴 41. MUTASYON KAPSAMI 39/79 — GENİŞLETME KARARI ROL-1'DE** _(2026-08-14, v246-A ölçtü ve BİLEREK eklemedi)_
+- **🔴 41. MUTASYON KAPSAMI 39/79 — GENİŞLETME KARARI ROL-1'DE** _(2026-08-14, v246-A ölçtü ve BİLEREK eklemedi)_ **[2026-08-23 Rol-1 SINIFLANDIRMA: WP5'e SINIFLANDI — bugün ölçüldü: liste 45, modül-kural ≥85 buluyor → boşluk ~40 dosya; kaynak: docs/RAPOR-HAVUZ-SINIFLANDIRMA-2026-08-23.md; gövde SİLİNMEDİ]**
   `pyproject.toml`ın KENDİ türetme kuralı (`meridian import broker|guard|score`, AST ile modül
   düzeyi + fonksiyon içi) bugün **79 test modülünü** kapsıyor; `pytest_add_cli_args_test_selection`
   listesinde **39** var → **41 dosyalık boşluk** (tamamı ajan raporunda ADIYLA).
@@ -1936,7 +1936,7 @@ kararı gerektirenler §5'e geçer.
   (`ops/haftalik_mutasyon.sh`) ve davranış-çivisi ↔ metin-çivisi ayrımı yapılmadan eklenirse skor
   yanıltıcı olur. *öncelik: orta · gerekli iş: 41 dosyayı "davranış mı metin mi" diye sınıflamak.*
 
-- **🆕 42. ÇAPA DESENİ — ÖLÇÜLDÜ, YOL AÇIK (A17 genel kalemi)** _(2026-08-14, v246-A)_
+- **🆕 42. ÇAPA DESENİ — ÖLÇÜLDÜ, YOL AÇIK (A17 genel kalemi)** _(2026-08-14, v246-A)_ **[2026-08-23 Rol-1 SINIFLANDIRMA: WP6'ya SINIFLANDI — capa_uyusmasi hâlâ yok; '138' yeniden-üretilemedi (bugün 17, yöntem beyanlı); kaynak: docs/RAPOR-HAVUZ-SINIFLANDIRMA-2026-08-23.md; gövde SİLİNMEDİ]**
   meridian/ içinde **138** `dosya.py:SATIR` çapası var. **93'ü (%67)** bir `def/class` gövdesine
   düşüyor → doğrudan `modül.sembol` çapasına çevrilebilir ve uyuşması **AST ile 5 satırda**
   sınanır. **28'i** modül düzeyinde → çapa "ayırt edici kod dizgisi" olur (emsal: `ledgerstamp`
@@ -1950,7 +1950,7 @@ kararı gerektirenler §5'e geçer.
   (3) eski satır çapaları **büyük-patlama göçü yerine** çevresi düzenlendikçe dönüştürülür.
   Bu turda iki çapa tek tek sembolleştirildi (`codelaw` auth çapası, `sermaye`→`broker` çapası).
 
-- **🆕 43. YANLIŞLANAN İDDİANIN ÜÇÜNCÜ ÖRNEĞİ VERİYE YAZILMIŞ** _(2026-08-14, v246-A bulup düzeltti; ders kaydı)_
+- **🆕 43. YANLIŞLANAN İDDİANIN ÜÇÜNCÜ ÖRNEĞİ VERİYE YAZILMIŞ** _(2026-08-14, v246-A bulup düzeltti; ders kaydı)_ **[2026-08-23 Rol-1 SINIFLANDIRMA: ARŞİV — ders kayıtlı; sermaye.py düzeltmesi + A17 çapası yerinde; kaynak: docs/RAPOR-HAVUZ-SINIFLANDIRMA-2026-08-23.md; gövde SİLİNMEDİ]**
   Ö-38 iki modül YORUMUNU sayıyordu. Üçüncüsü daha ağırdı: `sermaye.py:413-425` reset işaretinin
   `not` alanına *"eğrinin son noktası tohum sınırıdır"* cümlesini **`state/`e YAZIYORDU**. Yorum
   bayatlaması bir sınıf; **artık yanlış olan bir iddiayı kalıcı veriye yazmak** başka bir sınıf —
@@ -1959,7 +1959,7 @@ kararı gerektirenler §5'e geçer.
   yazımlara da uygulanmalı.* Ayrıca `state/goal.yaml:130` çapası (`guard.py:352`, gerçek yer
   440-443) bayat — `state/` yazımı yasak olduğu için rapor edildi, düzeltilmedi.
 
-- **🔴 39. KALİBRASYON "HANGİ BEYİN NE KADAR İSABETLİ"Yİ CEVAPLAYAMIYOR — YAPISAL** _(2026-08-14, v246-B ölçtü; **Rol-1 kararı gerektiriyor**)_
+- **🔴 39. KALİBRASYON "HANGİ BEYİN NE KADAR İSABETLİ"Yİ CEVAPLAYAMIYOR — YAPISAL** _(2026-08-14, v246-B ölçtü; **Rol-1 kararı gerektiriyor**)_ **[2026-08-23 Rol-1 SINIFLANDIRMA: WP7'ye SINIFLANDI — künye ailesi WP7'de; iş ölçüm değil YOL kararı (candidate_review analytics'te 0); kaynak: docs/RAPOR-HAVUZ-SINIFLANDIRMA-2026-08-23.md; gövde SİLİNMEDİ]**
   `analytics.llm_opinion_calibration` çiftleri `trade_plans.llm_opinion` + işlem defteri join'inden
   kuruyor ve **model künyesini hiç okumuyor** (`grep -c candidate_review analytics.py` = **0** —
   v245'te benim ters yöndeki iddiam da böyle çürümüştü). Sorun künyeyi okumaması değil,
@@ -2021,14 +2021,14 @@ kararı gerektirenler §5'e geçer.
 
 - ~~**🆕 32. SUITE'İN İÇİNDEN GERÇEK AĞ ÇAĞRISI — ÖLÇÜLDÜ**~~ _(taşındı: §4-32 → WP5-G, 2026-08-23)_
 
-- **🆕 33. KARDEŞ AJAN PYTEST ÇAKIŞMASI — ORKESTRASYON DERSİ** _(2026-08-14, yaşanmış)_
+- **🆕 33. KARDEŞ AJAN PYTEST ÇAKIŞMASI — ORKESTRASYON DERSİ** _(2026-08-14, yaşanmış)_ **[2026-08-23 Rol-1 SINIFLANDIRMA: ARŞİV — kural kurumsallaşmış: CLAUDE.md §6 + hafıza + hermes.py; kaynak: docs/RAPOR-HAVUZ-SINIFLANDIRMA-2026-08-23.md; gövde SİLİNMEDİ]**
   Aynı checkout'ta iki ajan eşzamanlı `pytest` koşarken `_no_live_state_writes` bekçisi
   `['events.jsonl']` ile ERROR verdi; izole yeniden koşum **10 passed / 0 error**. Yani kırmızı
   koddan değil, **paralel koşumdan** doğdu (`hermes.py:410-419` bu sınıfı zaten belgeliyor).
   **KURAL:** otoriter tam suite koşarken hiçbir ajan test koşmamalı; ajanlar arası dosya-ayrıklığı
   YETMEZ — `state/` paylaşımlı bir yüzeydir. *(Rol-1 çalışma kuralı; ROADMAP'e kayıt amaçlı.)*
 
-- **🆕 30. AYRILMAZ ÇİFTİN İKİ YARISI FARKLI YEDEK DAVRANIŞINDA** _(2026-08-14, WP6-26 turunun devrettiği kalem; sahibi WP2 ya da WP6 — sınıflandırma Rol-1'de)_
+- **🆕 30. AYRILMAZ ÇİFTİN İKİ YARISI FARKLI YEDEK DAVRANIŞINDA** _(2026-08-14, WP6-26 turunun devrettiği kalem; sahibi WP2 ya da WP6 — sınıflandırma Rol-1'de)_ **[2026-08-23 Rol-1 SINIFLANDIRMA: ARŞİV-önerisi Rol-1 HÜKMÜYLE İŞLENDİ — BAYAT — config.py:364 yedek 0,5 + BEKLENEN_BOYUT çivisi; WP2 kapanışında çözülmüş; kaynak: docs/RAPOR-HAVUZ-SINIFLANDIRMA-2026-08-23.md; gövde SİLİNMEDİ]**
   `state/goal.yaml:123-125` kendi metninde şunu **beyan ediyor**: *"BERABERİNDE GİDEN AYAR:
   `position_size_r` 1,0 → 0,5 … **İkisi AYRILMAZ**: slot 20 tek başına ısı zarfını 5R'de bağlar ve
   boyut yarıya inmeden ölçülen davranışı vermez."*
