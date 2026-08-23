@@ -42,6 +42,14 @@ NEDEN_KANONIK = "neden"
 BEYAN_KANONIK = "beyan"
 NEDEN_ESANLAMLI = ("detail", "detay", "note", "reason", "error")
 
+# ---- T3.1 — SAYAÇ ALANI (`watchdog.report().ok` sayı-taşıma vakası → `n_ok`) ----------------
+# A4 KARARI (Rol-1, 2026-08-23): üretici ayrıştı — `report()` sayacı `n_ok`ta, hükmü `ok`ta
+# taşır. Eski sayı-taşıyan `ok` bir dönem EŞANLAMLI okunur (`n_ok_oku`, sayaçlı) ki dağıtım-arası
+# eski-şekilli bir yük panoyu boş bırakmasın; düşürme kararı Rol-1'de. `hukum_oku`nun "sayı-ok
+# hüküm sayılmaz" emniyeti KALIR — eski-şekilli yükler için hâlâ gerekli.
+SAYAC_KANONIK = "n_ok"
+SAYAC_ESANLAMLI = ("ok",)
+
 # ---- T1.1 + T1.2 — DURDURMA KOLLARI (kanonik KOL ADI → eski/eşanlamlı yazımlar) -------------
 # Kanonik kol adları sessiz_hat'ın bugünkü adlarıdır (tasarım §6 kararı): `soft_halt` ve
 # `halt_learning`. API alan adları (`halted` ×4 yüzey, `learn_halted`) ve dosya adları
@@ -56,7 +64,8 @@ KOL_KANONIK = {
 _KOL_TERS = {eski: kanonik for kanonik, eskiler in KOL_KANONIK.items() for eski in eskiler}
 
 # ---- EŞANLAMLI-OKUMA SAYAÇLARI (ölüm tarihi ölçümü) -----------------------------------------
-# Anahtar biçimi "<sinif>:<eski_ad>" (örn. "hukum:failed", "neden:detail", "kol:learning_halted").
+# Anahtar biçimi "<sinif>:<eski_ad>" (örn. "hukum:failed", "neden:detail", "kol:learning_halted",
+# "sayac:ok").
 # Süreç-içi (gerekçe modül başlığında). Dış okuyucu: api._durum_sozlugu → /api/diagnostics →
 # app.js `f8SozlukSatiri` (YASA 6 — sayacın kendisi okuyucusuz kalamaz).
 _ESANLAMLI_OKUMA: dict[str, int] = {}
@@ -81,10 +90,10 @@ def _sifirla_test_icin() -> None:
 def hukum_oku(rapor) -> tuple[bool | None, str | None]:
     """Bir rapor sözlüğünden ÜÇ değerli hüküm okur: (ok, kaynak_alan).
 
-    Önce kanonik `ok`; alan varsa ama DEĞERİ hüküm değilse (SAYI — `report().ok` vakası, T3.1;
-    `n_ok` geçişi Açık Soru A4'te Rol-1'i bekliyor) hüküm UYDURULMAZ, eşanlamlılara da düşülmez:
-    (None, None) döner. Eşanlamlı okuma sayaçlıdır. Hiçbir ad yoksa (None, None) — "hüküm yok"
-    dürüst cevaptır, "temiz" değildir."""
+    Önce kanonik `ok`; alan varsa ama DEĞERİ hüküm değilse (SAYI — eski-şekilli `report().ok`
+    yükü, T3.1; A4 kararıyla üretici 2026-08-23'te ayrıştı, emniyet ESKİ yükler için kalır)
+    hüküm UYDURULMAZ, eşanlamlılara da düşülmez: (None, None) döner. Eşanlamlı okuma sayaçlıdır.
+    Hiçbir ad yoksa (None, None) — "hüküm yok" dürüst cevaptır, "temiz" değildir."""
     if not isinstance(rapor, dict):
         return None, None
     if HUKUM_KANONIK in rapor:
@@ -112,6 +121,24 @@ def hukum_oku(rapor) -> tuple[bool | None, str | None]:
         # `durum` (defter_yok/dolu/bos…) bir DOLULUK durumudur, hüküm değil: hiçbir değeri
         # True/False'a çevrilmez (uydurma yasağı). Ad yine de sayılır — okunduğu ölçülür.
         return None, "durum"
+    return None, None
+
+
+def n_ok_oku(rapor) -> tuple[int | None, str | None]:
+    """Penceresinde-mekanizma SAYACINI okur: (n, kaynak_alan). Önce kanonik `n_ok`; yoksa eski
+    sayı-taşıyan `ok` (sayaçlı — "sayac:ok"). İKİ YÖNDE DE TİP EMNİYETİ: bool bir sayaç DEĞİLDİR —
+    `hukum_oku`nun "sayı-ok hüküm sayılmaz" kuralının ayna görüntüsü ("hüküm-ok sayaç sayılmaz");
+    bool int'in alt sınıfı olduğundan (True == 1) emniyetsiz okuma yeni-şekilli bir hükmü sessizce
+    "1 mekanizma" diye uydururdu. Hiçbir alan sayı taşımıyorsa (None, None) — 0 DEĞİL."""
+    if not isinstance(rapor, dict):
+        return None, None
+    v = rapor.get(SAYAC_KANONIK)
+    if isinstance(v, int) and not isinstance(v, bool):
+        return v, SAYAC_KANONIK
+    v = rapor.get("ok")
+    if isinstance(v, int) and not isinstance(v, bool):
+        _say("sayac:ok")
+        return v, "ok"
     return None, None
 
 

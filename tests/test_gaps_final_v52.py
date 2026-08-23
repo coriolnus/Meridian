@@ -329,7 +329,7 @@ def test_watchdog_reports_are_derived_from_live_state(sandbox_state):
     from meridian import watchdog
     watchdog.beat("scheduler_poll")
     rep = watchdog.report()
-    assert rep["ok"] >= 1 and "scheduler_poll" not in rep["never"]
+    assert rep["n_ok"] >= 1 and "scheduler_poll" not in rep["never"]   # F8/T3.1: sayaç `n_ok` (A4)
 
 
 def test_watchdog_conservation_counts_every_plan(sandbox_state):

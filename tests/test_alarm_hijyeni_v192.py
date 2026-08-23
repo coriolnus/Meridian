@@ -108,13 +108,14 @@ def test_hermes_kota_sogumasinda_gecikti_alarmi_BASILMAZ(sandbox_state, saat, al
 
 
 def test_askida_mekanizma_OK_SAYILMAZ(sandbox_state, saat, monkeypatch):
-    """Askıda 'iyi' değildir. `ok` sayacına katılırsa pano beklemeyi sağlık diye gösterir."""
+    """Askıda 'iyi' değildir. `n_ok` sayacına katılırsa pano beklemeyi sağlık diye gösterir.
+    (F8/T3.1 A4 kararı 2026-08-23: sayaç `ok`tan `n_ok`a taşındı — `ok` artık hüküm.)"""
     monkeypatch.setattr(watchdog, "_hermes_askida",
                         lambda: {"neden": "havuz_tukendi", "kalan_s": None, "detay": "kimlik yok"})
     _tazele(saat, "scheduler_poll")
     _bayatla(saat, "hermes_poll", 0.7 * 3600)
     rep = watchdog.report()
-    assert rep["ok"] == 1                                        # yalnız scheduler_poll
+    assert rep["n_ok"] == 1                                      # yalnız scheduler_poll
     assert "hermes_poll" not in rep["never"] and "hermes_poll" not in {x["name"] for x in rep["stale"]}
 
 

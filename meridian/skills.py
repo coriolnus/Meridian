@@ -91,6 +91,18 @@ UYGULANAMAZ_NOT = ("kayıt-önerisi; davranışsal karşılığı yok — kayıt
                    "karşılayan alan bulunmuyor ve deterministik motor kayıt defterini okumuyor. "
                    "Gerçek aksiyon knob/kapı düzeyindedir (bkz. motor_ici_esik_asan).")
 
+#: 25b SON DAMGA (WP7-24h; DENETIM-OLU-BILESEN-ENVANTERI-2026-08-13 §D-2 "En acil damga"):
+#: `shadow` bayrağının DAVRANIŞSIZLIK BEYANI — kayıt yüzeyinin tek satırlık dürüstlük damgası.
+#: Bayrak bir GÖZLEM/İNCELEME işaretidir, motor anahtarı DEĞİL: deterministik karar çekirdeği
+#: (strategy/guard/broker; loop'un karar yolu) kayıt defterinin bayrağını hiç okumaz — çivi:
+#: tests/test_kucuk_paket_v275.py davranışsızlık çivisi. Yüzeyler (pano "gölge" rozeti tooltip'i,
+#: /api/skills `golge_beyani`) BU metni basar, ikinci bir cümle kurmaz. Bayrağı motora bağlamak
+#: (denetim D-3: bayrak ↔ ARMED_SETUPS) AYRI ve açık bir karardır; bu beyan o kararı gizlemez,
+#: bugünkü gerçeği görünür kılar.
+GOLGE_BEYANI = ("gölge bayrağı trading'i DEĞİŞTİRMEZ — gözlem katmanı: deterministik motor "
+                "kayıt defterinin bayrağını okumaz; bayrak yalnız LLM-yüzeyi (hermes brifingi), "
+                "anahtar-kapısı muafiyeti ve pano/teşhis yüzeylerinde anlam taşır.")
+
 
 def eylem_uygulanabilir(action: str | None) -> bool:
     """Bu eylemin GERÇEK bir uygulayıcısı var mı? Yüzeyler düğme çizmeden ÖNCE buna sorar."""

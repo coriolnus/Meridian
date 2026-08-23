@@ -135,9 +135,10 @@ def test_kanonik_okuma_sayac_oynatmaz():
 
 
 def test_sayi_ok_hukum_sayilmaz():
-    """T3.1 emniyeti: `report().ok` bir SAYIDIR (penceresindeki mekanizma adedi) — sayıdan
-    hüküm TÜRETİLMEZ, alan mevcutken eşanlamlıya da düşülmez (`n_ok` geçişi Açık Soru A4,
-    Rol-1 kararında)."""
+    """T3.1 emniyeti: ESKİ-şekilli `report().ok` bir SAYIYDI (penceresindeki mekanizma adedi) —
+    sayıdan hüküm TÜRETİLMEZ, alan mevcutken eşanlamlıya da düşülmez. A4 kararıyla (Rol-1,
+    2026-08-23) üretici ayrıştı (sayaç `n_ok`, hüküm `ok` — v275); bu emniyet ESKİ-şekilli
+    yükler için kalır."""
     assert dsz.hukum_oku({"ok": 17, "total": 17}) == (None, None)
     assert dsz.esanlamli_okumalar() == {}
 
