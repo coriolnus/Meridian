@@ -37,3 +37,35 @@ karşılıklarıyla; harici font CDN'i YASAK) · tabular-nums disiplini.
    — bileşen kütüphanesi ikili token'larla orada kurulur ve önizlenir (canlı pano DEĞİŞMEZ).
 3. Onaydan sonra `app.js`/CSS'e uygulama: bileşen bileşen, çivi-önce (her aile için görsel
    çivi + değişmez çivisi yeşil kalacak).
+
+
+---
+
+## ⚠ ROL-1 DÜZELTMESİ (2026-08-24, operatör "font yasağımız yok" dedi → ölçüm yapıldı)
+
+Bu belgenin İKİ İDDİASI YANLIŞTI. Kayda geçiyor (uydurma-yasağı: yanlış beyan silinmez, düzeltilir):
+
+**① "Harici font CDN'i YASAK" → YARIM DOĞRU.** CSP `font-src 'self'` (deploy/Caddyfile:107)
+gerçekten harici origin'i kapatıyor — ama bu bir yasak değil, **D4 sertleştirmesinin sonucu**
+(2026-08-07: Google Fonts CDN kaldırıldı, iki üçüncü-taraf origin CSP'den DÜŞTÜ). Yani font
+kullanımı serbesttir; şart **kendi-barındırma**. Satoshi/Inter istenirse woff2 olarak indirilip
+`meridian/web/fonts/` altına konur, CSP değişmez. Operatör haklı.
+
+**② "İkili tema KURULACAK" → ZATEN KURULU.** Ölçüm: `meridian/web/tokens.json` 68 jeton taşıyor;
+23'ü temadan bağımsız, **45 renk jetonunun 45'i de `:root[data-theme="gece"]` bloğunda override
+ediliyor** (index.html:113 ve :335) — yani İKİ TAM PALET var, `theme.js` ilk boyamadan önce
+`data-theme` koyuyor. Karar "ikili tema kur" değil, **"var olan ikili temayı Dub değerlerine
+göre yeniden ayarla"** olarak okunur.
+
+**③ (bonus, benim çıkarımım da yanlıştı) VARSAYILAN TEMA KOYU DEĞİL.** Yerleşik dünya
+2026-07-27 Omega dönüşümüyle **AÇIK zemine** geçmiş: `#ffffff` + sıcak kemik paneller
+(`#f8f5f2`/`#f1ece8`) + sıcak hairline (`#e7e3df`), 12px kart yarıçapı, tam-pill kontroller,
+**HİÇBİR YERDE GÖLGE YOK** — "ayrım hairline + ton". Koyu artık `gece` varyantı. Ben WP8-B'nin
+dark-cockpit doktrin METNİNİ okuyup YAPILMIŞ ESERİ okumamıştım.
+
+**SONUÇ — işin niteliği değişti:** Bu bir DÜNYA DEĞİŞTİRME değil, **AYNI DÜNYANIN daha iyi
+icrası**. Yerleşik yön sözleşmesi (index.html DIRECTION CONTRACT) operatörün çıtasını zaten
+"Linear · Vercel · Raycast" diye adlandırıyor — Dub'ın kendi DESIGN.md'si de "Similar Brands"
+başlığında AYNI üçünü sayıyor. Yani referans, mevcut dünyanın daha rafine bir akrabası.
+Asıl iş operatörün söylediği yerde: **bilgi mimarisi** (101 kart · tutarsız rozet dili ·
+bağlamsız sayılar · öne çıkmayan aciliyet).

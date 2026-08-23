@@ -12,7 +12,9 @@ _Operate yüzeyi · redesign · dünya operatörce sabitlendi (Dub) · ikili tem
   tutarsızlığı buldu. M11 taraması panonun YANLIŞ rozet bastığını ölçtü (veto edilmiş plan
   "gönderilecek" görünüyor; keşif çipi 41 gün sıfır üretimde yanıyor).
 
-## THESIS
+## THESIS (2026-08-24 düzeltmesiyle)
+Bu bir DÜNYA DEĞİŞTİRME DEĞİL — yerleşik dünya (Omega/Linear-Vercel-Raycast register) Dub ile AYNI
+ailede; iş **aynı dünyanın daha iyi icrası** ve asıl hedef BİLGİ MİMARİSİ.
 Pano bir **kart tarlası** olmaktan çıkıp bir **enstrüman paneli** olur: üç katmanlı okuma —
 *şu an* (5 saniye), *alanlar* (30 saniye), *kanıt* (dakikalar). Reddettiği kategori-varsayılanı:
 "her ölçüm bir kart, tüm kartlar eşit" düzeni. Yoğunluk azalmaz, **hiyerarşi kazanır**;
@@ -24,7 +26,11 @@ konteyner tanımlar · radius sözlüğü 9999/16/12/8/6px, dışı yok · 4px t
 tek aksan (elektrik mavisi) yalnız *dikkat* ve *aktif durum* için — dekoratif kullanım yasak ·
 rakamlar **mono** (tabular-nums, hizalı sütun) — sayı bir malzemedir, metin değil · tipografi
 Inter/sistem yığını (Satoshi DÜŞÜRÜLDÜ: CSP harici font yasağı + panoda 36px+ display yok).
-İki tema: aynı grameri iki zeminde — açık (kağıt) ve koyu (arduvaz); token'lar rol-adlı, renk-adlı değil.
+İki tema **ZATEN KURULU** (45 renk jetonu × 2 tam palet, `data-theme="gece"`; varsayılan AÇIK zemin —
+Omega dönüşümü 2026-07-27). Bu redesign temayı KURMAZ, mevcut iki paleti Dub değerlerine göre
+YENİDEN AYARLAR; jeton değişikliği `index.html` iki `:root` bloğu + `tokens.json`'da EŞ ZAMANLI
+(v153 eşitlik çivisi) ve kontrast `docs/kontrast-denetimi.md` usulüyle (WCAG 2.2, en kötü GERÇEK
+bileşke zemin) yeniden ölçülür.
 
 ## STORY
 Operatör panoyu açar → bir bandda parasını ve günün karar zincirini görür → müdahale gereken bir
