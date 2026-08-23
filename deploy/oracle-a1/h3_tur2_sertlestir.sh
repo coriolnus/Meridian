@@ -71,7 +71,10 @@ on_sart_fail_notify() {
   # ÖN-ŞART ÖLÇÜLÜR, VARSAYILMAZ (birimdeki "NE ZAMAN SERTLEŞTİRİLİR" bloğu): journal'da en az bir
   # GERÇEK başarılı gönderim olmadan sertleştirme kurulmaz — arızası tanım gereği sessiz bir birimde
   # tek kanıt, sertleştirme ÖNCESİ çalıştığının kaydıdır.
-  journalctl -u meridian-fail-notify --no-pager 2>/dev/null | grep -q "gonderim sonucu: True" \
+  # `grep -q` DEĞİL (2026-08-23 canlı vakası): -q eşleşince boruyu erken kapatır, journalctl
+  # SIGPIPE(141) alır ve `set -o pipefail` zinciri "başarısız" sayar — ön-şart, kanıt journal'da
+  # DURURKEN ölçülemedi görünür. grep >/dev/null akışı sonuna dek tüketir; SIGPIPE doğmaz.
+  journalctl -u meridian-fail-notify --no-pager 2>/dev/null | grep "gonderim sonucu: True" >/dev/null \
     || die "ÖN-ŞART ÖLÇÜLEMEDİ: journal'da başarılı gönderim yok ('gonderim sonucu: True').
    Önce kanalı kur (operatör kalemi: Telegram/webhook sırları) + elle test-ateşleme:
      sudo systemctl start meridian-fail-notify && journalctl -u meridian-fail-notify -n 8
