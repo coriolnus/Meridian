@@ -1,0 +1,12 @@
+== FAZ4: [4] sürüklenme + 21g blok-bootstrap CI + [5] maliyet ==
+   tepki_ust_20pct @20g: n=3144 ort=0.001783 ci={'lo': -0.001132, 'hi': 0.005202, 'seviye': 0.95} net10=0.000783
+   tepki_ust_20pct @60g: n=3121 ort=0.005243 ci={'lo': 0.000161, 'hi': 0.010641, 'seviye': 0.95} net10=0.004243
+   tepki_alt_20pct @20g: n=3145 ort=-0.001767 ci={'lo': -0.004634, 'hi': 0.001054, 'seviye': 0.95} net10=-0.002767
+   tepki_alt_20pct @60g: n=3113 ort=0.001711 ci={'lo': -0.003927, 'hi': 0.006782, 'seviye': 0.95} net10=0.000711
+   tum_olaylar_TANI @20g: n=15754 ort=-0.002217 ci={'lo': -0.003291, 'hi': -0.00109, 'seviye': 0.95} net10=-0.003217
+   tum_olaylar_TANI @60g: n=15653 ort=-0.002639 ci={'lo': -0.004486, 'hi': -0.000732, 'seviye': 0.95} net10=-0.003639
+   [TANI] tepki_ust_20pct_GENISLEYEN_ESIK_TANI @20g: n=3371 ort=0.002419 ci={'lo': -0.000341, 'hi': 0.005356, 'seviye': 0.95}
+   [TANI] tepki_ust_20pct_GENISLEYEN_ESIK_TANI @60g: n=3348 ort=0.004471 ci={'lo': 6.7e-05, 'hi': 0.00967, 'seviye': 0.95}
+   [TANI] tepki_alt_20pct_GENISLEYEN_ESIK_TANI @20g: n=3413 ort=-0.002146 ci={'lo': -0.004797, 'hi': 0.000505, 'seviye': 0.95}
+   [TANI] tepki_alt_20pct_GENISLEYEN_ESIK_TANI @60g: n=3381 ort=0.001297 ci={'lo': -0.004064, 'hi': 0.006409, 'seviye': 0.95}
+== yazıldı: faz4_sonuc.json ==

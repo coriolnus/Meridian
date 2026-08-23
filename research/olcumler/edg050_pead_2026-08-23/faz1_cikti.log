@@ -1,0 +1,5 @@
+== FAZ1: [1] olay inşası + 14g kümeleme + kapsam ==
+   tam CSV kümeleme: 16819 olay (ref 16819, uyum=True)
+   CIK-kesiği: 41 sembol (ref 41, uyum=True)
+   evren-içi olay (kümeleme sonrası): 16324
+== yazıldı: faz1_olay.json ==

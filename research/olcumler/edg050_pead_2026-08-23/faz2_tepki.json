@@ -1,0 +1,465 @@
+{
+  "kart": "EDG-2026-050",
+  "faz": 2,
+  "bar_muhasebesi": {
+    "istenen": 251,
+    "dosya_yok": 0,
+    "okunamadi": 0,
+    "kisa": 2,
+    "yuklendi": 249,
+    "hayalet_dusen": 428,
+    "karantina_dusen": 13,
+    "defter_yolu_dusen": 46761,
+    "defter_yolu_sembol": 58,
+    "hesaplanan_dislanan_satir": 0,
+    "iki_yol_ayrisan_sembol": [],
+    "kirilma_sinifi": {},
+    "kisa_semboller": [
+      "HON",
+      "DD"
+    ],
+    "takvim_reddedilen_n": 0
+  },
+  "kapsam": {
+    "ham_satir": 17535,
+    "csv_sha256": "ba90698d4010f539543fa5e3c7c8df01d29b87f2c624b9d2f731654cf8490b3e",
+    "item202_disi_dusen": 0,
+    "csv_sembol": 258,
+    "kumeleme_tam_csv_olay": 16819,
+    "kumeleme_birlestirilen_satir": 716,
+    "kumeleme_ref_uyum": true,
+    "cik_kesigi_sembol_n_tam_csv": 41,
+    "cik_kesigi_ref_uyum_41": true,
+    "cik_kesigi": [
+      {
+        "symbol": "ABBV",
+        "ilk_202": "2013-04-26",
+        "none_donem": [
+          "2010-01-01",
+          "2013-04-26"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "APO",
+        "ilk_202": "2022-01-27",
+        "none_donem": [
+          "2010-01-01",
+          "2022-01-27"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "AVGO",
+        "ilk_202": "2018-06-07",
+        "none_donem": [
+          "2010-01-01",
+          "2018-06-07"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "BKR",
+        "ilk_202": "2017-07-28",
+        "none_donem": [
+          "2010-01-01",
+          "2017-07-28"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "BLK",
+        "ilk_202": "2024-10-11",
+        "none_donem": [
+          "2010-01-01",
+          "2024-10-11"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "BURL",
+        "ilk_202": "2013-12-10",
+        "none_donem": [
+          "2010-01-01",
+          "2013-12-10"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "CEG",
+        "ilk_202": "2022-05-12",
+        "none_donem": [
+          "2010-01-01",
+          "2022-05-12"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "CI",
+        "ilk_202": "2019-05-02",
+        "none_donem": [
+          "2010-01-01",
+          "2019-05-02"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "DD",
+        "ilk_202": "2017-10-26",
+        "none_donem": [
+          "2010-01-01",
+          "2017-10-26"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "DIS",
+        "ilk_202": "2019-05-08",
+        "none_donem": [
+          "2010-01-01",
+          "2019-05-08"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "DOW",
+        "ilk_202": "2019-07-25",
+        "none_donem": [
+          "2010-01-01",
+          "2019-07-25"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "ENPH",
+        "ilk_202": "2012-05-10",
+        "none_donem": [
+          "2010-01-01",
+          "2012-05-10"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "ETN",
+        "ilk_202": "2013-02-05",
+        "none_donem": [
+          "2010-01-01",
+          "2013-02-05"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "FANG",
+        "ilk_202": "2013-02-26",
+        "none_donem": [
+          "2010-01-01",
+          "2013-02-26"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "GOOG",
+        "ilk_202": "2015-10-22",
+        "none_donem": [
+          "2010-01-01",
+          "2015-10-22"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "GOOGL",
+        "ilk_202": "2015-10-22",
+        "none_donem": [
+          "2010-01-01",
+          "2015-10-22"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "HLT",
+        "ilk_202": "2014-02-27",
+        "none_donem": [
+          "2010-01-01",
+          "2014-02-27"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "KHC",
+        "ilk_202": "2015-08-10",
+        "none_donem": [
+          "2010-01-01",
+          "2015-08-10"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "KKR",
+        "ilk_202": "2010-08-10",
+        "none_donem": [
+          "2010-01-01",
+          "2010-08-10"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "KMI",
+        "ilk_202": "2011-04-20",
+        "none_donem": [
+          "2010-01-01",
+          "2011-04-20"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "KVUE",
+        "ilk_202": "2023-07-20",
+        "none_donem": [
+          "2010-01-01",
+          "2023-07-20"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "LIN",
+        "ilk_202": "2019-05-10",
+        "none_donem": [
+          "2010-01-01",
+          "2019-05-10"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "LYB",
+        "ilk_202": "2010-10-29",
+        "none_donem": [
+          "2010-01-01",
+          "2010-10-29"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "MDT",
+        "ilk_202": "2015-05-19",
+        "none_donem": [
+          "2010-01-01",
+          "2015-05-19"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "META",
+        "ilk_202": "2012-07-26",
+        "none_donem": [
+          "2010-01-01",
+          "2012-07-26"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "MPC",
+        "ilk_202": "2011-08-02",
+        "none_donem": [
+          "2010-01-01",
+          "2011-08-02"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "MRNA",
+        "ilk_202": "2019-01-08",
+        "none_donem": [
+          "2010-01-01",
+          "2019-01-08"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "MRVL",
+        "ilk_202": "2021-06-07",
+        "none_donem": [
+          "2010-01-01",
+          "2021-06-07"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "NCLH",
+        "ilk_202": "2013-02-11",
+        "none_donem": [
+          "2010-01-01",
+          "2013-02-11"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "NOW",
+        "ilk_202": "2012-08-01",
+        "none_donem": [
+          "2010-01-01",
+          "2012-08-01"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "NXPI",
+        "ilk_202": "2019-10-29",
+        "none_donem": [
+          "2010-01-01",
+          "2019-10-29"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "PANW",
+        "ilk_202": "2012-09-10",
+        "none_donem": [
+          "2010-01-01",
+          "2012-09-10"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "PINS",
+        "ilk_202": "2019-05-16",
+        "none_donem": [
+          "2010-01-01",
+          "2019-05-16"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "PSX",
+        "ilk_202": "2012-08-01",
+        "none_donem": [
+          "2010-01-01",
+          "2012-08-01"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "PYPL",
+        "ilk_202": "2015-10-28",
+        "none_donem": [
+          "2010-01-01",
+          "2015-10-28"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "ROKU",
+        "ilk_202": "2017-11-08",
+        "none_donem": [
+          "2010-01-01",
+          "2017-11-08"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "SNAP",
+        "ilk_202": "2017-05-10",
+        "none_donem": [
+          "2010-01-01",
+          "2017-05-10"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "SYF",
+        "ilk_202": "2014-10-17",
+        "none_donem": [
+          "2010-01-01",
+          "2014-10-17"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "TRGP",
+        "ilk_202": "2011-02-24",
+        "none_donem": [
+          "2010-01-01",
+          "2011-02-24"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "TSLA",
+        "ilk_202": "2010-08-04",
+        "none_donem": [
+          "2010-01-01",
+          "2010-08-04"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      },
+      {
+        "symbol": "WBA",
+        "ilk_202": "2015-04-09",
+        "none_donem": [
+          "2010-01-01",
+          "2015-04-09"
+        ],
+        "neden": "CIK-kesiği/IPO: bu aralıkta VERİ YOK (duyuru yok değil — README §7); sembol-dönem ölçülemez → None"
+      }
+    ],
+    "evren_n": 251,
+    "evren_disi_csv_sembol": [
+      "ANSS",
+      "DFS",
+      "FI",
+      "HES",
+      "IPG",
+      "K",
+      "PARA",
+      "WBA"
+    ],
+    "csv_de_olmayan_evren_sembol": [
+      {
+        "symbol": "SPOT",
+        "neden": "8-K 2.02 serisi CSV'de yok → sembolün tümü None (ör. yabancı ihraççı boşluğu, README §8)"
+      }
+    ],
+    "evren_ici_olay_kumeleme_sonrasi": 16324,
+    "olay_neden_histogram": {
+      "t0_bar_serisi_sonrasi": 51,
+      "t0_bar_boslugu>3g": 298,
+      "t0_sonrasi_bar_yok (seri sonu)": 18,
+      "evren_paydasi<50": 5,
+      "bar_paneli_yok (şablon bar yolu sembolü yüklemedi)": 114
+    },
+    "gecerli_olay_tepki": 15838,
+    "t0_kaydirilan_olay": 10,
+    "tepki_evren_payda": {
+      "min": 206,
+      "medyan": 241,
+      "maks": 249
+    },
+    "olay_takvim_araligi": [
+      "2010-01-07",
+      "2026-07-27"
+    ],
+    "olay_sembol_n": 248,
+    "ufuk20_olculebilen": 15754,
+    "ufuk20_none_neden": {
+      "ufuk_penceresi_seri_disi": 84
+    },
+    "ufuk60_olculebilen": 15653,
+    "ufuk60_none_neden": {
+      "ufuk_penceresi_seri_disi": 181,
+      "gunluk_evren_paydasi<50": 4
+    }
+  },
+  "pit_yikici_sinama": {
+    "tanim": "tepki, sembol serisi close[:t0+1] ve evren matrisi C[:t0+1] KESİLEREK yeniden hesaplandı; t0+1 kapanışından sonraki hiçbir satır girdi değil.",
+    "kapsam": "TÜM geçerli olaylar (örneklem değil)",
+    "sinanan_olay": 15838,
+    "ihlal": 0,
+    "gelecek_indeks_ihlali": 0,
+    "ayrisan_ornek": [],
+    "gecti": true
+  },
+  "kill3": {
+    "esik": 8000,
+    "gecerli_olay": 15838,
+    "gecti": true
+  }
+}

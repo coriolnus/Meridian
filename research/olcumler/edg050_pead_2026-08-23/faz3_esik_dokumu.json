@@ -1,0 +1,25 @@
+{
+  "kart": "EDG-2026-050",
+  "faz": 3,
+  "yazim_zamani_utc": "2026-08-23T20:34:56.142553+00:00",
+  "n": 15838,
+  "p20": -0.034528,
+  "p80": 0.03902,
+  "ort": 0.002087,
+  "medyan": 0.000988,
+  "std": 0.057476,
+  "q": {
+    "1": -0.157017,
+    "5": -0.084574,
+    "10": -0.058455,
+    "25": -0.027172,
+    "50": 0.000988,
+    "75": 0.030911,
+    "90": 0.064883,
+    "95": 0.089786,
+    "99": 0.161233
+  },
+  "ust_dilim_olay_n": 3168,
+  "alt_dilim_olay_n": 3168,
+  "beyan": "yüzdelikler TÜM geçerli olay dağılımından (kart [3] donuk tasarımı); bu döküm sürüklenme istatistikleri HESAPLANMADAN ÖNCE ayrı dosyaya yazıldı (ölçüm-öncesi döküm beyanı; mtime sırası kanıt)."
+}

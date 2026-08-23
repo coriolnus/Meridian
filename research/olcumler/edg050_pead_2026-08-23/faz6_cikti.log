@@ -1,0 +1,6 @@
+== FAZ6 (TANI): CI kararlılığı — kart tohumu DEĞİŞMEZ, yalnız duyarlılık ölçülür ==
+   tepki_ust_20pct @20g: lo(6 tohum)=[-0.001132, -0.00141, -0.0014, -0.001348, -0.001357, -0.001212] işaret_tutarli=True P(boot<=0)=0.1257
+   tepki_ust_20pct @60g: lo(6 tohum)=[0.000221, -8.6e-05, 0.000291, 0.000207, -8.4e-05, 0.000135] işaret_tutarli=False P(boot<=0)=0.0239
+   tepki_alt_20pct @20g: lo(6 tohum)=[-0.004579, -0.004708, -0.004671, -0.004542, -0.004691, -0.004679] işaret_tutarli=True P(boot<=0)=0.8956
+   tepki_alt_20pct @60g: lo(6 tohum)=[-0.004029, -0.004042, -0.00423, -0.004131, -0.00413, -0.004247] işaret_tutarli=True P(boot<=0)=0.30275
+== yazıldı: faz6_ci_kararlilik.json ==

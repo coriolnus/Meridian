@@ -1,0 +1,114 @@
+{
+  "kart": "EDG-2026-050",
+  "faz": 6,
+  "kart_tohumu": 20260812,
+  "not": "TANI — kart karar kuralı YALNIZ faz4_sonuc.json'daki (seed 20260812) hücreleri okur; buradaki alternatif tohum/blok değerleri hüküm girdisi DEĞİLDİR.",
+  "tepki_ust_20pct": {
+    "@20g": {
+      "n": 3144,
+      "ort": 0.001783,
+      "alt_sinir_6_tohum": [
+        -0.001132,
+        -0.00141,
+        -0.0014,
+        -0.001348,
+        -0.001357,
+        -0.001212
+      ],
+      "ust_sinir_6_tohum": [
+        0.005202,
+        0.005161,
+        0.005034,
+        0.005016,
+        0.005257,
+        0.005143
+      ],
+      "alt_sinir_min": -0.00141,
+      "alt_sinir_maks": -0.001132,
+      "alt_sinir_isaret_tutarli": true,
+      "boot20k_sifirin_altinda_oran": 0.1257,
+      "boot20k_p2_5": -0.001357,
+      "boot20k_p97_5": 0.005059
+    },
+    "@60g": {
+      "n": 3121,
+      "ort": 0.005243,
+      "alt_sinir_6_tohum": [
+        0.000221,
+        -8.6e-05,
+        0.000291,
+        0.000207,
+        -8.4e-05,
+        0.000135
+      ],
+      "ust_sinir_6_tohum": [
+        0.01051,
+        0.010749,
+        0.010437,
+        0.010707,
+        0.010411,
+        0.010437
+      ],
+      "alt_sinir_min": -8.6e-05,
+      "alt_sinir_maks": 0.000291,
+      "alt_sinir_isaret_tutarli": false,
+      "boot20k_sifirin_altinda_oran": 0.0239,
+      "boot20k_p2_5": 4.8e-05,
+      "boot20k_p97_5": 0.010629
+    }
+  },
+  "tepki_alt_20pct": {
+    "@20g": {
+      "n": 3145,
+      "ort": -0.001767,
+      "alt_sinir_6_tohum": [
+        -0.004579,
+        -0.004708,
+        -0.004671,
+        -0.004542,
+        -0.004691,
+        -0.004679
+      ],
+      "ust_sinir_6_tohum": [
+        0.000994,
+        0.001004,
+        0.000889,
+        0.001218,
+        0.000951,
+        0.000942
+      ],
+      "alt_sinir_min": -0.004708,
+      "alt_sinir_maks": -0.004542,
+      "alt_sinir_isaret_tutarli": true,
+      "boot20k_sifirin_altinda_oran": 0.8956,
+      "boot20k_p2_5": -0.004624,
+      "boot20k_p97_5": 0.001036
+    },
+    "@60g": {
+      "n": 3113,
+      "ort": 0.001711,
+      "alt_sinir_6_tohum": [
+        -0.004029,
+        -0.004042,
+        -0.00423,
+        -0.004131,
+        -0.00413,
+        -0.004247
+      ],
+      "ust_sinir_6_tohum": [
+        0.006967,
+        0.006746,
+        0.007062,
+        0.006995,
+        0.006669,
+        0.006932
+      ],
+      "alt_sinir_min": -0.004247,
+      "alt_sinir_maks": -0.004029,
+      "alt_sinir_isaret_tutarli": true,
+      "boot20k_sifirin_altinda_oran": 0.30275,
+      "boot20k_p2_5": -0.00404,
+      "boot20k_p97_5": 0.006869
+    }
+  }
+}

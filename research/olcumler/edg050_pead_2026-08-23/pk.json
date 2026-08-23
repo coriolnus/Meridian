@@ -1,0 +1,1542 @@
+{
+  "bar_muhasebesi": {
+    "istenen": 251,
+    "dosya_yok": 0,
+    "okunamadi": 0,
+    "kisa": 2,
+    "yuklendi": 249,
+    "hayalet_dusen": 428,
+    "karantina_dusen": 13,
+    "takvim_reddedilen": 0,
+    "defter_yolu_dusen": 46761,
+    "defter_yolu_sembol": 58,
+    "hesaplanan_dislanan_satir": 0,
+    "iki_yol_ayrisan_sembol": [],
+    "kirilma_sinifi": {}
+  },
+  "bar_muhasebesi_kisa_semboller": [
+    "HON",
+    "DD"
+  ],
+  "pozitif_kontrol": {
+    "aciklama": "AYNI boru hattı, kart çivisi: ham rvol20 @20 cf-katman IC ≈ 0.0645 (max_olcum/EDG-2026-004 turu); bars_integrity DIŞLAMALI yolda resmom 0.0637, pullback 0.0642 ölçtü. Bu tur da DIŞLAMALI yoldadır.",
+    "katman": "counterfactuals.jsonl entered=True & near_miss=False (component_ic katmanı)",
+    "populasyon_muhasebesi": {
+      "cf_satir": 7161,
+      "cf_girilmemis": 108,
+      "cf_eksik_alan": 0,
+      "open_satir": 69,
+      "open_eksik_alan": 0
+    },
+    "eslesme_muhasebesi": {
+      "bar_yok_sembol": 45,
+      "bar_yok_tarih": 0,
+      "kabul": 7077
+    },
+    "5": {
+      "ic": 0.0374,
+      "n": 2095,
+      "ci": {
+        "lo": -0.0193,
+        "hi": 0.0791,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": -0.019325,
+        "hi": 0.079094,
+        "n_gun": 742,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": false,
+      "neden": null
+    },
+    "10": {
+      "ic": 0.0516,
+      "n": 2093,
+      "ci": {
+        "lo": -0.0119,
+        "hi": 0.0996,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": -0.011923,
+        "hi": 0.099568,
+        "n_gun": 740,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": false,
+      "neden": null
+    },
+    "20": {
+      "ic": 0.0642,
+      "n": 2087,
+      "ci": {
+        "lo": 0.0061,
+        "hi": 0.1071,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": 0.006101,
+        "hi": 0.107069,
+        "n_gun": 736,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": true,
+      "neden": null
+    },
+    "civi_hedef": 0.0645,
+    "civi_olculen": 0.0642,
+    "civi_sapma": 0.0003,
+    "tolerans": 0.005,
+    "GECTI": true,
+    "defterdeki_deger_cf_rvol20": {
+      "5": 0.032,
+      "10": 0.0456,
+      "20": 0.0604
+    }
+  },
+  "pk4_yol_tutarliligi": {
+    "tanim": "close[t+h]/close[t]-1 ile aradaki GÜNLÜK getirilerin bileşiği ÖZDEŞ olmalı. Takvim kapısı/integrity kırpması ufkun İÇİNDE bar düşürdüyse ya da kaydırma bir gün kaysaydı özdeşlik bozulurdu.",
+    "kapsam": "pozitif kontrol satırları + TÜM bar paneli (her sembol, her bar)",
+    "fwd5": {
+      "n": 1263201,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "fwd10": {
+      "n": 1261933,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "fwd20": {
+      "n": 1259405,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "fwd60": {
+      "n": 1242481,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "gecti": true
+  },
+  "pk5_ozdeslikler": {
+    "A_asof_geriye_bakissizlik": {
+      "n_ornek": 500,
+      "ayrisan": 0,
+      "filed>t_sizinti": 0,
+      "gecti": true,
+      "tanim": "vektörel searchsorted as-of ile satır satır `filed<=t` filtresi AYNI kaydı ve AYNI güncel-baz değeri vermeli; hiçbir seçilen kaydın filed'ı t'yi aşmamalı"
+    },
+    "B_split_bazi": {
+      "n_ornek": 3729,
+      "ayrisan": 0,
+      "gecti": true,
+      "tanim": "B(f) = f gününe kadar kabul edilmiş bölünme oranlarının çarpımı; kümülatif tablo yolu ile kaba döngü yolu birebir aynı olmalı"
+    },
+    "C_hizli_ortalama": {
+      "n_ornek": 50,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true,
+      "tanim": "mean_block_boot (gün-toplamı/gün-adedi) ile block_boot (satır toplayıp mean) AYNI gün dizisinde birebir aynı sayıyı vermeli"
+    },
+    "D_fundamentals_asof": {
+      "n_ornek": 1160,
+      "filed>t_sizinti": 0,
+      "gecti": true,
+      "tanim": "gpa as-of: seçilen FY kaydının filed'ı gözlem gününü ASLA aşmamalı (end tabanlı okuma YASAK — kart 014 notu)"
+    },
+    "gecti": true
+  },
+  "hisse_muhasebesi": {
+    "ham_satir": 161856,
+    "birim_veya_val_dusen": 76,
+    "anlik_iki_etiket_satir": 32954,
+    "birincil_dei": 244,
+    "birincil_usgaap": 8,
+    "seri_olmayan_sembol": [
+      "EL",
+      "HRL",
+      "META",
+      "MKC",
+      "STZ",
+      "TSN"
+    ],
+    "yedek_etiket_eklenen_kayit": 22,
+    "split_takvimi": {
+      "aday_sicrama": 169,
+      "snap_olmayan": 68,
+      "kanitsiz": 27,
+      "kabul": 74,
+      "kabul_sembol": 58,
+      "kirik_sinir": 51,
+      "olcek_gidis_donus": 24,
+      "kabul_listesi": [
+        {
+          "symbol": "AAPL",
+          "filed": "2014-07-23",
+          "oran": 7,
+          "ham_oran": 6.951473,
+          "kanit_n": 14
+        },
+        {
+          "symbol": "AAPL",
+          "filed": "2020-10-30",
+          "oran": 4,
+          "ham_oran": 3.97644,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "AFL",
+          "filed": "2018-05-04",
+          "oran": 2,
+          "ham_oran": 1.986659,
+          "kanit_n": 25
+        },
+        {
+          "symbol": "AMZN",
+          "filed": "2022-07-29",
+          "oran": 20,
+          "ham_oran": 20.02584,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "AVGO",
+          "filed": "2024-09-11",
+          "oran": 10,
+          "ham_oran": 10.033712,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "BKNG",
+          "filed": "2026-04-28",
+          "oran": 25,
+          "ham_oran": 24.464685,
+          "kanit_n": 3
+        },
+        {
+          "symbol": "C",
+          "filed": "2011-08-05",
+          "oran": 0.1,
+          "ham_oran": 0.099908,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "CF",
+          "filed": "2015-08-06",
+          "oran": 5,
+          "ham_oran": 4.951148,
+          "kanit_n": 11
+        },
+        {
+          "symbol": "CHD",
+          "filed": "2011-08-05",
+          "oran": 2,
+          "ham_oran": 2.008526,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "CHD",
+          "filed": "2016-11-03",
+          "oran": 2,
+          "ham_oran": 2.007814,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "CL",
+          "filed": "2013-07-25",
+          "oran": 2,
+          "ham_oran": 1.989149,
+          "kanit_n": 18
+        },
+        {
+          "symbol": "CRM",
+          "filed": "2013-05-24",
+          "oran": 4,
+          "ham_oran": 4.030055,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "CSX",
+          "filed": "2021-07-22",
+          "oran": 3,
+          "ham_oran": 2.976624,
+          "kanit_n": 14
+        },
+        {
+          "symbol": "CTSH",
+          "filed": "2014-05-08",
+          "oran": 2,
+          "ham_oran": 2.003391,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "DD",
+          "filed": "2019-08-06",
+          "oran": 0.3333333333333333,
+          "ham_oran": 0.331858,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "DECK",
+          "filed": "2024-10-31",
+          "oran": 6,
+          "ham_oran": 5.978692,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "DHR",
+          "filed": "2010-08-11",
+          "oran": 2,
+          "ham_oran": 2.010256,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "DLTR",
+          "filed": "2012-08-16",
+          "oran": 2,
+          "ham_oran": 1.985937,
+          "kanit_n": 7
+        },
+        {
+          "symbol": "EOG",
+          "filed": "2014-05-06",
+          "oran": 2,
+          "ham_oran": 2.000976,
+          "kanit_n": 13
+        },
+        {
+          "symbol": "EW",
+          "filed": "2016-02-19",
+          "oran": 2,
+          "ham_oran": 1.989689,
+          "kanit_n": 14
+        },
+        {
+          "symbol": "EW",
+          "filed": "2020-07-27",
+          "oran": 3,
+          "ham_oran": 3.010052,
+          "kanit_n": 14
+        },
+        {
+          "symbol": "FCX",
+          "filed": "2011-02-25",
+          "oran": 2,
+          "ham_oran": 2.010066,
+          "kanit_n": 8
+        },
+        {
+          "symbol": "FI",
+          "filed": "2014-02-20",
+          "oran": 2,
+          "ham_oran": 1.973236,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "FI",
+          "filed": "2018-05-02",
+          "oran": 2,
+          "ham_oran": 1.981709,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "FISV",
+          "filed": "2014-02-20",
+          "oran": 2,
+          "ham_oran": 1.973236,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "FISV",
+          "filed": "2018-05-02",
+          "oran": 2,
+          "ham_oran": 1.981709,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "GE",
+          "filed": "2021-10-26",
+          "oran": 0.125,
+          "ham_oran": 0.125054,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "GILD",
+          "filed": "2013-02-27",
+          "oran": 2,
+          "ham_oran": 2.009366,
+          "kanit_n": 18
+        },
+        {
+          "symbol": "GIS",
+          "filed": "2010-07-09",
+          "oran": 2,
+          "ham_oran": 1.962814,
+          "kanit_n": 1
+        },
+        {
+          "symbol": "GOOG",
+          "filed": "2022-07-27",
+          "oran": 20,
+          "ham_oran": 19.85236,
+          "kanit_n": 2
+        },
+        {
+          "symbol": "GOOGL",
+          "filed": "2022-07-27",
+          "oran": 20,
+          "ham_oran": 19.85236,
+          "kanit_n": 2
+        },
+        {
+          "symbol": "HLT",
+          "filed": "2017-02-15",
+          "oran": 0.3333333333333333,
+          "ham_oran": 0.333135,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "HON",
+          "filed": "2026-07-23",
+          "oran": 0.5,
+          "ham_oran": 0.500179,
+          "kanit_n": 6
+        },
+        {
+          "symbol": "HWM",
+          "filed": "2016-11-09",
+          "oran": 0.3333333333333333,
+          "ham_oran": 0.333349,
+          "kanit_n": 14
+        },
+        {
+          "symbol": "ISRG",
+          "filed": "2017-10-20",
+          "oran": 3,
+          "ham_oran": 3.016012,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "ISRG",
+          "filed": "2021-10-20",
+          "oran": 3,
+          "ham_oran": 3.008371,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "KO",
+          "filed": "2012-10-25",
+          "oran": 2,
+          "ham_oran": 1.992554,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "KR",
+          "filed": "2015-03-31",
+          "oran": 2,
+          "ham_oran": 1.941017,
+          "kanit_n": 4
+        },
+        {
+          "symbol": "KR",
+          "filed": "2015-04-01",
+          "oran": 0.5,
+          "ham_oran": 0.514965,
+          "kanit_n": 1
+        },
+        {
+          "symbol": "KR",
+          "filed": "2015-09-22",
+          "oran": 2,
+          "ham_oran": 2.004141,
+          "kanit_n": 19
+        },
+        {
+          "symbol": "LRCX",
+          "filed": "2024-10-28",
+          "oran": 10,
+          "ham_oran": 9.907027,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "LULU",
+          "filed": "2011-09-09",
+          "oran": 2,
+          "ham_oran": 2.012754,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "MCHP",
+          "filed": "2021-11-04",
+          "oran": 2,
+          "ham_oran": 2.024779,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "MNST",
+          "filed": "2012-02-29",
+          "oran": 2,
+          "ham_oran": 2.00188,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "MNST",
+          "filed": "2017-03-01",
+          "oran": 3,
+          "ham_oran": 2.977116,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "MNST",
+          "filed": "2023-05-05",
+          "oran": 2,
+          "ham_oran": 2.003624,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "MPC",
+          "filed": "2015-08-03",
+          "oran": 2,
+          "ham_oran": 1.973798,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "NEE",
+          "filed": "2021-02-12",
+          "oran": 4,
+          "ham_oran": 4.001635,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "NFLX",
+          "filed": "2015-07-17",
+          "oran": 7,
+          "ham_oran": 7.02738,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "NFLX",
+          "filed": "2026-01-23",
+          "oran": 10,
+          "ham_oran": 9.96422,
+          "kanit_n": 12
+        },
+        {
+          "symbol": "NKE",
+          "filed": "2013-01-09",
+          "oran": 2,
+          "ham_oran": 1.98803,
+          "kanit_n": 14
+        },
+        {
+          "symbol": "NOW",
+          "filed": "2026-01-29",
+          "oran": 5,
+          "ham_oran": 5.028846,
+          "kanit_n": 12
+        },
+        {
+          "symbol": "NVDA",
+          "filed": "2021-08-20",
+          "oran": 4,
+          "ham_oran": 4.012841,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "NVDA",
+          "filed": "2024-08-28",
+          "oran": 10,
+          "ham_oran": 9.971545,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "OKE",
+          "filed": "2012-08-01",
+          "oran": 2,
+          "ham_oran": 1.973089,
+          "kanit_n": 6
+        },
+        {
+          "symbol": "ORLY",
+          "filed": "2025-08-08",
+          "oran": 15,
+          "ham_oran": 14.888661,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "PANW",
+          "filed": "2022-11-18",
+          "oran": 3,
+          "ham_oran": 3.031514,
+          "kanit_n": 10
+        },
+        {
+          "symbol": "PANW",
+          "filed": "2025-02-14",
+          "oran": 2,
+          "ham_oran": 2.017982,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "PCAR",
+          "filed": "2023-02-22",
+          "oran": 1.5,
+          "ham_oran": 1.50248,
+          "kanit_n": 14
+        },
+        {
+          "symbol": "PPG",
+          "filed": "2015-07-27",
+          "oran": 2,
+          "ham_oran": 1.991683,
+          "kanit_n": 17
+        },
+        {
+          "symbol": "ROST",
+          "filed": "2012-03-27",
+          "oran": 2,
+          "ham_oran": 1.981449,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "ROST",
+          "filed": "2015-09-09",
+          "oran": 2,
+          "ham_oran": 1.98403,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "SBUX",
+          "filed": "2015-04-28",
+          "oran": 2,
+          "ham_oran": 2.0012,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "SHW",
+          "filed": "2021-04-28",
+          "oran": 3,
+          "ham_oran": 2.968126,
+          "kanit_n": 19
+        },
+        {
+          "symbol": "SRE",
+          "filed": "2023-11-03",
+          "oran": 2,
+          "ham_oran": 2.000067,
+          "kanit_n": 17
+        },
+        {
+          "symbol": "TJX",
+          "filed": "2012-03-27",
+          "oran": 2,
+          "ham_oran": 1.979906,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "TJX",
+          "filed": "2018-12-04",
+          "oran": 2,
+          "ham_oran": 1.986487,
+          "kanit_n": 22
+        },
+        {
+          "symbol": "TSLA",
+          "filed": "2020-10-26",
+          "oran": 5,
+          "ham_oran": 5.086349,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "TSLA",
+          "filed": "2022-10-24",
+          "oran": 3,
+          "ham_oran": 3.023248,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "UNP",
+          "filed": "2014-07-25",
+          "oran": 2,
+          "ham_oran": 1.981463,
+          "kanit_n": 16
+        },
+        {
+          "symbol": "VFC",
+          "filed": "2014-02-26",
+          "oran": 4,
+          "ham_oran": 4.00079,
+          "kanit_n": 18
+        },
+        {
+          "symbol": "WEC",
+          "filed": "2011-05-05",
+          "oran": 2,
+          "ham_oran": 1.999962,
+          "kanit_n": 15
+        },
+        {
+          "symbol": "WFC",
+          "filed": "2023-08-04",
+          "oran": 2,
+          "ham_oran": 2.006981,
+          "kanit_n": 1
+        },
+        {
+          "symbol": "WMT",
+          "filed": "2024-03-15",
+          "oran": 3,
+          "ham_oran": 2.993072,
+          "kanit_n": 14
+        }
+      ],
+      "kirik_listesi": [
+        {
+          "symbol": "AEP",
+          "filed": "2010-07-30",
+          "oran": 1001176.460636
+        },
+        {
+          "symbol": "AEP",
+          "filed": "2011-02-25",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "AEP",
+          "filed": "2011-05-03",
+          "oran": 1002046.140511
+        },
+        {
+          "symbol": "AEP",
+          "filed": "2011-07-29",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "AIG",
+          "filed": "2011-02-24",
+          "oran": 13.285937
+        },
+        {
+          "symbol": "AMD",
+          "filed": "2012-08-02",
+          "oran": 1008849.094722
+        },
+        {
+          "symbol": "AMD",
+          "filed": "2012-11-01",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "CB",
+          "filed": "2010-05-07",
+          "oran": 1006198.835528
+        },
+        {
+          "symbol": "CB",
+          "filed": "2010-11-08",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "CCL",
+          "filed": "2021-01-26",
+          "oran": 1294.09708
+        },
+        {
+          "symbol": "CCL",
+          "filed": "2021-04-07",
+          "oran": 0.001044
+        },
+        {
+          "symbol": "CLX",
+          "filed": "2013-02-05",
+          "oran": 1003778.535287
+        },
+        {
+          "symbol": "CLX",
+          "filed": "2013-05-02",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "CRM",
+          "filed": "2011-05-26",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "CRM",
+          "filed": "2011-09-06",
+          "oran": 1011949.215833
+        },
+        {
+          "symbol": "CSX",
+          "filed": "2011-04-20",
+          "oran": 0.0
+        },
+        {
+          "symbol": "CSX",
+          "filed": "2011-07-21",
+          "oran": 1095281506.0
+        },
+        {
+          "symbol": "EOG",
+          "filed": "2009-11-05",
+          "oran": 0.001002
+        },
+        {
+          "symbol": "ETN",
+          "filed": "2013-02-28",
+          "oran": 4711000.0
+        },
+        {
+          "symbol": "EXC",
+          "filed": "2010-04-23",
+          "oran": 1001035.970771
+        },
+        {
+          "symbol": "EXC",
+          "filed": "2010-07-22",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "KDP",
+          "filed": "2018-08-07",
+          "oran": 7.705711
+        },
+        {
+          "symbol": "LIN",
+          "filed": "2018-11-09",
+          "oran": 22042.18276
+        },
+        {
+          "symbol": "MAR",
+          "filed": "2010-04-23",
+          "oran": 1007836.869863
+        },
+        {
+          "symbol": "MAR",
+          "filed": "2010-04-28",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "ON",
+          "filed": "2012-08-03",
+          "oran": 1003280.937154
+        },
+        {
+          "symbol": "ON",
+          "filed": "2013-02-26",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "ON",
+          "filed": "2013-05-03",
+          "oran": 1002823.738101
+        },
+        {
+          "symbol": "ON",
+          "filed": "2013-08-02",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "ORCL",
+          "filed": "2012-09-24",
+          "oran": 987004.624265
+        },
+        {
+          "symbol": "ORCL",
+          "filed": "2012-12-21",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "PKG",
+          "filed": "2023-05-03",
+          "oran": 1002.662001
+        },
+        {
+          "symbol": "PKG",
+          "filed": "2023-08-04",
+          "oran": 0.001
+        },
+        {
+          "symbol": "PKG",
+          "filed": "2024-05-08",
+          "oran": 1001.93988
+        },
+        {
+          "symbol": "PKG",
+          "filed": "2024-08-08",
+          "oran": 0.001
+        },
+        {
+          "symbol": "PKG",
+          "filed": "2026-02-26",
+          "oran": 991.512582
+        },
+        {
+          "symbol": "PKG",
+          "filed": "2026-05-08",
+          "oran": 0.000999
+        },
+        {
+          "symbol": "PSA",
+          "filed": "2013-05-10",
+          "oran": 0.001001
+        },
+        {
+          "symbol": "PSA",
+          "filed": "2013-08-05",
+          "oran": 1000.867414
+        },
+        {
+          "symbol": "PSA",
+          "filed": "2016-05-06",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "PSA",
+          "filed": "2016-08-05",
+          "oran": 1002320.16185
+        },
+        {
+          "symbol": "QCOM",
+          "filed": "2011-04-20",
+          "oran": 1015.687319
+        },
+        {
+          "symbol": "QCOM",
+          "filed": "2011-07-20",
+          "oran": 0.001006
+        },
+        {
+          "symbol": "QCOM",
+          "filed": "2011-11-02",
+          "oran": 1000.741252
+        },
+        {
+          "symbol": "QCOM",
+          "filed": "2012-02-01",
+          "oran": 0.001006
+        },
+        {
+          "symbol": "ROKU",
+          "filed": "2018-03-01",
+          "oran": 20.577063
+        },
+        {
+          "symbol": "SRE",
+          "filed": "2010-02-26",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "SWKS",
+          "filed": "2011-11-28",
+          "oran": 1008.657332
+        },
+        {
+          "symbol": "SWKS",
+          "filed": "2012-05-08",
+          "oran": 0.001007
+        },
+        {
+          "symbol": "WBA",
+          "filed": "2015-04-09",
+          "oran": 10907565.09
+        },
+        {
+          "symbol": "WBD",
+          "filed": "2022-04-26",
+          "oran": 17.946531
+        }
+      ],
+      "gidis_donus_listesi": [
+        {
+          "symbol": "AEP",
+          "bas": "2010-07-30",
+          "son": "2011-02-25",
+          "oran": 1001176.460636
+        },
+        {
+          "symbol": "AEP",
+          "bas": "2011-02-25",
+          "son": "2011-05-03",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "AEP",
+          "bas": "2011-05-03",
+          "son": "2011-07-29",
+          "oran": 1002046.140511
+        },
+        {
+          "symbol": "AMD",
+          "bas": "2012-08-02",
+          "son": "2012-11-01",
+          "oran": 1008849.094722
+        },
+        {
+          "symbol": "CB",
+          "bas": "2010-05-07",
+          "son": "2010-11-08",
+          "oran": 1006198.835528
+        },
+        {
+          "symbol": "CLX",
+          "bas": "2013-02-05",
+          "son": "2013-05-02",
+          "oran": 1003778.535287
+        },
+        {
+          "symbol": "CRM",
+          "bas": "2011-05-26",
+          "son": "2011-09-06",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "EXC",
+          "bas": "2010-04-23",
+          "son": "2010-07-22",
+          "oran": 1001035.970771
+        },
+        {
+          "symbol": "MAR",
+          "bas": "2010-04-23",
+          "son": "2010-04-28",
+          "oran": 1007836.869863
+        },
+        {
+          "symbol": "ON",
+          "bas": "2012-08-03",
+          "son": "2013-02-26",
+          "oran": 1003280.937154
+        },
+        {
+          "symbol": "ON",
+          "bas": "2013-02-26",
+          "son": "2013-05-03",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "ON",
+          "bas": "2013-05-03",
+          "son": "2013-08-02",
+          "oran": 1002823.738101
+        },
+        {
+          "symbol": "ORCL",
+          "bas": "2012-09-24",
+          "son": "2012-12-21",
+          "oran": 987004.624265
+        },
+        {
+          "symbol": "PKG",
+          "bas": "2023-05-03",
+          "son": "2023-08-04",
+          "oran": 1002.662001
+        },
+        {
+          "symbol": "PKG",
+          "bas": "2023-08-04",
+          "son": "2024-05-08",
+          "oran": 0.001
+        },
+        {
+          "symbol": "PKG",
+          "bas": "2024-05-08",
+          "son": "2024-08-08",
+          "oran": 1001.93988
+        },
+        {
+          "symbol": "PKG",
+          "bas": "2024-08-08",
+          "son": "2026-02-26",
+          "oran": 0.001
+        },
+        {
+          "symbol": "PKG",
+          "bas": "2026-02-26",
+          "son": "2026-05-08",
+          "oran": 991.512582
+        },
+        {
+          "symbol": "PSA",
+          "bas": "2013-05-10",
+          "son": "2013-08-05",
+          "oran": 0.001001
+        },
+        {
+          "symbol": "PSA",
+          "bas": "2016-05-06",
+          "son": "2016-08-05",
+          "oran": 1e-06
+        },
+        {
+          "symbol": "QCOM",
+          "bas": "2011-04-20",
+          "son": "2011-07-20",
+          "oran": 1015.687319
+        },
+        {
+          "symbol": "QCOM",
+          "bas": "2011-07-20",
+          "son": "2011-11-02",
+          "oran": 0.001006
+        },
+        {
+          "symbol": "QCOM",
+          "bas": "2011-11-02",
+          "son": "2012-02-01",
+          "oran": 1000.741252
+        },
+        {
+          "symbol": "SWKS",
+          "bas": "2011-11-28",
+          "son": "2012-05-08",
+          "oran": 1008.657332
+        }
+      ],
+      "yalniz_anlik_kanitla_ayni_mi": false,
+      "yalniz_anlik_kanitla_kabul_n": 64
+    },
+    "fiziksel_bekci": {
+      "tavan": 1.0,
+      "gecersiz_kayit": 7,
+      "etkilenen_sembol": {
+        "BKR": {
+          "kayit": 1,
+          "ornek_deger": 100.0
+        },
+        "CSX": {
+          "kayit": 1,
+          "ornek_deger": 3.0
+        },
+        "ETN": {
+          "kayit": 1,
+          "ornek_deger": 100.0
+        },
+        "LIN": {
+          "kayit": 2,
+          "ornek_deger": 25000.0
+        },
+        "ROKU": {
+          "kayit": 1,
+          "ornek_deger": 4818812.0
+        },
+        "SPG": {
+          "kayit": 1,
+          "ornek_deger": 8000.0
+        }
+      },
+      "bar_yok_sembol": 9
+    }
+  },
+  "temel_muhasebesi": {
+    "ham_satir": 142499,
+    "birim_veya_val_dusen": 148,
+    "AFN_dusen": 1,
+    "grossprofit_val_le0_dusen": 64,
+    "FY_akis_satir": 20882,
+    "assets_anlik_satir": 35983,
+    "gp_grossprofit_etiketi": 4269,
+    "gp_gelir_eksi_maliyet": 2209,
+    "assets_ayni_dosyalama_ayni_end": 4968,
+    "assets_ayni_end_eslesmeyen": 1510,
+    "assets_ayni_dosyalama_yakin_end": 1,
+    "assets_eslesmeyen": 1509,
+    "gozlem_satir": 4969,
+    "sembol_n": 179,
+    "evren_kesisim_n": 175,
+    "gp_kaynak_dagilimi": {
+      "GrossProfit": 3269,
+      "Revenues-CostOfGoodsAndServicesSold": 660,
+      "RevenueFromContractWithCustomerExcludingAssessedTax-CostOfGoodsAndServicesSold": 428,
+      "Revenues-CostOfRevenue": 406,
+      "RevenueFromContractWithCustomerExcludingAssessedTax-CostOfRevenue": 142,
+      "RevenueFromContractWithCustomerIncludingAssessedTax-CostOfGoodsAndServicesSold": 46,
+      "RevenueFromContractWithCustomerIncludingAssessedTax-CostOfRevenue": 18
+    }
+  },
+  "split_takvimi_bar_serisi_duz_mu": {
+    "sonuc": {
+      "NVDA": {
+        "split_gunu": "2024-06-10",
+        "gun_getirisi": 0.007445,
+        "hacim_orani": 0.761817
+      },
+      "AVGO": {
+        "split_gunu": "2024-07-15",
+        "gun_getirisi": 0.007938,
+        "hacim_orani": 0.755236
+      },
+      "AAPL": {
+        "split_gunu": "2020-08-31",
+        "gun_getirisi": 0.033892,
+        "hacim_orani": 0.604427
+      },
+      "TSLA": {
+        "split_gunu": "2022-08-25",
+        "gun_getirisi": -0.003467,
+        "hacim_orani": 0.929624
+      },
+      "GOOGL": {
+        "split_gunu": "2022-07-18",
+        "gun_getirisi": -0.024602,
+        "hacim_orani": 0.922929
+      }
+    },
+    "yorum": "Bilinen bölünme günlerinde bar serisinde ~%90 fiyat düşüşü YOK — state/bars SPLIT-DÜZELTİLMİŞ. Yani 'bar verisindeki split günleri' bu veri kümesinde OKUNAMAZ; split takvimi EDGAR'ın kendi geriye-dönük yeniden-beyanından türetildi (ortak.build_split_takvimi belgesi)."
+  },
+  "split_normalizasyon_dogrulama": {
+    "aciklama": "Güncel baza çevrilmiş as-of hisse sayımı, bölünmenin ÜZERİNDEN pürüzsüz geçmelidir. Ham EDGAR serisi 2024-08-28'de NVDA'da 10× sıçrar; aşağıdaki seride sıçrama YOKTUR ve seviye bugünkü gerçek hisse adedidir.",
+    "tarihler": [
+      "2013-06-03",
+      "2015-06-01",
+      "2019-06-03",
+      "2021-06-01",
+      "2023-06-01",
+      "2024-06-03",
+      "2024-09-03",
+      "2025-06-02",
+      "2026-06-01"
+    ],
+    "seri": {
+      "NVDA": {
+        "B_son": 40.0,
+        "guncel_baz": [
+          23116700000.0,
+          21502400000.0,
+          24360000000.0,
+          24920000000.0,
+          24700000000.0,
+          24600000000.0,
+          24530000000.0,
+          24400000000.0,
+          24200000000.0
+        ],
+        "ham_edgar": [
+          577916000.0,
+          537560000.0,
+          609000000.0,
+          623000000.0,
+          2470000000.0,
+          2460000000.0,
+          24530000000.0,
+          24400000000.0,
+          24200000000.0
+        ],
+        "guncel_baz_donemsel_degisim": [
+          null,
+          -0.069831,
+          0.132897,
+          0.022989,
+          -0.008828,
+          -0.004049,
+          -0.002846,
+          -0.0053,
+          -0.008197
+        ],
+        "kaynak_filed": [
+          "2013-05-22",
+          "2015-05-20",
+          "2019-05-16",
+          "2021-05-26",
+          "2023-05-26",
+          "2024-05-29",
+          "2024-08-28",
+          "2025-05-28",
+          "2026-05-20"
+        ]
+      },
+      "AVGO": {
+        "B_son": 10.0,
+        "guncel_baz": [
+          null,
+          null,
+          3958460000.0,
+          4083020000.0,
+          4169240000.0,
+          4634210000.0,
+          4654880000.0,
+          4701950000.0,
+          4734670000.0
+        ],
+        "ham_edgar": [
+          null,
+          null,
+          395846000.0,
+          408302000.0,
+          416924000.0,
+          463421000.0,
+          465488000.0,
+          4701950000.0,
+          4734670000.0
+        ],
+        "guncel_baz_donemsel_degisim": [
+          null,
+          null,
+          null,
+          0.031468,
+          0.021115,
+          0.111525,
+          0.004461,
+          0.010111,
+          0.006959
+        ],
+        "kaynak_filed": [
+          "",
+          "",
+          "2019-03-15",
+          "2021-03-12",
+          "2023-03-08",
+          "2024-03-14",
+          "2024-06-13",
+          "2025-03-12",
+          "2026-03-11"
+        ]
+      },
+      "AAPL": {
+        "B_son": 28.0,
+        "guncel_baz": [
+          26282200000.0,
+          23044100000.0,
+          18404300000.0,
+          16687600000.0,
+          15728700000.0,
+          15334100000.0,
+          15204100000.0,
+          14935800000.0,
+          14687400000.0
+        ],
+        "ham_edgar": [
+          938649000.0,
+          5761030000.0,
+          4601080000.0,
+          16687600000.0,
+          15728700000.0,
+          15334100000.0,
+          15204100000.0,
+          14935800000.0,
+          14687400000.0
+        ],
+        "guncel_baz_donemsel_degisim": [
+          null,
+          -0.123203,
+          -0.201345,
+          -0.093275,
+          -0.057463,
+          -0.025089,
+          -0.008474,
+          -0.017647,
+          -0.016636
+        ],
+        "kaynak_filed": [
+          "2013-04-24",
+          "2015-04-28",
+          "2019-05-01",
+          "2021-04-29",
+          "2023-05-05",
+          "2024-05-03",
+          "2024-08-02",
+          "2025-05-02",
+          "2026-05-01"
+        ]
+      },
+      "GOOGL": {
+        "B_son": 20.0,
+        "guncel_baz": [
+          null,
+          null,
+          13895600000.0,
+          13421900000.0,
+          12722000000.0,
+          12381000000.0,
+          12322000000.0,
+          12155000000.0,
+          12116000000.0
+        ],
+        "ham_edgar": [
+          null,
+          null,
+          694782000.0,
+          671094000.0,
+          12722000000.0,
+          12381000000.0,
+          12322000000.0,
+          12155000000.0,
+          12116000000.0
+        ],
+        "guncel_baz_donemsel_degisim": [
+          null,
+          null,
+          null,
+          -0.034094,
+          -0.052145,
+          -0.026804,
+          -0.004765,
+          -0.013553,
+          -0.003209
+        ],
+        "kaynak_filed": [
+          "",
+          "",
+          "2019-04-30",
+          "2021-04-28",
+          "2023-04-26",
+          "2024-04-26",
+          "2024-07-24",
+          "2025-04-25",
+          "2026-04-30"
+        ]
+      },
+      "TSLA": {
+        "B_son": 15.0,
+        "guncel_baz": [
+          1733290000.0,
+          1896060000.0,
+          2605810000.0,
+          2879560000.0,
+          3169500000.0,
+          3189200000.0,
+          3194640000.0,
+          3216520000.0,
+          3752430000.0
+        ],
+        "ham_edgar": [
+          115553000.0,
+          126404000.0,
+          173721000.0,
+          959854000.0,
+          3169500000.0,
+          3189200000.0,
+          3194640000.0,
+          3216520000.0,
+          3752430000.0
+        ],
+        "guncel_baz_donemsel_degisim": [
+          null,
+          0.093906,
+          0.374332,
+          0.105053,
+          0.10069,
+          0.006213,
+          0.001707,
+          0.006848,
+          0.166613
+        ],
+        "kaynak_filed": [
+          "2013-05-10",
+          "2015-05-11",
+          "2019-04-29",
+          "2021-04-30",
+          "2023-04-24",
+          "2024-04-24",
+          "2024-07-24",
+          "2025-04-30",
+          "2026-04-30"
+        ]
+      },
+      "WMT": {
+        "B_son": 3.0,
+        "guncel_baz": [
+          9877330000.0,
+          9678190000.0,
+          8609050000.0,
+          8451220000.0,
+          8086970000.0,
+          8058050000.0,
+          8038250000.0,
+          8016850000.0,
+          7958080000.0
+        ],
+        "ham_edgar": [
+          3292440000.0,
+          3226060000.0,
+          2869680000.0,
+          2817070000.0,
+          2695660000.0,
+          8058050000.0,
+          8038250000.0,
+          8016850000.0,
+          7958080000.0
+        ],
+        "guncel_baz_donemsel_degisim": [
+          null,
+          -0.020162,
+          -0.110469,
+          -0.018334,
+          -0.0431,
+          -0.003576,
+          -0.002457,
+          -0.002662,
+          -0.007331
+        ],
+        "kaynak_filed": [
+          "2013-03-26",
+          "2015-04-01",
+          "2019-03-28",
+          "2021-03-19",
+          "2023-03-17",
+          "2024-03-15",
+          "2024-08-30",
+          "2025-03-14",
+          "2026-05-29"
+        ]
+      },
+      "NFLX": {
+        "B_son": 70.0,
+        "guncel_baz": [
+          3930080000.0,
+          4243450000.0,
+          4371920000.0,
+          4433840000.0,
+          4445370000.0,
+          4309650000.0,
+          4291650000.0,
+          4256830000.0,
+          4212790000.0
+        ],
+        "ham_edgar": [
+          56144000.0,
+          60620700.0,
+          437192000.0,
+          443384000.0,
+          444537000.0,
+          430965000.0,
+          429165000.0,
+          425683000.0,
+          4212790000.0
+        ],
+        "guncel_baz_donemsel_degisim": [
+          null,
+          0.079737,
+          0.030275,
+          0.014163,
+          0.002601,
+          -0.03053,
+          -0.004178,
+          -0.008112,
+          -0.010345
+        ],
+        "kaynak_filed": [
+          "2013-04-26",
+          "2015-04-17",
+          "2019-04-18",
+          "2021-04-22",
+          "2023-04-21",
+          "2024-04-22",
+          "2024-07-19",
+          "2025-04-18",
+          "2026-04-17"
+        ]
+      }
+    }
+  }
+}

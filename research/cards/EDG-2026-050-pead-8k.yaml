@@ -37,7 +37,36 @@ kill_criteria:
   - "14g kümeleme atlanırsa geçersiz"
   - "pozitif kontrol (rvol20 IC) yeniden üretilemezse ölçüm düzeneği geçersiz"
 k_registry: {registered_at: "2026-08-23", trial_ids: [pending-050-ust, pending-050-alt]}
-status: registered   # 2026-08-23 Rol-1 — ön-kayıt (operatör 'WP açık kalemlerine devam' talimatı; ölçüm 049 sonrası)
+status: measured     # 2026-08-24 Rol-1 HÜKMÜ aşağıda (K=2 aynen; kill 0; kapsam 15.838 olay)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-24): **KURAL ATEŞLEDİ — "PEAD SİNYALİ VAR, ARSENAL ADAYI" — AMA ÜÇ ZORUNLU
+  ŞERHLE VE SAĞLAMLIK-TEKRARI ÖN-ŞARTIYLA.** Ölçüm: üst dilim @60g fazla-getiri **+52,4 bps**,
+  CI95 [+1,6; +106,4] (sıfır-dışı POZİTİF) · 10bps sonrası **+42,4**, 20bps sonrası +32,4 (>0).
+  Kartın donuk kuralının iki şartı da harfi harfine sağlandı; eşik ölçümden sonra DEĞİŞTİRİLMEZ,
+  bu yüzden hüküm "aday" der.
+  ── ŞERH-1 (SAĞLAMLIK — hükmün en önemli parçası): anlamlılık KIL PAYI ve TOHUM-KIRILGAN. CI
+  alt ucu +1,6 bps, bootstrap gürültü tabanının içinde; 6 farklı tohumda alt sınır işareti
+  TUTARSIZ (2/6 tohumda ≤0), 20k tekrarda P(ortalama≤0)=0,0239 ↔ çıta 0,025. Yani sinyal
+  "istatistiksel olarak var" ama tek tohum çevirmesiyle kaybolabilecek kadar sınırda. SONUÇ:
+  bu kart bir SKOR BAĞLAMASI GEREKÇESİ DEĞİLDİR. Bağlama ancak ön-kayıtlı bir SAĞLAMLIK TEKRARI
+  geçerse gündeme gelir (ayrı kart; tasarım şartları: tohum kümesi ÖNCEDEN beyanlı [≥5 tohum,
+  hepsinin alt sınırı >0 şartı], dönem-bölmeli replikasyon [erken/geç yarı ayrı ayrı aynı yön],
+  ve ARSENAL çıtası [kart-önce + confirm n≥30 ∧ CI-alt>0 + operatör imzası]).
+  ── ŞERH-2 (SURVIVORSHIP): evren bugünün 251'idir; delist olmuş isimler yok → her pozitif okuma
+  **ÜST-SINIR**dır (kart beyanı gereği bu kelime hükümde zorunlu).
+  ── ŞERH-3 (TABAN BAĞLAMI, tanı): olay popülasyonunun TAMAMI evrene karşı anlamlı NEGATİF
+  sürüklüyor (@20g −22,2 [−32,9; −10,9] · @60g −26,4 [−44,9; −7,3]). Yani "8-K olayları sınıf
+  olarak evreni yeniyor" DEĞİL; bulgu, olaylar İÇİNDE en güçlü tepkilerin göreli üstünlüğüdür.
+  Bir uygulama tasarımı bunu ıskalarsa (tüm olaylara girmek) sinyalin tersini alır.
+  ── DİĞER HÜCRELER: üst@20g +17,8 [−11,3; +52,0] · alt@60g +17,1 [−39,3; +67,8] · alt@20g −17,7
+  [−46,3; +10,5] — üçü de CI 0-içi (alt dilimden "kaçınma sinyali" ÇIKARILAMAZ; kartın simetrik
+  okuması sonuçsuz). Genişleyen-pencere PIT tanısı aynı yönde ve yine kıl payı (+44,7 [+0,67; +96,7]).
+  ── DİSİPLİN: kill#3 geçti (15.838 ≥ 8.000); pozitif kontroller geçti (rvol20 IC 0,0642 ↔ hedef
+  0,0645; PK4 fark 0,0; PK5 dört bacak sızıntısız); PIT YIKICI SINAMA tüm 15.838 olayda koştu
+  (ihlal 0); dilim eşikleri ölçüm-öncesi ayrı süreçte döküldü ve faz4 onları yeniden hesaplamadı.
+  Kapsam beyanı: 41 CIK-kesiği sembol-dönemi + 486 düşen olay adlı/nedenli; SPOT tümüyle None.
+  K=2 aynen (pending-050-ust/alt harcandı).
 beyanli_sinirlar: >
   (1) Survivorship: evren bugünün 251'i — hüküm "üst-sınır" kelimesiyle yazılır. (2) 2.02-işaretsiz
   duyurular kaçar (kapsam beyanı). (3) Faktör-ölçümü portföy-bağlamsız fazla-getiridir; paket-içi

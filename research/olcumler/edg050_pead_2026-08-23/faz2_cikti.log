@@ -1,0 +1,6 @@
+== FAZ2: [2] tepki + ham sürüklenme + kill#3 kapısı + [6] PIT yıkıcı sınama ==
+   249/251 sembol yüklendi
+   yazıldı: olaylar.csv (16324 satır)
+   geçerli olay (tepki ölçülebilir): 15838  nedenler: {'t0_bar_serisi_sonrasi': 51, 't0_bar_boslugu>3g': 298, 't0_sonrasi_bar_yok (seri sonu)': 18, 'evren_paydasi<50': 5, 'bar_paneli_yok (şablon bar yolu sembolü yüklemedi)': 114}
+   PIT yıkıcı sınama: n=15838 ihlal=0 geçti=True
+== yazıldı: faz2_tepki.json ==
