@@ -8,7 +8,9 @@ kâğıt) tarafında gerçek emrin TEK kapısı da buradadır; dolum/ret/koruma 
 
 Kilit girişler: `daily_cycle(bars, index, on_date)` (ana giriş; zamanlayıcı/worker bunu çağırır),
 `mirror_submit_armed` / `mirror_submit_ve_kalicilastir` (tek gönderim kapısı — intraday gönderim
-bacağı da buradan geçer), `reconcile_broker_state` (broker mutabakatı), `operator_onay_ver` /
+bacağı da buradan geçer; PENCERE YASASI [EXE-2026-009+K2] bu kapının içindedir: giriş emri sabah
+tetik penceresi [barclock.ENTRY_WINDOW_ET_MIN, 13:45] dışında gönderilmez, ertelenir — sabah
+kancası intraday_cycle._pencere_gonderim gönderir), `reconcile_broker_state` (broker mutabakatı), `operator_onay_ver` /
 `girise_uygun` (plan onay yolu), `_persist_trade` (kapanan işlem, tekilleştirilmiş),
 `_persist_equity_point` (sermaye eğrisinin kadanslı yazarı).
 
@@ -29,6 +31,7 @@ import pandas as pd
 
 from . import config, store, strategy as strat, regime as regime_mod, indicators as ind
 from . import guard, health, skills, dataset, obs, earnings, rollback, ledgerstamp
+from . import barclock                     # sabah tetik penceresi + E2 `pencere` damgası (EXE-009+K2)
 from .adapters import data as data_adapter
 from .backtest import SECTORS, _adv
 from . import broker as BR                 # E1 giriş-icra yasası (olay adları + karar fonksiyonları)
@@ -658,7 +661,7 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
 # fonksiyon onları defterden okur (okunamazsa REDDEDER — hayali sermayeyle gönderim yok).
 def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
                         plans: list | None = None, halted: bool | None = None,
-                        source: str = "loop") -> dict:
+                        source: str = "loop", pencere_muaf: bool = False) -> dict:
     """Silahlı planları Alpaca PAPER aynasına gönderir (E1 yasası + de-risk + dedup + E2 + red sınıfı).
 
     `meta` YERİNDE değiştirilir (armed / alpaca_submitted / broker_rejected) — KALICILIK ÇAĞIRANIN
@@ -680,6 +683,26 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
         return {**out, "detail": "HALT aktif — emir gönderilmez"}
     if not meta.get("armed"):
         return {**out, "ok": True, "detail": "silahlı plan yok"}
+    # ── PENCERE YASASI (EXE-2026-009 + K2, 2026-08-23) ────────────────────────────────────────
+    # Giriş emri sabah tetik penceresi (barclock.ENTRY_WINDOW_ET_MIN) DIŞINDA GÖNDERİLMEZ —
+    # ertelenir. ÖLÇÜLEN NEDEN: akşam gönderilen GTC marketable-limit emir gece dinlenip ertesi
+    # açılışta (13:30) doluyordu (canlı E2 kanıtı: submitted ~20:33Z, fill ertesi seans) — yani
+    # "13:30 tetiği"nin çapası bir sabit değil, GÖNDERİMİN AÇILIŞTAN ÖNCE OLMASIYDI. Erteleme
+    # tek kapının İÇİNDE: tüm çağıranlar (döngü, onay anı, pano, 4b, kemer) aynı yasaya uyar,
+    # ikinci bir tetik saati doğamaz. Emir tipi/mantık DEĞİŞMEDİ — yalnız zamanlama.
+    # Ertelenen plan SİLAHLI KALIR; sabah kancası (intraday_cycle._pencere_gonderim) pencere
+    # açılınca aynı tek kapıdan gönderir. `pencere_muaf` YALNIZ İŞ-2-EOD kemeri içindir
+    # (mutabakat > zamanlama: iç-dolmuş planın aynasız kalması VLO sınıfıdır ve pencere
+    # yasasından ağır basar; geç emir açılışta dolarsa damga yine YÜRÜRLÜK rejimini söyler —
+    # kart sözleşmesi damgayı gerçekleşen pencereye değil rejime bağlar).
+    if not pencere_muaf and not barclock.is_entry_window():
+        obs.log("mirror_gonderim_ertelendi", kaynak=source, n=len(meta["armed"]),
+                rejim=barclock.pencere_rejimi(),
+                detail="pencere-tetiği (EXE-009+K2): tetik penceresi dışında giriş emri "
+                       "gönderilmez — silahlı planlar sabah kancasıyla tek kapıdan gider")
+        return {**out, "deferred": True,
+                "detail": "pencere-tetiği (EXE-009+K2): gönderim sabah penceresine ertelendi — "
+                          "planlar silahlı bekliyor"}
     from .adapters import alpaca
     if not alpaca.paper_available():
         # DAVRANIŞ FARKI, BEYANLI: döngü eskiden bu kapıyı hiç kontrol etmiyor, anahtarsız
@@ -1439,8 +1462,12 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                         # slippage_bps sabitini geri üretir — bir ÖLÇÜM değil totoloji. None + beyan
                         # (bkz. IC_ACILIS_TOTOLOJI_BEYAN). `fill_vs_limit_bps` AYRIDIR (dolum limit
                         # TAVANINA göre; E1 grid tam onu ölçer) ve KALIR.
+                        # `pencere` (EXE-009+K2): dolum anındaki YÜRÜRLÜK rejimi — barclock TEK
+                        # kaynağından. İç dolum açılış FİYATINDAN türetilir (yasa değişmedi);
+                        # damga fiyat penceresini değil rejimi söyler (kart sözleşmesi).
                         _entry_exec_write({**_base, "karar": "fill", "fill": round(_pos.entry, 4),
                                            "qty": _pos.qty,
+                                           "pencere": barclock.pencere_rejimi(),
                                            "fill_vs_resmi_acilis_bps": None,
                                            "fill_vs_resmi_acilis_beyan": IC_ACILIS_TOTOLOJI_BEYAN,
                                            "fill_vs_limit_bps": _bps(_pos.entry, _lw.get("limit"))})
@@ -1522,8 +1549,13 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                          "peak_equity": meta.get("peak_equity", START_EQUITY),
                          "size_law": meta.setdefault("size_law", {})}
             try:
+                # PENCERE MUAFİYETİ (EXE-009+K2): kemerin işi ZAMANLAMA değil MUTABAKATTIR —
+                # iç-dolmuş planın aynasız kalması (VLO sınıfı) pencere yasasından ağır basar.
+                # Ertelenseydi plan silahlı kümede OLMADIĞI için sabah kancası onu hiç görmez,
+                # emir sonsuza dek gönderilmemiş kalırdı. Geç emir açılışta dolarsa E2 damgası
+                # yine yürürlük rejimini söyler (kart sözleşmesi).
                 _gec = mirror_submit_armed(_gec_view, dstr, eq_now=eq_now, halted=halted,
-                                           source="loop_gec_gonderim")
+                                           source="loop_gec_gonderim", pencere_muaf=True)
                 meta["alpaca_submitted"] = list(_gec_view.get("alpaca_submitted")
                                                 or meta.get("alpaca_submitted") or [])
                 if _gec_view.get("broker_rejected"):
@@ -2527,6 +2559,12 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
                 op = r.get("resmi_acilis")
             if op is None:
                 out["acilis_yok"] += 1
+            # `pencere` (EXE-009+K2): İLK dolum yazımında YÜRÜRLÜK rejimi damgalanır (barclock
+            # tek kaynağı). Kısmi tazelemede MEVCUT damga korunur — rejim aradaki dağıtımla
+            # değişmiş olsa bile yeniden yazmak GERİYE DÖNÜK ETİKETLEME olurdu (kart kill#3).
+            # Dolumu bu turdan ESKİ satırlar (fill dolu + terminal) yukarıda zaten atlandı.
+            if "pencere" not in r:
+                r["pencere"] = barclock.pencere_rejimi()
             r["fill"] = round(af, 4)
             r["fill_qty"] = o.get("filled_qty")
             r["fill_status"] = str(o.get("status", "")).lower()

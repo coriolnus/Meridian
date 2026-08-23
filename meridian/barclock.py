@@ -128,6 +128,47 @@ def is_market_open(at: dt.datetime | None = None) -> bool:
     return 9 * 60 + 30 <= minutes < 16 * 60
 
 
+# ---------------- SABAH TETİK PENCERESİ (EXE-2026-009 + K2) ----------------
+# OPERATÖR KARARI (docs/KARAR-2026-08-23-YEDI-KARAR.md K2, kanıt EDG-2026-047: açılış bandının
+# menzili −%42,3 [−%44,3, −%40,1], bedel medyan +4,65 bps): canlı sabah tarama/emir tetiği
+# 13:30 → 13:45 UTC. ÖLÇÜLEN MEKANİZMA (uydurma değil): kodda "13:30" diye bir gönderim sabiti
+# YOKTU — sabah dolumu iki yoldan geliyordu: (a) EOD akşam gönderilen GTC marketable-limit emir
+# gece boyunca DİNLENİP açılışta doluyordu, (b) intraday tarama `is_market_open` (9:30 ET)
+# kapısıyla açılışta başlıyordu. Tetiği kaydırmak = (a) gönderimi pencereye ertelemek
+# (loop.mirror_submit_armed pencere yasası + intraday_cycle sabah kancası) ve (b) taramayı bu
+# pencereden başlatmak. HEPSİ AŞAĞIDAKİ TEK SABİTTEN OKUNUR — E2 `pencere` damgası da
+# (`pencere_rejimi`) aynı kaynaktan türetilir; ikiz-değer üretmek EQUIVALENT_TRUTHS sınıfı
+# tuzağıdır ve kartın hakemini (EDG-042 alt-bant kıyası) sessizce köreltirdi.
+# NOT (DST beyanı): sabit ET-dakikadır; "13:45 UTC" karar metni EDT içindir (kışın 14:45 UTC'ye
+# denk gelir — açılışa göre +15 dk ilişkisi korunur, karar da "açılış-sonrası 15 dk" kararıdır).
+ENTRY_WINDOW_ET_MIN = 9 * 60 + 45     # EXE-2026-009 + K2: tetik 9:45 ET (EDT'de 13:45 UTC)
+# Rejim adları KARTTA DONUK ("1330"/"1345") — sabitin bilinen iki değeri dışında ad UYDURULMAZ:
+# bilinmeyen değerde KeyError yükselir (sessizce yanlış damga basmaktan iyidir; UYDURMA YASAĞI).
+_PENCERE_REJIMLERI = {9 * 60 + 30: "1330", 9 * 60 + 45: "1345"}
+
+
+def pencere_rejimi() -> str:
+    """E2 `pencere` damgasının YÜRÜRLÜK rejimi — tetik sabitiyle AYNI kaynaktan (EXE-009 kill#3:
+    damga rejimi ikinci bir değerden okunursa tetik geri alındığında damga yalan söylerdi)."""
+    return _PENCERE_REJIMLERI[ENTRY_WINDOW_ET_MIN]
+
+
+def is_entry_window(at: dt.datetime | None = None) -> bool:
+    """Sabah tetik penceresi açık mı? (hafta içi, ET dakika ∈ [ENTRY_WINDOW_ET_MIN, 16:00)).
+
+    `is_market_open`ın ALT kümesidir ve onun yerine GEÇMEZ: seans yasası (RTH 9:30-16:00) veri/
+    gözlem katmanlarının kapısıdır ve değişmedi; bu pencere yalnız TARAMA/EMİR tetiğinin yasasıdır.
+    Tatil sınırı da aynıdır (bilmez — kolaylık kapısı; bkz. is_market_open docstring'i)."""
+    a = at or now()
+    if a.tzinfo is None:
+        a = a.replace(tzinfo=UTC)
+    ny = a.astimezone(NY)
+    if ny.weekday() >= 5:            # Cmt/Paz
+        return False
+    minutes = ny.hour * 60 + ny.minute
+    return ENTRY_WINDOW_ET_MIN <= minutes < 16 * 60
+
+
 def session_date(at: dt.datetime | None = None) -> str:
     """İçinde bulunulan ET seans tarihi (YYYY-MM-DD) — intraday kayıtları günle etiketlemek için."""
     a = at or now()

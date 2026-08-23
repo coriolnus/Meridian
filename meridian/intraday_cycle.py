@@ -19,6 +19,12 @@ ki vs_eod eşleştirmesi sulanmasın. Gönderim bacağı (`_faz4b`) YALNIZ opera
 state/INTRADAY_ARM bayrağıyla, silahlı kolun gölge satırı `would_submit` dediyse ve plan icra-uygunsa
 gerçek bracket emrini TEK KAPIDAN (loop.mirror_submit_ve_kalicilastir) gönderir — güvenlik kapıları
 EOD yoluyla aynı gövdeden uygulanır; bayrak kapalıyken davranış gözlem moduyla birebir aynıdır.
+İKİNCİ (AYRI YETKİLİ) GÖNDERİM YOLU — SABAH KANCASI (`_pencere_gonderim`, EXE-2026-009 + K2):
+tarama/emir tetiği 13:45'e kaydı (`barclock.ENTRY_WINDOW_ET_MIN`); pencere öncesi olaylar hiçbir
+karar/gölge üretmez (`skipped["pencere"]`), pencere açılınca EOD'de pencere yasasıyla ERTELENMİŞ
+silahlı gönderimler aynı tek kapıdan gider. Bu 4b'nin yetkisi DEĞİLDİR ve INTRADAY_ARM'a bağlı
+değildir: kancanın gönderdiği planlar EOD kadansının zaten göndereceği planlardır — yetki EOD'den
+devralınır, yalnız zamanlama pencereye taşınmıştır (gerekçe fonksiyon docstring'inde).
 
 Look-ahead yasası (bkz. barclock): karar anı `as_of=barclock.now()` olay başına TEK kez; girdi
 DEĞERLENDİRİLEN admissible barın OHLC'sinden, ASLA sıcak fiyattan; her satır 3 damgalı →
@@ -81,7 +87,12 @@ class IntradayConsumer:
         # (gölge ölçümdür, bu icradır; ikisini tek sayaçta toplamak kartın kill#3 sınıfı bir
         # anlam kaymasıdır). Süreç-içi; kalıcı iz E2 defteri + olay defterindedir.
         self.submitted_4b = 0
-        self.skipped = {"session": 0, "halt": 0, "stale": 0, "no_bars": 0}
+        # `pencere`: RTH açık ama sabah tetik penceresi (EXE-009+K2) henüz açılmamış — 13:30-13:45
+        # arası olaylar tarama/karar üretmez; ayrı sayaç, çünkü `session` "seans dışı" demektir ve
+        # iki olguyu tek adda ezmek panoda pencere kaymasını görünmez kılardı.
+        self.skipped = {"session": 0, "pencere": 0, "halt": 0, "stale": 0, "no_bars": 0}
+        # sabah kancasının gönderim sayacı (pencere açılınca bekleyen silahlı planlar tek kapıdan)
+        self.pencere_gonderim_n = 0
 
     # ---- ilgi kümesi: açık pozisyonlar ∪ silahlı ∪ GÜNÜN TÜM PLANLARI (O(≤ plan tavanı)) ----
     def _interest_set(self, pf: dict, planned: dict) -> set:
@@ -158,12 +169,27 @@ class IntradayConsumer:
         if not barclock.is_market_open(as_of):          # RTH dışı (mcal yok → fail-closed)
             self.skipped["session"] += 1
             return
+        # SABAH TETİK PENCERESİ (EXE-2026-009 + K2): tarama/emir tetiği 13:45'e kaydı — pencere
+        # öncesi olaylar karar/gölge/gönderim ÜRETMEZ (fail-closed, RTH kapısıyla aynı desen).
+        # Sayaç ayrı: kayma panoda görünür kalır, "seans dışı" ile karışmaz.
+        if not barclock.is_entry_window(as_of):
+            self.skipped["pencere"] += 1
+            return
         if _health.halted():                            # kill-switch
             self.skipped["halt"] += 1
             return
         self.events_handled += 1
         armed = _health.intraday_armed()                # Faz 4a: False beklenir (gözlem)
         pf = store.read_json("portfolio.json", {}) or {}
+        # SABAH KANCASI (EXE-009+K2): pencere açıldı — EOD'de pencere yasasıyla ERTELENMİŞ silahlı
+        # gönderimler burada tek kapıdan gider. Kancanın hatası gözlem hattını düşüremez.
+        try:
+            self._pencere_gonderim(pf)
+        except Exception as e:
+            self.last_error = f"pencere_gonderim: {type(e).__name__}: {e}"[:160]
+            obs.warn("pencere_gonderim_dustu", error=self.last_error,
+                     detail="sabah gönderim kancası düştü — planlar silahlı kaldı, bir sonraki "
+                            "bar olayı yeniden dener (fail-closed retry); son kemer İŞ-2-EOD")
         planned = self._planned(pf)
         interest = self._interest_set(pf, planned)
         self.watched = len(interest)
@@ -171,6 +197,37 @@ class IntradayConsumer:
         for tk in [s.upper() for s in str(fields.get("syms", "")).split(",") if s]:
             if tk in interest:
                 self._handle_symbol(tk, as_of, pf, armed, planned)
+
+    def _pencere_gonderim(self, pf: dict) -> None:
+        """SABAH GÖNDERİM KANCASI (EXE-2026-009 + K2) — EOD gönderiminin ERTELENMİŞ yarısı.
+
+        YENİ BİR YETKİ DEĞİLDİR (4b'nin INTRADAY_ARM yetkisiyle karıştırılmaz): buradan giden
+        planlar EOD kadansının ZATEN silahlayıp göndereceği planlardır — pencere yasası
+        (loop.mirror_submit_armed) akşam gönderimini erteledi, kanca aynı gönderimi pencere
+        açılınca AYNI TEK KAPIDAN yapar. Emir tipi/boyut/kapılar birebir EOD yoluyla aynı gövdede.
+
+        İDEMPOTENS: koşul (silahlı ∧ dedup-kümesinde-değil) kendini söndürür — başarılı gönderim
+        `alpaca_submitted`a yazılır, veto/ret silahlı kümeden düşer; bir sonraki bar olayında koşul
+        boş kalır. Arıza dalında (ağ/anahtar) plan silahlı kalır ve sonraki olay yeniden dener
+        (4b'nin fail-closed retry deseni). Akşam sermaye nabzından boyutlanır (`eq_kaynak=nabiz`
+        makbuzda görünür); kapanış→pencere arasında kitabı yazan kadans yok — taban bayat değil.
+        Kanca hiç koşamazsa (akış/Redis ölü) son kemer İŞ-2-EOD geç-gönderimidir (pencere_muaf)."""
+        if config.BROKER != "alpaca_paper":
+            return                                       # ayna kapalı: kanca sıfır dokunuş (gözlem safiyeti)
+        gonderilmis = set(pf.get("alpaca_submitted") or [])
+        bekleyen = [p.get("id") for p in (pf.get("armed") or [])
+                    if p.get("id") and p.get("id") not in gonderilmis]
+        if not bekleyen:
+            return
+        from . import loop as _loop
+        res = _loop.mirror_submit_ve_kalicilastir(source="pencere_gonderim")
+        self.pencere_gonderim_n += int(res.get("submitted") or 0)
+        obs.log("pencere_gonderim", n_bekleyen=len(bekleyen),
+                submitted=res.get("submitted", 0), ok=bool(res.get("ok")),
+                dropped=len(res.get("dropped_ids") or []),
+                detail="EXE-009+K2 sabah kancası: pencere açıldı, ertelenmiş silahlı gönderimler "
+                       "tek kapıdan denendi" + ("" if res.get("ok")
+                                                else f" — {str(res.get('detail') or '')[:120]}"))
 
     def _handle_symbol(self, tk: str, as_of, pf: dict, armed: bool, planned: dict) -> None:
         """Tek sembolün gözlem/karar turu: sıcak durumdan barları okur, yalnız KAPANMIŞ ve taze
@@ -401,7 +458,7 @@ def health() -> dict:
         return {"ok": None, "enabled": ENABLED, "armed": _health.intraday_armed(),
                 "events_handled": 0, "decisions_written": 0, "watched": 0, "watched_planned": 0,
                 "decisions_armed": 0, "decisions_planned": 0, "shadow_written": 0,
-                "shadow_planli_written": 0, "submitted_4b": 0,
+                "shadow_planli_written": 0, "submitted_4b": 0, "pencere_gonderim_n": 0,
                 "skipped": {}, "last_decision_at": None, "last_error": None, "mode": "observe"}
     c = _CONSUMER
     return {"ok": True, "enabled": ENABLED, "armed": _health.intraday_armed(),
@@ -410,6 +467,7 @@ def health() -> dict:
             "decisions_armed": c.decisions_armed, "decisions_planned": c.decisions_planned,
             "shadow_written": c.shadow_written,
             "shadow_planli_written": c.shadow_planli_written,
-            "submitted_4b": c.submitted_4b, "skipped": dict(c.skipped),
+            "submitted_4b": c.submitted_4b, "pencere_gonderim_n": c.pencere_gonderim_n,
+            "skipped": dict(c.skipped),
             "last_decision_at": c.last_decision_at, "last_error": c.last_error or None,
             "mode": "arm" if _health.intraday_armed() else "observe"}

@@ -113,7 +113,12 @@ def ayna(sandbox_state, monkeypatch):
     fake = SahteHttpx()
     monkeypatch.setattr(alpaca, "httpx", fake)
     watchdog._ONAYLI_GONDERIM_ALARMED.clear()
+    # PENCERE YASASI (EXE-009+K2): gönderim artık sabah tetik penceresine bağlı — bu dosyanın
+    # çivileri GÖNDERİM MEKANİĞİNİ ölçer, pencereyi değil; saat pencere İÇİNE donar ki testler
+    # koşum saatinden bağımsız kalsın (pencerenin kendi çivileri test_pencere_kaydirma_v272'de).
+    bc.set_clock(lambda: RTH)
     yield sandbox_state, fake
+    bc.reset_clock()
     secrets_mod.clear_cache()
     watchdog._ONAYLI_GONDERIM_ALARMED.clear()
 
@@ -291,6 +296,12 @@ def dortb(ayna, monkeypatch):
     from meridian import intraday_shadow as gol
     gol.reset_dedup()
     bc.set_clock(lambda: RTH)
+    # SAHNE İZOLASYONU (EXE-009+K2): sabah kancası (`_pencere_gonderim`) pencere açılınca
+    # silahlı-gönderilmemiş planı EOD yetkisiyle KENDİSİ gönderir — bu meşru davranış, 4b
+    # çivilerinin sahnesini (silahlı ama henüz gönderilmemiş plan + tetik kesişimi) bozar:
+    # emri kanca göndermiş olur ve ölçülen şey 4b olmaktan çıkar. Kanca burada kapatılır;
+    # kendi çivileri test_pencere_kaydirma_v272'de.
+    monkeypatch.setattr(ic.IntradayConsumer, "_pencere_gonderim", lambda self, pf: None)
     _nabiz()
     pid = "P-2026-07-22-AAPL"
     plan = _plan(pid, date="2026-07-22", verdict="GO", setup="breakout_vcp",

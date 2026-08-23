@@ -38,6 +38,14 @@ from meridian.adapters import alpaca
 from meridian.broker import PaperBroker, derisk_mult
 
 
+@pytest.fixture(autouse=True)
+def _saat_sifirla():
+    """Pencere-yasası (EXE-009) testleri saati donduruyor — sızıntıya karşı her testte sıfırla."""
+    yield
+    from meridian import barclock as _bc
+    _bc.reset_clock()
+
+
 # =================================================================================================
 # KALEM 4 — İÇ-MOTOR TOTOLOJİSİ (None + beyan; ayna hükmü n<20'de susar)
 # =================================================================================================
@@ -229,7 +237,13 @@ def test_k8_patch_entry_slippage_hala_iki_bps_yazar(sandbox_state):
 # =================================================================================================
 @pytest.fixture
 def ayna(sandbox_state, monkeypatch):
-    """`alpaca_paper` arka ucu + sahte, hiçbir şey göndermeyen submit_plan."""
+    """`alpaca_paper` arka ucu + sahte, hiçbir şey göndermeyen submit_plan.
+
+    Saat pencere İÇİNE donar (EXE-009+K2): gönderim artık sabah tetik penceresine bağlı; bu
+    dosyanın çivileri MAKBUZ mekaniğini ölçer, pencereyi değil — koşum saatinden bağımsız kalır."""
+    from meridian import barclock as _bc
+    import datetime as _dt
+    _bc.set_clock(lambda: _dt.datetime(2026, 7, 23, 14, 0, tzinfo=_dt.timezone.utc))
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     monkeypatch.setattr(alpaca, "paper_available", lambda: True)
     monkeypatch.setattr(alpaca, "account", lambda: {"equity": "100000"})
@@ -237,7 +251,8 @@ def ayna(sandbox_state, monkeypatch):
         alpaca, "submit_plan",
         lambda pl, eq, size_mult=1.0, atr=None, ref_price=None:
         {"ok": True, "qty": 5, "law": {"limit": 10.1, "mode": "stop_limit", "tif": "gtc"}})
-    return sandbox_state
+    yield sandbox_state
+    _bc.reset_clock()
 
 
 def test_k5_makbuz_bes_alan_eq_now_dali(ayna):
@@ -295,6 +310,9 @@ def test_k5_makbuz_nabiz_dali(ayna):
 
 def test_k5_makbuz_reddedilen_planda_da_yazilir(sandbox_state, monkeypatch):
     """Boyut TABANI gönderim sonucundan bağımsız kanıttır: reddedilen planın da makbuzu yazılır."""
+    from meridian import barclock as _bc
+    import datetime as _dt
+    _bc.set_clock(lambda: _dt.datetime(2026, 7, 23, 14, 0, tzinfo=_dt.timezone.utc))  # pencere içi (EXE-009)
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     monkeypatch.setattr(alpaca, "paper_available", lambda: True)
     monkeypatch.setattr(alpaca, "account", lambda: {"equity": "100000"})

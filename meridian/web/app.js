@@ -8277,7 +8277,8 @@ async function intraParcalar() {
     <div class="srow"><span>Mod</span><b class="${armed ? "neg" : "pos"}">${armed ? "SİLAHLI — otonom intraday emir kapısı AÇIK" : "gözlem-modu · yalnız ölçüm, emir YOK"}</b></div>
     <div class="srow"><span>İzlenen sembol / işlenen olay</span><b>${iq.watched ?? 0} sembol · ${iq.events_handled ?? 0} olay</b></div>
     <div class="srow"><span>Yazılan ölçüm / tetik-geçişi</span><b>${iq.decisions_written ?? 0} ölçüm · ${dec.fired ?? 0} geçiş · ${iq.shadow_written ?? 0} gölge kararı</b></div>
-    ${(sk.session || sk.halt || sk.stale || sk.no_bars) ? `<div class="srow"><span>Atlanan</span><b class="mut">seans ${sk.session || 0} · halt ${sk.halt || 0} · bayat ${sk.stale || 0} · bar-yok ${sk.no_bars || 0}</b></div>` : ""}
+    ${(sk.session || sk.pencere || sk.halt || sk.stale || sk.no_bars) ? `<div class="srow"><span>Atlanan</span><b class="mut">seans ${sk.session || 0} · pencere-öncesi ${sk.pencere || 0} · halt ${sk.halt || 0} · bayat ${sk.stale || 0} · bar-yok ${sk.no_bars || 0}</b></div>` : ""}
+    ${iq.pencere_gonderim_n ? `<div class="srow"><span>Sabah penceresi gönderimi (EXE-009 · 13:45)</span><b>${iq.pencere_gonderim_n} emir</b></div>` : ""}
     ${iq.last_error ? `<div class="srow"><span>Son hata</span><b class="neg">${esc(iq.last_error)}</b></div>` : ""}
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center">
       <button class="dlbtn" data-act="intradayArm" data-a1="${armed ? "false" : "true"}">${armed ? "■ Silahlamayı KAPAT (gözleme dön)" : "Intraday silahlamayı AÇ"}</button>
