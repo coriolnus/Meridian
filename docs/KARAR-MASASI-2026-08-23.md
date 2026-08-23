@@ -29,6 +29,7 @@ H3 tur-2 canlıda (tetik-testi kanıtlı; iki alet vakası yakalandı-düzeltild
 
 ## C. Erişim / para / veri kararları
 
+- ~~OCI bucket~~ ✅ **TAMAMLANDI 2026-08-23 akşam:** S3 replica canlı + geri-yükleme tatbikatı geçti (893/27.034,92 birebir)
 - **QC**: blok gerekçesi düzeltildi — login DEĞİL makine kurulumu (dotnet/docker yok, boyut L).
   Karar: kurulum işi açılsın mı?
 - **Massive planı**: artık ~son 2 ay — 2004'e giden bar arşivi YENİDEN ÜRETİLEMEZ kalıntı;
