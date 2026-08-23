@@ -6628,6 +6628,7 @@ RENDER.operasyon = async () => {
       <div id="bp-alerts"><div class="empty">yükleniyor…</div></div></div>
     ${firsatAlarmTaksonomi(((_DIAG || {}).watchdog || {}).alarm_gunluk)}
     ${bekciDurumlari((_DIAG || {}).bekci_durumlari)}
+    ${f8SozlukSatiri((_DIAG || {}).durum_sozlugu)}
     ${p.sOgr}
     <div class="card rise"><h2 class="t">Olay akışı · son 8</h2>
       <div id="bp-events"><div class="empty">yükleniyor…</div></div></div>`;
@@ -7787,10 +7788,14 @@ function bekciDurumlari(bd) {
         ? "uç bu raporu hiç göndermedi — yüzey yarım (temiz değil)" : metin}</span>
       ${_chip(lbl, kls)}</div>`;
   };
-  // ① SÖZLEŞME HÜKMÜ — hüküm alanı `failed` (`ok` DEĞİL) ve işareti terstir; F8 geçiş haritası
-  // "önce yüzey, sonra ad" dediği için alan BURADA çevrilir, uçta değil. null = henüz ölçülemiyor.
+  // ① SÖZLEŞME HÜKMÜ — F8 çift-alan geçişi (WP8-C): üretici artık kanonik `ok`u DA taşıyor,
+  // okuyucu ÖNCE onu okur; alan yoksa eski `failed` ters işaretle okunur (eşanlamlı — dönem
+  // sonunda düşer, sunucu tarafı sayaçları durum_sozlugu'nda). null = henüz ölçülemiyor.
+  // kapsam_disi artık uçtan geçer (eşik tanımsız = yapılandırma hâli, ölçüm arızası değil).
   const g = b.goal_failure;
-  const gOk = !g || g.failed == null ? null : !g.failed;
+  const gOk = !g ? null
+    : ("ok" in g ? (g.ok === true || g.ok === false ? g.ok : null)
+                 : (g.failed == null ? null : !g.failed));
   const gMetin = !g ? "" : (g.realized_30d == null
     ? `${esc(String(g.detail == null ? "30g getiri henüz ölçülemiyor" : g.detail))}${ucNotu(g)}`
     : `30g getiri %${trn(g.realized_30d * 100, 2)}${g.threshold == null ? ""
@@ -7830,12 +7835,70 @@ function bekciDurumlari(bd) {
     <p class="hint" style="margin-top:0">Dört bekçinin ŞU ANKİ hükmü — alarm akışından bağımsız
     durum yüzeyi (YASA 6). Hüküm uçtan okunur, panoda kurulmaz; ölçülemeyen satır sönük yazılır
     ve asla "temiz" sayılmaz.</p>
-    ${satir("Sözleşme hükmü (goal)", g == null ? g : { ok: gOk, kapsam_disi: false }, "İHLAL",
+    ${satir("Sözleşme hükmü (goal)", g == null ? g : { ok: gOk, kapsam_disi: !!g.kapsam_disi }, "İHLAL",
             gMetin, g && g.detail && g.realized_30d != null ? String(g.detail) : "")}
     ${satir("Kitap damgası (#9)", k, "DAMGASIZ YAZIM", kMetin)}
     ${satir("Mutabakat tazeliği (#10)", m, "BAYAT", mMetin, mIpucu)}
     ${satir("Onaylı gönderim (#11)", o, "GÖNDERİLMEMİŞ", oMetin,
             o && o.payda_beyani ? String(o.payda_beyani) : "")}</div>`;
+}
+
+// ---- F8 KANONİK DURUM SÖZLÜĞÜ — PANO TARAFI (WP8-C · TASARIM-F8 §5/§6) -----------------------
+// Dört ad-tutarsızlığı sınıfının pano ucu. Kol adlarının kanonik Türkçe etiketi BURADA yaşar;
+// eşanlamlı/eski adlar (hermes `last_result="learning_halted"`, API `halted`…) panoya HAM
+// sızmaz, `f8KolAd` kanonik ada çevirir (tanınmayan değer DEĞİŞMEZ — pano tanımadığını sessizce
+// düşürmez, sessizce de "düzeltmez"; ham hâl `title`da kalır). Sunucu eşi meridian/durum_sozlugu.py:
+// eşanlamlı-okuma SAYAÇLARI orada tutulur (ölüm tarihi ölçümü sunucudandır; pano yalnız BASAR,
+// kendi sayacını tutmaz — istemci sayacı her yenilemede sıfırlanır ve hiçbir yerde okunamazdı).
+// NOT: Kilitler sayfasındaki "Kademe N · …" satırları ve v194 çivileri bu etiketlerle AYNI
+// kelimeleri taşır; oradaki dizgeler test-çivili olduğundan (test_pano_mudahale_satiri_v194)
+// buraya taşınmadı — sözlük eşlemesi kayıttır, dizge tekilleştirme ayrı turun işidir.
+const F8_SOZLUK = {
+  // Yalnız T1.1/T1.2'nin iki kolu: `devre_kesici` bir ad-tutarsızlığı sınıfı DEĞİL (tek adı var,
+  // sessiz_hat zaten adıyla basıyor) — buraya eklemek okuyucusuz kayıt olurdu (YASA 6).
+  kol: { soft_halt: "Kademe 1 · Soft Halt", halt_learning: "Kademe 4 · Öğrenme durdurma" },
+  kolEsanlamli: { HALT: "soft_halt", halted: "soft_halt", HALT_ACTIVE: "soft_halt",
+                  meridian_halted: "soft_halt", halt: "soft_halt",
+                  LEARN_HALT: "halt_learning", learn_halted: "halt_learning",
+                  learning_halted: "halt_learning" },
+};
+function f8KolAd(v) { return F8_SOZLUK.kolEsanlamli[v] || v; }
+// ---- F8 SÖZLÜK KARTI — eşanlamlı-okuma sayaçlarının OKUYUCUSU (YASA 6) -----------------------
+// Sunucu eski adları eşanlamlı okurken SAYIYOR ki "eski ad hâlâ okunuyor mu?" ölçülebilsin;
+// sayaç panoda görünmeseydi ölçümün kendisi okuyucusuz kalır, YASA-6 vakasına dönüşürdü.
+// Hepsi 0 ise TEK sönük cümle (sessiz hat ilkesi: sağlıklı durum bağırmaz); 0'dan büyük sayaç
+// ADIYLA ve uyarı tonuyla yazılır. Blok yoksa ÖLÇÜLEMEDİ denir — 0'a çevrilmez (v196).
+function f8SozlukSatiri(dz) {
+  const BASLIK = `<h2 class="t">F8 durum sözlüğü <span class="tx3" style="font-weight:400">(kanonik adlar · eşanlamlı-okuma sayaçları)</span></h2>`;
+  if (!dz || typeof dz !== "object") {
+    return `<div class="card rise">${BASLIK}
+      <p class="hint">teşhis ucu <code>durum_sozlugu</code> bloğunu vermedi — eşanlamlı-okuma
+      sayaçları bu turda ÖLÇÜLEMEDİ (0 DEĞİL; eski adların okuyucu-ölümü bu turda kanıtlanamaz).</p></div>`;
+  }
+  const kan = dz.kanonik || {}, say = dz.esanlamli_okumalar || {};
+  const canli = Object.keys(say).filter(k => say[k] > 0).sort();
+  // Kol satırı ÜÇ katmanı tek yerde bağlar: kanonik ad (uçtan) + pano etiketi (F8_SOZLUK —
+  // kanonik Türkçe etiketin TEK kaynağı) + eşanlamlı eski adlar (uçtan). Uçta olup etikette
+  // olmayan kol etiketsiz basılır — sözlük tanımadığını gizlemez.
+  const kollar = Object.entries(kan.kol || {})
+    .map(([k, e]) => `<code>${esc(k)}</code>${F8_SOZLUK.kol[k] ? ` "${esc(F8_SOZLUK.kol[k])}"` : ""} ← ${(e || []).map(esc).join(", ")}`).join(" · ");
+  // Normalize hüküm satırları kaynak alanın ADIYLA basılır: "ok" = kanonik yol; başka bir ad
+  // görünüyorsa eski adlı bir yük hâlâ akıyor demektir (geçiş haritası canlıda izlenir).
+  const satirlar = (dz.satirlar || []).map(s =>
+    `<code>${esc(s.kimlik)}</code>:${s.kaynak_alan == null
+      ? '<span class="pm-none">hüküm alanı yok</span>'
+      : `<b${s.kaynak_alan === "ok" ? "" : ' class="warn"'}>${esc(s.kaynak_alan)}</b>`}`).join(" · ");
+  return `<div class="card rise">${BASLIK}
+    <p class="hint" style="margin-top:0"${dz.beyan ? ` title="${esc(dz.beyan)}"` : ""}>Kanonik hüküm alanı <code>${esc(kan.hukum && kan.hukum.kanonik != null ? kan.hukum.kanonik : "?")}</code>
+      (eşanlamlı: ${((kan.hukum || {}).esanlamli || []).map(esc).join(", ") || "—"}) ·
+      açıklama <code>${esc(kan.neden && kan.neden.kanonik != null ? kan.neden.kanonik : "?")}</code> + <code>${esc(kan.beyan == null ? "?" : kan.beyan)}</code>
+      (eşanlamlı: ${((kan.neden || {}).esanlamli || []).map(esc).join(", ") || "—"}) ·
+      kollar: ${kollar || "—"}.</p>
+    <p class="hint">Bekçi hükümlerinin okunduğu alan — ${satirlar || "satır yok"}.</p>
+    <p class="hint">Eşanlamlı okuma (${esc(dz.sayac_rejimi == null ? "sayaç rejimi beyan edilmedi" : dz.sayac_rejimi)}): ${canli.length
+      ? canli.map(k => `<b class="warn">${esc(k)} ×${trn(say[k])}</b>`).join(" · ")
+        + " — eski ad HÂLÂ okunuyor; düşürmek için erken (karar Rol-1'de)"
+      : "<b>hepsi 0</b> — bu süreçte hiçbir eski ad okunmadı (düşürme kararı Rol-1'de)"}.</p></div>`;
 }
 
 // ---- PORTFÖY · MUTABAKAT MASASI (ADR: "dolum akışı/mutabakat … reddedilen emirler") ----------
@@ -10011,7 +10074,10 @@ RENDER.hermes = async () => {
         + `${sq.best ? ` · <span class="pos">en iyi ${esc(sq.best.variable)}</span>` : ''}`;
   }
   const searchRow = s.reflecting ? `<div class="r"><span>Arama ilerlemesi</span><b>${searchTxt}</b></div>` : '';
-  const lastR = s.last_reflection ? `${esc(s.last_reflection.replace('T',' ').slice(0,16))} · <b>${esc(s.last_result || '—')}</b>${s.last_variable ? ' · ' + esc(s.last_variable) : ''}` : 'henüz yok';
+  // F8 SÖZLÜK BAĞI (WP8-C · T1.1): hermes `last_result` HAM basılıyordu — "learning_halted"
+  // eşanlamlısı kanonik `halt_learning` adına çevrilir (f8KolAd; ham hâl title'da kalır, kol-dışı
+  // değerler DEĞİŞMEZ). Üreticinin kanonikleştirilmesi Açık Soru A3'te operatör kararı bekliyor.
+  const lastR = s.last_reflection ? `${esc(s.last_reflection.replace('T',' ').slice(0,16))} · <b title="${esc(s.last_result || '')}">${esc(s.last_result ? f8KolAd(s.last_result) : '—')}</b>${s.last_variable ? ' · ' + esc(s.last_variable) : ''}` : 'henüz yok';
   const over = sp.over_budget;
   const cards = (d.recent || []).map(h => {
     const [label, kls] = HSTATUS[h.status] || [h.status, "s-rj"];

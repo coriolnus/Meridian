@@ -500,6 +500,13 @@ def production_report() -> dict:
             waiting.append({"name": name, "have": n, "need": need, "note": note})
         else:
             ok += 1
+    # F8 ÇİFT-ALAN GEÇİŞİ (WP8-C · T1.4): satır açıklaması kanonik `neden` adıyla DA taşınır;
+    # `note` dönem sonuna dek eşanlamlı kalır (okuyucu-ölümü durum_sozlugu sayaçlarıyla ölçülür,
+    # düşürme Rol-1'de). NOT: buradaki `ok` bir SAYAÇTIR, hüküm değil — `n_ok` geçişi (T3.1)
+    # Açık Soru A4'te Rol-1 kararını bekliyor, bu tur DOKUNULMADI.
+    for _liste in (starved, waiting, askida):
+        for _r in _liste:
+            _r.setdefault("neden", _r.get("note"))
     return {"starved": starved, "waiting": waiting, "askida": askida, "ok": ok,
             "total": len(checks)}
 
@@ -1324,6 +1331,12 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
         _shown = ", ".join(f"{k}:{meas[k].get('avg_r')}" for k in list(meas)[:3])
         rows.append({"check": "measured_edge", "ok": len(neg) < len(meas),
                      "detail": f"{len(neg)}/{len(meas)} rejimde ölçülen ort. R negatif ({_shown})"})
+    # F8 ÇİFT-ALAN GEÇİŞİ (WP8-C · T1.4): satır açıklaması kanonik `neden` adıyla DA taşınır;
+    # `detail` dönem sonuna dek eşanlamlı kalır (çok okuyuculu alan — tasarım §6: çift alan,
+    # okuyucular geçince eski düşer; ölçüm durum_sozlugu sayaçlarında, karar Rol-1'de).
+    for _r in rows:
+        if "detail" in _r and "neden" not in _r:
+            _r["neden"] = _r["detail"]
     return {"rows": rows, "ok": all(r["ok"] for r in rows), "n_cycles": len(recent)}
 
 
@@ -1385,7 +1398,13 @@ def integrity_report(persist: bool = False) -> dict:
         Hata hâlinde uyarı basar ve `ok=False, dedektor_dustu=True, olculemedi=True` taşıyan boş
         hüküm döner — ölçülemeyen hüküm 'temiz' SAYILMAZ."""
         try:
-            return fn()
+            out = fn()
+            # F8 ÇİFT-ALAN (WP8-C · T1.4): dedektörün tepe `detail`i kanonik `neden` adıyla DA
+            # taşınır (determinism vb.). İskeletteki `error` DOKUNULMAZ — tasarım §4a: `error`
+            # yalnız dedektör-düşüş iskeletinde meşrudur, oraya neden kopyalamak iki hâli karıştırır.
+            if isinstance(out, dict) and "detail" in out and "neden" not in out:
+                out["neden"] = out["detail"]
+            return out
         except Exception as e:
             from . import obs
             obs.warn("integrity_detector_failed", detector=ad, error=f"{type(e).__name__}: {e}",
@@ -1747,25 +1766,36 @@ def goal_failure_report() -> dict:
     from . import config
     goal = config.goal()
     thr = goal.get("failure_below")
+    # F8 ÇİFT-ALAN GEÇİŞİ (WP8-C · tasarım §6 satır 1): kanonik hüküm çekirdeği (`ok` ters
+    # işaretle + `neden`) EK alan olarak taşınır; `failed`/`detail` dönem sonuna dek KALIR
+    # (okuyucu-ölümleri durum_sozlugu sayaçlarıyla ölçülür, düşürme kararı Rol-1'de).
     if thr is None:
+        _msg = "goal.yaml'da failure_below tanımlı değil"
+        # Eşik yokluğu ölçüm ARIZASI değil YAPILANDIRMA hâlidir → kapsam_disi (tasarım §4a):
+        # ne temiz ne ihlal ne arıza — pano onu KAPSAM DIŞI kelimesiyle ayrı basar.
         return {"failed": None, "threshold": None, "realized_30d": None,
-                "detail": "goal.yaml'da failure_below tanımlı değil"}
+                "ok": None, "olculemedi": False, "kapsam_disi": True,
+                "detail": _msg, "neden": _msg}
     thr = float(thr)
     from . import score as _sc
     sd = _sc.score_detail(store.read_jsonl("trades.jsonl"), goal)
     r30 = sd.get("realized_30d")
     if r30 is None:
+        _msg = (f"{sd.get('n')}/{sd.get('min_sample')} kapanan işlem — 30g getiri "
+                f"ÖLÇÜLEMEZ, hüküm None (0.0 değil)")
         return {"failed": None, "threshold": thr, "realized_30d": None,
                 "n": sd.get("n"), "min_sample": sd.get("min_sample"),
-                "detail": (f"{sd.get('n')}/{sd.get('min_sample')} kapanan işlem — 30g getiri "
-                           f"ÖLÇÜLEMEZ, hüküm None (0.0 değil)")}
+                "ok": None, "olculemedi": True, "kapsam_disi": False,
+                "detail": _msg, "neden": _msg}
     r30 = float(r30)
     failed = r30 < thr
+    _msg = (f"30g getiri {r30:+.2%} < başarısızlık eşiği {thr:+.2%} — SÖZLEŞME HÜKMÜ"
+            if failed else
+            f"30g getiri {r30:+.2%} ≥ başarısızlık eşiği {thr:+.2%}")
     return {"failed": bool(failed), "threshold": thr, "realized_30d": round(r30, 4),
             "n": sd.get("n"),
-            "detail": (f"30g getiri {r30:+.2%} < başarısızlık eşiği {thr:+.2%} — SÖZLEŞME HÜKMÜ"
-                       if failed else
-                       f"30g getiri {r30:+.2%} ≥ başarısızlık eşiği {thr:+.2%}")}
+            "ok": not failed, "olculemedi": False, "kapsam_disi": False,
+            "detail": _msg, "neden": _msg}
 
 
 def check_integrity_and_alarm() -> None:
@@ -3001,6 +3031,11 @@ def kitap_damga_report(persist: bool = False) -> dict:
         # fonksiyon 300 sn'lik poll'da koşuyor ve koşulsuz yazım günde 288 gereksiz atomik yazım
         # + IO p95 gürültüsü ederdi. Sakin bir sistemde damga da özet de kıpırdamaz.
         store.write_json(DAMGA_FILE, yeni)
+    # F8 ÇİFT-ALAN GEÇİŞİ (WP8-C · T1.4): satır açıklaması kanonik `neden` adıyla DA taşınır;
+    # `detay` dönem sonuna dek eşanlamlı kalır (okuyucu-ölümü durum_sozlugu sayaçlarıyla
+    # ölçülür, düşürme Rol-1'de). setdefault: ileride kanonik adla üretilen satır ezilmez.
+    for _r in rows:
+        _r.setdefault("neden", _r.get("detay"))
     olculebilir = [r for r in rows if r["sinif"] != "olculemedi"]
     return {"ok": (None if not olculebilir else not damgasiz),
             "olculemedi": not olculebilir, "damgasiz": damgasiz, "rows": rows,
@@ -3444,8 +3479,11 @@ def universe_audit_report() -> dict:
         return {"status": "yok", "olculemedi": False,
                 "beyan": "universe_drift.json yok — evren denetimi hiç koşmamış (alarm değil, bilgi)"}
     if doc.get("status") == "unknown":
+        # F8 ÇİFT-ALAN (WP8-C · T1.4): `reason` kanonik `neden` adıyla DA taşınır (eski ad
+        # kalır — check_universe_and_alarm ve alarm kaydı `reason`ı okuyor). `status` alanı
+        # KALIR-şerhlidir: hüküm enum'u değil, sözlük onu eşleme kaydıyla bağlar (tasarım §6).
         return {"status": "unknown", "olculemedi": True, "reason": doc.get("reason"),
-                "date": doc.get("date"),
+                "neden": doc.get("reason"), "date": doc.get("date"),
                 "beyan": (f"EVREN DENETİMİ ÖLÇÜLEMEDİ: {doc.get('reason') or 'üyelik kaynağı yok'} "
                           f"— 'sapma yok' DEMEZ (endeksten düşen ölü isim sorusu cevapsız)")}
     return {"status": doc.get("status"), "olculemedi": False, "n_stale": doc.get("n_stale"),

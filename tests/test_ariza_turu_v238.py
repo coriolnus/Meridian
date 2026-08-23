@@ -357,7 +357,7 @@ def test_C_damgali_goc_arsivi_YETIM_SAYILMIYOR(sandbox_state):
 
 def test_C_ADIYLA_sayiliyor_sessizce_yok_sayilmiyor(sandbox_state):
     """SESSİZ MUAFİYET DEĞİL. `detail` bilerek seçildi: watchdog satırlara yalnız
-    `check`/`ok`/`detail` taşıyor (watchdog.py:1068), yani operatörün gördüğü TEK metin bu.
+    `check`/`ok`/`detail` taşıyor (watchdog.py:1075), yani operatörün gördüğü TEK metin bu.
     Sayıyı ek bir alana koyup burada susmak "sessizce yok say" ile aynı sonucu verirdi."""
     _dolu(sandbox_state / "scoreboard.json.migrated-20260812-201359-p192112")
     d = _satir(sandbox_state)["detail"]

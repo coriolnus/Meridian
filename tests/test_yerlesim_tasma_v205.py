@@ -66,7 +66,7 @@ EKRAN_ADLARI = [
     "eleme:threshold_curve.eslesme:sema_elemesi",
 ]
 EN_UZUN_AD = "eleme:llm_opinion_calibration.gercek:sema_orani_yuksek"
-KISA_AD = "scan_yield"  # watchdog.py:972 — evrenin kısa ucu, düzen bozulmadı kontrolü
+KISA_AD = "scan_yield"  # watchdog.py:979 — evrenin kısa ucu, düzen bozulmadı kontrolü
 
 # ---- ÖLÇÜLMÜŞ TABAN (RATCHET, 2026-08-07) -----------------------------------------------------
 # `.tick` kolonuna düşen ad evreni kaynaktan sayıldı (watchdog.py düz `"check": "…"` satırları +
