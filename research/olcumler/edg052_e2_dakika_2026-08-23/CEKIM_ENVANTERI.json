@@ -1,0 +1,46 @@
+{
+ "kart": "EDG-2026-052",
+ "cekim_yontemi": "ssh-stdin SALT-OKUMA (exe007 emsali; canliya dosya yazilmadi, POST/emir yok)",
+ "canliya_yazim": "SIFIR bayt",
+ "cekimler": [
+  {
+   "dosya": "canli_entry_execution.jsonl",
+   "kaynak": "ubuntu@130.61.126.87:/opt/meridian/state/entry_execution.jsonl (dogrudan cat)",
+   "canli_bayt": 17939,
+   "canli_satir": 30,
+   "yerel_satir": 30,
+   "satir_eslesme": true,
+   "canli_mtime_epoch": 1787344342,
+   "sha256_16": "fe6c53a44b57f45c",
+   "stderr_kaniti": "canli_cekim_stderr.txt"
+  },
+  {
+   "dosya": "canli_trades_cikis.json",
+   "kaynak": "A1 meridian.store.read_jsonl('trades.jsonl') — yalniz alpaca_fill_price'li satirlar (betik: canli_cek_trades.py)",
+   "cekim_zamani": "2026-08-23T19:18:18+00:00",
+   "trades_toplam_n": 893,
+   "secilen_satir_n": 5,
+   "sha256_16": "40be678ae177e747"
+  }
+ ],
+ "devralinan_yerel_girdiler": [
+  {
+   "dosya": "research/olcumler/edg047_yakin_pencere_2026-08-23/canli_veri/*.jsonl.gz",
+   "not": "dakika arsivi 20 seans (2026-07-27..2026-08-21); bu olcum 6 seansini acti — sha'lar sonuc.json girdiler.arsiv_dosyalari'nda",
+   "yeni_seans_cekildi_mi": false,
+   "gerekce": "tum E2 dolum gunleri (2026-08-06..2026-08-21) 047 penceresinin ICINDE — taze cekim sarti dogmadi"
+  },
+  {
+   "dosya": "research/olcumler/edg047_yakin_pencere_2026-08-23/dogrulama_saat_dilimi.json",
+   "not": "kill#2 saat-dilimi kapisi DEVRALINDI (ayni arsiv, yeni seans yok)",
+   "sha256_16": "617e9878a7383357"
+  },
+  {
+   "dosya": "research/olcumler/exe007_broker_teyit_2026-08-22/broker_ham.json",
+   "not": "KATMAN-2 yan-kanit dolum-zamani kaynagi (Alpaca FILL transaction_time); YEREL mevcut kanit dosyasi — broker'a yeni erisim YAPILMADI",
+   "sha256_16": "e512f1cb24c1dcf2"
+  }
+ ],
+ "olcum_py_sha256_16": "b3f48ce06323b822",
+ "sonuc_json_sha256_16": "28213c061e94f7c7"
+}

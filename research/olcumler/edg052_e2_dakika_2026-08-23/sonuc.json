@@ -1,0 +1,1500 @@
+{
+ "kart": "EDG-2026-052",
+ "damga": "BETIMLEYICI",
+ "damga_nedeni": "dolum-olayi n=18 (<30: True) VEYA seans=6 (<10: True) — kartin esigi geregi TUM cikti betimleyici",
+ "hukum": null,
+ "hukum_notu": "HUKUM YOK — kart geregi Rol-1'e; hukumlu esik (bant-ici>=%95 VE eslenemeyen=0) ORNEKLEM DOLMADAN UYGULANMAZ (kill#4)",
+ "kapsam": {
+  "dolum_olayi_n": 18,
+  "giris_n": 13,
+  "cikis_n": 5,
+  "seans_listesi_defter": [
+   "2026-08-06",
+   "2026-08-14",
+   "2026-08-17",
+   "2026-08-19",
+   "2026-08-20",
+   "2026-08-21"
+  ],
+  "seans_n_defter": 6,
+  "seans_listesi_yan_kanit": [
+   "2026-08-06",
+   "2026-08-14",
+   "2026-08-17",
+   "2026-08-19",
+   "2026-08-20",
+   "2026-08-21"
+  ],
+  "seans_n_yan_kanit": 6,
+  "pencere_rejimi_kovalari": {
+   "damgasiz": 18,
+   "damgali": 0
+  },
+  "pencere_notu": "E2 satirlarinin HICBIRINDE 'pencere' alani yok (EXE-009+K2 damgasi bu 13 dolumdan sonra devreye girmis) — tumu 'damgasiz' kovasi"
+ },
+ "saat_dilimi_kapisi": {
+  "durum": "DEVRALINDI (047 dogrulamasi aynen; kill#2 saglandi)",
+  "beyan": "bu olcum 047'nin AYNI yerel arsiv dosyalarini kullanir; YENI SEANS CEKILMEDI (tum dolum gunleri 2026-08-06..2026-08-21, 047 penceresi 2026-07-27..2026-08-21 icinde) — yeniden kosum sarti dogmadi",
+  "kaynak": "research/olcumler/edg047_yakin_pencere_2026-08-23/dogrulama_saat_dilimi.json",
+  "kaynak_sha256_16": "617e9878a7383357",
+  "sicrama_min": 67.0,
+  "sonuc_utc_mi": true
+ },
+ "katman1_kart_birebir": {
+  "tanim": "dolum dakikasi YALNIZ E2 defter satirindan; defterde dakika-duzeyi dolum zamani alani yok",
+  "eslenen_n": 0,
+  "eslenemeyen_n": 18,
+  "eslenemeyen_adli_liste": [
+   {
+    "kimlik": "P-2026-08-05-NUE/giris",
+    "bacak": "giris",
+    "ticker": "NUE",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-05T22:10:00+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-06"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-05-EMR/giris",
+    "bacak": "giris",
+    "ticker": "EMR",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-05T22:10:00+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-06"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-05-BKNG/giris",
+    "bacak": "giris",
+    "ticker": "BKNG",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-05T22:10:01+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-06"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-05-AMGN-momentum_burst/giris",
+    "bacak": "giris",
+    "ticker": "AMGN",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-06T10:32:46+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-06"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-13-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-13T20:37:08+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-14"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-13-CRM/giris",
+    "bacak": "giris",
+    "ticker": "CRM",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-13T20:37:09+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-14"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-14-MRNA/giris",
+    "bacak": "giris",
+    "ticker": "MRNA",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-14T20:31:17+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-17"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-14T20:31:18+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-17"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-19-MRNA/giris",
+    "bacak": "giris",
+    "ticker": "MRNA",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-19T20:33:05+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-20"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-19-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-19T20:33:06+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-20"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-19-MRVL/giris",
+    "bacak": "giris",
+    "ticker": "MRVL",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-19T20:33:07+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-20"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-19-LLY/giris",
+    "bacak": "giris",
+    "ticker": "LLY",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-19T20:33:07+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-20"
+    }
+   },
+   {
+    "kimlik": "P-2026-08-19-BDX/giris",
+    "bacak": "giris",
+    "ticker": "BDX",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts(emir_gonderim)": "2026-08-19T20:33:08+00:00",
+     "fill_kaydedildi(ciplak_gun)": "2026-08-20"
+    }
+   },
+   {
+    "kimlik": "T00099/P-2026-08-13-MRK/cikis",
+    "bacak": "cikis",
+    "ticker": "MRK",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts_close(ciplak_gun)": "2026-08-19"
+    }
+   },
+   {
+    "kimlik": "T00100/P-2026-08-14-MRNA/cikis",
+    "bacak": "cikis",
+    "ticker": "MRNA",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts_close(ciplak_gun)": "2026-08-19"
+    }
+   },
+   {
+    "kimlik": "T00101/P-2026-08-14-HUM/cikis",
+    "bacak": "cikis",
+    "ticker": "HUM",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts_close(ciplak_gun)": "2026-08-19"
+    }
+   },
+   {
+    "kimlik": "T00102/P-2026-08-19-MRVL/cikis",
+    "bacak": "cikis",
+    "ticker": "MRVL",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts_close(ciplak_gun)": "2026-08-21"
+    }
+   },
+   {
+    "kimlik": "T00103/P-2026-08-19-LLY/cikis",
+    "bacak": "cikis",
+    "ticker": "LLY",
+    "neden": "dolum_dakika_damgasi_defterde_yok",
+    "defterdeki_zaman_alanlari": {
+     "ts_close(ciplak_gun)": "2026-08-21"
+    }
+   }
+  ],
+  "alan_dogrulama": {
+   "giris_fiyat_alani": "fill (= Alpaca filled_avg_price; 'alpaca_fill_price' ADLI alan giris defterinde YOK)",
+   "cikis_fiyat_alani": "alpaca_fill_price (trades.jsonl yamasi, loop.py ~:2985)",
+   "giris_zaman_alanlari": "ts = emir GONDERIM zamani UTC (20:3x/22:10 — dolum zamani DEGIL); fill_kaydedildi = ciplak gun",
+   "cikis_zaman_alanlari": "ts_close = ciplak gun (exe007 KOMUT.txt teyidi)",
+   "kod_teyidi": "loop.py giris tazelemesi filled_at OKUMAZ/YAZMAZ; cikis yamasi yalniz fiyat+divergence yazar"
+  }
+ },
+ "katman2_yan_kanit": {
+  "beyan": "dolum dakikasi E2 defterinden DEGIL, exe007 YEREL broker ham dokumunden (Alpaca FILL transaction_time, UTC ISO ms). Kart evreninin (defter x arsiv) DISINDAN yan-kanit; betimleyici, hukum tasiyamaz",
+  "kaynak": "research/olcumler/exe007_broker_teyit_2026-08-22/broker_ham.json",
+  "kaynak_sha256_16": "e512f1cb24c1dcf2",
+  "kaynak_cekim_zamani": "2026-08-22T10:43:34+00:00",
+  "broker_fill_aktivite_n": 44,
+  "olay_duzeyi": {
+   "eslenen_n": 18,
+   "eslenemeyen_n": 0,
+   "tum_parcalari_barli_ve_bant_ici_olay_n": 3,
+   "qty_teyit_gecen_n": 18,
+   "defter_fiyat_teyit_bps_maks": 0.002,
+   "tarih_uyusmazligi_olaylari": [
+    "T00101/P-2026-08-14-HUM/cikis"
+   ]
+  },
+  "parca_duzeyi": {
+   "parca_n": 39,
+   "barli_n": 30,
+   "bant_ici_n": 9,
+   "bant_ici_orani": 0.3,
+   "bps_dakika_acilis": {
+    "medyan": 19.4,
+    "p25": 8.863,
+    "p75": 50.501
+   },
+   "bps_vwap_vekili_hlc3": {
+    "medyan": 26.551,
+    "p25": 8.483,
+    "p75": 46.058
+   },
+   "vekil_beyani": "(h+l+c)/3 gercek VWAP degildir; bar 'vw' alani kartin tanimi geregi KULLANILMADI"
+  },
+  "hizalama_saglamasi": {
+   "n_bant_disi": 21,
+   "d_eksi1_bant_ici": 7,
+   "d_arti1_bant_ici": 3,
+   "hicbiri": 11,
+   "beyan": "bant-disi parcalarin buyuk cogunlugu komsu dakikada da bant-disi -> sistematik dakika-kaymasi (bitis-damgasi karisikligi) DISLANDI; bant-disilik deseni dar/tek-islemli IEX barlariyla uyumlu (kartin beyanli siniri 3: IEX-tek-kaynak serhi)"
+  },
+  "eslenemeyen_adli_liste": [
+   {
+    "kimlik": "P-2026-08-05-NUE/giris",
+    "bacak": "giris",
+    "ticker": "NUE",
+    "dakika_utc": "2026-08-06T13:32",
+    "fiyat": 272.82,
+    "qty": 8.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   },
+   {
+    "kimlik": "P-2026-08-05-NUE/giris",
+    "bacak": "giris",
+    "ticker": "NUE",
+    "dakika_utc": "2026-08-06T13:33",
+    "fiyat": 272.71,
+    "qty": 2.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   },
+   {
+    "kimlik": "P-2026-08-05-EMR/giris",
+    "bacak": "giris",
+    "ticker": "EMR",
+    "dakika_utc": "2026-08-06T13:32",
+    "fiyat": 164.76,
+    "qty": 1.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   },
+   {
+    "kimlik": "P-2026-08-13-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "dakika_utc": "2026-08-14T13:31",
+    "fiyat": 134.96,
+    "qty": 29.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "dakika_utc": "2026-08-17T13:32",
+    "fiyat": 385.76,
+    "qty": 31.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "dakika_utc": "2026-08-17T13:33",
+    "fiyat": 384.47,
+    "qty": 4.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "dakika_utc": "2026-08-17T13:36",
+    "fiyat": 382.65,
+    "qty": 1.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   },
+   {
+    "kimlik": "P-2026-08-19-BDX/giris",
+    "bacak": "giris",
+    "ticker": "BDX",
+    "dakika_utc": "2026-08-20T13:32",
+    "fiyat": 187.47,
+    "qty": 16.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   },
+   {
+    "kimlik": "T00101/P-2026-08-14-HUM/cikis",
+    "bacak": "cikis",
+    "ticker": "HUM",
+    "dakika_utc": "2026-08-17T13:37",
+    "fiyat": 380.0,
+    "qty": 43.0,
+    "neden": "o_dakikada_bar_satiri_yok"
+   }
+  ],
+  "olay_tablosu": [
+   {
+    "kimlik": "P-2026-08-05-NUE/giris",
+    "bacak": "giris",
+    "ticker": "NUE",
+    "defter_gun": "2026-08-06",
+    "defter_fiyat": 273.9512,
+    "parca_n": 3,
+    "dakika_kumesi": [
+     "2026-08-06T13:30",
+     "2026-08-06T13:32",
+     "2026-08-06T13:33"
+    ],
+    "toplam_qty": 25.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 273.9512,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": false,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-05-EMR/giris",
+    "bacak": "giris",
+    "ticker": "EMR",
+    "defter_gun": "2026-08-06",
+    "defter_fiyat": 164.76,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-06T13:30",
+     "2026-08-06T13:32"
+    ],
+    "toplam_qty": 37.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 164.76,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": false,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-05-BKNG/giris",
+    "bacak": "giris",
+    "ticker": "BKNG",
+    "defter_gun": "2026-08-06",
+    "defter_fiyat": 210.24,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-06T13:30",
+     "2026-08-06T13:32"
+    ],
+    "toplam_qty": 22.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 210.24,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": true,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-05-AMGN-momentum_burst/giris",
+    "bacak": "giris",
+    "ticker": "AMGN",
+    "defter_gun": "2026-08-06",
+    "defter_fiyat": 415.0073,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-06T13:30",
+     "2026-08-06T13:32"
+    ],
+    "toplam_qty": 22.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 415.0073,
+    "defter_fiyat_teyit_bps": 0.001,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-13-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "defter_gun": "2026-08-14",
+    "defter_fiyat": 134.6928,
+    "parca_n": 3,
+    "dakika_kumesi": [
+     "2026-08-14T13:31",
+     "2026-08-14T13:33"
+    ],
+    "toplam_qty": 60.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 134.6928,
+    "defter_fiyat_teyit_bps": 0.002,
+    "tum_parcalar_barli": false,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-13-CRM/giris",
+    "bacak": "giris",
+    "ticker": "CRM",
+    "defter_gun": "2026-08-14",
+    "defter_fiyat": 201.0879,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-14T13:31",
+     "2026-08-14T13:33"
+    ],
+    "toplam_qty": 19.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 201.0879,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-14-MRNA/giris",
+    "bacak": "giris",
+    "ticker": "MRNA",
+    "defter_gun": "2026-08-17",
+    "defter_fiyat": 63.41,
+    "parca_n": 1,
+    "dakika_kumesi": [
+     "2026-08-17T13:31"
+    ],
+    "toplam_qty": 174.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 63.41,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "defter_gun": "2026-08-17",
+    "defter_fiyat": 385.1751,
+    "parca_n": 5,
+    "dakika_kumesi": [
+     "2026-08-17T13:32",
+     "2026-08-17T13:33",
+     "2026-08-17T13:35",
+     "2026-08-17T13:36"
+    ],
+    "toplam_qty": 43.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 385.1751,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": false,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-19-MRNA/giris",
+    "bacak": "giris",
+    "ticker": "MRNA",
+    "defter_gun": "2026-08-20",
+    "defter_fiyat": 148.28,
+    "parca_n": 1,
+    "dakika_kumesi": [
+     "2026-08-20T13:31"
+    ],
+    "toplam_qty": 8.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 148.28,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": true,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-19-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "defter_gun": "2026-08-20",
+    "defter_fiyat": 150.6029,
+    "parca_n": 3,
+    "dakika_kumesi": [
+     "2026-08-20T13:31",
+     "2026-08-20T13:32",
+     "2026-08-20T13:33"
+    ],
+    "toplam_qty": 65.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 150.6029,
+    "defter_fiyat_teyit_bps": 0.002,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-19-MRVL/giris",
+    "bacak": "giris",
+    "ticker": "MRVL",
+    "defter_gun": "2026-08-20",
+    "defter_fiyat": 244.957,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-20T13:31",
+     "2026-08-20T13:32"
+    ],
+    "toplam_qty": 37.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 244.957,
+    "defter_fiyat_teyit_bps": 0.001,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-19-LLY/giris",
+    "bacak": "giris",
+    "ticker": "LLY",
+    "defter_gun": "2026-08-20",
+    "defter_fiyat": 1278.4367,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-20T13:30",
+     "2026-08-20T13:33"
+    ],
+    "toplam_qty": 9.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 1278.4367,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "P-2026-08-19-BDX/giris",
+    "bacak": "giris",
+    "ticker": "BDX",
+    "defter_gun": "2026-08-20",
+    "defter_fiyat": 186.966,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-20T13:31",
+     "2026-08-20T13:32"
+    ],
+    "toplam_qty": 40.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 186.966,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": false,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "T00099/P-2026-08-13-MRK/cikis",
+    "bacak": "cikis",
+    "ticker": "MRK",
+    "defter_gun": "2026-08-19",
+    "defter_fiyat": 152.36,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-19T18:35"
+    ],
+    "toplam_qty": 60.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 152.36,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "T00100/P-2026-08-14-MRNA/cikis",
+    "bacak": "cikis",
+    "ticker": "MRNA",
+    "defter_gun": "2026-08-19",
+    "defter_fiyat": 116.01,
+    "parca_n": 1,
+    "dakika_kumesi": [
+     "2026-08-19T13:31"
+    ],
+    "toplam_qty": 174.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 116.01,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": true,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "T00101/P-2026-08-14-HUM/cikis",
+    "bacak": "cikis",
+    "ticker": "HUM",
+    "defter_gun": "2026-08-19",
+    "defter_fiyat": 380.0,
+    "parca_n": 1,
+    "dakika_kumesi": [
+     "2026-08-17T13:37"
+    ],
+    "toplam_qty": 43.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 380.0,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": false,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": true
+   },
+   {
+    "kimlik": "T00102/P-2026-08-19-MRVL/cikis",
+    "bacak": "cikis",
+    "ticker": "MRVL",
+    "defter_gun": "2026-08-21",
+    "defter_fiyat": 237.1308,
+    "parca_n": 2,
+    "dakika_kumesi": [
+     "2026-08-21T14:18"
+    ],
+    "toplam_qty": 37.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 237.1308,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   },
+   {
+    "kimlik": "T00103/P-2026-08-19-LLY/cikis",
+    "bacak": "cikis",
+    "ticker": "LLY",
+    "defter_gun": "2026-08-21",
+    "defter_fiyat": 1244.7433,
+    "parca_n": 3,
+    "dakika_kumesi": [
+     "2026-08-21T13:32",
+     "2026-08-21T13:33"
+    ],
+    "toplam_qty": 9.0,
+    "qty_teyit": true,
+    "wavg_fiyat": 1244.7433,
+    "defter_fiyat_teyit_bps": 0.0,
+    "tum_parcalar_barli": true,
+    "tum_parcalar_bant_ici": false,
+    "tarih_uyusmazligi": false
+   }
+  ],
+  "parca_tablosu": [
+   {
+    "kimlik": "P-2026-08-05-NUE/giris",
+    "bacak": "giris",
+    "ticker": "NUE",
+    "transaction_time": "2026-08-06T13:30:51.300957Z",
+    "dakika_utc": "2026-08-06T13:30",
+    "fiyat": 274.72,
+    "qty": 15.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 273.51,
+     "h": 274.09,
+     "l": 273.51,
+     "c": 274.09,
+     "v": 407.0,
+     "t": "2026-08-06T13:30:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 44.24,
+    "bps_vwap_vekili_hlc3": 30.06
+   },
+   {
+    "kimlik": "P-2026-08-05-NUE/giris",
+    "bacak": "giris",
+    "ticker": "NUE",
+    "transaction_time": "2026-08-06T13:32:24.385894Z",
+    "dakika_utc": "2026-08-06T13:32",
+    "fiyat": 272.82,
+    "qty": 8.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "P-2026-08-05-NUE/giris",
+    "bacak": "giris",
+    "ticker": "NUE",
+    "transaction_time": "2026-08-06T13:33:07.913388Z",
+    "dakika_utc": "2026-08-06T13:33",
+    "fiyat": 272.71,
+    "qty": 2.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "P-2026-08-05-EMR/giris",
+    "bacak": "giris",
+    "ticker": "EMR",
+    "transaction_time": "2026-08-06T13:30:43.479824Z",
+    "dakika_utc": "2026-08-06T13:30",
+    "fiyat": 164.76,
+    "qty": 36.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 163.865,
+     "h": 163.865,
+     "l": 163.865,
+     "c": 163.865,
+     "v": 100.0,
+     "t": "2026-08-06T13:30:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 54.618,
+    "bps_vwap_vekili_hlc3": 54.618
+   },
+   {
+    "kimlik": "P-2026-08-05-EMR/giris",
+    "bacak": "giris",
+    "ticker": "EMR",
+    "transaction_time": "2026-08-06T13:32:20.943857Z",
+    "dakika_utc": "2026-08-06T13:32",
+    "fiyat": 164.76,
+    "qty": 1.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "P-2026-08-05-BKNG/giris",
+    "bacak": "giris",
+    "ticker": "BKNG",
+    "transaction_time": "2026-08-06T13:30:13.483118Z",
+    "dakika_utc": "2026-08-06T13:30",
+    "fiyat": 210.41,
+    "qty": 11.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 207.45,
+     "h": 210.75,
+     "l": 207.29,
+     "c": 210.425,
+     "v": 1202.0,
+     "t": "2026-08-06T13:30:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 142.685,
+    "bps_vwap_vekili_hlc3": 43.996
+   },
+   {
+    "kimlik": "P-2026-08-05-BKNG/giris",
+    "bacak": "giris",
+    "ticker": "BKNG",
+    "transaction_time": "2026-08-06T13:32:06.872629Z",
+    "dakika_utc": "2026-08-06T13:32",
+    "fiyat": 210.07,
+    "qty": 11.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 209.81,
+     "h": 211.55,
+     "l": 209.42,
+     "c": 209.42,
+     "v": 1070.0,
+     "t": "2026-08-06T13:32:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 12.392,
+    "bps_vwap_vekili_hlc3": 2.855
+   },
+   {
+    "kimlik": "P-2026-08-05-AMGN-momentum_burst/giris",
+    "bacak": "giris",
+    "ticker": "AMGN",
+    "transaction_time": "2026-08-06T13:30:59.932204Z",
+    "dakika_utc": "2026-08-06T13:30",
+    "fiyat": 417.48,
+    "qty": 2.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 414.385,
+     "h": 416.74,
+     "l": 413.605,
+     "c": 416.74,
+     "v": 1041.0,
+     "t": "2026-08-06T13:30:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 74.689,
+    "bps_vwap_vekili_hlc3": 42.94
+   },
+   {
+    "kimlik": "P-2026-08-05-AMGN-momentum_burst/giris",
+    "bacak": "giris",
+    "ticker": "AMGN",
+    "transaction_time": "2026-08-06T13:32:28.153863Z",
+    "dakika_utc": "2026-08-06T13:32",
+    "fiyat": 414.76,
+    "qty": 20.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 413.95,
+     "h": 413.95,
+     "l": 412.06,
+     "c": 412.06,
+     "v": 244.0,
+     "t": "2026-08-06T13:32:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 19.568,
+    "bps_vwap_vekili_hlc3": 50.159
+   },
+   {
+    "kimlik": "P-2026-08-13-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "transaction_time": "2026-08-14T13:31:20.006606Z",
+    "dakika_utc": "2026-08-14T13:31",
+    "fiyat": 134.96,
+    "qty": 29.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "P-2026-08-13-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "transaction_time": "2026-08-14T13:33:15.136545Z",
+    "dakika_utc": "2026-08-14T13:33",
+    "fiyat": 134.45,
+    "qty": 9.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 134.385,
+     "h": 134.385,
+     "l": 134.385,
+     "c": 134.385,
+     "v": 548.0,
+     "t": "2026-08-14T13:33:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 4.837,
+    "bps_vwap_vekili_hlc3": 4.837
+   },
+   {
+    "kimlik": "P-2026-08-13-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "transaction_time": "2026-08-14T13:33:34.066438Z",
+    "dakika_utc": "2026-08-14T13:33",
+    "fiyat": 134.44,
+    "qty": 22.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 134.385,
+     "h": 134.385,
+     "l": 134.385,
+     "c": 134.385,
+     "v": 548.0,
+     "t": "2026-08-14T13:33:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 4.093,
+    "bps_vwap_vekili_hlc3": 4.093
+   },
+   {
+    "kimlik": "P-2026-08-13-CRM/giris",
+    "bacak": "giris",
+    "ticker": "CRM",
+    "transaction_time": "2026-08-14T13:31:16.860997Z",
+    "dakika_utc": "2026-08-14T13:31",
+    "fiyat": 201.95,
+    "qty": 5.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 201.31,
+     "h": 201.54,
+     "l": 201.12,
+     "c": 201.54,
+     "v": 2551.0,
+     "t": "2026-08-14T13:31:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 31.792,
+    "bps_vwap_vekili_hlc3": 27.309
+   },
+   {
+    "kimlik": "P-2026-08-13-CRM/giris",
+    "bacak": "giris",
+    "ticker": "CRM",
+    "transaction_time": "2026-08-14T13:33:13.628535Z",
+    "dakika_utc": "2026-08-14T13:33",
+    "fiyat": 200.78,
+    "qty": 14.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 200.61,
+     "h": 200.645,
+     "l": 199.94,
+     "c": 199.94,
+     "v": 1792.0,
+     "t": "2026-08-14T13:33:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 8.474,
+    "bps_vwap_vekili_hlc3": 30.224
+   },
+   {
+    "kimlik": "P-2026-08-14-MRNA/giris",
+    "bacak": "giris",
+    "ticker": "MRNA",
+    "transaction_time": "2026-08-17T13:31:06.833171Z",
+    "dakika_utc": "2026-08-17T13:31",
+    "fiyat": 63.41,
+    "qty": 174.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 63.1,
+     "h": 63.1,
+     "l": 63.1,
+     "c": 63.1,
+     "v": 370.0,
+     "t": "2026-08-17T13:31:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 49.128,
+    "bps_vwap_vekili_hlc3": 49.128
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "transaction_time": "2026-08-17T13:32:51.038236Z",
+    "dakika_utc": "2026-08-17T13:32",
+    "fiyat": 385.76,
+    "qty": 31.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "transaction_time": "2026-08-17T13:33:22.800451Z",
+    "dakika_utc": "2026-08-17T13:33",
+    "fiyat": 384.47,
+    "qty": 4.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "transaction_time": "2026-08-17T13:35:26.897936Z",
+    "dakika_utc": "2026-08-17T13:35",
+    "fiyat": 383.35,
+    "qty": 6.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 382.67,
+     "h": 382.67,
+     "l": 382.67,
+     "c": 382.67,
+     "v": 100.0,
+     "t": "2026-08-17T13:35:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 17.77,
+    "bps_vwap_vekili_hlc3": 17.77
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "transaction_time": "2026-08-17T13:35:57.294833Z",
+    "dakika_utc": "2026-08-17T13:35",
+    "fiyat": 383.34,
+    "qty": 1.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 382.67,
+     "h": 382.67,
+     "l": 382.67,
+     "c": 382.67,
+     "v": 100.0,
+     "t": "2026-08-17T13:35:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 17.509,
+    "bps_vwap_vekili_hlc3": 17.509
+   },
+   {
+    "kimlik": "P-2026-08-14-HUM/giris",
+    "bacak": "giris",
+    "ticker": "HUM",
+    "transaction_time": "2026-08-17T13:36:52.543698Z",
+    "dakika_utc": "2026-08-17T13:36",
+    "fiyat": 382.65,
+    "qty": 1.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "P-2026-08-19-MRNA/giris",
+    "bacak": "giris",
+    "ticker": "MRNA",
+    "transaction_time": "2026-08-20T13:31:41.359179Z",
+    "dakika_utc": "2026-08-20T13:31",
+    "fiyat": 148.28,
+    "qty": 8.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 152.37,
+     "h": 152.475,
+     "l": 146.93,
+     "c": 148.15,
+     "v": 29169.0,
+     "t": "2026-08-20T13:31:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 268.426,
+    "bps_vwap_vekili_hlc3": 60.663
+   },
+   {
+    "kimlik": "P-2026-08-19-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "transaction_time": "2026-08-20T13:31:19.440511Z",
+    "dakika_utc": "2026-08-20T13:31",
+    "fiyat": 150.73,
+    "qty": 55.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 150.44,
+     "h": 150.59,
+     "l": 149.61,
+     "c": 149.645,
+     "v": 3634.0,
+     "t": "2026-08-20T13:31:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 19.277,
+    "bps_vwap_vekili_hlc3": 52.129
+   },
+   {
+    "kimlik": "P-2026-08-19-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "transaction_time": "2026-08-20T13:32:19.327807Z",
+    "dakika_utc": "2026-08-20T13:32",
+    "fiyat": 149.99,
+    "qty": 9.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 150.125,
+     "h": 150.125,
+     "l": 149.62,
+     "c": 149.62,
+     "v": 3364.0,
+     "t": "2026-08-20T13:32:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 8.993,
+    "bps_vwap_vekili_hlc3": 13.463
+   },
+   {
+    "kimlik": "P-2026-08-19-MRK/giris",
+    "bacak": "giris",
+    "ticker": "MRK",
+    "transaction_time": "2026-08-20T13:33:42.455761Z",
+    "dakika_utc": "2026-08-20T13:33",
+    "fiyat": 149.13,
+    "qty": 1.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 149.08,
+     "h": 149.08,
+     "l": 148.965,
+     "c": 148.965,
+     "v": 1178.0,
+     "t": "2026-08-20T13:33:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 3.354,
+    "bps_vwap_vekili_hlc3": 8.501
+   },
+   {
+    "kimlik": "P-2026-08-19-MRVL/giris",
+    "bacak": "giris",
+    "ticker": "MRVL",
+    "transaction_time": "2026-08-20T13:31:56.726189Z",
+    "dakika_utc": "2026-08-20T13:31",
+    "fiyat": 245.99,
+    "qty": 11.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 240.89,
+     "h": 245.97,
+     "l": 240.63,
+     "c": 245.97,
+     "v": 7666.0,
+     "t": "2026-08-20T13:31:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 211.715,
+    "bps_vwap_vekili_hlc3": 73.713
+   },
+   {
+    "kimlik": "P-2026-08-19-MRVL/giris",
+    "bacak": "giris",
+    "ticker": "MRVL",
+    "transaction_time": "2026-08-20T13:32:40.48218Z",
+    "dakika_utc": "2026-08-20T13:32",
+    "fiyat": 244.52,
+    "qty": 26.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 245.56,
+     "h": 246.29,
+     "l": 244.02,
+     "c": 244.94,
+     "v": 10866.0,
+     "t": "2026-08-20T13:32:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 42.352,
+    "bps_vwap_vekili_hlc3": 22.985
+   },
+   {
+    "kimlik": "P-2026-08-19-LLY/giris",
+    "bacak": "giris",
+    "ticker": "LLY",
+    "transaction_time": "2026-08-20T13:30:37.223332Z",
+    "dakika_utc": "2026-08-20T13:30",
+    "fiyat": 1280.34,
+    "qty": 8.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 1274.64,
+     "h": 1274.9,
+     "l": 1274.0,
+     "c": 1274.9,
+     "v": 320.0,
+     "t": "2026-08-20T13:30:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 44.719,
+    "bps_vwap_vekili_hlc3": 45.034
+   },
+   {
+    "kimlik": "P-2026-08-19-LLY/giris",
+    "bacak": "giris",
+    "ticker": "LLY",
+    "transaction_time": "2026-08-20T13:33:04.794473Z",
+    "dakika_utc": "2026-08-20T13:33",
+    "fiyat": 1263.21,
+    "qty": 1.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 1260.69,
+     "h": 1261.99,
+     "l": 1260.45,
+     "c": 1261.99,
+     "v": 195.0,
+     "t": "2026-08-20T13:33:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 19.989,
+    "bps_vwap_vekili_hlc3": 13.741
+   },
+   {
+    "kimlik": "P-2026-08-19-BDX/giris",
+    "bacak": "giris",
+    "ticker": "BDX",
+    "transaction_time": "2026-08-20T13:31:03.417206Z",
+    "dakika_utc": "2026-08-20T13:31",
+    "fiyat": 186.63,
+    "qty": 24.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 186.72,
+     "h": 186.72,
+     "l": 186.7,
+     "c": 186.7,
+     "v": 290.0,
+     "t": "2026-08-20T13:31:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 4.82,
+    "bps_vwap_vekili_hlc3": 4.106
+   },
+   {
+    "kimlik": "P-2026-08-19-BDX/giris",
+    "bacak": "giris",
+    "ticker": "BDX",
+    "transaction_time": "2026-08-20T13:32:10.816132Z",
+    "dakika_utc": "2026-08-20T13:32",
+    "fiyat": 187.47,
+    "qty": 16.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "T00099/P-2026-08-13-MRK/cikis",
+    "bacak": "cikis",
+    "ticker": "MRK",
+    "transaction_time": "2026-08-19T18:35:57.314263Z",
+    "dakika_utc": "2026-08-19T18:35",
+    "fiyat": 152.36,
+    "qty": 17.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 152.065,
+     "h": 152.315,
+     "l": 152.065,
+     "c": 152.315,
+     "v": 1228.0,
+     "t": "2026-08-19T18:35:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 19.4,
+    "bps_vwap_vekili_hlc3": 8.43
+   },
+   {
+    "kimlik": "T00099/P-2026-08-13-MRK/cikis",
+    "bacak": "cikis",
+    "ticker": "MRK",
+    "transaction_time": "2026-08-19T18:35:58.261903Z",
+    "dakika_utc": "2026-08-19T18:35",
+    "fiyat": 152.36,
+    "qty": 43.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 152.065,
+     "h": 152.315,
+     "l": 152.065,
+     "c": 152.315,
+     "v": 1228.0,
+     "t": "2026-08-19T18:35:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 19.4,
+    "bps_vwap_vekili_hlc3": 8.43
+   },
+   {
+    "kimlik": "T00100/P-2026-08-14-MRNA/cikis",
+    "bacak": "cikis",
+    "ticker": "MRNA",
+    "transaction_time": "2026-08-19T13:31:31.792336Z",
+    "dakika_utc": "2026-08-19T13:31",
+    "fiyat": 116.01,
+    "qty": 174.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 115.83,
+     "h": 118.33,
+     "l": 114.57,
+     "c": 117.23,
+     "v": 51000.0,
+     "t": "2026-08-19T13:31:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 15.54,
+    "bps_vwap_vekili_hlc3": 59.978
+   },
+   {
+    "kimlik": "T00101/P-2026-08-14-HUM/cikis",
+    "bacak": "cikis",
+    "ticker": "HUM",
+    "transaction_time": "2026-08-17T13:37:46.960668Z",
+    "dakika_utc": "2026-08-17T13:37",
+    "fiyat": 380.0,
+    "qty": 43.0,
+    "bar_bulundu": false
+   },
+   {
+    "kimlik": "T00102/P-2026-08-19-MRVL/cikis",
+    "bacak": "cikis",
+    "ticker": "MRVL",
+    "transaction_time": "2026-08-21T14:18:57.883919Z",
+    "dakika_utc": "2026-08-21T14:18",
+    "fiyat": 237.18,
+    "qty": 23.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 239.24,
+     "h": 239.24,
+     "l": 237.07,
+     "c": 237.07,
+     "v": 3952.0,
+     "t": "2026-08-21T14:18:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 86.106,
+    "bps_vwap_vekili_hlc3": 25.793
+   },
+   {
+    "kimlik": "T00102/P-2026-08-19-MRVL/cikis",
+    "bacak": "cikis",
+    "ticker": "MRVL",
+    "transaction_time": "2026-08-21T14:18:59.214308Z",
+    "dakika_utc": "2026-08-21T14:18",
+    "fiyat": 237.05,
+    "qty": 14.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 239.24,
+     "h": 239.24,
+     "l": 237.07,
+     "c": 237.07,
+     "v": 3952.0,
+     "t": "2026-08-21T14:18:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 91.54,
+    "bps_vwap_vekili_hlc3": 31.26
+   },
+   {
+    "kimlik": "T00103/P-2026-08-19-LLY/cikis",
+    "bacak": "cikis",
+    "ticker": "LLY",
+    "transaction_time": "2026-08-21T13:32:19.872414Z",
+    "dakika_utc": "2026-08-21T13:32",
+    "fiyat": 1241.71,
+    "qty": 2.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 1244.005,
+     "h": 1245.76,
+     "l": 1244.005,
+     "c": 1245.76,
+     "v": 468.0,
+     "t": "2026-08-21T13:32:00Z"
+    },
+    "bant_ici": false,
+    "bps_dakika_acilis": 18.448,
+    "bps_vwap_vekili_hlc3": 27.827
+   },
+   {
+    "kimlik": "T00103/P-2026-08-19-LLY/cikis",
+    "bacak": "cikis",
+    "ticker": "LLY",
+    "transaction_time": "2026-08-21T13:33:04.814548Z",
+    "dakika_utc": "2026-08-21T13:33",
+    "fiyat": 1244.46,
+    "qty": 2.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 1245.18,
+     "h": 1246.66,
+     "l": 1244.31,
+     "c": 1246.66,
+     "v": 564.0,
+     "t": "2026-08-21T13:33:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 5.782,
+    "bps_vwap_vekili_hlc3": 11.371
+   },
+   {
+    "kimlik": "T00103/P-2026-08-19-LLY/cikis",
+    "bacak": "cikis",
+    "ticker": "LLY",
+    "transaction_time": "2026-08-21T13:33:57.35908Z",
+    "dakika_utc": "2026-08-21T13:33",
+    "fiyat": 1246.07,
+    "qty": 5.0,
+    "bar_bulundu": true,
+    "bar": {
+     "o": 1245.18,
+     "h": 1246.66,
+     "l": 1244.31,
+     "c": 1246.66,
+     "v": 564.0,
+     "t": "2026-08-21T13:33:00Z"
+    },
+    "bant_ici": true,
+    "bps_dakika_acilis": 7.148,
+    "bps_vwap_vekili_hlc3": 1.552
+   }
+  ],
+  "atanmayan_broker_parcalari": [
+   {
+    "symbol": "NVDA",
+    "side": "buy",
+    "transaction_time": "2026-07-14T15:07:43.133102Z",
+    "price": "208.12",
+    "qty": "1",
+    "not": "E2 dolum-olayina atanmadi (E2-disi ya da defterde alpaca_fill_price'siz)"
+   },
+   {
+    "symbol": "NUE",
+    "side": "sell",
+    "transaction_time": "2026-08-19T17:45:59.231999Z",
+    "price": "256.8",
+    "qty": "21",
+    "not": "E2 dolum-olayina atanmadi (E2-disi ya da defterde alpaca_fill_price'siz)"
+   },
+   {
+    "symbol": "NUE",
+    "side": "sell",
+    "transaction_time": "2026-08-19T17:45:59.994794Z",
+    "price": "256.57",
+    "qty": "1",
+    "not": "E2 dolum-olayina atanmadi (E2-disi ya da defterde alpaca_fill_price'siz)"
+   },
+   {
+    "symbol": "NUE",
+    "side": "sell",
+    "transaction_time": "2026-08-19T17:46:00.695708Z",
+    "price": "256.57",
+    "qty": "2",
+    "not": "E2 dolum-olayina atanmadi (E2-disi ya da defterde alpaca_fill_price'siz)"
+   },
+   {
+    "symbol": "NUE",
+    "side": "sell",
+    "transaction_time": "2026-08-19T17:46:01.52621Z",
+    "price": "256.57",
+    "qty": "1",
+    "not": "E2 dolum-olayina atanmadi (E2-disi ya da defterde alpaca_fill_price'siz)"
+   }
+  ]
+ },
+ "girdiler": {
+  "canli_entry_execution.jsonl": {
+   "sha256_16": "fe6c53a44b57f45c",
+   "n": 30
+  },
+  "canli_trades_cikis.json": {
+   "sha256_16": "40be678ae177e747",
+   "trades_toplam_n": 893,
+   "alpaca_fill_price_satir_n": 5
+  },
+  "arsiv_dosyalari": {
+   "2026-08-06": {
+    "dosya": "research/olcumler/edg047_yakin_pencere_2026-08-23/canli_veri/2026-08-06.jsonl.gz",
+    "sha256_16": "025668977ef3a548"
+   },
+   "2026-08-14": {
+    "dosya": "research/olcumler/edg047_yakin_pencere_2026-08-23/canli_veri/2026-08-14.jsonl.gz",
+    "sha256_16": "f7744181840cd4f3"
+   },
+   "2026-08-17": {
+    "dosya": "research/olcumler/edg047_yakin_pencere_2026-08-23/canli_veri/2026-08-17.jsonl.gz",
+    "sha256_16": "03f3b528d8756383"
+   },
+   "2026-08-19": {
+    "dosya": "research/olcumler/edg047_yakin_pencere_2026-08-23/canli_veri/2026-08-19.jsonl.gz",
+    "sha256_16": "e3518bf0e5300260"
+   },
+   "2026-08-20": {
+    "dosya": "research/olcumler/edg047_yakin_pencere_2026-08-23/canli_veri/2026-08-20.jsonl.gz",
+    "sha256_16": "898b0dcf212167ae"
+   },
+   "2026-08-21": {
+    "dosya": "research/olcumler/edg047_yakin_pencere_2026-08-23/canli_veri/2026-08-21.jsonl.gz",
+    "sha256_16": "5977efc7d7391386"
+   }
+  }
+ },
+ "olcum_py_sha256_16": "b3f48ce06323b822"
+}

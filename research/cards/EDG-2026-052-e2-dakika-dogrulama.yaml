@@ -36,7 +36,23 @@ kill_criteria:
   - "canlı state'e tek bayt yazım → geçersiz"
   - "hükümlü eşik örneklem dolmadan uygulanırsa geçersiz (betimleyici damga zorunlu)"
 k_registry: {registered_at: "2026-08-23", trial_ids: [pending-052-eslesme]}
-status: registered   # 2026-08-23 Rol-1 — ön-kayıt (F-stok açılışı; operatör 'F'ye başla')
+status: measuring    # 2026-08-23 Rol-1 — İLK KOŞUM BETİMLEYİCİ (n=18<30, seans 8<10; hüküm null,
+                     # kart kuralı gereği). Haftalık kadansta örneklem birikince hükümlü okunur.
+
+ilk_kosum_notu_2026_08_23: >
+  ROL-1 NOTU (hüküm değil): YAPISAL BULGU — E2 defterinde dolum-DAKİKASI alanı YOK (giriş ts =
+  gönderim anı; çıkış zamansız): kartın eşlemesi defterden KURULAMAZ, 18/18 'eşlenemeyen'
+  (neden-kodlu, kill#1 uyarınca adlı). YAN-KANIT (beyanlı, kart-evreni dışı — exe007 broker
+  dökümünün transaction_time'ları): (a) DEFTER SADAKATİ BAĞIMSIZ TEYİT — qty 18/18 birebir,
+  defter fiyatı = parça-ağırlıklı Alpaca ortalaması (maks 0,002 bps); (b) ARŞİV UYARISI —
+  bant-içi 9/30 (%30), komşu-dakika sağlaması sistematik kaymayı DIŞLADI → desen IEX-tek-kaynak
+  dar barlarıyla uyumlu: arşiv açılış dakikalarında NBBO icra fiyatlarını sık kaçırıyor (13-A2/A3
+  için ciddi sınır; beyanlı-sınır-3 rakamlandı). DOĞAN İŞLER (Rol-1 kuyruğu): [1] E2'ye
+  dolum-zamanı alanı (Alpaca filled_at/transaction_time → giriş+çıkış yamalarına; görünürlük
+  alanı, davranış değişmez; okuyucusu BU KART) — 13-A2/A3 ön-şartı; [2] adlı tutarsızlık
+  incelemesi: T00101/HUM ts_close 08-19 ↔ broker 08-17 + T00098/NUE kapanışı alpaca_fill_price
+  yamasız; [3] pencere damgası 18/18 'damgasız' — beklenen (K2 sonrası dolumlar damgalı gelecek).
+  Kill'ler temiz (saat-dilimi 047'den beyanlı devir; sessiz düşürme yok; canlıya sıfır yazım).
 beyanli_sinirlar: >
   (1) E2 örneklemi bugün küçük (~13) — kart bunu bilerek betimleyici başlatır. (2) VWAP vekili
   gerçek VWAP değildir (hacim-ağırlıksız üçlü ortalama); ad hep 'vekil' ile anılır. (3) IEX-tek-
