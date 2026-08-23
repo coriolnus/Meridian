@@ -18,6 +18,13 @@ HÜKÜM, İKİ DAL — bu dosya ikisini de DAVRANIŞTAN ölçer, docstring'den d
 KORKULUK KILL KRİTERİ (MUTLAK): canlı-DIŞI bir rejimin kanıtı canlı `params`ı ETKİLEYEMEZ. Üç
 ayrı test bunu ayrı ayrı çiviler: sertifika yoksa ret · farklı rejim yine ret · canlı tur zerre
 değişmedi.
+
+DAMGA (K1 @chop DURAKLATMASI, 2026-08-23): ölçülen tarihsel vaka `chop` sertifikalıydı ama
+EDG-2026-048 NO-GO ile `@chop` ÜRETİMİ duraklatıldı — chop sertifikalı bg turu artık gövde
+başında atlanır (`bg_reflection_skipped_paused_regime`). D2/D1 MEKANİZMASI rejim-bağımsızdır ve
+duraklatılmamış rejimlerde aynen yaşar; bu dosyanın mekanizma testleri bu yüzden `trend_down`
+sertifikasına taşındı (canlı rejim `chop` KALDI — gerçekçi post-duraklatma senaryosu).
+Duraklatmanın kendisi tests/test_k5_paketi_v273.py'de çivilidir.
 """
 from __future__ import annotations
 
@@ -89,10 +96,10 @@ def test_D2_bg_globali_REJIME_CIVILENIR_atilmaz(bg, monkeypatch):
     Eski davranışta bu öneri `proposal = None` ile çöpe gidiyordu ve aramaya düşülüyordu; ölçülen
     47 redin 46'sı tam olarak bu daldı."""
     _oneri(monkeypatch, variable="stop_loss_atr_mult")
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     assert bg["submit"], "çivilenen öneri kapıya HİÇ gitmedi — hâlâ atılıyor"
-    assert bg["submit"][-1]["variable"] == "stop_loss_atr_mult@chop", \
+    assert bg["submit"][-1]["variable"] == "stop_loss_atr_mult@trend_down", \
         "öneri sertifikalı rejime çivilenmedi"
     assert not _olay("hermes_bg_proposal_rejected"), \
         "çivilenen öneri AYRICA reddedilmiş sayıldı — çift muhasebe"
@@ -101,13 +108,13 @@ def test_D2_bg_globali_REJIME_CIVILENIR_atilmaz(bg, monkeypatch):
 def test_D2_civileme_OLAY_BASAR_eski_yeni_sertifika(bg, monkeypatch):
     """ÇİVİ-1b: sessiz dönüşüm YASAK — bu turun bütün konusu görünürlük. Olay üç alanı da taşır."""
     _oneri(monkeypatch, variable="exit.trail_atr_mult", new=1.5, old=2.5)
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     ev = _olay("hermes_bg_proposal_rejimlendi")
     assert ev, "yeniden yazım SESSİZ yapıldı — olay basılmadı"
     assert ev[-1]["eski"] == "exit.trail_atr_mult"
-    assert ev[-1]["yeni"] == "exit.trail_atr_mult@chop"
-    assert ev[-1]["sertifika"] == "chop"
+    assert ev[-1]["yeni"] == "exit.trail_atr_mult@trend_down"
+    assert ev[-1]["sertifika"] == "trend_down"
     assert len(str(ev[-1].get("detail", ""))) >= 20, "olay gerekçesiz (YASA 4 eşiği)"
 
 
@@ -115,22 +122,23 @@ def test_D2_civileme_GEREKCEYE_de_yansir(bg, monkeypatch):
     """ÇİVİ-1c: defterde "bu öneri global doğdu, rejime çivilendi" OKUNABİLMELİ — `rationale`
     kapıya giden öneriyle birlikte `memory.record`a düşer, yani izin kalıcı yeri orasıdır."""
     _oneri(monkeypatch, variable="exit.breakeven_r", new=0.5, old=1.0)
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     r = str(bg["submit"][-1]["rationale"])
-    assert "rejime çivilendi" in r and "exit.breakeven_r@chop" in r, \
+    assert "rejime çivilendi" in r and "exit.breakeven_r@trend_down" in r, \
         f"gerekçe çivilemeyi anlatmıyor: {r[:120]}"
     assert "ORİJİNAL GEREKÇE" in r, "orijinal gerekçe SİLİNDİ — beynin kendi tezi kayboldu"
 
 
 def test_D2_UCTAN_UCA_entry_w_turnover_olculen_vaka(bg, monkeypatch):
     """ÇİVİ-7 (uçtan uca, ÖLÇÜLEN vaka): 47 redin 21'i `entry.w_turnover`dı. Bugün o öneri
-    `entry.w_turnover@chop` olarak kapıya ulaşır."""
+    sertifikalı rejime çivilenmiş (`entry.w_turnover@trend_down`) olarak kapıya ulaşır
+    (tarihsel vaka `@chop`tu; K1 duraklatması sonrası mekanizma trend_down'la sınanır)."""
     _oneri(monkeypatch, variable="entry.w_turnover", new=0.15, old=None,
            source="deterministic:virgin")
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
-    assert bg["submit"][-1]["variable"] == "entry.w_turnover@chop"
+    assert bg["submit"][-1]["variable"] == "entry.w_turnover@trend_down"
     assert _olay("hermes_bg_proposal_rejimlendi")[-1]["source"] == "deterministic:virgin", \
         "üretici etiketi çivilemede kayboldu — hangi kolun kurtarıldığı ölçülemez"
 
@@ -153,11 +161,11 @@ def test_KORKULUK_sertifika_YOKSA_bugunku_ret_AYNEN_surer(bg, monkeypatch):
 
 
 def test_KORKULUK_FARKLI_rejime_giden_oneri_AYNEN_reddedilir(bg, monkeypatch):
-    """ÇİVİ-3 (ölçümdeki 1/47): `exit.time_stop_days@trend_up`, sertifika `chop`. Korkuluğun ASIL
-    hedefi budur — çivileme onu KURTARMAZ, çünkü kurtarmak kanıtı sahibi olmayan bir rejime
-    taşımak olurdu."""
+    """ÇİVİ-3 (ölçümdeki 1/47): `exit.time_stop_days@trend_up`, sertifika farklı (ölçümde `chop`,
+    K1 duraklatması sonrası testte `trend_down`). Korkuluğun ASIL hedefi budur — çivileme onu
+    KURTARMAZ, çünkü kurtarmak kanıtı sahibi olmayan bir rejime taşımak olurdu."""
     _oneri(monkeypatch, variable="exit.time_stop_days@trend_up", new=10, old=15)
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     assert not bg["submit"], "farklı rejime giden öneri kapıya gitti — denetim #27 deliği açıldı"
     assert not _olay("hermes_bg_proposal_rejimlendi")
@@ -218,25 +226,25 @@ def test_D2_civilenen_ad_GUARD_dogrulamasina_ULASIR(bg_gercek_kapi, monkeypatch)
                         lambda p, *a, **k: (gorulen.append(p.get("variable")) or gercek(p, *a, **k)))
     _oneri(monkeypatch, variable="entry.w_turnover", new=0.15, old=None)
 
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
-    assert gorulen == ["entry.w_turnover@chop"], \
+    assert gorulen == ["entry.w_turnover@trend_down"], \
         f"guard çivilenen adı görmedi (guard yolu atlanıyor olabilir): {gorulen}"
 
 
 def test_D2_guarddan_DUSEN_civileme_ONERIYI_dusurur_VE_KAYDA_gecer(bg_gercek_kapi, monkeypatch):
-    """ÇİVİ-5 (ÖLÇÜLEN vaka, 21/47): `entry.w_turnover` canlı `params`ta YOKTUR → `@chop`
+    """ÇİVİ-5 (ÖLÇÜLEN vaka, 21/47): `entry.w_turnover` canlı `params`ta YOKTUR → `@regime`
     override'ı sessizce yok sayılırdı, guard bunu DÜRÜSTÇE reddeder. Kartın beyanlı sınırı:
     "kurtarılan önerilerin İYİ olduğu İDDİA EDİLMİYOR — probgate'ten yine geçmek zorundadır".
 
     VE bu düşüş KAYITSIZ kalmaz: gerçek kapı reddi hipotez defterine kendi satırını yazar."""
     _oneri(monkeypatch, variable="entry.w_turnover", new=0.15, old=None)
 
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     defter = memory.all_hypotheses()
     assert len(defter) == 1, f"çivilenen önerinin kapı reddi deftere GİRMEDİ: {defter}"
-    assert defter[0]["variable"] == "entry.w_turnover@chop"
+    assert defter[0]["variable"] == "entry.w_turnover@trend_down"
     assert defter[0]["status"] == "rejected_by_guard"
     assert any("live strategy params" in str(r) for r in defter[0]["reject_reasons"]), \
         f"ret gerekçesi guard'ın kendi cümlesi değil: {defter[0].get('reject_reasons')}"
@@ -250,14 +258,14 @@ def test_D1_ret_kaydi_TAM_ve_DAMGALI(bg, monkeypatch):
     D1 kaydı öneriyi yeniden kurabilecek kadar tam ve REDDEDİLDİ damgalıdır."""
     _oneri(monkeypatch, variable="exit.time_stop_days@trend_up", new=10, old=15,
            source="hermes:nous", rationale="stop payı yüksek")
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     e = _olay("hermes_bg_proposal_rejected")[-1]
     assert e["damga"] == hermes.BG_RED_DAMGA == "REDDEDILDI"
     assert e["red_nedeni"] == "farkli_rejim"
     assert (e["old"], e["new"], e["source"]) == (15, 10, "hermes:nous")
     assert e["rationale"] == "stop payı yüksek"
-    assert e["bg_regime"] == "chop"
+    assert e["bg_regime"] == "trend_down"
     assert len(str(e.get("detail", ""))) >= 20
 
 
@@ -270,7 +278,7 @@ def test_D1_ret_kaydi_ADAY_SAYAN_tuketicide_SAYILMIYOR(bg_gercek_kapi, monkeypat
     İkisi ayrılmazsa ya üretim görünmez kalır (bugünkü kusur) ya da sayı şişer (ters yönü)."""
     # --- NEGATİF: korkuluk reddi ---
     _oneri(monkeypatch, variable="exit.time_stop_days@trend_up", new=10, old=15)
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     assert _olay("hermes_bg_proposal_rejected"), "ön koşul: ret gerçekleşmedi"
     assert memory.all_hypotheses() == [], "reddedilen öneri hipotez defterine ADAY gibi girdi"
@@ -279,7 +287,7 @@ def test_D1_ret_kaydi_ADAY_SAYAN_tuketicide_SAYILMIYOR(bg_gercek_kapi, monkeypat
 
     # --- POZİTİF: çivilenip GERÇEK guard'a ulaşan öneri (aynı sayaçlar bunu SAYMALI) ---
     _oneri(monkeypatch, variable="entry.w_turnover", new=0.15, old=None)
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     assert len(memory.all_hypotheses()) == 1, "gerçek kapı reddi deftere girmedi (sayaç körleşti)"
     assert analytics.deflate_why()["n_hypotheses"] == 1
@@ -289,15 +297,15 @@ def test_D1_okuyucu_karnede_ve_hermes_scorecardda_GORUNUR(bg, monkeypatch):
     """YASA 6: okuyucusuz yazım yok. D1 damgasının tüketicisi `bg_on_eleme_karnesi` → o da
     `exploration_share`in içinde → `analytics.hermes_scorecard()` onu olduğu gibi dışa verir."""
     _oneri(monkeypatch, variable="exit.time_stop_days@trend_up", new=10, old=15)
-    hermes.reflect_once(target_regime="chop", background=True)     # 1 ret
+    hermes.reflect_once(target_regime="trend_down", background=True)     # 1 ret
     _oneri(monkeypatch, variable="entry.w_turnover", new=0.15, old=None)
-    hermes.reflect_once(target_regime="chop", background=True)     # 1 çivileme
+    hermes.reflect_once(target_regime="trend_down", background=True)     # 1 çivileme
 
     k = hermes.bg_on_eleme_karnesi()
     assert k["reddedilen"]["n"] == 1 and k["reddedilen"]["damga"] == "REDDEDILDI"
     assert k["reddedilen"]["nedenler"] == {"farkli_rejim": 1}
     assert k["rejimlendirilen"]["n"] == 1
-    assert k["rejimlendirilen"]["son"]["yeni"] == "entry.w_turnover@chop"
+    assert k["rejimlendirilen"]["son"]["yeni"] == "entry.w_turnover@trend_down"
     assert len(str(k["beyan"])) >= 20
 
     assert hermes.exploration_share()["on_eleme"]["reddedilen"]["n"] == 1, \
@@ -311,7 +319,7 @@ def test_D1_karne_BOS_defterde_de_olcer(bg, monkeypatch):
     """Ön-eleme sayımı hipotez defterinden BAĞIMSIZDIR: defter boş diye onu da None yapmak,
     ÖLÇÜLMÜŞ bir sayıyı 'ölçülemedi' diye yazmak olurdu."""
     _oneri(monkeypatch, variable="exit.time_stop_days@trend_up", new=10, old=15)
-    hermes.reflect_once(target_regime="chop", background=True)
+    hermes.reflect_once(target_regime="trend_down", background=True)
 
     ks = hermes.exploration_share()
     assert ks["n_defter"] == 0 and ks["aile_dagilimi"] is None      # defter gerçekten boş
@@ -352,7 +360,7 @@ def test_D1_kayit_kanali_dususu_TURU_dusurmez_ama_SESSIZ_de_kalmaz(bg, monkeypat
     monkeypatch.setattr(hermes.obs, "warn", _kirik)
     _oneri(monkeypatch, variable="exit.time_stop_days@trend_up", new=10, old=15)
 
-    hermes.reflect_once(target_regime="chop", background=True)      # patlamamalı
+    hermes.reflect_once(target_regime="trend_down", background=True)      # patlamamalı
 
     monkeypatch.setattr(hermes.obs, "warn", gercek_warn)
     assert _olay("hermes_bg_on_eleme_kaydi_dustu"), "kayıt düşüşü SESSİZCE yutuldu"

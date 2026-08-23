@@ -248,6 +248,18 @@ def reload_config() -> None:
 # as "unknown regime" (trend_down/high_vol), and a knob for a phantom regime (risk_off) is silently dead.
 VALID_REGIMES = ("trend_up", "trend_down", "chop", "high_vol")
 
+# --- K1 ÜRETİM DURAKLATMASI: '@chop' (EDG-2026-048 NO-GO, 2026-08-23) ---------------------------
+# '@chop' HEDEFLİ HİPOTEZ ÜRETİMİ DURAKLATILDI. Ölçüm (research/cards/EDG-2026-048-chop-tabani.yaml):
+# chop tabanı 45→60 açılımı Δ −18.266$ (CI 0-içi, nokta ağır negatif); chop dilimi −26,3R alırken
+# +22,6R'lik 99 iyi işlemi yerinden etti (çift kanallı zarar) → chop kapalılığı artık ÖLÇÜLMÜŞ
+# POLİTİKA. Duraklatılan YALNIZ ÜRETİMDİR — üç yüzey: hermes şema/istem teşviki, bg-sertifika
+# yazımı (D2 çivileme + rejim-zorlamalı arama), canlı arama kapsamı. DOKUNULMAYAN: mevcut @chop
+# kayıtları, notlandırma (rollback/probgate), teyit kapıları, rejim tespiti ve resolve_params'ın
+# chop haritası — fail-closed hiçbir kapı gevşemedi, "chop" VALID_REGIMES'te KALIR.
+# CANLANMA YALNIZ YENİ KARTLA: bu tuple'dan ad çıkarmak yeni bir ön-kayıt kartı + Rol-1 hükmü
+# ister (çivi: tests/test_k5_paketi_v273.py).
+URETIMI_DURAKLATILAN_REJIMLER: tuple[str, ...] = ("chop",)
+
 
 # --- REJİM-KOŞULLU ÇIKIŞ ALTYAPISI ----------------------------------------------------------
 # Rejim başına çözülmesine İZİN VERİLEN çıkış anahtarları — flat params'ta OLMASALAR BİLE.

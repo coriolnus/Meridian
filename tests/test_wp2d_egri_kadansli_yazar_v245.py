@@ -394,7 +394,8 @@ def test_D_seed_boundary_ROWS_ile_de_olculur(sandbox_state):
 def test_D_kadansli_yazar_m2m_bacagini_YENIDEN_OLCULEBILIR_yapar(sandbox_state):
     """BEYAN EDİLMESİ GEREKEN YAN ETKİ — ÖLÇÜLDÜ, TAHMİN EDİLMEDİ.
 
-    `analytics._realized_drawdown` seriyi KAPSADIĞI DÖNEMLE etiketler (analytics.py:1696-1707):
+    `analytics._realized_drawdown` seriyi KAPSADIĞI DÖNEMLE etiketler (fonksiyon gövdesi,
+    analytics.py — satır çapası sembole çevrildi, 2026-08-23: K5 kaymasında bayatladı):
     eğrinin son noktası kitabın işlediği seansı KAPSAMIYORSA m2m bacağı 'dönem_dışı' sayılır,
     `gunluk_m2m_dd` None kalır ve `max_dd` bir ALT SINIR olur (Ç1, 2026-08-09 — bayat seriyle
     'kötüsü' hesaplanmaz). Kadanslı yazar tam o kapsamayı GERİ GETİRİR: aynı turda hem

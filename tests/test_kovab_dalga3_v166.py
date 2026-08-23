@@ -222,8 +222,10 @@ def test_c24_uc_esik_de_HERMESE_KAPALI(seeded):
 
 def test_c24_goal_limits_ANAHTARLARI_LIMIT_KEYSi_asmiyor(seeded):
     """GU1 sürüklenme çivisinin bu turdaki hâli: goal.yaml'a eklenen HER limit adı LIMIT_KEYS'te
-    olmalı, yoksa yeni bir risk eşiği Hermes'e açık kalır."""
-    assert not (set(config.goal()["limits"]) - guard.LIMIT_KEYS)
+    olmalı, yoksa yeni bir risk eşiği Hermes'e açık kalır.
+    (25c damgası 2026-08-23: `no_trade_before_bars` REPLAY_WARMUP_KEYS'e taşındı — replay ısınma
+    kuralı, canlı zarf değil; o küme de Hermes'e kapalıdır, kapı daralmadı.)"""
+    assert not (set(config.goal()["limits"]) - guard.LIMIT_KEYS - guard.REPLAY_WARMUP_KEYS)
 
 
 # =================================================================================================

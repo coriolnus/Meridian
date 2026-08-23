@@ -272,10 +272,13 @@ def test_e1_goal_anahtarlari_degismezdir(ad):
     assert v.variable == ad
 
 
-@pytest.mark.parametrize("ad", ["max_position_r", "autonomy_level", "kill_switch_file"])
+@pytest.mark.parametrize("ad", ["max_position_r", "autonomy_level", "heat_hard_r"])
 def test_e2_limit_anahtarlari_degismezdir(ad):
     """Sınıf 99: `base in LIMIT_KEYS and base.startswith("limits.")` — limit adları önekli GELMEZ,
-    yani `and` mutantı LIMIT_KEYS dalını tamamen kapatır ve ajan kendi risk tavanını önerebilirdi."""
+    yani `and` mutantı LIMIT_KEYS dalını tamamen kapatır ve ajan kendi risk tavanını önerebilirdi.
+    (25a mezar taşı 2026-08-23: parametre `kill_switch_file` → `heat_hard_r` — ölü anahtar
+    LIMIT_KEYS'ten ve goal.yaml'dan kaldırıldı; mutasyon kapsamı için herhangi bir LIMIT_KEYS
+    üyesi eşdeğerdir.)"""
     v = _vc({"variable": ad, "new": 3})
     assert v.ok is False
     assert "is immutable (goal/limits block)" in v.reasons[0]

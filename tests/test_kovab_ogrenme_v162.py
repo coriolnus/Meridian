@@ -276,9 +276,13 @@ def test_C16_canli_trend_up_turu_BIREBIR_ESKI_DAVRANIS(bg_ortami):
     assert bg_ortami["search"][-1]["regime"] is None
 
 
-def test_C16_canli_chop_turu_BIREBIR_ESKI_DAVRANIS(bg_ortami):
-    hermes.reflect_once(target_regime="chop")
-    assert bg_ortami["search"][-1]["regime"] == "chop"
+def test_C16_canli_nondefault_turu_BIREBIR_ESKI_DAVRANIS(bg_ortami):
+    """K1 DAMGASI (EDG-2026-048 NO-GO, 2026-08-23): bu test eskiden `chop` ile koşuyordu; `@chop`
+    ÜRETİMİ duraklatılınca canlı chop turunun kapsamı bilinçli olarak globale düştü (o davranışın
+    çivisi test_k5_paketi_v273::test_d5/d6). Buradaki iddia — canlı varsayılan-dışı rejim turu
+    aramayı O rejime kapsamlar — duraklatmasız rejimle AYNEN yaşıyor."""
+    hermes.reflect_once(target_regime="trend_down")
+    assert bg_ortami["search"][-1]["regime"] == "trend_down"
 
 
 def test_C16_bg_turunda_GLOBAL_oneri_SERTIFIKASIZ_gecemez(sandbox_state, bg_ortami, monkeypatch):

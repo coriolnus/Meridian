@@ -1149,6 +1149,9 @@ def llm_opinion_calibration() -> dict:
                 sv.drop("sema:plan_join_yok"); continue
             op = plan.get("llm_opinion")
             if not op:
+                # EZER: (ezen kod değil GÖRÜŞ KURAKLIĞI) LLM_PROMOTE_MIN_PAIRS terfi eşiği ezilen
+                # taraf — 25d zinciri c-8 (canlı sieve: 97 gerçek işlemin 93'ü bu satırdan
+                # düşüyor → n_pairs 4 < 30, promoted=false; eşik değil ÜRETİCİ bağlıyor), 2026-08-23
                 sv.drop("piyasa:llm_görüşü_yok"); continue
             if t.get("r_multiple") is None:
                 sv.drop("sema:eksik_alan:r_multiple"); continue

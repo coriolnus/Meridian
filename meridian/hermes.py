@@ -175,10 +175,15 @@ HYP_SCHEMA = {
         # diyordu ama bağlamdaki `note_regime_conditional` rejim-koşullu biçimi ÖNERİYORDU — model
         # iki çelişen talimat görüyordu ve rejim düğmesini kullanmaktan kaçınıyordu. Şema hâlâ TEK
         # değişken ister; `@regime` soneki o değişkenin yalnız bir rejimdeki değerini hedefler.
+        # K1 DURAKLATMA (EDG-2026-048 NO-GO, 2026-08-23): örnek '@chop'tan '@trend_down'a çevrildi
+        # ve duraklatma şemaya YAZILDI — şema teşviki, @chop üretiminin üç yüzeyinden biriydi.
+        # Kod tarafı fail-closed: model yine de '@chop' üretirse `_reflect_once_govde` düşürür
+        # (config.URETIMI_DURAKLATILAN_REJIMLER). Canlanma yalnız yeni kartla.
         "variable": {"type": "string",
                      "description": "exactly one key from bounds.yaml; optionally suffixed '@regime' "
-                                    "to tune that key for ONE regime only (e.g. 'exit.trail_atr_mult@chop'). "
-                                    "Still counts as one variable."},
+                                    "to tune that key for ONE regime only (e.g. 'exit.trail_atr_mult@trend_down'). "
+                                    "Still counts as one variable. '@chop' is PAUSED "
+                                    "(EDG-2026-048 NO-GO) — never propose an '@chop' variable."},
         "new": {"type": "number", "description": "proposed value, on-step and in-range"},
         "rationale": {"type": "string"},
         "predicted_direction": {"type": "string", "enum": ["improve_oos_score", "worsen_oos_score"]},
@@ -219,7 +224,10 @@ Hard rules (also enforced in code — you cannot bypass them):
 - Never touch goal.yaml, the limits block, or autonomy_level. Those are immutable to you.
 - Read lessons.md FIRST. Never re-propose a value lessons.md marks as a failed dead end.
 - State a falsifiable prediction (predicted_direction + predicted_delta) and a calibrated confidence.
-- Score by regime, not as one blur. An edge that only exists in chop is a real finding.
+- Score by regime, not as one blur. An edge that only exists in one regime is a real finding.
+- '@chop' targets are PAUSED (card EDG-2026-048 measured opening the chop slice as harmful,
+  NO-GO): never propose an '@chop' variable. Existing @chop records and their grading are
+  untouched; the pause lifts only with a new pre-registered card.
 
 You improve the system along TWO axes:
   Axis-1 (primary, THIS output): tune ONE strategy parameter — auto-validated by the backtest gate.
@@ -340,8 +348,11 @@ def build_context() -> str:
         "skill_attribution": analytics.skill_attribution(),  # per-skill avg_r/win_rate (Axis-2 evolve signal)
         "vs_benchmark": analytics.benchmark_relative(),      # are you beating SPY, or just riding beta?
         "skill_library": _skill_library(),                   # your full toolkit + how each skill performs
+        # K1 DURAKLATMA (EDG-2026-048): reklam edilen rejim listesi duraklatılanları TAŞIMAZ —
+        # bağlam istemi de bir üretim teşvikidir (şema örneğiyle aynı sınıf, aynı gerekçe).
         "note_regime_conditional": "You may tune one knob for one regime with 'variable@regime' "
-                                    f"(regimes: {', '.join(config.VALID_REGIMES)}); it stays one_variable_only.",
+                                    f"(regimes: {', '.join(r for r in config.VALID_REGIMES if r not in config.URETIMI_DURAKLATILAN_REJIMLER)}"
+                                    "; '@chop' is PAUSED, EDG-2026-048); it stays one_variable_only.",
     }, indent=2)
 
 
@@ -4578,6 +4589,20 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     Atlama yalnız SON ÇARE olarak kalır: rejim adı geçerli değilse (kapsanamıyorsa) tur koşmaz —
     çünkü kapsanamayan bir bg turu, tam olarak kapatılan deliğin kendisidir."""
     _progress_temizle()          # kapıdan geçen temizleme — disk aynası da sıfırlanır (Ö-50)
+    # --- K1 DURAKLATMA (EDG-2026-048 NO-GO, 2026-08-23): duraklatılmış rejime SERTİFİKALI arka
+    # plan turu HİÇ koşmaz. Koşsaydı hem D2 çivilemesi hem rejim-zorlamalı arama her sondayı
+    # `var@chop`a çevirirdi — üretim yasağının tam kendisi. Atlama sessiz değil OLAYDIR
+    # (`bg_reflection_skipped_unscoped` emsali). Notlandırma/teyit yolları bu daldan bağımsız;
+    # canlanma yalnız yeni kartla (config.URETIMI_DURAKLATILAN_REJIMLER).
+    if background and target_regime in config.URETIMI_DURAKLATILAN_REJIMLER:
+        obs.warn("bg_reflection_skipped_paused_regime", target_regime=str(target_regime),
+                 kart="EDG-2026-048",
+                 detail="'@chop' üretimi duraklatıldı (EDG-2026-048 NO-GO) — bg turu koşmadı; "
+                        "mevcut @chop kayıtları/notlandırma/teyit kapıları aynen, canlanma "
+                        "yalnız yeni kartla")
+        _progress(running=False, phase="skipped")
+        return {"status": "bg_regime_paused", "regime": target_regime,
+                "beyan": "'@chop' üretim duraklatması (EDG-2026-048 NO-GO) — tur atlandı"}
     proposal = propose_with_llm()
     if proposal is None and VIRGIN_FALLBACK:
         # BEYİNSİZ TUR ARTIK BOŞ GEÇMİYOR: tek akıllı hamle yuvası bakir bir düğmeyle doldurulur.
@@ -4641,6 +4666,17 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
         elif preg is not None and certified is not None and preg != certified:
             obs.warn("hermes_proposal_uncertified_regime", variable=pvar, certified=certified)
             proposal = None                     # fall through to the (certified-regime) search
+        # --- K1 DURAKLATMA (EDG-2026-048): yukarıdaki dallardan SAĞ ÇIKAN '@chop' hedefli öneri
+        # de üretimden düşer — kaynağı LLM ya da bakir-düğme, tur canlı ya da bg fark etmez
+        # (canlı-chop turunda preg == certified olduğundan yukarıdaki dallar onu YAKALAMAZ; bg
+        # sertifikası chop olan tur zaten gövde başında atlandı). Reddedilen öneri hipotez
+        # defterine GİRMEZ (aday değildir, D1 emsali); arama yoluna düşülür ve o kapsam da
+        # aşağıda duraklatılmış rejime verilmez. Canlanma yalnız yeni kartla.
+        if proposal is not None and preg in config.URETIMI_DURAKLATILAN_REJIMLER:
+            obs.warn("hermes_proposal_paused_regime", variable=pvar, kart="EDG-2026-048",
+                     detail="duraklatılmış rejime ('@chop') öneri üretilmez — EDG-2026-048 NO-GO; "
+                            "canlanma yalnız yeni kartla")
+            proposal = None                     # fall through to the (paused-regime-free) search
     if proposal is not None:
         obs.log("hermes_proposal", source=proposal.get("source", "llm"), variable=proposal["variable"], new=proposal["new"])
         result = reflect.submit(proposal)
@@ -4678,7 +4714,13 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
                     "beyan": ("arka plan turu rejimle sınırlanamadı — global ship yetkisiyle "
                               "koşulmadı (C16)")}
     else:
-        search_regime = live_reg if live_reg in config.VALID_REGIMES and live_reg != "trend_up" else None
+        # K1 DURAKLATMA (EDG-2026-048): duraklatılmış rejim CANLI turda da arama kapsamı OLMAZ —
+        # kapsamlansaydı her sonda `var@chop` üretirdi. Kapsam globale düşer (Faz-3 öncesi
+        # davranış; canlı rejimin kanıtıyla global ship canlı turda MEŞRUDUR — yukarıdaki C16
+        # gerekçesindeki "or be global" muafiyeti). Chop dilimine ÖZGÜ ayar arayışı, ancak yeni
+        # bir kartla duraklatma kalkınca geri gelir.
+        search_regime = (live_reg if live_reg in config.VALID_REGIMES and live_reg != "trend_up"
+                         and live_reg not in config.URETIMI_DURAKLATILAN_REJIMLER else None)
     # TAVAN ARTIK TÜRETİLİR (bütçe öz-ayarı): `SEARCH_BUDGET` sabiti TABAN olarak durur
     # (env override yolu birebir aynı); `search_budget()` kota durumuna göre onu açar. Türetimin
     # KENDİSİ olaya yazılır — "bugün neden 20 sonda koştu?" sorusu defterden cevaplanabilsin.

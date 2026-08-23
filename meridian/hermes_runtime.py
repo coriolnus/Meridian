@@ -91,6 +91,12 @@ def _bg_ready_regime(trades: list, every: int, live_reg: str | None) -> str | No
     for r in config.VALID_REGIMES:
         if r == live_reg:
             continue
+        # K1 DURAKLATMA (EDG-2026-048 NO-GO, 2026-08-23): duraklatılmış rejime bg SERTİFİKASI
+        # VERİLMEZ — verilseydi tur hermes gövdesinde atlanacaktı (bg_reflection_skipped_paused_
+        # regime, ikinci savunma hattı); slotu burada hiç yakmamak, diğer rejimlerin birikmiş
+        # kanıtına yol açar. Canlanma yalnız yeni kartla (config.URETIMI_DURAKLATILAN_REJIMLER).
+        if r in config.URETIMI_DURAKLATILAN_REJIMLER:
+            continue
         last_r = int(baselines.get(r, 0))
         if not _horizon_ok(trades, last_r, regime=r, min_trades=every):
             continue

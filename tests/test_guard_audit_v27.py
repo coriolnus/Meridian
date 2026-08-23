@@ -41,8 +41,12 @@ def test_gu1_every_goal_key_is_immutable(seeded):
 
 
 def test_gu1b_every_limit_key_is_immutable(seeded):
-    missing = set(config.goal()["limits"]) - guard.LIMIT_KEYS
-    assert not missing, f"limits'te olup LIMIT_KEYS'te olmayan: {missing}"
+    # 25c DAMGASI (2026-08-23): `no_trade_before_bars` LIMIT_KEYS'ten REPLAY_WARMUP_KEYS'e taşındı
+    # (canlı zarf değil, replay ısınma kuralı — Rol-1 ölçümü). Sürüklenme kapısı DARALMADI:
+    # limits'e inen her ad yine bu İKİ kümeden birinde adlandırılmak zorunda; ikisi de Hermes'e
+    # kapalıdır (validate_change ikisini de reddeder — test_k5_paketi_v273 çivisi).
+    missing = set(config.goal()["limits"]) - guard.LIMIT_KEYS - guard.REPLAY_WARMUP_KEYS
+    assert not missing, f"limits'te olup LIMIT_KEYS∪REPLAY_WARMUP_KEYS'te olmayan: {missing}"
 
 
 def test_gu1c_immutable_keys_are_actually_refused(seeded):

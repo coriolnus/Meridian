@@ -78,7 +78,9 @@ def _kapi(sayac: int, *, plan=None, acik: int = 0, **limit_over):
 
 
 def _eski_kural(sayac: int, max_open, pct) -> bool:
-    """AYRIŞTIRMA ÖNCESİ `guard.py:359-360` satırının BİREBİR KOPYASI — REFERANS UYGULAMA.
+    """AYRIŞTIRMA ÖNCESİ `guard.py:359-360` satırının BİREBİR KOPYASI (çapa-mezar-taşı: TARİHÎ).
+    Satır numarası ayrıştırma GÜNÜNÜN dosyasına işaret eder, bugünkü guard.py'ye değil — K5
+    kayması (2026-08-23) yasayı tetikledi, çapa bilinçli donuk. REFERANS UYGULAMA.
 
     Bu fonksiyon bilerek guard'ı ÇAĞIRMAZ ve guard'dan hiçbir şey import etmez: eşdeğerlik ancak
     bağımsız bir referansa karşı ölçülürse eşdeğerliktir (guard'ın kendi paydasını kullanan bir

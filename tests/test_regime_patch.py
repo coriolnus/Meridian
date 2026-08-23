@@ -550,9 +550,12 @@ def test_reflect_once_targets_live_nondefault_regime(seeded_sandbox, monkeypatch
         seen["regime"] = regime
         return {"status": "no_clearing_candidate", "search": {}}
     monkeypatch.setattr(reflect, "search_and_submit", fake_search)
-    store.write_json("regime.json", {"regime": "chop"})
+    # K1 DAMGASI (EDG-2026-048, 2026-08-23): örnek rejim `chop`tu; `@chop` üretimi duraklatılınca
+    # canlı chop turu bilinçli olarak globale düşer (çivisi test_k5_paketi_v273::test_d5/d6).
+    # Bu testin iddiası — varsayılan-dışı canlı rejim hedeflenir — duraklatmasız rejimle sürer.
+    store.write_json("regime.json", {"regime": "trend_down"})
     hermes.reflect_once()
-    assert seen["regime"] == "chop"
+    assert seen["regime"] == "trend_down"
     store.write_json("regime.json", {"regime": "trend_up"})
     hermes.reflect_once()
     assert seen["regime"] is None
