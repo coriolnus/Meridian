@@ -67,3 +67,6 @@ research/olcumler/*/sandbox/
 # ölçüm ajanlarının yerel önbellekleri (yeniden üretilebilir; 140MB bars.pkl vakası 2026-08-24)
 research/olcumler/**/_cache/
 research/olcumler/**/__pycache__/
+
+# geçici tasarım comp'ları (depoya girmez)
+scratch-panov2/
