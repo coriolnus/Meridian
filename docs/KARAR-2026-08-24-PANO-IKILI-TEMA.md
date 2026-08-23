@@ -69,3 +69,41 @@ icrası**. Yerleşik yön sözleşmesi (index.html DIRECTION CONTRACT) operatör
 başlığında AYNI üçünü sayıyor. Yani referans, mevcut dünyanın daha rafine bir akrabası.
 Asıl iş operatörün söylediği yerde: **bilgi mimarisi** (101 kart · tutarsız rozet dili ·
 bağlamsız sayılar · öne çıkmayan aciliyet).
+
+
+---
+
+## ⚠ ROL-1 DÜZELTMESİ #2 (2026-08-24, envanter turu sonrası — ÜÇÜNCÜ hatam)
+
+**"Varsayılan tema: KOYU (Rol-1 seçimi)" cümlesi YANLIŞTI ve bağlayıcı bir kararla ÇELİŞİYORDU.**
+Envanter ölçtü (`DESIGN.md:552-555`, beyanlı sapma #3): brief karanlık-tek tuval varsayıyordu ama
+**bağlayıcı operatör kararı (2026-07-31) İKİ ZEMİN + GÜNDÜZ VARSAYILAN**. "Koyu daha iyi okunur"
+iddiası `deploy/HANDBOOK-PLAN.md:463-472`'de zaten ÇÜRÜTÜLMÜŞ. Yani:
+- Kontrol-odası doktrini BENİMSENDİ, **koyu TUVAL benimsenmedi** — ikisi ayrı şeydi, ben
+  birleştirmiştim.
+- Operatörün 2026-08-24 "iki tema" seçimi yeni bir şey getirmiyor; **var olan bağlayıcı kararla
+  BİREBİR AYNI** yerde duruyor. Varsayılan GÜNDÜZ kalır.
+
+## DUB'DAN NE ALINIR — ENVANTERİN ÖLÇTÜĞÜ GERÇEK (kapsam beklediğimden DAR)
+**Doğrudan alınabilir (3):** 12px kart yarıçapı (zaten aynı) · 4px boşluk tabanı (zaten aynı) ·
+medium-500 başlık ağırlığı.
+**ALINAMAZ, gerekçeleriyle (6):**
+- **Elektrik-mavi aksan** → `v197` koşulsuz-emisyon tavanı **0**: dekoratif/marka rengi yapısal
+  olarak imkânsız. Meridian'ın *Money Rule*'u: renk YALNIZ ölçüme aittir (yeşil/amber/kırmızı).
+- **6 gölge kademesi** → `--elev: none`, "hiçbir yerde gölge yok" yasası.
+- **9999px hap** → üç-yarıçap sözlüğü (Dub'ın pill mimarisi alınmaz).
+- **Soğuk nötrler** → *Warm Rule* (Meridian sıcak kemik/hairline ailesinde).
+- **16px gövde** → yoğunluk yasası.
+- **Google Fonts** → `font-src 'self'` (self-host şartı; Recursive ölçümle seçilmiş).
+**SONUÇ:** Dub bir GÖRÜNÜM kaynağı değil, bir DOĞRULAMA: aynı ailenin daha rafine üyesi olduğu
+için Meridian'ın mevcut yasalarını (hairline-önceli elevasyon, gölgesizlik, kompakt yoğunluk)
+DIŞARIDAN teyit ediyor. Redesign'ın değeri renkte değil **bilgi mimarisinde** — operatörün
+söylediği yerde.
+
+## REDESIGN ÖNCESİ KAPANMASI GEREKEN İKİ BORÇ (envanter buldu)
+1. **`DESIGN.md` gündüz jeton tablosu BAYAT** (`:190-210`): `--bg` `#ffffff` yazıyor, gerçek
+   `#fbf9f8`; 9 jeton ayrışmış. Çivi CSS↔`tokens.json`'ı denetliyor ama DESIGN.md'yi denetlemiyor →
+   tasarımcı YANLIŞ tabandan türetir. **Redesign'dan ÖNCE tazelenmeli + çivi kapsamı genişletilmeli.**
+2. **`app.js`'te 53 satır-içi DEĞER-jetonu, 0 ROL-jetonu** (`var(--sev-*)`=0). ROADMAP WP8-D bunu
+   **33** diye kaydetmiş — sayım farkı çözülmedi (None+neden). Rol-jetonu katmanı olmadan iki temayı
+   tutarlı yeniden ayarlamak imkânsız.
