@@ -5,7 +5,7 @@
 işlem sayısı SIFIR (ledgerstamp 95/95 replay_seed). İki ayrı zarar:
 
   GÖSTERİM — pano "Sermaye" diye bir antrenman artefaktı gösteriyordu.
-  DAVRANIŞ — `broker.equity()` = start_equity + realized_pnl (broker.py:263) ve
+  DAVRANIŞ — `broker.equity()` = start_equity + realized_pnl (`PaperBroker.equity`) ve
              `loop._load_broker` start_equity'yi her turda START_EQUITY'ye sabitler; yani tohum
              zararı GERÇEK-CANLI çağın pozisyon boyutlarını kısıyordu. `peak_equity` = 102.520,45$
              ise simülasyonun tepesi ve de-risk rampası düşüşü ORADAN ölçüyordu.

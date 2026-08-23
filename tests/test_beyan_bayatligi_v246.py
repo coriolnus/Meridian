@@ -322,12 +322,12 @@ def test_E3_duzeltmenin_ADLANDIRDIGI_mekanizmalar_gercek():
 
 
 def test_E4_sermaye_nin_IKINCI_capasi_da_SEMBOL_ve_uyusuyor():
-    """A17'nin aynı dosyadaki ikinci vakası (bu turda ÖLÇÜLDÜ): docstring `broker.py:263` diyordu,
-    o satır bugün de-risk rampasına ait — `PaperBroker.equity` 429'a kaymıştı. Çapa sembol+dizgi
-    oldu; uyuşma burada ölçülür, satır numarası bir daha bayatlayamaz."""
+    """A17'nin ikinci vakası: docstring `broker.py:263` diyordu [çapa-mezar-taşı], o satır bugün
+    de-risk rampasına ait — `PaperBroker.equity` 429'a, 2026-08-24'te 533'e kaydı. Çapa sembol+dizgi
+    oldu; uyuşma burada ölçülür (aranan dizgi TARİHTİR, silmek vakayı silmek olurdu)."""
     from meridian.broker import PaperBroker
     d = sermaye.__doc__ or ""
-    assert "PaperBroker.equity" in d and "broker.py:263" in d, \
-        "çapa ya sembolleşmemiş ya da vaka kaydı silinmiş (tarihçe-koru)"
+    assert "PaperBroker.equity" in d and "broker.py:263" in d, (  # çapa-mezar-taşı
+        "çapa ya sembolleşmemiş ya da vaka kaydı silinmiş (tarihçe-koru)")
     assert "eq = self.start_equity + self.realized_pnl" in inspect.getsource(PaperBroker.equity), \
         "çapa bayat: `PaperBroker.equity` artık bu satırı taşımıyor"

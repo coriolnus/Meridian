@@ -26,8 +26,8 @@ sayıya "Sermaye" diyordu ve iki ayrı yalan söylüyordu:
 
 ÖLÇÜLEN İNCE NOKTA — NAKDİ RESETLEMEK TEK BAŞINA HİÇBİR ŞEY YAPMAZDI. `broker.equity()` `cash`i
 OKUMAZ (`PaperBroker.equity`: `eq = self.start_equity + self.realized_pnl` — ÇAPA SEMBOLDÜR;
-burada "broker.py:263" yazıyordu, o satır bugün de-risk rampasına ait — satır-numarası çürümesi
-sınıfı, ölçümle düzeltildi ve çapa sembole bağlandı). Yalnız `cash`i 100.000'e
+burada "broker.py:263" yazıyordu [çapa-mezar-taşı], o satır bugün de-risk rampasına ait —
+satır-numarası çürümesi sınıfı, ölçümle düzeltildi ve çapa sembole bağlandı). Yalnız `cash`i 100.000'e
 çekmek panoyu düzeltir, boyutlandırmayı DÜZELTMEZ — kozmetik bir yama olurdu. Bu yüzden reset
 kitabın DÖRT alanına birden dokunur ve dördünün de gerekçesi ayrı yazılıdır (aşağıda `_yeni_kitap`).
 
@@ -457,7 +457,7 @@ def _yeni_kitap(pf: dict, hedef: float) -> dict:
 
       cash             → hedef : kitabın anlattığı sermaye; panonun okuduğu sayı.
       realized_pnl     → 0.0   : ASIL DAVRANIŞ ALANI. `broker.equity()` = start_equity +
-                                 realized_pnl (broker.py:263) ve `loop._load_broker` start_equity'yi
+                                 realized_pnl (`PaperBroker.equity`) ve `loop._load_broker` start_equity'yi
                                  her turda START_EQUITY'ye sabitler — yani boyutlandırma tabanını
                                  belirleyen tek disk alanı budur. Sıfırlanmazsa reset KOZMETİK kalır.
       day_start_equity → hedef : gün P&L'i (equity − day_start)/day_start. Eski taban kalsaydı pano
