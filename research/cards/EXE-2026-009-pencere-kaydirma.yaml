@@ -1,0 +1,39 @@
+card_id: EXE-2026-009
+family: icra_pencere_uygulama
+thesis: >
+  B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah
+  tarama/emir tetiği 13:30→13:45 UTC'ye kayar. BU KART bir replay ölçümü DEĞİL, canlı-değişikliğin
+  ÖN-KAYDI ve hakem sözleşmesidir (kart-önce disiplini: değişiklik, hakemi ve geri-alma kuralı
+  değişiklikten ÖNCE donar). Hakem: EDG-2026-042'nin haftalık gerçek-friksiyon ölçümü.
+evidence_refs:
+  - "EDG-2026-047 (measured): Δ%menzil −%42,3 [−%44,3, −%40,1]; bedel medyan +4,65 bps"
+  - "docs/KARAR-2026-08-23-YEDI-KARAR.md K2 (operatör onayı + ray seçimi: 042-hakemli süresiz)"
+uygulama_sozlesmesi: >
+  (1) Tetik: canlı sabah tarama/emir gönderimi 13:45 UTC'ye kayar (yalnız zamanlama; emir tipi/
+  mantık DEĞİŞMEZ). (2) DAMGA: E2 icra defterine her dolumda `pencere` alanı yazılır ("1330" =
+  kaydırma-öncesi rejim, "1345" = sonrası); damga dolum anındaki YÜRÜRLÜK rejimini söyler,
+  geriye dönük yeniden-etiketleme YASAK. (3) OKUYUCU (YASA 6): EDG-042 haftalık koşumu K1'i iki
+  alt-bantta raporlar (pencere=1330 · pencere=1345).
+hakem_kurali: >
+  DONUK ÖNERİ TETİĞİ: 042-K1'in 1345-alt-bandının medyan CI'ı, 1330-alt-bandınınkinden YÜKSEK
+  yönde AYRIK olursa (kötüleşme; CI'lar kesişmiyor) haftalık rapor operatöre "GERİ-AL ÖNERİSİ"
+  düşürür. Geri alma OTOMATİK DEĞİL — operatör kararı. Alt-bant n<10 iken kıyas yapılmaz
+  ("örneklem-birikimde" damgası). Kaydırma süresiz; pilot süresi YOK (operatör seçimi).
+parameter_grid:
+  hucreler: [canli_pencere_1345]   # K += 0 — replay hücresi yok; canlı-değişiklik ön-kaydı
+cost_model: gercek_dolum   # hakem gerçek dolumlardan ölçer (042 kanalı)
+success_metric: >
+  Bu kart hüküm ÜRETMEZ; başarı ölçütü hakem sözleşmesinin İŞLEMESİDİR: damga her dolumda var,
+  alt-bant raporu her haftalık koşumda üretiliyor, öneri tetiği koşulu her koşumda değerlendirilip
+  sonucu (tetiklenmedi/tetiklendi/örneklem-birikimde) raporda beyan ediliyor.
+kill_criteria:
+  - "damga alanı yazılmadan kaydırma canlıya çıkarsa geçersiz (hakem kör doğar)"
+  - "öneri tetiği eşiği ölçüm başladıktan sonra değişirse geçersiz"
+  - "geriye dönük pencere yeniden-etiketleme yapılırsa geçersiz"
+k_registry: {registered_at: "2026-08-23", trial_ids: [EXE-009-canli-pencere]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
+beyanli_sinirlar: >
+  (1) 047 tek-dönem ölçümüydü; kaydırmanın gerçek etkisi ancak 042 birikimiyle görünür — hakem
+  tam bunun için. (2) Sürüklenme bedeli fiyata gömülü gelir (1345 dolum fiyatları); ayrı bedel
+  muhasebesi yapılmaz. (3) Kaçan-hareket etkisi (13:30-13:45 arası sinyal bozulması) bu kartta
+  ölçülmez; tahtada açık soru olarak durur.
