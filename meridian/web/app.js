@@ -1203,6 +1203,78 @@ function spineHTML(t, h, rc, ws) {
          `<span class="msg">${msg}</span>${items.length ? `<span class="items">${chips}</span>` : ""}</div>`;
 }
 
+// ---- `broker_status` DEĞER SÖZLÜĞÜ (v280 · M11/T-2) -----------------------------------------
+// ÖLÇÜLEN KUSUR (docs/TARAMA-KOVA6-ALAN-MERCEGI-2026-08-24.md §2.2): üretici ÜÇ değer yazar —
+// `failed_broker_rejection` (loop.py:830/852), `gap_veto` (loop.py:813) ve `armed_dropped_<kapı>`
+// (loop.py:332). Pano yalnız BİRİNCİSİNİ tanıyordu; kalan her değer `else` dalında nötr/olumlu
+// "gönderilecek" rozetiyle çiziliyor ve `bekleyen` sayacına giriyordu. Yani gap-vetosuyla ya da
+// HALT/kesici kapısıyla DÜŞÜRÜLMÜŞ bir plan "açılışta gidecek" diye okunuyordu — ve o damgalar
+// tam "silahlı bir planın kaybolma sebebi defterden OKUNABİLMELİ" diye eklenmişti
+// (SISTEM-DENETIMI-2026-08-02 #14/#16). Yazan bacak inmiş, okuyan bacak inmemişti.
+//
+// BU EŞLEŞME ALAN DÜZEYİNDE DEĞİL DEĞER DÜZEYİNDEDİR: "pano `broker_status`ü okuyor" demek
+// yetmez — okuduğu DEĞERLERİ tanıması gerekir. Çivisi test_pano_durustluk_v280 §D.
+//
+// BİLİNMEYEN DEĞER HAM BASILIR (`ICRA_TR`/`EXIT_TR` deseni, v196/v197 emisyon disiplini):
+// tanınmayan bir damga sessizce "gönderilecek"e katlanırsa yeni bir düşme sınıfı panoda
+// GÖRÜNMEDEN doğar — kusurun ta kendisi ikinci kez üretilirdi.
+//
+// İKİZİ VAR VE BİLİNÇLİ: icra masasının `KAPI_TR`ı (aynı dosyada, E2 kapı dağılımı) AYNI kapı
+// sözcük dağarcığını TAM SATIR uzunluğunda yazar ("HALT — icra durdurma"); burası 92px'lik bir
+// rozete sığmak zorunda. Tek sözlüğe indirmek uzun etiketin taşıdığı bilgiyi kaybettirirdi.
+// RİSK ÇİVİLENDİ: anahtar kümeleri `test_pano_durustluk_v280 §D3` ile bağlı — yeni bir kapı adı
+// yalnız birine eklenirse test kırmızı yanar (yoksa öteki yüzey ham anahtar basardı).
+const AYNA_KAPI_TR = { halt: "halt", breaker: "kesici", data_bad: "veri arızası",
+                       throttle: "kısma", slot_full: "slot dolu", already_open: "açık pozisyon" };
+
+// `bs` = plan defterinin ham `broker_status` değeri · `gonderildi` = plan id `alpaca_submitted`te mi.
+// Saf fonksiyon (DOM yok, esc yok): davranışı Node'da koşturulabilsin diye — kaynak-metin çivisi
+// "kod değişti mi"yi ölçer, ancak koşturulan fonksiyon "kod ne diyor"u ölçer.
+function aynaDurumu(bs, gonderildi) {
+  if (gonderildi)
+    return { kova: "aynada", sinif: "t-go", kisa: "aynada",
+             uzun: "aynaya gönderildi", taninmiyor: false };
+  // DAMGASIZ = gerçekten bekliyor. Bu dal `bekleyen` sayacının TEK kaynağıdır.
+  if (bs == null || bs === "")
+    return { kova: "bekleyen", sinif: "t-vi", kisa: "gönderilecek", uzun: "", taninmiyor: false };
+  if (bs === "failed_broker_rejection")
+    return { kova: "ret", sinif: "t-no", kisa: "RET",
+             uzun: "broker reddetti — plan silahlı kümeden düştü", taninmiyor: false };
+  if (bs === "gap_veto")
+    return { kova: "dusen", sinif: "t-no", kisa: "VETO: gap",
+             uzun: "gap vetosu — emir GÖNDERİLMEDİ (bizim kararımız, broker reddi DEĞİL)",
+             taninmiyor: false };
+  if (bs.indexOf("armed_dropped_") === 0) {
+    // ÖNEK JENERİK KARŞILANIR: kapı adı bir f-string'den gelir (`f"armed_dropped_{gate}"`), yani
+    // yeni bir kapı adı sözlükten ÖNCE üretime iner. Düşme kesindir; tanınmayan yalnız kapı ADIdır.
+    const g = bs.slice("armed_dropped_".length);
+    const tr = AYNA_KAPI_TR[g];
+    return { kova: "dusen", sinif: "t-no", kisa: `DÜŞTÜ: ${tr || g}${tr ? "" : " ?"}`,
+             uzun: `kapıda düştü: ${tr || g}${tr ? "" : " (tanınmayan kapı adı)"}`
+                   + " — dolum HİÇ denenmedi", taninmiyor: !tr };
+  }
+  return { kova: "bilinmeyen", sinif: "t-rv", kisa: `${bs} ?`,
+           uzun: `tanınmayan plan durumu: ${bs} — pano bu değeri tanımıyor, ham basıldı`,
+           taninmiyor: true };
+}
+
+// Silahlı kümenin kova sayımı. `bekleyen` ARTIK ÇIKARMAYLA BULUNMAZ: eski
+// `bekleyen = silahlı − gönderilen − ret` aritmetiği tanımadığı her damgayı "gönderilecekte
+// kaldı" kovasına atıyordu — sayacın yalanı rozetin yalanıyla aynı kökten geliyordu.
+function aynaSayaclari(armed, gonderilmisIdler) {
+  const sent = new Set(gonderilmisIdler || []);
+  const s = { gonderilen: 0, bekleyen: 0, ret: 0, dusen: 0, taninmayan: 0 };
+  for (const p of (armed || [])) {
+    const u = aynaDurumu(p.broker_status, sent.has(p.id));
+    if (u.kova === "aynada") s.gonderilen++;
+    else if (u.kova === "bekleyen") s.bekleyen++;
+    else if (u.kova === "ret") s.ret++;
+    else if (u.kova === "dusen") s.dusen++;
+    if (u.taninmiyor) s.taninmayan++;
+  }
+  return s;
+}
+
 // ---- SIRADAKİ SEANS — niyet yüzeyi. Canlı-paper modda operatörün akşam sorusu "yarın ne
 // yapacaksın?"dır: açılışta ateşlenecek her silahlı emri, tam seviyeleriyle ve ayna durumuyla
 // gösterir. Boş hali de birinci sınıf: "emir yok" bir özür değil, bir bilgidir.
@@ -1213,10 +1285,11 @@ function nextSessionCard(t) {
     return `<div class="card rise"><h2 class="t">Sıradaki seans · niyet</h2>
       <div class="empty">Silahlı emir yok — açılışta yeni tarama yapılır; kapıyı geçen çıkarsa burada listelenir.</div></div>`;
   const rows = armed.map(p => {
-    const mirror = sent.has(p.id)
-      ? '<span class="tag t-go">aynada</span>'
-      : (p.broker_status === "failed_broker_rejection" ? '<span class="tag t-no">RET</span>'
-                                                       : '<span class="tag t-vi">gönderilecek</span>');
+    const u = aynaDurumu(p.broker_status, sent.has(p.id));
+    // KÜNYE (title) HER ZAMAN HAM DEĞERİ TAŞIR: rozet bir ÇEVİRİdir, kanıtın yerine geçmez.
+    const mirror = `<span class="tag ${u.sinif}"${p.broker_status
+      ? ` title="${esc(u.uzun)} · defter damgası: ${esc(p.broker_status)}"` : ""
+      }>${esc(u.kisa)}</span>`;
     return `<div class="trow" style="grid-template-columns:64px 1fr 90px 90px 90px 92px">
       <span class="tick">${esc(p.ticker)}</span>
       <span class="mut">${esc(p.setup || "")} · tetik ${trn(p.entry_trigger, 2)}</span>
@@ -1230,7 +1303,15 @@ function nextSessionCard(t) {
       <span class="mono-num">${p.size_r ?? "—"}R</span>
       <span style="text-align:right">${mirror}</span></div>`;
   }).join("");
-  return `<div class="card rise"><h2 class="t">Sıradaki seans · ${armed.length} emir ateşlenecek</h2>
+  // BAŞLIK DA DEĞER-FARKINDALI: "N emir ateşlenecek" cümlesi silahlı kümenin BOYUNU sayıyordu —
+  // düşürülmüş/vetolanmış planlar dahil. Ateşlenecek olan yalnız damgasız + aynadaki plandır;
+  // düşenler ayrı ve ADIYLA sayılır (sıfırsa cümle kurulmaz — "0 düştü" bir bilgi değil gürültü).
+  const s = aynaSayaclari(armed, t.alpaca_submitted);
+  const canli = s.gonderilen + s.bekleyen;
+  const dusukler = [s.dusen ? `${s.dusen} düştü` : "", s.ret ? `${s.ret} ret` : "",
+                    s.taninmayan ? `${s.taninmayan} tanınmayan durum` : ""].filter(Boolean);
+  return `<div class="card rise"><h2 class="t">Sıradaki seans · ${canli} emir ateşlenecek${
+      dusukler.length ? ` <span class="mut">· ${esc(dusukler.join(" · "))}</span>` : ""}</h2>
     <div class="trow head" style="grid-template-columns:64px 1fr 90px 90px 90px 92px">
       <span>HİSSE</span><span>PLAN</span><span>STOP</span><span>HEDEF</span><span>${T("BOYUT","boyut")}</span><span style="text-align:right">AYNA</span></div>
     ${rows}</div>`;
@@ -2494,16 +2575,20 @@ function _durumKitapKarti(t, s) {
 // bugüne kadar yalnız `nextSessionCard` satırındaki küçük bir çipte görünüyordu — bir bakışta değil.
 function _durumEmirKarti(t, d) {
   const armed = t.armed_plans || [];
-  const sent = new Set(t.alpaca_submitted || []);
-  const gonderilen = armed.filter(p => sent.has(p.id)).length;
-  const ret = armed.filter(p => p.broker_status === "failed_broker_rejection").length;
-  const bekleyen = Math.max(0, armed.length - gonderilen - ret);
+  // v280 · DEĞER-FARKINDALI SAYIM. Eski hâl `bekleyen = silahlı − gönderilen − ret` idi ve
+  // TANIMADIĞI her damgayı (gap_veto, armed_dropped_*) "gönderilecekte kaldı" kovasına atıyordu:
+  // kart, kapıda DÜŞMÜŞ bir planı operatöre "hâlâ gidecek" diye sayıyordu. `bekleyen` artık
+  // çıkarmayla değil DAMGADAN türer — yalnız damgasız ve gönderilmemiş plan bekliyordur.
+  const say = aynaSayaclari(armed, t.alpaca_submitted);
+  const gonderilen = say.gonderilen, ret = say.ret, bekleyen = say.bekleyen;
+  const dusen = say.dusen, taninmayan = say.taninmayan;
   const rc = (d || {}).reconcile || {};
   const slp = (((d || {}).icra || {}).slipaj) || {};
   const dl = (slp.ayna || {}).dolum || {};
   const acikRet = ((rc.failed_submissions || {}).open || []).length;
   const akis = rc.stream_ok;                 // true / false / null(=hiç kanıt yok)
-  const k = rec("durumEmir", { t, armed, gonderilen, ret, bekleyen, rc, slp, dl, acikRet });
+  const k = rec("durumEmir", { t, armed, gonderilen, ret, bekleyen, dusen, taninmayan,
+                               rc, slp, dl, acikRet });
   const dolanTxt = dl.n_dolan == null
     ? `<b class="mut">—</b> <span class="tx3">(${esc(slp.durum || "icra defteri ölçüm vermedi")})</span>`
     : `<b>${trn(dl.n_dolan)}</b> <span class="tx3">(son ${esc(String(slp.pencere_gun ?? "?"))} gün)</span>`;
@@ -2524,12 +2609,26 @@ function _durumEmirKarti(t, d) {
     // çubuk üretmek sıfır paydadan bir oran uydurmaktı.
     oran: armed.length ? gonderilen / armed.length : null,
     payda: "aynaya gönderim oranı · payda: silahlı plan",
+    // DÜŞEN KOVASI KENDİ ADIYLA KONUŞUR: bu satır eskiden HİÇ YOKTU ve düşen planlar
+    // "gönderilecekte kaldı" cümlesinin İÇİNDE sayılıyordu. Tanınmayan damga ayrı bir satırdır —
+    // "sınıflandıramadım" ile "düştü" aynı sayıya katlanamaz (ölçülemedi ≠ ölçüldü).
     meta: `silahlı → aynaya gönderilmiş → dolan ${dolanTxt}<br>${akisTxt}${
       bekleyen ? `<br><b class="warn">${trn(bekleyen)}</b> plan gönderilecekte kaldı` : ""}${
+      dusen ? `<br><b class="neg">${trn(dusen)}</b> plan kapıda/vetoda düştü — gönderilmeyecek` : ""}${
+      taninmayan ? `<br><b class="warn">${trn(taninmayan)}</b> plan TANINMAYAN durum damgası taşıyor (pano sınıflandıramadı)` : ""}${
       acikRet ? `<br><span class="neg">${trn(acikRet)} açık broker reddi</span>` : ""}`,
-    rozet: bekleyen ? "BEKLİYOR" : "" },
-    bekleyen ? { anomali: "uyari", anomaliNe: `${bekleyen} silahlı plan aynaya gönderilmedi` }
-             : (akis === false ? { anomali: "kopuk", anomaliNe: "ayna akışı kopuk" } : {}));
+    // SIRA v191'İN ÇİVİSİNE UYAR (`rozet: bekleyen ? "BEKLİYOR"`): "bekleyen" operatörden EYLEM
+    // ister, diğer ikisi olan biteni ANLATIR. Tanınmayan damga yine kaybolmaz — `meta` satırında
+    // ve aşağıdaki anomali cümlesinde koşulsuz görünür.
+    rozet: bekleyen ? "BEKLİYOR" : (taninmayan ? "TANINMAYAN" : (dusen ? "DÜŞTÜ" : "")) },
+    bekleyen
+      ? { anomali: "uyari",
+          anomaliNe: `${bekleyen} silahlı plan aynaya gönderilmedi${taninmayan
+            ? ` · ${taninmayan} plan TANINMAYAN durum damgası taşıyor` : ""}` }
+      : (taninmayan
+          ? { anomali: "uyari",
+              anomaliNe: `${taninmayan} plan tanınmayan durum damgası taşıyor — pano sınıflandıramadı` }
+          : (akis === false ? { anomali: "kopuk", anomaliNe: "ayna akışı kopuk" } : {})));
 }
 // ---- ④ POZİSYONLAR — açık n · toplam ısı R · en yakın stop -----------------------------------
 // STOP MESAFESİ GİRİŞE GÖREDİR ve bu BEYANLIDIR: kitapta CARİ FİYAT yok (portfolio.positions
@@ -4422,6 +4521,8 @@ async function opParcalar() {
         silahlı plan yok — silahlanan her plan icra yoluna girdi.</p>`;
       // BİLİNMEYEN ANAHTAR HAM GÖSTERİLİR (EXIT_TR deseni): sözlükte olmayan bir kapı adı sessizce
       // "diğer"e katlanırsa yeni bir kapı sınıfı panoda GÖRÜNMEDEN doğar.
+      // İKİZİ `AYNA_KAPI_TR` (rozet uzunluğu). ANAHTAR KÜMELERİ ÇİVİLİ — v280 §D3: buraya bir
+      // kapı adı eklerken ötekine de ekle, yoksa niyet kartı ham anahtar basar.
       const KAPI_TR = { halt: "HALT — icra durdurma", breaker: "devre kesici",
                         data_bad: "veri arızası", throttle: "boyut kısıcı (size_mult=0)",
                         slot_full: "slot dolu", already_open: "sembol zaten defterde" };
@@ -9018,6 +9119,14 @@ const RECORD_VIEW = {
         ${o.bekleyen ? `<p class="pd-warn">${trn(o.bekleyen)} plan <b>gönderilecekte kaldı</b>: silahlı,
           ama ne aynaya ulaştı ne de broker reddetti. Gönderim kolunu Ayarlar'daki
           "Silahlı planları Alpaca'ya gönder" çalıştırır.</p>` : ""}
+        ${/* v280: bu iki satır YOKTU ve sayıları `bekleyen`in İÇİNDE eriyordu — çekmece de kartla
+              aynı yalanı söylüyordu. Ayrı sayılırlar: düşen plan bir KARARDIR, tanınmayan damga
+              bir ÖLÇEMEDİMdir. */""}
+        ${o.dusen ? `<p class="pd-warn">${trn(o.dusen)} plan <b>kapıda ya da vetoda düştü</b> —
+          gönderilmeyecek; sebebi plan kaydının "Ayna" satırında yazılı.</p>` : ""}
+        ${o.taninmayan ? `<p class="pd-warn">${trn(o.taninmayan)} plan <b>tanınmayan durum damgası</b>
+          taşıyor: pano damgayı sınıflandıramadı ve ham bastı. Bu "sorun yok" DEĞİL, "pano bilmiyor"
+          demektir — üretici yeni bir damga eklemiş olabilir.</p>` : ""}
         ${o.acikRet ? `<p class="pd-warn">${trn(o.acikRet)} açık broker reddi var — kayıtları mutabakat
           masasındaki ret defterinde açılır.</p>` : ""}
         <h3 class="pd-sub">Ayna akışı</h3>
@@ -9216,7 +9325,12 @@ const RECORD_VIEW = {
         ${pdRow("Tarih", esc(p.date || ""))}${pdRow("Skor", p.score)}
         ${pdRow("Sektör", esc(p.sector || ""))}${pdRow("Plan rejimi", esc(REGIME_TR[p.regime_at_plan] || p.regime_at_plan || ""))}
         ${pdRow("Uyuyan kurulum", p.dormant_setup ? "evet" : "")}
-        ${pdRow("Ayna", p.broker_status === "failed_broker_rejection" ? "broker reddetti" : "")}
+        ${/* v280: `pdRow` BOŞ değeri satır BASMADAN yutar — eski hâlde `failed_broker_rejection`
+              dışındaki HER damga (gap_veto, armed_dropped_*) burada sessizce kayboluyordu. Oysa
+              o damga plan defterine tam "kaybolma sebebi okunabilsin" diye yazılıyor: satırın
+              yokluğu, sebebin yokluğu gibi okunuyordu. Çekmecede `gonderildi=false` sabittir —
+              bu yüzey plan DEFTERİNİ gösterir, silahlı kümeyi değil. */""}
+        ${pdRow("Ayna", aynaDurumu(p.broker_status, false).uzun)}
         ${pdRow("Gölge P(kazanç)", p.p_win_shadow == null ? "" : `%${Math.round(p.p_win_shadow * 100)}`)}
         ${(p.gate_reasons || []).length ? `<h3 class="pd-sub">Kapı gerekçesi</h3>
           ${p.gate_reasons.map(r => `<div class="srow"><span>${esc(r)}</span></div>`).join("")}` : ""}
