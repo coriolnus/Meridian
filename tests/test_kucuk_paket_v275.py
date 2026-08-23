@@ -200,9 +200,9 @@ def _skills_kullanimlari(kaynak: str) -> tuple[set[str], set[str]]:
 
 # Karar-yolu modüllerinin GÖZLEMSEL izin listesi: hiçbiri `shadow`/`enabled` bayrağını karara
 # bağlamaz (pipeline_run=telemetri, screener_for=ad eşlemesi, reconcile_enablement=anahtar
-# defter bakımı — ve gölge kararı onu da ATLAR, skills.py:210 beyanı).
+# defter bakımı — ve gölge kararı onu da ATLAR, skills.GOLGE_BEYANI (satır-çapası 2026-08-24'te sembole çevrildi) beyanı).
 # `auto_shadow_from_evidence` ÖLÇÜLDÜ ve bilerek listede: YAZAR yönüdür (kanıt→bayrak;
-# loop.py:2181 kendi beyanı "bayrak yazımı davranışı değiştirmez") — bayrak→karar okuması değil.
+# loop'un auto_shadow_from_evidence yazar-yolu (satır-çapası 2026-08-24'te sembole çevrildi) kendi beyanı "bayrak yazımı davranışı değiştirmez") — bayrak→karar okuması değil.
 _KARAR_YOLU_IZIN = {
     "loop": {"pipeline_run", "reconcile_enablement", "screener_for", "auto_shadow_from_evidence"},
     "backtest": {"screener_for"},
