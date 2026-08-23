@@ -97,6 +97,10 @@ def arms() -> dict[str, dict]:
 # kez ve eksik bir tabloyla tahmin edilmesi gerekmez.
 LIFECYCLE_READ_DEFAULTS: dict[str, tuple] = {
     "exit.trail_atr_mult":      (2.5, "strategy.manage_position"),
+    # OPT Faz-1 kablosu (2026-08-23): iki silahlanma eşiği manage_position'da OKUNUR oldu
+    # (eski gövde sabitleri 1R); tablo kopya olduğu için buraya da iner — AST çivisi eşitliği denetler.
+    "exit.trail_arm_r":         (1.0, "strategy.manage_position"),
+    "exit.giveback_arm_r":      (1.0, "strategy.manage_position"),
     "exit.breakeven_r":         (1.0, "strategy.manage_position"),
     "exit.chandelier_lookback": (0,   "strategy.manage_position"),
     "exit.giveback_pct":        (0.0, "strategy.manage_position"),

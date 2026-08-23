@@ -160,16 +160,29 @@ def _align_index_close(df: pd.DataFrame, index_close: pd.Series) -> pd.Series:
     return index_close
 
 
-def rvol_band_score(rvol: Optional[float]) -> Optional[float]:
-    """rvol → [0,100] BANT puanı: 100·max(0, 1-|rvol-1.75|/0.75). Ölçülemeyen girdi → None.
+def rvol_band_score(rvol: Optional[float], center: Optional[float] = None,
+                    halfwidth: Optional[float] = None) -> Optional[float]:
+    """rvol → [0,100] BANT puanı: 100·max(0, 1-|rvol-merkez|/yarı-genişlik). Ölçülemeyen girdi → None.
 
     Neden üçgen ve neden monoton bir eğri değil: yukarıdaki bant tablosu. `vol_score`un
     `min(vr/3, 1)` biçimi "ne kadar çok hacim o kadar iyi" der; ölçüm bunun 2.0 üstünde YANLIŞ
     olduğunu söylüyor. Yeni bileşen eskisini SİLMEZ — yanında, ayrı ağırlıkla durur ki hangisinin
-    doğru olduğunu kapı ölçsün."""
+    doğru olduğunu kapı ölçsün.
+
+    OPT FAZ-1 KABLO (WP3-B/10-1, 2026-08-23): merkez/yarı-genişlik FONKSİYON SABİTİYDİ (1.75/0.75)
+    — arama uzayı bant ŞEKLİNİ göremiyordu. Artık argüman; verilmezse modül sabitine düşer, yani
+    eski tek-argümanlı her çağrı BİREBİR aynı sayıyı üretir (özdeşlik çivisi
+    test_opt_faz1_kablolama_v276). bounds.yaml'a satır YAZILMADI — sınırlar operatör onaylı,
+    öneri docs/ONERI-OPT-FAZ1-BOUNDS-2026-08-23.md."""
     if rvol is None or pd.isna(rvol):
         return None
-    return 100.0 * max(0.0, 1.0 - abs(float(rvol) - RVOL_BAND_CENTER) / RVOL_BAND_HALFWIDTH)
+    c = RVOL_BAND_CENTER if center is None else float(center)
+    hw = RVOL_BAND_HALFWIDTH if halfwidth is None else float(halfwidth)
+    if hw <= 0:
+        # işaretli düşüş (YASA 4): yarı-genişlik <= 0 bölme-sıfırı/anlamsız bant demektir — bozuk
+        # elle-yazım modül varsayılanına düşer; Hermes yolu zaten guard aralığından geçemez.
+        hw = RVOL_BAND_HALFWIDTH
+    return 100.0 * max(0.0, 1.0 - abs(float(rvol) - c) / hw)
 
 
 def mom_rank_score(mom_series: pd.Series) -> Optional[float]:
@@ -427,7 +440,11 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
     if int(_f(params, "entry.rs_dual_horizon", 0)) == 1 and len(close) > 64:
         mom_short = c_now / close.iloc[-22] - 1.0
         mom_long = c_now / close.iloc[-64] - 1.0
-        if mom_short * 3.0 < mom_long:      # short-horizon pace decelerating vs long-horizon → skip
+        # OPT FAZ-1 KABLO (WP3-B/10-1, 2026-08-23): pro-rata çarpanı 3.0 gövde sabitiydi (63/21
+        # takviminden türer ama bir KATILIK düğmesidir). Anahtar yokken 3.0 → davranış birebir;
+        # yalnız rs_dual_horizon=1 iken okunur (bugün 0 → çift-uykuda; atıl-eksen notu raporda).
+        pace = _f(params, "entry.rs_dual_pace", 3.0)
+        if mom_short * pace < mom_long:     # short-horizon pace decelerating vs long-horizon → skip
             return None
 
     # --- composite score in [0,100] ---
@@ -435,7 +452,16 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
     # öğrenme döngüsüne açıldı. Toplama normalize edildiği için ağırlık oynadıkça ölçek [0,100] kalır;
     # varsayılanlar eski sabitlerin birebir aynısı (0.35/0.30/0.20/0.15) → temel davranış değişmez.
     prox_score = 100.0 * (1.0 - min(proximity_pct / prox_max, 1.0)) if prox_max > 0 else 0.0
-    vol_score = 100.0 * min(vr / 3.0, 1.0)
+    # OPT FAZ-1 KABLO (WP3-B/10-1, 2026-08-23): vol_score doyma noktası 3.0 gövde sabitiydi —
+    # rvol bant ölçümü (g2) "2.0 üstü monoton-iyi değil" derken doyma eğrisi aranamıyordu.
+    # Anahtar yokken 3.0 → skor birebir. ŞERH: component_ic.py'daki ölçüm-yüzeyi kopyası (out["vol"])
+    # üretim varsayılanına sabit kalır; bounds satırı inerse senkron kararı o turda verilir (rapor).
+    vol_sat = _f(params, "entry.vol_score_sat", 3.0)
+    if vol_sat <= 0:
+        # işaretli düşüş (YASA 4): doyma <= 0 bölme-sıfırı demektir — bozuk elle-yazım kod
+        # varsayılanına düşer; Hermes yolu zaten guard aralığından geçemez.
+        vol_sat = 3.0
+    vol_score = 100.0 * min(vr / vol_sat, 1.0)
     w_rs = _f(params, "entry.w_rs", 0.35); w_tt = _f(params, "entry.w_tight", 0.30)
     w_vol = _f(params, "entry.w_vol", 0.20); w_px = _f(params, "entry.w_prox", 0.15)
     w_sum = max(w_rs + w_tt + w_vol + w_px, 1e-9)
@@ -452,7 +478,9 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
     rmom_now = (ind.residual_momentum(close, _align_index_close(df, index_close)).iloc[-1]
                 if index_close is not None else None)
     rmom_val = None if (rmom_now is None or pd.isna(rmom_now)) else float(rmom_now)
-    rvb_score = rvol_band_score(rvol_val)
+    rvb_score = rvol_band_score(rvol_val,
+                                _f(params, "entry.rvol_band_center", RVOL_BAND_CENTER),
+                                _f(params, "entry.rvol_band_halfwidth", RVOL_BAND_HALFWIDTH))
     mom_score = mom_rank_score(mom_series)
     # ÖLÇÜLEMEYEN AĞIRLIKLI BİLEŞEN = KURULUM YOK, "kalanlara göre normalize et" DEĞİL. İkincisi,
     # ısınması dolmamış bir sembolün skorunu üç bileşenden hesaplayıp dört bileşenlik bir sayı gibi
@@ -1132,11 +1160,16 @@ def manage_position(bars: pd.DataFrame, position: dict, params: dict,
     prev_trail = position.get("trail_stop", hard_stop)
 
     trail_mult = _f(params, "exit.trail_atr_mult", 2.5)
+    # OPT FAZ-1 KABLO (WP3-B/10-1, 2026-08-23): trail/chandelier SİLAHLANMA eşiği ("kâr > 1R")
+    # gövde sabitiydi — trail çarpanı aranabilirken silahlanma anı aranamıyordu. Tek düğme iki
+    # kullanım yerini de kapsar (aynı "kâr > arm·R" yüklemi). Anahtar yokken 1.0 → davranış birebir
+    # (özdeşlik çivisi test_opt_faz1_kablolama_v276; bounds satırı YOK — operatör onayı bekler).
+    arm_r = _f(params, "exit.trail_arm_r", 1.0)
     new_trail = prev_trail
     if not pd.isna(a) and a > 0:
         candidate = close - trail_mult * a
-        # only ratchet up, and only once the trade is in profit past 1R
-        if close > entry + position["r_per_share"]:
+        # only ratchet up, and only once the trade is in profit past arm_r·R (eski sabit: 1R)
+        if close > entry + arm_r * position["r_per_share"]:
             new_trail = max(prev_trail, candidate)
     # breakeven: once the bar's high reached entry + breakeven_r * risk, lock the stop at entry so a
     # winner that reverses can't turn into a loss (protects the drawdown score / the L0->L1 max_dd gate).
@@ -1154,7 +1187,7 @@ def manage_position(bars: pd.DataFrame, position: dict, params: dict,
     # çıkıyor (ertesi bar kesin çıkış) — gerçek chandelier ise çıkarmıyor. Bugün uykuda (varsayılan 0)
     # ama bounds.yaml 0-30 aralığını arama döngüsüne AÇIK bırakıyor: açıldığında kapı bozuk bir çıkışı ölçerdi.
     chand_lb = int(_f(params, "exit.chandelier_lookback", 0))
-    if chand_lb > 0 and not pd.isna(a) and a > 0 and close > entry + position["r_per_share"]:
+    if chand_lb > 0 and not pd.isna(a) and a > 0 and close > entry + arm_r * position["r_per_share"]:
         hh = bars["high"].iloc[-min(chand_lb, max(1, bars_held)):].max()
         new_trail = max(new_trail, hh - trail_mult * a)
     new_trail = max(new_trail, hard_stop)
@@ -1178,7 +1211,11 @@ def manage_position(bars: pd.DataFrame, position: dict, params: dict,
     if giveback > 0 and bars_held >= 1:
         window = bars["high"].iloc[-bars_held:]
         peak_profit = float(window.max()) - entry
-        if peak_profit > position["r_per_share"] and (close - entry) < peak_profit * (1.0 - giveback):
+        # OPT FAZ-1 KABLO (WP3-B/10-1, 2026-08-23): giveback'in silahlanma eşiği ("zirve kârı >
+        # 1R") gövde sabitiydi. Anahtar yokken 1.0 → davranış birebir; giveback_pct=0 iken zaten
+        # okunmaz (atıl-eksen notu raporda — arama bileşik kartla ya da pct>0'ken anlamlı).
+        gb_arm = _f(params, "exit.giveback_arm_r", 1.0)
+        if peak_profit > gb_arm * position["r_per_share"] and (close - entry) < peak_profit * (1.0 - giveback):
             return ManageDecision(True, "giveback", new_trail)
 
     time_stop = int(_f(params, "exit.time_stop_days", 15))
