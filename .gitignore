@@ -70,3 +70,13 @@ research/olcumler/**/__pycache__/
 
 # geçici tasarım comp'ları (depoya girmez)
 scratch-panov2/
+
+# SATOSHI — LİSANS BELİRSİZLİĞİ NEDENİYLE VERSİYONLANMAZ (2026-08-24).
+# ITF Free Font License v2.0 §02 dağıtım-kanalı listesinde "repository" NİTELEMESİZ geçiyor;
+# §01 ise "internal sharing does not constitute redistribution" diyor ve özel/kamu ayrımını
+# commit bağlamında HİÇ yapmıyor. Git geçmişi KALICIDIR — belirsiz bir izni geri alınamaz bir
+# yere yazmak, kazancı sıfır olan bir risktir (panonun en büyük başlığı 28px; Dub'ın kendi
+# kuralı Satoshi'yi 36px altında YASAKLIYOR, yani ekranda sıfır karakter çizerdi).
+# Ölçüm ve lisans metni depoda KALIR; yalnız İKİLİ dosya dışarıda.
+research/olcumler/yazi_tipi_2026-08-24/satoshi/fonts/
+research/olcumler/yazi_tipi_2026-08-24/satoshi/woff2/

@@ -233,3 +233,55 @@ Dosyalar `meridian/web/fonts/` altına iner ama **bu turda bağlanmaz**: `index.
 `landing.html`, `workflow.html`, `api.py::_FONT_DOSYALARI` ve `tests/test_yazitipi_v201.py`
 şu an başka ajanların elinde. Ölçüm raporu bağlanma listesini satır numarasıyla verir;
 bağlama, ajanlar indikten sonra Rol-1'de tek elden yapılır.
+
+---
+
+## 8 · SATOSHI HÜKMÜ (2026-08-24, Rol-1 otonom kararı)
+
+Operatör _"yazı tiplerinde satoshi de olması lazım"_ dedi. Edinildi, lisansı metinden okundu,
+ölçüldü. **Hüküm: bu turda ALINMIYOR — panoya bağlanmıyor, ikilisi versiyonlanmıyor.**
+Talep reddedilmiyor; **maliyeti sıfır olan tek defansif yola** park ediliyor (§8.4).
+
+### 8.1 Lisans — ITF Free Font License **v2.0** (paketten çıkan metin, `satoshi/lisans/FFL.txt`)
+| Soru | Hüküm | Dayanak |
+|---|---|---|
+| Self-host | **EVET** | §01 `@font-face` ile kendi sunucusundan servisi ADIYLA izinli; Fontshare API'si isteğe bağlı |
+| Ticari kullanım | **EVET** | §01 |
+| **Kesit (subset) alma** | **HAYIR** | §02 `"subsetting, format conversion"` ve nameID değiştirmeyi ADIYLA yasaklıyor |
+| **Depoya commit** | **BELİRSİZ** | §02 dağıtım kanalları arasında `"repository"` NİTELEMESİZ; §01 iç paylaşımı "yeniden dağıtım değil" sayıyor. Metin özel/kamu ayrımını commit bağlamında HİÇ yapmıyor |
+
+Not: `fontshare.com/licenses/itf-ffl` **ölçülemedi** (JS kabuğu); hüküm paketin içindeki metne
+dayanıyor. Atıf lisansta şart DEĞİL (§01) ama fontun gömülü `nameID 13`'ü şart koşuyor —
+çelişki kayda geçti, maliyetsiz taraf (atıf yazmak) seçildi.
+
+### 8.2 Ölçüm — üç bulgu, üçü de aleyhte
+1. **Panoda meşru kullanım alanı BOŞ KÜME.** `--display` yuvasını kullanan üç kuralın en büyüğü
+   **28px** (`.greet`/`.ph` clamp tavanı, `.gate-h` 24px). Dub'ın kendi DESIGN.md'si iki kez
+   yazıyor: _"Satoshi is display-only (36px+)"_ / _"switch to Inter for everything 30px and below"_.
+   Yani Satoshi'yi almanın gerekçesi olan tasarım dili, onu bu panodaki boylarda **yasaklıyor**.
+2. **Kesilemez → 41,6 KB sabit.** Üç yüzün toplamı 96,1 KB (bütçe 120 KB, `test_dagitim_boyutu_BUTCEDE`).
+   Sığıyor, ama Satoshi toplamın **%43'ü** ve karşılığında ekranda **sıfır karakter**.
+3. **İki teknik uyumsuzluk**: `wght` varsayılanı 900 (eksen daraltma da yasak — tek savunma CSS
+   tarafında), ve **rakamlar oransal** (9 farklı advance) — deponun yapısal-tabular çivisini
+   karşılamıyor. Ayrıca `U+20BA (₺)` ve `U+00A0` cmap'te yok. Türkçe on iki glifin **hepsi var**.
+
+### 8.3 Neden geri alınamazlık belirleyici oldu
+Git geçmişi kalıcıdır. Belirsiz izinli bir ikiliyi commit'lemek, depo bir gün kamuya açılırsa
+ihlali **geriye dönük** doğurur; FFL §08 ihlalde "proof of deletion" istiyor ve git'te silme
+diye bir şey yok. Kazanç tarafı ise **ölçülmüş biçimde sıfır** (§8.2/1). Sıfır kazanç için
+geri alınamaz risk alınmaz — operatör otonomi verdi, **hukuki risk kabulü** vermedi.
+
+### 8.4 Ne yapıldı, ne park edildi
+- İkili dosyalar `.gitignore`'a alındı; **lisans metni, ölçüm ve rapor depoda KALIR** (SİLME YOK).
+- **Park edilen tek savunulabilir kullanım**: `landing.html` — orada 36-48px hero gerçekten var
+  ve Dub'ın kuralına uyar. Operatör onaylarsa tek turda bağlanır (jeton adı `--display` zaten
+  yerinde, yüz o an takas olur).
+- **Panoda karşılığı ZATEN ÇALIŞIYOR**: Dub DESIGN.md'nin kendi ikamesi _"Substitute: Inter
+  (weight 500, letter-spacing -0.02em)"_ — pano `h1,h2,h3`'te bunu bugün harfi harfine yapıyor.
+- Yeni çivi borcu: OFL çivisi (`test_OFL_lisansi_FONTLARLA_BIRLIKTE_dagitiliyor`) Satoshi'yi
+  KAPSAYAMAZ — OFL dağıtıma izin verip lisansı yanında taşımayı şart koşar, FFL dağıtımı hiç
+  izinli kılmaz. İki zıt mantık tek assert'e sığmaz. Satoshi bağlanırsa gereken çivi farklıdır:
+  **dağıtılan woff2'nin sha256'sı ITF'ninkiyle birebir** (yani "kesit alınmadı" bir beyan değil
+  ÖLÇÜM olsun).
+- **Operatöre açık yol**: FFL §09 kesit izni için ITF'ye yazmaya açıkça davet ediyor; izin
+  alınırsa 41,6 KB ~15 KB'a iner. Dış yazışma operatör işidir, yapılmadı.
