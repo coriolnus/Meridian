@@ -261,6 +261,7 @@ fi
 #   * 50-meridian-sprint.rules  → /etc/polkit-1/rules.d/   (v241 — NoNewPrivileges altında tetik izni)
 #   * deploy/hermes/SOUL.md     → ~ubuntu/.hermes/SOUL.md  (v242 — hermes brifingi)
 #   * meridian-tick-watchdog.service + .timer → /etc/systemd/system/  (asılı-tick bekçisi)
+#   * litestream.yml → /etc/litestream.yml (kurulum litestream_kur.sh — 2026-08-23 eklendi, altıncı dosya)
 # Bu, OB-2'yi doğuran "kurulu ≠ çalışır" sınıfıdır: repo ilerler, canlı kopya yerinde sayar ve
 # hiçbir kapı bağırmazdı — denetim ölçtü: dagit'te bu dosyalara sıfır atıf vardı. [1c] yalnız
 # *.service YÖNERGELERİNİ kıyaslar; bu kapı BEŞ dosyanın TAM İÇERİĞİNİ kıyaslar (timer/polkit/
@@ -278,7 +279,8 @@ deploy/oracle-a1/meridian-sprint@.service|/etc/systemd/system/meridian-sprint@.s
 deploy/oracle-a1/50-meridian-sprint.rules|/etc/polkit-1/rules.d/50-meridian-sprint.rules
 deploy/hermes/SOUL.md|/home/ubuntu/.hermes/SOUL.md
 deploy/oracle-a1/meridian-tick-watchdog.service|/etc/systemd/system/meridian-tick-watchdog.service
-deploy/oracle-a1/meridian-tick-watchdog.timer|/etc/systemd/system/meridian-tick-watchdog.timer"
+deploy/oracle-a1/meridian-tick-watchdog.timer|/etc/systemd/system/meridian-tick-watchdog.timer
+deploy/oracle-a1/litestream.yml|/etc/litestream.yml"
 for _cift in $F9_LISTE; do
   _f9_repo="${_cift%%|*}"; _f9_canli="${_cift##*|}"; _f9_ad="$(basename "$_f9_repo")"
   if [[ ! -f "$REPO/$_f9_repo" ]]; then

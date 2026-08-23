@@ -112,15 +112,23 @@ dbs:
     busy-timeout: 5s
 
     replica:
-      # DOSYA REPLICA'SI — AYNI DİSKTE AYRI DİZİN (ikinci disk yok; dosya başındaki uyarı).
-      # `/home/ubuntu/backups`ın (tar zinciri) KARDEŞİDİR, İÇİNDE DEĞİL: yedek biriminin
-      # `find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete` budaması
-      # bugün ad+derinlik filtreli olduğu için replica'ya dokunmazdı — ama o filtrenin bir gün
-      # gevşetilmesi, iki mekanizmayı tek dizine koymuş olmamızın cezasını verirdi.
-      path: /home/ubuntu/replica/meridian.db
-
-      # 10 SANİYE — "saniyeler" mertebesi, gerekçeli. Worker döngüsü 300sn'dir
-      # (meridian.service `CYCLE_POLL_SECONDS=300`), yani 10sn ZATEN yazma kadansının otuzda biri:
-      # daha küçük bir değer RPO'yu ölçülebilir biçimde iyileştirmez, yalnız paylaşılan önyükleme
-      # diskinde boşuna G/Ç üretir. Varsayılan 1sn'dir (replica.go:26).
-      sync-interval: 10s
+      # ================================================================================================
+      # AŞAMA-2 — OCI OBJECT STORAGE (S3-uyumlu), 2026-08-23 operatör kararıyla (C-kovası #2).
+      # Off-box PITR: medya/VM kaybında bile dakika-hassas geri sarma. Kimlik YALNIZ ortamdan
+      # (LITESTREAM_ACCESS_KEY_ID / LITESTREAM_SECRET_ACCESS_KEY — birim drop-in'i
+      # `10-s3-env.conf` bunları API'nin ürettiği 0600 `state/litestream.env`ten yükler; sır bu
+      # dosyaya PANO Ayarlar'dan girilir, repoya/sohbete değmez).
+      # İSTEK BÜTÇESİ (ölçülmüş gerekçe): OCI Always-Free ~20k istek/ay. Yazar kadansı 300sn
+      # (CYCLE_POLL_SECONDS) → veri olduğunda ~12 PUT/saat seans-içi, boşta ~0; snapshot 12sa'da 1.
+      # Aylık ~2-3k istek — bütçenin çok altında. sync-interval 30sn: dosya-replica'nın 10sn'i
+      # S3'te gereksiz sıklıktı; 30sn hâlâ yazma kadansının onda biri.
+      # GEÇİŞ NOTU: yerel dosya-replica (aşama-1) bu blokla EMEKLİ — tarihçesi git'te (bu dosyanın
+      # önceki sürümü). Gece tar + Mac-pull zinciri AYNEN sürer; ops/pull-a1-backups.sh'ın
+      # replica bacağı "bucket'a taşındı" beyanıyla güncellenir.
+      type: s3
+      bucket: meridian-bucket
+      path: litestream/meridian.db
+      region: eu-frankfurt-1
+      endpoint: https://frllsrdbjodk.compat.objectstorage.eu-frankfurt-1.oraclecloud.com
+      force-path-style: true
+      sync-interval: 30s

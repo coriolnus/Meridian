@@ -171,12 +171,17 @@ def test_kontrol_soketi_kapali():
 def _yazilabilir_dizinler() -> dict[str, str]:
     """Yapılandırmanın YAZMAYI GEREKTİRDİĞİ dizinler → hangi ayardan geldiği."""
     db = _cfg()["dbs"][0]
-    return {
+    yollar = {
         # DB dizini: `-wal`/`-shm` yan dosyaları + litestream'in tablo yazımları (db.go:1083/1089)
         str(pathlib.PurePosixPath(db["path"]).parent): "dbs[0].path",
-        str(pathlib.PurePosixPath(db["replica"]["path"]).parent): "dbs[0].replica.path",
         str(pathlib.PurePosixPath(db["meta-path"]).parent): "dbs[0].meta-path",
     }
+    # AŞAMA-2 DÜZELTMESİ (2026-08-23): `replica.path` yalnız DOSYA replica'sında yerel dizindir;
+    # `type: s3`te (OCI bucket) NESNE-ÖNEKİdir ve diske yazılmaz — yerel-yol saymak birimden
+    # var olmayan bir ReadWritePaths istemek olurdu (v180'in kendi ilk kırmızısı, 2026-08-23).
+    if db["replica"].get("type", "file") == "file":
+        yollar[str(pathlib.PurePosixPath(db["replica"]["path"]).parent)] = "dbs[0].replica.path"
+    return yollar
 
 
 def test_yapilandirmadaki_her_yazilabilir_yol_birimde_ACIK():
