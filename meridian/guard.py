@@ -25,17 +25,31 @@ from typing import Optional
 from . import config
 
 # Names that are immutable to Hermes. Touching any of these is an automatic reject.
-GOAL_KEYS = {"schema_version", "universe", "style", "session_tz", "target_return_30d", "min_sharpe",
+# --- MEZAR TAŞI (25a, 2026-08-23): `schema_version` · `universe` · `style` · `session_tz` ·
+#   `backtest_gate` · `explore_rate` · `fill` BU KÜMEDEN ve goal.yaml'dan BİRLİKTE düştü.
+#   Yedisi de OKUYUCUSUZDU (envanter docs/DENETIM-OLU-BILESEN-ENVANTERI-2026-08-13 §b-1 + §D-1;
+#   kaldırma günü yeniden grep'lendi) — üyelikleri "değişmez düğme"yi değil, OLMAYAN düğmeyi
+#   koruyordu. Alan gerekçeleri goal.yaml'daki mezar taşlarında; sessiz-diriliş çivisi
+#   tests/test_k5_paketi_v273.py. Yeni bir goal anahtarı inerse GU1 sürüklenme testi
+#   (test_guard_audit_v27) buraya da eklenmesini ZORLAR — o kapı aynen yürürlükte.
+GOAL_KEYS = {"target_return_30d", "min_sharpe",
              "max_drawdown", "failure_below", "reflection_every", "min_sample", "one_variable_only",
-             "backtest_gate", "rollback_if_worse_by", "explore_rate", "max_accepted_changes_per_month",
-             "commission_per_share", "slippage_bps", "fill",
+             "rollback_if_worse_by", "max_accepted_changes_per_month",
+             "commission_per_share", "slippage_bps",
              # Giriş İCRA yasası ve kötümser maliyet bandı goal.yaml'a girdi ve
              # ikisi de DEĞİŞMEZ olmak ZORUNDA — icra yasası bir arama değişkeni olsaydı ajan kendi
              # dolum fiyatını, maliyet bandı düğme olsaydı kendi karnesinin paydasını seçerdi.
              # Sürüklenme testi (test_guard_audit_v27) bu iki adı burada görmezse kırmızı yanar.
              "execution_v2", "pessimistic_band_v2"}
+# --- MEZAR TAŞI (25a, 2026-08-23): `kill_switch_file` BU KÜMEDEN ve goal.yaml limits'ten düştü —
+#   okuyucusuzdu; health.py kill-switch yolunu SABİT kodlar (STATE/"HALT") ve bu anahtara hiç
+#   bakmadı (gerekçe goal.yaml mezar taşında; çivi tests/test_k5_paketi_v273.py).
+# --- DAMGA (25c ÜSTÜN-HÜKÜM, 2026-08-23): `no_trade_before_bars` bu kümeden ÇIKTI ama goal.yaml
+#   limits'te YAŞIYOR — canlı-zarf parametresi DEĞİL, REPLAY ISINMA KURALI (Rol-1 ölçümü:
+#   `bar_i` = seans sırası, backtest.py `enumerate(calendar)`; canlının "koşum başlangıcı"
+#   kavramı yok). Hermes'e kapalılığı aşağıdaki REPLAY_WARMUP_KEYS taşır — davranış AYNEN.
 LIMIT_KEYS = {"autonomy_level", "max_position_r", "max_open_positions", "max_daily_loss_pct",
-              "max_sector_exposure_pct", "no_trade_before_bars", "kill_switch_file",
+              "max_sector_exposure_pct",
               # Portföy-ısısı ve korelasyon eşikleri KOD SABİTİYDİ — ne
               # operatörün değişmez zarfında (goal.yaml) ne arama uzayında (bounds.yaml). Yani
               # canlı defterde plan kesen bir risk eşiği HİÇBİR yönetişim yüzeyinde görünmüyordu
@@ -59,6 +73,17 @@ LIMIT_KEYS = {"autonomy_level", "max_position_r", "max_open_positions", "max_dai
               # davranış değiştirmez. Ad burada ŞİMDİDEN durur ki, operatör bir gün satırı
               # yazdığında Hermes'e açık bir düğme olarak DOĞMASIN (kayma sınıfı).
               "sector_cap_basis"}
+
+# --- REPLAY ISINMA KURALLARI (25c ÜSTÜN-HÜKÜM damgası, 2026-08-23) -------------------------------
+# goal.yaml `limits` blokunda YAŞAYAN ama CANLI ZARF PARAMETRESİ OLMAYAN adlar. Bugün tek üye
+# `no_trade_before_bars`: yalnız replay okur (`backtest.py`, koşumun ilk N SEANSINI ısınma sayar);
+# canlı `loop.py`nin okumaması eksiklik değil doğal sonuçtur (canlıda "koşum başlangıcı" yok —
+# Rol-1 ölçümü 2026-08-13, ROADMAP 25c; envanterin D-3/1 "DİRİLT" hükmü bu ölçümle AŞILDI).
+# LIMIT_KEYS'te durması onu canlı-zarf düğmesi gibi gösteriyordu; buraya taşındı. YETKİ AYNI:
+# Hermes ÖNEREMEZ (`validate_change` bu kümeyi de reddeder), bounds'ta satırı yok, değiştiren
+# yalnız operatördür. GU1 sürüklenme testi limits anahtarlarını LIMIT_KEYS ∪ bu küme üzerinden
+# denetler — yeni bir limits anahtarı yine adsız kalamaz.
+REPLAY_WARMUP_KEYS = {"no_trade_before_bars"}
 
 # --- CANLI MOTORUN OKUYAMADIĞI KNOB SINIFI -------------------------------------------------------
 # Bir knob replay/gölgede ÖLÇÜLÜR ama canlı motorda yapısal olarak hiçbir şey yapmazsa, terfi yolu
@@ -207,8 +232,10 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
                                    f"@{regime} override'ı yapısal olarak etkisizdir"], variable=variable)
 
     # --- immutability: goal.yaml / bounds.yaml / limits block ---
-    if base in GOAL_KEYS or base in LIMIT_KEYS or base.startswith("limits.") \
-            or base in ("goal", "bounds"):
+    # REPLAY_WARMUP_KEYS de burada reddedilir (25c damgası): sınıf değişti (canlı zarf değil,
+    # replay ısınma kuralı) ama YETKİ değişmedi — goal.yaml'da yaşayan hiçbir ad Hermes'e açılmaz.
+    if base in GOAL_KEYS or base in LIMIT_KEYS or base in REPLAY_WARMUP_KEYS \
+            or base.startswith("limits.") or base in ("goal", "bounds"):
         return Verdict(False, [f"'{base}' is immutable (goal/limits block); Hermes may not propose it"],
                        variable=variable)
 
@@ -502,6 +529,9 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
          f"R:R {rr:.1f} < {DISCIPLINE_MIN_RR:.1f} (yetersiz ödül/risk)", "hard",
          value=round(rr, 2), threshold=f">={DISCIPLINE_MIN_RR:.1f}")
     open_heat = portfolio.get("open_risk_r", 0.0) + float(plan.get("size_r", 0.0))
+    # EZER: limits.max_open_positions (slot düğmesi) — 25d zinciri c-1 (eşzamanlı tepe 13<20;
+    # slot25 kolu tabanla bayt-özdeş, EDG-2026-035; 0,5R'lik pozisyonlarla 5R zarfı ~10 isimde
+    # dolar — slotun kalan tek etkisi sektör-tavanı paydası), 2026-08-23
     _chk("heat_hard", open_heat > heat_hard_r,
          f"portföy ısısı sert tavanı %{heat_hard_r:.1f}R aşıyor (~{open_heat:.1f}R açık risk)", "hard",
          value=round(open_heat, 2), threshold=f"<={heat_hard_r:.1f}R")

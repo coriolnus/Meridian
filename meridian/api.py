@@ -2167,7 +2167,7 @@ def _slippage_measured(trades: list[dict], goal: dict) -> dict:
     `loop.py` → `reconcile_broker_state` kapanan işlemlere `alpaca_fill_price` + `mirror_divergence` geri-yazıyor ve
     gerekçesi açık: "real-world slippage vs the model is measurable". Ama ölçülen sapmayı
     `goal.slippage_bps`e (ya da herhangi bir kalibrasyon raporuna) geri besleyen tüketici YOKTU —
-    döngünün kapanan ucu hiç kurulmamıştı. Model tarafı sabit: goal.yaml:58 slippage_bps: 5
+    döngünün kapanan ucu hiç kurulmamıştı. Model tarafı sabit: goal.yaml:62 slippage_bps: 5
     (A17: eski `:27` çapası bayattı — satır kaydı, değer değişmedi).
 
     UYDURMA YASAĞI: ayna henüz hiçbir satırı yamamadı (canlı sayım 2026-07-30: 0/95). O yüzden

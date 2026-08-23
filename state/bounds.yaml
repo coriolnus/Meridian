@@ -4,6 +4,10 @@ entry.rs_rating_min:      {min: 60,  max: 95,  step: 1,   type: int}
 entry.pivot_proximity_pct: {min: 0.5, max: 8.0, step: 0.1, type: float}
 entry.min_volume_ratio:   {min: 1.0, max: 4.0, step: 0.1, type: float}
 entry.min_score:          {min: 40,  max: 90,  step: 1,   type: int}
+# EZER: guard.DISCIPLINE_MIN_RR (R:R sert vetosu) — 25d zinciri c-6 (aşağıdaki min=2.0 hedef
+# R'nin alt sınırını vetonun tabanına eşitler → rr_floor yapısal olarak ateşleyemez; canlı
+# defterde 0/409 düştü. Taban gerçek bir kısıt olacaksa min < 2.0 bilinçli kararla iner),
+# 2026-08-23
 exit.profit_target_r:     {min: 2.0, max: 6.0, step: 0.5, type: float}
 exit.time_stop_days:      {min: 3,   max: 40,  step: 1,   type: int}
 exit.trail_atr_mult:      {min: 1.0, max: 5.0, step: 0.1, type: float}

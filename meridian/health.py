@@ -135,6 +135,11 @@ def set_intraday_arm(on: bool) -> bool:
 # BU FONKSİYON HİÇBİR ŞEY SİLAHLAMAZ VE HİÇBİR DOSYAYA YAZMAZ. Saf okumadır: bugün hiçbir kod yolu
 # otonom intraday emir göndermiyor (Faz 4b silahlama bacağı yazılmadı), yani bu zincirin eklenmesi
 # canlı davranışı DEĞİŞTİREMEZ. Faz 4b/6 yazıldığında ön-koşul kontrolü BURAYA bağlanır.
+# EZER: (ezen kod değil TÜKETİCİ YOKLUĞU) 5 kilit + analytics'in 12 kanıt eşiği ezilen taraf —
+# 25d zinciri c-9 (silahlama bacağının ön-koşul kontrolü bu fonksiyona hâlâ bağlanmadı; kilitler
+# ölçüyor, kimse hükümlerini tüketip silahlanmıyor. Şerh: 4b gönderim bacağı 2026-08-11'de
+# yazıldı ve `intraday_arm_flag_on_but_4b_not_built` olayı 0'a indi — zincirin BİR ucu kapandı,
+# kilit→silahlanma kablosu hâlâ yok), 2026-08-23
 FAZ6_KILITLERI = ("edge_kaniti", "sonuc_hukmu", "faz5_cikisi", "operator_onayi", "dsr_gecer")
 
 

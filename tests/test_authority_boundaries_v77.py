@@ -489,9 +489,13 @@ def test_c3_guard_rejection_list_is_derived_not_duplicated():
     """Değişmez ad listeleri goal.yaml'ın GERÇEK anahtarlarını kapsıyor mu? Kapsamıyorsa yeni bir
     limit eklendiğinde sessizce ÖNERİLEBİLİR hâle gelir (kayma sınıfı)."""
     goal = config.goal()
-    eksik_limit = set(goal.get("limits", {})) - guard.LIMIT_KEYS
+    # 25c damgası (2026-08-23): REPLAY_WARMUP_KEYS de korumalı bir kümedir (Hermes'e kapalı) —
+    # `no_trade_before_bars` oraya taşındı, kapı daralmadı.
+    eksik_limit = set(goal.get("limits", {})) - guard.LIMIT_KEYS - guard.REPLAY_WARMUP_KEYS
     assert not eksik_limit, f"goal.limits içinde guard'ın korumadığı anahtar: {eksik_limit}"
-    kritik = {"target_return_30d", "max_drawdown", "backtest_gate", "min_sample"}
+    # 25a mezar taşı (2026-08-23): `backtest_gate` bu listeden ve goal.yaml'dan düştü — kapı sözü
+    # verip hiçbir davranış taşımayan ÖLÜ anahtardı (envanter §D-1; çivi test_k5_paketi_v273).
+    kritik = {"target_return_30d", "max_drawdown", "min_sample"}
     assert kritik <= guard.GOAL_KEYS, f"GOAL_KEYS eksik: {kritik - guard.GOAL_KEYS}"
 
 

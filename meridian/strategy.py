@@ -1056,6 +1056,10 @@ def evaluate_canslim(bars: pd.DataFrame, params: dict, rs_rating_value: int,
 # YENİDEN-SİLAHLANMA KAPISI (kartın önerdiği eşik, karar gereği DONUK): cf'de n≥30 VE ort-R
 # CI-alt > 0 olursa KART-ÖNCE yeniden değerlendirme açılır — doğrudan geri ekleme YASAK.
 # Sıra disiplini korunur: sonradan silahlanan, mevcutların ARKASINA eklenir (v92).
+# EZER: skill registry `enabled`/`mode`/`shadow` bayrakları (31 kayıt × 3) — 25d zinciri c-5
+# (deterministik motor registry'yi HİÇ okumaz; silahlanmanın tek gerçeği bu tuple. Kanıtlanmış
+# canlı vaka: pullback-screener registry'de "gölge"yken pullback burada silahlı koşuyordu —
+# bayrakların ayrı damgası WP7/25b kaleminde), 2026-08-23
 ARMED_SETUPS = ("breakout_vcp", "exhaustion_hammer", "momentum_burst")
 
 

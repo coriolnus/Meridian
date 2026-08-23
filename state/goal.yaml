@@ -1,16 +1,15 @@
 # state/goal.yaml — IMMUTABLE. Hermes may NEVER edit this file.
 # Written by intake on 2026-07-14. Any change is a human action, not an agent action.
-# schema_version / style / session_tz: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (artefakt taraması
-# dördüncü kova, 2026-08-07; docs/ARTEFAKT-TARAMASI-2026-08-07.md B-1; explore_rate ile aynı
-# sınıf, K1'in 2026-07-30 taramasından kaçmış üçü). Tek eşleşmeleri guard.py GOAL_KEYS üyelik
-# seti (drift koruması — değeri değerlendirmez). DİKKAT ad çakışması: kodda görünen
-# `storage.schema_version()` bir DB fonksiyonudur, BU anahtar değil. Saat dilimi gerçekte
-# barclock/exchange_calendars'tan gelir; stil hiçbir kapıya bağlı değildir. Bu üçünü
-# değiştirmek hiçbir davranışı değiştirmez.
-schema_version: 1
-universe: "S&P 500"
-style: "swing_momentum"
-session_tz: "America/New_York"
+# --- MEZAR TAŞI: schema_version · universe · style · session_tz — KALDIRILDI (2026-08-23) ------
+# Düşen satırlar: `schema_version: 1` · `universe: "S&P 500"` · `style: "swing_momentum"` ·
+#   `session_tz: "America/New_York"` (25a; envanter docs/DENETIM-OLU-BILESEN-ENVANTERI-2026-08-13
+#   §b-1 + §D-1).
+# NEDEN: dördü de BİLGİLENDİRİCİYDİ — HİÇBİR KOD OKUMAZDI. Kaldırma günü YENİDEN grep'lendi
+#   (25a doğrulama şartı): tek eşleşmeleri guard.GOAL_KEYS üyeliğiydi ve o üyelikler de bu turda
+#   birlikte düştü. Evren gerçekte state/finviz_universe.json + dataset.py'den, saat dilimi
+#   barclock/exchange_calendars'tan gelir; stil hiçbir kapıya bağlı değildir. DİKKAT ad
+#   çakışması: kodda görünen `storage.schema_version()` bir DB fonksiyonudur, bu anahtar DEĞİLDİ.
+# Sessiz-diriliş çivisi: tests/test_k5_paketi_v273.py (anahtarlar geri gelemez, taş durur).
 
 # success
 target_return_30d: 0.07
@@ -37,26 +36,36 @@ min_sample: 30
 # (yasa yumuşak olmamalı); yalan olan, kapatılamaz bir şeyin düğme gibi durması. Bu satır o
 # yalanı düzeltir: düğme değil, yasanın BEYANIDIR.
 one_variable_only: true
-# backtest_gate: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (artefakt taraması B-1'in EN AĞIRI: bir
-# KAPI sözü verir, hiçbir davranışı yoktur; tek eşleşme GOAL_KEYS üyeliği). Gerçek geri-test
-# kapıları başka yerde yaşar ve bu anahtara bakmaz: DSR/PBO ship-yolu sertliği (validation),
-# guard.classify_gate, Faz-6 kilit zinciri (health.faz6_kilitleri). `false` yazmak hiçbir
-# kapıyı açmaz/kapamaz. Gerçek bir kapıya bağlanması ayrı ve bilinçli bir karardır — bağlanana
-# kadar bu satır bir düğme değil, tarihî bir niyet kaydıdır.
-backtest_gate: true
+# --- MEZAR TAŞI: backtest_gate — KALDIRILDI (2026-08-23) ---------------------------------------
+# Düşen satır: `backtest_gate: true` (25a; envanter §D-1'in İKİ "en tehlikeli"sinden biri).
+# NEDEN: bir KAPI sözü verir, hiçbir davranışı yoktu — HİÇBİR KOD OKUMAZDI (kaldırma günü
+#   yeniden grep'lendi: tek eşleşme guard.GOAL_KEYS üyeliğiydi, o da düştü). Gerçek geri-test
+#   kapıları bu anahtara hiç bakmadı ve YERLERİNDE DURUYOR: DSR/PBO ship-yolu sertliği
+#   (validation), guard.classify_gate, Faz-6 kilit zinciri (health.faz6_kilitleri). `false`
+#   yazmak hiçbir kapıyı açmıyordu/kapamıyordu; satırın tek etkisi operatöre SAHTE bir kontrol
+#   hissi vermekti. Gerçek bir kapıya bağlanmak istenirse bu ayrı ve bilinçli bir karardır —
+#   yeni ad + okuyucu + test birlikte iner.
+# Sessiz-diriliş çivisi: tests/test_k5_paketi_v273.py.
 rollback_if_worse_by: 0.10
-# explore_rate: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). Tek eşleşmesi
-# guard.py'nin GOAL_KEYS üyelik setidir (drift koruması, değerlendirme değil). Gerçek keşif
-# kararları başka yerlerden gelir: reflect.py `--explore` CLI bayrağı ve loop.py'nin maruziyet
-# bütçesi koşulu — ikisi de bu 0.15'i OKUMAZ. Bu değeri değiştirmek hiçbir davranışı değiştirmez;
-# gerçek bir olasılığa bağlanması ayrı bir karardır (ROADMAP K1 kalemi).
-explore_rate: 0.15
+# --- MEZAR TAŞI: explore_rate — KALDIRILDI (2026-08-23) ----------------------------------------
+# Düşen satır: `explore_rate: 0.15` (25a; envanter §D-1; ilk tespit K1 denetimi 2026-07-30,
+#   beyan 426b998). HİÇBİR KOD OKUMAZDI — kaldırma günü yeniden grep'lendi: tek eşleşme
+#   guard.GOAL_KEYS üyeliğiydi, o da düştü. Gerçek keşif kararları başka yerlerden gelir ve
+#   YERİNDE: reflect.py `--explore` CLI bayrağı + loop.py keşif bütçesi (EXPLORE_MAX_POS /
+#   EXPLORE_TOTAL_R). İkisi de bu 0.15'i hiç okumadı; keşif gerçek bir olasılığa bağlanacaksa
+#   yeni ad + okuyucu + ölçüm birlikte iner (ROADMAP K1).
+# Sessiz-diriliş çivisi: tests/test_k5_paketi_v273.py.
 max_accepted_changes_per_month: 8      # anti-overfit throttle
 
 # frictions
 commission_per_share: 0.0
 slippage_bps: 5
-fill: next_bar_open
+# --- MEZAR TAŞI: fill — KALDIRILDI (2026-08-23) ------------------------------------------------
+# Düşen satır: `fill: next_bar_open` (25a; envanter §b-1 + §D-1). HİÇBİR KOD OKUMAZDI:
+#   kodda `fill` geçen her satır DEFTER SATIR ALANIDIR (loop/analytics `r.get("fill")` — dolum
+#   fiyatı), bu goal anahtarı değil. Dolum zamanlaması koda gömülü: iki motor da ertesi açılışta
+#   doldurur (broker.entry_law + PaperBroker); bu satırı değiştirmek hiçbir dolumu değiştirmezdi.
+# Sessiz-diriliş çivisi: tests/test_k5_paketi_v273.py.
 
 # ---------------------------------------------------------------------------------------------
 # E1 — GİRİŞ İCRA YASASI (WP-E, kart EXE-2026-001, 2026-07-31). BURADA, çünkü icra yasası bir
@@ -82,15 +91,16 @@ execution_v2:
   # 95/95 reddin kökü) ne olacak? "marketable_limit" = limit fiyatlı emir (tavan yine limit),
   # "cancel" = gap-risk vetosu (emir gönderilmez, iç motor da doldurmaz).
   gap_behavior: marketable_limit
-  # TIF (E1-v2, 2026-08-07 — ÖNCEKİ DEĞER `day` İDİ): bracket'ta `time_in_force` TEKTİR ve
-  # emrin TAMAMINA — giriş + iki KORUMA bacağına — uygulanır. `day` seçmek, dolmuş bir
-  # pozisyonun stop'unu her seans kapanışında öldürüyordu; canlı ölçüm 2026-08-06
-  # 20:00-20:02Z'de dört pozisyonu çıplak buldu. Bayat tetik gerekçesi ÇÜRÜMEDİ — aracı
-  # değişti: dolmamış giriş artık günlük kadansta `cancel_open_entries()` ile iptal edilir
-  # (o mekanizma dolmuş parent'ın koruma bacaklarına DOKUNMAZ, alpaca.py:354 yasası).
-  # Kart revizyonu: EXE-2026-001-R1. `day` beyaz-listeden ÇIKARILDI — bu satır `day` yazsa
-  # bile yasa artık kabul etmez (broker.ENTRY_TIF_ALLOWED), yani değeri burada da dürüst tut.
-  tif: gtc
+  # --- MEZAR TAŞI: tif — KALDIRILDI (2026-08-23) ----------------------------------------------
+  # Düşen satır: `tif: gtc` (25a; envanter §b-2 + §D-1). Beyaz-liste TEK UÇLU
+  #   (broker.ENTRY_TIF_ALLOWED = ("gtc",)): bu alana NE yazılırsa yazılsın yasa `gtc` koşuyordu
+  #   — envanter hükmü "ya alan kalkar ya beyaz-liste genişler; ikisinin arası yalan". Alan
+  #   kalktı; TIF'in tek kaynağı artık broker.ENTRY_TIF + ENTRY_TIF_ALLOWED (E1-v2 kelepçesi,
+  #   yürürlükteki değer her gönderimde E2 defterine yazılır). Tarihçe SİLİNMEDİ: `day`in koruma
+  #   bacaklarını her seans kapanışında öldürdüğü canlı vaka (2026-08-06) + kart revizyonu
+  #   EXE-2026-001-R1, broker.py madde-4 blok yorumunda yaşıyor. Beyaz-liste genişletilecekse
+  #   alan yeni kartla, okuyucu + testle birlikte geri iner.
+  # Sessiz-diriliş çivisi: tests/test_k5_paketi_v273.py.
 
 # ---------------------------------------------------------------------------------------------
 # E3 — KÖTÜMSER MALİYET BANDI (WP-E, 2026-07-31). NEDEN VAR: yürürlükteki friksiyon modeli
@@ -127,11 +137,20 @@ limits:
   # 0,285 → 0,037). Tutarlılık çivisi `heat_hard_r <= max_open × max_position_r` (v166) artık
   # eşitlik değil BOL: 5,0 <= 20,0 — sert tavan bağlayan taraf, slot sayısı değil.
   # YAN ETKİ (bilinçli, 026 kartında beyanlı): `max_sector_exposure_pct` kuralının paydası
-  # `max_open_positions`tır (guard.py:359 `sector_cap_basis`; A17: eski `:352` çapası bayattı) — sektör başına fiili tavan 2 isimden 8 isme çıkar.
+  # `max_open_positions`tır (guard.py:386 `sector_cap_basis`; A17: eski `:352`/`:359` çapaları bayattı) — sektör başına fiili tavan 2 isimden 8 isme çıkar.
   max_open_positions: 20
   max_daily_loss_pct: 3.0
   max_sector_exposure_pct: 40.0
-  no_trade_before_bars: 3              # skip the first N bars after the open
+  # no_trade_before_bars — DAMGA (25c ÜSTÜN-HÜKÜM; Rol-1 ölçümü 2026-08-13, uygulandı 2026-08-23):
+  # REPLAY ISINMA KURALIDIR, gün-içi kural DEĞİL. Eski yorum ("skip the first N bars after the
+  # open") intraday çağrışımı yapıyordu ve YANILTICIYDI: `bar_i` seans SIRASIDIR (backtest.py,
+  # `enumerate(calendar)`) → kural "koşumun ilk N SEANSINDA tarama yapma"dır; etki 1147 seansın
+  # 3'ü. Canlının "koşum başlangıcı" kavramı YOK — loop.py'nin okumaması eksiklik değil doğal
+  # sonuç (envanterin D-3/1 "motor-eşitliği ihlali → DİRİLT" hükmü bu ölçümle AŞILDI, ROADMAP
+  # 25c üstün-hüküm cümlesi). Bu yüzden `guard.LIMIT_KEYS`ten çıkarıldı (canlı-zarf-parametresi
+  # görüntüsü yanlıştı) ve `guard.REPLAY_WARMUP_KEYS`e alındı — Hermes yine ÖNEREMEZ, replay
+  # davranışı AYNEN (değer 3 KALDI; çivi: tests/test_differential_v60 + test_k5_paketi_v273).
+  no_trade_before_bars: 3
   # --- PORTFÖY ISISI / KORELASYON EŞİKLERİ (C24, 2026-08-02: koddan buraya TAŞINDI) --------------
   # Üçü de `meridian/guard.py`de modül sabitiydi: canlı defterde plan kesiyorlardı ama ne burada
   # (operatörün değişmez zarfı) ne bounds.yaml'da (arama uzayı) görünüyorlardı. DEĞERLER AYNEN
@@ -169,7 +188,12 @@ limits:
   # rampasının tabanı, diğeri deneyin başarısızlık hükmü eşiğidir (ayrı sınıf, ayrı okuyucu).
   derisk_full_dd: 0.15                 # bu çekilmeye KADAR tam boy (rampanın üst ucu)
   derisk_floor_dd: 0.36                # bu çekilmede ve ötesinde YENİ boy YOK (rampanın tabanı)
-  # kill_switch_file: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). health.py yolu
-  # SABİT kodlar (STATE/"HALT") ve bu anahtara hiç bakmaz. Yani buradaki yolu değiştirmek
-  # kill-switch'i TAŞIMAZ — dosya yine state/HALT olur. Yanlış kontrol hissi vermemesi için yazılı.
-  kill_switch_file: "state/HALT"
+  # --- MEZAR TAŞI: kill_switch_file — KALDIRILDI (2026-08-23) ---------------------------------
+  # Düşen satır: `kill_switch_file: "state/HALT"` (25a; envanter §D-1'in İKİ "en tehlikeli"sinden
+  #   ikincisi; ilk tespit K1 denetimi 2026-07-30). HİÇBİR KOD OKUMAZDI — kaldırma günü yeniden
+  #   grep'lendi: tek eşleşme guard.LIMIT_KEYS üyeliğiydi, o da düştü. health.py kill-switch
+  #   yolunu SABİT kodlar (STATE/"HALT") ve bu anahtara hiç bakmadı: buradaki yolu değiştiren
+  #   bir operatör, acil durumda kill-switch'i TAŞIDIĞINI SANIRDI — dosya yine state/HALT
+  #   olurdu. Kill-switch'in tek gerçeği state/HALT dosyasıdır (health.halted). Yol
+  #   yapılandırılabilir olacaksa okuyucu + test + RUNBOOK birlikte iner.
+  # Sessiz-diriliş çivisi: tests/test_k5_paketi_v273.py.

@@ -179,6 +179,9 @@ def entry_limit_price(trigger: float, atr: float | None = None, cfg: dict | None
     t = float(trigger or 0.0)
     if t <= 0:
         return 0.0
+    # EZER: execution_v2.limit_atr_mult — 25d zinciri c-2 (aşağıdaki `min()` her koşulda bu yüzde
+    # tavanını seçer: 100·ATR ≫ %4·tetik; bilinçli operatör kararı 2026-08-03, ayrıntı aşağıdaki
+    # 25b-4 ezilen-damga blokunda), 2026-08-23
     pct_off = t * float(cfg["limit_pct_cap"])
     try:
         a = float(atr) if atr is not None else 0.0
@@ -613,6 +616,10 @@ class PaperBroker:
         if qty <= 0:
             return _red("qty_zero", size_mult=round(float(size_mult), 4))
         # liquidity: cap the order at ADV_CAP_PCT of ADV, then charge participation-based price impact
+        # EZER: (bu zincirde ezen kod değil EMİR BOYUTUNUN KÜÇÜKLÜĞÜ) ADV_CAP_PCT + IMPACT_COEF
+        # ezilen taraf — 25d zinciri c-10 (canlı ölçüm: katılım 1e-5…8e-4, etki ≤0,8 bps; %2×ADV
+        # = 1.419 hisse vs sipariş 25 — hiçbir emirde bağlamadı,
+        # docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md:225-228), 2026-08-23
         if adv and adv > 0:
             cap = int(ADV_CAP_PCT * adv)
             if cap <= 0:

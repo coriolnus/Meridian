@@ -11,7 +11,7 @@ gevşeyen bir tanım (ör. None'ı "eşit" saymak) daha önce hiç denenmemiş b
 diye reddeder, sıkılaşan bir tanım (ör. int düğmesini float gibi ölçmek) reddedilmiş bir değeri
 tekrar tekrar canlıya sunar — ikisi de sessizdir, ikisi de defterde yanlış bir hikâye bırakır.
 
-GERÇEK KOD (meridian/guard.py:211-216):
+GERÇEK KOD (meridian/guard.py `_equalish` gövdesi — satır çapası sembole çevrildi, 2026-08-23):
     if a is None or b is None:
         return False
     if typ == "int":

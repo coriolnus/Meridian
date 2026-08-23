@@ -14,7 +14,8 @@ iç motor ÇARPAN 1,0 ile doldurdu. Aynı plan, iki farklı sermaye tabanı, 22 
 BU DOSYANIN ÇİVİLEDİĞİ ÜÇ OLGU (hepsi davranış düzeyinde; hiçbiri metin eşleşmesi değil):
 
   K1  BOYUT TABANI `cash` DEĞİL `realized_pnl`DİR. `PaperBroker.equity()` nakdi HİÇ okumaz
-      (broker.py:357-364). Yalnız `cash`i düzelten bir onarım panoyu düzeltir, boyutlandırmayı
+      (broker.py `PaperBroker.equity` gövdesi — satır çapası sembole çevrildi, 2026-08-23:
+      K5 kaymasında bayatladı). Yalnız `cash`i düzelten bir onarım panoyu düzeltir, boyutlandırmayı
       DÜZELTMEZ; yalnız `realized_pnl`i kıpırdatan bir yazım ise panoda görünmeden emir
       boyutunu yarılar. Canlı vakada olan İKİNCİSİDİR.
 

@@ -35,6 +35,10 @@ from . import score as score_mod
 
 N_BOOT_DEFAULT = 2000
 SEED_DEFAULT = 42          # deterministik testler ve tekrarlanabilir kapı kararları için sabit
+# EZER: 32 bounds ekseni + 172 modül sabiti + Hermes arama makinesinin TAMAMI — 25d zinciri c-3
+# (canlı defter: 52 hipotez → 0 ship; 16 ret doğrudan bu eşikten "P(ΔS>0) < 0.80", 20'si tek
+# değerin kara-listesi; ikincil ezilme: aylık kabul kotası ship olmadığı için hiç bağlamadı),
+# 2026-08-23
 P_BASE = 0.80              # ship için P(ΔS>0) alt sınırı (tek aday)
 # Sayısal güvenlik sınırı: p_req tam 1.0 olursa HİÇBİR aday geçemez ve kapı sessizce ölür.
 # 0.999, K=200'e kadar gerçek Bonferroni ile aynı; ötesinde "pratikte imkânsız" der.
@@ -164,6 +168,9 @@ def refresh_meta_calibration() -> dict:
         elif med < 0.5:
             extra = 0.02
     # DURUM: "ölçtüm" · "kanıt birikmedi" · "birim borcu yüzünden sayamıyorum" AYRI cümlelerdir.
+    # EZER: (ezen kod değil KANIT KURAKLIĞI — kaynağı c-3'ün ship kapısı) META_MIN_N/META_LOOKBACK
+    # meta-ayarı ezilen taraf — 25d zinciri c-7 (canlı: n_measured=1, durum="kurak", extra_p=0.0;
+    # kapı kendi eşiğini ayarlayamıyor çünkü ayarlayacak ship kanıtı hiç birikmiyor), 2026-08-23
     durum = (DURUM_OLCULDU if n >= META_MIN_N else (DURUM_ASKIDA if atlanan else DURUM_KURAK))
     prev = store.read_json(META_FILE, {})
     out = {"extra_p": extra, "median_ratio": round(med, 4) if med is not None else None,
