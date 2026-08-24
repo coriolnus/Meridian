@@ -99,7 +99,39 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
 ## Brand Commitments
 
 - Product name: Meridian.
-- **Standing visual preference — TWO GROUNDS (revised 2026-07-31 by the operator, binding;
+
+> ### ⚠ SUPERSEDED 2026-08-24 — the reference world is now **Dub**, not Omega
+>
+> Everything below this box is **history, not the current contract**. It is kept because the
+> reasoning is still load-bearing (why two grounds exist, why the night ground is an ergonomics
+> choice and not a readability claim, what the rejected "CAM KOKPİT" world was). Read it as the
+> record of how we got here. The binding document is
+> **`docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md`** plus **`docs/KARAR-2026-08-24-C-YUZEY-TAKASI.md`**.
+>
+> **What actually changed:**
+>
+> - **Reference:** ~~Omega (`omega.nextjsshop-preview.workers.dev`)~~ → **Dub**, via the
+>   operator-approved comp at `scratch-panov2/index.html`.
+> - **Typeface:** ~~Geist + Geist Mono~~ → **Inter** (body/UI) · **Satoshi** (display) ·
+>   **Geist Mono** (measured values). Self-hosted; the CSP still allows no external font host.
+>   The 2026-08-06 "typeface is not frozen" clause below is what *permitted* this — it worked.
+> - **Grounds:** still two, still one token vocabulary. Night ground values are now Dub-derived
+>   (`--canvas #0a0a0a` / `--card #262626` / text `#e5e5e5`), ~~not the warm `#1E1E1E` band~~.
+> - **Elevation:** border-first (1px hairline). The zero-shadow invariant survives unchanged.
+> - **Surfaces:** ~~three~~ → the dashboard now carries **seven** (Bugün · Portföy · Karar
+>   zinciri · Analiz · Sağlık · Öğrenme · Kilitler); landing/workflow/runbook still convert and
+>   still share one token set (`test_jeton_birligi_v208` enforces byte-identity).
+>
+> **NEW BINDING CONSTRAINT — reserved hue bands are a SAFETY record, not a style preference.**
+> Learned the hard way on 2026-08-24: adopting the reference palette verbatim put a chart series
+> on the exact hex of `--mod-canli` (`#7c3aed`) — the chip that distinguishes **paper from live
+> money** — and on `--nav`/`--nav-2` (`#2563eb` / `#1e40af`), which own navigation/selection.
+> Before any palette round, check the reserved bands first: **mode (OKLCh 285-335°)**,
+> **navigation (255-272°)** and the **severity trio** (red ~21° / amber ~40° / green ~149°).
+> A series colour must also stay under 0.75 × the severity chroma — an alarm has to be able to
+> out-shout a decoration. `tests/test_renk_rolleri_v197.py` is the nail.
+
+- **[HISTORY] Standing visual preference — TWO GROUNDS (revised 2026-07-31 by the operator, binding;
   amends the 2026-07-27 light-only decision, which remains binding for the daylight ground):**
   the Omega conversion stands and is not reopened; a **second, night ground is added beside it**,
   and the operator switches between them with a control in the top bar.
