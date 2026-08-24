@@ -1098,7 +1098,8 @@ const EYLEMLER = new Set([
   "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
   "opSoftHalt", "planOnayla",
   // PANO v2 (KARAR-2026-08-24-B): akış görünümü anahtarı, metrik sekmesi ve Top Views kontrolleri
-  "pvAkisGorunum", "pvFacet", "pvFacetSekme", "pvFacetTumu", "pvFiltreTemizle", "pvMetrik", "pvSekme",
+  "pvAkisGorunum", "pvFacet", "pvFacetSekme", "pvFacetTumu", "pvFiltreTemizle", "pvMetrik",
+  "pvPencere", "pvSekme",
   "saveSecret", "skillRev", "sprintStart", "sprintStop", "temaDegistir",
   "testKey", "toggleHalt", "toggleKs",
 ]);
@@ -1834,26 +1835,39 @@ function pvKivilcimSVG(spark, sev, pencere) {
   if (v.length < PV_KV_MIN_BAR)
     return pvYok(`bar sayısı yetersiz (${v.length}/${PV_KV_MIN_BAR} kapanış) — çizgi uydurulmaz`);
   const s = sev || {};
-  const seviyeler = [["giris", s.giris], ["stop", s.stop], ["hedef", s.hedef]]
-    .map(([ad, x]) => [ad, Number(x)]).filter(([, x]) => Number.isFinite(x) && x > 0);
-  // ÖLÇEK SEVİYELERİ DE KAPSAR: stop serinin altındaysa çizgiyi kırpmak, "stop uzakta" diye
-  // okunacak bir görüntü üretirdi. Alan genişler, seri kaymaz.
-  const hepsi = v.concat(seviyeler.map(([, x]) => x));
-  const mn = Math.min(...hepsi), mx = Math.max(...hepsi), rng = (mx - mn) || 1;
+  const seviyeler = [["giris", "giriş", s.giris], ["stop", "stop", s.stop], ["hedef", "hedef", s.hedef]]
+    .map(([sf, ad, x]) => [sf, ad, Number(x)]).filter(([, , x]) => Number.isFinite(x) && x > 0);
+  // ÖLÇEK FİYAT SERİSİNİN KENDİSİDİR, SEVİYELER DEĞİL (ölçülen kusur, 2026-08-24 görsel
+  // doğrulama). Önceki hâl alanı seviyeleri kapsayacak kadar genişletiyordu ve MRNA gibi hedefi
+  // girişin iki katı olan satırlarda 40 barlık fiyat seyri DÜMDÜZ bir çizgiye eziliyordu — yani
+  // "canlı grafik" tam olarak taşıması gereken bilgiyi kaybediyordu.
+  // ARALIK DIŞI SEVİYE GİZLENMEZ, KENARDA İŞARETLENİR: kenara yapıştırılmış bir üçgen + `title`
+  // hem "bu yönde ve çizim aralığının dışında" der hem de değeri taşır. Seviyeyi kenara ÇİZGİ
+  // olarak koymak "tam orada" demek olurdu (uydurma); hiç çizmemek ise ölçümü silmek olurdu.
+  const mn = Math.min(...v), mx = Math.max(...v), rng = (mx - mn) || 1;
   const W = 104, H = 26, py = 3;
   const sx = i => (i / (v.length - 1) * W);
   const sy = x => H - py - (x - mn) / rng * (H - 2 * py);
   const yol = v.map((x, i) => `${i ? "L" : "M"}${sx(i).toFixed(1)},${sy(x).toFixed(1)}`).join("");
   const yukari = v[v.length - 1] >= v[0];
-  const cizgiler = seviyeler.map(([ad, x]) =>
-    `<line x1="0" y1="${sy(x).toFixed(1)}" x2="${W}" y2="${sy(x).toFixed(1)}"
-       class="pv-kv-sev pv-kv-${ad}"><title>${ad} ${trn(x, 2)}</title></line>`).join("");
+  const disari = [];
+  const cizgiler = seviyeler.map(([sf, ad, x]) => {
+    if (x >= mn && x <= mx)
+      return `<line x1="0" y1="${sy(x).toFixed(1)}" x2="${W}" y2="${sy(x).toFixed(1)}"
+        class="pv-kv-sev pv-kv-${sf}"><title>${ad} ${trn(x, 2)}</title></line>`;
+    const ust = x > mx;
+    disari.push(`${ad} ${trn(x, 2)} (${ust ? "üstte" : "altta"}, çizim aralığı dışı)`);
+    const y = ust ? 0.5 : H - 0.5, d = ust ? 4 : -4;
+    return `<path d="M${W - 4} ${y} l4 ${d} l4 ${-d} z" class="pv-kv-disari pv-kv-${sf}"
+      ><title>${ad} ${trn(x, 2)} — çizim aralığının ${ust ? "ÜSTÜNDE" : "ALTINDA"}, seri ölçeğine sığmıyor</title></path>`;
+  }).join("");
   // PENCERE BEYANI GRAFİĞE YAPIŞIK: bu bir EOD serisidir ve hangi seansa kadar ölçüldüğü
   // grafiğin KENDİSİNDE (aria + title) yazar — donuk bir seri canlı bir trend gibi okunmasın.
   const pc = pencere || {};
   const aria = `${v.length} kapanış · ${trn(v[0], 2)} → ${trn(v[v.length - 1], 2)}`
     + (pc.ilk_tarih && pc.son_tarih ? ` · ${pc.ilk_tarih} → ${pc.son_tarih} (EOD)` : "")
-    + (seviyeler.length ? " · " + seviyeler.map(([a, x]) => `${a} ${trn(x, 2)}`).join(" · ") : "");
+    + (seviyeler.length ? " · " + seviyeler.map(([, a, x]) => `${a} ${trn(x, 2)}`).join(" · ") : "")
+    + (disari.length ? " · aralık dışı: " + disari.join(" · ") : "");
   return `<svg class="pv-kv-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(aria)}"><title>${esc(aria)}</title>
     ${cizgiler}<path d="${yol}" fill="none" class="${yukari ? "pv-kv-up" : "pv-kv-dn"}"
       stroke-width="1.4" stroke-linejoin="round"/>
@@ -1995,7 +2009,7 @@ function pvAlanGrafigi(seriler, opt) {
       ? `<path d="M${sx(0).toFixed(1)},${(H - pb).toFixed(1)} ${s.pts.map((p, i) =>
           `L${sx(i).toFixed(1)},${sy(Number(p[1])).toFixed(1)}`).join("")} L${sx(s.pts.length - 1).toFixed(1)},${(H - pb).toFixed(1)}Z"
           fill="url(#${ok}-dolgu)"/>` : "";
-    return `${alan}<path d="${yol}" fill="none" class="pv-seri pv-seri-${si}"/>
+    return `${alan}<path d="${yol}" fill="none" vector-effect="non-scaling-stroke" class="pv-seri pv-seri-${si}"/>
       <circle cx="${sx(s.pts.length - 1).toFixed(1)}" cy="${sy(Number(son[1])).toFixed(1)}" r="3.5"
         class="pv-seri-uc pv-seri-uc-${si}"/>`;
   }).join("");
@@ -2061,6 +2075,19 @@ function pvIpucuBagla(on) {
 // ÜÇ PAYDA AYRIDIR ve bu kartın altında BEYAN edilir: ilk dört basamak son GÜNLÜK DÖNGÜnün kendi
 // kaydından, "gönderildi" ŞU ANKİ silahlı kümeden, "doldu" icra defterinin PENCERESİNDEN gelir.
 // Tek bir yüzdeye toplamak, üç farklı paydayı tek oran gibi okutmak olurdu.
+// GÖRÜNÜM ANAHTARININ İKONLARI SVG'DİR, GLİF DEĞİL (ölçülen borç, 2026-08-24).
+// Önceki hâl `▤` (U+25A4) ve `◤` (U+25E4) karakterleriydi ve YAZI TİPİ ÖLÇÜMÜ bunların kendi
+// sunduğumuz kesitte OLMADIĞINI söyledi: sistem yüzüne düşüyorlar, yani yüz değiştiği gün
+// düğmenin görüntüsü sessizce kayıyor. Metin karakterini ikon olarak kullanmak yüz-bağımlı bir
+// kırılganlıktır; maket de SVG kullanıyordu. Kalem panonun geri kalanıyla aynı (`_ico`: 24 birim
+// kutu, 1.5px kontur, `aria-hidden`) — erişilebilir ad DÜĞMEDE (`aria-label`), ikonda değil:
+// ekran okuyucu "siyah kare" değil "kompakt zincir görünümü" der (D7).
+const PV_AKIS_IKON = [
+  ["zincir", "Kompakt zincir görünümü",
+   _ico('<path d="M3.5 6.5h17"/><path d="M3.5 12h17"/><path d="M3.5 17.5h17"/>')],
+  ["huni", "Huni görünümü",
+   _ico('<path d="M3.5 5h17l-6.5 7.5v6l-4 2v-8z"/>')],
+];
 let _PV_AKIS_GORUNUM = "zincir";
 window.pvAkisGorunum = (g) => {
   _PV_AKIS_GORUNUM = (g === "huni") ? "huni" : "zincir";
@@ -2136,7 +2163,35 @@ function pvHuniNot(a) {
   return `<p class="pv-huni-not">${_PV_AKIS_GORUNUM === "huni"
     ? `Şerit genişliği <b>karekök ölçeklidir</b> (üs ${String(PV_HUNI_US).replace(".", ",")}) — genişlik oranı
        <b>yüzde DEĞİLDİR</b>; yüzdeler basamağın kendi etiketinde yazar ve taranan evrene göredir. `
-    : ""}${esc(a.paydaBeyani || "")}</p>`;
+    : ""}${esc(a.paydaBeyani || "")}</p>${pvDolumSatiriHTML(a.dolum)}${pvMonotonUyariHTML(a.asamalar)}`;
+}
+// DOLUM — HUNİNİN İÇİNDE DEĞİL, ALTINDA. Paydası ayrı olduğu için basamak OLAMAZ (D1), ama
+// kaybolamaz da: ölçüm var, yeri burası ve kendi paydasını yanında taşıyor.
+function pvDolumSatiriHTML(d) {
+  if (!d) return "";
+  return `<p class="pv-dolum">Dolum: ${d.n == null
+    ? pvYok(d.neden || "icra defteri dolum ölçümü vermedi")
+    : `<b>${trn(d.n)}</b> emir doldu${d.oran == null ? "" : ` · dolum oranı ${pctf(d.oran, 1)}`}`}
+    <span class="pv-dolum-payda">payda: icra defterinin${d.pencere == null
+      ? " penceresi (gün sayısı uçtan gelmedi)" : ` son ${trn(d.pencere)} günlük penceresi`} —
+      bugünün gönderimleri DEĞİL, o yüzden yukarıdaki huninin basamağı değildir.</span></p>`;
+}
+// MONOTONLUK DENETİMİ — ÖLÇÜLÜR, VARSAYILMAZ. Bugünkü beş basamak yapı gereği daralıyor
+// (evren ⊇ aday ⊇ plan ⊇ silahlı ⊇ gönderilen) ama bir gün listeye başka bir alan eklenirse
+// yüzey SESSİZCE yalan söylememeli: genişleyen bir şerit "sonraki basamak öncekini aştı" diye
+// okunur. SAYI KIRPILMAZ — ihlal ADIYLA yazılır ve okur hangi çiftin bozuk olduğunu görür.
+function pvMonotonUyariHTML(asamalar) {
+  const as = asamalar || [];
+  const ihlal = [];
+  for (let i = 1; i < as.length; i++) {
+    const a0 = _pvSayi(as[i - 1].n), a1 = _pvSayi(as[i].n);
+    if (a0 != null && a1 != null && a1 > a0) ihlal.push(`${as[i - 1].ad} ${trn(a0)} → ${as[i].ad} ${trn(a1)}`);
+  }
+  return ihlal.length
+    ? `<p class="pv-monoton">Bu şerit bir HUNİ DEĞİL: sonraki basamak öncekini aşıyor
+       (${esc(ihlal.join(" · "))}). İki basamağın paydası aynı değil — sayılar olduğu gibi
+       basıldı, kırpılmadı; oranları huni gibi okuma.</p>`
+    : "";
 }
 
 // ==============================================================================================
@@ -2206,26 +2261,61 @@ function pvMetrikIpucu(s, metrik) {
   if (s.gross_win == null || s.gross_loss == null) return "";
   return ` title="brüt kâr ${trn(s.gross_win, 2)}R / brüt zarar ${trn(Math.abs(s.gross_loss), 2)}R"`;
 }
-// BİRİM SATIRI — hangi paydanın sayıldığı HER satırda yazar. Plan tabanlı facette iki sayı da
-// basılır (plan ≠ işlem); işlem tabanlı facette `r_n` ancak `n`den AYRIŞTIĞINDA basılır, çünkü
-// eşitken ikinci sayı bilgi taşımaz ama ayrıştığında R'si ölçülemeyen satırların varlığını söyler.
+// BİRİM SATIRI — hangi paydanın sayıldığı satırda yazar. ÜÇ DAL, üçü de ölçülmüş bir AYRIMA
+// dayanır; hiçbiri süs değildir:
+//   (a) PLAN TABANLI FACET: `n` PLAN, `r_n` o planlardan doğmuş KAPANMIŞ İŞLEM. İkisi FARKLI
+//       KİNDdir ve her zaman birlikte basılır — "217 planın PF'i 1,16" yanlış okuması bir
+//       strateji kararını bozabilir (PF 52 işlemin).
+//   (b) İŞLEM TABANLI, `r_n ≠ n`: bazı satırda R ölçülmemiş — bu bir BİLGİdir, basılır.
+//   (c) İŞLEM TABANLI, `r_n = n`: sayı zaten değer sütununda. `n` metriği seçiliyken tekrar
+//       basmak AYNI SAYIYI İKİ KEZ göstermektir (ölçülen kusur D3: "breakout_vcp 91 işlem … 91").
+//       Bu dalda satır SUSAR; birimin adı kartın metrik başlığında bir kez yazar.
+// AYIRICI KAYNAKTA (D3'ün kardeşi D2): etiket ile birim arasına boşluk+orta nokta konur.
+// Yalnız CSS `margin`ine güvenmek yedek yüzde ve dar ekranda "breakout_vcp91 işlem" üretiyordu.
+const PV_AYIRICI = "\u00A0·\u00A0";
 function pvBirimSatiri(s, facet) {
+  if (PV_PLAN_FACET.has(facet)) {
+    // `n` seçiliyken PLAN sayısı zaten değer sütununda ve birimi kartın başlığında ("n · plan"):
+    // burada tekrarlamak D3'ün plan tarafındaki hâli olurdu. Zorunlu olan AYRIM (kaçı işleme
+    // döndü) yine basılır — asıl yanlış okuma ("217 planın PF'i 1,16") tam olarak orada doğuyor.
+    if (_PV_METRIK === "n")
+      return s.r_n ? `${trn(s.r_n)}'si kapanmış işleme döndü` : "hiçbiri kapanmış işleme dönmedi";
+    return `${trn(s.n)} plan${PV_AYIRICI}${trn(s.r_n)} kapanmış işlem`;
+  }
+  if (s.r_n != null && s.r_n !== s.n)
+    return `${trn(s.n)} işlem${PV_AYIRICI}${trn(s.r_n)}'inde R ölçülü`;
+  return _PV_METRIK === "n" ? "" : `${trn(s.n)} işlem`;
+}
+// ERİŞİLEBİLİR AD GÖRSELDEN AYRI OLABİLİR ve burada OLMALI: görselde `n` değer sütununda ve
+// birim kartın başlığında duruyor, yani göz üçünü BİRLİKTE okuyor. Ekran okuyucu satırı tek
+// başına okur — orada paydanın TAMAMI satırın kendi adında olmak zorunda.
+function pvSesliBirim(s, facet) {
   if (PV_PLAN_FACET.has(facet))
-    return `${trn(s.n)} plan · ${trn(s.r_n)} kapanmış işlem`;
-  return s.r_n != null && s.r_n !== s.n
-    ? `${trn(s.n)} işlem · ${trn(s.r_n)}'inde R ölçülü`
-    : `${trn(s.n)} işlem`;
+    return `${trn(s.n)} plan${PV_AYIRICI}${trn(s.r_n)} kapanmış işlem`;
+  if (s.r_n != null && s.r_n !== s.n)
+    return `${trn(s.n)} işlem${PV_AYIRICI}${trn(s.r_n)}'inde R ölçülü`;
+  return `${trn(s.n)} işlem`;
+}
+// KART BAŞLIĞINDAKİ METRİK ADI, `n` seçiliyken BİRİMİ DE SÖYLER: satırlar sustuğunda okur "bu 91
+// neyin sayısı?" sorusunu kartın başlığından cevaplar — sayı satır satır tekrarlanmadan.
+function pvMetrikBasligi(facet) {
+  const ad = (PV_METRIKLER.find(m => m[0] === _PV_METRIK) || [])[1] || _PV_METRIK;
+  if (_PV_METRIK !== "n") return ad;
+  return `${ad} · ${PV_PLAN_FACET.has(facet) ? "plan" : "işlem"}`;
 }
 function pvFacetSatirHTML(s, facet, en) {
   const deger = pvMetrikDeger(s, _PV_METRIK);
   const oran = (en > 0 && s.n != null) ? Math.max(0.02, Number(s.n) / en) : null;
   const secili = !!(_PV_FILTRE && _PV_FILTRE.boyut === facet && _PV_FILTRE.deger === s.deger);
   const etiket = pvFacetEtiket(facet, s.deger);
+  const birim = pvBirimSatiri(s, facet);
   return `<button type="button" class="pv-fsatir" aria-pressed="${secili ? "true" : "false"}"
-      aria-label="Filtreye ekle: ${esc(PV_FACET_AD[facet] || facet)} ${esc(etiket)} — ${esc(pvBirimSatiri(s, facet))}"
+      aria-label="Filtreye ekle: ${esc(PV_FACET_AD[facet] || facet)} ${esc(etiket)} — ${
+        esc(pvSesliBirim(s, facet))}"
       data-act="pvFacet" data-a1="${esc(facet)}" data-a2="${esc(String(s.deger))}">
     ${oran == null ? "" : `<span class="pv-fbar" style="width:${(oran * 100).toFixed(1)}%"></span>`}
-    <span class="pv-fad">${esc(etiket)}<span class="pv-fbirim">${esc(pvBirimSatiri(s, facet))}</span></span>
+    <span class="pv-fad">${esc(etiket)}${birim
+      ? `<span class="pv-fbirim">${PV_AYIRICI}${esc(birim)}</span>` : ""}</span>
     <span class="pv-fdeger"${pvMetrikIpucu(s, _PV_METRIK)}>${
       deger == null ? pvYok(s.pf_yok_nedeni || "bu hücrede bu metrik ölçülemedi — uç neden bildirmedi") : deger}</span>
   </button>`;
@@ -2262,7 +2352,7 @@ function pvFacetKartiHTML(aile) {
       <div class="pv-fsekmeler" role="tablist" aria-label="${esc(aile.ad)}">${aile.facetler.map(x =>
         `<button type="button" role="tab" class="pv-fsekme" aria-selected="${x.anahtar === f.anahtar ? "true" : "false"}"
           data-act="pvFacetSekme" data-a1="${esc(aile.anahtar)}" data-a2="${esc(x.anahtar)}">${esc(x.ad)}</button>`).join("")}</div>
-      <span class="pv-fmetrik">${esc((PV_METRIKLER.find(m => m[0] === _PV_METRIK) || [])[1] || _PV_METRIK)}</span>
+      <span class="pv-fmetrik">${esc(pvMetrikBasligi(f.anahtar))}</span>
     </header>
     <p class="pv-fpayda">${kaynak.kaynak
       ? `${esc(kaynak.kaynak)} · ${esc(kaynak.pencere || "pencere bildirilmedi")}`
@@ -2324,9 +2414,14 @@ window.pvFacet = (boyut, deger) => {
 window.pvFiltreTemizle = () => { _PV_FILTRE = null; pvTopViewsCiz(); };
 // METRİK SEÇİCİ, TOP VIEWS'IN KENDİ BAŞLIĞINDA DURUR: yalnız o kartların sütununu değiştirir.
 // Sayfa tepesine taşımak, aşağıdaki bir kartın kontrolünü sayfanın kontrolü gibi göstermekti.
+// ERİŞİLEBİLİR AD GÖRÜNEN METİNDEN AYRI (D7): görünen etiket "n" olabilir ama ekran okuyucuya
+// "n" hiçbir şey söylemez. `aria-label` metriğin ADINI kurar; görsel kısa kalır.
+const PV_METRIK_SESLI = { n: "metrik: satır sayısı", sum_r: "metrik: toplam R",
+                          pf: "metrik: kâr faktörü (PF)", kazanma: "metrik: kazanma oranı" };
 function pvMetrikSeridiHTML() {
   return `<span class="pv-mgrup" role="group" aria-label="Metrik sütunu">${PV_METRIKLER.map(([a, ad]) =>
     `<button type="button" class="pv-mbtn" aria-pressed="${a === _PV_METRIK ? "true" : "false"}"
+      aria-label="${esc(PV_METRIK_SESLI[a] || ad)}"
       data-act="pvMetrik" data-a1="${esc(a)}">${esc(ad)}</button>`).join("")}</span>`;
 }
 // FİLTRE ÇİPİ SAYFANIN KONTROL SATIRINDADIR çünkü filtre SAYFA düzeyinde bir keşif kipidir:
@@ -2348,18 +2443,63 @@ function pvFiltreCipHTML() {
 // `equity_curve.json`dır; kalan üç metrik anlık ölçümdür ve bunu söylemek zorundayız.
 let _PV_SERI = {};
 let _PV_SEKME = "sermaye";
+// PENCERE — VERİ KIRPILMAZ, PENCERELENİR (ölçülen kusur D6, 2026-08-24 görsel doğrulama).
+// Eğri 3,5 yılı (2023-01 → 2026-08) ~120px'e sıkıştırıyordu: tek sivri çizgi, okunmaz bir duvar.
+// Varsayılan SON 60 SEANS; tüm tarih bir SEÇENEK olarak durur (silinmedi, varsayılan olmaktan
+// çıktı) ve seçilen pencere grafiğin altında ADIYLA yazar. Bu bir GÖRÜNTÜ penceresidir, bir
+// eşik değil: hiçbir kapı, hiçbir hüküm bu sayıya bağlı değil.
+const PV_PENCERELER = [[60, "son 60 seans"], [250, "son 250 seans"], [0, "tüm tarih"]];
+let _PV_PENCERE = 60;
+// `Number(n) || 0` YAZILMADI (v196 tavanı): orada `0` "tüm tarih" ANLAMINA gelen bir işaret ve
+// `|| 0` çırçırı tanınmayan bir değeri sessizce o anlama çevirirdi — düğme bozulduğu gün pano
+// sessizce başka bir pencere çizerdi. Değer KAYITLI listeden çözülür; tanınmayan değer düşer ve
+// bu bir programlama hatası olduğu için GÖRÜNÜR olur (`data-act` izin listesiyle aynı desen).
+window.pvPencere = (n) => {
+  const v = PV_PENCERELER.map(x => x[0]).find(x => String(x) === String(n));
+  if (v === undefined) { console.error("tanınmayan grafik penceresi:", n); return; }
+  _PV_PENCERE = v;
+  pvSekme(_PV_SEKME);
+};
+function pvPencereSeridiHTML() {
+  return `<span class="pv-mgrup" role="group" aria-label="Grafik penceresi">${PV_PENCERELER.map(([n, ad]) =>
+    `<button type="button" class="pv-mbtn" aria-pressed="${n === _PV_PENCERE ? "true" : "false"}"
+      aria-label="Grafik penceresi: ${esc(ad)}" data-act="pvPencere" data-a1="${n}">${esc(ad)}</button>`).join("")}</span>`;
+}
+// Pencere UÇTAN gelen seriye uygulanır, seriyi DEĞİŞTİRMEDEN: `_PV_SERI` tam seriyi tutar, bu
+// fonksiyon yalnız kuyruğu keser. Böylece pencere değiştirmek yeniden istek atmaz.
+function _pvPencerele(seriler) {
+  if (!_PV_PENCERE) return seriler;
+  return (seriler || []).map(x => ({ ...x, pts: Array.isArray(x.pts) ? x.pts.slice(-_PV_PENCERE) : x.pts }));
+}
 window.pvSekme = (a) => {
   _PV_SEKME = a || "sermaye";
   document.querySelectorAll(".pv-sekme[data-a1]").forEach(b =>
     b.setAttribute("aria-selected", String(b.dataset.a1 === _PV_SEKME)));
+  const pen = $("pv-pencere-serit");
+  if (pen) pen.innerHTML = pvPencereSeridiHTML();
   const kap = $("pv-grafik-yuva");
   if (!kap) return;
   const s = _PV_SERI[_PV_SEKME];
-  kap.innerHTML = s ? pvAlanGrafigi(s.seriler, s.opt || {})
+  kap.innerHTML = s ? pvAlanGrafigi(_pvPencerele(s.seriler), s.opt || {})
     : `<div class="pv-grafik-bos"><p class="pv-grafik-yok">${pvYokAlt(
         "bu metriğin serisi henüz okunmadı — performans ucu bekleniyor")}</p></div>`;
   pvIpucuBagla();
+  pvPencereBeyaniYaz(s);
 };
+// PENCERE BEYANI ÖLÇÜLEN SAYILARLA: kaç nokta var, kaçı çiziliyor, hangi seans aralığı.
+// "son 60 seans" yazıp 12 nokta çizmek, pencereyi bir vaat gibi göstermek olurdu.
+function pvPencereBeyaniYaz(s) {
+  const el = $("pv-pencere-beyan");
+  if (!el) return;
+  const tam = ((s || {}).seriler || [])[0];
+  const pts = (tam && Array.isArray(tam.pts)) ? tam.pts : null;
+  if (!pts || !pts.length) { el.innerHTML = pvYokAlt("çizilecek nokta yok — pencere uygulanmadı"); return; }
+  const gos = _PV_PENCERE ? pts.slice(-_PV_PENCERE) : pts;
+  el.innerHTML = `pencere: <b>${_PV_PENCERE ? `son ${trn(gos.length)} nokta` : "tüm tarih"}</b>
+    · seride ${trn(pts.length)} nokta · çizilen aralık ${esc(String((gos[0] || [])[0] || "—"))} →
+    ${esc(String((gos[gos.length - 1] || [])[0] || "—"))}
+    <span class="tx3">(görüntü penceresi — hiçbir kapı bu sayıya bağlı değil; seri kırpılmadı)</span>`;
+}
 
 // ==============================================================================================
 // GENEL BAKIŞ v1 — J1'in 60 saniyelik sabah turu (ADR: TEK EKRAN, KAYDIRMASIZ · 1440×900)
@@ -2514,18 +2654,30 @@ RENDER.bugun = async () => {
   const say = aynaSayaclari(t.armed_plans || [], t.alpaca_submitted);
   const sd = (sonDongu && sonDongu.var) ? sonDongu : {};
   const dnNeden = (sonDongu && sonDongu.var) ? "" : ((sonDongu && sonDongu.neden) || "günlük döngü kaydı okunamadı");
+  // «DOLDU» BASAMAĞI HUNİDEN ÇIKARILDI (ölçülen kusur, 2026-08-24 görsel doğrulama).
+  // Canlı fikstürde zincir `260 · 5 · 5 · 2 · Doldu 5` çiziyordu: SON BASAMAK ÖNCEKİNİ AŞIYORDU.
+  // Sebep bir okuma hatası değil, PAYDA hatasıydı — `icra.slipaj.ayna.dolum.n_dolan` BUGÜNÜN
+  // gönderimlerini değil icra defterinin SON N GÜNLÜK penceresindeki TÜM dolumları sayar
+  // (`analytics`: `dolan = [r for r in ayna if r.get("fill") is not None]`). Farklı kümeyi aynı
+  // huniye koymak, bir dipnotla düzeltilemeyecek bir yalandır: genişleyen şerit "dolum gönderimi
+  // aştı" diye okunur. SAYIYI KIRPMAK/min'LEMEK DE YASAK (veriyi göstermek yerine gizlemek olurdu).
+  // Çözüm: dolum huniden ÇIKTI ve kartın altında KENDİ paydasıyla AYRI bir satır oldu.
+  // Kalan beş basamak tek soydan gelir ve yapı gereği monotondur: evren ⊇ aday ⊇ plan ⊇ silahlı ⊇
+  // gönderilen. Yine de aşağıda ÖLÇÜLEN bir monotonluk denetimi var — kod bir gün başka bir alanı
+  // bu listeye koyarsa yüzey sessizce yalan söylemesin.
   const asamalar = [
     { ad: "Taranan evren", n: null, neden: "evren ucu (/api/market) henüz okunmadı" },
     { ad: "Aday", n: sd.candidates ?? null, neden: dnNeden || "döngü kaydında aday sayısı yok" },
     { ad: "Plan", n: sd.plans ?? null, neden: dnNeden || "döngü kaydında plan sayısı yok" },
     { ad: "Silahlandı", n: sd.armed ?? null, neden: dnNeden || "döngü kaydında silahlı sayısı yok" },
     { ad: "Gönderildi", n: say.gonderilen, neden: "" },
-    { ad: "Doldu", n: null, neden: "icra defteri dolum ölçümü henüz okunmadı (/api/diagnostics)" },
   ];
   _PV_AKIS = {
     asamalar,
     paydaBeyani: "İlk dört basamak son GÜNLÜK DÖNGÜnün kendi kaydından, «Gönderildi» ŞU ANKİ silahlı "
-      + "kümeden, «Doldu» icra defterinin penceresinden gelir — üç payda AYRIDIR, tek orana toplanmaz.",
+      + "kümeden gelir.",
+    // AYRI SATIR, HUNİNİN İÇİNDE DEĞİL: paydası farklı olan ölçüm huniye giremez ama KAYBOLMAZ.
+    dolum: { n: null, neden: "icra defteri dolum ölçümü henüz okunmadı (/api/diagnostics)", pencere: null },
     dususler: [],
   };
   pvAkisDususlerYaz(_PV_AKIS, t, say);
@@ -2574,8 +2726,10 @@ RENDER.bugun = async () => {
 
     <section class="pv-para">
       <div id="pv-sekmeler-yuva">${pvSekmelerHTML(metrikler, _PV_SEKME)}</div>
+      <div class="pv-pencere-kap"><span id="pv-pencere-serit">${pvPencereSeridiHTML()}</span></div>
       <div id="pv-grafik-yuva"><div class="pv-grafik-bos"><p class="pv-grafik-yok">ölçülüyor…</p></div></div>
-      <p class="pv-para-beyan" id="pv-egri-beyan">eğrinin penceresi ölçülüyor…</p>
+      <p class="pv-para-beyan" id="pv-pencere-beyan">pencere ölçülüyor…</p>
+      <p class="pv-para-beyan" id="pv-egri-beyan">eğrinin tazeliği ölçülüyor…</p>
       <p class="pv-para-beyan">${sermayeKokenSatiri(t.sermaye_koken, { kisa: true })}</p>
     </section>
 
@@ -2583,12 +2737,11 @@ RENDER.bugun = async () => {
       <header>
         <h2>Aday seçiminin seyri</h2>
         <span class="alt">günün eleme zinciri</span>
-        <div class="pv-gorunum" role="group" aria-label="Görünüm">
-          <button type="button" class="pv-gbtn" data-act="pvAkisGorunum" data-a1="zincir"
-            aria-pressed="${_PV_AKIS_GORUNUM === "zincir" ? "true" : "false"}" title="Kompakt zincir">▤</button>
-          <button type="button" class="pv-gbtn" data-act="pvAkisGorunum" data-a1="huni"
-            aria-pressed="${_PV_AKIS_GORUNUM === "huni" ? "true" : "false"}" title="Huni">◤</button>
-        </div>
+        <div class="pv-gorunum" role="group" aria-label="Akış görünümü">${PV_AKIS_IKON.map(
+          ([anahtar, ad, ikon]) => `<button type="button" class="pv-gbtn"
+            data-act="pvAkisGorunum" data-a1="${esc(anahtar)}"
+            aria-pressed="${_PV_AKIS_GORUNUM === anahtar ? "true" : "false"}"
+            aria-label="${esc(ad)}" title="${esc(ad)}">${ikon}</button>`).join("")}</div>
       </header>
       <div id="pv-akis-govde">${pvAkisGovdeHTML(_PV_AKIS)}</div>
     </section>
@@ -2647,16 +2800,17 @@ RENDER.bugun = async () => {
                       hedef: "karar#failsub", uyari: true });
       pvGorevleriCiz(gorevler);
     }
-    // HUNİNİN SON BASAMAĞI: dolum icra defterinin PENCERESİNDEN gelir (payda beyanı kartın altında).
+    // DOLUM AYRI SATIRDIR (D1): huninin paydası "bugünün silahlı kümesi", bu ölçümün paydası
+    // "icra defterinin son N günlük penceresi". Aynı şeridin basamağı yapmak monotonluğu bozar.
     const slp = (((d || {}).icra || {}).slipaj) || {};
     const dl = (slp.ayna || {}).dolum || {};
     if (_PV_AKIS) {
-      const son = _PV_AKIS.asamalar[_PV_AKIS.asamalar.length - 1];
-      son.n = dl.n_dolan == null ? null : dl.n_dolan;
-      son.neden = dl.n_dolan == null ? (slp.durum || "icra defteri dolum ölçümü vermedi") : "";
-      if (dl.n_dolan != null && slp.pencere_gun != null)
-        _PV_AKIS.paydaBeyani = _PV_AKIS.paydaBeyani.replace("icra defterinin penceresinden",
-          `icra defterinin son ${slp.pencere_gun} günlük penceresinden`);
+      _PV_AKIS.dolum = {
+        n: dl.n_dolan == null ? null : dl.n_dolan,
+        neden: dl.n_dolan == null ? (slp.durum || "icra defteri dolum ölçümü vermedi") : "",
+        pencere: slp.pencere_gun == null ? null : slp.pencere_gun,
+        oran: dl.dolum_orani == null ? null : dl.dolum_orani,
+      };
       const kap = $("pv-akis-govde");
       if (kap) kap.innerHTML = pvAkisGovdeHTML(_PV_AKIS);
     }
@@ -2806,14 +2960,24 @@ function gbAlarmSatiri(ab, bekliyor) {
     esc(ALAN_ADI.saglik)} <span class="tx3">· alarmlar</span></button>`;
   if (bekliyor) return `<div class="gb-alarm" id="gb-alarm">alarm bütçesi · <span class="mut">ölçülüyor…</span>${bag}</div>`;
   if (!ab) return `<div class="gb-alarm" id="gb-alarm">alarm bütçesi · <b>ölçülmedi</b> — teşhis ucu bu alanı vermedi${bag}</div>`;
+  // HÜKÜM ÖNDE, ÖLÇÜLER AÇILIRDA (ölçülen kusur D5, 2026-08-24): satır altı ayrı ölçüyü, üç
+  // parantezi ve iki tavanı TEK SATIRDA veriyordu ve okunmuyordu. YASA 6 hiçbirini silmeye izin
+  // vermez — ama hepsini aynı satırda vermeyi de ZORUNLU KILMAZ. Kural: bir bakışta okunan tek
+  // şey HÜKÜMdür ("aşım yok" / "AŞIM"); onu üreten altı ölçü bir tık uzakta, TAM hâliyle durur.
+  // Açılır varsayılan KAPALIdır ama AŞIM varken AÇIK doğar: bir ihlali tıklama arkasına saklamak,
+  // satırı kısaltmak değil susturmak olurdu.
   const d = ab.dagilim || {};
+  const olculer = [
+    `son 24 sa <b>${d.low ?? "—"}</b> low / <b>${d.high ?? "—"}</b> high`,
+    `<span${ab.tepe_muafiyet_uygulandi ? ` title="${esc(ab.tepe_beyan || "")}"` : ""}>tepe <b>${
+      ab.tepe_10dk ?? "—"}</b>/10dk · tavan ${ab.tavan_10dk ?? "—"}${
+      ab.tepe_muafiyet_uygulandi ? ` <span class="ab-not">(restart-muafiyetli · ham ${ab.tepe_ham_10dk ?? "—"})</span>` : ""}</span>`,
+    `duran <b>${ab.duran ?? "—"}</b> · tavan ${ab.tavan_duran ?? "—"}`,
+  ];
   return `<div class="gb-alarm${ab.asim_var ? " asim" : ""}" id="gb-alarm">
-    <span>alarm bütçesi · son 24 sa <b>${d.low ?? "—"}</b> low / <b>${d.high ?? "—"}</b> high</span>
-    <span${ab.tepe_muafiyet_uygulandi ? ` title="${esc(ab.tepe_beyan || "")}"` : ""}>tepe <b>${
-      ab.tepe_10dk ?? "—"}</b>/10dk (tavan ${ab.tavan_10dk ?? "—"})${
-      ab.tepe_muafiyet_uygulandi ? ` <span class="ab-not">(restart-muafiyetli · ham ${ab.tepe_ham_10dk ?? "—"})</span>` : ""}</span>
-    <span>duran <b>${ab.duran ?? "—"}</b> (tavan ${ab.tavan_duran ?? "—"})</span>
-    <span>${ab.asim_var ? "▲ AŞIM" : "aşım yok"}</span>${bag}</div>`;
+    <span class="ab-hukum">alarm bütçesi · <b>${ab.asim_var ? "AŞIM" : "aşım yok"}</b></span>
+    <details class="ab-kat"${ab.asim_var ? " open" : ""}><summary>ölçüler</summary>
+      <span class="ab-olcu">${olculer.join('</span><span class="ab-olcu">')}</span></details>${bag}</div>`;
 }
 
 // ==============================================================================================
@@ -3974,12 +4138,35 @@ function renderHUD(d) {
   // Basit modun tek satırlık "genel durum" çipi SİLİNDİ (2026-07-27): statuspill zaten aynı üç
   // durumu (durduruldu / gecikmiş / canlı) söylüyordu, üstelik nabzın YAŞIYLA birlikte. Aynı
   // okumanın sulandırılmış ikinci kopyası, bakılacak yeri çoğaltmaktan başka iş görmüyordu.
-  hud.innerHTML = [
+  // ---- ÜST ŞERİT SADELEŞTİRMESİ (ölçülen kusur D4, 2026-08-24 görsel doğrulama) -------------
+  // Şerit SEKİZ mikro-metin çipini yan yana taşıyordu ve sayfanın hem ilk bakılan hem EN YOĞUN
+  // yeriydi — operatörün bu turdaki asıl talebi ("okunaklı ve KOMPLEKS OLMAYAN") doğrudan burada
+  // çiğneniyordu. Kural artık panonun kendi yasası: BİR ÇİP YA HER AN GEREKLİDİR YA DA YALNIZ
+  // ANOMALİDE KONUŞUR (aynı gerekçe `_durumEmirKarti`in akış satırında ve düşen bekçi çipinde
+  // yazılı). HİÇBİR ÖLÇÜM SİLİNMEDİ (YASA 6): her-an olmayanlar `sistem` açılırına indi, tam
+  // metinleriyle. Yıkıcı kontroller (KRİZ/HALT) ve `#statuspill` bu şeridin dışında, yerinde.
+  //   HER AN     : döngü sayacı (sistem bir sonraki turu ne zaman atacak)
+  //   ANOMALİDE  : WS kopuk/bayat-yoklama · IO p95 tavan aşımı · KEŞİF MODU
+  //   AÇILIRDA   : mod·broker · rejim·bütçe · WS sağlıklı hâli · IO nominal değeri
+  const wsBayatYoklama = _wsAge != null && _wsAge >= 120;
+  const wsAnomali = h.stream_ok === false || wsBayatYoklama;
+  const wsGovde = `<span class="ld ${wsCls}"></span>WS ${h.stream_ok === false
+    ? `<b class='neg'>KOPUK</b>${wsDown ? ` · ${wsDown}` : ""}`
+    : (h.stream_ok ? "canlı" + wsAgeTxt : "—")}`;
+  const ioGovde = `<span class="ld ${ioBad ? "warn" : ""}"></span>IO <b>${io.p95_ms != null
+    ? trn(io.p95_ms, 1) + " ms" : (io.p50_ms != null ? trn(io.p50_ms, 1) + " ms·p50" : "—")}</b>`;
+  const gizli = [
     `<span class="hudchip"><b>${esc(h.mode || "?")}</b>·${esc((h.broker || "").replace("alpaca_paper", "alpaca"))}</span>`,
     _regime ? `<span class="hudchip">${esc(REGIME_TR[_regime] || _regime)} · bütçe <b>${_bud != null ? "%" + trn(_bud) : "—"}</b></span>` : "",
+    wsAnomali ? "" : `<span class="hudchip" title="${esc(wsTip)}">${wsGovde}</span>`,
+    ioBad ? "" : `<span class="hudchip" title="atomik yazım gecikmesi (son 200 yazım p95)">${ioGovde}</span>`,
+  ].filter(Boolean).join("");
+  hud.innerHTML = [
     h.explore_mode ? `<span class="hudchip explore">· KEŞİF MODU · ≤0.25R sonda</span>` : "",
     `<span class="hudchip" title="zamanlayıcının bir sonraki döngüsüne kalan"><span class="ld ${sch.updated ? "" : "off"}"></span>döngü <b id="hud-count">${sch.updated ? "…" : "—"}</b></span>`,
-    `<span class="hudchip" title="${esc(wsTip)}"><span class="ld ${wsCls}"></span>WS ${h.stream_ok === false ? `<b class='neg'>KOPUK</b>${wsDown ? ` · ${wsDown}` : ""}` : (h.stream_ok ? "canlı" + wsAgeTxt : "—")}</span>`,
+    wsAnomali ? `<span class="hudchip" title="${esc(wsTip)}">${wsGovde}</span>` : "",
+    ioBad ? `<span class="hudchip" title="atomik yazım gecikmesi (son 200 yazım p95)">${ioGovde}</span>` : "",
+    gizli ? `<details class="hud-kat" id="hud-kat"><summary title="her an gerekmeyen ölçüler">sistem</summary>${gizli}</details>` : "",
     // BEKÇİ ÇİPİ D2-b'DE DÜŞTÜ (P3 tekilleştirmesi · baseline §2). "Bekçiler ne durumda?" İKİ
     // yerde yazılıydı: bu çip (lamba + `ok/total`) ve sessiz hattın `bekçiler` segmenti. İkisi
     // aynı `_wd_rep` nesnesinden besleniyordu ve çip HER ZAMAN konuşuyordu — sağlıklıyken bile.
@@ -3987,10 +4174,15 @@ function renderHUD(d) {
     // mekanizmanın ADIYLA, SÜRESİYLE ve artık `teşhis ↗` olay yüzeyiyle birlikte. Ayrıntının
     // tam hâli (on yedi mekanizmanın hepsi, adım adım) ③ Sağlık'ın `cizelge` bölümünde.
     // Askıda hâli de orada adıyla ve nedeniyle duruyor — bu çiple birlikte hiçbir şey düşmedi.
-    `<span class="hudchip" title="atomik yazım gecikmesi (son 200 yazım p95)"><span class="ld ${ioBad ? "warn" : ""}"></span>IO <b>${io.p95_ms != null ? trn(io.p95_ms, 1) + " ms" : (io.p50_ms != null ? trn(io.p50_ms, 1) + " ms·p50" : "—")}</b></span>`,
   ].filter(Boolean).join("");
   syncNavHeight();   // rozetler barın yüksekliğini değiştirir; shell dolgusu onu takip etmeli
 }
+// AÇILIR ŞERİDİ BÜYÜTÜR: `syncNavHeight` bir kez render'da koşuyor, açılış onu kaçırırdı ve
+// kabuk dolgusu üst barın altında kalırdı (aynı hata sınıfı rozetler eklendiğinde ölçülmüştü).
+// Dinleyici DELEGE ve BİR KEZ bağlanır — `#hud-kat` her render'da yeniden doğar.
+document.addEventListener("toggle", e => {
+  if (e.target && e.target.classList && e.target.classList.contains("hud-kat")) syncNavHeight();
+}, true);
 async function pollHUD() {
   try { _DIAG = await j("/api/diagnostics"); renderHUD(_DIAG); } catch (e) { /* statuspill zaten bağlantıyı söylüyor */ }
 }

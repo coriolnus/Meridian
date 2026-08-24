@@ -493,80 +493,112 @@ hesaplanır ve ±0.005 içinde eşleşmezse test kırmızı verir. Tablo bir öz
 Biçim: `mürekkep · zemin yığını (alttan üste, `+` ile) · tema · oran · eşik`.
 
 <!-- CIVI-TABLOSU-BASI -->
+<!-- 2026-08-24 · DUB DÖNÜŞÜMÜ: bu gövdenin TAMAMI yeniden üretildi.
+     Üreten: research/olcumler/dub_donusumu_2026-08-24/olc.py (çıktı: civi_tablosu.md).
+     Elle yazılmış tek bir oran yoktur; tests/test_tasarim_token_v153.py her satırı
+     KAYNAKTAN yeniden hesaplar ve ayrışırsa raporu BAYAT ilan eder.
+     ~~Önceki gövde (WP-P/P9 + D1, 2026-08-02/07, 66 satır) sıcak-kemik dünyaya aitti
+     ve emekli edildi; sayıları §11'in metninde okunabilir durumda kalıyor.~~ -->
 | mürekkep | zemin yığını | tema | oran | eşik |
 |---|---|---|---|---|
-| --tx | --bg | gunduz | 19.42 | 4.5 |
-| --tx | --bg | gece | 11.31 | 4.5 |
-| --tx | --card | gunduz | 17.80 | 4.5 |
-| --tx | --card | gece | 10.18 | 4.5 |
-| --tx | --card-2 + --red-t | gunduz | 14.27 | 4.5 |
-| --tx | --card-2 + --red-t | gece | 7.64 | 4.5 |
-| --tx2 | --bg | gunduz | 7.15 | 4.5 |
-| --tx2 | --bg | gece | 7.46 | 4.5 |
-| --tx2 | --card | gunduz | 6.55 | 4.5 |
-| --tx2 | --card | gece | 6.72 | 4.5 |
-| --tx2 | --card-2 + --red-t | gunduz | 5.25 | 4.5 |
-| --tx2 | --card-2 + --red-t | gece | 5.04 | 4.5 |
-| --tx2 | --card-2 + --amber-t | gunduz | 5.26 | 4.5 |
-| --tx2 | --card-2 + --amber-t | gece | 4.96 | 4.5 |
-| --tx3 | --card | gunduz | 5.06 | 4.5 |
-| --tx3 | --card | gece | 5.05 | 4.5 |
-| --tx3 | --card-2 | gunduz | 4.72 | 4.5 |
-| --tx3 | --card-2 | gece | 4.54 | 4.5 |
-| --violet | --card | gunduz | 9.60 | 4.5 |
-| --violet | --card | gece | 7.15 | 4.5 |
-| --accent-2 | --accent-tint | gunduz | 17.57 | 4.5 |
-| --accent-2 | --accent-tint | gece | 10.94 | 4.5 |
-| --green | --card-2 + --green-t | gunduz | 4.72 | 4.5 |
-| --green | --card-2 + --green-t | gece | 5.31 | 4.5 |
-| --amber | --card-2 + --amber-t | gunduz | 5.57 | 4.5 |
-| --amber | --card-2 + --amber-t | gece | 5.39 | 4.5 |
-| --red | --card-2 + --red-t | gunduz | 4.59 | 4.5 |
-| --red | --card-2 + --red-t | gece | 5.01 | 4.5 |
-| --green | --bg | gunduz | 6.37 | 4.5 |
-| --green | --bg | gece | 7.83 | 4.5 |
-| --amber | --bg | gunduz | 7.57 | 4.5 |
-| --amber | --bg | gece | 8.11 | 4.5 |
-| --red | --bg | gunduz | 6.24 | 4.5 |
-| --red | --bg | gece | 7.41 | 4.5 |
-| --red | --bg + --nav-bg | gunduz | 6.24 | 4.5 |
-| --red | --bg + --nav-bg | gece | 7.41 | 4.5 |
-| --field | --card-2 | gunduz | 3.14 | 3.0 |
-| --field | --card-2 | gece | 3.18 | 3.0 |
-| --field | --bg | gunduz | 3.67 | 3.0 |
-| --field | --bg | gece | 3.93 | 3.0 |
-| --line | --card-2 | gunduz | 1.09 | 3.0 |
-| --line | --card-2 | gece | 1.14 | 3.0 |
-| --line-2 | --bg | gunduz | 1.47 | 3.0 |
-| --line-2 | --bg | gece | 1.83 | 3.0 |
-| --accent | --card | gunduz | 17.80 | 3.0 |
-| --accent | --card | gece | 10.18 | 3.0 |
-| --accent | --card-2 + --red-t | gunduz | 14.27 | 3.0 |
-| --accent | --card-2 + --red-t | gece | 7.64 | 3.0 |
-| --green-h | --card + --green-t | gunduz | 1.65 | 3.0 |
-| --green-h | --card + --green-t | gece | 1.94 | 3.0 |
-| --ink-h | --accent-tint | gunduz | 2.05 | 3.0 |
-| --ink-h | --accent-tint | gece | 2.12 | 3.0 |
-| --green-stamp | --bg | gunduz | 2.52 | 3.0 |
-| --green-stamp | --bg | gece | 3.25 | 3.0 |
-| --card-2 | --band-2 | gunduz | 2.46 | 3.0 |
-| --card-2 | --band-2 | gece | 2.45 | 3.0 |
-| --band-2 | --tx2 | gunduz | 2.49 | 3.0 |
-| --band-2 | --tx2 | gece | 2.46 | 3.0 |
-| --accent | --violet | gunduz | 1.85 | 3.0 |
-| --accent | --violet | gece | 1.42 | 3.0 |
-| --violet | --tx3 | gunduz | 1.90 | 4.5 |
+| --tx | --bg | gunduz | 18.97 | 4.5 |
+| --tx | --bg | gece | 14.23 | 4.5 |
+| --tx | --card | gunduz | 19.80 | 4.5 |
+| --tx | --card | gece | 12.01 | 4.5 |
+| --tx | --card-2 + --red-t | gunduz | 15.65 | 4.5 |
+| --tx | --card-2 + --red-t | gece | 8.56 | 4.5 |
+| --tx2 | --bg | gunduz | 7.49 | 4.5 |
+| --tx2 | --bg | gece | 12.09 | 4.5 |
+| --tx2 | --card | gunduz | 7.81 | 4.5 |
+| --tx2 | --card | gece | 10.21 | 4.5 |
+| --tx2 | --card-2 + --red-t | gunduz | 6.17 | 4.5 |
+| --tx2 | --card-2 + --red-t | gece | 7.27 | 4.5 |
+| --tx2 | --card-2 + --amber-t | gunduz | 6.46 | 4.5 |
+| --tx2 | --card-2 + --amber-t | gece | 7.50 | 4.5 |
+| --tx3 | --card | gunduz | 4.74 | 4.5 |
+| --tx3 | --card | gece | 6.00 | 4.5 |
+| --tx3 | --card-2 | gunduz | 4.54 | 4.5 |
+| --tx3 | --card-2 | gece | 5.38 | 4.5 |
+| --violet | --card | gunduz | 10.37 | 4.5 |
+| --violet | --card | gece | 8.50 | 4.5 |
+| --accent-2 | --accent-tint | gunduz | 16.44 | 4.5 |
+| --accent-2 | --accent-tint | gece | 12.46 | 4.5 |
+| --green | --card-2 + --green-t | gunduz | 4.70 | 4.5 |
+| --green | --card-2 + --green-t | gece | 4.54 | 4.5 |
+| --amber | --card-2 + --amber-t | gunduz | 5.79 | 4.5 |
+| --amber | --card-2 + --amber-t | gece | 5.49 | 4.5 |
+| --red | --card-2 + --red-t | gunduz | 6.95 | 4.5 |
+| --red | --card-2 + --red-t | gece | 6.64 | 4.5 |
+| --green | --bg | gunduz | 5.38 | 4.5 |
+| --green | --bg | gece | 7.05 | 4.5 |
+| --amber | --bg | gunduz | 6.71 | 4.5 |
+| --amber | --bg | gece | 8.86 | 4.5 |
+| --red | --bg | gunduz | 8.43 | 4.5 |
+| --red | --bg | gece | 11.04 | 4.5 |
+| --red | --bg + --nav-bg | gunduz | 8.43 | 4.5 |
+| --red | --bg + --nav-bg | gece | 11.04 | 4.5 |
+| --field | --card-2 | gunduz | 4.54 | 3.0 |
+| --field | --card-2 | gece | 5.38 | 3.0 |
+| --field | --bg | gunduz | 4.54 | 3.0 |
+| --field | --bg | gece | 7.11 | 3.0 |
+| --line | --card-2 | gunduz | 1.21 | 3.0 |
+| --line | --card-2 | gece | 1.31 | 3.0 |
+| --line-2 | --bg | gunduz | 1.42 | 3.0 |
+| --line-2 | --bg | gece | 2.29 | 3.0 |
+| --accent | --card | gunduz | 19.80 | 3.0 |
+| --accent | --card | gece | 12.01 | 3.0 |
+| --accent | --card-2 + --red-t | gunduz | 15.65 | 3.0 |
+| --accent | --card-2 + --red-t | gece | 8.56 | 3.0 |
+| --green-h | --card + --green-t | gunduz | 1.62 | 3.0 |
+| --green-h | --card + --green-t | gece | 1.82 | 3.0 |
+| --ink-h | --accent-tint | gunduz | 2.03 | 3.0 |
+| --ink-h | --accent-tint | gece | 2.33 | 3.0 |
+| --green-stamp | --bg | gunduz | 2.32 | 3.0 |
+| --green-stamp | --bg | gece | 3.01 | 3.0 |
+| --card-2 | --band-2 | gunduz | 2.42 | 3.0 |
+| --card-2 | --band-2 | gece | 2.86 | 3.0 |
+| --band-2 | --tx2 | gunduz | 3.10 | 3.0 |
+| --band-2 | --tx2 | gece | 3.20 | 3.0 |
+| --accent | --violet | gunduz | 1.91 | 3.0 |
+| --accent | --violet | gece | 1.41 | 3.0 |
+| --violet | --tx3 | gunduz | 2.19 | 4.5 |
 | --violet | --tx3 | gece | 1.42 | 4.5 |
-| --kap-4 | --card | gunduz | 2.05 | 3.0 |
-| --kap-4 | --card | gece | 2.18 | 3.0 |
-| --tx | --card + --kap-4 | gunduz | 8.70 | 4.5 |
-| --tx | --card + --kap-4 | gece | 4.68 | 4.5 |
+| --kap-4 | --card | gunduz | 2.03 | 3.0 |
+| --kap-4 | --card | gece | 2.37 | 3.0 |
+| --tx | --card + --kap-4 | gunduz | 9.76 | 4.5 |
+| --tx | --card + --kap-4 | gece | 5.07 | 4.5 |
 | --dv-n2 | --card | gunduz | 1.41 | 3.0 |
-| --dv-n2 | --card | gece | 1.50 | 3.0 |
-| --dv-p2 | --card | gunduz | 1.31 | 3.0 |
-| --dv-p2 | --card | gece | 1.57 | 3.0 |
-| --card | --bg + --scrim | gunduz | 2.68 | 3.0 |
-| --card | --bg + --scrim | gece | 1.23 | 3.0 |
+| --dv-n2 | --card | gece | 1.76 | 3.0 |
+| --dv-p2 | --card | gunduz | 1.42 | 3.0 |
+| --dv-p2 | --card | gece | 1.75 | 3.0 |
+| --card | --bg + --scrim | gunduz | 3.00 | 3.0 |
+| --card | --bg + --scrim | gece | 1.28 | 3.0 |
+| --nav | --bg | gunduz | 4.95 | 3.0 |
+| --nav | --bg | gece | 7.11 | 3.0 |
+| --nav | --card | gunduz | 5.17 | 3.0 |
+| --nav | --card | gece | 6.00 | 3.0 |
+| --nav-2 | --nav-t | gunduz | 7.15 | 4.5 |
+| --nav-2 | --nav-t | gece | 8.87 | 4.5 |
+| --nav | --nav-t | gunduz | 4.24 | 4.5 |
+| --nav | --nav-t | gece | 5.78 | 4.5 |
+| --nav-h | --nav-t | gunduz | 1.59 | 3.0 |
+| --nav-h | --nav-t | gece | 1.91 | 3.0 |
+| --bg2 | --nav | gunduz | 4.74 | 4.5 |
+| --bg2 | --nav | gece | 6.54 | 4.5 |
+| --tx | --nav-t | gunduz | 16.24 | 4.5 |
+| --tx | --nav-t | gece | 11.57 | 4.5 |
+| --tx | --nav-t + --nav-h | gunduz | 10.24 | 4.5 |
+| --tx | --nav-t + --nav-h | gece | 6.05 | 4.5 |
+| --tx2 | --nav-t | gunduz | 6.41 | 4.5 |
+| --tx2 | --nav-t | gece | 9.83 | 4.5 |
+| --tx3 | --nav-t | gunduz | 3.89 | 4.5 |
+| --tx3 | --nav-t | gece | 5.78 | 4.5 |
+| --tx | --nav-t | gunduz | 16.24 | 4.5 |
+| --tx | --nav-t | gece | 11.57 | 4.5 |
+| --sh-ring | --bg | gunduz | 1.24 | 3.0 |
+| --sh-ring | --bg | gece | 1.28 | 3.0 |
+| --sh-ring | --card | gunduz | 1.25 | 3.0 |
+| --sh-ring | --card | gece | 1.31 | 3.0 |
 <!-- CIVI-TABLOSU-SONU -->
 
 ---
@@ -840,3 +872,258 @@ Değişmeyen 10 çift, iki ucu da gece jetonu olan ya da iki ucu da mürekkep ol
   (mavi-sarı ekseni protan/deutan'da korunur), simülasyonla doğrulanmış değildir. Program X'in
   ayrı kalemi olmayı sürdürüyor.
 
+---
+
+## 12 · Dub dönüşümü — jeton katmanı (KARAR-2026-08-24-B) · 2026-08-24
+
+_Bu bölüm §11'i (WP-P/P9 sıcak-kemik turu) SİLMEZ; hükmünü emekli eder ve yerine geçer._
+_§11'in sayıları tarih olarak okunabilir kalır ve o değerler artık yürürlükte DEĞİLDİR._
+
+**Ölçüm ve üretici:** `research/olcumler/dub_donusumu_2026-08-24/olc.py` → `sonuc.json` +
+`RAPOR.md` + `civi_tablosu.md`. §9 çivi tablosunun TAMAMI o betiğin çıktısıdır; elle
+yazılmış tek bir oran yoktur ve `tests/test_tasarim_token_v153.py` her satırı KAYNAKTAN
+yeniden hesaplar. **Kaynak:** Dub'ın kendi DTCG dışa aktarımı (`~/Downloads/tokens.json`) —
+değerler hatırlanmadı, dosyadan okundu.
+
+### 12.1 · Dub'da karanlık tema YOK — doğrulandı
+
+Karar §1.2'nin iddiası ölçüldü: dört Dub dosyası, ikinci bir renk katmanını AÇAN mekanizma
+için tarandı (`prefers-color-scheme`, `[data-theme`, `.dark`, `color-scheme:dark`).
+
+| dosya | karanlık-tema mekanizması |
+|---|---|
+| `tokens.json` | YOK |
+| `DESIGN.md` | YOK |
+| `variables.css` | YOK |
+| `theme.css` | YOK |
+
+Bu yüzden gece paleti **türetildi**. Türetme ters çevirme DEĞİLDİR: kroma taşıyan her jeton
+kendi %10 tinti üzerinde AYRI ölçüldü ve gece para renkleri naif tersin vereceğinden
+AÇIKTIR (tint-yönü kuralı). Gece yüzey rampası 8/255 ızgarasına oturur ve Dub'ın
+`charcoal` (0x17) ile `graphite` (0x26) jetonları o ızgaraya çivi olarak girer.
+
+### 12.2 · Ö1-Ö7 · eşikler ÖNCEDEN donduruldu (karar §4), sonuç
+
+| Ö | ölçülen | eşik | hüküm |
+|---|---|---|---|
+| Ö1 · `#fafafa` parlama | en büyük yüzey Y=0.956 (saf beyaz 1.0) · kart/zemin adımı 1.0438 | Y<1.0 · adım ≥1.02 | **TUTTU** |
+| Ö2 · para renkleri kendi %10 tinti üstünde | en düşük **4.503** (iki tema × üç renk × yedi gerçek zemin) | ≥4.5 | **TUTTU** |
+| Ö3 · gezinme kroması | mürekkep C(--nav) 0.2152 / 0.1458 · dolgu C(--nav-t) 0.0328 / 0.072 · min C(şiddet) 0.0921 / 0.0809 | C(nav) < min C(şiddet) | **TUTMADI** — dolgu için **TUTTU** |
+| Ö4 · `--nav` ↔ `--dv-n2` | 3.655 / 3.41 | ≥3.0 | **TUTTU** |
+| Ö5 · wash üstünde mürekkep | `--nav` 4.239 / 5.778 · `--nav-2` 7.155 / 8.871 | ≥4.5 | **TUTMADI** — `--nav-2` için **TUTTU** |
+| Ö6 · tip rampası | karar rampası [11, 14, 16, 20, 24, 30] → adımlar [1.2727, 1.1429, 1.25, 1.2, 1.25] | her adım ≥1.15, en az bir ≥1.25 | **TUTMADI** |
+| Ö7 · odak halkası | `--sh-ring` 1.234-1.31 · 2px `--accent` ana hattı 10.78-19.798 | ≥3.0 | **TUTMADI** — ana hat için **TUTTU** |
+
+Ö4'ün eşiği kararda NİTELdi ("ayırt edilebilir"). İşlemsel karşılık olarak deponun zaten
+yürürlükteki metin-dışı ayrım ölçütü (WCAG 2.2 1.4.11, 3:1) alındı — yeni bir eşik icat
+edilmedi, var olan uygulandı. Sonuç: ıraksayan negatif kutbun mor-toprağa taşınmasına
+GEREK KALMADI (karar §2.1'in koşullu maddesi tetiklenmedi).
+
+### 12.3 · Tutmayan DÖRT eşik — DEĞER ZORLANMADI, KULLANIM YÜZEYİ DARALDI
+
+Karar §4'ün kuralı: *"Ölçülemeyen değer jetona GİRMEZ. Bir eşik tutmazsa çözüm §2.1'deki
+gibi kullanım yüzeyini daraltmaktır, değeri zorlamak değil."* Dördü de öyle işlendi.
+
+**Ö3 · gezinme kroması (mürekkep).** Elektrik mavisi doygundur: C=0,2152 > min C(şiddet)=0,1392
+(gündüz). Jeton uydurulmadı, kroması düşürülmedi. **Daraltma:** gezinmenin BÜYÜK YÜZEYİ
+washtır (`--nav-t`, C=0,0328 gündüz · 0,0874 gece) ve tavanın altındadır — dolgu için Ö3
+TUTAR. `--nav`/`--nav-2` yalnız İNCE mürekkep taşır ve kaynakta iki okuyucusu vardır:
+3px seçim çubuğu (`.sitem::before`) ve sayaç hapı dolgusu (`.pillc`). Bir para değeri, bir
+alarm, bir yön ASLA mavi olmaz (karar §2.1) ve bu `tests/test_renk_rolleri_v197.py` §9'da
+çivilidir — kroma tavanı da orada test edilir.
+
+**Ö5 · wash üstünde mürekkep.** `--nav` (`electric-blue`) `--nav-t` üstünde **4.24** — AA ALTI.
+**Daraltma** karar §2.1'in kendi cümlesidir (*"dolgu washı kalır, mürekkep koyulaşır"*):
+washın üstündeki metin `--nav-2`dir (`deep-sapphire`; ölçüldü 7.15 gündüz · 8.95 gece).
+`.sitem.on` bu yüzden `color:var(--nav-2)` okur, `var(--nav)` DEĞİL. Gecede `--nav` de eşiği
+geçiyor (5.83) ama kural iki temada AYNI kalır: tek yüzey, tek gramer.
+
+**Ö6 · tip rampası.** Karar §3'ün rampası [11, 14, 16, 20, 24, 30] → adımlar
+[1.2727, 1.1429, 1.25, 1.2, 1.25]: **16/14 = 1.1429**, eşiğin (1.15) altında. **Daraltma:**
+16px basamağı rampadan DÜŞER ve bedeli ölçüldü — SIFIR: `index.html`de 16px kullanımı zaten
+yoktu. Kalan rampa [11, 14, 17, 20, 24, 30], adımlar [1.2727, 1.2143, 1.1765, 1.2, 1.25] —
+**TUTTU**. Ayrıca 13px basamağı kaldırıldı (karar §3: *"14→15
+oranı 1.07, hiyerarşi değil gürültü"*) ve `index.html`deki **28** kullanımı gövde basamağına
+(14px) taşındı; 28px'in tek kullanımı (`.mcard .v`, büyük metrik rakamı) `--t-num` jetonuyla
+30px'e çıktı.
+
+**Ö7 · odak halkası.** Dub'ın `shadow-subtle-2`si (`rgba(0,0,0,.1) 0 0 0 4px`) her zeminde
+**1.234-1.31** ölçtü — 3:1'in çok altında. Dub'ın alfası KIMILDATILMADI.
+**Daraltma:** `--sh-ring` bir ODAK GÖSTERGESİ DEĞİLDİR, onu çevreleyen yardımcı halkadır.
+G4'ü (odak her zeminde ≥3:1) taşıyan gösterge `:focus-visible` üzerindeki **2px `--accent`
+ana hattı**dır ve o ölçüldü: **10.78-19.798** (iki tema, yedi gerçek zemin) — GEÇTİ.
+Ayrım `tests/test_tasarim_token_v153.py::test_odak_halkasi_HER_ZEMINDE_3_1` ile çivilidir ve
+o test `--accent`i ölçer, halkayı değil.
+
+### 12.4 · ÖE1 · ŞİDDET MERDİVENİ ÇÖKTÜ — bulgu (jeton turu), hüküm (Rol-1 §9)
+
+Karar §4 bir rolün ÜYELERİNİN ayrılabilirliğini sormuyordu. Ölçülmeyince görülmeyen şey
+buydu: Dub `tangerine` (hue 41,1°) ile maketin `loss-red`i (38,4°) yalnız **2,7°** arayla
+duruyor. Üye-üye AA türetmesi ikisini AYNI renge çökertiyordu — gündüz `#b54000` ↔
+`#ba3a00`, gece `#ff8e63` ↔ `#ff8e6a`. Yani ŞİDDET-1 (P1, şimdi müdahale) ile ŞİDDET-2
+(P2, insan gerekiyor) ekranda **tek renk** olacaktı. İkinci çökme: `tangerine` ile
+`vivid-green` luminansta **1,004** ayrışıyordu, yani ayrım TAMAMEN protan/deutan'ın
+sildiği eksende kalıyordu.
+
+**Hiçbir mevcut test bunu görmezdi.** v197 rol AYRILIĞINI ölçer, v153 KONTRASTI ölçer;
+ikisi de "iki seviye ayırt edilebiliyor mu" diye sormuyordu. Kör nokta buydu ve iki
+rengin aynı olduğunu on iki saat görünmez kıldı.
+
+Hükmü Rol-1 verdi (`docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md` §9) ve eşikleri ölçümden
+ÖNCE dondurdu (§9.3). Aşağısı o hükmün UYGULANMASIdır.
+
+### 12.5 · ÖE1 · uygulanan çözüm — §9.4 geri çekilmesi
+
+| ÖE1 | ölçü | eşik (§9.3, DONMUŞ) |
+|---|---|---|
+| a | komşu seviyelerin luminans oranı | ≥ 1.2 |
+| b | komşu seviyelerin ΔE2000'i | ≥ 15.0 |
+| c | her renk kendi %10 tinti üstünde (`--card`) | ≥ 4.5 |
+
+**Önce kaynak üçlüler MERDİVENSİZ ölçüldü** — çünkü §9.4 "Omega üçlüsü yerinde kalır"
+diyor ve bu ancak ölçülürse bir hüküm olur:
+
+| üçlü (gündüz) | çift | luminans oranı | ΔE2000 |
+|---|---|---|---|
+| Dub ataması (ortak ΔL, merdiven YOK) | --sev-1 ↔ --sev-2 | 1.471 | 9.44 |
+| Dub ataması (ortak ΔL, merdiven YOK) | --sev-2 ↔ --sev-3 | 1.004 | 55.73 |
+| Omega üçlüsü AYNEN (#0c6a3b/#6e4a00/#b3242c) | --sev-1 ↔ --sev-2 | 1.213 | 29.37 |
+| Omega üçlüsü AYNEN (#0c6a3b/#6e4a00/#b3242c) | --sev-2 ↔ --sev-3 | 1.188 | 32.38 |
+
+**Omega üçlüsü bile, AYNEN alındığında ÖE1-a'yı tutmuyor** (gündüz 1,188 · gece 1,035 /
+1,093). Yani hue ailesi hangisi olursa olsun üçlünün bir LUMİNANS MERDİVENİNE oturması
+zorunlu — bu, hükmün ölçümle ortaya çıkan ikinci yarısıdır.
+
+**Adaylar, karar §9'un kendi sırasıyla** (önce Dub içinde çöz, olmazsa §9.4):
+
+| aday | tema | a (lum, iki komşu) | b (ΔE2000) | c | hüküm |
+|---|---|---|---|---|---|
+| A | gunduz | 1.251 / 1.253 | 5.39 / 54.18 | ✓ | **TUTMADI** |
+| A | gece | 1.247 / 1.256 | 8.44 / 55.03 | ✓ | **TUTMADI** |
+| B | gunduz | 1.242 / 1.253 | 13.53 / 54.18 | ✓ | **TUTMADI** |
+| B | gece | 1.251 / 1.256 | 12.62 / 55.03 | ✓ | **TUTMADI** |
+| C | gunduz | 1.255 / 1.247 | 28.47 / 32.43 | ✓ | **TUTTU** |
+| C | gece | 1.247 / 1.255 | 22.75 / 30.1 | ✓ | **TUTTU** |
+
+**SEÇİLEN: C · §9.4 geri çekilme · şiddet rolü Dub paletinden ÇIKAR, ölçülmüş Omega üçlüsünün hue/kroması kalır**
+
+A ve B ÖE1-b'de düştü. B, `loss-red`in hue'sunu Meridian'ın ÖLÇÜLMÜŞ alarm hue'suna
+(24,1° — Omega `--red`, bu depoda bir yıl yayında kalmış bir değer) çekti ve 17° ayrım
+kazandı; yetmedi (ΔE2000 13,53 gündüz / 12,62 gece). Sebep yapısal ve ölçülebilir:
+**Dub'ın paletinde şiddet için kullanılabilir ÜÇ ayrık hue yok.** `lavender` MOD'a,
+`electric-blue` ve `deep-sapphire` ROL 6'ya kalıcı olarak ayrılmış durumda; geriye
+`vivid-green` ve `tangerine` kalıyor, yani İKİ hue. Karar §9.4 bunu öngörmüştü —
+*Dub bir pazarlama sitesidir ve üç seviyeli bir şiddet kanalı taşımaz* — ve ölçüm onu
+doğruladı. **Şiddet rolü Dub paletinden ÇIKTI**; gezinme, yüzey, geometri, tipografi ve
+yön rolleri Dub'da KALDI.
+
+**Uygulanan merdiven:**
+
+| tema | jeton | değer | kroma | komşu çift | luminans oranı | ΔE2000 | kendi tinti (`--card`) |
+|---|---|---|---|---|---|---|---|
+| gunduz | `--sev-1` (`--red`) | `#9a0019` | 0.1754 | --sev-1 ↔ --sev-2 | 1.255 | 28.47 | 7.272 |
+| gunduz | `--sev-2` (`--amber`) | `#77520e` | 0.0917 | --sev-2 ↔ --sev-3 | 1.247 | 32.43 | 6.046 |
+| gunduz | `--sev-3` (`--green`) | `#1f7646` | 0.1114 | — | — | — | 4.884 |
+| gece | `--sev-1` (`--red`) | `#ffbab4` | 0.0815 | --sev-1 ↔ --sev-2 | 1.247 | 22.75 | 7.387 |
+| gece | `--sev-2` (`--amber`) | `#d8b072` | 0.0917 | --sev-2 ↔ --sev-3 | 1.255 | 30.1 | 6.106 |
+| gece | `--sev-3` (`--green`) | `#61b37f` | 0.1118 | — | — | — | 5.04 |
+
+**MERDİVEN KURALI (yeni, beyanlı).** Şiddet arttıkça mürekkep zeminden UZAKLAŞIR —
+tint-yönü kuralının şiddet hattındaki kardeşi: gündüz `--sev-1` en KOYU, gece en AÇIK;
+nominal (`--sev-3`) zemine en yakın olandır (*renk yalnız anomalide* kuralının luminans
+karşılığı). İnşa basamağı **1.25**, eşik 1.2 DEĞİL: 8-bit yuvarlama ve alfa bileşimi sıfır
+paylı bir merdiveni eşiğin altına iter. Pay YALNIZ İNŞADADIR; ölçüm hâlâ 1,20'ye karşı
+yapılır ve `tests/test_renk_rolleri_v197.py` §10 onu çiviler.
+
+**BEDELİ BEYANLI — bu bir kazanç değil bir takas.** Gece `--sev-1` merdivenin en uzak
+basamağındadır ve sRGB gamutu orada kroma tutmaz: **0,166 → 0,0809**. Alarm gecede daha
+SOLUK bir mürekkeptir; ayrımını luminans ve hue taşır, doygunluk değil. Bu ayrıca Ö3'ün
+DOLGU tavanını düşürdü ve gece gezinme washı o tavanın altına çekilerek yeniden türetildi
+(`#172554` → `#1a274d`, C 0,0874 → 0,0720): eşik gevşetilmedi, TÜRETİLEBİLİR olan değer
+kısıta uyduruldu.
+
+**KÖR NOKTA KAPATILDI.** `tests/test_renk_rolleri_v197.py` §10 artık ÖE1-a + ÖE1-b'yi
+komşu çiftler için İKİ temada ölçüyor, ÖE1-c'yi ayrıca çiviliyor (sıra bağlayıcı: a ve b
+için c'den çalınamaz), merdivenin YÖNÜNÜ iki temada sınıyor ve eşiklerin karar §9.3'ten
+oynamadığını belgeye karşı doğruluyor. ΔE2000 uygulamasının kendi çivisi de orada
+(beyaz↔siyah = 100, aynı renk = 0, ve kusurun kendisi olan çift eşiğin ALTINDA).
+
+### 12.6 · Türetilen jetonlar — hangi kural, kaç adım
+
+| jeton | tema | kaynak | sonuç | ΔL adımı | kroma (kaynak) | kural |
+|---|---|---|---|---|---|---|
+| `--green` | gunduz | Dub vivid-green `#16a34a` | `#1f7646` | 0 | 0.1114 (0.1699) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 154.4° kroma 0.1111 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
+| `--amber` | gunduz | Dub tangerine `#ea580c` | `#77520e` | 0 | 0.0921 (0.1943) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 76.9° kroma 0.0917 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
+| `--red` | gunduz | maket beyanlı türetmesi loss-red (Dub'da kayıp rengi YOK) `#c2410c` | `#9a0019` | 0 | 0.175 (0.1739) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 24.1° kroma 0.1782 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
+| `--green` | gece | Dub vivid-green `#16a34a` | `#61b37f` | 0 | 0.1118 (0.1699) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 154.4° kroma 0.1111 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
+| `--amber` | gece | Dub tangerine `#ea580c` | `#d8b072` | 0 | 0.0922 (0.1943) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 76.9° kroma 0.0917 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
+| `--red` | gece | maket beyanlı türetmesi loss-red (Dub'da kayıp rengi YOK) `#c2410c` | `#ffbab4` | 0 | 0.0809 (0.1739) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 24.1° kroma 0.1782 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
+| `--yon-arti` | gunduz | --green (gunduz) `#1f7646` | `#4a6e56` | 0 | 0.0563 (0.1114) | C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
+| `--yon-eksi` | gunduz | --red (gunduz) `#9a0019` | `#6c4442` | 0 | 0.0559 (0.175) | C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
+| `--yon-arti` | gece | --green (gece) `#61b37f` | `#8bab94` | 9 | 0.0484 (0.1118) | C = min C(şiddet) x 0.6; ORTAK ΔL=0.009; AA>=4.5 kendi tinti + çıplak / #2e2e2e |
+| `--yon-eksi` | gece | --red (gece) `#ffbab4` | `#edc3be` | 0 | 0.0487 (0.0809) | C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #2e2e2e |
+| `--mod-canli` | gunduz | Dub lavender `#7c3aed` | `#7c3aed` *(Dub jetonu AYNEN)* | 0 | 0.2466 (0.2466) | AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
+| `--mod-kesif` | gunduz | --mod-canli (aynı hue, düşük kroma) `#7c3aed` | `#6c5e9e` | 16 | 0.0996 (0.2466) | C = C(mod-canli) x 0.4; AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
+| `--mod-canli` | gece | Dub lavender `#7c3aed` | `#ab91ff` | 184 | 0.157 (0.2466) | AA>=4.5 kendi tinti + çıplak / #2e2e2e |
+| `--mod-kesif` | gece | --mod-canli (aynı hue, düşük kroma) `#ab91ff` | `#a79fcb` | 0 | 0.0637 (0.157) | C = C(mod-canli) x 0.4; AA>=4.5 kendi tinti + çıplak / #2e2e2e |
+| `--nav-t` | gece | onaylanan maket (scratch-panov2) gece washı `#172554` | `#1a274d` | 0 | 0.072 (0.0874) | Ö3 DOLGU tavanı: C tohumda 0.0874 ≥ min C(şiddet) 0.0809; hue ve L sabit, kroma tavanın %90'ına indirildi |
+| `--nav` | gece | Dub electric-blue `#2563eb` | `#72a2ff` | 172 | 0.1458 (0.2152) | AA>=4.5 gece washı #1a274d + çıplak/tint #2e2e2e |
+| `--nav-2` | gece | Dub deep-sapphire `#1e40af` | `#b2caff` | 122 | 0.0791 (0.1809) | L = L(--nav gece) + 0.1217 (gündüzün nav↔nav-2 L farkı, yönü çevrilmiş); AA>=4.5 washı #1a274d + çıplak/tint #2e2e2e |
+| `--field` | gunduz | Dub fog `#737373` | `#737373` *(Dub jetonu AYNEN)* | 0 | 0.0 (0.0) | rampadan SEÇİM: her gerçek yüzeyde >=3:1 tutan ilk basamak |
+| `--field` | gece | Dub silver `#a3a3a3` | `#a3a3a3` *(Dub jetonu AYNEN)* | 0 | 0.0 (0.0) | rampadan SEÇİM: her gerçek yüzeyde >=3:1 tutan ilk basamak |
+| `--band-2` | gunduz | Dub silver `#a3a3a3` | `#a3a3a3` *(Dub jetonu AYNEN)* | 0 | 0.0 (0.0) | rampadan SEÇİM: card-2->band-2 2.42 · band-2->tx2 3.10 |
+| `--band-2` | gece | Dub fog `#737373` | `#737373` *(Dub jetonu AYNEN)* | 0 | 0.0 (0.0) | rampadan SEÇİM: card-2->band-2 2.86 · band-2->tx2 3.20 |
+| `--violet` | gunduz | Dub slate `#404040` | `#404040` *(Dub jetonu AYNEN)* | 0 | 0.0 (0.0) | rampadan SEÇİM: accent->violet 1.91 · violet->tx3 2.19 (v171 kısıtı: ayrım ≥1.35, kart üstünde AA) |
+| `--violet` | gece | TÜRETİLDİ — Dub nötr rampasında geçerli basamak YOK `#e5e5e5` | `#c2c2c2` | 0 | 0.0 (0.0) | accent↔tx3 merdiveninin GEOMETRİK ORTASI (eşit adım): accent->violet 1.41 · violet->tx3 1.42; akromatik |
+| `--dv-n*` | gunduz | Dub deep-sapphire hue'su `#1e40af` | `#45526f` | 0 | 0.0509 (0.1809) | L=L(--tx2)=0.4386 · C = min C(şiddet) x 0.55; alfa .22/.10 DEĞİŞMEDİ |
+| `--dv-p*` | gunduz | Dub tangerine hue'su `#ea580c` | `#6b493c` | 0 | 0.0513 (0.1943) | L=L(--tx2)=0.4386 · C = min C(şiddet) x 0.55; alfa .22/.10 DEĞİŞMEDİ |
+| `--dv-n*` | gece | Dub deep-sapphire hue'su `#1e40af` | `#c6d4f2` | 0 | 0.0443 (0.1809) | L=L(--tx2)=0.8699 · C = min C(şiddet) x 0.55; alfa .22/.10 DEĞİŞMEDİ |
+| `--dv-p*` | gece | Dub tangerine hue'su `#ea580c` | `#efcbbe` | 0 | 0.0446 (0.1943) | L=L(--tx2)=0.8699 · C = min C(şiddet) x 0.55; alfa .22/.10 DEĞİŞMEDİ |
+
+**KIRPMA BEYANI.** OKLCh'de L kaydırılırken hue ve kroma sabit tutulur; sRGB gamut dışına
+düşen bir bileşimde kroma o L'de gamut sınırına indirilir. Bu SESSİZ DEĞİLDİR: yukarıdaki
+kroma sütunu hem gerçekleşen hem kaynak değeri taşır. En büyük kırpma gece kehribarında:
+**0,1943 → 0,1054**. Gece `min C(şiddet)` odur ve Ö3'ün dolgu tavanı o sayıya karşı ölçülür —
+yani kırpma bir kozmetik ayrıntı değil, bir EŞİĞİN girdisidir.
+
+### 12.7 · Okuyucusuz jetonlar (YASA 6 kaydı — sayıldı, hüküm VERİLMEDİ)
+
+"En kötü gerçek zemin" ölçülür, varsayılmaz: bir yüzey jetonunu hiçbir kural okumuyorsa o
+bir zemin değildir ve türetmeyi gereksiz yere sıkar. Kaynaktan sayıldı
+(`olc.py::_okuyucu_sayisi` — `index.html` kural gövdeleri + `app.js`):
+
+Hesap gündüz `#f5f5f5`, gece `#2e2e2e` ile yapıldı. Okuyucusuz bulunan jetonlar:
+
+- `--blue` · **0 okuyucu**
+- `--elev` · **0 okuyucu**
+- `--serif` · **0 okuyucu**
+- `--violet2` · **0 okuyucu**
+
+VAKA KAYDI (2026-08-24, aynı gün içinde iki kez ölçüldü): `--raise` sabah **0** okuyucuya
+sahipti ve o yüzden "en kötü gerçek zemin" hesabından DÜŞMÜŞTÜ. Pano v2 bileşen kuralları
+eklenince **19** okuyucuya çıktı (kart zemini) ve hesap kendiliğinden değişti — gece en kötü
+zemin `#363636`e çıkıp gece kehribarının kroması 0,1054'ten 0,0829'a düştü, bu da Ö3'ün
+DOLGU tavanını (`--nav-t` C 0,0874) altına aldı. Kök neden ölçüldü: gece `--raise` gündüzde
+OLMAYAN bir basamak icat ediyordu (gündüz `--raise` = `--card` = `#ffffff`). Gece de eşitlendi
+(`#262626`) ve zincir kapandı. **Ders:** "okuyucusuz" bir jeton kalıcı bir sıfat DEĞİLDİR;
+bu yüzden sayı her koşumda kaynaktan yeniden üretilir, elle yazılmaz.
+
+Bu 4 jeton ADIYLA duruyor çünkü jeton adları bu turda DEĞİŞMEZ (`app.js` DOM'u çalışma anında
+üretir ve isim sözleşmesi bağlayıcıdır).
+
+**HÜKÜM (Rol-1, 2026-08-24): BU TUR EMEKLİ EDİLMEZ — kalem `emeklilik adayı, tur
+kapanışında ölçülecek` olarak açık kalır.** Gerekçe: dördü de uçuştaki `app.js` turunun
+potansiyel tüketicisidir ve o tur henüz kapanmadı; şimdi kaldırmak, kapanmamış bir turu
+kör noktadan kırar. Sayı her koşumda kaynaktan yeniden üretilir (`olc.py`), yani kalem
+tur kapanışında elle değil ÖLÇÜMLE yeniden değerlenir.
+
+### 12.8 · Ad borçları (jeton adı işini söylemiyor — hüküm Rol-1'de)
+
+- **`--nav-h` FILL olarak da kullanılıyordu.** Ad bir SAÇ TELİ (hairline, %35 alfa)
+  söylüyor, `.pv-gorev:hover` ise onu DOLGU olarak okuyordu. 2026-08-24'te düzeltildi:
+  hover artık dolguyu `--nav-t` washında tutar ve geri bildirimi `--nav-h` SAÇ TELİYLE
+  verir (`box-shadow:inset 0 0 0 1px`) — yani jeton işini yapıyor. Ölçüldü: gövde
+  mürekkebi (`--tx`) saç telinin üstünde 10.24 (gündüz) / 6.05 (gece) — AA.
+- **`--blue` akromatiktir** (`#0a0a0a` / `#e5e5e5`). Ad bir HUE söylüyor, değer
+  akromatik bir seri basamağı. Adı değiştirmek `app.js`i kırar (isim sözleşmesi
+  bağlayıcı) — kalem burada duruyor, hüküm tur kapanışında.

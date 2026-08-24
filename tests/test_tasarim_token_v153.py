@@ -161,7 +161,11 @@ GUNDUZ_HEPSI = {**GUNDUZ, **ROL_GUNDUZ}
 GECE_HEPSI = {**GECE, **ROL_GECE}
 
 # Rol jetonunun adı bir İŞİN adıdır ve bu önekle taşınır (değer jetonu HİÇBİRİNİ taşımaz).
-ROL_ONEK = ("sev-", "yon-", "mod-", "olcek-")
+# "nav" 2026-08-24'te eklendi (ROL 6 · GEZİNME/SEÇİM, KARAR-2026-08-24-B §2). Önek TİRESİZ
+# yazılır çünkü rolün kendi adı `--nav`dır; `--nav-2/-t/-h/-bg` onun ailesidir.
+# `--nav-bg` (üst bar perdesi) BU TURDA `tema.*.perde`den `rol.*.nav`a TAŞINDI: bir gezinme
+# yüzeyidir ve önek kuralı onu değer katmanında bırakırsa iki katman ADIYLA karışırdı.
+ROL_ONEK = ("sev-", "yon-", "mod-", "olcek-", "nav")
 
 
 # =============================== Ç1 · EŞ-KAYIT ===============================
@@ -267,8 +271,17 @@ def test_gece_TAM_palet_hicbir_renk_jetonu_YARIM_KALMAZ():
     #            + ölçek   3 (--olcek-guven · -t/-h)
     # CSS :root  = 23 temel + 43 değer + 31 rol = 97   (68 → 97)
     # CSS gece   =            43 değer + 31 rol = 74   (45 → 74; `temel` gece bloğunda YOK)
-    assert (len(TEMEL) == 23 and len(GUNDUZ) == 43 and len(ROL_GUNDUZ) == 31
-            and len(ROOT) == 97 and len(GECE_OV) == 74), \
+    # 2026-08-24 · DUB DÖNÜŞÜMÜ (KARAR-2026-08-24-B). Sayım değişti ve ayrışımı şu:
+    #   temel 23 → 33: +4 yarıçap (--r-input/--r-btn/--r-lg/--r-tag, Dub ölçeği devralındı)
+    #                  +6 tip rampası (--t-cap/--t-body/--t-lg/--t-sub/--t-h/--t-num).
+    #                  Rampa 2026-08-24'te JETONLANDI: o güne kadar tek jeton --t-num idi,
+    #                  geri kalan boylar kural gövdelerinde sabit px duruyordu — iki kaynak,
+    #                  ayrışabilir iki gerçek. Ölçülen rampa 11/14/17/20/24/30 (Ö6).
+    #   tema  43 → 44: +2 gölge (--sh-btn/--sh-ring, Dub'ın iki gölgesi; renk taşıdıkları
+    #                  için `temel`de DURAMAZLAR) −1 (--nav-bg `rol.nav`a taşındı)
+    #   rol   31 → 36: +5 ROL 6 (--nav/--nav-2/--nav-t/--nav-h/--nav-bg)
+    assert (len(TEMEL) == 33 and len(GUNDUZ) == 44 and len(ROL_GUNDUZ) == 36
+            and len(ROOT) == 113 and len(GECE_OV) == 80), \
         (f"jeton sayımı değişmiş: temel {len(TEMEL)} · değer {len(GUNDUZ)} · rol "
          f"{len(ROL_GUNDUZ)} · :root {len(ROOT)} · gece {len(GECE_OV)}")
 
@@ -354,12 +367,12 @@ def test_DTCG_semasi_gecerli():
             f"{p}: açıklamasız jeton — okuyucusuz yazım yok (YASA 6)"
         assert "$extensions" in tk and "org.meridian.css" in tk["$extensions"], \
             f"{p}: CSS eş-kaydı yok — eş-doğrulama yolu bu alan olmadan kurulamaz"
-    # 113 → 171 (D1, 2026-08-07). Ayrışım yukarıdaki tam-palet ölçümüyle AYNI ve orada
+    # 113 → 171 (D1, 2026-08-07) → 193 (Dub dönüşümü + tip rampası jetonlaması, 2026-08-24). Ayrışım yukarıdaki tam-palet ölçümüyle AYNI ve orada
     # gerekçelendirildi: 23 temel (tema-bağımsız) + 2×43 değer (tema, zemin başına) +
     # 2×31 rol (D1'in üçüncü katmanı, zemin başına). Sayı bir BÜTÇE değil bir MUHASEBEdir:
     # burada tutmayan bir toplam, DTCG ağacına eş-kayıtsız bir dal eklendiğini söyler.
-    assert sayac == 23 + 2 * 43 + 2 * 31, \
-        f"jeton sayımı {sayac} (beklenen 171 = 23 temel + 2×43 değer + 2×31 rol)"
+    assert sayac == 33 + 2 * 44 + 2 * 36, \
+        f"jeton sayımı {sayac} (beklenen 193 = 33 temel + 2×44 değer + 2×36 rol)"
 
 
 def test_takma_adlar_COZULUYOR():
@@ -383,6 +396,36 @@ def _renk_coz(lit):
     m = re.fullmatch(r"rgba?\((\d+),(\d+),(\d+),([0-9.]+)\)", lit.replace(" ", ""))
     assert m, f"renk çözülemedi: {lit!r}"
     return [int(m.group(i)) for i in (1, 2, 3)], float(m.group(4))
+
+
+def _olcu_yaz(o):
+    """DTCG dimension -> CSS parçası. Sıfır BİRİMSİZ yazılır (`0`, `0px` değil) çünkü
+    CSS'te fiilen öyle duruyor ve eş-kayıt BİREBİR olmak zorunda."""
+    return "0" if o["value"] == 0 else f"{o['value']:g}{o['unit']}"
+
+
+def _renk_yaz(c):
+    r, g, b = [int(round(x * 255)) for x in c["components"]]
+    if c.get("alpha", 1) == 1:
+        return c["hex"]
+    return f"rgba({r},{g},{b},{('%.2f' % c['alpha']).lstrip('0')})"
+
+
+def _golge_serilestir(katmanlar):
+    """DTCG shadow -> CSS literali. Ölçüm aracının kendi çivisi aşağıda
+    (test_golge_serilestirici_KENDINI_KANITLAR)."""
+    return ", ".join(
+        " ".join([_renk_yaz(k["color"]), _olcu_yaz(k["offsetX"]), _olcu_yaz(k["offsetY"]),
+                  _olcu_yaz(k["blur"]), _olcu_yaz(k["spread"])])
+        for k in katmanlar)
+
+
+def test_golge_serilestirici_KENDINI_KANITLAR():
+    """Serileştirici sessizce bozulursa yukarıdaki gölge çivisi yalancı yeşil verir."""
+    ornek = [{"color": {"colorSpace": "srgb", "components": [0.0, 0.0, 0.0], "alpha": 0.05},
+              "offsetX": {"value": 0, "unit": "px"}, "offsetY": {"value": 1, "unit": "px"},
+              "blur": {"value": 2, "unit": "px"}, "spread": {"value": 0, "unit": "px"}}]
+    assert _golge_serilestir(ornek) == "rgba(0,0,0,.05) 0 1px 2px 0"
 
 
 def test_DTCG_degeri_CSS_LITERALINDEN_yeniden_uretilebilir():
@@ -417,8 +460,22 @@ def test_DTCG_degeri_CSS_LITERALINDEN_yeniden_uretilebilir():
             sayilar = [float(x) for x in re.fullmatch(r"cubic-bezier\(([^)]*)\)", lit).group(1).split(",")]
             assert v == sayilar, p
         elif tip == "shadow":
-            assert lit == "none" and v == [], \
-                f"{p}: gölge geri gelmiş — Omega'da box-shadow:none ölçülmüş bir karardır"
+            # KARTLARDA GÖLGE HÂLÂ YOK (`--elev:none`, boş katman listesi) — Omega'nın
+            # ölçülmüş kararı Dub dönüşümünde de durur, çünkü Dub da kenar-öncedir.
+            # 2026-08-24'te İKİ gölge geldi ve ikisi de KART DIŞI (`--sh-btn` düğme
+            # oklüzyonu, `--sh-ring` yardımcı odak halkası). Onlar için bağ, renk
+            # jetonlarındakiyle AYNI sıkılıkta ölçülür: katman listesi literale GERİ
+            # SERİLEŞTİRİLİR ve birebir eşleşmek zorundadır. Yoksa `$value` ile literal
+            # ayrı ayrı elle güncellenebilir ve dosya iki gerçek söylerdi.
+            if lit == "none":
+                assert v == [], f"{p}: `none` gölgenin katman listesi boş olmalı"
+                continue
+            assert isinstance(v, list) and v, f"{p}: gölge katman listesi boş"
+            assert _golge_serilestir(v) == lit, \
+                f"{p}: gölge ayrışmış — kayıt {_golge_serilestir(v)!r}, CSS {lit!r}"
+            for katman in v:
+                assert set(katman) == {"color", "offsetX", "offsetY", "blur", "spread"}, \
+                    f"{p}: DTCG gölge katmanı eksik/fazla alan taşıyor: {sorted(katman)}"
 
 
 # =========================== Ç1c · ROL ALIAS ZİNCİRİ (D1) ===========================
@@ -500,7 +557,20 @@ IZIN_VERILEN: dict[str, str] = {}
 _HEX = re.compile(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b")
 _FONK = re.compile(r"\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^)]*\)")
 # `white-space` / `black-box` gibi bileşik sözcükler renk DEĞİL: ad tek başına durmalı.
-_ADLI = re.compile(r":\s*(black|white|red|green|blue|gray|grey|orange|yellow|purple|silver)\b")
+#
+# 2026-08-24 · SOLDAKİ AD DA ÖLÇÜLÜR — ve bu bir gevşetme değil bir DÜZELTME. Desen eskiden
+# yalnız iki nokta ÜSTÜNDEN sonrasına bakıyordu (`:\s*red`) ve bu, CSS dışındaki her `ad: deger`
+# yapısını renk sanıyordu. Ölçülen vaka: `app.js` Top Views kırılımında
+#     { anahtar: "red", ad: "Kapı reddi", satirlar: red, … }
+# `red` burada Türkçe "reddi"nin kısaltması olan bir DEĞİŞKEN adıdır; hiçbir piksel boyamaz.
+# Yalancı kırmızı, gerçek kırmızıdan daha pahalıdır: bir yıl içinde ya lint kapatılır ya
+# allowlist'e `named:red` yazılır — ve o satır ondan sonra GERÇEK ihlalleri de yutardı.
+# SIKILIK KORUNDU: renk hâlâ iki noktadan HEMEN SONRA gelmek zorunda (yani `border:1px solid
+# red` bugün de yakalanmıyor — eskiden de yakalanmıyordu); eklenen tek kısıt, solundaki adın
+# bir RENK ÖZELLİĞİ olması. `test_lint_KENDINI_KANITLAR` her iki yönü de sınar.
+_RENK_OZ = r"[a-z-]*(?:color|background|border|outline|fill|stroke|shadow)"
+_ADLI = re.compile(
+    rf"\b{_RENK_OZ}\s*:\s*(black|white|red|green|blue|gray|grey|orange|yellow|purple|silver)\b")
 
 
 def _yorumsuz_js(s: str) -> str:
@@ -648,8 +718,17 @@ def test_lint_KENDINI_KANITLAR():
         assert _ham_renkler("x{" + tuzak + "}"), f"lint bu tuzağı kaçırıyor: {tuzak}"
     # ve YANLIŞ POZİTİF vermemeli
     for temiz in ("white-space:nowrap", "#gate-pw2-wrap{display:none}",
-                  "color:var(--tx)", "background:transparent", "fill:currentColor"):
+                  "color:var(--tx)", "background:transparent", "fill:currentColor",
+                  # 2026-08-24 · ÖLÇÜLEN YALANCI POZİTİF: CSS OLMAYAN bir `ad: deger` çifti.
+                  # `red` burada "reddi"nin kısaltması olan bir JS değişkenidir (app.js Top
+                  # Views kırılımı) ve hiçbir piksel boyamaz.
+                  '{ anahtar: "red", ad: "Kapı reddi", satirlar: red }',
+                  "gorunum: green", "durum: blue"):
         assert not _ham_renkler(temiz), f"lint yanlış pozitif: {temiz}"
+    # VE DİŞLERİ YERİNDE: renk ÖZELLİĞİNİN sağındaki adlı renk hâlâ ısırır.
+    for tuzak in ("color:red", "background-color:white", "fill:green", "stroke:blue",
+                  "outline-color:orange", "border-bottom-color:silver"):
+        assert _ham_renkler("x{" + tuzak + "}"), f"lint bu adlı rengi kaçırıyor: {tuzak}"
 
     # ---- YÜZEY BAŞINA DİŞ: her HTML yüzeyinin İKİ dilimi de ayrı ayrı ısırmalı ----
     for ad, kaynak in HTML_KAYNAK.items():
@@ -701,6 +780,14 @@ def _rgba(deger, tema):
     if m:
         h = m.group(1)
         return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), 1.0)
+    # GÖLGE JETONU DA ÖLÇÜLÜR (2026-08-24). `--sh-ring` bir renk DEĞİL bir gölgedir
+    # (`rgba(...) 0 0 0 4px`) ama ekranda çizdiği şey bir RENKTİR ve o rengin zeminine
+    # karşı oranı G4'ün kapsamındadır. Geometri atılır, renk ölçülür; atmasaydık çivi
+    # tablosu bu satırı "renk değil" diye reddeder ve halkanın 3:1 altında kaldığı
+    # ÖLÇÜLMEDEN kalırdı — tam olarak bu dosyanın kovaladığı sessiz boşluk.
+    m = re.match(r"(rgba?\([^)]*\))\s+\S+\s+\S+\s+\S+\s+\S+$", d)
+    if m:
+        d = m.group(1)
     m = re.fullmatch(r"rgba?\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)", d)
     assert m, f"renk değil: {d!r}"
     return (int(m.group(1)), int(m.group(2)), int(m.group(3)), float(m.group(4)))

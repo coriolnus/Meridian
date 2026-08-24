@@ -1,0 +1,30 @@
+/* KESİT ss02/cv01 TAKİP TURU — 2026-08-24
+   Bu klasör, yazi_tipi_2026-08-24 turunun DONMUŞ kaydına DOKUNMAZ. Oradaki açık kalem
+   ("kesit ss02/cv01'i buduyor") tek bir soru bırakmıştı: özellikleri KORUYAN bir kesit
+   alınırsa 1/l ayrımı ne olur. Bu tur o tek soruyu ölçer.
+   Düzenek DEĞİŞMEDİ: olcum.js aynı dosyanın kopyası, yalnız AILELER listesine iki satır
+   eklendi. Değişseydi 08-07 tabanıyla kıyas ölürdü. */
+
+/* SINANAN — yeni kesit (ss02 + cv01 KORUNMUŞ, kesit_uret.py + iki özellik) */
+@font-face{font-family:'INTER kesit2';src:url('fonts/inter-vf-ss02cv01.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+/* Aynı bayt, descriptor AÇIK — özellikler dosyada VARSA bu satır ötekinden AYRILMALI. */
+@font-face{font-family:'INTER kesit2 ss02cv01';src:url('fonts/inter-vf-ss02cv01.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block;
+  font-feature-settings:'ss02' 1,'cv01' 1}
+
+/* KIYAS TABANI — bugün DAĞITILAN kesit (ss02/cv01 budanmış) */
+@font-face{font-family:'INTER kesit';src:url('fonts/inter-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+@font-face{font-family:'INTER kesit ss02cv01';src:url('fonts/inter-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block;
+  font-feature-settings:'ss02' 1,'cv01' 1}
+/* ÜST SINIR — tam dosya, iki özellik açık (bu turun hedefi bu sayıya YAKLAŞMAK) */
+@font-face{font-family:'INTER tam ss02cv01';src:url('fonts/inter-tam.woff2') format('woff2');
+  font-weight:100 900;font-style:normal;font-display:block;
+  font-feature-settings:'ss02' 1,'cv01' 1}
+/* DONMUŞ TABAN — emekli sans ve yürürlükteki mono */
+@font-face{font-family:'Recursive Sans';src:url('fonts/recursive-sans-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+@font-face{font-family:'Recursive Mono';src:url('fonts/recursive-mono-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}

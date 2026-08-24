@@ -279,3 +279,149 @@ def test_n1_kalibrasyonun_girdisi_PLAN_SATIRIDIR_kunye_degil(sandbox_state):
     assert satir["llm_opinion"] == "destekle"
     assert not [k for k in satir if "model" in k or "beyin" in k], \
         "plan satırı model atıfı taşıyor — ölçüm güncellenmeli"
+
+
+# ==================================================================================================
+# KALEM 4 (WP7-40) — TÜKETİCİ BEYANLARI TAŞIYOR: künye ailesinin son bacağı
+# `chain_text` üç beyanı (`model_kaynagi` · `model_olculemedi` · `model_istenen`) 2026-08-14'ten beri
+# ÜRETİYOR ama tek üretim tüketicisi (`nous_eval.haftalik_degerlendirme`) onları OKUMUYORDU: beyanlar
+# fonksiyon dönüşünde ölüyor, iki kalıcı defter (`nous_eval_runs.json` · `improvement_proposals.jsonl`)
+# yalnız çıplak `model` alanını taşıyordu. Çıplak alan tek başına "cevap veren mi, istenen mi?"
+# sorusunu CEVAPLAYAMAZ — v245 künye kusurunun deftere düşen hâli tam buydu.
+# ==================================================================================================
+_KUNYE_NEDEN = ("cevap veren model ölçülemedi: yerel ajan künye kutusu boş döndü "
+                "(alt süreç adı yazmadı)")
+
+
+def _tel_kunye() -> dict:
+    """Kanıt atfı GEÇEBİLEN küçük telemetri paketi (v131'deki `_tel`in aynı deseni: gerçek alan
+    adları ve gerçek sayılar — jetonsuz paket kalite kapısından her öneriyi düşürürdü)."""
+    from meridian import analytics
+    return {"hafta": "2026-W31",
+            "bolum_adlari": list(analytics.TELEMETRY_SECTIONS),
+            "bolumler": {"kar_selalesi": {"n": 95, "genel": {"net_r": -0.0421,
+                                                             "sinyal_mfe_r": 0.9648}}},
+            "bounds_dugmeleri": ["stop_loss_atr_mult"]}
+
+
+def _oneri_kunye() -> dict:
+    """Kalite kapısından GEÇEN tek öneri (şekil=tasarim → kuyruk yolu yok, bounds'a bağımlı değil)."""
+    return {"alan": "kar_selalesi",
+            "gozlem": "kar_selalesi bölümünde net_r -0.0421 iken sinyal_mfe_r 0.9648 — çıkış "
+                      "sunulan hareketin neredeyse tamamını geri veriyor",
+            "oneri": "çıkış eşiğini sıkılaştır",
+            "beklenen_etki": "net_r +0.10 yönünde",
+            "onerilen_olcum": "profit_waterfall geri_verilen_r yeniden ölçülür",
+            "oncelik": "yuksek", "sekil": "tasarim"}
+
+
+def _chain_sapla(monkeypatch, **ek):
+    """`chain_text`i GERÇEK dönüş sözleşmesiyle sapla (üç beyan dahil); `ek` alanları ezer."""
+    import json as _json
+    cevap = {"text": _json.dumps({"oneriler": [_oneri_kunye()]}, ensure_ascii=False),
+             "beyin": "nous", "model": None, "model_kaynagi": "cevap_veren",
+             "model_olculemedi": _KUNYE_NEDEN, "model_istenen": "tencent/hy3:free", "neden": {}}
+    cevap.update(ek)
+    monkeypatch.setattr(hermes, "chain_text", lambda *a, **k: cevap)
+    return cevap
+
+
+def test_w1_UC_BEYAN_KOSU_DEFTERINE_dusuyor(sandbox_state, monkeypatch):
+    """ÖLÇÜLEMEYEN KÜNYE: `model` None kalır, NEDENİ yanında durur ve "istenen" ad künye alanına
+    SIZMAZ (uydurma yasağı — `active_model()`e sessizce dönülmez)."""
+    _chain_sapla(monkeypatch)
+    nous_eval.haftalik_degerlendirme(telemetri=_tel_kunye(), hafta="2026-W31")
+    kosu = (store.read_json("nous_eval_runs.json", {}) or {})["haftalar"]["2026-W31"]
+    assert kosu["beyin"] == "nous"
+    assert kosu["model"] is None, "ölçülemeyen künye deftere uydurularak yazıldı"
+    assert kosu["model_olculemedi"] == _KUNYE_NEDEN, "ölçülemedi nedeni koşu defterine düşmedi"
+    assert kosu["model_kaynagi"] == "cevap_veren", "kaynak beyanı koşu defterine düşmedi"
+    assert kosu["model_istenen"] == "tencent/hy3:free", "istenen ad koşu defterine düşmedi"
+    assert "tencent" not in str(kosu["model"] or ""), "istenen ad künye alanına sızmış"
+
+
+def test_w2_UC_BEYAN_ONERI_DEFTERINE_dusuyor(sandbox_state, monkeypatch):
+    """İKİNCİ DEFTER: öneri satırı da beyanları taşır — `improvement_proposals.jsonl` satırından
+    "bu öneriyi hangi model yazdı, ölçülebildi mi?" sorusu CEVAPLANABİLİR olmalı."""
+    from meridian import ledgers
+    _chain_sapla(monkeypatch)
+    nous_eval.haftalik_degerlendirme(telemetri=_tel_kunye(), hafta="2026-W31")
+    satirlar = store.read_jsonl("improvement_proposals.jsonl")
+    assert len(satirlar) == 1, f"öneri defteri beklenen satırı taşımıyor: {satirlar}"
+    s = satirlar[0]
+    assert s["beyin"] == "nous" and s["model"] is None
+    assert s["model_olculemedi"] == _KUNYE_NEDEN
+    assert s["model_kaynagi"] == "cevap_veren"
+    assert s["model_istenen"] == "tencent/hy3:free"
+    # EK ALAN SÖZLEŞMEYİ KIRMAZ: `required` kümesi değişmedi, satır hâlâ uyumlu.
+    assert ledgers.validate_row("improvement_proposals.jsonl", s) == []
+
+
+def test_w3_OLCULEN_KUNYE_neden_YOK_ad_YAZILIR(sandbox_state, monkeypatch):
+    """Simetrik hâl: künye ÖLÇÜLDÜYSE ad yazılır ve `model_olculemedi` None kalır — "ölçülemedi"
+    damgası her satıra basılan bir süs değildir."""
+    _chain_sapla(monkeypatch, model="gemini-flash-latest", model_olculemedi=None)
+    nous_eval.haftalik_degerlendirme(telemetri=_tel_kunye(), hafta="2026-W31")
+    kosu = (store.read_json("nous_eval_runs.json", {}) or {})["haftalar"]["2026-W31"]
+    assert kosu["model"] == "gemini-flash-latest" and kosu["model_olculemedi"] is None
+    assert kosu["model_istenen"] == "tencent/hy3:free"
+    s = store.read_jsonl("improvement_proposals.jsonl")[0]
+    assert s["model"] == "gemini-flash-latest" and s["model_olculemedi"] is None
+
+
+def test_w4_KOSULAMADI_DALI_da_beyanlari_tasir(sandbox_state, monkeypatch):
+    """Zincir hiç metin döndürmediğinde de künye beyanları kayda geçer: `kosulamadi` kaydı
+    "hangi ad istendi, niçin ölçülemedi" sorusunu cevaplayabilmeli."""
+    _chain_sapla(monkeypatch, text=None)
+    nous_eval.haftalik_degerlendirme(telemetri=_tel_kunye(), hafta="2026-W31")
+    kosu = (store.read_json("nous_eval_runs.json", {}) or {})["haftalar"]["2026-W31"]
+    assert kosu["durum"] == "kosulamadi"
+    assert kosu["model"] is None and kosu["model_olculemedi"] == _KUNYE_NEDEN
+    assert kosu["model_istenen"] == "tencent/hy3:free"
+
+
+def test_w5_METIN_ENJEKTE_zincir_CAGRILMADI_neden_yazilir(sandbox_state, monkeypatch):
+    """`text=` enjekte edildiğinde zincir HİÇ çağrılmaz — künye ölçülebileceği bir yer yoktur.
+    Alan None kalır ve NEDENİ yazılır: sessiz bir None, "ölçtük ve boş çıktı" gibi okunurdu."""
+    import json as _json
+    monkeypatch.setattr(hermes, "chain_text",
+                        lambda *a, **k: pytest.fail("metin enjekte iken zincir çağrıldı"))
+    nous_eval.haftalik_degerlendirme(
+        telemetri=_tel_kunye(), hafta="2026-W31",
+        text=_json.dumps({"oneriler": [_oneri_kunye()]}, ensure_ascii=False))
+    kosu = (store.read_json("nous_eval_runs.json", {}) or {})["haftalar"]["2026-W31"]
+    assert kosu["model"] is None and kosu["model_istenen"] is None
+    assert kosu["model_olculemedi"] == nous_eval.KUNYE_ZINCIR_CAGRILMADI
+    assert len(kosu["model_olculemedi"]) >= 20
+
+
+def test_w6_ESKI_SOZLESMELI_DONUS_sessiz_None_YAZMAZ(sandbox_state, monkeypatch):
+    """GERİYE UYUM: beyan taşımayan (eski/saplı) bir zincir dönüşünde künye ölçülemedi sayılır ve
+    NEDEN yazılır — beyansız dönüş "ölçtük, ad yok" gibi kaydedilemez."""
+    import json as _json
+    monkeypatch.setattr(hermes, "chain_text", lambda *a, **k: {
+        "text": _json.dumps({"oneriler": [_oneri_kunye()]}, ensure_ascii=False),
+        "beyin": "nous", "model": None, "neden": {}})
+    nous_eval.haftalik_degerlendirme(telemetri=_tel_kunye(), hafta="2026-W31")
+    kosu = (store.read_json("nous_eval_runs.json", {}) or {})["haftalar"]["2026-W31"]
+    assert kosu["model"] is None
+    assert kosu["model_kaynagi"] is None, "beyansız dönüşe kaynak damgası uydurulmuş"
+    assert kosu["model_olculemedi"] == nous_eval.KUNYE_BEYANSIZ_DONUS
+
+
+def test_w7_TUKETICI_CIVISI_uc_beyan_iki_deftere_de_bagli():
+    """Statik çivi: üç beyan hem koşu kaydına hem öneri satırına bağlı kalmalı (biri kopunca
+    defterlerden biri sessizce eski sözleşmeye döner)."""
+    import inspect
+    src = inspect.getsource(nous_eval)
+    satir = inspect.getsource(nous_eval._oneri_kaydet)
+    for alan in ("model_kaynagi", "model_olculemedi", "model_istenen"):
+        assert f'"{alan}"' in src, f"koşu kaydı beyanı taşımıyor: {alan}"
+        assert f'"{alan}"' in satir, f"öneri satırı beyanı taşımıyor: {alan}"
+    # ve künye YAPILANDIRMADAN okunmuyor: AST'de `active_model()` ÇAĞRISI yok (yorumda geçen ad
+    # sayılmaz — v246'nın kusuru bir çağrıydı, bir kelime değil).
+    import ast
+    for d in ast.walk(ast.parse(src)):
+        if isinstance(d, ast.Call):
+            ad = getattr(d.func, "id", None) or getattr(d.func, "attr", None)
+            assert ad != "active_model", "tüketici künyeyi yapılandırmadan okumaya başlamış"

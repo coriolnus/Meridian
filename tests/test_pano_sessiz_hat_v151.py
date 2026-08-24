@@ -313,13 +313,47 @@ def test_yanip_sonme_YALNIZ_gercek_anomalide():
 
 
 # =============================== P4 · TİPOGRAFİ ===============================
-def test_slashed_zero_OLCULMUS_gerekceyle_EKLENMEZ():
-    """Geist Mono'da `zero` özelliği YOK ve eğik çizgi zaten varsayılan glifin içinde (tarayıcıda
-    ölçüldü 2026-08-01). Bildirimi eklemek, ölçülmüş olarak ETKİSİZ bir şeyi "tipografi denetimi
-    yapıldı" diye kayda geçirmek olurdu."""
-    assert "font-feature-settings" not in CSS, \
-        "etkisiz bir font-feature bildirimi eklenmiş — kaynaktaki ölçüm bunun no-op olduğunu söylüyor"
+def test_font_feature_bildirimi_ETKISI_OLCULMEDEN_EKLENMEZ():
+    """ETKİSİZ bir tipografi bildirimi, yapılmış bir iş izlenimi verir — yasak olan BUDUR.
+
+    ESKİ ADI: test_slashed_zero_OLCULMUS_gerekceyle_EKLENMEZ (2026-08-01 → 2026-08-24) ve
+    eski hâli `font-feature-settings`i TÜMDEN yasaklıyordu. O yasak, o günkü ölçümün doğru
+    ama DAR bir sonucuydu: Geist Mono'da `zero` YOKTU, eğik çizgi zaten varsayılan glifteydi,
+    yani bildirim ölçülmüş biçimde NO-OP olurdu. Kural asla "özellik bildirmeyin" değildi;
+    "ölçülmemiş/etkisiz özellik bildirmeyin"di. Blanket yasak o cümleyi kaybediyordu.
+
+    2026-08-24'te fark ölçüldü ve yön DEĞİŞTİ: Inter'in `ss02`/`cv01`i ETKİLİ. Aynı düzenek,
+    donmuş taban birebir yeniden üretilerek: `l`/`I` mürekkep farkı 0,500 → 0,930, `1`/`l`
+    0,968 → 0,975, `0`/`O` 0,774 → 0,795. Üstelik özelliğin GERÇEKTEN uygulandığı ayrıca
+    kanıtlandı (aynı bayt, iki `@font-face`, descriptor'lı olan piksel olarak AYRIŞIYOR).
+    Yani bu bildirim tam olarak eski yasağın koruduğu şeyin TERSİdir.
+
+    Yasağın çekirdeği KORUNUYOR ve iki dişi var:
+      1) `slashed-zero` HÂLÂ YASAK — üç kez açılıp üç kez kapandı, glifte zaten var.
+      2) Bildirilen HER özellik, dağıtılan kesidin GSUB'ında BULUNMAK ZORUNDA. Dosyada
+         olmayan bir özelliği açmak, tanımı gereği no-op'tur — eski yasağın kovaladığı
+         şeyin ta kendisi, ve bu diş onu ADIYLA yakalar.
+    """
+    import json
+    import re as _re
+    assert "slashed-zero" not in CSS, (
+        "`slashed-zero` geri gelmiş. Üç kez ölçüldü, üç kez etkisiz çıktı: eğik çizgi "
+        "varsayılan glifin İÇİNDE ve `zero` özelliği aynı konturlu bir glifle eşliyor.")
     assert "WP-P/P4" in INDEX, "hükmün yeniden açılmasını engelleyen kayıt yok"
+
+    bildirilen = set()
+    for m in _re.finditer(r"font-feature-settings\s*:\s*([^;}]+)", CSS):
+        bildirilen |= set(_re.findall(r"['\"]([a-z0-9]{4})['\"]", m.group(1)))
+    if not bildirilen:
+        return                                   # bildirim yoksa ölçülecek bir şey de yok
+    kayit = json.loads((SRC / "research" / "olcumler" / "kesit_ss02cv01_2026-08-24"
+                        / "web_fonts_build.json").read_text(encoding="utf-8"))
+    gsub = set(kayit["kesitler"][0]["gsub_ozellikleri"])
+    eksik = sorted(bildirilen - gsub)
+    assert not eksik, (
+        f"CSS'te açılan ama dağıtılan kesitte OLMAYAN özellik: {eksik}. Dosyada olmayan bir "
+        f"özelliği açmak ölçülmüş biçimde NO-OP'tur — bu testin ilk gününden beri yasakladığı "
+        f"şey tam olarak budur. Kesit GSUB'ı: {sorted(gsub)}")
 
 
 def test_sayi_sutunlari_SAGA_HIZALI():

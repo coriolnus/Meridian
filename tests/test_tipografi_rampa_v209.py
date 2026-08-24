@@ -29,7 +29,20 @@ DESIGN_MD = KOK / "DESIGN.md"
 OLCUM = KOK / "research" / "olcumler" / "tipografi_rampa_2026-08-07"
 
 # DESIGN.md Rampa Kuralı — dokuz basamak, başkası yok.
-RAMPA = {10, 11, 12, 13, 14, 17, 20, 24, 28}
+#
+# 2026-08-24 · DUB DÖNÜŞÜMÜ (KARAR-2026-08-24-B §3). İki değişiklik ve ikisi de ÖLÇÜLDÜ:
+#   +30  Dub Analytics'in büyük metrik rakamı. Rampanın yeni en üst basamağı; `index.html`de
+#        jeton taşır (`--t-num`) ve tek okuyucusu `.mcard .v`dir.
+#   −13  Kaldırıldı. Gerekçe kararın kendi cümlesi: ara basamakların oranı hiyerarşi değil
+#        GÜRÜLTÜ üretiyor (14→15 = 1.07; 13→14 = 1.077). Bedeli ölçüldü ve ödendi:
+#        DÖRT yüzeyin tamamında gövde basamağına (14px) taşındı: `index.html` 28,
+#        `landing.html` 12, `workflow.html` 3, `runbook.html` 3 kullanım. İlk üçü artık
+#        `var(--t-body)` yazıyor (rampa jetonlandı); runbook ham px kalır ve bu dosyanın
+#        lint'i onu okur — `test_govde_panonun_uzun_metin_olcutuyle_ayni` iki biçimi
+#        index.html'in `:root`undan çözerek karşılaştırır.
+#   15   Zaten rampada DEĞİLDİ (D6, 2026-08-07'de kaldırılmıştı); karar onu tekrar anıyor.
+# ~~Emekli rampa (D6, 2026-08-07 → 2026-08-24): {10, 11, 12, 13, 14, 17, 20, 24, 28}~~
+RAMPA = {10, 11, 12, 14, 17, 20, 24, 28, 30}
 
 _YORUM = re.compile(r"/\*.*?\*/|<!--.*?-->", re.S)
 _FONT_SIZE = re.compile(r"font-size:\s*([^;}\s]+)")
@@ -40,6 +53,38 @@ def _kural_govdesi(yol: Path) -> str:
     gerekçelerinde `15px` geçiyor olması onu ihlal saymamalı (v153'ün `_yorumsuz_html`
     dersi; sürüklenme yorumda değil kuralda yaşar)."""
     return _YORUM.sub("", yol.read_text(encoding="utf-8"))
+
+
+_KOK_TIP = dict(re.findall(r"--(t-[a-z0-9-]+|label-size)\s*:\s*(\d+px)",
+                           _YORUM.sub(" ", INDEX_HTML.read_text(encoding="utf-8"))))
+
+
+def _px_coz(govde: str) -> str:
+    """`var(--t-body)` → `14px`, index.html'in kendi `:root` tablosundan."""
+    return re.sub(r"var\(\s*--([a-z0-9-]+)\s*\)",
+                  lambda m: _KOK_TIP.get(m.group(1), m.group(0)), govde)
+
+
+def test_tip_jetonlari_HIYERARSI_RAMPASINDA():
+    """Jetonlanmış her basamak rampada olmalı — jeton, rampadan kaçmanın yeni yolu OLAMAZ.
+
+    2026-08-24'te index.html'in tip rampası jetonlandı (`--t-cap/--t-body/--t-lg/--t-sub/
+    --t-h/--t-num`). Bir jetonun değeri sessizce rampa dışına kayarsa, onu okuyan 79 kural
+    birden kayar ve `test_her_font_size_rampada` bunu GÖREMEZ (o kural gövdelerine bakar,
+    jeton tanımına değil). Kapı burası."""
+    tip = {k: v for k, v in _KOK_TIP.items() if k.startswith("t-")}
+    assert len(tip) == 6, f"tip jetonu sayısı {len(tip)} (beklenen 6): {sorted(tip)}"
+    disari = {k: v for k, v in tip.items() if int(v.removesuffix("px")) not in RAMPA}
+    assert not disari, f"tip jetonu rampa dışında: {disari} · izinli {sorted(RAMPA)}"
+    # HİYERARŞİ RAMPASI (Ö6) — yüzey rampasının ALT KÜMESİ ve adımları ölçülmüştür.
+    # docs/kontrast-denetimi.md §12.3: karar §3'ün 11/14/16/20/24/30 rampası 16/14=1.1429
+    # ile eşiğin (1.15) altında kaldı; daraltma 16 → 17 oldu.
+    basamak = sorted(int(v.removesuffix("px")) for v in tip.values())
+    assert basamak == [11, 14, 17, 20, 24, 30], (
+        f"hiyerarşi rampası değişmiş: {basamak}. Değişecekse ÖLÇÜLEREK değişir "
+        f"(research/olcumler/dub_donusumu_2026-08-24/olc.py · Ö6) ve §12.3 güncellenir.")
+    adim = [round(basamak[i + 1] / basamak[i], 4) for i in range(len(basamak) - 1)]
+    assert min(adim) >= 1.15 and max(adim) >= 1.25, f"Ö6 adım eşiği düştü: {adim}"
 
 
 def _font_size_degerleri(yol: Path) -> list[str]:
@@ -70,7 +115,12 @@ def test_uc_ihlal_geri_gelmedi():
     kusuru ADIYLA anıyor ki geri gelirse hata mesajı hangi vaka olduğunu söylesin."""
     govde = _kural_govdesi(RUNBOOK_HTML)
     for kotu, nerede in (("15px", "gövde"), ("26px", "h1"), ("18px", "h2"),
-                         (".86em", "code"), (".92em", "em")):
+                         (".86em", "code"), (".92em", "em"),
+                         # 2026-08-24: 13px rampadan düştü ve runbook'un ÜÇ kullanımı
+                         # (`.ust a`, `nav.toc`, `em`) gövde basamağına taşındı. Yukarıdaki
+                         # asıl çivi bunu zaten yakalar; burada ADIYLA anılıyor ki nüksederse
+                         # hata mesajı hangi kararın çiğnendiğini söylesin.
+                         ("13px", "bağlantı/TOC/em")):
         assert f"font-size:{kotu}" not in govde.replace(" ", ""), (
             f"T10 nüksetti: {nerede} yeniden `{kotu}` (rampa dışı). "
             "D6 hükmü DESIGN.md § 'runbook.html on the ramp'ta."
@@ -83,7 +133,11 @@ def test_govde_panonun_uzun_metin_olcutuyle_ayni():
     yazılsaydı iki kopya olurdu ve zamanla ayrışırlardı (bu deponun baskın hata deseni)."""
     md = re.search(r"\.md\{([^}]*)\}", _kural_govdesi(INDEX_HTML))
     assert md, "index.html `.md` kuralı bulunamadı — ölçüt kayboldu, hüküm dayanaksız kaldı"
-    kural = md.group(1).replace(" ", "")
+    # 2026-08-24 · index.html'in tip rampası JETONLANDI (`font-size:var(--t-body)`), runbook
+    # hâlâ ham px yazıyor. ÖLÇÜLEN ŞEY ÖLÇÜDÜR, YAZILIŞ BİÇİMİ DEĞİL: jeton index.html'in
+    # KENDİ `:root`undan çözülür. Buraya sabit `14px` yazmak, karşılaştırmanın iki kopyasını
+    # yaratır ve bu dosyanın kovaladığı ayrışmanın ta kendisi olurdu.
+    kural = _px_coz(md.group(1)).replace(" ", "")
     olcut = {k: v for k, v in (p.split(":", 1) for p in kural.split(";") if ":" in p)}
 
     body = re.search(r"\nbody\{([^}]*)\}", _kural_govdesi(RUNBOOK_HTML))

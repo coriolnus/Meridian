@@ -38,8 +38,25 @@ FONTLAR = WEB / "fonts"
 CADDY = KOK / "deploy" / "Caddyfile"
 DESIGN = KOK / "DESIGN.md"
 OLCUM = KOK / "research" / "olcumler" / "yazi_tipi_2026-08-07"
-BUILD_JSON = OLCUM / "web_fonts_build.json"
 TARAYICI = OLCUM / "tarayici"
+# 2026-08-24 · YAZI TİPİ DEVRALMA (docs/HUKUM-2026-08-24-YAZITIPI.md).
+# `--sans` Inter oldu, `--mono` Recursive Mono KALDI. İki tur, iki kayıt:
+#   08-07 turu → Recursive Mono'yu üretti ve HÂLÂ dağıtılan mono kesidin kaydıdır.
+#   08-24 turu → Inter kesidini üretti; kaydı `yuzler[]` sarmalayıcısı taşır (iki kaynak
+#                dosya, kaynak-başına cmap — bkz. o dosyanın `sema_notu`su).
+# İkisi BİRLEŞTİRİLMEZ: her kesit KENDİ turunun kaydına aittir ve bir kaydı ötekine
+# taşımak, hangi kesidin hangi düzenekle ölçüldüğünü silerdi. `build_kaydi` fixture'ı
+# ikisini OKUR ve dağıtılan iki dosyanın kaydını tek sözlükte sunar.
+OLCUM_2408 = KOK / "research" / "olcumler" / "yazi_tipi_2026-08-24"
+# ÜÇÜNCÜ TUR (takip): 08-24 turu bir AÇIK KALEM bırakmıştı — dağıtım kesidi Inter'in
+# `ss02`/`cv01` Il1-ayrım özelliklerini buduyordu. Bu tur kesidi onları KORUYARAK yeniden
+# aldı ve AYNI düzenekle ölçtü; dağıtılan sans kesidinin kaydı ARTIK BURADADIR.
+# 08-24 turunun kaydı DONMUŞ KANITTIR ve değişmedi — Geist reddi ve kalibrasyon oradan okunur.
+OLCUM_SS02 = KOK / "research" / "olcumler" / "kesit_ss02cv01_2026-08-24"
+BUILD_JSON = OLCUM / "web_fonts_build.json"
+BUILD_JSON_2408 = OLCUM_2408 / "web_fonts_build.json"
+BUILD_JSON_SANS = OLCUM_SS02 / "web_fonts_build.json"
+TARAYICI_2408 = OLCUM_2408 / "tarayici"
 
 # Yazı tipi taşıyan üç yüzey. `runbook.html` BİLEREK DIŞARIDA: o sayfa D2-b'de yönlendirmeye
 # çevrildi, D5'te silinecek ve zaten hiç dış font yüklemiyor (kendi `ui-sans-serif` yığınıyla
@@ -51,8 +68,14 @@ YUZEYLER = ["index.html", "landing.html", "workflow.html"]
 TUM_YUZEYLER = YUZEYLER + ["runbook.html", "app.js", "theme.js", "landing.js",
                            "workflow.js", "palette.js"]
 
-SANS_DOSYA = "recursive-sans-vf.woff2"
+SANS_DOSYA = "inter-vf.woff2"
 MONO_DOSYA = "recursive-mono-vf.woff2"
+SANS_AILE = "Inter"
+MONO_AILE = "Recursive Mono"
+# EMEKLİ AMA SİLİNMEZ: `recursive-sans-vf.woff2` dağıtımda KALIR (tarihçe-koru + eski
+# önbelleklerin 404 görmemesi) ve `api.py::_FONT_DOSYALARI` onu sunmayı sürdürür. Hiçbir
+# yüzey onu ARTIK İSTEMEZ; bunu `test_EMEKLI_sans_kesidi_HICBIR_YUZEYDE_istenmiyor` ölçer.
+EMEKLI_SANS_DOSYA = "recursive-sans-vf.woff2"
 
 # Türkçe'nin ayırt edici on iki karakteri. "Muhtemelen vardır" yazılmaz — tek tek sayılır.
 TURKCE = {0x0131: "ı", 0x0130: "İ", 0x015F: "ş", 0x015E: "Ş",
@@ -80,11 +103,35 @@ def _yorumsuz(kaynak: str) -> str:
 
 @pytest.fixture(scope="module")
 def build_kaydi():
-    assert BUILD_JSON.is_file(), (
-        f"{BUILD_JSON} YOK. Fontlar kayıtsız üretilmiş demektir: hangi kaynaktan, hangi eksen "
-        "aralığıyla, hangi özellik kümesiyle sorularının cevabı kalmamış. "
-        "Çözüm: research/olcumler/yazi_tipi_2026-08-07/build_web_fonts.py koş.")
-    return json.loads(BUILD_JSON.read_text(encoding="utf-8"))
+    """DAĞITILAN iki kesidin üretim kaydı — her biri KENDİ turundan okunur.
+
+    Kayıtsız bir font, "hangi kaynaktan, hangi eksen aralığıyla, hangi özellik kümesiyle"
+    sorularının cevabı olmayan bir ikilidir. İki tur olduğu için iki kayıt var ve
+    birleştirilmiyorlar; burada yalnız DAĞITILAN dosyaların satırları tek sözlükte
+    toplanıyor. Kaynağı da taşınıyor (`_tur`) ki bir sayı tartışıldığında hangi düzeneğe
+    ait olduğu belirsiz kalmasın."""
+    for yol in (BUILD_JSON, BUILD_JSON_2408):
+        assert yol.is_file(), (
+            f"{yol} YOK. Fontlar kayıtsız üretilmiş demektir. "
+            f"Çözüm: ilgili turun kesit üretici betiğini koş.")
+    for yol in (BUILD_JSON_SANS,):
+        assert yol.is_file(), f"{yol} YOK — dağıtılan sans kesidinin kaydı kayıp."
+    eski = json.loads(BUILD_JSON.read_text(encoding="utf-8"))
+    yeni = json.loads(BUILD_JSON_2408.read_text(encoding="utf-8"))
+    sans_kaydi = json.loads(BUILD_JSON_SANS.read_text(encoding="utf-8"))
+    kesitler = []
+    for k in eski["kesitler"]:
+        if k["dosya"] == MONO_DOSYA:
+            kesitler.append({**k, "_tur": "2026-08-07"})
+    for k in sans_kaydi["kesitler"]:
+        if k["dosya"] == SANS_DOSYA:
+            kesitler.append({**k, "_tur": "kesit_ss02cv01_2026-08-24",
+                             "_yalin_ozellikler": sans_kaydi["yalin_ozellikler"],
+                             "_sabitlenen_eksenler": sans_kaydi["sabitlenen_eksenler"],
+                             "_wght_aralik": sans_kaydi["wght_aralik"]})
+    return {"kesitler": kesitler,
+            "toplam_bayt": sum(k["bayt"] for k in kesitler),
+            "_eski": eski, "_yeni": yeni, "_sans": sans_kaydi}
 
 
 @pytest.fixture(scope="module")
@@ -192,8 +239,8 @@ def test_yuzey_IKI_yerel_font_face_tasir(ad):
     assert len(bloklar) == 2, f"{ad}: {len(bloklar)} @font-face bloğu var, 2 bekleniyordu"
 
     aileler = [b.get("font-family", "") for b in bloklar]
-    assert any("Recursive Sans" in a for a in aileler), f"{ad}: 'Recursive Sans' @font-face yok"
-    assert any("Recursive Mono" in a for a in aileler), f"{ad}: 'Recursive Mono' @font-face yok"
+    assert any(SANS_AILE in a for a in aileler), f"{ad}: {SANS_AILE!r} @font-face yok"
+    assert any(MONO_AILE in a for a in aileler), f"{ad}: {MONO_AILE!r} @font-face yok"
 
     for b in bloklar:
         src = b.get("src", "")
@@ -255,8 +302,13 @@ def test_uc_yuzeyin_font_bildirimleri_BIREBIR_AYNI():
 
 
 @pytest.mark.parametrize("ad", YUZEYLER)
-def test_jetonlar_RECURSIVE_ve_yedekler_KORUNDU(ad):
-    """`--sans`/`--mono` Recursive'e bağlı, ve sistem yedekleri KALDI.
+def test_jetonlar_DAGITILAN_YUZLERE_bagli_ve_yedekler_KORUNDU(ad):
+    """`--sans` Inter'e, `--mono` Recursive Mono'ya bağlı; sistem yedekleri KALDI.
+
+    ESKİ ADI: test_jetonlar_RECURSIVE_ve_yedekler_KORUNDU (2026-08-07 → 2026-08-24). Ad,
+    `--sans` Inter'e geçince gerçeğe uyduruldu — yanlış bir ad, kapsamı okumadan varsayan
+    bir okuyucu üretir. İKİ AİLE TAŞIMAK BİLİNÇLİDİR ve ölçülmüştür: sans tarafında Inter,
+    mono tarafında Recursive kazandı (docs/HUKUM-2026-08-24-YAZITIPI.md).
 
     Yedek yığınının kalması şart: `font-display:block` üç saniyelik bir pencere tanır ve o
     pencere dolarsa tarayıcı yedeğe düşer. Yedeksiz bir `--mono`, dosya bir gün gelmediğinde
@@ -265,8 +317,8 @@ def test_jetonlar_RECURSIVE_ve_yedekler_KORUNDU(ad):
     sans = re.search(r"--sans\s*:\s*([^;]+);", kaynak)
     mono = re.search(r"--mono\s*:\s*([^;]+);", kaynak)
     assert sans and mono, f"{ad}: --sans / --mono jetonu bulunamadı"
-    assert sans.group(1).strip().startswith("'Recursive Sans'"), f"{ad}: --sans → {sans.group(1)!r}"
-    assert mono.group(1).strip().startswith("'Recursive Mono'"), f"{ad}: --mono → {mono.group(1)!r}"
+    assert sans.group(1).strip().startswith(f"'{SANS_AILE}'"), f"{ad}: --sans → {sans.group(1)!r}"
+    assert mono.group(1).strip().startswith(f"'{MONO_AILE}'"), f"{ad}: --mono → {mono.group(1)!r}"
     assert "system-ui" in sans.group(1), f"{ad}: --sans sistem yedeği kaybolmuş"
     assert "ui-monospace" in mono.group(1), f"{ad}: --mono sistem yedeği kaybolmuş"
 
@@ -317,8 +369,8 @@ def test_ISIM_CAKISMASI_COZULDU(build_kaydi):
     k = {x["dosya"]: x for x in build_kaydi["kesitler"]}
     sans, mono = k[SANS_DOSYA], k[MONO_DOSYA]
 
-    assert sans["nameID1"] == "Recursive Sans", f"sans aile adı: {sans['nameID1']!r}"
-    assert mono["nameID1"] == "Recursive Mono", f"mono aile adı: {mono['nameID1']!r}"
+    assert sans["nameID1"] == SANS_AILE, f"sans aile adı: {sans['nameID1']!r}"
+    assert mono["nameID1"] == MONO_AILE, f"mono aile adı: {mono['nameID1']!r}"
     assert sans["nameID1"] != mono["nameID1"], "iki kesit AYNI aile adını taşıyor — çakışma geri gelmiş"
     assert sans["nameID6"] != mono["nameID6"], (
         f"postscript adları çakışık: {sans['nameID6']!r} == {mono['nameID6']!r}")
@@ -328,15 +380,62 @@ def test_ISIM_CAKISMASI_COZULDU(build_kaydi):
             f"tek ailede yeniden birleştirir — silinmiş olmalı.")
 
 
-def test_rakamlar_YAPISAL_tabular_HER_IKI_KESITTE(build_kaydi):
-    """Sıfırdan dokuza tek bir advance — mono'da VE sans'ta.
+def test_rakamlar_MONODA_YAPISAL_SANSTA_TNUM_ile_hizali(build_kaydi):
+    """"The Tabular Rule"un dayanağı — ve 2026-08-24'te DEĞİŞEN yarısı.
 
-    "The Tabular Rule"un yapısal dayanağı budur ve Geist'e göre asıl kazançlardan biri: Geist
-    Sans'ta hizalama `tnum` bildirimine bağlıydı, burada yapıya bağlı."""
-    for x in build_kaydi["kesitler"]:
-        assert x["rakam_advance"] == [600], (
-            f"{x['dosya']}: rakam advance kümesi {x['rakam_advance']} — tek değer (600) "
-            f"bekleniyordu; hizalama artık yapısal DEĞİL.")
+    ESKİ ADI: test_rakamlar_YAPISAL_tabular_HER_IKI_KESITTE. Ad, hüküm değiştiği için
+    değişti ve BU BİR GERİLEMEDİR — beyanlı olarak kaydediliyor:
+
+      MONO (Recursive Mono) — DEĞİŞMEDİ. Rakam advance kümesi tek değerdir (600/1000 upem),
+        yani hizalama YAPISALdır: hiçbir bildirime bağlı değil, `tnum` düşse bile durur.
+        Panonun HER SAYISI bu yüzde çizilir, o yüzden asıl garanti burada.
+
+      SANS (Inter) — ARTIK YAPISAL DEĞİL. Inter'in varsayılan rakamları ORANSALdır
+        (ölçüldü: dokuz farklı advance, 833..1323 / 2048 upem) ve hizalama `tnum`
+        BİLDİRİMİNE bağlıdır. Kesit `tnum`u TAŞIYOR (kayıt: `_yalin_ozellikler`) ve
+        tarayıcıda uygulandığı DOĞRULANDI (08-24 turu, `tabular` bölümü:
+        `tnum_acik_tekduze = True`, tek genişlik 64.844).
+
+    BEDELİ: sans'ta rakam hizası bir CSS bildirimine bağlı hâle geldi. Bu, 2026-08-07'de
+    Geist'ten kaçınma gerekçelerinden biriydi ve şimdi sans tarafında geri geldi. Kabul
+    edilme sebebi ölçülmüştür (Inter her okunaklılık ölçütünde Recursive Sans'ı geçiyor) ve
+    RİSKİ SINIRLIDIR: sayılar `--mono` ile çizilir. Aşağıdaki ikinci assert o sınırı çiviler
+    — sans'ta rakam basan her kural `tabular-nums` bildirmek ZORUNDA."""
+    k = {x["dosya"]: x for x in build_kaydi["kesitler"]}
+    assert k[MONO_DOSYA]["rakam_advance"] == [600], (
+        f"mono rakam advance kümesi {k[MONO_DOSYA]['rakam_advance']} — tek değer (600) "
+        f"bekleniyordu; panonun sayı hizası artık YAPISAL DEĞİL.")
+    sans = k[SANS_DOSYA]
+    assert len(sans["rakam_advance"]) > 1, (
+        "sans rakamları yapısal tabular ÇIKTI — bu bir iyileşme, ama kayıt ve bu testin "
+        "gerekçesi bayatladı: hükmü güncelle.")
+    assert "tnum" in sans["_yalin_ozellikler"], (
+        f"sans kesidi `tnum` TAŞIMIYOR ({sans['_yalin_ozellikler']}) — rakamları oransal ve "
+        f"telafisi yok; sans'ta basılan her sayı sütunu kayar.")
+
+
+def test_SANSTA_basilan_her_SAYI_tabular_nums_bildiriyor():
+    """Sans artık yapısal tabular DEĞİL: hizayı taşıyan tek şey `font-variant-numeric`.
+
+    Bu test o bildirimin gerçekten YERİNDE olduğunu ölçer. Ölçüt kural gövdesidir: `--sans`
+    ile çizilen ve `tabular-nums` demeyen bir sayı kuralı, Inter'de sütunu kaydırır — ve
+    kayma sessizdir (hiçbir test rengi/boyu bozulmaz, yalnız rakamlar oynar)."""
+    kaynak = _yorumsuz(_oku("index.html"))
+    stil = kaynak[kaynak.index("<style>"):kaynak.rindex("</style>")]
+    ihlal = []
+    for m in re.finditer(r"([^{}]+)\{([^{}]*)\}", stil):
+        sec, govde = m.group(1).strip().splitlines()[-1].strip(), m.group(2)
+        if sec.startswith(":root") or "var(--sans)" not in govde:
+            continue
+        if "tabular-nums" in govde or "font-variant-numeric" in govde:
+            continue
+        # Sayı basmayan sans kuralları serbest — ölçüt "rakam sözleşmesi taşıyor mu".
+        if not re.search(r"tabular|--t-num|mono-num|\bnum\b", govde + sec):
+            continue
+        ihlal.append(sec)
+    assert not ihlal, (
+        f"`--sans` ile sayı basan ama `tabular-nums` bildirmeyen kural: {ihlal}. "
+        f"Inter'in rakamları ORANSALdır; hizayı yalnız bu bildirim taşır.")
 
 
 def test_agirlik_ekseni_400_700_ve_varsayilan_400(build_kaydi):
@@ -345,8 +444,10 @@ def test_agirlik_ekseni_400_700_ve_varsayilan_400(build_kaydi):
     Varsayılan kalemi bir tuzağı kapatıyor: Recursive'in kendi `wght` varsayılanı **300**'dür
     (ölçüm raporu §7/5 bunu açık kalem olarak devretmişti). 400 tabanlı bir eksende `@font-face`
     bildirimi bir gün düşse bile yüz İNCE açılmaz."""
-    assert build_kaydi["wght_aralik"] == [400, 700], f"kayıt: {build_kaydi['wght_aralik']}"
+    assert build_kaydi["_eski"]["wght_aralik"] == [400, 700], "mono turu (08-07) kaydı"
     for x in build_kaydi["kesitler"]:
+        if x["_tur"].startswith("kesit_ss02cv01"):
+            assert x["_wght_aralik"] == [400, 700], f"{x['dosya']}: {x['_wght_aralik']}"
         assert x["fvar"]["wght"] == [400.0, 400.0, 700.0], f"{x['dosya']}: fvar {x['fvar']}"
         assert x["usWeightClass"] == 400, f"{x['dosya']}: usWeightClass {x['usWeightClass']}"
 
@@ -358,9 +459,23 @@ def test_TURKCE_glif_civisi(build_kaydi):
     her kod noktasını `fontta_yok` listesine yazar (uydurma yasağı — "hepsi var" demek yerine
     olmayanları sayar). Türkçe'den bir harf o listeye düşerse pano `ÖLÇÜLEMEDİ`yi tofu ile
     yazar."""
-    yok = set(build_kaydi["fontta_yok"])
+    yok = set(build_kaydi["_eski"]["fontta_yok"])
+    for y in build_kaydi["_yeni"]["yuzler"]:
+        if "Inter" in y["kaynak"]:
+            yok |= set(y["fontta_yok"])
     eksik = {f"U+{cp:04X}": ch for cp, ch in TURKCE.items() if f"U+{cp:04X}" in yok}
     assert not eksik, f"Türkçe karakter subset dışında kalmış: {eksik}"
+    # 08-24 turunun üreticisi her kesit için AYRICA sayıyor (08-07'de o alan yoktu).
+    # Alanın YOKLUĞU bir geçiş değil bir BULGU: hangi kaydın hangi şemayı taşıdığı burada
+    # görünür kalsın diye `_tur` ile ayrılıyor, sessizce `get(...)` ile yutulmuyor.
+    for x in build_kaydi["kesitler"]:
+        if x["_tur"].startswith("kesit_ss02cv01"):
+            assert x["turkce_kesitte_eksik"] == [], \
+                f"{x['dosya']}: kesitte eksik Türkçe glif {x['turkce_kesitte_eksik']}"
+        else:
+            assert "turkce_kesitte_eksik" not in x, (
+                f"{x['dosya']}: 08-07 kaydı bu alanı KAZANMIŞ — kayıt elle düzenlenmiş "
+                f"olabilir; o dosya DONMUŞ KANITTIR ve değişmemeliydi.")
     # cmap sayımı da kayda giriyor: bir gün subset kümesi daraltılırsa sayı düşer ve görünür olur.
     for x in build_kaydi["kesitler"]:
         assert x["cmap"] >= 250, f"{x['dosya']}: cmap {x['cmap']} — subset beklenmedik ölçüde dar"
@@ -379,20 +494,115 @@ def test_dagitim_boyutu_BUTCEDE(build_kaydi):
         f"yalın özellik kümesi geri alınmış olabilir (bkz. build_web_fonts.py).")
 
 
-def test_OFL_lisansi_FONTLARLA_BIRLIKTE_dagitiliyor():
-    """OFL 1.1, telif kaydının ikili ile birlikte taşınmasını İSTER. Dosya orada olmalı."""
+def test_OFL_lisansi_HER_IKI_AILE_ICIN_FONTLARLA_BIRLIKTE_dagitiliyor():
+    """OFL 1.1 §2, telif + izin bildiriminin ikili ile BİRLİKTE taşınmasını şart koşar —
+    ve 2026-08-24'ten beri dağıtılan İKİ AYRI AİLE var.
+
+    ESKİ ADI: test_OFL_lisansi_FONTLARLA_BIRLIKTE_dagitiliyor. Tek aile varken tek bildirim
+    yeterliydi; Inter geldiğinde o test YEŞİL KALIRDI ve Inter lisanssız dağıtılırdı — yani
+    kapsam boşluğu, ihlali sessiz kılan şeyin ta kendisi olurdu. Kapsam artık DAĞITILAN
+    DOSYALARDAN türetilir, elle sayılmaz.
+
+    İki bildirim TEK dosyada duruyor (bölüm A / bölüm B) çünkü ikisi de OFL 1.1; ayrı dosya
+    da meşru olurdu, ama tek dosya `api.py`nin rota yüzeyini genişletmiyor."""
     p = FONTLAR / "OFL.txt"
     assert p.is_file(), (
         "meridian/web/fonts/OFL.txt YOK. SIL OFL 1.1 telif + izin bildiriminin kopyalarla "
         "birlikte taşınmasını şart koşar; font dosyalarını lisanssız dağıtmak ihlaldir.")
     metin = p.read_text(encoding="utf-8")
-    assert "The Recursive Project Authors" in metin, "telif sahibi kaydı yok"
     assert "SIL OPEN FONT LICENSE Version 1.1" in metin, "lisans metni yok"
-    # OFL §3: değiştirilmiş sürüm ise, ne yapıldığı kayda geçmeli.
+    # HER DAĞITILAN AİLE için bir telif kaydı. Kapsam diskten okunur.
+    TELIF = {"Inter": "The Inter Project Authors",
+             "Recursive": "The Recursive Project Authors"}
+    dagitilan = sorted(x.name for x in FONTLAR.glob("*.woff2"))
+    aileler = {"Inter" if a.startswith("inter") else "Recursive" for a in dagitilan}
+    assert aileler == set(TELIF), (
+        f"dağıtılan aileler {sorted(aileler)} ile lisans kapsamı {sorted(TELIF)} ayrışmış — "
+        f"yeni bir aile eklendiyse bildirimi de eklenmeli (diskte: {dagitilan})")
+    for aile in aileler:
+        assert TELIF[aile] in metin, (
+            f"{aile} dağıtılıyor ama OFL.txt'te telif sahibi kaydı YOK ({TELIF[aile]!r}). "
+            f"Lisanssız dağıtım OFL 1.1 §2 ihlalidir.")
+    # OFL §3 / RFN: rezerve font adı durumu kayda geçmeli — İKİSİ için de.
     assert "Reserved Font Name" in metin, (
-        "Rezerve Font Adı durumu kayda geçmemiş. Recursive'in telif kaydında RFN YOKTUR "
-        "(ölçüldü) — türetmenin 'Recursive' adını koruması bu yüzden serbest; bu tespit "
-        "dosyada durmazsa bir sonraki tur onu yeniden ölçmek zorunda kalır.")
+        "Rezerve Font Adı durumu kayda geçmemiş. Ne Recursive'in ne Inter'in telif kaydında "
+        "RFN VARDIR (ölçüldü) — kesitlerin kendi adlarını koruması bu yüzden serbest; bu "
+        "tespit dosyada durmazsa bir sonraki tur onu yeniden ölçmek zorunda kalır.")
+
+
+def test_EMEKLI_sans_kesidi_HICBIR_YUZEYDE_istenmiyor():
+    """`recursive-sans-vf.woff2` DAĞITIMDA kalır ama hiçbir yüzey onu İSTEMEZ.
+
+    İki ayrı iddia ve ikisi de ayrı ayrı ölçülür: (a) dosya duruyor — silmek, eski
+    önbelleklerden gelen istekleri 404'e düşürür ve tarihçe-koru ilkesini çiğner;
+    (b) hiçbir `@font-face` / `preload` / jeton onu artık istemiyor — istiyorsa tarayıcı
+    41 KB'ı BOŞUNA indirir ve `font-display:block` penceresini uzatır."""
+    p = FONTLAR / EMEKLI_SANS_DOSYA
+    assert p.is_file(), (
+        f"{EMEKLI_SANS_DOSYA} SİLİNMİŞ. Emekli edildi ama dağıtımda KALIR (tarihçe-koru + "
+        f"eski önbelleklerin 404 görmemesi) — `api.py::_FONT_DOSYALARI` onu hâlâ sunuyor.")
+    isteyen = [ad for ad in TUM_YUZEYLER
+               if EMEKLI_SANS_DOSYA in _yorumsuz(_oku(ad))]
+    assert not isteyen, (
+        f"emekli sans kesidi hâlâ isteniyor: {isteyen}. Dosya sunulmaya devam eder ama "
+        f"hiçbir yüzey onu YÜKLEMEMELİ — boşuna indirilen 41 KB, block penceresini uzatır.")
+
+
+def test_INTER_sansta_RECURSIVEI_gectigi_TARAYICIDA_olculdu():
+    """Sans devralmasının GEREKÇESİ — bir tercih değil bir ölçüm (karar §9.5'in font hattı).
+
+    2026-08-24 turu 2026-08-07 düzeneğini yeniden koştu ve DONMUŞ TABANI BİREBİR ÜRETTİ;
+    kalibrasyon tutmasaydı bu sayılar kıyaslanamazdı ve devralma dayanaksız kalırdı. O
+    yüzden bu test önce kalibrasyonu, sonra üstünlüğü çakar.
+
+    Ölçüt MÜREKKEPTİR (alfa farkı), advance değil: oransal bir yüzde advance farkı `1` ile
+    `l`yi ayırt etmez, yalnız kutu genişliğini söyler."""
+    yeni = json.loads((TARAYICI_2408 / "olcum_sonucu.json").read_text(encoding="utf-8"))
+    kal = yeni["KALIBRASYON_HUKMU"]
+    for alan in ("geist_mono_0807_1l_10px", "geist_mono_0807_1l_28px"):
+        beklenen, olculen = kal[alan]
+        assert beklenen == olculen, (
+            f"kalibrasyon TUTMADI ({alan}: taban {beklenen}, bu tur {olculen}) — düzenek "
+            f"08-07'nin sayılarını yeniden üretmiyorsa kıyas ÖLÜR ve devralma dayanaksızdır.")
+
+    inter = _satir(yeni, "INTER kesit")
+    rec = _satir(json.loads((TARAYICI / "olcum_sonucu.json").read_text(encoding="utf-8")),
+                 "YENI Sans")
+    # `1`/`l` ve `0`/`O`, dpr=1 @28px — hükmün alıntıladığı iki sayı çifti.
+    # ALAN ADLARI İKİ TURDA FARKLI ve bu bir tuzak: 08-24 turu dpr'ı ADA yazdı
+    # (`raster_1_l_dpr1`), 08-07 turu yazmadı (`raster_1_l`) çünkü o turda tek dpr vardı.
+    # `.get(a, b)` ile sessizce yutmak, yanlış dpr'ı doğru sanmak olurdu — ikisi ADIYLA
+    # ayrılıyor ve eksikse test PATLIYOR.
+    assert "raster_1_l_dpr1" in inter and "raster_1_l" in rec, (
+        "tarayıcı kayıtlarının şeması beklenenden farklı — hangi dpr'ın okunduğu belirsiz")
+    i_1l = inter["raster_1_l_dpr1"]["28px"]["fark_orani"]
+    r_1l = rec["raster_1_l"]["28px"]["fark_orani"]
+    i_0O = inter["raster_0_O_dpr1"]["28px"]["fark_orani"]
+    r_0O = rec["raster_0_O"]["28px"]["fark_orani"]
+    assert (i_1l, r_1l) == (0.968, 0.931), f"kayıt kaymış: 1/l {i_1l} vs {r_1l}"
+    assert (i_0O, r_0O) == (0.774, 0.663), f"kayıt kaymış: 0/O {i_0O} vs {r_0O}"
+    assert i_1l > r_1l and i_0O > r_0O, (
+        "Inter artık Recursive Sans'ı GEÇMİYOR — devralmanın tek gerekçesi buydu; "
+        "hüküm yeniden açılmalı (docs/HUKUM-2026-08-24-YAZITIPI.md).")
+
+
+def test_MONONUN_KALMASI_da_olculdu_Geist_ALINMADI():
+    """Devralma TEK YÖNLÜ DEĞİL: mono tarafında Recursive kazandı ve o yüzden KALDI.
+
+    Bu testin işi bir simetri süsü değil: bir sonraki tur "sans Inter oldu, mono da Geist
+    olsun, tek aile tutarlılığı" diyebilir. O öneri ÖLÇÜLDÜ ve reddedildi — sayılar burada
+    dursun ki yeniden ölçülmeden geri gelmesin."""
+    yeni = json.loads((TARAYICI_2408 / "olcum_sonucu.json").read_text(encoding="utf-8"))
+    taban = yeni["donmus_taban"]
+    rec, geist = taban["recursive_mono_1l_28px"], taban["geist_mono_1l_28px"]
+    assert rec == 0.817 and geist == 0.57, f"taban kaymış: recursive {rec} · geist {geist}"
+    assert rec > geist, "Geist Mono artık daha iyi — mono hükmü yeniden açılmalı"
+    # Ve Geist'in kesidinde ₺ ile ✓ YOKTU: pano işaretleri yedek yüze düşerdi.
+    kayit = json.loads(BUILD_JSON_2408.read_text(encoding="utf-8"))
+    geist_yuz = [y for y in kayit["yuzler"] if "Geist" in y["kaynak"]][0]
+    yok = set(geist_yuz["fontta_yok"])
+    assert {"U+20BA", "U+2713"} & yok, (
+        "Geist Mono kesidinde ₺/✓ eksikliği kayıttan kaybolmuş — reddin ikinci gerekçesi bu.")
 
 
 # ===================== Ç4 · TARAYICI TEYİT TURU =====================
@@ -435,8 +645,15 @@ def test_mono_TARAYICIDA_gercekten_mono_sans_ORANSAL(tarayici_olcumu):
     assert h["yeni_cift_ayrisiyor_mu"] is True, "iki aile tarayıcıda AYRIŞMIYOR"
     assert h["yeni_mono_rakamlar_tekduze"] is True and h["yeni_sans_rakamlar_tekduze"] is True
 
-    mono, sans = _satir(tarayici_olcumu, "YENI Mono"), _satir(tarayici_olcumu, "YENI Sans")
+    mono = _satir(tarayici_olcumu, "YENI Mono")
     assert mono["i_genislik"] == mono["M_genislik"], f"mono: i={mono['i_genislik']} M={mono['M_genislik']}"
+    # SANS YARISI KENDİ TURUNDAN OKUNUR (2026-08-24). 08-07 kaydındaki "YENI Sans" artık
+    # DAĞITILMAYAN yüzdür (Recursive Sans, emekli); onu ölçmeye devam etmek, gemide olmayan
+    # bir dosya hakkında yeşil vermek olurdu — bu dosyanın kovaladığı kusur sınıfının ta
+    # kendisi. Yukarıdaki `hukum` alanları da o turun mono yarısına aittir ve orada kalır.
+    yeni = json.loads((TARAYICI_2408 / "olcum_sonucu.json").read_text(encoding="utf-8"))
+    sans = _satir(yeni, "INTER kesit")
+    assert sans["monospace"] is False, "sans yüz monospace ÇIKTI — mono dosya sans yerine geçmiş"
     assert sans["i_genislik"] != sans["M_genislik"], f"sans: i={sans['i_genislik']} M={sans['M_genislik']}"
 
 
@@ -477,21 +694,28 @@ def test_isim_cakismasi_BLOKE_EDICI_DEGILDI(tarayici_olcumu):
 
 # ===================== Ç5 · BELGE (DESIGN.md) =====================
 
-def test_DESIGN_md_tipografi_RECURSIVE_diyor():
-    """Ön-madde jetonları ve Typography bölümü aynı yazı tipini söylemeli.
+def test_DESIGN_md_tipografi_DAGITILAN_YUZLERI_diyor():
+    """Ön-madde jetonları ve Typography bölümü aynı yazı tiplerini söylemeli.
+
+    ESKİ ADI: test_DESIGN_md_tipografi_RECURSIVE_diyor (2026-08-07 → 2026-08-24).
 
     DESIGN.md iki yerde tipografi beyan eder: dosyanın başındaki makine-okunur `typography:`
     bloğu ve `## Typography` bölümü. Biri güncellenip öteki bırakılırsa belge kendi kendisiyle
     çelişir — ve bu deponun kayıtlı kusur sınıfı tam olarak budur."""
     metin = DESIGN.read_text(encoding="utf-8")
     on_madde = metin.split("---", 2)[1]
-    assert "Recursive Sans" in on_madde and "Recursive Mono" in on_madde, \
-        "DESIGN.md ön-madde `typography:` bloğu hâlâ eski yazı tipini bildiriyor"
+    assert f"'{SANS_AILE}'" in on_madde, \
+        f"DESIGN.md ön-madde `typography:` bloğu {SANS_AILE!r} bildirmiyor — belge kendi " \
+        f"makine-okunur yarısıyla çelişiyor"
+    assert "Recursive Sans" not in on_madde, \
+        "DESIGN.md ön-maddesi EMEKLİ sans yüzünü bildiriyor"
     assert "Geist" not in on_madde, "DESIGN.md ön-maddesinde Geist kalmış"
 
     tipo = metin.split("## Typography", 1)[1].split("\n## ", 1)[0]
-    for beklenen in ("Recursive Sans Linear", "Recursive Mono Linear",
-                     "SIL Open Font License 1.1", "self-hosted"):
+    # İKİ AİLE, İKİ GEREKÇE — ve mono'nun NEDEN kaldığı da yazılı olmalı: bir sonraki tur
+    # "tutarlılık için ikisini de değiştirelim" demesin diye ölçüm belgede durur.
+    for beklenen in ("Inter", "Recursive Mono Linear", "0.968", "0.931", "0.774", "0.663",
+                     "0.570", "ss02"):
         assert beklenen in tipo, f"DESIGN.md § Typography'de {beklenen!r} geçmiyor"
     # KAYIP KALEMİ DÜRÜSTÇE YAZILMIŞ OLMALI — kazanç tablosu tek başına bir satış metnidir.
     assert "−0.10 px" in tipo or "-0.10 px" in tipo, \
@@ -502,10 +726,13 @@ def test_RAMP_RULE_dokuz_basamak_KORUNDU():
     """Rampanın dokuz basamağı bu turda DEĞİŞMEDİ. Yazı tipi değişti, ölçek değişmedi."""
     metin = DESIGN.read_text(encoding="utf-8")
     basamaklar = [int(m) for m in re.findall(r"\|\s*`font-size:\s*(\d+)px`", metin)]
-    assert basamaklar == [10, 11, 12, 13, 14, 17, 20, 24, 28], f"rampa tablosu: {basamaklar}"
+    # 2026-08-24 · rampa DEĞİŞTİ (13 çıktı, 30 girdi) ve DOKUZ BASAMAK KORUNDU. Ölçüm ve
+    # gerekçe: docs/kontrast-denetimi.md §12.3 + DESIGN.md § Type scale.
+    # ~~Emekli: [10, 11, 12, 13, 14, 17, 20, 24, 28]~~
+    assert basamaklar == [10, 11, 12, 14, 17, 20, 24, 28, 30], f"rampa tablosu: {basamaklar}"
     kural = re.search(r"\*\*The Ramp Rule\.\*\*(.{0,220})", metin, re.S)
-    assert kural and "10 · 11 · 12 · 13 · 14 · 17 · 20 · 24 · 28" in kural.group(1), \
-        "The Ramp Rule metni değişmiş"
+    assert kural and "10 · 11 · 12 · 14 · 17 · 20 · 24 · 28 · 30" in kural.group(1), \
+        "The Ramp Rule metni tablodan AYRIŞMIŞ — belge kendi kendisiyle çelişiyor"
 
 
 def test_TABULAR_RULE_korundu_ve_slashed_zero_YASAGI_gerekcesiyle_tasindi():
@@ -520,6 +747,13 @@ def test_TABULAR_RULE_korundu_ve_slashed_zero_YASAGI_gerekcesiyle_tasindi():
     assert kural, "The Tabular Rule kaybolmuş"
     govde = kural.group(1)
     assert "Recursive Mono" in govde, "Tabular Rule hâlâ eski yazı tipini adlandırıyor"
+    # 2026-08-24: sans yarısı YAPISAL OLMAKTAN ÇIKTI ve bu bir GERİLEMEDİR. Belge onu
+    # gerileme olarak yazmak zorunda — "değişti" demek yeterli değil, çünkü aynı kusur
+    # 2026-08-07'de Geist'i REDDETME gerekçesiydi ve sans tarafında geri geldi.
+    assert "regression" in govde.lower(), \
+        "Tabular Rule'un sans yarısındaki gerileme DÜRÜSTÇE yazılmamış"
+    assert "proportional" in govde.lower(), \
+        "Inter rakamlarının oransal olduğu belgede yazılı değil"
     assert "tabular-nums" in govde and "slashed-zero" in govde, "kuralın iki kalemi eksik"
 
     tipo = metin.split("## Typography", 1)[1].split("\n## ", 1)[0]
@@ -598,14 +832,38 @@ def test_IKI_KESIT_de_GERCEKTEN_sunuluyor(sandbox_state):
 # ÖLÇÜLDÜ, VARSAYILMADI: bu turda üç yüzeyin TAMAMI tarandı. Rampa dışına düşen HER değer bir
 # `clamp()` uç noktasıdır; çıplak (sabit) tek bir rampa-dışı literal YOKTUR.
 
-RAMPA = {10, 11, 12, 13, 14, 17, 20, 24, 28}
+# 2026-08-24 · DUB DÖNÜŞÜMÜ (KARAR-2026-08-24-B §3): 13px rampadan DÜŞTÜ (ara basamak,
+# oranı hiyerarşi değil gürültü üretiyordu — 13→14 = 1.077), 30px EKLENDİ (Dub Analytics'in
+# büyük metrik basamağı). Ayrıntı ve ölçüm: tests/test_tipografi_rampa_v209.py + §12.3.
+# ~~Emekli: {10, 11, 12, 13, 14, 17, 20, 24, 28}~~
+RAMPA = {10, 11, 12, 14, 17, 20, 24, 28, 30}
 # `clamp()` alt sınırı için taban. Bugünkü en küçük alt sınır 16px (index.html `.kk-ozet
 # .pm-yield`); istisna büyük tipin küçülmesi içindir, rampanın ALTINA inmek için DEĞİL.
 CLAMP_TABAN = 16
 
 
+def _kok_tip(ad: str) -> dict:
+    """Yüzeyin KENDİ `:root` bloğundaki tip jetonları. 2026-08-24'te index.html'in rampası
+    jetonlandı (`font-size:var(--t-sub)`); aşağıdaki ölçümler BOYUTA bakar, yazılış biçimine
+    değil, o yüzden jeton kaynağın kendisinden çözülür — ikinci bir kopya tutulmaz."""
+    return dict(re.findall(r"--(t-[a-z0-9-]+|label-size)\s*:\s*(\d+px)", _yorumsuz(_oku(ad))))
+
+
 def _font_boylari(ad: str) -> list[str]:
-    return [v.strip() for v in re.findall(r"font-size\s*:\s*([^;}\n]+)", _yorumsuz(_oku(ad)))]
+    tablo = _kok_tip(ad)
+    ham = [v.strip() for v in re.findall(r"font-size\s*:\s*([^;}\n]+)", _yorumsuz(_oku(ad)))]
+    return [re.sub(r"var\(\s*--([a-z0-9-]+)\s*\)",
+                   lambda m: tablo.get(m.group(1), m.group(0)), v) for v in ham]
+
+
+def test_tip_jetonu_cozucusu_CALISIYOR():
+    """Çözücü sessizce boş dönerse aşağıdaki rampa çivileri hiçbir şey ölçmez: jetonlanmış
+    her `font-size` "px içermiyor" diye atlanır ve rampa dışına çıkmak ÜCRETSİZ olur."""
+    assert _kok_tip("index.html").get("t-body") == "14px", _kok_tip("index.html")
+    boylar = _font_boylari("index.html")
+    assert any(b == "14px" for b in boylar), "jetonlanmış gövde boyu çözülmedi"
+    assert not [b for b in boylar if "var(--t-" in b], \
+        f"çözülmeyen tip jetonu kaldı: {[b for b in boylar if 'var(--t-' in b][:3]}"
 
 
 def test_DESIGN_md_clamp_ISTISNASINI_ACIKCA_yaziyor():
@@ -648,3 +906,93 @@ def test_clamp_alt_siniri_RAMPANIN_ALTINA_inmez(ad):
         assert pxler and min(pxler) >= CLAMP_TABAN, (
             f"{ad}: `font-size:{boy}` alt sınırı {min(pxler)}px — istisnanın tabanı "
             f"{CLAMP_TABAN}px (DESIGN.md § Typography, üç sınırın üçüncüsü).")
+
+
+# ===================== Ç7 · ss02/cv01 — BUDANDI, GERİ ALINDI, ÇİVİLENDİ =====================
+# ÖLÇÜLEN KUSUR SINIFI: **bir özelliğin İKİ yerde birden var olması gerekmesi.** Inter'in Il1
+# ayrım özellikleri (`ss02` → `I`/`l` alternatifleri, `cv01` → `1`) varsayılan-KAPALI özellikler.
+# İki bağımsız koşul gerekir ve HER BİRİ tek başına sessizce düşebilir:
+#   (a) özellik DOSYADA olmalı — subsetter'ın `layout_features` allowlist'i onu düşürebilir,
+#       ve 2026-08-24 sabahı tam olarak bunu yapıyordu;
+#   (b) CSS descriptor onu AÇMALI — açmazsa dosyadaki tablo hiç çalışmaz.
+# (a) düşerse (b) sessizce etkisiz kalır; (b) düşerse (a) boşuna 728 bayt taşır. İkisi de
+# ölçülür. Ölçüm ve kanıt: research/olcumler/kesit_ss02cv01_2026-08-24/.
+SS02_OLCUM = OLCUM_SS02 / "sonuc.json"
+
+
+@pytest.fixture(scope="module")
+def ss02_olcumu():
+    assert SS02_OLCUM.is_file(), (
+        f"{SS02_OLCUM} YOK — takip turunun tarayıcı kaydı kayıp. Kaydı olmayan bir tur "
+        f"koşulmamış sayılır ve `font-feature-settings` satırı dayanaksız kalır.")
+    return json.loads(SS02_OLCUM.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("ad", YUZEYLER + ["runbook.html"])
+def test_ss02_cv01_descriptori_DORT_YUZEYDE_de_ACIK(ad):
+    """(b) yarısı: özelliği açan `font-feature-settings` sans `@font-face`inde olmalı.
+
+    Dört yüzeyde birden, çünkü jeton takımı gibi yazı tipi bildirimi de tek gerçektir
+    (v208'in font tarafındaki aynası): bir yüzeyde açık, ötekinde kapalı bir özellik,
+    aynı üründe iki farklı `l` demektir."""
+    for b in _font_face_blogu(_yorumsuz(_oku(ad))):
+        if SANS_AILE not in b.get("font-family", ""):
+            continue
+        ffs = (b.get("font-feature-settings") or "").replace(" ", "").replace('"', "'")
+        assert "'ss02'1" in ffs and "'cv01'1" in ffs, (
+            f"{ad}: sans @font-face'inde ss02/cv01 AÇILMAMIŞ → {ffs!r}. Özellikler dosyada "
+            f"VAR ama varsayılan-kapalı; descriptor olmadan hiç çizilmezler ve kesit 728 "
+            f"baytı boşuna taşır.")
+        return
+    raise AssertionError(f"{ad}: {SANS_AILE} @font-face bloğu bulunamadı")
+
+
+def test_ss02_cv01_ozellikleri_DAGITILAN_KESITTE_var(build_kaydi):
+    """(a) yarısı: özellik dağıtılan ikilinin GSUB'ında olmalı.
+
+    Bu, descriptor testinin ikizi ve onsuz anlamsız: CSS bir özelliği açabilir, dosyada
+    yoksa hiçbir şey olmaz — ve hiçbir test kırmızı vermez. Budama tam da böyle bir yarım
+    sözleşmeydi."""
+    sans = {x["dosya"]: x for x in build_kaydi["kesitler"]}[SANS_DOSYA]
+    for oz in ("ss02", "cv01"):
+        assert oz in sans["gsub_ozellikleri"], (
+            f"dağıtılan sans kesidinde `{oz}` YOK ({sans['gsub_ozellikleri']}) — subsetter "
+            f"yeniden buduyor. `kesit_uret.py::YALIN_OZELLIKLER` listesine bak.")
+        assert oz in sans["_yalin_ozellikler"], f"üretim kaydı `{oz}`u saymıyor"
+    # Ve dosya GERÇEKTEN diskteki bu bayt: kayıt-artefakt ayrışması ayrı bir arıza sınıfı.
+    p = FONTLAR / SANS_DOSYA
+    assert p.stat().st_size == sans["bayt"], "kayıt ile diskteki kesit ayrışmış"
+
+
+def test_ss02_cv01_KAZANCI_olculdu_ve_taban_YENIDEN_URETILDI(ss02_olcumu):
+    """Kazanç ÖLÇÜLDÜ, varsayılmadı — ve ölçen düzenek önce kendini kanıtladı.
+
+    KALİBRASYON ÖNCE GELİR: yeni bir klasörde koşan bir rig, donmuş tabanı yeniden
+    üretmiyorsa sayıları kıyaslanamaz. Bu tur üretti (Recursive Mono 1,00/0,817 ·
+    Recursive Sans 0,931/0,663 · bir önceki turun kesidi 0,968) — üçü de birebir.
+
+    ASIL KAZANÇ `l`/`I`DE: 0,500 → 0,930. `ss02`, `I`yi serifli `I.1`e çeviriyor ve bu,
+    bir alım-satım panosunda `Il1` karışmasının en pahalı yarısıdır. `1`/`l` ve `0`/`O`
+    kazançları küçük ama YÖNLERİ doğru; hiçbiri gerilemedi."""
+    h = ss02_olcumu["hukum"]
+    # 1) Kalibrasyon — donmuş tabanla BİREBİR.
+    assert [h["kalibrasyon_recursive_mono_1l_10px"], h["kalibrasyon_recursive_mono_1l_28px"]] \
+        == h["kalibrasyon_donmus_taban_recursive_mono"], "mono kalibrasyonu TUTMADI"
+    assert [h["kalibrasyon_recursive_sans_1l_28px"], h["kalibrasyon_recursive_sans_0O_28px"]] \
+        == h["kalibrasyon_donmus_taban_recursive_sans"], "sans kalibrasyonu TUTMADI"
+    assert h["kalibrasyon_eski_kesit_1l_28px"] == h["kalibrasyon_08_24_kaydindaki_eski_kesit"], \
+        "önceki turun kesidi bu rigde başka bir sayı veriyor — kıyas geçersiz"
+    # 2) Budama iddiası iki yönlü doğrulandı.
+    assert h["yeni_kesitte_ozellik_VAR_MI"] is True, "yeni kesitte descriptor HİÇBİR ŞEY değiştirmiyor"
+    assert h["eski_kesitte_ozellik_YOK_MU"] is True, "eski kesitte özellik varmış — budama iddiası yanlıştı"
+    # 3) Ölçülen sayılar — kaymaları görünür olsun diye ADIYLA çivili.
+    assert (h["yeni_kesit_1l_28px"], h["eski_kesit_1l_28px"]) == (0.975, 0.968)
+    assert (h["yeni_kesit_0O_28px"], h["eski_kesit_0O_28px"]) == (0.795, 0.774)
+    assert (h["yeni_kesit_lI_28px"], h["eski_kesit_lI_28px"]) == (0.930, 0.500)
+    # 4) Hiçbir eksende gerileme yok, çıta ve biçim sözleşmesi duruyor.
+    assert h["yeni_kesit_ESKISINI_geciyor_mu"] and h["yeni_kesit_RECURSIVE_SANSI_geciyor_mu"]
+    assert h["cita_yeni_kesit"], "10px 1/l çıtası (0,75) düştü"
+    assert h["yeni_kesit_oransal"] and h["yeni_kesit_tnum_acikken_tekduze"], \
+        "kesit biçim sözleşmesini kaybetti (oransal + tnum ile tekdüze)"
+    # 5) Üst sınır beyanlı: tam dosya 0,988; aradaki 0,013 KAPANMADI ve kapatılmadığı yazılı.
+    assert h["ust_sinir_tam_1l_28px"] == 0.988 and h["ust_sinira_kalan_1l_28px"] == 0.013

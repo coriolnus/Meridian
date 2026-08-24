@@ -1,0 +1,84 @@
+{
+ "tur": "kesit_ss02cv01_2026-08-24 · TAKİP TURU",
+ "niye": "yazi_tipi_2026-08-24 turunun AÇIK KALEMİ: dağıtım kesidi Inter'in `ss02`/`cv01` Il1-ayrım özelliklerini BUDUYORDU. Bu tur kesidi o iki özelliği KORUYARAK yeniden aldı ve farkı AYNI düzenekle ölçtü. Düzenek 08-24 turunun olcum.js'inin kopyasıdır; yalnız AILELER/probe/hukum listeleri bu tek soruya daraltıldı — yöntem DEĞİŞMEDİ.",
+ "onceki_tur_DOKUNULMADI": "research/olcumler/yazi_tipi_2026-08-24/ donmuş kaydı ve artefaktları değişmedi; bu tur kendi klasöründe kendi sonuc.json'unu yazdı.",
+ "kaynak": "research/olcumler/yazi_tipi_2026-08-24/fonts/Inter-VF.ttf",
+ "boru": "research/olcumler/yazi_tipi_2026-08-24/kesit_uret.py — TEK değişiklik: YALIN_OZELLIKLER listesine `ss02,cv01` eklendi (Inter yüzü için).",
+ "yalin_ozellikler": [
+  "ccmp",
+  "locl",
+  "kern",
+  "mark",
+  "mkmk",
+  "rlig",
+  "calt",
+  "tnum",
+  "zero",
+  "case",
+  "ss02",
+  "cv01"
+ ],
+ "wght_aralik": [
+  400,
+  700
+ ],
+ "sabitlenen_eksenler": {
+  "opsz": 14.0
+ },
+ "kesitler": [
+  {
+   "dosya": "inter-vf.woff2",
+   "bayt": 39448,
+   "kb": 38.5,
+   "sha256": "eb0c784e0dfda105eb264f87ee0557857746e73aa6a449a3b983c3f2873ca7d6",
+   "nameID1": "Inter",
+   "nameID6": "Inter-Regular",
+   "nameID16": null,
+   "fvar": {
+    "wght": [
+     400.0,
+     400.0,
+     700.0
+    ]
+   },
+   "glif": 665,
+   "cmap": 278,
+   "rakam_advance": [
+    833,
+    1159,
+    1215,
+    1249,
+    1265,
+    1267,
+    1270,
+    1292,
+    1323
+   ],
+   "usWeightClass": 400,
+   "sxHeight": 1118,
+   "sCapHeight": 1490,
+   "unitsPerEm": 2048,
+   "gsub_ozellikleri": [
+    "calt",
+    "case",
+    "ccmp",
+    "cv01",
+    "locl",
+    "ss02",
+    "tnum",
+    "zero"
+   ],
+   "turkce_kesitte_eksik": []
+  }
+ ],
+ "onceki_kesitle_FARK": {
+  "bayt": 728,
+  "cmap": "aynı (278)",
+  "kazanilan_ozellikler": [
+   "ss02",
+   "cv01"
+  ],
+  "not": "Kod noktası kümesi DEĞİŞMEDİ; büyüme yalnız iki GSUB tablosundan geliyor."
+ },
+ "TARAYICI_OLCUMU": "sonuc.json (bu klasör) · düzenek: olcum.html + olcum.js + yuzler.css + sunucu.py"
+}

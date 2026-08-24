@@ -1,4 +1,4 @@
-"""v197 — BEŞ RENK ROLÜ, BEŞ AYRI KANAL (D1, 2026-08-07).
+"""v197 — ALTI RENK ROLÜ, ALTI AYRI KANAL (D1 2026-08-07 · ROL 6 2026-08-24).
 
 ÖLÇÜLEN KUSUR SINIFININ ADI: ROL SIZINTISI — bir hue'nun aynı anda birden çok anlam
 taşıması. 2026-08-06 denetimi sayıyı verdi (docs/BASELINE-2026-08-06.md §C):
@@ -28,6 +28,18 @@ BÖLÜMLER
   §6  koşulsuz emisyon tavanı (ölçüm betiğiyle)
   §7  kontrast çivileri — WCAG 2.2 AA, iki zeminde
   §8  kapatılan sızıntıların tek tek çivisi
+  §9  ROL 6 · GEZİNME/SEÇİM (2026-08-24) — kroma tavanı + bağlam ayrıklığı
+
+ROL 6 NİYE VAR VE NİYE BİR SIZINTI DEĞİL. Omega "yapı hue TAŞIMAZ" diyordu ve aksanı
+siyaha çekmişti. Dub'ın dili gezinmeyi maviyle taşır (aktif menü dolgusu, sayaç hapları,
+bağlantılar) ve operatör kararı (KARAR-2026-08-24-B §2) bu dili bağlayıcı kıldı. Rolü
+KIRMAK — yani mavinin şiddet/yön/mod kanallarına sızmasına izin vermek — ile onu ALTINCI
+bir kanal olarak AÇMAK arasındaki fark ölçülebilir bir farktır ve §9 tam olarak onu ölçer:
+  · mavi YALNIZ gezinme/seçim/sayaç bağlamında görünür,
+  · `--nav*` hiçbir şiddet/yön/mod jetonuna BAĞLANAMAZ,
+  · gezinme kroması bir TAVANA tabidir (Ö3) ve tavan burada ÇİVİLİDİR.
+Birincil eylem dolgusu hâlâ akromatiktir (`--accent` midnight-ink) — "renk yalnız ölçüme
+aittir" kuralının çekirdeği böylece korunur; Dub da öyle yapar.
 """
 
 from __future__ import annotations
@@ -48,6 +60,14 @@ OLCUM = SRC / "research" / "olcumler" / "renk_rolleri_2026-08-07"
 # Ortak: jeton tabloları ve kural gövdeleri
 # ---------------------------------------------------------------------------
 ROL_ONEK = ("--sev-", "--yon-", "--mod-", "--olcek-")
+# ROL 6 (2026-08-24) ÖNEKLE DEĞİL AD LİSTESİYLE tanınır, ve bu bir titizlik değil ölçülmüş
+# bir tuzak: `--navh` (üst barın JS'in ölçtüğü YÜKSEKLİĞİ, `.shell`/`.pdrawer` bunu okur)
+# `--nav` önekiyle eşleşir ama bir renk değil bir ÖLÇÜdür. Önek kullanan ilk sürüm dört
+# yerleşim kuralını "gezinme rengi taşıyor" diye kırmızı yaktı. Rolün kendi adı `--nav`dır
+# ve ailesi kapalıdır; yeni bir üye eklemek buraya bir satır yazmaktır.
+# `--nav-bg` (üst bar perdesi) bu turda `tema`dan `rol`e TAŞINDI: üst bar bir GEZİNME
+# yüzeyidir ve değer katmanında bırakılırsa iki katman adıyla karışır.
+ROL6_AILESI = ("--nav", "--nav-2", "--nav-t", "--nav-h", "--nav-bg")
 
 
 def _blok(secici: str) -> str:
@@ -182,8 +202,12 @@ def test_iki_zeminde_ad_kumesi_esit():
     assert not eksik_gunduz, f"gündüz zemininde TANIMSIZ jeton: {eksik_gunduz}"
 
 
-def test_bes_rolun_hepsi_iki_zeminde_tanimli():
-    """Rol katmanının kendisi eksiksiz: her rolün jeton ailesi iki zeminde de var."""
+def test_alti_rolun_hepsi_iki_zeminde_tanimli():
+    """Rol katmanının kendisi eksiksiz: her rolün jeton ailesi iki zeminde de var.
+
+    ESKİ ADI: test_bes_rolun_hepsi_iki_zeminde_tanimli (2026-08-07 → 2026-08-24). Ad,
+    ROL 6 eklenince gerçeğe uyduruldu — yanlış bir ad, kapsamı okumadan varsayan bir
+    okuyucu üretir (v153'ün `dort_yuzeyde` dersi)."""
     beklenen = {
         "--sev-1", "--sev-2", "--sev-3", "--sev-1-t", "--sev-2-t", "--sev-3-t",
         "--sev-1-h", "--sev-2-h", "--sev-3-h", "--sev-2-h2", "--sev-3-damga",
@@ -193,6 +217,7 @@ def test_bes_rolun_hepsi_iki_zeminde_tanimli():
         "--mod-kagit-t", "--mod-canli-t", "--mod-kesif-t",
         "--mod-kagit-h", "--mod-canli-h", "--mod-kesif-h",
         "--olcek-guven", "--olcek-guven-t", "--olcek-guven-h",
+        "--nav", "--nav-2", "--nav-t", "--nav-h", "--nav-bg",
     }
     for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
         assert beklenen <= set(tablo), f"{ad}: eksik rol jetonu {sorted(beklenen - set(tablo))}"
@@ -233,9 +258,13 @@ def test_ham_renk_literali_bilesene_sizmaz():
 # §3 — ROL AYRIKLIĞI
 # ---------------------------------------------------------------------------
 def _roller(govde: str) -> set[str]:
+    """Bir kural gövdesinin OKUDUĞU roller. ROL 1-5 önekle, ROL 6 AD LİSTESİYLE tanınır
+    (bkz. ROL6_AILESI gerekçesi: `--navh` bir ölçüdür, bir renk değil)."""
     r = set()
     for m in re.finditer(r"var\(\s*(--[a-z0-9-]+)", govde):
         ad = m.group(1)
+        if ad in ROL6_AILESI:
+            r.add("--nav")
         for onek in ROL_ONEK:
             if ad.startswith(onek):
                 r.add(onek)
@@ -268,15 +297,24 @@ def test_guven_jetonu_yalniz_veri_guveni_baglaminda():
     assert not ihlal, f"veri-güveni jetonu kendi bağlamı dışında: {ihlal}"
 
 
-def test_yapi_seciciler_kromatik_degil():
-    """ROL 1: yapı akromatiktir. Gezinme rayı ve oturum çıkışı hue TAŞIMAZ.
+def test_yapi_seciciler_YALNIZ_ROL6_tasir():
+    """ROL 1: yapı akromatiktir — ŞİDDET/YÖN/MOD/ÖLÇEK hue'su gezinme rayına GİREMEZ.
 
     Ölçülen sızıntı (baseline T14): oturum çıkışının hover'ı HALT/FLATTEN ile AYNI kırmızı
     jetonu kullanıyordu — geri alınabilir bir eylem, geri alınamayanların dilinde.
-    """
+
+    2026-08-24 · KAPSAM DARALDI, İDDİA DEĞİL. ROL 6 gezinme rayının KENDİ kanalıdır ve
+    orada bulunması bir sızıntı değil, rolün TANIMIdır. Yasak olan hâlâ aynı: rayın bir
+    alarm, bir yön ya da bir çalışma kipi rengiyle boyanması. Bu yüzden test artık
+    "hiç rol yok" değil "YALNIZ ROL 6" ölçüyor — daha zayıf değil, daha KESKİN: eskiden
+    `.sitem.on{background:var(--sev-2-t)}` yazan biri de, mavi yazan biri de aynı
+    kırmızıyı alırdı ve ikisi aynı şey değildir."""
     for sec, govde in KURALLAR:
         if ".sitem" in sec or ".side " in sec:
-            assert not _roller(govde), f"gezinme rayı kromatik: {sec} → {govde.strip()}"
+            yabanci = _roller(govde) - {"--nav"}
+            assert not yabanci, (
+                f"gezinme rayı ROL 6 DIŞI bir rol taşıyor: {sec} → {sorted(yabanci)} "
+                f"({govde.strip()})")
 
 
 # ---------------------------------------------------------------------------
@@ -383,10 +421,28 @@ def test_kosulsuz_emisyon_tavani():
 # ---------------------------------------------------------------------------
 # §7 — KONTRAST ÇİVİLERİ (WCAG 2.2 AA)
 # ---------------------------------------------------------------------------
+# 2026-08-24 · DUB DÖNÜŞÜMÜ. Yüzeyler Dub'ın soğuk nötr rampasına geçti.
+# ~~Emekli: gündüz #fbf9f8 / #f5f4f2 / #f2efed / #ece7e3 · gece #1c1a18 / #232120 /
+#   #262320 / #2f2b27 (sıcak kemik rampası, WP-P/P9).~~
+# Bu sözlük index.html'in jeton bloğunun KOPYASIDIR ve ayrışırsa aşağıdaki AA ölçümleri
+# gerçekte var olmayan bir zemine karşı yeşil verir. Kopya olmasının sebebi ölçüldü:
+# GUNDUZ/GECE tabloları alias zincirini taşır, bu liste ise HANGİ yüzeylerin gerçek bir
+# mürekkep zemini olduğunu SEÇER — o seçim bir karardır, bir çıkarım değil.
 ZEMIN = {
-    "gündüz": {"bg": "#fbf9f8", "bg2": "#f5f4f2", "card": "#f2efed", "card-2": "#ece7e3"},
-    "gece": {"bg": "#1c1a18", "bg2": "#232120", "card": "#262320", "card-2": "#2f2b27"},
+    "gündüz": {"bg": "#fafafa", "bg2": "#f5f5f5", "card": "#ffffff", "card-2": "#fafafa"},
+    "gece": {"bg": "#171717", "bg2": "#1f1f1f", "card": "#262626", "card-2": "#2e2e2e"},
 }
+
+
+def test_ZEMIN_kopyasi_index_html_ile_AYRISMAMIS():
+    """Kopya bir tablo, ayrıştığı gün sessizce yalan söyler — ve bu dosyadaki HER AA
+    ölçümü ona bağlıdır. Kaynak index.html'in jeton bloğudur; burada yalnız SEÇİM yapılır."""
+    for tema, tablo in ZEMIN.items():
+        kaynak = GUNDUZ if tema == "gündüz" else dict(GUNDUZ, **GECE)
+        for ad, deger in tablo.items():
+            assert kaynak["--" + ad] == deger, (
+                f"{tema} --{ad}: ZEMIN {deger} ↔ index.html {kaynak['--' + ad]} — "
+                f"kopya ayrışmış, bu dosyadaki tüm AA ölçümleri şüpheli")
 TABLO = {"gündüz": GUNDUZ, "gece": GECE}
 
 
@@ -552,3 +608,355 @@ def test_sermaye_reseti_hicbir_yuzeyde_siddet_tasimaz():
     # ŞERİT KİMLİĞİ VE KONUMU TAŞIMAYA DEVAM EDER: kimliksiz bir kırılma izlenemez.
     assert "<code>${esc(m.id)}</code>" in APPJS, "reset kimliği şeritten düşmüş"
     assert "m.konum_neden" in APPJS, "konum beyanı şeritten düşmüş"
+
+
+# ---------------------------------------------------------------------------
+# §9 — ROL 6 · GEZİNME/SEÇİM (2026-08-24, KARAR-2026-08-24-B §2)
+# ---------------------------------------------------------------------------
+# ÖLÇÜLEN KUSUR SINIFI, §2-§4'ünkiyle AYNI ama yeni bir kanalda: bir rolün ödünç
+# alınması. Yeni kanal maviyi sisteme sokuyor ve mavi bu depoda bir yıl boyunca YASAKTI
+# ("renk yalnız ölçüme aittir"). Yasak KALKMADI, KAPSAMI DARALDI: mavi yalnız gezinmeye
+# ait. Bu bölüm o daralmanın sınırını çiviler — yoksa "gezinme rengi" bir yıl içinde
+# "vurgu rengi"ne, oradan "önemli sayı rengi"ne kayar (D1'in ölçtüğü çürümenin tam yolu).
+
+NAV_AILESI = ("--nav", "--nav-2", "--nav-t", "--nav-h", "--nav-bg")
+
+
+def test_ROL6_yalniz_gezinme_secim_baglaminda():
+    """`--nav*` gezinme · seçim · sayaç · konum DIŞI bir seçicide görünemez.
+
+    İzin bir DESEN LİSTESİDİR ve her desenin ≥20 karakter GEREKÇESİ vardır (YASA 4'ün rol
+    hattındaki karşılığı): liste sessizce büyürse "gezinme rengi" bir yıl içinde "vurgu
+    rengi"ne, oradan "önemli sayı rengi"ne kayar — D1'in ölçtüğü çürümenin tam yolu.
+    Yeni bir bağlam eklemek buraya bir SATIR YAZMAKTIR ve o satır bir karardır."""
+    IZIN = {
+        "nav": "üst bar perdesi ve sınırı — gezinme yüzeyinin kendisi",
+        ".sitem": "görünüm listesi öğesi: seçim çubuğu + aktif dolgu (ROL 6'nın çekirdek vakası)",
+        ".side": "gezinme rayının kabı",
+        ".pillc": "sayaç hapı — Dub'ın sayaç dili; bir ölçüm değil bir gezinme sayacı",
+        "aria-pressed": "SEÇİM durumu; rolün adı zaten GEZİNME/SEÇİM ve basılı kontrol seçimdir",
+        "aria-selected": "SEÇİM durumu (sekme/filtre) — aynı kanal, aynı gerekçe",
+        ".durdu": ("akış zincirinde KONUM işareti: 'şu an burada durdu' bir ARIZA değil bir YER "
+                   "bildirimidir. Şiddet kanalına koymak, onay bekleyen her planı kalıcı bir "
+                   "uyarıya çevirirdi — sakin turda ekranda sürekli kehribar demek olurdu."),
+        ".pv-gorev": ("'Seni bekleyenler' satırı bir GEZİNME HEDEFİdir (tıklayınca ilgili "
+                      "görünüme gider); uyarı hâli AYRI kuralda ve şiddet kanalındadır"),
+        ".pv-fcip": "aktif filtre çipi — seçimin görünür hâli, kaldırılabilir bir seçim rozeti",
+        ".pv-fsatir": "Top Views satırı bir FİLTRE KONTROLÜdür; seçili hâli aynı seçim kanalı",
+        ".pv-fbar": "aynı satırın oran çubuğu — kontrolün zemini, ayrı bir anlam taşımaz",
+        ".pv-rz.aktif": "aktif filtre rozeti — seçim durumunun rozet grameri içindeki hâli",
+    }
+    for desen, gerekce in IZIN.items():
+        assert len(gerekce) >= 20, f"{desen}: gerekçe {len(gerekce)} karakter (≥20 gerekli)"
+    ihlal = [(s_, sorted(_roller(g))) for s_, g in KURALLAR
+             if "--nav" in _roller(g) and not any(k in s_ for k in IZIN)]
+    assert not ihlal, (
+        f"ROL 6 jetonu gezinme/seçim/konum DIŞI seçicide: {ihlal}\n"
+        f"İzinli desenler: {sorted(IZIN)}. Yeni bir bağlam bir KARARDIR — listeye "
+        f"gerekçesiyle yaz, ya da kuralı rolüne uygun bir jetona bağla.")
+
+
+def test_ROL6_siddet_yon_mod_jetonuna_BAGLANAMAZ():
+    """`--nav*` bir `--sev-*`/`--yon-*`/`--mod-*`/para jetonuna çözülemez.
+
+    Ödünç alma iki yönlü olur ve ikisi de sessizdir: gezinme bir alarm hue'suna bağlanırsa
+    "seçili" ile "sorunlu" aynı renk olur; tersi olursa bir alarm gezinme diliyle konuşur.
+    §4'ün mod için yaptığının aynısı, ROL 6 için."""
+    for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
+        for jeton in [j for j in tablo if j.startswith("--nav")]:
+            zincir, v = [jeton], tablo[jeton].strip()
+            while (m := re.fullmatch(r"var\((--[a-z0-9-]+)\)", v)):
+                zincir.append(m.group(1))
+                v = tablo[m.group(1)].strip()
+            kirli = [z for z in zincir[1:]
+                     if z.startswith(("--sev-", "--yon-", "--mod-", "--green", "--amber", "--red"))]
+            assert not kirli, f"{ad} {jeton}: şiddet/yön/mod/para jetonuna bağlı ({zincir})"
+
+
+def test_ROL6_hue_MOD_bandina_girmiyor():
+    """Gezinme mavisi mod için AYRILMIŞ 285-335° bandına giremez.
+
+    §4 bunu zaten tüm jetonlar için ölçüyor; burada ROL 6 ADIYLA anılıyor ki bir gün
+    gezinme moru denenirse hata mesajı hangi kararın çiğnendiğini söylesin."""
+    for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
+        for jeton in ("--nav", "--nav-2", "--nav-t"):
+            _, C, H = oklch(_coz(jeton, tablo))
+            if C < 0.02:
+                continue
+            assert not (MOD_BANDI[0] <= H <= MOD_BANDI[1]), \
+                f"{ad} {jeton}: hue {H:.1f}° MOD bandını işgal ediyor"
+
+
+# Ö3'ÜN KROMA TAVANI — ÇİVİ. Ölçülen sayılar:
+#   gündüz  min C(şiddet) 0,1392 (--sev-3) · C(--nav) 0,2152 · C(--nav-t) 0,0328
+#   gece    min C(şiddet) 0,1054 (--sev-2) · C(--nav) 0,1458 · C(--nav-t) 0,0791..0,0874
+# MÜREKKEP TAVANI TUTMADI ve değer ZORLANMADI (karar §2.1: "jeton uydurulmaz").
+# Daraltma: gezinmenin BÜYÜK YÜZEYİ washtır ve TAVANA TABİ OLAN ODUR. Aşağıdaki iki test
+# bu hükmün iki yarısını ayrı ayrı çakar — biri "wash tavanın altında KALMALI" (yürürlükteki
+# kısıt), öteki "mürekkep tavanın üstünde ve bu BEYANLI" (bilinen sapma, sessizce
+# genişleyemez). İkincisi bir gün yeşile dönerse (mürekkep tavanın altına inerse) test
+# DÜŞER ve düşmesi doğrudur: o zaman daraltmaya artık gerek yoktur ve §12 güncellenmelidir.
+def test_ROL6_DOLGU_kromasi_siddetin_ALTINDA():
+    """Yürürlükteki kısıt: gezinmenin büyük yüzeyi (`--nav-t`) şiddetin kroma tavanının
+    ALTINDA kalır. Bu, "bir alarm ile bir seçim dikkat için yarışamaz" kuralının Ö3'teki
+    sayısal karşılığıdır ve `--nav-t` fiilen boyanan en geniş gezinme yüzeyidir."""
+    for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
+        sev = min(oklch(_coz(f"--sev-{i}", tablo))[1] for i in (1, 2, 3))
+        wash = oklch(_coz("--nav-t", tablo))[1]
+        assert wash < sev, f"{ad}: gezinme dolgusu C={wash:.4f} şiddet C={sev:.4f} altında DEĞİL"
+
+
+def test_ROL6_MUREKKEP_tavan_asimi_BEYANLI_ve_MUREKKEP_KALIYOR():
+    """BEYANLI SAPMA + ONU SINIRLAYAN KURAL.
+
+    `--nav`/`--nav-2` kroma tavanını AŞAR (electric-blue doygundur); bu karar §2.1'de
+    öngörülmüş ve docs/kontrast-denetimi.md §12.3'te ölçülmüştür. Sapmanın bedeli
+    kullanım yüzeyinin DARLIĞIdır — ama "darlık" KURAL SAYISI değildir: yirmi kural bir
+    3px çubuğu boyayabilir, tek bir kural sayfanın yarısını. Ölçülebilir tanım şudur:
+
+        `--nav`/`--nav-2` MÜREKKEPTİR. Büyük dolguyu washa (`--nav-t`) bırakır.
+
+    İşlemsel hâli: bu iki jeton `color` / `box-shadow` / `border*` / `fill` / `stroke`
+    olarak serbesttir; `background` olarak YALNIZ iki ADI GEÇEN küçük yüzeyde durabilir.
+    Üçüncü bir dolgu, sapmayı sessizce genişletmektir ve hüküm Rol-1'e döner (jetonun
+    kroması mı iner, yüzey mi daralır).
+
+    ESKİ ADI: test_ROL6_MUREKKEP_tavan_asimi_BEYANLI_ve_YUZEYI_DAR (2026-08-24 sabahı).
+    Kural-sayısı tavanıydı ve pano v2 bileşenleri gelince yanlış kırmızı verdi: on beş
+    kuralın tamamı ince mürekkepti. Ölçüt değişti, İDDİA DEĞİL."""
+    for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
+        sev = min(oklch(_coz(f"--sev-{i}", tablo))[1] for i in (1, 2, 3))
+        murekkep = max(oklch(_coz(j, tablo))[1] for j in ("--nav", "--nav-2"))
+        assert murekkep >= sev, (
+            f"{ad}: gezinme mürekkebi C={murekkep:.4f} artık şiddet C={sev:.4f} ALTINDA — "
+            f"sapma kapandı, docs/kontrast-denetimi.md §12.3'teki daraltma beyanı BAYAT")
+    # DOLGU İSTİSNALARI — ADIYLA, gerekçesiyle ve ölçülmüş küçük yüzeyle.
+    DOLGU_IZNI = {
+        ".sitem::before": "3px genişliğinde seçim çubuğu — yüzeyi bir saç teli kadar",
+        ".pillc": "sayaç hapı: iki-üç haneli, 10px mono; yüzeyi bir rozet kadar",
+    }
+    for sec_, gerekce in DOLGU_IZNI.items():
+        assert len(gerekce) >= 20, f"{sec_}: gerekçe kısa"
+    _DOLGU = re.compile(r"background(?:-color)?\s*:\s*[^;]*var\(\s*--nav(?:-2)?\s*\)")
+    ihlal = [s_ for s_, g in KURALLAR if _DOLGU.search(g) and s_ not in DOLGU_IZNI]
+    assert not ihlal, (
+        f"ROL 6 MÜREKKEBİ büyük dolgu olarak kullanılmış: {ihlal}. Tavanı aşan bir jeton "
+        f"dolguya geçemez — büyük yüzey `--nav-t` washıdır (C tavanın altında, Ö3).")
+    # Ve iki istisna GERÇEKTEN duruyor mu: silinirlerse liste sessizce anlamsızlaşır.
+    duran = {s_ for s_, g in KURALLAR if _DOLGU.search(g)}
+    assert duran == set(DOLGU_IZNI), (
+        f"dolgu istisnaları ayrışmış — kaynakta {sorted(duran)}, listede {sorted(DOLGU_IZNI)}")
+
+
+def test_ROL6_wash_ustundeki_murekkep_AA():
+    """Ö5'in yürürlükteki hâli: washın üstündeki metin `--nav-2`dir ve AA geçer.
+
+    `--nav` gündüz washın üstünde 4.24 ölçtü (AA ALTI) — o yüzden `.sitem.on` `--nav-2`
+    okur. Bu test iki şeyi birden çakar: (a) `--nav-2` gerçekten geçiyor, (b) `.sitem.on`
+    gerçekten onu okuyor. Yalnız (a) ölçülseydi, kural yarın `--nav`a dönebilir ve ölçüm
+    yeşil kalırdı."""
+    for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
+        wash = _coz("--nav-t", tablo)
+        o = kontrast(_coz("--nav-2", tablo), wash)
+        assert o >= 4.5, f"{ad}: --nav-2 washın üstünde {o:.2f} — AA ALTI"
+    m = re.search(r"\.sitem\.on\{([^}]*)\}", INDEX)
+    assert m, ".sitem.on kuralı yok — aktif gezinme öğesinin dolgusu kayboldu"
+    assert "var(--nav-t)" in m.group(1) and "var(--nav-2)" in m.group(1), \
+        (f".sitem.on wash+mürekkep çiftini okumuyor: {m.group(1)!r} — Ö5 daraltması "
+         f"kaynakta karşılıksız kaldı")
+    assert "var(--nav)" not in m.group(1).replace("var(--nav-t)", "").replace("var(--nav-2)", ""), \
+        ".sitem.on metni `--nav` ile boyuyor — Ö5 ölçtü, o kombinasyon AA ALTI (4.24)"
+
+
+def test_ROL6_sayac_hapinin_murekkebi_AA():
+    """Sayaç hapı: `--nav` DOLGU, `--bg2` mürekkep. Dolgu olarak mavi meşrudur (metin
+    değil), ama üstündeki rakam AA geçmek zorunda — hap bir SAYI taşıyor."""
+    m = re.search(r"\.pillc\{([^}]*)\}", INDEX)
+    assert m and "var(--nav)" in m.group(1), ".pillc ROL 6 dolgusunu okumuyor"
+    for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
+        o = kontrast(_coz("--bg2", tablo), _coz("--nav", tablo))
+        assert o >= 4.5, f"{ad}: sayaç hapının rakamı {o:.2f} — AA ALTI"
+
+
+def test_ROL6_birincil_eylem_dolgusu_HALA_AKROMATIK():
+    """Kuralın çekirdeği: mavi gezinmeye ait, EYLEME değil. `--accent` (birincil eylem
+    dolgusu) kroma taşımaz ve `--nav`a bağlanamaz — Dub'ın kendi kararı da budur
+    (`primary-action-fill` siyahtır, mavi değil)."""
+    for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
+        for jeton in ("--accent", "--accent-2"):
+            _, C, _ = oklch(_coz(jeton, tablo))
+            assert C < 0.02, f"{ad} {jeton}: kroma {C:.4f} — birincil eylem hue TAŞIYAMAZ"
+        assert "nav" not in tablo["--accent"], "--accent gezinme jetonuna bağlanmış"
+
+
+# ---------------------------------------------------------------------------
+# §10 — ŞİDDET SEVİYELERİ BİRBİRİNDEN AYRILABİLİYOR MU (ÖE1 · karar §9.5)
+# ---------------------------------------------------------------------------
+# ÖLÇÜLEN KUSUR SINIFI VE KÖR NOKTA. Bu dosya rol AYRILIĞINI ölçer (bir kural iki rolün
+# jetonunu karıştırmasın); `test_tasarim_token_v153.py` KONTRASTI ölçer (her renk kendi
+# zemininde AA). İKİSİ DE "iki ŞİDDET SEVİYESİ birbirinden ayırt edilebiliyor mu" diye
+# SORMUYORDU — ve sormadıkları şey 2026-08-24'te gerçekleşti: Dub ataması `--sev-1` ile
+# `--sev-2`yi aynı renge çökertti (gündüz #b54000 ↔ #ba3a00, ΔE2000 5,39) ve `--sev-2` ile
+# `--sev-3`ü aynı luminansa oturttu (oran 1,004, yani ayrım TAMAMEN protan/deutan'ın
+# sildiği eksende). Her iki hâlde de bu dosya YEŞİL kalıyordu: roller ayrıktı, kontrastlar
+# AA idi, yalnız İKİ SEVİYE AYNI GÖRÜNÜYORDU.
+#
+# Bedeli soyut değil: şiddet merdiveni operatörün "şimdi müdahale" ile "insan gerekiyor"
+# ile "nominal"i ayırdığı kanaldır. Çökerse pano bir alarmı bir uyarıdan ayıramaz.
+#
+# EŞİKLER ÖLÇÜMDEN ÖNCE DONDURULDU (Rol-1, karar §9.3) ve BURADA YENİDEN YAZILIR AMA
+# DEĞİŞTİRİLMEZ. Bir eşiği gevşetmek, kusurun kendisini yeniden meşrulaştırmaktır.
+OE1_LUMINANS_ORANI = 1.20     # ÖE1-a · renk körlüğünün SİLEMEDİĞİ tek kanal
+OE1_DELTA_E2000 = 15.0        # ÖE1-b · JND ~2,3; küçük çipte bir bakışta ayrılmalı
+OE1_TINT_AA = 4.5             # ÖE1-c · mevcut G3 garantisi, GEVŞEMEZ
+OE1_KOMSU = (("--sev-1", "--sev-2"), ("--sev-2", "--sev-3"))
+
+
+def _lab(rgb):
+    """CIE L*a*b*, D65. ΔE2000 eşiği Lab'de donduruldu; OKLab ile ölçmek başka bir
+    sayı verirdi ve donmuş bir eşik başka bir metrikle ölçülemez."""
+    r, g, b = (_lin(v) for v in (_hx(rgb) if isinstance(rgb, str) else rgb))
+    X = 0.4124564 * r + 0.3575761 * g + 0.1804375 * b
+    Y = 0.2126729 * r + 0.7151522 * g + 0.0721750 * b
+    Z = 0.0193339 * r + 0.1191920 * g + 0.9503041 * b
+
+    def f(t):
+        return t ** (1 / 3) if t > (6 / 29) ** 3 else t / (3 * (6 / 29) ** 2) + 4 / 29
+    fx, fy, fz = f(X / 0.95047), f(Y / 1.0), f(Z / 1.08883)
+    return 116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)
+
+
+def delta_e2000(c1, c2):
+    """CIEDE2000 (Sharma/Wu/Dalal). Ölçüm betiğindeki uygulamayla AYNI formül —
+    `research/olcumler/dub_donusumu_2026-08-24/olc.py::delta_e2000`. İki kopya
+    kasıtlıdır ve `test_OE1_delta_e2000_KENDINI_KANITLAR` ikisinin de aynı referans
+    değerleri verdiğini sınar; test bir ölçüm betiğini import edip ona GÜVENEMEZ."""
+    L1, a1, b1 = _lab(c1)
+    L2, a2, b2 = _lab(c2)
+    C1, C2 = math.hypot(a1, b1), math.hypot(a2, b2)
+    Cb = (C1 + C2) / 2
+    G = 0.5 * (1 - math.sqrt(Cb ** 7 / (Cb ** 7 + 25 ** 7))) if Cb > 0 else 0.5
+    a1p, a2p = (1 + G) * a1, (1 + G) * a2
+    C1p, C2p = math.hypot(a1p, b1), math.hypot(a2p, b2)
+    h1p = math.degrees(math.atan2(b1, a1p)) % 360 if (a1p or b1) else 0.0
+    h2p = math.degrees(math.atan2(b2, a2p)) % 360 if (a2p or b2) else 0.0
+    dLp, dCp = L2 - L1, C2p - C1p
+    if C1p * C2p == 0:
+        dhp = 0.0
+    elif abs(h2p - h1p) <= 180:
+        dhp = h2p - h1p
+    elif h2p - h1p > 180:
+        dhp = h2p - h1p - 360
+    else:
+        dhp = h2p - h1p + 360
+    dHp = 2 * math.sqrt(C1p * C2p) * math.sin(math.radians(dhp) / 2)
+    Lbp, Cbp = (L1 + L2) / 2, (C1p + C2p) / 2
+    if C1p * C2p == 0:
+        hbp = h1p + h2p
+    elif abs(h1p - h2p) <= 180:
+        hbp = (h1p + h2p) / 2
+    elif h1p + h2p < 360:
+        hbp = (h1p + h2p + 360) / 2
+    else:
+        hbp = (h1p + h2p - 360) / 2
+    T = (1 - 0.17 * math.cos(math.radians(hbp - 30))
+         + 0.24 * math.cos(math.radians(2 * hbp))
+         + 0.32 * math.cos(math.radians(3 * hbp + 6))
+         - 0.20 * math.cos(math.radians(4 * hbp - 63)))
+    Rc = 2 * math.sqrt(Cbp ** 7 / (Cbp ** 7 + 25 ** 7)) if Cbp > 0 else 0.0
+    Sl = 1 + (0.015 * (Lbp - 50) ** 2) / math.sqrt(20 + (Lbp - 50) ** 2)
+    Sc, Sh = 1 + 0.045 * Cbp, 1 + 0.015 * Cbp * T
+    Rt = -math.sin(math.radians(2 * (30 * math.exp(-(((hbp - 275) / 25) ** 2))))) * Rc
+    return math.sqrt((dLp / Sl) ** 2 + (dCp / Sc) ** 2 + (dHp / Sh) ** 2
+                     + Rt * (dCp / Sc) * (dHp / Sh))
+
+
+def test_OE1_delta_e2000_KENDINI_KANITLAR():
+    """Ölçen aracın kendi çivisi. Sessizce sıfır dönen bir ΔE, aşağıdaki eşiği bir SÜSe
+    çevirir; sessizce şişen bir ΔE ise gerçek bir çökmeyi yeşil gösterir."""
+    assert abs(delta_e2000("#ffffff", "#000000") - 100.0) < 0.5, "beyaz↔siyah 100 olmalı"
+    assert delta_e2000("#16a34a", "#16a34a") == 0.0, "aynı renk 0 olmalı"
+    # ÖLÇÜLEN VAKA: Dub atamasının çökmüş çifti eşiğin ALTINDA çıkmalı — araç bu vakayı
+    # görebiliyor mu diye sınanır (bkz. docs/kontrast-denetimi.md §12.7).
+    assert delta_e2000("#b54000", "#ba3a00") < OE1_DELTA_E2000, \
+        "araç, kusurun ta kendisi olan çifti eşiğin üstünde gösteriyor"
+
+
+@pytest.mark.parametrize("tema", ["gündüz", "gece"])
+def test_OE1_a_komsu_siddet_seviyeleri_LUMINANSTA_ayrisiyor(tema):
+    """ÖE1-a (karar §9.3): komşu şiddet seviyelerinin luminans oranı ≥1,20, İKİ temada.
+
+    NİYE LUMİNANS. Protan/deutan renk körlüğü kırmızı-yeşil eksenini siler ama luminans
+    kanalını KORUR. Ayrımı yalnız hue'ya emanet eden bir merdiven, okuyucuların bir
+    kısmında HİÇ merdiven değildir. Ölçülen çökme tam buydu: `--sev-2` ↔ `--sev-3`
+    oranı 1,004 idi, yani iki seviye aynı ağırlıkta basılıyordu."""
+    T = TABLO[tema]
+    for a, b in OE1_KOMSU:
+        o = kontrast(_coz(a, T), _coz(b, T))
+        assert o >= OE1_LUMINANS_ORANI, (
+            f"{tema} {a} ↔ {b}: luminans oranı {o:.3f} < {OE1_LUMINANS_ORANI} — şiddet "
+            f"merdiveni renk körü okuyucu için ÇÖKMÜŞ. Eşik karar §9.3'te ölçümden ÖNCE "
+            f"donduruldu ve gevşetilemez; çözüm merdiveni yeniden kurmaktır "
+            f"(research/olcumler/dub_donusumu_2026-08-24/olc.py::_merdiven).")
+
+
+@pytest.mark.parametrize("tema", ["gündüz", "gece"])
+def test_OE1_b_komsu_siddet_seviyeleri_DELTA_E2000_ayrisiyor(tema):
+    """ÖE1-b (karar §9.3): komşu seviyeler arasında ΔE2000 ≥15, İKİ temada.
+
+    JND ~2,3'tür; bir alarm çipi küçük bir yüzeydir ve BİR BAKIŞTA ayrılması gerekir, o
+    yüzden eşik JND'nin katlarındadır. Ölçülen çökme: Dub'ın `tangerine`i (41,1°) ile
+    türetilmiş `loss-red`i (38,4°) arasında yalnız 2,7° vardı ve AA türetmesi ikisini
+    ΔE2000 5,39'a indiriyordu."""
+    T = TABLO[tema]
+    for a, b in OE1_KOMSU:
+        d = delta_e2000(_coz(a, T), _coz(b, T))
+        assert d >= OE1_DELTA_E2000, (
+            f"{tema} {a} ↔ {b}: ΔE2000 {d:.2f} < {OE1_DELTA_E2000} — iki şiddet seviyesi "
+            f"bir bakışta ayrılamıyor. Eşik karar §9.3'te dondu.")
+
+
+@pytest.mark.parametrize("tema", ["gündüz", "gece"])
+def test_OE1_c_her_siddet_seviyesi_KENDI_TINTI_ustunde_AA(tema):
+    """ÖE1-c (karar §9.3): mevcut G3 garantisi GEVŞEMEZ.
+
+    SIRA BAĞLAYICIDIR: a ve b sağlanamıyorsa c'yi gevşetmek YASAK. Bu test o yasağın
+    kapısıdır — merdiveni kurmak için okunabilirlikten çalınamaz."""
+    T = TABLO[tema]
+    kart = ZEMIN[tema]["card"]
+    for jeton in ("--sev-1", "--sev-2", "--sev-3"):
+        v = _coz(jeton, T)
+        o = kontrast(v, bilesik(v, 0.10, kart))
+        assert o >= OE1_TINT_AA, \
+            f"{tema} {jeton} kendi %10 tinti (--card) üstünde {o:.2f} — AA ALTI"
+
+
+def test_OE1_merdiven_YONU_iki_temada_TUTARLI():
+    """Merdiven bir KURALDIR, bir tesadüf değil: şiddet arttıkça mürekkep zeminden
+    UZAKLAŞIR. Gündüz sev-1 en KOYU, gece en AÇIK; nominal (sev-3) zemine en yakındır.
+
+    Yön iki temada ters DÜŞERSE operatörün kas hafızası bozulur: aynı olay bir temada
+    "daha ağır", ötekinde "daha hafif" görünür. Sıralamanın kendisi çivilenir, sayılar
+    değil — sayılar zaten a ve b'de ölçülüyor."""
+    for tema, ters in (("gündüz", False), ("gece", True)):
+        T = TABLO[tema]
+        Y = {j: _lum(_hx(_coz(j, T))) for j in ("--sev-1", "--sev-2", "--sev-3")}
+        sirali = Y["--sev-1"] < Y["--sev-2"] < Y["--sev-3"]
+        beklenen = (not sirali) if ters else sirali
+        assert beklenen, (
+            f"{tema} şiddet merdiveninin yönü yanlış: {Y}. "
+            f"{'Gecede' if ters else 'Gündüzde'} sev-1 en "
+            f"{'AÇIK' if ters else 'KOYU'} olmalı (zeminden en uzak).")
+
+
+def test_OE1_hukum_BELGEDE_ve_esik_OYNAMAMIS():
+    """Eşik kaynakta durur ama HÜKÜM belgede durur; ikisi ayrışırsa test bir sayıyı korur,
+    kararı değil. Karar §9.3'ün üç eşiği bu dosyadakilerle BİREBİR aynı olmalı."""
+    karar = (SRC / "docs" / "KARAR-2026-08-24-B-DUB-DONUSUMU.md").read_text(encoding="utf-8")
+    assert "## 9 · ÖE1" in karar, "ÖE1 hükmü kararda yok — bu testin dayanağı kayboldu"
+    for iz in ("1,20", "15", "4,5"):
+        assert iz in karar.split("### 9.3", 1)[1].split("### 9.4", 1)[0], \
+            f"karar §9.3'te {iz} eşiği bulunamadı — eşik oynatılmış olabilir"
+    rapor = (SRC / "docs" / "kontrast-denetimi.md").read_text(encoding="utf-8")
+    assert "12.7" in rapor and "ÖE1" in rapor, \
+        "ÖE1 hükmünün ölçümü docs/kontrast-denetimi.md'ye yazılmamış (karar §9 madde 3)"

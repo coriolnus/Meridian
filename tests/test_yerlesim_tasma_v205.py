@@ -113,6 +113,27 @@ def mono_advance() -> float:
     return kume.pop() / upem
 
 
+_KOK_JETON = dict(re.findall(r"--(t-[a-z0-9-]+|label-size)\s*:\s*(\d+px)",
+                             re.sub(r"/\*.*?\*/", " ", CSS_KOD, flags=re.S)))
+
+
+def _px_coz(govde: str) -> str:
+    """`var(--t-body)` → `14px`. Tablo index.html'in kendi `:root`undan gelir; burada
+    SABİT bir sayı tutulmaz."""
+    def _yer(m):
+        return _KOK_JETON.get(m.group(1), m.group(0))
+    return re.sub(r"var\(\s*--([a-z0-9-]+)\s*\)", _yer, govde)
+
+
+def test_jeton_cozucu_KENDINI_KANITLAR():
+    """Çözücü sessizce boş dönerse yukarıdaki tipografi ölçümü `font-size yok` diye
+    patlar (yalancı kırmızı) ya da — daha kötüsü — bir gün `\d+px` yazan eski bir kurala
+    denk gelip yeşil kalır. Tablonun DOLU olduğu ve çözümün çalıştığı burada ölçülür."""
+    assert _KOK_JETON.get("t-body") == "14px", f"--t-body çözülemedi: {_KOK_JETON}"
+    assert _px_coz("font-size:var(--t-body);x") == "font-size:14px;x"
+    assert _px_coz("font-size:12px") == "font-size:12px"
+
+
 @pytest.fixture(scope="module")
 def tipografi() -> dict:
     """`.tick` ve `.chain` tipografisi YAYINDAKİ CSS'ten okunur (ikinci kopya = sessiz bayatlama)."""
@@ -121,7 +142,12 @@ def tipografi() -> dict:
         m = re.search(r"^\.%s\{([^}]*)\}" % sinif, CSS_KOD, re.M)
         assert m, f".{sinif} kuralı index.html'de bulunamadı"
         govde = m.group(1)
-        fs = re.search(r"font-size:(\d+(?:\.\d+)?)px", govde)
+        # 2026-08-24 · TİP RAMPASI JETONLANDI. `.tick`/`.chain` artık `font-size:var(--t-body)`
+        # yazıyor. ÖLÇÜLEN ŞEY BOYUTTUR, YAZILIŞ BİÇİMİ DEĞİL: jetonu index.html'in KENDİ
+        # `:root` bloğundan çözüyoruz — ikinci bir kopya tutmak (ör. buraya 14 yazmak) tam
+        # olarak bu dosyanın 118. satırdaki uyarısının ("ikinci kopya = sessiz bayatlama")
+        # ihlali olurdu.
+        fs = re.search(r"font-size:(\d+(?:\.\d+)?)px", _px_coz(govde))
         ls = re.search(r"letter-spacing:(-?\.?\d*\.?\d+)em", govde)
         assert fs, f".{sinif}: font-size px cinsinden yazılmamış → {govde!r}"
         out[sinif] = {"fs": float(fs.group(1)), "ls": float(ls.group(1)) if ls else 0.0}

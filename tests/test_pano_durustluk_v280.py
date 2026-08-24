@@ -355,3 +355,243 @@ def test_e4_e2_defteri_bu_alanlari_hala_yazmiyor():
     for alan in ("offset_kaynak", "ref_kaynak"):
         assert f'"{alan}"' not in kod, (
             f"`{alan}` artık loop.py'de geçiyor — E2 defterine yazılıyorsa damga bayatladı")
+
+
+# ====================== F · PLAN DEFTERİ ALAN DAMGALARI (Ö-5…Ö-8) ======================
+#
+# Kaynak öneri: `docs/TARAMA-KOVA6-ALAN-MERCEGI-2026-08-24.md` §7 Ö-5…Ö-8. Kalıp §E'nin
+# BİREBİR kardeşi: damga METNİ çivilenir + damganın DAYANDIĞI OLGU ayrıca çivilenir, böylece
+# alan bir gün gerçekten üretime bağlanırsa (ya da bağı KESİLİRSE) damga BAYATLAR ve test
+# kırmızıya döner. Şema alanı KALDIRILMAZ, davranış DEĞİŞMEZ (test_differential_v60 yeşil kalır).
+#
+# Ö-7'DE BAĞIMSIZ ÖLÇÜM TARAMAYI DÜZELTTİ (kör uygulama yok — bkz. damga ve belge §7 şerhi):
+# taramanın 13. satırı `sector`ü "davranış? HAYIR" diye sınıflamıştı, ama `guard.py`nin CANLI
+# sert kapısı (`sector_cap`, POZİSYON SAYISI tavanı) plan alanını KOŞULSUZ okur. Uyuyan olan
+# İKİNCİ tavandır (`portfolio.sector_cap`, NOTIONAL payı). Damga bu ayrımı yazar; aşağıdaki iki
+# çivi de iki yarımı ayrı ayrı tutar.
+
+DAMGA_BASLARI = {
+    "Ö-5": "── ALAN DAMGASI[M11·Ö-5]",
+    "Ö-6": "── ALAN DAMGASI[M11·Ö-6]",
+    "Ö-7": "── ALAN DAMGASI[M11·Ö-7]",
+    "Ö-8": "── ALAN DAMGASI[M11·Ö-8]",
+}
+
+GUARD = (REPO / "meridian" / "guard.py").read_text()
+
+
+def _damga(kaynak: str, oneri: str, n: int = 2600) -> str:
+    bas = DAMGA_BASLARI[oneri]
+    assert bas in kaynak, f"{oneri} damga BLOĞU yok (yalnız atıf yeterli değil)"
+    return kaynak.split(bas, 1)[1][:n]
+
+
+def _duz(s: str) -> str:
+    """Türkçe nokta tuzağı: `İ`.lower() birleşik noktalı `i̇` verir (§E/e2 dersi)."""
+    return s.replace("İ", "i").lower()
+
+
+# ---------------------------------------------------------------- Ö-5 · `side` (ÖLÜ)
+
+def test_f1_side_damgasi_var():
+    """DAMGA: `side` plan alanı ÖLÜ (sıfır üretim okuyucusu) ama KALDIRILMADI — şema iki motorda
+    aynı kalmak zorunda (`test_differential_v60`). Damga o kararı ve gerekçesini taşır."""
+    for kaynak, ad in ((LOOP, "loop.py"), (BROKER, "broker.py")):
+        d = _duz(_damga(kaynak, "Ö-5"))
+        assert "side" in d, f"{ad}: Ö-5 damgası alanı adlandırmıyor"
+        assert "kaldir" in d or "kaldır" in d.replace("ı", "i"), \
+            f"{ad}: damga 'KALDIRMA YOK' kararını söylemiyor"
+    assert "short" in _duz(_damga(LOOP, "Ö-5")), \
+        "damga alanın NEDEN durduğunu (gelecekteki short desteği) söylemiyor"
+
+
+def test_f2_side_sabiti_hala_plani_okumuyor():
+    """DAMGANIN DAYANDIĞI OLGU — İKİ YÖNLÜ: (a) `broker.py` pozisyonu `side="long"` SABİTİYLE
+    kurar, plan alanını okumaz; (b) üretimde hiçbir `plan`-adlı sözlük `side` okumaz.
+
+    ÇİVİNİN BEYANLI SINIRI (ad çakışması — tarama §1.2/2): `side` adı işlem satırı, açık pozisyon
+    ve Alpaca emri sözlüklerinde de yaşar (`watchdog.py` `p.get("side")` bir ALPACA POZİSYONUdur,
+    `faz5_cikis.py` `p.get("side")` bir AÇIK POZİSYONdur — ikisi de elle doğrulandı). Bu yüzden
+    çivi çıplak `p` değişkenini DEĞİL, yalnız plan bağlamını adlandıran isimleri tarar; daha geniş
+    bir desen ALAKASIZ okuyucularla sürekli kırmızı yanar ve çivi sökülürdü."""
+    assert 'side="long"' in BROKER, (
+        "`broker.py` artık `side` sabitini yazmıyor — plan alanı bağlanmış olabilir, Ö-5 damgası BAYATLADI")
+    plan_pat = re.compile(r"""(?:plan|pln|_gate_plan|_plan)\s*(?:\[\s*['"]side['"]\s*\]"""
+                          r"""|\.get\(\s*['"]side['"])""")
+    hits = []
+    for f in sorted((REPO / "meridian").rglob("*.py")):
+        for i, l in enumerate(_yorumsuz_py(f.read_text()).splitlines(), 1):
+            if plan_pat.search(l):
+                hits.append(f"{f.name}:{i}")
+    assert not hits, (
+        f"plan `side` artık üretimde okunuyor ({hits}) — ALAN DAMGASI[M11·Ö-5] BAYATLADI; "
+        "damgayı tazele (alan artık ölü değil)")
+
+
+# ---------------------------------------------------------------- Ö-6 · `targets` (YEDEKLİ İKİZ)
+
+def test_f3_targets_damgasi_var():
+    d = _duz(_damga(LOOP, "Ö-6"))
+    assert "targets" in d and "profit_target" in d, "Ö-6 damgası ikizi adlandırmıyor"
+    assert "counterfactual" in d, "damga cf YEDEK okumasını (kaldırmayı yasaklayan olgu) söylemiyor"
+
+
+def _liste_ici(kod: str, i: int) -> str | None:
+    """`[` konumundan başlayıp DENGELİ kapanışa kadar olan içeriği döndürür.
+
+    Kaba `\\[[^\\]]*\\]` deseni `[c["profit_target"]]` ifadesini İÇ `]`de keserdi — yani çivi
+    üreticinin gerçek ifadesini hiç görmeden yeşil kalırdı."""
+    if i >= len(kod) or kod[i] != "[":
+        return None
+    derinlik = 0
+    for j in range(i, len(kod)):
+        if kod[j] in "([{":
+            derinlik += 1
+        elif kod[j] in ")]}":
+            derinlik -= 1
+            if not derinlik:
+                return kod[i + 1:j]
+    return None
+
+
+def _tepe_virgul(s: str) -> int:
+    d, n = 0, 0
+    for ch in s:
+        if ch in "([{":
+            d += 1
+        elif ch in ")]}":
+            d -= 1
+        elif ch == "," and d == 0:
+            n += 1
+    return n
+
+
+def _deger(kod: str, i: int) -> str:
+    """`i`den başlayan sözlük DEĞERİNİ, TEPE düzeydeki virgüle/satır sonuna kadar döndürür.
+
+    Kaba `[^,\n]+` deseni `round(px * 1.15, 4)` ifadesini İÇ virgülde keserdi — üretici ile
+    ikizini karşılaştıran çivi o zaman ikisi AYNI olduğu hâlde kırmızı yanardı (yanlış-alarm).
+    """
+    d, out = 0, []
+    for ch in kod[i:]:
+        if ch in "([{":
+            d += 1
+        elif ch in ")]}":
+            if d == 0:
+                break
+            d -= 1
+        elif (ch == "," and d == 0) or ch == "\n":
+            break
+        out.append(ch)
+    return "".join(out)
+
+
+def test_f4_targets_hala_profit_targetin_yedekli_ikizi():
+    """DAMGANIN DAYANDIĞI OLGU: HER üretici `targets`i TEK elemanlı ve o eleman AYNI dosyanın
+    `profit_target` ifadesiyle AYNI yazar — canlı 500/500 sapma-0 ölçümünün kod tarafındaki
+    karşılığı budur. Alan bir gün gerçek bir HEDEF MERDİVENİ taşırsa (çok elemanlı ya da farklı
+    ifade) 'yedekli ikiz' beyanı BAYATLAR ve bu test kırmızıya döner."""
+    uretici = 0
+    for f in sorted((REPO / "meridian").rglob("*.py")):
+        kod = _yorumsuz_py(f.read_text())
+        pt = {re.sub(r"\s+", " ", _deger(kod, m.end())).strip()
+              for m in re.finditer(r'"profit_target"\s*:\s*', kod)}
+        for m in re.finditer(r'"targets"\s*:\s*(?=\[)', kod):
+            ic = _liste_ici(kod, m.end())
+            assert ic is not None, f"{f.name}: `targets` listesi ayrıştırılamadı"
+            uretici += 1
+            assert _tepe_virgul(ic) == 0, (
+                f"{f.name}: `targets` ARTIK ÇOK ELEMANLI ({ic!r}) — 'yedekli ikiz' damgası BAYATLADI")
+            norm = re.sub(r"\s+", " ", ic).strip()
+            assert norm in pt, (
+                f"{f.name}: `targets` ifadesi ({norm!r}) `profit_target` ifadelerinden ({sorted(pt)}) "
+                "ayrıştı — ALAN DAMGASI[M11·Ö-6] BAYATLADI")
+    assert uretici >= 4, f"`targets` üreticileri bulunamadı ({uretici}) — çivi kör kaldı"
+
+
+# ---------------------------------------------------------------- Ö-7 · `sector` (İKİ TAVAN)
+
+def test_f5_sector_damgasi_var():
+    d = _duz(_damga(GUARD, "Ö-7", 3200))
+    assert "sector" in d, "Ö-7 damgası alanı adlandırmıyor"
+    assert "portfolio.sector_cap" in d, "damga UYUYAN knob'u adlandırmıyor"
+    assert "y3_sector_cap" in d, "damga uyuyan kapının ADINI vermiyor"
+    assert "uyu" in d, "damga 'uyuyan bağ' ayrımını söylemiyor"
+
+
+def test_f6_canli_sektor_kapisi_hala_plan_alanini_okuyor():
+    """DAMGANIN BİRİNCİ YARISI (taramanın 13. satırının DÜZELTMESİ): `sector` bugün CANLI bir sert
+    kapıya girer — `classify_gate` alanı KOŞULSUZ okur ve `sector_cap` kontrolüne verir. Bu bağ
+    bir gün kesilirse damga ('canlı yarım') bayatlar ve test kırmızıya döner."""
+    kod = _yorumsuz_py(GUARD)
+    m = re.search(r"\ndef classify_gate\(.*?\n(?=\ndef )", kod, re.S)
+    assert m, "classify_gate gövdesi bulunamadı"
+    g = m.group(0)
+    assert re.search(r'sec\s*=\s*plan\.get\(\s*"sector"', g), (
+        "`classify_gate` artık plan `sector` alanını okumuyor — ALAN DAMGASI[M11·Ö-7]'nin "
+        "'CANLI YARIM' beyanı BAYATLADI")
+    kapi = re.search(r'_chk\(\s*"sector_cap"\s*,(.*?)\n\s*(?:#|_chk\()', g, re.S)
+    assert kapi, "`sector_cap` sert kontrolü bulunamadı"
+    assert "sc.get(sec" in kapi.group(1), (
+        "`sector_cap` kontrolü artık plandan gelen sektörü kullanmıyor — damga bayatladı")
+
+
+def test_f7_uyuyan_sektor_knobu_hala_kosullu():
+    """DAMGANIN İKİNCİ YARISI: UYUYAN olan `portfolio.sector_cap` (NOTIONAL payı) tavanıdır —
+    knob 0/yok iken `y3_sector_cap` kontrolü hiç KURULMAZ. Knob koşulsuz hâle gelirse (ya da
+    varsayılanı 0 olmaktan çıkarsa) 'uyuyan bağ' beyanı bayatlar ve bu test kırmızıya döner."""
+    kod = _yorumsuz_py(GUARD)
+    m = re.search(r"\ndef _y3_portfolio_caps\(.*?(?=\ndef |\Z)", kod, re.S)
+    assert m, "_y3_portfolio_caps gövdesi bulunamadı"
+    g = m.group(0)
+    assert re.search(r'cap_pct\s*=\s*float\(\s*p\.get\(\s*"portfolio\.sector_cap"\s*,\s*0', g), (
+        "`portfolio.sector_cap` artık 0 varsayılanıyla okunmuyor — uyuyan-bağ beyanı bayatladı")
+    kosul = g.index("if cap_pct > 0:")
+    assert kosul < g.index('_chk("y3_sector_cap"'), (
+        "`y3_sector_cap` artık knob koşulunun DIŞINDA kuruluyor — uyuyan bağ UYANDI, damga bayatladı")
+
+
+# ---------------------------------------------------------------- Ö-8 · `exploration` + `carried`
+
+def test_f8_kesif_damgasi_var():
+    """Kalemin ADI da damganın parçası: 'keşif bütçesi' değil 'keşif ÜRETİCİ KURAKLIĞI' —
+    yanlış iş (tavanı ayarlamaya çalışmak) tam bu addan doğardı (tarama T-3)."""
+    d = _duz(_damga(LOOP, "Ö-8", 3200))
+    assert "exploration" in d and "carried" in d, "Ö-8 damgası iki alanı da adlandırmıyor"
+    assert "kablo" in d, "damga 'kablo canlı' yarımını söylemiyor"
+    assert "kurak" in d, "damga 'üretim kurak' yarımını söylemiyor"
+    assert "bütçe" in d or "butce" in d, "damga yanlış-ad tuzağını (bütçe) adlandırmıyor"
+
+
+def test_f9_kesif_kablosu_hala_canli():
+    """DAMGANIN DAYANDIĞI OLGU (1): açık pozisyonun çıkış rejim kapısını GEVŞETEN dal.
+    Kablo kesilirse 'kablo canlı' beyanı bayatlar ve test kırmızıya döner."""
+    kod = _yorumsuz_py(LOOP)
+    assert re.search(r'pos_regime_ok\s*=\s*.*getattr\(pos,\s*"exploration"', kod), (
+        "keşif çıkış-gevşetme dalı kaybolmuş — ALAN DAMGASI[M11·Ö-8]'in 'kablo canlı' yarımı BAYATLADI")
+
+
+def test_f10_carried_kablosu_hala_canli():
+    """DAMGANIN DAYANDIĞI OLGU (2): ikinci bar-sız seansta planı DÜŞÜREN sayaç + iki olayı."""
+    kod = _yorumsuz_py(LOOP)
+    m = re.search(r"\ndef _carry_armed_without_bar\(.*?\n(?=\ndef |\n_)", kod, re.S)
+    assert m, "_carry_armed_without_bar gövdesi bulunamadı"
+    g = m.group(0)
+    assert 'plan.get("carried")' in g, "`carried` artık okunmuyor — düşürme sayacı koptu"
+    assert 'plan["carried"]' in g, "`carried` artık yazılmıyor — sayaç üreticisi koptu"
+    for ev in ("armed_no_bar_carried", "armed_expired_no_bar"):
+        assert ev in g, f"`{ev}` olayı kaybolmuş — kuraklık ölçümünün TEK kanıt kanalıydı"
+
+
+def test_f11_kesif_uretici_yuzeyi_tek():
+    """'ÜRETİM KURAK' beyanı ÖLÇÜLEN bir üretici yüzeyine dayanır: `exploration` bayrağını üretimde
+    TEK bir yol (keşif havuzu seçimi) `True` yapar. İkinci bir üretici doğarsa kuraklık ölçümü
+    yeniden yapılmalıdır — o gün bu test kırmızı yanar."""
+    yazan = []
+    for f in sorted((REPO / "meridian").rglob("*.py")):
+        for i, l in enumerate(_yorumsuz_py(f.read_text()).splitlines(), 1):
+            if re.search(r'\[\s*"exploration"\s*\]\s*=', l):
+                yazan.append(f"{f.name}:{i}")
+    assert len(yazan) == 1, (
+        f"`exploration` üretici yüzeyi değişti ({yazan}) — 'ÜRETİM KURAK' beyanı ölçülen tek "
+        "üreticiye dayanıyordu; ALAN DAMGASI[M11·Ö-8] BAYATLADI")

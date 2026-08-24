@@ -505,10 +505,32 @@ def test_index_html_RAMPA_DISI_deger_tasimaz():
                           + " · ".join(f"{p}px" for p in sorted(rampa)) + "):\n" + "\n".join(ihlaller))
 
 
+# 2026-08-24 · TİP RAMPASI JETONLANDI. Aşağıdaki basamak çivileri BOYUTU ölçüyor, yazılış
+# biçimini değil; `var(--t-sub)` gibi bir jeton index.html'in KENDİ `:root` tablosundan
+# çözülür. Tabloyu buraya sabit yazmak, ölçülen şeyin ikinci bir kopyasını yaratırdı.
+_KOK_TIP = dict(re.findall(r"--(t-[a-z0-9-]+|label-size)\s*:\s*(\d+px)",
+                           re.sub(r"/\*.*?\*/", " ", INDEX, flags=re.S)))
+
+
+def _px_coz(govde: str) -> str:
+    return re.sub(r"var\(\s*--([a-z0-9-]+)\s*\)",
+                  lambda m: _KOK_TIP.get(m.group(1), m.group(0)), govde)
+
+
+def test_tip_jeton_cozucusu_CALISIYOR():
+    """Çözücü boş dönerse yukarıdaki iki basamak çivisi sessizce anlamsızlaşır."""
+    assert _KOK_TIP.get("t-sub") == "20px" and _KOK_TIP.get("t-cap") == "11px", _KOK_TIP
+    assert _px_coz("font-size:var(--t-sub)") == "font-size:20px"
+
+
 def test_bolum_basligi_HEADLINE_basamaginda():
     """19px → 20px (Headline). Sayfa başlığından (24px) hâlâ bir basamak aşağıda: hiyerarşi
-    ağırlıkla değil BASAMAKLA korunuyor."""
-    kural = re.search(r"\.alan-bolum h2\.ph,\.alan-bolum h2\.greet\{([^}]*)\}", INDEX).group(1)
+    ağırlıkla değil BASAMAKLA korunuyor.
+
+    2026-08-24: rampa JETONLANDI (`font-size:var(--t-sub)`). ÖLÇÜLEN ŞEY BASAMAKTIR,
+    YAZILIŞ BİÇİMİ DEĞİL — jeton index.html'in kendi `:root`undan çözülür, buraya ikinci
+    bir `20` sabiti yazılmaz."""
+    kural = _px_coz(re.search(r"\.alan-bolum h2\.ph,\.alan-bolum h2\.greet\{([^}]*)\}", INDEX).group(1))
     assert "font-size:20px" in kural
 
 
@@ -522,7 +544,7 @@ def test_eksen_etiketi_OKUNABILIR_tabanda():
 
 def test_parola_etiketleri_MICRO_basamaginda():
     """10px imzası rakam üstündeki mono mikro-etikete ait; parola alanının etiketi form metnidir."""
-    kural = re.search(r"\.gate-l\{([^}]*)\}", INDEX).group(1)
+    kural = _px_coz(re.search(r"\.gate-l\{([^}]*)\}", INDEX).group(1))
     assert "font-size:11px" in kural
     # İDİOM YERİNDE KALDI: rakam üstündeki mikro-etiket hâlâ Label basamağında — ve o basamağı
     # kendi jetonundan (`--label-size`) alıyor, yani idiomun tek bir sahibi var.

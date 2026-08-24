@@ -34,7 +34,14 @@ KOK = pathlib.Path(__file__).resolve().parents[1]
 FONTLAR = KOK / "meridian" / "web" / "fonts"
 API_PY = KOK / "meridian" / "api.py"
 
-SUNULAN = ["recursive-sans-vf.woff2", "recursive-mono-vf.woff2"]
+# 2026-08-24 · YAZI TİPİ DEVRALMA (docs/HUKUM-2026-08-24-YAZITIPI.md).
+# `--sans` Inter oldu; `recursive-sans-vf.woff2` EMEKLİ ama LİSTEDE KALIR ve SUNULMAYA
+# devam eder — silmek, eski önbelleklerden gelen istekleri 404'e düşürür ve tarihçe-koru
+# ilkesini çiğner. Hiçbir yüzeyin onu ARTIK istemediği ayrı bir çividir
+# (tests/test_yazitipi_v201.py::test_EMEKLI_sans_kesidi_HICBIR_YUZEYDE_istenmiyor); yani
+# "sunuluyor" ile "yükleniyor" iki ayrı iddia ve ikisi de ayrı ölçülüyor.
+# ~~Emekli liste: ["recursive-sans-vf.woff2", "recursive-mono-vf.woff2"]~~
+SUNULAN = ["inter-vf.woff2", "recursive-sans-vf.woff2", "recursive-mono-vf.woff2"]
 
 
 @pytest.fixture
@@ -199,10 +206,18 @@ def test_icerik_ETagi_var_ve_If_None_Match_304_doner(istemci, ad):
 
 
 @pytest.mark.parametrize("ad", SUNULAN)
-def test_ETag_ICERIKTEN_turer_iki_kesit_AYRI_etiket_tasir(istemci, ad):
-    """İki farklı dosya iki farklı etiket taşır — etiket içeriğin özetidir, adın değil."""
+def test_ETag_ICERIKTEN_turer_her_kesit_AYRI_etiket_tasir(istemci, ad):
+    """Her dosya kendi etiketini taşır — etiket İÇERİĞİN özetidir, adın değil.
+
+    ESKİ ADI: ..._iki_kesit_... (2026-08-07 → 2026-08-24). Sunulan kesit sayısı üçe çıktı
+    (Inter geldi, emekli Recursive Sans sunulmaya devam ediyor) ve sabit `== 2` beklentisi
+    sayıya çivilenmişti. Sayı bir ölçüt DEĞİL: iddia "ETag adı değil içeriği özetliyor"dur,
+    yani kaç dosya olursa olsun HEPSİ ayrı etiket taşımalı. Sayıya çivili hâli, üçüncü
+    dosya geldiğinde iddiayı değil sayımı kırdı."""
     etiketler = {a: istemci.get(f"/fonts/{a}").headers.get("etag") for a in SUNULAN}
-    assert len(set(etiketler.values())) == 2, f"iki kesit AYNI ETag'i taşıyor: {etiketler}"
+    assert None not in etiketler.values(), f"ETag'siz kesit var: {etiketler}"
+    assert len(set(etiketler.values())) == len(SUNULAN), (
+        f"iki kesit AYNI ETag'i taşıyor — etiket içerikten türemiyor demektir: {etiketler}")
 
 
 @pytest.mark.parametrize("ad", SUNULAN)

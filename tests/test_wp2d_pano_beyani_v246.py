@@ -315,13 +315,22 @@ def test_CIVI_pano_TEK_NOKTAYLA_cizgi_UYDURMAZ():
     assert "pts.length < 2" in govde
 
 
-def test_CIVI_mini_egri_de_TAZELIGINI_soyler():
-    """Genel Bakış'ın mini eğrisi serinin SON 40 noktasını çizer; 24 gün donuk bir seri orada canlı
-    bir trend gibi görünüyordu."""
-    govde = APPJS[APPJS.index('const eq = $("gb-eq");'):]
+def test_CIVI_bugun_egrisi_TAZELIGINI_soyler():
+    """① Bugün'ün eğrisi tazeliğini SÖYLER — 24 gün donuk bir seri canlı bir trend gibi görünüyordu.
+
+    ÇAPA TAŞINDI (KARAR-2026-08-24-B §5.3, BEYANLI): sayfada İKİ eğri vardı — mini "Sermaye eğrisi"
+    kartı (`gb-eq`) ve Birikim'in tam eğrisi. Dub dönüşümünde Bugün'ün mini eğrisi ANA alan
+    grafiğine BİRLEŞTİ (aynı seri, aynı beyan, iki yerde iki tazelik cümlesi ilk düzenlemede
+    ayrışırdı). İDDİA DEĞİŞMEDİ: eğrinin YANINDA penceresini söyleyen bir beyan şeridi durur ve
+    ölçülemeyen tazelik "güncel" diye okunmaz. Yeni çapa `pv-egri-beyan`dır.
+    """
+    govde = APPJS[APPJS.index('j("/api/performance").then(p => {'):]
     govde = govde[:govde.index("// KAPSAMA")]
     assert "p.equity_curve_beyani" in govde
     assert "gün geride" in govde and "tazelik ölçülemedi" in govde
+    assert 'id="pv-egri-beyan"' in APPJS, "eğrinin pencere beyanı için kap yok"
+    # TEK EĞRİ, TEK BEYAN: ikinci bir mini eğri geri gelirse bu satır kırmızı yanar.
+    assert 'id="gb-eq"' not in APPJS, "mini eğri geri gelmiş — aynı seri iki yerde iki tazelik yazar"
 
 
 def test_CIVI_YASA6_beyanin_HER_ALANININ_panoda_okuyucusu_var(sandbox_state):

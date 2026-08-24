@@ -2,57 +2,58 @@
 name: Meridian
 description: A hairline-ruled operator console in two grounds — a daylight desk and a night desk — sharing one token vocabulary, where colour is reserved for money.
 colors:
-  ink: "#050505"
-  ink-muted: "#585450"
-  paper: "#ffffff"
-  paper-raised: "#fbfaf8"
-  bone: "#f8f5f2"
-  bone-deep: "#f1ece8"
-  chip: "#f3f3f3"
-  rule: "#e7e3df"
-  rule-strong: "#d9d4cf"
-  gain: "#0c6a3b"
-  caution: "#6e4a00"
-  loss: "#b3242c"
+  ink: "#0a0a0a"
+  ink-muted: "#525252"
+  paper: "#fafafa"
+  paper-raised: "#f5f5f5"
+  bone: "#ffffff"
+  bone-deep: "#fafafa"
+  chip: "#f5f5f5"
+  rule: "#e5e5e5"
+  rule-strong: "#d4d4d4"
+  gain: "#1f7646"
+  caution: "#77520e"
+  loss: "#9a0019"
+  nav: "#2563eb"
 typography:
   display:
-    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "28px"
     fontWeight: 500
     lineHeight: 1.18
     letterSpacing: "-0.02em"
   headline:
-    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "20px"
     fontWeight: 500
     lineHeight: 1.18
     letterSpacing: "-0.02em"
   title:
-    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "17px"
     fontWeight: 500
     lineHeight: 1.25
     letterSpacing: "-0.02em"
   body:
-    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.55
     letterSpacing: "-0.011em"
   compact:
-    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "13px"
     fontWeight: 400
     lineHeight: 1.45
     letterSpacing: "-0.008em"
   small:
-    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "12px"
     fontWeight: 400
     lineHeight: 1.4
     letterSpacing: "-0.005em"
   micro:
-    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "11px"
     fontWeight: 400
     lineHeight: 1.35
@@ -178,42 +179,78 @@ means money.
 
 ## Colors
 
-A warm neutral field interrupted only by three chromatic values that report outcomes. The field
-inverts between themes; the discipline does not.
+A **cold neutral** field interrupted only by three chromatic values that report outcomes, plus one
+reserved navigation hue. The field inverts between themes; the discipline does not.
 
 The YAML frontmatter above carries the **daylight** values, because the schema admits one value per
 token name. The night values are the second column of every table below and are normative — they
 are not a derived or auto-generated variant.
 
+> **Superseded 2026-08-24 — the warm ramp is retired.** Every value in this section was replaced in
+> the Dub conversion (`docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md`). The retired warm-bone ramp
+> (`#fbf9f8` / `#f2efed` / `#e2deda`, ink `#050505`, night field `#1c1a18` / ink `#d4d0cb`) is kept
+> in the history of `meridian/web/index.html`'s `:root` block, struck through and dated — nothing is
+> deleted. The measurement behind the new values — every threshold that held, and the four that did
+> not — is in `docs/kontrast-denetimi.md` §12 and `research/olcumler/dub_donusumu_2026-08-24/`.
+
 ### Token table — both grounds
 
 | Token (CSS var) | Role | Daylight | Night |
 |---|---|---|---|
-| `--bg` (paper) | page ground | `#ffffff` | `#1c1a18` |
-| `--bg2` (paper-raised) | drawer, secondary panel, grid gutters | `#fbfaf8` | `#232120` |
-| `--card` (bone) | standard card fill | `#f8f5f2` | `#262320` |
-| `--card-2` (bone-deep) | nested panel, slip inside a card | `#f1ece8` | `#2f2b27` |
-| `--raise` | meter / donut track | `#ffffff` | `#38342f` |
-| `--slip` | inline record slip | `#f1ece8` | `#2f2b27` |
-| `--slip-ink` | text on a slip | `#050505` | `#d4d0cb` |
-| `--line` (rule) | default hairline | `#e7e3df` | `#38342f` |
-| `--line-2` (rule-strong) | hairline that must survive on a card | `#d9d4cf` | `#4a453f` |
-| `--tx` (ink) | body text, headings, figures | `#050505` | `#d4d0cb` |
-| `--tx2` (ink-muted) | secondary and supporting text | `#585450` | `#b0a9a0` |
-| `--accent` | primary action fill; also the focus outline | `#050505` | `#d4d0cb` |
-| `--accent-2` | accent as text | `#050505` | `#e8e4df` |
-| `--accent-tint` | segmented control / nav pill micro-fill | `#f3f3f3` | `#302c28` |
-| `--green` (gain) | a positive realised result | `#0c6a3b` | `#4cc38a` |
-| `--amber` (caution) | a state that needs a human | `#6e4a00` | `#e0a82e` |
-| `--red` (loss) | a negative result; the emergency controls | `#b3242c` | `#f58b8f` |
-| `--green-t` / `--amber-t` / `--red-t` | 10% status tint | `rgba(12,106,59,.10)` · `rgba(110,74,0,.10)` · `rgba(179,36,44,.10)` | `rgba(76,195,138,.10)` · `rgba(224,168,46,.10)` · `rgba(245,139,143,.10)` |
-| `--elev` | elevation | `none` | `none` |
+| `--bg` (paper) | page ground | `#fafafa` | `#171717` |
+| `--bg2` (paper-raised) | drawer, secondary panel, grid gutters | `#f5f5f5` | `#1f1f1f` |
+| `--card` (card) | standard card fill | `#ffffff` | `#262626` |
+| `--card-2` (card-deep) | nested panel, slip inside a card | `#fafafa` | `#2e2e2e` |
+| `--raise`  | raised surface — equals `--card` in both themes (edge-first, no elevation step) | `#ffffff` | `#262626` |
+| `--slip`  | inline record slip | `#f5f5f5` | `#2e2e2e` |
+| `--slip-ink`  | text on a slip | `#0a0a0a` | `#e5e5e5` |
+| `--line` (rule) | default hairline | `#e5e5e5` | `#404040` |
+| `--line-2` (rule-strong) | hairline that must survive on a card | `#d4d4d4` | `#525252` |
+| `--tx` (ink) | body text, headings, figures | `#0a0a0a` | `#e5e5e5` |
+| `--tx2` (ink-muted) | secondary and supporting text | `#525252` | `#d4d4d4` |
+| `--tx3` (ink-soft) | third ink step — a real step, measured | `#737373` | `#a3a3a3` |
+| `--field`  | text-input edge (WCAG 1.4.11 ≥3:1) | `#737373` | `#a3a3a3` |
+| `--accent`  | primary action fill; also the focus outline | `#0a0a0a` | `#e5e5e5` |
+| `--accent-2`  | accent as text | `#171717` | `#f5f5f5` |
+| `--accent-tint`  | segmented control / nav pill micro-fill | `#f5f5f5` | `#2e2e2e` |
+| `--green` (sev-3) | nominal — a positive realised result | `#1f7646` | `#61b37f` |
+| `--amber` (sev-2) | caution — a state that needs a human | `#77520e` | `#d8b072` |
+| `--red` (sev-1) | alarm — a negative result; the emergency controls | `#9a0019` | `#ffbab4` |
+| `--nav` (ROL 6) | navigation / selection ink — **never** money, alarm or direction | `#2563eb` | `#72a2ff` |
+| `--nav-2`  | the ink that sits **on** `--nav-t` (measured: `--nav` fails AA there) | `#1e40af` | `#b2caff` |
+| `--nav-t`  | active navigation fill (the wash) — the only large blue surface | `#dbeaff` | `#1a274d` |
+| `--elev`  | card elevation — still `none`, in both themes | `none` | `none` |
+| `--green-t` / `--amber-t` / `--red-t` | 10% status tint | `rgba(31,118,70,.10)` · `rgba(119,82,14,.10)` · `rgba(154,0,25,.10)` | `rgba(97,179,127,.10)` · `rgba(216,176,114,.10)` · `rgba(255,186,180,.10)` |
 
-**Pure black and pure white are forbidden on the night ground.** `#000` under off-white text
-produces halation, and roughly 40–47% of adults have some astigmatism (handbook, Area 5). The
-night field is `#1c1a18` and the night ink is `#d4d0cb` — inside the `#1E1E1E` ground / `#CCC`–`#D4D4D4`
-text envelope the handbook specifies, with the warm cast carried over so the two themes are
-recognisably the same product.
+**Pure black and pure white are forbidden.** On the night ground `#000` under off-white text
+produces halation, and roughly 40–47% of adults have some astigmatism (handbook, Area 5); the night
+field is `#171717` and the night ink is `#e5e5e5`. On the daylight ground the constraint is glare:
+the **page** is `#fafafa`, never `#ffffff` — measured, largest-surface luminance 0.956 with the
+card/ground step at 1.0438 (Ö1). Cards stay `#ffffff`, because the glare finding was about the
+field, not about a card sitting on it.
+
+**The money colours left the Dub palette, and that is a measured verdict, not a preference.** Dub is
+a marketing site and carries no three-level severity channel: once `lavender` is reserved for MODE
+and `electric-blue` / `deep-sapphire` for navigation, exactly **two** usable hues remain. Its
+`tangerine` (41.1°) and the mock's derived `loss-red` (38.4°) sit **2.7°** apart, and AA derivation
+collapsed them onto the same colour (`#b54000` ↔ `#ba3a00`). The severity trio therefore keeps the
+measured Omega hue family (154° / 77° / 24°) while everything else — surfaces, geometry, type,
+navigation, direction — stays Dub. Candidate table and frozen thresholds:
+`docs/kontrast-denetimi.md` §12.4–12.5.
+
+**The severity ladder is a rule, not an accident.** As severity rises the ink moves **away from the
+ground**: in daylight `--sev-1` is the darkest, at night the lightest; nominal (`--sev-3`) sits
+closest to the ground. Adjacent levels are held apart by luminance ratio ≥ 1.20 **and** ΔE2000 ≥ 15,
+in both themes — because red–green hue separation is exactly what protan/deutan vision deletes, so a
+ladder that leans on hue alone is no ladder at all for some readers. The old trio failed this: it
+measured 1.004 between caution and nominal. Nailed in `tests/test_renk_rolleri_v197.py` §10.
+
+**Blue is a sixth role, not a loosened rule.** `--nav*` carries navigation, selection and counters
+and nothing else; the primary action fill stays achromatic (`--accent`, midnight-ink), exactly as
+Dub itself does. Two thresholds did not hold and **no token was invented to rescue them** — the
+usage surface narrowed instead: the chroma ceiling holds for the *fill* (`--nav-t`) but not for the
+ink, so the ink may only paint two named small surfaces; and `--nav` fails AA on its own wash, so
+the text on that wash is `--nav-2`. Both narrowings are nailed, not just written down.
 
 ### The role layer — five roles, five token families (D1, 2026-08-07)
 
@@ -268,11 +305,11 @@ to prevent.
 
 | Token | Daylight | worst real ground | Night | worst real ground |
 |---|---|---|---|---|
-| `--yon-arti` | `#40654c` | **4.71** | `#8ab59c` | **5.10** |
-| `--yon-eksi` | `#784e4b` | **4.99** | `#d1a0a0` | **5.13** |
-| `--mod-canli` | `#723a96` | **5.35** | `#c598e7` | **5.03** |
-| `--mod-kesif` | `#635071` | **5.11** | `#b9a4ca` | **5.12** |
-| `--olcek-guven` | `#585450` | **5.32** | `#b0a9a0` | **5.02** |
+| `--yon-arti` | `#4a6e56` | **4.64** | `#8bab94` | **4.58** |
+| `--yon-eksi` | `#6c4442` | **6.49** | `#edc3be` | **6.72** |
+| `--mod-canli` | `#7c3aed` | **4.52** | `#ab91ff` | **4.50** |
+| `--mod-kesif` | `#6c5e9e` | **4.54** | `#a79fcb` | **4.61** |
+| `--olcek-guven` | `#525252` | **6.20** | `#d4d4d4` | **7.10** |
 
 The matrix cell grounds moved with them, and moved the right way: lowering direction chroma
 shifts the cell ground less, so the figure sitting on it gained contrast rather than losing it —
@@ -292,7 +329,16 @@ measures 1.70 / 1.92 and **stays inside the declared hairline deviation**: it is
 fill (5.72 / 5.61 for the text on it) and by the band, not by its border — the same reasoning the
 status chips already run on.
 
-### Measured contrast — daylight ground
+> **Superseded 2026-08-24 — read the numbers from the generated table, not from here.** The three
+> tables below (daylight, night, composited surfaces) were measured against the retired warm ramp.
+> They are kept as history and **their figures are no longer current**. The live, machine-generated
+> nail table lives in `docs/kontrast-denetimi.md` §9: every row is recomputed from source by
+> `tests/test_tasarim_token_v153.py::test_rapordaki_KONTRAST_RAKAMLARI_yeniden_uretilebilir`, so a
+> stale figure there fails a test instead of quietly misleading a reader. Duplicating those 94 rows
+> into this document would recreate the "two sources, one truth" failure this repo keeps paying for.
+> The role-token table just above **was** refreshed, because it is short enough to stay honest.
+
+### Measured contrast — daylight ground *(historical — warm ramp)*
 
 Text tokens, against the flat surfaces they sit on, and against the **worst real composited
 ground** they can reach anywhere in the interface:
@@ -314,7 +360,7 @@ status chip — and against bare surfaces:
 
 Everything above clears WCAG 2.2 AA (4.5:1) at every real ground, including the 10px chips.
 
-### Measured contrast — night ground
+### Measured contrast — night ground *(historical — warm ramp)*
 
 | Token | Value | on `--bg` | on `--bg2` | on `--card` | on `--card-2` | on `--accent-tint` | worst real ground |
 |---|---|---|---|---|---|---|---|
@@ -333,7 +379,7 @@ tried was `#f2555a`, the value the pre-Omega dark world used. It measures **4.12
 over `--card` and **3.72** over `--card-2` — below AA at the 10px the chips are set in. It was
 lightened to `#f58b8f`, which measures 5.62 and 5.01 on the same two grounds.
 
-### Composited surfaces measured individually
+### Composited surfaces measured individually *(historical — warm ramp)*
 
 | Surface | Daylight | Night |
 |---|---|---|
@@ -556,15 +602,85 @@ Turkish interface. Those bound the *content*; the *form* is fully open.
 
 ## Typography
 
-**Display / Body Font:** **Recursive Sans Linear** (with `system-ui`, `-apple-system`, `Segoe UI`)
+**Display / Body Font:** **Inter** (with `system-ui`, `-apple-system`, `Segoe UI`)
 **Label / Figure Font:** **Recursive Mono Linear** (with `ui-monospace`, `SFMono-Regular`)
 
-Both **self-hosted** from `/fonts/recursive-{sans,mono}-vf.woff2` — SIL Open Font License 1.1,
-upstream `github.com/arrowtype/recursive` v1.085, licence text shipped at `meridian/web/fonts/OFL.txt`.
-Variable weight axis, **400–700**. No third-party origin is contacted for type, and the deployment
-CSP now says so: `font-src 'self'` with no host list.
+Both **self-hosted** from `/fonts/inter-vf.woff2` and `/fonts/recursive-mono-vf.woff2` — SIL Open
+Font License 1.1 for both, licence text for **both** shipped in one file at
+`meridian/web/fonts/OFL.txt` (section A Inter, section B Recursive; neither carries a Reserved Font
+Name — measured, not assumed). Variable weight axis **400–700**; Inter's `opsz` axis is pinned at
+**14**. No third-party origin is contacted for type, and the deployment CSP says so:
+`font-src 'self'` with no host list. Total shipped: **76.9 KB** (37.8 + 39.0), ceiling 120 KB.
 
-*Settled 2026-08-07 (D4). Geist was the incumbent and is **retired** — it is on the overused-typeface
+*Settled 2026-08-24 — and the finding ran in two directions, so the verdict does too
+(`docs/HUKUM-2026-08-24-YAZITIPI.md`; measurement `research/olcumler/yazi_tipi_2026-08-24/`).*
+The round re-ran the 2026-08-07 rig and **reproduced its frozen baseline exactly** (Geist Mono
+`1`/`l` 0.92 @10px / 0.57 @28px, Recursive Mono 1.00 / 0.817) — which is the only reason the new
+numbers are admissible at all.
+
+- **Sans: Inter wins and is taken.** It beats Recursive Sans on every legibility measure —
+  `1`/`l` ink difference @28px **0.968 vs 0.931**, `0`/`O` @28px **0.774 vs 0.663**. Refusing a
+  measured improvement without a reason would be the discipline running backwards.
+- **Mono: Recursive wins and stays.** Geist Mono collapses the `1`/`l` distinction from 0.817 to
+  **0.570** (−30%; at the machine's real dpr=2, 0.708 → 0.576), its cut carries **no `₺` and no
+  `✓`**, and it has no OpenType feature that could compensate. This pane's every number is money.
+  The 2026-08-07 ruling was **confirmed, not overturned**.
+- **The declared cost.** The type is no longer one family and its sibling: two foundries now share
+  the page, and the typographic cost of that was **not measured**. This document does not claim it
+  is zero. The trade taken is a measured legibility gain over an unmeasured aesthetic consistency.
+
+**Subset coverage was measured, not assumed — twice, and the second pass changed the answer.**
+Twelve symbols the pane can draw (`∪ ⏱ ⓘ ▤ ▸ ▾ ◈ ◐ ◤ ⚖ ✕ ❓`) are absent from the Inter cut. They are
+absent from the **current Recursive cuts too**, so they already fall to the system face today and
+this is not a regression; and Inter's cut is the wider one overall (278 code points vs 260) and does
+carry `₺` and `✓`.
+
+**They cannot be added by re-subsetting.** All of them — plus `⟨⟩` and the soft hyphen — are missing
+from Inter's *source* (2 852 glyphs, checked directly against `Inter-VF.ttf`). A subsetter can only
+remove. Widening would mean changing the source font, which is a separate ruling, not a build flag.
+
+Counted per character, comments stripped, because a naive count gets this wrong:
+
+| Character | In `app.js` | Actually drawn | Where |
+|---|---|---|---|
+| `─` U+2500 | 58 | **0** | all inside source comments (`// ── HEADING ──`) |
+| `⟨` `⟩` U+27E8/9 | 2 + 2 | **0** | source comments |
+| soft hyphen U+00AD | 0 | **0** | not used anywhere |
+| `▤` U+25A4 | 1 | **1** | the flow card's view switch (chain) |
+| `◤` U+25E4 | 1 | **1** | the flow card's view switch (funnel) |
+
+So exactly **two** live uses, both icons on a `.pv-gbtn`, and both are moving to inline SVG — which
+is the right fix regardless of the face: a glyph used as an icon is a font-dependency in disguise,
+and it breaks the moment the cut, the fallback or the platform changes. Nothing is used in *running
+text*, so nothing here forces the subset wider.
+
+**The subset's pruned `ss02`/`cv01` were recovered — measured, not assumed.** The first cut
+dropped Inter's I/l disambiguation features because the subsetter's feature allowlist did not name
+them, and the pruning was *proved* rather than suspected: applying the same descriptor to that cut
+changed nothing (`0.968`, pixel-identical), while the full file with both features on reached
+`0.988`. A follow-up round re-cut the font with both preserved and re-measured on the same rig —
+which first reproduced the frozen baseline exactly (Recursive Mono 1.00 / 0.817, Recursive Sans
+0.931 / 0.663, the previous cut 0.968), so the comparison is admissible.
+
+| Ink difference, dpr 1 @28px | pruned cut | **preserved cut** | full file (ceiling) |
+|---|---|---|---|
+| `1` vs `l` | 0.968 | **0.975** | 0.988 |
+| `0` vs `O` | 0.774 | **0.795** | — |
+| `l` vs `I` | 0.500 | **0.930** | — |
+
+The `l`/`I` pair is where it matters: `ss02` swaps `I` for a serifed `I.1`, and that is the
+expensive half of `Il1` confusion on a trading desk. Cost: **+728 bytes** (37.8 → 38.5 KB). Nothing
+regressed — the cut is still proportional, `tnum` still makes the figures uniform, and the frozen
+0.75 floor at 10px still passes. **Both halves are required and both are nailed:** the features must
+be *in the file* (the subsetter can drop them) **and** switched on by the `@font-face` descriptor
+(they are default-off) — either half failing is silent on its own. The remaining **0.013** to the
+full-file ceiling is not closed, and is not claimed to be: it is the `opsz` axis and the glyphs the
+subset does not carry.
+
+Evidence: `research/olcumler/kesit_ss02cv01_2026-08-24/` (its own harness, its own record; the
+2026-08-24 round's frozen evidence was not touched).
+
+*Historical — the round that retired Geist and installed Recursive on both slots. Its mono half is still in force; its sans half was superseded on 2026-08-24 (above). Settled 2026-08-07 (D4). Geist was the incumbent and is **retired** — it is on the overused-typeface
 list, and the operator opened the change on 2026-08-06. The successor was chosen by measuring nine
 OFL sans+mono pairs against the seven-point bar in `docs/TASARIM-YONU-2026-08-07.md` §5; the full
 pool, the eliminations and the evidence are in `docs/YAZI-TIPI-OLCUMU-2026-08-07.md`. The browser
@@ -574,17 +690,35 @@ confirmation round that ruling demanded is in `research/olcumler/yazi_tipi_2026-
 
 Nine steps, and no others. This list is the ramp; the Ramp Rule below states it as law.
 
-| Step | Size | Role |
-|---|---|---|
-| Label | `font-size: 10px` | mono micro-label above a figure; status badges (UPPERCASE, 0.16em) |
-| Micro | `font-size: 11px` | dense table meta, chip text, secondary row detail |
-| Small | `font-size: 12px` | table cells and controls in dense grids |
-| Compact | `font-size: 13px` | default UI text in cards and drawers |
-| Body | `font-size: 14px` | running prose and roomy table cells |
-| Title | `font-size: 17px` | card titles |
-| Headline | `font-size: 20px` | section and drawer titles |
-| Grid figure | `font-size: 24px` | the figure inside a dense matrix cell (weight steps to 500) |
-| Display / Figure | `font-size: 28px` | the largest heading on a view; the headline number in a stat card |
+| Step | Size | Token | Role |
+|---|---|---|---|
+| Label | `font-size: 10px` | `--label-size` | mono micro-label above a figure; status badges (UPPERCASE, 0.16em) |
+| Micro | `font-size: 11px` | `--t-cap` | dense table meta, chip text, secondary row detail |
+| Small | `font-size: 12px` | — | table cells and controls in dense grids |
+| Body | `font-size: 14px` | `--t-body` | default UI text, running prose, roomy table cells |
+| Title | `font-size: 17px` | `--t-lg` | card titles |
+| Headline | `font-size: 20px` | `--t-sub` | section and drawer titles |
+| Grid figure | `font-size: 24px` | `--t-h` | the figure inside a dense matrix cell (weight steps to 500) |
+| Display | `font-size: 28px` | — | the largest heading on a view |
+| Figure | `font-size: 30px` | `--t-num` | the headline number in a stat card |
+
+**Changed 2026-08-24 (Dub conversion).** `13px` **left** the ramp — its ratio to the body step is
+1.077, which is noise rather than hierarchy, and its 46 uses across the four surfaces moved to the
+body step. `30px` **joined** it, as the headline-figure step. Two sizes were considered and
+rejected: `16px` (Dub's canonical body) fails the step rule at 16/14 = **1.1429**, below the frozen
+1.15 floor, and `18px` was only ever a `clamp()` bound. Keeping **17** instead of 16 was the
+narrower of the two measured options: it already had three uses in source and dropping it would
+have collapsed `.md h3` and `.md h4` onto the same size. The hierarchy ramp — the steps a reader
+actually climbs — is therefore **11 · 14 · 17 · 20 · 24 · 30**, with consecutive ratios
+1.273 / 1.214 / 1.176 / 1.200 / 1.250. Measurement: `docs/kontrast-denetimi.md` §12.3.
+
+**The ramp is now tokenised, and that closed a two-source gap.** Until this round only `--t-num`
+existed as a token and every other size was a literal in a rule body — two places telling the same
+truth, free to drift. `10px` and `12px` stay literal on purpose: they are the micro-label and dense-
+meta band, not steps of the hierarchy ramp (and `10px` already has its own token, `--label-size`).
+The surface ramp that `tests/test_tipografi_rampa_v209.py` polices — *which sizes are legal at all*
+— is the wider set `10 · 11 · 12 · 14 · 17 · 20 · 24 · 28 · 30`; the two are different questions and
+are not conflated.
 
 **Character:** One family and its monospace sibling, nothing else, in both themes. With Recursive
 that sentence is literally true rather than approximately true: the mono is not a companion family,
@@ -614,10 +748,16 @@ had.
 | Small-size metrics | x-height 532/1000 → **5.32 px at 10px**, 5.85 px at 11px. Cap height 700/1000 → **7.00 px** / 7.70 px. | `OS/2` v4 `sxHeight`, `sCapHeight`, read at `wght` 400 |
 | Turkish at 10px | **Met, and this is a Turkish product.** `ö`/`ü` keep two separate dots, `ğ`'s breve stays curved and detached, `ş`/`ç` cedillas stay readable — at 10px, on both grounds. The signature idiom (mono 10px/700 UPPERCASE) renders `IŞIK İĞNE ÇÖZÜM ÜSTÜNDE ĞAZI` cleanly. Four of the nine candidates failed exactly here. | 6× pixel-zoom of the real browser raster, `tarayici/04_yakinlastirma_6x.png` |
 
-**Ruling: Recursive Sans Linear + Recursive Mono Linear, self-hosted.** The two properties that
-actually matter for a money console — non-shifting figures and an unmistakable zero — are again met
-by the font's *construction* rather than by optional features, which is the stronger guarantee, and
-they are now met in the sans as well as the mono.
+**Ruling (2026-08-07): Recursive Sans Linear + Recursive Mono Linear, self-hosted.** The two
+properties that actually matter for a money console — non-shifting figures and an unmistakable zero
+— are met by the font's *construction* rather than by optional features, which is the stronger
+guarantee, and at that date they were met in the sans as well as the mono.
+
+> **Half of this ruling was superseded on 2026-08-24.** The mono half stands and was re-confirmed
+> against Geist in the same rig. The sans half did not: Inter beats Recursive Sans on every
+> legibility measure, so `--sans` moved and the construction guarantee moved with it — Inter's
+> figures are proportional and the column is held by `tabular-nums` instead. That trade, and its
+> bounded exposure, are stated at the top of this section and nailed in The Tabular Rule.
 
 #### What the change cost and what it bought — measured, both directions
 
@@ -702,9 +842,10 @@ default; weight is the *remedy* held in reserve if halation is ever reported.
 
 ### Named Rules
 
-**The Ramp Rule.** Nine sizes exist and no others: **10 · 11 · 12 · 13 · 14 · 17 · 20 · 24 · 28** px.
+**The Ramp Rule.** Nine sizes exist and no others: **10 · 11 · 12 · 14 · 17 · 20 · 24 · 28 · 30** px.
 No half-steps, no `15px` because something looked slightly small. If a new element needs a size
-that isn't on the ramp, it needs a different element.
+that isn't on the ramp, it needs a different element. *Changed 2026-08-24: `13px` left and `30px`
+joined — measured, see § Type scale. The count did not move; the rule did not loosen.*
 
 **The Ramp Rule's one exception: fluid display type.** *Written down 2026-08-07 (D5). It was
 already the practice on every surface and it was written nowhere in this document — an unwritten
@@ -831,12 +972,22 @@ the Roboto stack and `prefers-color-scheme`; D6 takes the type ramp. The two rou
 independently and against different trees, which is why this section originally recorded the colour
 leg as outstanding — it was, from where D6 stood.
 
-**The Tabular Rule.** Every figure is Recursive Mono, and every figure declares `tabular-nums`. The
-declaration is defensive, not decorative: it is inert on Recursive Mono itself (no `tnum` feature,
-alignment already structural at 600/1000) and load-bearing on the `ui-monospace` fallback. Never
+**The Tabular Rule.** Every figure is Recursive Mono, and every figure declares `tabular-nums`. On
+the mono face the declaration is defensive, not decorative: it is inert on Recursive Mono itself
+(alignment is already structural at 600/1000) and load-bearing on the `ui-monospace` fallback. Never
 rely on `slashed-zero` — the slash is already in the default glyph, and the `zero` feature that does
-exist substitutes one glyph for an identically shaped one. *The rule's text is the same rule it was
-under Geist; only the font name and the reason the feature is inert have changed.*
+exist substitutes one glyph for an identically shaped one.
+
+*Changed 2026-08-24, and this half is a declared regression.* Where a figure is drawn in `--sans`
+— the headline number in a stat card — alignment is **no longer structural**. Inter's default
+figures are proportional (nine advances, 833–1323 at 2048 upem) and the column is held only by the
+`tabular-nums` declaration, which the subset does carry and which was confirmed applied in the
+browser (uniform 64.844). This is one of the reasons Geist was refused in 2026-08-07, and on the
+sans side it has come back. It was accepted because the legibility gain is measured and the
+exposure is bounded: **numbers are drawn in `--mono`**, which is unchanged and still structural.
+The bound is nailed, not merely asserted — `tests/test_yazitipi_v201.py::
+test_SANSTA_basilan_her_SAYI_tabular_nums_bildiriyor` fails if a `--sans` rule prints a figure
+without the declaration.
 
 **The Label-Above Rule.** A figure never appears without a mono micro-label above it naming what
 it measures. A bare number on this desk is an unlabelled instrument.
@@ -913,19 +1064,33 @@ border. Anything else is elevation.
 
 ## Shapes
 
-Corners are gentle and consistent, and identical in both themes: cards at 12px, controls and badges
-at 10px. Bars and meters stay nearly square at 2px so a thin measurement reads as a measurement
-rather than a lozenge. **There are exactly three radii.**
+Corners are gentle and consistent, and identical in both themes. **Changed 2026-08-24 — the Dub
+radius scale was adopted, so there are now five radii plus the bar:**
+
+| Token | Value | Applies to |
+|---|---|---|
+| `--r-input` | `6px` | text inputs, search boxes, filter rows |
+| `--r-btn` | `8px` | buttons, segmented controls, the focus outline's own corner |
+| `--r-ctl` | `8px` | legacy control radius — **kept** because `app.js` reads the name; now the same step as `--r-btn` |
+| `--r-card` | `12px` | cards, panels, tooltips |
+| `--r-lg` | `16px` | a large card standing alone on the page (the gate card) |
+| `--r-tag` | `9999px` | pills — today only the navigation counter (`.pillc`) |
+| `--r-bar` | `2px` | bars and meters |
+
+Bars and meters stay nearly square at 2px so a thin measurement reads as a measurement rather than a
+lozenge. *The retired scale was three radii — cards 12px, controls and badges 10px, bars 2px.*
 
 Borders are always exactly 1px and always a warm neutral, except where a status colour draws its
 own inset hairline. Nothing is dashed. Nothing is doubled except the top bar's deliberate rule pair.
 
-**There is no pill geometry, and this document used to claim otherwise.** Earlier versions listed a
-`--r-pill: 999px` token and a rule reserving full-round corners for clickable things. The token was
-removed from `index.html` during the Omega conversion because no rule referenced it, and a re-count
-on 2026-08-01 found **zero** uses of `var(--r-pill)` across all three surfaces — while a dead
-definition still sat in `landing.html`. Both the claim and the dead token are now gone. Every
-control, including the primary action, is the 10px control radius.
+**Pill geometry came back on 2026-08-24 — with a reader this time.** Earlier versions listed a
+`--r-pill: 999px` token and a rule reserving full-round corners for clickable things; the token was
+removed during the Omega conversion because **no rule referenced it** (re-count 2026-08-01: zero
+uses across three surfaces, while a dead definition still sat in `landing.html`). The lesson stuck
+and is the reason the new token is named `--r-tag` and ships with exactly one reader: the navigation
+counter pill, `.pillc`. A radius token without a rule that uses it is a claim, not a geometry — if a
+future surface wants more full-round shapes it adds them, in the same change. Every other control,
+including the primary action, is the `--r-btn` step.
 
 The word *pill* survives in this document only as a shape-of-speech for a small filled control
 (“the black pill”); it never denotes a 999px radius. If a future surface wants true full-round

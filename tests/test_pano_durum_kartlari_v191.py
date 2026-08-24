@@ -307,8 +307,19 @@ def test_brifing_kahraman_blogu_ve_son_sinyaller_karti_gitti():
     assert '<div class="hero rise">' not in kod, "kahraman bloğu hâlâ Portföy'de — çakışma sürüyor"
     assert "Son sinyaller" not in kod, "plan tablosu hâlâ iki sayfada"
     assert "planRowBrief" not in kod
-    # Bölüm boşalmadı: kartın SAYISI ızgarada, satırları burada.
-    assert "nextSessionCard(t)" in kod and "posRows" in kod
+    # Bölüm boşalmadı: kartın SAYISI ızgarada, sıradaki seansın satırları burada.
+    assert "nextSessionCard(t)" in kod
+    # ÇİVİ GÜNCELLENDİ (KARAR-2026-08-24-B §5.3, BEYANLI): açık pozisyon TABLOSU (`posRows`) bu
+    # bölümden ① Bugün'e TAŞINDI. Gerekçe aynı çakışma yasasıdır — aynı satırlar iki yerde
+    # çiziliyordu ve Y1 (satır-içi 60 barlık seri + giriş/stop/hedef işaretleri) ancak TEK tabloda
+    # işaretlenebilir; iki tablo iki ayrı "etkin stop" tanımına kapı bırakırdı.
+    # SİLİNMEDİ, TAŞINDI — ve bunun ölçülebilir şartı: bölüm yeni adresi YAZAR (öksüz yüzey yok).
+    assert "posRows" not in kod, "pozisyon tablosu geri gelmiş — aynı satırlar yine iki sayfada"
+    assert 'data-a1="bugun"' in kod, "taşınan tablonun yeni adresi bölümde yazmıyor (öksüz yüzey)"
+    assert "① Bugün" in kod, "okur satırları nerede bulacağını bu bölümden öğrenemiyor"
+    # ve HEDEFTE gerçekten duruyor: ① Bugün'ün pozisyon tablosu kıvılcım yuvası taşır.
+    assert "pvKivilcimYuva(p.ticker, { giris: p.entry, stop: etkin, hedef: p.target })" in APPJS, \
+        "pozisyon satırları ① Bugün'de seviye işaretli seri taşımıyor — taşıma yarım kalmış"
 
 
 def test_planRowBrief_silindi_ve_alanlari_planRowFull_da_okunuyor():
