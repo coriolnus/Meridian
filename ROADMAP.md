@@ -165,6 +165,50 @@ varırdı. Bu satır burada bir **hatıra değil kapı gerekçesidir**.
 aşamasında) · `H6 ✅` = kapandı ve kanıtı §7'de yazılı · `BLOKE`/`ASKIDA` = aşama değil **dik
 durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'dır.
 
+> ## ⚑ 2026-08-24 DOĞRULAMA TURU — BU BÖLÜMÜN YETKİLİ DÜZELTMESİ
+>
+> 59 aday kalem koda/canlıya karşı doğrulandı, sonra "hâlâ açık" diyen her hüküm AYRI bir
+> şüpheciye çürütülmeye verildi (19 cephe, 33 ajan). Tam liste ve kalem kalem kanıt:
+> **`docs/ACIK-KALEMLER-DOGRULANMIS-2026-08-24.md`** (o belgenin EK bölümü tam sayımı taşır).
+>
+> **SAYIM: 25 gerçekten açık · 20 BAYAT-KAPALI · 14 KISMEN.**
+> Aşağıdaki tablolar ve §3 WP hücreleri bu ölçümden ÖNCEye aittir. **Çeliştiklerinde bu blok
+> yetkilidir.** Satırlar SİLİNMEDİ (tarihçe-koru) — üstlerine bu not düşüldü.
+>
+> ### BAYAT-KAPALI 20 — tahta açık gösteriyor, kalem KAPALI (tur harcama)
+> `B-PENCERE-KAYDIR` · `24h` · `WP7-40 (K5)` · `B-NOUS-BEYIN` · `BT-2` · `M11-Ö1` ·
+> `kart-lint` · `ARSENAL` · `B-CHOP-BUTCE` · `L3` · `L4` · `sprint-inactive` ·
+> `GOAL_FAILURE` · `B-ORACLE-TASIMA` · `26-3cift` · `F9/H3` · `registry-budama` ·
+> `B-OCI-BUCKET` · `B-DASH-CRED` · `B-RUNBOOK-KAPSAM`
+>
+> **Bunların DÖRDÜ §5'te "operatör bekliyor" diye duruyor ama kararları VERİLMİŞ ve
+> UYGULANMIŞ:** `B-RUNBOOK-KAPSAM` (K4, "Evet") · `B-DASH-CRED` (iki faz da canlı) ·
+> `B-OCI-BUCKET` (anahtar kurulu, S3 replica dakika başı sync) · `B-ORACLE-TASIMA`
+> (taşıma 2026-07-30'da yapıldı). Operatöre boşuna karar bekletiyorlar.
+>
+> ### GERÇEKTEN AÇIK 25 — engele göre
+> **HAZIR İŞ (4, bugün başlanabilir):** `korunum-kovası-3` (EDG-049 hükmü indi, engel kalktı) ·
+> `20c` (tasarım kapalı, kod+çivi) · `Ö-54-ek` (short işaret sözleşmesi) · `K3/K6`
+> (dün gece dosya çakışmasından koşulamadı, çakışma YOK) — **dördü de 2026-08-24'te başlatıldı.**
+> **OPERATÖR (11):** `B-AJAN-TAVAN` · `B-AJAN-GIT` · `U6` · `B-FMP-PLAN` · `B-DELIST-KAYNAK` ·
+> `bars_intraday` retention · `insider-A6` · `15c` · `15d` · `M11-Ö10` · `M2`
+> **TAKVİM (5):** `Ö-54/EDG-042` (29 Ağustos) · `Ö-55` · `Faz-5` örneklemi (11/20) ·
+> `EXE-2026-003` (~8 hafta) · `eq_ayna` kanıtı (bugünkü seans turundan sonra)
+> **BLOKE (5):** `EDG-040-a` · `EDG-2026-055` (PIT derinliği) · `propose_virgin_knob` ·
+> `L2` · `M2`
+>
+> **`D5` bilinçli olarak OPERATÖR listesinde DEĞİL:** nominal olarak operatörde ama kararı
+> verdirecek kanıt üretilmedi (EDG-042 bandı). "Operatör bekliyor" demek yanıltıcı olurdu —
+> asıl engel ölçüm.
+>
+> ### KISMEN 14 — bir bacağı kapalı
+> `F8-A1A8` · `EDG-2026-053` · `B-FINVIZ-TOKEN` · `13` · `24b` · `EDG-2026-056` · `2D` ·
+> `20d` · `B-QC-LOGIN` · `B-FAZ6-KILIT` · `L1` · `25a/25c/25d` · `Ö-49-kalan` ·
+> `zaman-varsayimi`
+> İkisi (`2D`, `20d`) **yalnız tahta bakımı** — iş tamamen bitmiş, satır çizilmemiş.
+> `B-QC-LOGIN`in "dotnet/docker yok" engeli BAYAT; gerçek engel operatörün `lean login`i.
+> `25a`nın 14 kaleminden **13'ü inmiş**; kalan tek şey canlı `.env`de gereksiz token kopyası.
+
 #### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (6 kalem; **`Ö-51b` ve `Ö-51c` 2026-08-22'de H6 ✅'e geçti, satırları tarihçe olarak yerinde bırakıldı** → ~~fiilen 4 açık~~ **[2026-08-23 süpürme: sayım bayattı — fiilen 5 açık (Ö-55 · F8 · Ö-54 · gölge · 24b-24d); 23e'nin H0'dan taşınmasıyla 6]** **[2026-08-24 eleme: `24b-24d` satırı fiilen yalnız `24b` — `24c` ve `24d` KAPANDI-BAYAT (`docs/ELEME-WP7-2026-08-23.md` §1-§2); kalem SAYISI değişmez, kapsamı daralır]**)
 
 > **[2026-08-24 gece karşıt-doğrulama: aşağıdaki 7 satır BAYAT — kalemler kapalı, tahta açık gösteriyordu. Kanıt tek tek `docs/GECE-TURU-2026-08-24-ROADMAP.md` §4'te.]**
