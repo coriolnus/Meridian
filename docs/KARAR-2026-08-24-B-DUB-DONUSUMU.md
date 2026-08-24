@@ -285,3 +285,58 @@ geri alınamaz risk alınmaz — operatör otonomi verdi, **hukuki risk kabulü*
   ÖLÇÜM olsun).
 - **Operatöre açık yol**: FFL §09 kesit izni için ITF'ye yazmaya açıkça davet ediyor; izin
   alınırsa 41,6 KB ~15 KB'a iner. Dış yazışma operatör işidir, yapılmadı.
+
+---
+
+## 9 · ÖE1 · ŞİDDET MERDİVENİ ÇÖKTÜ — KARARIN KENDİ KUSURU (2026-08-24)
+
+### 9.1 Bulgu (jeton turu ölçtü, kararda YOKTU)
+§2'de şiddet rolünü Dub paletine bağladım: `vivid-green` → sev-3, `tangerine` → sev-2,
+türetilmiş `loss-red` → sev-1. **Ölçüm bunun bir gerileme olduğunu gösterdi:**
+
+| çift | eski dünya | Dub ataması | sonuç |
+|---|---|---|---|
+| sev-1 ↔ sev-2 hue farkı | 53° | **2,7°** (`loss-red` 38,4° ↔ `tangerine` 41,1°) | AA türetmesi ikisini AYNI renge çökertiyor: `#b54000`↔`#ba3a00` (gündüz), `#ff8e63`↔`#ff8e6a` (gece) |
+| sev-1 ↔ sev-2 ΔE | — | **0,094 / 0,114** | ayırt edilemez |
+| sev-2 ↔ sev-3 luminans oranı | — | **1,004** | ayrım YALNIZ hue'da — protan/deutan'ın sildiği eksen |
+
+**Hiçbir mevcut test bunu görmezdi.** v197 rol ayrılığını ölçer (bir kural iki rol taşımasın),
+v153 kontrastı ölçer (her renk kendi zemininde AA). İkisi de "iki ŞİDDET SEVİYESİ birbirinden
+ayırt edilebiliyor mu" diye SORMUYOR. Kör nokta buydu.
+
+### 9.2 Neden bu pazarlık edilemez
+Şiddet merdiveni operatörün "şimdi müdahale" ile "insan gerekiyor" ile "nominal"i ayırdığı
+kanaldır. Çökerse pano bir alarmı bir uyarıdan ayıramaz. Hiçbir görsel kazanç bunu karşılamaz —
+ve kazanç zaten yok: iki renk aynıysa Dub'ın paleti de temsil edilmiyor.
+
+### 9.3 EŞİK — ÖLÇÜMDEN ÖNCE DONDURULDU (2026-08-24, Rol-1)
+Şiddet üçlüsünün **komşu** seviyeleri, İKİ temada da, kendi gerçek zeminlerinde:
+
+| Ö | ölçü | eşik | gerekçe |
+|---|---|---|---|
+| ÖE1-a | luminans oranı (sev-1↔sev-2, sev-2↔sev-3) | **≥ 1,20** | renk körlüğünün SİLEMEDİĞİ tek kanal. 1,004 tam bu yüzden kabul edilemez |
+| ÖE1-b | ΔE2000 (aynı komşu çiftler) | **≥ 15** | JND ~2,3; küçük çipte bir bakışta ayrılması için katları gerekir |
+| ÖE1-c | her renk kendi %10 tinti üstünde (`--card`) | **≥ 4,5** | mevcut G3 garantisi — GEVŞEMEZ |
+
+**Sıra bağlayıcıdır**: a ve b sağlanamıyorsa c'yi gevşetme yasak.
+
+### 9.4 TUTMAZSA — beyanlı geri çekilme yolu
+Dub'ın rampasında bu üçlü ayrılamıyorsa **şiddet rolü Dub paletinden ÇIKAR** ve ölçülmüş Omega
+üçlüsü (`#0c6a3b` / `#6e4a00` / `#b3242c`, hue farkı 53°) yerinde kalır. Bu bir başarısızlık
+değil, doğru bölünmedir: Dub bir **pazarlama sitesidir** ve üç seviyeli bir şiddet kanalı
+taşımaz — taşımadığı bir şeyi ondan almaya çalışmak kategori hatasıdır. Gezinme, yüzey,
+geometri, tipografi ve yön rolleri Dub'da KALIR.
+
+### 9.5 YENİ ÇİVİ ZORUNLU
+Hangi sonuç çıkarsa çıksın, `test_renk_rolleri_v197`'ye **şiddet seviyeleri birbirinden
+ayrılabiliyor mu** çivisi eklenir (ÖE1-a + ÖE1-b, iki temada). Bu kör nokta bir daha sessiz
+kalamaz — ölçülmemiş olması, iki rengin aynı olduğunu on iki saat görünmez kıldı.
+
+### 9.6 Diğer hükümler (aynı tur)
+- **Ö6 tip rampası** — eşik (her adım ≥1,15) tutmadı; jeton turu **16→17** daraltmasıyla kapattı
+  (rampa 11/14/17/20/24/30, en küçük adım 1,176). Bedeli beyanlıdır: Dub'ın kanonik gövde boyu
+  16px'tir ve ondan sapıyoruz. Kabul: eşik ölçümden önce donmuştu ve donmuş eşik oynatılmaz;
+  17 ile 16 arasındaki fark ölçülemez düzeyde, hiyerarşi kazancı ölçülür düzeyde.
+- **Ö3/Ö5/Ö7** — tutmadılar ve §2.1'in yazdığı gibi **kullanım yüzeyi daraltılarak** kapandılar
+  (jeton uydurulmadı): gezinme mürekkebi yalnız iki adı geçen küçük yüzeyde zemin olabilir,
+  büyük yüzey wash'a düşer; odak garantisini `--sh-ring` değil 2px `--accent` ana hattı taşır.
