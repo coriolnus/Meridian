@@ -91,7 +91,7 @@ def _olcum_modulu():
 # rozet taşır, rozet `data-dikkat` doğurur ve kurucu oturum hafızasını EZEREK kartı açar.
 # v219'DA BEYANLI GÜNCELLENDİ (2026-08-09, dalga W4 · 93ae96a) — TEK yeni kart:
 #   ogrenme 43 → 44  (+1: hermes:telemetri — `agent_calls` defterinin İLK pano okuyucusu;
-#                     hermes.py:2503'ün "veri hazır, çizim henüz yok" beyanını KAPATIR)
+#                     hermes.py:2503'ün beyanını KAPATIR [çapa-mezar-taşı: 2026-08-09 anlatısı])
 # Kapak altında: `KAPAK_TABANI` ogrenme 18 → ÖLÇÜLEN 23, taban KORUNUYOR.
 # v229'DA BEYANLI GÜNCELLENDİ (2026-08-09, dalga W-UX D3-b) — ÜÇ yeni FIRSAT kartı (docs/TASARIM-
 # YONU-2026-08-07 §7'nin F1/F2/F14'ü); hepsi kapak altında, üçü de "üretiliyor ama görünmüyor"
