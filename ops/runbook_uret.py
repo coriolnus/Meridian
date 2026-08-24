@@ -260,9 +260,44 @@ def atesleme_yerleri() -> dict[str, list[dict]]:
             else:
                 continue
             mesaj = _kaynak_parcasi(kaynak, d.args[1]) if len(d.args) > 1 else ""
-            out.setdefault(jeton, []).append(
-                {"yer": f"{p.relative_to(KOK)}:{d.lineno}", "mesaj": mesaj})
+            _kayit = {"yer": f"{p.relative_to(KOK)}::{_kapsayan_sembol(agac, d)}", "mesaj": mesaj}
+            # AYNI FONKSİYONDA AYNI MESAJLI İKİ ÇAĞRI TEK SATIR OLUR: sembol çapası satır
+            # numarasından daha kaba ve bu bilinçli; ayırt eden şey MESAJDIR, konum değil.
+            if _kayit not in out.setdefault(jeton, []):
+                out[jeton].append(_kayit)
     return out
+
+
+def _kapsayan_sembol(agac: ast.AST, hedef: ast.AST) -> str:
+    """Bir çağrının İÇİNDE bulunduğu fonksiyon/sınıf zinciri (ör. `Sinif.metot`).
+
+    NEDEN SATIR NUMARASI DEĞİL — ÜÇÜNCÜ TEKRAR (2026-08-24). `docs/RUNBOOK.md` ÜRETİLMİŞ bir
+    belgedir ve çapaları `dosya:satır` biçimindeydi. Sonuç: kaynak dosyanın HERHANGİ bir yerine
+    satır eklemek — ilgisiz bir yorum bile — belgeyi, `korpus_uret.py`in üç artefaktını ve
+    onlara bağlı D6 tipografi ölçümünü BİRLİKTE bayatlatıyordu. Bu, 2026-08-14 · 2026-08-14
+    (ikinci) ve 2026-08-24'te üç kez tazeleme turu yedi ve her turda ölçüm kanıt zinciri
+    yeniden gerekçelendirilmek zorunda kaldı.
+
+    SEMBOL ÇAPASI BU ZİNCİRİ KIRAR: bir fonksiyonun ADI, o fonksiyonun üstüne satır eklenince
+    değişmez. Belge yalnız GERÇEKTEN değiştiğinde (yeni alarm, yeni mekanizma, yeni mesaj)
+    değişir — yani düşen test artık "satır kaydı" değil "sözleşme değişti" demek olur.
+
+    Modül düzeyindeki çağrılar için `<modül>` döner: yanlış bir isim uydurmaktansa kapsamın
+    olmadığını söylemek (UYDURMA YASAĞI'nın çapa tarafı)."""
+    yol: list[str] = []
+    def gez(dugum, zincir):
+        for cocuk in ast.iter_child_nodes(dugum):
+            ad = getattr(cocuk, "name", None)
+            yeni = zincir + [ad] if isinstance(
+                cocuk, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) else zincir
+            if cocuk is hedef or (hasattr(cocuk, "lineno") and cocuk is hedef):
+                yol.extend(yeni)
+                return True
+            if gez(cocuk, yeni):
+                return True
+        return False
+    gez(agac, [])
+    return ".".join(yol) if yol else "<modül>"
 
 
 def nabiz_yerleri() -> dict[str, list[str]]:
@@ -281,7 +316,9 @@ def nabiz_yerleri() -> dict[str, list[str]]:
                     and d.func.attr == "beat" and d.args
                     and isinstance(d.args[0], ast.Constant)
                     and isinstance(d.args[0].value, str)):
-                out.setdefault(d.args[0].value, []).append(f"{p.relative_to(KOK)}:{d.lineno}")
+                _yer = f"{p.relative_to(KOK)}::{_kapsayan_sembol(agac, d)}"
+                if _yer not in out.setdefault(d.args[0].value, []):
+                    out[d.args[0].value].append(_yer)
     return out
 
 

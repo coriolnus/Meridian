@@ -1,0 +1,68 @@
+card_id: EDG-2026-059
+family: arayuz_olcumu
+thesis: >
+  D6 tip-rampası ölçümü (2026-08-07) `DESIGN.md`de yürürlükte duruyor ama ölçtüğü İKİ GİRDİ de
+  değişti: (a) sevk edilen YÜZ Recursive Sans → **Inter** (2026-08-24 Dub dönüşümü), (b) korpus
+  151 blok / 56.249 karakter → **209 / 101.876** (+%81). Harness'ın `OLCUT` satırı hâlâ
+  Recursive yüklüyor, yani bugün koşulsa SEVK EDİLMEYEN bir bileşimi ölçerdi.
+  BU KART O SAYILARI YENİDEN ÖLÇER. Yeni bir tasarım iddiası TEST ETMEZ; yürürlükteki
+  belgenin yürürlükteki sayılarla eşleşmesini sağlar.
+
+evidence_refs:
+  - "research/olcumler/tipografi_rampa_2026-08-07/ON_KAYIT.md — özgün ön-kayıt, dört spesifikasyon"
+  - "research/olcumler/tipografi_rampa_2026-08-07/TAZELEME-2026-08-14.md §dördüncü tazeleme — neden tazeleme DEĞİL kart"
+  - "docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md §3 — yüz değişimi (Inter/Satoshi/Geist Mono)"
+  - "olcum_sonucu.json — özgün koşum (korpus 151 blok / 56.249 karakter, yüz system-ui + Recursive)"
+
+universe: >
+  `docs/RUNBOOK.md`ten `korpus_uret.py` ile türetilen ÜÇ artefakt (bugünkü hâl: 209 blok,
+  101.876 karakter, `ornek_metin.json 9f5c91203284d794`). Tarayıcı: Browser pane, ölçüm
+  makinesinin dpr'ı ve ekran boyutu SONUÇLA BİRLİKTE kaydedilir (özgün koşumda da öyleydi:
+  "2026-08-07, Chrome, dpr 2, ekran 1710x1112"). Canlıya DOKUNULMAZ; salt okuma.
+
+features_asof: >
+  Dört spesifikasyon AYNEN korunur (MEVCUT 15/1.65/78ch · SADECE_BOYUT 14/1.65/78ch ·
+  ADAY 14/1.80/72ch · OLCUT 14/1.80/72ch) — DEĞİŞEN TEK ŞEY `OLCUT`un YÜZÜDÜR:
+  ~~RecursiveSans~~ → **Inter** (`index.html`in `.md` sınıfıyla BİREBİR, özgün ön-kaydın
+  kuralı buydu: "ürünün kendi uzun-metin spesifikasyonu"). Bu bir eşik değişikliği DEĞİL,
+  aynı kuralın bugünkü karşılığıdır ve ölçümden ÖNCE burada beyan edilmiştir.
+  Ölçülenler: cpl_medyan · cpl_ortalama · x_yuksekligi_px · cap_px · toplam_satir ·
+  korpus_yuksekligi_px (özgün koşumun alan kümesiyle birebir).
+
+parameter_grid:
+  spesifikasyon: [MEVCUT, SADECE_BOYUT, ADAY, OLCUT]   # K = 4, özgün ön-kayıtla aynı
+
+cost_model: yok_tarayici_olcumu
+
+success_metric: >
+  KARAR KURALI (DONUK, ölçümden önce yazıldı) — bu kart bir EDGE aramaz, BAYATLIK ölçer:
+    * `DESIGN.md`de duran D6 sayıları ile yeniden ölçülen sayılar arasındaki fark
+      **cpl_medyan'da ≤ 3 CPL ve x_yuksekligi'nde ≤ 0,3 px** ise: sayılar YÜRÜRLÜKTEDİR,
+      belgeye yalnız yeni damga (tarih + korpus künyesi) düşülür.
+    * Fark bu bandın DIŞINDA ise: `DESIGN.md`in D6 satırları yeni sayılarla DEĞİŞTİRİLİR ve
+      eski sayılar üstü çizili + tarihli olarak KALIR (SİLME YOK).
+  Eşiğin gerekçesi: 3 CPL, özgün koşumun spesifikasyonlar ARASI en küçük farkının (92,0 → 78,0
+  = 14 CPL) beşte birinden küçüktür; yani "ölçüm gürültüsü" ile "gerçek kayma" ayrılabilir.
+  0,3 px x-yüksekliği, özgün K3 ölçütünün toleransının (0,5 px) altındadır.
+  HÜKÜM SIRALAMASI DEĞİŞMEZ İDDİASI YOKTUR: sıralama da ölçülür ve değişirse yazılır.
+
+kill_criteria:
+  - "korpus artefaktları koşum sırasında yeniden üretilirse geçersiz (girdi donmuş olmalı: 9f5c91203284d794)"
+  - "dört spesifikasyondan biri ölçüm sırasında değiştirilirse geçersiz"
+  - "eşikler (3 CPL / 0,3 px) ölçümden sonra oynatılırsa geçersiz"
+  - "`OLCUT` yüzü Inter DIŞINDA bir şeye çevrilirse geçersiz — kart tam da 'sevk edilen yüz' iddiasını ölçüyor"
+  - "canlı state'e YAZILIRSA geçersiz"
+
+k_registry: {registered_at: "2026-08-24", trial_ids: [pending]}
+status: registered
+
+beyanli_sinirlar: >
+  (1) Bu kart bir TASARIM KARARI vermez. Özgün D6'nın hükmü (28/20/14 merdiveni, 14px gövde)
+  operatör onaylı ve YÜRÜRLÜKTE; kart yalnız o hükmün altındaki SAYILARIN bugünkü girdiyle
+  eşleşip eşleşmediğini ölçer.
+  (2) İKİ DEĞİŞKEN BİRDEN OYNADI (yüz + korpus) ve bu kart onları AYIRMAZ — ayırmak iki ayrı
+  koşum ister ve bu kartın sorusu "hangisi ne kadar etkiledi" değil, "yürürlükteki sayı doğru mu".
+  Ayrıştırma gerekirse ayrı kart açılır.
+  (3) Çapa sınıfı 2026-08-24'te kapandı (`dosya::sembol`), yani bu kart koşulduktan sonra
+  korpusun ilgisiz satır kaymalarıyla yeniden bayatlaması BEKLENMİYOR — kartın kendisi bir
+  tekrar sınıfının SON halkasıdır.
