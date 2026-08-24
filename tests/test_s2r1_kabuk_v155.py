@@ -280,12 +280,40 @@ def test_render_genel_kartlari_kayittan_cizer():
         f"çizilen kartlar kayıtla aynı değil: çizilen={sorted(cagri)}")
 
 
-def test_genel_bakis_OZETTIR_detay_tablosu_tasimaz():
-    """ADR: 'HEPSİ özet … kart içinde detay YOK. BAŞKA HİÇBİR ŞEY.' Bir tablo satırı (`trow`)
-    tanım gereği detaydır ve bu sayfaya bir kez girdiğinde tek ekran sözleşmesi biter."""
+def test_genel_bakis_SINIRSIZ_detay_dokumu_tasimaz():
+    """ADR'nin mutlak yasağı 2026-08-24'te AŞILDI; korktuğu şey AŞILMADI ve burada ölçülür.
+
+    ESKİ SÖZLEŞME (2026-07, `docs/UIUX-S2R-REDESIGN.md`): 'HEPSİ özet … BAŞKA HİÇBİR ŞEY' —
+    `trow`, `<table` ve `class="card` üçü de mutlak yasaktı.
+
+    YENİ SÖZLEŞME (`docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md`, operatör onaylı maket): Bugün
+    yüzeyi bir kanıt tablosu taşır (açık pozisyonlar, seviye-işaretli kıvılcımlarla). Sözleşme
+    SİLİNMEDİ, DARALTILDI — çünkü ADR'nin gerçek korkusu 'bir tablo' değil, sayfanın SINIRSIZ
+    bir detay dökümüne dönüşmesiydi. Üç sınır o korkuyu ölçülebilir tutar:
+
+      1. `trow` = 0 — jenerik detay satırı üreticisi. Paydası bir SORGU sonucudur, yani
+         sınırsızdır. Bir kez girerse sayfanın uzunluğu veriye bağlanır.
+      2. `<table` ≤ 1 — ve o tek tablo açık pozisyonlar olmalı. Paydası MARUZİYET BÜTÇESİYLE
+         sınırlıdır (bugün 7), sorguyla değil. Sınırlı payda ile sınırsız payda arasındaki
+         fark, bu testin savunduğu tek şeydir.
+      3. `class="card` = 0 — emekli kart grameri. `pv-` grameriyle yan yana yaşarsa iki
+         görsel dünya aynı sayfada durur ve hangisinin doğru olduğu okunamaz.
+
+    Bu üç sınırdan biri düşerse doğru tepki testi gevşetmek DEĞİL, ADR'yi yeniden açmaktır."""
     govde = _render_genel()
-    for yasak in ("trow", "<table", "class=\"card"):
-        assert yasak not in govde, f"Genel Bakış'a detay yüzeyi sızmış: {yasak}"
+    assert "trow" not in govde, (
+        "Genel Bakış'a jenerik detay satırı (`trow`) sızmış — paydası sorguya bağlı, sayfa "
+        "uzunluğu veriyle büyür. Aşma sınırlı tabloya verildi, sınırsız satıra DEĞİL.")
+    assert 'class="card' not in govde, (
+        "emekli kart grameri geri gelmiş — `pv-` grameriyle yan yana iki görsel dünya olur.")
+    n_tablo = govde.count("<table")
+    assert n_tablo <= 1, (
+        f"Genel Bakış {n_tablo} tablo taşıyor; sözleşme EN FAZLA BİR (açık pozisyonlar kanıt "
+        f"tablosu). İkinci tablo, ADR'nin 'sınırsız detay dökümü' korkusunun ta kendisidir.")
+    if n_tablo == 1:
+        assert "pv-tbl" in govde and "pv-kanit" in govde, (
+            "tek tabloya izin var ama o tablo AÇIK POZİSYONLAR kanıt tablosu olmalı "
+            "(`pv-tbl` içinde, `pv-kanit` bölümünde) — başka bir tablo bu izni kullanamaz.")
 
 
 def test_alarm_butcesi_TEK_SATIR_kart_degil():

@@ -111,7 +111,16 @@ def _olcum_modulu():
 #                     "dış okuyucusu api.py'dir" der → pano çizmiyordu, YASA 6 boşluğu])
 #   karar 27 · ogrenme 45 · kilitler 5 (değişmedi — F5 ③'e düştü)
 # Kapak altında: `KAPAK_TABANI` saglik ÖLÇÜLEN 7→8, taban 4 KORUNUYOR (`>=`).
-KART_TABANI = {"karar": 27, "saglik": 24, "ogrenme": 45, "kilitler": 5}
+KART_TABANI = {"karar": 26, "saglik": 24, "ogrenme": 45, "kilitler": 5}
+# 2026-08-24 BEYANLI DÜŞÜŞ (ratchet'in İLK aşağı yönlü hareketi): karar 27 → 26.
+# TEK sebep: "Açık pozisyonlar" kartı ② Karar'dan SİLİNMEDİ, ① Bugün'e TAŞINDI
+# (`docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md` §5.3 sadeleştirme yetkisi; aynı sayıyı iki
+# yüzeyde göstermek YASA 6'nın tam tersiydi). Bölüm yeni adresini YAZIYOR ve
+# `RECORD_VIEW.durumPozisyon`un adresi de güncellendi — yani okuyucu kaybolmadı, yer değiştirdi.
+# DÜŞÜŞÜN NEDEN İHLAL OLMADIĞI: ratchet "sessizce kart eklenemez" der; buradaki hareket bir
+# EKLEME değil bir TAŞIMA, ve taşındığı yer ölçülüyor (test_s2r1_kabuk_v155 tek tabloyu
+# `pv-kanit`/`pv-tbl` olarak çiviliyor). Kart YOK OLSAYDI bu satır düşemezdi — okuyucusuz
+# kalan bir sayı YASA 6 ihlalidir ve kırmızı kalmalıydı.
 # 2026-08-23 BEYANLI ARTIŞ #2: saglik 22→24 — triyaj turu iki yeni sağlık yüzeyi ekledi:
 # dagitimSatiri (dagitim.json YASA-6 okuyucusu: canlıdaki dağıtım sha'sı) + litestream sır
 # grubu (Ayarlar, S3 kimlik çifti). İkisi de bu turun operatör-onaylı işleri.

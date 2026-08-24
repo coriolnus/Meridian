@@ -13,7 +13,28 @@ alanı yeni IA'da bir eve taşınır YA DA bilinçli-gerekçeli emekli edilir (�
 - **GENEL BAKIŞ (Overview — J1'in evi, TEK EKRAN KAYDIRMASIZ):** Sessiz-Hat (zaten global) ·
   "dün gece ne oldu" tek paragraf-blok (son döngü: seans/aday/plan/silahlı) · sermaye-köken kartı ·
   bugün-ne-var (silahlı planlar / bekleyen onaylar sayacı) · alarm-bütçesi tek satır · 3 mini-trend
-  (equity+DD, karne, kapsama) — HEPSİ özet; her kartın "→ alan sayfası" tek bağı. BAŞKA HİÇBİR ŞEY.
+  (equity+DD, karne, kapsama) — HEPSİ özet; her kartın "→ alan sayfası" tek bağı. ~~BAŞKA HİÇBİR ŞEY.~~
+
+  > **AŞILDI — 2026-08-24, `docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md` (operatör onaylı maket).**
+  > İki hüküm düştü, biri KALDI.
+  >
+  > **DÜŞEN 1 — "BAŞKA HİÇBİR ŞEY".** Bugün yüzeyi artık metrik sekmeleri, çok serili alan
+  > grafiği, birleşik akış kartı (zincir ↔ huni), alan satırları, **bir** kanıt tablosu (açık
+  > pozisyonlar, seviye-işaretli kıvılcımlarla) ve Top Views taşıyor. Gerekçe: S2R'nin
+  > "her şey özet, detay alan sayfasında" modeli tarama derinliğini üç tıklamaya gömüyordu;
+  > devralınan Dub dili tam tersini yapar — tek yüzeyde zaman serisi + toplulaştırma +
+  > (istenirse) olay akışı, filtreler görünümler arasında taşınarak.
+  >
+  > **DÜŞEN 2 — "TEK EKRAN KAYDIRMASIZ".** Yeni yüzey kaydırılır ve bu BİLİNÇLİDİR. Tek-ekran
+  > kısıtı, ölçülmemiş bir ergonomi iddiasıydı ve bedeli ölçülebilirdi: her ek bilgi bir alan
+  > sayfasına sürülüyordu. Operatör kaydırmayı seçti.
+  >
+  > **KALAN — sınırsız detay dökümü hâlâ YASAK.** Aşma sınırlıdır ve `test_s2r1_kabuk_v155`
+  > tarafından ÖLÇÜLÜR: jenerik detay satırı (`trow`) sıfır · en fazla BİR `<table` ve o da
+  > açık pozisyonlar kanıt tablosu (paydası maruziyet bütçesiyle sınırlı, bir sorgu sonucu
+  > DEĞİL) · eski kart grameri (`class="card`) geri gelemez. Yani ADR'nin korktuğu şey
+  > (sayfanın sınırsız bir tabloya dönüşmesi) hâlâ kırmızıya döner — yalnız eşik, "sıfır
+  > tablo"dan "bir sınırlı tablo"ya taşındı.
 - **VERİ SAĞLIĞI:** kapsama/tazelik/karantina/bütünlük + intraday akış durumu (eski market-sağlık +
   intraday-veri parçaları buraya).
 - **KOŞU & DÖNGÜ:** günlük döngü karnesi, koşu şelalesi, onarım geçidi, seans işleme geçmişi.
