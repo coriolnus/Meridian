@@ -1,0 +1,94 @@
+# TASLAK — GERÇEK KART DEĞİLDİR. research/cards/ altına KOPYALAMA yetkisi Rol-1'dedir.
+# Şema: research/cards/README.md + iş emri §5. Bu dosya yalnız öneridir; K-kaydı ve id
+# Rol-1 tarafından verilir. Ölçüm kodu bu kart research/cards/ altına ALINMADAN yazılamaz.
+
+card_id: EDG-2026-057            # ÖNERİ — id'yi Rol-1 atar (sıradaki boş numara)
+family: kapi_erisilebilirligi
+
+thesis: >
+  Canlı öğrenme kapısı 2026-08-17'den beri hiçbir aday geçirmedi (153/153 koşum `cleared: 0`) ve
+  bu sayı BUGÜN teşhis edilemiyor: gerekçe kanalı ya süreçte bayat (meridian-learn 7 gün eski
+  derleme) ya da yapısal olarak siliniyor (sprint_run.py:118 izi `cleared==0` iken boşaltıyor;
+  hermes_search_probe `why` taşımıyor). İki bağımsız kanalda ölçülmüş 37 P(ΔS>0) değerinin en
+  yükseği 0,799 iken canlı ısınma K=40 ile 0,995, ship yolu K=8 ile 0,975 istiyor. HİPOTEZ:
+  `cleared: 0` bir edge ölçümü değil bir K ölçümüdür — yani "geçen yok" cümlesi hiçbir bilgi
+  taşımıyor. KARŞI HİPOTEZ EŞİT AĞIRLIKTA MASADA: eşiğe en çok yaklaşmış tek vaka (H00033,
+  P=0,799) fold-çoğunluğundan da düşmüştü, yani bağlayıcı terim eşik OLMAYABİLİR.
+  Bu kart HANGİ TERİMİN bağladığını sayar; hiçbir eşiği değiştirmez.
+
+evidence_refs:
+  - "research/olcumler/ogrenme_kurakligi_2026-08-24/TESHIS.md (bu kartın doğduğu teşhis; komut+çıktı zinciri orada)"
+  - "canlı defter: warmup_sprint 153 koşum, evaluated Counter({40:149,33:1,35:1,37:1,39:1}), cleared Counter({0:153}), neden_dagilim taşıyan 0"
+  - "canlı defter: hermes_search_probe 2026-08-21T19:57:21 → entry.w_turnover 0.15 cand_oos 0.2823 > inc_oos 0.2687, passes=False, total(K)=8"
+  - "canlı defter: arming_measured 17 sayısal search_p, maks 0,5755; p>=0,90 olan SIFIR"
+  - "docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md:211,233,294 — tam sayım, maks P 0,799 (H00033) ve o adayın fold-çoğunluğu 1/3"
+  - "meridian/probgate.py:348-367 (p_req = 1 − (0,20 − extra_p)/K) + :42 P_BASE=0.80; meridian/reflect.py:2049,2078 (K = len(planlanan sonda))"
+  - "state/gate_calibration.json: extra_p 0.0, n_measured 1, durum kurak"
+
+universe: >
+  DONMUŞ VERİ: ölçüm anındaki `state/` kopyası (bars revizyonu + strategy.yaml + hypotheses.jsonl
+  + inc_cache.json + probe_cache.json) bir kez alınır ve ölçüm boyunca DEĞİŞMEZ. Canlı `state/`
+  altına YAZILMAZ, canlı birim RESTART EDİLMEZ. Motor yamasız; kapı yasası (reflect._gate_eval)
+  ve probgate AYNEN koşar — tek fark, hükmün DEFTERE değil ölçüm artefaktına yazılması
+  (record_erosion=False, record_session=False; aşınma sayacı beslenmez).
+
+features_asof: >
+  Isınmanın bugünkü planını birebir yeniden kur: `coordinate_descent_search`ün sonda üretim
+  bloğu (reflect.py ~1975-2032) aynı girdilerle koşturulur → ilk 40 imza. Her imza için:
+  (1) P(ΔS>0) [probgate.evaluate → prob.p], (2) p_required(K) dört K değeri için,
+  (3) magnitude_ok / majority (fold_wins/fold_total) / tail_ok / dd_ok / dd_mtm_ok terimlerinin
+  her biri AYRI AYRI, (4) cand_oos − inc_oos, (5) `why` dizgesi, (6) erosion_margin'in o an
+  yürürlükte olup olmadığı ve değeri. Çıktı: 40 satırlık tablo + terim başına veto sayımı.
+  Ölçülemeyen satır (cand_oos None, dilim ince, walk-forward düştü) "olculemedi" kovasına
+  yazılır ve BAŞARISIZLIK SAYILMAZ (uydurma yasağı).
+
+parameter_grid:
+  k_esigi: [1, 2, 8, 40]      # K += 4 (ÇARPILARAK sayılır) — 1=tek aday, 2=en gevşek gerçekçi ship,
+                              # 8=son gerçek aramanın K'sı, 40=canlı ısınmanın K'sı.
+                              # P ölçümü K'dan BAĞIMSIZDIR; ızgara yalnız HÜKÜM eşiğini seçer,
+                              # ama yine de dört karar olduğu için dördü de K'ya yazılır.
+  # BAŞKA HİÇBİR EKSEN YOK. P_BASE, extra_p, formül, sonda üretim kuralı, kill-list DONDURULMUŞTUR.
+
+cost_model: yok   # bu kart P&L ölçmez; friksiyon modeli uygulanmaz (kapı içi istatistik ölçümü)
+
+success_metric: >
+  ÖLÇÜMDEN ÖNCE DONDURULMUŞ DÖRT HÜKÜM (sonradan değiştirilemez):
+  H1 YAPISAL ERİŞİLMEZLİK — 40 sondanın maks P < 0,90 ise: en gevşek gerçekçi K'da (K=2 → 0,90)
+     bile hiçbir aday geçemezdi ⇒ `cleared: 0` bilgi taşımıyor; sınıf (a) DOĞRULANDI.
+  H2 K TANIMI BAĞLAYICI — en az bir sondada P ≥ 0,90 VE aynı sonda majority+tail_ok+dd_ok'u
+     geçiyorsa: aday K=2'de ship olurdu, K=40'ta olmaz ⇒ bağlayıcı terim "K = planlanan sonda"
+     tanımıdır (reflect.py:2049); kusur kapıda değil K muhasebesinde.
+  H3 EŞİK BAĞLAYICI DEĞİL — en yüksek üç P'li sonda majority/tail_ok/dd_ok'tan düşüyorsa: eşiği
+     indirmek hiçbir şeyi değiştirmez (H00033 deseninin tekrarı) ⇒ öğrenme kuraklığının kökü
+     olasılıksal eşik DEĞİL, fold tutarlılığı/kuyruk/düşüş vetolarıdır.
+  H4 DÜRÜST YEREL-OPTİMAL — 40 sondanın TAMAMINDA cand_oos ≤ inc_oos VE maks P < 0,50 ise:
+     sınıf (c) doğrulanır, v1 bu veri diliminde gerçekten yerel-optimaldir ve `cleared: 0`
+     DÜRÜST bir cevaptır. Bu İYİ HABERDİR ve öyle raporlanır.
+  Birden fazla hüküm aynı anda tetiklenirse ikisi de yazılır; uzlaştırma YOK.
+  BU KART HİÇBİR EŞİĞİ DEĞİŞTİRMEZ: pozitif sonuç bile yalnız ROADMAP önerisi doğurur; değişiklik
+  ayrı bir tur + taban yeniden-dondurma (BASE-2026-001 karnesi) ister.
+
+kill_criteria:
+  - "Ölçüm ortamı canlı incumbent'ı yeniden üretemezse (inc_oos 0,2687'den |Δ|>0,001 sapıyorsa)
+     ÖLÇÜM GEÇERSİZDİR — şasi onarımı önce (ölçüm bağlamı tuzağı dersi: yanlış ortam sessizce
+     sahte sayı verir)."
+  - "40 sondanın 30'undan azı ölçülebilirse (cand_oos None / dilim ince / walk-forward düştü)
+     dağılım hükmü VERİLMEZ; ölçülen n raporlanır ve 'n yetersiz' yazılır — ekstrapolasyon YOK."
+  - "Ölçüm sırasında canlı `state/` değişirse (mtime kontrolü koşum başında ve sonunda) koşum
+     ATILIR: donmuş dilim varsayımı düşmüştür."
+  - "Kapı yasasında ölçüm uğruna TEK SATIR değişirse koşum geçersizdir — `_gate_eval` çağrısı
+     birebir üretimdeki hâliyle koşar (yalnız kayıt bayrakları False)."
+
+k_registry: {registered_at: "TASLAK — Rol-1 doldurur",
+             trial_ids: [ogrenme_kurakligi_2026-08-24/k1, ogrenme_kurakligi_2026-08-24/k2,
+                         ogrenme_kurakligi_2026-08-24/k8, ogrenme_kurakligi_2026-08-24/k40]}
+
+status: taslak    # gerçek kartta: registered → measuring → measured; hükmü Rol-1 işler
+
+verdict: null     # ölçüm koşmadı
+
+on_kosul_notu: >
+  S1 (operatör kararı, bu kartın DIŞINDA): `meridian-learn` bakım penceresinde yeniden başlatılırsa
+  2026-08-21/23'te dağıtılmış `neden_dagilim` kanalı koşmaya başlar ve H3 ile H1 ayrımı bir saat
+  içinde CANLI defterden okunabilir — o durumda bu kartın kapsamı H2/H4'e daralabilir. Restart bu
+  kartın ön koşulu DEĞİLDİR (kart donmuş dilimde çevrimdışı koşar), ama koşulursa ölçüm ucuzlar.
