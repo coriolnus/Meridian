@@ -49,8 +49,12 @@ DAGIT = KOK / "dagit.sh"
 
 # Pilotun ürettiği artefakt. Mevcut `workflow.html` YERİNE GEÇMEZ — yan yana durur ki
 # ikisi aynı ekranda karşılaştırılabilsin ve karar ölçümle verilsin.
-ARTEFAKT = WEB / "pilot-workflow.html"
-ARTEFAKT_VARLIK = WEB / "pilot-assets"
+# ARTEFAKT ADI DEĞİŞTİ (2026-08-25, D4): pilot bir DENEMEYDİ ve hükmünü verdi — uygulama
+# tamamen studio-admin şablonuna geçiyor. Denemenin artefaktı (`pilot-workflow.html`) yerini
+# ürünün artefaktına bıraktı. Kapılar AYNEN GEÇERLİ: CSP, dağıtım sızıntısı ve tazelik kapıları
+# hangi sayfanın derlendiğinden bağımsızdır — yalnız işaret ettikleri ad değişti.
+ARTEFAKT = WEB / "pano.html"
+ARTEFAKT_VARLIK = WEB / "pano-assets"
 
 PILOT_VAR = UI.is_dir()
 
@@ -113,7 +117,7 @@ def test_G2b_pilot_KAYNAGI_canliya_gitmez_ARTEFAKT_gider():
     assert any(d.strip("/") in ("ui", "ui/*") for d in dis), (
         "dagit.sh 'ui' kaynağını dışlamıyor — derlenmemiş kaynak canlıya gider")
     # Artefakt DIŞLANMAMALI: dışlanırsa sayfa canlıda 404 olur ve bunu kimse görmez.
-    for yasak in ("pilot-workflow.html", "pilot-assets", "meridian/web/pilot*"):
+    for yasak in ("pano.html", "pano-assets", "meridian/web/pano*"):
         assert yasak not in dis, f"artefakt '{yasak}' dışlanmış — sayfa canlıda doğmaz"
 
 
@@ -130,7 +134,7 @@ def test_G2c_artefakt_TAZELIK_kapisi_dagitta_VAR():
     assert "ARTEFAKT TAZELİĞİ" in s, (
         "dagit.sh'te artefakt tazelik kapısı YOK — kaynak değişip build koşmazsa canlı "
         "sessizce bayat kalır ve [5b] bunu göremez (o Python mtime'ına bakar)")
-    assert "pilot-workflow.html" in s, "tazelik kapısı pilot artefaktını tanımıyor"
+    assert "pano.html" in s, "tazelik kapısı pano artefaktını tanımıyor"
 
 
 def test_G2d_uretilen_sayfa_CSP_uyumlu():
@@ -206,53 +210,55 @@ def _css_jetonlari(yol: pathlib.Path, tema: str = "gunduz") -> dict[str, str]:
             for m in re.finditer(r"(--[a-z0-9-]+)\s*:\s*([^;}]+)", s)}
 
 
-@pytest.mark.parametrize("jeton", ROL_JETONLARI)
-def test_G1a_rol_jetonlari_BIREBIR_tasiniyor(jeton):
-    """Pilot yüzeyi rol jetonlarını ana panoyla AYNI değerde taşımalı.
-
-    "Yaklaşık" kabul edilmez: `--mod-canli` bir zamanlar Dub'ın `--lavender`ıyla BİREBİR
-    aynı hex'ti ve bu, "canlı para" çipiyle bir grafik serisini aynı renge düşürüyordu —
-    kâğıt/canlı ayrımı bir güvenlik sinyalidir.
-    """
-    _pilot_gerekli()
-    if not ARTEFAKT.exists():
-        pytest.fail(f"pilot artefaktı üretilmemiş: {ARTEFAKT}")
-    ana = _css_jetonlari(WEB / "index.html")
-    # ARTEFAKT İKİ PARÇADIR: Vite CSS'i ayrı dosyaya çıkarır ve HTML ona <link> ile bağlanır.
-    # Yalnız HTML'e bakmak "jeton kayboldu" der — ölçüm bağlamı tuzağı; bağlı CSS de okunur.
-    pilot_metin = ARTEFAKT.read_text()
-    for m in re.finditer(r'<link[^>]+href="(/pilot-assets/[^"]+\.css)"', pilot_metin):
-        yol = WEB / m.group(1).lstrip("/")
-        assert yol.exists(), f"artefaktın bağladığı CSS diskte yok: {yol}"
-        pilot_metin += "\n" + yol.read_text()
-    pilot = _css_jetonlari_metinden(pilot_metin)
-    assert jeton in ana, f"{jeton} ana panoda tanımlı değil — çivinin listesi bayat"
-    assert jeton in pilot, (
-        f"{jeton} pilot yüzeyinde YOK — Tailwind katmanı rol jetonunu düşürdü. "
-        f"Rol katmanı sözleşmesi (index.html:296-299) bileşenin YALNIZ rol jetonu "
-        f"okumasını zorunlu kılar; jeton yoksa bileşen değer jetonuna ya da hex'e kaçar.")
-    assert pilot[jeton] == ana[jeton], (
-        f"{jeton}: ana pano '{ana[jeton]}' ↔ pilot '{pilot[jeton]}' — taşıma sırasında ayrıştı")
+# ~~G1a — ROL JETONLARI BİREBİR TAŞINIYOR~~ · 2026-08-25'te EMEKLİ (D4)
+# -------------------------------------------------------------------------------------------------
+# Bu çivi pilotun ANA SORUSUNU çiviliyordu: "shadcn/Tailwind katmanı Meridian'ın rol jetonlarını
+# düşürür mü?" Cevap ölçüldü ve HAYIR'dı — jetonlar birebir taşındı, hatta CLI'ın enjekte ettiği
+# palet ihlali bu çiviyle yakalandı (`--sidebar-ring` #3b82f6, rezerve nav bandının içinde).
+#
+# ÇİVİ ARTIK ÖLÇÜLEMEZ ÇÜNKÜ ÖLÇTÜĞÜ SÖZLEŞME YOK: operatör 2026-08-25'te panonun tamamının
+# studio-admin'e geçmesine karar verdi ("UI ile alakalı bütün kurallarını yok sayabilirsin").
+# Jeton katmanı artık şablonunki (`ui/src/tema.css`); Meridian'ın rol jetonları (`--sev-*`,
+# `--yon-*`, `--mod-*`, `--huni-*`) yeni panoda TANIMLI DEĞİL ve olmaları da beklenmiyor.
+# Çiviyi bırakmak, kararın kendisini ihlal saymak olurdu — kırmızı kalır, hiçbir şey öğretmezdi.
+#
+# NEDEN SİLİNMEDİ: gerekçesi hâlâ doğru ve bir gün geri gelebilir. Renk bu üründe bir üslup değil
+# bir GÜVENLİK KAYDI olmayı sürdürüyor (kâğıt/canlı ayrımı, şiddet bantları). Yeni panoda o ayrımı
+# taşıyacak bir kanal kurulduğunda, çivinin yeni hâli buradaki gerekçeden doğacak.
+# İZ: docs/KARAR-2026-08-24-D3-SHADCN-UI-PILOT.md (ölçüm) + D4 karar belgesi (emeklilik).
 
 
 def test_G1b_ciplak_hex_ve_deger_jetonu_BILESENDE_yok():
     """Rol katmanı sözleşmesi: bileşen kuralları YALNIZ rol jetonu okur. Tailwind'in utility
     sınıfları bu sözleşmeyi kırmanın en kolay yoludur (`text-green-600` bir rol değildir)."""
     _pilot_gerekli()
-    kaynaklar = _ts_kaynaklari()
-    assert kaynaklar, "ui/ altında kaynak yok — pilot boş"
+    # KAPSAM DARALDI, KURAL DEĞİL (2026-08-25, D4). `components/ui/*` artık BİZİM yazdığımız
+    # kod değil: studio-admin'in 61 bileşeni olduğu gibi benimsendi ve shadcn'in resmî
+    # `chart.tsx`i içinde beş çıplak hex var (`#ccc`, `#fff` — renk örneği denetimi için).
+    # Onları ihlal saymak, benimsenen sistemi ihlal saymak olurdu ve düzeltmek şablonla
+    # aramızda kalıcı bir fark açardı (bir sonraki sürümle fark almayı imkânsız kılan cins).
+    # KURAL KENDİ KODUMUZDA AYNEN GEÇERLİ: çıplak hex tema anahtarını KIRAR — `dark:` varyantına
+    # katılmaz, gece temasında olduğu gibi kalır. Bizim yazdığımız her satır jetondan okur.
+    kaynaklar = [k for k in _ts_kaynaklari() if "/components/ui/" not in k.as_posix()]
+    assert kaynaklar, "ui/ altında KENDİ kaynağımız yok — pano boş"
     ihlal = []
     for p in kaynaklar:
         s = _soy(p.read_text())
         for m in re.finditer(r"#[0-9a-fA-F]{3,8}\b", s):
             ihlal.append(f"{p.relative_to(KOK)}: {m.group(0)}")
-        # Tailwind'in HAZIR renk skalası bir rol DEĞİLDİR
-        for m in re.finditer(r"\b(?:text|bg|border|fill|stroke)-(?:red|green|blue|amber|"
-                             r"yellow|orange|purple|violet|slate|gray|zinc|neutral|stone)-\d{2,3}\b", s):
-            ihlal.append(f"{p.relative_to(KOK)}: {m.group(0)}")
+        # ~~Tailwind'in HAZIR renk skalası bir rol DEĞİLDİR~~ — 2026-08-25'te EMEKLİ (D4).
+        # OPERATÖR KARARI: "UI ile alakalı bütün kurallarını yok sayabilirsin, uygulamanın
+        # tamamen buraya geçmesini istiyorum". Rol katmanı (`--sev-*`, `--yon-*`, rezerve hue
+        # bantları) Meridian'ın KENDİ tasarım dilinin sözleşmesiydi; o dil studio-admin'in jeton
+        # sistemiyle DEĞİŞTİRİLDİ ve şablonun kendi 61 bileşeni bu skalayı kullanıyor. Çiviyi
+        # bırakmak, benimsenen sistemin tamamını ihlal saymak olurdu.
+        #
+        # HEX YARISI DURUYOR (yukarıda) ve ayrım bilinçli: çıplak hex tema anahtarını KIRAR —
+        # gece/gündüz ayrımına hiç katılmaz. Tailwind sınıfı jeton sistemine katılır (`dark:`
+        # varyantı çalışır). Aynı sınıftan kusur değiller.
     assert not ihlal, (
-        f"pilot bileşenleri rol katmanını atlıyor ({len(ihlal)}): {ihlal[:8]} — "
-        f"renk YALNIZ rol jetonundan gelir")
+        f"pano kaynağında çıplak hex ({len(ihlal)}): {ihlal[:8]} — "
+        f"renk jetondan okunur; hex tema anahtarını kırar")
 
 
 # =================================================================================================
