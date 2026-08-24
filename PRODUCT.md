@@ -112,8 +112,25 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
 >
 > - **Reference:** ~~Omega (`omega.nextjsshop-preview.workers.dev`)~~ → **Dub**, via the
 >   operator-approved comp at `scratch-panov2/index.html`.
-> - **Typeface:** ~~Geist + Geist Mono~~ → **Inter** (body/UI) · **Satoshi** (display) ·
->   **Geist Mono** (measured values). Self-hosted; the CSP still allows no external font host.
+> - **Typeface:** ~~Geist + Geist Mono~~ → **Inter** (body/UI) · **Recursive Mono** (measured
+>   values). Self-hosted; the CSP still allows no external font host.
+>   **Correction 2026-08-24 (same day):** an earlier draft of this line read *"Inter · Satoshi
+>   (display) · Geist Mono"*. That was the **plan**, not the **ruling**, and it was wrong twice
+>   over — the decree it cites had already decided against both:
+>   · **Satoshi is parked, not adopted** (`KARAR-2026-08-24-B` §8, measured): the largest
+>     `--display` slot on the dashboard is 28px and Dub's own system says *"Satoshi is
+>     display-only (36px+)"* — so the design language that justifies Satoshi forbids it at our
+>     sizes. Subsetting is barred by ITF FFL §02, making it a fixed 41.6 KB (43% of the font
+>     budget) for **zero characters on screen**. The declared substitute is Inter weight 500 at
+>     `-0.02em`, which is what ships.
+>   · **Geist Mono was eliminated in the 2026-08-07 round**; `Recursive Mono` won on measurement
+>     and still ships. A nail actively forbids Geist in live declarations
+>     (`test_hicbir_yuzey_CANLI_bildirimde_Geist_tasimaz`). The retired face is Recursive
+>     **Sans**, kept on disk deliberately so stale caches don't 404.
+>   The lesson is the reason this correction is written out rather than silently edited: a
+>   superseding block that restates a *plan* while citing a document whose *ruling* went the
+>   other way becomes a false source, and the next reader — including its own author, hours
+>   later — will believe it.
 >   The 2026-08-06 "typeface is not frozen" clause below is what *permitted* this — it worked.
 > - **Grounds:** still two, still one token vocabulary. Night ground values are now Dub-derived
 >   (`--canvas #0a0a0a` / `--card #262626` / text `#e5e5e5`), ~~not the warm `#1E1E1E` band~~.
