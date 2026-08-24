@@ -1471,8 +1471,21 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* BAŞLIK MERTEBESİ (2026-07-27): kart başlıkları h3'tü ve üstlerinde hiç h2 yoktu — ağaç
    h1'den h3'e atlıyordu. Etiket biçimi (mono 11px indigo, kural altında) DEĞİŞMEZ; değişen
    yalnız etiketin mertebesi. Bu yüzden seçici tag'den sınıfa taşındı. */
-.card .t,.gb-kart .t,.durum-kart .t{font-family:var(--mono);font-size:var(--t-cap);font-weight:700;color:var(--accent-2);text-transform:uppercase;letter-spacing:var(--label-track);
-  margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--line-2)}
+/* KART BAŞLIĞININ SESİ DEĞİŞTİ (2026-08-24) — kaynak: onaylanan maket `scratch-panov2/index.html:186`
+   `.kart > h2{font-size:var(--t-cap);font-weight:600;letter-spacing:.04em;color:var(--fog);
+                text-transform:uppercase;margin-bottom:var(--s4)}`
+   Operatör: "tasarım dilini de buna göre değiştirmen gerekiyordu". Bu TEK KURAL 106 `class="card`
+   emisyonuna + `.gb-kart` + `.durum-kart` ailesine dokunuyor ve ÜRETİCİ KODUNA HİÇ ELLENMİYOR.
+   DEĞİŞEN DÖRT ŞEY, hepsi maketten:
+     · yüz      MONO → sans (kalıtım; `--mono` emekli DEĞİL, ama kart BAŞLIĞI bir ölçüm değil bir addır)
+     · ağırlık  700 → 600
+     · aralık   --label-track (.16em) → .04em   ← eski sesin en görünür parçası, dört katı genişti
+     · renk     --accent-2 → --tx3              ← başlık bağırmaz, adlandırır
+   ALTI ÇİZGİSİ KALKTI: Dub kenar-önce YÜKSELTMEYİ KABIN kendisine verir, başlığın altına değil;
+   maketin kart başlığında `border-bottom` YOK. BÜYÜK HARF KALDI — maket de büyük harf kullanıyor;
+   değişen ses, düzen değil. Boşluk (`margin-bottom:var(--s4)`) maketle birebir korundu. */
+.card .t,.gb-kart .t,.durum-kart .t{font-size:var(--t-cap);font-weight:600;color:var(--tx3);
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--s4)}
 /* `.durum-kart .t` bir `<span>`dir (kart bir `<button>` ve düğmenin içine başlık koymak, ekran
    okuyucuya "başlık mı, düğme mi?" diye sordurur). Blok davranışı bu yüzden burada verilir. */
 .durum-kart .t{display:block}
@@ -1551,7 +1564,12 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .rowbtn.sel{background:var(--accent-tint)}
 .hyp.rowbtn{min-height:44px;display:block;border-bottom-color:var(--line)}
 .hyp.rowbtn.sel{border-color:var(--accent)}
-.trow.head{color:var(--tx2);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;
+/* TABLO BAŞLIĞI — 45 emisyon. `pv-` karşılığı ZATEN YAZILI ve ölçüldü: `.pv-tbl th` (bu dosyada,
+   `font:600 11px/1 var(--sans);letter-spacing:.03em;color:var(--tx3)`). İki dil aynı işi iki sesle
+   yapıyordu; `.trow.head` o sese hizalandı. Sert `10px` de gitti (`--t-cap` jetonu zaten var —
+   ölçek 165 kez baypas ediliyordu, bu onlardan biriydi). Alt çizgi KALDI: tablo başlığı gövdeden
+   ayrılmak zorunda ve `.pv-tbl th` de kendi `border-bottom`unu taşıyor. */
+.trow.head{color:var(--tx3);font-size:var(--t-cap);font-weight:600;letter-spacing:.03em;text-transform:uppercase;
   padding-bottom:10px;border-bottom:1px solid var(--line-2)}
 .tick{font-family:var(--mono);font-weight:700;font-size:var(--t-body);letter-spacing:.02em;color:var(--tx)}
 /* ============================================================================
@@ -1589,7 +1607,12 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .chain.sev-3{color:var(--tx);text-decoration-color:var(--sev-3)}
 .chain.guven{color:var(--olcek-guven)}
 .reason{font-size:var(--t-cap);color:var(--tx2);margin-top:3px;line-height:1.5}
-.empty{color:var(--tx2);text-align:center;padding:var(--s8);font-family:var(--mono);font-size:12px;letter-spacing:.04em}
+/* BOŞ HÂL — 51 emisyon. Bu kutular CÜMLE taşıyor ("aday vardı, kapı eledi" gibi gerekçeler),
+   etiket değil; mono + ortalanmış + harf aralıklı düzen onları etiket gibi okutuyordu.
+   `pv-` karşılığı `.pv-not`/`.pv-fbos`: sans, `--tx3`, sola dayalı, 1.6 satır. Sert `12px` gitti.
+   ORTALAMA KALKTI ve bu bilinçli: ortalanmış metin bir BAŞLIK jestidir; burada okunan şey bir
+   gerekçedir ve gerekçe sola dayanır. */
+.empty{color:var(--tx3);text-align:left;padding:var(--s6) var(--s4);font-size:var(--t-cap);line-height:1.6}
 
 /* ---- measured gauge — a ruled tube, filled ---- */
 .bar{height:5px;border-radius:0;background:var(--bg2);overflow:hidden;margin:var(--s2) 0 var(--s1);
