@@ -2174,12 +2174,26 @@ _AGENT_SON_MODEL = threading.local()
 def _agent_model_sifirla() -> None:
     """Kutuyu boşalt — HER `_agent_call` girişinde, erken dönüşlerden ÖNCE."""
     _AGENT_SON_MODEL.model, _AGENT_SON_MODEL.neden = None, AGENT_MODEL_YOK_KAYIT
+    _AGENT_SON_MODEL.iz_id = None
 
 
 def _agent_model_kaydet(model: str | None) -> None:
     """Dolu cevabı GERÇEKTEN veren denemenin model adı (`None` = zincir adsızdı → CLI varsayılanı)."""
     _AGENT_SON_MODEL.model = model or None
     _AGENT_SON_MODEL.neden = None if model else AGENT_MODEL_YOK_ZINCIR
+
+
+def _agent_iz_kaydet(iz_id: str | None) -> None:
+    """Cevabı veren denemenin TELEMETRİ anahtarı (`agent_calls.jsonl` → `iz_id`) — Ö-39 atıf join'i.
+
+    AYRI YAZICI, BİLİNÇLİ: ad `models` döngü değişkeninden, anahtar telemetri YAZIMININ dönüşünden
+    gelir; iki farklı olgu tek çağrıya katlansaydı `_agent_model_kaydet(model)` çağrısının metni
+    değişir ve o metni donduran ölçüm çivisi (`test_ogrenme_hafiza_kunye_v245::test_c1`) yan
+    kanalın kendi ölçümünü kaybederdi. Ad tek başına "HANGİ çağrı" sorusunu cevaplamaz — aynı
+    model gün içinde onlarca kez konuşur; bir atıf satırından ham izine (süre, deneme,
+    ön-yükleme, stdout) ancak bu anahtarla inilir. Telemetri yazımı düşerse None kalır ve
+    UYDURULMAZ: sahte bir anahtar, var olmayan bir satıra işaret eden ÖLÜ bir join olurdu."""
+    _AGENT_SON_MODEL.iz_id = iz_id or None
 
 
 def cevap_veren_model() -> tuple[str | None, str | None]:
@@ -2191,6 +2205,18 @@ def cevap_veren_model() -> tuple[str | None, str | None]:
     n = getattr(_AGENT_SON_MODEL, "neden", AGENT_MODEL_YOK_KAYIT)
     _AGENT_SON_MODEL.model, _AGENT_SON_MODEL.neden = None, AGENT_MODEL_YOK_KAYIT
     return (m, None) if m else (None, n or AGENT_MODEL_YOK_KAYIT)
+
+
+def cevap_veren_iz() -> str | None:
+    """SON `_agent_call`in telemetri anahtarı (`agent_calls.jsonl` → `iz_id`); yoksa None.
+
+    AYRI OKUYUCU, AYNI KUTU: `cevap_veren_model()` künyeyi tüketir ama `iz_id`ye dokunmaz —
+    ikisi tek dönüşte katlansaydı bugünkü altı çağıranın hepsinin sözleşmesi değişirdi (aynı
+    gerekçeyle yan kanal seçilmişti). Okuma yine TÜKETİR ve kutu her `_agent_call` girişinde
+    zaten sıfırlanır, yani bayat bir anahtar taze sanılamaz."""
+    i = getattr(_AGENT_SON_MODEL, "iz_id", None)
+    _AGENT_SON_MODEL.iz_id = None
+    return i or None
 
 
 def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
@@ -2272,20 +2298,27 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 raise
         return out_, kr.ms
 
-    def _telemetri(out_, sure_ms: float, *, deneme: int, alt: int, sinif: str) -> None:
-        """Bir koşumun telemetri + ham iz satırlarını yaz (sınıf ÇAĞIRANDA bilinir)."""
+    def _telemetri(out_, sure_ms: float, *, deneme: int, alt: int, sinif: str) -> dict | None:
+        """Bir koşumun telemetri + ham iz satırlarını yaz (sınıf ÇAĞIRANDA bilinir).
+
+        DÖNÜŞ: yazılan telemetri satırı (ya da yazım düşerse None) — `iz_id` oradan alınır ve
+        künye kutusuna konur (Ö-39 atıf defterinin `agent_calls.jsonl` join anahtarı). Anahtarı
+        burada YENİDEN ÜRETMEK yerine yazılan satırdan okumak bilinçlidir: `iz_kimligi` ts/kind/
+        deneme/alt'tan türer ve ikinci bir türetim, damga biçimi bir gün değişirse sessizce
+        ayrışan İKİNCİ bir anahtar üretirdi."""
         tc = _agent_tool_calls(out_.stdout)
-        _at.kaydet(kind=kind, model=model, deneme=deneme, alt=alt, sure_ms=sure_ms,
-                   sonuc_sinifi=sinif, returncode=out_.returncode,
-                   # -1 = ÖLÇÜLEMEDİ (`-Q` özeti bastırır) → deftere None yazılır, 0 DEĞİL.
-                   arac_cagri_n=(tc if tc >= 0 else None),
-                   # ADLAR DA YAZILIR (2026-08-13 — GERİLEME ONARIMI): `on_yukleme_n` tek
-                   # başına "kaç skill" der, "hangileri" demez. Onarımın tam gerekçesi ve hacim
-                   # ölçümü `agent_telemetry.skill_adlari` üstündeki blokta. `preload` bu kapanışta
-                   # GEÇ okunur ve bu bilinçlidir: ön-uçuş onarımı (`Unknown skill(s)`) listeyi
-                   # KÜÇÜLTEBİLİR ve deftere gerçekten GÖNDERİLEN liste yazılmalıdır, istenen değil.
-                   on_yukleme_n=len(preload), on_yukleme=list(preload), istem=prompt,
-                   stdout=out_.stdout, stderr=out_.stderr)
+        return _at.kaydet(
+            kind=kind, model=model, deneme=deneme, alt=alt, sure_ms=sure_ms,
+            sonuc_sinifi=sinif, returncode=out_.returncode,
+            # -1 = ÖLÇÜLEMEDİ (`-Q` özeti bastırır) → deftere None yazılır, 0 DEĞİL.
+            arac_cagri_n=(tc if tc >= 0 else None),
+            # ADLAR DA YAZILIR (2026-08-13 — GERİLEME ONARIMI): `on_yukleme_n` tek
+            # başına "kaç skill" der, "hangileri" demez. Onarımın tam gerekçesi ve hacim
+            # ölçümü `agent_telemetry.skill_adlari` üstündeki blokta. `preload` bu kapanışta
+            # GEÇ okunur ve bu bilinçlidir: ön-uçuş onarımı (`Unknown skill(s)`) listeyi
+            # KÜÇÜLTEBİLİR ve deftere gerçekten GÖNDERİLEN liste yazılmalıdır, istenen değil.
+            on_yukleme_n=len(preload), on_yukleme=list(preload), istem=prompt,
+            stdout=out_.stdout, stderr=out_.stderr)
 
     for attempt, model in enumerate(models):
         if not _agent_budget_take(max_wait if attempt == 0 else 0.0):
@@ -2348,9 +2381,9 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         # (c) BOŞ CEVABIN İKİ SINIFI AYRIŞIR: imza varsa CLI ağa çıkmadan yapılandırma rehberi
         # bastı (yapılandırmasız), yoksa gerçekten cevapsız kalındı (kota/arka uç).
         unconf = _agent_unconfigured_sign(out.stdout, out.stderr) if empty else None
-        _telemetri(out, sure_ms, deneme=attempt + 1, alt=alt,
-                   sinif=(_at.SINIF_YAPILANDIRMASIZ if unconf
-                          else (_at.SINIF_BOS if empty else _at.SINIF_DOLU)))
+        _tel_satir = _telemetri(out, sure_ms, deneme=attempt + 1, alt=alt,
+                                sinif=(_at.SINIF_YAPILANDIRMASIZ if unconf
+                                       else (_at.SINIF_BOS if empty else _at.SINIF_DOLU)))
         # SKILL ADLARI GERİ GELDİ (2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL.
         # 2026-07-20'ye kadar `nous_call_skills` olayı çağrı başına `names: [...]` tam listesini
         # yazıyordu; `_agent_call` yeniden yazılırken liste `preloaded: <sayı>`ya çöktü ve bir daha
@@ -2401,6 +2434,9 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 pass
             # CEVABI VEREN DENEME BUDUR (zincirin kaçıncı ayağı olursa olsun) — künye buradan çıkar.
             _agent_model_kaydet(model)
+            # İz anahtarı da AYNI denemeden gelir: "kim konuştu" ile "hangi çağrıda konuştu" bu
+            # noktada eşlenmezse atıf satırı ham izine (agent_calls/agent_traces) hiç bağlanamaz.
+            _agent_iz_kaydet((_tel_satir or {}).get("iz_id"))
             return out.stdout
     # ZİNCİR UZUNLUĞU DÜRÜST BİLDİRİLİR: canlı defterde bu satır "tüm model zinciri cevapsız" diyordu
     # ama tried=1'di — NOUS_FALLBACK_MODEL hiç ayarlanmamıştı, yani "düşüş zinciri" tek elemanlıydı.
@@ -3778,7 +3814,14 @@ def review_candidates(dstr: str | None = None) -> dict | None:
     store.update_json("candidate_review.json", _yaz, {})
     obs.log("candidate_review", date=day, n=len(reviews), brain=active_brain())
     try:
-        _stamp_llm_opinions(day, reviews)      # görüşler plan satırlarına GERİ-damgalanır
+        # KÜNYE DAMGAYLA BİRLİKTE İNER (Ö-39): `res` zaten bu çağrının ölçülmüş künyesini taşıyor
+        # (`cevap_veren_model()` yukarıda TÜKETEREK okundu) — atıf defterine oradan geçer, ikinci
+        # bir okuma yapılmaz. `iz_id` ayrı kutudan alınır; ölçülemezse None kalır (uydurma yok).
+        _stamp_llm_opinions(day, reviews,      # görüşler plan satırlarına GERİ-damgalanır
+                            kunye={"model": _cevap_model, "model_olculemedi": _model_neden,
+                                   "model_kaynagi": "cevap_veren",
+                                   "model_istenen": res["model_istenen"],
+                                   "iz_id": cevap_veren_iz(), "kind": "review", "backfill": False})
     except Exception as e:
         obs.warn("llm_stamp_failed", error=f"{type(e).__name__}: {e}")
     return res
@@ -3805,27 +3848,97 @@ def _opinion_history(k: int = 5) -> str:
             + "\n- ".join(rows))
 
 
-def _stamp_llm_opinions(day: str, reviews: list) -> None:
+# ==================================================================================================
+# ATIF DEFTERİ (Ö-39 / WP7 "künye turu" — Rol-1 tasarım-kapanışı 2026-08-24, YOL (b))
+# --------------------------------------------------------------------------------------------------
+# SORU: "yetkili danışman HANGİ modeldi?" — terfi 2026-08-14'te açıldığından beri canlı bir soru
+# (`AUTHORITY_CHANGE`: R farkı 0.638, n=100) ve bugüne dek KALICI hiçbir defterde cevabı yoktu:
+#   · plan satırı taşıyamaz — `test_authority_boundaries_v77::test_c3` `llm_opinion` dışında anahtar
+#     yazılmasını YASAKLIYOR (yetki sınırı yasası; ikinci alan = yasa değişikliği);
+#   · `candidate_review.json` TEK-BELGE deposudur (`doc.clear()`), yalnız SON günü tutar;
+#   · `agent_calls.jsonl` modeli taşır ama TICKER ve PLAN GÜNÜ yoktur — ve `backfill_opinions`
+#     bugünkü çağrıyla AYLAR öncesine damga vurur (canlı: 2026-08-16 koşumu 2026-02-26 ve
+#     2026-04-14 planlarını damgaladı), yani zaman-yakınlığı join'i YAPISAL olarak yanlıştır.
+# ÇÖZÜM: yasayı kırmadan AYRI append-only defter. Satır plan_id ↔ künye ↔ `iz_id` üçlüsünü taşır ve
+# `backfill` bayrağıyla geriye-damgayı KENDİ BEYAN EDER — okuyucu artık tahmin etmez, OKUR.
+# OKUYUCUSU İLK GÜNDEN BAĞLI (YASA 6 / uyuyan-yol dersi): `analytics.llm_opinion_calibration`
+# `model_kirilim` kovalarını buradan kurar. Sözleşme: `ledgers.CONTRACTS["plan_atif.jsonl"]`.
+# ==================================================================================================
+PLAN_ATIF_DEFTERI = "plan_atif.jsonl"
+
+KUNYE_DAMGA_VERILMEDI = ("cevap veren model ÖLÇÜLEMEDİ: damgayı çağıran künye paketi vermedi — bu "
+                         "yol künyeyi hiç okumuyor (satır atıfsızdır, 'ölçtük ve ad yoktu' DEĞİL)")
+
+
+def _plan_atif_yaz(day: str, damgalananlar: list, kunye: dict | None) -> int:
+    """Damgalanan her plan için `plan_atif.jsonl`e BİR satır yazar; dönüş: yazılan satır sayısı.
+
+    UYDURMA YASAĞI: künye ölçülemediyse `model` None kalır ve `model_olculemedi` nedeni taşır;
+    `model_istenen` (yapılandırma adı) ASLA `model`e kopyalanmaz — v245 künye kusurunun deftere
+    düşmüş hâli tam olarak o kopyaydı. Künye paketi hiç verilmediyse `model_kaynagi` da None olur:
+    "cevap veren" beyanı ölçülmemiş bir satıra basılamaz.
+    YAZIM ÇAĞIRANI DÜŞÜRMEZ (telemetri emsali): atıf bir ÖLÇÜM yoludur, arızası damgalamayı
+    öldürmemeli — ama SESSİZ de kalmaz (YASA 4), `plan_atif_write_failed` ile adıyla kaydedilir."""
+    if not damgalananlar:
+        return 0
+    k = kunye or {}
+    model = k.get("model") or None
+    neden = k.get("model_olculemedi") if model is None else None
+    if model is None and not neden:
+        neden = KUNYE_DAMGA_VERILMEDI
+    ts = memory.now_iso()
+    satirlar = [{"ts": ts, "plan_id": pid, "ticker": tkr, "plan_date": day,
+                 "kind": k.get("kind"), "model": model, "model_olculemedi": neden,
+                 "model_kaynagi": k.get("model_kaynagi"), "model_istenen": k.get("model_istenen"),
+                 "iz_id": k.get("iz_id"), "backfill": bool(k.get("backfill"))}
+                for pid, tkr in damgalananlar]
+    try:
+        # KİLİT: dolgu iş parçacığı ile inceleme kolu AYNI ANDA damgalayabilir (ikisi de bu
+        # fonksiyona iner); kilitsiz append satırları birbirinin içine yazabilirdi.
+        with store.file_lock(PLAN_ATIF_DEFTERI):
+            for s in satirlar:
+                store.append_jsonl(PLAN_ATIF_DEFTERI, s)
+    except Exception as e:
+        obs.warn("plan_atif_write_failed", defter=PLAN_ATIF_DEFTERI, gun=day, n=len(satirlar),
+                 error=f"{type(e).__name__}: {e}",
+                 detail="atıf satırları YAZILAMADI — damgalama normal tamamlandı; bu satırların "
+                        "yokluğu 'künye yoktu' DEĞİL 'atıf kaydedilemedi' demektir")
+        return 0
+    return len(satirlar)
+
+
+def _stamp_llm_opinions(day: str, reviews: list, kunye: dict | None = None) -> None:
     """Kademe-1 (LLM danışman katmanı): inceleme P3'ten DAKİKALAR SONRA asenkron iner — bu yüzden görüş
     plan satırlarına geriye dönük damgalanır (alpaca_fill_price backfill kalıbı). İki yere yazılır:
     trade_plans.jsonl (kalibrasyon defterinin join'i + panel çipleri) ve portfolio.json'daki silahlı
-    planlar (P4 dolum-anı vetosu — YALNIZ terfiden sonra — oradan okur). Yetki yok: damga bilgidir."""
+    planlar (P4 dolum-anı vetosu — YALNIZ terfiden sonra — oradan okur). Yetki yok: damga bilgidir.
+
+    `kunye` (Ö-39): görüşü ÜRETEN çağrının künye paketi —
+    `{model, model_olculemedi, model_kaynagi, model_istenen, iz_id, kind, backfill}`. Damganın
+    KENDİSİ okumaz, ÇAĞIRAN verir: künye kutusu tüketen-okumalıdır ve burada okunsaydı iki çağıran
+    (`review_candidates` · `backfill_opinions`) sırayla okuyup birbirinin künyesini boşaltırdı.
+    Verilmezse satır yine yazılır ama NEDENİYLE (`KUNYE_DAMGA_VERILMEDI`)."""
     op_by_ticker = {str(r.get("ticker")): r.get("opinion") for r in reviews if r.get("ticker")}
     if not op_by_ticker:
         return
     # KİLİTLİ oku-değiştir-yaz: bu damga, zamanlayıcı iş parçacığının AYNI dosyaya
     # yazdığı anlarda araya giriyordu; kilitsiz hâlde döngünün planlarını bayat kopyayla ezebilirdi.
-    counters = {"plans": 0}
+    counters: dict = {"plans": 0, "damgalananlar": []}
 
     def _patch_plans(plans):
         """trade_plans.jsonl satırlarına o günün LLM görüşünü damgalar (yalnız aynı gün + aynı
-        ticker + `llm_opinion` HENÜZ YOKKEN — var olan damga ezilmez); damgalanan sayısını sayar."""
+        ticker + `llm_opinion` HENÜZ YOKKEN — var olan damga ezilmez); damgalanan sayısını sayar
+        ve damgalanan satırların (kimlik, ticker) çiftini biriktirir — atıf defterinin girdisi
+        BUDUR: ezilmeyen bir satır atfedilirse aynı görüş iki kez atfedilmiş olurdu."""
         n = 0
+        vurulan = []
         for pl in plans:
             if pl.get("date") == day and pl.get("ticker") in op_by_ticker and "llm_opinion" not in pl:
                 pl["llm_opinion"] = op_by_ticker[pl["ticker"]]
+                vurulan.append((pl.get("id"), pl.get("ticker")))
                 n += 1
         counters["plans"] = n
+        counters["damgalananlar"] = vurulan
         return n > 0
 
     store.update_jsonl("trade_plans.jsonl", _patch_plans)
@@ -3856,7 +3969,11 @@ def _stamp_llm_opinions(day: str, reviews: list) -> None:
         return changed
 
     store.update_json("portfolio.json", _patch_pf, None)
-    obs.log("llm_opinions_stamped", date=day, n=patched)
+    atif_n = _plan_atif_yaz(day, counters["damgalananlar"], kunye)
+    # ATIF SAYISI OLAYA DA KONUR: `n` ile `atif_n` ayrışırsa (yazım düştü ya da çağıran künyesiz
+    # geldi) bu tek satırdan görülür — iki sayıyı tek alana katlamak arızayı gizlerdi.
+    obs.log("llm_opinions_stamped", date=day, n=patched, atif_n=atif_n,
+            atif_kunyeli=bool((kunye or {}).get("model")))
 
 
 def rank_explore(cands: list, timeout: int = 60) -> str | None:
@@ -3966,11 +4083,21 @@ def backfill_opinions(max_days: int | None = None) -> dict:
     processed, stamped = 0, 0
     for day in days[:max_days]:
         reviews = _review_plans_batch(day, todo[day])
+        # KÜNYE HEMEN BURADA OKUNUR (Ö-39): kutu tüketen-okumalıdır ve bir sonraki `_agent_call`
+        # (döngünün bir sonraki günü) onu GİRİŞTE sıfırlar — okuma geciktirilirse künye kaybolur.
+        # Bu yol eskiden künyeyi HİÇ okumuyordu: dolgu, aylar öncesine atıfsız damga vuruyordu ve
+        # Ö-39'un canlı kanıtı (2026-02-26 / 2026-04-14 damgaları) tam buradan çıkmıştı.
+        _dolgu_model, _dolgu_neden = cevap_veren_model()
+        _dolgu_iz = cevap_veren_iz()
         if not reviews:                       # bütçe kurudu / cevapsız → dur (kalanı sonraki turda)
             if not _agent_budget_take(0.0):
                 break
             continue
-        _stamp_llm_opinions(day, reviews)
+        _stamp_llm_opinions(day, reviews,
+                            kunye={"model": _dolgu_model, "model_olculemedi": _dolgu_neden,
+                                   "model_kaynagi": "cevap_veren",
+                                   "model_istenen": active_model(),
+                                   "iz_id": _dolgu_iz, "kind": "backfill", "backfill": True})
         processed += 1
         stamped += len({r["ticker"] for r in reviews})
     if processed:

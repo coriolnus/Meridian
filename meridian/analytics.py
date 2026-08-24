@@ -1127,6 +1127,55 @@ LLM_PROMOTE_MIN_BUCKET = 8      # hem 'destekle' hem 'karşı' kovasında en az 
 LLM_PROMOTE_R_GAP = 0.3        # avg_r(destekle) − avg_r(karşı) en az bu kadar olmalı
 
 
+PLAN_ATIF_KIRILIM_NOT = (
+    "MODEL KIRILIMI TERFİYE GİRMEZ — betimleyicidir. Terfi kuralı (`n_pairs`/kova/`r_gap`) "
+    "DEĞİŞMEDİ; eşiği model başına bölmek kart-önce iştir. `atifsiz_n` atıf defteri doğmadan "
+    "(2026-08-24) damgalanmış çiftlerdir: retro damga YASAK olduğu için künyeleri hiç olmayacak "
+    "ve bir modele YAMANMAZLAR. `olculemeyen_n` atfı VAR ama adı ölçülememiş çiftlerdir (zincir "
+    "adsızdı) — 'atıf yok' ile 'ad yok' ayrı hâllerdir. `backfill_n` o modelin çiftlerinden kaçının "
+    "GERİYE damga olduğunu söyler: geriye damga bir arıza değildir, ama karışırsa 'model değişti, "
+    "isabet arttı' okuması sahte çıkar (Ö-39'un kök kusuru)."
+)
+
+
+def _plan_atif_kirilimi(pair_pids: list, pairs: list) -> dict:
+    """Kalibrasyon çiftlerini `plan_atif.jsonl` (Ö-39 atıf defteri) ile plan_id üstünden birleştirir.
+
+    YASA 6'nın gereği: bu defterin okuyucusu İLK GÜNDEN vardır — okuyucusuz defter açılmaz
+    (uyuyan-yol dersi). Cevapladığı soru: "hangi model kaç çift üretti, ortalama R'si ne, kaçı
+    geriye damga?" — terfi 2026-08-14'te açıldığından beri sorulabilir ama cevaplanamaz olan soru.
+    AYNI PLANA BİRDEN ÇOK SATIR: damga var olan `llm_opinion`ı ezmediği için normalde tek satır
+    düşer; yine de defter append-only olduğundan İLK satır otorite kabul edilir (görüşü yazan
+    çağrı odur), sonrakiler sayılmaz."""
+    atif = {}
+    for r in store.read_jsonl("plan_atif.jsonl"):
+        pid = str(r.get("plan_id"))
+        if pid not in atif:
+            atif[pid] = r
+    modeller: dict = {}
+    atifli = olculemeyen = 0
+    for pid, (_op, r_mult) in zip(pair_pids, pairs):
+        row = atif.get(pid)
+        if row is None:
+            continue
+        atifli += 1
+        ad = row.get("model")
+        if not ad:
+            # UYDURMA YASAĞI: adsız satır bir kovaya yazılmaz ("varsayılan" diye bir model YOK).
+            olculemeyen += 1
+            continue
+        b = modeller.setdefault(ad, {"n": 0, "sum_r": 0.0, "backfill_n": 0})
+        b["n"] += 1
+        b["sum_r"] += float(r_mult)
+        b["backfill_n"] += 1 if row.get("backfill") else 0
+    return {"n_cift": len(pairs), "atifli_n": atifli, "atifsiz_n": len(pairs) - atifli,
+            "olculemeyen_n": olculemeyen,
+            "modeller": {ad: {"n": b["n"], "avg_r": round(b["sum_r"] / b["n"], 3),
+                              "backfill_n": b["backfill_n"]}
+                         for ad, b in modeller.items()},
+            "not": PLAN_ATIF_KIRILIM_NOT}
+
+
 def llm_opinion_calibration() -> dict:
     """Ajanın görüşleri gerçekten sinyal mi? Kapanan işlemler plan görüşleriyle (plan_id join)
     eşleştirilir; kova başına n / kazanma / ort.R. Terfi yalnız yazılı kuralla: ≥{pairs} çift,
@@ -1136,6 +1185,7 @@ def llm_opinion_calibration() -> dict:
     plan_rows = store.read_jsonl("trade_plans.jsonl")
     plans = {p.get("id"): p for p in plan_rows}      # join tarafı: kimliğe göre (son satır kazanır)
     pairs = []
+    pair_pids: list[str] = []                        # `pairs` ile HİZALI plan kimlikleri (Ö-39 atfı)
     # `(plans.get(...) or {}).get("llm_opinion")` üç AYRI sessiz elemeyi tek satıra gizliyordu:
     # plan_id yok / plan birleşmedi (canlıda `P00140` ↔ `P-2026-07-20-AAA` şema çatışması) /
     # görüş yok. İlk ikisi ŞEMA hatası, üçüncüsü meşru bilgi — artık ayrı ayrı sayılıyor.
@@ -1157,9 +1207,11 @@ def llm_opinion_calibration() -> dict:
                 sv.drop("sema:eksik_alan:r_multiple"); continue
             sv.keep()
             pairs.append((op, float(t["r_multiple"])))
+            pair_pids.append(str(pid))                       # atıf kırılımının join anahtarı
         if len(pairs) > 100:                                 # taze pencere kırpması da bir elemedir
             sv.drop("piyasa:taze_pencere_dışı", n=len(pairs) - 100, from_kept=True)
     pairs = pairs[-100:]                                     # taze pencere
+    pair_pids = pair_pids[-100:]                             # AYNI kırpma — iki liste hizalı kalmalı
     buckets = {}
     for op, r in pairs:
         b = buckets.setdefault(op, {"n": 0, "wins": 0, "sum_r": 0.0})
@@ -1211,6 +1263,9 @@ def llm_opinion_calibration() -> dict:
            # UYDURMA YASAĞI: hiç görüşlü plan yoksa (ya da hiçbirinde tarih yoksa) None — "bugün"
            # yazmak ölü bir damgalamayı diri göstermenin en kısa yolu olurdu.
            "last_opinion_plan_date": _opinion_dates[-1] if _opinion_dates else None,
+           # Ö-39 ATIF KIRILIMI: "hangi beyin ne kadar isabetli" sorusunun ilk cevap yüzeyi.
+           # BETİMLEYİCİ — `promoted` hesabına GİRMEZ (bkz. PLAN_ATIF_KIRILIM_NOT).
+           "model_kirilim": _plan_atif_kirilimi(pair_pids, pairs),
            "rule": f">={LLM_PROMOTE_MIN_PAIRS} çift · kova>={LLM_PROMOTE_MIN_BUCKET} · "
                    f"Rfark>={LLM_PROMOTE_R_GAP} → yalnız REVIEW+karşı dolum vetosu",
            # KÜNYE: terfi kararı YALNIZ gerçek çiftlerden çıkar; cf yalnız göstergedir. Tek bir

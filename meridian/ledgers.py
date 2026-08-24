@@ -354,6 +354,33 @@ CONTRACTS: dict[str, Contract] = {
              "`-Q` sessiz modu CLI oturum özetini bastırır, yani araç sayısı ÖLÇÜLEMEZ — "
              "UYDURMA YASAĞI gereği 0 yazılmaz, alan None kalır ve `arac_neden` nedeni taşır. "
              "`iz_id` ham iz defteriyle birleştirme anahtarıdır"),
+    # PLAN ATIF DEFTERİ (Ö-39, 2026-08-24). Bu defter de DOĞUŞTA sözleşmeye giriyor — aynı gerekçe:
+    # "sözleşmesiz defter" bu depoda ölçülmüş bir hata ailesidir. Defterin var olma sebebi tek bir
+    # soruyu KALICI kılmak: "bu plana görüşü hangi model yazdı?" Plan satırı cevabı taşıyamaz
+    # (yetki sınırı yasası `test_authority_boundaries_v77::test_c3` tek anahtara izin verir),
+    # `candidate_review.json` tek-belge deposudur (yalnız son gün), `agent_calls.jsonl`ta ise
+    # ticker/plan günü yoktur. Ayrıntılı gerekçe: `hermes.PLAN_ATIF_DEFTERI` üstündeki blok.
+    "plan_atif.jsonl": Contract(
+        required=("ts", "plan_id", "ticker", "plan_date", "kind", "model", "model_kaynagi",
+                  "model_olculemedi", "model_istenen", "iz_id", "backfill"),
+        writers=("hermes.py",),          # tek yazar: `hermes._plan_atif_yaz` (damga çağrısı içinde)
+        key="plan_id",
+        consumers=("analytics",),
+        # `key_format` BİLEREK YOK: bu defter plan satırındaki kimliği AYNEN aynalar ve biçim
+        # denetiminin sahibi `trade_plans.jsonl` sözleşmesidir (orada PLAN_ID_RE ile çivili).
+        # Burada ikinci kez denetlemek, aynı kusuru iki deftere fatura eder ve atıf defterini
+        # KENDİ taşımadığı bir hatanın ihlal sayacına yazardı.
+        note="ÜÇ KÜNYE ALANI BİRLİKTE OKUNUR: `model` = cevabı GERÇEKTEN veren (ölçülemezse None "
+             "+ `model_olculemedi` nedeni), `model_istenen` = yapılandırmanın istediği ad, "
+             "`model_kaynagi` = beyanın sınıfı ('cevap_veren'; künye paketi hiç verilmediyse "
+             "None). İkisini tek alana katlamak v245 künye kusurunun ta kendisiydi. "
+             "`backfill=true` satırın GERİYE damga olduğunu söyler: `ts` bugünü, `plan_date` "
+             "aylar öncesini gösterebilir ve bu AYRIŞMA normaldir — beyansız hâlde zaman-yakınlığı "
+             "join'i onu sessizce yanlış modele bağlardı (Ö-39'un kök kusuru). `iz_id` "
+             "`agent_calls.jsonl` ile birleşme anahtarıdır (süre/deneme/ön-yükleme/ham iz oradan "
+             "okunur); telemetri yazımı düşerse None kalır ve UYDURULMAZ. RETRO DAMGA YASAĞI: "
+             "defter 2026-08-24'te doğdu, ondan önceki çiftler ATIFSIZDIR ve öyle kalacaktır — "
+             "tüketici onları bir modele yamaz, `atifsiz_n` olarak AYRI sayar"),
     "agent_traces.jsonl": Contract(
         required=("ts", "iz_id", "kind", "sonuc_sinifi", "stdout", "stderr", "ham_kr",
                   "tavan_kr", "kirpildi"),
