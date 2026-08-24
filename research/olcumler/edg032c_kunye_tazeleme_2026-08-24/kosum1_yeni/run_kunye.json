@@ -1,0 +1,93 @@
+{
+ "ad": "kosum1_yeni",
+ "amac": "edg032c künye tazeleme çift-koşumu (2026-08-24; EDG-048/049 emsali) — broker/strategy/guard v276 değişikliklerinin bit-nötrlüğünü SINAR",
+ "baslangic_utc": "2026-08-24T00:43:24+00:00",
+ "bitis_utc": "2026-08-24T01:00:11+00:00",
+ "sure_sn": 1007.5,
+ "sasi": {
+  "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py",
+  "sha256": "75cef79215a7404f386517678df3d264d65d671ad23734a0b6559427177c85da"
+ },
+ "uyarlama_beyani": {
+  "eski_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "yeni_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "motor_ARMED_SETUPS": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "beyan": "TEK uyarlama: yüklenen şasi modülünün ARMED_BEKLENEN sabiti B1 yasasına çevrildi (dünya-beklentisi; motor DEĞİL). Başka hiçbir sabit/assert/parametre değişmedi; parametre enjeksiyonu YOK (merkez hücre olduğu gibi) — edg032c beyanı AYNEN."
+ },
+ "motor_sha_once": {
+  "broker.py": {
+   "sha256": "e4c5c91515d8ec35ae36c71af39f61cadd09baa1c11268a99aedc7ed05a470fb",
+   "sha256_16": "e4c5c91515d8ec35",
+   "mtime_ns": 1787529725443848254
+  },
+  "backtest.py": {
+   "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+   "sha256_16": "b59c059f43d4e410",
+   "mtime_ns": 1787349934977599301
+  },
+  "strategy.py": {
+   "sha256": "d6ae533c8a578f74282445541f5b689c8ef4a8f0cf78c95ecc7dc138836203e4",
+   "sha256_16": "d6ae533c8a578f74",
+   "mtime_ns": 1787518856159672678
+  },
+  "guard.py": {
+   "sha256": "475e19e7b38f0650afb73681e2d69791b4635f488c5bea968cb87dc4e666415d",
+   "sha256_16": "475e19e7b38f0650",
+   "mtime_ns": 1787529835728277441
+  }
+ },
+ "motor_sha_sonra": {
+  "broker.py": {
+   "sha256": "e4c5c91515d8ec35ae36c71af39f61cadd09baa1c11268a99aedc7ed05a470fb",
+   "sha256_16": "e4c5c91515d8ec35",
+   "mtime_ns": 1787529725443848254
+  },
+  "backtest.py": {
+   "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+   "sha256_16": "b59c059f43d4e410",
+   "mtime_ns": 1787349934977599301
+  },
+  "strategy.py": {
+   "sha256": "d6ae533c8a578f74282445541f5b689c8ef4a8f0cf78c95ecc7dc138836203e4",
+   "sha256_16": "d6ae533c8a578f74",
+   "mtime_ns": 1787518856159672678
+  },
+  "guard.py": {
+   "sha256": "475e19e7b38f0650afb73681e2d69791b4635f488c5bea968cb87dc4e666415d",
+   "sha256_16": "475e19e7b38f0650",
+   "mtime_ns": 1787529835728277441
+  }
+ },
+ "motor_ayni_kosum_icinde": true,
+ "v276_pin": {
+  "broker.py": "e4c5c91515d8ec35ae36c71af39f61cadd09baa1c11268a99aedc7ed05a470fb",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "d6ae533c8a578f74282445541f5b689c8ef4a8f0cf78c95ecc7dc138836203e4",
+  "guard.py": "475e19e7b38f0650afb73681e2d69791b4635f488c5bea968cb87dc4e666415d"
+ },
+ "sandbox": {
+  "state_dizini": "state_kontrol",
+  "bakir_baslatildi": true,
+  "beyan": "koşum öncesi silindi; şasi hazirla() donmuş EDG-022 kopyalarından yeniden kurdu; state/bars SALT-OKUNUR symlink"
+ },
+ "tasinan_dosyalar_sha256": {
+  "sonuc_kontrol.json": "7bc7e381d14e02c50fbb54d03eb0b7ada30275905b872a7481b6fca7197155c7",
+  "seanslar_kontrol.json": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+  "islemler_kontrol.json": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+  "islemler_tam_kontrol.json": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+  "alan_envanteri_kontrol.json": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0"
+ }
+}

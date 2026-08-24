@@ -21,9 +21,9 @@
  "motor_sha256": {
   "kosum1_once": {
    "broker.py": {
-    "sha256": "e4c5c91515d8ec35ae36c71af39f61cadd09baa1c11268a99aedc7ed05a470fb",
-    "sha256_16": "e4c5c91515d8ec35",
-    "mtime_ns": 1787529725443848254
+    "sha256": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "sha256_16": "09f5d0850122376a",
+    "mtime_ns": 1787496823142538157
    },
    "backtest.py": {
     "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
@@ -31,21 +31,21 @@
     "mtime_ns": 1787349934977599301
    },
    "strategy.py": {
-    "sha256": "d6ae533c8a578f74282445541f5b689c8ef4a8f0cf78c95ecc7dc138836203e4",
-    "sha256_16": "d6ae533c8a578f74",
-    "mtime_ns": 1787518856159672678
+    "sha256": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "sha256_16": "449039624127c66d",
+    "mtime_ns": 1787496823150661208
    },
    "guard.py": {
-    "sha256": "475e19e7b38f0650afb73681e2d69791b4635f488c5bea968cb87dc4e666415d",
-    "sha256_16": "475e19e7b38f0650",
-    "mtime_ns": 1787529835728277441
+    "sha256": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "sha256_16": "bb984356798278a5",
+    "mtime_ns": 1787496823143898742
    }
   },
   "kosum2_sonra": {
    "broker.py": {
-    "sha256": "e4c5c91515d8ec35ae36c71af39f61cadd09baa1c11268a99aedc7ed05a470fb",
-    "sha256_16": "e4c5c91515d8ec35",
-    "mtime_ns": 1787529725443848254
+    "sha256": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "sha256_16": "09f5d0850122376a",
+    "mtime_ns": 1787496823142538157
    },
    "backtest.py": {
     "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
@@ -53,14 +53,14 @@
     "mtime_ns": 1787349934977599301
    },
    "strategy.py": {
-    "sha256": "d6ae533c8a578f74282445541f5b689c8ef4a8f0cf78c95ecc7dc138836203e4",
-    "sha256_16": "d6ae533c8a578f74",
-    "mtime_ns": 1787518856159672678
+    "sha256": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "sha256_16": "449039624127c66d",
+    "mtime_ns": 1787496823150661208
    },
    "guard.py": {
-    "sha256": "475e19e7b38f0650afb73681e2d69791b4635f488c5bea968cb87dc4e666415d",
-    "sha256_16": "475e19e7b38f0650",
-    "mtime_ns": 1787529835728277441
+    "sha256": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "sha256_16": "bb984356798278a5",
+    "mtime_ns": 1787496823143898742
    }
   },
   "dort_noktada_sabit": true
@@ -207,39 +207,6 @@
    "kanit": "/Users/erdemozturk/AI-Trading/research/olcumler/edg049_dormant_2026-08-23/determinizm_kunye.json",
    "yedek": "/Users/erdemozturk/AI-Trading/research/olcumler/edg049_dormant_2026-08-23/kunye_yedek_pre049.json",
    "yetki": "Rol-1 devri (EDG-2026-049 ölçüm turu koordinatör mesajı, 2026-08-23)"
-  },
-  {
-   "tarih_utc": "2026-08-24T01:20:15+00:00",
-   "dosya": "broker.py",
-   "eski_sha256": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
-   "eski_mtime_ns": 1787496823142538157,
-   "yeni_sha256": "e4c5c91515d8ec35ae36c71af39f61cadd09baa1c11268a99aedc7ed05a470fb",
-   "neden": "Commit'siz çalışma-ağacı değişikliği (10 satır), koordinatör ölçümü: YALNIZ YORUM — ölü-alan damgaları (aynı gece başka ajanların statik işaretlemesi). Kod yolu DEĞİŞMEDİ. Davranış bit-nötr KANITLI — TAM-pencere çift-koşum (edg032c_kunye_tazeleme_2026-08-24 kosum1_yeni/kosum2_yeni) birbirleriyle VE edg032c/kosum1 ile ÜÇ DEFTERDE bayt-özdeş. kosum1_once + kosum2_sonra kayıtları birlikte güncellendi (dort_noktada_sabit iç tutarlılığı).",
-   "kanit": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_kunye_tazeleme_2026-08-24/bayt_ozdeslik.json",
-   "yedek": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_kunye_tazeleme_2026-08-24/kunye_yedek_pre_tazeleme.json",
-   "yetki": "Rol-1 devri (edg032c künye tazeleme görev mesajı, 2026-08-24 — EDG-2026-057 künye kapısı tıkanması)"
-  },
-  {
-   "tarih_utc": "2026-08-24T01:20:15+00:00",
-   "dosya": "strategy.py",
-   "eski_sha256": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
-   "eski_mtime_ns": 1787496823150661208,
-   "yeni_sha256": "d6ae533c8a578f74282445541f5b689c8ef4a8f0cf78c95ecc7dc138836203e4",
-   "neden": "Commit 06a6cff (2026-08-23) — OPT Faz-1 kablolama (v276): 5 yeni düğme bounds'tan OKUNUR hâle geldi, 36 kod satırı. Commit mesajı 'bit-nötr' İDDİA ediyordu; künye o commit'ten sonra hiç tazelenmediği için iddia SINANMAMIŞTI. Bu koşum iddiayı SINADI: davranış bit-nötr KANITLI — aynı üç-defter özdeşliği (düğmelerin replay varsayılanları defteri kaydırmıyor). ARMED_SETUPS B1 üçlüsü AYNEN (koşum başı assert). kosum1_once + kosum2_sonra kayıtları birlikte güncellendi (dort_noktada_sabit iç tutarlılığı).",
-   "kanit": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_kunye_tazeleme_2026-08-24/bayt_ozdeslik.json",
-   "yedek": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_kunye_tazeleme_2026-08-24/kunye_yedek_pre_tazeleme.json",
-   "yetki": "Rol-1 devri (edg032c künye tazeleme görev mesajı, 2026-08-24 — EDG-2026-057 künye kapısı tıkanması)"
-  },
-  {
-   "tarih_utc": "2026-08-24T01:20:15+00:00",
-   "dosya": "guard.py",
-   "eski_sha256": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
-   "eski_mtime_ns": 1787496823143898742,
-   "yeni_sha256": "475e19e7b38f0650afb73681e2d69791b4635f488c5bea968cb87dc4e666415d",
-   "neden": "Commit'siz çalışma-ağacı değişikliği (14 satır), koordinatör ölçümü: YALNIZ YORUM — ölü-alan damgaları. Kod yolu DEĞİŞMEDİ. Davranış bit-nötr KANITLI — aynı üç-defter özdeşliği. kosum1_once + kosum2_sonra kayıtları birlikte güncellendi (dort_noktada_sabit iç tutarlılığı).",
-   "kanit": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_kunye_tazeleme_2026-08-24/bayt_ozdeslik.json",
-   "yedek": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_kunye_tazeleme_2026-08-24/kunye_yedek_pre_tazeleme.json",
-   "yetki": "Rol-1 devri (edg032c künye tazeleme görev mesajı, 2026-08-24 — EDG-2026-057 künye kapısı tıkanması)"
   }
  ]
 }

@@ -1,0 +1,348 @@
+{
+ "adim": "edg032c KÜNYE TAZELEME — BAYT-ÖZDEŞLİK KAPISI (2026-08-24; EDG-048/049 emsali)",
+ "olcum_zamani": "2026-08-24T01:20:15+00:00",
+ "soru": "broker.py (yorum-only) + guard.py (yorum-only) + strategy.py (06a6cff, OPT Faz-1 v276, 36 kod satırı) değişiklikleri replay defterinde BİT-NÖTR MÜ? Commit mesajının 'bit-nötr' İDDİASI kanıt sayılmaz — kanıt bayt-özdeşliktir.",
+ "tanim": "TAM kontrol iki kez, taze süreç + bakir sandbox, bugünkü (v276) motorla; üç defter kosum1_yeni ↔ kosum2_yeni ↔ edg032c/kosum1 BAYT-ÖZDEŞ olmalı. Ek kanıt: alan_envanteri üç yönlü bayt + sonuc ölçüm blokları k1↔k2 derin-eşit + motor dört noktada sabit + v276 pin. 4. kanonik dosya (sonuc) bayt kapısında DEĞİL — gerekçesi dorduncu_kanonik_dosya bloğunda.",
+ "kapi_defterleri": {
+  "islemler_tam_kontrol.json": {
+   "kosum1_yeni_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "kosum2_yeni_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "edg032c_kosum1_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "determinizm_k1_k2": true,
+   "uc_yonlu_ozdes": true
+  },
+  "islemler_kontrol.json": {
+   "kosum1_yeni_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "kosum2_yeni_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "edg032c_kosum1_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "determinizm_k1_k2": true,
+   "uc_yonlu_ozdes": true
+  },
+  "seanslar_kontrol.json": {
+   "kosum1_yeni_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "kosum2_yeni_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "edg032c_kosum1_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+   "determinizm_k1_k2": true,
+   "uc_yonlu_ozdes": true
+  }
+ },
+ "kapi_uc_yonlu_ozdes": true,
+ "determinizm_k1_k2": true,
+ "kunye_civisi_tutarli": true,
+ "dorduncu_kanonik_dosya": {
+  "dosya": "sonuc_kontrol.json",
+  "bayt_kapisinda_mi": false,
+  "neden": "YAPISAL: şasi bu dosyaya olcum_zamani / sure_sn / motor mtime_ns yazar — koşum KİMLİĞİ alanlarıdır, bayt-özdeşlik imkansızdır. edg032b/edg032c'nin kendi beyanı AYNEN; künyenin determinizm_kaniti.kapi_sha256 kaydı da bu dosyayı İÇERMEZ (üç defter). Yerine 10 ÖLÇÜM BLOĞU derin-eşitlikle sınanır.",
+  "sha256": {
+   "kosum1_yeni": "7bc7e381d14e02c50fbb54d03eb0b7ada30275905b872a7481b6fca7197155c7",
+   "kosum2_yeni": "ec5af20cb9587aa69cc63f8a225b8ce3d993d078f8b652bf7147dc32a96ecb0d",
+   "edg032c_kosum1": "9c5b493b90fbc9a7e9bb63accb169fad8f983bdb46897adbb47dcbffd4bde1c6"
+  },
+  "ust_duzey_fark_k1_vs_edg032c": {
+   "config_sha256_16": {
+    "kosum1_yeni": {
+     "goal.yaml": {
+      "sandbox": "099590dedee1ccf2",
+      "edg022": "099590dedee1ccf2",
+      "repo_state": "98869980534e91a0"
+     },
+     "strategy.yaml": {
+      "sandbox": "9f3e4732315abe52",
+      "edg022": "9f3e4732315abe52",
+      "repo_state": "758d30c39c18c4fd"
+     },
+     "bounds.yaml": {
+      "sandbox": "3e810b547ca95f9a",
+      "edg022": "3e810b547ca95f9a",
+      "repo_state": "a001e4b347cc7188"
+     }
+    },
+    "referans": {
+     "goal.yaml": {
+      "sandbox": "099590dedee1ccf2",
+      "edg022": "099590dedee1ccf2",
+      "repo_state": "0f0a7b4bd912d6bd"
+     },
+     "strategy.yaml": {
+      "sandbox": "9f3e4732315abe52",
+      "edg022": "9f3e4732315abe52",
+      "repo_state": "758d30c39c18c4fd"
+     },
+     "bounds.yaml": {
+      "sandbox": "3e810b547ca95f9a",
+      "edg022": "3e810b547ca95f9a",
+      "repo_state": "3acb44b141e09227"
+     }
+    }
+   },
+   "kill3_mtime": {
+    "kosum1_yeni": {
+     "motor_once": {
+      "broker.py": {
+       "sha256_16": "e4c5c91515d8ec35",
+       "mtime_ns": 1787529725443848254
+      },
+      "backtest.py": {
+       "sha256_16": "b59c059f43d4e410",
+       "mtime_ns": 1787349934977599301
+      },
+      "strategy.py": {
+       "sha256_16": "d6ae533c8a578f74",
+       "mtime_ns": 1787518856159672678
+      },
+      "guard.py": {
+       "sha256_16": "475e19e7b38f0650",
+       "mtime_ns": 1787529835728277441
+      },
+      "config.py": {
+       "sha256_16": "bc681894538cac18",
+       "mtime_ns": 1787519184632411697
+      },
+      "dataset.py": {
+       "sha256_16": "61483e2846411b80",
+       "mtime_ns": 1786911181788004870
+      },
+      "score.py": {
+       "sha256_16": "53dcaec8a23a4a4a",
+       "mtime_ns": 1787397426659527268
+      },
+      "regime.py": {
+       "sha256_16": "b057ee60f647c4d3",
+       "mtime_ns": 1786911181816427027
+      }
+     },
+     "motor_sonra": {
+      "broker.py": {
+       "sha256_16": "e4c5c91515d8ec35",
+       "mtime_ns": 1787529725443848254
+      },
+      "backtest.py": {
+       "sha256_16": "b59c059f43d4e410",
+       "mtime_ns": 1787349934977599301
+      },
+      "strategy.py": {
+       "sha256_16": "d6ae533c8a578f74",
+       "mtime_ns": 1787518856159672678
+      },
+      "guard.py": {
+       "sha256_16": "475e19e7b38f0650",
+       "mtime_ns": 1787529835728277441
+      },
+      "config.py": {
+       "sha256_16": "bc681894538cac18",
+       "mtime_ns": 1787519184632411697
+      },
+      "dataset.py": {
+       "sha256_16": "61483e2846411b80",
+       "mtime_ns": 1786911181788004870
+      },
+      "score.py": {
+       "sha256_16": "53dcaec8a23a4a4a",
+       "mtime_ns": 1787397426659527268
+      },
+      "regime.py": {
+       "sha256_16": "b057ee60f647c4d3",
+       "mtime_ns": 1786911181816427027
+      }
+     },
+     "bozuk_dosyalar": [],
+     "temiz": true
+    },
+    "referans": {
+     "motor_once": {
+      "broker.py": {
+       "sha256_16": "52e67c5db43f52d5",
+       "mtime_ns": 1787422741457650475
+      },
+      "backtest.py": {
+       "sha256_16": "b59c059f43d4e410",
+       "mtime_ns": 1787349934977599301
+      },
+      "strategy.py": {
+       "sha256_16": "263eb8fef7d10089",
+       "mtime_ns": 1787417249039052433
+      },
+      "guard.py": {
+       "sha256_16": "467034e580311150",
+       "mtime_ns": 1787422791001664719
+      },
+      "config.py": {
+       "sha256_16": "7a64576e122fb937",
+       "mtime_ns": 1786911181787276410
+      },
+      "dataset.py": {
+       "sha256_16": "61483e2846411b80",
+       "mtime_ns": 1786911181788004870
+      },
+      "score.py": {
+       "sha256_16": "53dcaec8a23a4a4a",
+       "mtime_ns": 1787397426659527268
+      },
+      "regime.py": {
+       "sha256_16": "b057ee60f647c4d3",
+       "mtime_ns": 1786911181816427027
+      }
+     },
+     "motor_sonra": {
+      "broker.py": {
+       "sha256_16": "52e67c5db43f52d5",
+       "mtime_ns": 1787422741457650475
+      },
+      "backtest.py": {
+       "sha256_16": "b59c059f43d4e410",
+       "mtime_ns": 1787349934977599301
+      },
+      "strategy.py": {
+       "sha256_16": "263eb8fef7d10089",
+       "mtime_ns": 1787417249039052433
+      },
+      "guard.py": {
+       "sha256_16": "467034e580311150",
+       "mtime_ns": 1787422791001664719
+      },
+      "config.py": {
+       "sha256_16": "7a64576e122fb937",
+       "mtime_ns": 1786911181787276410
+      },
+      "dataset.py": {
+       "sha256_16": "61483e2846411b80",
+       "mtime_ns": 1786911181788004870
+      },
+      "score.py": {
+       "sha256_16": "53dcaec8a23a4a4a",
+       "mtime_ns": 1787397426659527268
+      },
+      "regime.py": {
+       "sha256_16": "b057ee60f647c4d3",
+       "mtime_ns": 1786911181816427027
+      }
+     },
+     "bozuk_dosyalar": [],
+     "temiz": true
+    }
+   },
+   "motor_sha256_16": {
+    "kosum1_yeni": {
+     "broker.py": "e4c5c91515d8ec35",
+     "backtest.py": "b59c059f43d4e410",
+     "strategy.py": "d6ae533c8a578f74",
+     "guard.py": "475e19e7b38f0650"
+    },
+    "referans": {
+     "broker.py": "52e67c5db43f52d5",
+     "backtest.py": "b59c059f43d4e410",
+     "strategy.py": "263eb8fef7d10089",
+     "guard.py": "467034e580311150"
+    }
+   },
+   "olcum_zamani": {
+    "kosum1_yeni": "2026-08-24T01:00:11+00:00",
+    "referans": "2026-08-22T20:32:06+00:00"
+   },
+   "sure_sn": {
+    "kosum1_yeni": 1006.8,
+    "referans": 762.4
+   }
+  },
+  "olcum_bloklari_k1_k2_esit": {
+   "performans": true,
+   "doluluk": true,
+   "tepe_isi": true,
+   "betim": true,
+   "tasnif_tum_seans": true,
+   "birincil": true,
+   "ci95_ay_kumeli": true,
+   "islem": true,
+   "replay": true,
+   "hucre": true
+  },
+  "olcum_bloklari_k1_edg032c_esit": {
+   "performans": true,
+   "doluluk": true,
+   "tepe_isi": true,
+   "betim": true,
+   "tasnif_tum_seans": true,
+   "birincil": true,
+   "ci95_ay_kumeli": true,
+   "islem": true,
+   "replay": true,
+   "hucre": true
+  },
+  "olcum_bloklari_fark_k1_edg032c": null,
+  "bloklar_hepsi_esit_k1_k2": true,
+  "bloklar_hepsi_esit_k1_edg032c": true
+ },
+ "ek_kanit_alan_envanteri": {
+  "kosum1_yeni": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "kosum2_yeni": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "edg032c_kosum1": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0",
+  "uc_yonlu_ozdes": true
+ },
+ "motor_dort_noktada_sabit": true,
+ "v276_pin_dogrulandi": true,
+ "motor_sha_simdi": {
+  "broker.py": {
+   "sha256": "e4c5c91515d8ec35ae36c71af39f61cadd09baa1c11268a99aedc7ed05a470fb",
+   "sha256_16": "e4c5c91515d8ec35",
+   "mtime_ns": 1787529725443848254
+  },
+  "backtest.py": {
+   "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+   "sha256_16": "b59c059f43d4e410",
+   "mtime_ns": 1787349934977599301
+  },
+  "strategy.py": {
+   "sha256": "d6ae533c8a578f74282445541f5b689c8ef4a8f0cf78c95ecc7dc138836203e4",
+   "sha256_16": "d6ae533c8a578f74",
+   "mtime_ns": 1787518856159672678
+  },
+  "guard.py": {
+   "sha256": "475e19e7b38f0650afb73681e2d69791b4635f488c5bea968cb87dc4e666415d",
+   "sha256_16": "475e19e7b38f0650",
+   "mtime_ns": 1787529835728277441
+  }
+ },
+ "sure_sn": {
+  "kosum1_yeni": 1007.5,
+  "kosum2_yeni": 1203.3
+ },
+ "TAZELEME_GECTI": true,
+ "hukum": null,
+ "kunye_guncellendi": {
+  "dosya": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/TABAN_KUNYESI.json",
+  "once_sha256": "dcb8f3b8a59b8984a6d0e82034009143d1b3d77ee0d3ead0e74072ca5e180af4",
+  "sonra_sha256": "ddbef18a3e1695bd43e3def7a48d655737698bbb7a5ff8637c37f680cd11d28b",
+  "dosyalar": {
+   "broker.py": {
+    "eski": "09f5d0850122376a560c852307d6e3b49724718e601b74788ae9de8e4b85548b",
+    "yeni": "e4c5c91515d8ec35ae36c71af39f61cadd09baa1c11268a99aedc7ed05a470fb"
+   },
+   "strategy.py": {
+    "eski": "449039624127c66d550b8e9f6b43ae8302d6858e706604ba6be7cc048f599877",
+    "yeni": "d6ae533c8a578f74282445541f5b689c8ef4a8f0cf78c95ecc7dc138836203e4"
+   },
+   "guard.py": {
+    "eski": "bb984356798278a513846f27959e26caedc5538f3d76646c72c4819d9e967392",
+    "yeni": "475e19e7b38f0650afb73681e2d69791b4635f488c5bea968cb87dc4e666415d"
+   }
+  },
+  "dokunulmayan_alanlar": [
+   "taban",
+   "dondurma_tarihi_utc",
+   "neden",
+   "kanonik_taban_dosyalari",
+   "determinizm_kaniti",
+   "sasi",
+   "yasa",
+   "config_sha256",
+   "pencere",
+   "evren",
+   "hucre",
+   "cost_model",
+   "butunluk_gecerli",
+   "taban_ozeti_betimleyici",
+   "hukum_yok",
+   "motor_sha256.backtest.py (değişmedi)"
+  ]
+ }
+}
