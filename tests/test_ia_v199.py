@@ -39,12 +39,18 @@ KOD = "\n".join(l for l in APPJS.splitlines() if not l.lstrip().startswith("//")
 # ---- BAĞLAYICI IA (docs/TASARIM-YONU-2026-08-07.md §3) --------------------------------------
 # Bu liste testin KENDİ iddiasıdır ve kaynaktan TÜRETİLMEZ: türetilseydi test "kod kendine
 # uyuyor mu?" diye sorardı ve bir yüzeyi yanlış adlandırmak testi yeşil bırakırdı.
-YUZEYLER = ["bugun", "karar", "saglik", "ogrenme", "kilitler"]
-YUZEY_ADI = {"bugun": "Bugün", "karar": "Karar", "saglik": "Sağlık",
+# 2026-08-24 (operatör): BEŞ yüzey YEDİ oldu. Onaylanan maketin kenar çubuğu gruplaması —
+# eski tek "Karar" alanı sekiz bölümle şişmişti ve içinde üç ayrı soru vardı; ② Portföy ve
+# ④ Analiz (operatörün adıyla istediği sekme) oradan ayrıldı. ~~["bugun","karar","saglik",
+# "ogrenme","kilitler"]~~
+YUZEYLER = ["bugun", "portfoy", "karar", "analiz", "saglik", "ogrenme", "kilitler"]
+YUZEY_ADI = {"bugun": "Bugün", "portfoy": "Portföy", "karar": "Karar zinciri",
+             "analiz": "Analiz", "saglik": "Sağlık",
              "ogrenme": "Öğrenme", "kilitler": "Kilitler"}
 # Eski beş ALAN SAYFASI → yeni yüzeyi. Bunların DOM kabı YOKTUR (birleştiler); tek varlıkları
 # ROUTE_ALIAS'taki satırlarıdır ve o satır kalkarsa (A) sınıfı doğar.
-ESKI_SAYFALAR = {"genel": "bugun", "kosu": "karar", "portfoy": "karar",
+# 2026-08-24: `portfoy` çıktı — artık alias değil, kendi kabı olan gerçek yüzey.
+ESKI_SAYFALAR = {"genel": "bugun", "kosu": "karar",
                  "veri": "saglik", "gozetim": "saglik"}
 # Denetim raporlarının ve RUNBOOK'un taşıdığı GERÇEK eski adresler — örneklem, tam liste değil.
 ESKI_DERIN_ADRESLER = ["kosu#adaylar", "kosu#kapilar", "portfoy#brifing", "portfoy#onaylar",
@@ -115,7 +121,17 @@ def test_yuzey_sorulari_yon_belgesinin_sorularini_tasir():
     dizge çivisi cümleyi düzeltilemez yapardı."""
     s = _sozluk("EKRAN_SORUSU")
     assert "dün gece" in s["bugun"] and "benden ne bekleniyor" in s["bugun"]
-    assert "ne önerildi" in s["karar"] and "geçti/geçmedi" in s["karar"]
+    # D2 (2026-08-24, operatör): "ne önerildi / ne oldu" çerçevesi Karar'dan BUGÜN'e taşındı,
+    # çünkü o soruyu cevaplayan yüzeyler (dört durum kartı + «bir sonraki açılış») oraya taşındı.
+    # ~~`"ne önerildi" in s["karar"]`~~ → `s["bugun"]`. Kural AYNEN duruyor: her yüzeyin cevabı
+    # ekranda YAZILI olmalı; değişen, hangi yüzeyin hangi soruyu üstlendiği. Karar'a kalan iki
+    # anahtar (kapının GEREKÇESİ + hükümlerin BİRİKİMİ) burada çivilenir ki soru boşalmasın.
+    assert "ne önerildi" in s["bugun"], "taşınan çerçeve Bugün'ün cümlesine girmemiş"
+    assert "geçti/geçmedi" in s["karar"]
+    # 2026-08-24: "kitap" ② Portföy'e, "birikim" ④ Analiz'e ayrıldı — her yüzeyin cevabı
+    # kendi sorusunda yazılı olmalı, yoksa ayırmanın kazancı ekranda görünmez.
+    assert "kitap nerede" in s["portfoy"]
+    assert "birikimde ne var" in s["analiz"]
     assert "güvenilir mi" in s["saglik"] and "bozulduysa" in s["saglik"]
     assert "öğreniyor mu" in s["ogrenme"]
     assert "yetkisi" in s["kilitler"] and "durdururum" in s["kilitler"]
@@ -385,7 +401,13 @@ def test_durum_izgarasi_TEK_yuzeyde():
     iki sayfaya bölünmüştü. Sayfalar birleşince `durumIzgarasiCiz` çağrısı ikiden BİRE indi."""
     m = re.search(r"const DURUM_SAYFALARI = new Set\(\[([^\]]*)\]\);", APPJS)
     assert m, "DURUM_SAYFALARI tanımlı değil"
-    assert re.findall(r'"(\w+)"', m.group(1)) == ["karar"]
+    # D2 (2026-08-24, operatör): ızgara Karar'dan BUGÜN'e taşındı. Bugün bir ALAN DEĞİL (elle
+    # bestelenmiş tek ekran; `alanSayfasi` onu çizmez), dolayısıyla küme BOŞ. "TEK yüzey" kuralı
+    # ayakta: aşağıdaki iki satır ızgaranın hâlâ tam bir yerde yaşadığını ölçer.
+    assert re.findall(r'"(\w+)"', m.group(1)) == []
+    assert APPJS.count("durumIzgarasiHTML(") == 2, "ızgara üreteci tek olmalı (tanım + çağrı)"
+    assert "durumIzgarasiCiz(document.querySelector(\"#page-bugun" in APPJS, \
+        "ızgara Bugün'de çizilmiyor — taşıma yarım kalmış"
 
 
 def test_ws_akisinin_TEK_evi_mutabakat_masasi():

@@ -287,6 +287,11 @@ def test_gece_TAM_palet_hicbir_renk_jetonu_YARIM_KALMAZ():
     # SERİ MERDİVENİ JETON EKLEMEDİ ve bu bilinçli: --blue/--violet2 tanımlıydı ama ÖLÜYDÜ
     # (0 okuyucu). Yeni ad açmak yerine o ikisi diriltildi — ad değiştirmek app.js'in
     # `IC_SERI.sim = "var(--violet)"` sözleşmesini ve kesik-çizgi desenini kırardı.
+    # 2026-08-24 (operatör turu): değer katmanı SAYISI DEĞİŞMEDİ (45) ama ADLAR değişti.
+    #   −2  --violet · --violet2   +2  --sapphire · --sky
+    # Yeni adlar rolü söylüyor; eskiler "tarihsel ad, farklı değer" ikilemini taşıyordu.
+    # ~~--lavender / --blue-wash da eklenmişti~~ GERİ ALINDI: lavanta `--mod-canli` ile
+    # BİREBİR aynı hex (#7c3aed) — "canlı para" çipiyle bir grafik serisi aynı renk olamaz.
     assert (len(TEMEL) == 33 and len(GUNDUZ) == 45 and len(ROL_GUNDUZ) == 36
             and len(ROOT) == 114 and len(GECE_OV) == 81), \
         (f"jeton sayımı değişmiş: temel {len(TEMEL)} · değer {len(GUNDUZ)} · rol "
@@ -379,7 +384,7 @@ def test_DTCG_semasi_gecerli():
     # 2×31 rol (D1'in üçüncü katmanı, zemin başına). Sayı bir BÜTÇE değil bir MUHASEBEdir:
     # burada tutmayan bir toplam, DTCG ağacına eş-kayıtsız bir dal eklendiğini söyler.
     assert sayac == 33 + 2 * 45 + 2 * 36, \
-        f"jeton sayımı {sayac} (beklenen 195 = 33 temel + 2×45 değer + 2×36 rol)"
+        f"jeton sayımı {sayac} (beklenen 195 = 33 temel + 2×47 değer + 2×36 rol)"
 
 
 def test_takma_adlar_COZULUYOR():

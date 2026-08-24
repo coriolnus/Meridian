@@ -111,7 +111,21 @@ def _olcum_modulu():
 #                     "dış okuyucusu api.py'dir" der → pano çizmiyordu, YASA 6 boşluğu])
 #   karar 27 · ogrenme 45 · kilitler 5 (değişmedi — F5 ③'e düştü)
 # Kapak altında: `KAPAK_TABANI` saglik ÖLÇÜLEN 7→8, taban 4 KORUNUYOR (`>=`).
-KART_TABANI = {"karar": 26, "saglik": 24, "ogrenme": 45, "kilitler": 5}
+# 2026-08-24 ÜÇÜNCÜ GÜNCELLEME — BÖLÜNME, artış/azalış DEĞİL. Eski `karar: 25`, yedi-yüzey
+# yapılandırmasında üçe ayrıldı ve TOPLAM KORUNDU: 11 + 10 + 4 = 25. Ratchet'in anlamı
+# "sessizce kart eklenemez"dir; burada hiç kart eklenmedi ve hiç kart silinmedi, yalnız
+# hangi yüzeyin hangi bütçeyi taşıdığı değişti. Toplamın korunması bu satırın KANITIDIR.
+KART_TABANI = {"portfoy": 11, "karar": 10, "analiz": 4,
+               "saglik": 24, "ogrenme": 45, "kilitler": 5}
+# 2026-08-24 İKİNCİ BEYANLI DÜŞÜŞ (operatör kararı): karar 26 → 25.
+# TEK sebep: «Bir sonraki açılış için» kartı ② Karar/Adaylar'dan SİLİNMEDİ, ① Bugün'e TAŞINDI.
+# Operatörün cümlesi: "karar altındaki ne önerildi ne oldu kısmı ile BİR SONRAKİ AÇILIŞ İÇİN
+# kısmı bugün altına taşınmalı" (aynı turda Toplulaştırma ters yönde, Bugün → Karar).
+# TAŞIMA KOPYA ÜRETMEDİ: gövde tek yerde (`sonrakiAcilisKartiHTML`), bağlam türetimi tek yerde
+# (`adaySinyalBaglami`); Adaylar bölümü kartı ÇAĞIRMIYOR ve yeni adresini metinde YAZIYOR.
+# Kart Bugün'de `pv-` gramerine ÇEVRİLDİ (emekli `card` grameri o yüzeyde yasak, v155) ve
+# satırları TAVANLI (`PV_SONRAKI_TAVAN`) — sınırsız payda o sözleşmenin yasağıydı.
+# NOT: Karar bu turda `topviews` BÖLÜMÜ kazandı ama sayı artmadı — o bir `<section>`, kart değil.
 # 2026-08-24 BEYANLI DÜŞÜŞ (ratchet'in İLK aşağı yönlü hareketi): karar 27 → 26.
 # TEK sebep: "Açık pozisyonlar" kartı ② Karar'dan SİLİNMEDİ, ① Bugün'e TAŞINDI
 # (`docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md` §5.3 sadeleştirme yetkisi; aynı sayıyı iki

@@ -340,7 +340,10 @@ def test_palet_bolum_tablosu_ALAN_BOLUMLERI_ile_BIREBIR():
         f"  palet: {olculen}\n  app.js: {beklenen}")
     # D2-b: yirmi birinci bölüm `cizelge` (workflow.html'in halefi) girdi. Sayı ÇİVİLİ kalır —
     # bir bölümün paletten sessizce düşmesi, o odanın haritadan silinmesi demektir.
-    assert len(olculen) == 21, f"yirmi bir bölüm beklenirken {len(olculen)}"
+    # 2026-08-24 (operatör): YİRMİ İKİNCİ bölüm `topviews` — Toplulaştırma, Bugün ekranından
+    # Karar alanına taşındı. Sayı ÇİVİLİ kalır (aynı gerekçe: sessiz düşüş = odanın haritadan
+    # silinmesi), yalnız değeri bir arttı ve artışın sebebi burada yazılı.
+    assert len(olculen) == 22, f"yirmi iki bölüm beklenirken {len(olculen)}"
     assert set(sayfa_adi) == set(_alan_bolumleri()), "sayfa adları eşlemesi ayrışmış"
 
 

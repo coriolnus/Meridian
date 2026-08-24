@@ -105,7 +105,19 @@ def test_izgara_YALNIZ_cakisan_iki_sayfada():
     # ÇİVİ TAŞINDI (D2-b): çakışan İKİ sayfa BİRLEŞTİ (kosu+portfoy → karar), yani ızgaranın
     # var oluş sebebi olan çakışma KÖKÜNDEN kapandı ve `durumIzgarasiCiz` çağrısı ikiden bire
     # indi. Kural aynı kural ve bir kademe SERTLEŞTİ: ızgara TEK yüzeyde çizilir.
-    assert sorted(re.findall(r'"(\w+)"', m.group(1))) == ["karar"]
+    # D3 (2026-08-24, operatör): ızgara Karar'dan BUGÜN'e taşındı. Bugün bir ALAN DEĞİL, elle
+    # bestelenmiş tek ekran — `alanSayfasi` onu çizmiyor, dolayısıyla küme BOŞ olmak ZORUNDA.
+    # ~~`== ["karar"]`~~ düştü. KURAL AYNEN DURUYOR ve hâlâ "TEK yüzey" diyor; ölçtüğü yer
+    # değişti: küme boş VE `RENDER.bugun` tam bir tane ızgara kabı basıyor.
+    assert sorted(re.findall(r'"(\w+)"', m.group(1))) == [], \
+        "bir ALAN yeniden ızgara istiyor — Bugün'deki kapla birlikte ızgara İKİ yüzeye çıkar"
+    # KAP İKİ YERDE GEÇER ve bu doğrudur: biri `alanSayfasi`ın şablonu (küme BOŞ olduğu için
+    # UYUYAN dal — hiçbir alan onu basmıyor), biri `RENDER.bugun`ün canlı kabı. Şablonu silmek
+    # mekanizmayı silmek olurdu; sayının kendisi çivili ki üçüncü bir kap sessizce doğmasın.
+    assert APPJS.count('class="durum-izgara-kap"') == 2, \
+        "ızgara kabı sayısı değişti — üçüncü bir yüzeye sızmış olabilir"
+    assert APPJS.count("durumIzgarasiCiz(") == 3, \
+        "çizim çağrısı sayısı değişti (tanım + kabuk dalı + Bugün) — ızgara ikinci bir yüzeye sızmış olabilir"
 
 
 def test_izgara_TEK_yerde_uretilir():
@@ -528,6 +540,12 @@ _SERIT_BOLGELERI = {
     # davranış tarafı `tests/test_gorunurluk_v219.py`).
     "kilitler · faz6 olcum": ("  const olcumBloklari = f.adlar.map(ad => {",
                               "\n  return `<div style=\"margin-top:18px"),
+    # YEDİNCİ BÖLGE (2026-08-24) — «bir sonraki açılış» kartı Karar/Adaylar'dan BUGÜN'e taşındı
+    # (operatör kararı) ve şeridini yanında götürdü. Bölge SAYISI arttı ama şerit SAYISI aynı
+    # kalmadı: Adaylar kendi şeridini geri aldı ve PAYDASI FARKLI (pencerenin tamamı ↔ son
+    # seans). İki bölge iki payda demektir ve tam da bu yüzden AYRI beyan edilirler — aynı
+    # etiketi iki farklı paydayla basmak v192'nin kapattığı kusurdu.
+    "bugun · sonraki açılış": ("function sonrakiAcilisKartiHTML(b) {", "\nRENDER.adaylar"),
 }
 
 

@@ -231,7 +231,9 @@ def test_violet_accentin_KOPYASI_DEGIL_ve_uc_seri_bir_MERDIVEN():
     kural AA değil grafik-nesne kuralıdır (ÇG2 = 3.00). Bu muafiyetin BEDELİ var: aşağıdaki
     son iddia, jetonun metne geri sızmasını yasaklar — sızarsa 3.00 eşiği meşruiyetini
     kaybeder ve çivi kırmızı verir."""
-    SERI = ("--blue", "--violet", "--violet2")
+    # 2026-08-24: seri jetonları rol adlarına geçti (`--violet` hiç mor değildi ve
+    # `--lavender` denemesi `--mod-canli` ile BİREBİR çakıştığı için geri alındı).
+    SERI = ("--sapphire", "--blue", "--sky")
     for tema in ("gunduz", "gece"):
         renkler = [_rgba(x, tema) for x in SERI]
         assert len(set(renkler)) == 3, f"seri jetonları kopyalanmış ({tema}): {renkler}"
@@ -261,7 +263,7 @@ def test_IC_serileri_TEK_TABLODAN_okunur_cizim_ve_efsane_AYRISAMAZ():
     İki tüketici tek tablodan (`IC_SERI`) okursa ayrışamazlar."""
     assert "const IC_SERI = {" in KOD, "IC_SERI tablosu yok — efsane yeniden ayrışabilir"
     ictrend = _govde("function icTrend(hist) {", "const IC_SERI")
-    assert "var(--violet)" not in ictrend and "var(--tx3)" not in ictrend, \
+    assert "var(--blue)" not in ictrend and "var(--tx3)" not in ictrend, \
         "icTrend seri rengini tablodan DEĞİL doğrudan yazıyor — ayrışma kapısı açık"
     efsane = _govde("function icEfsane() {", "\nconst CHECK_TR")
     assert "IC_SERI" in efsane and "stroke-dasharray" in efsane, \
@@ -677,5 +679,8 @@ def test_TEST_KENDINI_KANITLAR_eski_dunya_kirmizi_verirdi():
     violet = accent) bu dosyanın ölçülerini AÇIKÇA devirir; ölçüt burada yeniden kurulur."""
     eski = {"tx3": "#585450", "tx2": "#585450", "violet": "#050505", "accent": "#050505"}
     assert eski["tx3"] == eski["tx2"] and eski["violet"] == eski["accent"]
+    # `violet` adı 2026-08-24'te DÜŞTÜ; B6'nın bugünkü karşılığı seri üçlüsünün
+    # birbirinin kopyası OLMAMASIDIR ve o aşağıda ölçülüyor.
     # aynı ölçü bugünkü kaynakta AYRIŞMIŞ olmalı — yoksa test hiçbir şey ölçmüyor demektir
-    assert ROOT["tx3"] != ROOT["tx2"] and ROOT["violet"] != ROOT["accent"]
+    assert ROOT["tx3"] != ROOT["tx2"]
+    assert len({ROOT["sapphire"], ROOT["blue"], ROOT["sky"]}) == 3, "seri üçlüsü kopyalanmış (B6)"

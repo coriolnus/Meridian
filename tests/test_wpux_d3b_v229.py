@@ -378,7 +378,12 @@ def test_public_summary_wave2_alanlarinin_OKUYUCUSU_var():
 def test_yeni_ozetSerit_serit_ACILMADI():
     """F1 `.trow` tablosuyla çizer (ozetSerit DEĞİL) → yeni bir şerit BEYAN etmek gerekmedi;
     ozetSerit çağrı sayısı v207/v219/v226 tabanında (6) kalır."""
-    assert APPJS.count("ozetSerit([") == 6, "ozetSerit sayısı değişti — v191 _SERIT_BOLGELERI + v226 güncellenmeli"
+    # 2026-08-24 (operatör turu): ALTI → YEDİ. Artış bir EKLEME değil bir BÖLÜNMEDİR:
+    # «bir sonraki açılış» kartı Bugün'e taşınırken şeridini yanında götürdü, Adaylar
+    # bölümü de kendi şeridini geri aldı — ve ikisinin PAYDASI FARKLI (son seans ↔
+    # pencerenin tamamı). İki payda iki şerit demektir; aynı etiketi iki farklı paydayla
+    # basmak v192'nin kapattığı kusurdu. Beyan: v191 `_SERIT_BOLGELERI` (yedi bölge).
+    assert APPJS.count("ozetSerit([") == 7, "ozetSerit sayısı değişti — v191 _SERIT_BOLGELERI + v226 güncellenmeli"
 
 
 def test_yeni_kod_UYDURMA_SIFIR_getirmedi():

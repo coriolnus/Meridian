@@ -48,14 +48,27 @@ CSS = re.search(r"<style>(.*?)</style>", INDEX, re.S).group(1)
 # testin KENDİ iddiasıdır ve kaynaktan türetilmez. Yeni sıra yüzeyin sorusuna hizmet sırasıdır
 # (② ne önerildi → neden geçti → onay → ne oldu → mutabakat → seans-içi → birikim;
 #  ③ önce bozulan → hattın çizelgesi → hattın iç sağlığı → evren → akış).
+# 2026-08-24 (operatör) — BEŞ YÜZEY YEDİ OLDU, onaylanan maketin kenar çubuğu gruplamasıyla.
+# Eski tek "Karar" alanı SEKİZ bölüm taşıyordu ve içinde ÜÇ AYRI soru vardı; her soru artık
+# kendi yüzeyinde ve sırası o sorunun cevap sırası:
+#   ② Portföy       kitap → mutabakat → seans-içi emir     ("kitap nerede duruyor?")
+#   ③ Karar zinciri aday → kapı → onay                     ("neden geçti ya da geçmedi?")
+#   ④ Analiz        toplulaştırma → birikim defteri        ("ne birikti ve nerede?")
+# Analiz operatörün ADIYLA istediği sekmedir; keşif (kırılım) önce, defter sonra gelir —
+# keşif soruyu doğurur, defter cevabı taşır.
 ADR_HARITASI: dict[str, list[str]] = {
-    "karar":    ["adaylar", "kapilar", "onaylar", "brifing", "mutabakat", "intraemir", "performans"],
+    "portfoy":  ["brifing", "mutabakat", "intraemir"],
+    "karar":    ["adaylar", "kapilar", "onaylar"],
+    "analiz":   ["topviews", "performans"],
     "saglik":   ["operasyon", "cizelge", "veriboru", "market", "intraday"],
     "ogrenme":  ["karne", "golge", "bilesenic", "hermes", "ajan", "skiller", "hafiza"],
     "kilitler": ["mudahale", "ayarlar"],
 }
 # Eski beş ALAN SAYFASI — bugün yalnız birer alias (kapları yok, yüzeyleri birleşti).
-ESKI_SAYFALAR = {"genel": "bugun", "kosu": "karar", "portfoy": "karar",
+# 2026-08-24: `portfoy` BU LİSTEDEN ÇIKTI — artık bir alias değil, kendi DOM kabı olan
+# gerçek bir yüzey (maket gruplaması). Eski `portfoy#mutabakat` bağları hâlâ çalışır ve
+# çapası korunur; değişen, hedefin artık gerçekten orada olması.
+ESKI_SAYFALAR = {"genel": "bugun", "kosu": "karar",
                  "veri": "saglik", "gozetim": "saglik"}
 ESKI_GORUNUMLER = ["brifing", "performans", "adaylar", "onaylar", "market", "intraday",
                    "ajan", "hermes", "skiller", "hafiza", "operasyon", "ayarlar"]
@@ -203,7 +216,11 @@ def test_intraday_akis_ve_emir_olarak_bolundu():
     ikisinde birden yazılsaydı operatör aynı tabloyu iki sayfada iki kez okurdu."""
     assert "async function intraParcalar()" in APPJS, "intraday tek gövde olarak duruyor"
     ev = _dom_evleri()
-    assert ev["intraday"][0] == "saglik" and ev["intraemir"][0] == "karar"
+    # 2026-08-24: emir yarısının evi ② PORTFÖY oldu (maket gruplaması) — "silahlanma ve
+    # gölge icra" kitabın hâliyle aynı soruyu cevaplıyor, kapının gerekçesiyle değil.
+    # ~~`ev["intraemir"][0] == "karar"`~~ İKİYE BÖLÜNME iddiası AYNEN duruyor: akış ③ Sağlık'ta,
+    # emir ② Portföy'de — ikisi AYRI yüzeyde, ki bölünmenin kazancı ölçülebilsin.
+    assert ev["intraday"][0] == "saglik" and ev["intraemir"][0] == "portfoy"
     akis = _govde("RENDER.intraday = async () => {", "\n// EMİR / SİLAHLAMA YARISI")
     emir = _govde("RENDER.intraemir = async () => {", "\n};")
     assert re.search(r"p\.s3 \+ p\.s4", akis), "akış yarısı s3+s4 yazmıyor"

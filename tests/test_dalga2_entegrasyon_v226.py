@@ -305,7 +305,12 @@ def test_manset_canli_yokken_ortalama_UYDURULMAZ(manset_ciktilari):
 def test_yeni_ozetSerit_seridi_ACILMADI():
     """canlilikBloku srow/_chip diliyle çizer (ozetSerit DEĞİL) → _SERIT_BOLGELERI'ne yeni bir
     şerit BEYAN etmek GEREKMEDİ; ozetSerit çağrı sayısı v207/v219 tabanında (6) kalır."""
-    assert APPJS.count("ozetSerit([") == 6, \
+    # 2026-08-24 (operatör turu): ALTI → YEDİ. Artış bir EKLEME değil bir BÖLÜNMEDİR:
+    # «bir sonraki açılış» kartı Bugün'e taşınırken şeridini yanında götürdü, Adaylar
+    # bölümü de kendi şeridini geri aldı — ve ikisinin PAYDASI FARKLI (son seans ↔
+    # pencerenin tamamı). İki payda iki şerit demektir; aynı etiketi iki farklı paydayla
+    # basmak v192'nin kapattığı kusurdu. Beyan: v191 `_SERIT_BOLGELERI` (yedi bölge).
+    assert APPJS.count("ozetSerit([") == 7, \
         "ozetSerit çağrı sayısı değişti — v191 _SERIT_BOLGELERI beyanı güncellenmeli"
 
 

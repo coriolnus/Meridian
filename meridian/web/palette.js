@@ -215,24 +215,32 @@
      çapa YOK (`el("page-"+id)` kapısı bunu çalışma anında da doğrular).
      ========================================================================== */
   var SAYFA_ADI = {
-    karar: "Karar", saglik: "Sağlık", ogrenme: "Öğrenme", kilitler: "Kilitler"
+    portfoy: "Portföy", karar: "Karar zinciri", analiz: "Analiz",
+    saglik: "Sağlık", ogrenme: "Öğrenme", kilitler: "Kilitler"
   };
   var BOLUMLER = [
     /* [bölüm id, yüzey, palet adı, anahtar kelimeler] */
+    /* SIRA `app.js`in ALAN_BOLUMLERI'si ile BİREBİR olmak ZORUNDA (v160 çivisi):
+       palet bu panonun haritasıdır ve harita ile odaların sırası ayrışırsa,
+       operatör paletten gittiği yerin sayfadaki komşularını yanlış hatırlar. */
+    ["brifing", "portfoy", "Kitap · şu an",
+      ["kitap", "pozisyon", "sermaye", "equity", "brifing", "bugun"]],
+    ["mutabakat", "portfoy", "Mutabakat masası",
+      ["mutabakat", "ayna", "broker", "ghost", "hwm", "dolum", "reconcile"]],
+    ["intraemir", "portfoy", "Seans-içi silahlanma · gölge icra",
+      ["intraday", "golge", "silah", "arm", "tetik", "icra"]],
     ["adaylar", "karar", "Tarama hattı · adaylar",
       ["aday", "tarama", "sinyal", "plan", "candidate", "elenen"]],
     ["kapilar", "karar", "Disiplin kapısı · karar ağacı",
       ["kapi", "gate", "karar", "matris", "eleme", "rejim", "karartma"]],
     ["onaylar", "karar", "Onay kuyruğu · senden iş isteyenler",
       ["onay", "kuyruk", "approve", "bekleyen", "karar"]],
-    ["brifing", "karar", "Kitap · şu an",
-      ["kitap", "pozisyon", "sermaye", "equity", "brifing", "bugun"]],
-    ["mutabakat", "karar", "Mutabakat masası",
-      ["mutabakat", "ayna", "broker", "ghost", "hwm", "dolum", "reconcile"]],
-    ["intraemir", "karar", "Seans-içi silahlanma · gölge icra",
-      ["intraday", "golge", "silah", "arm", "tetik", "icra"]],
-    ["performans", "karar", "Birikim · para eğrisi ve defter",
-      ["performans", "egri", "birikim", "islem", "trade", "dusus", "kelly"]],
+    // 2026-08-24: ④ ANALİZ operatörün adıyla istediği yeni sekme. Toplulaştırma Bugün'den,
+    // birikim defteri eski Karar'dan geldi; ikisi de "ne birikti?" sorusunun parçası.
+    ["topviews", "analiz", "Toplulaştırma · keşif görünümü",
+      ["topviews", "toplulastirma", "kirilim", "facet", "kesif", "sektor", "beceri", "analiz"]],
+    ["performans", "analiz", "Birikim · para eğrisi ve defter",
+      ["performans", "egri", "birikim", "islem", "trade", "dusus", "kelly", "analiz"]],
     ["operasyon", "saglik", "Alarmlar · bekçiler · olay günlüğü",
       ["alarm", "bekci", "olay", "gozetim", "butce", "gelen kutusu", "nabiz"]],
     ["cizelge", "saglik", "Gece hattı · canlı zaman çizelgesi",

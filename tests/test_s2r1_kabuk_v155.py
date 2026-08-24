@@ -37,10 +37,18 @@ CSS = re.search(r"<style>(.*?)</style>", INDEX, re.S).group(1)
 # hafızası sessizce yanlış sayfaya gider.
 # ÇİVİ TAŞINDI, SÖKÜLMEDİ (D2-b): S2R'nin yedilisi iki birleşmeyle beşe indi
 # (kosu+portfoy → karar, veri+gozetim → saglik, genel → bugun). Kural aynı kural.
-ADR_SAYFALARI = ["bugun", "karar", "saglik", "ogrenme", "kilitler"]
+# 2026-08-24 (operatör): BEŞ yüzey YEDİ oldu. Onaylanan maketin kenar çubuğu gruplaması —
+# eski tek "Karar" alanı sekiz bölümle şişmişti ve içinde üç ayrı soru vardı; ② Portföy ve
+# ④ Analiz (operatörün adıyla istediği sekme) oradan ayrıldı. ~~["bugun","karar","saglik",
+# "ogrenme","kilitler"]~~
+ADR_SAYFALARI = ["bugun", "portfoy", "karar", "analiz", "saglik", "ogrenme", "kilitler"]
 # ESKİ ALAN SAYFALARI — bugün birer alias. Kapları YOK (yüzeyleri birleşti), yani alias
 # doğrulaması bölüm alias'ından AYRI bir sınıftır (aşağıda ikisi de ölçülür).
-ESKI_SAYFALAR = {"genel": "bugun", "kosu": "karar", "portfoy": "karar",
+# 2026-08-24: `portfoy` BU LİSTEDEN ÇIKTI. Alias listesi "DOM kabı OLMAYAN eski adresler"
+# demektir; portfoy 2026-08-24'te kendi kabına (`#page-portfoy`) geri kavuştu, yani artık bir
+# alias DEĞİL gerçek bir hedef. Eski `portfoy#mutabakat` bağları kırılmaz — tam tersine,
+# hedefleri artık gerçekten orada. ~~"portfoy": "karar"~~
+ESKI_SAYFALAR = {"genel": "bugun", "kosu": "karar",
                  "veri": "saglik", "gozetim": "saglik"}
 
 # S2R-1 öncesi on iki çizilebilir yüzey. Hiçbiri düşmez; her biri bir eve TAŞINIR.

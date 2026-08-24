@@ -506,7 +506,9 @@ Biçim: `mürekkep · zemin yığını (alttan üste, `+` ile) · tema · oran �
          satırları bir İŞARETİN kontrastıdır ve eşiği metin-dışı **3.0**'dır; aynı çipin
          YAZISI `--tx` satırlarındadır ve eşiği hâlâ **4.5**'tir. Eşik gevşemedi —
          ~~"--green | --card-2 + --green-t | 4.5"~~ satırı yanlış SORUYU soruyordu.
-       · ROL 5 seri merdiveni (`--blue/--violet/--violet2`) ÇG2 ile geldi (≥3.0).
+       · ROL 5 serisi (`--sapphire/--blue/--sky`) + tek-seri `--blue` ÇG2 ile ölçülür (≥3.0).
+       2026-08-24: üçlü maketin hue ailesine geçti; `--violet`/`--violet2` adları DÜŞTÜ
+       (değerleri lavender/sky'nin birebir kopyasıydı).
          ~~"--accent | --violet" ve "--violet | --tx3" satırları emekli~~: o ikisi
          akromatik merdivenin komşu-adım oranıydı; renkli merdivende ayrımı ΔL* ölçer
          (ÇG1, §12.9) ve kontrast oranı o soruyu cevaplamaz.
@@ -570,18 +572,18 @@ Biçim: `mürekkep · zemin yığını (alttan üste, `+` ile) · tema · oran �
 | --green | --mint | gece | 3.42 | 3.0 |
 | --green-stamp | --mint | gunduz | 1.95 | 3.0 |
 | --green-stamp | --mint | gece | 1.99 | 3.0 |
-| --blue | --card | gunduz | 13.44 | 3.0 |
-| --blue | --card | gece | 9.46 | 3.0 |
-| --violet | --card | gunduz | 7.57 | 3.0 |
-| --violet | --card | gece | 5.92 | 3.0 |
-| --violet2 | --card | gunduz | 4.16 | 3.0 |
-| --violet2 | --card | gece | 3.50 | 3.0 |
-| --blue | --bg2 | gunduz | 12.33 | 3.0 |
-| --blue | --bg2 | gece | 10.31 | 3.0 |
-| --violet | --bg2 | gunduz | 6.95 | 3.0 |
-| --violet | --bg2 | gece | 6.45 | 3.0 |
-| --violet2 | --bg2 | gunduz | 3.82 | 3.0 |
-| --violet2 | --bg2 | gece | 3.81 | 3.0 |
+| --blue | --card | gunduz | 5.67 | 3.0 |
+| --blue | --card | gece | 7.85 | 3.0 |
+| --blue | --bg2 | gunduz | 5.20 | 3.0 |
+| --blue | --bg2 | gece | 8.56 | 3.0 |
+| --sapphire | --card | gunduz | 10.02 | 3.0 |
+| --sapphire | --card | gece | 12.13 | 3.0 |
+| --sapphire | --bg2 | gunduz | 9.19 | 3.0 |
+| --sapphire | --bg2 | gece | 13.21 | 3.0 |
+| --sky | --card | gunduz | 3.31 | 3.0 |
+| --sky | --card | gece | 4.78 | 3.0 |
+| --sky | --bg2 | gunduz | 3.04 | 3.0 |
+| --sky | --bg2 | gece | 5.21 | 3.0 |
 | --field | --card-2 | gunduz | 4.54 | 3.0 |
 | --field | --card-2 | gece | 5.38 | 3.0 |
 | --field | --bg | gunduz | 4.54 | 3.0 |

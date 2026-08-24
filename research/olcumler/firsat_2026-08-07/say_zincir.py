@@ -45,11 +45,16 @@ STATE = KOK / "state"
 #   uretici   · api.py'deki üretici fonksiyon (uç zenginleştirmesi)
 #   tuketici  · app.js'teki kart üreteci (tek okuyucu)
 #   kart      · KART_KAYDI anahtarı (kapak sözleşmesinin çıpası)
+# 2026-08-24 (operatör): BAĞLAYICI YÜZEY ATAMALARI GÜNCELLENDİ — beş yüzey YEDİ oldu ve
+# iki işin evi DEĞİŞTİ (bölümleri taşındığı için, atama tercihi değiştiği için değil):
+#   C1-2 emir yaşam-döngüsü → `mutabakat` ② Portföy'e taşındı  (karar → portfoy)
+#   C1-9 çıkış nedeni       → `performans` ④ Analiz'e taşındı  (karar → analiz)
+# İŞİN KENDİSİ DEĞİŞMEDİ; hangi sorunun cevabı olduğu netleşti (bkz. docs/KARAR-2026-08-24-C).
 ZINCIR = [
     {"is": "C1-1 · reddedilen kararların karnesi", "yuzey": "karar", "bolum": "kapilar",
      "defter": "near_miss.json", "uc_alan": "mlops.near_miss", "uretici": "_near_miss_karne",
      "tuketici": "firsatRetKarnesi", "kart": "kapilar:retkarne"},
-    {"is": "C1-2 · emir yaşam-döngüsü izi", "yuzey": "karar", "bolum": "mutabakat",
+    {"is": "C1-2 · emir yaşam-döngüsü izi", "yuzey": "portfoy", "bolum": "mutabakat",
      "defter": "mirror_orders.json", "uc_alan": "reconcile.emir_yasam", "uretici": "_emir_yasam",
      "tuketici": "firsatEmirYasam", "kart": "mutabakat:emiryasam"},
     {"is": "C1-3 · gece maliyet/token karnesi", "yuzey": "ogrenme", "bolum": "hermes",
@@ -70,7 +75,7 @@ ZINCIR = [
     {"is": "C1-8 · bugün neden hiçbir şey olmadı", "yuzey": "karar", "bolum": "kapilar",
      "defter": "—", "uc_alan": "risk.eylemsizlik", "uretici": "_eylemsizlik",
      "tuketici": "firsatEylemsizlik", "kart": "kapilar:eylemsizlik"},
-    {"is": "C1-9 · çıkış nedeni kırılımı", "yuzey": "karar", "bolum": "performans",
+    {"is": "C1-9 · çıkış nedeni kırılımı", "yuzey": "analiz", "bolum": "performans",
      "defter": "exit_efficiency.json", "uc_alan": "mlops.exit_efficiency", "uretici": None,
      "tuketici": "firsatCikisNedeni", "kart": "performans:cikis"},
     {"is": "C1-10 · skorun olgunlaşması", "yuzey": "ogrenme", "bolum": "karne",

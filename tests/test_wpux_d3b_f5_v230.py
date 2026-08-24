@@ -236,7 +236,12 @@ def test_f5_v192_pano_okuyucusu_NIHAYET_var():
 def test_f5_yeni_ozetSerit_serit_ACILMADI():
     """F5 `.trow` tablosuyla çizer (ozetSerit DEĞİL) → v191 `_SERIT_BOLGELERI` bütçesine
     dokunulmadı; ozetSerit çağrı sayısı v226/v229 tabanında (6) kalır."""
-    assert APPJS.count("ozetSerit([") == 6, "ozetSerit sayısı değişti — v191 _SERIT_BOLGELERI güncellenmeli"
+    # 2026-08-24 (operatör turu): ALTI → YEDİ. Artış bir EKLEME değil bir BÖLÜNMEDİR:
+    # «bir sonraki açılış» kartı Bugün'e taşınırken şeridini yanında götürdü, Adaylar
+    # bölümü de kendi şeridini geri aldı — ve ikisinin PAYDASI FARKLI (son seans ↔
+    # pencerenin tamamı). İki payda iki şerit demektir; aynı etiketi iki farklı paydayla
+    # basmak v192'nin kapattığı kusurdu. Beyan: v191 `_SERIT_BOLGELERI` (yedi bölge).
+    assert APPJS.count("ozetSerit([") == 7, "ozetSerit sayısı değişti — v191 _SERIT_BOLGELERI güncellenmeli"
 
 
 def test_f5_UYDURMA_SIFIR_getirmedi():

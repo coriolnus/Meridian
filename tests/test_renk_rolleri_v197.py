@@ -827,7 +827,9 @@ OE1_ISARET_3_1 = 3.0          # işaret (nokta/şerit/kenar/alt çizgi) kendi ze
 CG1_DELTA_L = 15.0            # komşu seri ΔL* — renk körünün ayrımını luminans taşır
 CG2_KART = 3.0                # her seri kart üstünde, metin-dışı taşıyıcı
 CG3_DASH_ASGARI = 9           # app.js'teki kesik-çizgi ikinci kanalı — sayı DÜŞEMEZ
-SERI_MERDIVEN = ("--blue", "--violet", "--violet2")
+# 2026-08-24: adlar rolü söylüyor. ~~("--blue","--violet","--violet2")~~ — eski adlar
+# "tarihsel ad, değişen değer" ikilemini taşıyordu ve `--violet` hiç mor değildi.
+SERI_MERDIVEN = ("--sapphire", "--blue", "--sky")
 OE1_KOMSU = (("--sev-1", "--sev-2"), ("--sev-2", "--sev-3"))
 
 
@@ -1162,8 +1164,8 @@ def test_CG3_kesik_cizgi_IKINCI_KANALI_KORUNUYOR():
     assert n >= CG3_DASH_ASGARI, (
         f"app.js'te {n} `stroke-dasharray` kaldı, en az {CG3_DASH_ASGARI} olmalı — renkli "
         f"seriler CVD kanalının YERİNE değil ÜSTÜNE eklendi (karar §10.3).")
-    assert 'IC_SERI' in APPJS and 'var(--violet)' in APPJS, (
-        "app.js'in seri sözleşmesi (`IC_SERI` / `var(--violet)`) kaybolmuş — `--violet` adı "
+    assert 'IC_SERI' in APPJS and 'var(--blue)' in APPJS, (
+        "app.js'in seri sözleşmesi (`IC_SERI` / `var(--blue)`) kaybolmuş — ad DEĞİŞTİ ama "
         "TARİHSELDİR ve bilerek korunuyor; adı değiştirmek deseni ve rengi birlikte kırar.")
 
 

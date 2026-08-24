@@ -13,9 +13,15 @@ const OPERATOR = "Erdem";
 //   ④ Öğrenme → ajan öğreniyor mu, neyi düzeltti, neyi bozdu, kaça mal oldu?
 //   ⑤ Kilitler→ ajanın yetkisi ne, sınırları nerede, nasıl durdururum?
 // Sıra ekrandaki sırayla aynıdır ve çıplak 1-5 tuşları bu sıradan türer.
+// 2026-08-24 (operatör): YEDİ YÜZEY. Onaylanan maketin kenar çubuğu gruplaması alındı —
+// eski tek "Karar" alanı SEKİZ bölümle şişmişti ve içinde üç ayrı soru vardı ("ne önerildi?",
+// "kitap nerede?", "ne birikti?"). Maket bunları ayırıyor; biz de ayırdık:
+//   ② Portföy  ← brifing · mutabakat · intraemir   (kitap · ayna · seans-içi emir)
+//   ③ Karar zinciri ← adaylar · kapilar · onaylar  (öneri → kapı → onay)
+//   ④ Analiz   ← topviews · performans             (operatörün istediği YENİ sekme)
 const VIEWS = [
-  ["bugun", "Bugün"], ["karar", "Karar"], ["saglik", "Sağlık"],
-  ["ogrenme", "Öğrenme"], ["kilitler", "Kilitler"],
+  ["bugun", "Bugün"], ["portfoy", "Portföy"], ["karar", "Karar zinciri"],
+  ["analiz", "Analiz"], ["saglik", "Sağlık"], ["ogrenme", "Öğrenme"], ["kilitler", "Kilitler"],
 ];
 // ---- ESKİ ADRESLER → YENİ EVİ (17/17, hiçbiri düşmez) ----------------------------------------
 // Eski yer imleri, derin bağlantılar, `docs/RUNBOOK.md` bağları ve çekmece çipleri KIRILMAZ:
@@ -34,12 +40,14 @@ const VIEWS = [
 // ALAN_BOLUMLERI'dir.
 const ROUTE_ALIAS = {
   // (a) eski on iki görünüm → bugün bir bölüm
-  brifing: "karar", performans: "karar", onaylar: "karar", adaylar: "karar",
+  brifing: "portfoy", performans: "analiz", onaylar: "karar", adaylar: "karar",
   market: "saglik", intraday: "saglik", operasyon: "saglik",
   ajan: "ogrenme", hermes: "ogrenme", skiller: "ogrenme", hafiza: "ogrenme",
   ayarlar: "kilitler",
   // (b) eski beş alan sayfası → yeni yüzey (D2-b birleşmesi)
-  genel: "bugun", kosu: "karar", portfoy: "karar", veri: "saglik", gozetim: "saglik",
+  // `portfoy` ARTIK ALIAS DEĞİL: 2026-08-24'te kendi yüzeyine geri döndü (maket gruplaması).
+  // Eski `portfoy#mutabakat` bağları çalışmayı sürdürür — hedef gerçek bir sayfa oldu.
+  genel: "bugun", kosu: "karar", veri: "saglik", gozetim: "saglik",
 };
 // Hash yoksa ya da tanınmıyorsa açılan sayfa. TEK YERDE: üç ayrı yerde ("baslat", "buildSidebar",
 // R tuşu) elle "brifing" yazılıydı ve bu tur onları ayrı ayrı kaydırabilirdi.
@@ -78,14 +86,20 @@ const ALAN_ADI = Object.fromEntries(VIEWS);
 // ikinci liste, ilk düzenlemede sessizce ayrışırdı.
 const EKRAN_SORUSU = {
   // --- beş yüzey (cümleler yön belgesinin §3 tablosundan, BİREBİR) ---
-  bugun:      "Bu ekran şunu cevaplar: sağlıklı mı, dün gece ne oldu, benden ne bekleniyor?",
-  karar:      "Bu ekran şunu cevaplar: ne önerildi, neden geçti/geçmedi, ne oldu?",
+  // 2026-08-24 (operatör): "ne önerildi / ne oldu" çerçevesi Karar'dan BUGÜN'e geçti, çünkü
+  // o soruyu cevaplayan yüzeyler (dört durum kartı + «bir sonraki açılış» kartı) buraya taşındı.
+  // Karar'a kalan soru artık kapının GEREKÇESİ ve hükümlerin BİRİKİMİ.
+  bugun:      "Bu ekran şunu cevaplar: sağlıklı mı, dün gece ne önerildi ve ne oldu, benden ne bekleniyor?",
+  portfoy:    "Bu ekran şunu cevaplar: kitap nerede — sermaye, pozisyon ve broker aynası ne durumda?",
+  karar:      "Bu ekran şunu cevaplar: neden geçti/geçmedi, onayımı bekleyen ne var?",
+  analiz:     "Bu ekran şunu cevaplar: birikimde ne var — hangi kırılım öne çıkıyor, defter ne diyor?",
   saglik:     "Bu ekran şunu cevaplar: veri ve işleyiş güvenilir mi; bir şey bozulduysa ne yapmalıyım?",
   ogrenme:    "Bu ekran şunu cevaplar: ajan öğreniyor mu — neyi düzeltti, neyi bozdu, kaça mal oldu?",
   kilitler:   "Bu ekran şunu cevaplar: ajanın yetkisi ne, sınırları nerede, nasıl durdururum?",
   // --- eski on iki görünüm, artık bölüm ---
   brifing:    "Bu bölüm şunu cevaplar: kitap şu an nerede — sermaye, risk ve açık pozisyonlar ne durumda?",
   adaylar:    "Bu bölüm şunu cevaplar: gece döngüsü ne önerdi — kapıdan ne geçti, ne elendi?",
+  topviews:   "Bu bölüm şunu cevaplar: hükümler nerede birikiyor — hangi kırılım öne çıkıyor?",
   market:     "Bu bölüm şunu cevaplar: bugün neyi izliyorum — evrenin tamamı hangi kapanışta, neresi bayat?",
   operasyon:  "Bu bölüm şunu cevaplar: hangi alarm çaldı, bütçesi aştı mı, bekçiler ne diyor?",
   intraday:   "Bu bölüm şunu cevaplar: dakikalık bar akışı canlı mı, kayıp dakika var mı?",
@@ -771,7 +785,13 @@ const RAIL_ICON = {
   // ① Bugün — dört bölmeli tek pencere: kokpitin kendisi
   bugun: _ico('<rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 12h17M12 3.5v17"/>'),
   // ② Karar — kapanan halka: her gece bir tur, turun sonunda bir karar
+  // Portföy — kart/defter kapağı. EMEKLİDEN GERİ ÇAĞRILDI (2026-08-24): yüzey geri gelince
+  // glifi de geri geldi; okuyucusu olan bir yazım artık YASA 6 ihlali değil.
+  portfoy: _ico('<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M3.5 10h17"/>'),
   karar: _ico('<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.5 3.8v3.6h-3.6"/>'),
+  // Analiz — kırılım çubukları. Yükselen/alçalan DEĞİL: bu yüzey bir yön söylemiyor, bir
+  // DAĞILIM gösteriyor; artan bir grafik glifi "iyi gidiyor" diye okunurdu.
+  analiz: _ico('<path d="M4.5 19.5V11M9.5 19.5V5.5M14.5 19.5v-6M19.5 19.5V9"/>'),
   // ③ Sağlık — kadranlı gösterge: sistem sağlıklı mı?
   saglik: _ico('<path d="M4 18a8 8 0 1 1 16 0"/><path d="M4 18h16"/><path d="m12 18 4-5"/>'),
   // ④ Öğrenme — açık defter
@@ -1597,9 +1617,16 @@ const RENDER = {};
 // çevirseydik aynı cümleyi 24px'te ve 12px'te iki kez okuturduk ve ikincisi — asıl denetim
 // çıpası olan sönük satır — süs gibi görünürdü.
 const ALAN_BAS = {
-  bugun:    ["① BUGÜN · SABAH TURU", "Dün gece", "ve bugün.", ""],
-  karar:    ["② KARAR", "Ne önerildi", "ve ne oldu?",
-             "Adaylar, disiplin kapısı, onay kuyruğu, kitap, broker mutabakatı, seans-içi emir ve birikim."],
+  // 2026-08-24 (operatör): başlıklar da taşındı — h1 içeriğin ADIDIR, içerik yer değiştirince
+  // adın yerinde kalması sayfanın kendini yalanlaması olurdu. ~~Bugün: "Dün gece ve bugün."~~
+  // ~~Karar: "Ne önerildi ve ne oldu?"~~ (SİLME YOK: eski adlar burada, tarihiyle duruyor.)
+  bugun:    ["① BUGÜN · SABAH TURU", "Ne önerildi", "ve ne oldu?", ""],
+  portfoy:  ["② PORTFÖY", "Kitap", "nerede duruyor?",
+             "Sermaye ve açık pozisyonlar, broker aynasıyla mutabakat, seans-içi emir."],
+  karar:    ["③ KARAR ZİNCİRİ", "Neden geçti", "ya da geçmedi?",
+             "Gecenin adayları, disiplin kapısının karar ağacı ve onayını bekleyen kuyruk."],
+  analiz:   ["④ ANALİZ", "Ne birikti", "ve nerede?",
+             "Dokuz kırılımda toplulaştırma ve birikimin kendi defteri."],
   saglik:   ["③ SAĞLIK", "Veri", "ve işleyiş.",
              "Alarmlar ve olay yüzeyleri, gece hattının çizelgesi, veri hattı, izlenen evren ve seans-içi akış."],
   ogrenme:  ["④ ÖĞRENME", "Defter", "ve kalibrasyon.",
@@ -1743,7 +1770,12 @@ function satirKoru(alan, uret) {
 // ① Bugün BU TABLODA YOK ve bu bilinçli: bölümü yoktur, tek ekranlık kart kompozisyonudur
 // (`GENEL_KARTLARI` kendi bütçesini taşır). Kabuk onu `alanSayfasi` ile çizmez.
 const ALAN_BOLUMLERI = {
-  karar:    ["adaylar", "kapilar", "onaylar", "brifing", "mutabakat", "intraemir", "performans"],
+  // `topviews` 2026-08-24'te Bugün'den taşındı ve EN SONDA duruyor: üstündeki bölümler hüküm
+  // anlatır, o ise hükümlerin birikimine bakar. SATIRI BÖLME — iki testin ayrıştırıcısı çok
+  // satırlı girdiyi göremiyor ve `karar` alanı sessizce BOŞ okunuyor (2026-08-24 vakası).
+  portfoy:  ["brifing", "mutabakat", "intraemir"],
+  karar:    ["adaylar", "kapilar", "onaylar"],
+  analiz:   ["topviews", "performans"],
   saglik:   ["operasyon", "cizelge", "veriboru", "market", "intraday"],
   ogrenme:  ["karne", "golge", "bilesenic", "hermes", "ajan", "skiller", "hafiza"],
   kilitler: ["mudahale", "ayarlar"],
@@ -2092,7 +2124,10 @@ const PV_AKIS_IKON = [
   ["huni", "Huni görünümü",
    _ico('<path d="M3.5 5h17l-6.5 7.5v6l-4 2v-8z"/>')],
 ];
-let _PV_AKIS_GORUNUM = "zincir";
+// VARSAYILAN HUNİ (2026-08-24, operatör: "huni hâlâ gri gözüküyor"). Kompakt zincir SALT
+// METİNDİ — ölçüldü: içindeki her boya gri/siyah, sıfır renk. Onaylanan maket huniyi
+// gösteriyor ve renk kanalı orada yaşıyor. Zincir görünümü SİLİNMEDİ, düğmesi duruyor.
+let _PV_AKIS_GORUNUM = "huni";
 window.pvAkisGorunum = (g) => {
   _PV_AKIS_GORUNUM = (g === "huni") ? "huni" : "zincir";
   const kap = $("pv-akis-govde");
@@ -2125,15 +2160,36 @@ function pvAkisGovdeHTML(a) {
   const W = 1160, H = 240;
   const k = as.length - 1;
   const kol = k > 0 ? W / k : W;
+  // AKIŞ KATMANLARI — MAKETTEN BİREBİR (`scratch-panov2/index.html`). Üç katman: iki soluk
+  // HALE (çekirdeğin 1,45 ve 1,18 katı genişlikte, opaklık .10 ve .18) + bir DOLU çekirdek
+  // (1,00 · .92). Katsayılar maketin kendi koordinatlarından geri-hesaplandı, uydurulmadı:
+  // ilk segmentte çekirdek y=0 iken hale katmanları y=-27,0 ve y=-67,5 → (150+27)/150 = 1,18
+  // ve (150+67,5)/150 = 1,45.
+  const HALE = [[1.45, ".10"], [1.18, ".18"], [1.00, ".92"]];
+  // HUE İLERLEMESİ — huni bir YOLCULUK anlatır ve maket bunu renkle söylüyor. MAKETİN KENDİ
+  // ÜÇLÜSÜ (mavi → lavanta → yeşil) ALINAMADI ve gerekçe ÖLÇÜLDÜ, tercih değil:
+  //   · lavanta #7c3aed, `--mod-canli` ile BİREBİR AYNI hex. "CANLI PARA" mod çipiyle
+  //     dekoratif bir huni bandı aynı renk olurdu; kâğıt/canlı ayrımı güvenlik sinyalidir.
+  //   · yeşil `--sev-3`ün (ok) hue'su; bir VARIŞ işareti bir HÜKÜM gibi okunurdu.
+  //   · Dub'ın mavisi #2563eb de serbest değil — `--nav` onu zaten kullanıyor (ROL 6).
+  // Yolculuk bu yüzden SERİ AİLESİNİN kendi merdiveninde çizilir: koyu → orta → açık.
+  // Maketten alınan şey renk değil YAPI (üç katman + ilerleme), ve asıl derdi olan CANLILIK
+  // merdivenin yukarı kaydırılmasıyla geldi (en koyu basamak L* 19,3 → 30,1).
+  const segRenk = (i, n) => (i === n - 1) ? "var(--sky)" : (i < 2 ? "var(--sapphire)" : "var(--blue)");
+  const nSeg = as.length - 1;
   const govde = as.slice(0, -1).map((s, i) => {
     const g0 = pvHuniGenislik(s.n, taban), g1 = pvHuniGenislik(as[i + 1].n, taban);
     if (g0 == null || g1 == null) return "";
     const x0 = i * kol, x1 = (i + 1) * kol;
-    const y0a = H / 2 - (H / 2) * g0, y0b = H / 2 + (H / 2) * g0;
-    const y1a = H / 2 - (H / 2) * g1, y1b = H / 2 + (H / 2) * g1;
     const c0 = x0 + kol * 0.45, c1 = x1 - kol * 0.45;
-    return `<path d="M${x0.toFixed(1)} ${y0a.toFixed(1)} C${c0.toFixed(1)} ${y0a.toFixed(1)} ${c1.toFixed(1)} ${y1a.toFixed(1)} ${x1.toFixed(1)} ${y1a.toFixed(1)}
-      L${x1.toFixed(1)} ${y1b.toFixed(1)} C${c1.toFixed(1)} ${y1b.toFixed(1)} ${c0.toFixed(1)} ${y0b.toFixed(1)} ${x0.toFixed(1)} ${y0b.toFixed(1)} Z" class="pv-hakis"/>`;
+    const renk = segRenk(i, nSeg);
+    return HALE.map(([kat, op]) => {
+      const a0 = Math.min(1.6, g0 * kat), a1 = Math.min(1.6, g1 * kat);
+      const y0a = H / 2 - (H / 2) * a0, y0b = H / 2 + (H / 2) * a0;
+      const y1a = H / 2 - (H / 2) * a1, y1b = H / 2 + (H / 2) * a1;
+      return `<path d="M${x0.toFixed(1)} ${y0a.toFixed(1)} C${c0.toFixed(1)} ${y0a.toFixed(1)} ${c1.toFixed(1)} ${y1a.toFixed(1)} ${x1.toFixed(1)} ${y1a.toFixed(1)}
+      L${x1.toFixed(1)} ${y1b.toFixed(1)} C${c1.toFixed(1)} ${y1b.toFixed(1)} ${c0.toFixed(1)} ${y0b.toFixed(1)} ${x0.toFixed(1)} ${y0b.toFixed(1)} Z" fill="${renk}" opacity="${op}"/>`;
+    }).join("");
   }).join("");
   const dikey = as.slice(1, -1).map((s, i) =>
     `<line x1="${((i + 1) * kol).toFixed(1)}" y1="0" x2="${((i + 1) * kol).toFixed(1)}" y2="${H}" class="pv-hy"/>`).join("");
@@ -2528,7 +2584,9 @@ function pvPencereBeyaniYaz(s) {
 //     tazelik beyanını İKİNCİ kez yazıyordu; iki beyan ilk düzenlemede ayrışırdı.
 const GENEL_KARTLARI = [
   // [anahtar,   başlık,               hedef yüzey (opsiyonel #bölüm çapası)]
-  ["gece",     "Dün gece",             "karar#adaylar"],
+  // ~~["gece", "Dün gece", "karar#adaylar"]~~ ÇIKARILDI (2026-08-24, operatör): dört durum
+  // kartı Bugün'e taşınınca SON DÖNGÜ kartı bu kartın üç sayısını da söyler oldu. Beyan
+  // okuyucusuz kalamaz (YASA 6) — hem satır hem `geceGovde` hesabı birlikte kalktı.
   ["bugun",    "Bugün ne var",         "karar#onaylar"],
   ["karne",    "Karne",                "ogrenme"],
   ["kapsama",  "Kapsama",              "saglik#market"],
@@ -2570,14 +2628,10 @@ RENDER.bugun = async () => {
   // ---- 1) DÜN GECE — son günlük döngünün KENDİ kaydından (`/api/today.son_dongu`).
   //         Kayıt yoksa uydurma yok: sunucunun yazdığı NEDEN basılır.
   const sonDongu = t.son_dongu || null;
-  const geceGovde = (sonDongu && sonDongu.var)
-    ? `<span class="gb-say">${esc(String(sonDongu.date || "—"))}</span>
-       <p class="gb-alt"><b>${sonDongu.candidates ?? "—"}</b> aday · <b>${sonDongu.plans ?? "—"}</b> plan ·
-         <b>${sonDongu.armed ?? "—"}</b> silahlı${sonDongu.regime ? ` · ${esc(REGIME_TR[sonDongu.regime] || sonDongu.regime)}` : ""}</p>
-       <p class="gb-alt">${sonDongu.yas_saat == null ? "yaş ölçülemedi (döngü kaydında zaman damgası yok)"
-           : `${trn(sonDongu.yas_saat, 1)} saat önce`}${sonDongu.data_ok === false ? ' · <span class="warn">veri kapısı kapalıydı</span>' : ""}</p>`
-    : `<span class="gb-say mut">—</span>
-       <p class="gb-alt">${esc((sonDongu && sonDongu.neden) || "günlük döngü özeti uçtan gelmedi — ölçülemedi.")}</p>`;
+  // `geceGovde` SİLİNDİ (2026-08-24): «Dün gece» kartı kalktı, çünkü yukarıdaki SON DÖNGÜ
+  // kartı aynı üç sayıyı (tarih · aday·plan·silahlı · kaç saat önce) zaten basıyor. Gövde
+  // OKUYUCUSUZ kalmıştı — YASA 6 gereği hesap da beyanla birlikte gitti. `sonDongu` yaşıyor:
+  // huninin ve alarm bütçesinin girdisi.
 
   // ---- 2) BUGÜN NE VAR — silahlı emir + senden iş isteyen bekleyen onay.
   const silahliN = (t.armed_plans || []).length;
@@ -2734,6 +2788,14 @@ RENDER.bugun = async () => {
       <span class="sag"><span class="pv-rz ${t.halted ? "sorun" : "ok"}">${t.halted ? "DURDURULDU" : "sakin"}</span></span>
     </div>
 
+    ${/* DÖRT DURUM KARTI — Karar alanından BUGÜN'e taşındı (2026-08-24, operatör). Gerekçe:
+          dördü de "sistem şu an nerede?" sorusunu cevaplıyor ve o soru sabah turunun sorusu.
+          KAP BOŞ DOĞAR, `durumIzgarasiCiz` arkadan doldurur — ızgara kendi üç ucunu kendisi
+          okur (`today` + `diagnostics` + `summary`), yani taşıma yeni bir veri bağı getirmedi.
+          KARTLAR BİR ÖZET KATMANIDIR: her biri kendi kayıt çekmecesini açar ve altındaki
+          bölümler (para · huni · pozisyon tablosu) o özetin DETAYIDIR. */""}
+    <div class="durum-izgara-kap"><p class="durum-dus mut">durum okunuyor…</p></div>
+
     <section class="pv-para">
       <div id="pv-sekmeler-yuva">${pvSekmelerHTML(metrikler, _PV_SEKME)}</div>
       <div class="pv-pencere-kap"><span id="pv-pencere-serit">${pvPencereSeridiHTML()}</span></div>
@@ -2756,8 +2818,16 @@ RENDER.bugun = async () => {
       <div id="pv-akis-govde">${pvAkisGovdeHTML(_PV_AKIS)}</div>
     </section>
 
+    ${/* «BİR SONRAKİ AÇILIŞ İÇİN» — Karar/Adaylar'dan taşındı (2026-08-24, operatör). Yeri
+          huninin HEMEN ALTI: huni seçim ZİNCİRİNİ çizer, kart o zincirin ÇIKTISINI. Arkadan
+          gelir (`/api/signals`), çünkü sayfanın beklenen tek ucu `/api/today`. */""}
+    <div id="pv-sonraki-yuva"></div>
+
+    ${/* `gbKart("gece", …)` KALDIRILDI (2026-08-24): yukarıdaki SON DÖNGÜ kartı aynı üç sayıyı
+          (tarih · aday·plan·silahlı · kaç saat önce) zaten basıyor. İki kart aynı şeyi iki
+          ağırlıkta söylediğinde okuyucu hangisinin otorite olduğunu bilemez. `geceGovde` ölü
+          değil: aşağıdaki `bugunGovde` ile aynı üreticiden geliyor ve hâlâ okunuyor. */""}
     <div class="pv-alanlar">
-      ${gbKart("gece", geceGovde)}
       ${gbKart("bugun", bugunGovde)}
       ${gbKart("karne", `<div id="gb-karne">${bekle}</div>`)}
       ${gbKart("kapsama", `<div id="gb-kapsama">${bekle}</div>`)}
@@ -2777,18 +2847,9 @@ RENDER.bugun = async () => {
       : `<p class="pv-not">Kitapta açık pozisyon yok.</p>`}
     </section>
 
-    <section class="pv-top">
-      <header>
-        <h2>Toplulaştırma</h2>
-        <span class="pv-damga">keşif görünümü · hüküm kart-önce</span>
-        <span class="pv-filtre-serit" id="pv-metrik-serit">${pvMetrikSeridiHTML()}</span>
-      </header>
-      <p class="pv-not" id="pv-top-kapsam">kapsam beyanı ölçülüyor…</p>
-      <div id="pv-top-govde"><p class="pv-fbos">ölçülüyor…</p></div>
-      <p class="pv-not">Bu yüzey bir KEŞİF aracıdır: toplulaştırılmış bir sayı ölçüm kartından
-      geçmeden HÜKÜM olmaz. Kapsam yukarıda, her kartın kendi kaynağı ve penceresi sekmenin
-      altındadır.</p>
-    </section>`;
+    ${/* TOPLULAŞTIRMA BÖLÜMÜ KARAR ALANINA TAŞINDI (2026-08-24, operatör) — `RENDER.topviews`.
+          Gerekçe: bu bir KEŞİF yüzeyi ("hangi kırılımda ne birikmiş?"), sabah turunun
+          "bugün ne oldu, benden ne bekleniyor?" sorusunun cevabı değil. */""}`;
   buildSidebar(t);
   pvIpucuBagla();
 
@@ -2906,20 +2967,21 @@ RENDER.bugun = async () => {
     const el = $("gb-kapsama");
     if (el) el.innerHTML = `<span class="gb-say mut">—</span><p class="gb-alt">evren ucu okunamadı</p>`;
   });
-  // Y3 · TOP VIEWS — TEK UÇ, ARKADAN. Dokuz facetin dokuzu da `/api/topviews`ten gelir; pano
-  // hesap yapmaz. Uç düşerse yüzey "ölçülemedi" der ve NEDENİNİ yazar — boş bir ızgara
-  // "kırılım yok" diye okunurdu. Hata YUTULMAZ (YASA 4).
-  j("/api/topviews").then(d => {
-    _PV_TOP = pvTopViewsVeri(d);
-    _PV_TOP_KAPSAM = (d && d.kapsam) || null;
-    pvTopViewsCiz();
+  // DURUM IZGARASI — ARKADAN. Kendi üç ucunu kendisi okur ve hatasını kendi kabında yazar
+  // (`durumIzgarasiCiz` içinde), yani buradaki çağrı sayfanın gövdesini riske atmaz.
+  durumIzgarasiCiz(document.querySelector("#page-bugun .durum-izgara-kap"));
+  // «BİR SONRAKİ AÇILIŞ İÇİN» — ARKADAN. Gövde Adaylar bölümüyle TEK kaynaktan
+  // (`sonrakiAcilisKartiHTML`) çiziliyor; bağlam türetimi de tek (`adaySinyalBaglami`).
+  j("/api/signals").then(sg => {
+    const kap = $("pv-sonraki-yuva");
+    if (kap) kap.innerHTML = sonrakiAcilisKartiHTML(adaySinyalBaglami(sg));
   }).catch(e => {
-    _PV_TOP = null;
-    _PV_TOP_KAPSAM = null;
-    pvTopViewsCiz();
-    const kap = $("pv-top-govde");
-    if (kap) kap.innerHTML = `<p class="pv-fbos">${pvYokAlt(
-      "toplulaştırma ucu okunamadı: " + String(e).slice(0, 90))}</p>`;
+    // YUTMA YOK (YASA 4): kart çizilemediyse EKRAN bunu söyler — boş bir yuva "bugün aday
+    // yok" diye okunurdu ve bu, uydurma yasağının tam olarak yasakladığı sessiz sıfırdır.
+    const kap = $("pv-sonraki-yuva");
+    if (kap) kap.innerHTML = `<section class="pv-sonraki"><header><h2>Bir sonraki açılış için</h2></header>
+      <p class="pv-not">Sinyal ucu okunamadı: ${esc(String(e).slice(0, 90))} — bu bir "aday yok"
+      DEĞİL, bir ölçülemedi. Karar → Adaylar bölümü kendi verisini ayrıca okur.</p></section>`;
   });
 };
 // HUNİ DÜŞÜŞLERİ — her satır ÖLÇÜLMÜŞ iki basamağın farkıdır; biri ölçülmemişse satır BASILMAZ
@@ -3133,9 +3195,9 @@ const KART_KAYDI = {
   "veriboru:redis":     { alan: "saglik",  bolum: "veriboru" },
   "veriboru:saglayici": { alan: "saglik",  bolum: "veriboru" },
   // ---- ② KARAR (§5.3 önceliği 4; `s1` mutabakat masasının ANA cevabı, katlanmaz) ----
-  "mutabakat:icra":     { alan: "karar",   bolum: "mutabakat" },
-  "mutabakat:band":     { alan: "karar",   bolum: "mutabakat" },
-  "mutabakat:gecegun":  { alan: "karar",   bolum: "mutabakat" },
+  "mutabakat:icra":     { alan: "portfoy", bolum: "mutabakat" },
+  "mutabakat:band":     { alan: "portfoy", bolum: "mutabakat" },
+  "mutabakat:gecegun":  { alan: "portfoy", bolum: "mutabakat" },
   // ---- v211 · KORUMANIN YENİDEN KURULMASI --------------------------------------------------
   // NEDEN MUTABAKAT MASASI: kartın taşıdığı asıl tuzak bir MUTABAKAT tuzağıdır — iç defterin
   // adedi ile broker'ın adedi AYRIŞIK ve emir broker'ınkini kullanıyor. "İç defterim brokerinkiyle
@@ -3143,7 +3205,7 @@ const KART_KAYDI = {
   // sorunun sorulduğu yerden koparırdı.
   // KAPAK ALTINDA AMA GİZLENEMEZ: çıplak pozisyon varken özet bir ROZET taşır, rozet `data-dikkat`
   // doğurur ve kurucu kartı oturum hafızasını EZEREK açar. Yani kapak yalnız TEMİZ günlerde kapalı.
-  "mutabakat:koruma":   { alan: "karar",   bolum: "mutabakat" },
+  "mutabakat:koruma":   { alan: "portfoy", bolum: "mutabakat" },
   // ---- D3-UI · FIRSAT YÜZEYLERİ (C1'in on işi) --------------------------------------------
   // HEPSİ KAPAK ALTINA GİRER VE BU BİLİNÇLİ: on yeni kart, bütçesi zaten aşılmış üç yüzeye
   // ekleniyor. Kapaksız eklemek "ilk bakışta düşen yük"ü on kart büyütmek olurdu — sözleşmenin
@@ -3152,8 +3214,8 @@ const KART_KAYDI = {
   // kapak yüzünden gizlenemez.
   "kapilar:retkarne":   { alan: "karar",   bolum: "kapilar" },      // C1-1
   "kapilar:eylemsizlik":{ alan: "karar",   bolum: "kapilar" },      // C1-8
-  "mutabakat:emiryasam":{ alan: "karar",   bolum: "mutabakat" },    // C1-2
-  "performans:cikis":   { alan: "karar",   bolum: "performans" },   // C1-9
+  "mutabakat:emiryasam":{ alan: "portfoy", bolum: "mutabakat" },    // C1-2
+  "performans:cikis":   { alan: "analiz", bolum: "performans" },   // C1-9
   "adaylar:denetim":    { alan: "karar",   bolum: "adaylar" },      // C1-7
   "cizelge:damga":      { alan: "saglik",  bolum: "cizelge" },      // C1-4
   "hermes:maliyet":     { alan: "ogrenme", bolum: "hermes" },       // C1-3
@@ -3189,8 +3251,13 @@ const KART_KAYDI = {
 // bir ekranda tutabildiği kart sayısı iki yüzey birleşti diye İKİYE KATLANMAZ — bütçeleri toplamak
 // (4+6=10, 6+3=9) sözleşmeyi birleşmenin kendisiyle gevşetmek olurdu. Denetim §7.1'in yazdığı
 // hedef sayı alınır; ölçülen aşım ekranda `.kk-butce` satırında SAYIYLA beyan edilir.
+// 2026-08-24: eski `karar: 6` ÜÇE BÖLÜNDÜ (yedi-yüzey yapılandırması). Toplam AÇIK kart
+// bütçesi 6 → 7'ye çıktı ve artışın tamamı bölünmenin kendisinden geliyor: üç ayrı yüzeyin
+// her birinin en az bir açık "ana cevap" kartı olmalı, yoksa sayfa kapaklarla açılır.
 const KART_BUTCESI = {
-  karar:    6,   // 21 kart (eski kosu 4 + portfoy 17) · kitap + kuyruk + mutabakatın ana masası
+  portfoy:  3,   // 11 kart · kitap + mutabakatın ana masası açık; gerisi kapak altında
+  karar:    3,   // 10 kart · aday listesi + kapı karnesi + onay kuyruğu, üçü de ana cevap
+  analiz:   1,   //  4 kart · toplulaştırma keşif yüzeyi tek başına sayfanın cevabı
   saglik:   6,   // 12 kart (eski veri 9 + gozetim 3) + çizelge · alarm kutusu ve evren ana cevap
   ogrenme:  6,   // 39 kart · karne (sayfanın 1. bölümü) açık; altı bölüm kapak altında
   kilitler: 5,   // 5 kart · müdahale kolları hiçbir koşulda kapak altına girmez
@@ -3447,7 +3514,12 @@ document.addEventListener("click", e => {
 // D2-b'DE KÜME TEKE İNDİ ve bu, v191 bandının KÖKÜNÜN kapanmasıdır: ızgara iki sayfada çiziliyordu
 // çünkü "sistem şu an nerede?" sorusu iki sayfaya bölünmüştü. Sayfalar birleşince ızgara da tek
 // yerde doğar — `durumIzgarasiCiz` çağrısı ikiden BİRE indi (denetim §7.1'in ölçülen kazancı).
-const DURUM_SAYFALARI = new Set(["karar"]);
+// 2026-08-24 (operatör): ızgara Karar'dan BUGÜN'e taşındı ve Bugün bir ALAN değil, elle
+// bestelenmiş tek ekran — `alanSayfasi` onu çizmiyor. Bu yüzden küme BOŞ: kabuk artık
+// hiçbir alanın başlığına ızgara basmıyor, `RENDER.bugun` kendi kabını kendi çiziyor.
+// KÜME SİLİNMEDİ: `alanSayfasi` onu okuyor ve ileride bir alan yeniden ızgara isterse
+// mekanizma yerinde duruyor (boş küme = "hiçbir alan", yok = kırık kod).
+const DURUM_SAYFALARI = new Set([]);
 // Kart sayısı bir TASARIM BÜTÇESİdir (Genel Bakış'ın altı kartıyla aynı gerekçe): beşincisi
 // ızgarayı tek satırdan taşırır ve "tek bakış" iddiasını sessizce yer. Liste veri, şablon değil —
 // test onu sayabiliyor.
@@ -3874,30 +3946,12 @@ window.planOnayla = async (planId) => {
 // ================= ADAYLAR (sinyaller) =================
 const _VORDER = { GO: 0, REVIEW: 1, NO_GO: 2 };
 const _PHEAD = `<div class="trow head" style="grid-template-columns:78px 66px 1fr 112px 92px 56px 90px"><span>TARİH</span><span>HİSSE</span><span>ANALİZ ZİNCİRİ</span><span>SERİ · SEVİYELER</span><span>GİRİŞ→HEDEF</span><span>R:R</span><span style="text-align:right">KAPI</span></div>`;
-RENDER.adaylar = async () => {
-  // MATRİS ARTIK BURADA (2026-07-27): Bugün'ün tepesinden alındı, çünkü Bugün'ün açılış sorusu
-  // "senden bir şey bekliyor mu?"dur ve matris o cümleyi y=710'a itiyordu. Kararlar'da ise matris
-  // süs değil DAYANAK: bugünkü adayın kurulumu bu rejimde bugüne dek ne verdi? Sayfa kanıtla açılır,
-  // sonra önerilere, sonra senin onayını bekleyenlere iner.
-  // AWAIT ŞART: ateşle-unut çağrılırsa go()'nun revealActive'i matrisin `.rise`'ından ÖNCE koşar
-  // ve matris `.in` sınıfını hiç alamaz — DOM'da var ama görünmez olur (bkz. RENDER.brifing notu).
-  await renderPlotMap();
-  // DENETİM İZİ AYRI UÇTAN (C1-7): `/api/signals` defterin SON 120 satırını verir ve tavanı
-  // beyan eder; `/api/audit_trail` defterin TAMAMI üstünde sayar ve sorgu alır. İkisi aynı
-  // defteri farklı SORU için okur — biri "sırada ne var", diğeri "geçmişte ne karar verdim".
-  // Sorgu durumu modül düzeyinde tutulur (`_DENETIM_SEMBOL`), çünkü bölüm yeniden çizildiğinde
-  // filtrenin kaybolması operatörün yazdığı sorguyu sessizce silmek olurdu.
-  // Y2 · ADAY KARARI ÇEKMECESİ (KARAR-2026-08-24-B §5.2): "ne oldu?" sorusunun cevabı üç deftere
-  // birden bakmayı gerektirir — aday (candidates), kapı (plans) ve İCRA (silahlı/gönderilmiş/açık
-  // pozisyon). `/api/today` ucu ucuzdur (0,18 sn) ve zaten önbellekli; icra bacağını okumadan
-  // çekmece "plan → onay → gönderim → doldu" zincirinin NEREDE durduğunu SÖYLEYEMEZDİ.
-  // Uç düşerse zincirin icra bacağı `ölçülemedi` olur — "gönderilmedi" diye okunmaz.
-  const [d, at, tdy] = await Promise.all([
-    j("/api/signals"),
-    j("/api/audit_trail" + (_DENETIM_SEMBOL ? "?sembol=" + encodeURIComponent(_DENETIM_SEMBOL) : ""))
-      .catch(() => null),
-    j("/api/today").catch(() => null),
-  ]);
+// ---- ADAY/SİNYAL BAĞLAMI — TEK TÜRETİM, İKİ TÜKETİCİ ----------------------------------------
+// `/api/signals` yanıtından türeyen her şey BURADA hesaplanır. İki sayfa okuyor: Bugün (sabah
+// turunun "bir sonraki açılış" kartı) ve Karar/Adaylar (kapı karnesi + eleme izi). Türetimi iki
+// yere kopyalamak bu deponun tekrar eden kusuru olurdu — aynı `latestSignal` tanımının iki yerde
+// yaşayıp bir gün ayrışması, ve ayrışmanın İKİ EKRANDA FARKLI SAYI olarak görünmesi.
+function adaySinyalBaglami(d) {
   const plans = (d.plans || []).slice()
     .sort((a, b) => (_VORDER[a.gate_verdict] ?? 3) - (_VORDER[b.gate_verdict] ?? 3)
                     || String(b.date).localeCompare(String(a.date)));
@@ -3909,7 +3963,12 @@ RENDER.adaylar = async () => {
   const nextActionable = actionable.filter(p => String(p.date) === String(latestSignal));
   const histActionable = actionable.filter(p => String(p.date) !== String(latestSignal));
   const staleFresh = asOf && latestSignal && String(latestSignal) < String(asOf);   // data newer than last signal
-  const vc = {}; plans.forEach(p => vc[p.gate_verdict] = (vc[p.gate_verdict] || 0) + 1);
+  // ÜÇ HÜKÜM ANAHTARI SIFIRLA DOĞAR: `vc` PLANLARIN ÜSTÜNDE sayılıyor, yani "GO yok"
+  // gerçekten "ölçtük, sıfır çıktı"dır. Anahtarı önceden açmak, tüketicilerde `?? 0`
+  // yazma ihtiyacını kaldırır — ve o operatör `?? 0` çırçırının (v196) saymadığı,
+  // ama okurken "burada bir ölçülemedi gizleniyor olabilir mi?" sorusunu doğuran yazımdı.
+  const vc = { GO: 0, REVIEW: 0, NO_GO: 0 };
+  plans.forEach(p => vc[p.gate_verdict] = (vc[p.gate_verdict] || 0) + 1);
   const rc = {};
   rejected.forEach(p => (p.gate_reasons || ["(gerekçesiz)"]).forEach(r => {
     const key = String(r).split("(")[0].replace(/%?\s*[0-9]+([.,][0-9]+)?\s*%?/g, " ").replace(/\s+/g, " ").trim();
@@ -3923,49 +3982,45 @@ RENDER.adaylar = async () => {
   // Kapı bugün bir şey elediyse operatörün ilk göreceği şey o olmalı.
   const rejToday = rejected.filter(p => String(p.date) === String(latestSignal));
   const rejOlder = rejected.filter(p => String(p.date) !== String(latestSignal));
-  const rejRows = rejToday.concat(rejOlder).slice(0, 10).map(planRowFull).join("");
-  // Y2: HER ADAY SATIRI ARTIK BİR KAYIT DÜĞMESİDİR. Eskiden `div`di ve tıklanamıyordu — yani
-  // "bu aday ne oldu?" sorusunun panoda hiçbir cevabı yoktu; operatör plan defterini ayrı bir
-  // tabloda elle aramak zorundaydı. YENİ MEKANİZMA AÇILMADI: `rec()`/`rowAttrs()`/`openDrawer()`
-  // zinciri planla, matrisle ve olayla AYNI (klavye, odak dönüşü, Esc sözleşmesi dâhil).
-  // Y1: satır-içi kıvılcım aynı satırda; adayda giriş/stop/hedef İŞARETLİ (plan seviyeleri değil
-  // ADAYIN kendi seviyeleri — plan henüz kurulmamış olabilir ve iki kaynağı karıştırmak yasak).
-  const candRows = (d.candidates || []).slice(0, 24).map(c => {
-    const k = rec("aday", { c, plan: _adayinPlani(c, d.plans), tdy, ledger: d.ledger });
-    return `<button ${rowAttrs(k, `${c.date} · ${c.ticker} · skor ${c.score}. Aday kararını aç.`)}
-     class="trow rowbtn" style="grid-template-columns:78px 66px 1fr 112px 60px 60px 90px">
-     <span class="mut" style="font-size:11px">${esc(c.date)}</span><span class="tick" style="font-size:14px">${esc(c.ticker)}</span>
-     <span class="chain">${esc(c.source_skill||'')}</span>
-     <span>${pvKivilcimYuva(c.ticker, { giris: c.entry_trigger, stop: c.stop, hedef: c.profit_target })}</span>
-     <span class="mono-num">${c.score}</span>
-     <span class="mono-num">RS ${c.rs_rating??'—'}</span><span class="mut" style="font-size:11px">${esc(c.sector||'')}</span></button>`;
-  }).join("");
-  $("adaylar-now").innerHTML = `
-    ${bolumBasHTML("adaylar", "Tarama hattı · bir sonraki açılış",
-      `Veri <b style="color:var(--tx)">${esc(asOf || '—')}</b>'e kadar taze · kaynak <b style="color:var(--tx)">${esc(provider)}</b> · adaylar <b style="color:var(--tx)">bir sonraki açılışa</b> yöneliktir`)}
+  return { d, plans, asOf, latestSignal, provider, actionable, rejected, nextActionable,
+           histActionable, staleFresh, vc, rc, rcTop, bySkill, rejToday, rejOlder };
+}
 
-    ${(() => {   // yerel LLM ajanının İKİNCİ GÖRÜŞÜ — danışma katmanı, kapı kararını değiştirmez
-      const rv = d.candidate_review || {};
-      if (!rv.date || !(rv.reviews || []).length) return "";
-      const OP = { destekle: ["destekle", "t-go"], "çekimser": ["çekimser", "t-rv"], "karşı": ["karşı", "t-no"] };
-      const rows = rv.reviews.map(r => {
-        const [lbl, kls] = OP[r.opinion] || [r.opinion, "t-vi"];
-        return `<div class="trow" style="grid-template-columns:64px 92px 1fr">
-          <span class="tick">${esc(r.ticker)}</span><span><span class="tag ${kls}">${esc(lbl)}</span></span>
-          <span class="mut" style="font-size:12px">${esc(r.note || "")}</span></div>`;
-      }).join("");
-      // BAYATLIK DÜRÜSTÇE SÖYLENİR: görüş katmanı bir seansı kaçırırsa (canlıda oldu — tek-atışlık
-      // koşuda daemon thread öldürülüyordu) eski görüş taze karar gibi okunurdu.
-      const bayat = latestSignal && String(rv.date) < String(latestSignal);
-      return `<div class="card rise"><h2 class="t">LLM ikinci görüşü · ${esc(rv.date)} · ${esc(rv.model || rv.brain || "")}${
-        bayat ? ` <span class="warn" style="letter-spacing:0;text-transform:none">— BAYAT: ${esc(latestSignal)} seansı için görüş alınmadı</span>` : ""}</h2>
-        <p class="hint" style="margin-top:0">Danışma katmanı — kapı kararını DEĞİŞTİRMEZ, yalnız not düşer.</p>
-        ${rows}</div>`;
-    })()}
+// ---- «BİR SONRAKİ AÇILIŞ İÇİN» KARTI ---------------------------------------------------------
+// 2026-08-24'te Karar/Adaylar bölümünden BUGÜN ekranına taşındı (operatör kararı). Gövde
+// AYNEN korundu; değişen tek şey kimin çağırdığı. Bağlamı `adaySinyalBaglami` verir.
+// ---- «BİR SONRAKİ AÇILIŞ» SATIRLARI — pv- GRAMERİ, TAVAN BEYANLI ----------------------------
+// NEDEN `planRowFull` DEĞİL: o üretici `trow` sınıfını ve tablo düzenini kullanıyor; Bugün
+// yüzeyinin sözleşmesi (`test_s2r1_kabuk_v155::test_genel_bakis_SINIRSIZ_detay_dokumu_tasimaz`)
+// üçünü de yasaklıyor — `class="card"`, `trow`, ve İKİNCİ bir `<table>` (tek tablo açık
+// pozisyonlara ayrılmış, çünkü onun paydası maruziyet bütçesidir, sorgu değil).
+// TAVAN SÖZLEŞMENİN GEREĞİ: `nextActionable` bir SORGU sonucudur, yani paydası sınırsızdır.
+// Sınırsız payda tam olarak o sözleşmenin korktuğu şey; burada payda BEYAN EDİLİR ve aşan
+// kısım sayısıyla birlikte tam listeye yönlendirilir. Kayıt zinciri (`rec`/`rowAttrs`) AYNEN
+// korunur — satır hâlâ kendi kararının çekmecesini açar.
+const PV_SONRAKI_TAVAN = 12;
+function pvSonrakiSatirlari(planlar) {
+  const gosterilen = planlar.slice(0, PV_SONRAKI_TAVAN);
+  const asan = planlar.length - gosterilen.length;
+  return `<div class="pv-plist">${gosterilen.map(p => {
+    const v = p.gate_verdict || "?";
+    const k = rec("plan", p);
+    return `<button ${rowAttrs(k, `${p.date} · ${p.ticker} · kapı ${v}. Planı aç.`)} class="pv-psat">
+      <span class="pv-tick">${esc(p.ticker)}</span>
+      <span class="pv-zincir">${esc((p.skill_chain || []).join(" → "))}</span>
+      <span class="pv-sev mono-num">${trn(p.entry_trigger, 1)}→${trn((p.targets && p.targets[0]), 1)}</span>
+      <span class="pv-rr mono-num">${p.r_multiple_expected ?? "—"}R</span>
+      <span class="pv-hkm"><span class="tag ${TAG[v] || ""}">${esc(v)}</span></span></button>`;
+  }).join("")}</div>${asan > 0
+    ? `<p class="pv-not">Tavan ${PV_SONRAKI_TAVAN} satır — ${asan} plan daha var. KIRPILDI, gizlenmedi:
+       tam liste ve karar ağacı Karar → <b>Adaylar</b> bölümünde.</p>` : ""}`;
+}
 
-    <div class="card rise"><h2 class="t">${d.latest_session && latestSignal && latestSignal < d.latest_session
+function sonrakiAcilisKartiHTML(b) {
+  const { d, plans, asOf, latestSignal, nextActionable, rejToday, staleFresh } = b;
+  return `    <section class="pv-sonraki"><header><h2>${d.latest_session && latestSignal && latestSignal < d.latest_session
         ? `Son sinyaller · ${esc(latestSignal)} <span class="warn" style="letter-spacing:0;text-transform:none">— süresi doldu; ${esc(d.latest_session)} seansından beri kapıyı geçen taze aday yok</span>`
-        : `Bir sonraki açılış için${latestSignal ? ` · ${esc(latestSignal)} kapanışından` : ''}`} <span class="tx3" style="font-weight:400">(${nextActionable.length})</span></h2>
+        : `Bir sonraki açılış için${latestSignal ? ` · ${esc(latestSignal)} kapanışından` : ''}`} <span class="pv-say">(${nextActionable.length})</span></h2></header>
       ${/* ---- BÖLÜM ÖZETİ · HÜCRE ŞERİDİ (v192) ------------------------------------------------
             Kapının çıktısı bugüne kadar YALNIZ aşağıdaki `.g2` panosunda, tek boşluklu bir mono
             listede duruyordu ("GO ....... 3"). O liste okunabilir ama TARTILAMAZ: 3 GO'nun 4
@@ -4014,21 +4069,125 @@ RENDER.adaylar = async () => {
         ], "Disiplin kapısının bu seanstaki hüküm dağılımı");
       })()}
       ${gateLegend()}
-      ${nextActionable.length ? _PHEAD + nextActionable.map(planRowFull).join("")
+      ${nextActionable.length ? pvSonrakiSatirlari(nextActionable)
         : (rejToday.length
             // BOŞLUĞUN SEBEBİ GÖRÜNÜR OLMALI: "aday yok" ile "aday vardı, kapı eledi" AYRI şeylerdir.
             // Motor bugün çalıştıysa ve kapı eledi ise bu bir KARARDIR — gerekçesiyle burada durur.
             ? `<div class="empty" style="text-align:left">
                  <b>${esc(latestSignal)} seansında ${rejToday.length} plan üretildi, ${rejToday.length === 1 ? "o da" : "hepsi de"} disiplin kapısında elendi.</b>
                  Motor çalıştı ve karar verdi — bu bir boşluk değil, bir <b>karar</b>.
-                 <div style="margin-top:10px">${rejToday.map(p => `<div class="trow" style="grid-template-columns:70px 1fr">
-                    <span class="tick">${esc(p.ticker)}</span>
-                    <span class="chain">${esc((p.gate_reasons || []).join(" · ") || "gerekçe kaydı yok")}</span></div>`).join("")}</div>
-                 <p class="hint" style="margin-top:10px">Ayrıntılı karar ağacı aşağıdaki "Elenen planlar" tablosunda.</p></div>`
+                 <div class="pv-eleme">${rejToday.map(p => `<div class="pv-esat">
+                    <span class="pv-tick">${esc(p.ticker)}</span>
+                    <span class="pv-zincir">${esc((p.gate_reasons || []).join(" · ") || "gerekçe kaydı yok")}</span></div>`).join("")}</div>
+                 <p class="pv-not">Ayrıntılı karar ağacı Karar → <b>Adaylar</b> bölümündeki "Elenen planlar" tablosunda.</p></div>`
             : `<div class="empty">${staleFresh
                  ? `Veri ${esc(asOf)}'e kadar işlendi ama <b>${esc(latestSignal)}</b> sonrası disiplin kapısını geçen taze bir kurulum çıkmadı — dürüst boşluk, uydurma yok.`
                  : `Bu seansta temiz geçen taze bir aday yok — dürüst boşluk. Piyasa uygun olduğunda ajan otomatik silahlanır.`}</div>`)}
-</div>
+</section>`;
+}
+
+RENDER.adaylar = async () => {
+  // MATRİS ARTIK BURADA (2026-07-27): Bugün'ün tepesinden alındı, çünkü Bugün'ün açılış sorusu
+  // "senden bir şey bekliyor mu?"dur ve matris o cümleyi y=710'a itiyordu. Kararlar'da ise matris
+  // süs değil DAYANAK: bugünkü adayın kurulumu bu rejimde bugüne dek ne verdi? Sayfa kanıtla açılır,
+  // sonra önerilere, sonra senin onayını bekleyenlere iner.
+  // AWAIT ŞART: ateşle-unut çağrılırsa go()'nun revealActive'i matrisin `.rise`'ından ÖNCE koşar
+  // ve matris `.in` sınıfını hiç alamaz — DOM'da var ama görünmez olur (bkz. RENDER.brifing notu).
+  await renderPlotMap();
+  // DENETİM İZİ AYRI UÇTAN (C1-7): `/api/signals` defterin SON 120 satırını verir ve tavanı
+  // beyan eder; `/api/audit_trail` defterin TAMAMI üstünde sayar ve sorgu alır. İkisi aynı
+  // defteri farklı SORU için okur — biri "sırada ne var", diğeri "geçmişte ne karar verdim".
+  // Sorgu durumu modül düzeyinde tutulur (`_DENETIM_SEMBOL`), çünkü bölüm yeniden çizildiğinde
+  // filtrenin kaybolması operatörün yazdığı sorguyu sessizce silmek olurdu.
+  // Y2 · ADAY KARARI ÇEKMECESİ (KARAR-2026-08-24-B §5.2): "ne oldu?" sorusunun cevabı üç deftere
+  // birden bakmayı gerektirir — aday (candidates), kapı (plans) ve İCRA (silahlı/gönderilmiş/açık
+  // pozisyon). `/api/today` ucu ucuzdur (0,18 sn) ve zaten önbellekli; icra bacağını okumadan
+  // çekmece "plan → onay → gönderim → doldu" zincirinin NEREDE durduğunu SÖYLEYEMEZDİ.
+  // Uç düşerse zincirin icra bacağı `ölçülemedi` olur — "gönderilmedi" diye okunmaz.
+  const [d, at, tdy] = await Promise.all([
+    j("/api/signals"),
+    j("/api/audit_trail" + (_DENETIM_SEMBOL ? "?sembol=" + encodeURIComponent(_DENETIM_SEMBOL) : ""))
+      .catch(() => null),
+    j("/api/today").catch(() => null),
+  ]);
+  const b = adaySinyalBaglami(d);
+  const { plans, asOf, latestSignal, provider, rejected,
+          histActionable, vc, rcTop, bySkill, rejToday, rejOlder } = b;
+  const rejRows = rejToday.concat(rejOlder).slice(0, 10).map(planRowFull).join("");
+  // Y2: HER ADAY SATIRI ARTIK BİR KAYIT DÜĞMESİDİR. Eskiden `div`di ve tıklanamıyordu — yani
+  // "bu aday ne oldu?" sorusunun panoda hiçbir cevabı yoktu; operatör plan defterini ayrı bir
+  // tabloda elle aramak zorundaydı. YENİ MEKANİZMA AÇILMADI: `rec()`/`rowAttrs()`/`openDrawer()`
+  // zinciri planla, matrisle ve olayla AYNI (klavye, odak dönüşü, Esc sözleşmesi dâhil).
+  // Y1: satır-içi kıvılcım aynı satırda; adayda giriş/stop/hedef İŞARETLİ (plan seviyeleri değil
+  // ADAYIN kendi seviyeleri — plan henüz kurulmamış olabilir ve iki kaynağı karıştırmak yasak).
+  const candRows = (d.candidates || []).slice(0, 24).map(c => {
+    const k = rec("aday", { c, plan: _adayinPlani(c, d.plans), tdy, ledger: d.ledger });
+    return `<button ${rowAttrs(k, `${c.date} · ${c.ticker} · skor ${c.score}. Aday kararını aç.`)}
+     class="trow rowbtn" style="grid-template-columns:78px 66px 1fr 112px 60px 60px 90px">
+     <span class="mut" style="font-size:11px">${esc(c.date)}</span><span class="tick" style="font-size:14px">${esc(c.ticker)}</span>
+     <span class="chain">${esc(c.source_skill||'')}</span>
+     <span>${pvKivilcimYuva(c.ticker, { giris: c.entry_trigger, stop: c.stop, hedef: c.profit_target })}</span>
+     <span class="mono-num">${c.score}</span>
+     <span class="mono-num">RS ${c.rs_rating??'—'}</span><span class="mut" style="font-size:11px">${esc(c.sector||'')}</span></button>`;
+  }).join("");
+  // BÖLÜM ÖZETİ (v192) — «bir sonraki açılış» kartı 2026-08-24'te Bugün'e taşınınca bu bölge
+  // kendi hücre şeridini KAYBETTİ (`test_dort_bolumun_ozet_seridi_var_ve_TIKLANMAZ` yakaladı).
+  // Şerit geri geldi ama PAYDASI DEĞİŞTİ ve bu bilinçli: taşınan şerit SON SEANSI özetliyordu,
+  // bu bölge ise artık pencerenin TAMAMINI (kapı karnesi + eleme izi) anlatıyor. Her yüzey
+  // KENDİ paydasını özetler; taşınan şeridi burada da basmak, iki ekranda aynı etikete iki
+  // farklı payda koymak olurdu — v192'nin kapattığı kusurun ta kendisi.
+  const _aSerit = (() => {
+    const nP = plans.length;
+    const nA = (d.candidates || []).length;
+    const h = (etiket, n, sinif) => ozetHucre(etiket, {
+      deger: nP ? trn(n) : null, degerSinif: nP && sinif ? sinif : "",
+      oran: nP ? n / nP : null, payda: `pencerenin planı (${nP})`,
+      meta: nP ? `%${Math.round(100 * n / nP)} · ${nP} planın ${n} tanesi`
+                : "pencerede plan yok — payda sıfır, oran BASILMAZ (uydurma yasağı)",
+      rozet: azOrnek(nP) && nP ? "AZ ÖRNEK" : "" });
+    return ozetSerit([
+      // DÖRDÜNCÜ HÜCRENİN PAYDASI AYRI (aday, plan değil) ve bu yüzden kendi çubuğunda durur —
+      // iki paydayı tek orana toplamak v192'nin kapattığı kusurdu.
+      ozetHucre("Tarama → plan", {
+        deger: nA ? `${trn(nA)} → ${trn(nP)}` : null,
+        oran: nA ? nP / nA : null, payda: `pencerenin tarama adayı (${nA})`,
+        meta: nA ? "pencere boyunca · aday → kapıya giren plan"
+                 : "pencerede tarama adayı yok — payda sıfır, oran BASILMAZ",
+        rozet: azOrnek(nA) && nA ? "AZ ÖRNEK" : "" }),
+      h("Kapıdan geçen · GO", vc.GO, ""),
+      h("İncelemeye düşen", vc.REVIEW, ""),
+      h("Elenen · NO_GO", vc.NO_GO, "warn"),
+    ], "Disiplin kapısının pencere boyunca hüküm dağılımı");
+  })();
+  $("adaylar-now").innerHTML = `
+    ${bolumBasHTML("adaylar", "Tarama hattı · bir sonraki açılış",
+      `Veri <b style="color:var(--tx)">${esc(asOf || '—')}</b>'e kadar taze · kaynak <b style="color:var(--tx)">${esc(provider)}</b> · adaylar <b style="color:var(--tx)">bir sonraki açılışa</b> yöneliktir`)}
+    ${_aSerit}
+
+    ${(() => {   // yerel LLM ajanının İKİNCİ GÖRÜŞÜ — danışma katmanı, kapı kararını değiştirmez
+      const rv = d.candidate_review || {};
+      if (!rv.date || !(rv.reviews || []).length) return "";
+      const OP = { destekle: ["destekle", "t-go"], "çekimser": ["çekimser", "t-rv"], "karşı": ["karşı", "t-no"] };
+      const rows = rv.reviews.map(r => {
+        const [lbl, kls] = OP[r.opinion] || [r.opinion, "t-vi"];
+        return `<div class="trow" style="grid-template-columns:64px 92px 1fr">
+          <span class="tick">${esc(r.ticker)}</span><span><span class="tag ${kls}">${esc(lbl)}</span></span>
+          <span class="mut" style="font-size:12px">${esc(r.note || "")}</span></div>`;
+      }).join("");
+      // BAYATLIK DÜRÜSTÇE SÖYLENİR: görüş katmanı bir seansı kaçırırsa (canlıda oldu — tek-atışlık
+      // koşuda daemon thread öldürülüyordu) eski görüş taze karar gibi okunurdu.
+      const bayat = latestSignal && String(rv.date) < String(latestSignal);
+      return `<div class="card rise"><h2 class="t">LLM ikinci görüşü · ${esc(rv.date)} · ${esc(rv.model || rv.brain || "")}${
+        bayat ? ` <span class="warn" style="letter-spacing:0;text-transform:none">— BAYAT: ${esc(latestSignal)} seansı için görüş alınmadı</span>` : ""}</h2>
+        <p class="hint" style="margin-top:0">Danışma katmanı — kapı kararını DEĞİŞTİRMEZ, yalnız not düşer.</p>
+        ${rows}</div>`;
+    })()}
+
+    ${/* «Bir sonraki açılış için» KARTI BUGÜN SAYFASINA TAŞINDI (2026-08-24, operatör).
+          Gerekçe: kart bir SABAH TURU sorusunu cevaplıyor ("bugün ne silahlandı?") ve
+          Bugün ekranının kendi cümlesi de o. Kart SİLİNMEDİ, yeri değişti ve tek gövdeden
+          (`sonrakiAcilisKartiHTML`) çiziliyor — kopyalasaydık ilk düzenlemede ayrışırdı.
+          Bu bölümde kalan şey KAPI KARNESİ ve eleme izidir. */""}
 
     <div class="g2 rise">
       <div class="pane"><p class="mut" style="font-size:12px;margin-bottom:14px">${T("tarama hattı", "pipeline")} · son çalışma</p>
@@ -5066,9 +5225,9 @@ function icTrend(hist) {
 // Eski cümle "hue EKLENMEDİ" diyordu; o beyan 08-24'te ölçümle geçersizleşti, ayrım artık
 // ÜÇ kanalda birden taşınıyor (luminans + desen + hue) ve hiçbiri diğerinin yerine geçmez.
 const IC_SERI = {
-  gercek: ["gerçek", "var(--blue)", "0"],
-  sim: ["sim", "var(--violet)", "1 3"],
-  havuz: ["havuz", "var(--violet2)", "2 2"],
+  gercek: ["gerçek", "var(--sapphire)", "0"],
+  sim: ["sim", "var(--blue)", "1 3"],
+  havuz: ["havuz", "var(--sky)", "2 2"],
 };
 // EFSANE ETİKETİ NÖTR MÜREKKEPTİR (`--tx2`) ve rengi YALNIZ yanındaki çizgi örneği taşır.
 // §10.2'nin taşıyıcı değişimi burada da geçerli: etiketi seri rengiyle boyamak `--violet2`yi
@@ -9338,6 +9497,44 @@ RENDER.kapilar = async () => {
     + firsatEylemsizlik((d || {}).risk) + firsatRetKarnesi((d || {}).mlops);
 };
 
+// ---- TOPLULAŞTIRMA · KEŞİF YÜZEYİ -----------------------------------------------------------
+// 2026-08-24'te Bugün ekranından buraya taşındı (operatör kararı). Karar alanının son bölümü
+// olması bilinçli: üstündeki altı bölüm HÜKÜM anlatır (aday → kapı → onay → kitap → mutabakat →
+// emir), bu ise hükümlerin BİRİKİMİNE bakar. Keşif, karardan sonra gelir.
+RENDER.topviews = async () => {
+  $("page-topviews").innerHTML = bolumBasHTML("topviews", "Toplulaştırma · keşif görünümü",
+    "Dokuz kırılımın dokuzu da <b>tek uçtan</b> (<code>/api/topviews</code>) gelir; pano burada "
+    + "hesap YAPMAZ, adlandırır.")
+    + `<section class="pv-top">
+      <header>
+        <span class="pv-damga">keşif görünümü · hüküm kart-önce</span>
+        <span class="pv-filtre-serit" id="pv-metrik-serit">${pvMetrikSeridiHTML()}</span>
+      </header>
+      <p class="pv-not" id="pv-top-kapsam">kapsam beyanı ölçülüyor…</p>
+      <div id="pv-top-govde"><p class="pv-fbos">ölçülüyor…</p></div>
+      <p class="pv-not">Bu yüzey bir KEŞİF aracıdır: toplulaştırılmış bir sayı ölçüm kartından
+      geçmeden HÜKÜM olmaz. Kapsam yukarıda, her kartın kendi kaynağı ve penceresi sekmenin
+      altındadır.</p>
+    </section>`;
+  // BAŞLIK BÖLÜM BAŞINA İNDİ: eski `<h2>Toplulaştırma</h2>` `bolumBasHTML`in h2'siyle
+  // ÇAKIŞIRDI (aynı sayfada iki kez aynı ad). Kabuk zaten bölüm başlığını basıyor.
+  // Uç düşerse yüzey "ölçülemedi" der ve NEDENİNİ yazar — boş bir ızgara "kırılım yok" diye
+  // okunurdu. Hata YUTULMAZ (YASA 4).
+  try {
+    const d = await j("/api/topviews");
+    _PV_TOP = pvTopViewsVeri(d);
+    _PV_TOP_KAPSAM = (d && d.kapsam) || null;
+    pvTopViewsCiz();
+  } catch (e) {
+    _PV_TOP = null;
+    _PV_TOP_KAPSAM = null;
+    pvTopViewsCiz();
+    const kap = $("pv-top-govde");
+    if (kap) kap.innerHTML = `<p class="pv-fbos">${pvYokAlt(
+      "toplulaştırma ucu okunamadı: " + String(e).slice(0, 90))}</p>`;
+  }
+};
+
 // ---- VERİ SAĞLIĞI · HATTIN İÇ SAĞLIĞI --------------------------------------------------------
 // ADR Veri Sağlığı: "kapsama/tazelik/karantina/bütünlük + intraday akış durumu". Karantina,
 // bütünlük dedektörleri, defter sözleşmesi, eleme muhasebesi, sıcak katman ve sağlayıcılar —
@@ -12325,7 +12522,12 @@ const PAGE_DESC = {
 // Önek bir ayrı kip açar ve o kipte tek tuş TÜKETİLİR; yani `g k` satır gezinmesini tetiklemez.
 // `g g` gerekmez artık (Bugün'ün harfi `b`); `g` iki kez basılırsa ikinci `g` tanınmayan tuştur
 // ve dizi sessizce iptal olur.
-const GIT_KISAYOL = { b: "bugun", k: "karar", s: "saglik", o: "ogrenme", y: "kilitler" };
+// YEDİ YÜZEY (2026-08-24). Harfler yüzeyin ADINDAN gelir ve çakışmaz:
+//   b=Bugün · p=Portföy · k=Karar zinciri · a=Analiz · s=Sağlık · o=Öğrenme · y=kilitler
+// `y` tarihseldir (Kilitler'in `k`si Karar'a gitmişti) ve DEĞİŞMEDİ — operatörün
+// parmak hafızasını bir yeniden adlandırma turunda sıfırlamak pahalıdır.
+const GIT_KISAYOL = { b: "bugun", p: "portfoy", k: "karar", a: "analiz",
+                      s: "saglik", o: "ogrenme", y: "kilitler" };
 // Önek SÜRESİZ AÇIK KALAMAZ: yarım bırakılmış bir `g`, dakikalar sonra basılan `r`yi sayfa
 // atlamasına çevirirdi — kullanıcının hiç istemediği bir eylem, hiç beklemediği anda.
 const G_PENCERE_MS = 1500;

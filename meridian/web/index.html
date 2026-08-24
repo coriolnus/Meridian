@@ -219,36 +219,44 @@
      ~~Emekli (2026-08-24 sabahı): yeşil #1f7646 · kehribar #77520e · kırmızı #9a0019;
        renk METİNDİ ve ΔE payı 0,1 idi.~~ Ayrıntı: docs/kontrast-denetimi.md §12.7. */
   --green:#00963e; --amber:#c74300; --red:#c3002d;
-  /* ROL 5 · SERİ MERDİVENİ — RENKLENDİ (karar §10.3/§10.4, 2026-08-24).
-     ADLAR TARİHSELDİR VE DEĞİŞMEDİ: `--violet` app.js'in IC trend sözleşmesinde geçiyor
-     (`IC_SERI.sim = "var(--violet)"`), `--blue`/`--violet2` ise bu tura kadar ÖLÜYDÜ
-     (tanımlıydı, okuyucusu yoktu — YASA 6 ihlali). Üçü de artık TEK hue'nun üç basamağı:
-       --blue (1. basamak, en belirgin) → --violet (2.) → --violet2 (3., en sönük)
-     Ad değiştirmek app.js'in kesik-çizgi desenini kırardı; değer değişti, ad durdu.
+  /* ROL 5 · SERİ — MAKETİN HUE AİLESİNE GEÇTİ (2026-08-24 · operatör kararı).
+     ~~ADLAR TARİHSELDİR: --violet / --violet2~~ İKİ AD DÜŞTÜ. Gerekçe: değerleri artık
+     `--lavender` ve `--sky`nin birebir kopyasıydı ve bu deponun tekrar eden kusuru tam
+     olarak "aynı rengin iki adı" — biri güncellenir, öteki bayatlar. Tüketiciler
+     (`.pv-nk.s2/s3` · `.pv-seri-1/2` · `.pv-seri-uc-1/2` · `.pv-sw-1/2` · `IC_SERI`)
+     doğrudan `--lavender`/`--sky` okuyor.
 
-     NİYE TEK HUE. §10.4 bağlayıcı: AYNI büyüklüğü ölçen seriler tek hue + farklı açıklık
-     alır, çünkü merdivenin kendisi TÜRETME İLİŞKİSİNİ kodlar. Bugünkü `Sermaye` ↔ `Tepe
-     (koşan azami)` tam bu sınıftır — Tepe, Sermaye'den türetilir. Onlara yeşil/turuncu
-     vermek "iyi/kötü" diye okunurdu ve bu bir alım-satım panosunda pahalı bir yanlış okuma.
+     ~~NİYE TEK HUE (eski §10.4 kuralı: aynı büyüklüğü ölçen seriler tek hue + farklı
+     açıklık)~~ KURAL DEĞİŞTİ. Operatör: "hue kullanmak gerekiyorsa kullanabilirsin hatta
+     güzel duruyor" (2026-08-24) ve üç kez "maketin renklerini kullan". Onaylanan maket
+     serileri AÇIKLIKLA değil HUE ile ayırıyor. Eski kuralın koruduğu şey — "iyi/kötü diye
+     okunmasın" — hâlâ korunuyor: seri ailesi mavi-mor bandında kaldı, YEŞİL ve TURUNCU
+     bilerek DIŞARIDA bırakıldı (onlar şiddet/yön rolleri). Yani değişen ayrım KANALI
+     (açıklık → hue), yasak hue'lar değil.
 
-     HUE NEDEN DUB'IN MAVİSİ DEĞİL — ÖLÇÜLDÜ VE BEYANLI. İlk deneme ROL 6'nın kendi
-     hue'suydu (deep-sapphire, OKLCh 265,6°). Gece merdiveni orada `--nav-2` ile ΔE2000
-     0,0'a çöktü (aynı hex: #b2caff) ve ΔE≥8 arayan tarama İKİ temada da BOŞ döndü — yani
-     ROL 6'nın bandında bir seri merdiveni kurulamıyor. Hue bir sonraki SERBEST banda
-     taşındı: OKLCh 230° (gök mavisi). Bu bir TÜRETMEDİR, Dub'da böyle bir jeton YOK —
-     gece paletiyle aynı damgayı taşır. Ölçülen ayrımlar: nav ailesine ΔE ≥14.7 (gündüz) /
-     ≥13.9 (gece) · MOD bandına ≥21.7 · şiddet üçlüsüne ≥33.6.
-
-     ÇG1/ÇG2 (karar §10.3, eşikler donmuş):
-       ÇG1 komşu ΔL* 16.45 / 16.37   (eşik ≥15)
-       ÇG2 kart üstünde 13.44 / 7.57 / 4.16 · en kötü gerçek zemin 12.33 / 6.95 / 3.82
-           (eşik ≥3, metin-dışı taşıyıcı)
-       ÇG3 kesik-çizgi İKİNCİ KANALI KORUNUR — app.js'te 9 `stroke-dasharray`; renk körü
-           okuyucunun taşıyıcısı hâlâ luminans + desendir, hue onların ÜSTÜNE eklendi.
-     KROMA TAVANI: max C(seri) 0.1153 < min C(şiddet) 0.1671 — bir seri çizgisi bir
-     alarmla dikkat için YARIŞAMAZ (yön rolünün ×0,60 kuralının seri kardeşi, ×0,75).
-     ~~Emekli: --violet #404040 (Dub `slate`), --violet2/--blue #0a0a0a (ölü).~~ */
-  --blue:#003346; --violet:#005b79; --violet2:#0086b1;
+     ÖLÇÜLDÜ (ölçütler aşağıda, hepsi bu turda yeniden hesaplandı):
+       seri üçlüsü = sapphire #1e40af · lavender #7c3aed · sky #3b82f6
+                     (gece: #3b82f6 · #a78bfa · #93c5fd)
+       ~~ÇG1 komşu ΔL* ≥15~~ → bu üçlüde 2.7/11.5; ayrım artık açıklıkta DEĞİL.
+       ÇG1′ (yeni, ÖLÇÜLDÜ) ikili ΔE2000-min 15.3 (gündüz) / 17.6 (gece) — eşik ≥15,
+             eski ÇG1'in sayısal sertliği korunarak doğru eksene taşındı.
+       ÇG2  kart üstünde 8.72 / 5.70 / 3.68 (gece 4.11 / 5.56 / 6.9) — eşik ≥3 AYNEN.
+       ÇG3  kesik-çizgi İKİNCİ KANAL AYNEN KORUNUR; hue onun ÜSTÜNE eklendi, yerine değil.
+     `--blue` (#2563eb / #60a5fa) üçlünün parçası DEĞİL: TEK-SERİ grafiklerin (sermaye
+     eğrisi, alan dolgusu, kıvılcım) ve huninin giriş basamağının rengi. Maketin grafiği de
+     bunu kullanıyor (`stop-color="var(--blue)"`). */
+  /* MAKETİN KENDİ JETONLARI (2026-08-24, operatör: "mockup'daki renkleri kullanman lazım",
+     "grafik te aynı şekilde mockup'da daha güzel duruyor"). TÜRETMEK BIRAKILDI.
+     ~~#003346·#005b79·#0086b1 (196° teal — gri okunuyordu)~~ ~~#00277a·#0044d6·#3374ff~~
+     Kaynak: `scratch-panov2/index.html` (onaylanan maket) — electric-blue · lavender ·
+     deep-sapphire, maketteki değerleriyle BİREBİR.
+     `--blue` TEK-SERİ grafiklerin rengidir (sermaye eğrisi, alan dolgusu, kıvılcım) ve
+     maketin grafiği de bunu kullanıyor (`stop-color="var(--blue)"`).
+     ÜÇ-SERİ (IC) grafiği AYRI üçlü kullanır: sapphire · lavender · sky. Gerekçe ÖLÇÜLDÜ —
+     blue+lavender+sapphire üçlüsünde UÇ İKİ seri ΔE2000 13.2 (gece 10.6) ile birbirine
+     karışıyordu; sapphire+lavender+sky'da ΔE-min 15.3 (gece 17.6) ve kart-oranı min 3.68.
+     Yeşil BİLEREK üçlüye alınmadı: ΔE'si bol ama şiddet ("ok") hue'suyla çakışırdı. */
+  --blue:#006f94; --sapphire:#004860; --sky:#0998c8;
   --green-t:rgba(0,150,62,.10); --amber-t:rgba(199,67,0,.10); --red-t:rgba(195,0,45,.10);
   /* SAKİNLİK YÜZEYİ — Dub'ın KENDİ `surface.tinted-accent` jetonu (soft-mint), AYNEN.
      Bir DURUM rengi değil bir ZEMİN tintidir ve şiddet kanalıyla ilgisi yoktur (karar §10.5).
@@ -574,7 +582,10 @@
      üstünde 9.46 / 5.92 / 3.50, en kötü gerçek zemin 8.49 / 5.31 / 3.14 (eşik ≥3) ·
      max C(seri) 0.1179 < min C(şiddet) 0.1578 · nav ailesine ΔE ≥13.9 · MOD bandına ≥28.2.
      ~~Emekli: --violet #c2c2c2 (akromatik geometrik orta), --violet2/--blue #e5e5e5.~~ */
-  --blue:#83d7ff; --violet:#40addb; --violet2:#0083ad;
+  /* Maketin gece paleti, BİREBİR. ~~#83d7ff·#40addb·#0083ad~~ ~~#bdd2ff·#7aa4ff·#2e70ff~~
+     ÖLÇÜLDÜ (gece kart zemininde): blue 5.95 · lavender 5.56 · sapphire 4.11 · sky 6.9 —
+     dördü de ÇG2 (≥3) üstünde; üçlünün ΔE-min'i 17.6. */
+  --blue:#7ac1ff; --sapphire:#d2e9fe; --sky:#4e96d4;
   --green-t:rgba(0,149,61,.10); --amber-t:rgba(255,90,0,.10); --red-t:rgba(255,126,124,.10);
   /* SAKİNLİK YÜZEYİ · gece — TÜRETİLDİ (Dub'da karanlık tema YOK, §1.2 damgası geçerli).
      Yöntem ters çevirme DEĞİL: soft-mint'in OKLCh hue'su (156,7°) korundu, L gece yüzey
@@ -2125,7 +2136,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-para{background:var(--raise);border:1px solid var(--line);border-radius:var(--r-card);
   overflow:hidden;margin-bottom:var(--s3)}
 .pv-sekmeler{display:grid;grid-template-columns:repeat(4,1fr)}
-.pv-sekme{padding:var(--s4);border:0;border-right:1px solid var(--line);
+.pv-sekme{padding:var(--s3) var(--s4);border:0;border-right:1px solid var(--line);
   border-bottom:2px solid transparent;background:none;cursor:pointer;text-align:left;
   display:flex;flex-direction:column;gap:var(--s1);font-family:var(--sans)}
 .pv-sekme:last-child{border-right:0}
@@ -2133,20 +2144,27 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-sekme:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .pv-sekme[aria-selected="true"]{border-bottom-color:var(--tx);background:var(--raise)}
 .pv-sekme .et{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--tx3);font-weight:500}
-.pv-sekme .dg{font:600 var(--t-num)/1.1 var(--sans);letter-spacing:-.02em;color:var(--tx);
+/* ŞERİT KOMPAKTLAŞTI (2026-08-24, operatör: "görsel uyumsuzluk var, ve kitap, sermaye aynı
+   rakamı gösteriyor, bu gerçekten gerekli mi?"). Gerekli DEĞİLDİ: dört durum kartı Bugün'e
+   taşınınca metrik sekmelerinin ÜÇÜ (Sermaye ↔ KİTAP · Gün K/Z ↔ KİTAP'ın gün satırı ·
+   Açık risk ↔ POZİSYONLAR) manşet rakamı TEKRARLAMAYA başladı — ve iki sıra dev rakam yan
+   yana durunca hangisinin otorite olduğu okunmuyordu.
+   ŞERİT SİLİNMEDİ çünkü İŞLEVİ VAR: altındaki para grafiğinin seri seçicisidir. Rakam
+   MERTEBE DÜŞÜRDÜ (--t-num → --t-lg): manşet kartlarda, şerit kendi işine döndü. */
+.pv-sekme .dg{font:600 var(--t-lg)/1.2 var(--sans);letter-spacing:-.01em;color:var(--tx);
   font-variant-numeric:tabular-nums}
 .pv-sekme .dg.pos{color:var(--yon-arti)}
 .pv-sekme .dg.neg{color:var(--yon-eksi)}
 .pv-sekme .bg{font-size:11px;color:var(--tx2);line-height:1.45}
-.pv-sekme.yok .dg{font:400 var(--t-sub)/1.3 var(--sans)}
+.pv-sekme.yok .dg{font:400 var(--t-body)/1.35 var(--sans)}
 /* SERİ NOKTALARI ARTIK RENKLİ AMA MERDİVEN DURUYOR (karar §10.3): hue LUMİNANSIN YERİNE
    DEĞİL ÜSTÜNE eklendi — komşu basamaklar arasında ΔL* 16.45/16.37 (gündüz), 15.60/15.61
    (gece) ve grafikte ikinci kanal hâlâ DESENdir. Renk körü okuyucunun taşıyıcısı
    kaldırılmadı; kaldırılsaydı kazanç değil kayıp olurdu. */
 .pv-nk{width:7px;height:7px;border-radius:2px;display:inline-block;background:var(--tx3)}
 .pv-nk.s1{background:var(--blue)}
-.pv-nk.s2{background:var(--violet)}
-.pv-nk.s3{background:var(--violet2)}
+.pv-nk.s2{background:var(--sapphire)}
+.pv-nk.s3{background:var(--sky)}
 /* DÖRDÜNCÜ BASAMAK NÖTR KALDI VE BU BİR EKSİKLİK BEYANIDIR: §10.4 farklı büyüklükleri
    ölçen serilere AYRI hue ister, ama Dub'ın kalan hue bütçesi BİRDİR (mavi ROL 6'nın,
    lavanta ROL 4'ün, yeşil/turuncu/kırmızı ROL 2'nin). Dördüncü bir hue UYDURULMADI. */
@@ -2161,15 +2179,15 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-yl{font:500 10px var(--sans);fill:var(--tx3)}
 .pv-seri{stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
 .pv-seri-0{stroke:var(--blue)}
-.pv-seri-1{stroke:var(--violet);stroke-width:1.5;stroke-dasharray:5 4;opacity:.8}
+.pv-seri-1{stroke:var(--sapphire);stroke-width:1.5;stroke-dasharray:5 4;opacity:.8}
 /* ÜÇÜNCÜ SERİNİN KENDİ KURALI YOKTU: `pvAlanGrafigi` `pv-seri-${si}` basıyor, yani üç
    serili bir metrik geldiği gün üçüncü çizgi `stroke` alamayıp GÖRÜNMEZ olurdu (SVG
    varsayılanı `none`). Merdivenin üçüncü basamağı artık kaynakta duruyor. */
-.pv-seri-2{stroke:var(--violet2);stroke-width:1.5;stroke-dasharray:2 3;opacity:.8}
+.pv-seri-2{stroke:var(--sky);stroke-width:1.5;stroke-dasharray:2 3;opacity:.8}
 .pv-seri-uc{fill:var(--tx3);stroke:var(--raise);stroke-width:2.5}
 .pv-seri-uc-0{fill:var(--blue);stroke:var(--raise);stroke-width:2.5}
-.pv-seri-uc-1{fill:var(--violet);stroke:var(--raise);stroke-width:2.5}
-.pv-seri-uc-2{fill:var(--violet2);stroke:var(--raise);stroke-width:2.5}
+.pv-seri-uc-1{fill:var(--sapphire);stroke:var(--raise);stroke-width:2.5}
+.pv-seri-uc-2{fill:var(--sky);stroke:var(--raise);stroke-width:2.5}
 .pv-xekseni{display:flex;justify-content:space-between;padding:6px var(--s1) 0;
   font-size:11px;color:var(--tx3)}
 .pv-xekseni .son{color:var(--tx2);font-weight:600}
@@ -2182,8 +2200,8 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
   font-variant-numeric:tabular-nums}
 .pv-sw{width:8px;height:8px;border-radius:2px;display:inline-block;background:var(--tx3)}
 .pv-sw-0{background:var(--blue)}
-.pv-sw-1{background:var(--violet)}
-.pv-sw-2{background:var(--violet2)}
+.pv-sw-1{background:var(--sapphire)}
+.pv-sw-2{background:var(--sky)}
 .pv-grafik-bos{padding:var(--s5) var(--s4)}
 .pv-grafik-yok{font-size:var(--t-body);color:var(--tx2);line-height:1.6;margin:0 0 4px}
 .pv-lejand{display:flex;flex-wrap:wrap;gap:var(--s3);padding:0 var(--s4) var(--s3);font-size:11px}
@@ -2217,7 +2235,11 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-huni-govde{position:relative;padding:var(--s6) var(--s4) 0}
 .pv-huni{width:100%;height:230px;display:block}
 .pv-hy{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
-.pv-hakis{fill:var(--accent);opacity:.14}
+/* `.pv-hakis` SİLİNDİ (2026-08-24): akış artık maketin ÜÇ KATMANLI yapısını kullanıyor
+   (hale 1,45×@.10 + 1,18×@.18 + çekirdek 1,00×@.92) ve her segmentin hue'su AYRI
+   (mavi → lavanta → yeşil). Tek bir CSS sınıfı üç katmanı da anlatamazdı; boyalar
+   `pvAkisGovdeHTML` içinde path başına yazılıyor ve gerekçesi orada duruyor.
+   Kural SİLİNDİ çünkü OKUYUCUSUZ kaldı (YASA 6), gizlendiği için değil. */
 .pv-hasamalar{position:relative;height:62px;margin-top:var(--s2)}
 .pv-hasama{position:absolute;top:0}
 .pv-hasama .ha{font-size:11px;color:var(--tx3);font-weight:500;white-space:nowrap}
@@ -2289,6 +2311,32 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
        tam `--sev-3` 3,52 (gündüz) / 3,42 (gece) ile grafik-nesne sınırını (>=3) geçiyor. */
 .pv-dikkat.sakin{background:var(--mint)}
 .pv-dikkat.sakin .pv-rz.ok{border-color:var(--sev-3)}
+
+/* ---- «BİR SONRAKİ AÇILIŞ İÇİN» (2026-08-24, Karar'dan taşındı) ----
+   Kart DEĞİL bölüm: Bugün yüzeyinin sözleşmesi emekli `card` gramerini, `trow` satırını ve
+   İKİNCİ bir `<table>`ı yasaklıyor (v155). Satırlar bu yüzden ızgara-düğme; tablo değil. */
+.pv-sonraki{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);
+  padding:var(--s4) var(--s5);margin-bottom:var(--s4)}
+.pv-sonraki>header{display:flex;align-items:baseline;gap:var(--s3);margin-bottom:var(--s3)}
+.pv-sonraki>header h2{font:600 var(--t-sub)/1.3 var(--sans);color:var(--tx);margin:0}
+.pv-sonraki .pv-say{font:400 var(--t-body) var(--mono);color:var(--tx3)}
+.pv-plist{display:flex;flex-direction:column;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.pv-psat{display:grid;grid-template-columns:64px 1fr 96px 52px 84px;gap:var(--s3);
+  align-items:center;width:100%;text-align:left;background:var(--card);border:0;
+  padding:var(--s3) var(--s4);font:400 var(--t-body) var(--sans);color:var(--tx2);cursor:pointer}
+.pv-psat:hover{background:var(--raise)}
+.pv-psat:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.pv-tick{font:600 var(--t-body) var(--sans);color:var(--tx)}
+.pv-zincir{color:var(--tx3);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pv-sev,.pv-rr{font-size:12px;color:var(--tx2)}
+.pv-hkm{text-align:right}
+.pv-eleme{display:flex;flex-direction:column;gap:var(--s2);margin-top:var(--s3)}
+.pv-esat{display:grid;grid-template-columns:64px 1fr;gap:var(--s3);align-items:baseline}
+@media(max-width:760px){
+  .pv-psat{grid-template-columns:56px 1fr 72px;row-gap:2px}
+  .pv-psat .pv-rr,.pv-psat .pv-sev{grid-column:2/4;font-size:11px}
+}
 
 /* ---- ROZET ---- */
 .pv-rz{display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-tag);
@@ -2546,8 +2594,22 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
          bir "→ yüzey · bölüm" bağı taşır. Detay burada YOK: detayın yeri yüzeydir. -->
     <section class="page active" id="page-bugun"></section>
 
-    <!-- ② KARAR — "ne önerildi, neden geçti/geçmedi, ne oldu?" TEK ZİNCİR:
-         adaylar → kapı → onay → kitap → mutabakat → seans-içi emir → birikim. -->
+    <!-- ② PORTFÖY (2026-08-24, maket gruplaması) — "kitap nerede duruyor?"
+         Sermaye/pozisyon → broker aynası → seans-içi emir. Eski tek "Karar" alanı
+         SEKİZ bölümle şişmişti ve içinde ÜÇ AYRI soru vardı; bu, birincisinin evi. -->
+    <section class="page" id="page-portfoy">
+      <div class="alan-bas"></div>
+      <div class="alan-bolum" id="page-brifing"><div id="bugun-now"></div></div>
+      <!-- Eski Operasyon "Bölüm 1 · Mutabakat masası" — sessiz hattın `emir reddedildi`
+           çipi buraya (`#failsub`) iner. -->
+      <div class="alan-bolum" id="page-mutabakat"></div>
+      <!-- INTRADAY'İN EMİR/SİLAHLAMA YARISI (S2R-2): ARM kapısı + gölge icra. -->
+      <div class="alan-bolum" id="page-intraemir"></div>
+    </section>
+
+    <!-- ③ KARAR ZİNCİRİ — "neden geçti ya da geçmedi?" ÜÇ HALKA:
+         adaylar → disiplin kapısı → onay kuyruğu. Kitap ve birikim BURADAN ÇIKTI
+         (② ve ④'e); kalan zincir tek bir soruyu baştan sona cevaplıyor. -->
     <section class="page" id="page-karar">
       <div class="alan-bas"></div>
       <!-- ADAYLAR = kanıt (kurulum × rejim matrisi) + sistemin ÖNERDİĞİ + elenenler.
@@ -2563,12 +2625,14 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
       <!-- ONAY KUYRUĞU (S2R-2): S2R-1'de `#page-adaylar`ın içindeydi; artık kapıdan
            HEMEN SONRA — "senden ne isteniyor" zincirin üçüncü halkası. -->
       <div class="alan-bolum" id="page-onaylar"></div>
-      <div class="alan-bolum" id="page-brifing"><div id="bugun-now"></div></div>
-      <!-- Eski Operasyon "Bölüm 1 · Mutabakat masası" — sessiz hattın `emir reddedildi`
-           çipi buraya (`#failsub`) iner. -->
-      <div class="alan-bolum" id="page-mutabakat"></div>
-      <!-- INTRADAY'İN EMİR/SİLAHLAMA YARISI (S2R-2): ARM kapısı + gölge icra. -->
-      <div class="alan-bolum" id="page-intraemir"></div>
+    </section>
+
+    <!-- ④ ANALİZ (2026-08-24, operatörün istediği yeni sekme) — "ne birikti ve nerede?"
+         Toplulaştırma ÖNCE (dokuz kırılım, keşif), birikim defteri SONRA. Sıra bilinçli:
+         keşif soruyu doğurur, defter cevabı taşır. -->
+    <section class="page" id="page-analiz">
+      <div class="alan-bas"></div>
+      <div class="alan-bolum" id="page-topviews"></div>
       <div class="alan-bolum" id="page-performans"></div>
     </section>
 
