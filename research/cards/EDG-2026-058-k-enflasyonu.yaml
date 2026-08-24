@@ -1,0 +1,71 @@
+card_id: EDG-2026-058
+family: arama_kapisi
+thesis: >
+  Çoklu-test cezası `p_req = 1 − (0,20 − extra_p)/K` ile uygulanıyor ve `K = len(planned)`,
+  yani o turda PLANLANAN sonda sayısı. Ölçüldü (2026-08-24): **önbellekten BEDAVA gelen
+  sondalar da K'ya sayılıyor.** Isınmanın beyan edilmiş görevi "sonda önbeleğini ısıtmak"tır;
+  görev başarıldıkça K 10→20→30→40 tırmanıyor ve ön eleme eşiği 0,980→0,995'e çıkıyor.
+  HİPOTEZ: mekanizma kendi başarısıyla kendi kapısını sıkıyor ve bu bir TASARIM KUSURUDUR —
+  çoklu-test cezası KAÇ FARKLI HİPOTEZ sınandığına bağlı olmalı, kaç kez hesap koşulduğuna değil.
+  BU KART yalnız kusurun BÜYÜKLÜĞÜNÜ ölçer; hiçbir eşiği değiştirmez, CANLI DEĞİŞMEZ.
+
+peek_beyani: >
+  ⚠ GÖZETLENMİŞ: bu hipotez 2026-08-24 teşhis turundan doğdu ve o turda yön gösteren bir
+  gözlem GÖRÜLDÜ — aynı aday (`exit.trail_atr_mult`) 08-08 ve 08-11'de K=10'da temizlendi,
+  K=20/30/40'ta temizlenemedi (iki bağımsız gece, arada başka değişiklik yok). Bu gözlem
+  KANIT DEĞİLDİR (n=2, gözlemsel, kontrolsüz) ve kartın eşiği ona bakılmadan türetildi (§success).
+
+evidence_refs:
+  - "docs/HUKUM-2026-08-24-OGRENME-KURAKLIGI.md — teşhis, iki şüpheci, ayakta kalan (A) maddesi"
+  - "meridian/probgate.py:348-367 (p_req formülü) · P_BASE=0.80 · reflect.py:2029 (K'nın önbellek beyanı)"
+  - "reflect.py:2078 ön eleme (k_probes=total) ↔ reflect.py:1325 resmî ship kapısı (k_probes=probes_tested)"
+
+universe: >
+  Canlı `state/hypotheses.jsonl` (60 satır, 30'unda sayısal `search_p`) + `hermes_search_probe`
+  olay defteri (999 sonda, 2026-07-14 → 2026-08-21). SALT OKUMA — canlıya yazılmaz,
+  birim restart edilmez. Bu bir DEFTER ÖLÇÜMÜDÜR, backtest koşumu DEĞİL; donmuş kasa gerekmez.
+
+features_asof: >
+  Her arama oturumu için: `K_planlanan` (bugünkü tanım) · `K_taze` (o turda GERÇEKTEN hesaplanan,
+  yani önbellek isabeti OLMAYAN sonda sayısı) · `p_req(K_planlanan)` · `p_req(K_taze)` ·
+  o turdaki en yüksek `search_p`. Önbellek isabeti `_PROBE_CACHE` anahtarından türetilir;
+  türetilemeyen tur "ölçülemedi" damgalanır ve paydadan DÜŞMEZ, ayrı sayılır.
+
+parameter_grid:
+  tanim: [K_planlanan, K_taze]   # K += 2 (iki tanım, tek kıyas ekseni)
+
+cost_model: yok_defter_olcumu
+
+success_metric: >
+  KARAR KURALI (DONUK — gözlem sayısına bakılmadan türetildi):
+  Ölçülecek tek şey **ayrışma büyüklüğü**: kaç arama oturumunda `p_req(K_taze) < search_p ≤
+  p_req(K_planlanan)` — yani "taze tanımla geçerdi, planlanan tanımla geçemedi".
+    * Bu sayı **0** → K tanımı pratikte bağlayıcı DEĞİL; kalem kapanır, tasarım kusuru
+      teorik kalır ve düzeltme gerekçesizdir.
+    * Bu sayı **≥ 1** → tanım fiilen aday düşürüyor. Sonuç bir ARSENAL adayı DEĞİL, bir
+      **tasarım kartı** tetikler (ayrı kart): "K hangi birimi saymalı?" Bu kart o soruyu
+      CEVAPLAMAZ.
+  Eşiğin gerekçesi: sıfır, "fark yaratıyor mu" sorusunun tam sınırıdır ve gözlemdeki iki
+  vakaya bakmayı gerektirmez.
+
+kill_criteria:
+  - "önbellek isabeti türetilemeyen tur oranı > %30 → hüküm YOK (ölçüm nüfusu güvenilmez)"
+  - "`p_req` formülü ölçüm sırasında değişirse geçersiz"
+  - "eşik (sıfır) ölçümden sonra oynatılırsa geçersiz"
+  - "resmî ship kapısı (reflect.py:1325) ile ön eleme (2078) karıştırılırsa geçersiz — bu kart
+     YALNIZ ön elemeyi ölçer; iki kapının karıştırılması 2026-08-24'te bir teşhisi çürüttü"
+  - "canlı state'e YAZILIRSA geçersiz"
+
+k_registry: {registered_at: "2026-08-24", trial_ids: [pending]}
+status: registered
+
+beyanli_sinirlar: >
+  (1) Bu kart bir EDGE ölçmez; bir mekanizmanın kendi kendini sıkıp sıkmadığını ölçer.
+  Pozitif sonuç bile hiçbir parametre değişikliğini gerekçelendirmez — yalnız tasarım
+  sorusunu açar.
+  (2) ÖN ELEME ≠ SHIP KAPISI. Ön elemenin sıkı olması öğrenmeyi durdurmaz (ship kapısı
+  ayrıdır ve 0,80 ister); en kötü hâlde YANLIŞ adayı resmî kapıya taşır. Kartın bulacağı
+  şey bir "kayıp fırsat" ölçüsüdür, bir arıza değil.
+  (3) Bugünkü sıkılık ölçülmüş bir kusurun ONARIMIDIR (eski formül K=16'da tavana çarpıyordu;
+  40 null adayda aile-bazlı yanlış geçiş olasılığı %87). Herhangi bir gevşetme önerisi o
+  ölçümü YENİDEN yapmak zorundadır — bu kart onu yapmaz ve yapmadığını beyan eder.
