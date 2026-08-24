@@ -213,14 +213,18 @@ are not a derived or auto-generated variant.
 | `--accent`  | primary action fill; also the focus outline | `#0a0a0a` | `#e5e5e5` |
 | `--accent-2`  | accent as text | `#171717` | `#f5f5f5` |
 | `--accent-tint`  | segmented control / nav pill micro-fill | `#f5f5f5` | `#2e2e2e` |
-| `--green` (sev-3) | nominal — a positive realised result | `#1f7646` | `#61b37f` |
-| `--amber` (sev-2) | caution — a state that needs a human | `#77520e` | `#d8b072` |
-| `--red` (sev-1) | alarm — a negative result; the emergency controls | `#9a0019` | `#ffbab4` |
+| `--green` (sev-3) | nominal — a positive realised result. **A mark, not text** | `#00963e` | `#00953d` |
+| `--amber` (sev-2) | caution — a state that needs a human. **A mark, not text** | `#c74300` | `#ff5a00` |
+| `--red` (sev-1) | alarm — a negative result; the emergency controls. **A mark, not text** | `#c3002d` | `#ff7e7c` |
+| `--mint`  | Dub `surface.tinted-accent` — the calm / positive-confirmation surface | `#dcfce7` | `#163523` |
+| `--blue` (series 1) | data-series ladder, most prominent rung — ROL 5, not navigation | `#003346` | `#83d7ff` |
+| `--violet` (series 2) | middle rung. **Name is historical**; `app.js` binds `var(--violet)` | `#005b79` | `#40addb` |
+| `--violet2` (series 3) | faintest rung — dead until 2026-08-24, now the third series | `#0086b1` | `#0083ad` |
 | `--nav` (ROL 6) | navigation / selection ink — **never** money, alarm or direction | `#2563eb` | `#72a2ff` |
 | `--nav-2`  | the ink that sits **on** `--nav-t` (measured: `--nav` fails AA there) | `#1e40af` | `#b2caff` |
 | `--nav-t`  | active navigation fill (the wash) — the only large blue surface | `#dbeaff` | `#1a274d` |
 | `--elev`  | card elevation — still `none`, in both themes | `none` | `none` |
-| `--green-t` / `--amber-t` / `--red-t` | 10% status tint | `rgba(31,118,70,.10)` · `rgba(119,82,14,.10)` · `rgba(154,0,25,.10)` | `rgba(97,179,127,.10)` · `rgba(216,176,114,.10)` · `rgba(255,186,180,.10)` |
+| `--green-t` / `--amber-t` / `--red-t` | 10% status tint | `rgba(0,150,62,.10)` · `rgba(199,67,0,.10)` · `rgba(195,0,45,.10)` | `rgba(0,149,61,.10)` · `rgba(255,90,0,.10)` · `rgba(255,126,124,.10)` |
 
 **Pure black and pure white are forbidden.** On the night ground `#000` under off-white text
 produces halation, and roughly 40–47% of adults have some astigmatism (handbook, Area 5); the night
@@ -229,14 +233,24 @@ the **page** is `#fafafa`, never `#ffffff` — measured, largest-surface luminan
 card/ground step at 1.0438 (Ö1). Cards stay `#ffffff`, because the glare finding was about the
 field, not about a card sitting on it.
 
-**The money colours left the Dub palette, and that is a measured verdict, not a preference.** Dub is
-a marketing site and carries no three-level severity channel: once `lavender` is reserved for MODE
-and `electric-blue` / `deep-sapphire` for navigation, exactly **two** usable hues remain. Its
-`tangerine` (41.1°) and the mock's derived `loss-red` (38.4°) sit **2.7°** apart, and AA derivation
-collapsed them onto the same colour (`#b54000` ↔ `#ba3a00`). The severity trio therefore keeps the
-measured Omega hue family (154° / 77° / 24°) while everything else — surfaces, geometry, type,
-navigation, direction — stays Dub. Candidate table and frozen thresholds:
-`docs/kontrast-denetimi.md` §12.4–12.5.
+**Severity colour is a MARK, not text — and that change is what put chroma back on the board.**
+For a year the rule was "severity ink must clear 4.5:1 on its own 10% tint". It was the right rule
+while the colour *was* the text, and it had a measured price: the only way to reach 4.5 is to darken,
+and darkening costs chroma in sRGB. Measured on the shipped board: green had lost **36%** of Dub's
+chroma, amber **48%**, and the best text-carrier candidate cleared the ΔE gate by **0.1**. So the
+carrier moved instead of the threshold. The word is now neutral ink (`--tx`); the colour is a 6px
+dot, a 3px left stripe, a border, or a 2px thick underline. **This is not a relaxation:** ÖE1-c
+(≥4.5 on the tint) still applies to the text, and neutral ink measures **9.2–17.5** there — the same
+bar, met three times over. What moved to 3:1 is the *mark*, because WCAG 2.2 1.4.11 is the rule for
+non-text carriers. Chroma recovered: amber **+94% / +132%**, green **+50% / +49%**, red
+**+19% / +95%** (daylight / night). Full record: `docs/kontrast-denetimi.md` §13.
+
+~~*Superseded 2026-08-24 (same day):* "the money colours left the Dub palette … the severity trio
+keeps the Omega hue family (154° / 77° / 24°)".~~ With the carrier changed, **two of the three hues
+came back to Dub's own**: green is `vivid-green`'s hue (146.4°) and amber is `tangerine`'s (50.0°),
+both exactly. Red remains a **declared derivation** — Dub has no red — placed 23.4° off tangerine.
+Every generated colour's hue is measured back against its target and rejected if it drifts more than
+1.0°, because gamut clipping silently threw hues into magenta twice during this round.
 
 **The severity ladder is a rule, not an accident.** As severity rises the ink moves **away from the
 ground**: in daylight `--sev-1` is the darkest, at night the lightest; nominal (`--sev-3`) sits
@@ -273,7 +287,8 @@ nailed by test, not by eye (`tests/test_renk_rolleri_v197.py`).
 | 2 · Severity | `--sev-1` `--sev-2` `--sev-3` (+ `-t`, `-h`, `-h2`, `-damga`) | P1 act now · P2 needs a human · P3 nominal | anything that is not an alarm or risk level |
 | 3 · Direction | `--yon-arti` `--yon-eksi` (+ `-t`, `-h`, `-zemin`) | the sign of a P&L reading | a price level, a magnitude, a parameter |
 | 4 · Mode | `--mod-kagit` `--mod-canli` `--mod-kesif` (+ `-t`, `-h`) | paper / live / exploration | any other state |
-| 5 · Data scales | `--kap-*`, `--dv-*`, `--olcek-guven` (+ `-t`, `-h`) | coverage ramp, drift divergence, sample confidence | a verdict |
+| 5 · Data scales | `--kap-*`, `--dv-*`, `--olcek-guven` (+ `-t`, `-h`), **series ladder `--blue` / `--violet` / `--violet2`** | coverage ramp, drift divergence, sample confidence, plotted series | a verdict |
+| 6 · Navigation | `--nav` `--nav-2` `--nav-t` `--nav-h` `--nav-bg` | navigation, selection, counters | money, an alarm, a direction |
 
 Severity keeps the three measured hues from the value layer, so nothing in that channel moved.
 The other three families are new and were measured from scratch.
@@ -286,8 +301,51 @@ chroma:
 
 | Ground | severity min chroma | direction max chroma | ratio |
 |---|---|---|---|
-| Daylight | 0.0917 (`--sev-2`) | 0.0588 | 0.64 |
-| Night | 0.1289 (`--sev-1`) | 0.0586 | 0.45 |
+| Daylight | 0.1671 (`--sev-3`) | 0.0563 | 0.34 |
+| Night | 0.1578 (`--sev-1`) | 0.0487 | 0.31 |
+
+The rule is written as **≤**, never **=**: the 2026-08-24 carrier round raised severity chroma and
+left direction untouched, so the ratio fell from 0.60 to 0.31–0.34. Direction did not get quieter by
+decision; severity got louder, and the ordering held. Raising direction to restore the ratio would be
+a separate decision and was not taken.
+
+**Series get colour, and the colour-blind channel stays.** The chart ladder was three greys on
+purpose: hue difference is exactly what protan/deutan vision deletes, so the separation was carried
+by luminance and by dash pattern. Adding colour is only legitimate **on top of** that, never instead
+of it. Frozen before measuring: adjacent series ΔL\* ≥ 15, every series ≥ 3:1 on the card, and the
+nine `stroke-dasharray` declarations in `app.js` may not decrease. Measured: ΔL\* 16.45 / 16.37
+(daylight) and 15.60 / 15.61 (night); card contrast 13.44 / 7.57 / 4.16 and 9.46 / 5.92 / 3.50.
+
+**Assignment carries information, it is not decoration.** Series measuring the *same* magnitude get
+**one hue at different lightness**, because the ladder itself encodes the derivation: `Sermaye` and
+`Tepe (running maximum)` are that case — the peak is derived from the equity, and giving them green
+and orange would read as *good* and *bad*, which on a trading board is an expensive misreading.
+Different magnitudes get different hues, and a money series never rides a severity hue.
+
+**The series hue is a declared derivation, and the reason is a measurement.** The obvious choice was
+Dub's own blue. At that hue the night ladder collapsed onto `--nav-2` at **ΔE2000 0.0** — the
+highest-chroma candidate came out as literally `#b2caff` — and a search demanding ΔE ≥ 8 from the
+navigation family returned **empty in both themes**: navigation ink (L\* 67) and navigation ink-2
+(L\* 81) occupy precisely the two rungs the ladder needs. The hue moved to the next free band,
+OKLCh **230°**, and carries the same "not in Dub, derived" stamp the night palette carries. Measured
+separations: ≥ 14.7 / 13.9 from the navigation family, ≥ 21.7 / 28.2 from the mode band, ≥ 33.6 from
+severity. Chroma is capped at **0.75 × min severity chroma** — a plotted line may not out-shout an
+alarm, the same law direction obeys at 0.60.
+
+Two shortfalls are declared rather than papered over. `.pv-nk.s4` — the fourth metric tab dot —
+stays neutral, because §10.4 wants a hue per magnitude and Dub's remaining free hue budget is
+**one**; a fourth hue was not invented. And the names `--blue` / `--violet` / `--violet2` are
+historical: `app.js` binds `var(--violet)` in its series contract, and renaming would break the dash
+pattern along with the colour. `--blue` and `--violet2` were **dead tokens** before this round
+(declared, zero readers), so the ladder cost no new names.
+
+**`soft-mint` finally has a reader.** `#dcfce7` is Dub's own `surface.tinted-accent` and was unused.
+It is not a status colour — it is a *ground* tint — so it binds to the two positive, conditional
+surfaces: `.spine.calm` (the status band's calm state, which previously had no surface at all, while
+`attn` and `act` both had one) and `.pv-rz.ok`. The night value is derived (`#163523`: soft-mint's
+OKLCh hue held at 156.7°, L lowered to 0.299, chroma 0.0498). It carries no text but text falls on
+it, so it was measured anyway — and the measurement produced a constraint: `--tx3` reads **4.32** on
+daylight mint, below AA, so **mint surfaces have no `--tx3` reader** and a test guards that.
 
 **Mode owns a hue band, not a badge.** 310° (violet-magenta) is reserved permanently: no other
 token may enter 285–335°, and `--mod-*` may not resolve to a severity or direction token. Both
@@ -1217,6 +1275,16 @@ Every component below is identical in geometry across the two themes. Only the t
   directional reading carries a glyph as well as a hue. Around 8% of men have a colour-vision
   deficiency and red/green is the most commonly affected pair — a chip that means something only
   by being green has no meaning for them.
+- **The word is neutral; the colour is the mark** (2026-08-24, Dub's own feature-pill grammar).
+  A severity chip is `background: <state>-tint` + `color: var(--tx)` + a 6px dot painted from the
+  rule's own `--isaret` variable. One `::before` rule owns the dot geometry for all six chip
+  families, so the geometry cannot fork. Three carriers, chosen by shape and nothing else:
+  **chip → dot**, **block/callout → 3px left stripe**, **inline run of text → 2px underline**
+  (`text-decoration-skip-ink: none`; a line broken by descenders stops being a mark).
+  Two declared exceptions, both "this was never text": an `aria-hidden` glyph, and the 18px
+  criterion box `.ck` that holds a single symbol. Nailed in `tests/test_renk_rolleri_v197.py` §11.
+- **A tint alone never carries a state.** A 10% tint separates from the card by 1.05–1.10; if the
+  mark is dropped and only the fill remains, the channel dies silently. Tested.
 
 ### Cards / Containers
 - **Corner Style:** 12px.

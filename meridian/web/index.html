@@ -152,18 +152,21 @@
       düzenleme yapıldığında yorumdaki tarihsel kayıt bir BİLDİRİM sanılıp üzerine
       yazılabiliyor — 2026-08-24'te bir kez yaşandı ve blok bozuldu.)
 
-     ---- ŞİDDET ÜÇLÜSÜ DUB'DAN ÇIKTI (ÖE1 hükmü, karar §9.4 — 2026-08-24) ----
-     Şiddet rolü Dub paletinde ÇÖZÜLEMEDİ ve bu ölçüldü: `tangerine` (41,1°) ile türetilmiş
-     `loss-red` (38,4°) yalnız 2,7° arayla, ve ikisini Meridian'ın ölçülmüş alarm hue'suna
-     (24,1°) çekmek bile ΔE2000'i 15 eşiğinin altında bıraktı (13,53 / 12,62). Sebep yapısal:
-     Dub'da şiddet için kullanılabilir ÜÇ ayrık hue yok — `lavender` MOD'a, `electric-blue`
-     ve `deep-sapphire` ROL 6'ya kalıcı olarak ayrılmış; geriye İKİ hue kalıyor.
-     Karar §9.4 bunu öngörmüştü: Dub bir pazarlama sitesidir ve üç seviyeli bir şiddet
-     kanalı taşımaz. ŞİDDET ÜÇLÜSÜ Omega'nın ölçülmüş hue/kroma ailesine (154° / 77° / 24°)
-     GERİ DÖNER; gezinme, yüzey, geometri, tipografi ve yön rolleri Dub'da KALIR.
-     Luminans değerleri ise Omega'nınkiler DEĞİL: kaynak üçlü ÖE1-a'yı (komşu luminans
-     oranı ≥1,20) kendi hâliyle tutmuyordu (gündüz 1,188 · gece 1,035/1,093), o yüzden
-     üçlü bir MERDİVENE oturtuldu. Bkz. docs/kontrast-denetimi.md §12.7.
+     ---- ŞİDDET ÜÇLÜSÜ DUB'A GERİ DÖNDÜ — TAŞIYICI DEĞİŞTİĞİ İÇİN (karar §10.2) ----
+     ~~Aynı günün sabahı: "ŞİDDET ÜÇLÜSÜ DUB'DAN ÇIKTI (§9.4)". Ölçüm doğruydu ama SORU
+       yanlıştı: renk METİN kaldığı sürece Dub'ın yeşil/turuncu hue'ları AA'yı (4,5) tutacak
+       kadar koyulaşamıyordu ve koyulaşırken kromalarının yarısını harcıyorlardı. Beşinci
+       seçenek eşiği 0,1 payla geçti ve paylı arama İKİ TEMADA DA BOŞ döndü — o pay, rengin
+       metin olmasının kendisiydi.~~
+     ALTINCI SEÇENEK BU DUVARI KALDIRDI: renk metin olmaktan çıkıp İŞARET olunca tavan
+     4,5'ten metin-dışı 3:1'e çıktı, ve Dub'ın KENDİ hue'ları geri kullanılabilir hâle geldi:
+       yeşil  146,4° = `vivid-green`ın hue'su, AYNEN
+       turuncu 50,0° = `tangerine`ın hue'su, AYNEN
+       kırmızı 26,6° = TÜRETME, beyanlı (Dub'da kırmızı YOK; `tangerine`dan 23,4° uzakta bir
+                       kızıl bandı, ΔE2000 16,81/19,05 ile ölçülmüş ayrımı taşıyor)
+     Yani §9.4'ün "Dub üç ayrık hue taşımaz" teşhisi İKİ hue için düşmüştür, üçüncüsü için
+     hâlâ geçerlidir ve orası türetme olarak damgalıdır. `lavender` MOD'a, `electric-blue`/
+     `deep-sapphire` ROL 6'ya kalıcı ayrılmış olarak KALIR. Bkz. docs/kontrast-denetimi.md §12.7.
      ========================================================================== */
 
   /* ROL 1 · YAPI — akromatik SOĞUK gri (Dub nötr rampası). Yapı hue TAŞIMAZ.
@@ -183,30 +186,76 @@
      rağmen durur: birincil eylem dolgusu mavi DEĞİL midnight-ink'tir (Dub da öyle yapar).
      Gezinme mavisi AYRI bir roldür (ROL 6, aşağıda) ve eylem dolgusuna girmez. */
   --accent:#0a0a0a; --accent-2:#171717; --accent-tint:#f5f5f5;
-  /* ROL 2 · PARA — DUB'DAN ÇIKTI (ÖE1 hükmü, karar §9.4). Hue/kroma ailesi Omega'nın
-     ÖLÇÜLMÜŞ üçlüsüdür (yeşil 154,4° · kehribar 76,9° · kırmızı 24,1°); luminansları ise
-     Omega'nınkiler DEĞİL, ÖE1 MERDİVENİNİN basamaklarıdır.
+  /* ROL 2 · ŞİDDET — TAŞIYICI DEĞİŞTİ (karar §10.2, 2026-08-24 · ALTINCI SEÇENEK).
+     ŞİDDET RENGİ ARTIK METİN DEĞİL, İŞARETTİR. Çipin/satırın yazısı nötr mürekkebe
+     (--tx) geçti; renk noktaya, sol şeride, kenara ve kalın alt çizgiye taşındı. Dub'ın
+     kendi "feature pill" grameri budur: aksan yüzer, gövde nötr kalır.
 
-     NİYE MERDİVEN. Karar §9.3 üç eşiği ölçümden ÖNCE dondurdu: komşu şiddet seviyeleri
-     arasında (a) luminans oranı ≥1,20 · (b) ΔE2000 ≥15 · (c) her renk kendi %10 tinti
-     üstünde ≥4,5. Kaynak üçlüler bunu KENDİ HÂLLERİYLE tutmuyordu — Omega bile: gündüz
-     1,188 (eşik 1,20). O yüzden üçlü bir luminans merdivenine oturur:
-       ŞİDDET ARTTIKÇA MÜREKKEP ZEMİNDEN UZAKLAŞIR (tint-yönü kuralının şiddet kardeşi):
-       gündüz sev-1 en KOYU, gece en AÇIK; nominal (sev-3) zemine en yakın olandır —
-       "renk yalnız anomalide" kuralının luminans karşılığı.
-       Basamak oranı 1,25'tir, eşik 1,20 DEĞİL: 8-bit yuvarlama ve alfa bileşimi sıfır
-       paylı bir merdiveni aşağı iter. Pay İNŞADADIR; ölçüm hâlâ 1,20'ye karşı yapılır.
-     ÖLÇÜLDÜ (gündüz): sev-1↔sev-2 luminans 1.255 · ΔE2000 28.47 ·
-                       sev-2↔sev-3 luminans 1.247 · ΔE2000 32.43 · üçü de AA
-                       (kendi %10 tinti, kart üstünde): 7.27 · 6.05 · 4.88.
-     Ayrıntı ve aday tablosu: docs/kontrast-denetimi.md §12.7 + RAPOR.md §2b. */
-  --green:#1f7646; --amber:#77520e; --red:#9a0019;
-  /* --violet ARTIK AYRI BİR SERİ RENGİ (B6 hükmü korunur): üç serilik bir LUMİNANS
-     merdiveninin orta basamağı, hue EKLENMEDEN. Dub `slate`. Kart üstünde
-     accent 19.80 → violet 10.37 → tx3 4.74 (adımlar 1.91 / 2.19). Ayrım ayrıca
-     kesik-çizgi deseniyle İKİNCİ kanaldan taşınır. */
-  --violet:#404040; --violet2:#0a0a0a; --blue:#0a0a0a;
-  --green-t:rgba(31,118,70,.10); --amber-t:rgba(119,82,14,.10); --red-t:rgba(154,0,25,.10);
+     BU BİR GEVŞETME DEĞİL. ÖE1-c (%10 tint üstünde ≥4,5) metne uygulanmaya DEVAM ediyor —
+     ama metin artık nötr, yani şart daha KOLAY değil daha SIKI karşılanıyor: ölçüldü,
+     nötr yazı kendi tinti üstünde 15.11-17.46 (renkli mürekkep 4,5'in kıyısındaydı).
+     Renge uygulanan şart metin-dışı 3:1'e döner (WCAG 2.2 1.4.11) çünkü renk artık
+     metin değildir — ve 3:1 HER GERÇEK ZEMİNDE ölçülür, yalnız kartta değil.
+
+     HUE KAPISI (bu turda üç ölçüm aracı hatası yakalandı; ikisi hue savrulmasıydı):
+     üç hue ÖNCEDEN sabitlendi — yeşil 146,4° · turuncu 50,0° · kırmızı 26,6° (LAB) — ve
+     üretilen her rengin hue'su GERİ ÖLÇÜLDÜ. Sapma ≤1,0°: 145,59 / 49,13 / 27,29.
+     Gamut kırpması hue'yu savurursa aday REDDEDİLİR (kırpılmış aday kabul edilmez).
+
+     MERDİVEN DURUYOR: şiddet arttıkça mürekkep zeminden UZAKLAŞIR — gündüz sev-1 en KOYU,
+     gece en AÇIK; nominal (sev-3) zemine en yakın olandır. Basamak oranı 1,28'dir,
+     eşik 1,20 DEĞİL: pay İNŞADADIR, ölçüm hâlâ 1,20'ye karşı yapılır.
+
+     ÖLÇÜLDÜ (gündüz · research/olcumler/oe1_dub_dorduncu_2026-08-24/olc.py üreticisi,
+     hue kapısı eklenmiş):
+       ÖE1-a  sev-1↔sev-2 1.260 · sev-2↔sev-3 1.284            (eşik ≥1,20)
+       ÖE1-b  ΔE2000 16.81 / 61.34                              (eşik ≥15)
+       İŞARET kart üstünde 6.25 / 4.96 / 3.87 · en kötü gerçek zemin (--bg2) 5.74 / 4.55 /
+              3.55 · KENDİ %10 tinti üstünde 5.22 / 4.29 / 3.16 (eşik ≥3, metin-dışı)
+       ÖE1-c  ÇİP METNİ (--tx) kendi tinti üstünde 16.53 / 17.13 / 17.46 (eşik ≥4,5)
+     KROMA KAZANCI (OKLCh): kehribar +%94 · yeşil +%50 · kırmızı +%19. Kök neden çözüldü:
+     luminans merdiveni koyulaştırdığı için kroma harcıyordu; taşıyıcı metinden işarete
+     geçince merdivenin tavanı 4,5'ten 3:1'e çıktı ve kroma serbest kaldı.
+     ~~Emekli (2026-08-24 sabahı): yeşil #1f7646 · kehribar #77520e · kırmızı #9a0019;
+       renk METİNDİ ve ΔE payı 0,1 idi.~~ Ayrıntı: docs/kontrast-denetimi.md §12.7. */
+  --green:#00963e; --amber:#c74300; --red:#c3002d;
+  /* ROL 5 · SERİ MERDİVENİ — RENKLENDİ (karar §10.3/§10.4, 2026-08-24).
+     ADLAR TARİHSELDİR VE DEĞİŞMEDİ: `--violet` app.js'in IC trend sözleşmesinde geçiyor
+     (`IC_SERI.sim = "var(--violet)"`), `--blue`/`--violet2` ise bu tura kadar ÖLÜYDÜ
+     (tanımlıydı, okuyucusu yoktu — YASA 6 ihlali). Üçü de artık TEK hue'nun üç basamağı:
+       --blue (1. basamak, en belirgin) → --violet (2.) → --violet2 (3., en sönük)
+     Ad değiştirmek app.js'in kesik-çizgi desenini kırardı; değer değişti, ad durdu.
+
+     NİYE TEK HUE. §10.4 bağlayıcı: AYNI büyüklüğü ölçen seriler tek hue + farklı açıklık
+     alır, çünkü merdivenin kendisi TÜRETME İLİŞKİSİNİ kodlar. Bugünkü `Sermaye` ↔ `Tepe
+     (koşan azami)` tam bu sınıftır — Tepe, Sermaye'den türetilir. Onlara yeşil/turuncu
+     vermek "iyi/kötü" diye okunurdu ve bu bir alım-satım panosunda pahalı bir yanlış okuma.
+
+     HUE NEDEN DUB'IN MAVİSİ DEĞİL — ÖLÇÜLDÜ VE BEYANLI. İlk deneme ROL 6'nın kendi
+     hue'suydu (deep-sapphire, OKLCh 265,6°). Gece merdiveni orada `--nav-2` ile ΔE2000
+     0,0'a çöktü (aynı hex: #b2caff) ve ΔE≥8 arayan tarama İKİ temada da BOŞ döndü — yani
+     ROL 6'nın bandında bir seri merdiveni kurulamıyor. Hue bir sonraki SERBEST banda
+     taşındı: OKLCh 230° (gök mavisi). Bu bir TÜRETMEDİR, Dub'da böyle bir jeton YOK —
+     gece paletiyle aynı damgayı taşır. Ölçülen ayrımlar: nav ailesine ΔE ≥14.7 (gündüz) /
+     ≥13.9 (gece) · MOD bandına ≥21.7 · şiddet üçlüsüne ≥33.6.
+
+     ÇG1/ÇG2 (karar §10.3, eşikler donmuş):
+       ÇG1 komşu ΔL* 16.45 / 16.37   (eşik ≥15)
+       ÇG2 kart üstünde 13.44 / 7.57 / 4.16 · en kötü gerçek zemin 12.33 / 6.95 / 3.82
+           (eşik ≥3, metin-dışı taşıyıcı)
+       ÇG3 kesik-çizgi İKİNCİ KANALI KORUNUR — app.js'te 9 `stroke-dasharray`; renk körü
+           okuyucunun taşıyıcısı hâlâ luminans + desendir, hue onların ÜSTÜNE eklendi.
+     KROMA TAVANI: max C(seri) 0.1153 < min C(şiddet) 0.1671 — bir seri çizgisi bir
+     alarmla dikkat için YARIŞAMAZ (yön rolünün ×0,60 kuralının seri kardeşi, ×0,75).
+     ~~Emekli: --violet #404040 (Dub `slate`), --violet2/--blue #0a0a0a (ölü).~~ */
+  --blue:#003346; --violet:#005b79; --violet2:#0086b1;
+  --green-t:rgba(0,150,62,.10); --amber-t:rgba(199,67,0,.10); --red-t:rgba(195,0,45,.10);
+  /* SAKİNLİK YÜZEYİ — Dub'ın KENDİ `surface.tinted-accent` jetonu (soft-mint), AYNEN.
+     Bir DURUM rengi değil bir ZEMİN tintidir ve şiddet kanalıyla ilgisi yoktur (karar §10.5).
+     Metin taşımaz ama ÜSTÜNE metin düşer, o yüzden yine ölçüldü: --tx 18.03 · --tx2 7.11
+     (ikisi de AA). --tx3 4.32 ile AA ALTIDIR ve bu yüzden mint yüzeylerde --tx3 OKUYUCUSU YOK.
+     Kart ile farkı 1.098 — bir fısıltı, bir duyuru değil. */
+  --mint:#dcfce7;
 
   /* ==========================================================================
      ROL KATMANI — D1 (2026-08-07), ALTI ROL (ROL 6 · 2026-08-24'te eklendi).
@@ -235,24 +284,41 @@
        ÜÇ SEVİYE BİRBİRİNDEN AYRILABİLİR OLMAK ZORUNDA ve bu artık ÖLÇÜLÜYOR (ÖE1,
        karar §9.3): komşu seviyeler arasında luminans oranı ≥1,20 ve ΔE2000 ≥15,
        iki temada. Çivisi tests/test_renk_rolleri_v197.py §10'da.
+       TAŞIYICI (2026-08-24, karar §10.2): şiddet rengi METİN DEĞİL İŞARETtir — nokta,
+       sol şerit, kenar ya da kalın alt çizgi. Çipin/satırın YAZISI nötr mürekkeptir.
+       Ölçüt buna göre BÖLÜNDÜ, GEVŞEMEDİ: işaret metin-dışı 3:1 · yazı ÖE1-c'nin
+       kendi 4,5'i (ve nötr olduğu için fiilen 9-17 veriyor).
+       TEK İSTİSNA ADIYLA YAZILIR: `aria-hidden` glifler (`.sev-N[aria-hidden]`) ve
+       18px'lik ikon kutusu (`.ck.ok`/`.ck.man`) — ikisi de zaten metin değildir.
 
      ROL 3 · YÖN — yon-arti/yon-eksi. K/Z İŞARETİ, başka bir şey değil.
        ÜÇÜNCÜ SİNYAL: işaret (+/−) ve ok önce gelir, hue yalnız pekiştirir.
        KROMA ŞİDDETİN ALTINDA, ve bu ölçülmüş bir kısıttır (bkz. testler):
-         gündüz  yön C≤0,0563  <  şiddet min C 0,0921 (sev-2)
-         gece    yön C≤0,0487  <  şiddet min C 0,0809 (sev-1)
-       Gerekçe: kârlı bir gün, bir risk ihlaliyle dikkat için YARIŞAMAZ. Kural
-       sayısaldır ve DEĞİŞMEDİ: C(yön) = min C(şiddet) × 0,60.
+         gündüz  yön C≤0,0563  <  şiddet min C 0,1671 (sev-3)   [oran 0,34]
+         gece    yön C≤0,0487  <  şiddet min C 0,1578 (sev-1)   [oran 0,31]
+       Gerekçe: kârlı bir gün, bir risk ihlaliyle dikkat için YARIŞAMAZ.
+       KURAL "≤" OLARAK OKUNUR, "=" OLARAK DEĞİL — ve bu bir gevşeme değil, ölçümün
+       yönüdür: ÖE1 taşıyıcı turu (2026-08-24) şiddet kromasını yükseltti, yön ise
+       DOKUNULMADAN kaldı, yani oran 0,60'tan 0,31-0,34'e DÜŞTÜ. Yön artık şiddetin
+       daha da altında. Yönü de yükseltmek ayrı bir karardır ve bu turda alınmadı.
 
      ROL 4 · MOD — mod-kagit/mod-canli/mod-kesif. AYRILMIŞ KANAL.
        Hue 310° (mor-macenta) bandı bu kanala kalıcı olarak ayrıldı ve BAŞKA HİÇBİR
        ŞEY kullanamaz. Dub'ın kendi 293° bandı (`lavender #7c3aed`) bu kanala girer;
-       şiddet hue'ları (24° / 77° / 154°) ve gezinme (263°) bu bandın DIŞINDA.
+       şiddet hue'ları (OKLCh 21° / 40° / 149°), gezinme (263°) ve SERİ merdiveni (230°)
+       bu bandın DIŞINDA — ve üçü de ölçülüyor.
        KÂĞIT AKROMATİKTİR: beklenen, güvenli durum kroma harcamaz.
 
      ROL 5 · VERİ ÖLÇEKLERİ — tek-hue sequential (--kap-*) + CVD-güvenli
-       diverging (--dv-*) + seri merdiveni (--accent/--violet/--tx3) + veri güveni
-       (--olcek-guven, akromatik + kesik çizgi ikinci kanalı).
+       diverging (--dv-*) + SERİ MERDİVENİ (--blue/--violet/--violet2, OKLCh 230°,
+       tek hue üç açıklık) + veri güveni (--olcek-guven, akromatik).
+       SERİ RENKLENDİ AMA CVD KANALI KALKMADI (karar §10.3): ayrım hâlâ luminans
+       (ΔL* ≥15) + kesik-çizgi desenidir; hue onların ÜSTÜNE eklendi.
+       ATAMA KURALI (§10.4): aynı büyüklüğü ölçen seriler TEK hue farklı açıklık alır
+       (`Sermaye` ↔ `Tepe` böyledir — Tepe Sermaye'den türetilir, merdiven o ilişkiyi
+       kodlar); farklı büyüklükler ayrı hue ister ama Dub'ın kalan hue bütçesi BİRDİR
+       ve dördüncü bir hue UYDURULMADI (`.pv-nk.s4` nötr kaldı, beyanlı).
+       Bir seri çizgisi bir alarmla yarışamaz: max C(seri) < min C(şiddet) (×0,75).
 
      ROL 6 · GEZİNME/SEÇİM — --nav/--nav-2/--nav-t/--nav-h/--nav-bg. YENİ (2026-08-24).
        Dub'ın dili gezinmeyi maviyle taşır (aktif menü dolgusu, sayaç hapları,
@@ -331,12 +397,12 @@
   --dv-p1:rgba(107,73,60,.10); --dv-p2:rgba(107,73,60,.22);
   /* SAÇ TELLERİ VE PERDELER JETONDUR (2026-08-01): renk taşıyan hiçbir değer kuralın
      içinde YAZILMAZ, jetondan gelir. Aksi hâlde ikinci tema sessizce kırılır. */
-  --green-h:rgba(31,118,70,.35); --amber-h:rgba(119,82,14,.35); --red-h:rgba(154,0,25,.35);
-  --amber-h2:rgba(119,82,14,.40);
+  --green-h:rgba(0,150,62,.35); --amber-h:rgba(199,67,0,.35); --red-h:rgba(195,0,45,.35);
+  --amber-h2:rgba(199,67,0,.40);
   --ink-h:rgba(10,10,10,.30); --ink-h-soft:rgba(10,10,10,.18);
   /* PERDE İKİ TEMADA DA KOYU TABANLIDIR: perde bir mürekkep değil bir ENGELdir. */
   --scrim:rgba(10,10,10,.42);
-  --green-stamp:rgba(31,118,70,.55);
+  --green-stamp:rgba(0,150,62,.55);
   /* YARIÇAP — Dub ölçeği devralındı (karar §3). --r-ctl KALIR ama 8px olur: app.js onu
      okuyor (isim sözleşmesi bağlayıcı) ve Dub'ın düğme yarıçapıyla aynı basamağa oturur.
      ~~Eski --r-ctl:10px, Omega ölçümü.~~ --r-bar:2px grafik çubukları için değişmedi. */
@@ -483,24 +549,39 @@
   --line:#404040; --line-2:#525252;
   --tx:#e5e5e5; --tx2:#d4d4d4; --tx3:#a3a3a3;
   --accent:#e5e5e5; --accent-2:#f5f5f5; --accent-tint:#2e2e2e;
-  /* Para renkleri · GECE — aynı ÖE1 merdiveni, yönü çevrilmiş: koyu zeminde şiddet
-     ARTTIKÇA mürekkep AÇILIR, yani sev-1 en açık, nominal (sev-3) zemine en yakın.
-     ÖLÇÜLDÜ: sev-1↔sev-2 luminans 1.247 · ΔE2000 22.75 · sev-2↔sev-3 luminans 1.255 ·
-     ΔE2000 30.10 · üçü de AA (kendi %10 tinti / --card:#262626; en kötü
-     gerçek zemin #2e2e2e üstünde 6.64 · 5.49 · 4.54).
-     KIRPMA BEYANI: sev-1 merdivenin en uzak basamağındadır ve sRGB gamutu orada kroma
-     tutmaz — 0,166 → 0,0809. Alarm gecede daha SOLUK bir mürekkeptir ve ayrımı luminans
-     ile hue taşır, doygunluk DEĞİL. Bu, gece min C(şiddet)'idir ve Ö3'ün DOLGU tavanını
-     belirler; gece gezinme washı o tavanın altına çekilerek yeniden türetildi. */
-  --green:#61b37f; --amber:#d8b072; --red:#ffbab4;
-  /* Seri merdiveni gecede: accent 12.01 → violet 8.50 → tx3 6.00 (kart üstünde), adımlar
-     1.41 / 1.42. Bu jeton gecede TÜRETİLDİ ve Dub jetonu DEĞİLDİR: v171'in B6 kısıtı
-     accent↔violet ayrımını ≥1,35 istiyor, Dub'ın nötr rampasında 0,366 (silver, ki o zaten
-     --tx3'ün kendisi) ile 0,578 (pebble, accent'e yalnız 1.33 bırakıyor) arasında BASAMAK
-     YOK. Değer merdivenin GEOMETRİK ORTASIdır (eşit kontrast adımları), akromatiktir ve hue
-     EKLENMEMİŞTİR. Gündüzde böyle bir boşluk yok: orada Dub `slate #404040` seçildi. */
-  --violet:#c2c2c2; --violet2:#e5e5e5; --blue:#e5e5e5;
-  --green-t:rgba(97,179,127,.10); --amber-t:rgba(216,176,114,.10); --red-t:rgba(255,186,180,.10);
+  /* ŞİDDET · GECE — aynı taşıyıcı değişimi (karar §10.2), merdivenin yönü çevrilmiş:
+     koyu zeminde şiddet ARTTIKÇA mürekkep AÇILIR, yani sev-1 en açık, nominal (sev-3)
+     zemine en yakın. Hue kapısı gündüzle AYNI ve geri ölçüldü (LAB): 145,44 / 49,50 /
+     26,48 — hedeflerden sapma ≤1,0°. "Gece kırmızısı pembeye kayar" arızası bu kapıyla
+     kapandı: #ff7e7c hâlâ 26,5°'de, kızıl bandın içinde.
+     ÖLÇÜLDÜ (gece):
+       ÖE1-a  1.270 / 1.251                                     (eşik ≥1,20)
+       ÖE1-b  ΔE2000 19.05 / 63.99                              (eşik ≥15)
+       İŞARET kart üstünde 6.15 / 4.84 / 3.87 · en kötü gerçek zemin (--card-2) 5.51 /
+              4.34 / 3.47 · kendi %10 tinti üstünde 4.69 / 3.89 / 3.15 (eşik ≥3)
+       ÖE1-c  ÇİP METNİ (--tx) kendi tinti üstünde 9.16 / 9.65 / 9.79 (eşik ≥4,5)
+     KROMA KAZANCI (OKLCh): kehribar +%132 · kırmızı +%95 · yeşil +%49. ESKİ KIRPMA
+     BEYANI DÜŞTÜ: sev-1'in kroması 0,0809'dan 0,1578'e çıktı, çünkü artık 4,5:1'lik bir
+     metin tavanına değil 3:1'lik bir işaret tavanına çarpıyor.
+     BUNUN BİR YAN ETKİSİ VAR VE BEYANLIDIR: gece min C(şiddet) 0,0809 → 0,1578 yükseldi,
+     yani Ö3'ün DOLGU tavanı da yükseldi ve gezinme MÜREKKEBİ (--nav, C 0,1458) artık o
+     tavanın ALTINDA — gecede Ö3 sapması KAPANDI. Gündüzde sürüyor (C 0,2152 > 0,1671).
+     Çivisi: test_renk_rolleri_v197::test_ROL6_MUREKKEP_tavan_asimi_BEYANLI_ve_MUREKKEP_KALIYOR.
+     ~~Emekli: yeşil #61b37f · kehribar #d8b072 · kırmızı #ffbab4 (renk METİNDİ).~~ */
+  --green:#00953d; --amber:#ff5a00; --red:#ff7e7c;
+  /* ROL 5 · SERİ MERDİVENİ · gece — aynı hue (OKLCh 230°), yönü çevrilmiş: koyu zeminde
+     1. basamak en AÇIK olandır. ÖLÇÜLDÜ: ÇG1 ΔL* 15.60 / 15.61 (eşik ≥15) · ÇG2 kart
+     üstünde 9.46 / 5.92 / 3.50, en kötü gerçek zemin 8.49 / 5.31 / 3.14 (eşik ≥3) ·
+     max C(seri) 0.1179 < min C(şiddet) 0.1578 · nav ailesine ΔE ≥13.9 · MOD bandına ≥28.2.
+     ~~Emekli: --violet #c2c2c2 (akromatik geometrik orta), --violet2/--blue #e5e5e5.~~ */
+  --blue:#83d7ff; --violet:#40addb; --violet2:#0083ad;
+  --green-t:rgba(0,149,61,.10); --amber-t:rgba(255,90,0,.10); --red-t:rgba(255,126,124,.10);
+  /* SAKİNLİK YÜZEYİ · gece — TÜRETİLDİ (Dub'da karanlık tema YOK, §1.2 damgası geçerli).
+     Yöntem ters çevirme DEĞİL: soft-mint'in OKLCh hue'su (156,7°) korundu, L gece yüzey
+     bandına indirildi (0,299) ve kroma 0,0498'de tutuldu — gece min C(şiddet) 0,1578'in
+     görünür altında, çünkü bu bir zemindir, bir hüküm değil. ÖLÇÜLDÜ: --tx 10.63 ·
+     --tx2 9.04 · --tx3 5.31 (üçü de AA) · karttan farkı 1.130. */
+  --mint:#163523;
   /* Gece merdiveni card-2 → band-2 → tx2: adımlar 2.86 / 3.20. Dub `fog`. */
   --band-2:#737373;
   /* Kapsama rampası gecede AÇILARAK ilerler — mürekkep açık olduğu için aynı alfa
@@ -513,8 +594,8 @@
      para renklerinin ALTINDA. Ö4 gecede 3.41 ölçtü — ayırt edilebilir. */
   --dv-n2:rgba(198,212,242,.22); --dv-n1:rgba(198,212,242,.10);
   --dv-p1:rgba(239,203,190,.10); --dv-p2:rgba(239,203,190,.22);
-  --green-h:rgba(97,179,127,.35); --amber-h:rgba(216,176,114,.35); --red-h:rgba(255,186,180,.35);
-  --amber-h2:rgba(216,176,114,.40);
+  --green-h:rgba(0,149,61,.35); --amber-h:rgba(255,90,0,.35); --red-h:rgba(255,126,124,.35);
+  --amber-h2:rgba(255,90,0,.40);
   --ink-h:rgba(229,229,229,.30); --ink-h-soft:rgba(229,229,229,.18);
   /* PERDE: mekanizma gece zeminine TAŞINMIYOR ve bu ölçüldü. Gündüz perde sayfayı karta
      karşı 3.00 ayırıyor; gece zemin zaten koyu olduğu için tavan 1.28. Yani gece ayrımı
@@ -522,7 +603,7 @@
      Alfa yine de yüksek tutulur (.66): elde edilebilir ayrımın tamamı alınsın diye.
      Taban midnight-ink, saf siyah DEĞİL. */
   --scrim:rgba(10,10,10,.66);
-  --green-stamp:rgba(97,179,127,.55);
+  --green-stamp:rgba(0,149,61,.55);
   /* Gölge: OKLÜZYON iki temada da koyu (--sh-btn, Dub jetonu AYNEN); MÜREKKEP HALKASI
      temayla döner (--sh-ring, alfa .10 korunur). Ö7 gecede 1.28-1.31 — 3:1 ALTI;
      odak göstergesi yine 2px --accent ana hattıdır (10.78-14.23). */
@@ -603,11 +684,28 @@ a{color:inherit;text-decoration:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-btn);
   box-shadow:var(--sh-ring)}
 .mut{color:var(--tx2)} .tx3{color:var(--tx2)}
-.pos{color:var(--yon-arti)} .neg{color:var(--yon-eksi)} .warn{color:var(--sev-2)}
+.pos{color:var(--yon-arti)} .neg{color:var(--yon-eksi)}
 /* ROL SINIFLARI (D1): rolünü ADIYLA söyleyen sınıflar. `.pos/.neg` YÖN, `.warn`
    ŞİDDET-2 kalır (baskın kullanımları bunlar); şiddetin üç kademesi, modun üç
-   hâli ve veri güveni artık KENDİ sınıflarını taşır ve ödünç almazlar. */
-.sev-1{color:var(--sev-1)} .sev-2{color:var(--sev-2)} .sev-3{color:var(--sev-3)}
+   hâli ve veri güveni artık KENDİ sınıflarını taşır ve ödünç almazlar.
+
+   TAŞIYICI DEĞİŞİMİ (karar §10.2, 2026-08-24): ŞİDDET SINIFLARININ YAZISI ARTIK NÖTR.
+   Bu sınıflar satır içi metne takılır (bir alarm mesajı, bir eşik etiketi, bir sayı) ve
+   satır içi metinde nokta da sol şerit de yerleşimi kaydırır — bu yüzden buradaki taşıyıcı
+   2px KALIN ALT ÇİZGİdir: metin-dışı bir işaret, sıfır yerleşim bedeli. `skip-ink:none`
+   çünkü inen harflerde kesilen bir çizgi "işaret" olmaktan çıkar.
+   YÖN (`.pos/.neg`) DEĞİŞMEDİ ve bu kasıtlı: yön kroması şiddetin görünür altındadır
+   (C 0,0563 < 0,1671) ve kendi tinti üstünde AA'yı geçer — taşıyıcı sorunu ORADA YOKTU. */
+.sev-1,.sev-2,.sev-3,.warn{color:var(--tx);text-decoration:underline;text-decoration-thickness:2px;
+  text-underline-offset:3px;text-decoration-skip-ink:none}
+.sev-1{text-decoration-color:var(--sev-1)} .sev-2{text-decoration-color:var(--sev-2)}
+.sev-3{text-decoration-color:var(--sev-3)} .warn{text-decoration-color:var(--sev-2)}
+/* İKON İSTİSNASI — `aria-hidden` bir glif METİN DEĞİLDİR (ekran okuyucu onu hiç okumaz);
+   o bir işarettir ve zaten metin-dışı 3:1 ile ölçülür. Alt çizgi orada İKİNCİ bir işaret
+   olur ve tek bir olayı iki kez anlatırdı (app.js'in alarm satırındaki ▲ tam bu vaka). */
+.sev-1[aria-hidden="true"]{color:var(--sev-1);text-decoration:none}
+.sev-2[aria-hidden="true"]{color:var(--sev-2);text-decoration:none}
+.sev-3[aria-hidden="true"]{color:var(--sev-3);text-decoration:none}
 .guven{color:var(--olcek-guven)}
 .mod-kagit{color:var(--mod-kagit)} .mod-canli{color:var(--mod-canli)} .mod-kesif{color:var(--mod-kesif)}
 .mono-num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:-.01em}
@@ -670,11 +768,15 @@ a{color:inherit;text-decoration:none}
    kutu yan yana düşüyordu. */
 #gate-pw2-wrap{display:flex;flex-direction:column;gap:var(--s3)}
 #gate-pw2-wrap[hidden]{display:none}
-.gate-msg{font-size:var(--t-body);color:var(--sev-1);min-height:1.2em;margin:0}
-.gate-msg.ok{color:var(--sev-3)}
+.gate-msg{font-size:var(--t-body);color:var(--tx);min-height:1.2em;margin:0;
+  text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;
+  text-decoration-skip-ink:none;text-decoration-color:var(--sev-1)}
+.gate-msg:empty{text-decoration:none}
+.gate-msg.ok{text-decoration-color:var(--sev-3)}
 /* TLS uyarısı KIRMIZI: burada renk gerçekten bir kaybı anlatıyor — parolanın açık gitmesi.
    Money Rule'un istisnası değil, uygulaması. */
-.gate-tls{font-size:12px;line-height:1.45;color:var(--sev-1);background:var(--sev-1-t);
+.gate-tls{font-size:12px;line-height:1.45;color:var(--tx);background:var(--sev-1-t);
+  border-left:3px solid var(--sev-1);
   border-radius:var(--r-ctl);padding:10px 12px;margin:var(--s2) 0 0}
 /* ---- accession header — the ruled top edge of the sheet ---- */
 /* OMEGA: bar sayfayla aynı ışıkta durur, üstünden geçen içeriği bulanıklaştırarak ayrılır.
@@ -717,7 +819,10 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
 .dot.stale{background:var(--sev-2)} .dot.halt{background:var(--sev-1)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 /* the halt lever — the one control that stops the collection */
-.halt{border:1px solid var(--sev-1);color:var(--sev-1);background:transparent;padding:0 16px;
+/* HALT: kenar zaten kırmızıydı (metin-dışı taşıyıcı, ölçüldü 5.74 gündüz / 6.69 gece) —
+   değişen tek şey YAZI. Düğmenin sözcüğü nötr mürekkeple basılır; kırmızı kalan kenar,
+   `:hover`da dolguya döner ve orada yazı --bg2'dir (AA: 5.74 / 6.69). */
+.halt{border:1px solid var(--sev-1);color:var(--tx);background:transparent;padding:0 16px;
   border-radius:var(--r-ctl);font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;cursor:pointer;transition:var(--t)}
 .halt:hover{background:var(--sev-1);color:var(--bg2)}
 /* HUD ÜST-BAR ÖĞELERİ TEK YÜKSEKLİK: statuspill/KRİZ/HALT farklı padding+font yüzünden farklı
@@ -819,7 +924,7 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
    üstünde 4.74 (gündüz) · 6.54 (gece) — AA. Geometri --r-tag (hap). */
 .pillc{background:var(--nav);color:var(--bg2);font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;
   border-radius:var(--r-tag);font-variant-numeric:tabular-nums}
-.pillc.g{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
+.pillc.g{--isaret:var(--sev-3);background:var(--sev-3-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
 .pillc.q{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 
 main{min-width:0}
@@ -1043,7 +1148,9 @@ main{min-width:0}
 .gb-alarm{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--s2) var(--s3);margin-top:var(--s4);
   padding:var(--s2) var(--s3);border:1px solid var(--line);border-radius:var(--r-bar);
   font-family:var(--mono);font-size:var(--t-cap);color:var(--tx2);line-height:1.6}
-.gb-alarm.asim{border-color:var(--sev-2-h);color:var(--sev-2)}
+/* AŞIM HÂLİ: kenar zaten kehribardı (metin-dışı, dokunulmadı); değişen tek şey METİN —
+   satırın yazısı --tx2'de kalır, kehribar 3px sol şeride taşınır (karar §10.2). */
+.gb-alarm.asim{border-color:var(--sev-2-h);border-left:3px solid var(--sev-2);color:var(--tx2)}
 .gb-alarm .gb-bag{margin-top:0;margin-left:auto;align-self:baseline}
 @media(max-width:980px){.gb-ust,.gb-trend{grid-template-columns:1fr}}
 
@@ -1080,8 +1187,11 @@ main{min-width:0}
    dolgusu `currentColor` okur, `.pm-n` nötr kalır. 7px'lik anomali NOKTASI kaldırıldı: aynı
    sapmayı ikinci bir işaret diliyle tekrar anlatıyordu. PULS YOK — kalıcı bir hareket, hareket
    bütçesinin (P10) tamamını sürekli harcar. */
-.durum-kart.uyari{color:var(--sev-2)}
-.durum-kart.kopuk{color:var(--sev-1)}
+/* TAŞIYICI DEĞİŞİMİ (karar §10.2): kartın MÜREKKEBİ artık renklenmiyor — `.pm-yield`
+   `currentColor` okuduğu için eski kural 24px'lik bir SAYIYI kırmızı/kehribar yapıyordu,
+   yani renk metindi. Şimdi sapma kartın SOL ŞERİDİdir; sayı ve meta nötr kalır. */
+.durum-kart.uyari,.durum-kart.kopuk{border-left:3px solid var(--sev-2)}
+.durum-kart.kopuk{border-left-color:var(--sev-1)}
 .durum-dus{font-size:12px;color:var(--tx2);margin:0}
 /* Dört kart 1100px altında ikişerli, 640px altında tek kolon. Genel Bakış'takiyle aynı gerekçe:
    dar ekranda kaydırma DÜRÜST hâldir, sıkıştırılmış dört sütun değil. */
@@ -1098,7 +1208,11 @@ main{min-width:0}
 .spine:first-child{margin-top:0}
 .spine::before{content:"";position:absolute;left:var(--s5);top:calc(var(--s4) + 7px);width:8px;height:8px;background:var(--sev-3)}
 .spine .msg{font-weight:600;font-size:var(--t-body);letter-spacing:-.005em;color:var(--tx)}
-.spine.calm{color:var(--tx2);background:transparent;border-top-color:var(--line);border-bottom-color:var(--line)}
+/* SAKİN HÂL ARTIK KENDİ YÜZEYİNİ TAŞIR (karar §10.5): `attn` kehribar tinti, `act`
+   kırmızı tinti okuyordu; `calm` ise şeffaftı — üçlünün olumlu ucunun yüzeyi YOKTU.
+   Dub'ın kendi `surface.tinted-accent` jetonu (soft-mint) tam bu boşluğun adı.
+   Bir fısıltı: karttan farkı 1.098 (gündüz) / 1.130 (gece); üstündeki --tx2 7.11 / 9.04. */
+.spine.calm{color:var(--tx2);background:var(--mint);border-top-color:var(--line);border-bottom-color:var(--line)}
 .spine.calm::before{background:var(--sev-3-damga)}
 .spine.calm .msg{color:var(--tx2);font-weight:400}
 .spine.attn{background:var(--sev-2-t);border-top-color:var(--sev-2);border-bottom-color:var(--sev-2)}
@@ -1158,7 +1272,11 @@ main{min-width:0}
    kimsenin fark etmediği bir sıra çakışmasıyla ölüydü. (0,2,0) ile kap yenilir.
    Matrisin `.pm-cell.pos` zemini bundan BAĞIMSIZ çalışır: o hücrenin tamamını boyar, bu yalnız
    değeri — ikisi çakışmaz, biri kesitin hükmü diğeri sayının işareti. */
-.pm-yield.pos{color:var(--yon-arti)} .pm-yield.neg{color:var(--yon-eksi)} .pm-yield.warn{color:var(--sev-2)}
+.pm-yield.pos{color:var(--yon-arti)} .pm-yield.neg{color:var(--yon-eksi)}
+/* ŞİDDET HÂLİ (`.warn`) TAŞIYICI DEĞİŞTİRDİ: 24px'lik bir sayının KENDİSİ kırmızı/kehribar
+   olmaz (karar §10.2). Sayı nötr kalır, kehribar sayının altındaki 2px çizgidir. */
+.pm-yield.warn{color:var(--tx);text-decoration:underline;text-decoration-thickness:2px;
+  text-underline-offset:3px;text-decoration-skip-ink:none;text-decoration-color:var(--sev-2)}
 .pm-n{position:relative;font-size:12px;color:var(--tx2);line-height:1.55;font-variant-numeric:tabular-nums}
 .pm-n b{color:var(--tx);font-weight:500}
 /* under-sown: the ochre stake a trials officer puts in a plot with too few rows */
@@ -1199,8 +1317,8 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .pd-stats .l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--tx2);margin-bottom:8px}
 .pd-stats .v{font-family:var(--mono);font-size:var(--t-sub);font-weight:400;letter-spacing:-.04em;line-height:1}
 /* an under-sown plot says so in words, not just with a stake */
-.pd-warn{font-size:var(--t-body);line-height:1.65;color:var(--sev-2);background:var(--sev-2-t);
-  border:1px solid var(--sev-2-h2);padding:11px 13px;margin-bottom:var(--s5)}
+.pd-warn{font-size:var(--t-body);line-height:1.65;color:var(--tx);background:var(--sev-2-t);
+  border:1px solid var(--sev-2-h2);border-left:3px solid var(--sev-2);padding:11px 13px;margin-bottom:var(--s5)}
 .pd-sub{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;
   color:var(--tx2);margin:var(--s5) 0 var(--s2);padding-bottom:7px;border-bottom:1px solid var(--line)}
 .pd-sub:first-of-type{margin-top:0}
@@ -1425,12 +1543,28 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .trow.head{color:var(--tx2);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;
   padding-bottom:10px;border-bottom:1px solid var(--line-2)}
 .tick{font-family:var(--mono);font-weight:700;font-size:var(--t-body);letter-spacing:.02em;color:var(--tx)}
+/* ============================================================================
+   ÇİP İŞARETİ — DUB "FEATURE PILL" GRAMERİ (karar §10.2, 2026-08-24)
+   ----------------------------------------------------------------------------
+   Şiddet rengi çipin YAZISI değil, yazının önündeki 6px NOKTAdır. Yazı nötr
+   mürekkebe (--tx) geçti, tint zemin ve saç teli AYNEN kaldı. Nokta kuralın kendi
+   `--isaret` değişkeninden okunur — böylece geometri TEK yerde durur ve altı çip
+   ailesi (etiket, hipotez damgası, kapı zinciri, sayaç hapı, görev satırı, rozet)
+   ikinci bir nokta tanımı üretmez.
+   ÖLÇÜLDÜ: nokta kendi %10 tinti üstünde 5.22 / 4.29 / 3.16 (gündüz) · 4.69 / 3.89 /
+   3.15 (gece) — metin-dışı eşiği 3:1 iki temada da geçildi. Nötr yazı aynı tint
+   üstünde 16.53-17.46 (gündüz) · 9.16-9.79 (gece), yani ÖE1-c GEVŞEMEDİ, SIKILAŞTI.
+   ============================================================================ */
+.t-go::before,.t-rv::before,.t-no::before,.s-ok::before,.s-rb::before,
+.gc.p::before,.gc.f::before,.pillc.g::before,.pv-gorev.uyari::before{
+  content:"";display:inline-block;flex:none;width:6px;height:6px;margin-right:6px;
+  vertical-align:middle;border-radius:var(--r-tag);background:var(--isaret)}
 /* rubber stamps: struck in the state's own ink, ruled, never a soft pill */
 .tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:var(--r-ctl);text-align:center;
   letter-spacing:var(--label-track);display:inline-block;text-transform:uppercase}
-.t-go{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
-.t-rv{background:var(--sev-2-t);color:var(--sev-2);box-shadow:inset 0 0 0 1px var(--sev-2-h)}
-.t-no{background:var(--sev-1-t);color:var(--sev-1);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
+.t-go{--isaret:var(--sev-3);background:var(--sev-3-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
+.t-rv{--isaret:var(--sev-2);background:var(--sev-2-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-2-h)}
+.t-no{--isaret:var(--sev-1);background:var(--sev-1-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
 .t-vi{background:var(--accent-tint);color:var(--accent-2);box-shadow:inset 0 0 0 1px var(--ink-h)}
 .chain{font-size:var(--t-cap);color:var(--tx2);font-family:var(--mono)}
 /* ROL SINIFI KAPTAN SONRA GELİR (D1, 2026-08-07). Ölçüldü: `.chain` bu satırda, rol
@@ -1439,7 +1573,9 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    ekranda HİÇBİR ZAMAN renklenmiyordu: ihlal, uyumlu satırla aynı griydi. Bu, `.pm-yield`
    için 2026-07 turunda belgelenen çakışmanın ta kendisi — orada da kural kaynakta canlı,
    ekranda ölüydü. (0,2,0) ile kap yenilir. */
-.chain.sev-1{color:var(--sev-1)} .chain.sev-2{color:var(--sev-2)} .chain.sev-3{color:var(--sev-3)}
+.chain.sev-1{color:var(--tx);text-decoration-color:var(--sev-1)}
+.chain.sev-2{color:var(--tx);text-decoration-color:var(--sev-2)}
+.chain.sev-3{color:var(--tx);text-decoration-color:var(--sev-3)}
 .chain.guven{color:var(--olcek-guven)}
 .reason{font-size:var(--t-cap);color:var(--tx2);margin-top:3px;line-height:1.5}
 .empty{color:var(--tx2);text-align:center;padding:var(--s8);font-family:var(--mono);font-size:12px;letter-spacing:.04em}
@@ -1456,8 +1592,8 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .hyp .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:var(--s3)}
 .hyp .v{font-family:var(--mono);font-size:12px;color:var(--tx2);letter-spacing:.04em}
 .st{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:var(--r-ctl);letter-spacing:var(--label-track);text-transform:uppercase}
-.s-ok{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
-.s-rb{background:var(--sev-1-t);color:var(--sev-1);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
+.s-ok{--isaret:var(--sev-3);background:var(--sev-3-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
+.s-rb{--isaret:var(--sev-1);background:var(--sev-1-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
 .s-rj{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 .hyp h3{font-family:var(--display);font-size:var(--t-lg);margin-bottom:8px;font-weight:400;letter-spacing:-.008em;line-height:1.3}
 .hyp p{font-size:var(--t-body);color:var(--tx2);line-height:1.7;max-width:74ch}
@@ -1468,7 +1604,14 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* ---- the transcript — the raw plate, read as typed ---- */
 .pane{border-radius:var(--r-card);border:1px solid var(--line-2);background:var(--bg2);padding:var(--s6)}
 .mono{font-family:var(--mono);font-size:12px;line-height:2;color:var(--tx2);white-space:pre-wrap}
-.mono .k{color:var(--accent-2)} .mono .ok{color:var(--sev-3)} .mono .w{color:var(--sev-2)} .mono .no{color:var(--sev-1)} .mono .d{color:var(--tx2)}
+.mono .k{color:var(--accent-2)} .mono .d{color:var(--tx2)}
+/* DÖKÜMDE ŞİDDET: `pre-wrap` bir dökümde nokta da şerit de sütun hizasını kaydırır —
+   taşıyıcı yine alt çizgidir ve yazı --tx'e çıkar (döküm gövdesi --tx2, yani vurgulanan
+   satır zaten bir basamak öne gelir). */
+.mono .ok,.mono .w,.mono .no{color:var(--tx);text-decoration:underline;text-decoration-thickness:2px;
+  text-underline-offset:3px;text-decoration-skip-ink:none}
+.mono .ok{text-decoration-color:var(--sev-3)} .mono .w{text-decoration-color:var(--sev-2)}
+.mono .no{text-decoration-color:var(--sev-1)}
 .bignum{font-family:var(--mono);font-size:clamp(var(--t-h),6vw,28px);font-weight:400;letter-spacing:-.05em;font-variant-numeric:tabular-nums;line-height:1;color:var(--tx)}
 
 /* ---- autonomy ladder — the rungs this collection has earned ---- */
@@ -1551,6 +1694,12 @@ code{font-family:var(--mono);font-size:12px;background:var(--accent-tint);color:
 .crit{display:flex;align-items:flex-start;gap:var(--s3);padding:11px 0;border-bottom:1px solid var(--line);font-size:var(--t-body)}
 .crit:last-child{border-bottom:none}
 .ck{width:18px;height:18px;border-radius:0;flex:none;display:grid;place-items:center;font-size:10px;margin-top:1px;font-family:var(--mono);font-weight:700}
+/* İKON KUTUSU — TAŞIYICI DEĞİŞİMİNİN DIŞINDA VE BU BEYANLI (karar §10.2 sınıflaması).
+   `.ck` 18×18'lik bir kutudur ve içinde TEK bir glif taşır (`app.js:crit` bir işaret basar,
+   bir cümle değil). Ekran okuyucu için anlamı kutunun yanındaki etiketten gelir; glif bir
+   METİN değil bir İKONdur ve WCAG 2.2 1.4.11 gereği ölçütü metin-dışı 3:1'dir.
+   ÖLÇÜLDÜ (kendi tinti üstünde): gündüz 3.41 / 4.29 · gece 3.49 / 3.89 — ikisi de geçer.
+   Buraya nokta eklemek 18px'lik bir kutuya İKİNCİ bir işaret koymak olurdu. */
 .ck.ok{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
 .ck.no{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 .ck.man{background:var(--sev-2-t);color:var(--sev-2);box-shadow:inset 0 0 0 1px var(--sev-2-h)}
@@ -1573,7 +1722,12 @@ svg text{font-family:var(--mono)}
 /* AYNI ÇAKIŞMA, İKİNCİ KAP: `class="hint warn"` basan altı emisyon (pencere kesildi, kırpma
    uyarıları, boş takvim, kota) ekranda GRİ çıkıyordu — uyarı olduğunu söyleyen tek kanal
    ölüydü. Rol sınıfı kaptan sonra gelmeli. */
-.hint.sev-1{color:var(--sev-1)} .hint.sev-2{color:var(--sev-2)} .hint.warn{color:var(--sev-2)}
+/* BİR PARAGRAF ALTI ÇİZİLMEZ: `.hint` 70ch'lik bir açıklama bloğudur ve satır içi
+   taşıyıcı (alt çizgi) burada bir gürültü duvarı olurdu. Blok taşıyıcısı SOL ŞERİTtir. */
+.hint.sev-1,.hint.sev-2,.hint.warn{color:var(--tx2);text-decoration:none;
+  border-left:3px solid var(--sev-2);padding-left:var(--s3)}
+.hint.sev-1{border-left-color:var(--sev-1)}
+.hint.sev-2{border-left-color:var(--sev-2)} .hint.warn{border-left-color:var(--sev-2)}
 .hint.guven{color:var(--olcek-guven)}
 .term{border-bottom:1px solid var(--line-2);cursor:help;position:relative;text-transform:none}
 .term:hover,.term:focus-visible{color:var(--tx);border-color:var(--accent);outline:none}
@@ -1690,7 +1844,7 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    gerçek bir düğme: yalnız TIKLAYINCA açılır, aria-expanded durumu söyler, kapalıyken maddeler
    display:none olduğu için ne sekme sırasında ne erişilebilirlik ağacında vardır. */
 .kswrap{position:relative}
-.kscover{border:1px solid var(--sev-1);color:var(--sev-1);background:transparent;padding:0 13px;
+.kscover{border:1px solid var(--sev-1);color:var(--tx);background:transparent;padding:0 13px;
   border-radius:var(--r-ctl);font-family:var(--mono);font-weight:700;font-size:var(--t-cap);letter-spacing:.1em;cursor:pointer}
 .kscover:hover{background:var(--sev-1-t)}
 .kscover[aria-expanded="true"]{background:var(--sev-1);color:var(--bg2)}
@@ -1699,8 +1853,8 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .ksgroup.open{display:flex;flex-direction:column;gap:6px}
 .ksgroup button{text-align:left;font-size:var(--t-body);padding:8px 11px;min-height:44px;border-radius:var(--r-btn);cursor:pointer;
   border:1px solid var(--line-2);background:var(--bg2);color:var(--tx);font-family:var(--sans)}
-.ksgroup button:hover{border-color:var(--sev-1);color:var(--sev-1)}
-.ksgroup button.armed{border-color:var(--sev-2);color:var(--sev-2)}
+.ksgroup button:hover{border-color:var(--sev-1);color:var(--tx)}
+.ksgroup button.armed{border-color:var(--sev-2);color:var(--tx)}
 /* yanıp sönen durum etiketleri (GHOST / DESYNC) */
 .blink{animation:blinkTag 1.1s steps(2,start) infinite}
 @keyframes blinkTag{50%{opacity:.25}}
@@ -1712,8 +1866,8 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .gatechain{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .gc{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--r-ctl);
   letter-spacing:var(--label-track);cursor:default;text-transform:uppercase}
-.gc.p{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
-.gc.f{background:var(--sev-1-t);color:var(--sev-1);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
+.gc.p{--isaret:var(--sev-3);background:var(--sev-3-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
+.gc.f{--isaret:var(--sev-1);background:var(--sev-1-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
 .gc.arrow{background:none;color:var(--tx2);padding:0 1px;box-shadow:none}
 /* ÖLÇÜ ŞERİDİ — eskiden burada iki dairesel gauge vardı (deflasyon + sabır); ikisi de bullet
    graph'a çevrildi (2026-08-01). Gerekçe app.js'teki _bullet başlığında; özet: radyal kodlama
@@ -1791,8 +1945,9 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 /* SAPAN SEGMENT TAM SATIRI ALIR: açılımı bir sütuna sıkışırsa runbook ipucu okunmaz olur.
    `flex-basis` BURADA yazılır çünkü ızgaranın flex ÖĞESİ `.sh-seg`tir — içindeki `.sh-ac`ye
    yazmak sessizce hiçbir şey yapmaz (o bir flex öğesi değil). */
-.sessizhat .sh-sap{color:var(--sev-2);font-weight:700;white-space:normal;flex-basis:100%}
-.sessizhat .sh-sap.kritik{color:var(--sev-1)}
+.sessizhat .sh-sap{color:var(--tx);font-weight:700;white-space:normal;flex-basis:100%;
+  border-left:3px solid var(--sev-2);padding-left:var(--s3)}
+.sessizhat .sh-sap.kritik{border-left-color:var(--sev-1)}
 .sessizhat .sh-sap b{color:inherit;font-weight:700}
 /* AÇILIM sapan segmentin ALTINDA, tam genişlikte: ad + süre + runbook ipucu. Çekmece DEĞİL —
    bir tık ardına saklanan sapma, sessiz hattın kazandırdığı görünürlüğü geri alırdı. */
@@ -1818,7 +1973,7 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .alarmbutce{font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.7;
   font-variant-numeric:tabular-nums;margin-bottom:var(--s4)}
 .alarmbutce b{font-weight:500;color:inherit}
-.alarmbutce.asim{color:var(--sev-2)}
+.alarmbutce.asim{color:var(--tx2);border-left:3px solid var(--sev-2);padding-left:var(--s3)}
 .alarmbutce.asim b{color:inherit;font-weight:700}
 .alarmbutce .ab-not{color:var(--tx2);font-weight:400}
 
@@ -1984,12 +2139,17 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-sekme .dg.neg{color:var(--yon-eksi)}
 .pv-sekme .bg{font-size:11px;color:var(--tx2);line-height:1.45}
 .pv-sekme.yok .dg{font:400 var(--t-sub)/1.3 var(--sans)}
-/* SERİ NOKTALARI BİR LUMİNANS MERDİVENİDİR, HUE AİLESİ DEĞİL: renk körü okuyucunun ayıramadığı
-   şey tam olarak hue farkıdır; etiket zaten yanında ve grafikte ikinci kanal DESENdir. */
+/* SERİ NOKTALARI ARTIK RENKLİ AMA MERDİVEN DURUYOR (karar §10.3): hue LUMİNANSIN YERİNE
+   DEĞİL ÜSTÜNE eklendi — komşu basamaklar arasında ΔL* 16.45/16.37 (gündüz), 15.60/15.61
+   (gece) ve grafikte ikinci kanal hâlâ DESENdir. Renk körü okuyucunun taşıyıcısı
+   kaldırılmadı; kaldırılsaydı kazanç değil kayıp olurdu. */
 .pv-nk{width:7px;height:7px;border-radius:2px;display:inline-block;background:var(--tx3)}
-.pv-nk.s1{background:var(--accent)}
+.pv-nk.s1{background:var(--blue)}
 .pv-nk.s2{background:var(--violet)}
-.pv-nk.s3{background:var(--tx2)}
+.pv-nk.s3{background:var(--violet2)}
+/* DÖRDÜNCÜ BASAMAK NÖTR KALDI VE BU BİR EKSİKLİK BEYANIDIR: §10.4 farklı büyüklükleri
+   ölçen serilere AYRI hue ister, ama Dub'ın kalan hue bütçesi BİRDİR (mavi ROL 6'nın,
+   lavanta ROL 4'ün, yeşil/turuncu/kırmızı ROL 2'nin). Dördüncü bir hue UYDURULMADI. */
 .pv-nk.s4{background:var(--tx3)}
 
 /* ---- ALAN GRAFİĞİ ---- */
@@ -2000,11 +2160,16 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-gl{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
 .pv-yl{font:500 10px var(--sans);fill:var(--tx3)}
 .pv-seri{stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
-.pv-seri-0{stroke:var(--accent)}
+.pv-seri-0{stroke:var(--blue)}
 .pv-seri-1{stroke:var(--violet);stroke-width:1.5;stroke-dasharray:5 4;opacity:.8}
+/* ÜÇÜNCÜ SERİNİN KENDİ KURALI YOKTU: `pvAlanGrafigi` `pv-seri-${si}` basıyor, yani üç
+   serili bir metrik geldiği gün üçüncü çizgi `stroke` alamayıp GÖRÜNMEZ olurdu (SVG
+   varsayılanı `none`). Merdivenin üçüncü basamağı artık kaynakta duruyor. */
+.pv-seri-2{stroke:var(--violet2);stroke-width:1.5;stroke-dasharray:2 3;opacity:.8}
 .pv-seri-uc{fill:var(--tx3);stroke:var(--raise);stroke-width:2.5}
-.pv-seri-uc-0{fill:var(--accent);stroke:var(--raise);stroke-width:2.5}
+.pv-seri-uc-0{fill:var(--blue);stroke:var(--raise);stroke-width:2.5}
 .pv-seri-uc-1{fill:var(--violet);stroke:var(--raise);stroke-width:2.5}
+.pv-seri-uc-2{fill:var(--violet2);stroke:var(--raise);stroke-width:2.5}
 .pv-xekseni{display:flex;justify-content:space-between;padding:6px var(--s1) 0;
   font-size:11px;color:var(--tx3)}
 .pv-xekseni .son{color:var(--tx2);font-weight:600}
@@ -2016,8 +2181,9 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-ipucu-s b{margin-left:auto;font:600 var(--t-body) var(--sans);color:var(--tx);
   font-variant-numeric:tabular-nums}
 .pv-sw{width:8px;height:8px;border-radius:2px;display:inline-block;background:var(--tx3)}
-.pv-sw-0{background:var(--accent)}
+.pv-sw-0{background:var(--blue)}
 .pv-sw-1{background:var(--violet)}
+.pv-sw-2{background:var(--violet2)}
 .pv-grafik-bos{padding:var(--s5) var(--s4)}
 .pv-grafik-yok{font-size:var(--t-body);color:var(--tx2);line-height:1.6;margin:0 0 4px}
 .pv-lejand{display:flex;flex-wrap:wrap;gap:var(--s3);padding:0 var(--s4) var(--s3);font-size:11px}
@@ -2062,7 +2228,8 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-dolum{font-size:11px;color:var(--tx2);padding:0 var(--s4) var(--s2);line-height:1.6;margin:0}
 .pv-dolum-payda{color:var(--tx3);display:block;font-size:10px}
 /* MONOTONLUK İHLALİ — bir ÖLÇÜM arızasıdır (şerit huni gibi okunamaz), şiddet kanalında. */
-.pv-monoton{font-size:11px;color:var(--sev-2);padding:0 var(--s4) var(--s3);line-height:1.6;margin:0}
+.pv-monoton{font-size:11px;color:var(--tx2);padding:0 var(--s4) var(--s3);line-height:1.6;margin:0;
+  border-left:3px solid var(--sev-2);padding-left:var(--s3);margin-left:var(--s4)}
 .pv-huni-not{font-size:10px;color:var(--tx3);padding:var(--s2) var(--s4) var(--s3);line-height:1.6}
 .pv-dususler{border-top:1px solid var(--line);background:var(--bg2);padding:var(--s3) var(--s4)}
 .pv-dbaslik{font-size:11px;font-weight:600;color:var(--tx3);letter-spacing:.04em;
@@ -2091,8 +2258,11 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
   border-radius:var(--r-tag);padding:3px 8px;font-variant-numeric:tabular-nums}
 /* UYARI HÂLİ ŞİDDET KANALINDADIR ve gezinme kanalını EZER: bir HALT bildirimi bir menü
    öğesiyle aynı dilde yazılamaz. */
-.pv-gorev.uyari{background:var(--sev-2-t));color:var(--sev-2)}
-.pv-gorev.uyari .pv-say{color:var(--sev-2)}
+/* ~~`background:var(--sev-2-t))` — fazladan kapanış parantezi bildirimi GEÇERSİZ kılıyordu,
+   yani uyarı hâlinin tint zemini hiç boyanmıyordu. 2026-08-24'te ölçülüp düzeltildi.~~ */
+.pv-gorev.uyari{--isaret:var(--sev-2);background:var(--sev-2-t);color:var(--tx)}
+.pv-gorev.uyari .pv-say{color:var(--tx);text-decoration:underline;text-decoration-thickness:2px;
+  text-underline-offset:3px;text-decoration-skip-ink:none;text-decoration-color:var(--sev-2)}
 
 /* ---- KONTROL SATIRI ---- */
 .pv-kontroller{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s4);flex-wrap:wrap}
@@ -2112,10 +2282,18 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 /* ---- ROZET ---- */
 .pv-rz{display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-tag);
   padding:5px 10px;font:500 11px/1 var(--sans);border:1px solid transparent;white-space:nowrap}
-.pv-rz::before{content:"";width:6px;height:6px;border-radius:var(--r-tag);background:currentColor}
-.pv-rz.ok{color:var(--sev-3)}
-.pv-rz.dikkat{color:var(--sev-2)}
-.pv-rz.sorun{color:var(--sev-1)}
+/* Rozetin noktası ZATEN vardı ve `currentColor` okuyordu — yani yazı renklendiği için
+   nokta da renkleniyordu. Taşıyıcı değişiminde ilişki TERSİNE döndü: nokta kendi
+   `--isaret`ini okur, yazı nötr kalır. Rol taşımayan hâller (`notr`/`aktif`) hâlâ
+   currentColor'a düşer — onlarda yazı ile nokta AYNI şeyi söylüyor. */
+.pv-rz::before{content:"";width:6px;height:6px;flex:none;border-radius:var(--r-tag);
+  background:var(--isaret,currentColor)}
+/* SAKİNLİK ROZETİ MİNT ZEMİNDE (karar §10.5): `soft-mint` bir durum rengi değil bir
+   OLUMLU ONAY yüzeyidir. Ölçüldü — yeşil nokta mint üstünde 3.52 (gündüz) / 3.42 (gece),
+   nötr yazı 18.03 / 10.63. */
+.pv-rz.ok{--isaret:var(--sev-3);color:var(--tx);background:var(--mint)}
+.pv-rz.dikkat{--isaret:var(--sev-2);color:var(--tx)}
+.pv-rz.sorun{--isaret:var(--sev-1);color:var(--tx)}
 .pv-rz.notr{color:var(--tx2);background:var(--bg2)}
 .pv-rz.aktif{color:var(--nav);background:var(--nav-t)}
 
@@ -2310,7 +2488,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
     <div class="ksgroup" id="ksgroup" role="group" aria-label="Kriz kontrolleri">
       <button id="ks1" data-act="opSoftHalt">1 · Soft Halt — yeni giriş durur</button>
       <button data-act="opCancelOpen">2 · Cancel-Open — dolmamış girişler iptal</button>
-      <button data-act="opFlatten" style="border-color:var(--sev-1);color:var(--sev-1)">3 · Flatten ⚠ — TÜM pozisyonlar (NVDA dahil, çift onay)</button>
+      <button data-act="opFlatten" style="border-color:var(--sev-1)">3 · Flatten ⚠ — TÜM pozisyonlar (NVDA dahil, çift onay)</button>
       <button id="ks4" data-act="opLearnHaltToggle">4 · Halt Learning — işlem sürer, ship durur</button>
     </div>
   </div>

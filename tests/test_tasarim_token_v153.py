@@ -280,8 +280,15 @@ def test_gece_TAM_palet_hicbir_renk_jetonu_YARIM_KALMAZ():
     #   tema  43 → 44: +2 gölge (--sh-btn/--sh-ring, Dub'ın iki gölgesi; renk taşıdıkları
     #                  için `temel`de DURAMAZLAR) −1 (--nav-bg `rol.nav`a taşındı)
     #   rol   31 → 36: +5 ROL 6 (--nav/--nav-2/--nav-t/--nav-h/--nav-bg)
-    assert (len(TEMEL) == 33 and len(GUNDUZ) == 44 and len(ROL_GUNDUZ) == 36
-            and len(ROOT) == 113 and len(GECE_OV) == 80), \
+    # 2026-08-24 · ÖE1 TAŞIYICI TURU (karar §10.5). Bir jeton eklendi ve YALNIZ biri:
+    #   tema 44 → 45: +1 --mint (Dub `surface.tinted-accent` / soft-mint). Bu tura kadar
+    #                 Dub'ın bu jetonu HİÇ kullanılmıyordu; sakinlik/olumlu onay yüzeyine
+    #                 bağlandı (.spine.calm, .pv-rz.ok) — yani okuyucusuz DEĞİL (YASA 6).
+    # SERİ MERDİVENİ JETON EKLEMEDİ ve bu bilinçli: --blue/--violet2 tanımlıydı ama ÖLÜYDÜ
+    # (0 okuyucu). Yeni ad açmak yerine o ikisi diriltildi — ad değiştirmek app.js'in
+    # `IC_SERI.sim = "var(--violet)"` sözleşmesini ve kesik-çizgi desenini kırardı.
+    assert (len(TEMEL) == 33 and len(GUNDUZ) == 45 and len(ROL_GUNDUZ) == 36
+            and len(ROOT) == 114 and len(GECE_OV) == 81), \
         (f"jeton sayımı değişmiş: temel {len(TEMEL)} · değer {len(GUNDUZ)} · rol "
          f"{len(ROL_GUNDUZ)} · :root {len(ROOT)} · gece {len(GECE_OV)}")
 
@@ -371,8 +378,8 @@ def test_DTCG_semasi_gecerli():
     # gerekçelendirildi: 23 temel (tema-bağımsız) + 2×43 değer (tema, zemin başına) +
     # 2×31 rol (D1'in üçüncü katmanı, zemin başına). Sayı bir BÜTÇE değil bir MUHASEBEdir:
     # burada tutmayan bir toplam, DTCG ağacına eş-kayıtsız bir dal eklendiğini söyler.
-    assert sayac == 33 + 2 * 44 + 2 * 36, \
-        f"jeton sayımı {sayac} (beklenen 193 = 33 temel + 2×44 değer + 2×36 rol)"
+    assert sayac == 33 + 2 * 45 + 2 * 36, \
+        f"jeton sayımı {sayac} (beklenen 195 = 33 temel + 2×45 değer + 2×36 rol)"
 
 
 def test_takma_adlar_COZULUYOR():
@@ -848,23 +855,36 @@ def test_rapordaki_KONTRAST_RAKAMLARI_yeniden_uretilebilir():
 
 
 def test_para_renkleri_EN_KOTU_GERCEK_ZEMINDE_AA_kalir():
-    """Jeton yeniden-değerleme turu geldiğinde (gündüz beyazı) bu üç renk AA altına
-    düşerse pano parayı okunamaz yazıyor demektir. Eşik SONRADAN düşürülemez.
+    """Gömülü panelde ŞİDDET ÇİPİ okunabilir mi — TAŞIYICISINA GÖRE ÖLÇÜLÜR.
 
-    D1 SONRASI OKUNAN KATMAN DEĞİŞTİ, EŞİK DEĞİŞMEDİ. Ekranda fiilen çizilen jeton artık
-    ROL jetonudur (`.durum-kart.uyari{color:var(--sev-2)}`); --green/--amber/--red yalnız
-    o rollerin BUGÜNKÜ kaynağıdır. Ölçüm rolü izler, çünkü kırılma bu depoda tam olarak
-    şöyle olurdu: bir rol başka bir hue'ya yeniden bağlanır, ekran değişir, ama hue'yu
-    ölçen test yeşil kalır. Bugün üçü de alias olduğu için SAYILAR AYNI (gündüz 4.72 /
-    5.57 / 4.59 · gece 5.31 / 5.39 / 5.01) — iddia zayıflamadı, adresi düzeldi.
-    YÖN ve MOD rollerinin AA'sı tests/test_renk_rolleri_v197.py §7'de ölçülür; buraya
-    ikinci bir kopya koymak, ilk düzenlemede ayrışacak iki eşik demek olurdu."""
+    D1 SONRASI OKUNAN KATMAN DEĞİŞTİ, EŞİK DEĞİŞMEDİ. Ekranda fiilen çizilen jeton
+    ROL jetonudur; --green/--amber/--red yalnız o rollerin BUGÜNKÜ kaynağıdır.
+
+    2026-08-24 · TAŞIYICI DEĞİŞTİ, ÖLÇÜM ONU İZLEDİ (karar §10.2). Bu test bir yıl
+    "renkli mürekkep kendi tinti üstünde ≥4,5" ölçtü. O ölçüm doğruydu ÇÜNKÜ renk
+    METİNDİ. Renk artık metin değil İŞARET (nokta / sol şerit / kenar / kalın alt
+    çizgi); yazı nötr mürekkeptir. İki ölçüt de burada duruyor ve İKİSİ BİRDEN
+    zorunludur — çünkü tek başına hiçbiri çipin okunabilirliğini kanıtlamaz:
+
+      (a) ÇİPİN YAZISI (--tx) kendi tintinin üstünde ≥4,5  → AA, GEVŞEMEDİ
+      (b) ÇİPİN İŞARETİ (--sev-N) aynı zeminin üstünde ≥3  → WCAG 2.2 1.4.11, metin-dışı
+
+    NİYE BU BİR GEVŞETME DEĞİL: (a) fiilen 9,16-17,46 veriyor (renkli mürekkep 4,5'in
+    kıyısındaydı, ölçüldü: beşinci seçenek ΔE payı 0,1 idi). Yani eşik aynı kaldı,
+    KARŞILANMA PAYI ÜÇE KATLANDI. (b) yeni bir eşik değil, mevcut G4 garantisinin
+    (metin-dışı taşıyıcı ≥3:1) bu çipe uygulanmış hâli.
+    ~~Emekli iddia: "üç renk kendi tinti üstünde ≥4,5" (gündüz 4.72/5.57/4.59 ·
+      gece 5.31/5.39/5.01). Renk metin olduğu sürece doğruydu.~~"""
     en_kotu = {"--sev-3": "--sev-3-t", "--sev-2": "--sev-2-t", "--sev-1": "--sev-1-t"}
     for tema in ("gunduz", "gece"):
         for ink, tint in en_kotu.items():
             zc = _yigin(["--card-2", tint], tema)
-            assert _oran(_rgba(ink, tema), zc) >= 4.5, \
-                f"{ink} ({tema}) kendi tinti gömülü panelde AA ALTI"
+            yazi = _oran(_rgba("--tx", tema), zc)
+            assert yazi >= 4.5, \
+                f"{ink} ({tema}) çipinin NÖTR YAZISI gömülü panelde AA ALTI: {yazi:.2f}"
+            isaret = _oran(_rgba(ink, tema), zc)
+            assert isaret >= 3.0, \
+                f"{ink} ({tema}) İŞARETİ gömülü panelde metin-dışı 3:1 ALTI: {isaret:.2f}"
 
 
 def test_odak_halkasi_HER_ZEMINDE_3_1():

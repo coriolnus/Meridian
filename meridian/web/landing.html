@@ -173,9 +173,9 @@
   --accent:#0a0a0a; --accent-2:#171717; --accent-tint:#f5f5f5;
   /* DEĞER KATMANI — bir HUE'nun adı. Bunlar parayı anlatır, süs değildir.
      Dub ailesinden ORTAK ΔL ile türetildi (hue kümesi içinde), kendi %10 tinti üstünde AA. */
-  --green:#1f7646; --amber:#77520e; --red:#9a0019; --violet:#404040; --violet2:#0a0a0a;
-  --blue:#0a0a0a; --green-t:rgba(31,118,70,.10); --amber-t:rgba(119,82,14,.10);
-  --red-t:rgba(154,0,25,.10);
+  --green:#00963e; --amber:#c74300; --red:#c3002d; --violet:#005b79; --violet2:#0086b1;
+  --blue:#003346; --green-t:rgba(0,150,62,.10); --amber-t:rgba(199,67,0,.10);
+  --red-t:rgba(195,0,45,.10); --mint:#dcfce7;
   /* ROL KATMANI (D1) — bir İŞİN adı. Bileşen kuralları YALNIZ bunu okur. Altı rolün
      tanımı, kroma sınırları ve ölçümleri index.html'in :root bloğunda. */
   --sev-1:var(--red); --sev-1-t:var(--red-t); --sev-1-h:var(--red-h); --sev-2:var(--amber);
@@ -199,9 +199,9 @@
   --kap-3:rgba(10,10,10,.23); --kap-4:rgba(10,10,10,.30); --dv-n2:rgba(69,82,111,.22);
   --dv-n1:rgba(69,82,111,.10); --dv-p1:rgba(107,73,60,.10); --dv-p2:rgba(107,73,60,.22);
   /* Saç telleri ve perdeler JETONDUR — kural içinde sabit rgba() tema değişimine tepki vermez. */
-  --green-h:rgba(31,118,70,.35); --amber-h:rgba(119,82,14,.35); --red-h:rgba(154,0,25,.35);
-  --amber-h2:rgba(119,82,14,.40); --ink-h:rgba(10,10,10,.30); --ink-h-soft:rgba(10,10,10,.18);
-  --scrim:rgba(10,10,10,.42); --green-stamp:rgba(31,118,70,.55);
+  --green-h:rgba(0,150,62,.35); --amber-h:rgba(199,67,0,.35); --red-h:rgba(195,0,45,.35);
+  --amber-h2:rgba(199,67,0,.40); --ink-h:rgba(10,10,10,.30); --ink-h-soft:rgba(10,10,10,.18);
+  --scrim:rgba(10,10,10,.42); --green-stamp:rgba(0,150,62,.55);
   /* Yarıçap: Dub ölçeği (giriş 6 · düğme 8 · kart 12 · büyük 16 · hap 9999). --r-ctl 8px
      olur ve KALIR (app.js onu okuyor). Gölge yalnız kart DIŞI; kartlarda --elev:none. */
   --r-input:6px; --r-btn:8px; --r-card:12px; --r-lg:16px; --r-tag:9999px; --r-ctl:8px;
@@ -236,16 +236,16 @@
   --tx:#e5e5e5; --tx2:#d4d4d4; --tx3:#a3a3a3; --accent:#e5e5e5; --accent-2:#f5f5f5;
   --accent-tint:#2e2e2e;
   /* Para renkleri gecede kendi tinti üstünde 4.51 / 6.05 / 4.50 — üçü de AA. */
-  --green:#61b37f; --amber:#d8b072; --red:#ffbab4; --violet:#c2c2c2; --violet2:#e5e5e5;
-  --blue:#e5e5e5; --green-t:rgba(97,179,127,.10); --amber-t:rgba(216,176,114,.10);
-  --red-t:rgba(255,186,180,.10);
+  --green:#00953d; --amber:#ff5a00; --red:#ff7e7c; --violet:#40addb; --violet2:#0083ad;
+  --blue:#83d7ff; --green-t:rgba(0,149,61,.10); --amber-t:rgba(255,90,0,.10);
+  --red-t:rgba(255,126,124,.10); --mint:#163523;
   --band-2:#737373; --kap-1:rgba(229,229,229,.06); --kap-2:rgba(229,229,229,.14);
   --kap-3:rgba(229,229,229,.23); --kap-4:rgba(229,229,229,.30); --dv-n2:rgba(198,212,242,.22);
   --dv-n1:rgba(198,212,242,.10); --dv-p1:rgba(239,203,190,.10); --dv-p2:rgba(239,203,190,.22);
-  --green-h:rgba(97,179,127,.35); --amber-h:rgba(216,176,114,.35); --red-h:rgba(255,186,180,.35);
-  --amber-h2:rgba(216,176,114,.40); --ink-h:rgba(229,229,229,.30);
+  --green-h:rgba(0,149,61,.35); --amber-h:rgba(255,90,0,.35); --red-h:rgba(255,126,124,.35);
+  --amber-h2:rgba(255,90,0,.40); --ink-h:rgba(229,229,229,.30);
   --ink-h-soft:rgba(229,229,229,.18); --scrim:rgba(10,10,10,.66);
-  --green-stamp:rgba(97,179,127,.55); --sh-btn:rgba(0,0,0,.05) 0 1px 2px 0;
+  --green-stamp:rgba(0,149,61,.55); --sh-btn:rgba(0,0,0,.05) 0 1px 2px 0;
   --sh-ring:rgba(229,229,229,.10) 0 0 0 4px; --field:#a3a3a3;
   /* ROL KATMANI · GECE — ad kümesi gündüzle BİREBİR aynı. */
   --sev-1:var(--red); --sev-1-t:var(--red-t); --sev-1-h:var(--red-h); --sev-2:var(--amber);
@@ -305,8 +305,15 @@ a{color:inherit;text-decoration:none}
      gündüz  #0c6a3b · --bg #fbf9f8 → 6,37  (12px mono, eşik 4,5 → AA)
      gece    #4cc38a · --bg #1c1a18 → 7,83  (AA)
    Rakam D5 ZEMİNİNDE yeniden alındı: bu turdan önce `--bg` saf beyazdı ve aynı mürekkep
-   6,69 ölçüyordu — 0,32'lik farkı taşıyan zemin turu, ölçümü bayatlatan turdu. */
-.sev-3{color:var(--sev-3)}
+   6,69 ölçüyordu — 0,32'lik farkı taşıyan zemin turu, ölçümü bayatlatan turdu.
+
+   ~~O ÖLÇÜM 2026-08-24'te DÜŞTÜ ve rakam DEĞİL, TAŞIYICI değişti (karar §10.2).~~
+   Şiddet rengi artık metin değil işarettir: yeni yeşil (#00963e) çıplak --bg üstünde
+   3,70 verir — bir METİN için AA ALTI, bir İŞARET için 3:1'in üstünde. `.sev-3` bu yüzden
+   panodaki kardeşiyle AYNI grameri okur: yazı nötr mürekkep, renk 2px kalın alt çizgi.
+   ÖLÇÜLDÜ: nötr yazı --bg üstünde 15,80 (gündüz) / 12,30 (gece) — AA'nın çok üstünde. */
+.sev-3{color:var(--tx);text-decoration:underline;text-decoration-thickness:2px;
+  text-underline-offset:3px;text-decoration-skip-ink:none;text-decoration-color:var(--sev-3)}
 .mono-num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:-.01em}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--s6)}
 section[id]{scroll-margin-top:88px}

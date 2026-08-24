@@ -420,7 +420,7 @@ gerekçeli bir hüküm olarak duruyor; burada ölçülmüş rakamlarıyla tekrar
 | İ3 | `--ink-h` / `--ink-h-soft` nötr çip kenarları | 2.05 / 1.51 · 2.12 / 1.58 | Aynı aile. `--ink-h-soft` (%18) sınıfın en zayıfı. |
 | İ4 | Ton merdiveni basamakları (`bg→bg2→card→card-2`, ray/kart) | 1.03–1.09 | Ton basamağı bir **kontrast aygıtı değil, düzlem aygıtıdır**; kenarı saç teli kapatır (DESIGN.md, 1.043/1.041/1.080). |
 | İ5 | Gece modal perdesi | — / 1.23 (tavan 1.34) | Mekanizmanın **yeri yok**: gece zemini zaten koyu, saf siyah perde bile 1.34 verir. Ayrım `backdrop-blur` + modalın kendi saç teliyle kurulur. Bu **beyan**, bir çözüm değil. |
-| İ6 | `.spine.calm::before` sakin damgası | 2.56 / 3.25 | Sağlıklı durum **bilerek sönüktür** (iş emri Ç2, karanlık kokpit). Damganın yanında aynı şeyi söyleyen tam bir cümle var; damga tek taşıyıcı değil. |
+| İ6 | `.spine.calm::before` sakin damgası | 1.95 / 1.99 (mint zemin, 2026-08-24) · ~~2.56 / 3.25~~ | Sağlıklı durum **bilerek sönüktür** (iş emri Ç2, karanlık kokpit). Damganın yanında aynı şeyi söyleyen tam bir cümle var; damga tek taşıyıcı değil. **2026-08-24: sayı DÜŞTÜ ve sebebi beyanlıdır** — `.spine.calm` artık `--mint` yüzeyinde duruyor (karar §10.5), yani damga ile zemini aynı hue ailesinden. İstisnanın gerekçesi değişmedi (sakin sönüktür); değişen zeminin adı. |
 | İ7 | `.sessizhat .sh-sep` ayırıcı (`opacity:.45`) | 2.08 / 2.54 | Ayırıcı **noktalama**dır, bilgi değil; kaldırılsa cümle aynı okunur. |
 | **İ8** | **ÖLÇEK basamakları** (P9 kapsama rampası 4 bant · sapma kutupları 4 · nitel bant merdiveni 2 adım · IC serileri 3 çift) | 1.05–2.49 / 1.05–2.46 | **Bir skala 3:1 adımlarla kurulamaz.** Dört basamaklı sequential bir rampanın uç-uca menzili 2.05:1'dir (gündüz); 3:1 adım istemek dört basamağın ikisini silmek demektir — yani skalayı yok ederek "erişilebilir" kılmak. 1.4.11 "bileşeni ya da durumu TANITAN bilgi" ister ve o bilgi burada **hücrenin rakamıdır**: her hücre oranını (%NN) ve sapmasını (işaretli, ±NN p) YAZAR. Dolgu tarama yardımıdır — gözün "nerede delik var" sorusunu tek bakışta sorabilmesi için. Rakamın kendisi her bantta AA geçer (en dar: gece, en koyu kapsama bandı **4.68**). Ayrıca sapma kutupları renk körlüğüne karşı **mavi ↔ toprak** ekseninde seçildi (protan/deutan kırmızı-yeşili siler, mavi-sarıyı korur) ve kutuplar arası luminans farkı 1.07 olduğu için işaret **kelimeyle/rakamla** taşınır, renkle değil. |
 
@@ -498,45 +498,90 @@ Biçim: `mürekkep · zemin yığını (alttan üste, `+` ile) · tema · oran �
      Elle yazılmış tek bir oran yoktur; tests/test_tasarim_token_v153.py her satırı
      KAYNAKTAN yeniden hesaplar ve ayrışırsa raporu BAYAT ilan eder.
      ~~Önceki gövde (WP-P/P9 + D1, 2026-08-02/07, 66 satır) sıcak-kemik dünyaya aitti
-     ve emekli edildi; sayıları §11'in metninde okunabilir durumda kalıyor.~~ -->
+     ve emekli edildi; sayıları §11'in metninde okunabilir durumda kalıyor.~~
+
+     2026-08-24 · ÖE1 TAŞIYICI TURU (karar §10.2/§10.3/§10.5) — gövde İKİNCİ kez
+     yeniden üretildi ve TABLONUN YAPISI DEĞİŞTİ, çünkü ölçülen şey değişti:
+       · Şiddet üçlüsünün satırları artık İKİ AYRI SORU soruyor. `--green/--amber/--red`
+         satırları bir İŞARETİN kontrastıdır ve eşiği metin-dışı **3.0**'dır; aynı çipin
+         YAZISI `--tx` satırlarındadır ve eşiği hâlâ **4.5**'tir. Eşik gevşemedi —
+         ~~"--green | --card-2 + --green-t | 4.5"~~ satırı yanlış SORUYU soruyordu.
+       · ROL 5 seri merdiveni (`--blue/--violet/--violet2`) ÇG2 ile geldi (≥3.0).
+         ~~"--accent | --violet" ve "--violet | --tx3" satırları emekli~~: o ikisi
+         akromatik merdivenin komşu-adım oranıydı; renkli merdivende ayrımı ΔL* ölçer
+         (ÇG1, §12.9) ve kontrast oranı o soruyu cevaplamaz.
+       · `--mint` (soft-mint) satırları eklendi: yüzey metin taşımaz ama ÜSTÜNE metin
+         düşer, ve karar §10.5 onun da ölçülmesini istedi. -->
 | mürekkep | zemin yığını | tema | oran | eşik |
 |---|---|---|---|---|
 | --tx | --bg | gunduz | 18.97 | 4.5 |
 | --tx | --bg | gece | 14.23 | 4.5 |
 | --tx | --card | gunduz | 19.80 | 4.5 |
 | --tx | --card | gece | 12.01 | 4.5 |
-| --tx | --card-2 + --red-t | gunduz | 15.65 | 4.5 |
-| --tx | --card-2 + --red-t | gece | 8.56 | 4.5 |
+| --tx | --card-2 + --red-t | gunduz | 15.80 | 4.5 |
+| --tx | --card-2 + --red-t | gece | 9.16 | 4.5 |
 | --tx2 | --bg | gunduz | 7.49 | 4.5 |
 | --tx2 | --bg | gece | 12.09 | 4.5 |
 | --tx2 | --card | gunduz | 7.81 | 4.5 |
 | --tx2 | --card | gece | 10.21 | 4.5 |
-| --tx2 | --card-2 + --red-t | gunduz | 6.17 | 4.5 |
-| --tx2 | --card-2 + --red-t | gece | 7.27 | 4.5 |
-| --tx2 | --card-2 + --amber-t | gunduz | 6.46 | 4.5 |
-| --tx2 | --card-2 + --amber-t | gece | 7.50 | 4.5 |
+| --tx2 | --card-2 + --red-t | gunduz | 6.24 | 4.5 |
+| --tx2 | --card-2 + --red-t | gece | 7.79 | 4.5 |
+| --tx2 | --card-2 + --amber-t | gunduz | 6.52 | 4.5 |
+| --tx2 | --card-2 + --amber-t | gece | 8.20 | 4.5 |
 | --tx3 | --card | gunduz | 4.74 | 4.5 |
 | --tx3 | --card | gece | 6.00 | 4.5 |
 | --tx3 | --card-2 | gunduz | 4.54 | 4.5 |
 | --tx3 | --card-2 | gece | 5.38 | 4.5 |
-| --violet | --card | gunduz | 10.37 | 4.5 |
-| --violet | --card | gece | 8.50 | 4.5 |
 | --accent-2 | --accent-tint | gunduz | 16.44 | 4.5 |
 | --accent-2 | --accent-tint | gece | 12.46 | 4.5 |
-| --green | --card-2 + --green-t | gunduz | 4.70 | 4.5 |
-| --green | --card-2 + --green-t | gece | 4.54 | 4.5 |
-| --amber | --card-2 + --amber-t | gunduz | 5.79 | 4.5 |
-| --amber | --card-2 + --amber-t | gece | 5.49 | 4.5 |
-| --red | --card-2 + --red-t | gunduz | 6.95 | 4.5 |
-| --red | --card-2 + --red-t | gece | 6.64 | 4.5 |
-| --green | --bg | gunduz | 5.38 | 4.5 |
-| --green | --bg | gece | 7.05 | 4.5 |
-| --amber | --bg | gunduz | 6.71 | 4.5 |
-| --amber | --bg | gece | 8.86 | 4.5 |
-| --red | --bg | gunduz | 8.43 | 4.5 |
-| --red | --bg | gece | 11.04 | 4.5 |
-| --red | --bg + --nav-bg | gunduz | 8.43 | 4.5 |
-| --red | --bg + --nav-bg | gece | 11.04 | 4.5 |
+| --tx | --card-2 + --green-t | gunduz | 16.80 | 4.5 |
+| --tx | --card-2 + --green-t | gece | 9.79 | 4.5 |
+| --tx | --card-2 + --amber-t | gunduz | 16.51 | 4.5 |
+| --tx | --card-2 + --amber-t | gece | 9.65 | 4.5 |
+| --green | --card-2 + --green-t | gunduz | 3.28 | 3.0 |
+| --green | --card-2 + --green-t | gece | 3.15 | 3.0 |
+| --amber | --card-2 + --amber-t | gunduz | 4.14 | 3.0 |
+| --amber | --card-2 + --amber-t | gece | 3.89 | 3.0 |
+| --red | --card-2 + --red-t | gunduz | 4.99 | 3.0 |
+| --red | --card-2 + --red-t | gece | 4.69 | 3.0 |
+| --green | --card | gunduz | 3.87 | 3.0 |
+| --green | --card | gece | 3.87 | 3.0 |
+| --amber | --card | gunduz | 4.96 | 3.0 |
+| --amber | --card | gece | 4.84 | 3.0 |
+| --red | --card | gunduz | 6.25 | 3.0 |
+| --red | --card | gece | 6.15 | 3.0 |
+| --green | --bg | gunduz | 3.70 | 3.0 |
+| --green | --bg | gece | 4.58 | 3.0 |
+| --amber | --bg | gunduz | 4.75 | 3.0 |
+| --amber | --bg | gece | 5.73 | 3.0 |
+| --red | --bg | gunduz | 5.99 | 3.0 |
+| --red | --bg | gece | 7.28 | 3.0 |
+| --red | --bg + --nav-bg | gunduz | 5.99 | 3.0 |
+| --red | --bg + --nav-bg | gece | 7.28 | 3.0 |
+| --tx | --bg + --nav-bg | gunduz | 18.97 | 4.5 |
+| --tx | --bg + --nav-bg | gece | 14.23 | 4.5 |
+| --bg2 | --red | gunduz | 5.74 | 4.5 |
+| --bg2 | --red | gece | 6.69 | 4.5 |
+| --tx | --mint | gunduz | 18.03 | 4.5 |
+| --tx | --mint | gece | 10.63 | 4.5 |
+| --tx2 | --mint | gunduz | 7.11 | 4.5 |
+| --tx2 | --mint | gece | 9.04 | 4.5 |
+| --green | --mint | gunduz | 3.52 | 3.0 |
+| --green | --mint | gece | 3.42 | 3.0 |
+| --green-stamp | --mint | gunduz | 1.95 | 3.0 |
+| --green-stamp | --mint | gece | 1.99 | 3.0 |
+| --blue | --card | gunduz | 13.44 | 3.0 |
+| --blue | --card | gece | 9.46 | 3.0 |
+| --violet | --card | gunduz | 7.57 | 3.0 |
+| --violet | --card | gece | 5.92 | 3.0 |
+| --violet2 | --card | gunduz | 4.16 | 3.0 |
+| --violet2 | --card | gece | 3.50 | 3.0 |
+| --blue | --bg2 | gunduz | 12.33 | 3.0 |
+| --blue | --bg2 | gece | 10.31 | 3.0 |
+| --violet | --bg2 | gunduz | 6.95 | 3.0 |
+| --violet | --bg2 | gece | 6.45 | 3.0 |
+| --violet2 | --bg2 | gunduz | 3.82 | 3.0 |
+| --violet2 | --bg2 | gece | 3.81 | 3.0 |
 | --field | --card-2 | gunduz | 4.54 | 3.0 |
 | --field | --card-2 | gece | 5.38 | 3.0 |
 | --field | --bg | gunduz | 4.54 | 3.0 |
@@ -547,22 +592,18 @@ Biçim: `mürekkep · zemin yığını (alttan üste, `+` ile) · tema · oran �
 | --line-2 | --bg | gece | 2.29 | 3.0 |
 | --accent | --card | gunduz | 19.80 | 3.0 |
 | --accent | --card | gece | 12.01 | 3.0 |
-| --accent | --card-2 + --red-t | gunduz | 15.65 | 3.0 |
-| --accent | --card-2 + --red-t | gece | 8.56 | 3.0 |
-| --green-h | --card + --green-t | gunduz | 1.62 | 3.0 |
-| --green-h | --card + --green-t | gece | 1.82 | 3.0 |
+| --accent | --card-2 + --red-t | gunduz | 15.80 | 3.0 |
+| --accent | --card-2 + --red-t | gece | 9.16 | 3.0 |
+| --green-h | --card + --green-t | gunduz | 1.51 | 3.0 |
+| --green-h | --card + --green-t | gece | 1.52 | 3.0 |
 | --ink-h | --accent-tint | gunduz | 2.03 | 3.0 |
 | --ink-h | --accent-tint | gece | 2.33 | 3.0 |
-| --green-stamp | --bg | gunduz | 2.32 | 3.0 |
-| --green-stamp | --bg | gece | 3.01 | 3.0 |
+| --green-stamp | --bg | gunduz | 2.03 | 3.0 |
+| --green-stamp | --bg | gece | 2.20 | 3.0 |
 | --card-2 | --band-2 | gunduz | 2.42 | 3.0 |
 | --card-2 | --band-2 | gece | 2.86 | 3.0 |
 | --band-2 | --tx2 | gunduz | 3.10 | 3.0 |
 | --band-2 | --tx2 | gece | 3.20 | 3.0 |
-| --accent | --violet | gunduz | 1.91 | 3.0 |
-| --accent | --violet | gece | 1.41 | 3.0 |
-| --violet | --tx3 | gunduz | 2.19 | 4.5 |
-| --violet | --tx3 | gece | 1.42 | 4.5 |
 | --kap-4 | --card | gunduz | 2.03 | 3.0 |
 | --kap-4 | --card | gece | 2.37 | 3.0 |
 | --tx | --card + --kap-4 | gunduz | 9.76 | 4.5 |
@@ -593,8 +634,6 @@ Biçim: `mürekkep · zemin yığını (alttan üste, `+` ile) · tema · oran �
 | --tx2 | --nav-t | gece | 9.83 | 4.5 |
 | --tx3 | --nav-t | gunduz | 3.89 | 4.5 |
 | --tx3 | --nav-t | gece | 5.78 | 4.5 |
-| --tx | --nav-t | gunduz | 16.24 | 4.5 |
-| --tx | --nav-t | gece | 11.57 | 4.5 |
 | --sh-ring | --bg | gunduz | 1.24 | 3.0 |
 | --sh-ring | --bg | gece | 1.28 | 3.0 |
 | --sh-ring | --card | gunduz | 1.25 | 3.0 |
@@ -1127,3 +1166,169 @@ tur kapanışında elle değil ÖLÇÜMLE yeniden değerlenir.
 - **`--blue` akromatiktir** (`#0a0a0a` / `#e5e5e5`). Ad bir HUE söylüyor, değer
   akromatik bir seri basamağı. Adı değiştirmek `app.js`i kırar (isim sözleşmesi
   bağlayıcı) — kalem burada duruyor, hüküm tur kapanışında.
+
+
+---
+
+## 13 · ÖE1 TAŞIYICI DEĞİŞİMİ + RENKLİ SERİLER — 2026-08-24 (karar §10)
+
+Bu bölüm karar `docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md` §10'un ölçülmüş uygulamasıdır.
+Sayıların üreticisi `research/olcumler/oe1_dub_dorduncu_2026-08-24/olc.py`nin renk
+matematiğidir (`rgb2lab` / `lab2rgb` / `dE2000` / `kont` / `tint` / `uret`), üzerine
+**HUE KAPISI** eklenmiş hâliyle. Elle yazılmış hex yoktur.
+
+### 13.1 · Neden bir hue kapısı — bu turda ÜÇ araç hatası yakalandı
+
+| # | hata | sonuç | kapı |
+|---|---|---|---|
+| 1 | gamut kırpması (`lab2rgb` sonrası RGB'yi [0,1]'e sıkıştırmak) | hue savruldu, macenta/mor üretti | üretilen rengin hue'su GERİ ÖLÇÜLÜR; sapma >1,0° ise aday REDDEDİLİR |
+| 2 | jeton değeri yorum satırından okundu | gece kart zemini `#ffffff` sanıldı (doğrusu `#262626`) | jeton okurken CSS yorumları SIYRILIR (`re.sub(r"/\*.*?\*/")`) |
+| 3 | gece kırmızısı serbest bırakıldı | pembeye kaydı | hue bantla sabitlenir (kırmızı 26,6°), kroma değişkendir, hue DEĞİL |
+
+Ürettiğim her rengin hue'su hedefiyle karşılaştırıldı ve sapma **≤1,0°** çıktı:
+
+| | hedef (LAB) | gündüz ölçülen | gece ölçülen |
+|---|---|---|---|
+| yeşil (Dub `vivid-green` hue'su) | 146,4° | 145,59° | 145,44° |
+| turuncu (Dub `tangerine` hue'su) | 50,0° | 49,13° | 49,50° |
+| kırmızı (TÜRETME — Dub'da yok) | 26,6° | 27,29° | 26,48° |
+
+Seri merdiveni için kapı **OKLCh**'de kuruldu, LAB'de değil — ve bu bir tercih değil bir
+düzeltmedir: MOD kanalının ayrılmış bandı (285-335°) OKLCh'de tanımlı, ve sabit LAB hue'su
+ile üretilen "mavi" merdiven OKLCh'de tam o bandın içine düşüyordu (`#c5bfff` — bir lavanta).
+Aynı sınıf hata, ikinci bir uzayda.
+
+### 13.2 · ÖE1 · şiddet üçlüsü — üç eşik, iki tema
+
+Eşikler karar §9.3'te ölçümden ÖNCE donduruldu ve **oynatılmadı**; §10.2 ÖE1-c'nin
+ÖZNESİNİ değiştirdi (renkli mürekkep → nötr mürekkep), eşiğini değil.
+
+| | gündüz | gece | eşik |
+|---|---|---|---|
+| **ÖE1-a** komşu luminans oranı (sev-1↔2, sev-2↔3) | 1.260 / 1.284 | 1.270 / 1.251 | ≥ 1,20 |
+| **ÖE1-b** komşu ΔE2000 | 16.81 / 61.34 | 19.05 / 63.99 | ≥ 15 |
+| **İŞARET** — kart üstünde | 6.25 / 4.96 / 3.87 | 6.15 / 4.84 / 3.87 | ≥ 3 |
+| **İŞARET** — en kötü GERÇEK zemin | 5.74 / 4.55 / 3.55 (`--bg2`) | 5.51 / 4.34 / 3.47 (`--card-2`) | ≥ 3 |
+| **İŞARET** — kendi %10 tinti üstünde | 5.22 / 4.29 / 3.16 | 4.69 / 3.89 / 3.15 | ≥ 3 |
+| **ÖE1-c** ÇİP METNİ (`--tx`) kendi tinti üstünde | 16.53 / 17.13 / 17.46 | 9.16 / 9.65 / 9.79 | ≥ 4,5 |
+
+Değerler: gündüz `--red #c3002d` · `--amber #c74300` · `--green #00963e` ·
+gece `--red #ff7e7c` · `--amber #ff5a00` · `--green #00953d`.
+
+**Kroma kazancı (OKLCh):** gündüz kehribar **+%94** · yeşil **+%50** · kırmızı **+%19** ·
+gece kehribar **+%132** · kırmızı **+%95** · yeşil **+%49**.
+
+Neden kazanç var: eski tavan "renkli mürekkep kendi tinti üstünde 4,5" idi ve bir rengi
+4,5'e taşımanın tek yolu onu koyulaştırmaktı — sRGB'de koyulaşmak kromaya mal olur. Renk
+metin olmaktan çıkınca tavan 3:1'e indi ve merdiven kromayı geri aldı. **Bu bir gevşetme
+değildir**: okunabilirlik ölçütü aynı çipte 4,5 olarak DURUYOR, yalnız artık nötr mürekkebe
+uygulanıyor ve o mürekkep 9,16-17,46 veriyor.
+
+**Pay ölçüldü:** beşinci seçenek (renk metin kalıyordu) ΔE 15,1 ile 0,1 paylıydı; altıncı
+seçenek 16,81 (gündüz) / 19,05 (gece) ile geliyor. Paylı arama (ΔE≥18) beşinci seçenekte
+iki temada da BOŞ dönüyordu.
+
+### 13.3 · Taşıyıcı grameri — üç biçim, sınıflandırılmış 39 kural
+
+`index.html`de şiddet rengini `color:var(--sev-N)` deseniyle taşıyan **39 satır** tek tek
+incelendi (`grep -cE "color:var\(--sev-[123]\)"`). Sınıflandırma:
+
+| sınıf | satır | taşıyıcı | ölçüt |
+|---|---|---|---|
+| **çip / rozet** | 12 | 6px NOKTA (`::before`, kuralın `--isaret` değişkeni), tint zemin ve saç teli KORUNDU | işaret ≥3 · yazı ≥4,5 |
+| **blok / satır** | 8 | 3px SOL ŞERİT (`border-left`) | işaret ≥3 |
+| **satır içi metin** | 8 | 2px KALIN ALT ÇİZGİ (`text-decoration-color`, `skip-ink:none`) | işaret ≥3 |
+| **kart mürekkebi** | 2 | kartın SOL ŞERİDİ (eski kural `currentColor` zinciriyle 24px'lik SAYIYI boyuyordu) | işaret ≥3 |
+| **düğme** | 5 | kenar zaten renkliydi — yalnız YAZI nötrlendi | kenar ≥3 · dolgu üstündeki yazı ≥4,5 |
+| **kenar / ikon — DOKUNULMADI** | 4 | `.spine.attn` / `.spine.act` (yalnız `border-*-color`) · `.ck.ok` / `.ck.man` (18×18 ikon kutusu) | metin-dışı 3:1, zaten sağlanıyor |
+
+**GERÇEKTEN METİN OLMASI GEREKEN: SIFIR.** Bu bir tercih değil bir sonuçtur: metin kalan
+her kural, rengin kendi tinti üstünde 4,5 tutmasını gerektirirdi ve yeni üçlü orada
+3,16-5,22 veriyor. Tek bir kuralı metin bırakmak, ya o kuralı AA altında sevk etmek ya da
+kroma kazancını geri vermek olurdu — ikisi de reddedildi.
+
+İki istisna ADIYLA yazılıdır ve ikisi de "bu zaten metin değil" gerekçesine dayanır:
+`.sev-N[aria-hidden="true"]` (ekran okuyucunun okumadığı glif — app.js'in alarm satırındaki
+▲) ve `.ck.ok`/`.ck.man` (18px'lik kutuda tek işaret; kendi tinti üstünde 3.41/4.29 gündüz,
+3.49/3.89 gece).
+
+**Yan bulgu (aynı taramada):** `.pv-gorev.uyari{background:var(--sev-2-t))}` — fazladan bir
+kapanış parantezi bildirimi GEÇERSİZ kılıyordu, yani "seni bekleyenler" satırının uyarı
+zemini hiç boyanmıyordu. Düzeltildi.
+
+### 13.4 · ÇG · seri merdiveni renklendi, CVD kanalı KALMADI
+
+Eşikler karar §10.3'te donmuştu.
+
+| | gündüz | gece | eşik |
+|---|---|---|---|
+| **ÇG1** komşu seri ΔL* | 16.45 / 16.37 | 15.60 / 15.61 | ≥ 15 |
+| **ÇG2** her seri kart üstünde | 13.44 / 7.57 / 4.16 | 9.46 / 5.92 / 3.50 | ≥ 3 |
+| **ÇG2** en kötü gerçek zemin | 12.33 / 6.95 / 3.82 | 8.49 / 5.31 / 3.14 | ≥ 3 |
+| **ÇG3** `stroke-dasharray` sayısı (`app.js`) | 9 | 9 | DÜŞEMEZ |
+
+Değerler: gündüz `--blue #003346` · `--violet #005b79` · `--violet2 #0086b1` ·
+gece `--blue #83d7ff` · `--violet #40addb` · `--violet2 #0083ad`.
+
+**Ad değişmedi, değer değişti.** `--violet` adı tarihseldir ve `app.js`in IC trend
+sözleşmesinde yazılıdır (`IC_SERI.sim = "var(--violet)"`); adı değiştirmek kesik-çizgi
+desenini kırardı. `--blue` ve `--violet2` bu tura kadar **ÖLÜ jetonlardı** (tanımlı, sıfır
+okuyucu — YASA 6 ihlali); yeni ad açmak yerine onlar diriltildi, yani jeton sayısı seri
+tarafında **artmadı**.
+
+**HUE NEDEN DUB'IN MAVİSİ DEĞİL — ölçülmüş bir geri çekilme.** İlk deneme ROL 6'nın kendi
+hue'suydu (deep-sapphire, OKLCh 265,6°) ve karar §10.3'ün önerisi de buydu. Gece merdiveni
+orada `--nav-2` ile **ΔE2000 0,0**'a çöktü (üretilen en iyi kromalı aday birebir `#b2caff`
+çıktı) ve "nav ailesine ΔE ≥8" arayan tarama **iki temada da BOŞ döndü**. Yani ROL 6'nın
+bandında bir seri merdiveni kurulamıyor: gezinme mürekkebi (L* 67) ile gezinme mürekkep-2'si
+(L* 81) tam olarak merdivenin ihtiyaç duyduğu iki basamağı işgal ediyor.
+
+Hue bir sonraki SERBEST banda taşındı: **OKLCh 230°** (gök mavisi). Bu bir TÜRETMEDİR ve
+gece paletiyle aynı damgayı taşır — Dub'da böyle bir jeton yok. Ölçülen ayrımlar:
+
+| ayrım | gündüz | gece |
+|---|---|---|
+| seri ↔ `--nav` ailesi (min ΔE2000) | 14.7 | 13.9 |
+| seri ↔ MOD bandı (`--mod-canli/kesif`) | 21.7 | 28.2 |
+| seri ↔ şiddet üçlüsü | 33.6 | 34.0 |
+| MOD bandına (285-335° OKLCh) giren seri basamağı | yok | yok |
+
+**Kroma tavanı:** max C(seri) 0.1153 (gündüz) / 0.1179 (gece) < min C(şiddet) 0.1671 /
+0.1578. Kural yön rolünün ×0,60'ının seri kardeşidir: **×0,75**. Bir seri çizgisi bir
+alarmla dikkat için yarışamaz.
+
+**§10.4 atama kuralı uygulandı ve bir yerde YETMEDİ, o da beyanlıdır.** `Sermaye` ↔ `Tepe`
+aynı büyüklüğü ölçer (Tepe, Sermaye'den türetilir) → tek hue, iki açıklık. `.pv-nk.s1..s4`
+ise DÖRT FARKLI büyüklüğün kimlik noktalarıdır ve §10.4 onlara ayrı hue ister; Dub'ın kalan
+serbest hue bütçesi **birdir** ve dördüncü bir hue UYDURULMADI — `.pv-nk.s4` nötr kaldı.
+
+**Kaynakta bulunan gizli kusur:** `pvAlanGrafigi` `pv-seri-${si}` sınıfı basıyor ama
+`.pv-seri-2` kuralı YOKTU; üç serili bir metrik geldiği gün üçüncü çizgi `stroke` alamayıp
+görünmez olurdu (SVG varsayılanı `none`). Merdivenin üçüncü basamağı artık kaynakta.
+
+### 13.5 · `soft-mint` bağlandı (karar §10.5)
+
+`#dcfce7` Dub'ın kendi `surface.tinted-accent` jetonudur ve bu tura kadar HİÇ
+kullanılmıyordu. İki okuyucuya bağlandı, ikisi de KOŞULLU ve ikisi de olumlu:
+
+* `.spine.calm` — durum şeridinin sakin hâli. Üçlü artık tamamlandı: `calm` mint,
+  `attn` kehribar tinti, `act` kırmızı tinti. Öncesinde sakin hâlin yüzeyi YOKTU
+  (`background:transparent`).
+* `.pv-rz.ok` — "sakin" rozeti (olumlu onay).
+
+Gece karşılığı TÜRETİLDİ (`#163523`): soft-mint'in OKLCh hue'su (156,7°) korundu, L 0,299'a
+indirildi, kroma 0,0498'de tutuldu — min C(şiddet)'in görünür altında, çünkü bu bir zemindir.
+
+Metin taşımaz ama üstüne metin düşer, ve karar §10.5 yine de ölçülmesini istedi:
+
+| | gündüz `#dcfce7` | gece `#163523` |
+|---|---|---|
+| `--tx` üstünde | 18.03 | 10.63 |
+| `--tx2` üstünde | 7.11 | 9.04 |
+| `--tx3` üstünde | **4.32 (AA ALTI)** | 5.31 |
+| `--sev-3` işareti (rozet noktası) | 3.52 | 3.42 |
+| karttan farkı | 1.098 | 1.130 |
+
+`--tx3` gündüzde AA altındadır ve bu yüzden **mint yüzeylerde `--tx3` okuyucusu yoktur**:
+`.spine.calm` `--tx2` okur, `.pv-rz.ok` `--tx`. Bir gün mint bir `--tx3` metni taşırsa bu
+satır o kararın kapısıdır.

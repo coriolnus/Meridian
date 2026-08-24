@@ -724,12 +724,21 @@ def test_ROL6_MUREKKEP_tavan_asimi_BEYANLI_ve_MUREKKEP_KALIYOR():
     ESKİ ADI: test_ROL6_MUREKKEP_tavan_asimi_BEYANLI_ve_YUZEYI_DAR (2026-08-24 sabahı).
     Kural-sayısı tavanıydı ve pano v2 bileşenleri gelince yanlış kırmızı verdi: on beş
     kuralın tamamı ince mürekkepti. Ölçüt değişti, İDDİA DEĞİL."""
+    # 2026-08-24 · ÖE1 TAŞIYICI TURU: SAPMA GECEDE KAPANDI ve bu bir BEYANDIR, bir
+    # tesadüf değil. Renk metinden işarete geçince şiddetin kroma tabanı yükseldi
+    # (gece 0,0809 → 0,1578) ve gezinme mürekkebi (--nav C 0,1458) o tabanın ALTINDA
+    # kaldı. Gündüzde sürüyor (--nav 0,2152 > 0,1671). Tek yönlü bir assert artık
+    # yalan söylerdi; tablo tema başına yazılır ve İKİ YÖNDE birden çakılır: sapma
+    # sessizce kapanamaz DA açılamaz DA.
+    TAVAN_ASIMI = {"gündüz": True, "gece": False}
     for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
         sev = min(oklch(_coz(f"--sev-{i}", tablo))[1] for i in (1, 2, 3))
         murekkep = max(oklch(_coz(j, tablo))[1] for j in ("--nav", "--nav-2"))
-        assert murekkep >= sev, (
-            f"{ad}: gezinme mürekkebi C={murekkep:.4f} artık şiddet C={sev:.4f} ALTINDA — "
-            f"sapma kapandı, docs/kontrast-denetimi.md §12.3'teki daraltma beyanı BAYAT")
+        assert (murekkep >= sev) == TAVAN_ASIMI[ad], (
+            f"{ad}: gezinme mürekkebi C={murekkep:.4f} ↔ şiddet C={sev:.4f} — beyan "
+            f"{'AŞIYOR' if TAVAN_ASIMI[ad] else 'AŞMIYOR'} diyor, ölçüm tersini söylüyor. "
+            f"docs/kontrast-denetimi.md §12.3 ve §13.2 güncellenmeli: bir sapma sessizce "
+            f"ne kapanır ne açılır.")
     # DOLGU İSTİSNALARI — ADIYLA, gerekçesiyle ve ölçülmüş küçük yüzeyle.
     DOLGU_IZNI = {
         ".sitem::before": "3px genişliğinde seçim çubuğu — yüzeyi bir saç teli kadar",
@@ -809,6 +818,16 @@ def test_ROL6_birincil_eylem_dolgusu_HALA_AKROMATIK():
 OE1_LUMINANS_ORANI = 1.20     # ÖE1-a · renk körlüğünün SİLEMEDİĞİ tek kanal
 OE1_DELTA_E2000 = 15.0        # ÖE1-b · JND ~2,3; küçük çipte bir bakışta ayrılmalı
 OE1_TINT_AA = 4.5             # ÖE1-c · mevcut G3 garantisi, GEVŞEMEZ
+# 2026-08-24 · TAŞIYICI DEĞİŞİMİ (karar §10.2). Renk METİN olmaktan çıkıp İŞARET oldu;
+# yazı nötr mürekkebe geçti. Bu YENİ BİR EŞİK DEĞİL, mevcut G4 garantisinin (metin-dışı
+# taşıyıcı ≥3:1, WCAG 2.2 1.4.11) şiddet kanalına uygulanmış hâlidir — ve ÖE1-c'nin
+# yerine GEÇMEZ, YANINA gelir: yukarıdaki 4,5 artık çipin NÖTR YAZISINI ölçer.
+OE1_ISARET_3_1 = 3.0          # işaret (nokta/şerit/kenar/alt çizgi) kendi zemininde
+# ÇG · RENKLİ SERİ MERDİVENİ (karar §10.3, eşikler ölçümden ÖNCE donduruldu).
+CG1_DELTA_L = 15.0            # komşu seri ΔL* — renk körünün ayrımını luminans taşır
+CG2_KART = 3.0                # her seri kart üstünde, metin-dışı taşıyıcı
+CG3_DASH_ASGARI = 9           # app.js'teki kesik-çizgi ikinci kanalı — sayı DÜŞEMEZ
+SERI_MERDIVEN = ("--blue", "--violet", "--violet2")
 OE1_KOMSU = (("--sev-1", "--sev-2"), ("--sev-2", "--sev-3"))
 
 
@@ -921,14 +940,36 @@ def test_OE1_c_her_siddet_seviyesi_KENDI_TINTI_ustunde_AA(tema):
     """ÖE1-c (karar §9.3): mevcut G3 garantisi GEVŞEMEZ.
 
     SIRA BAĞLAYICIDIR: a ve b sağlanamıyorsa c'yi gevşetmek YASAK. Bu test o yasağın
-    kapısıdır — merdiveni kurmak için okunabilirlikten çalınamaz."""
+    kapısıdır — merdiveni kurmak için okunabilirlikten çalınamaz.
+
+    2026-08-24 · ÖZNE DEĞİŞTİ, EŞİK DEĞİŞMEDİ (karar §10.2). Bu test bir gün
+    "renkli mürekkep kendi tinti üstünde ≥4,5" ölçüyordu ve o ölçüm DOĞRUYDU çünkü
+    renk METİNDİ. Renk artık işarettir; çipin metni nötr mürekkeptir. 4,5 rakamına
+    DOKUNULMADI — sorulan soru düzeldi:
+
+        (c1) ÇİPİN METNİ (--tx) kendi tintinin üstünde ≥ 4,5   [OE1_TINT_AA, aynı sayı]
+        (c2) ÇİPİN İŞARETİ (--sev-N) aynı tintin üstünde ≥ 3   [WCAG 2.2 1.4.11]
+
+    NİYE BU BİR GEVŞETME DEĞİL: (c1) fiilen 9,16-17,46 veriyor — renkli mürekkep
+    4,5'in KIYISINDAYDI (beşinci seçeneğin ΔE payı 0,1 idi, ve o pay rengin metin
+    olmasının bedeliydi). Eşik aynı, karşılanma payı üç kat. İKİSİ BİRDEN ölçülür:
+    yalnız (c1) ölçülse renk sessizce silinebilir, yalnız (c2) ölçülse yazı
+    okunmaz hâle gelebilirdi."""
     T = TABLO[tema]
     kart = ZEMIN[tema]["card"]
+    tx = _coz("--tx", T)
     for jeton in ("--sev-1", "--sev-2", "--sev-3"):
         v = _coz(jeton, T)
-        o = kontrast(v, bilesik(v, 0.10, kart))
-        assert o >= OE1_TINT_AA, \
-            f"{tema} {jeton} kendi %10 tinti (--card) üstünde {o:.2f} — AA ALTI"
+        tint = bilesik(v, 0.10, kart)
+        yazi = kontrast(tx, tint)
+        assert yazi >= OE1_TINT_AA, (
+            f"{tema} {jeton} çipinin NÖTR YAZISI kendi %10 tinti üstünde {yazi:.2f} — "
+            f"AA ALTI. Eşik karar §9.3'te dondu ve §10.2 yalnız ÖZNESİNİ değiştirdi.")
+        isaret = kontrast(v, tint)
+        assert isaret >= OE1_ISARET_3_1, (
+            f"{tema} {jeton} İŞARETİ kendi %10 tinti üstünde {isaret:.2f} — metin-dışı "
+            f"3:1 ALTI (WCAG 2.2 1.4.11). Renk artık metin değil; taşıyıcı görünmezse "
+            f"şiddet kanalı çipin İÇİNDE kaybolur.")
 
 
 def test_OE1_merdiven_YONU_iki_temada_TUTARLI():
@@ -960,3 +1001,228 @@ def test_OE1_hukum_BELGEDE_ve_esik_OYNAMAMIS():
     rapor = (SRC / "docs" / "kontrast-denetimi.md").read_text(encoding="utf-8")
     assert "12.7" in rapor and "ÖE1" in rapor, \
         "ÖE1 hükmünün ölçümü docs/kontrast-denetimi.md'ye yazılmamış (karar §9 madde 3)"
+
+
+# ---------------------------------------------------------------------------
+# §11 — TAŞIYICI: ŞİDDET RENGİ METİN DEĞİL, İŞARET (karar §10.2 · 2026-08-24)
+# ---------------------------------------------------------------------------
+# ÖLÇÜLEN KUSUR SINIFI VE NİYE YENİ BİR ÇİVİ GEREKTİ. §10'un üç eşiği (ÖE1-a/b/c)
+# şiddet SEVİYELERİNİN birbirinden ayrılabildiğini ölçer; hiçbiri "renk NEYİ boyuyor"
+# diye sormaz. Bu fark ölçülebilir bir bedele bağlıydı: renk METİN kaldığı sürece
+# kendi tinti üstünde 4,5 tutmak zorundaydı, bunun tek yolu koyulaşmaktı ve sRGB'de
+# koyulaşmak kromaya mal oluyordu — panonun renksizliğinin kök nedeni buydu
+# (operatör 2026-08-24: "uygulamada renkleri kullanmamışsın"; ölçüldü, haklıydı).
+#
+# TAŞIYICI DEĞİŞİNCE ÖLÇÜT DE BÖLÜNDÜ ve İKİ PARÇA DA ÇİVİLENMEK ZORUNDA:
+#   · yazı NÖTR mü (yoksa 4,5 eşiği yeni yüksek-kromalı üçlüde düşer)
+#   · renk GÖRÜNÜR bir işaret olarak duruyor mu (yoksa şiddet kanalı sessizce silinir —
+#     "yazıyı nötrle" hükmü, yanlış uygulandığında rengi TAMAMEN kaldırmaktır)
+# Yalnız birini ölçmek, ötekini bedava kırılabilir bırakır.
+TASIYICI_ISTISNA = {
+    '.sev-1[aria-hidden="true"]':
+        "aria-hidden glif METİN DEĞİLDİR: ekran okuyucu onu hiç okumaz, ekranda bir ikondur "
+        "ve ölçütü zaten metin-dışı 3:1'dir (app.js'in alarm satırındaki ▲ tam bu vaka)",
+    '.sev-2[aria-hidden="true"]':
+        "aynı sınıf — dekoratif glif; alt çizgi eklemek tek olayı iki kez anlatmak olurdu",
+    '.sev-3[aria-hidden="true"]':
+        "aynı sınıf — dekoratif glif; renk burada zaten işaretin kendisidir",
+    ".ck.ok":
+        "18×18 ikon kutusu, içinde TEK glif (app.js:crit bir işaret basar, bir cümle değil); "
+        "anlam yanındaki etiketten gelir, ölçütü metin-dışı 3:1 ve ölçüldü (3.41 / 3.49)",
+    ".ck.man":
+        "aynı ikon kutusu ailesi; ölçüldü (4.29 gündüz / 3.89 gece), ikinci bir nokta "
+        "18px'lik bir kutuya sığmaz ve aynı şeyi iki kez söylerdi",
+}
+# `color:` ile `*-color:` AYRI ŞEYLERDİR ve bu ayrım testin çekirdeği: `border-left-color`
+# ya da `text-decoration-color` bir METİN rengi değil, bir İŞARET rengidir. Önündeki tire
+# (ya da harf) look-behind ile dışlanır — yoksa taşıyıcının kendisi ihlal sayılırdı.
+_METIN_RENGI = re.compile(r"(?<![-a-zA-Z])color\s*:\s*var\(\s*--sev-[123]\s*\)")
+_SEV_TINT = re.compile(r"background(?:-color)?\s*:\s*var\(\s*--sev-([123])-t\s*\)")
+
+
+def test_TASIYICI_siddet_rengi_METIN_olarak_kullanilmiyor():
+    """Karar §10.2'nin işlemsel tanımı: hiçbir bileşen kuralı METNİ şiddet rengiyle boyamaz.
+
+    İstisnalar ADIYLA ve ≥20 karakter gerekçeyle yazılır (YASA 4). Liste sessizce
+    büyüyemez; büyümesi bir KARARDIR ve buraya bir satır yazmayı gerektirir."""
+    for sec, gerekce in TASIYICI_ISTISNA.items():
+        assert len(gerekce) >= 20, f"{sec}: gerekçe {len(gerekce)} karakter (≥20 gerekli)"
+    ihlal = [(s_, g.strip()) for s_, g in KURALLAR
+             if _METIN_RENGI.search(g) and s_ not in TASIYICI_ISTISNA]
+    assert not ihlal, (
+        f"şiddet rengi hâlâ METİN olarak kullanılıyor: {ihlal}\n"
+        f"Karar §10.2: renk metin olmaktan çıkıp işaret oldu. Yazı `var(--tx)` olur; renk "
+        f"bir noktaya (`--isaret` + ::before), 3px sol şeride, kenara ya da 2px kalın alt "
+        f"çizgiye taşınır. Gerçekten metin olması gereken bir vaka varsa istisna listesine "
+        f"gerekçesiyle yazılır — ama ölçüm şunu söylüyor: yeni üçlü kendi tinti üstünde "
+        f"3.16-5.22 verir, yani metin bırakılan her kural AA ALTINDA sevk edilir.")
+    # İstisnalar GERÇEKTEN duruyor mu: silinirlerse liste sessizce anlamsızlaşır.
+    duran = {s_ for s_, g in KURALLAR if _METIN_RENGI.search(g)}
+    assert duran == set(TASIYICI_ISTISNA), (
+        f"istisna listesi kaynakla ayrışmış — kaynakta {sorted(duran)}, "
+        f"listede {sorted(TASIYICI_ISTISNA)}")
+
+
+def test_TASIYICI_cip_tinti_TEK_BASINA_durum_tasimiyor():
+    """Bir şiddet TİNTİ tek başına bir durum bildirmez — o zeminin ÜSTÜNDE bir işaret olmalı.
+
+    Ölçülen risk şu: "yazıyı nötrle" hükmü, tinti bırakıp rengi silmekle de karşılanmış
+    GÖRÜNÜR. Ama %10 tint karttan yalnız 1.05-1.10 ayrılır (§6/İ4: ton basamağı bir
+    kontrast aygıtı değildir) — yani durum kanalı sessizce ölür. Tint taşıyan her kural
+    ya bir NOKTA (`--isaret`), ya bir ŞERİT/KENAR taşımak zorunda."""
+    for sec, govde in KURALLAR:
+        m = _SEV_TINT.search(govde)
+        if not m:
+            continue
+        # DURUM KURALLARI (`:hover` / `:focus` / `[aria-expanded]`) MUAF ve bu bir boşluk
+        # değil: onlar yalnız DOLGUYU değiştirir, işaret TABAN kuralda durur. `.kscover`
+        # örneği: taban kural 1px kırmızı kenar taşır, hover yalnız tinti ekler.
+        if any(k in sec for k in (":hover", ":focus", ":active", "[aria-expanded")):
+            continue
+        n = m.group(1)
+        tasiyici = ("--isaret:" in govde or "border-left:" in govde
+                    or re.search(r"border(?:-top|-bottom|-left|-right)?-color\s*:\s*var\(\s*--sev-",
+                                 govde) or f"var(--sev-{n}-h" in govde)
+        assert tasiyici, (
+            f"{sec}: --sev-{n}-t tinti var ama üstünde İŞARET yok ({govde.strip()!r}). "
+            f"Tint tek başına 1.05-1.10 ayrılır; durum kanalı görünmez olur.")
+
+
+def test_TASIYICI_nokta_geometrisi_TEK_yerde_ve_isareti_okuyor():
+    """Dub feature-pill noktası TEK kuraldan gelir. İki kopya olsaydı biri ilk
+    düzenlemede bayatlar ve iki çip ailesi iki farklı nokta çizerdi."""
+    m = re.search(r"\.t-go::before[^{]*\{([^}]*)\}", INDEX)
+    assert m, "çip noktasının geometri kuralı yok — taşıyıcı kaynakta karşılıksız"
+    govde = m.group(1)
+    assert "var(--isaret)" in govde, \
+        f"nokta kuralı `--isaret` okumuyor: {govde!r} — renk kuralın kendisinden gelmeli"
+    assert 'content:""' in govde.replace(" ", ""), "nokta ::before içeriği yok, çizilmez"
+    # Nokta okuyan HER çip ailesi `--isaret` tanımlamalı; tanımlamayan bir çipin noktası
+    # `var(--isaret)` çözülemeyip GÖRÜNMEZ olur (geçersiz değer → özellik atılır).
+    i = INDEX.index(".t-go::before")
+    bas = max(INDEX.rfind("}", 0, i) + 1, INDEX.rfind("*/", 0, i) + 2)
+    secici_listesi = INDEX[bas:INDEX.index("{", i)]
+    okuyanlar = {x.strip() for x in secici_listesi.split(",") if "::before" in x}
+    assert len(okuyanlar) >= 8, f"nokta kuralı yalnız {len(okuyanlar)} çip ailesini kapsıyor"
+    for sec in okuyanlar:
+        kural = sec.replace("::before", "").strip()
+        eslesen = [g for s_, g in KURALLAR if s_ == kural]
+        assert eslesen and "--isaret:" in eslesen[0], \
+            f"{kural} noktayı çiziyor ama `--isaret` tanımlamıyor — nokta görünmez olur"
+
+
+@pytest.mark.parametrize("tema", ["gündüz", "gece"])
+def test_CG1_komsu_seri_LUMINANSTA_ayrisiyor(tema):
+    """ÇG1 (karar §10.3): komşu seri basamakları arasında ΔL* ≥15, İKİ temada.
+
+    RENK EKLENDİ, CVD KANALI KALDIRILMADI — ve bu ayrım bağlayıcı. Bugünkü merdiven
+    bilerek akromatikti: renk körü okuyucunun ayıramadığı şey tam olarak hue farkıdır.
+    Doğru hamle o kanalı kaldırmak değil, ÜSTÜNE renk eklemektir; bu test kaldırılmadığını
+    ölçer. ΔL* seçildi (kontrast oranı değil) çünkü ölçülen şey iki SERİNİN birbirinden
+    ayrılması, bir mürekkebin bir zeminden ayrılması değil."""
+    T = TABLO[tema]
+    L = [_lab(_coz(j, T))[0] for j in SERI_MERDIVEN]
+    for i in range(len(L) - 1):
+        d = abs(L[i] - L[i + 1])
+        assert d >= CG1_DELTA_L, (
+            f"{tema} {SERI_MERDIVEN[i]} ↔ {SERI_MERDIVEN[i+1]}: ΔL* {d:.2f} < {CG1_DELTA_L} — "
+            f"renk körü okuyucu için seri merdiveni ÇÖKMÜŞ. Eşik karar §10.3'te donduruldu.")
+    # Merdiven bir SIRADIR: yönü iki temada ters, ama monotonluk her ikisinde de şart.
+    assert L == sorted(L) or L == sorted(L, reverse=True), \
+        f"{tema} seri merdiveni monoton değil: {[round(x, 1) for x in L]}"
+
+
+@pytest.mark.parametrize("tema", ["gündüz", "gece"])
+def test_CG2_her_seri_KART_ustunde_metin_disi_3_1(tema):
+    """ÇG2 (karar §10.3): her seri çizgisi kart üstünde ≥3:1 — WCAG 2.2 1.4.11.
+
+    Bir seri çizgisi bir bileşeni TANITAN bilgidir (hangi büyüklük çiziliyor); saç teli
+    değildir ve §6/İ1'in beyanlı sapmasına giremez. En kötü GERÇEK zemin de ölçülür:
+    grafik `--raise` üstünde çizilir ama efsane lekeleri `--bg2` üstüne de düşer."""
+    T = TABLO[tema]
+    for jeton in SERI_MERDIVEN:
+        v = _coz(jeton, T)
+        for ad, zem in ZEMIN[tema].items():
+            o = kontrast(v, zem)
+            assert o >= CG2_KART, \
+                f"{tema} {jeton} /{ad}: {o:.2f} < {CG2_KART} — seri taşıyıcısı görünmez"
+
+
+def test_CG3_kesik_cizgi_IKINCI_KANALI_KORUNUYOR():
+    """ÇG3 (karar §10.3): `app.js`teki kesik-çizgi deseni renk EKLENDİ diye kaldırılamaz.
+
+    Bu testin ölçtüğü kusur sınıfı geçmişte yaşandı (B6, 2026-08-02): efsane üç seriyi üç
+    RENKLE etiketliyordu, oysa grafikteki gerçek ayrım desendi ve efsane onu hiç
+    göstermiyordu. Renk gelince deseni "artık gereksiz" diye silmek, aynı arızayı ikinci
+    kez üretmek olurdu — bu kez renk körü okuyucunun aleyhine.
+
+    JETON ADLARI DA ÇİVİLİ: `app.js` seri rengini ADIYLA okur (`IC_SERI`), yani bir ad
+    değişikliği çizgiyi sessizce renksiz bırakır."""
+    n = APPJS.count("stroke-dasharray")
+    assert n >= CG3_DASH_ASGARI, (
+        f"app.js'te {n} `stroke-dasharray` kaldı, en az {CG3_DASH_ASGARI} olmalı — renkli "
+        f"seriler CVD kanalının YERİNE değil ÜSTÜNE eklendi (karar §10.3).")
+    assert 'IC_SERI' in APPJS and 'var(--violet)' in APPJS, (
+        "app.js'in seri sözleşmesi (`IC_SERI` / `var(--violet)`) kaybolmuş — `--violet` adı "
+        "TARİHSELDİR ve bilerek korunuyor; adı değiştirmek deseni ve rengi birlikte kırar.")
+
+
+@pytest.mark.parametrize("tema", ["gündüz", "gece"])
+def test_SERI_kromasi_SIDDETIN_altinda(tema):
+    """Bir seri çizgisi bir alarmla dikkat için YARIŞAMAZ (karar §10.4'ün kroma kardeşi).
+
+    Yön rolünde bu kural ×0,60 ile yazılı (§5); seri için ×0,75 — daha geniş, çünkü seri
+    üç basamağı birbirinden ayırmak zorunda, ama yine de şiddetin ALTINDA."""
+    T = TABLO[tema]
+    sev = min(oklch(_coz(f"--sev-{i}", T))[1] for i in (1, 2, 3))
+    seri = max(oklch(_coz(j, T))[1] for j in SERI_MERDIVEN)
+    assert seri < sev, f"{tema}: seri C={seri:.4f} şiddet C={sev:.4f} altında DEĞİL"
+    assert seri / sev <= 0.75, \
+        f"{tema}: seri/şiddet kroma oranı {seri / sev:.2f} > 0,75 — seri bağırıyor"
+
+
+def test_SERI_TEK_HUE_ailesi_ve_atama_kurali_BELGEDE():
+    """§10.4: AYNI büyüklüğü ölçen seriler TEK hue + farklı açıklık alır.
+
+    `Sermaye` ↔ `Tepe (koşan azami)` tam bu sınıftır — Tepe, Sermaye'den TÜRETİLİR ve
+    merdiven o ilişkiyi kodlar. Onlara yeşil/turuncu vermek "iyi/kötü" diye okunurdu.
+    Hue birliği sayısal olarak ölçülür; kural ise BELGEDE durmak zorunda, çünkü bir
+    sonraki seri çiftini hangi kurala göre boyayacağımızı test değil karar söyler."""
+    for tema in ("gündüz", "gece"):
+        H = [oklch(_coz(j, TABLO[tema]))[2] for j in SERI_MERDIVEN]
+        for h in H[1:]:
+            fark = abs((h - H[0] + 180) % 360 - 180)
+            assert fark <= 2.0, \
+                f"{tema} seri merdiveni TEK hue değil: {[round(x, 1) for x in H]} (fark {fark:.1f}°)"
+    karar = (SRC / "docs" / "KARAR-2026-08-24-B-DUB-DONUSUMU.md").read_text(encoding="utf-8")
+    assert "### 10.4" in karar, "seri atama kuralı kararda yok — bu testin dayanağı kayboldu"
+    rapor = (SRC / "docs" / "kontrast-denetimi.md").read_text(encoding="utf-8")
+    assert "ÇG1" in rapor and "ÇG2" in rapor and "ÇG3" in rapor, \
+        "ÇG ölçümleri docs/kontrast-denetimi.md'ye yazılmamış"
+
+
+def test_SOFT_MINT_baglandi_ve_ustundeki_metin_OLCULDU():
+    """Karar §10.5: `soft-mint` Dub'ın KENDİ yüzey jetonudur ve bu tura kadar HİÇ
+    kullanılmıyordu — okuyucusuz bir jeton, YASA 6'nın tam tanımıdır.
+
+    Metin taşımaz ama ÜSTÜNE metin düşer; karar yine de ölçülmesini istedi ve ölçüm
+    bir kısıt üretti: `--tx3` gündüzde 4.32 ile AA ALTIDIR, o yüzden mint yüzeylerde
+    `--tx3` okuyucusu YOKTUR ve bu test o yasağın kapısıdır."""
+    okuyanlar = [s_ for s_, g in KURALLAR if "var(--mint)" in g]
+    assert len(okuyanlar) >= 2, \
+        f"--mint okuyucusu {len(okuyanlar)} — bağlanmamış bir jeton (YASA 6): {okuyanlar}"
+    for tema in ("gündüz", "gece"):
+        T = TABLO[tema]
+        mint = _coz("--mint", T)
+        for ink, esik in (("--tx", 4.5), ("--tx2", 4.5)):
+            o = kontrast(_coz(ink, T), mint)
+            assert o >= esik, f"{tema} {ink} mint üstünde {o:.2f} < {esik}"
+        isaret = kontrast(_coz("--sev-3", T), mint)
+        assert isaret >= OE1_ISARET_3_1, \
+            f"{tema} sakinlik rozetinin noktası mint üstünde {isaret:.2f} — 3:1 ALTI"
+    # --tx3 mint üstünde AA ALTI ve bu BEYANLI: kural onu okumamalı.
+    for sec, govde in KURALLAR:
+        if "var(--mint)" in govde:
+            assert "var(--tx3)" not in govde, (
+                f"{sec}: mint yüzeyinde --tx3 okunuyor — ölçüldü, gündüz 4.32 (AA ALTI). "
+                f"Mint yüzeyler --tx ya da --tx2 taşır.")
