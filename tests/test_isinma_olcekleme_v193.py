@@ -153,3 +153,47 @@ def test_isinma_sprinti_butceyi_merdivenden_alir_ve_sonucu_geri_isler(sandbox_st
     lw = hermes_runtime._state.get("last_warmup") or {}
     assert lw["butce"] == 20 and lw["butce_carpani"] == 2 and lw["k_max"] == 3, \
         "merdivenin hâli PANOYA taşınmalı — 'kural koşuyor mu' sorusu dosyaya bakmadan cevaplanmalı"
+
+
+# ---------------------------------------------------------------- 5) KİLİTLİ MERDİVEN GÖRÜNÜR
+def test_duvara_dayanmis_merdiven_SESSIZ_KALMAZ(sandbox_state):
+    """CANLI OLGU (2026-08-24, `docs/TESHIS-2026-08-24-ISINMA-MERDIVENI.md`): `warmup_scale`
+    yedi gündür `carpan=1, duvar=1` ve 154 koşumun HEPSİ aynı bütçede koştu. Mekanizma durmuştu
+    ve durduğunu söyleyen HİÇBİR KANAL YOKTU — `warmup_budget_scaled` yalnız DEĞİŞİM anında
+    basıyor, kilitliyken hiçbir şey değişmediği için yedi gün boyunca tek satır düşmedi.
+
+    ÖLÇÜLEN KUSUR SESSİZLİKTİR, KİLİDİN KENDİSİ DEĞİL. Duvar meşru bir ölçümdür ("bu genişlik bu
+    makinede pencereye sığmadı") ve bu test onu KALDIRMAZ, bütçeyi DEĞİŞTİRMEZ, eşiğe DOKUNMAZ.
+    Yalnız şunu ister: merdiven duvara dayandığında bunun bir OLAY KAYDI olsun ki bekçi ve
+    operatör "mekanizma çalışıyor mu, yoksa çalışır GÖRÜNÜYOR mu?" sorusunu cevaplayabilsin.
+
+    (Kilidin ONARIMI ayrı bir iştir ve bir ön-kayıt kartı ister: merdiveni açmak sonda sayısını
+    artırır → K büyür → ön eleme eşiği SIKILAŞIR, yani etkinin YÖNÜ ölçülmeden bilinmiyor.)"""
+    # ×1 iken süre tavanına takıl → duvar 1'e çivilenir ve merdiven bir daha büyüyemez
+    hermes.warmup_budget_feedback(_sc(cleared=0, kesildi=True))
+    assert hermes.warmup_budget() == hermes.warmup_budget()  # (saf okuma)
+    wb = hermes.warmup_budget()
+    assert wb["carpan"] == 1 and wb["duvar"] == 1, "önkoşul: merdiven duvara dayanmış olmalı"
+
+    n0 = len(_events("warmup_merdiven_kilitli"))
+    for _ in range(3):
+        hermes.warmup_budget_feedback(_sc(cleared=0))
+    kilit = _events("warmup_merdiven_kilitli")
+    assert len(kilit) - n0 == 3, (
+        "duvara dayanmış merdiven SESSİZ kaldı — `cleared=0` her turda büyümeyi deniyor ve "
+        "her turda duvara çarpıyor; bu bir OLAYDIR ve kaydı olmadan mekanizmanın durduğu "
+        "yalnız state dosyasına elle bakınca görülür (canlıda yedi gün öyle oldu)")
+    son = kilit[-1]
+    assert son["carpan"] == 1 and son["duvar"] == 1
+    assert son["ardisik"] == 3, "üst üste kaçıncı kilitli tur olduğu SAYILMALI (bayatlık ölçüsü)"
+    assert "cleared" in son and son["cleared"] == 0
+
+    # BÜTÇE DEĞİŞMEDİ — bu tur yalnız görünürlük ekledi.
+    assert hermes.warmup_budget()["budget"] == wb["budget"]
+    assert hermes.warmup_budget()["k_max"] == wb["k_max"]
+
+    # İlk clearing hem merdiveni tabana döndürür hem SAYACI sıfırlar: bir sonraki kilitlenme
+    # serisinin uzunluğu, öncekinin kuyruğuyla toplanmamalı.
+    hermes.warmup_budget_feedback(_sc(cleared=2))
+    hermes.warmup_budget_feedback(_sc(cleared=0))
+    assert _events("warmup_merdiven_kilitli")[-1]["ardisik"] == 1

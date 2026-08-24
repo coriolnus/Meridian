@@ -1799,6 +1799,11 @@ def warmup_budget_feedback(res: dict | None) -> dict:
     cleared = int(res.get("cleared") or 0)
     kesildi = bool(res.get("kesildi"))
     yeni, duvar, sebep = onceki["carpan"], onceki["duvar"], None
+    # MERDİVEN DUVARA DAYANDI MI? Büyüme dalının koşulunun tam TERSİ; burada AYRICA hesaplanır
+    # çünkü aşağıdaki `elif` zinciri "girmedi" bilgisini kaybediyor ve kaybettiği için yedi gün
+    # boyunca kimse mekanizmanın durduğunu göremedi (2026-08-24 teşhisi).
+    _tavan = min(int(duvar) if duvar else WARMUP_SCALE_MAX, WARMUP_SCALE_MAX)
+    _kilitli = (not kesildi) and cleared == 0 and onceki["carpan"] >= _tavan
     if kesildi:
         # SÜRE TAVANI ÖLÇÜMDÜR: bu makinede bu genişlik H11 penceresine SIĞMADI. Bir kademe geri
         # in ve seviyeyi duvar olarak çivile — aksi hâlde merdiven her turda aynı tavana çarpıp
@@ -1814,9 +1819,16 @@ def warmup_budget_feedback(res: dict | None) -> dict:
 
     def _mut(st):
         """Merdiven durumunu yazar: yeni çarpan, (varsa) duvar kademesi ve son koşumun künyesi
-        (evaluated/cleared/kesildi + zaman damgası)."""
+        (evaluated/cleared/kesildi + zaman damgası).
+
+        `kilit_ardisik`: merdiven ÜST ÜSTE kaç turdur duvara çarpıyor. Bir BAYATLIK ÖLÇÜSÜDÜR —
+        duvar meşru bir ölçümdür ama süresi yoktur ve yeniden sınanmaz; sayaç, "bu duvar ne
+        kadar zamandır sorgulanmadı?" sorusunu cevaplanabilir kılar. Kilit dışındaki HER dal
+        (clearing, süre tavanı, gerçek büyüme) onu SIFIRLAR: seriler birbirinin kuyruğuna
+        eklenmemeli, yoksa sayı "kesintisiz kilit" demeyi bırakır."""
         st["carpan"] = int(yeni)
         st["duvar"] = int(duvar) if duvar else None
+        st["kilit_ardisik"] = (int(st.get("kilit_ardisik") or 0) + 1) if _kilitli else 0
         import datetime as _dtw
         st["son"] = {"evaluated": res.get("evaluated"), "cleared": cleared, "kesildi": kesildi,
                      "at": _dtw.datetime.now(_dtw.timezone.utc).isoformat(timespec="seconds")}
@@ -1824,6 +1836,22 @@ def warmup_budget_feedback(res: dict | None) -> dict:
 
     store.update_json(WARMUP_SCALE_FILE, _mut, default={})
     sonraki = warmup_budget()
+    if _kilitli:
+        # SESSİZ DURUŞ YOK (2026-08-24). `warmup_budget_scaled` yalnız DEĞİŞİMDE basar; kilitliyken
+        # hiçbir şey değişmediği için canlıda yedi gün / 154 koşum boyunca tek satır düşmedi ve
+        # mekanizmanın durduğu ancak `state/warmup_scale.json`a elle bakınca görüldü.
+        # BU SATIR HİÇBİR ŞEYİ DEĞİŞTİRMEZ — bütçe, k_max ve eşik aynen kalır; yalnız duruş GÖRÜNÜR.
+        _ard = int((store.read_json(WARMUP_SCALE_FILE, {}) or {}).get("kilit_ardisik") or 0)
+        obs.log("warmup_merdiven_kilitli", carpan=sonraki["carpan"], duvar=sonraki["duvar"],
+                budget=sonraki["budget"], k_max=sonraki["k_max"], cleared=cleared,
+                evaluated=res.get("evaluated"), ardisik=_ard,
+                detail=("ısınma merdiveni DUVARA DAYALI: `cleared=0` büyümeyi istiyor ama çarpan "
+                        "zaten duvarda, yani bütçe ve k_max DEĞİŞMİYOR. Duvar bir ÖLÇÜMDÜR (bu "
+                        "genişlik bu makinede H11 penceresine sığmamıştı) ama SÜRESİ YOKTUR ve "
+                        "yeniden sınanmaz — `ardisik` o duvarın kaç turdur sorgulanmadığını sayar. "
+                        "Duvarı gevşetmek bir ÖLÇÜM işidir, bir ops kararı değil: merdiveni açmak "
+                        "sonda sayısını artırır, K büyür ve ön eleme eşiği SIKILAŞIR (EDG-2026-058) "
+                        "— etkinin yönü ölçülmeden bilinmiyor."))
     if yeni != onceki["carpan"] or (duvar and duvar != onceki["duvar"]):
         obs.log("warmup_budget_scaled", sebep=sebep, evaluated=res.get("evaluated"), cleared=cleared,
                 kesildi=kesildi, carpan_onceki=onceki["carpan"], carpan_yeni=sonraki["carpan"],
