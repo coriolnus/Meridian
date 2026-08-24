@@ -356,7 +356,13 @@ echo "=== [3/5] uv sync --frozen $SYNC_BAYRAK (dev grubu HARİÇ) ==="
 "${SSH[@]}" "export PATH=\"\$HOME/.local/bin:\$PATH\"; cd /opt/meridian && uv sync --frozen $SYNC_BAYRAK -q && echo '  ✓'"
 
 echo "=== [4/5] bakım penceresi ==="
-"${SSH[@]}" 'sudo systemctl stop meridian meridian-barsarchive && echo "  ✓ durdu"'
+# `meridian-learn` 2026-08-24'te LİSTEYE GİRDİ. Birim 2026-08-17'de doğdu ve bu betikte `learn`
+# kelimesi HİÇ geçmiyordu — bilinçli dışlama değil UNUTMA. Bedeli ölçüldü: 12:30Z dağıtımı
+# ısınma telemetrisini diske indirdi ama süreç 00:34:40'tan beri eski bytecode'u koşuyordu
+# (11 sa 19 dk), ve doğrulama "active" dediği için kimse görmedi.
+# RESTART UCUZ, ÖLÇÜLDÜ: sonda önbelleği diske yazılıyor (`reflect.PROBE_DISK_FILE`), döngü
+# 300 sn'de bir uyanıyor, birim `Restart=always`. Kaybedilen en fazla o anki turun taze hesabı.
+"${SSH[@]}" 'sudo systemctl stop meridian meridian-barsarchive meridian-learn && echo "  ✓ durdu"'
 
 # VERSİYONLU STATE KOPYASI — DURDURMA SONRASI, BAŞLATMA ÖNCESİ (2026-08-02). Yer bilinçli:
 #   * durdurmadan ÖNCE olsaydı, koşan worker yapılandırmayı okurken altından değişirdi (yarı-okuma
@@ -399,7 +405,7 @@ else
   echo "  · versiyonlu state kopyası YOK (fark yok ya da [1b] operatöre bıraktı)"
 fi
 
-"${SSH[@]}" 'sudo systemctl daemon-reload && sudo systemctl start meridian meridian-barsarchive && sleep 8 && systemctl is-active meridian meridian-barsarchive | tr "\n" " "; echo'
+"${SSH[@]}" 'sudo systemctl daemon-reload && sudo systemctl start meridian meridian-barsarchive meridian-learn && sleep 8 && systemctl is-active meridian meridian-barsarchive meridian-learn | tr "\n" " "; echo'
 
 echo "=== [5/5] doğrulama ==="
 "${SSH[@]}" 'curl -s -o /dev/null -w "healthz: %{http_code}\n" http://127.0.0.1:8080/healthz;
@@ -435,6 +441,63 @@ fi
 # [B] DAĞITIM-BEYANI (P0-b — docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md §4.2). Ortamlar-arası #2
 # ("repo-ağacı ↔ canlı-ağacı hangi tepede?") bugüne dek dedektörün YAPISAL kör noktasıydı: süreç-içi
 # hiçbir kıyas iki ortamı aynı anda göremez. Kapısı bu beyandır: dagit her başarılı dağıtımın
+# =================================================================================================
+# [5b] KOD-TAZELİK DEĞİŞMEZİ — "active" ≠ "yeni kodu koşuyor"
+# =================================================================================================
+# ÖLÇÜLEN VAKA (2026-08-24). [5] doğrulaması "iki birim de active" dedi ve bu DOĞRUYDU; ama
+# `meridian-learn` 00:34:40'tan beri koşuyordu ve en yeni kaynak 11:53:16'ydı. Yani doğru bir
+# cümle, ANLAMSIZ bir güvence verdi: `active`, sürecin hangi kodu taşıdığı hakkında hiçbir şey
+# söylemez. Yarı-etkili bir dağıtım "TAMAM" damgası aldı.
+#
+# DEĞİŞMEZ:  süreç başlangıcı  ≥  en yeni  /opt/meridian/meridian/**/*.py  mtime'ı
+#
+# KAPSAM ELLE SAYILMAZ, ExecStart'TAN TÜRETİLİR. Birim adlarını buraya yazsaydık yarın eklenen
+# bir birim aynı sessizlikle unutulurdu — düzeltmek istediğimiz sınıfın ta kendisi. Kural:
+# `running` durumda VE ExecStart'ı /opt/meridian altından python/uv koşan her birim. Bu sayede
+# `meridian-litestream` (litestream ikilisi, Python değil) kendiliğinden DIŞARIDA kalır.
+#
+# NEDEN [B]'DEN ÖNCE: beyan `state/dagitim.json`a "bu sha canlıda" yazar. Süreçlerden biri eski
+# kodu koşuyorsa o cümle YANLIŞTIR. Kapı önce düşerse dosya eski sha'da kalır — koşan sistemin
+# GERÇEK hâli odur (operatör kararı 2026-08-24). Onarım: birimi döndür, betiği tekrar koş
+# (rsync idempotent).
+echo "=== [5b/5] kod-tazelik değişmezi (süreç ≥ kaynak) ==="
+_tazelik="$("${SSH[@]}" '
+  yeni=$(find /opt/meridian/meridian -name "*.py" -printf "%T@\n" 2>/dev/null | sort -rn | head -1)
+  yeni_ad=$(find /opt/meridian/meridian -name "*.py" -printf "%T@ %p\n" 2>/dev/null | sort -rn | head -1 | cut -d" " -f2-)
+  [ -z "$yeni" ] && { echo "OLCULEMEDI kaynak-mtime-okunamadi"; exit 0; }
+  for u in $(systemctl list-units --type=service --state=running --no-legend --plain 2>/dev/null \
+             | awk "{print \$1}" | grep "^meridian"); do
+    es=$(systemctl show "$u" -p ExecStart --value 2>/dev/null)
+    case "$es" in *"/opt/meridian"*python*|*"/opt/meridian"*|*uv*) ;; *) continue ;; esac
+    case "$es" in *litestream*) continue ;; esac
+    bas=$(systemctl show "$u" -p ExecMainStartTimestampMonotonic --value 2>/dev/null)
+    bas_epoch=$(date -u -d "$(systemctl show "$u" -p ExecMainStartTimestamp --value)" +%s 2>/dev/null)
+    [ -z "$bas_epoch" ] && { echo "OLCULEMEDI $u sureç-baslangici-okunamadi"; continue; }
+    if [ "${bas_epoch%.*}" -lt "${yeni%.*}" ]; then
+      yas=$(( ${yeni%.*} - ${bas_epoch%.*} ))
+      echo "IHLAL $u $yas $yeni_ad"
+    fi
+  done')"
+if [ -z "$_tazelik" ]; then
+  echo "  ✓ koşan tüm meridian birimleri dağıtılan kodu taşıyor"
+else
+  echo "$_tazelik" | while read -r _d _u _y _f; do
+    if [ "$_d" = "IHLAL" ]; then
+      echo "  ✗ $_u — süreç kaynaktan $(( _y / 60 )) dk ESKİ (en yeni: $_f)"
+    else
+      echo "  ⚠ ölçülemedi: $_u $_y"
+    fi
+  done
+  if echo "$_tazelik" | grep -q "^IHLAL"; then
+    echo "  ——————————————————————————————————————————————————————————————"
+    echo "  DAĞITIM YARI-ETKİLİ: kod diskte, süreç eski. Beyan YAZILMADI —"
+    echo "  \`state/dagitim.json\` koşan sistemin gerçek hâlini (eski sha) söylemeyi sürdürüyor."
+    echo "  Onarım: sudo systemctl restart <birim>  →  ardından ./dagit.sh --uygula (rsync idempotent)"
+    echo "  ——————————————————————————————————————————————————————————————"
+    exit 1
+  fi
+fi
+
 # SONUNDA canlıya `state/dagitim.json` yazar. OKUYUCUSU (YASA 6): envanter/denetim turlarının
 # ortamlar-arası kıyası + "canlıda hangi sha koşuyor" sorusunu soran operatör (660dc10 dersinin
 # kalıcılaşması: beyan, kapılardan geçen tepeyi [0a]'da dondurulmuş DAGIT_SHA'dan söyler).

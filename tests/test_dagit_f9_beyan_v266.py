@@ -240,3 +240,58 @@ def test_h3_uygulama_betigi_VAR_ve_runbook_bolumu_uretildi():
         "RUNBOOK bölümü yok — `python ops/runbook_uret.py` koşulmamış"
     assert "Bu dört dosya dagit kapsamı dışıdır" in runbook, \
         "F9 notu RUNBOOK'ta yok — deploy.sh başlığı + yeniden üretim zinciri kopuk"
+
+
+# =================================================================================================
+# ④ [5b] KOD-TAZELİK DEĞİŞMEZİ — "active" ≠ "yeni kodu koşuyor"  (2026-08-24)
+# =================================================================================================
+# ÖLÇÜLEN VAKA. 2026-08-24 12:30Z dağıtımı `meridian-learn`i HİÇ yeniden başlatmadı: betiğin
+# bakım penceresi yalnız `meridian meridian-barsarchive` durduruyordu ve dosyada `learn` kelimesi
+# HİÇ geçmiyordu (birim 2026-08-17'de doğdu, betik güncellenmedi — bilinçli dışlama DEĞİL, unutma).
+# Sonuç: ısınma telemetrisi diske indi ama süreç 00:34:40'tan beri ESKİ bytecode'u koşuyordu ve
+# doğrulama adımı "iki birim de active" dedi — DOĞRU ama ANLAMSIZ bir cümle. Ölçülen fark:
+# süreç 00:34:40, en yeni kaynak 11:53:16 → 11 sa 19 dk.
+#
+# Bu çivi İKİ şeyi birden korur ve ikisi de ayrı sınıftır:
+#   (a) LİSTE — learn bakım penceresinde. Bugünkü örneği kapatır.
+#   (b) DEĞİŞMEZ — süreç başlangıcı ≥ en yeni kaynak mtime'ı, ve kapsam ExecStart'tan TÜRETİLİR.
+#       (a) tek başına yeterli olsaydı, yarın eklenen bir birim aynı sessizlikle unutulurdu;
+#       türetilmiş kapsam unutma sınıfını kapatır.
+def test_bakim_penceresi_ogrenme_birimini_KAPSAR():
+    """(a) `meridian-learn` durdur VE başlat satırlarında olmalı.
+
+    Öğrenme birimini dağıtımdan uzak tutmayı gerektiren bir şey YOK — ölçüldü: sonda önbelleği
+    diske yazılıyor (`reflect.PROBE_DISK_FILE`), döngü 300 sn'de bir uyanıyor ve birim
+    `Restart=always`. Restart'ın bedeli en fazla o anki turun taze hesabıdır."""
+    metin = DAGIT.read_text()
+    for eylem in ("systemctl stop", "systemctl start"):
+        satir = next((s for s in _satirlar() if eylem in s and "meridian" in s), None)
+        assert satir, f"{eylem} satırı bulunamadı — çivi bayatlamış"
+        assert "meridian-learn" in satir, (
+            f"`{eylem}` satırı `meridian-learn` taşımıyor — öğrenme tarafına yapılan her dağıtım "
+            f"biri ELLE restart edene kadar sessizce etkisiz kalır (2026-08-24 vakası). Satır: {satir.strip()}")
+    assert metin.count("meridian-learn") >= 2
+
+
+def test_kod_tazelik_kapisi_VAR_ve_BEYANDAN_ONCE():
+    """(b) [5b] değişmezi ve YERİ.
+
+    Kapı [B] dağıtım-beyanından ÖNCE düşmeli: beyan `state/dagitim.json`a "bu sha canlıda" yazar
+    ve süreçlerden biri eski kodu koşuyorsa bu cümle YANLIŞTIR. Önce düşerse dosya eski sha'da
+    kalır — koşan sistemin GERÇEK hâli odur (operatör kararı, 2026-08-24)."""
+    metin = DAGIT.read_text()
+    assert "[5b/" in metin, "kod-tazelik kapısı [5b] yok"
+    assert "ExecMainStartTimestamp" in metin, (
+        "kapı süreç başlangıcını okumuyor — 'active' cümlesi bu kusuru göremez")
+    # KAPSAM TÜRETİLİR, YAZILMAZ: birim adları elle sayılsaydı yarın eklenen birim unutulurdu.
+    assert "ExecStart" in metin, "kapsam ExecStart'tan türetilmiyor — unutma sınıfı açık kalır"
+    # ÇAPA `echo` SATIRINA BAĞLI: düz `"[B] dağıtım-beyanı"` dizgisi dosyanın BAŞINDAKİ
+    # içindekiler yorumunda da geçiyor (satır ~15) ve çivi orayı bulup sahte kırmızı verdi
+    # (2026-08-24, ilk yazımda). Aranan şey adımın KENDİSİ, ondan söz eden satır değil.
+    i_kapi, i_beyan = _satir_no("[5b/"), _satir_no('echo "=== [B] dağıtım-beyanı')
+    assert i_kapi < i_beyan, (
+        f"[5b] kapısı beyandan SONRA (satır {i_kapi} > {i_beyan}) — yarı-etkili bir dağıtım "
+        f"'tamam' diye damgalanır")
+    # Kapı ENGELLER (F9'un tersine): yarı-etkili dağıtım sessizce geçemez.
+    blok = "\n".join(_satirlar()[i_kapi:i_beyan])
+    assert "exit 1" in blok, "[5b] ihlalde exit 1 vermiyor — kapı değil rapor olur"
