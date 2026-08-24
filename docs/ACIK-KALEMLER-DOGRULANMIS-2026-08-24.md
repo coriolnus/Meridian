@@ -39,6 +39,22 @@ yüzden BLOKE grubunda (aşağıda). "Operatör bekliyor" diye bırakmak yanılt
 
 ### 2.1 · HAZIR İŞ — bugün başlanabilir, engeli yok  ← **en değerli grup**
 
+> **GÜNCELLEME 2026-08-24 (Rol-1, ölçümle):** **H1 bir ARIZA DEĞİL — boyutu SIFIR.**
+> `_defter_teyit_yamasi` ağaca 2026-08-22'de girdi (`55d72b3`); son reconcile turu
+> **2026-08-21 20:32Z**, yani koddan BİR GÜN ÖNCE. Arada hafta sonu var, Pazartesi seansı da
+> bu ölçüm yapılırken açılmamıştı. Damga hiç koşma fırsatı bulmamış. Üç rakip hipotez ölçümle
+> elendi (yazım yolu DB'ye yönleniyor ✓ · sekiz satır `live_paper` damgalı ✓ · 7 günde sıfır
+> `defter_teyit_yamasi_dusdu` ✓). Sekiz satırın hepsi `plan_id` taşıyor ve emir penceresinin
+> (`en_eski 2026-07-14`, `kapsandi: True`) İÇİNDE — yani sonraki turda hepsi KESİN hüküm alır.
+> **Yazılacak kod yok; bir reconcile turu bekliyor.** Sınanabilir öngörü + elenen hipotezler:
+> `docs/TESHIS-2026-08-24-H1-BROKER-TEYIT.md`. Öngörü tutmazsa teşhis DÜŞER.
+>
+> Ayrıca bu tabloda **H2 · 20c · korunum-kovası-3 · K3 · K6 KAPANDI** (2026-08-24 turları):
+> H2 short işaret sözleşmesi karta işlendi · 20c çift-bağ `goal.yaml`a girdi ve canlıya
+> kopyalandı · korunum kovası `uyuyan_kurulum` ile kapandı (`unexplained` 6 → 0) · K3
+> (EDG-055) ölçüldü ve HÜKÜM YOK ile kapandı · K6 (Ö-39) `plan_atif.jsonl` ile kapandı.
+> Geriye **H3** (13-A2 kartı) ve **H4** (`propose_virgin_knob` süzgeci) kalıyor.
+
 | # | kalem | WP | somut kalan iş | boyut | kanıt |
 |---|---|---|---|---|---|
 | H1 | **`broker_teyit` damgası basılmıyor** (`Ö-54`/K2-K3 önündeki tek engel) | WP1 | Teşhis: `EXE-2026-007`/`Ö-52` dağıtıldığı hâlde damga neden defterde yok? Reconcile yolunu izle, damgayı beş satıra bas → `EDG-042` K2/K3'ün n'i 0'dan çıkar | orta | CANLI (ssh, salt-okuma, 2026-08-24, benim koşumum): `state/meridian.db` `trades` → `tot 893 · alpaca_fill_price dolu 5 · broker_teyit dağılımı {'None': 5}` (T00099-T00103'ün beşi de damgasız). Kart kill#3: teyitsiz satır kıyasa giremez → K2/K3 ölçülebilen n = **0** |

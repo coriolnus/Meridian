@@ -94,3 +94,26 @@ döner. Dönmezse bu açıklama DÜŞER ve gerçek bir gerileme aranmalıdır.
 **EDG-2026-058 İÇİN DOĞAL DENEY:** restart önbelleği boşalttı; K şu anda 2-4, ısındıkça 40'a
 tırmanacak. Kartın tezi (bedava önbellek isabetleri K'ya sayılıyor) tam da bu tırmanışta
 gözlemlenebilir. Kartın eşikleri DONUK, bu not yalnız gözlem penceresini işaret eder.
+
+---
+
+## 8 · ARA GÖZLEM (2026-08-24 12:05Z) — §7'nin öngörüsü YÖNÜ doğru, henüz TAMAMLANMADI
+
+§7 şunu yazmıştı: *"önbellek ısındıkça açlık kesilir ve koşum/gün ~23'e, `evaluated` 40'a
+döner. Dönmezse bu açıklama DÜŞER."* Bugünkü seri:
+
+```
+evaluated: 40 → 2 → 4 → 6      (00:34 restart'tan sonra, ~11 saatte dört koşum)
+arama_havuzu_zaman_asimi: 4    (kararlı Aug 18-23 penceresinde: 0)
+```
+
+**Tırmanış var ve yönü öngörülen yönde** — soğuk önbellek açıklamasıyla tutarlı. Ama hız
+beklenenden düşük (11 saatte 2→6, 40 değil) ve havuz açlığı hâlâ sürüyor. **Açıklama
+ÇÜRÜMEDİ ama DOĞRULANMADI da**; ikisini birbirine karıştırmamak için bu ara nokta yazıldı.
+
+Bir sonraki kontrol için ölçüt AYNI kalır (koşum/gün ve `evaluated`); 24 saat sonra hâlâ
+`evaluated < 20` ise soğuk-önbellek açıklaması düşer ve gerçek bir gerileme aranmalıdır.
+
+**YAN NOT:** `warmup_scale.json`ın son yazımı 11:15Z, yani 11:48'deki dağıtımdan ÖNCE.
+`warmup_merdiven_kilitli` telemetrisi henüz canlıda değil (commit edildi, dağıtılmadı) —
+kilit sayacı ilk değerini dağıtımdan sonraki ilk ısınma koşumunda alacak.
