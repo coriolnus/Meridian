@@ -55,9 +55,19 @@ _MODUL_DURUMLARI = (
     # edilir: bir kırmızı test GÖZLENMEDİ. Ölçülen şey şu (geçici pytest eklentisiyle, 121 testlik
     # `-k "scheduler or regime or bottleneck"` seçiminde): ikisi de testler arası TAŞINIYOR
     # (constituents 68, shortinterest 119 testin başında tabandan farklıydı) ve okuyucuları
-    # `fmp._HEALTH`inkiyle aynı sınıftan — `watchdog.production_report` (watchdog.py:195) ve
-    # `/api/diagnostics` sağlayıcı satırları (api.py:1553). Yani mekanizma birebir aynı; eksik olan
+    # `fmp._HEALTH`inkiyle aynı sınıftan — `watchdog.production_report` (gövdesinde
+    # `constituents.health()`) ve `/api/diagnostics`in sağlayıcı satırları: `api._saglayicilar`
+    # (gövdesinde `shortinterest.health()`). Yani mekanizma birebir aynı; eksik olan
     # yalnız o mekanizmanın bugün ateşlediği bir testin bulunmuş olması.
+    # ÇAPA SEMBOLE ÇEVRİLDİ (2026-08-24, v282 turu). Bu iki okuyucu önce SATIR NUMARASIYLA
+    # çapalanmıştı ve ölçüldüğünde İKİSİ DE yanlış yeri gösteriyordu:
+    #   çapa-mezar-taşı `watchdog.py:195` → `production_report`ın (bugün 404) değil başka bir docstring'in gövdesi
+    #   çapa-mezar-taşı `api.py:1553`     → `/api/diagnostics`in değil `/api/today`in defter bloğu
+    # İkisi de
+    # `codelaw.stale_line_anchors`tan KAZARA geçiyordu — yasa "boş satır ya da yorum mu?" diye
+    # sorar, "doğru şeyi mi gösteriyor?" diye değil. api.py'ye tek bir import satırı eklenince
+    # ikincisi bir yorum satırına kayıp yasayı düşürdü; kusur o import değil, numara çapasının
+    # kendisiydi (`codelaw.stale_line_anchors` docstring'i bu sınıfı adıyla anlatır).
     (_con_mod, "_HEALTH"),
     (_si_mod, "_HEALTH"),
     # alpaca._TRANSPORT — KANITLI VAKA, OTORİTER SUITE KIRMIZISI (2026-08-08). `tests/

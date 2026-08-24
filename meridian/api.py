@@ -39,6 +39,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import auth
 
 from . import store, storage, config, analytics, health, memory, obs, secrets as secrets_mod
+from . import topviews as topviews_mod
 
 def _auth_posture_check() -> None:
     """Açılışta yetki duruşunu DÜRÜSTÇE bildir.
@@ -1658,15 +1659,38 @@ def api_signals(request: Request):
 
 
 @app.get("/api/market")
-def api_market(request: Request):
+def api_market(request: Request, seri: int = 0):
     """İzlenen evrenin TAMAMI (state/bars/*.csv + finviz keşfinin bars'ta olmayan ekstraları).
 
     EOD KAPANIŞ verisidir — bu uç CANLI FİYAT SERVİS ETMEZ ve etmediğini `as_of` (evrendeki en
     taze seans) ile birlikte söyler. Barı `as_of`tan geride kalan semboller `stale_n` ile sayılır.
-    Ölçülemeyen her alan None döner; pano onu "—" gösterir (bkz. marketview modül başlığı)."""
+    Ölçülemeyen her alan None döner; pano onu "—" gösterir (bkz. marketview modül başlığı).
+
+    `?seri=1` her satıra kıvılcım grafiğinin serisini ekler (`seri` + `seri_yok_nedeni`; son 40
+    KAPANIŞ, ölçülen seans aralığıyla birlikte). VARSAYILAN KAPALI: 260 sembol × 40 kapanış
+    (~91 KB, ölçüldü) her tazelemede seriyi çizmeyen tüketicilere ödettirilmez. Seri de EOD'dur —
+    `seri.son_tarih` hangi seansa kadar olduğunu söyler; burada "canlı" olan tek şey silahlı
+    sembollerin `intraday_close`u ve o da yalnız KAPANMIŞ + TAZE dakikalık bar demektir."""
     _auth(request)
     from . import marketview
-    return marketview.build()
+    return marketview.build(seri=bool(seri))
+
+
+@app.get("/api/bars/{ticker}")
+def api_bars(ticker: str, request: Request, n: int | None = None):
+    """Tek sembolün DERİN günlük (EOD/OHLCV) serisi — aday çekmecesinin çizdiği grafik.
+
+    `?n=` bar sayısı (varsayılan 120, tavan 500; tavanı aşan istek tavanla döner ve `kirpildi`
+    der). Yük ve dürüstlük sözleşmesi `marketview.bar_serisi()`de yazılı — özellikle: BİLİNMEYEN
+    SEMBOL 404 DEĞİLDİR, `bar: null` + `neden` döner ki pano onu "ölçülemedi" diye çizebilsin.
+
+    `n < 1` ise 400: sessizce 1'e (ya da varsayılana) çevirmek, çağıranın sorduğundan BAŞKA bir
+    soruyu cevaplayıp cevabı doğruymuş gibi sunmak olurdu. Tavan ise sessiz değil BEYANLIDIR."""
+    _auth(request)
+    from . import marketview
+    if n is not None and n < 1:
+        raise HTTPException(status_code=400, detail="n en az 1 olmalı")
+    return marketview.bar_serisi(ticker, n)
 
 
 @app.get("/api/agent")
@@ -2209,6 +2233,31 @@ def api_plots(request: Request):
         "n_trades": sum(1 for t in trades if t.get("setup") and t.get("regime")),
         "n_trades_total": len(trades),
     }
+
+
+# ---- TOP VIEWS — DOKUZ FACET, TEK PAYDA, TAM METRİK ------------------------------------------
+# NEDEN AYRI UÇ (ve neden `/api/plots` genişletilmedi): `/api/plots` bir MATRİS ucudur — kurulum ×
+# rejim ızgarası + hücre çekmecesi. Dokuz facetin yedisi o ızgaranın ekseni DEĞİL; sekizinci ve
+# dokuzuncusu ise başka bir defteri (plan/kapı) sayar. İkisini tek yüke sıkıştırmak, panonun
+# matris kartını her facet eklenişinde büyütür ve iki farklı paydayı tek yanıtta ayrımsız
+# gösterirdi. Matris ucu OLDUĞU GİBİ KALIR (kırılmaz sözleşme); bu uç onun yanına gelir.
+#
+# BU UCUN KAZANDIRDIĞI TEK ŞEY: **PF**. `/api/plots` hücrede yalnız ortalama R veriyor ve ortalama
+# R'den brüt kâr / brüt zarar ayrımı GERİ ÇIKARILAMAZ — bu bir eksiklik değil bilgi kaybıdır.
+# Pano bugüne dek her PF hücresine dürüstçe `ölçülemedi + neden` basıyordu; yüzeyin değeri buna
+# takılıydı. Hesap `meridian/topviews.py`de, kova sınırları orada GEREKÇESİYLE sabit.
+@app.get("/api/topviews")
+def api_topviews(request: Request):
+    """Dokuz facet (KAYNAK: kurulum·rejim·sektör · SONUÇ: çıkış nedeni·tutma·R kovası ·
+    KAPI: kapı reddi·kapı hükmü·kaynak damgası), her satırda `n · toplam R · brüt kâr · brüt
+    zarar · PF · kazanma` ve her facette KENDİ kaynağı/penceresi/paydası.
+
+    UYDURMA YOK: `gross_loss == 0` ise PF `None` + neden (sonsuz DEĞİL); R taşımayan hücrede
+    toplamlar `None` (0.0 DEĞİL); `n == 0` satır basılmaz; ölçülemeyen facet `satirlar: null` +
+    neden döner ve BOŞ LİSTE dönmez (boş liste "hiç yok" der, ölçülemedi ise başka bir cümledir).
+    YALNIZ OKUMA: hiçbir dal state'e dokunmaz."""
+    _auth(request)
+    return topviews_mod.topviews()
 
 
 def _slippage_measured(trades: list[dict], goal: dict) -> dict:

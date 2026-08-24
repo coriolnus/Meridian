@@ -20,6 +20,15 @@ gerçek) ama bayatlık ölçümüne GİRMEZ — delist gününde donmuş bar kal
 içi kolonun boşluğu da nedenli beyan edilir: "silahlı yok" / "akış yok" / "akış bayat" aynı
 sessizliğe indirgenmez.
 
+SERİ (2026-08-24). Pano her satıra kıvılcım grafiği çizecek; `build(seri=True)` (uçta `?seri=1`)
+her satıra son `_SERI_BARS` KAPANIŞI `seri` alanıyla ekler ve VARSAYILAN KAPALIDIR — seriyi
+çizmeyen tüketicinin yükü büyümez. Aynı disiplin burada da geçerlidir: barı olmayan sembol boş
+dizi DEĞİL `null` alır ve nedeni `seri_yok_nedeni`nde YAZILIR (boş dizi kıvılcımda düz çizgi
+çizdirir — "fiyat kıpırdamadı" diye okunur), 40 barı olmayan sembolde eldeki kadarı DOLGUSUZ
+gider ve `n` gerçek sayıdır. `bar_serisi()` aynı yasayı tek sembolün DERİN (OHLCV) serisi için
+tekrarlar: tavanlı, tavanı beyan eden (`kirpildi`), bilinmeyen sembolde 404 yerine nedenli boşluk.
+İKİSİ DE EOD'dur — `son_tarih`/`as_of` hangi seansa kadar ölçüldüğünü söyler, "canlı fiyat" DEĞİL.
+
 NEYİ OKUR. `state/bars/*.csv`, `portfolio.json`, `trade_plans.jsonl`, `regime.json`,
 `finviz_universe.json`, kazanç takvimi (earnings) ve sıcak katman (hotstate — yalnız silahlılar).
 Hiçbir şey yazmaz.
@@ -28,6 +37,7 @@ from __future__ import annotations
 
 import datetime as dt
 import math
+import re as _re
 from pathlib import Path
 
 import pandas as pd
@@ -48,6 +58,26 @@ _ADV_BARS = 20
 _CHG20_BARS = 21          # 20 GÜNLÜK değişim 21 kapanış ister (t ile t-20)
 _HIGH_BARS = 252
 
+# SATIR-İÇİ KIVILCIM GRAFİĞİNİN (sparkline) PENCERESİ — `?seri=1` ile İSTENİR (aşağı bak).
+# NEDEN 40: 40 seans ≈ iki takvim ayı (5 iş günü × 8 hafta). Alt sınır okunabilirlikten gelir —
+# 20 barlık bir pencerede tek bir kazanç günü tüm eğriyi domine eder ve kıvılcım "bu hisse ne
+# yapıyor?" sorusunu değil "dün ne oldu?" sorusunu cevaplar; üst sınır ise satır yüksekliğinden —
+# 120 kapanış 40 piksellik bir satıra sıkıştığında çizgi okunmaz mürekkebe döner. `_SPARK_BARS`
+# (60) ile BİLEREK AYRIŞIR: `spark` başka bir tüketicinin alanıdır ve birini diğerinin sabitine
+# bağlamak, birini değiştirenin ötekini sessizce bozması demekti.
+_SERI_BARS = 40
+
+# YÜK ÖLÇÜLDÜ, TAHMİN EDİLMEDİ (2026-08-24, 260 sembollük canlı `state/bars`, JSON bayt olarak,
+# `store.sanitize` sonrası ve uçtaki gibi ayraçsız):
+#     /api/market            195.959 bayt (191,4 KB)   ← DEĞİŞMEDİ
+#     /api/market?seri=1     290.615 bayt (283,8 KB)   ← seri alanının payı 94.656 bayt (92,4 KB)
+# 400 KB bütçesinin altında kalındığı için kapanışlar YUVARLANMADAN gider. Ölçülen alternatif:
+# kuruşa yuvarlamak aynı 260×40 diziyi 93.125 → 92.990 bayta indiriyordu (135 bayt, %0,1) —
+# hassasiyet kaybı bedava değil (bölünme/temettü düzeltmeli fiyatlar kuruş altı ondalık taşır) ve
+# karşılığı ölçülebilir bir kazanç değil. Bütçe bir gün aşılırsa çözüm örneklem SEYRELTMEK
+# DEĞİLDİR (seyreltilmiş bir grafik, olmayan bir fiyat yolu çizer): önce yuvarlama, sonra
+# pencereyi kısaltma — ikisi de bu yorumda gerekçesiyle güncellenerek.
+
 # {csv mutlak yolu: (mtime_ns, satır çekirdeği)} — SÜREÇ-İÇİ önbellek.
 # İlk çağrı 260 CSV okur (kabul edilen bedel); sonraki her çağrı dosyanın mtime'ı DEĞİŞMEDİKÇE
 # diske hiç inmez. EOD dosyaları günde bir kez yazıldığı için isabet oranı fiilen 1'dir — pano
@@ -59,6 +89,24 @@ _CACHE: dict[str, tuple[int, dict]] = {}
 # ekstrası) ile "barı okunamayan satır" aynı dürüst şekli taşısın.
 _EMPTY_CORE: dict = {"last_date": None, "close": None, "chg1_pct": None, "chg20_pct": None,
                      "dist_52w_high_pct": None, "adv20_usd": None, "spark": []}
+
+# SERİ ALANLARI `_EMPTY_CORE`UN DIŞINDA DURUR ve bu bilinçlidir: satır kurulurken YALNIZ
+# `_EMPTY_CORE` anahtarları kopyalanır (`_satir`), dolayısıyla seri istenmeyen çağrının yükü
+# BİREBİR eskisi gibi kalır. Çekirdek yine de her zaman hesaplanır — çünkü çekirdek mtime
+# anahtarlı önbelleğin İÇİNDEDİR; seriyi dışarıda hesaplamak, aynı CSV'yi ikinci bir yoldan
+# okumak (ve önbelleği atlamak) demekti.
+_SERI_YOK_DOSYA = "bar dosyası yok"
+# BAŞLANGIÇ NEDENİ BOŞ DEĞİL: başarı yolunda seri en sonda doldurulur ve neden None'a çekilir.
+# Buraya boş dizge koymak, ileride araya girecek bir erken `return`ün NEDENSİZ bir `null`
+# üretmesi demekti — yani yasağın (nedensiz boşluk) kendi kodumuzda açtığı arka kapı.
+_SERI_HESAPLANMADI = "seri hesaplanmadan dönüldü — çekirdek yarım kaldı (kod hatası)"
+
+
+def _bos_cekirdek(seri_yok_nedeni: str) -> dict:
+    """Ölçümsüz çekirdek + serinin NEDEN yok olduğunun beyanı. Boş dizi DÖNMEZ: `[]` bir kıvılcım
+    grafiğinde düz çizgi çizdirir ve okuyucu onu "fiyat kıpırdamadı" diye okur — yokluk ile
+    durgunluk aynı şekle indirgenemez (UYDURMA YASAĞI)."""
+    return {**_EMPTY_CORE, "seri": None, "seri_yok_nedeni": seri_yok_nedeni}
 
 
 def clear_cache() -> None:
@@ -99,7 +147,8 @@ def _compute_core(path: Path) -> dict:
         from . import obs
         obs.warn("marketview_bars_unreadable", file=path.name, error=f"{type(e).__name__}: {e}",
                  detail="sembol evrende ÖLÇÜMSÜZ satır olarak kalır — listeden düşmez")
-        return dict(_EMPTY_CORE)
+        return _bos_cekirdek(f"bar dosyası okunamadı ({type(e).__name__}) — sembol evrende "
+                             f"ölçümsüz satır olarak kalır, seri UYDURULMAZ")
 
     closes = [_f(v) for v in df["close"].tolist()]
     vols = [_f(v) for v in df["volume"].tolist()]
@@ -107,13 +156,13 @@ def _compute_core(path: Path) -> dict:
     # Kapanışı olmayan bar bir bar DEĞİLDİR: pencere sayımına girerse "20 barım var" yalanı olur.
     keep = [i for i, c in enumerate(closes) if c is not None]
     if not keep:
-        return dict(_EMPTY_CORE)
+        return _bos_cekirdek("dosyada kapanışı ölçülebilen tek bar yok — seri çizilemez")
     closes = [closes[i] for i in keep]
     vols = [vols[i] for i in keep]
     dates = [dates[i] for i in keep]
 
     n = len(closes)
-    out = dict(_EMPTY_CORE)
+    out = _bos_cekirdek(_SERI_HESAPLANMADI)   # seri aşağıda DOLDURULUR, neden orada None'a çekilir
     out["last_date"] = dates[-1]
     out["close"] = closes[-1]
     if n >= 2:
@@ -129,6 +178,15 @@ def _compute_core(path: Path) -> dict:
         if all(v is not None for v in pen_v):
             out["adv20_usd"] = sum(c * v for c, v in zip(pen_c, pen_v)) / _ADV_BARS
     out["spark"] = closes[-_SPARK_BARS:]
+    # SERİ: eldeki kadarı, DOLGUSUZ. 40 barı olmayan sembolde eksik uçları interpole etmek
+    # (ya da ilk kapanışla doldurmak) grafiğe var olmayan bir geçmiş çizerdi; `n` GERÇEK sayıdır
+    # ve `ilk_tarih` de dizinin gerçek başlangıcıdır — okuyucu pencerenin kısa olduğunu görür.
+    # Bu bir EOD serisidir: `son_tarih` hangi SEANSA kadar ölçüldüğünü söyler (yük başındaki
+    # `as_of` ile aynı disiplin) — "canlı fiyat" değildir ve öyle adlandırılmaz.
+    kap = closes[-_SERI_BARS:]
+    out["seri"] = {"kapanis": kap, "ilk_tarih": dates[-len(kap)], "son_tarih": dates[-1],
+                   "n": len(kap)}
+    out["seri_yok_nedeni"] = None
     return out
 
 
@@ -187,8 +245,13 @@ def _next_report(dates: list, on_date: str | None):
     return next((d for d in sorted(dates) if d >= on_date), None)
 
 
-def build() -> dict:
+def build(*, seri: bool = False) -> dict:
     """İzlenen evrenin tamamı — pano 'Piyasa' sekmesinin tek kaynağı.
+
+    `seri=True` her satıra `seri` (son `_SERI_BARS` KAPANIŞ + ilk/son seans + gerçek `n`) ve
+    `seri_yok_nedeni` ekler. VARSAYILAN KAPALI ve bu bir performans süsü değil sözleşme:
+    seriyi hiç çizmeyen mevcut tüketicilerin yükü büyümez, üstelik "üretilen her alanın tüketicisi
+    var" (YASA 6) çivisi de satır şeklini istemeden genişletmekle bozulmaz.
 
     Evren = `state/bars/*.csv` (motorun fiilen bar tuttuğu semboller). `finviz_universe.json`
     keşfi bars'ta OLMAYAN bir sembol getirirse o da satır olur ama bar alanları None kalır ve
@@ -254,7 +317,7 @@ def build() -> dict:
         """Tek tickerın pano satırını kurar: çekirdek bar alanları + gün-içi kapanış/damgası, pozisyon /
         silahlı / emekli bayrakları, plan sayımı ve sıradaki bilanço tarihi."""
         ic_kapanis, ic_damga = intraday.get(ticker, (None, None))
-        return {
+        satir = {
             "ticker": ticker, "source": source,
             **{k: core[k] for k in _EMPTY_CORE},
             "intraday_close": ic_kapanis, "intraday_ts": ic_damga,
@@ -265,9 +328,16 @@ def build() -> dict:
             "last_plan_date": plan_son.get(ticker),
             "earnings_date": _next_report(takvim.get(ticker) or [], takvim_gunu),
         }
+        if seri:
+            # İKİ ALAN BİRLİKTE GİDER: `seri` None ise nedeni DOLU, doluysa nedeni None. Yokluğu
+            # nedensiz bırakmak, panoya "çizemedim" ile "çizecek bir şey yok"u aynı boşlukla
+            # anlattırırdı.
+            satir["seri"] = core.get("seri")
+            satir["seri_yok_nedeni"] = core.get("seri_yok_nedeni")
+        return satir
 
     rows = [_satir(t, "bars", cores[t]) for t in sorted(cores)]
-    rows += [_satir(t, "finviz", dict(_EMPTY_CORE)) for t in fv_ekstra]
+    rows += [_satir(t, "finviz", _bos_cekirdek(_SERI_YOK_DOSYA)) for t in fv_ekstra]
 
     # BAYATLIK YALNIZ YAŞAYAN SEMBOLE SORULUR. Emekli bir sembolün barı as_of'un gerisinde olmak
     # ZORUNDADIR — delist gününden sonra bar YOK. Onu saymak, sayacı hiç düşmeyen bir tabana
@@ -311,3 +381,81 @@ def build() -> dict:
         "regime": rejim,
         "rows": rows,
     }
+
+
+# =================================================================================================
+# TEK SEMBOLÜN DERİN SERİSİ — `/api/bars/{ticker}` (aday çekmecesinin çizdiği grafik)
+# =================================================================================================
+# Satır-içi kıvılcım 40 kapanışla yetinir; çekmece açıldığında operatör "bu hisse son yarım yılda
+# ne yaptı?" diye sorar ve o soru OHLC ister (gövde/fitil), yalnız kapanış değil.
+BAR_UCU_VARSAYILAN = 120      # ≈ altı ay — çekmecenin varsayılan sorusu bu ölçekte cevaplanır
+BAR_UCU_TAVAN = 500           # ≈ iki yıl. TAVAN ZORUNLU: bu depodaki CSV'ler 2004'ten beri
+                              # birikiyor (≈5.600 bar) ve tavansız bir uç tek istekle defterin
+                              # TAMAMINI tele koyardı. Tavan SESSİZ DE OLAMAZ (`kirpildi`):
+                              # 900 isteyip 500 alan bir pano, eksik grafiği tam sanardı.
+
+# Yol parametresi diskte bir DOSYA ADINA çevriliyor. Kapalı bir izin listesi olmadan bu uç bir
+# dizin gezintisi yüzeyidir (`/api/bars/%2e%2e`, `/api/bars/..%2f..%2fetc%2fpasswd`). Sembol adları
+# harf/rakamla BAŞLAR ve devamında yalnız harf/rakam/nokta/tire taşır (`BRK.B`) — desen bunu
+# ZORLAR, adı temizlemeye ÇALIŞMAZ: temizleyen bir kod, temizlemeyi unuttuğu ilk karakterde sessizce
+# açık kapı bırakır. İlk karakterin alfanümerik olma şartı `..` ve `-x` gibi adları daha kapıda
+# eler (dosya adı kurulurken '.' → '-' zaten dönüştürülüyor, yani bu İKİNCİ hattır, tek hat değil).
+_TICKER_DESENI = _re.compile(r"^[A-Za-z0-9][A-Za-z0-9.\-]{0,11}$")
+
+
+def bar_serisi(ticker: str, n: int | None = None) -> dict:
+    """Tek sembolün son `n` GÜNLÜK barı (EOD, kapanmış). Yük:
+
+        {"ticker", "istenen_n", "n", "kirpildi", "as_of", "bar": [{"t","o","h","l","c","v"}…],
+         "neden"}
+
+    `n` GERÇEK sayıdır (dönen bar adedi), `istenen_n` ise sorulan sayı — ikisini tek alana
+    indirmek "500 istedim 500 aldım" ile "500 istedim 12 var"ı aynı şekle sokardı.
+
+    BİLİNMEYEN/OKUNAMAYAN SEMBOL 404 DEĞİLDİR: `bar: null` + `neden`. 404 alan bir çekmece
+    "sunucu bozuk" ile "bu sembolün barı yok"u ayırt edemez; ikincisi bir ARIZA değil bir
+    ÖLÇÜM YOKLUĞUDUR ve panoda öyle çizilir.
+
+    ÖNBELLEKSİZ ve bilinçli: `_bar_core`ın gözü satır ÖZETLERİNİ tutar (260 sembol × birkaç
+    alan). 500 barlık OHLCV kareleri aynı göze konsaydı süreç belleği evren büyüklüğüyle
+    çarpılırdı; bu uç ise tek sembol için, çekmece açıldığında, seyrek çağrılır.
+    """
+    ham = str(ticker or "").strip()
+    ad = ham.upper()
+    istenen = int(n) if n is not None else BAR_UCU_VARSAYILAN
+    kirpildi = istenen > BAR_UCU_TAVAN
+    etkin = min(istenen, BAR_UCU_TAVAN)
+
+    def _yok(neden: str) -> dict:
+        return {"ticker": ad, "istenen_n": istenen, "n": 0, "kirpildi": kirpildi,
+                "as_of": None, "bar": None, "neden": neden}
+
+    if not _TICKER_DESENI.match(ham):
+        return _yok("geçersiz sembol adı — harf/rakam/nokta/tire dışında karakter var")
+    # Dosya adı küçük harf ve '.' → '-' ile yazılır (adapters.data._bar_path ile AYNI kural;
+    # oradaki tek kaynağı import etmek marketview'e bir adapter bağımlılığı daha eklerdi).
+    p = config.BARS / f"{ham.lower().replace('.', '-')}.csv"
+    if not p.exists():
+        return _yok(_SERI_YOK_DOSYA)
+    try:
+        df = pd.read_csv(p, usecols=["date", "open", "high", "low", "close", "volume"])
+    except Exception as e:
+        from . import obs
+        obs.warn("marketview_bar_ucu_unreadable", file=p.name, error=f"{type(e).__name__}: {e}",
+                 detail="derin seri ucu boş DÖNMEZ, nedenini beyan eder — pano 'ölçülemedi' çizer")
+        return _yok(f"bar dosyası okunamadı ({type(e).__name__}) — biçim bozuk ya da kolon eksik")
+
+    kuyruk = df.tail(etkin)
+    bar = []
+    for d, o, h, lo, c, v in zip(kuyruk["date"], kuyruk["open"], kuyruk["high"],
+                                 kuyruk["low"], kuyruk["close"], kuyruk["volume"]):
+        cf = _f(c)
+        if cf is None:
+            continue      # kapanışı olmayan bar bir bar DEĞİLDİR (`_compute_core` ile aynı kural)
+        bar.append({"t": str(d)[:10], "o": _f(o), "h": _f(h), "l": _f(lo), "c": cf, "v": _f(v)})
+    if not bar:
+        return _yok("dosyada kapanışı ölçülebilen tek bar yok — çizilecek seri çıkmadı")
+    # `as_of` DÖNEN serinin son seansıdır: bu uç EOD servis eder ve hangi seansa kadar ölçtüğünü
+    # söylemek zorundadır — sembolün barı günler önce durmuşsa grafik "bugün" diye okunmamalı.
+    return {"ticker": ad, "istenen_n": istenen, "n": len(bar), "kirpildi": kirpildi,
+            "as_of": bar[-1]["t"], "bar": bar, "neden": None}
