@@ -340,3 +340,64 @@ kalamaz — ölçülmemiş olması, iki rengin aynı olduğunu on iki saat gör�
 - **Ö3/Ö5/Ö7** — tutmadılar ve §2.1'in yazdığı gibi **kullanım yüzeyi daraltılarak** kapandılar
   (jeton uydurulmadı): gezinme mürekkebi yalnız iki adı geçen küçük yüzeyde zemin olabilir,
   büyük yüzey wash'a düşer; odak garantisini `--sh-ring` değil 2px `--accent` ana hattı taşır.
+
+---
+
+## 10 · RENK GERİ GELİYOR — TAŞIYICI DEĞİŞİMİ + RENKLİ SERİLER (operatör, 2026-08-24)
+
+_Operatör: "uygulamada renkleri kullanmamışsın" → ölçüldü, haklı. Sonra: "hangisi en doğru
+sonucu verecekse onunla ilerle, grafikler de renkli olmalı."_
+
+### 10.1 Teşhis — sorun hue değil KROMA
+`index.html`de altı Dub aksanından **üç hex** geçiyor, üçü de mavi. `vivid-green`,
+`tangerine`, `soft-mint` **hiç yok**; `lavender` tanımlı ama görünmez (kâğıt modu akromatik).
+Ve şiddet üçlüsü: yeşil zaten Dub'ın hue'sunda (6,2° fark) ama **%36 solmuş**; kehribar 27,3°
+kaymış ve **%48 solmuş**. Kök neden luminans merdiveni — koyulaşmak sRGB'de kromaya mal olur.
+
+### 10.2 HÜKÜM: TAŞIYICI DEĞİŞİMİ (altıncı seçenek)
+Beş seçenek ölçüldü (`research/olcumler/oe1_dub_dorduncu_2026-08-24/RAPOR.md`). Metin-taşıyıcı
+altında en iyi sonuç ΔE **15,1** — çıtaya 0,1 pay. Paylı arama (ΔE≥18) **iki temada da BOŞ
+döndü**: bu, rengin metin kaldığı sürece ulaşılabilecek sınırın kendisi.
+
+**Karar: renk METİN olmaktan çıkar, İŞARET olur; yazı nötr mürekkebe geçer.**
+Dub'ın kendi "feature pill" grameri budur — aksan yüzer, gövde nötr kalır.
+Ölçüldü: **ΔE 17,9 / 64,8 · lum 1,21 / 1,27 · işaret 3:1 → 4,82 / 3,99 / 3,14**, kroma kazancı
+**kehribar +%97 · yeşil +%70 · kırmızı +%28**.
+
+**BU BİR GEVŞETME DEĞİLDİR ve bu ayrım bağlayıcı:** `ÖE1-c` metne uygulanmaya DEVAM eder —
+ama metin artık nötr mürekkeptir, yani şart daha kolay değil **daha sıkı** karşılanır
+(nötr mürekkep %10 tint üstünde ~18:1, renkli mürekkep 4,5:1). Renge uygulanan şart
+metin-dışı **3:1**'e döner çünkü renk artık metin değildir.
+
+**Bedeli ölçüldü:** `index.html`de şiddet rengini metin olarak kullanan **39 kural** +
+`app.js`te çip işaretlemesi.
+
+### 10.3 GRAFİKLER RENKLENİR — ama CVD kanalı KALDIRILMAZ
+Bugünkü seri merdiveni üç ton gri (`--accent #0a0a0a` · `--violet #404040` · `--tx3 #737373`)
+ve bu **bilinçliydi**: renk körü okuyucunun ayıramadığı tam olarak hue farkıdır, o yüzden
+ayrım luminansa ve kesik-çizgi desenine bindirilmişti.
+
+**Doğru hamle o kanalı kaldırmak değil, üstüne renk EKLEMEKTİR.** Donmuş kural:
+
+| Ö | ölçü | eşik | gerekçe |
+|---|---|---|---|
+| ÇG1 | komşu seri ΔL* | **≥ 15** | renk körü ayrımını luminans taşımaya devam eder |
+| ÇG2 | her seri kart üstünde | **≥ 3:1** | metin-dışı taşıyıcı (WCAG 2.2 1.4.11) |
+| ÇG3 | kesik-çizgi ikinci kanalı | **KORUNUR** | bugün 9 yerde var; sayı DÜŞEMEZ |
+
+Ölçüldü (gündüz): üç ayrı Dub hue'su `#00369c · #b63c00 · #00a241` → ΔL* 16,2/15,2 ·
+kart 10,46/5,78/3,36 · **ΔE 48,6/62,9** — geçer, ve hue ayrımı luminansın üstüne net bir
+kazanç ekliyor (yalnız-mavi merdiveninde ΔE 14,8/16,0'a düşüyor).
+
+### 10.4 SERİ ATAMA KURALI — bilgi taşır, süs değildir
+- **Aynı büyüklüğü ölçen seriler → TEK hue, farklı açıklık.** Merdivenin kendisi türetme
+  ilişkisini KODLAR. Bugünkü `Sermaye` ↔ `Tepe (koşan azami)` tam bu sınıftır: Tepe,
+  Sermaye'den türetilir. Onlara yeşil/turuncu vermek **"iyi/kötü" diye okunur** ve bu bir
+  alım-satım panosunda pahalı bir yanlış okumadır.
+- **Farklı büyüklükleri ölçen seriler → ayrı Dub hue'su.** (ör. sermaye ↔ açık risk ↔ K/Z.)
+- Para taşıyan bir seri, şiddet kanalının hue'suna binmez.
+
+### 10.5 BEDELSİZ KALEM — `soft-mint` bağlanır
+`soft-mint #dcfce7` Dub'ın KENDİ yüzey jetonudur (`surface.tinted-accent`), bir durum rengi
+değil bir **zemin tinti**dir ve şiddet kanalıyla hiç ilgisi yoktur. Bugün hiç kullanılmıyor.
+Sakinlik beyanı / olumlu onay yüzeyine bağlanır — ölçüm gerektirmez, çünkü metin taşımaz.
