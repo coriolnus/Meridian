@@ -1,58 +1,81 @@
 /* ============================================================================
-   PİLOT YÜZEYİ — İş akışı, shadcn "application shell" gramerinde
+   PİLOT YÜZEYİ — shadcn "application shell" bloğunun KENDİSİ, Meridian jetonlarıyla
    ----------------------------------------------------------------------------
-   PİLOTUN AMACI sayfayı güzelleştirmek DEĞİL, üç kapıyı ölçmek:
-     G1  jeton/kontrast denkliği   → renk YALNIZ rol jetonundan gelir
-     G2  dağıtım bütünlüğü         → CSP uyumlu, dış origin yok, artefakt taze
-     G3  epistemik değişmezler     → payda zorunlu, ölçülemedi ≠ sıfır
+   Kabuk artık elle çizilmiyor: `npx shadcn add sidebar breadcrumb` ile gelen RESMÎ
+   bileşenler kullanılıyor (SidebarProvider/Sidebar/SidebarInset/SidebarTrigger +
+   Breadcrumb). Operatör bloğu shadcnblocks.com'da göremedi (üçüncü taraf paywall);
+   burada bloğun grameri BİZİM paletimizle ve BİZİM verimizle çiziliyor.
 
-   Bu dosya G1'in bileşen ayağını taşır: burada TEK bir çıplak hex ya da Tailwind
-   hazır renk skalası (`text-green-600`) geçmez. Geçerse çivi düşer.
+   ÖLÇÜLEN İHLAL VE DÜZELTMESİ (stil.css'te yazılı): CLI kendi paletini enjekte etti ve
+   iki rengi rezerve NAV bandımızın (255-272°) içine düştü. Palet silindi, shadcn'in
+   `--sidebar-*` jetonları rol katmanına bağlandı. Bu dosyada çıplak hex ve Tailwind
+   hazır renk skalası GEÇMEZ — çivi test_ui_pilot_kapilari_v286::test_G1b.
    ============================================================================ */
-import { useState } from "react";
 import {
-  OlcumHucresi,
-} from "./meridian/OlcumHucresi";
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import {
-  azOrnek,
-  gurultuBandiAciklamasi,
-  kanitOrani,
-  yonSinifi,
-} from "./meridian/olcum";
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import {
+  Activity,
+  CalendarDays,
+  FileText,
+  GitBranch,
+  HeartPulse,
+  LineChart,
+  Workflow,
+} from "lucide-react";
+
+import { OlcumHucresi } from "./meridian/OlcumHucresi";
+import { azOrnek, gurultuBandiAciklamasi, kanitOrani, yonSinifi } from "./meridian/olcum";
 import type { Olcum } from "./meridian/olcum";
 
-/* --- KENAR ÇUBUĞU: gruplu gezinme (shadcn shell grameri) --------------------- */
 const RAY = [
   {
     grup: "Karar",
     ogeler: [
-      { ad: "Bugün", yol: "/#bugun" },
-      { ad: "Karar", yol: "/#karar" },
-      { ad: "Analiz", yol: "/#analiz" },
+      { ad: "Bugün", yol: "/#bugun", Ikon: CalendarDays },
+      { ad: "Karar zinciri", yol: "/#karar", Ikon: GitBranch },
+      { ad: "Analiz", yol: "/#analiz", Ikon: LineChart },
     ],
   },
   {
     grup: "İşletme",
     ogeler: [
-      { ad: "Portföy", yol: "/#portfoy" },
-      { ad: "Sağlık", yol: "/#saglik" },
-      { ad: "Operasyon", yol: "/#operasyon" },
+      { ad: "Portföy", yol: "/#portfoy", Ikon: Activity },
+      { ad: "Sağlık", yol: "/#saglik", Ikon: HeartPulse },
     ],
   },
   {
     grup: "Belge",
     ogeler: [
-      { ad: "İş akışı", yol: "/pilot-workflow.html", secili: true },
-      { ad: "Runbook", yol: "/runbook" },
+      { ad: "İş akışı", yol: "/pilot-workflow.html", Ikon: Workflow, secili: true },
+      { ad: "Runbook", yol: "/runbook", Ikon: FileText },
     ],
   },
 ] as const;
 
-/* --- ÖRNEK ÖLÇÜMLER --------------------------------------------------------
-   Sayılar SABİT ve bu bilerek: pilot bir VERİ yüzeyi değil, bir GRAMER denemesi.
-   Canlı uca bağlanmadı çünkü pilotun sorusu "shadcn Meridian'ın kurallarını
-   taşıyabiliyor mu", "veri akıyor mu" değil. Bağlanmış olsaydı yanlış bir sayıyı
-   canlı sanma riski doğardı — UYDURMA YASAĞI'nın yüzey karşılığı. */
+/* SAYILAR SABİT VE BU BİLEREK: pilot bir VERİ yüzeyi değil, bir GRAMER denemesi.
+   Canlı uca bağlanmadı — bağlansaydı yanlış bir sayıyı canlı sanma riski doğardı. */
 const ORNEKLER: {
   etiket: string;
   olcum: Olcum;
@@ -87,7 +110,6 @@ const ORNEKLER: {
   },
   {
     etiket: "pullback · düşüş",
-    // ÖLÇÜLEMEDİ — ve NEDENİ tipte zorunlu olduğu için ekranda da var.
     olcum: { deger: null, neden: "bu kesitte hiç işlem kapanmadı — ortalama tanımsız" },
     n: 0,
     ortalama: null,
@@ -96,88 +118,84 @@ const ORNEKLER: {
 ];
 
 export function App() {
-  const [rayAcik, setRayAcik] = useState(true);
-
   return (
-    <div className="grid min-h-screen" style={{ gridTemplateColumns: rayAcik ? "240px 1fr" : "64px 1fr" }}>
-      {/* ---- KENAR ÇUBUĞU ---- */}
-      <aside className="border-r border-cizgi bg-kart px-3 py-5">
-        <div className="mb-6 flex items-center gap-2 px-2">
-          <span className="inline-block h-2 w-2 rounded-cip bg-nav" aria-hidden />
-          {rayAcik && (
-            <span className="text-[length:var(--t-body)] font-semibold text-murekkep">
+    <SidebarProvider>
+      <Sidebar collapsible="icon">
+        <SidebarHeader>
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <span className="inline-block size-2 shrink-0 rounded-cip bg-nav" aria-hidden />
+            <span className="truncate text-[length:var(--t-body)] font-semibold text-murekkep group-data-[collapsible=icon]:hidden">
               Meridian
             </span>
-          )}
-        </div>
+          </div>
+        </SidebarHeader>
 
-        {RAY.map((g) => (
-          <nav key={g.grup} className="mb-5">
-            {rayAcik && (
-              /* E1 — MİKRO BÖLÜM BAŞLIĞI: 11px · 600 · .04em · UPPERCASE · --tx3 */
-              <div className="mb-2 px-2 text-[length:var(--t-cap)] font-semibold uppercase tracking-[.04em] text-murekkep-3">
+        <SidebarContent>
+          {RAY.map((g) => (
+            <SidebarGroup key={g.grup}>
+              {/* E1 — MİKRO BÖLÜM BAŞLIĞI: 11px · 600 · .04em · UPPERCASE · --tx3 */}
+              <SidebarGroupLabel className="font-semibold uppercase tracking-[.04em] text-murekkep-3">
                 {g.grup}
-              </div>
-            )}
-            <ul className="flex flex-col gap-0.5">
-              {g.ogeler.map((o) => (
-                <li key={o.ad}>
-                  <a
-                    href={o.yol}
-                    aria-current={"secili" in o && o.secili ? "page" : undefined}
-                    className={`flex min-h-[36px] items-center gap-2.5 rounded-dugme px-2 text-[length:var(--t-body)] no-underline transition-colors hover:bg-zemin-2 ${
-                      "secili" in o && o.secili
-                        ? "bg-zemin-2 font-medium text-murekkep"
-                        : "text-murekkep-2"
-                    }`}
-                    title={rayAcik ? undefined : o.ad}
-                  >
-                    <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-cip bg-cizgi-2" aria-hidden />
-                    {rayAcik && o.ad}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ))}
-      </aside>
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {g.ogeler.map((o) => (
+                    <SidebarMenuItem key={o.ad}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={"secili" in o && o.secili}
+                        tooltip={o.ad}
+                      >
+                        <a href={o.yol}>
+                          <o.Ikon />
+                          <span>{o.ad}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
+        </SidebarContent>
+        <SidebarRail />
+      </Sidebar>
 
-      {/* ---- İÇERİK ---- */}
-      <div className="flex min-w-0 flex-col">
-        {/* ÜST BAR: daraltma düğmesi + KIRINTI (bugün panoda eksik olan tek şey) */}
-        <header className="flex items-center gap-3 border-b border-cizgi px-5 py-3">
-          <button
-            type="button"
-            onClick={() => setRayAcik((v) => !v)}
-            aria-expanded={rayAcik}
-            aria-label={rayAcik ? "Kenar çubuğunu daralt" : "Kenar çubuğunu aç"}
-            className="grid h-8 w-8 place-items-center rounded-dugme border border-cizgi bg-kart text-murekkep-2 hover:bg-zemin-2"
-          >
-            <span aria-hidden>{rayAcik ? "‹" : "›"}</span>
-          </button>
-          <span className="h-4 w-px bg-cizgi" aria-hidden />
-          <nav aria-label="Kırıntı">
-            <ol className="flex items-center gap-2 text-[length:var(--t-cap)] text-murekkep-3">
-              <li><a href="/" className="no-underline hover:text-murekkep-2">Meridian</a></li>
-              <li aria-hidden>/</li>
-              <li>Belge</li>
-              <li aria-hidden>/</li>
-              <li className="text-murekkep">İş akışı</li>
-            </ol>
-          </nav>
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-cizgi px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Meridian</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/#analiz">Belge</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>İş akışı</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </header>
 
-        <main className="p-5">
-          <h1 className="mb-1 text-[length:var(--t-h)] font-semibold text-murekkep">
-            Kurulum × rejim
-          </h1>
-          <p className="mb-5 max-w-[65ch] text-[length:var(--t-body)] text-murekkep-2">
-            shadcn kabuğu üstünde Meridian ölçüm hücresi. Hücrelerin hepsi aynı
-            bileşenden doğuyor; renk yalnız rol jetonundan geliyor.
-          </p>
+        <main className="flex flex-1 flex-col gap-4 p-4">
+          <div>
+            <h1 className="text-[length:var(--t-h)] font-semibold text-murekkep">
+              Kurulum × rejim
+            </h1>
+            <p className="mt-1 max-w-[65ch] text-[length:var(--t-body)] text-murekkep-2">
+              shadcn'in resmî <span className="font-mono">sidebar</span> +{" "}
+              <span className="font-mono">breadcrumb</span> bloğu, Meridian jetonlarıyla.
+              Kenar çubuğu ikon-rayına daralır; hücrelerin hepsi tek bileşenden doğuyor ve
+              renk yalnız rol jetonundan geliyor.
+            </p>
+          </div>
 
-          {/* DÖRTLÜ SAYISAL BAND — TEK GRAMER: kapalı kap + paylaşılan kenar + gap:0.
-              Maketin yedi blok kabının yedisinde aynı reçete (çivi T4). */}
+          {/* DÖRTLÜ SAYISAL BAND — TEK GRAMER: kapalı kap + paylaşılan kenar + gap:0 */}
           <div className="overflow-hidden rounded-kart border border-cizgi bg-kart">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {ORNEKLER.map((o, i) => (
@@ -197,7 +215,7 @@ export function App() {
                     yon={yonSinifi(o.ortalama, o.n)}
                     kanit={
                       o.n > 0
-                        ? { oran: kanitOrani(o.n), payda: `işlem sayısı · log ölçek, n=55 dolu` }
+                        ? { oran: kanitOrani(o.n), payda: "işlem sayısı · log ölçek, n=55 dolu" }
                         : undefined
                     }
                     rozet={o.n > 0 && azOrnek(o.n) ? "az_ornek" : undefined}
@@ -207,38 +225,34 @@ export function App() {
             </div>
           </div>
 
-          {/* GÜRÜLTÜ BANDI LEJANTI — operatörün sahne C'de gördüğü "aynı anlam iki
-              renkte" okumasının gerçek cevabı. Kural doğruydu ama EKRANDA
-              AÇIKLANMIYORDU; kuralı değil görünürlüğünü düzeltiyoruz. */}
-          <section
-            className="mt-4 rounded-serit bg-zemin-2 p-4"
-            aria-label="Renk kuralı"
-          >
+          {/* GÜRÜLTÜ BANDI LEJANTI — operatörün "aynı anlam iki renkte" okumasının cevabı.
+              Kural doğruydu ama EKRANDA AÇIKLANMIYORDU; kuralı değil görünürlüğünü düzeltiyoruz. */}
+          <section className="rounded-serit bg-zemin-2 p-4" aria-label="Renk kuralı">
             <div className="mb-2 text-[length:var(--t-cap)] font-semibold uppercase tracking-[.04em] text-murekkep-3">
               Renk neden bazı hücrelerde yok
             </div>
             <p className="max-w-[65ch] text-[length:var(--t-body)] leading-[1.6] text-murekkep-2">
               Ortalama, örneklem gürültüsünün <span className="font-mono">(1/√n)</span> içinde
-              kalıyorsa hücre ne yeşil ne kırmızı olur — o sayı sıfırdan ayırt edilemez ve
-              renk taşırsa bir hüküm gibi okunur. İşaret sayının kendisinde durur.
+              kalıyorsa hücre ne yeşil ne kırmızı olur — o sayı sıfırdan ayırt edilemez ve renk
+              taşırsa bir hüküm gibi okunur. İşaret sayının kendisinde durur.
             </p>
             <ul className="mt-3 flex flex-col gap-1">
-              {ORNEKLER.filter((o) => o.ortalama != null).map((o) => {
-                const aciklama = gurultuBandiAciklamasi(o.ortalama, o.n);
-                return (
-                  <li
-                    key={o.etiket}
-                    className="flex flex-wrap items-baseline gap-2 text-[length:var(--t-cap)] text-murekkep-2"
-                  >
-                    <span className="font-mono tabular-nums text-murekkep">{o.etiket}</span>
-                    <span>{aciklama ?? "bandın dışında — renk bir okuma taşıyor"}</span>
-                  </li>
-                );
-              })}
+              {ORNEKLER.filter((o) => o.ortalama != null).map((o) => (
+                <li
+                  key={o.etiket}
+                  className="flex flex-wrap items-baseline gap-2 text-[length:var(--t-cap)] text-murekkep-2"
+                >
+                  <span className="font-mono tabular-nums text-murekkep">{o.etiket}</span>
+                  <span>
+                    {gurultuBandiAciklamasi(o.ortalama, o.n) ??
+                      "bandın dışında — renk bir okuma taşıyor"}
+                  </span>
+                </li>
+              ))}
             </ul>
           </section>
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

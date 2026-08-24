@@ -14,6 +14,13 @@
 @import "./jetonlar.css";
 @import "tailwindcss";
 
+/* TEMA VARYANTI BİZİM MEKANİZMAMIZA BAĞLANDI (2026-08-24, pilot bulgusu).
+   shadcn CLI `@custom-variant dark (&:is(.dark *))` yazdı — ama bu depoda `.dark`
+   sınıfını HİÇ KİMSE yazmıyor: `theme.js` `data-theme` NİTELİĞİNİ kurar (dört yüzeyin
+   ortak sözleşmesi, D5 2026-08-07). Düzeltilmeseydi shadcn bileşenlerinin gece hâli
+   SESSİZCE hiç ateşlenmezdi — hata vermez, sadece yanlış temada çizerdi. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme inline {
   --font-sans: var(--sans);
   --font-mono: var(--mono);
@@ -50,6 +57,21 @@
   --radius-serit: var(--r-lg);
   --radius-cip: var(--r-tag);
   --radius-cubuk: var(--r-bar);
+  /* SHADCN'İN KENDİ PALETİ SİLİNDİ, JETONLARI ROL KATMANINA BAĞLANDI.
+     ÖLÇÜLEN İHLAL (2026-08-24, pilotun en değerli bulgusu): `shadcn add sidebar` kendi
+     paletini stil dosyasına ENJEKTE ETTİ ve iki rengi bizim REZERVE NAV BANDIMIZIN
+     (OKLCh 255-272°) tam içine düştü — `--sidebar-ring` #3b82f6 H=259,8° (--nav'a ΔE 10,9)
+     ve `--sidebar-primary` #1d4ed8 H=264,4° (ΔE 7,1). Meridian'da hue bir üslup değil bir
+     GÜVENLİK KAYDIDIR: gezinme rengi, mod çipi ve şiddet ayrı bantlarda durur. Araç bunu
+     bilmez ve sessizce çakışır — CLI çıktısı OLDUĞU GİBİ KABUL EDİLEMEZ, yeniden bağlanır. */
+  --color-sidebar: var(--card);
+  --color-sidebar-foreground: var(--tx);
+  --color-sidebar-primary: var(--nav);
+  --color-sidebar-primary-foreground: var(--bg2);
+  --color-sidebar-accent: var(--bg2);
+  --color-sidebar-accent-foreground: var(--tx);
+  --color-sidebar-border: var(--line);
+  --color-sidebar-ring: var(--accent);
 }
 
 /* Panonun kendi sıfırlayıcısıyla aynı iki satır: düğme/form font KALITMAZ ve
@@ -64,3 +86,5 @@ body {
   color: var(--tx);
   font-family: var(--sans);
 }
+
+
