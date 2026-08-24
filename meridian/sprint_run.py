@@ -107,15 +107,43 @@ def _sessions(index, lo: str, hi: str) -> list[str]:
     return [str(d.date()) for d in index["date"] if lo <= str(d.date()) <= hi]
 
 
+# İZ SÜZGECİ 2026-08-24'te GENİŞLETİLDİ — REDDİN GEREKÇESİ ARTIK SİLİNMİYOR.
+# ESKİ HÂL: `[t for t in trace if t.get("passes")][:6]`. `cleared == 0` iken bu ifade TANIM GEREĞİ
+# `[]` döndürüyordu; yani sprintin en sık sonucu (2026-08-21 koşumu: evaluated 6, cleared 0)
+# durum dosyasına HİÇBİR iz bırakmıyordu. Ölçülen bedel: "kapı ölçemedi" · "aday kötü" ·
+# "aday atıl düğme" hükümleri birbirinden AYIRT EDİLEMİYORDU — ve `reflect.py:2091` her reddedilen
+# ize `why` alanını ZATEN yazıyordu, yani bilgi üretiliyor, süzgeçte ölüyordu (YASA 6'nın tersi:
+# okuyucusu olan bir alanın YAZAR tarafından kırpılması).
+#
+# YENİ ALAN AÇILMADI, BİLEREK: `trace` adı korunuyor ve içeriği zenginleşiyor. Yeni bir anahtar
+# (`trace_red` gibi) eklemek, okuyucusu olmayan bir alan üretirdi (`sprint.status()` → /api/sprint
+# → pano zinciri o adı bilmiyor) ve YASA 6 borcu açardı. Her iz girdisi zaten `passes` bayrağı
+# taşıyor, yani tüketici ikisini ayırabiliyor.
+#
+# PAYDA BEYANI: kırpma hâlâ var (durum dosyası bir okuma-modeli, defter DEĞİL) ve TÜRETİLEBİLİR
+# kalıyor — `evaluated` ile dönen iz uzunluğunun farkı kaç satırın dışarıda kaldığını söyler.
+# Bunun için AYRI BİR ALAN AÇILMADI ve bu bilinçli: okuyucusu olmayan bir sayaç, kapatmaya
+# çalıştığımız YASA 6 borcunun aynısını açardı. Türetilebilir bir şeyi alan yapmak, sözleşmeyi
+# genişletmenin bedava olduğu yanılsamasını üretir.
+_IZ_GECEN_TAVAN = 6      # kapıyı geçenler: karar için altı örnek yeter (eski davranış korundu)
+_IZ_RED_TAVAN = 4        # reddedilenler: en sık DÖRT gerekçe teşhis için yeter, dosya şişmez
+
+
 def _slim(res: dict) -> dict:
     """Arama sonucunu durum dosyasına sığacak kadar küçültür: durum, denenen/kapıyı geçen sayısı,
-    mevcut sürümün OOS skoru, en iyi aday ve kapıyı geçen ilk altı iz satırı.
+    mevcut sürümün OOS skoru, en iyi aday ve İKİ TARAFLI iz örneği.
+
+    İz artık yalnız GEÇENLERİ değil, REDDEDİLENLERİ de taşır (yukarıdaki blok): `cleared == 0`
+    bir sprintin en sık sonucudur ve reddin gerekçesi olmadan hiçbir şey öğretmez.
     """
     s = res.get("search") or res
     best = s.get("best")
+    iz = list(s.get("trace") or [])
+    gecen = [t for t in iz if t.get("passes")][:_IZ_GECEN_TAVAN]
+    red = [t for t in iz if not t.get("passes")][:_IZ_RED_TAVAN]
     return {"status": res.get("status"), "evaluated": s.get("evaluated"), "cleared": s.get("cleared"),
             "incumbent_oos": s.get("incumbent_oos"), "best": best,
-            "trace": [t for t in (s.get("trace") or []) if t.get("passes")][:6]}
+            "trace": gecen + red}
 
 
 def _run(sbroot: str, cfg: dict) -> None:
