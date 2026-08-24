@@ -136,3 +136,36 @@ ağırlığı**, **129 çivi yeniden enstrümanlama**, **göç boyunca iki ekosi
 
 **Bu belge bir hüküm değil bir ölçümdür.** Taşıyıp taşımamak operatörün kararı; bu belgenin işi
 kararı tahmin üstünde değil sayı üstünde verdirmek.
+
+---
+
+## EK (aynı gün) — CLI ÇIKTISI OLDUĞU GİBİ KABUL EDİLEMEZ
+
+Pilot ilk turda kabuğu ELLE çizmişti. Operatör bloğun kendisini görmek isteyince resmî
+bileşenler CLI ile çekildi (`npx shadcn add sidebar breadcrumb separator badge`) — ve
+**araç, kapattığımız hastalığı kendi eliyle geri getirdi.**
+
+**İhlal 1 — REZERVE HUE BANDI ÇİĞNENDİ.** CLI kendi paletini stil dosyasına enjekte etti:
+
+| jeton | hex | OKLCh hue | `--nav`'a ΔE2000 | rezerve nav bandı (255-272°) |
+|---|---|---|---|---|
+| `--sidebar-ring` | `#3b82f6` | **259,8°** | 10,9 | **İÇİNDE** |
+| `--sidebar-primary` (gece) | `#1d4ed8` | **264,4°** | 7,1 | **İÇİNDE** |
+
+Meridian'da hue bir üslup değil **güvenlik kaydıdır**: gezinme, mod çipi (kâğıt ↔ canlı para)
+ve şiddet ayrı bantlarda durur. Araç bunu bilmez, bilemez ve sessizce çakışır.
+
+**İhlal 2 — TEMA MEKANİZMASI ÇATALLANDI.** CLI `@custom-variant dark (&:is(.dark *))` yazdı.
+Bu depoda `.dark` sınıfını **hiç kimse yazmıyor**: `theme.js` `data-theme` niteliğini kurar ve
+bu dört yüzeyin ortak sözleşmesidir (D5, 2026-08-07). Düzeltilmeseydi shadcn bileşenlerinin
+gece hâli **sessizce hiç ateşlenmezdi** — hata vermez, yalnız yanlış temada çizerdi.
+
+**Düzeltme:** enjekte edilen palet silindi (kalan `hsl(` = 0), `--sidebar-*` jetonları rol
+katmanına bağlandı, dark varyantı `[data-theme="dark"]`e çevrildi. Kapılar sonrasında da 22/22.
+
+**HÜKÜM:** *"shadcn kullanılabilir"* ile *"CLI çıktısı olduğu gibi kabul edilebilir"* aynı şey
+değil. Her `shadcn add` sonrası palet ve tema mekanizması **yeniden bağlanmalı** ve bu bir
+kerelik değil **süregelen** bir bakım kalemidir. Göç kararı verilirse bu adım bir çiviyle
+korunmalı, yoksa bir sonraki bileşen eklemesi bandı yeniden çiğner ve kimse görmez.
+
+**Ağırlık güncellendi:** resmî bileşenlerle 68,2 → **109,6 kB gzip** (mevcut sayfa 18,6 kB).
