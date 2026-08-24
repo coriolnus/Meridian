@@ -1,0 +1,413 @@
+{
+  "betimleyici_hukumsuz": {
+    "bayat_capa_girisler": [
+      "ALL",
+      "AMGN",
+      "BKNG",
+      "EMR",
+      "HUM",
+      "MRK",
+      "MRNA",
+      "NUE",
+      "VLO"
+    ],
+    "bayat_capa_not": "kapsam 'known' AMA giriş anında bilinen tek rapor tarihi GEÇMİŞTE — kapı sembolü tanıyor ama ileri çapası yok; bu kartın fail-open ekseninden AYRI bir olgudur, sayılır ve hüküm taşımaz",
+    "beyan": "aşağıdakiler karar kuralına GİRMEZ; yalnız paydayı ve bağlamı gösterir",
+    "maruziyet_vekili": {
+      "evren": 251,
+      "kapsam_disi_bugun": [
+        "ABT",
+        "ADBE",
+        "AZO",
+        "BAC",
+        "BKR",
+        "BLK",
+        "C",
+        "CAG",
+        "CCL",
+        "COST",
+        "DAL",
+        "FDX",
+        "GE",
+        "GIS",
+        "GS",
+        "ISRG",
+        "JNJ",
+        "JPM",
+        "KR",
+        "MKC",
+        "MS",
+        "MU",
+        "NFLX",
+        "NKE",
+        "ORCL",
+        "PEP",
+        "PGR",
+        "PLD",
+        "PNC",
+        "STZ",
+        "TRV",
+        "UAL",
+        "UNH",
+        "USB",
+        "WFC"
+      ],
+      "kapsam_disi_bugun_n": 35,
+      "pay_yuzde": 14.22,
+      "takvimde_bugun": 216,
+      "tarihsel_islem_kapsam_disi_sembolde": 127,
+      "tarihsel_islem_toplam": 893,
+      "uyari": "bu blok BUGÜNKÜ takvimi kullanır ve bilerek HÜKÜMSÜZDÜR — geçmiş bir girişin kazanç gününe denk gelip gelmediğini SORMAZ, yalnız bugün kapsam dışı olan sembollerin defterdeki payını sayar (kartın 'maruziyet vekili' kalemi). Hüküm yolu SALT PIT'tir."
+    },
+    "pencere_kapali_islem_n": 6,
+    "pencere_kapali_toplam_r": 15.934
+  },
+  "giris_tablosu": [
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-08-04"
+      ],
+      "asof_snapshot": "2026-08-05",
+      "durum": "acik",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": null,
+      "kimlik": "ACIK-AMGN",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+      "plan_kayitli_kapsam_damgasi": null,
+      "pnl_dollars": null,
+      "r_multiple": null,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-08-04"
+      ],
+      "ticker": "AMGN",
+      "ts_close": null,
+      "ts_open": "2026-08-06",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-08-04"
+      ],
+      "asof_snapshot": "2026-08-05",
+      "durum": "acik",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": null,
+      "kimlik": "ACIK-BKNG",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-05-BKNG",
+      "plan_kayitli_kapsam_damgasi": null,
+      "pnl_dollars": null,
+      "r_multiple": null,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-08-04"
+      ],
+      "ticker": "BKNG",
+      "ts_close": null,
+      "ts_open": "2026-08-06",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-08-04"
+      ],
+      "asof_snapshot": "2026-08-05",
+      "durum": "acik",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": null,
+      "kimlik": "ACIK-EMR",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-05-EMR",
+      "plan_kayitli_kapsam_damgasi": null,
+      "pnl_dollars": null,
+      "r_multiple": null,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-08-04"
+      ],
+      "ticker": "EMR",
+      "ts_close": null,
+      "ts_open": "2026-08-06",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-07-27"
+      ],
+      "asof_snapshot": "2026-08-05",
+      "durum": "kapali",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": "live_paper",
+      "kimlik": "T00098",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-05-NUE",
+      "plan_kayitli_kapsam_damgasi": null,
+      "pnl_dollars": -884.15,
+      "r_multiple": -0.993,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-07-27"
+      ],
+      "ticker": "NUE",
+      "ts_close": "2026-08-19",
+      "ts_open": "2026-08-06",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-08-05"
+      ],
+      "asof_snapshot": "2026-08-06",
+      "durum": "kapali",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": "live_paper",
+      "kimlik": "T00096",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-06-ALL-momentum_burst",
+      "plan_kayitli_kapsam_damgasi": null,
+      "pnl_dollars": -450.38,
+      "r_multiple": -1.028,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-08-05"
+      ],
+      "ticker": "ALL",
+      "ts_close": "2026-08-07",
+      "ts_open": "2026-08-07",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-07-30"
+      ],
+      "asof_snapshot": "2026-08-07",
+      "durum": "kapali",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": "live_paper",
+      "kimlik": "T00097",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-07-VLO-exhaustion_hammer",
+      "plan_kayitli_kapsam_damgasi": "known",
+      "pnl_dollars": 728.37,
+      "r_multiple": 0.918,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-07-30"
+      ],
+      "ticker": "VLO",
+      "ts_close": "2026-08-11",
+      "ts_open": "2026-08-10",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": true,
+      "asof_rapor_tarihleri": [
+        "2026-08-26"
+      ],
+      "asof_snapshot": "2026-08-13",
+      "durum": "acik",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": null,
+      "kimlik": "ACIK-CRM",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-13-CRM",
+      "plan_kayitli_kapsam_damgasi": "known",
+      "pnl_dollars": null,
+      "r_multiple": null,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-08-26"
+      ],
+      "ticker": "CRM",
+      "ts_close": null,
+      "ts_open": "2026-08-14",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-08-04"
+      ],
+      "asof_snapshot": "2026-08-13",
+      "durum": "kapali",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": "live_paper",
+      "kimlik": "T00099",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-13-MRK",
+      "plan_kayitli_kapsam_damgasi": "known",
+      "pnl_dollars": 1373.76,
+      "r_multiple": 3.379,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-08-04"
+      ],
+      "ticker": "MRK",
+      "ts_close": "2026-08-19",
+      "ts_open": "2026-08-14",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-07-29"
+      ],
+      "asof_snapshot": "2026-08-14",
+      "durum": "kapali",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": "live_paper",
+      "kimlik": "T00101",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-14-HUM",
+      "plan_kayitli_kapsam_damgasi": "known",
+      "pnl_dollars": -395.34,
+      "r_multiple": -1.017,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-07-29"
+      ],
+      "ticker": "HUM",
+      "ts_close": "2026-08-19",
+      "ts_open": "2026-08-17",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    },
+    {
+      "asof_ileri_capa_var": false,
+      "asof_rapor_tarihleri": [
+        "2026-07-31"
+      ],
+      "asof_snapshot": "2026-08-14",
+      "durum": "kapali",
+      "fail_open": false,
+      "gercek_bilgi_ufku": "2026-09-03",
+      "kapsam_asof": "known",
+      "kaynak_damgasi": "live_paper",
+      "kimlik": "T00100",
+      "olculemedi_neden": null,
+      "plan_id": "P-2026-08-14-MRNA",
+      "plan_kayitli_kapsam_damgasi": "known",
+      "pnl_dollars": 6436.17,
+      "r_multiple": 14.675,
+      "sonradan_ogrenilen_rapor_tarihleri": [
+        "2026-07-31"
+      ],
+      "ticker": "MRNA",
+      "ts_close": "2026-08-19",
+      "ts_open": "2026-08-17",
+      "vaka": false,
+      "vaka_neden": "fail-open damgası YOK (giriş anında sembol kapsam içindeydi)"
+    }
+  ],
+  "hucre_sayisi_K_katkisi": 1,
+  "hucre_sonucu": {
+    "hucre": "failopen_retro_sayim",
+    "toplam_r_neden": "vaka kümesi BOŞ — toplanacak R yok; 0.0 yazmak yokluğu ölçüm gibi gösterirdi",
+    "vaka_listesi": [],
+    "vaka_n": 0,
+    "vaka_olculemedi_n": 0,
+    "vaka_r_olculemeyen_n": 0,
+    "vaka_toplam_pnl_dolar": null,
+    "vaka_toplam_r": null
+  },
+  "kart": "EDG-2026-055",
+  "kaynak": {
+    "not": "A1 (canlı) günlük state yedeği, VM-dışı yerel kopya; yerel state/ KULLANILMADI (bayat) ve hiçbir şey state/ altına YAZILMADI",
+    "uye_sha256": {
+      "state/earnings.csv": "9f6ded73babac760403d3540a125c851eefacdfad63df87ab3deb5f00cd489bf",
+      "state/history/earnings_snapshots.jsonl": "f6cac50a286a40e64f514ebe9f1a6024fc479f219f5ad5384b52defc32eaa259",
+      "state/meridian.db": "7601420d7b22e893acea740a9c2cd26383ce690b492a773203d1992ae5686cff"
+    },
+    "yedek": "backups/a1/state-2026-08-22.tar.gz",
+    "yedek_sha256": "78bf09caab0dcc1d6465b200e7792e4866f87e558b49d7b525ce22484b414afe"
+  },
+  "kill_kontrolleri": {
+    "bugunku_takvimle_gecmis_yargilandi_mi": {
+      "kanit": "hüküm yolundaki iki soru da yalnız earnings_snapshots.jsonl'dan yanıtlandı: kapsam = fetch_date<giriş olan son anlık görüntü, gerçek rapor = fetch_date>=giriş anlık görüntüleri. state/earnings.csv YALNIZ hükümsüz maruziyet vekilinde okundu.",
+      "sonuc": "HAYIR"
+    },
+    "damgasiz_islem_vakaya_sayildi_mi": {
+      "kanit": "vaka yüklemi `fail_open is True` şartına bağlı; fail_open False ya da None olan satır vakaya GİREMEZ (None ayrı sayılır).",
+      "sonuc": "HAYIR"
+    },
+    "ikinci_eksen_alt_dilim_eklendi_mi": {
+      "kanit": "hükümlü hücre TEK: failopen_retro_sayim (K += 1). Diğer her sayı `betimleyici_hukumsuz` altında ve eşiksizdir.",
+      "sonuc": "HAYIR"
+    },
+    "kapi_tasarimina_dokunuldu_mu": {
+      "kanit": "bu betik yalnız okur; meridian/ altında hiçbir dosya değişmedi, meridian import bile edilmedi (REPLAY_UNIVERSE ast ile okundu).",
+      "sonuc": "HAYIR"
+    }
+  },
+  "olculemeyenler": [],
+  "olcum_tarihi": "2026-08-24",
+  "on_sayim_R1": {
+    "N_failopen_kapsam": 0,
+    "N_giris": 10,
+    "N_giris_acik_pozisyon": 4,
+    "N_giris_kapali_live_paper": 6,
+    "N_kapsam_olculemedi": 0,
+    "ateslenen_dal": "R1-dal-2: N_giris>=1 ve N_failopen_kapsam=0 → BETİMLEYİCİ (ölçülmüş-ret DEĞİL)",
+    "kapsam_damgasi_capraz_dogrulama": {
+      "celiski": [],
+      "not": "plan defteri 500 satırlık DÖNEN defter; düşen planın damgası None kalır ve UYDURULMAZ — hüküm yolu PIT yeniden kurulumudur",
+      "plan_defterinde_bulunan": 5,
+      "plan_defterinde_bulunmayan": 5
+    },
+    "pencere": [
+      "2026-08-03",
+      "2026-08-17"
+    ],
+    "snapshot_n": 10
+  },
+  "pit_arsiv": {
+    "asof_kurali": "giriş günü X için kapının elindeki takvim = fetch_date < X olan SON anlık görüntü (tazelemeler ≈20:1x UTC, girişler ≈13:30 UTC)",
+    "fetch_date_listesi": [
+      "2026-08-03",
+      "2026-08-04",
+      "2026-08-05",
+      "2026-08-06",
+      "2026-08-07",
+      "2026-08-10",
+      "2026-08-12",
+      "2026-08-13",
+      "2026-08-14",
+      "2026-08-17"
+    ],
+    "kaynaklar": [
+      "nasdaq"
+    ],
+    "pencere": [
+      "2026-08-03",
+      "2026-08-17"
+    ],
+    "snapshot_n": 10,
+    "son_snapshot_bilgi_ufku": "2026-09-03"
+  },
+  "rol_beyani": "ÖLÇÜM — bu dosya SAYI taşır, HÜKÜM taşımaz; damgayı Rol-1 işler"
+}

@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **70** kart.
 
-### Kayıtlı — ölçüm bekliyor (7)
+### Kayıtlı — ölçüm bekliyor (6)
 
 - **EDG-2026-019** (`registered`) — Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10) aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı…
   · HÜKÜM: 2026-08-09 Rol-1. (Aşağıya bkz: 2026-08-23 kill#1 kaydı — katman kapatma emri)
@@ -24,9 +24,6 @@ Toplam **70** kart.
 - **EDG-2026-054** (`registered`) — E-turu kararı 1/12 (operatör, 2026-08-23: "kartla ölç"): `bars_integrity` 98 kırık dönem/61 sembol buldu ve kanonik tüketiciler…
   · HÜKÜM: 2026-08-24 Rol-1 — ön-kayıt (E-1 operatör kararı; ölçüm 042-zinciri sonrası)
   · kart: `EDG-2026-054-kirli-donem-dislama.yaml`
-- **EDG-2026-055** (`registered`) — WP4 eleme bulgusu (2026-08-24): earnings takvimi kapsamı bugün 216/251 (%86,1) — 35 sembolde fail-open (kazanç-penceresi bilinmediğinde kapı…
-  · HÜKÜM: 2026-08-24 Rol-1 — ön-kayıt (WP4 eleme ÖLÇ sınıfı)
-  · kart: `EDG-2026-055-earnings-fail-open.yaml`
 - **EDG-2026-056** (`registered`) — WP4 eleme bulgusu (2026-08-24): MNST split teşhisi TAM ama kart ve kod YOK (oran-imza taraması repoda 0 eşleşme).
   · HÜKÜM: 2026-08-24 Rol-1 — ön-kayıt (WP4 eleme ÖLÇ sınıfı)
   · kart: `EDG-2026-056-split-oran-imzasi.yaml`
@@ -36,7 +33,7 @@ Toplam **70** kart.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
 
-### Ölçümde (3)
+### Ölçümde (4)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -44,6 +41,9 @@ Toplam **70** kart.
 - **EDG-2026-052** (`measuring`) — 13-A1 (tasarım: docs/TASARIM-13-INTRADAY-DOLUM-SOZLESMESI-2026-08-23.md §3-A1): dakika arşivi İCRA ZEMİNİ olarak güvenilir mi?
   · HÜKÜM: 2026-08-23 Rol-1 — İLK KOŞUM BETİMLEYİCİ (n=18<30, seans 8<10; hüküm null,
   · kart: `EDG-2026-052-e2-dakika-dogrulama.yaml`
+- **EDG-2026-055** (`measuring`) — WP4 eleme bulgusu (2026-08-24): earnings takvimi kapsamı bugün 216/251 (%86,1) — 35 sembolde fail-open (kazanç-penceresi bilinmediğinde kapı…
+  · HÜKÜM: HÜKÜM (Rol-1, 2026-08-24): **HÜKÜM YOK — ve bu, R1 şerhi olmasaydı YANLIŞ bir kapanış olurdu.** ÖN-SAYIM: `N_giris = 10` (6 kapanmış live_paper + 4 açık pozisyon, giriş…
+  · kart: `EDG-2026-055-earnings-fail-open.yaml`
 - **EXE-2026-003** (`measuring`) — 4b gölge katmanı yalnız SİLAHLANMIŞ planların dakika-hassas dolumunu yazıyor (6 seansta 4 satır).
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`

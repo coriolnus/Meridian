@@ -30,7 +30,45 @@ kill_criteria:
   - "fail-open damgası olmayan işlemler vakaya sayılırsa geçersiz"
   - "kapı tasarımına dokunulursa geçersiz (bu kart ÖLÇER, değiştirmez)"
 k_registry: {registered_at: "2026-08-24", trial_ids: [pending-055-failopen]}
-status: registered   # 2026-08-24 Rol-1 — ön-kayıt (WP4 eleme ÖLÇ sınıfı)
+status: measuring    # 2026-08-24 ölçüldü — R1'in DAL-2'si ateşledi, hüküm YOK (aşağıda)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-24): **HÜKÜM YOK — ve bu, R1 şerhi olmasaydı YANLIŞ bir kapanış olurdu.**
+
+  ÖN-SAYIM: `N_giris = 10` (6 kapanmış live_paper + 4 açık pozisyon, giriş tarihi pencerede) ·
+  `N_failopen_kapsam = 0` · `N_kapsam_olculemedi = 0`. PIT arşivi 10 anlık görüntü,
+  pencere 2026-08-03 → 2026-08-17. İki koşum bayt-özdeş (`7460fb5b…`). Dört kill temiz.
+
+  **R1'in DAL-2'si ateşledi:** `N_giris ≥ 1` ama `N_failopen_kapsam = 0` → BETİMLEYİCİ.
+  Bu pencerede fail-open hiç tetiklenmedi, dolayısıyla **bedeli ölçülemez**. Hücre yine de
+  hesaplandı ve dürüst kaldı: `vaka_n = 0`, `vaka_toplam_r = null` (boş kümenin toplamına
+  `0.0` yazmak yokluğu ölçüm gibi gösterirdi).
+
+  **R1 OLMASAYDI NE OLURDU:** kartın özgün `success_metric`i "N = 0 → ölçülmüş-ret:
+  fail-open bedelsiz, kalem kapanır" diyordu. Bugünkü sayıyla o dal ateşler ve kalem
+  KAPANIRDI — oysa ölçülen şey bedelin yokluğu değil, **fail-open'ın hiç tetiklenmemiş
+  olmasıydı**. Şerh ölçümden ÖNCE yazıldığı için bu kapanış olmadı. Kart `measuring` KALIR.
+
+  ⚑ **EKSEN DIŞI AMA DAHA AĞIR BULGU (eşiksiz, hükümsüz — ama kayda geçiyor):**
+  10 girişin **9'unda** kapsam `known` görünüyor, AMA giriş anında bilinen tek rapor tarihi
+  GEÇMİŞTEYDİ (NUE 07-27 · HUM 07-29 · VLO 07-30 · MRNA 07-31 · EMR/BKNG/AMGN/MRK 08-04 ·
+  ALL 08-05). Yalnız CRM'in ileri çapası vardı (08-26). Yani kapı sembolü TANIYORDU ama
+  **ileriye bakacak çapası yoktu** — davranış bakımından fail-open'dan ayırt edilemez.
+  Bu, kapsama ölçüsünün kendisinin yanıltıcı olabileceğini gösterir: `known` ≠ KORUNUYOR.
+  Bu bulgu bu kartın ekseni DEĞİLDİR ve buradan hüküm çıkmaz; **ayrı bir kart konusudur**
+  ve ön-kayıt yazılmadan hiçbir tasarım kararına girdi olamaz.
+
+  ÇAPRAZ DOĞRULAMA: 10 girişin 5'inin planı defterde bulundu, hepsinde kayıtlı
+  `coverage = "known"` — PIT yeniden kurulumuyla **0 çelişki**.
+
+beyanli_olculemeyenler: >
+  (a) 08-03 öncesi ve 08-17 sonrası canlı girişler arşiv dışında — 2026-08-20'deki beş giriş
+  (MRVL · LLY · MRNA · MRK · BDX) ölçüme GİRMEDİ.
+  (b) Kartın "fail-open olmayanlarla dağılım farkı" kalemi: kıyaslanacak birinci küme yok.
+  (c) NUE/ALL + üç açık pozisyonun KAYITLI kapsam damgası — `trade_plans` 500 satırlık dönen
+  defter ve o planlar düştü. Hüküm yolu etkilenmedi (kapsam PIT'ten kuruldu).
+  (d) Girişlerin saat damgası yok; `asof` bu yüzden muhafazakâr kuruldu (giriş günü X için
+  `fetch_date < X` olan son anlık görüntü — aynı günün akşam tazelemesi geleceği sızdırırdı).
 r1_pit_derinligi_serhi_2026_08_24: >
   R1 REVİZYONU (Rol-1, ÖLÇÜMDEN ÖNCE — eşiklere, karar kuralına ve kill listesine DOKUNULMADI;
   bu bir KAPSAM ŞERHİdir, eşik değişikliği DEĞİL).
