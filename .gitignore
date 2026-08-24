@@ -85,3 +85,4 @@ research/olcumler/yazi_tipi_2026-08-24/satoshi/woff2/
 # UYARI: .gitignore rsync'i ETKİLEMEZ; dağıtım dışlaması AYRICA dagit.sh RSYNC_EXC'te.
 node_modules/
 ui/node_modules/
+ui/tsconfig.tsbuildinfo
