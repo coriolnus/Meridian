@@ -708,7 +708,15 @@ def palettejs(request: Request):
 # göremedim" vakasının (yukarıdaki önbellek sözleşmesi) tam olarak yazı tipi hâli. Bu yüzden
 # fontlar da öteki varlıklarla AYNI yasayı okur: içerik-sha256 ETag + `no-cache, must-revalidate`
 # + eşleşmede gövdesiz 304. Doğrulama isteği başına maliyet ~0 bayt, bayatlama penceresi SIFIR.
-_FONT_DOSYALARI = frozenset({"recursive-sans-vf.woff2", "recursive-mono-vf.woff2"})
+# 2026-08-24 · KARMA DEVRALMA (docs/HUKUM-2026-08-24-YAZITIPI.md): `--sans` Inter oldu,
+# `--mono` Recursive KALDI. Ölçüm iki yönlüydü ve iki yönü de alındı: sans'ta Inter kazandı
+# (1/l @28px 0,968 vs 0,931), mono'da Recursive kazandı (0,817 vs Geist 0,570). Recursive Sans
+# LİSTEDEN DÜŞMEDİ ve bu bilinçli: dört yüzeyin dağıtımı atomik değil (rsync sırası), yani
+# yeni HTML eski font dosyasını isteyebilir ya da tersi. Aradaki pencerede 404 dönmek sayfayı
+# sistem yüzüne düşürürdü. Emeklilik ayrı bir turda, dağıtım oturduktan SONRA.
+_FONT_DOSYALARI = frozenset({"inter-vf.woff2",
+                             "recursive-sans-vf.woff2",   # emekli ama SUNULUYOR (yukarı bkz.)
+                             "recursive-mono-vf.woff2"})
 
 
 @app.get("/fonts/{ad}")
