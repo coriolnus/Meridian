@@ -171,7 +171,7 @@ Sütunlar: **alan | yüzey | üretici | okuyucu(lar) | davranış? | sınıf | c
 | 10 | `r_multiple_expected` | defter+silahlı | `loop.py:1819` | `guard.py:456` (rr_floor/rr_marginal) · `shadow_model.py:124` · `broker.py:657` → `trades.r_multiple_expected` | **EVET** | CANLI-BAĞLI | 500/500 |
 | 11 | `regime_at_plan` | defter+silahlı | `loop.py:1820` | `broker.py:652` → `Position.regime_at_plan` → `trades.regime` → `analytics.per_regime_scores` → `autonomy_ladder:169` (dal) · `hermes.py:3900` · `shadow_model.py:125` | **EVET** (silahlı yüzeyden, dolaylı) | CANLI-BAĞLI | 500/500 |
 | 12 | `strategy_version` | defter+silahlı | `loop.py:1823` | `broker.py:653` → `trades.strategy_version` → `rollback.py:209/213/404/407` (geri-alma dalı) · `baseline.py:115/269` | **EVET** (silahlı yüzeyden) · defter yüzeyi yalnız pano | CANLI-BAĞLI | 500/500 |
-| 13 | **`sector`** | defter+silahlı | `loop.py:1820` | `guard.py:673 y3_portfolio_inputs` (armed → `sector_notional`) → `guard.py:723` **ama kapı `portfolio.sector_cap`=0 iken hiç kurulmaz** · `web/app.js:9201` | HAYIR (bugün) | **YALNIZ-GÖRÜNÜRLÜK** + uyuyan bağ | 500/500 · `y3_sector_cap` kontrolü **0/500 planda** |
+| 13 | **`sector`** | defter+silahlı | `loop.py:1820` | ~~`guard.py:673 y3_portfolio_inputs` (armed → `sector_notional`) → `guard.py:723` **ama kapı `portfolio.sector_cap`=0 iken hiç kurulmaz** · `web/app.js:9201`~~ **ŞERH 2026-08-24: EKSİK — `guard.py:454` → `_chk("sector_cap")` SERT kapısı atlanmıştı; bkz. §10/D-1** | ~~HAYIR (bugün)~~ **EVET** (§10/D-1) | ~~**YALNIZ-GÖRÜNÜRLÜK** + uyuyan bağ~~ **CANLI-BAĞLI** + AYRICA uyuyan İKİNCİ tavan | 500/500 · `y3_sector_cap` kontrolü **0/500 planda** |
 | 14 | `score` | defter+silahlı | `loop.py:1820` | `guard.py:565` (score_band) · `broker.py:656` → `trades.score` → `analytics.score_calibration:916` · `threshold_curve.py:97` · `shadow_model.py:123` | **EVET** | CANLI-BAĞLI | 500/500 |
 | 15 | `setup` | defter+silahlı | `loop.py:1821` | `intraday_cycle.py:376` (`ARMED_SETUPS` → GERÇEK emir) · `arming.py:141` · `hermes.py:3689/3912` · `counterfactual.py:125` | **EVET** — emir kapısı | CANLI-BAĞLI | 500/500 (6 kurulum) |
 | 16 | `gate_verdict` | defter+silahlı | `loop.py:1883/1900` | §2.3'teki 5 disk-dalı + `analytics.py:258` + `api.py:4152` | **EVET** | CANLI-BAĞLI | 500/500 (REVIEW 370 · NO_GO 112 · GO 18) |
@@ -229,12 +229,12 @@ fill_vs_resmi_acilis_beyan` — **`offset_kaynak`/`ref_kaynak`/`limit_bps` yok.*
 
 | Sınıf | Adet | Alanlar |
 |---|---:|---|
-| **CANLI-BAĞLI** | **18** | `id · date · ticker · entry_trigger · stop · profit_target · size_r · r_multiple_expected · regime_at_plan · strategy_version · score · setup · gate_verdict · llm_opinion · operator_onayi` **+ 3 yıldızlı** `exploration* · p_win_shadow* · carried*` (kablo gerçek, **besleme kurak / uç kilitli** — §6) |
-| **YALNIZ-GÖRÜNÜRLÜK** | **7** | `targets · sector · gate_reasons · gate_checks · broker_status · dormant_setup · llm_veto` |
+| **CANLI-BAĞLI** | ~~**18**~~ **19** | `id · date · ticker · entry_trigger · stop · profit_target · size_r · r_multiple_expected · regime_at_plan · strategy_version · score · setup · gate_verdict · llm_opinion · operator_onayi` **+ 3 yıldızlı** `exploration* · p_win_shadow* · carried*` (kablo gerçek, **besleme kurak / uç kilitli** — §6) **+ `sector`** (§10/D-1 düzeltmesi, 2026-08-24) |
+| **YALNIZ-GÖRÜNÜRLÜK** | ~~**7**~~ **6** | `targets · `~~`sector`~~` · gate_reasons · gate_checks · broker_status · dormant_setup · llm_veto` (§10/D-1) |
 | **ÖLÜ** | **1** | `side` |
 | **HAYALET** | **0** | (alan düzeyinde; değer düzeyinde 2 — §2.2) |
 
-> Sayım notu: 18 + 7 + 1 = 26. `gate_reasons`/`gate_checks` MEŞRU görünürlüktür (pano karar-ağacı,
+> Sayım notu: ~~18 + 7 + 1 = 26~~ → **19 + 6 + 1 = 26** (2026-08-24 şerhi, §10/D-1). `gate_reasons`/`gate_checks` MEŞRU görünürlüktür (pano karar-ağacı,
 > beyanlı); `targets`/`sector`/`llm_veto`/`broker_status`/`dormant_setup` beyansızdır.
 > Yıldızlı üç alan **sınıf olarak CANLI-BAĞLI** sayıldı (dal gerçek ve diskten besleniyor); ayrı bir
 > kova AÇILMADI çünkü dört sınıflı sözleşme brief'te sabittir — ayrım "canlı doluluk" sütununda ve
@@ -320,10 +320,10 @@ düşük-öncelikli işaretlendi.
 | Ö-2 | `p_win_shadow` (dolaylı: retention) | **DOĞRULA** — `store.py:632-655` yeni retention kuralının canlıda KOŞTUĞUNU bir sonraki `daily_cycle` sonrası ölç (bugün defter hâlâ tam 500) | T-1 · 535/893 birleşmeyen işlem · terfi eşiği erişilemez |
 | Ö-3 | `offset_kaynak · ref_kaynak` | **DAMGALA (öncelikli)** — `broker.py:200` ve `broker.py:215`'teki *"okuyucusu E2 defteri"* beyanları ÇÜRÜK; ya beyanı tazele ya alanları E2'ye gerçekten yaz | §4 · canlı E2'nin 30 satırında alan YOK · Ö-49 bayat-beyan sınıfı |
 | Ö-4 | `olay · limit_bps` | **DAMGALA** — "test-tek-tüketici" olarak beyan et (`DECLARED_SINKS` alan-düzeyi karşılığı yoksa yorum satırı yeter) | §2.4 · üretim tüketicisi sıfır |
-| Ö-5 | `side` | **KALDIR ya da DAMGALA (düşük öncelik)** — plan şeması iki motorda aynı kalmak zorunda; kaldırmak `test_differential_v60`'ı tetikler. Alternatif: "gelecekteki short desteği için ayrılmış, bugün sabit `long`" beyanı | 500/500 `long` · sıfır okuyucu · `broker.py:649` sabit yazıyor |
-| Ö-6 | `targets` | **DAMGALA** — `profit_target`ın yedekli ikizi; canlıda 500/500 sapma 0. Kaldırma önerilmez (cf yedek okuması var) | §3/8 |
-| Ö-7 | `sector` | **DAMGALA** — "uyuyan bağ: `portfolio.sector_cap`=0 iken hiçbir kapıya girmez" (kod `guard.py:721`'de zaten koşullu ama alanın kendisi beyansız) | 0/500 planda `y3_sector_cap` kontrolü |
-| Ö-8 | `exploration · carried` | **DAMGALA** — "kablo canlı, ÜRETİM KURAK" ayrımını panoya/kaleme yaz; kalem "keşif bütçesi" değil "keşif üretici kuraklığı" adıyla izlensin | T-3 · 41 günde 1 / 0 olay |
+| Ö-5 | `side` | **KALDIR ya da DAMGALA (düşük öncelik)** — plan şeması iki motorda aynı kalmak zorunda; kaldırmak `test_differential_v60`'ı tetikler. Alternatif: "gelecekteki short desteği için ayrılmış, bugün sabit `long`" beyanı | 500/500 `long` · sıfır okuyucu · `broker.py:649` sabit yazıyor **→ UYGULANDI 2026-08-24 (§10)** |
+| Ö-6 | `targets` | **DAMGALA** — `profit_target`ın yedekli ikizi; canlıda 500/500 sapma 0. Kaldırma önerilmez (cf yedek okuması var) | §3/8 **→ UYGULANDI 2026-08-24 (§10)** |
+| Ö-7 | `sector` | **DAMGALA** — "uyuyan bağ: `portfolio.sector_cap`=0 iken hiçbir kapıya girmez" (kod `guard.py:721`'de zaten koşullu ama alanın kendisi beyansız) | 0/500 planda `y3_sector_cap` kontrolü **→ UYGULANDI 2026-08-24 (§10)** |
+| Ö-8 | `exploration · carried` | **DAMGALA** — "kablo canlı, ÜRETİM KURAK" ayrımını panoya/kaleme yaz; kalem "keşif bütçesi" değil "keşif üretici kuraklığı" adıyla izlensin | T-3 · 41 günde 1 / 0 olay **→ UYGULANDI 2026-08-24 (§10)** |
 | Ö-9 | `llm_veto` | **İZLE** — üretici (`loop.py:1135`) yalnız `llm_promoted()` sonrası koşar; 0/500 doluluk bugün MEŞRU. Terfi gerçekleşirse alanın pano bacağı zaten hazır | `llm_veto_strip` 0 |
 | Ö-10 | **yöntem** | **BAĞLA (mimari karar)** — bu turun merceği oturum-içi bir betikti; kalıcı bir alan-düzeyi bekçisi (`codelaw.artifact_graph`'ın alan kardeşi) YASA-6'yı alan granülaritesine taşır. `ONAY_ALANI` vakası (§1.2/1) böyle bir bekçinin ilk gününde çözmesi gereken sorunu adlandırıyor: **sabit-dolayımlı anahtarlar** | M11 kaleminin kendi tespiti: "alan-merceği ARACI repo'da hiç yok" |
 
@@ -364,3 +364,71 @@ tamamen ölü; asıl bulgu alanların kendisinde değil **besleme ve okuma bacak
 "gönderilecek" diye okunuyor, `exploration`/`carried` gerçek dallara bağlı ama hiç beslenmiyor — ve
 `entry_law`'ın dört alt-alanı diske yazılıp **yalnız testler tarafından** okunuyor, ikisi de
 "okuyucusu E2 defteri" diye **çürük bir beyan** taşıyor.
+
+---
+
+## 10. UYGULAMA KAYDI — Ö-5…Ö-8 DAMGALANDI (2026-08-24, WP5/WP3 · KALEM K4)
+
+**Ne yapıldı.** §7'nin dört DAMGALA önerisi, aynı gece Ö-3/Ö-4 için indirilen kalıbın BİREBİR
+tekrarıyla uygulandı: her alan için kaynak koda bir **`ALAN DAMGASI[M11·Ö-n]`** bloğu ve
+`tests/test_pano_durustluk_v280.py` **§F**'ye o damganın DAYANDIĞI OLGUYU tutan bir **bayatlama
+kapısı**. Kalıbın çekirdeği: *damga metni tek başına çivilenmez — damganın iddiası ölçülür, ve
+alan bir gün gerçekten üretime bağlanırsa (ya da bağı kesilirse) çivi kırmızıya döner.*
+
+**Davranış DEĞİŞMEDİ, şema alanı KALDIRILMADI.** Dört öneri de yorum + test kalemidir; hiçbir
+karar dalı, eşik, emir ya da alan eklenmedi/çıkarıldı. `tests/test_differential_v60.py` (iki motor
+plan şeması eşitliği) yeşil kaldı — kalemin ön koşuluydu.
+
+| # | Alan(lar) | Damga nerede | Bayatlama kapısı (§F) |
+|---|---|---|---|
+| Ö-5 | `side` | `loop.py` (üretici) + `broker.py` (`side="long"` sabiti) | `test_f1` (damga metni) · `test_f2` (plan-adlı sözlük `side` okursa ya da sabit kalkarsa KIRMIZI) |
+| Ö-6 | `targets` | `loop.py` (üretici) | `test_f3` · `test_f4` (liste çok elemanlı olur ya da ifadesi `profit_target`tan ayrışırsa KIRMIZI) |
+| Ö-7 | `sector` | `guard.py:classify_gate` | `test_f5` · `test_f6` (CANLI yarım kesilirse) · `test_f7` (UYUYAN yarım knob koşulundan çıkarsa) |
+| Ö-8 | `exploration` · `carried` | `loop.py` (`_carry_armed_without_bar` üstü + keşif çıkış dalında işaretçi) | `test_f8` (ad dâhil: "keşif ÜRETİCİ KURAKLIĞI") · `test_f9` (keşif dalı) · `test_f10` (carried sayacı + iki olayı) · `test_f11` (üretici yüzeyi tek kalmalı) |
+
+### D-1 · BU TURUN DÜZELTMESİ — Ö-7 önerisi OLDUĞU GİBİ UYGULANAMAZDI
+
+§7/Ö-7 şu damgayı önermişti: *"uyuyan bağ: `portfolio.sector_cap`=0 iken hiçbir kapıya girmez"*.
+Bağımsız ölçüm (kör uygulama yapılmadı) bunun **eksik** olduğunu gösterdi:
+
+- `guard.py:classify_gate` içinde `sec = plan.get("sector", "?")` **KOŞULSUZ** okunur ve
+  `_chk("sector_cap", (sc.get(sec, 0) + 1) / max(1, sector_basis) > max_sector_exposure_pct/100)`
+  **SERT** kapısına girer. Bu kapı bugün canlıdır (`max_sector_exposure_pct: 40.0`, `state/goal.yaml`)
+  ve üretim çağıranı `loop.py`'nin plan döngüsüdür.
+- §3'ün 13. satırı bu okuyucuyu listelemiyordu; yalnız `y3_portfolio_inputs → y3_sector_cap`
+  bacağını görmüştü. İki tavan **AYRI**dır ve birbirinin yerine geçmez: canlı olan İSİM SAYAR
+  (`sector_cap`), uyuyan olan NOTIONAL PAYI ölçer (`portfolio.sector_cap` → `y3_sector_cap`).
+  Kodun kendi belgesi bunu zaten söylüyordu (`guard._y3_portfolio_caps` docstring'i).
+
+Önerilen ifade olduğu gibi yazılsaydı **Ö-49 bayat-beyan sınıfını yeniden üretirdi** — yani tam bu
+turun kapattığı kusuru. Damga bu yüzden İKİ YARIMLI yazıldı ve iki yarım ayrı ayrı çivilendi
+(`test_f6` / `test_f7`). §3 satırı ve §5 sayımı **silinmedi**, üstü çizilip şerh düşüldü.
+
+### D-2 · KASITLI-KIRMIZI DOĞRULAMASI (çiviler gerçekten ölçüyor mu)
+
+Altı sahte bağlanma/kopma kaynağa geçici olarak enjekte edildi, ilgili çivi koşuldu, dosya
+**sha256 ile birebir** geri alındı. Altısı da kırmızı yandı:
+
+| Enjeksiyon | Beklenen çivi | Sonuç |
+|---|---|---|
+| plan sözlüğüne sahte `plan.get("side")` okuyucusu | `test_f2` | KIRMIZI ✓ |
+| `targets` gerçek hedef merdivenine çevrildi (2 eleman) | `test_f4` | KIRMIZI ✓ |
+| `sec = plan.get("sector")` kesildi (canlı yarım koptu) | `test_f6` | KIRMIZI ✓ |
+| `portfolio.sector_cap` varsayılanı 0→25 (uyuyan yarım uyandı) | `test_f7` | KIRMIZI ✓ |
+| keşif çıkış-gevşetme dalı kesildi | `test_f9` | KIRMIZI ✓ |
+| ikinci bir `exploration` üreticisi eklendi | `test_f11` | KIRMIZI ✓ |
+
+### D-3 · BU TURDA ÖLÇÜLEMEYENLER (ÖLÇÜLEMEDİ ≠ 0)
+
+1. **Canlı doluluk sayıları YENİDEN ÖLÇÜLMEDİ.** Damgalardaki 500/500 · 0/500 · 1/0 olay
+   rakamları bu belgenin 2026-08-23 salt-okuma SSH ölçümünden ALINTIdır; bu tur canlıya
+   bakmadı. Pencere sınırları §8'de duruyor ve damgalarda tekrarlandı.
+2. **`state/goal.yaml`'da `portfolio.sector_cap` anahtarı YOK** (dosyada geçmiyor) — yani knob
+   `guard.py`nin `0` varsayılanına düşüyor. Bu kod tarafından çivilendi (`test_f7`), canlı
+   `goal.yaml`ın kendisi çivilenMEDİ: canlı yapılandırma meşru olarak değişebilir ve testi
+   yapılandırmaya bağlamak yanlış-alarm üretirdi.
+3. **`side`in "sıfır okuyucu" hükmü** ad çakışması yüzünden mekanik değil ELLE doğrulandı
+   (`watchdog` Alpaca pozisyonu · `faz5_cikis` açık pozisyon · `alpaca` emri). `test_f2` yalnız
+   plan bağlamını adlandıran isimleri tarar; beyanlı sınırı testin kendi docstring'indedir.
+4. **Pano tarafı bu kalemde açılmadı.** Ö-8 "kalem adı" önerisi kodun içine yazıldı; panonun
+   keşif çipi/uyarı metni başka ajanın dosyasıdır (`meridian/web/**`) ve DOKUNULMADI.

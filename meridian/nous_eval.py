@@ -42,6 +42,20 @@ from . import obs, store
 PROPOSALS_FILE = "improvement_proposals.jsonl"
 RUNS_FILE = "nous_eval_runs.json"
 
+# ---- KÜNYE BEYANLARI (WP7-40) ------------------------------------------------------------------
+# `hermes.chain_text` künyeyi ÜÇ beyanla birlikte döndürür (`model_kaynagi` · `model_olculemedi` ·
+# `model_istenen`, bkz. hermes.py künye sözleşmesi bloğu) ve bu modül o zincirin TEK üretim
+# tüketicisidir. Beyanlar burada okunmazsa fonksiyon dönüşünde ölür: iki kalıcı defter
+# (`nous_eval_runs.json` · `improvement_proposals.jsonl`) yalnız çıplak `model` alanını taşır ve
+# çıplak alan "cevap veren mi, istenen mi?" sorusunu CEVAPLAYAMAZ — v245 künye kusurunun deftere
+# düşen hâli tam buydu. AŞAĞIDAKİ İKİ SABİT künyenin ölçülemediği iki YOLU adıyla ayırır; ikisi de
+# UYDURMA YASAĞININ gereği: ad yoksa alan None kalır ve NEDENİ yanında durur, `active_model()`
+# (= yapılandırma = "istenen") künye alanına SESSİZCE yazılmaz.
+KUNYE_ZINCIR_CAGRILMADI = ("cevap veren model ölçülemedi: metin ENJEKTE edildi, beyin zinciri hiç "
+                           "çağrılmadı (kuru koşum / tekrar-ayrıştırma yolu)")
+KUNYE_BEYANSIZ_DONUS = ("cevap veren model ölçülemedi: zincir dönüşü künye için neden BEYAN "
+                        "ETMEDİ (eski sözleşme ya da beyansız sarmalayıcı) — ad uydurulmaz")
+
 # ---- ÇIKTI SÖZLEŞMESİ -------------------------------------------------------------------------
 # ZORUNLU alanlar: eksik alan taşıyan öneri DÜŞER. Neden zorunlu oldukları tek tek bir karardır:
 #   alan            — hangi mekanizma? (öneri adressiz olamaz)
@@ -681,6 +695,11 @@ def haftalik_degerlendirme(*, telemetri: dict | None = None, yaz: bool = True,
     tel = telemetri if telemetri is not None else analytics.system_telemetry()
     ak = onceki_akibet(hafta=h)
     kayit: dict = {"hafta": h, "ts": _now(), "durum": "kosuldu", "beyin": None, "model": None,
+                   # KÜNYE BEYANLARI HER KAYITTA DURUR (bkz. üstteki KUNYE_* bloğu): zincir
+                   # çağrılmadığı yolda bile alanlar VAR ve `model_olculemedi` niçin ad olmadığını
+                   # söyler — sessiz bir None "ölçtük, çıkmadı" diye okunurdu.
+                   "model_kaynagi": None, "model_olculemedi": KUNYE_ZINCIR_CAGRILMADI,
+                   "model_istenen": None,
                    "telemetri_hafta": tel.get("hafta"),
                    # İKİ SAYAÇ AYRI TAŞINIR (bkz. analytics.system_telemetry notu): "bölüm boş" ile
                    # "üretici kendi içinde ölçemedim dedi" farklı sorulardır ve Katman B'nin en
@@ -695,6 +714,14 @@ def haftalik_degerlendirme(*, telemetri: dict | None = None, yaz: bool = True,
         text, kayit["beyin"], kayit["model"] = (cevap.get("text"), cevap.get("beyin"),
                                                cevap.get("model"))
         kayit["zincir_neden"] = cevap.get("neden")
+        # ÜÇ BEYAN OLDUĞU GİBİ TAŞINIR (WP7-40). `model_kaynagi` VARSA `model` = cevabı veren;
+        # yoksa kayıt beyansız bir dönüşten gelir ve o hâl de ADIYLA yazılır. Ad ölçülemediyse
+        # nedeni zincirden gelir; zincir neden de vermediyse burada UYDURULMAZ, "beyansız dönüş"
+        # diye kaydedilir — `active_model()`e (yapılandırma) sessizce dönmek YASAK.
+        kayit["model_kaynagi"] = cevap.get("model_kaynagi")
+        kayit["model_istenen"] = cevap.get("model_istenen")
+        kayit["model_olculemedi"] = (cevap.get("model_olculemedi")
+                                     or (None if kayit["model"] else KUNYE_BEYANSIZ_DONUS))
         if not text:
             # LLM ERİŞİMİ YOK/KESİNTİLİ: ŞABLON ÇIKTI UYDURULMAZ. Koşu "koşulamadı" olarak kaydedilir
             # ve hangi ayağın niçin cevap vermediği yazılır (UYDURMA YASAĞI).
@@ -767,7 +794,14 @@ def _oneri_kaydet(o: dict, hafta: str, kayit: dict) -> None:
            "kuyruk": o.get("kuyruk", "hayir" if o.get("sekil") == "parametre" else "yol_yok"),
            "kuyruk_id": o.get("kuyruk_id"),
            "kuyruk_neden": o.get("kuyruk_neden"),
-           "beyin": kayit.get("beyin"), "model": kayit.get("model")}
+           # KÜNYE, KOŞU KAYDIYLA AYNI ÜÇ BEYANI TAŞIR (WP7-40): öneri satırından "bu öneriyi
+           # hangi model yazdı, ad ölçülebildi mi, istenen ad neydi?" sorusu CEVAPLANABİLİR olmalı.
+           # Alanlar ledgers sözleşmesinde ZORUNLU DEĞİL (None meşru, eski satırlarda hiç yok) ve
+           # `required` kümesi DEĞİŞMEDİ — geriye dönük satırlar ihlal ilan edilmez, retro damga yok.
+           "beyin": kayit.get("beyin"), "model": kayit.get("model"),
+           "model_kaynagi": kayit.get("model_kaynagi"),
+           "model_olculemedi": kayit.get("model_olculemedi"),
+           "model_istenen": kayit.get("model_istenen")}
     store.append_jsonl(PROPOSALS_FILE, row)
     o["id"] = row["id"]
 

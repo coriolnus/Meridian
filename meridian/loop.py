@@ -1225,6 +1225,26 @@ def _near_miss_blockers(sig, eff: dict) -> list:
     return out or ["diğer"]
 
 
+# ── ALAN DAMGASI[M11·Ö-8] · plan["exploration"] + plan["carried"] — KABLO CANLI, ÜRETİM KURAK ──
+# (Tarama KOVA-6 §6/T-3, 2026-08-24. KALEMİN ADI DAMGANIN PARÇASI: bu bir "keşif BÜTÇESİ" kalemi
+#  DEĞİL, "keşif ÜRETİCİ KURAKLIĞI" kalemidir. Yanlış iş tam o addan doğar — tavan/bütçe ayarlamak
+#  HİÇBİR ŞEYİ değiştirmez: EXPLORE_MAX_POS/EXPLORE_MAX_R/EXPLORE_TOTAL_R bağlamıyor, KAYNAK kurumuş.)
+# KABLO CANLI — iki GERÇEK dal, ikisi de DİSKTEN beslenir (yani "ölü kod" DEĞİL):
+#   · `exploration` → `broker.Position.exploration` → çıkış rejim kapısı GEVŞER (`pos_regime_ok`:
+#     keşif sondası `trend_up`/`chop`ta tutulur, rejim bütçesine bakılmaz).
+#   · `carried` → AŞAĞIDAKİ sayaç: barı yayınlanmamış plan BİR seans taşınır, ikinci seansta da
+#     bar yoksa DÜŞÜRÜLÜR (olaylı).
+# ÜRETİM KURAK — ölçüm, hüküm değil (canlı 500 plan · 893 işlem · 7 açık pozisyon; olay penceresi
+#   41 gün, 2026-07-14…08-23): `exploration` 0/500 planda, 0/893 işlemde, 0/7 pozisyonda ve
+#   `exploration_armed` 41 günde 1 kez (TMO, 2026-07-25); `carried` 0/500, `armed_no_bar_carried`
+#   0, `armed_expired_no_bar` 0. Kod ölü değil — BESLENMİYOR.
+#   ÖLÇÜLEMEDİ ≠ 0: defter tam 500'e kırpılmıştır, "0/500" = "pencerede yok" (TMO planı pencere
+#   dışında kaldı, olay defteri onu ayrıca kanıtlıyor).
+# NEDEN YAZILI: pano keşif çipi/uyarısı ve denetim izi sistemi "keşif YAPIYOR" gibi gösterir; bu
+#   damga o yanılsamayı kapatır. Kablo kesilmez, tavan da oynatılmaz.
+# BAYATLAMA KAPISI: `tests/test_pano_durustluk_v280.py` test_f9_* (keşif çıkış dalı) · test_f10_*
+#   (carried sayacı + iki olayı) · test_f11_* (üretici yüzeyi TEK kalmalı — ikinci bir üretici
+#   doğarsa "kurak" beyanı ölçülen tabanını kaybeder ve YENİDEN ölçülmesi gerekir).
 def _carry_armed_without_bar(armed: list, has_bar) -> tuple[list, list]:
     """P4 dolum ayrıştırıcısı — kök neden (canlıda 2026-07-15): dolum anında bar henüz
     YAYINLANMAMIŞSA plan sessizce buharlaşıyordu, hiçbir olay yazılmadan. Tek-seans yasası "bayat
@@ -1633,6 +1653,9 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         if t in per and d in per[t].index:
             pos = b.positions[t]
             df_t = per[t].loc[:d].reset_index()
+            # ALAN DAMGASI[M11·Ö-8]'in "KABLO CANLI" yarımı BURASIDIR (damga bloğu
+            # `_carry_armed_without_bar` üstünde): diskten gelen keşif bayrağı çıkış rejim
+            # kapısını GEVŞETİR. Üretim kurak — çivi: test_pano_durustluk_v280::test_f9_*.
             pos_regime_ok = (rj["regime"] in ("trend_up", "chop")) if getattr(pos, "exploration", False) else regime_ok
             dec = strat.manage_position(df_t, {"entry": pos.entry, "stop": pos.stop,
                     "trail_stop": pos.trail_stop, "r_per_share": pos.r_per_share,
@@ -1813,6 +1836,31 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                                          size_fn=b.size_position)}
                 _pid = (f"P-{dstr}-{c['ticker']}-{c.get('setup','')}" if c.get("dormant_setup")
                         else f"P-{dstr}-{c['ticker']}")   # uyuyan: kurulum ekli kimlik (çakışma + ayrışma)
+                # ── ALAN DAMGASI[M11·Ö-5] · plan["side"] — ÖLÜ ALAN, KALDIRMA YOK ───────────
+                # ÖLÇÜM (tarama KOVA-6 §2.4 + §3/4. satır, 2026-08-24; canlı defter 500 satır):
+                #   ÜRETİCİ: aşağıdaki `"side": "long"` SABİTİ (kardeşleri cf_backfill /
+                #     mutation / shadow_variants / backtest üreticileri — hepsi aynı sabiti yazar).
+                #   OKUYUCU (üretim): SIFIR. `broker.py` pozisyonu `side="long"` sabitiyle kurar,
+                #     PLAN ALANINI OKUMAZ (oradaki kardeş damgaya bak). `side` adının watchdog /
+                #     faz5_cikis / adapters.alpaca'daki okumaları AYRI sözlüklerdir (Alpaca
+                #     pozisyonu · açık pozisyon · emir) — ad çakışması, elle doğrulandı.
+                #   CANLI DOLULUK: 500/500 dolu, HEPSİ `long` (2026-08-23 salt-okuma ölçümü).
+                # NEDEN DURUYOR (KALDIRMA YOK — bilinçli): plan şeması iki motorda AYNI kalmak
+                #   zorundadır (`tests/test_differential_v60.py` şema eşitliği); alanı kaldırmak
+                #   davranışı değil ŞEMAYI kırar. İkinci gerekçe: alan gelecekteki SHORT desteği
+                #   için ayrılmıştır — yön bir gün değişkense onu okuyacak taraf burayı bulmalı.
+                # BAYATLAMA KAPISI: `tests/test_pano_durustluk_v280.py::test_f2_*` — plan-adlı bir
+                #   sözlük `side` okumaya başlarsa damga BAYATLAR ve test kırmızıya döner.
+                # ── ALAN DAMGASI[M11·Ö-6] · plan["targets"] — `profit_target`IN YEDEKLİ İKİZİ ──
+                # ÖLÇÜM (tarama §2.4 + §3/8. satır, 2026-08-24): liste HER ZAMAN tek elemanlıdır
+                #   ve o eleman `profit_target`ın ta kendisidir — canlı 500 planda ikisi arasında
+                #   SAPMA 0. Davranışa giren okuyucu YOK; `counterfactual.py` alanı YALNIZ YEDEK
+                #   olarak okur (`profit_target or targets[0]`), pano da yedekli okur.
+                # KALDIRMA ÖNERİLMEZ: o yedek okuma GERÇEK bir tüketicidir (eski satırlarda
+                #   `profit_target` boşsa hedefi BU alan verir) ve şema eşitliği yine bağlar.
+                # BAYATLAMA KAPISI: test_f4_* — `targets` çok elemanlı olursa (gerçek hedef
+                #   merdiveni) ya da ifadesi `profit_target`tan ayrışırsa "yedekli ikiz" beyanı
+                #   düşer ve test kırmızıya döner.
                 plan = {"id": _pid, "date": dstr, "ticker": c["ticker"], "side": "long",
                         "entry_trigger": c["entry_trigger"], "stop": c["stop"],
                         "targets": [c["profit_target"]], "size_r": min(c["size_r"], limits["max_position_r"]),

@@ -684,6 +684,16 @@ class PaperBroker:
         # the circuit-breaker (reads realized_pnl). Keep slippage in the price only; defer commission to close.
         entry_slip_dollars = qty * (fill - next_open)
         entry_commission = qty * self.commission
+        # ── ALAN DAMGASI[M11·Ö-5] · plan["side"] BURADA OKUNMAZ ───────────────────────────
+        # `side="long"` bir SABİTTİR: plan defteri `side` alanını taşır, ama bu üretim yolu onu
+        # HİÇ OKUMAZ (tarama KOVA-6 §2.4 + §3/4. satır, 2026-08-24: plan bağlamında SIFIR okuyucu;
+        # `side` adının watchdog/faz5_cikis/alpaca'daki okumaları AYRI sözlüklerdir — Alpaca
+        # pozisyonu, açık pozisyon, emir — ad çakışması elle doğrulandı).
+        # KALDIRMA YOK: alan iki motorun plan ŞEMA EŞİTLİĞİ (`tests/test_differential_v60.py`)
+        # yüzünden durur ve gelecekteki SHORT desteğine ayrılmıştır. Asıl damga üreticinin
+        # yanındadır (`loop.py`, aynı öneri numarası).
+        # BAYATLAMA KAPISI: `tests/test_pano_durustluk_v280.py::test_f2_*` — bu sabit `plan`dan
+        # okunmaya başlarsa (ya da kalkarsa) damga BAYATLAR ve test kırmızıya döner.
         pos = Position(
             plan_id=plan["id"], ticker=plan["ticker"], side="long", entry=fill, stop=stop,
             trail_stop=stop, target=plan["profit_target"], qty=qty,

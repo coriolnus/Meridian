@@ -4193,9 +4193,16 @@ def propose_with_llm() -> dict | None:
 # pencere `active_model()`in kapattığımız SAĞLAYICI-SEÇİMİ hatasıyla aynı sınıfta değildir.
 #
 # TÜKETİCİLER (ADIYLA, ölçüldü): tek üretim tüketicisi `nous_eval.haftalik_degerlendirme`
-# (`nous_eval.haftalik_degerlendirme`) — `cevap.get("text"/"beyin"/"model"/"neden")` okur ve `model`i iki
-# kalıcı deftere yazar: `nous_eval_runs.json` (`_kosu_kaydet`) ve `improvement_proposals.jsonl`
-# (`_oneri_kaydet` → satır alanı `model`; ledgers sözleşmesinde ZORUNLU DEĞİL, yani None meşru).
+# (`nous_eval.haftalik_degerlendirme`) — `cevap.get("text"/"beyin"/"model"/"neden")` VE ÜÇ KÜNYE
+# BEYANINI (`model_kaynagi`/`model_olculemedi`/`model_istenen`) okur; hepsini iki kalıcı deftere
+# yazar: `nous_eval_runs.json` (`_kosu_kaydet`) ve `improvement_proposals.jsonl`
+# (`_oneri_kaydet` → satır alanları `model` + üç beyan; ledgers sözleşmesinde ZORUNLU DEĞİL, yani
+# None meşru ve eski satırlar retro-damgalanmaz).
+# BEYANLARIN TAŞINMASI 2026-08-24'TE KAPANDI (WP7-40): o güne dek beyanlar bu fonksiyonun dönüşünde
+# ÖLÜYORDU — defterler çıplak `model` alanını taşıyor, "cevap veren mi, istenen mi?" sorusu
+# defterden cevaplanamıyordu. Zincir beyan vermezse tüketici NEDEN uydurmaz, "beyansız dönüş" diye
+# kaydeder (`nous_eval.KUNYE_BEYANSIZ_DONUS`); metin enjekte edildiği yolda zincir HİÇ çağrılmaz ve
+# o hâl de adıyla yazılır (`nous_eval.KUNYE_ZINCIR_CAGRILMADI`).
 # Pano ikisini de None-korumalı basar (`web/app.js`: `p.model || "—"`). Sözleşme EK ALANLA
 # genişledi, mevcut anahtarların adı/şekli DEĞİŞMEDİ — `.get()` okuyan tüketici kırılmaz.
 # ==================================================================================================

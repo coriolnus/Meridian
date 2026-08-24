@@ -451,6 +451,20 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     heat_review_r = float(limits.get("heat_review_r", HEAT_REVIEW_R))
     corr_review = float(limits.get("corr_review", CORR_REVIEW))
     hard, soft = [], []
+    # ── ALAN DAMGASI[M11·Ö-7] · plan["sector"] — İKİ TAVAN: BİRİ CANLI, BİRİ UYUYOR ─────────
+    # (Tarama KOVA-6 §7/Ö-7 "uyuyan bağ" damgası önerdi; bu turda BAĞIMSIZ ölçüm taramayı
+    #  DÜZELTTİ — kör uygulama yok. Belgenin 13. satırına şerh düşüldü, 2026-08-24.)
+    # CANLI YARIM (taramanın ATLADIĞI bağ): aşağıdaki `sec` KOŞULSUZ okunur ve `_chk("sector_cap")`
+    #   SERT kapısına girer (payda `sector_cap_basis`, eşik `limits.max_sector_exposure_pct`).
+    #   Yani `sector` bugün YALNIZ-GÖRÜNÜRLÜK DEĞİL, karar yolunda CANLI bir plan alanıdır —
+    #   "hiçbir kapıya girmez" beyanı YAZILAMAZ, yazılsaydı Ö-49 bayat-beyan sınıfını YENİDEN
+    #   üretirdi (tam da bu turun kapattığı kusur).
+    # UYUYAN YARIM: AYRI ve İKİNCİ bir tavan olan `portfolio.sector_cap` (sektörün NOTIONAL payı,
+    #   `_y3_portfolio_caps`) knob 0/yok iken `y3_sector_cap` kontrolünü HİÇ KURMAZ. Uyuyan bağ
+    #   BUDUR; canlı 500 planın hiçbirinde bu kontrol görülmedi (2026-08-23 salt-okuma ölçümü).
+    #   İki tavan birbirinin YERİNE GEÇMEZ: biri İSİM sayar, öteki NOTIONAL ölçer.
+    # BAYATLAMA KAPISI: `tests/test_pano_durustluk_v280.py` test_f6_* (canlı yarım kesilirse) +
+    #   test_f7_* (uyuyan yarım knob koşulundan çıkıp UYANIRSA) — ikisi de damgayı kırmızıya çevirir.
     sec = plan.get("sector", "?")
     sc = portfolio.get("sector_counts", {})
     rr = float(plan.get("r_multiple_expected", 0.0))

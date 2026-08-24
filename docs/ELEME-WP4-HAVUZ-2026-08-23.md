@@ -110,6 +110,25 @@ katkısı kartın iskeletini hazırlamak:
   A2 katsayı defteri ayrı adım (tohum kırmızılarını "bilinen katsayı 2×" beyanlı-yeşile çevirir,
   retro-değişmezlik korunur).
 
+**GÜNCELLEME 2026-08-24 — A4 ÖLÇÜLDÜ, KALEM KAPANDI (yukarıdaki "ÖNERİ: ÖLÇ" bloğu tarihiyle
+kalır, silinmez).** Kart `research/cards/EDG-2026-056-split-oran-imzasi.yaml` ön-kayıtlandı ve
+retro tarama koştu (K=1, hücre `oran_imza_retro`):
+`research/olcumler/edg056_oran_imzasi_2026-08-24/` (`sonuc.json` + `RAPOR.md`).
+
+- Donmuş yer gerçeği: `bilinen_split_donuk.json`
+  sha256 `60177962804f9b0b63c446b0d80ac0e013c3ae0f8c81c9f6a41c605d6d48fbb7`
+  (kaynak `state/bars_integrity.json` K1 `olcek_dikisi`, 92 olay; sha256
+  `ab6b2e5995ba3084782cbcedc2982a7d56d0d16a6245cadff14e74e5edfdedcc`). `state/quarantine/`
+  ÖLÇÜLDÜ: sıfır bölünme kaydı (yalnız constituents FIXTURE'ı).
+- Tarama: 260 dosya · 1.349.764 bar çifti · SALT-OKUMA (motor import edilmedi).
+- Sonuç: aday **55** · bilinen-split eşleşen **32** · eşleşmeyen aday **23** · yakalanmayan
+  bilinen split **60/92** → yanlış-pozitif **%41,8** (eşik ≤%20) · yakalama **%34,8** (eşik ≥%80).
+- **HÜKÜM (karar kuralı doğrudan okundu): "imza tek başına yetersiz."** Dedektör kablolaması
+  YAPILMAZ; bölünme körlüğü BEYANLI kalır. Kartın kendi tanımladığı ikinci çıkış budur.
+- Yan bulgu (RAPOR §3b): eşleşmeyen 23 adayın 5'i 2025-05-26 hayalet seansıdır (DD·HON·KLAC·
+  NFLX·NOW, vr/r = 1,000) — `docs/RUNBOOK.md:1310` vakasının birebir kendisi; imza onları
+  mükemmel yakalıyor ama o sınıf karantina hattınındır (`data.py:531`), bu kartın değil.
+
 ---
 
 ## [B] HAVUZ KART-ADAYI ÜÇLÜSÜ (ROADMAP §4 tam metinden)
@@ -193,6 +212,7 @@ olarak kalır, `yollar_ayrisik` bayrağı ve beyan aynen korunur; değişiklik d
 | A2 | Seans-içi boşluk dedektörü | Sevk 08-01/02; canlıda 3.321 olay/15 gün; sembol=yapısal gürültü, akış=0 | **KAPAT-BAYAT** | — |
 | A3 | Earnings kapsama + fail-open | 216/251 (%86,1; eski 194 bayat); 35 fail-open; bedel hiç sayılmadı | **ÖLÇ** (retro bedel sayımı) | 1 |
 | A4 | MNST split (kart-önce) | Teşhis tam; kart YOK, kod YOK; canlı semptom sustu, körlük duruyor | **ÖLÇ** (A1 oran-imza kartı) | 1 |
+| A4 · 2026-08-24 KAPANIŞ | (aynı kalem) | ÖLÇÜLDÜ: EDG-2026-056 koştu — YP %41,8 / yakalama %34,8 | **KAPANDI: imza tek başına yetersiz** | 1 (harcandı) |
 | B1 | Ö-45 chop tanımı | EDG-048 NO-GO (aynı gün): @chop dilimi kapandı, tüketici yok | **KAPAT-BAYAT** | — |
 | B2 | Ö-47 artık-fold + 91g holdout | n_dengeli canlıda 23/26; FOLD_MIN_N=15; holdout hükümsüz-by-design | **KAPAT-BAYAT** (+holdout kuyruğu → WP5-A 2D, BİRLEŞTİR) | — |
 | B3 | Ö-37 seed_boundary otoritesi | Tek hesap (v264), ayrışma beyanlı, bugün davranış-nötr | **KAPAT-TASARIMDA** | — |
