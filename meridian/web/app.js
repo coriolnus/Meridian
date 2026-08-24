@@ -463,7 +463,7 @@ async function _fillTradeSeries() {
     const path = s.map((p, i) => `${i ? "L" : "M"}${sx(i).toFixed(1)},${sy(p.c).toFixed(1)}`).join("");
     box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%" role="img"
         aria-label="Fiyat seyri: ${esc(s[0].date)} ${trn(s[0].c, 2)} → ${esc(s[s.length-1].date)} ${trn(s[s.length-1].c, 2)}">
-      <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+      <path d="${path}" fill="none" stroke="var(--blue)" stroke-width="2"/>
       <text x="${pad}" y="14" fill="var(--tx2)" font-size="10">${trn(s[0].c, 2)} · ${esc(s[0].date)}</text>
       <text x="${W - pad}" y="14" text-anchor="end" fill="var(--tx2)" font-size="10">${trn(s[s.length-1].c, 2)} · ${esc(s[s.length-1].date)}</text>
       </svg><p class="hint" style="margin:4px 0 0">${s.length} bar · en düşük ${trn(mn, 2)} · en yüksek ${trn(mx, 2)}</p>`;
@@ -2025,9 +2025,13 @@ function pvAlanGrafigi(seriler, opt) {
   return `<div class="pv-grafik-kap" id="${ok}-kap" data-pv-ipucu="${ok}-ipucu" data-pv-nokta='${
       esc(JSON.stringify(ciz.map(s => ({ ad: s.ad, pts: s.pts.slice(-400) }))))}'>
     <svg class="pv-grafik" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(aria)}">
+      ${/* DOLGU 0. SERİNİN RENGİNDEDİR. `alan` yalnız `si === 0` için çizilir ve o serinin
+            çizgisi `.pv-seri-0{stroke:var(--blue)}`tır (index.html). `--accent` (nötr mürekkep)
+            bırakılırsa dolgu ile üstündeki çizgi AYRI renkte kalır — alan grafiğinin tek işi
+            "bu çizginin altı" demektir, iki renk o beyanı bozar. Metin-dışı taşıyıcı. */""}
       <defs><linearGradient id="${ok}-dolgu" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="var(--accent)" stop-opacity=".16"/>
-        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+        <stop offset="0%" stop-color="var(--blue)" stop-opacity=".16"/>
+        <stop offset="100%" stop-color="var(--blue)" stop-opacity="0"/></linearGradient></defs>
       ${izgara}${govde}${o.isaretler || ""}</svg>
     <div class="pv-xekseni">${xet}</div>
     <div class="pv-ipucu" id="${ok}-ipucu" hidden></div>
@@ -2717,7 +2721,13 @@ RENDER.bugun = async () => {
 
     <div id="pv-gorevler-yuva">${pvGorevlerHTML(gorevler)}</div>
 
-    <div class="pv-dikkat">
+    ${/* SAKİNLİK YÜZEYİ (karar §10.5): mint tinti bugün yalnız sağdaki rozette (`.pv-rz.ok`)
+          duruyor, oysa sakinlik beyanı BU SATIRIN TAMAMI — "müdahale gerektiren yok" + pozisyon
+          sayısı + "durdurulmuş değil" aynı cümlenin parçaları. Sınıf koşulludur: DURDURULDU
+          hâlinde sakinlik yüzeyi basılmaz, yoksa yüzey durumu YALANLAR. `soft-mint` bir durum
+          rengi değil bir zemin tintidir ve metin taşımaz — jeton tarafı kuralı yazana kadar
+          sınıfın tek başına hiçbir görsel etkisi yoktur (kuralsız sınıf zararsızdır). */""}
+    <div class="pv-dikkat${t.halted ? "" : " sakin"}">
       <b id="pv-sakin-bas">${gorevler.length ? "Bunların dışında müdahale gerektiren yok" : "Müdahale gerektiren yok"}</b>
       <span class="det">${pos.length ? `<b>${trn(pos.length)}</b> pozisyon kitapta` : "açık pozisyon yok"}${
         t.halted ? "" : " · sistem durdurulmuş değil"}</span>
@@ -4496,7 +4506,12 @@ const OLAY_YUZEYLERI = {
         ["Son başarılı tazeleme", pl.last_refetch_session || null],
         ["Tazeleme sabrı", pl.refetch_attempts == null ? null : `${pl.refetch_attempts}/${pl.refetch_max ?? 8} deneme`],
         ["cf sadakati (sim↔gerçek)", pl.cf_fidelity ? `r=${pl.cf_fidelity.corr ?? "—"} · n=${pl.cf_fidelity.n ?? "—"}` : null],
-        ["Muhafaza raporu", rep.unexplained == null ? null : `açıklanamayan ${rep.unexplained}`],
+        // PAYDA BURADA DA GÖRÜNÜR (YASA 6): "açıklanamayan N" tek başına, kaç planın
+        // uyuyan-kurulum diye terminal SAYILDIĞINI ve kaçının silahlanma tarihçesinin
+        // OKUNAMADIĞINI gizler. `trn()` yoklukta "—" basar — alan gelmemişse 0 UYDURULMAZ.
+        ["Muhafaza raporu", rep.unexplained == null ? null
+          : `açıklanamayan ${rep.unexplained} · uyuyan-kurulum ${trn(rep.uyuyan_kurulum)}${
+              rep.uyuyan_olculemedi > 0 ? ` · uyuyan_olculemedi ${trn(rep.uyuyan_olculemedi)}` : ""}`],
       ];
     },
     adimlar: [
@@ -5043,21 +5058,28 @@ function icTrend(hist) {
 // yazıldıkları sürece ayrışabilirlerdi ve TAM OLARAK ayrıştılar: efsane üç adı üç RENKLE
 // etiketliyordu, oysa `--violet` ile `--accent` iki temada da BİRE-BİR aynı renkti (oran 1.00)
 // ve grafikteki gerçek ayrım kesik-çizgi DESENİYDİ — efsane o deseni hiç göstermiyordu
-// (kontrast-denetimi.md §5/B6, öneri Ö8). Şimdi renk ayrı (luminans merdiveni: 17.80 → 9.60 →
-// 5.06, kart üstünde) VE efsane çizgi örneğini basıyor. Renk körü okuyucu için taşıyıcı kanal
-// desendir; hue EKLENMEDİ çünkü hue, renk körlüğünün sildiği tam o şeydir.
+// (kontrast-denetimi.md §5/B6, öneri Ö8). Şimdi renk ayrı VE efsane çizgi örneğini basıyor.
+// Renk körü okuyucunun taşıyıcı kanalı DESENDİR ve o kanal KALDIRILMADI — 2026-08-24 kararı
+// (KARAR-2026-08-24-B §10.3, ÇG1/ÇG2/ÇG3) hue'yu luminans merdiveninin YERİNE değil ÜSTÜNE
+// ekledi: üç gri (`--accent`/`--violet`/`--tx3`) yerine tek-hue gök mavisi merdiveni
+// (`--blue` → `--violet` → `--violet2`, OKLCh 230°), ΔL* ≥15 ve kesik-çizgi deseni aynen durur.
+// Eski cümle "hue EKLENMEDİ" diyordu; o beyan 08-24'te ölçümle geçersizleşti, ayrım artık
+// ÜÇ kanalda birden taşınıyor (luminans + desen + hue) ve hiçbiri diğerinin yerine geçmez.
 const IC_SERI = {
-  gercek: ["gerçek", "var(--accent)", "0"],
+  gercek: ["gerçek", "var(--blue)", "0"],
   sim: ["sim", "var(--violet)", "1 3"],
-  havuz: ["havuz", "var(--tx3)", "2 2"],
+  havuz: ["havuz", "var(--violet2)", "2 2"],
 };
+// EFSANE ETİKETİ NÖTR MÜREKKEPTİR (`--tx2`) ve rengi YALNIZ yanındaki çizgi örneği taşır.
+// §10.2'nin taşıyıcı değişimi burada da geçerli: etiketi seri rengiyle boyamak `--violet2`yi
+// gündüz kart üstünde 4,16'ya — AA ALTINA — düşürüyordu. Renk İŞARET, yazı NÖTR.
 function icEfsane() {
   return Object.values(IC_SERI).map(([ad, renk, desen]) =>
     `<span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
        <svg width="18" height="6" viewBox="0 0 18 6" aria-hidden="true" style="flex:none">
          <line x1="0" y1="3" x2="18" y2="3" stroke="${renk}" stroke-width="1.5"${
            desen === "0" ? "" : ` stroke-dasharray="${desen}"`}/></svg>
-       <span style="color:${renk}">${ad}</span></span>`).join(" · ");
+       <span style="color:var(--tx2)">${ad}</span></span>`).join(" · ");
 }
 
 const CHECK_TR = { exposure_budget: "bütçe", max_open_positions: "pozisyon", sector_cap: "sektör tavanı",
@@ -7314,6 +7336,11 @@ async function opParcalar() {
   // `!undefined` = true, yani açıklanamayan plan VARKEN panel daima yeşil "temiz" gösteriyordu
   // ve "N AÇIKLANAMAYAN" metni hiç basılmıyordu. Tip ne olursa olsun doğru sayan yardımcı:
   const _say = x => Array.isArray(x) ? x.length : (typeof x === "number" ? x : 0);
+  // `conservation` HÜKMÜ İKİ YENİ ALANLA DEĞİŞMEZ ve bu bilinçli: `uyuyan_kurulum` üreticide
+  // ZATEN `unexplained`ten düşülmüştür (terminal sayıldı), `uyuyan_olculemedi` ise ZATEN
+  // `unexplained`te KALIR (damgasız plan terminal sayılmaz). Yani iki alan da hükmün girdisi
+  // değil PAYDASIDIR — burada tekrar sayılsalardı watchdog'un kendi `ok` alanıyla çelişirdik.
+  // Okuyucuları `_patNote` (özet satırı) ve `butunluk.degerler` (muhafaza raporu) satırlarıdır.
   const _patOK = (k, v) => k === "production" ? !(v.starved || []).length
                  : k === "conservation" ? !_say(v.unexplained)
                  : k === "coherence" ? !(v.stale || []).length
@@ -7349,7 +7376,20 @@ async function opParcalar() {
     v.error ? ` · ${String(v.error).slice(0, 140)}` : ""}. Boş liste "bulgu yok" DEĞİL.`;
   const _patNote = (k, v) => _patOlculemedi(v) ? _patOlcumYok(v)
                  : k === "production" ? `${v.ok ?? 0}/${v.total ?? 0} mekanizma üretiyor${(v.starved || []).length ? ` · AÇ: ${v.starved.map(s => s.name).join(", ")}` : ""}${(v.waiting || []).length ? ` · ${v.waiting.length} bekliyor` : ""}`
-                 : k === "conservation" ? `${v.plans ?? 0} plan → ${v.traded ?? 0} işlem · ${v.no_fill ?? 0} dolmadı${_say(v.unexplained) ? ` · ${_say(v.unexplained)} AÇIKLANAMAYAN` : ""}`
+                 // PAYDA SATIRDA DURUR (YASA 6, 2026-08-24). `conservation_report` iki yeni alan
+                 // üretmeye başladı — `uyuyan_kurulum` (kurulumu O GÜN silahsız olan plan: yapısal
+                 // olarak silahlanamaz, dolayısıyla KAYIP DEĞİL açıklanmış çıkıştır) ve
+                 // `uyuyan_olculemedi` (plan satırında `dormant_setup` damgası YOK: silahlanma
+                 // tarihçesi OKUNAMADI). Yerel anlık görüntüde `unexplained` 6→0'a düşmesinin
+                 // TAMAMI ilk kovadan geliyordu; pano yalnız düşen sayıyı gösterseydi bir sınıf
+                 // sessizce yeniden sınıflandırılmış, operatör de "kayıp bitti" diye okumuş olurdu.
+                 // `uyuyan_kurulum` KOŞULSUZ basılır çünkü o bir PAYDA beyanıdır: "şu kadar planı
+                 // kaybolmuş SAYMADIK" cümlesi, sayı sıfırken de bilgi taşır. `trn()` kullanılır,
+                 // `?? 0` DEĞİL — alan hiç gelmediyse "—" (ölçülmedi), 0 ise "0" (ölçtük, sıfır çıktı).
+                 // `uyuyan_olculemedi` YALNIZ >0 iken ve MAKİNE-OKUNUR ADIYLA yazılır: o sayı
+                 // "ölçemedik" demektir, "sıfır" değil, ve o planlar `unexplained`te KALIR (yani
+                 // hükmü zaten AÇIKLANAMAYAN tarafında sayılıyor — burada anlatılan NEDENİdir).
+                 : k === "conservation" ? `${v.plans ?? 0} plan → ${v.traded ?? 0} işlem · ${v.no_fill ?? 0} dolmadı · uyuyan-kurulum ${trn(v.uyuyan_kurulum)}${v.uyuyan_olculemedi > 0 ? ` · uyuyan_olculemedi ${trn(v.uyuyan_olculemedi)} (silahlanma tarihçesi okunamadı — terminal SAYILMADI)` : ""}${_say(v.unexplained) ? ` · ${_say(v.unexplained)} AÇIKLANAMAYAN` : ""}`
                  : k === "determinism" ? `${v.appended ?? 0} salt-ekleme defteri doğrulandı${v.shrunk ? ` · ${v.shrunk} defter KISALDI` : ""}`
                  : k === "coherence" ? `${v.ok ?? 0}/${v.total ?? 0} kalibrasyon taze${(v.stale || []).length ? ` · BAYAT: ${v.stale.map(x => `${x.artifact || x}${x.behind_h != null ? ` (${x.behind_h}sa geride)` : ""}`).join(", ")}` : ""}`
                  : k === "monotonicity" ? `${v.tracked ?? 0} sayaç izleniyor${(v.regressions || []).length ? ` · GERİLEME: ${v.regressions.map(x => `${x.field} ${x.was}→${x.now}`).join(", ")}` : ""}${(v.amnestied || []).length ? ` · AFFEDİLDİ: ${v.amnestied.map(a => `${a.field} ${a.was}→${a.now} (${a.reason || ""})`.slice(0, 120)).join(" | ")}` : ""}`
@@ -10827,8 +10867,8 @@ function line(pts, b) {
     + (sinB && sinB.replay_end ? `. Tohum penceresi ${esc(String(sinB.replay_end))} tarihinde biter` : "")
     + (bo.gecikme_gun ? `. Son nokta kitabın son seansından ${bo.gecikme_gun} gün geride` : "");
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%" role="img" aria-label="${esc(aria)}">
-    <defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".35"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
-    <path d="${area}" fill="url(#eg)"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    <defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--blue)" stop-opacity=".35"/><stop offset="1" stop-color="var(--blue)" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#eg)"/><path d="${path}" fill="none" stroke="var(--blue)" stroke-width="2"/>
     ${bosIsaret}${resIsaret}${sinIsaret}
     <text x="${pad}" y="16" fill="var(--tx2)" font-size="11">${money(pts[0][1])} · ${esc(pts[0][0])}</text>
     <text x="${W - pad}" y="16" text-anchor="end" fill="var(--green)" font-size="11">${money(pts[pts.length - 1][1])} · ${esc(pts[pts.length - 1][0])}</text></svg>`;

@@ -444,12 +444,30 @@ def test_anomali_rengi_ve_hareket_butcesini_bozmaz():
     ifadesi — `.uyari` ile `.kopuk` zaten bir HUE değil bir ŞİDDET söylüyordu ("insan
     gerekiyor" / "şimdi müdahale"), ve artık jetonun adı da onu söylüyor: --sev-2 / --sev-1.
     ÖLÇÜLEN DEĞER AYNI (rol bugün ilgili hue'ya alias); değişen, kuralın hangi işi taşıdığını
-    beyan etmesi."""
+    beyan etmesi.
+
+    D2 (2026-08-24) — TAŞIYICI DEĞİŞTİ, KANAL SAYISI DEĞİŞMEDİ. Karar §10.2: sapma artık
+    kartın MÜREKKEBİNİ değil SOL ŞERİDİNİ renklendiriyor. Gerekçe ölçülmüştü — mürekkep
+    kanalı, kartın içindeki her sayıyı da boyadığı için "kart uyarıda" ile "bu SAYI kötü"
+    ekranda ayrışmıyordu; şerit sapmayı kartın kenarına taşır ve içerideki hücreler kendi
+    rollerini (yön/şiddet) bağımsız söyleyebilir.
+    ~~`.durum-kart.uyari{color:var(--sev-2)}`~~ → `border-left:3px solid var(--sev-2)`.
+    İDDİA AYNEN DURUYOR ve iki parçası da bu turda korundu: (a) sapmanın TEK bir kanalı var
+    (nokta geri gelmedi), (b) kanal KALICI, yani hareket yok — kalıcı bir puls kalıcı bir
+    hareket bütçesi harcardı."""
     assert ".durum-nokta" not in CSS_KOD, "anomali noktası CSS'te kalmış — iki işaret dili sürüyor"
     assert "durum-nokta" not in KOD, "anomali noktası JS'te kalmış"
-    for kural in (".durum-kart.uyari{color:var(--sev-2)}", ".durum-kart.kopuk{color:var(--sev-1)}"):
-        assert kural in INDEX, f"anomali renk kuralı yok: {kural}"
-    blok = _govde(".durum-kart.uyari{", "\n.durum-dus{", INDEX)
+    for kural in (".durum-kart.uyari,.durum-kart.kopuk{border-left:3px solid var(--sev-2)}",
+                  ".durum-kart.kopuk{border-left-color:var(--sev-1)}"):
+        assert kural in INDEX, f"anomali şiddet kuralı yok: {kural}"
+    # Taşıyıcı ŞERİT olduğuna göre mürekkep kanalı GERÇEKTEN boşalmış olmalı: aynı seçici
+    # `color` bildirmeye devam etseydi iki kanal birden yanardı ve tur hiçbir şey kazanmazdı.
+    blok = _govde(".durum-kart.uyari,", "\n.durum-dus{", INDEX)
+    # BİLDİRİM SINIRINA bağlı: düz `"color:" not in blok` ararsan `border-left-color:` alt
+    # dizgisine takılırsın — yani şeridin KENDİ kuralı sahte kırmızı verirdi (bu tam olarak
+    # ilk yazımda oldu, 2026-08-24). Aranan şey `color` KISALTMASININ kendisi.
+    assert not re.search(r"[;{]\s*color\s*:", blok), \
+        "sapma hem şeridi hem mürekkebi boyuyor — kanal ikiye çıktı"
     assert "animation" not in blok and "blink" not in blok
     g = _govde("function _durumEmirKarti(", "\n// ---- ④ POZİSYONLAR")
     assert 'anomali: "kopuk"' in g and 'anomali: "uyari"' in g
@@ -815,10 +833,24 @@ def test_degerin_KENDI_rengi_hucrenin_rengini_YENER():
     yarışamaz. `.warn` ise bir işaret değil bir ALARM'dır → ŞİDDET rolü (--sev-2). Eskiden
     üçü de aynı hue kovasından (green/red/amber) geliyordu ve "para işareti" ile "uyarı"
     ekranda aynı ağırlıkta bağırıyordu. Kanalın canlılığı iddiası aynen duruyor; kanal
-    artık İKİ kanal olduğunu da söylüyor."""
-    for kural in (".pm-yield.pos{color:var(--yon-arti)}", ".pm-yield.neg{color:var(--yon-eksi)}",
-                  ".pm-yield.warn{color:var(--sev-2)}"):
+    artık İKİ kanal olduğunu da söylüyor.
+
+    D2 (2026-08-24) — D1'İN AYRIMI ARTIK GÖRSEL DE. Karar §10.2 taşıyıcı değişimi ŞİDDETİ
+    mürekkepten çıkardı: `.warn` bugün `color:var(--tx)` + altçizgi, `.pos`/`.neg` ise
+    mürekkepte KALDI. Yani D1'de yalnız JETON adıyla ayrılan iki rol (yön ↔ şiddet) şimdi
+    iki AYRI KANALDA yaşıyor ve kâr işareti ile alarm ekranda birbirinin yerine geçemez.
+    ~~`.pm-yield.warn{color:var(--sev-2)}`~~ → `color:var(--tx)` + `text-decoration:underline`.
+    Bu testin ASIL iddiası (sıra çakışması: değerin kabı değerin kendi kuralını yeniyordu)
+    `.pos`/`.neg` üstünden AYNEN ölçülmeye devam ediyor — o ikisi hâlâ `color` bildiriyor,
+    yani çakışmanın yaşayabileceği tek yer hâlâ çivili."""
+    for kural in (".pm-yield.pos{color:var(--yon-arti)}", ".pm-yield.neg{color:var(--yon-eksi)}"):
         assert kural in INDEX, f"değer rengi kuralı yok: {kural}"
+    # Şiddet mürekkebi TERK ETMİŞ olmalı: `.warn` yeniden renge dönerse yön ile şiddet aynı
+    # kanalda buluşur ve D1'in ayrımı sessizce çöker (ölçülen kusurun ta kendisi).
+    assert ".pm-yield.warn{color:var(--tx);text-decoration:underline" in INDEX, \
+        "şiddet altçizgi taşıyıcısını bırakmış — yön/şiddet aynı kanala düştü"
+    assert ".pm-yield.warn{color:var(--sev-" not in INDEX, \
+        ".warn yeniden şiddet mürekkebine dönmüş (§10.2 taşıyıcı değişimi geri alındı)"
     # Kural `.pm-yield` taban kuralından SONRA gelmeli (aynı özgüllükte olsaydı sıra yine kaybettirirdi
     # — burada özgüllük 0,2,0 olduğu için yenmesi garanti, ama sıra da doğru olsun).
     assert CSS_KOD.index(".pm-yield.pos{") > CSS_KOD.index(".pm-yield{")

@@ -2278,6 +2278,17 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-dikkat b{font-weight:600}
 .pv-dikkat .det{color:var(--tx2)}
 .pv-dikkat .sag{margin-left:auto;display:flex;gap:var(--s2);align-items:center}
+/* SAKİNLİK TİNTİ (karar §10.5) — app.js `.sakin` sınıfını DURDURULDU değilken basıyor.
+   ÖLÇÜLDÜ (2026-08-24), ve iki sayı bu kuralın biçimini belirledi:
+   (1) `--mint` ↔ `--bg2` luminans ayrımı gündüz 1,01 · gece 1,23 — yani tint TEK BAŞINA bir
+       durum kanalı DEĞİL. Sorun değil, çünkü durum zaten METİNLE taşınıyor (sağdaki rozet
+       "sakin" / "DURDURULDU" yazıyor). Tint bir pekiştirmedir. Bu satır o sınırı yazıya
+       geçirir: sakinlik ASLA yalnız bu zemine bırakılamaz — rozet kaldırılırsa kanal ölür.
+   (2) Rozetin kendi zemini de `--mint` (`.pv-rz.ok`), yani tintli şeridin üstünde rozet
+       zemine karışıyordu. Sınır ölçüldü: `--sev-3-h` (%35 alfa) mint üstünde 1,52 — YETMEZ;
+       tam `--sev-3` 3,52 (gündüz) / 3,42 (gece) ile grafik-nesne sınırını (>=3) geçiyor. */
+.pv-dikkat.sakin{background:var(--mint)}
+.pv-dikkat.sakin .pv-rz.ok{border-color:var(--sev-3)}
 
 /* ---- ROZET ---- */
 .pv-rz{display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-tag);

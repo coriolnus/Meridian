@@ -123,6 +123,14 @@ def _oran(a, b):
     return (l1 + 0.05) / (l2 + 0.05)
 
 
+def _lstar(c):
+    """CIE L* — ALGISAL açıklık ekseni. `_lum` (WCAG) kontrast oranı içindir; ÇG1 "iki seri
+    birbirinden yeterince açık mı" diye sorar ve bu SORU L* eksenindedir. İkisini karıştırmak
+    komşu adımı zeminin parlaklığına göre sessizce büyütür/küçültürdü."""
+    y = _lum(c)
+    return 116 * (y ** (1 / 3)) - 16 if y > 0.008856 else 903.3 * y
+
+
 def _metin(ink, zemin, tema):
     zc = _yigin(zemin, tema)
     ic = _rgba(ink, tema)
@@ -208,16 +216,44 @@ def test_bullet_bantlari_NODEDA_UCTEN_FAZLA_CIZMEZ():
 # =================================================================================================
 def test_violet_accentin_KOPYASI_DEGIL_ve_uc_seri_bir_MERDIVEN():
     """B6. `--violet` = `--accent`ti (oran 1.00). Üç seri artık bir luminans merdiveni ve
-    sıralama İKİ temada da aynı yönde olmalı — ters dönerse efsane grafiği yalanlar."""
+    sıralama İKİ temada da aynı yönde olmalı — ters dönerse efsane grafiği yalanlar.
+
+    D2 (2026-08-24) — TAŞIYICI DEĞİŞİMİ, SERİ ÜÇLÜSÜ DEĞİŞTİ. Karar §10.3 seri sözleşmesini
+    `--accent`/`--violet`/`--tx3`ten `--blue`/`--violet`/`--violet2`ye taşıdı; jetonlar hâlâ
+    tanımlı ama artık SERİ DEĞİLLER, yani bu çivi bugüne kadar var olmayan bir sözleşmeyi
+    ölçüyordu (bayat, gecede 5.92 > 6.00 ile düşüyordu). İddia AYNEN duruyor — ölçtüğü üçlü
+    tazelendi. İki eşik de KARARDA DONDURULMUŞTUR (§10, ölçümden ÖNCE):
+      ÇG1 · komşu seriler arası ΔL* ≥ 15      ÇG2 · her seri kart zemininde ≥ 3.00
+    ~~`_oran(--accent, --violet) >= 1.35`~~ DÜŞTÜ (2026-08-24): iki jeton artık komşu seri
+    değil, aralarında oran ölçmek anlamsız — yerini ÇG1'in ΔL* adımı aldı.
+    ~~`v >= 4.5` (AA, metin)~~ DÜŞTÜ (2026-08-24): efsane etiketi artık `--tx2` ile
+    basılıyor, renk YALNIZ `<line stroke>` örneğinde. Seri jetonu metin OLMADIĞI için geçerli
+    kural AA değil grafik-nesne kuralıdır (ÇG2 = 3.00). Bu muafiyetin BEDELİ var: aşağıdaki
+    son iddia, jetonun metne geri sızmasını yasaklar — sızarsa 3.00 eşiği meşruiyetini
+    kaybeder ve çivi kırmızı verir."""
+    SERI = ("--blue", "--violet", "--violet2")
     for tema in ("gunduz", "gece"):
-        assert _rgba("--violet", tema) != _rgba("--accent", tema), \
-            f"--violet ({tema}) hâlâ --accent'in kopyası — B6 geri geldi"
+        renkler = [_rgba(x, tema) for x in SERI]
+        assert len(set(renkler)) == 3, f"seri jetonları kopyalanmış ({tema}): {renkler}"
         kart = ["--card"]
-        a, v, t = (_metin(x, kart, tema) for x in ("--accent", "--violet", "--tx3"))
-        assert a > v > t, f"seri merdiveni sırasız ({tema}): {a:.2f} / {v:.2f} / {t:.2f}"
-        assert _oran(_rgba("--accent", tema), _rgba("--violet", tema)) >= 1.35, \
-            f"gerçek ↔ sim ayrımı ölçülemez kadar dar ({tema})"
-        assert v >= 4.5, f"--violet efsanede METİN olarak basılıyor, AA altı: {v:.2f} ({tema})"
+        oranlar = [_metin(x, kart, tema) for x in SERI]
+        assert oranlar == sorted(oranlar, reverse=True), \
+            f"seri merdiveni sırasız ({tema}): {[f'{o:.2f}' for o in oranlar]}"
+        for ad, o in zip(SERI, oranlar):
+            assert o >= 3.00, f"ÇG2 düştü — {ad} kartta {o:.2f} < 3.00 ({tema})"
+        yildizlar = [_lstar(_uzerine(c, _yigin(kart, tema)) if c[3] < 1.0 else c) for c in renkler]
+        for i in range(len(SERI) - 1):
+            d = abs(yildizlar[i] - yildizlar[i + 1])
+            assert d >= 15.0, \
+                f"ÇG1 düştü — {SERI[i]} ↔ {SERI[i+1]} ΔL* {d:.1f} < 15 ({tema})"
+    # ÇG2'nin (3.00) meşruiyet şartı: seri jetonu METİN olarak basılamaz. Efsanenin etiketi
+    # `--tx2`dir; renk yalnız çizgi örneğinde yaşar. Sızarsa AA kuralı geri gelir ve gecedeki
+    # `--violet2` (3.50) AA altı kalır — yani bu satır 3.00 eşiğinin bedelidir.
+    efsane_g = _govde("function icEfsane() {", "\nconst CHECK_TR")
+    assert 'color:var(--tx2)' in efsane_g, "efsane etiketi --tx2 değil — ÇG2 muafiyeti düştü"
+    for jeton in SERI:
+        assert f"color:var({jeton})" not in efsane_g, \
+            f"{jeton} efsanede METİN rengi olmuş — AA kuralı geri gelir, ÇG2 yetmez"
 
 
 def test_IC_serileri_TEK_TABLODAN_okunur_cizim_ve_efsane_AYRISAMAZ():
