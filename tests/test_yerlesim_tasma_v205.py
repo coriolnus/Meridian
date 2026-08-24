@@ -58,7 +58,10 @@ CSS = INDEX[INDEX.index("<style>"):INDEX.index("</style>")]
 CSS_KOD = re.sub(r"/\*.*?\*/", "", CSS, flags=re.S)
 
 # Ekran görüntüsünde ÖLÇÜLEN üç ad (operatör bildirimi) + kaynaktan türetilen en uzun olası ad.
-# Sonuncusu bir tahmin değil: watchdog.py:844 `eleme:{aşama}:{kural}` biçimini kuruyor, aşama adları
+# Sonuncusu bir tahmin değil: `watchdog.parity_report`ın eleme dalı (satır-çapası 2026-08-24'te
+# sembole çevrildi — v283 korunum turu watchdog.py'ye satır ekledi ve numara boş satıra düştü;
+# numarayı GÜNCELLEMEK aynı çürümeyi bir tur sonra tekrar üretirdi) `eleme:{aşama}:{kural}`
+# biçimini kuruyor, aşama adları
 # `Sieve("…")` çağrılarından, kural adları sieve.py'den geliyor; çarpımın en uzunu budur.
 EKRAN_ADLARI = [
     "yeniden_hesap:orphan_state_files",

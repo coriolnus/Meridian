@@ -600,7 +600,41 @@ def conservation_report(olaylar: list[dict] | None = None) -> dict:
         if e.get("event") == "daily_cycle" and e.get("date"):
             live_start = str(e["date"])
             break
+    # UYUYAN KURULUM — YEDİNCİ TERMİNAL SINIF (WP5-F/16; kalem `korunum-kovası-3`).
+    # Kurulumu o gün SİLAHLI OLMAYAN bir plan yapısal olarak silahlanamaz: `loop.py` onu yalnız
+    # keşif sondası olarak taşır, `arming` kapısı ona hiç bakmaz, dolayısıyla ne `entry_exec`
+    # satırı ne de bir düşme olayı doğar. Böyle bir plan KAYIP DEĞİLDİR — açıklanmış çıkıştır.
+    # Yerel 2026-07-28 anlık görüntüsünde `unexplained` 6'ydı ve ALTISI DA buydu (CSX/UNP/NSC/RTX
+    # 07-23 momentum_burst · PKG 07-24 momentum_burst · ROK 07-27 exhaustion_hammer); yani sayı
+    # tamamen bu sınıftan geliyordu ve pano bunu "kayıtsız kayboldu" diye gösteriyordu.
+    #
+    # SİLAHLANMA TARİHÇESİ KAYITTAN OKUNUR — `strategy.ARMED_SETUPS` SABİTİNDEN DEĞİL. Bugünkü
+    # sabitle dünkü planı yargılamak NOKTA-ZAMANI İHLALİdir ve zararı çift yönlüdür: 2026-08-22 B1
+    # kararı `pullback`i silahtan düşürdü (c150902), yani bugünkü sabite bakan bir dedektör B1'den
+    # ÖNCE silahlıyken sessizce kaybolmuş her pullback planını geriye dönük olarak affederdi —
+    # kararın kendisi geçmişi temizlerdi; ters yönde de 08-12'de silahlanan `momentum_burst`
+    # yüzünden 07-23'ün uyuyan planları bugün "silahlıydı" sayılırdı.
+    # KAYIT NEREDE (ölçüldü, 2026-08-24): plan satırının KENDİ damgası `dormant_setup`.
+    # `loop.py:1757/1870` ve `cf_backfill.py:90/117` planı üretirken `setup not in
+    # strat.ARMED_SETUPS`i O AN ölçüp satıra yazar — yani o turun silah yasası satırda donar
+    # (`storage.py` PLANS şemasında da tipli kolon; NULL kolon okumada ATLANIR, yani "damga yok"
+    # iki arka uçta da ayırt edilebilir). Aranan diğer kaynaklar ELENDİ: `state/history/v000N.yaml`
+    # sürüm defteri YALNIZ parametre taşır (silah listesi yok, beş dosya da okundu); olay
+    # defterindeki `arming_measured` yalnız POZİTİF ve seyrek bir iz bırakır (bir kurulumun o gün
+    # ölçülMEmiş olması silahlı olduğunu KANITLAMAZ) — ondan hüküm türetmek uydurma olurdu.
+    #
+    # DAMGA YOKSA HÜKÜM DE YOK. Alan defter şemasına sonradan girdi; yerel defterde 390 satırın
+    # 367'si damgasız (hepsi 2026-07-16 ve öncesi). Damgasız satırı "silahlıydı" diye okumak
+    # UYDURMA olurdu, "uyuyandı" diye okumak da: plan `uyuyan_olculemedi` paydasına yazılır,
+    # TERMİNAL SAYILMAZ ve `unexplained`te kalır.
+    #
+    # SIRA NEDEN EN SONDA: kova yalnız BAŞKA HİÇBİR AÇIKLAMASI OLMAYAN planlara sorulur. İki
+    # gerekçe: (a) `no_fill` kaderi `(tarih, sembol)` anahtarıyla okunur ve uyuyan plan silahlı
+    # kardeşiyle aynı anahtarı paylaşabilir (kimliğine kurulum eklenmesinin sebebi de bu) — o
+    # ikircikli anahtarı yeni sınıfın ÖNÜNE koymak sayıyı bulandırırdı; (b) böylece mevcut beş
+    # sınıfın sayıları bu turda DEĞİŞMEZ, kova yalnız `unexplained`ten pay alır.
     unexplained, replay_era, no_fill = [], 0, 0
+    uyuyan_kurulum, uyuyan_olculemedi = 0, 0
     for p in plans:
         pid, d = str(p.get("id")), str(p.get("date") or "")
         if pid in traded or pid in dropped:
@@ -615,14 +649,23 @@ def conservation_report(olaylar: list[dict] | None = None) -> dict:
         if live_start and d < live_start:
             replay_era += 1                             # replay: olay defteri yok — körlük, sızıntı değil
             continue
+        if "dormant_setup" not in p:
+            uyuyan_olculemedi += 1                      # tarihçe OKUNAMADI → terminal SAYILMAZ (aşağı düşer)
+        elif p.get("dormant_setup"):
+            uyuyan_kurulum += 1                         # o gün silahsızdı — açıklanmış çıkış, kayıp değil
+            continue
         unexplained.append({"id": pid, "date": d, "ticker": p.get("ticker"),
                             "verdict": p.get("gate_verdict")})
     # HÜKMÜNÜ SÖYLE. Bu rapor `ok` alanı DÖNDÜRMÜYORDU; diğer altı dedektör döndürüyor. Panoda ve
     # her toplayıcıda `ok=None` görünüyordu — "geçti" de değil "kaldı" da değil, sessizlik. Hüküm
     # vermeyen bir dedektör, bakanı hiçbir şey öğrenmeden geçirir.
+    # PAYDA İKİ TARAFLI ÇIKAR (YASA 6 okuyucusu: `check_integrity_and_alarm`, bu dosyada):
+    # `uyuyan_kurulum` kaç planı terminal saydığımız, `uyuyan_olculemedi` kaç planda bunu
+    # ÖLÇEMEDİĞİMİZ. İkincisi olmadan birincisi bir güven beyanı olurdu.
     return {"ok": not unexplained,
             "plans": len(plans), "traded": len(traded & {str(p.get("id")) for p in plans}),
             "no_fill": no_fill, "replay_era": replay_era, "live_start": live_start,
+            "uyuyan_kurulum": uyuyan_kurulum, "uyuyan_olculemedi": uyuyan_olculemedi,
             "unexplained": len(unexplained), "rows": unexplained[:8]}
 
 
@@ -1858,13 +1901,33 @@ def check_integrity_and_alarm() -> None:
         if tok not in prev:
             obs.alarm("MECHANISM_STALE", f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)",
                       mechanism=s["name"], kind="starved")
-    if rep["conservation"].get("unexplained"):
+    # KORUNUM — PAYDASIYLA BİRLİKTE (YASA 6: `conservation_report`un iki yeni alanının okuyucusu
+    # burasıdır). `uyuyan_kurulum` kaç planın "o gün silahsızdı" diye TERMİNAL sayıldığı,
+    # `uyuyan_olculemedi` kaç planda silahlanma tarihçesinin OKUNAMADIĞI. İkincisi olmadan
+    # "kayıtsız kayboldu" cümlesi fazla kesin olur: belki kaybolmadı, ölçemedik. (Damgasız plan
+    # `unexplained`te KALIR, yani `uyuyan_olculemedi > 0` ⇒ bu dal daima açıktır — payda alarmsız
+    # kalamaz.)
+    _kon = rep["conservation"]
+    _uyk, _uyo = int(_kon.get("uyuyan_kurulum") or 0), int(_kon.get("uyuyan_olculemedi") or 0)
+    if _kon.get("unexplained"):
         tok = "conservation"
         now.add(tok)
         if tok not in prev:
             obs.alarm("MECHANISM_STALE",
-                      f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu",
-                      kind="conservation")
+                      f"KORUNUM İHLALİ: {_kon['unexplained']} plan kayıtsız kayboldu "
+                      f"(payda: uyuyan-kurulum terminali {_uyk} · silahlanma tarihçesi "
+                      f"OKUNAMAYAN {_uyo} — damgasız plan terminal SAYILMAZ)",
+                      kind="conservation", uyuyan_kurulum=_uyk, uyuyan_olculemedi=_uyo)
+    elif _uyk or _uyo:
+        # İHLAL YOK AMA SESSİZLİK DE YOK. Kova `unexplained`i sıfırlayabilir; o hâlde alarm susar
+        # ve yeniden sınıflanan planlar hiçbir yüzeye çıkmazdı (pano korunum satırı yalnız
+        # plans/traded/no_fill/unexplained basar). `info` seviyesi EEMUA bütçesine GİRMEZ ve bu
+        # fonksiyon günde bir koşar — bedeli günlük tek satır, kazancı alanın okuyucusuz kalmaması.
+        # Boş kovada satır YOK: sıfır bir olgu değildir, yazılırsa yalnız gürültü olur.
+        obs.log("conservation_uyuyan_kovasi", uyuyan_kurulum=_uyk, uyuyan_olculemedi=_uyo,
+                plans=_kon.get("plans"), kind="conservation",
+                neden="kurulumu plan-tarihinde silahsız olan plan terminaldir (kayıp değil); "
+                      "tarihçe plan satırının `dormant_setup` damgasından okunur")
     if not rep["determinism"].get("ok"):
         # ÖLÇÜLEMEDİ ≠ İHLAL: bar dizini okunamadığında (ya da dedektör düştüğünde) hüküm
         # YOKTUR. Onu "SESSİZ BAR MUTASYONU" diye adlandırmak uydurma olurdu; jeton da AYRIDIR,
