@@ -1,0 +1,526 @@
+{
+  "kart": "EDG-2026-053",
+  "faz": 4,
+  "seed_ci": 20260812,
+  "esik_kaynagi": {
+    "dosya": "faz3_esik_dokumu.json",
+    "not": "ay-içi p70/p30 eşikleri FAZ3'te dondu ve aynı fonksiyonla (_ay_ici_dilim) yeniden üretildi; eşik tanımı değişmedi"
+  },
+  "sonuc": {
+    "yoy_buyume_ust_30pct": {
+      "gozlem_n": 9933,
+      "dilim_meta": {
+        "esik_ay_n": 203,
+        "dilimsiz_ay_n": 6,
+        "dilimsiz_satir": 30
+      },
+      "@20g": {
+        "n": 9861,
+        "ort": 0.002215,
+        "medyan": -0.00155,
+        "std": 0.089815,
+        "pozitif_oran": 0.490721,
+        "ci": {
+          "lo": 0.00033,
+          "hi": 0.003454,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": 0.00033,
+          "hi": 0.003454,
+          "n_gun": 202,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": true,
+        "pozitif_anlamli": true,
+        "negatif_anlamli": false,
+        "neden": null,
+        "net_10bps_tek_yon": 0.001215,
+        "net_10bps_gidis_donus_TANI": 0.000215,
+        "net_10bps_ci_TANI": {
+          "lo": -0.00067,
+          "hi": 0.002454
+        },
+        "net_20bps_tek_yon": 0.000215,
+        "net_20bps_gidis_donus_TANI": -0.001785,
+        "net_20bps_ci_TANI": {
+          "lo": -0.00167,
+          "hi": 0.001454
+        },
+        "ufuk_none_gozlem": 72
+      },
+      "@60g": {
+        "n": 9789,
+        "ort": 0.003745,
+        "medyan": -0.006297,
+        "std": 0.161648,
+        "pozitif_oran": 0.47584,
+        "ci": {
+          "lo": -0.001456,
+          "hi": 0.007515,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.001456,
+          "hi": 0.007515,
+          "n_gun": 201,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "net_10bps_tek_yon": 0.002745,
+        "net_10bps_gidis_donus_TANI": 0.001745,
+        "net_10bps_ci_TANI": {
+          "lo": -0.002456,
+          "hi": 0.006515
+        },
+        "net_20bps_tek_yon": 0.001745,
+        "net_20bps_gidis_donus_TANI": -0.000255,
+        "net_20bps_ci_TANI": {
+          "lo": -0.003456,
+          "hi": 0.005515
+        },
+        "ufuk_none_gozlem": 144
+      }
+    },
+    "ivme_ust_30pct": {
+      "gozlem_n": 8197,
+      "dilim_meta": {
+        "esik_ay_n": 197,
+        "dilimsiz_ay_n": 12,
+        "dilimsiz_satir": 488
+      },
+      "@20g": {
+        "n": 8180,
+        "ort": 0.002308,
+        "medyan": -0.002119,
+        "std": 0.084162,
+        "pozitif_oran": 0.485697,
+        "ci": {
+          "lo": -0.000961,
+          "hi": 0.00428,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.000961,
+          "hi": 0.00428,
+          "n_gun": 196,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "net_10bps_tek_yon": 0.001308,
+        "net_10bps_gidis_donus_TANI": 0.000308,
+        "net_10bps_ci_TANI": {
+          "lo": -0.001961,
+          "hi": 0.00328
+        },
+        "net_20bps_tek_yon": 0.000308,
+        "net_20bps_gidis_donus_TANI": -0.001692,
+        "net_20bps_ci_TANI": {
+          "lo": -0.002961,
+          "hi": 0.00228
+        },
+        "ufuk_none_gozlem": 17
+      },
+      "@60g": {
+        "n": 8163,
+        "ort": 0.004473,
+        "medyan": -0.007703,
+        "std": 0.154147,
+        "pozitif_oran": 0.47213,
+        "ci": {
+          "lo": -0.002322,
+          "hi": 0.008205,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.002322,
+          "hi": 0.008205,
+          "n_gun": 195,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "net_10bps_tek_yon": 0.003473,
+        "net_10bps_gidis_donus_TANI": 0.002473,
+        "net_10bps_ci_TANI": {
+          "lo": -0.003322,
+          "hi": 0.007205
+        },
+        "net_20bps_tek_yon": 0.002473,
+        "net_20bps_gidis_donus_TANI": 0.000473,
+        "net_20bps_ci_TANI": {
+          "lo": -0.004322,
+          "hi": 0.006205
+        },
+        "ufuk_none_gozlem": 34
+      }
+    }
+  },
+  "TANI": {
+    "yoy_alt_30pct_TANI": {
+      "gozlem_n": 9933,
+      "dilim_meta": {
+        "esik_ay_n": 203,
+        "dilimsiz_ay_n": 6,
+        "dilimsiz_satir": 30
+      },
+      "@20g": {
+        "n": 9861,
+        "ort": -0.000714,
+        "medyan": -0.004687,
+        "std": 0.079752,
+        "pozitif_oran": 0.469324,
+        "ci": {
+          "lo": -0.003771,
+          "hi": 0.002074,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.003771,
+          "hi": 0.002074,
+          "n_gun": 202,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "net_10bps_tek_yon": -0.001714,
+        "net_10bps_gidis_donus_TANI": -0.002714,
+        "net_10bps_ci_TANI": {
+          "lo": -0.004771,
+          "hi": 0.001074
+        },
+        "net_20bps_tek_yon": -0.002714,
+        "net_20bps_gidis_donus_TANI": -0.004714,
+        "net_20bps_ci_TANI": {
+          "lo": -0.005771,
+          "hi": 7.4e-05
+        },
+        "ufuk_none_gozlem": 72
+      },
+      "@60g": {
+        "n": 9789,
+        "ort": -0.001189,
+        "medyan": -0.009796,
+        "std": 0.143118,
+        "pozitif_oran": 0.463071,
+        "ci": {
+          "lo": -0.009778,
+          "hi": 0.007066,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.009778,
+          "hi": 0.007066,
+          "n_gun": 201,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "net_10bps_tek_yon": -0.002189,
+        "net_10bps_gidis_donus_TANI": -0.003189,
+        "net_10bps_ci_TANI": {
+          "lo": -0.010778,
+          "hi": 0.006066
+        },
+        "net_20bps_tek_yon": -0.003189,
+        "net_20bps_gidis_donus_TANI": -0.005189,
+        "net_20bps_ci_TANI": {
+          "lo": -0.011778,
+          "hi": 0.005066
+        },
+        "ufuk_none_gozlem": 144
+      },
+      "not": "TANI — kart karar kuralı bu dilimi OKUMAZ, K harcamaz"
+    },
+    "ivme_alt_30pct_TANI": {
+      "gozlem_n": 8202,
+      "dilim_meta": {
+        "esik_ay_n": 197,
+        "dilimsiz_ay_n": 12,
+        "dilimsiz_satir": 488
+      },
+      "@20g": {
+        "n": 8185,
+        "ort": -0.001716,
+        "medyan": -0.004906,
+        "std": 0.083482,
+        "pozitif_oran": 0.467685,
+        "ci": {
+          "lo": -0.003118,
+          "hi": -9.6e-05,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.003118,
+          "hi": -9.6e-05,
+          "n_gun": 196,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": true,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": true,
+        "neden": null,
+        "net_10bps_tek_yon": -0.002716,
+        "net_10bps_gidis_donus_TANI": -0.003716,
+        "net_10bps_ci_TANI": {
+          "lo": -0.004118,
+          "hi": -0.001096
+        },
+        "net_20bps_tek_yon": -0.003716,
+        "net_20bps_gidis_donus_TANI": -0.005716,
+        "net_20bps_ci_TANI": {
+          "lo": -0.005118,
+          "hi": -0.002096
+        },
+        "ufuk_none_gozlem": 17
+      },
+      "@60g": {
+        "n": 8168,
+        "ort": -0.003305,
+        "medyan": -0.011811,
+        "std": 0.15042,
+        "pozitif_oran": 0.460578,
+        "ci": {
+          "lo": -0.006655,
+          "hi": 0.000623,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.006655,
+          "hi": 0.000623,
+          "n_gun": 195,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "net_10bps_tek_yon": -0.004305,
+        "net_10bps_gidis_donus_TANI": -0.005305,
+        "net_10bps_ci_TANI": {
+          "lo": -0.007655,
+          "hi": -0.000377
+        },
+        "net_20bps_tek_yon": -0.005305,
+        "net_20bps_gidis_donus_TANI": -0.007305,
+        "net_20bps_ci_TANI": {
+          "lo": -0.008655,
+          "hi": -0.001377
+        },
+        "ufuk_none_gozlem": 34
+      },
+      "not": "TANI — kart karar kuralı bu dilimi OKUMAZ, K harcamaz"
+    },
+    "tum_gozlem_TANI": {
+      "gozlem_n": 32934,
+      "@20g": {
+        "n": 32692,
+        "ort": -0.000684,
+        "medyan": -0.003584,
+        "std": 0.078997,
+        "pozitif_oran": 0.476569,
+        "ci": {
+          "lo": -0.001269,
+          "hi": -0.00025,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.001269,
+          "hi": -0.00025,
+          "n_gun": 206,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": true,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": true,
+        "neden": null,
+        "net_10bps_tek_yon": -0.001684,
+        "net_10bps_gidis_donus_TANI": -0.002684,
+        "net_10bps_ci_TANI": {
+          "lo": -0.002269,
+          "hi": -0.00125
+        },
+        "net_20bps_tek_yon": -0.002684,
+        "net_20bps_gidis_donus_TANI": -0.004684,
+        "net_20bps_ci_TANI": {
+          "lo": -0.003269,
+          "hi": -0.00225
+        }
+      },
+      "@60g": {
+        "n": 32453,
+        "ort": -0.001861,
+        "medyan": -0.009017,
+        "std": 0.141608,
+        "pozitif_oran": 0.465843,
+        "ci": {
+          "lo": -0.003453,
+          "hi": -0.000668,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.003453,
+          "hi": -0.000668,
+          "n_gun": 205,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "seed": 20260812,
+          "neden": null
+        },
+        "anlamli": true,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": true,
+        "neden": null,
+        "net_10bps_tek_yon": -0.002861,
+        "net_10bps_gidis_donus_TANI": -0.003861,
+        "net_10bps_ci_TANI": {
+          "lo": -0.004453,
+          "hi": -0.001668
+        },
+        "net_20bps_tek_yon": -0.003861,
+        "net_20bps_gidis_donus_TANI": -0.005861,
+        "net_20bps_ci_TANI": {
+          "lo": -0.005453,
+          "hi": -0.002668
+        }
+      },
+      "not": "hüküm-dışı bağlam; kart karar kuralı yalnız iki üst dilimi okur"
+    },
+    "yayilim_TANI": {
+      "not": "TANI — kart karar kuralı OKUMAZ. Kapsanan alt-evrenin tabanı negatiftir (tum_gozlem_TANI); yayılım bu taban kaymasından arınmış tek-yönlü okumadır. TAZE default_rng(20260812) ile hesaplandı; kayıtlı hücrelerin akışına dokunmaz.",
+      "yoy_buyume_ust30_eksi_alt30_TANI": {
+        "@20g": {
+          "nA": 9861,
+          "nB": 9861,
+          "fark": 0.002929,
+          "ci": {
+            "lo": -0.000623,
+            "hi": 0.006121,
+            "seviye": 0.95
+          },
+          "n_gun": 202,
+          "blok": 21,
+          "n_boot_gecerli": 2000,
+          "atlanan": 0,
+          "seed": 20260812,
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "neden": null,
+          "net_10bps_iki_bacak_TANI": 0.000929,
+          "net_20bps_iki_bacak_TANI": -0.001071
+        },
+        "@60g": {
+          "nA": 9789,
+          "nB": 9789,
+          "fark": 0.004933,
+          "ci": {
+            "lo": -0.007441,
+            "hi": 0.015486,
+            "seviye": 0.95
+          },
+          "n_gun": 201,
+          "blok": 21,
+          "n_boot_gecerli": 2000,
+          "atlanan": 0,
+          "seed": 20260812,
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "neden": null,
+          "net_10bps_iki_bacak_TANI": 0.002933,
+          "net_20bps_iki_bacak_TANI": 0.000933
+        }
+      },
+      "ivme_ust30_eksi_alt30_TANI": {
+        "@20g": {
+          "nA": 8180,
+          "nB": 8185,
+          "fark": 0.004024,
+          "ci": {
+            "lo": -0.000221,
+            "hi": 0.006869,
+            "seviye": 0.95
+          },
+          "n_gun": 196,
+          "blok": 21,
+          "n_boot_gecerli": 2000,
+          "atlanan": 0,
+          "seed": 20260812,
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "neden": null,
+          "net_10bps_iki_bacak_TANI": 0.002024,
+          "net_20bps_iki_bacak_TANI": 2.4e-05
+        },
+        "@60g": {
+          "nA": 8163,
+          "nB": 8168,
+          "fark": 0.007779,
+          "ci": {
+            "lo": -0.001578,
+            "hi": 0.013654,
+            "seviye": 0.95
+          },
+          "n_gun": 195,
+          "blok": 21,
+          "n_boot_gecerli": 2000,
+          "atlanan": 0,
+          "seed": 20260812,
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "neden": null,
+          "net_10bps_iki_bacak_TANI": 0.005779,
+          "net_20bps_iki_bacak_TANI": 0.003779
+        }
+      }
+    }
+  }
+}

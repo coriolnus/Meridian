@@ -1,0 +1,34 @@
+{
+  "kart": "EDG-2026-056",
+  "hucre": "oran_imza_retro",
+  "donduruldu": "2026-08-24",
+  "beyan": "Bu dosya ÖLÇÜMDEN ÖNCE yazıldı ve ölçüm sırasında DEĞİŞTİRİLMEDİ. sha256'sı sonuc.json'da.",
+  "r_tanimi": "r = c[t-1] / c[t]  (kart features_asof; 2:1 ileri bölünmede r ~ 2)",
+  "bilinen_split_oranlari": {
+    "ileri": {"3:2": 1.5, "2:1": 2.0, "5:2": 2.5, "3:1": 3.0, "4:1": 4.0, "5:1": 5.0, "10:1": 10.0, "20:1": 20.0},
+    "ters": {"2:3": 0.6666666666666666, "1:2": 0.5, "2:5": 0.4, "1:3": 0.3333333333333333, "1:4": 0.25, "1:5": 0.2, "1:10": 0.1, "1:20": 0.05},
+    "gerekce": "Kart tezi 2:1, 3:1, 3:2, 4:1, 10:1, 1:2-ters + 'vb.' diyor. 'vb.' ölçümden ÖNCE burada donduruldu: yaygın ABD hisse bölünme oranları + tam simetrik tersleri. Ölçümden sonra bu küme GENİŞLETİLEMEZ (kill)."
+  },
+  "fiyat_tolerans_rel": 0.02,
+  "fiyat_kurali": "aday_fiyat(t) := min_rho |r(t)/rho - 1| <= 0.02  (kart: '± tolerans (kart-önce donuk: %2)')",
+  "hacim_teyidi": {
+    "tanim": "vr(t) = v[t] / v[t-1];  teyit := (1/F) <= vr(t)/r(t) <= F",
+    "F_birincil": 1.5,
+    "F_merdiveni_ikincil": [1.25, 1.5, 2.0],
+    "gerekce": "KART BOŞLUĞU: kart hacim teyidi için sayı vermiyor ('v[t]/v[t-1] ~ r'). Fiyat oranı için verilen %2, günlük hacim gürültüsü için fiziksel olarak anlamsızdır (adet-hacmi bölünmede ~r katına çıkar ama günlük dağılımı geniştir). Bu yüzden ölçümden ÖNCE log-simetrik bir kat-toleransı donduruldu: F=1.5 BİRİNCİL (hüküm bundan okunur). Merdiven yalnız BİLGİ amaçlıdır ve hükmü DEĞİŞTİRMEZ.",
+    "hacim_olculemez": "v[t]<=0 veya v[t-1]<=0 veya NaN ise TEYİT YOK -> aday DEĞİL, ayrıca 'hacim_olculemedi' olarak SAYILIR (uydurma yasağı: 'teyit edilmedi' ile 'ölçülemedi' aynı kovaya girmez)."
+  },
+  "aday_tanimi": "aday(t) := aday_fiyat(t) AND hacim_teyidi(t)   [kill: hacim teyidi atlanamaz]",
+  "eslesme_kurali": "Bir aday (ticker, tarih) BİRİNCİL donuk bilinen-split listesinde AYNI (ticker, tarih) ile varsa EŞLEŞMİŞ sayılır. Tarih penceresi YOK (tam eşleşme) — iki taraf da aynı t indeksini, aynı arşivi kullanıyor.",
+  "karar_kurali": {
+    "yanlis_pozitif_orani": "eslesmeyen_aday / toplam_aday",
+    "yakalama_orani": "yakalanan_bilinen / birincil_bilinen_toplam",
+    "esik": "YP <= 0.20 VE yakalama >= 0.80 -> 'dedektör UYGULANABİLİR'; aksi -> 'imza tek başına yetersiz'",
+    "not": "Eşikler karttan (success_metric) AYNEN alındı; ölçümden sonra değiştirilemez."
+  },
+  "kapsam": "state/bars/*.csv TAMAMI (SALT-OKUMA). meridian motoru import EDİLMEZ; CSV doğrudan okunur.",
+  "beyanli_sinirlar": [
+    "Kart beyanli_sinirlar(2) ters-split'i 'imza sınıfı dışında' sayıyor, tez cümlesi ise '1:2 ters'i oran kümesinde ANIYOR. Çelişki ölçümden ÖNCE şöyle çözüldü: oran kümesi HER İKİ yönü içerir (tez cümlesi), ve sonuçta yön kırılımı AYRICA raporlanır. Hüküm iki yönlü kümeden okunur.",
+    "Kart beyanli_sinirlar(1): 'bilinen split' listesi bizim kayıtlarımız kadardır."
+  ]
+}

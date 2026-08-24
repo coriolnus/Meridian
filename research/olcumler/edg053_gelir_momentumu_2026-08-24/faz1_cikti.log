@@ -1,0 +1,6 @@
+== FAZ1: [1] çeyreklik gelir serisi — İLK-İFŞA + etiket önceliği + frame hizası ==
+   ilk-ifşa satır: 12768 (düşen yeniden-beyan: 16316)
+   sembol-çeyrek: 10933  sembol: 248/251
+   frame kaynaklı dönem: 12597 (türetilen: 171, uyum=0.999127)
+   kapsam dışı sembol: ['GS', 'SPOT', 'SYF']
+== yazıldı: faz1_temel.json + temel_ceyrek.csv ==

@@ -1,0 +1,7 @@
+== FAZ2: [2] aylık panel + PIT as-of + fazla getiri + kill#1 + PIT yıkıcı sınama ==
+   249/251 sembol yüklendi
+   gözlem günü (ay-sonu): 272  [2004-01-30 .. 2026-08-04]
+   yazıldı: panel.csv (32934 satır)
+   PIT yıkıcı sınama: n=32934 ihlal_yoy=0 ihlal_ivme=0 geçti=True
+   sembol-ay: yoy=32934  ivme=27229 (kill#1 eşik 3000 → geçti=True)
+== yazıldı: faz2_panel.json ==

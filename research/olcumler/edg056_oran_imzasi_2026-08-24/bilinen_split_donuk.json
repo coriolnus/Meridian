@@ -1,0 +1,871 @@
+{
+  "kart": "EDG-2026-056",
+  "donduruldu": "2026-08-24",
+  "beyan": "ÖLÇÜMDEN ÖNCE donduruldu. Ölçüm sırasında GENİŞLETİLMEDİ (kart kill kriteri).",
+  "birincil": {
+    "kaynak": "state/bars_integrity.json -> semboller[*].kirilma_listesi, sinif=='olcek_dikisi' (K1)",
+    "kaynak_sha256": "ab6b2e5995ba3084782cbcedc2982a7d56d0d16a6245cadff14e74e5edfdedcc",
+    "kaynak_uretildi": "2026-07-31T00:01:10",
+    "neden_bu": "Kart 'bilinen split' kaynağı olarak KENDİ karantina/temizlik kayıtlarımızı gösteriyor. state/quarantine/ ÖLÇÜLDÜ: yalnız sp500_constituents FIXTURE'ı var, SIFIR bölünme kaydı. Repodaki tek makine-okunur ölçek-dikişi defteri bars_integrity.json'dur (K1 olcek_dikisi).",
+    "kapsam_uyarisi": "K1 eşikleri r>=1.9 veya r<=0.55 (data.py BREAK_UP/BREAK_DN). Bu yüzden 3:2 gibi küçük oranlı bölünmeler bu YER GERÇEĞİNDE hiç YOKTUR — yakalama oranı büyük-oranlı dikişlere yanlıdır (beyanlı).",
+    "sinif_uyarisi": "K1 'ölçek dikişi'dir: gerçek bölünme, spinoff yeniden-tabanlaması ve sağlayıcı taban değişimi AYNI kovada. Kart beyanli_sinirlar(1) bunu kapsıyor: liste 'bizim kayıtlarımız kadardır'.",
+    "olaylar": [
+      {
+        "ticker": "ABT",
+        "tarih": "2013-01-02",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4893,
+        "r_kart_c_t1_bolu_c_t": 2.043736,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "AIG",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 20.4074,
+        "r_kart_c_t1_bolu_c_t": 0.049002,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "ALB",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5342,
+        "r_kart_c_t1_bolu_c_t": 1.871958,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "ALB",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9942,
+        "r_kart_c_t1_bolu_c_t": 0.501454,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "ANSS",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4639,
+        "r_kart_c_t1_bolu_c_t": 2.155637,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "ANSS",
+        "tarih": "2007-06-05",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9541,
+        "r_kart_c_t1_bolu_c_t": 0.511745,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "APO",
+        "tarih": "2011-03-30",
+        "kayitli_oran_c_t_bolu_c_t1": 2.3545,
+        "r_kart_c_t1_bolu_c_t": 0.424719,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "AVGO",
+        "tarih": "2009-08-06",
+        "kayitli_oran_c_t_bolu_c_t1": 162.0,
+        "r_kart_c_t1_bolu_c_t": 0.006173,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "C",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 10.1566,
+        "r_kart_c_t1_bolu_c_t": 0.098458,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CB",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5103,
+        "r_kart_c_t1_bolu_c_t": 1.959632,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CB",
+        "tarih": "2006-04-19",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0577,
+        "r_kart_c_t1_bolu_c_t": 0.485979,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CBRE",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.3409,
+        "r_kart_c_t1_bolu_c_t": 2.933412,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CHD",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5076,
+        "r_kart_c_t1_bolu_c_t": 1.970055,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CHTR",
+        "tarih": "2010-09-15",
+        "kayitli_oran_c_t_bolu_c_t1": 1158.3333,
+        "r_kart_c_t1_bolu_c_t": 0.000863,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CI",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.1115,
+        "r_kart_c_t1_bolu_c_t": 8.96861,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CI",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 2.9413,
+        "r_kart_c_t1_bolu_c_t": 0.339986,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CI",
+        "tarih": "2007-04-26",
+        "kayitli_oran_c_t_bolu_c_t1": 3.0112,
+        "r_kart_c_t1_bolu_c_t": 0.332094,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CMCSA",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.3374,
+        "r_kart_c_t1_bolu_c_t": 2.963841,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CMI",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.2523,
+        "r_kart_c_t1_bolu_c_t": 3.963535,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CMI",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 4.0228,
+        "r_kart_c_t1_bolu_c_t": 0.248583,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CSX",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4894,
+        "r_kart_c_t1_bolu_c_t": 2.043318,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CTSH",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5036,
+        "r_kart_c_t1_bolu_c_t": 1.985703,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "CTSH",
+        "tarih": "2007-10-17",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0843,
+        "r_kart_c_t1_bolu_c_t": 0.479777,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "D",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5062,
+        "r_kart_c_t1_bolu_c_t": 1.975504,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "D",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 1.997,
+        "r_kart_c_t1_bolu_c_t": 0.500751,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "DD",
+        "tarih": "2025-11-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4249,
+        "r_kart_c_t1_bolu_c_t": 2.353495,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "DE",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4991,
+        "r_kart_c_t1_bolu_c_t": 2.003606,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "DE",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0415,
+        "r_kart_c_t1_bolu_c_t": 0.489836,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "DUK",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5071,
+        "r_kart_c_t1_bolu_c_t": 1.971998,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "EMR",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5028,
+        "r_kart_c_t1_bolu_c_t": 1.988862,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "EMR",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9991,
+        "r_kart_c_t1_bolu_c_t": 0.500225,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "EQT",
+        "tarih": "2018-11-13",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5358,
+        "r_kart_c_t1_bolu_c_t": 1.866368,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "EXPE",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5008,
+        "r_kart_c_t1_bolu_c_t": 1.996805,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "FI",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0185,
+        "r_kart_c_t1_bolu_c_t": 0.495417,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "FISV",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0185,
+        "r_kart_c_t1_bolu_c_t": 0.495417,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "GD",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5041,
+        "r_kart_c_t1_bolu_c_t": 1.983733,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "GD",
+        "tarih": "2006-03-27",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9762,
+        "r_kart_c_t1_bolu_c_t": 0.506022,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "GILD",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.2683,
+        "r_kart_c_t1_bolu_c_t": 3.727171,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "GOOGL",
+        "tarih": "2013-12-18",
+        "kayitli_oran_c_t_bolu_c_t1": 2.6152,
+        "r_kart_c_t1_bolu_c_t": 0.38238,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "HAL",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5271,
+        "r_kart_c_t1_bolu_c_t": 1.897173,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "HAL",
+        "tarih": "2006-07-17",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9075,
+        "r_kart_c_t1_bolu_c_t": 0.524246,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "HES",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.3508,
+        "r_kart_c_t1_bolu_c_t": 2.850627,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "HES",
+        "tarih": "2006-06-01",
+        "kayitli_oran_c_t_bolu_c_t1": 3.0012,
+        "r_kart_c_t1_bolu_c_t": 0.3332,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "HLT",
+        "tarih": "2017-01-04",
+        "kayitli_oran_c_t_bolu_c_t1": 2.1176,
+        "r_kart_c_t1_bolu_c_t": 0.472233,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "HON",
+        "tarih": "2026-06-29",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4905,
+        "r_kart_c_t1_bolu_c_t": 2.038736,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "HRL",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5055,
+        "r_kart_c_t1_bolu_c_t": 1.978239,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "HSY",
+        "tarih": "2004-06-16",
+        "kayitli_oran_c_t_bolu_c_t1": 0.497,
+        "r_kart_c_t1_bolu_c_t": 2.012072,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "INTU",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5073,
+        "r_kart_c_t1_bolu_c_t": 1.97122,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "INTU",
+        "tarih": "2006-07-07",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9617,
+        "r_kart_c_t1_bolu_c_t": 0.509762,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "IRM",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4427,
+        "r_kart_c_t1_bolu_c_t": 2.258866,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "ITW",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5092,
+        "r_kart_c_t1_bolu_c_t": 1.963865,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "ITW",
+        "tarih": "2006-05-26",
+        "kayitli_oran_c_t_bolu_c_t1": 1.996,
+        "r_kart_c_t1_bolu_c_t": 0.501002,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "LHX",
+        "tarih": "2005-03-31",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5038,
+        "r_kart_c_t1_bolu_c_t": 1.984915,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "LOW",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5029,
+        "r_kart_c_t1_bolu_c_t": 1.988467,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "LOW",
+        "tarih": "2006-07-03",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0066,
+        "r_kart_c_t1_bolu_c_t": 0.498355,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "MAR",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5037,
+        "r_kart_c_t1_bolu_c_t": 1.985309,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "MAR",
+        "tarih": "2006-06-12",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9813,
+        "r_kart_c_t1_bolu_c_t": 0.504719,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "MNST",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.2633,
+        "r_kart_c_t1_bolu_c_t": 3.797949,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "MO",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.2317,
+        "r_kart_c_t1_bolu_c_t": 4.315926,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "MRVL",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5184,
+        "r_kart_c_t1_bolu_c_t": 1.929012,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "MRVL",
+        "tarih": "2006-07-25",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0245,
+        "r_kart_c_t1_bolu_c_t": 0.493949,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "NEE",
+        "tarih": "2005-03-16",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4926,
+        "r_kart_c_t1_bolu_c_t": 2.030045,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "NKE",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4954,
+        "r_kart_c_t1_bolu_c_t": 2.018571,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "NKE",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0195,
+        "r_kart_c_t1_bolu_c_t": 0.495172,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "NUE",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5198,
+        "r_kart_c_t1_bolu_c_t": 1.923817,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "NUE",
+        "tarih": "2006-06-01",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0281,
+        "r_kart_c_t1_bolu_c_t": 0.493072,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "NVDA",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.3548,
+        "r_kart_c_t1_bolu_c_t": 2.818489,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "NVDA",
+        "tarih": "2006-04-07",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0,
+        "r_kart_c_t1_bolu_c_t": 0.5,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "O",
+        "tarih": "2005-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4947,
+        "r_kart_c_t1_bolu_c_t": 2.021427,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "OMC",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5056,
+        "r_kart_c_t1_bolu_c_t": 1.977848,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "OMC",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 2.1303,
+        "r_kart_c_t1_bolu_c_t": 0.469417,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "OXY",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5381,
+        "r_kart_c_t1_bolu_c_t": 1.858391,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "OXY",
+        "tarih": "2006-08-16",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9803,
+        "r_kart_c_t1_bolu_c_t": 0.504974,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PCAR",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.3609,
+        "r_kart_c_t1_bolu_c_t": 2.770851,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PEG",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.2564,
+        "r_kart_c_t1_bolu_c_t": 3.900156,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PEG",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9948,
+        "r_kart_c_t1_bolu_c_t": 0.501303,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PGR",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.1845,
+        "r_kart_c_t1_bolu_c_t": 5.420054,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PGR",
+        "tarih": "2006-05-19",
+        "kayitli_oran_c_t_bolu_c_t1": 5.5533,
+        "r_kart_c_t1_bolu_c_t": 0.180073,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PINS",
+        "tarih": "2013-02-26",
+        "kayitli_oran_c_t_bolu_c_t1": 12.0,
+        "r_kart_c_t1_bolu_c_t": 0.083333,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PINS",
+        "tarih": "2013-03-27",
+        "kayitli_oran_c_t_bolu_c_t1": 8.3333,
+        "r_kart_c_t1_bolu_c_t": 0.12,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PINS",
+        "tarih": "2013-04-30",
+        "kayitli_oran_c_t_bolu_c_t1": 0.0112,
+        "r_kart_c_t1_bolu_c_t": 89.285714,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "PINS",
+        "tarih": "2019-04-18",
+        "kayitli_oran_c_t_bolu_c_t1": 152.5,
+        "r_kart_c_t1_bolu_c_t": 0.006557,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "RTX",
+        "tarih": "2020-04-03",
+        "kayitli_oran_c_t_bolu_c_t1": 3.7941,
+        "r_kart_c_t1_bolu_c_t": 0.263567,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "SLB",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5319,
+        "r_kart_c_t1_bolu_c_t": 1.880053,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "SLB",
+        "tarih": "2006-04-10",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0043,
+        "r_kart_c_t1_bolu_c_t": 0.498927,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "STLD",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.2579,
+        "r_kart_c_t1_bolu_c_t": 3.877472,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "STLD",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 4.1945,
+        "r_kart_c_t1_bolu_c_t": 0.238407,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "UNP",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4953,
+        "r_kart_c_t1_bolu_c_t": 2.018978,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "UNP",
+        "tarih": "2006-10-24",
+        "kayitli_oran_c_t_bolu_c_t1": 2.0062,
+        "r_kart_c_t1_bolu_c_t": 0.498455,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "WBD",
+        "tarih": "2014-08-07",
+        "kayitli_oran_c_t_bolu_c_t1": 0.4936,
+        "r_kart_c_t1_bolu_c_t": 2.025932,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "WFC",
+        "tarih": "2006-01-03",
+        "kayitli_oran_c_t_bolu_c_t1": 0.5076,
+        "r_kart_c_t1_bolu_c_t": 1.970055,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      },
+      {
+        "ticker": "WFC",
+        "tarih": "2006-08-14",
+        "kayitli_oran_c_t_bolu_c_t1": 1.9914,
+        "r_kart_c_t1_bolu_c_t": 0.502159,
+        "sinif": "olcek_dikisi",
+        "kural": "K1",
+        "arsivde_var": true
+      }
+    ]
+  },
+  "ikincil_hukum_disi": {
+    "kaynak": "docs/TESHIS-MNST-SPLIT-2026-08-12.md (Massive /stocks/v1/splits takvimi, dış kanıt)",
+    "kaynak_sha256": "c5d6fab9a0420599f9ecc29fdfa84b502dfe679c76e52059d8681cda407e95c0",
+    "neden_hukum_disi": "Dış takvim bizim 'karantina/temizlik kaydımız' DEĞİL. Karar kuralına GİRMEZ; ayrı raporlanır.",
+    "olaylar": [
+      {
+        "ticker": "MNST",
+        "tarih": "2026-08-11",
+        "oran_metni": "1->2",
+        "r_kart_beklenen": 2.0,
+        "arsivde_var": false
+      },
+      {
+        "ticker": "MNST",
+        "tarih": "2023-03-28",
+        "oran_metni": "1->2",
+        "r_kart_beklenen": 2.0,
+        "arsivde_var": true
+      },
+      {
+        "ticker": "MNST",
+        "tarih": "2016-11-10",
+        "oran_metni": "1->3",
+        "r_kart_beklenen": 3.0,
+        "arsivde_var": true
+      }
+    ]
+  }
+}

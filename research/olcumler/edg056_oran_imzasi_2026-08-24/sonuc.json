@@ -1,0 +1,1246 @@
+{
+  "kart": "EDG-2026-056",
+  "hucre": "oran_imza_retro",
+  "K": 1,
+  "kosuldu": "2026-08-24",
+  "donuk_tanim_sha256": "d456efd2a25ed5cd2403c6f817bfdabfecc636deb85b505bfd19cf493c98061b",
+  "bilinen_split_listesi_sha256": "60177962804f9b0b63c446b0d80ac0e013c3ae0f8c81c9f6a41c605d6d48fbb7",
+  "bilinen_split_kaynak_sha256": "ab6b2e5995ba3084782cbcedc2982a7d56d0d16a6245cadff14e74e5edfdedcc",
+  "kapsam": {
+    "dosya": 260,
+    "bar_cifti": 1349764,
+    "fiyat_hesaplanamadi": 0
+  },
+  "sayimlar": {
+    "aday": 55,
+    "fiyat_adayi_hacim_oncesi": 107,
+    "hacim_olculemedi": 16,
+    "bilinen_split_eslesen": 32,
+    "eslesmeyen_aday": 23,
+    "yakalanmayan_bilinen_split": 60,
+    "birincil_bilinen_toplam": 92
+  },
+  "oranlar": {
+    "yanlis_pozitif": 0.41818181818181815,
+    "yakalama": 0.34782608695652173
+  },
+  "karar": {
+    "esik": "YP <= 0.20 VE yakalama >= 0.80",
+    "gecti": false,
+    "hukum": "imza tek başına yetersiz — körlük BEYANLI kalır"
+  },
+  "eslesmeyen_adaylar_ADIYLA": [
+    {
+      "ticker": "AIG",
+      "tarih": "2008-09-24",
+      "r": 1.51057,
+      "oran": "3:2",
+      "vr_bolu_r": 0.755,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "ALB",
+      "tarih": "2006-10-31",
+      "r": 0.49985,
+      "oran": "1:2",
+      "vr_bolu_r": 0.694,
+      "yon": "ters"
+    },
+    {
+      "ticker": "CCL",
+      "tarih": "2020-04-01",
+      "r": 1.49659,
+      "oran": "3:2",
+      "vr_bolu_r": 1.09,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "CHD",
+      "tarih": "2013-12-18",
+      "r": 0.49516,
+      "oran": "1:2",
+      "vr_bolu_r": 1.076,
+      "yon": "ters"
+    },
+    {
+      "ticker": "CHD",
+      "tarih": "2013-12-19",
+      "r": 2.00973,
+      "oran": "2:1",
+      "vr_bolu_r": 1.317,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "CMCSA",
+      "tarih": "2006-10-24",
+      "r": 0.65769,
+      "oran": "2:3",
+      "vr_bolu_r": 0.839,
+      "yon": "ters"
+    },
+    {
+      "ticker": "CMCSA",
+      "tarih": "2013-12-19",
+      "r": 1.97991,
+      "oran": "2:1",
+      "vr_bolu_r": 0.893,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "DD",
+      "tarih": "2025-05-26",
+      "r": 3.0,
+      "oran": "3:1",
+      "vr_bolu_r": 1.0,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "DLTR",
+      "tarih": "2012-06-26",
+      "r": 0.49351,
+      "oran": "1:2",
+      "vr_bolu_r": 1.46,
+      "yon": "ters"
+    },
+    {
+      "ticker": "EL",
+      "tarih": "2012-01-20",
+      "r": 0.50065,
+      "oran": "1:2",
+      "vr_bolu_r": 0.929,
+      "yon": "ters"
+    },
+    {
+      "ticker": "EL",
+      "tarih": "2012-01-23",
+      "r": 2.01862,
+      "oran": "2:1",
+      "vr_bolu_r": 1.27,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "EOG",
+      "tarih": "2020-03-09",
+      "r": 1.47074,
+      "oran": "3:2",
+      "vr_bolu_r": 1.299,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "HES",
+      "tarih": "2020-03-09",
+      "r": 1.50758,
+      "oran": "3:2",
+      "vr_bolu_r": 0.898,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "HON",
+      "tarih": "2025-05-26",
+      "r": 2.0,
+      "oran": "2:1",
+      "vr_bolu_r": 1.0,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "HON",
+      "tarih": "2025-05-27",
+      "r": 0.49022,
+      "oran": "1:2",
+      "vr_bolu_r": 1.242,
+      "yon": "ters"
+    },
+    {
+      "ticker": "KLAC",
+      "tarih": "2025-05-26",
+      "r": 0.1,
+      "oran": "1:10",
+      "vr_bolu_r": 1.0,
+      "yon": "ters"
+    },
+    {
+      "ticker": "MDLZ",
+      "tarih": "2012-10-02",
+      "r": 1.51803,
+      "oran": "3:2",
+      "vr_bolu_r": 0.848,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "NFLX",
+      "tarih": "2025-05-26",
+      "r": 0.1,
+      "oran": "1:10",
+      "vr_bolu_r": 1.0,
+      "yon": "ters"
+    },
+    {
+      "ticker": "NOW",
+      "tarih": "2025-05-26",
+      "r": 0.2,
+      "oran": "1:5",
+      "vr_bolu_r": 1.0,
+      "yon": "ters"
+    },
+    {
+      "ticker": "SNAP",
+      "tarih": "2024-02-07",
+      "r": 1.52936,
+      "oran": "3:2",
+      "vr_bolu_r": 1.341,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "TRGP",
+      "tarih": "2020-03-18",
+      "r": 1.52431,
+      "oran": "3:2",
+      "vr_bolu_r": 1.0,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "UNP",
+      "tarih": "2014-06-06",
+      "r": 0.49624,
+      "oran": "1:2",
+      "vr_bolu_r": 1.184,
+      "yon": "ters"
+    },
+    {
+      "ticker": "UNP",
+      "tarih": "2014-06-09",
+      "r": 1.97631,
+      "oran": "2:1",
+      "vr_bolu_r": 0.831,
+      "yon": "ileri"
+    }
+  ],
+  "eslesen_adaylar_ADIYLA": [
+    {
+      "ticker": "CHD",
+      "tarih": "2006-01-03",
+      "r": 1.97017,
+      "oran": "2:1",
+      "vr_bolu_r": 1.105,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "CI",
+      "tarih": "2006-10-24",
+      "r": 0.33998,
+      "oran": "1:3",
+      "vr_bolu_r": 1.429,
+      "yon": "ters"
+    },
+    {
+      "ticker": "CI",
+      "tarih": "2007-04-26",
+      "r": 0.3321,
+      "oran": "1:3",
+      "vr_bolu_r": 1.447,
+      "yon": "ters"
+    },
+    {
+      "ticker": "CMCSA",
+      "tarih": "2006-01-03",
+      "r": 2.96398,
+      "oran": "3:1",
+      "vr_bolu_r": 0.758,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "CMI",
+      "tarih": "2006-10-24",
+      "r": 0.24858,
+      "oran": "1:4",
+      "vr_bolu_r": 0.704,
+      "yon": "ters"
+    },
+    {
+      "ticker": "D",
+      "tarih": "2006-01-03",
+      "r": 1.97544,
+      "oran": "2:1",
+      "vr_bolu_r": 0.798,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "D",
+      "tarih": "2006-10-24",
+      "r": 0.50075,
+      "oran": "1:2",
+      "vr_bolu_r": 0.854,
+      "yon": "ters"
+    },
+    {
+      "ticker": "DE",
+      "tarih": "2006-01-03",
+      "r": 2.00353,
+      "oran": "2:1",
+      "vr_bolu_r": 1.416,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "EMR",
+      "tarih": "2006-01-03",
+      "r": 1.98882,
+      "oran": "2:1",
+      "vr_bolu_r": 1.156,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "EMR",
+      "tarih": "2006-10-24",
+      "r": 0.50024,
+      "oran": "1:2",
+      "vr_bolu_r": 0.911,
+      "yon": "ters"
+    },
+    {
+      "ticker": "FI",
+      "tarih": "2006-01-03",
+      "r": 0.49542,
+      "oran": "1:2",
+      "vr_bolu_r": 0.856,
+      "yon": "ters"
+    },
+    {
+      "ticker": "FISV",
+      "tarih": "2006-01-03",
+      "r": 0.49542,
+      "oran": "1:2",
+      "vr_bolu_r": 0.856,
+      "yon": "ters"
+    },
+    {
+      "ticker": "GD",
+      "tarih": "2006-03-27",
+      "r": 0.50601,
+      "oran": "1:2",
+      "vr_bolu_r": 1.116,
+      "yon": "ters"
+    },
+    {
+      "ticker": "INTU",
+      "tarih": "2006-01-03",
+      "r": 1.97115,
+      "oran": "2:1",
+      "vr_bolu_r": 1.041,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "INTU",
+      "tarih": "2006-07-07",
+      "r": 0.50975,
+      "oran": "1:2",
+      "vr_bolu_r": 0.693,
+      "yon": "ters"
+    },
+    {
+      "ticker": "ITW",
+      "tarih": "2006-05-26",
+      "r": 0.50099,
+      "oran": "1:2",
+      "vr_bolu_r": 0.694,
+      "yon": "ters"
+    },
+    {
+      "ticker": "LOW",
+      "tarih": "2006-01-03",
+      "r": 1.98866,
+      "oran": "2:1",
+      "vr_bolu_r": 1.447,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "MAR",
+      "tarih": "2006-01-03",
+      "r": 1.98518,
+      "oran": "2:1",
+      "vr_bolu_r": 0.818,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "MAR",
+      "tarih": "2006-06-12",
+      "r": 0.50471,
+      "oran": "1:2",
+      "vr_bolu_r": 1.283,
+      "yon": "ters"
+    },
+    {
+      "ticker": "MRVL",
+      "tarih": "2006-07-25",
+      "r": 0.49394,
+      "oran": "1:2",
+      "vr_bolu_r": 0.932,
+      "yon": "ters"
+    },
+    {
+      "ticker": "NKE",
+      "tarih": "2006-01-03",
+      "r": 2.01862,
+      "oran": "2:1",
+      "vr_bolu_r": 0.895,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "NKE",
+      "tarih": "2006-10-24",
+      "r": 0.49517,
+      "oran": "1:2",
+      "vr_bolu_r": 1.215,
+      "yon": "ters"
+    },
+    {
+      "ticker": "NUE",
+      "tarih": "2006-06-01",
+      "r": 0.49307,
+      "oran": "1:2",
+      "vr_bolu_r": 0.749,
+      "yon": "ters"
+    },
+    {
+      "ticker": "NVDA",
+      "tarih": "2006-04-07",
+      "r": 0.5,
+      "oran": "1:2",
+      "vr_bolu_r": 0.865,
+      "yon": "ters"
+    },
+    {
+      "ticker": "O",
+      "tarih": "2005-01-03",
+      "r": 2.02158,
+      "oran": "2:1",
+      "vr_bolu_r": 0.996,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "OXY",
+      "tarih": "2006-08-16",
+      "r": 0.50496,
+      "oran": "1:2",
+      "vr_bolu_r": 0.689,
+      "yon": "ters"
+    },
+    {
+      "ticker": "SLB",
+      "tarih": "2006-04-10",
+      "r": 0.49892,
+      "oran": "1:2",
+      "vr_bolu_r": 0.696,
+      "yon": "ters"
+    },
+    {
+      "ticker": "UNP",
+      "tarih": "2006-01-03",
+      "r": 2.01906,
+      "oran": "2:1",
+      "vr_bolu_r": 0.851,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "UNP",
+      "tarih": "2006-10-24",
+      "r": 0.49846,
+      "oran": "1:2",
+      "vr_bolu_r": 0.845,
+      "yon": "ters"
+    },
+    {
+      "ticker": "WBD",
+      "tarih": "2014-08-07",
+      "r": 2.02587,
+      "oran": "2:1",
+      "vr_bolu_r": 0.745,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "WFC",
+      "tarih": "2006-01-03",
+      "r": 1.96991,
+      "oran": "2:1",
+      "vr_bolu_r": 1.067,
+      "yon": "ileri"
+    },
+    {
+      "ticker": "WFC",
+      "tarih": "2006-08-14",
+      "r": 0.50216,
+      "oran": "1:2",
+      "vr_bolu_r": 1.076,
+      "yon": "ters"
+    }
+  ],
+  "yakalanmayan_bilinen_ADIYLA": [
+    {
+      "ticker": "ABT",
+      "tarih": "2013-01-02",
+      "r_kart": 2.043736
+    },
+    {
+      "ticker": "AIG",
+      "tarih": "2006-01-03",
+      "r_kart": 0.049002
+    },
+    {
+      "ticker": "ALB",
+      "tarih": "2006-01-03",
+      "r_kart": 1.871958
+    },
+    {
+      "ticker": "ALB",
+      "tarih": "2006-10-24",
+      "r_kart": 0.501454
+    },
+    {
+      "ticker": "ANSS",
+      "tarih": "2006-01-03",
+      "r_kart": 2.155637
+    },
+    {
+      "ticker": "ANSS",
+      "tarih": "2007-06-05",
+      "r_kart": 0.511745
+    },
+    {
+      "ticker": "APO",
+      "tarih": "2011-03-30",
+      "r_kart": 0.424719
+    },
+    {
+      "ticker": "AVGO",
+      "tarih": "2009-08-06",
+      "r_kart": 0.006173
+    },
+    {
+      "ticker": "C",
+      "tarih": "2006-01-03",
+      "r_kart": 0.098458
+    },
+    {
+      "ticker": "CB",
+      "tarih": "2006-01-03",
+      "r_kart": 1.959632
+    },
+    {
+      "ticker": "CB",
+      "tarih": "2006-04-19",
+      "r_kart": 0.485979
+    },
+    {
+      "ticker": "CBRE",
+      "tarih": "2006-01-03",
+      "r_kart": 2.933412
+    },
+    {
+      "ticker": "CHTR",
+      "tarih": "2010-09-15",
+      "r_kart": 0.000863
+    },
+    {
+      "ticker": "CI",
+      "tarih": "2006-01-03",
+      "r_kart": 8.96861
+    },
+    {
+      "ticker": "CMI",
+      "tarih": "2006-01-03",
+      "r_kart": 3.963535
+    },
+    {
+      "ticker": "CSX",
+      "tarih": "2006-01-03",
+      "r_kart": 2.043318
+    },
+    {
+      "ticker": "CTSH",
+      "tarih": "2006-01-03",
+      "r_kart": 1.985703
+    },
+    {
+      "ticker": "CTSH",
+      "tarih": "2007-10-17",
+      "r_kart": 0.479777
+    },
+    {
+      "ticker": "DD",
+      "tarih": "2025-11-03",
+      "r_kart": 2.353495
+    },
+    {
+      "ticker": "DE",
+      "tarih": "2006-10-24",
+      "r_kart": 0.489836
+    },
+    {
+      "ticker": "DUK",
+      "tarih": "2006-01-03",
+      "r_kart": 1.971998
+    },
+    {
+      "ticker": "EQT",
+      "tarih": "2018-11-13",
+      "r_kart": 1.866368
+    },
+    {
+      "ticker": "EXPE",
+      "tarih": "2006-01-03",
+      "r_kart": 1.996805
+    },
+    {
+      "ticker": "GD",
+      "tarih": "2006-01-03",
+      "r_kart": 1.983733
+    },
+    {
+      "ticker": "GILD",
+      "tarih": "2006-01-03",
+      "r_kart": 3.727171
+    },
+    {
+      "ticker": "GOOGL",
+      "tarih": "2013-12-18",
+      "r_kart": 0.38238
+    },
+    {
+      "ticker": "HAL",
+      "tarih": "2006-01-03",
+      "r_kart": 1.897173
+    },
+    {
+      "ticker": "HAL",
+      "tarih": "2006-07-17",
+      "r_kart": 0.524246
+    },
+    {
+      "ticker": "HES",
+      "tarih": "2006-01-03",
+      "r_kart": 2.850627
+    },
+    {
+      "ticker": "HES",
+      "tarih": "2006-06-01",
+      "r_kart": 0.3332
+    },
+    {
+      "ticker": "HLT",
+      "tarih": "2017-01-04",
+      "r_kart": 0.472233
+    },
+    {
+      "ticker": "HON",
+      "tarih": "2026-06-29",
+      "r_kart": 2.038736
+    },
+    {
+      "ticker": "HRL",
+      "tarih": "2006-01-03",
+      "r_kart": 1.978239
+    },
+    {
+      "ticker": "HSY",
+      "tarih": "2004-06-16",
+      "r_kart": 2.012072
+    },
+    {
+      "ticker": "IRM",
+      "tarih": "2006-01-03",
+      "r_kart": 2.258866
+    },
+    {
+      "ticker": "ITW",
+      "tarih": "2006-01-03",
+      "r_kart": 1.963865
+    },
+    {
+      "ticker": "LHX",
+      "tarih": "2005-03-31",
+      "r_kart": 1.984915
+    },
+    {
+      "ticker": "LOW",
+      "tarih": "2006-07-03",
+      "r_kart": 0.498355
+    },
+    {
+      "ticker": "MNST",
+      "tarih": "2006-01-03",
+      "r_kart": 3.797949
+    },
+    {
+      "ticker": "MO",
+      "tarih": "2006-01-03",
+      "r_kart": 4.315926
+    },
+    {
+      "ticker": "MRVL",
+      "tarih": "2006-01-03",
+      "r_kart": 1.929012
+    },
+    {
+      "ticker": "NEE",
+      "tarih": "2005-03-16",
+      "r_kart": 2.030045
+    },
+    {
+      "ticker": "NUE",
+      "tarih": "2006-01-03",
+      "r_kart": 1.923817
+    },
+    {
+      "ticker": "NVDA",
+      "tarih": "2006-01-03",
+      "r_kart": 2.818489
+    },
+    {
+      "ticker": "OMC",
+      "tarih": "2006-01-03",
+      "r_kart": 1.977848
+    },
+    {
+      "ticker": "OMC",
+      "tarih": "2006-10-24",
+      "r_kart": 0.469417
+    },
+    {
+      "ticker": "OXY",
+      "tarih": "2006-01-03",
+      "r_kart": 1.858391
+    },
+    {
+      "ticker": "PCAR",
+      "tarih": "2006-01-03",
+      "r_kart": 2.770851
+    },
+    {
+      "ticker": "PEG",
+      "tarih": "2006-01-03",
+      "r_kart": 3.900156
+    },
+    {
+      "ticker": "PEG",
+      "tarih": "2006-10-24",
+      "r_kart": 0.501303
+    },
+    {
+      "ticker": "PGR",
+      "tarih": "2006-01-03",
+      "r_kart": 5.420054
+    },
+    {
+      "ticker": "PGR",
+      "tarih": "2006-05-19",
+      "r_kart": 0.180073
+    },
+    {
+      "ticker": "PINS",
+      "tarih": "2013-02-26",
+      "r_kart": 0.083333
+    },
+    {
+      "ticker": "PINS",
+      "tarih": "2013-03-27",
+      "r_kart": 0.12
+    },
+    {
+      "ticker": "PINS",
+      "tarih": "2013-04-30",
+      "r_kart": 89.285714
+    },
+    {
+      "ticker": "PINS",
+      "tarih": "2019-04-18",
+      "r_kart": 0.006557
+    },
+    {
+      "ticker": "RTX",
+      "tarih": "2020-04-03",
+      "r_kart": 0.263567
+    },
+    {
+      "ticker": "SLB",
+      "tarih": "2006-01-03",
+      "r_kart": 1.880053
+    },
+    {
+      "ticker": "STLD",
+      "tarih": "2006-01-03",
+      "r_kart": 3.877472
+    },
+    {
+      "ticker": "STLD",
+      "tarih": "2006-10-24",
+      "r_kart": 0.238407
+    }
+  ],
+  "ikincil_hukum_disi": {
+    "toplam": 3,
+    "yakalanan": 0,
+    "yakalanan_ADIYLA": []
+  },
+  "yon_kirilimi_aday": {
+    "ileri": 26,
+    "ters": 29
+  },
+  "yakalanmayan_neden_dagilimi": {
+    "fiyat_kapisinda_dustu": 42,
+    "hacim_kapisinda_dustu": 18,
+    "fiyat_ADIYLA": [
+      {
+        "ticker": "ABT",
+        "tarih": "2013-01-02",
+        "r_kart": 2.04374,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0219
+      },
+      {
+        "ticker": "ALB",
+        "tarih": "2006-01-03",
+        "r_kart": 1.87196,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.064
+      },
+      {
+        "ticker": "ANSS",
+        "tarih": "2006-01-03",
+        "r_kart": 2.15564,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0778
+      },
+      {
+        "ticker": "ANSS",
+        "tarih": "2007-06-05",
+        "r_kart": 0.51175,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0235
+      },
+      {
+        "ticker": "APO",
+        "tarih": "2011-03-30",
+        "r_kart": 0.42472,
+        "en_yakin_oran": "2:5",
+        "bagil_sapma": 0.0618
+      },
+      {
+        "ticker": "AVGO",
+        "tarih": "2009-08-06",
+        "r_kart": 0.00617,
+        "en_yakin_oran": "1:20",
+        "bagil_sapma": 0.8765
+      },
+      {
+        "ticker": "CB",
+        "tarih": "2006-01-03",
+        "r_kart": 1.95963,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0202
+      },
+      {
+        "ticker": "CB",
+        "tarih": "2006-04-19",
+        "r_kart": 0.48598,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.028
+      },
+      {
+        "ticker": "CBRE",
+        "tarih": "2006-01-03",
+        "r_kart": 2.93341,
+        "en_yakin_oran": "3:1",
+        "bagil_sapma": 0.0222
+      },
+      {
+        "ticker": "CHTR",
+        "tarih": "2010-09-15",
+        "r_kart": 0.00086,
+        "en_yakin_oran": "1:20",
+        "bagil_sapma": 0.9827
+      },
+      {
+        "ticker": "CI",
+        "tarih": "2006-01-03",
+        "r_kart": 8.96861,
+        "en_yakin_oran": "10:1",
+        "bagil_sapma": 0.1031
+      },
+      {
+        "ticker": "CSX",
+        "tarih": "2006-01-03",
+        "r_kart": 2.04332,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0217
+      },
+      {
+        "ticker": "CTSH",
+        "tarih": "2007-10-17",
+        "r_kart": 0.47978,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0404
+      },
+      {
+        "ticker": "DD",
+        "tarih": "2025-11-03",
+        "r_kart": 2.3535,
+        "en_yakin_oran": "5:2",
+        "bagil_sapma": 0.0586
+      },
+      {
+        "ticker": "DE",
+        "tarih": "2006-10-24",
+        "r_kart": 0.48984,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0203
+      },
+      {
+        "ticker": "EQT",
+        "tarih": "2018-11-13",
+        "r_kart": 1.86637,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0668
+      },
+      {
+        "ticker": "GILD",
+        "tarih": "2006-01-03",
+        "r_kart": 3.72717,
+        "en_yakin_oran": "4:1",
+        "bagil_sapma": 0.0682
+      },
+      {
+        "ticker": "GOOGL",
+        "tarih": "2013-12-18",
+        "r_kart": 0.38238,
+        "en_yakin_oran": "2:5",
+        "bagil_sapma": 0.0441
+      },
+      {
+        "ticker": "HAL",
+        "tarih": "2006-01-03",
+        "r_kart": 1.89717,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0514
+      },
+      {
+        "ticker": "HAL",
+        "tarih": "2006-07-17",
+        "r_kart": 0.52425,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0485
+      },
+      {
+        "ticker": "HES",
+        "tarih": "2006-01-03",
+        "r_kart": 2.85063,
+        "en_yakin_oran": "3:1",
+        "bagil_sapma": 0.0498
+      },
+      {
+        "ticker": "HLT",
+        "tarih": "2017-01-04",
+        "r_kart": 0.47223,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0555
+      },
+      {
+        "ticker": "IRM",
+        "tarih": "2006-01-03",
+        "r_kart": 2.25887,
+        "en_yakin_oran": "5:2",
+        "bagil_sapma": 0.0965
+      },
+      {
+        "ticker": "MNST",
+        "tarih": "2006-01-03",
+        "r_kart": 3.79795,
+        "en_yakin_oran": "4:1",
+        "bagil_sapma": 0.0505
+      },
+      {
+        "ticker": "MO",
+        "tarih": "2006-01-03",
+        "r_kart": 4.31593,
+        "en_yakin_oran": "4:1",
+        "bagil_sapma": 0.079
+      },
+      {
+        "ticker": "MRVL",
+        "tarih": "2006-01-03",
+        "r_kart": 1.92901,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0355
+      },
+      {
+        "ticker": "NUE",
+        "tarih": "2006-01-03",
+        "r_kart": 1.92382,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0381
+      },
+      {
+        "ticker": "NVDA",
+        "tarih": "2006-01-03",
+        "r_kart": 2.81849,
+        "en_yakin_oran": "3:1",
+        "bagil_sapma": 0.0605
+      },
+      {
+        "ticker": "OMC",
+        "tarih": "2006-10-24",
+        "r_kart": 0.46942,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0612
+      },
+      {
+        "ticker": "OXY",
+        "tarih": "2006-01-03",
+        "r_kart": 1.85839,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0708
+      },
+      {
+        "ticker": "PCAR",
+        "tarih": "2006-01-03",
+        "r_kart": 2.77085,
+        "en_yakin_oran": "3:1",
+        "bagil_sapma": 0.0764
+      },
+      {
+        "ticker": "PEG",
+        "tarih": "2006-01-03",
+        "r_kart": 3.90016,
+        "en_yakin_oran": "4:1",
+        "bagil_sapma": 0.025
+      },
+      {
+        "ticker": "PGR",
+        "tarih": "2006-01-03",
+        "r_kart": 5.42005,
+        "en_yakin_oran": "5:1",
+        "bagil_sapma": 0.084
+      },
+      {
+        "ticker": "PGR",
+        "tarih": "2006-05-19",
+        "r_kart": 0.18007,
+        "en_yakin_oran": "1:5",
+        "bagil_sapma": 0.0996
+      },
+      {
+        "ticker": "PINS",
+        "tarih": "2013-02-26",
+        "r_kart": 0.08333,
+        "en_yakin_oran": "1:10",
+        "bagil_sapma": 0.1667
+      },
+      {
+        "ticker": "PINS",
+        "tarih": "2013-03-27",
+        "r_kart": 0.12,
+        "en_yakin_oran": "1:10",
+        "bagil_sapma": 0.2
+      },
+      {
+        "ticker": "PINS",
+        "tarih": "2013-04-30",
+        "r_kart": 89.28571,
+        "en_yakin_oran": "20:1",
+        "bagil_sapma": 3.4643
+      },
+      {
+        "ticker": "PINS",
+        "tarih": "2019-04-18",
+        "r_kart": 0.00656,
+        "en_yakin_oran": "1:20",
+        "bagil_sapma": 0.8689
+      },
+      {
+        "ticker": "RTX",
+        "tarih": "2020-04-03",
+        "r_kart": 0.26357,
+        "en_yakin_oran": "1:4",
+        "bagil_sapma": 0.0543
+      },
+      {
+        "ticker": "SLB",
+        "tarih": "2006-01-03",
+        "r_kart": 1.88005,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.06
+      },
+      {
+        "ticker": "STLD",
+        "tarih": "2006-01-03",
+        "r_kart": 3.87747,
+        "en_yakin_oran": "4:1",
+        "bagil_sapma": 0.0306
+      },
+      {
+        "ticker": "STLD",
+        "tarih": "2006-10-24",
+        "r_kart": 0.23841,
+        "en_yakin_oran": "1:4",
+        "bagil_sapma": 0.0464
+      }
+    ],
+    "hacim_ADIYLA": [
+      {
+        "ticker": "AIG",
+        "tarih": "2006-01-03",
+        "r_kart": 0.049,
+        "en_yakin_oran": "1:20",
+        "bagil_sapma": 0.02
+      },
+      {
+        "ticker": "ALB",
+        "tarih": "2006-10-24",
+        "r_kart": 0.50145,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0029
+      },
+      {
+        "ticker": "C",
+        "tarih": "2006-01-03",
+        "r_kart": 0.09846,
+        "en_yakin_oran": "1:10",
+        "bagil_sapma": 0.0154
+      },
+      {
+        "ticker": "CMI",
+        "tarih": "2006-01-03",
+        "r_kart": 3.96353,
+        "en_yakin_oran": "4:1",
+        "bagil_sapma": 0.0091
+      },
+      {
+        "ticker": "CTSH",
+        "tarih": "2006-01-03",
+        "r_kart": 1.9857,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0071
+      },
+      {
+        "ticker": "DUK",
+        "tarih": "2006-01-03",
+        "r_kart": 1.972,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.014
+      },
+      {
+        "ticker": "EXPE",
+        "tarih": "2006-01-03",
+        "r_kart": 1.9968,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0016
+      },
+      {
+        "ticker": "GD",
+        "tarih": "2006-01-03",
+        "r_kart": 1.98373,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0081
+      },
+      {
+        "ticker": "HES",
+        "tarih": "2006-06-01",
+        "r_kart": 0.3332,
+        "en_yakin_oran": "1:3",
+        "bagil_sapma": 0.0004
+      },
+      {
+        "ticker": "HON",
+        "tarih": "2026-06-29",
+        "r_kart": 2.03874,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0194
+      },
+      {
+        "ticker": "HRL",
+        "tarih": "2006-01-03",
+        "r_kart": 1.97824,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0109
+      },
+      {
+        "ticker": "HSY",
+        "tarih": "2004-06-16",
+        "r_kart": 2.01207,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.006
+      },
+      {
+        "ticker": "ITW",
+        "tarih": "2006-01-03",
+        "r_kart": 1.96386,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0181
+      },
+      {
+        "ticker": "LHX",
+        "tarih": "2005-03-31",
+        "r_kart": 1.98491,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0075
+      },
+      {
+        "ticker": "LOW",
+        "tarih": "2006-07-03",
+        "r_kart": 0.49835,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0033
+      },
+      {
+        "ticker": "NEE",
+        "tarih": "2005-03-16",
+        "r_kart": 2.03004,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.015
+      },
+      {
+        "ticker": "OMC",
+        "tarih": "2006-01-03",
+        "r_kart": 1.97785,
+        "en_yakin_oran": "2:1",
+        "bagil_sapma": 0.0111
+      },
+      {
+        "ticker": "PEG",
+        "tarih": "2006-10-24",
+        "r_kart": 0.5013,
+        "en_yakin_oran": "1:2",
+        "bagil_sapma": 0.0026
+      }
+    ]
+  },
+  "ikincil_merdiven_HUKUM_DISI": {
+    "beyan": "Hüküm YALNIZ F=1.5 (birincil) satırından okunur. Bu merdiven donuk tanımda ölçümden ÖNCE ilan edildi ve yalnız DAYANIKLILIK gösterir — eşik seçmez.",
+    "taban": "hacmi ÖLÇÜLEBİLEN fiyat adayları (F kapısından ÖNCE)",
+    "taban_n": 91,
+    "basamaklar": {
+      "1.25": {
+        "aday": 34,
+        "eslesen": 18,
+        "eslesmeyen": 16,
+        "yanlis_pozitif": 0.4706,
+        "yakalama": 0.1957,
+        "esikleri_gecer": false
+      },
+      "1.5": {
+        "aday": 55,
+        "eslesen": 32,
+        "eslesmeyen": 23,
+        "yanlis_pozitif": 0.4182,
+        "yakalama": 0.3478,
+        "esikleri_gecer": false
+      },
+      "2.0": {
+        "aday": 65,
+        "eslesen": 38,
+        "eslesmeyen": 27,
+        "yanlis_pozitif": 0.4154,
+        "yakalama": 0.413,
+        "esikleri_gecer": false
+      }
+    }
+  }
+}

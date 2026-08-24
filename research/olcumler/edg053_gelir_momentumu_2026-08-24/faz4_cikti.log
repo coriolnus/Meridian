@@ -1,0 +1,16 @@
+== FAZ4: [4] dilim fazla-getirileri + 21g blok-bootstrap CI + [5] maliyet ==
+   yoy_buyume_ust_30pct @20g: n=9861 ort=0.002215 ci={'lo': 0.00033, 'hi': 0.003454, 'seviye': 0.95} net10=0.001215
+   yoy_buyume_ust_30pct @60g: n=9789 ort=0.003745 ci={'lo': -0.001456, 'hi': 0.007515, 'seviye': 0.95} net10=0.002745
+   yoy_alt_30pct_TANI @20g: n=9861 ort=-0.000714 ci={'lo': -0.003771, 'hi': 0.002074, 'seviye': 0.95} net10=-0.001714
+   yoy_alt_30pct_TANI @60g: n=9789 ort=-0.001189 ci={'lo': -0.009778, 'hi': 0.007066, 'seviye': 0.95} net10=-0.002189
+   ivme_ust_30pct @20g: n=8180 ort=0.002308 ci={'lo': -0.000961, 'hi': 0.00428, 'seviye': 0.95} net10=0.001308
+   ivme_ust_30pct @60g: n=8163 ort=0.004473 ci={'lo': -0.002322, 'hi': 0.008205, 'seviye': 0.95} net10=0.003473
+   ivme_alt_30pct_TANI @20g: n=8185 ort=-0.001716 ci={'lo': -0.003118, 'hi': -9.6e-05, 'seviye': 0.95} net10=-0.002716
+   ivme_alt_30pct_TANI @60g: n=8168 ort=-0.003305 ci={'lo': -0.006655, 'hi': 0.000623, 'seviye': 0.95} net10=-0.004305
+   tum_gozlem_TANI @20g: n=32692 ort=-0.000684 ci={'lo': -0.001269, 'hi': -0.00025, 'seviye': 0.95}
+   tum_gozlem_TANI @60g: n=32453 ort=-0.001861 ci={'lo': -0.003453, 'hi': -0.000668, 'seviye': 0.95}
+   [TANI] yoy_buyume ust30−alt30 @20g: fark=0.002929 ci={'lo': -0.000623, 'hi': 0.006121, 'seviye': 0.95}
+   [TANI] yoy_buyume ust30−alt30 @60g: fark=0.004933 ci={'lo': -0.007441, 'hi': 0.015486, 'seviye': 0.95}
+   [TANI] ivme ust30−alt30 @20g: fark=0.004024 ci={'lo': -0.000221, 'hi': 0.006869, 'seviye': 0.95}
+   [TANI] ivme ust30−alt30 @60g: fark=0.007779 ci={'lo': -0.001578, 'hi': 0.013654, 'seviye': 0.95}
+== yazıldı: faz4_sonuc.json ==

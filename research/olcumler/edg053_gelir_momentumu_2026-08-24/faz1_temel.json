@@ -1,0 +1,63 @@
+{
+  "kart": "EDG-2026-053",
+  "faz": 1,
+  "kapsam": {
+    "ham_satir": 142499,
+    "csv_sha256": "626bba1a61b527e2d64bb19bbf10682ce34ee0bd765ac7862450c5a1ad6778b2",
+    "etiket_onceligi_kaynak": "ortak.GELIR_ONCELIK",
+    "etiket_onceligi": [
+      "Revenues",
+      "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "RevenueFromContractWithCustomerIncludingAssessedTax"
+    ],
+    "ceyrek_gelir_ham_satir": 30133,
+    "ceyrek_gelir_sembol": 256,
+    "birim_val_donem_etiket_dusen": 112366,
+    "evren_n": 251,
+    "evren_ici_satir": 29084,
+    "ilk_ifsa_satir": 12768,
+    "ilk_ifsa_dusen_yeniden_beyan_satir": 16316,
+    "ayni_filed_icinde_coklu_val": 1,
+    "ilk_ifsa_gecikme_gun": {
+      "medyan": 34.0,
+      "p10": 24.0,
+      "p90": 395.0,
+      "not": "A4 tanısı — EŞİKSİZ, hiçbir satır bu sütuna göre elenmedi"
+    },
+    "frame_kaynakli_donem": 12597,
+    "frame_yok_turetilen_donem": 171,
+    "frame_turetilen_uyum_orani": 0.999127,
+    "frame_turetilen_uyumsuz_n": 11,
+    "ayni_sembol_ceyrek_coklu_kayit_grup": 1786,
+    "sembol_ceyrek_n": 10933,
+    "sembol_n": 248,
+    "etiket_dagilimi": {
+      "Revenues": 7507,
+      "RevenueFromContractWithCustomerExcludingAssessedTax": 3149,
+      "RevenueFromContractWithCustomerIncludingAssessedTax": 277
+    },
+    "cq_kaynak_dagilimi": {
+      "sec_frame": 10805,
+      "donem_ortasi_turetilen": 128
+    },
+    "kapsam_disi_sembol": [
+      {
+        "symbol": "GS",
+        "neden": "arşivde var ama ÇEYREKLİK gelir etiketi yok (mevcut etiketler: ['Assets']); finansal sektör gelir tablosu us-gaap Revenues ile raporlanmıyor → None"
+      },
+      {
+        "symbol": "SPOT",
+        "neden": "fundamentals arşivinde HİÇ satır yok (CIK/us-gaap boşluğu — yabancı ihraççı 20-F yolu); sembolün TÜM dönemleri ölçülemez → None"
+      },
+      {
+        "symbol": "SYF",
+        "neden": "arşivde var ama ÇEYREKLİK gelir etiketi yok (mevcut etiketler: ['Assets']); finansal sektör gelir tablosu us-gaap Revenues ile raporlanmıyor → None"
+      }
+    ],
+    "kapsam_disi_sembol_n": 3,
+    "evren_kapsam": "248/251"
+  },
+  "kod_sha256": {
+    "olcum": "70e72d1b2deb6bfa6e8c34044ba69afb6f71cc070a8c0686e83fbdb5bc9af22f"
+  }
+}

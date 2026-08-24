@@ -1,0 +1,6 @@
+== FAZ6 (TANI): CI kararlılığı — kart tohumu/bloğu DEĞİŞMEZ, duyarlılık ölçülür ==
+   yoy_buyume_ust_30pct @20g: blok duyarlılığı lo = {'1': -0.000629, '3': -0.000311, '6': -0.000265, '12': 6.9e-05, '21': 0.00033}
+   yoy_buyume_ust_30pct @60g: blok duyarlılığı lo = {'1': -0.000483, '3': -0.002643, '6': -0.003251, '12': -0.003017, '21': -0.001481}
+   ivme_ust_30pct @20g: blok duyarlılığı lo = {'1': 9.6e-05, '3': -0.00019, '6': -0.000772, '12': -0.000967, '21': -0.000971}
+   ivme_ust_30pct @60g: blok duyarlılığı lo = {'1': 8.6e-05, '3': -0.001785, '6': -0.002977, '12': -0.003226, '21': -0.002675}
+== yazıldı: faz6_ci_kararlilik.json ==

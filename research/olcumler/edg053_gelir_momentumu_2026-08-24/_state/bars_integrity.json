@@ -1,0 +1,1651 @@
+{
+  "rev": 1,
+  "kural": {
+    "BREAK_UP": 1.9,
+    "BREAK_DN": 0.55,
+    "BREAK_OGAP_TOL": 0.1,
+    "BREAK_HL_NORMAL": 1.3,
+    "CORRUPT_HL_MAX": 3.0,
+    "PHANTOM_DOLLAR_VOL": 100000.0,
+    "PHANTOM_WINDOW": 63,
+    "UNADJ_REVERT_TOL": 0.1,
+    "beyan": "K1 \u00f6l\u00e7ek diki\u015fi \u00b7 K2 bozuk kesit \u00b7 K3 hayalet ge\u00e7mi\u015f (bkz. data.integrity_breaks)"
+  },
+  "semboller": {
+    "ABT": {
+      "guvenli_baslangic": "2013-01-03",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 2266,
+      "kirilma_listesi": [
+        {
+          "tarih": "2013-01-02",
+          "oran": 0.4893,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.008,
+            "high_low": 1.026
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "AIG": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 20.4074,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.99,
+            "high_low": 1.042
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "ALB": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5342,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.942,
+            "high_low": 1.088
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 1.9942,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.999,
+            "high_low": 1.011
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "ANSS": {
+      "guvenli_baslangic": "2007-06-06",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 861,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.4639,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.075,
+            "high_low": 1.089
+          }
+        },
+        {
+          "tarih": "2007-06-05",
+          "oran": 1.9541,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.008,
+            "high_low": 1.052
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "APO": {
+      "guvenli_baslangic": "2011-05-06",
+      "ilk_bar": "2006-10-31",
+      "dislanan_bar": 648,
+      "kirilma_listesi": [
+        {
+          "tarih": "2011-03-30",
+          "oran": 2.3545,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.027,
+            "high_low": 1.047
+          }
+        },
+        {
+          "tarih": "2011-05-05",
+          "oran": null,
+          "sinif": "hayalet_gecmis",
+          "kural": "K3",
+          "kanit": {
+            "donem": [
+              "2006-11-28",
+              "2011-05-05"
+            ],
+            "medyan_dolar_hacmi": 97269.8,
+            "seans": 629
+          }
+        }
+      ],
+      "tespit_kurali": "K1,K3"
+    },
+    "AVGO": {
+      "guvenli_baslangic": "2009-08-21",
+      "ilk_bar": "2008-06-11",
+      "dislanan_bar": 23,
+      "kirilma_listesi": [
+        {
+          "tarih": "2009-08-06",
+          "oran": 162.0,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.019,
+            "high_low": 1.083
+          }
+        },
+        {
+          "tarih": "2009-08-20",
+          "oran": null,
+          "sinif": "hayalet_gecmis",
+          "kural": "K3",
+          "kanit": {
+            "donem": [
+              "2009-08-17",
+              "2009-08-20"
+            ],
+            "medyan_dolar_hacmi": 10750.0,
+            "seans": 4
+          }
+        }
+      ],
+      "tespit_kurali": "K1,K3"
+    },
+    "C": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 10.1566,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.994,
+            "high_low": 1.026
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CB": {
+      "guvenli_baslangic": "2006-04-20",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 578,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5103,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.991,
+            "high_low": 1.026
+          }
+        },
+        {
+          "tarih": "2006-04-19",
+          "oran": 2.0577,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.965,
+            "high_low": 1.046
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CBRE": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-06-10",
+      "dislanan_bar": 395,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.3409,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.977,
+            "high_low": 1.034
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CHD": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5076,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.988,
+            "high_low": 1.023
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CHTR": {
+      "guvenli_baslangic": "2010-09-16",
+      "ilk_bar": "2009-04-07",
+      "dislanan_bar": 2,
+      "kirilma_listesi": [
+        {
+          "tarih": "2010-09-15",
+          "oran": 1158.3333,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.993,
+            "high_low": 1.02
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CI": {
+      "guvenli_baslangic": "2007-04-27",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 834,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.1115,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.995,
+            "high_low": 1.025
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 2.9413,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.014,
+            "high_low": 1.025
+          }
+        },
+        {
+          "tarih": "2007-04-26",
+          "oran": 3.0112,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.021
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CMCSA": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.3374,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.993,
+            "high_low": 1.039
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CMI": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.2523,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.993,
+            "high_low": 1.025
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 4.0228,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.995,
+            "high_low": 1.011
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CSX": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.4894,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.022,
+            "high_low": 1.029
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "CTSH": {
+      "guvenli_baslangic": "2007-10-18",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 955,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5036,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.986,
+            "high_low": 1.037
+          }
+        },
+        {
+          "tarih": "2007-10-17",
+          "oran": 2.0843,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.989,
+            "high_low": 1.026
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "D": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5062,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.981,
+            "high_low": 1.022
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 1.997,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.007
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "DD": {
+      "guvenli_baslangic": "2025-11-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 5172,
+      "kirilma_listesi": [
+        {
+          "tarih": "2019-07-16",
+          "oran": null,
+          "sinif": "hayalet_gecmis",
+          "kural": "K3",
+          "kanit": {
+            "donem": [
+              "2017-10-17",
+              "2019-07-16"
+            ],
+            "medyan_dolar_hacmi": 0.0,
+            "seans": 115
+          }
+        },
+        {
+          "tarih": "2025-11-03",
+          "oran": 0.4249,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.966,
+            "high_low": 1.047
+          }
+        }
+      ],
+      "tespit_kurali": "K1,K3"
+    },
+    "DE": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.4991,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.008
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 2.0415,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.999,
+            "high_low": 1.033
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "DUK": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5071,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.993,
+            "high_low": 1.018
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "EMR": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5028,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.999,
+            "high_low": 1.024
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 1.9991,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.997,
+            "high_low": 1.005
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "EQT": {
+      "guvenli_baslangic": "2018-11-14",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 3744,
+      "kirilma_listesi": [
+        {
+          "tarih": "2018-11-13",
+          "oran": 0.5358,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.018,
+            "high_low": 1.152
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "EXPE": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2005-07-21",
+      "dislanan_bar": 115,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5008,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.032
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "FI": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 2.0185,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.999,
+            "high_low": 1.022
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "FISV": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 2.0185,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.999,
+            "high_low": 1.022
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "GD": {
+      "guvenli_baslangic": "2006-03-28",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 562,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5041,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.012
+          }
+        },
+        {
+          "tarih": "2006-03-27",
+          "oran": 1.9762,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.008,
+            "high_low": 1.017
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "GILD": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.2683,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.909,
+            "high_low": 1.1
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "GOOGL": {
+      "guvenli_baslangic": "2014-04-03",
+      "ilk_bar": "2004-08-19",
+      "dislanan_bar": 347,
+      "kirilma_listesi": [
+        {
+          "tarih": "2013-12-18",
+          "oran": 2.6152,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.988,
+            "high_low": 1.024
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "HAL": {
+      "guvenli_baslangic": "2006-07-18",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 639,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5271,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.967,
+            "high_low": 1.042
+          }
+        },
+        {
+          "tarih": "2006-07-17",
+          "oran": 1.9075,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.035,
+            "high_low": 1.054
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "HES": {
+      "guvenli_baslangic": "2006-06-02",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 608,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.3508,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.962,
+            "high_low": 1.05
+          }
+        },
+        {
+          "tarih": "2006-06-01",
+          "oran": 3.0012,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.985,
+            "high_low": 1.039
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "HLT": {
+      "guvenli_baslangic": "2017-01-05",
+      "ilk_bar": "2013-12-12",
+      "dislanan_bar": 771,
+      "kirilma_listesi": [
+        {
+          "tarih": "2017-01-04",
+          "oran": 2.1176,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.988,
+            "high_low": 1.043
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "HON": {
+      "guvenli_baslangic": "2026-06-30",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 5657,
+      "kirilma_listesi": [
+        {
+          "tarih": "2026-06-29",
+          "oran": 0.4905,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.054,
+            "high_low": 1.109
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "HRL": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5055,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.993,
+            "high_low": 1.012
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "HSY": {
+      "guvenli_baslangic": "2004-06-17",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 114,
+      "kirilma_listesi": [
+        {
+          "tarih": "2004-06-16",
+          "oran": 0.497,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.009,
+            "high_low": 1.019
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "INTU": {
+      "guvenli_baslangic": "2006-07-10",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 633,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5073,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.984,
+            "high_low": 1.049
+          }
+        },
+        {
+          "tarih": "2006-07-07",
+          "oran": 1.9617,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.017,
+            "high_low": 1.028
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "IRM": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.4427,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.999,
+            "high_low": 1.032
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "ITW": {
+      "guvenli_baslangic": "2006-05-30",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 605,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5092,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.989,
+            "high_low": 1.031
+          }
+        },
+        {
+          "tarih": "2006-05-26",
+          "oran": 1.996,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.009,
+            "high_low": 1.016
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "LHX": {
+      "guvenli_baslangic": "2005-04-01",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 313,
+      "kirilma_listesi": [
+        {
+          "tarih": "2005-03-31",
+          "oran": 0.5038,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.989,
+            "high_low": 1.023
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "LOW": {
+      "guvenli_baslangic": "2006-07-05",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 630,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5029,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.993,
+            "high_low": 1.032
+          }
+        },
+        {
+          "tarih": "2006-07-03",
+          "oran": 2.0066,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.006,
+            "high_low": 1.032
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "MAR": {
+      "guvenli_baslangic": "2006-06-13",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 615,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5037,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.994,
+            "high_low": 1.017
+          }
+        },
+        {
+          "tarih": "2006-06-12",
+          "oran": 1.9813,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.013,
+            "high_low": 1.018
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "MNST": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.2633,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.971,
+            "high_low": 1.048
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "MO": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.2317,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.002,
+            "high_low": 1.015
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "MRVL": {
+      "guvenli_baslangic": "2006-07-26",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 645,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5184,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.975,
+            "high_low": 1.061
+          }
+        },
+        {
+          "tarih": "2006-07-25",
+          "oran": 2.0245,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.997,
+            "high_low": 1.034
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "NEE": {
+      "guvenli_baslangic": "2005-03-17",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 303,
+      "kirilma_listesi": [
+        {
+          "tarih": "2005-03-16",
+          "oran": 0.4926,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.016,
+            "high_low": 1.034
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "NKE": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.4954,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.011,
+            "high_low": 1.026
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 2.0195,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.982,
+            "high_low": 1.024
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "NUE": {
+      "guvenli_baslangic": "2006-06-02",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 608,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5198,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.98,
+            "high_low": 1.037
+          }
+        },
+        {
+          "tarih": "2006-06-01",
+          "oran": 2.0281,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.979,
+            "high_low": 1.051
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "NVDA": {
+      "guvenli_baslangic": "2006-04-10",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 571,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.3548,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.909,
+            "high_low": 1.1
+          }
+        },
+        {
+          "tarih": "2006-04-07",
+          "oran": 2.0,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.03
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "O": {
+      "guvenli_baslangic": "2005-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 253,
+      "kirilma_listesi": [
+        {
+          "tarih": "2005-01-03",
+          "oran": 0.4947,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.01,
+            "high_low": 1.031
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "OMC": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5056,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.993,
+            "high_low": 1.016
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 2.1303,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.951,
+            "high_low": 1.057
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "OXY": {
+      "guvenli_baslangic": "2006-08-17",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 661,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5381,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.96,
+            "high_low": 1.05
+          }
+        },
+        {
+          "tarih": "2006-08-16",
+          "oran": 1.9803,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.016,
+            "high_low": 1.027
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "PCAR": {
+      "guvenli_baslangic": "2006-01-04",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 505,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.3609,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.984,
+            "high_low": 1.046
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "PEG": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.2564,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.983,
+            "high_low": 1.033
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 1.9948,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.002,
+            "high_low": 1.011
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "PGR": {
+      "guvenli_baslangic": "2006-05-22",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 600,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.1845,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.016,
+            "high_low": 1.033
+          }
+        },
+        {
+          "tarih": "2006-05-19",
+          "oran": 5.5533,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.997,
+            "high_low": 1.022
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "PINS": {
+      "guvenli_baslangic": "2019-06-04",
+      "ilk_bar": "2013-02-13",
+      "dislanan_bar": 71,
+      "kirilma_listesi": [
+        {
+          "tarih": "2013-02-26",
+          "oran": 12.0,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.0
+          }
+        },
+        {
+          "tarih": "2013-03-27",
+          "oran": 8.3333,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.0
+          }
+        },
+        {
+          "tarih": "2013-04-30",
+          "oran": 0.0112,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.0
+          }
+        },
+        {
+          "tarih": "2019-04-18",
+          "oran": 152.5,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.973,
+            "high_low": 1.092
+          }
+        },
+        {
+          "tarih": "2019-06-03",
+          "oran": null,
+          "sinif": "hayalet_gecmis",
+          "kural": "K3",
+          "kanit": {
+            "donem": [
+              "2013-09-26",
+              "2019-06-03"
+            ],
+            "medyan_dolar_hacmi": 6706.1,
+            "seans": 52
+          }
+        }
+      ],
+      "tespit_kurali": "K1,K3"
+    },
+    "RTX": {
+      "guvenli_baslangic": "2020-04-06",
+      "ilk_bar": "2007-10-29",
+      "dislanan_bar": 226,
+      "kirilma_listesi": [
+        {
+          "tarih": "2008-08-22",
+          "oran": null,
+          "sinif": "hayalet_gecmis",
+          "kural": "K3",
+          "kanit": {
+            "donem": [
+              "2008-05-15",
+              "2008-08-22"
+            ],
+            "medyan_dolar_hacmi": 92720.0,
+            "seans": 58
+          }
+        },
+        {
+          "tarih": "2020-04-03",
+          "oran": 3.7941,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.021,
+            "high_low": 1.109
+          }
+        }
+      ],
+      "tespit_kurali": "K1,K3"
+    },
+    "SLB": {
+      "guvenli_baslangic": "2006-04-11",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 572,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5319,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.956,
+            "high_low": 1.05
+          }
+        },
+        {
+          "tarih": "2006-04-10",
+          "oran": 2.0043,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.016,
+            "high_low": 1.03
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "STLD": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.2579,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.978,
+            "high_low": 1.046
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 4.1945,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.947,
+            "high_low": 1.07
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "TDG": {
+      "guvenli_baslangic": "2012-01-24",
+      "ilk_bar": "2011-11-09",
+      "dislanan_bar": 32,
+      "kirilma_listesi": [
+        {
+          "tarih": "2012-01-23",
+          "oran": null,
+          "sinif": "bozuk_kesit",
+          "kural": "K2",
+          "kanit": {
+            "donem": [
+              "2011-11-09",
+              "2012-01-23"
+            ],
+            "bozuk_bar": 9,
+            "max_high_low": 7.1
+          }
+        }
+      ],
+      "tespit_kurali": "K2"
+    },
+    "UNP": {
+      "guvenli_baslangic": "2006-10-25",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 709,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.4953,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.005,
+            "high_low": 1.019
+          }
+        },
+        {
+          "tarih": "2006-10-24",
+          "oran": 2.0062,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.0,
+            "high_low": 1.014
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "WBD": {
+      "guvenli_baslangic": "2014-08-08",
+      "ilk_bar": "2005-07-08",
+      "dislanan_bar": 2287,
+      "kirilma_listesi": [
+        {
+          "tarih": "2014-08-07",
+          "oran": 0.4936,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.055,
+            "high_low": 1.074
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    },
+    "WFC": {
+      "guvenli_baslangic": "2006-08-15",
+      "ilk_bar": "2004-01-02",
+      "dislanan_bar": 659,
+      "kirilma_listesi": [
+        {
+          "tarih": "2006-01-03",
+          "oran": 0.5076,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 0.991,
+            "high_low": 1.024
+          }
+        },
+        {
+          "tarih": "2006-08-14",
+          "oran": 1.9914,
+          "sinif": "olcek_dikisi",
+          "kural": "K1",
+          "kanit": {
+            "acilis_orani": 1.026,
+            "high_low": 1.032
+          }
+        }
+      ],
+      "tespit_kurali": "K1"
+    }
+  },
+  "yanlis_pozitif_adaylari": [
+    {
+      "ticker": "AIG",
+      "tarih": "2008-09-15",
+      "oran": 0.3921,
+      "acilis_orani": 1.496,
+      "high_low": 2.283,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "AIG",
+      "tarih": "2008-09-17",
+      "oran": 0.5467,
+      "acilis_orani": 1.117,
+      "high_low": 1.558,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "AIG",
+      "tarih": "2008-09-16",
+      "oran": 0.7878,
+      "acilis_orani": null,
+      "high_low": 4.192,
+      "hukum": "TEK\u0130L bozuk bar (high/low>3) \u2014 k\u00fcmelenmedi\u011fi i\u00e7in damgalanmad\u0131"
+    },
+    {
+      "ticker": "CEG",
+      "tarih": "2008-09-16",
+      "oran": 0.641,
+      "acilis_orani": null,
+      "high_low": 3.667,
+      "hukum": "TEK\u0130L bozuk bar (high/low>3) \u2014 k\u00fcmelenmedi\u011fi i\u00e7in damgalanmad\u0131"
+    },
+    {
+      "ticker": "MNST",
+      "tarih": "2005-08-09",
+      "oran": 0.4826,
+      "acilis_orani": 1.139,
+      "high_low": 1.189,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "MRK",
+      "tarih": "2021-06-11",
+      "oran": 1.0017,
+      "acilis_orani": null,
+      "high_low": 5.017,
+      "hukum": "TEK\u0130L bozuk bar (high/low>3) \u2014 k\u00fcmelenmedi\u011fi i\u00e7in damgalanmad\u0131"
+    },
+    {
+      "ticker": "OXY",
+      "tarih": "2020-03-09",
+      "oran": 0.4657,
+      "acilis_orani": 1.245,
+      "high_low": 1.594,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "PINS",
+      "tarih": "2013-09-18",
+      "oran": 0.5128,
+      "acilis_orani": 1.25,
+      "high_low": 1.25,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "TDG",
+      "tarih": "2011-11-11",
+      "oran": 1.9489,
+      "acilis_orani": 0.729,
+      "high_low": 1.645,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "TDG",
+      "tarih": "2011-12-15",
+      "oran": 0.4267,
+      "acilis_orani": 1.062,
+      "high_low": 3.167,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "TDG",
+      "tarih": "2011-12-20",
+      "oran": 2.283,
+      "acilis_orani": 1.149,
+      "high_low": 1.826,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "TDG",
+      "tarih": "2011-12-28",
+      "oran": 0.2234,
+      "acilis_orani": 4.167,
+      "high_low": 4.744,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "TDG",
+      "tarih": "2011-12-29",
+      "oran": 2.369,
+      "acilis_orani": 0.387,
+      "high_low": 2.792,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "TMO",
+      "tarih": "2015-07-22",
+      "oran": 1.0263,
+      "acilis_orani": null,
+      "high_low": 10.089,
+      "hukum": "TEK\u0130L bozuk bar (high/low>3) \u2014 k\u00fcmelenmedi\u011fi i\u00e7in damgalanmad\u0131"
+    },
+    {
+      "ticker": "TRGP",
+      "tarih": "2020-03-09",
+      "oran": 0.4709,
+      "acilis_orani": 1.675,
+      "high_low": 1.719,
+      "hukum": "ger\u00e7ek piyasa olay\u0131 say\u0131ld\u0131 \u2014 damgalanmad\u0131"
+    },
+    {
+      "ticker": "UAL",
+      "tarih": "2008-09-08",
+      "oran": 0.8878,
+      "acilis_orani": null,
+      "high_low": 4.15,
+      "hukum": "TEK\u0130L bozuk bar (high/low>3) \u2014 k\u00fcmelenmedi\u011fi i\u00e7in damgalanmad\u0131"
+    },
+    {
+      "ticker": "VZ",
+      "tarih": "2026-01-08",
+      "oran": 1.011,
+      "acilis_orani": null,
+      "high_low": 3.842,
+      "hukum": "TEK\u0130L bozuk bar (high/low>3) \u2014 k\u00fcmelenmedi\u011fi i\u00e7in damgalanmad\u0131"
+    }
+  ],
+  "taranan": 260,
+  "sembol_sayisi": 61,
+  "kirilma_sayisi": 98,
+  "dislanan_bar_toplam": 48735,
+  "uretildi": "2026-07-31T00:01:10"
+}
