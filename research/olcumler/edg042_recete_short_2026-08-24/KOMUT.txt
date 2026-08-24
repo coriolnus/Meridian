@@ -1,0 +1,72 @@
+EDG-2026-042 — REÇETE R2 (2026-08-24): ÇIKIŞ İŞARET SÖZLEŞMESİ SHORT'A GENİŞLETİLDİ
+Kalem: Ö-54-ek. Bu bir ÖLÇÜM KOŞUMU DEĞİLDİR — canlıya BAĞLANILMADI, yeni snapshot ÇEKİLMEDİ,
+hüküm ÜRETİLMEDİ. Yalnız (a) kart revizyonu, (b) reçete koşullaması, (c) iki kanıt dosyası.
+
+[0] SIRA (bağlayıcı): KART ÖNCE, REÇETE SONRA.
+    Kart bloğu: research/cards/EDG-2026-042-gercek-friksiyon-tahmini.yaml
+                → yeni üst-düzey anahtar `r2_short_isaret_sozlesmesi_2026_08_24`
+    Mevcut metin SİLİNMEDİ (tarihçe-koru). success_metric / kill_criteria / örneklem eşikleri
+    / karar kuralları DEĞİŞMEDİ — bu bir KAPSAM genişletmesidir, eşik değişikliği DEĞİL.
+
+[1] KAPATILAN AÇIK KALEM (kartın kendi beyanı, `haftalik_kosum_2026_08_22_ilk_fire` son satırı):
+    "Kartın işaret cümlesi yalnız LONG içindir; ... short satır çıkarsa reçete KARTSIZ
+    genişletilemez (yeni açık kalem)."
+
+[2] İŞARET CÜMLESİ (kart otoritesi; bu dizindeki kod onu UYGULAR, TÜRETMEZ):
+    LONG  : kapanış bir SATIŞtır → "long satışta DÜŞÜK dolum aleyhte = +"
+            aleyhte_bps = −bps_delta(alpaca_fill_price, exit)
+    SHORT : kapanış bir ALIŞtır  → "short alışta YÜKSEK dolum aleyhte = +"
+            aleyhte_bps = +bps_delta(alpaca_fill_price, exit)
+    BİRLEŞİK: aleyhte_bps = yon_isareti × bps_delta(alpaca_fill_price, exit)
+              yon_isareti = −1 (side=="long") · +1 (side=="short")
+    side ∉ {"long","short"} → bps HESAPLANMAZ, satır olculemedi kovasına nedeniyle düşer.
+    ("Varsayılan long" kabulü YASAK: bir short satırı sessizce TERS işaretle ölçerdi.)
+
+[3] DONMUŞ REÇETE EZİLMEDİ. research/olcumler/edg042_kosum_2026-08-22/ dizinine TEK BAYT
+    yazılmadı (koşum sonrası doğrulandı):
+      eski olcum.py    sha256 = 6d33a58cde6b54c72d302d0df398b6606ab2a802a8ac8ae1b44d7e448621008f
+      eski sonuc.json  sha256 = 1de3ad4c04002c5193438c65a721146c934c7607cfb42da9cb1597bf6f490649
+      eski canli_ham   sha256 = 155a0da2f6a600490f1f9f2de56fafa8b78caf45edb91cfc33249460a2925323
+    Bu dizin, o dizinin KOPYASI + yalnız yön koşullamasıdır:
+      canli_cek.py     sha256 = 4c6b85a53f5efeb47234612e90f6e70ebee1ead62cad0ed6ccb8a66f9929e96d
+                       (BAYT-ÖZDEŞ kopya — çekim tarafı DEĞİŞMEDİ; `side` alanı TR_ALAN'da
+                        ZATEN taşınıyordu, yeni alan gerekmedi)
+      olcum.py         sha256 = 1dcb7708e592f2daf47182e381c657d4564b0e5050dc01bc434e1aa48ef915c8
+    KOD FARKI (docstring hariç) TAM OLARAK ÜÇ PARÇA: (i) YON_ISARETI sabiti, (ii) yön okuma +
+    "yön bilinmiyor → olculemedi" dalı, (iii) round(-ham_v,3) → round(isaret*ham_v,3).
+    Eşik sabitleri (ESIK), bootstrap (B/SEED), kova listeleri, kill dalları DOKUNULMADI.
+
+[4] REGRESYON KANITI — ozdeslik_sina.py → ozdeslik.json
+    Eski ve yeni reçete AYNI 2026-08-22 snapshot'ında (155a0da2…) koşturuldu (her ikisi de
+    geçici dizinde; donmuş dizin EZİLMEDİ) ve sonuc.json çıktıları BAYT-ÖZDEŞ çıktı.
+    Beklenen buydu: örneklemde short satır YOK, yani yeni dal HİÇ ateşlenmiyor.
+      bayt_ozdes = true → GEÇTİ. (false olsaydı REGRESYON: koşum durdurulacaktı.)
+
+[5] SENTETİK SHORT SINAMASI — sinama.py → sinama.json (SAYILAR ÖLÇÜM DEĞİLDİR)
+    Gerçek veriyle sınamak İMKÂNSIZ: defterde short satır yok (893/893 side="long";
+    meridian/broker.py alan damgası: `side` "gelecekteki SHORT desteğine ayrılmıştır").
+    exit=100,0 sabit; afp 99,0 (düşük) / 101,0 (yüksek) → ±100,0 bps tam.
+      SYNLA long  + düşük  dolum → +100,0 ALEYHTE   (2026-08-22 emsali — DEĞİŞMEDİ)
+      SYNLL long  + yüksek dolum → −100,0 LEHTE     (2026-08-22 emsali — DEĞİŞMEDİ)
+      SYNSA short + yüksek dolum → +100,0 ALEYHTE   (R2'nin yeni bacağı)
+      SYNSL short + düşük  dolum → −100,0 LEHTE     (R2'nin yeni bacağı)
+      SYNSU side="  SHORT " (boşluk+büyük harf) → +100,0 (normalizasyon; sessizce düşmüyor)
+      SYNXX side=None → bps HESAPLANMADI, olculemedi + neden (uydurma yasağı)
+    hukum = GEÇTİ · long_emsali_korundu = true
+    DÜZELTMENİN MADDİLİĞİ: aynı sentetik girdide ESKİ reçete SYNSA/SYNSL/SYNSU'yu TERS yazıyor
+    (+100 ↔ −100), SYNXX'i ise sessizce "long" varsayıp +100,0 uyduruyor. Yani short satır
+    belirdiği gün eski reçete hükmü TERS YÖNE çevirirdi — 2026-08-22'de long için yakalanan
+    T00103 vakasının short karşılığı.
+
+[6] KOŞUM KOMUTLARI (yeniden üretim; canlıya bağlanmaz, state/'e yazmaz):
+    PYTHONDONTWRITEBYTECODE=1 .venv/bin/python research/olcumler/edg042_recete_short_2026-08-24/ozdeslik_sina.py
+    PYTHONDONTWRITEBYTECODE=1 .venv/bin/python research/olcumler/edg042_recete_short_2026-08-24/sinama.py
+
+[7] KAPSAM SINIRI (kartta da yazılı): R2 YALNIZ ÇIKIŞ bacağını (K2/K3) kapsar. K1 girişin
+    ölçüsü bu reçetenin hesapladığı bir sayı değil, E2 defterinde KAYITLI
+    `fill_vs_resmi_acilis_bps` alanıdır; işareti E2'nin KENDİ sözleşmesidir. Short GİRİŞ satırı
+    belirirse doğru işareti üretecek yer bu reçete değil E2 üreticisidir.
+
+[8] SIRADAKİ HAFTALIK KOŞUM: bağlayıcı kısıt DEĞİŞMEDİ — K2/K3'ün önündeki tek engel hâlâ
+    `broker_teyit` damgasının basılmamış olması (5/5 aday damgasız). Bu tur o kısıtı ÇÖZMEZ,
+    yalnız damga basıldığında reçetenin yönü doğru okumasını garanti eder.

@@ -1,0 +1,29 @@
+{
+  "kart": "EDG-2026-042",
+  "ne": "R2 regresyon kanıtı — eski (2026-08-22 donuk) reçete ile yeni (R2, yöne koşullu) reçete AYNI snapshot'ta bayt-özdeş sonuç üretiyor mu?",
+  "bu_bir_olcum_kosumu_DEGILDIR": "hüküm taşımaz, karta sayı yazmaz; yalnız reçete değişikliğinin davranış-nötr olduğunu kanıtlar",
+  "snapshot": {
+    "dosya": "research/olcumler/edg042_kosum_2026-08-22/canli_ham.json",
+    "sha256": "155a0da2f6a600490f1f9f2de56fafa8b78caf45edb91cfc33249460a2925323",
+    "yeni_cekim_yapildi_mi": false
+  },
+  "recete_eski": {
+    "yol": "research/olcumler/edg042_kosum_2026-08-22/olcum.py",
+    "sha256": "6d33a58cde6b54c72d302d0df398b6606ab2a802a8ac8ae1b44d7e448621008f",
+    "dokunuldu_mu": false
+  },
+  "recete_yeni": {
+    "yol": "research/olcumler/edg042_recete_short_2026-08-24/olcum.py",
+    "sha256": "1dcb7708e592f2daf47182e381c657d4564b0e5050dc01bc434e1aa48ef915c8"
+  },
+  "sonuc_sha256_eski": "1de3ad4c04002c5193438c65a721146c934c7607cfb42da9cb1597bf6f490649",
+  "sonuc_sha256_yeni": "1de3ad4c04002c5193438c65a721146c934c7607cfb42da9cb1597bf6f490649",
+  "bayt_ozdes": true,
+  "bayt_uzunluk": {
+    "eski": 6138,
+    "yeni": 6138
+  },
+  "stdout_eski": "{\"yazildi\": \"sonuc.json\", \"giris_n\": 13, \"cikis_hedef_n\": 0, \"cikis_stop_n\": 0}",
+  "stdout_yeni": "{\"yazildi\": \"sonuc.json\", \"giris_n\": 13, \"cikis_hedef_n\": 0, \"cikis_stop_n\": 0}",
+  "hukum": "GEÇTİ — long örnekleminde davranış DEĞİŞMEDİ (short satır yok, yeni dal hiç ateşlenmedi)"
+}

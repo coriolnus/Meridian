@@ -150,6 +150,61 @@ haftalik_kosum_2026_08_22_ilk_fire: >
   BAĞLAYICI KISIT DEĞİŞMEDİ: K2/K3'ün önündeki tek engel `broker_teyit` damgasının henüz
   basılmamış olması (Ö-52 dağıtıldı; damga ilk reconcile turunda basılır).
 
+r2_short_isaret_sozlesmesi_2026_08_24: >
+  R2 — ÇIKIŞ BACAĞININ İŞARET SÖZLEŞMESİ SHORT İÇİN DE YAZILDI (KAPSAM GENİŞLETMESİ;
+  EŞİK DEĞİŞİKLİĞİ DEĞİL — success_metric, kill_criteria, örneklem eşikleri ve karar kuralları
+  AYNEN yerinde, tek karakteri değişmedi). Kapatılan açık kalem: bu kartın
+  `haftalik_kosum_2026_08_22_ilk_fire` bloğunun son cümlesi — "Kartın işaret cümlesi yalnız LONG
+  içindir; bugünkü live_paper örnekleminin 8/8'i long — short satır çıkarsa reçete KARTSIZ
+  genişletilemez (yeni açık kalem)". Kart o kartı ŞİMDİ veriyor; reçete artık kartsız genişlemiyor.
+  (R1 = universe içindeki "[DÜZELTME 2026-08-22, Rol-1]" bloğudur — long bacağının işaret
+  düzeltmesi; tarihçe olarak DOKUNULMADAN duruyor.)
+
+  TÜRETİM — İŞARET NEDEN YÖNLE TERS DÖNER: çıkış bps'i, GERÇEK broker dolumunu
+  (`alpaca_fill_price`) iç motorun yazdığı çıkışla (`exit`) kıyaslar; "aleyhte" = broker'ın bize
+  motorun varsaydığından KÖTÜ fiyat vermesi. LONG pozisyonun kapanışı bir SATIŞtır — satıcı için
+  kötü olan DÜŞÜK fiyattır. SHORT pozisyonun kapanışı bir ALIŞtır (buy-to-cover) — alıcı için kötü
+  olan YÜKSEK fiyattır. Yani "aleyhte = +" sözleşmesi DEĞİŞMEZ; değişen tek şey ham farkın çarpanıdır.
+
+  İŞARET CÜMLESİ — TAM METİN (kart otoritesidir, koda BIRAKILMAZ):
+    LONG  : kapanış bir SATIŞtır → "long satışta DÜŞÜK dolum aleyhte = +"
+            aleyhte_bps = −bps_delta(alpaca_fill_price, exit)
+    SHORT : kapanış bir ALIŞtır  → "short alışta YÜKSEK dolum aleyhte = +"
+            aleyhte_bps = +bps_delta(alpaca_fill_price, exit)
+    BİRLEŞİK: aleyhte_bps = yon_isareti × bps_delta(alpaca_fill_price, exit),
+              yon_isareti = −1 (side == "long") · +1 (side == "short")
+    bps_delta(a, b) = (a/b − 1) × 10000 (meridian.broker ile aynı formül; taraflardan biri
+    ölçülemezse None — 0.0 yazmak "slipaj yoktu" yalanı olurdu).
+    YÖN BİLİNMİYORSA: side, {"long","short"} DIŞINDA bir değerse (boş/None/bilinmeyen) bps
+    HESAPLANMAZ; satır nedeniyle birlikte `olculemedi` kovasına düşer. Yön bilinmeden işaret
+    seçmek UYDURMADIR (E2'nin ikame yasağıyla aynı sınıf) ve "varsayılan long" kabulü YASAKTIR —
+    bir short satırı sessizce TERS işaretle ölçer, hükmü ters yöne çevirirdi.
+
+  DEFTER DAYANAĞI (koşullama uydurma değildir): `side` alanı trades defterinde GERÇEKTEN vardır ve
+  doludur — 2026-08-22 snapshot'ında 893/893 satır `side="long"`; canlı çekim betiği
+  (`canli_cek.py`, TR_ALAN) alanı ZATEN taşıyor, yani çekim tarafında tek bayt değişiklik
+  gerekmedi. Bugün SHORT satır YOKTUR ve bu bilinçlidir: motor `side="long"` SABİTİ yazar
+  (`meridian/broker.py` alan damgası: alan "gelecekteki SHORT desteğine ayrılmıştır"). Bu revizyon
+  bir ÖLÇÜM İDDİASI değil bir SÖZLEŞMEdir: short satır defterde belirdiği gün reçete onu doğru
+  işaretle ölçer, kart o gün yeniden açılmak zorunda kalmaz.
+
+  REÇETE KARŞILIĞI: `research/olcumler/edg042_recete_short_2026-08-24/olcum.py` — 2026-08-22 donuk
+  reçetesinin KOPYASI + YALNIZ yön koşullaması. GÜNCEL DONUK REÇETE İŞARETÇİSİ budur; `status:`
+  bloğundaki 2026-08-22 işaretçisi tarihçe olarak DOKUNULMADAN durur ve o dizin
+  (`edg042_kosum_2026-08-22/`) tek bayt değiştirilmedi — hangi koşumun hangi reçeteyi kullandığı
+  dizinden geri izlenir.
+  REGRESYON KANITI: eski ve yeni reçete AYNI 2026-08-22 snapshot'ında BAYT-ÖZDEŞ sonuç üretir
+  (`ozdeslik.json`) — long örneklemde davranış DEĞİŞMEDİ. Yeni dal sentetik satırlarla sınandı
+  (`sinama.json`), long emsali aynen korundu: long düşük dolum → +100,0 (aleyhte) · long yüksek
+  dolum → −100,0 (lehte) · short YÜKSEK dolum → +100,0 (aleyhte) · short düşük dolum → −100,0
+  (lehte) · side boş → bps hesaplanmadı, olculemedi.
+
+  BEYANLI SINIR (yeni açık kalem DEĞİL, kapsam beyanı): bu revizyon YALNIZ ÇIKIŞ bacağını (K2/K3)
+  kapsar. K1 girişin ölçüsü reçetenin hesapladığı bir sayı değil, E2 defterinde KAYITLI
+  `fill_vs_resmi_acilis_bps` alanıdır ve onun işareti E2'nin KENDİ sözleşmesidir (aleyhte = +).
+  Short GİRİŞ satırı belirirse doğru işareti üretecek yer bu reçete değil E2 üreticisidir; o gün
+  E2'nin işaret sözleşmesi AYRICA denetlenir (bu kart onu ne ölçer ne varsayar).
+
 beyanlı_sinirlar: >
   (1) SEÇİLİM YANLILIĞI YAPISAL: yalnız DOLAN emrin friksiyonu ölçülebilir — kaçan/veto edilen
   emrin "friksiyonu" tanımsız. Ölçülen şey "dolan emirlerin friksiyonu"dur ve gerçek beklenen
