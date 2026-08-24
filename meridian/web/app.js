@@ -1,5 +1,13 @@
 // Meridian dashboard — sabah brifingi. Read-model client, matches meridian-landing.html. No build step.
 // Plain-Turkish glossary + hover tooltips + always-visible captions so a low-finance-literacy reader can follow.
+// ---- SATIR-İÇİ PUNTO → JETON (2026-08-24) ----------------------------------------------------
+// Denetim ölçtü: bu dosyada 84 satır-içi `font-size` vardı ve `var(--t-*)` kullanımı SIFIRDI.
+// Satır-içi stil en yüksek özgüllüktür — yüzeydeki hiçbir jeton düzeltmesi onlara ULAŞAMAZ,
+// yani `index.html`de ölçeği düzeltmek ekranın bu yarısını hiç değiştirmiyordu.
+// BU TURDA YALNIZ BİREBİR EŞLEŞENLER çevrildi (11→--t-cap · 10→--label-size · 14→--t-body):
+// görsel çıktı DEĞİŞMEZ, değişen tek şey ölçeğe bağlanmış olması. Rampa DIŞINDA kalan 34 punto
+// (12px×32 · 13px×2) BİLEREK bırakıldı — onları taşımak bir tasarım kararıdır (11 mi 14 mü?)
+// ve görünür bir değişiklik üretir; ayrı turda, gerekçesiyle.
 const OPERATOR = "Erdem";
 // ---- BEŞ YÜZEY (D2-b, 2026-08-07 — bağlayıcı IA: docs/TASARIM-YONU-2026-08-07.md §3) ---------
 // S2R-1/2'nin YEDİ alan sayfası, işten değil widget'tan türemişti: "Veri Sağlığı" ile "Gözetim &
@@ -843,7 +851,7 @@ function sermayeKokenSatiri(k, { kisa = false, ibareyle = false } = {}) {
   if (k.ayrisik && k.reset_tarihi) parca.push(`ayrıştırma ${esc(String(k.reset_tarihi).slice(0, 10))}`);
   if (k.tohum_islem_n) parca.push(`${k.tohum_islem_n} tohum satırı defterde kaldı`);
   if (!parca.length) return "";
-  return `<p class="sub mut" style="margin-top:4px;font-size:11px;line-height:1.45">${
+  return `<p class="sub mut" style="margin-top:4px;font-size:var(--t-cap);line-height:1.45">${
       parca.join(" · ")}</p>`;
 }
 
@@ -4124,11 +4132,11 @@ RENDER.adaylar = async () => {
     const k = rec("aday", { c, plan: _adayinPlani(c, d.plans), tdy, ledger: d.ledger });
     return `<button ${rowAttrs(k, `${c.date} · ${c.ticker} · skor ${c.score}. Aday kararını aç.`)}
      class="trow rowbtn" style="grid-template-columns:78px 66px 1fr 112px 60px 60px 90px">
-     <span class="mut" style="font-size:11px">${esc(c.date)}</span><span class="tick" style="font-size:14px">${esc(c.ticker)}</span>
+     <span class="mut" style="font-size:var(--t-cap)">${esc(c.date)}</span><span class="tick" style="font-size:var(--t-body)">${esc(c.ticker)}</span>
      <span class="chain">${esc(c.source_skill||'')}</span>
      <span>${pvKivilcimYuva(c.ticker, { giris: c.entry_trigger, stop: c.stop, hedef: c.profit_target })}</span>
      <span class="mono-num">${c.score}</span>
-     <span class="mono-num">RS ${c.rs_rating??'—'}</span><span class="mut" style="font-size:11px">${esc(c.sector||'')}</span></button>`;
+     <span class="mono-num">RS ${c.rs_rating??'—'}</span><span class="mut" style="font-size:var(--t-cap)">${esc(c.sector||'')}</span></button>`;
   }).join("");
   // BÖLÜM ÖZETİ (v192) — «bir sonraki açılış» kartı 2026-08-24'te Bugün'e taşınınca bu bölge
   // kendi hücre şeridini KAYBETTİ (`test_dort_bolumun_ozet_seridi_var_ve_TIKLANMAZ` yakaladı).
@@ -4254,10 +4262,10 @@ function planRowFull(p) {
   const k = rec("plan", p);
   return `<button ${rowAttrs(k, `${p.date} · ${p.ticker} · kapı ${v}. Planı aç.`)}
     class="trow rowbtn" style="grid-template-columns:78px 66px 1fr 112px 92px 56px 90px">
-    <span class="mut" style="font-size:11px">${esc(p.date)}</span><span class="tick" style="font-size:14px">${esc(p.ticker)}${st.badge}</span>
+    <span class="mut" style="font-size:var(--t-cap)">${esc(p.date)}</span><span class="tick" style="font-size:var(--t-body)">${esc(p.ticker)}${st.badge}</span>
     <span class="chain">${esc((p.skill_chain||[]).join(" → "))}${st.ctx ? "<br>" + st.ctx : ""}</span>
     <span>${pvKivilcimYuva(p.ticker, { giris: p.entry_trigger, stop: p.stop, hedef: (p.targets && p.targets[0]) })}</span>
-    <span class="mono-num" style="font-size:11px">${trn(p.entry_trigger,1)}→${trn((p.targets&&p.targets[0]),1)}</span>
+    <span class="mono-num" style="font-size:var(--t-cap)">${trn(p.entry_trigger,1)}→${trn((p.targets&&p.targets[0]),1)}</span>
     <span class="mono-num">${p.r_multiple_expected??'—'}R</span>
     <span style="text-align:right"><span class="tag ${TAG[v]||''}">${v}</span>${onayRozeti(p)}${p.p_win_shadow!=null?`<span class="reason" style="display:block" title="Gölge model kanıtı — karar yetkisi yok, kalibre olana dek yalnız gösterge">gölge P(kazanç) %${Math.round(p.p_win_shadow*100)}</span>`:''}${(p.gate_reasons||[]).length?`<span class="reason" style="display:block">${esc(p.gate_reasons.join(' · '))}</span>`:''}</span></button>`;
 }
@@ -4838,7 +4846,7 @@ function olayBagi(ad, sinif, segment) {
   return `<button class="${sinif || "rb-link"}" type="button" data-act="olayAc"` +
          ` data-a1="${esc(String(ad))}"${segment ? ` data-a2="${esc(segment)}"` : ""}` +
          ` title="Olay yüzeyi: ${esc(s ? OLAY_YUZEYLERI[s].ad : String(ad))}"` +
-         ` style="font-size:11px;color:var(--tx2);background:none;border:0;padding:0;cursor:pointer;` +
+         ` style="font-size:var(--t-cap);color:var(--tx2);background:none;border:0;padding:0;cursor:pointer;` +
          `text-decoration:underline;text-underline-offset:2px;white-space:nowrap">teşhis ↗</button>`;
 }
 function sessizHat(sh) {
@@ -5552,20 +5560,20 @@ function mktPaint() {
     const durum = [r.position ? _chip("pozisyon", "t-go") : "", r.armed ? _chip("silahlı", "t-rv") : ""]
       .filter(Boolean).join(" ") || '<span class="mut">—</span>';
     return `<div class="trow" style="${_MKT_GRID}">
-      <span class="tick">${esc(r.ticker)}${r.source !== "bars" ? `<br><span class="mut" style="font-size:10px;font-weight:400">${esc(r.source)}</span>` : ""}${
-        r.retired ? `<br><span class="mut" style="font-size:10px;font-weight:400">emekli</span>` : ""}</span>
+      <span class="tick">${esc(r.ticker)}${r.source !== "bars" ? `<br><span class="mut" style="font-size:var(--label-size);font-weight:400">${esc(r.source)}</span>` : ""}${
+        r.retired ? `<br><span class="mut" style="font-size:var(--label-size);font-weight:400">emekli</span>` : ""}</span>
       <span>${mktSpark(r.spark)}</span>
       <span class="mono-num${bayat ? bayatSinif(r.last_date, _MKT.as_of) : ""}">${
         r.close == null ? '<span class="mut">—</span>' : money(r.close)}<br>
-        <span class="${bayat ? "warn" : "mut"}" style="font-size:10px">${esc(r.last_date || "bar yok")}</span></span>
+        <span class="${bayat ? "warn" : "mut"}" style="font-size:var(--label-size)">${esc(r.last_date || "bar yok")}</span></span>
       <span class="mono-num">${r.intraday_close == null ? '<span class="mut">—</span>'
-        : `${money(r.intraday_close)}<br><span class="mut" style="font-size:10px">${esc(mktSaat(r.intraday_ts))}</span>`}</span>
+        : `${money(r.intraday_close)}<br><span class="mut" style="font-size:var(--label-size)">${esc(mktSaat(r.intraday_ts))}</span>`}</span>
       <span class="mono-num">${mktPct(r.chg1_pct)}</span>
       <span class="mono-num">${mktPct(r.chg20_pct)}</span>
       <span class="mono-num">${mktPct(r.dist_52w_high_pct, false)}</span>
       <span class="mono-num">${mktUsd(r.adv20_usd)}</span>
       <span class="mono-num">${r.plans_n || 0}${r.last_plan_date
-        ? ` <span class="mut" style="font-size:10px">${esc(r.last_plan_date)}</span>` : ""}</span>
+        ? ` <span class="mut" style="font-size:var(--label-size)">${esc(r.last_plan_date)}</span>` : ""}</span>
       <span class="mono-num ${mktSoon(r.earnings_date) ? "warn" : ""}">${r.earnings_date ? esc(r.earnings_date) : '<span class="mut">—</span>'}</span>
       <span>${durum}</span></div>`;
   }).join("");
@@ -5681,7 +5689,7 @@ async function opParcalar() {
             <span class="tick"${kapali ? ' style="opacity:.55"' : ""}>${esc(f.ticker || "—")}</span>
             <span class="mut">${esc(String(f.detail || "gerekçe kaydedilmemiş"))}</span>
             <span class="etime">${esc(String(f.date || "—"))}</span></button>
-          ${kapali ? `<span class="mut" style="font-size:11px;white-space:nowrap">kapatıldı ${esc(String(f.ack_ts || "").slice(0, 16))}</span>`
+          ${kapali ? `<span class="mut" style="font-size:var(--t-cap);white-space:nowrap">kapatıldı ${esc(String(f.ack_ts || "").slice(0, 16))}</span>`
                    : `<button class="dlbtn" style="padding:6px 12px;min-height:36px;font-size:12px" data-act="ackReject" data-a1="${esc(key)}">kapat</button>`}</div>`;
       };
       return `<h3 class="t" id="failsub" style="margin-top:16px">Reddedilen gönderimler (${open.length})</h3>
@@ -6204,7 +6212,7 @@ async function opParcalar() {
     return `<div style="border:1px solid var(--line);border-radius:var(--r-card);padding:10px 12px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:6px">
         <span class="chain">${esc(h.id || "")} · ${esc(h.variable || "?")}</span><span class="st ${st[1]}">${esc(st[0])}</span></div>
-      <div class="mono" style="line-height:1.7;font-size:11px">
+      <div class="mono" style="line-height:1.7;font-size:var(--t-cap)">
         <span style="background:var(--red-t);color:var(--red);padding:1px 8px;border-radius:var(--r-ctl);display:inline-block">− ${esc(h.variable || "")} = ${esc(String(h.old ?? "—"))}</span><br>
         <span style="background:var(--green-t);color:var(--green);padding:1px 8px;border-radius:var(--r-ctl);display:inline-block">+ ${esc(h.variable || "")} = ${esc(String(h.new ?? "—"))}</span></div>
       <div class="chain" style="margin-top:6px">arama Δ ${h.predicted_delta_search ?? "—"} → onay Δ ${h.predicted_delta ?? "—"}${h.realized_delta != null ? ` → gerçekleşen ${h.realized_delta}` : ""}</div>
@@ -6420,16 +6428,16 @@ async function opParcalar() {
     const ebKatman = lay => (((cic.eb || {}).katmanlar || {})[lay] || {}).hucreler || null;
     const hucre = (tbl, c, h, lay) => {
       const cell = ((tbl[c] || {})[String(h)]) || {};
-      if (cell.ic == null) return `<span class="mono-num num mut">— <span style="font-size:10px">(${esc(cell.neden || "ölçülmedi")})</span></span>`;
+      if (cell.ic == null) return `<span class="mono-num num mut">— <span style="font-size:var(--label-size)">(${esc(cell.neden || "ölçülmedi")})</span></span>`;
       const ci = cell.ci;
       const ebh = (ebKatman(lay) || {})[`${c}@${h}`];
       // `eb_ic` null olabilir (hücre küçültülemedi) — o zaman ikiz satırı da düşer.
       const ebYazi = ebh && ebh.eb_ic != null
-        ? `<span class="mut" style="font-size:10px;display:block">EB ${(ebh.eb_ic > 0 ? "+" : "") + trn(ebh.eb_ic, 3)}${
+        ? `<span class="mut" style="font-size:var(--label-size);display:block">EB ${(ebh.eb_ic > 0 ? "+" : "") + trn(ebh.eb_ic, 3)}${
             ebh.shrink_katsayisi != null ? ` · w=${trn(ebh.shrink_katsayisi, 2)}` : ""}</span>`
         : "";
       return `<span class="mono-num num ${cell.anlamli ? cls(cell.ic) : "mut"}">${(cell.ic > 0 ? "+" : "") + trn(cell.ic, 3)}
-        ${ci ? `<span class="mut" style="font-size:10px">[${trn(ci.lo, 2)},${trn(ci.hi, 2)}]</span>` : ""}${ebYazi}</span>`;
+        ${ci ? `<span class="mut" style="font-size:var(--label-size)">[${trn(ci.lo, 2)},${trn(ci.hi, 2)}]</span>` : ""}${ebYazi}</span>`;
     };
     const satir = (lay, c, etiket) => {
       const tbl = cic.tablo[lay] || {};
@@ -6627,11 +6635,11 @@ async function opParcalar() {
         const r = p.gerceklesen_r || {}, ci = r.ci;
         const canli = p.esik === tc.canli_min_score;
         return `<div class="trow" style="${kol}">
-          <span class="tick">${p.esik}${canli ? ' <span class="warn" style="font-size:10px">CANLI</span>' : ""}</span>
+          <span class="tick">${p.esik}${canli ? ' <span class="warn" style="font-size:var(--label-size)">CANLI</span>' : ""}</span>
           <span>${etiket}</span>
           <span class="mono-num mut">${p.n_aday}</span>
           <span class="mono-num ${r.ort == null ? "mut" : cls(r.ort)}">${r.ort == null
-            ? `— <span style="font-size:10px">(${esc(r.neden || "ölçülmedi")})</span>`
+            ? `— <span style="font-size:var(--label-size)">(${esc(r.neden || "ölçülmedi")})</span>`
             : `${r.ort > 0 ? "+" : ""}${trn(r.ort, 3)}R`}</span>
           <span class="chain">${ci ? `CI [${trn(ci.lo, 2)}, ${trn(ci.hi, 2)}]` : "aralık yok"} ·
             ileri getiri 10 bar ${((p.ileri_getiri || {})["10"] || {}).ort == null ? "—"
@@ -7613,7 +7621,7 @@ async function opParcalar() {
   // 0.0 = bu istekte hesaplandı; büyükse rapor önbellekten geldi ve o kadar saniye eskidir.
   const _ageS = d.integrity_age_s;
   const ageBadge = _ageS == null ? ""
-    : `<span class="tag ${_ageS >= 15 ? "t-vi" : "t-go"}" style="font-weight:400;font-size:10px;margin-left:8px"
+    : `<span class="tag ${_ageS >= 15 ? "t-vi" : "t-go"}" style="font-weight:400;font-size:var(--label-size);margin-left:8px"
         title="Rapor 20 sn'lik önbellekten okunur; bu sayı kaç saniye önce hesaplandığını söyler (0 = bu istekte).">${
         _ageS <= 0 ? "şu an hesaplandı" : `${esc(String(_ageS))} sn önce hesaplandı`}</span>`;
   // KAPALI ÖZET (v198). ÜÇ DURUM ÜÇ SAYIYA ÇEVRİLİR ve payda UYGULANABİLİR desendir — yani
@@ -9806,10 +9814,10 @@ async function intraParcalar() {
     ].filter(Boolean);
     return `<div class="trow" style="grid-template-columns:66px 96px 92px 74px 1fr 104px">
       <span class="tick">${esc(r.ticker)}</span>
-      <span class="mono-num">${money(r.sim_price)}<br><span class="mut" style="font-size:10px">tetik ${trn(r.entry_trigger, 2)}</span></span>
-      <span class="mono-num">${r.sim_fill == null ? '<span class="mut">—</span>' : money(r.sim_fill)}<br><span class="mut" style="font-size:10px">sim dolum</span></span>
-      <span class="mono-num">${r.qty == null ? '<span class="mut">—</span>' : r.qty + " adet"}<br><span class="mut" style="font-size:10px">${r.risk_dollars == null ? "" : money(r.risk_dollars) + " risk"}</span></span>
-      <span class="chain mut" style="font-size:11px">${esc(gz || "—")}<br>${esc(mktSaat(r.bar_t))} · bar ${esc(String(r.bar_t || "").slice(0, 10))}${
+      <span class="mono-num">${money(r.sim_price)}<br><span class="mut" style="font-size:var(--label-size)">tetik ${trn(r.entry_trigger, 2)}</span></span>
+      <span class="mono-num">${r.sim_fill == null ? '<span class="mut">—</span>' : money(r.sim_fill)}<br><span class="mut" style="font-size:var(--label-size)">sim dolum</span></span>
+      <span class="mono-num">${r.qty == null ? '<span class="mut">—</span>' : r.qty + " adet"}<br><span class="mut" style="font-size:var(--label-size)">${r.risk_dollars == null ? "" : money(r.risk_dollars) + " risk"}</span></span>
+      <span class="chain mut" style="font-size:var(--t-cap)">${esc(gz || "—")}<br>${esc(mktSaat(r.bar_t))} · bar ${esc(String(r.bar_t || "").slice(0, 10))}${
         r.red_nedeni ? `<br><span class="warn">broker kuralı: ${esc(redNedeni(r.red_nedeni))}</span>` : ""}${
         icra.length ? `<br>${icra.join(" · ")}` : ""}</span>
       ${_chip(shDurum(r.status), ws ? "t-go" : "t-vi")}</div>`;
@@ -9817,7 +9825,7 @@ async function intraParcalar() {
   const veRows = (ve.recent || []).map(p => `<div class="trow" style="grid-template-columns:66px 92px 92px 1fr">
       <span class="tick">${esc(p.ticker)}</span><span class="mono-num">${money(p.sim_fill)}</span>
       <span class="mono-num">${money(p.eod_fill)}</span>
-      <span class="mono-num ${cls(p.delta_pct)}">${isr(p.delta_pct, "%" + trn(p.delta_pct, 2))} <span class="mut" style="font-size:11px">EOD − gölge · ${esc(p.date)}</span></span></div>`).join("");
+      <span class="mono-num ${cls(p.delta_pct)}">${isr(p.delta_pct, "%" + trn(p.delta_pct, 2))} <span class="mut" style="font-size:var(--t-cap)">EOD − gölge · ${esc(p.date)}</span></span></div>`).join("");
   const s5 = `<div class="card rise"><h2 class="t">Gölge icra · Faz 4b
       ${_chip(sh.enabled === false ? "KAPALI" : "GÖLGE · EMİR YOK", sh.enabled === false ? "t-vi" : "t-go")}</h2>
     <p class="hint" style="margin-top:0">Tetik kesildiği anda <b>tam icra kararı</b> (kapılar + boyutlandırma + emir niyeti)
@@ -10111,10 +10119,10 @@ RENDER.skiller = async () => {
     const st = i.shadow ? "shadow" : (i.enabled ? i.mode : "disabled");
     const tag = i.enabled ? (i.mode === "active" ? "t-go" : "t-vi") : "t-no";
     return `<div class="trow" style="grid-template-columns:1fr 120px 78px 1fr">
-      <span><b style="font-weight:500">${esc(n)}</b>${i.agent_authored ? ' <span class="tag t-vi" style="font-size:10px">ajan yazdı</span>' : ''}</span>
-      <span class="mut" style="font-size:11px">${i.fmp !== '-' && i.fmp != null ? `FMP:${esc(i.fmp)} ` : ''}${i.alpaca !== '-' && i.alpaca != null ? `ALPACA:${esc(i.alpaca)}` : ''}</span>
+      <span><b style="font-weight:500">${esc(n)}</b>${i.agent_authored ? ' <span class="tag t-vi" style="font-size:var(--label-size)">ajan yazdı</span>' : ''}</span>
+      <span class="mut" style="font-size:var(--t-cap)">${i.fmp !== '-' && i.fmp != null ? `FMP:${esc(i.fmp)} ` : ''}${i.alpaca !== '-' && i.alpaca != null ? `ALPACA:${esc(i.alpaca)}` : ''}</span>
       <span><span class="tag ${tag}"${st === "shadow" ? ` title="${esc(GOLGE_BEYAN)}"` : ""}>${STATE_TR[st] || esc(st)}</span></span>
-      <span class="mut" style="font-size:11px">${esc(i.reason || '')}</span></div>`;
+      <span class="mut" style="font-size:var(--t-cap)">${esc(i.reason || '')}</span></div>`;
   };
   const cats = Object.entries(byCat).sort().map(([cat, list]) => {
     const rows = list.sort().map(satir).join("");
@@ -10136,8 +10144,8 @@ RENDER.skiller = async () => {
     return `<div class="trow" style="grid-template-columns:1fr 92px 1fr 96px">
       <span><b style="font-weight:500">${esc(n)}</b>${nereye}</span>
       <span><span class="tag ${kls}">${hal}</span></span>
-      <span class="mut" style="font-size:11px">${esc(i.reason || "gerekçe kaydedilmemiş")}</span>
-      <span class="mut" style="font-size:11px">${esc(String(i.retired_at || "").slice(0, 10))}</span></div>`;
+      <span class="mut" style="font-size:var(--t-cap)">${esc(i.reason || "gerekçe kaydedilmemiş")}</span>
+      <span class="mut" style="font-size:var(--t-cap)">${esc(String(i.retired_at || "").slice(0, 10))}</span></div>`;
   }).join("");
   const emekliCard = emekli.length ? `<details class="gloss rise" style="margin-top:16px">
     <summary>emekli / birleştirilmiş (${emekli.length}) — ${birlesenN} birleşti · ${emekliN} emekli · ${kapaliN} kapalı</summary>
@@ -10185,7 +10193,7 @@ function runsCard(runs) {
     const inv = (r.skills_invoked || []).length, notRun = (r.skills_declared_not_run || []).length;
     const dur = (r.started && r.finished) ? Math.round((Date.parse(r.finished) - Date.parse(r.started)) / 1000) : null;
     return `<div class="trow" style="grid-template-columns:118px 130px 64px 1fr 74px">
-      <span class="mut" style="font-size:11px">${esc(relTime(r.started) || "—")}</span>
+      <span class="mut" style="font-size:var(--t-cap)">${esc(relTime(r.started) || "—")}</span>
       <span><span class="tag t-vi">${esc(String(r.pipeline || "—"))}</span></span>
       <span class="mono-num">${dur == null ? "—" : dur + "s"}</span>
       <span class="chain">${inv} beceri koştu${notRun ? ` · <span class="warn">${notRun} beyan edildi KOŞMADI</span>` : ""}${
@@ -11091,7 +11099,7 @@ const EGRI_YAZIM_TR = {
   yazilmadi: ["nokta YAZILMADI", "warn"],
 };
 function egriBeyani(b) {
-  if (!b) return `<p class="sub mut" style="margin-top:6px;font-size:11px;line-height:1.5">Eğri
+  if (!b) return `<p class="sub mut" style="margin-top:6px;font-size:var(--t-cap);line-height:1.5">Eğri
     penceresi <b>ölçülemedi</b> — performans ucu <code>equity_curve_beyani</code> alanını vermedi.
     Bu "eğri sağlam" DEĞİL, beyan yok demektir.</p>`;
   const p = [];
@@ -11171,8 +11179,8 @@ function egriBeyani(b) {
       y.ofset ? ` · beyanlı ofset ${money(y.ofset)} düşülmüş tabanda` : ""}${
       y.neden ? ` — ${esc(y.neden)}` : ""}`);
   }
-  return `<p class="sub mut" style="margin-top:6px;font-size:11px;line-height:1.5">${p.join(" · ")}</p>
-    <p class="sub mut" style="margin-top:2px;font-size:11px;line-height:1.5;opacity:.75">${esc(b.beyan || "")}</p>`;
+  return `<p class="sub mut" style="margin-top:6px;font-size:var(--t-cap);line-height:1.5">${p.join(" · ")}</p>
+    <p class="sub mut" style="margin-top:2px;font-size:var(--t-cap);line-height:1.5;opacity:.75">${esc(b.beyan || "")}</p>`;
 }
 
 // ================= ONAYLAR (Kararlar sayfasının alt yüzeyi) =================
@@ -11192,7 +11200,7 @@ function ornekSatiri(it) {
   const sayi = o ? `n=${o.n ?? "—"}${o.avg_r != null ? ` · ort ${trn(o.avg_r, 3)}R` : ""}`
                    + ` · cf n=${o.n_cf ?? "—"}${o.cf_avg_r != null ? ` · cf ort ${trn(o.cf_avg_r, 3)}R` : ""}` : "";
   const kls = it.ornek_yeterli === false ? "neg" : (it.ornek_yeterli == null ? "mut" : "pos");
-  return `<br><span class="hint" style="font-size:11px">Ölçülen örneklem: <b class="${kls}">${
+  return `<br><span class="hint" style="font-size:var(--t-cap)">Ölçülen örneklem: <b class="${kls}">${
     esc(sayi || "ölçülemedi")}</b>${notu ? ` — ${esc(notu)}` : ""}</span>`;
 }
 
@@ -11200,13 +11208,13 @@ const KARAR_TR = { approve: "KABUL", reject: "RET", bozuk: "OKUNAMIYOR" };
 function kararDamgasi(kk) {
   if (!kk) return "";
   if (kk.okunamadi)
-    return `<br><span class="hint" style="font-size:11px"><b class="neg">Karar defteri OKUNAMADI</b>
+    return `<br><span class="hint" style="font-size:var(--t-cap)"><b class="neg">Karar defteri OKUNAMADI</b>
       (${esc(kk.okunamadi)}) — bu "karar yok" DEĞİL, ölçüm yok demektir.</span>`;
   if (!kk.karar)
-    return `<br><span class="hint" style="font-size:11px">${esc(kk.not || "")} · kimlik
+    return `<br><span class="hint" style="font-size:var(--t-cap)">${esc(kk.not || "")} · kimlik
       <code>${esc(kk.id)}</code></span>`;
   const k = kk.kunye || {}, o = k.ornek || null;
-  return `<br><span class="hint" style="font-size:11px">Karar: <b class="${
+  return `<br><span class="hint" style="font-size:var(--t-cap)">Karar: <b class="${
     kk.karar === "approve" ? "pos" : "neg"}">${esc(KARAR_TR[kk.karar] || kk.karar)}</b>${
     kk.ts ? ` · ${esc(String(kk.ts).replace("T", " ").slice(0, 16))}` : ""}${
     o ? ` · karar anındaki künye: n=${esc(String(o.n ?? "—"))} · cf n=${esc(String(o.n_cf ?? "—"))}` : ""}${
@@ -11269,7 +11277,7 @@ RENDER.onaylar = async () => {
       <span class="tag ${kls}">${lbl}</span>
       <span><b style="font-size:13px">${esc(it.title)}</b><br><span class="chain">${esc(it.evidence || "")}</span>
         ${ornekSatiri(it)}
-        ${it.note ? `<br><span class="hint" style="font-size:11px">${esc(it.note)}</span>` : ""}
+        ${it.note ? `<br><span class="hint" style="font-size:var(--t-cap)">${esc(it.note)}</span>` : ""}
         ${kk ? kararDamgasi(kk) : ""}
         ${it.skill ? `<p class="hint" data-eylem-msg="${esc(kk ? kk.id : it.skill)}" style="margin:6px 0 0"></p>` : ""}</span>
       <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${btns}${kararBtn}</span></div>`;
@@ -11386,7 +11394,7 @@ function sprintCard(sp, learning) {
   const runs = sp.runs || [];
   const runRows = runs.length
     ? runs.slice(0, 5).map(r => `<div class="trow" style="grid-template-columns:110px 1fr 70px 90px">
-        <span class="mut" style="font-size:11px">${esc(relTime(r.started || r.ts) || "—")}</span>
+        <span class="mut" style="font-size:var(--t-cap)">${esc(relTime(r.started || r.ts) || "—")}</span>
         <span class="chain">${esc(String(r.variable || r.sid || r.run_id || "—"))}</span>
         <span class="mono-num">${r.evaluated ?? r.n ?? "—"}</span>
         <span><span class="tag ${r.passes || r.status === "ok" ? "t-go" : "t-no"}">${esc(String(r.status || (r.passes ? "geçti" : "—")))}</span></span></div>`).join("")
@@ -11523,7 +11531,7 @@ function havuzKutusuHTML() {
 // ================= hermes (düşünme beyni) =================
 function intCard(it) {
   if (!it) return "";
-  const chip = (on, label) => `<span class="term" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line-2);border-radius:var(--r-ctl);font-family:var(--mono);font-size:11px">
+  const chip = (on, label) => `<span class="term" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line-2);border-radius:var(--r-ctl);font-family:var(--mono);font-size:var(--t-cap)">
     <span style="width:7px;height:7px;border-radius:var(--r-bar);background:${on ? 'var(--green)' : 'var(--tx3)'}"></span>${label}</span>`;
   const pool = Object.entries(it.pool_keys || {}).map(([p, n]) => `${esc(p)}·${n}`).join(" ") || "yok";
   const pend = it.backfill_pending;
@@ -11648,7 +11656,7 @@ RENDER.hermes = async () => {
   const cards = (d.recent || []).map(h => {
     const [label, kls] = HSTATUS[h.status] || [h.status, "s-rj"];
     return `<div class="hyp"><div class="top"><span class="v">${esc(h.variable || '?')}</span><span class="st ${kls}">${label}</span></div>
-      <h3 style="font-size:14px">${esc(h.variable || '')} ${esc(h.old ?? '?')} → ${esc(h.new ?? '?')}</h3>
+      <h3 style="font-size:var(--t-body)">${esc(h.variable || '')} ${esc(h.old ?? '?')} → ${esc(h.new ?? '?')}</h3>
       <p>${esc(h.rationale || '')}</p></div>`;
   }).join("");
   const ACT_TR = { shadow: "Gölgeye al", activate: "Aktifleştir", lean_in: "Öne çıkar" };
@@ -11671,11 +11679,11 @@ RENDER.hermes = async () => {
     // sonra bu kart aynı öneriyi hâlâ kararsız gösterirdi.
     return `<div class="hyp"><div class="top"><span class="v">${esc(rc.skill)}</span><span class="st ${rc.action === 'shadow' ? 's-rb' : 's-ok'}">${esc(ACT_TR[rc.action] || rc.action)}</span></div>
       <p>${esc(rc.rationale || '')}</p>
-      <p class="hint" style="margin:4px 0 0;font-size:11px">${ornekSatiri(rc).replace(/^<br>/, "")}</p>
+      <p class="hint" style="margin:4px 0 0;font-size:var(--t-cap)">${ornekSatiri(rc).replace(/^<br>/, "")}</p>
       ${applyable ? `<button class="dlbtn" style="margin-top:8px" data-act="applySkillRec" data-a1="${esc(rc.skill)}" data-a2="${esc(rc.action)}">${esc(ACT_TR[rc.action])} · uygula</button>
         <p class="hint" data-eylem-msg="${esc(rc.skill)}" style="margin:6px 0 0"></p>`
                   : `<p class="hint" style="margin-top:4px">${esc(notu)}${
-                      rc.karar_kaydi ? `${kararDamgasi(rc.karar_kaydi)}<br><span style="font-size:11px">Karar düğmesi <b>Onaylar → Gelen kutusu</b>ndadır (tek karar yolu).</span>` : ""}</p>`}</div>`;
+                      rc.karar_kaydi ? `${kararDamgasi(rc.karar_kaydi)}<br><span style="font-size:var(--t-cap)">Karar düğmesi <b>Onaylar → Gelen kutusu</b>ndadır (tek karar yolu).</span>` : ""}</p>`}</div>`;
   }).join("");
   $("ogrenme-eylem").innerHTML = eylemSeridi(d);
   // MLOPS + ÖĞRENME ÇARKI BURAYA GELDİ (S2R-2): eski Operasyon'un "Bölüm 3 · MLOps & Hermes" ve
@@ -11709,7 +11717,7 @@ RENDER.hermes = async () => {
               // hiçbir yüzey OKUMUYORDU — oysa "üç beyin" bir sayım değil bir VARSAYIMDI ve iki
               // yeşil çipin arkasında tek kota olduğu ancak burada görünür. `null` = ölçülemedi
               // (yerel ajan modu, NOUS_MODEL boş): boş bırakılır, varsayılan UYDURULMAZ.
-              const mid = a.model_id ? `<span class="mut" style="font-size:10px"> ${esc(a.model_id)}</span>` : "";
+              const mid = a.model_id ? `<span class="mut" style="font-size:var(--label-size)"> ${esc(a.model_id)}</span>` : "";
               const tip = esc((a.reason || (a.ready ? "hazır" : "kullanılamıyor"))
                 + " · model: " + (a.model_id || "ölçülemedi (yerel ajan kendi yapılandırmasını kullanıyor)"));
               return `<span class="gc ${a.ready ? "p" : "f"}" title="${tip}">${esc(n)}${esc(not)}${mid}</span>`;
@@ -11922,7 +11930,7 @@ function keyField(name, label, desc, st, provider) {
   const test = (provider && st.set)
     ? `<button class="dlbtn" data-act="testKey" data-a1="${provider}" data-a2="${name}">Test et</button>` : "";
   return `<div class="keyrow">
-    <div class="kmeta"><b>${esc(label)}</b><span class="tx3" style="font-size:11px">${esc(desc)}</span>
+    <div class="kmeta"><b>${esc(label)}</b><span class="tx3" style="font-size:var(--t-cap)">${esc(desc)}</span>
       <span class="kstat" id="kstat-${name}">${status}</span></div>
     <div class="kin">
       <input type="password" id="key-${name}" placeholder="anahtarı yapıştır…" autocomplete="new-password" spellcheck="false" autocapitalize="off">
@@ -11985,7 +11993,7 @@ function _alpacaKartHTML(a) {
             return `<div class="r"><span>Ayna uzlaştırma (${esc(rc.date)})</span>
               <b>${harici.length ? `harici: ${esc(harici.join(', '))} · ` : ''}<button class="dlbtn"
                 type="button" data-act="go" data-a1="karar#mutabakat"
-                style="min-height:0;padding:2px 8px;font-size:11px">mutabakat masası →</button></b></div>`;
+                style="min-height:0;padding:2px 8px;font-size:var(--t-cap)">mutabakat masası →</button></b></div>`;
           })()}</div>
         ${posRows?`<div class="tbl" style="margin-top:10px"><div class="trow head" style="grid-template-columns:60px 60px 1fr 90px"><span>HİSSE</span><span>ADET</span><span>GİRİŞ</span><span>K/Z</span></div>${posRows}</div>`:''}
         ${ordRows?`<div class="tbl" style="margin-top:8px"><div class="trow head" style="grid-template-columns:60px 1fr 90px"><span>HİSSE</span><span>EMİR</span><span>SEVİYE</span></div>${ordRows}</div>`:''}
@@ -12374,14 +12382,14 @@ function ladderCard(L, faz6) {
     const ic = c.manual ? "◆" : (c.met ? "✓" : "○");
     const label = TR[i] ? TR[i][0] : esc(c.label);
     const sub = TR[i] ? `${TR[i][1]} · ${esc(c.detail)}` : esc(c.detail);
-    return `<div class="crit"><div class="ck ${k}">${ic}</div><div><div>${label}</div><div class="tx3" style="font-size:11px">${sub}</div></div></div>`;
+    return `<div class="crit"><div class="ck ${k}">${ic}</div><div><div>${label}</div><div class="tx3" style="font-size:var(--t-cap)">${sub}</div></div></div>`;
   }).join("");
   const p = L.auto_progress;
   return `<div class="card rise"><h2 class="t">${T("Otonomi merdiveni", "otonomi")} — gerçek parayı hak etmek</h2>
     <p class="hint" style="margin-top:0;margin-bottom:12px">Meridian gerçek paraya, bir ayar değişikliğiyle değil, aşağıdaki şartları <b>kanıtlayarak</b> geçer. Şu an en alt basamakta (L0, gerçek para yok).</p>
     <div class="levels">${L.levels.map(l => `<span class="lv ${l.active ? 'on' : ''}">${l.id} · ${trLevel(l.name)}</span>`).join('')}</div>
     <div class="bar" style="margin-bottom:6px"><i style="width:${p.total ? 100 * p.met / p.total : 0}%"></i></div>
-    <p class="tx3" style="font-size:11px;margin-bottom:12px">Otomatik şartlar: ${p.met}/${p.total} karşılandı · ◆ işaretliler terfi anında elle yapılır · her şart kod içinde (guard.py) zorunlu tutulur</p>
+    <p class="tx3" style="font-size:var(--t-cap);margin-bottom:12px">Otomatik şartlar: ${p.met}/${p.total} karşılandı · ◆ işaretliler terfi anında elle yapılır · her şart kod içinde (guard.py) zorunlu tutulur</p>
     ${crits}
     ${faz6Satiri(faz6)}</div>`;
 }
