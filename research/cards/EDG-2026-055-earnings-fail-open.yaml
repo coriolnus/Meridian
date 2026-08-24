@@ -31,6 +31,31 @@ kill_criteria:
   - "kapı tasarımına dokunulursa geçersiz (bu kart ÖLÇER, değiştirmez)"
 k_registry: {registered_at: "2026-08-24", trial_ids: [pending-055-failopen]}
 status: registered   # 2026-08-24 Rol-1 — ön-kayıt (WP4 eleme ÖLÇ sınıfı)
+r1_pit_derinligi_serhi_2026_08_24: >
+  R1 REVİZYONU (Rol-1, ÖLÇÜMDEN ÖNCE — eşiklere, karar kuralına ve kill listesine DOKUNULMADI;
+  bu bir KAPSAM ŞERHİdir, eşik değişikliği DEĞİL).
+
+  DOĞRULAMA TURU BULGUSU (2026-08-24): PIT snapshot arşivi **10 fotoğraf** ve penceresi
+  **2026-08-03 → 2026-08-17** ile sınırlı. `success_metric`in "N = 0 → ölçülmüş-ret" dalı bu
+  pencerede KÖR BİR TEHLİKE taşıyor: pencerede hiç canlı giriş yoksa N zaten 0 çıkar ve
+  ölçüm "fail-open bedelsiz" der — oysa ölçülen şey bedelin yokluğu değil, ÖRNEKLEMİN
+  yokluğudur. Bu, bu deponun `kuraklığı kanıt sanmak` hatasıdır.
+
+  ZORUNLU ÖN-SAYIM (karar kuralına GİRMEDEN önce koşulur ve raporlanır):
+    N_giris = PIT penceresi (2026-08-03..08-17) içinde CANLI (live_paper) giriş sayısı.
+  Ve bu sayıdan kaçının fail-open damgası taşıdığı ayrıca sayılır (N_failopen_kapsam).
+
+  KARAR KURALINA BAĞLAYICI ETKİ:
+    * N_giris = 0  →  hüküm YOKTUR. Kart "ölçülemedi — PIT penceresinde canlı giriş yok"
+      damgasıyla `measuring` KALIR. **"Ölçülmüş-ret" YAZILAMAZ.**
+    * N_giris ≥ 1 ama N_failopen_kapsam = 0  →  "bu pencerede fail-open hiç tetiklenmedi"
+      BETİMLEYİCİ damgası; yine ölçülmüş-ret DEĞİL, çünkü kapının bedeli tetiklenmediği
+      bir pencerede ölçülemez.
+    * N_failopen_kapsam ≥ 1  →  `success_metric` AYNEN uygulanır (N ve toplam R üzerinden).
+
+  Payda her hâlde yüzeyde yazılır: N_giris · N_failopen_kapsam · pencere · snapshot sayısı.
+  Kapsanamayan dönem `beyanli_sinirlar` (1)'de zaten beyanlı; bu şerh onu KARAR KURALINA bağlar.
+
 beyanli_sinirlar: >
   (1) PIT snapshot derinliği takvim arşivimiz kadardır — kapsanamayan dönem beyanla dışarıda.
   (2) "Kazanç gününe denk gelmek" zarar demek değildir; kart bedeli SAYAR, nedensellik iddia etmez.
