@@ -2,7 +2,7 @@
    Aynı iki dosya aynı adla istenir; ad ayrışırsa tarayıcı aynı yüzü İKİ KEZ indirir.
    KENDİ BAYTLARIMIZ: /fonts/*.woff2, aynı origin. CDN yok — "ağ yokken de açılır". */
 @font-face{
-  font-family:'Inter';
+  font-family:"Inter";
   src:url('/fonts/inter-vf.woff2') format('woff2');
   font-weight:400 700; font-style:normal; font-display:block;
   /* `ss02` + `cv01` — Inter'in Il1 AYRIM özellikleri, ve bu satır SÜS DEĞİL.
@@ -19,7 +19,7 @@
   font-feature-settings:'ss02' 1,'cv01' 1;
 }
 @font-face{
-  font-family:'Recursive Mono';
+  font-family:"Recursive Mono";
   src:url('/fonts/recursive-mono-vf.woff2') format('woff2');
   font-weight:400 700; font-style:normal; font-display:block;
 }

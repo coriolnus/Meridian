@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="tr" data-theme-mode="light" data-theme-preset="default" data-font="inter"
+      data-content-layout="centered" data-navbar-style="sticky"
+      data-sidebar-variant="sidebar" data-sidebar-collapsible="icon">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Meridian — pano</title>
+<!-- ÖNYÜKLEYİCİ SENKRON VE HARİCİ. Senkron: tercihler ilk boyamadan ÖNCE
+     niteliklere yazılmalı, yoksa gece vardiyasında beyaz bir flaş olur. Harici:
+     dağıtım CSP'si `script-src 'self'` — satır içi blok üretimde BLOKLANIR ve
+     sayfa yanlış temada, sessizce açılır. (meridian/api.py::CSP_POLITIKASI) -->
+<script src="/pano-onyuk.js"></script>
+</head>
+<body class="min-h-screen antialiased">
+<div id="kok"></div>
+<script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

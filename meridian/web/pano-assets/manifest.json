@@ -1,0 +1,11 @@
+{
+  "pano.html": {
+    "file": "pano-assets/pano-BfM4e46f.js",
+    "name": "pano",
+    "src": "pano.html",
+    "isEntry": true,
+    "css": [
+      "pano-assets/pano-CZexU9T0.css"
+    ]
+  }
+}

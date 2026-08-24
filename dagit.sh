@@ -444,28 +444,28 @@ fi
 # =================================================================================================
 # [5c] ARTEFAKT TAZELİĞİ — derleme adımı [5b]'nin varsayımını KIRAR
 # =================================================================================================
-# [5b] "dağıtılan dosya = kaynak" varsayar ve Python için bu DOĞRU. Ama shadcn pilotuyla araya bir
-# DERLEME girdi: canlıya giden `meridian/web/pilot-*` artefaktı, `ui/` altındaki kaynaktan ÜRETİLİR.
+# [5b] "dağıtılan dosya = kaynak" varsayar ve Python için bu DOĞRU. Ama shadcn göçüyle araya bir
+# DERLEME girdi: canlıya giden `meridian/web/pano*` artefaktı, `ui/` altındaki kaynaktan ÜRETİLİR.
 # Kaynak değişip `npm run build` koşmazsa canlı sessizce bayat kalır ve [5b] bunu GÖREMEZ — o
 # Python mtime'ına bakar, artefaktı hiç tanımaz. Bu, `meridian-learn`de yaşadığımız SESSİZ
 # ETKİSİZLİĞİN aynısıdır: doğru bir cümle, anlamsız bir güvence.
 #
-# DEĞİŞMEZ:  mtime(meridian/web/pilot-workflow.html)  >=  en yeni mtime(ui/ altındaki kaynak)
+# DEĞİŞMEZ:  mtime(meridian/web/pano.html)  >=  en yeni mtime(ui/ altındaki kaynak)
 #
 # YERELDE ölçülür (dağıtımdan ÖNCE), çünkü onarım da yerel: `cd ui && npm run build`. Canlıda
 # ölçmenin anlamı yok — orada kaynak zaten yok (rsync `/ui`yi dışlıyor).
-# JETON KÖPRÜSÜ AYRICA ÖLÇÜLÜR: `ops/jeton_css_uret.py --kontrol` (çıkış 1 = tokens.json ile
-# ayrışmış). Jeton bayatsa artefakt "taze" görünüp YANLIŞ RENGİ taşır.
-_ART="$REPO/meridian/web/pilot-workflow.html"
+# ~~JETON KÖPRÜSÜ AYRICA ÖLÇÜLÜR: `ops/jeton_css_uret.py --kontrol`~~ — 2026-08-25'te DÜŞTÜ.
+# Köprü `ui/src/jetonlar.css`i üretiyordu ve o dosyayı yalnız pilotun `stil.css`i okuyordu.
+# studio-admin göçüyle jeton katmanı ŞABLONUNKİ oldu (`src/tema.css`); `jetonlar.css`in artık
+# HİÇ okuyucusu yok. Okuyucusu olmayan bir dosyanın tazeliğini ölçmek, doğru bir cümleyle
+# anlamsız bir güvence vermektir — tam da [5b]'nin düzelttiği hata sınıfı (YASA 6).
+# Betik ve üretim yolu DURUYOR (silinmedi): göç sırasında bir rol jetonuna geri dönmek
+# gerekirse köprü yerinde. Geri açılacaksa ÖNCE bir okuyucusu olmalı.
+_ART="$REPO/meridian/web/pano.html"
 if [ -d "$REPO/ui" ]; then
-  echo "=== [5c/5] artefakt tazeliği (pilot) ==="
-  if ! (cd "$REPO" && "$REPO/.venv/bin/python" ops/jeton_css_uret.py --kontrol >/dev/null 2>&1); then
-    echo "  IHLAL jeton köprüsü BAYAT — ui/src/jetonlar.css tokens.json ile ayrışmış"
-    echo "  onarım: python ops/jeton_css_uret.py && (cd ui && npm run build)"
-    exit 1
-  fi
+  echo "=== [5c/5] artefakt tazeliği (pano) ==="
   if [ ! -f "$_ART" ]; then
-    echo "  ATLANDI pilot artefaktı yok (henüz derlenmedi) — kapı ölçülemedi, dağıtım sürüyor"
+    echo "  ATLANDI pano artefaktı yok (henüz derlenmedi) — kapı ölçülemedi, dağıtım sürüyor"
   else
     _art_m=$(stat -f %m "$_ART" 2>/dev/null || stat -c %Y "$_ART")
     _kay_m=$(find "$REPO/ui" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' -o -name '*.html' -o -name '*.json' \) \
@@ -473,7 +473,7 @@ if [ -d "$REPO/ui" ]; then
     [ -z "$_kay_m" ] && _kay_m=$(find "$REPO/ui" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' -o -name '*.html' -o -name '*.json' \) \
              -not -path '*/node_modules/*' -printf '%T@\n' 2>/dev/null | cut -d. -f1 | sort -rn | head -1)
     if [ -n "$_kay_m" ] && [ "$_art_m" -lt "$_kay_m" ]; then
-      echo "  IHLAL artefakt BAYAT: pilot-workflow.html $_art_m < ui/ kaynak $_kay_m"
+      echo "  IHLAL artefakt BAYAT: pano.html $_art_m < ui/ kaynak $_kay_m"
       echo "  onarım: cd ui && npm run build   (sonra dagit'i tekrar koş — rsync idempotent)"
       exit 1
     fi

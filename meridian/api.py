@@ -681,6 +681,94 @@ def palettejs(request: Request):
     return _statik(request, "palette.js", "application/javascript")
 
 
+# ---- YENİ PANO (studio-admin göçü, 2026-08-25) ------------------------------
+# ÜÇ ROTA: sayfa, tercih önyükleyicisi, derleme varlıkları. Eski panonun rotaları
+# (`/`, `/app.js`, `/palette.js`, …) YERİNDE DURUYOR — göç bitene kadar iki pano yan
+# yana yaşıyor ve canlı olan hâlâ eskisi.
+#
+# NEDEN MONTAJ DEĞİL (yukarıdaki notun devamı): Vite'ın çıktı adları içerik-hash'li
+# (`pano-C2lINJAW.js`), yani kaynağa LİTERAL yazılamazlar — her derlemede değişirler.
+# `StaticFiles` montajı bu ikilemin kolay cevabı olurdu ama aynı bedeli getirirdi:
+# dizine düşen HER bayt yayına açılır. Bunun yerine SUNULAN AD KÜMESİ DERLEMENİN
+# KENDİ BEYANINDAN okunuyor — `pano-assets/manifest.json`, Vite'ın ürettiği manifest.
+# Manifestte olmayan hiçbir ad 200 alamaz; dizine elle bırakılmış bir dosya da,
+# eski bir derlemenin artığı da. Bu, "montaj yok" sözleşmesini bozmadan hash'li
+# adları sunmanın tek dürüst yolu.
+#
+# MANİFEST YOKSA HİÇBİR VARLIK SUNULMAZ ve 404 bunu ADIYLA söyler: "derleme koşmamış".
+# Boş küme dönmek sessizce yarım bir sayfa açardı — kabuk gelir, uygulama hiç gelmez.
+_PANO_MANIFEST = WEB / "pano-assets" / "manifest.json"
+
+
+def _pano_varliklari() -> frozenset[str]:
+    """Manifestin BEYAN ETTİĞİ varlık adları (`pano-assets/...` göreli yollar).
+
+    HER İSTEKTE OKUNUR, import anında ÖNBELLEĞE ALINMAZ: dağıtım (`dagit.sh`) dosyaları
+    rsync'ler ve servisi yeniden başlatmayabilir. Import anında donmuş bir küme, yeni
+    derlemenin varlıklarını 404'lerdi — sayfa açılır, uygulama hiç yüklenmez, ve hata
+    tarayıcı konsolunda kalırdı. Manifest 200 baytlık bir dosya; okuma maliyeti ihmal
+    edilebilir, bayatlama maliyeti bir gecelik ölü panodur."""
+    try:
+        ham = json.loads(_PANO_MANIFEST.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        # sessiz-yutma İŞARETLİ (YASA 4): manifest yoksa ya da bozuksa BOŞ küme döner ve
+        # çağıran taraf dürüst bir 404 yazar. Burada istisna fırlatmak, tek bir eksik
+        # derleme artefaktını 500'e çevirirdi — teşhisi zorlaştırır, sonucu değiştirmez.
+        return frozenset()
+    adlar: set[str] = set()
+    for girdi in ham.values():
+        if not isinstance(girdi, dict):
+            continue
+        dosya = girdi.get("file")
+        if isinstance(dosya, str):
+            adlar.add(dosya)
+        for css in girdi.get("css") or ():
+            if isinstance(css, str):
+                adlar.add(css)
+    return frozenset(adlar)
+
+
+@app.get("/pano", response_class=HTMLResponse)
+def pano(request: Request):
+    """`/pano` ucu: yeni pano kabuğu `pano.html`i ETag/304 pazarlığıyla döndürür.
+
+    YETKİ `/` İLE AYNI (yani burada `_auth` YOK) ve bu bilinçli: kabuk kendisi bir sır
+    taşımaz, açılır açılmaz `/api/session`ı sorar ve cevaba göre giriş ekranını mı
+    uygulamayı mı çizeceğine karar verir. Kabuğu yetkiye bağlamak, giriş ekranını da
+    yetkiye bağlamak olurdu — kapalı bir kapıya girmenin yolu kapının kendisi olamaz."""
+    return _statik(request, "pano.html")
+
+
+@app.get("/pano-onyuk.js")
+def pano_onyuk(request: Request):
+    """`/pano-onyuk.js` ucu: tercih önyükleyicisini ETag/304 ile döndürür (salt-okuma).
+
+    AD AD YAZILMAK ZORUNDA — `theme.js`/`palette.js` ile aynı sebep: montaj yok. Bu satır
+    olmadan `pano.html`deki `<script src>` üretimde 404 döner ve pano YANLIŞ TEMADA,
+    sessizce açılır (hata yok, yanlış sonuç var)."""
+    return _statik(request, "pano-onyuk.js", "application/javascript")
+
+
+@app.get("/pano-assets/{ad}")
+def pano_varlik(request: Request, ad: str):
+    """Derlenmiş pano varlıkları. YALNIZ manifestin beyan ettiği adlar; başka her şey 404."""
+    yol = f"pano-assets/{ad}"
+    if yol not in _pano_varliklari():
+        # `_statik`in 404'üyle AYNI dili konuşur ama AYNI CÜMLEYİ kurmaz: orada teşhis
+        # "dağıtım eksik", burada "bu ad derlemenin beyanında YOK" — istenen dosya diskte
+        # olsa bile sunulmaz. İkisini aynı metne bağlamak operatörü yanlış yere (rsync'e)
+        # bakmaya gönderirdi; doğru yer derlemenin kendisidir.
+        return JSONResponse({"error": "not_found", "path": yol,
+                             "detail": "pano derleme manifestinde YOK — `cd ui && npm run build` "
+                                       "koşmamış ya da manifest eski"},
+                            status_code=404, headers=_NOCACHE)
+    tur = ("application/javascript" if ad.endswith(".js")
+           else "text/css" if ad.endswith(".css")
+           else "application/json" if ad.endswith(".json")
+           else None)
+    return _statik(request, yol, tur)
+
+
 # ---- YAZI TİPİ SUNUMU -------------------------------------------------------
 # VAKA: bir önceki tur Recursive'i kendi-barındırmaya aldı — `meridian/web/fonts/` altına iki `.woff2`,
 # üç yüzeye yerel yollu `@font-face`, ve CSP'den `fonts.googleapis.com` + `fonts.gstatic.com`
