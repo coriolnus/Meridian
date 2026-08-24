@@ -1,15 +1,20 @@
 "use client";
 
 /* ============================================================================
-   ONAY ÇEKMECESİ — bir kalemin TAM kanıtı, karar düğmesi OLMADAN
+   ONAY ÇEKMECESİ — bir kalemin TAM kanıtı, ve ALTINDA çift adımlı karar
    ----------------------------------------------------------------------------
-   NEDEN DÜĞME YOK (brief maddesi, gerekçesi burada yazılı olsun): bu kuyruktaki
-   kalemlerin bir kısmı GERİ ALINAMAZ bir icra tetikliyor — `POST /api/plan/{id}/
-   onayla` planı silahlı kümeye almakla kalmıyor, ONAY ANINDA aynaya gönderim
-   deniyor (api.py; yanıtın `gonderim` alanı bunu beyan ediyor). Bir görev
-   listesinin satır sonundaki düğme, "listeyi temizleme" refleksiyle basılan bir
-   düğmedir; emir gönderen bir eylem oraya konmaz. Onay kendi turunda, çift onaylı
-   bir yüzeyle gelecek.
+   TARİHÇE-KORU (v-önceki tur): burada "karar düğmesi YOK" yazıyordu ve gerekçesi
+   şuydu: bu kuyruktaki kalemlerin bir kısmı GERİ ALINAMAZ bir icra tetikliyor —
+   `POST /api/plan/{id}/onayla` planı silahlı kümeye almakla kalmıyor, ONAY ANINDA
+   aynaya gönderim deniyor. O gerekçe DOĞRUYDU ve HÂLÂ GEÇERLİ; yanlış olan sonuçtu
+   — operatör kararı veremez hâle geldi ("review butonuna basınca onaylayabilmem
+   için bir ekran açılması gerekli", 2026-08-25).
+
+   ÇÖZÜM DÜĞMEYİ SATIRA KOYMAK DEĞİL: düğme hâlâ görev listesinin satır sonunda
+   DEĞİL. Satırdaki eylem yalnız "İncele" — kalemin TAM kanıtını açar. Karar,
+   kanıtın ALTINDA, çift adımlı ve iki tık arasında ne olacağı yazılı olarak durur
+   (`KararPaneli.tsx`). "Listeyi temizleme" refleksiyle basılabilecek tek tık
+   ortadan kalktı; kaybolan karar yolu geri geldi.
 
    ÇEKMECE UYDURMAZ, TAŞIR: her tür kendi ham gövdesini gösterir ve gövdenin
    yazmadığı alan "ölçülemedi + neden" olur. Silahlanma ölçümü ikinci bir uçtan
@@ -22,8 +27,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
+import { KararPaneli } from "./KararPaneli";
 import { Deger, HukumRozet, Olculemedi, Satir, tarihMetni, zamanMetni } from "./parcalar";
+import type { KapiKontrolu, PlanAyrintisi } from "./onayEylem";
 import { TUR_ETIKET, type KuyrukOgesi } from "./onaylar";
+import type { PlanOzeti } from "./tipler";
 
 /** Silahlanma ölçümünün `status` alanı bir HÜKÜMDÜR; tonu burada tek yerde eşlenir. */
 function silahlanmaTonu(durum: string | undefined): "iyi" | "kotu" | "notr" {
@@ -41,14 +49,269 @@ function Blok({ baslik, children }: { readonly baslik: string; readonly children
   );
 }
 
+/** `gate_checks[].value` sayı da olabilir metin de (`"industrials"`) — tipe göre basılır, zorlanmaz. */
+function kontrolDegeri(v: unknown): string {
+  if (v === null || v === undefined) return "—";
+  if (typeof v === "number") return Number.isFinite(v) ? v.toLocaleString("tr-TR") : String(v);
+  if (typeof v === "boolean") return v ? "evet" : "hayır";
+  if (typeof v === "string") return v;
+  return JSON.stringify(v);
+}
+
+/**
+ * KAPI DÖKÜMÜ — "düştüğü/geçtiği kapılar" sorusunun tam cevabı.
+ * `gate_reasons` yalnız DÜŞENLERİN metnini taşıyor; `gate_checks` ise HER kontrolü
+ * (geçen/düşen · sert/yumuşak · ölçülen değer · eşik) tek tek taşıyor. Operatör
+ * neyi onayladığını görecekse, geçen kapıları da görmeli: "yalnız düşenleri göster"
+ * bir onay ekranında, kararın dayandığı zemini gizlemek olurdu.
+ */
+function KapiDokumu({ kontroller }: { readonly kontroller: readonly KapiKontrolu[] }) {
+  const dusen = kontroller.filter((k) => k.passed === false);
+  const gecen = kontroller.filter((k) => k.passed === true);
+  const belirsiz = kontroller.filter((k) => k.passed !== true && k.passed !== false);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-1.5">
+        <HukumRozet
+          ton={dusen.length === 0 ? "iyi" : "kotu"}
+          metin={`${dusen.length} düştü`}
+          baslik="`gate_checks[].passed === false` sayısı"
+        />
+        <HukumRozet ton="notr" metin={`${gecen.length} geçti`} baslik="`gate_checks[].passed === true` sayısı" />
+        {belirsiz.length > 0 ? (
+          <HukumRozet
+            ton="olculemedi"
+            metin={`${belirsiz.length} ölçülemedi`}
+            baslik="`passed` alanı true/false değil — kapı hükmü bu satırdan okunamıyor"
+          />
+        ) : null}
+      </div>
+      <ul className="flex flex-col gap-1">
+        {[...dusen, ...belirsiz, ...gecen].map((k, i) => (
+          <li
+            key={`${k.check ?? "?"}-${i}`}
+            className={
+              k.passed === false
+                ? "rounded-md border border-destructive/30 bg-destructive/5 p-2"
+                : "rounded-md border p-2"
+            }
+          >
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <code className="font-mono text-xs">{k.check ?? "(adsız kontrol)"}</code>
+              <Badge variant="outline" className="text-[10px]">
+                {k.severity ?? "şiddet yazılmamış"}
+              </Badge>
+              <span className="text-muted-foreground text-[11px]">
+                {k.passed === true ? "geçti" : k.passed === false ? "DÜŞTÜ" : "hüküm okunamadı"}
+              </span>
+              <span className="ml-auto tabular-nums text-[11px]">
+                {kontrolDegeri(k.value)} {k.threshold ? `↔ ${k.threshold}` : "(eşik yazılmamış)"}
+              </span>
+            </div>
+            {k.note ? <p className="mt-1 text-sm leading-5">{k.note}</p> : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * PLANIN TAM KÜNYESİ — "neyi onaylıyorum" sorusunun tek satırlık özetten FAZLASI.
+ *
+ * ALANLAR ÖLÇÜLDÜ (`state/trade_plans.jsonl` anahtar birleşimi, `onayEylem.ts`
+ * başlığında liste). `PlanOzeti` bu alanların yalnız bir kesitini tanıyor ve o tip
+ * Çizelge ile PAYLAŞILAN `tipler.ts`te yaşıyor (imzası bozulmaz) — bu yüzden
+ * genişletilmiş kesit `onayEylem.ts::PlanAyrintisi`de duruyor ve daraltma burada
+ * yapılıyor. Daraltma bir İDDİA DEĞİL: eklenen alanların HEPSİ opsiyonel, yani
+ * gelmeyen alan `undefined` kalır ve ekranda "ölçülemedi + neden" olur.
+ *
+ * ADET VE `risk_dollars` BU SATIRDA YOK: `broker.size_position` (broker.py:544)
+ * ikisini de GÖNDERİM ANINDA öz sermayeden hesaplıyor. Yokluk yazılır, türetilmez.
+ */
+function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
+  const p = plan as PlanAyrintisi;
+  // HİSSE BAŞINA RİSK TÜRETİLİR VE TÜRETİLDİĞİ SÖYLENİR: tetik ve stop ÖLÇÜLMÜŞ iki
+  // alan; farkları planın kendi tanımladığı 1R'lik mesafedir. Uydurma değil aritmetik —
+  // ama etiketi "türetildi" der, çünkü uç bu sayıyı YAZMIYOR.
+  const birimRisk =
+    typeof p.entry_trigger === "number" && typeof p.stop === "number" && Number.isFinite(p.entry_trigger - p.stop)
+      ? p.entry_trigger - p.stop
+      : null;
+  return (
+    <Blok baslik="Plan (/api/today.todays_plans)">
+      <div>
+        <Satir etiket="Sembol">{p.ticker ?? <Olculemedi neden="`ticker` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Yön">{p.side ?? <Olculemedi neden="`side` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Kurulum">{p.setup ?? <Olculemedi neden="`setup` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Sektör">{p.sector ?? <Olculemedi neden="`sector` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Plan kimliği">
+          {p.id ? (
+            <code className="break-all font-mono text-xs">{p.id}</code>
+          ) : (
+            <Olculemedi neden="`id` yazılmamış — onay ucu bu plana çağrılamaz" kisa />
+          )}
+        </Satir>
+        <Satir etiket="Seans tarihi">{p.date ?? <Olculemedi neden="`date` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Skor">
+          <Deger deger={p.score} basamak={3} neden="`score` yazılmamış" />
+        </Satir>
+        <Satir etiket="Rejim (plan anı)">
+          {p.regime_at_plan ?? <Olculemedi neden="`regime_at_plan` yazılmamış" kisa />}
+        </Satir>
+      </div>
+
+      <div className="mt-2">
+        <h5 className="text-muted-foreground text-[11px] uppercase">Seviyeler ve risk</h5>
+        <Satir etiket="Giriş tetiği">
+          <Deger deger={p.entry_trigger} basamak={2} neden="`entry_trigger` yazılmamış" />
+        </Satir>
+        <Satir etiket="Stop">
+          <Deger deger={p.stop} basamak={2} neden="`stop` yazılmamış" />
+        </Satir>
+        <Satir etiket="Kâr hedefi">
+          <Deger deger={p.profit_target} basamak={2} neden="`profit_target` yazılmamış" />
+        </Satir>
+        <Satir etiket="Beklenen R katsayısı">
+          <Deger deger={p.r_multiple_expected} basamak={2} neden="`r_multiple_expected` yazılmamış" />
+        </Satir>
+        <Satir etiket="Risk büyüklüğü (R)">
+          <Deger deger={p.size_r} basamak={2} neden="`size_r` yazılmamış" />
+        </Satir>
+        <Satir etiket="Hisse başına risk (türetildi)">
+          {birimRisk === null ? (
+            <Olculemedi neden="tetik ya da stop yok — `entry_trigger − stop` hesaplanamaz" kisa />
+          ) : (
+            <span className="tabular-nums" title="türetildi: entry_trigger − stop (uç bu alanı yazmıyor)">
+              {birimRisk.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          )}
+        </Satir>
+        <Satir etiket="Risk (dolar)">
+          <Olculemedi neden="`risk_dollars` plan satırında YOK — broker.size_position onu gönderim anında öz sermayeden hesaplar" />
+        </Satir>
+        <Satir etiket="Adet (lot)">
+          <Olculemedi neden="plan satırı adet taşımıyor — lot gönderim anında hesaplanır (broker.size_position)" />
+        </Satir>
+        <Satir etiket="Son kapanış">
+          <Deger deger={p.last_close} basamak={2} neden="`last_close` yok — bar CSV'si okunamadı" />
+        </Satir>
+        <Satir etiket="Tetikten sapma">
+          <Deger deger={p.drift_pct} birim="%" basamak={2} neden="`drift_pct` yok — tetik 0 ya da yazılmamış" />
+        </Satir>
+      </div>
+
+      <div className="mt-2">
+        <h5 className="text-muted-foreground text-[11px] uppercase">Hüküm ve ikinci beyin</h5>
+        <Satir etiket="Kapı hükmü">
+          {p.gate_verdict ?? <Olculemedi neden="`gate_verdict` yazılmamış" kisa />}
+        </Satir>
+        <Satir etiket="Süresi doldu mu">
+          {p.expired === undefined ? (
+            <Olculemedi neden="`expired` alanı yok — bayatlık ÖLÇÜLEMEDİ" kisa />
+          ) : (
+            <HukumRozet
+              ton={p.expired ? "kotu" : "notr"}
+              metin={p.expired ? "SÜRESİ DOLDU" : "seansı geçmemiş"}
+              baslik="`expired` — süresi dolmuş plan onaylanamaz (uç 409 verir)"
+            />
+          )}
+        </Satir>
+        <Satir etiket="LLM vetosu">
+          {p.llm_veto === undefined ? (
+            <Olculemedi neden="`llm_veto` alanı yok" kisa />
+          ) : (
+            <HukumRozet
+              ton={p.llm_veto ? "kotu" : "notr"}
+              metin={p.llm_veto ? "VETO" : "veto yok"}
+              baslik="`llm_veto` — ikinci beynin reddi"
+            />
+          )}
+        </Satir>
+        <Satir etiket="Uyuyan kurulum">
+          {p.dormant_setup === undefined ? (
+            <Olculemedi neden="`dormant_setup` alanı yok" kisa />
+          ) : (
+            <span className="text-xs">{p.dormant_setup ? "evet — icraya bağlı olmayan kurulum" : "hayır"}</span>
+          )}
+        </Satir>
+        <Satir etiket="Strateji sürümü">
+          <Deger deger={p.strategy_version} neden="`strategy_version` yazılmamış" />
+        </Satir>
+        <Satir etiket="Gölge p(kazanç)">
+          <Deger deger={p.p_win_shadow} basamak={3} neden="`p_win_shadow` yazılmamış" />
+        </Satir>
+        <Satir etiket="Broker durumu">
+          {p.broker_status ?? <Olculemedi neden="`broker_status` yazılmamış" kisa />}
+        </Satir>
+      </div>
+
+      {p.skill_chain && p.skill_chain.length > 0 ? (
+        <div className="mt-2">
+          <h5 className="text-muted-foreground text-[11px] uppercase">Skill zinciri (planı kim kurdu)</h5>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {p.skill_chain.map((s) => (
+              <Badge key={s} variant="secondary" className="font-mono text-[10px]">
+                {s}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-2">
+        <h5 className="text-muted-foreground text-[11px] uppercase">Kapılar — geçen ve düşen</h5>
+        {p.gate_checks && p.gate_checks.length > 0 ? (
+          <div className="mt-1">
+            <KapiDokumu kontroller={p.gate_checks} />
+          </div>
+        ) : (
+          <Olculemedi neden="plan satırı `gate_checks` taşımıyor — tek tek kapı hükümleri ÖLÇÜLEMEDİ" />
+        )}
+      </div>
+
+      {p.gate_reasons && p.gate_reasons.length > 0 ? (
+        <div className="mt-2">
+          <h5 className="text-muted-foreground text-[11px] uppercase">Kapı gerekçeleri (hükmün metni)</h5>
+          <ul className="mt-1 list-disc pl-5 text-sm leading-6">
+            {p.gate_reasons.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {p.llm_opinion ? (
+        <p className="mt-2 whitespace-pre-wrap rounded-md border bg-muted/30 p-3 text-sm leading-6">
+          {p.llm_opinion}
+        </p>
+      ) : null}
+    </Blok>
+  );
+}
+
 export function OnayCekmecesi({
   oge,
   acik,
   kapat,
+  seviye,
+  seviyeNeden,
+  halt,
+  broker,
+  mod,
+  tazele,
 }: {
   readonly oge: KuyrukOgesi | null;
   readonly acik: boolean;
   readonly kapat: () => void;
+  /** `/api/approvals.level` — `undefined` = ölçülemedi (L0 DEĞİL). */
+  readonly seviye: number | undefined;
+  readonly seviyeNeden: string;
+  readonly halt: boolean | undefined;
+  readonly broker: string | undefined;
+  readonly mod: string | undefined;
+  /** Karar gönderildikten SONRA kuyruğu yeniden okur (iyimser güncelleme yok). */
+  readonly tazele: () => void;
 }) {
   return (
     <Sheet open={acik} onOpenChange={(a) => (a ? undefined : kapat())}>
@@ -306,71 +569,7 @@ export function OnayCekmecesi({
                 </Blok>
               ) : null}
 
-              {oge.ayrinti.cesit === "plan" ? (
-                <Blok baslik="Plan (/api/today.todays_plans)">
-                  <div>
-                    <Satir etiket="Sembol">
-                      {oge.ayrinti.plan.ticker ?? <Olculemedi neden="`ticker` yazılmamış" kisa />}
-                    </Satir>
-                    <Satir etiket="Kurulum">
-                      {oge.ayrinti.plan.setup ?? <Olculemedi neden="`setup` yazılmamış" kisa />}
-                    </Satir>
-                    <Satir etiket="Sektör">
-                      {oge.ayrinti.plan.sector ?? <Olculemedi neden="`sector` yazılmamış" kisa />}
-                    </Satir>
-                    <Satir etiket="Skor">
-                      <Deger deger={oge.ayrinti.plan.score} basamak={3} neden="`score` yazılmamış" />
-                    </Satir>
-                    <Satir etiket="Giriş tetiği">
-                      <Deger deger={oge.ayrinti.plan.entry_trigger} basamak={2} neden="`entry_trigger` yazılmamış" />
-                    </Satir>
-                    <Satir etiket="Son kapanış">
-                      <Deger
-                        deger={oge.ayrinti.plan.last_close}
-                        basamak={2}
-                        neden="`last_close` yok — bar CSV'si okunamadı"
-                      />
-                    </Satir>
-                    <Satir etiket="Tetikten sapma">
-                      <Deger
-                        deger={oge.ayrinti.plan.drift_pct}
-                        birim="%"
-                        basamak={2}
-                        neden="`drift_pct` yok — tetik 0 ya da yazılmamış"
-                      />
-                    </Satir>
-                    <Satir etiket="Risk büyüklüğü (R)">
-                      <Deger deger={oge.ayrinti.plan.size_r} basamak={2} neden="`size_r` yazılmamış" />
-                    </Satir>
-                    <Satir etiket="LLM vetosu">
-                      {oge.ayrinti.plan.llm_veto === undefined ? (
-                        <Olculemedi neden="`llm_veto` alanı yok" kisa />
-                      ) : (
-                        <HukumRozet
-                          ton={oge.ayrinti.plan.llm_veto ? "kotu" : "notr"}
-                          metin={oge.ayrinti.plan.llm_veto ? "VETO" : "veto yok"}
-                          baslik="`llm_veto` — ikinci beynin reddi"
-                        />
-                      )}
-                    </Satir>
-                  </div>
-                  {oge.ayrinti.plan.gate_reasons && oge.ayrinti.plan.gate_reasons.length > 0 ? (
-                    <div className="mt-2">
-                      <h5 className="text-muted-foreground text-[11px] uppercase">Kapı gerekçeleri</h5>
-                      <ul className="mt-1 list-disc pl-5 text-sm leading-6">
-                        {oge.ayrinti.plan.gate_reasons.map((r) => (
-                          <li key={r}>{r}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                  {oge.ayrinti.plan.llm_opinion ? (
-                    <p className="mt-2 whitespace-pre-wrap rounded-md border bg-muted/30 p-3 text-sm leading-6">
-                      {oge.ayrinti.plan.llm_opinion}
-                    </p>
-                  ) : null}
-                </Blok>
-              ) : null}
+              {oge.ayrinti.cesit === "plan" ? <PlanBloku plan={oge.ayrinti.plan} /> : null}
 
               {oge.ayrinti.cesit === "bilinmeyen" ? (
                 <Blok baslik="Tanınmayan tür — ham gövde">
@@ -379,6 +578,25 @@ export function OnayCekmecesi({
                   </pre>
                 </Blok>
               ) : null}
+
+              <Separator />
+
+              {/* ---- KARAR: kanıtın ALTINDA, çift adımlı --------------------
+                  `key` KALEM KİMLİĞİ: çekmece açıkken başka bir satıra geçilirse
+                  panelin iç durumu (birinci tık alınmış "teyit" aşaması, yazılmış
+                  gerekçe, önceki yanıt) SIFIRLANMALI. Aksi hâlde A kalemi için
+                  alınmış bir niyet, B kalemi açıldığında ekranda duruyor olurdu —
+                  ve ikinci tık B'yi gönderirdi. */}
+              <KararPaneli
+                key={oge.kimlik}
+                oge={oge}
+                seviye={seviye}
+                seviyeNeden={seviyeNeden}
+                halt={halt}
+                broker={broker}
+                mod={mod}
+                tazele={tazele}
+              />
             </div>
           </>
         )}

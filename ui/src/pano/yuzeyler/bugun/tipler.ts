@@ -64,8 +64,24 @@ export interface Plan {
   readonly onay_bekliyor?: boolean;
 }
 
+/** `_son_dongu()` (api.py:1575) — günlük döngünün KENDİ kaydı (`events.jsonl`
+ *  içindeki son `daily_cycle` satırı). BU YÜZEY YALNIZ ÜÇ ALANINI OKUYOR ve bu
+ *  bilinçli: kardeş kartın (Karar zinciri hunisi) hangi SEANSI anlattığını
+ *  söyleyebilmek için damga + damganın yokluk nedeni yeterli. Sayıları
+ *  (`candidates`/`plans`/`armed`) buraya yazmak, okunmayan alanı okunuyormuş gibi
+ *  gösterirdi — dosyanın başındaki kural.
+ *
+ *  `var: false` iken `date` YOKTUR ve `neden` doludur; ikisini birden okuyup
+ *  "damga ölçülemedi + NEDEN" yazmak, tarih uydurmanın alternatifidir. */
+export interface SonDonguDamgasi {
+  readonly var?: boolean;
+  readonly neden?: string | null;
+  readonly date?: string | null;
+}
+
 /** `GET /api/today` — paylaşılan nabzın gövdesi, bu yüzeyin okuduğu alanlarla. */
 export interface BugunTam extends BugunGovdesi {
+  readonly son_dongu?: SonDonguDamgasi;
   readonly heartbeat?: NabizTam;
   readonly heartbeat_age_seconds?: number | null;
   readonly sermaye_koken?: SermayeKokeniTam;

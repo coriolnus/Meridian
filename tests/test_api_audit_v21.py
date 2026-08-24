@@ -104,9 +104,26 @@ def test_p1c_public_get_allowlist():
     # SIZDIRDIĞI VERİ: yok. State okumaz, sorgu almaz, sır TAŞIMAZ (token'ı çalışma anında
     # tarayıcıdaki URL'den okur); gövdesi `api._HALT_JS` sabitidir.
     # Çivileri: tests/test_guvenlik_basliklari_v203.py (Ç5 — gövdeli script yok + betik sunuluyor).
+    # YENİ PANO (2026-08-25, D4 — studio-admin göçü): `/pano`, `/pano-onyuk.js`,
+    # `/pano-assets/{ad}`. ÜÇÜ DE `/` + `/app.js` + `/theme.js` ÜÇLÜSÜYLE TAM AYNI SINIF ve
+    # gerekçe birebir aynı — maruziyet YENİ DEĞİL, yalnız aynı işi yapan dosyaların yeni adı:
+    #   · `/pano`            ↔ `/`          — pano KABUĞU. Kendisi bir sır taşımaz; açılır
+    #     açılmaz `/api/session`ı sorar ve cevaba göre giriş ekranını mı uygulamayı mı
+    #     çizeceğine karar verir. Yetki isteseydi GİRİŞ EKRANI da yetkiye bağlanırdı —
+    #     kapalı bir kapıya girmenin yolu kapının kendisi olamaz (aynı gerekçe `/` için de
+    #     bu listede yazılı).
+    #   · `/pano-onyuk.js`   ↔ `/theme.js`  — tercih/tema ÖNYÜKLEYİCİSİ. Diskten sabit dosya,
+    #     sıfır state okuması, sıfır veri ucu. Satır içi olamaz: dağıtım CSP'si
+    #     `script-src 'self'` satır içi bloğu bloklar ve sayfa YANLIŞ TEMADA, sessizce açılır.
+    #   · `/pano-assets/{ad}` ↔ `/app.js`   — panonun kendi arayüz kodu (Vite çıktısı).
+    #     `/app.js` nasıl yetkisizse bu da öyle: giriş kapısını ÇİZEN kod bu paketin içinde,
+    #     401 alsaydı sayfa yarım yüklenirdi. Sunulan ad kümesi UYDURULMAZ — Vite manifestinin
+    #     BEYANI okunur (`api.py::_pano_varliklari`), yani dizine düşen bir taslak yayına açılmaz.
+    # Hiçbiri veri UCU değildir, hiçbiri state okumaz; üçü de FileResponse ile diskten döner.
     allow = {"/", "/app.js", "/theme.js", "/landing.js", "/workflow.js", "/palette.js",
              "/landing", "/workflow", "/healthz", "/metrics", "/halt", "/halt.js",
-             "/api/public/summary", "/fonts/{ad}"} | set(api.KIMLIK_UCLARI)
+             "/api/public/summary", "/fonts/{ad}",
+             "/pano", "/pano-onyuk.js", "/pano-assets/{ad}"} | set(api.KIMLIK_UCLARI)
     public = {r["path"] for r in _routes() if r["verb"] == "GET" and not r["authed"]}
     assert public <= allow, f"beklenmedik yetkisiz GET: {public - allow}"
 

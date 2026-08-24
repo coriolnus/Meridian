@@ -37,6 +37,7 @@ import { YUZEYLER } from "../alanlar";
 import { useRota } from "../rota";
 import { NABIZ_MS, useApi } from "../veri";
 import { Broker } from "./kimlik/Broker";
+import { SirGirisi } from "./kimlik/SirGirisi";
 import { Sirlar } from "./kimlik/Sirlar";
 import { Tercihler } from "./kimlik/Tercihler";
 import { zamanMetni } from "./kimlik/parcalar";
@@ -123,6 +124,12 @@ export function Operator() {
         </div>
         <Broker alpaca={alpaca} teshis={teshis} />
         <Sirlar sirlar={sirlar} teshis={teshis} />
+        {/* GİRİŞ FORMU OKUMA TABLOSUNUN ALTINDA, aynı bölümde: "hangi anahtar
+            kurulu" sorusunun cevabı okunmadan "hangisini gireyim" sorulmaz. Aynı
+            `sirlar` durumunu paylaşıyorlar — form yazdıktan sonra `sirlar.tazele()`
+            çağırıyor, yani üstteki tablo da aynı okumadan tazeleniyor (iki ayrı
+            useApi olsaydı iki farklı gerçek yan yana durabilirdi). */}
+        <SirGirisi sirlar={sirlar} teshis={teshis} />
       </section>
 
       {/* --- TERCİHLER ---------------------------------------------------- */}

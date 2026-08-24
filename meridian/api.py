@@ -714,7 +714,7 @@ def _pano_varliklari() -> frozenset[str]:
     edilebilir, bayatlama maliyeti bir gecelik ölü panodur."""
     try:
         ham = json.loads(_PANO_MANIFEST.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except (OSError, ValueError):  # sessiz-yutma: manifest yoksa/bozuksa BOŞ küme döner ve çağıran dürüst bir 404 yazar; tek eksik derleme artefaktını 500'e çevirmek teşhisi zorlaştırır, sonucu değiştirmez
         # sessiz-yutma İŞARETLİ (YASA 4): manifest yoksa ya da bozuksa BOŞ küme döner ve
         # çağıran taraf dürüst bir 404 yazar. Burada istisna fırlatmak, tek bir eksik
         # derleme artefaktını 500'e çevirirdi — teşhisi zorlaştırır, sonucu değiştirmez.
@@ -3088,9 +3088,11 @@ def _saglayici_satiri(ad: str, h: dict, ek: dict | None = None) -> dict:
 
 
 def _saglayicilar(sched: dict) -> dict:
-    """Beş sağlayıcının sağlık kartı. AĞ ÇAĞRISI YOK — hepsi süreç-içi sayaç okuması."""
+    """Yedi sağlayıcının sağlık kartı (sekiz satır — Alpaca'nın iki taşıması ayrı).
+    AĞ ÇAĞRISI YOK — hepsi süreç-içi sayaç okuması."""
     from .adapters import finviz as _fv, massive as _ms, insider as _in
-    from .adapters import shortinterest as _si, alpaca as _alp
+    from .adapters import shortinterest as _si, alpaca as _alp, fmp as _fmp
+    from .adapters import constituents as _con
     y4 = sched.get("last_y4") or {}
     satirlar = []
     try:
@@ -3135,6 +3137,40 @@ def _saglayicilar(sched: dict) -> dict:
                                           ek={"anahtar": _alp.paper_available()}))
     except Exception as e:
         satirlar.append({"ad": "alpaca", "ok": None, "olculemedi": f"{type(e).__name__}"})
+    try:
+        # FMP LİSTEYE 2026-08-25'TE GİRDİ ve YOKLUĞU BİR GÖZETİM BOŞLUĞUYDU, bir tercih değil.
+        # Operatör bildirdi ("sağlayıcılarda FMP'yi göremiyorum") ve ölçüm onu doğruladı: FMP'nin
+        # bu depoda ADAPTÖRÜ (`adapters/fmp.py`), İKİ ANAHTAR YUVASI (`FMP_API_KEY`,
+        # rotasyonlu `FMP_API_KEY_2`), GÜNLÜK KOTA MUHASEBESİ (`fmp_usage.json`) ve araç
+        # kapısı var (`skills.py`, `fmp=='req'` olan araçlar anahtar gelene kadar KAPALI) —
+        # ama sağlık kartında SATIRI YOKTU. Yani en çok bakılan yerde görünmüyordu.
+        #
+        # BUNUN BEDELİ ÖLÇÜLDÜ, varsayılmadı: aynı teşhis gövdesinde `integrity.production.starved`
+        # `fmp_source` diyor ve gerekçesi "anahtar var ama üretmiyor — 402 Payment Required";
+        # `pipeline.fmp_usage` 2026-08-23 için 43 çağrı / 43 hata (`by_status: {"402": 43}`)
+        # sayıyor. Yani sağlayıcı ÇALIŞMIYORDU ve sağlayıcı kartı bunu HİÇ göstermiyordu —
+        # operatör "FMP gerek" yazan araçlarla, sebebini göstermeyen bir kart arasında kaldı.
+        #
+        # `ek` ÜÇ ŞEYİ AYRI TAŞIR ve üçü ayrı sorulardır: anahtar VAR MI (`anahtar`), kota
+        # KAPATMIŞ MI (`kota_blokli` — 429 sınıfı), ve günün muhasebesi (`kullanim`; 402 gibi
+        # ödeme/plan hataları burada `by_status`ta görünür). Üçünü tek bayrağa indirmek
+        # "anahtar yok" ile "anahtar var ama plan kapsamıyor"u aynı hâle sokardı.
+        satirlar.append(_saglayici_satiri("fmp", _fmp.health(),
+                                          ek={"anahtar": _fmp.available(),
+                                              "kota_blokli": _fmp.quota_blocked(),
+                                              "kullanim": _fmp.usage()}))
+    except Exception as e:
+        satirlar.append({"ad": "fmp", "ok": None, "olculemedi": f"{type(e).__name__}"})
+    try:
+        # ÜYELİK KAYNAĞI DA BİR SAĞLAYICIDIR (2026-08-25, aynı gözetim boşluğu). FMP satırını
+        # eklerken `health()` sunan adaptörler sayıldı ve kartta olmayan İKİNCİSİ buydu:
+        # `adapters/constituents` S&P 500 üyeliğini kurar (FMP birincil, Wikipedia ikincil) ve
+        # ürünün gerçek tüketicisi `universe_drift()`tir — yani EVRENİN kendisi bu kaynağa bağlı.
+        # Kendi şerhi Wikipedia yolunun bu kurulumda HTTP 403 aldığını yazıyor; kartta satırı
+        # olmadığı için o hâl hiçbir yerde görünmüyordu.
+        satirlar.append(_saglayici_satiri("uyelik", _con.health()))
+    except Exception as e:
+        satirlar.append({"ad": "uyelik", "ok": None, "olculemedi": f"{type(e).__name__}"})
     return {"kapsam": "surec-ici",
             "beyan": ("sağlık sayaçları DİSKE YAZILMAZ — bu kart yalnız BU sürecin gördüğünü "
                       "anlatır ve yeniden başlatmada sıfırlanır. Boş bir kart 'sağlayıcı bozuk' "
@@ -6219,7 +6255,7 @@ def _infra_makine() -> dict:
         else:
             try:
                 alanlar = [float(x) for x in satir.split()[1:]]
-            except ValueError:
+            except ValueError:  # sessiz-yutma: /proc/stat satırı beklenmedik biçimde — alan listesi boş bırakılır ve CPU yüzdesi çağıran tarafında None + neden ile döner; kısmi sayı uydurmaktan dürüst
                 alanlar = []
             if len(alanlar) < 5:
                 cpu_neden_on = "`/proc/stat` `cpu ` satırı beklenen alan sayısını taşımıyor"
@@ -6303,7 +6339,7 @@ def _infra_makine() -> dict:
     if up:
         try:
             uptime_s = round(float(up.split()[0]), 1)
-        except (ValueError, IndexError):
+        except (ValueError, IndexError):  # sessiz-yutma: gerekçe hemen altta `uptime_neden`e yazılıyor ve gövdede beyan ediliyor — yutulan şey istisna, ölçüm değil
             uptime_neden = "`/proc/uptime` beklenmedik biçimde — ilk alan sayı değil"
     else:
         uptime_neden = ("`/proc/uptime` yok (macOS) — makine çalışma süresi ancak `sysctl "
@@ -6341,7 +6377,7 @@ def _infra_surec() -> dict:
     if statm:
         try:
             rss = int(statm.split()[1]) * os.sysconf("SC_PAGE_SIZE")
-        except (ValueError, IndexError, OSError):
+        except (ValueError, IndexError, OSError):  # sessiz-yutma: gerekçe hemen altta `rss_neden`e yazılıyor ve gövdede beyan ediliyor — yutulan şey istisna, ölçüm değil
             rss_neden = "`/proc/self/statm` okundu ama yerleşik sayfa alanı çıkarılamadı"
     else:
         # `resource.getrusage(...).ru_maxrss` BİLEREK KULLANILMADI: o ZİRVE RSS'tir, ANLIK değil —
@@ -6493,7 +6529,7 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
             v = ham.get(alan)
             try:
                 return int(v)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError):  # sessiz-yutma: sayıya çevrilemeyen systemd alanı None döner ve çağıran onu kendi `_neden` metniyle karşılar; 0 yazmak 'ölçüldü, sıfır çıktı' diye okunurdu
                 return None
 
         mem = _sayi("MemoryCurrent")

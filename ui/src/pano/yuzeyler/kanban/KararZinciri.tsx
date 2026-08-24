@@ -30,7 +30,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBugun } from "../../durum";
 import { useApi } from "../../veri";
 import { Hal, OlculemedBlok, Olculemedi } from "./Hal";
-import { HukumGrafigi, HuniGrafigi, type HuniAsamasi, type SeansHukmu } from "./Grafikler";
+import { HukumGrafigi, type SeansHukmu } from "./Grafikler";
+import { Huni, SeansUzlasmasi, type HuniBasamagi, type HuniDususu, type HuniKarsiKart } from "./Huni";
 import { KapiTablosu, kapilariOzetle } from "./KapiTablosu";
 import { PlanKarti } from "./PlanKarti";
 import { kisaTarih, mantik, metin, nesne, sayi } from "./oku";
@@ -71,7 +72,35 @@ function sonDonguOku(ham: unknown): SonDongu | null {
   };
 }
 
-function GeceKarti({ sd }: { sd: SonDongu | null }) {
+/** Bu kartın kaynak beyanı ile kardeş kartınki — İKİSİ DE ekranda yazar, çünkü
+ *  iki kart aynı soruyu AYRI defterlerden cevaplıyor ve farklı seansı anlatabilir. */
+const KAYNAK = "döngünün kendi kaydı (`events.jsonl` · `daily_cycle`)";
+const KARSI_KAYNAK = "günün plan defteri (`/api/today.verdict_counts`)";
+
+/** İki basamak arasında eriyen küme. Sayı ya da payda ölçülemediyse ORAN NULL
+ *  döner ve nedeni taşınır — 0 yazmak "hiçbiri elenmedi" yalanı olurdu. */
+function dusus(ok: string, ad: string, once: number | null, sonra: number | null, taban: number | null): HuniDususu {
+  if (once === null || sonra === null) {
+    return {
+      ok,
+      metin: `${ad} sayısı ölçülemedi — eriyen küme hesaplanamadı`,
+      oran: null,
+      neden: "iki basamaktan biri döngü kaydında YAZILI DEĞİL (sıfır değil)",
+    };
+  }
+  const eriyen = once - sonra;
+  return {
+    ok,
+    metin:
+      eriyen > 0
+        ? `${eriyen} ${ad} · hangi kapıda düştüğü bu kayıtta YAZMIYOR — kırılım aşağıdaki "Kapı aşamaları" tablosunda`
+        : `eriyen yok · ${ad} 0`,
+    oran: taban !== null && taban > 0 ? eriyen / taban : null,
+    neden: "payda ölçülemedi — ilk basamak (taranan aday) yazılı değil",
+  };
+}
+
+function GeceKarti({ sd, planTarihi }: { sd: SonDongu | null; planTarihi: string | null }) {
   if (sd === null) {
     return (
       <OlculemedBlok
@@ -88,21 +117,61 @@ function GeceKarti({ sd }: { sd: SonDongu | null }) {
       />
     );
   }
+  return <GeceGovdesi sd={sd} planTarihi={planTarihi} />;
+}
 
-  // HUNİ YALNIZ ÖLÇÜLEN AŞAMALARDAN kurulur; eksik aşama çubuk olarak DEĞİL,
-  // altındaki "ölçülemedi" satırı olarak görünür. Sıfır çubuk çizmek, kaydı
-  // olmayan bir aşamayı "hiçbiri geçmedi" diye okutur.
-  const adaylar: readonly [string, number | null][] = [
-    ["Taranan aday", sd.aday],
-    ["Kurulan plan", sd.plan],
-    ["Silahlanan", sd.silahli],
-  ];
-  const asamalar: HuniAsamasi[] = [];
-  const eksik: string[] = [];
-  for (const [ad, n] of adaylar) {
-    if (n === null) eksik.push(ad);
-    else asamalar.push({ asama: ad, n });
-  }
+/* AYRI BİLEŞEN, TERCİH DEĞİL ZORUNLULUK: aşağıdaki `useMemo`lar yukarıdaki iki
+   erken dönüşten SONRA gelseydi kanca sırası koşula bağlanır ve React kural
+   ihlaliyle düşerdi. Memo şart çünkü `/api/today` 15 sn'de bir tazeleniyor ve
+   memosuz her yoklama huniye YENİ dizi kimliği verirdi — ortak gövdedeki bütün
+   türetmeler (segment yolları, monotonluk denetimi) boşuna yeniden koşardı. */
+function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | null }) {
+  const { basamaklar, dususler, olculen } = useMemo(() => {
+    // HUNİ BASAMAKLARI — ölçülemeyen aşama SIFIR ÇUBUK DEĞİL, "ölçülemedi + neden".
+    // Ortak gövde (`Huni`) bu ayrımı tipte zorunlu kılıyor: `n: null` yazan `neden`
+    // yazmak ZORUNDA, yoksa derlenmez.
+    const basamaklar: HuniBasamagi[] = [
+      sd.aday === null
+        ? { ad: "Taranan aday", n: null, neden: "döngü kaydında `candidates` alanı yok" }
+        : { ad: "Taranan aday", n: sd.aday },
+      sd.plan === null
+        ? { ad: "Kurulan plan", n: null, neden: "döngü kaydında `plans` alanı yok" }
+        : { ad: "Kurulan plan", n: sd.plan },
+      sd.silahli === null
+        ? { ad: "Silahlanan", n: null, neden: "döngü kaydında `armed` alanı yok" }
+        : { ad: "Silahlanan", n: sd.silahli },
+    ];
+    const taban = sd.aday !== null && sd.aday > 0 ? sd.aday : null;
+    return {
+      basamaklar,
+      olculen: basamaklar.filter((b) => b.n !== null).length,
+      dususler: [
+        dusus("Taranan aday → Kurulan plan", "aday plan olmadı", sd.aday, sd.plan, taban),
+        dusus("Kurulan plan → Silahlanan", "plan silahlanmadı", sd.plan, sd.silahli, taban),
+      ] as HuniDususu[],
+    };
+  }, [sd.aday, sd.plan, sd.silahli]);
+
+  const seans = useMemo(
+    () => ({
+      damga: sd.tarih,
+      neden: "döngü kaydında `date` alanı yok — seans damgası ölçülemedi (tarih tahmin edilmedi)",
+      kaynak: KAYNAK,
+    }),
+    [sd.tarih],
+  );
+
+  const karsi: HuniKarsiKart = useMemo(
+    () => ({
+      ad: "Bugün · Hüküm dağılımı",
+      damga: planTarihi,
+      // `metin()` "alan yok" ile "alan boş"u AYIRMIYOR (oku.ts) — bu yüzden neden
+      // metni ikisini de kapsıyor; ayırmadığımız şeyi ayırmış gibi yazmak uydurma olurdu.
+      neden: "`/api/today.todays_plan_date` okunamadı (alan yok ya da boş) — plan defterinde TARİHLİ satır bulunamadı",
+      kaynak: KARSI_KAYNAK,
+    }),
+    [planTarihi],
+  );
 
   return (
     <Card>
@@ -111,12 +180,8 @@ function GeceKarti({ sd }: { sd: SonDongu | null }) {
           <ScanSearch className="size-4 text-muted-foreground" aria-hidden />
           Gece ne buldu
         </CardTitle>
-        <CardDescription>
-          Günlük döngünün KENDİ kaydı (`events.jsonl` · `daily_cycle`) — kırpılmış sinyal defterinden
-          sayılmadı.
-        </CardDescription>
+        <CardDescription>Aday seçiminin seyri — taramadan silahlı kümeye kaç tanesi sağ çıktı?</CardDescription>
         <CardAction className="flex flex-wrap items-center gap-1.5">
-          {sd.tarih ? <Badge variant="outline">{kisaTarih(sd.tarih)}</Badge> : null}
           {sd.yasSaat === null ? (
             <Olculemedi kisa neden="döngü kaydının damgası okunamadı — yaş hesaplanamadı (0 saat DEĞİL)" />
           ) : (
@@ -127,19 +192,27 @@ function GeceKarti({ sd }: { sd: SonDongu | null }) {
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
-        {asamalar.length > 0 ? (
-          <HuniGrafigi asamalar={asamalar} />
+        {olculen === 0 ? (
+          // HUNİ ÇİZİLEMEDİ AMA SEANS SORUSU DURUYOR: iki kartın hangi güne baktığı,
+          // basamak sayıları yazılmamış olsa da okuyucunun ilk sorusudur.
+          <div className="flex flex-col gap-3">
+            <p className="text-muted-foreground text-sm">
+              Döngü kaydı var ama hiçbir aşama sayısı yazılmamış — huni çizilemedi (sıfır aday DEĞİL).
+            </p>
+            <SeansUzlasmasi seans={seans} karsi={karsi} />
+          </div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            Döngü kaydı var ama hiçbir aşama sayısı yazılmamış — huni çizilemedi.
-          </p>
+          <Huni
+            basamaklar={basamaklar}
+            dususler={dususler}
+            seans={seans}
+            karsi={karsi}
+            paydaBeyani={
+              "Payda: bu döngü kaydının TARANAN ADAY sayısı — kırpılmış sinyal defterinden (`/api/signals`) " +
+              "sayılmadı, o uç son 120 satırla kesik ve huninin ağzını olduğundan dar gösterirdi."
+            }
+          />
         )}
-
-        {eksik.length > 0 ? (
-          <p className="text-muted-foreground text-xs leading-5">
-            Ölçülemeyen aşama: {eksik.join(", ")} — döngü kaydında bu alan yok, sıfır DEĞİL.
-          </p>
-        ) : null}
 
         <div className="flex flex-wrap items-center gap-1.5 border-t pt-3">
           {sd.rejim ? <Badge variant="secondary">rejim · {sd.rejim}</Badge> : null}
@@ -328,7 +401,7 @@ export function KararZinciri() {
           iskelet={<Skeleton className="h-40 w-full" />}
           ciz={() => (
             <div className="flex flex-col gap-4">
-              <GeceKarti sd={sonDonguOku(ham?.["son_dongu"])} />
+              <GeceKarti sd={sonDonguOku(ham?.["son_dongu"])} planTarihi={planTarihi} />
 
               {defter === null ? (
                 <OlculemedBlok

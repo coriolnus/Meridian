@@ -18,10 +18,14 @@
        sunucuda 45 sn önbellekli (api.py:4348), daha sık sormak aynı kopyayı
        yeniden indirmek olurdu
 
-   ONAY/RET DÜĞMESİ YOK — brief maddesi ve gerekçesi `OnayCekmecesi.tsx`ta yazılı:
-   bu kuyruktaki bir kalem (REVIEW planı) onay ANINDA aynaya emir gönderiyor. Bir
-   görev listesinin satır sonundaki düğme "listeyi temizle" refleksiyle basılır;
-   emir gönderen bir eylem oraya konmaz.
+   KARAR YOLU BAĞLI — AMA SATIR SONUNDA DEĞİL (2026-08-25). Önceki turda onay/ret
+   düğmesi bilerek dışarıda bırakılmıştı: bu kuyruktaki bir kalem (REVIEW planı)
+   onay ANINDA aynaya emir gönderiyor ve bir görev listesinin satır sonundaki düğme
+   "listeyi temizle" refleksiyle basılır. Gerekçe doğruydu, sonucu yanlıştı —
+   operatör kararı hiç veremiyordu ("review butonuna basınca onaylayabilmem için
+   bir ekran açılması gerekli"). Şimdi satırdaki eylem yalnız İNCELE; karar
+   kalemin TAM kanıtının altında, ÇİFT ADIMLI ve iki tık arasında ne olacağı
+   yazılı olarak veriliyor (`kuyruk/KararPaneli.tsx`).
 
    BOŞ KUYRUK "SIFIR BEKLEYEN" DEĞİLDİR: uç düştüyse ya da `inbox` alanını hiç
    döndürmediyse tablo yerine NEDEN yazılır. Bu ayrım bu sayfanın var olma
@@ -256,10 +260,12 @@ export function OnayKuyrugu() {
         />
 
         <p className="text-muted-foreground text-xs leading-5">
-          Satıra tıkla: kalemin tam kanıtı çekmecede. <strong>Onay/ret düğmesi bilerek YOK</strong> —
-          bu kuyruktaki bir kalem (REVIEW planı) onaylandığı ANDA aynaya emir göndermeyi deniyor
+          <strong>İncele</strong>: kalemin tam kanıtı çekmecede açılır ve karar ORADA verilir —
+          çift adımlı. Satır sonunda tek tıkla onay YOK, çünkü bu kuyruktaki bir kalem (REVIEW
+          planı) onaylandığı ANDA aynaya emir göndermeyi deniyor
           (<code className="font-mono text-[11px]">POST /api/plan/&#123;id&#125;/onayla</code>). Geri
-          alınamaz bir icra, bir görev listesinin satır sonuna konmaz.
+          alınamaz bir icra, bir görev listesinin satır sonuna konmaz; kanıtın altına, iki tık
+          arasında ne olacağı yazılı hâlde konur.
         </p>
       </BolumKart>
 
@@ -318,7 +324,33 @@ export function OnayKuyrugu() {
         </p>
       </BolumKart>
 
-      <OnayCekmecesi oge={secili} acik={secili !== null} kapat={() => setSecili(null)} />
+      {/* KARAR BAĞLAMI ÇEKMECEYE TAŞINIR, ORADA YENİDEN OKUNMAZ: seviye/HALT/broker bu
+          sayfada zaten çekilmiş nabızlardan geliyor. Çekmece kendi isteğini açsaydı aynı
+          soruya iki farklı ANIN cevabı olurdu (`durum.tsx` başlığındaki gerekçe).
+          `tazele` ÜÇ UCU birden yeniler: karar `/api/approvals` defterini, plan onayı ise
+          `/api/today` plan listesini kıpırdatır — hangisinin değiştiğini panonun tahmin
+          etmesi, tazelenmeyen bir uçta kararı görünmez kılardı. */}
+      <OnayCekmecesi
+        oge={secili}
+        acik={secili !== null}
+        kapat={() => setSecili(null)}
+        seviye={onay.veri?.level}
+        seviyeNeden={
+          onay.hata !== null
+            ? onay.hata
+            : onay.veri === null
+              ? "/api/approvals henüz okunmadı"
+              : "/api/approvals `level` alanını döndürmedi"
+        }
+        halt={bugun.veri?.halted}
+        broker={bugun.veri?.broker}
+        mod={bugun.veri?.mode}
+        tazele={() => {
+          onay.tazele();
+          bugun.tazele();
+          skiller.tazele();
+        }}
+      />
     </div>
   );
 }

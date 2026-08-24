@@ -323,11 +323,17 @@ export function kuyrugaCevir(
         p.gate_reasons && p.gate_reasons.length > 0
           ? `kapı: ${p.gate_reasons.join(" · ")}`
           : "kapı gerekçesi yazılmamış",
-      bekleyen: "planı onayla (geri alınamaz icra — bu sayfada düğme YOK)",
+      bekleyen: "planı onayla — GERİ ALINAMAZ icra (İncele → çift adımlı karar)",
       isIstiyor: true,
       durgunNeden: null,
       eylemler: [],
-      not: "Onay ANINDA aynaya gönderim denenir (POST /api/plan/{id}/onayla). Bu yüzden düğme burada değil.",
+      // `eylemler` UÇTAN GELEN eylem listesidir (`inbox.actions`) ve plan öğesi gelen kutusundan
+      // GELMİYOR (kaynağı /api/today) — boş kalması doğru. Panonun kendi "İncele" düğmesi bu
+      // listeden çizilmez; oraya elle bir dizge yazmak, eylemin uçtan geldiğini iddia etmek olurdu.
+      not:
+        "Onay ANINDA aynaya gönderim denenir (POST /api/plan/{id}/onayla) — kapı hükmü DEĞİŞMEZ, " +
+        "plan silahlı kümeye girer ve bracket emir gönderilmeye çalışılır. Bu yüzden karar satır " +
+        "sonunda değil, kanıtın ALTINDA ve çift adımlı (KararPaneli).",
       ayrinti: { cesit: "plan", plan: p },
     });
   }

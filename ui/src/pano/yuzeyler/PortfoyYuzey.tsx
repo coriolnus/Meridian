@@ -50,6 +50,7 @@ import {
   yuzde,
 } from "./portfoy/olcum";
 import { PozisyonGrafigi } from "./portfoy/PozisyonGrafigi";
+import { PozisyonSeyri } from "./portfoy/PozisyonSeyri";
 import { PozisyonTablosu } from "./portfoy/PozisyonTablosu";
 import { SeansIciEmir } from "./portfoy/SeansIciEmir";
 import type { AlpacaGovdesi, BugunPortfoyEk, PiyasaGovdesi, TeshisGovdesi } from "./portfoy/tipler";
@@ -325,6 +326,26 @@ export function PortfoyYuzey() {
             </CardHeader>
             <CardContent>
               <PozisyonGrafigi satirlar={defter.satirlar} />
+            </CardContent>
+          </Card>
+
+          {/* ---- AYNI POZİSYONLAR, ÖBÜR SORU ---------------------------------
+              Üstteki kart "ŞU AN ne kadar?" (tutar, tek an); bu kart "ZAMAN İÇİNDE
+              nasıl gitti?" (girişe göre yüzde, seans seans). İkisi ayrı kart çünkü
+              ayrı kanallar: birinde büyüklük dolar, öbüründe yüzde. Tek karta
+              bindirmek, 50.000$'lık bir pozisyonla 500$'lığın çizgisini aynı
+              ölçeğe koymak olurdu. Bu kart KENDİ ucunu (`/api/bars`) kendi YAVAŞ
+              periyoduyla okur — sayfanın 15 sn'lik nabzına bağlı değil (veri EOD). */}
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle className="text-base">Açık pozisyonların seyri · girişe göre %</CardTitle>
+              <CardDescription>
+                Her çizgi bir pozisyonun giriş gününden bugüne kapanış seyri; sıfır çizgisi giriş fiyatıdır.
+                Kesikli çizgi kitabın EŞİT AĞIRLIKLI ortalaması. Kaynak `/api/bars` — EOD kapanış.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PozisyonSeyri satirlar={defter.satirlar} />
             </CardContent>
           </Card>
 

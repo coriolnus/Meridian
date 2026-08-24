@@ -34,6 +34,15 @@ CADDY = pathlib.Path(__file__).resolve().parents[1] / "deploy" / "Caddyfile"
 YUZEYLER = ["index.html", "landing.html", "workflow.html", "runbook.html",
             "app.js", "theme.js", "landing.js", "workflow.js",
             "palette.js",  # P7 komut paleti (2026-08-01) — aynı CSP kuralları ev-tarafında da çivili
+            # YENİ PANO (2026-08-25, D4 — studio-admin göçü). Kapsama girmesi ZORUNLU ve
+            # sebebi bu turda birebir yaşandı: şablon Next 16 App Router ve `next build`
+            # çıktısındaki HER sayfa ÜÇ satır içi <script> taşıyor (tema önyükleyicisi +
+            # `self.__next_f` RSC yükü). `script-src 'self'` üçünü de bloklar — sayfa
+            # çizilir, HİÇBİR düğme iş görmez. Substrat tam bu ölçüm yüzünden Vite oldu;
+            # bu iki satır o kararın nöbetçisidir. Derleme bir gün satır içi bir blok
+            # üretmeye başlarsa (modulePreload polyfill'i tam bunu yapıyordu) burada düşer.
+            "pano.html",
+            "pano-onyuk.js",
 ]
 
 # Yorum ve dizgi içindeki "onclick" kelimesini yakalamamak için özniteliğin gerçek biçimini

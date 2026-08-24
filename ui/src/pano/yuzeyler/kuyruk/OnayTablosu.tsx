@@ -6,9 +6,14 @@
    ŞABLONUN `tasks` TABLOSUNDAN ALINDI (TanStack v9 `useTable` + `dataTableFeatures`,
    `KapiTablosu.tsx` ile aynı sözleşme). ÜÇ FARK ve üçünün de gerekçesi burada:
 
-   1) SATIR SEÇİM KUTUSU YOK. Şablonun onay kutusu bir TOPLU EYLEM içindir; bu
-      kuyrukta toplu eylem yok (düğme hiç yok — bkz. `OnayCekmecesi.tsx` başlığı),
-      dolayısıyla seçim kutusu hiçbir şeye bağlanmayan bir arayüz olurdu.
+   1) SATIR SEÇİM KUTUSU YOK, AMA "İNCELE" EYLEMİ VAR. Şablonun onay kutusu bir
+      TOPLU EYLEM içindir; bu kuyrukta toplu eylem YOK ve olmayacak — bir kalem
+      geri alınamaz bir icra tetikleyebiliyorken "hepsini onayla" diye bir yol
+      açmak, tek tıkla çok emir göndermek olurdu. Satır sonundaki tek eylem
+      İNCELE'dir: kalemin TAM kanıtını açar, karar orada verilir (çift adımlı,
+      `KararPaneli.tsx`). Satırın kendisi de tıklanabilir kalır — düğme, tıklama
+      alanını daraltmak için değil, EYLEMİ GÖRÜNÜR kılmak için var (operatör
+      şikâyeti 2026-08-25: "review butonuna basınca bir ekran açılması gerekli").
    2) "GELDİ" SÜTUNU İKİ KATLI: mutlak damga + göreli yaş. Yalnız göreli yazmak
       ("3 gün önce") kuyruğun ne zaman dolduğunu belgelemez; yalnız mutlak yazmak
       bayatlığı gizler. Damga ölçülemeyen satırda sütun BOŞ değil, NEDEN taşır.
@@ -23,7 +28,7 @@
 import { useMemo, useState } from "react";
 
 import { type ColumnDef, type SortingState, useTable } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Eye } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,7 +54,10 @@ const TUR_TONU: Record<KuyrukTuru, "iyi" | "uyari" | "kotu" | "notr" | "olculeme
   bilinmeyen: "kotu",
 };
 
-function kolonlariKur(simdi: number): ColumnDef<DataTableFeatures, KuyrukOgesi>[] {
+function kolonlariKur(
+  simdi: number,
+  sec: (o: KuyrukOgesi) => void,
+): ColumnDef<DataTableFeatures, KuyrukOgesi>[] {
   return [
     {
       id: "tur",
@@ -158,6 +166,29 @@ function kolonlariKur(simdi: number): ColumnDef<DataTableFeatures, KuyrukOgesi>[
         </div>
       ),
     },
+    {
+      id: "islem",
+      header: "",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          // TIKLAMA YUKARI SIZMASIN: satırın kendisi de `sec` çağırıyor. Durdurmazsak
+          // aynı tık iki kez işlenir; bugün zararsız (aynı kalem seçilir) ama yarın
+          // satır tıklaması başka bir şey yaparsa sessiz bir çift-eylem olurdu.
+          onClick={(e) => {
+            e.stopPropagation();
+            sec(row.original);
+          }}
+          aria-label={`${row.original.baslik} — kararı incele`}
+        >
+          <Eye aria-hidden />
+          İncele
+        </Button>
+      ),
+    },
   ];
 }
 
@@ -175,7 +206,7 @@ export function OnayTablosu({
   // ŞİMDİ BİR KEZ SABİTLENİR: her hücrede `Date.now()` çağırsaydık aynı tablonun iki
   // satırı iki farklı ANA göre yaş yazardı (ve sıralama anahtarı render sırasında kayardı).
   const simdi = useMemo(() => Date.now(), [ogeler]);
-  const kolonlar = useMemo(() => kolonlariKur(simdi), [simdi]);
+  const kolonlar = useMemo(() => kolonlariKur(simdi, sec), [simdi, sec]);
   const veri = useMemo(() => [...ogeler], [ogeler]);
 
   const tablo = useTable({
@@ -212,24 +243,20 @@ export function OnayTablosu({
             tablo.getRowModel().rows.map((satir) => (
               <TableRow
                 key={satir.id}
-                // SATIRIN KENDİSİ AÇAR: ayrı bir "detay" düğmesi, tıklanabilir alanı bir
-                // ikona daraltırdı. Klavye için `tabIndex` + Enter/Space bağlı — satır bir
-                // düğme gibi davranıyorsa bir düğme gibi de erişilebilir olmalı.
-                tabIndex={0}
-                role="button"
-                aria-label={`${TUR_ETIKET[satir.original.tur]} · ${satir.original.baslik} — ayrıntıyı aç`}
+                /* SATIR FARE İÇİN TIKLANABİLİR, ERİŞİLEBİLİR EYLEM "İNCELE" DÜĞMESİDİR.
+                   ÖNCEDEN satırın kendisi `role="button"` + `tabIndex={0}` idi ve o zaman
+                   DOĞRUYDU (satırda başka düğme yoktu). Artık satırın içinde GERÇEK bir
+                   düğme var; `role="button"` bir kabın içine ikinci bir düğme koymak,
+                   erişilebilirlik ağacında iç içe iki etkileşimli düğüm demektir ve ekran
+                   okuyucu satırın tamamını tek bir düğme diye okur — düğmenin kendi
+                   etiketi kaybolur. Klavye yolu KAYBOLMADI, İYİLEŞTİ: sekme artık satır
+                   başına ADLANDIRILMIŞ bir düğmeye ("… — kararı incele") uğruyor. */
                 className={cn(
                   "cursor-pointer hover:bg-muted/40",
                   !satir.original.isIstiyor && "opacity-70",
                   satir.original.tur === "bilinmeyen" && "bg-destructive/5",
                 )}
                 onClick={() => sec(satir.original)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    sec(satir.original);
-                  }
-                }}
               >
                 {satir.getVisibleCells().map((hucre) => (
                   <TableCell key={hucre.id} className="align-top">

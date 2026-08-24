@@ -11,10 +11,15 @@
    yeterli bir parmak izidir, ve bu pano bir tünelden açılabiliyor. Ekranın
    cevapladığı soru "anahtar ne" değil, "anahtar KURULU MU"dur.
 
-   YENİ SIR GİRME FORMU DA YOK — bilinçli. `POST /api/secrets/{name}` uçları VAR
-   ve çalışıyor, ama bu yüzey bir OKUMA yüzeyi olarak tanımlandı; bir yazma formu
-   koymak, parolayı gören her tarayıcı sekmesini bir anahtar yazma yüzeyine
-   çevirirdi. Anahtar girişi mevcut ayarlar akışında kalıyor.
+   ~~YENİ SIR GİRME FORMU DA YOK — bilinçli.~~ 2026-08-25'te DEĞİŞTİ ve şerh
+   düzeltiliyor: operatör anahtar girebileceği bir alan olmadığını bildirdi
+   ("KEY'leri girebileceğim bir alan göremedim") ve form eklendi — `SirGirisi.tsx`,
+   bu tablonun hemen ALTINDA. İş bölümü NET kalsın diye iki bileşen ayrı:
+   BU dosya "anahtar kurulu mu" sorusunu okur, ÖTEKİ "anahtarı gir" eylemini taşır.
+   Eski gerekçe ("parolayı gören her sekme bir yazma yüzeyine dönerdi") YANLIŞ
+   değildi ama EKSİKTİ: yazma yetkisi zaten oturumun kendisinde — `POST
+   /api/secrets/{name}` `_auth` istiyor ve panoya girebilen zaten o yetkiye sahip.
+   Formu saklamak yetkiyi daraltmıyordu, yalnız operatörü terminale gönderiyordu.
 
    "SON TEST SONUCU" NEREDEN GELİYOR: `GET /api/secrets/test/{provider}` CANLI bir
    ağ çağrısı yapar — panonun her açılışında beş sağlayıcıya ping atmak, ölçmek
@@ -196,7 +201,7 @@ function SirGovdesi({ v }: { readonly v: SirlarGovdesi }) {
       <p className="text-muted-foreground text-xs">
         Değer sütunu YOK ve olmayacak: uç maskeli bir <code className="text-[11px]">hint</code> döndürüyor
         (<code className="text-[11px]">••••</code> + son 4 karakter) ama son dört karakter bir anahtarı tanımaya yeter.
-        Bu ekranın cevapladığı soru “anahtar ne” değil, “anahtar kurulu mu”. Yeni anahtar girme formu da bilerek yok.
+        Bu ekranın cevapladığı soru “anahtar ne” değil, “anahtar kurulu mu”. Anahtar girmek için aşağıdaki forma bak.
       </p>
     </div>
   );

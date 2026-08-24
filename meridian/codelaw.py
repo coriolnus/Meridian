@@ -427,9 +427,9 @@ DECLARED_SINKS: dict[str, str] = {
     # yalnız `store.read_*`/`write_*` çağrılarını görür, auth kendi dosya erişimini kullanır
     # (`_auth_file().read_text()`), tıpkı `secrets.json` gibi. Beyan edilmeseydi dedektör her turda
     # gerçek olmayan bir bulgu bağırır, gerçek bir yetim o gürültüde kaybolurdu.
-    # ÇAPA SATIR DEĞİL SEMBOL: bu
-    # satırda önce `api.py:420` yazıyordu, kayan-oturum turundan sonra gerçek satır 426
-    # oldu ve HİÇBİR test kırmızı vermedi — çünkü kapı yalnız terimin VARLIĞINA bakıyordu. Satır
+    # ÇAPA SATIR DEĞİL SEMBOL: bu satırda önce api.py'nin 420. satırına bir çapa yazılıydı,
+    # kayan-oturum turundan sonra gerçek satır 426 oldu ve HİÇBİR test kırmızı vermedi — çünkü
+    # kapı yalnız terimin VARLIĞINA bakıyordu. (Yukarıdaki sayı bir ÇAPA değil bir ALINTIDIR: emekli bir çapayı ÖRNEK olarak anıyor. İki nokta üst üsteli biçim (`dosya.py:NNN`) tarayıcıya canlı çapa görünüyordu ve 2026-08-25'te api.py'nin başına dört satır girince üçü birden 'bayat' sayıldı — yani anlatı, anlattığı şeyin kurbanı oldu. Biçim düzyazıya çevrildi; hikâye durdu.) Satır
     # numarası gömen her çapa, çapaladığı dosyanın her düzenlemesinde bayatlar; `codelaw`ın kendi
     # kovaladığı sınıf tam budur. Bu yüzden çapa artık FONKSİYON ADI + ÇAĞRI DİZGİSİDİR
     # (`api._auth` içinde `auth.verify_session(`) ve UYUŞMASI çivilenir — bkz.

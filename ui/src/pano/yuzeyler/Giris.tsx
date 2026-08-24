@@ -159,13 +159,29 @@ export function Giris() {
   // Oturum ÖMRÜ yalnız bu sekmede giriş yapılırsa ölçülebilir (bkz. KapiKunyesi).
   const [omurS, setOmurS] = useState<number | null>(null);
 
+  // SEKME ROTADAN SEÇİLİR, `defaultValue`dan DEĞİL: `#/dashboard/authentication/kayit`
+  // bağı sayfayı açmakla kalmaz, o bölümün DURDUĞU sekmeyi de açar. `defaultValue`
+  // yalnız ilk bağlanmada okunur — operatör bu yüzeydeyken kenar çubuğundan öteki
+  // bölüme tıklasaydı sekme hiç değişmez, çapa kapalı sekmenin içinde kalır ve bağ
+  // sessizce hiçbir şey yapmazdı. (`KanbanYuzey.tsx`teki desenin aynısı, aynı gerekçeyle.)
+  const [sekme, setSekme] = useState<"giris" | "kayit">(() => (bolum === "kayit" ? "kayit" : "giris"));
+  useEffect(() => {
+    if (bolum === "giris" || bolum === "kayit") setSekme(bolum);
+  }, [bolum]);
+
   useEffect(() => {
     if (!bolum) {
       window.scrollTo({ top: 0, behavior: "instant" });
       return;
     }
-    document.getElementById(`bolum-${bolum}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [bolum]);
+    // SEKME GEÇİŞİNDEN SONRA kaydır: etkin olmayan `TabsContent` DOM'da olmayabilir,
+    // bu yüzden aynı turda `getElementById` boş döner. Bir kare beklemek, sekmenin
+    // gövdesi bağlandıktan sonra çapayı bulmayı garantiler.
+    const kare = window.requestAnimationFrame(() => {
+      document.getElementById(`bolum-${bolum}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(kare);
+  }, [bolum, sekme]);
 
   const v = oturum.veri;
   const acik = v?.authenticated === true;
@@ -240,7 +256,7 @@ export function Giris() {
 
           return (
             <Panel marka="Meridian" markaAlt="Operatör kapısı — giriş bekleniyor">
-              <Tabs defaultValue="giris" className="gap-4">
+              <Tabs value={sekme} onValueChange={(v) => setSekme(v === "kayit" ? "kayit" : "giris")} className="gap-4">
                 <TabsList>
                   <TabsTrigger value="giris">
                     <KeyRound className="size-4" aria-hidden />
@@ -251,7 +267,7 @@ export function Giris() {
                     Kayıt
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="giris" className="flex flex-col gap-4">
+                <TabsContent value="giris" id="bolum-giris" className="flex scroll-mt-20 flex-col gap-4">
                   <div className="space-y-1">
                     <h2 className="font-medium text-xl">Panoya giriş</h2>
                     <p className="text-muted-foreground text-sm">

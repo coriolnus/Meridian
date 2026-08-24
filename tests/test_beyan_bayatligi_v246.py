@@ -15,8 +15,9 @@ BEŞ KALEM (ROADMAP Ö-34a/b, Ö-35a/b, Ö-38) ve her birinin çivisi:
      yazıldı ve düzeltmenin adlandırdığı mekanizmalar GERÇEKTEN var.
 
 NEDEN "VARLIK DEĞİL UYUŞMA": Ö-34a'nın kendisi bu dersin vakasıdır — `auth.json` beyanı
-`api.py:420` diyordu, satır 426 olmuştu ve mevcut test yalnız terimlerin geçtiğine baktığı için
-sessiz kaldı. Bir çapa, çapaladığı şeyle kıyaslanmıyorsa çapa değildir.
+api.py'nin 420. satırını gösteriyordu, satır 426 olmuştu ve mevcut test yalnız terimlerin
+geçtiğine baktığı için sessiz kaldı. Bir çapa, çapaladığı şeyle kıyaslanmıyorsa çapa değildir.
+(Buradaki sayı bir ÇAPA değil bir ALINTIDIR: emekli bir çapayı ÖRNEK olarak anıyor. İki nokta üst üsteli biçim (`dosya.py:NNN`) tarayıcıya canlı çapa görünüyordu ve 2026-08-25'te api.py'nin başına dört satır girince üçü birden 'bayat' sayıldı — yani anlatı, anlattığı şeyin kurbanı oldu. Biçim düzyazıya çevrildi; hikâye durdu.)
 """
 from __future__ import annotations
 
@@ -232,7 +233,8 @@ def _auth_yazan_girisler() -> set[str]:
 
 
 def test_C1_capa_SEMBOLDUR_ve_kaynakla_UYUSUYOR():
-    """Ö-34a'nın kendisi: eski çapa `api.py:420` idi, satır 426 oldu, hiçbir test görmedi. Çapa
+    """Ö-34a'nın kendisi: eski çapa api.py'nin 420. satırıydı, satır 426 oldu, hiçbir test
+    gördü değil. (Sayı bir çapa değil, emekli bir çapanın ALINTISI — bkz. dosya başlığı.) Çapa
     artık SEMBOL (fonksiyon adı + çağrı dizgisi) ve UYUŞMASI ölçülüyor — beyan `api._auth` diyorsa
     api.py'de o fonksiyon VAR ve gövdesinde `auth.verify_session(` GERÇEKTEN çağrılıyor olmalı."""
     beyan = codelaw.DECLARED_SINKS["auth.json"]

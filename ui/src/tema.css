@@ -52,6 +52,65 @@
   --font-sans: var(--font-sans);
 }
 
+/* ============================================================================
+   ÇOK SERİLİ GRAFİK RAMPASI (Meridian eki, 2026-08-25)
+   ----------------------------------------------------------------------------
+   Şablon beş grafik jetonu taşıyor (`--chart-1..5`) ve iki-üç serilik panolar için
+   bu yeter. Meridian'ın "bütün açık pozisyonlar tek grafikte" görünümü ise SERİ
+   SAYISI VERİYE BAĞLI bir grafiktir — bugün yedi pozisyon var, yarın on iki olabilir.
+
+   Beş jetonu döndürmek (cycle) en kolay yoldu ve REDDEDİLDİ: iki seri aynı rengi
+   alınca gösterge (legend) hangi çizginin hangi sembol olduğunu SÖYLEYEMEZ; okuyucu
+   iki pozisyonu birbirine karıştırır ve grafik yanlış okunur. Rampa bu yüzden ONA
+   çıkarıldı — beşi şablonun kendi jetonları, beşi Tailwind paletinden AYIRT EDİLEBİLİR
+   tonlar (ardışık iki ton komşu değil: mavi → turuncu → mor → camgöbeği → pembe).
+
+   ONDAN FAZLA POZİSYONDA rampa döner ve grafik bunu EKRANDA yazar — sessizce
+   tekrarlamaz. Renk burada bir kimlik kanalıdır; tükendiğinde susmak değil söylemek
+   gerekir.
+   ============================================================================ */
+/* RAMPA TEMAYA DUYARLIDIR — ve ilk hâli DEĞİLDİ (2026-08-25, operatör bildirdi:
+   "huni renkleri neden statik, temaya göre değişmeliydi"). Kusur ölçülebilir bir
+   TUTARSIZLIKTI: 1-5 şablonun `--chart-*` jetonlarına bağlıydı ve `.dark` onları
+   yeniden tanımlıyor; 6-10 ise doğrudan Tailwind'in sabit paletine (`--color-blue-500`)
+   bağlıydı ve iki temada AYNI kalıyordu. Yani aynı grafikte bazı seriler temayla
+   dönüyor, bazıları donuyordu — ve huni tam o donan üçünü kullanıyor (6·8·9).
+
+   ÇÖZÜM ŞABLONUN KENDİ DESENİ: ham değer `:root`/`.dark`ta tanımlanır, `@theme inline`
+   yalnız EŞLER. `inline` olması şart — çözseydi derleme anında donar ve tema anahtarı
+   yine ölürdü (aynı gerekçe `--chart-*` için de geçerli).
+
+   GECEDE 400, GÜNDÜZDE 600: aynı hue, farklı ışıklılık. Koyu zeminde 600 tonu boğuluyor,
+   açık zeminde 400 tonu soluyor — kimlik (hue) korunur, okunabilirlik temayla değişir. */
+:root {
+  --seri-6: var(--color-blue-600);
+  --seri-7: var(--color-orange-600);
+  --seri-8: var(--color-violet-600);
+  --seri-9: var(--color-cyan-600);
+  --seri-10: var(--color-pink-600);
+}
+
+.dark {
+  --seri-6: var(--color-blue-400);
+  --seri-7: var(--color-orange-400);
+  --seri-8: var(--color-violet-400);
+  --seri-9: var(--color-cyan-400);
+  --seri-10: var(--color-pink-400);
+}
+
+@theme inline {
+  --color-seri-1: var(--chart-1);
+  --color-seri-2: var(--chart-2);
+  --color-seri-3: var(--chart-3);
+  --color-seri-4: var(--chart-4);
+  --color-seri-5: var(--chart-5);
+  --color-seri-6: var(--seri-6);
+  --color-seri-7: var(--seri-7);
+  --color-seri-8: var(--seri-8);
+  --color-seri-9: var(--seri-9);
+  --color-seri-10: var(--seri-10);
+}
+
 /* Default theme styles (used when no data-theme-preset is set or when 'default' is selected).
 These serve as the fallback; there is no separate default.css file. */
 :root {

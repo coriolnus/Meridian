@@ -19,6 +19,7 @@
 import {
   Activity,
   BookOpen,
+  Bot,
   Boxes,
   Brain,
   CalendarDays,
@@ -35,11 +36,15 @@ import {
   GraduationCap,
   Hammer,
   Kanban,
+  KeyRound,
   Layers,
   LineChart,
   ListTodo,
   type LucideIcon,
+  // `Map` küresel `Map` tipini gölgelemesin diye yeniden adlandırıldı.
+  Map as HaritaIkonu,
   MessageSquare,
+  MessagesSquare,
   Radar,
   Scale,
   Send,
@@ -47,6 +52,8 @@ import {
   Settings2,
   ShieldAlert,
   Sparkles,
+  Table2,
+  UserPlus,
   UserRound,
   Users,
   Wallet,
@@ -80,8 +87,20 @@ export const YUZEYLER = {
     soru: "Şu an sakin mi, senden bir şey mi bekliyor?",
     ikon: GaugeCircle,
     grup: "Panolar",
-    // TEK EKRAN, KAYDIRMASIZ: her kart bir ÖZET ve tek bir "→ yüzey" bağı taşır.
-    // Detay burada YOK — detayın yeri yüzeydir (eski panonun sözleşmesi, korunuyor).
+    /* BÖLÜM YOK VE BU BİR EKSİK DEĞİL, SÖZLEŞME.
+       Uzlaştırma turunda dört bölüm (kpi · egri · hukum · planlar) buraya eklenmişti;
+       o turdaki çivi "ekranda çapası olan her blok kayıtta olmalı" diyordu. Çivinin o
+       yönü sonradan EMEKLİ oldu (bir çapa gezinme durağı olmak zorunda değil — sayfa
+       içi bir bloğun kendi kimliği de olabilir) ve girdiler GERİ ALINDI. İki sebep:
+
+         1. GERİLEME, ölçüldü: `nav-main.tsx` alt maddesi OLAN bir maddeyi düz bağdan
+            AÇILIR TETİĞE çeviriyor. "Bugün" açılış ekranıdır ve tek tıkla ulaşılmak
+            zorundadır; dört girdiyle tıklama artık gitmiyor, menü AÇIYORDU.
+         2. YÜZEYİN KENDİ SÖZLEŞMESİ: "tek ekran, her kart bir ÖZET; detay burada YOK,
+            detayın yeri yüzeydir." Kendi içine dört durak koymak o cümleyi bozar.
+
+       Çapalar gövdede DURUYOR (silinmedi): derin bağ `#/dashboard/default/planlar`
+       çalışmaya devam eder, yalnız kenar çubuğu onu bir durak olarak ÜRETMEZ. */
     bolumler: [],
   },
   finance: {
@@ -169,7 +188,14 @@ export const YUZEYLER = {
     soru: "Ajana ne sorabilirim, ne cevap verdi?",
     ikon: MessageSquare,
     grup: "Sayfalar",
-    bolumler: [],
+    // ÜÇ SEKME = ÜÇ BÖLÜM ve derin bağ sekmeyi de SEÇİYOR (`Ajan.tsx::bolumSec`).
+    // Çapalar gövdede zaten vardı; eksik olan kayıttı, yani kenar çubuğu üç sekmenin
+    // hiçbirine bağ üretmiyordu. Sıra sekme çubuğundaki sıradır.
+    bolumler: [
+      { kimlik: "sohbet", baslik: "Sohbet", soru: "Ajan ne önerdi, kapı ne cevap verdi?", ikon: MessagesSquare },
+      { kimlik: "defter", baslik: "Defter", soru: "Aynı kayıtlar sıralandığında hangi öneri öne çıkıyor?", ikon: Table2 },
+      { kimlik: "olcum", baslik: "Ölçüm", soru: "Kim konuştu, kapı ne dedi, tahmin tuttu mu?", ikon: Bot },
+    ],
   },
   calendar: {
     sablon: "Calendar",
@@ -188,6 +214,9 @@ export const YUZEYLER = {
     bolumler: [
       { kimlik: "adaylar", baslik: "Adaylar", soru: "Bu seans hangi planlar kuruldu?", ikon: Layers },
       { kimlik: "kapilar", baslik: "Kapılar", soru: "Aday hangi kapıda düştü, hangisinden geçti?", ikon: Radar },
+      // İKİNCİ SEKME, İKİNCİ TAHTA: `KanbanYuzey.tsx` çapayı kendisi tanımlamış ve
+      // şerhinde "kayıt dosyası bana kapalı" diye not düşmüştü — o boşluk burada kapanıyor.
+      { kimlik: "roadmap", baslik: "Yol haritası", soru: "Hangi iş hangi bölümde, hangi durumda?", ikon: HaritaIkonu },
     ],
   },
   tasks: {
@@ -240,7 +269,17 @@ export const YUZEYLER = {
     soru: "Kimim, oturumum açık mı?",
     ikon: Fingerprint,
     grup: "Sayfalar",
-    bolumler: [],
+    // İKİ SEKME İKİSİ BİRDEN KAYITTA, tek başına "kayit" DEĞİL. Gövdede yalnız kayıt
+    // sekmesinin çapası vardı; yalnız onu kaydetseydik kenar çubuğu "Giriş"i açılır
+    // bir başlığa çevirir ve TEK çocuğu, bugün hiçbir uca bağlı OLMAYAN kayıt formu
+    // olurdu (`nav-main.tsx`: alt maddesi olan madde artık bağ değil, açılır tetiktir).
+    // Yüzeyin asıl içeriği o zaman gezinmede hiç görünmezdi.
+    bolumler: [
+      { kimlik: "giris", baslik: "Panoya giriş", soru: "Parolayla nasıl giriş yapılır?", ikon: KeyRound },
+      // KAYIT BUGÜN BAĞSIZ ve bunu kendi gövdesi yazıyor (alanlar `disabled`, gerekçe
+      // ekranda). Kaydetmek onu "çalışıyor" ilan etmez; SORUSU zaten bu — cevabı hayır.
+      { kimlik: "kayit", baslik: "Kayıt", soru: "Yeni kullanıcı açılabiliyor mu?", ikon: UserPlus },
+    ],
   },
 } as const satisfies Record<string, Yuzey>;
 
