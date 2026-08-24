@@ -244,7 +244,12 @@ def test_G1b_ciplak_hex_ve_deger_jetonu_BILESENDE_yok():
     ihlal = []
     for p in kaynaklar:
         s = _soy(p.read_text())
-        for m in re.finditer(r"#[0-9a-fA-F]{3,8}\b", s):
+        # `&`DEN SONRA GELEN HEX BİR RENK DEĞİL, BİR HTML VARLIĞIDIR (2026-08-25).
+        # JSX'te süslü ayracı METİN olarak basmanın yolu `&#123;` / `&#125;`tir ve çivi
+        # bunları "çıplak renk" diye bildiriyordu. Yanlış alarm, üstelik düzeltmesi kaynağı
+        # BOZACAK cinsten: entity'yi silmek ayracı JSX'e ayraç olarak verir.
+        # Negatif geriye-bakış iddiayı DARALTMIYOR — bir CSS rengi hiçbir zaman `&` ile başlamaz.
+        for m in re.finditer(r"(?<!&)#[0-9a-fA-F]{3,8}\b", s):
             ihlal.append(f"{p.relative_to(KOK)}: {m.group(0)}")
         # ~~Tailwind'in HAZIR renk skalası bir rol DEĞİLDİR~~ — 2026-08-25'te EMEKLİ (D4).
         # OPERATÖR KARARI: "UI ile alakalı bütün kurallarını yok sayabilirsin, uygulamanın

@@ -12,7 +12,10 @@ göre scheduler, hermes_runtime, mirror_stream, marketstream/barfeed ve intraday
 ayağa kaldırır), `_auth` (oturum çerezi + başlık token'ı), `_auth_posture_check` (açılış yetki
 duruşu), `_NativeRoute` (her uç dönüşü `store.sanitize`den geçer: numpy tipleri ve NaN/±Inf telden
 çıkamaz). Uç aileleri: /healthz, /metrics, /api/summary, /api/diagnostics, /api/hermes,
-/api/scheduler, /api/alpaca, /api/approvals, /api/halt, /api/resume…
+/api/scheduler, /api/alpaca, /api/approvals, /api/halt, /api/resume, /api/infra, /api/roadmap…
+Son ikisi state/ DIŞINA bakan tek okuma yüzeyleridir: `/api/infra` işletim sistemine (çekirdek,
+bellek, disk, systemd birimleri), `/api/roadmap` depo kökündeki `ROADMAP.md`ye. İkisi de yalnız
+standart kütüphaneyle ölçer (psutil bağımlılığı YOK) ve ölçemediği alanı None + neden döndürür.
 
 Değişmezler: loopback DIŞINA parolasız bağlanma süreci BAŞLATMAZ (fail-closed RuntimeError); okuma
 uçları durum ÜRETMEZ (hesabı analytics/health/scheduler yapar); yazma yüzeyi operatör niyetiyle
@@ -27,6 +30,7 @@ import inspect
 import json
 import os
 import re
+import shutil
 import time as _time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -6077,3 +6081,980 @@ async def api_approve(approval_id: str, request: Request):
         yanit["not"] = KAYIT_KARARI_NOT
         yanit["kunye"] = satir.get("kunye")
     return yanit
+
+
+# =================================================================================================
+# v287 · PANO ALTYAPI YÜZEYİ — `/api/infra` (makine + Meridian bileşenleri) ve `/api/roadmap`
+# =================================================================================================
+#
+# NEDEN BU İKİ UÇ BURADA, `/api/diagnostics` İÇİNDE DEĞİL: teşhis ucu **Meridian'ın kendi
+# defterini** (state/) okur ve 45 sn önbelleklidir. Bu ikisi defterin DIŞINA bakar — biri işletim
+# sistemine (çekirdek, bellek, disk, systemd), diğeri bir markdown dosyasına. Aynı zarfa
+# koysaydık: (a) `/proc` okuması ve `systemctl` alt süreçleri teşhis yükünün maliyetine eklenir,
+# (b) 562 KB'lık ROADMAP ayrıştırması her teşhis isteğine bulaşırdı, (c) makine metriği 45 sn
+# bayatlıkla servis edilirdi — oysa "makine şu an ne durumda" sorusunun cevabı 45 sn'de eskir.
+#
+# PSUTIL YOK — VE EKLENMEDİ. Depoda `psutil` bağımlılığı ÖLÇÜLDÜ ve YOKTUR (`pyproject.toml`:
+# 0 eşleşme · `uv.lock`: 0 eşleşme · `.venv` import denemesi: ModuleNotFoundError, 2026-08-25).
+# Tek bir pano ucu için üretim bağımlılık ağacına C uzantılı bir paket sokmak, ucun getirdiği
+# değerden pahalıdır (canlı A1 aarch64; tekerlek yoksa derleme). Bu yüzden ölçüm YALNIZ standart
+# kütüphaneyle yapılır: `os` · `platform` · `shutil.disk_usage` · `/proc` (Linux) · `os.getloadavg`
+# · `os.times`. BEDELİ AÇIKÇA TAŞINIR: psutil'in taşınabilir verdiği birkaç alan (macOS'ta CPU
+# yüzdesi, kullanılan bellek, makine uptime'ı) bu makinede ÖLÇÜLEMEZ ve `None` + neden döner.
+#
+# PLATFORM FARKI GİZLENMEZ. Canlı sistem Linux (Oracle A1), geliştirme makinesi macOS ve `/proc`
+# macOS'ta YOKTUR. Bir alanı "ölçülemedi" yerine `0` yazmak sözdizimsel olarak bedavadır ve panoda
+# "boşta makine" diye okunur — bu deponun birinci yasasının (UYDURMA YASAĞI) tam ihlali. Bu yüzden
+# her ölçüm alanının yanında ya kendi `<alan>_neden` kardeşi ya da kabın `olculemedi_neden`i
+# vardır; `tests/test_pano_altyapi_v287.py` bunu GENEL biçimde çivilemiştir (yarın eklenen alan da
+# kurala girer, kimse listeyi güncellemeyi unutamaz).
+#
+# CPU YÜZDESİ BİR FARKTIR, BİR OKUMA DEĞİL. `/proc/stat` ve systemd `CPUUsageNSec` KÜMÜLATİF
+# sayaçlardır; yüzde ancak İKİ örnek arasındaki farktan çıkar. Uç içinde `sleep` YOKTUR (madde 7'nin
+# ruhu: bekleyen kod yasak; ayrıca 15 sn'de bir yoklanan bir uçta 200 ms uyumak panoyu yavaşlatırdı)
+# — bunun yerine önceki örnek süreç-içi tutulur ve İLK istekte yüzde `None` + neden döner. "Bir
+# sonraki yoklamada ölçülür" demek, sıfır yazmaktan dürüsttür.
+_INFRA_CACHE: dict = {}
+_INFRA_CPU_ORNEK: dict = {}
+INFRA_TTL_S = 8.0
+# 8 sn: pano şeridi 15 sn'de bir yokluyor, yani ardışık iki yoklamanın İKİSİ birden kutudan
+# gelemez — "pano donmuş" hissi doğmaz. Aşağı sınırı da var: `systemctl show` alt süreçleri
+# birim başına bir fork'tur ve önbelleksiz bir uç, 15 sn'de bir 14 fork demek olurdu.
+_INFRA_SUREC_BASI = _time.time()
+_INFRA_SUREC_MONO = _time.monotonic()
+
+# systemd `MemoryCurrent` AYARSIZ olduğunda 2^64-1 döndürür. Bunu 18 exabayt RSS diye basmak,
+# ölçülmemiş bir değeri sayıya çevirmenin ders kitabı örneğidir — sentinel `None`a çevrilir.
+_SYSTEMD_AYARSIZ = 18446744073709551615
+_SYSTEMCTL_ALANLARI = ("LoadState", "ActiveState", "SubState", "MainPID", "NRestarts",
+                       "MemoryCurrent", "CPUUsageNSec", "ExecMainStartTimestampMonotonic",
+                       "UnitFileState", "Description")
+# TOPLAM zaman bütçesi: birim başına 2 sn'lik timeout × 14 birim = en kötü 28 sn ve o, 15 sn'de
+# bir yoklanan bir ucu kilitlerdi. Bütçe dolunca kalan birimler ÖLÇÜLMEDİ + neden ile döner.
+_SYSTEMCTL_BUTCE_S = 1.5
+# CPU farkının anlamlı olması için gereken asgari aralık (ölçüm gerekçesi `_infra_cpu_yuzde`de).
+_CPU_ASGARI_ARALIK_S = 0.5
+
+
+def _proc_oku(ad: str) -> str | None:
+    """`/proc/<ad>` içeriğini döndürür; dosya yoksa/okunamazsa `None`.
+
+    TEK KAPI OLMASI BİLİNÇLİ: `/proc` macOS'ta HİÇ YOKTUR ve ölçümün platforma bağlı yarısı bu tek
+    fonksiyondan geçer. Testler bunu kör ederek macOS'u Linux üstünde simüle eder — yoksa çivi
+    yerelde ve canlıda FARKLI şeyi ölçer, geçtiğinde hiçbir şey kanıtlamazdı."""
+    try:
+        return Path("/proc", ad).read_text(encoding="utf-8", errors="replace")
+    except (OSError, ValueError):  # sessiz-yutma: /proc yokluğu macOS'ta NORMAL hâldir, hata değil; çağıran None'ı "ölçülemedi" olarak işler ve nedenini gövdeye yazar
+        return None
+
+
+def _infra_cpu_yuzde(anahtar: str, kumulatif_ns: float | None, *,
+                     bolen_ns: float | None = None) -> tuple[float | None, str | None]:
+    """Kümülatif bir CPU sayacından yüzde çıkarır — İKİ örnek arasındaki farkla.
+
+    `bolen_ns` verilirse (örn. `/proc/stat`'ın toplam jiffy'si) yüzde o farka bölünür; verilmezse
+    duvar saati farkı × çekirdek sayısı yerine DUVAR SAATİ kullanılır (tek çekirdek-eşdeğeri
+    yüzdesi, `top`un süreç sütunuyla aynı sözleşme: %200 = iki çekirdek dolu).
+    İlk örnekte `None` + neden döner — sıfır yazmak "boşta" demek olurdu.
+
+    ÇOK KISA ARALIK DA ÖLÇÜM DEĞİLDİR. `?taze=1` art arda çağrılınca aralık milisaniyelere
+    düşer ve pay/payda gürültüsü %200+ gibi anlamsız değerler üretir (ölçüldü: 0,1 sn aralıkta
+    %224,8). O sayı "CPU yandı" diye okunur — oysa ölçülen şey aralığın kısalığıdır. Bu durumda
+    ÖNCEKİ ÖRNEK KORUNUR (üzerine yazılmaz): taban geride kalsın ki aradan yeterli süre geçtiğinde
+    fark GERÇEKTEN ölçülebilsin. Örneği yenileseydik hızlı yoklama yüzdeyi sonsuza dek ölçülemez
+    yapardı."""
+    simdi = _time.monotonic()
+    onceki = _INFRA_CPU_ORNEK.get(anahtar)
+    if onceki is not None and (simdi - onceki[2]) < _CPU_ASGARI_ARALIK_S:
+        return None, (f"iki örnek arası {simdi - onceki[2]:.2f} sn (< {_CPU_ASGARI_ARALIK_S} sn) — "
+                      "bu kadar kısa aralıkta yüzde gürültüdür; taban korundu, sonraki yoklamada ölçülür")
+    _INFRA_CPU_ORNEK[anahtar] = (kumulatif_ns, bolen_ns, simdi)
+    if kumulatif_ns is None:
+        return None, "kümülatif CPU sayacı okunamadı (kaynak alan yok)"
+    if onceki is None:
+        return None, ("ilk örnek: CPU yüzdesi iki örnek arasındaki FARKtır, tek okumadan "
+                      "hesaplanamaz — bir sonraki yoklamada ölçülür")
+    ov, ob, ot = onceki
+    if ov is None:
+        return None, "önceki örnekte sayaç okunamamıştı; fark alınamadı"
+    d_sayac = float(kumulatif_ns) - float(ov)
+    if d_sayac < 0:
+        return None, "sayaç geriye gitti (birim yeniden başladı) — bu aralık için fark anlamsız"
+    if bolen_ns is not None and ob is not None:
+        d_bolen = float(bolen_ns) - float(ob)
+        if d_bolen <= 0:
+            return None, "iki örnek arasında geçen çekirdek zamanı sıfır — yüzde tanımsız"
+        return round(100.0 * d_sayac / d_bolen, 1), None
+    d_duvar = simdi - ot
+    if d_duvar <= 0:
+        return None, "iki örnek arasında geçen duvar saati sıfır — yüzde tanımsız"
+    return round(100.0 * d_sayac / (d_duvar * 1e9), 1), None
+
+
+def _infra_makine() -> dict:
+    """MAKİNE bloğu — çekirdek, yük, CPU, bellek, disk, çalışma süresi.
+
+    Her alan kendi ölçüm yolunu taşır; ölçülemeyen alan `None` + neden döner."""
+    import platform as _pf
+
+    cekirdek = os.cpu_count()
+    # ---- yük ortalaması: Linux + macOS'ta VAR, Windows'ta yok
+    try:
+        y1, y5, y15 = os.getloadavg()
+        yuk, yuk_neden = {"1dk": round(y1, 2), "5dk": round(y5, 2), "15dk": round(y15, 2)}, None
+    except (OSError, AttributeError) as e:
+        yuk, yuk_neden = None, f"os.getloadavg() bu platformda yok/başarısız: {type(e).__name__}"
+
+    # ---- CPU yüzdesi: /proc/stat'ın kümülatif jiffy'lerinden FARK
+    stat = _proc_oku("stat")
+    kumulatif = bolen = None
+    cpu_neden_on = None
+    if stat is None:
+        cpu_neden_on = ("`/proc/stat` okunamadı — bu makinede `/proc` yok (macOS) ya da erişilemez; "
+                        "psutil kurulu DEĞİL, taşınabilir bir CPU okuması bu uçta mevcut değil")
+    else:
+        satir = next((s for s in stat.split("\n") if s.startswith("cpu ")), None)
+        if satir is None:
+            cpu_neden_on = "`/proc/stat` içinde toplam `cpu ` satırı yok — beklenmedik biçim"
+        else:
+            try:
+                alanlar = [float(x) for x in satir.split()[1:]]
+            except ValueError:
+                alanlar = []
+            if len(alanlar) < 5:
+                cpu_neden_on = "`/proc/stat` `cpu ` satırı beklenen alan sayısını taşımıyor"
+            else:
+                toplam = sum(alanlar)
+                bosta = alanlar[3] + alanlar[4]          # idle + iowait
+                kumulatif, bolen = toplam - bosta, toplam
+    if cpu_neden_on:
+        cpu_yuzde, cpu_neden = None, cpu_neden_on
+        _INFRA_CPU_ORNEK.pop("makine", None)             # kör örnek saklanmaz: sahte fark üretirdi
+    else:
+        cpu_yuzde, cpu_neden = _infra_cpu_yuzde("makine", kumulatif, bolen_ns=bolen)
+
+    # ---- bellek: /proc/meminfo (Linux). Toplam sysconf'tan da ölçülebilir; KULLANILAN ölçülemez.
+    bellek: dict = {"toplam_bayt": None, "kullanilan_bayt": None, "kullanilabilir_bayt": None,
+                    "kullanim_yuzde": None, "kaynak": None, "olculemedi_neden": None}
+    meminfo = _proc_oku("meminfo")
+    if meminfo:
+        kb: dict = {}
+        for s in meminfo.split("\n"):
+            p = s.split(":", 1)
+            if len(p) == 2:
+                sayi = p[1].strip().split()
+                if sayi and sayi[0].isdigit():
+                    kb[p[0]] = int(sayi[0]) * 1024
+        t, a = kb.get("MemTotal"), kb.get("MemAvailable")
+        if t and a is not None:
+            bellek.update(toplam_bayt=t, kullanilabilir_bayt=a, kullanilan_bayt=t - a,
+                          kullanim_yuzde=round(100.0 * (t - a) / t, 1), kaynak="/proc/meminfo")
+        elif t:
+            bellek.update(toplam_bayt=t, kaynak="/proc/meminfo",
+                          olculemedi_neden="`MemAvailable` satırı yok (çok eski çekirdek) — "
+                                           "kullanılan/kullanılabilir bellek çıkarılamadı")
+        else:
+            bellek["olculemedi_neden"] = "`/proc/meminfo` okundu ama `MemTotal` satırı yok"
+    if bellek["toplam_bayt"] is None:
+        try:
+            t = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+            bellek.update(toplam_bayt=t, kaynak="sysconf")
+        except (OSError, ValueError, AttributeError):  # sessiz-yutma: sysconf anahtarı bu platformda yoksa toplam bellek de ölçülemez; aşağıdaki gerekçe satırı bunu gövdeye yazar
+            pass
+        bellek["olculemedi_neden"] = (
+            "`/proc/meminfo` yok (macOS) — KULLANILAN bellek yalnız `vm_stat`/psutil ile "
+            "çıkarılabilir, ikisi de bu uçta kullanılmıyor" + (
+                "; toplam bellek `sysconf` ile ölçüldü" if bellek["toplam_bayt"] is not None
+                else "; `sysconf` da toplamı vermedi"))
+
+    # ---- disk: `shutil.disk_usage` HER platformda çalışır (psutil'in gerekmediği tek metrik).
+    # AYNI BÖLÜM İKİ SATIR OLMAZ: `/`, depo kökü ve `state/` çoğu kurulumda tek dosya sistemidir ve
+    # üç satır aynı sayıyı üç kez basardı — pano "üç disk" sanardı. Bunun yerine bölüm TEK satırdır
+    # ve `kapsayan_yollar` hangi Meridian yolunun o bölümde durduğunu SÖYLER; bilgi kaybı yok.
+    diskler, aygit_satiri = [], {}
+    for yol in ("/", str(config.ROOT), str(config.STATE)):
+        try:
+            aygit = os.stat(yol).st_dev
+        except OSError as e:
+            diskler.append({"yol": yol, "kapsayan_yollar": [yol], "toplam_bayt": None,
+                            "kullanilan_bayt": None, "bos_bayt": None, "kullanim_yuzde": None,
+                            "olculemedi_neden": f"os.stat başarısız — {type(e).__name__}: {e}"})
+            continue
+        if aygit in aygit_satiri:
+            aygit_satiri[aygit]["kapsayan_yollar"].append(yol)
+            continue
+        satir: dict = {"yol": yol, "kapsayan_yollar": [yol], "toplam_bayt": None,
+                       "kullanilan_bayt": None, "bos_bayt": None, "kullanim_yuzde": None,
+                       "olculemedi_neden": None}
+        try:
+            u = shutil.disk_usage(yol)
+            satir.update(toplam_bayt=u.total, kullanilan_bayt=u.used, bos_bayt=u.free,
+                         kullanim_yuzde=round(100.0 * u.used / u.total, 1) if u.total else None)
+            if u.total == 0:
+                satir["olculemedi_neden"] = "aygıt toplam boyutu 0 bildirdi — yüzde tanımsız"
+        except OSError as e:
+            satir["olculemedi_neden"] = f"shutil.disk_usage başarısız — {type(e).__name__}: {e}"
+        aygit_satiri[aygit] = satir
+        diskler.append(satir)
+
+    # ---- makine çalışma süresi: /proc/uptime. macOS'ta `sysctl kern.boottime` gerekir (alt süreç).
+    uptime_s = uptime_neden = None
+    up = _proc_oku("uptime")
+    if up:
+        try:
+            uptime_s = round(float(up.split()[0]), 1)
+        except (ValueError, IndexError):
+            uptime_neden = "`/proc/uptime` beklenmedik biçimde — ilk alan sayı değil"
+    else:
+        uptime_neden = ("`/proc/uptime` yok (macOS) — makine çalışma süresi ancak `sysctl "
+                        "kern.boottime` alt süreciyle ölçülebilir, bu uç alt süreç açmıyor")
+
+    return {
+        "hostname": _pf.node(),
+        "platform": {"sistem": _pf.system(), "surum": _pf.release(), "makine": _pf.machine(),
+                     "python": _pf.python_version(), "tam": _pf.platform()},
+        "cekirdek_n": cekirdek,
+        "cekirdek_n_neden": None if cekirdek else "os.cpu_count() None döndürdü — çekirdek sayısı belirlenemedi",
+        "yuk": yuk, "yuk_neden": yuk_neden,
+        "cpu_yuzde": cpu_yuzde, "cpu_yuzde_neden": cpu_neden,
+        "bellek": bellek, "disk": diskler,
+        "uptime_s": uptime_s, "uptime_s_neden": uptime_neden,
+    }
+
+
+def _infra_surec() -> dict:
+    """BU API SÜRECİ — makine ile bileşenler arasındaki üçüncü kat.
+
+    Neden ayrı: `/api/infra`yı okuyan operatörün ilk sorusu "pano süreci kendisi ne kadar yiyor?"
+    ve bu, systemd'nin `meridian.service` satırıyla AYNI ŞEY DEĞİLDİR (o birim docker compose'u
+    sarar). `os.times()` HER platformda çalışır, yani süreç CPU'su macOS'ta da ölçülür — `/proc`
+    körlüğünün istisnası."""
+    try:
+        t = os.times()
+        cpu_ns = (t.user + t.system) * 1e9
+    except (OSError, AttributeError):  # sessiz-yutma: os.times() yoksa süreç CPU'su ölçülemez; aşağıda None + neden ile beyan edilir
+        cpu_ns = None
+    cpu_yuzde, cpu_neden = _infra_cpu_yuzde("surec", cpu_ns)
+
+    rss = rss_neden = None
+    statm = _proc_oku("self/statm")
+    if statm:
+        try:
+            rss = int(statm.split()[1]) * os.sysconf("SC_PAGE_SIZE")
+        except (ValueError, IndexError, OSError):
+            rss_neden = "`/proc/self/statm` okundu ama yerleşik sayfa alanı çıkarılamadı"
+    else:
+        # `resource.getrusage(...).ru_maxrss` BİLEREK KULLANILMADI: o ZİRVE RSS'tir, ANLIK değil —
+        # ve macOS'ta bayt, Linux'ta kilobayt döndürür. İki farklı şeyi tek alana yazmak, tam olarak
+        # bu dosyanın kovaladığı sessiz yalan sınıfıdır.
+        rss_neden = ("`/proc/self/statm` yok (macOS) — ANLIK RSS yalnız psutil/`ps` ile ölçülür; "
+                     "`ru_maxrss` ZİRVE değeri ve birimi platforma göre değişir, kullanılmadı")
+    return {"pid": os.getpid(),
+            "uptime_s": round(_time.monotonic() - _INFRA_SUREC_MONO, 1),
+            "baslangic_ts": __import__("datetime").datetime.fromtimestamp(
+                _INFRA_SUREC_BASI, __import__("datetime").timezone.utc).isoformat(timespec="seconds"),
+            "cpu_yuzde": cpu_yuzde, "cpu_yuzde_neden": cpu_neden,
+            "rss_bayt": rss, "rss_bayt_neden": rss_neden}
+
+
+def _infra_birim_adlari() -> dict:
+    """Meridian systemd birimlerinin GERÇEK adları — `deploy/` altındaki birim DOSYALARINDAN.
+
+    AD UYDURULMAZ: "muhtemelen `meridian-worker.service` vardır" demek, panoya var olmayan bir
+    satır bastırır ve o satır sonsuza dek `not-found` gösterir. Kaynak diskteki dosyadır; aynı ad
+    iki yerde geçiyorsa (`deploy/meridian.service` ve `deploy/oracle-a1/meridian.service`) birim
+    TEK sayılır — systemd için de tek bir addır."""
+    kok = Path(config.ROOT) / "deploy"
+    birimler: dict = {}
+    neden = None
+    try:
+        dosyalar = sorted(list(kok.rglob("*.service")) + list(kok.rglob("*.timer")))
+    except OSError as e:
+        dosyalar, neden = [], f"`deploy/` taranamadı: {type(e).__name__}: {e}"
+    for p in dosyalar:
+        ad = p.name
+        if ad in birimler:
+            continue
+        birimler[ad] = {
+            "ad": ad, "dosya": ad, "tur": p.suffix.lstrip("."),
+            # ŞABLON BİRİM (`ad@.service`): düz adla `systemctl show` sorgusu SAHTE bir `inactive`
+            # döndürür — birim şablonu değil, örneği koşar (`meridian-sprint@2026-08-13.service`).
+            # Bu tuzak bu depoda bir kez yaşandı: "koşmuyor" ile "koştu, aday geçmedi" karıştı.
+            "sablon": "@" in ad,
+            "yol": str(p.relative_to(config.ROOT)) if str(p).startswith(str(config.ROOT)) else str(p),
+        }
+    if not birimler and neden is None:
+        neden = f"`{kok}` altında hiç `.service`/`.timer` dosyası yok"
+    return {"birimler": list(birimler.values()), "dizin": str(kok), "olculemedi_neden": neden}
+
+
+def _systemctl_show(birim: str) -> dict | None:
+    """`systemctl show <birim>` çıktısını `anahtar=değer` sözlüğüne çevirir; ölçülemezse `None`.
+
+    AYRI FONKSİYON OLMASI BİLİNÇLİ: alt süreç çağrısı testlerde tek noktadan saplanabilmeli,
+    yoksa bileşen sözleşmesi ancak systemd KURULU bir makinede sınanabilirdi."""
+    import subprocess
+    yol = shutil.which("systemctl")
+    if not yol:
+        return None
+    try:
+        cp = subprocess.run([yol, "show", birim, "--no-pager"]
+                            + [f"--property={a}" for a in _SYSTEMCTL_ALANLARI],
+                            capture_output=True, text=True, timeout=2.0)
+    except (OSError, subprocess.SubprocessError):  # sessiz-yutma: systemctl yoksa/zaman aşarsa bu birim ÖLÇÜLEMEDİ demektir; çağıran None'ı gerekçeye çevirir, uydurma satır basmaz
+        return None
+    if cp.returncode != 0:
+        return None
+    out: dict = {}
+    for satir in cp.stdout.split("\n"):
+        if "=" in satir:
+            k, v = satir.split("=", 1)
+            out[k] = v
+    return out or None
+
+
+def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
+    """MERIDIAN BİLEŞENLERİ — birim başına durum, CPU%, RSS, çalışma süresi, restart sayısı.
+
+    `systemctl` YOKSA BOŞ LİSTE DEĞİL `None` DÖNER. Boş liste panoda "bu makinede Meridian
+    bileşeni yok" diye okunur; oysa ölçülen şey "ölçemedim"dir. (YASA: boş gövde 'her şey yolunda'
+    DEĞİLDİR.) Süreç taramasına da düşülmedi: `ps` ayrıştırmak, systemd'nin ZATEN otoriter olarak
+    tuttuğu bilgiyi tahmine çevirmek olurdu ve macOS'ta koşan bir `python -m meridian...` süreci
+    "canlı bileşen" gibi görünürdü — yerel geliştirme makinesini canlı sanmak, bu deponun en
+    pahalı hata sınıfı (ölçüm bağlamı tuzağı)."""
+    if not shutil.which("systemctl"):
+        import platform as _pf
+        return None, (f"`systemctl` bu makinede yok ({_pf.system()}) — Meridian bileşenleri systemd "
+                      "birimleridir ve durumları yalnız canlı Linux sunucusunda (A1) ölçülebilir; "
+                      "süreç taraması bilerek kullanılmadı (tahmini otoriteye çevirirdi)")
+    # Makine uptime'ı birim başlangıcını mutlak zamana çevirmek için gerekir; bir kez okunur.
+    mak_uptime = None
+    up = _proc_oku("uptime")
+    if up:
+        try:
+            mak_uptime = float(up.split()[0])
+        except (ValueError, IndexError):  # sessiz-yutma: biçim beklenmedikse birim çalışma süresi ölçülemez; her satır kendi `uptime_s_neden`ini taşır
+            pass
+    bitis = _time.monotonic() + _SYSTEMCTL_BUTCE_S
+    satirlar = []
+    for b in birimler:
+        s: dict = {"ad": b["ad"], "dosya": b["dosya"], "tur": b["tur"], "sablon": b["sablon"],
+                   "birim_dosyasi": b["yol"], "kurulu": None, "kurulu_neden": None,
+                   "durum": None, "durum_neden": None, "alt_durum": None, "alt_durum_neden": None,
+                   "cpu_yuzde": None, "cpu_yuzde_neden": None, "rss_bayt": None, "rss_bayt_neden": None,
+                   "uptime_s": None, "uptime_s_neden": None, "restart_n": None, "restart_n_neden": None,
+                   "pid": None, "pid_neden": None, "aciklama": None, "aciklama_neden": None}
+        if b["sablon"]:
+            _sablon = ("ŞABLON birim (`@`): düz adla `systemctl show` SAHTE bir `inactive` döndürür "
+                       "— koşan şey şablon değil, örneğidir (`ad@<örnek>.service`). Bu birimin "
+                       "gerçek durumu `/api/sprint` üzerinden okunur; buradan UYDURULMAZ")
+            for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
+                         "restart_n", "pid", "aciklama"):
+                s[f"{alan}_neden"] = _sablon
+            satirlar.append(s)
+            continue
+        if _time.monotonic() >= bitis:
+            _butce = (f"zaman bütçesi doldu ({_SYSTEMCTL_BUTCE_S} sn): bu birim bu istekte "
+                      "sorgulanmadı — bütçe, 15 sn'de bir yoklanan ucun kilitlenmemesi için var")
+            for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
+                         "restart_n", "pid", "aciklama"):
+                s[f"{alan}_neden"] = _butce
+            satirlar.append(s)
+            continue
+        ham = _systemctl_show(b["ad"])
+        if not ham:
+            _yok = "`systemctl show` bu birim için çıktı vermedi (hata/zaman aşımı) — ölçülemedi"
+            for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
+                         "restart_n", "pid", "aciklama"):
+                s[f"{alan}_neden"] = _yok
+            satirlar.append(s)
+            continue
+
+        yukleme = ham.get("LoadState") or None
+        s["kurulu"] = (yukleme == "loaded") if yukleme else None
+        if yukleme is None:
+            s["kurulu_neden"] = "`LoadState` alanı çıktıda yok — kurulu olup olmadığı ölçülemedi"
+        elif yukleme != "loaded":
+            # Depoda dosyası olan ama bu makineye KURULMAMIŞ birimler var (örn. taslak
+            # `litestream.service`). Onları "inactive" diye basmak, kurulu ama durmuş bir birimle
+            # aynı görünürdü — iki farklı gerçek, tek rozet.
+            s["kurulu_neden"] = (f"`LoadState={yukleme}` — birim dosyası depoda var ama bu makineye "
+                                 "KURULU DEĞİL; durum/kaynak alanları bu yüzden ölçülemez")
+        durum = ham.get("ActiveState") or None
+        if s["kurulu"] and durum:
+            s["durum"], s["alt_durum"] = durum, (ham.get("SubState") or None)
+            if s["alt_durum"] is None:
+                s["alt_durum_neden"] = "`SubState` alanı çıktıda yok"
+        else:
+            _d = s["kurulu_neden"] or "`ActiveState` alanı çıktıda yok"
+            s["durum_neden"] = s["alt_durum_neden"] = _d
+
+        def _sayi(alan: str):
+            v = ham.get(alan)
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                return None
+
+        mem = _sayi("MemoryCurrent")
+        if mem is None:
+            s["rss_bayt_neden"] = "`MemoryCurrent` çıktıda yok/sayı değil"
+        elif mem >= _SYSTEMD_AYARSIZ:
+            s["rss_bayt_neden"] = ("`MemoryCurrent` 2^64-1 (systemd'nin AYARSIZ sentineli) — bellek "
+                                   "muhasebesi bu birim için açık değil; 18 EB diye BASILMAZ")
+        else:
+            s["rss_bayt"] = mem
+
+        nr = _sayi("NRestarts")
+        if nr is None:
+            s["restart_n_neden"] = "`NRestarts` çıktıda yok/sayı değil"
+        else:
+            s["restart_n"] = nr
+
+        pid = _sayi("MainPID")
+        if pid:
+            s["pid"] = pid
+        else:
+            s["pid_neden"] = ("`MainPID` yok ya da 0 — birim koşmuyor ya da ana süreci yok "
+                              "(oneshot/timer birimlerinde NORMAL)")
+
+        s["cpu_yuzde"], s["cpu_yuzde_neden"] = _infra_cpu_yuzde(f"birim:{b['ad']}", _sayi("CPUUsageNSec"))
+
+        bas = _sayi("ExecMainStartTimestampMonotonic")
+        if bas and mak_uptime is not None:
+            s["uptime_s"] = round(mak_uptime - bas / 1e6, 1)
+        elif not bas:
+            s["uptime_s_neden"] = ("`ExecMainStartTimestampMonotonic` yok/0 — birim hiç başlamamış "
+                                   "ya da ana süreci yok; çalışma süresi ölçülemez")
+        else:
+            s["uptime_s_neden"] = "`/proc/uptime` okunamadı — monotonik başlangıç mutlak süreye çevrilemez"
+
+        s["aciklama"] = ham.get("Description") or None
+        if s["aciklama"] is None:
+            s["aciklama_neden"] = "`Description` alanı çıktıda yok"
+        satirlar.append(s)
+    return satirlar, None
+
+
+def _infra_yaslandir(yuk: dict, yas: float) -> dict:
+    """Önbellekten servis edilen yükün YAŞ alanlarını zarfın yaşıyla toplar (`_diag_yaslandir`
+    emsali, aynı yasa): hiçbir alan içinde bulunduğu zarftan taze olduğunu iddia edemez.
+    Ölçülmemiş (None) bir süre YAŞLANDIRILMAZ — 'ölçülemedi' sessizce sayıya dönmesin."""
+    out = dict(yuk)
+    out["zarf_yasi_s"] = round(yas, 1)
+    mak = dict(out.get("makine") or {})
+    if isinstance(mak.get("uptime_s"), (int, float)):
+        mak["uptime_s"] = round(mak["uptime_s"] + yas, 1)
+        out["makine"] = mak
+    sur = dict(out.get("surec") or {})
+    if isinstance(sur.get("uptime_s"), (int, float)):
+        sur["uptime_s"] = round(sur["uptime_s"] + yas, 1)
+        out["surec"] = sur
+    bl = out.get("bilesenler")
+    if isinstance(bl, list):
+        out["bilesenler"] = [
+            ({**s, "uptime_s": round(s["uptime_s"] + yas, 1)}
+             if isinstance(s.get("uptime_s"), (int, float)) else s) for s in bl]
+    return out
+
+
+@app.get("/api/infra")
+def api_infra(request: Request, taze: int = 0):
+    """MAKİNE + MERİDİAN BİLEŞENLERİ — operatörün AYRI görmek istediği iki kat.
+
+    · `makine`: hostname, platform, çekirdek sayısı, yük ortalaması, CPU yüzdesi, bellek, disk
+      doluluğu, çalışma süresi.
+    · `surec`: bu API sürecinin kendisi (pid, uptime, CPU%, RSS) — systemd birimiyle AYNI ŞEY DEĞİL.
+    · `bilesenler`: `deploy/` altındaki GERÇEK systemd birimleri için durum/CPU%/RSS/uptime/restart.
+
+    ÖNBELLEK: 8 sn, `hesaplama_ts` + `onbellekten` + `zarf_yasi_s` ile BEYANLI; `?taze=1` zorlar
+    (`/api/diagnostics` deseni). Ölçülemeyen HER alan `None` + neden taşır — 0 yazmak yalandır."""
+    _auth(request)
+    anahtar = str(getattr(config, "STATE", ""))
+    if not taze:
+        hit = _INFRA_CACHE.get(anahtar)
+        if hit:
+            yuk, at = hit
+            yas = _time.monotonic() - at
+            if yas < INFRA_TTL_S:
+                return {**_infra_yaslandir(yuk, yas), "onbellekten": True}
+    kaynak = _infra_birim_adlari()
+    bilesenler, bilesen_neden = _infra_bilesenler(kaynak["birimler"])
+    import datetime as _dt          # dosyanın konvansiyonu: datetime fonksiyon içinde import edilir
+    yuk = {
+        "hesaplama_ts": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "onbellekten": False, "zarf_yasi_s": 0.0, "ttl_s": INFRA_TTL_S,
+        "makine": _infra_makine(),
+        "surec": _infra_surec(),
+        "bilesenler": bilesenler,
+        "bilesenler_olculemedi_neden": bilesen_neden,
+        "bilesen_kaynagi": {"dizin": kaynak["dizin"], "birim_n": len(kaynak["birimler"]),
+                            "systemctl_yolu": shutil.which("systemctl"),
+                            "systemctl_yolu_neden": None if shutil.which("systemctl")
+                            else "`systemctl` PATH'te yok — bu makine systemd koşmuyor",
+                            "olculemedi_neden": kaynak["olculemedi_neden"]},
+        "olcum_yolu": "stdlib (psutil YOK; /proc + os + shutil.disk_usage + systemctl)",
+    }
+    _INFRA_CACHE.clear()            # tek girdi: kum havuzu anahtarları birikip sızmasın (diag emsali)
+    _INFRA_CACHE[anahtar] = (yuk, _time.monotonic())
+    return yuk
+
+
+# ------------------------------------------------------------------ /api/roadmap ---------------
+#
+# ROADMAP.md 562 KB / 4622 satırdır ve panonun tahtası odur. Ayrıştırıcının TEK işi markdown
+# yapısını (başlıklar + madde listeleri) veri hâline getirmektir; YORUM ÜRETMEZ.
+#
+# İŞARETSİZ KALEM "AÇIK" DEĞİL "BELİRSİZ"dir. Bu ayrım bu ucun en önemli satırıdır: 419 maddenin
+# çoğu düzyazıdır ve durum işareti taşımaz. Onları "açık" saymak, tahtanın üstüne ÖLÇÜLMEMİŞ bir
+# sayı yazmak olurdu — ve o sayı yönetim kararına dönüşürdü. `belirsiz` dürüst olandır.
+#
+# ÜSTÜ ÇİZİLİ KAPANIŞ KAPALI DEĞİLDİR. Dosyada `~~✅ KAPANDI~~ — yukarıda ✅ (tarihçe)` ve
+# `~~⟳ YENİDEN AÇILDI~~` desenleri GERÇEKTEN var: kapanış iddiası sonradan GERİ ALINMIŞ demektir.
+# Naif bir `"✅" in satır` ayrıştırıcısı onu kapalı sayar ve tahta yalan söyler. Bu yüzden önce
+# üstü çizili aralıklar SÖKÜLÜR, işaret ancak KALAN metinde aranır.
+_ROADMAP_HAM_TAVAN = 400
+_ROADMAP_BASLIK_TAVAN = 160
+# Durum ROZETİNİN arandığı alan (gerekçe `_roadmap_madde_durumu`da). 160: dosyadaki en uzun rozet
+# başlıkları (`**✅ SB-4 — DAMGASIZ YAZIM BEKÇİSİ (KAPANDI v216, dağıtım #2 …)**`) buna sığıyor.
+_ROADMAP_ISARET_ALANI = 160
+_ROADMAP_CACHE: dict = {}
+_ROADMAP_MADDE = re.compile(r"^(\s*)([-*]) (\S.*)$")
+_ROADMAP_BASLIK = re.compile(r"^(#{1,6})\s+(.*)$")
+_ROADMAP_NO = re.compile(r"^(§[0-9∞]+)\s*(.*)$")
+_ROADMAP_CIZIK = re.compile(r"~~(.+?)~~", re.S)
+
+
+def _ROADMAP_TABLO_SATIRI(l: str) -> bool:
+    """Markdown tablo satırı mı? Boru ile BAŞLAR, boru ile BİTER ve en az iki boru taşır.
+
+    "Boru ile başlar" TEK BAŞINA YETMEZ — ölçüldü (2026-08-25, ROADMAP satır 3639): sarılmış bir
+    düzyazı satırı `|Δclose|/c, hacim oranı) …` diye başlıyor ve gevşek kural onu tablo sanıp
+    içinde bulunduğu maddenin gövdesinden KOPARIYORDU. Sonu da boru olma şartı bu yanlış pozitifi
+    kapatır: gerçek satırlar (`| kalem | WP | durum |`) kapanış borusunu taşır."""
+    k = l.strip()
+    return k.startswith("|") and k.endswith("|") and k.count("|") >= 2
+
+
+def _roadmap_yolu() -> Path:
+    """Tahtanın kaynağı — depo kökündeki `ROADMAP.md`. Ad TAHMİN EDİLMEDİ, diskte ölçüldü
+    (2026-08-25: `ROADMAP.md` 562 515 bayt / 4622 satır; `docs/` altındakiler tarihli türevlerdir
+    ve SSoT değildir)."""
+    return Path(config.ROOT) / "ROADMAP.md"
+
+
+def _roadmap_madde_durumu(metin: str) -> tuple[str, str | None, bool]:
+    """(durum, kanıt, üstü_çizili). Durum sözlüğü: kapali · bloke · askida · acik · belirsiz.
+
+    İŞARET KALEMİN BAŞINDA ARANIR, DÜZYAZISINDA DEĞİL. Bu satır da bir ölçümün bedelidir: tüm
+    gövdede arayan ilk sürüm, 763 karakterlik bir BULGU paragrafının ortasındaki bir ✅'yi görüp
+    kalemi "kapandı" saydı. Bu dosyada durum işareti bir ROZETTİR ve rozet başta durur
+    (`- **✅ KAPANDI — …`, `- **📋 SB-2 …`, `- **BLOKE:** …`); cümlenin ortasındaki ✅ bir işaret
+    değil, bir ANLATIDIR. Aranan alan: üstü-çizili aralıklar söküldükten SONRA kalan metnin ilk
+    `_ROADMAP_ISARET_ALANI` karakteri.
+
+    BİLİNEN SINIR (gizlenmiyor): "→ yukarıda ✅ (tarihçe)" gibi tarihçe İŞARETÇİLERİ de rozet
+    alanına düşerse `kapali` etiketlenir. Bunlar `ustu_cizili=True` taşır ve `durum_kanit` ham
+    işareti verir — tüketici ikisini birden görüp kendi hükmünü kurabilir. Düzyazıyı yorumlayacak
+    bir sezgisel eklemedim: sezgisel, ölçülmemiş bir hükmü ölçülmüş gibi gösterirdi."""
+    cizili = bool(_ROADMAP_CIZIK.search(metin))
+    kalan = _ROADMAP_CIZIK.sub(" ", metin)[:_ROADMAP_ISARET_ALANI]
+    for durum, desen in (("kapali", r"(✅|KAPANDI|KAPALI|TAMAMLANDI)"),
+                         ("bloke", r"\bBLOKE\b"),
+                         ("askida", r"\bASKIDA\b"),
+                         ("acik", r"\bAÇIK\b")):
+        m = re.search(desen, kalan)
+        if m:
+            return durum, m.group(0), cizili
+    if cizili and re.search(r"(✅|KAPANDI|KAPALI|TAMAMLANDI)", metin[:_ROADMAP_ISARET_ALANI]):
+        # Kapanış işareti VARDI ama üstü çizilmişti → "kapandı" DEĞİL; ölçülmüş bir geri alma.
+        return "belirsiz", "kapanış işareti ÜSTÜ ÇİZİLİ (geri alınmış) — kapalı sayılmaz", cizili
+    return "belirsiz", None, cizili
+
+
+def _roadmap_madde_basligi(metin: str) -> str:
+    """Kalın başlangıç (`**...**`) varsa başlıktır; yoksa ilk cümle/tire öncesi kırpılır."""
+    m = re.match(r"^\*{2}(.+?)\*{2}", metin, re.S)
+    ham = m.group(1) if m else re.split(r"\s+[—–]\s+|(?<=[.:])\s", metin, maxsplit=1)[0]
+    ham = _ROADMAP_CIZIK.sub(r"\1", ham).replace("**", "").strip().rstrip(":").strip()
+    return ham[:_ROADMAP_BASLIK_TAVAN]
+
+
+def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
+                      tam: bool = False) -> dict:
+    """Markdown'ı bölüm ağacına + madde listelerine çevirir. YORUM ÜRETMEZ, yalnız yapı çıkarır."""
+    satirlar = metin.split("\n")
+    belge_basligi = None
+    kok: list = []                 # üst düzey (## ) bölümler
+    yigin: list = []               # (seviye, bölüm) — açık başlık zinciri
+    onsoz: dict | None = None      # ilk başlıktan ÖNCEki maddeler (varsa) kaybolmasın
+    fence = False
+
+    def _yeni(seviye: int, ham_baslik: str, satir_no: int) -> dict:
+        no = None
+        govde = ham_baslik
+        m = _ROADMAP_NO.match(ham_baslik.strip())
+        if m:
+            no, govde = m.group(1), m.group(2)
+        return {"no": no, "baslik": govde.strip() or ham_baslik.strip(),
+                "ham_baslik": ham_baslik.strip(), "seviye": seviye, "satir": satir_no,
+                "maddeler": [], "alt_bolumler": []}
+
+    def _aktif() -> dict | None:
+        return yigin[-1][1] if yigin else None
+
+    acik: dict | None = None       # devam satırı katlanabilecek AÇIK madde (yoksa None)
+    for i, l in enumerate(satirlar, 1):
+        if l.lstrip().startswith("```"):
+            fence = not fence
+            acik = None
+            continue
+        if fence:
+            continue
+        if not l.strip():
+            # BOŞ SATIR MADDEYİ KAPATIR. Bu satır bir ölçümün bedelidir: kapatmayan ilk sürüm
+            # §0'ın son maddesine (satır 58) sonraki İKİ paragrafı katladı ve o paragrafların
+            # birindeki "✅ kapalı" LEJANTI maddeyi "kapandı" diye etiketledi. Yani tahtanın durum
+            # sütunu, madde ile hiç ilgisi olmayan bir açıklama satırından geliyordu. Markdown'da
+            # boş satırdan sonraki gövde ZATEN girintili olmak zorundadır; bu dosya satırlarını
+            # bitişik sardığı için yalnız BİTİŞİK satırlar katlanır.
+            acik = None
+            continue
+        if not _ROADMAP_TABLO_SATIRI(l):
+            # TABLO BLOĞUNU BOŞ SATIR BÖLMEZ, DÜZ METİN BÖLER. Ölçüldü (2026-08-25): ROADMAP'in
+            # §2 TAHTA tabloları ortalarında boş satır taşıyor (284-296 arası üç tane) ve
+            # bitişiklik varsayan ilk sürüm bloğu ÜÇE bölüp ayraçsız kalan iki parçayı SESSİZCE
+            # düşürdü — `BLOKE`/`ASKIDA` sayaçları bu yüzden 0 görünüyordu. Boş satır burada hiç
+            # görünmez (yukarıda `continue` edilir); kesinti işareti yalnız GERÇEK metin için.
+            _ht = _aktif() or onsoz
+            if _ht is not None and _ht.get("_tablo_ham"):
+                _ht["_tablo_ham"].append((i, None))
+        hb = _ROADMAP_BASLIK.match(l)
+        if hb:
+            acik = None
+            seviye, ham_baslik = len(hb.group(1)), hb.group(2)
+            if seviye == 1 and belge_basligi is None:
+                belge_basligi = ham_baslik.strip()
+                continue
+            if seviye == 1:
+                continue           # ikinci bir `#` başlık: belge içi ayraç, bölüm değil
+            b = _yeni(seviye, ham_baslik, i)
+            while yigin and yigin[-1][0] >= seviye:
+                yigin.pop()
+            if yigin:
+                yigin[-1][1]["alt_bolumler"].append(b)
+            else:
+                kok.append(b)
+            yigin.append((seviye, b))
+            continue
+        mm = _ROADMAP_MADDE.match(l)
+        if mm:
+            girinti, govde = len(mm.group(1)), mm.group(3)
+            hedef = _aktif()
+            if hedef is None:
+                if onsoz is None:
+                    # Başlıksız önsöz maddeleri SESSİZCE DÜŞMEZ: sayım dosyayla tutarlı kalmalı.
+                    onsoz = _yeni(2, "(başlıksız önsöz)", 1)
+                    onsoz["no"] = None
+                hedef = onsoz
+            acik = {"satir": i, "girinti": girinti, "_ham": [govde]}
+            hedef["maddeler"].append(acik)
+            continue
+        if l.lstrip().startswith(">"):
+            acik = None            # alıntı bloğu maddenin devamı değildir (§2'nin doğrulama bloğu)
+            continue
+        if _ROADMAP_TABLO_SATIRI(l):
+            # TABLOLAR AYRI BİR SINIF — VE BU DEPODA ASIL TAHTA ONLARDIR. Ölçüldü (2026-08-25):
+            # dosyada 13 tablo / 194 satır var ve `BLOKE:`/`ASKIDA:` durumlarının TAMAMI tablo
+            # hücrelerinde yaşıyor (§2 TAHTA bir tablodur, liste değil). Yalnız madde listelerini
+            # ayrıştıran bir uç `bloke: 0` derdi — ölçmediği bir şeyi "yok" diye bildirmek, bu
+            # deponun birinci yasasının ihlali. Satır maddeye KATLANMAZ: tablo hücresi bir
+            # maddenin devamı değildir.
+            acik = None
+            hedef = _aktif() or onsoz
+            if hedef is not None:
+                hedef.setdefault("_tablo_ham", []).append((i, l.strip()))
+            continue
+        # Bitişik devam satırı: bu dosya madde gövdelerini sarıyor, katlanmazsa metin yarım kalır.
+        if acik is not None:
+            acik["_ham"].append(l.strip())
+
+    if onsoz is not None:
+        kok.insert(0, onsoz)
+
+    sayim_durum = {"kapali": 0, "bloke": 0, "askida": 0, "acik": 0, "belirsiz": 0}
+    tablo_durum = {"kapali": 0, "bloke": 0, "askida": 0, "acik": 0, "belirsiz": 0,
+                   "cok_isaretli": 0}
+    tablo_sayaci = {"tablo": 0, "satir": 0, "atlanan": 0}
+
+    def _hucreler(satir: str) -> list[str]:
+        """`| a | b |` → ["a", "b"]. Kenar borularının ürettiği boş uçlar atılır."""
+        parcalar = satir.split("|")
+        if parcalar and not parcalar[0].strip():
+            parcalar = parcalar[1:]
+        if parcalar and not parcalar[-1].strip():
+            parcalar = parcalar[:-1]
+        return [x.strip() for x in parcalar]
+
+    def _tablolari_kur(b: dict) -> list:
+        """Bitişik `|` satırlarını tablolara böler; başlık + ayraç + satırlar.
+
+        DURUM HÜCRE HÜCRE ARANIR, satırın tamamında DEĞİL: tablo satırı birden çok sütundur ve
+        rozet KENDİ hücresindedir (`| kalem | WP | **BLOKE: operatör** |`). Satırın tamamını tek
+        metin sayan bir arama, `kalem` sütunundaki düzyazıyı da rozet alanına sokardı — madde
+        tarafında ölçülüp düzeltilen kusurun aynısı."""
+        ham = b.pop("_tablo_ham", [])
+        tablolar, blok, atlanan = [], [], []
+
+        def _ayrac(l: str) -> bool:
+            return bool(re.fullmatch(r"[\s|:\-]+", l)) and "-" in l
+
+        def _bitir(blok):
+            """Bir `|` bloğunu tablolara böler. AYRAÇ satırı (`|---|`) tabloyu başlatır; bir blokta
+            birden çok ayraç varsa üst üste binmiş birden çok tablo demektir."""
+            if len(blok) < 2:
+                if blok:
+                    atlanan.append({"satir": blok[0][0], "satir_n": len(blok),
+                                    "neden": "tek satırlık `|` bloğu — tablo değil"})
+                return
+            ayrac_ix = [k for k, (_no, _l) in enumerate(blok) if _ayrac(_l)]
+            if not ayrac_ix:
+                # SESSİZ DÜŞÜRME YOK: atlanan her blok sayılır ve NEDENİ gövdede taşınır.
+                atlanan.append({"satir": blok[0][0], "satir_n": len(blok),
+                                "neden": "ayraç satırı (`|---|`) yok — markdown tablosu değil, "
+                                         "boru karakterli düz metin"})
+                return
+            for j, ix in enumerate(ayrac_ix):
+                if ix == 0:
+                    atlanan.append({"satir": blok[0][0], "satir_n": 1,
+                                    "neden": "ayraç ilk satır — üstünde başlık satırı yok"})
+                    continue
+                son = ayrac_ix[j + 1] - 1 if j + 1 < len(ayrac_ix) else len(blok)
+                _tabloyu_kur(blok[ix - 1], [x for x in blok[ix + 1:son] if not _ayrac(x[1])])
+
+        def _tabloyu_kur(baslik_satiri, govde):
+            basliklar = _hucreler(baslik_satiri[1])
+            blok = [baslik_satiri]
+            satirlar = []
+            for no, l in govde:
+                hucreler = _hucreler(l)
+                hucre_durum, kanitlar, cizili = [], [], False
+                for h in hucreler:
+                    d, k, c = _roadmap_madde_durumu(h)
+                    cizili = cizili or c
+                    hucre_durum.append(d)
+                    if d != "belirsiz":
+                        kanitlar.append({"sutun": len(hucre_durum) - 1, "durum": d, "kanit": k})
+                # TEK HÜKME İNDİRGEME YOK. Ölçüldü (2026-08-25, ROADMAP satır 290): bir §2 TAHTA
+                # satırı `| ~~B1 …~~ **H6 ✅ KARAR+UYGULAMA** | WP11 | **BLOKE: operatör** |`
+                # biçiminde HEM kapanış HEM blok rozeti taşıyor — ilk bulduğunu alan sürüm satırı
+                # "kapalı" sayıyor ve `BLOKE` sayacı 0 kalıyordu. İkisi ÇELİŞMİYOR da: karar
+                # verilmiş (kapalı) ama kapı operatörde (bloke). Çelişkiyi bir sezgiselle çözmek,
+                # ölçülmemiş bir hükmü ölçülmüş gibi göstermek olurdu.
+                ayrik = sorted({d for d in hucre_durum if d != "belirsiz"})
+                if len(ayrik) == 1:
+                    durum, durum_neden = ayrik[0], None
+                elif not ayrik:
+                    durum, durum_neden = "belirsiz", None
+                else:
+                    durum = None
+                    durum_neden = ("satırda birden çok durum rozeti var (" + " + ".join(ayrik) +
+                                   ") — tek hükme indirgenemedi; hücre başına `hucre_durum` ve "
+                                   "`durum_kanitlari` okunur")
+                tablo_durum["cok_isaretli" if durum is None else durum] += 1
+                tablo_sayaci["satir"] += 1
+                kirpildi = (not tam) and any(len(h) > _ROADMAP_HAM_TAVAN for h in hucreler)
+                satirlar.append({
+                    "satir": no,
+                    "hucreler": [h if tam or len(h) <= _ROADMAP_HAM_TAVAN
+                                 else h[:_ROADMAP_HAM_TAVAN] for h in hucreler],
+                    "hucre_kirpildi": kirpildi,
+                    "hucre_uzunluk": [len(h) for h in hucreler],
+                    "hucre_durum": hucre_durum,
+                    "durum": durum, "durum_neden": durum_neden,
+                    "durum_kanitlari": kanitlar, "ustu_cizili": cizili})
+            tablo_sayaci["tablo"] += 1
+            tablolar.append({"satir": baslik_satiri[0], "basliklar": basliklar,
+                             "satirlar": satirlar, "satir_n": len(satirlar)})
+
+        for no, l in ham:
+            if l is None:            # kesinti işareti: araya GERÇEK metin girdi
+                _bitir(blok); blok = []
+                continue
+            blok.append((no, l))
+        _bitir(blok)
+        if atlanan:
+            b["tablo_atlanan"] = atlanan
+            tablo_sayaci["atlanan"] += len(atlanan)
+        return tablolar
+
+    def _kapat(b: dict) -> None:
+        yeni = []
+        for m in b["maddeler"]:
+            ham = " ".join(m.pop("_ham")).strip()
+            durum, kanit, cizili = _roadmap_madde_durumu(ham)
+            sayim_durum[durum] += 1
+            kirpildi = (not tam) and len(ham) > _ROADMAP_HAM_TAVAN
+            yeni.append({"satir": m["satir"], "girinti": m["girinti"],
+                         "baslik": _roadmap_madde_basligi(ham) or None,
+                         "ham": ham[:_ROADMAP_HAM_TAVAN] if kirpildi else ham,
+                         "ham_kirpildi": kirpildi, "ham_uzunluk": len(ham),
+                         "durum": durum, "durum_kanit": kanit, "ustu_cizili": cizili})
+        b["maddeler"] = yeni
+        b["madde_n"] = len(yeni)
+        b["tablolar"] = _tablolari_kur(b)
+        b["tablo_satir_n"] = sum(t["satir_n"] for t in b["tablolar"])
+        for alt in b["alt_bolumler"]:
+            _kapat(alt)
+        b["madde_n_toplam"] = b["madde_n"] + sum(a["madde_n_toplam"] for a in b["alt_bolumler"])
+        b["tablo_satir_n_toplam"] = b["tablo_satir_n"] + sum(
+            a["tablo_satir_n_toplam"] for a in b["alt_bolumler"])
+
+    for b in kok:
+        _kapat(b)
+
+    # ALT BÖLÜM KENDİ ADRESİNİ TAŞIR: `### WP7 …` başlığı `§N` numarası taşımaz ve tüketici
+    # "bu kalem hangi bölümde?" sorusunu ancak ağacı kendi gezerek cevaplayabilirdi. `ust_no`
+    # o gezintiyi gövdeye taşır — yüzey ajanı satırı tek başına gösterebilsin.
+    def _adresle(bs: list, ust_no, ust_baslik) -> None:
+        for b in bs:
+            b["ust_no"], b["ust_baslik"] = ust_no, ust_baslik
+            _adresle(b["alt_bolumler"], ust_no if ust_no else b["no"], ust_baslik or b["baslik"])
+
+    for b in kok:
+        b["ust_no"], b["ust_baslik"] = None, None
+        _adresle(b["alt_bolumler"], b["no"], b["baslik"])
+
+    def _alt_say(bs: list) -> int:
+        return sum(1 + _alt_say(b["alt_bolumler"]) for b in bs)
+
+    # `wc -l` İLE AYNI SAYIYI VERSİN: `split("\n")` sondaki satır sonundan sonra BOŞ bir eleman
+    # üretir ve "4623 satır" der — dosyada 4622 var. Bir satırlık fark küçüktür ama gövdedeki her
+    # sayı dışarıdan doğrulanabilir olmalı; doğrulanamayan sayı güveni sessizce aşındırır.
+    satir_n = len(satirlar) - (1 if satirlar and satirlar[-1] == "" else 0)
+    return {"yol": yol, "bayt": bayt, "satir_n": satir_n, "mtime": mtime,
+            "baslik": belge_basligi, "bolumler": kok,
+            "sayim": {"bolum_n": len(kok), "alt_bolum_n": _alt_say(kok) - len(kok),
+                      "madde_n": sum(b["madde_n_toplam"] for b in kok), "durum": sayim_durum,
+                      "tablo_n": tablo_sayaci["tablo"], "tablo_satir_n": tablo_sayaci["satir"],
+                      "tablo_atlanan_n": tablo_sayaci["atlanan"], "tablo_durum": tablo_durum,
+                      "kapsam": "belgenin TAMAMI"},
+            "ham_tavan": None if tam else _ROADMAP_HAM_TAVAN,
+            # SÖZLEŞME GÖVDEDE TAŞINIR: tüketici `durum` alanının NE KADARINI ölçtüğünü satırın
+            # kendisinden okumalı. Özellikle `belirsiz`: "işaretsiz" demektir, "açık" DEĞİL.
+            "durum_kapsam": (f"durum işareti kalemin ilk {_ROADMAP_ISARET_ALANI} karakterinde "
+                             "(rozet alanı) aranır; düzyazının ortasındaki işaret sayılmaz. "
+                             "`belirsiz` = kalem işaret TAŞIMIYOR — 'açık' DEĞİL, ölçülmemiş. "
+                             "Üstü çizili kapanış rozeti kapalı SAYILMAZ (`ustu_cizili` alanı). "
+                             "Tablo satırlarında durum HÜCRE HÜCRE aranır ve sayımı AYRI tutulur "
+                             "(`sayim.tablo_durum`) — §2 TAHTA bir tablodur, madde listesi değil; "
+                             "iki sayımı toplamak kalemleri çift saymak olurdu")}
+
+
+def _roadmap_say(bolumler: list) -> dict:
+    """Verilen bölüm ağacından sayımı YENİDEN hesaplar (süzgeç uygulandığında kullanılır).
+
+    NİYE GEREKLİ: `?bolum=§2` isteğinde `madde_n`i süzgeçleyip `tablo_durum`u belge-geneli
+    bırakmak, aynı `sayim` sözlüğünün yarısını bir kapsama yarısını başkasına bağlardı — okuyan
+    hangi sayının neyi saydığını AYIRT EDEMEZDİ. Sayım tek kapsamlıdır ve kapsamını `kapsam`
+    alanında söyler."""
+    durum = {"kapali": 0, "bloke": 0, "askida": 0, "acik": 0, "belirsiz": 0}
+    tdurum = {"kapali": 0, "bloke": 0, "askida": 0, "acik": 0, "belirsiz": 0, "cok_isaretli": 0}
+    sayac = {"madde": 0, "tablo": 0, "tsatir": 0, "atlanan": 0, "alt": 0}
+
+    def _gez(bs: list, ust: bool) -> None:
+        for b in bs:
+            if not ust:
+                sayac["alt"] += 1
+            for m in b["maddeler"]:
+                durum[m["durum"]] += 1
+                sayac["madde"] += 1
+            for t in b["tablolar"]:
+                sayac["tablo"] += 1
+                for r in t["satirlar"]:
+                    tdurum["cok_isaretli" if r["durum"] is None else r["durum"]] += 1
+                    sayac["tsatir"] += 1
+            sayac["atlanan"] += len(b.get("tablo_atlanan") or [])
+            _gez(b["alt_bolumler"], False)
+
+    _gez(bolumler, True)
+    return {"bolum_n": len(bolumler), "alt_bolum_n": sayac["alt"], "madde_n": sayac["madde"],
+            "durum": durum, "tablo_n": sayac["tablo"], "tablo_satir_n": sayac["tsatir"],
+            "tablo_atlanan_n": sayac["atlanan"], "tablo_durum": tdurum}
+
+
+def _roadmap_ozetle(bolumler: list) -> list:
+    """Gövdeleri SÖKER, yapıyı ve durumu bırakır. Kopya üretir — önbellekteki ağaca DOKUNMAZ
+    (yerinde budasaydık ikinci istek gövdesiz bir tahta görür ve `?ozet=0` sessizce yalan olurdu).
+
+    NİYE VAR: tam gövde ÖLÇÜLDÜ — 383 KB (2026-08-25). Uygulamada gzip ara katmanı YOK, yani o
+    383 KB telden ham geçiyor. Tahtayı çizmek için madde gövdesi gerekmez; başlık + durum yeter.
+    Ayrıntı `?bolum=§N` ile tek bölüm olarak istenir."""
+    def _b(b: dict) -> dict:
+        return {**b,
+                "maddeler": [{"satir": m["satir"], "girinti": m["girinti"], "baslik": m["baslik"],
+                              "durum": m["durum"], "durum_kanit": m["durum_kanit"],
+                              "ustu_cizili": m["ustu_cizili"], "ham_uzunluk": m["ham_uzunluk"]}
+                             for m in b["maddeler"]],
+                "tablolar": [{**t, "satirlar": [
+                    {"satir": r["satir"], "etiket": (r["hucreler"][0] if r["hucreler"] else "")[:160],
+                     "durum": r["durum"], "durum_neden": r["durum_neden"],
+                     "hucre_durum": r["hucre_durum"], "ustu_cizili": r["ustu_cizili"]}
+                    for r in t["satirlar"]]} for t in b["tablolar"]],
+                "alt_bolumler": [_b(a) for a in b["alt_bolumler"]]}
+    return [_b(b) for b in bolumler]
+
+
+@app.get("/api/roadmap")
+def api_roadmap(request: Request, bolum: str | None = None, tam: int = 0, ozet: int = 0):
+    """ROADMAP.md → tahta. SALT OKUNUR; yazma ucu YOKTUR (dosya insan tarafından düzenlenir).
+
+    `?bolum=§3` tek bölüme daraltır · `?tam=1` madde gövdelerinin kırpılmasını kapatır
+    (kırpılmışsa gövde bunu `ham_kirpildi` + `ham_uzunluk` ile SÖYLER — kırpılmış metni tam
+    sanmak yalandır) · `?ozet=1` madde/hücre gövdelerini söker, yapı + başlık + durum bırakır
+    (tam gövde ÖLÇÜLDÜ: 383 KB, uygulamada gzip ara katmanı yok).
+
+    MADDE LİSTELERİ VE TABLOLAR AYRI SAYILIR. Bu dosyanın asıl tahtası (§2) bir TABLODUR; yalnız
+    `- ` maddelerini ayrıştıran bir uç `bloke: 0` derdi — ölçmediğini "yok" diye bildirmek. İki
+    sayaç ayrı tutulur (`sayim.durum` vs `sayim.tablo_durum`); toplamak kalemleri çift sayardı.
+
+    DOSYA YOKSA 200 + `hata` + `yol` döner, 404 DEĞİL: 404'ün gövdesi FastAPI zarfıdır ve panonun
+    `useApi` üç-hâl ayrımında yalnız "hata" olarak görünürdü — operatör HANGİ yolun okunamadığını
+    göremezdi. Burada `bolumler: null`tır (boş liste DEĞİL: boş liste 'yol haritası boş' diye
+    okunur, oysa ölçülen şey 'dosyayı bulamadım')."""
+    _auth(request)
+    p = _roadmap_yolu()
+    try:
+        st = p.stat()
+        metin = p.read_text(encoding="utf-8")
+    except OSError as e:
+        return {"ok": False, "bolumler": None,
+                "hata": f"ROADMAP dosyası okunamadı ({type(e).__name__}): {e}",
+                "yol": str(p)}
+    import datetime as _dt
+    mtime = _dt.datetime.fromtimestamp(st.st_mtime, _dt.timezone.utc).isoformat(timespec="seconds")
+    kok = Path(config.ROOT)
+    gorunur = str(p.relative_to(kok)) if str(p).startswith(str(kok)) else str(p)
+    ck = (str(p), st.st_mtime_ns, st.st_size, bool(tam))
+    yuk = _ROADMAP_CACHE.get(ck)
+    if yuk is None:
+        # ÖNBELLEK ANAHTARI mtime_ns + boyut TAŞIR: dosya değişince anahtar da değişir, yani bayat
+        # bir tahta servis edilemez. 562 KB'lık ayrıştırma her istekte tekrarlanmasın diye var.
+        yuk = _roadmap_ayristir(metin, yol=gorunur, bayt=st.st_size, mtime=mtime, tam=bool(tam))
+        _ROADMAP_CACHE.clear()
+        _ROADMAP_CACHE[ck] = yuk
+    bolumler = yuk["bolumler"]
+    if bolum:
+        ara = bolum.strip()
+        secili = [b for b in bolumler
+                  if (b.get("no") or "") == ara or b["ham_baslik"].startswith(ara)]
+        yuk = {**yuk, "bolumler": secili,
+               "sayim": {**_roadmap_say(secili), "kapsam": f"YALNIZ süzgeçlenen bölüm(ler): {ara}"}}
+    if ozet:
+        yuk = {**yuk, "bolumler": _roadmap_ozetle(yuk["bolumler"]),
+               "ozet_beyani": ("madde `ham` gövdeleri ve tablo hücreleri SÖKÜLDÜ; başlık, durum ve "
+                               "yapı duruyor. Gövde için `?ozet=0` (varsayılan) ya da `?bolum=§N`")}
+    yuk = {**yuk, "ok": True,
+           "suzgec": {"bolum": bolum, "tam": bool(tam), "ozet": bool(ozet),
+                      "eslesen_bolum_n": len(yuk["bolumler"]), "toplam_bolum_n": len(bolumler)}}
+    return yuk
