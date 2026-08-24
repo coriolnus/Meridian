@@ -137,7 +137,7 @@ limits:
   # 0,285 → 0,037). Tutarlılık çivisi `heat_hard_r <= max_open × max_position_r` (v166) artık
   # eşitlik değil BOL: 5,0 <= 20,0 — sert tavan bağlayan taraf, slot sayısı değil.
   # YAN ETKİ (bilinçli, 026 kartında beyanlı): `max_sector_exposure_pct` kuralının paydası
-  # `max_open_positions`tır (guard.py:386 `sector_cap_basis`; A17: eski `:352`/`:359` çapaları bayattı) — sektör başına fiili tavan 2 isimden 8 isme çıkar.
+  # `max_open_positions`tır (guard.py:392 `sector_cap_basis`; A17: eski `:352`/`:359`/`:386` çapaları bayattı) — sektör başına fiili tavan 2 isimden 8 isme çıkar.
   max_open_positions: 20
   max_daily_loss_pct: 3.0
   max_sector_exposure_pct: 40.0
@@ -188,6 +188,27 @@ limits:
   # rampasının tabanı, diğeri deneyin başarısızlık hükmü eşiğidir (ayrı sınıf, ayrı okuyucu).
   derisk_full_dd: 0.15                 # bu çekilmeye KADAR tam boy (rampanın üst ucu)
   derisk_floor_dd: 0.36                # bu çekilmede ve ötesinde YENİ boy YOK (rampanın tabanı)
+  # --- ÇİFT-BAĞ ÇİVİSİ: slot ⟷ boyut (OPERATÖR TASARIM KAPANIŞI 2026-08-24, kalem 20c) ---------
+  # NE YAPAR: `max_open_positions` (slot) ile `position_size_r` (boyut) ölçülen ÇİFTTEN yalnız
+  #   BİRİ ayrılırsa kapı hükmü REVIEW'a düşer ve nedeni `gate_reasons`a ADIYLA yazılır.
+  # NEDEN: ikisi BİRLİKTE pozisyon riskini belirler; birini tek başına oynatmak öteki üzerinden
+  #   SESSİZ bir kaldıraç değişikliğidir (slot 20 + 1,0R ile slot 20 + 0,5R aynı sistem değildir;
+  #   simetrik olarak boyut sabitken slotu kısmak da ısı zarfını yeniden kurar). `EDG-2026-026`
+  #   kartı bu çifti BİRLİKTE ölçtü — tek başına hiçbir uç ölçülmedi.
+  # NE YAPMAZ: NO_GO ÜRETMEZ. Bu bir YASAK değil bir İNSAN KAPISIDIR. `position_size_r` bu yüzden
+  #   `guard.LIMIT_KEYS`e ALINMADI ve `state/bounds.yaml` satırına DOKUNULMADI (arama uzayı AÇIK
+  #   kalır; tek-bacaklı öneri yasaklanmaz, GÖRÜNÜR olur) — tasarım kapanışı ikisini de açıkça
+  #   reddetti.
+  # OKUYUCU (YASA 6): `guard.cift_bag_hukmu` → `guard.classify_gate` soft dalı (kontrol adı
+  #   `cift_bag_slot_boyut`). Kayıt silinirse çivi ölür; sessiz-ölüm çivisi
+  #   tests/test_goal_cift_bag_v284.py.
+  # OPERATÖR KALEMİ: `guard.LIMIT_KEYS` — Hermes öneremez, bounds.yaml'da satırı YOKTUR. Çift
+  #   yeniden ölçülürse İKİ SAYI DA aynı turda ve KART-ÖNCE güncellenir: buradaki kayıt +
+  #   yürürlükteki `limits.max_open_positions` + `state/strategy.yaml` params.position_size_r.
+  cift_bag_slot_boyut:
+    kart: EDG-2026-026                 # research/cards/EDG-2026-026-slot20-boyut05.yaml
+    max_open_positions: 20             # ölçülen çiftin SLOT ucu (yürürlükteki limits değeriyle aynı)
+    position_size_r: 0.5               # ölçülen çiftin BOYUT ucu (strategy.yaml params yüzeyinde)
   # --- MEZAR TAŞI: kill_switch_file — KALDIRILDI (2026-08-23) ---------------------------------
   # Düşen satır: `kill_switch_file: "state/HALT"` (25a; envanter §D-1'in İKİ "en tehlikeli"sinden
   #   ikincisi; ilk tespit K1 denetimi 2026-07-30). HİÇBİR KOD OKUMAZDI — kaldırma günü yeniden

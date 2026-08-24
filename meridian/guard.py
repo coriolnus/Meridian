@@ -9,7 +9,8 @@ aday girişin çalışma-zamanı risk-zarfı hükmü (GO/REVIEW/NO_GO). Sert zar
 `classify_gate`tir; `check_trade` ondan TÜRETİLİR — zarfın ikinci bir kopyasını taşıyan eski
 tasarım, iki yüzey sessizce ayrışıp canlıda NO_GO olan plana "geçti" deyince YANLIŞLANDI ve
 türetme o ayrışmayı yapısal olarak imkânsız kılar. Yardımcılar: `sector_cap_basis` (sektör tavanı
-paydası — sebepli fail-safe, sessiz varsayılan yok), `y3_plan_inputs`/`y3_portfolio_inputs`
+paydası — sebepli fail-safe, sessiz varsayılan yok), `cift_bag_hukmu` (slot ⟷ boyut çift-bağı —
+tek-bacaklı değişikliği REVIEW'a düşüren insan kapısı), `y3_plan_inputs`/`y3_portfolio_inputs`
 (dolar tabanlı portföy tavanlarının üretici sözleşmesi). Kilit ad kümeleri: `GOAL_KEYS`/
 `LIMIT_KEYS` (Hermes'in öneremeyeceği değişmez operatör kalemleri), `LIVE_DEAD_KNOBS` (canlı
 motorun okuyamadığı, yapısal no-op knob sınıfı — terfisi ölçülmemiş kazanç üretirdi).
@@ -72,7 +73,12 @@ LIMIT_KEYS = {"autonomy_level", "max_position_r", "max_open_positions", "max_dai
               # payda `max_open_positions`tan TÜRETİLİR (bkz. `sector_cap_basis`), yani bu tur
               # davranış değiştirmez. Ad burada ŞİMDİDEN durur ki, operatör bir gün satırı
               # yazdığında Hermes'e açık bir düğme olarak DOĞMASIN (kayma sınıfı).
-              "sector_cap_basis"}
+              "sector_cap_basis",
+              # ÇİFT-BAĞ ÇİVİSİNİN KENDİSİ (20c, 2026-08-24). Kayıt bir EŞİK değil, iki ucun
+              # BİRLİKTE ölçüldüğünün beyanıdır — ama yetki sınıfı yukarıdakilerle aynı: çiviyi
+              # sökmek de bir risk kararıdır ve Hermes'in kendi kapısını kaldırmasına açık
+              # bırakılamaz (bounds.yaml'da satırı YOKTUR; değiştiren yalnız operatördür).
+              "cift_bag_slot_boyut"}
 
 # --- REPLAY ISINMA KURALLARI (25c ÜSTÜN-HÜKÜM damgası, 2026-08-23) -------------------------------
 # goal.yaml `limits` blokunda YAŞAYAN ama CANLI ZARF PARAMETRESİ OLMAYAN adlar. Bugün tek üye
@@ -425,6 +431,87 @@ def sector_cap_basis(limits: dict):
     return deger, None
 
 
+# --- ÇİFT-BAĞ ÇİVİSİ: slot ⟷ boyut (OPERATÖR TASARIM KAPANIŞI 2026-08-24, kalem 20c) -------------
+# YÖNETİŞİM ASİMETRİSİ: `max_open_positions` bir OPERATÖR KALEMİDİR (LIMIT_KEYS; bounds.yaml'da
+# satırı yok), `position_size_r` ise bir ARAMA DEĞİŞKENİDİR (bounds.yaml'da satırı var, Hermes
+# önerebilir). Ama İKİSİ BİRLİKTE pozisyon riskini belirler: birini tek başına oynatmak, öteki
+# üzerinden SESSİZ bir kaldıraç değişikliğidir (slot 20 + 1,0R ile slot 20 + 0,5R aynı sistem
+# değildir; simetrik olarak boyut sabitken slotu kısmak ısı zarfını yeniden kurar). `EDG-2026-026`
+# kartı bu çifti BİRLİKTE ölçtü — tek başına hiçbir uç ölçülmedi.
+#
+# HÜKÜM (2026-08-24, BAĞLAYICI): asimetri KAPATILMADI. `position_size_r` LIMIT_KEYS'e ALINMADI ve
+# bounds.yaml satırına DOKUNULMADI — yani tek-bacaklı öneri YASAK DEĞİLDİR, GÖRÜNÜRDÜR: kapı
+# hükmü REVIEW'a düşer ve nedeni `gate_reasons`a adıyla yazılır. NO_GO ÜRETİLMEZ; bu bir insan
+# kapısıdır, bir veto değil (sert zarfın üyeleri yukarıdaki hard listede kalır).
+CIFT_BAG_KEY = "cift_bag_slot_boyut"
+CIFT_BAG_SLOT_ADI = "max_open_positions"    # goal.yaml `limits`te yaşar (operatör kalemi)
+CIFT_BAG_BOYUT_ADI = "position_size_r"      # strateji `params` yüzeyinde yaşar (arama değişkeni)
+
+
+def _cift_bag_sayi(deger):
+    """Çift ucunun `float` hâli; okunamıyorsa None ("ölçülemedi", 0 DEĞİL — UYDURMA YASAĞI).
+
+    `bool` BİLEREK ELENİR: YAML `true` bir slot/boyut değildir ama `float(True)` sessizce 1.0
+    verirdi ve çivi "ölçüldü" diye yalan söylerdi (aynı tuzak `sector_cap_basis`ta paydayı 1'e
+    düşürüp her planı kesiyordu). NaN de None sayılır: her karşılaştırmada False verdiği için
+    "iki uç da aynı" hükmünü sessizce üretirdi."""
+    if deger is None or isinstance(deger, bool):
+        return None
+    try:
+        s = float(deger)
+    except (TypeError, ValueError):  # sessiz-yutma: istisna YUTULMUYOR — çağıran None'ı "ölçülemedi" olarak okur, karar satırına gerekçesiyle YAZAR ve hüküm DEĞİŞMEZ (fail-open: çift-bağ bir risk vetosu değil, bir görünürlük kapısıdır)
+        return None
+    return None if s != s else s
+
+
+def cift_bag_hukmu(limits: dict, params: dict | None) -> tuple[str, str | None, str | None, str | None]:
+    """(durum, gerekçe, değer, eşik) — slot ⟷ boyut çift-bağı. SAF fonksiyon (defter/ağ/disk yok).
+
+    `durum` DÖRT DEĞERDEN BİRİ ve dördü de AYRI bir olgudur (ikisini birleştirmek "kayıt yok" ile
+    "kayıt var ama ölçemedik"i aynı şeye çevirirdi — bu deponun tekrar tekrar yakaladığı sınıf):
+      * `"yok"`         — goal'da çift-bağ kaydı YOK. Çivi bu goal için TANIMLI DEĞİLDİR; çağıran
+                          karar ağacına satır bile AÇMAZ (eski/sentetik goal sözlükleri birebir
+                          bugünkü davranışı korur — geriye uyum ve fail-safe).
+      * `"olculemedi"`  — kayıt var, ama uçlardan biri okunamıyor (yok / sayı değil / bool / NaN).
+                          Hüküm DEĞİŞMEZ ama satır sebebini TAŞIR: "tavan tuttu" görüntüsü YASAK.
+      * `"temiz"`       — iki uç da ölçülen çiftte, YA DA ikisi birlikte oynamış. Çift öneri
+                          MEŞRUDUR: çivi tek-bacaklılığa bakar, değişikliğe değil.
+      * `"kirildi"`     — TAM OLARAK BİR uç ölçülen çiftten ayrılmış → çağıran REVIEW'a düşürür.
+    """
+    kayit = (limits or {}).get(CIFT_BAG_KEY)
+    if not isinstance(kayit, dict):
+        return "yok", None, None, None
+    kart = str(kayit.get("kart") or "?")
+    olcum = {
+        f"kayıt.{CIFT_BAG_SLOT_ADI}": _cift_bag_sayi(kayit.get(CIFT_BAG_SLOT_ADI)),
+        f"kayıt.{CIFT_BAG_BOYUT_ADI}": _cift_bag_sayi(kayit.get(CIFT_BAG_BOYUT_ADI)),
+        f"limits.{CIFT_BAG_SLOT_ADI}": _cift_bag_sayi((limits or {}).get(CIFT_BAG_SLOT_ADI)),
+        f"params.{CIFT_BAG_BOYUT_ADI}": _cift_bag_sayi((params or {}).get(CIFT_BAG_BOYUT_ADI)),
+    }
+    eksik = sorted(ad for ad, v in olcum.items() if v is None)
+    if eksik:
+        return ("olculemedi",
+                f"çift-bağ ÖLÇÜLEMEDİ — {', '.join(eksik)} okunamadı (yok/sayı değil/NaN); hüküm "
+                f"DEĞİŞMEZ (fail-open), eksik uç 0 ya da varsayılan SAYILMAZ", None, None)
+    ref_slot = olcum[f"kayıt.{CIFT_BAG_SLOT_ADI}"]
+    ref_boyut = olcum[f"kayıt.{CIFT_BAG_BOYUT_ADI}"]
+    eff_slot = olcum[f"limits.{CIFT_BAG_SLOT_ADI}"]
+    eff_boyut = olcum[f"params.{CIFT_BAG_BOYUT_ADI}"]
+    deger = f"{CIFT_BAG_SLOT_ADI}={eff_slot:g} · {CIFT_BAG_BOYUT_ADI}={eff_boyut:g}"
+    esik = f"{ref_slot:g} · {ref_boyut:g} ({kart})"
+    slot_ayni = abs(eff_slot - ref_slot) < 1e-9
+    boyut_ayni = abs(eff_boyut - ref_boyut) < 1e-9
+    if slot_ayni == boyut_ayni:      # ikisi de yerinde YA DA ikisi de oynamış → çift bozulmadı
+        return "temiz", None, deger, esik
+    oynayan = CIFT_BAG_SLOT_ADI if not slot_ayni else CIFT_BAG_BOYUT_ADI
+    duran = CIFT_BAG_BOYUT_ADI if not slot_ayni else CIFT_BAG_SLOT_ADI
+    return ("kirildi",
+            f"çift-bağ KIRILDI: `{oynayan}` TEK BAŞINA ölçülen çiftten ayrıldı — `{duran}` "
+            f"yerinde kaldı ({deger}; ölçülen çift {esik}). İkisi BİRLİKTE pozisyon riskini "
+            f"belirler: tek bacak, öteki uç üzerinden SESSİZ bir kaldıraç değişikliğidir. Öneri "
+            f"ÇİFT ve KART-ÖNCE gelmeli (insan kapısı — yasak değil)", deger, esik)
+
+
 def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params: dict | None = None,
                   detail_out: list | None = None):
     """Return (verdict, reasons) where verdict ∈ {GO, REVIEW, NO_GO}.
@@ -578,6 +665,20 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
         min_score = float(params.get("entry.min_score", 60))
         _chk("score_band", plan.get("score", 100) < min_score + REVIEW_SCORE_BAND,
              "skor alt bantta", "soft", value=plan.get("score"), threshold=f">={min_score + REVIEW_SCORE_BAND:.0f}")
+        # --- ÇİFT-BAĞ ÇİVİSİ: slot ⟷ boyut (gerekçe `cift_bag_hukmu` gövdesinde) --------------
+        # NEDEN `params is not None` DALININ İÇİNDE: çiftin boyut ucu YALNIZ strateji params
+        # yüzeyinde yaşar (`position_size_r`; motor onu goal'dan DEĞİL oradan okur). params
+        # verilmeyen çağrıda ölçülecek bir çift YOKTUR — ve karar ağacının params'sız 12'li ad
+        # listesi (test_mutborc_guard_classify_gate_v148 + test_sektor_tavani_ayristirma_v245)
+        # bu yüzden BÜYÜMEZ. Üç üretim çağıranı da (loop/backtest/cf_backfill) `eff` geçirir,
+        # yani canlı ve replay bu satırı AYNI şekilde yazar (motor-eşitliği: test_differential_v60).
+        # SOFT: hüküm en fazla REVIEW'a düşer. Tek-bacaklı bir değişiklik bir YASAK değil, insan
+        # gözü isteyen bir yönetişim olayıdır — sert zarfa dokunmaz.
+        cb_durum, cb_neden, cb_deger, cb_esik = cift_bag_hukmu(limits, params)
+        if cb_durum != "yok":       # kayıt taşımayan goal: satır bile açılmaz (geriye uyum)
+            _chk(CIFT_BAG_KEY, cb_durum == "kirildi", cb_neden or "", "soft",
+                 value=cb_deger, threshold=cb_esik,
+                 gecse_de_yaz=(cb_durum == "olculemedi"))   # ÖLÇÜLEMEDİ ≠ HÜKÜM: satır sebebini taşır
 
     # --- Y3'ÜN KARAR YOLUNDA KALAN KISMI: İKİ PORTFÖY TAVANI, İKİSİ DE BAYRAK-ARKASI -----------
     # DEFAULT KAPALI: knob yoksa/0 ise bu blok HİÇBİR ŞEY yapmaz ve kapı birebir eski davranışı
