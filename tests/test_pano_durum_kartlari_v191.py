@@ -422,13 +422,29 @@ def test_izgara_YENI_RENK_JETONU_acmaz():
     # D1 sonrası hangi KATMANIN okunduğu tam olarak burada ölçülüyor — ölçüm yorumdan beslenirse
     # kural hue'ya geri dönse bile test yeşil kalırdı.
     blok_kod = re.sub(r"/\*.*?\*/", "", blok, flags=re.S)
-    for jeton in ("--card", "--line-2", "--r-card", "--mono", "--tx2", "--tx3", "--sev-2", "--sev-1"):
+    # D2 (2026-08-24) — `--mono` LİSTEDEN ÇIKTI. Izgara bloğundaki tek mono tüketicisi
+    # `.durum-ac` idi ("detay →") ve o bir ETİKET, ölçülen değer değil. Yazı tipi hükmünün
+    # (`docs/HUKUM-2026-08-24-YAZITIPI.md`) gerekçesinin tamamı RAKAMLARLA ilgili — `1`/`l`,
+    # `0`/`O` ayrımı — yani mono'nun yerini hak ettiği yer bir ölçümdür; etikette mono
+    # emekli Omega sesiydi. KARTIN SAYISI ETKİLENMEDİ ve bu ayrıca ölçülüyor (aşağıda):
+    # `.pm-thin` mono'da KALDI, `.pm-n` zaten kalıtımlıydı ve `tabular-nums` taşıyor.
+    # D3 (2026-08-24) — `--line-2` LİSTEDEN ÇIKTI. Maket 22 kenarın 21'inde TEK saç teli
+    # kullanıyor; bizde `--line` ve `--line-2` 60/45 bölüşüyordu ve operatörün "çerçeveler de
+    # farklı" gözleminin ÖLÇÜLEN sebebi buydu. Kenarlar tek jetona (`--line`) birleşti; çivi
+    # onu istiyor. Sözleşmenin genel hâli `test_tasarim_dili_tutarliligi_v285::test_TEK_sac_teli`.
+    for jeton in ("--card", "--line", "--r-card", "--tx2", "--tx3", "--sev-2", "--sev-1"):
         assert jeton in blok_kod, f"{jeton} jetonu kullanılmıyor — değer başka yerden geliyor olabilir"
     # Ham hex kadar sessiz bir geri düşüş: kuralın hue adına geri bağlanması. Yasağın GENEL
     # hâli test_renk_rolleri_v197::test_bilesen_kurallari_ham_hue_okumaz'dadır; burada ızgaraya
     # özgü mesajıyla tekrarlanır, çünkü bu bloğun sözleşmesi bu dosyada okunuyor.
     assert not re.search(r"var\(\s*--(green|amber|red)\b", blok_kod), \
         "ızgara kuralı hue adına geri bağlanmış — kural hangi ROLÜ taşıdığını söylemiyor"
+    # MONO'NUN BIRAKILMASI SAYIYA DOKUNMADI — bunun çivisi burada, yoksa "etiketi sans'a al"
+    # turu bir gün para rakamını da sürükler ve kimse görmez.
+    assert "font-family:var(--mono)" in _govde(".pm-thin{", "\n.pm-none{", INDEX), \
+        "`.pm-thin` mono'yu kaybetmiş — kartın sayısı ölçüm yüzünü bıraktı"
+    assert "tabular-nums" in _govde(".pm-n{", "\n.pm-thin{", INDEX), \
+        "`.pm-n` tabular hizayı kaybetmiş"
 
 
 def test_sayilar_tabular_nums():
@@ -500,9 +516,24 @@ def test_izgara_dis_kaynak_cekmez():
 def test_kart_sutun_sayisi_ve_dar_ekran_civili():
     """Sütun sayısı bir SÖZLEŞMEdir (Genel Bakış'ın `.gb-ust`'üyle aynı gerekçe): dört kart tek
     kolona dizilseydi "tek bakış" iddiası sessizce düşerdi. Dar ekranda kaydırma DÜRÜST hâldir."""
+    # 2026-08-24: iddia SÜTUN SAYISI. Eskiden kırılma noktaları BİREBİR DİZGEYLE sabitlenmişti
+    # ve blok tek satır kaldığı sürece bu fark etmiyordu; band maketin paylaşılan-kenar
+    # gramerine geçince (gap:0 + hücrede border-right) her kırılma noktasına asılı kenarı
+    # kapatan kurallar girdi ve çivi, DEĞİŞMEYEN sütun sayısına rağmen düştü. Dizge değil
+    # SAYI ölçülüyor artık — kural bloğu büyüyebilir, sözleşme büyüyemez.
+    import re as _re
     assert ".durum-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))" in INDEX
-    assert "@media(max-width:1100px){.durum-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}}" in INDEX
-    assert "@media(max-width:640px){.durum-izgara{grid-template-columns:1fr}}" in INDEX
+    for genislik, beklenen in (("1100px", "repeat(2,minmax(0,1fr))"), ("640px", "1fr")):
+        m = _re.search(r"@media\(max-width:" + genislik + r"\)\{[^@]*?\.durum-izgara\{grid-template-columns:([^;}]+)",
+                       INDEX, _re.S)
+        assert m, f"{genislik} kırılma noktasında .durum-izgara sütun kuralı YOK"
+        assert m.group(1).strip() == beklenen, \
+            f"{genislik}: sütun sözleşmesi {beklenen} iken {m.group(1).strip()} bulundu"
+    # PAYLAŞILAN KENAR HER KIRILMADA KAPANIR: dar ekranda satır sonundaki hücrenin sağ kenarı
+    # asılı kalırsa band "kapalı kap" olmaktan çıkar ve maket grameri bozulur.
+    assert ".durum-kart:nth-child(2n){border-right:0}" in INDEX, "iki sütunda asılı sağ kenar kapanmıyor"
+    assert ".durum-kart{border-right:0;border-bottom:1px solid var(--line)}" in INDEX, \
+        "tek sütunda hücreler yatay kenara geçmiyor"
 
 
 def test_kart_odak_halkasi_var():
@@ -673,8 +704,14 @@ def test_rozet_kosullu_dogar_ve_kelimesi_beyanlidir():
     for ad, (ifade, kelime) in beklenen.items():
         g = _govde(*_KART_GOVDE[ad])
         assert ifade in g, f"{ad} kartının rozeti koşullu doğmuyor: {kelime}"
-    # Matrisin kendi rozeti ("az örnek") ve şeritlerinki AYNI çip sınıfını kullanır.
-    assert 'rozet: thin ? "az örnek"' in _govde("function plotCell(", "\nasync function renderPlotMap()")
+    # Matrisin rozeti ile şeritlerinki AYNI çip sınıfını kullanır — ve 2026-08-24'ten beri
+    # AYNI KELİMEYİ de kullanır. Eski hâli `"az örnek"` küçük harfti ve bu çivi onu SABİTLİYORDU
+    # ama savunmuyordu: iddia "aynı sınıf"tı, harf düzeni cümlenin içinde kazara duruyordu.
+    # Operatör ekran görüntüsüyle bildirdi — pencere kartında "AZ ÖRNEK", matriste "az örnek";
+    # aynı eşik (AZ_ORNEK_N), aynı çip, iki farklı ses. Harf düzeni artık TEK.
+    pc = _govde("function plotCell(", "\nasync function renderPlotMap()")
+    assert 'rozet: thin ? "AZ ÖRNEK"' in pc, "matris rozeti şeritlerle aynı kelimeyi kullanmıyor"
+    assert '"az örnek"' not in pc, "matriste küçük harf rozet geri gelmiş — iki ses yeniden doğdu"
 
 
 def test_kanit_olcegi_TEK_ve_matris_onu_kullanir():

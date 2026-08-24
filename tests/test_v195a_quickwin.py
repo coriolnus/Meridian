@@ -535,9 +535,19 @@ def test_bolum_basligi_HEADLINE_basamaginda():
 
 
 def test_eksen_etiketi_OKUNABILIR_tabanda():
-    """8px → 10px. Sönüklük MÜREKKEPLE kurulur (--tx2), puntoyla değil."""
-    kural = re.search(r"\.bl-ax\{([^}]*)\}", INDEX).group(1)
-    assert "font-size:10px" in kural and "var(--tx2)" in kural
+    """8px → 10px. Sönüklük MÜREKKEPLE kurulur (--tx2), puntoyla değil.
+
+    2026-08-24 (Dub göçü): iddia bir TABAN, dondurulmuş bir sabit değil. Etiket basamağı
+    maketin `--t-cap`ine (11px) çıktı; 11 ≥ 10, yani okunabilirlik iddiası ÇİĞNENMEDİ,
+    GÜÇLENDİ. Eskiden burada literal `10px` yazılıydı ve rampa jetonlanınca çivi, ölçtüğü
+    şey iyileştiği HÂLDE düştü — sabit, iddianın kendisi sanılmıştı."""
+    kural = _px_coz(re.search(r"\.bl-ax\{([^}]*)\}", INDEX).group(1))
+    m = re.search(r"font-size:(\d+)px", kural)
+    assert m, ".bl-ax punto bildirmiyor"
+    assert int(m.group(1)) >= 10, (
+        f"eksen etiketi {m.group(1)}px — okunabilirlik tabanı 10px'in ALTINA düştü; "
+        f"sönüklük mürekkeple kurulur, puntoyla değil")
+    assert "var(--tx2)" in kural
     # Etiket SAYISI iki (iki uç) — sıkışma çözümü punto düşürmek değil, etiket azaltmaktır.
     assert APPJS.count('class="bl-ax"') == 2
 
@@ -549,7 +559,16 @@ def test_parola_etiketleri_MICRO_basamaginda():
     # İDİOM YERİNDE KALDI: rakam üstündeki mikro-etiket hâlâ Label basamağında — ve o basamağı
     # kendi jetonundan (`--label-size`) alıyor, yani idiomun tek bir sahibi var.
     assert "font-size:var(--label-size)" in re.search(r"\.bl-lab\{([^}]*)\}", INDEX).group(1)
-    assert "--label-size:10px" in INDEX, "Label basamağı jetonu kaymış — imza idiomu 10px'tir"
+    # 2026-08-24 (Dub göçü): ~~--label-size:10px~~ → 11px, maketin `--t-cap` basamağı.
+    # ÖLÇÜLEN İDDİA "10" SABİTİ DEĞİL, TEK SAHİPLİK: mikro-etiket basamağını kendi jetonundan
+    # alır ve o jeton rampanın kapak basamağıyla AYNI olmalı — iki ayrı 11px doğarsa idiom
+    # yine ikiye bölünür ve bu çivinin varlık sebebi tam olarak o bölünmeyi engellemek.
+    m_l = re.search(r"--label-size:(\d+)px", INDEX)
+    m_c = re.search(r"--t-cap:(\d+)px", INDEX)
+    assert m_l and m_c, "etiket/kapak basamağı jetonu bulunamadı"
+    assert m_l.group(1) == m_c.group(1), (
+        f"Label basamağı ({m_l.group(1)}px) rampanın kapak basamağından ({m_c.group(1)}px) "
+        f"AYRILMIŞ — mikro-etiket idiomunun iki sahibi olur")
     # Ve etiketler gerçekten bu sınıfı kullanıyor (kural ile kullanım ayrışmasın).
     assert INDEX.count('class="gate-l"') == 2
 

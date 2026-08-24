@@ -74,17 +74,37 @@ def test_tip_jetonlari_HIYERARSI_RAMPASINDA():
     jeton tanımına değil). Kapı burası."""
     tip = {k: v for k, v in _KOK_TIP.items() if k.startswith("t-")}
     assert len(tip) == 6, f"tip jetonu sayısı {len(tip)} (beklenen 6): {sorted(tip)}"
-    disari = {k: v for k, v in tip.items() if int(v.removesuffix("px")) not in RAMPA}
+    disari = {k: v for k, v in tip.items() if _px(v) not in RAMPA}
     assert not disari, f"tip jetonu rampa dışında: {disari} · izinli {sorted(RAMPA)}"
     # HİYERARŞİ RAMPASI (Ö6) — yüzey rampasının ALT KÜMESİ ve adımları ölçülmüştür.
     # docs/kontrast-denetimi.md §12.3: karar §3'ün 11/14/16/20/24/30 rampası 16/14=1.1429
     # ile eşiğin (1.15) altında kaldı; daraltma 16 → 17 oldu.
-    basamak = sorted(int(v.removesuffix("px")) for v in tip.values())
+    basamak = sorted(_px(v) for v in tip.values())
     assert basamak == [11, 14, 17, 20, 24, 30], (
         f"hiyerarşi rampası değişmiş: {basamak}. Değişecekse ÖLÇÜLEREK değişir "
         f"(research/olcumler/dub_donusumu_2026-08-24/olc.py · Ö6) ve §12.3 güncellenir.")
     adim = [round(basamak[i + 1] / basamak[i], 4) for i in range(len(basamak) - 1)]
     assert min(adim) >= 1.15 and max(adim) >= 1.25, f"Ö6 adım eşiği düştü: {adim}"
+
+
+# ---- JETON ÇÖZÜCÜ (D1, 2026-08-24) ------------------------------------------------------------
+# Rampa artık `--t-*` jetonlarıyla yönetiliyor: 2026-08-24 öncesi 165 sert punto kural
+# gövdelerine dağılmıştı ve ölçek yarıdan fazla baypas ediliyordu. Ham `NNpx` ayrıştıran bir
+# çivi, DOĞRU olan jetonlu yazımı "rampa dışı" sanar — yani düzeltmeyi cezalandırırdı.
+# Bu dosyanın İDDİALARI değişmedi; yalnız ölçmeden önce jetonu çözüyor.
+_JETON_PX = {"--t-cap": 11, "--t-body": 14, "--t-lg": 17, "--t-sub": 20,
+             "--t-h": 24, "--t-num": 30, "--label-size": 11}
+
+
+def _px(v: str) -> int:
+    """`14px` ya da `var(--t-body)` → 14. Tanınmayan jeton SESSİZ GEÇMEZ, hata verir."""
+    v = v.strip()
+    j = re.fullmatch(r"var\(\s*(--[a-z0-9-]+)\s*\)", v)
+    if j:
+        px = _JETON_PX.get(j.group(1))
+        assert px is not None, f"tanınmayan punto jetonu: {v} — `_JETON_PX`e ekle"
+        return px
+    return int(v.removesuffix("px"))
 
 
 def _font_size_degerleri(yol: Path) -> list[str]:
@@ -97,11 +117,27 @@ def test_her_font_size_rampada():
     Göreli birimler (`em`/`rem`/`%`) de düşürür: T10'un ikinci bacağı buydu ve ölçüldüğünde
     ikisi de zaten bir basamağa nişan alıyordu (14px'te .86em=12,04 · .92em=12,88). Yaklaşık
     doğru bir değer, belirsiz bir beyandır."""
+    # D1 (2026-08-24) — JETON ÇÖZÜLÜR, SONRA ÖLÇÜLÜR. Rampa artık `--t-*` jetonlarıyla
+    # yönetiliyor (165 sert punto tek tek kural gövdelerindeydi ve ölçek yarıdan fazla
+    # baypas ediliyordu). Ham `NNpx` arayan bir çivi, DOĞRU olan jetonlu yazımı "rampa dışı"
+    # sanar — yani düzeltmenin kendisini cezalandırırdı. Çivinin İDDİASI aynı: çizilen punto
+    # bir rampa basamağı olmalı; değişen, o puntoya nasıl ulaşıldığı.
+    JETON_PX = {"--t-cap": 11, "--t-body": 14, "--t-lg": 17, "--t-sub": 20,
+                "--t-h": 24, "--t-num": 30, "--label-size": 11}
     disari = []
     for ham in _font_size_degerleri(RUNBOOK_HTML):
-        m = re.fullmatch(r"(\d+)px", ham)
+        h = ham.strip()
+        if h == "inherit":
+            continue
+        j = re.fullmatch(r"var\(\s*(--[a-z0-9-]+)\s*\)", h)
+        if j:
+            px = JETON_PX.get(j.group(1))
+            if px is None or px not in RAMPA:
+                disari.append(f"{h} (jeton tanınmadı ya da rampada değil)")
+            continue
+        m = re.fullmatch(r"(\d+)px", h)
         if not m or int(m.group(1)) not in RAMPA:
-            disari.append(ham)
+            disari.append(h)
     assert not disari, (
         f"runbook.html rampa dışı font-size taşıyor: {disari}. "
         f"İzinli basamaklar: {sorted(RAMPA)} (DESIGN.md Rampa Kuralı). "
@@ -144,7 +180,11 @@ def test_govde_panonun_uzun_metin_olcutuyle_ayni():
     assert body, "runbook.html `body` kuralı bulunamadı"
     b = body.group(1).replace("\n", "").replace(" ", "")
 
-    assert f"font-size:{olcut['font-size']}" in b, (
+    # D1 (2026-08-24): karşılaştırma ÇÖZÜLMÜŞ değer üzerinden. İki taraf farklı BİÇİMDE
+    # yazılabilir (biri `14px`, öteki `var(--t-body)`) ama iddia "aynı PUNTO" olmalı — biçim
+    # eşitliği aramak, jetona geçen tarafı sahte kırmızıya düşürüyordu.
+    _b_fs = _FONT_SIZE.search(b)
+    assert _b_fs and _px(_b_fs.group(1)) == _px(olcut['font-size']), (
         f"runbook gövdesi panonun uzun-metin ölçütünden ayrıştı "
         f"(`.md` {olcut['font-size']}, runbook farklı)"
     )
@@ -169,9 +209,9 @@ def test_baslik_merdiveni_olculen_ayrimi_koruyor():
         assert m, f"runbook.html `{etiket}` kuralı bulunamadı"
         fs = _FONT_SIZE.search(m.group(1))
         assert fs, f"`{etiket}` font-size taşımıyor"
-        olculen[etiket] = int(fs.group(1).removesuffix("px"))
+        olculen[etiket] = _px(fs.group(1))
     body = re.search(r"\nbody\{([^}]*)\}", govde)
-    olculen["body"] = int(_FONT_SIZE.search(body.group(1)).group(1).removesuffix("px"))
+    olculen["body"] = _px(_FONT_SIZE.search(body.group(1)).group(1))
 
     assert olculen["h1"] > olculen["h2"] > olculen["body"], (
         f"merdiven monoton değil: {olculen}"
@@ -196,8 +236,8 @@ def test_baslik_ici_kod_gomulmedi():
     m = re.search(r"h2 code\{([^}]*)\}", govde)
     assert m, ("`h2 code` kuralı yok — başlık içi kod gövde ölçüsüne düşer ve 15 başlık "
                "sessizce mertebe kaybeder (ölçüldü: docs/RUNBOOK.md'de 15 adet `## \\`…\\``)")
-    kod_px = int(_FONT_SIZE.search(m.group(1)).group(1).removesuffix("px"))
-    h2_px = int(_FONT_SIZE.search(re.search(r"\nh2\{([^}]*)\}", govde).group(1))
+    kod_px = _px(_FONT_SIZE.search(m.group(1)).group(1))
+    h2_px = _px(_FONT_SIZE.search(re.search(r"\nh2\{([^}]*)\}", govde).group(1))
                 .group(1).removesuffix("px"))
     assert kod_px in RAMPA and kod_px < h2_px, (
         f"başlık içi kod ölçüsü ({kod_px}px) rampada ve h2'nin ({h2_px}px) altında olmalı"

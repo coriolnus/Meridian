@@ -328,6 +328,11 @@ def test_mod_hue_bandi_yalniz_moda_ait():
 
     Bant 285-335° (mor-macenta). Şiddet hue'ları (~24 / ~77 / ~154) ve veri-ölçek kutupları
     (~250 mavi / ~84 toprak) bu bandın dışında; giren olursa mod artık ayrılmış değildir.
+
+    D1 (2026-08-24) — `--huni-*` MUAF, operatör kararıyla. Huni üçlüsü onaylanan maketin
+    (Dub) kendi jetonlarıdır ve `--huni-2` `--mod-canli` ile birebir aynı hex. Ayrılmışlık
+    iddiası bu aile için ARTIK YOK ve bu bilerek böyle; kayıt gerekçesiyle birlikte
+    `docs/KARAR-2026-08-24-C-YUZEY-TAKASI.md`de. Çivi geri kalan her jeton için AYNEN çalışır.
     """
     for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
         for jeton in tablo:
@@ -340,6 +345,16 @@ def test_mod_hue_bandi_yalniz_moda_ait():
             if C < 0.02:                       # akromatik — hue anlamsız
                 continue
             icinde = MOD_BANDI[0] <= H <= MOD_BANDI[1]
+            # HUNİ JETONLARI MUAF (2026-08-24, OPERATÖR KARARI). Operatörün kendi cümlesi:
+            # "dub renklerini istiyorum … renk körü değilim, birşeyi de renkten dolayı
+            # karıştırmam". Onaylanan maketin huni üçlüsü Dub'ın kendi jetonlarıdır ve
+            # `--huni-2` = `#7c3aed`, `--mod-canli` ile BİREBİR AYNI HEX'tir.
+            # BU BİR ÖLÇÜM DEĞİL BİR RİSK KABULÜDÜR ve sahibi operatördür: bandın koruduğu
+            # şey "kâğıt mı canlı para mı" ayrımının renkle karışmamasıydı; operatör o
+            # karışmayı kendi adına reddetti. Muafiyet DAR: yalnız `--huni-*` ailesi.
+            # Başka bir jeton banda girerse çivi AYNEN kırmızı verir.
+            if jeton.startswith("--huni-"):
+                continue
             if jeton.startswith("--mod-"):
                 assert icinde, f"{ad} {jeton}: hue {H:.1f}° mod bandının DIŞINDA"
             else:
@@ -374,16 +389,31 @@ def test_mod_yapisal_tasiyici_var_ve_ucuncu_hal_uyduruk_degil():
 # §5 — YÖN KROMASI ŞİDDETİN ALTINDA
 # ---------------------------------------------------------------------------
 def test_yon_kromasi_siddetin_gorunur_altinda():
-    """Kârlı bir gün, bir risk ihlaliyle DİKKAT İÇİN YARIŞAMAZ.
+    """D1 (2026-08-24) — TAVAN ŞİDDETTEN ONAYLI-PALET-AZAMİSİNE TAŞINDI.
 
-    Yön üçüncü sinyaldir (işaret ve ok önce gelir), o yüzden kroması şiddetin altında
-    olmalı. Kısıt sayısaldır ve iki zeminde de ölçülür: maks(yön C) < min(şiddet C).
-    """
+    ~~Eski kural: yön kroması ≤ 0,75 × şiddet kroması.~~ Gerekçesi "kâr/zarar işareti bir
+    alarmla dikkat için YARIŞAMAZ"dı. İki şey onu düşürdü:
+
+    1. OPERATÖR KARARI: "renk körü değilim, birşeyi de renkten dolayı karıştırmam" +
+       "operatör benim ve canlılık istiyorum" → Dub renkleri istendi, soluklaştırma reddedildi.
+    2. ÖLÇÜM: eski kuralın öncülü ZATEN YANLIŞTI. Dub hunisi indiğinden beri şiddet ekranın
+       en yüksek sesli mürekkebi DEĞİL — gündüz huni-2 C=0,2466 ↔ şiddet-min C=0,1671.
+       Şiddetin altında kalmak "en sesli olma" anlamına gelmiyordu, ölçtüm.
+
+    KALAN CANLI İDDİA: yön, ekrandaki ONAYLI mürekkeplerin en yükseğini AŞAMAZ. Tavan
+    hâlâ var, yeri değişti — yön yeni bir kroma zirvesi açamaz, yalnız mevcut zirveye
+    kadar çıkabilir. Gece --yon-arti ile --huni-3 zaten AYNI hex (#4ade80): huni yeşilini
+    onaylayıp yön yeşilini soluklaştırmak tutarsızlık olurdu.
+    Ölçülen (2026-08-24): gündüz yön-max 0,1641 ≤ tavan 0,2466 · gece 0,1821 ≤ 0,1821."""
     for ad, tablo in (("gündüz", GUNDUZ), ("gece", GECE)):
-        sev = min(oklch(_coz(f"--sev-{i}", tablo))[1] for i in (1, 2, 3))
-        yon = max(oklch(_coz(j, tablo))[1] for j in ("--yon-arti", "--yon-eksi"))
-        assert yon < sev, f"{ad}: yön C={yon:.4f} şiddet C={sev:.4f} altında DEĞİL"
-        assert yon / sev <= 0.75, f"{ad}: yön/şiddet kroma oranı {yon / sev:.2f} — 'görünür altında' değil"
+        tavan_j = max(("--huni-1", "--huni-2", "--huni-3", "--sev-1", "--sev-2", "--sev-3"),
+                      key=lambda j: oklch(_coz(j, tablo))[1])
+        tavan = oklch(_coz(tavan_j, tablo))[1]
+        for j in ("--yon-arti", "--yon-eksi"):
+            c = oklch(_coz(j, tablo))[1]
+            assert c <= tavan + 1e-9, (
+                f"{ad} {j}: C={c:.4f} onaylı palet tavanını ({tavan_j} C={tavan:.4f}) AŞIYOR — "
+                f"yön yeni bir kroma zirvesi açamaz")
 
 
 def test_yon_ikinci_kanali_kodda_duruyor():

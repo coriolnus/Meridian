@@ -126,17 +126,17 @@
   /* DEĞER KATMANI — bir HUE'nun adı. Bunlar parayı anlatır, süs değildir.
      Dub ailesinden ORTAK ΔL ile türetildi (hue kümesi içinde), kendi %10 tinti üstünde AA. */
   --green:#00963e; --amber:#c74300; --red:#c3002d; --blue:#006f94; --sapphire:#004860; --sky:#0998c8;
-  --huni-1:#014221; --huni-2:#096e7b; --huni-3:#0291e3; --green-t:rgba(0,150,62,.10); --amber-t:rgba(199,67,0,.10);
+  --huni-1:#2563eb; --huni-2:#7c3aed; --huni-3:#16a34a; --green-t:rgba(0,150,62,.10); --amber-t:rgba(199,67,0,.10);
   --red-t:rgba(195,0,45,.10); --mint:#dcfce7;
   /* ROL KATMANI (D1) — bir İŞİN adı. Bileşen kuralları YALNIZ bunu okur. Altı rolün
      tanımı, kroma sınırları ve ölçümleri index.html'in :root bloğunda. */
   --sev-1:var(--red); --sev-1-t:var(--red-t); --sev-1-h:var(--red-h); --sev-2:var(--amber);
   --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
   --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
-  --sev-3-damga:var(--green-stamp); --yon-arti:#4a6e56; --yon-eksi:#6c4442;
-  --yon-arti-t:rgba(74,110,86,.10); --yon-eksi-t:rgba(108,68,66,.10);
-  --yon-arti-h:rgba(74,110,86,.35); --yon-eksi-h:rgba(108,68,66,.35);
-  --yon-arti-zemin:rgba(74,110,86,.08); --yon-eksi-zemin:rgba(108,68,66,.07);
+  --sev-3-damga:var(--green-stamp);   --yon-arti:#107636; --yon-eksi:#b43c0b;
+  --yon-arti-t:rgba(16,118,54,.10); --yon-eksi-t:rgba(180,60,11,.10);
+  --yon-arti-h:rgba(16,118,54,.35); --yon-eksi-h:rgba(180,60,11,.35);
+  --yon-arti-zemin:rgba(16,118,54,.08); --yon-eksi-zemin:rgba(180,60,11,.07);
   --mod-kagit:var(--tx2); --mod-canli:#7c3aed; --mod-kesif:#6c5e9e; --mod-kagit-t:transparent;
   --mod-canli-t:rgba(124,58,237,.10); --mod-kesif-t:rgba(108,94,158,.10);
   --mod-kagit-h:var(--line-2); --mod-canli-h:rgba(124,58,237,.35);
@@ -162,7 +162,7 @@
   /* TİP RAMPASI — hiyerarşi basamakları (Ö6: 11/14/17/20/24/30). 10px/12px bilerek
      jetonsuz: mikro-etiket ve yoğun meta bandı, hiyerarşi basamağı değil. */
   --t-cap:11px; --t-body:14px; --t-lg:17px; --t-sub:20px; --t-h:24px; --t-num:30px;
-  --label-size:10px; --label-track:.16em; --ease:cubic-bezier(.16,1,.3,1); --t:.15s;
+    --label-size:11px; --label-track:.04em; --ease:cubic-bezier(.16,1,.3,1); --t:.15s;
   --t-rise:.34s; --max:1180px;
   /* ALAN KENARI — WCAG 2.2 1.4.11 (metin dışı 3:1): form kontrolleri --line-2'yi DEĞİL bunu
      kullanır. Dub `fog`; en kötü gündüz zemininde 4.54. */
@@ -187,7 +187,7 @@
   --accent-tint:#2e2e2e;
   /* Para renkleri gecede kendi tinti üstünde 4.51 / 6.05 / 4.50 — üçü de AA. */
   --green:#00953d; --amber:#ff5a00; --red:#ff7e7c; --blue:#7ac1ff; --sapphire:#d2e9fe; --sky:#4e96d4;
-  --huni-1:#92fcca; --huni-2:#07cddf; --huni-3:#0296f2; --green-t:rgba(0,149,61,.10); --amber-t:rgba(255,90,0,.10);
+  --huni-1:#60a5fa; --huni-2:#a78bfa; --huni-3:#4ade80; --green-t:rgba(0,149,61,.10); --amber-t:rgba(255,90,0,.10);
   --red-t:rgba(255,126,124,.10); --mint:#163523;
   --band-2:#737373; --kap-1:rgba(229,229,229,.06); --kap-2:rgba(229,229,229,.14);
   --kap-3:rgba(229,229,229,.23); --kap-4:rgba(229,229,229,.30); --dv-n2:rgba(198,212,242,.22);
@@ -201,10 +201,10 @@
   --sev-1:var(--red); --sev-1-t:var(--red-t); --sev-1-h:var(--red-h); --sev-2:var(--amber);
   --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
   --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
-  --sev-3-damga:var(--green-stamp); --yon-arti:#8bab94; --yon-eksi:#edc3be;
-  --yon-arti-t:rgba(139,171,148,.10); --yon-eksi-t:rgba(237,195,190,.10);
-  --yon-arti-h:rgba(139,171,148,.35); --yon-eksi-h:rgba(237,195,190,.35);
-  --yon-arti-zemin:rgba(139,171,148,.08); --yon-eksi-zemin:rgba(237,195,190,.07);
+  --sev-3-damga:var(--green-stamp); --yon-arti:#4ade80; --yon-eksi:#f98080;
+  --yon-arti-t:rgba(74,222,128,.10); --yon-eksi-t:rgba(249,128,128,.10);
+  --yon-arti-h:rgba(74,222,128,.35); --yon-eksi-h:rgba(249,128,128,.35);
+  --yon-arti-zemin:rgba(74,222,128,.08); --yon-eksi-zemin:rgba(249,128,128,.07);
   --mod-kagit:var(--tx2); --mod-canli:#ab91ff; --mod-kesif:#a79fcb; --mod-kagit-t:transparent;
   --mod-canli-t:rgba(171,145,255,.10); --mod-kesif-t:rgba(167,159,203,.10);
   --mod-kagit-h:var(--line-2); --mod-canli-h:rgba(171,145,255,.35);
@@ -220,6 +220,10 @@
    Operatörün gördüğü tek gerçek YÜZ farkı buydu (gerisi punto/ağırlık). `none` demek,
    eksikliği gizlemek değil BEYAN etmek: vurgu artık renk+ağırlıkla taşınır. */
 *{font-synthesis:none}
+/* DÜĞME/GİRDİ FONT KALITIMI (2026-08-24). `<button>` ve form öğeleri yazı tipini KALITMAZ —
+   UA varsayılanı (Arial) uygular. Bir etiket kuralı `--mono`yu bıraktığı an o düğme sessizce
+   Arial'e düşer; panoda ölçüldü (7 öğe). Kural başına yama yerine sıfırlayıcıda tek satır. */
+button,input,select,textarea{font-family:inherit;font-size:inherit;letter-spacing:inherit}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 /* GÖVDE ÖLÇÜSÜ RAMPADAN (DESIGN.md Rampa Kuralı, Body basamağı = 14px). Eski 15px/1.65/78ch
@@ -239,26 +243,26 @@ html{-webkit-text-size-adjust:100%}
    değil 78'dir ve o sayı ölçülmüştür — yeniden ölçüm gerekmedi, ölçümün doğru satırı
    okunmalıydı. Ayrıntı: DESIGN.md § "runbook.html on the ramp". */
 body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);
-     font-size:14px;line-height:1.8;font-variant-numeric:tabular-nums}
+     font-size:var(--t-body);line-height:1.8;font-variant-numeric:tabular-nums}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 24px 96px;display:grid;
       grid-template-columns:minmax(0,1fr);gap:0}
 @media (min-width:1000px){ .wrap{grid-template-columns:250px minmax(0,1fr);gap:44px} }
 
 /* ---- üst bar: tek dönüş yolu. Panoya dönmek bir kısayol değil, sayfanın sözleşmesi ---- */
-.ust{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line-2);
+.ust{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
      padding:14px 24px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
 .ust b{font-weight:600;letter-spacing:-.01em}
-.ust .yol{font-family:var(--mono);font-size:11px;color:var(--tx3)}
-.ust a{color:var(--tx2);text-decoration:none;border-bottom:1px solid var(--line-2);font-size:14px}
+.ust .yol{font-family:var(--mono);font-size:var(--t-cap);color:var(--tx3)}
+.ust a{color:var(--tx2);text-decoration:none;border-bottom:1px solid var(--line);font-size:var(--t-body)}
 .ust a:hover,.ust a:focus-visible{color:var(--tx);border-bottom-color:var(--tx2)}
 
 /* ---- içindekiler: 50 bölümlük bir belgede gezinme bir süs değil, kullanılabilirlik ---- */
-nav.toc{font-size:14px;line-height:1.5;padding-top:28px}
+nav.toc{font-size:var(--t-body);line-height:1.5;padding-top:28px}
 @media (min-width:1000px){ nav.toc{position:sticky;top:56px;max-height:calc(100vh - 76px);overflow:auto;padding-right:8px} }
 nav.toc ul{list-style:none;margin:0;padding:0}
-nav.toc .g{margin-top:16px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3)}
+nav.toc .g{margin-top:16px;font-size:var(--t-cap);letter-spacing:.04em;text-transform:uppercase;color:var(--tx3)}
 nav.toc a{display:block;padding:3px 0;color:var(--tx2);text-decoration:none;
-          font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+          font-family:var(--mono);font-size:var(--t-cap);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 nav.toc a:hover,nav.toc a:focus-visible{color:var(--tx)}
 
 main{min-width:0;padding-top:28px}
@@ -278,9 +282,9 @@ main{min-width:0;padding-top:28px}
    1189px'ten uzun ekranlarda İLK iki h1 (belge başlığı + "Alarmlar") aynı görünümü paylaşabilir. */
 h1{font-size:28px;line-height:1.25;letter-spacing:-.02em;margin:44px 0 12px;font-weight:600}
 h1:first-child{margin-top:8px}
-h2{font-size:20px;line-height:1.3;letter-spacing:-.01em;margin:36px 0 8px;font-weight:600;
+h2{font-size:var(--t-sub);line-height:1.3;letter-spacing:-.01em;margin:36px 0 8px;font-weight:600;
    padding-top:10px;border-top:1px solid var(--line)}
-h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);
+h3{font-size:var(--t-cap);letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);
    margin:18px 0 6px;font-weight:600}
 /* ÖLÇÜ (max-width) DA EVDEN: `.md` 72ch diyor. `ul` de 72ch'e iner — ölçülen korpusun
    çoğunluğu liste maddesidir (kaynakta 314 liste satırı), paragrafla farklı ölçüde
@@ -290,7 +294,7 @@ p{margin:10px 0;max-width:72ch}
 ul{margin:8px 0;padding-left:22px;max-width:72ch}
 li{margin:4px 0}
 li ul{margin:2px 0}
-hr{border:0;border-top:1px solid var(--line-2);margin:44px 0}
+hr{border:0;border-top:1px solid var(--line);margin:44px 0}
 blockquote{margin:14px 0;padding:10px 16px;border-left:2px solid var(--line-2);
            background:var(--bg2);color:var(--tx2);max-width:82ch}
 blockquote p{margin:4px 0}
@@ -312,14 +316,14 @@ blockquote p{margin:4px 0}
    parçasıdır (`## \`ops/kapilar.sh\``); sabit 12px onları gövde ölçüsüne düşürüp başlık
    olmaktan çıkarırdı. 17px = 20px'lik h2'nin bir alt rampa basamağı (eski .86em davranışı
    20px'te 17,2px verirdi — fiilen aynı yer, artık rampada). h1/h3'te kod geçmiyor (ölçüldü). */
-code{font-family:var(--mono);font-size:12px;background:var(--accent-tint);padding:1px 5px;
+code{font-family:var(--mono);font-size:var(--t-cap);background:var(--accent-tint);padding:1px 5px;
      border-radius:var(--r-bar);color:var(--tx)}
-h2 code{font-size:17px}
+h2 code{font-size:var(--t-lg)}
 pre{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-ctl);padding:14px 16px;
     overflow-x:auto;margin:12px 0}
-pre code{background:none;padding:0;font-size:12px;line-height:1.55;white-space:pre}
+pre code{background:none;padding:0;font-size:var(--t-cap);line-height:1.55;white-space:pre}
 strong{font-weight:600;color:var(--tx)}
-em{font-style:normal;color:var(--tx3);font-size:14px}
+em{font-style:normal;color:var(--tx3);font-size:var(--t-body)}
 a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
 a:hover,a:focus-visible{text-decoration-color:var(--tx2)}
 :target{scroll-margin-top:72px}
@@ -345,7 +349,7 @@ h2:target{border-left:2px solid var(--tx3);padding-left:12px;margin-left:-14px}
 /* YÖNLENDİRME KUTUSU (D2-b): içerik panoya taşındı. Kendi rengi YOK — bu sayfada renk yalnız
    "yazılmadı" işaretine ayrılmış ve bir yönlendirme bir eksik değildir. Ayrımı ÇERÇEVE ve
    ZEMİN taşır, hue değil. Geometri yine evin ölçeğinden (--r-bar). */
-.tasindi{border:1px solid var(--line-2);background:var(--bg2);padding:14px 18px;margin:8px 0 28px;
+.tasindi{border:1px solid var(--line);background:var(--bg2);padding:14px 18px;margin:8px 0 28px;
          border-radius:var(--r-bar);max-width:82ch}
 .tasindi p{margin:6px 0}
 .tasindi p:first-child{margin-top:0}

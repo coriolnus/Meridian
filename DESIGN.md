@@ -363,8 +363,10 @@ to prevent.
 
 | Token | Daylight | worst real ground | Night | worst real ground |
 |---|---|---|---|---|
-| `--yon-arti` | `#4a6e56` | **4.64** | `#8bab94` | **4.58** |
-| `--yon-eksi` | `#6c4442` | **6.49** | `#edc3be` | **6.72** |
+| `--yon-arti` | `#107636` | **4.58** | `#4ade80` | **6.32** |
+| `--yon-eksi` | `#b43c0b` | **4.63** | `#f98080` | **4.63** |
+<!-- 2026-08-24 D1: ~~#4a6e56/#8bab94 (4.64/4.58) · #6c4442/#edc3be (6.49/6.72)~~ — soluklaştırma
+     kuralı operatör kararıyla düştü, Dub hue'ları AA'yı geçecek kadar koyulaştırılarak alındı. -->
 | `--mod-canli` | `#7c3aed` | **4.52** | `#ab91ff` | **4.50** |
 | `--mod-kesif` | `#6c5e9e` | **4.54** | `#a79fcb` | **4.61** |
 | `--olcek-guven` | `#525252` | **6.20** | `#d4d4d4` | **7.10** |

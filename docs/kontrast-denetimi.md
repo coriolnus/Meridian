@@ -1099,10 +1099,10 @@ oynamadığını belgeye karşı doğruluyor. ΔE2000 uygulamasının kendi çiv
 | `--green` | gece | Dub vivid-green `#16a34a` | `#61b37f` | 0 | 0.1118 (0.1699) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 154.4° kroma 0.1111 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
 | `--amber` | gece | Dub tangerine `#ea580c` | `#d8b072` | 0 | 0.0922 (0.1943) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 76.9° kroma 0.0917 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
 | `--red` | gece | maket beyanlı türetmesi loss-red (Dub'da kayıp rengi YOK) `#c2410c` | `#ffbab4` | 0 | 0.0809 (0.1739) | ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 24.1° kroma 0.1782 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta |
-| `--yon-arti` | gunduz | --green (gunduz) `#1f7646` | `#4a6e56` | 0 | 0.0563 (0.1114) | C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
-| `--yon-eksi` | gunduz | --red (gunduz) `#9a0019` | `#6c4442` | 0 | 0.0559 (0.175) | C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
-| `--yon-arti` | gece | --green (gece) `#61b37f` | `#8bab94` | 9 | 0.0484 (0.1118) | C = min C(şiddet) x 0.6; ORTAK ΔL=0.009; AA>=4.5 kendi tinti + çıplak / #2e2e2e |
-| `--yon-eksi` | gece | --red (gece) `#ffbab4` | `#edc3be` | 0 | 0.0487 (0.0809) | C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #2e2e2e |
+| `--yon-arti` | gunduz | --green (gunduz) `#1f7646` | `#107636` | 0 | 0.1315 (0.1114) | 2026-08-24 D1: ~~C = min C(şiddet) x 0,6~~ → Dub hue; tavan = onaylı palet azamisi; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
+| `--yon-eksi` | gunduz | --red (gunduz) `#9a0019` | `#b43c0b` | 0 | 0.1641 (0.175) | 2026-08-24 D1: ~~C = min C(şiddet) x 0,6~~ → Dub hue; tavan = onaylı palet azamisi; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
+| `--yon-arti` | gece | --green (gece) `#61b37f` | `#4ade80` | 9 | 0.1821 (0.1118) | 2026-08-24 D1: ~~C = min C(şiddet) x 0,6~~ → Dub hue; tavan = onaylı palet azamisi; ORTAK ΔL=0.009; AA>=4.5 kendi tinti + çıplak / #2e2e2e |
+| `--yon-eksi` | gece | --red (gece) `#ffbab4` | `#f98080` | 0 | 0.1482 (0.0809) | 2026-08-24 D1: ~~C = min C(şiddet) x 0,6~~ → Dub hue; tavan = onaylı palet azamisi; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #2e2e2e |
 | `--mod-canli` | gunduz | Dub lavender `#7c3aed` | `#7c3aed` *(Dub jetonu AYNEN)* | 0 | 0.2466 (0.2466) | AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
 | `--mod-kesif` | gunduz | --mod-canli (aynı hue, düşük kroma) `#7c3aed` | `#6c5e9e` | 16 | 0.0996 (0.2466) | C = C(mod-canli) x 0.4; AA>=4.5 kendi tinti + çıplak / #f5f5f5 |
 | `--mod-canli` | gece | Dub lavender `#7c3aed` | `#ab91ff` | 184 | 0.157 (0.2466) | AA>=4.5 kendi tinti + çıplak / #2e2e2e |

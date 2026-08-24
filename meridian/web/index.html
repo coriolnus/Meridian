@@ -123,6 +123,14 @@
   font-weight:400 700; font-style:normal; font-display:block;
 }
 :root{
+  /* MONO ARTIK YALNIZ ÖLÇÜLEN DEĞERDE (2026-08-24, operatör: "yazı tipleri hala eski").
+     `docs/HUKUM-2026-08-24-YAZITIPI.md`in gerekçesinin TAMAMI RAKAMLARLA ilgili — `1`/`l` ve
+     `0`/`O` ayrımı. Yani mono'nun yerini hak ettiği yer bir ÖLÇÜMDÜR. Büyük-harf ETİKETLERDE
+     mono kullanmak bir okunaklılık ihtiyacı değil, emekli Omega sesiydi ve ekranda "eski yazı
+     tipi" diye okunan şey buydu. Yirmi sekiz etiket kuralı mono'yu bıraktı ve `--sans`a
+     (Inter) kalıtıyor; SAYI taşıyan her kural (`.mono-num` · `.bignum` · `.km-cell` ·
+     `.mcard .v` · `.srow b` · `.tbl .num` · `.evrow .etime` · `.twin .tb` · `.pm-yield` ·
+     kod/kbd bağlamları) mono'da KALDI — hükmün koruduğu şey orası. */
   --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   --display:var(--sans);
   --mono:'Recursive Mono',ui-monospace,SFMono-Regular,monospace;
@@ -274,7 +282,7 @@
        · dört zeminde (bg·bg2·card·card-2) kontrast ≥ 3
      ÖLÇÜLDÜ (gündüz): hue 154→209→245 (dengeli adım 55°/36°) · L* 23,7→42,2→57,9 ·
      ΔL* 18,5/15,7 · ΔE2000-min 23,8 · kroma 0,083→0,159 (eski tavan 0,125 — kazanılan canlılık). */
-  --huni-1:#014221; --huni-2:#096e7b; --huni-3:#0291e3;
+  --huni-1:#2563eb; --huni-2:#7c3aed; --huni-3:#16a34a;
   --green-t:rgba(0,150,62,.10); --amber-t:rgba(199,67,0,.10); --red-t:rgba(195,0,45,.10);
   /* SAKİNLİK YÜZEYİ — Dub'ın KENDİ `surface.tinted-accent` jetonu (soft-mint), AYNEN.
      Bir DURUM rengi değil bir ZEMİN tintidir ve şiddet kanalıyla ilgisi yoktur (karar §10.5).
@@ -374,11 +382,22 @@
      %10 tinti üstünde ve çıplak yüzeyde AA (en kötü gerçek zemin #f5f5f5).
      Hue'lar artık şiddet üçlüsününkilerdir (Omega ailesi, ÖE1 hükmü) ve kroma yine
      min C(şiddet) × 0,60'tır — kural DEĞİŞMEDİ, girdi değişti. */
-  --yon-arti:#4a6e56; --yon-eksi:#6c4442;
-  --yon-arti-t:rgba(74,110,86,.10); --yon-eksi-t:rgba(108,68,66,.10);
-  --yon-arti-h:rgba(74,110,86,.35); --yon-eksi-h:rgba(108,68,66,.35);
+    /* YÖN JETONLARI DUB'A GEÇTİ (2026-08-24, operatör kararı). ~~#4a6e56 / #6c4442~~ —
+     bunlar kroması ×0,60 SOLUKLAŞTIRILMIŞ tonlardı ve gerekçeleri "kâr/zarar işareti bir
+     alarmla dikkat için YARIŞAMAZ" kuralıydı. Operatör o gerekçeyi adıyla reddetti
+     ("renk körü değilim, birşeyi de renkten dolayı karıştırmam") ve Dub renklerini istedi.
+     Değerler maketten BİREBİR: vivid-green #16a34a · loss-red #c2410c (gece #4ade80 / #f87171).
+     ROL DEĞİŞMEDİ — hâlâ YÖN kanalı; değişen yalnız doygunluk. */
+  --yon-arti:#107636; --yon-eksi:#b43c0b;   /* yeşil Dub'ın #16a34a'sının BİR ADIM KOYUSU: aynı HSL hue (142,1°), aynı
+     doygunluk (%76), OKLCh farkı 0,2°. Gerekçe OKUNABİLİRLİK, karışma değil —
+     ölçüldü: yön rengini kullanan 17 öğenin HEPSİ WCAG büyük-metin eşiğinin
+     altında (en küçüğü 11px) ve Dub'ın tam yeşili beyazda 3,02 veriyor; bunlar
+     PARA rakamları. #117e39 min 4,74 ile AA'yı geçiyor. Kırmızı (#c2410c) zaten
+     4,75 ile geçtiği için maketten BİREBİR alındı. */
+  --yon-arti-t:rgba(16,118,54,.10); --yon-eksi-t:rgba(180,60,11,.10);
+  --yon-arti-h:rgba(16,118,54,.35); --yon-eksi-h:rgba(180,60,11,.35);
   /* Matris hücre zemini: yönün ıraksayan ölçeği. Alfa .08/.07 KORUNDU (ölçülmüş sınır). */
-  --yon-arti-zemin:rgba(74,110,86,.08); --yon-eksi-zemin:rgba(108,68,66,.07);
+  --yon-arti-zemin:rgba(16,118,54,.08); --yon-eksi-zemin:rgba(180,60,11,.07);
   /* ROL 4 · MOD — ayrılmış hue bandı. Dub `lavender` AYNEN alındı (0 adım: kendi %10
      tinti üstünde zaten AA — 4.52). --mod-kesif aynı hue, kroması ×0,40 ve AA'ya kadar
      indirilmiş: C 0,0996. ÖLÇÜLDÜ (çıplak #f5f5f5): canlı 5.23 · keşif 5.16;
@@ -450,7 +469,14 @@
   --sh-btn:rgba(0,0,0,.05) 0 1px 2px 0;
   --sh-ring:rgba(10,10,10,.10) 0 0 0 4px;
   /* Omega imza etiketi: mono, 10px, BÜYÜK HARF, 0.16em — sayının üstünde duran mikro başlık */
-  --label-size:10px; --label-track:.16em;
+    /* ETİKET JETONLARI DUB'A HİZALANDI (2026-08-24, operatör: "eski tasarım dili … bunlarla
+     sınırlı değil"). Tek tek kural kovalamak yerine JETONUN KENDİSİ değişti — bir satır,
+     yirmi kullanım. İkisi de emekli Omega'nın imzasıydı:
+       --label-track  .16em → .04em   (maketin `.kart > h2` ve `.dbaslik` değeri; .16em dört katıydı
+                                       ve "seyreltilmiş büyük harf" sesi eski dilin en görünür yeriydi)
+       --label-size   10px  → 11px    (10px RAMPADA YOK; 11px `--t-cap`in ta kendisi. Mikro etiketler
+                                       böylece ölçeğe oturdu — 23 kullanım tek satırdan düzeldi) */
+  --label-size:11px; --label-track:.04em;
   /* ==========================================================================
      TİP RAMPASI JETONLARI (2026-08-24) — İKİ KAYNAK KAPANDI.
      --------------------------------------------------------------------------
@@ -607,7 +633,7 @@
   /* Huni, gece. Aynı yolculuk ters yönde (koyu zeminde en belirgin olan en AÇIK basamaktır).
      ÖLÇÜLDÜ: hue 162→206→247 · L* 91,7→75,5→60,1 · ΔL* 16,2/15,4 · ΔE2000-min 24,8 ·
      kroma 0,122→0,171 (eski tavan 0,118). */
-  --huni-1:#92fcca; --huni-2:#07cddf; --huni-3:#0296f2;
+  --huni-1:#60a5fa; --huni-2:#a78bfa; --huni-3:#4ade80;
   --green-t:rgba(0,149,61,.10); --amber-t:rgba(255,90,0,.10); --red-t:rgba(255,126,124,.10);
   /* SAKİNLİK YÜZEYİ · gece — TÜRETİLDİ (Dub'da karanlık tema YOK, §1.2 damgası geçerli).
      Yöntem ters çevirme DEĞİL: soft-mint'in OKLCh hue'su (156,7°) korundu, L gece yüzey
@@ -655,12 +681,15 @@
   --sev-2:var(--amber); --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
   --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
   --sev-3-damga:var(--green-stamp);
-  /* YÖN · gece — ÖLÇÜLDÜ: --yon-arti #8aaa93 C 0,0484 · --yon-eksi #edc3be C 0,0487.
-     Kroma gece şiddet minimumunun (0,0809) %60'ı — yön burada da şiddetin GÖRÜNÜR altında. */
-  --yon-arti:#8bab94; --yon-eksi:#edc3be;
-  --yon-arti-t:rgba(139,171,148,.10); --yon-eksi-t:rgba(237,195,190,.10);
-  --yon-arti-h:rgba(139,171,148,.35); --yon-eksi-h:rgba(237,195,190,.35);
-  --yon-arti-zemin:rgba(139,171,148,.08); --yon-eksi-zemin:rgba(237,195,190,.07);
+  /* YÖN · gece — D1 (2026-08-24): Dub renkleri. ~~#8aaa93 C 0,0484 · #edc3be C 0,0487,
+     kroma = şiddet-min × 0,60~~ — soluklaştırma kuralı operatör kararıyla düştü.
+     ÖLÇÜLDÜ: --yon-arti #4ade80 C 0,1821 (en kötü gerçek zemin 6,32) · --yon-eksi #f98080
+     C 0,1482 (4,63). --yon-arti, --huni-3 ile BİLEREK aynı hex: aynı yeşil iki yerde iki
+     türlü olamaz. Tavan artık şiddet değil ONAYLI PALET AZAMİSİ (0,1821) — çivi §5. */
+  --yon-arti:#4ade80; --yon-eksi:#f98080;
+  --yon-arti-t:rgba(74,222,128,.10); --yon-eksi-t:rgba(249,128,128,.10);
+  --yon-arti-h:rgba(74,222,128,.35); --yon-eksi-h:rgba(249,128,128,.35);
+  --yon-arti-zemin:rgba(74,222,128,.08); --yon-eksi-zemin:rgba(249,128,128,.07);
   /* MOD · gece — aynı ayrılmış hue bandı (lavender ailesi), gece mürekkep bandında.
      --mod-canli #ab91ff C 0,1570 · --mod-kesif #a79fcb C 0,0637. */
   --mod-kagit:var(--tx2); --mod-canli:#ab91ff; --mod-kesif:#a79fcb;
@@ -688,6 +717,12 @@
    Operatörün gördüğü tek gerçek YÜZ farkı buydu (gerisi punto/ağırlık). `none` demek
    eksikliği gizlemek değil BEYAN etmek: vurgu artık renk+ağırlıkla taşınır. */
 *{margin:0;padding:0;box-sizing:border-box;font-synthesis:none}
+/* DÜĞME/GİRDİ FONT KALITIMI (2026-08-24). `<button>` ve form öğeleri yazı tipini
+   KALITMAZ — UA varsayılanı (Arial/system) uygular. Etiket kurallarından `--mono`
+   alınınca `.gb-bag` ve `.pv-gbtn` sans'a değil ARIAL'e düştü ve ekranda ölçüldü
+   (7 öğe). Bu satır o sınıfın tamamını kapatır; tek tek kural yamamak yerine
+   sıfırlayıcıda çözülür. */
+button,input,select,textarea{font-family:inherit;font-size:inherit;letter-spacing:inherit}
 /* YATAY TAŞMA KAPALI (2026-07-27): çekmece kapalıyken position:fixed + translateX(101%) ile
    görüntü alanının SAĞINDA durur, ama gizli bir öğe bile scrollWidth'e yazılır — 1280px'te
    1381px, 375px'te 753px ölçüldü, yani sayfa yana kayıyordu. `clip` seçildi, `hidden` değil:
@@ -757,7 +792,7 @@ a{color:inherit;text-decoration:none}
 /* Çıkış — rayın SONU, görünüm listesinden bir kural ile ayrılır. Sessiz durur: bir gezinme
    hedefi değil, oturumu kapatan tek seferlik bir eylem. Üzerine gelince kırmızıya döner —
    bu renk bir ölçüm değil ama bir KAYIP anlatıyor (yapılmakta olan işin kesilmesi). */
-.side .sitem.cikis{border-bottom:none;border-top:1px solid var(--line-2);margin-top:var(--s3);
+.side .sitem.cikis{border-bottom:none;border-top:1px solid var(--line);margin-top:var(--s3);
   padding-top:var(--s3);color:var(--tx2)}
 .side .sitem.cikis:hover{color:var(--tx);background:var(--card-2)}
 .side .sitem.cikis .vis-label{font-weight:400}
@@ -765,7 +800,7 @@ a{color:inherit;text-decoration:none}
 /* Tema anahtarı — çıkışla AYNI aile (oturum tercihi), o yüzden aynı ayırıcı çizginin altında.
    Ama hover'ı kırmızı DEĞİL: tema değiştirmek bir kayıp anlatmaz, geri alınabilir bir tercihtir.
    Renk burada nötr kalır — Money Rule: renk yalnız parayı ve müdahale gerektiren durumu anlatır. */
-.side .sitem.tema{border-bottom:none;border-top:1px solid var(--line-2);margin-top:var(--s3);
+.side .sitem.tema{border-bottom:none;border-top:1px solid var(--line);margin-top:var(--s3);
   padding-top:var(--s3);color:var(--tx2)}
 .side .sitem.tema:hover{color:var(--tx);background:var(--accent-tint)}
 .side .sitem.tema .vis-label{font-weight:400}
@@ -782,7 +817,7 @@ a{color:inherit;text-decoration:none}
 /* GİRİŞ KARTI BÜYÜK KART BASAMAĞINDADIR (--r-lg 16px, Dub `largecards`): sayfada tek
    başına duran 380px'lik bir yüzey — kart ızgarasının 12px'i onu küçük gösteriyordu.
    Dub'ın kendi yarıçap ölçeği bu ayrımı zaten taşıyor. */
-.gate-card{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line-2);
+.gate-card{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
   border-radius:var(--r-lg);padding:var(--s8);display:flex;flex-direction:column;gap:var(--s3)}
 .gate-h{font-family:var(--display);font-size:var(--t-h);font-weight:500;letter-spacing:-.02em;margin:0}
 .gate-sub{font-size:var(--t-body);color:var(--tx2);line-height:1.5;margin:0 0 var(--s3)}
@@ -791,7 +826,7 @@ a{color:inherit;text-decoration:none}
    göz onu okumadan geçen etiket. Bir PAROLA alanının etiketi ise normal form metnidir: gözün
    ona bakıp yazması gerekir ve girişte kullanıcının başka hiçbir bağlamı yoktur. Bir basamak
    yukarı, Micro (11px). İdiom değişmedi — yalnız bu iki etiket kendi mertebesine taşındı. */
-.gate-l{font-family:var(--mono);font-size:var(--t-cap);font-weight:700;letter-spacing:var(--label-track);
+.gate-l{font-size:var(--t-cap);font-weight:600;letter-spacing:var(--label-track);
   text-transform:uppercase;color:var(--tx2)}
 .gate-in{background:var(--bg);color:var(--tx);border:1px solid var(--field);
   border-radius:var(--r-input);padding:10px 12px;min-height:44px;font-family:var(--sans);font-size:var(--t-body)}
@@ -799,7 +834,7 @@ a{color:inherit;text-decoration:none}
 .gate-in:focus{border-color:var(--accent);background:var(--card)}
 .gate-btn{background:var(--accent);color:var(--bg2);border:1px solid var(--accent);
   border-radius:var(--r-ctl);min-height:44px;margin-top:var(--s2);
-  font-family:var(--sans);font-size:var(--t-body);font-weight:700;cursor:pointer;transition:opacity var(--t)}
+  font-family:var(--sans);font-size:var(--t-body);font-weight:600;cursor:pointer;transition:opacity var(--t)}
 .gate-btn:hover{opacity:.88}
 .gate-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .gate-btn:disabled{opacity:.5;cursor:default}
@@ -814,7 +849,7 @@ a{color:inherit;text-decoration:none}
 .gate-msg.ok{text-decoration-color:var(--sev-3)}
 /* TLS uyarısı KIRMIZI: burada renk gerçekten bir kaybı anlatıyor — parolanın açık gitmesi.
    Money Rule'un istisnası değil, uygulaması. */
-.gate-tls{font-size:12px;line-height:1.45;color:var(--tx);background:var(--sev-1-t);
+.gate-tls{font-size:var(--t-cap);line-height:1.45;color:var(--tx);background:var(--sev-1-t);
   border-left:3px solid var(--sev-1);
   border-radius:var(--r-ctl);padding:10px 12px;margin:var(--s2) 0 0}
 /* ---- accession header — the ruled top edge of the sheet ---- */
@@ -826,7 +861,7 @@ a{color:inherit;text-decoration:none}
    arızanın aynadaki hâli olurdu. Kırmızı bar üstünde: gündüz 6.55, gece 7.41.
    (Bu yorum 2026-08-01'e kadar 5.64 diyordu; o rakam yeniden üretilemedi.) */
 nav{position:fixed;top:0;left:0;right:0;z-index:50;background:var(--nav-bg);backdrop-filter:blur(8px);
-  border-bottom:1px solid var(--line-2);box-shadow:0 3px 0 -2px var(--line)}
+  border-bottom:1px solid var(--line);box-shadow:0 3px 0 -2px var(--line)}
 nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2)}
 /* ACİL DURDURMA SARMADA KAYMAZ (2026-07-27). 1280x720'de bar iki satıra sarıyor ve HALT
    x=387, y=52'ye — ikinci satırın ortasına — düşüyordu. Kas hafızasıyla bulunması gereken tek
@@ -844,8 +879,8 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
   box-shadow:inset 0 0 0 3px var(--bg2)}
 .spacer{flex:1}
 /* every reading in the header is a stamped chip: typewritten, ruled, square */
-.statuspill{display:inline-flex;align-items:center;gap:var(--s2);border:1px solid var(--line-2);background:var(--card);
-  color:var(--tx2);font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:var(--r-ctl)}
+.statuspill{display:inline-flex;align-items:center;gap:var(--s2);border:1px solid var(--line);background:var(--card);
+  color:var(--tx2);font-family:var(--sans);font-size:var(--t-cap);padding:7px 12px;border-radius:var(--r-tag);font-weight:500}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--sev-3)}
 /* HAREKET KURALI (WP-P/P10, 2026-08-01): PULS YALNIZ ANOMALİ SİNYALİDİR.
    ESKİ KURAL `.dot.pulse{animation:pulse}` idi ve app.js sınıfı KOŞULSUZ basıyor
@@ -862,7 +897,7 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
    değişen tek şey YAZI. Düğmenin sözcüğü nötr mürekkeple basılır; kırmızı kalan kenar,
    `:hover`da dolguya döner ve orada yazı --bg2'dir (AA: 5.74 / 6.69). */
 .halt{border:1px solid var(--sev-1);color:var(--tx);background:transparent;padding:0 16px;
-  border-radius:var(--r-ctl);font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;cursor:pointer;transition:var(--t)}
+  border-radius:var(--r-ctl);font-family:var(--mono);font-weight:600;font-size:var(--t-cap);letter-spacing:.04em;cursor:pointer;transition:var(--t)}
 .halt:hover{background:var(--sev-1);color:var(--bg2)}
 /* HUD ÜST-BAR ÖĞELERİ TEK YÜKSEKLİK: statuspill/KRİZ/HALT farklı padding+font yüzünden farklı
    yükseklikteydi ve üst bar hizasız görünüyordu. Ortak yükseklik hepsini aynı hizaya oturtur.
@@ -892,15 +927,18 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
    sırasına bağlı davranıyordu. Örtüşmenin kökü genişlikti — ad artık HEP görünür, hiçbir şey
    içeriğin üstüne binmez, bu yüzden z-index de gerekmez. Bedeli: içerik kolonu 152px daralır. */
 .side{position:sticky;top:78px;padding:0}
-.slab{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);color:var(--tx2);text-transform:uppercase;
-  margin:var(--s6) 0 var(--s3);padding-bottom:6px;border-bottom:1px solid var(--line-2)}
+/* ALT ÇİZGİ DÜŞTÜ (2026-08-24): `.card .t`den kaldırılan büyük-harf+alt-çizgi başlığı
+   `.slab` ve `.pd-sub`ta yaşamaya devam ediyordu — operatörün "eski tasarım dili
+   duruyor" dediği şey birebir buydu. Maket başlığı çizgiyle değil BOŞLUKLA ayırır. */
+.slab{font-size:var(--label-size);font-weight:600;letter-spacing:var(--label-track);color:var(--tx2);text-transform:uppercase;
+  margin:var(--s6) 0 var(--s3)}
 .slab:first-child{margin-top:0}
 /* the balance block — a ruled ledger column, not a card */
-.acct{padding:0;border-radius:0;background:none;border:none;border-top:1px solid var(--line-2);margin-top:var(--s2)}
+.acct{padding:0;border-radius:0;background:none;border:none;border-top:1px solid var(--line);margin-top:var(--s2)}
 .acct .r{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:var(--t-body);color:var(--tx2);padding:8px 0;border-bottom:1px solid var(--line)}
 .acct .r:first-child{padding-top:8px} .acct .r:last-child{border-bottom:none}
 .acct .r>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.acct .r b{color:var(--tx);font-weight:700;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;white-space:nowrap;flex:none;letter-spacing:-.02em}
+.acct .r b{color:var(--tx);font-weight:600;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-cap);white-space:nowrap;flex:none;letter-spacing:-.02em}
 /* each view is a drawer: a two-line index entry — label row + the live reading
    inside it, so the index answers "orada ne var?" before the drawer is pulled. */
 /* a rail marker: the view's initial stands in the margin; the full label and its live
@@ -940,7 +978,7 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
 .vis-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
   clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 .sitem .top{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
-.sitem .sub{font-family:var(--mono);font-size:var(--t-cap);color:var(--tx2);opacity:.7;letter-spacing:.01em;
+.sitem .sub{font-size:var(--t-cap);color:var(--tx2);opacity:.7;letter-spacing:.01em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .sitem.on .sub{opacity:1;color:var(--nav-2)}
 /* ROL 6 · SEÇİM ÇUBUĞU (2026-08-24). ~~Eskiden `background:var(--accent)` idi — aksan
@@ -961,7 +999,7 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
 /* SAYAÇ HAPI — Dub'ın sayaç hapı ROL 6'dır (gezinme sayacı, bir ölçüm değil).
    ~~Eskiden `background:var(--accent)`.~~ Ölçüldü: --bg2 mürekkebi --nav dolgusu
    üstünde 4.74 (gündüz) · 6.54 (gece) — AA. Geometri --r-tag (hap). */
-.pillc{background:var(--nav);color:var(--bg2);font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;
+.pillc{background:var(--nav);color:var(--bg2);font-size:var(--label-size);font-weight:500;padding:2px 7px;
   border-radius:var(--r-tag);font-variant-numeric:tabular-nums}
 .pillc.g{--isaret:var(--sev-3);background:var(--sev-3-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
 .pillc.q{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
@@ -974,8 +1012,8 @@ main{min-width:0}
    altı; o yüzden etiket --accent-2 okur, --accent değil.~~ Kural yürürlükte, rakam yenilendi
    (Dub dönüşümü 2026-08-24): --accent-2 kendi tinti (--accent-tint) üstünde 16.44 (gündüz) /
    12.46 (gece) — bkz. docs/kontrast-denetimi.md §9 çivi tablosu. */
-.slabel{display:inline-flex;align-items:center;gap:var(--s2);color:var(--accent-2);font-family:var(--mono);font-size:var(--t-cap);
-  font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;margin-bottom:var(--s4);
+.slabel{display:inline-flex;align-items:center;gap:var(--s2);color:var(--accent-2);font-size:var(--t-cap);
+  font-weight:500;letter-spacing:var(--label-track);text-transform:uppercase;margin-bottom:var(--s4);
   padding:4px 9px;border:1px solid var(--ink-h-soft);background:var(--accent-tint)}
 .slabel .d{width:6px;height:6px;background:var(--accent);border-radius:0}
 .greet{font-family:var(--display);font-weight:500;font-size:clamp(var(--t-h),4.6vw,28px);letter-spacing:-.015em;line-height:1.06}
@@ -996,7 +1034,7 @@ main{min-width:0}
 .alan-bas{margin-bottom:var(--s6)}
 /* Bölümler arası ayrım bir kart kenarı DEĞİL, bir kural çizgisidir: kart içinde kart,
    bu turun kaldırmaya çalıştığı "katman katman kutu" hissinin ta kendisiydi. */
-.alan-bolum + .alan-bolum{margin-top:var(--s12);padding-top:var(--s10);border-top:1px solid var(--line-2)}
+.alan-bolum + .alan-bolum{margin-top:var(--s12);padding-top:var(--s10);border-top:1px solid var(--line)}
 /* Eski görünümün kendi başlığı ARTIK BİR BÖLÜM BAŞLIĞIDIR: sayfanın h1'i alan sayfasınındır.
    Mertebe JS'te düşürülür (app.js `_bolumBasliklariniIndir`); BOY da düşmeli, yoksa iki
    başlık aynı ağırlıkta görünür ve hiyerarşi yalnız DOM'da kalır — yani okunmaz. */
@@ -1027,11 +1065,11 @@ main{min-width:0}
 /* MARJ --s6'DAN --s4'E (S2R-3 · blok ritmi): tek ölçü. Değer BURADA, tek yerde —
    S2R-3 bloğunda tekrarlanmaz (aynı özgüllük → sonra yazılan sessizce kazanır). */
 .detay-kat{border-top:1px solid var(--line);margin-top:var(--s4);padding-top:var(--s4)}
-.detay-kat>summary{cursor:pointer;font-family:var(--mono);font-size:var(--t-cap);letter-spacing:var(--label-track);
+.detay-kat>summary{cursor:pointer;font-size:var(--t-cap);letter-spacing:var(--label-track);
   text-transform:uppercase;color:var(--tx2);list-style:none;min-height:32px;display:flex;
   align-items:center;gap:var(--s2)}
 .detay-kat>summary::-webkit-details-marker{display:none}
-.detay-kat>summary::before{content:"▸";font-size:10px;color:var(--tx3)}
+.detay-kat>summary::before{content:"▸";font-size:var(--label-size);color:var(--tx3)}
 .detay-kat[open]>summary::before{content:"▾"}
 .detay-kat>summary:hover{color:var(--tx)}
 .detay-kat>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -1074,7 +1112,7 @@ main{min-width:0}
 /* Rozet başlığa TAŞINDIĞI için (kopya değil) kendi `.pm-thin` kuralını korur;
    burada yalnız hizası verilir — `.pm-cell` içinde `align-self:flex-start`tı. */
 .kat-kart > .t .pm-thin{align-self:center;flex:none}
-.kk-ok{flex:none;font-size:10px;color:var(--tx3);line-height:1}
+.kk-ok{flex:none;font-size:var(--label-size);color:var(--tx3);line-height:1}
 .kk-ok::before{content:"\25B8"}
 .kat-kart[data-kat-acik="1"] .kk-ok::before{content:"\25BE"}
 /* KAPALI ÖZET HER İKİ HÂLDE DE GÖRÜNÜR (açıkken de): denetimin çizimi böyle —
@@ -1092,12 +1130,12 @@ main{min-width:0}
    Bütçe aşımı SAYIYLA yazılır, RENKLE değil: renk kanalı yalnız anomalinindir
    ve bir tasarım borcu anomali değildir. */
 .kk-kontrol{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);margin-top:var(--s5)}
-.kk-hepsi{font-family:var(--mono);font-size:var(--t-cap);letter-spacing:.04em;color:var(--tx2);
-  background:none;border:none;padding:4px 0;border-bottom:1px solid var(--line-2);
+.kk-hepsi{font-size:var(--t-cap);letter-spacing:.04em;color:var(--tx2);
+  background:none;border:none;padding:4px 0;border-bottom:1px solid var(--line);
   cursor:pointer;min-height:24px}
 .kk-hepsi:hover{color:var(--tx);border-bottom-color:var(--accent)}
 .kk-hepsi:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.kk-butce{font-family:var(--mono);font-size:var(--t-cap);line-height:1.6}
+.kk-butce{font-size:var(--t-cap);line-height:1.6}
 
 /* MÜDAHALE KOLLARI — üç kolon: ne yapar / şu anki hâli / düğme. Kapağın altındaki
    dört düğme aynı işi yapıyor ama orada hiçbir DURUM okunmuyordu; bu satırın var
@@ -1105,7 +1143,7 @@ main{min-width:0}
 .kol-satir{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:var(--s4);
   align-items:center;padding:var(--s4) 0;border-bottom:1px solid var(--line)}
 .kol-satir:last-of-type{border-bottom:none}
-.kol-durum{font-family:var(--mono);font-size:var(--t-cap);letter-spacing:.04em;text-transform:uppercase}
+.kol-durum{font-size:var(--t-cap);letter-spacing:.04em;text-transform:uppercase}
 @media(max-width:720px){.kol-satir{grid-template-columns:1fr;gap:var(--s2)}}
 
 /* ============================================================================
@@ -1160,7 +1198,7 @@ main{min-width:0}
    olmadan Karne, şeridin düğmelerine yapışık başlıyordu — yedi bölümlü sayfada
    ilk sınırın eksik olması, geri kalan altı sınırın da ritmini yalanlıyordu. */
 #ogrenme-eylem + .alan-bolum{margin-top:var(--s12);padding-top:var(--s10);
-  border-top:1px solid var(--line-2)}
+  border-top:1px solid var(--line)}
 
 /* ---- GENEL BAKIŞ (J1 sabah turu) — TEK EKRAN, KAYDIRMASIZ --------------------------
    Sözleşme kuralın kendisinde: altı kart tek kolona dizilseydi sayfa ~2400px olur ve
@@ -1168,18 +1206,18 @@ main{min-width:0}
    sütuna iniş YALNIZ dar ekran sorgusunda (orada kaydırma zaten dürüst hâldir). */
 .gb-ust{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:var(--s4);margin-top:var(--s4)}
 .gb-trend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4);margin-top:var(--s4)}
-.gb-kart{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-card);
+.gb-kart{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);
   padding:var(--s5);display:flex;flex-direction:column;min-width:0}
 .gb-govde{flex:1 1 auto;min-width:0}
 .gb-say{font-family:var(--mono);font-size:clamp(var(--t-sub),2.6vw,var(--t-h));font-weight:400;letter-spacing:-.04em;
   font-variant-numeric:tabular-nums;line-height:1.05;color:var(--tx);display:block}
-.gb-alt{font-size:12px;color:var(--tx2);line-height:1.55;font-variant-numeric:tabular-nums;margin-top:var(--s2)}
+.gb-alt{font-size:var(--t-cap);color:var(--tx2);line-height:1.55;font-variant-numeric:tabular-nums;margin-top:var(--s2)}
 .gb-alt b{color:var(--tx);font-weight:500}
 /* Tek bağ, tek yön: kartın kendisi tıklanabilir DEĞİL (yanlışlıkla sayfa değiştirmek,
    özet okurken en ucuz hata olurdu) — bağ ayrı ve adlandırılmış bir kontroldür. */
-.gb-bag{align-self:flex-start;margin-top:var(--s4);font-family:var(--mono);font-size:var(--t-cap);
+.gb-bag{align-self:flex-start;margin-top:var(--s4);font-size:var(--t-cap);
   letter-spacing:.04em;color:var(--tx2);background:none;border:none;padding:4px 0;
-  border-bottom:1px solid var(--line-2);cursor:pointer;min-height:24px}
+  border-bottom:1px solid var(--line);cursor:pointer;min-height:24px}
 .gb-bag:hover{color:var(--tx);border-bottom-color:var(--accent)}
 .gb-bag:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* Alarm bütçesi TEK SATIRDIR, kart değil (ADR): kart olsaydı yedinci kart olur ve
@@ -1202,13 +1240,27 @@ main{min-width:0}
    ("özet okurken yanlışlıkla sayfa değiştirmek en ucuz hata") çünkü eylem SAYFA DEĞİŞTİRMEKtir.
    Burada eylem sayfayı DEĞİŞTİRMEZ: aynı ekranda bir çekmece açar, kaydırma yerinde kalır ve Esc
    geri alır. Geri alınabilir bir eylem, kartın tamamını hedef yapmayı hak eder (Fitts). */
-.durum-izgara-kap{margin-top:var(--s6)}
-.durum-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s4)}
+/* DÖRTLÜ SAYISAL BAND — TEK GRAMER (2026-08-24, operatör: "çerçeveler birinde oval
+   diğerinde birleşik kare"). Haklıydı ve ölçüldü: bu band, emisyonda `.pv-sekmeler`in
+   TAM ÜSTÜNDE duruyor (app.js `durum-izgara-kap` → `pv-para`) ve ikisi aynı türde bir
+   şeyi — dört hücreli sayısal özet — iki ayrı kap dilinde yazıyordu.
+   MAKET TEK REÇETE KULLANIR ve yedi blok kabının yedisinde aynı: kapalı 12px kap +
+   `overflow:hidden`, hücreler PAYLAŞILAN KENARLA bölünür, `gap:0`, hücrede yarıçap yok
+   (scratch-panov2/index.html:134-139 `.para/.sekme` · :174-178 `.zincir-yatay/.zadim` ·
+   :264-268 `.alanlar/.alan`). Boşluklu ızgarada kendi çerçevesi+yarıçapı olan mini-kart
+   maket sözlüğünde SIFIR kez geçiyor — ölçtüm.
+   ~~gap:var(--s4) · hücrede border+border-radius:var(--r-card)~~ düştü.
+   TIKLANABİLİRLİK DEĞİŞMEDİ: hücre hâlâ bir <button>, çekmeceyi hâlâ açıyor (yukarıdaki
+   Fitts gerekçesi ayakta) — değişen yalnız kap grameri. */
+.durum-izgara-kap{margin-top:var(--s6);background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-card);overflow:hidden}
+.durum-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
 .durum-kart{display:flex;flex-direction:column;min-width:0;text-align:left;font:inherit;color:inherit;
-  background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-card);
+  background:none;border:0;border-right:1px solid var(--line);border-radius:0;
   padding:var(--s5);cursor:pointer}
-.durum-kart:hover{border-color:var(--line)}
-.durum-kart:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.durum-kart:last-child{border-right:0}
+.durum-kart:hover{background:var(--bg2)}
+.durum-kart:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 /* SEÇİLİ HÂL — çekmece hangi kartın kaydını gösteriyor? Renk DEĞİL kenar: `.pm-cell.sel` ile
    aynı dil, ve seçim bir anomali değil bir konum bilgisidir. */
 .durum-kart.sel{border-color:var(--accent)}
@@ -1217,7 +1269,7 @@ main{min-width:0}
    kendisiyle aynı — dikey yığın, 5px ritim; içerik sınıfları `.pm-yield`/`.pm-conf`/`.pm-n`/
    `.pm-thin`/`.pm-none` ve hepsi matrisin bloğunda TEK kez tanımlı. */
 .durum-govde{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px}
-.durum-ac{align-self:flex-start;margin-top:var(--s4);font-family:var(--mono);font-size:var(--t-cap);
+.durum-ac{align-self:flex-start;margin-top:var(--s4);font-size:var(--t-cap);
   letter-spacing:.04em;color:var(--tx3)}
 .durum-kart:hover .durum-ac{color:var(--tx2)}
 /* ANOMALİ RENGİ — renk YALNIZ burada ve yalnız ölçülmüş bir sapmada (P1/P2 alarm bütçesi):
@@ -1231,17 +1283,22 @@ main{min-width:0}
    yani renk metindi. Şimdi sapma kartın SOL ŞERİDİdir; sayı ve meta nötr kalır. */
 .durum-kart.uyari,.durum-kart.kopuk{border-left:3px solid var(--sev-2)}
 .durum-kart.kopuk{border-left-color:var(--sev-1)}
-.durum-dus{font-size:12px;color:var(--tx2);margin:0}
+.durum-dus{font-size:var(--t-cap);color:var(--tx2);margin:0}
 /* Dört kart 1100px altında ikişerli, 640px altında tek kolon. Genel Bakış'takiyle aynı gerekçe:
    dar ekranda kaydırma DÜRÜST hâldir, sıkıştırılmış dört sütun değil. */
-@media(max-width:1100px){.durum-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.durum-izgara{grid-template-columns:1fr}}
+@media(max-width:1100px){.durum-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* İKİ SÜTUNDA: satır sonundaki hücrenin sağ kenarı asılı kalır, alt satırın üstü açık kalır. */
+  .durum-kart:nth-child(2n){border-right:0}
+  .durum-kart:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+@media(max-width:640px){.durum-izgara{grid-template-columns:1fr}
+  .durum-kart{border-right:0;border-bottom:1px solid var(--line)}
+  .durum-kart:last-child{border-bottom:0}}
 
 /* ---- DURUM ŞERİDİ — the dateline band ruled across the sheet. A stamp square
    carries the state; calm is a ruled sentence you can read past, act is the
    loudest mark on the page. Not a fat colored margin. ---- */
 .spine{display:flex;align-items:baseline;gap:var(--s4);padding:var(--s4) var(--s5) var(--s4) var(--s10);margin-top:var(--s6);
-  border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);border-radius:0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;
   font-size:var(--t-body);line-height:1.6;position:relative;background:var(--card)}
 /* Şerit artık Bugün'ün İLK öğesi — sayfanın tepesinde üst boşluğu olmaz. */
 .spine:first-child{margin-top:0}
@@ -1262,7 +1319,7 @@ main{min-width:0}
 /* DOKUNMA HEDEFİ: 99.6×21.8 idi. Şerit panonun tek zorunlu cümlesi ve bu düğmeler onun tek
    çıkışı — parmakla ıskalanamaz. Yazı çizgisi aynı kalır, kutu 44px'e açılır. */
 .spine .items button{background:none;border:none;padding:0;font:inherit;color:var(--tx);cursor:pointer;
-  border-bottom:1px solid var(--line-2);min-height:44px;display:inline-flex;align-items:center;text-align:left;
+  border-bottom:1px solid var(--line);min-height:44px;display:inline-flex;align-items:center;text-align:left;
   gap:5px}
 .spine .items button:hover{color:var(--accent-2);border-color:var(--accent)}
 /* AFFORDANS (2026-07-27): çipler TIKLANABİLİR ve operatörün şeritten çıkışı onlar — ama alttaki
@@ -1283,19 +1340,32 @@ main{min-width:0}
    cell carries a confidence track sized by sample count, so a 3-trade mean can
    never pass itself off as a 55-trade one. ---- */
 .pm-grid{display:grid;grid-template-columns:170px repeat(var(--cols,3),minmax(0,1fr));
-  gap:1px;background:var(--line);border:1px solid var(--line-2);margin-top:var(--s5)}
+  gap:1px;background:var(--line);border:1px solid var(--line);margin-top:var(--s5)}
 .pm-grid>*{background:var(--bg)}
 .pm-corner{background:var(--bg2)}
-.pm-sect{background:var(--bg2);font-family:var(--mono);font-size:var(--t-cap);font-weight:700;letter-spacing:var(--label-track);
+.pm-sect{background:var(--bg2);font-size:var(--t-cap);font-weight:600;letter-spacing:var(--label-track);
   text-transform:uppercase;color:var(--tx2);padding:12px var(--s4)}
-.pm-strip{background:var(--bg2);font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx);
+.pm-strip{background:var(--bg2);font-size:var(--t-cap);font-weight:600;color:var(--tx);
   padding:var(--s5) var(--s4);display:flex;align-items:center;letter-spacing:-.01em;word-break:break-word}
 /* a sown plot: drilled rows running the strip, dense where the evidence is */
 .pm-cell{position:relative;padding:var(--s5) var(--s4);min-height:106px;
-  display:flex;flex-direction:column;justify-content:center;gap:5px;overflow:hidden}
+  display:flex;flex-direction:column;overflow:hidden}
+/* ÜSTE ÇİVİLİ (2026-08-24, operatör ekran görüntüsü): ~~justify-content:center~~ hücreyi
+   dikey ortalıyordu. Kardeş hücrelerin YÜKSEKLİĞİ eşit ama İÇERİĞİ eşit değil — rozet
+   taşıyan hücre dolu, taşımayan boş. Ortalanınca etiketler farklı y'de başlıyordu ve
+   operatör bunu "yazılar birbiri ile align olmamış" diye bildirdi. Makette hücrede ne
+   dikey ortalama var ne min-height: içerik ÜSTTEN akar. Ortalama, yalnız içeriği TEK
+   satır olan kaplarda hizalar; çok satırlıda sistematik olarak bozar. */
 /* sample size, drawn the way this canon draws it: a confidence track under the
    figure, not a texture. A 3-trade mean cannot look as firm as a 55-trade one. */
-.pm-conf{position:relative;height:2px;background:var(--line);border-radius:var(--r-bar);overflow:hidden;margin-top:2px}
+/* GÜVEN ŞERİDİ DUB DİLİNE GEÇTİ (2026-08-24). BU BİR VERİ KANALI — örneklem büyüklüğü;
+   silinmedi ve silinemez. Ama tam genişlikte, kart zeminiyle aynı tonda 2px'lik bir çizgi
+   olarak "başlığın altı çizili" diye okunuyordu (operatör üç ekran görüntüsünde de bunu
+   işaret etti). Dub'da ölçüm çubuğu bir MİKRO-ÇUBUKTUR: ince, yuvarlatılmış, zemini
+   neredeyse görünmez, dolusu belirgin. Yükseklik 2→3px (dolusu okunabilsin), ray rengi
+   --line → --line-2 (daha sönük), genişlik %100 → 64px tavan (çizgi değil ÖLÇÜ olsun). */
+.pm-conf{position:relative;height:3px;width:min(100%,64px);background:var(--line-2);
+  border-radius:9999px;overflow:hidden;margin-top:var(--s2)}
 .pm-conf i{display:block;height:100%;width:var(--conf,50%);background:currentColor;opacity:.85;border-radius:var(--r-bar)}
 .pm-cell.pos{color:var(--yon-arti)} .pm-cell.neg{color:var(--yon-eksi)}
 .pm-cell.pos{background:var(--yon-arti-zemin)} .pm-cell.neg{background:var(--yon-eksi-zemin)}
@@ -1316,16 +1386,21 @@ main{min-width:0}
    olmaz (karar §10.2). Sayı nötr kalır, kehribar sayının altındaki 2px çizgidir. */
 .pm-yield.warn{color:var(--tx);text-decoration:underline;text-decoration-thickness:2px;
   text-underline-offset:3px;text-decoration-skip-ink:none;text-decoration-color:var(--sev-2)}
-.pm-n{position:relative;font-size:12px;color:var(--tx2);line-height:1.55;font-variant-numeric:tabular-nums}
+.pm-n{position:relative;margin-top:var(--s2);font-size:var(--t-cap);color:var(--tx2);line-height:1.55;font-variant-numeric:tabular-nums}
 .pm-n b{color:var(--tx);font-weight:500}
 /* under-sown: the ochre stake a trials officer puts in a plot with too few rows */
 .pm-cell.thin{box-shadow:inset 0 0 0 1px var(--olcek-guven-h)}
-.pm-thin{position:relative;align-self:flex-start;font-family:var(--mono);font-size:10px;font-weight:700;
-  letter-spacing:var(--label-track);text-transform:uppercase;color:var(--olcek-guven);
-  background:var(--olcek-guven-t);border:1px dashed var(--olcek-guven-h);padding:1px 5px;margin-top:2px}
+/* ÖLÇÜM ROZETİ — Dub çipi (2026-08-24). ~~mono · 10px · 700 · .16em · KESİK çerçeve~~
+   Kesik çerçeve emekli Omega'nın "geçici/taslak" jestiydi; burada taşınan şey geçici
+   değil KALICI bir ölçüm beyanı ("AZ ÖRNEK" · "ÖLÇÜLEMEDİ" · "BEKLİYOR" ·
+   "SERMAYE-RESET"). Dub'ın çip grameri: yumuşak tint zemin, kenarlıksız, tam yuvarlak,
+   sans 600. Renk rolü (`--olcek-guven`) AYNEN korundu — değişen ses, anlam değil. */
+.pm-thin{position:relative;align-self:flex-start;font-size:var(--t-cap);font-weight:500;
+  letter-spacing:.02em;color:var(--olcek-guven);background:var(--olcek-guven-t);
+  border-radius:var(--r-tag);padding:2px 8px;margin-top:var(--s2)}
 /* never sown: bare worked earth, not a zero */
 .pm-unsown{background:var(--bg2)}
-.pm-none{font-family:var(--mono);font-size:var(--t-cap);letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);opacity:.7}
+.pm-none{font-size:var(--t-cap);letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);opacity:.7}
 /* a plot is a control, not a tile — pressing it opens that plot's record */
 button.pm-cell{width:100%;text-align:left;border:none;font:inherit;cursor:pointer;transition:var(--t)}
 button.pm-cell:hover{filter:brightness(1.25)}
@@ -1338,28 +1413,28 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    Önceki hali top:0/z-index:75 idi ve açıkken HALT düğmesini örtüp tıklanamaz yapıyordu —
    acil durdurma hiçbir panelin arkasında kalamaz. */
 .pdrawer{position:fixed;top:var(--navh,76px);right:0;bottom:0;width:min(430px,100%);z-index:45;
-  background:var(--bg2);border-left:1px solid var(--line-2);box-shadow:none;
+  background:var(--bg2);border-left:1px solid var(--line);box-shadow:none;
   transform:translateX(101%);transition:transform .28s var(--ease);
   display:flex;flex-direction:column;overflow:hidden;visibility:hidden}
 .pdrawer.open{transform:none;visibility:visible}
 .pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s4);
-  padding:var(--s6) var(--s6) var(--s4);border-bottom:1px solid var(--line-2)}
-.pd-l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.2em;color:var(--accent-2);margin-bottom:7px}
+  padding:var(--s6) var(--s6) var(--s4);border-bottom:1px solid var(--line)}
+.pd-l{font-size:var(--label-size);font-weight:600;letter-spacing:.04em;color:var(--accent-2);margin-bottom:7px}
 .pd-t{font-family:var(--display);font-size:var(--t-sub);font-weight:600;letter-spacing:-.015em;line-height:1.25}
 /* 30×30 idi; çekmecenin tek çıkış düğmesi 44px altında kalamaz. */
-.pd-x{flex:none;background:none;border:1px solid var(--line-2);color:var(--tx2);cursor:pointer;
+.pd-x{flex:none;background:none;border:1px solid var(--line);color:var(--tx2);cursor:pointer;
   width:44px;height:44px;border-radius:var(--r-ctl);font-size:var(--t-body);line-height:1;transition:var(--t)}
 .pd-x:hover{border-color:var(--accent);color:var(--accent-2)}
 .pd-body{padding:var(--s5) var(--s6) var(--s8);overflow-y:auto;flex:1}
 .pd-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3);
   border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:var(--s4) 0;margin-bottom:var(--s5)}
-.pd-stats .l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--tx2);margin-bottom:8px}
+.pd-stats .l{font-size:var(--label-size);font-weight:600;letter-spacing:.04em;color:var(--tx2);margin-bottom:8px}
 .pd-stats .v{font-family:var(--mono);font-size:var(--t-sub);font-weight:400;letter-spacing:-.04em;line-height:1}
 /* an under-sown plot says so in words, not just with a stake */
 .pd-warn{font-size:var(--t-body);line-height:1.65;color:var(--tx);background:var(--sev-2-t);
   border:1px solid var(--sev-2-h2);border-left:3px solid var(--sev-2);padding:11px 13px;margin-bottom:var(--s5)}
-.pd-sub{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;
-  color:var(--tx2);margin:var(--s5) 0 var(--s2);padding-bottom:7px;border-bottom:1px solid var(--line)}
+.pd-sub{font-size:var(--label-size);font-weight:600;letter-spacing:var(--label-track);text-transform:uppercase;
+  color:var(--tx2);margin:var(--s5) 0 var(--s2)}
 .pd-sub:first-of-type{margin-top:0}
 /* OLAY YÜZEYİ · RUNBOOK ADIMLARI (D2-b). Yeni bir bileşen DEĞİL: çekmecenin kendi gövde
    ölçeğinde numarasız bir liste. Kendi rengi, kendi yazı tipi, kendi yarıçapı YOK — jetonlardan
@@ -1377,10 +1452,13 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    bir kopya yazmak gerekirdi ve iki kopya ilk düzenlemede ayrışırdı. Kural artık burada, tek
    yerde; görünürlük bağlama göre açılıyor. Matriste masaüstünde GİZLİ kalır (konumu satır/sütun
    başlıklarından okunur), telefonda ve özet şeridinde her hücre kendi adını taşır. */
-.pm-sectlabel{display:none;position:relative;font-family:var(--mono);font-size:10px;font-weight:700;
-  letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);margin-bottom:2px}
+/* HÜCRE ETİKETİ — kart başlıklarıyla AYNI ses (2026-08-24). Aynı turda `.card .t` maketin
+   `.kart > h2`sine hizalandı (11px · 600 · .04em · --tx3); hücre etiketi 10px · 700 ·
+   .16em'de kalınca sayfada İKİ ayrı etiket sesi duruyordu. ~~10px/700/--label-track~~ */
+.pm-sectlabel{display:none;position:relative;font-size:var(--t-cap);font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);margin-bottom:var(--s1)}
 .ozet-serit .pm-sectlabel{display:block}
-.pm-foot{margin-top:var(--s3);font-size:12px;color:var(--tx2);line-height:1.6;max-width:78ch}
+.pm-foot{margin-top:var(--s3);font-size:var(--t-cap);color:var(--tx2);line-height:1.6;max-width:78ch}
 /* ---- ÖZET ŞERİDİ (v192) — bölüm-içi sayısal özetlerin hücre kabı ---------------------------
    NEDEN `.pm-grid`İN AYNI REÇETESİ: bunlar da hücre; tek fark satır/sütun başlığı olmaması ve
    çekmece açmaması. `.km-*` gibi AYRI bir aile açmak burada YANLIŞ olurdu — `.km-*` ayrı çünkü
@@ -1388,7 +1466,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    kanıt çubuğu + payda). Kap kendi marjını taşır: blok ritmi ailesine (`:is(.card,.g2,.mrow,…)`)
    GİRMEZ, çünkü şerit bir bölüm bloğu değil, bir kartın İÇ özet başlığıdır. */
 .ozet-serit{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;
-  background:var(--line);border:1px solid var(--line-2);margin-top:var(--s4)}
+  background:var(--line);border:1px solid var(--line);margin-top:var(--s4)}
 .ozet-serit>*{background:var(--bg)}
 .ozet-serit .pm-cell{min-height:0;padding:var(--s4)}
 @media(max-width:900px){.ozet-serit{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -1398,7 +1476,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
   .pm-corner{display:none}
   .pm-sect{display:none}
   /* on a phone the map reads strip by strip; each cell names its own section */
-  .pm-strip{border-top:1px solid var(--line-2);padding:var(--s4) 0;background:none}
+  .pm-strip{border-top:1px solid var(--line);padding:var(--s4) 0;background:none}
   /* KURAL `.pm-grid`E ÇİVİLİ: ızgara telefonda çerçevesine veda edip satır-ayracına döner, ama
      özet şeridi 1px'lik saç-teli ızgarasını KORUR — kapsız bir `.pm-cell` kuralı oraya ikinci
      bir alt çizgi basar ve şerit çift çizgili görünürdü. */
@@ -1417,16 +1495,16 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    skalası 3:1 adımlarla kurulamaz) ve bu BEYANLI bir sapmadır (kontrast eki §11/İ8). */
 .km-wrap{overflow-x:auto;margin-top:var(--s4)}
 .km-grid{display:grid;grid-template-columns:186px repeat(var(--kmc,4),minmax(74px,1fr));
-  gap:1px;background:var(--line);border:1px solid var(--line-2);min-width:min-content}
+  gap:1px;background:var(--line);border:1px solid var(--line);min-width:min-content}
 .km-grid>*{background:var(--bg)}
 .km-corner{background:var(--bg2)}
-.km-head{background:var(--bg2);font-family:var(--mono);font-size:10px;font-weight:700;
+.km-head{background:var(--bg2);font-size:var(--label-size);font-weight:600;
   letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);
   padding:9px var(--s2);text-align:center;line-height:1.4}
 .km-head b{display:block;font-weight:400;letter-spacing:0;text-transform:none;font-size:var(--t-cap);color:var(--tx)}
-.km-row{background:var(--bg2);font-size:12px;color:var(--tx);padding:9px var(--s3);
+.km-row{background:var(--bg2);font-size:var(--t-cap);color:var(--tx);padding:9px var(--s3);
   display:flex;flex-direction:column;justify-content:center;line-height:1.35}
-.km-row i{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--tx2);
+.km-row i{font-style:normal;font-family:var(--mono);font-size:var(--label-size);color:var(--tx2);
   letter-spacing:var(--label-track);text-transform:uppercase}
 .km-cell{padding:9px var(--s2);text-align:center;font-family:var(--mono);font-variant-numeric:tabular-nums;
   font-size:var(--t-body);color:var(--tx);display:flex;align-items:center;justify-content:center;min-height:38px}
@@ -1439,10 +1517,10 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* ÖLÇÜM YOK ≠ SIFIR: dolgu yoktur, rakam yoktur, kelime vardır. */
 .km-cell.km-yok{color:var(--tx2);font-size:var(--t-cap);letter-spacing:var(--label-track);text-transform:uppercase}
 .km-lej{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s3);
-  font-family:var(--mono);font-size:10px;letter-spacing:var(--label-track);
+  font-family:var(--mono);font-size:var(--label-size);letter-spacing:var(--label-track);
   text-transform:uppercase;color:var(--tx2)}
-.km-sw{display:inline-block;width:22px;height:12px;border:1px solid var(--line-2);vertical-align:-2px}
-.km-foot{margin-top:var(--s3);font-size:12px;color:var(--tx2);line-height:1.6;max-width:80ch}
+.km-sw{display:inline-block;width:22px;height:12px;border:1px solid var(--line);vertical-align:-2px}
+.km-foot{margin-top:var(--s3);font-size:var(--t-cap);color:var(--tx2);line-height:1.6;max-width:80ch}
 
 /* ---- the ledger's measurement columns. A ruled register divided by vertical
    rules — not a row of equal cards with a big number in each. ---- */
@@ -1452,16 +1530,16 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    yerde: aynı bildirimi S2R-3 bloğunda tekrarlamak, kaynak sırasına bağlı sessiz bir
    kazanan/kaybeden oyunu doğururdu (aynı özgüllük → sonra yazılan kazanır). */
 .mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:var(--s4) 0;
-  border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .mcard{background:none;border:none;border-left:1px solid var(--line);border-radius:0;
   padding:var(--s5) var(--s5) var(--s5) var(--s5);transition:var(--t)}
 .mcard:first-child{border-left:none;padding-left:0}
 .mcard:hover{background:var(--card-2)}
-.mcard .l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);margin-bottom:14px}
+.mcard .l{font-size:var(--label-size);font-weight:600;letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);margin-bottom:14px}
 .mcard .v{font-family:var(--mono);font-size:var(--t-num);font-weight:400;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1;color:var(--tx)}
-.mcard .s{font-size:12px;color:var(--tx2);margin-top:12px;line-height:1.5}
+.mcard .s{font-size:var(--t-cap);color:var(--tx2);margin-top:12px;line-height:1.5}
 /* mounted sheets */
-.card{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-card);padding:var(--s6)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:var(--s6)}
 /* YIĞIN MARJI IZGARA KARDEŞLERİNE VURMASIN (2026-07-28): bu kural ÜST ÜSTE dizilen kartlar
    için yazılmıştı, ama yan yana bir ızgarada da ateşliyordu: ilk kart :first-child olduğu için
    marj almıyor, diğer ikisi 16px alıyordu — üç kutu 259/275/275'te, gözle görülür kayık.
@@ -1521,19 +1599,19 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 
 /* ---- the mounted sheet — the specimen laid on its card, with the mount's own
    ruled frame drawn inside the edge, as a herbarium sheet is ruled. ---- */
-.hero{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-card);
+.hero{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);
   padding:var(--s8);position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:7px;border:1px solid var(--line);pointer-events:none}
 .hero-grid{display:grid;grid-template-columns:1.05fr 1fr 1.25fr;gap:var(--s8);align-items:start;position:relative}
 .hero-grid>*+*{border-left:1px solid var(--line);padding-left:var(--s8)}
-.hstat .l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.hstat .l{font-size:var(--label-size);font-weight:600;letter-spacing:var(--label-track);text-transform:uppercase;color:var(--accent);margin-bottom:12px}
 .hstat .big{font-family:var(--mono);font-size:clamp(var(--t-h),3.3vw,28px);font-weight:400;letter-spacing:-.045em;
   font-variant-numeric:tabular-nums;line-height:1;color:var(--tx)}
-.hstat .sub{font-size:12px;color:var(--tx2);margin-top:12px;font-variant-numeric:tabular-nums;line-height:1.55}
+.hstat .sub{font-size:var(--t-cap);color:var(--tx2);margin-top:12px;font-variant-numeric:tabular-nums;line-height:1.55}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);font-size:var(--t-body);color:var(--tx2);
   padding:9px 0;border-bottom:1px solid var(--line)}
 .srow:last-child{border-bottom:none} .srow:first-child{padding-top:0}
-.srow b{color:var(--tx);font-weight:700;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-body);text-align:right;letter-spacing:-.02em}
+.srow b{color:var(--tx);font-weight:600;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-body);text-align:right;letter-spacing:-.02em}
 .livedot{width:7px;height:7px;border-radius:0;display:inline-block;margin-right:8px;vertical-align:middle;background:currentColor}
 @media(max-width:820px){
  .hero{padding:var(--s6)}
@@ -1598,8 +1676,8 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    ölçek 165 kez baypas ediliyordu, bu onlardan biriydi). Alt çizgi KALDI: tablo başlığı gövdeden
    ayrılmak zorunda ve `.pv-tbl th` de kendi `border-bottom`unu taşıyor. */
 .trow.head{color:var(--tx3);font-size:var(--t-cap);font-weight:600;letter-spacing:.03em;text-transform:uppercase;
-  padding-bottom:10px;border-bottom:1px solid var(--line-2)}
-.tick{font-family:var(--mono);font-weight:700;font-size:var(--t-body);letter-spacing:.02em;color:var(--tx)}
+  padding-bottom:10px;border-bottom:1px solid var(--line)}
+.tick{font-family:var(--mono);font-weight:600;font-size:var(--t-body);letter-spacing:.02em;color:var(--tx)}
 /* ============================================================================
    ÇİP İŞARETİ — DUB "FEATURE PILL" GRAMERİ (karar §10.2, 2026-08-24)
    ----------------------------------------------------------------------------
@@ -1616,14 +1694,19 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .gc.p::before,.gc.f::before,.pillc.g::before,.pv-gorev.uyari::before{
   content:"";display:inline-block;flex:none;width:6px;height:6px;margin-right:6px;
   vertical-align:middle;border-radius:var(--r-tag);background:var(--isaret)}
-/* rubber stamps: struck in the state's own ink, ruled, never a soft pill */
-.tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:var(--r-ctl);text-align:center;
+/* ~~rubber stamps: struck in the state's own ink, ruled, never a soft pill~~
+   EMEKLİ (2026-08-24) — karar §10.2 çipi Dub "feature pill" gramerine bağladı ve bu
+   cümle onun TERSİNİ söylüyordu. Çizilmeden bırakıldığı için yürürlükte sayıldı ve
+   `.tag`/`.st`/`.gc` düğme yarıçapında (--r-ctl 8px) kaldı; operatör bunu üç turda
+   "çerçeveler birinde oval diğerinde birleşik kare" diye bildirmek zorunda kaldı.
+   Çip katmanının yarıçapı artık istisnasız --r-tag (hap). */
+.tag{font-size:var(--label-size);font-weight:500;padding:4px 9px;border-radius:var(--r-tag);text-align:center;
   letter-spacing:var(--label-track);display:inline-block;text-transform:uppercase}
 .t-go{--isaret:var(--sev-3);background:var(--sev-3-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
 .t-rv{--isaret:var(--sev-2);background:var(--sev-2-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-2-h)}
 .t-no{--isaret:var(--sev-1);background:var(--sev-1-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
 .t-vi{background:var(--accent-tint);color:var(--accent-2);box-shadow:inset 0 0 0 1px var(--ink-h)}
-.chain{font-size:var(--t-cap);color:var(--tx2);font-family:var(--mono)}
+.chain{font-size:var(--t-cap);color:var(--tx2);}
 /* ROL SINIFI KAPTAN SONRA GELİR (D1, 2026-08-07). Ölçüldü: `.chain` bu satırda, rol
    sınıfları :377-383'te — AYNI özgüllükte (0,1,0) ve KAYNAK SIRASI gereği kap kazanıyordu.
    Yani `class="chain neg"` basan iki emisyon (bütünlük parity satırları, beyansız yazar)
@@ -1652,20 +1735,20 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .hyp{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:var(--s5) var(--s6);transition:var(--t)}
 .hyp:hover{border-color:var(--line-2);background:var(--card-2)}
 .hyp .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:var(--s3)}
-.hyp .v{font-family:var(--mono);font-size:12px;color:var(--tx2);letter-spacing:.04em}
-.st{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:var(--r-ctl);letter-spacing:var(--label-track);text-transform:uppercase}
+.hyp .v{font-family:var(--mono);font-size:var(--t-cap);color:var(--tx2);letter-spacing:.04em}
+.st{font-size:var(--label-size);font-weight:500;padding:4px 9px;border-radius:var(--r-tag);letter-spacing:var(--label-track);text-transform:uppercase}
 .s-ok{--isaret:var(--sev-3);background:var(--sev-3-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
 .s-rb{--isaret:var(--sev-1);background:var(--sev-1-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
 .s-rj{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 .hyp h3{font-family:var(--display);font-size:var(--t-lg);margin-bottom:8px;font-weight:400;letter-spacing:-.008em;line-height:1.3}
 .hyp p{font-size:var(--t-body);color:var(--tx2);line-height:1.7;max-width:74ch}
 .hyp .meta{display:flex;gap:var(--s5);margin-top:var(--s4);padding-top:var(--s3);border-top:1px solid var(--line);
-  font-size:12px;color:var(--tx2);flex-wrap:wrap;font-variant-numeric:tabular-nums}
-.hyp .meta b{color:var(--tx);font-weight:700;font-family:var(--mono);font-size:12px;letter-spacing:-.02em}
+  font-size:var(--t-cap);color:var(--tx2);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.hyp .meta b{color:var(--tx);font-weight:600;font-family:var(--mono);font-size:var(--t-cap);letter-spacing:-.02em}
 
 /* ---- the transcript — the raw plate, read as typed ---- */
-.pane{border-radius:var(--r-card);border:1px solid var(--line-2);background:var(--bg2);padding:var(--s6)}
-.mono{font-family:var(--mono);font-size:12px;line-height:2;color:var(--tx2);white-space:pre-wrap}
+.pane{border-radius:var(--r-card);border:1px solid var(--line);background:var(--bg2);padding:var(--s6)}
+.mono{font-family:var(--mono);font-size:var(--t-cap);line-height:2;color:var(--tx2);white-space:pre-wrap}
 .mono .k{color:var(--accent-2)} .mono .d{color:var(--tx2)}
 /* DÖKÜMDE ŞİDDET: `pre-wrap` bir dökümde nokta da şerit de sütun hizasını kaydırır —
    taşıyıcı yine alt çizgidir ve yazı --tx'e çıkar (döküm gövdesi --tx2, yani vurgulanan
@@ -1678,17 +1761,17 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 
 /* ---- autonomy ladder — the rungs this collection has earned ---- */
 .levels{display:flex;gap:var(--s2);flex-wrap:wrap;margin:var(--s3) 0 var(--s4)}
-.lv{font-family:var(--mono);font-size:12px;padding:5px 11px;border-radius:var(--r-ctl);border:1px solid var(--line);
-  color:var(--tx2);font-variant-numeric:tabular-nums;letter-spacing:.04em}
-.lv.on{background:var(--accent-tint);color:var(--accent-2);border-color:var(--ink-h);font-weight:700}
+.lv{font-size:var(--t-cap);padding:5px 11px;border-radius:var(--r-tag);border:1px solid var(--line);
+  color:var(--tx2);font-variant-numeric:tabular-nums;letter-spacing:.04em;font-weight:500}
+.lv.on{background:var(--accent-tint);color:var(--accent-2);border-color:var(--ink-h);font-weight:500}
 
 /* ---- one control primitive: .dlbtn ---- */
-.dlbtn{font-size:var(--t-body);font-weight:600;padding:9px 15px;min-height:44px;border-radius:var(--r-btn);border:1px solid var(--line-2);
+.dlbtn{font-size:var(--t-body);font-weight:600;padding:9px 15px;min-height:44px;border-radius:var(--r-btn);border:1px solid var(--line);
   box-shadow:var(--sh-btn);
   color:var(--tx);text-decoration:none;background:transparent;cursor:pointer;transition:var(--t);font-family:var(--sans);
   display:inline-flex;align-items:center;gap:7px}
 .dlbtn:hover{border-color:var(--accent);color:var(--accent-2);background:var(--accent-tint)}
-.dlbtn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg2);font-weight:700}
+.dlbtn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg2);font-weight:600}
 .dlbtn.primary:hover{background:var(--accent-2);color:var(--bg2)}
 .dlbtn:disabled{opacity:.45;cursor:default}
 .dlbtn:disabled:hover{border-color:var(--line-2);color:var(--tx);background:transparent}
@@ -1701,9 +1784,9 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    BİTİŞİKTİ. Sınıf adı vardı, sözleşmesi yoktu.
    Ev üslubu: kutu yok, saç teli var; başlık mono mikro-etiket; sayı sütunu SAĞA hizalı. */
 .tbl{width:100%;border-collapse:collapse;margin-top:var(--s3);font-size:var(--t-body)}
-.tbl th{font-family:var(--mono);font-size:var(--label-size);font-weight:700;
+.tbl th{font-size:var(--label-size);font-weight:600;
   letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);text-align:left;
-  padding:0 var(--s3) var(--s2) 0;border-bottom:1px solid var(--line-2);white-space:nowrap}
+  padding:0 var(--s3) var(--s2) 0;border-bottom:1px solid var(--line);white-space:nowrap}
 .tbl td{padding:var(--s2) var(--s3) var(--s2) 0;border-bottom:1px solid var(--line);
   vertical-align:top}
 .tbl tr:last-child td{border-bottom:none}
@@ -1723,12 +1806,12 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    BAŞLIK DA İŞARETLENİR: sütunun hangi kenardan okunacağı belirsiz kalmasın diye `.trow.head`
    karşılığı olmayan bir hizalama BIRAKILMAZ (bkz. yukarıdaki gerekçe). */
 .trow > .num{text-align:right;font-variant-numeric:tabular-nums;white-space:normal}
-.tbl code{font-family:var(--mono);font-size:12px}
+.tbl code{font-family:var(--mono);font-size:var(--t-cap)}
 .ktbl{margin-top:var(--s3);display:flex;flex-direction:column;gap:var(--s4)}
 .keyrow{display:grid;grid-template-columns:1fr;gap:var(--s2);padding:var(--s3) 0;border-top:1px solid var(--line)}
 .keyrow:first-child{border-top:none;padding-top:0}
 .kmeta{display:flex;flex-direction:column;gap:3px}
-.kstat{font-size:12px;margin-top:2px}
+.kstat{font-size:var(--t-cap);margin-top:2px}
 .kin{display:flex;gap:var(--s2);flex-wrap:wrap}
 .kin input,.searchbox{flex:1;min-width:220px;min-height:44px;font-size:var(--t-body);padding:10px 12px;border-radius:var(--r-input);
   border:1px solid var(--field);background:var(--bg2);color:var(--tx);font-family:var(--mono);transition:var(--t)}
@@ -1750,12 +1833,12 @@ select{appearance:none;-webkit-appearance:none;padding-right:30px;cursor:pointer
 select option{background:var(--bg2);color:var(--tx)}
 /* SABİT PUNTO (2026-07-27): `.9em` bağlama göre 12.6px ve 21px üretiyordu — rampada
    olmayan iki basamak, tek kuraldan. Rampa göreli birim kaldırmaz. */
-code{font-family:var(--mono);font-size:12px;background:var(--accent-tint);color:var(--accent-2);padding:1px 6px;border-radius:0}
+code{font-family:var(--mono);font-size:var(--t-cap);background:var(--accent-tint);color:var(--accent-2);padding:1px 6px;border-radius:0}
 
 /* ---- ladder criteria — checked off in the margin ---- */
 .crit{display:flex;align-items:flex-start;gap:var(--s3);padding:11px 0;border-bottom:1px solid var(--line);font-size:var(--t-body)}
 .crit:last-child{border-bottom:none}
-.ck{width:18px;height:18px;border-radius:0;flex:none;display:grid;place-items:center;font-size:10px;margin-top:1px;font-family:var(--mono);font-weight:700}
+.ck{width:18px;height:18px;border-radius:0;flex:none;display:grid;place-items:center;font-size:var(--label-size);margin-top:1px;font-family:var(--mono);font-weight:600}
 /* İKON KUTUSU — TAŞIYICI DEĞİŞİMİNİN DIŞINDA VE BU BEYANLI (karar §10.2 sınıflaması).
    `.ck` 18×18'lik bir kutudur ve içinde TEK bir glif taşır (`app.js:crit` bir işaret basar,
    bir cümle değil). Ekran okuyucu için anlamı kutunun yanındaki etiketten gelir; glif bir
@@ -1791,10 +1874,10 @@ svg text{font-family:var(--mono)}
 .hint.sev-1{border-left-color:var(--sev-1)}
 .hint.sev-2{border-left-color:var(--sev-2)} .hint.warn{border-left-color:var(--sev-2)}
 .hint.guven{color:var(--olcek-guven)}
-.term{border-bottom:1px solid var(--line-2);cursor:help;position:relative;text-transform:none}
+.term{border-bottom:1px solid var(--line);cursor:help;position:relative;text-transform:none}
 .term:hover,.term:focus-visible{color:var(--tx);border-color:var(--accent);outline:none}
 .term::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 9px);width:max-content;max-width:270px;
-  background:var(--slip);border:none;color:var(--slip-ink);font-family:var(--sans);font-size:12px;font-weight:400;
+  background:var(--slip);border:none;color:var(--slip-ink);font-family:var(--sans);font-size:var(--t-cap);font-weight:400;
   line-height:1.65;letter-spacing:0;text-transform:none;padding:11px 13px;border-radius:0;white-space:normal;
   box-shadow:none;
   opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity var(--t),transform var(--t);z-index:60}
@@ -1802,10 +1885,10 @@ svg text{font-family:var(--mono)}
 .term:hover::after,.term:focus-visible::after{opacity:1;transform:none}
 .legend-gate{display:flex;gap:var(--s4);flex-wrap:wrap;margin-bottom:var(--s4)}
 .legend-gate .lg{display:inline-flex;align-items:center;gap:var(--s2);font-size:var(--t-body);color:var(--tx2)}
-.gloss{margin-top:var(--s4);border:1px solid var(--line-2);border-radius:var(--r-card);background:var(--card);overflow:hidden}
-.gloss summary{cursor:pointer;list-style:none;padding:var(--s4) var(--s6);font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase}
+.gloss{margin-top:var(--s4);border:1px solid var(--line);border-radius:var(--r-card);background:var(--card);overflow:hidden}
+.gloss summary{cursor:pointer;list-style:none;padding:var(--s4) var(--s6);font-size:var(--t-cap);color:var(--accent);font-weight:600;letter-spacing:var(--label-track);text-transform:uppercase}
 .gloss summary::-webkit-details-marker{display:none}
-.gloss[open] summary{border-bottom:1px solid var(--line-2)}
+.gloss[open] summary{border-bottom:1px solid var(--line)}
 .gloss .body{padding:var(--s2) var(--s6) var(--s4)}
 .gterm{display:flex;gap:var(--s4);padding:11px 0;border-bottom:1px solid var(--line);font-size:var(--t-body)}
 .gterm:last-child{border-bottom:none}
@@ -1823,17 +1906,17 @@ svg text{font-family:var(--mono)}
 /* ---- klavye yardım katmanı ---- */
 .kbd-ov{position:fixed;inset:0;z-index:80;background:var(--scrim);backdrop-filter:blur(4px);
   display:grid;place-items:center;padding:var(--s6)}
-.kbd-panel{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-card);
+.kbd-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);
   padding:var(--s6);width:min(460px,100%)}
-.kbd-panel h3.t{font-family:var(--mono);font-size:var(--t-cap);font-weight:700;color:var(--accent);
-  text-transform:uppercase;letter-spacing:var(--label-track);margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--line-2)}
+.kbd-panel h3.t{font-size:var(--t-cap);font-weight:600;color:var(--accent);
+  text-transform:uppercase;letter-spacing:var(--label-track);margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--line)}
 .krow{display:grid;grid-template-columns:34px 110px 1fr;gap:var(--s3);align-items:baseline;
   padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--t-body)}
 .krow:last-child{border-bottom:none}
 .krow b{font-weight:600}
-.krow span{color:var(--tx2);font-size:12px}
-kbd{font-family:var(--mono);font-size:var(--t-cap);background:var(--bg2);border:1px solid var(--line-2);
-  border-radius:0;padding:2px 7px;color:var(--tx);font-weight:700}
+.krow span{color:var(--tx2);font-size:var(--t-cap)}
+kbd{font-family:var(--mono);font-size:var(--t-cap);background:var(--bg2);border:1px solid var(--line);
+  border-radius:0;padding:2px 7px;color:var(--tx);font-weight:600}
 
 /* ============================================================================
    ROL 4 · MOD KANALI — YAPISAL TAŞIYICI (D1, 2026-08-07)
@@ -1875,7 +1958,7 @@ body[data-mod="olculemedi"]::before{opacity:.9;background:repeating-linear-gradi
    kaynaktır. `t-vi` akromatik kalıbı korunur, yalnız canlı hâlde kanal açılır. */
 .tag[data-mod="live"]{background:var(--mod-canli-t);color:var(--mod-canli);
   box-shadow:inset 0 0 0 1px var(--mod-canli-h)}
-.tag[data-mod="olculemedi"]{border:1px dashed var(--mod-kagit-h)}
+.tag[data-mod="olculemedi"]{border:1px solid var(--mod-kagit-h)}
 
 /* ---- Risk & müdahale okumaları + panel bileşenleri ---- */
 /* keşif modu: the sheet is marked as an unconfirmed exposure — a ruled orpiment
@@ -1893,9 +1976,9 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    gibi göstermek olurdu. */
 .hud{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
 .hudchip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
-  color:var(--tx2);font-family:var(--mono);font-size:var(--t-cap);padding:6px 10px;border-radius:var(--r-ctl);
-  font-variant-numeric:tabular-nums;white-space:nowrap}
-.hudchip b{color:var(--tx);font-weight:700;letter-spacing:-.02em}
+  color:var(--tx2);font-family:var(--sans);font-size:var(--t-cap);padding:6px 10px;border-radius:var(--r-tag);
+  font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:500}
+.hudchip b{color:var(--tx);font-weight:600;letter-spacing:-.02em}
 .hudchip.explore{border-color:var(--mod-kesif);color:var(--mod-kesif);background:var(--mod-kesif-t)}
 .hudchip .ld{width:6px;height:6px;border-radius:0;background:var(--sev-3);display:inline-block}
 .hudchip .ld.bad{background:var(--sev-1)} .hudchip .ld.warn{background:var(--sev-2)} .hudchip .ld.off{background:var(--tx2)}
@@ -1907,14 +1990,14 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    display:none olduğu için ne sekme sırasında ne erişilebilirlik ağacında vardır. */
 .kswrap{position:relative}
 .kscover{border:1px solid var(--sev-1);color:var(--tx);background:transparent;padding:0 13px;
-  border-radius:var(--r-ctl);font-family:var(--mono);font-weight:700;font-size:var(--t-cap);letter-spacing:.1em;cursor:pointer}
+  border-radius:var(--r-ctl);font-family:var(--mono);font-weight:600;font-size:var(--t-cap);letter-spacing:.04em;cursor:pointer}
 .kscover:hover{background:var(--sev-1-t)}
 .kscover[aria-expanded="true"]{background:var(--sev-1);color:var(--bg2)}
 .ksgroup{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:60;background:var(--card);
   border:1px solid var(--sev-1);border-radius:var(--r-card);padding:var(--s3);min-width:280px}
 .ksgroup.open{display:flex;flex-direction:column;gap:6px}
 .ksgroup button{text-align:left;font-size:var(--t-body);padding:8px 11px;min-height:44px;border-radius:var(--r-btn);cursor:pointer;
-  border:1px solid var(--line-2);background:var(--bg2);color:var(--tx);font-family:var(--sans)}
+  border:1px solid var(--line);background:var(--bg2);color:var(--tx);font-family:var(--sans)}
 .ksgroup button:hover{border-color:var(--sev-1);color:var(--tx)}
 .ksgroup button.armed{border-color:var(--sev-2);color:var(--tx)}
 /* yanıp sönen durum etiketleri (GHOST / DESYNC) */
@@ -1926,7 +2009,7 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .twin .tb .bar{flex:1;margin:0}
 /* karar ağacı zinciri — the gates this candidate passed, stamped in order */
 .gatechain{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-.gc{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--r-ctl);
+.gc{font-family:var(--sans);font-size:var(--label-size);font-weight:500;padding:3px 8px;border-radius:var(--r-tag);
   letter-spacing:var(--label-track);cursor:default;text-transform:uppercase}
 .gc.p{--isaret:var(--sev-3);background:var(--sev-3-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
 .gc.f{--isaret:var(--sev-1);background:var(--sev-1-t);color:var(--tx);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
@@ -1945,7 +2028,7 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .bullet svg{display:block;flex:none}
 /* Etiket — Label-Above kuralı: mono, 10px, büyük harf, izli. `.slabel` KULLANILMAZ; o kutulu
    bir bölüm çipidir ve her bullet'ı tıklanabilir bir kontrol gibi gösteriyordu. */
-.bl-lab{font-family:var(--mono);font-size:var(--label-size);font-weight:700;
+.bl-lab{font-family:var(--mono);font-size:var(--label-size);font-weight:600;
   letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);line-height:1.2}
 /* Okuma barın YANINDA, ÜSTÜNDE değil: bar 6px ve sayı 13px — üst üste konsalar sayı barı
    ezerdi. Sabit kutuda sağa hizalı ve tabular: iki bullet alt alta gelince rakamlar sütun olur. */
@@ -1960,21 +2043,21 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    okunabilirlik tabanının altında — ve "sönük olsun" isteği boyutla değil MÜREKKEPLE (--tx2)
    karşılanır. 10px = Label basamağı. Etiket SAYISI iki (sol uç 0, sağ uç ölçek tavanı) ve iki
    uca yaslı; sıkışma olursa çözüm etiketi azaltmaktır, punto düşürmek değil. */
-.bl-ax{font-family:var(--mono);font-size:10px;fill:var(--tx2);letter-spacing:.02em}
+.bl-ax{font-family:var(--mono);font-size:var(--label-size);fill:var(--tx2);letter-spacing:.02em}
 .bl-trend{display:flex;align-items:center;gap:var(--s2);margin-top:4px}
 .bl-trend svg{display:block;flex:none}
-.bl-trend-lab{font-family:var(--mono);font-size:10px;color:var(--tx2);letter-spacing:.04em}
+.bl-trend-lab{font-family:var(--mono);font-size:var(--label-size);color:var(--tx2);letter-spacing:.04em}
 /* "ölçüm yok" bar YOKKEN çıkar ve barın yerini ALMAZ — sıfır uzunlukta bir bar "ölçtük, sıfır"
    demektir; ölçülmemiş bir şey için bu bir uydurmadır. Yazı, boşluğun kendisini adlandırır. */
 .bl-yok{font-size:var(--t-cap);color:var(--tx2);margin-top:3px;font-style:normal}
 /* .cap biçimi İKİ göstergede de aynı olmalı. Kural yalnız `.gaugewrap .cap` altında yazılıydı, bu
    yüzden termometrenin başlığı gövde varsayılanına düşüyordu (16px/--tx ↔ 12px/--tx2) ve aynı
    şeridin iki kartı farklı yazı tipi ve renkte görünüyordu (2026-07-22). */
-.gaugewrap .cap,.thermo .cap{font-size:12px;color:var(--tx2);line-height:1.65}
+.gaugewrap .cap,.thermo .cap{font-size:var(--t-cap);color:var(--tx2);line-height:1.65}
 .gaugewrap .cap b,.thermo .cap b{color:var(--tx);font-size:var(--t-body);font-weight:600}
 /* ısınma termometresi — a graduated tube, square-shouldered like lab glass */
 .thermo{display:flex;align-items:flex-end;gap:var(--s4)}
-.thermo .tube{width:14px;height:86px;border:1px solid var(--line-2);border-radius:0;background:var(--bg2);
+.thermo .tube{width:14px;height:86px;border:1px solid var(--line);border-radius:0;background:var(--bg2);
   position:relative;overflow:hidden;flex:none}
 .thermo .tube i{position:absolute;left:0;right:0;bottom:0;height:100%;background:var(--accent);
   transform:scaleY(var(--fill,0));transform-origin:bottom;transition:transform .4s var(--ease)}
@@ -1987,7 +2070,7 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    ZORUNDA, ki sapınca söylediği şey duyulsun.
    RENK YALNIZ SAPAN SEGMENTTE. Sağlıklı segmentler --tx2'de kalır; şeridin tamamını boyamak
    "hepsi bozuk" der ve toplamanın ayırt etme gücünü siler. ============================================================================================ */
-.sessizhat{font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.7;
+.sessizhat{font-family:var(--mono);font-size:var(--t-cap);color:var(--tx2);line-height:1.7;
   display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--s3);
   font-variant-numeric:tabular-nums;margin-bottom:var(--s4)}
 /* GLOBAL KAP (S2R-1): şerit artık sayfaların DIŞINDA, `<main>`in ilk çocuğu. Üst bar sabit
@@ -2007,16 +2090,16 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 /* SAPAN SEGMENT TAM SATIRI ALIR: açılımı bir sütuna sıkışırsa runbook ipucu okunmaz olur.
    `flex-basis` BURADA yazılır çünkü ızgaranın flex ÖĞESİ `.sh-seg`tir — içindeki `.sh-ac`ye
    yazmak sessizce hiçbir şey yapmaz (o bir flex öğesi değil). */
-.sessizhat .sh-sap{color:var(--tx);font-weight:700;white-space:normal;flex-basis:100%;
+.sessizhat .sh-sap{color:var(--tx);font-weight:600;white-space:normal;flex-basis:100%;
   border-left:3px solid var(--sev-2);padding-left:var(--s3)}
 .sessizhat .sh-sap.kritik{border-left-color:var(--sev-1)}
-.sessizhat .sh-sap b{color:inherit;font-weight:700}
+.sessizhat .sh-sap b{color:inherit;font-weight:600}
 /* AÇILIM sapan segmentin ALTINDA, tam genişlikte: ad + süre + runbook ipucu. Çekmece DEĞİL —
    bir tık ardına saklanan sapma, sessiz hattın kazandırdığı görünürlüğü geri alırdı. */
 .sessizhat .sh-ac{display:block;margin:var(--s1) 0 var(--s2);
   padding-left:var(--s3);border-left:2px solid currentColor;font-weight:400}
 .sessizhat .sh-row{display:block;white-space:normal}
-.sessizhat .sh-row b{font-weight:700;color:inherit}
+.sessizhat .sh-row b{font-weight:600;color:inherit}
 .sessizhat .sh-sure{color:inherit;opacity:.85}
 .sessizhat .sh-ip{color:var(--tx2);font-weight:400}
 .sessizhat .sh-fazla{color:var(--tx2);font-weight:400;display:block}
@@ -2032,11 +2115,11 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    `.asim` YALNIZ ölçülen tavan aşıldığında (tepe/10dk ya da duran alarm) takılır. Dağılım
    hedefi (80/15/5) ton TAŞIMAZ: bu sistem üç dilimden birini üretemiyor, yani hedefe göre
    "aşım" hükmü kurulamaz — kurulsaydı ölçülemeyen bir şey hakkında hüküm olurdu. */
-.alarmbutce{font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.7;
+.alarmbutce{font-family:var(--mono);font-size:var(--t-cap);color:var(--tx2);line-height:1.7;
   font-variant-numeric:tabular-nums;margin-bottom:var(--s4)}
 .alarmbutce b{font-weight:500;color:inherit}
 .alarmbutce.asim{color:var(--tx2);border-left:3px solid var(--sev-2);padding-left:var(--s3)}
-.alarmbutce.asim b{color:inherit;font-weight:700}
+.alarmbutce.asim b{color:inherit;font-weight:600}
 .alarmbutce .ab-not{color:var(--tx2);font-weight:400}
 
 /* BELİRSİZLİK KODLAMASI (WP-P/P5) — kesikli alt çizgi.
@@ -2057,16 +2140,16 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
   padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--t-body);font-variant-numeric:tabular-nums}
 .regrow:last-child{border-bottom:none}
 .regrow .nm{font-family:var(--mono);font-size:var(--t-cap);color:var(--tx2);letter-spacing:.04em}
-.regrow.live .nm{color:var(--accent-2);font-weight:700}
+.regrow.live .nm{color:var(--accent-2);font-weight:600}
 .regrow .bar{margin:0}
 @media(max-width:900px){.ksgroup{position:fixed;left:12px;right:12px;top:auto}}
 
 /* ---- a11y: içeriğe atla ---- */
 .skip{min-height:44px;display:inline-flex;align-items:center;position:absolute;left:-9999px;top:0;z-index:99;background:var(--accent-2);color:var(--bg2);
-  padding:10px 16px;border-radius:0;font-weight:700}
+  padding:10px 16px;border-radius:0;font-weight:600}
 .skip:focus-visible{left:0}
 
-footer{border-top:1px solid var(--line-2);margin-top:var(--s12);padding:var(--s6) 0;color:var(--tx2);font-size:12px;text-align:center}
+footer{border-top:1px solid var(--line);margin-top:var(--s12);padding:var(--s6) 0;color:var(--tx2);font-size:var(--t-cap);text-align:center}
 footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 
 /* ---- responsive ---- */
@@ -2094,7 +2177,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
     scrollWidth 526 / clientWidth 327, yani altı görünümün ikisi ulaşılamazdı.
     Kaydırma yerine SARMA: altı çip de ilk bakışta ekranda, hiçbir hareket gerekmez. */
  .side{position:static;display:flex;flex-wrap:wrap;gap:0;padding:var(--s2) 0;
-   border-bottom:1px solid var(--line-2)}
+   border-bottom:1px solid var(--line)}
  .side .slab,.side .acct{display:none}
  /* on a phone the rail is wrong — the views come back as a wrapping chip bar with
     full names, and the ride-over label is switched off (nothing to hover with). */
@@ -2163,12 +2246,12 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 
 /* ---- ÖLÇÜLEMEDİ ATOMU — kesik alt çizgi, ölçülmüş sıfırdan görsel AYRIM (GARANTİ G1) ---- */
 .pv-yok{font:400 var(--t-body)/1.3 var(--sans);color:var(--tx3);
-  border-bottom:1px dashed var(--line-2);display:inline-block;padding-bottom:1px;cursor:help}
+  border-bottom:1px solid var(--line);display:inline-block;padding-bottom:1px;cursor:help}
 .pv-yok-alt{color:var(--tx3);font-size:var(--t-cap)}
 
 /* ---- Y1 · SATIR-İÇİ KIVILCIM ---- */
 .pv-kv{display:inline-block;min-width:104px;vertical-align:middle}
-.pv-kv-bek{color:var(--tx3);font-size:11px}
+.pv-kv-bek{color:var(--tx3);font-size:var(--t-cap)}
 .pv-kv-svg{width:104px;height:26px;display:block;overflow:visible}
 /* SEVİYELER AKROMATİK, AYRIM DESENDE: giriş kesiksiz-ince · stop seyrek nokta · hedef uzun kesik.
    Renkle ayırmak, bir FİYAT SEVİYESİNİ bir SONUÇ gibi okutmak olurdu. */
@@ -2194,7 +2277,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-sekme:hover{background:var(--bg2)}
 .pv-sekme:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .pv-sekme[aria-selected="true"]{border-bottom-color:var(--tx);background:var(--raise)}
-.pv-sekme .et{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--tx3);font-weight:500}
+.pv-sekme .et{display:flex;align-items:center;gap:7px;font-size:var(--t-cap);color:var(--tx3);font-weight:500}
 /* ŞERİT KOMPAKTLAŞTI (2026-08-24, operatör: "görsel uyumsuzluk var, ve kitap, sermaye aynı
    rakamı gösteriyor, bu gerçekten gerekli mi?"). Gerekli DEĞİLDİ: dört durum kartı Bugün'e
    taşınınca metrik sekmelerinin ÜÇÜ (Sermaye ↔ KİTAP · Gün K/Z ↔ KİTAP'ın gün satırı ·
@@ -2206,13 +2289,13 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
   font-variant-numeric:tabular-nums}
 .pv-sekme .dg.pos{color:var(--yon-arti)}
 .pv-sekme .dg.neg{color:var(--yon-eksi)}
-.pv-sekme .bg{font-size:11px;color:var(--tx2);line-height:1.45}
+.pv-sekme .bg{font-size:var(--t-cap);color:var(--tx2);line-height:1.45}
 .pv-sekme.yok .dg{font:400 var(--t-body)/1.35 var(--sans)}
 /* SERİ NOKTALARI ARTIK RENKLİ AMA MERDİVEN DURUYOR (karar §10.3): hue LUMİNANSIN YERİNE
    DEĞİL ÜSTÜNE eklendi — komşu basamaklar arasında ΔL* 16.45/16.37 (gündüz), 15.60/15.61
    (gece) ve grafikte ikinci kanal hâlâ DESENdir. Renk körü okuyucunun taşıyıcısı
    kaldırılmadı; kaldırılsaydı kazanç değil kayıp olurdu. */
-.pv-nk{width:7px;height:7px;border-radius:2px;display:inline-block;background:var(--tx3)}
+.pv-nk{width:7px;height:7px;border-radius:var(--r-bar);display:inline-block;background:var(--tx3)}
 .pv-nk.s1{background:var(--blue)}
 .pv-nk.s2{background:var(--sapphire)}
 .pv-nk.s3{background:var(--sky)}
@@ -2240,24 +2323,24 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-seri-uc-1{fill:var(--sapphire);stroke:var(--raise);stroke-width:2.5}
 .pv-seri-uc-2{fill:var(--sky);stroke:var(--raise);stroke-width:2.5}
 .pv-xekseni{display:flex;justify-content:space-between;padding:6px var(--s1) 0;
-  font-size:11px;color:var(--tx3)}
+  font-size:var(--t-cap);color:var(--tx3)}
 .pv-xekseni .son{color:var(--tx2);font-weight:600}
 .pv-ipucu{position:absolute;top:var(--s4);transform:translateX(-50%);background:var(--raise);
   border:1px solid var(--line);border-radius:var(--r-card);padding:10px var(--s3);
   min-width:190px;box-shadow:var(--sh-btn);pointer-events:none;z-index:2}
 .pv-ipucu-b{font-size:var(--t-body);font-weight:500;color:var(--tx);margin-bottom:8px}
-.pv-ipucu-s{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--tx2);padding:3px 0}
+.pv-ipucu-s{display:flex;align-items:center;gap:8px;font-size:var(--t-cap);color:var(--tx2);padding:3px 0}
 .pv-ipucu-s b{margin-left:auto;font:600 var(--t-body) var(--sans);color:var(--tx);
   font-variant-numeric:tabular-nums}
-.pv-sw{width:8px;height:8px;border-radius:2px;display:inline-block;background:var(--tx3)}
+.pv-sw{width:8px;height:8px;border-radius:var(--r-bar);display:inline-block;background:var(--tx3)}
 .pv-sw-0{background:var(--blue)}
 .pv-sw-1{background:var(--sapphire)}
 .pv-sw-2{background:var(--sky)}
 .pv-grafik-bos{padding:var(--s5) var(--s4)}
 .pv-grafik-yok{font-size:var(--t-body);color:var(--tx2);line-height:1.6;margin:0 0 4px}
-.pv-lejand{display:flex;flex-wrap:wrap;gap:var(--s3);padding:0 var(--s4) var(--s3);font-size:11px}
+.pv-lejand{display:flex;flex-wrap:wrap;gap:var(--s3);padding:0 var(--s4) var(--s3);font-size:var(--t-cap)}
 .pv-lej-yok{color:var(--tx3)}
-.pv-para-beyan{padding:0 var(--s4) var(--s3);font-size:11px;color:var(--tx2);line-height:1.6}
+.pv-para-beyan{padding:0 var(--s4) var(--s3);font-size:var(--t-cap);color:var(--tx2);line-height:1.6}
 
 /* ---- AKIŞ KARTI: kompakt zincir ↔ Sankey huni ---- */
 .pv-akis{background:var(--raise);border:1px solid var(--line);border-radius:var(--r-card);
@@ -2265,10 +2348,10 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-akis > header{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) var(--s4);
   border-bottom:1px solid var(--line)}
 .pv-akis h2{font-size:var(--t-body);font-weight:600;color:var(--tx);margin:0}
-.pv-akis .alt{font-size:11px;color:var(--tx3)}
+.pv-akis .alt{font-size:var(--t-cap);color:var(--tx3)}
 .pv-gorunum{margin-left:auto;display:flex;gap:2px}
 .pv-gbtn{border:1px solid var(--line);background:var(--raise);color:var(--tx2);width:28px;
-  height:26px;border-radius:var(--r-ctl);cursor:pointer;font-size:12px;line-height:1}
+  height:26px;border-radius:var(--r-ctl);cursor:pointer;font-size:var(--t-cap);line-height:1}
 .pv-gbtn:hover{background:var(--bg2);color:var(--tx)}
 .pv-gbtn[aria-pressed="true"]{background:var(--nav-t);color:var(--nav);border-color:var(--nav-h)}
 .pv-gbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -2276,7 +2359,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-zadim{flex:1;padding:var(--s3) var(--s4);border-right:1px solid var(--line);
   display:flex;flex-direction:column;gap:5px}
 .pv-zadim:last-child{border-right:0}
-.pv-zadim .zt{font-size:11px;color:var(--tx3);font-weight:500}
+.pv-zadim .zt{font-size:var(--t-cap);color:var(--tx3);font-weight:500}
 .pv-zadim .zs{font:600 var(--t-sub)/1 var(--sans);color:var(--tx);font-variant-numeric:tabular-nums}
 /* KONUM İŞARETİ — ROL 6. "Burada durdu" bir ALARM değil bir YER bildirimidir; şiddet kanalına
    koymak, her sakin turda ekranda kalıcı bir uyarı üretirdi. */
@@ -2293,19 +2376,19 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
    Kural SİLİNDİ çünkü OKUYUCUSUZ kaldı (YASA 6), gizlendiği için değil. */
 .pv-hasamalar{position:relative;height:62px;margin-top:var(--s2)}
 .pv-hasama{position:absolute;top:0}
-.pv-hasama .ha{font-size:11px;color:var(--tx3);font-weight:500;white-space:nowrap}
+.pv-hasama .ha{font-size:var(--t-cap);color:var(--tx3);font-weight:500;white-space:nowrap}
 .pv-hasama .hs{font:600 var(--t-h)/1.15 var(--sans);color:var(--tx);
   font-variant-numeric:tabular-nums;margin-top:3px}
 .pv-hasama .hy2{font:500 11px/1 var(--mono);color:var(--tx3);margin-top:3px}
 /* DOLUM — huninin İÇİNDE değil ALTINDA (payda farkı). Kendi paydasını yanında taşır. */
-.pv-dolum{font-size:11px;color:var(--tx2);padding:0 var(--s4) var(--s2);line-height:1.6;margin:0}
-.pv-dolum-payda{color:var(--tx3);display:block;font-size:10px}
+.pv-dolum{font-size:var(--t-cap);color:var(--tx2);padding:0 var(--s4) var(--s2);line-height:1.6;margin:0}
+.pv-dolum-payda{color:var(--tx3);display:block;font-size:var(--label-size)}
 /* MONOTONLUK İHLALİ — bir ÖLÇÜM arızasıdır (şerit huni gibi okunamaz), şiddet kanalında. */
-.pv-monoton{font-size:11px;color:var(--tx2);padding:0 var(--s4) var(--s3);line-height:1.6;margin:0;
+.pv-monoton{font-size:var(--t-cap);color:var(--tx2);padding:0 var(--s4) var(--s3);line-height:1.6;margin:0;
   border-left:3px solid var(--sev-2);padding-left:var(--s3);margin-left:var(--s4)}
-.pv-huni-not{font-size:10px;color:var(--tx3);padding:var(--s2) var(--s4) var(--s3);line-height:1.6}
+.pv-huni-not{font-size:var(--label-size);color:var(--tx3);padding:var(--s2) var(--s4) var(--s3);line-height:1.6}
 .pv-dususler{border-top:1px solid var(--line);background:var(--bg2);padding:var(--s3) var(--s4)}
-.pv-dbaslik{font-size:11px;font-weight:600;color:var(--tx3);letter-spacing:.04em;
+.pv-dbaslik{font-size:var(--t-cap);font-weight:600;color:var(--tx3);letter-spacing:.04em;
   text-transform:uppercase;margin-bottom:var(--s2)}
 .pv-dsatir{display:flex;align-items:center;gap:var(--s3);padding:6px 0;
   font-size:var(--t-body);color:var(--tx2)}
@@ -2318,7 +2401,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 /* ---- "SENİ BEKLEYENLER" ---- */
 .pv-gorevler-kap{background:var(--raise);border:1px solid var(--line);
   border-radius:var(--r-card);padding:var(--s4);margin-bottom:var(--s3)}
-.pv-gorevler-kap h2{font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--tx3);
+.pv-gorevler-kap h2{font-size:var(--t-cap);font-weight:600;letter-spacing:.04em;color:var(--tx3);
   text-transform:uppercase;margin:0 0 var(--s4)}
 .pv-gorevler{display:flex;flex-direction:column;gap:var(--s1)}
 .pv-gorev{display:flex;align-items:center;gap:10px;padding:11px var(--s3);
@@ -2372,26 +2455,26 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-sonraki>header h2{font:600 var(--t-sub)/1.3 var(--sans);color:var(--tx);margin:0}
 .pv-sonraki .pv-say{font:400 var(--t-body) var(--mono);color:var(--tx3)}
 .pv-plist{display:flex;flex-direction:column;gap:1px;background:var(--line);
-  border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+  border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
 .pv-psat{display:grid;grid-template-columns:64px 1fr 96px 52px 84px;gap:var(--s3);
   align-items:center;width:100%;text-align:left;background:var(--card);border:0;
   padding:var(--s3) var(--s4);font:400 var(--t-body) var(--sans);color:var(--tx2);cursor:pointer}
 .pv-psat:hover{background:var(--raise)}
 .pv-psat:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
 .pv-tick{font:600 var(--t-body) var(--sans);color:var(--tx)}
-.pv-zincir{color:var(--tx3);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pv-sev,.pv-rr{font-size:12px;color:var(--tx2)}
+.pv-zincir{color:var(--tx3);font-size:var(--t-cap);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pv-sev,.pv-rr{font-size:var(--t-cap);color:var(--tx2)}
 .pv-hkm{text-align:right}
 .pv-eleme{display:flex;flex-direction:column;gap:var(--s2);margin-top:var(--s3)}
 .pv-esat{display:grid;grid-template-columns:64px 1fr;gap:var(--s3);align-items:baseline}
 @media(max-width:760px){
   .pv-psat{grid-template-columns:56px 1fr 72px;row-gap:2px}
-  .pv-psat .pv-rr,.pv-psat .pv-sev{grid-column:2/4;font-size:11px}
+  .pv-psat .pv-rr,.pv-psat .pv-sev{grid-column:2/4;font-size:var(--t-cap)}
 }
 
 /* ---- ROZET ---- */
 .pv-rz{display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-tag);
-  padding:5px 10px;font:500 11px/1 var(--sans);border:1px solid transparent;white-space:nowrap}
+  padding:5px 10px;font:500 11px/1 var(--sans);border:1px solid transparent;white-space:nowrap;font-weight:500}
 /* Rozetin noktası ZATEN vardı ve `currentColor` okuyordu — yani yazı renklendiği için
    nokta da renkleniyordu. Taşıyıcı değişiminde ilişki TERSİNE döndü: nokta kendi
    `--isaret`ini okur, yazı nötr kalır. Rol taşımayan hâller (`notr`/`aktif`) hâlâ
@@ -2442,7 +2525,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-tbl tbody tr:hover{background:var(--bg2)}
 .pv-tbl td.ad{color:var(--tx);font-weight:500}
 .pv-tbl td.sy{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--tx)}
-.pv-not{font-size:11px;color:var(--tx3);line-height:1.6;padding:var(--s3) var(--s4);margin:0}
+.pv-not{font-size:var(--t-cap);color:var(--tx3);line-height:1.6;padding:var(--s3) var(--s4);margin:0}
 
 /* ---- Y3 · TOP VIEWS ---- */
 .pv-top{background:var(--raise);border:1px solid var(--line);
@@ -2451,7 +2534,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
   padding:var(--s3) var(--s4);border-bottom:1px solid var(--line)}
 .pv-top h2{font-size:var(--t-body);font-weight:600;color:var(--tx);margin:0}
 .pv-damga{font:600 10px var(--sans);letter-spacing:.06em;text-transform:uppercase;
-  color:var(--tx3);border:1px dashed var(--line-2);border-radius:var(--r-tag);padding:3px 9px}
+  color:var(--tx3);border:1px solid var(--line);border-radius:var(--r-tag);padding:3px 9px}
 .pv-filtre-serit{margin-left:auto;display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
 .pv-mgrup{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden}
 /* WCAG 2.2 AA 2.5.8 (hedef boyu ≥24×24): ölçüldü, 23px'ti — bir piksel altta. Yükseklik
@@ -2476,7 +2559,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 .pv-fsekme:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .pv-fmetrik{margin-left:auto;font:600 10px var(--sans);letter-spacing:.06em;
   text-transform:uppercase;color:var(--tx3)}
-.pv-fpayda{font-size:10px;color:var(--tx3);line-height:1.5;margin:0 0 var(--s2)}
+.pv-fpayda{font-size:var(--label-size);color:var(--tx3);line-height:1.5;margin:0 0 var(--s2)}
 .pv-fgovde{display:flex;flex-direction:column;gap:2px;position:relative}
 /* E4 · KESME BEYANI — kesilen liste AŞAĞI DOĞRU SOLAR: "daha var" diyen dürüst bir sinyal.
    Soldurma bir SÜS değil: sayıyı gizlemeden listenin sonunun gelmediğini söyler. */
@@ -2499,30 +2582,30 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 /* BİRİM SATIRI — hangi paydanın sayıldığı HER satırda yazar. Plan tabanlı facette `n` PLAN,
    `r_n` o planlardan doğmuş KAPANMIŞ İŞLEMdir; ayrımı yazmayan bir satır "217 planın PF'i 1,16"
    diye okunur, oysa PF 52 işlemin. Bu yanlış okuma bir strateji kararını bozabilir. */
-.pv-fbirim{font-size:10px;color:var(--tx3);font-variant-numeric:tabular-nums}
+.pv-fbirim{font-size:var(--label-size);color:var(--tx3);font-variant-numeric:tabular-nums}
 .pv-fdeger{position:relative;z-index:1;font-family:var(--mono);font-variant-numeric:tabular-nums;
   color:var(--tx);font-size:var(--t-body)}
 .pv-ftumu{margin-top:var(--s2);border:1px solid var(--line);background:var(--raise);
   color:var(--tx2);border-radius:var(--r-btn);padding:5px var(--s3);cursor:pointer;
   font:500 11px var(--sans);width:100%}
 .pv-ftumu:hover{background:var(--bg2);color:var(--tx)}
-.pv-fbos{font-size:11px;color:var(--tx3);line-height:1.6;margin:0;padding:var(--s2) 0}
+.pv-fbos{font-size:var(--t-cap);color:var(--tx3);line-height:1.6;margin:0;padding:var(--s2) 0}
 /* KART ALTBİLGİSİ — etiketsiz sayaç · çok-etiketli uyarısı · facete özgü `ek` sayaçları ·
    tautoloji şerhi. Uç bu alanları üretiyor; okuyucusuz bırakmak YASA 6 ihlali olurdu. */
 .pv-fdip{margin:var(--s2) 0 0;padding-top:var(--s2);border-top:1px solid var(--line);
-  font-size:10px;color:var(--tx3);line-height:1.6}
+  font-size:var(--label-size);color:var(--tx3);line-height:1.6}
 
 /* ---- Y2 · ADAY ÇEKMECESİNİN ZİNCİRİ ---- */
 .pd-zincir{display:flex;flex-direction:column;gap:2px;margin-bottom:var(--s3)}
 .pd-zincir .pd-adim{display:grid;grid-template-columns:120px 110px 1fr;gap:var(--s2);
   align-items:baseline;padding:6px var(--s2);border-radius:var(--r-input);
   font-size:var(--t-body);color:var(--tx2)}
-.pd-zincir .pd-adim b{font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+.pd-zincir .pd-adim b{font-weight:600;font-size:var(--t-cap);letter-spacing:.04em;text-transform:uppercase;
   color:var(--tx3)}
 .pd-zincir .pd-adim.gecti b{color:var(--tx2)}
 .pd-zincir .pd-adim.durdu{background:var(--nav-t)}
 .pd-zincir .pd-adim.durdu b{color:var(--nav)}
-.pd-zincir .pd-adim.yok b{color:var(--tx3);border-bottom:1px dashed var(--line-2)}
+.pd-zincir .pd-adim.yok b{color:var(--tx3);border-bottom:1px solid var(--line)}
 
 /* ---- DAR EKRAN ---- */
 @media(max-width:980px){
@@ -2536,7 +2619,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 /* ---- ALARM BÜTÇESİ: HÜKÜM ÖNDE, ÖLÇÜLER AÇILIRDA (D5) ---- */
 .gb-alarm .ab-hukum{font-weight:500}
 .gb-alarm .ab-kat{display:inline}
-.gb-alarm .ab-kat > summary{display:inline;cursor:pointer;color:var(--tx2);font-size:11px;
+.gb-alarm .ab-kat > summary{display:inline;cursor:pointer;color:var(--tx2);font-size:var(--t-cap);
   list-style:none}
 .gb-alarm .ab-kat > summary::-webkit-details-marker{display:none}
 .gb-alarm .ab-kat > summary::before{content:"▸ ";color:var(--tx3)}
@@ -2555,7 +2638,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 
 /* ---- ÜST ŞERİT AÇILIRI (D4): her an gerekmeyen ölçüler ---- */
 .hud-kat{display:inline-flex;align-items:center}
-.hud-kat > summary{cursor:pointer;color:var(--tx2);font-size:11px;list-style:none;padding:0 var(--s2)}
+.hud-kat > summary{cursor:pointer;color:var(--tx2);font-size:var(--t-cap);list-style:none;padding:0 var(--s2)}
 .hud-kat > summary::-webkit-details-marker{display:none}
 .hud-kat > summary::before{content:"▸ ";color:var(--tx3)}
 .hud-kat[open] > summary::before{content:"▾ "}

@@ -137,7 +137,7 @@ const EKRAN_SORUSU = {
 function soruCumlesi(id) {
   const s = EKRAN_SORUSU[id];
   if (!s) return "";           // kayıtsız görünüm sessizce boş satır üretir, uydurma cümle değil
-  return `<p class="hint soru-c" data-soru="${id}" style="margin-top:6px;font-size:12px;` +
+  return `<p class="hint soru-c" data-soru="${id}" style="margin-top:6px;font-size:var(--t-cap);` +
          `color:var(--tx3);max-width:80ch">${esc(s)}</p>`;
 }
 let HALTED = false, SUMMARY = null;
@@ -708,7 +708,7 @@ async function go(id) {
       const el = _yuva();
       if (el) el.innerHTML = `<div class="card rise in"><h2 class="t">Veri yüklenemedi</h2>` +
         `<p class="mut">${esc(String(e))}</p>` +
-        `<p class="mut" style="font-size:12px;margin-top:8px">Sunucu çalışıyor mu? Terminalde <b>./serve.sh</b> ile başlatabilirsin.</p></div>`;
+        `<p class="mut" style="font-size:var(--t-cap);margin-top:8px">Sunucu çalışıyor mu? Terminalde <b>./serve.sh</b> ile başlatabilirsin.</p></div>`;
     };
     const _p = RENDER[id] ? RENDER[id]() : null;
     const _bitti = () => { if (_pg0) { _pg0.removeAttribute("aria-busy"); _pg0.classList.remove("tazeleniyor"); } };
@@ -730,7 +730,7 @@ async function go(id) {
     const el = _kap && (_kap.querySelector(".alan-bas") || _kap);
     if (el) el.innerHTML = `<div class="card rise in"><h2 class="t">Veri yüklenemedi</h2>` +
       `<p class="mut">${esc(String(e))}</p>` +
-      `<p class="mut" style="font-size:12px;margin-top:8px">Sunucu çalışıyor mu? Terminalde <b>./serve.sh</b> ile başlatabilirsin.</p></div>`;
+      `<p class="mut" style="font-size:var(--t-cap);margin-top:8px">Sunucu çalışıyor mu? Terminalde <b>./serve.sh</b> ile başlatabilirsin.</p></div>`;
   }
   revealActive(true);
   // Çapa ancak RENDER.<id>() bittikten sonra DOM'da olur; bu yüzden burada, revealActive'ten
@@ -1706,7 +1706,7 @@ function alanSayfasi(id, bolumler) {
         const bol = $("page-" + ad);
         if (bol) bol.innerHTML = `<div class="card rise in"><h2 class="t">Bölüm yüklenemedi</h2>` +
           `<p class="mut">${esc(String(e))}</p>` +
-          `<p class="mut" style="font-size:12px;margin-top:8px">Sayfanın diğer bölümleri çizildi — bu blok ${
+          `<p class="mut" style="font-size:var(--t-cap);margin-top:8px">Sayfanın diğer bölümleri çizildi — bu blok ${
             esc(ad)} verisini okuyamadı.</p></div>`;
         else throw e;      // kabı olmayan bir bölümün hatası GÖRÜNMEZ kalamaz: yukarı çıkar
       }
@@ -4183,7 +4183,7 @@ RENDER.adaylar = async () => {
         const [lbl, kls] = OP[r.opinion] || [r.opinion, "t-vi"];
         return `<div class="trow" style="grid-template-columns:64px 92px 1fr">
           <span class="tick">${esc(r.ticker)}</span><span><span class="tag ${kls}">${esc(lbl)}</span></span>
-          <span class="mut" style="font-size:12px">${esc(r.note || "")}</span></div>`;
+          <span class="mut" style="font-size:var(--t-cap)">${esc(r.note || "")}</span></div>`;
       }).join("");
       // BAYATLIK DÜRÜSTÇE SÖYLENİR: görüş katmanı bir seansı kaçırırsa (canlıda oldu — tek-atışlık
       // koşuda daemon thread öldürülüyordu) eski görüş taze karar gibi okunurdu.
@@ -4201,7 +4201,7 @@ RENDER.adaylar = async () => {
           Bu bölümde kalan şey KAPI KARNESİ ve eleme izidir. */""}
 
     <div class="g2 rise">
-      <div class="pane"><p class="mut" style="font-size:12px;margin-bottom:14px">${T("tarama hattı", "pipeline")} · son çalışma</p>
+      <div class="pane"><p class="mut" style="font-size:var(--t-cap);margin-bottom:14px">${T("tarama hattı", "pipeline")} · son çalışma</p>
         <div class="mono"><span class="k">tarama</span> toplam ${(d.candidates||[]).length} aday
 ${Object.entries(bySkill).map(([k, n]) => `  ${esc(k).padEnd(26, ' ')} ${n}`).join("\n")}
 
@@ -4209,7 +4209,7 @@ ${Object.entries(bySkill).map(([k, n]) => `  ${esc(k).padEnd(26, ' ')} ${n}`).jo
   <span class="ok">GO</span> ....... ${vc.GO || 0}
   <span class="w">REVIEW</span> ... ${vc.REVIEW || 0}
   <span class="no">NO_GO</span> .... ${vc.NO_GO || 0}</div></div>
-      <div class="pane"><p class="mut" style="font-size:12px;margin-bottom:14px">elenme nedenleri (özet)</p>
+      <div class="pane"><p class="mut" style="font-size:var(--t-cap);margin-bottom:14px">elenme nedenleri (özet)</p>
         <div class="mono">${rcTop.length ? rcTop.map(([r, n]) => `  <span class="no">${String(n).padStart(3,' ')}</span> × ${esc(r)}`).join("\n") : '<span class="d">eleme yok</span>'}</div>
 </div>
     </div>
@@ -4217,7 +4217,7 @@ ${Object.entries(bySkill).map(([k, n]) => `  ${esc(k).padEnd(26, ' ')} ${n}`).jo
     ${rejected.length ? `<div class="card rise"><h2 class="t">Elenen planlardan örnekler (${rejected.length})</h2>
       <div class="trow head" style="grid-template-columns:78px 66px 1fr 92px 56px 90px"><span>TARİH</span><span>HİSSE</span><span>${T("ANALİZ ZİNCİRİ", "skill")}</span><span>GİRİŞ→HEDEF</span><span>${T("R:R", "rr")}</span><span style="text-align:right">${T("KAPI", "kapi", true)}</span></div>
       ${rejRows}
-      ${rejected.length > 10 ? `<p class="mut" style="font-size:12px;margin-top:10px">… ${rejected.length - 10} eleme daha (yukarıdaki özet hepsini kapsar).</p>` : ''}</div>` : ''}
+      ${rejected.length > 10 ? `<p class="mut" style="font-size:var(--t-cap);margin-top:10px">… ${rejected.length - 10} eleme daha (yukarıdaki özet hepsini kapsar).</p>` : ''}</div>` : ''}
 
     ${/* ---- DETAY KATMANINA İNDİ (S2R-2 "soruya hizmet" denetimi) --------------------------
           Bölümün sorusu: "gece döngüsü ne önerdi — kapıdan ne geçti, ne elendi?" GEÇMİŞ
@@ -5481,10 +5481,10 @@ function kmCiz() {
   kap.innerHTML = bas + `
     <div role="group" aria-label="Isı-matrisi skalası" style="display:flex;gap:8px;margin-top:12px">
       <button type="button" class="dlbtn${sapma ? "" : " primary"}" aria-pressed="${!sapma}"
-        style="padding:7px 13px;min-height:36px;font-size:12px"
+        style="padding:7px 13px;min-height:36px;font-size:var(--t-cap)"
         data-act="kmMod" data-a1="kapsama">Kapsama</button>
       <button type="button" class="dlbtn${sapma ? " primary" : ""}" aria-pressed="${sapma}"
-        style="padding:7px 13px;min-height:36px;font-size:12px"
+        style="padding:7px 13px;min-height:36px;font-size:var(--t-cap)"
         data-act="kmMod" data-a1="sapma">Evrenden sapma</button>
     </div>
     ${grid}${lejant}
@@ -5541,7 +5541,7 @@ function mktPaint() {
   const chips = $("mkt-chips");
   if (chips) chips.innerHTML = Object.keys(CHIP_TR).map(k =>
     `<button type="button" class="dlbtn${_MKT_CHIPS[k] ? " primary" : ""}" aria-pressed="${_MKT_CHIPS[k]}"
-       style="padding:7px 13px;min-height:36px;font-size:12px" data-act="mktChip" data-a1="${k}">${CHIP_TR[k]} · ${say[k]}</button>`).join("");
+       style="padding:7px 13px;min-height:36px;font-size:var(--t-cap)" data-act="mktChip" data-a1="${k}">${CHIP_TR[k]} · ${say[k]}</button>`).join("");
 
   const rows = all.filter(r =>
     (!q || String(r.ticker).includes(q)) &&
@@ -5583,7 +5583,7 @@ function mktPaint() {
 
   const el = $("mkt-tbl");
   if (el) el.innerHTML = rows.length
-    ? `${head}${html}<p class="mut" style="font-size:12px;margin-top:10px">${rows.length} / ${all.length} hisse gösteriliyor · ölçülmemiş alanlar "—" ve sıralamada sonda.</p>`
+    ? `${head}${html}<p class="mut" style="font-size:var(--t-cap);margin-top:10px">${rows.length} / ${all.length} hisse gösteriliyor · ölçülmemiş alanlar "—" ve sıralamada sonda.</p>`
     : `<div class="empty">Filtreye uyan hisse yok — dürüst boşluk.</div>`;
 }
 
@@ -5693,7 +5693,7 @@ async function opParcalar() {
             <span class="mut">${esc(String(f.detail || "gerekçe kaydedilmemiş"))}</span>
             <span class="etime">${esc(String(f.date || "—"))}</span></button>
           ${kapali ? `<span class="mut" style="font-size:var(--t-cap);white-space:nowrap">kapatıldı ${esc(String(f.ack_ts || "").slice(0, 16))}</span>`
-                   : `<button class="dlbtn" style="padding:6px 12px;min-height:36px;font-size:12px" data-act="ackReject" data-a1="${esc(key)}">kapat</button>`}</div>`;
+                   : `<button class="dlbtn" style="padding:6px 12px;min-height:36px;font-size:var(--t-cap)" data-act="ackReject" data-a1="${esc(key)}">kapat</button>`}</div>`;
       };
       return `<h3 class="t" id="failsub" style="margin-top:16px">Reddedilen gönderimler (${open.length})</h3>
       <p class="hint">Broker emri geri çevirdi. Her satır açılır — gerekçe, plan ve tarih kayıtta.
@@ -5732,7 +5732,7 @@ async function opParcalar() {
           class="trow rowbtn" style="grid-template-columns:64px 108px 1fr 86px">
           <span class="tick">${esc(e.ticker || "—")}</span>
           <span><span class="tag ${kls}">${esc(lbl)}</span></span>
-          <span class="mut" style="font-size:12px">${esc(String(e.detail || e.error || "gerekçe alanı boş"))}</span>
+          <span class="mut" style="font-size:var(--t-cap)">${esc(String(e.detail || e.error || "gerekçe alanı boş"))}</span>
           <span class="etime">${esc(relTime(e.ts) || "—")}</span></button>`;
       }).join("");
       return `<h3 class="t" style="margin-top:16px">Gönderim olayları · başarısız (${evs.length})</h3>
@@ -6351,7 +6351,7 @@ async function opParcalar() {
     const sr = d.selfreview_summary;
     if (!sr) return "";           // uç servis etmiyor: uydurma "sistem sakin" kartı DOĞMAZ
     const att = (sr.attention || []).map(a => `<div class="trow" style="grid-template-columns:auto 1fr">
-      <span class="tag ${a.sev === "yüksek" ? "t-no" : "t-rv"}">${esc(a.sev)}</span><span style="font-size:12px">${esc(a.why)}</span></div>`).join("");
+      <span class="tag ${a.sev === "yüksek" ? "t-no" : "t-rv"}">${esc(a.sev)}</span><span style="font-size:var(--t-cap)">${esc(a.why)}</span></div>`).join("");
     const con = (sr.contradictions || []).map(c => `<div class="trow" style="grid-template-columns:auto 1fr">
       <span class="tag t-vi">${esc(c.pair)}</span><span class="chain">${esc(c.detail)}</span></div>`).join("");
     return `<div class="card rise"><h2 class="t">Öz-değerlendirme · DİKKAT (${(sr.attention || []).length})</h2>
@@ -7749,7 +7749,7 @@ async function opParcalar() {
       // bütünlük dedektörlerindeki (C21/C22) kusurun aynısıydı — aynı turda aynı dille kapandı.
       if (p.olculemedi) return `<div class="trow" style="grid-template-columns:120px 1fr auto">
         <span class="chain">${esc(p.ad)}</span>
-        <span class="mut" style="font-size:12px">sağlık okuması istisna verdi (olculemedi): ${esc(p.olculemedi)}</span>
+        <span class="mut" style="font-size:var(--t-cap)">sağlık okuması istisna verdi (olculemedi): ${esc(p.olculemedi)}</span>
         ${_chip("ÖLÇÜLEMEDİ", "t-vi")}</div>`;
       // ok: true/false/null — null "bu süreçte hiç çağrılmadı"dır ve YEŞİL de KIRMIZI da değildir.
       const [lbl, kls] = p.ok === true ? ["sağlıklı", "t-go"]
@@ -7763,7 +7763,7 @@ async function opParcalar() {
                      p.hata != null ? `${p.hata} hata` : null, oran].filter(Boolean).join(" · ");
       return `<div class="trow" style="grid-template-columns:120px 1fr auto;align-items:start">
         <span class="chain">${esc(p.ad)}</span>
-        <span class="mut" style="font-size:12px">${esc(sayac || "sayaç boş")}${
+        <span class="mut" style="font-size:var(--t-cap)">${esc(sayac || "sayaç boş")}${
           p.son_cagri_ts ? ` · son çağrı ${esc(relTime(p.son_cagri_ts) || "—")}` : ""}${
           ek ? `<br>${ek}` : ""}${
           p.son_hata ? `<br><span class="neg">${esc(String(p.son_hata).slice(0, 110))}</span>` : ""}</span>
@@ -7813,7 +7813,7 @@ async function opParcalar() {
         : (v.bayat ? ["BAYAT", "t-rv"] : ["taze", "t-go"]);
       return `<div class="trow" style="grid-template-columns:1fr 150px auto">
         <span class="chain">${esc(NABIZ_TR[k] || k)}</span>
-        <span class="mut" style="font-size:12px">${v.gecen_saat == null ? "damga yok"
+        <span class="mut" style="font-size:var(--t-cap)">${v.gecen_saat == null ? "damga yok"
           : `${trn(v.gecen_saat, 1)} sa önce · pencere ${trn(v.pencere_saat, 1)} sa`}</span>
         ${_chip(lbl, kls)}</div>`;
     }).join("");
@@ -7836,7 +7836,7 @@ async function opParcalar() {
       // tarih kayıt künyesinden ÇIKARILDI. v207 öncesi canlının hâli tam olarak buydu ve ayrımı
       // yazmayan bir tarih, çıkarımı damga gibi gösterirdi.
       const kaynakNotu = sf.kaynak === "kunye"
-        ? ' <span class="mut" style="font-size:12px">(fit damgası yok — künyeden)</span>' : "";
+        ? ' <span class="mut" style="font-size:var(--t-cap)">(fit damgası yok — künyeden)</span>' : "";
       return `<div class="srow"><span>Son fit</span><b>${
         sf.ts ? esc(String(sf.ts).replace("T", " ").slice(0, 16)) + kaynakNotu : '<span class="mut">tarih yok</span>'
         } · n ${sf.n ?? "—"}${sf.n_real != null ? ` (gerçek ${sf.n_real} · cf ${sf.n_cf ?? 0})` : ""}${
@@ -8629,7 +8629,7 @@ function hermesTelemetriKarti(it) {
            <div class="trow head" style="grid-template-columns:1fr 64px 74px">
              <span>SONUÇ SINIFI</span><span>ÇAĞRI</span><span>PAY</span></div>
            ${Object.entries(sinif).sort((a, b) => b[1] - a[1]).map(([ad, adet]) => dagilimSatir(ad, adet)).join("")
-             || `<div class="empty" style="font-size:12px">pencerede sınıflanmış çağrı yok</div>`}</div>
+             || `<div class="empty" style="font-size:var(--t-cap)">pencerede sınıflanmış çağrı yok</div>`}</div>
          ${detayKatmani("Model ve taşıyıcı kırılımı · iz defteri",
              "Aynı pencerenin ikinci kesiti: hangi model kaç kez çağrıldı ve çağrı hangi taşıyıcıdan "
              + "gitti (yerel ajan CLI'ı mı, doğrudan HTTP mi). İz defteri satırı OKUNMADAN yalnız BAYT "
@@ -8638,12 +8638,12 @@ function hermesTelemetriKarti(it) {
                 <div class="trow head" style="grid-template-columns:1fr 64px 74px">
                   <span>MODEL</span><span>ÇAĞRI</span><span>PAY</span></div>
                 ${Object.entries((t.model) || {}).sort((a, b) => b[1] - a[1]).map(([ad, adet]) => dagilimSatir(ad, adet)).join("")
-                  || `<div class="empty" style="font-size:12px">model alanı taşıyan satır yok</div>`}</div>
+                  || `<div class="empty" style="font-size:var(--t-cap)">model alanı taşıyan satır yok</div>`}</div>
               <div class="tbl" style="margin-top:10px">
                 <div class="trow head" style="grid-template-columns:1fr 64px 74px">
                   <span>TAŞIYICI</span><span>ÇAĞRI</span><span>PAY</span></div>
                 ${Object.entries((t.tasiyici) || {}).sort((a, b) => b[1] - a[1]).map(([ad, adet]) => dagilimSatir(ad, adet)).join("")
-                  || `<div class="empty" style="font-size:12px">taşıyıcı alanı taşıyan satır yok</div>`}</div>
+                  || `<div class="empty" style="font-size:var(--t-cap)">taşıyıcı alanı taşıyan satır yok</div>`}</div>
               <div class="srow" style="margin-top:10px"><span>Ham iz defteri</span><b class="mono-num">${
                 iz.bayt == null ? "—" : `${trn(Math.round(iz.bayt / 1000))} KB`}${
                 iz.disk_tavani_mb == null ? "" : ` / ${trn(iz.disk_tavani_mb, 2)} MB türetilmiş tavan`}</b></div>
@@ -10287,7 +10287,7 @@ function plotCell(c, setup, regime, si, ri) {
       deger: `${c.mean_r > 0 ? '+' : ''}${c.mean_r.toFixed(2)}R`,
       oran: kanitOrani(c.n), payda: `işlem sayısı · log ölçek, n=${KANIT_TAVAN_N} dolu`,
       meta: `${c.n} işlem · %${Math.round(c.hit * 100)} tutan`,
-      rozet: thin ? "az örnek" : "" })}</button>`;
+      rozet: thin ? "AZ ÖRNEK" : "" })}</button>`;
 }
 
 async function renderPlotMap() {
@@ -10595,7 +10595,7 @@ const RECORD_VIEW = {
     const sat = x => `<div class="trow" style="grid-template-columns:150px 62px 1fr">
       <span class="chain">${esc(CHECK_TR[x.check] || x.check || "?")}</span>
       <span><span class="tag ${x.passed ? "t-go" : "t-no"}">${x.passed ? "geçti" : "kaldı"}</span></span>
-      <span class="mut" style="font-size:12px">${esc(SEV[x.severity] || x.severity || "")}${
+      <span class="mut" style="font-size:var(--t-cap)">${esc(SEV[x.severity] || x.severity || "")}${
         x.value != null ? ` · ölçülen ${esc(String(x.value))}` : ""}${
         x.threshold != null && x.threshold !== "" ? ` · eşik ${esc(String(x.threshold))}` : ""}${
         x.note ? `<br>${esc(String(x.note))}` : ""}</span></div>`;
@@ -10649,7 +10649,7 @@ const RECORD_VIEW = {
     const sat = c => `<div class="trow" style="grid-template-columns:150px 62px 1fr">
       <span class="chain">${esc(CHECK_TR[c.check] || c.check || "?")}</span>
       <span><span class="tag ${c.passed ? "t-go" : "t-no"}">${c.passed ? "geçti" : "kaldı"}</span></span>
-      <span class="mut" style="font-size:12px">${esc(SEV[c.severity] || c.severity || "")}${
+      <span class="mut" style="font-size:var(--t-cap)">${esc(SEV[c.severity] || c.severity || "")}${
         c.value != null ? ` · ölçülen ${esc(String(c.value))}` : ""}${
         c.threshold != null && c.threshold !== "" ? ` · eşik ${esc(String(c.threshold))}` : ""}${
         c.note ? `<br>${esc(String(c.note))}` : ""}</span></div>`;
@@ -10800,7 +10800,7 @@ const RECORD_VIEW = {
       body: `<div class="pd-stats">
           ${pdStat("SEVİYE", esc(LVL[e.level] || e.level || "—"), e.level === "alarm" ? "neg" : (e.level === "warn" ? "warn" : ""))}
           ${pdStat("NE ZAMAN", esc(relTime(e.ts) || "—"))}
-          ${pdStat("KAYIT", `<span style="font-size:12px">${esc(name || "—")}</span>`)}</div>
+          ${pdStat("KAYIT", `<span style="font-size:var(--t-cap)">${esc(name || "—")}</span>`)}</div>
         ${e.message ? `<h3 class="pd-sub">Mesaj</h3><p class="hint" style="margin-top:0">${esc(e.message)}</p>` : ""}
         <h3 class="pd-sub">Ham kayıt</h3>
         ${pdRow("Zaman damgası", esc(String(e.ts || "")))}${extra || ""}` };
@@ -11278,7 +11278,7 @@ RENDER.onaylar = async () => {
       : "";
     return `<div class="trow" style="grid-template-columns:96px 1fr auto;align-items:start">
       <span class="tag ${kls}">${lbl}</span>
-      <span><b style="font-size:13px">${esc(it.title)}</b><br><span class="chain">${esc(it.evidence || "")}</span>
+      <span><b style="font-size:var(--t-body)">${esc(it.title)}</b><br><span class="chain">${esc(it.evidence || "")}</span>
         ${ornekSatiri(it)}
         ${it.note ? `<br><span class="hint" style="font-size:var(--t-cap)">${esc(it.note)}</span>` : ""}
         ${kk ? kararDamgasi(kk) : ""}
@@ -11358,7 +11358,7 @@ function regimeTriggerRows(trig, statusCounts, overfit) {
   return `<h3 class="pd-sub" style="margin-top:14px">Rejim bütçe tetikleyicisi
       <span class="tx3" style="font-weight:400">(eşiği dolan rejimde dinamik bütçelemeye geçiş OPERATÖR kararı)</span></h3>
     ${trigRows ? `<div class="trow head" style="grid-template-columns:120px 1fr 74px 92px"><span>REJİM</span><span>DOLULUK</span><span>N/EŞİK</span><span>DURUM</span></div>${trigRows}`
-      : `<div class="empty" style="font-size:12px">Henüz rejim örneklemi yok.</div>`}
+      : `<div class="empty" style="font-size:var(--t-cap)">Henüz rejim örneklemi yok.</div>`}
     <p class="hint" style="margin-top:8px">Hipotez durumları: ${scRows || "—"} · aşırı-uyum şüphelisi:
       <b class="${overfit ? "warn" : "pos"}">${overfit ?? "—"}</b></p>`;
 }
@@ -11401,10 +11401,10 @@ function sprintCard(sp, learning) {
         <span class="chain">${esc(String(r.variable || r.sid || r.run_id || "—"))}</span>
         <span class="mono-num">${r.evaluated ?? r.n ?? "—"}</span>
         <span><span class="tag ${r.passes || r.status === "ok" ? "t-go" : "t-no"}">${esc(String(r.status || (r.passes ? "geçti" : "—")))}</span></span></div>`).join("")
-    : `<div class="empty" style="font-size:12px">${sp.runs_ledger === "YOK"
+    : `<div class="empty" style="font-size:var(--t-cap)">${sp.runs_ledger === "YOK"
         ? "sprint_runs.jsonl <b>diskte yok</b> — okuyucu bağlı ama defter hiç doğmadı (ters orphan). Bir sonraki antrenmanda satırın düştüğü doğrulanmalı."
         : "Henüz koşu satırı yok."}</div>`;
-  const body = `${active && total ? `<div class="bar" style="margin:10px 0 4px"><i style="width:${pct}%"></i></div><p class="mut" style="font-size:12px">${ph} · ${prog}/${total} seans (%${pct})</p>` : ""}
+  const body = `${active && total ? `<div class="bar" style="margin:10px 0 4px"><i style="width:${pct}%"></i></div><p class="mut" style="font-size:var(--t-cap)">${ph} · ${prog}/${total} seans (%${pct})</p>` : ""}
     ${tiles}
     ${sp.note ? `<p class="hint" style="margin-top:8px"><b>${closed ? "✓ " : ""}${esc(sp.note)}</b></p>` : ""}
     ${stepLog ? `<div class="mono" style="margin-top:10px">${stepLog}</div>` : ""}
@@ -11523,10 +11523,10 @@ function havuzKutusuHTML() {
     + "önlemi eylem şeridiyle aynı nefeste okunur. /api/hermes/pool_key ucunun tek yüzeyi budur.",
     `<p class="hint" style="margin-top:0">Aynı sağlayıcıdan yedek anahtar eklersen kota dolduğunda ajan otomatik döner. Değer loglanmaz.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
-        <select id="pool-prov" style="background:var(--bg);color:var(--tx);border:1px solid var(--field);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:12px">
+        <select id="pool-prov" style="background:var(--bg);color:var(--tx);border:1px solid var(--field);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:var(--t-cap)">
           <option value="gemini">gemini</option><option value="anthropic">anthropic</option><option value="openrouter">openrouter</option></select>
         <input id="pool-key" type="password" placeholder="yedek API anahtarı" autocomplete="off"
-          style="flex:1;min-width:180px;background:var(--bg);color:var(--tx);border:1px solid var(--field);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:12px">
+          style="flex:1;min-width:180px;background:var(--bg);color:var(--tx);border:1px solid var(--field);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:var(--t-cap)">
         <button class="dlbtn" data-act="addPoolKey">Havuza ekle</button></div>
       <p class="hint" id="pool-msg" style="margin-top:8px"></p>`);
 }
@@ -11534,7 +11534,7 @@ function havuzKutusuHTML() {
 // ================= hermes (düşünme beyni) =================
 function intCard(it) {
   if (!it) return "";
-  const chip = (on, label) => `<span class="term" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line-2);border-radius:var(--r-ctl);font-family:var(--mono);font-size:var(--t-cap)">
+  const chip = (on, label) => `<span class="term" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line);border-radius:var(--r-ctl);font-family:var(--mono);font-size:var(--t-cap)">
     <span style="width:7px;height:7px;border-radius:var(--r-bar);background:${on ? 'var(--green)' : 'var(--tx3)'}"></span>${label}</span>`;
   const pool = Object.entries(it.pool_keys || {}).map(([p, n]) => `${esc(p)}·${n}`).join(" ") || "yok";
   const pend = it.backfill_pending;
@@ -11735,7 +11735,7 @@ RENDER.hermes = async () => {
           <div class="r"><span>Kapanan işlem</span><b>${s.closed_trades ?? '—'}</b></div>
           <div class="r"><span>Sonraki otomatik düşünme</span><b>${nextTxt}</b></div>
           ${searchRow}
-          <div class="r"><span>Son düşünme</span><b style="font-weight:500;font-size:12px">${lastR}</b></div>
+          <div class="r"><span>Son düşünme</span><b style="font-weight:500;font-size:var(--t-cap)">${lastR}</b></div>
         </div>
         <p class="hint" style="margin-top:12px">${d.autostart ? 'Uygulama açılınca otomatik başlar (yerel).' : 'Otomatik başlatma kapalı.'} · Düğmeler yukarıdaki eylem şeridinde.</p></div>
       <div class="card"><h2 class="t">Harcama (bu ay)</h2>
@@ -11976,7 +11976,7 @@ function _alpacaKartHTML(a) {
       const on = a.backend === "alpaca_paper";
       const posRows = (acc.positions || []).map(p => `<div class="trow" style="grid-template-columns:60px 60px 1fr 90px"><span class="tick">${esc(p.symbol)}</span><span class="mono-num">${p.qty}</span><span class="mut">giriş ${esc(p.avg_entry)}</span><span class="mono-num ${(+p.upl)>=0?'pos':'neg'}">${(+p.upl>=0?'+':'')}${esc(p.upl)}</span></div>`).join("");
       const ordRows = (acc.open_orders || []).map(o => `<div class="trow" style="grid-template-columns:60px 1fr 90px"><span class="tick">${esc(o.symbol)}</span><span class="mut">${esc(o.side)} ${o.qty} ${esc(o.type)}</span><span class="mono-num">${esc(o.stop||o.limit||'')}</span></div>`).join("");
-      return `<div class="card rise"><h2 class="t">Alpaca kağıt hesabı ${acc.connected?'<span class="pos" style="font-size:12px">● bağlı</span>':'<span class="neg">bağlı değil</span>'}</h2>
+      return `<div class="card rise"><h2 class="t">Alpaca kağıt hesabı ${acc.connected?'<span class="pos" style="font-size:var(--t-cap)">● bağlı</span>':'<span class="neg">bağlı değil</span>'}</h2>
         <p class="hint" style="margin-top:0">${esc(a.note||'')}</p>
         <div class="acct" style="margin-top:6px">
           <div class="r"><span>İcra arka-ucu</span><b class="${on?'pos':''}">${on?'ALPACA PAPER (aktif)':'içsel simülatör'}</b></div>
@@ -12355,7 +12355,7 @@ function faz6Satiri(f) {
       ${k.neden ? `<p class="hint" style="margin:2px 0 0"><b>Gerekçe:</b> ${esc(k.neden)}</p>` : ""}</div>`;
   }).join("");
   return `<div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
-    <h3 class="t" style="font-size:13px">Gerçek-para tarafındaki ikinci kapı — Faz-6 kilit zinciri
+    <h3 class="t" style="font-size:var(--t-body)">Gerçek-para tarafındaki ikinci kapı — Faz-6 kilit zinciri
       <span class="tx3" style="font-weight:400">(${f.n_acik ?? 0}/${f.n_kilit ?? 5} açık)</span></h3>
     <p class="hint" style="margin-top:6px">Yukarıdaki ölçütler kâğıt provanın karnesidir. Silahlanma
       ve gerçek para AYRICA bu beş kilidi ister ve zincir <b>fail-closed</b>'dır: ölçülemeyen kilit

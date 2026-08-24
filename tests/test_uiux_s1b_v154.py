@@ -592,7 +592,10 @@ def test_t5_satir_sonuk_ve_kancasi_var():
     fn = KOD_JS[KOD_JS.index("function soruCumlesi("):]
     fn = fn[:fn.index("\n}") + 2]
     assert 'data-soru="${id}"' in fn, "test kancası yok"
-    assert "var(--tx3)" in fn and "font-size:12px" in fn, "satır sönük değil"
+    # D1 (2026-08-24): soru cümlesinin puntosu jetona bağlandı. 12px RAMPADA YOKTU;
+    # `--t-cap` (11px) rampanın mikro basamağı. İddia aynı — cümle SÖNÜK olmalı (küçük
+    # punto + --tx3); değişen, puntonun tek yerden yönetiliyor olması.
+    assert "var(--tx3)" in fn and "font-size:var(--t-cap)" in fn, "satır sönük değil"
     assert 'class="hint soru-c"' in fn
 
 
