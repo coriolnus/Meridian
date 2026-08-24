@@ -1,0 +1,37 @@
+{
+ "sinamalar": [
+  {
+   "ad": "S1_tarih_kaydirma",
+   "tasarim": "her plan +5 iş günü kaydırılmış girişle yeniden koşuldu; koşum giriş tarihini gerçekten okuyorsa sonuçlar DEĞİŞMELİ (değişmezse sabit/gelecek pencere şüphesi)",
+   "kosuldu": true,
+   "ortak_islem_n": 97,
+   "degisen_n": 92,
+   "degisen_pay": 0.9485,
+   "kaydirilmis_ortalama_r": -0.22798,
+   "gecti": true,
+   "yorum_yok": "sayı verildi; hüküm Rol-1'in"
+  },
+  {
+   "ad": "S2_gelecek_bar_erisim_assert",
+   "tasarim": "her karar çağrısına verilen çerçevenin son barı, karar gününden BÜYÜK olamaz; `PITBekcisi` bunu her çağrıda sayarak doğrular ve tek ihlalde `PITIhlali` yükseltip koşumu durdurur. Yapısal koruma da var: her çağrıya `.loc[:d]` dilimi verilir, tam çerçeve HİÇ geçilmez",
+   "kosuldu": true,
+   "kontrol_n": 1504,
+   "ihlal_n": 0,
+   "ihlaller": [],
+   "gecti": true
+  },
+  {
+   "ad": "S3_iki_as_of_ayni_sonuc",
+   "tasarim": "aynı kohort iki `as_of` ile koşuldu: 2026-07-30 (kasa sınırı) ve 2026-08-12 (önbellekteki son bar). as_of sonrası bilgi sızmıyorsa, dar pencerede markout'a KESİLMEMİŞ her planın sonucu AYNI olmalı",
+   "kosuldu": true,
+   "kiyaslanan_n": 152,
+   "ayni_n": 152,
+   "farkli_n": 0,
+   "farkli_plan_idler": [],
+   "markout_kesilen_disarida_n": 4,
+   "gecti": true
+  }
+ ],
+ "ozet": "3/3 geçti",
+ "olculemedi_neden": null
+}

@@ -1,0 +1,47 @@
+== [A] KÜNYE KAPISI (koşum ÖNCESİ) ==
+   OK   meridian/backtest.py   taban=b59c059f43d4e410  simdi=b59c059f43d4e410
+   OK   meridian/broker.py     taban=e4c5c91515d8ec35  simdi=e4c5c91515d8ec35
+   OK   meridian/guard.py      taban=475e19e7b38f0650  simdi=475e19e7b38f0650
+   OK   meridian/strategy.py   taban=d6ae533c8a578f74  simdi=d6ae533c8a578f74
+   -> gecti=True
+
+== [B] TEST KÜMESİ ==
+   leading_sector takilan 217 · isleme donen 52 · TEST KUMESI 165 (aritmetik=True, sizinti_temiz=True)
+   yalniz-leading_sector 87 / coklu 78
+
+== [C] DONMUŞ KASA KURULUYOR (edg032c) ==
+{"ts": "2026-08-24T01:39:32+00:00", "level": "warn", "event": "bar_ghost_session_dropped", "ticker": "AAPL", "dates": "2025-05-26", "n": 1, "calendar": "XNYS", "detail": "takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü"}
+{"ts": "2026-08-24T01:39:32+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "AVGO", "dates": "2008-06-12", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-24T01:39:32+00:00", "level": "warn", "event": "bar_ghost_session_dropped", "ticker": "CRM", "dates": "2018-11-22", "n": 1, "calendar": "XNYS", "detail": "takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü"}
+{"ts": "2026-08-24T01:39:32+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "CMCSA", "dates": "2013-12-18", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-24T01:39:32+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "PINS", "dates": "2013-07-15,2013-08-02", "n": 2, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-24T01:39:33+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "DLTR", "dates": "2012-06-26", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-24T01:39:33+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "UNP", "dates": "2014-06-06", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-24T01:39:33+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "TDG", "dates": "2011-12-01,2011-12-09", "n": 2, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-24T01:39:34+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "ALB", "dates": "2006-10-30", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-24T01:39:34+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "EL", "dates": "2012-01-20", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+   sasi=olcum.py sha=75cef79215a7404f · ARMED=['breakout_vcp', 'exhaustion_hammer', 'momentum_burst']
+   config sha16={'goal.yaml': '099590dedee1ccf2', 'strategy.yaml': '9f3e4732315abe52', 'bounds.yaml': '3e810b547ca95f9a'} · maliyet={'slippage_bps': 5.0, 'commission_per_share': 0.0}
+   evren=251 sembol · endeks=1408 satir
+
+== KARSI-OLGUSAL KOSUM (n_plan=165, as_of=2026-07-30) ==
+   dolan islem=156 · dolmayan=9
+   dolmama nedenleri={'dolum seansında bar yok': 7, 'max_chase': 1, 'open_below_stop': 1}
+   n=156 · toplam_R=-22.79 · ortalama_R=-0.14609 · stop_payi=0.359 · kazanma=0.4038
+   CI95 ay-kumeli=[-0.26612, -0.02581] (18 ay) -> CI-ÜST < eşik
+   [duyarlilik] n=153 ortalama_R=-0.14891 CI=[-0.2674, -0.02671]
+
+== PIT ÖZ-SINAMALARI ==
+   S1_tarih_kaydirma                gecti=True
+   S2_gelecek_bar_erisim_assert     gecti=True
+   S3_iki_as_of_ayni_sonuc          gecti=True
+
+== KILL ==
+   #1 temiz     n < 30 → hüküm YOK, betimleyici damga
+   #2 temiz     edg032c künyesi (motor sha) ölçüm anında eşleşmezse geçersiz
+   #3 temiz     test kümesine işleme DÖNMÜŞ tek bir plan sızarsa geçersiz
+   #4 temiz     karşı-olgusal koşum gelecek bar okursa geçersiz (üç PIT sına
+   #5 temiz     eşik (sıfır) ölçümden sonra oynatılırsa geçersiz
+   #6 temiz     alt-dilim/ikinci eksen eklenirse geçersiz — K donmuştur
+
+yazildi: /Users/erdemozturk/AI-Trading/research/olcumler/edg057_leading_sector_2026-08-24/sonuc.json, pit_sinama.json

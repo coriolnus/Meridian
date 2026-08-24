@@ -68,8 +68,59 @@ kill_criteria:
   - "eşik (sıfır) ölçümden sonra oynatılırsa geçersiz"
   - "alt-dilim/ikinci eksen eklenirse geçersiz — K donmuştur"
 
-k_registry: {registered_at: "2026-08-24", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-08-24", trial_ids: [edg057_leading_sector_2026-08-24/leading_sector_ret_islemsiz]}
+status: measured     # 2026-08-24 Rol-1 HÜKMÜ aşağıda (K=1 aynen; altı kill kontrolü temiz)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-24): **GÖZLEM ÇÜRÜTÜLDÜ. Kapının POZİTİF değeri ise KURULMADI.**
+  İki ayrı şey ve ikisi de ayrı ayrı yazılıyor.
+
+  ÖLÇÜM: kohort n=156 karşı-olgusal işlem (165 plandan; 9 dolmadı) · toplam R −22,79 ·
+  ortalama R **−0,14609** · %95 CI (ay-kümeli, B=5000, seed=20260812, 18 ay)
+  **[−0,26612, −0,02581]** · stop payı 0,359 · kazanma 0,4038.
+  Duyarlılık (3 `failed_broker_rejection` hariç): n=153, −0,14891, CI [−0,26740, −0,02671] —
+  iki sayı AYNI TARAFTA. Künye koşum öncesi VE sonrası geçti; altı kill kontrolü temiz; üç
+  PIT sınaması geçti (tarih kaydırma 92/97 işlemi değiştirdi · 1504 gelecek-bar kontrolü
+  0 ihlal · iki `as_of` 152/152 birebir). İki tam koşumda `sonuc.json` bayt-özdeş.
+
+  (1) **ÇÜRÜTÜLEN — ve bu SAĞLAM.** Kartı doğuran gözlem "kapı kârlı planları reddediyor"
+  diye okunabilirdi (REVIEW'a rağmen işleme dönen 52 plan +3,09R / PF 1,16). Dokunulmamış
+  dilim — kimsenin seçmediği 165 plan — ölçüldüğünde CI'nın TAMAMI sıfırın altında.
+  Yani `peek_beyani`'ndaki (b) şıkkı, SEÇİM YANLILIĞI, ayakta kalan hipotezdir: ölçülen şey
+  kapının yanılması değil, seçicinin isabetiydi. Kart tam bu ayrımı yapmak için yazılmıştı
+  ve yaptı.
+
+  (2) **KURULMAYAN — kartın donmuş kuralı "CI-üst < 0 → KAPI HAKLI" diyor ve ateşliyor,
+  AMA ölçüm sırasında bulunan bir karıştırıcı bu okumayı taşıyamaz.** REJİM BÜTÇESİ
+  AYRIŞMASI: donmuş kasanın rejim ETİKETİ planların kaydıyla 165/165 aynı, ama
+  `exposure_budget_pct` 44 planda farklı ve **52 plan gününde 0**. Donmuş motorda bütçe 0 →
+  `regime_ok=False` → ilk CLOSE'da `regime_flip`: **75 regime_flip çıkışının 49'u İLK BARDA**,
+  yani kohortun ~%31'i kasa artefaktıyla zorla kapanıyor. Üstelik tabanın kendi replay'i bu
+  planları hiç SİLAHLANDIRMAZDI (tarama koşulu `exposure_budget_pct > 0`). Kaynak: canlı
+  strategy.yaml v5 ↔ donmuş EDG-022 v3. Ayrıştırıcı varyant KASITLI hesaplanmadı (kill#6:
+  ikinci eksen K'yı büyütürdü). Bu yüzden −0,146'nın ne kadarının edge, ne kadarının artefakt
+  olduğu ÖLÇÜLMEDİ.
+
+  (3) **SINIF YASASI.** `meridian/counterfactual.py` modül başlığı bu SINIFA depo yasası
+  koyuyor: karşı-olgusal defter hiçbir kapı kararına kanıt olamaz (seçilim yanlılığı +
+  doldurma gerçekçiliği). Ölçüm o modülü KULLANMADI (yasak koşum başında assert'lendi,
+  motorun kendi replay ilkelleriyle koşuldu) — ama yasanın GEREKÇESİ bu ölçümün sınıfına da
+  uyuyor. Rol-1 hükmü: yasa geçerli sayılır.
+
+  SONUÇ: `leading_sector` kapısı **gevşetilmez, kaldırılmaz, eşiği oynatılmaz** — ama bu
+  karar kapının kanıtlanmış değerine DEĞİL, kanıtın yokluğuna dayanıyor ve öyle kaydediliyor.
+  Kapının pozitif değerini kurmak isteyen bir tur, önce rejim-bütçesi ayrışmasını izole eden
+  AYRI bir kart yazmalıdır (canlı v5 bütçesiyle koşum, ya da bütçe-0 günlerinin dışlanması —
+  hangisi seçilirse eşiği ÖNCEDEN dondurarak).
+
+beyanli_ek_sinirlar: >
+  (f) Test kümesi fiilen 2025-02-20 → 2026-07-28 (18 ay). 2023 (20/20) ve 2024 (15/15)
+  takılan planların TAMAMI işleme dönmüş; plan defterinin bütününde de o iki yılın her planı
+  bir işleme bağlı — bu, o satırların işlem defterinden geriye türetilmiş olabileceğini
+  düşündürür (ölçülmedi, sayı olarak kayıtlı). "Dokunulmamış dilim" fiilen 2025-02 sonrasıdır.
+  (g) Plan-düzeyi payda (dolmayan 9'u 0R sayarak 165 üzerinden −0,13812) BETİMLEYİCİDİR;
+  CI üretilmedi çünkü ikinci bir çıkarımsal deneme K'yı büyütürdü. Yukarıdaki CI 156
+  İŞLEMİNDİR, 165 planın değil.
 
 beyanli_sinirlar: >
   (1) GÖZETLENMİŞ HİPOTEZ: kart bir gözlemden doğdu ve bunu peek_beyani'nda taşır. Pozitif sonuç

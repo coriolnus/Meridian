@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **70** kart.
 
-### Kayıtlı — ölçüm bekliyor (8)
+### Kayıtlı — ölçüm bekliyor (7)
 
 - **EDG-2026-019** (`registered`) — Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10) aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı…
   · HÜKÜM: 2026-08-09 Rol-1. (Aşağıya bkz: 2026-08-23 kill#1 kaydı — katman kapatma emri)
@@ -30,8 +30,6 @@ Toplam **70** kart.
 - **EDG-2026-056** (`registered`) — WP4 eleme bulgusu (2026-08-24): MNST split teşhisi TAM ama kart ve kod YOK (oran-imza taraması repoda 0 eşleşme).
   · HÜKÜM: 2026-08-24 Rol-1 — ön-kayıt (WP4 eleme ÖLÇ sınıfı)
   · kart: `EDG-2026-056-split-oran-imzasi.yaml`
-- **EDG-2026-057** (`registered`) — `/api/topviews` (2026-08-24) toplulaştırması, planların kapı-reddi kırılımını İLK KEZ tek paydadan gösterdi.
-  · kart: `EDG-2026-057-leading-sector-kapisi.yaml`
 - **EDG-2026-058** (`registered`) — Çoklu-test cezası `p_req = 1 − (0,20 − extra_p)/K` ile uygulanıyor ve `K = len(planned)`, yani o turda PLANLANAN sonda sayısı.
   · kart: `EDG-2026-058-k-enflasyonu.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
@@ -50,7 +48,7 @@ Toplam **70** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (42)
+### Ölçüldü (43)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -154,6 +152,9 @@ Toplam **70** kart.
 - **EDG-2026-051** (`measured`) — 28g teşhisinin bıraktığı boşluk: incumbent'ın holdout bozulması GERÇEK, kayıp GENELE YAYILI (4/4 setup, 3/3 ay) ve SPY yükselirken oluştu —…
   · HÜKÜM: HÜKÜM (Rol-1, 2026-08-23): **BREADTH AYIRMIYOR — hipotez ARŞİVE (donuk kural: CI 0-içi).** ΔortR(dar−genis) = −0,158, CI95 [−0,652, +0,335].
   · kart: `EDG-2026-051-genislik-dilimi.yaml`
+- **EDG-2026-057** (`measured`) — `/api/topviews` (2026-08-24) toplulaştırması, planların kapı-reddi kırılımını İLK KEZ tek paydadan gösterdi.
+  · HÜKÜM: HÜKÜM (Rol-1, 2026-08-24): **GÖZLEM ÇÜRÜTÜLDÜ.
+  · kart: `EDG-2026-057-leading-sector-kapisi.yaml`
 - **EXE-2026-001** (`measured`) — İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra modelleri koşuyor ve ayna gap durumunda reddediliyor…
   · HÜKÜM: 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
   · kart: `EXE-2026-001-entry-execution.yaml`
