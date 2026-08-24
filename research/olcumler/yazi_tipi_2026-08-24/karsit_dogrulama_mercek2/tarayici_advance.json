@@ -1,0 +1,15 @@
+{
+ "not": "Chrome canvas measureText, 100px. Geist Mono'nun kendi advance'i 600/1000 = TAM 60.00px. 60.00 DISI her deger = o karakter BASKA bir yuzden geliyor.",
+ "sayfa": "kd_mercek2.html (woff2'ler data: URI ile gomulu, http://127.0.0.1:8899 uzerinden kosuldu, sunucu kapatildi)",
+ "pano_mono_stack": {"aciklama":"'Geist Mono',ui-monospace,SFMono-Regular,monospace — macOS",
+  "0":60,"M":60,"Ğ":60,"─":60,"≥":60,"≤":60,"±":60,"×":60,"−":60,"·":60,"→":60,
+  "✓":60.21,"◆":60.21,"■":60.21,"Δ":60.21,"⚠":60.21,"✗":60.21,"⟨":60.21,"▤":60.21,"◤":60.21,
+  "Σ":60.21,"σ":60.21,"τ":60.21,"⇒":60.21,"⌘":60.21,"∪":60.21,"▸":60.21,"▾":60.21,"✕":60.21,
+  "₺":55.62,"ⓘ":100},
+ "sadece_geist": {"aciklama":"yedek yuz YOK — cikplak dusme",
+  "0":60,"M":60,"Ğ":60,"Δ":72.22,"Σ":61.08,"σ":55.62,"τ":44.38,"₺":55.62,"✓":60.21,"ⓘ":100},
+ "turkce_12_hepsi": {"Ğ":60,"ğ":60,"İ":60,"ı":60,"ç":60,"ö":60,"ş":60,"ü":60,"Ç":60,"Ö":60,"Ü":60,"Ş":60,
+  "hukum":"12'sinin de advance'i TAM 60.00 — yani Geist Mono'nun KENDISI ciziyor, yedek yuz DEGIL"},
+ "dom_12px_izgara": {"10xM":72,"10xĞ":72,"10xΔ":72.25,"10x✓":72.25,
+  "hukum":"macOS'ta yedek mono (Menlo) 0.6021em — izgara 10 karakterde 0.25px kayiyor, GORUNMEZ; yedek yuzu OLMAYAN platformda kayma/tofu buyur"}
+}

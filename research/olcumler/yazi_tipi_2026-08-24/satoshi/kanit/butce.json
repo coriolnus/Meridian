@@ -1,0 +1,56 @@
+{
+ "parametreler": {
+  "wght_aralik": [
+   400,
+   700
+  ],
+  "yalin_ozellikler": [
+   "ccmp",
+   "locl",
+   "kern",
+   "mark",
+   "mkmk",
+   "rlig",
+   "calt",
+   "tnum",
+   "zero",
+   "case"
+  ],
+  "istenen_kod_noktasi": 350
+ },
+ "yuzler": [
+  {
+   "aile": "Inter",
+   "kaynak": "InterVariable.ttf",
+   "bayt": 38572,
+   "kb": 37.7,
+   "kesildi": true,
+   "cmap": 278
+  },
+  {
+   "aile": "Geist Mono",
+   "kaynak": "GeistMono[wght].ttf",
+   "bayt": 17204,
+   "kb": 16.8,
+   "kesildi": true,
+   "cmap": 260
+  },
+  {
+   "aile": "Satoshi",
+   "kaynak": "Satoshi-Variable.woff2",
+   "bayt": 42588,
+   "kb": 41.6,
+   "kesildi": false,
+   "not": "KESİLEMEZ — FFL §02. ITF'nin kendi WOFF2'si, TAM kod noktası kümesi.",
+   "cmap": 431
+  }
+ ],
+ "olculemeyen": [],
+ "toplam_bayt": 98364,
+ "toplam_kb": 96.1,
+ "butce_bayt": 122880,
+ "butce_kb": 120.0,
+ "sigiyor_mu": true,
+ "fark_kb": 23.9,
+ "mevcut_recursive_cifti_bayt": 81168
+}

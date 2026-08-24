@@ -1,0 +1,138 @@
+{
+ "istenen_yalin_ozellikler": [
+  "ccmp",
+  "locl",
+  "kern",
+  "mark",
+  "mkmk",
+  "rlig",
+  "calt",
+  "tnum",
+  "zero",
+  "case"
+ ],
+ "not": "Subset YALNIZ istenen ozellikleri tutar; istenen ama KAYNAKTA OLMAYAN ya da kesit disinda kalan gliflere dokunan bir ozellik BUDANIR. Asagidaki ayrim 'kaynakta yoktu' ile 'subset dusurdu'yu birbirinden ayirir (YASA 4: sessiz yutma yok).",
+ "yuzler": [
+  {
+   "aile": "Inter",
+   "kaynakta_var": [
+    "aalt",
+    "calt",
+    "case",
+    "ccmp",
+    "cpsp",
+    "cv01",
+    "cv02",
+    "cv03",
+    "cv04",
+    "cv05",
+    "cv06",
+    "cv07",
+    "cv08",
+    "cv09",
+    "cv10",
+    "cv11",
+    "cv12",
+    "cv13",
+    "cv14",
+    "dlig",
+    "dnom",
+    "frac",
+    "kern",
+    "locl",
+    "mark",
+    "mkmk",
+    "numr",
+    "ordn",
+    "pnum",
+    "salt",
+    "sinf",
+    "ss01",
+    "ss02",
+    "ss03",
+    "ss04",
+    "ss05",
+    "ss06",
+    "ss07",
+    "ss08",
+    "subs",
+    "sups",
+    "tnum",
+    "zero"
+   ],
+   "kesitte_var": [
+    "calt",
+    "case",
+    "ccmp",
+    "kern",
+    "locl",
+    "mark",
+    "mkmk",
+    "tnum",
+    "zero"
+   ],
+   "istenen_ama_KAYNAKTA_YOK": [
+    "rlig"
+   ],
+   "istenen_kaynakta_VARDI_kesitte_YOK": []
+  },
+  {
+   "aile": "Geist Mono",
+   "kaynakta_var": [
+    "aalt",
+    "case",
+    "ccmp",
+    "dnom",
+    "frac",
+    "locl",
+    "mark",
+    "mkmk",
+    "numr",
+    "ordn",
+    "sinf",
+    "ss01",
+    "ss02",
+    "ss03",
+    "ss04",
+    "ss06",
+    "ss07",
+    "ss08",
+    "ss09",
+    "ss10",
+    "ss11",
+    "subs",
+    "sups"
+   ],
+   "kesitte_var": [
+    "ccmp",
+    "locl",
+    "mark",
+    "mkmk"
+   ],
+   "istenen_ama_KAYNAKTA_YOK": [
+    "calt",
+    "kern",
+    "rlig",
+    "tnum",
+    "zero"
+   ],
+   "istenen_kaynakta_VARDI_kesitte_YOK": [
+    "case"
+   ],
+   "budanan_case_incelemesi": {
+    "ozellik": "case",
+    "kaynak_lookup_girdileri": {
+     "uni0335": "uni0335.case",
+     "uni0337": "uni0337.case",
+     "uni0338": "uni0338.case"
+    },
+    "hukum": "BUDAMA DOGRU. Geist Mono'nun `case` ozelligi YALNIZ U+0335/0337/0338 (birlesen ustu-cizgi isaretleri) uzerinde calisir; ucu de istenen kod noktasi kumesinde YOK. Lookup bos kaldigi icin dusuruldu — erisilemez bir ozellik kaybedilmedi, olmayan bir yol kapandi."
+   }
+  }
+ ],
+ "tnum_kontrolu": {
+  "soru": "Geist Mono'da `tnum` yok — subset mi dusurdu, kaynakta mi yoktu?",
+  "kontrol": "kanit/tnum_KAYNAK_kontrol.json (KESILMEMIS kaynak fontlar uzerinde ayni kanitlayici)",
+  "cevap": "KAYNAKTA YOKTU. Kesilmemis GeistMono-VF.ttf de tnum=absent, zero=absent veriyor. Subset hicbir sey dusurmedi; Geist Mono'nun rakamlari zaten YAPISAL olarak tekduze (advance 600 = 0.600 em), tnum'a ihtiyaci yok."
+ }
+}

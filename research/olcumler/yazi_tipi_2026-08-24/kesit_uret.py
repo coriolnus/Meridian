@@ -139,7 +139,15 @@ GUVENLIK_KUMESI = (
     + [0x2713, 0x2715, 0x2717, 0x27E8, 0x27E9]         # ✓ ✕ ✗ ⟨ ⟩
 )
 
-YALIN_OZELLIKLER = "ccmp,locl,kern,mark,mkmk,rlig,calt,tnum,zero,case"
+# [10] `ss02,cv01` EKLENDİ (2026-08-24 takip turu). Orijinal liste bu iki özelliği
+#      BUDUYORDU ve budama ölçülerek kanıtlandı: aynı descriptor budanmış kesitte HİÇBİR
+#      şey değiştirmiyordu (fark 0), tam dosyada değiştiriyordu. Korunmuş kesit AYNI
+#      düzenekle yeniden ölçüldü — 1/l @28px 0,968 → 0,975 · 0/O 0,774 → 0,795 ·
+#      l/I 0,500 → 0,930 (bedeli +728 bayt). Kanıt:
+#      research/olcumler/kesit_ss02cv01_2026-08-24/{sonuc.json,web_fonts_build.json}
+#      DİKKAT: özellikler dosyada olması YETMEZ — `@font-face` descriptor'ı da açmalıdır
+#      (`font-feature-settings:'ss02' 1,'cv01' 1`); dört yüzeyde de yazılı.
+YALIN_OZELLIKLER = "ccmp,locl,kern,mark,mkmk,rlig,calt,tnum,zero,case,ss02,cv01"
 
 # Türkçe çivisi — `tests/test_yazitipi_v201.py::test_TURKCE_glif_civisi` ile aynı 12 karakter.
 TURKCE = {

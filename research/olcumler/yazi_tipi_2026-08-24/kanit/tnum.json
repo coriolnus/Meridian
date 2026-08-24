@@ -1,0 +1,140 @@
+{
+ "geist-mono-vf": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": null,
+  "lnum": null,
+  "ss01": null,
+  "ss02": null,
+  "cv01": null
+ },
+ "inter-vf": {
+  "default_advances": {
+   "0": 1292,
+   "1": 833,
+   "2": 1249,
+   "3": 1265,
+   "4": 1323,
+   "5": 1215,
+   "6": 1270,
+   "7": 1159,
+   "8": 1267,
+   "9": 1270
+  },
+  "default_uniform": false,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "glyph00365"
+    ],
+    "1": [
+     "one",
+     "glyph00366"
+    ],
+    "2": [
+     "two",
+     "glyph00367"
+    ],
+    "3": [
+     "three",
+     "glyph00368"
+    ],
+    "4": [
+     "four",
+     "glyph00369"
+    ],
+    "5": [
+     "five",
+     "glyph00370"
+    ],
+    "6": [
+     "six",
+     "glyph00371"
+    ],
+    "7": [
+     "seven",
+     "glyph00372"
+    ],
+    "8": [
+     "eight",
+     "glyph00373"
+    ],
+    "9": [
+     "nine",
+     "glyph00374"
+    ]
+   },
+   "advances_after": {
+    "0": 1328,
+    "1": 1328,
+    "2": 1328,
+    "3": 1328,
+    "4": 1328,
+    "5": 1328,
+    "6": 1328,
+    "7": 1328,
+    "8": 1328,
+    "9": 1328
+   },
+   "uniform_after": true,
+   "value_after": [
+    1328
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "glyph00364"
+    ]
+   },
+   "advances_after": {
+    "0": 1292,
+    "1": 833,
+    "2": 1249,
+    "3": 1265,
+    "4": 1323,
+    "5": 1215,
+    "6": 1270,
+    "7": 1159,
+    "8": 1267,
+    "9": 1270
+   },
+   "uniform_after": false,
+   "value_after": [
+    833,
+    1159,
+    1215,
+    1249,
+    1265,
+    1267,
+    1270,
+    1292,
+    1323
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": null,
+  "ss02": null,
+  "cv01": null
+ }
+}

@@ -1,0 +1,62 @@
+/* ÜÇ YÜZ + KONTROLLER — tek kaynak, hem ornek.html hem yakinlastir.html buradan okur.
+   Dosyalar tarayici/fonts/ altına KOPYALANDI (kaynak hash'leri olcum_sonucu.json'da).
+   08-07 turu bunları `/fonts/...` mutlak yolundan servis ediyordu; burada ölçüm sayfası
+   kendi klasöründen servis edildiği için yol görelidir. Sınanan BAYT aynı bayttır. */
+
+/* A · YENİ — dağıtım adayı kesitler (kesit_uret.py çıktısı, woff2) */
+@font-face{font-family:'INTER kesit';src:url('fonts/inter-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+@font-face{font-family:'GEIST Mono kesit';src:url('fonts/geist-mono-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+
+/* B · INTER TAM — rsms/inter v4.1 sürümündeki web/InterVariable.woff2, DOKUNULMAMIŞ.
+   Gerek: dağıtım kesitinde ss02/cv01 GSUB özellikleri BUDANMIŞ (web_fonts_build.json
+   `yalin_ozellikler` listesi: ccmp locl kern mark mkmk rlig calt tnum zero case).
+   Il1 disambiguation'ı ölçmek için özelliği TAŞIYAN dosya gerekiyor. */
+@font-face{font-family:'INTER tam';src:url('fonts/inter-tam.woff2') format('woff2');
+  font-weight:100 900;font-style:normal;font-display:block}
+/* Aynı bayt, @font-face descriptor'ıyla özellik AÇIK. Descriptor'ın gerçekten
+   uygulanıp uygulanmadığı ölçümde AYRICA sınanır (probe) — varsayılmaz. */
+@font-face{font-family:'INTER tam ss02';src:url('fonts/inter-tam.woff2') format('woff2');
+  font-weight:100 900;font-style:normal;font-display:block;
+  font-feature-settings:'ss02' 1}
+@font-face{font-family:'INTER tam ss02cv01';src:url('fonts/inter-tam.woff2') format('woff2');
+  font-weight:100 900;font-style:normal;font-display:block;
+  font-feature-settings:'ss02' 1,'cv01' 1}
+/* KESİTE de aynı descriptor uygulanır: budama iddiasının doğrudan sınavı.
+   Kesitte ss02 yoksa bu aile 'INTER kesit' ile PİKSEL PİKSEL aynı çıkmalı. */
+@font-face{font-family:'INTER kesit ss02cv01';src:url('fonts/inter-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block;
+  font-feature-settings:'ss02' 1,'cv01' 1}
+
+/* C · DONMUŞ TABAN — canlıda BUGÜN koşan çift (meridian/web/fonts/) */
+@font-face{font-family:'Recursive Sans';src:url('fonts/recursive-sans-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+@font-face{font-family:'Recursive Mono';src:url('fonts/recursive-mono-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+
+/* D · DÜZENEK KALİBRASYONU — 08-07 turunun ölçtüğü GEIST MONO'nun TA KENDİSİ.
+   Bu satır hüküm için değil, DÜZENEĞİN KENDİSİNİ sınamak için: aynı yüz aynı yöntemle
+   0.92 (10px) / 0.57 (28px) veriyorsa bu turun sayıları donmuş tabanla kıyaslanabilir.
+   Vermiyorsa kıyas ölür ve bu kayıtta öyle yazar. */
+@font-face{font-family:'GEIST Mono 0807';src:url('fonts/geist-mono-0807.ttf') format('truetype');
+  font-weight:400 700;font-style:normal;font-display:block}
+
+/* E · `zero` (eğik çizgili sıfır) AYRI SINAV. web_fonts_build.json'a göre dağıtım kesitleri
+   ss02/cv01'i BUDADI ama `zero`yu TUTTU. Bu iddia burada tek başına ölçülür: descriptor
+   yalnız 'zero' açar, 0/O mürekkep farkı değişiyorsa özellik kesitte GERÇEKTEN duruyordur. */
+@font-face{font-family:'INTER kesit zero';src:url('fonts/inter-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block;font-feature-settings:'zero' 1}
+@font-face{font-family:'GEIST Mono kesit zero';src:url('fonts/geist-mono-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block;font-feature-settings:'zero' 1}
+
+/* F · OPSZ SORUSU. Inter'in `opsz` ekseni 14–32, varsayılan 14; CSS'in `font-optical-sizing`
+   varsayılanı `auto`, yani tarayıcı opsz'yi PUNTO BOYUNA bağlar (28px → opsz 28).
+   Dağıtım kesiti ise opsz'yi 14'e SABİTLEYEREK üretildi (web_fonts_build.json
+   `sabitlenen_eksenler: {opsz: 14.0}`). Bu, kesitin 28px'te Display kesimini
+   VEREMEYECEĞİ anlamına gelir. İddia değil, ölçü: aşağıdaki iki aile tam dosyayı
+   opsz'ye ÇİVİLEYEREK kesitle yan yana koyar. */
+@font-face{font-family:'INTER tam opsz14';src:url('fonts/inter-tam.woff2') format('woff2');
+  font-weight:100 900;font-style:normal;font-display:block;font-variation-settings:'opsz' 14}
+@font-face{font-family:'INTER tam opsz32';src:url('fonts/inter-tam.woff2') format('woff2');
+  font-weight:100 900;font-style:normal;font-display:block;font-variation-settings:'opsz' 32}

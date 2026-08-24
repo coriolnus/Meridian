@@ -1,0 +1,2872 @@
+{
+ "olcum_turu": "yazi_tipi_2026-08-24 · tarayıcı okunaklılık",
+ "tarih_utc": "2026-08-24T00:01:21.936112+00:00",
+ "donmus_taban": {
+  "kayit": "research/olcumler/yazi_tipi_2026-08-07/tarayici/olcum_sonucu.json",
+  "durum": "DEĞİŞTİRİLMEDİ — yalnız okundu; düzenek oradan kopyalanıp uyarlandı",
+  "recursive_mono_1l_10px": 1.0,
+  "recursive_mono_1l_28px": 0.817,
+  "geist_mono_1l_10px": 0.92,
+  "geist_mono_1l_28px": 0.57,
+  "recursive_sans_0O_28px": 0.663,
+  "kabul_citasi": "10px'te 1/l mürekkep fark oranı >= 0.75 (bu turda DEĞİŞTİRİLMEDİ)"
+ },
+ "KALIBRASYON_HUKMU": {
+  "soru": "Bu düzenek 08-07'nin sayılarını yeniden üretiyor mu? Üretmiyorsa kıyas ölür.",
+  "sonuc": "ÜRETİYOR — üç referans da BİREBİR tutuyor, kıyas geçerlidir",
+  "geist_mono_0807_1l_10px": [
+   0.92,
+   0.92
+  ],
+  "geist_mono_0807_1l_28px": [
+   0.57,
+   0.57
+  ],
+  "recursive_mono_1l_10px": [
+   1,
+   1.0
+  ],
+  "recursive_mono_1l_28px": [
+   0.817,
+   0.817
+  ],
+  "recursive_sans_0O_28px": [
+   0.663,
+   0.663
+  ],
+  "format": "[bu tur, donmuş taban]",
+  "dpr_notu": "Cihaz dpr=2; hüküm sütunu dpr=1'e ZORLANDI (08-07 dpr=1'di). Zorlanmasaydı sayılar düşerdi ve kıyas ölürdü. raster_*_gercek_dpr alanları dpr=2 karşılığını taşır."
+ },
+ "OLCULEMEDI": {
+  "l_I_donmus_taban_karsiligi": "08-07 turu l/I mürekkep farkını HİÇ ölçmedi; o turun kaydında böyle bir alan yok. Bu turda ölçüldü ama TABANLA kıyaslanamaz — yalnız yüzler arası kıyas geçerli.",
+  "Inter_08_07_turunda": "Inter 08-07 turunda hiç ölçülmedi; Inter için 'önce/sonra' YOKTUR, yalnız bu turun sayısı var.",
+  "gercek_ekranda_okuma_hizi": "Mürekkep fark oranı bir PROXY'dir; insan okuma hatası/hızı ölçülmedi — bu tur kişi denemesi içermiyor.",
+  "geist_kesitte_zero_ozelligi_VAR_MI": "AYIRT EDİLEMEDİ. 'zero' descriptor'ı Geist Mono kesitinde HİÇBİR piksel değiştirmedi (fark_orani=0, 231 mürekkepli piksel). İki açıklama tarayıcıdan ayrılamıyor: (a) özellik dosyada yok, (b) özellik var ama Geist'in VARSAYILAN sıfırı ZATEN eğik çizgili olduğu için değişim yok. 6× yakınlaştırma (02_yakinlastirma_6x.png) (b)'yi destekliyor — Geist'in varsayılan 0'ı çizgili görünüyor — ama bu göz kanıtı, GSUB kanıtı değil. Kesin cevap font tablosundan okunmalı; bu ajanın ortamında fontTools kurulu değil.",
+  "Inter_kesitte_ss02_neden_yok": "Ölçüldü ve YOK olduğu doğrulandı (descriptor 3 karakterde de 0 fark; aynı descriptor TAM dosyada çalışıyor → descriptor değil DOSYA eksik). NEDENİ web_fonts_build.json'un `yalin_ozellikler` listesi (ss02/cv01 listede yok) — ama kesiti üreten betik bu turda KOŞULMADI, yani neden BELGEDEN okundu, yeniden üretilerek doğrulanmadı."
+ },
+ "kaynak_dosyalar": {
+  "INTER kesit (+ss02cv01 +zero varyantlari)": {
+   "dosya": "fonts/inter-vf.woff2",
+   "bayt": 38720,
+   "sha256": "465cab77239c87ed4df77871b34c2ef927e852fb26a0142e7e8c83913aab9dab",
+   "asil_yol": "research/olcumler/yazi_tipi_2026-08-24/woff2/inter-vf.woff2",
+   "not": "DAGITIM ADAYI kesit; kesit_uret.py ciktisi; opsz 14'e SABIT, wght 400-700"
+  },
+  "INTER tam (+ss02 +ss02cv01 +opsz14 +opsz32)": {
+   "dosya": "fonts/inter-tam.woff2",
+   "bayt": 352240,
+   "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+   "asil_yol": "research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis/web/InterVariable.woff2",
+   "not": "rsms/inter v4.1 surum zip'inden cikan DOKUNULMAMIS web dosyasi"
+  },
+  "GEIST Mono kesit (+zero)": {
+   "dosya": "fonts/geist-mono-vf.woff2",
+   "bayt": 17256,
+   "sha256": "7420049593c9b0b43419c2840fae8357dda672cf7984aa748201cba3dcc88a21",
+   "asil_yol": "research/olcumler/yazi_tipi_2026-08-24/woff2/geist-mono-vf.woff2",
+   "not": "DAGITIM ADAYI kesit; Geist Mono v1.7.2 kaynakli"
+  },
+  "Recursive Sans": {
+   "dosya": "fonts/recursive-sans-vf.woff2",
+   "bayt": 41204,
+   "sha256": "942b5aa41634c906b92c55b0cd557a42573b2f5002962081530f106e68ced846",
+   "asil_yol": "meridian/web/fonts/recursive-sans-vf.woff2",
+   "not": "DONMUS TABAN - canlida bugun kosan dosyanin kendisi"
+  },
+  "Recursive Mono": {
+   "dosya": "fonts/recursive-mono-vf.woff2",
+   "bayt": 39964,
+   "sha256": "b4e57a7b75bfa8d72dfbc0ea570e4b388580a73b2e9d2473dd3900a732d9b2ad",
+   "asil_yol": "meridian/web/fonts/recursive-mono-vf.woff2",
+   "not": "DONMUS TABAN - canlida bugun kosan dosyanin kendisi"
+  },
+  "GEIST Mono 0807": {
+   "dosya": "fonts/geist-mono-0807.ttf",
+   "bayt": 171948,
+   "sha256": "d00e590b8eb3a59acc329b2d044fd143ae935090b7da33199ebee27cc7de8196",
+   "asil_yol": "research/olcumler/yazi_tipi_2026-08-24/edinme/geist/karsilastirma/girdi/GeistMono_ESKI_20260807.ttf",
+   "not": "KALIBRASYON - 08-07 turunun 0.92/0.57 verdigi yuzun ta kendisi"
+  }
+ },
+ "duzenek": {
+  "sayfalar": [
+   "ornek.html (göz)",
+   "olcum.html + olcum.js (sayı)",
+   "yakinlastir.html + yakinlastir.js (6× piksel büyütme)",
+   "yuzler.css (@font-face tek kaynak)"
+  ],
+  "sunucu": "sunucu.py — yerel http://127.0.0.1:8791, yalnız bu klasör; serve.sh KOŞULMADI, uygulama YÜKLENMEDİ",
+  "ekran_goruntuleri": [
+   "01_ornek_uc_yuz.png",
+   "02_yakinlastirma_6x.png",
+   "03_olcum_ozet.png"
+  ]
+ },
+ "yontem": "08-07 turunun olcum.js'i; MÜREKKEP (alfa) farkı, advance DEĞİL. Rampa ve eşikler aynı.",
+ "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.34493.1 Chrome/148.0.7778.280 Electron/42.9.2 Safari/537.36",
+ "devicePixelRatio": 2,
+ "hukum_dpr": 1,
+ "olcum_px": 100,
+ "probe": {
+  "aciklama": "Aynı font dosyası iki @font-face altında; biri descriptor'sız, biri özellikli. Fark>0 ise tarayıcı descriptor'ı UYGULUYOR. Fark=0 ise descriptor yok sayılmış YA DA özellik dosyada yok — ikisini ayırmak için kesit/tam çapraz okunur.",
+  "dpr": 1,
+  "tam_l_ss02_vs_kapali_28px": {
+   "fark_orani": 0.178,
+   "fark_enerji": 7.43,
+   "murekkepli_piksel": 90
+  },
+  "tam_I_ss02_vs_kapali_28px": {
+   "fark_orani": 0.806,
+   "fark_enerji": 78.84,
+   "murekkepli_piksel": 129
+  },
+  "tam_0_ss02_vs_kapali_28px": {
+   "fark_orani": 0.22,
+   "fark_enerji": 35.19,
+   "murekkepli_piksel": 227
+  },
+  "tam_1_cv01_vs_ss02tek_28px": {
+   "fark_orani": 0.594,
+   "fark_enerji": 13.97,
+   "murekkepli_piksel": 106
+  },
+  "kesit_l_descriptor_etkisi_28px": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 63
+  },
+  "kesit_0_descriptor_etkisi_28px": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 186
+  },
+  "kesit_1_descriptor_etkisi_28px": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 107
+  },
+  "kesit_inter_0_zero_etkisi_28px": {
+   "fark_orani": 0.204,
+   "fark_enerji": 30.51,
+   "murekkepli_piksel": 226
+  },
+  "kesit_geist_0_zero_etkisi_28px": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 231
+  },
+  "kesit_vs_tam_opsz14_l_28px": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 63
+  },
+  "kesit_vs_tam_opsz14_1_28px": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 107
+  },
+  "kesit_vs_tam_opsz14_0_28px": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 186
+  },
+  "kesit_vs_tam_opsz14_M_28px": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 304
+  },
+  "tam_opsz14_vs_opsz32_M_28px": {
+   "fark_orani": 0.679,
+   "fark_enerji": 81.91,
+   "murekkepli_piksel": 330
+  },
+  "tam_opsz14_vs_opsz32_0_28px": {
+   "fark_orani": 0.542,
+   "fark_enerji": 21.27,
+   "murekkepli_piksel": 192
+  },
+  "negatif_kontrol_ayni_aile_ayni_karakter": {
+   "fark_orani": 0,
+   "fark_enerji": 0,
+   "murekkepli_piksel": 84
+  }
+ },
+ "tabular": {
+  "INTER kesit": {
+   "varsayilan_genislikler": [
+    40.68,
+    56.594,
+    59.328,
+    60.992,
+    61.773,
+    61.867,
+    62.016,
+    63.086,
+    64.602
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    64.844
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  },
+  "INTER tam": {
+   "varsayilan_genislikler": [
+    36.234,
+    51.563,
+    56.109,
+    57.672,
+    58.203,
+    58.398,
+    59.867,
+    61.328,
+    61.773
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    64.453
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  },
+  "INTER tam ss02": {
+   "varsayilan_genislikler": [
+    36.234,
+    51.563,
+    56.109,
+    57.672,
+    58.203,
+    58.398,
+    59.867,
+    61.328,
+    61.773
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    64.453
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  },
+  "INTER tam ss02cv01": {
+   "varsayilan_genislikler": [
+    36.133,
+    51.563,
+    56.109,
+    57.672,
+    58.203,
+    58.398,
+    59.867,
+    61.328,
+    61.773
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    64.453
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  },
+  "INTER kesit ss02cv01": {
+   "varsayilan_genislikler": [
+    40.68,
+    56.594,
+    59.328,
+    60.992,
+    61.773,
+    61.867,
+    62.016,
+    63.086,
+    64.602
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    64.844
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  },
+  "INTER kesit zero": {
+   "varsayilan_genislikler": [
+    40.68,
+    56.594,
+    59.328,
+    60.992,
+    61.773,
+    61.867,
+    62.016,
+    63.086,
+    64.602
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    64.844
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  },
+  "INTER tam opsz14": {
+   "varsayilan_genislikler": [
+    40.68,
+    56.594,
+    59.328,
+    60.992,
+    61.773,
+    61.867,
+    62.016,
+    63.086,
+    64.602
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    64.844
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  },
+  "INTER tam opsz32": {
+   "varsayilan_genislikler": [
+    36.234,
+    51.563,
+    56.109,
+    57.672,
+    58.203,
+    58.398,
+    59.867,
+    61.328,
+    61.773
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    64.453
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  },
+  "GEIST Mono kesit": {
+   "varsayilan_genislikler": [
+    60
+   ],
+   "varsayilan_tekduze": true,
+   "tnum_acik_genislikler": [
+    60
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": false
+  },
+  "GEIST Mono kesit zero": {
+   "varsayilan_genislikler": [
+    60
+   ],
+   "varsayilan_tekduze": true,
+   "tnum_acik_genislikler": [
+    60
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": false
+  },
+  "Recursive Sans": {
+   "varsayilan_genislikler": [
+    60
+   ],
+   "varsayilan_tekduze": true,
+   "tnum_acik_genislikler": [
+    60
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": false
+  },
+  "Recursive Mono": {
+   "varsayilan_genislikler": [
+    60
+   ],
+   "varsayilan_tekduze": true,
+   "tnum_acik_genislikler": [
+    60
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": false
+  },
+  "GEIST Mono 0807": {
+   "varsayilan_genislikler": [
+    60
+   ],
+   "varsayilan_tekduze": true,
+   "tnum_acik_genislikler": [
+    60
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": false
+  },
+  "ui-monospace": {
+   "varsayilan_genislikler": [
+    50
+   ],
+   "varsayilan_tekduze": true,
+   "tnum_acik_genislikler": [
+    50
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": false
+  },
+  "system-ui": {
+   "varsayilan_genislikler": [
+    44.336,
+    54.688,
+    56.594,
+    58.5,
+    59.18,
+    59.961,
+    60.453,
+    60.648,
+    61.719
+   ],
+   "varsayilan_tekduze": false,
+   "tnum_acik_genislikler": [
+    60.453
+   ],
+   "tnum_acik_tekduze": true,
+   "tnum_bir_sey_degistirdi_mi": true
+  }
+ },
+ "satirlar": [
+  {
+   "aile": "INTER kesit",
+   "aciklama": "A · YENİ sans · dağıtım adayı kesit (ss02/cv01 BUDANMIŞ)",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 24.219,
+   "M_genislik": 90.332,
+   "monospace": false,
+   "rakam_genislikleri": [
+    63.086,
+    40.674,
+    60.986,
+    61.768,
+    64.6,
+    59.326,
+    62.012,
+    56.592,
+    61.865
+   ],
+   "rakam_tekduze": false,
+   "bir": 40.674,
+   "l_kucuk": 24.219,
+   "I_buyuk": 26.855,
+   "sifir": 63.086,
+   "O_buyuk": 76.465,
+   "bir_l_advance_fark_100px": 16.455,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 0.969,
+     "fark_enerji": 13.33,
+     "murekkepli_piksel": 32
+    },
+    "11px": {
+     "fark_orani": 0.944,
+     "fark_enerji": 15.83,
+     "murekkepli_piksel": 36
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 19.53,
+     "murekkepli_piksel": 36
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 23.16,
+     "murekkepli_piksel": 42
+    },
+    "28px": {
+     "fark_orani": 0.968,
+     "fark_enerji": 112.96,
+     "murekkepli_piksel": 156
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.886,
+     "fark_enerji": 12.87,
+     "murekkepli_piksel": 44
+    },
+    "11px": {
+     "fark_orani": 0.941,
+     "fark_enerji": 16.94,
+     "murekkepli_piksel": 51
+    },
+    "12px": {
+     "fark_orani": 0.983,
+     "fark_enerji": 20.02,
+     "murekkepli_piksel": 59
+    },
+    "13px": {
+     "fark_orani": 0.986,
+     "fark_enerji": 24.17,
+     "murekkepli_piksel": 69
+    },
+    "28px": {
+     "fark_orani": 0.774,
+     "fark_enerji": 121.68,
+     "murekkepli_piksel": 265
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 2,
+     "murekkepli_piksel": 16
+    },
+    "11px": {
+     "fark_orani": 0.889,
+     "fark_enerji": 2.44,
+     "murekkepli_piksel": 18
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.05,
+     "murekkepli_piksel": 18
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.46,
+     "murekkepli_piksel": 20
+    },
+    "28px": {
+     "fark_orani": 0.5,
+     "fark_enerji": 14.74,
+     "murekkepli_piksel": 84
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.989,
+     "fark_enerji": 56.02,
+     "murekkepli_piksel": 93
+    },
+    "11px": {
+     "fark_orani": 0.99,
+     "fark_enerji": 68.91,
+     "murekkepli_piksel": 105
+    },
+    "12px": {
+     "fark_orani": 0.985,
+     "fark_enerji": 82.15,
+     "murekkepli_piksel": 130
+    },
+    "13px": {
+     "fark_orani": 0.984,
+     "fark_enerji": 98.14,
+     "murekkepli_piksel": 129
+    },
+    "28px": {
+     "fark_orani": 0.957,
+     "fark_enerji": 453.34,
+     "murekkepli_piksel": 608
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.832,
+     "fark_enerji": 61.07,
+     "murekkepli_piksel": 143
+    },
+    "11px": {
+     "fark_orani": 0.803,
+     "fark_enerji": 74.31,
+     "murekkepli_piksel": 178
+    },
+    "12px": {
+     "fark_orani": 0.811,
+     "fark_enerji": 90.04,
+     "murekkepli_piksel": 206
+    },
+    "13px": {
+     "fark_orani": 0.781,
+     "fark_enerji": 104.76,
+     "murekkepli_piksel": 233
+    },
+    "28px": {
+     "fark_orani": 0.717,
+     "fark_enerji": 492.29,
+     "murekkepli_piksel": 951
+    }
+   }
+  },
+  {
+   "aile": "INTER tam",
+   "aciklama": "A' · Inter v4.1 TAM dosya, özellik KAPALI (varsayılan)",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 20.605,
+   "M_genislik": 85.742,
+   "monospace": false,
+   "rakam_genislikleri": [
+    61.328,
+    36.23,
+    56.104,
+    59.863,
+    61.768,
+    57.666,
+    58.398,
+    51.563,
+    58.203
+   ],
+   "rakam_tekduze": false,
+   "bir": 36.23,
+   "l_kucuk": 20.605,
+   "I_buyuk": 23.242,
+   "sifir": 61.328,
+   "O_buyuk": 74.902,
+   "bir_l_advance_fark_100px": 15.625,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 14.16,
+     "murekkepli_piksel": 32
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 15.63,
+     "murekkepli_piksel": 32
+    },
+    "12px": {
+     "fark_orani": 0.972,
+     "fark_enerji": 19.65,
+     "murekkepli_piksel": 36
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 23.45,
+     "murekkepli_piksel": 42
+    },
+    "28px": {
+     "fark_orani": 0.974,
+     "fark_enerji": 108.84,
+     "murekkepli_piksel": 155
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.889,
+     "fark_enerji": 14.68,
+     "murekkepli_piksel": 45
+    },
+    "11px": {
+     "fark_orani": 0.938,
+     "fark_enerji": 16.79,
+     "murekkepli_piksel": 48
+    },
+    "12px": {
+     "fark_orani": 0.968,
+     "fark_enerji": 20.29,
+     "murekkepli_piksel": 62
+    },
+    "13px": {
+     "fark_orani": 0.97,
+     "fark_enerji": 23.85,
+     "murekkepli_piksel": 67
+    },
+    "28px": {
+     "fark_orani": 0.807,
+     "fark_enerji": 122.05,
+     "murekkepli_piksel": 264
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 2.18,
+     "murekkepli_piksel": 16
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 2.39,
+     "murekkepli_piksel": 16
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.12,
+     "murekkepli_piksel": 18
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.46,
+     "murekkepli_piksel": 20
+    },
+    "28px": {
+     "fark_orani": 0.75,
+     "fark_enerji": 16.06,
+     "murekkepli_piksel": 84
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.989,
+     "fark_enerji": 56.02,
+     "murekkepli_piksel": 93
+    },
+    "11px": {
+     "fark_orani": 0.99,
+     "fark_enerji": 68.91,
+     "murekkepli_piksel": 105
+    },
+    "12px": {
+     "fark_orani": 0.985,
+     "fark_enerji": 82.15,
+     "murekkepli_piksel": 130
+    },
+    "13px": {
+     "fark_orani": 0.984,
+     "fark_enerji": 98.14,
+     "murekkepli_piksel": 129
+    },
+    "28px": {
+     "fark_orani": 0.956,
+     "fark_enerji": 437.39,
+     "murekkepli_piksel": 572
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.832,
+     "fark_enerji": 61.07,
+     "murekkepli_piksel": 143
+    },
+    "11px": {
+     "fark_orani": 0.803,
+     "fark_enerji": 74.31,
+     "murekkepli_piksel": 178
+    },
+    "12px": {
+     "fark_orani": 0.811,
+     "fark_enerji": 90.04,
+     "murekkepli_piksel": 206
+    },
+    "13px": {
+     "fark_orani": 0.781,
+     "fark_enerji": 104.76,
+     "murekkepli_piksel": 233
+    },
+    "28px": {
+     "fark_orani": 0.725,
+     "fark_enerji": 493.07,
+     "murekkepli_piksel": 932
+    }
+   }
+  },
+  {
+   "aile": "INTER tam ss02",
+   "aciklama": "A'' · Inter TAM, ss02 AÇIK (I→I.1, l→l.ss02, 0→zero.slash)",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 20.605,
+   "M_genislik": 85.742,
+   "monospace": false,
+   "rakam_genislikleri": [
+    61.328,
+    36.23,
+    56.104,
+    59.863,
+    61.768,
+    57.666,
+    58.398,
+    51.563,
+    58.203
+   ],
+   "rakam_tekduze": false,
+   "bir": 36.23,
+   "l_kucuk": 22.949,
+   "I_buyuk": 33.887,
+   "sifir": 61.328,
+   "O_buyuk": 74.902,
+   "bir_l_advance_fark_100px": 13.281,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 13.66,
+     "murekkepli_piksel": 32
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 15.59,
+     "murekkepli_piksel": 32
+    },
+    "12px": {
+     "fark_orani": 0.972,
+     "fark_enerji": 19.19,
+     "murekkepli_piksel": 36
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 22.94,
+     "murekkepli_piksel": 42
+    },
+    "28px": {
+     "fark_orani": 0.974,
+     "fark_enerji": 108.86,
+     "murekkepli_piksel": 155
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.922,
+     "fark_enerji": 18.18,
+     "murekkepli_piksel": 51
+    },
+    "11px": {
+     "fark_orani": 0.944,
+     "fark_enerji": 20.35,
+     "murekkepli_piksel": 54
+    },
+    "12px": {
+     "fark_orani": 0.958,
+     "fark_enerji": 25.57,
+     "murekkepli_piksel": 72
+    },
+    "13px": {
+     "fark_orani": 0.987,
+     "fark_enerji": 29.54,
+     "murekkepli_piksel": 76
+    },
+    "28px": {
+     "fark_orani": 0.826,
+     "fark_enerji": 152.96,
+     "murekkepli_piksel": 305
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 12.71,
+     "murekkepli_piksel": 26
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 13.83,
+     "murekkepli_piksel": 28
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 19.36,
+     "murekkepli_piksel": 35
+    },
+    "13px": {
+     "fark_orani": 0.976,
+     "fark_enerji": 18.91,
+     "murekkepli_piksel": 42
+    },
+    "28px": {
+     "fark_orani": 0.944,
+     "fark_enerji": 88.73,
+     "murekkepli_piksel": 144
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.989,
+     "fark_enerji": 55.33,
+     "murekkepli_piksel": 93
+    },
+    "11px": {
+     "fark_orani": 0.99,
+     "fark_enerji": 68.28,
+     "murekkepli_piksel": 105
+    },
+    "12px": {
+     "fark_orani": 0.977,
+     "fark_enerji": 80.99,
+     "murekkepli_piksel": 130
+    },
+    "13px": {
+     "fark_orani": 0.985,
+     "fark_enerji": 97.31,
+     "murekkepli_piksel": 134
+    },
+    "28px": {
+     "fark_orani": 0.949,
+     "fark_enerji": 437.48,
+     "murekkepli_piksel": 573
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.842,
+     "fark_enerji": 74.15,
+     "murekkepli_piksel": 165
+    },
+    "11px": {
+     "fark_orani": 0.821,
+     "fark_enerji": 90.62,
+     "murekkepli_piksel": 201
+    },
+    "12px": {
+     "fark_orani": 0.826,
+     "fark_enerji": 108.8,
+     "murekkepli_piksel": 236
+    },
+    "13px": {
+     "fark_orani": 0.789,
+     "fark_enerji": 126.67,
+     "murekkepli_piksel": 266
+    },
+    "28px": {
+     "fark_orani": 0.756,
+     "fark_enerji": 617.02,
+     "murekkepli_piksel": 1088
+    }
+   }
+  },
+  {
+   "aile": "INTER tam ss02cv01",
+   "aciklama": "A''' · Inter TAM, ss02+cv01 AÇIK (ek: 1→one.ss01)",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 20.605,
+   "M_genislik": 85.742,
+   "monospace": false,
+   "rakam_genislikleri": [
+    61.328,
+    36.133,
+    56.104,
+    59.863,
+    61.768,
+    57.666,
+    58.398,
+    51.563,
+    58.203
+   ],
+   "rakam_tekduze": false,
+   "bir": 36.133,
+   "l_kucuk": 22.949,
+   "I_buyuk": 33.887,
+   "sifir": 61.328,
+   "O_buyuk": 74.902,
+   "bir_l_advance_fark_100px": 13.184,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 14.35,
+     "murekkepli_piksel": 32
+    },
+    "11px": {
+     "fark_orani": 0.958,
+     "fark_enerji": 14.6,
+     "murekkepli_piksel": 24
+    },
+    "12px": {
+     "fark_orani": 0.972,
+     "fark_enerji": 19.38,
+     "murekkepli_piksel": 36
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 23.28,
+     "murekkepli_piksel": 40
+    },
+    "28px": {
+     "fark_orani": 0.988,
+     "fark_enerji": 106.97,
+     "murekkepli_piksel": 164
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.922,
+     "fark_enerji": 18.18,
+     "murekkepli_piksel": 51
+    },
+    "11px": {
+     "fark_orani": 0.944,
+     "fark_enerji": 20.35,
+     "murekkepli_piksel": 54
+    },
+    "12px": {
+     "fark_orani": 0.958,
+     "fark_enerji": 25.57,
+     "murekkepli_piksel": 72
+    },
+    "13px": {
+     "fark_orani": 0.987,
+     "fark_enerji": 29.54,
+     "murekkepli_piksel": 76
+    },
+    "28px": {
+     "fark_orani": 0.826,
+     "fark_enerji": 152.96,
+     "murekkepli_piksel": 305
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 12.71,
+     "murekkepli_piksel": 26
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 13.83,
+     "murekkepli_piksel": 28
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 19.36,
+     "murekkepli_piksel": 35
+    },
+    "13px": {
+     "fark_orani": 0.976,
+     "fark_enerji": 18.91,
+     "murekkepli_piksel": 42
+    },
+    "28px": {
+     "fark_orani": 0.944,
+     "fark_enerji": 88.73,
+     "murekkepli_piksel": 144
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.978,
+     "fark_enerji": 54.27,
+     "murekkepli_piksel": 90
+    },
+    "11px": {
+     "fark_orani": 0.99,
+     "fark_enerji": 66.75,
+     "murekkepli_piksel": 102
+    },
+    "12px": {
+     "fark_orani": 0.992,
+     "fark_enerji": 79.95,
+     "murekkepli_piksel": 128
+    },
+    "13px": {
+     "fark_orani": 0.992,
+     "fark_enerji": 95.56,
+     "murekkepli_piksel": 132
+    },
+    "28px": {
+     "fark_orani": 0.956,
+     "fark_enerji": 431.47,
+     "murekkepli_piksel": 588
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.842,
+     "fark_enerji": 74.15,
+     "murekkepli_piksel": 165
+    },
+    "11px": {
+     "fark_orani": 0.821,
+     "fark_enerji": 90.62,
+     "murekkepli_piksel": 201
+    },
+    "12px": {
+     "fark_orani": 0.826,
+     "fark_enerji": 108.8,
+     "murekkepli_piksel": 236
+    },
+    "13px": {
+     "fark_orani": 0.789,
+     "fark_enerji": 126.67,
+     "murekkepli_piksel": 266
+    },
+    "28px": {
+     "fark_orani": 0.756,
+     "fark_enerji": 617.02,
+     "murekkepli_piksel": 1088
+    }
+   }
+  },
+  {
+   "aile": "INTER kesit ss02cv01",
+   "aciklama": "A× · KESİT + aynı descriptor — budama iddiasının sınavı",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 24.219,
+   "M_genislik": 90.332,
+   "monospace": false,
+   "rakam_genislikleri": [
+    63.086,
+    40.674,
+    60.986,
+    61.768,
+    64.6,
+    59.326,
+    62.012,
+    56.592,
+    61.865
+   ],
+   "rakam_tekduze": false,
+   "bir": 40.674,
+   "l_kucuk": 24.219,
+   "I_buyuk": 26.855,
+   "sifir": 63.086,
+   "O_buyuk": 76.465,
+   "bir_l_advance_fark_100px": 16.455,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 0.969,
+     "fark_enerji": 13.33,
+     "murekkepli_piksel": 32
+    },
+    "11px": {
+     "fark_orani": 0.944,
+     "fark_enerji": 15.83,
+     "murekkepli_piksel": 36
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 19.53,
+     "murekkepli_piksel": 36
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 23.16,
+     "murekkepli_piksel": 42
+    },
+    "28px": {
+     "fark_orani": 0.968,
+     "fark_enerji": 112.96,
+     "murekkepli_piksel": 156
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.886,
+     "fark_enerji": 12.87,
+     "murekkepli_piksel": 44
+    },
+    "11px": {
+     "fark_orani": 0.941,
+     "fark_enerji": 16.94,
+     "murekkepli_piksel": 51
+    },
+    "12px": {
+     "fark_orani": 0.983,
+     "fark_enerji": 20.02,
+     "murekkepli_piksel": 59
+    },
+    "13px": {
+     "fark_orani": 0.986,
+     "fark_enerji": 24.17,
+     "murekkepli_piksel": 69
+    },
+    "28px": {
+     "fark_orani": 0.774,
+     "fark_enerji": 121.68,
+     "murekkepli_piksel": 265
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 2,
+     "murekkepli_piksel": 16
+    },
+    "11px": {
+     "fark_orani": 0.889,
+     "fark_enerji": 2.44,
+     "murekkepli_piksel": 18
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.05,
+     "murekkepli_piksel": 18
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.46,
+     "murekkepli_piksel": 20
+    },
+    "28px": {
+     "fark_orani": 0.5,
+     "fark_enerji": 14.74,
+     "murekkepli_piksel": 84
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.989,
+     "fark_enerji": 56.02,
+     "murekkepli_piksel": 93
+    },
+    "11px": {
+     "fark_orani": 0.99,
+     "fark_enerji": 68.91,
+     "murekkepli_piksel": 105
+    },
+    "12px": {
+     "fark_orani": 0.985,
+     "fark_enerji": 82.15,
+     "murekkepli_piksel": 130
+    },
+    "13px": {
+     "fark_orani": 0.984,
+     "fark_enerji": 98.14,
+     "murekkepli_piksel": 129
+    },
+    "28px": {
+     "fark_orani": 0.957,
+     "fark_enerji": 453.34,
+     "murekkepli_piksel": 608
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.832,
+     "fark_enerji": 61.07,
+     "murekkepli_piksel": 143
+    },
+    "11px": {
+     "fark_orani": 0.803,
+     "fark_enerji": 74.31,
+     "murekkepli_piksel": 178
+    },
+    "12px": {
+     "fark_orani": 0.811,
+     "fark_enerji": 90.04,
+     "murekkepli_piksel": 206
+    },
+    "13px": {
+     "fark_orani": 0.781,
+     "fark_enerji": 104.76,
+     "murekkepli_piksel": 233
+    },
+    "28px": {
+     "fark_orani": 0.717,
+     "fark_enerji": 492.29,
+     "murekkepli_piksel": 951
+    }
+   }
+  },
+  {
+   "aile": "INTER kesit zero",
+   "aciklama": "A° · KESİT + yalnız 'zero' — budamanın TUTTUĞU özelliğin sınavı",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 24.219,
+   "M_genislik": 90.332,
+   "monospace": false,
+   "rakam_genislikleri": [
+    63.086,
+    40.674,
+    60.986,
+    61.768,
+    64.6,
+    59.326,
+    62.012,
+    56.592,
+    61.865
+   ],
+   "rakam_tekduze": false,
+   "bir": 40.674,
+   "l_kucuk": 24.219,
+   "I_buyuk": 26.855,
+   "sifir": 63.086,
+   "O_buyuk": 76.465,
+   "bir_l_advance_fark_100px": 16.455,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 0.969,
+     "fark_enerji": 13.33,
+     "murekkepli_piksel": 32
+    },
+    "11px": {
+     "fark_orani": 0.944,
+     "fark_enerji": 15.83,
+     "murekkepli_piksel": 36
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 19.53,
+     "murekkepli_piksel": 36
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 23.16,
+     "murekkepli_piksel": 42
+    },
+    "28px": {
+     "fark_orani": 0.968,
+     "fark_enerji": 112.96,
+     "murekkepli_piksel": 156
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.9,
+     "fark_enerji": 16.36,
+     "murekkepli_piksel": 50
+    },
+    "11px": {
+     "fark_orani": 0.947,
+     "fark_enerji": 20.52,
+     "murekkepli_piksel": 57
+    },
+    "12px": {
+     "fark_orani": 0.986,
+     "fark_enerji": 25.36,
+     "murekkepli_piksel": 69
+    },
+    "13px": {
+     "fark_orani": 0.987,
+     "fark_enerji": 29.44,
+     "murekkepli_piksel": 77
+    },
+    "28px": {
+     "fark_orani": 0.795,
+     "fark_enerji": 148.51,
+     "murekkepli_piksel": 303
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 2,
+     "murekkepli_piksel": 16
+    },
+    "11px": {
+     "fark_orani": 0.889,
+     "fark_enerji": 2.44,
+     "murekkepli_piksel": 18
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.05,
+     "murekkepli_piksel": 18
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.46,
+     "murekkepli_piksel": 20
+    },
+    "28px": {
+     "fark_orani": 0.5,
+     "fark_enerji": 14.74,
+     "murekkepli_piksel": 84
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.989,
+     "fark_enerji": 56.02,
+     "murekkepli_piksel": 93
+    },
+    "11px": {
+     "fark_orani": 0.99,
+     "fark_enerji": 68.91,
+     "murekkepli_piksel": 105
+    },
+    "12px": {
+     "fark_orani": 0.985,
+     "fark_enerji": 82.15,
+     "murekkepli_piksel": 130
+    },
+    "13px": {
+     "fark_orani": 0.984,
+     "fark_enerji": 98.14,
+     "murekkepli_piksel": 129
+    },
+    "28px": {
+     "fark_orani": 0.957,
+     "fark_enerji": 453.34,
+     "murekkepli_piksel": 608
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.842,
+     "fark_enerji": 74.15,
+     "murekkepli_piksel": 165
+    },
+    "11px": {
+     "fark_orani": 0.821,
+     "fark_enerji": 90.62,
+     "murekkepli_piksel": 201
+    },
+    "12px": {
+     "fark_orani": 0.826,
+     "fark_enerji": 108.8,
+     "murekkepli_piksel": 236
+    },
+    "13px": {
+     "fark_orani": 0.789,
+     "fark_enerji": 126.67,
+     "murekkepli_piksel": 266
+    },
+    "28px": {
+     "fark_orani": 0.745,
+     "fark_enerji": 599.2,
+     "murekkepli_piksel": 1084
+    }
+   }
+  },
+  {
+   "aile": "INTER tam opsz14",
+   "aciklama": "A^ · Inter TAM, opsz 14'e ÇİVİLİ (kesitin sabitlediği değer)",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 24.219,
+   "M_genislik": 90.332,
+   "monospace": false,
+   "rakam_genislikleri": [
+    63.086,
+    40.674,
+    60.986,
+    61.768,
+    64.6,
+    59.326,
+    62.012,
+    56.592,
+    61.865
+   ],
+   "rakam_tekduze": false,
+   "bir": 40.674,
+   "l_kucuk": 24.219,
+   "I_buyuk": 26.855,
+   "sifir": 63.086,
+   "O_buyuk": 76.465,
+   "bir_l_advance_fark_100px": 16.455,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 14.16,
+     "murekkepli_piksel": 32
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 15.63,
+     "murekkepli_piksel": 32
+    },
+    "12px": {
+     "fark_orani": 0.972,
+     "fark_enerji": 19.65,
+     "murekkepli_piksel": 36
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 23.45,
+     "murekkepli_piksel": 42
+    },
+    "28px": {
+     "fark_orani": 0.968,
+     "fark_enerji": 112.96,
+     "murekkepli_piksel": 156
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.889,
+     "fark_enerji": 14.68,
+     "murekkepli_piksel": 45
+    },
+    "11px": {
+     "fark_orani": 0.938,
+     "fark_enerji": 16.79,
+     "murekkepli_piksel": 48
+    },
+    "12px": {
+     "fark_orani": 0.968,
+     "fark_enerji": 20.29,
+     "murekkepli_piksel": 62
+    },
+    "13px": {
+     "fark_orani": 0.97,
+     "fark_enerji": 23.85,
+     "murekkepli_piksel": 67
+    },
+    "28px": {
+     "fark_orani": 0.774,
+     "fark_enerji": 121.68,
+     "murekkepli_piksel": 265
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 2.18,
+     "murekkepli_piksel": 16
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 2.39,
+     "murekkepli_piksel": 16
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.12,
+     "murekkepli_piksel": 18
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.46,
+     "murekkepli_piksel": 20
+    },
+    "28px": {
+     "fark_orani": 0.5,
+     "fark_enerji": 14.74,
+     "murekkepli_piksel": 84
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.989,
+     "fark_enerji": 56.02,
+     "murekkepli_piksel": 93
+    },
+    "11px": {
+     "fark_orani": 0.99,
+     "fark_enerji": 68.91,
+     "murekkepli_piksel": 105
+    },
+    "12px": {
+     "fark_orani": 0.985,
+     "fark_enerji": 82.15,
+     "murekkepli_piksel": 130
+    },
+    "13px": {
+     "fark_orani": 0.984,
+     "fark_enerji": 98.14,
+     "murekkepli_piksel": 129
+    },
+    "28px": {
+     "fark_orani": 0.957,
+     "fark_enerji": 453.34,
+     "murekkepli_piksel": 608
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.832,
+     "fark_enerji": 61.07,
+     "murekkepli_piksel": 143
+    },
+    "11px": {
+     "fark_orani": 0.803,
+     "fark_enerji": 74.31,
+     "murekkepli_piksel": 178
+    },
+    "12px": {
+     "fark_orani": 0.811,
+     "fark_enerji": 90.04,
+     "murekkepli_piksel": 206
+    },
+    "13px": {
+     "fark_orani": 0.781,
+     "fark_enerji": 104.76,
+     "murekkepli_piksel": 233
+    },
+    "28px": {
+     "fark_orani": 0.717,
+     "fark_enerji": 492.29,
+     "murekkepli_piksel": 951
+    }
+   }
+  },
+  {
+   "aile": "INTER tam opsz32",
+   "aciklama": "A^^ · Inter TAM, opsz 32'ye ÇİVİLİ (Display ucu)",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 20.605,
+   "M_genislik": 85.742,
+   "monospace": false,
+   "rakam_genislikleri": [
+    61.328,
+    36.23,
+    56.104,
+    59.863,
+    61.768,
+    57.666,
+    58.398,
+    51.563,
+    58.203
+   ],
+   "rakam_tekduze": false,
+   "bir": 36.23,
+   "l_kucuk": 20.605,
+   "I_buyuk": 23.242,
+   "sifir": 61.328,
+   "O_buyuk": 74.902,
+   "bir_l_advance_fark_100px": 15.625,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 12.21,
+     "murekkepli_piksel": 21
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 14.12,
+     "murekkepli_piksel": 26
+    },
+    "12px": {
+     "fark_orani": 0.972,
+     "fark_enerji": 18.27,
+     "murekkepli_piksel": 36
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 20.69,
+     "murekkepli_piksel": 43
+    },
+    "28px": {
+     "fark_orani": 0.977,
+     "fark_enerji": 106.95,
+     "murekkepli_piksel": 172
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.85,
+     "fark_enerji": 12.29,
+     "murekkepli_piksel": 40
+    },
+    "11px": {
+     "fark_orani": 0.98,
+     "fark_enerji": 16.92,
+     "murekkepli_piksel": 51
+    },
+    "12px": {
+     "fark_orani": 0.967,
+     "fark_enerji": 20.21,
+     "murekkepli_piksel": 60
+    },
+    "13px": {
+     "fark_orani": 0.9,
+     "fark_enerji": 23.86,
+     "murekkepli_piksel": 70
+    },
+    "28px": {
+     "fark_orani": 0.811,
+     "fark_enerji": 121.96,
+     "murekkepli_piksel": 265
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 1.84,
+     "murekkepli_piksel": 14
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 2.45,
+     "murekkepli_piksel": 16
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 2.88,
+     "murekkepli_piksel": 18
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 3.12,
+     "murekkepli_piksel": 20
+    },
+    "28px": {
+     "fark_orani": 0.75,
+     "fark_enerji": 15.5,
+     "murekkepli_piksel": 84
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.985,
+     "fark_enerji": 55.59,
+     "murekkepli_piksel": 66
+    },
+    "11px": {
+     "fark_orani": 0.971,
+     "fark_enerji": 66.82,
+     "murekkepli_piksel": 104
+    },
+    "12px": {
+     "fark_orani": 0.984,
+     "fark_enerji": 78.58,
+     "murekkepli_piksel": 128
+    },
+    "13px": {
+     "fark_orani": 0.963,
+     "fark_enerji": 92.25,
+     "murekkepli_piksel": 160
+    },
+    "28px": {
+     "fark_orani": 0.965,
+     "fark_enerji": 432.69,
+     "murekkepli_piksel": 571
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.861,
+     "fark_enerji": 61.74,
+     "murekkepli_piksel": 144
+    },
+    "11px": {
+     "fark_orani": 0.824,
+     "fark_enerji": 74.67,
+     "murekkepli_piksel": 176
+    },
+    "12px": {
+     "fark_orani": 0.815,
+     "fark_enerji": 90.6,
+     "murekkepli_piksel": 205
+    },
+    "13px": {
+     "fark_orani": 0.791,
+     "fark_enerji": 104.59,
+     "murekkepli_piksel": 234
+    },
+    "28px": {
+     "fark_orani": 0.726,
+     "fark_enerji": 493.09,
+     "murekkepli_piksel": 935
+    }
+   }
+  },
+  {
+   "aile": "GEIST Mono kesit",
+   "aciklama": "B · YENİ mono · Geist Mono v1.7.2 dağıtım adayı kesit",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 60,
+   "M_genislik": 60,
+   "monospace": true,
+   "rakam_genislikleri": [
+    60
+   ],
+   "rakam_tekduze": true,
+   "bir": 60,
+   "l_kucuk": 60,
+   "I_buyuk": 60,
+   "sifir": 60,
+   "O_buyuk": 60,
+   "bir_l_advance_fark_100px": 0,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 0.923,
+     "fark_enerji": 4.73,
+     "murekkepli_piksel": 26
+    },
+    "11px": {
+     "fark_orani": 0.862,
+     "fark_enerji": 5.79,
+     "murekkepli_piksel": 29
+    },
+    "12px": {
+     "fark_orani": 0.732,
+     "fark_enerji": 5.58,
+     "murekkepli_piksel": 41
+    },
+    "13px": {
+     "fark_orani": 0.66,
+     "fark_enerji": 8.1,
+     "murekkepli_piksel": 47
+    },
+    "28px": {
+     "fark_orani": 0.57,
+     "fark_enerji": 38.2,
+     "murekkepli_piksel": 151
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.825,
+     "fark_enerji": 6.89,
+     "murekkepli_piksel": 40
+    },
+    "11px": {
+     "fark_orani": 0.813,
+     "fark_enerji": 8.48,
+     "murekkepli_piksel": 48
+    },
+    "12px": {
+     "fark_orani": 0.842,
+     "fark_enerji": 10.29,
+     "murekkepli_piksel": 57
+    },
+    "13px": {
+     "fark_orani": 0.761,
+     "fark_enerji": 11.63,
+     "murekkepli_piksel": 67
+    },
+    "28px": {
+     "fark_orani": 0.613,
+     "fark_enerji": 56.5,
+     "murekkepli_piksel": 243
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 0.786,
+     "fark_enerji": 4.14,
+     "murekkepli_piksel": 28
+    },
+    "11px": {
+     "fark_orani": 0.828,
+     "fark_enerji": 4.9,
+     "murekkepli_piksel": 29
+    },
+    "12px": {
+     "fark_orani": 0.775,
+     "fark_enerji": 5.61,
+     "murekkepli_piksel": 40
+    },
+    "13px": {
+     "fark_orani": 0.795,
+     "fark_enerji": 7.54,
+     "murekkepli_piksel": 39
+    },
+    "28px": {
+     "fark_orani": 0.523,
+     "fark_enerji": 32.21,
+     "murekkepli_piksel": 153
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.696,
+     "fark_enerji": 19.02,
+     "murekkepli_piksel": 79
+    },
+    "11px": {
+     "fark_orani": 0.691,
+     "fark_enerji": 24.35,
+     "murekkepli_piksel": 94
+    },
+    "12px": {
+     "fark_orani": 0.659,
+     "fark_enerji": 29.43,
+     "murekkepli_piksel": 123
+    },
+    "13px": {
+     "fark_orani": 0.667,
+     "fark_enerji": 34.27,
+     "murekkepli_piksel": 135
+    },
+    "28px": {
+     "fark_orani": 0.576,
+     "fark_enerji": 163.42,
+     "murekkepli_piksel": 540
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.709,
+     "fark_enerji": 29.25,
+     "murekkepli_piksel": 134
+    },
+    "11px": {
+     "fark_orani": 0.66,
+     "fark_enerji": 34.51,
+     "murekkepli_piksel": 162
+    },
+    "12px": {
+     "fark_orani": 0.645,
+     "fark_enerji": 42.48,
+     "murekkepli_piksel": 186
+    },
+    "13px": {
+     "fark_orani": 0.634,
+     "fark_enerji": 48.71,
+     "murekkepli_piksel": 213
+    },
+    "28px": {
+     "fark_orani": 0.499,
+     "fark_enerji": 222.6,
+     "murekkepli_piksel": 845
+    }
+   }
+  },
+  {
+   "aile": "GEIST Mono kesit zero",
+   "aciklama": "B° · KESİT + yalnız 'zero' (eğik çizgili sıfır)",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 60,
+   "M_genislik": 60,
+   "monospace": true,
+   "rakam_genislikleri": [
+    60
+   ],
+   "rakam_tekduze": true,
+   "bir": 60,
+   "l_kucuk": 60,
+   "I_buyuk": 60,
+   "sifir": 60,
+   "O_buyuk": 60,
+   "bir_l_advance_fark_100px": 0,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 0.923,
+     "fark_enerji": 4.73,
+     "murekkepli_piksel": 26
+    },
+    "11px": {
+     "fark_orani": 0.862,
+     "fark_enerji": 5.79,
+     "murekkepli_piksel": 29
+    },
+    "12px": {
+     "fark_orani": 0.732,
+     "fark_enerji": 5.58,
+     "murekkepli_piksel": 41
+    },
+    "13px": {
+     "fark_orani": 0.66,
+     "fark_enerji": 8.1,
+     "murekkepli_piksel": 47
+    },
+    "28px": {
+     "fark_orani": 0.57,
+     "fark_enerji": 38.2,
+     "murekkepli_piksel": 151
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.825,
+     "fark_enerji": 6.89,
+     "murekkepli_piksel": 40
+    },
+    "11px": {
+     "fark_orani": 0.813,
+     "fark_enerji": 8.48,
+     "murekkepli_piksel": 48
+    },
+    "12px": {
+     "fark_orani": 0.842,
+     "fark_enerji": 10.29,
+     "murekkepli_piksel": 57
+    },
+    "13px": {
+     "fark_orani": 0.761,
+     "fark_enerji": 11.63,
+     "murekkepli_piksel": 67
+    },
+    "28px": {
+     "fark_orani": 0.613,
+     "fark_enerji": 56.5,
+     "murekkepli_piksel": 243
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 0.786,
+     "fark_enerji": 4.14,
+     "murekkepli_piksel": 28
+    },
+    "11px": {
+     "fark_orani": 0.828,
+     "fark_enerji": 4.9,
+     "murekkepli_piksel": 29
+    },
+    "12px": {
+     "fark_orani": 0.775,
+     "fark_enerji": 5.61,
+     "murekkepli_piksel": 40
+    },
+    "13px": {
+     "fark_orani": 0.795,
+     "fark_enerji": 7.54,
+     "murekkepli_piksel": 39
+    },
+    "28px": {
+     "fark_orani": 0.523,
+     "fark_enerji": 32.21,
+     "murekkepli_piksel": 153
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.696,
+     "fark_enerji": 19.02,
+     "murekkepli_piksel": 79
+    },
+    "11px": {
+     "fark_orani": 0.691,
+     "fark_enerji": 24.35,
+     "murekkepli_piksel": 94
+    },
+    "12px": {
+     "fark_orani": 0.659,
+     "fark_enerji": 29.43,
+     "murekkepli_piksel": 123
+    },
+    "13px": {
+     "fark_orani": 0.667,
+     "fark_enerji": 34.27,
+     "murekkepli_piksel": 135
+    },
+    "28px": {
+     "fark_orani": 0.576,
+     "fark_enerji": 163.42,
+     "murekkepli_piksel": 540
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.709,
+     "fark_enerji": 29.25,
+     "murekkepli_piksel": 134
+    },
+    "11px": {
+     "fark_orani": 0.66,
+     "fark_enerji": 34.51,
+     "murekkepli_piksel": 162
+    },
+    "12px": {
+     "fark_orani": 0.645,
+     "fark_enerji": 42.48,
+     "murekkepli_piksel": 186
+    },
+    "13px": {
+     "fark_orani": 0.634,
+     "fark_enerji": 48.71,
+     "murekkepli_piksel": 213
+    },
+    "28px": {
+     "fark_orani": 0.499,
+     "fark_enerji": 222.6,
+     "murekkepli_piksel": 845
+    }
+   }
+  },
+  {
+   "aile": "Recursive Sans",
+   "aciklama": "C · DONMUŞ TABAN · canlıdaki sans",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 35,
+   "M_genislik": 80,
+   "monospace": false,
+   "rakam_genislikleri": [
+    60
+   ],
+   "rakam_tekduze": true,
+   "bir": 60,
+   "l_kucuk": 35,
+   "I_buyuk": 50,
+   "sifir": 60,
+   "O_buyuk": 65,
+   "bir_l_advance_fark_100px": 25,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 0.933,
+     "fark_enerji": 15.65,
+     "murekkepli_piksel": 30
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 19.36,
+     "murekkepli_piksel": 40
+    },
+    "12px": {
+     "fark_orani": 0.936,
+     "fark_enerji": 23.29,
+     "murekkepli_piksel": 47
+    },
+    "13px": {
+     "fark_orani": 0.946,
+     "fark_enerji": 27.45,
+     "murekkepli_piksel": 56
+    },
+    "28px": {
+     "fark_orani": 0.931,
+     "fark_enerji": 129.33,
+     "murekkepli_piksel": 204
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.756,
+     "fark_enerji": 9.57,
+     "murekkepli_piksel": 41
+    },
+    "11px": {
+     "fark_orani": 0.848,
+     "fark_enerji": 11.76,
+     "murekkepli_piksel": 46
+    },
+    "12px": {
+     "fark_orani": 0.737,
+     "fark_enerji": 13.17,
+     "murekkepli_piksel": 57
+    },
+    "13px": {
+     "fark_orani": 0.797,
+     "fark_enerji": 16.31,
+     "murekkepli_piksel": 64
+    },
+    "28px": {
+     "fark_orani": 0.663,
+     "fark_enerji": 71.97,
+     "murekkepli_piksel": 240
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 0.958,
+     "fark_enerji": 14.41,
+     "murekkepli_piksel": 24
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 14.93,
+     "murekkepli_piksel": 35
+    },
+    "12px": {
+     "fark_orani": 0.973,
+     "fark_enerji": 20.09,
+     "murekkepli_piksel": 37
+    },
+    "13px": {
+     "fark_orani": 0.957,
+     "fark_enerji": 24.04,
+     "murekkepli_piksel": 46
+    },
+    "28px": {
+     "fark_orani": 0.939,
+     "fark_enerji": 114.27,
+     "murekkepli_piksel": 163
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.964,
+     "fark_enerji": 65.18,
+     "murekkepli_piksel": 111
+    },
+    "11px": {
+     "fark_orani": 0.937,
+     "fark_enerji": 79.74,
+     "murekkepli_piksel": 127
+    },
+    "12px": {
+     "fark_orani": 0.944,
+     "fark_enerji": 95.25,
+     "murekkepli_piksel": 143
+    },
+    "13px": {
+     "fark_orani": 0.952,
+     "fark_enerji": 111.65,
+     "murekkepli_piksel": 167
+    },
+    "28px": {
+     "fark_orani": 0.901,
+     "fark_enerji": 516.46,
+     "murekkepli_piksel": 719
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.803,
+     "fark_enerji": 37.62,
+     "murekkepli_piksel": 132
+    },
+    "11px": {
+     "fark_orani": 0.771,
+     "fark_enerji": 45.02,
+     "murekkepli_piksel": 157
+    },
+    "12px": {
+     "fark_orani": 0.727,
+     "fark_enerji": 53.68,
+     "murekkepli_piksel": 183
+    },
+    "13px": {
+     "fark_orani": 0.716,
+     "fark_enerji": 63.26,
+     "murekkepli_piksel": 208
+    },
+    "28px": {
+     "fark_orani": 0.567,
+     "fark_enerji": 289.58,
+     "murekkepli_piksel": 857
+    }
+   }
+  },
+  {
+   "aile": "Recursive Mono",
+   "aciklama": "C · DONMUŞ TABAN · canlıdaki mono",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 60,
+   "M_genislik": 60,
+   "monospace": true,
+   "rakam_genislikleri": [
+    60
+   ],
+   "rakam_tekduze": true,
+   "bir": 60,
+   "l_kucuk": 60,
+   "I_buyuk": 60,
+   "sifir": 60,
+   "O_buyuk": 60,
+   "bir_l_advance_fark_100px": 0,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 8.55,
+     "murekkepli_piksel": 27
+    },
+    "11px": {
+     "fark_orani": 0.909,
+     "fark_enerji": 10.6,
+     "murekkepli_piksel": 33
+    },
+    "12px": {
+     "fark_orani": 0.891,
+     "fark_enerji": 12.65,
+     "murekkepli_piksel": 46
+    },
+    "13px": {
+     "fark_orani": 0.913,
+     "fark_enerji": 14.12,
+     "murekkepli_piksel": 46
+    },
+    "28px": {
+     "fark_orani": 0.817,
+     "fark_enerji": 73.25,
+     "murekkepli_piksel": 175
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.854,
+     "fark_enerji": 5.75,
+     "murekkepli_piksel": 41
+    },
+    "11px": {
+     "fark_orani": 0.889,
+     "fark_enerji": 6.65,
+     "murekkepli_piksel": 45
+    },
+    "12px": {
+     "fark_orani": 0.778,
+     "fark_enerji": 7.79,
+     "murekkepli_piksel": 54
+    },
+    "13px": {
+     "fark_orani": 0.754,
+     "fark_enerji": 9.58,
+     "murekkepli_piksel": 61
+    },
+    "28px": {
+     "fark_orani": 0.621,
+     "fark_enerji": 43.22,
+     "murekkepli_piksel": 227
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 6.81,
+     "murekkepli_piksel": 27
+    },
+    "11px": {
+     "fark_orani": 0.882,
+     "fark_enerji": 7.28,
+     "murekkepli_piksel": 34
+    },
+    "12px": {
+     "fark_orani": 0.744,
+     "fark_enerji": 9.49,
+     "murekkepli_piksel": 39
+    },
+    "13px": {
+     "fark_orani": 0.872,
+     "fark_enerji": 11.54,
+     "murekkepli_piksel": 39
+    },
+    "28px": {
+     "fark_orani": 0.723,
+     "fark_enerji": 52.82,
+     "murekkepli_piksel": 155
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.793,
+     "fark_enerji": 37.47,
+     "murekkepli_piksel": 87
+    },
+    "11px": {
+     "fark_orani": 0.816,
+     "fark_enerji": 44.98,
+     "murekkepli_piksel": 114
+    },
+    "12px": {
+     "fark_orani": 0.78,
+     "fark_enerji": 53.65,
+     "murekkepli_piksel": 127
+    },
+    "13px": {
+     "fark_orani": 0.793,
+     "fark_enerji": 63.35,
+     "murekkepli_piksel": 140
+    },
+    "28px": {
+     "fark_orani": 0.708,
+     "fark_enerji": 298.25,
+     "murekkepli_piksel": 619
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.702,
+     "fark_enerji": 22.59,
+     "murekkepli_piksel": 124
+    },
+    "11px": {
+     "fark_orani": 0.69,
+     "fark_enerji": 26.64,
+     "murekkepli_piksel": 142
+    },
+    "12px": {
+     "fark_orani": 0.646,
+     "fark_enerji": 31.09,
+     "murekkepli_piksel": 175
+    },
+    "13px": {
+     "fark_orani": 0.635,
+     "fark_enerji": 36.67,
+     "murekkepli_piksel": 192
+    },
+    "28px": {
+     "fark_orani": 0.471,
+     "fark_enerji": 167.69,
+     "murekkepli_piksel": 787
+    }
+   }
+  },
+  {
+   "aile": "GEIST Mono 0807",
+   "aciklama": "D · KALİBRASYON · 08-07'nin ölçtüğü Geist Mono'nun ta kendisi",
+   "yukleme": "yüklendi (1 yüz)",
+   "i_genislik": 60,
+   "M_genislik": 60,
+   "monospace": true,
+   "rakam_genislikleri": [
+    60
+   ],
+   "rakam_tekduze": true,
+   "bir": 60,
+   "l_kucuk": 60,
+   "I_buyuk": 60,
+   "sifir": 60,
+   "O_buyuk": 60,
+   "bir_l_advance_fark_100px": 0,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 0.92,
+     "fark_enerji": 3.76,
+     "murekkepli_piksel": 25
+    },
+    "11px": {
+     "fark_orani": 0.897,
+     "fark_enerji": 6.16,
+     "murekkepli_piksel": 29
+    },
+    "12px": {
+     "fark_orani": 0.756,
+     "fark_enerji": 6.82,
+     "murekkepli_piksel": 41
+    },
+    "13px": {
+     "fark_orani": 0.681,
+     "fark_enerji": 8.32,
+     "murekkepli_piksel": 47
+    },
+    "28px": {
+     "fark_orani": 0.57,
+     "fark_enerji": 38.2,
+     "murekkepli_piksel": 151
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.833,
+     "fark_enerji": 7.19,
+     "murekkepli_piksel": 42
+    },
+    "11px": {
+     "fark_orani": 0.816,
+     "fark_enerji": 8.46,
+     "murekkepli_piksel": 49
+    },
+    "12px": {
+     "fark_orani": 0.842,
+     "fark_enerji": 10.89,
+     "murekkepli_piksel": 57
+    },
+    "13px": {
+     "fark_orani": 0.746,
+     "fark_enerji": 11.67,
+     "murekkepli_piksel": 67
+    },
+    "28px": {
+     "fark_orani": 0.613,
+     "fark_enerji": 56.5,
+     "murekkepli_piksel": 243
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 0.786,
+     "fark_enerji": 4.16,
+     "murekkepli_piksel": 28
+    },
+    "11px": {
+     "fark_orani": 0.929,
+     "fark_enerji": 4.94,
+     "murekkepli_piksel": 28
+    },
+    "12px": {
+     "fark_orani": 0.756,
+     "fark_enerji": 5.78,
+     "murekkepli_piksel": 41
+    },
+    "13px": {
+     "fark_orani": 0.795,
+     "fark_enerji": 7.45,
+     "murekkepli_piksel": 39
+    },
+    "28px": {
+     "fark_orani": 0.523,
+     "fark_enerji": 32.21,
+     "murekkepli_piksel": 153
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.696,
+     "fark_enerji": 19.02,
+     "murekkepli_piksel": 79
+    },
+    "11px": {
+     "fark_orani": 0.691,
+     "fark_enerji": 24.35,
+     "murekkepli_piksel": 94
+    },
+    "12px": {
+     "fark_orani": 0.659,
+     "fark_enerji": 29.43,
+     "murekkepli_piksel": 123
+    },
+    "13px": {
+     "fark_orani": 0.667,
+     "fark_enerji": 34.27,
+     "murekkepli_piksel": 135
+    },
+    "28px": {
+     "fark_orani": 0.576,
+     "fark_enerji": 163.42,
+     "murekkepli_piksel": 540
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.709,
+     "fark_enerji": 29.25,
+     "murekkepli_piksel": 134
+    },
+    "11px": {
+     "fark_orani": 0.66,
+     "fark_enerji": 34.51,
+     "murekkepli_piksel": 162
+    },
+    "12px": {
+     "fark_orani": 0.645,
+     "fark_enerji": 42.48,
+     "murekkepli_piksel": 186
+    },
+    "13px": {
+     "fark_orani": 0.634,
+     "fark_enerji": 48.71,
+     "murekkepli_piksel": 213
+    },
+    "28px": {
+     "fark_orani": 0.499,
+     "fark_enerji": 222.6,
+     "murekkepli_piksel": 845
+    }
+   }
+  },
+  {
+   "aile": "ui-monospace",
+   "aciklama": "KONTROL · sistem monosu (yüklenmemiş yüzün düşeceği yer)",
+   "yukleme": "sistem",
+   "i_genislik": 27.783,
+   "M_genislik": 88.916,
+   "monospace": false,
+   "rakam_genislikleri": [
+    50
+   ],
+   "rakam_tekduze": true,
+   "bir": 50,
+   "l_kucuk": 27.783,
+   "I_buyuk": 33.301,
+   "sifir": 50,
+   "O_buyuk": 72.217,
+   "bir_l_advance_fark_100px": 22.217,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 13.81,
+     "murekkepli_piksel": 29
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 12.65,
+     "murekkepli_piksel": 28
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 18.71,
+     "murekkepli_piksel": 34
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 21.23,
+     "murekkepli_piksel": 41
+    },
+    "28px": {
+     "fark_orani": 0.993,
+     "fark_enerji": 103.18,
+     "murekkepli_piksel": 147
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.978,
+     "fark_enerji": 18.26,
+     "murekkepli_piksel": 46
+    },
+    "11px": {
+     "fark_orani": 0.962,
+     "fark_enerji": 21.11,
+     "murekkepli_piksel": 53
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 26.38,
+     "murekkepli_piksel": 64
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 32.05,
+     "murekkepli_piksel": 79
+    },
+    "28px": {
+     "fark_orani": 0.952,
+     "fark_enerji": 161.49,
+     "murekkepli_piksel": 271
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 0.917,
+     "fark_enerji": 3.01,
+     "murekkepli_piksel": 24
+    },
+    "11px": {
+     "fark_orani": 0.909,
+     "fark_enerji": 4.76,
+     "murekkepli_piksel": 22
+    },
+    "12px": {
+     "fark_orani": 0.621,
+     "fark_enerji": 4.81,
+     "murekkepli_piksel": 29
+    },
+    "13px": {
+     "fark_orani": 0.97,
+     "fark_enerji": 6.71,
+     "murekkepli_piksel": 33
+    },
+    "28px": {
+     "fark_orani": 0.796,
+     "fark_enerji": 31.34,
+     "murekkepli_piksel": 113
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 52.74,
+     "murekkepli_piksel": 88
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 63.87,
+     "murekkepli_piksel": 97
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 76.32,
+     "murekkepli_piksel": 108
+    },
+    "13px": {
+     "fark_orani": 0.993,
+     "fark_enerji": 85.89,
+     "murekkepli_piksel": 134
+    },
+    "28px": {
+     "fark_orani": 0.968,
+     "fark_enerji": 414.24,
+     "murekkepli_piksel": 502
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.945,
+     "fark_enerji": 79.33,
+     "murekkepli_piksel": 146
+    },
+    "11px": {
+     "fark_orani": 0.953,
+     "fark_enerji": 97.4,
+     "murekkepli_piksel": 172
+    },
+    "12px": {
+     "fark_orani": 0.946,
+     "fark_enerji": 115.61,
+     "murekkepli_piksel": 205
+    },
+    "13px": {
+     "fark_orani": 0.958,
+     "fark_enerji": 137.73,
+     "murekkepli_piksel": 237
+    },
+    "28px": {
+     "fark_orani": 0.894,
+     "fark_enerji": 642.51,
+     "murekkepli_piksel": 938
+    }
+   }
+  },
+  {
+   "aile": "system-ui",
+   "aciklama": "KONTROL · sistem sansı",
+   "yukleme": "sistem",
+   "i_genislik": 20.605,
+   "M_genislik": 83.105,
+   "monospace": false,
+   "rakam_genislikleri": [
+    60.645,
+    44.336,
+    56.592,
+    59.18,
+    60.449,
+    58.496,
+    61.719,
+    54.688,
+    59.961
+   ],
+   "rakam_tekduze": false,
+   "bir": 44.336,
+   "l_kucuk": 20.41,
+   "I_buyuk": 22.461,
+   "sifir": 60.645,
+   "O_buyuk": 73.145,
+   "bir_l_advance_fark_100px": 23.926,
+   "raster_1_l_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 12.74,
+     "murekkepli_piksel": 32
+    },
+    "11px": {
+     "fark_orani": 0.971,
+     "fark_enerji": 15.49,
+     "murekkepli_piksel": 34
+    },
+    "12px": {
+     "fark_orani": 0.974,
+     "fark_enerji": 20.3,
+     "murekkepli_piksel": 38
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 21.88,
+     "murekkepli_piksel": 40
+    },
+    "28px": {
+     "fark_orani": 0.964,
+     "fark_enerji": 104.58,
+     "murekkepli_piksel": 169
+    }
+   },
+   "raster_0_O_dpr1": {
+    "10px": {
+     "fark_orani": 0.778,
+     "fark_enerji": 12.89,
+     "murekkepli_piksel": 45
+    },
+    "11px": {
+     "fark_orani": 0.889,
+     "fark_enerji": 17.03,
+     "murekkepli_piksel": 54
+    },
+    "12px": {
+     "fark_orani": 0.885,
+     "fark_enerji": 21.07,
+     "murekkepli_piksel": 61
+    },
+    "13px": {
+     "fark_orani": 0.892,
+     "fark_enerji": 24.14,
+     "murekkepli_piksel": 65
+    },
+    "28px": {
+     "fark_orani": 0.782,
+     "fark_enerji": 114.63,
+     "murekkepli_piksel": 261
+    }
+   },
+   "raster_l_I_dpr1": {
+    "10px": {
+     "fark_orani": 1,
+     "fark_enerji": 1.31,
+     "murekkepli_piksel": 16
+    },
+    "11px": {
+     "fark_orani": 1,
+     "fark_enerji": 1.6,
+     "murekkepli_piksel": 18
+    },
+    "12px": {
+     "fark_orani": 1,
+     "fark_enerji": 1.94,
+     "murekkepli_piksel": 20
+    },
+    "13px": {
+     "fark_orani": 1,
+     "fark_enerji": 2.23,
+     "murekkepli_piksel": 20
+    },
+    "28px": {
+     "fark_orani": 0.488,
+     "fark_enerji": 11.36,
+     "murekkepli_piksel": 82
+    }
+   },
+   "raster_1_l_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.989,
+     "fark_enerji": 55.2,
+     "murekkepli_piksel": 90
+    },
+    "11px": {
+     "fark_orani": 0.981,
+     "fark_enerji": 66.5,
+     "murekkepli_piksel": 103
+    },
+    "12px": {
+     "fark_orani": 0.983,
+     "fark_enerji": 79.18,
+     "murekkepli_piksel": 115
+    },
+    "13px": {
+     "fark_orani": 0.974,
+     "fark_enerji": 93.67,
+     "murekkepli_piksel": 154
+    },
+    "28px": {
+     "fark_orani": 0.964,
+     "fark_enerji": 424.58,
+     "murekkepli_piksel": 523
+    }
+   },
+   "raster_0_O_gercek_dpr": {
+    "10px": {
+     "fark_orani": 0.856,
+     "fark_enerji": 60.4,
+     "murekkepli_piksel": 146
+    },
+    "11px": {
+     "fark_orani": 0.818,
+     "fark_enerji": 75.23,
+     "murekkepli_piksel": 176
+    },
+    "12px": {
+     "fark_orani": 0.84,
+     "fark_enerji": 90.45,
+     "murekkepli_piksel": 206
+    },
+    "13px": {
+     "fark_orani": 0.812,
+     "fark_enerji": 107.09,
+     "murekkepli_piksel": 229
+    },
+    "28px": {
+     "fark_orani": 0.712,
+     "fark_enerji": 460.68,
+     "murekkepli_piksel": 919
+    }
+   }
+  }
+ ],
+ "hukum": {
+  "kabul_citasi_10px_1l_fark_orani": 0.75,
+  "cita_kaynagi": "2026-08-07 turunda donduruldu; bu turda DEĞİŞTİRİLMEDİ",
+  "kalibrasyon_geist0807_1l_10px_fark_orani": 0.92,
+  "kalibrasyon_geist0807_1l_28px_fark_orani": 0.57,
+  "kalibrasyon_donmus_taban_geist_1l_10px": 0.92,
+  "kalibrasyon_donmus_taban_geist_1l_28px": 0.57,
+  "kalibrasyon_recursive_mono_1l_10px_fark_orani": 1,
+  "kalibrasyon_recursive_mono_1l_28px_fark_orani": 0.817,
+  "kalibrasyon_donmus_taban_recursive_mono_1l_10px": 1,
+  "kalibrasyon_donmus_taban_recursive_mono_1l_28px": 0.817,
+  "kalibrasyon_recursive_sans_0O_28px_fark_orani": 0.663,
+  "kalibrasyon_donmus_taban_recursive_sans_0O_28px": 0.663,
+  "inter_kesit_1l_10px_fark_orani": 0.969,
+  "inter_kesit_1l_28px_fark_orani": 0.968,
+  "inter_kesit_0O_28px_fark_orani": 0.774,
+  "inter_tam_kapali_1l_10px_fark_orani": 1,
+  "inter_tam_kapali_1l_28px_fark_orani": 0.974,
+  "inter_tam_kapali_0O_28px_fark_orani": 0.807,
+  "inter_tam_ss02_1l_10px_fark_orani": 1,
+  "inter_tam_ss02_1l_28px_fark_orani": 0.974,
+  "inter_tam_ss02_0O_28px_fark_orani": 0.826,
+  "inter_tam_ss02cv01_1l_10px_fark_orani": 1,
+  "inter_tam_ss02cv01_1l_28px_fark_orani": 0.988,
+  "inter_tam_ss02cv01_0O_28px_fark_orani": 0.826,
+  "geist_mono_kesit_1l_10px_fark_orani": 0.923,
+  "geist_mono_kesit_1l_28px_fark_orani": 0.57,
+  "geist_mono_kesit_0O_28px_fark_orani": 0.613,
+  "recursive_mono_0O_28px_fark_orani": 0.621,
+  "EK_lI_sutunu_notu": "08-07 turu l/I'yı ölçmedi; aşağıdaki sayıların donmuş tabanda karşılığı YOKTUR. Tüm yüzler AYNI koşuda ölçüldüğü için yüzler arası kıyas geçerlidir, tabanla kıyas DEĞİLDİR.",
+  "inter_kesit_lI_10px_fark_orani": 1,
+  "inter_kesit_lI_28px_fark_orani": 0.5,
+  "inter_tam_ss02_lI_10px_fark_orani": 1,
+  "inter_tam_ss02_lI_28px_fark_orani": 0.944,
+  "geist_mono_kesit_lI_10px_fark_orani": 0.786,
+  "geist_mono_kesit_lI_28px_fark_orani": 0.523,
+  "recursive_mono_lI_10px_fark_orani": 1,
+  "recursive_mono_lI_28px_fark_orani": 0.723,
+  "recursive_sans_lI_10px_fark_orani": 0.958,
+  "recursive_sans_lI_28px_fark_orani": 0.939,
+  "inter_kesit_lI_28px_AYIRT_EDILEMEZ_MI": false,
+  "cita_inter_kesit": true,
+  "cita_inter_tam_kapali": true,
+  "cita_inter_tam_ss02": true,
+  "cita_inter_tam_ss02cv01": true,
+  "cita_geist_mono_kesit": true,
+  "cita_recursive_mono": true,
+  "inter_kesit_oransal": true,
+  "geist_mono_kesit_gercekten_mono": true,
+  "recursive_mono_gercekten_mono": true,
+  "recursive_sans_oransal": true,
+  "inter_kesit_rakamlar_tekduze": false,
+  "inter_kesit_tnum_acikken_tekduze": true,
+  "geist_mono_kesit_tnum_acikken_tekduze": true,
+  "recursive_sans_tnum_acikken_tekduze": true,
+  "recursive_mono_tnum_acikken_tekduze": true,
+  "geist_mono_kesit_rakamlar_tekduze": true,
+  "recursive_mono_rakamlar_tekduze": true,
+  "recursive_sans_rakamlar_tekduze": true,
+  "descriptor_uygulaniyor_mu": true,
+  "kesitte_ss02_var_mi": false,
+  "inter_kesit_zero_ozelligi_calisiyor_mu": true,
+  "geist_kesit_zero_ozelligi_calisiyor_mu": false,
+  "inter_kesit_zero_acik_0O_28px_fark_orani": 0.795,
+  "geist_kesit_zero_acik_0O_28px_fark_orani": 0.613,
+  "kesit_tam_opsz14_ile_ayni_mi": true,
+  "opsz_ekseni_gercekten_bicim_degistiriyor_mu": true,
+  "kesit_opsz14e_SABITLENDI_display_kesimi_ALINAMAZ": true,
+  "cv01_rakam1i_degistiriyor_mu": true
+ }
+}

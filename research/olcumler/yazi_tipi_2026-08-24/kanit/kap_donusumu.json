@@ -1,0 +1,36 @@
+[
+ {
+  "woff2": "geist-mono-vf.woff2",
+  "woff2_bayt": 17256,
+  "woff2_sha256": "7420049593c9b0b43419c2840fae8357dda672cf7984aa748201cba3dcc88a21",
+  "ttf": "geist-mono-vf.ttf",
+  "ttf_bayt": 34484,
+  "ttf_sha256": "9eda144ce2c9bc00b2b18680e93673390b7368ae7395c81727e75bbf01347f86",
+  "woff2_sayim": {
+   "glif": 281,
+   "cmap": 260
+  },
+  "ttf_sayim": {
+   "glif": 281,
+   "cmap": 260
+  },
+  "KAP_DONUSUMU_KAYIPSIZ": true
+ },
+ {
+  "woff2": "inter-vf.woff2",
+  "woff2_bayt": 38720,
+  "woff2_sha256": "465cab77239c87ed4df77871b34c2ef927e852fb26a0142e7e8c83913aab9dab",
+  "ttf": "inter-vf.ttf",
+  "ttf_bayt": 108628,
+  "ttf_sha256": "20141f4fc07bdda107bab519d6c031e82d00eb53eeb158fea3a69e407f48e6f8",
+  "woff2_sayim": {
+   "glif": 644,
+   "cmap": 278
+  },
+  "ttf_sayim": {
+   "glif": 644,
+   "cmap": 278
+  },
+  "KAP_DONUSUMU_KAYIPSIZ": true
+ }
+]

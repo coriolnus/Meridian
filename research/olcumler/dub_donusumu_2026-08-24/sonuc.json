@@ -1,0 +1,2579 @@
+{
+ "tur": "KARAR-2026-08-24-B · Dub dönüşümü, jeton katmanı",
+ "okuyucu": {
+  "raise": 19,
+  "serif": 0,
+  "violet2": 0,
+  "blue": 0,
+  "elev": 0,
+  "slip": 1,
+  "slip-ink": 1,
+  "t-cap": 54,
+  "t-body": 61,
+  "t-lg": 6,
+  "t-sub": 8,
+  "t-h": 8,
+  "t-num": 2,
+  "sh-btn": 2,
+  "sh-ring": 1,
+  "r-input": 6,
+  "r-btn": 7,
+  "r-lg": 2,
+  "r-tag": 7,
+  "r-ctl": 20,
+  "r-card": 17,
+  "nav": 12,
+  "nav-2": 3,
+  "nav-t": 11,
+  "nav-h": 4,
+  "nav-bg": 1,
+  "label-size": 2,
+  "band-2": 1,
+  "violet": 5
+ },
+ "okuyucusuz": [
+  "blue",
+  "elev",
+  "serif",
+  "violet2"
+ ],
+ "tarih": "2026-08-24",
+ "kaynak": "/Users/erdemozturk/Downloads/tokens.json",
+ "dub_karanlik_tema_taramasi": {
+  "tokens.json": [],
+  "DESIGN.md": [],
+  "variables.css": [],
+  "theme.css": []
+ },
+ "en_kotu_gercek_zemin": {
+  "gunduz": "#f5f5f5",
+  "gece": "#2e2e2e"
+ },
+ "esikler": {
+  "O1_kart_zemin_adimi": 1.02,
+  "O2_para_AA": 4.5,
+  "O3_kroma_tavani": "C(nav) < min C(siddet)",
+  "O4_ayirt_edilebilirlik": 3.0,
+  "O5_nav_wash_AA": 4.5,
+  "O6_tip_adimi_min": 1.15,
+  "O6_tip_adimi_en_az_bir": 1.25,
+  "O7_odak_halkasi": 3.0
+ },
+ "turetme_kaydi": [
+  {
+   "jeton": "--green",
+   "tema": "gunduz",
+   "kaynak": "#16a34a",
+   "kaynak_adi": "Dub vivid-green",
+   "sonuc": "#1f7646",
+   "L_adimi": 0,
+   "kroma": 0.1114,
+   "hedef_kroma": 0.1114,
+   "kaynak_kroma": 0.1699,
+   "kural": "ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 154.4° kroma 0.1111 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--amber",
+   "tema": "gunduz",
+   "kaynak": "#ea580c",
+   "kaynak_adi": "Dub tangerine",
+   "sonuc": "#77520e",
+   "L_adimi": 0,
+   "kroma": 0.0921,
+   "hedef_kroma": 0.0921,
+   "kaynak_kroma": 0.1943,
+   "kural": "ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 76.9° kroma 0.0917 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--red",
+   "tema": "gunduz",
+   "kaynak": "#c2410c",
+   "kaynak_adi": "maket beyanlı türetmesi loss-red (Dub'da kayıp rengi YOK)",
+   "sonuc": "#9a0019",
+   "L_adimi": 0,
+   "kroma": 0.175,
+   "hedef_kroma": 0.175,
+   "kaynak_kroma": 0.1739,
+   "kural": "ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 24.1° kroma 0.1782 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--green",
+   "tema": "gece",
+   "kaynak": "#16a34a",
+   "kaynak_adi": "Dub vivid-green",
+   "sonuc": "#61b37f",
+   "L_adimi": 0,
+   "kroma": 0.1118,
+   "hedef_kroma": 0.1118,
+   "kaynak_kroma": 0.1699,
+   "kural": "ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 154.4° kroma 0.1111 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--amber",
+   "tema": "gece",
+   "kaynak": "#ea580c",
+   "kaynak_adi": "Dub tangerine",
+   "sonuc": "#d8b072",
+   "L_adimi": 0,
+   "kroma": 0.0922,
+   "hedef_kroma": 0.0922,
+   "kaynak_kroma": 0.1943,
+   "kural": "ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 76.9° kroma 0.0917 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--red",
+   "tema": "gece",
+   "kaynak": "#c2410c",
+   "kaynak_adi": "maket beyanlı türetmesi loss-red (Dub'da kayıp rengi YOK)",
+   "sonuc": "#ffbab4",
+   "L_adimi": 0,
+   "kroma": 0.0809,
+   "hedef_kroma": 0.0809,
+   "kaynak_kroma": 0.1739,
+   "kural": "ÖE1 MERDİVENİ (karar §9.3) · aday «C» · hue 24.1° kroma 0.1782 sabit, luminans basamağı 1.25; sev-3 AA sınırında, sev-1 iki basamak zeminden uzakta",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--yon-arti",
+   "tema": "gunduz",
+   "kaynak": "#1f7646",
+   "kaynak_adi": "--green (gunduz)",
+   "sonuc": "#4a6e56",
+   "L_adimi": 0,
+   "kroma": 0.0563,
+   "hedef_kroma": 0.0563,
+   "kaynak_kroma": 0.1114,
+   "kural": "C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #f5f5f5",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--yon-eksi",
+   "tema": "gunduz",
+   "kaynak": "#9a0019",
+   "kaynak_adi": "--red (gunduz)",
+   "sonuc": "#6c4442",
+   "L_adimi": 0,
+   "kroma": 0.0559,
+   "hedef_kroma": 0.0559,
+   "kaynak_kroma": 0.175,
+   "kural": "C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #f5f5f5",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--yon-arti",
+   "tema": "gece",
+   "kaynak": "#61b37f",
+   "kaynak_adi": "--green (gece)",
+   "sonuc": "#8bab94",
+   "L_adimi": 9,
+   "kroma": 0.0484,
+   "hedef_kroma": 0.0485,
+   "kaynak_kroma": 0.1118,
+   "kural": "C = min C(şiddet) x 0.6; ORTAK ΔL=0.009; AA>=4.5 kendi tinti + çıplak / #2e2e2e",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--yon-eksi",
+   "tema": "gece",
+   "kaynak": "#ffbab4",
+   "kaynak_adi": "--red (gece)",
+   "sonuc": "#edc3be",
+   "L_adimi": 0,
+   "kroma": 0.0487,
+   "hedef_kroma": 0.0487,
+   "kaynak_kroma": 0.0809,
+   "kural": "C = min C(şiddet) x 0.6; ORTAK ΔL=0.000; AA>=4.5 kendi tinti + çıplak / #2e2e2e",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--mod-canli",
+   "tema": "gunduz",
+   "kaynak": "#7c3aed",
+   "kaynak_adi": "Dub lavender",
+   "sonuc": "#7c3aed",
+   "L_adimi": 0,
+   "kroma": 0.2466,
+   "hedef_kroma": 0.2466,
+   "kaynak_kroma": 0.2466,
+   "kural": "AA>=4.5 kendi tinti + çıplak / #f5f5f5",
+   "aynen_alindi": true
+  },
+  {
+   "jeton": "--mod-kesif",
+   "tema": "gunduz",
+   "kaynak": "#7c3aed",
+   "kaynak_adi": "--mod-canli (aynı hue, düşük kroma)",
+   "sonuc": "#6c5e9e",
+   "L_adimi": 16,
+   "kroma": 0.0996,
+   "hedef_kroma": 0.0989,
+   "kaynak_kroma": 0.2466,
+   "kural": "C = C(mod-canli) x 0.4; AA>=4.5 kendi tinti + çıplak / #f5f5f5",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--mod-canli",
+   "tema": "gece",
+   "kaynak": "#7c3aed",
+   "kaynak_adi": "Dub lavender",
+   "sonuc": "#ab91ff",
+   "L_adimi": 184,
+   "kroma": 0.157,
+   "hedef_kroma": 0.1572,
+   "kaynak_kroma": 0.2466,
+   "kural": "AA>=4.5 kendi tinti + çıplak / #2e2e2e",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--mod-kesif",
+   "tema": "gece",
+   "kaynak": "#ab91ff",
+   "kaynak_adi": "--mod-canli (aynı hue, düşük kroma)",
+   "sonuc": "#a79fcb",
+   "L_adimi": 0,
+   "kroma": 0.0637,
+   "hedef_kroma": 0.0637,
+   "kaynak_kroma": 0.157,
+   "kural": "C = C(mod-canli) x 0.4; AA>=4.5 kendi tinti + çıplak / #2e2e2e",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--nav-t",
+   "tema": "gece",
+   "kaynak": "#172554",
+   "kaynak_adi": "onaylanan maket (scratch-panov2) gece washı",
+   "sonuc": "#1a274d",
+   "L_adimi": 0,
+   "kroma": 0.072,
+   "hedef_kroma": 0.0728,
+   "kaynak_kroma": 0.0874,
+   "kural": "Ö3 DOLGU tavanı: C tohumda 0.0874 ≥ min C(şiddet) 0.0809; hue ve L sabit, kroma tavanın %90'ına indirildi",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--nav",
+   "tema": "gece",
+   "kaynak": "#2563eb",
+   "kaynak_adi": "Dub electric-blue",
+   "sonuc": "#72a2ff",
+   "L_adimi": 172,
+   "kroma": 0.1458,
+   "hedef_kroma": 0.1461,
+   "kaynak_kroma": 0.2152,
+   "kural": "AA>=4.5 gece washı #1a274d + çıplak/tint #2e2e2e",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--nav-2",
+   "tema": "gece",
+   "kaynak": "#1e40af",
+   "kaynak_adi": "Dub deep-sapphire",
+   "sonuc": "#b2caff",
+   "L_adimi": 122,
+   "kroma": 0.0791,
+   "hedef_kroma": 0.0789,
+   "kaynak_kroma": 0.1809,
+   "kural": "L = L(--nav gece) + 0.1217 (gündüzün nav↔nav-2 L farkı, yönü çevrilmiş); AA>=4.5 washı #1a274d + çıplak/tint #2e2e2e",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--field",
+   "tema": "gunduz",
+   "kaynak": "#737373",
+   "kaynak_adi": "Dub fog",
+   "sonuc": "#737373",
+   "L_adimi": 0,
+   "kroma": 0.0,
+   "hedef_kroma": 0.0,
+   "kaynak_kroma": 0.0,
+   "kural": "rampadan SEÇİM: her gerçek yüzeyde >=3:1 tutan ilk basamak",
+   "aynen_alindi": true
+  },
+  {
+   "jeton": "--field",
+   "tema": "gece",
+   "kaynak": "#a3a3a3",
+   "kaynak_adi": "Dub silver",
+   "sonuc": "#a3a3a3",
+   "L_adimi": 0,
+   "kroma": 0.0,
+   "hedef_kroma": 0.0,
+   "kaynak_kroma": 0.0,
+   "kural": "rampadan SEÇİM: her gerçek yüzeyde >=3:1 tutan ilk basamak",
+   "aynen_alindi": true
+  },
+  {
+   "jeton": "--band-2",
+   "tema": "gunduz",
+   "kaynak": "#a3a3a3",
+   "kaynak_adi": "Dub silver",
+   "sonuc": "#a3a3a3",
+   "L_adimi": 0,
+   "kroma": 0.0,
+   "hedef_kroma": 0.0,
+   "kaynak_kroma": 0.0,
+   "kural": "rampadan SEÇİM: card-2->band-2 2.42 · band-2->tx2 3.10",
+   "aynen_alindi": true
+  },
+  {
+   "jeton": "--band-2",
+   "tema": "gece",
+   "kaynak": "#737373",
+   "kaynak_adi": "Dub fog",
+   "sonuc": "#737373",
+   "L_adimi": 0,
+   "kroma": 0.0,
+   "hedef_kroma": 0.0,
+   "kaynak_kroma": 0.0,
+   "kural": "rampadan SEÇİM: card-2->band-2 2.86 · band-2->tx2 3.20",
+   "aynen_alindi": true
+  },
+  {
+   "jeton": "--violet",
+   "tema": "gunduz",
+   "kaynak": "#404040",
+   "kaynak_adi": "Dub slate",
+   "sonuc": "#404040",
+   "L_adimi": 0,
+   "kroma": 0.0,
+   "hedef_kroma": 0.0,
+   "kaynak_kroma": 0.0,
+   "kural": "rampadan SEÇİM: accent->violet 1.91 · violet->tx3 2.19 (v171 kısıtı: ayrım ≥1.35, kart üstünde AA)",
+   "aynen_alindi": true
+  },
+  {
+   "jeton": "--violet",
+   "tema": "gece",
+   "kaynak": "#e5e5e5",
+   "kaynak_adi": "TÜRETİLDİ — Dub nötr rampasında geçerli basamak YOK",
+   "sonuc": "#c2c2c2",
+   "L_adimi": 0,
+   "kroma": 0.0,
+   "hedef_kroma": 0.0,
+   "kaynak_kroma": 0.0,
+   "kural": "accent↔tx3 merdiveninin GEOMETRİK ORTASI (eşit adım): accent->violet 1.41 · violet->tx3 1.42; akromatik",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--dv-n*",
+   "tema": "gunduz",
+   "kaynak": "#1e40af",
+   "kaynak_adi": "Dub deep-sapphire hue'su",
+   "sonuc": "#45526f",
+   "L_adimi": 0,
+   "kroma": 0.0509,
+   "hedef_kroma": 0.0509,
+   "kaynak_kroma": 0.1809,
+   "kural": "L=L(--tx2)=0.4386 · C = min C(şiddet) x 0.55; alfa .22/.10 DEĞİŞMEDİ",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--dv-p*",
+   "tema": "gunduz",
+   "kaynak": "#ea580c",
+   "kaynak_adi": "Dub tangerine hue'su",
+   "sonuc": "#6b493c",
+   "L_adimi": 0,
+   "kroma": 0.0513,
+   "hedef_kroma": 0.0513,
+   "kaynak_kroma": 0.1943,
+   "kural": "L=L(--tx2)=0.4386 · C = min C(şiddet) x 0.55; alfa .22/.10 DEĞİŞMEDİ",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--dv-n*",
+   "tema": "gece",
+   "kaynak": "#1e40af",
+   "kaynak_adi": "Dub deep-sapphire hue'su",
+   "sonuc": "#c6d4f2",
+   "L_adimi": 0,
+   "kroma": 0.0443,
+   "hedef_kroma": 0.0443,
+   "kaynak_kroma": 0.1809,
+   "kural": "L=L(--tx2)=0.8699 · C = min C(şiddet) x 0.55; alfa .22/.10 DEĞİŞMEDİ",
+   "aynen_alindi": false
+  },
+  {
+   "jeton": "--dv-p*",
+   "tema": "gece",
+   "kaynak": "#ea580c",
+   "kaynak_adi": "Dub tangerine hue'su",
+   "sonuc": "#efcbbe",
+   "L_adimi": 0,
+   "kroma": 0.0446,
+   "hedef_kroma": 0.0446,
+   "kaynak_kroma": 0.1943,
+   "kural": "L=L(--tx2)=0.8699 · C = min C(şiddet) x 0.55; alfa .22/.10 DEĞİŞMEDİ",
+   "aynen_alindi": false
+  }
+ ],
+ "jetonlar": {
+  "gunduz": {
+   "bg": "#fafafa",
+   "bg2": "#f5f5f5",
+   "card": "#ffffff",
+   "card-2": "#fafafa",
+   "raise": "#ffffff",
+   "slip": "#f5f5f5",
+   "accent-tint": "#f5f5f5",
+   "line": "#e5e5e5",
+   "line-2": "#d4d4d4",
+   "tx": "#0a0a0a",
+   "tx2": "#525252",
+   "tx3": "#737373",
+   "slip-ink": "#0a0a0a",
+   "accent": "#0a0a0a",
+   "accent-2": "#171717",
+   "violet2": "#0a0a0a",
+   "blue": "#0a0a0a",
+   "field": "#737373",
+   "violet": "#404040",
+   "band-2": "#a3a3a3",
+   "green": "#1f7646",
+   "amber": "#77520e",
+   "red": "#9a0019",
+   "green-t": "rgba(31,118,70,.10)",
+   "amber-t": "rgba(119,82,14,.10)",
+   "red-t": "rgba(154,0,25,.10)",
+   "green-h": "rgba(31,118,70,.35)",
+   "amber-h": "rgba(119,82,14,.35)",
+   "red-h": "rgba(154,0,25,.35)",
+   "amber-h2": "rgba(119,82,14,.40)",
+   "green-stamp": "rgba(31,118,70,.55)",
+   "ink-h": "rgba(10,10,10,.30)",
+   "ink-h-soft": "rgba(10,10,10,.18)",
+   "scrim": "rgba(10,10,10,.42)",
+   "kap-1": "rgba(10,10,10,.06)",
+   "kap-2": "rgba(10,10,10,.14)",
+   "kap-3": "rgba(10,10,10,.23)",
+   "kap-4": "rgba(10,10,10,.30)",
+   "sh-btn": "rgba(0,0,0,.05) 0 1px 2px 0",
+   "sh-ring": "rgba(10,10,10,.10) 0 0 0 4px",
+   "sev-1": "#9a0019",
+   "sev-2": "#77520e",
+   "sev-3": "#1f7646",
+   "yon-arti": "#4a6e56",
+   "yon-eksi": "#6c4442",
+   "yon-arti-t": "rgba(74,110,86,.10)",
+   "yon-eksi-t": "rgba(108,68,66,.10)",
+   "yon-arti-h": "rgba(74,110,86,.35)",
+   "yon-eksi-h": "rgba(108,68,66,.35)",
+   "yon-arti-zemin": "rgba(74,110,86,.08)",
+   "yon-eksi-zemin": "rgba(108,68,66,.07)",
+   "mod-kagit": "#525252",
+   "mod-canli": "#7c3aed",
+   "mod-kesif": "#6c5e9e",
+   "mod-kagit-t": "transparent",
+   "mod-canli-t": "rgba(124,58,237,.10)",
+   "mod-kesif-t": "rgba(108,94,158,.10)",
+   "mod-kagit-h": "#d4d4d4",
+   "mod-canli-h": "rgba(124,58,237,.35)",
+   "mod-kesif-h": "rgba(108,94,158,.35)",
+   "olcek-guven": "#525252",
+   "olcek-guven-t": "#f5f5f5",
+   "olcek-guven-h": "rgba(10,10,10,.45)",
+   "nav": "#2563eb",
+   "nav-2": "#1e40af",
+   "nav-t": "#dbeaff",
+   "nav-h": "rgba(37,99,235,.35)",
+   "nav-bg": "rgba(250,250,250,.82)",
+   "dv-n2": "rgba(69,82,111,.22)",
+   "dv-n1": "rgba(69,82,111,.10)",
+   "dv-p1": "rgba(107,73,60,.10)",
+   "dv-p2": "rgba(107,73,60,.22)"
+  },
+  "gece": {
+   "bg": "#171717",
+   "bg2": "#1f1f1f",
+   "card": "#262626",
+   "card-2": "#2e2e2e",
+   "raise": "#262626",
+   "slip": "#2e2e2e",
+   "accent-tint": "#2e2e2e",
+   "line": "#404040",
+   "line-2": "#525252",
+   "tx": "#e5e5e5",
+   "tx2": "#d4d4d4",
+   "tx3": "#a3a3a3",
+   "slip-ink": "#e5e5e5",
+   "accent": "#e5e5e5",
+   "accent-2": "#f5f5f5",
+   "violet2": "#e5e5e5",
+   "blue": "#e5e5e5",
+   "field": "#a3a3a3",
+   "violet": "#c2c2c2",
+   "band-2": "#737373",
+   "green": "#61b37f",
+   "amber": "#d8b072",
+   "red": "#ffbab4",
+   "green-t": "rgba(97,179,127,.10)",
+   "amber-t": "rgba(216,176,114,.10)",
+   "red-t": "rgba(255,186,180,.10)",
+   "green-h": "rgba(97,179,127,.35)",
+   "amber-h": "rgba(216,176,114,.35)",
+   "red-h": "rgba(255,186,180,.35)",
+   "amber-h2": "rgba(216,176,114,.40)",
+   "green-stamp": "rgba(97,179,127,.55)",
+   "ink-h": "rgba(229,229,229,.30)",
+   "ink-h-soft": "rgba(229,229,229,.18)",
+   "scrim": "rgba(10,10,10,.66)",
+   "kap-1": "rgba(229,229,229,.06)",
+   "kap-2": "rgba(229,229,229,.14)",
+   "kap-3": "rgba(229,229,229,.23)",
+   "kap-4": "rgba(229,229,229,.30)",
+   "sh-btn": "rgba(0,0,0,.05) 0 1px 2px 0",
+   "sh-ring": "rgba(229,229,229,.10) 0 0 0 4px",
+   "sev-1": "#ffbab4",
+   "sev-2": "#d8b072",
+   "sev-3": "#61b37f",
+   "yon-arti": "#8bab94",
+   "yon-eksi": "#edc3be",
+   "yon-arti-t": "rgba(139,171,148,.10)",
+   "yon-eksi-t": "rgba(237,195,190,.10)",
+   "yon-arti-h": "rgba(139,171,148,.35)",
+   "yon-eksi-h": "rgba(237,195,190,.35)",
+   "yon-arti-zemin": "rgba(139,171,148,.08)",
+   "yon-eksi-zemin": "rgba(237,195,190,.07)",
+   "mod-kagit": "#d4d4d4",
+   "mod-canli": "#ab91ff",
+   "mod-kesif": "#a79fcb",
+   "mod-kagit-t": "transparent",
+   "mod-canli-t": "rgba(171,145,255,.10)",
+   "mod-kesif-t": "rgba(167,159,203,.10)",
+   "mod-kagit-h": "#525252",
+   "mod-canli-h": "rgba(171,145,255,.35)",
+   "mod-kesif-h": "rgba(167,159,203,.35)",
+   "olcek-guven": "#d4d4d4",
+   "olcek-guven-t": "#2e2e2e",
+   "olcek-guven-h": "rgba(229,229,229,.45)",
+   "nav": "#72a2ff",
+   "nav-2": "#b2caff",
+   "nav-t": "#1a274d",
+   "nav-h": "rgba(114,162,255,.35)",
+   "nav-bg": "rgba(23,23,23,.82)",
+   "dv-n2": "rgba(198,212,242,.22)",
+   "dv-n1": "rgba(198,212,242,.10)",
+   "dv-p1": "rgba(239,203,190,.10)",
+   "dv-p2": "rgba(239,203,190,.22)"
+  }
+ },
+ "olcumler": {
+  "O1": {
+   "soru": "#fafafa zemin P9'un parlama kısıtını karşılıyor mu?",
+   "en_buyuk_yuzey": "#fafafa",
+   "luminans": 0.956,
+   "saf_beyaz_luminans": 1.0,
+   "saf_beyazin_altinda": true,
+   "kart_zemin_adimi": 1.0438,
+   "esik_adim": 1.02,
+   "gunduz_saf_beyaz_jeton_sayisi": 2,
+   "tuttu": true
+  },
+  "O2": {
+   "esik": 4.5,
+   "satirlar": [
+    {
+     "tema": "gunduz",
+     "jeton": "--green",
+     "zemin": "bg",
+     "tint_ustu": 4.702,
+     "ciplak": 5.382
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--green",
+     "zemin": "bg2",
+     "tint_ustu": 4.503,
+     "ciplak": 5.153
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--green",
+     "zemin": "card",
+     "tint_ustu": 4.884,
+     "ciplak": 5.618
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--green",
+     "zemin": "card-2",
+     "tint_ustu": 4.702,
+     "ciplak": 5.382
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--green",
+     "zemin": "raise",
+     "tint_ustu": 4.884,
+     "ciplak": 5.618
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--green",
+     "zemin": "slip",
+     "tint_ustu": 4.503,
+     "ciplak": 5.153
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--green",
+     "zemin": "accent-tint",
+     "tint_ustu": 4.503,
+     "ciplak": 5.153
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--amber",
+     "zemin": "bg",
+     "tint_ustu": 5.789,
+     "ciplak": 6.712
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--amber",
+     "zemin": "bg2",
+     "tint_ustu": 5.569,
+     "ciplak": 6.426
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--amber",
+     "zemin": "card",
+     "tint_ustu": 6.046,
+     "ciplak": 7.005
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--amber",
+     "zemin": "card-2",
+     "tint_ustu": 5.789,
+     "ciplak": 6.712
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--amber",
+     "zemin": "raise",
+     "tint_ustu": 6.046,
+     "ciplak": 7.005
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--amber",
+     "zemin": "slip",
+     "tint_ustu": 5.569,
+     "ciplak": 6.426
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--amber",
+     "zemin": "accent-tint",
+     "tint_ustu": 5.569,
+     "ciplak": 6.426
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--red",
+     "zemin": "bg",
+     "tint_ustu": 6.949,
+     "ciplak": 8.425
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--red",
+     "zemin": "bg2",
+     "tint_ustu": 6.645,
+     "ciplak": 8.066
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--red",
+     "zemin": "card",
+     "tint_ustu": 7.272,
+     "ciplak": 8.794
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--red",
+     "zemin": "card-2",
+     "tint_ustu": 6.949,
+     "ciplak": 8.425
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--red",
+     "zemin": "raise",
+     "tint_ustu": 7.272,
+     "ciplak": 8.794
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--red",
+     "zemin": "slip",
+     "tint_ustu": 6.645,
+     "ciplak": 8.066
+    },
+    {
+     "tema": "gunduz",
+     "jeton": "--red",
+     "zemin": "accent-tint",
+     "tint_ustu": 6.645,
+     "ciplak": 8.066
+    },
+    {
+     "tema": "gece",
+     "jeton": "--green",
+     "zemin": "bg",
+     "tint_ustu": 6.043,
+     "ciplak": 7.054
+    },
+    {
+     "tema": "gece",
+     "jeton": "--green",
+     "zemin": "bg2",
+     "tint_ustu": 5.489,
+     "ciplak": 6.485
+    },
+    {
+     "tema": "gece",
+     "jeton": "--green",
+     "zemin": "card",
+     "tint_ustu": 5.04,
+     "ciplak": 5.955
+    },
+    {
+     "tema": "gece",
+     "jeton": "--green",
+     "zemin": "card-2",
+     "tint_ustu": 4.541,
+     "ciplak": 5.343
+    },
+    {
+     "tema": "gece",
+     "jeton": "--green",
+     "zemin": "raise",
+     "tint_ustu": 5.04,
+     "ciplak": 5.955
+    },
+    {
+     "tema": "gece",
+     "jeton": "--green",
+     "zemin": "slip",
+     "tint_ustu": 4.541,
+     "ciplak": 5.343
+    },
+    {
+     "tema": "gece",
+     "jeton": "--green",
+     "zemin": "accent-tint",
+     "tint_ustu": 4.541,
+     "ciplak": 5.343
+    },
+    {
+     "tema": "gece",
+     "jeton": "--amber",
+     "zemin": "bg",
+     "tint_ustu": 7.428,
+     "ciplak": 8.855
+    },
+    {
+     "tema": "gece",
+     "jeton": "--amber",
+     "zemin": "bg2",
+     "tint_ustu": 6.668,
+     "ciplak": 8.142
+    },
+    {
+     "tema": "gece",
+     "jeton": "--amber",
+     "zemin": "card",
+     "tint_ustu": 6.106,
+     "ciplak": 7.475
+    },
+    {
+     "tema": "gece",
+     "jeton": "--amber",
+     "zemin": "card-2",
+     "tint_ustu": 5.493,
+     "ciplak": 6.708
+    },
+    {
+     "tema": "gece",
+     "jeton": "--amber",
+     "zemin": "raise",
+     "tint_ustu": 6.106,
+     "ciplak": 7.475
+    },
+    {
+     "tema": "gece",
+     "jeton": "--amber",
+     "zemin": "slip",
+     "tint_ustu": 5.493,
+     "ciplak": 6.708
+    },
+    {
+     "tema": "gece",
+     "jeton": "--amber",
+     "zemin": "accent-tint",
+     "tint_ustu": 5.493,
+     "ciplak": 6.708
+    },
+    {
+     "tema": "gece",
+     "jeton": "--red",
+     "zemin": "bg",
+     "tint_ustu": 9.009,
+     "ciplak": 11.042
+    },
+    {
+     "tema": "gece",
+     "jeton": "--red",
+     "zemin": "bg2",
+     "tint_ustu": 8.178,
+     "ciplak": 10.152
+    },
+    {
+     "tema": "gece",
+     "jeton": "--red",
+     "zemin": "card",
+     "tint_ustu": 7.387,
+     "ciplak": 9.321
+    },
+    {
+     "tema": "gece",
+     "jeton": "--red",
+     "zemin": "card-2",
+     "tint_ustu": 6.639,
+     "ciplak": 8.364
+    },
+    {
+     "tema": "gece",
+     "jeton": "--red",
+     "zemin": "raise",
+     "tint_ustu": 7.387,
+     "ciplak": 9.321
+    },
+    {
+     "tema": "gece",
+     "jeton": "--red",
+     "zemin": "slip",
+     "tint_ustu": 6.639,
+     "ciplak": 8.364
+    },
+    {
+     "tema": "gece",
+     "jeton": "--red",
+     "zemin": "accent-tint",
+     "tint_ustu": 6.639,
+     "ciplak": 8.364
+    }
+   ],
+   "dub_jetonu_aynen": {
+    "gunduz/--green": false,
+    "gunduz/--amber": false,
+    "gunduz/--red": false,
+    "gece/--green": false,
+    "gece/--amber": false,
+    "gece/--red": false
+   },
+   "en_dusuk": 4.503,
+   "tuttu": true
+  },
+  "O3": {
+   "esik": "C(nav) < min C(siddet)",
+   "temalar": {
+    "gunduz": {
+     "siddet_kroma": {
+      "--sev-1": 0.175,
+      "--sev-2": 0.0921,
+      "--sev-3": 0.1114
+     },
+     "min_siddet": 0.0921,
+     "nav_kroma": {
+      "--nav": 0.2152,
+      "--nav-2": 0.1809,
+      "--nav-t": 0.0328
+     },
+     "murekkep_tuttu": false,
+     "dolgu_tuttu": true
+    },
+    "gece": {
+     "siddet_kroma": {
+      "--sev-1": 0.0809,
+      "--sev-2": 0.0922,
+      "--sev-3": 0.1118
+     },
+     "min_siddet": 0.0809,
+     "nav_kroma": {
+      "--nav": 0.1458,
+      "--nav-2": 0.0791,
+      "--nav-t": 0.072
+     },
+     "murekkep_tuttu": false,
+     "dolgu_tuttu": true
+    }
+   },
+   "tuttu": false,
+   "dolgu_tuttu": true
+  },
+  "O4": {
+   "esik": 3.0,
+   "esik_gerekcesi": "Ö4'ün eşiği kararda niteldir ('ayırt edilebilir'). İşlemsel karşılık olarak deponun zaten yürürlükteki metin-dışı ayrım ölçütü (WCAG 2.2 1.4.11, 3:1) alındı — yeni bir eşik icat edilmedi, var olanı uygulandı.",
+   "temalar": {
+    "gunduz": {
+     "nav": "#2563eb",
+     "dv_n2_karta_binmis": "#d6d9df",
+     "kontrast": 3.655,
+     "oklab_dE": 0.3965,
+     "hue_farki": 1.6,
+     "tuttu": true
+    },
+    "gece": {
+     "nav": "#72a2ff",
+     "dv_n2_karta_binmis": "#494c53",
+     "kontrast": 3.41,
+     "oklab_dE": 0.3306,
+     "hue_farki": 4.6,
+     "tuttu": true
+    }
+   },
+   "tuttu": true
+  },
+  "O5": {
+   "esik": 4.5,
+   "temalar": {
+    "gunduz": {
+     "wash": "#dbeaff",
+     "nav_ustunde": 4.239,
+     "nav-2_ustunde": 7.155
+    },
+    "gece": {
+     "wash": "#1a274d",
+     "nav_ustunde": 5.778,
+     "nav-2_ustunde": 8.871
+    }
+   },
+   "nav_tuttu": false,
+   "nav2_tuttu": true,
+   "tuttu": false
+  },
+  "O6": {
+   "esik_min": 1.15,
+   "esik_en_az_bir": 1.25,
+   "karar_rampasi": {
+    "rampa": [
+     11,
+     14,
+     16,
+     20,
+     24,
+     30
+    ],
+    "adimlar": [
+     1.2727,
+     1.1429,
+     1.25,
+     1.2,
+     1.25
+    ],
+    "en_kucuk": 1.1429,
+    "en_buyuk": 1.2727,
+    "tuttu": false
+   },
+   "adaylar": [
+    {
+     "ad": "16 → 17 (16 ve 18 düşer, 17 rampaya girer)",
+     "rampa": [
+      11,
+      14,
+      17,
+      20,
+      24,
+      30
+     ],
+     "adimlar": [
+      1.2727,
+      1.2143,
+      1.1765,
+      1.2,
+      1.25
+     ],
+     "en_kucuk": 1.1765,
+     "en_buyuk": 1.2727,
+     "tuttu": true
+    },
+    {
+     "ad": "16 tamamen düşer",
+     "rampa": [
+      11,
+      14,
+      20,
+      24,
+      30
+     ],
+     "adimlar": [
+      1.2727,
+      1.4286,
+      1.2,
+      1.25
+     ],
+     "en_kucuk": 1.2,
+     "en_buyuk": 1.4286,
+     "tuttu": true
+    }
+   ],
+   "daraltilmis": {
+    "rampa": [
+     11,
+     14,
+     17,
+     20,
+     24,
+     30
+    ],
+    "adimlar": [
+     1.2727,
+     1.2143,
+     1.1765,
+     1.2,
+     1.25
+    ],
+    "en_kucuk": 1.1765,
+    "en_buyuk": 1.2727,
+    "tuttu": true
+   },
+   "daraltma": "16 → 17 (16 ve 18 düşer, 17 rampaya girer)",
+   "tuttu": false
+  },
+  "O7": {
+   "esik": 3.0,
+   "satirlar": [
+    {
+     "tema": "gunduz",
+     "zemin": "bg",
+     "oran": 1.241
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "bg2",
+     "oran": 1.234
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "card",
+     "oran": 1.248
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "card-2",
+     "oran": 1.241
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "raise",
+     "oran": 1.248
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "slip",
+     "oran": 1.234
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "accent-tint",
+     "oran": 1.234
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "bg (2px --accent ana hattı)",
+     "oran": 18.968
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "bg2 (2px --accent ana hattı)",
+     "oran": 18.16
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "card (2px --accent ana hattı)",
+     "oran": 19.798
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "card-2 (2px --accent ana hattı)",
+     "oran": 18.968
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "raise (2px --accent ana hattı)",
+     "oran": 19.798
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "slip (2px --accent ana hattı)",
+     "oran": 18.16
+    },
+    {
+     "tema": "gunduz",
+     "zemin": "accent-tint (2px --accent ana hattı)",
+     "oran": 18.16
+    },
+    {
+     "tema": "gece",
+     "zemin": "bg",
+     "oran": 1.284
+    },
+    {
+     "tema": "gece",
+     "zemin": "bg2",
+     "oran": 1.305
+    },
+    {
+     "tema": "gece",
+     "zemin": "card",
+     "oran": 1.31
+    },
+    {
+     "tema": "gece",
+     "zemin": "card-2",
+     "oran": 1.31
+    },
+    {
+     "tema": "gece",
+     "zemin": "raise",
+     "oran": 1.31
+    },
+    {
+     "tema": "gece",
+     "zemin": "slip",
+     "oran": 1.31
+    },
+    {
+     "tema": "gece",
+     "zemin": "accent-tint",
+     "oran": 1.31
+    },
+    {
+     "tema": "gece",
+     "zemin": "bg (2px --accent ana hattı)",
+     "oran": 14.232
+    },
+    {
+     "tema": "gece",
+     "zemin": "bg2 (2px --accent ana hattı)",
+     "oran": 13.085
+    },
+    {
+     "tema": "gece",
+     "zemin": "card (2px --accent ana hattı)",
+     "oran": 12.014
+    },
+    {
+     "tema": "gece",
+     "zemin": "card-2 (2px --accent ana hattı)",
+     "oran": 10.78
+    },
+    {
+     "tema": "gece",
+     "zemin": "raise (2px --accent ana hattı)",
+     "oran": 12.014
+    },
+    {
+     "tema": "gece",
+     "zemin": "slip (2px --accent ana hattı)",
+     "oran": 10.78
+    },
+    {
+     "tema": "gece",
+     "zemin": "accent-tint (2px --accent ana hattı)",
+     "oran": 10.78
+    }
+   ],
+   "sh_ring_tuttu": false,
+   "ana_hat_tuttu": true,
+   "tuttu": false
+  },
+  "OE1_cift_taramasi": {
+   "esik": null,
+   "not": "kararda ön-kayıtlı eşik YOK — sayı beyan edilir, hüküm Rol-1'de",
+   "ciftler": [
+    {
+     "tema": "gunduz",
+     "a": "--sev-1",
+     "b": "--sev-2",
+     "a_hex": "#9a0019",
+     "b_hex": "#77520e",
+     "kontrast": 1.255,
+     "oklab_dE": 0.1437,
+     "hue_farki": 52.4
+    },
+    {
+     "tema": "gunduz",
+     "a": "--sev-1",
+     "b": "--sev-3",
+     "a_hex": "#9a0019",
+     "b_hex": "#1f7646",
+     "kontrast": 1.565,
+     "oklab_dE": 0.2705,
+     "hue_farki": 130.3
+    },
+    {
+     "tema": "gunduz",
+     "a": "--sev-2",
+     "b": "--sev-3",
+     "a_hex": "#77520e",
+     "b_hex": "#1f7646",
+     "kontrast": 1.247,
+     "oklab_dE": 0.1336,
+     "hue_farki": 77.9
+    },
+    {
+     "tema": "gunduz",
+     "a": "--nav",
+     "b": "--nav-2",
+     "a_hex": "#2563eb",
+     "b_hex": "#1e40af",
+     "kontrast": 1.688,
+     "oklab_dE": 0.1268,
+     "hue_farki": 2.8
+    },
+    {
+     "tema": "gunduz",
+     "a": "--mod-canli",
+     "b": "--mod-kesif",
+     "a_hex": "#7c3aed",
+     "b_hex": "#6c5e9e",
+     "kontrast": 1.013,
+     "oklab_dE": 0.1481,
+     "hue_farki": 0.3
+    },
+    {
+     "tema": "gece",
+     "a": "--sev-1",
+     "b": "--sev-2",
+     "a_hex": "#ffbab4",
+     "b_hex": "#d8b072",
+     "kontrast": 1.247,
+     "oklab_dE": 0.1062,
+     "hue_farki": 53.2
+    },
+    {
+     "tema": "gece",
+     "a": "--sev-1",
+     "b": "--sev-3",
+     "a_hex": "#ffbab4",
+     "b_hex": "#61b37f",
+     "kontrast": 1.565,
+     "oklab_dE": 0.231,
+     "hue_farki": 130.0
+    },
+    {
+     "tema": "gece",
+     "a": "--sev-2",
+     "b": "--sev-3",
+     "a_hex": "#d8b072",
+     "b_hex": "#61b37f",
+     "kontrast": 1.255,
+     "oklab_dE": 0.15,
+     "hue_farki": 76.8
+    },
+    {
+     "tema": "gece",
+     "a": "--nav",
+     "b": "--nav-2",
+     "a_hex": "#72a2ff",
+     "b_hex": "#b2caff",
+     "kontrast": 1.535,
+     "oklab_dE": 0.1381,
+     "hue_farki": 3.1
+    },
+    {
+     "tema": "gece",
+     "a": "--mod-canli",
+     "b": "--mod-kesif",
+     "a_hex": "#ab91ff",
+     "b_hex": "#a79fcb",
+     "kontrast": 1.029,
+     "oklab_dE": 0.0933,
+     "hue_farki": 0.1
+    }
+   ],
+   "en_dusuk_dE": 0.0933
+  },
+  "OE1": {
+   "karar": "docs/KARAR-2026-08-24-B-DUB-DONUSUMU.md §9",
+   "esikler": {
+    "a_luminans_orani": 1.2,
+    "b_deltaE2000": 15.0,
+    "c_tint_AA": 4.5
+   },
+   "merdiven_adimi": 1.25,
+   "kaynak_ucul_olcumu": {
+    "Dub ataması (ortak ΔL, merdiven YOK)": {
+     "a": false,
+     "b": false,
+     "c": true,
+     "tuttu": false,
+     "komsu": [
+      {
+       "tema": "gunduz",
+       "cift": "--sev-1 ↔ --sev-2",
+       "a_hex": "#8f2b00",
+       "b_hex": "#b54000",
+       "luminans_orani": 1.471,
+       "deltaE2000": 9.44,
+       "hue_farki": 2.5
+      },
+      {
+       "tema": "gunduz",
+       "cift": "--sev-2 ↔ --sev-3",
+       "a_hex": "#b54000",
+       "b_hex": "#007732",
+       "luminans_orani": 1.004,
+       "deltaE2000": 55.73,
+       "hue_farki": 108.3
+      }
+     ],
+     "tint": [
+      {
+       "tema": "gunduz",
+       "jeton": "--green",
+       "hex": "#007732",
+       "kendi_tinti_card": 4.922,
+       "kendi_tinti_en_kotu": 4.528
+      },
+      {
+       "tema": "gunduz",
+       "jeton": "--amber",
+       "hex": "#b54000",
+       "kendi_tinti_card": 4.903,
+       "kendi_tinti_en_kotu": 4.513
+      },
+      {
+       "tema": "gunduz",
+       "jeton": "--red",
+       "hex": "#8f2b00",
+       "kendi_tinti_card": 7.065,
+       "kendi_tinti_en_kotu": 6.499
+      }
+     ]
+    },
+    "Omega üçlüsü AYNEN (#0c6a3b/#6e4a00/#b3242c)": {
+     "a": false,
+     "b": true,
+     "c": true,
+     "tuttu": false,
+     "komsu": [
+      {
+       "tema": "gunduz",
+       "cift": "--sev-1 ↔ --sev-2",
+       "a_hex": "#b3242c",
+       "b_hex": "#6e4a00",
+       "luminans_orani": 1.213,
+       "deltaE2000": 29.37,
+       "hue_farki": 52.8
+      },
+      {
+       "tema": "gunduz",
+       "cift": "--sev-2 ↔ --sev-3",
+       "a_hex": "#6e4a00",
+       "b_hex": "#0c6a3b",
+       "luminans_orani": 1.188,
+       "deltaE2000": 32.38,
+       "hue_farki": 77.5
+      }
+     ],
+     "tint": [
+      {
+       "tema": "gunduz",
+       "jeton": "--green",
+       "hex": "#0c6a3b",
+       "kendi_tinti_card": 5.751,
+       "kendi_tinti_en_kotu": 5.297
+      },
+      {
+       "tema": "gunduz",
+       "jeton": "--amber",
+       "hex": "#6e4a00",
+       "kendi_tinti_card": 6.797,
+       "kendi_tinti_en_kotu": 6.268
+      },
+      {
+       "tema": "gunduz",
+       "jeton": "--red",
+       "hex": "#b3242c",
+       "kendi_tinti_card": 5.553,
+       "kendi_tinti_en_kotu": 5.112
+      }
+     ]
+    }
+   },
+   "adaylar": [
+    {
+     "ad": "A · Dub içi · hue KORUNUR (vivid-green / tangerine / loss-red)",
+     "temalar": {
+      "gunduz": {
+       "a": true,
+       "b": false,
+       "c": true,
+       "tuttu": false,
+       "komsu": [
+        {
+         "tema": "gunduz",
+         "cift": "--sev-1 ↔ --sev-2",
+         "a_hex": "#882800",
+         "b_hex": "#9c3600",
+         "luminans_orani": 1.251,
+         "deltaE2000": 5.39,
+         "hue_farki": 2.7
+        },
+        {
+         "tema": "gunduz",
+         "cift": "--sev-2 ↔ --sev-3",
+         "a_hex": "#9c3600",
+         "b_hex": "#007732",
+         "luminans_orani": 1.253,
+         "deltaE2000": 54.18,
+         "hue_farki": 108.3
+        }
+       ],
+       "tint": [
+        {
+         "tema": "gunduz",
+         "jeton": "--green",
+         "hex": "#007732",
+         "kendi_tinti_card": 4.922,
+         "kendi_tinti_en_kotu": 4.528
+        },
+        {
+         "tema": "gunduz",
+         "jeton": "--amber",
+         "hex": "#9c3600",
+         "kendi_tinti_card": 6.089,
+         "kendi_tinti_en_kotu": 5.603
+        },
+        {
+         "tema": "gunduz",
+         "jeton": "--red",
+         "hex": "#882800",
+         "kendi_tinti_card": 7.54,
+         "kendi_tinti_en_kotu": 6.89
+        }
+       ],
+       "ucul": {
+        "green": "#007732",
+        "amber": "#9c3600",
+        "red": "#882800"
+       },
+       "kroma": {
+        "green": 0.1392,
+        "amber": 0.1462,
+        "red": 0.1375
+       }
+      },
+      "gece": {
+       "a": true,
+       "b": false,
+       "c": true,
+       "tuttu": false,
+       "komsu": [
+        {
+         "tema": "gece",
+         "cift": "--sev-1 ↔ --sev-2",
+         "a_hex": "#ffbaa3",
+         "b_hex": "#ff9c76",
+         "luminans_orani": 1.247,
+         "deltaE2000": 8.44,
+         "hue_farki": 2.4
+        },
+        {
+         "tema": "gece",
+         "cift": "--sev-2 ↔ --sev-3",
+         "a_hex": "#ff9c76",
+         "b_hex": "#37b85d",
+         "luminans_orani": 1.256,
+         "deltaE2000": 55.03,
+         "hue_farki": 107.5
+        }
+       ],
+       "tint": [
+        {
+         "tema": "gece",
+         "jeton": "--green",
+         "hex": "#37b85d",
+         "kendi_tinti_card": 4.998,
+         "kendi_tinti_en_kotu": 4.505
+        },
+        {
+         "tema": "gece",
+         "jeton": "--amber",
+         "hex": "#ff9c76",
+         "kendi_tinti_card": 6.084,
+         "kendi_tinti_en_kotu": 5.476
+        },
+        {
+         "tema": "gece",
+         "jeton": "--red",
+         "hex": "#ffbaa3",
+         "kendi_tinti_card": 7.328,
+         "kendi_tinti_en_kotu": 6.58
+        }
+       ],
+       "ucul": {
+        "green": "#37b85d",
+        "amber": "#ff9c76",
+        "red": "#ffbaa3"
+       },
+       "kroma": {
+        "green": 0.1711,
+        "amber": 0.1299,
+        "red": 0.0868
+       }
+      }
+     },
+     "tuttu": false
+    },
+    {
+     "ad": "B · Dub içi · loss-red hue'su Meridian'ın ölçülmüş alarm hue'suna çekilir (24.1°); yeşil ve kehribar Dub'da KALIR",
+     "temalar": {
+      "gunduz": {
+       "a": true,
+       "b": false,
+       "c": true,
+       "tuttu": false,
+       "komsu": [
+        {
+         "tema": "gunduz",
+         "cift": "--sev-1 ↔ --sev-2",
+         "a_hex": "#990019",
+         "b_hex": "#9c3600",
+         "luminans_orani": 1.242,
+         "deltaE2000": 13.53,
+         "hue_farki": 17.0
+        },
+        {
+         "tema": "gunduz",
+         "cift": "--sev-2 ↔ --sev-3",
+         "a_hex": "#9c3600",
+         "b_hex": "#007732",
+         "luminans_orani": 1.253,
+         "deltaE2000": 54.18,
+         "hue_farki": 108.3
+        }
+       ],
+       "tint": [
+        {
+         "tema": "gunduz",
+         "jeton": "--green",
+         "hex": "#007732",
+         "kendi_tinti_card": 4.922,
+         "kendi_tinti_en_kotu": 4.528
+        },
+        {
+         "tema": "gunduz",
+         "jeton": "--amber",
+         "hex": "#9c3600",
+         "kendi_tinti_card": 6.089,
+         "kendi_tinti_en_kotu": 5.603
+        },
+        {
+         "tema": "gunduz",
+         "jeton": "--red",
+         "hex": "#990019",
+         "kendi_tinti_card": 7.332,
+         "kendi_tinti_en_kotu": 6.7
+        }
+       ],
+       "ucul": {
+        "green": "#007732",
+        "amber": "#9c3600",
+        "red": "#990019"
+       },
+       "kroma": {
+        "green": 0.1392,
+        "amber": 0.1462,
+        "red": 0.1738
+       }
+      },
+      "gece": {
+       "a": true,
+       "b": false,
+       "c": true,
+       "tuttu": false,
+       "komsu": [
+        {
+         "tema": "gece",
+         "cift": "--sev-1 ↔ --sev-2",
+         "a_hex": "#ffb9b3",
+         "b_hex": "#ff9c76",
+         "luminans_orani": 1.251,
+         "deltaE2000": 12.62,
+         "hue_farki": 17.1
+        },
+        {
+         "tema": "gece",
+         "cift": "--sev-2 ↔ --sev-3",
+         "a_hex": "#ff9c76",
+         "b_hex": "#37b85d",
+         "luminans_orani": 1.256,
+         "deltaE2000": 55.03,
+         "hue_farki": 107.5
+        }
+       ],
+       "tint": [
+        {
+         "tema": "gece",
+         "jeton": "--green",
+         "hex": "#37b85d",
+         "kendi_tinti_card": 4.998,
+         "kendi_tinti_en_kotu": 4.505
+        },
+        {
+         "tema": "gece",
+         "jeton": "--amber",
+         "hex": "#ff9c76",
+         "kendi_tinti_card": 6.084,
+         "kendi_tinti_en_kotu": 5.476
+        },
+        {
+         "tema": "gece",
+         "jeton": "--red",
+         "hex": "#ffb9b3",
+         "kendi_tinti_card": 7.335,
+         "kendi_tinti_en_kotu": 6.592
+        }
+       ],
+       "ucul": {
+        "green": "#37b85d",
+        "amber": "#ff9c76",
+        "red": "#ffb9b3"
+       },
+       "kroma": {
+        "green": 0.1711,
+        "amber": 0.1299,
+        "red": 0.0827
+       }
+      }
+     },
+     "tuttu": false
+    },
+    {
+     "ad": "C · §9.4 geri çekilme · şiddet rolü Dub paletinden ÇIKAR, ölçülmüş Omega üçlüsünün hue/kroması kalır",
+     "temalar": {
+      "gunduz": {
+       "a": true,
+       "b": true,
+       "c": true,
+       "tuttu": true,
+       "komsu": [
+        {
+         "tema": "gunduz",
+         "cift": "--sev-1 ↔ --sev-2",
+         "a_hex": "#9a0019",
+         "b_hex": "#77520e",
+         "luminans_orani": 1.255,
+         "deltaE2000": 28.47,
+         "hue_farki": 52.4
+        },
+        {
+         "tema": "gunduz",
+         "cift": "--sev-2 ↔ --sev-3",
+         "a_hex": "#77520e",
+         "b_hex": "#1f7646",
+         "luminans_orani": 1.247,
+         "deltaE2000": 32.43,
+         "hue_farki": 77.9
+        }
+       ],
+       "tint": [
+        {
+         "tema": "gunduz",
+         "jeton": "--green",
+         "hex": "#1f7646",
+         "kendi_tinti_card": 4.884,
+         "kendi_tinti_en_kotu": 4.503
+        },
+        {
+         "tema": "gunduz",
+         "jeton": "--amber",
+         "hex": "#77520e",
+         "kendi_tinti_card": 6.046,
+         "kendi_tinti_en_kotu": 5.569
+        },
+        {
+         "tema": "gunduz",
+         "jeton": "--red",
+         "hex": "#9a0019",
+         "kendi_tinti_card": 7.272,
+         "kendi_tinti_en_kotu": 6.645
+        }
+       ],
+       "ucul": {
+        "green": "#1f7646",
+        "amber": "#77520e",
+        "red": "#9a0019"
+       },
+       "kroma": {
+        "green": 0.1114,
+        "amber": 0.0917,
+        "red": 0.1754
+       }
+      },
+      "gece": {
+       "a": true,
+       "b": true,
+       "c": true,
+       "tuttu": true,
+       "komsu": [
+        {
+         "tema": "gece",
+         "cift": "--sev-1 ↔ --sev-2",
+         "a_hex": "#ffbab4",
+         "b_hex": "#d8b072",
+         "luminans_orani": 1.247,
+         "deltaE2000": 22.75,
+         "hue_farki": 53.2
+        },
+        {
+         "tema": "gece",
+         "cift": "--sev-2 ↔ --sev-3",
+         "a_hex": "#d8b072",
+         "b_hex": "#61b37f",
+         "luminans_orani": 1.255,
+         "deltaE2000": 30.1,
+         "hue_farki": 76.8
+        }
+       ],
+       "tint": [
+        {
+         "tema": "gece",
+         "jeton": "--green",
+         "hex": "#61b37f",
+         "kendi_tinti_card": 5.04,
+         "kendi_tinti_en_kotu": 4.541
+        },
+        {
+         "tema": "gece",
+         "jeton": "--amber",
+         "hex": "#d8b072",
+         "kendi_tinti_card": 6.106,
+         "kendi_tinti_en_kotu": 5.493
+        },
+        {
+         "tema": "gece",
+         "jeton": "--red",
+         "hex": "#ffbab4",
+         "kendi_tinti_card": 7.387,
+         "kendi_tinti_en_kotu": 6.639
+        }
+       ],
+       "ucul": {
+        "green": "#61b37f",
+        "amber": "#d8b072",
+        "red": "#ffbab4"
+       },
+       "kroma": {
+        "green": 0.1118,
+        "amber": 0.0917,
+        "red": 0.0815
+       }
+      }
+     },
+     "tuttu": true
+    }
+   ],
+   "secilen": "C · §9.4 geri çekilme · şiddet rolü Dub paletinden ÇIKAR, ölçülmüş Omega üçlüsünün hue/kroması kalır",
+   "tuttu": true
+  }
+ },
+ "civi_tablosu": [
+  {
+   "murekkep": "--tx",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 18.97,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 14.23,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 19.8,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 12.01,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--card-2 + --red-t",
+   "tema": "gunduz",
+   "oran": 15.65,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--card-2 + --red-t",
+   "tema": "gece",
+   "oran": 8.56,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 7.49,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 12.09,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 7.81,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 10.21,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--card-2 + --red-t",
+   "tema": "gunduz",
+   "oran": 6.17,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--card-2 + --red-t",
+   "tema": "gece",
+   "oran": 7.27,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--card-2 + --amber-t",
+   "tema": "gunduz",
+   "oran": 6.46,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--card-2 + --amber-t",
+   "tema": "gece",
+   "oran": 7.5,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx3",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 4.74,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx3",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 6.0,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx3",
+   "zemin": "--card-2",
+   "tema": "gunduz",
+   "oran": 4.54,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx3",
+   "zemin": "--card-2",
+   "tema": "gece",
+   "oran": 5.38,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--violet",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 10.37,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--violet",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 8.5,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--accent-2",
+   "zemin": "--accent-tint",
+   "tema": "gunduz",
+   "oran": 16.44,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--accent-2",
+   "zemin": "--accent-tint",
+   "tema": "gece",
+   "oran": 12.46,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--green",
+   "zemin": "--card-2 + --green-t",
+   "tema": "gunduz",
+   "oran": 4.7,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--green",
+   "zemin": "--card-2 + --green-t",
+   "tema": "gece",
+   "oran": 4.54,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--amber",
+   "zemin": "--card-2 + --amber-t",
+   "tema": "gunduz",
+   "oran": 5.79,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--amber",
+   "zemin": "--card-2 + --amber-t",
+   "tema": "gece",
+   "oran": 5.49,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--red",
+   "zemin": "--card-2 + --red-t",
+   "tema": "gunduz",
+   "oran": 6.95,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--red",
+   "zemin": "--card-2 + --red-t",
+   "tema": "gece",
+   "oran": 6.64,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--green",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 5.38,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--green",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 7.05,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--amber",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 6.71,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--amber",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 8.86,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--red",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 8.43,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--red",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 11.04,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--red",
+   "zemin": "--bg + --nav-bg",
+   "tema": "gunduz",
+   "oran": 8.43,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--red",
+   "zemin": "--bg + --nav-bg",
+   "tema": "gece",
+   "oran": 11.04,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--field",
+   "zemin": "--card-2",
+   "tema": "gunduz",
+   "oran": 4.54,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--field",
+   "zemin": "--card-2",
+   "tema": "gece",
+   "oran": 5.38,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--field",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 4.54,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--field",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 7.11,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--line",
+   "zemin": "--card-2",
+   "tema": "gunduz",
+   "oran": 1.21,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--line",
+   "zemin": "--card-2",
+   "tema": "gece",
+   "oran": 1.31,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--line-2",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 1.42,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--line-2",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 2.29,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--accent",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 19.8,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--accent",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 12.01,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--accent",
+   "zemin": "--card-2 + --red-t",
+   "tema": "gunduz",
+   "oran": 15.65,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--accent",
+   "zemin": "--card-2 + --red-t",
+   "tema": "gece",
+   "oran": 8.56,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--green-h",
+   "zemin": "--card + --green-t",
+   "tema": "gunduz",
+   "oran": 1.62,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--green-h",
+   "zemin": "--card + --green-t",
+   "tema": "gece",
+   "oran": 1.82,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--ink-h",
+   "zemin": "--accent-tint",
+   "tema": "gunduz",
+   "oran": 2.03,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--ink-h",
+   "zemin": "--accent-tint",
+   "tema": "gece",
+   "oran": 2.33,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--green-stamp",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 2.32,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--green-stamp",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 3.01,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--card-2",
+   "zemin": "--band-2",
+   "tema": "gunduz",
+   "oran": 2.42,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--card-2",
+   "zemin": "--band-2",
+   "tema": "gece",
+   "oran": 2.86,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--band-2",
+   "zemin": "--tx2",
+   "tema": "gunduz",
+   "oran": 3.1,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--band-2",
+   "zemin": "--tx2",
+   "tema": "gece",
+   "oran": 3.2,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--accent",
+   "zemin": "--violet",
+   "tema": "gunduz",
+   "oran": 1.91,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--accent",
+   "zemin": "--violet",
+   "tema": "gece",
+   "oran": 1.41,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--violet",
+   "zemin": "--tx3",
+   "tema": "gunduz",
+   "oran": 2.19,
+   "esik": 4.5,
+   "gecti": false
+  },
+  {
+   "murekkep": "--violet",
+   "zemin": "--tx3",
+   "tema": "gece",
+   "oran": 1.42,
+   "esik": 4.5,
+   "gecti": false
+  },
+  {
+   "murekkep": "--kap-4",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 2.03,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--kap-4",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 2.37,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--card + --kap-4",
+   "tema": "gunduz",
+   "oran": 9.76,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--card + --kap-4",
+   "tema": "gece",
+   "oran": 5.07,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--dv-n2",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 1.41,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--dv-n2",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 1.76,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--dv-p2",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 1.42,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--dv-p2",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 1.75,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--card",
+   "zemin": "--bg + --scrim",
+   "tema": "gunduz",
+   "oran": 3.0,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--card",
+   "zemin": "--bg + --scrim",
+   "tema": "gece",
+   "oran": 1.28,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--nav",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 4.95,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--nav",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 7.11,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--nav",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 5.17,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--nav",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 6.0,
+   "esik": 3.0,
+   "gecti": true
+  },
+  {
+   "murekkep": "--nav-2",
+   "zemin": "--nav-t",
+   "tema": "gunduz",
+   "oran": 7.15,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--nav-2",
+   "zemin": "--nav-t",
+   "tema": "gece",
+   "oran": 8.87,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--nav",
+   "zemin": "--nav-t",
+   "tema": "gunduz",
+   "oran": 4.24,
+   "esik": 4.5,
+   "gecti": false
+  },
+  {
+   "murekkep": "--nav",
+   "zemin": "--nav-t",
+   "tema": "gece",
+   "oran": 5.78,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--nav-h",
+   "zemin": "--nav-t",
+   "tema": "gunduz",
+   "oran": 1.59,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--nav-h",
+   "zemin": "--nav-t",
+   "tema": "gece",
+   "oran": 1.91,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--bg2",
+   "zemin": "--nav",
+   "tema": "gunduz",
+   "oran": 4.74,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--bg2",
+   "zemin": "--nav",
+   "tema": "gece",
+   "oran": 6.54,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--nav-t",
+   "tema": "gunduz",
+   "oran": 16.24,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--nav-t",
+   "tema": "gece",
+   "oran": 11.57,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--nav-t + --nav-h",
+   "tema": "gunduz",
+   "oran": 10.24,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--nav-t + --nav-h",
+   "tema": "gece",
+   "oran": 6.05,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--nav-t",
+   "tema": "gunduz",
+   "oran": 6.41,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx2",
+   "zemin": "--nav-t",
+   "tema": "gece",
+   "oran": 9.83,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx3",
+   "zemin": "--nav-t",
+   "tema": "gunduz",
+   "oran": 3.89,
+   "esik": 4.5,
+   "gecti": false
+  },
+  {
+   "murekkep": "--tx3",
+   "zemin": "--nav-t",
+   "tema": "gece",
+   "oran": 5.78,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--nav-t",
+   "tema": "gunduz",
+   "oran": 16.24,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--tx",
+   "zemin": "--nav-t",
+   "tema": "gece",
+   "oran": 11.57,
+   "esik": 4.5,
+   "gecti": true
+  },
+  {
+   "murekkep": "--sh-ring",
+   "zemin": "--bg",
+   "tema": "gunduz",
+   "oran": 1.24,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--sh-ring",
+   "zemin": "--bg",
+   "tema": "gece",
+   "oran": 1.28,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--sh-ring",
+   "zemin": "--card",
+   "tema": "gunduz",
+   "oran": 1.25,
+   "esik": 3.0,
+   "gecti": false
+  },
+  {
+   "murekkep": "--sh-ring",
+   "zemin": "--card",
+   "tema": "gece",
+   "oran": 1.31,
+   "esik": 3.0,
+   "gecti": false
+  }
+ ]
+}

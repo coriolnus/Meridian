@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>6× yakınlaştırma — üç yüz, gerçek tarayıcı rasteri (2026-08-24)</title>
+<!--
+  08-07 turunun yakinlastir.html'inin ÜÇ YÜZE genişletilmiş hâli. Metin GERÇEK punto boyunda
+  canvas'a basılır, sonra o raster `imageSmoothingEnabled=false` ile 6× büyütülür — büyütülen
+  şey harf değil PİKSELdir. Vektörü büyütmek (transform:scale) soruyu kaçırırdı.
+-->
+<link rel="stylesheet" href="yuzler.css">
+<style>
+body{margin:0;font-family:ui-monospace,monospace;font-size:11px}
+.blok{padding:12px 16px}
+.gunduz{background:#fbf9f8;color:#050505}
+.gece{background:#1E1E1E;color:#D4D4D4}
+h3{font:700 12px ui-monospace,monospace;letter-spacing:.14em;margin:0 0 8px;opacity:.7}
+canvas{display:block;image-rendering:pixelated;margin-bottom:5px}
+.et{font:700 10px ui-monospace,monospace;letter-spacing:.1em;opacity:.55;margin:7px 0 3px}
+</style>
+</head>
+<body>
+<div class="blok gunduz" id="g"><h3>GÜNDÜZ · 6× (piksel büyütme)</h3></div>
+<div class="blok gece" id="k"><h3>GECE · 6× (piksel büyütme)</h3></div>
+<script src="yakinlastir.js"></script>
+</body>
+</html>

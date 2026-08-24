@@ -1,0 +1,174 @@
+{
+ "geist-mono-vf": {
+  "U+00C7 Ç": {
+   "cmapte": true,
+   "glif": "Ccedilla",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+00D6 Ö": {
+   "cmapte": true,
+   "glif": "Odieresis",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+00DC Ü": {
+   "cmapte": true,
+   "glif": "Udieresis",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+00E7 ç": {
+   "cmapte": true,
+   "glif": "ccedilla",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+00F6 ö": {
+   "cmapte": true,
+   "glif": "odieresis",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+00FC ü": {
+   "cmapte": true,
+   "glif": "udieresis",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+011E Ğ": {
+   "cmapte": true,
+   "glif": "Gbreve",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+011F ğ": {
+   "cmapte": true,
+   "glif": "gbreve",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+0130 İ": {
+   "cmapte": true,
+   "glif": "Idotaccent",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+0131 ı": {
+   "cmapte": true,
+   "glif": "dotlessi",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+015E Ş": {
+   "cmapte": true,
+   "glif": "Scedilla",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  },
+  "U+015F ş": {
+   "cmapte": true,
+   "glif": "scedilla",
+   "kontur_var": true,
+   "advance": 600,
+   "HAYATTA": true
+  }
+ },
+ "inter-vf": {
+  "U+00C7 Ç": {
+   "cmapte": true,
+   "glif": "Ccedilla",
+   "kontur_var": true,
+   "advance": 1496,
+   "HAYATTA": true
+  },
+  "U+00D6 Ö": {
+   "cmapte": true,
+   "glif": "Odieresis",
+   "kontur_var": true,
+   "advance": 1566,
+   "HAYATTA": true
+  },
+  "U+00DC Ü": {
+   "cmapte": true,
+   "glif": "Udieresis",
+   "kontur_var": true,
+   "advance": 1524,
+   "HAYATTA": true
+  },
+  "U+00E7 ç": {
+   "cmapte": true,
+   "glif": "ccedilla",
+   "kontur_var": true,
+   "advance": 1170,
+   "HAYATTA": true
+  },
+  "U+00F6 ö": {
+   "cmapte": true,
+   "glif": "odieresis",
+   "kontur_var": true,
+   "advance": 1228,
+   "HAYATTA": true
+  },
+  "U+00FC ü": {
+   "cmapte": true,
+   "glif": "udieresis",
+   "kontur_var": true,
+   "advance": 1211,
+   "HAYATTA": true
+  },
+  "U+011E Ğ": {
+   "cmapte": true,
+   "glif": "Gbreve",
+   "kontur_var": true,
+   "advance": 1528,
+   "HAYATTA": true
+  },
+  "U+011F ğ": {
+   "cmapte": true,
+   "glif": "gbreve",
+   "kontur_var": true,
+   "advance": 1256,
+   "HAYATTA": true
+  },
+  "U+0130 İ": {
+   "cmapte": true,
+   "glif": "Idotaccent",
+   "kontur_var": true,
+   "advance": 550,
+   "HAYATTA": true
+  },
+  "U+0131 ı": {
+   "cmapte": true,
+   "glif": "dotlessi",
+   "kontur_var": true,
+   "advance": 496,
+   "HAYATTA": true
+  },
+  "U+015E Ş": {
+   "cmapte": true,
+   "glif": "Scedilla",
+   "kontur_var": true,
+   "advance": 1314,
+   "HAYATTA": true
+  },
+  "U+015F ş": {
+   "cmapte": true,
+   "glif": "scedilla",
+   "kontur_var": true,
+   "advance": 1081,
+   "HAYATTA": true
+  }
+ }
+}

@@ -1,0 +1,456 @@
+{
+  "olcum_turu": "yazi_tipi_2026-08-24",
+  "tarih_utc": "2026-08-23T23:29:18.657278+00:00",
+  "urun": "Inter",
+  "surum": {
+    "tag_name": "v4.1",
+    "release_name": "4.1",
+    "published_at": "2024-11-16T00:27:07Z",
+    "font_ic_surum_nameID5": "Version 4.001;git-9221beed3",
+    "head_fontRevision": 4.001,
+    "not": "release etiketi v4.1 ama fontun ic surumu 4.001 - rsms/inter'de bilinen normal durum, celiski degil"
+  },
+  "kaynak": {
+    "resmi": true,
+    "api": "https://api.github.com/repos/rsms/inter/releases/latest",
+    "indirme_url": "https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip",
+    "api_bildirilen_boyut_bayt": 33707794,
+    "indirilen_boyut_bayt": 33707794,
+    "boyut_eslesti": true,
+    "zip_sha256": "9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e",
+    "not": "yayinci sha256 yayinlamiyor; bu hash bizim indirdigimiz baytlarin kaydidir, ust-kaynakla capraz dogrulanmadi"
+  },
+  "dosyalar": {
+    "zip": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/Inter-4.1.zip",
+    "acilmis_kok": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis",
+    "bulunanlar": {
+      "InterVariable.ttf": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis/InterVariable.ttf",
+        "bayt": 879708,
+        "sha256": "4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf"
+      },
+      "InterVariable-Italic.ttf": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis/InterVariable-Italic.ttf",
+        "bayt": 910252,
+        "sha256": "d6f1f6a172d9e588438db9f986fd5cfad7b30f644374080a8a9d4d91e344586f"
+      },
+      "web/InterVariable.woff2": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis/web/InterVariable.woff2",
+        "bayt": 352240,
+        "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3"
+      },
+      "web/InterVariable-Italic.woff2": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis/web/InterVariable-Italic.woff2",
+        "bayt": 387976,
+        "sha256": "e564f652916db6c139570fefb9524a77c4d48f30c92928de9db19b6b5c7a262a"
+      },
+      "LICENSE.txt": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis/LICENSE.txt",
+        "bayt": 4380,
+        "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+      },
+      "web/inter.css": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis/web/inter.css"
+      },
+      "Inter.ttc": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/edinme/inter/acilmis/Inter.ttc",
+        "bayt": 13172948
+      }
+    },
+    "kopyalananlar": {
+      "fonts/Inter-VF.ttf": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/fonts/Inter-VF.ttf",
+        "sha256": "4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf",
+        "kaynak": "acilmis/InterVariable.ttf",
+        "hash_kaynakla_ayni": true
+      },
+      "lisans/Inter-OFL.txt": {
+        "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/lisans/Inter-OFL.txt",
+        "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+        "kaynak": "acilmis/LICENSE.txt",
+        "hash_kaynakla_ayni": true
+      }
+    }
+  },
+  "lisans": {
+    "dosya_adi_iddiasi": "LICENSE.txt",
+    "METINDEN_dogrulandi": true,
+    "tespit": "SIL Open Font License 1.1",
+    "kanit_satirlari": [
+      "Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)",
+      "This Font Software is licensed under the SIL Open Font License, Version 1.1.",
+      "SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007"
+    ],
+    "OFL_bolumleri_var": {
+      "PREAMBLE": true,
+      "DEFINITIONS": true,
+      "PERMISSION AND CONDITIONS": true,
+      "TERMINATION": true,
+      "DISCLAIMER": true
+    },
+    "Reserved_Font_Name_ilan_edilmis_mi": "HAYIR - metinde RFN tanimi geciyor ama Inter icin ilan edilmis bir RFN yok; yeniden adlandirma kisiti yok",
+    "fsType_embedding": 0,
+    "fsType_anlami": "0 = Installable Embedding, gomme/web kullanimi kisitsiz",
+    "ticari_web_kullanimi": "SERBEST (OFL 1.1: telif+lisans birlikte dagitilmali, font tek basina satilamaz)",
+    "OFL_11_kanonik_bolumlerin_hepsi_var": true,
+    "bolum_satir_numaralari": {
+      "PREAMBLE": 11,
+      "DEFINITIONS": 27,
+      "PERMISSION AND CONDITIONS": 46,
+      "TERMINATION": 79,
+      "DISCLAIMER": 83
+    },
+    "duzeltme_notu": "Ilk kontrolde 'PERMISSION & CONDITIONS' arandi ve False dondu; gercek baslik 'PERMISSION AND CONDITIONS' - hata sorgudaydi, lisansta degil. Duzeltildi."
+  },
+  "teknik": {
+    "unitsPerEm": 2048,
+    "numGlyphs": 2937,
+    "post_format": 2.0,
+    "achVendID": "RSMS",
+    "tablolar": [
+      "GDEF",
+      "GPOS",
+      "GSUB",
+      "GlyphOrder",
+      "HVAR",
+      "MVAR",
+      "OS/2",
+      "STAT",
+      "avar",
+      "cmap",
+      "fvar",
+      "glyf",
+      "gvar",
+      "head",
+      "hhea",
+      "hmtx",
+      "loca",
+      "maxp",
+      "name",
+      "post"
+    ]
+  },
+  "isimler": {
+    "nameID_1_aile": "Inter Variable",
+    "nameID_2_alt_aile": "Regular",
+    "nameID_4_tam": "Inter Variable",
+    "nameID_6_postscript": "InterVariable",
+    "nameID_16_tipografik_aile": null,
+    "nameID_17_tipografik_alt_aile": null,
+    "nameID_16_17_notu": "nameID 16 ve 17 bu dosyada YOK (bos). Degisken font tek aile+tek alt-aile ('Inter Variable'/'Regular') olarak isimlendirilmis; CSS'te font-family:'Inter Variable' ya da @font-face ile kendi adini ver."
+  },
+  "eksenler": {
+    "liste": [
+      {
+        "tag": "opsz",
+        "min": 14.0,
+        "default": 14.0,
+        "max": 32.0,
+        "name": "Optical size"
+      },
+      {
+        "tag": "wght",
+        "min": 100.0,
+        "default": 400.0,
+        "max": 900.0,
+        "name": "Weight"
+      }
+    ],
+    "wght_araligi": {
+      "tag": "wght",
+      "min": 100.0,
+      "default": 400.0,
+      "max": 900.0,
+      "name": "Weight"
+    },
+    "opsz_var_mi": true,
+    "opsz_araligi": {
+      "tag": "opsz",
+      "min": 14.0,
+      "default": 14.0,
+      "max": 32.0,
+      "name": "Optical size"
+    },
+    "opsz_notu": "opsz 14-32; varsayilan 14. 9 adlandirilmis ornek (Thin..Black) hepsi opsz=14'te. Buyuk baslikta opsz'yi yukari surmek Display kesimini verir.",
+    "adlandirilmis_ornek_sayisi": 9
+  },
+  "ozellikler": {
+    "GSUB": [
+      "aalt",
+      "calt",
+      "case",
+      "ccmp",
+      "cv01",
+      "cv02",
+      "cv03",
+      "cv04",
+      "cv05",
+      "cv06",
+      "cv07",
+      "cv08",
+      "cv09",
+      "cv10",
+      "cv11",
+      "cv12",
+      "cv13",
+      "cv14",
+      "dlig",
+      "dnom",
+      "frac",
+      "locl",
+      "numr",
+      "ordn",
+      "pnum",
+      "salt",
+      "sinf",
+      "ss01",
+      "ss02",
+      "ss03",
+      "ss04",
+      "ss05",
+      "ss06",
+      "ss07",
+      "ss08",
+      "subs",
+      "sups",
+      "tnum",
+      "zero"
+    ],
+    "GPOS": [
+      "cpsp",
+      "kern",
+      "mark",
+      "mkmk"
+    ],
+    "tnum": {
+      "VAR": true,
+      "tablo": "GSUB",
+      "lookup": [
+        62
+      ],
+      "substitution_sayisi": 61,
+      "ornek": {
+        "zero": "zero.tf",
+        "one": "one.tf",
+        "two": "two.tf",
+        "three": "three.tf",
+        "four": "four.tf",
+        "five": "five.tf",
+        "six": "six.tf",
+        "seven": "seven.tf",
+        "eight": "eight.tf",
+        "nine": "nine.tf"
+      },
+      "not": "tnum sadece rakamlari degil parantez/koseli-parantez gibi isaretleri de sabit genislige cekiyor (61 substitution)"
+    },
+    "rakam_ozellikleri_var_mi": {
+      "tnum": true,
+      "pnum": true,
+      "lnum": false,
+      "onum": false,
+      "zero": true,
+      "frac": true,
+      "case": true
+    },
+    "lnum_onum_notu": "lnum ve onum YOK - Inter'de varsayilan zaten lining figure, old-style figure kesimi yok"
+  },
+  "IL1_DISAMBIGUATION": {
+    "VAR_MI": true,
+    "dogrulama_yontemi": "GSUB FeatureList -> FeatureParams UINameID -> name tablosu; ve LookupList uzerinden gercek glif substitution haritasi cozuldu. Ad benzerligine DAYANMIYOR.",
+    "zip_icindeki_help.txt_belgeliyor_mu": "HAYIR - help.txt'te disambig/ss02/cv08 gecmiyor; tek kanit GSUB tablosunun kendisi",
+    "birincil_feature": {
+      "tag": "ss02",
+      "UI_adi": "Disambiguation",
+      "lookup": [
+        69
+      ],
+      "substitution_sayisi": 50,
+      "cekirdek_etki": {
+        "I": "I.1 (serifli buyuk I)",
+        "l": "l.ss02 (kuyruklu kucuk l)",
+        "zero": "zero.slash (egik cizgili sifir)",
+        "one": "DEGISMIYOR - rakam 1'e dokunmuyor",
+        "i": "DEGISMIYOR",
+        "J": "DEGISMIYOR"
+      },
+      "tam_harita": {
+        "I": "I.1",
+        "Idieresis": "Idieresis.1",
+        "uni1E2E": "uni1E2E.1",
+        "uni0197": "uni0197.1",
+        "uni1E2C": "uni1E2C.1",
+        "Igrave": "Igrave.1",
+        "Iacute": "Iacute.1",
+        "Icircumflex": "Icircumflex.1",
+        "Itilde": "Itilde.1",
+        "Imacron": "Imacron.1",
+        "Ibreve": "Ibreve.1",
+        "Iogonek": "Iogonek.1",
+        "Idotaccent": "Idotaccent.1",
+        "uni01CF": "uni01CF.1",
+        "uni0208": "uni0208.1",
+        "uni020A": "uni020A.1",
+        "uni1EC8": "uni1EC8.1",
+        "uni1ECA": "uni1ECA.1",
+        "uni1F38": "uni1F38.1",
+        "uni1F39": "uni1F39.1",
+        "uni1F3A": "uni1F3A.1",
+        "uni1F3B": "uni1F3B.1",
+        "uni1F3C": "uni1F3C.1",
+        "uni1F3D": "uni1F3D.1",
+        "uni1F3E": "uni1F3E.1",
+        "uni1F3F": "uni1F3F.1",
+        "uni1FD8": "uni1FD8.1",
+        "uni1FD9": "uni1FD9.1",
+        "uni1FDA": "uni1FDA.1",
+        "uni1FDB": "uni1FDB.1",
+        "uni0406": "uni0406.1",
+        "uni0407": "uni0407.1",
+        "l": "l.ss02",
+        "lslash": "lslash.ss02",
+        "uni019A": "uni019A.ss02",
+        "lmidtilde": "lmidtilde.ss02",
+        "uni026C": "uni026C.ss02",
+        "ldot": "ldot.ss02",
+        "lacute": "lacute.ss02",
+        "uni013C": "uni013C.ss02",
+        "lcaron": "lcaron.ss02",
+        "uni1E37": "uni1E37.ss02",
+        "uni1E39": "uni1E39.ss02",
+        "uni1E3B": "uni1E3B.ss02",
+        "uni1E3D": "uni1E3D.ss02",
+        "germandbls": "germandbls.1",
+        "zero": "zero.slash",
+        "zero.tf": "zero.tf.slash",
+        "uni24EA": "zero.slash.circled",
+        "zero.squared": "zero.slash.squared"
+      }
+    },
+    "ikincil_feature": {
+      "tag": "ss04",
+      "UI_adi": "Disambiguation (no slashed zero)",
+      "lookup": [
+        71
+      ],
+      "substitution_sayisi": 46,
+      "ss02_ile_farki": "ss02 = ss04 + slashed zero. Fark tam olarak 4 mapping: zero, zero.tf, zero.squared, uni24EA"
+    },
+    "ayrik_karakter_variantlari": {
+      "cv08": {
+        "UI_adi": "Upper-case i with serif",
+        "substitution_sayisi": 34,
+        "cekirdek": "I -> I.1",
+        "kapsam": "yalniz buyuk I ailesi"
+      },
+      "cv05": {
+        "UI_adi": "Lower-case L with tail",
+        "substitution_sayisi": 15,
+        "cekirdek": "l -> l.ss02",
+        "kapsam": "yalniz kucuk l ailesi"
+      },
+      "cv01": {
+        "UI_adi": "Alternate one",
+        "substitution_sayisi": 8,
+        "cekirdek": "one -> one.ss01",
+        "not": "RAKAM 1'in alternatifi BURADA, ss02'de DEGIL"
+      },
+      "zero": {
+        "UI_adi": "(feature params yok)",
+        "cekirdek": "zero -> zero.slash",
+        "not": "slashed zero tek basina 'zero' feature'i ile de alinabilir"
+      }
+    },
+    "Il1_TRIADI_HUKMU": "I ve l icin ss02 TEK BASINA yeterli. Rakam 1 (one) ss02 KAPSAMINDA DEGIL - '1' de ayirt edilsin isteniyorsa cv01 AYRICA acilmali: font-feature-settings:'ss02','cv01'.",
+    "tnum_ile_BIRLIKTE_CALISIR_MI": {
+      "sonuc": "EVET",
+      "kanit": "ss02 haritasinda 'zero.tf -> zero.tf.slash' ve cv01 haritasinda 'one.tf -> one.tf.ss01' var; yani tabular formlarin da alternatifi tanimli.",
+      "sira": "tnum lookup 62, ss02 lookup 69, cv01 lookup 76. OpenType lookup'lari LookupList index sirasinda uygulanir, yani once tnum (rakam -> .tf), sonra ss02/cv01 (.tf -> .tf alternatifi). Zincir kopmuyor.",
+      "onerilen_css": "font-variant-numeric: tabular-nums; font-feature-settings: 'ss02' 1, 'cv01' 1;"
+    }
+  },
+  "turkce": {
+    "hepsi_cmapte": true,
+    "eksik": [],
+    "karakter_karakter": {
+      "ı": {
+        "codepoint": "U+0131",
+        "in_cmap": true,
+        "glyph": "dotlessi"
+      },
+      "İ": {
+        "codepoint": "U+0130",
+        "in_cmap": true,
+        "glyph": "Idotaccent"
+      },
+      "ş": {
+        "codepoint": "U+015F",
+        "in_cmap": true,
+        "glyph": "scedilla"
+      },
+      "Ş": {
+        "codepoint": "U+015E",
+        "in_cmap": true,
+        "glyph": "Scedilla"
+      },
+      "ğ": {
+        "codepoint": "U+011F",
+        "in_cmap": true,
+        "glyph": "gbreve"
+      },
+      "Ğ": {
+        "codepoint": "U+011E",
+        "in_cmap": true,
+        "glyph": "Gbreve"
+      },
+      "ç": {
+        "codepoint": "U+00E7",
+        "in_cmap": true,
+        "glyph": "ccedilla"
+      },
+      "Ç": {
+        "codepoint": "U+00C7",
+        "in_cmap": true,
+        "glyph": "Ccedilla"
+      },
+      "ö": {
+        "codepoint": "U+00F6",
+        "in_cmap": true,
+        "glyph": "odieresis"
+      },
+      "Ö": {
+        "codepoint": "U+00D6",
+        "in_cmap": true,
+        "glyph": "Odieresis"
+      },
+      "ü": {
+        "codepoint": "U+00FC",
+        "in_cmap": true,
+        "glyph": "udieresis"
+      },
+      "Ü": {
+        "codepoint": "U+00DC",
+        "in_cmap": true,
+        "glyph": "Udieresis"
+      }
+    },
+    "locl_var_mi": true,
+    "GSUB_dil_sistemleri": [
+      "latn/CAT",
+      "latn/MOL",
+      "latn/ROM"
+    ],
+    "TRK_langsys_notu": "GSUB'da yalniz latn/CAT, latn/MOL, latn/ROM dil sistemi var; TRK YOK. Pratik etkisi dusuk: Turkce'de locl esas olarak i/I noktalama icin gerekir, Inter zaten ayri dotlessi ve Idotaccent glifleri sunuyor ve bunlar cmap'te dogrudan erisilebilir. Ama otomatik dil-duyarli i->dotlessi donusumu BEKLENMEMELI; dogru kod noktasi yazilmali.",
+    "S_cedilla_notu": "S/s U+015E/U+015F 'Scedilla/scedilla' glifleriyle karsilaniyor (cedilla, alt-virgul degil) - Turkce icin dogru olan budur; Romence U+0218/U+021A ayri gliflerle mevcut."
+  },
+  "olculemedi": [
+    {
+      "kalem": "yayincinin resmi sha256 kontrol toplami",
+      "neden": "rsms/inter release sayfasi ve GitHub API varlik kaydinda yayinci tarafindan uretilmis bir checksum ya da imza dosyasi yok; bu yuzden indirdigimiz zip'in hash'i ust-kaynakla capraz dogrulanamadi, yalnizca API'nin bildirdigi bayt boyutuyla (33707794) eslesti"
+    }
+  ],
+  "arac": {
+    "fonttools": "4.54.1",
+    "python": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3",
+    "kurulum_yapilmadi": "fonttools zaten sistemde kuruluydu (Python 3.12 framework); hicbir paket kurulmadi"
+  }
+}

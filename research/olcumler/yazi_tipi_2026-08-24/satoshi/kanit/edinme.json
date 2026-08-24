@@ -1,0 +1,32 @@
+{
+ "tarih": "2026-08-24",
+ "kaynak_sayfa": "https://www.fontshare.com/fonts/satoshi",
+ "indirme_url": "https://api.fontshare.com/v2/fonts/download/satoshi",
+ "content_disposition": "filename=Satoshi_Complete.zip",
+ "http": 200,
+ "zip": {
+  "yol": "research/olcumler/yazi_tipi_2026-08-24/satoshi/fonts/satoshi.zip",
+  "bayt": 2168134,
+  "sha256": "03ec52cf8d0b44628a3b8ce782ccbac13bc632017a6be8215a03322afa1a26ea",
+  "dosya_sayisi": 63
+ },
+ "onemli_dosyalar": {
+  "License/FFL.txt": {"bayt": 12734, "sha256": "145e7fe2429a3336ba215c070ef722000e01348a3e1baaa127e871bb5012f554"},
+  "Fonts/TTF/Satoshi-Variable.ttf": {"bayt": 127420, "sha256": "02ad131926aa46d282b6af73ad2bcaecb0ec6ef3b830a2f08dcabef44f1140ff"},
+  "Fonts/WEB/fonts/Satoshi-Variable.woff2": {"bayt": 42588, "sha256": "e739aff9b4d02c264341d6d4872edcda28e79373aeda936f659566a1cd3eb47f"}
+ },
+ "api_metadata": {
+  "endpoint": "https://api.fontshare.com/v2/fonts?q=satoshi&limit=2",
+  "id": "20e9fcdc-1e41-4559-a43d-1ede0adc8896",
+  "license_type": "itf_ffl",
+  "publisher": "Indian Type Foundry",
+  "api_version_alani": "1.0",
+  "api_axes_range_default": 780.0,
+  "CELISKI": "API 'version: 1.0' ve 'range_default: 780.0' diyor; İKİLİNİN KENDİSİ nameID5='Version 2.000' ve fvar wght varsayilan=900 diyor. İkili otoritedir, API metadata'sı bayat."
+ },
+ "lisans_sayfasi_olculemedi": {
+  "url": "https://www.fontshare.com/licenses/itf-ffl",
+  "http": 200,
+  "neden": "Sayfa JS ile çizilen bir SPA — sunucudan gelen HTML yalnızca 'Enable javascript to use this application.' taşıyor, lisans metni YOK (1744 bayt, kanit/ffl_page.html). Lisans metni bunun yerine paketin İÇİNDEN alındı (License/FFL.txt) — o metin ikili ile birlikte dağıtılan RESMİ nüshadır."
+ }
+}

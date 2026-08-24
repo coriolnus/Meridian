@@ -1,0 +1,360 @@
+{
+ "olculen": [
+  {
+   "dosya": "Satoshi-Variable.ttf",
+   "bayt": 127420,
+   "kb": 124.4,
+   "nameID0_telif": "Copyright 2017-2021 Indian Type Foundry. All rights reserved.",
+   "nameID1_aile": "Satoshi Variable",
+   "nameID5_surum": "Version 2.000",
+   "nameID6_ps": "SatoshiVariable-Bold",
+   "nameID13_lisans": "This Font Software is protected under domestic and international trademark and copyright law. You agree to identify the ITF fonts by name and credit the ITF's ownership of the trademarks and copyrights in any design or production credits.",
+   "nameID14_lisans_url": "https://fontshare.com/terms",
+   "nameID16_tipografik_aile": null,
+   "unitsPerEm": 1000,
+   "usWeightClass": 900,
+   "fsType_gomme_izni": 0,
+   "glif": 504,
+   "cmap_boyu": 431,
+   "fvar": {
+    "wght": [
+     300.0,
+     900.0,
+     900.0
+    ]
+   },
+   "adlandirilmis_kesitler": [
+    [
+     "Light",
+     {
+      "wght": 300.0
+     }
+    ],
+    [
+     "Regular",
+     {
+      "wght": 400.0
+     }
+    ],
+    [
+     "Medium",
+     {
+      "wght": 500.0
+     }
+    ],
+    [
+     "Bold",
+     {
+      "wght": 700.0
+     }
+    ],
+    [
+     "Black",
+     {
+      "wght": 900.0
+     }
+    ]
+   ],
+   "ozellikler": [
+    "aalt",
+    "case",
+    "ccmp",
+    "dlig",
+    "dnom",
+    "frac",
+    "kern",
+    "liga",
+    "locl",
+    "mark",
+    "numr",
+    "ordn",
+    "pnum",
+    "salt",
+    "sinf",
+    "ss01",
+    "ss02",
+    "ss03",
+    "ss04",
+    "subs",
+    "sups",
+    "tnum"
+   ],
+   "tnum_var": true,
+   "turkce": {
+    "U+0131 ı": true,
+    "U+0130 İ": true,
+    "U+015F ş": true,
+    "U+015E Ş": true,
+    "U+011F ğ": true,
+    "U+011E Ğ": true,
+    "U+00E7 ç": true,
+    "U+00C7 Ç": true,
+    "U+00F6 ö": true,
+    "U+00D6 Ö": true,
+    "U+00FC ü": true,
+    "U+00DC Ü": true
+   },
+   "turkce_eksik": [],
+   "locl_var": true,
+   "boru_kumesi_istenen": 315,
+   "boru_kumesi_fontta_yok": [
+    "U+007F",
+    "U+0080",
+    "U+0081",
+    "U+0082",
+    "U+0083",
+    "U+0084",
+    "U+0085",
+    "U+0086",
+    "U+0087",
+    "U+0088",
+    "U+0089",
+    "U+008A",
+    "U+008B",
+    "U+008C",
+    "U+008D",
+    "U+008E",
+    "U+008F",
+    "U+0090",
+    "U+0091",
+    "U+0092",
+    "U+0093",
+    "U+0094",
+    "U+0095",
+    "U+0096",
+    "U+0097",
+    "U+0098",
+    "U+0099",
+    "U+009A",
+    "U+009B",
+    "U+009C",
+    "U+009D",
+    "U+009E",
+    "U+009F",
+    "U+00A0",
+    "U+00AA",
+    "U+00AD",
+    "U+00BA",
+    "U+0328",
+    "U+0394",
+    "U+03A3",
+    "U+03C3",
+    "U+03C4",
+    "U+2010",
+    "U+2011",
+    "U+20BA",
+    "U+21D2",
+    "U+21E7",
+    "U+222A",
+    "U+2303",
+    "U+2304",
+    "U+2318",
+    "U+2325",
+    "U+23CE",
+    "U+25AA",
+    "U+25AB",
+    "U+25B6",
+    "U+25B8",
+    "U+25BC",
+    "U+25BE",
+    "U+25C6",
+    "U+25C7",
+    "U+25C8",
+    "U+25D0",
+    "U+2715",
+    "U+2717",
+    "U+27E8",
+    "U+27E9"
+   ],
+   "rakam_advance": [
+    437,
+    559,
+    570,
+    605,
+    611,
+    630,
+    657,
+    659,
+    718
+   ]
+  },
+  {
+   "dosya": "Satoshi-Variable.woff2",
+   "bayt": 42588,
+   "kb": 41.6,
+   "nameID0_telif": "Copyright 2017-2021 Indian Type Foundry. All rights reserved.",
+   "nameID1_aile": "Satoshi Variable",
+   "nameID5_surum": "Version 2.000",
+   "nameID6_ps": "SatoshiVariable-Bold",
+   "nameID13_lisans": "This Font Software is protected under domestic and international trademark and copyright law. You agree to identify the ITF fonts by name and credit the ITF's ownership of the trademarks and copyrights in any design or production credits.",
+   "nameID14_lisans_url": "https://fontshare.com/terms",
+   "nameID16_tipografik_aile": null,
+   "unitsPerEm": 1000,
+   "usWeightClass": 900,
+   "fsType_gomme_izni": 0,
+   "glif": 504,
+   "cmap_boyu": 431,
+   "fvar": {
+    "wght": [
+     300.0,
+     900.0,
+     900.0
+    ]
+   },
+   "adlandirilmis_kesitler": [
+    [
+     "Light",
+     {
+      "wght": 300.0
+     }
+    ],
+    [
+     "Regular",
+     {
+      "wght": 400.0
+     }
+    ],
+    [
+     "Medium",
+     {
+      "wght": 500.0
+     }
+    ],
+    [
+     "Bold",
+     {
+      "wght": 700.0
+     }
+    ],
+    [
+     "Black",
+     {
+      "wght": 900.0
+     }
+    ]
+   ],
+   "ozellikler": [
+    "aalt",
+    "case",
+    "ccmp",
+    "dlig",
+    "dnom",
+    "frac",
+    "kern",
+    "liga",
+    "locl",
+    "mark",
+    "numr",
+    "ordn",
+    "pnum",
+    "salt",
+    "sinf",
+    "ss01",
+    "ss02",
+    "ss03",
+    "ss04",
+    "subs",
+    "sups",
+    "tnum"
+   ],
+   "tnum_var": true,
+   "turkce": {
+    "U+0131 ı": true,
+    "U+0130 İ": true,
+    "U+015F ş": true,
+    "U+015E Ş": true,
+    "U+011F ğ": true,
+    "U+011E Ğ": true,
+    "U+00E7 ç": true,
+    "U+00C7 Ç": true,
+    "U+00F6 ö": true,
+    "U+00D6 Ö": true,
+    "U+00FC ü": true,
+    "U+00DC Ü": true
+   },
+   "turkce_eksik": [],
+   "locl_var": true,
+   "boru_kumesi_istenen": 315,
+   "boru_kumesi_fontta_yok": [
+    "U+007F",
+    "U+0080",
+    "U+0081",
+    "U+0082",
+    "U+0083",
+    "U+0084",
+    "U+0085",
+    "U+0086",
+    "U+0087",
+    "U+0088",
+    "U+0089",
+    "U+008A",
+    "U+008B",
+    "U+008C",
+    "U+008D",
+    "U+008E",
+    "U+008F",
+    "U+0090",
+    "U+0091",
+    "U+0092",
+    "U+0093",
+    "U+0094",
+    "U+0095",
+    "U+0096",
+    "U+0097",
+    "U+0098",
+    "U+0099",
+    "U+009A",
+    "U+009B",
+    "U+009C",
+    "U+009D",
+    "U+009E",
+    "U+009F",
+    "U+00A0",
+    "U+00AA",
+    "U+00AD",
+    "U+00BA",
+    "U+0328",
+    "U+0394",
+    "U+03A3",
+    "U+03C3",
+    "U+03C4",
+    "U+2010",
+    "U+2011",
+    "U+20BA",
+    "U+21D2",
+    "U+21E7",
+    "U+222A",
+    "U+2303",
+    "U+2304",
+    "U+2318",
+    "U+2325",
+    "U+23CE",
+    "U+25AA",
+    "U+25AB",
+    "U+25B6",
+    "U+25B8",
+    "U+25BC",
+    "U+25BE",
+    "U+25C6",
+    "U+25C7",
+    "U+25C8",
+    "U+25D0",
+    "U+2715",
+    "U+2717",
+    "U+27E8",
+    "U+27E9"
+   ],
+   "rakam_advance": [
+    437,
+    559,
+    570,
+    605,
+    611,
+    630,
+    657,
+    659,
+    718
+   ]
+  }
+ ]
+}

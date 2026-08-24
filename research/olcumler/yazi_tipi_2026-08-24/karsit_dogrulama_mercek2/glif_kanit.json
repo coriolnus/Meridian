@@ -1,0 +1,1845 @@
+{
+ "inter-vf(YENI-sans)": {
+  "dosya": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/woff2/inter-vf.woff2",
+  "sha256": "465cab77239c87ed",
+  "glif": 644,
+  "cmap": 278,
+  "upem": 2048,
+  "turkce": {
+   "U+00C7 Ç": {
+    "cmapte": true,
+    "glif": "Ccedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "C",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1496,
+    "murekkep": 167438,
+    "es_karakter": "C",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00D6 Ö": {
+    "cmapte": true,
+    "glif": "Odieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "O",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1566,
+    "murekkep": 195730,
+    "es_karakter": "O",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00DC Ü": {
+    "cmapte": true,
+    "glif": "Udieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "U",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1524,
+    "murekkep": 176316,
+    "es_karakter": "U",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00E7 ç": {
+    "cmapte": true,
+    "glif": "ccedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "c",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1170,
+    "murekkep": 123643,
+    "es_karakter": "c",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00F6 ö": {
+    "cmapte": true,
+    "glif": "odieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "o",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1228,
+    "murekkep": 151998,
+    "es_karakter": "o",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00FC ü": {
+    "cmapte": true,
+    "glif": "udieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "u",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1211,
+    "murekkep": 144247,
+    "es_karakter": "u",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+011E Ğ": {
+    "cmapte": true,
+    "glif": "Gbreve",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "G",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0306",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1528,
+    "murekkep": 200892,
+    "es_karakter": "G",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+011F ğ": {
+    "cmapte": true,
+    "glif": "gbreve",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "g",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0306",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1256,
+    "murekkep": 210187,
+    "es_karakter": "g",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+0130 İ": {
+    "cmapte": true,
+    "glif": "Idotaccent",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "I",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0307",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 550,
+    "murekkep": 80964,
+    "es_karakter": "I",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+0131 ı": {
+    "cmapte": true,
+    "glif": "dotlessi",
+    "kontur": {
+     "var": true,
+     "kontur": 1,
+     "bilesen": []
+    },
+    "advance": 496,
+    "murekkep": 52236,
+    "es_karakter": "i",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+015E Ş": {
+    "cmapte": true,
+    "glif": "Scedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "S",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1314,
+    "murekkep": 180018,
+    "es_karakter": "S",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+015F ş": {
+    "cmapte": true,
+    "glif": "scedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "s",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 1081,
+    "murekkep": 134493,
+    "es_karakter": "s",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   }
+  },
+  "para": {
+   "U+0024 $": {
+    "cmapte": true,
+    "glif": "dollar",
+    "kontur_var": true,
+    "advance": 1314,
+    "murekkep": 205876,
+    "HAYATTA": true
+   },
+   "U+0025 %": {
+    "cmapte": true,
+    "glif": "percent",
+    "kontur_var": true,
+    "advance": 2011,
+    "murekkep": 177661,
+    "HAYATTA": true
+   },
+   "U+00B1 ±": {
+    "cmapte": true,
+    "glif": "plusminus",
+    "kontur_var": true,
+    "advance": 1355,
+    "murekkep": 105942,
+    "HAYATTA": true
+   },
+   "U+00B7 ·": {
+    "cmapte": true,
+    "glif": "periodcentered",
+    "kontur_var": true,
+    "advance": 590,
+    "murekkep": 14370,
+    "HAYATTA": true
+   },
+   "U+00D7 ×": {
+    "cmapte": true,
+    "glif": "multiply",
+    "kontur_var": true,
+    "advance": 1355,
+    "murekkep": 90529,
+    "HAYATTA": true
+   },
+   "U+2013 –": {
+    "cmapte": true,
+    "glif": "endash",
+    "kontur_var": true,
+    "advance": 1024,
+    "murekkep": 41824,
+    "HAYATTA": true
+   },
+   "U+2014 —": {
+    "cmapte": true,
+    "glif": "emdash",
+    "kontur_var": true,
+    "advance": 2048,
+    "murekkep": 83648,
+    "HAYATTA": true
+   },
+   "U+2030 ‰": {
+    "cmapte": true,
+    "glif": "perthousand",
+    "kontur_var": true,
+    "advance": 2735,
+    "murekkep": 235759,
+    "HAYATTA": true
+   },
+   "U+20BA ₺": {
+    "cmapte": true,
+    "glif": "uni20BA",
+    "kontur_var": true,
+    "advance": 1217,
+    "murekkep": 154826,
+    "HAYATTA": true
+   },
+   "U+2192 →": {
+    "cmapte": true,
+    "glif": "arrowright",
+    "kontur_var": true,
+    "advance": 1954,
+    "murekkep": 116197,
+    "HAYATTA": true
+   },
+   "U+2212 −": {
+    "cmapte": true,
+    "glif": "minus",
+    "kontur_var": true,
+    "advance": 1355,
+    "murekkep": 40146,
+    "HAYATTA": true
+   },
+   "U+2264 ≤": {
+    "cmapte": true,
+    "glif": "lessequal",
+    "kontur_var": true,
+    "advance": 1355,
+    "murekkep": 111947,
+    "HAYATTA": true
+   },
+   "U+2265 ≥": {
+    "cmapte": true,
+    "glif": "greaterequal",
+    "kontur_var": true,
+    "advance": 1355,
+    "murekkep": 111907,
+    "HAYATTA": true
+   }
+  }
+ },
+ "geist-mono-vf(YENI-mono)": {
+  "dosya": "/Users/erdemozturk/AI-Trading/research/olcumler/yazi_tipi_2026-08-24/woff2/geist-mono-vf.woff2",
+  "sha256": "7420049593c9b0b4",
+  "glif": 281,
+  "cmap": 260,
+  "upem": 1000,
+  "turkce": {
+   "U+00C7 Ç": {
+    "cmapte": true,
+    "glif": "Ccedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "C",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 160301,
+    "es_karakter": "C",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00D6 Ö": {
+    "cmapte": true,
+    "glif": "Odieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "O",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 178455,
+    "es_karakter": "O",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00DC Ü": {
+    "cmapte": true,
+    "glif": "Udieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "U",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 163106,
+    "es_karakter": "U",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00E7 ç": {
+    "cmapte": true,
+    "glif": "ccedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "c",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 132320,
+    "es_karakter": "c",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00F6 ö": {
+    "cmapte": true,
+    "glif": "odieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "o",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 140546,
+    "es_karakter": "o",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00FC ü": {
+    "cmapte": true,
+    "glif": "udieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "u",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 131874,
+    "es_karakter": "u",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+011E Ğ": {
+    "cmapte": true,
+    "glif": "Gbreve",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "G",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0306",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 189764,
+    "es_karakter": "G",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+011F ğ": {
+    "cmapte": true,
+    "glif": "gbreve",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "g",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0306",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 195321,
+    "es_karakter": "g",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+0130 İ": {
+    "cmapte": true,
+    "glif": "Idotaccent",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "I",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0307",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 132451,
+    "es_karakter": "I",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+0131 ı": {
+    "cmapte": true,
+    "glif": "dotlessi",
+    "kontur": {
+     "var": true,
+     "kontur": 1,
+     "bilesen": []
+    },
+    "advance": 600,
+    "murekkep": 99319,
+    "es_karakter": "i",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+015E Ş": {
+    "cmapte": true,
+    "glif": "Scedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "S",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 187064,
+    "es_karakter": "S",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+015F ş": {
+    "cmapte": true,
+    "glif": "scedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "s",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 147785,
+    "es_karakter": "s",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   }
+  },
+  "para": {
+   "U+0024 $": {
+    "cmapte": true,
+    "glif": "dollar",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 208915,
+    "HAYATTA": true
+   },
+   "U+0025 %": {
+    "cmapte": true,
+    "glif": "percent",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 174509,
+    "HAYATTA": true
+   },
+   "U+00B1 ±": {
+    "cmapte": true,
+    "glif": "plusminus",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 107327,
+    "HAYATTA": true
+   },
+   "U+00B7 ·": {
+    "cmapte": true,
+    "glif": "periodcentered",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 16320,
+    "HAYATTA": true
+   },
+   "U+00D7 ×": {
+    "cmapte": true,
+    "glif": "multiply",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 78771,
+    "HAYATTA": true
+   },
+   "U+2013 –": {
+    "cmapte": true,
+    "glif": "endash",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 34294,
+    "HAYATTA": true
+   },
+   "U+2014 —": {
+    "cmapte": true,
+    "glif": "emdash",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 47484,
+    "HAYATTA": true
+   },
+   "U+2030 ‰": {
+    "cmapte": true,
+    "glif": "perthousand",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 201692,
+    "HAYATTA": true
+   },
+   "U+20BA ₺": {
+    "cmapte": false,
+    "glif": null,
+    "HAYATTA": false
+   },
+   "U+2192 →": {
+    "cmapte": true,
+    "glif": "arrowright",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 94468,
+    "HAYATTA": true
+   },
+   "U+2212 −": {
+    "cmapte": true,
+    "glif": "minus",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 35815,
+    "HAYATTA": true
+   },
+   "U+2264 ≤": {
+    "cmapte": true,
+    "glif": "lessequal",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 109874,
+    "HAYATTA": true
+   },
+   "U+2265 ≥": {
+    "cmapte": true,
+    "glif": "greaterequal",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 109929,
+    "HAYATTA": true
+   }
+  }
+ },
+ "recursive-sans(ESKI)": {
+  "dosya": "/Users/erdemozturk/AI-Trading/meridian/web/fonts/recursive-sans-vf.woff2",
+  "sha256": "942b5aa41634c906",
+  "glif": 356,
+  "cmap": 260,
+  "upem": 1000,
+  "turkce": {
+   "U+00C7 Ç": {
+    "cmapte": true,
+    "glif": "Ccedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "C",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00308",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 163388,
+    "es_karakter": "C",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00D6 Ö": {
+    "cmapte": true,
+    "glif": "Odieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "O",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00303",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 650,
+    "murekkep": 194432,
+    "es_karakter": "O",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00DC Ü": {
+    "cmapte": true,
+    "glif": "Udieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "U",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00303",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 650,
+    "murekkep": 183920,
+    "es_karakter": "U",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00E7 ç": {
+    "cmapte": true,
+    "glif": "ccedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "c",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 500,
+    "murekkep": 118942,
+    "es_karakter": "c",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00F6 ö": {
+    "cmapte": true,
+    "glif": "odieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "o",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 150693,
+    "es_karakter": "o",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00FC ü": {
+    "cmapte": true,
+    "glif": "udieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "u",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 142988,
+    "es_karakter": "u",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+011E Ğ": {
+    "cmapte": true,
+    "glif": "Gbreve",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "G",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00301",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 650,
+    "murekkep": 214353,
+    "es_karakter": "G",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+011F ğ": {
+    "cmapte": true,
+    "glif": "gbreve",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "g",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0306",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 247623,
+    "es_karakter": "g",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+0130 İ": {
+    "cmapte": true,
+    "glif": "Idotaccent",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": []
+    },
+    "advance": 500,
+    "murekkep": 125756,
+    "es_karakter": "I",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+0131 ı": {
+    "cmapte": true,
+    "glif": "dotlessi",
+    "kontur": {
+     "var": true,
+     "kontur": 1,
+     "bilesen": []
+    },
+    "advance": 350,
+    "murekkep": 59439,
+    "es_karakter": "i",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+015E Ş": {
+    "cmapte": true,
+    "glif": "Scedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "S",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00308",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 180714,
+    "es_karakter": "S",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+015F ş": {
+    "cmapte": true,
+    "glif": "scedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "s",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 550,
+    "murekkep": 146018,
+    "es_karakter": "s",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   }
+  },
+  "para": {
+   "U+0024 $": {
+    "cmapte": true,
+    "glif": "dollar",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 189868,
+    "HAYATTA": true
+   },
+   "U+0025 %": {
+    "cmapte": true,
+    "glif": "percent",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 184658,
+    "HAYATTA": true
+   },
+   "U+00B1 ±": {
+    "cmapte": true,
+    "glif": "plusminus",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 110476,
+    "HAYATTA": true
+   },
+   "U+00B7 ·": {
+    "cmapte": true,
+    "glif": "periodcentered",
+    "kontur_var": true,
+    "advance": 350,
+    "murekkep": 20590,
+    "HAYATTA": true
+   },
+   "U+00D7 ×": {
+    "cmapte": true,
+    "glif": "multiply",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 80489,
+    "HAYATTA": true
+   },
+   "U+2013 –": {
+    "cmapte": true,
+    "glif": "endash",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 44199,
+    "HAYATTA": true
+   },
+   "U+2014 —": {
+    "cmapte": true,
+    "glif": "emdash",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 55262,
+    "HAYATTA": true
+   },
+   "U+2030 ‰": {
+    "cmapte": true,
+    "glif": "perthousand",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 170981,
+    "HAYATTA": true
+   },
+   "U+20BA ₺": {
+    "cmapte": true,
+    "glif": "uni20BA",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 152641,
+    "HAYATTA": true
+   },
+   "U+2192 →": {
+    "cmapte": true,
+    "glif": "arrowright",
+    "kontur_var": true,
+    "advance": 800,
+    "murekkep": 102101,
+    "HAYATTA": true
+   },
+   "U+2212 −": {
+    "cmapte": true,
+    "glif": "minus",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 43903,
+    "HAYATTA": true
+   },
+   "U+2264 ≤": {
+    "cmapte": true,
+    "glif": "lessequal",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 111244,
+    "HAYATTA": true
+   },
+   "U+2265 ≥": {
+    "cmapte": true,
+    "glif": "greaterequal",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 111098,
+    "HAYATTA": true
+   }
+  }
+ },
+ "recursive-mono(ESKI)": {
+  "dosya": "/Users/erdemozturk/AI-Trading/meridian/web/fonts/recursive-mono-vf.woff2",
+  "sha256": "b4e57a7b75bfa8d7",
+  "glif": 356,
+  "cmap": 260,
+  "upem": 1000,
+  "turkce": {
+   "U+00C7 Ç": {
+    "cmapte": true,
+    "glif": "Ccedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "C",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00308",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 163388,
+    "es_karakter": "C",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00D6 Ö": {
+    "cmapte": true,
+    "glif": "Odieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "O",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00303",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 192756,
+    "es_karakter": "O",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00DC Ü": {
+    "cmapte": true,
+    "glif": "Udieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "U",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00303",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 178825,
+    "es_karakter": "U",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00E7 ç": {
+    "cmapte": true,
+    "glif": "ccedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "c",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 126542,
+    "es_karakter": "c",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00F6 ö": {
+    "cmapte": true,
+    "glif": "odieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "o",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 150692,
+    "es_karakter": "o",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+00FC ü": {
+    "cmapte": true,
+    "glif": "udieresis",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": [
+      {
+       "ad": "u",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0308",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 142988,
+    "es_karakter": "u",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+011E Ğ": {
+    "cmapte": true,
+    "glif": "Gbreve",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "G",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00301",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 204645,
+    "es_karakter": "G",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+011F ğ": {
+    "cmapte": true,
+    "glif": "gbreve",
+    "kontur": {
+     "var": true,
+     "kontur": 3,
+     "bilesen": [
+      {
+       "ad": "g",
+       "coz": {
+        "var": true,
+        "kontur": 2,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0306",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 247623,
+    "es_karakter": "g",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+0130 İ": {
+    "cmapte": true,
+    "glif": "Idotaccent",
+    "kontur": {
+     "var": true,
+     "kontur": 4,
+     "bilesen": []
+    },
+    "advance": 600,
+    "murekkep": 142373,
+    "es_karakter": "I",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+0131 ı": {
+    "cmapte": true,
+    "glif": "dotlessi",
+    "kontur": {
+     "var": true,
+     "kontur": 1,
+     "bilesen": []
+    },
+    "advance": 600,
+    "murekkep": 66361,
+    "es_karakter": "i",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+015E Ş": {
+    "cmapte": true,
+    "glif": "Scedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "S",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "glyph00308",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 180717,
+    "es_karakter": "S",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   },
+   "U+015F ş": {
+    "cmapte": true,
+    "glif": "scedilla",
+    "kontur": {
+     "var": true,
+     "kontur": 2,
+     "bilesen": [
+      {
+       "ad": "s",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      },
+      {
+       "ad": "uni0327",
+       "coz": {
+        "var": true,
+        "kontur": 1,
+        "bilesen": []
+       }
+      }
+     ]
+    },
+    "advance": 600,
+    "murekkep": 142850,
+    "es_karakter": "s",
+    "es_ile_ayni_piksel": false,
+    "HAYATTA": true
+   }
+  },
+  "para": {
+   "U+0024 $": {
+    "cmapte": true,
+    "glif": "dollar",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 189868,
+    "HAYATTA": true
+   },
+   "U+0025 %": {
+    "cmapte": true,
+    "glif": "percent",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 184658,
+    "HAYATTA": true
+   },
+   "U+00B1 ±": {
+    "cmapte": true,
+    "glif": "plusminus",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 110476,
+    "HAYATTA": true
+   },
+   "U+00B7 ·": {
+    "cmapte": true,
+    "glif": "periodcentered",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 25439,
+    "HAYATTA": true
+   },
+   "U+00D7 ×": {
+    "cmapte": true,
+    "glif": "multiply",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 80489,
+    "HAYATTA": true
+   },
+   "U+2013 –": {
+    "cmapte": true,
+    "glif": "endash",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 44199,
+    "HAYATTA": true
+   },
+   "U+2014 —": {
+    "cmapte": true,
+    "glif": "emdash",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 55262,
+    "HAYATTA": true
+   },
+   "U+2030 ‰": {
+    "cmapte": true,
+    "glif": "perthousand",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 170981,
+    "HAYATTA": true
+   },
+   "U+20BA ₺": {
+    "cmapte": true,
+    "glif": "uni20BA",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 152641,
+    "HAYATTA": true
+   },
+   "U+2192 →": {
+    "cmapte": true,
+    "glif": "arrowright",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 95970,
+    "HAYATTA": true
+   },
+   "U+2212 −": {
+    "cmapte": true,
+    "glif": "minus",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 43903,
+    "HAYATTA": true
+   },
+   "U+2264 ≤": {
+    "cmapte": true,
+    "glif": "lessequal",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 111244,
+    "HAYATTA": true
+   },
+   "U+2265 ≥": {
+    "cmapte": true,
+    "glif": "greaterequal",
+    "kontur_var": true,
+    "advance": 600,
+    "murekkep": 111098,
+    "HAYATTA": true
+   }
+  }
+ }
+}
