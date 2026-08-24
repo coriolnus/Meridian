@@ -2183,7 +2183,10 @@ function pvAkisGovdeHTML(a) {
   // Yolculuk bu yüzden SERİ AİLESİNİN kendi merdiveninde çizilir: koyu → orta → açık.
   // Maketten alınan şey renk değil YAPI (üç katman + ilerleme), ve asıl derdi olan CANLILIK
   // merdivenin yukarı kaydırılmasıyla geldi (en koyu basamak L* 19,3 → 30,1).
-  const segRenk = (i, n) => (i === n - 1) ? "var(--sky)" : (i < 2 ? "var(--sapphire)" : "var(--blue)");
+  // HUNİ KENDİ JETON AİLESİNİ OKUR (2026-08-24, operatör: "canlılık istiyorum"). Seri
+  // üçlüsü (--sapphire/--blue/--sky) ÇG1 ve kroma tavanına çivili ve IC grafiğini besliyor;
+  // huniye onu dayatmak "tek mavi" görüntüsünü üretiyordu. Gerekçe jeton bloğunda.
+  const segRenk = (i, n) => (i === n - 1) ? "var(--huni-3)" : (i < 2 ? "var(--huni-1)" : "var(--huni-2)");
   const nSeg = as.length - 1;
   const govde = as.slice(0, -1).map((s, i) => {
     const g0 = pvHuniGenislik(s.n, taban), g1 = pvHuniGenislik(as[i + 1].n, taban);

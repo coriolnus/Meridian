@@ -287,13 +287,19 @@ def test_gece_TAM_palet_hicbir_renk_jetonu_YARIM_KALMAZ():
     # SERİ MERDİVENİ JETON EKLEMEDİ ve bu bilinçli: --blue/--violet2 tanımlıydı ama ÖLÜYDÜ
     # (0 okuyucu). Yeni ad açmak yerine o ikisi diriltildi — ad değiştirmek app.js'in
     # `IC_SERI.sim = "var(--violet)"` sözleşmesini ve kesik-çizgi desenini kırardı.
-    # 2026-08-24 (operatör turu): değer katmanı SAYISI DEĞİŞMEDİ (45) ama ADLAR değişti.
+    # 2026-08-24 İKİNCİ TUR (operatör: "canlılık istiyorum"): değer katmanı 45 → 48.
+    #   +3  --huni-1/2/3  — huninin KENDİ jeton ailesi. Seri üçlüsünden AYRI olması gerekliydi:
+    #        `--sapphire/--blue/--sky` ÇG1'e ve kroma tavanına çivili ve IC grafiğini besliyor;
+    #        huniye o kısıtı dayatmak onu tek-hue maviye hapsediyordu (operatörün gördüğü kusur).
+    #        Gevşetilen TEK kısıt kroma tavanı (ses yüksekliği); mod/nav bandı, şiddet ayrıklığı
+    #        ve renk körü ΔL* merdiveni AYNEN korundu ve yeni üçlü hepsini payla geçiyor.
+    # 2026-08-24 BİRİNCİ TUR: değer katmanı SAYISI DEĞİŞMEDİ (45) ama ADLAR değişti.
     #   −2  --violet · --violet2   +2  --sapphire · --sky
     # Yeni adlar rolü söylüyor; eskiler "tarihsel ad, farklı değer" ikilemini taşıyordu.
     # ~~--lavender / --blue-wash da eklenmişti~~ GERİ ALINDI: lavanta `--mod-canli` ile
     # BİREBİR aynı hex (#7c3aed) — "canlı para" çipiyle bir grafik serisi aynı renk olamaz.
-    assert (len(TEMEL) == 33 and len(GUNDUZ) == 45 and len(ROL_GUNDUZ) == 36
-            and len(ROOT) == 114 and len(GECE_OV) == 81), \
+    assert (len(TEMEL) == 33 and len(GUNDUZ) == 48 and len(ROL_GUNDUZ) == 36
+            and len(ROOT) == 117 and len(GECE_OV) == 84), \
         (f"jeton sayımı değişmiş: temel {len(TEMEL)} · değer {len(GUNDUZ)} · rol "
          f"{len(ROL_GUNDUZ)} · :root {len(ROOT)} · gece {len(GECE_OV)}")
 
@@ -383,8 +389,8 @@ def test_DTCG_semasi_gecerli():
     # gerekçelendirildi: 23 temel (tema-bağımsız) + 2×43 değer (tema, zemin başına) +
     # 2×31 rol (D1'in üçüncü katmanı, zemin başına). Sayı bir BÜTÇE değil bir MUHASEBEdir:
     # burada tutmayan bir toplam, DTCG ağacına eş-kayıtsız bir dal eklendiğini söyler.
-    assert sayac == 33 + 2 * 45 + 2 * 36, \
-        f"jeton sayımı {sayac} (beklenen 195 = 33 temel + 2×47 değer + 2×36 rol)"
+    assert sayac == 33 + 2 * 48 + 2 * 36, \
+        f"jeton sayımı {sayac} (beklenen 201 = 33 temel + 2×47 değer + 2×36 rol)"
 
 
 def test_takma_adlar_COZULUYOR():

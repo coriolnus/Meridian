@@ -257,6 +257,24 @@
      karışıyordu; sapphire+lavender+sky'da ΔE-min 15.3 (gece 17.6) ve kart-oranı min 3.68.
      Yeşil BİLEREK üçlüye alınmadı: ΔE'si bol ama şiddet ("ok") hue'suyla çakışırdı. */
   --blue:#006f94; --sapphire:#004860; --sky:#0998c8;
+  /* HUNİ BASAMAK RENKLERİ — AYRI JETON AİLESİ (2026-08-24, OPERATÖR KARARI: "canlılık istiyorum").
+     NİYE SERİ JETONLARINDAN AYRI: `--sapphire/--blue/--sky` üçlüsü ÇG1'e (komşu ΔL* ≥15) ve
+     kroma tavanına (≤0,75 × şiddet) çivili ve o üçlü IC grafiğini, seri lekelerini, efsaneyi
+     besliyor. Huni ise KENDİ kartının içinde bir arka-plan bandıdır ve basamakları AYRICA
+     metinle+sayıyla etiketli. İki işi tek jetonla yapmak, birinin kısıtını ötekine dayatıyordu —
+     huninin "tek mavi" görünmesinin sebebi tam olarak buydu.
+     MAKETİN ÜÇLÜSÜ ALINAMADI ve gerekçe ölçüldü: `#2563eb`→`--nav` · `#7c3aed`→`--mod-canli`
+     (BİREBİR hex) · `#16a34a`→şiddet yeşilinin hue'su. Maketin üç rengi de bizim ÜÇ SİNYAL
+     bandımızın içinde; kopyalamak canlı-para çipini bir dekorasyonla karıştırırdı.
+     OPERATÖR KARARIYLA GEVŞETİLEN TEK ŞEY KROMA TAVANI (bir SES YÜKSEKLİĞİ kısıtıydı).
+     GEVŞETİLMEYENLER — bunlar KARIŞMA kısıtları, gevşetmek rengi güzelleştirmez sinyali bozar:
+       · mod bandı (OKLCh 285-335°) ve nav bandı (255-272°) — ikisine de 8° PAY bırakıldı
+       · şiddet üçlüsü + yön çiftine ΔE2000 ≥ 15
+       · renk körü LUMİNANS merdiveni: komşu ΔL* ≥ 15 (tek taşıyıcıları budur)
+       · dört zeminde (bg·bg2·card·card-2) kontrast ≥ 3
+     ÖLÇÜLDÜ (gündüz): hue 154→209→245 (dengeli adım 55°/36°) · L* 23,7→42,2→57,9 ·
+     ΔL* 18,5/15,7 · ΔE2000-min 23,8 · kroma 0,083→0,159 (eski tavan 0,125 — kazanılan canlılık). */
+  --huni-1:#014221; --huni-2:#096e7b; --huni-3:#0291e3;
   --green-t:rgba(0,150,62,.10); --amber-t:rgba(199,67,0,.10); --red-t:rgba(195,0,45,.10);
   /* SAKİNLİK YÜZEYİ — Dub'ın KENDİ `surface.tinted-accent` jetonu (soft-mint), AYNEN.
      Bir DURUM rengi değil bir ZEMİN tintidir ve şiddet kanalıyla ilgisi yoktur (karar §10.5).
@@ -586,6 +604,10 @@
      ÖLÇÜLDÜ (gece kart zemininde): blue 5.95 · lavender 5.56 · sapphire 4.11 · sky 6.9 —
      dördü de ÇG2 (≥3) üstünde; üçlünün ΔE-min'i 17.6. */
   --blue:#7ac1ff; --sapphire:#d2e9fe; --sky:#4e96d4;
+  /* Huni, gece. Aynı yolculuk ters yönde (koyu zeminde en belirgin olan en AÇIK basamaktır).
+     ÖLÇÜLDÜ: hue 162→206→247 · L* 91,7→75,5→60,1 · ΔL* 16,2/15,4 · ΔE2000-min 24,8 ·
+     kroma 0,122→0,171 (eski tavan 0,118). */
+  --huni-1:#92fcca; --huni-2:#07cddf; --huni-3:#0296f2;
   --green-t:rgba(0,149,61,.10); --amber-t:rgba(255,90,0,.10); --red-t:rgba(255,126,124,.10);
   /* SAKİNLİK YÜZEYİ · gece — TÜRETİLDİ (Dub'da karanlık tema YOK, §1.2 damgası geçerli).
      Yöntem ters çevirme DEĞİL: soft-mint'in OKLCh hue'su (156,7°) korundu, L gece yüzey
