@@ -1,0 +1,85 @@
+card_id: EDG-2026-057
+family: kapi_gerekcelendirme
+thesis: >
+  `/api/topviews` (2026-08-24) toplulaştırması, planların kapı-reddi kırılımını İLK KEZ tek
+  paydadan gösterdi. En çok ateşleyen kapı `leading_sector`: 390 planın 217'sini reddediyor.
+  HİPOTEZ: bu kapı GEREKÇESİZDİR — reddettiği planlar donmuş kasada koşulsa pozitif beklenti
+  verir. Kapı, sistemin en büyük tek işlem-kısıtıysa ve reddettikleri kârlıysa, "neden az işlem
+  açılıyor" sorusunun cevabı bir hata olur.
+  BU KART SADECE reddedilen-ve-HİÇ-İŞLEME-DÖNMEMİŞ kohortun karşı-olgusal beklentisini ölçer.
+  Hiçbir şey bağlamaz, CANLI DEĞİŞMEZ, kapı bu kartla kaldırılamaz (kaldırma AYRI kart).
+
+peek_beyani: >
+  ⚠ BU KART BİR GÖZLEMDEN SONRA YAZILDI VE BUNU BEYAN EDER (eşik-gözetleme sınıfı).
+  Ölçüm ucunu yazan ajan, kartsız bir gözlem raporladı: `leading_sector`da REVIEW'a rağmen
+  işleme dönmüş 52 işlem +3,09R / PF 1,16; `GO` hükmü almış 28 işlem −3,15R / PF 0,77.
+  O SAYI BU KARTIN KANITI DEĞİLDİR ve olamaz — üç nedenle:
+    (a) EŞİK SONRADAN: gözlem eşik donmadan önce görüldü.
+    (b) SEÇİM YANLILIĞI (öldürücü olan bu): 52 plan REVIEW'dan rastgele geçmedi; birileri/bir şey
+        onları seçti. Seçimin kendisi bilgi taşıyor olabilir — o hâlde ölçülen şey kapının
+        yanlışlığı değil, seçicinin isabetidir.
+    (c) PAYDA KARIŞMASI: 217 PLAN, 52 İŞLEM. Aynı satırda okunursa "217 planın PF'i 1,16" gibi
+        okunur; PF 52 işlemindir.
+  Bu yüzden kart o 52'yi TEST KÜMESİNDEN DIŞLAR ve dokunulmamış dilimi ölçer (aşağıda).
+
+evidence_refs:
+  - "meridian/topviews.py — kapi_reddi facet'i (kaynak: trade_plans.jsonl gate_checks[].passed==false, 390 plan, 11 ölçüt, pencere 2023-01-20→2026-07-28)"
+  - "commit b11fc97 — uç ve 17 çivisi; altı hedefli mutasyonun altısı yakalandı"
+  - "docs/GOZLEM-2026-08-24-LEADING-SECTOR.md — gözlemin kendisi, hüküm damgasız"
+
+universe: >
+  TEST KÜMESİ = `leading_sector` ölçütünde takılmış VE hiçbir zaman işleme dönmemiş planlar
+  (gözlemdeki 217'den, işleme dönen 52 ÇIKARILIR → beklenen ~165; gerçek sayı ölçümde raporlanır).
+  Bu dilim dokunulmamıştır: hiçbir insan/mekanizma onları seçmedi, o yüzden seçim yanlılığı yok.
+  Kasa: edg032c DONMUŞ taban (künye sha doğrulanır; ezilirse kart geçersiz). Maliyet modeli
+  tabanla AYNI — friksiyon indirimi YOK.
+
+features_asof: >
+  Her plan, giriş gününün BARINDAN İTİBAREN donmuş kasada koşulur (aynı stop/hedef/tutma kuralı,
+  aynı slipaj/komisyon). PIT sınırı: yalnız t−1'e dek barlar; plan tarihinden sonraki hiçbir bilgi
+  kullanılmaz. Çıktı: kohort n · toplam R · ortalama R · stop payı · kazanma.
+  Ayrışma ölçüsü: ortalama R + eşlenik ay-kümeli bootstrap CI (B=5000, seed=20260812, birim=AY —
+  bu deponun standart kurulumu; işlem-düzeyi bootstrap ay-içi bağımlılığı yok sayardı).
+
+parameter_grid:
+  kohort: [leading_sector_ret_islemsiz]   # K += 1
+  # TEK eksen, TEK kohort. Alt-dilim (sektör/rejim/yıl) YOK ve bu bilinçli: gözetleme
+  # yapılmış bir hipotezde alt-dilim aramak, K'yı gizlice büyütüp p-hacking'e kapı açar.
+
+cost_model: edg032c_taban_ile_ayni
+
+success_metric: >
+  KARAR KURALI (DONUK — ölçümden önce yazıldı, gözlem sayısına BAKILMADAN türetildi):
+  Kapı ancak reddettiği planların beklentisi POZİTİF OLMADIĞI sürece gerekçelidir. O hâlde:
+    * ortalama R'nin bootstrap CI-ALT sınırı > 0  →  "KAPI REDDETTİKLERİ KÂRLI" beyanı.
+      Sonuç: kapı GÖZDEN GEÇİRME'ye alınır. Kaldırma/gevşetme AYRI kart gerektirir —
+      bu kart yalnız gerekçesizliği ÖLÇER, tasarım kararı vermez.
+    * CI 0'ı İÇERİYOR  →  "gerekçesizlik GÖSTERİLEMEDİ". Kapı yerinde kalır, kalem kapanır.
+    * CI-ÜST < 0  →  "KAPI HAKLI" beyanı; reddettikleri gerçekten zarar. Bu da bilgidir ve
+      kapının değerini ilk kez ölçmüş olur.
+  Eşiğin gerekçesi: sıfır, "kapının varlık nedeni"nin tam sınırıdır — türetilmesi için gözlemdeki
+  +3,09R'ye BAKMAK GEREKMEZ, ve bakılmamıştır.
+
+kill_criteria:
+  - "n < 30 → hüküm YOK, betimleyici damga (gözetlenmiş hipotezde küçük örneklem hüküm taşıyamaz)"
+  - "edg032c künyesi (motor sha) ölçüm anında tabanla eşleşmezse geçersiz"
+  - "test kümesine işleme DÖNMÜŞ tek bir plan sızarsa geçersiz — dışlama ölçümde sayıyla kanıtlanır"
+  - "karşı-olgusal koşum gelecek bar okursa geçersiz (PIT öz-sınaması zorunlu, üç sınama)"
+  - "eşik (sıfır) ölçümden sonra oynatılırsa geçersiz"
+  - "alt-dilim/ikinci eksen eklenirse geçersiz — K donmuştur"
+
+k_registry: {registered_at: "2026-08-24", trial_ids: [pending]}
+status: registered
+
+beyanli_sinirlar: >
+  (1) GÖZETLENMİŞ HİPOTEZ: kart bir gözlemden doğdu ve bunu peek_beyani'nda taşır. Pozitif sonuç
+  bile "keşif" değil "onay" gücündedir ve bağımsız bir dönemde yeniden üretilmeden canlıya
+  dokunamaz.
+  (2) KARŞI-OLGUSAL ≠ GERÇEK: hiç gönderilmemiş bir planın simüle dolumu, gerçek likidite ve
+  gerçek slipajı görmez. Pozitif çıksa bile ÜST SINIR okunur (bu deponun `survivorship`
+  şerhiyle aynı sınıf).
+  (3) Kapı REDDİ ile kapı HÜKMÜ ayrı şeylerdir (`kapi_reddi` çok etiketli: bir plan birden çok
+  ölçütte takılabilir). Bu kart yalnız `leading_sector` ölçütünü izole eder; aynı planlar başka
+  ölçütlerde de takılmış olabilir ve o hâlde kapının TEK BAŞINA sorumlusu olduğu söylenemez.
+  Ölçüm bu çakışmayı SAYIYLA raporlar (kaç plan yalnız-leading_sector'da takıldı).
+  (4) Bu kart bir TASARIM kararı vermez. "Kapı kalksın mı" sorusunun cevabı burada YOKTUR.
