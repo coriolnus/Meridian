@@ -80,3 +80,8 @@ scratch-panov2/
 # Ölçüm ve lisans metni depoda KALIR; yalnız İKİLİ dosya dışarıda.
 research/olcumler/yazi_tipi_2026-08-24/satoshi/fonts/
 research/olcumler/yazi_tipi_2026-08-24/satoshi/woff2/
+
+# DERLEME KATMANI (2026-08-24, shadcn pilotu) — kaynak versiyonlanır, kurulum ve artefakt DEĞİL.
+# UYARI: .gitignore rsync'i ETKİLEMEZ; dağıtım dışlaması AYRICA dagit.sh RSYNC_EXC'te.
+node_modules/
+ui/node_modules/

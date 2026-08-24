@@ -1,0 +1,25 @@
+/* YAZI TİPİ — dört yüzeyle BİREBİR AYNI olmak zorunda (çivi: tests/test_yazitipi_v201.py).
+   Aynı iki dosya aynı adla istenir; ad ayrışırsa tarayıcı aynı yüzü İKİ KEZ indirir.
+   KENDİ BAYTLARIMIZ: /fonts/*.woff2, aynı origin. CDN yok — "ağ yokken de açılır". */
+@font-face{
+  font-family:'Inter';
+  src:url('/fonts/inter-vf.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:block;
+  /* `ss02` + `cv01` — Inter'in Il1 AYRIM özellikleri, ve bu satır SÜS DEĞİL.
+     Kesit onları 2026-08-24 sabahı BUDUYORDU; takip turu kesidi özellikleri KORUYARAK
+     yeniden aldı (research/olcumler/kesit_ss02cv01_2026-08-24/). Ama dosyada olması
+     YETMEZ — ikisi de varsayılan-kapalı özelliktir, descriptor açmazsa hiç çizilmezler.
+     AYNI düzenekte ölçüldü (donmuş taban birebir yeniden üretildi: Recursive Mono
+     1,00/0,817 · Recursive Sans 0,931/0,663):
+        1/l @28px  0,968 → 0,975      0/O @28px  0,774 → 0,795
+        l/I @28px  0,500 → 0,930      ← asıl kazanç: `I` serifli `I.1`e dönüyor
+     Bedeli +728 bayt (37,8 → 38,5 KB). Üst sınır (tam dosya) 0,988; kalan fark 0,013.
+     `font-variant-numeric` ile ÇAKIŞMAZ: `tnum` ayrı bir eksende ve açık kalıyor
+     (ölçüldü: kesit hâlâ oransal, tnum açıkken rakamlar tekdüze). */
+  font-feature-settings:'ss02' 1,'cv01' 1;
+}
+@font-face{
+  font-family:'Recursive Mono';
+  src:url('/fonts/recursive-mono-vf.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:block;
+}

@@ -1,0 +1,66 @@
+/* ============================================================================
+   PİLOT STİL KATMANI — Tailwind v4, Meridian jetonları üstünde
+   ----------------------------------------------------------------------------
+   SIRALAMA ÖNEMLİ: önce yazı tipi ve jetonlar (bizim SSoT'umuz), sonra Tailwind.
+   `@theme inline` Tailwind'in kendi ölçeklerini BİZİM jetonlarımıza bağlar ve
+   `inline` olduğu için üretilen CSS `var(--x)` yazar, derleme anında ÇÖZMEZ —
+   tema anahtarı çalışmaya devam eder (çözseydi gece teması ölürdü).
+
+   ROL KATMANI SÖZLEŞMESİ (index.html:296-299): bileşen kuralları YALNIZ rol
+   jetonu okur. Tailwind'in hazır skalası (`text-green-600`) bir rol DEĞİLDİR ve
+   bu pilotta yasaktır — çivi test_ui_pilot_kapilari_v286::test_G1b.
+   ============================================================================ */
+@import "./yazitipi.css";
+@import "./jetonlar.css";
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
+
+  /* ZEMİN VE MÜREKKEP — Tailwind'in `gray` skalası KULLANILMAZ */
+  --color-zemin: var(--bg);
+  --color-zemin-2: var(--bg2);
+  --color-kart: var(--card);
+  --color-yukselti: var(--raise);
+  --color-cizgi: var(--line);
+  --color-cizgi-2: var(--line-2);
+  --color-murekkep: var(--tx);
+  --color-murekkep-2: var(--tx2);
+  --color-murekkep-3: var(--tx3);
+
+  /* ROL 2 · ŞİDDET */
+  --color-sev-1: var(--sev-1);
+  --color-sev-2: var(--sev-2);
+  --color-sev-3: var(--sev-3);
+  /* ROL 3 · YÖN */
+  --color-yon-arti: var(--yon-arti);
+  --color-yon-eksi: var(--yon-eksi);
+  /* ROL 4 · MOD */
+  --color-mod-canli: var(--mod-canli);
+  --color-mod-kesif: var(--mod-kesif);
+  /* ROL 6 · GEZİNME */
+  --color-nav: var(--nav);
+  --color-nav-2: var(--nav-2);
+
+  /* YARIÇAP ROL KİLİTLİ (K4): rol dışına taşma yok */
+  --radius-giris: var(--r-input);
+  --radius-dugme: var(--r-btn);
+  --radius-kart: var(--r-card);
+  --radius-serit: var(--r-lg);
+  --radius-cip: var(--r-tag);
+  --radius-cubuk: var(--r-bar);
+}
+
+/* Panonun kendi sıfırlayıcısıyla aynı iki satır: düğme/form font KALITMAZ ve
+   sentetik ağırlık YASAK (yüklü kesit `wght 400 700`; dışı sentetik olurdu). */
+* { font-synthesis: none; }
+button, input, select, textarea {
+  font-family: inherit; font-size: inherit; letter-spacing: inherit;
+}
+
+body {
+  background: var(--bg);
+  color: var(--tx);
+  font-family: var(--sans);
+}

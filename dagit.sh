@@ -27,7 +27,7 @@
 set -euo pipefail
 KEY="$HOME/.ssh/oci-a1.key"; IP="130.61.126.87"; REPO="$HOME/AI-Trading"
 SSH=(ssh -i "$KEY" -o ConnectTimeout=15 ubuntu@"$IP")
-RSYNC_EXC=(--exclude '.venv' --exclude '.git' --exclude 'state' --exclude 'backups' --exclude 'scratchpad' --exclude 'scratch-*' --exclude '__pycache__' --exclude '.claude' --exclude '.hypothesis' --exclude 'mutants' --exclude '.pytest_cache' --exclude '.env' --exclude '.dash.env' --exclude '.agents' --exclude '.codex' --exclude '.github' --exclude 'skills-lock.json' --exclude '.impeccable' --exclude '.import_linter_cache' --exclude 'research/olcumler/*/seanslar.json' --exclude 'research/olcumler/*/run.stderr.log' --exclude 'research/olcumler/*/state')  # + ÖLÇÜM HAM ÇIKTILARI (2026-08-10, ROADMAP §2 madde-1): .gitignore rsync'i ETKİLEMEZ — ham seans dökümü/betik-state/stderr yeniden-üretilebilir (olcum*.py deterministik), canlıda okuyucusu yok; özet sonuc.json + olcum*.py TAŞINIR  # + HARNESS ARTEFAKTLARI (2026-08-06): worktree-oturum kalıntıları dagit'i dry-run'da boğdu  # + ARAÇ ÖNBELLEKLERİ (2026-08-07): .impeccable/hook.cache.json (kökte VE meridian/web/ altında) ile .import_linter_cache/ kuru koşumda göründü — 306ab56'nın hükmü bunları kapsamıyordu. İkisi de araç katmanı: canlıda karşılığı yok, hiçbir test okumuyor, ama tool-layer sızıntısı aynı sınıf.  # SIR SINIFI (2026-08-01 vakası): rsync --delete A1-yerel .dash.env'i SİLDİ — sırlar dağıtıma binmez, kanal push_secret.sh  # + SCRATCH SINIFI (2026-08-24 vakası): `scratch-panov2/` kuru koşumda 5 girdiyle CANLIYA GİDİYORDU. Yerelde .gitignore'lu ama RSYNC GITIGNORE OKUMAZ, yalnız bu listeyi okur — iki mekanizma ayrı ve birini kapatmak ötekini kapatmaz. `scratchpad` zaten listedeydi; `scratch-*` globu sınıfı kapatır.
+RSYNC_EXC=(--exclude '.venv' --exclude '.git' --exclude 'state' --exclude 'backups' --exclude 'scratchpad' --exclude 'scratch-*' --exclude '__pycache__' --exclude '.claude' --exclude '.hypothesis' --exclude 'mutants' --exclude '.pytest_cache' --exclude '.env' --exclude '.dash.env' --exclude '.agents' --exclude '.codex' --exclude '.github' --exclude 'skills-lock.json' --exclude '.impeccable' --exclude '.import_linter_cache' --exclude 'research/olcumler/*/seanslar.json' --exclude 'research/olcumler/*/run.stderr.log' --exclude 'research/olcumler/*/state' --exclude 'node_modules' --exclude 'ui/node_modules' --exclude '/ui')  # + DERLEME SINIFI (2026-08-24, shadcn pilotu): `npm install` on binlerce dosya yazar ve rsync onları .gitignore'a BAKMADAN taşır — `scratch-panov2` vakasının aynısı, iki mekanizma AYRI. Canlıya giden ARTEFAKT'tır (`meridian/web/pilot-*`), kaynak DEĞİL: `/ui` altındaki TSX/config canlıda okuyucusuzdur (YASA 6). `/ui` ANKORLU — `meridian/web/ui/` gibi bir alt yol yanlışlıkla düşmesin.  # + ÖLÇÜM HAM ÇIKTILARI (2026-08-10, ROADMAP §2 madde-1): .gitignore rsync'i ETKİLEMEZ — ham seans dökümü/betik-state/stderr yeniden-üretilebilir (olcum*.py deterministik), canlıda okuyucusu yok; özet sonuc.json + olcum*.py TAŞINIR  # + HARNESS ARTEFAKTLARI (2026-08-06): worktree-oturum kalıntıları dagit'i dry-run'da boğdu  # + ARAÇ ÖNBELLEKLERİ (2026-08-07): .impeccable/hook.cache.json (kökte VE meridian/web/ altında) ile .import_linter_cache/ kuru koşumda göründü — 306ab56'nın hükmü bunları kapsamıyordu. İkisi de araç katmanı: canlıda karşılığı yok, hiçbir test okumuyor, ama tool-layer sızıntısı aynı sınıf.  # SIR SINIFI (2026-08-01 vakası): rsync --delete A1-yerel .dash.env'i SİLDİ — sırlar dağıtıma binmez, kanal push_secret.sh  # + SCRATCH SINIFI (2026-08-24 vakası): `scratch-panov2/` kuru koşumda 5 girdiyle CANLIYA GİDİYORDU. Yerelde .gitignore'lu ama RSYNC GITIGNORE OKUMAZ, yalnız bu listeyi okur — iki mekanizma ayrı ve birini kapatmak ötekini kapatmaz. `scratchpad` zaten listedeydi; `scratch-*` globu sınıfı kapatır.
 
 echo "=== [0a/5] git temiz-ağaç kapısı ==="
 cd "$REPO"
@@ -441,6 +441,46 @@ fi
 # [B] DAĞITIM-BEYANI (P0-b — docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md §4.2). Ortamlar-arası #2
 # ("repo-ağacı ↔ canlı-ağacı hangi tepede?") bugüne dek dedektörün YAPISAL kör noktasıydı: süreç-içi
 # hiçbir kıyas iki ortamı aynı anda göremez. Kapısı bu beyandır: dagit her başarılı dağıtımın
+# =================================================================================================
+# [5c] ARTEFAKT TAZELİĞİ — derleme adımı [5b]'nin varsayımını KIRAR
+# =================================================================================================
+# [5b] "dağıtılan dosya = kaynak" varsayar ve Python için bu DOĞRU. Ama shadcn pilotuyla araya bir
+# DERLEME girdi: canlıya giden `meridian/web/pilot-*` artefaktı, `ui/` altındaki kaynaktan ÜRETİLİR.
+# Kaynak değişip `npm run build` koşmazsa canlı sessizce bayat kalır ve [5b] bunu GÖREMEZ — o
+# Python mtime'ına bakar, artefaktı hiç tanımaz. Bu, `meridian-learn`de yaşadığımız SESSİZ
+# ETKİSİZLİĞİN aynısıdır: doğru bir cümle, anlamsız bir güvence.
+#
+# DEĞİŞMEZ:  mtime(meridian/web/pilot-workflow.html)  >=  en yeni mtime(ui/ altındaki kaynak)
+#
+# YERELDE ölçülür (dağıtımdan ÖNCE), çünkü onarım da yerel: `cd ui && npm run build`. Canlıda
+# ölçmenin anlamı yok — orada kaynak zaten yok (rsync `/ui`yi dışlıyor).
+# JETON KÖPRÜSÜ AYRICA ÖLÇÜLÜR: `ops/jeton_css_uret.py --kontrol` (çıkış 1 = tokens.json ile
+# ayrışmış). Jeton bayatsa artefakt "taze" görünüp YANLIŞ RENGİ taşır.
+_ART="$REPO/meridian/web/pilot-workflow.html"
+if [ -d "$REPO/ui" ]; then
+  echo "=== [5c/5] artefakt tazeliği (pilot) ==="
+  if ! (cd "$REPO" && "$REPO/.venv/bin/python" ops/jeton_css_uret.py --kontrol >/dev/null 2>&1); then
+    echo "  IHLAL jeton köprüsü BAYAT — ui/src/jetonlar.css tokens.json ile ayrışmış"
+    echo "  onarım: python ops/jeton_css_uret.py && (cd ui && npm run build)"
+    exit 1
+  fi
+  if [ ! -f "$_ART" ]; then
+    echo "  ATLANDI pilot artefaktı yok (henüz derlenmedi) — kapı ölçülemedi, dağıtım sürüyor"
+  else
+    _art_m=$(stat -f %m "$_ART" 2>/dev/null || stat -c %Y "$_ART")
+    _kay_m=$(find "$REPO/ui" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' -o -name '*.html' -o -name '*.json' \) \
+             -not -path '*/node_modules/*' -exec stat -f %m {} \; 2>/dev/null | sort -rn | head -1)
+    [ -z "$_kay_m" ] && _kay_m=$(find "$REPO/ui" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' -o -name '*.html' -o -name '*.json' \) \
+             -not -path '*/node_modules/*' -printf '%T@\n' 2>/dev/null | cut -d. -f1 | sort -rn | head -1)
+    if [ -n "$_kay_m" ] && [ "$_art_m" -lt "$_kay_m" ]; then
+      echo "  IHLAL artefakt BAYAT: pilot-workflow.html $_art_m < ui/ kaynak $_kay_m"
+      echo "  onarım: cd ui && npm run build   (sonra dagit'i tekrar koş — rsync idempotent)"
+      exit 1
+    fi
+    echo "  TAMAM artefakt kaynağından taze"
+  fi
+fi
+
 # =================================================================================================
 # [5b] KOD-TAZELİK DEĞİŞMEZİ — "active" ≠ "yeni kodu koşuyor"
 # =================================================================================================
