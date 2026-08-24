@@ -659,7 +659,13 @@
   --nav-bg:rgba(23,23,23,.82);
   color-scheme:dark;
 }
-*{margin:0;padding:0;box-sizing:border-box}
+/* SENTETİK YÜZ ÜRETİMİ KAPALI (2026-08-24). İtalik ya da kalın bir kesit HİÇBİR yerde
+   bildirilmemiş (`@font-face` yalnız `font-style:normal`, `wght 400 700`). Bildirimsiz bir
+   `<em>` tarayıcıya Inter'i MEKANİK olarak eğdirtiyordu — aynı işaret runbook'ta
+   `em{font-style:normal}` ile DÜZ çiziliyordu: tek işaretleme, iki yüzeyde iki yüz.
+   Operatörün gördüğü tek gerçek YÜZ farkı buydu (gerisi punto/ağırlık). `none` demek
+   eksikliği gizlemek değil BEYAN etmek: vurgu artık renk+ağırlıkla taşınır. */
+*{margin:0;padding:0;box-sizing:border-box;font-synthesis:none}
 /* YATAY TAŞMA KAPALI (2026-07-27): çekmece kapalıyken position:fixed + translateX(101%) ile
    görüntü alanının SAĞINDA durur, ama gizli bir öğe bile scrollWidth'e yazılır — 1280px'te
    1381px, 375px'te 753px ölçüldü, yani sayfa yana kayıyordu. `clip` seçildi, `hidden` değil:
@@ -1744,7 +1750,7 @@ code{font-family:var(--mono);font-size:12px;background:var(--accent-tint);color:
 /* mdToHtml artık h3/h4 üretir (belge mertebesi düzeltmesi); biçim aynı kaldı. */
 .md h3{font-family:var(--display);font-size:var(--t-sub);font-weight:400;margin:.6em 0 .3em;letter-spacing:-.015em}
 .md h4{font-family:var(--display);font-size:var(--t-lg);font-weight:400;margin:1.4em 0 .35em;color:var(--tx);letter-spacing:-.008em}
-.md ul{padding-left:18px;margin:.4em 0} .md li{margin:.35em 0} .md em{color:var(--tx2)} .md strong{color:var(--tx);font-weight:600}
+.md ul{padding-left:18px;margin:.4em 0} .md li{margin:.35em 0} .md em{font-style:normal;color:var(--tx2);font-weight:500} .md strong{color:var(--tx);font-weight:600}
 
 /* ---- charts — the plate's own measurements ---- */
 svg text{font-family:var(--mono)}

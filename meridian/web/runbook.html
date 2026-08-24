@@ -211,6 +211,13 @@
   --nav-2:#b2caff; --nav-t:#1a274d; --nav-h:rgba(114,162,255,.35); --nav-bg:rgba(23,23,23,.82);
   color-scheme:dark;
 }
+/* SENTETİK YÜZ ÜRETİMİ KAPALI (2026-08-24). İtalik ya da kalın bir kesit HİÇBİR yerde
+   bildirilmemiş (`@font-face` yalnız `font-style:normal`, `wght 400 700`). Bildirimsiz
+   bir `<em>` tarayıcıya Inter'i MEKANİK olarak eğdirtiyordu — ve aynı işaret runbook'ta
+   `em{font-style:normal}` ile DÜZ çiziliyordu: tek işaretleme, iki yüzeyde iki yüz.
+   Operatörün gördüğü tek gerçek YÜZ farkı buydu (gerisi punto/ağırlık). `none` demek,
+   eksikliği gizlemek değil BEYAN etmek: vurgu artık renk+ağırlıkla taşınır. */
+*{font-synthesis:none}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 /* GÖVDE ÖLÇÜSÜ RAMPADAN (DESIGN.md Rampa Kuralı, Body basamağı = 14px). Eski 15px/1.65/78ch

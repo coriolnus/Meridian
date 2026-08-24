@@ -262,7 +262,13 @@
   color-scheme:dark;
 }
 
-*{margin:0;padding:0;box-sizing:border-box}
+/* SENTETİK YÜZ ÜRETİMİ KAPALI (2026-08-24). İtalik ya da kalın bir kesit HİÇBİR yerde
+   bildirilmemiş (`@font-face` yalnız `font-style:normal`, `wght 400 700`). Bildirimsiz bir
+   `<em>` tarayıcıya Inter'i MEKANİK olarak eğdirtiyordu — aynı işaret runbook'ta
+   `em{font-style:normal}` ile DÜZ çiziliyordu: tek işaretleme, iki yüzeyde iki yüz.
+   Operatörün gördüğü tek gerçek YÜZ farkı buydu (gerisi punto/ağırlık). `none` demek
+   eksikliği gizlemek değil BEYAN etmek: vurgu artık renk+ağırlıkla taşınır. */
+*{margin:0;padding:0;box-sizing:border-box;font-synthesis:none}
 html{scroll-behavior:smooth}
 /* the canon's ground is flat: one near-black, no wash, no image */
 /* 'cv11','ss01' KALDIRILDI (2026-08-01) — ÖLÇÜLDÜ, ÖLÜYDÜ. Etkisi olmayan bir bildirim,
