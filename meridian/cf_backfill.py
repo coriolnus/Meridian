@@ -209,8 +209,13 @@ def run(start: str | None = None, end: str | None = None, progress_every: int = 
             plans, armed_ids, dormant, nmiss, rj = _plans_for_session(
                 d, dstr, per, idx, params, by_regime, goal, version, eg)
             if rj is not None:
+                # SÜRÜM DAMGASI: `version` bu fonksiyonun başında ZATEN okunuyordu
+                # (`strat_cfg["version"]`) ama satıra basılmıyordu — bilgi elde, bir adım
+                # ötede kayboluyordu. Damgasız defter "kanıt bugünün stratejisini yansıtıyor
+                # mu?" sorusunu cevaplayamıyordu (2026-08-25: 7260/7260 damgasız).
                 added = cf.collect(dstr, plans, armed_ids, dormant, time_stop, near_miss=nmiss,
-                           regime=rj["regime"])   # tur 2: uyuyan/eşik-altı satırlar da rejim taşır
+                           regime=rj["regime"],   # tur 2: uyuyan/eşik-altı satırlar da rejim taşır
+                           strategy_version=version)
                 n_open += added
         except Exception as e:
             obs.warn("cf_backfill_session_failed", date=dstr, error=f"{type(e).__name__}: {e}")

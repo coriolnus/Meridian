@@ -71,7 +71,7 @@ def _ledger_ids() -> set:
 
 
 def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_stop_days: int,
-            near_miss: list = (), regime: str = "?") -> int:
+            near_miss: list = (), regime: str = "?", strategy_version: int | None = None) -> int:
     """P3 sonunda çağrılır: o günün TÜM planları (silahlı/silahsız) + uyuyan kurulum sinyalleri
     bekleyen karşı-olgusal olarak açılır. Dönüş: eklenen kayıt sayısı (loop görmezden gelir).
     near_miss: (EntrySignal, blocked_by listesi) çiftleri — eşiğin HEMEN altında ölen adaylar
@@ -81,7 +81,16 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
     alıyordu ama UYUYAN ve EŞİK-ALTI satırlar "?" ile yazılıyordu: canlı defterin %70'i (7115'in
     4950'si) rejimsizdi. Sonuç, sessiz bir mantık boşluğuydu: selfreview eşik-altı kanıtından
     "`knob`@rejim sondası aramaya değer" ÖNERİSİ üretiyor — ama kanıtın kendisinde rejim YOK.
-    Öneri hangi rejime yazılacağını dayandıramıyordu. Rejim artık her satıra damgalanıyor."""
+    Öneri hangi rejime yazılacağını dayandıramıyordu. Rejim artık her satıra damgalanıyor.
+
+    strategy_version: Bu satırı ÜRETEN strateji sürümü. OPERATÖR SORUSUNUN CEVABI BURADA:
+    "sistem son tohumdan beri gelişti, defter bunu yansıtıyor mu?" — 2026-08-25'te
+    ölçüldüğünde 7260 satırın 7260'ı damgasızdı ve soru defterden CEVAPLANAMIYORDU.
+    Bedeli somuttu: `exhaustion_hammer` 2026-08-11'de silahlandı ama defterde 15 satırı
+    vardı (komşuları 6079 ve 1135'te) — çünkü geri dolum o kurulum VARKEN koşulmamıştı.
+    Damga olmadan bu ayrım yalnız tarih aralığına bakan bir sezgiyle kuruluyordu.
+    `None` = ÖLÇÜLEMEDİ (çağıran sürümü bilmiyor); 1 varsayıp yazmak UYDURMA olurdu.
+    Okuyucusu `surum_dokumu()` (YASA 6)."""
     open_rows = store.read_json(OPEN_FILE, [])
     # ÇİFT KAYIT KORUMASI (backfill tekrarından ÖNCE bulundu): eskiden yalnız AÇIK
     # satırlar eleniyordu. Çözülmüş bir satır artık open_rows'ta olmadığı için, defteri yeniden
@@ -122,6 +131,7 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
         if rps <= 0:
             continue
         _push({"id": f"CF-{dstr}-{p['ticker']}-{p.get('setup','?')}", "date": dstr,
+               "strategy_version": strategy_version,
                "ticker": p["ticker"], "setup": p.get("setup", "?"), "score": p.get("score"),
                "entry_trigger": float(p["entry_trigger"]), "stop": float(p["stop"]),
                "target": float(p.get("profit_target") or (p.get("targets") or [0])[0]),
@@ -154,6 +164,7 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
         if rps <= 0:
             continue
         _push({"id": f"CF-{dstr}-{sig.ticker}-{sig.setup}", "date": dstr,
+               "strategy_version": strategy_version,
                "ticker": sig.ticker, "setup": sig.setup, "score": sig.score,
                "entry_trigger": float(sig.entry_trigger), "stop": float(sig.stop),
                "target": float(sig.profit_target),
@@ -168,6 +179,7 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
             _nm_rps += 1                         # sessizce eleniyordu — sayısı artık olaya taşınır
             continue
         _push({"id": f"CF-{dstr}-{sig.ticker}-{sig.setup}-nm", "date": dstr,
+               "strategy_version": strategy_version,
                "ticker": sig.ticker, "setup": sig.setup, "score": sig.score,
                "entry_trigger": float(sig.entry_trigger), "stop": float(sig.stop),
                "target": float(sig.profit_target),
@@ -209,9 +221,14 @@ def _resolve(row: dict, dstr: str, status: str, exit_px: float | None = None,
     # `row[k]` YERİNE `.get()`: açık defter uzun ömürlüdür — şema büyüdüğünde diskte hâlâ eski
     # satırlar durur ve KeyError bütün çözümleme turunu düşürürdü (`r_multiple_expected`
     # eklenince tam bu oldu). Eksik alan satırı düşürmez; None taşır ve tüketici süzer.
+    # `strategy_version` LİSTEYE 2026-08-25'te GİRDİ ve girmemiş olması ÖLÇÜLDÜ: kum havuzu
+    # sondasında açık 106 satır damgalıyken çözülmüş 282 satır damgasız çıktı. İzin listesi
+    # doğru bir tasarım (alanlar açıkça sayılır) ama genişletilmediğinde yeni alan sessizce
+    # ölür — ve ölçümlerin ÇOĞU çözülmüş satırları okur (`resolved_rows`), yani damga tam
+    # ihtiyaç duyulan yerde yok olurdu.
     out = {k: row.get(k) for k in ("id", "date", "ticker", "setup", "score", "entry_trigger", "stop",
                                    "target", "rr_expected", "r_multiple_expected", "regime", "verdict",
-                                   "taken", "dormant")}
+                                   "taken", "dormant", "strategy_version")}
     # kanonik ad ↔ takma ad: hangisi varsa ikisi de dolar (ledgers.py sözleşmesindeki alias beyanı)
     if out["r_multiple_expected"] is None:
         out["r_multiple_expected"] = out["rr_expected"]
@@ -293,6 +310,37 @@ def advance(per: dict, d, dstr: str) -> dict:
     for r in resolved:
         store.append_jsonl(LEDGER, r)
     return {"open": len(still), "resolved": len(resolved)}
+
+
+def surum_dokumu() -> dict:
+    """Defterin STRATEJİ SÜRÜMÜ kırılımı — `strategy_version` damgasının OKUYUCUSU (YASA 6).
+
+    OPERATÖRÜN SORUSUNU CEVAPLAR: "sistem son tohumdan beri gelişti; kanıt bugünün
+    stratejisini mi yansıtıyor?" Damga olmadan bu soru defterden çıkmıyordu ve tarih
+    aralığına bakan bir sezgiyle kuruluyordu (`exhaustion_hammer` 15 satır vs
+    `breakout_vcp` 6079 — fark yetenek değil, geri dolumun o kurulum varken koşulmamış
+    olmasıydı).
+
+    `damgasiz` AYRI SAYILIR ve bu bilinçli: damgasız satırlar 2026-08-25'ten ESKİdir ve
+    hangi sürümle üretildikleri BİR DAHA bilinemez. Onları bir sürüme yamamak, ölçülemeyeni
+    ölçülmüş göstermek olurdu. Sayı küçüldükçe defter tazelenmiş demektir.
+
+    AÇIK ve ÇÖZÜLMÜŞ satırların İKİSİ birden sayılır: kanıtın tamamı budur, yalnız
+    çözülmüşe bakmak açık izlemedeki tazeliği görünmez kılardı.
+    """
+    dokum: dict[str, int] = {}
+    damgasiz = 0
+    for r in list(store.read_json(OPEN_FILE, [])) + list(store.read_jsonl(LEDGER)):
+        if not isinstance(r, dict):
+            continue
+        v = r.get("strategy_version")
+        if v is None:
+            damgasiz += 1
+        else:
+            dokum[str(v)] = dokum.get(str(v), 0) + 1
+    return {"dokum": dokum, "damgasiz": damgasiz, "n": sum(dokum.values()) + damgasiz,
+            "beyan": ("`damgasiz` = 2026-08-25 öncesi satırlar; sürümü BİR DAHA bilinemez. "
+                      "Sayı küçüldükçe defter bugünün stratejisiyle tazelenmiş demektir.")}
 
 
 def resolved_rows(entered_only: bool = True, include_near_miss: bool = False) -> list:

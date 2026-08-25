@@ -1,0 +1,96 @@
+card_id: EDG-2026-060
+family: silahlanma_kapisi
+k_registry: {registered_at: "2026-08-25", trial_ids: [pending]}
+status: registered
+
+thesis: >
+  OPERATÖR SORUSU (2026-08-25): "sistem son seed'den beri çok gelişti, yeniden bütün planları
+  değerlendirmek gerekmez mi?" ÖLÇÜLDÜ ve soru haklı çıktı: karşı-olgusal defter (7260 satır,
+  2022-01-03 → 2026-08-19) YALNIZ `breakout_vcp` (n=6079) ve `momentum_burst` (n=1135) için
+  tarihin tamamını taşıyor. Sonradan eklenen kurulumlar kanıtı yalnız CANLI günlük döngüden
+  topluyor — seansta bir satır:
+      exhaustion_hammer  n=15  (2026-07-27 → 2026-08-14; 2026-08-11'de SİLAHLANDI)
+      pullback           n=29  (2023-02-13 → 2026-06-12, seyrek)
+      episodic_pivot     n= 2  (2026-07-21 → 2026-07-30)
+  Yani `arming` kapısının "yeterli kanıt yok" hükmü, kurulumun kötü olmasından DEĞİL, tarihin o
+  kurulum için hiç yürütülmemiş olmasından doğuyor olabilir. HİPOTEZ: `cf_backfill.run()` tam
+  aralıkta yeniden koşturulursa uyuyan kurulumların kanıtı silahlanma eşiğinin (MIN_CF_ENTERED=30)
+  üstüne çıkar ve kapı ilk kez GERÇEK bir hüküm verebilir.
+  BU KART HİÇBİR KURULUMU SİLAHLANDIRMAZ. Silahlanma `arming.py`nin beyanına göre zaten operatör
+  kararıdır ("kapı GEÇSE bile ARMED_SETUPS değişmez"). Kart yalnız KANITI üretir.
+
+peek_beyani: >
+  ⚠ GÖZETLENMİŞ — dürüstçe: kart, canlı defter okunduktan SONRA yazıldı ve yön gösteren iki sayı
+  GÖRÜLDÜ: `pullback` n=21 çözülmüşte avg_r = −0,968 ve `episodic_pivot` n=2'de avg_r = +1,846
+  (`arming_report.json::cf_report`). İKİSİ DE KANIT DEĞİLDİR (n=21 ve n=2; ikincisi tek haneli).
+  Aşağıdaki karar kuralı bu iki sayıya BAKILMADAN, `arming.py`de ZATEN YAZILI olan eşiklerden
+  türetildi — yeni bir eşik icat edilmedi, mevcut kapı kullanıldı. Kartın değeri tam olarak
+  budur: eşik ölçümden SONRA seçilirse −0,968 görmüş bir göz onu meşrulaştıracak bir eşik bulur.
+
+evidence_refs:
+  - "meridian/cf_backfill.py başlığı — 'portföye, işlem defterine, stratejiye ve karneye ASLA dokunmaz'"
+  - "meridian/counterfactual.py::collect — çift kayıt koruması (`seen = open ∪ _ledger_ids()`); yeniden koşum satır ÇOĞALTMAZ"
+  - "meridian/arming.py başlığı — MIN_CF_ENTERED=30, MIN_CF_AVG_R; 'SİLAHLANMA OTOMATİK DEĞİLDİR'"
+  - "canlı ölçüm 2026-08-25: counterfactuals.jsonl 7260 satır, kurulum kırılımı yukarıda"
+
+universe: >
+  Karşı-olgusal defterin TAMAMI: 2022-01-03 → son kapanmış seans, `data_adapter.REPLAY_UNIVERSE`
+  (251 sembol), önbellekli bar CSV'leri (AĞA ÇIKILMAZ — `cf_backfill` sözleşmesi).
+  KOŞUM YERİ: ÖNCE SANDBOX. `cf_backfill.run()` sandbox'ta sandbox state'e yazar; canlı
+  `state/`e YAZILMAZ. Canlıya uygulama AYRI bir karardır ve bu kartın kapsamı DIŞINDADIR.
+
+features_asof: >
+  Kurulum başına: `n_girilmis` (cf'de giriş tetiklenmiş ve çözülmüş satır), `avg_r`, `win_rate`,
+  rejim kırılımı, ve YENİ: `strategy_version` damgası (2026-08-25'te eklendi; damgasız satır
+  "sürümü BİR DAHA bilinemez" olarak AYRI sayılır, bir sürüme yamanmaz).
+  Ölçüm ANI dondurulur: koşum başındaki `strategy.ARMED_SETUPS` ve `config.resolve_params`
+  kaydedilir — sonradan değişirlerse bu ölçüm o ana aittir ve öyle etiketlenir.
+
+parameter_grid:
+  tanim: [tam_aralik]        # K += 1. TEK koşum, TEK aralık. Parametre taraması YOK.
+
+cost_model: >
+  Gecelik tek koşum, ağ yok (önbellekli CSV). `MAX_OPEN` tavanı koşumu kısıtlayabilir —
+  kısıtlarsa BEYAN edilir ve sonuç "kısmi kapsama" damgalanır, tam sayılmaz.
+
+success_metric: >
+  KARAR KURALI (DONUK — yukarıdaki iki gözleme BAKILMADAN, `arming.py`nin MEVCUT eşiklerinden
+  türetildi). Her UYUYAN kurulum için, koşum sonrası:
+
+    (A) n_girilmis < MIN_CF_ENTERED (=30)  → KANIT YETERSİZ KALDI. Hüküm: tarih yürütüldü ve
+        yine de eşik dolmadı; "kanıt yok" artık bir ÖLÇÜM, bir boşluk değil. Kurulum uyur kalır
+        ve bu kalem KAPANIR — yeniden yürütme bir daha gerekçe olamaz.
+
+    (B) n_girilmis ≥ 30 ve avg_r ≤ MIN_CF_AVG_R → KANIT DOLDU, HÜKÜM OLUMSUZ. Kurulum uyur
+        kalır; artık gerekçeli. Kalem kapanır.
+
+    (C) n_girilmis ≥ 30 ve avg_r > MIN_CF_AVG_R → KANIT DOLDU, HÜKÜM OLUMLU. Sonuç bir
+        SİLAHLANMA DEĞİL, `arming.evaluate`in kapı ölçümüne (blok-bootstrap + K-ceza + fold
+        çoğunluğu + kuyruk vetosu) GİRİŞ BİLETİdir. Silahlanma operatör kararıdır.
+
+  KILL-LIST (DOKUNULMAZ — bu satırlar ölçümden sonra değiştirilemez):
+    · MIN_CF_ENTERED ve MIN_CF_AVG_R bu koşum için `arming.py`de YAZILI hâlleriyle kullanılır;
+      sonuç eşiğe yakın çıkarsa eşik OYNATILMAZ.
+    · Aralık daraltılıp "daha temiz" bir alt dönem seçilemez (tarih kiraz toplama).
+    · Kurulum başına ayrı eşik tanımlanamaz.
+    · Koşum tekrarlanırsa (ör. hata sonrası) TEKRAR SAYILIR ve K'ya eklenir.
+    · `episodic_pivot` n=2 → tek koşumda 30'a ulaşmazsa (A) uygulanır; "biraz daha bekleyelim"
+      bir hüküm değildir.
+
+hypothesis_status: >
+  registered — 2026-08-25 Rol-1. Ölçüm SANDBOX'ta koşacak; canlıya uygulama ayrı karar.
+  Sürüm damgası (`strategy_version`) bu karttan ÖNCE eklendi ki yeni satırlar damgalı doğsun.
+
+beyanli_sinirlar: >
+  (1) Bu kart bir EDGE ölçmez; MEVCUT bir kapının kanıt tabanının eksik olup olmadığını ölçer.
+  Olumlu sonuç bile hiçbir kurulumu silahlandırmaz — `arming.evaluate`in kapı ölçümüne giriş
+  bileti üretir, o kadar.
+  (2) Karşı-olgusal defter PORTFÖY-BAĞIMSIZ kapı kullanır (`counterfactual.py` yasası): per-aday
+  seçim kalitesini ölçer, o günkü tesadüfi holdinglerin ısı/korelasyon durumunu DEĞİL. Yani
+  sonuç "bu kurulum canlıda şu kadar kazandırırdı" DEMEZ.
+  (3) Simülasyon sadakati SINIRLI ve ölçülmüş: `cf_fidelity` corr 0,899 · sapma +0,059R, ve
+  `sadakat_beyani` altı canlı çıkış mekanizmasının (trail_atr, breakeven_lock, chandelier,
+  giveback, regime_flip, scale_out) simüle EDİLMEDİĞİNİ söylüyor. Sonuç bu iskontoyla okunur.
+  (4) Damgasız satırlar (2026-08-25 öncesi 7260 satır) hangi sürümle üretildiklerini BİR DAHA
+  söyleyemez. Bu koşum onları damgalamaz — yalnız YENİ satırlar damgalı doğar. Karışım
+  `surum_dokumu()` ile görünür kalır.

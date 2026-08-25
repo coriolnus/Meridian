@@ -123,7 +123,12 @@ def test_p1c_public_get_allowlist():
     allow = {"/", "/app.js", "/theme.js", "/landing.js", "/workflow.js", "/palette.js",
              "/landing", "/workflow", "/healthz", "/metrics", "/halt", "/halt.js",
              "/api/public/summary", "/fonts/{ad}",
-             "/pano", "/pano-onyuk.js", "/pano-assets/{ad}"} | set(api.KIMLIK_UCLARI)
+             "/pano", "/pano-onyuk.js", "/pano-assets/{ad}",
+             # KÖK ÇEVRİLDİ (2026-08-25): `/` artık yeni panoyu sunuyor, ESKİ pano `/eski`ye
+             # taşındı. Yetki sınıfı DEĞİŞMEDİ — `/eski` ile `/` aynı şey: bir sır taşımayan
+             # kabuk. Yeni bir kapı açılmıyor, var olan kapının adı değişiyor; maruziyet
+             # BİREBİR aynı (aynı dosya, aynı içerik, dün `/`ten sunuluyordu).
+             "/eski"} | set(api.KIMLIK_UCLARI)
     public = {r["path"] for r in _routes() if r["verb"] == "GET" and not r["authed"]}
     assert public <= allow, f"beklenmedik yetkisiz GET: {public - allow}"
 

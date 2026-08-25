@@ -2050,9 +2050,13 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             store.merge_dated_jsonl("trade_plans.jsonl", dstr, plans)
             try:                                   # günün TÜM planları + uyuyan ateşlemeler
                 from . import counterfactual       # karşı-olgusal deftere açılır (dönüş görmezden gelinir)
+                # SÜRÜM DAMGASI (2026-08-25): canlı döngünün açtığı satır da hangi strateji
+                # sürümüyle üretildiğini taşır. Damgasız satır, "kanıt tazelendi mi" sorusunu
+                # bir daha cevaplanamaz kılıyordu — `surum_dokumu()` bunun okuyucusu.
                 counterfactual.collect(dstr, plans, {a["id"] for a in meta["armed"]}, dormant_sigs,
                                        int(float(eff.get("exit.time_stop_days", 15))),
-                                       near_miss=near_miss_sigs, regime=rj["regime"])
+                                       near_miss=near_miss_sigs, regime=rj["regime"],
+                                       strategy_version=version)   # `version` daily_cycle başında okunuyor; plan satırı da bunu basıyor
                 # ANA collect'in muhasebesi geç-borç çağrıları EZMEDEN kopyalanır:
                 # özet olaydaki `near_miss_yazilan` bu seansın satırlarını sayar, geç-borcunkini değil.
                 _nm_toplama = dict(counterfactual.SON_TOPLAMA)

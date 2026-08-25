@@ -40,6 +40,26 @@ CLASSES = (SEMA, PIYASA)
 SEMA_ESCALATE_FRAC = 0.10
 SEMA_ESCALATE_MIN_N = 5     # bunun altında oran istatistik değil gürültüdür
 
+# ---- KAPANMIŞ ŞEMA NEDENLERİ ------------------------------------------------------------------
+# "YAZILIM HATASIDIR" İLE "TARİHSEL KAYIP" AYRI CÜMLELERDİR ve ikincisini birincisi gibi yazmak
+# operatörü KAPALI bir kusurun peşine gönderir. Bu kayıt SUSTURMA DEĞİLDİR: satır yerinde kalır,
+# yalnız doğru cümleyi kurar.
+#
+# KAYIT BİR TABAN TAŞIR ve taban bir CIRCIRdır: sayı tabanın ALTINDAysa kayıp tarihseldir
+# (sebebi kapandı, satırlar geri gelmez); ÜSTÜNE çıkarsa neden YENİDEN işliyordur ve cümle eski
+# sertliğine döner. Susturmakla nüksü görmemek arasındaki fark tam olarak bu satırdır.
+KAPANMIS_SEMA: dict[str, dict] = {
+    "sema:plan_join_yok": {
+        "kapandi": "2026-08-23",
+        # 893 işlemin 535'i var olmayan bir plana işaret ediyordu.
+        "taban": 535,
+        "sebep": ("`trade_plans` kırpma tavanı İŞLEME DÖNÜŞMÜŞ planları da süpürüyordu; kural "
+                  "artık 'plan, işlemi yaşadıkça yaşar' (store.append_dated_jsonl)"),
+        "geri_gelmez": ("kayıp satırlar hiçbir yedekte yok (535'in 43'ü) ve `run.replay_seed` "
+                        "state'i SIFIRDAN kurar — silahlı plan varken koşturmak onarım değil kayıp"),
+    },
+}
+
 
 def _now() -> str:
     """Şimdiki UTC zamanı, saniye çözünürlüklü ISO-8601 metni olarak."""
@@ -196,20 +216,50 @@ def report(doc: dict | None = None) -> dict:
                            f"var. Ekrandaki sayı 'veri yok' demek değil, 'veri vardı ama elendi' demek. "
                            f"En çok elenen neden: {top}.")})
         if sema_n:
-            liste = ", ".join(f"{k}×{v}" for k, v in sorted(drops.items())
-                              if k.startswith(SEMA))
-            violations.append({
-                "stage": name, "rule": "sema_elemesi", "severity": "hata",
-                "detail": (f"'{name}': {sema_n} satır VERİ SÖZLEŞMESİ yüzünden elendi ({liste}). "
-                           f"Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı "
-                           f"taşımıyor ve hesaptan sessizce düşüyor.")})
+            sema_drops = {k: v for k, v in sorted(drops.items()) if k.startswith(SEMA)}
+            liste = ", ".join(f"{k}×{v}" for k, v in sema_drops.items())
+            # HER NEDEN AYRI SORGULANIR: bir aşamada hem kapanmış hem AÇIK bir neden olabilir ve
+            # o hâlde cümle sert kalmalı — tek bir "hepsi tarihsel" hükmü açık kusuru gizlerdi.
+            acik, tarihsel = [], []
+            for k, v in sema_drops.items():
+                kayit = KAPANMIS_SEMA.get(k)
+                (tarihsel if (kayit and v <= kayit["taban"]) else acik).append((k, v, kayit))
+            if acik:
+                nuks = [f"{k}×{v} (TABAN {kayit['taban']} AŞILDI — NÜKS)"
+                        for k, v, kayit in acik if kayit]
+                violations.append({
+                    "stage": name, "rule": "sema_elemesi", "severity": "hata",
+                    "detail": (f"'{name}': {sema_n} satır VERİ SÖZLEŞMESİ yüzünden elendi ({liste}). "
+                               f"Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı "
+                               f"taşımıyor ve hesaptan sessizce düşüyor."
+                               + (" " + " · ".join(nuks) if nuks else ""))})
+            else:
+                k, v, kayit = tarihsel[0]
+                violations.append({
+                    "stage": name, "rule": "sema_elemesi", "severity": "bilgi",
+                    "detail": (f"'{name}': {sema_n} satır VERİ SÖZLEŞMESİ yüzünden elendi ({liste}). "
+                               f"SEBEBİ {kayit['kapandi']}'te KAPANDI ({kayit['sebep']}) — bu bir "
+                               f"açık yazılım hatası DEĞİL, tarihsel bir kayıptır ve GERİ GELMEZ: "
+                               f"{kayit['geri_gelmez']}. Sayı {kayit['taban']} tabanının üstüne "
+                               f"çıkarsa neden yeniden işliyordur ve bu satır sertleşir.")})
         if n_in >= SEMA_ESCALATE_MIN_N and frac > SEMA_ESCALATE_FRAC:
+            # ŞİDDET KAPANMIŞ NEDENDE DE KRİTİK KALIR ve bu bilinçli: sebebin kapanmış olması
+            # kanıtın geri geldiği anlamına GELMEZ. %60 satır eksikse bu aşamanın ürettiği her
+            # sayı hâlâ eksik kanıtla hesaplanır — sonuç bugünün gerçeği, sebep dünün.
+            # Değişen yalnız NEDEN cümlesi: "sistematik uyumsuzluk" (şimdi işleyen bir kusur)
+            # ile "tarihsel kayıp" (kapanmış) aynı şey değildir ve operatörü farklı yerlere
+            # gönderirler.
+            kapali = all(k in KAPANMIS_SEMA and v <= KAPANMIS_SEMA[k]["taban"]
+                         for k, v in drops.items() if k.startswith(SEMA))
+            sebep = ("Tek bozuk satır değil, sistematik bir uyumsuzluk"
+                     if not kapali else
+                     "Sebebi KAPANMIŞ tarihsel bir kayıp (yukarıdaki satır) — yeni satır "
+                     "kaybedilmiyor, ama kaybedilenler de geri gelmiyor")
             violations.append({
                 "stage": name, "rule": "sema_orani_yuksek", "severity": "kritik",
                 "detail": (f"'{name}': giren {n_in} satırın %{frac * 100:.0f}'i şema yüzünden "
-                           f"elendi (eşik %{SEMA_ESCALATE_FRAC * 100:.0f}). Tek bozuk satır değil, "
-                           f"sistematik bir uyumsuzluk — bu aşamanın ürettiği HER sayı eksik "
-                           f"kanıtla hesaplanmıştır.")})
+                           f"elendi (eşik %{SEMA_ESCALATE_FRAC * 100:.0f}). {sebep} — bu aşamanın "
+                           f"ürettiği HER sayı eksik kanıtla hesaplanmıştır.")})
     return {"generated": _now(), "n_stages": len(out_stages), "stages": out_stages,
             "violations": violations, "ok": not violations,
             "note": "sema: = veri sözleşmesi hatası (BUG) · piyasa: = meşru iş filtresi (BİLGİ)"}

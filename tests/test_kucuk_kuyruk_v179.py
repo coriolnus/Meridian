@@ -50,7 +50,13 @@ TIMER = BIRIMLER / "meridian-tick-watchdog.timer"
 # (rota yolu, WEB altındaki dosya adı). Kaynakla senkron kalması gereken liste: yeni bir ad-ad
 # statik rota eklenip buraya eklenmezse `test_statik_rota_envanteri_tam` düşer.
 STATIK_ROTALAR = [
-    ("/", "index.html"),
+    # KÖK ÇEVRİLDİ (2026-08-25): `/` yeni panoyu sunuyor, eski pano `/eski`ye taşındı.
+    # İKİSİ DE LİSTEDE ve bu bilinçli — bu tablo "hangi rota hangi dosyayı sunuyor"un
+    # tek kaynağı; eskiyi listeden düşürmek onu ETag/304 denetiminin dışında bırakırdı.
+    ("/", "pano.html"),
+    ("/eski", "index.html"),
+    ("/pano", "pano.html"),
+    ("/pano-onyuk.js", "pano-onyuk.js"),
     ("/app.js", "app.js"),
     ("/theme.js", "theme.js"),
     ("/landing.js", "landing.js"),
@@ -126,9 +132,34 @@ def test_etag_ICERIKTEN_turer_mtimeden_degil(istemci, sahte_web):
 
 
 def test_etag_dosya_bazinda_ayrisir(istemci, sahte_web):
+    """ETag DOSYAYA bağlıdır, ROTAYA değil — ve iddia 2026-08-25'te GÜÇLENDİ.
+
+    Eski hâl "her rota ayrı ETag" diyordu ve o, rota↔dosya BİREBİRken doğruydu. Kök
+    çevriminden sonra `/` ile `/pano` AYNI dosyayı (`pano.html`) sunuyor; aynı içeriğe
+    aynı etiketi vermek içerik-tabanlı ETag'in TANIMIdır, kusur değil. Eski iddia bu
+    doğru davranışı kırmızı bildirdi.
+
+    İki yönlü çivi (ikisi de gerekli): FARKLI dosyalar farklı etiket almalı — yoksa bir
+    sayfa ötekinin önbelleğinden servis edilir; AYNI dosyayı sunan rotalar da AYNI etiketi
+    almalı — yoksa `/` ile `/pano` arasında gezinen tarayıcı aynı baytı iki kez indirir.
+    """
     etiketler = {yol: istemci.get(yol).headers["etag"] for yol, _ in STATIK_ROTALAR}
-    assert len(set(etiketler.values())) == len(etiketler), \
-        f"iki rota aynı ETag'i paylaşıyor — {etiketler}"
+    dosya = dict(STATIK_ROTALAR)
+    # (a) farklı dosya → farklı etiket
+    dosya_basina = {}
+    for yol, et in etiketler.items():
+        dosya_basina.setdefault(dosya[yol], set()).add(et)
+    cakisan = {}
+    for d, ets in dosya_basina.items():
+        for baska, ets2 in dosya_basina.items():
+            if d < baska and ets & ets2:
+                cakisan[(d, baska)] = ets & ets2
+    assert not cakisan, f"FARKLI dosyalar aynı ETag'i paylaşıyor — {cakisan}"
+    # (b) aynı dosya → tek etiket
+    bolunen = {d: ets for d, ets in dosya_basina.items() if len(ets) > 1}
+    assert not bolunen, (
+        f"AYNI dosyayı sunan rotalar farklı ETag veriyor — {bolunen}; tarayıcı aynı baytı "
+        "iki kez indirir")
 
 
 @pytest.mark.parametrize("baslik", [

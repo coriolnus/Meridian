@@ -641,7 +641,29 @@ def _statik(request: Request, ad: str, media_type: str | None = None):
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    """`/` ucu: pano kabuğu `index.html`i ETag/304 pazarlığıyla döndürür (salt-okuma)."""
+    """`/` ucu: YENİ panoyu (`pano.html`) ETag/304 pazarlığıyla döndürür (salt-okuma).
+
+    KÖK ÇEVRİLDİ (2026-08-25, operatör kararı: "yeni panoya geçelim"). Çevrimin önündeki
+    tek engel kriz kollarıydı — HALT · Cancel-Open · Flatten · Halt-Learning yeni panonun
+    ÜST BARINDA, çift adımlı onayla (`ui/src/pano/kabuk/KrizKollari.tsx`). Acil bir anda
+    operatörün kas hafızasının gittiği yerde kolun bulunması, çevrimin ön şartıydı.
+
+    ESKİ PANO SİLİNMEDİ, ADRESİ DEĞİŞTİ → `/eski`. Gövdesi (`app.js`, 12.600 satır) hâlâ
+    bazı yolların TEK kaynağı; öksüz bırakmak, diskte tutup ulaşılamaz kılmak olurdu ve o
+    hata bu turda `pilot-workflow.html`de bir kez yaşandı (rotası yoktu, dağıtıma biniyordu).
+    Çivi: tests/test_kok_cevrimi_v298.py"""
+    return _statik(request, "pano.html")
+
+
+@app.get("/eski", response_class=HTMLResponse)
+def eski_pano(request: Request):
+    """`/eski` ucu: ÖNCEKİ pano kabuğu (`index.html`). Yetki `/` ile AYNI (yok) — kabuk bir
+    sır taşımaz, açılışta `/api/session`ı sorar ve giriş ekranını mı uygulamayı mı çizeceğine
+    ona göre karar verir.
+
+    NEDEN DURUYOR: göç bitmedi. Yeni panoda henüz karşılığı olmayan yollar var (ajana mesaj
+    ucu yok, belge arşivinin sunum ucu yok, oturum ömrü `/api/session`da dönmüyor) ve bu
+    bölümlerin gövdesi yalnız burada. Emeklilik, o boşluklar kapandığında ve kendi turunda."""
     return _statik(request, "index.html")
 
 
