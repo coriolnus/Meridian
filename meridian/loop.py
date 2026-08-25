@@ -2839,9 +2839,17 @@ def _adet_benimse(broker, sym: str, kitap_qty: float, ayna_qty: float,
         _yaz(); return None
     kayit.update(benimsendi=True, yeni=yeni, tarih=dstr)
     _yaz()
+    # `detail=` ANAHTAR ARGÜMAN, KONUMSAL DEĞİL — ve bu bir üslup düzeltmesi değil, üç günlük
+    # bir kesintinin onarımı. `obs.warn` imzası `warn(event: str, **fields)`: ikinci konumsal
+    # argüman ÇALIŞMA ANINDA `TypeError` demek. Bu satır 2026-08-22'de (c726a19) böyle girdi ve
+    # o günden sonraki HER mutabakat turu tam burada çöktü — `reconcile_broker_state`in çağıranı
+    # istisnayı yutup tek satırlık `reconcile_failed` yazıyor, `broker_reconcile.json` HİÇ
+    # yazılmıyordu. Son başarılı yazım 2026-08-21 20:32; kitap 2026-08-24'ü işlemişti.
+    # Dal yalnız kitap aynanın adedini BENİMSEDİĞİNDE koşuyor, yani her gece değil — bu yüzden
+    # ne test ne de gözle bakış yakaladı. Çivi: tests/test_obs_cagri_imzasi_v290.py
     obs.warn("adet_benimsendi",
-             f"kitap aynanın adedini benimsedi: {sym} {kitap_qty:g} → {yeni:g}"
-             + (f" (sapma sınıfı: {sinif})" if sinif else ""),
+             detail=f"kitap aynanın adedini benimsedi: {sym} {kitap_qty:g} → {yeni:g}"
+                    + (f" (sapma sınıfı: {sinif})" if sinif else ""),
              ticker=sym, onceki=kitap_qty, yeni=yeni, drift_sinifi=sinif)
     return float(yeni)
 
