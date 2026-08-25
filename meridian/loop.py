@@ -452,6 +452,24 @@ def _armed_dropped_by_gate(meta: dict, dstr: str, gate: str) -> None:
 ONAY_ALANI = "operator_onayi"
 ONAY_KANALI = "pano"
 
+# RET, ONAYIN AYNADAKİ GÖRÜNTÜSÜ DEĞİLDİR — ASİMETRİ BİLİNÇLİDİR (2026-08-25 operatör kararı).
+# `girise_uygun` yasası zaten `GO ya da (REVIEW ve onaylı)`; yani ONAYLANMAYAN bir REVIEW planı
+# ZATEN icra edilmiyor. Dolayısıyla ret bir DURUM DEĞİŞİKLİĞİ olamaz — değiştirecek durum yok.
+#   onay → İCRA YETKİSİ (silahlı kümeye yazar + ayna emri dener)
+#   ret  → HİÇBİR icra etkisi YOK; yalnız operatörün hükmünü ve GEREKÇESİNİ deftere yazar
+# YİNE DE DEĞERLİ (YASA 6, okuyucusu pano + olay defteri): sessiz zaman aşımı ile bilinçli ret
+# bugüne kadar AYNI görünüyordu. "Operatör bu kurulumu GÖRDÜ ve şu sebeple istemedi" cümlesi,
+# hiç bakılmamış bir plandan başka bir şeydir ve öğrenme için kanıttır.
+# GEREKÇE ZORUNLU: gerekçesiz bir ret, sessiz zaman aşımından hiçbir farkı olmayan bir satırdır.
+RET_ALANI = "operator_reddi"
+RET_MIN_GEREKCE = 12          # YASA 4'ün ≥20 karakterinden GEVŞEK: bu bir kod şerhi değil, insan notu
+
+
+def operator_reddedildi(pl: dict) -> bool:
+    """Planda operatör reddi OLAYI var mı? (Alanın varlığı değil, damgası ölçülür.)"""
+    r = pl.get(RET_ALANI)
+    return bool(isinstance(r, dict) and r.get("ts"))
+
 
 def operator_onayli(pl: dict) -> bool:
     """Planda operatör onayı OLAYI var mı? (Alanın varlığı değil, damgası ölçülür.)"""
@@ -472,6 +490,74 @@ def girise_uygun(pl: dict, verdict: str | None = None) -> bool:
     if v == "NO_GO":
         return False
     return v == "GO" or (v == "REVIEW" and operator_onayli(pl))
+
+
+def operator_ret_ver(plan_id: str, *, gerekce: str, kanal: str = ONAY_KANALI) -> dict:
+    """Operatörün "gördüm ve istemiyorum" kaydı — İCRAYA DOKUNMAZ (bkz. RET_ALANI bloğu).
+
+    NEDEN api.py'DE DEĞİL BURADA: `trade_plans.jsonl`in yazar listesi `ledgers.CONTRACTS`ta
+    yazılıdır (loop/run/hermes) — `operator_onay_ver` ile birebir aynı gerekçe.
+
+    ONAYDAN AYRILAN ÜÇ NOKTA ve hepsi bilinçli:
+      (1) SİLAHLI KÜMEYE DOKUNULMAZ, ayna emri GÖNDERİLMEZ. Ret hiçbir şeyi durdurmaz çünkü
+          durduracak bir şey yoktur; onaylanmayan REVIEW zaten silahlanmaz.
+      (2) NO_GO da REDDEDİLEBİLİR. Onay tarafında NO_GO mutlak yasaktır (kapıyı ezmek olurdu);
+          burada ret bir GÖRME kaydıdır, kapıyı ezmez — ama kayıt `icra_etkisi: False` taşır ki
+          defter "bu ret bir şeyi durdurdu" diye okunmasın.
+      (3) SEANS/HALT/SLOT KAPILARI KOŞMAZ. Onlar İCRA kapılarıdır; ret icra etmiyor.
+          Bayat bir planı da "gördüm ve istemedim" diye kapatabilmek MEŞRUDUR.
+
+    ONAYLI PLAN REDDEDİLEMEZ: onay icra yetkisidir ve ayna emri gitmiş olabilir. Onaylıyı
+    "reddetmek" operatöre durdurduğu YANILSAMASI verirdi; durduran kol kriz düğmesindeki
+    cancel-open / flatten'dır. Dürüst 409, sessiz bir "tamam" değil.
+
+    Dönüş sözleşmesi `operator_onay_ver` ile aynı: {"ok", "kod", "neden", ...}."""
+    g = str(gerekce or "").strip()
+    if len(g) < RET_MIN_GEREKCE:
+        return {"ok": False, "kod": 400,
+                "neden": f"gerekçe en az {RET_MIN_GEREKCE} karakter olmalı — gerekçesiz ret, "
+                         "sessiz zaman aşımından hiçbir farkı olmayan bir satırdır ve bu kaydın "
+                         "TÜM değeri gerekçededir"}
+    rows = store.read_jsonl("trade_plans.jsonl")
+    plan = next((r for r in reversed(rows) if r.get("id") == plan_id), None)
+    if plan is None:
+        return {"ok": False, "kod": 404, "neden": f"plan defterde yok: {plan_id}"}
+    if operator_onayli(plan):
+        return {"ok": False, "kod": 409,
+                "neden": "plan ONAYLI — onay icra yetkisidir ve ayna emri gitmiş olabilir; "
+                         "'reddetmek' onu geri almaz. Açık emri iptal / pozisyonu düzleştirmek "
+                         "için üst bardaki KRİZ kollarını kullan"}
+    if operator_reddedildi(plan):
+        return {"ok": True, "kod": 200, "zaten": True, "plan_id": plan_id,
+                "neden": "plan zaten reddedilmiş — ilk gerekçe KORUNDU (karar tarihçesi ezilmez)",
+                RET_ALANI: plan.get(RET_ALANI)}
+
+    verdict = str(plan.get("gate_verdict") or "?")
+    ret = {"ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+           "kanal": str(kanal)[:24], "gerekce": g[:500],
+           # BEYAN: bu kayıt hiçbir icrayı durdurmadı. Defter bunu okumadan "ret icra etti"
+           # diye yorumlanamasın diye alan AÇIKÇA yazılır (sessiz False değil, yazılı False).
+           "icra_etkisi": False,
+           "beyan": ("ret İCRAYA DOKUNMAZ: onaylanmayan REVIEW zaten silahlanmaz, NO_GO zaten "
+                     "girmez. Bu kayıt operatörün HÜKMÜdür, bir durdurma değil.")}
+
+    def _ret_yaz(rows_: list) -> bool:
+        """Plan satırına ret damgasını basar (yalnız ret alanı BOŞSA).
+        Hüküm alanına (`gate_verdict`) DOKUNULMAZ — ret de onay gibi bir OLAYdır."""
+        ch = False
+        for r in rows_:
+            if r.get("id") == plan_id and not r.get(RET_ALANI):
+                r[RET_ALANI] = ret
+                ch = True
+        return ch
+    store.update_jsonl("trade_plans.jsonl", _ret_yaz)
+
+    obs.log("plan_operator_rejected", plan_id=plan_id, ticker=plan.get("ticker"),
+            date=plan.get("date"), gate_verdict=verdict, kanal=ret["kanal"], gerekce=g[:200],
+            icra_etkisi=False,
+            detail="operatör planı GÖRDÜ ve istemedi — icra etkisi YOK (zaten silahlanmıyordu); "
+                   "kayıt sessiz zaman aşımını bilinçli retten ayırır")
+    return {"ok": True, "kod": 200, "plan_id": plan_id, "gate_verdict": verdict, RET_ALANI: ret}
 
 
 def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
@@ -3203,16 +3289,44 @@ def _defter_teyit_yamasi(by_coid: dict, pencere: dict, out: dict, dstr: str) -> 
 
 
 def _koruma_dolumu_bul(all_orders: list, sym: str) -> dict | None:
-    """Sembolün KORUMA-SINIFI emirlerinde dolmuş bacak ara. Sınıf hükmü `alpaca.coid_sinifi`den
-    (v220 aile+yön, v221 grup kemerleri — süzgeç KOPYALANMAZ, yeniden kullanılır); dolum okuma
-    `alpaca.koruma_fill`den. İlk dolum döner; yoksa None."""
+    """Sembolün korumasında DOLMUŞ bacak ara. İlk dolum döner; yoksa None.
+
+    İKİ DAL, İKİ GEOMETRİ (v307, 2026-08-25 — PANW vakası). Eskiden tek süzgeç vardı
+    (`coid_sinifi(o)[0] == SINIF_KORUMA`) ve o, BAŞKA BİR SORUNUN cevabını yeniden kullanıyordu:
+        süpürücü  → "bu emri İPTAL EDEBİLİR MİYİM?"   (sahiplik — `coid_sinifi`in işi)
+        mutabakat → "KORUMAM DOLDU MU?"                (dolum — bu fonksiyonun işi)
+    Motor bracket'inde koruma BACAKTADIR ama sahiplik kanıtı PARENT'tadır; parent bir GİRİŞ
+    emridir (`P-2026-08-21-PANW`, side=buy) → `giris` sınıfına düşer → eski süzgeç onu elerdi.
+    Bacaklar tek başına Alpaca'nın UUID coid'ini taşır → `yabanci` düşerler. Sonuç: motor
+    bracket'iyle korunan HİÇBİR pozisyonun stop dolumu görülemiyordu (ölçüm: 9 pozisyonun 5'i).
+
+    A DALI — MERİDİAN OCO (`P-KORUMA-…`): adaylar üst emir + `legs[]`. Davranış AYNEN korunur;
+    orada parent LİMİT hedef bacağıdır ve onu okumak DOĞRUDUR (AMGN/BKNG/EMR yolu değişmez).
+
+    B DALI — MOTOR BRACKET'İ: `giris` sınıfı + `order_class == "bracket"` + dolu `legs[]`.
+    ADAYLAR YALNIZ `legs[]`; PARENT ASLA. Bu kısıt bir üslup tercihi DEĞİL, ölçülmüş bir
+    kusurun kemeri: `koruma_fill` adayları sırayla tarar ve bracket parent'ının kendi GİRİŞ
+    dolumu (PANW: 357,66, type=limit) `bacak="hedef"` diye okunurdu — yani zararla kapanan bir
+    pozisyon GİRİŞ fiyatından "kâr-al doldu" diye kitaba yazılır, K/Z yanlış çıkardı.
+    Gerçek çıkış 342,70 STOP idi. Parent'ı aday listesinden çıkarmak o kusuru YAPISAL olarak
+    imkânsız kılar (çivi v307).
+
+    SAHİPLİK SINIRI KORUNUR: `yabanci` (operatörün kendi emri, A3) hiçbir dalda koruma sayılmaz."""
     from .adapters import alpaca
     for o in (all_orders or []):
         if str(o.get("symbol")) != sym:
             continue
-        if alpaca.coid_sinifi(o)[0] != alpaca.SINIF_KORUMA:
+        sinif = alpaca.coid_sinifi(o)[0]
+        if sinif == alpaca.SINIF_KORUMA:
+            kf = alpaca.koruma_fill(o)                       # A: parent + legs (aynen)
+        elif (sinif == alpaca.SINIF_GIRIS
+              and str(o.get("order_class") or "").lower() == "bracket"
+              and (o.get("legs") or [])):
+            # B: YALNIZ bacaklar. Parent'ı sarmalamıyoruz — `koruma_fill`e parent'sız bir
+            # kabuk veriyoruz ki "ilk dolum" taraması onun giriş dolumuna ASLA ulaşamasın.
+            kf = alpaca.koruma_fill({"legs": list(o.get("legs") or [])})
+        else:
             continue
-        kf = alpaca.koruma_fill(o)
         if kf is not None:
             return {**kf, "coid": o.get("client_order_id")}
     return None

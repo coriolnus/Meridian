@@ -7,9 +7,11 @@
      · HAFIZA (`bolum-hafiza`)   — GERÇEK ve okunuyor. `GET /api/memory` →
        `state/lessons.md` ham metni; burada belge olarak çiziliyor, aranıyor,
        bölüm dökümü çıkarılıyor.
-     · KARAR BELGELERİ (`bolum-belgeler`) — SUNULMUYOR. `docs/` altındaki
-       KARAR-* ve HUKUM-* dosyalarını veren bir uç `api.py`de yok (78 rota tarandı,
-       2026-08-25). Bölüm bunu açıkça yazıyor ve sahte bir dosya listesi çizmiyor.
+     · KARAR BELGELERİ (`bolum-belgeler`) — ARTIK SUNULUYOR (2026-08-25 turu).
+       Yukarıdaki cümle "uç `api.py`de yok" diyordu ve o gün DOĞRUYDU; uç aynı turda
+       eklendi (`api.py::api_karar_belgeleri`). BAYAT BEYAN SİLİNMEZ, DÜZELTİLİR:
+       panonun kendi ucunu yalanlaması, olmayan bir uçtan daha kötüdür — okuyucu
+       ekrana değil yorumun tarihine güvenmek zorunda kalır.
 
    NEDEN DOSYA YÖNETİCİSİ GRAMERİ AMA IZGARA YOK: şablonun file-manager sayfası
    ızgara/liste ikilisiyle geliyor; ızgara kutusu "burada N dosya var" der. Bugün

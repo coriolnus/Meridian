@@ -45,8 +45,8 @@ import { sayi, yuzde } from "./olcum";
  *  tavanı 500 (api.py::api_bars) ve N sembol × 500 bar her tazelemede ödenirdi. */
 const PENCERE_BAR = 90;
 
-/** TAZELEME YAVAŞ ve bu bilinçli: `/api/bars` EOD servis eder (marketview.py: "İKİSİ DE
- *  EOD'dur"), yani kaynak veri GÜNDE BİR değişir. 15 saniyelik panonun nabzına bağlamak
+/** TAZELEME YAVAŞ ve bu bilinçli: `/api/bars` EOD servis eder (marketview.py::bar_serisi
+ *  şerhi — "İKİSİ DE EOD'dur"), yani kaynak veri GÜNDE BİR değişir. 15 saniyelik panonun nabzına bağlamak
  *  N paralel isteği dakikada dörtle çarpar ve karşılığında AYNI seriyi geri getirirdi.
  *  Beş dakika, günde bir değişen bir veriyi zaten 288 kez sormak demek. */
 const TAZELEME_MS = 300_000;
@@ -59,6 +59,13 @@ const RAMPA_N = 10;
  *  yani 9 atlamak "onda birini yaz" demektir. 90 seansın 90 etiketi eksende okunmaz
  *  mürekkebe döner; seyrek etiket tarihi kaybettirmez (tooltip tam tarihi taşıyor). */
 const ETIKET_ATLA = 9;
+
+/** Tek noktalı serinin nokta yarıçapı. NEDEN NOKTA GEREKİYOR: recharts çizgiyi d3
+ *  `line()` ile üretir ve TEK non-null noktada `M x,y Z` yazar — sıfır uzunluklu bir
+ *  alt-yol, `stroke-linecap: butt` ile HİÇ boyanmaz. Yani "çizildi" sayılan seri
+ *  ekranda yoktur. Nokta yalnız o durumda açılır: 90 seansın hepsini noktalamak
+ *  grafiği okunmaz mürekkebe çevirirdi. */
+const TEK_NOKTA_R = 3;
 
 /** ChartContainer `config` İSTİYOR ama bu grafikte yapacak işi YOK ve nedeni yazılı olsun:
  *  config'in tek işlevi `--color-<anahtar>` değişkenleri üretmek (chart.tsx::ChartStyle);
@@ -113,6 +120,17 @@ interface CizimSerisi {
   readonly sonYuzde: number | null;
   readonly ilkSeans: string;
   readonly seansSayisi: number;
+  /** HAM serinin ÖLÇÜLEN son seansı (girişe göre süzülmeden önce). Tek noktalı bir seride
+   *  "seri burada bitiyor" demenin TEK kanıtı bu: `ilkSeans`e eşitse seri gerçekten orada
+   *  bitiyordur, değilse seri devam ediyor ve nokta başka bir nedenle tek kalmıştır.
+   *  Tarihi okunabilen tek bar yoksa `null` — o durumda hiçbir iddia basılmaz. */
+  readonly sonBarTarihi: string | null;
+  /** Girişten sonraki barlardan kaçının kapanışı sayıya ÇEVRİLEMEDİĞİ. Sessizce düşen bar
+   *  "o gün fiyat yoktu" diye okunurdu; sayılıp ekrana basılıyor. */
+  readonly kapanissizBar: number;
+  /** Yüzdenin TABANI hangi defterden okundu. Ekrandaki beyan bunu SAYAR; sabit bir
+   *  cümle, taban dağılımı değiştiği gün sessizce yalan söylerdi. */
+  readonly girisKaynak: PozisyonSatiri["girisKaynak"];
   /** Giriş, 90 seanslık pencerenin BAŞINDAN da eskiyse çizgi girişte değil pencerenin
    *  başında başlar. Yüzdenin tabanı yine giriştir (yani değer doğrudur), ama çizginin
    *  SOL UCU "burada aldık" demek DEĞİLDİR — bu ayrım ekranda yazılır. */
@@ -289,7 +307,7 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
      (dizi kimliği her nabızda değişiyor, İÇERİĞİ değişmiyor). İçerik değiştiğinde
      `metaImza` da değişir, yani bayat bir çizim ihtimali yok. Bu dizinin kimliğini
      nabızla birlikte yenilemek recharts'ta ölçülmüş bir kusur üretiyor (giriş
-     animasyonunun başa sarması — PozisyonGrafigi.tsx şerhi); animasyon burada da
+     animasyonunun başa sarması — PozisyonGrafigi.tsx::PozisyonGrafigi şerhi); animasyon burada da
      kapalı, ama diziyi sabitlemek hem çizimi hem de gereksiz React işini kesiyor. */
   const cizim: Cizim = useMemo(() => {
     if (barlar === null) return BOS_CIZIM;
@@ -300,6 +318,9 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
       readonly ilkSeans: string;
       readonly sonYuzde: number;
       readonly girisPencereOncesi: boolean;
+      readonly girisKaynak: PozisyonSatiri["girisKaynak"];
+      readonly sonBarTarihi: string | null;
+      readonly kapanissizBar: number;
     }
     const adaylar: Aday[] = [];
     const dusenler: Dusen[] = [];
@@ -340,10 +361,18 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
       if (acilisGun === null || !TARIH_DESENI.test(acilisGun)) {
         dusenler.push({
           ticker: s.ticker,
+          // BROKER-ONLY SATIRIN NEDENİ AYRI YAZILIR ve bu bir üslup tercihi değil, TEŞHİS
+          // farkı: `birlestir()` açılış damgasını YALNIZ kitap satırından okur (`ts_open`),
+          // çünkü `BrokerPozisyonu` (tipler.ts) symbol/qty/avg_entry/current/upl taşır —
+          // tarih alanı YOKTUR. Yalnız aynada duran bir pozisyon bu yüzden HİÇBİR ZAMAN
+          // çizilemez. Okuyucuyu "bar dosyası eksik" diye bar ucuna göndermek, olmayan bir
+          // veri boşluğunu aratmak olurdu.
           neden:
-            acilis === null
-              ? "açılış tarihi ölçülemedi (kitap satırı yok; broker `ts_open` vermiyor) — girişten önceki seanslar ayıklanamadığı için seri ÇİZİLMEDİ"
-              : `açılış damgası tarihe çevrilemedi ("${acilis}") — girişten önceki seanslar ayıklanamadı`,
+            acilis !== null
+              ? `açılış damgası tarihe çevrilemedi ("${acilis}") — girişten önceki seanslar ayıklanamadı`
+              : s.nerede === "yalniz-broker"
+                ? "yalnız BROKER aynasında var ve aynada AÇILIŞ DAMGASI yok — ayna satırı symbol/qty/avg_entry/current/upl taşır, tarih taşımaz. Seyir GİRİŞTEN İTİBAREN çizilir; giriş tarihi olmayan pozisyon çizilemez. Bu bir bar eksiği DEĞİL, aynanın şeklinden gelen YAPISAL bir eksik — bar dosyasına bakmak boşuna."
+                : "kitap satırında ts_open alanı yok — girişten önceki seanslar ayıklanamadığı için seri ÇİZİLMEDİ",
         });
         continue;
       }
@@ -351,16 +380,31 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
       const noktalar = new Map<string, number>();
       let sonYuzde: number | null = null;
       let ilkBarTarihi: string | null = null;
+      let sonBarTarihi: string | null = null;
+      let kapanissizBar = 0;
       for (const b of bar) {
         const t = typeof b.t === "string" ? b.t : null;
+        // SESSİZ YUTMA (bilinçli): tarihi okunamayan bar `kapanissizBar` kovasına DA
+        // yazılmıyor, çünkü o kova "GİRİŞTEN SONRAKİ" barları sayıyor ve tarihsiz bir barın
+        // girişten önce mi sonra mı olduğu bilinmiyor — sayarsak ekrana ölçmediğimiz bir
+        // iddia basmış oluruz. Tarihsiz bar, tarih taşıyan komşularının arasında yok sayılır.
         if (t === null || !TARIH_DESENI.test(t)) continue;
         if (ilkBarTarihi === null) ilkBarTarihi = t;
+        // HAM SERİNİN SON SEANSI, GİRİŞ SÜZGECİNDEN ÖNCE ölçülüyor: tek noktalı bir seride
+        // "bar serisi burada bitiyor" iddiasının tek kanıtı bu. Süzgeçten sonra ölçseydik
+        // her tek noktalı seri kendini "seri bitti" diye ilan ederdi — döngüsel kanıt.
+        sonBarTarihi = t;
         // GİRİŞTEN ÖNCESİ ÇİZİLMEZ. ISO tarihler sözlüksel olarak da kronolojiktir,
         // yani dizge karşılaştırması burada tarih karşılaştırmasıdır (Date kurmak
         // saat dilimi hatası riski getirirdi, karşılığında hiçbir şey vermeden).
         if (t < acilisGun) continue;
         const kapanis = sayi(b.c);
-        if (kapanis === null) continue;
+        if (kapanis === null) {
+          // SESSİZ YUTMA DEĞİL: kapanışı okunamayan bar SAYILIYOR ve tek noktalı seride
+          // ekrana basılıyor — sayılmasaydı "o gün fiyat yoktu" diye okunurdu.
+          kapanissizBar += 1;
+          continue;
+        }
         const y = (kapanis / giris - 1) * 100;
         noktalar.set(t, y);
         sonYuzde = y;
@@ -383,6 +427,9 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
         ilkSeans,
         sonYuzde,
         girisPencereOncesi: ilkBarTarihi !== null && acilisGun < ilkBarTarihi,
+        girisKaynak: s.girisKaynak,
+        sonBarTarihi,
+        kapanissizBar,
       });
     }
 
@@ -402,6 +449,9 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
       ilkSeans: a.ilkSeans,
       seansSayisi: a.noktalar.size,
       girisPencereOncesi: a.girisPencereOncesi,
+      girisKaynak: a.girisKaynak,
+      sonBarTarihi: a.sonBarTarihi,
+      kapanissizBar: a.kapanissizBar,
     }));
 
     const tarihler = [...new Set(adaylar.flatMap((a) => [...a.noktalar.keys()]))].sort();
@@ -455,6 +505,19 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
   const oturumDustu = barlar !== null && Object.values(barlar).some((d) => d.oturumDustu);
   const rampaDondu = cizim.seriler.some((s) => s.rampaTekrari);
   const pencereOncesi = cizim.seriler.filter((s) => s.girisPencereOncesi);
+
+  /* SAYAÇ ÜÇ KOVA — ADAY OLMAK ÇİZİLMEK DEĞİLDİR. Girişi pencerenin son seansında olan
+     bir pozisyonun serisi TEK NOKTALIDIR ve recharts onu sıfır piksel çizer (TEK_NOKTA_R
+     şerhi). Eski sayaç onları "çizildi" kovasına yazıyordu: ekranda yedi çizgi varken
+     kutu dokuz diyordu. Üçüncü kova (hiç aday olamayanlar) zaten vardı. */
+  const tekSeanslik = cizim.seriler.filter((s) => s.seansSayisi < 2);
+  const cizilenCizgi = cizim.seriler.length - tekSeanslik.length;
+
+  /* TABAN BEYANI ÖLÇÜMDEN BESLENİR: taban satır satır broker `avg_entry` ya da kitap
+     `entry` olabilir (`birlestir()`), ve iki defterin girişi AYRIŞIYOR. Sabit bir cümle,
+     dağılım değiştiği gün sessizce yalan söylerdi — bu yüzden sayılıyor. */
+  const tabanBroker = cizim.seriler.filter((s) => s.girisKaynak === "broker").length;
+  const tabanKitap = cizim.seriler.filter((s) => s.girisKaynak === "kitap").length;
   const yukseklik = 340;
 
   if (satirlar.length === 0) {
@@ -521,7 +584,7 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
               <Line
                 connectNulls={false}
                 dataKey={s.anahtar}
-                dot={false}
+                dot={s.seansSayisi < 2 ? { fill: s.renk, r: TEK_NOKTA_R, stroke: s.renk } : false}
                 isAnimationActive={false}
                 key={s.anahtar}
                 name={s.ticker}
@@ -536,7 +599,11 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
             <Line
               connectNulls={false}
               dataKey="ortalama"
-              dot={false}
+              dot={
+                cizim.veri.length < 2
+                  ? { fill: "var(--muted-foreground)", r: TEK_NOKTA_R, stroke: "var(--muted-foreground)" }
+                  : false
+              }
               isAnimationActive={false}
               name="Kitap ortalaması (eşit ağırlıklı)"
               stroke="var(--muted-foreground)"
@@ -575,7 +642,14 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
         olurdu.{" "}
         {cizim.ilkSeans !== null && cizim.sonSeans !== null
           ? `Pencere ${gunAyYil(cizim.ilkSeans)} → ${gunAyYil(cizim.sonSeans)} (${cizim.veri.length} seans), kaynak /api/bars?n=${PENCERE_BAR} — EOD kapanış, canlı fiyat değil.`
-          : `Kaynak /api/bars?n=${PENCERE_BAR} — EOD kapanış, canlı fiyat değil.`}
+          : `Kaynak /api/bars?n=${PENCERE_BAR} — EOD kapanış, canlı fiyat değil.`}{" "}
+        TABAN: yüzdenin paydası satırın giriş fiyatıdır ve bu, tablodaki "Giriş" sütunuyla AYNI alandır — broker
+        avg_entry varsa o, yoksa kitap entry (bu grafikte {tabanBroker} seri broker, {tabanKitap} seri kitap
+        tabanlı). Tablodaki "K/Z %" ile buradaki yüzde AYNI OLMAK ZORUNDA DEĞİL, ve fark tabandan değil PAYDAN
+        gelir: buradaki pay /api/bars EOD KAPANIŞI, tablodaki pay broker current son fiyatıdır (broker satırı
+        yoksa /api/market: ÖNCE seans içi intraday_close — kapanmış DAKİKALIK bar, yalnız silahlı sembollerde
+        dolu — ve yalnızca o da yoksa EOD close). İki sayı ayrışıyorsa bu bir kusur değil, iki farklı fiyat
+        kanalıdır.
       </p>
 
       {pencereOncesi.length > 0 && (
@@ -601,9 +675,29 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
       {/* ---- DÜRÜSTLÜK: kaçın kaçı çizildi --------------------------------- */}
       <div className="rounded-md border border-dashed p-3">
         <p className="font-medium text-sm">
-          {satirlar.length} pozisyonun {cizim.seriler.length}'i çizildi
-          {cizim.dusenler.length > 0 ? `; ${cizim.dusenler.length}'i çizilemedi:` : "."}
+          {satirlar.length} pozisyonun {cizilenCizgi}'i çizildi
+          {tekSeanslik.length > 0 ? `, ${tekSeanslik.length}'i tek seanslık (çizgi iki nokta ister)` : ""}
+          {cizim.dusenler.length > 0 ? `, ${cizim.dusenler.length}'i çizilemedi:` : "."}
         </p>
+        {/* TEK SEANSLIKLAR KENDİ NEDENLERİYLE: "çizilemedi" değiller (yüzdeleri ölçüldü,
+            göstergede duruyorlar) ama "çizildi" de değiller — ekrandaki işaretleri bir
+            çizgi değil, bir NOKTA. Ara kovayı adlandırmadan sayaç ya şişer ya da eksilir. */}
+        {tekSeanslik.length > 0 && (
+          <ul className="mt-2 space-y-1">
+            {tekSeanslik.map((s) => (
+              <li className="text-muted-foreground text-xs" key={s.anahtar}>
+                <span className="font-medium text-foreground">{s.ticker}</span> — girişten bu yana ölçülen TEK
+                seans {gunAyYil(s.ilkSeans)}
+                {s.sonBarTarihi === null
+                  ? "; serinin son seansı okunamadı (hiçbir barın tarihi beklenen biçimde değildi), o yüzden serinin nerede bittiği hakkında bir şey söylenmiyor."
+                  : s.sonBarTarihi === s.ilkSeans
+                    ? "; ham bar serisi de bu seansta bitiyor."
+                    : `; ham bar serisi ${gunAyYil(s.sonBarTarihi)} seansına kadar gidiyor ama girişten bu yana yalnız bu seans noktaya çevrilebildi (${s.kapanissizBar} barın kapanışı sayıya çevrilemedi).`}{" "}
+                Tek nokta sıfır piksel çizer, bu yüzden seri çizgi değil NOKTA olarak işaretlendi.
+              </li>
+            ))}
+          </ul>
+        )}
         {cizim.dusenler.length > 0 && (
           <ul className="mt-2 space-y-1">
             {cizim.dusenler.map((d) => (

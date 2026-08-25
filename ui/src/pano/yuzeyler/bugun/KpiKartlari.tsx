@@ -14,7 +14,8 @@
    yasası tam olarak bunu yasaklıyor.
 
    `inbox_count` ile `pending_count` AYNI KARTTA ama AYNI SATIRDA DEĞİL — çünkü aynı
-   şey değiller ve panonun eski kusuru ikisini karıştırmaktı (api.py:5867 şerhi:
+   şey değiller ve panonun eski kusuru ikisini karıştırmaktı (`_onay_bekleyen_damgala`
+   şerhi:
    üç plan onay beklerken ekran "0 bekleyen onay" yazıyordu). Büyük sayı senden İŞ
    isteyeni sayar; alt satır o seans KURULAN planı sayar ve kimseden bir şey istemez.
    ============================================================================ */
@@ -103,7 +104,8 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
 
   return (
     <div className={IZGARA}>
-      {/* 1 — SERMAYE. Rakamın YANINDA kökeni duruyor: ölçülen kusur (api.py:1611 şerhi)
+      {/* 1 — SERMAYE. Rakamın YANINDA kökeni duruyor: ölçülen kusur (`api_today` içindeki
+          `sermaye_koken` şerhi)
           panonun "94.457,91$" yazıp bunun bir ANTRENMAN artefaktı olduğunu söylememesiydi. */}
       <Kart
         ikon={Wallet}
@@ -195,7 +197,8 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
         )}
       </Kart>
 
-      {/* 5 — VERİ KAPISI. `data_ok` NABZIN İÇİNDE yaşıyor (loop.py:2275 onu oraya yazar),
+      {/* 5 — VERİ KAPISI. `data_ok` NABZIN İÇİNDE yaşıyor (`loop.daily_cycle` onu
+          `health.write_heartbeat` çağrısıyla oraya yazar),
           `/api/today`in kendi üst düzeyinde DEĞİL — üst düzeyde arayan bir kart her zaman
           "ölçülemedi" derdi ve bu, ölçülmüş bir gerçeği yanlış olumsuzlamak olurdu. */}
       <Kart

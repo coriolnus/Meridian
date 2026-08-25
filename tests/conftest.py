@@ -82,7 +82,7 @@ _MODUL_DURUMLARI = (
     (_alp_mod, "_TRANSPORT"),
     # obs._SUPPRESS_LOGGED — AYNI SINIF, KANIT DÜZEYİ FARKLI ve bu beyan edilir: bir kırmızı test
     # GÖZLENMEDİ (v215 ölçtü, `/api/halt` bisect'te temiz çıktı). Mekanizma yine de birebir aynı:
-    # her alarm jeton başına 6 saatlik SUSTURMA penceresini bu sözlüğe yazar (obs.py:148-152), yani
+    # her alarm jeton başına 6 saatlik SUSTURMA penceresini bu sözlüğe yazar (`obs._emit` (olay yazım yolu)-152), yani
     # alarm ateşleyen bir test, bildirim davranışını ölçen bir SONRAKİ testi kendi kurmadığı bir
     # susturmayla karşılaştırır. `tests/test_alarm_delivery_v71.py:177` bunu bugün tek satırlık bir
     # `monkeypatch.setattr(obs, "_SUPPRESS_LOGGED", {})` ile kendi başına çözüyor — yani sızıntı

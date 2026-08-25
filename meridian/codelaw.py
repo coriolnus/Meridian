@@ -19,8 +19,14 @@ buldu ve bu modül ikisini de çalışma zamanına hiç dokunmadan, ast ile kayn
   olan ama çağıranı insan olan defter). Beyanın kendisi de denetlenir: `declared_claims`/
   `stale_claims`/`unverifiable_claims` iddiaları fonksiyon-çağrı düzeyinde sınar.
 
+  SATIR ÇAPASI — `dosya.py:NNN` biçimindeki her çapa ÖLÇÜLÜR: gösterdiği satır bugün ne? Yasanın
+  İKİ DÜNYASI vardır ve hükümleri AYRIDIR: `.py` kaynağında sıfır tolerans
+  (`stale_line_anchors`), panonun `.ts`/`.tsx` kaynağında ÇIRÇIR (`stale_tsx_line_anchors` +
+  `TSX_CAPA_TABANI` — yüzlerce çapalık birikmiş borç tek turda temizlenmez, çırçır borcun BÜYÜMESİNİ
+  engeller). Ölçüm gövdesi ortaktır (`_capalari_olc`), ayrışan yalnız hükümdür.
+
 Modül SAF DENETİMDİR: durum değiştirmez, karar vermez, diske yazmaz; yalnız kaynak ağacını
-(meridian/*.py) okur. Toplu hüküm `report()` ile panoya ve bekçiye çıkar."""
+(meridian/*.py ve ui/src/*.ts[x]) okur. Toplu hüküm `report()` ile panoya ve bekçiye çıkar."""
 from __future__ import annotations
 
 import ast
@@ -1326,37 +1332,47 @@ _CAPA_DESENI = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*\.py):(\d+)\b")
 #: kendi yorum bloklarının kopyasıdır; orası üreticinin işidir (ROADMAP Ö-49, açık kalem).
 _EK_CAPA_KOKLERI = ("tests", "ops")
 
+#: PANONUN KAYNAĞI — YASANIN İKİNCİ DÜNYASI (2026-08-25, iki denetçinin bağımsız bulduğu kör
+#: nokta). Çapa deseni `dosya.py:NNN` olduğu için yasa yıllarca yalnız `.py` dosyalarını taradı;
+#: oysa çapayı YAZAN dosyanın Python olması gerekmiyor. `ui/src` altındaki `.ts`/`.tsx` kaynağı
+#: Python uçlarını satır numarasıyla çapalıyor ve o çapalar HİÇBİR çivinin görüş alanında değildi.
+TSX_CAPA_KOKU = "ui/src"
+TSX_UZANTILAR = (".ts", ".tsx")
 
-def stale_line_anchors(root: str = "meridian",
-                       cozulemeyen_out: list | None = None,
-                       ek_kokler: tuple[str, ...] = ()) -> list[dict]:
-    """SATIR ÇAPASI YASASI: kaynaktaki her `dosya.py:NNN` çapasını ÖLÇER ve çürükleri döndürür.
+#: ÇIRÇIR TABANI — 2026-08-25'te İKİ KEZ ÖLÇÜLDÜ (`ui/src`, 210 dosya): turun başında 200 çapa ·
+#: 40 BAYAT (27 `yorum`, 13 `bos_satir`); aynı turda başka iş kolları kendi `.tsx` çapalarını
+#: sembole çevirdikçe 161 çapa · 35 BAYAT (22 `yorum`, 13 `bos_satir`) · 0 çözülemeyen. Yazılan
+#: değer İKİNCİSİDİR — yani taban daha doğarken bir kez AŞAĞI çekildi ve mekanizma böyle çalışır.
+#:
+#: NEDEN TABAN VAR (ve `.py` tarafında YOK): yüzlerce çapalık BİRİKMİŞ BORÇ tek turda sembole
+#: çevrilemez. Taramayı sıfır-tolerans kapısına bağlamak onlarca ihlali anında tam suiteye düşürür,
+#: kırmızı normalleşir ve yasa susturulurdu — susturulmuş bekçi, olmayan bekçiden beterdir
+#: (varmış gibi durur). Çırçır borcun ÖDENMESİNİ zorlamaz, BÜYÜMESİNİ engeller: bugün bayat olan
+#: 35 çapa kayıtlı borçtur, 36'ncı YENİ bir kusurdur ve o an öter.
+#:
+#: YÖN TEK TARAFLIDIR (kill-list disiplini): temizlik yapıldıkça bu sayı DÜŞÜRÜLÜR; YÜKSELTMEK
+#: yasaktır — tabanı büyütmek borcu ödemek değil, borcu meşrulaştırmaktır ve tavan
+#: `tests/test_codelaw_tsx_capa_v314.py`de ayrıca çivilidir.
+TSX_CAPA_TABANI = 32
 
-    Çapa üç biçimde çürür ve üçü de burada yakalanır:
-      * `menzil_disi` — numara dosyanın satır sayısını aşıyor (çapa artık hiçbir şeyi göstermiyor),
-      * `bos_satir`   — gösterdiği satır boş,
-      * `yorum`       — gösterdiği satır bir yorum (çapa kod göstermeliydi).
+#: Beyanlı muafiyet işareti — İKİ DÜNYADA DA AYNI. Bayat çapayı KANIT olarak alıntılayan satır
+#: (dersin kendisi "şu çapa bayatladı" ise) bulgu değildir; işaret GÖRÜNÜR ve zorunludur.
+_CAPA_MUAFIYETI = "çapa-mezar-taşı"
 
-    Hedef dosya BASENAME ile çözülür; aynı adlı iki dosya varsa (`ikircikli`) hüküm verilmez —
-    ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI). Kendi kendini de tarar: bu modülün
-    beyanlarındaki çapalar da ölçülür.
 
-    ÇÖZÜLEMEYEN ÇAPA SESSİZCE DÜŞMEZ (2026-08-16 denetim bulgusu). Hüküm verilemeyen çapa —
-    hedef ağaçta YOK (`hedef_yok`) ya da aynı ad birden çok dosyada (`ikircikli`) — eskiden
-    `continue` ile atılıyordu: yani yasa "0 çürük" derken kaçının hakkında hüküm KURAMADIĞINI
-    söylemiyordu. Bu tam olarak `artifact_graph`ın `unresolved` kovasıyla kapattığı sınıftır ve
-    bir körlük-raporlama yasasının kendi körlüğünü gizlemesi, yasanın kendi ihlaliydi.
-    `cozulemeyen_out` verilirse bu kayıtlar ORAYA yazılır ve `report()` onları
-    `line_anchor_unresolved` ADIYLA dışarı verir. İHLAL SAYILMAZLAR (`ok`u False'a çekmezler):
-    ölçülemeyen şey ihlal değildir — ama SAYILIR.
+def _ts_files(root: str):
+    """`root` altındaki `.ts`/`.tsx` dosyalarını ad sırasıyla üretir (`_py_files`in tsx ikizi);
+    eleme `_SKIP_DIRS` ile ve KÖK ALTINDAKİ yolda yapılır — gerekçesi `_py_files`te yazılı."""
+    kok = pathlib.Path(root)
+    for f in sorted(g for u in TSX_UZANTILAR for g in kok.rglob(f"*{u}")):
+        if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
+            continue
+        yield f
 
-    Neden burada: `stale_claims` beyanın ULAŞILABİLİRLİĞİNİ doğrular, METNİNİ değil — çapa
-    metnin içinde yaşadığı için o kapının yapısal kör noktasıdır.
-    """
-    # TARANAN KÖKLER ve ADRES DEFTERİ AYNI KÜMEDEN kurulur: `tests/` içindeki bir çapa
-    # `meridian/`deki bir dosyayı gösterebilir (ve çoğu öyle yapar), dolayısıyla adres defteri
-    # tüm köklerden doğar — yoksa o çapalar "hedef_yok" diye ölçülemez sayılırdı.
-    kokler = [root, *ek_kokler]
+
+def _capa_adres_defteri(kokler) -> dict[str, list[pathlib.Path]]:
+    """Çapa hedeflerinin BASENAME → yollar defteri. Çapa metni `dosya.py:NNN` olduğu için defter
+    HER ZAMAN Python ağacından kurulur — çapayı yazan dosyanın dili ne olursa olsun."""
     adres: dict[str, list[pathlib.Path]] = {}
     for k in kokler:
         kok = pathlib.Path(k)
@@ -1366,13 +1382,18 @@ def stale_line_anchors(root: str = "meridian",
             if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
                 continue
             adres.setdefault(f.name, []).append(f)
+    return adres
 
-    # BEYANLI MUAFİYET (YASA 4'ün deseni): bir satır bayat çapayı KANIT olarak alıntılıyorsa —
-    # yani dersin kendisi "şu çapa bayatladı" ise — çürüklüğü bulgu değil, anlatının parçasıdır.
-    # İşaret zorunlu ve GÖRÜNÜR: `çapa-mezar-taşı`. İşaretsiz hiçbir çapa muaf değildir.
-    MUAFIYET = "çapa-mezar-taşı"
+
+def _capalari_olc(dosyalar, adres: dict[str, list[pathlib.Path]],
+                  cozulemeyen_out: list | None, evre: str) -> list[dict]:
+    """ÇAPA HÜKMÜNÜN TEK GÖVDESİ: verilen dosyalardaki her `dosya.py:NNN` çapasını ölçer.
+
+    İki tarayıcı (py ve tsx) bu gövdeyi PAYLAŞIR ve paylaşmak zorundadır: çürüme sınıfının tanımı
+    (`menzil_disi` · `bos_satir` · `yorum`), muafiyet işareti ve çözülemeyen-çapa kaydı iki dünyada
+    da AYNI olmalı. Ayrışan yalnız HÜKÜM (py = sıfır tolerans, tsx = çırçır) — ölçüm değil."""
     curuk: list[dict] = []
-    for f in (g for k in kokler if pathlib.Path(k).exists() for g in _py_files(k)):
+    for f in dosyalar:
         try:
             satirlar = _kaynak_oku(f).splitlines()
         except (OSError, ValueError) as e:            # ValueError: UnicodeDecodeError'ı da kapsar
@@ -1380,16 +1401,16 @@ def stale_line_anchors(root: str = "meridian",
             # veriliyordu (ikincisi de istisna değil ÖNCEDEN BİÇİMLENMİŞ metindi). Yani okunamayan
             # tek bir dosya, körlüğü kayda geçirmek yerine bekçiyi TypeError ile çökertirdi —
             # yakalayıcının kendisi yeni bir çökme yolu açmıştı.
-            _note_unscanned(str(f), e, "stale_line_anchors")
+            _note_unscanned(str(f), e, evre)
             continue
         for i, satir in enumerate(satirlar, 1):
-            if MUAFIYET in satir:
+            if _CAPA_MUAFIYETI in satir:
                 continue
             for m in _CAPA_DESENI.finditer(satir):
                 hedef_ad, n = m.group(1), int(m.group(2))
                 hedefler = adres.get(hedef_ad, [])
                 if len(hedefler) != 1:
-                    # hüküm YOK — ama kayıt VAR (yukarıdaki "çözülemeyen çapa" notu).
+                    # hüküm YOK — ama kayıt VAR (aşağıdaki "çözülemeyen çapa" notu).
                     if cozulemeyen_out is not None:
                         cozulemeyen_out.append(
                             {"kaynak": f"{f.name}:{i}", "capa": m.group(0),
@@ -1416,8 +1437,87 @@ def stale_line_anchors(root: str = "meridian",
     return curuk
 
 
-def report(root: str = "meridian") -> dict:
-    """İki yasanın birlikte durumu — tek bakışta 'kaç ihlal' cevabı."""
+def stale_tsx_line_anchors(root: str = TSX_CAPA_KOKU,
+                           py_kokler: tuple[str, ...] | None = None,
+                           cozulemeyen_out: list | None = None) -> list[dict]:
+    """SATIR ÇAPASI YASASI, TSX DÜNYASI: `ui/src` altındaki `.ts`/`.tsx` kaynağındaki
+    `dosya.py:NNN` çapalarını ölçer. Çürüme sınıfları ve muafiyet `.py` tarafıyla BİREBİR aynıdır
+    (`_capalari_olc`); ayrışan yalnız hükümdür — burada sıfır tolerans değil ÇIRÇIR işler
+    (`TSX_CAPA_TABANI`, `tsx_capa_nuksu`).
+
+    Hedef adres defteri PYTHON ağacından kurulur (`py_kokler`, varsayılan `meridian` + ek kökler):
+    tsx'teki çapa bir Python dosyasını gösterir, kendi ağacındaki bir dosyayı değil.
+
+    KÖK YOKSA SESSİZ YEŞİL YOK: `ui/src` bulunamazsa (kaynak ağacı olmayan bir kurulum, yanlış
+    çalışma dizini) körlük `UNSCANNED`e yazılır ve `report()["ok"]` bu yüzden düşer — "0 bayat
+    çapa" ile "hiç bakmadım" aynı görünemez."""
+    if py_kokler is None:
+        py_kokler = ("meridian", *_EK_CAPA_KOKLERI)
+    kok = pathlib.Path(root)
+    if not kok.exists():
+        _note_unscanned(root, FileNotFoundError(f"tsx çapa kökü yok: {root}"),
+                        "stale_tsx_line_anchors")
+        return []
+    return _capalari_olc(_ts_files(root), _capa_adres_defteri(py_kokler),
+                         cozulemeyen_out, "stale_tsx_line_anchors")
+
+
+def tsx_capa_nuksu(capalar: list[dict], taban: int | None = None) -> bool:
+    """ÇIRÇIR HÜKMÜ: bayat tsx çapası sayısı tabanın ÜSTÜNE çıktı mı?
+
+    Karşılaştırma `>`dır, `>=` DEĞİL: tabanın KENDİSİ kayıtlı borçtur, ihlal değil. Düşüş her
+    zaman serbesttir (temizlik yapan tur kırmızı görmemeli); ötme yalnız BÜYÜMEDEDİR.
+
+    Taban çağrı ANINDA okunur (varsayılan argümana bağlanmaz): `TSX_CAPA_TABANI` düşürüldüğünde
+    hüküm aynı süreçte yeni değere göre verilir."""
+    return len(capalar) > (TSX_CAPA_TABANI if taban is None else taban)
+
+
+def stale_line_anchors(root: str = "meridian",
+                       cozulemeyen_out: list | None = None,
+                       ek_kokler: tuple[str, ...] = ()) -> list[dict]:
+    """SATIR ÇAPASI YASASI: kaynaktaki her `dosya.py:NNN` çapasını ÖLÇER ve çürükleri döndürür.
+
+    Çapa üç biçimde çürür ve üçü de burada yakalanır:
+      * `menzil_disi` — numara dosyanın satır sayısını aşıyor (çapa artık hiçbir şeyi göstermiyor),
+      * `bos_satir`   — gösterdiği satır boş,
+      * `yorum`       — gösterdiği satır bir yorum (çapa kod göstermeliydi).
+
+    Hedef dosya BASENAME ile çözülür; aynı adlı iki dosya varsa (`ikircikli`) hüküm verilmez —
+    ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI). Kendi kendini de tarar: bu modülün
+    beyanlarındaki çapalar da ölçülür.
+
+    ÇÖZÜLEMEYEN ÇAPA SESSİZCE DÜŞMEZ (2026-08-16 denetim bulgusu). Hüküm verilemeyen çapa —
+    hedef ağaçta YOK (`hedef_yok`) ya da aynı ad birden çok dosyada (`ikircikli`) — eskiden
+    `continue` ile atılıyordu: yani yasa "0 çürük" derken kaçının hakkında hüküm KURAMADIĞINI
+    söylemiyordu. Bu tam olarak `artifact_graph`ın `unresolved` kovasıyla kapattığı sınıftır ve
+    bir körlük-raporlama yasasının kendi körlüğünü gizlemesi, yasanın kendi ihlaliydi.
+    `cozulemeyen_out` verilirse bu kayıtlar ORAYA yazılır ve `report()` onları
+    `line_anchor_unresolved` ADIYLA dışarı verir. İHLAL SAYILMAZLAR (`ok`u False'a çekmezler):
+    ölçülemeyen şey ihlal değildir — ama SAYILIR.
+
+    Neden burada: `stale_claims` beyanın ULAŞILABİLİRLİĞİNİ doğrular, METNİNİ değil — çapa
+    metnin içinde yaşadığı için o kapının yapısal kör noktasıdır.
+
+    KAPSAM `.py` İLE SINIRLI ve bu BİLİNÇLİDİR: `ui/src` altındaki `.ts`/`.tsx` çapaları AYRI bir
+    tarayıcıya (`stale_tsx_line_anchors`) ve AYRI bir hükme (çırçır) bağlıdır. Gerekçesi
+    `TSX_CAPA_TABANI` beyanında yazılı — buradaki sıfır tolerans o yüzden gevşemez.
+    """
+    # TARANAN KÖKLER ve ADRES DEFTERİ AYNI KÜMEDEN kurulur: `tests/` içindeki bir çapa
+    # `meridian/`deki bir dosyayı gösterebilir (ve çoğu öyle yapar), dolayısıyla adres defteri
+    # tüm köklerden doğar — yoksa o çapalar "hedef_yok" diye ölçülemez sayılırdı.
+    kokler = [root, *ek_kokler]
+    dosyalar = (g for k in kokler if pathlib.Path(k).exists() for g in _py_files(k))
+    return _capalari_olc(dosyalar, _capa_adres_defteri(kokler),
+                         cozulemeyen_out, "stale_line_anchors")
+
+
+def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
+    """İki yasanın birlikte durumu — tek bakışta 'kaç ihlal' cevabı.
+
+    `tsx_kok` verilmezse tsx çapaları YALNIZ üretim ağacında (`root == "meridian"`) ölçülür;
+    sentetik bir kökle çağıran testler kendi ağacını ölçmek ister ve oraya deponun `ui/src`ini
+    karıştırmak testin ölçtüğü şeyi bozardı (`_EK_CAPA_KOKLERI` ile aynı disiplin)."""
     sil = silent_handlers(root)
     ann = annotated_handlers(root)
     graph = artifact_graph(root)
@@ -1425,8 +1525,22 @@ def report(root: str = "meridian") -> dict:
     capa_kor: list[dict] = []
     # EK KÖKLER YALNIZ ÜRETİM AĞACINDA: sentetik bir `root` ile çağıran testler kendi tmp ağacını
     # ölçmek ister; oraya depo `tests/`ini karıştırmak testin ölçtüğü şeyi bozardı.
-    capalar = stale_line_anchors(root, cozulemeyen_out=capa_kor,
-                                 ek_kokler=_EK_CAPA_KOKLERI if root == "meridian" else ())
+    ek = _EK_CAPA_KOKLERI if root == "meridian" else ()
+    capalar = stale_line_anchors(root, cozulemeyen_out=capa_kor, ek_kokler=ek)
+    # TSX ÇAPALARI — ÖLÇÜLMEYEN None'DIR, BOŞ LİSTE DEĞİL (UYDURMA YASAĞI): boş liste "baktım,
+    # temiz" der; sentetik kökte doğru cevap "bakmadım"dır.
+    tsx_hedef = tsx_kok if tsx_kok is not None else (TSX_CAPA_KOKU if root == "meridian" else None)
+    tsx_kor: list[dict] | None = None
+    tsx_capalar: list[dict] | None = None
+    tsx_nuks: bool | None = None
+    if tsx_hedef is not None:
+        tsx_kor = []
+        # ADRES DEFTERİ PY TARAMASIYLA AYNI KÖKLERDEN: tsx'teki çapa bir Python dosyasını gösterir,
+        # dolayısıyla hedefleri raporun ölçtüğü Python ağacında aranmalı — sentetik kökle çağıran
+        # test, deponun `meridian/`ini değil kendi ağacını ölçer.
+        tsx_capalar = stale_tsx_line_anchors(tsx_hedef, py_kokler=(root, *ek),
+                                             cozulemeyen_out=tsx_kor)
+        tsx_nuks = tsx_capa_nuksu(tsx_capalar)
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
@@ -1456,5 +1570,14 @@ def report(root: str = "meridian") -> dict:
             "line_anchor_unresolved_by_reason": {
                 n: sum(1 for c in capa_kor if c["neden"] == n)
                 for n in sorted({c["neden"] for c in capa_kor})},
+            # TSX ÇAPALARI — İKİNCİ DÜNYA, İKİNCİ HÜKÜM. Sayı SIFIR DEĞİL (bugün 32 kayıtlı borç);
+            # ihlal olan `tsx_line_anchor_nuks`tur, yani borcun tabanı AŞMASI. Ölçülmediyse üçü de
+            # None: "baktım, temiz" ile "bakmadım" aynı alandan okunamaz.
+            "tsx_line_anchors": tsx_capalar,
+            "tsx_line_anchor_taban": TSX_CAPA_TABANI,
+            "tsx_line_anchor_nuks": tsx_nuks,
+            "tsx_line_anchor_unresolved": tsx_kor,
+            # `tsx_nuks is True` AÇIK YAZILDI: `not tsx_nuks` deseydik ölçülmemiş (None) durum
+            # sessizce "temiz" sayılırdı — hükmü olmayanı yeşile yazmak UYDURMA olurdu.
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED
-                  and not capalar}
+                  and not capalar and tsx_nuks is not True}

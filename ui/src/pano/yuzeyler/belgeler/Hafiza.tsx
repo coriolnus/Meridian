@@ -49,7 +49,7 @@ export function Hafiza({ ham }: { ham: string }) {
         <FileText />
         <AlertTitle>Hafıza dosyası YOK</AlertTitle>
         <AlertDescription>
-          `/api/memory` gövdesi `_No lessons yet._` döndü. Bu, api.py'nin açık boşluk beyanıdır:
+          `/api/memory` gövdesi `_No lessons yet._` döndü. Bu, api.py’nin açık boşluk beyanıdır:
           `state/lessons.md` diskte bulunmuyor. "Ajan hiçbir şey öğrenmedi" ile AYNI ŞEY DEĞİL —
           damıtım dosyası hiç yazılmamış.
         </AlertDescription>

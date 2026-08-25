@@ -1,8 +1,8 @@
 /* ============================================================================
    BUGÜN YÜZEYİ — GÖVDE TİPLERİ (ölçülerek yazıldı, tahminle DEĞİL)
    ----------------------------------------------------------------------------
-   Kaynak: `meridian/api.py::api_today` (satır 1611) + `meridian/analytics.py::today`
-   (satır 240) + `meridian/api.py::api_performance` (satır 2626). Her alan o iki
+   Kaynak: `meridian/api.py::api_today` + `meridian/analytics.py::today` +
+   `meridian/api.py::api_performance`. Her alan o iki
    fonksiyonun GERÇEKTEN yazdığı anahtardır; şekli tahmin edilen tek alan yok.
 
    NEDEN `pano/tipler.ts` GENİŞLETİLİYOR, KOPYALANMIYOR: paylaşılan `BugunGovdesi`
@@ -21,7 +21,7 @@ import type { BugunGovdesi, Nabiz, SermayeKokeni } from "../../tipler";
  *  exposure_budget_pct · halted · last_bar · last_date · mirror_drift · mode · n_trades · note ·
  *  open_positions · regime · replay_seeded · score · ts · version.
  *  ALANLARIN VARLIĞI GARANTİ DEĞİL: tohum nabzı canlı-döngü nabzından daha az anahtar taşır
- *  (api.py:2700 civarındaki "source live fields defensively" şerhi aynı gerçeği söylüyor). */
+ *  (`api_digest` içindeki "source live fields defensively" şerhi aynı gerçeği söylüyor). */
 export interface NabizTam extends Nabiz {
   readonly data_ok?: boolean;
   readonly regime?: string;
@@ -30,7 +30,7 @@ export interface NabizTam extends Nabiz {
   readonly exposure_budget_pct?: number;
 }
 
-/** `sermaye.koken()` (meridian/sermaye.py:315). Bu yüzey yalnız üç alanını okuyor;
+/** `sermaye.koken()`. Bu yüzey yalnız üç alanını okuyor;
  *  gerisi Portföy yüzeyinin işi — okumadığım alanı tipe yazmak, okunuyormuş gibi görünürdü. */
 export interface SermayeKokeniTam extends SermayeKokeni {
   readonly gercek_canli_sermaye?: number | null;
@@ -39,7 +39,7 @@ export interface SermayeKokeniTam extends SermayeKokeni {
 
 /** Bir plan satırı. Çekirdek alanlar `loop`un yazdığı plan kaydından; `expired`/`traded`/
  *  `last_close`/`drift_pct`/`onay_bekliyor` UÇ KATMANI EKLERİDİR (`_enrich_stale_plans`,
- *  `_onay_bekleyen_damgala` — api.py:5841 ve 5867) ve yalnız o damgalama koştuysa VARDIR.
+ *  `_onay_bekleyen_damgala`) ve yalnız o damgalama koştuysa VARDIR.
  *  YEREL DEFTERDE ÖLÇÜLDÜ (2026-08-25, son seans 2026-07-28, 10 plan): `exploration` ve
  *  `llm_veto` satırlarda YOKTU — bu yüzden ikisi de opsiyonel ve yoklukları ekranda
  *  "yok" değil, hiç çizilmeyerek karşılanıyor. */
@@ -64,7 +64,7 @@ export interface Plan {
   readonly onay_bekliyor?: boolean;
 }
 
-/** `_son_dongu()` (api.py:1575) — günlük döngünün KENDİ kaydı (`events.jsonl`
+/** `_son_dongu()` — günlük döngünün KENDİ kaydı (`events.jsonl`
  *  içindeki son `daily_cycle` satırı). BU YÜZEY YALNIZ ÜÇ ALANINI OKUYOR ve bu
  *  bilinçli: kardeş kartın (Karar zinciri hunisi) hangi SEANSI anlattığını
  *  söyleyebilmek için damga + damganın yokluk nedeni yeterli. Sayıları
@@ -92,7 +92,7 @@ export interface BugunTam extends BugunGovdesi {
   readonly broker?: string;
 }
 
-/** `_egri_beyani` (api.py:2485) — eğrinin PENCERE BEYANI. Grafiğin altındaki şerit budur:
+/** `_egri_beyani` — eğrinin PENCERE BEYANI. Grafiğin altındaki şerit budur:
  *  seri kaç nokta, nereden nereye, kitabın son seansından ne kadar geride, nerede kırık. */
 export interface EgriBeyani {
   readonly n_nokta?: number;
@@ -121,7 +121,7 @@ export interface EgriBeyani {
 /** `GET /api/performance` — bu yüzey YALNIZ eğriyi ve beyanını okuyor.
  *  ÖLÇÜLDÜ (state/equity_curve.json, 2026-08-25): 882 nokta, `[["2023-01-12", 100000.0], …]`,
  *  son nokta 2026-07-20. `/api/plots` AYNI SORUYU CEVAPLAMIYOR — o uç kurulum × rejim
- *  MATRİSİ döndürür (setups/regimes/grid), hiçbir zaman serisi taşımaz (api.py:2266).
+ *  MATRİSİ döndürür (setups/regimes/grid), hiçbir zaman serisi taşımaz (`api_plots`).
  *  Eğri bu yüzden buradan geliyor; seçim ölçülerek yapıldı, varsayılarak değil. */
 export interface PerformansGovdesi {
   readonly equity_curve?: { readonly points?: readonly (readonly unknown[])[] };

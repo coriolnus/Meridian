@@ -36,7 +36,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 
 ## Envanter özeti {#envanter}
 
-- **14 alarm jetonu** (`meridian/obs.py`) — hepsi bildirim beyaz-listesinde
+- **15 alarm jetonu** (`meridian/obs.py`) — hepsi bildirim beyaz-listesinde
   (`NOTIFY_TOKENS` ALARM_ sabitlerinden TÜRETİLİR, elle liste değil)
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
@@ -323,6 +323,24 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Çözüm / betik
 
 - **KALICI RİSKLER / DERSLER** → **ONAYLI_PLAN_GONDERILMEDI kurtarma (WP-P, 2026-08-12):** tetik watchdog.py:2687 (rapor watchdog.py:2606; poll kadansında, kendi try'ında watchdog.py:311): operatör-onaylı + iç-motor-dolmuş planın dolum-sonrası reconcile fotoğrafında Alpaca'da NE EMİR NE POZİSYON var; ihlal plan_id başına bir kez mandallı, ÖLÇÜLEMEDİ dalları alarmsız (fotoğraf bayatlığının sahibi #10 mutabakat-tazelik bekçisi — çift-duyuru yasağı). İlk ayrım olaydaki `gonderim_izi`: False = emir HİÇ çıkmadı → onay yanıtının/`plan_operator_approved` olayının `icra_yolu` alanını oku (loop.py:503-527 gönderimin sonucunu ya da yolun yokluğunu hâl hâl AÇIKÇA yazar); True = iz var ama broker'da yok → Mutabakat masası (pano karar#mutabakat) + Alpaca tarafını doğrula. Kendi kendine onarım: döngünün geç-gönderim kemeri (loop.py:1342) her günlük turda aynasız iç dolumları TEK kapıdan yeniden gönderir — olay `mirror_gec_gonderim`, kemer düşerse `mirror_gec_gonderim_dustu`. Pano `submit_armed` düğmesi BU vakayı KAPATMAZ (yalnız SİLAHLI kümeyi gönderir; dolan plan kümede değil — loop.py:1339 armed'a dokunulmaz beyanı). Kemer de kapatamıyorsa acil kapama ELLE EMİRDİR ve operatör domain kararıdır (alarm metninin kendi hükmü: "gönderim yolunu onar ya da elle emirle"); kalıcı onarım mühendislik turu.
+
+## ARAMA_HAVUZU_OLU {#arama_havuzu_olu}
+
+### Belirti
+
+- Neden ayrı bir sınıf: ARAMA HAVUZU HİÇBİR İŞ BİTİRMİYOR — TESLİMAT arızası, CANLILIK arızası DEĞİL (v313, 2026-08-25). Bugüne kadar bu olgu yalnız `obs.warn("arama_havuzu_zaman_asimi")` ile yazılıyordu ve `warn`ın kendi şerhi diyor ki "alarm DEĞİLDİR: bildirim zincirini tetiklemez" — 61 kayıt, günde 8-9, operatörün gelen kutusuna HİÇ düşmedi. Ölçülen bedel: öğrenme hattı 2026-08-21'den beri sıfır öneri üretti (bg_reflection son 08-16, hermes_proposal son 08-21) ve kimse duymadı. NEDEN AYRI BİR JETON: `MECHANISM_STALE` bir CANLILIK ölçüsüdür ("iplik nabız atıyor mu"). v302 nabzı havuz bekleyişinin İÇİNDEN attırıyor ve bunu DOĞRU yapıyor — iplik gerçekten canlı. Ama o düzeltme, kazara bu arızanın tek sesi olan yanıltıcı alarmı susturur. Doğru çözüm sesi kısmak değil, YANLIŞ sinyali DOĞRUSUYLA değiştirmektir: "iplik canlı" (v302) + "havuz iş bitirmiyor" (bu jeton). İkisi ayrı olgudur; biri ötekinin yerine geçemez. *(kaynak: `meridian/obs.py`)*
+
+### Teşhis adımları
+
+- Bu jetonu **2 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+  - `meridian/reflect.py::_parallel_prefill_probes` → mesaj şablonu: `f"arama havuzu (probe_prefill) {HAVUZ_ATALET_SN:.0f} sn'de TEK İŞ bitirmedi " f"(biten {z.biten}, bekleyen {z.bekleyen}) — öğrenme hattı ÜRETMİYOR; " "bu bir CANLILIK değil TESLİMAT arızasıdır (iplik nabız atıyor olabilir)"`
+  - `meridian/reflect.py::prefill_incumbents` → mesaj şablonu: `f"arama havuzu (incumbent_prefill) {HAVUZ_ATALET_SN:.0f} sn'de TEK İŞ " f"bitirmedi (biten {z.biten}, bekleyen {z.bekleyen}) — öğrenme hattı " "ÜRETMİYOR; bu bir CANLILIK değil TESLİMAT arızasıdır (iplik nabız " "atıyor olabilir)"`
+- Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
+
+### Çözüm / betik
+
+- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `ARAMA_HAVUZU_OLU` adı literal olarak geçmiyor.
+- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
 
 ---
 

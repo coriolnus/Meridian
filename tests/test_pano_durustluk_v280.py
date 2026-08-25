@@ -5,7 +5,7 @@ Bulgular bu turda BAĞIMSIZ olarak yeniden ölçüldü (kör uygulama yok) — a
 kaynak koddan doğrulandı:
 
 (1) DEĞER-KÖRLÜĞÜ. `loop.py` bir silahlı planın kaybolma sebebini plan defterine `broker_status`
-    alanıyla yazar ve ÜÇ değer üretir: `failed_broker_rejection` (loop.py:830/852),
+    alanıyla yazar ve ÜÇ değer üretir: `failed_broker_rejection` (`loop` pano-dürüstlük bloğu/852),
     `gap_veto` (loop.py:813) ve `armed_dropped_<kapı>` (loop.py:332, f-string). Pano yalnız
     BİRİNCİSİNİ tanıyordu: `nextSessionCard`in `else` dalı diğer HER değeri nötr/olumlu
     "gönderilecek" rozetiyle çiziyor, `_durumEmirKarti` ise `bekleyen = silahlı − gönderilen −

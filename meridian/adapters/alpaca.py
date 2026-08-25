@@ -1613,10 +1613,231 @@ def same_evening_bars(symbols: list[str], session: str, timeout: float = 30.0) -
     return {"source": None, "bars": {}, "detail": "hiçbir katman veremedi"}
 
 
+# ==================================================================================================
+# PANO EMİR GÖRÜNÜRLÜĞÜ — "stop yok", "koruma YOK" ve "ÖLÇÜLEMEDİ" ÜÇ AYRI OLGUDUR
+# ==================================================================================================
+# KUSUR (canlı A1 kâğıt hesap, salt-okuma GET, 2026-08-25): pano "Aynadaki açık emirler" kartında
+# sekiz satırın SEKİZİ de "stop yok" diyordu. Gerçekte sekiz pozisyonun sekizinde de CANLI `held`
+# stop emri vardı — pano ölçülmemiş bir olguyu OLGU diye yazıyordu (UYDURMA YASAĞI ihlali).
+#
+# KÖK NEDEN — `dashboard_view` emirleri `orders("open", 20)` ile çekiyordu: DÜZ (nested yok),
+# 20 tavanlı, `open` süzgeçli. Üç kapı da aynı gerçeği kesiyordu:
+#   (1) `status="open"` Alpaca'da `held`i DIŞARIDA bırakır ve koruma stop bacaklarının NORMAL
+#       durumu `held`tir → üst düzeyde duran stopların hepsi listeden düşüyordu.
+#   (2) `nested=False` → koruma OCO'sunun stop bacağı YALNIZ primary'nin `legs[]`i altında yaşar
+#       (bu dosyadaki ÜÇÜNCÜ KEMER başlığındaki şema ölçümü); düz çekimde HİÇ görünmez.
+#   (3) 20 tavanı → koruma satırları sessizce kırpılabilirdi.
+# `nested=True` TEK BAŞINA YETMEZ: canlı ölçümde `status="open"` + `nested` yalnız üç OCO
+# ebeveynin bacağını gösterdi (sekizde üç); üst düzeyde `held` duran beş stop yine kayıptı.
+# DOĞRU SORGU = `status="all"` + `nested=True` + bacak düzleştirme + `_LIVE_ORDER_STATES`.
+# `orders()` docstring'i bu kuralı zaten yazıyordu; `dashboard_view` onun dışında kalmış TEK
+# çağrıydı.
+_PANO_EMIR_PENCERESI = 500   # GET /v2/orders `limit` — Alpaca'nın izin verdiği en geniş pencere
+_PANO_EMIR_TAVANI = 120      # gövdeye giren satır tavanı; aşılırsa KAÇ satır düştüğü BEYAN edilir
+
+# Koruma sağlayan emir tipleri. "limit" (kâr-al) BURADA DEĞİLDİR: kâr-al bacağı zarar tarafını
+# kapatmaz; onu koruma saymak tam da panonun düzeltilen yalanının aynası olurdu.
+_KORUMA_EMIR_TIPLERI = ("stop", "stop_limit", "stop_market", "trailing_stop")
+
+# Koruma hükmünün ÜÇ hâli. İkincisiyle üçüncüsü ASLA aynı şey değildir: "koruma yok" ölçülmüş bir
+# olgudur, "ölçülemedi" bir arızadır. İkisini tek gösterime indirmek, arızayı olgu diye yazmaktır.
+KORUMA_VAR, KORUMA_YOK, KORUMA_OLCULEMEDI = "korumali", "korumasiz", "olculemedi"
+
+# Sembolü okunamayan POZİSYON satırının koruma haritasındaki anahtar öneki. Böyle bir satırı
+# haritadan düşürmek, hakkında HİÇBİR koruma hükmü bulunmayan bir pozisyonu sessizce yok etmek
+# olurdu — korumasız pozisyondan daha kötüsü, varlığı bile beyan edilmemiş pozisyondur. Gerçek
+# bir Alpaca sembolü parantez TAŞIMAZ, bu yüzden anahtar hiçbir sembolle çakışmaz; okuyucusu
+# koruma haritasını gezen pano koruma rozetidir (girdi `olculemedi` düşer, hüküm verilmez).
+KORUMA_SEMBOLSUZ_ONEK = "(sembolsüz #"
+
+
+def _fiyat(ham) -> float | None:
+    """Alpaca'nın DİZGE fiyat alanını sayıya çevir. Çevrilemiyorsa None — 0 DEĞİL."""
+    metin = str(ham if ham is not None else "").strip()
+    if not metin:
+        return None
+    try:
+        return float(metin)
+    except ValueError:  # sessiz-yutma: biçimsiz tek fiyat alanı; UYDURMA YASAĞI gereği None döner (0 bir stop seviyesi gibi okunurdu) ve çağıran `neden` yazar
+        return None
+
+
+def _pano_emir_satiri(o: dict) -> dict:
+    """Bir emri (parent YA DA bacak) pano satırına indir.
+
+    GERİYE UYUM: alan adları (`symbol/side/type/qty/status/stop/limit`) ve HAM DİZGE gösterimi
+    korunur — pano bu alanları kendi `sayi()` ayrıştırıcısıyla okuyor, sayıya burada çevirmek
+    tüketicinin sözleşmesini değiştirirdi. Sayısal hüküm gereken tek yer koruma haritasıdır ve
+    orada çevrim `_fiyat` ile yapılır."""
+    return {"symbol": o.get("symbol"), "side": o.get("side"), "type": o.get("type"),
+            "qty": o.get("qty"), "status": o.get("status"),
+            "stop": o.get("stop_price"), "limit": o.get("limit_price")}
+
+
+def _canli_emir_satirlari(ham: list) -> list[dict]:
+    """`orders(status="all", nested=True)` yanıtını CANLI pano satırlarına DÜZLEŞTİR.
+
+    Parent ve her bacak AYRI satırdır: koruma stop bacağının kendi fiyatı, kendi durumu ve kendi
+    kimliği vardır; onu ebeveyninin içine gömmek panoda görünmez yapıyordu. Canlılık hükmü
+    `status` süzgecinde değil `_LIVE_ORDER_STATES`tedir — `held` bu listede VARDIR, Alpaca'nın
+    `open` süzgecinde YOKTUR; kusurun tamamı bu tek farkta yaşıyordu.
+
+    `id` ile tekilleştirilir: bir kayıt hem üst düzeyde hem bacak olarak gelirse iki satır
+    üretmesin (aynı stop iki kez sayılırsa "çifte koruma" yanılsaması doğar)."""
+    out: list[dict] = []
+    gorulen: set[str] = set()
+    for o in (ham or []):
+        for kayit in [o] + list((o or {}).get("legs") or []):
+            if str(kayit.get("status", "")).lower() not in _LIVE_ORDER_STATES:
+                continue
+            oid = str(kayit.get("id") or "")
+            if oid and oid in gorulen:
+                continue
+            if oid:
+                gorulen.add(oid)
+            out.append(_pano_emir_satiri(kayit))
+    return out
+
+
+def _koruma_hukmu(pozisyonlar: list, canli: list[dict], emir_neden: str | None,
+                  pencere_doygun: bool | None) -> dict:
+    """Her POZİSYON için koruma hükmü — "koruma yok" ile "ölçülemedi" AYRI tutulur.
+
+    `durum` üç değerden biridir (`KORUMA_VAR` / `KORUMA_YOK` / `KORUMA_OLCULEMEDI`):
+      * `korumali`   → sembolde canlı bir stop-ailesi emri VAR. `stop` onun fiyatı; fiyat
+                       okunamıyorsa None + `neden` (emir yine de CANLIDIR — koruma vardır).
+      * `korumasiz`  → emir listesi OKUNDU ve o sembolde canlı stop YOK. ÖLÇÜLMÜŞ bir olgu;
+                       operatör buna bakıp elle stop koyabilir.
+      * `olculemedi` → emir listesi okunamadı. Hüküm VERİLMEZ. Arızada "korumasız" demek,
+                       ölçülmemiş bir olguyu alarm hâline getirmek olurdu.
+
+    YÖN SÜZGECİ: uzun pozisyonu SELL stop, kısa pozisyonu BUY stop korur. Pozisyonun `side`
+    alanı okunamazsa süzgeç UYGULANMAZ ve bu `neden`de BEYAN edilir — yanlış yönlü bir emri
+    sessizce koruma saymak da, ölçülebilir bir korumayı yön bilinmiyor diye yok saymak da yanlış
+    olurdu; hangisinin olduğu okuyucuya yazılır.
+
+    KIRPMADAN BAĞIMSIZ: hüküm, panoya giren KIRPILMIŞ satırlardan değil, canlı listenin TAMAMINDAN
+    verilir. Aksi hâlde bir görüntü tavanı "koruma yok" alarmı doğururdu.
+
+    PENCERE DOYGUNLUĞU OLUMSUZ HÜKMÜ ÇÜRÜTÜR (`pencere_doygun`): emir listesi `direction=desc`
+    ile çekilir, yani pencere tavanına dayandığında kesilen uç EN ESKİ emirlerdir — ve bir koruma
+    stop'u haftalarca `held` durabildiği için tam da oradadır. Pencere doygunken (ya da
+    doygunluğu ölçülemezken) "bu sembolde canlı stop YOK" cümlesi ÖLÇÜLMÜŞ bir olgu değildir:
+    liste TAM olduğu KANITLANMAMIŞTIR. Bu hâlde olumsuz hüküm `KORUMA_OLCULEMEDI`ye düşer.
+    OLUMLU hüküm çürümez — görülen canlı stop görülmüştür; ama `stop_n` artık bir ALT SINIRdır ve
+    bu `neden`de beyan edilir (aksi hâlde rozetin "çifte koruma yok" okuması sessizce yalan olur).
+
+    Dönüş: {anahtar: {"durum", "stop", "stop_n", "neden"}}. Anahtar normalde SEMBOLdür; pozisyon
+    satırının `symbol` alanı okunamadıysa `KORUMA_SEMBOLSUZ_ONEK` ile başlayan BEYANLI bir anahtar
+    kullanılır (satır sessizce düşürülmez). `stop_n` (`int | None`) sembolde bulunan canlı koruma
+    emri sayısıdır — 1'den büyük olması ÇİFTE KORUMA demektir (aynı hisseyi iki emir rehin tutar);
+    okuyucusu panonun koruma rozetidir, tek fiyat gösterirken kaç emir olduğunu söyler. SAYIM
+    YAPILAMADIĞI her dalda `None`tur (UYDURMA YASAĞI): `olculemedi` hâlinde 0 yazmak "saydım, hiç
+    koruma yok" demek olurdu — ölçülmemiş bir sayıyı olgu diye yazmak."""
+    out: dict = {}
+    sembolsuz = 0
+    for p in (pozisyonlar or []):
+        sym = str((p or {}).get("symbol") or "").strip()
+        if not sym:
+            # SESSİZ DÜŞÜRME YOK: sayaçla tekilleştirilmiş beyanlı anahtar altında taşınır ki iki
+            # sembolsüz satır birbirini ezmesin (`KORUMA_SEMBOLSUZ_ONEK` başlığındaki gerekçe).
+            sembolsuz += 1
+            out[f"{KORUMA_SEMBOLSUZ_ONEK}{sembolsuz})"] = {
+                "durum": KORUMA_OLCULEMEDI, "stop": None, "stop_n": None,
+                "neden": "pozisyon satırının `symbol` alanı okunamadı — hangi sembol için hüküm "
+                         "verileceği BİLİNMİYOR; satır haritadan düşürülmedi, çünkü hakkında hiç "
+                         "hüküm bulunmayan bir pozisyon korumasızdan da kötüdür"}
+            continue
+        if emir_neden is not None:
+            out[sym] = {"durum": KORUMA_OLCULEMEDI, "stop": None, "stop_n": None,
+                        "neden": f"emir listesi okunamadı, koruma hükmü VERİLMEDİ — {emir_neden}"}
+            continue
+        yon = str(p.get("side") or "").lower()
+        beklenen = {"long": "sell", "short": "buy"}.get(yon)
+        adaylar = [r for r in canli
+                   if str(r.get("symbol") or "") == sym
+                   and str(r.get("type") or "").lower() in _KORUMA_EMIR_TIPLERI
+                   and (beklenen is None or str(r.get("side") or "").lower() == beklenen)]
+        if not adaylar:
+            if pencere_doygun is not False:   # True = tavana dayandı · None = doygunluk ölçülemedi
+                out[sym] = {"durum": KORUMA_OLCULEMEDI, "stop": None, "stop_n": None,
+                            "neden": "emir listesi OKUNDU ama penceresinin TAM olduğu "
+                                     f"kanıtlanmadı (`pencere_doygun`={pencere_doygun!r}) — "
+                                     "liste en yeniden eskiye kesilir, ESKİ ama hâlâ CANLI bir "
+                                     "stop pencerenin dışında kalmış olabilir; 'KORUMASIZ' bu "
+                                     "hâlde ölçülmüş bir olgu DEĞİLDİR, hüküm VERİLMEDİ"}
+                continue
+            out[sym] = {"durum": KORUMA_YOK, "stop": None, "stop_n": 0,
+                        "neden": "emir listesi OKUNDU ve bu sembolde canlı stop emri YOK — "
+                                 "pozisyon KORUMASIZ (arıza değil, ölçülmüş olgu)"}
+            continue
+        fiyatlar = [f for f in (_fiyat(r.get("stop")) for r in adaylar) if f is not None]
+        notlar = []
+        if beklenen is None:
+            notlar.append("pozisyonun `side` alanı okunamadı — koruma emri YÖN süzgeci "
+                          "uygulanmadan eşleşti")
+        if not fiyatlar:
+            notlar.append("koruma emri CANLI ama `stop_price` okunamadı (iz süren stop tetik "
+                          "fiyatını henüz yayınlamamış olabilir) — fiyat UYDURULMAZ")
+        if pencere_doygun is not False:
+            notlar.append("emir penceresinin TAM olduğu kanıtlanmadı "
+                          f"(`pencere_doygun`={pencere_doygun!r}) — koruma VARDIR ama `stop_n` "
+                          "bir ALT SINIRdır: pencere dışında ikinci bir stop olabilir")
+        out[sym] = {"durum": KORUMA_VAR, "stop": fiyatlar[0] if fiyatlar else None,
+                    "stop_n": len(adaylar), "neden": " · ".join(notlar) or None}
+    return out
+
+
 def dashboard_view() -> dict:
-    """Everything the dashboard needs about the paper account — masked-safe (no keys)."""
+    """Everything the dashboard needs about the paper account — masked-safe (no keys).
+
+    `open_orders` — ANLAMI GENİŞLEDİ (2026-08-25, yukarıdaki PANO EMİR GÖRÜNÜRLÜĞÜ başlığı):
+      * ARTIK KORUMA BACAKLARINI DA TAŞIR. Eskiden `orders("open", 20)` çekiliyordu ve `held`
+        duran stop bacaklarının HİÇBİRİ listeye girmiyordu; alan adı aynı, içerik artık TAM.
+      * Bacaklar DÜZLEŞTİRİLİR: bir OCO/bracket ebeveyni ve bacakları AYRI satırlardır.
+      * TİPİ GENİŞLEDİ: `list | None`. `None` = liste OKUNAMADI (nedeni `open_orders_neden`de);
+        `[]` = okundu ve GERÇEKTEN canlı emir yok. Eskiden arıza da boş liste dönüyordu, yani
+        "API düştü" ile "emir yok" panoda aynı cümleye çıkıyordu.
+
+    YENİ ALANLAR (hepsinin okuyucusu pano `Aynadaki açık emirler` kartı ve koruma rozetidir):
+      * `open_orders_neden`  : None = ölçüldü; dolu = liste neden okunamadı.
+      * `open_orders_kirpma` : kırpma muhasebesi — SESSİZ KIRPMA YOK. `{tavan, canli, kirpilan,
+        pencere_istenen, pencere_donen, pencere_doygun}`. `kirpilan` gövdeye GİRMEYEN canlı satır
+        sayısıdır; `pencere_doygun=True` ise API penceresinin kendisi dolmuştur ve listenin
+        "hepsi bu" olduğu KANITLANMAMIŞTIR. Liste okunamadıysa None (olmayan listenin muhasebesi
+        olmaz).
+      * `koruma` / `koruma_neden` : pozisyon başına koruma hükmü (bkz. `_koruma_hukmu`).
+        `koruma=None` ⟺ `koruma_neden` dolu ⟺ POZİSYON listesi okunamadı, yani hangi sembol
+        için hüküm verileceği bile bilinmiyor. Emir listesi okunamadıysa harita KURULUR ama her
+        girdi `olculemedi` olur — "koruma yok" DEMEZ. Haritanın anahtarı normalde sembol, sembolü
+        okunamayan pozisyon satırında `KORUMA_SEMBOLSUZ_ONEK`li beyanlı bir anahtardır: pozisyon
+        başına TAM BİR girdi vardır, hiçbir satır sessizce düşmez.
+        `open_orders_kirpma["pencere_doygun"]` bu hükme GİRDİdir (kırpma muhasebesi ile koruma
+        rozeti aynı gerçeği paylaşır): pencere doygunken "korumasız" hükmü verilmez."""
     acct = account()
     pos = positions()
+    # TAŞIMA DURUMU HER ÇAĞRIDAN SONRA ANINDA ALINIR: `transport()` yalnız SON çağrıyı yansıtır;
+    # sonda bir kez bakmak, pozisyon arızasını emir başarısının altına gömerdi.
+    poz_ok = transport()["ok"]
+    poz_neden = None if poz_ok else (transport().get("error") or "pozisyon listesi okunamadı")
+
+    ham = orders(status="all", limit=_PANO_EMIR_PENCERESI, nested=True)
+    emir_ok = transport()["ok"]
+    emir_neden = None if emir_ok else (transport().get("error") or "emir listesi okunamadı")
+
+    canli: list[dict] = []
+    satirlar: list[dict] | None = None
+    kirpma: dict | None = None
+    if emir_neden is None:
+        canli = _canli_emir_satirlari(ham)
+        satirlar = canli[:_PANO_EMIR_TAVANI]
+        kirpma = {"tavan": _PANO_EMIR_TAVANI, "canli": len(canli),
+                  "kirpilan": len(canli) - len(satirlar),
+                  "pencere_istenen": _PANO_EMIR_PENCERESI, "pencere_donen": len(ham or []),
+                  "pencere_doygun": len(ham or []) >= _PANO_EMIR_PENCERESI}
+
+    koruma = _koruma_hukmu(pos, canli, emir_neden,
+                           kirpma["pencere_doygun"] if kirpma else None) if poz_ok else None
     return {"connected": acct is not None,
             "equity": float(acct["equity"]) if acct and "equity" in acct else None,
             "cash": float(acct["cash"]) if acct and "cash" in acct else None,
@@ -1625,8 +1846,9 @@ def dashboard_view() -> dict:
             "positions": [{"symbol": p.get("symbol"), "qty": p.get("qty"),
                            "avg_entry": p.get("avg_entry_price"), "current": p.get("current_price"),
                            "upl": p.get("unrealized_pl")} for p in pos],
-            "open_orders": [{"symbol": o.get("symbol"), "side": o.get("side"), "type": o.get("type"),
-                             "qty": o.get("qty"), "status": o.get("status"),
-                             "stop": o.get("stop_price"), "limit": o.get("limit_price")}
-                            for o in orders("open", 20)],
+            "open_orders": satirlar,
+            "open_orders_neden": emir_neden,
+            "open_orders_kirpma": kirpma,
+            "koruma": koruma,
+            "koruma_neden": None if koruma is not None else poz_neden,
             "endpoint": _paper_base()}

@@ -13,7 +13,7 @@ PIT ÇİVİSİ (bu dosyanın asıl işi). Sınıfı `strategy.ARMED_SETUPS` sabi
 NOKTA-ZAMANI İHLALİdir: o sabit 2026-08-22 B1 kararıyla değişti (`pullback` çıkarıldı, c150902) ve
 yarın yine değişecek. Bugünkü sabitle dünkü planı yargılayan bir dedektör, her silahlanma/
 silahsızlanma turunda GEÇMİŞİ yeniden yazar. Kayıt nerede: plan satırının KENDİ damgası
-`dormant_setup` (`loop.py:1757/1870`, `cf_backfill.py:90/117`) — plan üretilirken
+`dormant_setup` (``loop` uyuyan-kurulum korunumu/1870`, `cf_backfill.py:90/117`) — plan üretilirken
 `setup not in strat.ARMED_SETUPS` ölçülüp satıra yazılır, yani o günün yasası satırda donar.
 Aşağıdaki `test_pit_*` ikilisi tam bunu çiviler: damga ile bugünkü sabit ÇELİŞTİĞİNDE damga kazanır.
 

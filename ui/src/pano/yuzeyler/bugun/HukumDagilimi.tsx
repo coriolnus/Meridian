@@ -3,7 +3,7 @@
 /* ============================================================================
    HÜKÜM DAĞILIMI → SEÇİMİN HUNİSİ — kapının o seans ne dediği
    ----------------------------------------------------------------------------
-   Kaynak `/api/today.verdict_counts`: `analytics.today()` (analytics.py:259)
+   Kaynak `/api/today.verdict_counts`: `analytics.today()`
    günün planlarını `gate_verdict` alanına göre sayar ve alanı olmayan planı `"?"`
    kovasına koyar. Yani `"?"` bir hata değil, ÖLÇÜLMÜŞ bir kova.
 

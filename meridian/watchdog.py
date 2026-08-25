@@ -217,8 +217,8 @@ def report() -> dict:
             # HAM SANİYE + AŞIM (v303): `gap_h` tek başına ARIZAYI GİZLİYORDU. round(x,1) hem
             # 1810 sn'yi hem 1800 sn'lik pencereyi "0.5" yapar → "0.5 sa (pencere 0.5 sa)".
             # Kıl payı bir aşımla saatlerce süren bir aşım aynı satırı üretiyordu; teşhis
-            # üç kez yanlış yöne gitti. `gap_h` KORUNDU (mevcut okuyucular: api.py:3258/3285,
-            # selfreview.py:284) — yanına ayırt eden iki alan eklendi.
+            # üç kez yanlış yöne gitti. `gap_h` KORUNDU (mevcut okuyucular: `api.py::_sessiz_hat`
+            # ve `selfreview.py::build`) — yanına ayırt eden iki alan eklendi.
             satir = {"name": name, "gap_h": round(gap / 3600, 1),
                      "expected_h": round(max_gap / 3600, 1),
                      "gap_s": int(gap), "asim_s": int(gap - max_gap)}
@@ -690,7 +690,7 @@ def conservation_report(olaylar: list[dict] | None = None) -> dict:
     # kararın kendisi geçmişi temizlerdi; ters yönde de 08-12'de silahlanan `momentum_burst`
     # yüzünden 07-23'ün uyuyan planları bugün "silahlıydı" sayılırdı.
     # KAYIT NEREDE (ölçüldü, 2026-08-24): plan satırının KENDİ damgası `dormant_setup`.
-    # `loop.py:1757/1870` ve `cf_backfill.py:90/117` planı üretirken `setup not in
+    # `loop.py::daily_cycle` ve `cf_backfill.py::_plans_for_session` planı üretirken `setup not in
     # strat.ARMED_SETUPS`i O AN ölçüp satıra yazar — yani o turun silah yasası satırda donar
     # (`storage.py` PLANS şemasında da tipli kolon; NULL kolon okumada ATLANIR, yani "damga yok"
     # iki arka uçta da ayırt edilebilir). Aranan diğer kaynaklar ELENDİ: `state/history/v000N.yaml`
@@ -2022,7 +2022,7 @@ def intraday_stamp_report(sample: int = 500) -> dict:
 
 
 # ---- SÖZLEŞMENİN BAŞARISIZLIK HÜKMÜ ---------------------------------------
-# `state/goal.yaml:14` şunu yazıyor: failure_below: -0.04 — yani "30 günlük gerçekleşen getiri
+# `state/goal.yaml` `failure_below` anahtarı şunu yazıyor: -0.04 — yani "30 günlük gerçekleşen getiri
 # -%4'ün altına düşerse bu deney BAŞARISIZDIR". Hüküm yazılıydı ve BUGÜNE KADAR hiçbir
 # kod onu okumadı: `guard.GOAL_KEYS` yalnız üyelik seti (drift koruması), `score.score_detail`
 # hedef üçlüsünü composite'e katıyor ama failure tarafını asla. Deney başarısız olsa bunu
@@ -2606,7 +2606,8 @@ EQUIVALENT_TRUTHS: dict[str, dict] = {
     # üç sabitin kendi yorumları bunu ZATEN yazıyor (`RESULT_N_MIN`: "goal.yaml'ın min_sample
     # değeriyle BİREBİR"; `REGIME_N_MIN`: "IC_MIN_SAMPLE ile aynı taban … iki farklı cevabı
     # olmasın diye"). Yazılı olan iddia kapıya bağlanmamıştı: `RESULT_N_MIN` çapraz-dosya çiviliydi
-    # (test_hafta3a_v119.py:82) ama `REGIME_N_MIN` çivisi LİTERALdi (test_orgu2_v103.py:111) —
+    # (`test_hafta3a_v119.py::test_A_esikler_adlandirilmis_sabit_olarak_TEK_yerde_durur`) ama
+    # `REGIME_N_MIN` çivisi LİTERALdi (`test_orgu2_v103.py::test_esikler_modul_sabiti_olarak_TEK_yerde_durur`) —
     # yani goal 30'dan kaydığında sabit kendi literaliyle YEŞİL kalırdı.
     "asgari_ornek": {
         "neden": "asgari örneklem: rejim edge'i, dolar hükmü ve bileşen IC'si aynı tabandan "
@@ -2667,7 +2668,8 @@ EQUIVALENT_TRUTHS: dict[str, dict] = {
     # giriyor ki muafiyet SESSİZ olmasın: bugünkü değeri raporda görünür, ama ayrışma SAYILMAZ.
     "derisk_tabani": {
         "neden": "de-risk rampasının taban düşüşü; goal.max_drawdown ile bağı 2026-08-12'de "
-                 "BİLEREK koparıldı (broker.py:33 'KOPAN BAĞ') — aynı sayı DEĞİLDİR",
+                 "BİLEREK koparıldı (`broker.DERISK_FLOOR_DD` üstündeki 'ŞERH — KOPAN BAĞ') "
+                 "— aynı sayı DEĞİLDİR",
         "kaynaklar": [
             ("goal.yaml:max_drawdown", lambda: _yaml_alan("goal.yaml", "max_drawdown")),
             ("broker.DERISK_FLOOR_DD", lambda: _sabit("broker", "DERISK_FLOOR_DD"), "beyanli-ayri"),

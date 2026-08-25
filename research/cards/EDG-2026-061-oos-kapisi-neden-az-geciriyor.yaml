@@ -1,0 +1,212 @@
+card_id: EDG-2026-061
+family: ogrenme_kapisi
+k_registry: {registered_at: "2026-08-25", trial_ids: [pending]}
+status: judged
+
+thesis: >
+  OPERATÖR SORUSU (2026-08-25): "OOS kapısının neden bu kadar az aday geçirdiği hâlâ oturmadı,
+  bunu çözelim." Bir önceki tur şunu KANITLADI ve bu kart onu YENİDEN ÖLÇMEZ: kapı arızalı
+  DEĞİL ve fazla sert de değil — kendisine ULAŞAN 30 adayın 30'unda gerçek blok-bootstrap
+  hükmü verdi (n_valid 1965-2000, fail-closed dalına SIFIR giriş), ölçülen p medyanı 0,2605,
+  eşik `probgate.P_BASE = 0,80`. Eşiği 0,70'e indirmek yalnız iki adayı kurtarırdı ve
+  tam-ölçülebilir tek eşik-geçen aday (H00032) TEYİT bacağında p=0,1395 ile öldü.
+  GERİYE İKİ RAKİP AÇIKLAMA KALDI ve ikisi de ÇÜRÜTÜLEBİLİR:
+    H-A "DAR ARAMA": darboğaz kapıda değil ADAY ÜRETİMİNDE. Koşulsuz tek-değişken yasası
+        (guard.py) × "varsayılan kapalı, usta-anahtar arkasında" düğme mimarisi, bir düğmeyi
+        açacak ÇİFTİ tek hipotezde önerilemez kılıyor; o uzaya atılan sonda garantili no-op
+        üretiyor ve üstüne kalıcı kara listeye sahte bir çıkmaz sokak çakıyor.
+    H-B "YEREL OPTİMAL": arama uzayı açık ama incumbent, DONMUŞ kanıt penceresinde zaten
+        yerel optimumda; tek-değişken hamleleri iki yönde de zarar veriyor, dolayısıyla
+        ΔS dağılımı sıfır etrafında ve hiçbir aday eşiği geçemiyor.
+  İKİSİ AYNI ANDA DOĞRU OLABİLİR ve kart bunu yasaklamaz — hangisinin/hangilerinin geçerli
+  olduğunu SAYIYLA söyler. Çareleri TAMAMEN FARKLIDIR: H-A → öneri katmanı ve guard yasası;
+  H-B → daha geniş pencere ya da çok-değişkenli hamle. Yanlış olanı onarmak bedava değil.
+
+peek_beyani: >
+  ⚠ GÖZETLENMİŞ — dürüstçe. Kart, çok-mercekli bir soruşturmanın (6 bulucu + 3 şüpheci)
+  ÇIKTISI OKUNDUKTAN SONRA yazıldı ve şu sayılar GÖRÜLDÜ:
+    · ölçülen p medyanı 0,2605 · min 0,0 · maks 0,941; 35 kapı satırının yalnız 8'inde
+      ortalama ΔS pozitif; 30 hükmün 28'inde k_probes=1
+    · defter: 60 hipotez (rejected_by_backtest 32 · rejected_by_guard 25 ·
+      rejected_by_confirmation 1 · superseded 2)
+    · `bounds.yaml` 32 düğme taşıyor; defterde 33 FARKLI `variable` değeri var (bir kısmı
+      `@rejim` ekli, yani küresel düğme kapsaması bundan AZ)
+    · `stop_loss_atr_mult` tek başına 60 önerinin 21'ini almış (%35)
+    · H-A'ya üç karşı-örnek: H00028 (exit.scale_out_frac 0→0,5, p=0,364, gerçek ölçüm),
+      H00043 (entry.rs_dual_horizon 0→1, p=0,456), H00048 (exit.chandelier_lookback 0→15,
+      p=0,6135, ΔS +0,0457) — yani "uzay tamamen kapalı" ZATEN yanlış.
+  BU SAYILARIN HİÇBİRİ AŞAĞIDAKİ EŞİKLERİ SEÇMEDE KULLANILMADI. Eşikler YAPISAL
+  gerekçelerden türetildi (yarı, üçte-iki çoğunluk, çeyrek) ve hiçbiri veriye bakılarak
+  ayarlanmadı. Kartın değeri tam olarak budur: 0,2605'i görmüş bir göz, istediği hükmü
+  meşrulaştıracak bir eşik bulabilir.
+
+evidence_refs:
+  - "meridian/probgate.py — P_BASE=0,80 sabit kodda (goal.yaml'dan OKUNMAZ); passes = p >= p_req"
+  - "meridian/reflect.py::_gate_eval — resmî ship yolu; hüküm = magnitude and majority and tail_ok and dd_ok and dd_mtm_ok"
+  - "meridian/guard.py — koşulsuz tek-değişken yasası + kalıcı kara liste (aynı değişken+değer bir daha denenmez)"
+  - "state/hypotheses.jsonl — 60 satır, alanlar: variable, old, new, status, reject_reasons, backtest, source, regime"
+  - "state/bounds.yaml — 32 düğme"
+
+universe: >
+  `state/hypotheses.jsonl`in TAMAMI (60 satır, canlı defter — SALT OKUMA) × `state/bounds.yaml`
+  (32 düğme). Alt-dönem seçimi YOK, kaynak (`source`) süzgeci YOK, rejim süzgeci YOK.
+  KOŞUM YERİ: yerel, salt-okuma. Canlı state'e YAZILMAZ; hiçbir walk-forward koşturulmaz
+  (bu kart DEFTER SAYIMIDIR, yeniden simülasyon değil).
+
+features_asof: >
+  Düğme başına (rejim eki STRIPLENİR — `entry.w_prox@trend_up` → `entry.w_prox`; çünkü soru
+  ARAMA UZAYININ kapsanması, rejim kırılımı değil):
+    · `onerildi`      : defterde kaç satır bu düğmeyi önerdi
+    · `gercek_olcum`  : olasılıksal hüküm ALDI ve no-op DEĞİL. NO-OP TANIMI ŞİMDİ DONDURULUYOR
+      (ölçümden ÖNCE): `reject_reasons` metninde "bit-bit aynı" geçen ya da `old == new` olan
+      satır gerçek ölçüm SAYILMAZ. Bu satırlar kapının değil ÖNERİNİN kusurudur.
+    · `iki_yon`       : aynı düğme için hem artış (new > old) hem azalış (new < old) ölçüldü mü
+    · `delta_isaret`  : gerçek ölçümlerde ortalama ΔS'in işareti
+  ÖLÇÜM ANI DONDURULUR: koşum anındaki defter satır sayısı ve `bounds.yaml` düğme kümesi
+  sonuca yazılır; sonradan değişirlerse bu ölçüm O ANA aittir.
+
+parameter_grid:
+  tanim: [defter_sayimi]     # K += 1. TEK koşum, TEK defter. Parametre taraması YOK.
+
+cost_model: >
+  Saf defter okuması; ağ yok, simülasyon yok, dakikalar değil saniyeler. Bedeli olan tek şey
+  M4'tür ve o KOŞULLU (aşağıda) — bu kartın kapsamına ALINMADI, ayrı kart ister.
+
+success_metric: >
+  KARAR KURALI (DONUK — peek'teki hiçbir sayıya BAKILMADAN, yapısal gerekçelerden türetildi):
+
+    (A) DAR ARAMA DOĞRULANDI — `gercek_olcum` almış FARKLI düğme sayısı < 16 (32'nin YARISI).
+        Yarı seçildi çünkü "keşfedilmiş mi" sorusunun ön-taahhütlü doğal bölmesi budur; veriye
+        bakılmadı. Hüküm: darboğaz kapıda DEĞİL, aday üretimindedir. Çare öneri katmanı + guard.
+
+    (B) YEREL OPTİMAL DOĞRULANDI — `gercek_olcum` ≥ 16 düğme VE `iki_yon` ölçülmüş düğmelerin
+        ≥ 2/3'ünde HER İKİ yön de pozitif-olmayan ΔS verdi. Üçte-iki bir süper-çoğunluktur ve
+        ön-taahhütlüdür. Hüküm: incumbent donmuş pencerede yerel optimumda; tek-değişken
+        hamlesi bu pencerede kazanamaz.
+        ÖLÇÜLEMEZLİK KAPISI: `iki_yon` ölçülmüş düğme sayısı < 3 ise (B) ÖLÇÜLEMEDİ diye
+        raporlanır — "çoğunluk sağlanmadı" DENMEZ. Üç, bir orandan bahsedebilmenin asgarisidir.
+
+    (C) YOĞUNLAŞMA (A/B'den BAĞIMSIZ, birlikte olabilir) — tek bir düğmenin öneri payı ≥ %25.
+        Çeyrek ön-taahhütlü: bir arama bütçesinin dörtte birini tek düğmeye vermek, herhangi
+        bir ölçüde yoğunlaşmadır. Hüküm: öneri katmanı KEŞFETMİYOR, TEKRARLIYOR.
+
+    (D) KOŞULLU DEVAM — YALNIZ (B) ateşlerse: "donmuş pencere" iddiası kendi başına sınanmalı
+        (OOS penceresi 2024-01-01→2026-04-30'da bitiyor, bugün 2026-08-25; ~4 ay hiç denenmedi).
+        O sınama BU KARTIN KAPSAMI DIŞINDADIR ve AYRI kart ister (walk-forward maliyeti var).
+        Bu koşulluluk ÖNCEDEN yazıldı; sonuç görülünce icat edilmedi.
+
+  KILL-LIST (DOKUNULMAZ — ölçümden sonra değiştirilemez):
+    · 16 / (2/3) / %25 eşikleri OYNATILMAZ; sonuç eşiğe yakın çıkarsa da oynatılmaz.
+    · No-op tanımı ("bit-bit aynı" ya da old == new) ölçümden sonra GENİŞLETİLEMEZ/DARALTILAMAZ.
+    · Defterin bir alt-dönemi ya da bir `source` alt kümesi seçilemez (kiraz toplama).
+    · Düğme başına ayrı eşik tanımlanamaz.
+    · `stop_loss_atr_mult` gibi tek bir düğme "aykırı değer" gerekçesiyle DIŞLANAMAZ — yoğunlaşma
+      ölçümünün konusu tam olarak odur.
+    · Koşum tekrarlanırsa TEKRAR SAYILIR ve K'ya eklenir.
+
+hypothesis_status: >
+  judged — 2026-08-25 Rol-1. Hiçbir eşik oynatılmadı, hiçbir parametre değişmedi, kapıya
+  DOKUNULMADI. (D) koşullu kolu ATEŞLEMEDİ: (B) doğrulanmadığı için "donmuş pencere" sınaması
+  tetiklenmedi — ve zaten defterde pencere ROTASYONU olduğu ölçüldü (R0→R1, 2026-07-30),
+  yani (D)'nin dayandığı "donmuş pencere" öncülü de kısmen yanlıştı.
+  KAYIT TARİHÇESİ (tarihçe-koru, silinmez): "registered — 2026-08-25 Rol-1. Ölçüm YEREL ve
+  SALT-OKUMA; canlı state'e yazılmaz. Hiçbir parametre değişmez, hiçbir hipotez durumu
+  güncellenmez, kapı eşiklerine DOKUNULMAZ."
+
+beyanli_sinirlar: >
+  (1) Bu kart bir EDGE ölçmez ve bir kapı eşiği önermez. "Kapı neden az geçiriyor" sorusunun
+  DARBOĞAZINI adlandırır, o kadar.
+  (2) DEFTER SAYIMIDIR: yalnız ÖNERİLMİŞ düğmeleri görebilir. "Hiç önerilmemiş düğme neden
+  önerilmedi" sorusuna cevap veremez — yalnız SAYISINI verir.
+  (3) `gercek_olcum` bir KALİTE ölçüsü değildir: bir düğmenin ölçülmüş olması, iyi bir aralıkta
+  ya da iyi bir adımla denendiği anlamına GELMEZ. (A) ateşlemezse bu, aramanın YETERLİ olduğunu
+  değil, YAPISAL OLARAK KAPALI OLMADIĞINI söyler.
+  (4) `@rejim` ekli satırlar küresel düğmeye katlanır. Bu bilinçli (soru arama uzayı kapsaması)
+  ama bir maliyeti var: rejim-çivili bir önerinin küresel düğmeyi "denenmiş" göstermesi.
+  Katlama ÖNCESİ ve SONRASI sayılar İKİSİ BİRDEN raporlanır ki bu maliyet görünsün.
+  (5) Kart, önceki turda kanıtlanan "kapı sağlam" hükmünü VARSAYAR, yeniden ölçmez. O hüküm
+  yanlışsa bu kartın çerçevesi de yanlıştır.
+
+# ============================================================================
+# HÜKÜM — 2026-08-25, Rol-1. status: registered → judged.
+# ============================================================================
+k_registry_kapanis: {trial_ids: ["EDG-061/defter_sayimi@2026-08-25"], K: 1}
+
+kosum:
+  yer: "yerel, SALT-OKUMA; canlı defter kopyası üzerinden. state'e YAZILMADI, simülasyon YOK."
+  girdi: "hypotheses.jsonl 60 satır · bounds.yaml 32 düğme"
+
+olcum:
+  A_arama_kapsamasi:
+    gercek_olcum_alan_dugme: 29        # / 32   (eşik: <16 ise (A) ateşler)
+    onerilmis_dugme: 30
+    hic_onerilmemis: ["stop_buffer_atr", "stop_mode"]
+    onerilmis_ama_hic_olculmemis: ["entry.w_turnover"]
+  B_iki_yon:
+    R1_penceresi: 0                    # (eşik: <3 → ÖLÇÜLEMEDİ)
+    R1_oncesi: 1
+  C_yogunlasma:
+    en_cok_onerilen: "stop_loss_atr_mult"
+    pay: "21/60 = %35.0"               # (eşik: >=%25 ise (C) ateşler)
+
+hukum_A: >
+  ÇÜRÜDÜ. 32 düğmenin 29'u gerçek ölçüm aldı — eşik 16'ydı, sonuç neredeyse iki katı.
+  "Arama uzayı yapısal olarak kapalı" tezi ölçümle DÜŞTÜ. Hiç önerilmemiş yalnız iki düğme
+  var (`stop_buffer_atr`, `stop_mode`) ve bir düğme önerilip hiç ölçülmemiş
+  (`entry.w_turnover`). Darboğaz "uzaya girilemiyor" DEĞİL.
+
+hukum_B: >
+  ÖLÇÜLEMEDİ — ve ölçülememesinin SEBEBİ kendi başına bulgudur. Kart ölçülebilirlik kapısını
+  ≥3 çift-yön düğme olarak DONDURMUŞTU; R1 penceresinde bu sayı SIFIR, R1 öncesinde BİR.
+  Yani arama aynı düğmenin iki yönünü neredeyse hiç denemiyor. "İncumbent yerel optimumda mı?"
+  sorusu bu defterle CEVAPLANAMAZ ve kart gereği "çoğunluk sağlanmadı" DENMEZ.
+  PENCERE AYRIMI ZORUNLU TUTULDU: defterin kendi uyarısı (`pencere_kiyas_uyarisi`) R0/R1
+  kıyasını YASAKLIYOR ("aynı ada sahip iki farklı sınavdır"). Tüm satırları birlikte toplamak
+  sistemin kendi yasağını çiğneyip sahte bir sayı üretecekti.
+
+hukum_C: >
+  DOĞRULANDI. `stop_loss_atr_mult` 60 önerinin 21'ini almış (%35), eşik %25'ti. İkinci sıra
+  `entry.rs_rating_min` yalnız 5 (%8,3). Öneri katmanı KEŞFETMİYOR, TEKRARLIYOR.
+
+asil_bulgu_kartin_sormadigi: >
+  KEŞİFSEL (karar kuralına GİRMEDİ, eşik değiştirilmedi) ama sorunun asıl cevabı burada:
+  R1 penceresindeki 15 gerçek ölçümün 6'sı (%40) TAM SIFIR ΔS ve p=0,000 verdi — düğme
+  oynadı, skor KIPIRDAMADI. Altısı: entry.w_tight · exit.early_kill_bars ·
+  exit.early_kill_pivot · exit.scale_out_r · regime.vix_backwardation_gate · portfolio.heat_cap.
+  ATILLIK CANLI PARAMETRELERLE DOĞRULANDI: `exit.scale_out_frac = 0.0` olduğu için
+  `scale_out_r` hiçbir şey satmıyor (broker.py); diğer beşinin `old` değeri None, yani öneri
+  kodun KENDİ VARSAYILANINI "değiştiriyor" (`entry.w_tight None→0,3` = varsayılanın aynısı).
+  `regime.vix_backwardation_gate` için guard.py zaten "doğrulanmış VERİ-YOK (Massive 403 +
+  FMP boş)" diyor.
+  DEPO BU SINIFI ZATEN TEŞHİS ETMİŞ: probgate.py'deki "p = 0,000 İKİ AYRI GERÇEĞİ AYNI SAYIYLA
+  SÖYLÜYORDU" bloğu üç düğmeyi ADIYLA anıyor ve şu cümleyi kuruyor: "'Düğme atıl' bir RET
+  değil, kendi başına bir HÜKÜMdür." Ama yalnız ÖLÇÜMÜ eklenmiş (`search_ayrim` alanı),
+  KAYNAĞI kapatılmamış. Bugünkü bedeli üç kalem:
+    (1) her atıl öneri TAM bir 2000-replikasyonlu bootstrap yakıyor;
+    (2) defterde `rejected_by_backtest` olarak duruyor — operatörün gördüğü "32 backtest
+        reddi" sayısını kirletiyor, gerçek red ile atıl düğme AYNI görünüyor;
+    (3) guard o (değişken, değer) çiftini KALICI kara listeye çakıyor — usta-anahtar bir gün
+        açılırsa o arama noktası haksız yere kapalı kalır.
+
+cevap: >
+  OPERATÖRÜN SORUSUNA CEVAP: kapı az geçiriyor çünkü kapıya gelen adayların önemli bir kısmı
+  YARIŞA HİÇ GİRMİYOR. Kapı sağlam (30/30 aday gerçekten ölçüldü), arama uzayı açık (29/32
+  düğme denendi) — ama ölçüm bütçesinin %40'ı skoru oynatması İMKÂNSIZ düğmelere, %35'i tek
+  bir düğmeye gidiyor, ve aynı düğmenin iki yönü neredeyse hiç denenmiyor. Yani sorun
+  "eşik çok sert" ya da "uzay kapalı" değil: ARAMA BÜTÇESİNİN NEREYE HARCANDIĞI.
+
+kalemler:
+  kapanan:
+    - "EDG-2026-061: (A) çürüdü, (C) doğrulandı, (B) ölçülemedi — sebebiyle birlikte"
+    - "'arama uzayı yapısal olarak kapalı' tezi — ölçüldü, YANLIŞ"
+  acilan:
+    - ad: "atıl düğme önerisi kapıya ULAŞMADAN elenmeli"
+      etki: "R1'de ölçüm bütçesinin %40'ı; ayrıca defteri ve kalıcı kara listeyi kirletiyor"
+      not: "probgate zaten ÖLÇÜYOR; eksik olan guard'ın ÖN elemesi. Ayrı kart/tur ister."
+      durum: "önerilen kalem — operatör kararı"
+    - ad: "öneri yoğunlaşması"
+      etki: "stop_loss_atr_mult tek başına %35; çift-yön denemesi neredeyse yok"
+      durum: "önerilen kalem — operatör kararı"
+    - ad: "(B) yeniden ölçülebilir hâle gelmeli"
+      etki: "çift-yön örneklemi 3'e ulaşmadan 'yerel optimal' sorusu cevaplanamaz"
+      durum: "yukarıdaki iki kalem çözülürse KENDİLİĞİNDEN ölçülebilir olur"

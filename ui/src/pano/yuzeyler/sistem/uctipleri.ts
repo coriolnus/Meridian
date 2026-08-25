@@ -8,11 +8,12 @@
    CPU'yu boşta göstermek olurdu.
 
    TİPLER `meridian/api.py` OKUNARAK yazıldı, tahminle DEĞİL (brief'in açık şartı).
-   Kaynak satırları alanların yanında duruyor ki bir sonraki tur alanın nereden
-   geldiğini git geçmişinden değil koddan doğrulasın.
+   Kaynak SEMBOL ADIYLA çapalanır (`api.py::api_infra`), satır numarasıyla DEĞİL:
+   `dosya.py:NNN` çapası ilk düzenlemede bayatlar ve okuyucuyu yanlış yere gönderir
+   (bu dosyada dört çapa tam olarak böyle çürümüştü — codelaw çapa yasası).
    ============================================================================ */
 
-/* --- /api/alerts · api.py:2952 → notify.inbox() -------------------------- */
+/* --- /api/alerts · `api.py::api_alerts` → `notify.inbox()` ---------------- */
 
 export interface AlarmGrubu {
   readonly token?: string;
@@ -34,7 +35,7 @@ export interface AlarmGovdesi {
   readonly window_oldest_ts?: string | null;
 }
 
-/* --- /api/market · api.py:1757 → marketview.build() ---------------------- */
+/* --- /api/market · `api.py::api_market` → `marketview.build()` ----------- */
 
 export interface PiyasaSatiri {
   readonly ticker?: string;
@@ -70,7 +71,7 @@ export interface PiyasaGovdesi {
   readonly rows?: readonly PiyasaSatiri[];
 }
 
-/* --- /api/diagnostics · api.py:4342 ------------------------------------- */
+/* --- /api/diagnostics · `api.py::api_diagnostics` ------------------------ */
 
 export interface SaglayiciSatiri {
   readonly ad?: string;
@@ -176,8 +177,9 @@ export interface TeshisGovdesi {
     readonly shadow?: Readonly<Record<string, unknown>>;
     /**
      * scheduler `intraday_gap` kopyası. null = kanca BU SÜREÇTE HİÇ KOŞMADI — "boşluk yok"
-     * DEĞİL (api.py:4491 şerhi). `durum` üç arıza hâli taşıyabilir: seans_disi / arsiv_yok /
-     * takvim_yok; o üçünde blok yalnız {durum, gun, olculdu} olur (scheduler.py:840).
+     * DEĞİL (`api.py::api_diagnostics` şerhi). `durum` üç arıza hâli taşıyabilir: seans_disi /
+     * arsiv_yok / takvim_yok; o üçünde blok yalnız {durum, gun, olculdu} olur
+     * (`scheduler.py::_intraday_gap_check`).
      */
     readonly akis_boslugu?: {
       readonly durum?: string;
@@ -263,11 +265,11 @@ export interface TeshisGovdesi {
   readonly alarm_butcesi?: Readonly<Record<string, unknown>> & { readonly yas_s?: number };
 }
 
-/* --- /api/infra?taze=0|1 · api.py:6558 ------------------------------------
+/* --- /api/infra?taze=0|1 · `api.py::api_infra` ----------------------------
    ÜÇ KAT, ÜÇÜ DE AYRI (ucun kendi ayrımı):
      · `makine`     — kutunun kendisi (hostname, çekirdek, yük, CPU, bellek, disk, uptime)
      · `surec`      — BU API sürecinin kendisi. systemd'nin `meridian.service` satırıyla AYNI ŞEY
-                      DEĞİL (o birim compose'u sarar) — api.py:6322 şerhi.
+                      DEĞİL (o birim compose'u sarar) — `api.py::_infra_surec` şerhi.
      · `bilesenler` — `deploy/` altındaki GERÇEK systemd birimleri
    Alan adları `meridian/api.py::_infra_makine/_infra_surec/_infra_bilesenler` OKUNARAK yazıldı;
    sözleşmenin çivisi `tests/test_pano_altyapi_v287.py`.
@@ -322,7 +324,7 @@ export interface InfraMakine {
   readonly uptime_s_neden?: string | null;
 }
 
-/** BU API SÜRECİ — makine ile systemd birimleri arasındaki üçüncü kat (api.py:6322). */
+/** BU API SÜRECİ — makine ile systemd birimleri arasındaki üçüncü kat (`api.py::_infra_surec`). */
 export interface InfraSurec {
   readonly pid?: number | null;
   readonly uptime_s?: number | null;
@@ -333,6 +335,38 @@ export interface InfraSurec {
   readonly rss_bayt_neden?: string | null;
 }
 
+/**
+ * BİR BİRİM SATIRININ TEK HÜKMÜ (`api.py::_infra_durum_sinifi`). Ham `ActiveState` yerine bu
+ * okunur, çünkü `inactive` TEK BAŞINA bir hüküm değildir: `Type=oneshot` bir birim koşumlar
+ * ARASINDA zaten `inactive`tir ve timer'ı aktifse bu SAĞLIKLI hâldir. Operatör 2026-08-25'te
+ * tabloya bakıp "neden kurulu değil, inaktif ve ölçülemedi gözüküyor" diye sordu — üç ayrı dünya
+ * tek kılıktaydı. Sınıflar operatörün İŞİNE karşılık gelir:
+ *   · kosuyor                — `active`.
+ *   · sirada_timer           — oneshot, tetikleyen timer AKTİF ölçüldü. Arıza değil.
+ *   · ariza_yok_onfailure    — oneshot, `OnFailure` ile tetiklenir; `inactive` = hiçbir şey
+ *                              arızalanmadı. Mümkün olan EN İYİ hâl.
+ *   · tetikleyici_bozuk      — oneshot ama timer'ı ölü ölçüldü: birim HİÇ koşmuyor olabilir.
+ *   · tetikleyici_olculemedi — tetikleyici bu istekte ölçülmedi; SAĞLIK İDDİA EDİLMİYOR.
+ *   · tetikleyici_yok        — oneshot ama hiçbir bağ görülmedi; bağlanmayı bekliyor olabilir.
+ *   · olu                    — oneshot OLDUĞU ölçülmemiş bir birim durmuş. DİKKAT ÇEKER.
+ *   · arizali                — `failed`: koşmadı değil, KOŞTU VE DÜŞTÜ.
+ *   · kurulmali              — kurulu değil ama `deploy/<host>/` altında var: operatör işi (sudo).
+ *   · envanter_gurultusu     — kurulu değil ve kurulması BEKLENMİYOR (eski/genel kopya).
+ *   · olculemedi             — şablon birim, bütçe aşımı, systemctl hatası.
+ */
+export type InfraDurumSinifi =
+  | "kosuyor"
+  | "sirada_timer"
+  | "ariza_yok_onfailure"
+  | "tetikleyici_bozuk"
+  | "tetikleyici_olculemedi"
+  | "tetikleyici_yok"
+  | "olu"
+  | "arizali"
+  | "kurulmali"
+  | "envanter_gurultusu"
+  | "olculemedi";
+
 export interface InfraBilesen {
   readonly ad?: string;
   readonly dosya?: string;
@@ -342,10 +376,28 @@ export interface InfraBilesen {
   readonly birim_dosyasi?: string;
   /**
    * `LoadState == 'loaded'`. `false` = birim dosyası DEPODA var ama BU MAKİNEYE kurulmamış —
-   * "kurulu ama durmuş" ile AYNI ŞEY DEĞİL ve tabloda ayrı gösterilir (api.py:6478 şerhi).
+   * "kurulu ama durmuş" ile AYNI ŞEY DEĞİL ve tabloda ayrı gösterilir
+   * (`api.py::_infra_bilesenler` → `kurulu_neden` şerhi).
    */
   readonly kurulu?: boolean | null;
   readonly kurulu_neden?: string | null;
+  /**
+   * `deploy/<host>/` altında birim dosyası VAR mı — yani kurulu olması BEKLENİYOR mu.
+   * Kaynağı systemd değil DİSK: systemd kurulmamış bir birim için yalnız `not-found` der,
+   * "kurulmalı mıydı" sorusunun cevabı depodaki yoldadır (otorite `dagit.sh`).
+   */
+  readonly beklenen?: boolean | null;
+  readonly beklenen_neden?: string | null;
+  /** systemd `Type=` — `oneshot` ise duruş NORMAL olabilir. `.timer` birimlerinde YOKTUR. */
+  readonly servis_turu?: string | null;
+  readonly servis_turu_neden?: string | null;
+  /** systemd `TriggeredBy` — bu birimi koşturan timer(lar). Boş liste "bağ görülmedi" demektir. */
+  readonly tetikleyen_timerlar?: readonly string[];
+  /** systemd `OnFailureOf` — bu birimi ARIZADA tetikleyen birim(ler). */
+  readonly onfailure_kaynaklari?: readonly string[];
+  /** Rozetin kaynağı. Ham `durum` yerine BU okunur (bkz. `InfraDurumSinifi`). */
+  readonly durum_sinifi?: InfraDurumSinifi | null;
+  readonly durum_sinifi_neden?: string | null;
   readonly durum?: string | null;
   readonly durum_neden?: string | null;
   readonly alt_durum?: string | null;
@@ -367,7 +419,8 @@ export interface InfraBilesen {
 export interface InfraGovdesi {
   readonly hesaplama_ts?: string;
   readonly onbellekten?: boolean;
-  /** Önbellekten servis edilirken zarfın yaşı; `uptime_s` alanları bununla TOPLANIR (api.py:6536). */
+  /** Önbellekten servis edilirken zarfın yaşı; `uptime_s` alanları bununla TOPLANIR
+   *  (`api.py::_infra_yaslandir`). */
   readonly zarf_yasi_s?: number;
   readonly ttl_s?: number;
   readonly makine?: InfraMakine;

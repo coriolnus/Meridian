@@ -25,9 +25,16 @@ export interface UcYoklamasi {
   readonly hata: string | null;
 }
 
-/** Bir sunum ucunu HEAD ile yoklar. Gövde İNDİRİLMEZ: `/runbook` ölçülen 163 KB'lık
- *  bir markdown'ı her istekte HTML'e çeviriyor (api.py:1094) ve biz yalnız "cevap
- *  veriyor mu" sorusunu soruyoruz. Starlette GET rotalarına HEAD'i kendisi ekler. */
+/** Bir sunum ucunu HEAD ile yoklar. GÖVDE İNDİRİLMEZ: `/runbook` her istekte bir markdown
+ *  belgesini HTML sayfasına çeviriyor (api.py::runbook) ve biz yalnız "cevap veriyor mu"
+ *  sorusunu soruyoruz. ÖLÇÜLDÜ (2026-08-25): `docs/RUNBOOK.md` 184 776 bayt → sunulan sayfa
+ *  238 785 bayt. Rakam tarihiyle duruyor; tarihsiz bir rakam bayatladığında bunu söyleyemez.
+ *
+ *  HEAD KENDİLİĞİNDEN GELMEZ — ve bunun tersini varsaymak canlıda 405'in KÖK NEDENİYDİ. Doğru
+ *  ölçüt: FastAPI'de `@app.get` YALNIZ GET kaydeder. Starlette'in düz `Route`u HEAD'i kendisi
+ *  ekler, ama FastAPI'nin `APIRoute`u EKLEMEZ; `/runbook` bu yüzden ayrı bir `@app.head` ile de
+ *  kayıtlı (api.py::runbook). Bu kancayla YENİ bir uç yoklanacaksa o uçta da HEAD AYRICA
+ *  kaydedilmeli, yoksa raf, belge yerinde dururken satırı kırmızı yakar. */
 export function useUcYoklama(yol: string): UcYoklamasi {
   const [durum, setDurum] = useState<UcYoklamasi>({ kod: null, ok: null, hata: null });
 

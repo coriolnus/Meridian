@@ -3,24 +3,24 @@
    ----------------------------------------------------------------------------
    TAHMİN YOK: her alan aşağıdaki kaynak satırlardan geldi ve alan adı orada ne
    ise burada da odur.
-     · `/api/today`   → api.py::api_today (1611-1727) + analytics.today() (240-277)
-     · `/api/alpaca`  → api.py::api_alpaca (5096) + adapters/alpaca.dashboard_view() (1616)
-     · `/api/market`  → api.py::api_market (1755) + marketview.build() (321-324)
-     · `/api/diagnostics` → api.py (4468-4490) + intraday_cycle.health() (453)
+     · `/api/today`   → api.py::api_today + analytics.today()
+     · `/api/alpaca`  → api.py::api_alpaca + adapters/alpaca.dashboard_view()
+     · `/api/market`  → api.py::api_market + marketview.build()
+     · `/api/diagnostics` → api.py::api_diagnostics + intraday_cycle.health()
 
    HEPSİ İSTEĞE BAĞLI (`?:`) ve bu bilinçli — `pano/tipler.ts`teki aynı gerekçe:
    uç bir alanı ÖLÇEMEDİĞİNDE onu hiç yazmıyor. `alan?: T | null` üç hâl taşır:
    alan yok (hiç ölçülmedi) · alan null (ölçüldü, sonuç yok) · alan dolu.
 
    SAYILAR NEDEN `unknown` (fiyat/adet alanlarında): `/api/alpaca` Alpaca REST
-   yanıtını HAM geçiriyor (alpaca.positions() → `r.json()`, adapters/alpaca.py:310)
+   yanıtını HAM geçiriyor (`adapters/alpaca.positions()` → `r.json()`)
    ve Alpaca sayısal alanları DİZGE olarak döndürür ("qty":"10"). Tipi `number`
    yazsaydık derleyici tatmin olur, çalışma zamanı `10 * "123.45"` üretirdi.
    Ayrıştırma tek kapıdan geçer: `olcum.ts::sayi()`.
    ============================================================================ */
 
 /** `portfolio.json.positions` değeri — `broker.Position` dataclass'ının `asdict`i
- *  (loop.py:1002). `ticker` KAYBOLMAZ: dataclass alanı olarak satırın içinde durur. */
+ *  (`loop._save_broker`). `ticker` KAYBOLMAZ: dataclass alanı olarak satırın içinde durur. */
 export interface KitapPozisyonu {
   readonly ticker?: string;
   readonly qty?: unknown;
@@ -38,7 +38,7 @@ export interface KitapPozisyonu {
   readonly scaled_out?: boolean;
 }
 
-/** `sermaye.broker_mutabakati()` (sermaye.py:793-806) — köprünün TERİMLERİ + kalıntı.
+/** `sermaye.broker_mutabakati()` — köprünün TERİMLERİ + kalıntı.
  *  `aciklanamayan` yalnız BEŞ terimin beşi de ölçüldüyse sayı olur; aksi hâlde null
  *  ve `olculemedi_neden` hangi terimin eksik olduğunu yazar. */
 export interface BrokerMutabakati {
@@ -56,7 +56,7 @@ export interface BrokerMutabakati {
   readonly broker_gecmis_neden?: string | null;
 }
 
-/** `sermaye.pozisyon_mutabakati()` (sermaye.py:829-853). YÖN AYRI KOVALARDA:
+/** `sermaye.pozisyon_mutabakati()`. YÖN AYRI KOVALARDA:
  *  "kitapta var broker'da yok" (karşılıksız) ile tersi (kitabın bilmediği pozisyon)
  *  aynı şey DEĞİL — fonksiyonun kendi docstring'inin yasası. */
 export interface PozisyonMutabakati {
@@ -68,7 +68,7 @@ export interface PozisyonMutabakati {
   readonly olculemedi_neden?: string | null;
 }
 
-/** `sermaye.koken()` (sermaye.py:353+) — panonun okuduğu TEK sermaye yüzeyi. */
+/** `sermaye.koken()` — panonun okuduğu TEK sermaye yüzeyi. */
 export interface SermayeKokeniTam {
   readonly gercek_canli_sermaye?: number | null;
   readonly canli_islem_n?: number;
@@ -89,8 +89,9 @@ export interface SermayeKokeniTam {
   readonly beyan?: string;
 }
 
-/** `ledgerstamp.teyit_counts()` (ledgerstamp.py:122). Anahtarlar sabitlerden gelir
- *  (ledgerstamp.py:51-54) — `olculemedi` "karşılıksız" DEĞİLDİR, bakılamadı demektir. */
+/** `ledgerstamp.teyit_counts()`. Anahtarlar `ledgerstamp` sabitlerinden gelir
+ *  (`TEYITLI` / `KARSILIKSIZ` / `TEYIT_OLCULEMEDI` / `TEYIT_KAPSAM_DISI`) — `olculemedi`
+ *  "karşılıksız" DEĞİLDİR, bakılamadı demektir. */
 export interface DefterTeyit {
   readonly teyitli?: number;
   readonly karsiliksiz?: number;
@@ -111,7 +112,7 @@ export interface BugunPortfoyEk {
   readonly sermaye_koken?: SermayeKokeniTam;
   readonly broker_mutabakati?: BrokerMutabakati;
   readonly pozisyon_mutabakati?: PozisyonMutabakati;
-  /** DİKKAT (api.py:1691): `try` bloğunun İÇİNDE yazılır — broker köprüsü patlarsa
+  /** DİKKAT (`api.py::api_today`): `try` bloğunun İÇİNDE yazılır — broker köprüsü patlarsa
    *  alan HİÇ YOKTUR (null değil). `undefined` kontrolü ZORUNLU. */
   readonly defter_teyit?: DefterTeyit;
   readonly current_exposure_pct?: number | null;
@@ -123,7 +124,7 @@ export interface BugunPortfoyEk {
 }
 
 // ---- /api/alpaca ------------------------------------------------------------
-/** Alpaca REST pozisyon satırının `dashboard_view` izdüşümü (alpaca.py:1625-1627).
+/** Alpaca REST pozisyon satırının `dashboard_view` izdüşümü.
  *  Sayısal alanlar HAM Alpaca dizgeleri olabilir — bkz. dosya başlığı. */
 export interface BrokerPozisyonu {
   readonly symbol?: string;
@@ -143,6 +144,38 @@ export interface BrokerEmri {
   readonly limit?: unknown;
 }
 
+/** `alpaca._koruma_hukmu` satırı — POZİSYON başına koruma hükmü.
+ *
+ *  `durum` ÜÇ DEĞERDEN BİRİDİR ve üçü ayrı olgudur: `korumali` (sembolde canlı stop var) ·
+ *  `korumasiz` (emir listesi OKUNDU, stop YOK — ölçülmüş olgu) · `olculemedi` (emir listesi
+ *  okunamadı, hüküm VERİLMEDİ — arıza). Tipi `string` bırakmak bilinçli: gövde yarın dördüncü
+ *  bir hâl yazarsa birlik-tipi onu derleme anında değil ÇALIŞMA anında sessizce düşürürdü;
+ *  okuyucu bilinmeyen hâli "tanınmadı" diye ÇİZER.
+ *
+ *  `stop` null iken durum yine `korumali` olabilir: emir CANLIDIR ama tetik fiyatı henüz
+ *  yayınlanmamıştır (iz süren stop). Fiyat UYDURULMAZ, `neden` bunu yazar.
+ *  `stop_n` > 1 ÇİFTE KORUMA demektir — aynı hisseyi iki emir rehin tutar. */
+export interface KorumaHukmu {
+  readonly durum?: string;
+  readonly stop?: number | null;
+  readonly stop_n?: number;
+  readonly neden?: string | null;
+}
+
+/** `alpaca.dashboard_view` kırpma muhasebesi — SESSİZ KIRPMA YOK.
+ *
+ *  `kirpilan` gövdeye GİRMEYEN canlı satır sayısıdır. `pencere_doygun` true iken API
+ *  penceresinin KENDİSİ dolmuştur ve listenin "hepsi bu" olduğu KANITLANMAMIŞTIR — bu
+ *  ikisi ayrı sorudur (biri bizim tavanımız, öteki Alpaca'nın penceresi). */
+export interface EmirKirpmasi {
+  readonly tavan?: number;
+  readonly canli?: number;
+  readonly kirpilan?: number;
+  readonly pencere_istenen?: number;
+  readonly pencere_donen?: number;
+  readonly pencere_doygun?: boolean;
+}
+
 export interface AlpacaHesabi {
   readonly connected?: boolean;
   readonly equity?: number | null;
@@ -150,12 +183,24 @@ export interface AlpacaHesabi {
   readonly status?: string | null;
   readonly buying_power?: number | null;
   readonly positions?: readonly BrokerPozisyonu[];
-  readonly open_orders?: readonly BrokerEmri[];
+  /** ÜÇ HÂL: dizi (okundu) · `null` (OKUNAMADI — nedeni `open_orders_neden`de) · alan yok
+   *  (eski gövde). Eskiden arıza da boş dizi dönüyordu, yani "API düştü" ile "emir yok"
+   *  panoda AYNI cümleye çıkıyordu. `?? []` ile karşılamak o yalanı geri getirir. */
+  readonly open_orders?: readonly BrokerEmri[] | null;
+  /** `null` = liste ölçüldü. Dolu = liste neden okunamadı (gerçek arıza cümlesi). */
+  readonly open_orders_neden?: string | null;
+  /** Liste okunamadıysa `null` — olmayan listenin muhasebesi olmaz. */
+  readonly open_orders_kirpma?: EmirKirpmasi | null;
+  /** Sembol → hüküm. `null` ⟺ `koruma_neden` dolu ⟺ POZİSYON listesi okunamadı, yani hangi
+   *  sembol için hüküm verileceği bile bilinmiyor. Emir listesi okunamadıysa harita KURULUR
+   *  ama her girdi `olculemedi` olur — "koruma yok" DEMEZ. */
+  readonly koruma?: Readonly<Record<string, KorumaHukmu>> | null;
+  readonly koruma_neden?: string | null;
   readonly endpoint?: string;
 }
 
-/** `broker_reconcile.json` HAM alanları (loop.py:3657-3675) + uç katmanının
- *  ayrıştırdığı `failed_submissions` (api.py:5109). DİKKAT: `hwm_pairs` ve
+/** `broker_reconcile.json` HAM alanları (`loop.reconcile_broker_state`) + uç katmanının
+ *  ayrıştırdığı `failed_submissions` (`api.py::api_alpaca`). DİKKAT: `hwm_pairs` ve
  *  `partial_fills` bu uçta YOKTUR — onları /api/diagnostics katmanı ekliyor. */
 export interface MutabakatKaydi {
   readonly date?: string | null;
@@ -185,7 +230,7 @@ export interface MutabakatKaydi {
   readonly alive_order_syms?: readonly string[];
 }
 
-/** `_stream_view()` (api.py:514-532) — `stream_ok` NABIZLA ÇARPILMIŞ bayraktır,
+/** `api.py::_stream_view()` — `stream_ok` NABIZLA ÇARPILMIŞ bayraktır,
  *  ham değil; `null` = ayna hiç koşmadı (üçüncü hâl, "KOPUK" DEĞİL). */
 export interface AkisSagligi {
   readonly stream_ok?: boolean | null;
@@ -200,7 +245,7 @@ export interface AkisSagligi {
 export interface AlpacaGovdesi {
   readonly backend?: string;
   readonly paper_available?: boolean;
-  /** `paper_available` false ise TÜM blok null (api.py:5100). */
+  /** `paper_available` false ise TÜM blok null (`api.py::api_alpaca`). */
   readonly account?: AlpacaHesabi | null;
   readonly reconcile?: MutabakatKaydi;
   readonly stream?: AkisSagligi;
@@ -208,9 +253,9 @@ export interface AlpacaGovdesi {
 }
 
 // ---- /api/market ------------------------------------------------------------
-/** marketview.build() satırı (marketview.py:321-324). EOD KAPANIŞTIR — bu uç canlı
- *  fiyat servis ETMEZ ve etmediğini `as_of` ile söyler (api.py:1758). `intraday_close`
- *  yalnız KAPANMIŞ + TAZE dakikalık bar demektir, o da yalnız silahlı sembollerde. */
+/** `marketview.build()` satırı. EOD KAPANIŞTIR — bu uç canlı fiyat servis ETMEZ ve
+ *  etmediğini `as_of` ile söyler (`api.py::api_market`). `intraday_close` yalnız KAPANMIŞ
+ *  + TAZE dakikalık bar demektir, o da yalnız silahlı sembollerde. */
 export interface PiyasaSatiri {
   readonly ticker?: string;
   readonly close?: number | null;
@@ -229,9 +274,9 @@ export interface PiyasaGovdesi {
 }
 
 // ---- /api/diagnostics (yalnız `intraday` bloğu okunuyor) --------------------
-/** intraday_cycle.health() + api.py'nin eklediği dört alan (api.py:4468-4490).
+/** `intraday_cycle.health()` + `api.py`nin eklediği dört alan (`api.py::api_diagnostics`).
  *  `armed` OPERATÖRÜN Faz-4b bayrağıdır (state/INTRADAY_ARM); `armed_plans` ise
- *  defterdeki EOD-silahlı plan sayısı. İKİSİ AYRI SORU (api.py:4475 şerhi). */
+ *  defterdeki EOD-silahlı plan sayısı. İKİSİ AYRI SORU (`api.py::api_diagnostics` şerhi). */
 export interface SeansIciBlogu {
   readonly ok?: boolean | null;
   readonly enabled?: boolean;

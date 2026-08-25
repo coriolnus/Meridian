@@ -134,7 +134,7 @@ def test_canli_cagiran_bar_low_GECMEZ():
     o günün low'u BİLİNMEZ.
 
     AST İLE TARANIR, DÜZ METİNLE DEĞİL (2026-08-17 inceleme bulgusu — Kritik 2). İlk hâl
-    `metin.split(")")[0]` ile çağrıyı İLK KAPANAN PARANTEZDE kesiyordu; `loop.py:1407` için
+    `metin.split(")")[0]` ile çağrıyı İLK KAPANAN PARANTEZDE kesiyordu; ``loop.daily_cycle` dinlenen-limit bloğu` için
     çivinin gördüğü metin `adv=_adv(per[t], d`'de bitiyordu. Yani CANLI çağrıya `bar_low=`
     eklenebilir ve çivi YEŞİL kalırdı — kartın 1 numaralı kill kriterinin tek bekçisi, korumakla
     görevli olduğu yerde KÖRDÜ. AST üç sızıntı yolunu birden görür: anahtar sözcük, `**sözlük`,

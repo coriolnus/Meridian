@@ -409,6 +409,11 @@ export function PortfoyYuzey() {
             intraday={teshis.veri?.intraday}
             emirler={hesap?.open_orders ?? null}
             emirNedeni={brokerNedeni ?? "/api/alpaca `account.open_orders` alanı gövdede yok"}
+            /* KORUMA HÜKMÜ HESAP BLOĞUNDAN GELİR (v315): pozisyon başına `koruma` alanı
+               `open_orders` içinde DEĞİL, hesap gövdesinde durur. Bu prop geçilmezse koruma
+               rozeti hiç çizilmez — NVDA'nın korumasızlığı ölçülür ama EKRANA GELMEZ ki
+               kalemin var olma sebebi tam olarak onu göstermekti. */
+            hesap={hesap}
           />
         </UcHal>
       </section>

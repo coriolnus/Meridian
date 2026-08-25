@@ -5,8 +5,8 @@
    ----------------------------------------------------------------------------
    KAYNAK ÖLÇÜLEREK SEÇİLDİ, VARSAYILARAK DEĞİL. Brief iki adaydan birini istiyordu:
      · `/api/plots`       → kurulum × rejim MATRİSİ (setups/regimes/grid). Okundu
-       (api.py:2266): hiçbir zaman serisi taşımıyor, tek bir tarih alanı bile yok.
-     · `/api/performance` → `equity_curve.points`. Okundu (api.py:2626) ve yerel
+       (`api_plots`): hiçbir zaman serisi taşımıyor, tek bir tarih alanı bile yok.
+     · `/api/performance` → `equity_curve.points`. Okundu (`api_performance`) ve yerel
        artefakttan doğrulandı (state/equity_curve.json, 2026-08-25): 882 nokta,
        `[["2023-01-12", 100000.0], …]`, son nokta 2026-07-20.
    Eğriyi veren uç ikincisi; bu dosya oradan okuyor.
@@ -18,7 +18,7 @@
    oturumda görürüz" ile "boşuna trafik yok" arasındaki ölçülü orta.
 
    DELİKLER GÖRÜNMEZ, İŞARETLER GÖRÜNÜR: seri DİZİN ekseninde çiziliyor (uç beyanı,
-   api.py:2540 civarı) — yani 20 günlük bir boşluk grafikte normal bir adım gibi durur.
+   `_egri_beyani`) — yani 20 günlük bir boşluk grafikte normal bir adım gibi durur.
    Bu yüzden tohum sınırı ve reset kırılmaları dikey işaret olarak konuyor ve boşluk
    sayısı alttaki beyan şeridinde yazıyor. Boşluğu geriye doldurmak uydurma olurdu.
    ============================================================================ */

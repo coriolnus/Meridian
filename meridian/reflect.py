@@ -1848,6 +1848,13 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik
         _havuzu_oldur(ex)
         _probe_disk_save()                  # BİTEN sondalar kaybolmaz — kısmi ilerleme diske iner
         from . import obs as _obs
+        _obs.alarm(_obs.ALARM_ARAMA_HAVUZU_OLU,
+                   f"arama havuzu (probe_prefill) {HAVUZ_ATALET_SN:.0f} sn'de TEK İŞ bitirmedi "
+                   f"(biten {z.biten}, bekleyen {z.bekleyen}) — öğrenme hattı ÜRETMİYOR; "
+                   "bu bir CANLILIK değil TESLİMAT arızasıdır (iplik nabız atıyor olabilir)",
+                   yer="probe_prefill", atalet_sn=HAVUZ_ATALET_SN, biten=z.biten, bekleyen=z.bekleyen)
+        # TARİHÇE KORUNUR: `warn` satırı SİLİNMEZ — olay defterindeki 61 kayıtlık seri aynı adla
+        # sürsün ki geçmişle kıyas kopmasın. Alarm EKLENİR, yerine geçmez.
         _obs.warn("arama_havuzu_zaman_asimi", yer="probe_prefill", atalet_sn=HAVUZ_ATALET_SN,
                   biten=z.biten, bekleyen=z.bekleyen,
                   detail="havuz toplam-atalet tavanına çarptı (son bitenden beri hiçbir iş "
@@ -1907,6 +1914,15 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
             _havuzu_oldur(ex)
             _inc_disk_save()                # biten incumbent'lar kaybolmaz — kısmi ilerleme diske iner
             from . import obs as _obs
+            _obs.alarm(_obs.ALARM_ARAMA_HAVUZU_OLU,
+                       f"arama havuzu (incumbent_prefill) {HAVUZ_ATALET_SN:.0f} sn'de TEK İŞ "
+                       f"bitirmedi (biten {z.biten}, bekleyen {z.bekleyen}) — öğrenme hattı "
+                       "ÜRETMİYOR; bu bir CANLILIK değil TESLİMAT arızasıdır (iplik nabız "
+                       "atıyor olabilir)",
+                       yer="incumbent_prefill", atalet_sn=HAVUZ_ATALET_SN,
+                       biten=z.biten, bekleyen=z.bekleyen)
+            # TARİHÇE KORUNUR: `warn` satırı SİLİNMEZ — olay defterindeki 61 kayıtlık seri aynı
+            # adla sürsün ki geçmişle kıyas kopmasın. Alarm EKLENİR, yerine geçmez.
             _obs.warn("arama_havuzu_zaman_asimi", yer="incumbent_prefill", atalet_sn=HAVUZ_ATALET_SN,
                       biten=z.biten, bekleyen=z.bekleyen,
                       detail="incumbent ön-hesap havuzu toplam-atalet tavanına çarptı — işçiler "

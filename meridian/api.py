@@ -1116,13 +1116,32 @@ RUNBOOK_MD = Path(__file__).resolve().parents[1] / "docs" / "RUNBOOK.md"
 _RUNBOOK_YER_TUTUCU = ("<!--RUNBOOK-GOVDE-->", "<!--RUNBOOK-TOC-->")
 
 
+# HEAD AYRI BİR DEKORATÖRLE KAYDEDİLİR (2026-08-25, ölçülmüş kusur): pano belge rafı bu yüzeyi
+# HEAD ile yokluyor — 184 KB'lık bir sayfayı indirmeden "kapı açık mı" diye sormak DOĞRU olandır.
+# Ama `@app.get` FastAPI'de YALNIZ GET kaydeder (Starlette'in düz `Route`u HEAD'i kendiliğinden
+# ekler, `APIRoute` EKLEMEZ) ve yoklama canlıda 405 alıyordu: rafta belge yerinde dururken satır
+# kırmızı yanıyordu. Yani panel doğru soruyu soruyor, rota cevap veremiyordu.
+#
+# NEDEN İKİ DEKORATÖR, `api_route(methods=["GET","HEAD"])` DEĞİL: yetki denetimi
+# (`test_api_audit_v21::test_p1c`) rotaları KAYNAK METİNDEN, `@app.get("...")` deseniyle sayar.
+# Tek rotaya çevirmek `/runbook`u o envanterden düşürürdü — yarın `_auth` satırı silinse denetim
+# artık ötmezdi. HEAD dekoratörü GET'in ÜSTÜNE konur ki kaynak bloğu bölünürken gövde (ve içindeki
+# `_auth`) GET kaydının yanında kalsın; bu sıra bir stil tercihi değil, o denetimin çalışma şartı.
+@app.head("/runbook", response_class=HTMLResponse)
 @app.get("/runbook", response_class=HTMLResponse)
 def runbook(request: Request):
     """`docs/RUNBOOK.md`'nin okunur yüzeyi — alarm satırlarının ve sessiz-hat sapmalarının hedefi.
 
     EKSİK KAYNAK SESSİZ GEÇMEZ. Belge yoksa ya da kabuk yer tutucularını kaybettiyse sayfa BOŞ
     dönmez: ne olduğunu ve nasıl düzeltileceğini (`python ops/runbook_uret.py`) söyleyen bir
-    hata döner. Boş bir runbook, olay anında en kötü yalandır — "bakacak bir şey yok" der."""
+    hata döner. Boş bir runbook, olay anında en kötü yalandır — "bakacak bir şey yok" der.
+
+    HEAD AYNI KAPIDAN GEÇER, AYNI DURUMU DÖNER: `_auth` önce çağrılır (yetkisiz bir HEAD'in 200
+    dönmesi, sistemin iç haritasının orada durduğunu yetkisiz çağırana doğrulamak olurdu) ve iki
+    hata yolu da (yer tutucu kaybı 500 · belge yok 503) HEAD'de aynen işler. Tek fark GÖVDEDİR:
+    markdown HEAD'de HİÇ render EDİLMEZ — yoklamanın tüm anlamı o hesabı ödememektir. Bu yüzden
+    `Content-Length` 0'dır, GET'in uzunluğu değil; RFC 9110 içerik üretilirken belirlenen
+    başlıkların HEAD yanıtında atlanmasına izin verir."""
     _auth(request)
     kabuk = (WEB / "runbook.html").read_text(encoding="utf-8")
     for yt in _RUNBOOK_YER_TUTUCU:
@@ -1133,6 +1152,11 @@ def runbook(request: Request):
         raise HTTPException(
             status_code=503,
             detail="docs/RUNBOOK.md YOK — runbook henüz üretilmemiş. Üret: python ops/runbook_uret.py")
+    if request.method == "HEAD":
+        # Durum SORULARININ tamamı yukarıda cevaplandı; geriye yalnız gövde kalıyordu ve yoklayan
+        # onu istemiyor. Erken dönüş buradan ÖNCEYE alınamaz: alınsaydı HEAD "açık" derken GET
+        # 503 verirdi ve raf, üretilmemiş bir belgeyi yeşil gösterirdi.
+        return HTMLResponse("", headers=_NOCACHE)
     govde, toc = _md_render(RUNBOOK_MD.read_text(encoding="utf-8"))
     sayfa = kabuk.replace(_RUNBOOK_YER_TUTUCU[0], govde).replace(_RUNBOOK_YER_TUTUCU[1], toc)
     return HTMLResponse(sayfa, headers=_NOCACHE)
@@ -6079,6 +6103,33 @@ def api_plan_onayla(plan_id: str, request: Request):
     return res
 
 
+@app.post("/api/plan/{plan_id}/reddet")
+async def api_plan_reddet(plan_id: str, request: Request):
+    """REVIEW/NO_GO planına operatörün GEREKÇELİ ret kaydı — icraya DOKUNMAZ.
+
+    ONAYIN AYNASI DEĞİL: `girise_uygun` yasası onaylanmayan REVIEW'ü zaten silahlandırmaz, NO_GO'yu
+    zaten geçirmez. Yani bu uç bir şeyi DURDURMAZ — durduracak bir şey yoktur. Kaydın değeri
+    ayrımdadır: sessiz zaman aşımı ile "operatör gördü ve şu sebeple istemedi" bugüne kadar AYNI
+    görünüyordu. Gerekçe ZORUNLUdur (400) çünkü gerekçesiz ret o ayrımı üretmez.
+
+    YASA BURADA DEĞİL `loop.operator_ret_ver`DE — `api_plan_onayla` ile birebir aynı gerekçe:
+    `trade_plans.jsonl`in yazar listesi `ledgers.CONTRACTS`ta yazılıdır."""
+    _auth(request)
+    from . import loop as _loop
+    try:
+        govde = await request.json()
+    except Exception:  # sessiz-yutma: gövde okunamazsa gerekçe BOŞ sayılır ve alttaki yasa 400 ile reddeder — uydurma bir gerekçe üretmektense dürüst ret
+        govde = {}
+    if not isinstance(govde, dict):
+        govde = {}
+    res = _loop.operator_ret_ver(plan_id, gerekce=str(govde.get("gerekce") or ""), kanal="pano")
+    if not res.get("ok"):
+        raise HTTPException(status_code=int(res.get("kod") or 409),
+                            detail=str(res.get("neden") or "reddedilemedi"))
+    _diag_onbellek_bosalt("plan_operator_rejected")
+    return res
+
+
 @app.post("/api/approvals/{approval_id}")
 async def api_approve(approval_id: str, request: Request):
     """Operatörün onay/ret kararını deftere yazar. YALNIZ YAZAR — hiçbir şey uygulamaz.
@@ -6186,7 +6237,13 @@ _INFRA_SUREC_MONO = _time.monotonic()
 _SYSTEMD_AYARSIZ = 18446744073709551615
 _SYSTEMCTL_ALANLARI = ("LoadState", "ActiveState", "SubState", "MainPID", "NRestarts",
                        "MemoryCurrent", "CPUUsageNSec", "ExecMainStartTimestampMonotonic",
-                       "UnitFileState", "Description")
+                       "UnitFileState", "Description",
+                       # TETİKLEYİCİ ÜÇLÜSÜ (v310) — `inactive` TEK BAŞINA bir hüküm değildir.
+                       # `Type=oneshot` bir birim koşumlar ARASINDA zaten `inactive`tir; sağlıklı
+                       # olup olmadığı TETİKLEYİCİSİNDEN okunur: `TriggeredBy` (timer) ya da
+                       # `OnFailureOf` (arıza kancası). Bu üç alan olmadan pano ya susar ya
+                       # uydurur; operatör 2026-08-25'te "neden inaktif gözüküyor" diye sordu.
+                       "Type", "TriggeredBy", "OnFailureOf")
 # TOPLAM zaman bütçesi: birim başına 2 sn'lik timeout × 14 birim = en kötü 28 sn ve o, 15 sn'de
 # bir yoklanan bir ucu kilitlerdi. Bütçe dolunca kalan birimler ÖLÇÜLMEDİ + neden ile döner.
 _SYSTEMCTL_BUTCE_S = 1.5
@@ -6429,11 +6486,28 @@ def _infra_birim_adlari() -> dict:
         dosyalar = sorted(list(kok.rglob("*.service")) + list(kok.rglob("*.timer")))
     except OSError as e:
         dosyalar, neden = [], f"`deploy/` taranamadı: {type(e).__name__}: {e}"
+    # KURULUM BEKLENTİSİ, AD BAZINDA (v310). "kurulu değil" İKİ AYRI İŞTİR: biri operatörden sudo
+    # bekler (`meridian-aylik-bucket-kopya`), öteki hiçbir şey beklemez (`deploy/litestream.service`
+    # — üst dizinde duran eski/genel kopya). Ayrımın OTORİTESİ `dagit.sh`: o yalnız
+    # `deploy/oracle-a1/*.service` dosyalarını canlının birimleriyle kıyaslar, yani kurulum
+    # beklentisi HOST ALT DİZİNİNDE olmaktır. Beklenti AD bazında toplanıyor, tarama sırasından
+    # DEĞİL: `meridian.service` hem `deploy/` kökünde hem `deploy/oracle-a1/` altında var ve
+    # sıralamada kök önce gelir — sıraya güvenmek canlının ANA birimini "envanter gürültüsü" diye
+    # susturur (bu tam olarak susturmaması gereken satır).
+    host_altinda: set[str] = {p.name for p in dosyalar if p.parent != kok}
     for p in dosyalar:
         ad = p.name
         if ad in birimler:
             continue
+        _beklenen = ad in host_altinda
         birimler[ad] = {
+            "beklenen": _beklenen,
+            "beklenen_neden": (
+                f"`{kok.name}/<host>/` altında birim dosyası var ve `dagit.sh` bu dizini canlıyla "
+                "kıyaslıyor"
+                if _beklenen else
+                f"yalnız `{kok.name}/` kökünde duruyor, hiçbir host dizininde yok ve `dagit.sh` "
+                "kurulum kıyasına almıyor"),
             "ad": ad, "dosya": ad, "tur": p.suffix.lstrip("."),
             # ŞABLON BİRİM (`ad@.service`): düz adla `systemctl show` sorgusu SAHTE bir `inactive`
             # döndürür — birim şablonu değil, örneği koşar (`meridian-sprint@2026-08-13.service`).
@@ -6471,6 +6545,103 @@ def _systemctl_show(birim: str) -> dict | None:
     return out or None
 
 
+def _systemd_liste(ham: dict, alan: str) -> list[str]:
+    """systemd'nin boşlukla ayrılmış birim listesi alanını (`TriggeredBy`, `OnFailureOf`) böler.
+
+    Alan YOKSA ya da boşsa BOŞ LİSTE döner — ve boş liste burada "bağ yok" DEĞİL "bu çıktıda bağ
+    görünmedi" demektir; hükmü kuran `_infra_durum_sinifi` bu ikisini `Type` ölçüldü mü diye
+    ayırır."""
+    return [p for p in (ham.get(alan) or "").split() if p]
+
+
+def _infra_durum_sinifi(s: dict, olculen_durumlar: dict[str, str | None]) -> tuple[str, str]:
+    """Bir birim satırını OPERATÖRÜN İŞİNE karşılık gelen tek bir sınıfa indirger + gerekçesini.
+
+    NEDEN VAR (operatör kusuru, 2026-08-25: "neden kurulu değil, inaktif ve ölçülemedi
+    gözüküyor"): tablo ÜÇ AYRI DÜNYAYI tek kılıkta gösteriyordu. `Type=oneshot` bir birim
+    koşumlar ARASINDA zaten `inactive`tir — `meridian-backup.service` timer'ı aktifken de
+    `inactive` görünür ve bu SAĞLIKLI hâldir. `meridian-fail-notify.service` ise hiç timer
+    taşımaz; `OnFailure` ile tetiklenir ve `inactive` olması "hiçbir şey arızalanmadı" demektir,
+    mümkün olan EN İYİ hâl. Bunları koşması gerekirken durmuş bir `Type=simple` birimle aynı
+    rozete koymak, sinyali gürültünün içinde kaybetmekti.
+
+    SAĞLIK İDDİASI ANCAK ÖLÇÜLDÜYSE KURULUR (UYDURMA YASAĞI). `Type` gelmediyse birimin oneshot
+    olup olmadığı BİLİNMİYOR; `TriggeredBy` bu istekte ölçülmemiş bir birimi gösteriyorsa timer'ın
+    aktifliği BİLİNMİYOR. İkisinde de sınıf bir "ölçülemedi" sınıfıdır — "muhtemelen sıradadır"
+    bir ölçüm değil, bir varsayımdır ve panoya yazıldığı an güvence gibi okunur.
+
+    `olculen_durumlar`: bu istekte ÖLÇÜLEBİLMİŞ birim adı → `ActiveState`. Tetikleyici timer'ın
+    kendisi de listedeki bir satırdır; ek `systemctl` çağrısı YOK (birim başına fork, 1.5 sn'lik
+    bütçeyi yerdi)."""
+    ad = s.get("ad") or "?"
+    # ŞABLON BİRİM BURADA ELENMEZ, ÇÜNKÜ HİÇ SORGULANMAZ: `_infra_bilesenler` şablonları
+    # `systemctl`e götürmeden `durum=None` + şablon gerekçesiyle geçer, o satırlar aşağıdaki
+    # "durum ölçülemedi" dalına düşer ve kendi gerekçelerini taşır. Buraya ikinci bir şablon
+    # kontrolü koymak ULAŞILAMAZ bir dal olurdu — mutasyonla sınandı, silindiğinde hiçbir çivi
+    # ötmedi; yani okuyucuya "burada bir koruma var" diye yalan söyleyen bir satırdı.
+    if s.get("kurulu") is False:
+        if s.get("beklenen") is True:
+            return "kurulmali", (
+                f"`{ad}` bu makineye KURULU DEĞİL ama kurulması bekleniyor: "
+                f"{s.get('beklenen_neden') or 'host dizininde birim dosyası var'}. "
+                "Kurulum `sudo` ister, operatör işidir")
+        if s.get("beklenen") is False:
+            return "envanter_gurultusu", (
+                f"`{ad}` kurulu değil ve KURULMASI DA BEKLENMİYOR: "
+                f"{s.get('beklenen_neden') or 'deploy/ kökünde duran eski/genel kopya'}. "
+                "Bu satır bir eksik değil, envanter gürültüsüdür")
+        return "olculemedi", (
+            f"`{ad}` kurulu değil ama kurulmasının BEKLENİP beklenmediği ölçülemedi "
+            f"({s.get('beklenen_neden') or '`beklenen` alanı yok'}) — eylem gerekip gerekmediği "
+            "söylenemez")
+    durum = s.get("durum")
+    if durum is None:
+        return "olculemedi", (s.get("durum_neden")
+                              or f"`{ad}` için `ActiveState` ölçülemedi ve nedeni de yazılmadı")
+    if durum == "failed":
+        return "arizali", (
+            f"`{ad}` `ActiveState=failed` — birim koşmadı DEĞİL, KOŞTU VE DÜŞTÜ; tetikleyicisi "
+            "sağlam olsa bile bu bir arızadır")
+    if durum == "active":
+        return "kosuyor", f"`{ad}` `ActiveState=active` (alt durum: {s.get('alt_durum') or '—'})"
+
+    # --- Buradan aşağısı: kurulu, ölçüldü, `active` DEĞİL. Hüküm tetikleyiciye bağlı. ---
+    tur = s.get("servis_turu")
+    if tur != "oneshot":
+        _tur_metni = (f"`Type={tur}`" if tur else
+                      f"`Type` ÖLÇÜLEMEDİ ({s.get('servis_turu_neden') or 'alan gelmedi'})")
+        return "olu", (
+            f"`{ad}` `ActiveState={durum}` ve {_tur_metni} — koşumlar arasında dinlenen bir "
+            "`oneshot` OLDUĞU ölçülemedi, dolayısıyla bu duruş SAĞLIKLI SAYILAMAZ; koşması "
+            "gereken bir servis durmuş olabilir")
+    timerlar = s.get("tetikleyen_timerlar") or []
+    aktif = [t for t in timerlar if olculen_durumlar.get(t) == "active"]
+    if aktif:
+        return "sirada_timer", (
+            f"`{ad}` `Type=oneshot` ve tetikleyicisi {', '.join(f'`{t}`' for t in aktif)} "
+            f"`active` ölçüldü — koşumlar arasında `{durum}` olması BEKLENEN hâldir, arıza değil")
+    if timerlar:
+        olculemeyen = [t for t in timerlar if t not in olculen_durumlar]
+        if olculemeyen:
+            return "tetikleyici_olculemedi", (
+                f"`{ad}` `Type=oneshot` ve `TriggeredBy={' '.join(timerlar)}`, ama "
+                f"{', '.join(f'`{t}`' for t in olculemeyen)} bu istekte ÖLÇÜLMEDİ — timer'ın "
+                "aktif olduğu VARSAYILAMAZ, sağlık iddia edilmiyor")
+        return "tetikleyici_bozuk", (
+            f"`{ad}` `Type=oneshot` ama tetikleyicisi "
+            f"{', '.join(f'`{t}` ({olculen_durumlar.get(t)})' for t in timerlar)} — timer aktif "
+            "değil, yani bu birim HİÇ koşmuyor olabilir")
+    onfailure = s.get("onfailure_kaynaklari") or []
+    if onfailure:
+        return "ariza_yok_onfailure", (
+            f"`{ad}` `Type=oneshot`, timer'ı yok; `OnFailureOf="
+            f"{' '.join(onfailure)}` ile tetikleniyor — `{durum}` olması "
+            "HİÇBİR ŞEY ARIZALANMADI demektir, mümkün olan en iyi hâl")
+    return "tetikleyici_yok", (
+        f"`{ad}` `Type=oneshot` ve `{durum}`, ama ne `TriggeredBy` ne `OnFailureOf` bağı "
+        "görüldü — elle mi koşuluyor, bağlanmayı mı bekliyor ölçülemedi; sağlık iddia edilmiyor")
+
+
 def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
     """MERIDIAN BİLEŞENLERİ — birim başına durum, CPU%, RSS, çalışma süresi, restart sayısı.
 
@@ -6497,7 +6668,15 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
     satirlar = []
     for b in birimler:
         s: dict = {"ad": b["ad"], "dosya": b["dosya"], "tur": b["tur"], "sablon": b["sablon"],
-                   "birim_dosyasi": b["yol"], "kurulu": None, "kurulu_neden": None,
+                   "birim_dosyasi": b["yol"],
+                   # KURULUM BEKLENTİSİ diskten gelir (`_infra_birim_adlari`), systemd'den değil:
+                   # systemd kurulmamış bir birim için yalnız `not-found` der, "kurulmalı mıydı"
+                   # sorusunun cevabı depodaki YOLDADIR.
+                   "beklenen": b.get("beklenen"), "beklenen_neden": b.get("beklenen_neden"),
+                   "servis_turu": None, "servis_turu_neden": None,
+                   "tetikleyen_timerlar": [], "onfailure_kaynaklari": [],
+                   "durum_sinifi": None, "durum_sinifi_neden": None,
+                   "kurulu": None, "kurulu_neden": None,
                    "durum": None, "durum_neden": None, "alt_durum": None, "alt_durum_neden": None,
                    "cpu_yuzde": None, "cpu_yuzde_neden": None, "rss_bayt": None, "rss_bayt_neden": None,
                    "uptime_s": None, "uptime_s_neden": None, "restart_n": None, "restart_n_neden": None,
@@ -6507,7 +6686,7 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
                        "— koşan şey şablon değil, örneğidir (`ad@<örnek>.service`). Bu birimin "
                        "gerçek durumu `/api/sprint` üzerinden okunur; buradan UYDURULMAZ")
             for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
-                         "restart_n", "pid", "aciklama"):
+                         "restart_n", "pid", "aciklama", "servis_turu"):
                 s[f"{alan}_neden"] = _sablon
             satirlar.append(s)
             continue
@@ -6515,7 +6694,7 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
             _butce = (f"zaman bütçesi doldu ({_SYSTEMCTL_BUTCE_S} sn): bu birim bu istekte "
                       "sorgulanmadı — bütçe, 15 sn'de bir yoklanan ucun kilitlenmemesi için var")
             for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
-                         "restart_n", "pid", "aciklama"):
+                         "restart_n", "pid", "aciklama", "servis_turu"):
                 s[f"{alan}_neden"] = _butce
             satirlar.append(s)
             continue
@@ -6523,10 +6702,24 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
         if not ham:
             _yok = "`systemctl show` bu birim için çıktı vermedi (hata/zaman aşımı) — ölçülemedi"
             for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
-                         "restart_n", "pid", "aciklama"):
+                         "restart_n", "pid", "aciklama", "servis_turu"):
                 s[f"{alan}_neden"] = _yok
             satirlar.append(s)
             continue
+
+        # TETİKLEYİCİ ÜÇLÜSÜ. `Type` timer birimlerinde HİÇ YOKTUR (`.timer` bir servis değildir)
+        # ve orada yokluğu normaldir; hükmü kuran `_infra_durum_sinifi` timer'ları zaten
+        # `ActiveState` üzerinden okur, `Type`a bakmaz.
+        s["servis_turu"] = ham.get("Type") or None
+        if s["servis_turu"] is None:
+            s["servis_turu_neden"] = (
+                "`Type` alanı çıktıda yok/boş — birimin `oneshot` (koşumlar arasında dinlenen) "
+                "olup olmadığı ölçülemedi; `.timer` birimlerinde bu NORMALDİR"
+                if b["tur"] == "timer" else
+                "`Type` alanı çıktıda yok/boş — birimin `oneshot` (koşumlar arasında dinlenen) "
+                "olup olmadığı ölçülemedi, bu yüzden duruşu için sağlık İDDİA EDİLEMEZ")
+        s["tetikleyen_timerlar"] = _systemd_liste(ham, "TriggeredBy")
+        s["onfailure_kaynaklari"] = _systemd_liste(ham, "OnFailureOf")
 
         yukleme = ham.get("LoadState") or None
         s["kurulu"] = (yukleme == "loaded") if yukleme else None
@@ -6591,6 +6784,15 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
         if s["aciklama"] is None:
             s["aciklama_neden"] = "`Description` alanı çıktıda yok"
         satirlar.append(s)
+
+    # --- İKİNCİ GEÇİŞ: HÜKÜM. Tek geçişte kurulamaz, çünkü `meridian-backup.service`in sağlığı
+    # `meridian-backup.timer`ın ölçülmüş durumuna dayanır ve o satır listede DAHA SONRA gelebilir.
+    # Tetikleyiciyi ayrıca `systemctl show` ile sormak birim başına bir fork daha demekti ve 1.5
+    # sn'lik bütçeyi yerdi; zaten ölçülmüş satırdan okunuyor. Ölçülemeyen bir tetikleyici hükme
+    # GİRMEZ (sözlükte yoktur) ve sınıf "ölçülemedi" olur — sağlık ancak ölçüldüyse iddia edilir.
+    olculen_durumlar = {s["ad"]: s["durum"] for s in satirlar if s.get("durum") is not None}
+    for s in satirlar:
+        s["durum_sinifi"], s["durum_sinifi_neden"] = _infra_durum_sinifi(s, olculen_durumlar)
     return satirlar, None
 
 
@@ -7116,3 +7318,125 @@ def api_roadmap(request: Request, bolum: str | None = None, tam: int = 0, ozet: 
            "suzgec": {"bolum": bolum, "tam": bool(tam), "ozet": bool(ozet),
                       "eslesen_bolum_n": len(yuk["bolumler"]), "toplam_bolum_n": len(bolumler)}}
     return yuk
+
+
+# ---- KARAR / HÜKÜM ARŞİVİ -------------------------------------------
+# Zincir "tur → hüküm → belge" son halkasızdı: `docs/` altında 14 karar/hüküm belgesi duruyor
+# (ölçüldü 2026-08-25) ve HİÇBİRİNİ listeleyen uç yoktu — pano belge rafı bu satırı "uç yok"
+# rozetiyle, dürüstçe boş gösteriyordu. Buradaki uç o rafı DOLDURUR.
+#
+# NE SUNULUR, NE SUNULMAZ: bugün YALNIZ künye (ad · tarih · başlık · bayt). Belge GÖVDESİ
+# sunulmaz ve bu bir eksiklik değil bir SIRA: gövde ucu bir "hangi belge?" parametresi demektir,
+# o parametre de kullanıcıdan gelen bir dizeyi dosya sistemine yaklaştıran ilk adımdır. Kapı o
+# adımda BİLEREK yeniden açılacak (`test_belge_rafi_v312::test_uc_kullanicidan_YOL_almiyor`
+# ötecek), sessizce değil.
+#
+# YETKİ: `_auth` ZORUNLU. Arşiv tur hükümlerini, kök nedenleri ve açık kalemleri taşır —
+# `/runbook` ile aynı sınıf: sistemin iç haritası, genel anlatım yüzeyi değil.
+_KARAR_BELGE_ADI = re.compile(r"^(?:KARAR|HUKUM)-[\w.-]+\.md$")
+_KARAR_TARIHI = re.compile(r"(\d{4}-\d{2}-\d{2})")
+# Başlık için belgenin TAMAMI okunmaz: en büyük arşiv belgesi 60 KB'ı aşıyor ve raf 14 satır
+# çiziyor. İlk `# ` başlığı bu depoda HER ZAMAN belgenin ilk satırlarındadır; bulunamazsa
+# uydurulmaz, "ölçülemedi + neden" yazılır.
+_KARAR_BASLIK_TARAMA = 4096  # karakter (bayt değil: dosya utf-8 metin olarak açılır)
+
+
+def _karar_belgeleri_dizini() -> Path:
+    """Arşivin kaynağı — depo kökündeki `docs/`. Ad TAHMİN EDİLMEDİ, diskte ölçüldü
+    (2026-08-25: 14 dosya, `KARAR-*.md` 11 + `HUKUM-*.md` 3)."""
+    return Path(config.ROOT) / "docs"
+
+
+def _karar_belge_kaydi(p: Path, dizin_cozulmus: Path) -> dict:
+    """Bir arşiv belgesinin ÖLÇÜLEN künyesi: {ad, tarih, baslik, bayt, neden}.
+
+    ÖLÇÜLEMEYEN ALAN None KALIR ve `neden` onu ADIYLA açıklar (UYDURMA YASAĞI). İki kolay yalan
+    burada kapalı: tarihi okunamayan belgeye bugünün tarihini yazmak, ve başlığı okunamayan
+    belgeye dosya adını başlık diye koymak. Üçüncüsü daha sinsiydi — okunamayan belgeyi listeden
+    DÜŞÜRMEK: raf 13 belge gösterir, 14.'sü hakkında hiçbir şey söylenmez ve kimse aramaz.
+    Kayıt her hâlde listede kalır (YASA 4: sessiz atlama yok).
+
+    YOL GEÇİŞİ KAPISI: dosya `resolve()` sonrası hâlâ arşiv dizininin İÇİNDE değilse (arşiv adı
+    taşıyan bir sembolik bağ dışarıyı gösteriyorsa) AÇILMAZ — ne boyutu ne başlığı okunur, yani
+    dizin dışındaki içerik telden geçemez. Ret de sessiz değildir: kayıt `neden` ile durur."""
+    nedenler: list[str] = []
+    ad = p.name
+
+    m = _KARAR_TARIHI.search(ad)
+    tarih = m.group(1) if m else None
+    if tarih is None:
+        nedenler.append("tarih ölçülemedi: dosya adında YYYY-AA-GG deseni yok")
+
+    try:
+        icerde = p.resolve().parent == dizin_cozulmus
+        yol_hatasi = None
+    except OSError as e:
+        icerde, yol_hatasi = False, f"{type(e).__name__}: {e}"
+    if not icerde:
+        nedenler.append("başlık ve boyut ölçülemedi: dosya arşiv dizininin DIŞINI gösteriyor "
+                        f"(sembolik bağ ya da çözülemeyen yol{'; ' + yol_hatasi if yol_hatasi else ''})"
+                        " — açılmadı")
+        return {"ad": ad, "tarih": tarih, "baslik": None, "bayt": None,
+                "neden": "; ".join(nedenler)}
+
+    try:
+        bayt: int | None = p.stat().st_size
+    except OSError as e:
+        bayt = None
+        nedenler.append(f"boyut ölçülemedi: stat başarısız ({type(e).__name__}: {e})")
+
+    baslik: str | None = None
+    try:
+        with p.open("r", encoding="utf-8") as f:
+            bas = f.read(_KARAR_BASLIK_TARAMA)
+    except (OSError, UnicodeDecodeError) as e:
+        nedenler.append(f"başlık ölçülemedi: belge okunamadı ({type(e).__name__}: {e})")
+    else:
+        for satir in bas.splitlines():
+            if satir.startswith("# "):
+                baslik = satir[2:].strip()
+                break
+        if baslik is None:
+            nedenler.append(f"başlık ölçülemedi: ilk {_KARAR_BASLIK_TARAMA} karakterde "
+                            "`# ` ile başlayan satır yok")
+
+    return {"ad": ad, "tarih": tarih, "baslik": baslik, "bayt": bayt,
+            "neden": "; ".join(nedenler) if nedenler else None}
+
+
+@app.get("/api/karar-belgeleri")
+def api_karar_belgeleri(request: Request):
+    """`docs/KARAR-*.md` + `docs/HUKUM-*.md` arşivinin KÜNYE listesi. SALT OKUNUR; yazma ucu
+    YOKTUR (belgeler tur kapanışında insan eliyle yazılır).
+
+    Dönen alanlar: `ok` · `dizin` · `hata` · `belgeler[]` = {ad, tarih, baslik, bayt, neden}.
+    Sıra EN YENİ ÖNCE (dosya adındaki tarihe göre); tarihi ölçülemeyen belge sona düşer — sona
+    düşmek listeden düşmek değildir.
+
+    ARŞİVİN TANIMI DESENDİR, dizin listesi değil: yalnız `KARAR-`/`HUKUM-` ile başlayan `.md`
+    DOSYALARI. Komşu dosyalar (notlar, sır dosyaları) ve aynı adı taşıyan dizinler rafa giremez;
+    kullanıcıdan gelen HİÇBİR dize bu seçime karışmaz (uç `request` dışında parametre almaz).
+
+    DİZİN OKUNAMIYORSA 200 + `hata` döner, 404 DEĞİL: 404'ün gövdesi FastAPI zarfıdır ve panonun
+    üç-hâl ayrımında yalnız "hata" olarak görünürdü — operatör HANGİ dizinin okunamadığını
+    göremezdi. `belgeler` o hâlde null'dır (boş liste DEĞİL: boş liste "arşiv boş" diye okunur,
+    oysa ölçülen şey "dizini açamadım")."""
+    _auth(request)
+    d = _karar_belgeleri_dizini()
+    kok = Path(config.ROOT)
+    gorunur = str(d.relative_to(kok)) if str(d).startswith(str(kok)) else str(d)
+    try:
+        girdiler = sorted(d.iterdir())
+        dizin_cozulmus = d.resolve()
+    except OSError as e:
+        return {"ok": False, "dizin": gorunur, "belgeler": None,
+                "hata": f"arşiv dizini okunamadı ({type(e).__name__}): {e}"}
+
+    kayitlar = [_karar_belge_kaydi(p, dizin_cozulmus) for p in girdiler
+                if _KARAR_BELGE_ADI.match(p.name) and p.is_file()]
+    tarihli = sorted((k for k in kayitlar if k["tarih"]),
+                     key=lambda k: (k["tarih"], k["ad"]), reverse=True)
+    tarihsiz = sorted((k for k in kayitlar if not k["tarih"]), key=lambda k: k["ad"])
+    # `hata` BAŞARIDA DA VAR ve None: şekil TAM tutulur, yoksa okuyucu `.get("hata")` ile
+    # "hata yok" ile "alan yok"u ayırt edemez — bu depodaki baskın hata deseni.
+    return {"ok": True, "dizin": gorunur, "belgeler": tarihli + tarihsiz, "hata": None}

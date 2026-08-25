@@ -55,6 +55,28 @@ export interface AlpacaEmir {
   readonly limit?: HamSayi;
 }
 
+/** `alpaca._koruma_hukmu` satırı — POZİSYON başına koruma hükmü. `durum` üç değerden
+ *  biridir: `korumali` · `korumasiz` (ÖLÇÜLMÜŞ olgu) · `olculemedi` (ARIZA). İkincisiyle
+ *  üçüncüsü asla aynı gösterimi almaz. `stop` null iken durum yine `korumali` olabilir —
+ *  emir canlıdır, tetik fiyatı henüz yayınlanmamıştır; fiyat UYDURULMAZ. */
+export interface AlpacaKoruma {
+  readonly durum?: string;
+  readonly stop?: number | null;
+  readonly stop_n?: number;
+  readonly neden?: string | null;
+}
+
+/** `dashboard_view` kırpma muhasebesi. `pencere_doygun` true iken API penceresinin KENDİSİ
+ *  dolmuştur: listenin "hepsi bu" olduğu KANITLANMAMIŞTIR. */
+export interface AlpacaEmirKirpmasi {
+  readonly tavan?: number;
+  readonly canli?: number;
+  readonly kirpilan?: number;
+  readonly pencere_istenen?: number;
+  readonly pencere_donen?: number;
+  readonly pencere_doygun?: boolean;
+}
+
 export interface AlpacaHesap {
   readonly connected?: boolean;
   readonly equity?: number | null;
@@ -62,7 +84,16 @@ export interface AlpacaHesap {
   readonly status?: string | null;
   readonly buying_power?: number | null;
   readonly positions?: AlpacaPozisyon[];
-  readonly open_orders?: AlpacaEmir[];
+  /** ÜÇ HÂL: dizi (okundu) · `null` (OKUNAMADI — nedeni `open_orders_neden`de) · alan yok.
+   *  `?? []` ile karşılamak "API düştü" ile "emir yok"u aynı cümleye çıkarır. */
+  readonly open_orders?: AlpacaEmir[] | null;
+  /** `null` = liste ölçüldü. Dolu = liste neden okunamadı. */
+  readonly open_orders_neden?: string | null;
+  /** Liste okunamadıysa `null` — olmayan listenin muhasebesi olmaz. */
+  readonly open_orders_kirpma?: AlpacaEmirKirpmasi | null;
+  /** Sembol → hüküm. `null` ⟺ `koruma_neden` dolu ⟺ POZİSYON listesi okunamadı. */
+  readonly koruma?: Readonly<Record<string, AlpacaKoruma>> | null;
+  readonly koruma_neden?: string | null;
   /** Hesabın TEK kimlik izi — `dashboard_view` hesap NUMARASI döndürmüyor. */
   readonly endpoint?: string | null;
 }
