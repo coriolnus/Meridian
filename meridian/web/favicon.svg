@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Meridian">
+  <!-- MERIDIAN MARKA İŞARETİ — "C · M Monogramı", varyant v0 (operatör tasarımı, 2026-08-26).
+       M'nin iki kolu kutupta birleşen meridyen çizgileri gibi içe kapanır; enlem çizgisi ortadan
+       geçer. GEOMETRİ DOKUNULMAZ: v0, ölçüm gösterildikten sonra operatörün SEÇTİĞİ hâldir
+       (enlem çizgisi y=52, M'nin iç köşesiyle çakışık; 16px'te uçları bıyık gibi okunuyor —
+       bu bilinir ve kabul edilmiştir). Çivi: tests/test_favicon_v320.py.
+
+       RENK NEDEN ÖZNİTELİK+CSS, `currentColor` DEĞİL: favicon sayfanın İÇİNDE değil AYRI bir
+       belge olarak yüklenir ve sayfanın `color`ını GÖREMEZ — `currentColor` orada siyaha düşer,
+       yani karanlık tarayıcı temasında işaret kaybolur. Bu bir tasarım değişikliği değil, bağlam
+       zorunluluğudur. İKİ KATMAN: `stroke` ÖZNİTELİĞİ açık tema varsayılanıdır ve CSS hiç
+       yorumlanmasa bile çalışır; `<style>` yalnız koyu temada onu EZER. Tek katman bırakmak
+       (yalnız CSS) ikonu CSS'siz bağlamlarda görünmez kılardı. -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .m { stroke: #fafafa; }
+    }
+  </style>
+  <line class="m" x1="6" y1="52" x2="94" y2="52"
+        stroke="#0a0a0a" stroke-width="3.5" stroke-linecap="round"/>
+  <path class="m" d="M16,82 L33,17 L50,52 L67,17 L84,82" fill="none"
+        stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

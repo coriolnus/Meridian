@@ -848,6 +848,25 @@ def fontlar(request: Request, ad: str):
     return _statik(request, f"fonts/{ad}", "font/woff2")
 
 
+# MARKA İŞARETİ — `/favicon.svg` (2026-08-26). Beş HTML yüzeyin HİÇBİRİNDE favicon YOKTU:
+# ne `<link rel="icon">`, ne dosya. Beşi de sekmede boş sayfa ikonuyla duruyordu.
+# ROTA AD AD YAZILIR, `StaticFiles` MONTAJI YOK — `_FONT_DOSYALARI` üstündeki montaj-yasağı hükmü burada da
+# geçerli. Ve v202 dersi birebir tekrar etmesin diye rota dosyayla AYNI turda açılıyor:
+# `@font-face` yolu tek başına bir VAAT'tir, dosyanın diskte olması da öyle; SUNULAN ŞEY ROTADIR.
+# Orada dosyalar aylarca diskteydi ve üç yüzey 404 alıyordu.
+# `{ad}` PARAMETRESİ YOK, tek literal yol: parametre olsaydı dizin-dışı erişim bir FİLTRE işi
+# olurdu; tek yolda o yüzey hiç doğmuyor.
+# MIME AÇIK YAZILIR: `_statik` uzantıdan tahmin etmez ve `image/svg+xml` olmadan tarayıcı
+# ikonu sessizce yok sayar — "dosya 200 dönüyor ama sekme hâlâ boş" sınıfı.
+@app.get("/favicon.svg")
+def favicon(request: Request):
+    """Meridian marka işareti (C · M Monogramı v0). Yetkisiz — sekme ikonu herkese açıktır.
+
+    Karanlık/aydınlık ayrımı DOSYANIN İÇİNDEDİR (`prefers-color-scheme`): favicon ayrı bir
+    belge olarak yüklenir ve sayfanın rengini miras alamaz. Çivi: tests/test_favicon_v320.py."""
+    return _statik(request, "favicon.svg", "image/svg+xml")
+
+
 @app.get("/landing", response_class=HTMLResponse)
 def landing(request: Request):
     """The original marketing landing page — the design reference the dashboard is cut from.

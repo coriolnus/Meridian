@@ -128,6 +128,19 @@ def test_p1c_public_get_allowlist():
              # taşındı. Yetki sınıfı DEĞİŞMEDİ — `/eski` ile `/` aynı şey: bir sır taşımayan
              # kabuk. Yeni bir kapı açılmıyor, var olan kapının adı değişiyor; maruziyet
              # BİREBİR aynı (aynı dosya, aynı içerik, dün `/`ten sunuluyordu).
+             # /favicon.svg (2026-08-26 — marka işareti; beş yüzeyin HİÇBİRİNDE favicon yoktu):
+             # `/fonts/{ad}` İLE AYNI SINIF ve ondan DA DAR. YETKİ İSTEYEMEZ: sekme ikonunu
+             # tarayıcı oturumdan BAĞIMSIZ ister ve giriş ekranı da dahil HER sayfada ister —
+             # 401 dönseydi tam da kimliğin doğrulanmadığı anda (yani ikonun tek görüldüğü
+             # anda) boş sekme kalırdı. Aynı gerekçe `/app.js`, `/palette.js`, `/fonts/{ad}`
+             # için zaten yukarıda yazılı.
+             # SIZDIRDIĞI VERİ: yok. State okumaz, sorgu almaz, sır taşımaz; `_statik` ile
+             # diskten tek bir sabit dosya döner. Zaten TANIMI GEREĞİ kamuya açıktır —
+             # `/landing` herkese açık bir sayfadır ve bu işareti sekmesinde taşır.
+             # `{ad}` PARAMETRESİ YOK: `/fonts/{ad}`de dizin-dışı erişim kapalı bir izin
+             # listesiyle önleniyordu; burada tek literal yol olduğu için o yüzey hiç DOĞMUYOR.
+             # Çivi: tests/test_favicon_v320.py (geometri v0 + rota + beş yüzey).
+             "/favicon.svg",
              "/eski"} | set(api.KIMLIK_UCLARI)
     public = {r["path"] for r in _routes() if r["verb"] == "GET" and not r["authed"]}
     assert public <= allow, f"beklenmedik yetkisiz GET: {public - allow}"
