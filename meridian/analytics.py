@@ -688,6 +688,20 @@ def trade_alpha_beta() -> dict:
     return out
 
 
+# SHIP DURUMLARI — TEK KAYNAK (v304, 2026-08-25). Bu küme İKİ yerde ayrı ayrı yazılıydı ve
+# AYRIŞMIŞTI: `learning_scorecard` `superseded`i saymıyordu, `deflate_why` sayıyordu. Operatöre
+# yanlış sayan servis ediliyordu ve karne "hiçbir öneri OOS kapısını geçemedi" diyordu — oysa
+# defterde İKİ ship vardı (H00026 v1→v2, H00029 v2→v3) ve İKİ DÜĞME DE CANLIDA (v5, parent 3).
+#
+# `superseded` NEDEN SHIP'TİR: `rollback.sweep_orphan_hypotheses` YALNIZ `status == "live"` olanı
+# bu duruma taşır (rollback.py:367-375) ve bir hipotez ancak SHIP ETTİYSE `live` olur. Yani
+# sonradan eklenen bir HİJYEN mekanizması, daha eski bir sayacın varsayımını geçersiz kılmış ve
+# öğrenmenin kanıtını karneden sessizce silmişti. Arıza biçimi makul bir cümle olduğu için
+# ("sistem hiç öğrenmedi") kimse fark etmedi. Çivi v304 süpürmenin HEDEF durumunu kaynaktan
+# okuyup bu kümede arar — hedef değişirse öter.
+SHIP_DURUMLARI = ("live", "promoted", "superseded", "rolled_back")
+
+
 def learning_scorecard(goal: dict | None = None) -> dict:
     """An HONEST answer to 'is the agent actually learning?' — not vanity metrics. Reports how far the
     reflection→outcome loop has actually closed: how many hypotheses shipped, how many were measured
@@ -705,7 +719,7 @@ def learning_scorecard(goal: dict | None = None) -> dict:
     # hundreds of trades; the loop is stuck because nothing ever SHIPPED, so the live version never gained a
     # parent and evaluate_outcomes has nothing to measure). ever_shipped counts every version that reached
     # live (incl. ones later rolled back) — a shipped-then-rolled-back change still closed the loop once.
-    ever_shipped = sc.get("live", 0) + sc.get("promoted", 0) + sc.get("rolled_back", 0)
+    ever_shipped = sum(sc.get(s, 0) for s in SHIP_DURUMLARI)
     trades = store.read_jsonl("trades.jsonl")
     trades_total = len(trades)
     # ---- DEFTERİN KAYNAK AYRIŞTIRMASI ---------------------------------------
@@ -727,8 +741,15 @@ def learning_scorecard(goal: dict | None = None) -> dict:
     if not hyps:
         verdict, loop_state = "henüz hiç hipotez yok — reflect hiç çalışmamış", "no_hypotheses"
     elif ever_shipped == 0:
-        verdict = (f"hiçbir öneri OOS kapısını geçemedi — canlı strateji hâlâ v1 (parent yok), "
-                   f"değerlendirilecek bir evrim yok. {sc.get('rejected_by_backtest', 0)} backtest, "
+        # SÜRÜM ÖLÇÜLÜR, UYDURULMAZ: eski cümle "hâlâ v1 (parent yok)" diye SABİT bir literal
+        # basıyordu ve canlı v5/parent 3 taşırken bile aynen çıkıyordu. Ölçülemezse hiç söylenmez.
+        try:
+            _v = int(config.load_strategy().get("version", 0)) or None
+        except Exception:  # sessiz-yutma: sürüm okunamazsa cümle SÜRÜMDEN HİÇ BAHSETMEZ; uydurma bir "v1" basmak, tam da düzeltilen kusurun kendisi olurdu
+            _v = None
+        _sur = f"canlı strateji v{_v}" if _v else "canlı strateji sürümü ölçülemedi"
+        verdict = (f"hiçbir öneri OOS kapısını geçemedi — {_sur}, değerlendirilecek bir evrim yok. "
+                   f"{sc.get('rejected_by_backtest', 0)} backtest, "
                    f"{sc.get('rejected_by_guard', 0)} guard reddi. Öğrenme antrenmanı başlatabilirsin.")
         loop_state = "no_ship_v1_stands"
     elif not outcomes:
@@ -1112,7 +1133,7 @@ def deflate_why() -> dict:
     from collections import Counter
     hyp = store.read_jsonl("hypotheses.jsonl")
     dur = Counter(h.get("status") or "?" for h in hyp)
-    shipped = sum(n for s, n in dur.items() if s in ("live", "promoted", "superseded", "rolled_back"))
+    shipped = sum(n for s, n in dur.items() if s in SHIP_DURUMLARI)
     olculu = sum(1 for h in hyp if h.get("predicted_delta_search") is not None)
     return {"n_hypotheses": len(hyp), "shipped": shipped, "measured": olculu,
             "by_status": dict(dur.most_common()),

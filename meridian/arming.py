@@ -174,6 +174,58 @@ def _dormant_setups() -> list[str]:
     return [s for s in engine if s not in strat.ARMED_SETUPS]
 
 
+# KURULUM → ZORUNLU NOKTA-ZAMAN ÇAPASI. Bu kurulumlar çapa çözülemeyince ATEŞLEMEZ; dışarıdan
+# "sinyal vermedi" gibi görünürler ve rapor onları "örneklem dolmadı" diye yazıyordu. Kayıt bir
+# İDDİA değildir: v301 çivisi her iki yönü de bağlar — kayıttaki her ad çapayı GERÇEKTEN çağırmalı,
+# ve çapayı çağıran her kurulum kayıtta OLMALI (yeni bir kazanç-çapalı kurulum eklenirse çivi öter).
+PIT_CAPALI_KURULUMLAR = {
+    "episodic_pivot": "earnings.days_since_report",
+    "pead": "earnings.days_since_report",
+}
+
+
+def _kanit_durumu(setup: str, r: dict) -> dict:
+    """Eşiği geçemeyen UYUYAN kurulum için DOĞRU cümleyi seçer.
+
+    İKİ DÜNYA, İKİ CÜMLE (kart EDG-2026-060, 2026-08-25):
+      · seyrek ateşleyen ama ÖLÇÜLEBİLEN kurulum → `insufficient_cf`: kanıt birikiyor, bekle.
+      · PIT çapası çözülemeyen kurulum          → `olculemez_pit_yok`: kanıt BİRİKEMEZ, bekleme
+        boşuna. Geri dolumu tekrar koşturmak bunu ASLA çözmez; arşiv gerekir.
+    Tek etikete toplamak `_olculemedi`nin şerhindeki hatanın aynısıydı: "ölçülemedi = reddedildi".
+
+    KAPSAM DAR TUTULDU: PIT kaydında OLMAYAN hiçbir kurulumun cümlesi değişmez (çivi v301)."""
+    n, avg = r.get("n", 0), r.get("avg_r")
+    capa = PIT_CAPALI_KURULUMLAR.get(setup)
+    if capa is None:
+        return {"status": "insufficient_cf", "n": n, "avg_r": avg}
+
+    from . import counterfactual as cf, earnings as earn
+    takvim, defter = earn.takvim_ufku(), cf.defter_ufku()
+    # İKİ ALT SEBEP, İKİ AYRI ÇARE — tek cümleye toplamak operatörü yanlış işe yollar:
+    #   takvim_bos → takvim hiç çekilmemiş; çare BUGÜN uygulanabilir (`earnings.refresh`).
+    #   arsiv_yok  → takvim var ama ileriye dönük bir tazeleme önbelleği; çare bir PIT ARŞİVİdir.
+    # Hüküm SINIFI ikisinde de aynıdır (kanıt BİRİKEMEZ, "birikiyor" değil) ve bu bilinçli:
+    # ikisinde de `days_since_report` her gün False döner, yani kurulum ateşleyemez.
+    if takvim["n_tarih"] == 0:
+        alt, cumle = "takvim_bos", (
+            f"kazanç takvimi BOŞ ({takvim['neden']}) → çapa HİÇBİR gün için çözülemez. "
+            "Bu bir örneklem sorunu değil: takvim çekilene kadar kurulum hiç ateşleyemez.")
+    elif takvim["ilk"] and defter["ilk"] and takvim["ilk"] > defter["ilk"]:
+        alt, cumle = "arsiv_yok", (
+            f"kazanç takvimi bir NOKTA-ZAMAN ARŞİVİ değil, ileriye dönük tazeleme önbelleği: "
+            f"takvim {takvim['ilk']}→{takvim['son']} ({takvim['n_tarih']} tarih), "
+            f"defter {defter['ilk']}→{defter['son']} ({defter['n']} satır). Defterin "
+            "başındaki seanslar için çapa sorusu SORULAMAZ; geri dolumu tekrar koşturmak "
+            "kanıt üretmez, ARŞİV gerekir.")
+    else:
+        # Çapa defterin tamamını kapsıyor → kuraklık GERÇEKTEN örneklem sorunudur.
+        # Arşiv gelirse cümle KENDİLİĞİNDEN buraya döner; mazeret kalıcılaşmaz.
+        return {"status": "insufficient_cf", "n": n, "avg_r": avg}
+    return {"status": "olculemez_pit_yok", "alt_sebep": alt, "n": n, "avg_r": avg,
+            "capa": capa, "takvim": takvim, "defter": defter,
+            "neden": f"{setup} çapasız ateşlemez ({capa}) ve {cumle}"}
+
+
 def _olculemedi(neden: str, **ek) -> dict:
     """"ÖLÇÜLEMEDİ" terminali — `gate_undefined`in (ölçüm YAPILDI, sayı tanımsız) AKRABASI ama
     AYNISI DEĞİL: burada ölçüm HİÇ tamamlanmadı. İkisini tek etikete toplamak, "ölçülemedi = reddedildi" hatasının yeni bir kopyası olurdu. Sayı alanları
@@ -315,12 +367,11 @@ def evaluate(bars=None, index=None) -> dict:
             out["measurements"][setup] = _olculemedi("tur_tavani_doldu")
             continue
         out["measurements"][setup] = _sureli_olc(setup, bars, index, kalan)
-    # eşiği geçemeyenlerin durumu da dürüstçe raporda (neden ölçülmedi görünür olsun)
+    # eşiği geçemeyenlerin durumu da dürüstçe raporda (neden ölçülmedi görünür olsun).
+    # v301: "birikiyor" ile "birikemez" AYRI cümleler — seçim `_kanit_durumu`da.
     for setup in _dormant_setups():
         if setup not in out["measurements"]:
-            r = rep.get(setup, {})
-            out["measurements"][setup] = {"status": "insufficient_cf",
-                                          "n": r.get("n", 0), "avg_r": r.get("avg_r")}
+            out["measurements"][setup] = _kanit_durumu(setup, rep.get(setup, {}))
     store.write_json(REPORT_FILE, out)
     for setup, m in out["measurements"].items():
         if m.get("status") == "gate_passed" and (prev.get("measurements", {}).get(setup) or {}).get("status") != "gate_passed":

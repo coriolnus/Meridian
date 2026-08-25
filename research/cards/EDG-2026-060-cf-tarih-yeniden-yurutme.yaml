@@ -1,7 +1,7 @@
 card_id: EDG-2026-060
 family: silahlanma_kapisi
 k_registry: {registered_at: "2026-08-25", trial_ids: [pending]}
-status: registered
+status: judged
 
 thesis: >
   OPERATÖR SORUSU (2026-08-25): "sistem son seed'den beri çok gelişti, yeniden bütün planları
@@ -78,8 +78,13 @@ success_metric: >
       bir hüküm değildir.
 
 hypothesis_status: >
-  registered — 2026-08-25 Rol-1. Ölçüm SANDBOX'ta koşacak; canlıya uygulama ayrı karar.
-  Sürüm damgası (`strategy_version`) bu karttan ÖNCE eklendi ki yeni satırlar damgalı doğsun.
+  judged — 2026-08-25 Rol-1. HÜKÜM İŞLENDİ (ayrıntı aşağıdaki hukum_* bloklarında).
+  Hipotez UYUYAN kurulumlar için ÇÜRÜDÜ; ZATEN SİLAHLI bir kurulum (exhaustion_hammer) için
+  beklenmedik biçimde DOĞRULANDI. Hiçbir kurulum silahlandırılmadı, hiçbiri silahtan alınmadı;
+  ARMED_SETUPS'a DOKUNULMADI.
+  KAYIT TARİHÇESİ (tarihçe-koru, silinmez): "registered — 2026-08-25 Rol-1. Ölçüm SANDBOX'ta
+  koşacak; canlıya uygulama ayrı karar. Sürüm damgası (`strategy_version`) bu karttan ÖNCE
+  eklendi ki yeni satırlar damgalı doğsun."
 
 beyanli_sinirlar: >
   (1) Bu kart bir EDGE ölçmez; MEVCUT bir kapının kanıt tabanının eksik olup olmadığını ölçer.
@@ -94,3 +99,94 @@ beyanli_sinirlar: >
   (4) Damgasız satırlar (2026-08-25 öncesi 7260 satır) hangi sürümle üretildiklerini BİR DAHA
   söyleyemez. Bu koşum onları damgalamaz — yalnız YENİ satırlar damgalı doğar. Karışım
   `surum_dokumu()` ile görünür kalır.
+
+# ============================================================================
+# HÜKÜM — 2026-08-25, Rol-1. status: registered → judged.
+# ============================================================================
+k_registry_kapanis: {trial_ids: ["EDG-060/tam_aralik@2026-08-25"], K: 1}
+
+kosum:
+  yer: "A1 kum havuzu /tmp/cf-tam-pr1e51gx/state (canlı state'e YAZILMADI — doğrulandı)"
+  aralik: "1164 seans · 127,6 dk · 8754 satır (8699 çözülmüş / 55 açık)"
+  armed_setups_o_an: "('breakout_vcp', 'exhaustion_hammer', 'momentum_burst')"
+  esikler_o_an: "MIN_CF_ENTERED=30 · MIN_CF_AVG_R=0.0 (arming.py'den OKUNDU, yeniden tanımlanmadı)"
+
+olcum:                       # kurulum: [n_girilmis, avg_r] — tam aralık kum havuzu
+  breakout_vcp:      [5785,  0.031]
+  exhaustion_hammer: [1571,  0.090]
+  momentum_burst:    [1134,  0.047]
+  pullback:          [21,   -0.968]
+  episodic_pivot:    [null,  null]     # ÖLÇÜLEMEDİ — aşağıdaki hükme bak
+
+hukum_pullback: >
+  (A) UYGULANDI. n=21 < MIN_CF_ENTERED=30 → KANIT YETERSİZ KALDI; kalem KAPANIR ve
+  "yeniden yürütme" bir daha gerekçe olamaz. Eşik oynatılmadı.
+  HİPOTEZ ÇÜRÜDÜ: kart "tarih bu kurulum için hiç yürütülmemiş olabilir" diyordu. Tam aralık
+  koşumu canlı defterden AZ satır üretti (21 vs canlı 28) — yani tarih ZATEN yürütülmüştü;
+  kanıt seyrekliği kurulumun kendi ateşleme sıklığıdır, bir boşluk değil.
+  İKİNCİ KAPIYA DA GİRDİ: `pullback` 2026-08-22'de B1 operatör kararıyla silahtan alınmıştı
+  (kart EDG-2026-039) ve donuk yeniden-silahlanma kapısı yazılıydı: "cf'de n≥30 VE ort-R
+  CI-alt > 0". Ölçüm İKİ ayakta da düşüyor (n=21; ort-R −0,968). Kapı KAPALI kalır.
+
+hukum_episodic_pivot: >
+  ÖLÇÜLEMEDİ — (A) UYGULANMADI ve bu bir kaçamak değil, UYDURMA YASAĞInın gereğidir.
+  (A)'nın cümlesi "tarih yürütüldü ve yine de eşik dolmadı"dır. Bu kurulum için tarih
+  YÜRÜTÜLEMEDİ ve sebep ölçüldü:
+    · `evaluate_episodic_pivot` ZORUNLU çapa taşır: `earnings.days_since_report(..., max_days=2)`
+      → False ise kurulum hiç doğmaz (kodun kendi şerhi: "veri dürüstlüğü").
+    · Kazanç takvimi bir NOKTA-ZAMAN ARŞİVİ DEĞİL: 2026-08-25'te 29 tarih, aralık
+      2026-07-20 → 2026-09-11. Defter ise 2022-01-03'ten başlıyor.
+    · Yani 1164 seansın ~1141'inde çapa sorusu SORULAMADI. Koşumun kendi sayacı bunu zaten
+      beyan etti: earnings_gate {plan: 3687, olculemedi_cf: 3687} — kapı hiç konuşmadı.
+  KILL-LIST İHLALİ DEĞİL: kill-list "biraz daha bekleyelim bir hüküm değildir" der ve bu hüküm
+  beklemeyi ÖNERMİYOR — tam tersini söylüyor: geri dolumu KAÇ KEZ koşturursak koşturalım bu
+  kurulum için kanıt üretilemez. "Yeniden yürütme" kalemi episodic_pivot için de KAPANIR;
+  yerine ADI KONMUŞ tek bir engel geçer (aşağıda). Ölçülmemiş bir şeyi "ölçüldü ve doldurmadı"
+  diye kaydetmek, kartın korumak için yazıldığı şeyin ta kendisini bozardı.
+
+yan_bulgu_exhaustion_hammer: >
+  KARTIN SORMADIĞI AMA VERİSİNİN CEVAPLADIĞI ŞEY. Kartın hipotezi ("tarih hiç yürütülmedi")
+  UYUYAN kurulumlar için değil, ZATEN SİLAHLI olan biri için doğru çıktı:
+      canlı defter : n=14   avg_r +1,260  (2026-07-27 → 2026-08-14)
+      tam tarih    : n=1571 avg_r +0,090  (2022-01-03 → 2026-08-22)
+  `exhaustion_hammer` 2026-08-11'de operatör onayıyla silahlandı; gerekçe bir KENAR iddiası
+  DEĞİL, P-2026-08-07-VLO tesisat vakasıydı (onaylı plan iç motorda doldu, aynaya emir gitmedi).
+  Dolayısıyla bu sayı bir iddiayı çürütmüyor — kayda kurulumun İLK gerçek beklenti ölçümünü
+  ekliyor. İŞARET: +1,260 → +0,090 (14 kat küçülme) küçük örneklemin şans payıydı; ve
+  `cf_fidelity` sapması +0,059R İYİMSER ölçülmüştür, yani sadakat iskontosu altında +0,090
+  sıfırdan ayırt edilemeyecek kadar küçüktür. Silahsızlandırma ÖNERİSİ DEĞİL (bu kartın yetkisi
+  yok) — canlı izleme kalemi; MIN_CF_ENTERED=30 eşiğinin neden var olduğunun canlı kanıtı.
+
+kosumun_BEYANLI_KUSURLARI: >
+  Ölçümden SONRA bulundu ve gizlenmiyor:
+  (1) PARAMETRE SAPMASI. Kum havuzu betiği `strategy.json` kopyalamaya çalıştı; dosyanın adı
+      `strategy.yaml`. `if src.exists()` bunu sessizce yuttu → koşum `default_strategy()` ile
+      gitti (version 1, canlı 5). Fark ÖLÇÜLDÜ ve DAR: 18 parametreden 2'si ayrışıyor
+      (`entry.pivot_proximity_pct` 2.0 vs 2.3; `entry.w_prox` kod-içi varsayılanı zaten 0,15 =
+      canlı → etkisiz). Kalan tek fark YALNIZ `evaluate_entry` içinde okunur (strategy.py:410),
+      yani YALNIZ `breakout_vcp`'yi etkiler. `params_by_regime` iki tarafta da BOŞ (doğrulandı).
+      SONUÇ: pullback / episodic_pivot / exhaustion_hammer / momentum_burst ölçümleri GEÇERLİ;
+      `breakout_vcp` satırı (5785, +0,031) ŞARTNAME DIŞI damgalıdır, karara girmez.
+  (2) SÜRÜM DAMGASI DÜŞTÜ. 8754/8754 satır damgasız. Mekanizma sağlam — minimal yeniden üretim
+      (2026-08-25 13:08, 9 seans) `strategy.yaml` doğru kopyalanınca damgayı 5 olarak bastı.
+      Sebep zamanlama: koşum 10:41'de başladı, damgayı taşıyan dağıtım süreçten SONRA indi;
+      çalışan süreç bellekteki eski modülü kullandı. Kum havuzu defteri canlıya UYGULANMADIĞI
+      için bu damgasızlık canlı defteri kirletmez.
+  (3) Kum havuzu defteri canlıya UYGULANMADI — kartın `universe` bölümündeki sözleşme gereği
+      ("canlıya uygulama AYRI bir karardır"). Canlı `counterfactuals.jsonl` DOKUNULMADI.
+
+kalemler:
+  kapanan:
+    - "EDG-2026-060 'tam aralık yeniden yürütme' — pullback (A) ile, episodic_pivot ölçülemezlikle"
+    - "'kanıt yok çünkü tarih yürütülmedi' varsayımı — ölçüldü, uyuyan kurulumlar için YANLIŞ"
+  acilan:
+    - ad: "PIT kazanç arşivi yok"
+      etki: "episodic_pivot ve pead karşı-olgusal olarak ÖLÇÜLEMEZ (silahlanma kapısı onları hiç değerlendiremez)"
+      cozum: "geriye dönük nokta-zaman kazanç takvimi arşivi; onsuz bu iki kurulum kalıcı ölçülemez"
+      durum: "operatör kalemi — bu kartın yetkisi dışında"
+    - ad: "exhaustion_hammer beklenti işareti"
+      etki: "silahlı kurulumun tam-tarih beklentisi +0,090R, sadakat sapması +0,059R iyimser"
+      durum: "canlı izleme kalemi"
+  kodda_kapatildi:
+    - "arming raporu artık 'birikiyor' ile 'birikemez'i AYIRIYOR (`_kanit_durumu`, durum `olculemez_pit_yok`); çivi v301, dört mutasyonla sınandı"
+    - "`earnings.takvim_ufku()` + `counterfactual.defter_ufku()` — days_since_report'un sessiz False'unun OKUYUCUSU (YASA 6)"

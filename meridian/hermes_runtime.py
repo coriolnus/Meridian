@@ -158,23 +158,32 @@ def _warmup_sprint() -> None:
         bars, index = dataset.load()
         # önce sıradaki muhtemel yansımaların incumbent'ları (global + canlı + ufku dolu arka plan
         # rejimi) — yansıma anında kapı beklemesin; sonra sonda ısınması.
+        def _nabiz(*_a, **_k):
+            """İKİ nabız: ısınmanın kendi kadansı + poll ipliğinin canlılığı.
+
+            v302'de TANIM YUKARI TAŞINDI ve bu bir biçim düzeltmesi DEĞİL, kusurun kendisiydi:
+            eskiden `_nabiz` `reflect.prefill_incumbents` çağrısından SONRA tanımlanıyordu, yani
+            o fazda nabız atmak YAPISAL olarak imkânsızdı. `prefill_incumbents` havuz bekleyişi
+            tek blokta HAVUZ_ATALET_SN (=1800 sn) sürebilir ve bekçi penceresi de 1800 sn'dir →
+            bayat-geçiş garantiydi. CANLI KANIT: 2026-08-24 alarmı 01:59:48'de düştü,
+            `arama_havuzu_zaman_asimi biten=0` olayı 02:00:08'de — sonda döngüsü hiç başlamamıştı.
+
+            İMZA `*_a, **_k`: aynı geri-çağırma İKİ dikişe birden bağlanıyor — aramanın
+            `on_probe(i, total, ...)` dikişi ve havuz/sıralı bacakların argümansız `canlilik()`
+            dikişi. Tek gövde, tek anlam: "bu iplik canlı ve ilerliyor".
+            Nabız yazımı `store.write_json`dur (birkaç ms); en sık HAVUZ_NABIZ_SN'de bir atılır."""
+            _wd8.beat("warmup_sprint")     # ısınmanın KENDİ kadansı ilerliyor
+            _wd8.beat("hermes_poll")       # poll ipliği MEŞGUL ama CANLI — sahte alarm burada biter
+
         try:
             trades = store.read_jsonl("trades.jsonl")
             every = int((config.goal().get("reflection_every") or 5))
             live = store.read_json("regime.json", {}).get("regime")
             live = live if live in config.VALID_REGIMES else None
             bg = _bg_ready_regime(trades, every, live)
-            reflect.prefill_incumbents(bars, index, [None, live, bg])
+            reflect.prefill_incumbents(bars, index, [None, live, bg], canlilik=_nabiz)
         except Exception as e:
             obs.warn("incumbent_prefill_failed", error=f"{type(e).__name__}: {e}")
-        def _nabiz(i, total, *_a):
-            """Her sonda bitiminde İKİ nabız. Mevcut `on_probe` dikişi yeniden kullanılır: aramaya
-            ikinci bir geri-çağırma parametresi eklemek, aynı olayı iki kanaldan taşıyan bir
-            ikizlik yaratırdı. Nabız yazımı `store.write_json`dur (birkaç ms) ve sonda başına bir
-            kez olur — 40 sondalık bir turda toplam maliyet ölçülemeyecek kadar küçüktür."""
-            _wd8.beat("warmup_sprint")     # ısınmanın KENDİ kadansı ilerliyor
-            _wd8.beat("hermes_poll")       # poll ipliği MEŞGUL ama CANLI — sahte alarm burada biter
-
         _tavan = _warmup_tavan_dk()
         # `record_session=False`: "Nothing ships" beyanı artık DEFTER tarafında da
         # doğru. Isınma her 12 poll'da bir koşar ve sonda başına resmî kayıt düşerken tek bir gecede
@@ -188,7 +197,8 @@ def _warmup_sprint() -> None:
         _wb = hermes.warmup_budget()
         res = reflect.coordinate_descent_search(bars, index, budget=int(_wb["budget"]),
                                                 k_max=int(_wb["k_max"]), max_minutes=_tavan,
-                                                on_probe=_nabiz, record_session=False)
+                                                on_probe=_nabiz, canlilik=_nabiz,
+                                                record_session=False)
         _wd8.beat("warmup_sprint")         # sonda HİÇ koşmadıysa da ısınma turladı: kadans nabzı düşmez
         _wd8.beat("hermes_poll")
         try:

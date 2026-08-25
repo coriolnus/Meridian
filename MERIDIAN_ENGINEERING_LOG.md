@@ -893,3 +893,112 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   (`_warm_skip="learn_halted"`, hermes_runtime.py:411); rollback güvenlik olarak açık kalır.
   Geri alma panodan: Müdahale kademeleri (kilitler#mudahale) Kademe-4 kolu →
   `POST /api/control/learn_halt` (api.py:2025; aynı uç aç/kapa).
+- **PIT çapası olmayan kurulum "kanıt yetersiz" DEĞİL, ÖLÇÜLEMEZ (EDG-2026-060, 2026-08-25):**
+  operatör sorusu ("sistem son seed'den beri çok gelişti, planları yeniden değerlendirmek
+  gerekmez mi?") tam aralık karşı-olgusal geri dolumuyla ölçüldü — 1164 seans, 8754 satır,
+  127,6 dk, kum havuzunda (canlı defter DOKUNULMADI). Hüküm üç parça:
+  · `pullback` → (A): n=21 < 30, ort-R −0,968. Kalem KAPANIR. Hipotez ÇÜRÜDÜ: tam aralık koşumu
+    canlıdan AZ satır üretti (21 vs 28) — tarih zaten yürütülmüştü, seyreklik kurulumun kendi
+    ateşleme sıklığı. EDG-2026-039'un donuk yeniden-silahlanma kapısı (n≥30 VE ort-R CI-alt>0)
+    iki ayakta da düşüyor, KAPALI kalır.
+  · `episodic_pivot` → ÖLÇÜLEMEDİ, (A) UYGULANMADI. `evaluate_episodic_pivot` zorunlu çapa
+    taşır (`earnings.days_since_report`), kazanç takvimi ise NOKTA-ZAMAN ARŞİVİ DEĞİL:
+    29 tarih, 2026-07-20→2026-09-11; defter 2022-01-03'ten başlıyor → 1164 seansın ~1141'inde
+    çapa sorusu SORULAMAZ. Koşumun kendi sayacı beyan etti: `earnings_gate {plan:3687,
+    olculemedi_cf:3687}`. "Ölçüldü ve doldurmadı" yazmak uydurma olurdu; "biraz daha bekleyelim"
+    de değil — geri dolum KAÇ KEZ koşarsa koşsun bu kurulum için kanıt üretilemez, ARŞİV gerekir.
+  · YAN BULGU — kartın hipotezi UYUYAN değil, ZATEN SİLAHLI bir kurulum için doğru çıktı:
+    `exhaustion_hammer` canlı defterde n=14 ort-R +1,260, tam tarihte **n=1571 ort-R +0,090**
+    (14 kat küçülme). 2026-08-11 silahlanmasının gerekçesi kenar iddiası değil P-2026-08-07-VLO
+    tesisat vakasıydı, yani çürütme yok — ama kayda kurulumun İLK gerçek beklenti ölçümü girdi.
+    `cf_fidelity` sapması +0,059R İYİMSER olduğundan +0,090 sadakat iskontosu altında sıfırdan
+    ayırt edilemez. Canlı izleme kalemi; MIN_CF_ENTERED=30'un neden var olduğunun canlı kanıtı.
+  KODDA KAPATILAN: `arming` raporu "birikiyor" (`insufficient_cf`) ile "birikemez"
+  (`olculemez_pit_yok`) cümlelerini AYIRIYOR — `arming._kanit_durumu` + `PIT_CAPALI_KURULUMLAR`,
+  okuyucuları `earnings.takvim_ufku()` ve `counterfactual.defter_ufku()` (YASA 6). Kayıt iddia
+  olmasın diye çivi v301 İKİ YÖNÜ de bağlar: kayıttaki her ad çapayı gerçekten çağırmalı, çapayı
+  çağıran her kurulum kayıtta olmalı. Dört mutasyonla sınandı.
+  KOŞUMUN BEYANLI KUSURU: kum havuzu betiği `strategy.json` kopyalamaya çalıştı (dosya adı
+  `strategy.yaml`) → koşum varsayılan parametrelerle gitti. Fark DAR ve ölçüldü: tek etkili
+  parametre `entry.pivot_proximity_pct` (2.0 vs 2.3) ve YALNIZ `evaluate_entry` okur → sadece
+  `breakout_vcp` satırı şartname dışı, karara girmez. Diğer dört kurulumun ölçümü geçerli.
+- **hermes_poll MECHANISM_STALE — ÜÇÜNCÜ TEKRAR, KÖK NEDEN BULUNDU (2026-08-25, v302+v303):**
+  `mekanizma gecikti: hermes_poll — 0.5 sa (pencere 0.5 sa)` alarmı 2026-08-06'dan beri günde
+  tam bir kez ötüyordu (canlıda 134 kayıt). Çok-mercekli soruşturma (5 bulucu + 3 şüpheci);
+  ilk hipotez ÜÇ ŞÜPHECİNİN ÜÇÜ tarafından da ÇÜRÜTÜLDÜ — asıl bulgu çürütmelerde çıktı.
+  KÖK NEDEN: `beat("hermes_poll")` yalnız 3 yerde ve hepsi `hermes_runtime.py` (176/193/488);
+  `reflect.py`de ve `hermes.py`de HİÇ YOK. Nabız "iş bitti"ye bağlıydı, oysa havuz bekleyişi
+  tanım gereği "hiçbir iş bitmeyen" penceredir. Isınma dalında İLK nabza kadar ÜÇ ağır faz
+  nabızsız koşuyordu: (1) `prefill_incumbents` havuz bekleyişi — tek blokta `_cf.wait(1800)`;
+  (2) atalet sonrası SIRALI incumbent yedeği (canlıda 5065 sn / 2 walk-forward); (3)
+  `_parallel_prefill_probes` havuz bekleyişi — 1800 sn daha. (1) YAPISAL olarak yamanamıyordu:
+  `prefill_incumbents` satır 167'de çağrılıyor, `_nabiz` satır 170'te TANIMLANIYOR.
+  Üstüne `HAVUZ_ATALET_SN=1800` (reflect.py) ile `EXPECTED["hermes_poll"]=1800` (watchdog.py)
+  BİREBİR EŞİT → havuz ataleti her çarptığında pencere tanım gereği tam doluyor, bayat-geçiş
+  GARANTİ. Alarm bekçi kusuru DEĞİL: kör bir fazı doğru bildiriyordu.
+  KESKİN KANIT: 2026-08-24'te alarm 01:59:48'de, `arama_havuzu_zaman_asimi biten=0` olayı
+  02:00:08'de — 20 sn sonra; sonda döngüsü hiç başlamamıştı.
+  NEDEN ÜÇ KEZ YANLIŞ TEŞHİS: metindeki "0.5 sa" bir SESSİZLİK UZUNLUĞU DEĞİL, TESPİT GECİKMESİ
+  TAVANI. `check_and_alarm` 300 sn'lik poll'da koşar, histerezis mandalı tekrarı keser → kaydedilen
+  değer hep İLK TESPİT anındaki gap → (1800, 2100] → 0,5 veya 0,6. 134 kaydın 113'ü (%84) bu ikisi.
+  Gerçek sessizlikler ölçüldüğünde 2,1-2,8 sa, bir vakada 15,2 sa. Mesaj arızanın büyüklüğünü
+  GİZLİYORDU. Ayrıca "günde tam bir kez" bir mekanizma periyodu değil `GUNLUK_ALARM_TAVANI=1`in
+  imzasıdır (mandal kontrolü tavan kontrolünden ÖNCE gelir; tavan öncesi günde 4-14 alarm vardı).
+  ÇÖZÜM (pencere GENİŞLETİLMEDİ, alarm SUSTURULMADI — watchdog.py:48 ikisini de reddediyor;
+  eşitlik de KIRILMADI çünkü iki sabit iki ayrı türetimden geliyor):
+   · v302 — nabız artık "iş bitti" değil "iplik canlı": havuz bekleyişi `HAVUZ_NABIZ_SN=60`
+     kuantumlarına bölündü, her kuantumda `canlilik()` ateşleniyor. TOPLAM-ATALET YASASI
+     DEĞİŞMEDİ (kurtarma hâlâ 1800'de). Kanca üç kör fazın üçüne de geçirildi; `_nabiz` tanımı
+     `prefill_incumbents` çağrısının ÜSTÜNE taşındı (yapısal kusurun kendisiydi).
+   · v303 — mesaj artık aşımı çözünen bir birimde yazıyor ve rakamın İLK TESPİT değeri olduğunu
+     İTİRAF ediyor. Yeni `mechanism_stale_since.json` + `mechanism_recovered` olayı: sessizliğin
+     GERÇEK uzunluğu bittiğinde ölçülüp yazılıyor (eskiden geriye dönük ÖLÇÜLEMEZdi —
+     `watchdog_alarm_gunluk.json` gün dönüşünde sıfırlanır, `mechanism_beats.json` yalnız SON
+     damgayı tutar). `gap_h` korundu (okuyucuları api.py:3258/3285, selfreview.py:284).
+  Çiviler v302 (9 test) + v303 (4 test); SEKİZ mutasyonla sınandı, ikisi ilk turda HAYATTA KALDI
+  (prefill kancası ve ilk-tespit uyarısı) ve çiviler sertleştirildi.
+  AÇIK KALAN (ölçülmedi, devredildi): taze walk-forward 2026-08-06 civarında neden yavaşladı
+  (865-1276 sn → 2259-3185 sn), ve 08-23→08-24 arasında ısınma önbelleğini ne geçersizleştirdi.
+- **"hiçbir öneri OOS kapısını geçemiyor" — ÖNCÜL YANLIŞTI, KAPI İKİ KEZ SHIP ETTİ (2026-08-25, v304):**
+  Operatör sorusu panodaki `analytics.py` karne cümlesinden geliyordu:
+  "hiçbir öneri OOS kapısını geçemedi — canlı strateji hâlâ v1 (parent yok)". İKİ İDDİA DA YANLIŞ.
+  ÖLÇÜLDÜ (canlı defter): 60 hipotez — rejected_by_backtest 32 · rejected_by_guard 25 ·
+  rejected_by_confirmation 1 · **superseded 2**. İki superseded'in ikisinde de `reject_reasons: None`:
+      H00026  entry.pivot_proximity_pct  v1→v2  realized_delta −0,0364
+      H00029  entry.w_prox               v2→v3
+  Canlı `strategy.yaml`: version 5 · parent 3 · `pivot_proximity_pct: 2,3` · `w_prox: 0,15`.
+  YANİ İKİ DÜĞME DE BUGÜN CANLIDA. Bağımsız çapraz kanıt: aynı gün karşı-olgusal kum havuzu
+  koşumunda `default_strategy()` ile canlıyı karşılaştırdığımda ayrışan parametreler TAM OLARAK
+  bu ikisiydi — canlı stratejinin varsayılandan farkının TAMAMI öğrenme kapısının ürünü.
+  KÖK NEDEN — SONRADAN EKLENEN HİJYEN, ESKİ SAYACIN VARSAYIMINI GEÇERSİZ KILDI:
+  `ever_shipped` = live + promoted + rolled_back idi; `superseded` YOKTU. Ama
+  `rollback.sweep_orphan_hypotheses` YALNIZ `status == "live"` olanı `superseded`e taşır ve bir
+  hipotez ancak SHIP ETTİYSE `live` olur. Süpürme, öğrenmenin kanıtını karneden SESSİZCE siliyordu.
+  Fark edilmemesinin sebebi arıza biçiminin makul bir cümle olması: "sistem hiç öğrenmiyor".
+  ÜSTELİK AYNI DOSYA DOĞRUSUNU BİLİYORDU: `deflate_why` superseded'i ship sayıyor ve docstring'i
+  "defterde ship VARDI (2 superseded)" diyor. Tek dosya, iki ship tanımı; operatöre yanlış olan
+  servis ediliyordu — `iki-kapi-karistirma-tuzagi` sınıfının yeni bir örneği.
+  DÜZELTİLDİ: `analytics.SHIP_DURUMLARI` TEK KAYNAK (her iki fonksiyon oradan okur); sürüm iddiası
+  artık `config.load_strategy()`ten ÖLÇÜLÜYOR (ölçülemezse cümle sürümden hiç bahsetmiyor — eski
+  hâli sabit bir "v1" literaliydi). Çivi v304 (5 test) BEŞ mutasyonla sınandı; anti-sürüklenme
+  ayağı süpürmenin HEDEF durumunu kaynaktan okuyup ship kümesinde arıyor.
+  KAPININ KENDİSİ SAĞLAM — ayrı ve ayakta kalan bulgu: kapıya ULAŞAN adaylar gerçekten ölçülüyor
+  (30/30 olasılıksal hüküm, n_valid 1965-2000, fail-closed dalına SIFIR giriş). Ölçülen p medyanı
+  0,2605 (eşik `probgate.P_BASE = 0.80`); 35 satırın yalnız 8'inde ortalama ΔS pozitif. Eşik
+  0,80→0,70 yalnız iki adayı kurtarırdı ve tam-ölçülebilir tek eşik-geçen aday (H00032,
+  exit.breakeven_r 1,0→0,0, arama p=0,909) TEYİT bacağında p=0,1395 / ΔS −0,0796 ile öldü.
+  Yani kapı "reddediyor", "ölçemiyor" DEĞİL.
+  KAPI KİMLİĞİ (çok-kapı tuzağına karşı çivilendi): resmî yol `reflect._gate_eval` →
+  `oos_pipeline.evaluate_search` → `probgate` P_BASE=0,80. BUNLAR O KAPI DEĞİL: `hermes`teki
+  arka-plan rejim ön-elemesi (`hermes_bg_proposal_rejected`, 48 kayıt — hypotheses.jsonl'a satır
+  YAZMAZ, 2026-08-14'te çivileme dalıyla değiştirildi), teyit kapısı (P_CONFIRM=0,70), ve
+  "0,995" (ayrı bir sabit DEĞİL — `min(P_CEIL, 1 - alpha_family/k)` formülünün K=40'taki değeri,
+  yalnız aramanın kayıtsız içinde).
+  AÇIK KALAN (ölçülmedi, birincil kök neden HENÜZ OTURMADI — iki şüpheci ayrıştı): (a) "arama
+  uzayı yapısal olarak kapalı" tezi üç karşı-örnekle çürütüldü (H00028/H00043/H00048 gerçek ölçüm
+  üretti), yerine "tek donmuş kanıt penceresi → yerel optimal" önerildi; ikisi arasında karar
+  verecek ölçüm YAPILMADI. (b) rejim örneklem kuraklığı GERÇEK: 893 işlemde trend_down=0,
+  high_vol=0, chop teyit dilimi=0 — `params_by_regime`in dördünün de boş olmasının mekanik sebebi.
+  (c) 179 aramanın 119'u hüküm üretmeden kayboldu (`hermes_search_start` 179 vs `_done` 60) ve
+  `arama_havuzu_zaman_asimi` bugün hâlâ ötüyor. (d) OOS penceresi 2026-04-30'da bitiyor; aradaki
+  ~4 ay hiç denenmedi — "yerel optimal" hükmü YALNIZ o donmuş pencere için geçerli.

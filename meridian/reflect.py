@@ -1694,6 +1694,23 @@ def _pool_probe_job(args: dict) -> tuple:
 # bayrak bayatlamadan, aynı gece penceresi içinde olur.
 HAVUZ_ATALET_SN = float(os.environ.get("MERIDIAN_HAVUZ_ATALET_SN", "1800"))
 
+# CANLILIK KUANTUMU (v302, 2026-08-25). Bekleyiş ARTIK TEK BLOK DEĞİL: `_cf.wait` bu kuantumla
+# turlanır ve her turda `canlilik()` ateşlenir. TOPLAM-ATALET YASASI DEĞİŞMEDİ — kurtarma hâlâ
+# HAVUZ_ATALET_SN'de tetiklenir, yalnız bekleyiş artık GÖZLENEBİLİR.
+#
+# NEDEN VAR: `beat("hermes_poll")` yalnız İŞ BİTİNCE atılıyordu; havuz bekleyişi ise tanım gereği
+# "hiçbir iş bitmeyen" penceredir. HAVUZ_ATALET_SN (1800) ile bekçi penceresi
+# `watchdog.EXPECTED["hermes_poll"]` (1800) BİREBİR EŞİT olduğundan, havuz ataleti her çarptığında
+# bayat-geçiş GARANTİYDİ. Alarm bekçi kusuru değildi: kör bir fazı doğru bildiriyordu.
+# (2026-08-24 kanıtı: alarm 01:59:48, `arama_havuzu_zaman_asimi biten=0` olayı 02:00:08.)
+#
+# EŞİTLİK KIRILMADI ve bu bilinçli: iki sabit İKİ AYRI türetimden geliyor (biri incumbent-walk
+# ~90 sn ölçümünün 20 katı, diğeri poll sessizliği tavanı). Doğru çare eşiği oynatmak değil,
+# ARADA nabız atmaktır — eşiği oynatmak arızayı gizlerdi, ölçmezdi.
+# 60 sn seçimi: bekçinin tespit kadansı 300 sn (scheduler poll), yani 60 sn'lik nabız tespit
+# çözünürlüğünün beş katı sık — tespit penceresinde her zaman en az bir nabız bulunur.
+HAVUZ_NABIZ_SN = float(os.environ.get("MERIDIAN_HAVUZ_NABIZ_SN", "60"))
+
 
 class _HavuzAtaleti(RuntimeError):
     """Havuz toplam-atalet tavanına çarptı: son bitenden beri HAVUZ_ATALET_SN geçti, hiçbir iş bitmedi."""
@@ -1705,16 +1722,35 @@ class _HavuzAtaleti(RuntimeError):
         self.bekleyen, self.biten = bekleyen, biten
 
 
-def _havuz_sonuclari(ex, jobs: list[dict]):
+def _havuz_sonuclari(ex, jobs: list[dict], canlilik=None):
     """`ex.map` YERİNE toplam-atalet bekçili sonuç akışı. Tamamlanma SIRASI korunmaz ve bu
     ÖNEMSİZDİR: iki tüketici de sonucu ANAHTARLI önbelleğe yazar (_PROBE_CACHE/_INC_CACHE —
     `_havuz_tavani` docstring'indeki determinizm beyanı anahtara dayanır, sıraya değil). Bir işçi
-    istisnası `f.result()` ile aynen yükselir (ex.map ile aynı sözleşme)."""
+    istisnası `f.result()` ile aynen yükselir (ex.map ile aynı sözleşme).
+
+    `canlilik`: bekleyişin İÇİNDEN, HAVUZ_NABIZ_SN'de bir ateşlenen geri-çağırma (v302).
+    "Bir iş bitti" DEMEZ — "bu iplik canlı ve bekliyor" der; bekçinin gerçekte sorduğu soru budur.
+    Verilmezse davranış eskisiyle birebir aynıdır (geriye uyum: testler, diğer tüketiciler)."""
     import concurrent.futures as _cf
     kalan = {ex.submit(_pool_probe_job, j) for j in jobs}
     biten = 0
     while kalan:
-        done, kalan = _cf.wait(kalan, timeout=HAVUZ_ATALET_SN, return_when=_cf.FIRST_COMPLETED)
+        # Bekleyiş kuantumlara BÖLÜNÜR ama tavan TOPLAM-ATALETTİR: `atalet` yalnız hiçbir iş
+        # bitmediğinde birikir, biten ilk iş onu sıfırlar (yasa dosya başında, değişmedi).
+        atalet, done = 0.0, set()
+        while True:
+            kuantum = min(HAVUZ_NABIZ_SN, HAVUZ_ATALET_SN - atalet)
+            if kuantum <= 0:
+                break
+            done, kalan = _cf.wait(kalan, timeout=kuantum, return_when=_cf.FIRST_COMPLETED)
+            if done:
+                break
+            atalet += kuantum
+            if canlilik is not None:
+                try:
+                    canlilik()
+                except Exception:  # sessiz-yutma: nabız yazımı bir TELEMETRİ işidir; disk/kilit hatası aramanın kendisini öldürmemeli, ölçülmüş sonucu telemetri arızasına kurban etmek YASA 4'ün tersidir
+                    pass
         if not done:                       # tavan penceresi boyunca SIFIR ilerleme → havuz ölü
             raise _HavuzAtaleti(bekleyen=len(kalan), biten=biten)
         for f in done:
@@ -1737,7 +1773,7 @@ def _havuzu_oldur(ex) -> None:
         pass
 
 
-def _parallel_prefill_probes(probes, current, version, goal, w, regime) -> None:
+def _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik=None) -> None:
     """Sonda walk-forward'larını havuzda ÖNCEDEN hesaplayıp _PROBE_CACHE'e doldurur; ana döngü
     değişmeden (deterministik sıra + K-ceza + erken-en-iyi seçimi) önbellekten tüketir."""
     if os.environ.get("MERIDIAN_PARALLEL_PROBES") != "1" or len(probes) < 2:
@@ -1764,7 +1800,7 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime) -> None:
         # sonsuza dek bekler — asılı-arama vakasının mekanizmasının ta kendisi. Kapatma üç yolda da
         # AÇIK: normal (bekle — işler bitti, join anlık), atalet (öldür), istisna (öldür + yeniden fırlat).
         ex = ProcessPoolExecutor(max_workers=workers, mp_context=ctx, initializer=_pool_worker_init)
-        for key, wf in _havuz_sonuclari(ex, jobs):
+        for key, wf in _havuz_sonuclari(ex, jobs, canlilik=canlilik):
             _PROBE_CACHE[key] = wf
         ex.shutdown()
         _probe_disk_save()
@@ -1789,7 +1825,7 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime) -> None:
 
 
 def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
-                       windows: tuple | None = None) -> dict:
+                       windows: tuple | None = None, canlilik=None) -> dict:
     """Boşta incumbent ön-hesabı: sıradaki muhtemel yansımaların (global + canlı rejim + ufku dolu
     arka plan rejimi) incumbent walk'ları ÖNCEDEN hesaplanıp diske yazılır. Yansıma tetiklendiğinde
     kapı sıfır beklemeyle açılır; boş CPU bileşik çalışır. Havuz açıksa varyantlar paralel; değilse
@@ -1824,7 +1860,7 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
             # blokla AYNI: bu havuz da hermes iş parçacığını sonsuza dek bekletebiliyordu.
             ex = ProcessPoolExecutor(max_workers=min(len(jobs), _havuz_tavani(3)), mp_context=ctx,
                                      initializer=_pool_worker_init)
-            for key, wf in _havuz_sonuclari(ex, jobs):
+            for key, wf in _havuz_sonuclari(ex, jobs, canlilik=canlilik):
                 _INC_CACHE[key] = wf
                 computed += 1
             ex.shutdown()
@@ -1847,8 +1883,17 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
             missing = [(k, er) for k, er in missing if k not in _INC_CACHE]
     for _k, er in missing:
         if _k not in _INC_CACHE:
+            # (2) NUMARALI KÖR FAZ (v302): havuz atalete çarpınca akış BURAYA düşer ve her
+            # `_wf_cached` bir TAM walk-forward'dır. Canlıda ölçüldü: 02:00:08 → 03:24:33
+            # arası 5065 sn / 2 walk-forward, sıfır nabız. Havuz bekleyişini kuantumlamak bu
+            # bacağı KAPSAMAZ — burası havuz değil, sıralı hesap. Her iş bitiminde nabız.
             _wf_cached(params, version, bars, index, goal, by_regime, windows=w, eval_regime=er)
             computed += 1
+            if canlilik is not None:
+                try:
+                    canlilik()
+                except Exception:  # sessiz-yutma: telemetri hatası ön-hesabı öldürmemeli; sonuç zaten _INC_CACHE'e yazıldı, kaybolan yalnız bir nabızdır
+                    pass
     if computed:
         from . import obs as _obs
         _obs.log("incumbents_prefilled", computed=computed, cached=cached,
@@ -1861,6 +1906,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                               on_probe=None, regime: str | None = None,
                               max_minutes: float | None = None,
                               deadline_ts: float | None = None,
+                              canlilik=None,
                               record_session: bool = True) -> dict:
     """Walk the incumbent ONCE, then probe up to `budget` single-variable candidates (magnitude-first,
     breadth across UCB-ranked knobs) through the SAME OOS gate. Returns the best gate-CLEARING probe (or
@@ -2029,7 +2075,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
             planned.append(sig)
             fresh_planned += 1
     probes = planned
-    _parallel_prefill_probes(probes, current, version, goal, w, regime)
+    _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik=canlilik)
     _t0 = _time.time()
     _max_min = float(os.environ.get("MERIDIAN_SEARCH_MAX_MIN", "35"))
     _fresh_done = _skipped_fresh = 0

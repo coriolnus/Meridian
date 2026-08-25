@@ -312,6 +312,36 @@ def advance(per: dict, d, dstr: str) -> dict:
     return {"open": len(still), "resolved": len(resolved)}
 
 
+def defter_ufku() -> dict:
+    """Defterin KAPSADIĞI tarih aralığı — `arming`in PIT kapısının OKUYUCUSU (YASA 6).
+
+    `earnings.takvim_ufku()` ile ÇAPRAZLANIR: takvim defterin başlangıcından SONRA başlıyorsa,
+    nokta-zaman çapası zorunlu tutan kurulumlar (episodic_pivot, pead) defterin o bölümünde
+    ateşleyemez ve "kanıt birikmiyor" görünürler. İki ufuk yan yana konmadan o cümle
+    kurulamıyordu; tek başına hiçbiri yeterli değil, kıyas ikisini de gerektiriyor.
+
+    AÇIK + ÇÖZÜLMÜŞ satırların İKİSİ de sayılır (`surum_dokumu` emsali): kapsama sorusu
+    kanıtın tamamına aittir."""
+    ilk = son = None
+    n = 0
+    for r in list(store.read_json(OPEN_FILE, [])) + list(store.read_jsonl(LEDGER)):
+        if not isinstance(r, dict):
+            continue
+        d = r.get("date")
+        if not d:
+            continue
+        d = str(d)[:10]
+        n += 1
+        if ilk is None or d < ilk:
+            ilk = d
+        if son is None or d > son:
+            son = d
+    if not n:
+        return {"ilk": None, "son": None, "n": 0,
+                "neden": "karşı-olgusal defter BOŞ — ufuk ölçülemez (uydurma aralık yok)"}
+    return {"ilk": ilk, "son": son, "n": n, "neden": None}
+
+
 def surum_dokumu() -> dict:
     """Defterin STRATEJİ SÜRÜMÜ kırılımı — `strategy_version` damgasının OKUYUCUSU (YASA 6).
 

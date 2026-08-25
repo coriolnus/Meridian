@@ -214,8 +214,14 @@ def report() -> dict:
             never.append(name)                 # bozuk damga = hiç yok say (dürüst en-kötü varsayım)
             continue
         if gap > max_gap:
+            # HAM SANİYE + AŞIM (v303): `gap_h` tek başına ARIZAYI GİZLİYORDU. round(x,1) hem
+            # 1810 sn'yi hem 1800 sn'lik pencereyi "0.5" yapar → "0.5 sa (pencere 0.5 sa)".
+            # Kıl payı bir aşımla saatlerce süren bir aşım aynı satırı üretiyordu; teşhis
+            # üç kez yanlış yöne gitti. `gap_h` KORUNDU (mevcut okuyucular: api.py:3258/3285,
+            # selfreview.py:284) — yanına ayırt eden iki alan eklendi.
             satir = {"name": name, "gap_h": round(gap / 3600, 1),
-                     "expected_h": round(max_gap / 3600, 1)}
+                     "expected_h": round(max_gap / 3600, 1),
+                     "gap_s": int(gap), "asim_s": int(gap - max_gap)}
             sus = _askida_mi(name)
             if sus:
                 askida.append({**satir, **sus})
@@ -238,6 +244,33 @@ def report() -> dict:
 
 
 ALARMED_FILE = "watchdog_alarmed.json"
+# BAYATLIĞIN BAŞLANGICI (v303) MANDALIN İÇİNDE TAŞINIR — ayrı dosya AÇILMADI ve bu iki yasanın
+# kesişimidir: YASA 6 (okuyucusuz artefakt yok) ve v53 çivisi (bekçi yalnız kendi beat/alarm
+# dosyalarını sahiplenir). `ALARMED_FILE` zaten "ŞU AN bayat olan mekanizmalar" kümesidir;
+# "ne zamandan beri" bilgisi o kümenin doğal bir alanıdır, yeni bir varlık değil.
+# NEDEN GEREKLİ: mandal (`if ad in alarmed: continue`) tekrarı keser, dolayısıyla deftere yazılan
+# gap HER ZAMAN İLK TESPİT anındaki değerdir — sessizlik 15 saat sürse de "0.5 sa" yazılır.
+# Bu damga olmadan "gerçekte ne kadar sustu" sorusu GERİYE DÖNÜK ÖLÇÜLEMEZ kalıyordu
+# (`mechanism_beats.json` mekanizma başına yalnız SON damgayı tutar).
+# ALARM_GUNLUK_FILE'a KONMADI: o dosya gün dönüşünde sıfırlanır ve tam da önemsediğimiz vaka
+# (gece yarısını aşan sessizlik) orada kaybolurdu.
+# ŞEKİL GEÇİŞİ GERİYE UYUMLU: dosya liste iken sözlüğe döndü; her iki şekilde de `set(...)`
+# aynı mandal kümesini verir (sözlükte anahtarlar üzerinde gezer), yani eski dosyayı okuyan
+# koşum kırılmaz ve ilk yazımda kendiliğinden yeni şekle geçer.
+
+
+def _sure(saniye) -> str:
+    """Süreyi ÇÖZÜNEN bir birimde yazar. `round(x/3600,1)` 1810 sn ile 1800 sn'yi aynı gösteriyordu;
+    bu yardımcı büyüklüğe göre birim seçer, böylece kıl payı aşım ile saatlerce aşım AYRIŞIR.
+    Ölçülemeyen için "?" — uydurma sayı yok."""
+    if saniye is None:
+        return "?"
+    s = int(saniye)
+    if s < 120:
+        return f"{s} sn"
+    if s < 7200:
+        return f"{s // 60} dk"
+    return f"{s // 3600} sa {(s % 3600) // 60} dk"
 
 
 def _bugun(now: float | None = None) -> str:
@@ -299,20 +332,62 @@ def check_and_alarm() -> None:
             continue                          # HİSTEREZİS: aşım sürüyor, aynı olgu ikinci kez anlatılmaz
         satir = _satir(ad)
         satir["son_gap_h"] = x["gap_h"]
+        satir["son_gap_s"] = x.get("gap_s")
         kirli = True
+        # İLK TESPİT DAMGASI: sessizliğin BAŞLANGICI = şimdi - o anki gap. Toparlanmada gerçek
+        # uzunluk buradan ölçülür. Zaten kayıtlıysa DOKUNULMAZ (aynı sessizlik sürüyor).
         if int(satir.get("alarm") or 0) >= GUNLUK_ALARM_TAVANI:
             # TEKİLLEŞTİRME TAVANI: bastırıldı ama KAYITLI — sayaç panoda görünür, hüküm kaybolmaz.
             satir["bastirilan"] = int(satir.get("bastirilan") or 0) + 1
             continue
         satir["alarm"] = int(satir.get("alarm") or 0) + 1
+        # METİN AŞIMI SÖYLER ve rakamın NE OLDUĞUNU itiraf eder. Eski metin ("0.5 sa (pencere
+        # 0.5 sa)") iki aynı sayı basıyor, bir bekçi arızası gibi okunuyor ve arızanın
+        # büyüklüğünü gizliyordu — 300 sn'lik poll + mandal yüzünden yazılan değer
+        # SESSİZLİĞİN UZUNLUĞU DEĞİL, İLK TESPİT anındaki gap'tir ve (pencere, pencere+300]
+        # aralığına çakılıdır. Gerçek uzunluk `mechanism_recovered` olayında ölçülür.
         obs.alarm("MECHANISM_STALE",
-                  f"mekanizma gecikti: {ad} — {x['gap_h']} sa (pencere {x['expected_h']} sa)",
-                  mechanism=ad, gap_h=x["gap_h"])
+                  f"mekanizma gecikti: {ad} — nabız {_sure(x.get('gap_s'))} sessiz "
+                  f"(pencere {_sure(max(0, int(x['gap_s']) - int(x['asim_s'])))}, "
+                  f"aşım {_sure(x.get('asim_s'))}). Bu değer İLK TESPİT anına aittir; "
+                  "sessizlik sürüyor olabilir — gerçek uzunluk `mechanism_recovered` olayında.",
+                  mechanism=ad, gap_h=x["gap_h"], gap_s=x.get("gap_s"), asim_s=x.get("asim_s"))
     # GÜN DÖNÜŞÜ DE BİR DEĞİŞİKLİKTİR: dünkü defter diskte kalırsa `api._alarm_gunluk` bugünün
     # sayaçları yerine dünün tablosunu servis eder ("bugün 7 alarm" diye okunan dünkü sayı).
     if kirli or store.read_json(ALARM_GUNLUK_FILE, {}).get("gun") != doc["gun"]:
         store.write_json(ALARM_GUNLUK_FILE, doc)
-    store.write_json(ALARMED_FILE, sorted(now_stale))
+    # TOPARLANMA ÖLÇÜMÜ (v303): mandal yüzünden alarm metnindeki sayı hep ilk-tespit değeridir.
+    # Sessizliğin GERÇEK uzunluğu ancak BİTTİĞİNDE bilinir; burada ölçülüp bir kez yazılır,
+    # yoksa bilgi hiçbir yerde kalmıyordu. Okuyucusu: olay defteri + teşhis (YASA 6).
+    # ŞEKİL SAVUNMASI (dosyanın kendi yasası): bekçi bir HİJYEN aracıdır, karar kaynağı değil.
+    # Bozuk/yabancı bir şekil yüzünden istisna atmak bekçiyi susturur VE çağıran scheduler poll'unu
+    # yanında götürür (`_gunluk_oku` docstring'i aynı gerekçeyi taşıyor). Üç şekil de kabul edilir:
+    # sözlük (yeni), liste (eski — damga yok, bu turda doğar), başka her şey (yok sayılır).
+    # Değerler de tek tek süzülür: sözlük olmayan bir değer damgasız sayılır, satırı düşürmez.
+    _ham = store.read_json(ALARMED_FILE, [])
+    _since = ({a: v for a, v in _ham.items() if isinstance(v, dict)}
+              if isinstance(_ham, dict) else {})
+    _simdi = _now()
+    for x in rep["stale"]:
+        ad = x["name"]
+        if ad not in _since:                  # sessizlik BURADA başladı (şimdi - o anki gap)
+            _since[ad] = {"ts": _simdi - float(x.get("gap_s") or 0), "ilk_gap_s": x.get("gap_s")}
+    for ad in [a for a in _since if a not in now_stale]:
+        # `bas` SÖZLÜKTÜR: değişmez yukarıdaki okuma süzgecinde kurulur (sözlük olmayan değer
+        # `_since`e hiç girmez). Burada İKİNCİ bir tip kontrolü yazılmıştı ve ÖLÜ KODdu —
+        # mutasyon sınamasıyla ölçüldü: iki savunmadan biri kaldırılınca çivi susuyor, çünkü
+        # diğeri her vakayı zaten yakalıyor. Tek kapı, sınanabilir kapıdır.
+        bas = _since.pop(ad, {})
+        try:
+            sess = int(_simdi - float(bas.get("ts")))
+        except (TypeError, ValueError):  # sessiz-yutma: damga bozuksa süre UYDURULMAZ; olay yine yazılır ama süre None gider (UYDURMA YASAĞI)
+            sess = None
+        obs.log("mechanism_recovered", mechanism=ad, sessizlik_s=sess,
+                ilk_tespit_gap_s=bas.get("ilk_gap_s"),
+                beyan=("alarm metnindeki gap İLK TESPİT değeriydi; bu satır sessizliğin "
+                       "GERÇEK uzunluğudur (ölçüm çözünürlüğü: poll kadansı 300 sn)"))
+    # Mandal + damga TEK dosyada: anahtar kümesi eski listeyle birebir aynı işi görür.
+    store.write_json(ALARMED_FILE, {ad: _since.get(ad, {}) for ad in sorted(now_stale)})
     # #8 KORUMA: bu poll'un kadansı (300 sn) bir RİSK kalemi için doğru olan kadanstır —
     # `check_integrity_and_alarm` günde bir kez koşar ve korumasız bir pozisyonu bir SONRAKİ seansa
     # taşırdı. Kendi try'ı var: koruma dedektörünün arızası mekanizma bekçisini GÖTÜREMEZ (aynı

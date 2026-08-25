@@ -243,9 +243,33 @@ def refresh_window(today: dt.date | None = None) -> tuple[str, str]:
     return str(t - dt.timedelta(days=REFRESH_BACK_DAYS)), str(t + dt.timedelta(days=REFRESH_FWD_DAYS))
 
 
+def takvim_ufku() -> dict:
+    """Takvimin KAPSADIĞI tarih aralığı — `days_since_report`in SESSİZ False'unun OKUYUCUSU (YASA 6).
+
+    `days_since_report` veri yokken False döner ve bu DOĞRUDUR (uydurma tetik yok). Ama o False
+    iki AYRI dünyayı tek cevaba katlıyordu: "o gün rapor yoktu" ile "o gün hakkında hiçbir şey
+    bilmiyoruz". Çapayı ZORUNLU tutan kurulumlar (bkz. `arming.PIT_CAPALI_KURULUMLAR`) ikinci
+    dünyada ateşleyemez, ve dışarıdan bu "kurulum hiç sinyal vermedi" gibi görünür.
+
+    ÖLÇÜLDÜ 2026-08-25 (kart EDG-2026-060): takvim 29 tarih taşıyordu, aralık 2026-07-20 →
+    2026-09-11. Karşı-olgusal defter 2022-01-03'ten başlıyor. Yani takvim bir NOKTA-ZAMAN
+    ARŞİVİ DEĞİL, ileriye dönük bir tazeleme önbelleğidir; geçmiş seanslar için çapa sorusu
+    sorulamaz. Bu fonksiyon o sınırı SAYIYA çevirir ki rapor doğru cümleyi kurabilsin."""
+    cal = _load()
+    gunler = sorted({_pair(x)[0] for v in cal.values() for x in (v or [])})
+    if not gunler:
+        return {"ilk": None, "son": None, "n_tarih": 0, "n_sembol": len(cal),
+                "neden": "kazanç takvimi BOŞ — ufuk ölçülemez (uydurma aralık yok)"}
+    return {"ilk": gunler[0], "son": gunler[-1], "n_tarih": len(gunler),
+            "n_sembol": len(cal), "neden": None}
+
+
 def days_since_report(ticker: str, on_date: str, max_days: int = 2) -> bool:
     """PEAD/episodik-pivot çapası: on_date, ticker'ın bir kazanç raporundan sonraki max_days GÜN
-    içinde mi? (rapor günü dahil). Veri yoksa False — kurulum uydurma tetiklemez."""
+    içinde mi? (rapor günü dahil). Veri yoksa False — kurulum uydurma tetiklemez.
+
+    ŞERH: veri yokluğu ile rapor yokluğu bu dönüşte AYNI görünür. Ayrımın sayısı
+    `takvim_ufku()`ndadır ve `arming` raporu oradan okur."""
     try:
         d = dt.date.fromisoformat(str(on_date)[:10])
     except (ValueError, TypeError):  # sessiz-yutma: biçimsiz/eksik tek alan; yalnız bu değer düşer, satır başına uyarı asıl sinyali log seline gömerdi

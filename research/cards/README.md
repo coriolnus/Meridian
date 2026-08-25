@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **72** kart.
 
-### Kayıtlı — ölçüm bekliyor (8)
+### Kayıtlı — ölçüm bekliyor (7)
 
 - **EDG-2026-019** (`registered`) — Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10) aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı…
   · HÜKÜM: 2026-08-09 Rol-1. (Aşağıya bkz: 2026-08-23 kill#1 kaydı — katman kapatma emri)
@@ -31,8 +31,6 @@ Toplam **72** kart.
   · kart: `EDG-2026-058-k-enflasyonu.yaml`
 - **EDG-2026-059** (`registered`) — D6 tip-rampası ölçümü (2026-08-07) `DESIGN.md`de yürürlükte duruyor ama ölçtüğü İKİ GİRDİ de değişti: (a) sevk edilen YÜZ Recursive Sans → **Inter**…
   · kart: `EDG-2026-059-d6-tipografi-tazeleme.yaml`
-- **EDG-2026-060** (`registered`) — OPERATÖR SORUSU (2026-08-25): "sistem son seed'den beri çok gelişti, yeniden bütün planları değerlendirmek gerekmez mi?" ÖLÇÜLDÜ ve soru haklı çıktı:…
-  · kart: `EDG-2026-060-cf-tarih-yeniden-yurutme.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -232,7 +230,7 @@ Toplam **72** kart.
   · HÜKÜM: 2026-08-02 ~22:30 TR — ARŞİV (Rol-1 hükmü; kill#1 tetiklendi): İki yüzeyde de fark CI-0-içi VE |fark|<10bps: Y1 @20 −0,06bps [−2,06,+2,60] · Y2 @20 +0,27bps…
   · kart: `KYS-2026-001-kiyas-kirlenmesi.yaml`
 
-### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (2)
+### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (3)
 
 - **EDG-2026-011** (`askida`) — Aynı gün üretilen adaylar arasında "in-play" olanlar (kazanç-katalizörü yakınlığı + yüksek rvol) diğer adaylardan daha iyi ileri getiri/isabet taşır…
   · HÜKÜM: 2026-08-01 ~10:40 — kill#3 ASKI (K HARCANMADI): in-play aday-gün ÜST SINIRI bile 11-12 << 150.
@@ -240,6 +238,8 @@ Toplam **72** kart.
 - **EDG-2026-018** (`askiya_veri_kapisi`) — İki yaşayan sinyalin (turnover EDG-016 · trend EDG-009) canlı hükmü S&P500 large-cap evreninde ölçüldü.
   · HÜKÜM: 2026-08-02 ~19:30 TR — ADIM-0 DÜŞTÜ (Rol-1 hükmü): (1) KOHORT KURULAMADI: sp500_uyelik_tarihi.csv salt-S&P500 (date,tickers; büyüklük alanı yok; günlük üye 487-507) —…
   · kart: `EDG-2026-018-pit-midcap-ust-sinir.yaml`
+- **EDG-2026-060** (`judged`) — OPERATÖR SORUSU (2026-08-25): "sistem son seed'den beri çok gelişti, yeniden bütün planları değerlendirmek gerekmez mi?" ÖLÇÜLDÜ ve soru haklı çıktı:…
+  · kart: `EDG-2026-060-cf-tarih-yeniden-yurutme.yaml`
 
 <!-- ENDEKS: SON -->
 

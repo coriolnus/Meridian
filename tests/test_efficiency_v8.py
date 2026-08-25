@@ -83,11 +83,24 @@ def test_setup_report_and_evaluate_flow(seeded_sandbox, monkeypatch):
     assert rep["momentum_burst"]["n"] == 12, "cf attribution silahlanınca körleşmemeli"
     assert store.read_json("arming_report.json", {})["measurements"]["episodic_pivot"]["search_p"] == 0.91
     assert "episodic_pivot" not in strat.ARMED_SETUPS                     # ölçüm SİLAHLAMAZ — operatör onayı
-    # insufficient_cf bacağı KORUNDU: aynı uyuyan kurulum, zayıf kanıtla → ölçüm HİÇ koşmaz.
+    # EŞİK-ALTI bacağı KORUNDU: aynı uyuyan kurulum, zayıf kanıtla → ölçüm HİÇ koşmaz.
+    # BU ÇİVİNİN KORUDUĞU ŞEY DAVRANIŞTIR, DİZE DEĞİL (v301, 2026-08-25). Eskiden burada
+    # `status == "insufficient_cf"` yazıyordu; o dize bu kurgu içinde ARTIK YANLIŞ:
+    # `episodic_pivot` PIT-çapalı bir kurulumdur (`earnings.days_since_report` zorunlu) ve
+    # kum havuzunda kazanç takvimi BOŞtur → çapa hiçbir gün çözülemez, yani kanıt "henüz
+    # birikmedi" değil BİRİKEMEZ. Eski dizeyi savunmak, kartın (EDG-2026-060) düzelttiği
+    # yanlış cümleyi teste çivilemek olurdu. Asıl değişmez şudur ve aynen duruyor:
+    # eşik geçilmediyse KAPI ÖLÇÜMÜ KOŞMAZ.
     monkeypatch.setattr(cf, "resolved_rows",
                         lambda entered_only=True: [_cf_row("episodic_pivot", -0.2) for _ in range(12)])
     out2 = arming.evaluate(bars={}, index={})
-    assert out2["measurements"]["episodic_pivot"]["status"] == "insufficient_cf"
+    m2 = out2["measurements"]["episodic_pivot"]
+    assert m2["status"] != "gate_passed", "eşik-altı kanıtla kapı ölçümü KOŞMUŞ — asıl değişmez kırıldı"
+    assert m2.get("search_p") is None, "ölçüm koşmadığı hâlde arama p'si üretilmiş"
+    assert m2["n"] == 12, f"eşik-altı n rapora yansımamış: {m2}"
+    # ve doğru cümle: takvim boş olduğu için 'birikemez', alt sebebiyle birlikte
+    assert m2["status"] == "olculemez_pit_yok" and m2["alt_sebep"] == "takvim_bos", (
+        f"PIT-çapalı kurulum boş takvimde yanlış cümleyle raporlanıyor: {m2}")
 
 
 def test_armed_extra_param_channel_only(seeded_sandbox):
