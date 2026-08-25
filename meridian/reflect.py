@@ -1687,26 +1687,50 @@ def _pool_probe_job(args: dict) -> tuple:
 # HİÇBİR iş bitmediyse havuz ölü sayılır". İlerleyen uzun bir arama (ör. 40 sondalı gece koşusu,
 # saatler sürer) ASLA kesilmez: her biten iş sayacı sıfırlar.
 #
-# EŞİK TÜRETİMDİR, UYDURMA DEĞİL: bir havuz işi TEK walk-forward'dır ve incumbent-walk ~90 sn
-# ÖLÇÜLÜDÜR (`sprint.ARAMA_BAYAT_SAAT` bayatlık eşiği de aynı ölçümden türetildi). 1800 sn = o işin 20 katı —
-# işçi 20 kata kadar yavaşlasa bile (soğuk önbellek + nice(15) + dolu makine) tavana çarpmaz;
-# çarpan havuz, 30 dakikadır TEK iş bitirememiş havuzdur. 30 dk << bayatlık eşiği (6 sa): kurtarma
-# bayrak bayatlamadan, aynı gece penceresi içinde olur.
-HAVUZ_ATALET_SN = float(os.environ.get("MERIDIAN_HAVUZ_ATALET_SN", "1800"))
+# EŞİK TÜRETİMDİR — VE TÜRETİM 2026-08-25'TE YANLIŞLANIP YENİDEN ÖLÇÜLDÜ (v318).
+# ESKİ GEREKÇE: "bir havuz işi TEK walk-forward'dır ve incumbent-walk ~90 sn ÖLÇÜLÜDÜR;
+# 1800 sn = o işin 20 katı". İKİ YERİNDEN BOZUKTU: (1) o ~90 sn `hermes.py`de PANONUN bekleme
+# süresi için düşülmüş bir nottur ve BAŞKA bir hesabı anlatır — havuz işi 251 sembollük SONDA
+# walk-forward'ıdır; (2) doğru sayı ölçülmemiş değildi, `events.jsonl`da 94 satır hâlinde duruyordu.
+#
+# ÖLÇÜM (canlı A1, üç bağımsız kaynak — hepsi TEK bir walk-forward'ın süresi):
+#     45 başarılı `parallel_probes_prefilled` turu (duvar × işçi / n) ...  2279-3042 sn
+#     ardışık `hermes_search_probe` farkı (sıralı yol, 08-17 + 08-21) ...  2487-3185 sn
+#     bu dosyanın kendi notu (`prefill_incumbents`, 5065 sn / 2 walk) ...  2532 sn
+#
+# BEDELİ ÖLÇÜLDÜ: 1800 tek işin ALTINDA kaldığı için ilk bitiş tavana HİÇ yetişemedi — 2026-08-12
+# ile 08-25 arasında 61 atalet olayının 61'inde `biten=0`, sıfır havuz sonucu. Havuz 08-12'ye kadar
+# ÇALIŞIYORDU (son başarı 08-12T07:40, n=10); tavan o gün indi ve SAĞLIKLI bir mekanizmayı öldürdü.
+# Aramanın verimi de aynı gün çöktü: `evaluated` 26/34'ten tam 2'ye indi — tavanın yediği 1800 sn'den
+# sonra `MERIDIAN_SEARCH_MAX_MIN` penceresine yalnız iki taze sonda sığıyor.
+#
+# YENİ TÜRETİM: tavan = ÖLÇÜLEN EN UZUN TEK İŞ × MARJ. Marj 20 değil 3'tür, çünkü artık çarpanın
+# ALTINDAKİ SAYI GERÇEK: 3× soğuk önbellek + nice(15) + dolu makineyi karşılar. Sonuç ~9555 sn
+# (2 sa 39 dk) ve bayatlık eşiğinin (6 sa) ALTINDA KALIR — kurtarma hâlâ bayrak bayatlamadan, aynı
+# gece penceresinde olur; eski yasanın korumak istediği şey buydu ve korunuyor. YASA DEĞİŞMEDİ:
+# tavan hâlâ TOPLAM-ATALETTİR (biten her iş sayacı sıfırlar), yalnız sayı ölçülen işten türüyor.
+# BAĞLAYICI KISIT İLK İŞTİR: ilk bitişten sonra iki işçide tamamlanmalar ~iş/2'de bir gelir ve
+# sayaç sürekli sıfırlanır — yani tavan yalnız "havuz hiç açılamadı" hâlini ölçer.
+HAVUZ_IS_SURESI_OLCULEN_SN = 3185.0   # canlıda gözlenen EN UZUN tek walk-forward (yukarıdaki tablo)
+HAVUZ_ATALET_MARJI = 3.0
+HAVUZ_ATALET_SN = float(os.environ.get("MERIDIAN_HAVUZ_ATALET_SN",
+                                       str(HAVUZ_IS_SURESI_OLCULEN_SN * HAVUZ_ATALET_MARJI)))
 
 # CANLILIK KUANTUMU (v302, 2026-08-25). Bekleyiş ARTIK TEK BLOK DEĞİL: `_cf.wait` bu kuantumla
 # turlanır ve her turda `canlilik()` ateşlenir. TOPLAM-ATALET YASASI DEĞİŞMEDİ — kurtarma hâlâ
 # HAVUZ_ATALET_SN'de tetiklenir, yalnız bekleyiş artık GÖZLENEBİLİR.
 #
 # NEDEN VAR: `beat("hermes_poll")` yalnız İŞ BİTİNCE atılıyordu; havuz bekleyişi ise tanım gereği
-# "hiçbir iş bitmeyen" penceredir. HAVUZ_ATALET_SN (1800) ile bekçi penceresi
+# "hiçbir iş bitmeyen" penceredir. HAVUZ_ATALET_SN (O GÜN 1800; v318'te ~9555) ile bekçi penceresi
 # `watchdog.EXPECTED["hermes_poll"]` (1800) BİREBİR EŞİT olduğundan, havuz ataleti her çarptığında
 # bayat-geçiş GARANTİYDİ. Alarm bekçi kusuru değildi: kör bir fazı doğru bildiriyordu.
 # (2026-08-24 kanıtı: alarm 01:59:48, `arama_havuzu_zaman_asimi biten=0` olayı 02:00:08.)
 #
-# EŞİTLİK KIRILMADI ve bu bilinçli: iki sabit İKİ AYRI türetimden geliyor (biri incumbent-walk
-# ~90 sn ölçümünün 20 katı, diğeri poll sessizliği tavanı). Doğru çare eşiği oynatmak değil,
-# ARADA nabız atmaktır — eşiği oynatmak arızayı gizlerdi, ölçmezdi.
+# EŞİTLİK v318'TE KALKTI (tavan 1800 → ~9555) ama bu bir ÇARE DEĞİL, YAN ETKİDİR: tavan ölçülen
+# iş süresinden türetilince sayı kendiliğinden ayrıştı. Çare hâlâ ARADA NABIZ ATMAKTIR ve v318 bunu
+# GEVŞETMEZ, SIKILAŞTIRIR: bekleyiş artık bekçi penceresinin kat kat üstünde sürebildiğinden,
+# nabız kuantumlanmamış olsaydı v318 bayat-geçişi ortadan kaldırmaz BÜYÜTÜRDÜ. İki yama bu sırayla
+# bağlıdır — v302 olmadan v318 dağıtılamaz.
 # 60 sn seçimi: bekçinin tespit kadansı 300 sn (scheduler poll), yani 60 sn'lik nabız tespit
 # çözünürlüğünün beş katı sık — tespit penceresinde her zaman en az bir nabız bulunur.
 HAVUZ_NABIZ_SN = float(os.environ.get("MERIDIAN_HAVUZ_NABIZ_SN", "60"))
@@ -1765,11 +1789,25 @@ def _havuzu_oldur(ex) -> None:
     özel API'dir; erişilemezse (sürüm değişimi) kalan tek bedel nice(15)'li yetim bir süreçtir
     ve zaman-aşımı olayı zaten beyan edilmiştir. İşçiler yalnız HESAPLAR (donmuş bar önbelleği,
     yazım ebeveynde) — öldürmek hiçbir state yazımını yarıda kesmez."""
+    # SIRA YASADIR — TUTAMAKLAR shutdown'dan ÖNCE YAKALANIR (v317, canlı ölçüm).
+    # `ProcessPoolExecutor.shutdown()` gövdesinin sonunda koşulsuz bir `self._processes = None`
+    # vardır ve `wait` bayrağına BAKMAZ (CPython 3.12 process.py). Yakalama shutdown'dan SONRA
+    # yapılırsa `getattr(ex, "_processes", {})` varsayılan `{}`e DÜŞMEZ — öznitelik VARDIR, değeri
+    # `None`dır — ve `None.values()` AttributeError fırlatıp aşağıdaki yutucuya düşer: `terminate()`
+    # HİÇ ÇAĞRILMAZDI. ÖLÇÜLDÜ (A1, 2026-08-25): 18:56:29'daki atalet olayından sonra iki işçi 19:43'te
+    # hâlâ ayaktaydı — biri %99,8 CPU'da (sonucu artık kimsenin okumayacağı bir walk-forward),
+    # öbürü `anon_pipe_read`de donmuş, ikisi de ~225 MB tutuyor. Kaçağın ÖMRÜ DE ÖLÇÜLDÜ ve
+    # SINIRLIDIR: 20:05'te ikisi de gitmişti — yani süreçler terk edildikten sonra ~47-69 dk daha
+    # yaşıyor (kabaca elde kalan bir walk-forward kadar) ve `terminate()` koştuğu için değil, işleri
+    # bitip terk edilmiş kuyruk yıkıldığı için ölüyorlar. Bedel kalıcı bir sızıntı DEĞİL, atalet
+    # başına ~1 saatlik tam çekirdek + ~450 MB — üstelik tam da sıralı yedek yolun CPU istediği
+    # pencerede, yani `_havuz_tavani`nin uvicorn'a ayırdığı çekirdeği geri alarak.
+    procs = list((getattr(ex, "_processes", None) or {}).values())
     ex.shutdown(wait=False, cancel_futures=True)
     try:
-        for p in list(getattr(ex, "_processes", {}).values()):
+        for p in procs:
             p.terminate()
-    except Exception:  # sessiz-yutma: işçi süreçleri öldürülemedi — havuz yine kapalı (wait=False) ve arama sıralı yolda devam ediyor; bedel nice'lenmiş yetim süreç, zaman-aşımı olayı bunu zaten beyan etti
+    except Exception:  # sessiz-yutma: terminate'in KENDİSİ düştü (izin/yarış) — havuz yine kapalı (wait=False) ve arama sıralı yolda devam ediyor; bedel nice'lenmiş yetim süreç, zaman-aşımı olayı bunu zaten beyan etti. NOT: bu yutucunun eski gerekçesi "sürüm değişiminde _processes'e erişilemezse" diyordu ve YANLIŞLANDI — o dal bir uç durum değil TEK durumdu (yukarıdaki sıra yasası)
         pass
 
 

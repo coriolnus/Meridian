@@ -164,8 +164,10 @@ def _warmup_sprint() -> None:
             v302'de TANIM YUKARI TAŞINDI ve bu bir biçim düzeltmesi DEĞİL, kusurun kendisiydi:
             eskiden `_nabiz` `reflect.prefill_incumbents` çağrısından SONRA tanımlanıyordu, yani
             o fazda nabız atmak YAPISAL olarak imkânsızdı. `prefill_incumbents` havuz bekleyişi
-            tek blokta HAVUZ_ATALET_SN (=1800 sn) sürebilir ve bekçi penceresi de 1800 sn'dir →
-            bayat-geçiş garantiydi. CANLI KANIT: 2026-08-24 alarmı 01:59:48'de düştü,
+            tek blokta HAVUZ_ATALET_SN kadar sürebilir; o gün tavan 1800 sn'ydi ve bekçi penceresi
+            de 1800 sn olduğundan bayat-geçiş garantiydi. (v318 tavanı ölçülen iş süresinden
+            türetip ~9555 sn'ye çıkardı — eşitlik kalktı ama bu nabzı GEREKSİZ kılmaz, tam tersine
+            zorunlu kılar: bekleyiş artık bekçi penceresinin kat kat üstünde sürebiliyor.) CANLI KANIT: 2026-08-24 alarmı 01:59:48'de düştü,
             `arama_havuzu_zaman_asimi biten=0` olayı 02:00:08'de — sonda döngüsü hiç başlamamıştı.
 
             İMZA `*_a, **_k`: aynı geri-çağırma İKİ dikişe birden bağlanıyor — aramanın

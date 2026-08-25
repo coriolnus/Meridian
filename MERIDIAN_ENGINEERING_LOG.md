@@ -62,6 +62,53 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **ARAMA HAVUZU 13 GÜNDÜR SIFIR SONUÇ ÜRETTİ — TAVAN İŞTEN KISAYDI (2026-08-25; sınıf: "eşik,
+  ÖLÇTÜĞÜ mekanizmadan değil BAŞKA bir mekanizmadan türetildi"):** `arama_havuzu_zaman_asimi`
+  olaylarının TAMAMINDA (2026-08-12'den beri **61 olayın 61'i**) `biten=0`. Şüphe kilitlenme/
+  açlık/OOM/`nice(15)`e gitti; ÜÇÜ DE DEĞİL. Canlı adliye: işçiler ÇALIŞIYOR — 487337 `R`
+  durumunda %99,8 CPU, 487340 `S` + `wchan=anon_pipe_read`. **KÖK NEDEN: tavan tek bir işten
+  KISA.** İş başına walk-forward üç bağımsız kaynakta ölçüldü — 45 başarılı prefill turu
+  (duvar×işçi/n) **2279-3042 sn**, ardışık `hermes_search_probe` farkı **2487-3185 sn**,
+  reflect.py'nin kendi notu **2532 sn** — tavan ise **1800 sn**. İlk bitiş tavana yetişemediği
+  için `biten=0` bir arıza BELİRTİSİ değil ARİTMETİK ZORUNLULUKTU. Havuz 08-12'ye kadar
+  ÇALIŞIYORDU (94 başarılı prefill, sonuncusu 08-12T07:40 n=10); tavan o gün indi (`becb03b`,
+  "asılı-arama öz-onarımı") ve ilk aşım 08-12T11:40'ta geldi. **TÜRETİM NEREDE KAYDI:** gerekçe
+  "incumbent-walk ~90 sn ÖLÇÜLÜDÜR × 20" diyordu; o ~90 sn `hermes.py`de PANONUN bekleme süresi
+  için düşülmüş bir nottur ve BAŞKA bir hesabı anlatır. Doğru sayı ölçülmemiş değildi —
+  `events.jsonl`da 94 satırdı, bakılmamıştı. **İKİNCİ, BAĞIMSIZ KUSUR (`_havuzu_oldur` hiçbir
+  işçiyi öldürmüyordu):** `shutdown()` gövdesinin sonunda koşulsuz `self._processes = None` var
+  (`wait` bayrağına BAKMAZ, CPython 3.12); yakalama sonra yapıldığı için `getattr(ex,
+  "_processes", {})` varsayılana DÜŞMEZ (öznitelik var, değeri None) → `None.values()` →
+  `AttributeError` → alttaki `except Exception: pass` yutar → `terminate()` HİÇ ÇAĞRILMAZ.
+  Yutucunun gerekçesi bunu "sürüm değişimi" uç durumu sayıyordu; **TEK durummuş**. Bedel her
+  atalet olayında iki süreç: biri sonucunu kimsenin okumayacağı bir hesapta tam çekirdek yakıyor,
+  öbürü `anon_pipe_read`de, ikisi ~225 MB. ÖMÜR DE ÖLÇÜLDÜ: 20:05'te ikisi de gitmişti — terk
+  edilişten sonra ~47-69 dk (kabaca elde kalan bir walk-forward), `terminate()` koştuğu için
+  değil işleri bitip kuyruk yıkıldığı için. Yani kalıcı sızıntı DEĞİL, atalet başına ~1 saat tam
+  çekirdek + ~450 MB — tam da sıralı yedek yolun CPU istediği pencerede. **YAYILIM:** aramanın verimi de aynı gün
+  çöktü — `evaluated` 26/34'ten TAM 2'ye indi (tavanın yediği 1800 sn'den sonra
+  `MERIDIAN_SEARCH_MAX_MIN=60` penceresine yalnız iki taze sonda sığıyor); 179 `hermes_search_start`
+  karşısında 60 `done`, kayıp 119'un **70'i tek sonda bile koşturamadı**; biten SON arama
+  2026-08-21 18:02. **ÇİVİLER:** `test_havuz_oldurme_kacagi_v317` (davranışsal — atalete çarpan
+  havuzun işçileri ölmüş olmalı; düzenek çivisi: işçiler doğmazsa KURULUMDA düşer, sessiz-yeşil
+  yok) ve `test_havuz_atalet_tavani_v318` (üç bacaklı; ortadaki bilerek DAVRANIŞSAL — gerçek
+  (iş, tavan) oranını 1/10000 ölçekte GERÇEK `_havuz_sonuclari`ndan geçirir, çünkü sabit
+  karşılaştırması totoloji olurdu; üçüncü bacak yasanın İPTAL EDİLMEDİĞİNİ sınar). Dört mutasyonun
+  dördü de yakalandı. Tavan artık kaynakta ADLANDIRILMIŞ bir ölçümden türüyor
+  (`HAVUZ_IS_SURESI_OLCULEN_SN=3185 × HAVUZ_ATALET_MARJI=3` → 9555 sn = 2,65 sa), bayatlık
+  eşiğinin (6 sa) ALTINDA — kurtarma hâlâ aynı gece penceresinde. **SIRA BAĞI:** v318 v302'siz
+  DAĞITILAMAZ — bekleyiş artık bekçi penceresinin kat kat üstünde sürebildiğinden, nabız
+  kuantumlanmamış olsaydı v318 bayat-geçişi ortadan kaldırmaz BÜYÜTÜRDÜ. **AÇIK KALAN (ölçüldü,
+  bu turda kapatılmadı):** (1) `clear_wf_caches()` sonda+incumbent önbelleğini HER seans bar
+  tazelemesinde SİLİYOR — kalıcı sıcak önbellek yok, yani her gün 8-10 taze walk-forward sıfırdan;
+  "08-18→08-23 önbellek-isabetliydi" okuması yanlıştı, 0 sn'lik farklar KALICI önbelleğin değil
+  ÇALIŞAN havuz ön-dolgusunun imzasıydı ve 08-12'de o durdu. (2) `_havuz_tavani` 2026-07-30'da
+  4 işçiden 2'ye düştü (`cpu-2`, A1'de 4 OCPU) ve iş süresini ~1100-1430 sn'den ~2280-3040 sn'ye
+  çıkardı — brief'teki "865-1276 → 2259-3185" basamağı budur, 08-06 değil 07-30'dur ve tavanı
+  imkânsız kılan asıl olaydır. (3) Bugünkü `probe_prefill` aşımları ISINMA SPRİNTİNDEN geliyor
+  (`hermes_runtime` → `coordinate_descent_search`), `hermes.search` sarmalayıcısından değil —
+  o yüzden `hermes_search_start` damgası düşmüyor; "bugün 0 arama" okuması bu yüzden yanıltıcı.
+
 - **HÜKÜM YAZILDI, HİÇBİR KARARA İŞLENMEDİ (2026-08-17; sınıf: `Ö-49` çapa/beyan çürümesi — kart↔hüküm
   yüzeyi):** `EXE-2026-006` ölçümü TAM koşuldu (K=8, altı kill kriteri de geçti) ve hükmü
   `research/olcumler/exe006_limit_bacagi_2026-08-17/HUKUM.md`e yazıldı: **E1 HÜKMÜ YENİDEN AÇILIR**.
