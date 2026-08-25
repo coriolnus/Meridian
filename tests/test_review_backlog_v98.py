@@ -272,8 +272,14 @@ def test_the_reset_literal_matches_production():
     import inspect
     import meridian.adapters.fmp as _fmp
     src = inspect.getsource(_fmp)
+    # ÇAPA GÜNCELLENDİ (2026-08-25, v291): `QUOTA_COOLDOWN_S` sabiti EMEKLİ edildi (kota bloğu artık
+    # saatlik bir sabit değil, sağlayıcının günlük sıfırlaması — `fmp._blok_bitisi`). Eski çapa
+    # kaybolunca `split` tüm kaynağı döndürüyor ve bu çivi hiçbir şey ölçmeden yeşil geçerdi;
+    # yeni çapa AYNI bölgeyi (`_HEALTH` literalinin hemen ardı) işaret eder.
+    _capa = "_blok_bitisi"
+    assert _capa in src, "çapa üretimden kayboldu — bu çivi sessiz-yeşile düşer"
     for k in _HEALTH_FRESH:
-        assert f'"{k}"' in src.split("QUOTA_COOLDOWN_S")[0], f"_HEALTH alanı {k} üretimde yok"
+        assert f'"{k}"' in src.split(_capa)[0], f"_HEALTH alanı {k} üretimde yok"
     assert set(_HEALTH_FRESH) == set(_fmp.health()), \
         "reset literali üretimdeki _HEALTH şemasıyla ayrıştı"
 

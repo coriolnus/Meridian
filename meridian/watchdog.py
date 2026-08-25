@@ -1001,6 +1001,146 @@ def _kapsama_satiri(olaylar: list[dict]) -> dict:
     return satir
 
 
+# ============ SICAK KATMAN ÇIRPINMA SAYACI: SÜREÇLER ARASI SENSÖR =============================
+# FİŞ 3/6 (ORTA). Denetim `coverage_ariza.hotstate.surec_ici_sayac`ı null bırakmıştı, beyan
+# "health().reassert_suppressed okunmadı". ÖLÇÜLEN KÖK okunmamış olması DEĞİL, okunamaz olmasıydı:
+# `hotstate.health()` SÜREÇ-İÇİ bir sözlük döndürür ve sayacı artıran süreç ile onu okuyacak süreç
+# AYNI DEĞİLDİR. Üçü de aynı `state/` hacmini paylaşır ama hiçbiri ötekinin belleğini görmez:
+#   worker            — `MERIDIAN_AUTOSTART_CYCLE=1`; marketstream/barfeed iplikleri BURADA koşar,
+#                       yani sayacı ARTIRAN süreç budur.
+#   pano (dashboard)  — aynı imaj, `state` SALT-OKUNUR bağlı; `/api/diagnostics` bu süreçte koşar,
+#                       yani `hotstate.health()` burada HİÇ dokunulmamış bir sözlüktür (ok=None).
+#   meridian-barsarchive — ayrı systemd birimi; o da `hotstate`in bloklu okumalarını kullanır.
+#
+# NEDEN YENİ ARTEFAKT AÇILMADI (görevin (a) şıkkı): `hotstate` yalnız UÇUCU Redis tutar ve bu sınır
+# depoda İKİ ayrı testle çivilidir (v83/v84: `store.write_*` çağrısı YASAK). Yeni bir
+# `state/hotstate_*.json` o iki çiviyi kırardı; üstelik `codelaw.artifact_graph` okuyucusuz gördüğü
+# an kapı düşerdi. Kalıcı yüzey ZATEN VARDI: `state/events.jsonl`. Yazan `obs`, okuyan bu dosya —
+# sözleşme `ledgers.CONTRACTS["events.jsonl"]`de yazılı ve `watchdog` orada tüketici olarak beyanlı.
+#
+# NEDEN WATCHDOG REDIS'E KENDİ SORMUYOR (görevin (b) şıkkı): ölçülen büyüklük "Redis kaç kez
+# ERİŞİLEMEDİ"dir. Erişilemeyen bir servise bunu sormak tanım gereği imkânsızdır — soru tam da
+# cevabın alınamadığı anlarda sorulur — ve erişilebildiği anda Redis o anların hafızasını tutmaz.
+# `hotstate` DEĞİŞMEZ-1 zaten Redis'i UÇUCU ilan eder: denetim sayacını oraya koymak kalıcı bir
+# iddiayı uçucu bir depoya bağlardı. Ayrıca bekçi YALNIZ GÖZLEMdir; rapora ağ bağımlılığı eklemek
+# onu ölçtüğü arızanın kendisiyle birlikte düşürürdü.
+HOTSTATE_OLAY = "hotstate_down"
+
+
+def _hs_sayi(v):
+    """Olay alanını tam sayıya çevirir; çevrilemezse None. UYDURMA YASAĞI'nın tek satırlık hâli:
+    okunamayan bir alan 0 DEĞİLDİR — 0 "ölçtük, sıfır çıktı" demektir."""
+    if isinstance(v, bool) or v is None:
+        return None
+    try:
+        return int(v)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz alan zaten None döner ve çağıran onu "alansız satır" kovasına ADIYLA sayar — yutulan tek şey istisnanın kendisidir, ölçüm değil
+        return None
+
+
+def hotstate_health_report(gun: int = 1, olaylar: list[dict] | None = None) -> dict:
+    """Redis sıcak katmanının ÇIRPINMA sayacı — süreç-içi yarım + SÜREÇLER ARASI yarım.
+
+    İKİ YARIM AYRI RAPORLANIR ÇÜNKÜ AYRI ŞEYLERİ ÖLÇERLER:
+      `surec_ici` — `hotstate.health()`, YALNIZ bu sürecin gördüğü. Üç hâli vardır ve üçü
+                    birbirine karıştırılmaz: (1) `ok is None` → bu süreç hotstate'e hiç dokunmadı,
+                    sayaç ÖLÇÜLMEDİ (None + neden); (2) `ok` var, alan yok → süreç hotstate'i
+                    kullandı ve hiç bastırma olmadı, bu ÖLÇÜLMÜŞ 0'dır; (3) alan var → değeri.
+      `defter`    — olay defterindeki `hotstate_down` satırları, yani BÜTÜN süreçler. Sayaç süreç
+                    sınırını yalnız burada geçer (bkz. `hotstate._emit_down`).
+
+    SESSİZ 0 YASAK — bu raporun VAR OLMA sebebi. Yerel defterde ölçüldü: 15.865 `hotstate_down`
+    satırının 15.863'ü `suppressed` alanını HİÇ taşımıyor (alan, yeniden-basım kısıtından önce
+    yoktu) ve alanlı iki satırın ikisi de 0. `sum(e.get("suppressed", 0))` yazan bir okuyucu bu
+    defteri "sıfır çırpınma" diye özetlerdi. Alan taşımayan satır SAYILIR ve GÖRÜNÜR kalır; toplam
+    yalnız alanlı satırlardan çıkar ve karışık defterde ALT SINIR olarak beyan edilir.
+
+    `gun`: defter penceresi (gün). `olaylar`: ham satırlar elden verilebilir (turun tek okuması).
+    AĞA UZANMAZ: Redis'e bağlanmaz, ping atmaz — bekçi raporu ölçtüğü arızayla birlikte düşemez."""
+    import os as _os
+    from . import hotstate as _hs
+
+    pid = _os.getpid()
+    h = _hs.health()
+    ok = h.get("ok")
+    if ok is None:
+        surec_ici = {"pid": pid, "ok": None, "bastirilan": None,
+                     "kumulatif_bastirilan": None, "down_basimi": None,
+                     "bastirilan_neden": (
+                         f"bu süreçte (pid {pid}) hotstate hiçbir bağlantı DENEMEDİ "
+                         f"(health()['ok'] is None) — süreç-içi sayaç bu süreçte ÖLÇÜLMEDİ; "
+                         f"sayacı artıran süreç başkasıdır (worker / meridian-barsarchive)")}
+    else:
+        # ALAN YOKLUĞU BURADA ÖLÇÜLMÜŞ 0'DIR: `ok` None değilse bu süreç hotstate'i gerçekten
+        # kullanmıştır, yani "hiç bastırma olmadı" bir gözlemdir, bir boşluk değil.
+        surec_ici = {"pid": pid, "ok": bool(ok), "bastirilan_neden": None,
+                     "bastirilan": int(h.get("reassert_suppressed", 0) or 0),
+                     "kumulatif_bastirilan": int(h.get("suppressed_total", 0) or 0),
+                     "down_basimi": int(h.get("down_emits", 0) or 0)}
+
+    satirlar = [e for e in events_since(gun, olaylar=olaylar)
+                if str(e.get("event")) == HOTSTATE_OLAY]
+    n = len(satirlar)
+    bastirmalar = [_hs_sayi(e.get("suppressed")) for e in satirlar]
+    alanli = [b for b in bastirmalar if b is not None]
+    alansiz = n - len(alanli)
+
+    if n == 0:
+        bastirilan, bastirilan_neden = None, (
+            f"son {gun} günde hiç `{HOTSTATE_OLAY}` satırı yok — sayaç YAYINLANMADI. Bu 'çırpınma "
+            f"yok' DEĞİLDİR: sayaç yalnız bir kopuş kaydıyla dışarı çıkar, dolayısıyla sağlıklı "
+            f"bir katman ile hiç koşmamış bir katman defterde AYNI görünür")
+    elif not alanli:
+        bastirilan, bastirilan_neden = None, (
+            f"{n} `{HOTSTATE_OLAY}` satırının hiçbiri okunabilir bir `suppressed` alanı taşımıyor "
+            f"(alan yeniden-basım kısıtından ÖNCE yoktu) — toplam SIFIR sanılamaz; ölçülen tek şey "
+            f"olay sayısıdır")
+    else:
+        bastirilan, bastirilan_neden = sum(alanli), None
+
+    surecler: dict[str, int] = {}
+    basimlar: dict[str, int] = {}
+    for e in satirlar:
+        p = _hs_sayi(e.get("pid"))
+        if p is None:
+            continue
+        anahtar = str(p)
+        surecler[anahtar] = surecler.get(anahtar, 0) + 1
+        # `down_emits` SÜREÇ ÖMRÜ BOYUNCA ARTAR: pencerede o süreçten görülen EN BÜYÜĞÜ, sürecin
+        # bastığı kenar sayısının en iyi tahminidir (satırları toplamak aynı sayıyı defalarca sayardı).
+        de = _hs_sayi(e.get("down_emits"))
+        if de is not None:
+            basimlar[anahtar] = max(basimlar.get(anahtar, 0), de)
+
+    surecler_neden = None if surecler else (
+        f"{n} satırın hiçbiri `pid` taşımıyor — olaylar SÜRECE bağlanamıyor; 'tek süreç {n} kez "
+        f"koptu' ile '{n} süreç birer kez açıldı' bu defterden ayrılamaz"
+        if n else "süreç kimliği okunacak `%s` satırı yok" % HOTSTATE_OLAY)
+    down_basimi = sum(basimlar.values()) if basimlar else None
+    down_basimi_neden = None if basimlar else (
+        f"satırlar `down_emits` taşımıyor — pencere içindeki {n} satır 'kaç kenar basıldı'ı "
+        f"vermez, yalnız 'bu pencerede kaç kez YAZILDI'ı verir")
+
+    yabanci = sorted(k for k in surecler if k != str(pid))
+    defter = {"pencere_gun": gun, "olay": n,
+              "bastirilan": bastirilan, "bastirilan_neden": bastirilan_neden,
+              "alansiz_satir": alansiz, "alt_sinir": bool(alanli) and alansiz > 0,
+              "surecler": surecler or None, "surecler_neden": surecler_neden,
+              "down_basimi": down_basimi, "down_basimi_neden": down_basimi_neden,
+              "reassert": sum(1 for e in satirlar if e.get("reassert")),
+              "son_hata": (str(satirlar[-1].get("error"))[:120] if n else None)}
+
+    if bastirilan is None:
+        detail = f"süreçler arası sayaç ÖLÇÜLEMEDİ: {bastirilan_neden}"
+    else:
+        detail = (f"süreçler arası sayaç: {bastirilan} bastırılmış kopma"
+                  + (" (ALT SINIR — %d satır alansız)" % alansiz if defter["alt_sinir"] else "")
+                  + (f" · {down_basimi} kenar basımı" if down_basimi is not None else "")
+                  + (f" · süreçler {surecler}" if surecler else f" · {surecler_neden}"))
+    return {"surec_ici": surec_ici, "defter": defter,
+            "capraz_surec": bool(yabanci), "detail": detail}
+
+
 def parity_report(olaylar: list[dict] | None = None) -> dict:
     """Canlı üretim oranları ile beklenen oranların kıyası. Her satır: {check, ok, detail}.
 
@@ -1152,11 +1292,17 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
     _hot_down = [e for e in events_since(1, olaylar=olaylar)
                  if str(e.get("event")) == "hotstate_down"]
     if _hot_down:
+        # SAYAÇ SATIRA GİRER (YASA 6 okuyucusu). Bu satır bugüne dek yalnız OLAY SAYISINI ve son
+        # hatayı yazıyordu; denetimin `surec_ici_sayac = null` bıraktığı yer tam burasıydı. Sayı
+        # olmadan "flap" hükmü tek boyutludur: 40 satır, tek sürecin 40 kopması da olabilir 40
+        # sürecin birer açılışı da — `hotstate_health_report` ikisini AYIRIR ve ayıramadığında
+        # sessizce 0 demek yerine NEDEN taşır.
+        _hs_rap = hotstate_health_report(gun=1, olaylar=olaylar)
         rows.append({"check": "hotstate_sustained_down", "ok": False,
                      "detail": (f"son 24 saatte {len(_hot_down)} `hotstate_down` — Redis sıcak "
                                 f"katmanı flap'te; son hata: "
                                 f"{str(_hot_down[-1].get('error') or '?')[:80]}. İntraday Faz 2-4 "
-                                f"zinciri bu katmana bağlı")})
+                                f"zinciri bu katmana bağlı · {_hs_rap['detail']}")})
 
     # 7d-bis) ÜÇ DAMGA — LOOK-AHEAD İDDİASININ CANLI DENETÇİSİ.
     #     `intraday_shadow._satir` "as_of >= close_ts sonradan denetlenebilir" diye söz veriyor;

@@ -210,6 +210,17 @@ DECLARED_ALIASES = {
     ("shadow_model.py", "r_multiple_expected", "rr_expected"),   # ŞEMA TAKASI
     ("shadow_model.py", "regime_at_plan", "regime"),             # ŞEMA TAKASI
     ("watchdog.py", "armed", "alpaca_submitted"), # "ikisinden biri varsa" kontrolü
+    # OLAY DEFTERİNİN İKİ NEDEN ALANI (2026-08-25, eğri-yazar teşhisi). `events.jsonl`daki iki
+    # AYRI olay türü nedeni iki ayrı alanda taşır: kimi `neden`, kimi `error`. Bu bizim
+    # ürettiğimiz bir ayrışma DEĞİL, defterin tarihsel gerçeği — okuyan taraf hangi olayı
+    # okuduğuna göre dal açmasın diye tek yerde toplanıyor (analytics.py'de şerhi var).
+    ("analytics.py", "neden", "error"),
+    # FİŞ TEKRAR SAYACININ GERİYE UYUMU (2026-08-25, fiş tekilleştirme turu). Tekilleştirme
+    # öncesi yazılmış fiş satırları YALNIZ `ts`/`hafta` taşıyor; yeni satırlar `son_gorulme`/
+    # `son_hafta` taşıyor. Takas defterdeki ESKİ satırları okuyabilmek için — geçiş bitip
+    # eski satırlar düştüğünde bu iki beyan da düşmeli (kalıcı bir çift-ad DEĞİL).
+    ("nous_eval.py", "son_gorulme", "ts"),
+    ("nous_eval.py", "son_hafta", "hafta"),
     # mutasyon koşumu farklı dedektörlerin çıktısını tek biçime indirger: kimi `violations`,
     # kimi `rows` döndürür. Şema ayrışması değil, dedektör arayüzlerinin normalleştirilmesi.
     ("mutation.py", "violations", "rows"),

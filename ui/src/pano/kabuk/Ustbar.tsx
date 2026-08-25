@@ -14,13 +14,27 @@
    tetikli / sakin — üst barda ve HER yüzeyde aynı yerde durur. Eski panoda bu
    `#statuspill`di ve kas hafızası oraya bağlı.
 
-   KRİZ KOLLARI (HALT · Cancel-Open · Flatten · Halt-Learning) BU TURDA BURADA
+   ~~KRİZ KOLLARI (HALT · Cancel-Open · Flatten · Halt-Learning) BU TURDA BURADA
    DEĞİL ve bu bilinçli bir eksiklik, bir unutma değil: dördü de geri alınamaz
    icra emri veriyor (Flatten TÜM pozisyonları kapatır) ve yarım bağlanmış bir
    kol, basıldığında ne yaptığı belirsiz bir koldur. Canlı olan eski panoda
    çalışmaya devam ediyorlar; buraya kendi turlarında, çift onay ve çiviyle
-   gelecekler. Durum hapı bu yüzden yalnız OKUR — ve HALT çekiliyken operatörü
-   kolun gerçekten bulunduğu yere gönderir.
+   gelecekler.~~ — 2026-08-25'te GEÇERSİZ: o "kendi turu" BU TURDUR.
+
+   NE DEĞİŞTİ VE NEDEN: şerhin gerekçesi ("yarım bağlanmış bir kol, basıldığında
+   ne yaptığı belirsiz bir koldur") HÂLÂ DOĞRU — değişen şey kolun artık yarım
+   bağlanmamış olması. Şerh, kolların yokluğunu bir GEÇİCİ hâl olarak tarif
+   ediyordu ve o geçicilik bir bedel ödüyordu: kökün (`/`) yeni panoya çevrilmesi
+   bu dört düğme yüzünden bekliyordu. Acil bir anda operatörün kas hafızasının
+   gittiği yerde o düğmeler YOKSA, yeni pano ne kadar iyi olursa olsun canlıya
+   geçemez. Kollar `KrizKollari.tsx`te; sözleşmeleri (`krizUclari.ts`) uçların
+   gövdesi OKUNARAK yazıldı, çift adımlı onay grameri `kuyruk/KararPaneli.tsx`ten
+   alındı, Flatten ayrı ve daha ağır bir kapıdan geçiyor (`FlattenKapisi.tsx`).
+
+   DURUM HAPI YİNE YALNIZ OKUR ve bu bölünme korunuyor: hap HÂLİ söyler, kollar
+   EYLEMİ taşır. Hap HALT çekiliyken hâlâ müdahale yüzeyine bağ verir; geri alma
+   (`/api/resume`) ise artık ORADA DEĞİL, hapın yanında — `KrizKollari` HALT
+   çekiliyken üst bara bir `DEVAM` düğmesi çıkarır.
    ============================================================================ */
 import { AlertTriangle, CircleDot, OctagonPause } from "lucide-react";
 
@@ -39,9 +53,19 @@ import { cn } from "@/lib/utils";
 import { YUZEYLER, yuzeyYolu } from "../alanlar";
 import { useBugun } from "../durum";
 import Link, { useRota } from "../rota";
+import { KrizKollari } from "./KrizKollari";
 import { LayoutControls } from "./layout-controls";
 import { SearchDialog } from "./search-dialog";
 import { ThemeSwitcher } from "./theme-switcher";
+
+/* MÜDAHALE YÜZEYİNİN ADRESİ ELLE YAZILMAZ — ve bu bir arızanın düzeltmesi (2026-08-25).
+   Burada `"/dashboard/roles/mudahale"` sabiti duruyordu; oysa `mudahale` bölümü
+   `alanlar.ts`te `infrastructure` yüzeyine TAŞINMIŞTI ("Users/Roles bu turda gerçek
+   çok-kullanıcı kavramlarına ayrıldı — kollar oradan buraya taşındı", alanlar.ts:163).
+   Yani HALT çekiliyken durum hapına basan operatör YANLIŞ sayfaya, üstelik o sayfada
+   BULUNMAYAN bir çapaya gidiyordu — hatanın görüneceği tek an, en kötü an.
+   Adres artık kayıttan TÜRETİLİYOR: bölüm bir daha taşınırsa bu bağ onunla taşınır. */
+const MUDAHALE_YOLU = yuzeyYolu("infrastructure", "mudahale");
 
 function DurumHapi() {
   const { veri, hata, oturumDustu, yukleniyor } = useBugun();
@@ -58,9 +82,9 @@ function DurumHapi() {
         // sakin ilan ederdi. Alanın VARLIĞI aranıyor, doğruluğu değil.
         ? { metin: yukleniyor ? "okunuyor…" : "durum ölçülemedi", sinif: "border-border bg-muted text-muted-foreground", Ikon: CircleDot, yol: null }
         : veri.halted
-          ? { metin: "DURDURULDU", sinif: "border-destructive/50 bg-destructive/10 text-destructive", Ikon: OctagonPause, yol: "/dashboard/roles/mudahale" }
+          ? { metin: "DURDURULDU", sinif: "border-destructive/50 bg-destructive/10 text-destructive", Ikon: OctagonPause, yol: MUDAHALE_YOLU }
           : veri.heartbeat?.breaker_tripped
-            ? { metin: "kesici tetikli", sinif: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400", Ikon: AlertTriangle, yol: "/dashboard/roles/mudahale" }
+            ? { metin: "kesici tetikli", sinif: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400", Ikon: AlertTriangle, yol: MUDAHALE_YOLU }
             : { metin: "sakin", sinif: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400", Ikon: CircleDot, yol: null };
 
   const govde = (
@@ -113,8 +137,13 @@ export function Ustbar() {
           </Breadcrumb>
           <SearchDialog />
         </div>
+        {/* SIRA BİR SÖZLEŞMEDİR: `KrizKollari` kendi `DEVAM` düğmesini KENDİ SOLUNA
+            çıkarıyor (gerekçe o dosyanın başlığında). Sağ öbek sağa yaslı olduğu için
+            KRİZ düğmesinin sağ kenara uzaklığı — yani ekrandaki YERİ — HALT çekilse de
+            çekilmese de değişmez. Yeni bir denetim eklenecekse KRİZ'in SOLUNA eklenir. */}
         <div className="flex shrink-0 items-center gap-2">
           <DurumHapi />
+          <KrizKollari />
           <LayoutControls />
           <ThemeSwitcher />
         </div>

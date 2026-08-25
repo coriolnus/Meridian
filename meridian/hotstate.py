@@ -23,7 +23,11 @@ JSON/JSONL defterlerinde yaşar; Redis tamamen silinse hiçbir kalıcı gerçek 
 backtest/recompute'a ASLA girmez; kalıcı öğrenme kaynağı EOD immutable dosya barlarıdır.
 (2) GRACEFUL DEGRADATION: Redis yoksa okuma None (çağıran dosyaya düşer), yazma no-op — ama görünür:
 down olayı yazılır, süregelen kopuş DOWN_REASSERT_S'te bir yeniden basılır (bastırılanlar sayılır;
-çırpınma eşiği aşılırsa DATA_QUALITY alarmı). Girdi hataları (TypeError/ValueError) sağlığı
+çırpınma eşiği aşılırsa DATA_QUALITY alarmı). (3) SAĞLIK SAYAÇLARI SÜREÇ-İÇİDİR: `health()` yalnız
+çağıran sürecin gördüğünü anlatır ve sayacı ARTIRAN süreç (worker) ile onu OKUYAN süreç (pano —
+`state`i salt-okunur bağlar; ayrıca barsarchive birimi) aynı değildir. Sayaç süreç sınırını
+YALNIZ `hotstate_down` olayıyla geçer (pid + down_emits + suppressed_total alanları); okuyucusu
+`watchdog.hotstate_health_report`. Bunun için YENİ ARTEFAKT AÇILMAZ — bkz. DEĞİŞMEZ (1). Girdi hataları (TypeError/ValueError) sağlığı
 DÜŞÜRMEZ — kurt masalı yasağı. Bloklu stream okumaları AYRI client kullanır (hot-path'in 0.5s
 socket_timeout'u bloklu okumayı keser, sahte 'Redis down' churn'ü yapardı). Not: `mrd:ord` beyanı
 kaldırıldı (yazanı/okuyanı olmayan ölü şema okuyucuyu yanıltır; emirlerin gerçek kaynağı
@@ -136,6 +140,11 @@ def _note_down(exc: BaseException) -> None:
         # DOWN_REASSERT_S'te BİR kez yeniden basar, arada bastırılanlar SAYILIR ve bir sonraki
         # kayıtta `suppressed` olarak görünür — sel kesilir, GERÇEK kaybolmaz.
         _HEALTH["reassert_suppressed"] = int(_HEALTH.get("reassert_suppressed", 0)) + 1
+        # KÜMÜLATİF İKİZ. `reassert_suppressed` her basımda SIFIRLANIR (basılan kayıt onu taşır).
+        # Dışarıdan ÖRNEKLEYEN bir okuyucu için sıfırlanan bir sayaç ölçüsüzdür: iki örnekleme
+        # arasındaki tüm bastırmaları kaçırır ve gördüğü 0'ı "çırpınma yok" sanar. Bu ikiz süreç
+        # ömrü boyunca ARTAR, hiç sıfırlanmaz — pencere kaçırsa da toplam kaçmaz.
+        _HEALTH["suppressed_total"] = int(_HEALTH.get("suppressed_total", 0)) + 1
         _maybe_reassert_down()
 
 
@@ -146,16 +155,33 @@ _LAST_DOWN_EMIT: float = 0.0
 
 
 def _emit_down(reassert: bool = False) -> None:
-    """`hotstate_down` olayını yaz ve zaman damgasını güncelle. Bastırılan sayısı KAYITTA görünür."""
+    """`hotstate_down` olayını yaz ve zaman damgasını güncelle. Bastırılan sayısı KAYITTA görünür.
+
+    BU OLAY SAYACIN SÜREÇ SINIRINI GEÇTİĞİ TEK YERDİR (fiş 3/6). `health()` süreç-İÇİ bir sözlük
+    döndürür; sayacı artıran süreç (worker: marketstream/barfeed iplikleri) ile onu okuyacak süreç
+    (pano — `state`i SALT-OKUNUR bağlayan ayrı servis; ayrıca `meridian-barsarchive` üçüncü birim)
+    aynı süreç değildir, yani sözlük kimseye ulaşmaz. Kayıt üç alanı bu yüzden taşır:
+      `pid`             — hangi SÜREÇ çırpındı. Kimliksiz bir sayı toplanamaz: pencerede 40 satır
+                          görmek "bir süreç 40 kez koptu" da olabilir "40 süreç bir kez açıldı" da.
+      `down_emits`      — bu sürecin BAŞLANGICINDAN beri kaç kenar bastığı (kümülatif).
+      `suppressed_total`— bastırılan kopmaların kümülatif toplamı; `suppressed` her basımda
+                          sıfırlandığı için dışarıdan ÖRNEKLEYEN okuyucunun kaçırmayacağı tek ölçü.
+    Okuyucu (YASA 6, aynı tur): `watchdog.hotstate_health_report`.
+
+    YENİ ARTEFAKT AÇILMADI ve bu bilinçlidir: `hotstate` yalnız UÇUCU Redis tutar (DEĞİŞMEZ 1) ve
+    o sınır depoda iki ayrı testle çivili; kalıcı yüzey ZATEN var olan olay defteridir."""
     global _LAST_DOWN_EMIT
     import time as _t
     _LAST_DOWN_EMIT = _t.monotonic()
     bastirilan = int(_HEALTH.get("reassert_suppressed", 0))
     _HEALTH["reassert_suppressed"] = 0
+    _HEALTH["down_emits"] = int(_HEALTH.get("down_emits", 0)) + 1
     try:
         from . import obs
         obs.warn("hotstate_down", url=_mask(_URL), error=_HEALTH["last_error"],
                  reassert=bool(reassert), suppressed=bastirilan,
+                 pid=os.getpid(), down_emits=int(_HEALTH["down_emits"]),
+                 suppressed_total=int(_HEALTH.get("suppressed_total", 0)),
                  down_since=_HEALTH.get("down_since"),
                  detail="Redis sıcak katmanı erişilemez — sistem dosya defterlerine düşüyor "
                         "(kalıcı gerçek kaybı YOK, yalnız intraday okuma yavaşlar)"
@@ -203,7 +229,18 @@ def available() -> bool:
 
 def health() -> dict:
     """Sıcak katman sağlık sayaçlarının KOPYASI: ok (hiç denenmediyse None), okuma/yazma/hata
-    sayaçları, son hata, son damga, kopuş başlangıcı. Ping ATMAZ — anlık yoklama için available()."""
+    sayaçları, son hata, son damga, kopuş başlangıcı. Ping ATMAZ — anlık yoklama için available().
+
+    SÜREÇ-İÇİDİR ve öyle KALIR: bu sözlük yalnız ÇAĞIRAN sürecin gördüğünü anlatır. Çırpınma
+    sayaçlarının süreçler arası okunan hâli `hotstate_down` olayındadır (bkz. `_emit_down`);
+    okuyucusu `watchdog.hotstate_health_report`.
+
+    ÜÇ ÇIRPINMA ALANI VE ÜÇÜNÜN DE YOKLUĞU ANLAMLIDIR — bu yüzden hiçbiri `_HEALTH`in başlangıç
+    değerinde YOKTUR ve 0'a ön-doldurulmaz. `ok is None` iken bir alanın 0 dönmesi "ölçtük, sıfır
+    çırpınma" diye okunurdu; oysa o süreç hiç ölçmemiştir. Anahtar YOK = o olay hiç yaşanmadı:
+      `reassert_suppressed` — son basımdan BERİ bastırılan kopma (her basımda sıfırlanır),
+      `suppressed_total`    — aynı sayacın sıfırlanmayan kümülatif ikizi,
+      `down_emits`          — bu süreçte basılan `hotstate_down` kenarı (kümülatif)."""
     return dict(_HEALTH)
 
 

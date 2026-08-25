@@ -2,8 +2,8 @@
 bütünlük kapıları.
 
 (a) Ne yapar: [start, end] günlük barlarını çok kaynaklı bir zincirden çeker — Massive grouped
-(artımlı tek bar) → Massive custom-bars (~2 yıl içi) → FMP (derin backfill) → Cboe delayed_quotes →
-Nasdaq historical; açık kalan seans için zincirin SONUNDA aynı-akşam Alpaca/IEX bacağı boşluğu
+(artımlı tek bar) → Massive custom-bars (~2 yıl içi) → Cboe delayed_quotes → Nasdaq historical →
+FMP (derin backfill, EN SON — kota tahsisi 2026-08-25); açık kalan seans için zincirin SONUNDA aynı-akşam Alpaca/IEX bacağı boşluğu
 doldurur (otoriter kaynak gelince ezilir). Cboe/Nasdaq ANAHTARSIZ birincil kaynaklardır: hiçbir API
 anahtarı olmadan tam geçmiş gelir. Zincir tazelik-farkındadır: veri döndüren ama istenen pencerenin
 gerisinde kalan kaynak zinciri KESMEZ, en taze sonuç kazanır. HATA ≠ BOŞ: her kolun sonucu
@@ -1969,8 +1969,9 @@ def _merge_repair_bar(ticker: str, bar: dict) -> bool:
 
 def fetch(ticker: str, start: str, end: str, timeout: float = 30.0,
           incremental_ok: bool = False) -> pd.DataFrame:
-    """[Massive grouped artımlı] → [Massive custom-bars, yalnız ~2 yıl içi] → FMP (when keyed —
-    SPLIT-adjusted; dividend DEĞİL) → Cboe (split-adjusted) → Nasdaq.
+    """[Massive grouped artımlı] → [Massive custom-bars, yalnız ~2 yıl içi] → Cboe (split-adjusted)
+    → Nasdaq → FMP (when keyed — SPLIT-adjusted, dividend DEĞİL; kota tahsisi 2026-08-25'te EN SONA
+    alındı: anahtarsız iki kaynak zaten evrenin tamamını sahipleniyordu).
 
     Massive kolları yalnız ayarlama ölçeği ölçülüp uyumlu bulunmuşken devrededir (ölçüm çürütülürse
     zincir HARFİYEN eskisi gibi çalışır ve Massive sadece çapraz-doğrulama alarmı üretir). Derin
@@ -1998,15 +1999,25 @@ def fetch(ticker: str, start: str, end: str, timeout: float = 30.0,
     # doğruysa bu sembol için FMP'ye HİÇ istek atılmaz — kotanın kurtulduğu yer tam olarak burası.
     if incremental_ok and massive.write_enabled():
         chain.append(("massive", lambda: _fetch_massive(ticker, end, timeout)))
-    # SEMBOL-BAŞINA YAKIN DÖNEM: Massive ÖNCE, FMP sonra (kota tahsis politikası 2026-07-29 — FMP
-    # kotası bilgi katmanına ayrıldı). 2 yıldan eski başlangıç isteyen çağrılar bu kola HİÇ girmez:
+    # SEMBOL-BAŞINA YAKIN DÖNEM: Massive ÖNCE, FMP EN SONDA (kota tahsis politikası 2026-07-29,
+    # sıra 2026-08-25'te fiilen uygulandı). 2 yıldan eski başlangıç isteyen çağrılar bu kola HİÇ girmez:
     # Massive orada yarım seri döndürür ve sessizce kısa geçmiş yazmak, boş dönmekten çok daha kötüdür.
     if massive.write_enabled() and massive.covers(start):
         chain.append(("massive_hist", lambda: _fetch_massive_hist(ticker, start, end, timeout)))
-    if fmp.available() and not fmp.quota_blocked():   # kota dolduysa 250 boş isteği daha atma
-        chain.append(("fmp", lambda: _fetch_fmp(ticker, start, end, timeout)))
     chain += [("cboe", lambda: _fetch_cboe(ticker, timeout)),
               ("nasdaq", lambda: _fetch_nasdaq(ticker, start, end, timeout))]
+    # ---- FMP EN SONDA (2026-08-25, v291 bütçe turu) --------------------------------------------
+    # KARAR 2026-07-29'DA VERİLMİŞTİ, YARIM UYGULANMIŞTI: "FMP kotası BİLGİ katmanına ayrıldı" denip
+    # Massive öne kondu ama FMP kolu cboe/nasdaq'ın ÖNÜNDE bırakıldı. Ölçüm (operatör brief'i,
+    # 2026-08-25): bu kol günde 253 çağrı yakıyordu ve `bars_source.json` FMP'nin HİÇBİR sembolün
+    # sahibi olmadığını söylüyor (cboe 192 · nasdaq 59 · fmp 0) — yani 253 çağrının karşılığı SIFIR
+    # bar. Sıra GERÇEKTEN çağrı kazandırır çünkü tüketici İLK YETERLİ kaynakta `return df` yapar
+    # (aşağıdaki `fresh_enough` kapısı); cboe/nasdaq anahtarsız ve kotasızdır.
+    # NE DEĞİŞMEDİ: `fresh_enough` kapısı, "en-taze-kazanır" yedeği (`best`), aynı-akşam Alpaca
+    # bacağı, kota kapısı (aşağıdaki `quota_blocked`) ve FMP'nin derin-backfill YETENEĞİ — kaynak
+    # zincirden ÇIKARILMADI, yalnız SIRASI değişti: cboe/nasdaq boş dönerse FMP hâlâ sorulur.
+    if fmp.available() and not fmp.quota_blocked():   # kota dolduysa 250 boş isteği daha atma
+        chain.append(("fmp", lambda: _fetch_fmp(ticker, start, end, timeout)))
     fresh_enough = pd.Timestamp(end) - pd.Timedelta(days=1)   # ≥ end-1d ⇒ latest plausible session present
     # CANLI KAPI AÇIKSA ÇITA HEDEF SEANSTIR (bacağı ÖLÜ DOĞMAKTAN kurtaran satır).
     # `end-1d` toleransı "kaynaklar gecikmeli yayınlar" kabulüydü; ama kapanış AKŞAMINDA end=BUGÜN
@@ -2325,7 +2336,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
     # would manufacture a fake overnight crash that destroys every moving average and fires fatal false
     # signals. Discard the stale-scale cache and keep ONLY the fresh, fully-adjusted fetch (that IS the full
     # historical refetch). A legitimate big price move does NOT trigger this — it is identical in both. Same
-    # FMP→Cboe→Nasdaq fallback + polite_delay as any refetch.
+    # Cboe→Nasdaq→FMP fallback + polite_delay as any refetch (sıra 2026-08-25'te değişti).
     if cached is not None and not cached.empty and _corporate_action(cached, fetched):
         try:
             from .. import obs
@@ -2564,8 +2575,8 @@ def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) 
     failed, quarantined = [], []
     _n_uni = len(tickers)
     for _i_t, t in enumerate(tickers, 1):
-        # NABIZ NOKTASI #1 (turun en uzunu): sembol başına tam zincir (massive → fmp → cboe →
-        # nasdaq → aynı-akşam bacağı) + hayalet süpürmesi + CSV yazımı. 2026-08-03 akşamı bekçiyi
+        # NABIZ NOKTASI #1 (turun en uzunu): sembol başına tam zincir (massive → cboe → nasdaq →
+        # fmp → aynı-akşam bacağı) + hayalet süpürmesi + CSV yazımı. 2026-08-03 akşamı bekçiyi
         # üç kez ateşleyen blok BURASIYDI (408 sembol, 367 satırlık onarım kuyruğu).
         _nabiz("bar_yukleme", _i_t, _n_uni)
         try:

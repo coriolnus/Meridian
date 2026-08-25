@@ -181,6 +181,92 @@ def writeback_outcome(version_to: int, realized_delta: float, realized_detail: d
         return target
 
 
+# --- TAHMİN↔GERÇEKLEŞEN ÇİFTİ NEDEN AZ: TEŞHİS (2026-08-25) ----------------------------------
+# `analytics.prediction_hit_rate()` yalnız SAYIYI verir (n, sign_hits). n küçük olduğunda o sayı
+# İKİ BAMBAŞKA dünyayla uyumludur ve tüketici hangisi olduğunu bilemez:
+#   (a) hipotez terminale ULAŞIYOR ama `realized_delta` yazılmıyor → EŞLEŞTİRME HATTI KOPUK;
+#   (b) hipotez ship'e HİÇ ULAŞMIYOR (guard/kapı reddi) → gerçekleşecek bir delta yok, hat sağlam.
+# Ölçüldü (canlı defter, 41 satır): 39 satırda `version_to` YOK, 1 çift ölçülü, 1 ship ölçülemeden
+# aşılmış. Yani (b). (a) teşhisiyle yola çıkmak ÇALIŞAN bir hattı kurcalamaktır — bu yüzden
+# beyan sayının yanında YOLA ÇIKMALI. `neden` MAKİNE-OKUR etikettir, `beyan` insan cümlesi.
+
+
+def _as_float(v) -> Optional[float]:
+    """Sayıya çevrilebiliyorsa float, çevrilemiyorsa None. `prediction_hit_rate` ile AYNI popülasyon
+    yasası: biçimsiz satır çift SAYILMAZ (iki sayı ayrışırsa hangisinin doğru olduğu bilinmez)."""
+    if v is None:
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek defter satırı teşhisin dışında kalır; sayılsaydı çift sayısı şişer ve "ölçüldü" hükmü uydurma olurdu
+        return None
+
+
+def pairing_diagnosis() -> dict:
+    """TAHMİN↔GERÇEKLEŞEN çiftinin neden bu kadar az olduğunu ADIYLA söyler (saf okuma).
+
+    Her defter satırı BEŞ kovadan tam birine düşer ve toplamları defter boyuna eşittir — sessiz
+    sınıflandırma kaybı sayının kendisini uydurma yapardı:
+      `n_cift`                    tahmin VE gerçekleşen, ikisi de ölçülebilir → çift kuruldu
+      `n_gerceklesen_tahminsiz`   gerçekleşen yazılı, eşleşecek ölçülebilir tahmin YOK → (a)'nın
+                                  defterden görülebilen TEK meşru kanıtı
+      `n_sevk_edilmemis`          `version_to` yok → ship'e hiç ulaşmadı, gerçekleşecek şey yok
+      `n_sevk_acik`               ship edildi, statü hâlâ açık → döngü KOŞUYOR, kanıt birikiyor
+      `n_sevk_olculmeden_kapandi` ship edildi, terminale kapandı, gerçekleşen yazılmadan
+
+    `neden` MAKİNE-OKUR etikettir ve kapalı bir kümedir: defter_bos · esleme_kopuk ·
+    olcum_bekliyor · ship_yok · olculmeden_asildi · olculdu. HÜKÜM SIRASI bir DEĞER YARGISIDIR:
+    açık bir ship her şeyin önüne geçer, çünkü o durumda yapılacak şey "bekle"dir, "onar" değil
+    ("koşmuyor" ile "koştu, kanıt birikiyor" bu deponun karıştırdığı iki cümledir). `kopuk`
+    YALNIZ (a) kanıtı varken True olur."""
+    rows = all_hypotheses()
+    n_cift = n_tahminsiz = n_sevksiz = n_acik = n_kapandi = 0
+    for h in rows:
+        p, r = _as_float(h.get("predicted_delta")), _as_float(h.get("realized_delta"))
+        if p is not None and r is not None:
+            n_cift += 1
+        elif r is not None:
+            n_tahminsiz += 1
+        elif h.get("version_to") is None:
+            n_sevksiz += 1
+        elif h.get("status") in TERMINAL_STATUS:
+            n_kapandi += 1
+        else:
+            n_acik += 1
+
+    if not rows:
+        neden = "defter_bos"
+        beyan = ("HİPOTEZ DEFTERİ BOŞ — tahmin↔gerçekleşen çifti yok; eşleştirme hattı hakkında "
+                 "hüküm de YOK (ölçülemedi, sıfır değil).")
+    elif n_tahminsiz:
+        neden = "esleme_kopuk"
+        beyan = (f"EŞLEŞTİRME KOPUK — {n_tahminsiz} satırda gerçekleşen delta yazılı ama eşleşecek "
+                 f"ölçülebilir `predicted_delta` YOK; o satırlar çift kuramıyor.")
+    elif n_acik:
+        neden = "olcum_bekliyor"
+        beyan = (f"ÖLÇÜM BEKLİYOR — {n_acik} ship edilmiş hipotez hâlâ açık (min_sample birikiyor); "
+                 f"ölçülen çift: {n_cift}. Eşleştirme hattı kopuk DEĞİL, kanıt henüz yetmiyor.")
+    elif n_sevksiz:
+        neden = "ship_yok"
+        beyan = (f"TERMİNAL HİPOTEZ YOK — {n_sevksiz}/{len(rows)} hipotez ship'e HİÇ ULAŞMADI "
+                 f"(`version_to` yok: guard/kapı reddi), dolayısıyla gerçekleşecek bir delta da "
+                 f"yok. Ölçülen çift: {n_cift}. Eşleştirme hattı kopuk DEĞİL — eksik olan ship, "
+                 f"eşleştirme değil.")
+    elif n_kapandi:
+        neden = "olculmeden_asildi"
+        beyan = (f"SHIP ÖLÇÜLEMEDEN KAPANDI — {n_kapandi} ship edilmiş hipotez gerçekleşen delta "
+                 f"yazılmadan terminale taşındı (sonraki sürüm aştı). Ölçülen çift: {n_cift}. "
+                 f"Eşleştirme hattı kopuk DEĞİL.")
+    else:
+        neden = "olculdu"
+        beyan = (f"ÖLÇÜLDÜ — {n_cift} tahmin↔gerçekleşen çifti kurulu; eşleştirme hattı kopuk "
+                 f"DEĞİL. (Çiftin YETERLİ olup olmadığı ayrı bir eşiktir, bu teşhisin işi değil.)")
+    return {"n_defter": len(rows), "n_cift": n_cift,
+            "n_gerceklesen_tahminsiz": n_tahminsiz, "n_sevk_edilmemis": n_sevksiz,
+            "n_sevk_acik": n_acik, "n_sevk_olculmeden_kapandi": n_kapandi,
+            "kopuk": neden == "esleme_kopuk", "neden": neden, "beyan": beyan}
+
+
 def distill_lessons(trade_stats: Optional[dict] = None) -> str:
     """Regenerate lessons.md from the hypothesis ledger. Blunt, reusable, regime-aware lines that
     are injected into every reflection so the agent stops repeating dead ends."""
@@ -221,6 +307,26 @@ def distill_lessons(trade_stats: Optional[dict] = None) -> str:
             lines.append(f"- **{h.get('variable')}** {h.get('old')}→{h.get('new')}: predicted "
                          f"delta {h.get('predicted_delta')}, got {h.get('realized_delta')}. "
                          f"Direction wrong — the thesis was off.")
+        lines.append("")
+
+    # TAHMİN İSABETİNİN NEDEN İNCE OLDUĞU — `pairing_diagnosis`ın OKUYUCUSU (YASA 6, 2026-08-25).
+    # Buraya konmasının nedeni ÖLÇÜLDÜ: hermes kanıt paketi canlı defterde 6.183 karakter, tavanı
+    # 6.200 — 17 karakter boşluk. Teşhisi oraya eklemek İKİ düşük öncelikli kanıt alanını
+    # (weekly_attention, dormant_setup_evidence) prompt'tan düşürürdü; bir kör noktayı kapatmak
+    # için iki tane açmak, EVIDENCE_CAP yorumunun adıyla uyardığı takas. lessons.md ise 2.392
+    # karakter (tavanı 4.000) ve ZATEN her reflection'a enjekte ediliyor — beyin "n_pairs 1"
+    # cümlesini burada, nedeniyle birlikte okur ve çalışan bir hattı onarmaya çıkmaz.
+    # BOŞ DEFTERDE YAZILMAZ: "defter boş" satırı teknik olarak doğru ama bilgi taşımaz ve
+    # aşağıdaki "no lessons yet" hükmünü sessizce yerinden ederdi (uydurma yasağı).
+    if hyps:
+        _t = pairing_diagnosis()
+        lines.append("## Prediction accuracy — why the pair count is what it is")
+        lines.append(f"- {_t['beyan']}")
+        lines.append(f"- counts: pairs={_t['n_cift']}, never_shipped={_t['n_sevk_edilmemis']}, "
+                     f"ship_open={_t['n_sevk_acik']}, "
+                     f"closed_unmeasured={_t['n_sevk_olculmeden_kapandi']}, "
+                     f"realized_without_prediction={_t['n_gerceklesen_tahminsiz']} "
+                     f"(ledger={_t['n_defter']}, verdict={_t['neden']})")
         lines.append("")
 
     if trade_stats:

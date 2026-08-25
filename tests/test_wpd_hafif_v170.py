@@ -453,6 +453,12 @@ def test_fmp_dali_UST_KUME_yazar(sandbox_state, monkeypatch):
     monkeypatch.setattr(fmp, "available", lambda: True)
     monkeypatch.setattr(fmp, "quota_blocked", lambda: False)
     monkeypatch.setattr(fmp, "earnings_dates", lambda t, strict=False: [fmp_tarih])
+    # UFUK DARALTMASI BU TESTİN KONUSU DEĞİL (v291, 2026-08-25): yedek artık yalnız karartma
+    # ufkunda tarihi OLMAYAN sembolleri sorar ve AAA'nın tarihi (bugün+6) tam o ufkun içinde —
+    # yani yeni politika altında AAA hiç SORULMAZDI ve bu test YAZIM kuralını değil SEÇİM
+    # politikasını ölçmeye başlardı. Ufuk burada kapatılır; seçim politikasının kendi çivileri
+    # `tests/test_fmp_butce_v291.py` bölüm 4'tedir (tavan + ufuk + beyan).
+    monkeypatch.setattr(earnings, "fmp_yedek_ufku", lambda: 0)
     n = earnings.refresh_from_fmp(["AAA"])
     earnings.clear_cache()
     takvim = earnings._load()

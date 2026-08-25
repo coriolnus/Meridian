@@ -3,10 +3,16 @@
 NE YAPAR. Telemetri panellere dağılmıştı ve sentezi operatör kafasında yapıyordu; bu modül sentezi
 SİSTEME verir. `build()` haftada bir (ve istendiğinde, `weekly()` üzerinden) tüm kalibrasyon/
 defter/bekçi sinyallerini tek raporda toplar: hafta özeti (hipotez/gemi/red sayıları, çözülen cf,
-MECHANISM_STALE olayları — pencere-kesildi zarfıyla), ilerleme sayaçları ("karara ne kadar kaldı"),
+MECHANISM_STALE olayları — pencere-kesildi zarfıyla), ilerleme sayaçları ("karara ne kadar kaldı";
+`setup_arming` YALNIZ uyuyan kurulumları sayar — küme `arming._dormant_setups()`ten gelir),
 kural-tabanlı DİKKAT listesi (`_attention`; near-miss eşik önerileri NEAR_MISS_KNOB eşlemesi ve
 NM_MIN_N/NM_MIN_AVG_R eşikleriyle) ve `contradictions()` — katmanların birbiriyle ÇELİŞTİĞİ yerler
 (her çelişki ya öğrenme fırsatı ya hata işareti). Rapor ajanın kanıt paketine de girer.
+
+DİKKAT LİSTESİ "KARAR HAZIR" DEMEDEN ÖNCE KARARIN ALINIP ALINMADIĞINI SORAR (KARAR_ISARETI tablosu):
+eşiğin dolması, hükmünü üreticisinin verdiği kalemlerde (cf_fidelity, llm_promotion) bekleyen bir
+karar DEĞİL kararın üretildiği andır; işaret varsa satır çıkmaz, işaret hiç yoksa satır "karar
+işareti ölçülemedi" der. Kalem `progress` gövdesinde her hâlde kalır (ilerleme ölçüsüdür).
 
 Rapor ayrıca DANIŞMA KATMANI MEKANİZMALARININ SAĞLIK DEFTERİdir (MECH_KEY="mechanisms"):
 `mechanism_ok`/`mechanism_failed` üst üste düşüş sayacını tutar; kesinti DİKKAT listesine düşer ve
@@ -31,6 +37,81 @@ REVIEW_FILE = "self_review.json"
 # yok" gösteriyordu — SAKİN sistemle ARIZALI sistem ayırt edilemiyordu. Üst üste düşen bir mekanizma
 # uyarı değil KESİNTİdir; sayacı burada tutulur, DİKKAT listesine düşer ve alarmlanır.
 MECH_KEY = "mechanisms"
+
+# ================================================================================================
+# KARAR İŞARETİ — "eşik doldu" İLE "bir karar BEKLİYOR" AYNI ŞEY DEĞİLDİR (v292, 2026-08-25)
+# ================================================================================================
+# CANLIDA ÖLÇÜLEN ARIZA: `_attention`in `progress` döngüsü yalnız `have >= need` bakıyordu ve eşiği
+# dolan HER kalemi "karar hazır" diye YÜKSEK önemle dikkat listesine basıyordu. Canlı defterde bu,
+# hiç temizlenmeyen iki kalıcı yalancı pozitif üretiyordu:
+#     "cf_fidelity: eşik doldu (306/10) — karar hazır"    ama cf_fidelity.json::fidelity_ok = true
+#     "llm_promotion: eşik doldu (100/30) — karar hazır"  ama llm_calibration.json::promoted = true
+# Yani karar ZATEN VERİLMİŞTİ. Bu iki kalemin hükmünü bir insan vermez: üreticileri
+# (`analytics.cf_fidelity` / `analytics.llm_opinion_calibration`) eşik dolar dolmaz kendileri karar
+# verir ve hükmü artefakta YAZAR. Eşiğin dolması burada bir "bekleyen karar" değil, kararın
+# ÜRETİLDİĞİ andır. Dikkat listesi 8 satırla kırpılır — bu satırlar tek gerçek kalemi listenin
+# dibine itiyordu; bir dikkat listesini değersizleştirmek onu hiç yazmamaktan pahalıdır.
+#
+# TEK TABLO, İKİ YÖN. Aşağıdaki tablo hem işaretin NEREDEN okunacağını (build() damgalar) hem
+# satırda hangi kaynağın ADLANDIRILACAĞINI (_attention yazar) söyler. İki ayrı liste tutmak (biri
+# okuma, biri mesaj) bu deponun baskın hata desenidir: zamanla ayrışırlar ve ayrışan taraf sessizce
+# yanlış cevap verir. Hizanın kendisi çivili (test_selfreview_karar_hazir_v292).
+#
+# İŞARETİN VARLIĞI KARARDIR, YÖNÜ DEĞİL. `promoted: false` de üreticinin verdiği bir hükümdür
+# (eşik dolmuş, terfi etmemiş) — bekleyen bir insan kararı yoktur, satır çıkmaz. `fidelity_ok`in
+# olumsuz hâli zaten AYRI ve daha bilgilendirici bir satırla ("cf sadakati ONAYSIZ") raporlanır.
+#
+# İŞARET YOKSA SUSULMAZ. Alan hiç yoksa (ya da None ise) "karar verildi" demek de "karar bekliyor"
+# demek de uydurmadır: satır ÇIKAR ve "karar işareti ölçülemedi" der, bakılan kaynağı adıyla
+# yazarak. UYDURMA YASAĞI'nın bu yüzeydeki hâli — susmak da uydurmaktır.
+#
+# TABLODA OLMAYAN KALEM ESKİSİ GİBİ DAVRANIR: `shadow_promotion` / `meta_calibration` gerçekten
+# bekleyen kararlardır ve eşiği doldurduklarında "karar hazır" demeye devam ederler. Bu kural
+# kapıyı büsbütün kapatmaz, yalnız BEKLEMEYEN kalemleri susturur.
+KARAR_ISARETI = {"cf_fidelity": ("cf_fidelity.json", "fidelity_ok"),
+                 "llm_promotion": ("llm_calibration.json", "promoted")}
+KARAR_ANAHTARI = "karar"       # `progress` kalemine damgalanan alan adı (rapora da girer)
+
+
+def _karar_damgala(progress: dict, belgeler: dict) -> None:
+    """`progress` kalemlerine KARAR İŞARETİNİ damgalar — kaynak belgeler ZATEN OKUNMUŞ hâlde gelir.
+
+    Neden ikinci bir okuma yapılmıyor: `build()` bu artefaktları bir kez okur ve rapor onlardan
+    türer. `_attention` içinde yeniden okumak, aynı raporun iki farklı ANDAN konuşması demekti
+    (kalibrasyon tazelenmesi tam araya girerse "eşik doldu" satırıyla "karar verildi" işareti farklı
+    sürümlerden gelirdi). Damga rapora da girer: karar işareti operatör için de OKUNABİLİR olur.
+
+    İşaret bulunamazsa alan `None` kalır — `_attention` bunu "karar verilmedi" DEĞİL "ölçülemedi"
+    diye okur. Tabloda adı geçen bir kalem `progress`te yoksa sessizce atlanır: kalemin kendisi
+    kalkmışsa damgalanacak bir şey de yoktur (hizayı çivi ölçer, bu fonksiyon değil)."""
+    for ad, (dosya, alan) in KARAR_ISARETI.items():
+        kalem = progress.get(ad)
+        if isinstance(kalem, dict):
+            kalem[KARAR_ANAHTARI] = (belgeler.get(dosya) or {}).get(alan)
+
+
+def _setup_arming_progress(arming_rep: dict) -> dict:
+    """"Silahlanmaya ne kadar kaldı" sayacı — YALNIZ UYUYAN kurulumlar için.
+
+    KÖK NEDEN (canlıda ölçüldü, 2026-08-25): burada ham `arming_report.json::cf_report` üzerinde
+    dönülüyordu ve o sözlük SİLAHLI kurulumları da taşır (canlı: momentum_burst n=1093,
+    breakout_vcp n=1012 — ikisi de `strategy.ARMED_SETUPS` üyesi). Eşikleri elbette doluydu, çünkü
+    kanıt yıllarca birikmişti; `_attention` bunu "silahlanma kanıtı doldu" diye YÜKSEK önemle her
+    gün basıyordu. Oysa o kurulumlar ZATEN silahlıydı: gösterilen şey bir karar değil, bir geçmişti.
+
+    UYUYAN KÜMESİ BURADA TÜRETİLMEZ. Tek tanım `arming._dormant_setups()`tir (motor listesi eksi
+    ARMED_SETUPS) ve eşik de `arming.MIN_CF_ENTERED`den okunur. İkinci bir tanım (ya da elle yazılmış
+    bir 30) zamanla ayrışır — bu deponun baskın hata deseni; ayrışan taraf sessizce yanlış cevap
+    verir ve tam da burada gördüğümüz sınıfı yeniden üretirdi.
+
+    KANITI OLMAYAN UYUYAN KURULUM SİLİNMEZ, 0/N olarak durur: "ilerleme yok" bir ÖLÇÜMDÜR ve
+    kalemi listeden düşürmek onu "yok" gibi okutur. Silahlı kurulumların cf kırılımı kaybolmaz:
+    sahibi olan `arming_report.json::cf_report`ta durmaya devam eder — burada YALNIZ "silahlanmaya
+    ne kadar kaldı" sorusu sorulur ve o soru silahlı bir kurulum için anlamsızdır."""
+    from . import arming
+    rapor = arming_rep.get("cf_report") or {}
+    return {s: {"have": (rapor.get(s) or {}).get("n", 0), "need": arming.MIN_CF_ENTERED}
+            for s in arming._dormant_setups()}
 
 
 def _score_ic(sc: dict | None):
@@ -163,7 +244,7 @@ def build() -> dict:
     gatecal = store.read_json("gate_calibration.json", {}) or {}
     scorecal = store.read_json("score_calibration.json", None)
     exiteff = store.read_json("exit_efficiency.json", None)
-    arming = store.read_json("arming_report.json", {}) or {}
+    arming_rep = store.read_json("arming_report.json", {}) or {}
     budget = store.read_json("agent_budget.json", {}) or {}
     # KÖK NEDEN BURADAYDI: ham `store.read_json("skill_revisions.json", [])` diskteki ŞEKLİ aynen
     # döndürüyordu; defter sözlük/çift-kodlanmış metin olduğunda aşağıdaki `r.get("status")` bir
@@ -215,8 +296,7 @@ def build() -> dict:
             "llm_promotion": {"have": llmcal.get("n_pairs", 0), "need": 30,
                               "sim_pairs": llmcal.get("cf_pairs", 0)},
             "meta_calibration": {"have": gatecal.get("n_measured", 0), "need": 5},
-            "setup_arming": {s: {"have": v.get("n", 0), "need": 30}
-                             for s, v in (arming.get("cf_report") or {}).items()},
+            "setup_arming": _setup_arming_progress(arming_rep),
             "cf_fidelity": {"have": (fid or {}).get("n", 0), "need": 10},
         },
         "calibrations": {"cf_fidelity": fid, "score": scorecal, "exit": exiteff,
@@ -224,6 +304,7 @@ def build() -> dict:
         "agent": {"calls_today": budget.get("day", 0),
                   "revisions_pending": sum(1 for r in revs if r.get("status") == "draft")},
     }
+    _karar_damgala(report["progress"], {"cf_fidelity.json": fid, "llm_calibration.json": llmcal})
     report["contradictions"] = contradictions()
     # Buraya gelmek = bu mekanizma ÇIKTI ÜRETTİ. Diğer mekanizmaların sağlığı TAŞINIR (rapor yazımı
     # onların kesinti kaydını silmesin — silseydi kesinti tek bir başarılı koşumla görünmez olurdu).
@@ -275,10 +356,24 @@ def _attention(rep: dict) -> list:
     if ee and ee.get("nudge_active"):
         out.append({"why": f"çıkışta masada R kalıyor (ort {ee.get('avg_left_r')}R, en kötü {ee.get('worst_reason')})",
                     "sev": "orta"})
+    # "KARAR HAZIR" YALNIZ GERÇEKTEN BEKLEYEN KARARLAR İÇİN (v292 — bkz. KARAR_ISARETI bloğu).
+    # Eşiğin dolması tek başına bir bekleyen karar DEĞİLDİR; tabloda adı geçen kalemlerin hükmünü
+    # üreticileri eşik dolar dolmaz kendileri verir ve artefakta yazar.
     for name, p in rep["progress"].items():
         if isinstance(p, dict) and p.get("need") and p.get("have", 0) >= p["need"]:
+            if name in KARAR_ISARETI:
+                if p.get(KARAR_ANAHTARI) is not None:
+                    continue                    # KARAR VERİLMİŞ (yönü fark etmez) — bekleyen yok
+                # İşaret hiç yok: "verildi" de "bekliyor" da uydurma olur. Ölçülemediğini SÖYLE
+                # ve bakılan kaynağı adıyla yaz — okuyucu doğrulayabilsin.
+                _dosya, _alan = KARAR_ISARETI[name]
+                out.append({"why": f"{name}: eşik doldu ({p['have']}/{p['need']}) — karar işareti "
+                                   f"ölçülemedi ({_dosya}::{_alan} yok)", "sev": "yüksek"})
+                continue
             out.append({"why": f"{name}: eşik doldu ({p['have']}/{p['need']}) — karar hazır", "sev": "yüksek"})
         elif isinstance(p, dict) and "have" not in p:      # setup_arming alt-sözlüğü
+            # Bu sözlük ARTIK yalnız UYUYAN kurulumları taşır (`_setup_arming_progress`): silahlı
+            # bir kurulum buraya hiç girmediği için "silahlanma kanıtı doldu" satırı da üretemez.
             for s2, pp in p.items():
                 if pp.get("have", 0) >= pp.get("need", 10**9):
                     out.append({"why": f"silahlanma kanıtı doldu: {s2} ({pp['have']}/{pp['need']})",

@@ -1749,6 +1749,95 @@ EDGE_CVAR5_MIN_R = -1.5     # işlem-R dağılımının en kötü %5'inin ORTALA
                             # o hâlde 1R'lik boyutlandırma yasasının söz verdiği şey artık yoktur.
 
 
+# ---- M2M SERİSİNİN YAZARI — ADIYLA ------------------------------------------------------------
+# ÇAPA SEMBOLDÜR, SATIR DEĞİL (depo yasası): eğrinin tek kadanslı yazarı `loop`un
+# `_persist_equity_point` fonksiyonudur (WP2-D bacak-2). Ad burada DİZGE olarak durur çünkü
+# `analytics` modül düzeyinde `loop`u içe aktaramaz (loop ağır bağımlılıkları — pandas, adapters —
+# çeker ve analytics'i kendi içinden LAZY olarak çağırır: modül düzeyinde çift yönlü bağ olurdu).
+# Adın bayatlaması `test_karne_veri_hatti_v293`te çivilidir (fonksiyon VAR mı diye bakar).
+EGRI_KADANSLI_YAZAR = "loop._persist_equity_point"
+# Yazarın kendi düşüş olayları (`loop._persist_equity_point`ın obs adları). Bu iki ad ile
+# "olay YOK" hâli arasındaki fark, iki AYRI arıza hipotezini ayırır.
+EGRI_YAZAR_OLAYLARI = ("equity_point_skipped", "equity_point_failed")
+EGRI_YAZAR_OLAY_TARAMA = 2000   # olay defterinde geriye BAKILACAK satır TAVANI. NE YAPMADIĞI
+                                # BEYANLI: bu sayı okuma MALİYETİNİ düşürmez — `store.read_jsonl`
+                                # dosya arka ucunda defterin tamamını ayrıştırıp kuyruğu keser
+                                # (ölçüldü, bkz. `_egri_yazar_kaniti` maliyet beyanı). Yalnız
+                                # "en son ne oldu" penceresini sınırlar; teşhis bir tarihçe değil.
+
+
+def _gecikme_gun(seri_son: str | None, defter_seansi: str | None) -> int | None:
+    """Seri ile kitap seansı arasındaki TAKVİM GÜNÜ farkı; ölçülemezse None (0 DEĞİL).
+
+    NEDEN GÜN SAYISI: "kapsamıyor" ikili bir bayraktır ve "bugün akşam kapanış henüz yazılmadı"
+    (1 gün) ile "yazar haftalardır koşmuyor" (30 gün) arasındaki farkı GİZLER. İkisi aynı bayrağa
+    düşünce fiş her koşuda aynı cümleyle doğuyor, aciliyet okunamıyordu.
+
+    Seri kitabın İLERİSİNDEyse gecikme 0'dır (negatif bir gecikme bir gecikme değildir); tarih
+    ayrıştırılamıyorsa None — dedektörün körlüğü sayıya çevrilmez."""
+    import datetime as _dt
+    try:
+        a = _dt.date.fromisoformat(str(seri_son)[:10])
+        b = _dt.date.fromisoformat(str(defter_seansi)[:10])
+    except (TypeError, ValueError):  # sessiz-yutma: DEĞİL — None DÖNÜŞÜN KENDİSİ cevap ("gecikme ölçülemedi") ve çağıran onu çıktıya aynen basar; 0 yazmak "ölçtük, gecikme yok" demek olurdu
+        return None
+    return max(0, (b - a).days)
+
+
+def _egri_yazar_kaniti() -> dict:
+    """Seri kitabı kapsamıyorken TEK soruyu cevaplar: kadanslı yazar KOŞTU da mı reddedildi, yoksa
+    HİÇ Mİ KOŞMADI?
+
+    NEDEN GEREKLİ. Bayat seri iki TAMAMEN FARKLI arızanın aynı görüntüsüdür:
+      (a) yazar koştu ve kendi kapılarından birinde reddedildi (ölçülemeyen öz sermaye, okunamayan
+          beyanlı ofset, geriye yazım reddi) → düzeltme YAZARIN GİRDİLERİNDEDİR;
+      (b) yazar hiç koşmadı (günlük döngü tamamlanmıyor / o sürüm dağıtılmamış) → düzeltme
+          ÇALIŞTIRMA KATMANINDADIR.
+    Ayrım yapılmadan fiş "seri bayat" diyor ve her koşuda yeniden doğuyordu; iki hipotez arasında
+    seçim yapmak için canlıya bakmak gerekiyordu.
+
+    KANIT KAYNAĞI: yazarın KENDİ düşüş olayları (`EGRI_YAZAR_OLAYLARI`). Yazar başarıyla yazdığında
+    olay basmaz — ama o hâlde seri zaten kitabı kapsardı, yani bu fonksiyon hiç çağrılmaz. Bu
+    yüzden "olay yok" burada DÜRÜSTÇE (b)'yi işaret eder ve `durum` bunu ADIYLA söyler.
+
+    SAF OKUMA, HÜKÜM YOK: dönüş hiçbir eşiğe girmez, hiçbir sayacı oynatmaz; yalnız `_realized_
+    drawdown`ın teşhis alanına düşer.
+
+    MALİYET BEYANI (ÖLÇÜLDÜ, tahmin değil — 2026-08-25, yerel 9 MB `events.jsonl`): `obs.recent`
+    dosya arka ucunda defterin TAMAMINI ayrıştırır, sonra kuyruğu keser — soğuk 119 ms, sıcak
+    45 ms. `result_verdict` ve `edge_verdict` `_realized_drawdown`ı ayrı ayrı çağırdığı için tek
+    bir /api/diagnostics turunda bu bedel İKİ KEZ ödenir (~90 ms) ve YALNIZ kusur sürdüğü sürece
+    ödenir (seri kitabı kapsar kapsamaz bu fonksiyon hiç çağrılmaz). Önbellek BİLEREK eklenmedi:
+    telemetri turu zaten 12 üretici koşuyor, 90 ms orada gürültüdür; bir önbellek ise yeni bir
+    bayatlık sınıfı açardı ve bu dosyanın tam da kapatmaya çalıştığı kusur BAYATLIKTIR."""
+    from . import obs
+    try:
+        satirlar = [r for r in obs.recent(EGRI_YAZAR_OLAY_TARAMA)
+                    if isinstance(r, dict) and r.get("event") in EGRI_YAZAR_OLAYLARI]
+    except Exception as e:
+        # YASA 4: olay defteri okunamazsa "yazar hiç koşmamış" DENEMEZ — o, ölçülmemiş bir iddia
+        # olurdu ve teşhisi tam ters yöne çevirirdi. Düşüş adıyla döner.
+        return {"durum": "olculemedi", "son_olay": None, "son_neden": None, "son_ts": None,
+                "taranan": 0,
+                "neden": (f"olay defteri okunamadı ({type(e).__name__}: {e}) — yazarın koşup "
+                          f"koşmadığı ÖLÇÜLEMEDİ ('hiç koşmadı' SAYILMAZ)")}
+    if not satirlar:
+        return {"durum": "olay_yok", "son_olay": None, "son_neden": None, "son_ts": None,
+                "taranan": EGRI_YAZAR_OLAY_TARAMA,
+                "neden": (f"son {EGRI_YAZAR_OLAY_TARAMA} olayda `{EGRI_KADANSLI_YAZAR}`ın TEK bir "
+                          f"düşüş olayı ({'/'.join(EGRI_YAZAR_OLAYLARI)}) yok — yazar denenip "
+                          f"reddedilmiş DEĞİL, hiç KOŞMAMIŞ görünüyor: günlük döngü o seansı "
+                          f"tamamlamıyor ya da yazarın bulunduğu sürüm koşmuyor")}
+    son = satirlar[-1]
+    return {"durum": "olay_var", "son_olay": son.get("event"),
+            # İki olay nedeni İKİ AYRI alanda taşır (`neden` vs `error`); ikisini tek yerde
+            # toplamak, okuyucunun hangi olayı okuduğuna göre dal açmasını gereksiz kılar.
+            "son_neden": son.get("neden") or son.get("error"),
+            "son_ts": son.get("ts"), "taranan": EGRI_YAZAR_OLAY_TARAMA,
+            "neden": (f"`{EGRI_KADANSLI_YAZAR}` KOŞTU ve nokta yazılMADI ({son.get('event')}) — "
+                      f"düzeltme yazarın GİRDİLERİNDE, çalıştırma katmanında değil")}
+
+
 def _realized_drawdown() -> dict:
     """Gerçekleşen maksimum düşüş — KAPANMIŞ İŞLEM eğrisi ile GÜNLÜK piyasaya-göre eğrinin
     KÖTÜ OLANI. `score.score_detail`in `mtm_equity` yasası ile birebir aynı kural:
@@ -1799,7 +1888,23 @@ def _realized_drawdown() -> dict:
 
     DÖNEMİN REFERANSI KİTAPTIR (`portfolio.last_date`), defter değil: `trades.jsonl`in son kapanış
     tarihi bir işlemin kapandığı gündür, motorun BUGÜN hangi seansta olduğunu söylemez; eğrinin
-    kapsaması gereken şey ikincisidir."""
+    kapsaması gereken şey ikincisidir.
+
+    ---- TEŞHİS ÜÇLÜSÜ (2026-08-25; fiş 7/8'in KÖKÜ) ---------------------------
+    ÖLÇÜLEN KUSUR OKUMA DEĞİL, TEŞHİSTİ. Yukarıdaki kapsama kuralı DOĞRU çalışıyor (kanıt: canlı
+    karne kopyasında tek bir kadanslı nokta düşünce `m2m_durum` `donem_disi` → `olculdu` oluyor ve
+    İKİ hüküm birden `olculemedi`den çıkıyor — `test_karne_veri_hatti_v293` bunu uçtan uca çiviler).
+    Kusur, çıktının "seri bayat" deyip ÜÇ soruyu cevaplamamasıydı ve bu yüzden aynı kalem her
+    koşuda yeniden fişleniyor, hiçbir koşuda aksiyona çevrilemiyordu:
+      * `gecikme_gun` — kaç gün geride? "Bugünün kapanışı henüz yazılmadı" (1) ile "yazar
+        haftalardır koşmuyor" (30) tek bir ikili bayrağa düşüyordu.
+      * `yazar` — seriyi KİM yazmalı? Tek kadanslı yazar `EGRI_KADANSLI_YAZAR`dır; adı çıktıda
+        durur ki okuyucu kusuru TÜKETİCİDE (burada) aramasın.
+      * `yazar_kanit` — yazar KOŞUP reddedildi mi (girdi arızası), yoksa HİÇ mi koşmadı
+        (çalıştırma arızası)? İki hipotez `_egri_yazar_kaniti` ile ayrışır; YALNIZ `kapsamiyor`
+        hâlinde okunur (kusursuz turda olay defteri hiç taranmaz).
+    HİÇBİR EŞİĞE VE HİÇBİR HÜKME DOKUNULMADI: üçü de rapor alanıdır, `max_dd`/`max_dd_alt_sinir`
+    aynen eskisi gibi hesaplanır."""
     trades = _trades()
     kapali = score_mod.max_drawdown(score_mod.equity_curve(trades)) if trades else None
     gunluk, n_gun, seri_donem = None, 0, None
@@ -1830,13 +1935,19 @@ def _realized_drawdown() -> dict:
     bayat_seri_dd, donem_kapsami = None, "olculemedi"
     if seri_donem and defter_seansi:
         donem_kapsami = "kapsiyor" if seri_donem[1] >= defter_seansi else "kapsamiyor"
+    gecikme_gun = _gecikme_gun(seri_donem[1] if seri_donem else None, defter_seansi)
     if donem_kapsami == "kapsamiyor" and gunluk is not None:
         bayat_seri_dd = round(gunluk, 4)
         gunluk = None
         m2m_durum = "donem_disi"
         m2m_neden = (f"seri {seri_donem[0]} → {seri_donem[1]} dönemini kapsıyor; kitap "
                      f"{defter_seansi} seansını işledi — CANLI döneme ait m2m serisi YOK, "
-                     f"bayat seriyle 'kötüsü' hesaplanmaz (o serinin düşüşü: {bayat_seri_dd})")
+                     f"bayat seriyle 'kötüsü' hesaplanmaz (o serinin düşüşü: {bayat_seri_dd})"
+                     + (f"; gecikme {gecikme_gun} gün" if gecikme_gun is not None else ""))
+    # TEŞHİS YALNIZ KUSUR HÂLİNDE KONUŞUR (ve olay defterini yalnız o hâlde okur — kusursuz turda
+    # ödenmeyecek bir bedel). `kapsamiyor` bir tüketici kusuru DEĞİL bir ÜRETİCİ boşluğudur ve bu
+    # alan onu isimlendirir: yazar KOŞUP reddedildi mi, yoksa HİÇ mi koşmadı?
+    yazar_kanit = _egri_yazar_kaniti() if donem_kapsami == "kapsamiyor" else None
 
     adaylar = [x for x in (kapali, gunluk) if x is not None]
     kaynak = ("kapanmış işlem eğrisi ile günlük piyasaya-göre eğrinin KÖTÜ olanı"
@@ -1859,6 +1970,12 @@ def _realized_drawdown() -> dict:
             "m2m_durum": m2m_durum, "m2m_neden": m2m_neden,
             "seri_donem": seri_donem, "defter_seansi": defter_seansi,
             "donem_kapsami": donem_kapsami, "bayat_seri_dd": bayat_seri_dd,
+            # ---- TEŞHİS ÜÇLÜSÜ (2026-08-25, fiş 7/8) --------------------------------------------
+            # Fiş her koşuda yeniden doğuyordu çünkü çıktı "seri bayat" diyor ama ÜÇ soruyu
+            # cevaplamıyordu: kaç gün geride · seriyi KİM yazmalı · yazar deneyip mi reddedildi.
+            # Üçü olmadan kalem aksiyona çevrilemiyor, aynı cümleyle yeniden fişleniyordu.
+            "gecikme_gun": gecikme_gun, "yazar": EGRI_KADANSLI_YAZAR,
+            "yazar_kanit": yazar_kanit,
             "kaynak": kaynak}
 
 
@@ -2128,6 +2245,11 @@ def edge_verdict() -> dict:
                  "max_dd_alt_sinir": dd["max_dd_alt_sinir"], "m2m_durum": dd["m2m_durum"],
                  "m2m_neden": dd["m2m_neden"], "seri_donem": dd["seri_donem"],
                  "defter_seansi": dd["defter_seansi"], "bayat_seri_dd": dd["bayat_seri_dd"],
+                 # YASA 6 ZİNCİRİ — `result_verdict`in maks-düşüş ölçütüyle AYNI üçlü. İki hüküm
+                 # aynı olguyu okur; teşhisi yalnız birine koymak, kuyruk fişini (dd_bacagi null)
+                 # yine kör bırakırdı.
+                 "gecikme_gun": dd["gecikme_gun"], "egri_yazari": dd["yazar"],
+                 "yazar_kanit": dd["yazar_kanit"],
                  "cvar5_r": (cv or {}).get("cvar5_r"), "var5_r": (cv or {}).get("var5_r"),
                  "kuyruk_n": (cv or {}).get("kuyruk_n"), "en_kotu_r": (cv or {}).get("en_kotu_r"),
                  "isaret": (cv or {}).get("isaret"),
@@ -2268,6 +2390,104 @@ def _pf(pnls: list) -> dict:
 # kalır. HÜKÜM VERMEZ — süspansiyon kararı operatörün, kapı kararı probgate'indir.
 LIVE_CEILING_DURUMLAR = ("olculemedi", "tavan_altinda", "tavan_ustunde", "suspansiyon_degerlendirmesi")
 
+# ---- BACKTEST BEKLENTİSİ: TEK SORU, ÜÇ YAZAR, İKİ ALAN ----------------------------------------
+# ÖLÇÜLEN KUSUR (fiş 1/4/9, canlı karne 2026-08-25): tavan hükmü backtest tarafını TEK bir alandan
+# okuyordu (`versions[<sürüm>].backtest_full.avg_r`) ve o alanı karneye YALNIZ tam re-seed yolu
+# yazıyor. Sürüm doğuran diğer iki yol onu HİÇ yazmaz — yani ölçüm diskte YAZILI olduğu hâlde kapı
+# "ölçülemedi" diyordu. Canlı satır: `current_version = 5`, v5 = {params, parent, source,
+# live_since, note}; v4'te `backtest_full` VAR (re-seed yazmış), v5'te ne o ne fold'lar.
+BACKTEST_BEKLENTI_KAYNAKLARI = ("backtest_full", "backtest_folds")
+BACKTEST_BEKLENTI_KAPSAM = {
+    "backtest_full": ("TAM replay penceresi — `score.score_detail` çıktısının `avg_r` alanı "
+                      "(yazan: run.py'nin re-seed yolu)"),
+    "backtest_folds": ("Search-OOS walk-forward fold'larının n-AĞIRLIKLI ortalaması — "
+                       "`backtest._fold_metrics` şekli (yazan: reflect.py'nin ship yolu). "
+                       "`backtest_full`tan DAR bir penceredir: tam replay değil, OOS dilimi"),
+}
+
+
+def _backtest_beklenti_r(satir: dict) -> dict:
+    """Karne satırından BACKTEST BEKLENTİSİNİ (R = işlem başına ortalama) çözen TEK yer.
+
+    NEDEN İKİ BACAK. "Bu sürümün backtest beklentisi nedir?" TEK bir sorudur, ama karneye yazan
+    yollar tek değildir ve hiçbiri diğerinin alanını yazmaz:
+      * tam re-seed (`run.py`) → `backtest_full` = `score.score_detail(...)` çıktısı, içinde `avg_r`;
+      * öğrenme döngüsünün ship yolu (`reflect.py` → `versioning.update_scoreboard`) →
+        `backtest_folds` = `backtest._fold_metrics` çıktısı (her fold `n` + `avg_r`);
+        `backtest_full` YAZMAZ ve bu bir eksiklik değil bir iş bölümüdür (`run.py`nin yorumu ağır
+        ayrıntı defterini bilerek taşımıyor);
+      * operatör kalemi → İKİSİNİ DE yazmaz (yokluk BEYANLIdır, uydurulmaz).
+    Tek bacak okuyan bir kapı, ship edilen HER sürümde "ölçülemedi" der — ölçüm diskte dururken.
+
+    SIRA KEYFÎ DEĞİL VE DEĞİŞMEZ: `backtest_full` TAM pencereyi, fold'lar onun OOS alt kümesini
+    anlatır; GENİŞ olan önce okunur. Hangisinin okunduğu `kaynak` + `kapsam` alanlarında ADIYLA
+    durur — iki farklı popülasyon aynı sayı sanılamaz (bu, ikinci bacağın bedelidir ve gizlenmez).
+
+    AĞIRLIK n'DİR, DÜZ ORTALAMA DEĞİL: fold'lar eşit uzunlukta değildir. Düz ortalama, 7 işlemlik
+    bir pencerenin gürültüsünü 45 işlemlik bir pencereyle aynı ağırlıkta sayardı — `backtest`in
+    `FOLD_MIN_N` gerekçesiyle birebir aynı kusur, farklı yüzeyden.
+
+    ÖLÇÜLEMEYEN 0 DEĞİLDİR: hiçbir bacak çözülmezse `avg_r` None döner ve `neden` hangi alanın
+    eksik, hangisinin biçimsiz olduğunu söyler. 0.0 yazmak "ölçtük, beklenti sıfır" demek olurdu
+    ve `bt_r <= 0` kapısı o sahte sayıya dayanırdı."""
+    satir = satir if isinstance(satir, dict) else {}
+    bicimsiz = []
+
+    # --- 1. BACAK: tam replay detayı ------------------------------------------------------------
+    bt = satir.get("backtest_full")
+    if isinstance(bt, dict) and bt.get("avg_r") is not None:
+        try:
+            _r = float(bt["avg_r"])
+        except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — biçimsiz alanın adı `bicimsiz` listesine girer ve hiçbir bacak çözülmezse dönüşteki `neden` cümlesinde ADIYLA basılır ("alan yok" ile "alan bozuk" ayrı arıza sınıflarıdır); ikinci bacak yine de denenir, yani bilgi kaybı da yok
+            bicimsiz.append("`backtest_full.avg_r` BİÇİMSİZ")
+            _r = None
+        if _r is not None:
+            _n = bt.get("n")
+            try:
+                _n = None if _n is None else int(_n)
+            except (TypeError, ValueError):  # sessiz-yutma: yalnız RAPOR alanı olan örneklem sayısı; beklentinin kendisi ölçüldü ve n=None "sayı bilinmiyor" diye okunur, hüküm bu alandan türemiyor
+                _n = None
+            return {"avg_r": _r, "n": _n, "kaynak": "backtest_full",
+                    "kapsam": BACKTEST_BEKLENTI_KAPSAM["backtest_full"], "neden": None}
+
+    # --- 2. BACAK: ship yolunun walk-forward fold'ları ------------------------------------------
+    folds = satir.get("backtest_folds")
+    toplam_r, toplam_n, atilan = 0.0, 0, 0
+    for f in (folds if isinstance(folds, list) else []):
+        if not isinstance(f, dict) or f.get("avg_r") is None:
+            atilan += 1
+            continue
+        try:
+            _fn, _fr = int(f.get("n") or 0), float(f["avg_r"])
+        except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — biçimsiz TEK fold, ölçülmüş fold'ları çöpe atmaz (bilgi kaybı olurdu) ama paya da girmez (uydurma olurdu); düşen fold sayısı `atilan`da toplanır ve dönüşteki `neden` alanında SAYIYLA raporlanır, payda `backtest_n`de görünür
+            atilan += 1
+            continue
+        if _fn <= 0:
+            atilan += 1
+            continue
+        toplam_r += _fn * _fr
+        toplam_n += _fn
+    if toplam_n > 0:
+        # UYARI METNİ İKİ KAYBI DA TAŞIR: düşen fold'lar VE (varsa) birinci bacağın biçimsizliği.
+        # İkincisi buraya taşınmazsa "backtest_full bozuktu ama fold'lardan okuduk" bilgisi
+        # KAYBOLURDU — okuyucu ikinci bacağı bir tercih sanardı, oysa bir ARIZA telafisiydi.
+        uyari = [f"{atilan} fold ölçülmemiş/biçimsiz olduğu için paydaya GİRMEDİ" if atilan else "",
+                 *bicimsiz]
+        uyari = [u for u in uyari if u]
+        return {"avg_r": round(toplam_r / toplam_n, 4), "n": toplam_n, "kaynak": "backtest_folds",
+                "kapsam": BACKTEST_BEKLENTI_KAPSAM["backtest_folds"],
+                "neden": None if not uyari else f"{' · '.join(uyari)} (payda n={toplam_n})"}
+
+    # --- HİÇBİRİ ÇÖZÜLMEDİ ----------------------------------------------------------------------
+    # `backtest_full.avg_r` YOK ibaresi BEYANLI olarak bu cümlede kalır: fiş metinleri ve
+    # `test_wpm_borclari_v146` onu arıyor; ikinci bacak eklendi diye ilk bacağın adı düşürülemez.
+    eksik = "`backtest_full.avg_r` YOK" if not bicimsiz else " + ".join(bicimsiz)
+    fold_neden = (f"`backtest_folds` VAR ama ölçülmüş fold taşımıyor ({atilan} fold düştü)"
+                  if isinstance(folds, list) and folds else "`backtest_folds` da YOK")
+    return {"avg_r": None, "n": None, "kaynak": None, "kapsam": None,
+            "neden": (f"{eksik} ve {fold_neden} — backtest beklentisi ölçülmemiş, tavan "
+                      f"hesaplanamaz")}
+
 
 def live_expectancy_ceiling(goal: dict | None = None) -> dict:
     """Canlı beklenti ↔ backtest beklentisi kıyası. SAF OKUMA, HÜKÜM YOK.
@@ -2277,7 +2497,12 @@ def live_expectancy_ceiling(goal: dict | None = None) -> dict:
                  ortalaması. Payda yasası `learning_scorecard`ınkiyle BİREBİR aynıdır
                  (live_paper + belirsiz; `replay_seed` TRAINING sayılır ve girmez) — aynı depoda
                  "canlı defter kimdir?" sorusunun ikinci bir cevabı olamaz.
-      backtest — karnedeki AYNI sürümün `backtest_full.avg_r` alanı. Sürüm eşleşmesi
+      backtest — karnedeki AYNI sürümün backtest beklentisi, `_backtest_beklenti_r` ile YAZILI bir
+                 öncelikte çözülür: `backtest_full.avg_r` (tam replay penceresi), yoksa
+                 `backtest_folds`un n-ağırlıklı `avg_r` ortalaması (Search-OOS dilimi). Hangi bacak
+                 okundu → `backtest_kaynak`/`backtest_kapsam`. İkinci bacak 2026-08-25'te eklendi:
+                 ship yolu `backtest_full` YAZMIYOR, yani ship edilen her sürümde ölçüm diskte
+                 dururken taraf "ölçülemedi" görünüyordu (fiş 1/4/9). Sürüm eşleşmesi
                  `rollback.check_and_rollback`in popülasyon yasasıyla aynıdır; iki tarafı farklı
                  sürümlerden okumak like-for-like'ı bozardı.
 
@@ -2299,12 +2524,10 @@ def live_expectancy_ceiling(goal: dict | None = None) -> dict:
     sb = store.read_json("scoreboard.json", {"versions": {}})
     surum = sb.get("current_version")
     satir = ((sb.get("versions") or {}).get(str(surum)) or {}) if surum is not None else {}
-    bt = satir.get("backtest_full") or {}
-    bt_r = bt.get("avg_r")
-    try:
-        bt_r = None if bt_r is None else float(bt_r)
-    except (TypeError, ValueError):  # sessiz-yutma: karnede biçimsiz tek alan; taraf ÖLÇÜLEMEDİ olarak görünür ve neden alanı bunu söyler
-        bt_r = None
+    # BACKTEST TARAFI TEK ÇÖZÜCÜDEN GELİR (`_backtest_beklenti_r`): iki yazarın iki alanı, yazılı
+    # bir öncelikle. Buradaki tek satırlık okuma, "hangi alandan okuduk?" sorusunu çıktıya taşır.
+    _bt = _backtest_beklenti_r(satir)
+    bt_r, bt_n = _bt["avg_r"], _bt["n"]
 
     # --- canlı taraf: tohum-olmayan, yürürlükteki sürüme ait, R'si ölçülmüş satırlar ------------
     rlar, kanitli_n, belirsiz_n = [], 0, 0
@@ -2341,8 +2564,7 @@ def live_expectancy_ceiling(goal: dict | None = None) -> dict:
     if surum is None:
         durum, neden = "olculemedi", "karnede yürürlükteki sürüm yok (current_version boş)"
     elif bt_r is None:
-        durum, neden = "olculemedi", (f"v{surum} karne satırında `backtest_full.avg_r` YOK — "
-                                      f"backtest beklentisi ölçülmemiş, tavan hesaplanamaz")
+        durum, neden = "olculemedi", f"v{surum} karne satırında {_bt['neden']}"
     elif bt_r <= 0:
         durum, neden = "olculemedi", (f"backtest beklentisi pozitif DEĞİL ({bt_r}R) — negatif bir "
                                       f"beklentinin yarısı bir tavan değildir; oran TANIMSIZ")
@@ -2380,7 +2602,13 @@ def live_expectancy_ceiling(goal: dict | None = None) -> dict:
         "surum": surum,
         "canli_beklenti_r": canli_r, "canli_n": canli_n,
         "canli_kanitli_n": kanitli_n, "canli_belirsiz_n": belirsiz_n,
-        "backtest_beklenti_r": bt_r, "backtest_n": bt.get("n"),
+        "backtest_beklenti_r": bt_r, "backtest_n": bt_n,
+        # HANGİ BACAKTAN OKUNDU: iki kaynaklı bir alan kaynağını söylemezse okuyucu iki farklı
+        # popülasyonu (tam replay ↔ Search-OOS dilimi) aynı sayı sanar. `backtest_kaynak` None ise
+        # taraf ölçülemedi ve `neden` hangi alanların eksik olduğunu söyler.
+        "backtest_kaynak": _bt["kaynak"], "backtest_kapsam": _bt["kapsam"],
+        "backtest_kaynaklar": list(BACKTEST_BEKLENTI_KAYNAKLARI),
+        "backtest_uyari": _bt["neden"] if _bt["kaynak"] else None,
         "tavan_r": tavan, "oran": oran,
         "cap_mult": kural["cap_mult"], "suspend_ratio": kural["suspend_ratio"],
         "kural_kaynak": kural["kaynak"], "kural_metni": kural["kural_metni"],
@@ -2389,7 +2617,9 @@ def live_expectancy_ceiling(goal: dict | None = None) -> dict:
         "birim": "R (işlem başına ortalama)",
         "kaynak": ("canlı: trades.jsonl · yürürlükteki sürüm · replay_seed HARİÇ (payda yasası "
                    "learning_scorecard ile aynı) | backtest: scoreboard.json "
-                   "versions[<sürüm>].backtest_full.avg_r"),
+                   "versions[<sürüm>].backtest_full.avg_r, yoksa aynı satırdaki backtest_folds'un "
+                   "n-ağırlıklı avg_r ortalaması (öncelik yazılıdır; okunan bacak "
+                   "`backtest_kaynak` alanında durur)"),
         "kapsam": ("ADVISORY KOLON — `result_verdict`in dört ölçütünden hiçbirini değiştirmez, "
                    "passed/failed/unmeasured/zayif sayaçlarına GİRMEZ ve hiçbir kapıyı "
                    "(probgate/guard/arming) kısmaz. Süspansiyon bir OPERATÖR kararıdır; bu alan "
@@ -2460,6 +2690,11 @@ def result_verdict() -> dict:
              "max_dd_alt_sinir": dd["max_dd_alt_sinir"], "m2m_durum": dd["m2m_durum"],
              "m2m_neden": dd["m2m_neden"], "seri_donem": dd["seri_donem"],
              "defter_seansi": dd["defter_seansi"], "bayat_seri_dd": dd["bayat_seri_dd"],
+             # YASA 6 ZİNCİRİ (fiş 7/8): teşhis üçlüsü buradan `system_telemetry.sonuc_hukmu`ne,
+             # oradan fiş üreten beyne gider. Alanlar burada durmazsa teşhis `_realized_drawdown`ın
+             # içinde kalır ve fiş yine "seri bayat" cümlesiyle yeniden doğar.
+             "gecikme_gun": dd["gecikme_gun"], "egri_yazari": dd["yazar"],
+             "yazar_kanit": dd["yazar_kanit"],
              "anlamlilik_hesabi": False}
     if not yeterli or dd["max_dd"] is None:
         dd_olcut = _olcut("olculemedi", dd["max_dd"], dd_esik,

@@ -446,12 +446,20 @@ def test_fetch_prefers_fresher_fallback_over_stale_first_source(seeded_sandbox, 
     monkeypatch.setattr(data, "_fetch_nasdaq", lambda *a, **k: bars_ending("2026-07-17"))  # taze
     out = data.fetch("XYZ", "2026-06-01", "2026-07-18")
     assert str(out["date"].max())[:10] == "2026-07-17"          # taze fallback kazandı
-    # taze kaynak İLK sıradaysa zincir erken durur (sağlıklı çoğunluk için ekstra ağ maliyeti yok)
-    monkeypatch.setattr(data, "_fetch_fmp", lambda *a, **k: bars_ending("2026-07-17"))
-    calls = {"cboe": 0}
-    monkeypatch.setattr(data, "_fetch_cboe", lambda *a, **k: calls.__setitem__("cboe", calls["cboe"] + 1) or pd.DataFrame())
+    # TAZE KAYNAK İLK SIRADAYSA ZİNCİR ERKEN DURUR — iddia aynı, SIRA değişti (2026-08-25).
+    # Eski hâl FMP'yi ilk sıraya koyup `cboe` çağrılmadığını ölçüyordu. FMP artık zincirin
+    # SONUNDA (kota daraltması: ücretsiz plan 250/gün, evren 251 sembol — tek tazeleme kotayı
+    # yakıyordu) ve bu testin ölçtüğü tasarruf ters yöne döndü: anahtarsız kaynak yeterliyse
+    # FMP'ye İSTEK ATILMAZ. Ölçülen kazanç ≥219 çağrı/gün.
+    # ÇİVİ GÜÇLENDİ: eskiden "bir kaynak atlandı" diyordu, şimdi "KOTALI kaynak atlandı" diyor.
+    calls = {"fmp": 0}
+    monkeypatch.setattr(data, "_fetch_cboe", lambda *a, **k: bars_ending("2026-07-17"))   # taze, ANAHTARSIZ
+    monkeypatch.setattr(data, "_fetch_fmp",
+                        lambda *a, **k: calls.__setitem__("fmp", calls["fmp"] + 1) or pd.DataFrame())
     out2 = data.fetch("XYZ", "2026-06-01", "2026-07-18")
-    assert str(out2["date"].max())[:10] == "2026-07-17" and calls["cboe"] == 0
+    assert str(out2["date"].max())[:10] == "2026-07-17" and calls["fmp"] == 0, (
+        f"anahtarsız kaynak taze barı verdiği hâlde FMP'ye {calls['fmp']} istek atıldı — "
+        "kota daraltması geri alınmış olabilir (zincir sırası: cboe → nasdaq → fmp)")
 
 
 def test_scheduler_flag_survives_publish_lag(seeded_sandbox, monkeypatch):

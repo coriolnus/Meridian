@@ -3,12 +3,20 @@
 /* ============================================================================
    MÜDAHALE KOLLARI — DURUM, TETİKLEME DEĞİL
    ----------------------------------------------------------------------------
-   BU BÖLÜM HİÇBİR KOLU ÇEKMEZ ve bu bir eksiklik değil bir karardır (turun açık
-   şartı): kollar `POST /api/control/halt`, `/api/control/learn_halt`,
-   `/api/intraday-arm`, `/api/control/cancel_open` uçlarına bağlı ve hepsi CANLI
-   sisteme yazar. Bir okuma yüzeyinin içine yazma düğmesi koymak, yanlış tıklamayla
-   canlı ticareti durdurmak demektir. Burada yalnız "hangi kol nerede duruyor"
-   yazar; çekme yetkisi kendi turunda, onay adımıyla gelir.
+   BU BÖLÜM HİÇBİR KOLU ÇEKMEZ ve bu bir eksiklik değil bir karardır: kollar
+   `POST /api/halt`, `/api/control/learn_halt`, `/api/control/cancel_open`,
+   `/api/alpaca/close_all` uçlarına bağlı ve hepsi CANLI sisteme yazar. Bir OKUMA
+   yüzeyinin içine yazma düğmesi koymak, yanlış tıklamayla canlı ticareti durdurmak
+   demektir. Burada yalnız "hangi kol nerede duruyor" yazar.
+
+   ~~çekme yetkisi kendi turunda, onay adımıyla gelir~~ — O TUR GELDİ (2026-08-25):
+   kollar `kabuk/KrizKollari.tsx`te, ÜST BARDA ve çift adımlı. Yeri burası DEĞİL ve
+   sebebi değişmedi: üst bar SABİT bir evdir (kas hafızası; sayfa değişince yerinden
+   oynamaz), bu bölüm ise bir yüzeyin içinde kayan bir karttır. Acil bir anda kolun
+   nerede olduğunu aramak, kolun kendisinden pahalıdır.
+   Bu kart hâlâ DURUMU okur — ikisi çelişmez: burada "hangi kol çekili", üst barda
+   "çek/bırak". Şerh silinmedi çünkü gerekçesi hâlâ doğru; yalnız artık nerede
+   olduğunu da söylüyor.
 
    RENK SÖZLEŞMESİ: çekili kol AMBER, kırmızı DEĞİL. Kırmızı "arıza" der; HALT bir
    arıza değil bir KARARDIR. Kırmızı yalnız ölçülemeyen/bozuk bileşene ayrıldı.
@@ -53,8 +61,8 @@ export function Mudahale({
       soru="Hangi durdurma kolu çekili?"
       ikon={Radar}
       aksiyon={
-        <Badge variant="outline" title="Bu bölüm yalnız OKUR — hiçbir kolu çekmez.">
-          salt okunur
+        <Badge variant="outline" title="Bu bölüm yalnız OKUR. Kolları çekmek üst bardaki KRİZ düğmesinde — orada, çift adımlı onayla.">
+          salt okunur · kollar üst barda
         </Badge>
       }
     >

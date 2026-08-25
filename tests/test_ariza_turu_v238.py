@@ -357,8 +357,13 @@ def test_C_damgali_goc_arsivi_YETIM_SAYILMIYOR(sandbox_state):
 
 def test_C_ADIYLA_sayiliyor_sessizce_yok_sayilmiyor(sandbox_state):
     """SESSİZ MUAFİYET DEĞİL. `detail` bilerek seçildi: watchdog satırlara yalnız
-    `check`/`ok`/`detail` taşıyor (watchdog.py:1075), yani operatörün gördüğü TEK metin bu.
-    Sayıyı ek bir alana koyup burada susmak "sessizce yok say" ile aynı sonucu verirdi."""
+    `check`/`ok`/`detail` taşıyor, yani operatörün gördüğü TEK metin bu. Sayıyı ek bir
+    alana koyup burada susmak "sessizce yok say" ile aynı sonucu verirdi.
+
+    ÇAPA SATIR DEĞİL SEMBOL: burada önce watchdog.py'nin 1075. satırına bir çapa
+    yazılıydı; hotstate görünürlük turu o dosyaya satır ekleyince çapa bayatladı ve
+    `codelaw` düştü. Aynı ders bu turda ÜÇÜNCÜ kez yaşandı — satır numarası gömen her
+    çapa, çapaladığı dosyanın her düzenlemesinde bayatlar."""
     _dolu(sandbox_state / "scoreboard.json.migrated-20260812-201359-p192112")
     d = _satir(sandbox_state)["detail"]
     assert "migrasyon_artigi: 1" in d, d

@@ -136,35 +136,58 @@ def test_giveback_window_excludes_pre_entry_bar():
     assert dec.exit_reason != "giveback"
 
 
-# ---------------- FMP is the preferred (freshest) bar source when the key is present ----------------
-def test_fetch_prefers_fmp_when_available(monkeypatch, sandbox_state):
-    """With FMP_API_KEY set, bars come from FMP (~1 day fresher than the delayed Cboe feed) and Cboe is
-    not called; without the key, it falls back to Cboe.
+# ---------------- FMP is the LAST bar source: keyless feeds first, FMP only fills the gap ----------
+def test_fetch_asks_fmp_LAST_and_skips_it_when_keyless_feeds_suffice(monkeypatch, sandbox_state):
+    """POLİTİKA DEĞİŞTİ — ESKİ ÇİVİ ÇÜRÜTÜLDÜ (2026-08-25, v291 kota turu). Bu testin eski adı
+    `test_fetch_prefers_fmp_when_available`di ve "FMP tercih edilir, Cboe HİÇ çağrılmaz" diyordu.
+    ÖLÇÜM o iddiayı çürüttü: `bars_source.json` FMP'nin hiçbir sembolün sahibi OLMADIĞINI söylüyor
+    (cboe 192 · nasdaq 59 · fmp 0) ve öndeki FMP kolu günde 253 çağrı — ücretsiz planın kotasının
+    tamamı — yakıyordu. Kaynak zincirden ÇIKARILMADI, SIRASI değişti.
+
+    İKİ DAL BİRDEN ÇİVİLİ (biri olmadan diğeri yanıltır): (a) anahtarsız kaynak yeterince tazeyse
+    FMP'ye HİÇ istek atılmaz — kotanın kurtulduğu yer burası; (b) anahtarsız kaynaklar istenen
+    seansı VEREMEZSE FMP hâlâ sorulur ve daha taze barı kazanır — yani yetenek kaybı YOK.
 
     `sandbox_state` ZORUNLU (2026-07-29): bu test `data.fetch`i gerçek zincirle çağırıyor. Massive
     kolu eklenince, operatörün CANLI `state/secrets.json`ındaki MASSIVE_API_KEY sandbox'sız testte de
     görünür oluyor ve çapraz-doğrulama GERÇEK ağa çıkıp canlı `massive_grouped_last.json`ı eziyordu
     (5/dk kotasını da yiyor). Sandbox sırları tmp dizine yönlendirdiği için Massive dürüstçe devre
-    dışı kalır ve test yalnız ÖLÇTÜĞÜ şeyi — FMP'nin Cboe'ye tercih edilmesini — ölçer."""
+    dışı kalır."""
     import pandas as pd
     from meridian.adapters import data, fmp
     fmp_rows = [{"date": "2026-07-14", "open": 750, "high": 753, "low": 748, "close": 751, "volume": 3.5e7}]
-    cboe_called = {"n": 0}
+    cagri = {"cboe": 0, "nasdaq": 0, "fmp": 0}
 
-    def fake_cboe(t, to):
-        cboe_called["n"] += 1
-        return pd.DataFrame([{"date": pd.Timestamp("2026-07-13"), "open": 1, "high": 1, "low": 1, "close": 1, "volume": 1}])
+    def _bar(d):
+        return pd.DataFrame([{"date": pd.Timestamp(d), "open": 1, "high": 1, "low": 1,
+                              "close": 1, "volume": 1}])
+
+    def fake_fmp(sym):
+        cagri["fmp"] += 1
+        return fmp_rows
+    # Nasdaq kolu da SAPLANIR: sıra değişince o kol gerçekten koşuyor ve saplanmazsa test AĞA çıkardı.
     monkeypatch.setattr(fmp, "available", lambda: True)
-    monkeypatch.setattr(fmp, "historical_eod", lambda sym: fmp_rows)
-    monkeypatch.setattr(data, "_fetch_cboe", fake_cboe)
-    df = data.fetch("SPY", "2021-01-01", "2026-07-15")
-    assert not df.empty and str(df["date"].max().date()) == "2026-07-14"   # FMP's fresher bar
-    assert cboe_called["n"] == 0                                            # Cboe not hit when FMP works
+    monkeypatch.setattr(fmp, "quota_blocked", lambda: False)
+    monkeypatch.setattr(fmp, "historical_eod", fake_fmp)
+    monkeypatch.setattr(data, "_fetch_nasdaq", lambda t, s, e, to: (cagri.__setitem__("nasdaq", cagri["nasdaq"] + 1), pd.DataFrame())[1])
 
-    # no key → falls back to Cboe
-    monkeypatch.setattr(fmp, "available", lambda: False)
+    # (a) Cboe hedef seansı VERİYOR → zincir orada kesilir, FMP'ye istek YOK.
+    monkeypatch.setattr(data, "_fetch_cboe",
+                        lambda t, to: (cagri.__setitem__("cboe", cagri["cboe"] + 1), _bar("2026-07-14"))[1])
+    df = data.fetch("SPY", "2021-01-01", "2026-07-15")
+    assert not df.empty and str(df["date"].max().date()) == "2026-07-14"
+    assert cagri["cboe"] == 1 and cagri["fmp"] == 0, f"anahtarsız kaynak yeterken FMP'ye istek atıldı: {cagri}"
+
+    # (b) Cboe bir seans GERİDE, Nasdaq boş → FMP hâlâ sorulur ve daha taze barı kazanır.
+    monkeypatch.setattr(data, "_fetch_cboe",
+                        lambda t, to: (cagri.__setitem__("cboe", cagri["cboe"] + 1), _bar("2026-07-13"))[1])
     df2 = data.fetch("SPY", "2021-01-01", "2026-07-15")
-    assert cboe_called["n"] == 1 and str(df2["date"].max().date()) == "2026-07-13"
+    assert cagri["fmp"] == 1 and str(df2["date"].max().date()) == "2026-07-14", f"FMP kolu ölü: {cagri}"
+
+    # anahtar yoksa zincir anahtarsız kaynakla dürüstçe bozunur (FMP kolu zincire hiç girmez)
+    monkeypatch.setattr(fmp, "available", lambda: False)
+    df3 = data.fetch("SPY", "2021-01-01", "2026-07-15")
+    assert cagri["fmp"] == 1 and str(df3["date"].max().date()) == "2026-07-13"
 
 
 # ---------------- H1: slippage/commission not double-counted; the three ledgers agree ----------------

@@ -424,6 +424,9 @@ def _bounds() -> dict:
 #   (b) tasarim          → FİŞ. Kod/doküman/mimari önerisinin otomatik uygulama yolu YOKTUR ve
 #                          olmamalıdır; ama "yol yok" ile "operatörün kuyruğunda" arasında dağlar
 #                          kadar fark var. Fiş = görünür iş kalemi: `nous_fisler.json` + olay.
+#                          FİŞ, GÖZLEM BAŞINA TEKİLDİR (öneri başına değil): aynı alanın her
+#                          koşudaki yeniden bildirimi yeni satır açmaz, mevcut fişin sayacını
+#                          artırır — tekrar KAYBOLMAZ, kuyruğu ŞİŞİRMEZ (bkz. `_alan_anahtari`).
 #   (c) cekirdek_hakkinda→ ANAYASAL RED. `CekirdekIhlali` FIRLATILMAZ ve ALARM BASILMAZ: o istisna
 #                          bir KOD HATASININ (köprünün yanlış yönlendirmesinin) işaretidir — burada
 #                          ise sistem DOĞRU çalışıyor, yalnızca sınıf kapalı. Anayasanın normal
@@ -444,32 +447,182 @@ YOL_FIS = "fis"                     # (b) kod/doküman/mimari → operatör kuyr
 YOL_RED = "anayasal_red"            # (c) CORE/Katman-D → yalnız rapor
 
 
+# ---- FİŞ TEKİLLEŞTİRME: KİMLİK ÖNERİ DEĞİL, GÖZLEMİN ADRESİDİR ---------------------------------
+# ÖLÇÜLEN KUSUR (canlı `nous_fisler.json`): defterde 12 fiş vardı ama DÖRT gerçek kalem —
+# `backtest_full.avg_r eksik` üç kez, `tahmin_isabeti n=1` üç kez, `hotstate surec_ici_sayac null`
+# iki kez fişlenmişti. KÖK NEDEN: tekilleştirme ÖNERİ KİMLİĞİ (`anahtar` = N00007) üzerinden
+# çalışıyordu; oysa beyin her haftalık koşuda AYNI gözlem için YENİ bir öneri satırı üretiyor ve
+# `_oneri_kaydet` ona YENİ bir id veriyor. Yani anahtar her hafta değişiyordu ve "aynı öneri iki fiş
+# üretmez" kapısı HİÇ kapanmıyordu. Bedeli iki katmanlıydı: kuyruk üç kat şişik görünüyordu
+# (operatör "12 açık iş" sanıyordu, gerçek dört) ve tekrarlar önceliği bozuyordu — tek bir sorun üç
+# YÜKSEK satır üretiyordu.
+#
+# FİŞİN KİMLİĞİ ARTIK GÖZLEMİN ADRESİDİR (`alan`). BU BİR SUSTURMA DEĞİL BİR TEKİLLEŞTİRMEDİR —
+# hiçbir gözlem düşmez, yalnız aynı gözlemin N. kopyası AYRI BİR KUYRUK SATIRI olmaz:
+#   · `gorulme`   — alanın kaç DİSTİNCT bildirimle görüldüğü. Tekrar bir SİNYALDİR: her koşuda
+#                   yeniden görülen bir sorun, bir kez görülenden farklıdır. Sayı kaybolmaz.
+#   · `tekrarlar` — katlanan her bildirimin kimliği + haftası. Kimlik `improvement_proposals.jsonl`
+#                   satırının TAM metnine (gözlem/öneri/etki/ölçüm/atıf) işaret eder; kuyruk satırı
+#                   bu yüzden metni ÇOĞALTMAZ. İZ BİR PENCEREDİR (`TEKRAR_TAVANI`), SAYAÇ DEĞİL:
+#                   `gorulme` kırpılmaz, iz kırpılır — ikisi ayrılmazsa defter sınırsız büyürdü.
+#   · baş satır   — EN YENİ bildirimi taşır (gözlem değişmiş olabilir; en yenisi kalır) ve EN AĞIR
+#                   önceliği tutar (bir tekrar, açık bir kalemin önceliğini sessizce DÜŞÜREMEZ).
+#   · `anahtar`   — baş satırla birlikte EN YENİ öneri kimliğine döner. Sabit kalsaydı pano kartı
+#                   (`app.js`: `fis.anahtarlar` içinde önerinin id'sini arar) bu haftanın önerisine
+#                   "fişlenmedi — boru bu satırı işlemedi" YANLIŞ uyarısı basardı: boru doğru
+#                   çalışırken ekranda alarm görünürdü. Eski kimlikler ize düşer, kaybolmaz.
+# KAPANAN FİŞ YENİDEN AÇILIR: katlama YALNIZ AÇIK satırlara bakar (`_fis_acik`). Kapanmış bir fiş
+# yeni bir gözlemi yutsaydı tekilleştirme kalıcı bir susturmaya dönerdi.
+TEKRAR_TAVANI = 8                   # `tekrarlar` izinde tutulan EN SON bildirim sayısı
+
+FIS_SAYAC_KURU_KOSUM = ("kuru koşum (`yaz=False`): fiş defteri ne okundu ne yazıldı — tekrar sayacı "
+                        "ÖLÇÜLEMEZ ('1' yazmak 'ölçtük, ilk kez görüldü' demek olurdu)")
+
+
 def _fis_anahtari(o: dict, hafta: str) -> str:
-    """Fişin kimliği. Öneri id'si (N00001) varsa odur; `yaz=False` kuru koşumda id henüz atanmamış
-    olur ve o hâlde hafta+alan kullanılır — anahtarsız bir fiş her koşuda yeniden doğardı."""
+    """Fişi BİLDİREN önerinin kimliği (N00001) — `improvement_proposals.jsonl` satırına işaret eder
+    ve pano rozeti bununla eşleşir. `yaz=False` kuru koşumda id henüz atanmamış olur ve o hâlde
+    hafta+alan kullanılır. TEKİLLEŞTİRME ANAHTARI BU DEĞİL `_alan_anahtari`DIR (bkz. üstteki blok):
+    bu kimlik her koşuda değişir, gözlemin adresi değişmez."""
     return str(o.get("id") or f"{hafta}:{o.get('alan')}")
 
 
+def _alan_anahtari(alan) -> str:
+    """Fişin TEKİLLEŞTİRME kimliği: gözlemin adresi, normalize edilmiş (boşluklar sadeleşir, küçük
+    harfe iner). BOŞ dönerse katlanacak bir adres YOKTUR ve eski kimlik-tekilliği yürürlükte kalır —
+    adressiz bildirimleri tek kovaya yığmak, farklı gözlemleri birbirine susturmak olurdu."""
+    return " ".join(str(alan or "").split()).lower()
+
+
+def _fis_acik(f: dict) -> bool:
+    """Fiş hâlâ açık mı? Varsayılan `api._nous_fisler` ile AYNIdır: damgasız satır AÇIK sayılır."""
+    return str(f.get("durum") or "fislendi") == "fislendi"
+
+
+def _bildiren_kimlikler(f: dict) -> set[str]:
+    """Bu fişi bugüne kadar bildiren TÜM öneri kimlikleri (baş satır + iz penceresi)."""
+    k = {str(f.get("anahtar"))}
+    k.update(str(t.get("anahtar")) for t in (f.get("tekrarlar") or []) if isinstance(t, dict))
+    return k
+
+
+def _agir_oncelik(a, b):
+    """İkisinden AĞIR olanı döner (`ONCELIKLER` sırası). Bilinmeyen değer en hafif sayılır,
+    eşitlikte yeni bildirim kalır. Tekrar önceliği YÜKSELTEBİLİR, sessizce DÜŞÜREMEZ."""
+    def _r(v) -> int:
+        return ONCELIKLER.index(str(v)) if str(v) in ONCELIKLER else len(ONCELIKLER)
+    return a if _r(a) < _r(b) else b
+
+
+def _fis_ilk_kayit(s: dict) -> dict:
+    """Bir fiş satırının tekrar alanlarını başlatır (ilk görülme = son görülme, sayaç 1). Mevcut
+    değerlere DOKUNMAZ: katlanan eski satırlar kendi sayaçlarını korur."""
+    s.setdefault("gorulme", 1)
+    s.setdefault("son_gorulme", s.get("ts"))
+    s.setdefault("son_hafta", s.get("hafta"))
+    return s
+
+
+def _fis_birlestir(f: dict, s: dict) -> None:
+    """`s` bildirimini `f` fişine KATLA: eski baş ize düşer, baş satır tazelenir, sayaç artar."""
+    iz = [t for t in (f.get("tekrarlar") or []) if isinstance(t, dict)]
+    iz.append({"anahtar": f.get("anahtar"), "hafta": f.get("son_hafta") or f.get("hafta"),
+               "ts": f.get("son_gorulme") or f.get("ts")})
+    iz.extend(t for t in (s.get("tekrarlar") or []) if isinstance(t, dict))
+    f["tekrarlar"] = iz[-TEKRAR_TAVANI:]
+    f["gorulme"] = int(f.get("gorulme") or 1) + int(s.get("gorulme") or 1)
+    f["oncelik"] = _agir_oncelik(f.get("oncelik"), s.get("oncelik"))
+    # BİLDİRİM YÜKÜ BİR BÜTÜN OLARAK TAZELENİR: gözlemi yenileyip öneriyi/atfı eskide bırakmak, iki
+    # AYRI bildirimden dikilmiş bir satır üretirdi ve operatör hangi metnin hangi koşudan geldiğini
+    # ayırt edemezdi. Eski yükün tamamı `improvement_proposals.jsonl` satırında durmaya devam eder.
+    for k in ("anahtar", "id", "gozlem", "oneri", "beklenen_etki", "onerilen_olcum", "kanit_atifi"):
+        f[k] = s.get(k)
+    f["son_gorulme"] = s.get("son_gorulme") or s.get("ts")
+    f["son_hafta"] = s.get("son_hafta") or s.get("hafta")
+
+
+def _tekillestir(fisler: list) -> tuple[list, int]:
+    """DEFTERDE HÂLİHAZIRDA DURAN tekrarları katlar (yalnız AÇIK satırlar); (kalan, katlanan) döner.
+
+    Yalnız ileriye dönük bir tekilleştirme canlıdaki 12 satırı 12 bırakırdı — kusurun ölçülen bedeli
+    (operatörün gördüğü sayı) hiç değişmezdi. Katlama SIRA KORUR: hayatta kalan satır alanın İLK
+    açılan fişidir, baş yükü ise en son bildirimindir."""
+    kalan: list = []
+    bas: dict[str, dict] = {}
+    katlanan = 0
+    for f in fisler:
+        if not isinstance(f, dict):
+            kalan.append(f)
+            continue
+        k = _alan_anahtari(f.get("alan"))
+        if not k or not _fis_acik(f):
+            kalan.append(f)                 # adressiz ya da KAPANMIŞ satıra dokunulmaz
+            continue
+        onceki = bas.get(k)
+        if onceki is None:
+            bas[k] = _fis_ilk_kayit(f)
+            kalan.append(f)
+            continue
+        katlanan += 1
+        if str(f.get("anahtar")) in _bildiren_kimlikler(onceki):
+            continue                        # AYNI bildirim iki kez yazılmış: satır düşer, sayaç DEĞİL
+        _fis_birlestir(onceki, _fis_ilk_kayit(f))
+    return kalan, katlanan
+
+
 def _fis_yaz(satirlar: list[dict]) -> dict:
-    """Fişleri kuyruğa ekle (anahtar bazında TEKİL). Aynı öneri iki koşuda iki fiş üretmez."""
+    """Fişleri kuyruğa ekle — TEKİL OLAN ALANDIR, öneri kimliği DEĞİL (üstteki tekilleştirme bloğu).
+    Aynı alanın ikinci bildirimi YENİ SATIR AÇMAZ: baş satır tazelenir, sayaç artar, kimlik ize düşer.
+
+    DÖNÜŞ: {"doc", "yeni", "birlesen", "katlanan", "gorulme": {öneri kimliği → sayaç}}. Sayaç olaya
+    ve boru kalemine BURADAN taşınır — okunmayan bir sayaç YASA 6 ihlalidir ve tekrar bilgisi
+    kuyruğu şişirmeden görünür olmak zorundadır."""
+    sonuc: dict = {"yeni": 0, "birlesen": 0, "katlanan": 0, "gorulme": {}}
+
     def _mut(cur):
-        """Fiş defterini yerinde günceller: anahtarı henüz olmayan fişleri ekler, sayacı ve güncelleme
-        damgasını tazeler. `store.update_json` çağrısının değiştiricisi.
+        """Fiş defterini yerinde günceller: mevcut tekrarları katlar, her yeni bildirimi ya AÇIK bir
+        fişe katlar ya da yeni satır açar, sayacı ve güncelleme damgasını tazeler.
+        `store.update_json` çağrısının değiştiricisi.
         """
         if not isinstance(cur.get("fisler"), list):
             cur["fisler"] = []
-        var = {str(f.get("anahtar")) for f in cur["fisler"] if isinstance(f, dict)}
-        eklendi = 0
-        for s in satirlar:
-            if str(s["anahtar"]) in var:
+        cur["fisler"], sonuc["katlanan"] = _tekillestir(cur["fisler"])
+        acik: dict[str, dict] = {}
+        kimlikler: set[str] = set()
+        for f in cur["fisler"]:
+            if not isinstance(f, dict) or not _fis_acik(f):
                 continue
-            cur["fisler"].append(s)
-            var.add(str(s["anahtar"]))
-            eklendi += 1
+            kimlikler |= _bildiren_kimlikler(f)
+            k = _alan_anahtari(f.get("alan"))
+            if k:
+                acik.setdefault(k, f)
+        for s in satirlar:
+            kimlik = str(s.get("anahtar"))
+            k = _alan_anahtari(s.get("alan"))
+            mevcut = acik.get(k) if k else None
+            if kimlik in kimlikler:
+                # AYNI BİLDİRİM YENİDEN İŞLENDİ (boru iki kez koştu / tekrar-ayrıştırma yolu): bu
+                # YENİ bir gözlem değildir — ne satır açılır ne sayaç artar. Eski kimlik-tekilliği
+                # sözleşmesi burada aynen yaşar.
+                sonuc["gorulme"][kimlik] = int((mevcut or {}).get("gorulme") or 1)
+                continue
+            if mevcut is None:
+                cur["fisler"].append(_fis_ilk_kayit(s))
+                kimlikler.add(kimlik)
+                if k:
+                    acik.setdefault(k, s)
+                sonuc["yeni"] += 1
+                sonuc["gorulme"][kimlik] = 1
+                continue
+            _fis_birlestir(mevcut, _fis_ilk_kayit(s))
+            kimlikler.add(kimlik)
+            sonuc["birlesen"] += 1
+            sonuc["gorulme"][kimlik] = int(mevcut.get("gorulme") or 1)
         cur["guncellendi"] = _now()
         cur["n"] = len(cur["fisler"])
-        return bool(eklendi) or True        # `guncellendi` her koşuda tazelenir
-    return store.update_json(FISLER_FILE, _mut, {"fisler": [], "n": 0})
+        return True                         # `guncellendi` her koşuda tazelenir
+    sonuc["doc"] = store.update_json(FISLER_FILE, _mut, {"fisler": [], "n": 0})
+    return sonuc
 
 
 def boru(kabul: list, *, hafta: str, yaz: bool = True) -> dict:
@@ -480,8 +633,12 @@ def boru(kabul: list, *, hafta: str, yaz: bool = True) -> dict:
     dışarıdan da çağrılabilir ve o hâlde `o["sekil"]` hâlâ modelin etiketi olabilirdi.
 
     DÖNÜŞ: {"ozet": {...sayaçlar...}, "kalemler": [{"anahtar", "yol", "alan", "sekil", ...}]}."""
-    fisler, kalemler = [], []
-    ozet = {"n": len(kabul), YOL_KUYRUK: 0, YOL_FIS: 0, YOL_RED: 0, "yazildi": bool(yaz)}
+    fisler, kalemler, fis_kalemleri = [], [], []
+    ozet = {"n": len(kabul), YOL_KUYRUK: 0, YOL_FIS: 0, YOL_RED: 0, "yazildi": bool(yaz),
+            # TEKİLLEŞTİRME SAYAÇLARI (v296): "üç fiş yazıldı" ile "bir fiş açıldı, ikisi mevcut
+            # satıra katlandı" aynı ekranda aynı şeye benzemesin. `fis_katlanan` DEFTERDE hazır
+            # duran eski tekrarların katlanmasıdır (bir kereye mahsus, kusurun geriye dönük payı).
+            "fis_yeni": 0, "fis_birlesen": 0, "fis_katlanan": 0}
     for o in kabul:
         sekil, isaretler = sekil_sinifla(o)
         if sekil != o.get("sekil"):
@@ -520,14 +677,32 @@ def boru(kabul: list, *, hafta: str, yaz: bool = True) -> dict:
                  "oncelik": o.get("oncelik"), "sekil": sekil, "durum": "fislendi",
                  "kanit_atifi": o.get("kanit_atifi")}
         fisler.append(satir)
-        kalemler.append({"anahtar": anahtar, "yol": YOL_FIS, "alan": o.get("alan"),
-                         "sekil": sekil, "oncelik": o.get("oncelik")})
-        obs.log(OLAY_FIS, hafta=hafta, anahtar=anahtar, alan=str(o.get("alan"))[:120],
-                oncelik=o.get("oncelik"), yazildi=bool(yaz),
-                detail=("tasarım/kod/doküman önerisi FİŞLENDİ — otomatik uygulama yolu YOK "
-                        "(ve olmamalı); operatör kuyruğunda görünür bir iş kalemi olarak durur."))
-    if yaz and fisler:
-        _fis_yaz(fisler)
+        kalem = {"anahtar": anahtar, "yol": YOL_FIS, "alan": o.get("alan"),
+                 "sekil": sekil, "oncelik": o.get("oncelik")}
+        kalemler.append(kalem)
+        fis_kalemleri.append((satir, kalem))
+    # DEFTER ÖNCE, OLAY SONRA (v296): tekrar sayacı defterin İÇİNDE doğar (`_fis_yaz`), bu yüzden
+    # olay ancak yazımdan sonra "kaçıncı kez" diyebilir. Ters sıra sayacı olaya HİÇ taşıyamaz ve
+    # tekrar bilgisi yalnız defterde kalırdı — ekranda okunmayan bir sayaç YASA 6 ihlalidir.
+    yazim = _fis_yaz(fisler) if (yaz and fisler) else None
+    if yazim:
+        ozet.update({"fis_yeni": yazim["yeni"], "fis_birlesen": yazim["birlesen"],
+                     "fis_katlanan": yazim["katlanan"]})
+    elif fisler:
+        # UYDURMA YASAĞI: kuru koşumda defter okunmaz — sayaçlar ÖLÇÜLEMEZ, sıfır YAZILMAZ.
+        ozet.update({"fis_yeni": None, "fis_birlesen": None, "fis_katlanan": None,
+                     "fis_tekil_olculemedi": FIS_SAYAC_KURU_KOSUM})
+    for satir, kalem in fis_kalemleri:
+        g = yazim["gorulme"].get(str(satir["anahtar"])) if yazim else None
+        kalem["gorulme"] = g
+        tekrar = (f"bu gözlem {g}. kez fişlendi — AYNI ALAN için YENİ SATIR AÇILMADI, sayaç arttı "
+                  f"(TEKİLLEŞTİRME, susturma DEĞİL: her bildirimin kimliği izde durur ve tekrar "
+                  f"sayısı bir sinyaldir). " if (g or 0) > 1 else "")
+        obs.log(OLAY_FIS, hafta=hafta, anahtar=satir["anahtar"], alan=str(satir.get("alan"))[:120],
+                oncelik=satir.get("oncelik"), yazildi=bool(yaz), gorulme=g,
+                gorulme_olculemedi=(None if yazim else FIS_SAYAC_KURU_KOSUM),
+                detail=(tekrar + "tasarım/kod/doküman önerisi FİŞLENDİ — otomatik uygulama yolu "
+                        "YOK (ve olmamalı); operatör kuyruğunda görünür bir iş kalemi olarak durur."))
     return {"ozet": ozet, "kalemler": kalemler}
 
 
@@ -743,8 +918,10 @@ def haftalik_degerlendirme(*, telemetri: dict | None = None, yaz: bool = True,
                   "n_kuyruk": len(kopru["kuyruga_giren"]), "devreden": kopru["devreden"],
                   "slot": kopru["slot"], "haftalik_butce": kopru["haftalik_butce"]})
     # DEFTER ÖNCE, BORU SONRA: fiş satırı önerinin `id`sini taşımalı ve o kimlik burada,
-    # `_oneri_kaydet` içinde doğuyor. Ters sıra fişleri kimliksiz bırakır ve iki koşum aynı öneri
-    # için iki fiş üretirdi (tekilleştirme anahtarı kimliktir).
+    # `_oneri_kaydet` içinde doğuyor. Ters sıra fişleri kimliksiz bırakırdı — kimlik hem önerinin
+    # TAM metnine (`improvement_proposals.jsonl`) işaret eden tek bağ, hem de pano rozetinin eşleşme
+    # anahtarıdır. (Fiş TEKİLLEŞTİRMESİ bu kimlikle DEĞİL gözlemin adresiyle yapılır — kimlik her
+    # koşuda yenilendiği için tekilleştirme hiç kapanmıyordu; bkz. `_alan_anahtari` bloğu.)
     if yaz:
         for o in kabul:
             _oneri_kaydet(o, h, kayit)

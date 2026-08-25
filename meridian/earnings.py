@@ -5,7 +5,8 @@ BLACKOUT_DAYS gün içindeki plan silahlanmaz, çünkü kazanç açıklamasını
 swing girişi kenar değil, boşluk üzerine yazı-turadır (Hard Rule 7: hayal dolum yok). Aynı takvim
 PEAD/episodik-pivot kurulumlarının "rapordan hemen sonra" çapasını da verir. Takvimi periyodik
 tazeler (birincil kaynak anahtarsız Nasdaq takvimi; boş ya da kapsaması eşik-altı kısmi pencerede
-FMP yedeği denenir ve birleştirme geçmiş çapaları silmez), her tazelemenin anlık görüntüsünü
+FMP yedeği denenir — sembol TAVANLI ve karartma ufkuyla daraltılmış, kota sigortası — ve
+birleştirme geçmiş çapaları silmez), her tazelemenin anlık görüntüsünü
 nokta-zamanlı (PIT) birikim defterine EKLER ve kapsam/güvenilirlik sayaçlarını üretir.
 
 Kilit girişler: in_blackout (karartma hükmü), days_since_report (PEAD çapası), report_time
@@ -93,6 +94,42 @@ REFRESH_CADENCE_DAYS = 7   # tazeleme kadansı — scheduler'ın HAFTALIK isocal
 # `refresh`in dönüş sözleşmesi (Nasdaq yolunda hâlâ Nasdaq satır sayısı → scheduler'ın `n > 0`
 # nabzı kaymaz).
 EARNINGS_FMP_FALLBACK_COVERAGE = 0.90
+
+# --------------------------------------------------------------------------------------------------
+# FMP YEDEĞİNİN SEMBOL TAVANI + KARARTMA UFKU (2026-08-25, v291 bütçe turu)
+# --------------------------------------------------------------------------------------------------
+# ÖNEMLİ BULGU — YEDEK TARİHSEL OLARAK HİÇ ATEŞLENMEMİŞ: yerel olay defterinde 167
+# `earnings_refreshed` kaydının HEPSİ `source: nasdaq`, `fmp_yedek: None`. Yani bu yol bugüne dek
+# hiç açılmadı. Şimdi ateşleniyor olması KALICI BİR İHTİYAÇ DEĞİL, Nasdaq bacağında bir REGRESYON
+# SİNYALİDİR (gün kapsaması eşiğin altına düşüyor). Tavan bu yüzden bir ÇARE değil bir SİGORTAdır:
+# regresyonun BEDELİNİ 249 çağrıdan tavana indirir, REGRESYONUN KENDİSİNİ ÇÖZMEZ — kök neden
+# (Nasdaq gün-dilimlerinin neden düştüğü) ayrı bir kalemdir ve bu tur kapsamında DEĞİLDİR.
+#
+# NEDEN 25: günlük FMP bütçesinin ~%10'u (ücretsiz plan 250/gün/anahtar). Regresyon SÜRERKEN bile
+# kotayı yakmaz — 251 sembollük tavansız döngü tek başına günün tamamını (249 çağrı) yiyordu.
+# Sayı bir KOTA kararıdır, ölçümle ayarlanacak bir knob DEĞİL: arama uzayında yer almaz,
+# `bounds.yaml`a girmez (eşiğin kendisiyle aynı gerekçe, bkz. yukarısı).
+#
+# UFUK: sorulacak semboller KARARTMA UFKUYLA daraltılır — takvimde önümüzdeki
+# `BLACKOUT_DAYS + REFRESH_CADENCE_DAYS` gün içinde tarihi OLAN sembol zaten BİLİNİYOR ve ona kota
+# harcamak bilinen bir cevabı satın almaktır. Riskli olan, o pencerede tarihi OLMAYAN sembollerdir:
+# orada `in_blackout` veri yokken FAIL-OPEN'a düşer ve motor bilanço gününe pozisyonla girer.
+# Ufuk TÜRETİLİR (`fmp_yedek_ufku`), literal DEĞİL — `margin_days` ile aynı ders: üç sayının
+# aritmetiğini bir yere YAZMAMAK bu modülün bilinen hata sınıfıydı.
+#
+# SESSİZ KIRPMA YASAK: daraltmanın her turu `earnings_fmp_yedek_daraltildi` ile BEYAN edilir
+# (istenen / ufukta bilinen / sorulan / atlanan). Beyan olmasa "yedek koştu" ile "yedek koştu ama
+# evrenin %90'ını hiç sormadı" aynı sayıyla anlatılırdı.
+EARNINGS_FMP_TAVAN = 25
+
+
+def fmp_yedek_ufku() -> int:
+    """FMP yedeğinin sembol daraltmasında kullandığı gün ufku — SABİTLERDEN TÜRETİLİR.
+
+    `BLACKOUT_DAYS + REFRESH_CADENCE_DAYS`: bir sonraki tazelemeye kadar geçecek süre ARTI karartma
+    penceresi. Bu ufuk içinde takvimde tarihi olan sembol için yeni bilgiye ihtiyaç yoktur; ufkun
+    DIŞINDA kalan (ya da hiç tarihi olmayan) sembol ise karartmanın kör noktasıdır."""
+    return int(BLACKOUT_DAYS) + int(REFRESH_CADENCE_DAYS)
 
 # BMO/AMC DARALTMASI — YOL VAR, ANAHTAR KAPALI. `time` alanı ölçüldü ve GERÇEK (2026-08-01, Nasdaq
 # takvimi 6 gün / 1307 satır: time-not-supplied %65,7 · time-after-hours %19,7 · time-pre-market
@@ -372,8 +409,9 @@ def refresh(tickers: list[str]) -> int:
                         f"BİLİNMEZ ve karartma o sembolde fail-open kalırdı"),
                  detail="KISMİ pencere yedeğe düşürdü (KOVA B, operatör onaylı eşik): Nasdaq'ın "
                         "getirdiği satırlar ATILMADI, FMP satırları yanlarına eklendi; karartma "
-                        "semantiği ve tam-boşluk yolu DEĞİŞMEDİ. Yedek bu turda kotadan ticker "
-                        "başına bir istek harcadı.")
+                        "semantiği ve tam-boşluk yolu DEĞİŞMEDİ. Yedek kotadan SORULAN sembol "
+                        "başına bir istek harcadı — sorulan küme tavanlı ve ufukludur "
+                        "(EARNINGS_FMP_TAVAN; daraltma `earnings_fmp_yedek_daraltildi`de).")
 
     # ---- İLERİ-YÖNLÜ REVİZYON EMEKLİLİĞİ (denetim hafif bulgusu; gerekçe: refresh docstring'i (i))
     # NEDEN BURADA: `merged` artık BİRİKMİŞ takvimdir (prev + varsa FMP yedeği) ve `rows` kaynağın
@@ -438,6 +476,48 @@ def refresh(tickers: list[str]) -> int:
     return len(rows)
 
 
+def _yedek_hedefi(tickers: list[str]) -> list[str]:
+    """FMP yedeğinin GERÇEKTEN soracağı semboller: önce KARARTMA UFKU daraltması, sonra TAVAN.
+    Gerekçeler `EARNINGS_FMP_TAVAN` başlığında; burada yalnız uygulaması ve BEYANI var.
+
+    UFUK: takvimde [bugün, bugün+`fmp_yedek_ufku()`] aralığında tarihi OLAN sembol atlanır — o
+    sembolde karartma zaten çalışır durumda, cevabı satın almak kotayı bilinen bir bilgiye harcar.
+    Biçimsiz tarih "bilgi YOK" sayılır (uydurma yasağı: okunamayan tarih bilinen tarih değildir).
+
+    TAVAN: kalan liste `EARNINGS_FMP_TAVAN` sembolde kesilir. Sıra ÇAĞIRANIN sırasıdır — bu yol
+    kendi başına bir öncelik ölçüsü UYDURMAZ (öncelik gerçekten istenirse çağıranın işidir)."""
+    istenen = [str(t).strip().upper() for t in tickers if str(t).strip()]
+    takvim = _load()
+    bugun = dt.date.today()
+    son = bugun + dt.timedelta(days=fmp_yedek_ufku())
+
+    def _ufukta_bilinen(t: str) -> bool:
+        for d in takvim.get(t, []):
+            try:
+                gun = dt.date.fromisoformat(str(d)[:10])
+            except ValueError:  # sessiz-yutma: biçimsiz TEK tarih; o tarih "bilinmiyor" sayılır ve sembol SORULUR (fail-safe yön)
+                continue
+            if bugun <= gun <= son:
+                return True
+        return False
+
+    aday = [t for t in istenen if not _ufukta_bilinen(t)]
+    hedef = aday[:int(EARNINGS_FMP_TAVAN)]
+    if len(hedef) < len(istenen):
+        from . import obs
+        obs.warn("earnings_fmp_yedek_daraltildi", istenen=len(istenen),
+                 ufukta_bilinen=len(istenen) - len(aday), soruldu=len(hedef),
+                 atlandi=len(aday) - len(hedef), tavan=int(EARNINGS_FMP_TAVAN),
+                 ufuk_gun=fmp_yedek_ufku(),
+                 neden=("FMP kazanç ucu SEMBOL BAŞINA bir istektir; tavansız 251'lik döngü ücretsiz "
+                        "planın günlük kotasının tamamını (249 çağrı) yakıyordu"),
+                 detail="TAVAN BİR ÇARE DEĞİL SİGORTADIR: bu yedeğin ateşlenmesi Nasdaq bacağında "
+                        "bir REGRESYON sinyalidir (defterdeki 167 tazelemenin hepsi source=nasdaq, "
+                        "fmp_yedek=None). `atlandi` sembollerde takvim BU TURDA tazelenmedi — "
+                        "karartma orada bir önceki takvimle çalışır.")
+    return hedef
+
+
 def refresh_from_fmp(tickers: list[str]) -> int:
     """Evrenin kazanç tarihlerini FMP'den çekip state/earnings.csv'ye yazar (ticker,date). Hem PEAD
     çapasını hem MEVCUT kazanç-karartma guard'ını (bugüne dek boş veriyle no-op'tu) gerçek veriyle
@@ -450,20 +530,26 @@ def refresh_from_fmp(tickers: list[str]) -> int:
     `in_blackout` o tarihlerde fail-open'a düşerdi). Kaynak değişimi geçmiş çapaları SİLMEZ.
     DÖNÜŞ DEĞERİ DEĞİŞMEDİ: hâlâ "bu turda elde edilen satır" sayısıdır (FMP'nin döndürdükleri +
     düşen ticker'lardan kurtarılanlar), dosyadaki TOPLAM değil — `refresh`in `if not n` kapısı ve
-    scheduler'ın nabzı o sayıya yaslanıyor."""
+    scheduler'ın nabzı o sayıya yaslanıyor.
+
+    TAVANLI VE UFUKLU (2026-08-25, v291): `tickers`ın TAMAMI sorulmaz — `_yedek_hedefi` önce
+    karartma ufkuyla daraltır, sonra `EARNINGS_FMP_TAVAN` sembolde keser ve daraltmayı
+    `earnings_fmp_yedek_daraltildi` ile BEYAN eder (gerekçe sabitin başlığında). Yani bu yolun
+    kota maliyeti artık evren boyundan BAĞIMSIZDIR: 251 çağrı değil, en çok tavan kadar."""
     from .adapters import fmp
     if not fmp.available():
         return 0
     import time as _t
+    hedef = _yedek_hedefi(list(tickers))
     rows, failed = [], []
-    for t in tickers:
+    for _i, t in enumerate(hedef):
         try:
             for d in fmp.earnings_dates(t, strict=True):   # hata YUTULMAZ: eksik ≠ "kazanç yok"
                 rows.append((t.upper(), d))
         except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
             failed.append(t.upper())
             if fmp.quota_blocked():                        # kota bitti: kalanı denemek anlamsız
-                failed.extend(x.upper() for x in tickers[tickers.index(t) + 1:])
+                failed.extend(x.upper() for x in hedef[_i + 1:])
                 break
             continue
         _t.sleep(0.1)                                     # polite delay — refetch ile aynı görgü kuralı
@@ -485,7 +571,9 @@ def refresh_from_fmp(tickers: list[str]) -> int:
         for t in failed:
             for d in prev.get(t, []):
                 rows.append((t, d))
-        obs.warn("earnings_refresh_partial", ok=len(tickers) - len(failed), failed=len(failed),
+        # `ok` SORULAN sembollere göre sayılır, çağıranın verdiği tam listeye göre DEĞİL: tavan/ufuk
+        # yüzünden hiç sorulmayan sembol ne "ok" ne "failed"tır — o daraltma AYRI beyan edilir.
+        obs.warn("earnings_refresh_partial", ok=len(hedef) - len(failed), failed=len(failed),
                  kept_from_cache=len({t for t in failed if prev.get(t)}))
     # ÜST KÜME (bkz. docstring): `rows` YALNIZ bu turun kazanımıdır ve dönüş değeri odur; DOSYAYA
     # yazılan küme ise mevcut takvimin TAMAMIYLA birleştirilmiş hâlidir. İki kümenin ayrı tutulması

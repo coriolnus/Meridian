@@ -42,7 +42,41 @@ def available() -> bool:
 # çağrının sebebini (kota mı, auth mı, ağ mı) tahminle değil kayıtla cevaplamak için.
 _HEALTH = {"ok": None, "calls": 0, "fails": 0, "last_status": None, "last_error": "", "at": None,
            "last_key": None, "last_body": ""}
-QUOTA_COOLDOWN_S = 3600     # 429 sonrası toplu tüketicilerin bekleyeceği süre
+
+# --------------------------------------------------------------------------------------------------
+# KOTA BLOĞU SÜRESİ — SAAT SABİTİ DEĞİL, SAĞLAYICININ GÜNLÜK SIFIRLAMASI (2026-08-25, v291)
+# --------------------------------------------------------------------------------------------------
+# ESKİ HÂL: `QUOTA_COOLDOWN_S = 3600`. Blok BİR SAAT sürüyordu ama FMP kotası GÜNLÜKTÜR — yani blok
+# her saat kendiliğinden açılıyor ve her açılışta iki anahtara birer GARANTİLİ-429 atılıyordu.
+# KANIT (state/fmp_usage.json `quota_hits`, ÖLÇÜM — tahmin değil): 07-28 21:37→22:37 · 07-29
+# 20:33→21:36→22:56 — hepsi tam bir saat arayla ve hepsi ÇİFT (birincil + yedek). Ölçülen kazanç
+# 10-20 çağrı/gün.
+#
+# YENİ HÂL: blok, BİR SONRAKİ UTC GÜN DÖNÜMÜNE kadar sürer.
+#
+# "UTC gün dönümü" VARSAYIMI DOĞRULANMADI, GÖZLEMDEN TÜRETİLDİ — ve karşı kanıt da yazılıdır:
+#   * SAĞLAYICI SÖYLEMİYOR: 429 gövdesi yalnız "Limit Reach . Please upgrade your plan..." diyor,
+#     reset saati YOK (gövdenin tamamı `quota_hits[].body`de kayıtlı — okunabilir, uydurulmadı).
+#   * KARŞI KANIT: defterde 2026-07-30T00:53 UTC'de HÂLÂ 429 var (o gün yalnız ~10 çağrı yapılmış,
+#     yani yeniden tükenme değil). Demek ki gerçek sıfırlama UTC gün dönümünden SONRA olabilir
+#     (ör. ABD-doğu gece yarısı ≈ 04:00-05:00 UTC ya da 24 saatlik kayan pencere).
+#   * SONUÇ: UTC gün sonu bir ALT SINIRDIR. Saatlik sabitten kesinlikle daha doğrudur (kota günlük,
+#     saatlik değil) ama "kesin sıfırlama anı" DİYE OKUNMAMALIDIR.
+#   * ARTIK RİSK, AÇIKÇA: gerçek sıfırlama daha geçse ve bir tüketici gün dönümünün HEMEN ardından
+#     çağrı yapsa, gelen 429 anahtarı o günün SONUNA kadar bloklar — yani bir günlük kota
+#     kullanılmadan kalabilir. Bugünkü kadans bunu ISKALIYOR (gece işleri 20:00-20:20 UTC arasında,
+#     blok o saatte çoktan açılmış olur), ama sıfırlama saati ÖLÇÜLENE kadar bu bir açık kalemdir.
+def _blok_bitisi(now: float | None = None) -> float:
+    """429 bloğunun bitiş damgası: `now`dan sonraki İLK UTC gün dönümü (epoch saniye).
+
+    Gün dönümüne 30 saniye kala bloklanan anahtar yalnız 30 saniye bloklu kalır — sağlayıcının
+    takvimi neyse odur; süreyi yapay bir tabanla uzatmak tam da kaçınılan şeyi (uydurma saat
+    sabiti) geri getirirdi."""
+    import datetime as _d
+    import time as _t
+    ts = _d.datetime.fromtimestamp(float(now if now is not None else _t.time()), _d.timezone.utc)
+    ertesi = (ts.date() + _d.timedelta(days=1))
+    return _d.datetime(ertesi.year, ertesi.month, ertesi.day, tzinfo=_d.timezone.utc).timestamp()
 
 # --- YEDEK ANAHTAR ROTASYONU (operatör isteği) -----------------------------------
 # Birincil FMP anahtarı günlük kotayı (ücretsiz katman ~250/gün) doldurup 429 yeyince İKİNCİ bir
@@ -75,19 +109,103 @@ def _key_blocked(name: str) -> bool:
 
 
 def _block_key(name: str) -> None:
-    """Adı verilen anahtarı QUOTA_COOLDOWN_S boyunca bloklu işaretler (429 sonrası). Kota dolmuşken
-    istek atmak ne veri getirir ne kotayı geri verir; bu işaret diğer FMP tüketicilerini korur."""
+    """Adı verilen anahtarı SAĞLAYICININ günlük sıfırlamasına kadar bloklu işaretler (429 sonrası;
+    süre gerekçesi `_blok_bitisi` başlığında). Kota dolmuşken istek atmak ne veri getirir ne kotayı
+    geri verir; bu işaret diğer FMP tüketicilerini korur."""
+    _KEY_BLOCKED[name] = _blok_bitisi()
+
+
+# --------------------------------------------------------------------------------------------------
+# 402 = PLAN SINIRI (KOTA DEĞİL) → UÇ BAŞINA GÜNLÜK KAPATMA (2026-08-25, v291)
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN VAKA: 2026-08-23'te 43 çağrının 43'ü 402 ile düştü, hepsi BİRİNCİ anahtarda
+# (`by_key: {FMP_API_KEY: 43}`) — rotasyon hiç ateşlenmedi ve ateşlenmemeliydi de:
+# 402 "bu uç ÜCRETSİZ PLANDA kapalı" demektir, ikinci anahtar AYNI ücretsiz plandadır, yani
+# rotasyon 43 kaybı 86 yapardı. Bu hesapta gerçek KOTA sinyali 429'dur ve tam 251./502. çağrıda
+# gelir (`quota_hits` defteri) — iki sinyal AYRI politikaya bağlıdır ve bu ayrım kasıtlıdır.
+#
+# DOĞRU DAVRANIŞ: 402 alan UCU (path) o gün için kapat. Kapatma ANAHTAR başına DEĞİL uç başına;
+# aksi hâlde ücretsiz planda ÇALIŞAN uçlar (ör. `insider-trading/latest` — Y3, günde 1 çağrı,
+# vazgeçilmez) kapalı bir kardeş uç yüzünden susturulurdu. Desen `adapters/insider.py`nin 402
+# dalından alındı ("sembol sembol denemek 250 boş istek atmak olurdu"); oradaki dal tek TURU
+# kesiyordu, buradaki kapatma GÜN boyunca yaşar ve TÜM tüketicileri korur.
+#
+# BİLİNÇLİ KABA-TANE: kapatma UCUN TAMAMINI kapsar, istek BİÇİMİNİ değil. `quote` ucu tekil
+# sembolle 200, virgüllü çoklu listeyle 402 döner (bkz. `quote` docstring'i); çoklu bir çağrı
+# 402 yerse tekil yol da o gün kapanır. Üretimde çoklu yol tüketilmiyor, o yüzden bugün maliyeti
+# yok — ama açılırsa burası ince-taneleştirilmeli.
+_PATH_BLOCKED: dict[str, float] = {}   # uç (path) -> blocked_until (epoch)
+
+
+def _norm_path(path: str) -> str:
+    """Uç adının kanonik hâli — blok anahtarı bununla tutulur ki '/quote' ile 'quote' AYNI uç sayılsın."""
+    return str(path or "").lstrip("/")
+
+
+def _path_blocked(path: str) -> bool:
+    """Bu uç 402 yüzünden şu an kapalı mı? Kayıt yoksa False; damga geçmişse blok kendiliğinden düşer."""
     import time as _t
-    _KEY_BLOCKED[name] = _t.time() + QUOTA_COOLDOWN_S
+    return _t.time() < float(_PATH_BLOCKED.get(_norm_path(path)) or 0)
+
+
+def _block_path(path: str) -> None:
+    """Ucu sağlayıcının günlük sıfırlamasına kadar kapatır (402 sonrası). Süre gerekçesi
+    `_blok_bitisi` başlığında: plan sınırı da kota gibi GÜNLÜK bir olgudur ve saatlik yeniden
+    deneme her açılışta garantili-402 üretirdi."""
+    _PATH_BLOCKED[_norm_path(path)] = _blok_bitisi()
+
+
+def blocked_paths() -> list[str]:
+    """ŞU AN 402 ile kapalı uçların adları (sıralı). Muhasebenin görünen yüzü: 'istek neden
+    atılmadı' sorusu tahminle değil kayıtla cevaplanır. Süresi dolmuş kayıtlar listelenmez."""
+    return sorted(p for p in _PATH_BLOCKED if _path_blocked(p))
 
 
 def health() -> dict:
     """FMP HTTP yolunun son durumunun kopyası (ok, çağrı/hata sayaçları, son HTTP kodu, son hata,
-    son kullanılan anahtar adı ve damga). Anahtarın VARLIĞINI değil, çağrının sonucunu bildirir."""
+    son kullanılan anahtar adı ve damga). Anahtarın VARLIĞINI değil, çağrının sonucunu bildirir.
+
+    KAPALI UÇLAR BURADA DEĞİL, `blocked_paths()`tedir: bu sözlük "son ÇAĞRININ sonucu"nu anlatır ve
+    şeması dışarıda çivili (tests/test_review_backlog_v98). Atılmamış bir isteğin durumu bir çağrı
+    sonucu değildir; ikisini aynı sözlüğe koymak her iki okuyucuyu da yanıltırdı."""
     return dict(_HEALTH)
 
 
-USAGE_FILE = "fmp_usage.json"       # {date, calls, fails, blocked_at} — günlük kota muhasebesi
+USAGE_FILE = "fmp_usage.json"       # {date, calls, fails, blocked_at, atlanan} — günlük kota muhasebesi
+
+
+def _gun_defteri(u: dict, today: str) -> dict:
+    """Günlük defterin o güne ait hâli: gün DÖNDÜYSE sayaçlar sıfırlanır ama `quota_hits` TAŞINIR.
+
+    O defterin tek amacı sağlayıcının kota RESET SAATİNİ ölçmek; ölçüm ancak gün SINIRINI aşan bir
+    pencerede yapılabilir — her gece silmek, tam da ölçülmek istenen olguyu siliyordu. Yardımcı
+    olarak ayrıldı çünkü artık İKİ yazar var (çağrı muhasebesi + atlanan-istek muhasebesi) ve gün
+    dönümü kuralının iki kopyası sessizce ayrışırdı."""
+    if u.get("date") == today:
+        return u
+    return {"date": today, "calls": 0, "fails": 0, "blocked_at": None,
+            "quota_hits": list(u.get("quota_hits") or [])[-20:]}
+
+
+def _usage_atlandi(path: str) -> None:
+    """ATILMAYAN istek de bir olgudur: 402 ile kapalı bir uç yüzünden atlanan çağrı `atlanan` ve
+    `atlanan_by_path` altında AYRI sayılır.
+
+    `calls`a EKLENMEZ: atılmamış istek bir çağrı değildir ve onu çağrı saymak, defterin tek işini
+    ('kota neden bitti' sorusunu kayıtla cevaplamak) bozardı. Sessizce hiç saymamak ise bu deponun
+    yasağı — 'istek atılmadı' kararının kaç kez verildiği görünmeden kalırdı."""
+    try:
+        from .. import store
+        import datetime as _d
+        today = _d.date.today().isoformat()
+        with store.file_lock(USAGE_FILE):
+            u = _gun_defteri(store.read_json(USAGE_FILE, {}) or {}, today)
+            u["atlanan"] = int(u.get("atlanan", 0)) + 1
+            _p = _norm_path(path) or "?"
+            u.setdefault("atlanan_by_path", {})[_p] = int((u.get("atlanan_by_path") or {}).get(_p, 0)) + 1
+            store.write_json(USAGE_FILE, u)
+    except Exception:  # sessiz-yutma: geç bağlanan yardımcı modül/çağrı; asıl karar bu değere bağlı değil ve çağıran yokluğu yedek değerle karşılıyor
+        pass
 
 
 def _usage(ok: bool, *, status: int | None, key_name: str, error: str = "", body: str = "") -> None:
@@ -113,13 +231,8 @@ def _usage(ok: bool, *, status: int | None, key_name: str, error: str = "", body
         import datetime as _d
         today = _d.date.today().isoformat()
         with store.file_lock(USAGE_FILE):
-            u = store.read_json(USAGE_FILE, {}) or {}
-            if u.get("date") != today:
-                # GÜN DÖNÜMÜ: sayaçlar sıfırlanır ama `quota_hits` TAŞINIR. O defterin
-                # tek amacı sağlayıcının kota RESET SAATİNİ ölçmek; ölçüm ancak gün SINIRINI aşan bir
-                # pencerede yapılabilir. Her gece silmek, tam da ölçülmek istenen olguyu siliyordu.
-                u = {"date": today, "calls": 0, "fails": 0, "blocked_at": None,
-                     "quota_hits": list(u.get("quota_hits") or [])[-20:]}
+            # GÜN DÖNÜMÜ KURALI TEK YERDE: `_gun_defteri` (sayaçlar sıfırlanır, `quota_hits` taşınır).
+            u = _gun_defteri(store.read_json(USAGE_FILE, {}) or {}, today)
             u["calls"] = int(u.get("calls", 0)) + 1
             # SEBEP DAĞILIMI: "510 çağrı / 418 başarısız" tek başına kota mı, auth mı,
             # ağ mı olduğunu söylemiyordu — ve yanlış teşhis yanlış politikayı doğurur (bir
@@ -178,10 +291,20 @@ def _redact(msg: str) -> str:
 
 def _get(path: str, params: dict | None = None, timeout: float = 20.0):
     """Sıradaki AÇIK anahtarla GET; birincil 429 (kota) yeyince YEDEK anahtara ROTASYON. Anahtar çağırana
-    asla sızmaz (yalnız _get_with_key ekler; hata metni maskelenir). 401/403/5xx rotasyonla çözülmez."""
+    asla sızmaz (yalnız _get_with_key ekler; hata metni maskelenir). 401/403/5xx rotasyonla çözülmez.
+
+    402 (plan sınırı) ROTASYONLA DA ÇÖZÜLMEZ ve tekrar denemeyle de: uç o gün için kapatılır
+    (gerekçe `_PATH_BLOCKED` başlığında) ve sonraki çağrılar ağa ÇIKMADAN dürüst bir gerekçeyle
+    düşer. `ping()` bu kapıdan geçmez — teşhis aracı kapalı uçta bile gerçek isteği atmalıdır."""
     keys = _active_keys()
     if not keys:
         raise RuntimeError("FMP_API_KEY absent — FMP calls disabled")
+    if _path_blocked(path):
+        # KAPALI UÇ: istek ATILMAZ. Atılsaydı garantili bir 402 daha yerdik — ne veri gelir ne
+        # plan açılır; yalnız `fails` şişer (canlı defterde 43/43 tam olarak böyle yandı).
+        _usage_atlandi(path)
+        raise RuntimeError(f"FMP: '{_norm_path(path)}' ucu ücretsiz planda KAPALI (HTTP 402) — "
+                           f"bugünlük istek atılmadı")
     last_exc: Exception | None = None
     for name, key in keys:
         if _key_blocked(name):
@@ -204,6 +327,20 @@ def _get(path: str, params: dict | None = None, timeout: float = 20.0):
                     except Exception:  # sessiz-yutma: kayıt kanalı düştü; rotasyonun kendisi kararı düşürmez
                         pass
                 continue                   # ...ve YEDEK anahtara rotasyon
+            if _HEALTH.get("last_status") == 402:
+                # PLAN SINIRI: ne rotasyon (yedek AYNI planda) ne tekrar deneme (plan gün içinde
+                # açılmaz) çözer. Ucu kapat, sebebi kayda geç, hatayı AYNEN fırlat — çağıranın
+                # bugünkü davranışı (yutup boş dönmek) değişmesin.
+                _block_path(path)
+                try:
+                    from .. import obs
+                    obs.warn("fmp_path_closed", path=_norm_path(path), status=402,
+                             key_slot=name, blocked_paths=",".join(blocked_paths()),
+                             detail="uç ücretsiz planda kapalı (HTTP 402) — bugünlük istek "
+                                    "atılmayacak; rotasyon UYGULANMADI çünkü yedek anahtar da "
+                                    "aynı ücretsiz plandadır (43 kayıp 86 olurdu)")
+                except Exception:  # sessiz-yutma: kayıt kanalı düştü; kapatmanın kendisi kararı düşürmez
+                    pass
             raise                          # 401/403/5xx: rotasyon çözmez
         except Exception as e:
             last_exc = e
