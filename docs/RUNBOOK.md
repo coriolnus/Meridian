@@ -328,6 +328,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Belirti
 
+- işçi havuzu tavan boyunca TEK İŞ bitirmedi — teslimat arızası, canlılık değil *(kaynak: `meridian/obs.py` — `ALARM_ARAMA_HAVUZU_OLU`)*
 - Neden ayrı bir sınıf: ARAMA HAVUZU HİÇBİR İŞ BİTİRMİYOR — TESLİMAT arızası, CANLILIK arızası DEĞİL (v313, 2026-08-25). Bugüne kadar bu olgu yalnız `obs.warn("arama_havuzu_zaman_asimi")` ile yazılıyordu ve `warn`ın kendi şerhi diyor ki "alarm DEĞİLDİR: bildirim zincirini tetiklemez" — 61 kayıt, günde 8-9, operatörün gelen kutusuna HİÇ düşmedi. Ölçülen bedel: öğrenme hattı 2026-08-21'den beri sıfır öneri üretti (bg_reflection son 08-16, hermes_proposal son 08-21) ve kimse duymadı. NEDEN AYRI BİR JETON: `MECHANISM_STALE` bir CANLILIK ölçüsüdür ("iplik nabız atıyor mu"). v302 nabzı havuz bekleyişinin İÇİNDEN attırıyor ve bunu DOĞRU yapıyor — iplik gerçekten canlı. Ama o düzeltme, kazara bu arızanın tek sesi olan yanıltıcı alarmı susturur. Doğru çözüm sesi kısmak değil, YANLIŞ sinyali DOĞRUSUYLA değiştirmektir: "iplik canlı" (v302) + "havuz iş bitirmiyor" (bu jeton). İkisi ayrı olgudur; biri ötekinin yerine geçemez. *(kaynak: `meridian/obs.py`)*
 
 ### Teşhis adımları

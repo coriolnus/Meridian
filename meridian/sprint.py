@@ -572,7 +572,19 @@ def start(cfg: dict | None = None) -> dict:
     sid = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     sbroot = _kur_kum_havuzu(sid)
     live = config.STATE
-    conf = {"k_max": int(cfg.get("k_max", 3)), "budget": int(cfg.get("budget", 12))}
+    # VARSAYILAN TÜRETİMDEN GELİR, SABİTTEN DEĞİL (2026-08-26). Eskiden burada `3` ve `12`
+    # yazıyordu ve bu, AYNI MAKİNEDE İKİ FARKLI BÜTÇE demekti:
+    #     kadans yolu →  maybe_start() → start(auto_config())  → canlı A1'de 6/2
+    #     elle yol    →  start({}) / eksik alanlı cfg           → 12/3   (SABİT)
+    # 12 ve 3 masum görünür çünkü `auto_config`in "çipa dürüstlüğü" gereği SEKİZ çekirdekli bir
+    # makinede formül tam olarak onları üretir — yani sabitler bir geliştirme makinesinin
+    # türetimiydi. Dört çekirdekli canlıda operatörün "Antrenmanı başlat" düğmesi, kadansın
+    # ölçülmüş yükünün İKİ KATIYLA koşuyordu ve bunu hiçbir yer söylemiyordu.
+    # OVERRIDE SÖZLEŞMESİ KORUNUR (`auto_config`in env sözleşmesiyle aynı ruh): cfg'de alan
+    # VARSA operatör kazanır; YOKSA makine ölçülür.
+    _oto = auto_config()
+    conf = {"k_max": int(cfg.get("k_max", _oto["k_max"])),
+            "budget": int(cfg.get("budget", _oto["budget"]))}
     # TEK KODLAMA, İKİ YOL: aynı dize hem `Popen` argümanına hem systemd ortam dosyasına gider —
     # iki ayrı `json.dumps` çağrısı, iki yolun sessizce ayrışabileceği bir yüzey olurdu. BOŞLUKSUZ
     # (`separators`): `${VAR}` zaten tek argüman verir, ama biri bir gün birimde süslü parantezi

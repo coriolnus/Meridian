@@ -112,7 +112,19 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
         # İCRA-SÖZLEŞMESİ (2026-08-12, v233 — VLO vakası): onaylı plan broker'a gitmediyse bu
         # sermaye-sınıfı alarm split_brain gürültüsüne gömülmesin diye AYRI jeton; NOTIFY türetmesi
         # bildirime otomatik bağlar. Bu literal güncellemesi o kararın kaydıdır (`obs._maybe_notify` jeton-başına susturma gerekçesi).
-        "ONAYLI_PLAN_GONDERILMEDI"}
+        "ONAYLI_PLAN_GONDERILMEDI",
+        # TESLİMAT SINIFI (2026-08-25, v313): `ARAMA_HAVUZU_OLU` kasıtlı kapsam kararıdır (14 → 15).
+        # ÖLÇÜLEN BEDEL: arama havuzu 2026-08-12'den beri her atalet olayında `biten=0` döndü (61
+        # olayın 61'i) ve öğrenme hattı 2026-08-21'den sonra SIFIR öneri üretti — ama olgu yalnız
+        # `obs.warn` ile yazılıyordu ve `warn`ın kendi şerhi "alarm DEĞİLDİR: bildirim zincirini
+        # tetiklemez" diyor. 61 kayıt, günde 8-9, operatörün gelen kutusuna HİÇ düşmedi.
+        # NEDEN MECHANISM_STALE YETMEZ: o jeton CANLILIK ölçer ("iplik nabız atıyor mu"). v302
+        # nabzı havuz bekleyişinin İÇİNDEN attırdı ve bunu DOĞRU yaptı — iplik gerçekten canlı.
+        # Ama o düzeltme, kazara bu arızanın tek sesi olan yanıltıcı alarmı susturur. Doğru çözüm
+        # sesi kısmak değil, YANLIŞ sinyali DOĞRUSUYLA değiştirmektir: "iplik canlı" (MECHANISM_STALE,
+        # doğru) + "havuz iş bitirmiyor" (bu jeton, doğru). İkisi AYRI olgudur; biri ötekinin
+        # yerine geçemez. Kapsam BÜYÜDÜ, daralmadı. Bu literal güncellemesi o kararın kaydıdır.
+        "ARAMA_HAVUZU_OLU"}
 
 
 def test_every_alarm_constant_reaches_the_operator_by_construction():

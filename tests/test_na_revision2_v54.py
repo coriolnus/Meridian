@@ -91,10 +91,20 @@ def test_every_mutating_endpoint_leaves_a_trace():
         if "obs.log" in b or "obs.warn" in b or "obs.alarm" in b:
             continue
         # eylemi ÇAĞIRDIĞI modülde loglayanlar (delege edilmiş iz) — beyan edilmiş istisnalar
+        # PLAN KARAR UÇLARI (2026-08-26): ikisi de izi `loop`ta bırakır — `operator_onay_ver`
+        # → `plan_operator_approved`, `operator_ret_ver` → `plan_operator_rejected`. Yazımın
+        # orada olması bir tercih değil SÖZLEŞME: `trade_plans.jsonl`in yazar listesi
+        # `ledgers.CONTRACTS`ta yazılıdır (loop/run/hermes) ve uç noktanın deftere kendi eliyle
+        # yazması "haberi olmayan ikinci yazar" sınıfını yeniden açardı.
+        # NEDEN AÇIKÇA YAZILDI: `onayla` bugüne kadar bu listeye ADIYLA girmemişti, docstring'inde
+        # geçen "`api_halt` → `health.set_halt` deseni" cümlesi yüzünden ALT-DİZE TESADÜFÜYLE
+        # geçiyordu (ölçüldü, 2026-08-26). Yani kardeş uç korunmuyordu, susturulmuştu. Kardeşi
+        # `reddet` eklenirken tesadüf de kapatıldı: ikisi de artık adıyla beyanlı.
         if any(k in b for k in ("secrets_mod.set", "secrets_mod.delete", "reflect_now",
                                 "hermes_runtime.start", "hermes_runtime.stop", "sprint.start",
                                 "sprint.stop", "skill_evolve.", "skills.apply_skill_action",
-                                "alpaca.submit_plan", "health.set_halt", "health.set_learn_halt")):
+                                "alpaca.submit_plan", "health.set_halt", "health.set_learn_halt",
+                                "_loop.operator_onay_ver", "_loop.operator_ret_ver")):
             continue
         silent.append(path)
     assert not silent, f"iz bırakmayan mutasyon ucu: {silent}"

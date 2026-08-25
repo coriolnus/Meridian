@@ -4575,6 +4575,42 @@ const OLAY_YUZEYLERI = {
     eylemler: [["Gece hattının çizelgesi →", "saglik#cizelge"],
                ["Alarm gelen kutusu →", "saglik#operasyon"]],
   },
+  teslimat: {
+    ad: "Mekanizma canlı ama ÜRETMİYOR",
+    ozet: "İplik nabız atıyor, iş kabul ediyor — ve hiçbir sonuç çıkmıyor. Canlılık ≠ teslimat.",
+    // NEDEN AYRI YÜZEY (2026-08-25, v313): bu sınıf `besleme`ye DE `kota`ya DA uymaz ve
+    // ikisiyle karıştırmak bu turda ölçülen arızanın ta kendisiydi.
+    //   · `besleme` CANLILIK ölçer ("nabız atıyor mu"). v302 nabzı havuz bekleyişinin İÇİNDEN
+    //     attırdı ve DOĞRU yaptı — iplik gerçekten canlı. Ama o düzeltme, kazara bu arızanın
+    //     tek sesi olan yanıltıcı MECHANISM_STALE'i susturur.
+    //   · `kota` bilerek jetonsuzdur ve kendi yorumuyla "bu bir ARIZA değildir" der. Burası ise
+    //     ARIZADIR: iş kabul edildi, kaynak yakıldı, sonuç YOK.
+    // ÖLÇÜLEN BEDEL: 2026-08-12'den beri 61 atalet olayının 61'inde `biten=0`; öğrenme hattı
+    // 2026-08-21'den sonra sıfır öneri üretti; her olayda ~1 çekirdek-saat + ~450 MB israf.
+    jetonlar: ["ARAMA_HAVUZU_OLU"],
+    neOldu: "Bir işçi havuzu iş aldı, tavan süresi boyunca çalıştı ve TEK BİR işi bitirmedi. " +
+            "Bu bir canlılık arızası DEĞİLDİR — iplik nabız atıyor olabilir ve genellikle atıyor. " +
+            "Bekçi (<code>MECHANISM_STALE</code>) bu sınıfı GÖREMEZ; o yalnız sessizliği ölçer, " +
+            "verimsizliği değil. Alarm gövdesi hangi havuzun (<code>yer</code>), kaç iş bitirip " +
+            "(<code>biten</code>) kaçını beklediğini (<code>bekleyen</code>) taşır — " +
+            "<code>biten=0</code> teşhisin kendisidir.",
+    kaynak: "meridian/obs.py::ALARM_ARAMA_HAVUZU_OLU · meridian/reflect.py (HAVUZ_ATALET_SN)",
+    degerler: d => {
+      const ml = (d || {}).mlops || {}, hs = ml.hermes || {};
+      return [
+        ["Son öneri", hs.son_oneri ?? null],
+        ["Defterdeki öneri", hs.n_hipotez ?? null],
+      ];
+    },
+    adimlar: [
+      "Alarm gövdesindeki <code>yer</code> hangi havuzun öldüğünü söyler: <code>probe_prefill</code> (sonda ön-hesabı) ya da <code>incumbent_prefill</code>.",
+      "<code>biten=0</code> ise tavan İŞTEN KISA olabilir: tek bir walk-forward tavanı aşıyorsa ilk bitiş tavana hiç yetişemez ve olay her turda tekrarlar.",
+      "Kaydın tamamı: <code>state/events.jsonl</code> içinde <code>arama_havuzu_zaman_asimi</code> (tarihsel seri) ve <code>ARAMA_HAVUZU_OLU</code> (alarm).",
+    ],
+    cozum: null,
+    eylemler: [["Ajan defteri →", "ogrenme#ajan"],
+               ["Alarm gelen kutusu →", "saglik#operasyon"]],
+  },
   mutabakat: {
     ad: "Mutabakat çatışması",
     ozet: "İç defter ile brokerin defteri aynı şeyi söylemiyor — hayalet, sapma, ret, PATCH reddi ya da korumasız pozisyon.",
@@ -11430,11 +11466,19 @@ function _scheduleSprintPoll() {
   }, 5000);
 }
 window.sprintStart = async () => {
-  const budget = +(($("sprint-budget") || {}).value || 12), k_max = +(($("sprint-kmax") || {}).value || 3);
+  // BOŞ ALAN = "SEN KARAR VER", UYDURMA SAYI DEĞİL (2026-08-26). Eskiden burada `|| 12` ve
+  // `|| 3` yedekleri vardı; alan boşken canlıya ölçülmemiş bir yük gidiyordu. Artık boş alan
+  // gövdeden TAMAMEN düşer ve `sprint.start()` kendi `auto_config()` türetimini kullanır —
+  // yani "otomatik" varsayılan yol, elle giriş ise bilinçli bir override.
+  const _sayi = id => { const v = (($(id) || {}).value || "").trim(); return v === "" ? null : +v; };
+  const govde = {};
+  const _b = _sayi("sprint-budget"), _k = _sayi("sprint-kmax");
+  if (_b !== null && Number.isFinite(_b)) govde.budget = _b;
+  if (_k !== null && Number.isFinite(_k)) govde.k_max = _k;
   const btn = $("sprint-start"); if (btn) { btn.disabled = true; btn.textContent = "başlatılıyor… (kum havuzu kuruluyor)"; }
   // BOŞ `catch` KALKTI (v219): düşen bir başlatma düğmeyi süresiz "başlatılıyor…"da bırakıyordu —
   // ekranda çalışıyormuş gibi görünen, aslında hiç başlamamış bir antrenman.
-  try { await apiFetch("/api/sprint/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ budget, k_max }) }); }
+  try { await apiFetch("/api/sprint/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(govde) }); }
   catch (e) {
     eylemHatasiYaz("sprint-msg", e, "antrenman BAŞLAMADI — kum havuzu kurulmadı.");
     if (btn) { btn.disabled = false; btn.textContent = "Antrenmanı başlat"; }
@@ -11475,24 +11519,52 @@ function eylemKutu(baslik, amac, durum, durumSinif, kontrol, ipucuId, ayar) {
 function eylemSeridi(d) {
   const s = d.status || {}, sp = d.sprint || {}, it = d.integrations || {};
   const pend = it.backfill_pending;
+  // KADANS YÜKTE ZATEN VARDI, OKUNMUYORDU (2026-08-26). `analytics.learning_scorecard()` her
+  // yanıtta `should_run()`in kararını ve `auto_config()`in türetimini taşıyor; bu şerit onu
+  // görmezden gelip sabit sayı ve uydurma durum yazıyordu. Yol canlı ölçümle sabitlendi
+  // (`/api/hermes` → learning.besleme.antrenman_sprinti) ve YENİ PANO da AYNI yolu okur.
+  const kad = ((d.learning || {}).besleme || {}).antrenman_sprinti || null;
+  const kcfg = (kad || {}).cfg || {};
   const inpStil = "background:var(--card);border:1px solid var(--field);color:var(--tx);border-radius:var(--r-ctl);padding:3px 6px;min-height:44px";
 
   // 1 · DÜŞÜN — beyni elle çalıştır
   const dusun = `<button class="dlbtn" id="hbtn-reflect" data-act="hermesReflect">Şimdi düşün</button>
     ${s.active ? `<button class="dlbtn" data-act="hermesCtl" data-a1="stop">Durdur</button>`
                : `<button class="dlbtn" data-act="hermesCtl" data-a1="start">Başlat</button>`}`;
-  const dusunDurum = s.reflecting ? "düşünüyor…" : (s.active ? "aktif · beklemede" : "pasif");
+  // "pasif" NEYİN pasif olduğunu söylemiyordu ve operatör onu "beyin çalışmıyor" diye okudu.
+  // `s.active` yalnız ELLE döngüyü anlatır; canlıda `MERIDIAN_AUTOSTART_HERMES=0` ile BİLEREK
+  // kapalıdır ve öğrenme kadansı ondan BAĞIMSIZ koşar. Cümle artık kapsamını söylüyor —
+  // kadansın kendi durumu yanındaki ANTRENMAN kutusunda, kendi ölçümüyle yazılı.
+  const dusunDurum = s.reflecting ? "düşünüyor…"
+    : (s.active ? "aktif · beklemede" : "elle döngü kapalı · kadans ayrı koşar");
 
   // 2 · ANTRENMAN — kum havuzunda aday strateji ara (canlı defter dokunulmaz)
   const antrenman = sp.active
     ? `<button class="dlbtn" data-act="sprintStop">Durdur</button>`
     : `<button class="dlbtn" id="sprint-start" data-act="sprintStart">Antrenmanı başlat</button>`;
+  // ALANLAR TÜRETİLMİŞ DEĞERLE DOLAR; ölçülemezse BOŞ kalır (UYDURMA YASAĞI) ve boş alan
+  // motora "sen hesapla" der. Sayının KAYNAĞI da yazılır: operatör 6'yı görünce "otomatik mi,
+  // biri elle mi koydu?" sorusunu ekrandan cevaplayabilmeli.
+  const KAYNAK_TR = { turetim: "makineden türetildi", "turetim(env_bozuk)": "türetildi — env değeri bozuktu" };
+  const kaynakNot = kcfg.budget_kaynagi
+    ? `<br><span style="opacity:.75">${esc(KAYNAK_TR[kcfg.budget_kaynagi] || kcfg.budget_kaynagi)}` +
+      `${kcfg.cekirdek != null ? ` · ${kcfg.cekirdek} çekirdek → ${kcfg.isci} işçi` : ""}` +
+      ` · boş bırakırsan motor kendi türetimini kullanır</span>`
+    : `<br><span class="warn">bütçe türetimi ölçülemedi — boş bırak, motor kendi hesabını yapar</span>`;
   const antAyar = sp.active ? "" : `<p class="hint" style="margin:0 0 4px">bütçe
-       <input id="sprint-budget" type="number" value="12" min="4" max="30" style="width:54px;${inpStil}">
-       · k_max <input id="sprint-kmax" type="number" value="3" min="1" max="5" style="width:46px;${inpStil}"></p>`;
+       <input id="sprint-budget" type="number" value="${kcfg.budget ?? ""}" min="4" max="30" style="width:54px;${inpStil}">
+       · k_max <input id="sprint-kmax" type="number" value="${kcfg.k_max ?? ""}" min="1" max="5" style="width:46px;${inpStil}">
+       ${kaynakNot}</p>`;
+  // "kapalı" KALKTI: sprint'in aktif olmaması NORMALDİR (gecede en fazla bir kez koşar) ve o
+  // kelime açılabilecek bir kapı ima ediyordu. ÖLÇÜLEN BEDEL: operatör bu ekrana bakıp sprint'in
+  // duraklatıldığına inandı ve hiç durmamış bir kadans için "tekrar aktif edelim" iş kalemi
+  // doğdu. Doğru cümle kadansın KENDİ sebebidir (`tetik_yok(gun=4<7, taze=0<5)` gibi).
   const antDurum = sp.active
     ? `${esc(SPRINT_PHASE_TR[sp.phase] || sp.phase || "çalışıyor")}${sp.total ? ` · ${sp.progress || 0}/${sp.total}` : ""}`
-    : (sp.v2 ? `v${String(sp.v2).padStart(2, "0")} yayında` : "kapalı");
+    : `${!kad ? "kadans ölçülemedi — <code>learning.besleme.antrenman_sprinti</code> yükte yok"
+              : kad.kos ? "kadans KOŞ dedi — başlaması bekleniyor"
+              : `kadans bekliyor · ${esc(kad.sebep || "sebep yazılmamış")}`}` +
+      `${sp.v2 ? ` · v${String(sp.v2).padStart(2, "0")} yayında` : ""}`;
 
   // 3 · KANIT DOLGUSU — geçmiş planlara toplu LLM görüşü (sonuç gizli, look-ahead yok)
   const dolgu = `<button class="dlbtn" id="hbtn-backfill" ${pend ? "" : "disabled"} data-act="hermesBackfill"> Görüş dolgusu${pend ? " (" + pend + ")" : ""}</button>`;

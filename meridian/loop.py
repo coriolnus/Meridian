@@ -3300,7 +3300,8 @@ def _koruma_dolumu_bul(all_orders: list, sym: str) -> dict | None:
     Bacaklar tek başına Alpaca'nın UUID coid'ini taşır → `yabanci` düşerler. Sonuç: motor
     bracket'iyle korunan HİÇBİR pozisyonun stop dolumu görülemiyordu (ölçüm: 9 pozisyonun 5'i).
 
-    A DALI — MERİDİAN OCO (`P-KORUMA-…`): adaylar üst emir + `legs[]`. Davranış AYNEN korunur;
+    A DALI — MERİDİAN OCO (sınıf hükmü `alpaca.coid_sinifi`den; önek burada YAZILMAZ, o v220
+    çarpışmasının kaynağıydı): adaylar üst emir + `legs[]`. Davranış AYNEN korunur;
     orada parent LİMİT hedef bacağıdır ve onu okumak DOĞRUDUR (AMGN/BKNG/EMR yolu değişmez).
 
     B DALI — MOTOR BRACKET'İ: `giris` sınıfı + `order_class == "bracket"` + dolu `legs[]`.

@@ -59,7 +59,16 @@ ESKI_DERIN_ADRESLER = ["kosu#adaylar", "kosu#kapilar", "portfoy#brifing", "portf
                        "gozetim#operasyon", "genel"]
 # Olay yüzeyi sınıfları — brief'in adlandırdığı beş sınıf + `yetki` (ARMING_READY /
 # AUTHORITY_CHANGE'in evi; onlar da alarmdır ve evsiz kalamazlar).
-OLAY_SINIFLARI = ["besleme", "mutabakat", "kill", "butunluk", "yetki", "kota"]
+# 2026-08-25: ALTI sınıf YEDİ oldu — `teslimat` eklendi (v313). GEREKÇE, "yeni jeton geldi"
+# DEĞİLDİR: `ARAMA_HAVUZU_OLU` mevcut iki sınıfın da DIŞINDA kalıyordu ve evsiz bir alarm boş
+# çekmece açar. `besleme` "mekanizma ölü/bayat" der — havuz ölmedi, iplik canlı ve nabız atıyor.
+# `kota` "arıza değil, sınır" der — bu bir arıza. Aradaki hâl: MEKANİZMA ÇALIŞIYOR AMA HİÇBİR
+# İŞ TESLİM ETMİYOR (canlı vaka: `probe_prefill biten=0 bekleyen=10`, tavan boyunca tek iş
+# bitmedi). O hâlin adı yoktu; 61 `warn` kaydı dört gün boyunca kimseye ulaşmadı.
+# SIRA app.js İLE BİREBİRDİR (`besleme` hemen ardından `teslimat`): ikisi komşu okunmalı, çünkü
+# operatörün ilk sorusu "hat mı öldü, yoksa hat canlı da ürün mü gelmiyor?" ayrımıdır.
+# ~~["besleme", "mutabakat", "kill", "butunluk", "yetki", "kota"]~~
+OLAY_SINIFLARI = ["besleme", "teslimat", "mutabakat", "kill", "butunluk", "yetki", "kota"]
 
 
 def _sozluk(ad: str) -> dict[str, str]:

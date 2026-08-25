@@ -88,7 +88,7 @@ ALARM_ONAYLI_PLAN_GONDERILMEDI = "ONAYLI_PLAN_GONDERILMEDI"
 # düzeltme, kazara bu arızanın tek sesi olan yanıltıcı alarmı susturur. Doğru çözüm sesi kısmak
 # değil, YANLIŞ sinyali DOĞRUSUYLA değiştirmektir: "iplik canlı" (v302) + "havuz iş bitirmiyor"
 # (bu jeton). İkisi ayrı olgudur; biri ötekinin yerine geçemez.
-ALARM_ARAMA_HAVUZU_OLU = "ARAMA_HAVUZU_OLU"
+ALARM_ARAMA_HAVUZU_OLU = "ARAMA_HAVUZU_OLU"  # işçi havuzu tavan boyunca TEK İŞ bitirmedi — teslimat arızası, canlılık değil
 
 # also mirror events to state/events.jsonl so the dashboard/tests can read them without a log scraper
 _EVENTS = "events.jsonl"
