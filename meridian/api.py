@@ -5743,7 +5743,7 @@ def mobile_halt():
     rotadır — SPA'ya, diske ya da bir dış host'a bağlanmaz — ama "hiçbir şey istemez" demek
     yanlış olurdu: o rota düşerse düğme ölür (çivisi tests/test_guvenlik_basliklari_v203.py Ç5)."""
     return HTMLResponse("""<!doctype html><meta name=viewport content="width=device-width,initial-scale=1">
-<title>Meridian — HALT</title><style>body{margin:0;background:#0b0b0f;color:#eee;font-family:system-ui;
+<title>Meridian — HALT</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><style>body{margin:0;background:#0b0b0f;color:#eee;font-family:system-ui;
 display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:24px}
 button{width:78vw;max-width:420px;height:34vh;border:none;border-radius:24px;font-size:8vw;font-weight:800;
 color:#fff;background:#c0362c;box-shadow:0 8px 40px rgba(192,54,44,.4)}button:active{transform:scale(.97)}

@@ -188,3 +188,49 @@ def test_HEPSI_AYNI_yolu_gosteriyor():
             yollar.add(h.group(1) if h else "(href YOK)")
     assert yollar == {"/favicon.svg"}, (
         f"sayfalar farklı favicon yolları gösteriyor: {sorted(yollar)}")
+
+
+# ============================================================================================
+# (7) YÜZEY SAYIMI — DOSYA DEĞİL, SUNULAN SAYFA
+# --------------------------------------------------------------------------------------------
+# BU ÇİVİ, YUKARIDAKİ ÇİVİNİN KÖR NOKTASINDAN DOĞDU (2026-08-26, dağıtım sonrası ölçüm):
+# `test_BES_sayfanin_BESI_de_ikonu_bildiriyor` `meridian/web/*.html` DOSYALARINI sayıyor ve
+# beşini de yeşil gördü. Ama sunulan yüzey sayısı ALTI: `/halt` bir dosya DEĞİL, gövdesi
+# `api.py` içinde gömülü bir dizedir. Canlı ölçüm: `/`, `/pano`, `/landing`, `/workflow`,
+# `/runbook`, `/eski` → `rel="icon"` x1; `/halt` → x0.
+# Yani dosya-sayan bir çivi, dosya OLMAYAN bir yüzeyi hiç göremez — ve kaçırdığı yüzey,
+# telefonda acele bakılan PANİK sayfasıydı (ikonun en çok işe yaradığı yer).
+# DOĞRU ÖLÇÜT: "`<title>` beyan eden her gövde, ikon da beyan eder." `<title>` bir SAYFA
+# olmanın işaretidir ve nerede yaşadığından bağımsızdır.
+_BASLIK = re.compile(r"<title>.*?</title>", re.S)
+_IKON = re.compile(r'<link[^>]+rel="icon"[^>]*>')
+
+
+def _gomulu_sayfalar() -> list[tuple[str, str]]:
+    """`api.py` içinde gövdesi gömülü HTML sayfaları: (başlık, o başlığın çevresi)."""
+    src = (KOK / "meridian/api.py").read_text(encoding="utf-8")
+    out = []
+    for m in _BASLIK.finditer(src):
+        # Pencere: başlıktan geriye 600, ileriye 600 karakter — `<head>` bölgesini kapsar.
+        out.append((m.group(0), src[max(0, m.start() - 600): m.end() + 600]))
+    return out
+
+
+def test_GOMULU_sayfalar_da_ikon_bildiriyor():
+    """`/halt` sınıfı: dosyası olmayan ama SUNULAN sayfalar da ikonu bildirmeli."""
+    eksik = [b for b, cevre in _gomulu_sayfalar() if not _IKON.search(cevre)]
+    assert not eksik, (
+        f"gömülü sayfa(lar) favicon bildirmiyor: {eksik}. Bunlar `meridian/web/*.html` "
+        "taramasına GİRMEZ — gövdeleri api.py içindedir. Dosya saymak yetmez, YÜZEY sayılır.")
+
+
+def test_HER_baslik_sahibi_govde_ikon_da_bildiriyor():
+    """Genel yasa: dosyada ya da gömülü, `<title>` beyan eden her gövde ikon beyan eder.
+    Yeni bir sayfa eklenirse bu çivi onu kendiliğinden kapsar — liste elle güncellenmez."""
+    eksik = []
+    for ad in SAYFALAR:
+        s_ = (WEB / ad).read_text(encoding="utf-8")
+        if _BASLIK.search(s_) and not _IKON.search(s_):
+            eksik.append(ad)
+    eksik += [b for b, cevre in _gomulu_sayfalar() if not _IKON.search(cevre)]
+    assert not eksik, f"başlığı olup ikonu olmayan yüzey(ler): {eksik}"
