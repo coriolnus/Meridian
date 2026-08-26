@@ -62,6 +62,57 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **BÜTÇE ARIZASI BİÇİM ARIZASI DİYE YAZILIYORDU — v97'nin GEMİNİ'DE KAPATTIĞI SINIF PORTAL AYAĞINI
+  HİÇ ALMAMIŞTI (2026-08-27; sınıf: `Ö-49` kardeşi — "aynı kusur ikinci sağlayıcıda, düzeltme göç
+  etmedi"):** `_nous_text` (OpenRouter/nous portal yolu) `max_tokens: 4000` sabitini gönderiyordu.
+  Canlı defter (A1, `state/spend.jsonl`): nvidia/nemotron ailesine **13 çağrının 7'si TAM
+  `out_tokens=4000`** (%54) — 5x super-120b + 1x ultra-550b `reflect (nous)`, 1x super-120b
+  `nous_eval`; girdi ~23-27k token. Sağlayıcı sondası mekanizmayı gösterdi: `ultra @ max_tokens=60`
+  → `finish_reason=length` + içerik modelin **DÜŞÜNCE ÖN-EKİ** (reasoning=62); `@2000` →
+  `finish_reason=stop` + geçerli JSON. **KÖK NEDEN YAPISALDIR ve tavandan İBARET DEĞİL:**
+  `_nous_text`te `finish_reason` ayrımı `if not txt.strip():` bloğunun **İÇİNDEYDİ**. Kesilen cevap
+  BOŞ DEĞİLDİR — içinde düşünce ön-eki vardır — yani o ayrıma **HİÇ UĞRAMIYORDU**: yarım metin
+  çağırana dönüyor, `_parse_hyp` JSON bulamıyor, defter `unparseable` yazıyordu. Gemini'de kesilme
+  kontrolü metin kontrolünden ÖNCE gelir (`_gemini_text` docstring'i, v97); portalda o sıra yoktu.
+  Yani tavanı tek başına yükseltmek sınıfı düzeltMEZDİ: bir sonraki kesilme yine "biçim" diye
+  okunurdu. **DETERMİNİSTİK ÜREME (çıkarım değil, ölçüm — kırmızı faz):** düzeltmeden önce çivi
+  `assert 'unparseable' == 'truncated'` ile düştü; yani canlı defterdeki yanlış adın kaynağı
+  koddan yeniden üretildi. **DÜZELTME:** `NOUS_MAX_TOKENS` (env: `HERMES_NOUS_MAX_TOKENS`, vars.
+  16000) + kesilme kontrolü metin kontrolünden ÖNCE + `EMPTY_TRUNCATED` sınıfı token sayılarıyla
+  (`reasoning=N, completion=N, cap=N`) + `reasoning_tokens` → `spend.record(thought_tokens=)`.
+  **TAVAN NEREDEN TÜRÜYOR:** o 7 satır **SAĞDAN SANSÜRLÜDÜR** — tavanda kesilen örnek "ihtiyaç
+  ≥4000" der, ihtiyacın NE OLDUĞUNU söylemez; gerçek istem üzerinde ölçülmüş tek akıl-yürütme sayısı
+  gemini'nin `thoughtsTokenCount=3838`üdür → ×4 marj = 16000. Marj bedelsiz: iki model de `:free`,
+  platform tavanı istek/dk + istek/gün cinsinden, token cinsinden DEĞİL. Gerçek ihtiyacı bundan sonra
+  `truncated` olayının kendisi ölçecek. **ÇİVİLER (10, tests/test_brain_resilience_v66.py v325):**
+  uçtan uca sınıf çivisi + `reasoning=None` (uydurma yasağı) + pozitif kontrol + tavan/gövde çivisi +
+  eski üç sınıfın korunması. Dört mutasyonun dördü de yakalandı (tavanı 4000'e geri al · sınıfı
+  `unparseable`a geri al · kesik metni yine çağırana döndür · ölçülmeyen akıl sayısına 0 yaz).
+  **AÇIK KALAN — ÖLÇÜLEMEDİ, UYDURULMADI (3):**
+  (1) **7 damganın olay defteriyle KORELASYONU CANLIDA DOĞRULANMADI.** Bu tur GitHub'dan klonlanan
+      *cloud* oturumunda koştu: konteynerde `ssh` ikilisi YOK, `~/.ssh/oci-a1.key` YOK, `state/`
+      versiyonlanmıyor (yalnız `goal.yaml`+`bounds.yaml` izli) — yani `journalctl -u meridian
+      -u meridian-learn` ve `spend.jsonl` bu konumdan ERİŞİLEMEZ. Mekanizma koddan deterministik
+      üretildi; "bu 7 damga şu ledger satırlarını üretti" ifadesi hâlâ ÇIKARIMDIR. A1 erişimi olan
+      Rol-1 oturumu doğrulamalı: 7 damganın ±2 dk penceresinde `nous_eval_unparseable` /
+      `hermes_brain_empty(reason=unparseable)` / `nous_chain_empty` satırı var mı.
+  (2) **AYNI SINIF CLAUDE AYAĞINDA LATENT DURUYOR (bu turda BİLEREK dokunulmadı — kapsam
+      genişletmesi olurdu):** `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
+      (hermes.py:491) onu **argümansız** çağırır, yani 4000'e düşer — üstelik gövde
+      `thinking={"type": "adaptive"}` gönderir, yani o ayak da DÜŞÜNEN bir yapılandırmadır ve gemini'nin
+      3838 ölçtüğü AYNI yansıma prompt'unu kullanır. `chain_text`in claude ayağı 8000 geçer (hermes.py:4463),
+      `propose_with_claude` GEÇMEZ. Ayrıca `stop_reason="max_tokens"` → `EMPTY_TRUNCATED` eşlemesi orada
+      da YOK. Bugün canlıda tetiklenmiyor (sistem haritası: "claude bacağı kimliksiz") — bu yüzden
+      ACİL değil, ama kimlik girildiği gün sınıf üçüncü kez doğar.
+  (3) **`reasoning` kolu DOĞRULANMADI:** `NOUS_REASONING_EFFORT` env kolu eklendi ama **varsayılan
+      KAPALI ve boşken alan gövdeye HİÇ konmaz** (çivili). Sebep: `openrouter.ai` bu konteynerin çıkış
+      vekilince kapalı ve burada anahtar yok — parametrenin bu uçtaki tam şekli doğrulanamadı, uydurma
+      yasağı istek gövdesi için de geçerlidir. Açmadan önce sonda şart. TUZAK YAZILI: `exclude` bir
+      BÜTÇE ayarı DEĞİLDİR (düşünceyi cevaptan gizler, üretilmesini engellemez → tavanı aynen yer);
+      bütçeyi kurtaran ayar düşünceyi KAPATANdır (gemini'de `thinkingBudget=0`).
+  **KAPSAM SINIRI (varsayılmadı, brief'te ölçülmüş):** `agent_call_empty` (709) ve
+  `review_fallback_empty` (459) YEREL AJAN CLI yoludur (`_agent_call`), bu düzeltme onlara DOKUNMAZ.
+
 - **ARAMA HAVUZU 13 GÜNDÜR SIFIR SONUÇ ÜRETTİ — TAVAN İŞTEN KISAYDI (2026-08-25; sınıf: "eşik,
   ÖLÇTÜĞÜ mekanizmadan değil BAŞKA bir mekanizmadan türetildi"):** `arama_havuzu_zaman_asimi`
   olaylarının TAMAMINDA (2026-08-12'den beri **61 olayın 61'i**) `biten=0`. Şüphe kilitlenme/

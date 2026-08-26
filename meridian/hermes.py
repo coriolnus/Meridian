@@ -635,6 +635,34 @@ DEFAULT_BRAIN_ORDER = "claude,nous,gemini"
 GEMINI_THINKING_BUDGET = int(os.environ.get("HERMES_GEMINI_THINKING_BUDGET", "0"))
 GEMINI_MAX_OUTPUT_TOKENS = int(os.environ.get("HERMES_GEMINI_MAX_OUTPUT_TOKENS", "8000"))
 
+# AYNI SINIF, İKİNCİ SAĞLAYICI (2026-08-27): PORTAL (OpenAI-uyumlu) ayağı yukarıdaki düzeltmeyi HİÇ
+# ALMADI. `_nous_text` gövdesi `max_tokens: 4000` sabitini gönderiyordu ve nemotron ailesi de DÜŞÜNEN
+# bir ailedir — akıl yürütme tokenları CEVAPTAN ÖNCE, aynı üretim tavanından yenir.
+# CANLI ÖLÇÜM (A1, state/spend.jsonl): nvidia/nemotron ailesine 13 çağrı, **7'si TAM out_tokens=4000**
+# (%54) — 5x super-120b + 1x ultra-550b reflect, 1x super-120b nous_eval; girdi ~23-27k token.
+# SAĞLAYICI SONDASI mekanizmayı gösterdi: ultra @ max_tokens=60 → finish_reason=length + içerik
+# modelin DÜŞÜNCE ÖN-EKİ (reasoning=62); ultra @ max_tokens=2000 → finish_reason=stop + geçerli JSON.
+#
+# TAVAN NEREDEN TÜRÜYOR (ve neden 4000'in "biraz üstü" DEĞİL): o 7 satır SAĞDAN SANSÜRLÜDÜR —
+# tavanda kesilen bir örnek "ihtiyaç ≥4000" der, ihtiyacın NE OLDUĞUNU söylemez. Gerçek istem
+# üzerinde ölçülmüş TEK akıl-yürütme sayısı gemini bacağınınkidir (thoughtsTokenCount=3838, aynı
+# yansıma prompt'u, GEMINI_THINKING_BUDGET yorumu). Tavan o ölçümden türer: 3838 × 4 ≈ 15,4k → 16000.
+# Fatura yok (iki model de :free; OpenRouter GET /api/v1/key usage=0 all-time), platform tavanı
+# istek/dakika ve istek/gün cinsindendir — token cinsinden DEĞİL. Yani marj bedelsizdir.
+# GERÇEK İHTİYACI ARTIK OLAY ÖLÇECEK: bu turda eklenen `truncated` sınıfı her kesilmede
+# `reasoning=N` yazar, yani bir daha çarpılırsa sayı sansürsüz görünür ve tavan ölçüyle ayarlanır.
+NOUS_MAX_TOKENS = int(os.environ.get("HERMES_NOUS_MAX_TOKENS", "16000"))
+
+# AKIL YÜRÜTME KOLU — VARSAYILAN KAPALI, BİLEREK. OpenRouter'ın `reasoning` parametresinin bu uçtaki
+# TAM şekli BU DEPODAN DOĞRULANAMADI: openrouter.ai çıkış vekilince kapalı ve burada anahtar yok.
+# UYDURMA YASAĞI istek gövdesi için de geçerlidir — doğrulanmamış alan canlıya VARSAYILAN gitmez.
+# Boşken alan gövdeye HİÇ konmaz (çivi: test_nous_reasoning_control_is_absent_unless...), yani bu
+# turun davranış değişikliği YALNIZ tavan + sınıflandırmadır.
+# AÇMADAN ÖNCE SONDA ŞART, ve dikkat: `exclude` bir BÜTÇE ayarı DEĞİLDİR — düşünceyi cevaptan gizler,
+# ÜRETİLMESİNİ engellemez, yani tavanı aynen yer. Bütçeyi kurtaran ayar düşünceyi KAPATANdır
+# (gemini'de thinkingBudget=0'ın yaptığı). İkisini karıştırmak bu sınıfı ikinci kez doğurur.
+NOUS_REASONING_EFFORT = (os.environ.get("HERMES_NOUS_REASONING_EFFORT") or "").strip().lower()
+
 # ============ 429 SOĞUMA DEFTERİ + BOŞ-CEVAP SINIFLANDIRMASI =============
 # Canlı defterde 45x hermes_brain_failed vardı ve HEPSİ aynı gemini free-tier 429'uydu — üç gün
 # boyunca, her yansıma turunda yeniden. Geri çekilme YOKTU: kotayı yiyen sağlayıcı bir sonraki turda
@@ -2624,28 +2652,47 @@ def _nous_text(user: str, *, note: str) -> str | None:
     import httpx
     base = (secrets.get("NOUS_ENDPOINT") or NOUS_DEFAULT_ENDPOINT).rstrip("/")
     model = _nous_portal_model()
+    govde = {"model": model, "max_tokens": NOUS_MAX_TOKENS,
+             "messages": [{"role": "system", "content": SYSTEM},
+                          {"role": "user", "content": user}]}
+    if NOUS_REASONING_EFFORT:             # doğrulanmamış alan yalnız operatör açarsa gövdeye girer
+        govde["reasoning"] = {"effort": NOUS_REASONING_EFFORT}
     r = httpx.post(f"{base}/chat/completions",
                    headers={"Authorization": f"Bearer {secrets.get('NOUS_API_KEY')}",
                             "Content-Type": "application/json"},
-                   json={"model": model, "max_tokens": 4000,
-                         "messages": [{"role": "system", "content": SYSTEM},
-                                      {"role": "user", "content": user}]},
-                   timeout=120.0)
+                   json=govde, timeout=120.0)
     r.raise_for_status()
     d = r.json()
     u = d.get("usage") or {}
+    # AKIL YÜRÜTME TOKENLARI: OpenAI-uyumlu uçta burada raporlanır (gemini'de thoughtsTokenCount) ve
+    # `completion_tokens` içinde GÖRÜNMEZLER. Alt alanı taşımayan uçlar var → ölçülmediğinde None
+    # kalır ve `spend.record` satıra HİÇ yazmaz: "0" yazmak ölçülmemişi ölçülmüş göstermek olurdu.
+    akil = (u.get("completion_tokens_details") or {}).get("reasoning_tokens")
     from . import spend
-    spend.record(u.get("prompt_tokens", 0), u.get("completion_tokens", 0), model, note=note)
+    spend.record(u.get("prompt_tokens", 0), u.get("completion_tokens", 0), model, note=note,
+                 thought_tokens=akil)
     ch = (d.get("choices") or [{}])[0] or {}
     msg = ch.get("message") or {}
     txt = str(msg.get("content") or "")
-    if not txt.strip():                   # 200 OK ama içerik yok — sebebi ayır (araç çağrısı / kesilme)
+    finish = str(ch.get("finish_reason") or "")
+    # KESİLME KONTROLÜ METİN KONTROLÜNDEN ÖNCE GELİR — `_gemini_text`teki sıranın aynısı ve buradaki
+    # KUSURUN TA KENDİSİ: eskiden finish_reason ayrımı aşağıdaki `if not txt.strip()` bloğunun
+    # İÇİNDEYDİ. Kesilen cevap BOŞ DEĞİLDİR (içinde düşünce ön-eki vardır), o yüzden bu ayrıma HİÇ
+    # UĞRAMIYORDU: yarım metin çağırana dönüyor, `_parse_hyp` JSON bulamıyor ve defter "unparseable"
+    # yazıyordu — biçim suçlanıyor, asıl arıza (bütçe) görünmez kalıyordu. Kısmî metin zaten
+    # kullanılamaz; doğru adla boş dönmek hem sınıfı hem düzeltmeyi görünür kılar.
+    if finish == "length":
+        _trace_note(EMPTY_TRUNCATED,
+                    detail=f"reasoning={akil}, completion={u.get('completion_tokens')}, "
+                           f"cap={NOUS_MAX_TOKENS}")
+        return None
+    if not txt.strip():                   # 200 OK ama içerik yok — sebebi ayır (araç çağrısı / red)
         if msg.get("tool_calls") or msg.get("function_call"):
-            _trace_note(EMPTY_TOOL_ONLY, detail=f"finish_reason={ch.get('finish_reason') or '?'}")
-        elif str(ch.get("finish_reason") or "") in ("content_filter", "refusal"):
-            _trace_note(EMPTY_REFUSAL, detail=f"finish_reason={ch.get('finish_reason')}")
+            _trace_note(EMPTY_TOOL_ONLY, detail=f"finish_reason={finish or '?'}")
+        elif finish in ("content_filter", "refusal"):
+            _trace_note(EMPTY_REFUSAL, detail=f"finish_reason={finish}")
         else:
-            _trace_note(EMPTY_NO_TEXT, detail=f"finish_reason={ch.get('finish_reason') or '?'}")
+            _trace_note(EMPTY_NO_TEXT, detail=f"finish_reason={finish or '?'}")
         return None
     return txt
 

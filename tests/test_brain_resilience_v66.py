@@ -439,3 +439,170 @@ def test_summary_thought_tokens_stay_none_when_nothing_measured(sandbox_state):
     assert spend.summary()["thought_tokens"] is None
     spend.record(100, 50, "gemini-3.5-flash", note="reflect (gemini)", thought_tokens=0)
     assert spend.summary()["thought_tokens"] == 0, "ölçülüp sıfır çıkması ayrı bir olgudur"
+
+
+# ============ KESİLME AYRI SINIFTIR — İKİNCİ SAĞLAYICI: NOUS/OpenRouter (v325, 2026-08-27) ============
+# v97 bu sınıfı gemini için kapattı; PORTAL (OpenAI-uyumlu) ayağı ALMADI. Canlı kanıt (A1, 2026-08-27):
+#   state/spend.jsonl — nvidia/nemotron ailesine 13 çağrı, 7'si TAM out_tokens=4000'de bitti (%54):
+#     08-13T22:32 ultra-550b · 08-14T01:18 · 08-14T03:35 · 08-16T21:03 · 08-16T23:27 super-120b
+#     08-17T20:19 super-120b (nous_eval) · 08-21T21:43 super-120b — girdi ~23-27k token.
+#   Sağlayıcı sondası mekanizmayı gösterdi (aynı gün):
+#     ultra, max_tokens=60   → finish_reason=length · içerik = modelin DÜŞÜNCE ön-eki · reasoning=62
+#     ultra, max_tokens=2000 → finish_reason=stop   · içerik = '{"ok":true,"n":7}'      · reasoning=27
+# YAPISAL KUSUR (bu dosyanın çivilediği şey): `_nous_text`te finish_reason ayrımı `if not txt.strip()`
+# BLOĞUNUN İÇİNDEDİR. Kesilen cevap BOŞ DEĞİLDİR — içinde düşünce ön-eki vardır — yani o bloğa HİÇ
+# GİRMEZ: metin çağırana döner, `_parse_hyp` JSON bulamaz ve defter "unparseable" yazar. Gemini'de
+# kesilme kontrolü metin kontrolünden ÖNCE gelir (`_gemini_text` docstring'i); portalda o sıra yoktu.
+# Yanlış ad yanlış düzeltmeye çağırır: biçim/prompt kurcalanır, asıl arıza (bütçe) görünmez kalır.
+NOUS_ENV = {"HERMES_BRAIN_ORDER": "nous", "NOUS_API_KEY": "sahte-degil-gercek-anahtar-degil",
+            "NOUS_ENDPOINT": "https://sahte-portal.invalid/v1",   # 'local' DEĞİL → portal yolu
+            "NOUS_MODEL": "nvidia/nemotron-3-super-120b-a12b:free"}
+
+
+@pytest.fixture
+def nous_brain(monkeypatch):
+    """Portal (uzak, OpenAI-uyumlu) nous ayağı: ağ saplı, yerel ajan ikilisi kapalı, prompt sabit."""
+    monkeypatch.setattr(hermes.secrets, "get", lambda k: NOUS_ENV.get(k))
+    monkeypatch.setattr(hermes, "_hermes_bin", lambda: None)     # yerel ajan yolu KARIŞMASIN
+    monkeypatch.setattr(hermes, "_user_prompt", lambda: "SAPLI-PROMPT")
+    monkeypatch.setattr(spend, "over_budget", lambda *a, **k: False)
+    return NOUS_ENV
+
+
+# Canlı sondanın ölçtüğü gövdenin ta kendisi: finish_reason=length + DOLU içerik (düşünce ön-eki).
+NOUS_TRUNCATED_BODY = {
+    "choices": [{"finish_reason": "length",
+                 "message": {"role": "assistant",
+                             "content": "Okay, let me think about which variable to move. The "
+                                        "evidence pack shows entry.min_score at 62 and the OOS"}}],
+    "usage": {"prompt_tokens": 26411, "completion_tokens": 4000,
+              "completion_tokens_details": {"reasoning_tokens": 3961}},
+}
+
+
+def _nous_body(text: str) -> dict:
+    return {"choices": [{"finish_reason": "stop", "message": {"content": text}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 5}}
+
+
+def test_nous_text_names_truncation_instead_of_blaming_the_format(seeded, nous_brain, monkeypatch):
+    """ASIL ÇİVİ: tavana çarpan cevap KENDİ adıyla işaretlenir ve kısmî metin ayrıştırıcıya GİTMEZ."""
+    _take()                                    # önceki testten neden artığı kalmasın
+    _stub_post(monkeypatch, [_Resp(200, NOUS_TRUNCATED_BODY)])
+
+    assert hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)") is None, \
+        "düşünce ön-eki kullanılamaz — çağırana dönüp _parse_hyp'e gitmemeli"
+
+    reason, detail = _take()
+    assert reason == hermes.EMPTY_TRUNCATED, "kesilme 'unparseable' değildir: biçim değil bütçe arızası"
+    assert "reasoning=3961" in detail, "asıl kanıt (akıl yürütme tokenları) detayda görünmeli"
+    assert "completion=4000" in detail
+    assert f"cap={hermes.NOUS_MAX_TOKENS}" in detail, "hangi tavana çarpıldığı yazılı olmalı"
+
+
+def test_nous_text_reports_unmeasured_reasoning_tokens_as_none_not_zero(seeded, nous_brain, monkeypatch):
+    """UYDURMA YASAĞI (gemini kardeşinin aynısı): sağlayıcı alanı hiç göndermediyse 'reasoning=0'
+    yazmak ölçülmemişi ölçülmüş göstermektir. Her OpenAI-uyumlu uç bu alt alanı taşımaz."""
+    _take()
+    body = {"choices": [{"finish_reason": "length", "message": {"content": "yarim"}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 4000}}
+    _stub_post(monkeypatch, [_Resp(200, body)])
+
+    assert hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)") is None
+    reason, detail = _take()
+    assert reason == hermes.EMPTY_TRUNCATED and "reasoning=None" in detail
+
+
+def test_nous_text_passes_a_complete_answer_through_untouched(seeded, nous_brain, monkeypatch):
+    """POZİTİF KONTROL: sağlıklı cevap (stop + tam metin) AYNEN döner ve HİÇ iz bırakmaz — yoksa
+    yukarıdaki testler 'her şeyi kesik gören' bir tespitle de geçerdi (kurt masalı yasağı)."""
+    _take()
+    txt = json.dumps(GOOD_HYP)
+    _stub_post(monkeypatch, [_Resp(200, _nous_body(txt))])
+
+    assert hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)") == txt
+    assert _take() == (None, None), "kullanılabilir cevap için iz bırakılmamalı"
+
+
+def test_nous_truncation_is_never_recorded_as_unparseable(seeded, nous_brain, monkeypatch):
+    """SÖZLEŞMENİN UÇTAN UCA HÂLİ: defterdeki satırın SINIFI 'truncated' olmalı, 'unparseable' değil.
+    Canlı defterde bu satır `nous_eval_unparseable`/`hermes_brain_empty(unparseable)` diye duruyordu
+    ve bütçe arızasını biçim arızası gibi okutuyordu."""
+    _stub_post(monkeypatch, [_Resp(200, NOUS_TRUNCATED_BODY)])
+
+    assert hermes.propose_with_llm() is None                # kullanılabilir görüş ÜRETİLMEDİ
+
+    empty = _events("hermes_brain_empty")
+    assert len(empty) == 1, "başarılı-ama-kesik cevap TAM BİR kez kaydedilmeli"
+    assert empty[0]["provider"] == "nous"
+    assert empty[0]["reason"] == hermes.EMPTY_TRUNCATED, \
+        "bütçe arızası biçim arızası (unparseable) diye yazılamaz — düzeltmeyi görünmez kılar"
+    assert empty[0]["reason"] != hermes.EMPTY_UNPARSEABLE
+    assert "reasoning=3961" in (empty[0].get("detail") or ""), "token sayıları olayda durmalı"
+    assert _events("hermes_brain_failed") == [], "kesilme bir HATA değildir — sağlayıcı cezalandırılmaz"
+    assert hermes.brain_cooldown("nous") == 0
+
+
+def test_nous_request_carries_a_ceiling_above_the_measured_truncation_point(seeded, nous_brain, monkeypatch):
+    """Tavan artık ADLANDIRILMIŞ ve env ile ayarlanabilir (gemini emsali: GEMINI_MAX_OUTPUT_TOKENS)
+    ve canlıda 7 çağrıyı kesen 4000'in ÜSTÜNDE olmalı — yoksa düzeltme adı var, etkisi yok."""
+    govdeler = []
+
+    def fake_post(url, **kw):
+        govdeler.append(kw.get("json") or {})
+        return _Resp(200, _nous_body(json.dumps(GOOD_HYP)))
+    monkeypatch.setattr(httpx, "post", fake_post)
+
+    hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)")
+    assert govdeler, "istek gövdesi ölçülemedi"
+    assert govdeler[0]["max_tokens"] == hermes.NOUS_MAX_TOKENS
+    assert hermes.NOUS_MAX_TOKENS > 4000, "canlıda 13 çağrının 7'sini kesen tavan 4000'di"
+
+
+def test_nous_reasoning_control_is_absent_unless_the_operator_configures_it(seeded, nous_brain, monkeypatch):
+    """UYDURMA YASAĞI, İSTEK GÖVDESİ SÜRÜMÜ: `reasoning` alanının bu sağlayıcıdaki şekli bu depodan
+    DOĞRULANAMADI (bkz. hermes.NOUS_REASONING_EFFORT yorumu). Doğrulanmamış parametre canlıya
+    VARSAYILAN olarak gitmez — kol yalnız operatör açıkça açarsa gövdeye girer."""
+    govdeler = []
+
+    def fake_post(url, **kw):
+        govdeler.append(kw.get("json") or {})
+        return _Resp(200, _nous_body(json.dumps(GOOD_HYP)))
+    monkeypatch.setattr(httpx, "post", fake_post)
+
+    monkeypatch.setattr(hermes, "NOUS_REASONING_EFFORT", "")
+    hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)")
+    assert "reasoning" not in govdeler[0], "kapalıyken alan gövdede HİÇ bulunmamalı"
+
+    monkeypatch.setattr(hermes, "NOUS_REASONING_EFFORT", "low")
+    hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)")
+    assert govdeler[1]["reasoning"] == {"effort": "low"}
+
+
+def test_nous_reasoning_tokens_reach_the_spend_ledger(seeded, nous_brain, monkeypatch):
+    """Düşünce tokenları FATURALANAN çıktıdır ve gemini ayağında zaten deftere yazılıyor. Portal
+    ayağında hiç yazılmıyordu — tam da tavanı yiyen sayı görünmez kalıyordu."""
+    _stub_post(monkeypatch, [_Resp(200, NOUS_TRUNCATED_BODY)])
+    hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)")
+
+    satir = store.read_jsonl("spend.jsonl")[-1]
+    assert satir["out_tokens"] == 4000 and satir["thought_tokens"] == 3961
+
+    # ölçülmeyen alan satıra HİÇ yazılmaz (0 yazmak ölçülmemişi ölçülmüş göstermek olurdu)
+    _stub_post(monkeypatch, [_Resp(200, _nous_body(json.dumps(GOOD_HYP)))])
+    hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)")
+    assert "thought_tokens" not in store.read_jsonl("spend.jsonl")[-1]
+
+
+@pytest.mark.parametrize("body,reason", [
+    ({"choices": [{"finish_reason": "stop", "message": {"content": ""}}]}, hermes.EMPTY_NO_TEXT),
+    ({"choices": [{"finish_reason": "content_filter", "message": {"content": ""}}]}, hermes.EMPTY_REFUSAL),
+    ({"choices": [{"finish_reason": "tool_calls", "message":
+                   {"content": "", "tool_calls": [{"id": "x"}]}}]}, hermes.EMPTY_TOOL_ONLY),
+])
+def test_nous_text_keeps_the_older_three_classes_unchanged(seeded, nous_brain, monkeypatch, body, reason):
+    """KURT MASALI YASAĞI: yeni sınıf eskileri yutmamalı — boş/red/araç yolları AYNEN kalır."""
+    _take()
+    _stub_post(monkeypatch, [_Resp(200, body)])
+    assert hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)") is None
+    assert _take()[0] == reason
