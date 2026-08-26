@@ -28,6 +28,7 @@ import json
 import os
 import subprocess
 import sys
+import datetime as _dt
 from pathlib import Path
 
 import pytest
@@ -52,6 +53,26 @@ def _saglik_defteri_yalitildi():
     hs._HEALTH.clear()
     hs._HEALTH.update(onceki)
     hs._LAST_DOWN_EMIT = onceki_emit
+
+
+# ------------------------------------------------------------------------------------------------
+# ZAMAN FİKSTÜRÜ — SABİT DAMGA YASAK (2026-08-26'da ölçülerek öğrenildi)
+# ------------------------------------------------------------------------------------------------
+# Bu dosya `"2026-08-25T10:00:00+00:00"` gibi SABİT damgalar kullanıyordu ve
+# `watchdog.events_since` penceresini ŞİMDİDEN geriye hesaplar:
+#     since = now(utc) - timedelta(days=gun);  satır ancak ts >= since ise pencereye girer
+# Yani fikstür, gerçek saat 2026-08-26T10:00 UTC'yi geçtiği AN pencereden düştü ve üç test
+# birden kırmızıya döndü — kodda hiçbir değişiklik olmadan. Saatli bir bombaydı.
+#
+# TAM OLARAK BU SINIF DEPODA ADI KONMUŞ: scheduler.py'nin "DÖRDÜNCÜ KAPI" şerhi diyor ki
+# "test paketi 18:00-21:00 arası yeşil, 22:00'den sonra kırmızıydı: SAAT BAĞIMLI bir suite,
+# geçtiğinde HİÇBİR ŞEY KANITLAMAZ." Bir fikstür damgası, ölçülen şeyin parçası değilse,
+# ölçüm ânına GÖRE üretilmelidir.
+def _damga(dakika_once: int = 60) -> str:
+    """Pencere içinde kalması GARANTİ bir damga. Testler `gun=1` penceresi kullanıyor;
+    60 dakika öncesi her saatte güvenle içeridedir."""
+    return (_dt.datetime.now(_dt.timezone.utc)
+            - _dt.timedelta(minutes=dakika_once)).isoformat(timespec="seconds")
 
 
 def _satir(rapor: dict, ad: str) -> dict | None:
@@ -118,7 +139,7 @@ def test_alan_tasimayan_satirlar_sifir_diye_toplanmaz(sandbox_state):
     """CANLI KANIT ÇİVİSİ: yerel defterdeki 15.863 `hotstate_down` satırı `suppressed` alanını
     taşımıyor. Alan yoksa sayaç ÖLÇÜLMEMİŞTİR — `sum(get('suppressed', 0))` yazan bir okuyucu
     tam da bu satırlarda "0 çırpınma" raporlar. Alan-taşımayan satır sayısı GÖRÜNÜR kalmalı."""
-    alansiz = [{"ts": "2026-08-25T10:00:00+00:00", "level": "warn", "event": "hotstate_down",
+    alansiz = [{"ts": _damga(60), "level": "warn", "event": "hotstate_down",
                 "error": "TimeoutError: Timeout reading from socket"} for _ in range(7)]
 
     rap = wd.hotstate_health_report(olaylar=alansiz)
@@ -133,8 +154,8 @@ def test_karisik_defterde_toplam_alt_sinir_olarak_isaretlenir(sandbox_state):
     """Bir kısmı alanı taşıyor, bir kısmı taşımıyor: toplam DÖNER ama ALT SINIR olduğu beyan
     edilir. Beyansız bir toplam, eksik pencereyi tam sanmaktır."""
     karisik = [
-        {"ts": "2026-08-25T10:00:00+00:00", "event": "hotstate_down", "error": "x"},
-        {"ts": "2026-08-25T10:01:00+00:00", "event": "hotstate_down", "error": "x",
+        {"ts": _damga(60), "event": "hotstate_down", "error": "x"},
+        {"ts": _damga(59), "event": "hotstate_down", "error": "x",
          "suppressed": 4, "pid": 999, "down_emits": 2, "suppressed_total": 4},
     ]
 
@@ -183,7 +204,7 @@ def test_hotstate_down_olayi_surec_kimligi_ve_kumulatif_sayac_tasir(sandbox_stat
 def test_parity_satiri_capraz_surec_sayacini_tasiyor(sandbox_state):
     """`hotstate_sustained_down` satırı bugüne dek yalnız OLAY SAYISI ve son hatayı yazıyordu.
     Sensörün okuyucusu bu satırdır: sayaç satıra girmezse ölçüm yine okunmadan kalırdı."""
-    olaylar = [{"ts": "2026-08-25T10:00:00+00:00", "level": "warn", "event": "hotstate_down",
+    olaylar = [{"ts": _damga(60), "level": "warn", "event": "hotstate_down",
                 "error": "ResponseError: UNBLOCKED the stream key no longer exists",
                 "suppressed": 3, "pid": 4242, "down_emits": 9, "suppressed_total": 3}]
 
