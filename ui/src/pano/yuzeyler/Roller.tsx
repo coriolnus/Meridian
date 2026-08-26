@@ -113,7 +113,7 @@ export function Roller() {
 
       <BolumKart
         kimlik="terfi"
-        baslik="L0 → L1 terfi kapısı"
+        baslik="L0 → L1 terfi kontrolü"
         soru="Ajanın gerçek paraya ne kadar yakın olduğu neyle ölçülüyor?"
         ikon={GaugeCircle}
       >

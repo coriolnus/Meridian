@@ -89,14 +89,14 @@ function haliCoz(s: SprintDurumu): Hal {
       kod: "hic",
       baslik: "HİÇ KOŞMADI",
       metin:
-        "`sprint_status.json` faz damgası taşımıyor — bu kurulumda antrenman sprinti hiç başlatılmamış. Bu bir arıza DEĞİL, bir boşluk.",
+        "`sprint_status.json` faz damgası taşımıyor — bu kurulumda antrenman antrenman turu hiç başlatılmamış. Bu bir arıza DEĞİL, bir boşluk.",
     };
   }
   if (TERMINAL_FAZLAR.has(faz)) {
     return {
       kod: "bitti",
       baslik: "Şu an koşmuyor (son koşu bitti)",
-      metin: `Faz "${faz}" — süreç düzgün sonlandı. Aşağıdaki "son koşunun hükmü" ayrı bir sorudur: koşmamak ile aday geçirememek aynı şey değildir.`,
+      metin: `Faz "${faz}" — süreç düzgün sonlandı. Aşağıdaki "son koşunun kararı" ayrı bir sorudur: koşmamak ile aday geçirememek aynı şey değildir.`,
     };
   }
   return {
@@ -117,8 +117,8 @@ const HAL_STILI: Readonly<Record<Hal["kod"], { ikon: typeof Activity; sinif: str
 export function Sprint({ hermes }: { hermes: Durum<HermesGovdesi> }) {
   return (
     <BolumKarti
-      kimlik="sprint"
-      baslik="Sprint"
+      kimlik="antrenman turu"
+      baslik="Antrenman turu"
       soru="Antrenman koşuyor mu, kaç aday değerlendirildi?"
       ikon={Activity}
     >
@@ -184,10 +184,10 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col">
-          <Satir etiket="Sprint kimliği (sid)">
+          <Satir etiket="Antrenman turu kimliği (sid)">
             <Deger
               metin={s.sid ?? null}
-              neden="Henüz hiç sprint başlatılmamış"
+              neden="Henüz hiç antrenman turu başlatılmamış"
               teknik="`sid` yok"
               className="text-xs"
             />
@@ -199,7 +199,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
                 const a = anMetni(s.started_at);
                 return y === null ? null : a === null ? y.metin : `${y.metin} · ${a}`;
               })()}
-              neden="Sprint henüz hiç başlamamış"
+              neden="Antrenman turu henüz hiç başlamamış"
               teknik="`started_at` damgası yok"
               className="text-xs"
             />
@@ -218,7 +218,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
           <Satir etiket="Faz">
             <Deger
               metin={s.phase ?? null}
-              neden="Sprint henüz hiç koşmamış"
+              neden="Antrenman turu henüz hiç koşmamış"
               teknik="`phase` yok"
               className="text-xs"
             />
@@ -261,13 +261,13 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
 
       {/* ---- (2) SON KOŞUNUN HÜKMÜ ---- */}
       <Kutu
-        baslik="Son koşunun hükmü"
+        baslik="Son koşunun kararı"
         aciklama="Bu satır 'koşuyor mu?' sorusundan AYRIDIR: makine koşup hiçbir adayı geçirememiş olabilir."
       >
         {!arama ? (
           <Olculemedi
             neden="Son koşu arama aşamasına hiç ulaşmamış olabilir"
-            teknik="`sprint.search` yok — Faz A min_sample'a takılırsa arama hiç başlamaz"
+            teknik="`antrenman turu.search` yok — Faz A min_sample'a takılırsa arama hiç başlamaz"
           />
         ) : (
           <>
@@ -342,7 +342,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
             neden={
               s.runs_note ??
               (s.runs_ledger === "YOK"
-                ? "Hiçbir kum havuzunda koşu kaydı yok — sprint arama aşamasına hiç ulaşmamış olabilir"
+                ? "Hiçbir kum havuzunda koşu kaydı yok — antrenman turu arama aşamasına hiç ulaşmamış olabilir"
                 : "Koşu geçmişi okundu ama hiçbir satırda sayı yok — grafik çizilemedi")
             }
             teknik={
@@ -433,7 +433,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
       </Kutu>
 
       {/* ---- (4) KADANS: SIRADA NE VAR ---- */}
-      <Kutu baslik="Kadans — bir sonraki sprint ne zaman?" aciklama="`sprint.should_run()` her cevabın yanına SEBEBİNİ yazar.">
+      <Kutu baslik="Otomatik döngü — bir sonraki antrenman turu ne zaman?" aciklama="`antrenman turu.should_run()` her cevabın yanına SEBEBİNİ yazar.">
         {!kadans ? (
           <Olculemedi
             neden="Otomatik döngünün kararı bu turda ölçülemedi"
@@ -459,21 +459,21 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
               <Deger
                 metin={kadans.sebep ?? null}
                 neden="Otomatik döngü kararının gerekçesini kaydetmemiş"
-                teknik="kadans sebep yazmadı — 'arıza mı, disiplin mi' ayırt edilemez"
+                teknik="otomatik döngü sebep yazmadı — 'arıza mı, disiplin mi' ayırt edilemez"
                 className="text-xs"
               />
             </Satir>
-            <Satir etiket="Son sprintten geçen gün">
+            <Satir etiket="Son antrenman turundan geçen gün">
               <Deger
                 metin={sayi(kadans.gecen_gun, 0)}
-                neden="Henüz hiç sprint koşmamış — 'sıfır gün' demek değil"
+                neden="Henüz hiç antrenman turu koşmamış — 'sıfır gün' demek değil"
                 teknik="`gecen_gun` null"
               />
             </Satir>
-            <Satir etiket="Sprint sonrası taze hipotez">
+            <Satir etiket="Antrenman sonrası taze hipotez">
               <Deger
                 metin={sayi(kadans.taze_hipotez, 0)}
-                neden="Sprint sonrası taze hipotez sayısı ölçülemedi"
+                neden="Antrenman sonrası taze hipotez sayısı ölçülemedi"
                 teknik="`taze_hipotez` ölçülemedi"
               />
             </Satir>
@@ -497,7 +497,7 @@ function IzTablosu({ iz, evaluated }: { iz: readonly SprintIzi[]; evaluated: num
   if (iz.length === 0) {
     return (
       <Olculemedi
-        neden="Hangi adayın neden elendiği bu koşuda kaydedilmemiş — gerekçe olmadan sprint bir şey öğretmez"
+        neden="Hangi adayın neden elendiği bu koşuda kaydedilmemiş — gerekçe olmadan antrenman turu bir şey öğretmez"
         teknik="`search.trace` boş"
       />
     );
@@ -514,7 +514,7 @@ function IzTablosu({ iz, evaluated }: { iz: readonly SprintIzi[]; evaluated: num
               <TableHead className="h-9">Deneme</TableHead>
               <TableHead className="h-9 text-right">Aday OOS</TableHead>
               <TableHead className="h-9 text-right">Kat galibiyeti</TableHead>
-              <TableHead className="h-9">Hüküm</TableHead>
+              <TableHead className="h-9">Karar</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

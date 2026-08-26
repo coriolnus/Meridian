@@ -82,7 +82,7 @@ function KapiDokumu({ kontroller }: { readonly kontroller: readonly KapiKontrolu
           <HukumRozet
             ton="olculemedi"
             metin={`${belirsiz.length} ölçülemedi`}
-            baslik="`passed` alanı true/false değil — kapı hükmü bu satırdan okunamıyor"
+            baslik="`passed` alanı true/false değil — kontrolün kararı bu satırdan okunamıyor"
           />
         ) : null}
       </div>
@@ -102,7 +102,7 @@ function KapiDokumu({ kontroller }: { readonly kontroller: readonly KapiKontrolu
                 {k.severity ?? "şiddet yazılmamış"}
               </Badge>
               <span className="text-muted-foreground text-[11px]">
-                {k.passed === true ? "geçti" : k.passed === false ? "DÜŞTÜ" : "hüküm okunamadı"}
+                {k.passed === true ? "geçti" : k.passed === false ? "DÜŞTÜ" : "karar okunamadı"}
               </span>
               <span className="ml-auto tabular-nums text-[11px]">
                 {kontrolDegeri(k.value)} {k.threshold ? `↔ ${k.threshold}` : "(eşik yazılmamış)"}

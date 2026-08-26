@@ -56,16 +56,16 @@ const KATEGORI: Readonly<Record<string, string>> = {
   TELEGRAM_BOT_TOKEN: "bildirim",
   TELEGRAM_CHAT_ID: "bildirim",
   MERIDIAN_WEBHOOK_URL: "bildirim",
-  HERMES_API_KEY: "beyin (LLM)",
-  ANTHROPIC_API_KEY: "beyin (LLM)",
-  NOUS_API_KEY: "beyin (LLM)",
-  NOUS_ENDPOINT: "beyin (LLM)",
-  NOUS_MODEL: "beyin (LLM)",
-  NOUS_FALLBACK_MODEL: "beyin (LLM)",
-  GEMINI_API_KEY: "beyin (LLM)",
-  GEMINI_OAUTH_TOKEN: "beyin (LLM)",
-  GEMINI_MODEL: "beyin (LLM)",
-  HERMES_BRAIN_ORDER: "beyin (LLM)",
+  HERMES_API_KEY: "model (LLM)",
+  ANTHROPIC_API_KEY: "model (LLM)",
+  NOUS_API_KEY: "model (LLM)",
+  NOUS_ENDPOINT: "model (LLM)",
+  NOUS_MODEL: "model (LLM)",
+  NOUS_FALLBACK_MODEL: "model (LLM)",
+  GEMINI_API_KEY: "model (LLM)",
+  GEMINI_OAUTH_TOKEN: "model (LLM)",
+  GEMINI_MODEL: "model (LLM)",
+  HERMES_BRAIN_ORDER: "model (LLM)",
   LITESTREAM_ACCESS_KEY_ID: "yedekleme",
   LITESTREAM_SECRET_ACCESS_KEY: "yedekleme",
 };
@@ -252,7 +252,7 @@ function GuvenlikGovdesi({ v }: { readonly v: SirlarGovdesi }) {
         <Metin
           deger={v.model_defaults?.NOUS_MODEL}
           neden="Bu sağlayıcı için varsayılan model tanımlı değil"
-          teknik="hermes modülü NOUS_DEFAULT_MODEL sabiti taşımıyor (uç bu alanı null döndürür)"
+          teknik="danışma modülü NOUS_DEFAULT_MODEL sabiti taşımıyor (uç bu alanı null döndürür)"
           className="font-mono text-xs"
         />
       </Satir>

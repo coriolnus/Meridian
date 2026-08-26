@@ -277,7 +277,7 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                       olurdu; açık kalem olarak duruyor. */}
                   <Satir etiket="Ağ (rx/tx)">
                     <Olculemedi
-                      neden="Ağ trafiği bu sürümde hiç ölçülmüyor — açık kalem"
+                      neden="Ağ trafiği bu sürümde hiç ölçülmüyor — ölçüm henüz eklenmedi"
                       teknik="/api/infra makine bloğunda ağ sayacı YOK (uç `hostname/platform/cekirdek_n/yuk/cpu_yuzde/bellek/disk/uptime_s` döndürüyor)"
                       kisa
                     />

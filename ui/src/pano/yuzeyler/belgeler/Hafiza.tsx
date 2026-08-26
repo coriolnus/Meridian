@@ -197,7 +197,7 @@ function BolumTablosu({ belge }: { belge: HafizaBelgesi }) {
       </CardHeader>
       <CardContent>
         {belge.bolumler.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Belgede `##` bölümü yok — dökülecek kova yok.</p>
+          <p className="text-muted-foreground text-sm">Belgede `##` bölümü yok — dökülecek aralık yok.</p>
         ) : (
           <div className="min-w-0 overflow-x-auto">
             <Table>

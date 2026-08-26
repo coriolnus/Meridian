@@ -70,7 +70,7 @@ function Serit({ b }: { b: BugunTam }) {
     return (
       <Alert variant="destructive">
         <AlertTriangle aria-hidden />
-        <AlertTitle>Veri kapısı ŞÜPHELİ</AlertTitle>
+        <AlertTitle>Veri kalite kontrolü ŞÜPHELİ</AlertTitle>
         <AlertDescription>
           Nabız `data_ok=false` yazmış. Bu ekrandaki planlar ve fiyatlar şüpheli veriyle üretilmiş olabilir.
         </AlertDescription>

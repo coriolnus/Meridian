@@ -194,7 +194,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, AracSatir>[] = [
             <Badge
               variant="outline"
               className="cursor-help border-amber-500/40 text-amber-700 dark:text-amber-300"
-              title="Gölge: skill koşar ama hükmü icraya BAĞLANMAZ (beyan tablonun altında)."
+              title="Deneme: skill koşar ama kararı icraya BAĞLANMAZ (beyan tablonun altında)."
             >
               gölge
             </Badge>
@@ -476,7 +476,7 @@ function Govde({ veri }: { veri: SkillGovdesi }) {
             sayılıyorlar.
           </Beyan>
         ) : null}
-        {env?.hukum ? <Beyan>{env.hukum}</Beyan> : <Beyan>Envanter hükmü yükte yok — "kaç araç var?" sorusunun paydası bu turda ölçülemedi.</Beyan>}
+        {env?.hukum ? <Beyan>{env.hukum}</Beyan> : <Beyan>Envanter kararı yükte yok — "kaç araç var?" sorusunun paydası bu turda ölçülemedi.</Beyan>}
         {env?.kayit ? (
           <Beyan>
             Kayıt: toplam {sayi(env.kayit.toplam, 0) ?? "?"} · aktif {sayi(env.kayit.aktif, 0) ?? "?"} · arşiv{" "}

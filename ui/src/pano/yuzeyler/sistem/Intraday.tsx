@@ -60,7 +60,7 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
             { ad: "marketstream (WS)", ok: d.marketstream?.ok, not: "Alpaca canlı besleme dinleyicisi" },
             { ad: "hotstate (Redis)", ok: d.hotstate?.ok, not: "sıcak katman — fiyat/bar tamponu" },
             { ad: "barfeed (consumer-group)", ok: d.barfeed?.ok, not: "dayanıklı bar tetiği" },
-            { ad: "intraday_cycle", ok: i?.ok, not: "karar hattı (gözlem / silahlı)" },
+            { ad: "intraday_cycle", ok: i?.ok, not: "karar hattı (gözlem / işleme hazır)" },
           ];
 
           return (
@@ -102,7 +102,7 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                       iyi="canlı"
                       kotu="kopuk"
                       neden="Canlı besleme bu süreçte hiç koşmamış"
-                      teknik="broker tarafı aynası hiç koşmamış — stream_ok null (üçüncü hâl)"
+                      teknik="broker tarafı aynası hiç koşmamış — stream_ok null "
                     />
                   </Satir>
                   <Satir etiket="Son akış olayı">
@@ -147,7 +147,7 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                       </span>
                     )}
                   </Satir>
-                  <Satir etiket="İzlenen sembol / silahlı plan">
+                  <Satir etiket="İzlenen sembol / işleme hazır plan">
                     <span className="tabular-nums">
                       <Deger deger={i?.watched} neden="İzlenen sembol sayısı bildirilmedi" teknik="intraday.watched gelmedi" /> /{" "}
                       <Deger deger={i?.armed_plans} neden="İşleme hazır plan sayısı okunamadı" teknik="portfolio.armed okunamadı" />
@@ -196,7 +196,7 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                 <Olculemedi neden="Boşluk taraması bu süreçte hiç koşmadı — boşluk yok değil, bakılmadı" teknik="`akis_boslugu` null (api.py:4491)" />
               ) : bosluk.durum && bosluk.durum !== "ok" ? (
                 <p className="text-muted-foreground text-sm">
-                  Boşluk taraması hüküm VERMEDİ — durum: <span className="font-mono">{bosluk.durum}</span> (
+                  Boşluk taraması karar VERMEDİ — durum: <span className="font-mono">{bosluk.durum}</span> (
                   {bosluk.gun ?? "gün yok"}). Boş boşluk listesi bu hâlde "boşluk yok" anlamına gelmez.
                 </p>
               ) : (

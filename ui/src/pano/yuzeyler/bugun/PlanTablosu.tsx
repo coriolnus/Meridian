@@ -109,7 +109,7 @@ function SiraliBaslik({ sutun, etiket }: { sutun: Column<DataTableFeatures, Plan
  *  tek hüküm REVIEW'dur, çünkü SENDEN iş ister; o da `primary` ile öne çıkar. */
 function HukumRozeti({ hukum }: { hukum: string | undefined }) {
   if (hukum === undefined)
-    return <Yok neden="Bu plana kapı hükmü kaydedilmemiş" teknik="plan kaydında `gate_verdict` alanı yok" />;
+    return <Yok neden="Bu plana kontrolün kararı kaydedilmemiş" teknik="plan kaydında `gate_verdict` alanı yok" />;
   if (hukum === "GO") {
     return (
       <Badge variant="outline">

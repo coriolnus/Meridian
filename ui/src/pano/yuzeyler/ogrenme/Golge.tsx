@@ -45,9 +45,9 @@ import type { AntrenmanDurumu, GolgeYasasi, OgrenmeBlogu, TeshisGovdesi } from "
 
 const UYUM_CONFIG = {
   n: { label: "Kayıt" },
-  uyumlu: { label: "İki yasa aynı hükmü verdi", color: "var(--chart-2)" },
+  uyumlu: { label: "İki yasa aynı kararı verdi", color: "var(--chart-2)" },
   iraksayan: { label: "Iraksadı", color: "var(--destructive)" },
-  olcusuz: { label: "Geçiş öncesi (gölge ölçülmemiş)", color: "var(--muted-foreground)" },
+  olcusuz: { label: "Geçiş öncesi (deneme ölçülmemiş)", color: "var(--muted-foreground)" },
 } satisfies ChartConfig;
 
 interface UyumKovasi {
@@ -60,7 +60,7 @@ interface UyumKovasi {
 
 export function Golge({ teshis }: { teshis: Durum<TeshisGovdesi> }) {
   return (
-    <BolumKarti kimlik="golge" baslik="Gölge" soru="Gölge uyum ne gösteriyor?" ikon={FlaskConical}>
+    <BolumKarti kimlik="golge" baslik="Deneme" soru="Deneme uyum ne gösteriyor?" ikon={FlaskConical}>
       <Kapi durum={teshis} ad="/api/diagnostics" yukseklik="h-64">
         {(v) => (
           <div className="flex flex-col gap-6">
@@ -78,7 +78,7 @@ export function Golge({ teshis }: { teshis: Durum<TeshisGovdesi> }) {
 function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
   if (!yasa) {
     return (
-      <Kutu baslik="Gölge yasa — iki hesabın uyumu">
+      <Kutu baslik="Deneme kuralı — iki hesabın uyumu">
         <Olculemedi
           neden="İki kural setinin uyumu bu turda hiç ölçülmedi"
           teknik="/api/diagnostics yükünde `mlops.shadow_law` bloğu YOK"
@@ -99,7 +99,7 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
       n: uyumlu,
       renk: "var(--color-uyumlu)",
       opaklik: 0.9,
-      aciklama: "PARA-v3 ile eski bileşik yasa AYNI hükmü verdi.",
+      aciklama: "PARA-v3 ile eski bileşik yasa AYNI kararı verdi.",
     });
   }
   if (iraksayan !== null) {
@@ -108,7 +108,7 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
       n: iraksayan,
       renk: "var(--color-iraksayan)",
       opaklik: 0.9,
-      aciklama: "İki yasa FARKLI hüküm verdi — süreklilik bu satırda kırılıyor.",
+      aciklama: "İki yasa FARKLI karar verdi — süreklilik bu satırda kırılıyor.",
     });
   }
   if (oncesi !== null) {
@@ -117,7 +117,7 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
       n: oncesi,
       renk: "var(--color-olcusuz)",
       opaklik: 0.45,
-      aciklama: "Gölge alanı hiç yazılmamış (retro damga yasağı) — uyum ya da ıraksama olarak SAYILMAZ.",
+      aciklama: "Deneme alanı hiç yazılmamış (retro damga yasağı) — uyum ya da ıraksama olarak SAYILMAZ.",
     });
   }
 

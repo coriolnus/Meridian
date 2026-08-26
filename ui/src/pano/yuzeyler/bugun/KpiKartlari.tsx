@@ -212,7 +212,7 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
           "ölçülemedi" derdi ve bu, ölçülmüş bir gerçeği yanlış olumsuzlamak olurdu. */}
       <Kart
         ikon={Database}
-        etiket="Veri kapısı"
+        etiket="Veri kalite kontrolü"
         dip={
           b.heartbeat_age_seconds === undefined || b.heartbeat_age_seconds === null
             ? "nabız yaşı ölçülemedi — gövdede `heartbeat_age_seconds` yok"
@@ -226,7 +226,7 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
         ) : hb.data_ok === undefined ? (
           <Olculemedi
             neden="Veri sağlığı bu nabızda bildirilmedi"
-            teknik="nabız `data_ok` taşımıyor (tohum nabzı canlı-döngü nabzından az anahtar taşır)"
+            teknik="nabız `data_ok` taşımıyor (başlangıç verisi nabzı canlı-döngü nabzından az anahtar taşır)"
           />
         ) : (
           <>

@@ -82,7 +82,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
       row.original.kaynak === null ? (
         <Olculemedi neden="Öneriyi kimin yaptığı kaydedilmemiş" teknik="satırda `source` alanı yok" />
       ) : (
-        <Badge variant={row.original.kaynak.startsWith("hermes:") ? "secondary" : "outline"} className="text-[10px]">
+        <Badge variant={row.original.kaynak.startsWith("danışma:") ? "secondary" : "outline"} className="text-[10px]">
           {row.original.kaynak}
         </Badge>
       ),
@@ -148,7 +148,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
   {
     id: "durum",
     accessorFn: (h) => h.durum ?? "",
-    header: ({ column }) => <SiralamaBasligi etiket="Hüküm" column={column} />,
+    header: ({ column }) => <SiralamaBasligi etiket="Karar" column={column} />,
     cell: ({ row }) => {
       const d = row.original.durum;
       if (d === null) return <Olculemedi neden="Öneri hakkındaki karar kaydedilmemiş" teknik="satırda `status` alanı yok" />;

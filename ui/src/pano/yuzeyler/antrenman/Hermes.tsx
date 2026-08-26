@@ -64,7 +64,7 @@ const HARCAMA_CONFIG = {
 
 export function Hermes({ hermes, teshis }: { hermes: Durum<HermesGovdesi>; teshis: Durum<TeshisGovdesi> }) {
   return (
-    <BolumKarti kimlik="hermes" baslik="Hermes" soru="Yansıma hattı ne durumda, geri dolum nerede?" ikon={Sparkles}>
+    <BolumKarti kimlik="danışma" baslik="Danışma" soru="Değerlendirme hattı ne durumda, geri dolum nerede?" ikon={Sparkles}>
       <Kapi durum={hermes} ad="/api/hermes" yukseklik="h-64">
         {(v) => (
           <div className="flex flex-col gap-6">
@@ -77,7 +77,7 @@ export function Hermes({ hermes, teshis }: { hermes: Durum<HermesGovdesi>; teshi
                 düşerse Hermes kartının geri kalanı çizilmeye devam etsin. */}
             <Kutu
               baslik="Isınma (warmup) — ajan yoklaması"
-              aciklama="Kaynak /api/diagnostics `mlops.warmup`. Yansımadan AYRI bir kadans: model uçlarını yoklar."
+              aciklama="Kaynak /api/diagnostics `mlops.warmup`. Yansımadan AYRI bir otomatik döngü: model uçlarını yoklar."
             >
               <Kapi durum={teshis} ad="/api/diagnostics" yukseklik="h-24">
                 {(t) => <IsinmaSatirlari w={t.mlops?.warmup} />}

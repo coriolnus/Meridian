@@ -88,13 +88,13 @@ export function HukumDagilimi({ b }: { b: BugunTam }) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="leading-none">Hüküm dağılımı</CardTitle>
+        <CardTitle className="leading-none">Karar dağılımı</CardTitle>
         <CardDescription>Kurulan plandan GO'ya: kaç tanesi sağ çıktı?</CardDescription>
       </CardHeader>
       <CardContent>
         {sayimlar === undefined ? (
           <Olculemedi
-            neden="Bu seansın hüküm sayıları bildirilmedi"
+            neden="Bu seansın karar sayıları bildirilmedi"
             teknik="`/api/today` gövdesinde `verdict_counts` alanı yok"
           />
         ) : (

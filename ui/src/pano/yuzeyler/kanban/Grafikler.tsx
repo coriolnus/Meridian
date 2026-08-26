@@ -47,7 +47,7 @@ const hukumAyari = {
   no_go: { label: "NO_GO", color: "var(--destructive)" },
   review: { label: "REVIEW", color: "var(--chart-3)" },
   go: { label: "GO", color: "var(--primary)" },
-  belirsiz: { label: "hüküm yok", color: "var(--chart-1)" },
+  belirsiz: { label: "karar yok", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
 export function HukumGrafigi({ seanslar }: { seanslar: readonly SeansHukmu[] }) {

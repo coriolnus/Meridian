@@ -111,7 +111,7 @@ function grubu(ad: string): string {
   if (ad.startsWith("ALPACA_")) return "broker";
   if (ad.startsWith("TELEGRAM_") || ad.startsWith("MERIDIAN_WEBHOOK")) return "bildirim";
   if (ad.startsWith("HERMES_") || ad.startsWith("NOUS_") || ad.startsWith("GEMINI_") || ad.startsWith("ANTHROPIC_"))
-    return "beyin";
+    return "model";
   if (ad.startsWith("LITESTREAM_")) return "yedekleme";
   return SINIFLANMADI;
 }
@@ -137,7 +137,7 @@ const GRUP_KUNYE: Readonly<Record<string, GrupKunye>> = {
     aciklama: "Telegram / webhook. Alarm ve HALT bildirimlerinin çıkış kanalı.",
   },
   beyin: {
-    baslik: "Beyin (LLM)",
+    baslik: "Model (LLM)",
     aciklama:
       "Model sağlayıcıları ve zincir sırası. `HERMES_BRAIN_ORDER`, `*_MODEL`, `*_ENDPOINT` alanları bir sır değil YAPILANDIRMA taşır; yine de maskeli girilirler (aynı uç, aynı depo).",
   },
@@ -154,7 +154,7 @@ const GRUP_KUNYE: Readonly<Record<string, GrupKunye>> = {
 };
 
 /** Ekranda görünme sırası. Listede olmayan bir grup en sona eklenir. */
-const GRUP_SIRA: readonly string[] = ["veri", "broker", "bildirim", "beyin", "yedekleme", SINIFLANMADI];
+const GRUP_SIRA: readonly string[] = ["veri", "broker", "bildirim", "model", "yedekleme", SINIFLANMADI];
 
 /* --- UÇ EŞLEMELERİ (api.py OKUNARAK yazıldı, tahmin edilmedi) ------------- */
 

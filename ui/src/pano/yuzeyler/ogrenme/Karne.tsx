@@ -142,7 +142,7 @@ function Merdiven({ hal }: { hal: string | undefined }) {
 const DEFTER_CONFIG = {
   n: { label: "Satır" },
   canli: { label: "Canlı/paper", color: "var(--chart-2)" },
-  tohum: { label: "Replay tohumu", color: "var(--chart-4)" },
+  tohum: { label: "Replay başlangıç verisi", color: "var(--chart-4)" },
   belirsiz: { label: "Belirsiz", color: "var(--chart-3)" },
   damgasiz: { label: "Damgasız", color: "var(--muted-foreground)" },
 } satisfies ChartConfig;
@@ -158,9 +158,9 @@ function defterKovalari(d: DefterSayaci | undefined): DefterKovasi[] {
   if (!d) return [];
   const kayitlar: readonly [string, unknown, string, string][] = [
     ["Canlı/paper", d.live_paper_n, "var(--color-canli)", "kanıtlı canlı satır — min_sample paydasının çekirdeği"],
-    ["Replay tohumu", d.replay_seed_n, "var(--color-tohum)", "tek toplu yazım, bugünkü evrenle: TRAINING sayılır, paydaya GİRMEZ"],
+    ["Replay başlangıç verisi", d.replay_seed_n, "var(--color-başlangıç verisi)", "tek toplu yazım, bugünkü evrenle: TRAINING sayılır, paydaya GİRMEZ"],
     ["Belirsiz", d.belirsiz_n, "var(--color-belirsiz)", "damgası var ama kaynağı ayrışmıyor — paydaya girer, kanıt sayılmaz"],
-    ["Damgasız", d.damgasiz_n, "var(--color-damgasiz)", "hiç damga yok; tohuma yazmak uydurma olurdu"],
+    ["Damgasız", d.damgasiz_n, "var(--color-damgasiz)", "hiç damga yok; başlangıç verisine yazmak uydurma olurdu"],
   ];
   return kayitlar
     .filter((k): k is [string, number, string, string] => typeof k[1] === "number" && Number.isFinite(k[1]))

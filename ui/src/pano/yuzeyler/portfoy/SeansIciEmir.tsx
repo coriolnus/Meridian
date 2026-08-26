@@ -80,7 +80,7 @@ function KorumaRozeti({ sembol, h }: { sembol: string; h: KorumaHukmu }) {
   if (h.durum === KORUMA_OLCULEMEDI) {
     return (
       <Olculemedi
-        kisa="hüküm verilmedi"
+        kisa="karar verilmedi"
         neden={
           h.neden ??
           `${sembol}: emir listesi okunamadığı için koruma kararı verilemedi. Bu "koruma yok" demek değildir.`
@@ -142,7 +142,7 @@ function KorumaRozeti({ sembol, h }: { sembol: string; h: KorumaHukmu }) {
   }
   return (
     <Olculemedi
-      kisa="hüküm tanınmadı"
+      kisa="karar tanınmadı"
       neden={`${sembol}: koruma kararı bu ekranın tanımadığı bir değer taşıyor. Tanımadığı bir kararı "korumalı" ya da "korumasız" diye çevirmek uydurma olurdu.`}
       teknik={`${sembol}: gövde \`durum\` alanına ${h.durum ?? "hiçbir değer"} yazdı`}
     />
@@ -203,7 +203,7 @@ export function SeansIciEmir({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ShieldCheck className="size-4 text-muted-foreground" />
-            Silahlanma kapısı
+            İşleme hazırlık kontrolü
           </CardTitle>
           <CardDescription>
             Faz-4b bayrağı (<code className="text-xs">state/INTRADAY_ARM</code>). Varsayılan KAPALI = yalnız gözlem.
@@ -222,7 +222,7 @@ export function SeansIciEmir({
                 {intraday.armed === undefined ? (
                   <Olculemedi
                     kisa="bayrak okunamadı"
-                    neden="Silahlanma bayrağının durumu bildirilmedi"
+                    neden="İşleme hazırlık bayrağının durumu bildirilmedi"
                     teknik="`intraday.armed` alanı gövdede yok."
                   />
                 ) : (
@@ -235,7 +235,7 @@ export function SeansIciEmir({
                 {intraday.ok === null && (
                   <Olculemedi
                     kisa="tüketici hiç kurulmadı"
-                    neden="Seans-içi izleyici bu süreçte hiç kurulmamış — arıza değil, üçüncü hâl"
+                    neden="Seans-içi izleyici bu süreçte hiç kurulmamış — bu bir arıza değil"
                     teknik="`intraday.ok` null"
                   />
                 )}
@@ -248,7 +248,7 @@ export function SeansIciEmir({
               </p>
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Sayac ad="EOD silahlı plan" n={intraday.armed_plans} not="Defterdeki silahlı plan sayısı — bayrakla AYRI soru" />
+                <Sayac ad="EOD işleme hazır plan" n={intraday.armed_plans} not="Defterdeki işleme hazır plan sayısı — bayrakla AYRI soru" />
                 <Sayac ad="Karar (bugün)" n={intraday.decisions?.today} not="intraday_decisions.jsonl'de bugüne düşen satır" />
                 <Sayac ad="Karar (toplam)" n={intraday.decisions?.total} not="Defterin ömür boyu satır sayısı" />
                 <Sayac ad="Ateşlenen" n={intraday.decisions?.fired} not="fired=true damgalı karar" />
@@ -282,13 +282,13 @@ export function SeansIciEmir({
       {/* --- GÖLGE İCRA -------------------------------------------------------- */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Gölge icra</CardTitle>
+          <CardTitle className="text-base">Deneme icra</CardTitle>
           <CardDescription>"Tetik kesilseydi ne olurdu" defteri — emir GÖNDERMEZ, yalnız kararı yazar.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {intraday?.shadow === undefined ? (
             <Olculemedi
-              kisa="gölge bloğu yok"
+              kisa="deneme bloğu yok"
               neden={
                 intraday === undefined
                   ? "Seans-içi teşhis bloğu hiç gelmedi — denemeye alınmış kararların kaydı da onun içinde yaşıyor, ayrı bir kaynağı yok."
@@ -304,11 +304,11 @@ export function SeansIciEmir({
             <>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={intraday.shadow.enabled ? "outline" : "secondary"}>
-                  {intraday.shadow.enabled ? "gölge açık" : "gölge kapalı"}
+                  {intraday.shadow.enabled ? "deneme açık" : "deneme kapalı"}
                 </Badge>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Sayac ad="Bugün" n={intraday.shadow.today_n} not="Bugünkü gölge satırı" />
+                <Sayac ad="Bugün" n={intraday.shadow.today_n} not="Bugünkü deneme satırı" />
                 <Sayac ad="Gönderilirdi" n={intraday.shadow.would_submit_n} not="would_submit damgalı bugünkü satır" />
                 <Sayac ad="Engellendi" n={intraday.shadow.blocked_n} not="blocked* damgalı bugünkü satır" uyari />
                 <Sayac ad="Toplam" n={intraday.shadow.total} not="Defterin ömür boyu satır sayısı" />
@@ -354,7 +354,7 @@ export function SeansIciEmir({
             <p className="text-muted-foreground text-sm">
               <span className="font-medium text-foreground">Ölçülemedi:</span>{" "}
               {hesap?.koruma_neden ??
-                "`koruma` null ama `koruma_neden` boş — POZİSYON listesi okunamadı, yani hangi sembol için hüküm verileceği bile bilinmiyor."}
+                "`koruma` null ama `koruma_neden` boş — POZİSYON listesi okunamadı, yani hangi sembol için karar verileceği bile bilinmiyor."}
             </p>
           ) : Object.keys(koruma).length === 0 ? (
             <p className="text-muted-foreground text-sm">
@@ -376,12 +376,12 @@ export function SeansIciEmir({
                   uyari
                 />
                 <Sayac
-                  ad="hüküm verilmedi"
+                  ad="karar verilmedi"
                   n={korumaSayaci(koruma, KORUMA_OLCULEMEDI)}
                   not="Emir listesi okunamadı — arıza, 'koruma yok' DEĞİL"
                 />
                 <Sayac
-                  ad="tanınmayan hüküm"
+                  ad="tanınmayan karar"
                   n={
                     Object.keys(koruma).length -
                     korumaSayaci(koruma, KORUMA_VAR) -
@@ -397,7 +397,7 @@ export function SeansIciEmir({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Sembol</TableHead>
-                      <TableHead>Koruma hükmü</TableHead>
+                      <TableHead>Koruma kararı</TableHead>
                       <TableHead>Şerh</TableHead>
                     </TableRow>
                   </TableHeader>

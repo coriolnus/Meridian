@@ -64,9 +64,9 @@ const FACETLER = [
   { aile: "KAYNAK", ad: "sektor", etiket: "Sektör" },
   { aile: "SONUC", ad: "cikis_nedeni", etiket: "Çıkış nedeni" },
   { aile: "SONUC", ad: "tutma_kovasi", etiket: "Tutma süresi" },
-  { aile: "SONUC", ad: "r_kovasi", etiket: "R kovası" },
+  { aile: "SONUC", ad: "r_kovasi", etiket: "R aralığı" },
   { aile: "KAPI", ad: "kapi_reddi", etiket: "Kapı reddi" },
-  { aile: "KAPI", ad: "kapi_hukmu", etiket: "Kapı hükmü" },
+  { aile: "KAPI", ad: "kapi_hukmu", etiket: "Kontrolün kararı" },
   { aile: "KAPI", ad: "kaynak", etiket: "Kaynak damgası" },
 ] as const;
 

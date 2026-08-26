@@ -82,7 +82,7 @@ function kolonlariKur(simdi: number): ColumnDef<DataTableFeatures, Adim>[] {
     {
       id: "hukum",
       accessorFn: (a) => a.hukum,
-      header: "Hüküm",
+      header: "Karar",
       cell: ({ row }) => (
         <HukumRozet
           ton={HUKUM_TONU[row.original.hukum]}

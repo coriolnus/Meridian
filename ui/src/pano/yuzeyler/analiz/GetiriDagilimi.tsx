@@ -27,8 +27,8 @@ import type { FacetBloku, FacetSatiri, TopviewsGovdesi } from "./tipler";
 
 const DAGILIM_CONFIG = {
   n: { label: "İşlem", color: "var(--chart-2)" },
-  kaybeden: { label: "Kaybeden kova", color: "var(--destructive)" },
-  kazanan: { label: "Kazanan kova", color: "var(--chart-2)" },
+  kaybeden: { label: "Kaybeden aralık", color: "var(--destructive)" },
+  kazanan: { label: "Kazanan aralık", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
 interface KovaNoktasi {
@@ -53,7 +53,7 @@ export function GetiriDagilimi({ top }: { top: Durum<TopviewsGovdesi> }) {
     <Card>
       <CardHeader>
         <CardTitle>Getiri dağılımı</CardTitle>
-        <CardDescription>Kapanmış işlemler R kovalarına göre — kova sınırları uçta ÖNCEDEN sabit.</CardDescription>
+        <CardDescription>Kapanmış işlemler R aralıklarına göre — aralık sınırları uçta ÖNCEDEN sabit.</CardDescription>
       </CardHeader>
       <CardContent>
         <Kapi durum={top} ad="/api/topviews" yukseklik="h-56">
@@ -97,7 +97,7 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
   if (noktalar.length === 0) {
     return (
       <Olculemedi
-        neden="Çizilecek getiri kovası yok"
+        neden="Çizilecek getiri aralığı yok"
         teknik="r_kovasi satırlarının hiçbiri hem `deger` hem `n` taşımıyor"
       />
     );
@@ -108,7 +108,7 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
       <ChartContainer config={DAGILIM_CONFIG} className="aspect-auto h-64 w-full">
         <BarChart data={noktalar} margin={{ bottom: 0, left: 0, right: 8, top: 16 }}>
           <CartesianGrid vertical={false} />
-          <XAxis axisLine={false} dataKey="kova" tickLine={false} tickMargin={10} />
+          <XAxis axisLine={false} dataKey="aralık" tickLine={false} tickMargin={10} />
           <YAxis axisLine={false} tickLine={false} tickMargin={8} width={40} allowDecimals={false} />
           <ChartTooltip
             cursor={false}
@@ -118,7 +118,7 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
                 labelFormatter={(_etiket, yuk) => {
                   const ilk = Array.isArray(yuk) ? yuk[0] : undefined;
                   const p = (ilk as { payload?: KovaNoktasi } | undefined)?.payload;
-                  if (!p) return "kova okunamadı";
+                  if (!p) return "aralık okunamadı";
                   const pay = toplam > 0 ? ` · ${yuzde(p.n / toplam, 1) ?? ""}` : "";
                   return `${p.kova}${pay}`;
                 }}
@@ -147,7 +147,7 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
         <table className="w-full min-w-[32rem] text-sm">
           <thead>
             <tr className="border-border/60 border-b text-muted-foreground text-xs">
-              <th className="py-2 pr-3 text-left font-normal">Kova</th>
+              <th className="py-2 pr-3 text-left font-normal">Aralık</th>
               <th className="py-2 pr-3 text-right font-normal">İşlem</th>
               <th className="py-2 pr-3 text-right font-normal">Pay</th>
               <th className="py-2 pr-3 text-right font-normal">Toplam R</th>

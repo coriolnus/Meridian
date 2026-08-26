@@ -33,7 +33,7 @@ import type { BilesenIcBelgesi, IcHucresi, KucultulmusIc, TeshisGovdesi } from "
 
 const KATMAN_ETIKETI: Readonly<Record<string, string>> = {
   gercek: "Gerçek (alınmış işlemler)",
-  cf: "Karşı-olgusal (alınmamış girişler)",
+  cf: "Alınmamış işlem (alınmamış girişler)",
   havuz: "Havuz (ikisinin birleşimi)",
 };
 
@@ -113,7 +113,7 @@ function Govde({ doc, kucuk }: { doc: BilesenIcBelgesi | null; kucuk: Kucultulmu
     <div className="flex flex-col gap-6">
       {/* ---- HÜKÜM ---- */}
       <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-        <p className="text-muted-foreground text-xs">Uçtan gelen hüküm</p>
+        <p className="text-muted-foreground text-xs">Uçtan gelen karar</p>
         <p className="mt-1 text-sm leading-relaxed">
           {doc.verdict ?? (
             <span className="text-muted-foreground italic">
