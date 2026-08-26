@@ -626,6 +626,29 @@ def test_the_ceiling_must_be_reachable_within_the_timeout(seeded):
         "Bu hâlde kesilme zaman aşımına dönüşür ve `truncated` sınıfı HİÇ ateşlenmez.")
 
 
+def test_the_invariant_is_not_a_tautology_it_can_actually_go_red(seeded):
+    """ÇİVİNİN KENDİSİNİ SINAR. İlk sürümde `NOUS_TIMEOUT_S` tavandan TÜRETİLİYORDU
+    (tavan/hız × 1,4) ve invaryant "zaman aşımı >= tavan/hız" diye sınıyordu — yani varsayılan
+    yolda 1,4 > 1 olduğu için ASLA kırmızıya dönemezdi: ölçen değil kendi kendini onaylayan bir
+    kontrol. Değer artık §6 tablosundan BAĞIMSIZ geliyor; aşağısı bağın gerçekten sınandığını
+    gösterir — tavan yükseltilip zaman aşımı elde bırakılırsa invaryant ÇİĞNENİR."""
+    # yayımlanmış çift invaryantı SAĞLAR
+    assert hermes.NOUS_TIMEOUT_S >= hermes.NOUS_MAX_TOKENS / hermes.NOUS_OLCULEN_TOK_SN
+
+    # ama tavan iki katına çıkarılıp zaman aşımı AYNI bırakılırsa ÇİĞNENİR — çivi o gün kırmızı olur
+    iki_kat = hermes.NOUS_MAX_TOKENS * 2
+    assert hermes.NOUS_TIMEOUT_S < iki_kat / hermes.NOUS_OLCULEN_TOK_SN, (
+        "invaryant ayırt etmiyor: tavanı iki katına çıkarmak bile onu çiğnemiyorsa kontrol "
+        "totolojidir (ilk sürümün kusuru buydu — değer tavandan türetiliyordu)")
+
+
+def test_the_timeout_matches_the_published_budget_table(seeded):
+    """§6 tablosunun "arka plan derin (yansıma)" satırı: Ultra · 16.384 token · 900 sn.
+    Kaynaktaki sayı yayımlanmış tablodan AYRILIRSA belge ile kod sessizce ayrışmış olur."""
+    assert hermes.NOUS_MAX_TOKENS == 16384, "§6 'arka plan derin' satırının max_tokens'ı"
+    assert hermes.NOUS_TIMEOUT_S == 900.0, "§6 'arka plan derin' satırının timeout'u"
+
+
 def test_the_old_hardcoded_120s_timeout_could_not_reach_even_the_old_ceiling(seeded):
     """ÇÜRÜTME BACAĞI — invaryantın totoloji OLMADIĞINI gösterir: eski çift (4000 token, 120 sn)
     bu invaryantı ÇİĞNİYORDU (120 < 4000/25,8 ≈ 155 sn). Yani çivi gerçekten ayırt ediyor;

@@ -671,9 +671,18 @@ NOUS_MAX_TOKENS = int(os.environ.get("HERMES_NOUS_MAX_TOKENS", "16384"))
 # EN YAVAŞ model taban alınır — `_nous_portal_model()` ikisini de döndürebilir ve hızlı modele göre
 # ölçmek yavaş modeli yine kesilmeye mahkûm ederdi.
 NOUS_OLCULEN_TOK_SN = 25.8            # ultra-550b:free, ölçüm §3 — EN YAVAŞ ölçülen model
-NOUS_ZAMAN_MARJI = 1.4                # bağlantı/gecikme + free-tier kapasite PAYLAŞIMI payı (§ uyarı)
-NOUS_TIMEOUT_S = float(os.environ.get(
-    "HERMES_NOUS_TIMEOUT_S", str(round(NOUS_MAX_TOKENS / NOUS_OLCULEN_TOK_SN * NOUS_ZAMAN_MARJI))))
+# DEĞER BELGENİN §6 TABLOSUNDAN ALINIR, formülle TÜRETİLMEZ — ve bu bilinçli bir geri adımdır.
+# İlk hâli `NOUS_MAX_TOKENS / NOUS_OLCULEN_TOK_SN * 1.4` idi (889 sn). İKİ KUSURU VARDI:
+#   (a) ÇİVİ TOTOLOJİYE DÖNÜYORDU: invaryant "zaman aşımı >= tavan/hız" diye sınar, ama değer
+#       ZATEN o bölümün 1,4 katı olarak üretiliyorsa kontrol varsayılan yolda ASLA KIRMIZI OLAMAZ.
+#       Ölçen değil, kendi kendini onaylayan bir çiviydi (bu deponun "çürütmeyle sınandı" şartı).
+#   (b) SESSİZ ÖLÇEKLENME BİR TEHLİKEDİR: tavanı 32.768'e çıkaran biri farkında olmadan ~21
+#       dakikalık bir zaman aşımı da satın alırdı — kimsenin ÖLÇMEDİĞİ bir sayı. Doğrusu, bağ
+#       kırıldığında ÇİVİNİN KIRMIZIYA DÖNMESİ ve insanın yeniden ölçmeye zorlanmasıdır.
+# Şimdi iki sayı BAĞIMSIZDIR ve aralarındaki bağı çivi tutar (test_the_ceiling_must_be_reachable...).
+# 900 sn, §6'da bu çağrı sınıfının ("arka plan derin / yansıma") yayımlanmış değeridir; hesabı
+# 16.384 / 25,8 = 635 sn + bağlantı/gecikme ve free-tier kapasite PAYLAŞIMI payı.
+NOUS_TIMEOUT_S = float(os.environ.get("HERMES_NOUS_TIMEOUT_S", "900"))
 # ASENKRON ŞARTI DOĞRULANDI (§6 tablosu bu satır için "yalnız async" der): `_nous_text`in iki
 # çağıranı da arka plandadır — `_reflect_once_govde` (operatör tetiği `reflect_now()` ARKA PLAN
 # İŞ PARÇACIĞI açıp hemen döner, hermes_runtime.py:606) ve `nous_eval` (haftalık kadans). Yani bu

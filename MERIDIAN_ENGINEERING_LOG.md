@@ -112,6 +112,19 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   hiçbir HTTP isteğini bloklamaz. Senkron çağıran eklenirse yeniden ölçülmeli.
   **DERS:** "tavanı yükselt" tek başına bir düzeltme değildi; bağlayan tarafın HANGİSİ olduğu
   ölçülmeden seçilen her iki sayı da keyfîdir.
+  **ÜÇÜNCÜ GEÇİŞ — ÇİVİNİN KENDİSİ TOTOLOJİYDİ (aynı gün, tablo koda karşı okunurken bulundu):**
+  ikinci geçiş zaman aşımını `NOUS_MAX_TOKENS / NOUS_OLCULEN_TOK_SN × 1,4` diye TÜRETİYORDU (889 sn)
+  ve invaryant çivisi "zaman aşımı >= tavan/hız" diye sınıyordu. 1,4 > 1 olduğu için bu kontrol
+  VARSAYILAN YOLDA ASLA KIRMIZI OLAMAZDI — ölçen değil, kendi kendini onaylayan bir çivi. Bu deponun
+  "çürütmeyle sınandı, varsayılmadı" şartının ihlali; üstelik tam da o şartı yazmak için eklenmiş
+  bir çividen. İKİNCİ KUSUR: sessiz ölçeklenme bir TEHLİKEDİR — tavanı 32.768'e çıkaran biri farkında
+  olmadan ~21 dakikalık, kimsenin ÖLÇMEDİĞİ bir zaman aşımı da satın alırdı. **DÜZELTME:** değer
+  artık §6 tablosunun yayımlanmış sayısıdır (900 sn) ve tavandan BAĞIMSIZDIR; bağı çivi tutar, yani
+  bağ kırıldığı gün çivi KIRMIZIYA DÖNER ve insanı yeniden ölçmeye zorlar — doğru davranış budur.
+  Eklenen iki çivi: (a) invaryantın AYIRT ETTİĞİ (tavan iki katına çıkarılsa çiğnenirdi) — çivinin
+  kendisini sınayan çivi; (b) kaynaktaki çiftin §6 tablosuyla BİREBİR aynı olduğu (16.384 · 900),
+  yoksa belge ile kod sessizce ayrışırdı. Üç mutasyonun üçü de yakalandı.
+
 
   **AÇIK KALAN — ÖLÇÜLEMEDİ, UYDURULMADI (3):**
   (1) **7 damganın olay defteriyle KORELASYONU CANLIDA DOĞRULANMADI.** Bu tur GitHub'dan klonlanan
