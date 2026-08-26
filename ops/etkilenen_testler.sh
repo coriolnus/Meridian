@@ -145,6 +145,16 @@ for y in "${YOLLAR[@]}"; do
     ust="$(basename "$(dirname "$y")")"
     [[ -n "$ust" && "$ust" != "." && "$ust" != "/" ]] && JETON+=("$ust")
   fi
+  # DİZİN JETONU (EĞİK ÇİZGİLİ) — DÖRDÜNCÜ KÖRLÜĞÜN KAPATILMASI, canlı vakayla bulundu:
+  # bu betiği `ops/` altına eklemek `test_uiux_s1b_v154`i kırdı. O test RUNBOOK'u üretip
+  # "N ops betiği" sayısını doğruluyor — yani DİZİNİ sayıyor ve yeni dosyanın ADINI hiç
+  # anmıyor. Sınıf genel: bir dizini sayan/tarayan test, o dizine eklenen HER dosyadan
+  # etkilenir ama hiçbirinin adını içermez.
+  # EĞİK ÇİZGİ ZORUNLU: çıplak `ops` bir kelime olarak her yerde geçer; `ops/` bir YOL'dur.
+  # Ölçüldü: `ops/`→20, `meridian/web/`→27, `research/cards/`→8, `docs/`→51 test dosyası
+  # (387 içinde). Bedel saniyeler; kaçırmanın bedeli sessiz bir gerilemenin dağıtılmasıdır.
+  dizin="$(dirname "$y")"
+  [[ -n "$dizin" && "$dizin" != "." ]] && JETON+=("$dizin/")
 done
 # Yinelenenleri ele.
 _satirlari_oku JETON < <(printf '%s\n' "${JETON[@]}" | sort -u | grep -vE '^\.?$')

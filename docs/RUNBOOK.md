@@ -41,7 +41,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **18 ops betiği** başlığıyla okundu
+- **19 ops betiği** başlığıyla okundu
 - **83 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -816,6 +816,43 @@ noktam yok" diyen bir bekçiyle birleşirdi. Dosya state'siz
 
 LİSTE ELLE VE DAR TUTULUR — yavaşlayan kapı, atlanan kapıdır (kapilar.sh dersi). Dosya eklerken
 iki şart: (a) taze klonda state'siz geçtiği kanıtlı, (b) toplam süre < 5 dk kalmalı.
+```
+
+## `ops/etkilenen_testler.sh` {#ops-etkilenen-testler-sh}
+
+```
+================================================================================================
+ETKİLENEN TEST SEÇİCİSİ — "tam suite" her commit'in aracı DEĞİLDİR
+------------------------------------------------------------------------------------------------
+NEDEN VAR — ÖLÇÜLMÜŞ İSRAF (2026-08-26, operatör kalemi): kenar çubuğu ikonu `size-4`ten
+`size-5`e çekildi (bir Tailwind sınıfı) ve tam suite koşuldu.
+tam suite                 7183 test   28:13
+gerçekten etkilenen küme   149 test    0:18.7      ← 90 kat
+Değişiklik dört dosyaydı; o yolları okuyan test dosyası SEKİZ taneydi.
+
+KURALIN KAYNAĞI: CLAUDE.md madde 6 "tam suite yalnız Rol-1'de TEK-OTORİTER" der — "HER
+COMMIT'te" DEMEZ. Kuralı sıkılaştırmak disiplin değil israftır.
+
+------------------------------------------------------------------------------------------------
+SINIR — BU BETİĞİN NE ZAMAN KÖR OLDUĞU (en önemli paragraf):
+Diff `meridian/**/*.py` dosyasına dokunuyorsa BU SEÇİCİ YETMEZ ve betik tam suite İSTER.
+Sebep yapısal: orada etki IMPORT GRAFİĞİNDEN yayılır. `sprint.py` değişince onu import eden
+`scheduler.py`yi import eden bir testi kırabilir — ve o testin dosyasında "sprint.py" DİZESİ
+HİÇ GEÇMEZ. "Hangi test bu yolu anıyor" mantığı o durumda yapısal olarak kördür.
+Varlık/UI/doküman değişikliğinde ise mantık SAĞLAMDIR: bu depodaki çiviler yolları AÇIKÇA
+okur (kaynak-tarayıcı testler, `pathlib` + `read_text`), yani anmak = bağımlılık.
+
+AŞIRI-KAPSAMA GÜVENLİ, EKSİK-KAPSAMA DEĞİL: şüphede geniş davranılır (tam yol + taban ad +
+uzantısız ad + üst dizin adı). Fazladan koşan test saniye yakar; kaçan test sessiz gerileme
+dağıtır. Bu asimetri bilinçlidir.
+
+KULLANIM:
+ops/etkilenen_testler.sh                      # çalışma ağacı (commit'lenmemiş) değişiklikleri
+ops/etkilenen_testler.sh --commit HEAD        # tek commit
+ops/etkilenen_testler.sh --yollar a/b.tsx c/d.json   # açık yol listesi (test edilebilirlik)
+Çıkış kodu: 0 = seçici küme yeterli · 1 = TAM SUITE gerekli · 2 = eşleşme yok (karar okuyucuda)
+Çivi: tests/test_etkilenen_testler_v322.py
+================================================================================================
 ```
 
 ## `ops/haftalik_mutasyon.sh` {#ops-haftalik-mutasyon-sh}

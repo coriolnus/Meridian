@@ -74,7 +74,10 @@ def test_ESLESME_YOKSA_SESSIZ_KALMIYOR():
     # YOL ÇALIŞMA ANINDA KURULUR, LİTERAL YAZILMAZ. İlk sürüm literal yazdı ve seçici onu
     # BU DOSYADA buldu — yani çivi kendi metnini eşleştirip "eşleşme var" dedi. Kaynak tarayan
     # bir araca literal örnek vermek, aracı kendi test dosyasına yönlendirmektir.
-    yok = "docs/" + "OLM" + "AYAN-" + "DOSYA-" + "xyzzy" + ".md"
+    # DİZİN de eşleşmemeli: `dizin/` jetonu eklendikten sonra `docs/…` artık 51 dosya
+    # yakalıyor (o jetonun bilinçli bedeli). Gerçek "eşleşme yok" hâlini ölçmek için hiçbir
+    # testin anmadığı bir dizin gerekir.
+    yok = "bir/" + "olma" + "yan/" + "diz" + "in/" + "dos" + "ya" + ".md"
     rc, cikti = _kos(yok)
     assert cikti.strip(), "eşleşme yokken betik tamamen sessiz — 'koşacak test yok' ile 'ölçemedim' aynı görünür"
     assert "EŞLEŞME YOK" in cikti.upper() or "ESLESME YOK" in cikti.upper(), (
@@ -115,3 +118,18 @@ def test_KURESEL_dosyalar_TAM_SUITE_istiyor():
         assert "TAM SUITE" in cikti.upper(), (
             f"{yol} küresel erişimli ama seçici dar bir küme önerdi:\n{cikti}")
         assert rc != 0, f"{yol} için çıkış kodu ayrışmıyor"
+
+
+def test_DIZIN_SAYAN_testler_de_kumeye_giriyor():
+    """DÖRDÜNCÜ KÖRLÜK — CANLI VAKAYLA BULUNDU (2026-08-26). Bu betiği `ops/` altına eklemek
+    `test_uiux_s1b_v154`i kırdı: o test RUNBOOK'u üretip "N ops betiği" sayısını doğruluyor,
+    yani `ops/` dizinini SAYIYOR. Yeni bir dosya sayıyı 18'den 19'a çıkardı ve üretilen belge
+    bayatladı.
+
+    Seçici bunu ISKALADI çünkü test yeni dosyanın ADINI hiç anmıyor — dizini anıyor (`ops/`).
+    Sınıf genel: bir dizini SAYAN/tarayan test, o dizine eklenen HER dosyadan etkilenir ama
+    hiçbirinin adını içermez. Jeton bu yüzden `dizin/` (eğik çizgili) — çıplak `ops` değil,
+    çünkü o kelime olarak her yerde geçer."""
+    rc, cikti = _kos("ops/etkilenen_testler.sh")
+    assert "test_uiux_s1b_v154.py" in cikti, (
+        f"`ops/` dizinini sayan test kümede YOK — bu tam olarak canlıda kaçan vakaydı:\n{cikti}")
