@@ -441,7 +441,7 @@ def test_summary_thought_tokens_stay_none_when_nothing_measured(sandbox_state):
     assert spend.summary()["thought_tokens"] == 0, "ölçülüp sıfır çıkması ayrı bir olgudur"
 
 
-# ============ KESİLME AYRI SINIFTIR — İKİNCİ SAĞLAYICI: NOUS/OpenRouter (v325, 2026-08-27) ============
+# ============ KESİLME AYRI SINIFTIR — İKİNCİ SAĞLAYICI: NOUS/OpenRouter (v326, 2026-08-27) ============
 # v97 bu sınıfı gemini için kapattı; PORTAL (OpenAI-uyumlu) ayağı ALMADI. Canlı kanıt (A1, 2026-08-27):
 #   state/spend.jsonl — nvidia/nemotron ailesine 13 çağrı, 7'si TAM out_tokens=4000'de bitti (%54):
 #     08-13T22:32 ultra-550b · 08-14T01:18 · 08-14T03:35 · 08-16T21:03 · 08-16T23:27 super-120b
@@ -606,3 +606,49 @@ def test_nous_text_keeps_the_older_three_classes_unchanged(seeded, nous_brain, m
     _stub_post(monkeypatch, [_Resp(200, body)])
     assert hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)") is None
     assert _take()[0] == reason
+
+
+# ===== TAVAN ZAMAN AŞIMI İÇİNDE ULAŞILABİLİR OLMALI (v326, 2026-08-27) =====
+# Bu bölüm, ilk düzeltmenin KENDİ kusurunu çivilemek için var. Tavan 4000→16384'e çıkarıldı ama
+# `timeout=120.0` sabiti ELDE KALMIŞTI. `docs/OLCUM-MODEL-BUTCESI-2026-08-27.md` §3-4 bunun neden
+# bir düzeltme DEĞİL ad değişikliği olduğunu ölçmüş: Ultra 25,8 tok/sn üretir, yani 120 sn'de ancak
+# ~3.096 token — yükseltilen tavana ULAŞAMADAN zaman aşımına düşer. Üstelik o yolda httpx cevap
+# dönmeden istisna atar, yani bu turda eklenen `truncated` sınıflandırması HİÇ ateşlenmez ve olay
+# `nous_chain_failed`e düşer: bütçe arızası bu sefer TAŞIMA arızası gibi okunur.
+def test_the_ceiling_must_be_reachable_within_the_timeout(seeded):
+    """İNVARYANT: en yavaş ÖLÇÜLEN model, zaman aşımı dolmadan tavan kadar token üretebilmeli.
+    Bu çivi tavanı da zaman aşımını da SABİTLEMEZ — aralarındaki BAĞI sabitler. İkisinden biri
+    elle değiştirilir de öbürü unutulursa (bu turda tam olarak bu oldu) kırmızıya döner."""
+    gereken_sn = hermes.NOUS_MAX_TOKENS / hermes.NOUS_OLCULEN_TOK_SN
+    assert hermes.NOUS_TIMEOUT_S >= gereken_sn, (
+        f"tavan {hermes.NOUS_MAX_TOKENS} token, en yavaş ölçülen model {hermes.NOUS_OLCULEN_TOK_SN} "
+        f"tok/sn → en az {gereken_sn:.0f} sn gerekir, ama zaman aşımı {hermes.NOUS_TIMEOUT_S} sn. "
+        "Bu hâlde kesilme zaman aşımına dönüşür ve `truncated` sınıfı HİÇ ateşlenmez.")
+
+
+def test_the_old_hardcoded_120s_timeout_could_not_reach_even_the_old_ceiling(seeded):
+    """ÇÜRÜTME BACAĞI — invaryantın totoloji OLMADIĞINI gösterir: eski çift (4000 token, 120 sn)
+    bu invaryantı ÇİĞNİYORDU (120 < 4000/25,8 ≈ 155 sn). Yani çivi gerçekten ayırt ediyor;
+    'her zaman geçen' bir kontrol değil."""
+    assert 120.0 < 4000 / hermes.NOUS_OLCULEN_TOK_SN, \
+        "eski çift invaryantı çiğnemeliydi — çiğnemiyorsa bu çivi hiçbir şey ölçmüyor demektir"
+
+
+def test_nous_request_uses_the_derived_timeout_not_a_hardcoded_one(seeded, nous_brain, monkeypatch):
+    """Türetilen sayı GERÇEKTEN çağrıya gidiyor mu — yoksa sabit adlandırılmış olur, uygulanmış olmaz."""
+    gecen = {}
+
+    def fake_post(url, **kw):
+        gecen.update(kw)
+        return _Resp(200, _nous_body(json.dumps(GOOD_HYP)))
+    monkeypatch.setattr(httpx, "post", fake_post)
+
+    hermes._nous_text("SAPLI-PROMPT", note="reflect (nous)")
+    assert gecen["timeout"] == hermes.NOUS_TIMEOUT_S
+    assert gecen["timeout"] > 120.0, "eski sabit 120 sn tavana yetişemiyordu (ölçüm §4)"
+
+
+def test_the_ceiling_stays_under_the_measured_provider_limits(seeded):
+    """Tavan sağlayıcının İZİN VERDİĞİNİN üstüne çıkarsa istek sağlayıcıda reddedilir. Ölçülen
+    değerler (§1): ultra:free max_completion=65.536 · super:free=235.929. Bağlayan taraf KÜÇÜK olan."""
+    assert hermes.NOUS_MAX_TOKENS <= 65536, "ultra:free'nin ölçülen max_completion tavanı"

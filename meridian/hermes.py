@@ -651,7 +651,33 @@ GEMINI_MAX_OUTPUT_TOKENS = int(os.environ.get("HERMES_GEMINI_MAX_OUTPUT_TOKENS",
 # istek/dakika ve istek/gün cinsindendir — token cinsinden DEĞİL. Yani marj bedelsizdir.
 # GERÇEK İHTİYACI ARTIK OLAY ÖLÇECEK: bu turda eklenen `truncated` sınıfı her kesilmede
 # `reasoning=N` yazar, yani bir daha çarpılırsa sayı sansürsüz görünür ve tavan ölçüyle ayarlanır.
-NOUS_MAX_TOKENS = int(os.environ.get("HERMES_NOUS_MAX_TOKENS", "16000"))
+# ÖLÇÜLEN TAVANLAR (GET /api/v1/models — docs/OLCUM-MODEL-BUTCESI-2026-08-27.md §1): ultra:free
+# max_completion=65.536 · super:free=235.929. Yani 4000 sağlayıcının dayattığı bir sınır DEĞİLDİ,
+# Ultra'nın izin verdiğinin %6'sı, Super'in %1,7'siydi — keyfî ve aşırı muhafazakâr BİZİM sayımız.
+# Seçilen 16.384, o belgenin §6 bütçe tablosunda bu çağrı sınıfının ("arka plan derin / yansıma")
+# satırıdır ve iki modelin sağlayıcı tavanının da ALTINDADIR.
+NOUS_MAX_TOKENS = int(os.environ.get("HERMES_NOUS_MAX_TOKENS", "16384"))
+
+# ZAMAN AŞIMI TAVANDAN TÜRER — AYRI BİR SAYI DEĞİL, ve bu bu turun ÖĞRENDİĞİ derstir.
+# ÖLÇÜM (§3, aynı prompt, max_tokens=3000, ikisi de finish=length):
+#     Super 22.937 ms → 130,8 tok/sn   ·   Ultra 116.213 ms → 25,8 tok/sn   (Ultra 5 KAT yavaş)
+# SERT SONUÇ (§4): 120 sn'lik eski zaman aşımında Ultra ancak ~2.970 token üretebilir — yürürlükteki
+# 4000'e HİÇ ULAŞAMAZ. O yolda bağlayan taraf tavan değil ZAMAN AŞIMIYDI. Bu yüzden yalnız tavanı
+# yükseltmek kesilmeyi zaman aşımına ÇEVİRİR: arıza adı değişir, sonucu değişmez — üstelik daha
+# kötüsü, aşağıdaki `truncated` sınıflandırması o yolda HİÇ ATEŞLENMEZ (httpx cevap dönmeden atar).
+# BU YÜZDEN TÜRETİLMİŞTİR, sabit değil: ikisini bağımsız iki sayı olarak bırakmak, birinin
+# yükseltilip öbürünün unutulduğu tam bu vakayı bir kez daha üretirdi (emsal: HAVUZ_IS_SURESI_OLCULEN_SN
+# × HAVUZ_ATALET_MARJI). Çivi invaryantı kilitler: tavan zaman aşımı içinde ULAŞILABİLİR olmalı.
+# EN YAVAŞ model taban alınır — `_nous_portal_model()` ikisini de döndürebilir ve hızlı modele göre
+# ölçmek yavaş modeli yine kesilmeye mahkûm ederdi.
+NOUS_OLCULEN_TOK_SN = 25.8            # ultra-550b:free, ölçüm §3 — EN YAVAŞ ölçülen model
+NOUS_ZAMAN_MARJI = 1.4                # bağlantı/gecikme + free-tier kapasite PAYLAŞIMI payı (§ uyarı)
+NOUS_TIMEOUT_S = float(os.environ.get(
+    "HERMES_NOUS_TIMEOUT_S", str(round(NOUS_MAX_TOKENS / NOUS_OLCULEN_TOK_SN * NOUS_ZAMAN_MARJI))))
+# ASENKRON ŞARTI DOĞRULANDI (§6 tablosu bu satır için "yalnız async" der): `_nous_text`in iki
+# çağıranı da arka plandadır — `_reflect_once_govde` (operatör tetiği `reflect_now()` ARKA PLAN
+# İŞ PARÇACIĞI açıp hemen döner, hermes_runtime.py:606) ve `nous_eval` (haftalık kadans). Yani bu
+# zaman aşımı hiçbir HTTP isteğini bloklamaz. Senkron bir çağıran eklenirse bu satır YENİDEN ölçülür.
 
 # AKIL YÜRÜTME KOLU — VARSAYILAN KAPALI, BİLEREK. OpenRouter'ın `reasoning` parametresinin bu uçtaki
 # TAM şekli BU DEPODAN DOĞRULANAMADI: openrouter.ai çıkış vekilince kapalı ve burada anahtar yok.
@@ -2660,7 +2686,7 @@ def _nous_text(user: str, *, note: str) -> str | None:
     r = httpx.post(f"{base}/chat/completions",
                    headers={"Authorization": f"Bearer {secrets.get('NOUS_API_KEY')}",
                             "Content-Type": "application/json"},
-                   json=govde, timeout=120.0)
+                   json=govde, timeout=NOUS_TIMEOUT_S)
     r.raise_for_status()
     d = r.json()
     u = d.get("usage") or {}

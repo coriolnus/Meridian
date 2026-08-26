@@ -88,6 +88,31 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   uçtan uca sınıf çivisi + `reasoning=None` (uydurma yasağı) + pozitif kontrol + tavan/gövde çivisi +
   eski üç sınıfın korunması. Dört mutasyonun dördü de yakalandı (tavanı 4000'e geri al · sınıfı
   `unparseable`a geri al · kesik metni yine çağırana döndür · ölçülmeyen akıl sayısına 0 yaz).
+  **BU TURUN KENDİ KUSURU — İLK GEÇİŞ YARIM DÜZELTMEYDİ (aynı gün, `main`deki ölçüm belgesi
+  yakaladı):** ilk commit (69cf842) tavanı 4000→16000 yaptı ama `timeout=120.0` sabitine
+  DOKUNMADI. `docs/OLCUM-MODEL-BUTCESI-2026-08-27.md` (e8e52cb, `main`) §3-4 bunun neden bir
+  düzeltme DEĞİL ad değişikliği olduğunu ölçmüş: Super 130,8 tok/sn ama **Ultra 25,8 tok/sn (5 KAT
+  yavaş)** → 120 sn'de ancak ~3.096 token, yani yükseltilen tavana ULAŞAMADAN zaman aşımına düşer.
+  Belgenin cümlesi birebir: "ikisini AYRI AYRI değiştirmek işe yaramaz: yalnız `max_tokens`
+  yükseltilirse kesilme zaman aşımına dönüşür". DAHA KÖTÜSÜ, belge bunu söylemiyor ama bu turda
+  ölçüldü: o yolda httpx cevap DÖNMEDEN istisna atar, yani bu turda eklenen `truncated`
+  sınıflandırması HİÇ ATEŞLENMEZ ve olay `nous_chain_failed`e düşer — bütçe arızası bu sefer TAŞIMA
+  arızası diye okunurdu. Sınıf kapanmaz, yer değiştirirdi. **DÜZELTME (ikinci geçiş):** tavan
+  16384 (belgenin §6 tablosunda bu çağrı sınıfının satırı; iki modelin sağlayıcı tavanının da
+  altında — ölçülen §1: ultra 65.536 · super 235.929) ve **zaman aşımı artık TÜRETİLİR, sabit
+  değil**: `NOUS_MAX_TOKENS / NOUS_OLCULEN_TOK_SN(25,8) × NOUS_ZAMAN_MARJI(1,4)` = 889 sn. Emsal
+  `HAVUZ_IS_SURESI_OLCULEN_SN × HAVUZ_ATALET_MARJI`dir ve gerekçe aynı: ikisini bağımsız iki sayı
+  bırakmak, birinin yükseltilip öbürünün unutulduğu TAM BU VAKAYI bir kez daha üretirdi. Çivi
+  invaryantı kilitler (tavan zaman aşımı içinde ULAŞILABİLİR olmalı) + çürütme bacağı eski çiftin
+  (4000, 120) invaryantı ÇİĞNEDİĞİNİ gösterir, yani kontrol totoloji değildir. Üç mutasyon üçü de
+  yakalandı (zaman aşımını 120'ye geri al · tavanı yükselt ama zaman aşımını türetme · tavanı
+  sağlayıcı sınırının üstüne çıkar). **ASENKRON ŞARTI DOĞRULANDI:** §6 tablosu bu satır için
+  "yalnız async" der; `_nous_text`in iki çağıranı da arka plandadır (`reflect_now()` arka plan iş
+  parçacığı açıp HEMEN döner, hermes_runtime.py:606; `nous_eval` haftalık kadans), yani 889 sn
+  hiçbir HTTP isteğini bloklamaz. Senkron çağıran eklenirse yeniden ölçülmeli.
+  **DERS:** "tavanı yükselt" tek başına bir düzeltme değildi; bağlayan tarafın HANGİSİ olduğu
+  ölçülmeden seçilen her iki sayı da keyfîdir.
+
   **AÇIK KALAN — ÖLÇÜLEMEDİ, UYDURULMADI (3):**
   (1) **7 damganın olay defteriyle KORELASYONU CANLIDA DOĞRULANMADI.** Bu tur GitHub'dan klonlanan
       *cloud* oturumunda koştu: konteynerde `ssh` ikilisi YOK, `~/.ssh/oci-a1.key` YOK, `state/`
