@@ -33,6 +33,7 @@ import { gezinmeGruplari } from "../gezinme";
 import Link from "../rota";
 import { HesapKutusu } from "./HesapKutusu";
 import { NavMain } from "./nav-main";
+import { MarkaIsareti } from "@/pano/kabuk/MarkaIsareti";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
@@ -54,10 +55,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link href="/dashboard/default">
-                {/* Marka işareti bir ikon DEĞİL bir nokta: Meridian'ın kendi
-                    logosu yok ve lucide kataloğundan rastgele bir glif seçmek,
-                    hiçbir şey anlatmayan bir süs olurdu. */}
-                <span className="inline-block size-2 shrink-0 rounded-full bg-primary" aria-hidden />
+                {/* Marka işareti. 2026-08-26'ya kadar burada bir NOKTA vardı ve şerhi
+                    sebebini yazıyordu: "Meridian'ın kendi işareti yok, lucide kataloğundan
+                    rastgele bir glif seçmek hiçbir şey anlatmayan bir süs olurdu." Nokta
+                    bilinçli bir YER TUTUCUYDU ve dayandığı önerme o tarihte yanlışlandı —
+                    operatör kendi işaretini tasarladı (C · M Monogramı v0). Yer tutucu,
+                    gerekçesi düştüğü için kalkıyor. Aynı geometri sekme ikonunda da yaşıyor
+                    (meridian/web/favicon.svg); ayrışmayı test_marka_isareti_v321 kapatır. */}
+                <MarkaIsareti className="size-4 shrink-0" />
                 <span className="font-semibold text-base">{APP_CONFIG.name}</span>
               </Link>
             </SidebarMenuButton>

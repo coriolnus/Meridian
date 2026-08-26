@@ -6,13 +6,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Meridian — pano</title>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">  <!-- marka işareti; rota api.py `favicon()`, çivi tests/test_favicon_v320.py -->
+<!-- MARKA İŞARETİ — BU DOSYAYA yazılır, `meridian/web/pano.html`e DEĞİL: orası
+     ÜRETİLEN çıktıdır ve her `npm run build` onu yeniden yazar. 2026-08-26'da tam
+     bu oldu — link elle çıktıya eklendi, sonraki derleme sessizce sildi ve yalnız
+     test_favicon_v320 yakaladı. Üretilen dosyayı düzenlemek bir düzeltme değil,
+     bir sonraki derlemeye kadar süren bir yanılsamadır. -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <!-- ÖNYÜKLEYİCİ SENKRON VE HARİCİ. Senkron: tercihler ilk boyamadan ÖNCE
      niteliklere yazılmalı, yoksa gece vardiyasında beyaz bir flaş olur. Harici:
      dağıtım CSP'si `script-src 'self'` — satır içi blok üretimde BLOKLANIR ve
      sayfa yanlış temada, sessizce açılır. (meridian/api.py::CSP_POLITIKASI) -->
 <script src="/pano-onyuk.js"></script>
-  <script type="module" crossorigin src="/pano-assets/pano-2RwScrIs.js"></script>
+  <script type="module" crossorigin src="/pano-assets/pano-a53gyLmS.js"></script>
   <link rel="stylesheet" crossorigin href="/pano-assets/pano-D_tchDsn.css">
 </head>
 <body class="min-h-screen antialiased">
