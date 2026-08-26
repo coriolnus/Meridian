@@ -44,7 +44,11 @@ build-backend = "hatchling.build"
 packages = ["meridian"]
 
 [tool.pytest.ini_options]
-addopts = "-q"
+# `--durations=25`: 28 dakikanın NEREYE gittiği bu depoda hiç ölçülmemişti. Her koşum en
+# yavaş 25 testi kendiliğinden raporlar; ek maliyet SIFIR (pytest süreyi zaten tutuyor,
+# yalnız basmıyordu). İKİNCİ BİR `-q` EKLENMEZ: `-q` zaten burada ve ikincisi özet
+# satırını siler — "temiz" ile "çıktı yok" aynı görünür (ölçülmüş tuzak).
+addopts = "-q --durations=25"
 testpaths = ["tests"]
 markers = [
     # Hermes danışma katmanının GERÇEK arka plan ipliğini isteyen test. Varsayılan olarak
