@@ -367,7 +367,8 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
           if (g.bilesenler === null) {
             return (
               <Olculemedi
-                neden={
+                neden="Bileşen listesi ölçülemedi"
+                teknik={
                   g.bilesenler_olculemedi_neden ??
                   "/api/infra `bilesenler` null döndürdü ama nedenini yazmadı — boş liste 'bileşen yok' diye okunurdu"
                 }
@@ -375,7 +376,7 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
             );
           }
           if (g.bilesenler === undefined) {
-            return <Olculemedi neden="/api/infra `bilesenler` alanını hiç döndürmüyor" />;
+            return <Olculemedi neden="Bileşen listesi bildirilmedi" teknik="/api/infra `bilesenler` alanını hiç döndürmüyor" />;
           }
           const satirlar = g.bilesenler;
           if (satirlar.length === 0) {
@@ -502,7 +503,7 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                 <div>
                   <Satir etiket="Toplam ölçülen RSS">
                     {olculen.length === 0 ? (
-                      <Olculemedi neden="hiçbir satırda `rss_bayt` ölçülmedi" kisa />
+                      <Olculemedi neden="Hiçbir birimin bellek kullanımı ölçülemedi" teknik="hiçbir satırda `rss_bayt` ölçülmedi" kisa />
                     ) : (
                       <span className="tabular-nums">{baytMetni(toplamRss)}</span>
                     )}
@@ -526,7 +527,7 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                   uç bunu ayrı bir blok olarak veriyor (`api.py::_infra_surec`) ve operatörün ilk sorusu bu:
                   "panoyu servis eden süreç kendisi ne kadar yiyor?" */}
               {surec === undefined ? (
-                <Olculemedi neden="/api/infra `surec` bloğunu döndürmedi" />
+                <Olculemedi neden="Panoyu servis eden sürecin ölçümü bildirilmedi" teknik="/api/infra `surec` bloğunu döndürmedi" />
               ) : (
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="mb-1 flex items-center gap-2">
@@ -538,17 +539,18 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                   <div className="grid gap-x-6 sm:grid-cols-2">
                     <div>
                       <Satir etiket="PID">
-                        <Deger deger={surec.pid} neden="`surec.pid` gelmedi" />
+                        <Deger deger={surec.pid} neden="Sürecin numarası bildirilmedi" teknik="`surec.pid` gelmedi" />
                       </Satir>
                       <Satir etiket="Çalışma süresi">
-                        {sureMetni(surec.uptime_s) ?? <Olculemedi neden="`surec.uptime_s` gelmedi" kisa />}
+                        {sureMetni(surec.uptime_s) ?? <Olculemedi neden="Sürecin çalışma süresi bildirilmedi" teknik="`surec.uptime_s` gelmedi" kisa />}
                       </Satir>
                     </div>
                     <div>
                       <Satir etiket="CPU">
                         {surec.cpu_yuzde === null || surec.cpu_yuzde === undefined ? (
                           <Olculemedi
-                            neden={surec.cpu_yuzde_neden ?? "CPU bir DELTA'dır — ilk örnekte ölçülemez"}
+                            neden="İşlemci kullanımı ilk ölçümde hesaplanamaz"
+                            teknik={surec.cpu_yuzde_neden ?? "CPU bir DELTA'dır — ilk örnekte ölçülemez"}
                             kisa
                           />
                         ) : (
@@ -560,7 +562,8 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                           <span className="tabular-nums">{baytMetni(surec.rss_bayt)}</span>
                         ) : (
                           <Olculemedi
-                            neden={surec.rss_bayt_neden ?? "`surec.rss_bayt` gelmedi"}
+                            neden="Sürecin bellek kullanımı ölçülemedi"
+                            teknik={surec.rss_bayt_neden ?? "`surec.rss_bayt` gelmedi"}
                             kisa
                           />
                         )}
@@ -637,7 +640,7 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                   </p>
                 </>
               ) : (
-                <Olculemedi neden="hiçbir bileşenin `rss_bayt` değeri ölçülmedi — pay çubuğu çizilemez" />
+                <Olculemedi neden="Hiçbir bileşenin bellek kullanımı ölçülemedi — pay çubuğu çizilemez" teknik="hiçbir bileşenin `rss_bayt` değeri ölçülmedi" />
               )}
 
               {/* --- BİLEŞEN TABLOSU --- */}
@@ -664,7 +667,7 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                         <TableRow key={b.ad ?? `bilesen-${i}`}>
                           <TableCell className="font-medium font-mono text-xs">
                             <span className="flex items-center gap-1.5">
-                              {b.ad ?? <Olculemedi neden="satır `ad` taşımıyor" kisa />}
+                              {b.ad ?? <Olculemedi neden="Birimin adı bildirilmedi" teknik="satır `ad` taşımıyor" kisa />}
                               {b.sablon ? (
                                 <Badge
                                   variant="outline"
@@ -688,7 +691,8 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                           <TableCell className="text-right tabular-nums">
                             {b.cpu_yuzde === null || b.cpu_yuzde === undefined ? (
                               <Olculemedi
-                                neden={b.cpu_yuzde_neden ?? "CPU bir DELTA'dır — tek örnekle ölçülemez"}
+                                neden="İşlemci kullanımı tek örnekle hesaplanamaz"
+                                teknik={b.cpu_yuzde_neden ?? "CPU bir DELTA'dır — tek örnekle ölçülemez"}
                                 kisa
                               />
                             ) : (
@@ -700,7 +704,8 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                               baytMetni(b.rss_bayt)
                             ) : (
                               <Olculemedi
-                                neden={b.rss_bayt_neden ?? "`rss_bayt` ölçülemedi (systemd sentineli olabilir)"}
+                                neden="Bellek kullanımı ölçülemedi"
+                                teknik={b.rss_bayt_neden ?? "`rss_bayt` ölçülemedi (systemd sentineli olabilir)"}
                                 kisa
                               />
                             )}
@@ -722,25 +727,25 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                           </TableCell>
                           <TableCell className="text-right tabular-nums text-xs">
                             {sureMetni(b.uptime_s) ?? (
-                              <Olculemedi neden={b.uptime_s_neden ?? "`uptime_s` gelmedi"} kisa />
+                              <Olculemedi neden="Çalışma süresi bildirilmedi" teknik={b.uptime_s_neden ?? "`uptime_s` gelmedi"} kisa />
                             )}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {b.restart_n === null || b.restart_n === undefined ? (
-                              <Olculemedi neden={b.restart_n_neden ?? "`restart_n` gelmedi"} kisa />
+                              <Olculemedi neden="Yeniden başlatma sayısı bildirilmedi" teknik={b.restart_n_neden ?? "`restart_n` gelmedi"} kisa />
                             ) : (
                               <span
                                 className={cn(
                                   b.restart_n > 0 && "font-medium text-amber-600 dark:text-amber-400",
                                 )}
                               >
-                                <Deger deger={b.restart_n} neden="restart sayacı gelmedi" />
+                                <Deger deger={b.restart_n} neden="Yeniden başlatma sayacı bildirilmedi" teknik="restart sayacı gelmedi" />
                               </span>
                             )}
                           </TableCell>
                           <TableCell className="max-w-[20rem] truncate text-muted-foreground text-xs">
                             {b.aciklama ?? b.dosya ?? (
-                              <Olculemedi neden="birim tanımı/dosya adı gelmedi" kisa />
+                              <Olculemedi neden="Birimin ne iş yaptığı bildirilmedi" teknik="birim tanımı/dosya adı gelmedi" kisa />
                             )}
                           </TableCell>
                         </TableRow>
@@ -757,7 +762,8 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                 kırmızıya döner. `systemctl` yolu:{" "}
                 {g.bilesen_kaynagi?.systemctl_yolu ?? (
                   <Olculemedi
-                    neden={g.bilesen_kaynagi?.systemctl_yolu_neden ?? "yol beyanı gelmedi"}
+                    neden="Servis yönetim aracının yeri bildirilmedi"
+                    teknik={g.bilesen_kaynagi?.systemctl_yolu_neden ?? "yol beyanı gelmedi"}
                     kisa
                   />
                 )}

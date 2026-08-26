@@ -63,7 +63,7 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
             <>
               {/* --- SAĞLAYICI SAĞLIK KARTI --- */}
               {blok === undefined ? (
-                <Olculemedi neden="/api/diagnostics `saglayicilar` bloğunu döndürmedi" />
+                <Olculemedi neden="Sağlayıcıların sağlığı bildirilmedi" teknik="/api/diagnostics `saglayicilar` bloğunu döndürmedi" />
               ) : (
                 <>
                   {grafik.length > 0 ? (
@@ -109,27 +109,27 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                             <TableCell className="font-medium">{s.ad ?? "?"}</TableCell>
                             <TableCell>
                               {s.olculemedi ? (
-                                <Olculemedi neden={`sağlık okunamadı: ${s.olculemedi}`} kisa />
+                                <Olculemedi neden="Bu sağlayıcının sağlığı okunamadı" teknik={`sağlık okunamadı: ${s.olculemedi}`} kisa />
                               ) : (
-                                <OkRozet ok={s.ok} neden="sağlayıcı `ok` alanı gelmedi" />
+                                <OkRozet ok={s.ok} neden="Sağlayıcının durumu bildirilmedi" teknik="sağlayıcı `ok` alanı gelmedi" />
                               )}
                             </TableCell>
                             <TableCell className="text-right tabular-nums">
-                              <Deger deger={s.cagri} neden="sayaç yok" />
+                              <Deger deger={s.cagri} neden="Çağrı sayacı tutulmamış" teknik="satır `cagri` taşımıyor" />
                             </TableCell>
                             <TableCell className="text-right tabular-nums">
-                              <Deger deger={s.hata} neden="sayaç yok" />
+                              <Deger deger={s.hata} neden="Hata sayacı tutulmamış" teknik="satır `hata` taşımıyor" />
                             </TableCell>
                             <TableCell className="text-right tabular-nums">
                               {s.hata_orani === null || s.hata_orani === undefined ? (
-                                <Olculemedi neden="çağrı 0 ya da sayaç biçimsiz — oran ölçülemez" kisa />
+                                <Olculemedi neden="Hata oranı hesaplanamadı" teknik="çağrı 0 ya da sayaç biçimsiz — oran ölçülemez" kisa />
                               ) : (
                                 `${(s.hata_orani * 100).toFixed(2)}%`
                               )}
                             </TableCell>
                             <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
                               {zamanMetni(s.son_cagri_ts) ?? (
-                                <Olculemedi neden="son çağrı damgası yok" kisa />
+                                <Olculemedi neden="Son çağrının zamanı kaydedilmemiş" teknik="son çağrı damgası yok" kisa />
                               )}
                             </TableCell>
                             <TableCell className="max-w-[22rem] truncate text-xs" title={s.son_hata ?? ekMetni(s.ek)}>
@@ -150,13 +150,13 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
 
               {/* --- HATTIN TIKANMA NOKTALARI --- */}
               {p === undefined ? (
-                <Olculemedi neden="/api/diagnostics `pipeline` bloğunu döndürmedi" />
+                <Olculemedi neden="Hattın tıkanma noktaları bildirilmedi" teknik="/api/diagnostics `pipeline` bloğunu döndürmedi" />
               ) : (
                 <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
                   <div>
                     <Satir etiket="Yeniden çekme denemesi">
                       {p.refetch_attempts === undefined ? (
-                        <Olculemedi neden="scheduler refetch_attempts döndürmedi" kisa />
+                        <Olculemedi neden="Yeniden çekme denemeleri sayılmamış" teknik="scheduler refetch_attempts döndürmedi" kisa />
                       ) : (
                         <span className="tabular-nums">
                           {p.refetch_attempts} / {p.refetch_max ?? "?"}
@@ -164,14 +164,14 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                       )}
                     </Satir>
                     <Satir etiket="Son yeniden çekme seansı">
-                      {p.last_refetch_session ?? <Olculemedi neden="damga yok — hiç koşmamış olabilir" kisa />}
+                      {p.last_refetch_session ?? <Olculemedi neden="Son yeniden çekme damgası kaydedilmemiş — hiç yapılmamış olabilir" teknik="`last_refetch_session` damgası yok" kisa />}
                     </Satir>
                     <Satir etiket="Kazanç takvimi denemesi">
-                      <Deger deger={p.earnings_attempts} neden="scheduler earnings_attempts döndürmedi" />
+                      <Deger deger={p.earnings_attempts} neden="Kazanç takvimi denemeleri sayılmamış" teknik="scheduler earnings_attempts döndürmedi" />
                     </Satir>
                     <Satir etiket="FMP kotası (bugün)">
                       {p.fmp_usage === undefined || Object.keys(p.fmp_usage).length === 0 ? (
-                        <Olculemedi neden="fmp_usage.json yok — kota muhasebesi tutulmamış" kisa />
+                        <Olculemedi neden="Günlük kota muhasebesi tutulmamış" teknik="fmp_usage.json yok" kisa />
                       ) : (
                         <span className="tabular-nums">
                           {p.fmp_usage.calls ?? "?"} çağrı · {p.fmp_usage.fails ?? "?"} hata
@@ -181,7 +181,7 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                     </Satir>
                     <Satir etiket="Finviz keşfi">
                       {p.finviz?.last === undefined ? (
-                        <Olculemedi neden="finviz.status() `last` döndürmedi" kisa />
+                        <Olculemedi neden="Son aday keşfi kaydedilmemiş" teknik="finviz.status() `last` döndürmedi" kisa />
                       ) : (
                         <span>
                           {p.finviz.last.source ?? "?"} · {p.finviz.last.n ?? "?"} aday
@@ -193,14 +193,14 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                   <div>
                     <Satir etiket="Karantina (bu seans veri gelmeyen)">
                       {p.quarantine === undefined ? (
-                        <Olculemedi neden="data_quality.json tickers_failed yok" kisa />
+                        <Olculemedi neden="Karantina listesi bildirilmedi" teknik="data_quality.json tickers_failed yok" kisa />
                       ) : (
                         <span className="tabular-nums">{karantina.length} sembol</span>
                       )}
                     </Satir>
                     <Satir etiket="Israrla veri vermeyen (doğrulanmış)">
                       {nd === undefined ? (
-                        <Olculemedi neden="no_data_report() bloğu gelmedi" kisa />
+                        <Olculemedi neden="Israrla veri vermeyen semboller raporlanmadı" teknik="no_data_report() bloğu gelmedi" kisa />
                       ) : (
                         <span className="tabular-nums">
                           {nd.confirmed_no_data?.length ?? 0} · şüpheli {nd.suspect?.length ?? 0} · yalnız kaynak
@@ -209,11 +209,11 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                       )}
                     </Satir>
                     <Satir etiket="Kaynak dikişi (geçmişi sabit kaynağa bağlı)">
-                      <Deger deger={p.bar_source_seams?.tickers} birim=" sembol" neden="seam_report() gelmedi" />
+                      <Deger deger={p.bar_source_seams?.tickers} birim=" sembol" neden="Kaynak değişimi raporlanmadı" teknik="seam_report() gelmedi" />
                     </Satir>
                     <Satir etiket="Atomik yazım gecikmesi">
                       {io === undefined ? (
-                        <Olculemedi neden="store.io_stats() gelmedi" kisa />
+                        <Olculemedi neden="Yazma gecikmesi ölçülmemiş" teknik="store.io_stats() gelmedi" kisa />
                       ) : (
                         <span className="tabular-nums">
                           p50 {io.p50_ms ?? "—"} ms ·{" "}
@@ -228,7 +228,7 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                     </Satir>
                     <Satir etiket="Defterler">
                       {d.ledgers === undefined ? (
-                        <Olculemedi neden="/api/diagnostics `ledgers` döndürmedi" kisa />
+                        <Olculemedi neden="Defter sayaçları bildirilmedi" teknik="/api/diagnostics `ledgers` döndürmedi" kisa />
                       ) : (
                         <span className="tabular-nums">
                           {d.ledgers.trades ?? "?"} işlem · cf açık {d.ledgers.cf_open ?? "?"}/

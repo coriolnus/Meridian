@@ -51,8 +51,15 @@ function ticaretSatiri(t: TeshisGovdesi | null): SaglayiciSatiri | null {
   return xs.find((s) => s.ad === "alpaca_ticaret") ?? null;
 }
 
-function HamHucre({ deger, neden, basamak = 2 }: { readonly deger: unknown; readonly neden: string; readonly basamak?: number }) {
-  return <Deger deger={sayiya(deger)} basamak={basamak} neden={neden} />;
+function HamHucre({
+  deger,
+  neden,
+  teknik,
+  basamak = 2,
+}: { readonly deger: unknown; readonly neden: string; readonly teknik?: string; readonly basamak?: number }) {
+  const n = sayiya(deger);
+  if (n === null) return <Olculemedi neden={neden} teknik={teknik} kisa />;
+  return <Deger deger={n} basamak={basamak} neden={neden} />;
 }
 
 function PozisyonTablosu({ pozisyonlar }: { readonly pozisyonlar: readonly NonNullable<AlpacaHesap["positions"]>[number][] }) {
@@ -74,23 +81,36 @@ function PozisyonTablosu({ pozisyonlar }: { readonly pozisyonlar: readonly NonNu
             return (
               <TableRow key={`${p.symbol ?? "?"}-${i}`}>
                 <TableCell className="font-medium">
-                  <Metin deger={p.symbol} neden="broker satırında `symbol` yok" />
+                  <Metin deger={p.symbol} neden="Bu satırın sembolü bildirilmedi" teknik="broker satırında `symbol` yok" />
                 </TableCell>
                 <TableCell className="text-right">
-                  <HamHucre deger={p.qty} neden="broker satırında `qty` yok ya da sayıya çevrilemedi" basamak={0} />
+                  <HamHucre
+                    deger={p.qty}
+                    neden="Adet okunamadı"
+                    teknik="broker satırında `qty` yok ya da sayıya çevrilemedi"
+                    basamak={0}
+                  />
                 </TableCell>
                 <TableCell className="text-right">
-                  <HamHucre deger={p.avg_entry} neden="broker satırında `avg_entry_price` yok" />
+                  <HamHucre
+                    deger={p.avg_entry}
+                    neden="Ortalama giriş fiyatı bildirilmedi"
+                    teknik="broker satırında `avg_entry_price` yok"
+                  />
                 </TableCell>
                 <TableCell className="text-right">
-                  <HamHucre deger={p.current} neden="broker satırında `current_price` yok" />
+                  <HamHucre
+                    deger={p.current}
+                    neden="Son fiyat bildirilmedi"
+                    teknik="broker satırında `current_price` yok"
+                  />
                 </TableCell>
                 <TableCell className="text-right">
                   <Deger
                     deger={upl}
                     onek="$"
                     basamak={2}
-                    neden="broker satırında `unrealized_pl` yok"
+                    neden="Bu pozisyonun kâr/zararı bildirilmedi"
                     className={
                       upl === null
                         ? undefined
@@ -128,25 +148,29 @@ function EmirTablosu({ emirler }: { readonly emirler: readonly NonNullable<Alpac
           {emirler.map((o, i) => (
             <TableRow key={`${o.symbol ?? "?"}-${i}`}>
               <TableCell className="font-medium">
-                <Metin deger={o.symbol} neden="emir satırında `symbol` yok" />
+                <Metin deger={o.symbol} neden="Bu emrin sembolü bildirilmedi" teknik="emir satırında `symbol` yok" />
               </TableCell>
               <TableCell className="text-xs uppercase">
-                <Metin deger={o.side} neden="emir satırında `side` yok" />
+                <Metin
+                  deger={o.side}
+                  neden="Emrin alış mı satış mı olduğu bildirilmedi"
+                  teknik="emir satırında `side` yok"
+                />
               </TableCell>
               <TableCell className="text-xs">
-                <Metin deger={o.type} neden="emir satırında `type` yok" />
+                <Metin deger={o.type} neden="Emir türü bildirilmedi" teknik="emir satırında `type` yok" />
               </TableCell>
               <TableCell className="text-right">
-                <HamHucre deger={o.qty} neden="emir satırında `qty` yok" basamak={0} />
+                <HamHucre deger={o.qty} neden="Adet bildirilmedi" teknik="emir satırında `qty` yok" basamak={0} />
               </TableCell>
               <TableCell className="text-right">
-                <HamHucre deger={o.stop} neden="bu emir bir stop taşımıyor" />
+                <HamHucre deger={o.stop} neden="Bu emirde zarar durdurma fiyatı yok" teknik="emir satırında `stop` yok" />
               </TableCell>
               <TableCell className="text-right">
-                <HamHucre deger={o.limit} neden="bu emir bir limit taşımıyor" />
+                <HamHucre deger={o.limit} neden="Bu emirde limit fiyatı yok" teknik="emir satırında `limit` yok" />
               </TableCell>
               <TableCell className="text-xs">
-                <Metin deger={o.status} neden="emir satırında `status` yok" />
+                <Metin deger={o.status} neden="Emrin durumu bildirilmedi" teknik="emir satırında `status` yok" />
               </TableCell>
             </TableRow>
           ))}
@@ -189,25 +213,29 @@ function Govde({ v, ticaret }: { readonly v: AlpacaGovdesi; readonly ticaret: Sa
           ok={v.paper_available}
           iyi="kağıt anahtarı var"
           kotu="kağıt anahtarı YOK"
-          neden="/api/alpaca `paper_available` alanını döndürmedi"
+          neden="Kağıt hesap anahtarının kurulu olup olmadığı bildirilmedi"
         />
         <OkRozet
           ok={h?.connected}
           iyi="hesap bağlı"
           kotu="hesap bağlanamadı"
-          neden={v.paper_available === false ? "paper_available false — `account` bloğu TAMAMEN null döner" : "/api/alpaca `account.connected` alanını döndürmedi"}
+          neden={
+            v.paper_available === false
+              ? "Kağıt hesap anahtarı olmadığı için hesap hiç sorulmadı"
+              : "Hesabın bağlı olup olmadığı bildirilmedi"
+          }
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Kpi etiket="Broker sermayesi">
-          <Deger deger={h?.equity} onek="$" basamak={2} neden="hesap bloğu `equity` taşımıyor" />
+          <Deger deger={h?.equity} onek="$" basamak={2} neden="Broker sermayesi bildirilmedi" />
         </Kpi>
         <Kpi etiket="Nakit">
-          <Deger deger={h?.cash} onek="$" basamak={2} neden="hesap bloğu `cash` taşımıyor" />
+          <Deger deger={h?.cash} onek="$" basamak={2} neden="Hesaptaki nakit bildirilmedi" />
         </Kpi>
         <Kpi etiket="Alım gücü">
-          <Deger deger={h?.buying_power} onek="$" basamak={2} neden="hesap bloğu `buying_power` taşımıyor" />
+          <Deger deger={h?.buying_power} onek="$" basamak={2} neden="Alım gücü bildirilmedi" />
         </Kpi>
         <Kpi etiket="Açık pozisyon" alt={bosListeSupheli ? "boş liste şüpheli — aşağıya bak" : undefined}>
           <span className="tabular-nums">{pozisyonlar.length}</span>
@@ -220,18 +248,22 @@ function Govde({ v, ticaret }: { readonly v: AlpacaGovdesi; readonly ticaret: Sa
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col">
           <Satir etiket="hesap durumu">
-            <Metin deger={h?.status} neden="hesap bloğu `status` taşımıyor" />
+            <Metin deger={h?.status} neden="Hesap durumu bildirilmedi" teknik="hesap bloğu `status` taşımıyor" />
           </Satir>
           <Satir etiket="uç (kimlik izi)">
             <Metin
               deger={h?.endpoint}
-              neden="hesap bloğu `endpoint` taşımıyor"
+              neden="Bağlanılan sunucu adresi bildirilmedi"
+              teknik="hesap bloğu `endpoint` taşımıyor"
               className="font-mono text-xs"
             />
           </Satir>
           <Satir etiket="hesap numarası">
             {/* MASKELİ BİLE OLSA YAZILAMAZ — çünkü GELMİYOR. Bkz. dosya başı, tuzak 1. */}
-            <Olculemedi neden="/api/alpaca hesap numarası döndürmüyor: adapters/alpaca.py::dashboard_view yalnız equity/cash/status/buying_power/positions/open_orders/endpoint taşıyor" />
+            <Olculemedi
+              neden="Hesap numarası hiç gönderilmiyor — uydurmamak için boş bırakıldı"
+              teknik="/api/alpaca hesap numarası döndürmüyor: adapters/alpaca.py::dashboard_view yalnız equity/cash/status/buying_power/positions/open_orders/endpoint taşıyor"
+            />
           </Satir>
         </div>
 
@@ -241,7 +273,7 @@ function Govde({ v, ticaret }: { readonly v: AlpacaGovdesi; readonly ticaret: Sa
               ok={akis?.stream_ok}
               iyi="akış sağlam"
               kotu="akış düşük"
-              neden="stream_ok null — ayna hiç koşmamış (üçüncü hâl), 'akış bozuk' DEĞİL"
+              neden="Fiyat akışı bu süreçte hiç kontrol edilmedi — bozuk demek değil"
             />
           </Satir>
           <Satir etiket="akış bayat mı">
@@ -249,25 +281,32 @@ function Govde({ v, ticaret }: { readonly v: AlpacaGovdesi; readonly ticaret: Sa
               ok={akis?.stream_stale === undefined || akis.stream_stale === null ? akis?.stream_stale : !akis.stream_stale}
               iyi="taze"
               kotu="bayat"
-              neden="/api/alpaca `stream.stream_stale` alanını döndürmedi"
+              neden="Fiyat akışının taze olup olmadığı bildirilmedi"
             />
           </Satir>
           <Satir etiket="son olay">
             <Metin
               deger={zamanMetni(akis?.stream_last_event_ts)}
-              neden="akış bloğu `stream_last_event_ts` taşımıyor"
+              neden="Son akış olayının zamanı bildirilmedi"
+              teknik="akış bloğu `stream_last_event_ts` taşımıyor"
               className="tabular-nums text-xs"
             />
           </Satir>
           <Satir etiket="son kontrol yaşı">
             <Metin
               deger={sureMetni(akis?.stream_checked_age_s)}
-              neden="akış bloğu `stream_checked_age_s` taşımıyor"
+              neden="Akışın en son ne zaman kontrol edildiği bildirilmedi"
+              teknik="akış bloğu `stream_checked_age_s` taşımıyor"
               className="tabular-nums text-xs"
             />
           </Satir>
           <Satir etiket="son akış hatası">
-            <Metin deger={akis?.stream_last_error} neden="akış bloğu bir hata metni taşımıyor" className="text-xs" />
+            <Metin
+              deger={akis?.stream_last_error}
+              neden="Kayıtlı bir akış hatası yok"
+              teknik="akış bloğu bir hata metni taşımıyor"
+              className="text-xs"
+            />
           </Satir>
         </div>
       </div>
@@ -317,7 +356,10 @@ function Govde({ v, ticaret }: { readonly v: AlpacaGovdesi; readonly ticaret: Sa
                 </BarChart>
               </ChartContainer>
             ) : (
-              <Olculemedi neden="hiçbir pozisyon satırı sayıya çevrilebilir bir `unrealized_pl` taşımıyor — çizilecek nokta yok" />
+              <Olculemedi
+                neden="Hiçbir pozisyonun kâr/zararı okunamadı — çizilecek nokta yok"
+                teknik="hiçbir pozisyon satırı sayıya çevrilebilir bir `unrealized_pl` taşımıyor"
+              />
             )}
             {elenen > 0 ? (
               <p className="text-muted-foreground text-xs">

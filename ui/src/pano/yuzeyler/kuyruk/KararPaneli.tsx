@@ -214,14 +214,14 @@ export function KararPaneli({
           <>
             <Satir etiket="HALT">
               {halt === undefined ? (
-                <Olculemedi neden="/api/today `halted` alanını döndürmedi" kisa />
+                <Olculemedi neden="Durdurma kolunun çekili olup olmadığı bildirilmedi" teknik="/api/today `halted` alanını döndürmedi" kisa />
               ) : (
                 <span className="text-xs">{halt ? "ÇEKİLİ — uç 409 verir" : "çekili değil"}</span>
               )}
             </Satir>
             <Satir etiket="Broker (adaptör)">
               {broker === undefined ? (
-                <Olculemedi neden="/api/today `broker` alanını döndürmedi" kisa />
+                <Olculemedi neden="Hangi broker bağlantısının kullanıldığı bildirilmedi" teknik="/api/today `broker` alanını döndürmedi" kisa />
               ) : (
                 <span className="text-xs">
                   {broker}
@@ -385,16 +385,16 @@ export function KararPaneli({
             </span>
           </Satir>
           <Satir etiket="Kapı hükmü (DEĞİŞMEZ)">
-            {planSonuc.gate_verdict ?? <Olculemedi neden="yanıt `gate_verdict` yazmadı" kisa />}
+            {planSonuc.gate_verdict ?? <Olculemedi neden="Kontrollerin kararı bildirilmedi" teknik="yanıt `gate_verdict` yazmadı" kisa />}
           </Satir>
           <Satir etiket="Onay damgası">
             {zamanMetni(planSonuc.operator_onayi?.ts ?? planSonuc.ts) ?? (
-              <Olculemedi neden="yanıt `operator_onayi.ts` / `ts` yazmadı" kisa />
+              <Olculemedi neden="Onayın hangi anda işlendiği bildirilmedi" teknik="yanıt `operator_onayi.ts` / `ts` yazmadı" kisa />
             )}
           </Satir>
           <Satir etiket="Silahlı kümede">
             {planSonuc.silahli === undefined ? (
-              <Olculemedi neden="yanıt `silahli` yazmadı" kisa />
+              <Olculemedi neden="Planın işleme hazır listeye girip girmediği bildirilmedi" teknik="yanıt `silahli` yazmadı" kisa />
             ) : (
               <span className="text-xs">
                 {planSonuc.silahli ? "evet" : "HAYIR — gönderim düştü ve plan kümeden çıkarıldı"}
@@ -419,7 +419,7 @@ export function KararPaneli({
             <div className="text-muted-foreground text-[11px] uppercase">İcra yolu (uç ne yaptı)</div>
             <p className="mt-1 text-sm leading-6">
               {planSonuc.icra_yolu ?? (
-                <Olculemedi neden="yanıt `icra_yolu` yazmadı — gönderimin sonucu ÖLÇÜLEMEDİ, 'gitti' varsayma" />
+                <Olculemedi neden="Emrin gönderilip gönderilmediği bildirilmedi — gittiğini varsayma" teknik="yanıt `icra_yolu` yazmadı — gönderimin sonucu ölçülemedi" />
               )}
             </p>
             {planSonuc.gonderim === null ? (
@@ -461,7 +461,7 @@ export function KararPaneli({
           </Satir>
           <Satir etiket="Karar">
             {defterSonuc.decision === undefined ? (
-              <Olculemedi neden="yanıt `decision` yazmadı" kisa />
+              <Olculemedi neden="Hangi kararın yazıldığı bildirilmedi" teknik="yanıt `decision` yazmadı" kisa />
             ) : (
               <Badge variant="outline" className="font-mono text-[10px]">
                 {defterSonuc.decision}
@@ -470,7 +470,7 @@ export function KararPaneli({
           </Satir>
           <Satir etiket="Davranışsal mı">
             {defterSonuc.davranissal === undefined ? (
-              <Olculemedi neden="yanıt `davranissal` yazmadı — bağlayıcılığı ÖNEKTEN çıkarma" kisa />
+              <Olculemedi neden="Kararın sistemi bağlayıp bağlamadığı bildirilmedi" teknik="yanıt `davranissal` yazmadı — bağlayıcılığı önekten çıkarma" kisa />
             ) : (
               <span className="text-xs">
                 {defterSonuc.davranissal

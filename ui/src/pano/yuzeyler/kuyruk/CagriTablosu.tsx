@@ -36,7 +36,7 @@ export function CagriTablosu({
         <Badge variant="outline">{satirlar.length} çağrı (pencerede)</Badge>
         <Badge variant={bosSayisi > 0 ? "destructive" : "outline"}>{bosSayisi} boş dönen</Badge>
         <Badge variant="outline">
-          taranan olay: <Deger deger={olayPenceresi} neden="`olay_penceresi` yazılmamış" />
+          taranan olay: <Deger deger={olayPenceresi} neden="Kaç olayın tarandığı bildirilmedi" teknik="`olay_penceresi` yazılmamış" />
         </Badge>
       </div>
 
@@ -65,23 +65,23 @@ export function CagriTablosu({
               satirlar.map((c, i) => (
                 <TableRow key={`${c.ts ?? "?"}#${i}`} className={c.empty === true ? "bg-destructive/5" : undefined}>
                   <TableCell className="whitespace-nowrap text-xs tabular-nums">
-                    {zamanMetni(c.ts) ?? <Olculemedi neden="olay `ts` taşımıyor" kisa />}
+                    {zamanMetni(c.ts) ?? <Olculemedi neden="Çağrının zamanı kaydedilmemiş" teknik="olay `ts` taşımıyor" kisa />}
                   </TableCell>
                   <TableCell className="text-xs">
-                    {c.kind ?? <Olculemedi neden="olay `kind` taşımıyor" kisa />}
+                    {c.kind ?? <Olculemedi neden="Çağrının türü kaydedilmemiş" teknik="olay `kind` taşımıyor" kisa />}
                   </TableCell>
                   <TableCell className="text-xs">
                     {c.model ? (
                       <code className="break-all font-mono text-[11px]">{c.model}</code>
                     ) : (
-                      <Olculemedi neden="olay `model` taşımıyor" kisa />
+                      <Olculemedi neden="Hangi modelin çağrıldığı kaydedilmemiş" teknik="olay `model` taşımıyor" kisa />
                     )}
                   </TableCell>
                   <TableCell>
-                    <Deger deger={c.attempt} neden="`attempt` yazılmamış" />
+                    <Deger deger={c.attempt} neden="Kaçıncı deneme olduğu kaydedilmemiş" teknik="`attempt` yazılmamış" />
                   </TableCell>
                   <TableCell>
-                    <Deger deger={c.tool_calls} neden="`tool_calls` yazılmamış" />
+                    <Deger deger={c.tool_calls} neden="Kaç araç çağrısı yapıldığı kaydedilmemiş" teknik="`tool_calls` yazılmamış" />
                   </TableCell>
                   <TableCell>
                     <HukumRozet

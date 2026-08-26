@@ -162,15 +162,25 @@ function Govde({ govde, pencere }: { govde: PerformansGovdesi; pencere: string }
     .filter((x): x is string => x !== undefined);
 
   if (ham === undefined) {
-    return <Olculemedi neden="`/api/performance` gövdesinde `equity_curve.points` alanı yok" />;
+    return (
+      <Olculemedi
+        neden="Sermaye eğrisi bildirilmedi"
+        teknik="`/api/performance` gövdesinde `equity_curve.points` alanı yok"
+      />
+    );
   }
   if (noktalar.length === 0) {
     return (
       <Olculemedi
         neden={
           okunamayan > 0
-            ? `${bicimSayi(okunamayan)} noktanın hiçbiri çözülemedi — çizilecek seri yok`
-            : "eğri zarfı boş — henüz hiç nokta yazılmamış"
+            ? `${bicimSayi(okunamayan)} noktanın hiçbiri okunamadı — çizilecek seri kalmadı`
+            : "Henüz hiç sermaye noktası kaydedilmemiş"
+        }
+        teknik={
+          okunamayan > 0
+            ? "`equity_curve.points` dolu ama hiçbir satır tarih+değer çiftine çözülemedi"
+            : "`equity_curve.points` boş dizi"
         }
       />
     );

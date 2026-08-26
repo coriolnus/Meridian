@@ -40,7 +40,7 @@ export function PlanKarti({ p }: { p: Plan }) {
             {p.sembol ?? <span className="text-muted-foreground">sembolsüz plan satırı</span>}
           </h3>
           {p.skor === null ? (
-            <Olculemedi kisa neden="plan satırında `score` alanı yok — skorsuz plan" />
+            <Olculemedi kisa neden="Bu planın skoru kaydedilmemiş" teknik="plan satırında `score` alanı yok" />
           ) : (
             <Badge variant="outline" className="shrink-0 tabular-nums" title="kapı skoru (`score`)">
               {skorMetni(p.skor)}

@@ -34,11 +34,13 @@ export function OnayDefteri({
   satirlar,
   seviye,
   neden,
+  teknik,
 }: {
   readonly satirlar: readonly Record<string, unknown>[] | undefined;
   readonly seviye: number | undefined;
   /** Uç okunamadıysa NEDEN — boş tablo çizmeden önce bunu yazmak zorundayız. */
   readonly neden: string | null;
+  readonly teknik?: string;
 }) {
   // EN YENİ ÜSTTE: defter append-only yazılıyor (`append_jsonl`), yani dosya sırası
   // KRONOLOJİK. Ters çevirmek bir yorum değil, okuma yönünün düzeltilmesi.
@@ -69,7 +71,7 @@ export function OnayDefteri({
       ) : null}
 
       {neden !== null ? (
-        <Olculemedi neden={neden} />
+        <Olculemedi neden={neden} teknik={teknik} />
       ) : ters.length === 0 ? (
         <p className="text-muted-foreground text-sm">
           {seviye !== undefined && seviye < 1
@@ -97,18 +99,18 @@ export function OnayDefteri({
                   return (
                     <TableRow key={`${kimlik ?? "?"}#${i}`}>
                       <TableCell className="whitespace-nowrap align-top text-xs tabular-nums">
-                        {zamanMetni(alan(s, "ts")) ?? <Olculemedi neden="satır `ts` taşımıyor" kisa />}
+                        {zamanMetni(alan(s, "ts")) ?? <Olculemedi neden="Kararın zamanı kaydedilmemiş" teknik="satır `ts` taşımıyor" kisa />}
                       </TableCell>
                       <TableCell className="align-top">
                         {kimlik === null ? (
-                          <Olculemedi neden="satır `id` taşımıyor — kapı bu satırı eşleştiremez" kisa />
+                          <Olculemedi neden="Kimlik yok — bu karar hiçbir işle eşleşemez" teknik="satır `id` taşımıyor — kapı bu satırı eşleştiremez" kisa />
                         ) : (
                           <code className="break-all font-mono text-xs">{kimlik}</code>
                         )}
                       </TableCell>
                       <TableCell className="align-top">
                         {karar === null ? (
-                          <Olculemedi neden="`decision` yok — kapıda 'onay YOK' sayılır (fail-closed)" kisa />
+                          <Olculemedi neden="Karar kaydedilmemiş — kontrolde onaysız sayılır" teknik="`decision` yok — kapıda 'onay YOK' sayılır (fail-closed)" kisa />
                         ) : (
                           <Badge variant={karar === "approve" ? "secondary" : "outline"}>{karar}</Badge>
                         )}

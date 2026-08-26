@@ -115,7 +115,7 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
         {(g) => {
           const m = g.makine;
           if (m === undefined) {
-            return <Olculemedi neden="/api/infra `makine` bloğunu döndürmüyor" />;
+            return <Olculemedi neden="Makine ölçümleri bildirilmedi" teknik="/api/infra `makine` bloğunu döndürmüyor" />;
           }
           const ramYuzde = bellekYuzdesi(m);
           const diskler = m.disk ?? [];
@@ -128,7 +128,8 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                 <Gosterge
                   baslik="İşlemci"
                   yuzde={m.cpu_yuzde}
-                  neden={m.cpu_yuzde_neden ?? "/api/infra `makine.cpu_yuzde` alanını döndürmüyor"}
+                  neden="İşlemci kullanımı ölçülemedi"
+                  teknik={m.cpu_yuzde_neden ?? "/api/infra `makine.cpu_yuzde` alanını döndürmüyor"}
                   altMetin={
                     m.cekirdek_n !== undefined && m.cekirdek_n !== null ? `${m.cekirdek_n} çekirdek` : null
                   }
@@ -136,7 +137,8 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                 <Gosterge
                   baslik="Bellek"
                   yuzde={ramYuzde}
-                  neden={
+                  neden="Bellek doluluğu hesaplanamadı"
+                  teknik={
                     bellek?.olculemedi_neden ??
                     "kullanılan/toplam bayt birlikte gelmedi — doluluk TÜRETİLEMEZ (uydurma yasağı)"
                   }
@@ -153,14 +155,15 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                       key={ad}
                       baslik={`Disk ${ad}`}
                       yuzde={diskYuzdesi(d)}
-                      neden={d.olculemedi_neden ?? "/api/infra bu bölüm için `kullanim_yuzde` döndürmedi"}
+                      neden="Disk doluluğu ölçülemedi"
+                      teknik={d.olculemedi_neden ?? "/api/infra bu bölüm için `kullanim_yuzde` döndürmedi"}
                       altMetin={`${baytMetni(d.kullanilan_bayt) ?? "?"} / ${baytMetni(d.toplam_bayt) ?? "?"}`}
                     />
                   );
                 })}
                 {diskler.length === 0 ? (
                   <div className="col-span-2 flex min-h-40 items-center justify-center rounded-lg border border-dashed p-4">
-                    <Olculemedi neden="/api/infra `makine.disk` listesi boş ya da yok" />
+                    <Olculemedi neden="Makinenin diskleri bildirilmedi" teknik="/api/infra `makine.disk` listesi boş ya da yok" />
                   </div>
                 ) : null}
               </div>
@@ -219,7 +222,7 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
               <div className="grid gap-x-6 sm:grid-cols-2">
                 <div>
                   <Satir etiket="Ana makine adı">
-                    {m.hostname ?? <Olculemedi neden="/api/infra `makine.hostname` döndürmedi" kisa />}
+                    {m.hostname ?? <Olculemedi neden="Makinenin adı bildirilmedi" teknik="/api/infra `makine.hostname` döndürmedi" kisa />}
                   </Satir>
                   <Satir etiket="Platform">
                     {m.platform?.sistem ? (
@@ -229,16 +232,17 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                         {m.platform.makine ? ` · ${m.platform.makine}` : ""}
                       </span>
                     ) : (
-                      <Olculemedi neden="/api/infra `makine.platform.sistem` döndürmedi" kisa />
+                      <Olculemedi neden="İşletim sistemi bildirilmedi" teknik="/api/infra `makine.platform.sistem` döndürmedi" kisa />
                     )}
                   </Satir>
                   <Satir etiket="Çekirdek sayısı">
-                    <Deger deger={m.cekirdek_n} neden={m.cekirdek_n_neden ?? "/api/infra `makine.cekirdek_n` döndürmedi"} />
+                    <Deger deger={m.cekirdek_n} neden="Çekirdek sayısı bildirilmedi" teknik={m.cekirdek_n_neden ?? "/api/infra `makine.cekirdek_n` döndürmedi"} />
                   </Satir>
                   <Satir etiket="Çalışma süresi">
                     {sureMetni(m.uptime_s) ?? (
                       <Olculemedi
-                        neden={m.uptime_s_neden ?? "/api/infra `makine.uptime_s` döndürmedi"}
+                        neden="Makinenin ne zamandır açık olduğu ölçülemedi"
+                        teknik={m.uptime_s_neden ?? "/api/infra `makine.uptime_s` döndürmedi"}
                         kisa
                       />
                     )}
@@ -261,7 +265,8 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                       </span>
                     ) : (
                       <Olculemedi
-                        neden={m.yuk_neden ?? "/api/infra `makine.yuk` alanını döndürmedi"}
+                        neden="Makinenin yük ortalaması bildirilmedi"
+                        teknik={m.yuk_neden ?? "/api/infra `makine.yuk` alanını döndürmedi"}
                         kisa
                       />
                     )}
@@ -272,15 +277,16 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                       olurdu; açık kalem olarak duruyor. */}
                   <Satir etiket="Ağ (rx/tx)">
                     <Olculemedi
-                      neden="/api/infra makine bloğunda ağ sayacı YOK (uç `hostname/platform/cekirdek_n/yuk/cpu_yuzde/bellek/disk/uptime_s` döndürüyor) — açık kalem"
+                      neden="Ağ trafiği bu sürümde hiç ölçülmüyor — açık kalem"
+                      teknik="/api/infra makine bloğunda ağ sayacı YOK (uç `hostname/platform/cekirdek_n/yuk/cpu_yuzde/bellek/disk/uptime_s` döndürüyor)"
                       kisa
                     />
                   </Satir>
                   <Satir etiket="Bellek (kullanılan / toplam)">
                     {bellek === undefined ? (
-                      <Olculemedi neden="/api/infra `makine.bellek` bloğunu döndürmedi" kisa />
+                      <Olculemedi neden="Bellek bilgisi bildirilmedi" teknik="/api/infra `makine.bellek` bloğunu döndürmedi" kisa />
                     ) : bellek.kullanilan_bayt === null || bellek.kullanilan_bayt === undefined ? (
-                      <Olculemedi neden={bellek.olculemedi_neden ?? "bellek ölçülemedi, neden de yazılmadı"} kisa />
+                      <Olculemedi neden="Kullanılan bellek okunamadı" teknik={bellek.olculemedi_neden ?? "bellek ölçülemedi, neden de yazılmadı"} kisa />
                     ) : (
                       <span className="tabular-nums" title={`kaynak: ${bellek.kaynak ?? "beyan edilmedi"}`}>
                         {baytMetni(bellek.kullanilan_bayt)} / {baytMetni(bellek.toplam_bayt) ?? "toplam ölçülemedi"}
@@ -289,7 +295,7 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                   </Satir>
                   <Satir etiket="Ölçüm damgası">
                     {zamanMetni(g.hesaplama_ts) ?? (
-                      <Olculemedi neden="/api/infra `hesaplama_ts` döndürmedi" kisa />
+                      <Olculemedi neden="Ölçümün yapıldığı an bildirilmedi" teknik="/api/infra `hesaplama_ts` döndürmedi" kisa />
                     )}
                   </Satir>
                 </div>
@@ -309,7 +315,8 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                         key={`cubuk-${ad}-${i}`}
                         etiket={kapsanan.length > 1 ? `${ad} (+${kapsanan.length - 1} yol)` : ad}
                         yuzde={diskYuzdesi(d)}
-                        neden={d.olculemedi_neden ?? "/api/infra bu bölüm için `kullanim_yuzde` döndürmedi"}
+                        neden="Disk doluluğu ölçülemedi"
+                        teknik={d.olculemedi_neden ?? "/api/infra bu bölüm için `kullanim_yuzde` döndürmedi"}
                         altMetin={`${baytMetni(d.kullanilan_bayt) ?? "?"} kullanılıyor · ${
                           baytMetni(d.bos_bayt) ?? "?"
                         } boş`}

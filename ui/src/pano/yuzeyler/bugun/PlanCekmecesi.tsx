@@ -150,13 +150,23 @@ type Yon = "onayla" | "reddet";
 /* ---- DÜRÜSTLÜK PARÇALARI --------------------------------------------------- */
 
 /** Ölçülemeyen alanın tek biçimi. `neden` ZORUNLU — nedensiz bir "ölçülemedi",
- *  okuyucuyu sunucu günlüklerine gönderir; oysa cevap burada yazılabilir. */
-function Yok({ neden }: { readonly neden: string }) {
+ *  okuyucuyu sunucu günlüklerine gönderir; oysa cevap burada yazılabilir.
+ *
+ *  İKİ KATMAN (2026-08-26 sözleşmesi): `neden` EKRANDA duran insan cümlesidir;
+ *  `teknik` iç ayrıntıdır (alan adı, uç yolu) ve yalnız üstüne gelince çıkar.
+ *  `teknik` düşürülmez — teşhis eden kişinin aradığı tam olarak odur. */
+function Yok({ neden, teknik }: { readonly neden: string; readonly teknik?: string }) {
   return (
-    <span className="text-muted-foreground text-xs italic" title={neden}>
+    <span className="text-muted-foreground text-xs italic" title={teknik ? `${neden} — ${teknik}` : neden}>
       ölçülemedi — {neden}
     </span>
   );
+}
+
+/** İç ayrıntının iki parçasını (çağıranın verdiği alan adı + hücrenin ölçtüğü hâl)
+ *  TEK `teknik` dizesinde birleştirir. Biri düşerse öteki de anlamsız kalırdı. */
+function teknikBirlestir(teknik: string | undefined, hal: string): string {
+  return teknik ? `${teknik} · ${hal}` : hal;
 }
 
 function Satir({ etiket, children }: { readonly etiket: string; readonly children: ReactNode }) {
@@ -169,19 +179,28 @@ function Satir({ etiket, children }: { readonly etiket: string; readonly childre
 }
 
 /** Sayı hücresi. `undefined` ile `null` AYRI cümle kurar: biri "hiç yazılmadı",
- *  diğeri "yazıldı ama ölçülemedi". İkisini birleştirmek bilgi kaybıdır. */
+ *  diğeri "yazıldı ama ölçülemedi". İkisini birleştirmek bilgi kaybıdır.
+ *
+ *  BURADA `neden` BİR ÖZNEDİR, cümle DEĞİL ("Skor", "Giriş tetiği"): üç hâlin
+ *  yüklemini hücrenin kendisi ekler, çünkü hangi hâlde olduğumuzu yalnız o bilir.
+ *  Alan adı gibi iç ayrıntı `teknik`e verilir ve üç hâlin damgasıyla birleşir. */
 function Sayi({
   deger,
   neden,
+  teknik,
   basamak = 2,
 }: {
   readonly deger: number | null | undefined;
   readonly neden: string;
+  readonly teknik?: string;
   readonly basamak?: number;
 }) {
-  if (deger === undefined) return <Yok neden={`${neden} (alan gövdede YOK)`} />;
-  if (deger === null) return <Yok neden={`${neden} (yazıldı ama ölçülmemiş: null)`} />;
-  if (!Number.isFinite(deger)) return <Yok neden={`${neden} (sayı sonlu değil)`} />;
+  if (deger === undefined)
+    return <Yok neden={`${neden} yazılmamış`} teknik={teknikBirlestir(teknik, "alan gövdede YOK")} />;
+  if (deger === null)
+    return <Yok neden={`${neden} ölçülememiş`} teknik={teknikBirlestir(teknik, "alan yazıldı ama null")} />;
+  if (!Number.isFinite(deger))
+    return <Yok neden={`${neden} okunamadı`} teknik={teknikBirlestir(teknik, "sayı sonlu değil")} />;
   return (
     <span className="tabular-nums">
       {deger.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: basamak })}
@@ -189,8 +208,16 @@ function Sayi({
   );
 }
 
-function Metin({ deger, neden }: { readonly deger: string | undefined; readonly neden: string }) {
-  if (deger === undefined || deger === "") return <Yok neden={neden} />;
+function Metin({
+  deger,
+  neden,
+  teknik,
+}: {
+  readonly deger: string | undefined;
+  readonly neden: string;
+  readonly teknik?: string;
+}) {
+  if (deger === undefined || deger === "") return <Yok neden={neden} teknik={teknik} />;
   return <span>{deger}</span>;
 }
 
@@ -379,33 +406,38 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
           <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Künye</h4>
           <div>
             <Satir etiket="Sembol">
-              <Metin deger={plan.ticker} neden="`ticker` yazılmamış" />
+              <Metin deger={plan.ticker} neden="Sembol kaydedilmemiş" teknik="plan satırında `ticker` yok" />
             </Satir>
             <Satir etiket="Yön">
-              <Metin deger={plan.side} neden="`side` yazılmamış" />
+              <Metin deger={plan.side} neden="Yön kaydedilmemiş" teknik="plan satırında `side` yok" />
             </Satir>
             <Satir etiket="Kurulum">
-              <Metin deger={plan.setup} neden="`setup` yazılmamış" />
+              <Metin deger={plan.setup} neden="Kurulum kaydedilmemiş" teknik="plan satırında `setup` yok" />
             </Satir>
             <Satir etiket="Sektör">
-              <Metin deger={plan.sector} neden="`sector` yazılmamış" />
+              <Metin deger={plan.sector} neden="Sektör kaydedilmemiş" teknik="plan satırında `sector` yok" />
             </Satir>
             <Satir etiket="Seans tarihi">
-              <Metin deger={plan.date} neden="`date` yazılmamış" />
+              <Metin deger={plan.date} neden="Seans tarihi kaydedilmemiş" teknik="plan satırında `date` yok" />
             </Satir>
             <Satir etiket="Kapı hükmü">
-              <Metin deger={hukum} neden="`gate_verdict` yazılmamış" />
+              <Metin deger={hukum} neden="Kapı hükmü kaydedilmemiş" teknik="plan satırında `gate_verdict` yok" />
             </Satir>
             <Satir etiket="Skor">
-              <Sayi deger={plan.score} neden="`score` yok" basamak={3} />
+              <Sayi deger={plan.score} neden="Plan skoru kaydedilmemiş" teknik="plan satırının `score` alanı" basamak={3} />
             </Satir>
             <Satir etiket="Rejim (plan anı)">
-              <Metin deger={plan.regime_at_plan} neden="`regime_at_plan` yazılmamış" />
+              <Metin
+                deger={plan.regime_at_plan}
+                neden="Plan anındaki piyasa rejimi kaydedilmemiş"
+                teknik="plan satırında `regime_at_plan` yok"
+              />
             </Satir>
             <Satir etiket="Strateji sürümü">
               <Metin
                 deger={plan.strategy_version === undefined ? undefined : String(plan.strategy_version)}
-                neden="`strategy_version` yazılmamış"
+                neden="Strateji sürümü kaydedilmemiş"
+                teknik="plan satırında `strategy_version` yok"
               />
             </Satir>
           </div>
@@ -415,28 +447,44 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
           <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Seviyeler ve risk</h4>
           <div>
             <Satir etiket="Giriş tetiği">
-              <Sayi deger={plan.entry_trigger} neden="`entry_trigger` yok" />
+              <Sayi deger={plan.entry_trigger} neden="Giriş tetiği kaydedilmemiş" teknik="plan satırının `entry_trigger` alanı" />
             </Satir>
             <Satir etiket="Stop">
-              <Sayi deger={plan.stop} neden="`stop` yok" />
+              <Sayi deger={plan.stop} neden="Zarar durdurma seviyesi kaydedilmemiş" teknik="plan satırının `stop` alanı" />
             </Satir>
             <Satir etiket="Kâr hedefi">
-              <Sayi deger={plan.profit_target} neden="`profit_target` yok" />
+              <Sayi deger={plan.profit_target} neden="Kâr hedefi kaydedilmemiş" teknik="plan satırının `profit_target` alanı" />
             </Satir>
             <Satir etiket="Beklenen R katsayısı">
-              <Sayi deger={plan.r_multiple_expected} neden="`r_multiple_expected` yok" />
+              <Sayi
+                deger={plan.r_multiple_expected}
+                neden="Beklenen R katsayısı"
+                teknik="plan satırının `r_multiple_expected` alanı"
+              />
             </Satir>
             <Satir etiket="Risk büyüklüğü (R)">
-              <Sayi deger={plan.size_r} neden="`size_r` yok" />
+              <Sayi deger={plan.size_r} neden="Risk büyüklüğü kaydedilmemiş" teknik="plan satırının `size_r` alanı" />
             </Satir>
             <Satir etiket="Son kapanış">
-              <Sayi deger={plan.last_close} neden="`last_close` yok — bar okunamadı" />
+              <Sayi
+                deger={plan.last_close}
+                neden="Son kapanış fiyatı kaydedilmemiş"
+                teknik="plan satırının `last_close` alanı — günün barı okunamadı"
+              />
             </Satir>
             <Satir etiket="Tetikten sapma (%)">
-              <Sayi deger={plan.drift_pct} neden="`drift_pct` yok — tetik 0 ya da yazılmamış" basamak={1} />
+              <Sayi
+                deger={plan.drift_pct}
+                neden="Tetikten sapma hesaplanamadı"
+                teknik="plan satırının `drift_pct` alanı — tetik 0 ya da yazılmamış olabilir"
+                basamak={1}
+              />
             </Satir>
             <Satir etiket="Adet (lot)">
-              <Yok neden="plan satırı adet TAŞIMIYOR — lot gönderim anında öz sermayeden hesaplanır (broker.size_position)" />
+              <Yok
+                neden="Lot adedi planda yazmaz — gönderim anında sermayeden hesaplanır"
+                teknik="plan satırı adet TAŞIMIYOR; lot `broker.size_position` içinde öz sermayeden çıkar"
+              />
             </Satir>
           </div>
         </section>
@@ -448,7 +496,10 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
           {plan.gate_checks && plan.gate_checks.length > 0 ? (
             <KapiDokumu kontroller={plan.gate_checks} />
           ) : (
-            <Yok neden="plan satırı `gate_checks` taşımıyor — tek tek kapı hükümleri okunamadı" />
+            <Yok
+              neden="Tek tek kontrol sonuçları bu plana kaydedilmemiş"
+              teknik="plan satırı `gate_checks` taşımıyor"
+            />
           )}
         </section>
 
@@ -463,7 +514,10 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
               ))}
             </ul>
           ) : (
-            <Yok neden="`gate_reasons` boş ya da yok — kapı hükmünün metni yazılmamış" />
+            <Yok
+              neden="Hükmün gerekçe metni kaydedilmemiş"
+              teknik="`gate_reasons` boş ya da plan satırında yok"
+            />
           )}
         </section>
 
@@ -471,10 +525,18 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
           <section className="rounded-md border bg-muted/30 p-3">
             <h4 className="text-muted-foreground text-[11px] uppercase">Kayıtlı operatör reddi</h4>
             <Satir etiket="Damga">
-              <Metin deger={plan.operator_reddi?.ts} neden="ret damgası yazılmamış" />
+              <Metin
+                deger={plan.operator_reddi?.ts}
+                neden="Ret zamanı kaydedilmemiş"
+                teknik="plan satırında `operator_reddi.ts` yok"
+              />
             </Satir>
             <Satir etiket="Gerekçe">
-              <Metin deger={plan.operator_reddi?.gerekce} neden="ret gerekçesi yazılmamış" />
+              <Metin
+                deger={plan.operator_reddi?.gerekce}
+                neden="Ret gerekçesi kaydedilmemiş"
+                teknik="plan satırında `operator_reddi.gerekce` yok"
+              />
             </Satir>
             {plan.operator_reddi?.beyan ? (
               <p className="mt-2 text-muted-foreground text-[11px] leading-4">{plan.operator_reddi.beyan}</p>
@@ -616,7 +678,11 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
           {zatenOnayli ? (
             <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6">
               Bu plan ONAYLI (damga:{" "}
-              <Metin deger={plan.operator_onayi?.ts} neden="onay damgası yazılmamış" />
+              <Metin
+                deger={plan.operator_onayi?.ts}
+                neden="Onay zamanı kaydedilmemiş"
+                teknik="plan satırında `operator_onayi.ts` yok"
+              />
               ). Ret yolu kapalı: onay icra yetkisidir ve ayna emri gitmiş olabilir; reddetmek onu
               geri almaz. Yeniden onay göndermek İKİNCİ emir doğurmaz (uç dedup yapar) — yalnız
               düşmüş bir ayna gönderimini yeniden dener.
@@ -745,11 +811,18 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
                 <code className="break-all font-mono text-xs">{sonuc.plan_id ?? kimlik}</code>
               </Satir>
               <Satir etiket="Kapı hükmü (DEĞİŞMEZ)">
-                <Metin deger={sonuc.gate_verdict} neden="yanıt `gate_verdict` yazmadı" />
+                <Metin
+                  deger={sonuc.gate_verdict}
+                  neden="Yanıt kapı hükmünü bildirmedi"
+                  teknik="yanıt gövdesinde `gate_verdict` yok"
+                />
               </Satir>
               <Satir etiket="Silahlı kümede">
                 {sonuc.silahli === undefined ? (
-                  <Yok neden="yanıt `silahli` yazmadı — ret yanıtında bu alan zaten yoktur" />
+                  <Yok
+                    neden="Planın işleme hazır kümeye girip girmediği bildirilmedi"
+                    teknik="yanıt `silahli` yazmadı — ret yanıtında bu alan zaten yoktur"
+                  />
                 ) : (
                   <span className="text-xs">
                     {sonuc.silahli ? "evet" : "HAYIR — gönderim düştü ve plan kümeden çıkarıldı"}
@@ -761,7 +834,10 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
                 <div className="text-muted-foreground text-[11px] uppercase">İcra yolu (uç ne yaptı)</div>
                 <p className="mt-1 text-sm leading-6">
                   {sonuc.icra_yolu ?? (
-                    <Yok neden="yanıt `icra_yolu` yazmadı — ret ucunda icra yolu YOKTUR (ret icra etmez); onay ucunda yokluğu bir kusurdur" />
+                    <Yok
+                      neden="Bu kararın işleme nasıl döndüğü bildirilmedi"
+                      teknik="yanıt `icra_yolu` yazmadı — ret ucunda icra yolu YOKTUR (ret icra etmez); onay ucunda yokluğu bir kusurdur"
+                    />
                   )}
                 </p>
                 {sonuc.gonderim === null ? (

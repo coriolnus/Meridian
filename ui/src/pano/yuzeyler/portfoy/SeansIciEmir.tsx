@@ -53,7 +53,11 @@ function Sayac({ ad, n, not, uyari = false }: { ad: string; n: number | undefine
   return (
     <div className="rounded-md border p-2" title={not}>
       <div className={cn("font-semibold text-xl tabular-nums", uyari && (n ?? 0) > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground")}>
-        {n === undefined ? <Olculemedi kisa="—" neden={`${ad}: teşhis gövdesinde alan yok.`} /> : n}
+        {n === undefined ? (
+          <Olculemedi kisa="—" neden={`${ad} bildirilmedi.`} teknik={`${ad}: teşhis gövdesinde alan yok`} />
+        ) : (
+          n
+        )}
       </div>
       <div className="text-[11px] leading-snug">{ad}</div>
     </div>
@@ -79,7 +83,12 @@ function KorumaRozeti({ sembol, h }: { sembol: string; h: KorumaHukmu }) {
         kisa="hüküm verilmedi"
         neden={
           h.neden ??
-          `${sembol}: gövde \`olculemedi\` dedi ama nedenini yazmadı — emir listesi okunamadığı için koruma hükmü VERİLMEDİ. "Koruma yok" DEĞİL.`
+          `${sembol}: emir listesi okunamadığı için koruma kararı verilemedi. Bu "koruma yok" demek değildir.`
+        }
+        teknik={
+          h.neden
+            ? `${sembol}: \`koruma.durum\` = olculemedi`
+            : `${sembol}: gövde \`olculemedi\` dedi ama \`neden\` alanını yazmadı`
         }
       />
     );
@@ -112,8 +121,9 @@ function KorumaRozeti({ sembol, h }: { sembol: string; h: KorumaHukmu }) {
               kisa="stop fiyatı okunamadı"
               neden={
                 h.neden ??
-                `${sembol}: koruma emri CANLI ama \`stop_price\` okunamadı (iz süren stop tetik fiyatını henüz yayınlamamış olabilir). Fiyat UYDURULMAZ; koruma yine de VARDIR.`
+                `${sembol}: koruma emri canlı ama stop fiyatı henüz okunamadı. Fiyat uydurulmaz; koruma yine de var.`
               }
+              teknik={`${sembol}: koruma emri canlı ama \`stop_price\` okunamadı — iz süren stop tetik fiyatını henüz yayınlamamış olabilir`}
             />
           ) : (
             `stop ${para(st)}`
@@ -133,9 +143,8 @@ function KorumaRozeti({ sembol, h }: { sembol: string; h: KorumaHukmu }) {
   return (
     <Olculemedi
       kisa="hüküm tanınmadı"
-      neden={`${sembol}: gövde \`durum\` alanına bu yüzeyin tanımadığı bir değer yazdı (${
-        h.durum ?? "alan yok"
-      }). Tanımadığı bir hükmü "korumalı" ya da "korumasız" diye çevirmek uydurma olurdu.`}
+      neden={`${sembol}: koruma kararı bu ekranın tanımadığı bir değer taşıyor. Tanımadığı bir kararı "korumalı" ya da "korumasız" diye çevirmek uydurma olurdu.`}
+      teknik={`${sembol}: gövde \`durum\` alanına ${h.durum ?? "hiçbir değer"} yazdı`}
     />
   );
 }
@@ -145,7 +154,13 @@ function KorumaRozeti({ sembol, h }: { sembol: string; h: KorumaHukmu }) {
  *  söylerdi; kusurun kendisi tam olarak buydu). */
 function KirpmaSayisi({ v, alan }: { v: number | undefined; alan: string }) {
   if (v === undefined) {
-    return <Olculemedi kisa="yok" neden={`\`open_orders_kirpma.${alan}\` gövdede yok — sayı UYDURULMAZ.`} />;
+    return (
+      <Olculemedi
+        kisa="yok"
+        neden="Bu sayı bildirilmedi — uydurulmaz"
+        teknik={`\`open_orders_kirpma.${alan}\` gövdede yok`}
+      />
+    );
   }
   return <span className="tabular-nums">{v}</span>;
 }
@@ -205,7 +220,11 @@ export function SeansIciEmir({
             <>
               <div className="flex flex-wrap items-center gap-2">
                 {intraday.armed === undefined ? (
-                  <Olculemedi kisa="bayrak okunamadı" neden="`intraday.armed` alanı gövdede yok." />
+                  <Olculemedi
+                    kisa="bayrak okunamadı"
+                    neden="Silahlanma bayrağının durumu bildirilmedi"
+                    teknik="`intraday.armed` alanı gövdede yok."
+                  />
                 ) : (
                   <Badge variant={intraday.armed ? "destructive" : "outline"}>
                     {intraday.armed ? "SİLAHLI · otonom emir kapısı AÇIK" : "silahsız · yalnız gözlem"}
@@ -214,7 +233,11 @@ export function SeansIciEmir({
                 {intraday.mode && <Badge variant="secondary">mod: {intraday.mode}</Badge>}
                 {intraday.enabled === false && <Badge variant="secondary">döngü kapalı (ENABLED=false)</Badge>}
                 {intraday.ok === null && (
-                  <Olculemedi kisa="tüketici hiç kurulmadı" neden="`intraday.ok` null: seans-içi tüketici bu süreçte hiç kurulmamış — arıza DEĞİL, üçüncü hâl." />
+                  <Olculemedi
+                    kisa="tüketici hiç kurulmadı"
+                    neden="Seans-içi izleyici bu süreçte hiç kurulmamış — arıza değil, üçüncü hâl"
+                    teknik="`intraday.ok` null"
+                  />
                 )}
               </div>
 
@@ -244,7 +267,8 @@ export function SeansIciEmir({
                 {intraday.akis_boslugu === null || intraday.akis_boslugu === undefined ? (
                   <Olculemedi
                     kisa="kanca hiç koşmadı"
-                    neden="`intraday.akis_boslugu` null — zamanlayıcı kancası (scheduler._intraday_gap_check) bu süreçte hiç koşmadı. 'Boşluk yok' DEĞİL, 'bakılmadı'."
+                    neden="Akış boşluğu hiç ölçülmedi — 'boşluk yok' değil, 'bakılmadı'"
+                    teknik="`intraday.akis_boslugu` null — zamanlayıcı kancası (scheduler._intraday_gap_check) bu süreçte hiç koşmadı"
                   />
                 ) : (
                   <code className="text-[11px]">{JSON.stringify(intraday.akis_boslugu)}</code>
@@ -267,8 +291,13 @@ export function SeansIciEmir({
               kisa="gölge bloğu yok"
               neden={
                 intraday === undefined
-                  ? "/api/diagnostics gövdesinde `intraday` bloğu HİÇ yok — gölge defteri de onun içinde yaşıyor, ayrı bir kaynağı yok."
-                  : "`/api/diagnostics.intraday.shadow` gövdede yok — gölge defterinin özeti bu turda derlenmedi."
+                  ? "Seans-içi teşhis bloğu hiç gelmedi — denemeye alınmış kararların kaydı da onun içinde yaşıyor, ayrı bir kaynağı yok."
+                  : "Denemeye alınmış kararların özeti bu turda derlenmedi."
+              }
+              teknik={
+                intraday === undefined
+                  ? "/api/diagnostics gövdesinde `intraday` bloğu HİÇ yok"
+                  : "`/api/diagnostics.intraday.shadow` gövdede yok"
               }
             />
           ) : (
@@ -285,7 +314,11 @@ export function SeansIciEmir({
                 <Sayac ad="Toplam" n={intraday.shadow.total} not="Defterin ömür boyu satır sayısı" />
               </div>
               {intraday.shadow.vs_eod === null && (
-                <Olculemedi kisa="EOD kıyası yok" neden="`shadow.vs_eod` null — gölge kararının EOD dolumuyla farkı bu turda ölçülmedi." />
+                <Olculemedi
+                  kisa="EOD kıyası yok"
+                  neden="Denemeye alınmış kararın gün sonu dolumuyla farkı bu turda ölçülmedi"
+                  teknik="`shadow.vs_eod` null"
+                />
               )}
             </>
           )}
@@ -410,7 +443,8 @@ export function SeansIciEmir({
                 Satır tavanı ve API penceresi{" "}
                 <Olculemedi
                   kisa="ölçülemedi"
-                  neden="`open_orders_kirpma` yok: liste okunamadığında kırpma muhasebesi de üretilmez (olmayan listenin muhasebesi olmaz). Tavan sayısı UYDURULMAZ."
+                  neden="Satır tavanı ve sorgu penceresi ölçülemedi — liste okunamadığında kırpma muhasebesi de üretilmez. Tavan sayısı uydurulmaz"
+                  teknik="`open_orders_kirpma` gövdede yok"
                 />
                 . Salt okuma.
               </>
@@ -439,7 +473,8 @@ export function SeansIciEmir({
               {kirpma.pencere_doygun === undefined ? (
                 <Olculemedi
                   kisa="pencere doygunluğu ölçülemedi"
-                  neden="`open_orders_kirpma.pencere_doygun` gövdede yok — pencerenin dolup dolmadığı bilinmiyor, 'dolmadı' diye saymak uydurma olurdu."
+                  neden="Sorgu penceresinin dolup dolmadığı bildirilmedi — 'dolmadı' diye saymak uydurma olurdu"
+                  teknik="`open_orders_kirpma.pencere_doygun` gövdede yok"
                 />
               ) : kirpma.pencere_doygun ? (
                 <p className="text-destructive">
@@ -492,17 +527,45 @@ export function SeansIciEmir({
                     const lm = sayi(o.limit);
                     return (
                       <TableRow key={`${o.symbol ?? "?"}-${i}`}>
-                        <TableCell className="font-medium">{o.symbol ?? <Olculemedi kisa="sembolsüz" neden="Emir satırında `symbol` yok." />}</TableCell>
+                        <TableCell className="font-medium">
+                          {o.symbol ?? (
+                            <Olculemedi
+                              kisa="sembolsüz"
+                              neden="Bu emir hangi hisseye ait, bildirilmemiş"
+                              teknik="emir satırında `symbol` yok"
+                            />
+                          )}
+                        </TableCell>
                         <TableCell className="text-sm">{o.side ?? "—"}</TableCell>
                         <TableCell className="text-sm">{o.type ?? "—"}</TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {q === null ? <Olculemedi neden="Emrin `qty` alanı sayıya çevrilemedi." /> : adetBicim(q)}
+                          {q === null ? (
+                            <Olculemedi neden="Emrin adedi okunamadı" teknik="`qty` alanı sayıya çevrilemedi" />
+                          ) : (
+                            adetBicim(q)
+                          )}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {st === null ? <Olculemedi kisa="stop yok" neden="Bu emir türü stop fiyatı taşımıyor (`stop_price` boş)." /> : para(st)}
+                          {st === null ? (
+                            <Olculemedi
+                              kisa="stop yok"
+                              neden="Bu emir türü stop fiyatı taşımıyor"
+                              teknik="`stop_price` boş"
+                            />
+                          ) : (
+                            para(st)
+                          )}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {lm === null ? <Olculemedi kisa="limit yok" neden="Bu emir türü limit fiyatı taşımıyor (`limit_price` boş)." /> : para(lm)}
+                          {lm === null ? (
+                            <Olculemedi
+                              kisa="limit yok"
+                              neden="Bu emir türü limit fiyatı taşımıyor"
+                              teknik="`limit_price` boş"
+                            />
+                          ) : (
+                            para(lm)
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">{o.status ?? "durumsuz"}</Badge>

@@ -97,7 +97,7 @@ export function SeansTakvimi({
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
       <div className="shrink-0">
         {kosuTarihleri.length === 0 && donguTarihleri.length === 0 ? (
-          <Olculemedi neden="ne koşu defterinde ne döngü olaylarında ayrıştırılabilir bir gün damgası var — takvim çizilmedi" />
+          <Olculemedi neden="Kayıtlarda okunabilir bir gün damgası yok — takvim çizilmedi" teknik="ne koşu defterinde ne döngü olaylarında ayrıştırılabilir bir gün damgası var" />
         ) : (
           <>
             <Calendar
@@ -174,25 +174,25 @@ export function SeansTakvimi({
                 satirlar.map((c, i) => (
                   <TableRow key={`${c.date ?? c.ts ?? "?"}#${i}`}>
                     <TableCell className="whitespace-nowrap text-xs tabular-nums">
-                      {c.date ?? <Olculemedi neden="olay `date` taşımıyor" kisa />}
+                      {c.date ?? <Olculemedi neden="Seans tarihi kaydedilmemiş" teknik="olay `date` taşımıyor" kisa />}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-xs tabular-nums">
-                      {zamanMetni(c.ts) ?? <Olculemedi neden="olay `ts` taşımıyor" kisa />}
+                      {zamanMetni(c.ts) ?? <Olculemedi neden="Yazılma zamanı kaydedilmemiş" teknik="olay `ts` taşımıyor" kisa />}
                     </TableCell>
                     <TableCell className="text-xs">
-                      {c.regime ?? <Olculemedi neden="olay `regime` taşımıyor" kisa />}
+                      {c.regime ?? <Olculemedi neden="Piyasa rejimi kaydedilmemiş" teknik="olay `regime` taşımıyor" kisa />}
                     </TableCell>
                     <TableCell>
-                      <Deger deger={c.candidates} neden="`candidates` yazılmamış" />
+                      <Deger deger={c.candidates} neden="Aday sayısı kaydedilmemiş" teknik="`candidates` yazılmamış" />
                     </TableCell>
                     <TableCell>
-                      <Deger deger={c.plans} neden="`plans` yazılmamış" />
+                      <Deger deger={c.plans} neden="Plan sayısı kaydedilmemiş" teknik="`plans` yazılmamış" />
                     </TableCell>
                     <TableCell>
-                      <Deger deger={c.armed} neden="`armed` yazılmamış" />
+                      <Deger deger={c.armed} neden="İşleme hazır plan sayısı kaydedilmemiş" teknik="`armed` yazılmamış" />
                     </TableCell>
                     <TableCell>
-                      <Deger deger={c.open_positions} neden="`open_positions` yazılmamış" />
+                      <Deger deger={c.open_positions} neden="Açık pozisyon sayısı kaydedilmemiş" teknik="`open_positions` yazılmamış" />
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">

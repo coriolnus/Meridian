@@ -199,7 +199,11 @@ export function OnayKuyrugu() {
             {ozet.inboxNeden === null ? ozet.isIsteyen : <Olculemedi neden={ozet.inboxNeden} kisa />}
           </KpiKutu>
           <KpiKutu etiket="Sunucunun sayımı" altMetin="/api/today `inbox_count` — kenar çubuğu rozetinin kaynağı">
-            <Deger deger={sunucuSayisi} neden="/api/today `inbox_count` döndürmedi" />
+            <Deger
+              deger={sunucuSayisi}
+              neden="Sunucunun kendi sayımı bildirilmedi"
+              teknik="/api/today `inbox_count` döndürmedi"
+            />
           </KpiKutu>
           <KpiKutu
             etiket="Kayıt olarak duran"
@@ -306,7 +310,7 @@ export function OnayKuyrugu() {
           </div>
           <div>
             <Satir etiket="Ucun notu">
-              {onay.veri?.note ?? <Olculemedi neden="/api/approvals `note` döndürmedi" kisa />}
+              {onay.veri?.note ?? <Olculemedi neden="Kuyruk ucunun notu bildirilmedi" teknik="/api/approvals `note` döndürmedi" kisa />}
             </Satir>
             <Satir etiket="Kırpma">
               <span className="text-xs">

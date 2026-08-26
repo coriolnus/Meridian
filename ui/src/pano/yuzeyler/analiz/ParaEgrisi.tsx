@@ -105,7 +105,7 @@ function BeyanSatiri({ etiket, children }: { etiket: string; children: ReactNode
 function EgriBeyaniBlogu({ beyani, atlanan }: { beyani: EgriBeyani | undefined; atlanan: number }) {
   if (!beyani) {
     return (
-      <Olculemedi neden="/api/performance yükünde equity_curve_beyani bloğu yok — serinin penceresi, boşlukları ve tohum sınırı bu turda ölçülemedi." />
+      <Olculemedi neden="Serinin penceresi, delikleri ve başlangıç sınırı bu turda ölçülemedi" teknik="/api/performance yükünde equity_curve_beyani bloğu yok" />
     );
   }
   const ilk = beyani.ilk ?? null;
@@ -117,30 +117,30 @@ function EgriBeyaniBlogu({ beyani, atlanan }: { beyani: EgriBeyani | undefined; 
     <div className="flex flex-col gap-4">
       <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-6">
         <BeyanSatiri etiket="Nokta">
-          <Deger metin={sayi(beyani.n_nokta, 0)} neden="beyanda n_nokta yok — serinin boyu okunamadı." />
+          <Deger metin={sayi(beyani.n_nokta, 0)} neden="Serinin kaç noktadan oluştuğu bildirilmedi" teknik="beyanda n_nokta yok" />
         </BeyanSatiri>
         <BeyanSatiri etiket="İlk nokta">
           <Deger
             metin={ilk ? `${ilk[0]} · ${para(ilk[1]) ?? "sermaye okunamadı"}` : null}
-            neden="beyanda `ilk` null — seride çözülebilen tek bir [tarih, sermaye] noktası bile yok."
+            neden="Seride okunabilen tek bir nokta bile yok" teknik="beyanda `ilk` null — çözülebilen [tarih, sermaye] çifti yok"
           />
         </BeyanSatiri>
         <BeyanSatiri etiket="Son nokta">
           <Deger
             metin={son ? `${son[0]} · ${para(son[1]) ?? "sermaye okunamadı"}` : null}
-            neden="beyanda `son` null — seride çözülebilen tek bir [tarih, sermaye] noktası bile yok."
+            neden="Seride okunabilen tek bir nokta bile yok" teknik="beyanda `son` null — çözülebilen [tarih, sermaye] çifti yok"
           />
         </BeyanSatiri>
         <BeyanSatiri etiket="Kitabın son seansı">
           <Deger
             metin={typeof beyani.son_seans === "string" ? beyani.son_seans : null}
-            neden="portfolio.last_date okunamadı — eğrinin geride olup olmadığı KIYASLANAMADI."
+            neden="Eğrinin geride kalıp kalmadığı kıyaslanamadı" teknik="portfolio.last_date okunamadı"
           />
         </BeyanSatiri>
         <BeyanSatiri etiket="Gecikme">
           <Deger
             metin={typeof beyani.gecikme_gun === "number" ? `${sayi(beyani.gecikme_gun, 0)} gün` : null}
-            neden="gecikme_gun null — eğrinin son noktası ile kitabın son seansı kıyaslanamadı (biri yok ya da biçimsiz). 0 gün DEĞİL."
+            neden="Eğrinin son noktası kitabın son seansıyla kıyaslanamadı — sıfır gün değil" teknik="gecikme_gun null (biri yok ya da biçimsiz)"
           />
         </BeyanSatiri>
         <BeyanSatiri etiket="Boşluk">
@@ -150,7 +150,7 @@ function EgriBeyaniBlogu({ beyani, atlanan }: { beyani: EgriBeyani | undefined; 
                 ? `${sayi(beyani.n_bosluk, 0)}${enBuyuk?.gun === undefined ? "" : ` · en büyük ${enBuyuk.gun} gün`}`
                 : null
             }
-            neden="beyanda n_bosluk yok — takvim delikleri bu turda taranmadı."
+            neden="Takvim delikleri bu turda taranmadı" teknik="beyanda n_bosluk yok"
           />
         </BeyanSatiri>
       </dl>
@@ -242,7 +242,8 @@ function EgriGovdesi({ veri }: { veri: PerformansGovdesi }) {
         <CardContent className="flex flex-col gap-6">
           {noktalar.length === 0 ? (
             <Olculemedi
-              neden={`equity_curve.points içinde çözülebilen tek bir [tarih, sermaye] noktası yok (${atlanan} kayıt çözülemedi). Eğri çizilemez — boş bir eksen çizmek "sermaye sıfır" der ve bu yanlış olurdu.`}
+              neden={`Seride çizilebilecek tek bir nokta yok — ${atlanan} kayıt okunamadı`}
+              teknik={'equity_curve.points içinde çözülebilen [tarih, sermaye] çifti yok; boş bir eksen çizmek "sermaye sıfır" derdi'}
             />
           ) : (
             <>
@@ -405,7 +406,7 @@ function EgriGovdesi({ veri }: { veri: PerformansGovdesi }) {
                     <span className="font-medium text-foreground tabular-nums">
                       <Deger
                         metin={enKotuDusus === null ? null : `${sayi(enKotuDusus, 2) ?? ""}%`}
-                        neden="serinin tepesi hiçbir noktada pozitif olmadı — tepe-altı yüzde tanımsız."
+                        neden="Serinin tepesi hiç pozitif olmadı — tepe-altı yüzde tanımsız" teknik="tepe ≤ 0 olduğu için (deger/tepe - 1) hesabı tanımsız"
                       />
                     </span>
                   </span>
@@ -414,7 +415,8 @@ function EgriGovdesi({ veri }: { veri: PerformansGovdesi }) {
                     <span className="font-medium text-foreground tabular-nums">
                       <Deger
                         metin={sd?.max_drawdown === undefined ? null : yuzde(sd.max_drawdown, 2)}
-                        neden={
+                        neden="En büyük düşüş hesaplanmadı"
+                        teknik={
                           typeof sd?.reason === "string"
                             ? `${sd.reason} — bu eşiğin altında düşüş hiç hesaplanmıyor.`
                             : "score_detail max_drawdown alanını basmadı."
@@ -466,7 +468,8 @@ function RiskKartlari({ veri }: { veri: PerformansGovdesi }) {
           <div className="text-2xl leading-none tracking-tight tabular-nums">
             <Deger
               metin={typeof sd?.score === "number" ? sayi(sd.score, 3) : null}
-              neden={
+              neden="Bileşik skor hesaplanmadı — sıfır değil"
+              teknik={
                 typeof sd?.reason === "string"
                   ? `${sd.reason} — kapı örneklem eşiğinin altında skoru TANIMSIZ bırakır (0 değil).`
                   : "score_detail.score gelmedi."
@@ -490,7 +493,8 @@ function RiskKartlari({ veri }: { veri: PerformansGovdesi }) {
           <div className={`text-2xl leading-none tracking-tight tabular-nums ${pnlRengi(sd?.total_return)}`}>
             <Deger
               metin={sd?.total_return === undefined ? null : yuzde(sd.total_return, 2, true)}
-              neden={
+              neden="Toplam getiri hesaplanmadı"
+              teknik={
                 typeof sd?.reason === "string"
                   ? `${sd.reason} — bu eşiğin altında getiri hiç hesaplanmıyor.`
                   : "score_detail.total_return gelmedi."
@@ -501,7 +505,7 @@ function RiskKartlari({ veri }: { veri: PerformansGovdesi }) {
             30 güne ölçeklenmiş:{" "}
             <Deger
               metin={sd?.realized_30d === undefined ? null : yuzde(sd.realized_30d, 2, true)}
-              neden="realized_30d gelmedi — yıllıklandırma yapılamadı."
+              neden="30 güne ölçeklenmiş getiri hesaplanamadı" teknik="realized_30d gelmedi"
             />
           </p>
         </CardContent>
@@ -515,7 +519,7 @@ function RiskKartlari({ veri }: { veri: PerformansGovdesi }) {
           <div className="text-2xl leading-none tracking-tight tabular-nums">
             <Deger
               metin={kelly === null ? null : yuzde(kelly.half_kelly, 1)}
-              neden="tail/kelly eşiği: defterde 12'den az işlem var ya da defter tek yönlü (yalnız kazanç ya da yalnız kayıp) — oran tanımsız, sıfır DEĞİL."
+              neden="Defterde yeterli işlem yok — oran tanımsız, sıfır değil" teknik="tail/kelly eşiği: 12'den az işlem ya da tek yönlü defter (yalnız kazanç ya da yalnız kayıp)"
             />
           </div>
           <p className="text-muted-foreground text-xs leading-snug">
@@ -534,7 +538,7 @@ function RiskKartlari({ veri }: { veri: PerformansGovdesi }) {
           <div className="text-2xl leading-none tracking-tight text-red-600 tabular-nums dark:text-red-400">
             <Deger
               metin={kuyruk === null ? null : rKati(kuyruk.cvar_r === undefined ? undefined : -kuyruk.cvar_r)}
-              neden="tail_risk null — defterde 12'den (TAIL_MIN_SAMPLE) az r_multiple var; blok-bootstrap'ın dürüstçe söyleyeceği bir şey yok."
+              neden="Defterde yeterli işlem yok — kuyruk kaybı hesaplanamadı" teknik="tail_risk null — 12'den (TAIL_MIN_SAMPLE) az r_multiple var; blok-bootstrap'ın dürüstçe söyleyeceği bir şey yok"
             />
           </div>
           <p className="text-muted-foreground text-xs leading-snug">

@@ -63,7 +63,10 @@ export function KaynakDagilimi({ hipotezler }: { hipotezler: readonly Hipotez[] 
       </CardHeader>
       <CardContent>
         {satirlar.length === 0 ? (
-          <Olculemedi neden="defterdeki hiçbir satırda `source` alanı yok — kim yazdığı ölçülemedi" />
+          <Olculemedi
+            neden="Önerileri kimin yazdığı hiçbir kayıtta belirtilmemiş"
+            teknik="defterdeki hiçbir satırda `source` alanı yok"
+          />
         ) : (
           <div className="flex flex-col gap-3">
             <ChartContainer config={YAPI} className="aspect-auto h-44 w-full">
@@ -112,7 +115,10 @@ export function HukumDagilimi({ hipotezler }: { hipotezler: readonly Hipotez[] }
       </CardHeader>
       <CardContent>
         {satirlar.length === 0 ? (
-          <Olculemedi neden="defterdeki hiçbir satırda `status` alanı yok — hüküm ölçülemedi" />
+          <Olculemedi
+            neden="Hiçbir öneri için verilen karar kaydedilmemiş"
+            teknik="defterdeki hiçbir satırda `status` alanı yok"
+          />
         ) : (
           <div className="flex flex-col gap-3">
             <ChartContainer config={YAPI} className="aspect-auto h-44 w-full">
@@ -223,7 +229,8 @@ export function KalibrasyonKarti({
           <Olcut
             etiket="sonuçlanan"
             deger={n === null ? null : `${bicimSayi(n)} / ${bicimSayi(defterN)}`}
-            neden="`/api/agent.calibration` gövdesinde `n` alanı yok"
+            neden="Kaç önerinin sonucu ölçüldüğü kaydedilmemiş"
+            teknik="`/api/agent.calibration` gövdesinde `n` alanı yok"
           />
           <Olcut
             etiket="Brier"
@@ -239,10 +246,8 @@ export function KalibrasyonKarti({
 
         {noktalar.length === 0 ? (
           <Olculemedi
-            neden={
-              not ??
-              "`calibration_scatter` boş — hiçbir hipoteze `realized_delta` yazılmamış; çizilecek nokta yok"
-            }
+            neden={not ?? "Hiçbir önerinin sonucu henüz yazılmamış — çizilecek nokta yok"}
+            teknik="`calibration_scatter` boş — hiçbir hipoteze `realized_delta` yazılmamış"
           />
         ) : (
           <div className="flex flex-col gap-2">
@@ -321,13 +326,18 @@ export function KalibrasyonKarti({
   );
 }
 
-function Olcut({ etiket, deger, neden }: { etiket: string; deger: string | null; neden: string }) {
+function Olcut({
+  etiket,
+  deger,
+  neden,
+  teknik,
+}: { etiket: string; deger: string | null; neden: string; teknik?: string }) {
   return (
     <div className="rounded-lg border bg-muted/20 px-3 py-2">
       <p className="text-muted-foreground text-xs">{etiket}</p>
       {deger === null ? (
         <div className="mt-0.5">
-          <Olculemedi neden={neden} />
+          <Olculemedi neden={neden} teknik={teknik} />
         </div>
       ) : (
         <p className="mt-0.5 font-medium text-lg tabular-nums leading-none">{deger}</p>

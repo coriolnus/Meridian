@@ -94,7 +94,12 @@ export function Hermes({ hermes, teshis }: { hermes: Durum<HermesGovdesi>; teshi
 
 function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
   if (!s) {
-    return <Olculemedi neden="/api/hermes yükünde `status` bloğu YOK — yansıma hattının durumu bu turda hiç ölçülmedi." />;
+    return (
+      <Olculemedi
+        neden="Değerlendirme hattının durumu bu turda hiç ölçülmedi"
+        teknik="/api/hermes yükünde `status` bloğu YOK"
+      />
+    );
   }
   const pollYasi = yas(s.last_poll);
   const poll = typeof s.poll_seconds === "number" ? s.poll_seconds : null;
@@ -109,7 +114,10 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
           deger={s.active ?? null}
           evet="hat CANLI"
           hayir="hat DURMUŞ"
-          neden={s.active_neden ?? "`status.active` null — kalp atışı okunamadı; 'durdu' demek ölçülmemiş bir iddia olurdu."}
+          neden={
+            s.active_neden ??
+            "Hattın canlı olup olmadığı okunamadı; 'durdu' demek ölçülmemiş bir iddia olurdu"
+          }
         />
         <Badge variant="outline">{s.surec_ici ? "süreç içi iplik" : "ayrı birim (systemd)"}</Badge>
         {s.reflecting === true ? (
@@ -121,7 +129,7 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
           deger={s.brain_degraded ?? null}
           evet="deterministik yola düştü"
           hayir="LLM beyni aktif"
-          neden="`brain_degraded` yükte yok — beynin bozunup bozunmadığı ölçülemedi."
+          neden="Beynin bozunup bozunmadığı bildirilmedi"
           evetIyi={false}
         />
       </div>
@@ -136,30 +144,41 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
                   ? null
                   : `${pollYasi.metin}${anMetni(s.last_poll) ? ` · ${anMetni(s.last_poll)}` : ""}`
               }
-              neden="`last_poll` damgası yok — döngü bu süreçte hiç yoklama yapmamış."
+              neden="Otomatik döngü bu süreçte hiç yoklama yapmamış"
+              teknik="`last_poll` damgası yok"
               className="text-xs"
             />
           </Satir>
           <Satir etiket="Yoklama periyodu">
-            <Deger metin={poll === null ? null : `${sayi(poll, 0)} sn`} neden="`poll_seconds` yükte yok." />
+            <Deger
+              metin={poll === null ? null : `${sayi(poll, 0)} sn`}
+              neden="Yoklama periyodu bildirilmedi"
+              teknik="`poll_seconds` yükte yok"
+            />
           </Satir>
           <Satir etiket="Yoklama gecikmesi (periyodun katı)">
             <Deger
               metin={pollOrani === null ? null : `${sayi(pollOrani, 1)}×`}
-              neden="damga ya da periyot eksik — gecikme oranı ölçülemedi. Bayatlık eşiği sunucunun kanunudur, panoda yeniden tanımlanmaz."
+              neden="Yoklama gecikmesi hesaplanamadı — damga ya da periyot eksik"
+              teknik="bayatlık eşiği sunucunun kanunudur, panoda yeniden tanımlanmaz"
             />
           </Satir>
           <Satir etiket="Arama durumu">
             <Deger
               metin={s.search_durumu ?? null}
-              neden="`search_durumu` yükte yok — koordinat-inişi aramasının durumu ölçülemedi (üç değerli: kosuyor/yok/olculemedi)."
+              neden="Aramanın durumu bildirilmedi"
+              teknik="`search_durumu` yükte yok — koordinat-inişi araması, üç değerli: kosuyor/yok/olculemedi"
               className="text-xs"
             />
           </Satir>
         </div>
         <div className="flex flex-col">
           <Satir etiket="Toplam yansıma">
-            <Deger metin={sayi(s.reflections, 0)} neden="`reflections` sayacı yükte yok." />
+            <Deger
+              metin={sayi(s.reflections, 0)}
+              neden="Toplam değerlendirme sayısı bildirilmedi"
+              teknik="`reflections` sayacı yükte yok"
+            />
           </Satir>
           <Satir etiket="Son yansıma">
             <Deger
@@ -167,20 +186,32 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
                 const y = yas(s.last_reflection);
                 return y === null ? null : y.metin;
               })()}
-              neden="`last_reflection` damgası yok — hiç yansıma koşmamış (az önce koştu DEĞİL)."
+              neden="Henüz hiç değerlendirme koşmamış"
+              teknik="`last_reflection` damgası yok — 'az önce koştu' DEĞİL"
               className="text-xs"
             />
           </Satir>
           <Satir etiket="Son sonuç">
-            <Deger metin={s.last_result ?? null} neden="`last_result` yok — son yansımanın kolu kaydedilmemiş." className="text-xs" />
+            <Deger
+              metin={s.last_result ?? null}
+              neden="Son değerlendirmenin sonucu kaydedilmemiş"
+              teknik="`last_result` yok — son yansımanın kolu"
+              className="text-xs"
+            />
           </Satir>
           <Satir etiket="Son değişken">
-            <Deger metin={s.last_variable ?? null} neden="`last_variable` yok — son yansımanın dokunduğu parametre kaydedilmemiş." className="text-xs" />
+            <Deger
+              metin={s.last_variable ?? null}
+              neden="Son değerlendirmenin dokunduğu ayar kaydedilmemiş"
+              teknik="`last_variable` yok — son yansımanın dokunduğu parametre"
+              className="text-xs"
+            />
           </Satir>
           <Satir etiket="Beyin / model">
             <Deger
               metin={s.brain || s.model ? `${s.brain ?? "?"} · ${s.model ?? "model adı yok"}` : null}
-              neden="`brain`/`model` yükte yok — hangi beynin koştuğu ölçülemedi."
+              neden="Hangi beynin koştuğu bildirilmedi"
+              teknik="`brain`/`model` yükte yok"
               className="text-xs"
             />
           </Satir>
@@ -208,18 +239,20 @@ function CubuklulSatir({
   payda,
   birim,
   neden,
+  teknik,
 }: {
   etiket: string;
   pay: number | null;
   payda: number | null;
   birim: string;
   neden: string;
+  teknik?: string;
 }) {
   if (pay === null || payda === null || payda <= 0) {
     return (
       <div className="flex flex-col gap-1">
         <span className="text-muted-foreground text-xs">{etiket}</span>
-        <OlculemediHucre neden={neden} />
+        <OlculemediHucre neden={neden} teknik={teknik} />
       </div>
     );
   }
@@ -250,45 +283,54 @@ function GeriSayim({ s }: { s: HermesDurumu | undefined }) {
           pay={typeof s.trades_since_last_reflection === "number" ? s.trades_since_last_reflection : null}
           payda={typeof s.reflection_every === "number" ? s.reflection_every : null}
           birim="işlem"
-          neden="`trades_since_last_reflection` ya da `reflection_every` yükte yok — geri sayım ölçülemedi. Panoda formül yeniden yazılmaz."
+          neden="Yeni kapanan işlem sayacı okunamadı"
+          teknik="`trades_since_last_reflection` ya da `reflection_every` yükte yok — panoda formül yeniden yazılmaz"
         />
         <CubuklulSatir
           etiket="Ufuk · işlem bacağı"
           pay={typeof h?.trades === "number" ? h.trades : null}
           payda={typeof h?.trades_needed === "number" ? h.trades_needed : null}
           birim="işlem"
-          neden="`horizon.trades` / `trades_needed` yok — ufkun işlem bacağı ölçülemedi."
+          neden="Ufkun işlem bacağı ölçülemedi"
+          teknik="`horizon.trades` / `trades_needed` yok"
         />
         <CubuklulSatir
           etiket="Ufuk · takvim bacağı"
           pay={typeof h?.span_days === "number" ? h.span_days : null}
           payda={typeof h?.min_days === "number" ? h.min_days : null}
           birim="gün"
-          neden="`horizon.span_days` / `min_days` yok — ufkun takvim bacağı ölçülemedi."
+          neden="Ufkun takvim bacağı ölçülemedi"
+          teknik="`horizon.span_days` / `min_days` yok"
         />
       </div>
       <div className="flex flex-col">
         <Satir etiket="Kalan işlem (uçtan)">
           <Deger
             metin={sayi(s.trades_until_next, 0)}
-            neden="`trades_until_next` yükte yok — geri sayım sunucuda hesaplanmamış; pano kendi formülünü YAZMAZ."
+            neden="Sonraki değerlendirmeye kalan işlem sunucuda hesaplanmamış"
+            teknik="`trades_until_next` yükte yok — pano kendi formülünü YAZMAZ"
           />
         </Satir>
         <Satir etiket="Kapanmış işlem (defterin boyu)">
-          <Deger metin={sayi(s.closed_trades, 0)} neden="`closed_trades` yükte yok." />
+          <Deger
+            metin={sayi(s.closed_trades, 0)}
+            neden="Kapanmış işlem sayısı bildirilmedi"
+            teknik="`closed_trades` yükte yok"
+          />
         </Satir>
         <Satir etiket="Ufuk hazır mı?">
           <UcDegerli
             deger={s.horizon_ready ?? h?.ready ?? null}
             evet="hazır"
             hayir="henüz değil"
-            neden="`horizon_ready` yükte yok — ufkun hükmü ölçülemedi."
+            neden="Ufkun hazır olup olmadığı bildirilmedi"
           />
         </Satir>
         <Satir etiket="Ufkun ölçüldüğü rejim">
           <Deger
             metin={s.horizon_regime ?? h?.regime ?? null}
-            neden="rejim null — ufuk rejim-bağımsız ölçülüyor (regime.json geçersiz/boş olabilir); bu bir arıza DEĞİL."
+            neden="Ufuk piyasa rejiminden bağımsız ölçülüyor — bu bir arıza değil"
+            teknik="rejim null; regime.json geçersiz/boş olabilir"
             className="text-xs"
           />
         </Satir>
@@ -307,10 +349,14 @@ function BeyinZinciri({ s }: { s: HermesDurumu | undefined }) {
       aciklama="Zincirdeki AD sayısı yedek sayısı DEĞİLDİR: iki ad aynı model kimliğine gidiyorsa tek uç vardır."
     >
       {!z ? (
-        <Olculemedi neden="`status.brain_chain` yükte yok — zincirin yedekliliği bu turda hiç ölçülmedi." />
+        <Olculemedi
+          neden="Beyin zincirinin yedekliliği bu turda hiç ölçülmedi"
+          teknik="`status.brain_chain` yükte yok"
+        />
       ) : z.error ? (
         <Olculemedi
-          neden={`zincir ölçümünün KENDİSİ düştü (${z.error}) — bu 'hermes hiç koşmadı' DEĞİL, denetimin bozulduğu hâldir.`}
+          neden="Zincir denetiminin kendisi düştü — bu 'hiç koşmadı' değil, ölçümün bozulduğu hâl"
+          teknik={`zincir ölçümünün KENDİSİ düştü (${z.error}) — bu 'hermes hiç koşmadı' DEĞİL`}
         />
       ) : (
         <>
@@ -335,7 +381,8 @@ function BeyinZinciri({ s }: { s: HermesDurumu | undefined }) {
                       <TableCell className="py-2.5 text-muted-foreground text-xs">
                         <Deger
                           metin={z.models?.[ad] ?? null}
-                          neden="bu beynin model kimliği ölçülemedi — hangi uca gittiği bilinmiyor."
+                          neden="Bu beynin hangi modele gittiği bilinmiyor"
+                          teknik="model kimliği ölçülemedi"
                         />
                       </TableCell>
                       <TableCell className="py-2.5">
@@ -363,8 +410,9 @@ function BeyinZinciri({ s }: { s: HermesDurumu | undefined }) {
                 <OlculemediHucre
                   neden={
                     z.independent_upstreams_reason ??
-                    "`independent_upstreams` null ve uç nedenini yazmadı — bağımsız uç sayısı UYDURULMAZ."
+                    "Kaç bağımsız uç olduğu bildirilmedi ve nedeni de yazılmadı — bu sayı uydurulmaz"
                   }
+                  teknik="`independent_upstreams` null"
                 />
               ) : (
                 <span className="tabular-nums">{sayi(z.independent_upstreams, 0)}</span>
@@ -380,7 +428,12 @@ function BeyinZinciri({ s }: { s: HermesDurumu | undefined }) {
               )}
             </Satir>
             <Satir etiket="Yerel ajan kipi">
-              <Deger metin={z.nous_mode ?? null} neden="`nous_mode` yükte yok." className="text-xs" />
+              <Deger
+                metin={z.nous_mode ?? null}
+                neden="Yerel ajanın hangi kipte koştuğu bildirilmedi"
+                teknik="`nous_mode` yükte yok"
+                className="text-xs"
+              />
             </Satir>
           </div>
           {z.independent_upstreams_reason ? <Beyan>{z.independent_upstreams_reason}</Beyan> : null}
@@ -399,7 +452,10 @@ function Dolgu({ kuyruk }: { kuyruk: DolguKuyrugu | null }) {
       aciklama="Kalibrasyonu besleyen kuyruk. Dolgu YALNIZ sonucu BİLİNEN planlara dokunabilir — o yüzden 'görüşsüz toplam' her zaman daha büyüktür ve bu bir arıza değildir."
     >
       {!kuyruk ? (
-        <Olculemedi neden="`learning.besleme.dolgu_kuyrugu` null — kuyruk bu turda okunamadı (sunucu uyarısı: learning_scorecard_backfill_failed)." />
+        <Olculemedi
+          neden="Geri dolum kuyruğu bu turda okunamadı"
+          teknik="`learning.besleme.dolgu_kuyrugu` null — sunucu uyarısı: learning_scorecard_backfill_failed"
+        />
       ) : (
         <>
           {(() => {
@@ -407,7 +463,10 @@ function Dolgu({ kuyruk }: { kuyruk: DolguKuyrugu | null }) {
             const gorussuz = kuyruk.gorussuz_toplam;
             if (typeof toplam !== "number" || typeof gorussuz !== "number" || toplam <= 0) {
               return (
-                <Olculemedi neden="`n_plan` ya da `gorussuz_toplam` yükte yok — görüş kapsamı ölçülemedi (%100 DEĞİL)." />
+                <Olculemedi
+                  neden="Kaç planın görüşü olduğu ölçülemedi — bu %100 demek değil"
+                  teknik="`n_plan` ya da `gorussuz_toplam` yükte yok"
+                />
               );
             }
             const gorusluOran = (toplam - gorussuz) / toplam;
@@ -426,31 +485,50 @@ function Dolgu({ kuyruk }: { kuyruk: DolguKuyrugu | null }) {
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="flex flex-col">
               <Satir etiket="Dolgulanabilir gün">
-                <Deger metin={sayi(kuyruk.dolgulanabilir_gun, 0)} neden="`dolgulanabilir_gun` yükte yok." />
+                <Deger
+                  metin={sayi(kuyruk.dolgulanabilir_gun, 0)}
+                  neden="Dolgulanabilir gün sayısı bildirilmedi"
+                  teknik="`dolgulanabilir_gun` yükte yok"
+                />
               </Satir>
               <Satir etiket="Dolgulanabilir satır">
-                <Deger metin={sayi(kuyruk.dolgulanabilir_satir, 0)} neden="`dolgulanabilir_satir` yükte yok." />
+                <Deger
+                  metin={sayi(kuyruk.dolgulanabilir_satir, 0)}
+                  neden="Dolgulanabilir satır sayısı bildirilmedi"
+                  teknik="`dolgulanabilir_satir` yükte yok"
+                />
               </Satir>
               <Satir etiket="En eski / en yeni gün">
                 <Deger
                   metin={kuyruk.en_eski && kuyruk.en_yeni ? `${kuyruk.en_eski} → ${kuyruk.en_yeni}` : null}
-                  neden="kuyrukta dolgulanabilir gün yok — aralık tanımsız."
+                  neden="Kuyrukta dolgulanabilir gün yok — tarih aralığı oluşmadı"
+                  teknik="`en_eski`/`en_yeni` yok, aralık tanımsız"
                   className="text-xs"
                 />
               </Satir>
             </div>
             <div className="flex flex-col">
               <Satir etiket="Gece tavanı">
-                <Deger metin={sayi(kuyruk.gece_tavani, 0)} neden="`gece_tavani` yükte yok." />
+                <Deger
+                  metin={sayi(kuyruk.gece_tavani, 0)}
+                  neden="Gecelik tavan bildirilmedi"
+                  teknik="`gece_tavani` yükte yok"
+                />
               </Satir>
               <Satir etiket="Tahmini gece sayısı">
                 <Deger
                   metin={sayi(kuyruk.tahmini_gece, 0)}
-                  neden="tahmin null — kuyruk boş ya da tavan sıfır; 'bu gece biter' DEĞİL."
+                  neden="Kaç gece süreceği tahmin edilemedi — 'bu gece biter' demek değil"
+                  teknik="tahmin null; kuyruk boş ya da tavan sıfır"
                 />
               </Satir>
               <Satir etiket="Tavanın kaynağı">
-                <Deger metin={kuyruk.tavan_kaynagi ?? null} neden="`tavan_kaynagi` yükte yok." className="text-xs" />
+                <Deger
+                  metin={kuyruk.tavan_kaynagi ?? null}
+                  neden="Tavanın nereden geldiği bildirilmedi"
+                  teknik="`tavan_kaynagi` yükte yok"
+                  className="text-xs"
+                />
               </Satir>
             </div>
           </div>
@@ -480,11 +558,17 @@ function HarcamaKutusu({ govde }: { govde: HermesGovdesi }) {
   return (
     <Kutu baslik="Harcama" aciklama="Aylık bütçe ve gece maliyeti. Bu kart LLM harcamasını ölçer — kotayı değil.">
       {!h ? (
-        <Olculemedi neden="/api/hermes yükünde `spend` bloğu YOK — aylık harcama bu turda ölçülemedi ('sıfır harcama' DEĞİL)." />
+        <Olculemedi
+          neden="Aylık harcama bu turda ölçülemedi — 'sıfır harcama' demek değil"
+          teknik="/api/hermes yükünde `spend` bloğu YOK"
+        />
       ) : (
         <>
           {oran === null ? (
-            <Olculemedi neden="`spent_usd` ya da `budget_usd` yükte yok (veya bütçe sıfır) — doluluk oranı ölçülemedi." />
+            <Olculemedi
+              neden="Bütçenin ne kadarının kullanıldığı ölçülemedi"
+              teknik="`spent_usd` ya da `budget_usd` yükte yok (veya bütçe sıfır)"
+            />
           ) : (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-baseline justify-between text-xs">
@@ -499,17 +583,26 @@ function HarcamaKutusu({ govde }: { govde: HermesGovdesi }) {
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="flex flex-col">
               <Satir etiket="Bu ayki çağrı">
-                <Deger metin={sayi(h.calls_this_month, 0)} neden="`calls_this_month` yükte yok." />
+                <Deger
+                  metin={sayi(h.calls_this_month, 0)}
+                  neden="Bu ayki çağrı sayısı bildirilmedi"
+                  teknik="`calls_this_month` yükte yok"
+                />
               </Satir>
               <Satir etiket="Kalan bütçe">
-                <Deger metin={para(h.remaining_usd)} neden="`remaining_usd` yükte yok." />
+                <Deger
+                  metin={para(h.remaining_usd)}
+                  neden="Kalan bütçe bildirilmedi"
+                  teknik="`remaining_usd` yükte yok"
+                />
               </Satir>
             </div>
             <div className="flex flex-col">
               <Satir etiket="Düşünce jetonu">
                 <Deger
                   metin={sayi(h.thought_tokens, 0)}
-                  neden="hiçbir harcama satırı düşünce jetonu taşımıyor — alan null gelir ve bu 0 DEĞİLDİR."
+                  neden="Hiçbir harcama kaydı düşünce jetonu taşımıyor — bu sıfır demek değil"
+                  teknik="`thought_tokens` alanı null gelir, 0 DEĞİLDİR"
                 />
               </Satir>
               <Satir etiket="Bütçe aşıldı mı?">
@@ -517,7 +610,7 @@ function HarcamaKutusu({ govde }: { govde: HermesGovdesi }) {
                   deger={h.over_budget ?? null}
                   evet="AŞILDI"
                   hayir="aşılmadı"
-                  neden="`over_budget` yükte yok — bütçe hükmü ölçülemedi."
+                  neden="Bütçenin aşılıp aşılmadığı bildirilmedi"
                   evetIyi={false}
                 />
               </Satir>
@@ -527,11 +620,20 @@ function HarcamaKutusu({ govde }: { govde: HermesGovdesi }) {
       )}
 
       {d === undefined ? (
-        <Olculemedi neden="`spend_detay` yükte yok — günlük kırılım bu turda hiç üretilmedi." />
+        <Olculemedi
+          neden="Günlük harcama kırılımı bu turda hiç üretilmedi"
+          teknik="`spend_detay` yükte yok"
+        />
       ) : d.var === false ? (
-        <Olculemedi neden={d.neden ?? "`spend_detay.var` false ve uç nedenini yazmadı."} />
+        <Olculemedi
+          neden={d.neden ?? "Günlük harcama kırılımı yok ve nedeni yazılmadı"}
+          teknik="`spend_detay.var` false"
+        />
       ) : cizilebilir.length === 0 ? (
-        <Olculemedi neden={`harcama defterinde ${gunler.length} gün var ama hiçbiri hem \`gun\` hem \`cost_usd\` taşımıyor — günlük eğri çizilemedi.`} />
+        <Olculemedi
+          neden="Günlük harcama eğrisi çizilemedi — kayıtların hiçbiri hem tarih hem tutar taşımıyor"
+          teknik={`harcama defterinde ${gunler.length} gün var ama hiçbiri hem \`gun\` hem \`cost_usd\` taşımıyor`}
+        />
       ) : (
         <>
           <ChartContainer config={HARCAMA_CONFIG} className="aspect-auto h-44 w-full">
@@ -588,7 +690,12 @@ function HarcamaKutusu({ govde }: { govde: HermesGovdesi }) {
 
 function IsinmaSatirlari({ w }: { w: Isinma | undefined }) {
   if (!w) {
-    return <Olculemedi neden="/api/diagnostics yükünde `mlops.warmup` bloğu YOK — ısınma kadansı bu turda ölçülemedi." />;
+    return (
+      <Olculemedi
+        neden="Isınma döngüsünün durumu bu turda ölçülemedi"
+        teknik="/api/diagnostics yükünde `mlops.warmup` bloğu YOK"
+      />
+    );
   }
   return (
     <div className="flex flex-col">
@@ -598,7 +705,8 @@ function IsinmaSatirlari({ w }: { w: Isinma | undefined }) {
             const y = yas(w.last);
             return y === null ? null : `${y.metin}${anMetni(w.last) ? ` · ${anMetni(w.last)}` : ""}`;
           })()}
-          neden="`warmup.last` damgası yok — ısınma hiç koşmamış."
+          neden="Isınma henüz hiç koşmamış"
+          teknik="`warmup.last` damgası yok"
           className="text-xs"
         />
       </Satir>
@@ -607,7 +715,8 @@ function IsinmaSatirlari({ w }: { w: Isinma | undefined }) {
           metin={
             typeof w.ticks === "number" && typeof w.every === "number" ? `${sayi(w.ticks, 0)} / ${sayi(w.every, 0)}` : null
           }
-          neden="`ticks` ya da `every` yükte yok — ısınma sayacı ölçülemedi."
+          neden="Isınma sayacı okunamadı"
+          teknik="`ticks` ya da `every` yükte yok"
         />
       </Satir>
       <Satir etiket="Hiç yoklandı mı?">
@@ -615,12 +724,15 @@ function IsinmaSatirlari({ w }: { w: Isinma | undefined }) {
           deger={w.polled ?? null}
           evet="yoklandı"
           hayir="hiç yoklanmadı"
-          neden="`warmup.polled` yükte yok — yoklama olgusu ölçülemedi."
+          neden="Hiç yoklama yapılıp yapılmadığı bildirilmedi"
         />
       </Satir>
       <Satir etiket="UCB başı (en umutlu adaylar)">
         {(w.ucb_top ?? []).length === 0 ? (
-          <OlculemediHucre neden="`ucb_top` boş — ısınma hiç aday sıralamamış olabilir." />
+          <OlculemediHucre
+            neden="Isınma henüz hiç aday sıralamamış olabilir"
+            teknik="`ucb_top` boş"
+          />
         ) : (
           <span className="text-xs">{(w.ucb_top ?? []).join(", ")}</span>
         )}

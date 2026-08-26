@@ -78,7 +78,10 @@ function Cizelge({ ajan }: { ajan: AjanGovdesi }) {
   if (!r) {
     return (
       <Kutu baslik="Sürüm çizelgesi">
-        <Olculemedi neden="/api/agent yükünde `rollback` bloğu YOK — sürüm sicili bu turda hiç derlenmedi." />
+        <Olculemedi
+          neden="Sürüm geçmişi bu turda hiç derlenmedi"
+          teknik="/api/agent yükünde `rollback` bloğu YOK"
+        />
       </Kutu>
     );
   }
@@ -105,7 +108,10 @@ function Cizelge({ ajan }: { ajan: AjanGovdesi }) {
       </div>
 
       {surumler.length === 0 ? (
-        <Olculemedi neden="`rollback.surumler` boş — scoreboard'da tek bir sürüm kaydı bile yok." />
+        <Olculemedi
+          neden="Tek bir sürüm kaydı bile yok"
+          teknik="`rollback.surumler` boş — karne dosyasında kayıt yok"
+        />
       ) : (
         <div className="overflow-x-auto">
           <Table className="min-w-[58rem]">
@@ -136,25 +142,48 @@ function Cizelge({ ajan }: { ajan: AjanGovdesi }) {
                   </TableCell>
                   <TableCell className="py-2.5 text-muted-foreground tabular-nums">
                     {s.parent === null || s.parent === undefined ? (
-                      <OlculemediHucre neden="ebeveyn damgası yok — bu sürüm bir ship'ten türemediyse (v1 tabanı) normaldir, ama defterden ayırt EDİLEMEZ." />
+                      <OlculemediHucre
+                        neden="Bu sürümün hangi sürümden türediği kaydedilmemiş"
+                        teknik="`parent` yok — ilk sürüm (v1 tabanı) için normaldir, ama kayıttan ayırt edilemez"
+                      />
                     ) : (
                       `v${s.parent}`
                     )}
                   </TableCell>
                   <TableCell className="py-2.5 text-xs">
-                    <Deger metin={s.source ?? null} neden="`source` yazılmamış — sürümün hangi mekanizmadan doğduğu ölçülemedi." />
+                    <Deger
+                      metin={s.source ?? null}
+                      neden="Bu sürümün nasıl doğduğu kaydedilmemiş"
+                      teknik="`source` yazılmamış"
+                    />
                   </TableCell>
                   <TableCell className="py-2.5 text-xs">
-                    <Deger metin={anMetni(s.live_since)} neden="`live_since` damgası yok — yayına giriş anı ölçülemedi." />
+                    <Deger
+                      metin={anMetni(s.live_since)}
+                      neden="Yayına giriş anı kaydedilmemiş"
+                      teknik="`live_since` damgası yok"
+                    />
                   </TableCell>
                   <TableCell className="py-2.5 text-right tabular-nums">
-                    <Deger metin={sayi(s.n_trades, 0)} neden="`n_trades` yazılmamış — bu sürümde kaç işlem kapandığı ölçülemedi." />
+                    <Deger
+                      metin={sayi(s.n_trades, 0)}
+                      neden="Bu sürümde kaç işlem kapandığı bildirilmedi"
+                      teknik="`n_trades` yazılmamış"
+                    />
                   </TableCell>
                   <TableCell className="py-2.5 text-right tabular-nums">
-                    <Deger metin={sayi(s.live_score, 4)} neden="`live_score` yazılmamış — sürümün canlı skoru ölçülemedi (0 DEĞİL)." />
+                    <Deger
+                      metin={sayi(s.live_score, 4)}
+                      neden="Sürümün canlı skoru ölçülemedi — sıfır değil"
+                      teknik="`live_score` yazılmamış"
+                    />
                   </TableCell>
                   <TableCell className="py-2.5 text-right tabular-nums">
-                    <Deger metin={sayi(s.backtest_oos, 4)} neden="`backtest_oos` yazılmamış — kapı skoru bu kayıtta yok." />
+                    <Deger
+                      metin={sayi(s.backtest_oos, 4)}
+                      neden="Geçmiş veri sınavının skoru bu kayıtta yok"
+                      teknik="`backtest_oos` yazılmamış — kapı skoru"
+                    />
                   </TableCell>
                   <TableCell className="py-2.5">
                     <div className="flex flex-wrap gap-1">
@@ -185,7 +214,8 @@ function Cizelge({ ajan }: { ajan: AjanGovdesi }) {
         <Satir etiket="Açık öğrenme döngüsü">
           {r.acik_dongu === null || r.acik_dongu === undefined ? (
             <OlculemediHucre
-              neden={r.acik_dongu_neden ?? "`acik_dongu` okunamadı ve uç nedenini yazmadı."}
+              neden={r.acik_dongu_neden ?? "Açık döngü kaydı okunamadı ve nedeni bildirilmedi"}
+              teknik="`acik_dongu` okunamadı"
             />
           ) : Object.keys(r.acik_dongu).length === 0 ? (
             <span className="text-xs">yok (boş sözlük = açık döngü YOK)</span>
@@ -233,7 +263,10 @@ function Regresyon({ ajan }: { ajan: AjanGovdesi }) {
   if (!g) {
     return (
       <Kutu baslik="Regresyon — neyi düzeltti, neyi bozdu">
-        <Olculemedi neden="/api/agent yükünde `regresyon` bloğu YOK — sürüm kırılımı bu turda hiç hesaplanmadı." />
+        <Olculemedi
+          neden="Sürümler arası karşılaştırma bu turda hiç hesaplanmadı"
+          teknik="/api/agent yükünde `regresyon` bloğu YOK"
+        />
       </Kutu>
     );
   }
@@ -262,7 +295,8 @@ function Regresyon({ ajan }: { ajan: AjanGovdesi }) {
     >
       {noktalar.length === 0 ? (
         <Olculemedi
-          neden={`${surumler.length} sürüm dilimi var ama hiçbiri ortalama R taşımıyor — sürüm başına verim ölçülemedi.`}
+          neden={`${surumler.length} sürüm var ama hiçbirinin ortalama getirisi ölçülemedi`}
+          teknik="hiçbir dilimde `avg_r` sayı değil"
         />
       ) : (
         <ChartContainer config={SURUM_CONFIG} className="aspect-auto h-52 w-full">
@@ -321,7 +355,10 @@ function Regresyon({ ajan }: { ajan: AjanGovdesi }) {
 
       {/* ---- DÜZELTTİ / BOZDU ---- */}
       {!fark ? (
-        <Olculemedi neden="`regresyon.fark` null — karşılaştırma için en az iki sürüm gerekiyor; tek sürümde 'neyi bozdu' sorusunun karşılaştırma tarafı YOKTUR." />
+        <Olculemedi
+          neden="Karşılaştırma için en az iki sürüm gerekiyor — tek sürümde 'neyi bozdu' sorusunun karşılaştırma tarafı yok"
+          teknik="`regresyon.fark` null"
+        />
       ) : (
         <div className="flex flex-col gap-2">
           <p className="font-medium text-sm">
@@ -350,12 +387,16 @@ function Regresyon({ ajan }: { ajan: AjanGovdesi }) {
                     <TableCell className={cn("py-2.5 text-right tabular-nums", pnlRengi(d.delta_r))}>
                       <Deger
                         metin={sayi(d.delta_r, 3, true)}
-                        neden={d.neden ?? "delta ölçülemedi — iki dilimden biri ortalama R taşımıyor."}
+                        neden={d.neden ?? "Fark ölçülemedi — iki sürümden birinin ortalama getirisi yok"}
+                        teknik="iki dilimden biri `avg_r` taşımıyor"
                       />
                     </TableCell>
                     <TableCell className="py-2.5 text-right text-muted-foreground tabular-nums">
                       {d.n_yeni === undefined || d.n_eski === undefined ? (
-                        <OlculemediHucre neden="karşılaştırma dilimlerinden biri yok — payda kurulamadı." />
+                        <OlculemediHucre
+                          neden="Karşılaştırılacak iki sürümden biri eksik"
+                          teknik="`n_yeni` / `n_eski` alanlarından biri yok"
+                        />
                       ) : (
                         `${d.n_yeni} / ${d.n_eski}`
                       )}
@@ -418,7 +459,8 @@ function Sacilim({ ajan }: { ajan: AjanGovdesi }) {
 
       {noktalar.length === 0 ? (
         <Olculemedi
-          neden={`saçılımda çizilebilir nokta yok: uç ${ham.length} kayıt bastı ve hiçbirinde hem \`predicted\` hem \`realized\` sayı değil — döngü henüz kapanmamış olabilir.`}
+          neden={`Çizilecek nokta yok: ${ham.length} kaydın hiçbirinde tahmin ile gerçekleşen birlikte yok — döngü henüz kapanmamış olabilir`}
+          teknik="hiçbir kayıtta hem `predicted` hem `realized` sayı değil"
         />
       ) : (
         <ChartContainer config={SACILIM_CONFIG} className="aspect-auto h-64 w-full">

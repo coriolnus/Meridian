@@ -74,24 +74,25 @@ export function pnlRengi(v: unknown): string {
 /* ---- ÖLÇÜLEMEDİ ---------------------------------------------------------- */
 
 /** Blok biçimi: nedeni GÖRÜNÜR yazar. Kart gövdesinde kullanılır. */
-export function Olculemedi({ neden, className }: { neden: string; className?: string }) {
+export function Olculemedi({ neden, teknik, className }: { neden: string; teknik?: string; className?: string }) {
   return (
     <span className={cn("flex flex-col gap-0.5", className)}>
-      <span className="text-muted-foreground text-sm italic">ölçülemedi</span>
-      <span className="text-muted-foreground text-xs leading-snug">{neden}</span>
+      <span className="text-muted-foreground text-sm italic" title={teknik}>
+        {neden}
+      </span>
     </span>
   );
 }
 
 /** Satır-içi biçim: dar hücrede nedeni `title` ile taşır (noktalı altı çizgi =
  *  "üstüne gel"). Nedeni tamamen düşürmek yasak; yalnız yerleşimi değişir. */
-export function OlculemediHucre({ neden }: { neden: string }) {
+export function OlculemediHucre({ neden, teknik }: { neden: string; teknik?: string }) {
   return (
     <span
       className="cursor-help text-muted-foreground text-xs underline decoration-dotted underline-offset-2"
-      title={neden}
+      title={teknik ? `${neden} — ${teknik}` : neden}
     >
-      ölçülemedi
+      {neden}
     </span>
   );
 }
@@ -100,13 +101,15 @@ export function OlculemediHucre({ neden }: { neden: string }) {
 export function Deger({
   metin,
   neden,
+  teknik,
   className,
 }: {
   metin: string | null;
   neden: string;
+  teknik?: string;
   className?: string;
 }) {
-  if (metin === null) return <OlculemediHucre neden={neden} />;
+  if (metin === null) return <OlculemediHucre neden={neden} teknik={teknik} />;
   return <span className={className}>{metin}</span>;
 }
 

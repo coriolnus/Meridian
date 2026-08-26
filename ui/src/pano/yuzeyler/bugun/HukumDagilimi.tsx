@@ -68,10 +68,10 @@ export function HukumDagilimi({ b }: { b: BugunTam }) {
       damga,
       neden:
         sd === undefined
-          ? "`/api/today` gövdesinde `son_dongu` bloğu yok"
+          ? "Gecelik döngünün kaydı bu turda hiç gelmedi"
           : sd.var === false
-            ? (sd.neden ?? "`son_dongu.var` false ama `neden` alanı yazılmamış")
-            : "`son_dongu` bloğunda `date` alanı yok — döngü kaydının seansı okunamadı",
+            ? (sd.neden ?? "Döngü kaydı yok ve nedeni yazılmamış")
+            : "Döngü kaydında seans tarihi yok — hangi güne ait olduğu okunamadı",
       kaynak: KARSI_KAYNAK,
     };
   }, [b.son_dongu]);
@@ -82,8 +82,8 @@ export function HukumDagilimi({ b }: { b: BugunTam }) {
   const damga = b.todays_plan_date ?? null;
   const damgaNeden =
     b.todays_plan_date === undefined
-      ? "`/api/today` gövdesinde `todays_plan_date` alanı YOK — bu uç sürümü göndermiyor"
-      : "`todays_plan_date` null — plan defterinde TARİHLİ satır yok (bu 'sıfır plan' DEĞİL)";
+      ? "Plan defterinin seans tarihi bildirilmedi — bu sürüm o alanı göndermiyor"
+      : "Plan defterinde tarihli satır yok (bu 'sıfır plan' demek değil)";
 
   return (
     <Card className="h-full">
@@ -93,7 +93,10 @@ export function HukumDagilimi({ b }: { b: BugunTam }) {
       </CardHeader>
       <CardContent>
         {sayimlar === undefined ? (
-          <Olculemedi neden="`/api/today` gövdesinde `verdict_counts` alanı yok" />
+          <Olculemedi
+            neden="Bu seansın hüküm sayıları bildirilmedi"
+            teknik="`/api/today` gövdesinde `verdict_counts` alanı yok"
+          />
         ) : (
           <Icerik
             sayimlar={sayimlar}
@@ -161,7 +164,7 @@ function Icerik({
             ? `${bicimSayi(no_go)} plan kapıda takıldı · kapı: ${bicimSayi(no_go)} NO_GO`
             : "kapıda takılan yok · 0 NO_GO",
         oran: toplam > 0 ? no_go / toplam : null,
-        neden: "payda ölçülemedi — sayaç toplamı 0",
+        neden: "Oran hesaplanamadı — sayaç hiç plan saymadı",
       },
       {
         ok: "NO_GO değil → GO",
@@ -175,7 +178,7 @@ function Icerik({
               ? `${bicimSayi(gecen - go)} plan GO olmadı · ${kalanParcalar.join(" · ")}`
               : "geçenlerin hepsi GO oldu",
         oran: toplam > 0 ? (gecen - go) / toplam : null,
-        neden: "payda ölçülemedi — sayaç toplamı 0",
+        neden: "Oran hesaplanamadı — sayaç hiç plan saymadı",
       },
     ];
 

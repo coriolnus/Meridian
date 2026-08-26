@@ -96,13 +96,13 @@ export function Kapi<T>({
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ---------------------------------- */
 
 /** Ölçülemeyen değerin yeri. `neden` ZORUNLU — "—" tek başına yalandır. */
-export function Olculemedi({ neden, kisa = false }: { readonly neden: string; readonly kisa?: boolean }) {
+export function Olculemedi({ neden, teknik, kisa = false }: { readonly neden: string; readonly teknik?: string; readonly kisa?: boolean }) {
   return (
     <span
       className={cn("text-muted-foreground text-xs italic", kisa && "inline-block max-w-[22rem] truncate align-bottom")}
-      title={neden}
+      title={teknik ? `${neden} — ${teknik}` : neden}
     >
-      ölçülemedi — {neden}
+      {neden}
     </span>
   );
 }
@@ -113,15 +113,17 @@ export function Deger({
   birim = "",
   basamak = 0,
   neden,
+  teknik,
   className,
 }: {
   readonly deger: number | null | undefined;
   readonly birim?: string;
   readonly basamak?: number;
   readonly neden: string;
+  readonly teknik?: string;
   readonly className?: string;
 }) {
-  if (deger === undefined || deger === null || !Number.isFinite(deger)) return <Olculemedi neden={neden} kisa />;
+  if (deger === undefined || deger === null || !Number.isFinite(deger)) return <Olculemedi neden={neden} teknik={teknik} kisa />;
   return (
     <span className={cn("tabular-nums", className)}>
       {deger.toLocaleString("tr-TR", { minimumFractionDigits: basamak, maximumFractionDigits: basamak })}
@@ -154,17 +156,19 @@ export function OkRozet({
   iyi = "sağlam",
   kotu = "bozuk",
   neden = "uç bu alanı döndürmüyor",
+  teknik,
 }: {
   readonly ok: UcDeger;
   readonly iyi?: string;
   readonly kotu?: string;
   readonly neden?: string;
+  readonly teknik?: string;
 }) {
   if (ok === undefined || ok === null) {
     return (
-      <Badge variant="outline" className="gap-1.5" title={neden}>
+      <Badge variant="outline" className="gap-1.5" title={teknik ? `${neden} — ${teknik}` : neden}>
         <span className="size-1.5 rounded-full bg-muted-foreground/60" />
-        ölçülemedi
+        {neden}
       </Badge>
     );
   }
@@ -185,7 +189,7 @@ export function KolRozet({ cekili, cekiliMetin, serbestMetin }: { readonly cekil
     return (
       <Badge variant="outline" className="gap-1.5">
         <span className="size-1.5 rounded-full bg-muted-foreground/60" />
-        ölçülemedi
+        bilinmiyor
       </Badge>
     );
   }
@@ -217,6 +221,7 @@ export function OlcekCubugu({
   etiket,
   yuzde,
   neden,
+  teknik,
   uyari = 70,
   kritik = 85,
   altMetin,
@@ -224,6 +229,7 @@ export function OlcekCubugu({
   readonly etiket: string;
   readonly yuzde: number | null | undefined;
   readonly neden: string;
+  readonly teknik?: string;
   readonly uyari?: number;
   readonly kritik?: number;
   readonly altMetin?: string;
@@ -234,7 +240,7 @@ export function OlcekCubugu({
         <div className="flex items-baseline justify-between gap-2 text-xs">
           <span className="font-medium text-muted-foreground">{etiket}</span>
         </div>
-        <Olculemedi neden={neden} kisa />
+        <Olculemedi neden={neden} teknik={teknik} kisa />
       </div>
     );
   }

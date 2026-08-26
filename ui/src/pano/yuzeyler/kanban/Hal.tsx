@@ -87,25 +87,25 @@ export function Hal<T>({
 
 /** Ölçülemeyen bir DEĞERİN yerine geçer. "—" yazmıyoruz: tire, okuyucuya "ölçtük,
  *  sonuç yok" der ve bu bu depoda bir yalandır (CLAUDE.md §4). */
-export function Olculemedi({ neden, kisa = false }: { neden: string; kisa?: boolean }) {
+export function Olculemedi({ neden, teknik, kisa = false }: { neden: string; teknik?: string; kisa?: boolean }) {
   return (
     <span
       className={cn("inline-flex items-center gap-1 text-muted-foreground", kisa ? "text-xs" : "text-sm")}
-      title={neden}
+      title={teknik ? `${neden} — ${teknik}` : neden}
     >
       <Info className="size-3 shrink-0" aria-hidden />
-      ölçülemedi
+      {neden}
     </span>
   );
 }
 
 /** Ölçülemeyen bir BLOĞUN yerine geçer — nedeni gizlemeden yazar. */
-export function OlculemedBlok({ baslik, neden }: { baslik: string; neden: string }) {
+export function OlculemedBlok({ baslik, neden, teknik }: { baslik: string; neden: string; teknik?: string }) {
   return (
     <Alert>
       <Info />
-      <AlertTitle>{baslik} ölçülemedi</AlertTitle>
-      <AlertDescription>{neden}</AlertDescription>
+      <AlertTitle>{baslik}</AlertTitle>
+      <AlertDescription title={teknik}>{neden}</AlertDescription>
     </Alert>
   );
 }

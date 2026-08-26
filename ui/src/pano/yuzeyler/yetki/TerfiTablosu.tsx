@@ -40,7 +40,10 @@ function IlerlemeKadrani({ met, total }: { readonly met?: number; readonly total
     return (
       <div className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-4 text-center">
         <span className="font-medium text-sm">Otomatik ölçüt ilerlemesi</span>
-        <Olculemedi neden="`/api/summary.ladder.auto_progress` içinde `met`/`total` gelmedi (ya da payda 0)" />
+        <Olculemedi
+          neden="İlerleme kadranı için gereken sayılar gelmedi"
+          teknik="`/api/summary.ladder.auto_progress` içinde `met`/`total` gelmedi (ya da payda 0)"
+        />
       </div>
     );
   }
@@ -90,7 +93,10 @@ export function TerfiTablosu({ merdiven }: { readonly merdiven: Merdiven | undef
   }, [olcutler, tur]);
 
   if (olcutler === undefined) {
-    return <Olculemedi neden="`/api/summary.ladder` gövdesinde `l0_to_l1` dizisi yok" />;
+    return <Olculemedi
+        neden="Terfi ölçütlerinin listesi bildirilmedi"
+        teknik="`/api/summary.ladder` gövdesinde `l0_to_l1` dizisi yok"
+      />;
   }
 
   const elleN = olcutler.filter((o) => o.manual === true).length;
@@ -142,11 +148,15 @@ export function TerfiTablosu({ merdiven }: { readonly merdiven: Merdiven | undef
                   return (
                     <TableRow key={o.label ?? `olcut-${i}`} className="border-border/50">
                       <TableCell className="py-3 align-top text-sm leading-5">
-                        {o.label ?? <Olculemedi neden="ölçütün `label` alanı gelmedi" kisa />}
+                        {o.label ?? <Olculemedi neden="Ölçütün adı bildirilmedi" teknik="ölçütün `label` alanı gelmedi" kisa />}
                       </TableCell>
                       <TableCell className="py-3 align-top">
                         {saglandi === undefined ? (
-                          <Olculemedi neden="ölçütün `met` alanı gelmedi — sağlandı SAYILMAZ" kisa />
+                          <Olculemedi
+                            neden="Bu ölçütün sağlanıp sağlanmadığı bildirilmedi — sağlandı sayılmaz"
+                            teknik="ölçütün `met` alanı gelmedi"
+                            kisa
+                          />
                         ) : (
                           <span
                             className={cn(
@@ -167,7 +177,7 @@ export function TerfiTablosu({ merdiven }: { readonly merdiven: Merdiven | undef
                       </TableCell>
                       <TableCell className="py-3 align-top">
                         {o.detail === undefined ? (
-                          <Olculemedi neden="ölçütün `detail` alanı gelmedi" kisa />
+                          <Olculemedi neden="Ölçümün ayrıntısı bildirilmedi" teknik="ölçütün `detail` alanı gelmedi" kisa />
                         ) : (
                           <span className="text-muted-foreground text-xs leading-4">{o.detail}</span>
                         )}

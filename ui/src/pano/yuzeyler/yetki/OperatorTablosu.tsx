@@ -126,7 +126,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
     cell: ({ row }) => {
       const v = row.original.parolaKurulu;
       if (v === null) {
-        return <Olculemedi neden="`/api/session` gövdesinde `password_set` alanı yok" kisa />;
+        return <Olculemedi neden="Parolanın kurulu olup olmadığı bildirilmedi" teknik="`/api/session` gövdesinde `password_set` alanı yok" kisa />;
       }
       return (
         <div className="grid gap-0.5">
@@ -148,7 +148,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
     cell: ({ row }) => {
       const v = row.original.oturumAcik;
       if (v === null) {
-        return <Olculemedi neden="`/api/session` gövdesinde `authenticated` alanı yok" kisa />;
+        return <Olculemedi neden="Oturumun açık olup olmadığı bildirilmedi" teknik="`/api/session` gövdesinde `authenticated` alanı yok" kisa />;
       }
       return (
         <Badge variant="outline" className="w-fit gap-1.5">
@@ -165,7 +165,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
     cell: ({ row }) => {
       const v = row.original.tls;
       if (v === null) {
-        return <Olculemedi neden="`/api/session` gövdesinde `tls` alanı yok" kisa />;
+        return <Olculemedi neden="Bağlantının şifreli olup olmadığı bildirilmedi" teknik="`/api/session` gövdesinde `tls` alanı yok" kisa />;
       }
       return (
         <Badge variant="outline" className="w-fit gap-1.5">
@@ -180,7 +180,10 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
     header: "Katılma tarihi",
     enableSorting: false,
     cell: () => (
-      <AlanYok neden="kimlik defterinde kayıt tarihi tutulmuyor (auth.py: yalnız salt+hash yazılıyor)" />
+      <AlanYok
+        neden="Kayıt tarihi hiç tutulmuyor"
+        teknik="kimlik kaydında tarih alanı yok (auth.py: yalnız salt+hash yazılıyor)"
+      />
     ),
   },
   {
@@ -188,7 +191,10 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
     header: "Son etkinlik",
     enableSorting: false,
     cell: () => (
-      <AlanYok neden="`login_ok` olayı IP ve TTL yazıyor, kimlik yazmıyor (api.py:1348) — kişiye bağlanamaz" />
+      <AlanYok
+        neden="Son etkinlik bir kişiye bağlanamıyor"
+        teknik="`login_ok` olayı IP ve TTL yazıyor, kimlik yazmıyor (api.py:1348)"
+      />
     ),
   },
 ];

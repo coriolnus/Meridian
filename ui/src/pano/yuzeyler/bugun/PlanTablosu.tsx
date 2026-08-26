@@ -70,10 +70,14 @@ interface PlanSatiri extends Plan {
 
 /** Ölçülemeyen hücrenin tek biçimi. `Olculemedi` kart içi (iki satırlı) olduğundan
  *  tablo hücresinde onun yerine bu tek satırlık biçim kullanılıyor — nedeni `title`
- *  taşır, çünkü bir tablo hücresi iki satırlık gerekçeyi kaldırmaz. */
-function Yok({ neden }: { neden: string }) {
+ *  taşır, çünkü bir tablo hücresi iki satırlık gerekçeyi kaldırmaz.
+ *
+ *  İKİ KATMAN (2026-08-26 sözleşmesi): `neden` okuyucunun cümlesidir; `teknik` iç
+ *  ayrıntıdır (alan adı, uç yolu) ve aynı ipucunun ARKASINA eklenir — düşürülmez,
+ *  çünkü teşhis eden kişi tam olarak onu arıyor. */
+function Yok({ neden, teknik }: { neden: string; teknik?: string }) {
   return (
-    <span className="text-muted-foreground text-xs italic" title={neden}>
+    <span className="text-muted-foreground text-xs italic" title={teknik ? `${neden} — ${teknik}` : neden}>
       ölçülemedi
     </span>
   );
@@ -104,7 +108,8 @@ function SiraliBaslik({ sutun, etiket }: { sutun: Column<DataTableFeatures, Plan
  *  2026-08-25) — kırmızıya boyamak sakin bir günü olay gibi gösterirdi. Dikkat çeken
  *  tek hüküm REVIEW'dur, çünkü SENDEN iş ister; o da `primary` ile öne çıkar. */
 function HukumRozeti({ hukum }: { hukum: string | undefined }) {
-  if (hukum === undefined) return <Yok neden="plan kaydında `gate_verdict` alanı yok" />;
+  if (hukum === undefined)
+    return <Yok neden="Bu plana kapı hükmü kaydedilmemiş" teknik="plan kaydında `gate_verdict` alanı yok" />;
   if (hukum === "GO") {
     return (
       <Badge variant="outline">
@@ -147,7 +152,7 @@ function sutunlar(sec: (p: PlanSatiri) => void): ColumnDef<DataTableFeatures, Pl
       header: ({ column }) => <SiraliBaslik sutun={column} etiket="Sembol" />,
       cell: ({ row }) =>
         row.original.ticker === undefined ? (
-          <Yok neden="plan kaydında `ticker` alanı yok" />
+          <Yok neden="Sembol kaydedilmemiş" teknik="plan kaydında `ticker` alanı yok" />
         ) : (
           // DÜĞME, TIKLANABİLİR DIV DEĞİL: klavyeyle gezen ve ekran okuyucu kullanan
           // operatör için tek erişilebilir tıklama yüzeyi budur.
@@ -171,7 +176,7 @@ function sutunlar(sec: (p: PlanSatiri) => void): ColumnDef<DataTableFeatures, Pl
       header: ({ column }) => <SiraliBaslik sutun={column} etiket="Kurulum" />,
       cell: ({ row }) =>
         row.original.setup === undefined ? (
-          <Yok neden="plan kaydında `setup` alanı yok" />
+          <Yok neden="Kurulum adı kaydedilmemiş" teknik="plan kaydında `setup` alanı yok" />
         ) : (
           <span className="text-sm">{row.original.setup}</span>
         ),
@@ -191,9 +196,9 @@ function sutunlar(sec: (p: PlanSatiri) => void): ColumnDef<DataTableFeatures, Pl
       header: ({ column }) => <SiraliBaslik sutun={column} etiket="Skor" />,
       cell: ({ row }) =>
         row.original.score === undefined ? (
-          <Yok neden="plan kaydında `score` alanı yok" />
+          <Yok neden="Skor kaydedilmemiş" teknik="plan kaydında `score` alanı yok" />
         ) : row.original.score === null ? (
-          <Yok neden="plan kaydında `score` ölçülmemiş (null)" />
+          <Yok neden="Skor hesaplanamamış" teknik="plan kaydında `score` yazılı ama null" />
         ) : (
           <span className="tabular-nums text-sm">{bicimSayi(row.original.score)}</span>
         ),
@@ -204,7 +209,7 @@ function sutunlar(sec: (p: PlanSatiri) => void): ColumnDef<DataTableFeatures, Pl
       header: ({ column }) => <SiraliBaslik sutun={column} etiket="Sektör" />,
       cell: ({ row }) =>
         row.original.sector === undefined ? (
-          <Yok neden="plan kaydında `sector` alanı yok" />
+          <Yok neden="Sektör kaydedilmemiş" teknik="plan kaydında `sector` alanı yok" />
         ) : (
           <span className="text-muted-foreground text-sm">{row.original.sector}</span>
         ),
@@ -215,8 +220,10 @@ function sutunlar(sec: (p: PlanSatiri) => void): ColumnDef<DataTableFeatures, Pl
       header: ({ column }) => <SiraliBaslik sutun={column} etiket="Giriş tetiği" />,
       cell: ({ row }) => {
         const p = row.original;
-        if (p.entry_trigger === undefined) return <Yok neden="plan kaydında `entry_trigger` alanı yok" />;
-        if (p.entry_trigger === null) return <Yok neden="`entry_trigger` ölçülmemiş (null)" />;
+        if (p.entry_trigger === undefined)
+          return <Yok neden="Giriş tetiği kaydedilmemiş" teknik="plan kaydında `entry_trigger` alanı yok" />;
+        if (p.entry_trigger === null)
+          return <Yok neden="Giriş tetiği hesaplanamamış" teknik="`entry_trigger` yazılı ama null" />;
         return (
           <div className="flex flex-col gap-0.5">
             <span className="tabular-nums text-sm leading-none">{bicimSayi(p.entry_trigger)}</span>
@@ -239,7 +246,12 @@ function sutunlar(sec: (p: PlanSatiri) => void): ColumnDef<DataTableFeatures, Pl
         // ÜÇ DAMGA DA UÇ KATMANINDAN GELİYOR ve hiçbiri varsayılmıyor: `undefined` ise
         // damgalama koşmamış demektir ve o da bir bilgidir — "damga yok" yazılır.
         if (p.expired === undefined && p.traded === undefined && p.onay_bekliyor === undefined) {
-          return <Yok neden="bayatlık/onay damgaları bu satıra basılmamış (uç zenginleştirmesi koşmadı)" />;
+          return (
+            <Yok
+              neden="Bu planın durum damgaları basılmamış"
+              teknik="bayatlık/onay damgaları satıra yazılmamış — uç zenginleştirmesi koşmadı"
+            />
+          );
         }
         return (
           <div className="flex flex-wrap gap-1">

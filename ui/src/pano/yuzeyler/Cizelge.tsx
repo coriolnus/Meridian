@@ -163,7 +163,7 @@ export function Cizelge() {
             </p>
 
             {teshis.veri?.cizelge?.damga_neden_yok ? (
-              <Olculemedi neden={teshis.veri.cizelge.damga_neden_yok} />
+              <Olculemedi neden="Adımların son koşu damgaları okunamadı" teknik={teshis.veri.cizelge.damga_neden_yok} />
             ) : null}
 
             <AdimTablosu adimlar={ozet.adimlar} simdi={simdi} />
@@ -192,17 +192,17 @@ export function Cizelge() {
         <div className="grid gap-x-8 sm:grid-cols-2">
           <div>
             <Satir etiket="Son tur (last_tick)">
-              {zamanMetni(sched?.last_tick) ?? <Olculemedi neden="`scheduler.last_tick` yazılmamış" kisa />}
+              {zamanMetni(sched?.last_tick) ?? <Olculemedi neden="Zamanlayıcının son turu kaydedilmemiş" teknik="`scheduler.last_tick` yazılmamış" kisa />}
             </Satir>
             <Satir etiket="Turun yaşı">
-              {goreliMetin(sonTickMs, simdi) ?? <Olculemedi neden="son tur damgası ayrıştırılamadı" kisa />}
+              {goreliMetin(sonTickMs, simdi) ?? <Olculemedi neden="Son turun ne zaman olduğu okunamadı" teknik="son tur damgası ayrıştırılamadı" kisa />}
             </Satir>
             <Satir etiket="Tur periyodu">
-              <Deger deger={poll} birim=" sn" neden="`poll_seconds` yazılmamış" />
+              <Deger deger={poll} birim=" sn" neden="Turlar arası bekleme süresi bildirilmedi" teknik="`poll_seconds` yazılmamış" />
             </Satir>
             <Satir etiket="Beklenen sıradaki tur">
               {siradakiTickMs === null ? (
-                <Olculemedi neden="`last_tick` ya da `poll_seconds` eksik — hesap yapılamaz" kisa />
+                <Olculemedi neden="Sıradaki turun zamanı hesaplanamadı" teknik="`last_tick` ya da `poll_seconds` eksik" kisa />
               ) : (
                 <span className={tickGecikti ? "font-medium text-destructive tabular-nums" : "tabular-nums"}>
                   {zamanMetni(new Date(siradakiTickMs).toISOString()) ?? "—"}
@@ -213,25 +213,25 @@ export function Cizelge() {
               )}
             </Satir>
             <Satir etiket="Toplam tur (cycles)">
-              <Deger deger={sched?.cycles} neden="`cycles` yazılmamış" />
+              <Deger deger={sched?.cycles} neden="Toplam tur sayısı kaydedilmemiş" teknik="`cycles` yazılmamış" />
             </Satir>
           </div>
           <div>
             <Satir etiket="Durum dosyası güncellendi">
-              {zamanMetni(sched?.updated) ?? <Olculemedi neden="`scheduler.updated` yazılmamış" kisa />}
+              {zamanMetni(sched?.updated) ?? <Olculemedi neden="Durum dosyasının güncellenme anı kaydedilmemiş" teknik="`scheduler.updated` yazılmamış" kisa />}
             </Satir>
             <Satir etiket="Öğrenme kadansı (learn_session)">
-              {sched?.learn_session ?? <Olculemedi neden="`learn_session` yazılmamış — kadans hiç koşmamış olabilir" kisa />}
+              {sched?.learn_session ?? <Olculemedi neden="Son öğrenme turu kaydedilmemiş — hiç koşmamış olabilir" teknik="`learn_session` yazılmamış" kisa />}
             </Satir>
             <Satir etiket="Y4 toplama (y4_session)">
-              {sched?.y4_session ?? <Olculemedi neden="`y4_session` yazılmamış" kisa />}
+              {sched?.y4_session ?? <Olculemedi neden="Toplama turunun seansı kaydedilmemiş" teknik="`y4_session` yazılmamış" kisa />}
             </Satir>
             <Satir etiket="Doğrulama haftası">
-              {sched?.validation_week ?? <Olculemedi neden="`validation_week` yazılmamış" kisa />}
+              {sched?.validation_week ?? <Olculemedi neden="Doğrulama haftası kaydedilmemiş" teknik="`validation_week` yazılmamış" kisa />}
             </Satir>
             <Satir etiket="Çizelgenin gördüğü scheduler damgası">
               {zamanMetni(teshis.veri?.cizelge?.scheduler_updated) ?? (
-                <Olculemedi neden="`cizelge.scheduler_updated` yazılmamış" kisa />
+                <Olculemedi neden="Çizelgenin gördüğü zamanlayıcı damgası kaydedilmemiş" teknik="`cizelge.scheduler_updated` yazılmamış" kisa />
               )}
             </Satir>
           </div>
@@ -260,9 +260,9 @@ export function Cizelge() {
         }
       >
         {teshis.hata !== null ? (
-          <Olculemedi neden={teshis.hata} />
+          <Olculemedi neden="Koşu defteri okunamadı" teknik={teshis.hata} />
         ) : teshis.veri?.cizelge?.kosular === undefined ? (
-          <Olculemedi neden="/api/diagnostics `cizelge.kosular` döndürmedi — koşu defteri ölçülemedi" />
+          <Olculemedi neden="Hat koşularının kaydı bildirilmedi" teknik="/api/diagnostics `cizelge.kosular` döndürmedi" />
         ) : (
           <KosuTablosu satirlar={kosular} />
         )}
@@ -284,7 +284,7 @@ export function Cizelge() {
         }
       >
         {teshis.hata !== null ? (
-          <Olculemedi neden={teshis.hata} />
+          <Olculemedi neden="Takvim verisi okunamadı" teknik={teshis.hata} />
         ) : (
           <SeansTakvimi
             kosular={teshis.veri?.cizelge?.kosular}
@@ -302,9 +302,9 @@ export function Cizelge() {
         ikon={Cpu}
       >
         {teshis.hata !== null ? (
-          <Olculemedi neden={teshis.hata} />
+          <Olculemedi neden="Çağrı defteri okunamadı" teknik={teshis.hata} />
         ) : teshis.veri?.cizelge?.cagrilar === undefined ? (
-          <Olculemedi neden="/api/diagnostics `cizelge.cagrilar` döndürmedi — çağrı defteri ölçülemedi" />
+          <Olculemedi neden="Ajan çağrılarının kaydı bildirilmedi" teknik="/api/diagnostics `cizelge.cagrilar` döndürmedi" />
         ) : (
           <CagriTablosu
             cagrilar={teshis.veri.cizelge.cagrilar}

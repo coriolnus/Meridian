@@ -63,8 +63,13 @@ function Merdiven({ hal }: { hal: string | undefined }) {
       <Olculemedi
         neden={
           hal === undefined
-            ? "/api/hermes yükünde `learning.loop_state` yok — döngünün nerede olduğu ölçülemedi."
-            : `uç \`loop_state\` olarak "${hal}" bastı ve bu değer panonun tanıdığı beş hâlden biri değil — bilinen bir adıma katlamak yerine ölçülemedi yazıyorum.`
+            ? "Döngünün hangi adımda olduğu bildirilmedi"
+            : `Sistem tanınmayan bir döngü durumu bildirdi ("${hal}") — bilinen bir adıma katlamak yerine boş bırakıldı`
+        }
+        teknik={
+          hal === undefined
+            ? "/api/hermes yükünde `learning.loop_state` yok"
+            : "`loop_state` panonun tanıdığı beş hâlden biri değil"
         }
       />
     );
@@ -177,18 +182,20 @@ function Kpi({
   baslik,
   metin: m,
   neden,
+  teknik,
   alt,
 }: {
   baslik: string;
   metin: string | null;
   neden: string;
+  teknik?: string;
   alt: string;
 }) {
   return (
     <div className="rounded-lg border border-border/60 bg-card p-4">
       <p className="text-muted-foreground text-xs">{baslik}</p>
       <p className="mt-1.5 text-2xl leading-none tracking-tight tabular-nums">
-        <Deger metin={m} neden={neden} />
+        <Deger metin={m} neden={neden} teknik={teknik} />
       </p>
       <p className="mt-2 text-muted-foreground text-xs leading-snug">{alt}</p>
     </div>
@@ -220,7 +227,10 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
         const l: OgrenmeKarnesi | undefined = v.learning;
         if (!l) {
           return (
-            <Olculemedi neden="/api/hermes okundu ama `learning` bloğu YOK — karne bu turda hiç hesaplanmadı (boş defter DEĞİL)." />
+            <Olculemedi
+              neden="Karne bu turda hiç hesaplanmadı — kayıtların boş olduğu anlamına gelmez"
+              teknik="/api/hermes okundu ama `learning` bloğu YOK"
+            />
           );
         }
         const sc = l.status_counts ?? {};
@@ -266,13 +276,15 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
               <Kpi
                 baslik="Yayına giren öneri"
                 metin={sayi(l.shipped, 0)}
-                neden="/api/hermes `learning.shipped` basmadı — kaç önerinin kapıdan geçtiği ölçülemedi."
+                neden="Kaç önerinin yayına girdiği bildirilmedi"
+                teknik="/api/hermes `learning.shipped` basmadı"
                 alt={`Geri alınan: ${sayi(l.rolled_back, 0) ?? "ölçülemedi"} · terfi: ${sayi(l.promoted, 0) ?? "ölçülemedi"}`}
               />
               <Kpi
                 baslik="Ölçülmüş sonuç"
                 metin={sayi(l.outcomes_measured, 0)}
-                neden="`learning.outcomes_measured` yükte yok — kaç hipotezin gerçeğe karşı ölçüldüğü bilinmiyor."
+                neden="Kaç önerinin sonucu ölçüldüğü kaydedilmemiş"
+                teknik="`learning.outcomes_measured` yükte yok"
                 alt="realized_delta yazılmış hipotez sayısı — döngünün gerçekten kapandığı tek kanıt."
               />
               <Kpi
@@ -280,8 +292,13 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
                 metin={cal?.brier === null || cal?.brier === undefined ? null : sayi(cal.brier, 3)}
                 neden={
                   cal === undefined
-                    ? "`learning.calibration` bloğu yok — kalibrasyon hiç hesaplanmadı."
-                    : `kalibrasyon örneklemi ${cal.n ?? "ölçülemedi"} çift; Brier bu örneklemde hesaplanamadı (0 DEĞİL: ölçülmedi).`
+                    ? "Tahmin isabeti hiç hesaplanmadı"
+                    : `Tahmin isabeti bu örneklemde hesaplanamadı (${cal.n ?? "bilinmeyen sayıda"} çift)`
+                }
+                teknik={
+                  cal === undefined
+                    ? "`learning.calibration` bloğu yok"
+                    : "Brier bu örneklemde hesaplanamadı — 0 DEĞİL, ölçülmedi"
                 }
                 alt={`Çift sayısı: ${sayi(cal?.n, 0) ?? "ölçülemedi"} · isabet: ${
                   cal?.hit_rate === null || cal?.hit_rate === undefined ? "ölçülemedi" : (yuzde(cal.hit_rate, 0) ?? "ölçülemedi")
@@ -292,8 +309,13 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
                 metin={ornek === null || minOrnek === null ? null : `${sayi(ornek, 0)} / ${sayi(minOrnek, 0)}`}
                 neden={
                   minOrnek === null
-                    ? "`learning.min_sample` yükte yok — kapının paydası ölçülemedi (30 varsaymak yasak, eşik goal.yaml'dan gelir)."
-                    : "`learning.defter.orneklem_n` yükte yok — paydanın payı ölçülemedi."
+                    ? "Gereken en az işlem sayısı bildirilmedi"
+                    : "Şu ana kadar biriken işlem sayısı bildirilmedi"
+                }
+                teknik={
+                  minOrnek === null
+                    ? "`learning.min_sample` yükte yok — 30 varsaymak yasak, eşik goal.yaml'dan gelir"
+                    : "`learning.defter.orneklem_n` yükte yok"
                 }
                 alt="Payda = canlı/paper + belirsiz. Replay tohumu TRAINING'dir, buraya girmez."
               />
@@ -305,7 +327,10 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
               aciklama="Ham satır sayısı bir olgunluk kanıtı DEĞİLDİR: tohum satırları tek toplu yazımdan gelir ve bugünkü evrenle üretilmiştir."
             >
               {kovalar.length === 0 ? (
-                <Olculemedi neden="`learning.defter` kaynak sayaçlarının hiçbiri sayı taşımıyor — defterin kompozisyonu ölçülemedi." />
+                <Olculemedi
+                  neden="Kayıtların kaynak dağılımı ölçülemedi"
+                  teknik="`learning.defter` kaynak sayaçlarının hiçbiri sayı değil"
+                />
               ) : (
                 <>
                   <ChartContainer config={DEFTER_CONFIG} className="aspect-auto h-48 w-full">
@@ -352,34 +377,43 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
                     <Satir etiket="Ham satır (trades.jsonl)">
                       <Deger
                         metin={sayi(l.trades_total, 0)}
-                        neden="`learning.trades_total` yükte yok — defterin ham boyu ölçülemedi."
+                        neden="Toplam kayıt sayısı bildirilmedi"
+                        teknik="`learning.trades_total` yükte yok"
                       />
                     </Satir>
                     <Satir etiket="Kanıtlı canlı (gercek_canli_n)">
                       <Deger
                         metin={sayi(defter?.gercek_canli_n, 0)}
-                        neden="`defter.gercek_canli_n` yükte yok — kanıtlı canlı satır sayısı ölçülemedi."
+                        neden="Kanıtlı canlı işlem sayısı bildirilmedi"
+                        teknik="`defter.gercek_canli_n` yükte yok"
                       />
                     </Satir>
                     <Satir etiket="Training (tohum)">
                       <Deger
                         metin={sayi(defter?.training_n, 0)}
-                        neden="`defter.training_n` yükte yok — tohum/training payı ölçülemedi."
+                        neden="Eğitim amaçlı kayıtların payı bildirilmedi"
+                        teknik="`defter.training_n` yükte yok"
                       />
                     </Satir>
                     <Satir etiket="Yayındaki sürüm">
                       <Deger
                         metin={l.current_version === null || l.current_version === undefined ? null : `v${l.current_version}`}
-                        neden="`learning.current_version` yükte yok — hangi sürümün yayında olduğu bu karneden okunamadı."
+                        neden="Hangi sürümün yayında olduğu bu karneden okunamadı"
+                        teknik="`learning.current_version` yükte yok"
                       />
                     </Satir>
                     <Satir etiket="Toplam sürüm sayısı">
-                      <Deger metin={sayi(l.versions, 0)} neden="`learning.versions` yükte yok." />
+                      <Deger
+                        metin={sayi(l.versions, 0)}
+                        neden="Toplam sürüm sayısı bildirilmedi"
+                        teknik="`learning.versions` yükte yok"
+                      />
                     </Satir>
                     <Satir etiket="Aşırı-uyum şüphelisi">
                       <Deger
                         metin={sayi(l.overfit_suspects, 0)}
-                        neden="`learning.overfit_suspects` yükte yok — şüpheli hipotez sayısı ölçülemedi."
+                        neden="Şüpheli öneri sayısı bildirilmedi"
+                        teknik="`learning.overfit_suspects` yükte yok"
                       />
                     </Satir>
                   </div>
@@ -394,7 +428,10 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
               aciklama="Sayım uçtan geliyor; kapının EŞİK SAYISI hiçbir uçta servis edilmiyor (aşağıdaki not)."
             >
               {kapiSatirlari.length === 0 ? (
-                <Olculemedi neden="`learning.shipped` / `rejected_by_backtest` / `rejected_by_guard` alanlarının hiçbiri sayı taşımıyor — kapı sayımı ölçülemedi." />
+                <Olculemedi
+                  neden="Önerilerin nerede elendiği sayılamadı"
+                  teknik="`learning.shipped` / `rejected_by_backtest` / `rejected_by_guard` alanlarının hiçbiri sayı değil"
+                />
               ) : (
                 <ChartContainer config={KAPI_CONFIG} className="aspect-auto h-40 w-full">
                   <BarChart
@@ -417,11 +454,18 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
               )}
               <div className="flex flex-col">
                 {Object.keys(sc).length === 0 ? (
-                  <Olculemedi neden="`learning.status_counts` boş — hipotez defterinin durum kırılımı ölçülemedi." />
+                  <Olculemedi
+                    neden="Önerilerin durum dağılımı ölçülemedi"
+                    teknik="`learning.status_counts` boş"
+                  />
                 ) : (
                   Object.entries(sc).map(([ad, n]) => (
                     <Satir key={ad} etiket={ad}>
-                      <Deger metin={sayi(n, 0)} neden={`status_counts.${ad} sayı taşımıyor.`} />
+                      <Deger
+                        metin={sayi(n, 0)}
+                        neden="Bu durumdaki öneri sayısı bildirilmedi"
+                        teknik={`status_counts.${ad} sayı taşımıyor`}
+                      />
                     </Satir>
                   ))
                 )}
@@ -450,7 +494,12 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
 function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
   const b = l.besleme;
   if (!b) {
-    return <Olculemedi neden="`learning.besleme` bloğu yükte yok — besleme kanalları bu turda hiç ölçülmedi." />;
+    return (
+      <Olculemedi
+        neden="Besleme kanalları bu turda hiç ölçülmedi"
+        teknik="`learning.besleme` bloğu yükte yok"
+      />
+    );
   }
   const sprint = b.antrenman_sprinti;
   const dolgu = b.dolgu_kuyrugu;
@@ -462,7 +511,8 @@ function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
         {sprint === null || sprint === undefined ? (
           <Olculemedi
             className="mt-2"
-            neden="`besleme.antrenman_sprinti` null — sprint kadansı okunamadı (sunucu olayı: learning_scorecard_sprint_failed)."
+            neden="Antrenman turunun durumu okunamadı"
+            teknik="`besleme.antrenman_sprinti` null (sunucu olayı: learning_scorecard_sprint_failed)"
           />
         ) : (
           <div className="mt-2 flex flex-col">
@@ -470,10 +520,19 @@ function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
               <span>{sprint.kos === undefined ? "ölçülemedi" : sprint.kos ? "evet" : "hayır"}</span>
             </Satir>
             <Satir etiket="Sebep">
-              <Deger metin={sprint.sebep ?? null} neden="kadans sebebi yazmadı." className="text-xs" />
+              <Deger
+                metin={sprint.sebep ?? null}
+                neden="Otomatik döngünün bu turdaki sebebi kaydedilmemiş"
+                teknik="`sprint.sebep` yok"
+                className="text-xs"
+              />
             </Satir>
             <Satir etiket="Son sprintten geçen gün">
-              <Deger metin={sayi(sprint.gecen_gun, 0)} neden="`gecen_gun` ölçülemedi — hiç sprint koşmamış olabilir." />
+              <Deger
+                metin={sayi(sprint.gecen_gun, 0)}
+                neden="Son antrenmandan bu yana geçen gün ölçülemedi — hiç koşmamış olabilir"
+                teknik="`gecen_gun` yok"
+              />
             </Satir>
           </div>
         )}
@@ -488,17 +547,33 @@ function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
       <div className="rounded-lg border border-border/60 p-3">
         <p className="font-medium text-sm">Görüş dolgu kuyruğu</p>
         {dolgu === null || dolgu === undefined ? (
-          <Olculemedi className="mt-2" neden="`besleme.dolgu_kuyrugu` null — kuyruk okunamadı (learning_scorecard_backfill_failed)." />
+          <Olculemedi
+            className="mt-2"
+            neden="Eksik görüş kuyruğu okunamadı"
+            teknik="`besleme.dolgu_kuyrugu` null (sunucu olayı: learning_scorecard_backfill_failed)"
+          />
         ) : (
           <div className="mt-2 flex flex-col">
             <Satir etiket="Dolgulanabilir gün">
-              <Deger metin={sayi(dolgu.dolgulanabilir_gun, 0)} neden="`dolgulanabilir_gun` ölçülemedi." />
+              <Deger
+                metin={sayi(dolgu.dolgulanabilir_gun, 0)}
+                neden="Tamamlanabilir gün sayısı ölçülemedi"
+                teknik="`dolgulanabilir_gun` yok"
+              />
             </Satir>
             <Satir etiket="Dolgulanabilir satır">
-              <Deger metin={sayi(dolgu.dolgulanabilir_satir, 0)} neden="`dolgulanabilir_satir` ölçülemedi." />
+              <Deger
+                metin={sayi(dolgu.dolgulanabilir_satir, 0)}
+                neden="Tamamlanabilir kayıt sayısı ölçülemedi"
+                teknik="`dolgulanabilir_satir` yok"
+              />
             </Satir>
             <Satir etiket="Görüşsüz plan (toplam)">
-              <Deger metin={sayi(dolgu.gorussuz_toplam, 0)} neden="`gorussuz_toplam` ölçülemedi." />
+              <Deger
+                metin={sayi(dolgu.gorussuz_toplam, 0)}
+                neden="Görüş kaydedilmemiş plan sayısı ölçülemedi"
+                teknik="`gorussuz_toplam` yok"
+              />
             </Satir>
           </div>
         )}
@@ -513,14 +588,22 @@ function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
       <div className="rounded-lg border border-border/60 p-3">
         <p className="font-medium text-sm">Gölge model antrenmanı</p>
         {antrenman === null || antrenman === undefined ? (
-          <Olculemedi className="mt-2" neden="`besleme.antrenman` null — antrenman durumu okunamadı (learning_scorecard_training_failed)." />
+          <Olculemedi
+            className="mt-2"
+            neden="Model eğitiminin durumu okunamadı"
+            teknik="`besleme.antrenman` null (sunucu olayı: learning_scorecard_training_failed)"
+          />
         ) : (
           <div className="mt-2 flex flex-col">
             <Satir etiket="Model kuruldu mu?">
               <span>{antrenman.kuruldu === undefined ? "ölçülemedi" : antrenman.kuruldu ? "evet" : "hayır"}</span>
             </Satir>
             <Satir etiket="Fit satırı">
-              <Deger metin={sayi(antrenman.n_fit, 0)} neden="`n_fit` yok — model hiç kurulmamış olabilir (0 yazmak yanlış)." />
+              <Deger
+                metin={sayi(antrenman.n_fit, 0)}
+                neden="Modelin kaç satırla eğitildiği bildirilmedi — hiç kurulmamış olabilir"
+                teknik="`n_fit` yok; 0 yazmak yanlış olurdu"
+              />
             </Satir>
             <Satir etiket="Terfi eşiği (çift)">
               <Deger
@@ -529,7 +612,8 @@ function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
                     ? null
                     : `${sayi(antrenman.terfi.n_live, 0)} / ${sayi(antrenman.terfi.promote_min_n, 0) ?? "?"}`
                 }
-                neden="`terfi.n_live` ölçülemedi — canlı kıyas çifti birikmemiş olabilir."
+                neden="Terfi için biriken kıyas sayısı ölçülemedi"
+                teknik="`terfi.n_live` yok"
               />
             </Satir>
           </div>

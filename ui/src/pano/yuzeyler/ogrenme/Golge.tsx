@@ -79,7 +79,10 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
   if (!yasa) {
     return (
       <Kutu baslik="Gölge yasa — iki hesabın uyumu">
-        <Olculemedi neden="/api/diagnostics yükünde `mlops.shadow_law` bloğu YOK — çift hesabın uyumu bu turda hiç ölçülmedi." />
+        <Olculemedi
+          neden="İki kural setinin uyumu bu turda hiç ölçülmedi"
+          teknik="/api/diagnostics yükünde `mlops.shadow_law` bloğu YOK"
+        />
       </Kutu>
     );
   }
@@ -136,12 +139,15 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
           deger={yasa.law_transition ?? null}
           evet="geçiş YAPILDI"
           hayir="geçiş yapılmadı"
-          neden="`shadow_law.law_transition` yükte yok — hangi yasanın karar verdiği ölçülemedi; p değerlerini hangi yasanın p'si sayacağın belirsiz."
+          neden="Hangi kural setinin karar verdiği bildirilmedi — aşağıdaki olasılık değerlerinin hangisine ait olduğu belirsiz"
         />
       </div>
 
       {kovalar.length === 0 ? (
-        <Olculemedi neden="`golge_kayit_sayisi` / `iraksayan_kayit` / `gecis_oncesi_kayit` alanlarının hiçbiri sayı taşımıyor — uyum ölçülemedi." />
+        <Olculemedi
+          neden="Uyum sayımı okunamadı — hiçbir kova sayı taşımıyor"
+          teknik="`golge_kayit_sayisi` / `iraksayan_kayit` / `gecis_oncesi_kayit` alanlarının hiçbiri sayı değil"
+        />
       ) : (
         <ChartContainer config={UYUM_CONFIG} className="aspect-auto h-44 w-full">
           <BarChart data={kovalar} layout="vertical" margin={{ bottom: 0, left: 0, right: 28, top: 4 }}>
@@ -183,16 +189,25 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
             metin={oran === null ? null : yuzde(oran, 1)}
             neden={
               sayilan === null
-                ? "`golge_kayit_sayisi` yok — payda kurulamadı."
-                : "gölge hükmü ölçülen kayıt YOK (payda 0) — oran tanımsız, %100 DEĞİL."
+                ? "Karşılaştırmanın paydası okunamadı"
+                : "Karşılaştırılabilir tek kayıt bile yok — oran tanımsız, %100 değil"
             }
+            teknik={sayilan === null ? "`golge_kayit_sayisi` yok" : "gölge hükmü ölçülen kayıt yok (payda 0)"}
           />
         </Satir>
         <Satir etiket="Ölçülen kayıt (payda)">
-          <Deger metin={sayi(sayilan, 0)} neden="`golge_kayit_sayisi` yükte yok." />
+          <Deger
+            metin={sayi(sayilan, 0)}
+            neden="Ölçülen kayıt sayısı bildirilmedi"
+            teknik="`golge_kayit_sayisi` yükte yok"
+          />
         </Satir>
         <Satir etiket="Geçiş öncesi (paydaya girmez)">
-          <Deger metin={sayi(oncesi, 0)} neden="`gecis_oncesi_kayit` yükte yok." />
+          <Deger
+            metin={sayi(oncesi, 0)}
+            neden="Geçiş öncesi kayıt sayısı bildirilmedi"
+            teknik="`gecis_oncesi_kayit` yükte yok"
+          />
         </Satir>
       </div>
 
@@ -204,20 +219,32 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
           </p>
           <div className="mt-2 flex flex-col">
             <Satir etiket="p (PARA-v3, KARAR veren)">
-              <Deger metin={sayi(son.p_v3, 3)} neden="`son_kayit.p_v3` yok — karar veren yasanın p'si ölçülemedi." />
+              <Deger
+                metin={sayi(son.p_v3, 3)}
+                neden="Karar veren kuralın olasılık değeri kaydedilmemiş"
+                teknik="`son_kayit.p_v3` yok"
+              />
             </Satir>
             <Satir etiket="p (eski yasa, yalnız kayıt)">
-              <Deger metin={sayi(son.p_eski, 3)} neden="`son_kayit.p_eski` yok — gölge hesap bu kayıtta çalışmamış." />
+              <Deger
+                metin={sayi(son.p_eski, 3)}
+                neden="Eski kuralın olasılık değeri bu kayıtta hesaplanmamış"
+                teknik="`son_kayit.p_eski` yok"
+              />
             </Satir>
             <Satir etiket="Gerekli p">
-              <Deger metin={sayi(son.p_required, 3)} neden="`son_kayit.p_required` yok — eşik ölçülemedi." />
+              <Deger
+                metin={sayi(son.p_required, 3)}
+                neden="Gereken eşik bu kayıtta kaydedilmemiş"
+                teknik="`son_kayit.p_required` yok"
+              />
             </Satir>
             <Satir etiket="v3 geçti mi?">
               <UcDegerli
                 deger={son.v3_gecti ?? null}
                 evet="geçti"
                 hayir="geçmedi"
-                neden="`son_kayit.v3_gecti` yok — kararın kendisi bu kayıttan okunamadı."
+                neden="Kararın sonucu bu kayıttan okunamadı"
               />
             </Satir>
             <Satir etiket="Eski yasa geçirir miydi?">
@@ -225,14 +252,17 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
                 deger={son.eski_gecerdi ?? null}
                 evet="geçirirdi"
                 hayir="geçirmezdi"
-                neden="`son_kayit.eski_gecerdi` yok — gölge hüküm bu kayıtta ölçülmemiş."
+                neden="Eski kuralın ne karar vereceği bu kayıtta hesaplanmamış"
                 evetIyi={son.v3_gecti === true}
               />
             </Satir>
           </div>
         </div>
       ) : (
-        <Olculemedi neden="`shadow_law.son_kayit` null — gölge alanı yazılmış tek bir hipotez kaydı bile yok; son karşılaştırma gösterilemiyor." />
+        <Olculemedi
+          neden="Karşılaştırılacak tek bir kayıt bile yok — son karşılaştırma gösterilemiyor"
+          teknik="`shadow_law.son_kayit` null; gölge alanı yazılmış hipotez kaydı yok"
+        />
       )}
 
       {yasa.aktif_yasa ? <Beyan>{yasa.aktif_yasa}</Beyan> : null}
@@ -248,7 +278,10 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
   if (!ogrenme) {
     return (
       <Kutu baslik="Gölge model — antrenman ve terfi">
-        <Olculemedi neden="/api/diagnostics yükünde `ogrenme` bloğu YOK — gölge modelin antrenman durumu bu turda hiç ölçülmedi." />
+        <Olculemedi
+          neden="Denemeye alınmış modelin eğitim durumu bu turda hiç ölçülmedi"
+          teknik="/api/diagnostics yükünde `ogrenme` bloğu YOK"
+        />
       </Kutu>
     );
   }
@@ -274,7 +307,10 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
       aciklama="Bu, kapı hükmünün değil İŞLEM SONUCUNUN gölgesi: modelin tahmini canlı Brier'le taban orana karşı ölçülür."
     >
       {a === null || a === undefined ? (
-        <Olculemedi neden="`ogrenme.antrenman` null — gölge modelin durumu okunamadı (sunucu uyarısı: learning_scorecard_training_failed / learning_automation)." />
+        <Olculemedi
+          neden="Denemeye alınmış modelin durumu okunamadı"
+          teknik="`ogrenme.antrenman` null (sunucu uyarısı: learning_scorecard_training_failed / learning_automation)"
+        />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="flex flex-col">
@@ -283,13 +319,14 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
                 deger={a.kuruldu ?? null}
                 evet="kurulu"
                 hayir="kurulmadı"
-                neden="`antrenman.kuruldu` yükte yok — modelin varlığı ölçülemedi."
+                neden="Modelin kurulu olup olmadığı bildirilmedi"
               />
             </Satir>
             <Satir etiket="Fit satırı (n_fit)">
               <Deger
                 metin={sayi(a.n_fit, 0)}
-                neden="`n_fit` yok — model hiç kurulmamışsa bu alan UYDURULMAZ (0 DEĞİL)."
+                neden="Modelin kaç satırla eğitildiği bildirilmedi — sıfır değil, ölçülmemiş"
+                teknik="`n_fit` yok; model hiç kurulmamışsa bu alan uydurulmaz"
               />
             </Satir>
             <Satir etiket="Gerçek / karşı-olgusal satır">
@@ -299,21 +336,30 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
                     ? null
                     : `${sayi(a.n_real, 0)} gerçek · ${sayi(a.n_cf, 0)} cf`
                 }
-                neden="künye (`n_real`/`n_cf`) yazılmamış — fit'in hangi popülasyondan geldiği ölçülemedi."
+                neden="Eğitim verisinin hangi kaynaktan geldiği kaydedilmemiş"
+                teknik="künye (`n_real`/`n_cf`) yazılmamış"
               />
             </Satir>
             <Satir etiket="Antrenman Brier'i">
-              <Deger metin={sayi(a.brier_train, 4)} neden="`brier_train` yok — eğitim hatası ölçülemedi." />
+              <Deger
+                metin={sayi(a.brier_train, 4)}
+                neden="Eğitim hatası ölçülemedi"
+                teknik="`brier_train` yok"
+              />
             </Satir>
             <Satir etiket="En az fit örneklemi">
-              <Deger metin={sayi(a.min_fit_n, 0)} neden="`min_fit_n` yükte yok — fit eşiği ölçülemedi." />
+              <Deger
+                metin={sayi(a.min_fit_n, 0)}
+                neden="Eğitim için gereken en az örneklem bildirilmedi"
+                teknik="`min_fit_n` yükte yok"
+              />
             </Satir>
             <Satir etiket="Veri seti taze mi?" ipucu="Üç değerli: null = parmak izi hiç yazılmamış (eski model).">
               <UcDegerli
                 deger={a.veri_seti_taze ?? null}
                 evet="taze"
                 hayir="değişti (yeniden fit gerek)"
-                neden="`veri_seti_taze` null — fit parmak izi hiç yazılmamış; 'bayat' demek bir iddia olurdu."
+                neden="Eğitim verisinin değişip değişmediği kaydedilmemiş — 'eskimiş' demek bir iddia olurdu"
               />
             </Satir>
           </div>
@@ -322,7 +368,8 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
             <Satir etiket="Son FİT (modelin kurulduğu an)">
               <Deger
                 metin={fitYasi === null ? null : `${fitYasi.metin}${anMetni(fit?.ts ?? a.son_fit_ts) ? ` · ${anMetni(fit?.ts ?? a.son_fit_ts)}` : ""}`}
-                neden="fit damgası yok — model hiç kurulmamış ya da damga silinmiş olabilir."
+                neden="Modelin ne zaman kurulduğu kaydedilmemiş — hiç kurulmamış ya da kayıt silinmiş olabilir"
+                teknik="fit zaman damgası yok"
                 className="text-xs"
               />
             </Satir>
@@ -335,21 +382,24 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
                       ? "çıkarım (künyedeki generated)"
                       : null
                 }
-                neden="kaynak alanı yok — yukarıdaki tarihin damga mı çıkarım mı olduğu ölçülemedi."
+                neden="Yukarıdaki tarihin nereden geldiği kaydedilmemiş"
+                teknik="kaynak alanı yok — damga mı çıkarım mı ayırt edilemiyor"
                 className="text-xs"
               />
             </Satir>
             <Satir etiket="Son DENEME (fit denendiği an)">
               <Deger
                 metin={denemeYasi === null ? null : denemeYasi.metin}
-                neden="deneme damgası yok — kadans hiç koşmamış olabilir; 'az önce koştu' DEĞİL."
+                neden="Son deneme zamanı kaydedilmemiş — otomatik döngü hiç koşmamış olabilir"
+                teknik="deneme damgası yok; 'az önce koştu' DEĞİL"
                 className="text-xs"
               />
             </Satir>
             <Satir etiket="Denemenin atlama nedeni">
               <Deger
                 metin={deneme?.atlama_nedeni ?? a.son_atlama_nedeni ?? null}
-                neden="atlama nedeni yazılmamış — deneme ya hiç koşmadı ya da fit gerçekten yapıldı."
+                neden="Atlama nedeni kaydedilmemiş — deneme ya hiç koşmadı ya da eğitim gerçekten yapıldı"
+                teknik="`son_atlama_nedeni` yok"
                 className="text-xs"
               />
             </Satir>
@@ -392,7 +442,8 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
         {yuzdeIlerleme === null ? (
           <Olculemedi
             className="mt-3"
-            neden="canlı kıyas çifti (`terfi.n_live`) ya da eşik (`promote_min_n`) yükte yok — terfi eşiğine ne kadar kaldığı ölçülemedi."
+            neden="Terfi eşiğine ne kadar kaldığı ölçülemedi"
+            teknik="canlı kıyas çifti (`terfi.n_live`) ya da eşik (`promote_min_n`) yükte yok"
           />
         ) : (
           <div className="mt-3 flex flex-col gap-1.5">
@@ -409,11 +460,16 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
           <Satir etiket="Canlı Brier">
             <Deger
               metin={sayi(a?.terfi?.live_brier, 4)}
-              neden="canlı Brier ölçülemedi — gölge tahmini damgalı bir plan henüz kapanmış işleme dönüşmemiş olabilir."
+              neden="Canlı tahmin hatası henüz ölçülemedi — tahmin taşıyan bir plan henüz kapanmış işleme dönüşmemiş olabilir"
+              teknik="`live_brier` yok"
             />
           </Satir>
           <Satir etiket="Taban-oran Brier">
-            <Deger metin={sayi(a?.terfi?.baseline_brier, 4)} neden="taban-oran Brier'i ölçülemedi — kıyas yapılamaz." />
+            <Deger
+              metin={sayi(a?.terfi?.baseline_brier, 4)}
+              neden="Kıyas için gereken taban değer ölçülemedi"
+              teknik="`baseline_brier` yok"
+            />
           </Satir>
         </div>
       </div>

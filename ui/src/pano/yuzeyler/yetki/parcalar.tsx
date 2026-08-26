@@ -103,24 +103,31 @@ export function Kapi<T>({
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ----------------------------------- */
 
 /** Ölçülemeyen değerin yeri. `neden` ZORUNLU. */
-export function Olculemedi({ neden, kisa = false }: { readonly neden: string; readonly kisa?: boolean }) {
+export function Olculemedi({ neden, teknik, kisa = false }: { readonly neden: string; readonly teknik?: string; readonly kisa?: boolean }) {
   return (
     <span
       className={cn("text-muted-foreground text-xs italic", kisa && "inline-block max-w-[20rem] truncate align-bottom")}
-      title={neden}
+      title={teknik ? `${neden} — ${teknik}` : neden}
     >
-      ölçülemedi — {neden}
+      {neden}
     </span>
   );
 }
 
 /** Sistemde KARŞILIĞI OLMAYAN alan. "ölçülemedi"den AYRI: orada bir ölçüm denendi ve
  *  başarısız oldu; burada ölçülecek bir şey HİÇ YOK — veri modelinde alan bulunmuyor. */
-export function AlanYok({ neden }: { readonly neden: string }) {
+/** Dürüst boşluk — İKİ KATMAN (2026-08-26 sözleşmesi, bkz. ogrenme/ortak.tsx):
+ *  `neden` İNSAN CÜMLESİdir ve görünür; `teknik` iç ayrıntıdır ve üstüne gelince çıkar.
+ *  "ölçülemedi — " öneki KALKTI: 178 yerde aynı kelime, hiçbirinde ne olduğunu
+ *  söylemiyordu. Çivi: tests/test_arayuz_dili_v323.py. */
+export function AlanYok({ neden, teknik }: { readonly neden: string; readonly teknik?: string }) {
   return (
-    <span className="inline-flex items-center gap-1 text-muted-foreground text-xs" title={neden}>
+    <span
+      className="inline-flex items-center gap-1 text-muted-foreground text-xs"
+      title={teknik ? `${neden} — ${teknik}` : neden}
+    >
       <Minus className="size-3 shrink-0" aria-hidden />
-      alan yok
+      {neden}
     </span>
   );
 }

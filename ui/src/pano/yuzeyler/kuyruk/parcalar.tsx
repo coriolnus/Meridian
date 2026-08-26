@@ -105,13 +105,13 @@ export function Kapi<T>({
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ---------------------------------- */
 
 /** Ölçülemeyen değerin yeri. `neden` ZORUNLU — "—" tek başına yalandır. */
-export function Olculemedi({ neden, kisa = false }: { readonly neden: string; readonly kisa?: boolean }) {
+export function Olculemedi({ neden, teknik, kisa = false }: { readonly neden: string; readonly teknik?: string; readonly kisa?: boolean }) {
   return (
     <span
       className={cn("text-muted-foreground text-xs italic", kisa && "inline-block max-w-[22rem] truncate align-bottom")}
-      title={neden}
+      title={teknik ? `${neden} — ${teknik}` : neden}
     >
-      ölçülemedi — {neden}
+      {neden}
     </span>
   );
 }
@@ -122,15 +122,17 @@ export function Deger({
   birim = "",
   basamak = 0,
   neden,
+  teknik,
   className,
 }: {
   readonly deger: number | null | undefined;
   readonly birim?: string;
   readonly basamak?: number;
   readonly neden: string;
+  readonly teknik?: string;
   readonly className?: string;
 }) {
-  if (deger === undefined || deger === null || !Number.isFinite(deger)) return <Olculemedi neden={neden} kisa />;
+  if (deger === undefined || deger === null || !Number.isFinite(deger)) return <Olculemedi neden={neden} teknik={teknik} kisa />;
   return (
     <span className={cn("tabular-nums", className)}>
       {deger.toLocaleString("tr-TR", { minimumFractionDigits: basamak, maximumFractionDigits: basamak })}

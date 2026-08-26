@@ -221,7 +221,11 @@ export function PortfoyYuzey() {
                 alt={koken?.ibare ?? "Kitabın nakdi (portfolio.json cash) — otorite nabız değil kitaptır"}
                 rozet={
                   gunKz === null ? (
-                    <Olculemedi kisa="gün %?" neden="`day_pnl_pct` nabızda yok — günlük değişim ölçülemedi." />
+                    <Olculemedi
+                      kisa="gün %?"
+                      neden="Günlük değişim henüz hesaplanmadı"
+                      teknik="`day_pnl_pct` nabızda yok"
+                    />
                   ) : (
                     <span className={cn("text-xs tabular-nums", kzSinifi(gunKz))}>{yuzde(gunKz)}</span>
                   )
@@ -230,7 +234,8 @@ export function PortfoyYuzey() {
                 <Deger
                   v={koken?.gercek_canli_sermaye}
                   bicim={para}
-                  neden="`sermaye_koken.gercek_canli_sermaye` yok ya da null — kitabın nakdi okunamadı."
+                  neden="Kitabın nakdi okunamadı"
+                  teknik="`sermaye_koken.gercek_canli_sermaye` yok ya da null"
                 />
               </Kpi>
 
@@ -244,7 +249,12 @@ export function PortfoyYuzey() {
                 {brokerNedeni !== null ? (
                   <Olculemedi kisa="ayna yok" neden={brokerNedeni} />
                 ) : (
-                  <Deger v={hesap?.equity} bicim={para} neden="/api/alpaca `account.equity` null döndü." />
+                  <Deger
+                    v={hesap?.equity}
+                    bicim={para}
+                    neden="Broker hesabının varlık toplamı okunamadı"
+                    teknik="/api/alpaca `account.equity` null döndü"
+                  />
                 )}
               </Kpi>
 
@@ -255,7 +265,12 @@ export function PortfoyYuzey() {
                 {brokerNedeni !== null ? (
                   <Olculemedi kisa="ayna yok" neden={brokerNedeni} />
                 ) : (
-                  <Deger v={hesap?.cash} bicim={para} neden="/api/alpaca `account.cash` null döndü." />
+                  <Deger
+                    v={hesap?.cash}
+                    bicim={para}
+                    neden="Hesaptaki nakit okunamadı"
+                    teknik="/api/alpaca `account.cash` null döndü"
+                  />
                 )}
               </Kpi>
 
@@ -301,8 +316,13 @@ export function PortfoyYuzey() {
                     kisa={defter.toplamSatir === 0 ? "—" : "toplanamadı"}
                     neden={
                       defter.toplamSatir === 0
-                        ? "Açık pozisyon yok, toplanacak K/Z de yok."
-                        : "Hiçbir pozisyonun açık K/Z'si ölçülemedi — ne broker `unrealized_pl` verdi ne türetme girdisi tamamdı."
+                        ? "Açık pozisyon yok, toplanacak kâr/zarar da yok."
+                        : "Hiçbir pozisyonun açık kâr/zararı ölçülemedi."
+                    }
+                    teknik={
+                      defter.toplamSatir === 0
+                        ? undefined
+                        : "ne broker `unrealized_pl` verdi ne türetme girdisi tamamdı"
                     }
                   />
                 ) : (

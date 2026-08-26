@@ -57,7 +57,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
     cell: ({ row }) => {
       const z = zamanMetni(row.original.ts);
       return z === null ? (
-        <Olculemedi neden="satırda `ts` alanı yok — ne zaman önerildiği yazılmamış" />
+        <Olculemedi neden="Önerinin ne zaman yapıldığı kaydedilmemiş" teknik="satırda `ts` alanı yok" />
       ) : (
         <span className="whitespace-nowrap text-xs tabular-nums">{z}</span>
       );
@@ -69,7 +69,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
     header: "Kimlik",
     cell: ({ row }) =>
       row.original.id === null ? (
-        <Olculemedi neden="satırda `id` alanı yok" />
+        <Olculemedi neden="Bu kaydın kimliği kaydedilmemiş" teknik="satırda `id` alanı yok" />
       ) : (
         <code className="font-mono text-xs">{row.original.id}</code>
       ),
@@ -80,7 +80,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
     header: ({ column }) => <SiralamaBasligi etiket="Kaynak" column={column} />,
     cell: ({ row }) =>
       row.original.kaynak === null ? (
-        <Olculemedi neden="satırda `source` alanı yok — kim önerdiği yazılmamış" />
+        <Olculemedi neden="Öneriyi kimin yaptığı kaydedilmemiş" teknik="satırda `source` alanı yok" />
       ) : (
         <Badge variant={row.original.kaynak.startsWith("hermes:") ? "secondary" : "outline"} className="text-[10px]">
           {row.original.kaynak}
@@ -106,7 +106,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
     header: ({ column }) => <SiralamaBasligi etiket="Güven" column={column} />,
     cell: ({ row }) =>
       row.original.guven === null ? (
-        <Olculemedi neden="satırda `confidence` alanı yok" />
+        <Olculemedi neden="Öneriye duyulan güven kaydedilmemiş" teknik="satırda `confidence` alanı yok" />
       ) : (
         <span className="text-xs tabular-nums">%{bicimSayi(row.original.guven * 100, 0)}</span>
       ),
@@ -117,7 +117,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
     header: ({ column }) => <SiralamaBasligi etiket="Tahmin Δ" column={column} />,
     cell: ({ row }) =>
       row.original.tahminDelta === null ? (
-        <Olculemedi neden="satırda `predicted_delta` alanı yok" />
+        <Olculemedi neden="Öneriden beklenen etki kaydedilmemiş" teknik="satırda `predicted_delta` alanı yok" />
       ) : (
         <span className="text-xs tabular-nums">{bicimSayi(row.original.tahminDelta, 4, true)}</span>
       ),
@@ -130,7 +130,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
       const g = row.original.gerceklesenDelta;
       if (g === null) {
         return (
-          <Olculemedi neden="`realized_delta` yazılmamış — öneri canlıya çıkmadı, sonucu ÖLÇÜLMEDİ (0 DEĞİL)" />
+          <Olculemedi neden="Öneri canlıya çıkmadı, sonucu hiç ölçülmedi (sıfır değil)" teknik="`realized_delta` yazılmamış" />
         );
       }
       return (
@@ -151,7 +151,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
     header: ({ column }) => <SiralamaBasligi etiket="Hüküm" column={column} />,
     cell: ({ row }) => {
       const d = row.original.durum;
-      if (d === null) return <Olculemedi neden="satırda `status` alanı yok" />;
+      if (d === null) return <Olculemedi neden="Öneri hakkındaki karar kaydedilmemiş" teknik="satırda `status` alanı yok" />;
       const s = DURUM_SOZLUGU[d];
       return (
         <Badge

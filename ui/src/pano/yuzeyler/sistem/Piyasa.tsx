@@ -81,11 +81,11 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
               <div className="grid gap-x-6 sm:grid-cols-2">
                 <div>
                   <Satir etiket="Evren büyüklüğü (satır)">
-                    <Deger deger={m.n} birim=" sembol" neden="/api/market `n` döndürmedi" />
+                    <Deger deger={m.n} birim=" sembol" neden="Evrendeki sembol sayısı bildirilmedi" teknik="/api/market `n` döndürmedi" />
                   </Satir>
                   <Satir etiket="Bayat bar (ucun sayacı)">
                     {m.stale_n === undefined ? (
-                      <Olculemedi neden="/api/market `stale_n` döndürmedi" kisa />
+                      <Olculemedi neden="Kaç barın bayat olduğu bildirilmedi" teknik="/api/market `stale_n` döndürmedi" kisa />
                     ) : (
                       <span
                         className={
@@ -100,7 +100,7 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
                   </Satir>
                   <Satir etiket="Bayat satır (bu ekranda sayılan)">
                     {m.rows === undefined || !m.as_of ? (
-                      <Olculemedi neden="rows ya da as_of gelmedi — sayım yapılamaz" kisa />
+                      <Olculemedi neden="Bayat satırlar bu ekranda sayılamadı" teknik="rows ya da as_of gelmedi" kisa />
                     ) : (
                       <span className="tabular-nums">
                         {rows.filter((r) => !r.retired && r.last_date && m.as_of && r.last_date < m.as_of).length}
@@ -108,13 +108,13 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
                     )}
                   </Satir>
                   <Satir etiket="Emekli sembol">
-                    <Deger deger={m.retired_n} neden="/api/market `retired_n` döndürmedi" />
+                    <Deger deger={m.retired_n} neden="Emekli sembol sayısı bildirilmedi" teknik="/api/market `retired_n` döndürmedi" />
                   </Satir>
                 </div>
                 <div>
                   <Satir etiket="Kaynak">
                     {m.source === undefined ? (
-                      <Olculemedi neden="/api/market `source` bloğu gelmedi" kisa />
+                      <Olculemedi neden="Barların hangi kaynaktan geldiği bildirilmedi" teknik="/api/market `source` bloğu gelmedi" kisa />
                     ) : (
                       <span className="tabular-nums">
                         bars {m.source.bars ?? "?"} · finviz ekstra {m.source.finviz_extra ?? "?"}
@@ -123,7 +123,7 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
                   </Satir>
                   <Satir etiket="Seans içi ölçüm">
                     {m.intraday === undefined ? (
-                      <Olculemedi neden="/api/market `intraday` bloğu gelmedi" kisa />
+                      <Olculemedi neden="Gün içi ölçüm bildirilmedi" teknik="/api/market `intraday` bloğu gelmedi" kisa />
                     ) : m.intraday.reason ? (
                       <span className="text-muted-foreground text-xs">
                         {m.intraday.measured_n ?? 0}/{m.intraday.tracked_n ?? 0} — {m.intraday.reason}
@@ -142,7 +142,7 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
                   </Satir>
                   <Satir etiket="Rejim (regime.json'da GERÇEKTEN olan)">
                     {m.regime === undefined || Object.keys(m.regime).length === 0 ? (
-                      <Olculemedi neden="regime.json boş — uç olmayan anahtarı None ile doldurmuyor" kisa />
+                      <Olculemedi neden="Piyasa rejimi için kayıtlı bir değer yok" teknik="regime.json boş — uç olmayan anahtarı None ile doldurmuyor" kisa />
                     ) : (
                       <span className="text-xs">
                         {Object.entries(m.regime)
@@ -155,7 +155,7 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
               </div>
 
               {dagilim.length === 0 ? (
-                <Olculemedi neden="son bar tarihi taşıyan yaşayan sembol yok — dağılım çizilemedi" />
+                <Olculemedi neden="Son bar tarihi olan yaşayan sembol yok — dağılım çizilemedi" teknik="rows içinde emekli olmayan ve `last_date` taşıyan satır yok" />
               ) : (
                 <ChartContainer config={GRAFIK} className="aspect-auto h-56 w-full">
                   <BarChart data={dagilim} margin={{ left: 4, right: 8 }}>
@@ -190,13 +190,13 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
                         <TableRow key={r.ticker ?? `bayat-${i}`}>
                           <TableCell className="font-medium font-mono">{r.ticker ?? "?"}</TableCell>
                           <TableCell className="text-muted-foreground text-xs">
-                            {r.last_date ?? <Olculemedi neden="satır last_date taşımıyor" kisa />}
+                            {r.last_date ?? <Olculemedi neden="Bu sembolün son bar tarihi kaydedilmemiş" teknik="satır last_date taşımıyor" kisa />}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
-                            <Deger deger={r.close} basamak={2} neden="bar okunamadı" />
+                            <Deger deger={r.close} basamak={2} neden="Kapanış fiyatı okunamadı" teknik="satır `close` taşımıyor ya da bar okunamadı" />
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
-                            <Deger deger={r.adv20_usd} basamak={0} neden="ADV ölçülemedi" />
+                            <Deger deger={r.adv20_usd} basamak={0} neden="20 günlük ortalama işlem hacmi ölçülemedi" teknik="`adv20_usd` gelmedi" />
                           </TableCell>
                           <TableCell className="text-muted-foreground text-xs">{r.source ?? "?"}</TableCell>
                           <TableCell className="flex flex-wrap gap-1">
@@ -214,7 +214,7 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
                   </p>
                 </div>
               ) : m.rows === undefined ? (
-                <Olculemedi neden="/api/market `rows` döndürmedi — bayat satırlar listelenemedi" />
+                <Olculemedi neden="Sembol listesi bildirilmedi — bayat satırlar listelenemedi" teknik="/api/market `rows` döndürmedi" />
               ) : (
                 <p className="text-muted-foreground text-sm">
                   Yaşayan hiçbir sembolün barı `as_of`un gerisinde değil.

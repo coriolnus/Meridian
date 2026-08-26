@@ -114,13 +114,25 @@ export function Kapi<T>({
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ---------------------------------- */
 
 /** Ölçülemeyen değerin yeri. `neden` ZORUNLU — tek başına "—" yalandır. */
-export function Olculemedi({ neden, kisa = false }: { readonly neden: string; readonly kisa?: boolean }) {
+/** Dürüst boşluk — İKİ KATMAN (2026-08-26 sözleşmesi, bkz. ogrenme/ortak.tsx):
+ *  `neden` İNSAN CÜMLESİdir ve görünür; `teknik` iç ayrıntıdır ve üstüne gelince çıkar.
+ *  "ölçülemedi — " öneki KALKTI: 178 yerde aynı kelime, hiçbirinde ne olduğunu
+ *  söylemiyordu. Çivi: tests/test_arayuz_dili_v323.py. */
+export function Olculemedi({
+  neden,
+  teknik,
+  kisa = false,
+}: { readonly neden: string; readonly teknik?: string; readonly kisa?: boolean }) {
   return (
     <span
-      className={cn("text-muted-foreground text-xs italic", kisa && "inline-block max-w-[20rem] truncate align-bottom")}
-      title={neden}
+      className={cn(
+        "text-muted-foreground text-xs italic",
+        kisa && "inline-block max-w-[20rem] truncate align-bottom",
+        teknik && "cursor-help underline decoration-dotted underline-offset-2",
+      )}
+      title={teknik ? `${neden} — ${teknik}` : neden}
     >
-      ölçülemedi — {neden}
+      {neden}
     </span>
   );
 }
@@ -132,6 +144,7 @@ export function Deger({
   birim = "",
   basamak = 0,
   neden,
+  teknik,
   className,
 }: {
   readonly deger: number | null | undefined;
@@ -139,9 +152,10 @@ export function Deger({
   readonly birim?: string;
   readonly basamak?: number;
   readonly neden: string;
+  readonly teknik?: string;
   readonly className?: string;
 }) {
-  if (deger === undefined || deger === null || !Number.isFinite(deger)) return <Olculemedi neden={neden} kisa />;
+  if (deger === undefined || deger === null || !Number.isFinite(deger)) return <Olculemedi neden={neden} teknik={teknik} kisa />;
   return (
     <span className={cn("tabular-nums", className)}>
       {onek}
@@ -156,13 +170,15 @@ export function Deger({
 export function Metin({
   deger,
   neden,
+  teknik,
   className,
 }: {
   readonly deger: string | null | undefined;
   readonly neden: string;
+  readonly teknik?: string;
   readonly className?: string;
 }) {
-  if (typeof deger !== "string" || deger.trim() === "") return <Olculemedi neden={neden} kisa />;
+  if (typeof deger !== "string" || deger.trim() === "") return <Olculemedi neden={neden} teknik={teknik} kisa />;
   return <span className={cn("break-all", className)}>{deger}</span>;
 }
 
@@ -194,17 +210,19 @@ export function OkRozet({
   iyi = "sağlam",
   kotu = "bozuk",
   neden = "uç bu alanı döndürmüyor",
+  teknik,
 }: {
   readonly ok: UcDeger;
   readonly iyi?: string;
   readonly kotu?: string;
   readonly neden?: string;
+  readonly teknik?: string;
 }) {
   if (ok === undefined || ok === null) {
     return (
-      <Badge variant="outline" className="gap-1.5" title={neden}>
+      <Badge variant="outline" className="gap-1.5" title={teknik ? `${neden} — ${teknik}` : neden}>
         <span className="size-1.5 rounded-full bg-muted-foreground/60" />
-        ölçülemedi
+        {neden}
       </Badge>
     );
   }

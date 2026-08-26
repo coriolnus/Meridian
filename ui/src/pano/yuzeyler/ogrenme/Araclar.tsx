@@ -230,7 +230,8 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, AracSatir>[] = [
     cell: ({ row }) => (
       <Deger
         metin={rKati(row.original.avg_r, 2)}
-        neden={`bu aracın gerçek katmanında ${row.original.n} işlem var — ortalama R ölçülemedi (0,0 DEĞİL).`}
+        neden="Bu aracın ortalama getirisi hesaplanamadı"
+        teknik={`gerçek katmanda ${row.original.n} işlem var ama \`avg_r\` yok — 0,0 DEĞİL`}
         className="tabular-nums"
       />
     ),
@@ -248,7 +249,8 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, AracSatir>[] = [
     cell: ({ row }) => (
       <Deger
         metin={rKati(row.original.cf_avg_r, 2)}
-        neden={`karşı-olgusal katmanda ${row.original.n_cf} satır var — cf ortalama R ölçülemedi.`}
+        neden="Denenmeyen girişlerin ortalama getirisi hesaplanamadı"
+        teknik={`karşı-olgusal katmanda ${row.original.n_cf} satır var ama \`cf_avg_r\` yok`}
         className="text-muted-foreground tabular-nums"
       />
     ),
@@ -262,10 +264,8 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, AracSatir>[] = [
       if (s.yukleme === null && s.acilma === null) {
         return (
           <OlculemediHucre
-            neden={
-              s.ajan_neden ??
-              "ajan kullanım sayacı bu adı hiç kaydetmedi ve uç nedenini yazmadı — 0 yazmak ölçülmemiş bir şeyi ölçülmüş göstermek olurdu."
-            }
+            neden={s.ajan_neden ?? "Bu aracı yapay zekânın kaç kez kullandığı kaydedilmemiş"}
+            teknik="`ajan_yukleme_n` / `ajan_acilma_n` yok — sayaç dosyasında bu ad hiç geçmiyor; 0 yazmak ölçülmemiş bir şeyi ölçülmüş göstermek olurdu"
           />
         );
       }
@@ -340,7 +340,11 @@ function Govde({ veri }: { veri: SkillGovdesi }) {
           <div key={k.baslik} className="rounded-lg border border-border/60 bg-card p-4">
             <p className="text-muted-foreground text-xs">{k.baslik}</p>
             <p className="mt-1.5 text-2xl leading-none tabular-nums">
-              <Deger metin={sayi(k.deger, 0)} neden="/api/skills `counts` bloğu bu alanı basmadı — sayım ölçülemedi." />
+              <Deger
+                metin={sayi(k.deger, 0)}
+                neden="Araç sayımı bildirilmedi"
+                teknik="/api/skills `counts` bloğu bu alanı basmadı"
+              />
             </p>
             <p className="mt-2 text-muted-foreground text-xs leading-snug">{k.alt}</p>
           </div>
@@ -391,7 +395,8 @@ function Govde({ veri }: { veri: SkillGovdesi }) {
       {/* ---- TABLO ---- */}
       {satirlar.length === 0 ? (
         <Olculemedi
-          neden={`/api/skills \`catalog\` boş liste döndürdü${adsiz > 0 ? ` (${adsiz} satır \`name\` taşımadığı için ayrıca atlandı)` : ""} — kayıt defteri okunamamış olabilir.`}
+          neden={`Hiç araç listelenmedi${adsiz > 0 ? ` (${adsiz} satır adsız olduğu için ayrıca atlandı)` : ""} — araç kaydı okunamamış olabilir`}
+          teknik={`/api/skills \`catalog\` boş liste döndürdü${adsiz > 0 ? `; ${adsiz} satır \`name\` taşımıyordu` : ""}`}
         />
       ) : (
         <>

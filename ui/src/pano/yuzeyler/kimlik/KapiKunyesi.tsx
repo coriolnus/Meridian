@@ -89,7 +89,7 @@ export function KapiKunyesi({
             ok={oturum.authenticated}
             iyi="açık"
             kotu="kapalı"
-            neden="/api/session `authenticated` alanını döndürmedi"
+            neden="Oturumun açık olup olmadığı bildirilmedi"
           />
         </Satir>
         <Satir etiket="parola kurulu">
@@ -97,7 +97,7 @@ export function KapiKunyesi({
             ok={oturum.password_set}
             iyi="kurulu"
             kotu="kurulu değil"
-            neden="/api/session `password_set` alanını döndürmedi"
+            neden="Parolanın kurulu olup olmadığı bildirilmedi"
           />
         </Satir>
         <Satir etiket="çerez Secure (TLS)">
@@ -105,21 +105,27 @@ export function KapiKunyesi({
             ok={oturum.tls}
             iyi="Secure işaretli"
             kotu="Secure DEĞİL (düz HTTP)"
-            neden="/api/session `tls` alanını döndürmedi"
+            neden="Bağlantının şifreli olup olmadığı bildirilmedi"
           />
         </Satir>
         <Satir etiket="oturum ömrü">
           {omur !== null ? (
             <span className="tabular-nums">{omur}</span>
           ) : (
-            <Olculemedi neden="/api/session bu alanı döndürmüyor; ömür yalnız bu sekmede giriş yapılırsa /api/login yanıtındaki expires_in'den ölçülür" />
+            <Olculemedi
+              neden="Oturum süresi yalnız bu sekmede giriş yapılırsa bilinir"
+              teknik="/api/session bu alanı döndürmüyor; ömür yalnız /api/login yanıtındaki expires_in'den ölçülür"
+            />
           )}
         </Satir>
         <Satir etiket="son okuma">
           {zaman !== null ? (
             <span className="tabular-nums text-xs">{zamanMetni(zaman.toISOString()) ?? "—"}</span>
           ) : (
-            <Olculemedi neden="/api/session henüz bir kez bile başarıyla okunmadı" />
+            <Olculemedi
+              neden="Oturum bilgisi henüz bir kez bile başarıyla okunamadı"
+              teknik="/api/session bu sekmede hiç başarılı yanıt vermedi"
+            />
           )}
         </Satir>
       </div>

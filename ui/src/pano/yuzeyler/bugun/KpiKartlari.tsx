@@ -117,9 +117,9 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
         }
       >
         {b.equity === undefined ? (
-          <Olculemedi neden="`/api/today` gövdesinde `equity` alanı yok" />
+          <Olculemedi neden="Sermaye bildirilmedi" teknik="`/api/today` gövdesinde `equity` alanı yok" />
         ) : b.equity === null ? (
-          <Olculemedi neden="uç `equity` alanını ölçemedi (null döndü)" />
+          <Olculemedi neden="Sermaye okunamadı" teknik="uç `equity` alanını ölçemedi (null döndü)" />
         ) : (
           <>
             <Sayi>{bicimPara(b.equity)}</Sayi>
@@ -149,7 +149,10 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
         }
       >
         {pozlar === undefined ? (
-          <Olculemedi neden="`/api/today` gövdesinde `open_positions` alanı yok" />
+          <Olculemedi
+            neden="Açık pozisyon listesi bildirilmedi"
+            teknik="`/api/today` gövdesinde `open_positions` alanı yok"
+          />
         ) : (
           <Sayi>{bicimSayi(pozlar.length)}</Sayi>
         )}
@@ -166,9 +169,12 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
         }
       >
         {b.inbox_count === undefined ? (
-          <Olculemedi neden="`/api/today` gövdesinde `inbox_count` alanı yok" />
+          <Olculemedi
+            neden="Senden iş isteyen kalem sayısı bildirilmedi"
+            teknik="`/api/today` gövdesinde `inbox_count` alanı yok"
+          />
         ) : b.inbox_count === null ? (
-          <Olculemedi neden="uç gelen kutusunu sayamadı (null döndü)" />
+          <Olculemedi neden="Bekleyen kararlar sayılamadı" teknik="uç gelen kutusunu sayamadı (null döndü)" />
         ) : (
           <>
             <Sayi>{bicimSayi(b.inbox_count)}</Sayi>
@@ -191,7 +197,10 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
         }
       >
         {planlar === undefined ? (
-          <Olculemedi neden="`/api/today` gövdesinde `todays_plans` alanı yok" />
+          <Olculemedi
+            neden="Günün plan listesi bildirilmedi"
+            teknik="`/api/today` gövdesinde `todays_plans` alanı yok"
+          />
         ) : (
           <Sayi>{bicimSayi(planlar.length)}</Sayi>
         )}
@@ -213,9 +222,12 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
         }
       >
         {hb === undefined ? (
-          <Olculemedi neden="`/api/today` gövdesinde `heartbeat` alanı yok" />
+          <Olculemedi neden="Sistem nabzı bu turda gelmedi" teknik="`/api/today` gövdesinde `heartbeat` alanı yok" />
         ) : hb.data_ok === undefined ? (
-          <Olculemedi neden="nabız `data_ok` taşımıyor (tohum nabzı canlı-döngü nabzından az anahtar taşır)" />
+          <Olculemedi
+            neden="Veri sağlığı bu nabızda bildirilmedi"
+            teknik="nabız `data_ok` taşımıyor (tohum nabzı canlı-döngü nabzından az anahtar taşır)"
+          />
         ) : (
           <>
             <Sayi renk={hb.data_ok ? undefined : "text-destructive"}>{hb.data_ok ? "sağlam" : "ŞÜPHELİ"}</Sayi>
@@ -240,9 +252,12 @@ export function KpiKartlari({ b }: { b: BugunTam }) {
         }
       >
         {b.autonomy_level === undefined ? (
-          <Olculemedi neden="`/api/today` gövdesinde `autonomy_level` alanı yok" />
+          <Olculemedi
+            neden="Otonomi düzeyi bildirilmedi"
+            teknik="`/api/today` gövdesinde `autonomy_level` alanı yok"
+          />
         ) : b.autonomy_level === null ? (
-          <Olculemedi neden="uç özerklik düzeyini ölçemedi (null döndü)" />
+          <Olculemedi neden="Otonomi düzeyi okunamadı" teknik="uç özerklik düzeyini ölçemedi (null döndü)" />
         ) : (
           <>
             <Sayi>L{b.autonomy_level}</Sayi>

@@ -56,7 +56,7 @@ const KOLONLAR: ColumnDef<DataTableFeatures, KosuSatiri>[] = [
         {row.original.kosu.pipeline ? (
           <code className="font-mono text-xs">{row.original.kosu.pipeline}</code>
         ) : (
-          <Olculemedi neden="satır `pipeline` taşımıyor" kisa />
+          <Olculemedi neden="Hangi hattın koştuğu kaydedilmemiş" teknik="satır `pipeline` taşımıyor" kisa />
         )}
         <span className="max-w-[22rem] truncate text-muted-foreground text-[11px]" title={row.original.kosu.run_id}>
           {row.original.kosu.run_id ?? "koşu kimliği yazılmamış"}
@@ -79,7 +79,7 @@ const KOLONLAR: ColumnDef<DataTableFeatures, KosuSatiri>[] = [
       </Button>
     ),
     cell: ({ row }) =>
-      zamanMetni(row.original.kosu.started) ?? <Olculemedi neden="`started` damgası okunamadı" kisa />,
+      zamanMetni(row.original.kosu.started) ?? <Olculemedi neden="Başlangıç zamanı okunamadı" teknik="`started` damgası okunamadı" kisa />,
   },
   {
     id: "sure",
@@ -120,16 +120,16 @@ const KOLONLAR: ColumnDef<DataTableFeatures, KosuSatiri>[] = [
       return (
         <div className="flex items-center gap-1.5 text-xs tabular-nums">
           <Badge variant="secondary" title="`skills_invoked` — gerçekten koşan skill sayısı">
-            <Deger deger={row.original.kosu.skills_invoked} neden="`skills_invoked` yazılmamış" />
+            <Deger deger={row.original.kosu.skills_invoked} neden="Koşan skill sayısı kaydedilmemiş" teknik="`skills_invoked` yazılmamış" />
           </Badge>
           <Badge
             variant={beyanKosmayan !== undefined && beyanKosmayan > 0 ? "destructive" : "outline"}
             title="`skills_declared_not_run` — beyan edildi ama KOŞMADI; hattın sessizce boş dönmesinin tek kanıtı"
           >
-            <Deger deger={beyanKosmayan} neden="`skills_declared_not_run` yazılmamış" />
+            <Deger deger={beyanKosmayan} neden="Beyan edilip koşmayan skill sayısı kaydedilmemiş" teknik="`skills_declared_not_run` yazılmamış" />
           </Badge>
           <Badge variant="outline" title="`skills_skipped` — kapı/koşul nedeniyle atlanan">
-            <Deger deger={row.original.kosu.skills_skipped} neden="`skills_skipped` yazılmamış" />
+            <Deger deger={row.original.kosu.skills_skipped} neden="Atlanan skill sayısı kaydedilmemiş" teknik="`skills_skipped` yazılmamış" />
           </Badge>
         </div>
       );
@@ -139,7 +139,7 @@ const KOLONLAR: ColumnDef<DataTableFeatures, KosuSatiri>[] = [
     id: "artefakt",
     accessorFn: (s) => s.kosu.artifacts ?? -1,
     header: "Artefakt",
-    cell: ({ row }) => <Deger deger={row.original.kosu.artifacts} neden="`artifacts` yazılmamış" />,
+    cell: ({ row }) => <Deger deger={row.original.kosu.artifacts} neden="Üretilen çıktı sayısı kaydedilmemiş" teknik="`artifacts` yazılmamış" />,
   },
 ];
 

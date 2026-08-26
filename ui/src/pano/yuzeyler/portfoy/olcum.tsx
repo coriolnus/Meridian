@@ -114,12 +114,12 @@ export function kzOrnegi(v: number | null): string {
 }
 
 /** "—" YAZMANIN TEK YASAL BİÇİMİ: tire NEDENİYLE birlikte gelir. */
-export function Olculemedi({ neden, kisa = "ölçülemedi", className }: { neden: string; kisa?: string; className?: string }) {
+export function Olculemedi({ neden, teknik, kisa = "ölçülemedi", className }: { neden: string; teknik?: string; kisa?: string; className?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span
-          title={neden}
+          title={teknik ? `${neden} — ${teknik}` : neden}
           className={cn(
             "cursor-help text-muted-foreground text-xs underline decoration-dotted underline-offset-4",
             className,
@@ -138,14 +138,16 @@ export function Deger({
   v,
   bicim,
   neden,
+  teknik,
   className,
 }: {
   v: number | null | undefined;
   bicim: (n: number) => string;
   neden: string;
+  teknik?: string;
   className?: string;
 }) {
-  if (v === null || v === undefined) return <Olculemedi neden={neden} />;
+  if (v === null || v === undefined) return <Olculemedi neden={neden} teknik={teknik} />;
   return <span className={cn("tabular-nums", className)}>{bicim(v)}</span>;
 }
 

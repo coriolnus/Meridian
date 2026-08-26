@@ -83,7 +83,8 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                             ok={h.ok}
                             iyi="koşuyor"
                             kotu="kopuk"
-                            neden="health() `ok` alanı gelmedi — halka hiç kurulmamış olabilir"
+                            neden="Bu halkanın durumu bildirilmedi — hiç kurulmamış olabilir"
+                            teknik="health() `ok` alanı gelmedi"
                           />
                         </TableCell>
                         <TableCell className="text-muted-foreground text-xs">{h.not}</TableCell>
@@ -100,12 +101,13 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                       ok={hud.stream_ok}
                       iyi="canlı"
                       kotu="kopuk"
-                      neden="ayna hiç koşmamış — stream_ok null (üçüncü hâl)"
+                      neden="Canlı besleme bu süreçte hiç koşmamış"
+                      teknik="broker tarafı aynası hiç koşmamış — stream_ok null (üçüncü hâl)"
                     />
                   </Satir>
                   <Satir etiket="Son akış olayı">
                     {zamanMetni(hud.stream_last_event_ts) ?? (
-                      <Olculemedi neden="stream_last_event_ts yok — hiç olay görülmemiş" kisa />
+                      <Olculemedi neden="Akıştan hiç olay görülmemiş" teknik="stream_last_event_ts yok" kisa />
                     )}
                   </Satir>
                   <Satir etiket="Ne zamandır kopuk">
@@ -116,12 +118,12 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                     ) : hud.stream_down_since === null ? (
                       <span className="text-emerald-600 dark:text-emerald-400">kopuş kaydı yok</span>
                     ) : (
-                      <Olculemedi neden="stream_down_since alanı gelmedi" kisa />
+                      <Olculemedi neden="Kopukluğun ne zaman başladığı bildirilmedi" teknik="stream_down_since alanı gelmedi" kisa />
                     )}
                   </Satir>
                   <Satir etiket="Nabız yaşı">
                     {sureMetni(hud.heartbeat_age_s) ?? (
-                      <Olculemedi neden="heartbeat_age_s ölçülemedi" kisa />
+                      <Olculemedi neden="Nabzın yaşı ölçülemedi" teknik="heartbeat_age_s ölçülemedi" kisa />
                     )}
                   </Satir>
                 </div>
@@ -132,12 +134,12 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                         {i.mode === "arm" ? "SİLAHLI" : "gözlem"}
                       </Badge>
                     ) : (
-                      <Olculemedi neden="intraday `mode` alanı gelmedi" kisa />
+                      <Olculemedi neden="Karar hattının hangi modda olduğu bildirilmedi" teknik="intraday `mode` alanı gelmedi" kisa />
                     )}
                   </Satir>
                   <Satir etiket="Kararlar (bugün / toplam)">
                     {i?.decisions === undefined ? (
-                      <Olculemedi neden="intraday.decisions bloğu gelmedi" kisa />
+                      <Olculemedi neden="Karar sayaçları bildirilmedi" teknik="intraday.decisions bloğu gelmedi" kisa />
                     ) : (
                       <span className="tabular-nums">
                         {i.decisions.today ?? "?"} / {i.decisions.total ?? "?"} · tetiklenen{" "}
@@ -147,8 +149,8 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                   </Satir>
                   <Satir etiket="İzlenen sembol / silahlı plan">
                     <span className="tabular-nums">
-                      <Deger deger={i?.watched} neden="intraday.watched gelmedi" /> /{" "}
-                      <Deger deger={i?.armed_plans} neden="portfolio.armed okunamadı" />
+                      <Deger deger={i?.watched} neden="İzlenen sembol sayısı bildirilmedi" teknik="intraday.watched gelmedi" /> /{" "}
+                      <Deger deger={i?.armed_plans} neden="İşleme hazır plan sayısı okunamadı" teknik="portfolio.armed okunamadı" />
                     </span>
                   </Satir>
                   <Satir etiket="Son karar / son hata">
@@ -184,14 +186,14 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                   </p>
                 </>
               ) : i?.skipped === undefined ? (
-                <Olculemedi neden="intraday `skipped` sayacı gelmedi" />
+                <Olculemedi neden="Atlama sayacı bildirilmedi" teknik="intraday `skipped` sayacı gelmedi" />
               ) : (
                 <p className="text-muted-foreground text-sm">Atlama sayacı boş — bu süreçte hiç sembol atlanmadı.</p>
               )}
 
               {/* --- AKIŞ BOŞLUĞU: ÜÇÜNCÜ HÂL AYRI --- */}
               {bosluk === null || bosluk === undefined ? (
-                <Olculemedi neden="boşluk kancası bu süreçte hiç koşmadı — 'boşluk yok' DEĞİL, 'bakılmadı' (api.py:4491)" />
+                <Olculemedi neden="Boşluk taraması bu süreçte hiç koşmadı — boşluk yok değil, bakılmadı" teknik="`akis_boslugu` null (api.py:4491)" />
               ) : bosluk.durum && bosluk.durum !== "ok" ? (
                 <p className="text-muted-foreground text-sm">
                   Boşluk taraması hüküm VERMEDİ — durum: <span className="font-mono">{bosluk.durum}</span> (
@@ -228,7 +230,7 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                                 {b.baslangic?.slice(11, 16) ?? "?"}–{b.bitis?.slice(11, 16) ?? "?"}Z
                               </TableCell>
                               <TableCell className="text-right tabular-nums">
-                                <Deger deger={b.eksik_dk} neden="eksik_dk yok" />
+                                <Deger deger={b.eksik_dk} neden="Kaç dakikanın eksik olduğu kaydedilmemiş" teknik="eksik_dk yok" />
                               </TableCell>
                               <TableCell className="text-right tabular-nums">
                                 {b.beklenen ?? "?"} / {b.gelen ?? "?"}
@@ -263,20 +265,20 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                         <TableRow key={`${String(k.ts ?? "")}-${idx}`}>
                           <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
                             {zamanMetni(typeof k.ts === "string" ? k.ts : null) ?? (
-                              <Olculemedi neden="karar `ts` taşımıyor" kisa />
+                              <Olculemedi neden="Kararın zamanı kaydedilmemiş" teknik="karar `ts` taşımıyor" kisa />
                             )}
                           </TableCell>
                           <TableCell className="font-mono text-xs">
-                            {alan(k, ["ticker", "symbol"]) ?? <Olculemedi neden="karar sembol taşımıyor" kisa />}
+                            {alan(k, ["ticker", "symbol"]) ?? <Olculemedi neden="Kararın hangi sembole ait olduğu kaydedilmemiş" teknik="karar satırı ticker/symbol taşımıyor" kisa />}
                           </TableCell>
                           <TableCell className="text-xs">
                             {alan(k, ["action", "decision", "karar"]) ?? (
-                              <Olculemedi neden="karar alanı adlandırılmamış" kisa />
+                              <Olculemedi neden="Ne karar verildiği kaydedilmemiş" teknik="karar satırı action/decision/karar taşımıyor" kisa />
                             )}
                           </TableCell>
                           <TableCell className="max-w-[22rem] truncate text-xs">
                             {alan(k, ["reason", "neden", "detail"]) ?? (
-                              <Olculemedi neden="karar gerekçe alanı taşımıyor" kisa />
+                              <Olculemedi neden="Kararın gerekçesi kaydedilmemiş" teknik="karar satırı reason/neden/detail taşımıyor" kisa />
                             )}
                           </TableCell>
                         </TableRow>

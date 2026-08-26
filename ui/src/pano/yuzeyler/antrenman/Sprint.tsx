@@ -125,7 +125,10 @@ export function Sprint({ hermes }: { hermes: Durum<HermesGovdesi> }) {
       <Kapi durum={hermes} ad="/api/hermes" yukseklik="h-64">
         {(v) =>
           !v.sprint ? (
-            <Olculemedi neden="/api/hermes okundu ama `sprint` bloğu YOK — antrenman durumu bu turda hiç ölçülmedi (koşmuyor DEĞİL)." />
+            <Olculemedi
+              neden="Antrenman durumu bu turda hiç ölçülmedi — 'koşmuyor' demek değil"
+              teknik="/api/hermes okundu ama `sprint` bloğu YOK"
+            />
           ) : (
             <Govde s={v.sprint} kadans={v.learning?.besleme?.antrenman_sprinti ?? null} />
           )
@@ -182,7 +185,12 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col">
           <Satir etiket="Sprint kimliği (sid)">
-            <Deger metin={s.sid ?? null} neden="`sid` yok — hiç sprint başlatılmamış." className="text-xs" />
+            <Deger
+              metin={s.sid ?? null}
+              neden="Henüz hiç sprint başlatılmamış"
+              teknik="`sid` yok"
+              className="text-xs"
+            />
           </Satir>
           <Satir etiket="Başlangıç">
             <Deger
@@ -191,7 +199,8 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
                 const a = anMetni(s.started_at);
                 return y === null ? null : a === null ? y.metin : `${y.metin} · ${a}`;
               })()}
-              neden="`started_at` damgası yok — sprint hiç başlamamış."
+              neden="Sprint henüz hiç başlamamış"
+              teknik="`started_at` damgası yok"
               className="text-xs"
             />
           </Satir>
@@ -201,28 +210,49 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
                 const y = yas(s.updated);
                 return y === null ? null : y.metin;
               })()}
-              neden="`updated` damgası yok — durum dosyası hiç yazılmamış."
+              neden="Durum kaydı hiç kaydedilmemiş"
+              teknik="`updated` damgası yok — durum dosyası"
               className="text-xs"
             />
           </Satir>
           <Satir etiket="Faz">
-            <Deger metin={s.phase ?? null} neden="`phase` yok — sprint hiç koşmamış." className="text-xs" />
+            <Deger
+              metin={s.phase ?? null}
+              neden="Sprint henüz hiç koşmamış"
+              teknik="`phase` yok"
+              className="text-xs"
+            />
           </Satir>
         </div>
         <div className="flex flex-col">
           <Satir etiket="Kum havuzu değerlendirme başlangıcı">
-            <Deger metin={s.eval_start ?? null} neden="`eval_start` yok — pencere ölçülemedi." className="text-xs" />
+            <Deger
+              metin={s.eval_start ?? null}
+              neden="Değerlendirme penceresinin başlangıcı bildirilmedi"
+              teknik="`eval_start` yok — pencere ölçülemedi"
+              className="text-xs"
+            />
           </Satir>
           <Satir etiket="Ayrım tarihi (cutoff)">
-            <Deger metin={s.cutoff ?? null} neden="`cutoff` yok — seçim/onay penceresi ayrımı ölçülemedi." className="text-xs" />
+            <Deger
+              metin={s.cutoff ?? null}
+              neden="Seçim ve onay pencerelerini ayıran tarih bildirilmedi"
+              teknik="`cutoff` yok"
+              className="text-xs"
+            />
           </Satir>
           <Satir etiket="v1 taban işlemi">
-            <Deger metin={sayi(s.n_v1, 0)} neden="`n_v1` yok — ileri taban ölçülmemiş." />
+            <Deger
+              metin={sayi(s.n_v1, 0)}
+              neden="Taban sürümün işlem sayısı ölçülmemiş"
+              teknik="`n_v1` yok — ileri taban"
+            />
           </Satir>
           <Satir etiket="Aday sürüm (v2) işlemi">
             <Deger
               metin={s.v2 === null || s.v2 === undefined ? null : `v${s.v2} · ${sayi(s.n_v2, 0) ?? "?"} işlem`}
-              neden="aday sürüm hiç kurulmadı (arama kapıdan aday geçiremedi) — bu bir arıza DEĞİL, bir sonuç."
+              neden="Aday sürüm hiç kurulmadı — hiçbir aday elemeyi geçemedi; bu bir arıza değil, bir sonuç"
+              teknik="`v2`/`n_v2` yok — arama kapıdan aday geçiremedi"
               className="text-xs"
             />
           </Satir>
@@ -235,7 +265,10 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
         aciklama="Bu satır 'koşuyor mu?' sorusundan AYRIDIR: makine koşup hiçbir adayı geçirememiş olabilir."
       >
         {!arama ? (
-          <Olculemedi neden="`sprint.search` yok — son koşu arama fazına hiç ulaşmamış olabilir (Faz A min_sample'a takılırsa arama hiç başlamaz)." />
+          <Olculemedi
+            neden="Son koşu arama aşamasına hiç ulaşmamış olabilir"
+            teknik="`sprint.search` yok — Faz A min_sample'a takılırsa arama hiç başlamaz"
+          />
         ) : (
           <>
             <div className="flex flex-wrap gap-2">
@@ -270,7 +303,11 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
             ) : null}
             <div className="flex flex-col">
               <Satir etiket="Yürürlükteki sürümün OOS skoru">
-                <Deger metin={sayi(arama.incumbent_oos, 4)} neden="`incumbent_oos` yok — kıyas tabanı ölçülemedi." />
+                <Deger
+                  metin={sayi(arama.incumbent_oos, 4)}
+                  neden="Yürürlükteki sürümün skoru ölçülemedi — kıyas tabanı yok"
+                  teknik="`incumbent_oos` yok"
+                />
               </Satir>
               {arama.best ? (
                 <Satir etiket="En iyi aday">
@@ -281,7 +318,10 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
                 </Satir>
               ) : (
                 <Satir etiket="En iyi aday">
-                  <OlculemediHucre neden="`search.best` null — hiçbir aday en-iyi olarak kaydedilmemiş." />
+                  <OlculemediHucre
+                    neden="Hiçbir aday en iyi olarak kaydedilmemiş"
+                    teknik="`search.best` null"
+                  />
                 </Satir>
               )}
             </div>
@@ -302,8 +342,13 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
             neden={
               s.runs_note ??
               (s.runs_ledger === "YOK"
-                ? "hiçbir kum havuzunda `sprint_runs.jsonl` yok — sprint arama fazına hiç ulaşmamış olabilir."
-                : "koşu defteri okundu ama hiçbir satır `evaluated`/`cleared` taşımıyor — grafik çizilemedi.")
+                ? "Hiçbir kum havuzunda koşu kaydı yok — sprint arama aşamasına hiç ulaşmamış olabilir"
+                : "Koşu geçmişi okundu ama hiçbir satırda sayı yok — grafik çizilemedi")
+            }
+            teknik={
+              s.runs_ledger === "YOK"
+                ? "hiçbir kum havuzunda `sprint_runs.jsonl` yok"
+                : "hiçbir satır `evaluated`/`cleared` taşımıyor"
             }
           />
         ) : (
@@ -353,13 +398,25 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
                       <TableCell className="py-2.5 font-medium tabular-nums">{k.ts ?? "damgasız"}</TableCell>
                       <TableCell className="py-2.5 text-xs">{k.status ?? "—"}</TableCell>
                       <TableCell className="py-2.5 text-right tabular-nums">
-                        <Deger metin={sayi(k.evaluated, 0)} neden="bu koşuda `evaluated` yazılmamış." />
+                        <Deger
+                          metin={sayi(k.evaluated, 0)}
+                          neden="Bu koşuda değerlendirilen aday sayısı kaydedilmemiş"
+                          teknik="`evaluated` yok"
+                        />
                       </TableCell>
                       <TableCell className="py-2.5 text-right tabular-nums">
-                        <Deger metin={sayi(k.cleared, 0)} neden="bu koşuda `cleared` yazılmamış." />
+                        <Deger
+                          metin={sayi(k.cleared, 0)}
+                          neden="Bu koşuda geçen aday sayısı kaydedilmemiş"
+                          teknik="`cleared` yok"
+                        />
                       </TableCell>
                       <TableCell className="py-2.5 text-right tabular-nums">
-                        <Deger metin={sayi(k.incumbent_oos, 4)} neden="bu koşuda taban OOS yazılmamış." />
+                        <Deger
+                          metin={sayi(k.incumbent_oos, 4)}
+                          neden="Bu koşuda taban skoru kaydedilmemiş"
+                          teknik="`incumbent_oos` yok — taban OOS"
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -378,7 +435,10 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
       {/* ---- (4) KADANS: SIRADA NE VAR ---- */}
       <Kutu baslik="Kadans — bir sonraki sprint ne zaman?" aciklama="`sprint.should_run()` her cevabın yanına SEBEBİNİ yazar.">
         {!kadans ? (
-          <Olculemedi neden="`learning.besleme.antrenman_sprinti` yükte yok — kadansın kararı bu turda ölçülemedi." />
+          <Olculemedi
+            neden="Otomatik döngünün kararı bu turda ölçülemedi"
+            teknik="`learning.besleme.antrenman_sprinti` yükte yok"
+          />
         ) : (
           <div className="flex flex-col">
             <Satir etiket="Şimdi koşmalı mı?">
@@ -396,13 +456,26 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
               </Badge>
             </Satir>
             <Satir etiket="Sebep">
-              <Deger metin={kadans.sebep ?? null} neden="kadans sebep yazmadı — 'arıza mı, disiplin mi' ayırt edilemez." className="text-xs" />
+              <Deger
+                metin={kadans.sebep ?? null}
+                neden="Otomatik döngü kararının gerekçesini kaydetmemiş"
+                teknik="kadans sebep yazmadı — 'arıza mı, disiplin mi' ayırt edilemez"
+                className="text-xs"
+              />
             </Satir>
             <Satir etiket="Son sprintten geçen gün">
-              <Deger metin={sayi(kadans.gecen_gun, 0)} neden="`gecen_gun` null — hiç sprint koşmamış (0 gün DEĞİL)." />
+              <Deger
+                metin={sayi(kadans.gecen_gun, 0)}
+                neden="Henüz hiç sprint koşmamış — 'sıfır gün' demek değil"
+                teknik="`gecen_gun` null"
+              />
             </Satir>
             <Satir etiket="Sprint sonrası taze hipotez">
-              <Deger metin={sayi(kadans.taze_hipotez, 0)} neden="`taze_hipotez` ölçülemedi." />
+              <Deger
+                metin={sayi(kadans.taze_hipotez, 0)}
+                neden="Sprint sonrası taze hipotez sayısı ölçülemedi"
+                teknik="`taze_hipotez` ölçülemedi"
+              />
             </Satir>
             <Satir etiket="Tetik eşikleri">
               <span className="text-xs">
@@ -423,7 +496,10 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
 function IzTablosu({ iz, evaluated }: { iz: readonly SprintIzi[]; evaluated: number | null }) {
   if (iz.length === 0) {
     return (
-      <Olculemedi neden="`search.trace` boş — hangi adayın neden düştüğü bu koşuda kaydedilmemiş (reddin gerekçesi olmadan sprint hiçbir şey öğretmez)." />
+      <Olculemedi
+        neden="Hangi adayın neden elendiği bu koşuda kaydedilmemiş — gerekçe olmadan sprint bir şey öğretmez"
+        teknik="`search.trace` boş"
+      />
     );
   }
   const disarida = evaluated === null ? null : Math.max(0, evaluated - iz.length);
@@ -449,7 +525,11 @@ function IzTablosu({ iz, evaluated }: { iz: readonly SprintIzi[]; evaluated: num
                   {String(t.old ?? "?")} → {String(t.new ?? "?")}
                 </TableCell>
                 <TableCell className="py-2.5 text-right tabular-nums">
-                  <Deger metin={sayi(t.candidate_oos, 4)} neden="bu denemede aday OOS yazılmamış." />
+                  <Deger
+                    metin={sayi(t.candidate_oos, 4)}
+                    neden="Bu denemede aday skoru kaydedilmemiş"
+                    teknik="`candidate_oos` yok — aday OOS"
+                  />
                 </TableCell>
                 <TableCell className="py-2.5 text-right text-xs tabular-nums">{t.fold_wins ?? "—"}</TableCell>
                 <TableCell className="py-2.5">

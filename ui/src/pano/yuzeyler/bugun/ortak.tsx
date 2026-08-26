@@ -50,11 +50,15 @@ export function pnlRengi(n: number | null | undefined): string {
 /** Ölçülemeyen bir değerin yerine geçen tek işaret. `neden` ZORUNLU: nedensiz bir
  *  "ölçülemedi", okuyucuyu "acaba bozuk mu?" diye sunucu günlüklerine gönderir —
  *  oysa cevabın kendisi burada yazılabilir. */
-export function Olculemedi({ neden, className }: { neden: string; className?: string }) {
+export function Olculemedi({ neden, teknik, className }: { neden: string; teknik?: string; className?: string }) {
   return (
     <span className={cn("inline-flex flex-col gap-0.5", className)}>
-      <span className="font-medium text-muted-foreground text-xl leading-none tracking-tight">ölçülemedi</span>
-      <span className="text-muted-foreground text-xs leading-snug">{neden}</span>
+      <span
+        className="font-medium text-muted-foreground text-base leading-snug tracking-tight"
+        title={teknik}
+      >
+        {neden}
+      </span>
     </span>
   );
 }

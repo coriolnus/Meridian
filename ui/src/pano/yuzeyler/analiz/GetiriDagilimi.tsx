@@ -70,7 +70,10 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
 
   if (!blok) {
     return (
-      <Olculemedi neden="/api/topviews yükünde `aileler.SONUC.r_kovasi` bloğu yok — R kovası facet'i bu turda hiç üretilmedi." />
+      <Olculemedi
+        neden="Getiri dağılımı bu turda hiç üretilmedi"
+        teknik="/api/topviews yükünde `aileler.SONUC.r_kovasi` bloğu yok"
+      />
     );
   }
   if (!blok.satirlar) {
@@ -78,8 +81,9 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
       <Olculemedi
         neden={
           blok.olculemedi_neden ??
-          "r_kovasi facet'i `satirlar: null` döndürdü ama nedenini yazmadı — boş liste DEĞİL, ölçülemedi."
+          "Getiri dağılımı ölçülemedi ve nedeni de yazılmadı — bu, kayıt yok demek değil."
         }
+        teknik="r_kovasi facet'i `satirlar: null` döndürdü ama nedenini yazmadı"
       />
     );
   }
@@ -92,7 +96,10 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
 
   if (noktalar.length === 0) {
     return (
-      <Olculemedi neden="r_kovasi satırlarının hiçbiri hem `deger` hem `n` taşımıyor — çizilecek kova yok." />
+      <Olculemedi
+        neden="Çizilecek getiri kovası yok"
+        teknik="r_kovasi satırlarının hiçbiri hem `deger` hem `n` taşımıyor"
+      />
     );
   }
 
@@ -155,19 +162,20 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
                 <td className="py-2 pr-3 text-right text-muted-foreground tabular-nums">
                   <Deger
                     metin={toplam > 0 ? yuzde(p.n / toplam, 1) : null}
-                    neden="kovaların işlem toplamı sıfır — pay hesaplanamaz (bölme yok)."
+                    neden="Kovaların işlem toplamı sıfır — pay hesaplanamadı"
                   />
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">
                   <Deger
                     metin={p.satir.sum_r === null || p.satir.sum_r === undefined ? null : rKati(p.satir.sum_r)}
-                    neden={`bu kovadaki ${p.satir.r_n ?? 0} satır r_multiple taşıyor — toplam R ölçülemedi (0,0 DEĞİL: ölçülmedi).`}
+                    neden="Bu kovanın toplam R'si ölçülemedi — sıfır değil, ölçülmedi"
+                    teknik={`bu kovadaki ${p.satir.r_n ?? 0} satır r_multiple taşıyor`}
                   />
                 </td>
                 <td className="py-2 text-right tabular-nums">
                   <Deger
                     metin={p.satir.kazanma === null || p.satir.kazanma === undefined ? null : yuzde(p.satir.kazanma, 1)}
-                    neden="kovanın R taşıyan satırı yok — kazanma oranı paydasız."
+                    neden="Kovanın R taşıyan satırı yok — kazanma oranı paydasız"
                   />
                 </td>
               </tr>

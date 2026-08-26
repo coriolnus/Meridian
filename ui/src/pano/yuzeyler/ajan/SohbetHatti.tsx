@@ -202,6 +202,7 @@ function HafizaMesaji({
 }: {
   basliklar: readonly { readonly baslik: string; readonly n: number }[];
   neden: string | null;
+  teknik?: string;
 }) {
   return (
     <Message align="start">

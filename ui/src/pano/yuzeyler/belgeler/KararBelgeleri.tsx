@@ -269,7 +269,8 @@ function ArsivGovdesi({ arsiv }: { arsiv: Arsiv | null }) {
     return (
       <OlculemediBlok
         baslik="Arşiv künyesi okunamadı"
-        neden={`\`${ARSIV_UCU}\` 200 döndü ama gövdesi bir JSON nesnesi değil — bu bir "arşiv boş" hâli DEĞİL, uç sözleşmesinin ihlali.`}
+        neden="Sunucu cevap verdi ama içeriği beklenen biçimde değil. Bu, arşivin boş olduğu anlamına gelmez — sunucu tarafında bir uyumsuzluk var"
+        teknik={`\`${ARSIV_UCU}\` 200 döndü ama gövdesi bir JSON nesnesi değil`}
       />
     );
   }
@@ -279,11 +280,12 @@ function ArsivGovdesi({ arsiv }: { arsiv: Arsiv | null }) {
     // operatörü yanlış yere — diske ya da sunucuya — bakmaya gönderirdi.
     return (
       <OlculemediBlok
-        baslik={arsiv.hata === null ? "Uç sözleşmesi ihlal edildi" : "Arşiv dizini açılamadı"}
+        baslik={arsiv.hata === null ? "Belge listesi beklenen biçimde gelmedi" : "Arşiv klasörü açılamadı"}
         neden={
           arsiv.hata ??
-          `\`${ARSIV_UCU}\` \`belgeler\` alanını ne dizi ne null döndürdü ve \`hata\` da yazmadı — sunucu tarafına bakılmalı.`
+          "Belge listesi ne liste ne de boş olarak geldi ve nedeni yazılmadı — sunucu tarafına bakılmalı."
         }
+        teknik={`\`${ARSIV_UCU}\` \`belgeler\` alanını ne dizi ne null döndürdü ve \`hata\` da yazmadı`}
       />
     );
   }
@@ -316,7 +318,12 @@ function ArsivGovdesi({ arsiv }: { arsiv: Arsiv | null }) {
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline" className="gap-1">
           <Archive className="size-3" aria-hidden />
-          {arsiv.dizin ?? <Olculemedi neden="uç `dizin` alanını yazmadı — hangi klasörün tarandığı bilinmiyor" />}
+          {arsiv.dizin ?? (
+            <Olculemedi
+              neden="Hangi klasörün tarandığı bildirilmedi"
+              teknik="uç `dizin` alanını yazmadı"
+            />
+          )}
         </Badge>
         <Badge variant="ghost">{bicimSayi(belgeler.length)} belge</Badge>
         <Badge variant="ghost">{bicimSayi(kararN)} KARAR</Badge>
@@ -361,7 +368,7 @@ function ArsivGovdesi({ arsiv }: { arsiv: Arsiv | null }) {
                       <p className="font-medium text-sm leading-snug">
                         {b.baslik ?? (
                           <Olculemedi
-                            neden={b.neden ?? "uç başlığı yazmadı ve nedenini de söylemedi"}
+                            neden={b.neden ?? "Belgenin başlığı bildirilmedi ve nedeni de yazılmadı"}
                             className="text-sm"
                           />
                         )}
@@ -372,11 +379,11 @@ function ArsivGovdesi({ arsiv }: { arsiv: Arsiv | null }) {
                     </div>
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-xs tabular-nums">
-                    {b.tarih ?? <Olculemedi neden={b.neden ?? "uç tarihi yazmadı ve nedenini de söylemedi"} />}
+                    {b.tarih ?? <Olculemedi neden={b.neden ?? "Belgenin tarihi bildirilmedi ve nedeni de yazılmadı"} />}
                   </TableCell>
                   <TableCell className="text-right text-xs tabular-nums">
                     {b.bayt === null ? (
-                      <Olculemedi neden={b.neden ?? "uç boyutu yazmadı ve nedenini de söylemedi"} />
+                      <Olculemedi neden={b.neden ?? "Belgenin boyutu bildirilmedi ve nedeni de yazılmadı"} />
                     ) : (
                       bicimSayi(b.bayt)
                     )}

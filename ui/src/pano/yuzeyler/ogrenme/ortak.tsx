@@ -115,24 +115,59 @@ export function anMetni(ts: unknown): string | null {
 /* ---- ÖLÇÜLEMEDİ ---------------------------------------------------------- */
 
 /** Blok biçimi: nedeni GÖRÜNÜR yazar. Kart gövdesinde kullanılır. */
-export function Olculemedi({ neden, className }: { neden: string; className?: string }) {
+/** Veri yokken basılan dürüst boşluk. İKİ KATMAN, ve sıra 2026-08-26'da TERSİNE DÖNDÜ:
+ *
+ *    ESKİ:  "ölçülemedi" + `neden` (içinde alan adı, uç yolu, `null` …)
+ *    YENİ:  `neden` = İNSAN CÜMLESİ (görünür) · `teknik` = iç ayrıntı (üstüne gelince)
+ *
+ *  OPERATÖR VAKASI: "dışardan bir göz sadece UI'ı görecek" — ölçüldü ki 401 `neden`
+ *  geliştiricinin kendine yazdığı cümleydi (`day_pnl_pct` nabızda yok · /api/alpaca
+ *  `account.cash` null döndü). `/api/session` gören biri "bu bitmemiş" der.
+ *
+ *  DÜRÜSTLÜK DİSİPLİNİ GEVŞEMEZ: veri yokken hâlâ sayı UYDURULMUYOR ve sebep hâlâ
+ *  TAŞINIYOR. Değişen tek şey sebebin hangi KATMANDA ve hangi DİLLE söylendiği.
+ *  `teknik` sessizce düşürülemez (çivi: test_arayuz_dili_v323) — düşerse teşhis kaybolur
+ *  ve "ölçemedim" ile "arıza var" yine ayırt edilemez hâle gelir.
+ *
+ *  "ölçülemedi" SABİT ETİKETİ KALKTI: 178 yerde aynı kelime, hiçbirinde ne olduğunu
+ *  söylemiyordu. Artık cümlenin kendisi konuşuyor ("Günlük değişim henüz hesaplanmadı"). */
+export function Olculemedi({
+  neden,
+  teknik,
+  className,
+}: {
+  neden: string;
+  teknik?: string;
+  className?: string;
+}) {
   return (
     <span className={cn("flex flex-col gap-0.5", className)}>
-      <span className="text-muted-foreground text-sm italic">ölçülemedi</span>
-      <span className="text-muted-foreground text-xs leading-snug">{neden}</span>
+      <span
+        className={cn(
+          "text-muted-foreground text-sm italic",
+          teknik && "cursor-help underline decoration-dotted underline-offset-2",
+        )}
+        title={teknik}
+      >
+        {neden}
+      </span>
     </span>
   );
 }
 
 /** Satır-içi biçim: dar hücrede nedeni `title` ile taşır (noktalı altı çizgi =
  *  "üstüne gel"). Nedeni tamamen düşürmek yasak; yalnız yerleşimi değişir. */
-export function OlculemediHucre({ neden }: { neden: string }) {
+export function OlculemediHucre({ neden, teknik }: { neden: string; teknik?: string }) {
+  // DAR HÜCRE: insan cümlesi görünür, iç ayrıntı `title`da. Nedeni tamamen düşürmek yasak;
+  // yalnız yerleşimi değişir. İkisi de varsa `title` ikisini birden taşır — kullanıcı kısa
+  // cümleyi okur, teşhis eden kişi üstüne gelip ayrıntıyı görür.
+  const ipucu = teknik ? `${neden} — ${teknik}` : neden;
   return (
     <span
       className="cursor-help text-muted-foreground text-xs underline decoration-dotted underline-offset-2"
-      title={neden}
+      title={ipucu}
     >
-      ölçülemedi
+      {neden}
     </span>
   );
 }
@@ -141,13 +176,15 @@ export function OlculemediHucre({ neden }: { neden: string }) {
 export function Deger({
   metin: m,
   neden,
+  teknik,
   className,
 }: {
   metin: string | null;
   neden: string;
+  teknik?: string;
   className?: string;
 }) {
-  if (m === null) return <OlculemediHucre neden={neden} />;
+  if (m === null) return <OlculemediHucre neden={neden} teknik={teknik} />;
   return <span className={className}>{m}</span>;
 }
 
@@ -162,6 +199,7 @@ export function UcDegerli({
   evet,
   hayir,
   neden,
+  teknik,
   evetIyi = true,
 }: {
   deger: boolean | null | undefined;
@@ -169,14 +207,15 @@ export function UcDegerli({
   hayir: string;
   /** `null` iken ekrana çıkacak gerekçe — uçtan geliyorsa aynen taşı. */
   neden: string;
+  teknik?: string;
   /** `true` iyi haber mi? (Örn. `brain_degraded` için FALSE iyi haberdir.) */
   evetIyi?: boolean;
 }) {
   if (deger === null || deger === undefined) {
     return (
-      <Badge variant="outline" className="cursor-help gap-1 text-muted-foreground" title={neden}>
+      <Badge variant="outline" className="cursor-help gap-1 text-muted-foreground" title={teknik ? `${neden} — ${teknik}` : neden}>
         <CircleHelp className="size-3" aria-hidden />
-        ölçülemedi
+        {neden}
       </Badge>
     );
   }

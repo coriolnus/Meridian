@@ -185,16 +185,16 @@ export const DURUM_SOZLUGU: Readonly<
 /* ---- ÖLÇÜLEMEDİ ---------------------------------------------------------- */
 
 /** Ölçülemeyen bir DEĞERİN yerine geçer. "0" ya da "—" yazmak bu depoda yalandır. */
-export function Olculemedi({ neden, className }: { neden: string; className?: string }) {
+export function Olculemedi({ neden, teknik, className }: { neden: string; teknik?: string; className?: string }) {
   return (
     <span
       className={cn(
         "cursor-help text-muted-foreground text-xs underline decoration-dotted underline-offset-2",
         className,
       )}
-      title={neden}
+      title={teknik ? `${neden} — ${teknik}` : neden}
     >
-      ölçülemedi
+      {neden}
     </span>
   );
 }
@@ -203,23 +203,27 @@ export function Olculemedi({ neden, className }: { neden: string; className?: st
 export function Deger({
   metin: m,
   neden,
+  teknik,
   className,
 }: {
   metin: string | null;
   neden: string;
+  teknik?: string;
   className?: string;
 }) {
-  if (m === null) return <Olculemedi neden={neden} />;
+  if (m === null) return <Olculemedi neden={neden} teknik={teknik} />;
   return <span className={className}>{m}</span>;
 }
 
-export function OlculemediBlok({ baslik, neden }: { baslik: string; neden: string }) {
+export function OlculemediBlok({ baslik, neden, teknik }: { baslik: string; neden: string; teknik?: string }) {
   return (
     <div className="flex items-start gap-3 rounded-lg border border-border border-dashed bg-muted/30 p-4">
       <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
       <div className="min-w-0">
         <p className="font-medium text-sm">{baslik}</p>
-        <p className="mt-0.5 break-words text-muted-foreground text-xs leading-relaxed">{neden}</p>
+        <p className="mt-0.5 break-words text-muted-foreground text-xs leading-relaxed" title={teknik}>
+          {neden}
+        </p>
       </div>
     </div>
   );

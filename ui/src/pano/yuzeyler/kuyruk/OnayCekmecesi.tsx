@@ -141,46 +141,46 @@ function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
   return (
     <Blok baslik="Plan (/api/today.todays_plans)">
       <div>
-        <Satir etiket="Sembol">{p.ticker ?? <Olculemedi neden="`ticker` yazılmamış" kisa />}</Satir>
-        <Satir etiket="Yön">{p.side ?? <Olculemedi neden="`side` yazılmamış" kisa />}</Satir>
-        <Satir etiket="Kurulum">{p.setup ?? <Olculemedi neden="`setup` yazılmamış" kisa />}</Satir>
-        <Satir etiket="Sektör">{p.sector ?? <Olculemedi neden="`sector` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Sembol">{p.ticker ?? <Olculemedi neden="Sembol kaydedilmemiş" teknik="`ticker` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Yön">{p.side ?? <Olculemedi neden="İşlem yönü kaydedilmemiş" teknik="`side` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Kurulum">{p.setup ?? <Olculemedi neden="Kurulum adı kaydedilmemiş" teknik="`setup` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Sektör">{p.sector ?? <Olculemedi neden="Sektör kaydedilmemiş" teknik="`sector` yazılmamış" kisa />}</Satir>
         <Satir etiket="Plan kimliği">
           {p.id ? (
             <code className="break-all font-mono text-xs">{p.id}</code>
           ) : (
-            <Olculemedi neden="`id` yazılmamış — onay ucu bu plana çağrılamaz" kisa />
+            <Olculemedi neden="Plan kimliği yok — bu plan onaylanamaz" teknik="`id` yazılmamış — onay ucu bu plana çağrılamaz" kisa />
           )}
         </Satir>
-        <Satir etiket="Seans tarihi">{p.date ?? <Olculemedi neden="`date` yazılmamış" kisa />}</Satir>
+        <Satir etiket="Seans tarihi">{p.date ?? <Olculemedi neden="Seans tarihi kaydedilmemiş" teknik="`date` yazılmamış" kisa />}</Satir>
         <Satir etiket="Skor">
-          <Deger deger={p.score} basamak={3} neden="`score` yazılmamış" />
+          <Deger deger={p.score} basamak={3} neden="Plan skoru kaydedilmemiş" teknik="`score` yazılmamış" />
         </Satir>
         <Satir etiket="Rejim (plan anı)">
-          {p.regime_at_plan ?? <Olculemedi neden="`regime_at_plan` yazılmamış" kisa />}
+          {p.regime_at_plan ?? <Olculemedi neden="Plan anındaki piyasa rejimi kaydedilmemiş" teknik="`regime_at_plan` yazılmamış" kisa />}
         </Satir>
       </div>
 
       <div className="mt-2">
         <h5 className="text-muted-foreground text-[11px] uppercase">Seviyeler ve risk</h5>
         <Satir etiket="Giriş tetiği">
-          <Deger deger={p.entry_trigger} basamak={2} neden="`entry_trigger` yazılmamış" />
+          <Deger deger={p.entry_trigger} basamak={2} neden="Giriş tetiği kaydedilmemiş" teknik="`entry_trigger` yazılmamış" />
         </Satir>
         <Satir etiket="Stop">
-          <Deger deger={p.stop} basamak={2} neden="`stop` yazılmamış" />
+          <Deger deger={p.stop} basamak={2} neden="Stop seviyesi kaydedilmemiş" teknik="`stop` yazılmamış" />
         </Satir>
         <Satir etiket="Kâr hedefi">
-          <Deger deger={p.profit_target} basamak={2} neden="`profit_target` yazılmamış" />
+          <Deger deger={p.profit_target} basamak={2} neden="Kâr hedefi kaydedilmemiş" teknik="`profit_target` yazılmamış" />
         </Satir>
         <Satir etiket="Beklenen R katsayısı">
-          <Deger deger={p.r_multiple_expected} basamak={2} neden="`r_multiple_expected` yazılmamış" />
+          <Deger deger={p.r_multiple_expected} basamak={2} neden="Beklenen R katsayısı kaydedilmemiş" teknik="`r_multiple_expected` yazılmamış" />
         </Satir>
         <Satir etiket="Risk büyüklüğü (R)">
-          <Deger deger={p.size_r} basamak={2} neden="`size_r` yazılmamış" />
+          <Deger deger={p.size_r} basamak={2} neden="Risk büyüklüğü kaydedilmemiş" teknik="`size_r` yazılmamış" />
         </Satir>
         <Satir etiket="Hisse başına risk (türetildi)">
           {birimRisk === null ? (
-            <Olculemedi neden="tetik ya da stop yok — `entry_trigger − stop` hesaplanamaz" kisa />
+            <Olculemedi neden="Tetik ya da stop yok — hisse başına risk hesaplanamadı" teknik="`entry_trigger − stop` hesaplanamaz" kisa />
           ) : (
             <span className="tabular-nums" title="türetildi: entry_trigger − stop (uç bu alanı yazmıyor)">
               {birimRisk.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -188,27 +188,27 @@ function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
           )}
         </Satir>
         <Satir etiket="Risk (dolar)">
-          <Olculemedi neden="`risk_dollars` plan satırında YOK — broker.size_position onu gönderim anında öz sermayeden hesaplar" />
+          <Olculemedi neden="Dolar riski planda yazmaz — gönderim anında hesaplanır" teknik="`risk_dollars` plan satırında yok — broker.size_position onu gönderim anında öz sermayeden hesaplar" />
         </Satir>
         <Satir etiket="Adet (lot)">
-          <Olculemedi neden="plan satırı adet taşımıyor — lot gönderim anında hesaplanır (broker.size_position)" />
+          <Olculemedi neden="Adet planda yazmaz — gönderim anında hesaplanır" teknik="plan satırı adet taşımıyor — lot gönderim anında hesaplanır (broker.size_position)" />
         </Satir>
         <Satir etiket="Son kapanış">
-          <Deger deger={p.last_close} basamak={2} neden="`last_close` yok — bar CSV'si okunamadı" />
+          <Deger deger={p.last_close} basamak={2} neden="Son kapanış fiyatı okunamadı" teknik="`last_close` yok — bar CSV'si okunamadı" />
         </Satir>
         <Satir etiket="Tetikten sapma">
-          <Deger deger={p.drift_pct} birim="%" basamak={2} neden="`drift_pct` yok — tetik 0 ya da yazılmamış" />
+          <Deger deger={p.drift_pct} birim="%" basamak={2} neden="Fiyatın tetikten sapması hesaplanamadı" teknik="`drift_pct` yok — tetik 0 ya da yazılmamış" />
         </Satir>
       </div>
 
       <div className="mt-2">
         <h5 className="text-muted-foreground text-[11px] uppercase">Hüküm ve ikinci beyin</h5>
         <Satir etiket="Kapı hükmü">
-          {p.gate_verdict ?? <Olculemedi neden="`gate_verdict` yazılmamış" kisa />}
+          {p.gate_verdict ?? <Olculemedi neden="Kontrollerin kararı kaydedilmemiş" teknik="`gate_verdict` yazılmamış" kisa />}
         </Satir>
         <Satir etiket="Süresi doldu mu">
           {p.expired === undefined ? (
-            <Olculemedi neden="`expired` alanı yok — bayatlık ÖLÇÜLEMEDİ" kisa />
+            <Olculemedi neden="Planın süresinin dolup dolmadığı bildirilmedi" teknik="`expired` alanı yok — bayatlık ölçülemedi" kisa />
           ) : (
             <HukumRozet
               ton={p.expired ? "kotu" : "notr"}
@@ -219,7 +219,7 @@ function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
         </Satir>
         <Satir etiket="LLM vetosu">
           {p.llm_veto === undefined ? (
-            <Olculemedi neden="`llm_veto` alanı yok" kisa />
+            <Olculemedi neden="İkinci beynin veto verip vermediği bildirilmedi" teknik="`llm_veto` alanı yok" kisa />
           ) : (
             <HukumRozet
               ton={p.llm_veto ? "kotu" : "notr"}
@@ -230,19 +230,19 @@ function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
         </Satir>
         <Satir etiket="Uyuyan kurulum">
           {p.dormant_setup === undefined ? (
-            <Olculemedi neden="`dormant_setup` alanı yok" kisa />
+            <Olculemedi neden="Kurulumun uykuda olup olmadığı bildirilmedi" teknik="`dormant_setup` alanı yok" kisa />
           ) : (
             <span className="text-xs">{p.dormant_setup ? "evet — icraya bağlı olmayan kurulum" : "hayır"}</span>
           )}
         </Satir>
         <Satir etiket="Strateji sürümü">
-          <Deger deger={p.strategy_version} neden="`strategy_version` yazılmamış" />
+          <Deger deger={p.strategy_version} neden="Strateji sürümü kaydedilmemiş" teknik="`strategy_version` yazılmamış" />
         </Satir>
         <Satir etiket="Gölge p(kazanç)">
-          <Deger deger={p.p_win_shadow} basamak={3} neden="`p_win_shadow` yazılmamış" />
+          <Deger deger={p.p_win_shadow} basamak={3} neden="Denemedeki kazanma olasılığı kaydedilmemiş" teknik="`p_win_shadow` yazılmamış" />
         </Satir>
         <Satir etiket="Broker durumu">
-          {p.broker_status ?? <Olculemedi neden="`broker_status` yazılmamış" kisa />}
+          {p.broker_status ?? <Olculemedi neden="Broker durumu kaydedilmemiş" teknik="`broker_status` yazılmamış" kisa />}
         </Satir>
       </div>
 
@@ -266,7 +266,7 @@ function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
             <KapiDokumu kontroller={p.gate_checks} />
           </div>
         ) : (
-          <Olculemedi neden="plan satırı `gate_checks` taşımıyor — tek tek kapı hükümleri ÖLÇÜLEMEDİ" />
+          <Olculemedi neden="Tek tek kontrol sonuçları kaydedilmemiş" teknik="plan satırı `gate_checks` taşımıyor" />
         )}
       </div>
 
@@ -382,7 +382,7 @@ export function OnayCekmecesi({
                 {oge.kanit ? (
                   <p className="whitespace-pre-wrap rounded-md border bg-muted/30 p-3 text-sm leading-6">{oge.kanit}</p>
                 ) : (
-                  <Olculemedi neden="uç bu öğede `evidence` alanına metin yazmamış" />
+                  <Olculemedi neden="Bu kalem için kanıt metni kaydedilmemiş" teknik="uç bu öğede `evidence` alanına metin yazmamış" />
                 )}
               </Blok>
 
@@ -406,7 +406,7 @@ export function OnayCekmecesi({
               {oge.ayrinti.cesit === "silahlanma" ? (
                 <Blok baslik="Silahlanma ölçümü (/api/diagnostics.gatekeeper.arming)">
                   {oge.ayrinti.olcum === null ? (
-                    <Olculemedi neden={oge.ayrinti.olcumNeden ?? "ölçüm bulunamadı"} />
+                    <Olculemedi neden={oge.ayrinti.olcumNeden ?? "Bu kurulum için ölçüm bulunamadı"} />
                   ) : (
                     <div>
                       <Satir etiket="Kapı hükmü">
@@ -417,22 +417,22 @@ export function OnayCekmecesi({
                         />
                       </Satir>
                       <Satir etiket="Arama P(ΔS>0)">
-                        <Deger deger={oge.ayrinti.olcum.search_p} basamak={4} neden="`search_p` yazılmamış" />
+                        <Deger deger={oge.ayrinti.olcum.search_p} basamak={4} neden="Arama olasılığı kaydedilmemiş" teknik="`search_p` yazılmamış" />
                       </Satir>
                       <Satir etiket="Onay P">
-                        <Deger deger={oge.ayrinti.olcum.confirm_p} basamak={4} neden="`confirm_p` yazılmamış" />
+                        <Deger deger={oge.ayrinti.olcum.confirm_p} basamak={4} neden="Onay olasılığı kaydedilmemiş" teknik="`confirm_p` yazılmamış" />
                       </Satir>
                       <Satir etiket="Gereken P">
-                        <Deger deger={oge.ayrinti.olcum.p_required} basamak={2} neden="`p_required` yazılmamış" />
+                        <Deger deger={oge.ayrinti.olcum.p_required} basamak={2} neden="Gereken olasılık eşiği kaydedilmemiş" teknik="`p_required` yazılmamış" />
                       </Satir>
                       <Satir etiket="Kat kazanımı">
-                        {oge.ayrinti.olcum.fold_wins ?? <Olculemedi neden="`fold_wins` yazılmamış" kisa />}
+                        {oge.ayrinti.olcum.fold_wins ?? <Olculemedi neden="Kat kazanımı kaydedilmemiş" teknik="`fold_wins` yazılmamış" kisa />}
                       </Satir>
                       <Satir etiket="OOS (mevcut → aday)">
                         <span className="tabular-nums">
-                          <Deger deger={oge.ayrinti.olcum.incumbent_oos} basamak={4} neden="`incumbent_oos` yok" />
+                          <Deger deger={oge.ayrinti.olcum.incumbent_oos} basamak={4} neden="Mevcut kurulumun sonucu kaydedilmemiş" teknik="`incumbent_oos` yok" />
                           {" → "}
-                          <Deger deger={oge.ayrinti.olcum.candidate_oos} basamak={4} neden="`candidate_oos` yok" />
+                          <Deger deger={oge.ayrinti.olcum.candidate_oos} basamak={4} neden="Aday kurulumun sonucu kaydedilmemiş" teknik="`candidate_oos` yok" />
                         </span>
                       </Satir>
                       {oge.ayrinti.olcum.why ? (
@@ -445,17 +445,17 @@ export function OnayCekmecesi({
                   <div className="mt-2">
                     <h5 className="text-muted-foreground text-[11px] uppercase">Karşıolgusal defter (cf_report)</h5>
                     {oge.ayrinti.cf === null ? (
-                      <Olculemedi neden="bu kurulum için `cf_report` satırı yok" kisa />
+                      <Olculemedi neden="Bu kurulum için karşıolgusal kayıt yok" teknik="bu kurulum için `cf_report` satırı yok" kisa />
                     ) : (
                       <div>
                         <Satir etiket="n">
-                          <Deger deger={oge.ayrinti.cf.n} neden="`n` yazılmamış" />
+                          <Deger deger={oge.ayrinti.cf.n} neden="Örneklem sayısı kaydedilmemiş" teknik="`n` yazılmamış" />
                         </Satir>
                         <Satir etiket="Kazanma oranı">
-                          <Deger deger={oge.ayrinti.cf.win_rate} basamak={3} neden="`win_rate` yazılmamış" />
+                          <Deger deger={oge.ayrinti.cf.win_rate} basamak={3} neden="Kazanma oranı kaydedilmemiş" teknik="`win_rate` yazılmamış" />
                         </Satir>
                         <Satir etiket="Ortalama R">
-                          <Deger deger={oge.ayrinti.cf.avg_r} basamak={3} neden="`avg_r` yazılmamış" />
+                          <Deger deger={oge.ayrinti.cf.avg_r} basamak={3} neden="Ortalama R kaydedilmemiş" teknik="`avg_r` yazılmamış" />
                         </Satir>
                       </div>
                     )}
@@ -466,32 +466,32 @@ export function OnayCekmecesi({
               {oge.ayrinti.cesit === "revizyon" ? (
                 <Blok baslik="Revizyon kaydı (/api/skills.revisions)">
                   {oge.ayrinti.kayit === null ? (
-                    <Olculemedi neden="bu skill için ham revizyon kaydı /api/skills'ten okunamadı" />
+                    <Olculemedi neden="Bu skill'in revizyon kaydı okunamadı" teknik="bu skill için ham revizyon kaydı /api/skills'ten okunamadı" />
                   ) : (
                     <div>
                       <Satir etiket="Durum">
-                        {oge.ayrinti.kayit.status ?? <Olculemedi neden="`status` yazılmamış" kisa />}
+                        {oge.ayrinti.kayit.status ?? <Olculemedi neden="Revizyonun durumu kaydedilmemiş" teknik="`status` yazılmamış" kisa />}
                       </Satir>
                       <Satir etiket="Taslak damgası">
-                        {zamanMetni(oge.ayrinti.kayit.at) ?? <Olculemedi neden="`at` yazılmamış" kisa />}
+                        {zamanMetni(oge.ayrinti.kayit.at) ?? <Olculemedi neden="Taslağın yazılma zamanı kaydedilmemiş" teknik="`at` yazılmamış" kisa />}
                       </Satir>
                       <Satir etiket="Taslak uzunluğu">
-                        <Deger deger={oge.ayrinti.kayit.chars} birim=" karakter" neden="`chars` yazılmamış" />
+                        <Deger deger={oge.ayrinti.kayit.chars} birim=" karakter" neden="Taslak uzunluğu kaydedilmemiş" teknik="`chars` yazılmamış" />
                       </Satir>
                       <Satir etiket="Kanıt n">
-                        <Deger deger={oge.ayrinti.kayit.evidence?.n} neden="`evidence.n` yazılmamış" />
+                        <Deger deger={oge.ayrinti.kayit.evidence?.n} neden="Kanıt örneklem sayısı kaydedilmemiş" teknik="`evidence.n` yazılmamış" />
                       </Satir>
                       <Satir etiket="Kanıt ortalama R">
-                        <Deger deger={oge.ayrinti.kayit.evidence?.avg_r} basamak={3} neden="`evidence.avg_r` yazılmamış" />
+                        <Deger deger={oge.ayrinti.kayit.evidence?.avg_r} basamak={3} neden="Kanıtın ortalama R değeri kaydedilmemiş" teknik="`evidence.avg_r` yazılmamış" />
                       </Satir>
                       <Satir etiket="Karşıolgusal n / R">
                         <span className="tabular-nums">
-                          <Deger deger={oge.ayrinti.kayit.evidence?.n_cf} neden="`evidence.n_cf` yazılmamış" />
+                          <Deger deger={oge.ayrinti.kayit.evidence?.n_cf} neden="Karşıolgusal örneklem sayısı kaydedilmemiş" teknik="`evidence.n_cf` yazılmamış" />
                           {" / "}
                           <Deger
                             deger={oge.ayrinti.kayit.evidence?.cf_avg_r}
                             basamak={3}
-                            neden="`evidence.cf_avg_r` yazılmamış"
+                            neden="Karşıolgusal ortalama R kaydedilmemiş" teknik="`evidence.cf_avg_r` yazılmamış"
                           />
                         </span>
                       </Satir>
@@ -511,13 +511,15 @@ export function OnayCekmecesi({
                     <Satir etiket="Örneklem (n)">
                       <Deger
                         deger={oge.ayrinti.oge.ornek}
-                        neden={oge.ayrinti.oge.ornek_notu ?? "`ornek` alanı yazılmamış"}
+                        neden={oge.ayrinti.oge.ornek_notu ?? "Örneklem sayısı kaydedilmemiş"}
+                        teknik="`ornek` alanı yazılmamış"
                       />
                     </Satir>
                     <Satir etiket="Örneklem yeterli mi">
                       {oge.ayrinti.oge.ornek_yeterli === null || oge.ayrinti.oge.ornek_yeterli === undefined ? (
                         <Olculemedi
-                          neden={oge.ayrinti.oge.ornek_notu ?? "`ornek_yeterli` null — ölçülemedi (false DEĞİL)"}
+                          neden={oge.ayrinti.oge.ornek_notu ?? "Örneklemin yeterli olup olmadığı bildirilmedi"}
+                          teknik="`ornek_yeterli` null — ölçülemedi (false değil)"
                           kisa
                         />
                       ) : (
@@ -530,7 +532,7 @@ export function OnayCekmecesi({
                     </Satir>
                     <Satir etiket="Uygulanabilir mi">
                       {oge.ayrinti.oge.uygulanabilir === undefined ? (
-                        <Olculemedi neden="uç `uygulanabilir` alanını döndürmedi" kisa />
+                        <Olculemedi neden="Önerinin uygulanabilir olup olmadığı bildirilmedi" teknik="uç `uygulanabilir` alanını döndürmedi" kisa />
                       ) : (
                         <HukumRozet
                           ton={oge.ayrinti.oge.uygulanabilir ? "iyi" : "notr"}
@@ -540,7 +542,7 @@ export function OnayCekmecesi({
                       )}
                     </Satir>
                     <Satir etiket="Kaynak (öneriyi kim yazdı)">
-                      {oge.ayrinti.kayit?.source ?? <Olculemedi neden="ham satır `source` taşımıyor" kisa />}
+                      {oge.ayrinti.kayit?.source ?? <Olculemedi neden="Öneriyi kimin yazdığı kaydedilmemiş" teknik="ham satır `source` taşımıyor" kisa />}
                     </Satir>
                   </div>
                   {oge.ayrinti.karar !== null ? (
@@ -548,7 +550,7 @@ export function OnayCekmecesi({
                       <h5 className="text-muted-foreground text-[11px] uppercase">Karar kaydı</h5>
                       <Satir etiket="Karar">
                         {oge.ayrinti.karar.karar === undefined ? (
-                          <Olculemedi neden="`karar_kaydi.karar` alanı yok" kisa />
+                          <Olculemedi neden="Kararın ne olduğu bildirilmedi" teknik="`karar_kaydi.karar` alanı yok" kisa />
                         ) : oge.ayrinti.karar.karar === null ? (
                           <span className="text-muted-foreground text-xs">karar YOK — hâlâ bekliyor</span>
                         ) : (
@@ -556,7 +558,7 @@ export function OnayCekmecesi({
                         )}
                       </Satir>
                       <Satir etiket="Karar damgası">
-                        {zamanMetni(oge.ayrinti.karar.ts) ?? <Olculemedi neden="karar damgası yok" kisa />}
+                        {zamanMetni(oge.ayrinti.karar.ts) ?? <Olculemedi neden="Kararın zamanı kaydedilmemiş" teknik="karar damgası yok" kisa />}
                       </Satir>
                       {oge.ayrinti.karar.gerekce ? (
                         <p className="mt-2 text-sm leading-6">{oge.ayrinti.karar.gerekce}</p>

@@ -105,7 +105,8 @@ function GeceKarti({ sd, planTarihi }: { sd: SonDongu | null; planTarihi: string
     return (
       <OlculemedBlok
         baslik="Son döngü"
-        neden="`/api/today` gövdesinde `son_dongu` bloğu YOK — bu uç sürümü o bloğu göndermiyor."
+        neden="Gece döngüsünün kaydı bu sürümde gönderilmiyor"
+        teknik="`/api/today` gövdesinde `son_dongu` bloğu YOK"
       />
     );
   }
@@ -113,7 +114,8 @@ function GeceKarti({ sd, planTarihi }: { sd: SonDongu | null; planTarihi: string
     return (
       <OlculemedBlok
         baslik="Son döngü"
-        neden={sd.neden ?? "`son_dongu.var` false ama `neden` alanı yazılmamış — nedeni okuyamıyoruz."}
+        neden={sd.neden ?? "Gece döngüsünün neden sonuç üretmediği kaydedilmemiş"}
+        teknik="`son_dongu.var` false — döngü bu turda kayıt üretmedi"
       />
     );
   }
@@ -183,7 +185,7 @@ function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | nu
         <CardDescription>Aday seçiminin seyri — taramadan silahlı kümeye kaç tanesi sağ çıktı?</CardDescription>
         <CardAction className="flex flex-wrap items-center gap-1.5">
           {sd.yasSaat === null ? (
-            <Olculemedi kisa neden="döngü kaydının damgası okunamadı — yaş hesaplanamadı (0 saat DEĞİL)" />
+            <Olculemedi kisa neden="Döngü kaydının yaşı hesaplanamadı — sıfır saat değil" teknik="döngü kaydının damgası okunamadı" />
           ) : (
             <Badge variant="ghost" className="tabular-nums">
               {sd.yasSaat} sa önce
@@ -217,7 +219,7 @@ function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | nu
         <div className="flex flex-wrap items-center gap-1.5 border-t pt-3">
           {sd.rejim ? <Badge variant="secondary">rejim · {sd.rejim}</Badge> : null}
           {sd.veriTamam === null ? (
-            <Olculemedi kisa neden="döngü kaydında `data_ok` alanı yok" />
+            <Olculemedi kisa neden="Verinin tam olup olmadığı kaydedilmemiş" teknik="döngü kaydında `data_ok` alanı yok" />
           ) : (
             <Badge variant={sd.veriTamam ? "secondary" : "destructive"}>
               veri {sd.veriTamam ? "tamam" : "eksik"}
@@ -406,12 +408,14 @@ export function KararZinciri() {
               {defter === null ? (
                 <OlculemedBlok
                   baslik="Plan tahtası"
-                  neden="`/api/today.todays_plans` bir dizi değil — plan defteri okunamadı."
+                  neden="Plan defteri okunamadı"
+                  teknik="`/api/today.todays_plans` bir dizi değil"
                 />
               ) : planTarihi === null ? (
                 <OlculemedBlok
                   baslik="Plan tahtası"
-                  neden="`todays_plan_date` boş: plan defterinde TARİHLİ satır yok. Bu 'bu seans sıfır aday' DEĞİL — hangi seansın planlarına bakacağımızı ölçemedik."
+                  neden="Plan defterinde tarihli satır yok — hangi seansa bakacağımızı ölçemedik (bu seans sıfır aday demek değil)"
+                  teknik="`todays_plan_date` boş"
                 />
               ) : (
                 <>
@@ -461,9 +465,10 @@ export function KararZinciri() {
                 baslik="Kapı aşamaları"
                 neden={
                   planlar.length === 0
-                    ? "bu seansın plan listesi boş — sayılacak kapı satırı yok"
-                    : `bu seansın ${planlar.length} planının HİÇBİRİ \`gate_checks\` dizisi taşımıyor — hangi ölçütte takıldıkları YAZILMAMIŞ`
+                    ? "Bu seansta hiç plan yok — sayılacak kontrol satırı da yok"
+                    : `Bu seansın ${planlar.length} planından hiçbiri hangi kontrolde takıldığını yazmamış`
                 }
+                teknik="kapı sayımı plan satırlarındaki `gate_checks` dizisinden yapılır"
               />
             ) : (
               <KapiTablosu ozet={kapiOzeti} />
@@ -482,7 +487,8 @@ export function KararZinciri() {
               return (
                 <OlculemedBlok
                   baslik="Hüküm geçmişi"
-                  neden="`/api/signals.plans` bir dizi değil — seans geçmişi okunamadı."
+                  neden="Seans geçmişi okunamadı"
+                  teknik="`/api/signals.plans` bir dizi değil"
                 />
               );
             }
@@ -512,7 +518,8 @@ export function KararZinciri() {
                   {seanslar.length === 0 ? (
                     <OlculemedBlok
                       baslik="Hüküm geçmişi"
-                      neden="gösterilen plan penceresinde TARİHLİ satır yok — seans ekseni kurulamadı."
+                      neden="Gösterilen plan penceresinde tarihli satır yok — seans ekseni kurulamadı"
+                      teknik="plan satırlarının hiçbiri tarih taşımıyor"
                     />
                   ) : (
                     <div className="min-w-0 overflow-x-auto">

@@ -399,7 +399,7 @@ function SirAlani({
           ok={gecerliDurum?.set}
           iyi="kurulu"
           kotu="kurulu değil"
-          neden="/api/secrets bu satırda `set` alanını döndürmedi"
+          neden="Bu anahtarın kurulu olup olmadığı bildirilmedi"
         />
         {typeof kaynak === "string" && kaynak !== "" ? (
           <Badge variant="outline" className="font-mono text-[10px]">
@@ -460,7 +460,8 @@ function SirAlani({
           <span className="font-medium">Kaydedildiği ölçüldü.</span>{" "}
           {hal.durum === null ? (
             <Olculemedi
-              neden="POST cevabı `status` alanı taşımadı — yazım 200 döndü ama sonrası okunamadı; üstteki tablodan doğrulayın"
+              neden="Kaydedildi ama sunucu sonrasını okuyamadı — üstteki tablodan doğrulayın"
+              teknik="POST cevabı `status` alanı taşımadı; yazım 200 döndü"
               kisa
             />
           ) : (
@@ -492,9 +493,14 @@ function SirAlani({
             ok={test.ok}
             iyi="test geçti"
             kotu="test düştü"
-            neden="test ucu `ok` alanını döndürmedi — sonuç okunamadı"
+            neden="Testin geçip geçmediği bildirilmedi — sonuç okunamadı"
           />
-          <Metin deger={test.detay} neden="test ucu `detail` metni döndürmedi" className="text-xs" />
+          <Metin
+            deger={test.detay}
+            neden="Test bir açıklama döndürmedi"
+            teknik="test ucu `detail` metni döndürmedi"
+            className="text-xs"
+          />
           <span className="text-muted-foreground text-[11px] tabular-nums">{zamanMetni(test.ts) ?? ""}</span>
         </FieldDescription>
       ) : null}
@@ -539,7 +545,8 @@ function SonKullanim({
         <span className="text-muted-foreground">son kullanım</span>
         {saglik === undefined ? (
           <Olculemedi
-            neden={`/api/diagnostics sağlayıcı listesinde bu anahtara karşılık gelen satır yok (${ad} için sağlık sayacı tutulmuyor)`}
+            neden="Bu anahtar için kullanım sayacı tutulmuyor"
+            teknik={`/api/diagnostics sağlayıcı listesinde ${ad} için satır yok`}
             kisa
           />
         ) : (
@@ -548,7 +555,7 @@ function SonKullanim({
               ok={saglik.ok}
               iyi="son çağrı başarılı"
               kotu="son çağrı düştü"
-              neden={saglik.olculemedi ?? "bu süreçte henüz çağrı yapılmadı — 'bozuk' DEĞİL"}
+              neden={saglik.olculemedi ?? "Bu süreçte henüz çağrı yapılmadı — bozuk demek değil"}
             />
             {saglik.son_durum !== null && saglik.son_durum !== undefined ? (
               <span className="font-mono text-muted-foreground">son durum: {String(saglik.son_durum)}</span>
@@ -556,7 +563,8 @@ function SonKullanim({
             <span className="text-muted-foreground">
               <Metin
                 deger={zamanMetni(saglik.son_cagri_ts)}
-                neden="satır bir zaman damgası taşımıyor — bu süreçte çağrı yapılmamış olabilir"
+                neden="Son çağrının zamanı yok — bu süreçte hiç çağrı yapılmamış olabilir"
+                teknik="satır bir zaman damgası taşımıyor"
               />
             </span>
           </>
@@ -571,7 +579,11 @@ function SonKullanim({
             {hata === null ? " · hata: ölçülemedi" : ` · ${hata} hata`}
           </span>
           {kullanim.buAnahtarCagri === null ? (
-            <Olculemedi neden="defterde `by_key` dağılımı yok — çağrılar anahtar bazında ayrıştırılamadı" kisa />
+            <Olculemedi
+              neden="Çağrılar anahtar bazında ayrıştırılamadı"
+              teknik="günlük kayıtta `by_key` dağılımı yok"
+              kisa
+            />
           ) : (
             <span className="tabular-nums" title="defterdeki by_key dağılımı; ad hiç geçmiyorsa bugün bu anahtarla çağrı yapılmamıştır">
               bu anahtarla: {kullanim.buAnahtarCagri}
@@ -615,13 +627,19 @@ function GirisGovdesi({
   const s = v.secrets;
   if (s === undefined || s === null || typeof s !== "object") {
     return (
-      <Olculemedi neden="/api/secrets `secrets` sözlüğünü döndürmedi — hangi adların KABUL EDİLDİĞİ okunamadı, uydurma bir liste çizmektense form çizilmedi" />
+      <Olculemedi
+        neden="Hangi anahtarların girilebileceği okunamadı — uydurma bir liste çizmektense form çizilmedi"
+        teknik="/api/secrets `secrets` sözlüğünü döndürmedi"
+      />
     );
   }
   const adlar = Object.keys(s).sort();
   if (adlar.length === 0) {
     return (
-      <Olculemedi neden="/api/secrets `secrets` sözlüğü BOŞ geldi — secrets.py::ALLOWED bu süreçte hiçbir ad bildirmiyor" />
+      <Olculemedi
+        neden="Sunucu girilebilecek hiçbir anahtar adı bildirmedi"
+        teknik="/api/secrets `secrets` sözlüğü boş geldi — secrets.py::ALLOWED bu süreçte hiçbir ad bildirmiyor"
+      />
     );
   }
 

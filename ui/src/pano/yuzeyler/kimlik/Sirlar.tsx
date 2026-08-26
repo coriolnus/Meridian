@@ -133,7 +133,10 @@ function SirGovdesi({ v }: { readonly v: SirlarGovdesi }) {
 
   if (satirlar.length === 0) {
     return (
-      <Olculemedi neden="/api/secrets `secrets` sözlüğünü döndürmedi ya da boş döndürdü — hangi anahtarların bilindiği bile okunamadı" />
+      <Olculemedi
+        neden="Anahtar listesi okunamadı — hangi anahtarların bilindiği bile belli değil"
+        teknik="/api/secrets `secrets` sözlüğünü döndürmedi ya da boş döndürdü"
+      />
     );
   }
 
@@ -186,11 +189,15 @@ function SirGovdesi({ v }: { readonly v: SirlarGovdesi }) {
                     ok={r.kurulu}
                     iyi="kurulu"
                     kotu="kurulu değil"
-                    neden="/api/secrets bu satırda `set` alanını döndürmedi"
+                    neden="Bu anahtarın kurulu olup olmadığı bildirilmedi"
                   />
                 </TableCell>
                 <TableCell className="text-xs">
-                  <Metin deger={r.kaynak} neden="kurulu değil — kaynak diye bir şey yok" />
+                  <Metin
+                    deger={r.kaynak}
+                    neden="Kurulu değil, dolayısıyla bir kaynağı da yok"
+                    teknik="satır `source` alanı boş"
+                  />
                 </TableCell>
               </TableRow>
             ))}
@@ -213,7 +220,12 @@ function GuvenlikGovdesi({ v }: { readonly v: SirlarGovdesi }) {
   return (
     <div className="flex flex-col">
       <Satir etiket="mod (config.MODE)">
-        <Metin deger={v.mode} neden="/api/secrets `mode` alanını döndürmedi" className="font-mono text-xs" />
+        <Metin
+          deger={v.mode}
+          neden="Çalışma modu bildirilmedi"
+          teknik="/api/secrets `mode` alanını döndürmedi"
+          className="font-mono text-xs"
+        />
       </Satir>
       <Satir etiket="canlı işlem açık mı">
         {/* `live_enabled` MODDAN AYRI BİR SORU: mod + risk kabulünün VE'si. "mod live
@@ -222,23 +234,25 @@ function GuvenlikGovdesi({ v }: { readonly v: SirlarGovdesi }) {
           ok={v.live_enabled}
           iyi="AÇIK — gerçek para yolu"
           kotu="kapalı"
-          neden="/api/secrets `live_enabled` alanını döndürmedi"
+          neden="Gerçek para yolunun açık olup olmadığı bildirilmedi"
         />
       </Satir>
       <Satir etiket="özerklik düzeyi">
-        <Deger deger={v.autonomy_level} neden="/api/secrets `autonomy_level` alanını döndürmedi" />
+        <Deger deger={v.autonomy_level} neden="Özerklik düzeyi bildirilmedi" />
       </Satir>
       <Satir etiket="varsayılan Gemini modeli">
         <Metin
           deger={v.model_defaults?.GEMINI_MODEL}
-          neden="/api/secrets `model_defaults.GEMINI_MODEL` alanını döndürmedi"
+          neden="Varsayılan model adı bildirilmedi"
+          teknik="/api/secrets `model_defaults.GEMINI_MODEL` alanını döndürmedi"
           className="font-mono text-xs"
         />
       </Satir>
       <Satir etiket="varsayılan Nous modeli">
         <Metin
           deger={v.model_defaults?.NOUS_MODEL}
-          neden="hermes modülü NOUS_DEFAULT_MODEL sabiti taşımıyor (uç bu alanı null döndürür)"
+          neden="Bu sağlayıcı için varsayılan model tanımlı değil"
+          teknik="hermes modülü NOUS_DEFAULT_MODEL sabiti taşımıyor (uç bu alanı null döndürür)"
           className="font-mono text-xs"
         />
       </Satir>
@@ -253,7 +267,10 @@ function SaglayiciGovdesi({ v }: { readonly v: TeshisGovdesi }) {
   const xs = blok?.saglayicilar;
   if (!Array.isArray(xs) || xs.length === 0) {
     return (
-      <Olculemedi neden="/api/diagnostics `saglayicilar.saglayicilar` listesi gelmedi — sağlayıcı sağlığı bu istekte okunamadı" />
+      <Olculemedi
+        neden="Sağlayıcıların sağlığı bu istekte okunamadı"
+        teknik="/api/diagnostics `saglayicilar.saglayicilar` listesi gelmedi"
+      />
     );
   }
   return (
@@ -275,35 +292,39 @@ function SaglayiciGovdesi({ v }: { readonly v: TeshisGovdesi }) {
             {xs.map((s, i) => (
               <TableRow key={s.ad ?? `satir-${i}`}>
                 <TableCell className="font-mono text-xs">
-                  <Metin deger={s.ad} neden="satır `ad` taşımıyor" />
+                  <Metin deger={s.ad} neden="Sağlayıcı adı bildirilmedi" teknik="satır `ad` taşımıyor" />
                 </TableCell>
                 <TableCell>
                   <OkRozet
                     ok={s.ok}
                     iyi="son çağrı başarılı"
                     kotu="son çağrı düştü"
-                    neden={s.olculemedi ?? "bu süreçte henüz çağrı yapılmadı — 'bozuk' DEĞİL"}
+                    neden={s.olculemedi ?? "Bu süreçte henüz çağrı yapılmadı — bozuk demek değil"}
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Deger deger={s.cagri} neden="sayaç gelmedi" />
+                  <Deger deger={s.cagri} neden="Çağrı sayısı bildirilmedi" />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Deger deger={s.hata} neden="sayaç gelmedi" />
+                  <Deger deger={s.hata} neden="Hata sayısı bildirilmedi" />
                 </TableCell>
                 <TableCell className="text-right">
                   <Deger
                     deger={typeof s.hata_orani === "number" ? s.hata_orani * 100 : s.hata_orani}
                     birim="%"
                     basamak={1}
-                    neden="çağrı sayacı yok ya da biçimsiz — oran hesaplanamadı (0 yazmak 'hiç bozulmadı' diye okunurdu)"
+                    neden="Hata oranı hesaplanamadı — sıfır yazmak 'hiç bozulmadı' diye okunurdu"
                   />
                 </TableCell>
                 <TableCell className="text-xs">
-                  <Metin deger={zamanMetni(s.son_cagri_ts)} neden="satır bir zaman damgası taşımıyor" />
+                  <Metin
+                    deger={zamanMetni(s.son_cagri_ts)}
+                    neden="Son çağrının zamanı bildirilmedi"
+                    teknik="satır bir zaman damgası taşımıyor"
+                  />
                 </TableCell>
                 <TableCell className="max-w-[16rem] truncate text-xs" title={s.son_hata ?? undefined}>
-                  <Metin deger={s.son_hata} neden="bu süreçte kaydedilmiş hata yok" />
+                  <Metin deger={s.son_hata} neden="Bu süreç için hata kaydı gelmedi" teknik="satır `son_hata` taşımıyor" />
                 </TableCell>
               </TableRow>
             ))}

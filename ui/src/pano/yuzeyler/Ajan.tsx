@@ -143,7 +143,10 @@ export function Ajan() {
 
               <TabsContent value="defter" id="bolum-defter" className="scroll-mt-20">
                 {hipotezler.length === 0 ? (
-                  <Olculemedi neden="`/api/agent.hypotheses` boş ya da dizi değil — çizilecek kayıt yok" />
+                  <Olculemedi
+                    neden="Gösterilecek öneri kaydı bulunamadı"
+                    teknik="`/api/agent.hypotheses` boş ya da dizi değil"
+                  />
                 ) : (
                   <HipotezDefteri hipotezler={hipotezler} />
                 )}
@@ -206,19 +209,24 @@ function Kunye({
         <Kutu
           etiket="strateji sürümü"
           deger={surum}
-          neden="`/api/agent.scoreboard.current_version` yok — karne defteri sürümü yazmamış"
+          neden="Strateji sürümü kaydedilmemiş"
+          teknik="`/api/agent.scoreboard.current_version` yok — karne defteri sürümü yazmamış"
         />
         <Kutu etiket="defterdeki öneri" deger={bicimSayi(hipotezler.length)} neden="" />
         <Kutu
           etiket="sonucu ölçülen"
           deger={sonuclanan === null ? null : `${bicimSayi(sonuclanan)} / ${bicimSayi(hipotezler.length)}`}
-          neden="`/api/agent.calibration.n` yok — kaç önerinin sonucu yazıldığı ölçülemedi"
+          neden="Kaç önerinin sonucu ölçüldüğü henüz kaydedilmemiş"
+          teknik="`/api/agent.calibration.n` yok"
         />
         <div className="rounded-lg border bg-muted/20 px-3 py-2">
           <p className="text-muted-foreground text-xs">son öneri</p>
           {sonDamga === null ? (
             <div className="mt-0.5">
-              <Olculemedi neden="hiçbir satırda ayrıştırılabilir `ts` yok — ne zaman konuştuğu ölçülemedi" />
+              <Olculemedi
+                neden="Son önerinin ne zaman geldiği okunamadı"
+                teknik="hiçbir satırda ayrıştırılabilir `ts` yok"
+              />
             </div>
           ) : (
             <p className="mt-0.5 font-medium text-sm leading-tight">
@@ -253,13 +261,18 @@ function Kunye({
   );
 }
 
-function Kutu({ etiket, deger, neden }: { etiket: string; deger: string | null; neden: string }) {
+function Kutu({
+  etiket,
+  deger,
+  neden,
+  teknik,
+}: { etiket: string; deger: string | null; neden: string; teknik?: string }) {
   return (
     <div className="rounded-lg border bg-muted/20 px-3 py-2">
       <p className="text-muted-foreground text-xs">{etiket}</p>
       {deger === null ? (
         <div className="mt-0.5">
-          <Olculemedi neden={neden} />
+          <Olculemedi neden={neden} teknik={teknik} />
         </div>
       ) : (
         <p className="mt-0.5 font-medium text-lg tabular-nums leading-none">{deger}</p>

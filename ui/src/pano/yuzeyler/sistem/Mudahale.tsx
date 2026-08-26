@@ -145,11 +145,12 @@ export function Mudahale({
                       deger={hud.exposure_budget_pct}
                       birim="%"
                       basamak={1}
-                      neden="/api/diagnostics hud.exposure_budget_pct döndürmedi"
+                      neden="Maruziyet bütçesi bildirilmedi"
+                      teknik="/api/diagnostics hud.exposure_budget_pct döndürmedi"
                     />
                   </Satir>
                   <Satir etiket="Rejim">
-                    {hud.regime ?? <Olculemedi neden="hud.regime yok — regime.json boş olabilir" kisa />}
+                    {hud.regime ?? <Olculemedi neden="Piyasa rejimi bildirilmedi" teknik="hud.regime yok — regime.json boş olabilir" kisa />}
                   </Satir>
                   <Satir etiket="Mod / broker">
                     {hud.mode ?? "?"} · {hud.broker ?? "?"}
@@ -161,12 +162,16 @@ export function Mudahale({
                   </Satir>
                   <Satir etiket="Özerklik düzeyi">
                     {bugun.veri?.autonomy_level ?? (
-                      <Olculemedi neden="/api/today autonomy_level döndürmedi" kisa />
+                      <Olculemedi
+                        neden="Özerklik düzeyi bildirilmedi"
+                        teknik="/api/today autonomy_level döndürmedi"
+                        kisa
+                      />
                     )}
                   </Satir>
                   <Satir etiket="Veri sağlığı (data_ok)">
                     {hud.data_ok === undefined || hud.data_ok === null ? (
-                      <Olculemedi neden="heartbeat data_ok taşımıyor" kisa />
+                      <Olculemedi neden="Veri sağlığı bildirilmedi" teknik="nabız `data_ok` alanını taşımıyor" kisa />
                     ) : (
                       <KolRozet cekili={!hud.data_ok} cekiliMetin="veri BOZUK" serbestMetin="veri temiz" />
                     )}
@@ -175,7 +180,10 @@ export function Mudahale({
               </div>
 
               {ey === undefined ? (
-                <Olculemedi neden="/api/diagnostics risk.eylemsizlik bloğunu döndürmedi" />
+                <Olculemedi
+                  neden="Bugün neden işlem yapılmadığı bildirilmedi"
+                  teknik="/api/diagnostics risk.eylemsizlik bloğunu döndürmedi"
+                />
               ) : ey.birincil ? (
                 <Alert>
                   <AlertTitle>Eylemsizliğin birincil nedeni: {ey.birincil.ad ?? "?"}</AlertTitle>

@@ -120,7 +120,7 @@ export function Roller() {
         <Kapi durum={ozet} yol="/api/summary">
           {(v) =>
             v.ladder === undefined ? (
-              <Olculemedi neden="`/api/summary` gövdesinde `ladder` bloğu yok" />
+              <Olculemedi neden="Otonomi merdiveni bildirilmedi" teknik="`/api/summary` gövdesinde `ladder` bloğu yok" />
             ) : (
               <TerfiTablosu merdiven={v.ladder} />
             )
@@ -142,7 +142,7 @@ function SeviyeKartlari({
 }) {
   if (seviyeler === undefined || seviyeler.length === 0) {
     return (
-      <Olculemedi neden="`/api/summary.ladder.levels` gelmedi ya da boş — seviye tanımları kaynaktan okunamadı" />
+      <Olculemedi neden="Seviye tanımları kaynaktan okunamadı" teknik="`/api/summary.ladder.levels` gelmedi ya da boş" />
     );
   }
   return (
@@ -159,7 +159,7 @@ function SeviyeKartlari({
           >
             <div className="flex items-center justify-between gap-2">
               <span className="font-mono font-semibold text-lg">
-                {s.id ?? <Olculemedi neden="seviyenin `id` alanı gelmedi" kisa />}
+                {s.id ?? <Olculemedi neden="Seviyenin numarası bildirilmedi" teknik="seviyenin `id` alanı gelmedi" kisa />}
               </span>
               {aktif ? (
                 <Badge variant="outline" className="text-[10px]">
@@ -168,7 +168,7 @@ function SeviyeKartlari({
               ) : null}
             </div>
             {s.name === undefined ? (
-              <Olculemedi neden="seviyenin `name` alanı gelmedi — adı UYDURULMADI" kisa />
+              <Olculemedi neden="Seviyenin adı bildirilmedi — uydurulmadı" teknik="seviyenin `name` alanı gelmedi" kisa />
             ) : (
               <span className="text-muted-foreground text-sm leading-5">{s.name}</span>
             )}
@@ -177,7 +177,7 @@ function SeviyeKartlari({
       })}
       {etkin === null ? (
         <div className="sm:col-span-3">
-          <Olculemedi neden="`/api/summary.ladder.current_level` sayı olarak gelmedi — etkin seviye vurgulanamadı" />
+          <Olculemedi neden="Şu an hangi seviyede olunduğu bildirilmedi — etkin seviye vurgulanamadı" teknik="`/api/summary.ladder.current_level` sayı olarak gelmedi" />
         </div>
       ) : null}
     </div>

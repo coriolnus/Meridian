@@ -25,6 +25,7 @@ export function Gosterge({
   baslik,
   yuzde,
   neden,
+  teknik,
   altMetin,
   uyari = 70,
   kritik = 85,
@@ -32,6 +33,7 @@ export function Gosterge({
   readonly baslik: string;
   readonly yuzde: number | null | undefined;
   readonly neden: string;
+  readonly teknik?: string;
   readonly altMetin?: string | null;
   readonly uyari?: number;
   readonly kritik?: number;
@@ -40,7 +42,7 @@ export function Gosterge({
     return (
       <div className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-4 text-center">
         <span className="font-medium text-sm">{baslik}</span>
-        <Olculemedi neden={neden} />
+        <Olculemedi neden={neden} teknik={teknik} />
       </div>
     );
   }

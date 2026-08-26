@@ -88,12 +88,18 @@ function Govde({ doc, kucuk }: { doc: BilesenIcBelgesi | null; kucuk: Kucultulmu
 
   if (!doc) {
     return (
-      <Olculemedi neden="/api/diagnostics yükünde `mlops.component_ic` YOK (dosya hiç üretilmemiş) — bileşen IC'si bu turda ölçülemedi; 'hepsi sıfır' DEĞİL." />
+      <Olculemedi
+        neden="Bileşenlerin skora katkısı bu turda hiç ölçülmedi — 'hepsi sıfır' demek değil"
+        teknik="/api/diagnostics yükünde `mlops.component_ic` YOK (dosya hiç üretilmemiş)"
+      />
     );
   }
   if (ufuklar.length === 0 || bilesenler.length === 0) {
     return (
-      <Olculemedi neden="`component_ic` belgesi var ama `horizons`/`components` eksenlerinden biri boş — çizilecek hücre yok." />
+      <Olculemedi
+        neden="Çizilecek bileşen ya da vade bulunamadı"
+        teknik="`component_ic` belgesi var ama `horizons`/`components` eksenlerinden biri boş"
+      />
     );
   }
 
@@ -146,7 +152,8 @@ function Govde({ doc, kucuk }: { doc: BilesenIcBelgesi | null; kucuk: Kucultulmu
       {/* ---- GRAFİK ---- */}
       {olculenHucre === 0 ? (
         <Olculemedi
-          neden={`"${KATMAN_ETIKETI[secili] ?? secili}" katmanında ${toplamHucre} hücrenin hiçbiri IC taşımıyor — bu katman hiç ölçülememiş (sıfır IC DEĞİL).`}
+          neden={`"${KATMAN_ETIKETI[secili] ?? secili}" katmanında ${toplamHucre} hücrenin hiçbiri ölçülememiş — bu katman hiç hesaplanmamış (sıfır katkı değil)`}
+          teknik="hiçbir hücrede `ic` sayısı yok"
         />
       ) : (
         <ChartContainer config={config} className="aspect-auto h-72 w-full">
@@ -207,7 +214,10 @@ function Govde({ doc, kucuk }: { doc: BilesenIcBelgesi | null; kucuk: Kucultulmu
                   if (!hucre) {
                     return (
                       <TableCell key={h} className="py-2.5 text-right">
-                        <OlculemediHucre neden={`tabloda ${b}×${h} hücresi hiç yok — bu bileşen bu ufukta hesaplanmamış.`} />
+                        <OlculemediHucre
+                          neden={`Bu bileşen ${h} barlık vadede hiç hesaplanmamış`}
+                          teknik={`tabloda ${b}×${h} hücresi yok`}
+                        />
                       </TableCell>
                     );
                   }
@@ -215,7 +225,8 @@ function Govde({ doc, kucuk }: { doc: BilesenIcBelgesi | null; kucuk: Kucultulmu
                     return (
                       <TableCell key={h} className="py-2.5 text-right">
                         <OlculemediHucre
-                          neden={hucre.neden ?? `${b}×${h} hücresi IC taşımıyor ve uç nedenini yazmadı (n=${hucre.n ?? "?"}).`}
+                          neden={hucre.neden ?? `Bu bileşenin ${h} barlık vadedeki katkısı ölçülemedi`}
+                          teknik={`${b}×${h}: \`ic\` sayı değil (n=${hucre.n ?? "?"})`}
                         />
                       </TableCell>
                     );
@@ -250,14 +261,21 @@ function Govde({ doc, kucuk }: { doc: BilesenIcBelgesi | null; kucuk: Kucultulmu
         aciklama="Küçük örneklemli hücreler ortalamaya çekilir. GÖSTERGEDİR — hiçbir kapı tabanına girmez."
       >
         {!kucuk ? (
-          <Olculemedi neden="`mlops.shrunk_component_ic` yükte yok — küçültme bu turda hiç hesaplanmadı." />
+          <Olculemedi
+            neden="Küçük örneklem düzeltmesi bu turda hiç hesaplanmadı"
+            teknik="`mlops.shrunk_component_ic` yükte yok"
+          />
         ) : (
           <div className="flex flex-col">
             <Satir etiket="Küçültüldü mü?">
               <span>{kucuk.kucultuldu === undefined ? "ölçülemedi" : kucuk.kucultuldu ? "evet" : "hayır"}</span>
             </Satir>
             <Satir etiket="Hücre sayısı">
-              <Deger metin={sayi(kucuk.n_hucre, 0)} neden="`n_hucre` yükte yok." />
+              <Deger
+                metin={sayi(kucuk.n_hucre, 0)}
+                neden="Kaç hücrenin düzeltildiği bildirilmedi"
+                teknik="`n_hucre` yükte yok"
+              />
             </Satir>
             {kucuk.neden ? (
               <Satir etiket="Neden">

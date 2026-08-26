@@ -60,9 +60,12 @@ type KuruHal =
   | { readonly ad: "okundu"; readonly govde: KuruKosu }
   | { readonly ad: "okunamadi"; readonly neden: string };
 
-function Olculemedi({ neden }: { readonly neden: string }) {
+function Olculemedi({ neden, teknik }: { readonly neden: string; readonly teknik?: string }) {
   return (
-    <span className="text-muted-foreground text-xs italic">
+    <span
+      className="text-muted-foreground text-xs italic"
+      title={teknik ? `${neden} — ${teknik}` : neden}
+    >
       ölçülemedi — <span className="not-italic">{neden}</span>
     </span>
   );
@@ -172,7 +175,10 @@ export function FlattenKapisi({
           <dt className="text-muted-foreground">Piyasa değeri</dt>
           <dd>
             {para === null ? (
-              <Olculemedi neden="hiçbir satırda `qty × current` çözülemedi — `dashboard_view` `market_value` alanını geçirmiyor" />
+              <Olculemedi
+                neden="Pozisyonların piyasa değeri hesaplanamadı"
+                teknik="hiçbir satırda `qty × current` çözülemedi — `dashboard_view` `market_value` alanını geçirmiyor"
+              />
             ) : (
               <span className="font-medium tabular-nums">
                 {olcum.degeriOlculemeyen.length > 0 ? "en az " : ""}
@@ -223,7 +229,10 @@ export function FlattenKapisi({
             <dt className="text-muted-foreground">Düzleştirilecek</dt>
             <dd>
               {kuruListe === null ? (
-                <Olculemedi neden="yanıt `would_flatten` yazmadı" />
+                <Olculemedi
+                  neden="Hangi pozisyonların kapatılacağı bildirilmedi"
+                  teknik="yanıt `would_flatten` yazmadı"
+                />
               ) : kuruListe.length === 0 ? (
                 <span className="text-xs">
                   uç boş liste döndü —{" "}
@@ -240,7 +249,10 @@ export function FlattenKapisi({
             <dt className="text-muted-foreground">Bunların SENİN olanı</dt>
             <dd>
               {kuruYabanci === null ? (
-                <Olculemedi neden="yanıt `foreign` yazmadı" />
+                <Olculemedi
+                  neden="Bunlardan hangilerinin senin olduğu bildirilmedi"
+                  teknik="yanıt `foreign` yazmadı"
+                />
               ) : kuruYabanci.length === 0 ? (
                 <span className="text-xs">yok — listedeki her pozisyon motorun emirlerinden doğmuş görünüyor</span>
               ) : (

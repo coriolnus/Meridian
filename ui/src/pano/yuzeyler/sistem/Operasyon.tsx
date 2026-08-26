@@ -155,11 +155,11 @@ export function Operasyon({ durum }: { readonly durum: Durum<AlarmGovdesi> }) {
               <div className="grid gap-x-6 sm:grid-cols-2">
                 <div>
                   <Satir etiket="ACK'lenmemiş toplam">
-                    <Deger deger={a.pending} neden="/api/alerts `pending` döndürmedi" />
+                    <Deger deger={a.pending} neden="Kaç alarmın okunmadığı bildirilmedi" teknik="/api/alerts `pending` döndürmedi" />
                   </Satir>
                   <Satir etiket="Gösterilen imza grubu">
                     {a.groups === undefined ? (
-                      <Olculemedi neden="/api/alerts `groups` döndürmedi" kisa />
+                      <Olculemedi neden="Alarm grupları bildirilmedi" teknik="/api/alerts `groups` döndürmedi" kisa />
                     ) : (
                       <span className="tabular-nums">
                         {gruplar.length}
@@ -168,7 +168,7 @@ export function Operasyon({ durum }: { readonly durum: Durum<AlarmGovdesi> }) {
                     )}
                   </Satir>
                   <Satir etiket="Son 'gördüm' damgası">
-                    {zamanMetni(a.ack_ts) ?? <Olculemedi neden="ack_ts yok — hiç ACK verilmemiş" kisa />}
+                    {zamanMetni(a.ack_ts) ?? <Olculemedi neden="Henüz hiç okundu işareti verilmemiş" teknik="ack_ts yok" kisa />}
                   </Satir>
                 </div>
                 <div>
@@ -177,15 +177,16 @@ export function Operasyon({ durum }: { readonly durum: Durum<AlarmGovdesi> }) {
                       ok={a.channel_configured}
                       iyi="yapılandırılmış"
                       kotu="YOK — alarm yalnız bu ekranda"
-                      neden="/api/alerts `channel_configured` döndürmedi"
+                      neden="Uzak bildirim kanalının kurulu olup olmadığı bildirilmedi"
+                      teknik="/api/alerts `channel_configured` döndürmedi"
                     />
                   </Satir>
                   <Satir etiket="Taranan olay penceresi">
-                    <Deger deger={a.window_lines} birim=" satır" neden="/api/alerts `window_lines` döndürmedi" />
+                    <Deger deger={a.window_lines} birim=" satır" neden="Kaç satırın tarandığı bildirilmedi" teknik="/api/alerts `window_lines` döndürmedi" />
                   </Satir>
                   <Satir etiket="Pencere kırpıldı mı">
                     {a.window_truncated === null || a.window_truncated === undefined ? (
-                      <Olculemedi neden="ACK yok — kırpılma ölçülemez (null, false DEĞİL)" kisa />
+                      <Olculemedi neden="Okundu işareti olmadan pencerenin kırpılıp kırpılmadığı ölçülemez" teknik="`window_truncated` null — false DEĞİL" kisa />
                     ) : (
                       <OkRozet ok={!a.window_truncated} iyi="tamamı tarandı" kotu="pencere kırpıldı" />
                     )}
@@ -233,19 +234,19 @@ export function Operasyon({ durum }: { readonly durum: Durum<AlarmGovdesi> }) {
                         {gruplar.map((g, i) => (
                           <TableRow key={g.token ?? `grup-${i}`}>
                             <TableCell className="font-medium">
-                              {g.token ?? <Olculemedi neden="grup `token` taşımıyor" kisa />}
+                              {g.token ?? <Olculemedi neden="Bu grubun imzası kaydedilmemiş" teknik="grup `token` taşımıyor" kisa />}
                             </TableCell>
                             <TableCell className="text-right tabular-nums">
-                              <Deger deger={g.n} neden="grup `n` taşımıyor" />
+                              <Deger deger={g.n} neden="Bu imzanın kaç kez öttüğü kaydedilmemiş" teknik="grup `n` taşımıyor" />
                             </TableCell>
                             <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
-                              {zamanMetni(g.first_ts) ?? <Olculemedi neden="first_ts yok" kisa />}
+                              {zamanMetni(g.first_ts) ?? <Olculemedi neden="İlk ötüşün zamanı kaydedilmemiş" teknik="first_ts yok" kisa />}
                             </TableCell>
                             <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
-                              {zamanMetni(g.last_ts) ?? <Olculemedi neden="last_ts yok" kisa />}
+                              {zamanMetni(g.last_ts) ?? <Olculemedi neden="Son ötüşün zamanı kaydedilmemiş" teknik="last_ts yok" kisa />}
                             </TableCell>
                             <TableCell className="max-w-[26rem] truncate text-xs" title={g.message ?? ""}>
-                              {g.message ?? <Olculemedi neden="grup `message` taşımıyor" kisa />}
+                              {g.message ?? <Olculemedi neden="Alarm mesajı kaydedilmemiş" teknik="grup `message` taşımıyor" kisa />}
                             </TableCell>
                           </TableRow>
                         ))}
