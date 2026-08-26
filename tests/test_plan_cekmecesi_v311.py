@@ -230,7 +230,10 @@ def test_no_go_da_ret_mumkun_ama_onay_kapisina_bagli_degil():
 def test_go_hukmunun_durumu_yazili_ve_karar_cizilmez():
     c = _kaynak(CEKMECE)
     assert re.search(r'hukum === "GO"', c), "GO dalı yok — GO planında ekran ne diyeceğini bilmiyor"
-    assert "GO planı zaten silahlanır" in c, "GO planının durumu ekranda yazılı değil"
+    # ETİKET METNİ 2026-08-26 SÖZLÜĞÜYLE GÜNCELLENDİ (docs/ARAYUZ-SOZLUGU.md):
+    # "kapı"→"kontrol", "hüküm"→"karar", "silahlan"→"işleme hazırlan". Çivinin ölçtüğü
+    # şey KELİME değil OLGU: "bu cümle ekranda YAZILI mı". Sözcük değişti, iddia aynı.
+    assert "GO planı zaten işleme hazırlanır" in c, "GO planının durumu ekranda yazılı değil"
 
 
 def test_go_panelinde_ret_yolunun_kapali_olma_sebebi_DURUST():
@@ -429,8 +432,11 @@ def test_olculemeyen_alan_sifir_ya_da_tire_ile_doldurulmuyor():
 
 def test_planin_tam_govdesi_gosteriliyor():
     c = _kaynak(CEKMECE)
-    for etiket in ("Kurulum", "Kapı hükmü", "Skor", "Sektör", "Giriş tetiği", "Stop", "Kâr hedefi",
-                   "Kapı gerekçeleri"):
+    # ETİKET METNİ 2026-08-26 SÖZLÜĞÜYLE GÜNCELLENDİ (docs/ARAYUZ-SOZLUGU.md):
+    # "kapı"→"kontrol", "hüküm"→"karar", "silahlan"→"işleme hazırlan". Çivinin ölçtüğü
+    # şey KELİME değil OLGU: "bu cümle ekranda YAZILI mı". Sözcük değişti, iddia aynı.
+    for etiket in ("Kurulum", "Kontrol kararı", "Skor", "Sektör", "Giriş tetiği", "Stop", "Kâr hedefi",
+                   "Kontrol gerekçeleri"):
         assert etiket in c, f"çekmecede `{etiket}` alanı yok — 'tam gövde' iddiası yalan olur"
 
 
@@ -485,7 +491,10 @@ def test_taninmayan_hukumde_karar_bolumu_susmuyor():
     g = tanim.group(1)
     for h in ('"GO"', '"REVIEW"', '"NO_GO"'):
         assert h in g, f"tanınan hüküm kümesi {h} hükmünü saymıyor: {g.strip()}"
-    assert "Kapı hükmü okunamadı — karar yolu kapalı" in c, (
+    # ETİKET METNİ 2026-08-26 SÖZLÜĞÜYLE GÜNCELLENDİ (docs/ARAYUZ-SOZLUGU.md):
+    # "kapı"→"kontrol", "hüküm"→"karar", "silahlan"→"işleme hazırlan". Çivinin ölçtüğü
+    # şey KELİME değil OLGU: "bu cümle ekranda YAZILI mı". Sözcük değişti, iddia aynı.
+    assert "Kontrol kararı okunamadı — karar yolu kapalı" in c, (
         "bilinmeyen hükmün cümlesi ekranda yazılı değil"
     )
 
