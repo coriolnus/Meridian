@@ -94,12 +94,12 @@ export function Mudahale({
               aciklama: "Hipotez üretimi ve sürüm terfisi durur; ticaret etkilenmez.",
             },
             {
-              ad: "Seans içi silahlanma (Faz-4)",
+              ad: "Seans içi işleme hazırlık (Faz-4)",
               cekili: intra?.armed,
               cekiliMetin: "SİLAHLI — gün içi emir gidebilir",
               serbestMetin: "gözlem modu",
               kaynak: "/api/diagnostics intraday.armed · POST /api/intraday-arm",
-              aciklama: "Silahlıyken intraday karar hattı gerçek emir gönderebilir.",
+              aciklama: "İşleme hazırken intraday karar hattı gerçek emir gönderebilir.",
             },
             {
               ad: "Keşif modu (explore)",

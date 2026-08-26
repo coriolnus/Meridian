@@ -384,7 +384,7 @@ export function KararPaneli({
               {planSonuc.ticker ?? "?"} · <code className="font-mono">{planSonuc.plan_id ?? hedef.kimlik}</code>
             </span>
           </Satir>
-          <Satir etiket="Kapı hükmü (DEĞİŞMEZ)">
+          <Satir etiket="Kontrol kararı (DEĞİŞMEZ)">
             {planSonuc.gate_verdict ?? <Olculemedi neden="Kontrollerin kararı bildirilmedi" teknik="yanıt `gate_verdict` yazmadı" kisa />}
           </Satir>
           <Satir etiket="Onay damgası">
@@ -392,7 +392,7 @@ export function KararPaneli({
               <Olculemedi neden="Onayın hangi anda işlendiği bildirilmedi" teknik="yanıt `operator_onayi.ts` / `ts` yazmadı" kisa />
             )}
           </Satir>
-          <Satir etiket="Silahlı kümede">
+          <Satir etiket="İşleme hazır planlarda">
             {planSonuc.silahli === undefined ? (
               <Olculemedi neden="Planın işleme hazır listeye girip girmediği bildirilmedi" teknik="yanıt `silahli` yazmadı" kisa />
             ) : (
@@ -402,7 +402,7 @@ export function KararPaneli({
               </span>
             )}
           </Satir>
-          <Satir etiket="Zaten onaylıydı / silahlıydı">
+          <Satir etiket="Zaten onaylıydı / hazırdı">
             <span className="text-xs">
               {planSonuc.zaten_onayliydi === undefined ? "?" : planSonuc.zaten_onayliydi ? "evet" : "hayır"} /{" "}
               {planSonuc.zaten_silahliydi === undefined ? "?" : planSonuc.zaten_silahliydi ? "evet" : "hayır"}

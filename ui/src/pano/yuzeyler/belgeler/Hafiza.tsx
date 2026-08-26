@@ -85,7 +85,7 @@ function Kunye({ belge }: { belge: HafizaBelgesi }) {
       <Badge variant="ghost">{bicimSayi(maddeN)} madde</Badge>
       <Badge variant="ghost">{bicimSayi(belge.karakterN)} karakter</Badge>
       <span className="text-muted-foreground text-xs">
-        salt okunur — bu dosyayı yazan yansıma turudur, pano değil
+        salt okunur — bu dosyayı yazan değerlendirme turudur, pano değil
       </span>
     </div>
   );
@@ -193,7 +193,7 @@ function BolumTablosu({ belge }: { belge: HafizaBelgesi }) {
     <Card>
       <CardHeader>
         <CardTitle className="leading-none">Bölüm dökümü</CardTitle>
-        <CardDescription>Hafıza neyi biriktirmiş, hangi kovada?</CardDescription>
+        <CardDescription>Hafıza neyi biriktirmiş, hangi aralıkta?</CardDescription>
       </CardHeader>
       <CardContent>
         {belge.bolumler.length === 0 ? (

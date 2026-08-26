@@ -140,8 +140,8 @@ function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | nu
         ? { ad: "Kurulan plan", n: null, neden: "döngü kaydında `plans` alanı yok" }
         : { ad: "Kurulan plan", n: sd.plan },
       sd.silahli === null
-        ? { ad: "Silahlanan", n: null, neden: "döngü kaydında `armed` alanı yok" }
-        : { ad: "Silahlanan", n: sd.silahli },
+        ? { ad: "İşleme hazırlanan", n: null, neden: "döngü kaydında `armed` alanı yok" }
+        : { ad: "İşleme hazırlanan", n: sd.silahli },
     ];
     const taban = sd.aday !== null && sd.aday > 0 ? sd.aday : null;
     return {
@@ -149,7 +149,7 @@ function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | nu
       olculen: basamaklar.filter((b) => b.n !== null).length,
       dususler: [
         dusus("Taranan aday → Kurulan plan", "aday plan olmadı", sd.aday, sd.plan, taban),
-        dusus("Kurulan plan → Silahlanan", "plan silahlanmadı", sd.plan, sd.silahli, taban),
+        dusus("Kurulan plan → İşleme hazırlanan", "plan işleme hazırlanmadı", sd.plan, sd.silahli, taban),
       ] as HuniDususu[],
     };
   }, [sd.aday, sd.plan, sd.silahli]);
@@ -165,7 +165,7 @@ function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | nu
 
   const karsi: HuniKarsiKart = useMemo(
     () => ({
-      ad: "Bugün · Hüküm dağılımı",
+      ad: "Bugün · Karar dağılımı",
       damga: planTarihi,
       // `metin()` "alan yok" ile "alan boş"u AYIRMIYOR (oku.ts) — bu yüzden neden
       // metni ikisini de kapsıyor; ayırmadığımız şeyi ayırmış gibi yazmak uydurma olurdu.
@@ -182,7 +182,7 @@ function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | nu
           <ScanSearch className="size-4 text-muted-foreground" aria-hidden />
           Gece ne buldu
         </CardTitle>
-        <CardDescription>Aday seçiminin seyri — taramadan silahlı kümeye kaç tanesi sağ çıktı?</CardDescription>
+        <CardDescription>Aday seçiminin seyri — taramadan işleme hazır planlara kaç tanesi sağ çıktı?</CardDescription>
         <CardAction className="flex flex-wrap items-center gap-1.5">
           {sd.yasSaat === null ? (
             <Olculemedi kisa neden="Döngü kaydının yaşı hesaplanamadı — sıfır saat değil" teknik="döngü kaydının damgası okunamadı" />
@@ -250,7 +250,7 @@ function Kolon({ hukum, planlar }: { hukum: Hukum; planlar: readonly Plan[] }) {
       <div className="flex max-h-[34rem] min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pb-3 [scrollbar-color:var(--border)_transparent] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1">
         {planlar.length === 0 ? (
           <p className="rounded-lg border border-dashed px-3 py-6 text-center text-muted-foreground text-xs">
-            bu hükümde plan yok
+            bu kararda plan yok
           </p>
         ) : (
           planlar.map((p, i) => <PlanKarti key={p.id ?? `${p.sembol ?? "?"}-${i}`} p={p} />)
@@ -486,7 +486,7 @@ export function KararZinciri() {
             if (gecmis === null) {
               return (
                 <OlculemedBlok
-                  baslik="Hüküm geçmişi"
+                  baslik="Karar geçmişi"
                   neden="Seans geçmişi okunamadı"
                   teknik="`/api/signals.plans` bir dizi değil"
                 />
@@ -502,7 +502,7 @@ export function KararZinciri() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="size-4 text-muted-foreground" aria-hidden />
-                    Hüküm geçmişi
+                    Karar geçmişi
                   </CardTitle>
                   <CardDescription>
                     Seans başına NO_GO / REVIEW / GO dağılımı — sinyal defterinin gösterilen
@@ -517,7 +517,7 @@ export function KararZinciri() {
                 <CardContent className="flex flex-col gap-3">
                   {seanslar.length === 0 ? (
                     <OlculemedBlok
-                      baslik="Hüküm geçmişi"
+                      baslik="Karar geçmişi"
                       neden="Gösterilen plan penceresinde tarihli satır yok — seans ekseni kurulamadı"
                       teknik="plan satırlarının hiçbiri tarih taşımıyor"
                     />

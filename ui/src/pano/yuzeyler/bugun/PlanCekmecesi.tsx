@@ -420,8 +420,8 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
             <Satir etiket="Seans tarihi">
               <Metin deger={plan.date} neden="Seans tarihi kaydedilmemiş" teknik="plan satırında `date` yok" />
             </Satir>
-            <Satir etiket="Kapı hükmü">
-              <Metin deger={hukum} neden="Kapı hükmü kaydedilmemiş" teknik="plan satırında `gate_verdict` yok" />
+            <Satir etiket="Kontrol kararı">
+              <Metin deger={hukum} neden="Kontrol kararı kaydedilmemiş" teknik="plan satırında `gate_verdict` yok" />
             </Satir>
             <Satir etiket="Skor">
               <Sayi deger={plan.score} neden="Plan skoru kaydedilmemiş" teknik="plan satırının `score` alanı" basamak={3} />
@@ -505,7 +505,7 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
 
         <section className="flex flex-col gap-1">
           <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-            Kapı gerekçeleri (hükmün metni)
+            Kontrol gerekçeleri (kararın metni)
           </h4>
           {plan.gate_reasons && plan.gate_reasons.length > 0 ? (
             <ul className="list-disc pl-5 text-sm leading-6">
@@ -515,7 +515,7 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
             </ul>
           ) : (
             <Yok
-              neden="Hükmün gerekçe metni kaydedilmemiş"
+              neden="Kararın gerekçe metni kaydedilmemiş"
               teknik="`gate_reasons` boş ya da plan satırında yok"
             />
           )}
@@ -564,7 +564,7 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
           {hukum === "GO" ? (
             <Alert>
               <CircleAlert />
-              <AlertTitle>GO planı zaten silahlanır</AlertTitle>
+              <AlertTitle>GO planı zaten işleme hazırlanır</AlertTitle>
               <AlertDescription>
                 <span className="leading-6">
                   Kapı GO dedi; plan operatör onayı BEKLEMEDEN giriş kuyruğuna girer. Onay düğmesi
@@ -589,7 +589,7 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
           {!hukumTanindi ? (
             <Alert>
               <CircleAlert />
-              <AlertTitle>Kapı hükmü okunamadı — karar yolu kapalı</AlertTitle>
+              <AlertTitle>Kontrol kararı okunamadı — karar yolu kapalı</AlertTitle>
               <AlertDescription>
                 Plan satırında <code className="font-mono text-[11px]">gate_verdict</code> ya yok ya
                 da tanınmayan bir değer taşıyor. Onay ucu yalnız REVIEW alır, ret ucu REVIEW ve
@@ -810,14 +810,14 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
               <Satir etiket="Plan">
                 <code className="break-all font-mono text-xs">{sonuc.plan_id ?? kimlik}</code>
               </Satir>
-              <Satir etiket="Kapı hükmü (DEĞİŞMEZ)">
+              <Satir etiket="Kontrol kararı (DEĞİŞMEZ)">
                 <Metin
                   deger={sonuc.gate_verdict}
-                  neden="Yanıt kapı hükmünü bildirmedi"
+                  neden="Yanıt kontrol kararını bildirmedi"
                   teknik="yanıt gövdesinde `gate_verdict` yok"
                 />
               </Satir>
-              <Satir etiket="Silahlı kümede">
+              <Satir etiket="İşleme hazır planlarda">
                 {sonuc.silahli === undefined ? (
                   <Yok
                     neden="Planın işleme hazır kümeye girip girmediği bildirilmedi"

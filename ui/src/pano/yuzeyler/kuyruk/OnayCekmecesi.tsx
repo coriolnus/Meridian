@@ -202,8 +202,8 @@ function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
       </div>
 
       <div className="mt-2">
-        <h5 className="text-muted-foreground text-[11px] uppercase">Hüküm ve ikinci beyin</h5>
-        <Satir etiket="Kapı hükmü">
+        <h5 className="text-muted-foreground text-[11px] uppercase">Karar ve ikinci model</h5>
+        <Satir etiket="Kontrol kararı">
           {p.gate_verdict ?? <Olculemedi neden="Kontrollerin kararı kaydedilmemiş" teknik="`gate_verdict` yazılmamış" kisa />}
         </Satir>
         <Satir etiket="Süresi doldu mu">
@@ -238,7 +238,7 @@ function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
         <Satir etiket="Strateji sürümü">
           <Deger deger={p.strategy_version} neden="Strateji sürümü kaydedilmemiş" teknik="`strategy_version` yazılmamış" />
         </Satir>
-        <Satir etiket="Gölge p(kazanç)">
+        <Satir etiket="Deneme p(kazanç)">
           <Deger deger={p.p_win_shadow} basamak={3} neden="Denemedeki kazanma olasılığı kaydedilmemiş" teknik="`p_win_shadow` yazılmamış" />
         </Satir>
         <Satir etiket="Broker durumu">
@@ -272,7 +272,7 @@ function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {
 
       {p.gate_reasons && p.gate_reasons.length > 0 ? (
         <div className="mt-2">
-          <h5 className="text-muted-foreground text-[11px] uppercase">Kapı gerekçeleri (hükmün metni)</h5>
+          <h5 className="text-muted-foreground text-[11px] uppercase">Kontrol gerekçeleri (kararın metni)</h5>
           <ul className="mt-1 list-disc pl-5 text-sm leading-6">
             {p.gate_reasons.map((r) => (
               <li key={r}>{r}</li>
@@ -404,16 +404,16 @@ export function OnayCekmecesi({
 
               {/* ---- TÜRE ÖZEL KANIT ------------------------------------- */}
               {oge.ayrinti.cesit === "silahlanma" ? (
-                <Blok baslik="Silahlanma ölçümü (/api/diagnostics.gatekeeper.arming)">
+                <Blok baslik="İşleme hazırlık ölçümü (/api/diagnostics.gatekeeper.arming)">
                   {oge.ayrinti.olcum === null ? (
                     <Olculemedi neden={oge.ayrinti.olcumNeden ?? "Bu kurulum için ölçüm bulunamadı"} />
                   ) : (
                     <div>
-                      <Satir etiket="Kapı hükmü">
+                      <Satir etiket="Kontrol kararı">
                         <HukumRozet
                           ton={silahlanmaTonu(oge.ayrinti.olcum.status)}
                           metin={oge.ayrinti.olcum.status ?? "yazılmamış"}
-                          baslik="`measurements[kurulum].status` — kapının kendi hükmü"
+                          baslik="`measurements[kurulum].status` — kontrolün kendi kararı"
                         />
                       </Satir>
                       <Satir etiket="Arama P(ΔS>0)">
@@ -425,8 +425,8 @@ export function OnayCekmecesi({
                       <Satir etiket="Gereken P">
                         <Deger deger={oge.ayrinti.olcum.p_required} basamak={2} neden="Gereken olasılık eşiği kaydedilmemiş" teknik="`p_required` yazılmamış" />
                       </Satir>
-                      <Satir etiket="Kat kazanımı">
-                        {oge.ayrinti.olcum.fold_wins ?? <Olculemedi neden="Kat kazanımı kaydedilmemiş" teknik="`fold_wins` yazılmamış" kisa />}
+                      <Satir etiket="Doğrulama dilimi kazancı">
+                        {oge.ayrinti.olcum.fold_wins ?? <Olculemedi neden="Doğrulama dilimi kazancı kaydedilmemiş" teknik="`fold_wins` yazılmamış" kisa />}
                       </Satir>
                       <Satir etiket="OOS (mevcut → aday)">
                         <span className="tabular-nums">
@@ -506,7 +506,7 @@ export function OnayCekmecesi({
               ) : null}
 
               {oge.ayrinti.cesit === "oneri" ? (
-                <Blok baslik="Eksen-2 önerisi (/api/skills.recommendations)">
+                <Blok baslik="Beceri önerisi (/api/skills.recommendations)">
                   <div>
                     <Satir etiket="Örneklem (n)">
                       <Deger

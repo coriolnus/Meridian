@@ -112,17 +112,17 @@ export const YUZEYLER = {
     bolumler: [
       { kimlik: "brifing", baslik: "Brifing", soru: "Sermaye ve açık pozisyonlar ne durumda?", ikon: ClipboardCheck },
       { kimlik: "mutabakat", baslik: "Mutabakat masası", soru: "Bizim defter ile brokerin defteri tutuyor mu?", ikon: Scale },
-      { kimlik: "intraemir", baslik: "Seans içi emir", soru: "Silahlanma kapısı açık mı, gölge icra ne diyor?", ikon: Send },
+      { kimlik: "intraemir", baslik: "Seans içi emir", soru: "İşleme hazırlık kontrolü açık mı, deneme icrası ne diyor?", ikon: Send },
     ],
   },
   analytics: {
     sablon: "Analytics",
     baslik: "Analiz",
-    soru: "Biriken hükümler ne söylüyor?",
+    soru: "Biriken kararlar ne söylüyor?",
     ikon: LineChart,
     grup: "Panolar",
     bolumler: [
-      { kimlik: "topviews", baslik: "En çok bakılanlar", soru: "Hükümlerin birikimi nereye işaret ediyor?", ikon: Eye },
+      { kimlik: "topviews", baslik: "En çok bakılanlar", soru: "Kararların birikimi nereye işaret ediyor?", ikon: Eye },
       { kimlik: "performans", baslik: "Para eğrisi", soru: "Sermaye eğrisi ne yapıyor?", ikon: LineChart },
     ],
   },
@@ -133,8 +133,8 @@ export const YUZEYLER = {
     ikon: Activity,
     grup: "Panolar",
     bolumler: [
-      { kimlik: "sprint", baslik: "Sprint", soru: "Antrenman koşuyor mu, kaç aday değerlendirildi?", ikon: Activity },
-      { kimlik: "hermes", baslik: "Hermes", soru: "Yansıma hattı ne durumda, geri dolum nerede?", ikon: Sparkles },
+      { kimlik: "sprint", baslik: "Antrenman turu", soru: "Antrenman koşuyor mu, kaç aday değerlendirildi?", ikon: Activity },
+      { kimlik: "hermes", baslik: "Danışma", soru: "Değerlendirme hattı ne durumda, geri dolum nerede?", ikon: Sparkles },
     ],
   },
   academy: {
@@ -145,7 +145,7 @@ export const YUZEYLER = {
     grup: "Panolar",
     bolumler: [
       { kimlik: "karne", baslik: "Dürüst karne", soru: "Öğrenme döngüsü gerçekten kapanıyor mu?", ikon: ClipboardCheck },
-      { kimlik: "golge", baslik: "Gölge", soru: "Gölge uyum ne gösteriyor?", ikon: FlaskConical },
+      { kimlik: "golge", baslik: "Deneme", soru: "Denenen kural ne gösteriyor?", ikon: FlaskConical },
       { kimlik: "bilesenic", baslik: "Bileşen içi", soru: "Hangi bileşen skoru taşıyor?", ikon: Boxes },
       { kimlik: "ajan", baslik: "Strateji sürümleri", soru: "v01'den bugüne ne değişti?", ikon: Cpu },
       { kimlik: "skiller", baslik: "Araçlar", soru: "Ajanın elinde hangi araçlar var?", ikon: Hammer },
@@ -176,8 +176,8 @@ export const YUZEYLER = {
     ikon: FolderOpen,
     grup: "Panolar",
     bolumler: [
-      { kimlik: "hafiza", baslik: "Hafıza", soru: "lessons.md ne biriktirdi?", ikon: BookOpen },
-      { kimlik: "belgeler", baslik: "Karar belgeleri", soru: "Hangi hüküm hangi turda verildi?", ikon: FileText },
+      { kimlik: "hafiza", baslik: "Hafıza", soru: "Hangi dersler biriktirildi?", ikon: BookOpen },
+      { kimlik: "belgeler", baslik: "Karar belgeleri", soru: "Hangi karar hangi turda verildi?", ikon: FileText },
     ],
   },
 
@@ -192,9 +192,9 @@ export const YUZEYLER = {
     // Çapalar gövdede zaten vardı; eksik olan kayıttı, yani kenar çubuğu üç sekmenin
     // hiçbirine bağ üretmiyordu. Sıra sekme çubuğundaki sıradır.
     bolumler: [
-      { kimlik: "sohbet", baslik: "Sohbet", soru: "Ajan ne önerdi, kapı ne cevap verdi?", ikon: MessagesSquare },
+      { kimlik: "sohbet", baslik: "Sohbet", soru: "Ajan ne önerdi, kontrol ne cevap verdi?", ikon: MessagesSquare },
       { kimlik: "defter", baslik: "Defter", soru: "Aynı kayıtlar sıralandığında hangi öneri öne çıkıyor?", ikon: Table2 },
-      { kimlik: "olcum", baslik: "Ölçüm", soru: "Kim konuştu, kapı ne dedi, tahmin tuttu mu?", ikon: Bot },
+      { kimlik: "olcum", baslik: "Ölçüm", soru: "Kim konuştu, kontrol ne dedi, tahmin tuttu mu?", ikon: Bot },
     ],
   },
   calendar: {
@@ -208,12 +208,12 @@ export const YUZEYLER = {
   kanban: {
     sablon: "Kanban",
     baslik: "Karar zinciri",
-    soru: "Gece ne buldu, aday hangi kapıda?",
+    soru: "Gece ne buldu, aday hangi kontrolde?",
     ikon: Kanban,
     grup: "Sayfalar",
     bolumler: [
       { kimlik: "adaylar", baslik: "Adaylar", soru: "Bu seans hangi planlar kuruldu?", ikon: Layers },
-      { kimlik: "kapilar", baslik: "Kapılar", soru: "Aday hangi kapıda düştü, hangisinden geçti?", ikon: Radar },
+      { kimlik: "kapilar", baslik: "Kontroller", soru: "Aday hangi kontrolde düştü, hangisinden geçti?", ikon: Radar },
       // İKİNCİ SEKME, İKİNCİ TAHTA: `KanbanYuzey.tsx` çapayı kendisi tanımlamış ve
       // şerhinde "kayıt dosyası bana kapalı" diye not düşmüştü — o boşluk burada kapanıyor.
       { kimlik: "roadmap", baslik: "Yol haritası", soru: "Hangi iş hangi bölümde, hangi durumda?", ikon: HaritaIkonu },

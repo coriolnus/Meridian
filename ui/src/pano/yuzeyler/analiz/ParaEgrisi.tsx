@@ -173,7 +173,7 @@ function EgriBeyaniBlogu({ beyani, atlanan }: { beyani: EgriBeyani | undefined; 
 
       {tohum ? (
         <p className="text-muted-foreground text-xs leading-relaxed">
-          <span className="font-medium text-foreground">Tohum sınırı:</span>{" "}
+          <span className="font-medium text-foreground">Başlangıç verisi sınırı:</span>{" "}
           {typeof tohum.replay_end === "string" ? tohum.replay_end : "ölçülemedi"}
           {typeof tohum.kaynak === "string" ? ` · kaynak ${tohum.kaynak}` : ""}
           {typeof tohum.guven === "string" ? ` · güven ${tohum.guven}` : ""}
@@ -181,7 +181,7 @@ function EgriBeyaniBlogu({ beyani, atlanan }: { beyani: EgriBeyani | undefined; 
         </p>
       ) : (
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Tohum sınırı ölçülemedi — serinin neresinde replay tohumunun bittiği ve canlı kağıdın başladığı
+          Başlangıç verisi sınırı ölçülemedi — serinin neresinde replay başlangıç verisinin bittiği ve canlı kağıdın başladığı
           işaretlenemiyor.
         </p>
       )}
@@ -438,7 +438,7 @@ function EgriGovdesi({ veri }: { veri: PerformansGovdesi }) {
       <Card>
         <CardHeader>
           <CardTitle>Eğrinin beyanı</CardTitle>
-          <CardDescription>Seri hangi pencereyi kapsıyor, nerede delik var, tohum nerede bitiyor?</CardDescription>
+          <CardDescription>Seri hangi pencereyi kapsıyor, nerede delik var, başlangıç verisi nerede bitiyor?</CardDescription>
         </CardHeader>
         <CardContent>
           <EgriBeyaniBlogu beyani={beyani} atlanan={atlanan} />

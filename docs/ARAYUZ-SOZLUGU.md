@@ -48,7 +48,30 @@ bir göz bunları bilir. Değiştirmek netlik değil, yabancılaşma üretirdi:
 | **nabız** | sistem sağlığı bağlamında yaygın (heartbeat); yanında yaşı da yazıyor |
 | **plan · kurulum · tetik** | alım-satım günlüğü dili |
 
-## Çivi
+## Çiviler — ve neyi BAĞLADIKLARI
 
-`tests/test_arayuz_dili_v323.py` — bu tablo tek kaynaktır ve testle bağlıdır: burada
-"değişen" sayılan bir terim kullanıcıya görünen metinde yeniden belirirse suite kırmızı olur.
+| çivi | neyi bağlar |
+|---|---|
+| `tests/test_arayuz_dili_v323.py` | dürüst-boşluk sözleşmesi (`neden` insan cümlesi · `teknik` iç ayrıntı) **ve** yukarıdaki "değişenler" tablosunun gezinme kaydında (`ui/src/pano/alanlar.ts`) uygulanmış olması |
+| `tests/test_capa_kimligi_slug_v324.py` | `kimlik` DEĞERİ slug kalır — çeviri DOM çapasına sızamaz |
+| `tests/test_pano_yuzey_kaydi_v288.py` | kayıt ↔ ekran çapası paritesi (çeviri bir çapayı kaydırırsa öter) |
+
+**Bu bölümün önceki hâli YANLIŞ BEYANDI ve kaydı burada duruyor.** İlk yazımda
+"bu tablo tek kaynaktır ve testle bağlıdır" yazdım; bağlı DEĞİLDİ. Ölçülen sonuç
+(2026-08-26, ikinci tur):
+
+* v323'ün kapsamı `PANO.rglob("*.tsx")` idi; kenar çubuğu kaydı `alanlar.ts` bir `.ts`.
+  **Tek bir uzantı filtresi hem çeviriyi hem çiviyi kör bıraktı:** A turu 102 etiket
+  çevirdi, gezinme metnine hiç dokunmadı, ve suite bunu YEŞİL geçti. Gövde "Danışma"
+  yazarken menü "Hermes" diyordu.
+* Aynı turda ters yönde bir hasar da oluştu: kapsamı "çift tırnaklı dize" diye
+  daraltmıştım, ama **çift tırnaklı bir dize kullanıcı metni olmak zorunda değildir.**
+  `kimlik="sprint"` → `kimlik="antrenman turu"` oldu; bu bir DOM çapasıdır ve derin bağ
+  sessizce kaymaya başladı. 26 dakikalık tam suite'in tek kırmızısı buydu (v288).
+  Biçim denetimi artık v324'te.
+
+**Ders, kuralın kendisinden daha genel:** ayrım dizenin TIRNAK BİÇİMİ değil, DOLDURDUĞU
+ALANDIR. `baslik`/`soru`/`etiket`/`neden` kullanıcıya gider; `kimlik`/`ad`(alan anahtarı)/
+backtick içindeki sembol gitmez. İkinci turda `` `sprint.should_run()` `` de birinci
+tur tarafından `` `antrenman turu.should_run()` `` yapılmıştı — backtick içi kod adı
+kullanıcı metni değildir.

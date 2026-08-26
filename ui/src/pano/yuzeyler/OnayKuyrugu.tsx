@@ -304,7 +304,7 @@ export function OnayKuyrugu() {
             <Satir etiket="Geliş damgası kaynağı">
               <code className="font-mono text-xs">/api/skills</code>
             </Satir>
-            <Satir etiket="Silahlanma kanıtı">
+            <Satir etiket="İşleme hazırlık kanıtı">
               <code className="font-mono text-xs">/api/diagnostics.gatekeeper.arming</code>
             </Satir>
           </div>
@@ -323,7 +323,7 @@ export function OnayKuyrugu() {
         <p className="text-muted-foreground text-xs leading-5">
           <strong>Kapsam dışı:</strong> canlı emir onayları yalnız L1+&apos;ta doğar; sistem L0
           iken <code className="font-mono text-[11px]">pending</code> defteri HİÇ döndürülmez. Bir
-          Eksen-2 önerisine karar verildiğinde satır kuyrukta KALIR (üreteç aynı öneriyi yarın
+          Beceri önerisine karar verildiğinde satır kuyrukta KALIR (üreteç aynı öneriyi yarın
           yeniden yazabilir, karar geçmişi görünür kalmalı) ama &quot;iş istiyor&quot; sayılmaz.
         </p>
       </BolumKart>

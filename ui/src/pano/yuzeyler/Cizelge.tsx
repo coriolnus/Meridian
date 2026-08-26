@@ -147,7 +147,7 @@ export function Cizelge() {
               <KpiKutu etiket="Askıda" altMetin="pencereyi aştı ama sistem beklemeye almış">
                 {ozet.nAskida}
               </KpiKutu>
-              <KpiKutu etiket="Hükümsüz" altMetin="özdeşlik sınaması tutmadı — hüküm verilmedi">
+              <KpiKutu etiket="Karar yok" altMetin="özdeşlik sınaması tutmadı — karar verilmedi">
                 {ozet.nOlculemedi}
               </KpiKutu>
             </div>
@@ -220,7 +220,7 @@ export function Cizelge() {
             <Satir etiket="Durum dosyası güncellendi">
               {zamanMetni(sched?.updated) ?? <Olculemedi neden="Durum dosyasının güncellenme anı kaydedilmemiş" teknik="`scheduler.updated` yazılmamış" kisa />}
             </Satir>
-            <Satir etiket="Öğrenme kadansı (learn_session)">
+            <Satir etiket="Öğrenme otomatik döngüsü (learn_session)">
               {sched?.learn_session ?? <Olculemedi neden="Son öğrenme turu kaydedilmemiş — hiç koşmamış olabilir" teknik="`learn_session` yazılmamış" kisa />}
             </Satir>
             <Satir etiket="Y4 toplama (y4_session)">
@@ -238,7 +238,7 @@ export function Cizelge() {
         </div>
         <Separator />
         <p className="text-muted-foreground text-xs leading-5">
-          Bu blok <strong>zamanlayıcının kendi</strong> nabzıdır; adımların kadansı yukarıdaki
+          Bu blok <strong>zamanlayıcının kendi</strong> nabzıdır; adımların otomatik döngüsü yukarıdaki
           tabloda. İkisi ayrı sorudur: döngü dönüyor olabilir ama içindeki bir adım susmuş olabilir
           (bekçinin var olma sebebi). Kadans damgaları (<code className="font-mono text-[11px]">learn_session</code>{" "}
           · <code className="font-mono text-[11px]">y4_session</code> ·{" "}
@@ -298,7 +298,7 @@ export function Cizelge() {
       <BolumKart
         kimlik="cagrilar"
         baslik="Ajan çağrıları"
-        soru="Beyin koştu mu, koştuysa dolu cevap verdi mi?"
+        soru="Model koştu mu, koştuysa dolu cevap verdi mi?"
         ikon={Cpu}
       >
         {teshis.hata !== null ? (

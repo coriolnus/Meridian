@@ -184,7 +184,7 @@ function sutunlar(sec: (p: PlanSatiri) => void): ColumnDef<DataTableFeatures, Pl
     {
       id: "verdict",
       accessorFn: (r) => r.gate_verdict ?? "",
-      header: ({ column }) => <SiraliBaslik sutun={column} etiket="Hüküm" />,
+      header: ({ column }) => <SiraliBaslik sutun={column} etiket="Karar" />,
       cell: ({ row }) => <HukumRozeti hukum={row.original.gate_verdict} />,
     },
     {
@@ -348,7 +348,7 @@ export function PlanTablosu({ b }: { b: BugunTam }) {
                 />
                 <Input
                   className="h-8 pl-8"
-                  placeholder="Sembol, kurulum, sektör, hüküm…"
+                  placeholder="Sembol, kurulum, sektör, karar…"
                   value={arama}
                   onChange={(e) => {
                     table.getColumn("arama")?.setFilterValue(e.target.value || undefined);

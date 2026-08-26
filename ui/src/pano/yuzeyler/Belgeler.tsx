@@ -104,7 +104,7 @@ export function Belgeler() {
             <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
             Karar belgeleri
           </CardTitle>
-          <CardDescription>Hangi hüküm hangi turda verildi?</CardDescription>
+          <CardDescription>Hangi karar hangi turda verildi?</CardDescription>
         </CardHeader>
         <CardContent>
           <KararBelgeleri hafizaOk={hafizaOk} hafizaNeden={hafizaNeden} />

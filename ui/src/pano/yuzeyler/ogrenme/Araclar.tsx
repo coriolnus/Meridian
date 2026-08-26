@@ -196,7 +196,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, AracSatir>[] = [
               className="cursor-help border-amber-500/40 text-amber-700 dark:text-amber-300"
               title="Deneme: skill koşar ama kararı icraya BAĞLANMAZ (beyan tablonun altında)."
             >
-              gölge
+              deneme
             </Badge>
           ) : null}
           {s.korumali ? <Badge variant="outline">korumalı</Badge> : null}

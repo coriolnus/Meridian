@@ -345,7 +345,7 @@ function AynaKarti({ r, akis }: { r: MutabakatKaydi | undefined; akis: AkisSagli
 
   const sayaclar = [
     { ad: "Hayalet emir", n: hayalet.length, not: "Aynada canlı, kitapta karşılığı olmayan emir" },
-    { ad: "Soyulan silahlı plan", n: soyulan.length, not: "Ayna emri ölmüş, plan silahlı kümeden çıkarıldı" },
+    { ad: "Soyulan işleme hazır plan", n: soyulan.length, not: "Ayna emri ölmüş, plan işleme hazır planlardan çıkarıldı" },
     { ad: "Adet sapması", n: adetSapmasi.length, not: "İç adet ile Alpaca adedi %25'ten fazla ayrıldı" },
     { ad: "Aynada kayıp", n: aynadaYok.length, not: "İçeride açık, Alpaca'da ne pozisyon ne emir (split-brain)" },
     { ad: "Kitap dışı pozisyon", n: disPozisyon.length, not: "Alpaca'da var, kitabın hiç bilmediği sembol" },

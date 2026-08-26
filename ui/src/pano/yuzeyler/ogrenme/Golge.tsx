@@ -60,7 +60,7 @@ interface UyumKovasi {
 
 export function Golge({ teshis }: { teshis: Durum<TeshisGovdesi> }) {
   return (
-    <BolumKarti kimlik="golge" baslik="Deneme" soru="Deneme uyum ne gösteriyor?" ikon={FlaskConical}>
+    <BolumKarti kimlik="golge" baslik="Deneme" soru="Denenen kural ne gösteriyor?" ikon={FlaskConical}>
       <Kapi durum={teshis} ad="/api/diagnostics" yukseklik="h-64">
         {(v) => (
           <div className="flex flex-col gap-6">
@@ -129,8 +129,8 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
 
   return (
     <Kutu
-      baslik="Gölge yasa — iki hesabın uyumu"
-      aciklama="Kapı hükmünü PARA-v3 verir; eski bileşik yasa aynı anda ölçülüp kayda geçer. Uyum = ikisinin aynı hükmü verdiği kayıt payı."
+      baslik="Deneme kuralı — iki hesabın uyumu"
+      aciklama="Kontrol kararını PARA-v3 verir; eski bileşik yasa aynı anda ölçülüp kayda geçer. Uyum = ikisinin aynı kararı verdiği kayıt payı."
     >
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">yasa sürümü: {yasa.yasa_surumu ?? "ölçülemedi"}</Badge>
@@ -145,7 +145,7 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
 
       {kovalar.length === 0 ? (
         <Olculemedi
-          neden="Uyum sayımı okunamadı — hiçbir kova sayı taşımıyor"
+          neden="Uyum sayımı okunamadı — hiçbir aralık sayı taşımıyor"
           teknik="`golge_kayit_sayisi` / `iraksayan_kayit` / `gecis_oncesi_kayit` alanlarının hiçbiri sayı değil"
         />
       ) : (
@@ -277,7 +277,7 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
 function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
   if (!ogrenme) {
     return (
-      <Kutu baslik="Gölge model — antrenman ve terfi">
+      <Kutu baslik="Deneme model — antrenman ve terfi">
         <Olculemedi
           neden="Denemeye alınmış modelin eğitim durumu bu turda hiç ölçülmedi"
           teknik="/api/diagnostics yükünde `ogrenme` bloğu YOK"
@@ -303,8 +303,8 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
 
   return (
     <Kutu
-      baslik="Gölge model — antrenman ve terfi"
-      aciklama="Bu, kapı hükmünün değil İŞLEM SONUCUNUN gölgesi: modelin tahmini canlı Brier'le taban orana karşı ölçülür."
+      baslik="Deneme model — antrenman ve terfi"
+      aciklama="Bu, kontrol kararının değil İŞLEM SONUCUNUN denemesi: modelin tahmini canlı Brier'le taban orana karşı ölçülür."
     >
       {a === null || a === undefined ? (
         <Olculemedi
@@ -329,7 +329,7 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
                 teknik="`n_fit` yok; model hiç kurulmamışsa bu alan uydurulmaz"
               />
             </Satir>
-            <Satir etiket="Gerçek / karşı-olgusal satır">
+            <Satir etiket="Gerçek / alınmamış işlem satırı">
               <Deger
                 metin={
                   a.n_real === null || a.n_real === undefined || a.n_cf === null || a.n_cf === undefined
@@ -404,7 +404,7 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
               />
             </Satir>
             {nabiz ? (
-              <Satir etiket="Kadans nabzı" ipucu="Kadans ≠ fit: deneme ilerlerken fit yerinde kalabilir.">
+              <Satir etiket="Otomatik döngü nabzı" ipucu="Otomatik döngü ≠ fit: deneme ilerlerken fit yerinde kalabilir.">
                 <span className="text-xs">
                   {nabiz.hic_kosmadi
                     ? "hiç koşmadı"
@@ -421,7 +421,7 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
       {/* ---- TERFİ HÜKMÜ ---- */}
       <div className="rounded-md border border-border/60 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-medium text-sm">Terfi hükmü</p>
+          <p className="font-medium text-sm">Terfi kararı</p>
           <Badge
             variant="outline"
             className={

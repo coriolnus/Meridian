@@ -333,7 +333,7 @@ export function SeansIciEmir({
             Pozisyon koruması
           </CardTitle>
           <CardDescription>
-            Broker aynasında duran her pozisyon için stop hükmü (<code className="text-xs">
+            Broker aynasında duran her pozisyon için stop kararı (<code className="text-xs">
               /api/alpaca account.koruma
             </code>). Bu kart POZİSYONLARI sayar: hiç canlı emri olmayan bir pozisyon aşağıdaki defterde GÖRÜNMEZ ama
             burada KORUMASIZ olarak görünür. Hüküm gövdede verilir, burada yeniden hesaplanmaz.

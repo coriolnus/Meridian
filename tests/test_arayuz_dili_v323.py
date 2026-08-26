@@ -145,3 +145,57 @@ def test_SONDA_NOKTA_YOK():
     assert not ihlal, (
         f"{len(ihlal)} `neden` noktayla bitiyor — üslup ayrışması:\n"
         + "\n".join(f"  · {x}" for x in ihlal[:12]))
+
+
+# --- SÖZLÜK TABLOSUNUN KENDİSİ ÇİVİLENİR (2026-08-26, ikinci tur) --------------
+# `docs/ARAYUZ-SOZLUGU.md` "bu tablo tek kaynaktır ve TESTLE BAĞLIDIR" diye bitiyordu.
+# BAĞLI DEĞİLDİ. Belgeyi yazan bendim ve tutmayan bir garanti beyan ettim — YASA 6'nın
+# tersi: okuyucusu olan ama ölçüsü olmayan bir cümle.
+#
+# İKİ KÖR NOKTA, TEK SEBEP — bir uzantı filtresi:
+#   · yukarıdaki `_tsx()` yalnız `PANO.rglob("*.tsx")` okuyor
+#   · kenar çubuğu KAYDI `ui/src/pano/alanlar.ts` — bir `.ts`
+# Sonuç ölçüldü: A turu 102 etiket çevirdi ama gezinme metnine HİÇ dokunmadı. Gövde
+# "Danışma" yazarken menü "Hermes" diyordu; kaydın `soru:` alanları hâlâ "Yansıma
+# hattı ne durumda" diyordu. Ve aynı kör nokta yüzünden suite bunu YEŞİL geçti.
+#
+# KAPSAM SINIRI, bilerek: bu çivi KAYIT dosyasını (`alanlar.ts`) bağlar. Orası
+# gezinmenin tek kaynağı ve kullanıcının İLK okuduğu metin — yüzey gövdelerindeki
+# serbest metin bu çivinin konusu değil (onu insan gözü ve bu tablo yürütür).
+SOZLUK_KAYIT = KOK / "ui/src/pano/alanlar.ts"
+DEGISEN_TERIMLER = [
+    "sprint", "hermes", "beyin", "yansıma", "kadans", "silahl", "hüküm", "hükm",
+    "gölge", "kova", "ufuk", "bacak", "tohum", "ısınma", "çırpınma",
+    "karşı-olgusal", "kat kazanım", "üçüncü hâl", "açık kalem", "eksen-2",
+]
+
+
+def _kayit_gorunur_metinler() -> list[tuple[int, str, str]]:
+    """(satır, alan, değer) — kayıttaki KULLANICI METNİ alanları.
+
+    `kimlik:` BİLEREK DIŞARIDA: o bir DOM çapasıdır, kullanıcı metni değil. Onu
+    çevirmek derin bağı sessizce kırar — bu tam olarak yapıldı ve v288'i kırmızıya
+    düşürdü (`kimlik="antrenman turu"`). Biçimini ayrı bir çivi bekler: v324.
+    """
+    out = []
+    for no, satir in enumerate(SOZLUK_KAYIT.read_text(encoding="utf-8").splitlines(), 1):
+        for m in re.finditer(r'\b(baslik|soru)\s*:\s*"([^"\\\n]*)"', satir):
+            out.append((no, m.group(1), m.group(2)))
+    return out
+
+
+def test_KAYIT_ayristiricisi_bayat_degil():
+    n = len(_kayit_gorunur_metinler())
+    assert n >= 40, f"kayıt ayrıştırıcısı yalnız {n} görünür metin gördü — desen bayat"
+
+
+def test_SOZLUK_DEGISEN_TERIMLERI_gezinmede_YOK():
+    ihlal = [f"alanlar.ts:{no} {alan}=\"{v}\"  ← '{t}'"
+             for no, alan, v in _kayit_gorunur_metinler()
+             for t in DEGISEN_TERIMLER if t in v.lower()]
+    assert not ihlal, (
+        f"gezinme metninde {len(ihlal)} ESKİ İÇ TERİM duruyor:\n"
+        + "\n".join(f"  · {x}" for x in ihlal)
+        + "\n`docs/ARAYUZ-SOZLUGU.md` tablosundaki karşılığını kullan. "
+          "`kimlik:` alanına DOKUNMA — o çapadır (v324)."
+    )

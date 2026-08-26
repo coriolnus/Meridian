@@ -154,7 +154,7 @@ export function SeansTakvimi({
                 <TableHead className="whitespace-nowrap">Rejim</TableHead>
                 <TableHead className="whitespace-nowrap">Aday</TableHead>
                 <TableHead className="whitespace-nowrap">Plan</TableHead>
-                <TableHead className="whitespace-nowrap">Silahlı</TableHead>
+                <TableHead className="whitespace-nowrap">İşleme hazır</TableHead>
                 <TableHead className="whitespace-nowrap">Açık poz.</TableHead>
                 <TableHead className="whitespace-nowrap">Veri / HALT</TableHead>
               </TableRow>

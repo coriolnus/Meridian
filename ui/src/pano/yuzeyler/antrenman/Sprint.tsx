@@ -117,7 +117,7 @@ const HAL_STILI: Readonly<Record<Hal["kod"], { ikon: typeof Activity; sinif: str
 export function Sprint({ hermes }: { hermes: Durum<HermesGovdesi> }) {
   return (
     <BolumKarti
-      kimlik="antrenman turu"
+      kimlik="sprint"
       baslik="Antrenman turu"
       soru="Antrenman koşuyor mu, kaç aday değerlendirildi?"
       ikon={Activity}
@@ -267,7 +267,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
         {!arama ? (
           <Olculemedi
             neden="Son koşu arama aşamasına hiç ulaşmamış olabilir"
-            teknik="`antrenman turu.search` yok — Faz A min_sample'a takılırsa arama hiç başlamaz"
+            teknik="`sprint.search` yok — Faz A min_sample'a takılırsa arama hiç başlamaz"
           />
         ) : (
           <>
@@ -433,7 +433,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
       </Kutu>
 
       {/* ---- (4) KADANS: SIRADA NE VAR ---- */}
-      <Kutu baslik="Otomatik döngü — bir sonraki antrenman turu ne zaman?" aciklama="`antrenman turu.should_run()` her cevabın yanına SEBEBİNİ yazar.">
+      <Kutu baslik="Otomatik döngü — bir sonraki antrenman turu ne zaman?" aciklama="`sprint.should_run()` her cevabın yanına SEBEBİNİ yazar.">
         {!kadans ? (
           <Olculemedi
             neden="Otomatik döngünün kararı bu turda ölçülemedi"

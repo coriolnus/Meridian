@@ -162,20 +162,20 @@ function DagilimGovdesi({ veri }: { veri: TopviewsGovdesi }) {
                 <td className="py-2 pr-3 text-right text-muted-foreground tabular-nums">
                   <Deger
                     metin={toplam > 0 ? yuzde(p.n / toplam, 1) : null}
-                    neden="Kovaların işlem toplamı sıfır — pay hesaplanamadı"
+                    neden="Aralıkların işlem toplamı sıfır — pay hesaplanamadı"
                   />
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">
                   <Deger
                     metin={p.satir.sum_r === null || p.satir.sum_r === undefined ? null : rKati(p.satir.sum_r)}
-                    neden="Bu kovanın toplam R'si ölçülemedi — sıfır değil, ölçülmedi"
+                    neden="Bu aralığın toplam R'si ölçülemedi — sıfır değil, ölçülmedi"
                     teknik={`bu kovadaki ${p.satir.r_n ?? 0} satır r_multiple taşıyor`}
                   />
                 </td>
                 <td className="py-2 text-right tabular-nums">
                   <Deger
                     metin={p.satir.kazanma === null || p.satir.kazanma === undefined ? null : yuzde(p.satir.kazanma, 1)}
-                    neden="Kovanın R taşıyan satırı yok — kazanma oranı paydasız"
+                    neden="Aralığın R taşıyan satırı yok — kazanma oranı paydasız"
                   />
                 </td>
               </tr>

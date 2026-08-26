@@ -417,7 +417,7 @@ export function PortfoyYuzey() {
           BÖLÜM · SEANS İÇİ EMİR
           ===================================================================== */}
       <section id="bolum-intraemir" className="flex scroll-mt-20 flex-col gap-4">
-        <BolumBasligi ikon={Send} baslik="Seans içi emir" soru="Silahlanma kapısı açık mı, gölge icra ne diyor?" />
+        <BolumBasligi ikon={Send} baslik="Seans içi emir" soru="İşleme hazırlık kontrolü açık mı, deneme icrası ne diyor?" />
         <UcHal
           yol="/api/diagnostics"
           yukleniyor={teshis.yukleniyor}

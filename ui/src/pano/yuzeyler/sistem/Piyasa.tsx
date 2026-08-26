@@ -201,7 +201,7 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
                           <TableCell className="text-muted-foreground text-xs">{r.source ?? "?"}</TableCell>
                           <TableCell className="flex flex-wrap gap-1">
                             {r.position ? <Badge variant="secondary">pozisyon</Badge> : null}
-                            {r.armed ? <Badge variant="secondary">silahlı</Badge> : null}
+                            {r.armed ? <Badge variant="secondary">işleme hazır</Badge> : null}
                             {(r.plans_n ?? 0) > 0 ? <Badge variant="outline">{r.plans_n} plan</Badge> : null}
                           </TableCell>
                         </TableRow>

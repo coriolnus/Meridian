@@ -127,7 +127,7 @@ const RAF: readonly RafSatiri[] = [
     kaynak: "state/lessons.md",
     uc: "GET /api/memory",
     ikon: ScrollText,
-    aciklama: "Ajanın kalıcı hafızası; her yansımaya enjekte ediliyor. Yukarıdaki Hafıza bölümünde tam metin.",
+    aciklama: "Ajanın kalıcı hafızası; her değerlendirmeye enjekte ediliyor. Yukarıdaki Hafıza bölümünde tam metin.",
   },
   {
     ad: "Runbook",
@@ -144,11 +144,11 @@ const RAF: readonly RafSatiri[] = [
     aciklama: "Kalemlerin durum tahtası. Panoda Karar zinciri yüzeyinde çiziliyor — burada tekrar edilmiyor.",
   },
   {
-    ad: "Karar ve hüküm arşivi",
+    ad: "Karar arşivi",
     kaynak: "docs/KARAR-*.md · docs/HUKUM-*.md",
     uc: `GET ${ARSIV_UCU}`,
     ikon: Archive,
-    aciklama: "Tur hükümlerinin yazıldığı yer. Uç KÜNYE döndürüyor; belge gövdesi henüz sunulmuyor.",
+    aciklama: "Tur kararlarının yazıldığı yer. Uç KÜNYE döndürüyor; belge gövdesi henüz sunulmuyor.",
   },
 ];
 
@@ -221,7 +221,7 @@ export function KararBelgeleri({ hafizaOk, hafizaNeden }: { hafizaOk: boolean; h
             <div className="min-w-0">
               <CardTitle className="leading-none">Arşiv künyesi</CardTitle>
               <CardDescription>
-                Tur hükümleri: hangi belge, hangi tarih, ne kadar yer tutuyor?
+                Tur kararları: hangi belge, hangi tarih, ne kadar yer tutuyor?
               </CardDescription>
             </div>
             {/* AYRI TAZELEME: yüzeyin üstündeki düğme `/api/memory` okumasını yeniliyor,
@@ -242,7 +242,7 @@ export function KararBelgeleri({ hafizaOk, hafizaNeden }: { hafizaOk: boolean; h
 
       <Card>
         <CardHeader>
-          <CardTitle className="leading-none">Açık kalem</CardTitle>
+          <CardTitle className="leading-none">Henüz eklenmedi</CardTitle>
           <CardDescription>Bu bölümün tamamlanması için ne eksik?</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm leading-relaxed">

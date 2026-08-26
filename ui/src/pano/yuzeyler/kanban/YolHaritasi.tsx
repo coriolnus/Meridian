@@ -430,7 +430,7 @@ function Tahta({ ham }: { ham: unknown }) {
                       </TableCell>
                       <TableCell className="tabular-nums text-xs">
                         {s.ucSayimi === null ? (
-                          <span className="text-muted-foreground" title="uç bu kovayı `sayim.durum` içinde göndermedi">
+                          <span className="text-muted-foreground" title="uç bu aralığı `sayim.durum` içinde göndermedi">
                             ölçülemedi
                           </span>
                         ) : (

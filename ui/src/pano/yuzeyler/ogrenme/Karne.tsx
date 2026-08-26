@@ -250,7 +250,7 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
           <div className="flex flex-col gap-6">
             {/* HÜKÜM ÖNCE: operatörün ilk okuyacağı cümle uçtan gelen `verdict`tir. */}
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-              <p className="text-muted-foreground text-xs">Uçtan gelen hüküm</p>
+              <p className="text-muted-foreground text-xs">Uçtan gelen karar</p>
               <p className="mt-1 text-sm leading-relaxed">
                 {l.verdict ?? (
                   <span className="text-muted-foreground italic">
@@ -324,7 +324,7 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
             {/* ---- DEFTERİN KAYNAK KOMPOZİSYONU ---------------------------- */}
             <Kutu
               baslik="Defterin kaynak kompozisyonu"
-              aciklama="Ham satır sayısı bir olgunluk kanıtı DEĞİLDİR: tohum satırları tek toplu yazımdan gelir ve bugünkü evrenle üretilmiştir."
+              aciklama="Ham satır sayısı bir olgunluk kanıtı DEĞİLDİR: başlangıç verisi satırları tek toplu yazımdan gelir ve bugünkü evrenle üretilmiştir."
             >
               {kovalar.length === 0 ? (
                 <Olculemedi
@@ -388,7 +388,7 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
                         teknik="`defter.gercek_canli_n` yükte yok"
                       />
                     </Satir>
-                    <Satir etiket="Training (tohum)">
+                    <Satir etiket="Training (başlangıç verisi)">
                       <Deger
                         metin={sayi(defter?.training_n, 0)}
                         neden="Eğitim amaçlı kayıtların payı bildirilmedi"
@@ -507,7 +507,7 @@ function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <div className="rounded-lg border border-border/60 p-3">
-        <p className="font-medium text-sm">Antrenman sprinti</p>
+        <p className="font-medium text-sm">Antrenman turu</p>
         {sprint === null || sprint === undefined ? (
           <Olculemedi
             className="mt-2"
@@ -527,7 +527,7 @@ function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
                 className="text-xs"
               />
             </Satir>
-            <Satir etiket="Son sprintten geçen gün">
+            <Satir etiket="Son antrenman turundan geçen gün">
               <Deger
                 metin={sayi(sprint.gecen_gun, 0)}
                 neden="Son antrenmandan bu yana geçen gün ölçülemedi — hiç koşmamış olabilir"
@@ -586,7 +586,7 @@ function BeslemeSatirlari({ l }: { l: OgrenmeKarnesi }) {
       </div>
 
       <div className="rounded-lg border border-border/60 p-3">
-        <p className="font-medium text-sm">Gölge model antrenmanı</p>
+        <p className="font-medium text-sm">Deneme model antrenmanı</p>
         {antrenman === null || antrenman === undefined ? (
           <Olculemedi
             className="mt-2"

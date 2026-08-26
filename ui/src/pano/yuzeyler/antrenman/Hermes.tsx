@@ -64,7 +64,7 @@ const HARCAMA_CONFIG = {
 
 export function Hermes({ hermes, teshis }: { hermes: Durum<HermesGovdesi>; teshis: Durum<TeshisGovdesi> }) {
   return (
-    <BolumKarti kimlik="danışma" baslik="Danışma" soru="Değerlendirme hattı ne durumda, geri dolum nerede?" ikon={Sparkles}>
+    <BolumKarti kimlik="hermes" baslik="Danışma" soru="Değerlendirme hattı ne durumda, geri dolum nerede?" ikon={Sparkles}>
       <Kapi durum={hermes} ad="/api/hermes" yukseklik="h-64">
         {(v) => (
           <div className="flex flex-col gap-6">
@@ -77,7 +77,7 @@ export function Hermes({ hermes, teshis }: { hermes: Durum<HermesGovdesi>; teshi
                 düşerse Hermes kartının geri kalanı çizilmeye devam etsin. */}
             <Kutu
               baslik="Isınma (warmup) — ajan yoklaması"
-              aciklama="Kaynak /api/diagnostics `mlops.warmup`. Yansımadan AYRI bir otomatik döngü: model uçlarını yoklar."
+              aciklama="Kaynak /api/diagnostics `mlops.warmup`. Değerlendirmeden AYRI bir otomatik döngü: model uçlarını yoklar."
             >
               <Kapi durum={teshis} ad="/api/diagnostics" yukseklik="h-24">
                 {(t) => <IsinmaSatirlari w={t.mlops?.warmup} />}
@@ -108,7 +108,7 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
   const pollOrani = pollYasi !== null && poll !== null && poll > 0 ? pollYasi.saniye / poll : null;
 
   return (
-    <Kutu baslik="Yansıma hattı" aciklama="Kalp atışı, süreç konumu ve son yansımanın sonucu.">
+    <Kutu baslik="Değerlendirme hattı" aciklama="Kalp atışı, süreç konumu ve son değerlendirmenin sonucu.">
       <div className="flex flex-wrap items-center gap-2">
         <UcDegerli
           deger={s.active ?? null}
@@ -122,7 +122,7 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
         <Badge variant="outline">{s.surec_ici ? "süreç içi iplik" : "ayrı birim (systemd)"}</Badge>
         {s.reflecting === true ? (
           <Badge variant="outline" className="border-primary/40 text-primary">
-            şu an yansıma koşuyor
+            şu an değerlendirme koşuyor
           </Badge>
         ) : null}
         <UcDegerli
@@ -173,14 +173,14 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
           </Satir>
         </div>
         <div className="flex flex-col">
-          <Satir etiket="Toplam yansıma">
+          <Satir etiket="Toplam değerlendirme">
             <Deger
               metin={sayi(s.reflections, 0)}
               neden="Toplam değerlendirme sayısı bildirilmedi"
               teknik="`reflections` sayacı yükte yok"
             />
           </Satir>
-          <Satir etiket="Son yansıma">
+          <Satir etiket="Son değerlendirme">
             <Deger
               metin={(() => {
                 const y = yas(s.last_reflection);
@@ -207,7 +207,7 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
               className="text-xs"
             />
           </Satir>
-          <Satir etiket="Beyin / model">
+          <Satir etiket="Model">
             <Deger
               metin={s.brain || s.model ? `${s.brain ?? "?"} · ${s.model ?? "model adı yok"}` : null}
               neden="Hangi beynin koştuğu bildirilmedi"
@@ -274,12 +274,12 @@ function GeriSayim({ s }: { s: HermesDurumu | undefined }) {
   const h = s.horizon;
   return (
     <Kutu
-      baslik="Sonraki yansımaya ne kaldı?"
+      baslik="Sonraki değerlendirmeye ne kaldı?"
       aciklama="İki koşul BİRLİKTE dolmalı (STRICT AND): yeterli yeni işlem VE yeterli takvim açıklığı. Biri dolup öteki boşken hat hazır DEĞİLDİR."
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <CubuklulSatir
-          etiket="Yansıma sayacı (yeni kapanan işlem)"
+          etiket="Değerlendirme sayacı (yeni kapanan işlem)"
           pay={typeof s.trades_since_last_reflection === "number" ? s.trades_since_last_reflection : null}
           payda={typeof s.reflection_every === "number" ? s.reflection_every : null}
           birim="işlem"
@@ -287,7 +287,7 @@ function GeriSayim({ s }: { s: HermesDurumu | undefined }) {
           teknik="`trades_since_last_reflection` ya da `reflection_every` yükte yok — panoda formül yeniden yazılmaz"
         />
         <CubuklulSatir
-          etiket="Ufuk · işlem bacağı"
+          etiket="Değerlendirme koşulu · işlem tarafı"
           pay={typeof h?.trades === "number" ? h.trades : null}
           payda={typeof h?.trades_needed === "number" ? h.trades_needed : null}
           birim="işlem"
@@ -295,7 +295,7 @@ function GeriSayim({ s }: { s: HermesDurumu | undefined }) {
           teknik="`horizon.trades` / `trades_needed` yok"
         />
         <CubuklulSatir
-          etiket="Ufuk · takvim bacağı"
+          etiket="Değerlendirme koşulu · takvim tarafı"
           pay={typeof h?.span_days === "number" ? h.span_days : null}
           payda={typeof h?.min_days === "number" ? h.min_days : null}
           birim="gün"
@@ -318,7 +318,7 @@ function GeriSayim({ s }: { s: HermesDurumu | undefined }) {
             teknik="`closed_trades` yükte yok"
           />
         </Satir>
-        <Satir etiket="Ufuk hazır mı?">
+        <Satir etiket="Değerlendirme koşulu hazır mı?">
           <UcDegerli
             deger={s.horizon_ready ?? h?.ready ?? null}
             evet="hazır"
@@ -329,7 +329,7 @@ function GeriSayim({ s }: { s: HermesDurumu | undefined }) {
         <Satir etiket="Ufkun ölçüldüğü rejim">
           <Deger
             metin={s.horizon_regime ?? h?.regime ?? null}
-            neden="Ufuk piyasa rejiminden bağımsız ölçülüyor — bu bir arıza değil"
+            neden="Değerlendirme koşulu piyasa rejiminden bağımsız ölçülüyor — bu bir arıza değil"
             teknik="rejim null; regime.json geçersiz/boş olabilir"
             className="text-xs"
           />
@@ -345,12 +345,12 @@ function BeyinZinciri({ s }: { s: HermesDurumu | undefined }) {
   const z = s?.brain_chain;
   return (
     <Kutu
-      baslik="Beyin zinciri — yedeklilik gerçek mi?"
+      baslik="Model zinciri — yedeklilik gerçek mi?"
       aciklama="Zincirdeki AD sayısı yedek sayısı DEĞİLDİR: iki ad aynı model kimliğine gidiyorsa tek uç vardır."
     >
       {!z ? (
         <Olculemedi
-          neden="Beyin zincirinin yedekliliği bu turda hiç ölçülmedi"
+          neden="Model zincirinin yedekliliği bu turda hiç ölçülmedi"
           teknik="`status.brain_chain` yükte yok"
         />
       ) : z.error ? (
@@ -365,7 +365,7 @@ function BeyinZinciri({ s }: { s: HermesDurumu | undefined }) {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="h-9">Sıra</TableHead>
-                  <TableHead className="h-9">Beyin</TableHead>
+                  <TableHead className="h-9">Model</TableHead>
                   <TableHead className="h-9">Model kimliği</TableHead>
                   <TableHead className="h-9">Hazır mı?</TableHead>
                 </TableRow>
@@ -699,7 +699,7 @@ function IsinmaSatirlari({ w }: { w: Isinma | undefined }) {
   }
   return (
     <div className="flex flex-col">
-      <Satir etiket="Son ısınma">
+      <Satir etiket="Son hazırlık">
         <Deger
           metin={(() => {
             const y = yas(w.last);
