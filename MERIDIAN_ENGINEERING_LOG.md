@@ -77,8 +77,8 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   Yani tavanı tek başına yükseltmek sınıfı düzeltMEZDİ: bir sonraki kesilme yine "biçim" diye
   okunurdu. **DETERMİNİSTİK ÜREME (çıkarım değil, ölçüm — kırmızı faz):** düzeltmeden önce çivi
   `assert 'unparseable' == 'truncated'` ile düştü; yani canlı defterdeki yanlış adın kaynağı
-  koddan yeniden üretildi. **DÜZELTME:** `NOUS_MAX_TOKENS` (env: `HERMES_NOUS_MAX_TOKENS`, vars.
-  16000) + kesilme kontrolü metin kontrolünden ÖNCE + `EMPTY_TRUNCATED` sınıfı token sayılarıyla
+  koddan yeniden üretildi. **DÜZELTME (ilk geçiş — aşağıda İKİ KEZ düzeltildi):** `NOUS_MAX_TOKENS`
+  (env: `HERMES_NOUS_MAX_TOKENS`, o an 16000; YÜRÜRLÜKTEKİ değer 16384 · 900 sn) + kesilme kontrolü metin kontrolünden ÖNCE + `EMPTY_TRUNCATED` sınıfı token sayılarıyla
   (`reasoning=N, completion=N, cap=N`) + `reasoning_tokens` → `spend.record(thought_tokens=)`.
   **TAVAN NEREDEN TÜRÜYOR:** o 7 satır **SAĞDAN SANSÜRLÜDÜR** — tavanda kesilen örnek "ihtiyaç
   ≥4000" der, ihtiyacın NE OLDUĞUNU söylemez; gerçek istem üzerinde ölçülmüş tek akıl-yürütme sayısı
