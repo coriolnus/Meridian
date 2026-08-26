@@ -1357,7 +1357,45 @@ def _carry_armed_without_bar(armed: list, has_bar) -> tuple[list, list]:
 _RECONCILE_ATLANDI_LOGGED: set = set()
 
 
-def _reconcile_gunu_atlandi(sinif: str, dstr: str) -> None:
+RECONCILE_BAYAT_ISLEM_GUNU = 2      # bu kadar İŞLEM GÜNÜ mutabakatsız kalınırsa alarm (v325)
+
+
+def _gun_str(g) -> str:
+    """Takvim öğesini `YYYY-MM-DD`ye indirger — `all_dates` Timestamp taşır, testler düz dize."""
+    d = getattr(g, "date", None)
+    return str(d() if callable(d) else g)[:10]
+
+
+def _mutabakat_bayatligi(dstr: str, takvim) -> tuple:
+    """Son BAŞARILI mutabakattan bu yana kaç İŞLEM GÜNÜ geçti? → `(gun, neden, hic_kosmadi)`.
+
+    KAYNAK: `broker_reconcile.json`ın `date`i. İkinci bir sayaç TUTULMUYOR ve bu bilinçli —
+    dosya BAŞARISIZLIKTA HİÇ YAZILMIYOR (aşağıdaki `reconcile_failed` şerhi), yani damga zaten
+    "son başarılı mutabakat"ın ta kendisi. Ayrı bir sayaç, ayrışabilecek İKİNCİ bir gerçek
+    üretirdi — `broker.py` aynı gerekçeyle `open_risk_dollars()`ı çıkarmıştı (satır çapası
+    BİLEREK YOK: hedef bir yorum bloku ve çapa çürür — codelaw bekçisi bu turda tam onu yakaladı).
+
+    TAKVİM GÜNÜ DEĞİL İŞLEM GÜNÜ: cuma mutabakat + pazartesi atlama 3 TAKVİM günüdür ama 1
+    işlem günü. Takvimle ölçen bir eşik HER PAZARTESİ öter; operatör onu susturur ve mekanizma
+    gerçekten bozulduğunda kimse bakmaz. Çivi: tests/test_mutabakat_bayatligi_v325.py.
+
+    ÖLÇÜLEMEZSE UYDURULMAZ: takvim yoksa ya da damgalar takvimde bulunamıyorsa `(None, neden,
+    False)` — alarm basılmaz, ama neden olaya yazılır (YASA 4).
+    """
+    doc = store.read_json("broker_reconcile.json", {}) or {}
+    son = str(doc.get("date") or "")
+    if not son:
+        return None, None, True          # hiç koşmamış: en yüksek sesli hâl, mesafe aranmaz
+    gunler = [_gun_str(g) for g in (takvim or [])]
+    if not gunler:
+        return None, "işlem takvimi verilmedi — mesafe işlem günü olarak ölçülemez", False
+    if son not in gunler or _gun_str(dstr) not in gunler:
+        return None, (f"son mutabakat ({son}) ya da işlenen seans ({dstr}) işlem takviminde yok "
+                      "— mesafe ölçülemez"), False
+    return gunler.index(_gun_str(dstr)) - gunler.index(son), None, False
+
+
+def _reconcile_gunu_atlandi(sinif: str, dstr: str, takvim=None) -> None:
     """B7b (teşhis 2026-08-10): `noop` / `waiting_for_universe` / `refused_regressive` dalları
     reconcile'a HİÇ varmadan döner — o gün dolumlar yalnız Kanal-1'de (mirror_orders, kitap-dışı)
     yaşar ve `broker_reconcile.json` ÖNCEKİ seanstan konuşur. Bu kadans BİLİNÇLİdir (EOD kitap
@@ -1373,10 +1411,24 @@ def _reconcile_gunu_atlandi(sinif: str, dstr: str) -> None:
     if k in _RECONCILE_ATLANDI_LOGGED:
         return
     _RECONCILE_ATLANDI_LOGGED.add(k)
+    _gun, _neden, _hic = _mutabakat_bayatligi(dstr, takvim)
     obs.log("reconcile_atlandi", sinif=sinif, date=dstr,
+            bayat_gun=_gun, bayat_neden=_neden, mutabakat_hic_kosmadi=_hic,
             detail="günlük tur reconcile'a varmadan döndü — broker_reconcile.json önceki seanstan "
                    "konuşur; gün içi ayna dolumları o gün yalnız Kanal-1'de (mirror_orders) görünür "
                    "(B7b beyanı; kadans bilinçli, sessizliği değil)")
+    # V325 — ATLAMA BİR GÜN NORMALDİR, ÜST ÜSTE ATLAMA BİR ARIZADIR. Bu ayrım olmadan olay `info`
+    # kalıyordu ve 2026-08-06→25 arasında iç motor ile aynanın adet sapması 19 GÜN görülmedi
+    # (BKNG kitapta 43, brokerde 22). Kod kırık değildi; ÖLÇÜM koşmuyordu ve koşmama hâli iyi
+    # huylu bir hiçlik gibi raporlanıyordu. Token MECHANISM_STALE — yeni token uydurulmadı,
+    # monitoring.sh zaten bunu arıyor ve olgu birebir odur: bir mekanizma bayat.
+    if _hic or (_gun is not None and _gun >= RECONCILE_BAYAT_ISLEM_GUNU):
+        obs.alarm("MECHANISM_STALE",
+                  ("mutabakat HİÇ koşmamış — pozisyon sapması hiç ölçülmedi"
+                   if _hic else
+                   f"mutabakat {_gun} işlem günüdür koşmuyor — pozisyon sapması ÖLÇÜLMÜYOR"),
+                  mekanizma="broker_reconcile", gun=_gun, sinif=sinif, date=dstr,
+                  esik=RECONCILE_BAYAT_ISLEM_GUNU)
 
 
 def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> dict:
@@ -1435,7 +1487,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         obs.log("waiting_for_universe", chosen=dstr, book_at=str(_book_at0),
                 index_session=str(all_dates[-1].date()),
                 detail="tam kapsamalı seans kitabın gerisinde — barlar yetişince o seans işlenecek")
-        _reconcile_gunu_atlandi("waiting_for_universe", dstr)     # B7b: atlanan mutabakat OLAYLI
+        _reconcile_gunu_atlandi("waiting_for_universe", dstr, takvim=all_dates)     # B7b: atlanan mutabakat OLAYLI
         return {"status": "waiting_for_universe", "date": dstr, "book_at": str(_book_at0),
                 "index_session": str(all_dates[-1].date())}
 
@@ -1447,7 +1499,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     if _book_at and dstr < str(_book_at):
         obs.warn("regressive_session_refused", date=dstr, book_at=str(_book_at),
                  detail="endeks kitabın gerisinde — bayat/yedek kaynak şüphesi; kitap geri sarılmaz")
-        _reconcile_gunu_atlandi("refused_regressive", dstr)      # B7b: atlanan mutabakat OLAYLI
+        _reconcile_gunu_atlandi("refused_regressive", dstr, takvim=all_dates)      # B7b: atlanan mutabakat OLAYLI
         return {"status": "refused_regressive", "date": dstr, "book_at": str(_book_at)}
 
     # ---- data-quality gate: bad bars must never drive trades (Hard Rule 7) ----
@@ -1487,7 +1539,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                regime=_rg.get("regime"),
                                exposure_budget_pct=_rg.get("exposure_budget_pct"),
                                note="bar already processed")
-        _reconcile_gunu_atlandi("noop", dstr)                    # B7b: atlanan mutabakat OLAYLI
+        _reconcile_gunu_atlandi("noop", dstr, takvim=all_dates)                    # B7b: atlanan mutabakat OLAYLI
         return {"status": "noop", "date": dstr}
 
     marks = _marks(per, d)
