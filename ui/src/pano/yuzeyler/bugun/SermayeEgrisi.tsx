@@ -245,7 +245,7 @@ function Govde({ govde, pencere }: { govde: PerformansGovdesi; pencere: string }
       <div className="flex flex-col gap-1 border-t pt-3 text-muted-foreground text-xs">
         <p>{beyanSatiri(beyan, dilim.length, okunamayan).join(" · ")}</p>
         <p>
-          {tohumX !== undefined ? "Kesik gri dikey çizgi: antrenman tohumunun bittiği nokta. " : null}
+          {tohumX !== undefined ? "Kesik gri dikey çizgi: antrenman başlangıç verisinin bittiği nokta. " : null}
           {resetX.length > 0 ? `Kesik kırmızı çizgi(ler): ${bicimSayi(resetX.length)} sermaye reset kırılması. ` : null}
           {tohumSinir?.konum_neden ? `Tohum sınırı grafiğe konmadı — ${tohumSinir.konum_neden}` : null}
         </p>

@@ -135,7 +135,7 @@ export function Cizelge() {
         ) : (
           <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <KpiKutu etiket="Penceresinde" altMetin="bekçi kovalarının hiçbirinde değil">
+              <KpiKutu etiket="Penceresinde" altMetin="bekçi aralıklarının hiçbirinde değil">
                 {ozet.nPenceresinde}
               </KpiKutu>
               <KpiKutu etiket="Gecikti" vurgu={ozet.nGecikti > 0} altMetin="`stale` kovası">

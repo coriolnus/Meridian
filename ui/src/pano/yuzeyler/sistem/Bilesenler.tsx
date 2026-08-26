@@ -266,7 +266,7 @@ function sinifiOku(b: InfraBilesen): { sinif: InfraDurumSinifi; neden: string } 
     sinif: "olculemedi",
     neden:
       "/api/infra bu satır için `durum_sinifi` bildirmedi — ham `ActiveState` tek başına bir karar " +
-      "değildir (oneshot birimler koşumlar arasında zaten `inactive` görünür), o yüzden hüküm kurulmuyor",
+      "değildir (oneshot birimler koşumlar arasında zaten `inactive` görünür), o yüzden karar kurulmuyor",
   };
 }
 

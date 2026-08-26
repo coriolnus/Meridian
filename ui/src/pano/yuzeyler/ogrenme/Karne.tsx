@@ -317,7 +317,7 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
                     ? "`learning.min_sample` yükte yok — 30 varsaymak yasak, eşik goal.yaml'dan gelir"
                     : "`learning.defter.orneklem_n` yükte yok"
                 }
-                alt="Payda = canlı/paper + belirsiz. Replay tohumu TRAINING'dir, buraya girmez."
+                alt="Payda = canlı/paper + belirsiz. Replay başlangıç verisi TRAINING'dir, buraya girmez."
               />
             </div>
 

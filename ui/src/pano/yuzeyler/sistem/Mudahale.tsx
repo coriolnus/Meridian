@@ -88,7 +88,7 @@ export function Mudahale({
             {
               ad: "Öğrenme HALT",
               cekili: risk.learn_halted ?? hud.learn_halted,
-              cekiliMetin: "ÇEKİLİ — yansıma/terfi durdu",
+              cekiliMetin: "ÇEKİLİ — değerlendirme/terfi durdu",
               serbestMetin: "serbest",
               kaynak: "health.learn_halted() · /api/diagnostics risk.learn_halted",
               aciklama: "Hipotez üretimi ve sürüm terfisi durur; ticaret etkilenmez.",

@@ -219,7 +219,7 @@ function Icerik({
       {/* İKİNCİ BASAMAĞIN SINIRI: "NO_GO değil" ile "kapıdan geçti" AYNI ŞEY DEĞİL. */}
       {model.hukumsuz > 0 ? (
         <p className="text-muted-foreground text-xs leading-5">
-          İkinci basamak "NO_GO DEĞİL" demektir, "kapıdan geçti" demez: içinde hükmü hiç yazılmamış{" "}
+          İkinci basamak "NO_GO DEĞİL" demektir, "kapıdan geçti" demez: içinde kararı hiç yazılmamış{" "}
           {bicimSayi(model.hukumsuz)} plan var (`gate_verdict` alanı yok) — onların kapıdan geçtiği
           ölçülmedi.
         </p>

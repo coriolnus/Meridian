@@ -141,7 +141,7 @@ export function cizelgeyiCoz(
   const hukumGuvenilir = nOk !== undefined && okAdaylari.length === nOk;
   const hukumBeyani =
     nOk === undefined
-      ? "bekçi `n_ok` döndürmedi — 'penceresinde' hükmü doğrulanamıyor"
+      ? "bekçi `n_ok` döndürmedi — 'penceresinde' kararı doğrulanamıyor"
       : hukumGuvenilir
         ? `bekçi ${nOk} adımı penceresinde sayıyor ve kovalarda görünmeyen ${okAdaylari.length} damgalı adım bununla birebir eşleşiyor — hüküm doğrulandı`
         : `bekçi ${nOk} adımı penceresinde sayıyor ama kovalarda görünmeyen damgalı adım sayısı ${okAdaylari.length}. Fark, bekçinin İZLEMEDİĞİ (EXPECTED dışı) damgalı adımlar ya da damgasız izlenen adımlar olabilir — bu satırlara "penceresinde" hükmü VERİLMEDİ.`;
@@ -160,17 +160,17 @@ export function cizelgeyiCoz(
     let hukumNeden: string;
     if (hicKosmadi) {
       hukum = "hic_kosmadi";
-      hukumNeden = "bekçinin `never` kovasında — kurulumdan beri hiç nabız atmadı (en yüksek sesli hâl)";
+      hukumNeden = "bekçinin `never` aralığında — kurulumdan beri hiç nabız atmadı (en yüksek sesli hâl)";
     } else if (gec) {
       hukum = "gecikti";
       hukumNeden = `bekçinin \`stale\` kovasında — ${gec.gap_h ?? "?"} sa sessiz, pencere ${gec.expected_h ?? "?"} sa`;
     } else if (bek) {
       hukum = "askida";
       hukumNeden =
-        "bekçinin `askida` kovasında — pencereyi aştı AMA sistemin kendi beyanıyla beklemeye alınmış (alarm üretmez, OK de sayılmaz)";
+        "bekçinin `askida` aralığında — pencereyi aştı AMA sistemin kendi beyanıyla beklemeye alınmış (alarm üretmez, OK de sayılmaz)";
     } else if (hukumGuvenilir) {
       hukum = "penceresinde";
-      hukumNeden = "hiçbir bekçi kovasında değil ve `n_ok` özdeşlik sınaması tuttu";
+      hukumNeden = "hiçbir bekçi aralığında değil ve `n_ok` özdeşlik sınaması tuttu";
     } else {
       hukum = "olculemedi";
       hukumNeden = hukumBeyani;
@@ -202,7 +202,7 @@ export function cizelgeyiCoz(
           ? "son damga + beklenen pencere (ikisi de uçtan ölçüldü)"
           : ms === null
             ? "son damga yok — sıradaki koşu hesaplanamaz"
-            : "beklenen pencere uçtan gelmiyor — sıradaki koşu hesaplanamaz (açık kalem)",
+            : "beklenen pencere uçtan gelmiyor — sıradaki koşu hesaplanamaz (henüz eklenmedi)",
     });
   }
 
@@ -228,7 +228,7 @@ export function cizelgeyiCoz(
     nAskida,
     nPenceresinde,
     nOlculemedi,
-    neden: adimlar.length === 0 ? "ne damga ne bekçi kovası satır döndürdü — çizelge ölçülemedi" : null,
+    neden: adimlar.length === 0 ? "ne damga ne bekçi aralığı satır döndürdü — çizelge ölçülemedi" : null,
   };
 }
 

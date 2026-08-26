@@ -192,7 +192,7 @@ function GolgeYasaKutusu({ yasa }: { yasa: GolgeYasasi | undefined }) {
                 ? "Karşılaştırmanın paydası okunamadı"
                 : "Karşılaştırılabilir tek kayıt bile yok — oran tanımsız, %100 değil"
             }
-            teknik={sayilan === null ? "`golge_kayit_sayisi` yok" : "gölge hükmü ölçülen kayıt yok (payda 0)"}
+            teknik={sayilan === null ? "`golge_kayit_sayisi` yok" : "deneme kararı ölçülen kayıt yok (payda 0)"}
           />
         </Satir>
         <Satir etiket="Ölçülen kayıt (payda)">

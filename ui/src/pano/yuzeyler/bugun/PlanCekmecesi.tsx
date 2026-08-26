@@ -619,7 +619,7 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
                 <span className="leading-6">
                   Hüküm REVIEW ama onay düğmesi bilerek çizilmedi:{" "}
                   {seansiGecmis
-                    ? "planın seansı GEÇMİŞ (kitabın son işlenmiş seansından eski). Planlar TEK SEANS geçerlidir; seviyeleri bayat ve bu plan bir daha silahlanamaz."
+                    ? "planın seansı GEÇMİŞ (kitabın son işlenmiş seansından eski). Planlar TEK SEANS geçerlidir; seviyeleri bayat ve bu plan bir daha işleme hazırlanamaz."
                     : "planda seans tarihi YOK, yani geçerliliği ÖLÇÜLEMİYOR."}{" "}
                   <code className="font-mono text-[11px]">operator_onay_ver</code> aynı sebeple 409
                   verirdi; düğme çizip 409 yedirmek, operatöre kapının ezilebileceğini söylerdi.
@@ -756,7 +756,7 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
               </div>
               <p className="mt-2 text-sm leading-6">
                 {niyet === "onayla"
-                  ? "Planı silahlı kümeye yazar ve ONAY ANINDA aynaya emir gönderir. Kapı hükmü DEĞİŞMEZ (onay bir olaydır, hüküm geriye dönük yazılmaz)."
+                  ? "Planı işleme hazır planlara yazar ve ONAY ANINDA aynaya emir gönderir. Kontrol kararı DEĞİŞMEZ (onay bir olaydır, karar geriye dönük yazılmaz)."
                   : "Plan satırına gerekçeli bir ret damgası yazar. İCRAYA DOKUNMAZ — durduracak bir şey zaten yoktu."}
               </p>
               {niyet === "reddet" ? (

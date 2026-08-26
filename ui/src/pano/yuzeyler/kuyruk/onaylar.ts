@@ -331,8 +331,8 @@ export function kuyrugaCevir(
       // GELMİYOR (kaynağı /api/today) — boş kalması doğru. Panonun kendi "İncele" düğmesi bu
       // listeden çizilmez; oraya elle bir dizge yazmak, eylemin uçtan geldiğini iddia etmek olurdu.
       not:
-        "Onay ANINDA aynaya gönderim denenir (POST /api/plan/{id}/onayla) — kapı hükmü DEĞİŞMEZ, " +
-        "plan silahlı kümeye girer ve bracket emir gönderilmeye çalışılır. Bu yüzden karar satır " +
+        "Onay ANINDA aynaya gönderim denenir (POST /api/plan/{id}/onayla) — kontrol kararı DEĞİŞMEZ, " +
+        "plan işleme hazır planlara girer ve bracket emir gönderilmeye çalışılır. Bu yüzden karar satır " +
         "sonunda değil, kanıtın ALTINDA ve çift adımlı (KararPaneli).",
       ayrinti: { cesit: "plan", plan: p },
     });

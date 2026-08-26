@@ -48,6 +48,25 @@ bir göz bunları bilir. Değiştirmek netlik değil, yabancılaşma üretirdi:
 | **nabız** | sistem sağlığı bağlamında yaygın (heartbeat); yanında yaşı da yazıyor |
 | **plan · kurulum · tetik** | alım-satım günlüğü dili |
 
+## Terim kalıyor mu — BAĞLAMA göre, kelimeye göre değil
+
+İkinci tur ölçümü (2026-08-26, cümle görünümlü her dize literali taranarak) 34 kalıntı
+buldu. **Hepsi kusur değildi.** Aynı kelime iki ayrı bağlamda iki ayrı şeydir ve karar
+bağlamla verilir — bu tablo o kararı kayda geçirir ki bir sonraki tur onları "unutulmuş"
+sanıp yeniden çevirmesin:
+
+| kelime | ÇEVRİLDİ | KALDI — ve neden |
+|---|---|---|
+| bacak | Hermes değerlendirme penceresi: "işlem bacağı" → **işlem tarafı** | emir yapısı: "stop/hedef bacakları", "koruma bacağı" — `bracket leg`in Türkçesi, her broker arayüzünde bu; yukarıdaki DEĞİŞMEYENLER tablosundaki `stop · limit · bracket` ile aynı aile |
+| kova | histogram: "getiri kovası" → **getiri aralığı**; bekçi durumu: "`never` kovasında" → **`never` aralığında** | `r_kovasi` · `tutma_kovasi` — bunlar API FACET ADLARI, ekranda köken olarak gösteriliyor; çevirmek uçla bağı koparırdı |
+| sprint · hermes | görünen etiketler | `` `sprint.should_run()` `` · `` `besleme.antrenman_sprinti` `` · `/api/hermes` — backtick/kod içindeki sembol ve uç yolu KÖKEN bilgisidir |
+| hüküm · silahlanma · gölge | tüm kullanıcı cümleleri | `SilahlanmaOlcumu` · `HermesGovdesi` · `hukumTanindi` — kod tanımlayıcıları (kapsam kararı en üstte) |
+
+**`teknik=` KATMANI BİLEREK SERBESTTİR.** Dürüst-boşluk sözleşmesi (v323) iki katmanlıdır:
+`neden` insan cümlesidir ve görünür; `teknik` üstüne gelince çıkan iç ayrıntıdır. Oraya
+alan adı, uç yolu ve iç terim YAZILIR — teşhis eden kişinin ihtiyacı odur. Sözlük birinci
+katmanı bağlar, ikincisini değil.
+
 ## Çiviler — ve neyi BAĞLADIKLARI
 
 | çivi | neyi bağlar |

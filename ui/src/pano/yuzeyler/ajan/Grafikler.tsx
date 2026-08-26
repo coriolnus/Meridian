@@ -154,7 +154,7 @@ export function HukumDagilimi({ hipotezler }: { hipotezler: readonly Hipotez[] }
             <p className="text-muted-foreground text-xs leading-5">
               {yazilmamis > 0
                 ? `${bicimSayi(yazilmamis)} satırda \`status\` yazılmamış; bu grafiğin paydası DIŞINDA.`
-                : "Defterdeki her satır bir hüküm taşıyor — payda tam."}
+                : "Defterdeki her satır bir karar taşıyor — payda tam."}
             </p>
           </div>
         )}

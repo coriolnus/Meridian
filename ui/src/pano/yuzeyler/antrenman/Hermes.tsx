@@ -195,7 +195,7 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
             <Deger
               metin={s.last_result ?? null}
               neden="Son değerlendirmenin sonucu kaydedilmemiş"
-              teknik="`last_result` yok — son yansımanın kolu"
+              teknik="`last_result` yok — son değerlendirmenin kolu"
               className="text-xs"
             />
           </Satir>
@@ -203,7 +203,7 @@ function HatDurumu({ s }: { s: HermesDurumu | undefined }) {
             <Deger
               metin={s.last_variable ?? null}
               neden="Son değerlendirmenin dokunduğu ayar kaydedilmemiş"
-              teknik="`last_variable` yok — son yansımanın dokunduğu parametre"
+              teknik="`last_variable` yok — son değerlendirmenin dokunduğu parametre"
               className="text-xs"
             />
           </Satir>

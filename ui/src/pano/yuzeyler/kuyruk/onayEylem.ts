@@ -194,7 +194,7 @@ function sayi(x: number | null | undefined, basamak = 2): string | null {
  * alanından öğrenilir — yani ONAYDAN SONRA.
  */
 const PLAN_GERI_ALMA =
-  "GERİ ALINAMAZ VARSAY. Onay iki şey yapar: plan silahlı kümeye yazılır VE onay ANINDA " +
+  "GERİ ALINAMAZ VARSAY. Onay iki şey yapar: plan işleme hazır planlara yazılır VE onay ANINDA " +
   "broker aynasına bracket emir gönderilmeye çalışılır (loop.mirror_submit_ve_kalicilastir). " +
   "Gönderilmiş bir emri BU EKRAN geri alamaz — bu yüzeyde iptal ucu bağlı DEĞİL. Depoda " +
   "`POST /api/control/cancel_open` var ama o yalnız DOLMAMIŞ giriş emirlerini iptal eder ve " +
@@ -206,7 +206,7 @@ const PLAN_GERI_ALMA =
 const DEFTER_GERI_ALMA_KAPILI =
   "Bu satır DAVRANIŞSAL: `approvals.jsonl`a yazılır ve L1+'ta bir uygulama kapısı (`_onay_kapisi`) " +
   "onu ARAR. Defter salt-ekleme; karar 'silinmez' ama SON SATIR KAZANIR — sonradan `reject` " +
-  "yazarak hükmü çevirebilirsin. UYGULAMANIN KENDİSİ BU EKRANDA DEĞİL: onu ayrı bir uç yapar " +
+  "yazarak kararı çevirebilirsin. UYGULAMANIN KENDİSİ BU EKRANDA DEĞİL: onu ayrı bir uç yapar " +
   "(`POST /api/skills/revision` · `POST /api/skills/apply`) ve o uçlar bu ekranda bağlı değil.";
 
 const DEFTER_GERI_ALMA_KAPISIZ =
