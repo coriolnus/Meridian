@@ -62,6 +62,24 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **KILL#1 p95 ÇİVİSİ TAM SUITE'TE KIRMIZI VERDİ; ÖLÇÜM BUNUN REGRESYON OLMADIĞINI GÖSTERDİ
+  (2026-08-29, `752e51e` birleştirme koşumu):** `test_p95_dongu_suresi_kart_tavanini_ASMIYOR` 7148
+  yeşilin içinde TEK kırmızıydı. **"Flake" bir kök neden değildir**, o yüzden iki bağımsız ölçüm
+  yapıldı. **(1) ETKİ YOLU YOK:** birleştirmenin `meridian/` altında dokunduğu TEK dosya
+  `spend.py`dir (#14, `:free` fiyatlandırması); çivinin ölçtüğü döngü `on_barfeed_event`tir ve test
+  yalnız `barclock · config · faz5_cikis · intraday_cycle · intraday_shadow · store` çağırır —
+  `spend` o listede YOK. Bu turun kendi değişikliği de `hermes.py`dir, yani sıcak yolda değil.
+  **(2) ALETİN GÜRÜLTÜSÜ ÖLÇÜLDÜ:** çivi YALNIZ BAŞINA beş kez koşturuldu —
+  oran 1,024 · 1,018 · 1,014 · 0,720 · 1,006 (tavan 1,10, beşi de altında) ama negatif kontrolün
+  sapması 6,5% · 1,1% · 2,1% · **37,1%** · 0,5%. Yani aletin kendi gürültüsü, aradığı %10'luk
+  etkinin ÜÇ KATINA kadar çıkabiliyor — çivinin kendi yorumu bunu zaten yazmıştı ("taban da tavanı
+  aşıyor... aletin ÇÖZÜNÜRLÜĞÜNÜ raporluyordu").
+  **AÇIK KALAN (bu turda BİLEREK dokunulmadı):** çivinin `ÖLÇÜLEMEDİ` skip-kapısı tam bu duruma
+  karşı konmuş ama BU koşumda ateşlemedi — kontrol tesadüfen SIKI görünürken oran sıçradı. Yani kapı
+  gerçek koruma sağlıyor ama yeterli değil (tek pencerede hesaplanan kontrol, yükün açık kola düştüğü
+  durumu göremiyor). Çivi bir KILL KRİTERİDİR (`EXE-2026-003`) ve CLAUDE.md madde 3 eşik/kill-list'e
+  dokunmayı yasaklar — düzeltme kart sahibinin işidir, birleştirme turunun değil. Ayrı görev açıldı.
+
 - **ÜÇ TAVANDAN BİRİ ÖTEKİLERDEN FARKLI DAVRANIYORDU (2026-08-29; merge öncesi öz-denetimde
   bulundu, çivi bulmadı):** `CLAUDE_MAX_TOKENS` `_claude_text`in İMZASINA varsayılan olarak
   yazılmıştı, yani değer TANIM ANINDA bağlanıyordu. `NOUS_MAX_TOKENS` ve `GEMINI_MAX_OUTPUT_TOKENS`
