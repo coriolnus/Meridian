@@ -675,3 +675,174 @@ def test_the_ceiling_stays_under_the_measured_provider_limits(seeded):
     """Tavan sağlayıcının İZİN VERDİĞİNİN üstüne çıkarsa istek sağlayıcıda reddedilir. Ölçülen
     değerler (§1): ultra:free max_completion=65.536 · super:free=235.929. Bağlayan taraf KÜÇÜK olan."""
     assert hermes.NOUS_MAX_TOKENS <= 65536, "ultra:free'nin ölçülen max_completion tavanı"
+
+
+# ============ AYNI SINIF, ÜÇÜNCÜ SAĞLAYICI: CLAUDE AYAĞI (v327, 2026-08-29) ============
+# v97 gemini'de, v325/v326 portal ayağında kapattı. CLAUDE ayağı LATENT duruyordu ve operatör
+# kapatılmasını istedi. Kusur ikizinin aynısı, iki bacaklı:
+#   (1) TAVAN: `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
+#       (hermes.py:491) onu ARGÜMANSIZ çağırır → 4000'e düşer. Üstelik gövde
+#       `thinking={"type": "adaptive"}` + `output_config={"effort": "high"}` gönderir, yani bu
+#       ayak da DÜŞÜNEN bir yapılandırmadır: düşünce tokenları `max_tokens` tavanından yenir
+#       (Anthropic sözleşmesi: `max_tokens` modelin BİLMEDİĞİ, dayatılan bir yanıt tavanıdır).
+#       Gemini AYNI yansıma prompt'unda 3838 düşünce tokenı ölçtü — yani 4000 bu iş için dardır.
+#   (2) SINIFLANDIRMA: `stop_reason` incelemesi `if not text:` bloğunun İÇİNDE. Tavana çarpan
+#       cevap BOŞ DEĞİLDİR (kısmî metin taşır), o yüzden o ayrıma HİÇ UĞRAMAZ → `_parse_hyp` →
+#       `unparseable`. Portal ayağındaki yapısal kusurun birebir aynısı.
+# ANTHROPIC SÖZLEŞMESİ (skill'den okundu, ezberden DEĞİL): tavana çarpınca
+# `stop_reason == "max_tokens"`; `stop_details` YALNIZ `refusal`da dolar, ötekilerde None.
+CLAUDE_ENV = {"HERMES_BRAIN_ORDER": "claude", "HERMES_API_KEY": "sahte-degil-gercek-anahtar-degil"}
+
+
+class _SahteBlok:
+    def __init__(self, tip, text=None):
+        self.type, self.text = tip, text
+
+
+class _SahteKullanim:
+    def __init__(self, giris=0, cikis=0):
+        self.input_tokens, self.output_tokens, self.cache_read_input_tokens = giris, cikis, 0
+
+
+class _SahteYanit:
+    def __init__(self, content, stop_reason, usage=None):
+        self.content, self.stop_reason = content, stop_reason
+        self.usage = usage or _SahteKullanim()
+
+
+def _sahte_anthropic(monkeypatch, yanit, govdeler=None):
+    """`anthropic` SDK'sını sap: bu depoda kurulu DEĞİL (ölçüldü), ve çivi kurulu olmasına
+    bağlanmamalı — CI de kurmuyor. Gövde `govdeler`e biriktirilir ki istek ölçülebilsin."""
+    import sys
+    import types
+    mod = types.ModuleType("anthropic")
+
+    class _Mesajlar:
+        def create(self, **kw):
+            if govdeler is not None:
+                govdeler.append(kw)
+            return yanit
+
+    class _Istemci:
+        def __init__(self, **kw):
+            self.messages = _Mesajlar()
+
+    mod.Anthropic = _Istemci
+    monkeypatch.setitem(sys.modules, "anthropic", mod)
+
+
+@pytest.fixture
+def claude_brain(monkeypatch):
+    monkeypatch.setattr(hermes.secrets, "get", lambda k: CLAUDE_ENV.get(k))
+    monkeypatch.setattr(hermes, "_hermes_bin", lambda: None)
+    monkeypatch.setattr(hermes, "_user_prompt", lambda **k: "SAPLI-PROMPT")
+    monkeypatch.setattr(spend, "over_budget", lambda *a, **k: False)
+    return CLAUDE_ENV
+
+
+# Tavana çarpmış gerçek şekil: kısmî metin + stop_reason="max_tokens" (Anthropic sözleşmesi).
+def _kesik_yanit():
+    return _SahteYanit([_SahteBlok("text", '{"variable": "entry.min_score", "new": 62, "rat')],
+                       "max_tokens", _SahteKullanim(giris=26411, cikis=4000))
+
+
+def test_claude_text_names_truncation_instead_of_blaming_the_format(seeded, claude_brain, monkeypatch):
+    """ASIL ÇİVİ: tavana çarpan cevap KENDİ adıyla işaretlenir ve kısmî metin ayrıştırıcıya GİTMEZ."""
+    _take()
+    _sahte_anthropic(monkeypatch, _kesik_yanit())
+
+    assert hermes._claude_text("SAPLI-PROMPT", note="reflect") is None, \
+        "yarım JSON kullanılamaz — çağırana dönüp _parse_hyp'e gitmemeli"
+
+    reason, detail = _take()
+    assert reason == hermes.EMPTY_TRUNCATED, "kesilme 'unparseable' değildir: biçim değil bütçe arızası"
+    assert "output=4000" in detail, "ölçülen çıktı tokenı detayda görünmeli"
+    assert f"cap={hermes.CLAUDE_MAX_TOKENS}" in detail, "hangi tavana çarpıldığı yazılı olmalı"
+
+
+def test_claude_truncation_detail_does_not_invent_a_reasoning_count(seeded, claude_brain, monkeypatch):
+    """UYDURMA YASAĞI — SAĞLAYICI FARKI BİLEREK KORUNUR. gemini `thoughtsTokenCount`, OpenRouter
+    `reasoning_tokens` RAPORLAR; Anthropic usage'ı düşünce tokenını AYRI bir alanda BİLDİRMEZ
+    (`output_tokens` içindedir). O yüzden bu ayağın detayında 'reasoning=' YAZAMAZ — yazsaydı
+    ölçülmemiş bir sayıyı ölçülmüş gibi gösterirdi. Kardeş ayaklara simetri UĞRUNA uydurma yapılmaz."""
+    _take()
+    _sahte_anthropic(monkeypatch, _kesik_yanit())
+    hermes._claude_text("SAPLI-PROMPT", note="reflect")
+    _, detail = _take()
+    assert "reasoning=" not in detail, "Anthropic bu sayıyı bildirmiyor — uydurulamaz"
+    assert "thoughts=" not in detail
+
+
+def test_claude_truncation_is_never_recorded_as_unparseable(seeded, claude_brain, monkeypatch):
+    """UÇTAN UCA: defterdeki satırın SINIFI 'truncated' olmalı, 'unparseable' değil."""
+    _sahte_anthropic(monkeypatch, _kesik_yanit())
+
+    assert hermes.propose_with_llm() is None
+
+    empty = _events("hermes_brain_empty")
+    assert len(empty) == 1 and empty[0]["provider"] == "claude"
+    assert empty[0]["reason"] == hermes.EMPTY_TRUNCATED
+    assert empty[0]["reason"] != hermes.EMPTY_UNPARSEABLE
+    assert _events("hermes_brain_failed") == [], "kesilme bir HATA değildir"
+    assert hermes.brain_cooldown("claude") == 0
+
+
+def test_propose_with_claude_no_longer_falls_to_the_old_4000_ceiling(seeded, claude_brain, monkeypatch):
+    """LATENT KUSURUN TA KENDİSİ: `propose_with_claude` `_claude_text`i ARGÜMANSIZ çağırıyordu,
+    yani imzadaki 4000 varsayılanına düşüyordu — üstelik düşünen bir yapılandırmayla."""
+    govdeler = []
+    _sahte_anthropic(monkeypatch, _SahteYanit([_SahteBlok("text", json.dumps(GOOD_HYP))], "end_turn"),
+                     govdeler=govdeler)
+
+    hermes.propose_with_claude()
+    assert govdeler, "istek gövdesi ölçülemedi"
+    assert govdeler[0]["max_tokens"] == hermes.CLAUDE_MAX_TOKENS
+    assert govdeler[0]["max_tokens"] > 4000, "eski varsayılan düşünen bir ayak için dardı"
+    # düşünen yapılandırma GERÇEKTEN açık — tavanın neden yetmediğinin sebebi bu
+    assert govdeler[0]["thinking"] == {"type": "adaptive"}
+
+
+def test_claude_both_legs_share_one_named_ceiling(seeded, claude_brain, monkeypatch):
+    """BU PR'IN KENDİ DERSİ BURAYA DA UYGULANIR: `chain_text`in claude ayağı elle `max_tokens=8000`
+    geçiyordu, `propose_with_claude` hiç geçmiyordu — İKİ ayrı sayı, tek sözleşme. Bağımsız iki
+    sayı bırakmak, birinin değişip öbürünün unutulduğu vakayı üretir (nous ayağında tam bu oldu)."""
+    govdeler = []
+    _sahte_anthropic(monkeypatch, _SahteYanit([_SahteBlok("text", json.dumps(GOOD_HYP))], "end_turn"),
+                     govdeler=govdeler)
+
+    hermes.propose_with_claude()
+    hermes.chain_text("SAPLI-PROMPT", kind="system_eval")
+    assert len(govdeler) == 2, "iki ayak da çağrılmalıydı"
+    assert govdeler[0]["max_tokens"] == govdeler[1]["max_tokens"] == hermes.CLAUDE_MAX_TOKENS, \
+        "iki ayak TEK adlandırılmış tavanı paylaşmalı — elle yazılmış ikinci sayı yok"
+
+    kaynak = (Path(hermes.__file__)).read_text(encoding="utf-8")
+    assert "max_tokens=8000" not in kaynak, "elle yazılmış 8000 kaldırılmalıydı"
+
+
+def test_claude_ceiling_matches_the_documented_non_streaming_default(seeded):
+    """16000 keyfî DEĞİL: Anthropic'in akışsız istekler için belgelenmiş varsayılanı (SDK HTTP
+    zaman aşımının altında kalır). Daha yükseği akış ister — bu ayak akış kullanmıyor."""
+    assert hermes.CLAUDE_MAX_TOKENS == 16000
+
+
+def test_claude_text_passes_a_complete_answer_through_untouched(seeded, claude_brain, monkeypatch):
+    """POZİTİF KONTROL: sağlıklı cevap AYNEN döner, iz bırakmaz — 'her şeyi kesik gören' tespit yok."""
+    _take()
+    txt = json.dumps(GOOD_HYP)
+    _sahte_anthropic(monkeypatch, _SahteYanit([_SahteBlok("text", txt)], "end_turn"))
+    assert hermes._claude_text("SAPLI-PROMPT", note="reflect") == txt
+    assert _take() == (None, None)
+
+
+def test_claude_keeps_the_older_empty_classes_unchanged(seeded, claude_brain, monkeypatch):
+    """KURT MASALI YASAĞI: yeni sınıf eskileri yutmamalı."""
+    _take()
+    _sahte_anthropic(monkeypatch, _SahteYanit([_SahteBlok("tool_use")], "tool_use"))
+    assert hermes._claude_text("SAPLI-PROMPT", note="reflect") is None
+    assert _take()[0] == hermes.EMPTY_TOOL_ONLY
+
+    _take()
+    _sahte_anthropic(monkeypatch, _SahteYanit([], "end_turn"))
+    assert hermes._claude_text("SAPLI-PROMPT", note="reflect") is None
+    assert _take()[0] == hermes.EMPTY_NO_TEXT

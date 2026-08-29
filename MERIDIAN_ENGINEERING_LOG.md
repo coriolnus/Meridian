@@ -62,6 +62,47 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **SINIFIN ÜÇÜNCÜ AYAĞI DA KAPANDI — CLAUDE BACAĞI (2026-08-29; operatör istedi, önceki turda
+  "latent, bilerek dokunulmadı" diye açık bırakılmıştı):** kusur ikizlerinin aynısı, iki bacaklı.
+  **(1) TAVAN:** `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
+  (hermes.py:491) onu **ARGÜMANSIZ** çağırıyordu → 4000'e düşüyordu. Üstelik gövde
+  `thinking={"type": "adaptive"}` + `output_config={"effort": "high"}` gönderir, yani bu ayak da
+  **DÜŞÜNEN** bir yapılandırmadır; Anthropic sözleşmesinde `max_tokens` modelin BİLMEDİĞİ, dayatılan
+  bir yanıt tavanıdır ve düşünce o tavandan yenir. Gemini AYNI yansıma prompt'unda 3838 düşünce
+  tokenı ölçtü — yani 4000 bu iş için ÖLÇÜLÜ biçimde dardı. **(2) SINIFLANDIRMA:** `stop_reason`
+  incelemesi `if not text:` bloğunun **İÇİNDEYDİ**; tavana çarpan cevap BOŞ DEĞİLDİR (kısmî metin
+  taşır), o yüzden o ayrıma HİÇ UĞRAMIYORDU → `_parse_hyp` → `unparseable`. Portal ayağındaki
+  yapısal kusurun birebir aynısı. **DETERMİNİSTİK ÜREME:** düzeltmeden önce çivi yine
+  `assert 'unparseable' == 'truncated'` ile düştü. **DÜZELTME:** `CLAUDE_MAX_TOKENS`
+  (env `HERMES_CLAUDE_MAX_TOKENS`, vars. **16000** — Anthropic'in AKIŞSIZ istekler için belgelenmiş
+  varsayılanı; daha yükseği akış ister, bu ayak akış kullanmıyor) + kesilme kontrolü metin
+  kontrolünden ÖNCE (`stop_reason == "max_tokens"` → `EMPTY_TRUNCATED`) + `chain_text`teki elle
+  yazılmış `max_tokens=8000` KALDIRILDI, iki ayak artık TEK adlandırılmış tavanı paylaşıyor
+  (bu PR'ın kendi dersinin uygulanması: bağımsız iki sayı bırakmak, birinin değişip öbürünün
+  unutulduğu vakayı üretir). **SAĞLAYICI FARKI BİLEREK KORUNDU — UYDURMA YASAĞI:** gemini
+  `thoughtsTokenCount`, OpenRouter `reasoning_tokens` RAPORLAR; **Anthropic düşünce tokenını AYRI
+  bir alanda BİLDİRMEZ** (`output_tokens` içindedir). Kardeşlere SİMETRİ uğruna "reasoning=" yazmak
+  ölçülmemişi ölçülmüş göstermek olurdu; detayda yalnız ÖLÇÜLEN iki sayı var (`output=N, cap=N`) ve
+  bunu bir çivi kilitliyor. **ZAMAN AŞIMI BURADA AYRI DÜĞME DEĞİL** (nous ayağından farkı): SDK'nın
+  kendi varsayılanı (10 dk) yönetir ve 16000 token onun içine sığar — yani nous'taki "tavan
+  yükseldi, zaman aşımı elde kaldı" tuzağı bu ayakta YOKTUR. **ÇİVİLER (8, v327):** SDK bu depoda
+  KURULU DEĞİL (ölçüldü), o yüzden çiviler sahte bir `anthropic` modülü enjekte eder — kurulu
+  olmasına bağlanmaz, CI de kurmuyor. Beş mutasyonun beşi de yakalandı (tavanı 4000'e geri al ·
+  kesilme kontrolünü kaldır · sınıfı `unparseable`a geri al · `chain_text` yine elle 8000 geçsin ·
+  detaya uydurma `reasoning=0` ekle).
+  **AÇIK KALAN (bu turda BİLEREK yapılmadı):** claude ayağında `stop_reason == "refusal"` →
+  `EMPTY_REFUSAL` eşlemesi hâlâ YOK (red, `EMPTY_NO_TEXT`e düşer) — gemini ve nous ayaklarının
+  İKİSİ de reddi sınıflandırıyor. Bu AYRI bir sınıftır (kesilme değil red) ve operatörün isteği
+  kesilme sınıfıydı; kapsam genişletmemek için ayrı bırakıldı. Not: Anthropic `stop_details`i
+  YALNIZ `refusal`da doldurur (kategori + açıklama), yani düzeltilirse detay kardeşlerinden zengin olur.
+
+- **SEÇİCİ BETİĞİ BASH'TE GEÇERSİZ İFADE TAŞIYORDU (2026-08-29; taban kırmızısı, operatör istedi):**
+  `ops/etkilenen_testler.sh` üç satırda `${#DIZI[@]-0}` kullanıyordu; `-` varsayılan-değer operatörü
+  `${#...}` UZUNLUK biçimiyle birleşmez. `main`in kendi kopyası koşturularak doğrulandı (dal kusuru
+  DEĞİL). SESSİZ YANLIŞ-NEGATİF DEĞİLDİ: hata `stderr`e düşüyor, karar akışını bozmuyordu — kapı
+  gürültülüydü, yanlış değil. 8/8 yeşil. Taşınabilirlik YARIM doğrulandı: konteynerde yalnız bash
+  5.2.21 var, macOS'un 3.2'si YOK — betiğin başlığı ikisini de şart koşuyor.
+
 - **BÜTÇE ARIZASI BİÇİM ARIZASI DİYE YAZILIYORDU — v97'nin GEMİNİ'DE KAPATTIĞI SINIF PORTAL AYAĞINI
   HİÇ ALMAMIŞTI (2026-08-27; sınıf: `Ö-49` kardeşi — "aynı kusur ikinci sağlayıcıda, düzeltme göç
   etmedi"):** `_nous_text` (OpenRouter/nous portal yolu) `max_tokens: 4000` sabitini gönderiyordu.

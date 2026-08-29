@@ -47,6 +47,19 @@ from . import agent_telemetry as _at        # çağrı telemetrisi + ham iz + MA
 
 MODEL = os.environ.get("HERMES_MODEL", "claude-opus-4-8")
 
+# AYNI SINIF, ÜÇÜNCÜ SAĞLAYICI (2026-08-29). Kardeşleri `GEMINI_MAX_OUTPUT_TOKENS` ve
+# `NOUS_MAX_TOKENS`tır (aşağıda, ~640-700); bu üçü TEK sınıfın üç ayağıdır. BURADA duruyor çünkü
+# `_claude_text`in VARSAYILAN PARAMETRESİ ve o tanım bu dosyada daha yukarıda geçiyor.
+# NEDEN 4000 DARDI: bu ayak `thinking={"type": "adaptive"}` + `output_config={"effort": "high"}`
+# gönderir, yani DÜŞÜNEN bir yapılandırmadır ve Anthropic sözleşmesinde `max_tokens` modelin
+# BİLMEDİĞİ, dayatılan bir yanıt tavanıdır — düşünce o tavandan yenir. Gemini AYNI yansıma
+# prompt'unda 3838 düşünce tokenı ölçtü (GEMINI_THINKING_BUDGET yorumu), yani 4000 bu iş için
+# ölçülü biçimde dar. 16000 keyfî değil: Anthropic'in AKIŞSIZ istekler için belgelenmiş
+# varsayılanı (SDK HTTP zaman aşımının altında kalır). Daha yükseği akış ister; bu ayak akış
+# kullanmıyor, o yüzden buraya kadar. Zaman aşımı burada nous ayağındaki gibi AYRI bir düğme
+# değildir — SDK'nın kendi varsayılanı (10 dk) yönetir ve 16000 token onun içine sığar.
+CLAUDE_MAX_TOKENS = int(os.environ.get("HERMES_CLAUDE_MAX_TOKENS", "16000"))
+
 # Live view of the running coordinate-descent search, published per probe and read by
 # hermes_runtime.status() → /api/hermes → dashboard. A search runs ~a dozen walk-forwards (many minutes);
 # without this the operator sees only "reflecting: true" and cannot tell progress from a hang.
@@ -404,7 +417,7 @@ def _skill_library() -> dict:
 
 
 def _claude_text(user: str, *, note: str, schema: dict | None = None,
-                 max_tokens: int = 4000) -> str | None:
+                 max_tokens: int = CLAUDE_MAX_TOKENS) -> str | None:
     """Claude çağrısının TEK GÖVDESİ — METİN döner, ayrıştırma çağıranın işi.
 
     NEDEN AYRIŞTIRILDI (nous sistem-değerlendirme katmanı): Katman B beyin zincirini
@@ -469,6 +482,20 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
                sonuc_sinifi=(_at.SINIF_DOLU if text else _at.SINIF_BOS),
                tasiyici=_at.TASIYICI_HTTP, arac_cagri_n=None, istem=user, stdout=text,
                stop_reason=str(getattr(resp, "stop_reason", "") or "") or None)
+    # KESİLME KONTROLÜ METİN KONTROLÜNDEN ÖNCE — `_gemini_text` ve `_nous_text`teki sıranın aynısı,
+    # ve BURADAKİ KUSURUN TA KENDİSİ: `stop_reason` incelemesi aşağıdaki `if not text:` bloğunun
+    # İÇİNDEYDİ. Tavana çarpan cevap BOŞ DEĞİLDİR (kısmî metin taşır), o yüzden o ayrıma HİÇ
+    # UĞRAMIYORDU: yarım metin çağırana dönüyor, `_parse_hyp` JSON bulamıyor, defter "unparseable"
+    # yazıyordu — biçim suçlanıyor, asıl arıza (bütçe) görünmez kalıyordu.
+    # DETAY KARDEŞLERİNDEN AYRILIR, BİLEREK: gemini `thoughtsTokenCount`, OpenRouter
+    # `reasoning_tokens` RAPORLAR; Anthropic düşünce tokenını AYRI bir alanda BİLDİRMEZ
+    # (`output_tokens` içindedir). Simetri uğruna "reasoning=" yazmak ölçülmemişi ölçülmüş
+    # göstermek olurdu — UYDURMA YASAĞI. Bu yüzden yalnız ÖLÇÜLEN iki sayı yazılır.
+    if str(getattr(resp, "stop_reason", "") or "") == "max_tokens":
+        _u = getattr(resp, "usage", None)
+        _trace_note(EMPTY_TRUNCATED,
+                    detail=f"output={getattr(_u, 'output_tokens', None)}, cap={max_tokens}")
+        return None
     if not text:
         # 200 döndü ama metin bloğu yok: yalnız araç/düşünme bloğu ya da durdurma sebebi. "Başarılı"
         # sayılıp sessizce None dönmek, tam da kalibrasyonun neden hiç çift biriktirmediğinin cevabıydı.
@@ -4495,7 +4522,7 @@ def chain_text(prompt: str, *, kind: str, preload: tuple = (), timeout: int = 30
         kunye, kunye_neden = None, None    # BU AYAĞIN künyesi — okuma noktası ayağın kendi yanında
         try:
             if p == "claude":
-                txt = _claude_text(prompt, note=note or kind, max_tokens=8000)
+                txt = _claude_text(prompt, note=note or kind)   # tavan TEK yerden: CLAUDE_MAX_TOKENS
                 kunye = MODEL              # `_claude_text` gövdesi bu SABİTİ gönderir (import'ta bağlı)
             elif p == "nous":
                 # YEREL ajan varsa O kullanılır (skill kütüphanesi + MCP araçları onun yolunda).
