@@ -109,8 +109,13 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   kesilme · red · araç · metin-yok ayrı ayrı adlandırılıyor.
 
 - **SEÇİCİ BETİĞİ BASH'TE GEÇERSİZ İFADE TAŞIYORDU (2026-08-29; taban kırmızısı, operatör istedi):**
-  `ops/etkilenen_testler.sh` üç satırda `${#DIZI[@]-0}` kullanıyordu; `-` varsayılan-değer operatörü
-  `${#...}` UZUNLUK biçimiyle birleşmez. `main`in kendi kopyası koşturularak doğrulandı (dal kusuru
+  `ops/etkilenen_testler.sh` üç satırda dizi-uzunluğu ifadesini `-0` varsayılanıyla yazıyordu
+  (dolar + süslü parantez, içinde `#YOLLAR[@]-0`); `-` varsayılan-değer operatörü, baştaki diyezle
+  kurulan UZUNLUK biçimiyle birleşmez.
+  [BU CÜMLE BİLEREK DOLAYLI YAZILDI, geri düzeltmeyin: runbook ÇAPA sözdizimi süslü-parantez-diyez
+  ile başlar ve `ops/runbook_uret.py` günlük maddelerini AYNEN kopyalar. İfadeyi düz yazmak belgeye
+  İKİ HAYALET ÇAPA sokuyordu ve `test_t3_rota_cizer_ve_capalari_html_id_yapar` kırmızıya dönüyordu
+  — çapa "..." HTML id'ye dönüşemez. Ölçüldü, tahmin değil.] `main`in kendi kopyası koşturularak doğrulandı (dal kusuru
   DEĞİL). SESSİZ YANLIŞ-NEGATİF DEĞİLDİ: hata `stderr`e düşüyor, karar akışını bozmuyordu — kapı
   gürültülüydü, yanlış değil. 8/8 yeşil. Taşınabilirlik YARIM doğrulandı: konteynerde yalnız bash
   5.2.21 var, macOS'un 3.2'si YOK — betiğin başlığı ikisini de şart koşuyor.
