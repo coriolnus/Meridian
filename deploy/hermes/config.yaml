@@ -1,0 +1,44 @@
+model:
+  provider: gemini
+  default: gemini-flash-latest
+mcp_servers:
+  meridian:
+    command: /opt/meridian/.venv/bin/python
+    args:
+    - -m
+    - meridian.mcp_server
+    env:
+      PYTHONPATH: /opt/meridian
+      MERIDIAN_ROOT: /opt/meridian
+    tools:
+      resources: false
+      prompts: false
+hooks:
+  pre_tool_call:
+  - matcher: terminal|write_file|patch|edit|apply_patch
+    command: /opt/meridian/ops/meridian-guard.sh
+    timeout: 10
+hooks_auto_accept: true
+prompt_caching:
+  cache_ttl: 1h
+credential_pool_strategies:
+  gemini: round_robin
+  anthropic: least_used
+  openrouter: round_robin
+fallback_providers:
+- provider: nous
+  model: openai/gpt-oss-20b:free
+
+# --- GÜVENLİK DURUŞU (spec §9.2, operatör kararı 2026-08-27) --------------------------------
+# Terminal arka ucu BİLEREK `local`: A1 dört çekirdek ve 8 sa 55 dk CPU yakan sprint koşuyor;
+# ayrıca konteyner arka uçlarında Hermes'in KENDİ tehlikeli-komut denetimi ATLANIR (konteyner
+# sınır sayılır), yani docker göründüğü kadar net kazanç değil. Karşılığı bu blok + guard hook.
+approvals:
+  mode: smart
+  cron_mode: deny            # başsız cron tehlikeli komutu ONAYLAMAZ — pazarlığa kapalı
+  deny:                      # fnmatch; --yolo'da BİLE geçersiz
+    - "*dagit.sh*"           # dağıtım yalnız Rol-1'in (CLAUDE.md madde 5)
+    - "git push*"
+    - "git commit*"          # CLAUDE.md madde 8'in makine karşılığı
+    - "*systemctl*"
+    - "*serve.sh*"           # CLAUDE.md madde 5: yerelde koşma, çift-emir riski

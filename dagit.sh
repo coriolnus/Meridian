@@ -281,6 +281,7 @@ F9_LISTE="
 deploy/oracle-a1/meridian-sprint@.service|/etc/systemd/system/meridian-sprint@.service
 deploy/oracle-a1/50-meridian-sprint.rules|/etc/polkit-1/rules.d/50-meridian-sprint.rules
 deploy/hermes/SOUL.md|/home/ubuntu/.hermes/SOUL.md
+deploy/hermes/config.yaml|/home/ubuntu/.hermes/config.yaml
 deploy/oracle-a1/meridian-tick-watchdog.service|/etc/systemd/system/meridian-tick-watchdog.service
 deploy/oracle-a1/meridian-tick-watchdog.timer|/etc/systemd/system/meridian-tick-watchdog.timer
 deploy/oracle-a1/litestream.yml|/etc/litestream.yml
