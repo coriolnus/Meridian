@@ -133,3 +133,79 @@ def test_DIZIN_SAYAN_testler_de_kumeye_giriyor():
     rc, cikti = _kos("ops/etkilenen_testler.sh")
     assert "test_uiux_s1b_v154.py" in cikti, (
         f"`ops/` dizinini sayan test kümede YOK — bu tam olarak canlıda kaçan vakaydı:\n{cikti}")
+
+
+# ================================================================================================
+# BEŞİNCİ KÖRLÜK — KAPININ KENDİSİ ÇALIŞMIYORDU (2026-08-29, tam suite koşumunda bulundu)
+# ------------------------------------------------------------------------------------------------
+# VAKA: yukarıdaki iki çivi (`ESLESME_YOKSA…`, `KURESEL_dosyalar…`) kırmızıydı ve sebebi
+# betikteki bir SÖZDİZİMİ kusuruydu: üç yerde `${#DIZI[@]-0}` yazılıydı. Bash'te `${#parametre}`
+# biçimi varsayılan-değer soneki (`-0`) KABUL ETMEZ → `bad substitution`. Betik `set -e`
+# KULLANMADIĞI için hata ÖLÜMCÜL DEĞİLDİR: satır stderr'e düşer, `[[ ]]` testi başarısız sayılır
+# ve kapı SESSİZCE "false" olur. Yani üç `if` hiç değerlendirilmedi.
+#
+# ÜÇ FARKLI BEDEL ÖLÇÜLDÜ, biri diğerlerinden tehlikeli:
+#   · satır 101 (KÜRESEL kapısı) → `tests/conftest.py` değişince "TAM SUITE GEREKLİ" DEMEZ,
+#     dar bir küme önerir. Bu EKSİK-KAPSAMAdır — betiğin kendi başlığındaki "aşırı-kapsama
+#     güvenli, eksik-kapsama değil" sözleşmesinin TAM TERSİ. Tehlikeli olan budur.
+#   · satır 163 (eşleşme kapısı) → "EŞLEŞME YOK" yerine BOŞ liste basar (sessiz-yeşil).
+#   · satır 66  (boş-diff kapısı) → "DEĞİŞİKLİK YOK" yerine düşer ve jeton listesi boş kaldığı
+#     için `grep -rlE ""` HER dosyayı tutar: boş bir diff **394 test dosyası** "etkilenen"
+#     sayılır. Bu kapının HİÇ çivisi yoktu; aşağıdaki ilk çivi onu kapatır.
+#
+# AŞAĞIDAKİ İKİNCİ ÇİVİ SINIFI KAPATIR, ÖRNEĞİ DEĞİL: üç satırı tek tek düzeltmek yalnız
+# bugünkü üç örneği kapatır — yarın eklenen DÖRDÜNCÜ bir kapı aynı biçimi kullanırsa aynı
+# sessiz körlük geri gelir (bu deponun tekrar eden dersi: "kapanan sınıf değil, o günkü
+# örneklerdi"). O yüzden çivi tek tek satırlara değil, betiğin KABUK GENİŞLETME HATASI
+# ÜRETMEMESİ olgusuna bakar.
+# ================================================================================================
+
+def _kos_ayrik(*yollar: str) -> tuple[int, str, str]:
+    """`_kos` gibi ama stdout/stderr AYRI — kabuk genişletme hataları stderr'e düşer ve
+    birleşik okumada betiğin kendi metnine karışırlar."""
+    r = subprocess.run([str(BETIK), "--yollar", *yollar],
+                       capture_output=True, text=True, cwd=KOK)
+    return r.returncode, r.stdout, r.stderr
+
+
+def test_BOS_diff_DEGISIKLIK_YOK_diyor_ve_her_dosyayi_secmiyor():
+    """SATIR 66'NIN ÇİVİSİ — bu kapının hiç çivisi yoktu.
+
+    Boş yol listesi "koşulacak bir şey yok" demektir. Kapı düşerse betik devam eder ve jeton
+    listesi boş olduğu için `grep -rlE ""` TÜM test dosyalarını tutar — yani "hiçbir şey
+    değişmedi" girdisi "her şey etkilendi" hükmüne dönüşür (ölçüldü: 394 dosya)."""
+    rc, out, err = _kos_ayrik()
+    birlesik = out + err
+    assert "DEĞİŞİKLİK YOK" in birlesik.upper() or "DEGISIKLIK YOK" in birlesik.upper(), (
+        f"boş diff adıyla bildirilmiyor:\n{birlesik}")
+    assert rc == 0, "boş diff bir arıza değildir — çıkış kodu 0 olmalı"
+    assert "etkilenen test dosyaları" not in out, (
+        f"boş diff'te etkilenen küme hesaplanmış — kapı düşmüş:\n{out}")
+
+
+def test_betik_KABUK_GENISLETME_HATASI_uretmiyor():
+    """SINIF ÇİVİSİ (örnek çivisi değil): betik hiçbir yolda `bad substitution` /
+    `unbound variable` üretmemeli.
+
+    Neden ayrı bir çivi: yukarıdaki davranış çivileri yalnız ÜÇ bilinen kapıyı dolaylı olarak
+    korur. Yarın eklenen dördüncü bir kapı aynı geçersiz biçimi kullanırsa davranış çivileri
+    onu göremez (o kapının davranışını kimse sınamıyordur) ama BU çivi görür — çünkü olguya
+    bakar: betik sessizce yutulan bir genişletme hatası ÜRETEMEZ.
+
+    `set -e` yokluğu bu sınıfı görünmez yapar: hata ölümcül değildir, yalnız stderr'e düşer ve
+    kapı sessizce 'false' olur. Sessizliği kıran tek şey stderr'i OKUYAN bir çividir."""
+    senaryolar: list[tuple[str, tuple[str, ...]]] = [
+        ("boş diff", ()),
+        ("motor .py", ("meridian/sprint.py",)),
+        ("küresel dosya", ("tests/conftest.py",)),
+        ("varlık", ("meridian/web/pano.html",)),
+        ("eşleşmeyen yol", ("bir/" + "olma" + "yan/" + "diz" + "in/" + "dos" + "ya" + ".md",)),
+        ("çoklu yol", ("meridian/spend.py", "docs/RUNBOOK.md")),
+    ]
+    for ad, yollar in senaryolar:
+        _rc, _out, err = _kos_ayrik(*yollar)
+        dusuk = err.lower()
+        for hata in ("bad substitution", "unbound variable", "syntax error"):
+            assert hata not in dusuk, (
+                f"[{ad}] betik kabuk hatası üretiyor ({hata!r}) — `set -e` olmadığı için bu "
+                f"hata ölümcül değil, kapıyı SESSİZCE devre dışı bırakır:\n{err}")
