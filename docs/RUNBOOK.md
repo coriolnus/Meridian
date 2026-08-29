@@ -210,7 +210,8 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Teşhis adımları
 
-- Bu jetonu **17 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+- Bu jetonu **18 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+  - `meridian/loop.py::_reconcile_gunu_atlandi` → mesaj şablonu: `"mutabakat HİÇ koşmamış — pozisyon sapması hiç ölçülmedi" if _hic else f"mutabakat {_gun} işlem günüdür koşmuyor — pozisyon sapması ÖLÇÜLMÜYOR"`
   - `meridian/selfreview.py::mechanism_failed` → mesaj şablonu: `f"mekanizma ÜRETEMİYOR: {name} — {detail} (üst üste {box['streak']} koşum)"`
   - `meridian/watchdog.py::check_and_alarm` → mesaj şablonu: `f"mekanizma gecikti: {ad} — nabız {_sure(x.get('gap_s'))} sessiz " f"(pencere {_sure(max(0, int(x['gap_s']) - int(x['asim_s'])))}, " f"aşım {_sure(x.get('asim_s'))}). Bu değer İLK TESPİT anına aittir; " "sessizlik sürüyor olabilir — gerçek uzunluk `mechanism_recovered` olayında."`
   - `meridian/watchdog.py::check_eod_supurme_and_alarm` → mesaj şablonu: `f"EOD SÜPÜRME KANITI ÖLÇÜLEMEDİ: {rep.get('olculemedi_neden')}"`

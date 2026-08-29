@@ -295,3 +295,28 @@ def test_kod_tazelik_kapisi_VAR_ve_BEYANDAN_ONCE():
     # Kapı ENGELLER (F9'un tersine): yarı-etkili dağıtım sessizce geçemez.
     blok = "\n".join(_satirlar()[i_kapi:i_beyan])
     assert "exit 1" in blok, "[5b] ihlalde exit 1 vermiyor — kapı değil rapor olur"
+
+
+# =================================================================================================
+# SOUL.md — AJANIN KALICI BRİFİNGİNDE MAKİNEYE ÖZGÜ YOL OLAMAZ (2026-08-26 vakası)
+# =================================================================================================
+def test_SOUL_makineye_ozgu_yol_TASIMIYOR():
+    """`deploy/hermes/SOUL.md` ajanın HER çağrısına enjekte edilen kalıcı brifingidir. Bir ev
+    dizini yolu oraya yazılırsa, dosya BAŞKA makineye dağıtıldığında yanlış bir OLGU taşır.
+
+    ÖLÇÜLMÜŞ VAKA: brifing ajana deponun `~/Documents/Claude/AI-Trading`ta olduğunu söylüyordu.
+    A1'de o yol YOK (`ls: cannot access`), ve bu depo bile artık orada değil — yol iki
+    makinede de yanlıştı. `dagit` F9 kapısı "canlı ile repo BİREBİR" diyordu ve HAKLIYDI:
+    aynı yanlış her iki tarafta duruyordu. Kimlik kapısı doğruluk kapısı DEĞİLDİR.
+
+    ÇARE, kuralın kendisi: brifing yol BEYAN ETMEZ. Ajanın deponun kökünü öğrendiği yer
+    `meridian` MCP sunucusudur (`MERIDIAN_ROOT`) — tek kaynak, makineden bağımsız.
+    """
+    import re
+    soul = (REPO / "deploy/hermes/SOUL.md").read_text(encoding="utf-8")
+    # `~/...` ve `/home/<kullanıcı>/...` ve `/Users/<kullanıcı>/...` — üç ev-dizini biçimi
+    yasak = re.findall(r"(?:~|/home/[A-Za-z0-9._-]+|/Users/[A-Za-z0-9._-]+)/[A-Za-z0-9._/-]+", soul)
+    assert not yasak, (
+        f"kalıcı brifingte makineye özgü yol(lar): {yasak}\n"
+        "Bu dosya birden çok makineye dağıtılır; ev-dizini yolu bir tarafta MUTLAKA yanlış olur "
+        "ve ajan her çağrıda o yanlışı okur. Depo kökünü MCP sunucusu (MERIDIAN_ROOT) verir.")
