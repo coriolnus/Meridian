@@ -62,6 +62,17 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **ÜÇ TAVANDAN BİRİ ÖTEKİLERDEN FARKLI DAVRANIYORDU (2026-08-29; merge öncesi öz-denetimde
+  bulundu, çivi bulmadı):** `CLAUDE_MAX_TOKENS` `_claude_text`in İMZASINA varsayılan olarak
+  yazılmıştı, yani değer TANIM ANINDA bağlanıyordu. `NOUS_MAX_TOKENS` ve `GEMINI_MAX_OUTPUT_TOKENS`
+  ise gövde İÇİNDE okunur. Sonuç ölçüldü: sabiti çalışma anında değiştirmek claude ayağında
+  SESSİZCE etkisiz, ötekilerde etkili. Env yolu (`HERMES_CLAUDE_MAX_TOKENS`) her üçünde de çalışıyor
+  — yani CANLI bir arıza DEĞİL, ama bu turun kovaladığı "iki kopya sessizce ayrışır" sınıfının
+  küçük ve gerçek bir örneği, üstelik onu ben doğurmuştum. Tavan artık gövdede çözülüyor
+  (`max_tokens: int | None = None` → `if max_tokens is None`). **NEDEN KAYDA GEÇİYOR:** hiçbir çivi
+  bunu yakalamadı ve yakalayamazdı — üç ayağın davranış SİMETRİSİ o gün çivili değildi. Bulan şey
+  merge öncesi diff okumasıydı; yani "yeşil suite" ile "gözden geçirilmiş diff" ayrı güvencelerdir.
+
 - **KENDİ DÜZELTMEMİN ÇAPALARI BAYATLADI — CI YAKALADI, YEREL KOŞUM YAKALAMADI (2026-08-29):**
   `test_ihlal_seti_GERILEMEDI` üç ardışık commit'te CI'da kırmızıydı. Sebep tam da `codelaw`ın
   kovaladığı sınıf: çivi yorumuma `hermes.py:491` diye bir SATIR çapası yazmıştım, sonra AYNI

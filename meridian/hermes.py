@@ -417,7 +417,7 @@ def _skill_library() -> dict:
 
 
 def _claude_text(user: str, *, note: str, schema: dict | None = None,
-                 max_tokens: int = CLAUDE_MAX_TOKENS) -> str | None:
+                 max_tokens: int | None = None) -> str | None:
     """Claude çağrısının TEK GÖVDESİ — METİN döner, ayrıştırma çağıranın işi.
 
     NEDEN AYRIŞTIRILDI (nous sistem-değerlendirme katmanı): Katman B beyin zincirini
@@ -432,6 +432,13 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
         print("[hermes] anthropic SDK not installed; falling back to deterministic proposer")
         _trace_note(EMPTY_NO_CALL, detail="anthropic SDK yok")
         return None
+    # TAVAN GÖVDEDE ÇÖZÜLÜR, imzada DEĞİL — kardeşleriyle (NOUS/GEMINI) aynı davranış için.
+    # İmzaya varsayılan olarak yazılsaydı değer TANIM ANINDA bağlanırdı: `HERMES_CLAUDE_MAX_TOKENS`
+    # yine işlerdi (import'ta okunur) ama sabiti çalışma anında değiştiren biri SESSİZCE etkisiz
+    # kalırdı — üç tavandan ikisi bir türlü, biri başka türlü davranırdı. Bu turun kovaladığı
+    # "iki kopya sessizce ayrışır" sınıfının küçük ama gerçek bir örneği; ölçüldü ve kapatıldı.
+    if max_tokens is None:
+        max_tokens = CLAUDE_MAX_TOKENS
     from . import secrets
     api_key = secrets.get("HERMES_API_KEY") or secrets.get("ANTHROPIC_API_KEY")
     if not api_key:
