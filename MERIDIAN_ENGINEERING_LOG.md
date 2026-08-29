@@ -62,6 +62,35 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **ÇAPA TANIMI İKİ YERDE İKİ TÜRLÜYDÜ — DÜZYAZI HAYALET ÇAPA BEYAN EDEBİLİYORDU (2026-08-29;
+  sınıf: "iki kopya sessizce ayrışır", bu deponun tekrar eden sınıfı):** günlükte bash dizi-uzunluğu
+  ifadesinden söz eden bir cümle (`ops/runbook_uret.py` günlük maddelerini AYNEN kopyalar) belgeye
+  İKİ HAYALET ÇAPA soktu; biri düpedüz `...` idi ve `...` bir HTML id'ye dönüşemediği için
+  `test_t3_rota_cizer_ve_capalari_html_id_yapar` kırmızıya döndü.
+  **KÖK NEDEN İLK HİPOTEZ DEĞİLDİ.** Görev kartım "kod aralıklarını ayıkla" diyordu ve ÜÇ yerin
+  (`test`, `runbook_uret`, `api`) hizalanması gerektiğini varsayıyordu. ÖLÇÜM ikisini de çürüttü:
+  `meridian/api.py::_MD_BASLIK` — `/runbook`u GERÇEKTEN çizen ayrıştırıcı — çapayı `^#{1,3} ...
+  {#x}$` diye, yani **BAŞLIK SONEKİ** olarak tanır ve `id=` YALNIZ oradan doğar (api.py:1084-1088);
+  `ops/runbook_uret.py` de çapayı yalnız başlık satırlarına YAZAR (475/697/718) ve hiç TÜKETMEZ.
+  Yani üretici ile oluşturucu **zaten aynı fikirdeydi**; ayrışan TEK yer testteki `_capalar()`tı:
+  belgenin TAMAMINDA `{#...}` arıyordu. Üstelik aynı dosyanın 223. satırındaki kardeşi ZATEN
+  başlık-bağlıydı — tutarsızlık dosyanın kendi içinde de duruyordu. **Yani düzeltilecek yer üç
+  değil BİRDİ, ve kural "kod aralığını ayıkla" değil "çapa bir başlık sonekidir"dir.** Kod-aralığı
+  çözümü sınıfı KAPATMAZDI: ters tırnaksız bir düzyazı `{#x}` yine hayalet çapa olurdu.
+  **DÜZELTME:** `_capalar()` artık oluşturucunun DERLENMİŞ desenini (`api._MD_BASLIK`) İTHAL EDER —
+  ikinci bir regex yazmaz. Desen değişirse okuma onunla birlikte değişir.
+  **DOĞRULAMA ÇÜRÜTMEYLE, İDDİAYLA DEĞİL:** kırmızıyı doğuran cümle DÜZ hâline geri döndürüldü
+  (dolaylı yazım ve "geri düzeltmeyin" notu KALDIRILDI) — belge o diziyi hâlâ içeriyor ve testler
+  yeşil. Çivi de sabit listeye değil `api._md_render`ın ÜRETTİĞİ id'lere karşı ölçer, yani iki tanım
+  ayrışırsa düşer. Üç mutasyon üçü de yakalandı (çıkarıcıyı eski gevşek regex'e döndür · çıkarıcıyı
+  boşalt · oluşturucuyu düzyazı çapasını tanıyacak şekilde genişlet).
+  **KENDİ ÇİVİMİ GERİ ÇEKTİM, kayda geçiyor:** ilk turda `test_duzyazi_capa_BEYAN_EDEMEZ_gercek_belgede`
+  yazmıştım; yazıldığı an yeşildi ÇÜNKÜ cümle o sırada dolaylıydı. Cümle düzeltilince düştü ve
+  düşmesi DOĞRUYDU: çivi, düzeltmenin KALDIRDIĞI kısıtı KALICI YASAYA çeviriyordu — "düzyazıda
+  `${#...}` geçmesin" demek, bu turun tam tersini savunmaktır. Kaldırıldı, yerine gerekçesi yazıldı.
+  Ders: bir çivinin YEŞİL olması doğru şeyi ölçtüğü anlamına gelmez; geçici bir düzenlemenin
+  üstüne yazılmış çivi o düzenlemeyi yasalaştırır.
+
 - **SINIFIN ÜÇÜNCÜ AYAĞI DA KAPANDI — CLAUDE BACAĞI (2026-08-29; operatör istedi, önceki turda
   "latent, bilerek dokunulmadı" diye açık bırakılmıştı):** kusur ikizlerinin aynısı, iki bacaklı.
   **(1) TAVAN:** `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
@@ -109,13 +138,8 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   kesilme · red · araç · metin-yok ayrı ayrı adlandırılıyor.
 
 - **SEÇİCİ BETİĞİ BASH'TE GEÇERSİZ İFADE TAŞIYORDU (2026-08-29; taban kırmızısı, operatör istedi):**
-  `ops/etkilenen_testler.sh` üç satırda dizi-uzunluğu ifadesini `-0` varsayılanıyla yazıyordu
-  (dolar + süslü parantez, içinde `#YOLLAR[@]-0`); `-` varsayılan-değer operatörü, baştaki diyezle
-  kurulan UZUNLUK biçimiyle birleşmez.
-  [BU CÜMLE BİLEREK DOLAYLI YAZILDI, geri düzeltmeyin: runbook ÇAPA sözdizimi süslü-parantez-diyez
-  ile başlar ve `ops/runbook_uret.py` günlük maddelerini AYNEN kopyalar. İfadeyi düz yazmak belgeye
-  İKİ HAYALET ÇAPA sokuyordu ve `test_t3_rota_cizer_ve_capalari_html_id_yapar` kırmızıya dönüyordu
-  — çapa "..." HTML id'ye dönüşemez. Ölçüldü, tahmin değil.] `main`in kendi kopyası koşturularak doğrulandı (dal kusuru
+  `ops/etkilenen_testler.sh` üç satırda `${#DIZI[@]-0}` kullanıyordu; `-` varsayılan-değer operatörü
+  `${#...}` UZUNLUK biçimiyle birleşmez. `main`in kendi kopyası koşturularak doğrulandı (dal kusuru
   DEĞİL). SESSİZ YANLIŞ-NEGATİF DEĞİLDİ: hata `stderr`e düşüyor, karar akışını bozmuyordu — kapı
   gürültülüydü, yanlış değil. 8/8 yeşil. Taşınabilirlik YARIM doğrulandı: konteynerde yalnız bash
   5.2.21 var, macOS'un 3.2'si YOK — betiğin başlığı ikisini de şart koşuyor.
