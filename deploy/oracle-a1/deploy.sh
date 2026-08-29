@@ -10,11 +10,32 @@
 # Not: normalde bu betiği ELLE koşman gerekmez — yereldeki cutover.sh (aynı dizinde) durdurma +
 # rsync + bu betik + token + doğrulama sırasını tek komutta yürütür.
 #
-# DAGİT KAPSAMI DIŞI DÖRT CANLI ARTEFAKT (F9): `meridian-sprint@.service` · `50-meridian-sprint.rules`
-# (polkit) · `deploy/hermes/SOUL.md` (→ ~/.hermes/SOUL.md) · tick-watchdog (service + timer).
-# Bu dört dosya dagit kapsamı dışıdır, ELLE kurulur — kurulum adımları bu betiğin gövdesindedir
-# (sudo cp + daemon-reload); dagit.sh [F9] içerik kapısı her dağıtımda repo↔canlı sürüklenmesini
-# RAPORLAR (engellemez — kurulum kararı ve bakım penceresi operatörün).
+# DAGİT KAPSAMI DIŞI CANLI ARTEFAKTLAR (F9) — dagit BU DOSYALARI TAŞIMAZ, ELLE kurulur;
+# ÇOĞUNUN kurulum adımı bu betiğin gövdesindedir (sudo cp + daemon-reload); İSTİSNALAR aşağıda
+# ADIYLA işaretli — litestream.yml (`litestream_kur.sh`) ve aylık bucket kopyası (kendi birim
+# başlığı) bu betikte KURULMAZ; "hepsi buradadır" demek onları görünmez kılardı. dagit.sh [F9]
+# içerik kapısı her dağıtımda repo↔canlı sürüklenmesini RAPORLAR (engellemez — kurulum kararı ve
+# bakım penceresi operatörün).
+# SAYI DÜZYAZIYA GÖMÜLMEZ. Bu başlık bir zamanlar "DÖRT ARTEFAKT" diyor ve dördünü sayıyordu;
+# `F9_LISTE` bu arada 11 çifte çıktı ve başlık sessizce yalan oldu — üstelik bayatlayan taraf tam
+# da operatörün KURULUM adımlarını okuduğu yerdi. Tek kaynak dagit.sh `F9_LISTE`dir; aşağısı onun
+# okunur özetidir ve kapsaması çivilidir
+# (tests/test_dagit_f9_beyan_v266.py::test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR
+#  — listedeki her ad burada geçmek ZORUNDA; sayı ölçülmez, KAPSAMA ölçülür):
+#   * meridian-sprint@.service          → /etc/systemd/system/        (v241 sprint cgroup birimi)
+#   * 50-meridian-sprint.rules          → /etc/polkit-1/rules.d/      (v241 tetik izni)
+#   * deploy/hermes/SOUL.md             → ~ubuntu/.hermes/SOUL.md     (v242 hermes brifingi)
+#   * deploy/hermes/config.yaml         → ~ubuntu/.hermes/config.yaml (v326 ajan güvenlik duruşu)
+#   * meridian-tick-watchdog.service    → /etc/systemd/system/        (asılı-tick bekçisi)
+#   * meridian-tick-watchdog.timer      → /etc/systemd/system/        (aynı bekçinin tetiği)
+#   * litestream.yml                    → /etc/litestream.yml         (litestream_kur.sh, 2026-08-23)
+#   * meridian-aylik-bucket-kopya.service → /etc/systemd/system/      (aylık bar-arşivi bucket
+#     kopyası; kurulumu KENDİ birim başlığındadır, bu betikte değil)
+#   * meridian-aylik-bucket-kopya.timer → /etc/systemd/system/        (aynı kopyanın tetiği)
+#   * meridian-brifing.service          → /etc/systemd/system/        (v327 brifing kadansı)
+#   * meridian-brifing.timer            → /etc/systemd/system/        (kadansın tek tetiği)
+# KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
+# listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 set -euo pipefail
 cd "$(dirname "$0")/../.."   # repo kökü (/opt/meridian)
 REPO="$(pwd)"
@@ -106,6 +127,16 @@ sudo cp deploy/oracle-a1/meridian-fail-notify.service /etc/systemd/system/meridi
 # ölçülen sessizlik 73,1 dk) hiçbir bekçiye çarpmadan tekrarlanabilirdi.
 sudo cp deploy/oracle-a1/meridian-tick-watchdog.service /etc/systemd/system/meridian-tick-watchdog.service
 sudo cp deploy/oracle-a1/meridian-tick-watchdog.timer   /etc/systemd/system/meridian-tick-watchdog.timer
+# BRİFİNG KADANSI (v327, 2026-08-27 — tick-watchdog'un AYNI SINIFI, üçüncü tekrar). `ops/
+# alarm_backlog_digest.py` YAZILMIŞ ve ÇALIŞIYORDU ama HİÇBİR KADANSA ASILI DEĞİLDİ: canlıda 310
+# teslim edilmemiş alarm ve 16 okunmamış iyileştirme önerisi birikmişti — sistem hesaplıyor,
+# kimse okumuyordu. Birim İKİ teslimatı TEK sarmalayıcıyla koşturur: biri düşse öteki yine koşar
+# VE herhangi biri düşerse birim `failed` olur (bkz. birim başlığı; `-` öneki BİLEREK YOK, o önek
+# çıkış kodunu yutar ve Telegram kırıldığında arıza HER GÜN sessiz kalırdı).
+# YEDEK ALINMAZ ve bu bilinçlidir: birim dosyaları repodan TAM olarak yeniden üretilir, canlıda
+# elle yazılmış bir içerikleri yoktur (aşağıdaki ~/.hermes dosyalarının tersine).
+sudo cp deploy/oracle-a1/meridian-brifing.service       /etc/systemd/system/meridian-brifing.service
+sudo cp deploy/oracle-a1/meridian-brifing.timer         /etc/systemd/system/meridian-brifing.timer
 # SPRINT ŞABLON BİRİMİ (v241, 2026-08-13 — tick-watchdog'un AYNI DERSİ, bu kez baştan uygulandı).
 # Öğrenme sprinti 2026-08-13'e dek worker'ın çocuğu olarak doğuyordu (`sprint.py` Popen) ve systemd
 # varsayılan `KillMode=control-group` yüzünden HER `systemctl restart meridian` onu biçiyordu —
@@ -133,6 +164,25 @@ if [ -f deploy/hermes/SOUL.md ]; then
   [ -f "$HOME/.hermes/SOUL.md" ] && cp "$HOME/.hermes/SOUL.md" "$HOME/.hermes/SOUL.md.bak-$(date -u +%Y%m%d%H%M)"
   cp deploy/hermes/SOUL.md "$HOME/.hermes/SOUL.md"
   echo "-- hermes brifingi kuruldu: ~/.hermes/SOUL.md"
+fi
+# HERMES GÜVENLİK DURUŞU (config.yaml) — v326, 2026-08-27. SOUL.md ile AYNI SINIF ve AYNI DİZİN.
+# Ölçüm (§9.0): canlıda `approvals` HİÇ TANIMLI DEĞİLDİ — tek savunma kendi şerhinde "parse
+# edilemezse FAIL-OPEN" diyen guard kancasıydı. Dosya ayrıca `skills.external_dirs` ile
+# `deploy/hermes/skills/` dizinini hermes'e KAYDEDER: o kayıt olmadan depodaki hiçbir SKILL.md
+# yüklenmez (YASA 6 — okuyucusuz artefakt). Duruşu `tests/test_hermes_config_durusu_v326.py`
+# çiviler; canlı↔repo sürüklenmesini dagit [F9] raporlar.
+# ÜZERİNE YAZMAZ: varsa yedeklenir — SOUL.md ile aynı gerekçe, üstelik daha güçlüsü: `hermes
+# config set` ve profil işlemleri BU DOSYAYA canlıda yazar, yani burada gerçekten kaybedilecek
+# bir içerik olabilir.
+if [ -f deploy/hermes/config.yaml ]; then
+  mkdir -p "$HOME/.hermes"
+  # SANİYE ÇÖZÜNÜRLÜĞÜ + EZMEME (denetim 2026-08-29): dakika damgası, aynı dakika içinde iki
+  # deploy.sh koşumunda İLK yedeği repo kopyasıyla ezerdi — yani canlıda elle düzenlenmiş
+  # config'in TEK kopyası, tam da onu korumak için yazılmış satır tarafından yok edilirdi.
+  # `-n` (no-clobber) ikinci bir güvenlik: aynı saniyeye düşen iki koşum bile birbirini ezmez.
+  [ -f "$HOME/.hermes/config.yaml" ] && cp -n "$HOME/.hermes/config.yaml" "$HOME/.hermes/config.yaml.bak-$(date -u +%Y%m%dT%H%M%SZ)"
+  cp deploy/hermes/config.yaml "$HOME/.hermes/config.yaml"
+  echo "-- hermes yapılandırması kuruldu: ~/.hermes/config.yaml"
 fi
 # ÇALIŞTIRMA BİTİ: rsync tabanlı dağıtım (dagit.sh / push_code_a1.sh) izinleri her zaman
 # taşımayabilir; `Type=oneshot` bir ExecStart çalıştırılamazsa birim 203/EXEC ile düşer ve bekçi
@@ -168,6 +218,31 @@ sudo systemctl daemon-reload
 sudo systemctl enable meridian meridian-barsarchive
 sudo systemctl enable --now meridian-backup.timer   # timer şimdi başlar; service'i o tetikler
 sudo systemctl enable --now meridian-tick-watchdog.timer
+# BRİFİNG KADANSI — DOSYA KURULUMU ile ETKİNLEŞTİRME AYRI EYLEMDİR (denetim 2026-08-29).
+# Kardeş timer'lar burada koşulsuz `enable --now` yer; brifing İÇİN BU YANLIŞ OLURDU: bu birim
+# operatöre GÜNLÜK TELEGRAM MESAJI gönderir. `cutover.sh` adım 4 bu betiği çağırıyor, yani
+# ilgisiz bir sebeple koşan tek bir dağıtım, kimsenin karar vermediği bir bildirim kadansını
+# AÇARDI. Kurulum kararı operatörün (başlıktaki F9 cümlesinin aynısı) — burada uygulanıyor.
+# KENDİ KENDİNİ ONARIR: bir kez açıldıktan sonra her dağıtım onu AÇIK TUTAR (idempotent
+# yeniden-enable); kapalıyken hiçbir dağıtım onu açmaz. Yani kapı yalnız İLK açılışa bakar.
+# BİRİMİN KENDİSİ enable EDİLMEZ — `Type=oneshot`, tetiği timer'dır.
+BRIFING_ENABLED="$(systemctl is-enabled meridian-brifing.timer 2>/dev/null || true)"
+if [ "$BRIFING_ENABLED" = "enabled" ]; then
+  sudo systemctl enable --now meridian-brifing.timer
+  # "kurulu != çalışır" — kardeş bekçiye uygulanan disiplin buraya da (denetim 2026-08-29).
+  BRIFING_TIMER="$(systemctl is-active meridian-brifing.timer 2>&1 || true)"
+  echo "-- brifing kadansı: enabled · timer=$BRIFING_TIMER · sonraki: $(systemctl list-timers meridian-brifing.timer --no-pager --no-legend 2>/dev/null | awk '{print $1, $2, $3}')"
+  if [ "$BRIFING_TIMER" != "active" ]; then
+    echo "!! meridian-brifing.timer AÇIKTI ama AKTİF DEĞİL — alarm yığını ve öneriler sessizce birikir"; exit 1
+  fi
+else
+  echo "-- brifing kadansı: dosyalar KURULDU, kadans KAPALI (bilinçli — günlük Telegram teslimatı"
+  echo "   operatör kararıdır). Açmak için TEK komut:"
+  echo "       sudo systemctl enable --now meridian-brifing.timer"
+  echo "   UYARI (systemd sözleşmesinden ÇIKARIM, bu kutuda ÖLÇÜLMEDİ): birim `Persistent=true`"
+  echo "   taşıyor ve hiç tetiklenmemiş bir timer'ın damgası yoktur — ilk enable ANINDA bir koşum"
+  echo "   ateşleyebilir. İlk mesajın hemen gelmesi arıza DEĞİLDİR."
+fi
 
 # BEKÇİ KURULUM DOĞRULAMASI — "kurulu != çalışır" (fail-notify dersi, 2026-07-30: birim iki gün
 # kuruluydu ve ilk test-ateşlemede IndentationError verdi). Burada ÜÇ ayrı gerçek ölçülür ve

@@ -23,7 +23,7 @@ KOK = pathlib.Path(__file__).resolve().parent.parent
 CFG = KOK / "deploy/hermes/config.yaml"
 DAGIT = KOK / "dagit.sh"
 
-GEREKLI_DENY = ["*dagit.sh*", "git push*", "git commit*", "*systemctl*", "*serve.sh*"]
+GEREKLI_DENY = ["*dagit.sh*", "*git push*", "*git commit*", "*systemctl*", "*serve.sh*"]
 
 
 def _cfg() -> dict:
@@ -51,6 +51,26 @@ def test_deny_listesi_TAM():
     deny = [str(x) for x in (a.get("deny") or [])]
     eksik = [d for d in GEREKLI_DENY if d not in deny]
     assert not eksik, f"deny listesinde eksik desen(ler): {eksik} · mevcut: {deny}"
+
+
+def test_deny_desenleri_IKI_YANDAN_SARILI():
+    """ÖLÇÜLMÜŞ DELİK (denetim 2026-08-29): `git push*` ve `git commit*` ÖN EKE ÇAKILIYDI. Hermes
+    deny listesini `fnmatch` ile UYGULAR ve fnmatch TÜM DİZGEYİ eşler — yani şu üç biçim yasağın
+    ALTINDAN geçiyordu:
+
+        cd /opt/meridian && git push        (bileşik komut — ajanın en doğal yazımı)
+        /usr/bin/git push                   (mutlak yol)
+        ' git commit -m ...'                (baştaki tek boşluk)
+
+    Listedeki öteki üç desen zaten iki yandan sarılıydı; bu ikisi kopyalanırken sarmalayıcıyı
+    kaybetmiş. Kural: yasak bir KOMUTU yasaklar, komutun SATIR BAŞINDA olmasını değil."""
+    a = _cfg().get("approvals") or {}
+    deny = [str(x) for x in (a.get("deny") or [])]
+    assert deny, "deny listesi boş"
+    sarilmamis = [d for d in deny if not (d.startswith("*") and d.endswith("*"))]
+    assert not sarilmamis, (
+        f"iki yandan sarılmamış desen(ler): {sarilmamis} — `cd /x && <komut>`, mutlak yol ve "
+        f"baştaki boşluk bu yasağın altından geçer")
 
 
 def test_yapilandirmada_SIR_YOK():

@@ -1,12 +1,34 @@
+# meridian-brifing.timer — meridian-brifing.service'i günde bir tetikler.
+#
+# SAAT SEÇİMİ: 22:00 UTC. ABD kapanışı 16:00 America/New_York'ta SABİTTİR ama UTC karşılığı
+# DEĞİLDİR: EDT'de 20:00 UTC, EST'de (Kasım–Mart) 21:00 UTC. ÖNCEKİ DEĞER 21:00 UTC İDİ ve yorumu
+# "kapanıştan ~1 saat sonra" diyordu — bu yalnız EDT'de doğruydu; yılın BEŞ AYI tetik tam kapanış
+# zilinde, EOD turu daha başlamadan ateşlerdi (aynı-akşam bacağı kapanış + 16 dk'dan önce hiç
+# açılmaz — scheduler.SAME_EVENING_DELAY_MIN = 16). 22:00 UTC = 17:00/18:00 NY, yani HER İKİ
+# REJİMDE de kapanıştan EN AZ bir saat sonra.
+# PAY, İKİ REJİMDE AYRI — ölçülen sayı (denetim 2026-08-29; önceki hâli "EOD turunun ardında"
+# diyordu, bu bir ÇIKARIMDI ve EST'de payın ne kadar daraldığını gizliyordu):
+#   EDT — kapanış 20:00 UTC, aynı-akşam bacağı 20:16'da açılır → tetiğe 1 sa 44 dk
+#   EST — kapanış 21:00 UTC, bacak 21:16'da açılır         → tetiğe    44 dk
+# Bacağın AÇILIŞI ölçüldü, SÜRESİ ölçülmedi: "EOD turu bitmiş olur" EST rejiminde bir çıkarımdır,
+# bir ölçüm değil. Brifing zaten hesaplanmış çıktıları okur (kendi üretmez), yani geç bir EOD
+# turu en kötü ihtimalle o günün son kaleminin BİR SONRAKİ brifinge kalmasına yol açar — sessiz
+# kayıp değil, bir gün gecikme. Pay daralırsa doğru hamle saati değil, bu cümleyi ÖLÇMEKTİR. VM'in TZ'sini DEĞİŞTİRMEYE gerek yok —
+# OnCalendar burada açıkça UTC diyor, sunucu TZ'si ne olursa olsun aynı anda koşar. (Aynı gerekçe
+# biçimi: meridian-backup.timer, 23:30 UTC = 18:30/19:30 NY — o da bu birimden 1,5 saat sonradır,
+# yani gece tar'ı ile aynı dakikaya düşmez.)
 [Unit]
 Description=Meridian brifing tetiği (günlük, seans kapanışından sonra)
 
 [Timer]
-# 21:00 UTC = ABD kapanışından ~1 saat sonra; EOD turu (~20:30 UTC) bitmiş olur.
-OnCalendar=*-*-* 21:00:00 UTC
+OnCalendar=*-*-* 22:00:00 UTC
 # Makine kapalıysa açılışta telafi edilir — kaçan tetik sessizce kaybolmaz.
 Persistent=true
 RandomizedDelaySec=300
 
 [Install]
 WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — BU DOSYADA YAPILACAK BİR ŞEY YOK: timer birimlerinin `[Service]` bölümü olmaz,
+# sertleştirme süreç yürütmeye aittir ve tetiklenen birimde (meridian-brifing.service) yapıldı.
+# Aynı gerekçe meridian-backup.timer ve meridian-aylik-bucket-kopya.timer'da da yazılıdır.

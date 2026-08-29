@@ -362,7 +362,7 @@ def derisk_mult(equity: float, peak: float, cfg: dict | None = None) -> float:
     YOK (operatör kararı 2026-08-12: kâğıt = gerçek-para birebir).
 
     Bant `derisk_ramp()`ten gelir (goal.yaml → limits). Gövde ölçülen fonksiyonun
-    BİREBİR aynısıdır (olcum.py:178 `_rampa_fn`) — yalnız 0.03/0.08 yerine parametre; yuvarlama
+    BİREBİR aynısıdır (research/olcumler/edg026_slot20_2026-08-12/olcum.py:178 `_rampa_fn`) — yalnız 0.03/0.08 yerine parametre; yuvarlama
     hanesi (4) ve sınır yönleri (`<=` / `>=`) dahil hiçbir şey değişmedi."""
     if peak <= 0:
         return 1.0

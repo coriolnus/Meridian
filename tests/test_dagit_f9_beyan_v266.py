@@ -58,9 +58,16 @@ def test_dagit_sozdizimi_TEMIZ():
     assert r.returncode == 0, f"dagit.sh sözdizimi bozuk:\n{r.stderr}"
 
 
-def test_f9_DORT_ARTEFAKT_da_listede():
-    """Denetimin saydığı dört artefaktın BEŞ dosyası da kapının listesinde. Biri düşerse kapı o
-    artefakta karşı sessizleşir — tam olarak kapatılan körlük geri gelir."""
+def test_f9_KURUCU_ARTEFAKTLAR_hala_listede():
+    """Kapının KURULUŞUNDAKİ artefaktlar listeden hiç düşmemeli — bu bir TABAN, tavan değil.
+
+    Aşağıdaki beş dosya 2026-08-02 denetiminde sayılanlardır; biri listeden düşerse kapı o
+    artefakta karşı sessizleşir ve tam olarak kapatılan körlük geri gelir. Liste o günden beri
+    BÜYÜDÜ (bugün 11 çift) ve büyümesi burada sayılmaz: güncel kapsamayı `F9_LISTE`den TÜRETEN
+    ayrı çivi ölçer (test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR). Eski ad ve
+    docstring "DÖRT ARTEFAKT / BEŞ dosya" diyordu — düzyazıya gömülü bir sayım, hem de sayım
+    gömmeyi yasaklayan çivinin yanıbaşında (denetim 2026-08-29).
+    """
     metin = DAGIT.read_text()
     for repo_yol, canli_yol in [
         ("deploy/oracle-a1/meridian-sprint@.service", "/etc/systemd/system/meridian-sprint@.service"),
@@ -76,6 +83,36 @@ def test_f9_DORT_ARTEFAKT_da_listede():
         # dalına düşer ve her dağıtımda ölçülemedi gürültüsü üretirdi).
         assert (REPO / repo_yol).is_file(), f"[F9] repo tarafı yok: {repo_yol}"
 
+
+
+def test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR():
+    """`F9_LISTE`deki HER artefakt `deploy.sh` başlığında da ADIYLA geçer.
+
+    NEDEN BU ÇİVİ VAR (ölçülmüş sürüklenme, 2026-08-29). `deploy.sh` başlığı "DAGİT KAPSAMI DIŞI
+    DÖRT CANLI ARTEFAKT" diyordu ve dört tanesini sayıyordu; `F9_LISTE` bu arada 11 çifte
+    çıkmıştı. İki yerde tutulan bir liste, birini bayatlatmaktır — ve bayat olan taraf tam da
+    operatörün ELLE KURULUM adımlarını okuduğu yerdi: listede olup başlıkta olmayan bir artefakt
+    (litestream.yml, aylık bucket kopyası) için dagit sürüklenme RAPORLAR ama kurulum yönergesi
+    HİÇBİR YERDE yazmaz. Kapının gördüğü ile operatörün okuduğu ayrışır.
+
+    Çivi SAYI DEĞİL KAPSAMA ölçer: düzyazıya gömülü bir sayım (kaç tane) yine bayatlar, ama
+    "listedeki her ad başlıkta geçiyor mu" sorusu `F9_LISTE`den TÜRETİLİR ve bayatlayamaz.
+    Yön TEK: başlıkta fazladan bir ad olması serbest (bağlam olabilir); listede olup başlıkta
+    OLMAYAN yasaktır.
+    """
+    dagit = DAGIT.read_text()
+    govde = dagit.split('F9_LISTE="', 1)[1].split('"', 1)[0]
+    yollar = [ln.split("|")[0].strip() for ln in govde.strip().splitlines() if "|" in ln]
+    assert yollar, "F9_LISTE ayrıştırılamadı — çivi kendi hedefini kaybetmiş"
+
+    baslik = (ORACLE / "deploy.sh").read_text().split("set -euo pipefail", 1)[0]
+    eksik = [y for y in yollar if pathlib.Path(y).name not in baslik]
+    assert not eksik, (
+        "F9_LISTE'de olup deploy.sh BAŞLIĞINDA adı geçmeyen artefakt(lar): "
+        + ", ".join(eksik)
+        + " — dagit sürüklenmeyi raporlar ama operatörün okuduğu kurulum başlığı onlardan "
+        "HİÇ söz etmiyor"
+    )
 
 def test_f9_YERI_kuru_kosumda_da_gorunur():
     """YER YASASI: [F9] `--uygula` kapısından ÖNCE koşar — sürüklenme raporu kuru koşumda da
@@ -238,7 +275,11 @@ def test_h3_uygulama_betigi_VAR_ve_runbook_bolumu_uretildi():
     runbook = (REPO / "docs" / "RUNBOOK.md").read_text()
     assert "H3 tur-2 uygulama adımları (bakım penceresi" in runbook, \
         "RUNBOOK bölümü yok — `python ops/runbook_uret.py` koşulmamış"
-    assert "Bu dört dosya dagit kapsamı dışıdır" in runbook, \
+    # ÇAPA CÜMLESİ SAYI TAŞIMAZ (2026-08-29): eskiden "Bu dört dosya dagit kapsamı dışıdır"
+    # aranıyordu; liste 11'e çıkınca başlıktaki o sayı yalan oldu ve düzeltmesi bu çiviyi de
+    # kırdı. Yeni çapa başlığın DEĞİŞMEZ kısmıdır — kapsamı `F9_LISTE`den türeten ayrı çivi
+    # ölçer (test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR).
+    assert "DAGİT KAPSAMI DIŞI CANLI ARTEFAKTLAR (F9)" in runbook, \
         "F9 notu RUNBOOK'ta yok — deploy.sh başlığı + yeniden üretim zinciri kopuk"
 
 

@@ -10,15 +10,27 @@ düşünüyor ve kimse dinlemiyor.
 boşken SESSİZ · teslimden sonra damga · teslim düşerse damga BASILMAZ (yarım teslim "teslim
 edildi" sayılmaz). O şekil bu depoda zaten sınanmış; ikinci bir tasarım ikinci bir hata sınıfıdır.
 
-Okur: state/improvement_proposals.jsonl · Yazar: aynı dosyanın DAMGA anahtarı (öneri satırlarına
-DOKUNMAZ). Teslimat: meridian.notify.send (scrub + teslim-hatası kaydı orada).
+OKUR: `state/improvement_proposals.jsonl` — ve ona ASLA YAZMAZ (öneri satırlarına dokunulmaz).
+YAZAR (denetim 2026-08-29 düzeltmesi — bu satır kardeş betikten kopyalanmış ve "aynı dosyanın
+DAMGA anahtarı" diyordu; YANLIŞTI, o `alarm_backlog_digest.py`nin şeklidir): damga AYRI bir
+dosyada tutulur, `state/oneri_brifingi_damga.json` (`DAMGA_DOSYA`) — okunan defter JSONL'dir,
+içine bir damga anahtarı KOYULAMAZ. İkinci yazım `state/events.jsonl`dir (`obs.log` ile
+`oneri_brifingi_teslim` olayı). Teslimat: `meridian.notify.send` (scrub + teslim-hatası kaydı orada).
 """
 from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
-from meridian import memory, notify, obs, store
+# ops/ altından doğrudan koşulduğunda `meridian` paketi bulunabilsin. Bugün canlıda editable
+# kurulum (`_editable_impl_meridian.pth`) bunu zaten sağlıyor — ama kardeş betik
+# (`alarm_backlog_digest.py`) bu satırı taşıyor ve ikisini AYNI birim koşturuyor: bootstrap yalnız
+# birinde olsaydı yeniden kurulmuş/bozulmuş bir .venv kadansın YARISINI öldürür, öteki yarısı
+# çalışmaya devam ederdi — teşhis edilmesi en zor arıza şekli.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from meridian import memory, notify, obs, store  # noqa: E402
 
 DEFTER = "improvement_proposals.jsonl"
 DAMGA_DOSYA = "oneri_brifingi_damga.json"

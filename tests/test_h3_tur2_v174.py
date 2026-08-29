@@ -15,7 +15,7 @@ NEDEN BU TEST VAR. Bir systemd birim dosyası test edilmeyen tek dağıtım yüz
 
   3. SIR BİRİME GERİ SIZMASIN. `MERIDIAN_DASH_TOKEN` 2026-07-31'de 0644'lük birimden 0600'lük
      `.dash.env`e taşındı — ama YALNIZ CANLIDA (`bakim_h9.sh:59` sed'i); DEPODAKİ kopya
-     CHANGEME'li kaldı. Depodaki birimi kopyalayan her prosedür (`deploy.sh:89`) rotasyonu geri
+     CHANGEME'li kaldı. Depodaki birimi kopyalayan her prosedür (`deploy/oracle-a1/deploy.sh`in birim kopyalama adımı) rotasyonu geri
      alırdı. Artık `EnvironmentFile` düzeni depoda da çivili.
 
   4. `Environment=` SATIR-SONU YORUMU YASAK. systemd `#` ve sonrasını değerin/ayrı atamaların
@@ -40,7 +40,11 @@ UNITS = REPO / "deploy" / "oracle-a1"
 
 # H3 tur-2 setini TAŞIYAN birimler. `meridian-fail-notify.service` BİLEREK yok (gerekçesi kendi
 # dosyasında + ayrı testte ölçülüyor); `.timer` birimlerinin `[Service]` bölümü olmaz.
-SERTLESTIRILEN = ("meridian.service", "meridian-barsarchive.service", "meridian-backup.service")
+SERTLESTIRILEN = ("meridian.service", "meridian-barsarchive.service", "meridian-backup.service",
+                  # 2026-08-29 denetimi: brifing birimi ortak seti BİREBİR taşıyordu ama listede
+                  # DEĞİLDİ — yani ne kümesi, ne değerleri, ne "SystemCallFilter en sonda" kuralı
+                  # onun için çivili değildi. Sertleştirmeyi yazmak yetmez, çiviye BAĞLAMAK gerekir.
+                  "meridian-brifing.service")
 
 # Üç birimde de BİREBİR AYNI olması gereken direktifler (ReadWritePaths BİLEREK dışarıda —
 # her birimin yazma envanteri farklıdır ve ayrı testlerde ölçülür).
@@ -175,11 +179,43 @@ def test_readwritepaths_state_agacini_kapsiyor(birim):
         f"{birim}: ReadWritePaths state'i kapsamıyor: {yollar}")
 
 
-@pytest.mark.parametrize("birim", SERTLESTIRILEN)
+def _uv_kosanlar() -> list[str]:
+    """SERTLESTIRILEN içinden ExecStart'ı GERÇEKTEN `uv` çağıran birimler.
+
+    NEDEN TÜRETİLİYOR (denetim 2026-08-29). Aşağıdaki çivi eskiden doğrudan `SERTLESTIRILEN`
+    üstünde parametrize idi ve docstring'i "üç birim de `uv run` ile başlar" diyordu. O cümle
+    listedeki üç birim için doğruydu ama bir SABİT DEĞİL bir RASTLANTIYDI: liste büyüdüğü an
+    (`meridian-brifing.service`, ExecStart'ı `/bin/sh -c` + doğrudan `.venv/bin/python`) çivi
+    kırmızıya düştü — birimde bir eksik olduğu için DEĞİL, çivinin iki ayrı özelliği
+    ("sertleştirilmiş" ve "uv koşuyor") tek eksen sanması yüzünden. Kırmızının doğru cevabı
+    `~/.cache` eklemek OLMAZDI: uv hiç açılmayan bir birime uv önbelleği açmak, sertleştirmeyi
+    gerekçesiz gevşetmektir. Eksen KAYNAKTAN ölçülür; liste bir daha bayatlayamaz.
+    """
+    kosanlar = []
+    for birim in SERTLESTIRILEN:
+        execler = [d for k, d, _ in _service(birim) if k.startswith("ExecStart")]
+        if any(re.search(r"(^|/|\s)uv(\s|$)", d) for d in execler):
+            kosanlar.append(birim)
+    assert kosanlar, "hiçbir birimde `uv` çağrısı görülmedi — ölçüm ekseni kaybolmuş olabilir"
+    return kosanlar
+
+
+@pytest.mark.parametrize("birim", _uv_kosanlar())
 def test_uv_onbellegi_acik(birim):
-    """Üç birim de `uv run` ile başlar; `~/.cache` yazılabilir değilse servis BAŞLAMAZ
-    (tur-1'de canlıda ölçüldü)."""
+    """`uv run` ile başlayan birimlerde `~/.cache` yazılabilir olmalı — değilse servis BAŞLAMAZ
+    (tur-1'de canlıda ölçüldü). Kapsam `_uv_kosanlar()` ile KAYNAKTAN türetilir."""
     assert "/home/ubuntu/.cache" in _rwp(birim), f"{birim}: uv önbelleği ReadWritePaths'te yok"
+
+
+@pytest.mark.parametrize("birim", [b for b in SERTLESTIRILEN if b not in _uv_kosanlar()])
+def test_uv_KOSMAYAN_birime_onbellek_ACILMAZ(birim):
+    """Ters yön: uv çağırmayan birime `~/.cache` AÇILMAZ. Üstteki çivinin tek başına bıraktığı
+    boşluk — bir birime gereksiz yazma yolu eklemek onu kırmızıya düşürmezdi, oysa gerekçesiz
+    genişletilmiş her ReadWritePaths sertleştirmenin sessiz gevşemesidir (aynı dosyanın
+    `test_her_readwritepath_gerekce_tasiyor` çivisiyle aynı sınıf)."""
+    assert "/home/ubuntu/.cache" not in _rwp(birim), (
+        f"{birim}: ExecStart `uv` çağırmıyor ama ReadWritePaths'te `~/.cache` var — "
+        "gerekçesiz yazma yolu")
 
 
 @pytest.mark.parametrize("birim", SERTLESTIRILEN)

@@ -44,8 +44,8 @@ her biri BİR MEKANİZMAYI düzeltti ve ardından TAMLIĞI YENİ SÖZCÜKLERLE Y
 3'ten sonra SKILL.md "her NE olursa olsun çözemediğimiz her şey" diyordu. Ölçülen dördüncü delik
 bu cümleyi yalanladı:
 
-    ops/olcum.py olay oneri_brifingi_teslim        → OLAY YOK   (ops/oneri_brifingi.py:112)
-    ops/olcum.py olay alarm_backlog_digest_teslim  → OLAY YOK   (ops/alarm_backlog_digest.py:131)
+    ops/olcum.py olay oneri_brifingi_teslim        → OLAY YOK   (ops/oneri_brifingi.py)
+    ops/olcum.py olay alarm_backlog_digest_teslim  → OLAY YOK   (ops/alarm_backlog_digest.py)
 
 İkisi de CANLI olay, ikisi de mümkün olan EN DÜZ biçim (`obs.log("literal", …)`). Çözümleyicide
 hiçbir eksik YOKTU — `tara()` yalnız `meridian/`i glob'luyordu, `ops/` HİÇ AÇILMIYORDU. Ve
@@ -71,6 +71,9 @@ DÖNER (`taranan_kokler`, `taranan_dosya_sayisi`); (iii) CLI kapsam satırını 
                      deseni; kesin adla karıştırılırsa uydurma olur.
   3. `cozulemeyen` — ÇIKARMA ile türetilmiş SAYI (yukarıya bak). SESSİZCE YUTULMAZ — hem
                      `tara()` ile PROGRAMATİK olarak hem CLI çıktısında her koşumda raporlanır.
+  4. `ayristirilamayan_dosya` — AÇILAN ama `ast.parse`ı düşen dosya sayısı (fix round 5). Böyle
+                     bir dosya kapsam sayısına GİRER ama çağrıları ne toplama ne çözülene girer:
+                     yapısal çıkarma onu göremez, o yüzden AYRI sayılır ve ayrı beyan edilir.
 
 Alt komutlar:
     olay <desen>       kaynaktaki GERÇEK olay adlarını (+ f-string desenlerini) listeler
@@ -158,13 +161,20 @@ class OlayTarama:
     (fix round 4): üç sayının hiçbiri kendi başına anlamlı değildir — "0 bulundu" ile "0 bulundu,
     şuraya bakarak" farklı iki cümledir, ve İKİNCİSİ dürüst olandır. Bu iki alan tarama SIRASINDA
     GERÇEKTEN girilen dizinlerden/açılan dosyalardan ölçülür; `TARANAN_KOKLER`in kopyası DEĞİLDİR
-    (var olmayan bir kök beyana GİRMEZ)."""
+    (var olmayan bir kök beyana GİRMEZ).
+
+    `ayristirilamayan_dosya` (fix round 5) round-4'ün arızasının DOSYA granülerliğindeki hâlini
+    kapatır: `SyntaxError` veren bir dosya `taranan_dosya_sayisi`na SAYILIR (kapsam satırı onu
+    "taradım" diye beyan eder) ama çağrıları NE `toplam_cagri_sayisi`na NE çözülenlere girer —
+    yani "hiçbir kovaya düşmeyen" tam o şekil, ve yapısal ÇIKARMA onu göremez. Bu yüzden AYRI
+    sayılır ve `cozulemeyen` gibi HER koşumda beyan edilir."""
     adlar: frozenset[str]
     desenler: frozenset[str]
     cozulemeyen: int
     toplam_cagri_sayisi: int
     taranan_kokler: tuple[str, ...]
     taranan_dosya_sayisi: int
+    ayristirilamayan_dosya: int
 
 
 def _modul_sabitleri(agac: ast.Module) -> dict[str, str]:
@@ -293,6 +303,7 @@ def tara(kok: pathlib.Path = KOK) -> OlayTarama:
 
     girilen_kokler: list[str] = []
     taranan_dosya = 0
+    ayristirilamayan = 0
 
     for kok_adi in TARANAN_KOKLER:
         dizin = kok / kok_adi
@@ -305,8 +316,12 @@ def tara(kok: pathlib.Path = KOK) -> OlayTarama:
             try:
                 agac = ast.parse(kaynak, filename=str(yol))
             except SyntaxError:
-                # sessiz-yutma: tek dosyanın parse hatası tüm taramayı düşürmemeli — bu depoda
-                # ÇALIŞAN bir dosyanın sözdizim hatası vermesi beklenmez, bu salt savunma amaçlı.
+                # Tek dosyanın parse hatası tüm taramayı düşürmemeli — ama SESSİZCE ATLANAMAZ
+                # (fix round 5). Atlanan dosya `taranan_dosya`ya SAYILDI, yani kapsam satırı onu
+                # "taradım" diye beyan ediyor; içindeki çağrılar ise ne toplama ne çözülene
+                # giriyor — round-4'ün "hiçbir kovaya düşmeyen dosya" arızasının birebir aynısı,
+                # bu kez dosya granülerliğinde. Bu yüzden AYRI sayılır ve her koşumda beyan edilir.
+                ayristirilamayan += 1
                 continue
             yerel_sabitler = _modul_sabitleri(agac)
             obs_takma_adlari = _obs_takma_adlari(agac)
@@ -336,6 +351,7 @@ def tara(kok: pathlib.Path = KOK) -> OlayTarama:
         toplam_cagri_sayisi=toplam_cagri,
         taranan_kokler=tuple(girilen_kokler),
         taranan_dosya_sayisi=taranan_dosya,
+        ayristirilamayan_dosya=ayristirilamayan,
     )
 
 
@@ -392,6 +408,8 @@ def main(argv: list[str] | None = None) -> int:
     # sonuç + görünür kapsam DÜRÜSTTÜR; boş sonuç + tamlık iması ARIZANIN KENDİSİDİR.
     print(f"# taranan kapsam: {kapsam_beyani(t)}")
     print(f"# çözülemeyen çağrı yeri: {t.cozulemeyen} (ad çalışma zamanında belirleniyor)")
+    print(f"# ayrıştırılamayan dosya: {t.ayristirilamayan_dosya} (açıldı ve kapsam sayısına "
+          f"girdi ama parse EDİLEMEDİ — içindeki çağrılar hiçbir sayaca düşmedi)")
     return cikis
 
 

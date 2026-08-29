@@ -1318,7 +1318,14 @@ def dashboard_mentions(term: str, path: str = "meridian/web/app.js") -> bool:
 #: dosyanın HER düzenlemesinde bayatlar — bir docstring eklemek onlarca çapayı sessizce yanlışa
 #: çevirir. Bu depoda tam olarak bu sınıf ölçüldü ve elle ~117 yerde düzeltildi; ELLE DÜZELTME
 #: SINIFI KAPATMADI (aynı turda yenisi doğdu ve bir test onu dondurdu). Yasa bu yüzden var.
-_CAPA_DESENI = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*\.py):(\d+)\b")
+# YOL ÖNEKİ DE YAKALANIR (2026-08-29 denetimi). Desen eskiden yalnız TABAN ADI görüyordu ve
+# `research/olcumler/edg026_slot20_2026-08-12/olcum.py:178` gibi TAM YOL yazan bir çapa,
+# taranan kökteki apayrı bir `olcum.py` üzerinden yargılanıyordu — yasa GÖREMEDİĞİ bir hedef
+# hakkında hüküm veriyor, üstelik tesadüfen yeşil verip körlüğünü gizliyordu. Grup 1 = yol öneki
+# (boş olabilir), grup 2 = taban ad, grup 3 = satır. `m.group(0)` artık öneki de taşır: kayıtlar
+# hangi dosyanın kastedildiğini SÖYLER. Çivi: test_codelaw_kor_nokta_v214.py::
+# test_YOL_BELIRTEN_CAPA_ayni_adli_BASKA_dosyaya_hukum_ETTIRMEZ
+_CAPA_DESENI = re.compile(r"((?:[A-Za-z0-9_.-]+/)*)([A-Za-z_][A-Za-z0-9_]*\.py):(\d+)\b")
 
 
 #: Yasanın `meridian/` DIŞINDA da baktığı canlı kod kökleri (2026-08-16'da eklendi; `report()`
@@ -1407,8 +1414,22 @@ def _capalari_olc(dosyalar, adres: dict[str, list[pathlib.Path]],
             if _CAPA_MUAFIYETI in satir:
                 continue
             for m in _CAPA_DESENI.finditer(satir):
-                hedef_ad, n = m.group(1), int(m.group(2))
+                onek, hedef_ad, n = m.group(1), m.group(2), int(m.group(3))
                 hedefler = adres.get(hedef_ad, [])
+                if onek:
+                    # YOL BELİRTİLMİŞ → yalnız O yol ölçülür. Taranan kümede yoksa hüküm YOK.
+                    # Karşılaştırma sonek üstünden ve `/` sınırına saygılı: `adres` yolları
+                    # taranan köke GÖRE tutuluyor, çapa ise depo köküne göre yazılıyor olabilir;
+                    # sınır kontrolü olmadan `ops/olcum.py` çapası `deps/ops/olcum.py`ye de uyardı.
+                    tam = (onek + hedef_ad).lstrip("./")
+                    hedefler = [h for h in hedefler
+                                if str(h) == tam or str(h).endswith("/" + tam)]
+                    if not hedefler:
+                        if cozulemeyen_out is not None:
+                            cozulemeyen_out.append(
+                                {"kaynak": f"{f.name}:{i}", "capa": m.group(0),
+                                 "neden": "kapsam_disi", "aday_n": 0})
+                        continue
                 if len(hedefler) != 1:
                     # hüküm YOK — ama kayıt VAR (aşağıdaki "çözülemeyen çapa" notu).
                     if cozulemeyen_out is not None:

@@ -688,7 +688,12 @@ def test_capa_KORLUGU_ok_HUKMUNU_ETKILEMEZ(tmp_path):
     saymak UYDURMA YASAĞInın ihlali olurdu — sayılır, ama suçlanmaz."""
     r = codelaw.report()
     assert isinstance(r["line_anchor_unresolved"], list)
-    assert set(r["line_anchor_unresolved_by_reason"]) <= {"hedef_yok", "ikircikli"}
+    # ÜÇÜNCÜ GEREKÇE `kapsam_disi` (2026-08-29): çapa TAM YOL yazıyor ama o yol taranan
+    # köklerin dışında (örn. `research/olcumler/...`). Öteki ikisiyle AYNI SINIF — hüküm
+    # kurulamaz, ama SAYILIR. Eskiden bu vaka hiç görünmüyordu: desen yolu yakalamadığı için
+    # çapa aynı taban adlı BAŞKA bir dosyaya çözülüp yargılanıyordu (yasa göremediği hedef
+    # hakkında hüküm veriyordu). Liste kapalıdır: yeni bir gerekçe eklemek beyanla olur.
+    assert set(r["line_anchor_unresolved_by_reason"]) <= {"hedef_yok", "ikircikli", "kapsam_disi"}
     assert sum(r["line_anchor_unresolved_by_reason"].values()) == len(r["line_anchor_unresolved"])
     # canlı ağaçta çözülemeyen çapa VAR (bugün 16) ve yasa yine de yeşil:
     assert r["ok"] is True or r["stale_line_anchors"], "ok yalnız ÇÜRÜK çapayla düşmeli"
@@ -764,3 +769,40 @@ def test_yazar_onbellegi_KORLUGU_YUTMAZ(tmp_path):
     ikinci = dict(ledgers.UNPARSED)
     ledgers.UNPARSED.clear()
     assert ikinci == ilk, f"yazar önbelleği körlüğü yuttu: {ilk} → {ikinci}"
+
+
+def test_YOL_BELIRTEN_CAPA_ayni_adli_BASKA_dosyaya_hukum_ETTIRMEZ(tmp_path, monkeypatch):
+    """Tam yol yazan bir çapa, aynı TABAN ADI taşıyan BAŞKA bir dosya üzerinden yargılanamaz.
+
+    ÖLÇÜLEN VAKA (2026-08-29). Depoda dört çapa
+    `research/olcumler/edg026_slot20_2026-08-12/olcum.py:178` diyor — üçü tam yolu YAZARAK.
+    `research/` taranan köklerin DIŞINDA, yani çözücü o dosyayı HİÇ GÖREMEZ. Ama desen yalnız
+    TABAN ADI yakalıyordu (`([A-Za-z_]\\w*\\.py):(\\d+)`), yol görünmez oluyordu ve `adres`te
+    `olcum.py` TEK aday olarak `ops/olcum.py`ye çözülüyordu — apayrı bir dosya. Sonuç: yasa
+    göremediği bir hedef hakkında HÜKÜM VERİYORDU, üstelik sessizce YEŞİL vererek (o dosyanın
+    178. satırı tesadüfen kod satırıydı). `ops/olcum.py`de tek bir alan eklemek o satırı boşa
+    kaydırdı ve dört çapa birden "çürük" oldu — hiçbiri gerçekte çürümemişti.
+
+    Bu, yasanın kendi ihlalidir: ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI). Yol
+    belirtilmişse ya O yol ölçülür ya hiçbir hüküm verilmez — ikisinin arası, yanlış dosyaya
+    bakıp doğru cevap verdiğini sanmaktır.
+    """
+    (tmp_path / "taranan").mkdir()
+    (tmp_path / "disarida").mkdir()
+    # Taranan kökte aynı TABAN ADLI dosya; 5. satırı BOŞ.
+    (tmp_path / "taranan" / "olcum.py").write_text("a = 1\nb = 2\nc = 3\nd = 4\n\n", encoding="utf-8")
+    # Çapa TAM YOL yazıyor ve o yol taranan kökün DIŞINDA.
+    (tmp_path / "taranan" / "kaynak.py").write_text(
+        "# bkz. disarida/olcum.py:5 `_fn`\nx = 1\n", encoding="utf-8")
+    (tmp_path / "disarida" / "olcum.py").write_text("z = 9\n" * 20, encoding="utf-8")
+
+    monkeypatch.chdir(tmp_path)
+    cozulemeyen: list = []
+    curuk = codelaw.stale_line_anchors(root="taranan", cozulemeyen_out=cozulemeyen)
+
+    assert curuk == [], (
+        "yol belirten çapa, taranan kökteki AYNI ADLI başka dosya üzerinden çürük ilan edildi — "
+        f"yasa göremediği hedef hakkında hüküm verdi: {curuk!r}")
+    assert any("olcum.py:5" in k.get("capa", "") for k in cozulemeyen), (
+        "hüküm verilemeyen çapa KAYDA da geçmedi — sessizce düştü, ki bu yasanın kapatmak için "
+        f"var olduğu körlüğün ta kendisi: {cozulemeyen!r}")

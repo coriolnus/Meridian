@@ -230,8 +230,8 @@ def test_COZULEMEYEN_YAPISAL_TAMDIR_BILINMEYEN_BICIME_TEPKI_VERIR(tmp_path):
 # İDDİA ETTİ. Round 3'ten sonra SKILL.md "her NE olursa olsun çözemediğimiz her şey" diyordu —
 # bir dosya HİÇ OKUNMADIĞI anda bu iddia YANLIŞ olur. Ölçülmüş dördüncü delik:
 #
-#     ops/olcum.py olay oneri_brifingi_teslim        → OLAY YOK   (ops/oneri_brifingi.py:112)
-#     ops/olcum.py olay alarm_backlog_digest_teslim  → OLAY YOK   (ops/alarm_backlog_digest.py:131)
+#     ops/olcum.py olay oneri_brifingi_teslim        → OLAY YOK   (ops/oneri_brifingi.py)
+#     ops/olcum.py olay alarm_backlog_digest_teslim  → OLAY YOK   (ops/alarm_backlog_digest.py)
 #
 # İkisi de CANLI, ikisi de mümkün olan EN DÜZ biçim (`obs.log("literal", …)`). Görünmezdiler
 # çünkü `tara()` yalnız `meridian/`i glob'luyordu; `cozulemeyen` sayacı da KIPIRDAMIYORDU —
@@ -248,9 +248,9 @@ def test_OPS_KOKU_TARANIR_CANLI_OLAY_BULUNUR():
     (`obs.log("literal", …)`) — çözümleyici sınıfı değil, KAPSAM eksikti."""
     mod = _yukle()
     assert "oneri_brifingi_teslim" in mod.olay_adlari("oneri_brifingi_teslim"), (
-        "ops/oneri_brifingi.py:112'deki canlı olay görünmüyor — kapsam `ops/`i kapsamıyor")
+        "ops/oneri_brifingi.py'deki canlı olay görünmüyor — kapsam `ops/`i kapsamıyor")
     assert "alarm_backlog_digest_teslim" in mod.olay_adlari("alarm_backlog_digest_teslim"), (
-        "ops/alarm_backlog_digest.py:131'deki canlı olay görünmüyor")
+        "ops/alarm_backlog_digest.py'deki canlı olay görünmüyor")
 
 
 def test_MAIN_HER_KOSULDA_TARANAN_KAPSAMI_BASAR(capsys):
@@ -376,3 +376,48 @@ def test_KAPSAM_BEYANI_DIZINI_DEGIL_DOSYA_DESENINI_SOYLER(capsys):
         assert f"{k}/**/{mod.TARANAN_DOSYA_DESENI}" in satir[0], (
             f"beyan dosya desenini söylemiyor — `{k}/` çıplak dizin adı tamlık ima eder: "
             f"{satir[0]!r}")
+
+
+# --- FIX ROUND 5 (2026-08-29, dal-sonu denetimi) ---------------------------------------------
+# AYRIŞTIRILAMAYAN DOSYA = ROUND 4'ÜN ARIZASININ DOSYA GRANÜLERLİĞİNDEKİ HÂLİ. `tara()` bir
+# `SyntaxError`ü `continue` ile yutuyordu; o dosya `taranan_dosya_sayisi`na SAYILIYOR (yani kapsam
+# satırı "tarandı" diye beyan ediyor) ama içindeki çağrılar NE `toplam_cagri`ya NE `cozulen`e
+# giriyordu — "hiçbir kovaya düşmeyen" tam da o şekil, ve yapısal ÇIKARMA onu göremez.
+
+
+def test_AYRISTIRILAMAYAN_DOSYA_SAYILIR_HICBIR_KOVAYA_DUSMEDEN_KAYBOLMAZ(tmp_path):
+    """Parse edilemeyen bir dosya SESSİZCE atlanamaz: kapsam satırı onu "taradım" diye sayarken
+    çağrıları hiçbir sayaca düşmez. Sayı AYRI bir alanla beyan edilir (UYDURMA YASAĞI: ölçülemeyen
+    şey `None`/sayı + neden olarak görünür, gizlenmez)."""
+    mod = _yukle()
+    m = tmp_path / "meridian"
+    m.mkdir()
+    (m / "obs.py").write_text('"""sahte obs."""\n', encoding="utf-8")
+    (m / "saglam.py").write_text(
+        "from . import obs\ndef f():\n    obs.log('saglam_olay')\n", encoding="utf-8")
+    (m / "bozuk.py").write_text(
+        "from . import obs\ndef f(:\n    obs.log('bu_olay_ASLA_GORULMEZ')\n", encoding="utf-8")
+
+    t = mod.tara(tmp_path)
+    assert t.taranan_dosya_sayisi == 3, t.taranan_dosya_sayisi
+    assert t.ayristirilamayan_dosya == 1, (
+        f"parse edilemeyen dosya sessizce yutuldu: {t}")
+    assert "saglam_olay" in t.adlar
+    assert "bu_olay_ASLA_GORULMEZ" not in t.adlar
+    assert t.toplam_cagri_sayisi == 1, (
+        f"ayrıştırılamayan dosyanın çağrıları toplama giremez (görülmediler): {t}")
+
+
+def test_MAIN_HER_KOSULDA_AYRISTIRILAMAYAN_SAYISINI_RAPORLAR(capsys):
+    """`cozulemeyen` gibi: bulgu olsun olmasın HER koşumda basılır. Bugün sıfır olması satırı
+    gereksiz yapmaz — okuyucunun "0 sonuç" ile "1 dosya hiç okunamadı" arasını ayırabilmesi için
+    sayının GÖRÜNMESİ gerekir, ve sıfır beyanı da bir ölçümdür."""
+    mod = _yukle()
+    mod.main(["olay", "benimse"])
+    dolu = capsys.readouterr().out
+    mod.main(["olay", "boyle_bir_olay_asla_var_olmayacak_zzz"])
+    bos = capsys.readouterr().out
+    for ad, cikti in (("bulgulu", dolu), ("boş", bos)):
+        satirlar = [s for s in cikti.splitlines() if s.startswith("# ayrıştırılamayan dosya:")]
+        assert len(satirlar) == 1, (
+            f"{ad} koşumda ayrıştırılamayan-dosya satırı tam bir kez basılmalı: {cikti!r}")

@@ -62,6 +62,19 @@ def ozet_kur() -> dict:
     toplam = int(d.get("_toplam") or 0)
     kapsanan = int(((d.get(DAMGA) or {}) if isinstance(d.get(DAMGA), dict) else {})
                    .get("toplam_kapsanan") or 0)
+    # İMKÂNSIZ DURUM AYRI DALDIR (denetim 2026-08-29). `_toplam` yalnız ARTAN bir sayaçtır
+    # (`meridian/obs.py` `_bump`/`_bump_fail` — azaltan tek bir yol yok), yani `kapsanan`ın onu
+    # AŞMASI sözleşme ihlalidir: sayaç sıfırlanmış, dosya elle düzenlenmiş ya da eski bir
+    # `notify_undelivered.json` geri yüklenmiştir. Bu dal olmasaydı `yeni` negatife düşer,
+    # aşağıdaki `yeni <= 0` yakalar ve özet KALICI OLARAK susup sustuğunu "iyi huylu idempotens"
+    # diye raporlardı — ölçülemeyen bir durumun iyi huylu bir hiçlik gibi görünmesi (UYDURMA
+    # YASAĞI). Sıfır ile 'bilmiyorum' aynı şey değildir; çivi:
+    # tests/test_brifing_kadansi_v327.py::test_DAMGA_SAYACI_ASARSA_IYI_HUYLU_HICLIK_GIBI_GORUNMEZ
+    if kapsanan > toplam:
+        return {"hata": f"damganın kapsadığı sayı ({kapsanan}) birikmiş toplamı ({toplam}) AŞIYOR — "
+                        f"`_toplam` yalnız artan bir sayaçtır, bu durum sözleşme ihlalidir "
+                        f"(sayaç sıfırlanmış / dosya elle düzenlenmiş / eski state geri yüklenmiş). "
+                        f"Yığın ölçülemedi; damga elle düzeltilmeden özet güvenilmez."}
     yeni = toplam - kapsanan
     jetonlar = {k: int(v) for k, v in d.items()
                 if not k.startswith("_") and isinstance(v, (int, float))}
@@ -123,8 +136,18 @@ def main(argv: list[str] | None = None) -> int:
     def _damgala(d: dict) -> bool:
         """`store.update_json` sözleşmesi: belgeyi YERİNDE değiştir ve True dön (yeni sözlük
         döndürmek sessizce hiçbir şey yazmaz — obs._maybe_notify'ın kendi dersi). Sayaçlara
-        DOKUNULMAZ: yalnız damga anahtarı güncellenir."""
-        d[DAMGA] = {"ts": memory.now_iso(), "toplam_kapsanan": int(d.get("_toplam") or 0)}
+        DOKUNULMAZ: yalnız damga anahtarı güncellenir.
+
+        `toplam_kapsanan` GÖNDERİLEN mesajı üreten AYNI `o` enstantanesinden gelir — burada `d`ye
+        (kilit altındaki TAZE okuma) BAKILMAZ (denetim bulgusu 2026-08-29). Eski kod
+        `int(d.get("_toplam"))` yazıyordu: mesajın kurulmasıyla damganın basılması arasında tam bir
+        `events.jsonl` taraması VE bir ağ POST'u var, ve o pencerede `obs._maybe_notify`ın sayaca
+        yazdığı her alarm, kendisinden HİÇ SÖZ ETMEYEN bir mesajla "kapsandı" damgası yerdi.
+        Sayaçlar asla azalmadığı ve `yeni = toplam - kapsanan` olduğu için o alarm bir daha
+        HİÇBİR özete giremezdi — kalıcı sessiz kayıp. Kardeş betikteki (`oneri_brifingi.py`
+        `son_ts: o["en_yeni"]`) düzeltmenin birebir aynısı; çivi:
+        `test_DIGEST_GONDERIM_PENCERESINDE_ARTAN_SAYAC_KACIRILMAZ`."""
+        d[DAMGA] = {"ts": memory.now_iso(), "toplam_kapsanan": int(o["toplam"])}
         return True
 
     store.update_json(UNDELIVERED, _damgala, {})

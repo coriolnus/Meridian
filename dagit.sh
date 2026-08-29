@@ -7,7 +7,8 @@
 #   [1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
 #   [1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
 #   [F9] dagit-kapsamı-dışı canlı artefaktlar (sprint@ birimi · polkit kuralı · SOUL.md ·
-#        tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya service+timer):
+#        hermes config.yaml · tick-watchdog service+timer · litestream.yml ·
+#        aylık-bucket-kopya service+timer · brifing service+timer):
 #        içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
 #   [2] rsync (state/backups/.venv/.git HARİÇ)
 #   [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
@@ -257,18 +258,26 @@ fi
 # =================================================================================================
 # [F9] DAGİT-KAPSAMI-DIŞI CANLI ARTEFAKTLAR — içerik kapısı (denetim §F9 2026-08-13; kablo 2026-08-23)
 # =================================================================================================
-# DÖRT ARTEFAKT rsync kapsamının DIŞINDA yaşar ve ELLE kurulur (deploy/oracle-a1/deploy.sh):
+# AŞAĞIDAKİ ARTEFAKTLAR rsync kapsamının DIŞINDA yaşar ve ELLE kurulur (deploy/oracle-a1/
+# deploy.sh). SAYI BURADA YAZILI DEĞİL, `F9_LISTE`DE SAYILIR — düzyazıya gömülü bir sayım
+# (eskiden "DÖRT ARTEFAKT" yazıyordu, liste 11'e çıkmıştı) tam da bu kapının kapatmak için var
+# olduğu sürüklenmenin belgeye vurmuş hâlidir. TEK KAYNAK `F9_LISTE`; bu liste onun okunur özeti:
 #   * meridian-sprint@.service  → /etc/systemd/system/     (v241 — sprint'in kendi cgroup birimi)
 #   * 50-meridian-sprint.rules  → /etc/polkit-1/rules.d/   (v241 — NoNewPrivileges altında tetik izni)
 #   * deploy/hermes/SOUL.md     → ~ubuntu/.hermes/SOUL.md  (v242 — hermes brifingi)
+#   * deploy/hermes/config.yaml → ~ubuntu/.hermes/config.yaml  (v326 — ajan güvenlik duruşu:
+#     approvals/deny + guard kancası + skills.external_dirs)
 #   * meridian-tick-watchdog.service + .timer → /etc/systemd/system/  (asılı-tick bekçisi)
-#   * litestream.yml → /etc/litestream.yml (kurulum litestream_kur.sh — 2026-08-23 eklendi, altıncı dosya)
-#   * meridian-aylik-bucket-kopya.service + .timer → /etc/systemd/system/  (E-kod [4] 2026-08-23,
-#     yedinci-sekizinci dosya: aylık bar-arşivi bucket kopyası; kurulumu birim başlığında)
+#   * litestream.yml → /etc/litestream.yml (kurulum litestream_kur.sh — 2026-08-23 eklendi)
+#   * meridian-aylik-bucket-kopya.service + .timer → /etc/systemd/system/  (E-kod [4] 2026-08-23:
+#     aylık bar-arşivi bucket kopyası; kurulumu birim başlığında)
+#   * meridian-brifing.service + .timer → /etc/systemd/system/  (v327 — alarm yığını + öneri
+#     brifingi kadansı; boşken sessiz, arızada `failed`)
 # Bu, OB-2'yi doğuran "kurulu ≠ çalışır" sınıfıdır: repo ilerler, canlı kopya yerinde sayar ve
 # hiçbir kapı bağırmazdı — denetim ölçtü: dagit'te bu dosyalara sıfır atıf vardı. [1c] yalnız
-# *.service YÖNERGELERİNİ kıyaslar; bu kapı BEŞ dosyanın TAM İÇERİĞİNİ kıyaslar (timer/polkit/
-# brifing [1c]'nin tür kapsamının dışındadır, yorum-düzeyi sürüklenme de burada görünür).
+# *.service YÖNERGELERİNİ kıyaslar; bu kapı LİSTEDEKİ HER dosyanın TAM İÇERİĞİNİ kıyaslar
+# (timer/polkit/brifing/yapılandırma [1c]'nin tür kapsamının dışındadır, yorum-düzeyi
+# sürüklenme de burada görünür).
 #
 # KAPI RAPORLAR, ENGELLEMEZ — BİLİNÇLİ: bu artefaktlar dagit'in kopyalama kapsamında DEĞİL;
 # ayrıklıkta dağıtımı durdurmak, elle-kurulum akışını (bakım penceresi + daemon-reload + doğrulama)

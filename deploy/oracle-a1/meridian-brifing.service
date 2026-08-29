@@ -1,3 +1,13 @@
+# meridian-brifing.service — hesaplanmış ama teslim edilmemiş çıktıları operatöre iletir.
+#
+# KİMLİK: `EnvironmentFile=` YOK ve bu BİR EKSİK DEĞİL, ÖLÇÜLMÜŞ BİR SONUÇTUR (2026-08-29, canlı
+# A1). Telegram kimliği ortam değişkeninde değil `state/secrets.json`da yaşıyor ve `notify` onu
+# oradan okuyor: iki betik de `env -i` altında (BOŞ ortamla) kanalı ÇÖZÜYOR. Yani systemd'nin
+# asgari ortamı yeterlidir; bir `EnvironmentFile=-/opt/meridian/.dash.env` satırı burada sıra
+# dışı bir şey KAZANDIRMAZ. Bu not, aynı sorunun bir daha açılmaması için buradadır.
+#
+# KURULUM ELLE — F9 SINIFI (dagit bu dosyayı TAŞIMAZ; içerik kapısı [F9] ayrıklığı RAPORLAR).
+# Adımları `deploy/oracle-a1/deploy.sh` yürütür (sudo cp + daemon-reload + enable --now .timer).
 [Unit]
 # Hesaplanmış ama teslim edilmemiş çıktıları operatöre iletir. İKİSİ DE boşken SESSİZDİR —
 # karar döndürmeyen zamanlanmış iş bildirim spam'idir (spec §8, hata 4).
@@ -9,10 +19,71 @@ Wants=network-online.target
 Type=oneshot
 User=ubuntu
 WorkingDirectory=/opt/meridian
-# İki teslimat AYRI: biri düşerse öteki yine koşar (`;` değil ayrı ExecStart satırları
-# kullanılmadı — systemd ilk başarısızlıkta durur; `-` öneki hatayı yutar ve devam ettirir).
-ExecStart=-/opt/meridian/.venv/bin/python /opt/meridian/ops/alarm_backlog_digest.py --uygula
-ExecStart=-/opt/meridian/.venv/bin/python /opt/meridian/ops/oneri_brifingi.py --uygula
+# TEK ExecStart SARMALAYICI — İKİ ŞARTI AYNI ANDA SAĞLAYAN TEK ŞEKİL (denetim 2026-08-29):
+#   (a) ilk teslimat düşse bile İKİNCİSİ KOŞAR,   (b) HERHANGİ biri düşerse birim `failed` biter.
+# Ayrı `ExecStart=` satırları bunu YAPAMAZ ve eski hâl tam da bu yüzden yanlıştı: `-` öneksiz
+# systemd ilk başarısızlıkta DURUR (b olur, a olmaz); `-` önekiyle çıkış kodu YUTULUR ve birim
+# ASLA `failed` görmez (a olur, b olmaz). Eski dosya `-` önekini kullanıyor VE yorumunda "ayrı
+# ExecStart satırları kullanılmadı" diyordu — oysa tam olarak onları kullanıyordu.
+# NEDEN ÖNEMLİ: ikisi de "kanal yapılandırılmamış"ta 2 döner; "gönderim düştü"de digest 1,
+# öneri brifingi 2 (her betiğin kendi başlığında yazılı — sayılar BİRLEŞİK DEĞİL). Telegram
+# kırılırsa iş HER GÜN sessizce düşer, yığın büyür, ve bunu haber verecek tek mekanizma zaten
+# gönderemeyen işin TA KENDİSİDİR — arızayı görünür kılan tek şey birimin `failed` olmasıdır.
+# `failed`İN OKUYUCUSU VAR, ölçüldü (denetim 2026-08-29; YASA 6 — okuyucusuz sinyal sinyal
+# değildir): `meridian/api.py` `/api/infra` uçları `ActiveState=failed`i "arizali" diye
+# sınıflıyor, yani birim düşerse panoda görünür. `OnFailure=` BİLEREK YOK: ikinci bir bildirim
+# birimi eklemek, teslimat kanalı ZATEN kırıkken çalışmayacak bir yol daha kurmaktır — arıza
+# ÇEKMELİ (panodan bakılır) okunur, İTMELİ değil. Pano da susarsa sorun bu birim değildir.
+# NOT (systemd ikame tuzağı — meridian-backup.service'in ExecStart'ıyla AYNI idiom): $rc → systemd boş
+# geçirirdi; `$$` ile kaçırıldı, sh'a `$rc` ulaşır. En kötü (en büyük) çıkış kodu yayılır.
+ExecStart=/bin/sh -c 'rc=0; /opt/meridian/.venv/bin/python /opt/meridian/ops/alarm_backlog_digest.py --uygula || rc=$$?; /opt/meridian/.venv/bin/python /opt/meridian/ops/oneri_brifingi.py --uygula || { r2=$$?; [ $$r2 -gt $$rc ] && rc=$$r2; }; exit $$rc'
 
-[Install]
-WantedBy=multi-user.target
+# ==================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (meridian.service · meridian-sprint@.service ·
+# meridian-learn.service · meridian-backup.service · meridian-aylik-bucket-kopya.service ile
+# BİREBİR). Gerekçelerin TAM METNİ meridian.service'tedir; burada YALNIZ ayrışan kalem yazılıdır.
+# Dışarıda bırakılanlar (MemoryDenyWriteExecute · PrivateDevices · PrivateUsers · ProtectProc/
+# ProcSubset · IPAddressDeny · SystemCallErrorNumber=EPERM) ve gerekçeleri: meridian.service.
+# BU BİRİM NEDEN SERTLEŞTİRİLİR: filoda sertleştirmesi HİÇBİR YERDE olmayan TEK birimdi (denetim
+# 2026-08-29 — tick-watchdog ve fail-notify sertleştirilmiştir, yalnız birim İÇİNDE değil kendi
+# `.service.d/` drop-in'lerinde; ölçüm o dizinlerde yapıldı, varsayılmadı). Maruziyeti
+# kardeşleriyle aynı sınıftadır: aynı `.venv`i, aynı kod tabanını, aynı kullanıcıyla koşturur ve
+# `state/secrets.json`u OKUR (Telegram kimliği oradan gelir).
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA — ReadWritePaths BURADA DAR: ne `~/.hermes` ne `~/.cache`. ÖLÇÜM (yazan yollar):
+#     iki betik de yalnız `state/` altına yazar (`notify_undelivered.json` damgası,
+#     `oneri_brifingi_damga.json`, `events.jsonl` → obs.log) ve import anında `__pycache__` —
+#     hepsi /opt/meridian altındadır. `~/.hermes` YOK: bu betikler LLM/ajan ÇAĞIRMAZ.
+#     `~/.cache` YOK: ExecStart `uv` DEĞİL, doğrudan `.venv/bin/python` (uv önbelleği hiç açılmaz).
+ReadWritePaths=/opt/meridian
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# Bu birim AĞA ÇIKAR (Telegram POST) — liste kardeşlerle BİREBİR aynı; AF_NETLINK'in bilerek
+# dışarıda oluşunun gerekçesi meridian.service'te.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+# [Install] BÖLÜMÜ BİLEREK YOK — tetik YALNIZ meridian-brifing.timer'dır.
+# Burada bir `WantedBy=multi-user.target` dururken `systemctl enable meridian-brifing.service`
+# SESSİZCE başarılı olur ve birime kimsenin istemediği bir AÇILIŞ KOŞUMU ekler: timer kadansının
+# dışında, `Persistent=true` telafisiyle karışan ikinci bir tetik. Bölüm yokken aynı komut
+# "no installation config" diye DÜŞER — operatör hatası sessiz davranış değişikliği değil,
+# görünür bir hata olur. deploy.sh zaten yalnız `.timer`ı enable eder (orada da yazılı).
+# FİLO ÖLÇÜMÜ: timer-tetikli oneshot kardeşlerden meridian-backup.service ve
+# meridian-tick-watchdog.service de `[Install]` TAŞIMIYOR (meridian-aylik-bucket-kopya.service
+# taşıyor — konvansiyon filoda ayrık; çalışan o birimi bu turda değiştirmek kapsam dışı).
+# Çivi: tests/test_brifing_kadansi_v327.py::test_BIRIM_YANLISLIKLA_ENABLE_EDILEMEZ

@@ -1112,11 +1112,32 @@ cd /opt/meridian && bash deploy/oracle-a1/deploy.sh
 Not: normalde bu betiği ELLE koşman gerekmez — yereldeki cutover.sh (aynı dizinde) durdurma +
 rsync + bu betik + token + doğrulama sırasını tek komutta yürütür.
 
-DAGİT KAPSAMI DIŞI DÖRT CANLI ARTEFAKT (F9): `meridian-sprint@.service` · `50-meridian-sprint.rules`
-(polkit) · `deploy/hermes/SOUL.md` (→ ~/.hermes/SOUL.md) · tick-watchdog (service + timer).
-Bu dört dosya dagit kapsamı dışıdır, ELLE kurulur — kurulum adımları bu betiğin gövdesindedir
-(sudo cp + daemon-reload); dagit.sh [F9] içerik kapısı her dağıtımda repo↔canlı sürüklenmesini
-RAPORLAR (engellemez — kurulum kararı ve bakım penceresi operatörün).
+DAGİT KAPSAMI DIŞI CANLI ARTEFAKTLAR (F9) — dagit BU DOSYALARI TAŞIMAZ, ELLE kurulur;
+ÇOĞUNUN kurulum adımı bu betiğin gövdesindedir (sudo cp + daemon-reload); İSTİSNALAR aşağıda
+ADIYLA işaretli — litestream.yml (`litestream_kur.sh`) ve aylık bucket kopyası (kendi birim
+başlığı) bu betikte KURULMAZ; "hepsi buradadır" demek onları görünmez kılardı. dagit.sh [F9]
+içerik kapısı her dağıtımda repo↔canlı sürüklenmesini RAPORLAR (engellemez — kurulum kararı ve
+bakım penceresi operatörün).
+SAYI DÜZYAZIYA GÖMÜLMEZ. Bu başlık bir zamanlar "DÖRT ARTEFAKT" diyor ve dördünü sayıyordu;
+`F9_LISTE` bu arada 11 çifte çıktı ve başlık sessizce yalan oldu — üstelik bayatlayan taraf tam
+da operatörün KURULUM adımlarını okuduğu yerdi. Tek kaynak dagit.sh `F9_LISTE`dir; aşağısı onun
+okunur özetidir ve kapsaması çivilidir
+(tests/test_dagit_f9_beyan_v266.py::test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR
+— listedeki her ad burada geçmek ZORUNDA; sayı ölçülmez, KAPSAMA ölçülür):
+* meridian-sprint@.service          → /etc/systemd/system/        (v241 sprint cgroup birimi)
+* 50-meridian-sprint.rules          → /etc/polkit-1/rules.d/      (v241 tetik izni)
+* deploy/hermes/SOUL.md             → ~ubuntu/.hermes/SOUL.md     (v242 hermes brifingi)
+* deploy/hermes/config.yaml         → ~ubuntu/.hermes/config.yaml (v326 ajan güvenlik duruşu)
+* meridian-tick-watchdog.service    → /etc/systemd/system/        (asılı-tick bekçisi)
+* meridian-tick-watchdog.timer      → /etc/systemd/system/        (aynı bekçinin tetiği)
+* litestream.yml                    → /etc/litestream.yml         (litestream_kur.sh, 2026-08-23)
+* meridian-aylik-bucket-kopya.service → /etc/systemd/system/      (aylık bar-arşivi bucket
+kopyası; kurulumu KENDİ birim başlığındadır, bu betikte değil)
+* meridian-aylik-bucket-kopya.timer → /etc/systemd/system/        (aynı kopyanın tetiği)
+* meridian-brifing.service          → /etc/systemd/system/        (v327 brifing kadansı)
+* meridian-brifing.timer            → /etc/systemd/system/        (kadansın tek tetiği)
+KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
+listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 ```
 
 ## `deploy/oracle-a1/h3_tur2_sertlestir.sh` {#deploy-oracle-a1-h3-tur2-sertlestir-sh}
@@ -1269,7 +1290,8 @@ dagit.sh — Meridian GENEL dağıtım betiği (WP-H/H2 kapılı). Tek-seferlik 
 [1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
 [1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
 [F9] dagit-kapsamı-dışı canlı artefaktlar (sprint@ birimi · polkit kuralı · SOUL.md ·
-tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya service+timer):
+hermes config.yaml · tick-watchdog service+timer · litestream.yml ·
+aylık-bucket-kopya service+timer · brifing service+timer):
 içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
 [2] rsync (state/backups/.venv/.git HARİÇ)
 [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)

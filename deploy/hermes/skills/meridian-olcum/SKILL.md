@@ -1,7 +1,7 @@
 ---
 name: meridian-olcum
 description: Meridian olay/artefakt sorgularında tahmin yerine ops/olcum.py kullan
-version: 1.3.0
+version: 1.4.0
 metadata:
   hermes:
     tags: [meridian, olcum, teshis]
@@ -21,13 +21,14 @@ metadata:
 
     /opt/meridian/.venv/bin/python /opt/meridian/ops/olcum.py olay <desen>
 
-Çıktının SON İKİ satırı her koşumda — bulgu olsun ya da olmasın — şunu söyler:
+Çıktının SON ÜÇ satırı her koşumda — bulgu olsun ya da olmasın — şunu söyler:
 
     # taranan kapsam: meridian/**/*.py, ops/**/*.py (N dosya) — BU KAPSAMIN DIŞI GÖRÜLMEDİ; …
     # çözülemeyen çağrı yeri: M (ad çalışma zamanında belirleniyor)
+    # ayrıştırılamayan dosya: K (açıldı ve kapsam sayısına girdi ama parse EDİLEMEDİ — …)
 
-Bu iki satırı GÖRMEZDEN GELME. Aşağıdaki "Kapsam" ve "Doğrulama" bölümleri neden bir cevabın
-ancak bu iki satırla birlikte okunabileceğini anlatıyor.
+Bu üç satırı GÖRMEZDEN GELME. Aşağıdaki "Kapsam" ve "Doğrulama" bölümleri neden bir cevabın
+ancak bu üç satırla birlikte okunabileceğini anlatıyor.
 
 ## Kapsam — araç NEREYE bakıyor (ve nereye BAKMIYOR)
 
@@ -35,7 +36,7 @@ Araç **`meridian/` ve `ops/`** altındaki **`*.py`** dosyalarını statik olara
 iddiası DEĞİL, bir SINIR beyanıdır. **Bu kapsamın dışında basılan bir olayı araç GÖRMEZ** — ve
 görmediğini hiçbir sayaca da yazamaz, çünkü açılmayan dosya hiçbir kovaya düşmez.
 
-Sınır DOSYA TÜRÜNÜ de kapsar, sadece dizini değil. Ölçülmüş örnek: `ops/keepalive.sh:46` canlı bir
+Sınır DOSYA TÜRÜNÜ de kapsar, sadece dizini değil. Ölçülmüş örnek: `ops/keepalive.sh` canlı bir
 alarmı KABUKTAN basıyor —
 
     .venv/bin/python -c "from meridian import obs; obs.alarm('MECHANISM_STALE', …)"
@@ -81,8 +82,8 @@ YAYGIN bir kalıp — 44 çağrı yeri, düzinelerce takma ad (`_obs`, `_o`, `_o
 **Tuzak 4 — aracın KENDİSİ, KAPSAM (2026-08-29).** Tuzak 3'ten sonra bu belge, sayacın "her NE
 olursa olsun çözemediğimiz her şeyi" kapsadığını söylüyordu. Ölçüm bunu yalanladı:
 
-    olay oneri_brifingi_teslim        → OLAY YOK   (gerçekte: ops/oneri_brifingi.py:112)
-    olay alarm_backlog_digest_teslim  → OLAY YOK   (gerçekte: ops/alarm_backlog_digest.py:131)
+    olay oneri_brifingi_teslim        → OLAY YOK   (gerçekte: ops/oneri_brifingi.py)
+    olay alarm_backlog_digest_teslim  → OLAY YOK   (gerçekte: ops/alarm_backlog_digest.py)
 
 İkisi de canlı olay, ikisi de mümkün olan EN DÜZ biçim (`obs.log("literal", …)`). Çözümleyicide
 hiçbir eksik yoktu — araç `ops/` dizinini HİÇ AÇMIYORDU. Sayaç da kıpırdamıyordu: **okunmayan bir
@@ -106,7 +107,7 @@ gerçek olurdu. `codelaw.artifact_graph()` kullan.
 
 **Boş liste (0 sonuç) TEK BAŞINA "olay yok" KANITI DEĞİLDİR.** Sıfır sonucun anlamı şudur ve
 yalnızca şudur: *bu desene uyan bir olay, TARANAN KAPSAM İÇİNDE, statik olarak ÇÖZÜLEBİLEN çağrı
-yerlerinde bulunamadı.* "Böyle bir olay yoktur" demek DEĞİLDİR. Üç ayrı neden vardır ve araç
+yerlerinde bulunamadı.* "Böyle bir olay yoktur" demek DEĞİLDİR. DÖRT ayrı neden vardır ve araç
 hangisi olduğunu ayırt EDEMEZ:
 
 1. Böyle bir olay gerçekten yok — aradığın bir ALAN adı olabilir (Tuzak 1).
@@ -115,6 +116,15 @@ hangisi olduğunu ayırt EDEMEZ:
 3. Olay kapsamın DIŞINDA basılıyor → araç oraya hiç bakmadı, **hiçbir sayaca da düşmez**
    (Tuzak 4). Bu "başka bir dizin" olabileceği gibi `ops/` altındaki bir **`.sh`** de olabilir
    (yukarıdaki `keepalive.sh` örneği).
+4. Olay kapsam İÇİNDEKİ bir dosyada ama o dosya PARSE EDİLEMEDİ → `# ayrıştırılamayan dosya: K`.
+   Bu, Tuzak 4'ün dosya granülerliğindeki hâlidir: dosya "taranan kapsam" SAYISINA girer (yani
+   kapsam satırı onu taradım diye beyan eder) ama içindeki çağrılar hiçbir sayaca düşmez.
+   **`K > 0` gördüğün bir koşumda sıfır sonuç "bulunamadı" bile DEĞİLDİR** — önce o dosyayı elle aç.
+
+**Bu belgede bilerek SATIR NUMARASI YOK, yalnız dosya adı var.** `.md` dosyaları bu deponun çapa
+tarayıcılarının hiçbirinin kapsamında değildir: buraya gömülen bir `dosya.py:123`, dosyanın her
+düzenlemesinde SESSİZCE bayatlar ve hiçbir kapı ötmez. Konusu "bayat iddiaya güvenme" olan bir
+belgede bayatlayabilen bir iddia bulunmaz. Sembolü ara, satırı değil.
 
 `# çözülemeyen çağrı yeri: M` bir ÇIKARMADIR: (açılan dosyalarda metod adı log/warn/error/alarm
 olan TÜM çağrı yerleri, ALICI FARK ETMEKSİZİN) − (gerçekten çözülenler). Bu, **kapsam içinde**
@@ -124,13 +134,15 @@ göremez; (b) `obs`a hiç bağlı olmayan `np.log(...)` / `ap.error(...)` gibi �
 karışır (belirsizliği FAZLA beyan etmek dürüsttür; AZ beyan etmek dört tuzağın da kök nedeniydi).
 Yani `M`, "kaç gerçek olay eksik" sorusunun cevabı DEĞİL, "kaç çağrı yeri BELİRSİZ" sorusununkidir.
 
-**Okuma kuralı.** Aradığını bulamadıysan, önce iki satıra bak:
+**Okuma kuralı.** Aradığını bulamadıysan, önce o üç satıra bak:
 
 - `M > 0` ise → aradığın şey o M çağrının içinde SAKLI olabilir. Deseni daraltmak YETMEZ; ilgili
   kaynak dosyada `obs`a (veya bir takma adına) giden çağrıyı ELLE bulup ilk argümanının nereden
   geldiğine bak.
 - Kapsam satırındaki kökler aradığın kodu içermiyorsa → araç o dosyaya HİÇ BAKMADI. Cevap
   "olay yok" değil, "bakılmadı"dır; o dosyayı elle aç.
+- `K > 0` ise → kapsam içindeki bir dosya AÇILDI ama okunamadı. Hangisi olduğunu araç söylemez;
+  `python -m compileall -q meridian ops` onu adıyla verir.
 
 Sıfır dönen bir arama gördüğünde **"araç arıza olmadığını söyledi" SONUCUNU ÇIKARMA** — araç bunu
 hiçbir zaman iddia etmiyor.

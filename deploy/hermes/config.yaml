@@ -38,8 +38,19 @@ approvals:
   cron_mode: deny            # başsız cron tehlikeli komutu ONAYLAMAZ — pazarlığa kapalı
   deny:                      # fnmatch; --yolo'da BİLE geçersiz
     - "*dagit.sh*"           # dağıtım yalnız Rol-1'in (CLAUDE.md madde 5)
-    - "git push*"
-    - "git commit*"          # CLAUDE.md madde 8'in makine karşılığı
+    # İKİ YANDAN SARILI — ÖLÇÜLMÜŞ DELİK (denetim 2026-08-29): bunlar `git push*` / `git commit*`
+    # diye ÖN EKE ÇAKILIYDI ve fnmatch TÜM DİZGEYİ eşlediği için `cd /opt/meridian && git push`,
+    # `/usr/bin/git push` ve baştaki tek boşluk yasağın ALTINDAN geçiyordu. Listedeki öteki üç
+    # desen zaten sarılıydı; yasak bir KOMUTU yasaklar, komutun satır başında olmasını değil.
+    - "*git push*"
+    - "*git commit*"         # CLAUDE.md madde 8'in EN KESKİN İKİ kalemi. Madde 8 "ajanlar git
+    #                          komutu KOŞMAZ" der, yani liste maddenin TAMAMI DEĞİL: `git tag`,
+    #                          `git reset --hard`, `git checkout` hâlâ geçer. Kapsamı KASITLI dar
+    #                          tutuldu — `*git*` okuma komutlarını da (log/diff/status) bloklardı
+    #                          ve ajanın kendi işini görmesini engellerdi. Geri kalanı prompt
+    #                          düzeyinde kalıyor; bu bir kapı değil, en pahalı ikisine çekilmiş
+    #                          bir çit. Genişletmek isteyen ölçsün: hangi git komutu geri
+    #                          alınamaz bir dış etki üretir?
     - "*systemctl*"
     - "*serve.sh*"           # CLAUDE.md madde 5: yerelde koşma, çift-emir riski
 
