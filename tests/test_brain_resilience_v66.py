@@ -681,7 +681,7 @@ def test_the_ceiling_stays_under_the_measured_provider_limits(seeded):
 # v97 gemini'de, v325/v326 portal ayağında kapattı. CLAUDE ayağı LATENT duruyordu ve operatör
 # kapatılmasını istedi. Kusur ikizinin aynısı, iki bacaklı:
 #   (1) TAVAN: `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
-#       (hermes.py:491) onu ARGÜMANSIZ çağırır → 4000'e düşer. Üstelik gövde
+#       (`propose_with_claude`) onu ARGÜMANSIZ çağırır → 4000'e düşer. Üstelik gövde
 #       `thinking={"type": "adaptive"}` + `output_config={"effort": "high"}` gönderir, yani bu
 #       ayak da DÜŞÜNEN bir yapılandırmadır: düşünce tokenları `max_tokens` tavanından yenir
 #       (Anthropic sözleşmesi: `max_tokens` modelin BİLMEDİĞİ, dayatılan bir yanıt tavanıdır).

@@ -725,7 +725,8 @@ NOUS_OLCULEN_TOK_SN = 25.8            # ultra-550b:free, ölçüm §3 — EN YAV
 NOUS_TIMEOUT_S = float(os.environ.get("HERMES_NOUS_TIMEOUT_S", "900"))
 # ASENKRON ŞARTI DOĞRULANDI (§6 tablosu bu satır için "yalnız async" der): `_nous_text`in iki
 # çağıranı da arka plandadır — `_reflect_once_govde` (operatör tetiği `reflect_now()` ARKA PLAN
-# İŞ PARÇACIĞI açıp hemen döner, hermes_runtime.py:606) ve `nous_eval` (haftalık kadans). Yani bu
+# İŞ PARÇACIĞI açıp hemen döner, `hermes_runtime.reflect_now`) ve `nous_eval` (haftalık
+# kadans). Yani bu
 # zaman aşımı hiçbir HTTP isteğini bloklamaz. Senkron bir çağıran eklenirse bu satır YENİDEN ölçülür.
 
 # AKIL YÜRÜTME KOLU — VARSAYILAN KAPALI, BİLEREK. OpenRouter'ın `reasoning` parametresinin bu uçtaki

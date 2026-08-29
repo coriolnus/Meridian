@@ -62,6 +62,23 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **KENDİ DÜZELTMEMİN ÇAPALARI BAYATLADI — CI YAKALADI, YEREL KOŞUM YAKALAMADI (2026-08-29):**
+  `test_ihlal_seti_GERILEMEDI` üç ardışık commit'te CI'da kırmızıydı. Sebep tam da `codelaw`ın
+  kovaladığı sınıf: çivi yorumuma `hermes.py:491` diye bir SATIR çapası yazmıştım, sonra AYNI
+  dosyaya sabit bloğu ekledim ve `propose_with_claude` 491'den 522'ye kaydı — yani çapayı bayatlatan
+  şey benim kendi düzeltmemdi. `codelaw.py`nin kendi notu bunu zaten yasaklıyordu: "ÇAPA SATIR
+  DEĞİL SEMBOL"; o not, iki nokta üst üsteli biçimin (`dosya.py:NNN`) tarayıcıya CANLI çapa
+  göründüğünü ve bir kez "anlatının, anlattığı şeyin kurbanı" olduğunu da yazıyor.
+  **DÜZELTME:** iki çapa da SEMBOLE çevrildi (`propose_with_claude`, `hermes_runtime.reflect_now`)
+  — biri ÇİVİLENMİŞTİ, öbürü henüz çözülüyordu ama aynı sınıftaydı: bile bile mayın bırakılmaz.
+  Belgedeki satır alıntıları da sembole çevrildi (aynı sebep; `.md` taranmıyor ama sayı ARTIK
+  YANLIŞTI).
+  **NEDEN YEREL KOŞUM KAÇIRDI:** kapsam testlerim (`brain_resilience`, `uiux`, `tipografi`,
+  `etkilenen_testler`) `codelaw` çivisini İÇERMİYORDU ve `ops/etkilenen_testler.sh` motor kaynağı
+  değiştiği için ZATEN "tam suite gerekli" diyordu — yani seçici doğru söylüyordu, ben tam suite'i
+  arka planda başlatıp SONUCUNU BEKLEMEDEN commit'ledim. Ders: motor kaynağına dokunan bir turda
+  push, tam suite sonucundan ÖNCE atılırsa CI onu benim yerime bulur.
+
 - **ÇAPA TANIMI İKİ YERDE İKİ TÜRLÜYDÜ — DÜZYAZI HAYALET ÇAPA BEYAN EDEBİLİYORDU (2026-08-29;
   sınıf: "iki kopya sessizce ayrışır", bu deponun tekrar eden sınıfı):** günlükte bash dizi-uzunluğu
   ifadesinden söz eden bir cümle (`ops/runbook_uret.py` günlük maddelerini AYNEN kopyalar) belgeye
@@ -70,7 +87,7 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   **KÖK NEDEN İLK HİPOTEZ DEĞİLDİ.** Görev kartım "kod aralıklarını ayıkla" diyordu ve ÜÇ yerin
   (`test`, `runbook_uret`, `api`) hizalanması gerektiğini varsayıyordu. ÖLÇÜM ikisini de çürüttü:
   `meridian/api.py::_MD_BASLIK` — `/runbook`u GERÇEKTEN çizen ayrıştırıcı — çapayı `^#{1,3} ...
-  {#x}$` diye, yani **BAŞLIK SONEKİ** olarak tanır ve `id=` YALNIZ oradan doğar (api.py:1084-1088);
+  {#x}$` diye, yani **BAŞLIK SONEKİ** olarak tanır ve `id=` YALNIZ oradan doğar (`api._md_render`in başlık dalı);
   `ops/runbook_uret.py` de çapayı yalnız başlık satırlarına YAZAR (475/697/718) ve hiç TÜKETMEZ.
   Yani üretici ile oluşturucu **zaten aynı fikirdeydi**; ayrışan TEK yer testteki `_capalar()`tı:
   belgenin TAMAMINDA `{#...}` arıyordu. Üstelik aynı dosyanın 223. satırındaki kardeşi ZATEN
@@ -94,7 +111,7 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 - **SINIFIN ÜÇÜNCÜ AYAĞI DA KAPANDI — CLAUDE BACAĞI (2026-08-29; operatör istedi, önceki turda
   "latent, bilerek dokunulmadı" diye açık bırakılmıştı):** kusur ikizlerinin aynısı, iki bacaklı.
   **(1) TAVAN:** `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
-  (hermes.py:491) onu **ARGÜMANSIZ** çağırıyordu → 4000'e düşüyordu. Üstelik gövde
+  (`propose_with_claude`) onu **ARGÜMANSIZ** çağırıyordu → 4000'e düşüyordu. Üstelik gövde
   `thinking={"type": "adaptive"}` + `output_config={"effort": "high"}` gönderir, yani bu ayak da
   **DÜŞÜNEN** bir yapılandırmadır; Anthropic sözleşmesinde `max_tokens` modelin BİLMEDİĞİ, dayatılan
   bir yanıt tavanıdır ve düşünce o tavandan yenir. Gemini AYNI yansıma prompt'unda 3838 düşünce
@@ -190,7 +207,7 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   yakalandı (zaman aşımını 120'ye geri al · tavanı yükselt ama zaman aşımını türetme · tavanı
   sağlayıcı sınırının üstüne çıkar). **ASENKRON ŞARTI DOĞRULANDI:** §6 tablosu bu satır için
   "yalnız async" der; `_nous_text`in iki çağıranı da arka plandadır (`reflect_now()` arka plan iş
-  parçacığı açıp HEMEN döner, hermes_runtime.py:606; `nous_eval` haftalık kadans), yani 889 sn
+  parçacığı açıp HEMEN döner, `hermes_runtime.reflect_now`; `nous_eval` haftalık kadans), yani 889 sn
   hiçbir HTTP isteğini bloklamaz. Senkron çağıran eklenirse yeniden ölçülmeli.
   **DERS:** "tavanı yükselt" tek başına bir düzeltme değildi; bağlayan tarafın HANGİSİ olduğu
   ölçülmeden seçilen her iki sayı da keyfîdir.
@@ -218,9 +235,9 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
       `hermes_brain_empty(reason=unparseable)` / `nous_chain_empty` satırı var mı.
   (2) **AYNI SINIF CLAUDE AYAĞINDA LATENT DURUYOR (bu turda BİLEREK dokunulmadı — kapsam
       genişletmesi olurdu):** `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
-      (hermes.py:491) onu **argümansız** çağırır, yani 4000'e düşer — üstelik gövde
+      (`propose_with_claude`) onu **argümansız** çağırır, yani 4000'e düşer — üstelik gövde
       `thinking={"type": "adaptive"}` gönderir, yani o ayak da DÜŞÜNEN bir yapılandırmadır ve gemini'nin
-      3838 ölçtüğü AYNI yansıma prompt'unu kullanır. `chain_text`in claude ayağı 8000 geçer (hermes.py:4463),
+      3838 ölçtüğü AYNI yansıma prompt'unu kullanır. `chain_text`in claude ayağı 8000 geçer,
       `propose_with_claude` GEÇMEZ. Ayrıca `stop_reason="max_tokens"` → `EMPTY_TRUNCATED` eşlemesi orada
       da YOK. Bugün canlıda tetiklenmiyor (sistem haritası: "claude bacağı kimliksiz") — bu yüzden
       ACİL değil, ama kimlik girildiği gün sınıf üçüncü kez doğar.
