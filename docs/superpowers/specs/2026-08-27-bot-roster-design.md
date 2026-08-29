@@ -45,10 +45,13 @@ Liste **doygun**: son iki tur yeni sınıf değil varyant üretti. Genişletilme
 4. Ölçülmüş boşluk mu?
 5. Zayıf modelde çalışır mı?
 
-## 2. İlk dalga: 7 bot
+## 2. Hedef roster: 7 rol
+
+**DİKKAT — bunlar ROL, profil DEĞİL.** Kaç tanesinin kendi Hermes
+profili olacağı §3'ün kararıdır; cevap uzun süre **bir** olabilir.
 
 Seçim ölçütü "en faydalı yedi" değil, **birbirinden en farklı yedi** — her biri ayrı bir
-mimari kalıbı kanıtlar ve dört amacın hepsi kapsanır.
+mimari kalıbı kanıtlar ve dört amacın hepsi kapsanır. Sıra §3'te.
 
 | bot | kanıtladığı kalıp | amaç |
 |---|---|---|
@@ -63,22 +66,57 @@ mimari kalıbı kanıtlar ve dört amacın hepsi kapsanır.
 **Değişmez şart:** her bot, **okuyucusu beyan edilmiş** bir artefaktın tek yazarı olarak doğar.
 `codelaw` bunu zorlar. Böylece "kimsenin okumadığı çıktı" arızası yapısal olarak imkânsızlaşır.
 
-## 3. Fazlar
+## 3. Fazlar — İŞ AKIŞI ÖNCE, PROFİL SONRA
+
+**Bu sıra 2026-08-27'de DEĞİŞTİ.** Eski hâli "ilk dalgada 7 profil" idi. Kaynak ve gerekçe §8'de:
+kanıt, planımızın tam bu noktasını çürüttü.
 
 **Faz 0 — tesisat** *(iki arka plan görevi koşuyor)*
 - uydurma maliyet: `price_for()` `:free` modelleri tanımıyor, Opus fiyatına düşüyor
-- `max_tokens` + `timeout` birlikte: ölçüm `docs/OLCUM-MODEL-BUTCESI-2026-08-27.md`
+- `max_tokens` + `timeout` BİRLİKTE: ölçüm `docs/OLCUM-MODEL-BUTCESI-2026-08-27.md`
 
-**Faz 1 — `@kod` **VE** var olanı teslim et** *(paralel, çakışmıyorlar)*
-- `@kod`: okuma tarafını kurar. Talep üzerine, bildirim üretmez, tüketicisi garantili.
-- Teslimat: 310 alarm · `self_review.json` · `improvement_proposals.jsonl` (16 öneri) —
-  hepsi HESAPLANMIŞ, hiçbiri teslim edilmemiş. `ops/alarm_backlog_digest.py` yazılmış, koşmuyor.
+Tesisat inmeden üstüne bot koymak, ölçülen **%54 kesilme** oranına yatırım yapmaktır.
 
-**Faz 2 — kalan altı bot.** Zincir kanıtlandıktan sonra, `@kod` zemininin üstünde.
+**Faz 1 — İŞ AKIŞI. YENİ PROFİL YOK.** Her şey ana profilde kanıtlanır.
+- **BİR skill:** tekrarlayan ölçüm kalıbı (ssh + journalctl + state okuma + olay adını
+  KODDAN bulma). Ölçüldü: bu oturumda ~60 komut, beş kalıp, iki sahte-sıfır.
+- **BİR zamanlanmış iş, ve KARAR döndürür:** 310 teslim edilmemiş alarm +
+  `self_review.json` + `improvement_proposals.jsonl` (16 öneri) → tek brifing.
+  **Hiçbir şey yoksa SESSİZ.** Hepsi zaten hesaplanmış; `ops/alarm_backlog_digest.py`
+  yazılmış ama koşmuyor.
 
-## 4. AÇIK KARAR — `@kod`un zemini
+Bu faz teslimat zincirinin tamamını sınar (Telegram bağlama, yönlendirme, dikkat bütçesi) ve
+hiçbir yeni üretici eklemez — bu sistemin ölçülmüş hastalığı üretmemek değil, ürettiğini
+okumamaktır.
 
-Tek kalan tasarım sorusu.
+**Faz 2 — İLK profil.** Faz 1'de iş akışı kanıtlanmış olan. Tek.
+
+**Faz 3 — kalan roster**, her biri kanıtlandıkça.
+
+## 4. `@kod`un zemini — KARAR: hafif başla, tetikle yükselt
+
+Kanıtın hafıza yığını (§8) bu soruyu büyük ölçüde cevaplıyor ve içinde **kod grafiği yok**:
+
+> sabit olgu → **hafıza** · prosedür → **skill** · uzun araştırma notu → **wiki** ·
+> geçmiş konuşma → **oturum araması**
+
+Meridian'ın şerh külliyatı ve `docs/` tam olarak "uzun araştırma notu"dur.
+
+**Seçim: `qmd` + `codelaw` + `/learn` + `session_search`.**
+`qmd` official/MIT, yerel, MCP, **tünel yok**; `codelaw` artefakt grafiğini zaten tutuyor.
+Ayak izi: bir yerel gömme modeli. A1'e genç bağımlılık girmiyor.
+
+**ELENEN — `official/research/gitnexus-explorer`:** Cloudflare tüneli gerektiriyor ve
+`cloudflared`ı **otomatik kuruyor**. Alpaca anahtarlarının durduğu makineye tünel açmak ayrı
+ve bilinçli bir karar olmalı. Ayrıca insan için görsel arayüz, ajan için sorgu API'si değil.
+
+**ENGRAPHIS'E YÜKSELTME TETİĞİ** (his değil, sayı): bir soru **getirme** ile değil **gezinme**
+ile cevaplanıyorsa — *"bunu kim çağırıyor"*, *"bu neyi besliyor"*, *"bu sembolü hangi commit
+getirdi"* — ve bu **üç kez** tekrarlanmışsa, Engraphis kurulur. Ölçüm: 2026-08-27'de beş
+gerçek sorudan yalnız biri o sınıftaydı, o da diller arası olduğu için Engraphis'in de tam
+çözmesi şüpheliydi.
+
+### Eski seçenek karşılaştırması (kayıt)
 
 | seçenek | ne getirir | riski |
 |---|---|---|
@@ -114,7 +152,108 @@ GERÇEKTEN YAZILACAK   okuma · yorumlama · teslimat katmanı  +  @hipotez'in b
 ```
 
 ## 7. Açık kalanlar
-- [ ] `@kod` zemin seçimi (§4)
-- [ ] Faz 1 teslimat kanalı: Telegram bağlama + bot başına yönlendirme
-- [ ] Güvenlik duruşu: `approvals.cron_mode: deny` · `approvals.deny` · `HERMES_WRITE_SAFE_ROOT`
-- [ ] Botların depoya yazma yetkisi (soruldu, cevaplanmadı)
+- [x] ~~`@kod` zemin seçimi~~ → §4
+- [x] ~~Faz 1 teslimat kanalı~~ → §9.1
+- [x] ~~Güvenlik duruşu~~ → §9.2
+- [x] ~~Botların depoya yazma yetkisi~~ → §9.3
+- [ ] **Faz 2'ye ertelendi:** operatör botlarla KONUŞMAK istiyor mu? (Hermes gateway + ayrı
+      bir Telegram bot token'ı gerekir — aynı token'a iki dinleyici çakışır.)
+
+## 8. Kaynak: "Learn 95% of Hermes Agent in 31 Minutes" (Sharbel A., 31:28)
+
+Transkriptin tamamı okundu (303 segment). Bağımsız bir kaynak olduğu için ayrı tutuluyor.
+
+**DOĞRULADIKLARI** — bizim analizimize bağımsız destek:
+- Hafıza yığını (§4'te alıntılandı). Kod grafiği içermiyor.
+- İstisna izleme: *"yalnız önemli bir şey değiştiğinde uyandır… hiçbir şey olmayınca sessiz
+  kal, ve yalnız hüküm gerektiğinde token harca."* — `@nobet` için önerdiğimiz desenin aynısı.
+- Model kuralı: *"En iyi model hangisi diye sorma; bu model hangi işte iyi olmalı diye sor."*
+- Geliştirici/ops işi, ajanın deponun yanında yaşaması: kurulacak ilk ciddi iş akışı olarak
+  sayılıyor.
+
+**ÇÜRÜTTÜĞÜ — ve planımız buna göre değişti:**
+> *"Mistake six: building profiles before workflows. Do not create five specialist agents
+> before you know what those specialist agents are actually here to do."*
+
+Yedi günlük plan da aynı sırayı veriyor: gün 3 **bir** skill · gün 5 KARAR döndüren **bir**
+zamanlanmış iş · gün 6 **bir** subagent akışı · gün 7 **İLK** uzman profili.
+
+Karşı argüman tartıldı ve kısmen geçerli: uyarı "ne işe yaradığını bilmeden" diyor, biz ise
+rolleri ölçülmüş boşluklara dayandırdık. Ama daha derin nokta ayakta kalıyor — **profil bir
+KAPtır**; içine gireceği iş akışı ana profilde kanıtlanmadan kap yapmak, boş kap yapmaktır.
+Ve bu, bizim kendi ölçtüğümüz "okunmayan çıktı" arızasıyla aynı yöne bakıyor.
+
+**BİZE ÖZEL UYARI** — hata 3: *"zor iş için en ucuz modeli kullanmak: zayıf model, güçlü
+modelin baştan tutacağı parayı yeniden denemelerde harcar."* Ölçümümüz bunun faturası:
+7/13 kesilme + 709 `agent_call_empty` + 459 `review_fallback_empty`.
+
+**Diğer hatalar:** (1) çok erken çok araç · (2) her şeyi hafızaya yazmak · (4) her fikri cron
+yapmak — *"karar ve çıktı döndürmeyen zamanlanmış iş, bildirim spam'idir"* · (5) subagent
+çıktısını doğrulamadan güvenmek · (7) *"iyi talimat, iyi araç, iyi hafıza, iyi skill, iyi
+DOĞRULAMA — asıl oyun bu."*
+
+## 9. Güvenlik ve yetki duruşu (2026-08-27 kararları)
+
+### 9.0 Ölçülen mevcut durum
+
+```
+approvals            HİÇ TANIMLI DEĞİL → varsayılana düşüyor
+terminal             tanımlı değil → local (konteyner izolasyonu yok)
+security             tanımlı değil
+hooks_auto_accept    true
+pre_tool_call        → /opt/meridian/ops/meridian-guard.sh
+```
+
+`meridian-guard.sh` kapı yasasını HARNESS düzeyinde zorluyor — `state/` yazımı, `secrets.json`,
+`autonomy_level`, Alpaca emir gönderimi sert bloklu. Kendi şerhinde dürüstçe beyanlı:
+**"parse edilemezse fail-open — asıl savunma desen eşleşmesidir."** Kalkan değil, desen filtresi.
+
+**ÖLÇÜLEN RİSK, ve bu turun en önemli güvenlik bulgusu:** yeni bir profil bu kancayı
+**OTOMATİK MİRAS ALMAZ**. `hermes profile create --clone` taşır; sıfırdan kurulan profil
+**korumasız doğar**. Bot çoğaltmak, kancasız ajan sayısını çoğaltma riskidir.
+
+### 9.1 Teslimat kanalı — KARAR: Meridian'ın `notify.py`'ı
+
+Tercih değil, değişmez: `notify.py`nin şerhi *"bu modül dışarıya veri gönderen TEK yoldur ve
+'asla sır göndermez' iddiasının uygulamasıdır"* diyor ve `scrub()` giden metinden bilinen sır
+değerlerini siliyor. İkinci bir giden yol açmak o değişmezi kırar. Ayrıca Hermes tarafında
+Telegram hiç yapılandırılmamış (`~/.hermes/.env`de yalnız iki model anahtarı) ve Faz 1'de bot yok.
+
+### 9.2 Terminal arka ucu — KARAR: `local`
+
+Savunma `meridian-guard.sh` + açık deny listesi. Gerekçe: A1 dört çekirdek ve üstünde 8 sa 55 dk
+CPU yakan sprint koşuyor; docker her komuta konteyner maliyeti bindirir. Ayrıca konteyner arka
+uçlarında Hermes'in KENDİ tehlikeli-komut denetimi ATLANIR (konteyner sınır sayılır) — yani
+docker bu kutuda göründüğü kadar net bir kazanç değil.
+
+**Bu bilinçli bir riskli seçimdir:** izolasyon yok, guard fail-open. Karşılığı aşağıdaki
+yapılandırma ve çividir.
+
+```yaml
+approvals:
+  mode: smart                # şu an tanımsız — AÇIKÇA yazılacak
+  cron_mode: deny            # başsız cron tehlikeli komutu ONAYLAMASIN (zorunlu)
+  deny:                      # fnmatch; --yolo'da BİLE geçersiz
+    - "*dagit.sh*"           # dağıtım yalnız Rol-1'in (CLAUDE.md madde 5)
+    - "git push*"
+    - "git commit*"          # madde 8'in makine karşılığı
+    - "*systemctl*"
+    - "*serve.sh*"           # CLAUDE.md madde 5: yerelde koşma
+```
+
+### 9.3 Depoya yazma — KARAR: yalnız kendi artefaktına
+
+Git zaten yasak (CLAUDE.md madde 8: *"ajanlar git komutu KOŞMAZ"*). Dosya yazma ise
+`HERMES_WRITE_SAFE_ROOT` ile **tam olarak sahibi olduğu yola** kısıtlanır — sert kum havuzu,
+onayla aşılamaz. Değişiklikler çalışma ağacında birikir; commit/push Rol-1'de kalır.
+
+Bu, §2'deki "her bot bir artefaktın tek yazarı" şartının makine karşılığıdır: sözleşme artık
+bir kural değil, bir kısıt.
+
+### 9.4 Çiviler (yazılacak)
+
+1. **Her profil guard kancasını taşır.** `~/.hermes/profiles/*/config.yaml` içinde
+   `pre_tool_call → meridian-guard.sh` yoksa kırmızı. (Kural değil kontrol: korumasız profil
+   doğamaz.)
+2. **`approvals.cron_mode` `deny` dışında olamaz.**
+3. **Her botun `HERMES_WRITE_SAFE_ROOT`u kendi artefaktıyla sınırlı.**
