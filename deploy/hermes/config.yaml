@@ -35,7 +35,12 @@ fallback_providers:
 # sınır sayılır), yani docker göründüğü kadar net kazanç değil. Karşılığı bu blok + guard hook.
 approvals:
   mode: smart
-  cron_mode: deny            # başsız cron tehlikeli komutu ONAYLAMAZ — pazarlığa kapalı
+  # Kod varsayılanı ZATEN `deny` (tools/approval.py; ölçüm 2026-08-27, Hermes v0.19.0) —
+  # yani bu satır bir DELİK KAPATMAZ, bir BEYANDIR: başsız cron oturumunun tehlikeli komutu
+  # ONAYLAMAMASI bizim duruşumuzdur, üst akımın varsayılanına emanet edilmiş bir şans değil.
+  # Varsayılan bir gün değişirse burası değişmez. Satıra taşımadığı bir ağırlık yüklemeyelim:
+  # asıl taşıyıcı `deny` listesi ve guard kancasıdır.
+  cron_mode: deny
   deny:                      # fnmatch; --yolo'da BİLE geçersiz
     - "*dagit.sh*"           # dağıtım yalnız Rol-1'in (CLAUDE.md madde 5)
     # İKİ YANDAN SARILI — ÖLÇÜLMÜŞ DELİK (denetim 2026-08-29): bunlar `git push*` / `git commit*`

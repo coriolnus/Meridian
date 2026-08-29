@@ -1,0 +1,83 @@
+# @sef — dikkat bütçesi. Üç teslimat kaynağını TEK öncelikli brifinge indirir.
+#
+# ============================ KURULUM — ÜÇ EYLEM, TEK KOMUT DEĞİL ============================
+# BU REÇETE İKİ YERDE DURUR ve İKİSİ AYNIDIR: burası ve `deploy/oracle-a1/deploy.sh`ın @sef
+# bölümü. Çivi ikisini karşılaştırır (`tests/test_bot_profil_durusu_v329.py::
+# test_RECETENIN_HER_EYLEMI_IKI_BELGEDE_DE_GECER`) — çünkü bir kez ayrıştılar ve bayatlayan
+# taraf tam da operatörün okuduğu taraf oldu: manifest TIMER'DAN HİÇ SÖZ ETMİYORDU, yani
+# manifesti izleyen operatör kurar, anahtarı doldurur ve KADANSI HİÇ AÇMAZ. Sonuç sessizliktir
+# ve "boşken sessiz" davranışından AYIRT EDİLEMEZ (denetim 2026-08-30).
+#
+#   1) profili kur:
+#        hermes profile install /opt/meridian/deploy/hermes/profiles/sef
+#
+#   2) profilin KENDİ `.env`ini doldur — `env_requires` `.env` YAZMAZ, yalnız kurulu profile
+#      bir `.env.EXAMPLE` bırakır (ölçüm aşağıda; `.env` kullanıcı-sahiplidir). Anahtarsız
+#      profil her koşumda SESSİZCE ham brifinge düşer, yani "çalışıyor" görünür:
+#        cp  ~/.hermes/profiles/sef/.env.EXAMPLE  ~/.hermes/profiles/sef/.env
+#        ${EDITOR:-nano} ~/.hermes/profiles/sef/.env     # OPENROUTER_API_KEY=...
+#      (Bu adım bir zamanlar bir profil alt komutuyla belgeliydi; o alt komut YOK. ÖLÇÜLDÜ,
+#       yerel v0.18.2 `build_profile_parser` — tam liste: list · use · create · delete ·
+#       describe · show · alias · rename · export · import · install · update · info.
+#       Canlı v0.19.0; sürüm farkı beyan edilir. Adım elle yapılır, yukarıdaki iki satırla.)
+#
+#   3) günlük kadansı aç — teslimat bu satır olmadan HİÇ BAŞLAMAZ:
+#        sudo systemctl enable --now meridian-brifing.timer
+#
+# NOT, ADIM DEĞİL: botun yazma kum havuzunu (`/opt/meridian/var/bots/sef`) `deploy.sh` YARATIR
+# ve iznini/sahipliğini ÖLÇEREK sabitler — operatörün eli değmez. A1 DIŞINDA bir yere kurulum
+# yapılıyorsa dizini elle yaratmak gerekir, yoksa safe-root var olmayan bir yolu gösterir.
+#
+# GÜNCELLEME TUZAĞI (ölçüldü, v0.18.2 `profile update` açıklaması): `hermes profile update sef`
+# `config.yaml`ı VARSAYILAN OLARAK KORUR — `--force-config` gerekir. Yani BU DOSYAYLA birlikte
+# dağıtılan güvenlik duruşunda (guard kancası · kapalı araç takımları) yapılan bir değişiklik
+# düz `update` ile canlı profile GİTMEZ. Duruş değiştiyse:
+#        hermes profile update sef --force-config
+#
+# Kurulum bu depoda YAPILMAZ ve dağıtım betiği de YAPMAZ: profil yaratmak canlıda yeni bir
+# ajan kimliği doğurur ve bu operatör kararıdır (CLAUDE.md madde 5).
+name: sef
+version: 0.1.0
+description: >-
+  Meridian dikkat bütçesi. Alarm yığınını, iyileştirme önerilerini ve haftalık öz-değerlendirmeyi
+  okur; operatöre TEK, öncelikli brifing yazar. Hiçbir şey önemli değilse SUSAR.
+hermes_requires: ">=0.19.0"
+author: "Meridian / Rol-1"
+license: "özel — bu depoya ait"
+
+env_requires:
+  - name: HERMES_WRITE_SAFE_ROOT
+    description: >-
+      Bu botun yazabileceği TEK dizin. ÖLÇÜLDÜ (agent/file_safety.py, `if safe_roots:`;
+      yerel Hermes v0.18.2 kaynağı, 2026-08-29 — canlı v0.19.0, sürüm farkı beyan edilir):
+      değişken TANIMSIZSA hiçbir yazma kısıtı uygulanmaz, yalnız kimlik yolları bloklu
+      kalır — beyan etmemek, sınırsız yetki vermektir. Zamanlanmış koşumda değeri systemd
+      birimi verir; bu satır ETKİLEŞİMLİ koşum içindir.
+      DİZİN PROFİL EVİNİN DIŞINDA, bilerek: `~/.hermes/profiles/sef` olsaydı bot kendi
+      config.yaml'ını ve guard ayarını üstüne yazabilirdi (kendini silahsızlandırma).
+    required: true
+    default: "/opt/meridian/var/bots/sef"
+
+  - name: OPENROUTER_API_KEY
+    description: >-
+      Profilin model anahtarı. Profil = bağımsız HERMES_HOME dizini, yani KENDİ `.env`ini
+      okur ve ana profilin anahtarı ona GEÇMEZ. Anahtar yoksa arıza GÜRÜLTÜLÜ DEĞİLDİR:
+      LLM her koşumda düşer, Görev 2'nin ham-brifing düşüş yolu devreye girer ve teslimat
+      çalışıyor GÖRÜNÜR — bot hiç düşünmeden. Sessiz bozulma tam olarak budur.
+      `env_requires` `.env` YAZMAZ; ÖLÇÜLDÜ (v0.18.2 `profile_distribution.py`,
+      `ENV_EXAMPLE_FILENAME`): kurulu profile `.env.EXAMPLE` bırakır (`.env` kullanıcı-sahipli).
+    required: true
+
+# --- KARAR KAYDI: SOUL.md SATICI KİMLİĞİNİ DEĞİŞTİRİR, ONA EKLEMEZ (ölçüldü) ---------
+# `agent/system_prompt.py`: SOUL yüklenirse `stable_parts`a O konur ve `DEFAULT_AGENT_IDENTITY`
+# yalnız SOUL YOKSA eklenir. Yani ana `deploy/hermes/SOUL.md`in "You are Hermes Agent…"
+# bloğunu birebir taşıması bir üslup tercihi değil, o kimliği GERİ KOYMA hamlesidir.
+# `@sef` onu BİLEREK geri koymuyor: bu profil araçsız, tek işli bir özetleyici — genel amaçlı
+# bir asistan kimliği ona bağlam değil gürültü ekler.
+# KAYIT NEDEN BURADA, SOUL'un içinde DEĞİL: SOUL.md prompt'un KENDİSİDİR ve dosya olduğu gibi
+# sistem istemine girer — markdown yorumu da dahil. Karar kaydını oraya yazmak, mühendislik
+# notunu modele okutmak olurdu. (Ölçüm yerel Hermes v0.18.2 kaynağında; canlı v0.19.0.)
+
+distribution_owned:
+  - SOUL.md
+  - config.yaml

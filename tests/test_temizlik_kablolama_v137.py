@@ -158,9 +158,17 @@ def test_son_basari_ts_yalnizca_ok_iken_dolar():
     assert basarisiz["son_hata"] == "Timeout" and basarisiz["hata_orani"] == 1.0
 
 
-def test_kart_kapsamini_beyan_eder():
+def test_kart_kapsamini_beyan_eder(sandbox_state):
     """Süreç-içi bir ölçüm, kapsamını söylemezse boş bir kart 'sağlayıcı bozuk' diye okunur —
-    panonun dürüstlük yasası (boş kart 'aç' olduğunu söyler)."""
+    panonun dürüstlük yasası (boş kart 'aç' olduğunu söyler).
+
+    `sandbox_state` ZORUNLU (2026-08-30 vakası, ZAMANA BAĞLI GİZLİ KUSUR): `_saglayicilar()`
+    massive adaptörünü çağırır ve o adaptör ayarlama damgası 30 günü aşınca üretim uyarısı
+    `massive_verify_stale`i ATEŞLER. Damga 2026-07-29'du; eşik 2026-08-29T20:59:40Z'de geçti ve
+    test o andan sonraki İLK tam suite koşumunda CANLI `events.jsonl`e yazdı — autouse bekçisi
+    yakaladı. Kusur o gün DOĞMADI, o gün GÖRÜNDÜ: fixture'sız test aylardır oradaydı ve yalnız
+    bir takvim eşiği onu ateşleyebiliyordu. Kardeş testler zaten kum havuzunda koşuyor.
+    """
     from meridian.api import _saglayicilar
     kart = _saglayicilar({})
     assert kart["kapsam"] == "surec-ici" and "yeniden başlatmada sıfırlanır" in kart["beyan"]

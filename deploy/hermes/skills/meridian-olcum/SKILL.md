@@ -85,9 +85,17 @@ olursa olsun çözemediğimiz her şeyi" kapsadığını söylüyordu. Ölçüm 
     olay oneri_brifingi_teslim        → OLAY YOK   (gerçekte: ops/oneri_brifingi.py)
     olay alarm_backlog_digest_teslim  → OLAY YOK   (gerçekte: ops/alarm_backlog_digest.py)
 
-İkisi de canlı olay, ikisi de mümkün olan EN DÜZ biçim (`obs.log("literal", …)`). Çözümleyicide
-hiçbir eksik yoktu — araç `ops/` dizinini HİÇ AÇMIYORDU. Sayaç da kıpırdamıyordu: **okunmayan bir
-dosya hiçbir kovaya düşmez.**
+İkisi de mümkün olan EN DÜZ biçim (`obs.log("literal", …)`). Çözümleyicide hiçbir eksik yoktu —
+araç `ops/` dizinini HİÇ AÇMIYORDU. Sayaç da kıpırdamıyordu: **okunmayan bir dosya hiçbir kovaya
+düşmez.**
+
+> **TARİH DÜZELTMESİ (2026-08-30).** O ölçüm günü bu iki olay CANLIYDI. Bugün DEĞİLLER: Faz 2
+> kadansı `ops/sef_brifingi.py`ye devretti ve `meridian-brifing.service` iki eski betiği ARTIK
+> KOŞTURMUYOR, yalnız `ozet_kur()`larını okuyor. İkisi de kaynakta DURUYOR (elle koşulursa
+> ateşlenir) ama üretimde artık basılmıyor. Bugünün canlı teslimat olayı **`sef_brifingi_teslim`**
+> (`ops/sef_brifingi.py`). Delik anlatısı aynen geçerli — değişen, örneğin hangisinin BUGÜN canlı
+> olduğu. Bu satır burada, çünkü SKILL.md canlı ajana enjekte edilir (`skills.external_dirs`):
+> bayat bir örnek, ajana bayat bir dünya öğretir.
 
 **Kalıbın dersi (Tuzak 2, 3 ve 4 aynı kalıptır).** Her tur bir mekanizmayı düzeltti ve ardından
 tamlığı YENİ SÖZCÜKLERLE yeniden iddia etti; bir sonraki deliği tehlikeli yapan şey tam da o

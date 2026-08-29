@@ -103,6 +103,40 @@ def ozet_kur() -> dict:
             "jeton_n": len(jetonlar), "mesaj": mesaj}
 
 
+def damgala(o: dict) -> bool:
+    """Teslim damgasını basar; damga gerçekten yazıldıysa True. `o` = GÖNDERİLEN mesajı üreten
+    `ozet_kur()` enstantanesi.
+
+    MODÜL DÜZEYİNE ÇIKARILDI (denetim 2026-08-29). Bu gövde `main()` içinde bir KAPANIŞTI, yani
+    dışarıdan çağrılamıyordu — ve `ops/sef_brifingi.py` iki kaynağı tek brifingde birleştirip
+    damgayı KENDİSİ basmak zorunda kalınca sözleşmenin İKİNCİ bir kopyası doğdu. İki kopya
+    zamanla ayrışır ve ayrışan taraf sessizce yanlış damgalar (bu deponun baskın hata deseni).
+    Artık TEK uygulama, ÜÇ çağıran: bu betiğin `main()`i, `@sef`, ve çiviler.
+
+    `store.update_json` sözleşmesi: belgeyi YERİNDE değiştir ve True dön (yeni sözlük döndürmek
+    sessizce hiçbir şey yazmaz — `obs._maybe_notify`ın kendi dersi). Sayaçlara DOKUNULMAZ: yalnız
+    damga anahtarı güncellenir.
+
+    `toplam_kapsanan` GÖNDERİLEN mesajı üreten AYNI enstantaneden gelir — kilit altındaki TAZE
+    okumaya (`d`) BAKILMAZ (denetim bulgusu 2026-08-29). Eski kod `int(d.get("_toplam"))`
+    yazıyordu: mesajın kurulmasıyla damganın basılması arasında tam bir `events.jsonl` taraması VE
+    bir ağ POST'u var, ve o pencerede `obs._maybe_notify`ın sayaca yazdığı her alarm, kendisinden
+    HİÇ SÖZ ETMEYEN bir mesajla "kapsandı" damgası yerdi. Sayaçlar asla azalmadığı ve
+    `yeni = toplam - kapsanan` olduğu için o alarm bir daha HİÇBİR özete giremezdi — kalıcı
+    sessiz kayıp. Kardeş betikteki (`oneri_brifingi.damgala`, `son_ts: o["en_yeni"]`) düzeltmenin
+    birebir aynısı; çivi: `test_DIGEST_GONDERIM_PENCERESINDE_ARTAN_SAYAC_KACIRILMAZ`.
+
+    DÖNÜŞ DEĞERİ BİR KAYIT DÜRÜSTLÜĞÜ MESELESİDİR: çağıranlar "damgalandı" diye olay yazıyor.
+    Koşulsuz True dönmek, yazım hiç gerçekleşmese bile o olayı yazdırırdı — defterde duran ama
+    diskte olmayan bir damga, teşhisi en zor yalandır."""
+    def _yaz(d: dict) -> bool:
+        d[DAMGA] = {"ts": memory.now_iso(), "toplam_kapsanan": int(o["toplam"])}
+        return True
+
+    belge = store.update_json(UNDELIVERED, _yaz, {}) or {}
+    return isinstance(belge.get(DAMGA), dict)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--uygula", action="store_true",
@@ -133,24 +167,7 @@ def main(argv: list[str] | None = None) -> int:
               "(yarım teslim 'teslim edildi' sayılmaz)")
         return 1
 
-    def _damgala(d: dict) -> bool:
-        """`store.update_json` sözleşmesi: belgeyi YERİNDE değiştir ve True dön (yeni sözlük
-        döndürmek sessizce hiçbir şey yazmaz — obs._maybe_notify'ın kendi dersi). Sayaçlara
-        DOKUNULMAZ: yalnız damga anahtarı güncellenir.
-
-        `toplam_kapsanan` GÖNDERİLEN mesajı üreten AYNI `o` enstantanesinden gelir — burada `d`ye
-        (kilit altındaki TAZE okuma) BAKILMAZ (denetim bulgusu 2026-08-29). Eski kod
-        `int(d.get("_toplam"))` yazıyordu: mesajın kurulmasıyla damganın basılması arasında tam bir
-        `events.jsonl` taraması VE bir ağ POST'u var, ve o pencerede `obs._maybe_notify`ın sayaca
-        yazdığı her alarm, kendisinden HİÇ SÖZ ETMEYEN bir mesajla "kapsandı" damgası yerdi.
-        Sayaçlar asla azalmadığı ve `yeni = toplam - kapsanan` olduğu için o alarm bir daha
-        HİÇBİR özete giremezdi — kalıcı sessiz kayıp. Kardeş betikteki (`oneri_brifingi.py`
-        `son_ts: o["en_yeni"]`) düzeltmenin birebir aynısı; çivi:
-        `test_DIGEST_GONDERIM_PENCERESINDE_ARTAN_SAYAC_KACIRILMAZ`."""
-        d[DAMGA] = {"ts": memory.now_iso(), "toplam_kapsanan": int(o["toplam"])}
-        return True
-
-    store.update_json(UNDELIVERED, _damgala, {})
+    damgala(o)          # gövde ve gerekçesi modül düzeyinde — tek uygulama, üç çağıran
     obs.log("alarm_backlog_digest_teslim", toplam=o["toplam"], yeni=o["yeni"],
             jeton_n=o.get("jeton_n"),
             detail="birikmiş teslim-edilmemiş alarmlar TEK özet mesajla teslim edildi ve damgalandı")

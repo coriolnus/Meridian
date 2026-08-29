@@ -233,7 +233,8 @@ def test_COZULEMEYEN_YAPISAL_TAMDIR_BILINMEYEN_BICIME_TEPKI_VERIR(tmp_path):
 #     ops/olcum.py olay oneri_brifingi_teslim        → OLAY YOK   (ops/oneri_brifingi.py)
 #     ops/olcum.py olay alarm_backlog_digest_teslim  → OLAY YOK   (ops/alarm_backlog_digest.py)
 #
-# İkisi de CANLI, ikisi de mümkün olan EN DÜZ biçim (`obs.log("literal", …)`). Görünmezdiler
+# İkisi de o gün CANLIYDI (bugün değil — Faz 2 kadans devri; bkz. aşağıdaki çivi), ikisi de
+# mümkün olan EN DÜZ biçim (`obs.log("literal", …)`). Görünmezdiler
 # çünkü `tara()` yalnız `meridian/`i glob'luyordu; `cozulemeyen` sayacı da KIPIRDAMIYORDU —
 # okunmayan dosya HİÇBİR kovaya düşmez, "yapısal çıkarma" da onu göremez.
 #
@@ -244,13 +245,25 @@ def test_COZULEMEYEN_YAPISAL_TAMDIR_BILINMEYEN_BICIME_TEPKI_VERIR(tmp_path):
 
 
 def test_OPS_KOKU_TARANIR_CANLI_OLAY_BULUNUR():
-    """Dördüncü delik: `ops/` altındaki GERÇEK, CANLI olaylar. En düz biçim
-    (`obs.log("literal", …)`) — çözümleyici sınıfı değil, KAPSAM eksikti."""
+    """Dördüncü delik: `ops/` altındaki GERÇEK olaylar. En düz biçim (`obs.log("literal", …)`) —
+    çözümleyici sınıfı değil, KAPSAM eksikti.
+
+    "CANLI" SÖZCÜĞÜ DÜZELTİLDİ (denetim 2026-08-30). Aşağıdaki ilk iki olay ölçüm günü (2026-08-29)
+    canlıydı; BUGÜN DEĞİL. Faz 2 kadansı `ops/sef_brifingi.py`ye devretti ve
+    `meridian-brifing.service` iki eski betiği ARTIK KOŞTURMUYOR — yalnız `ozet_kur()`larını
+    okuyor. İkisi de kaynakta DURUYOR (elle koşulursa ateşlenir), yani KAPSAM çivisi olarak hâlâ
+    geçerli örneklerdir; ama "canlı" demek okuyucuya yanlış bir dünya öğretir. BUGÜNÜN canlı
+    teslimat olayı `sef_brifingi_teslim`tir ve o da AYNI kapsam altındadır — çivi bu yüzden onu
+    da ölçer: yeni canlı olay kapsam dışında kalsaydı, dördüncü delik ADI DEĞİŞMİŞ hâlde geri
+    gelirdi ve bu çivi yeşil kalırdı."""
     mod = _yukle()
+    assert "sef_brifingi_teslim" in mod.olay_adlari("sef_brifingi_teslim"), (
+        "ops/sef_brifingi.py'deki BUGÜNÜN canlı teslimat olayı görünmüyor — dördüncü delik "
+        "yeni bir adla geri gelmiş demektir")
     assert "oneri_brifingi_teslim" in mod.olay_adlari("oneri_brifingi_teslim"), (
-        "ops/oneri_brifingi.py'deki canlı olay görünmüyor — kapsam `ops/`i kapsamıyor")
+        "ops/oneri_brifingi.py'deki olay görünmüyor — kapsam `ops/`i kapsamıyor")
     assert "alarm_backlog_digest_teslim" in mod.olay_adlari("alarm_backlog_digest_teslim"), (
-        "ops/alarm_backlog_digest.py'deki canlı olay görünmüyor")
+        "ops/alarm_backlog_digest.py'deki olay görünmüyor")
 
 
 def test_MAIN_HER_KOSULDA_TARANAN_KAPSAMI_BASAR(capsys):

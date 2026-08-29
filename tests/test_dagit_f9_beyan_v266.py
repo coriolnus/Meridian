@@ -99,6 +99,14 @@ def test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR():
     "listedeki her ad başlıkta geçiyor mu" sorusu `F9_LISTE`den TÜRETİLİR ve bayatlayamaz.
     Yön TEK: başlıkta fazladan bir ad olması serbest (bağlam olabilir); listede olup başlıkta
     OLMAYAN yasaktır.
+
+    BASENAME ÇAKIŞMASI AYRI ÖLÇÜLÜR (denetim 2026-08-30 — çivi kendi ölçtüğünü sanmıyordu).
+    Faz 2'yle birlikte listede AYNI BASENAME'İ taşıyan çiftler doğdu: `config.yaml` iki kez
+    (ana profil + `@sef`), `SOUL.md` iki kez. Yalnız basename eşleyen bir çivi, `@sef`in
+    satırları başlıktan SİLİNSE bile ANA profilin satırları yüzünden YEŞİL kalırdı — yani
+    listede olup başlıkta olmayan artefakt gizlenirdi. Çakışan basename'ler için ölçü
+    BASENAME DEĞİL TAM REPO YOLUDUR; çakışmayanlar için basename yeter (başlık onları kısa
+    adla anıyor ve bu okunurluk tercihi meşru).
     """
     dagit = DAGIT.read_text()
     govde = dagit.split('F9_LISTE="', 1)[1].split('"', 1)[0]
@@ -106,12 +114,19 @@ def test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR():
     assert yollar, "F9_LISTE ayrıştırılamadı — çivi kendi hedefini kaybetmiş"
 
     baslik = (ORACLE / "deploy.sh").read_text().split("set -euo pipefail", 1)[0]
-    eksik = [y for y in yollar if pathlib.Path(y).name not in baslik]
+    import collections
+    sayim = collections.Counter(pathlib.Path(y).name for y in yollar)
+    # Çakışan basename → TAM YOL aranır; tekil basename → basename yeter.
+    def _aranan(y: str) -> str:
+        return y if sayim[pathlib.Path(y).name] > 1 else pathlib.Path(y).name
+
+    eksik = [f"{y} (aranan: {_aranan(y)})" for y in yollar if _aranan(y) not in baslik]
     assert not eksik, (
         "F9_LISTE'de olup deploy.sh BAŞLIĞINDA adı geçmeyen artefakt(lar): "
         + ", ".join(eksik)
         + " — dagit sürüklenmeyi raporlar ama operatörün okuduğu kurulum başlığı onlardan "
-        "HİÇ söz etmiyor"
+        "HİÇ söz etmiyor (çakışan basename'ler TAM YOLLA aranır: `config.yaml` ve `SOUL.md` "
+        "listede iki kez geçiyor ve basename eşlemesi birinin silinmesini gizlerdi)"
     )
 
 def test_f9_YERI_kuru_kosumda_da_gorunur():
@@ -341,9 +356,22 @@ def test_kod_tazelik_kapisi_VAR_ve_BEYANDAN_ONCE():
 # =================================================================================================
 # SOUL.md — AJANIN KALICI BRİFİNGİNDE MAKİNEYE ÖZGÜ YOL OLAMAZ (2026-08-26 vakası)
 # =================================================================================================
+def _enjekte_edilen_soullar() -> list[pathlib.Path]:
+    """Ajan sistem istemine giren TÜM `SOUL.md`ler — ana profilinki VE her bot profilininki.
+
+    KÜME TÜRETİLİR, YAZILMAZ (2026-08-29, Faz 2). Çivi bir zamanlar tek bir literal yol
+    (`deploy/hermes/SOUL.md`) taşıyordu; o gün doğru, bugün EKSİKTİ: `deploy/hermes/profiles/
+    <bot>/SOUL.md` dosyaları da AYNI şekilde enjekte edilir (`agent/system_prompt.py`: SOUL
+    yüklenirse `stable_parts`a O konur) ve AYNI şekilde canlıya dağıtılır. İkinci bir literal
+    eklemek sınıfı kapatmaz — üçüncü bot geldiğinde çivi yine sessizce kör kalırdı.
+    """
+    return sorted((REPO / "deploy" / "hermes").rglob("SOUL.md"))
+
+
 def test_SOUL_makineye_ozgu_yol_TASIMIYOR():
-    """`deploy/hermes/SOUL.md` ajanın HER çağrısına enjekte edilen kalıcı brifingidir. Bir ev
-    dizini yolu oraya yazılırsa, dosya BAŞKA makineye dağıtıldığında yanlış bir OLGU taşır.
+    """Ajanın HER çağrısına enjekte edilen kalıcı brifinglerinin HİÇBİRİ makineye özgü yol
+    taşımaz. Bir ev dizini yolu oraya yazılırsa, dosya BAŞKA makineye dağıtıldığında yanlış bir
+    OLGU taşır.
 
     ÖLÇÜLMÜŞ VAKA: brifing ajana deponun `~/Documents/Claude/AI-Trading`ta olduğunu söylüyordu.
     A1'de o yol YOK (`ls: cannot access`), ve bu depo bile artık orada değil — yol iki
@@ -354,10 +382,17 @@ def test_SOUL_makineye_ozgu_yol_TASIMIYOR():
     `meridian` MCP sunucusudur (`MERIDIAN_ROOT`) — tek kaynak, makineden bağımsız.
     """
     import re
-    soul = (REPO / "deploy/hermes/SOUL.md").read_text(encoding="utf-8")
-    # `~/...` ve `/home/<kullanıcı>/...` ve `/Users/<kullanıcı>/...` — üç ev-dizini biçimi
-    yasak = re.findall(r"(?:~|/home/[A-Za-z0-9._-]+|/Users/[A-Za-z0-9._-]+)/[A-Za-z0-9._/-]+", soul)
-    assert not yasak, (
-        f"kalıcı brifingte makineye özgü yol(lar): {yasak}\n"
-        "Bu dosya birden çok makineye dağıtılır; ev-dizini yolu bir tarafta MUTLAKA yanlış olur "
-        "ve ajan her çağrıda o yanlışı okur. Depo kökünü MCP sunucusu (MERIDIAN_ROOT) verir.")
+    soullar = _enjekte_edilen_soullar()
+    assert (REPO / "deploy/hermes/SOUL.md") in soullar, (
+        "ana brifing türetilen kümede YOK — glob bozulmuş olabilir ve bozuk bir glob bu çiviyi "
+        "SESSİZCE boşa çıkarır (sıfır dosya, sıfır ihlal)")
+    for yol in soullar:
+        soul = yol.read_text(encoding="utf-8")
+        # `~/...` ve `/home/<kullanıcı>/...` ve `/Users/<kullanıcı>/...` — üç ev-dizini biçimi
+        yasak = re.findall(
+            r"(?:~|/home/[A-Za-z0-9._-]+|/Users/[A-Za-z0-9._-]+)/[A-Za-z0-9._/-]+", soul)
+        assert not yasak, (
+            f"{yol.relative_to(REPO)}: kalıcı brifingte makineye özgü yol(lar): {yasak}\n"
+            "Bu dosya birden çok makineye dağıtılır; ev-dizini yolu bir tarafta MUTLAKA yanlış "
+            "olur ve ajan her çağrıda o yanlışı okur. Depo kökünü MCP sunucusu (MERIDIAN_ROOT) "
+            "verir.")

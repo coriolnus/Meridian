@@ -79,8 +79,10 @@ Alt komutlar:
     olay <desen>       kaynaktaki GERÇEK olay adlarını (+ f-string desenlerini) listeler
 
 KAPSAM (ölçülmüş, 2026-08-29 — bkz. `TARANAN_KOKLER`): `meridian/` + `ops/`. `ops/` üretim
-kodudur ve GERÇEKTEN olay basar (`oneri_brifingi_teslim`, `alarm_backlog_digest_teslim`,
-`plan_geri_dolduruldu`). BİLEREK DIŞARIDA bırakılanlar, gerekçeleriyle: `tests/` (63 çağrı yeri —
+kodudur ve GERÇEKTEN olay basar. BUGÜN CANLI OLAN (2026-08-30 düzeltmesi): `sef_brifingi_teslim`
+ve `plan_geri_dolduruldu`. `oneri_brifingi_teslim` / `alarm_backlog_digest_teslim` kaynakta
+DURUYOR ama Faz 2'den beri ÜRETİMDE ATEŞLENMİYOR — birim o iki betiği artık koşturmuyor, yalnız
+`ozet_kur()`larını okuyor; elle koşulurlarsa yine basarlar. BİLEREK DIŞARIDA bırakılanlar, gerekçeleriyle: `tests/` (63 çağrı yeri —
 `x_event`, `y_event`, `a`, `b`, `garip`, `BİLİNMEYEN_TOKEN` gibi UYDURULMUŞ fikstür adları; içeri
 alınsaydı araç uydurma ad üretirdi, tam da yasakladığı şey), `mutants/` (mutmut'ın MUTASYONA
 UĞRATILMIŞ kopyası — sahte adlar), `research/olcumler/.../sandbox/meridian/` (2026-08-12

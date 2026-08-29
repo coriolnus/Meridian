@@ -7,8 +7,8 @@
 #   [1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
 #   [1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
 #   [F9] dagit-kapsamı-dışı canlı artefaktlar (sprint@ birimi · polkit kuralı · SOUL.md ·
-#        hermes config.yaml · tick-watchdog service+timer · litestream.yml ·
-#        aylık-bucket-kopya service+timer · brifing service+timer):
+#        hermes config.yaml · tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya
+#        service+timer · brifing service+timer · @sef profili: distribution.yaml+config.yaml+SOUL.md):
 #        içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
 #   [2] rsync (state/backups/.venv/.git HARİÇ)
 #   [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
@@ -28,7 +28,7 @@
 set -euo pipefail
 KEY="$HOME/.ssh/oci-a1.key"; IP="130.61.126.87"; REPO="$HOME/AI-Trading"
 SSH=(ssh -i "$KEY" -o ConnectTimeout=15 ubuntu@"$IP")
-RSYNC_EXC=(--exclude '.venv' --exclude '.git' --exclude 'state' --exclude 'backups' --exclude 'scratchpad' --exclude 'scratch-*' --exclude '.superpowers' --exclude '__pycache__' --exclude '.claude' --exclude '.hypothesis' --exclude 'mutants' --exclude '.pytest_cache' --exclude '.env' --exclude '.dash.env' --exclude '.agents' --exclude '.codex' --exclude '.github' --exclude 'skills-lock.json' --exclude '.impeccable' --exclude '.import_linter_cache' --exclude 'research/olcumler/*/seanslar.json' --exclude 'research/olcumler/*/run.stderr.log' --exclude 'research/olcumler/*/state' --exclude 'node_modules' --exclude 'ui/node_modules' --exclude '/ui')  # + DERLEME SINIFI (2026-08-24, shadcn pilotu): `npm install` on binlerce dosya yazar ve rsync onları .gitignore'a BAKMADAN taşır — `scratch-panov2` vakasının aynısı, iki mekanizma AYRI. Canlıya giden ARTEFAKT'tır (`meridian/web/pilot-*`), kaynak DEĞİL: `/ui` altındaki TSX/config canlıda okuyucusuzdur (YASA 6). `/ui` ANKORLU — `meridian/web/ui/` gibi bir alt yol yanlışlıkla düşmesin.  # + ÖLÇÜM HAM ÇIKTILARI (2026-08-10, ROADMAP §2 madde-1): .gitignore rsync'i ETKİLEMEZ — ham seans dökümü/betik-state/stderr yeniden-üretilebilir (olcum*.py deterministik), canlıda okuyucusu yok; özet sonuc.json + olcum*.py TAŞINIR  # + HARNESS ARTEFAKTLARI (2026-08-06): worktree-oturum kalıntıları dagit'i dry-run'da boğdu  # + ARAÇ ÖNBELLEKLERİ (2026-08-07): .impeccable/hook.cache.json (kökte VE meridian/web/ altında) ile .import_linter_cache/ kuru koşumda göründü — 306ab56'nın hükmü bunları kapsamıyordu. İkisi de araç katmanı: canlıda karşılığı yok, hiçbir test okumuyor, ama tool-layer sızıntısı aynı sınıf.  # SIR SINIFI (2026-08-01 vakası): rsync --delete A1-yerel .dash.env'i SİLDİ — sırlar dağıtıma binmez, kanal push_secret.sh  # + SCRATCH SINIFI (2026-08-24 vakası): `scratch-panov2/` kuru koşumda 5 girdiyle CANLIYA GİDİYORDU. Yerelde .gitignore'lu ama RSYNC GITIGNORE OKUMAZ, yalnız bu listeyi okur — iki mekanizma ayrı ve birini kapatmak ötekini kapatmaz. `scratchpad` zaten listedeydi; `scratch-*` globu sınıfı kapatır.
+RSYNC_EXC=(--exclude '.venv' --exclude '.git' --exclude 'state' --exclude 'backups' --exclude '/var' --exclude 'scratchpad' --exclude 'scratch-*' --exclude '.superpowers' --exclude '__pycache__' --exclude '.claude' --exclude '.hypothesis' --exclude 'mutants' --exclude '.pytest_cache' --exclude '.env' --exclude '.dash.env' --exclude '.agents' --exclude '.codex' --exclude '.github' --exclude 'skills-lock.json' --exclude '.impeccable' --exclude '.import_linter_cache' --exclude 'research/olcumler/*/seanslar.json' --exclude 'research/olcumler/*/run.stderr.log' --exclude 'research/olcumler/*/state' --exclude 'node_modules' --exclude 'ui/node_modules' --exclude '/ui')  # + DERLEME SINIFI (2026-08-24, shadcn pilotu): `npm install` on binlerce dosya yazar ve rsync onları .gitignore'a BAKMADAN taşır — `scratch-panov2` vakasının aynısı, iki mekanizma AYRI. Canlıya giden ARTEFAKT'tır (`meridian/web/pilot-*`), kaynak DEĞİL: `/ui` altındaki TSX/config canlıda okuyucusuzdur (YASA 6). `/ui` ANKORLU — `meridian/web/ui/` gibi bir alt yol yanlışlıkla düşmesin.  # + ÖLÇÜM HAM ÇIKTILARI (2026-08-10, ROADMAP §2 madde-1): .gitignore rsync'i ETKİLEMEZ — ham seans dökümü/betik-state/stderr yeniden-üretilebilir (olcum*.py deterministik), canlıda okuyucusu yok; özet sonuc.json + olcum*.py TAŞINIR  # + HARNESS ARTEFAKTLARI (2026-08-06): worktree-oturum kalıntıları dagit'i dry-run'da boğdu  # + ARAÇ ÖNBELLEKLERİ (2026-08-07): .impeccable/hook.cache.json (kökte VE meridian/web/ altında) ile .import_linter_cache/ kuru koşumda göründü — 306ab56'nın hükmü bunları kapsamıyordu. İkisi de araç katmanı: canlıda karşılığı yok, hiçbir test okumuyor, ama tool-layer sızıntısı aynı sınıf.  # SIR SINIFI (2026-08-01 vakası): rsync --delete A1-yerel .dash.env'i SİLDİ — sırlar dağıtıma binmez, kanal push_secret.sh  # + SCRATCH SINIFI (2026-08-24 vakası): `scratch-panov2/` kuru koşumda 5 girdiyle CANLIYA GİDİYORDU. Yerelde .gitignore'lu ama RSYNC GITIGNORE OKUMAZ, yalnız bu listeyi okur — iki mekanizma ayrı ve birini kapatmak ötekini kapatmaz. `scratchpad` zaten listedeydi; `scratch-*` globu sınıfı kapatır.  # + BOT KUM HAVUZU SINIFI (2026-08-29): `/var` — botların TEK yazılabilir dizini (`var/bots/<ad>`, spec §9.3 safe-root). Depoda YOK, canlıda VAR: dışlanmasaydı `--delete` her dağıtımda botun biriktirdiği her şeyi SİLERDİ — `state`/`backups` ile BİREBİR aynı sınıf (canlı-sahipli, repo-sahipli değil). ANKORLU (`/var`, `/ui` gibi): ileride bir `ui/src/var/` doğarsa onu sessizce dağıtım dışı bırakmasın.
 
 echo "=== [0a/5] git temiz-ağaç kapısı ==="
 cd "$REPO"
@@ -273,6 +273,12 @@ fi
 #     aylık bar-arşivi bucket kopyası; kurulumu birim başlığında)
 #   * meridian-brifing.service + .timer → /etc/systemd/system/  (v327 — alarm yığını + öneri
 #     brifingi kadansı; boşken sessiz, arızada `failed`)
+#   * @sef profili: distribution.yaml + config.yaml + SOUL.md → ~ubuntu/.hermes/profiles/sef/
+#     (Faz 2 — bot roster'ın ilk Hermes profili). BURADA BİR İNCELİK VAR: rsync depo tarafını
+#     (`deploy/hermes/profiles/sef/`) canlıya TAŞIR, ama F9'un kıyasladığı şey o değil KURULU
+#     KOPYAdır — profil canlıya `hermes profile install` ile varır ve o komut operatörün
+#     kararıdır (yeni bir ajan kimliği doğurur). Yani "repoda güncel" ile "botun okuduğu dosya
+#     güncel" AYRI iki gerçektir; kapının ölçtüğü ikincisidir.
 # Bu, OB-2'yi doğuran "kurulu ≠ çalışır" sınıfıdır: repo ilerler, canlı kopya yerinde sayar ve
 # hiçbir kapı bağırmazdı — denetim ölçtü: dagit'te bu dosyalara sıfır atıf vardı. [1c] yalnız
 # *.service YÖNERGELERİNİ kıyaslar; bu kapı LİSTEDEKİ HER dosyanın TAM İÇERİĞİNİ kıyaslar
@@ -297,7 +303,10 @@ deploy/oracle-a1/litestream.yml|/etc/litestream.yml
 deploy/oracle-a1/meridian-aylik-bucket-kopya.service|/etc/systemd/system/meridian-aylik-bucket-kopya.service
 deploy/oracle-a1/meridian-aylik-bucket-kopya.timer|/etc/systemd/system/meridian-aylik-bucket-kopya.timer
 deploy/oracle-a1/meridian-brifing.service|/etc/systemd/system/meridian-brifing.service
-deploy/oracle-a1/meridian-brifing.timer|/etc/systemd/system/meridian-brifing.timer"
+deploy/oracle-a1/meridian-brifing.timer|/etc/systemd/system/meridian-brifing.timer
+deploy/hermes/profiles/sef/distribution.yaml|/home/ubuntu/.hermes/profiles/sef/distribution.yaml
+deploy/hermes/profiles/sef/config.yaml|/home/ubuntu/.hermes/profiles/sef/config.yaml
+deploy/hermes/profiles/sef/SOUL.md|/home/ubuntu/.hermes/profiles/sef/SOUL.md"
 for _cift in $F9_LISTE; do
   _f9_repo="${_cift%%|*}"; _f9_canli="${_cift##*|}"; _f9_ad="$(basename "$_f9_repo")"
   if [[ ! -f "$REPO/$_f9_repo" ]]; then

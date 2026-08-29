@@ -1,0 +1,146 @@
+# @sef profilinin güvenlik duruşu. ANA PROFİLDEN MİRAS ALINMAZ (spec §9.0'ın en önemli
+# bulgusu): `hermes profile create --clone` taşır, sıfırdan/dağıtımdan kurulan profil
+# KORUMASIZ doğar. Bu dosya o boşluğun kapağıdır ve tests/test_bot_profil_durusu_v329.py
+# onu repo tarafında çiviler — canlıya VARMADAN.
+#
+# ===================================================================================================
+# SÜRÜM BOŞLUĞU KAPANDI — TAŞIYICI İDDİALARIN HEPSİ CANLI v0.19.0'DA ÖLÇÜLDÜ (Rol-1, 2026-08-30).
+# Bu dosyanın alt bölümlerindeki "yerel v0.18.2 kaynağında ölçüldü, canlı v0.19.0" şerhleri o
+# ölçümün YAPILDIĞI ANI anlatır ve DURUYOR — silmiyorum, çünkü hangi iddianın hangi zeminde
+# doğduğu kaydın kendisidir. Aşağısı o boşluğun KAPANDIĞINI söyler; ikisi çelişmez.
+# A1'de (ubuntu@130.61.126.87, ~/.hermes/hermes-agent) doğrudan okundu:
+#   1. ARAÇ KAPATMA GERÇEKTEN UYGULANIYOR — `hermes_cli/tools_config.py` `_get_platform_tools`:
+#      `enabled_toolsets -= disabled_set`, ve şerhi "This runs last so it overrides everything
+#      above." VE `-z` yolu oradan GEÇİYOR: `hermes_cli/oneshot.py` `_get_platform_tools(cfg,
+#      "cli")` çağırıyor. Bu blok bütün duruşun taşıyıcısıydı; artık vekil değil ölçüm.
+#   2. `oneshot.py` `os.environ["HERMES_YOLO_MODE"] = "1"` KURUYOR — yani `approvals.mode` bu
+#      yolda ÖLÜDÜR. Aşağıdaki onay bölümü bunu zaten söylüyor; canlıda da böyle.
+#   3. `hermes profile env` alt komutu YOK (`hermes profile --help` çıktısında geçmiyor) —
+#      operatör reçetesinin o adımı gerçek komutlarla yazıldı.
+#   4. `agent/file_safety.py`: `if safe_roots:` — değişken TANIMSIZSA hiçbir yazma kısıtı YOK.
+#   5. `tests/agent/test_shell_hooks_consent.py::test_no_tty_no_flag_skips_registration`:
+#      `registered == []` — onaysız başsız koşumda kancalar HİÇ kaydolmaz.
+# HÂLÂ ÖLÇÜLMEMİŞ olan tek şey: bu profille GERÇEK bir koşumun ne yazdığı ve kancanın gerçekten
+# ateşlediği. Onlar ancak ilk canlı koşumda görülür ve deploy.sh operatöre bunu ADIYLA söyler.
+# ===================================================================================================
+
+# AŞAĞIDAKİ BİÇİM ÖLÇÜLEREK YAZILDI, kopyalanarak değil. Ölçümler YEREL Hermes v0.18.2
+# kaynağında yapıldı; canlı v0.19.0. Sürüm farkı beyan edilir: biçim iki sürüm arasında
+# değiştiyse çiviler değil KOŞUM yanılır, o yüzden ilk canlı koşumda doğrulanmalı.
+
+# BU ÜÇ BLOK HARNESS TARAFINDAN DA OKUNUR (Faz 2 düzeltme dalgası, 2026-08-30):
+# `ops/sef_brifingi.py::_profil_evini_dogrula` profili ÇAĞIRMADAN ÖNCE burada üç şey arar —
+# guard kancası · `hooks_auto_accept: true` · beş tehlikeli takımın kapalı olması. Tutmazsa
+# çağrı REDDEDİLİR ve brifing ham yoldan gider. Yani bu dosya artık yalnız bir beyan değil,
+# koşum zamanında ÖLÇÜLEN bir kapıdır: elle `hermes profile create sef` ile doğan korumasız bir
+# profil (spec §9.0'ın en önemli bulgusu) o kapıdan geçemez.
+#
+# --- KANCA VE ONAYI -------------------------------------------------------------------
+# İKİSİ BİRLİKTE BİR KORUMADIR; yalnız biri yazılırsa koruma YOKTUR.
+# ÖLÇÜLDÜ (satıcının kendi testi `test_no_tty_no_flag_skips_registration`): TTY yokken ve
+# onay kanallarının hiçbiri açık değilken kanca kaydı `[]` döner — kanca SESSİZCE
+# KAYDOLMAZ. Varsayılan da kapalı (`hermes_cli/config.py`). Yani zamanlanmış koşumda
+# `hooks_auto_accept` olmadan bu dosya "korumalı" görünür ve koşum korumasız olur.
+hooks:
+  pre_tool_call:
+    - matcher: terminal|write_file|patch|edit|apply_patch
+      command: /opt/meridian/ops/meridian-guard.sh
+      timeout: 10
+hooks_auto_accept: true
+
+# --- ARAÇ YÜZEYİ — SAVUNMANIN EN YÜKSEK KALDIRAÇLI KATMANI ----------------------------
+# `@sef` girdilerini HAZIR HESAPLANMIŞ alır (Görev 2) ve yalnız metin üretir. Araca
+# ihtiyacı YOK. Deny listesi bir kabuğu POLİSLEMEYE çalışır; bu blok kabuğu HİÇ VERMEZ —
+# ve guard kancası kendi şerhinde "parse edilemezse fail-open" dediği için polislik zaten
+# zayıf olan taraftı.
+# ÖLÇÜLDÜ (`hermes_cli/tools_config.py`): `agent.disabled_toolsets` çözümlemenin EN SONUNDA
+# uygulanır ve üstündeki her şeyi geçersiz kılar — platform varsayılanı, composite takım
+# genişletmesi ve `-t` bayrağı dahil.
+# İNCELEMENİN ÖLÇTÜĞÜ DÖRT GERİ-ALINAMAZ SINIF ve hangisini hangi satır kapatır:
+#   (a) silme (`rm -rf state/`) + (d) canlı döngüyü öldürme (`pkill`)  → terminal
+#   (b) kimlik okuyup dışarı taşıma (`cat .env | curl`)                → file + terminal + web/browser
+#   (c) kendi guard'ını/config'ini üstüne yazma                        → file
+# KALAN RİSK, dürüstçe: bu bir KARA LİSTEDİR. Hermes yeni bir tehlikeli takım eklerse
+# buraya kendiliğinden girmez. Beyaz liste tercih edilirdi; `disabled_toolsets` bugün var
+# olan kaldıraç bu — çivi en azından bu beşinin kapalı kalmasını garanti eder.
+agent:
+  disabled_toolsets:
+    - terminal          # kabuk: silme, pkill, curl ile dışarı taşıma
+    - file              # okuma/yazma/patch: .env okuma + kendi config'ini üstüne yazma
+    - code_execution    # kabuk eşdeğeri
+    - browser           # dışarı taşıma kanalı
+    - web               # dışarı taşıma kanalı
+    - delegation        # araçsız bırakılan botun araçlı bir alt ajan doğurma yolu
+    - cronjob           # kalıcılık: kendine zamanlanmış iş yaratamaz
+    - computer_use      # masaüstü kontrolü
+    - memory            # hafıza deposu safe-root DIŞINA yazar (aşağıdaki nota bak)
+    - session_search    # geçmiş oturumları okuma; bu botun işi için gereksiz
+    - image_gen
+    - video_gen
+    - tts
+
+# --- ONAY DURUŞU — HANGİ SATIR HANGİ YOLDA YÜK TAŞIYOR (düzeltildi: denetim 2026-08-30) --
+# ESKİ YORUM BU BLOĞU "derinlemesine savunma" diye anlatıyordu ve bir şeyi BİLMİYORDU:
+# ÖLÇÜLDÜ (yerel Hermes v0.18.2 kaynağı, `hermes_cli/oneshot.py::run_oneshot` — canlı
+# v0.19.0, sürüm farkı beyan edilir): `hermes -z` çağrının EN BAŞINDA
+# `os.environ["HERMES_YOLO_MODE"] = "1"` ve `HERMES_ACCEPT_HOOKS = "1"` set ediyor; modülün
+# kendi şerhi de "Approvals = auto-bypassed" diyor. Yani BİZİM koşum yolumuzda (systemd →
+# `hermes --accept-hooks -z`) `approvals.mode` HİÇ DANIŞILMAZ.
+#
+# BU YOLDA GERÇEKTEN YÜK TAŞIYAN BEŞ KATMAN (hepsi aynı kaynaktan ölçüldü):
+#   1. `agent.disabled_toolsets` — yukarıdaki blok; araç ŞEMADAN düşer, onay sorusu hiç doğmaz.
+#   2. `approvals.deny` — `tools/approval.py` şerhi birebir: "a deny match fires BEFORE the
+#      yolo / mode=off bypass"; yolo'nun ALTINDA bir taban, üstünde değil. Yalnız `terminal`
+#      üzerinden erişilir ve o kapalı: ikinci katman, ama SAĞLAM bir ikinci katman.
+#   3. `pre_tool_call → meridian-guard.sh` + `hooks_auto_accept` (aşağıdaki blok).
+#   4. `HERMES_WRITE_SAFE_ROOT` — yalnız dosya araçlarını bağlar, onlar da kapalı.
+#   5. systemd (`ProtectSystem=strict` · `ProtectHome=read-only` · `NoNewPrivileges` · boş
+#      `CapabilityBoundingSet`) — SÜRECİ bağlayan tek katman; ajanın yapılandırmasından
+#      bağımsızdır ve bu yüzden sürüklenmeye karşı en dayanıklısıdır.
+#
+# AŞAĞIDAKİ İKİ SATIR NEDEN SİLİNMİYOR: ikisi de BAŞKA yollarda yürürlüktedir ve profil tek
+# bir çağrı biçimine kilitli değildir — `hermes -p sef chat` (etkileşimli) ve gateway
+# oturumları `mode`u okur; `cron_mode` ise hermes'in KENDİ cron oturumları içindir (systemd
+# koşumu bir hermes cron oturumu DEĞİLDİR, o yüzden bugün hiç danışılmaz). Yani bu satırlar
+# ölü değil, BU YOLDA uykudadır. Spec §9.4/2 ikisini de şart koşuyor.
+approvals:
+  # ETKİLEŞİMLİ / gateway oturumları için. `-z` yolunda ÖLÜ (yolo, yukarıdaki ölçüm).
+  mode: smart
+  # Hermes'in KENDİ cron oturumları için. Kod varsayılanı ZATEN `deny` (`tools/approval.py`) —
+  # bu satır bir DELİK KAPATMAZ, bir BEYANDIR: varsayılan bir gün değişirse duruşumuz değişmez.
+  # systemd timer'ı bir hermes cron oturumu DEĞİLDİR; bu yolda hiç danışılmaz.
+  cron_mode: deny
+  # YOLO'NUN ALTINDAKİ TABAN — `-z` yolunda da ateşler (ölçüm yukarıda).
+  deny:                      # fnmatch TÜM DİZGEYİ eşler; iki yandan sarılı olmayan desen delinir
+    - "*dagit.sh*"
+    - "*git push*"
+    - "*git commit*"
+    - "*systemctl*"
+    - "*serve.sh*"
+
+# --- MODEL VE BÜTÇE -------------------------------------------------------------------
+# BİÇİM ÖLÇÜLDÜ (`agent/agent_init.py`): `max_tokens` MODEL EŞLEMESİNİN İÇİNDEN okunur
+# (`_model_cfg.get("max_tokens")`) ve okuma `isinstance(_model_cfg, dict)` kapısının
+# ardındadır. `model:` düz bir dize olsaydı bütçe SESSİZCE yok sayılırdı — dosya 8.000
+# der, koşum modelin kendi varsayılanını kullanırdı. İlk yazımda tam bu hata vardı.
+# BÜTÇENİN KENDİSİ — docs/OLCUM-MODEL-BUTCESI-2026-08-27.md §6, "özet/rapor" satırı.
+# Super, Ultra'dan ~5 kat hızlı (130,8 vs 25,8 tok/sn) ve bu çağrı bir özet/sıralamadır:
+# 8.000 token ≈ 61 sn. 120 sn tavan bunun ~2 katı; kaynak belge ölçümlerin dalgalandığını
+# AÇIKÇA söylüyor, yani bu pay rahat değil MAKUL — yavaş bir gün tavana değebilir ve
+# değdiğinde ham brifing gider (Görev 2'nin düşüş yolu). Ultra bu bütçede zaman aşımına
+# düşerdi; ölçümün "sert sonuç" bölümü tam bu tuzağı anlatıyor.
+model:
+  provider: openrouter
+  default: nvidia/nemotron-3-super-120b-a12b:free
+  max_tokens: 8000
+
+# ZAMAN AŞIMI, HERMES'İN GERÇEKTEN OKUDUĞU YERDE.
+# ÖLÇÜLDÜ (`hermes_cli/timeouts.py::get_provider_request_timeout`): okuma sırası
+# `providers.<sağlayıcı>.models.<model>.timeout_seconds` → `providers.<sağlayıcı>.
+# request_timeout_seconds`. NE kökte NE model eşlemesinde bakılır. İlk yazımdaki kök
+# `timeout: 120` anahtarı hiçbir şey yapmıyordu — yani olmayan bir korumaya güveniyorduk.
+# Sağlayıcı düzeyi seçildi: bu profilde tek model var, per-model satır ikinci bir
+# sürüklenme yüzeyi açardı.
+providers:
+  openrouter:
+    request_timeout_seconds: 120

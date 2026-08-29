@@ -1,5 +1,14 @@
 """BRİFİNG KADANSI: hesaplanan teslim edilir, boşken SESSİZ — v327 (2026-08-27)
 
+KADANS DEVREDİLDİ (Faz 2, 2026-08-29) ve BU DOSYANIN ÖZNESİ DEĞİŞTİ. Birim artık `ops/
+oneri_brifingi.py` ile `ops/alarm_backlog_digest.py`i KOŞTURMUYOR; tek bir harness'ı
+(`ops/sef_brifingi.py --uygula`) koşturuyor ve harness o ikisinin `ozet_kur()`unu OKUYUP
+teslimden sonra damgalarını KENDİSİ basıyor. Bu dosyadaki çiviler silinmedi, ÖZNELERİ taşındı:
+iki kaynak betiğin ÖZET/DAMGA sözleşmesi hâlâ burada ölçülür (onlar hâlâ üretimde, yalnız
+çağıranları değişti), birim/timer çivileri de burada — ama artık "ikisini de AYNI birim
+koşturur" CÜMLESİ YANLIŞTIR ve bu tur kaldırıldı (denetim 2026-08-30: bir önceki sürümü
+anlatan yorum, okuyucuya yanlış mekanizma öğretir).
+
 ÖLÇÜM (2026-08-27, canlı A1):
     notify_undelivered.json   toplam 310 · MECHANISM_STALE 208 · MIRROR_DRIFT 51 · NAKED_POSITION 9
     ops/alarm_backlog_digest.py  YAZILMIŞ, çalışıyor, ama HİÇBİR KADANSA ASILI DEĞİL
@@ -16,7 +25,6 @@ from __future__ import annotations
 import importlib.util
 import pathlib
 import shlex
-import subprocess
 
 import pytest
 
@@ -36,9 +44,11 @@ def _yukle():
 
 
 def _yukle_digest():
-    """Kadansın İKİNCİ teslimatı. Ayrı bir betiktir ve ayrı bir damga dosyası tutar; iki betiğin
-    çivileri de bu dosyada durur çünkü ikisini de AYNI birim koşturur (biri kırılırsa kadansın
-    yarısı sessizce ölür)."""
+    """Alarm yığını kaynağı. Ayrı bir betiktir ve ayrı bir damga dosyası tutar (kardeşi EN YENİ
+    ZAMAN DAMGASINI, bu KÜMÜLATİF SAYACI damgalar — ikisini aynı sanmak birini kalıcı damgasız
+    bırakır). Birim bu betiği ARTIK KOŞTURMUYOR: `@sef` yalnız `ozet_kur()`unu okur ve teslimden
+    sonra `damgala()`sını çağırır. Çivileri bu dosyada kalır çünkü ölçülen şey KAYNAĞIN kendi
+    sözleşmesidir, onu kimin çağırdığı değil."""
     assert DIGEST_BETIK.exists(), f"{DIGEST_BETIK} YOK"
     spec = importlib.util.spec_from_file_location("alarm_backlog_digest", DIGEST_BETIK)
     mod = importlib.util.module_from_spec(spec)
@@ -122,85 +132,114 @@ def _cagri_kuyruklari(betik: str) -> list[str]:
     return kuyruklar
 
 
-def test_BIRIM_ALARM_DIGESTINI_DE_KOSUYOR():
-    """Kadans iki teslimatı da tetiklemeli; biri unutulursa 310'luk yığın orada kalır.
+def test_BIRIM_SEF_BRIFINGINI_KOSUYOR_ve_ESKI_IKILIYI_KOSMUYOR():
+    """KADANS DEVRİ (Faz 2). Birim artık iki betiği değil TEK harness'ı koşar: `sef_brifingi.py`.
+    Çivi silinmedi, ÖZNESİ taşındı — teslimatın tetiklendiği gerçeği hâlâ burada ölçülür.
 
-    `--uygula` HER ÇAĞRIDA ayrı ayrı aranır (denetim 2026-08-29): bayrak bir çağrıdan düşerse o
-    betik kuru koşuma iner — hiçbir şey göndermez, hiçbir hata da vermez. Kayıp KALICI olarak
-    SESSİZDİR, yani tam da bu kadansın kapatmak için var olduğu arıza sınıfı."""
+    `--uygula` O ÇAĞRININ kuyruğunda aranır (eski çivinin dersi, korunuyor): bayrak düşerse betik
+    kuru koşuma iner — hiçbir şey göndermez, hiçbir hata da vermez. Kayıp KALICI olarak
+    SESSİZDİR, yani tam da bu kadansın kapatmak için var olduğu arıza sınıfı.
+
+    İKİNCİ YARI DEVRİN KENDİSİDİR: iki eski betik ARTIK ÇAĞRILMAMALI. `@sef` onların
+    `ozet_kur()`unu okur ve teslimden SONRA damgalarını kendisi basar. Birim onları da koşsaydı
+    operatör aynı yığını ÜÇ ayrı mesajda görürdü (dikkat bütçesi — botun var oluş sebebinin
+    tersi) ve iki damgalayıcı aynı dosyada yarışırdı: hangisi önce damgalarsa öteki mesaj
+    "yeni yok" derdi, yani kaynağın biri sessizce boşa konuşurdu."""
     assert SERVICE.exists() and TIMER.exists(), "systemd birimleri yok"
-    for betik in ("alarm_backlog_digest.py", "oneri_brifingi.py"):
-        kuyruklar = _cagri_kuyruklari(betik)
-        assert kuyruklar, f"{betik} birimin ExecStart'ında hiç çağrılmıyor"
-        for k in kuyruklar:
-            assert "--uygula" in k, (
-                f"{betik} çağrısında `--uygula` YOK ({k!r}) — o teslimat sessiz KURU KOŞUM olur")
+    kuyruklar = _cagri_kuyruklari("sef_brifingi.py")
+    assert kuyruklar, "sef_brifingi.py birimin ExecStart'ında hiç çağrılmıyor — kadans devri yarım"
+    for k in kuyruklar:
+        assert "--uygula" in k, (
+            f"sef_brifingi.py çağrısında `--uygula` YOK ({k!r}) — teslimat sessiz KURU KOŞUM olur")
+    for eski in ("alarm_backlog_digest.py", "oneri_brifingi.py"):
+        assert not _cagri_kuyruklari(eski), (
+            f"{eski} birimde HÂLÂ doğrudan çağrılıyor — `@sef` zaten onun özetini taşıyor ve "
+            "damgasını basıyor: operatöre çift mesaj gider ve iki damgalayıcı yarışır")
 
 
-def test_BIRIM_ARIZAYI_YUTMAZ_VE_IKISINI_DE_KOSAR(tmp_path):
-    """İKİ ŞART BİRDEN, ve ikisi de DAVRANIŞLA sınanır (metin araması değil): birimin kabuk
-    komutu gerçek bir `/bin/sh` altında sahte betiklerle koşturulur.
+def test_BIRIM_ARIZAYI_YUTMAZ_ve_BIR_KAYNAK_DUSSE_OTEKI_TESLIM_EDILIR(monkeypatch, sandbox_state):
+    """SARMALAYICININ İKİ ŞARTI, YENİ ŞEKİL ALTINDA. Çivi silinmedi; ÖZNESİ TAŞINDI.
 
-      (a) İlk betik DÜŞSE BİLE ikincisi KOŞAR — biri sussa öteki teslim etsin.
-      (b) HERHANGİ biri düşerse birim BAŞARISIZ biter (çıkış kodu != 0).
+    ÖZNESİ `sef_brifingi` ama EVİ v327 (denetim 2026-08-30 bunu bir dikiş olarak işaretledi).
+    BİLEREK BURADA KALIYOR: ölçtüğü şey harness'ın içi değil KADANSIN iki şartıdır ve o iki şart
+    bu dosyanın konusudur — birim şekli + betiğin çıkış kodları. Taşımak, "çivi silinmedi, öznesi
+    taşındı" anlatısını ikinci kez kopararak izlenemez kılardı.
 
-    NEDEN TEK ExecStart: ayrı `ExecStart=` satırları bu ikisini AYNI ANDA sağlayamaz. `-` öneksiz
-    systemd ilk başarısızlıkta durur (b sağlanır, a düşer); `-` önekiyle hata YUTULUR ve birim
-    ASLA `failed` olmaz (a sağlanır, b düşer). Eski hâl ikincisiydi: iki betik de "kanal
-    yapılandırılmamış"ta 2, "gönderim düştü"de sıfırdan farklı (digest 1, öneri brifingi 2)
-    dönüyor — yani Telegram kırılırsa iş HER GÜN sessizce düşer ve bunu bildirecek tek mekanizma
-    zaten gönderemeyen işin ta kendisidir."""
+    Eski şekil iki betiği tek bir `/bin/sh -c` sarmalayıcıyla koşturuyordu ve iki şartı O
+    sarmalayıcı taşıyordu:
+      (a) ilk teslimat düşse bile İKİNCİSİ KOŞAR — biri sussa öteki teslim etsin,
+      (b) HERHANGİ biri düşerse birim `failed` biter.
+    Kadans `@sef`e devredilince (a) sarmalayıcıdan ÇIKIP HARNESS'IN İÇİNE girdi ve (b) düz bir
+    `ExecStart`a indi. Şartlar KALKMADI, yer değiştirdi — bu yüzden çivi de yer değiştirir.
+    Öznesi taşınan bir çivi silinmez, yeniden yazılır.
+
+    (b) BİRİNCİ YARI — ŞEKİL. `-` öneksiz TEK `ExecStart`. `-` öneki çıkış kodunu YUTAR ve birim
+    ASLA `failed` görmez; oysa `failed`in okuyucusu ölçülü (`/api/infra` `ActiveState=failed`i
+    "arizali" sayıyor), yani teslimat kanalı kırıldığında arızayı görünür kılan TEK şey odur.
+    Kabuk sarmalayıcı da artık GEREKMEZ ve BULUNMAMALI: tek komut için `/bin/sh -c` yalnız bir
+    `$` ikame yüzeyi ekler (systemd kaçırılmamış `$`i boşaltır — kardeş çivi
+    `tests/test_kucuk_kuyruk_v179.py` bunu zaten biliyor) ve karşılığında hiçbir şey kazandırmaz.
+
+    (b) İKİNCİ YARI — DAVRANIŞ. Düz `ExecStart` ancak betik GERÇEKTEN sıfırdan farklı dönerse
+    `failed` üretir; yani (b) yarısı birimde, yarısı betiktedir. Kanal yapılandırılmamışsa 2,
+    gönderim düşerse 1 — ikisi de burada KOŞTURULARAK ölçülür, metin aranarak değil.
+
+    (a) ARTIK HARNESS'IN İÇİNDE. Bir kaynağın `ozet_kur()`u PATLASA bile öteki kaynak toplanır ve
+    teslim edilir; patlayan kaynak "ölçülemedi" diye ADIYLA basılır — sıfır sanılmaz (UYDURMA
+    YASAĞI). Tek mesaj tek gönderime indiği için eski (a) "iki gönderim" değil "iki KAYNAK"
+    düzeyinde yaşar: koruduğu arıza aynıdır — bir tarafın kırılması ötekini sustursun.
+    """
     satirlar = _execstart_satirlari()
     assert len(satirlar) == 1, (
-        f"tek bir ExecStart sarmalayıcı bekleniyordu, {len(satirlar)} satır var: {satirlar!r}")
+        f"tek bir ExecStart bekleniyordu, {len(satirlar)} satır var: {satirlar!r} — ayrı "
+        "`ExecStart=` satırları arızayı ya yutar ya da ilkinde durur")
     assert not satirlar[0].startswith("ExecStart=-"), (
-        "`ExecStart=-` çıkış kodunu YUTAR — birim hiçbir zaman `failed` olmaz")
+        "`ExecStart=-` çıkış kodunu YUTAR — birim hiçbir zaman `failed` olmaz ve Telegram "
+        "kırıldığında iş HER GÜN sessizce düşer")
     parcalar = shlex.split(satirlar[0].split("=", 1)[1])
-    assert parcalar[:2] == ["/bin/sh", "-c"], f"beklenmeyen ExecStart biçimi: {parcalar!r}"
-    # KAÇIŞ BÜTÜNLÜĞÜ ÖNCE ÖLÇÜLÜR (denetim 2026-08-29). Aşağıdaki `.replace` systemd'nin işini
-    # BURADA yapıyor; tek başına bırakılsaydı çivi kendi çözümünü sınardı: birim `exit $rc` diye
-    # TEK dolarla yazılsa bu test yine YEŞİL kalır, oysa systemd `$rc`yi BOŞ geçirir ve argümansız
-    # `exit` BİR ÖNCEKİ komutun durumunu döndürür — yani tam olarak kapatılan "arıza yutulur"
-    # hatası geri gelir, hem de sessizce. Kardeş çivi bunu zaten biliyordu
-    # (tests/test_kucuk_kuyruk_v179.py: `assert "$" not in satir`). Burada koşul daha ince:
-    # `$$` MEŞRU, tek `$` DEĞİL — çiftleri düşürüp kalan tek dolar var mı diye bakılır.
-    assert "$" not in parcalar[2].replace("$$", ""), (
-        "ExecStart yükünde KAÇIRILMAMIŞ tek `$` var — systemd onu boşaltır ve argümansız `exit` "
-        f"bir önceki komutun durumunu döndürür (arıza yutulur): {parcalar[2]!r}")
-    # systemd `$$` ile `$`i kaçırır (meridian-backup.service ile aynı idiom) — gerçek kabuğa
-    # verirken çözülür, yoksa burada sınadığımız şey birimin koştuğu şey OLMAZDI.
-    yuk_sablonu = parcalar[2].replace("$$", "$")
+    assert "sh" not in pathlib.Path(parcalar[0]).name, (
+        f"ExecStart hâlâ bir kabuk sarmalayıcı: {parcalar!r} — tek komut için kabuk yalnız bir "
+        "`$` ikame yüzeyi ekler, hiçbir şart kazandırmaz")
+    assert "$" not in satirlar[0], (
+        f"ExecStart `$` taşıyor — systemd onu ikame eder/boşaltır: {satirlar[0]!r}")
+    assert parcalar[0].endswith("/python") and parcalar[1].endswith("/ops/sef_brifingi.py"), (
+        f"ExecStart doğrudan `.venv/bin/python ops/sef_brifingi.py` çağırmıyor: {parcalar!r}")
 
-    gunluk = tmp_path / "kosanlar.txt"
-    sahte_python = tmp_path / "sahte-python"
-    sahte_python.write_text(
-        "#!/bin/sh\n"
-        f'basename "$1" >> "{gunluk}"\n'
-        'exit "$(cat "$1")"\n', encoding="utf-8")
-    sahte_python.chmod(0o755)
+    # --- (b) İKİNCİ YARI + (a): betiğin KENDİSİ koşturulur -------------------------------------
+    import importlib
+    sef = importlib.reload(importlib.import_module("ops.sef_brifingi"))
 
-    def _kos(alarm_rc: int, oneri_rc: int) -> tuple[int, list[str]]:
-        gunluk.write_text("", encoding="utf-8")
-        (tmp_path / "alarm_backlog_digest.py").write_text(f"{alarm_rc}\n", encoding="utf-8")
-        (tmp_path / "oneri_brifingi.py").write_text(f"{oneri_rc}\n", encoding="utf-8")
-        yuk = (yuk_sablonu
-               .replace("/opt/meridian/.venv/bin/python", str(sahte_python))
-               .replace("/opt/meridian/ops/", f"{tmp_path}/"))
-        p = subprocess.run(["/bin/sh", "-c", yuk], capture_output=True, text=True)
-        return p.returncode, gunluk.read_text(encoding="utf-8").split()
+    def _alarm_patlar():
+        raise RuntimeError("notify_undelivered.json okunamadı")
 
-    kod, kosanlar = _kos(0, 0)
-    assert kod == 0, f"ikisi de başarılıyken birim düştü (rc={kod})"
-    assert kosanlar == ["alarm_backlog_digest.py", "oneri_brifingi.py"], kosanlar
+    monkeypatch.setattr(sef, "_alarm_ozeti", _alarm_patlar)
+    monkeypatch.setattr(sef, "_oneri_ozeti",
+                        lambda: {"toplam": 1, "yeni": 1, "mesaj": "1 okunmamış öneri: N00017"})
+    monkeypatch.setattr(sef, "_self_review", lambda: {})
+    monkeypatch.setattr(sef, "_son_brifing", lambda: "")
 
-    kod, kosanlar = _kos(2, 0)   # kanal düştü → digest 2 döner
-    assert "oneri_brifingi.py" in kosanlar, (
-        f"ilk betik düşünce ikincisi HİÇ KOŞMADI: {kosanlar}")
-    assert kod != 0, "ilk betik düştü ama birim BAŞARILI bitti — arıza görünmez"
+    ham = sef.topla()
+    assert not ham["bos"], (
+        f"bir kaynak patlayınca brifing SUSTU: {ham!r} — ölçüm zincirinin kırıldığı gün "
+        "susmak, sustuğunu 'bugün bir şey yoktu' diye raporlamaktır")
+    assert [k["kaynak"] for k in ham["teslim_edilecek"]] == ["oneri"], (
+        f"patlayan kaynak ÖTEKİNİ de düşürdü: {ham['teslim_edilecek']!r} — eski sarmalayıcının "
+        "(a) şartı harness'ta korunmadı")
+    assert [k["kaynak"] for k in ham["olculemeyen"]] == ["alarm"], (
+        f"patlayan kaynak ADIYLA beyan edilmedi: {ham['olculemeyen']!r} — ölçülemeyen bir kaynak "
+        "sıfır gibi görünemez")
 
-    kod, kosanlar = _kos(0, 2)   # ikinci teslimat düştü
-    assert kosanlar == ["alarm_backlog_digest.py", "oneri_brifingi.py"], kosanlar
-    assert kod != 0, "ikinci betik düştü ama birim BAŞARILI bitti — arıza görünmez"
+    monkeypatch.setattr(sef, "_profili_cagir", lambda _p: "- okunmamış öneri N00017 bekliyor")
+    monkeypatch.setattr(sef.notify, "configured", lambda: False)
+    assert sef.main(["--uygula"]) != 0, (
+        "kanal yapılandırılmamışken betik 0 döndü — düz `ExecStart` bunu `failed`e çeviremez ve "
+        "teslimatsız kadans BAŞARILI görünür")
+
+    monkeypatch.setattr(sef.notify, "configured", lambda: True)
+    monkeypatch.setattr(sef.notify, "send", lambda _t: False)
+    assert sef.main(["--uygula"]) != 0, (
+        "gönderim düştüğü hâlde betik 0 döndü — birim `failed` olmaz, panoda hiçbir şey "
+        "kırmızıya dönmez ve yığın sessizce büyür")
 
 
 def test_TIMER_GUNLUK():
@@ -411,3 +450,42 @@ def test_DAMGA_SAYACI_ASARSA_IYI_HUYLU_HICLIK_GIBI_GORUNMEZ(sandbox_state):
         f"'yeni birikme yok' diyor ve bir daha hiç konuşmaz: {o!r}")
     assert "3" in str(o["hata"]) and "5" in str(o["hata"]), \
         f"hata mesajı iki sayıyı da taşımalı (teşhis edilemez hata işe yaramaz): {o['hata']!r}"
+
+
+def test_deploy_sh_BIRIM_DOSYASINI_DA_KOSULSUZ_DEVRETMEZ():
+    """KURULUM KAPISI, BİR KATMAN YUKARISI — `enable` kapısının ikizi (denetim 2026-08-30).
+
+    KAPATILAN ARIZA. Kardeş çivi (`test_deploy_sh_BIRIMLERI_KURAR_ama_KADANSI_ACMAZ`) yalnız
+    timer'ın AÇILMASINI koruyordu; birim DOSYASI koşulsuz kopyalanıp `daemon-reload` ediliyordu.
+    Timer A1'de ZATEN AÇIKSA — ki bir kez açıldıktan sonra öyle kalır, kapı bilerek "açık tut"
+    diyor — ilgisiz bir sebeple koşan tek bir `deploy.sh` (ve `cutover.sh` adım 4 onu ÇAĞIRIR)
+    günlük teslimatın ExecStart'ını sessizce `@sef`e çevirirdi: profil kurulu olmadığı için HAM
+    modda, ve kimse bu devri KARAR OLARAK vermemişken. Kurulum zararsız DEĞİLDİR: bu dosya
+    ÇALIŞAN bir kadansın ne koşturacağını belirler.
+
+    KAPININ ŞEKLİ. Kopyalama, kardeşiyle AYNI `is-enabled` ölçümüne bağlanır ve girinti ölçülür —
+    kardeş birimler sütun 0'da kopyalanır, bu değil.
+    """
+    d = (KOK / "deploy/oracle-a1/deploy.sh").read_text(encoding="utf-8")
+    satirlar = [ln for ln in d.splitlines()
+                if "meridian-brifing.service" in ln and " cp " in ln
+                and not ln.lstrip().startswith("#")]
+    assert satirlar, "deploy.sh brifing birimini hiç kurmuyor — taze kurulumda kadans dosyasız kalır"
+    for ln in satirlar:
+        assert ln.startswith((" ", "\t")), (
+            "brifing BİRİM DOSYASI koşulsuz kopyalanıyor — timer zaten açıksa ilgisiz bir "
+            f"dağıtım günlük teslimatı kimse karar vermeden @sef'e çevirir: {ln!r}")
+
+
+def test_deploy_sh_HANGI_TESLIMATIN_YURURLUKTE_OLDUGUNU_BASAR():
+    """Kapı sessiz kalırsa operatör hangi teslimatın koştuğunu BİLMEZ.
+
+    Devir kapısı bir dağıtımı "yapmadım" diye bitirebilir; bu doğru davranış ama YARIM: operatör
+    ekranda YÜRÜRLÜKTEKİ ExecStart'ı görmeli, yoksa "kurdum" ile "kurulu olan hâlâ eski" aynı
+    görünür — bu betiğin her yerde kapattığı sınıf."""
+    d = (KOK / "deploy/oracle-a1/deploy.sh").read_text(encoding="utf-8")
+    assert "systemctl cat meridian-brifing.service" in d, (
+        "deploy.sh canlıdaki birimin ExecStart'ını HİÇ okumuyor — hangi teslimatın yürürlükte "
+        "olduğu ölçülmeden raporlanamaz")
+    assert "YÜRÜRLÜKTEKİ" in d or "yürürlükte" in d, (
+        "deploy.sh yürürlükteki teslimatı operatöre BASMIYOR")

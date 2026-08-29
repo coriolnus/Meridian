@@ -90,3 +90,7 @@ ui/tsconfig.tsbuildinfo
 # SDD çalışma alanı — plan başına geçici artefaktlar (ledger, brief, rapor, review paketi).
 # rsync .gitignore OKUMAZ: dagit.sh RSYNC_EXC listesine de eklendi (scratch-panov2 dersi).
 .superpowers/
+
+# Bot kum havuzu (spec §9.3 safe-root): canlıda botların TEK yazılabilir dizini.
+# Depoda durmaz — `state/` ve `backups/` ile aynı sınıf: canlı-sahipli, repo-sahipli değil.
+/var/

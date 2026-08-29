@@ -40,7 +40,13 @@ def test_guard_kancasi_TANIMLI():
 
 
 def test_cron_modu_DENY():
-    """Başsız cron tehlikeli komutu ONAYLAYAMAZ. Bu pazarlığa kapalı (§9.2)."""
+    """Başsız cron tehlikeli komutu ONAYLAYAMAZ (§9.2).
+
+    ŞERH DÜZELTİLDİ (2026-08-29): burada "pazarlığa kapalı" yazıyordu ve satıra taşımadığı
+    bir ağırlık yüklüyordu. Ölçüldü: `tools/approval.py` varsayılanı ZATEN `deny` — yani
+    yapılandırmadaki satır bir DELİK KAPATMAZ, bir BEYANDIR (varsayılan değişirse duruşumuz
+    değişmez). Aynı fazla iddia `deploy/hermes/config.yaml` şerhinden de silindi; ikisi
+    ayrı yerlerde durup birbirini yalanlamasın."""
     a = _cfg().get("approvals") or {}
     assert a.get("cron_mode") == "deny", f"approvals.cron_mode={a.get('cron_mode')!r}, 'deny' olmalı"
 

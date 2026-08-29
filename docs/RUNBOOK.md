@@ -1136,6 +1136,18 @@ kopyası; kurulumu KENDİ birim başlığındadır, bu betikte değil)
 * meridian-aylik-bucket-kopya.timer → /etc/systemd/system/        (aynı kopyanın tetiği)
 * meridian-brifing.service          → /etc/systemd/system/        (v327 brifing kadansı)
 * meridian-brifing.timer            → /etc/systemd/system/        (kadansın tek tetiği)
+* @sef profili (Faz 2) → ~ubuntu/.hermes/profiles/sef/ — ÜÇ dosya, ELLE kurulur. TAM REPO
+YOLLARIYLA yazılır, kısa adla DEĞİL: `config.yaml` ve `SOUL.md` F9 listesinde İKİ KEZ
+geçiyor (ana profil + @sef) ve basename eşleyen bir çivi, bu üç satır silinse bile ana
+profilinkiler yüzünden yeşil kalırdı (denetim 2026-08-30):
+- deploy/hermes/profiles/sef/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
+- deploy/hermes/profiles/sef/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
+- deploy/hermes/profiles/sef/SOUL.md            (botun kalıcı brifingi)
+KURULUM BU BETİKTE DEĞİL, BİLEREK: `hermes profile install` canlıda YENİ BİR AJAN KİMLİĞİ
+doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: botun
+kum havuzunu (`/opt/meridian/var/bots/sef`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR. "Tek
+komut" demek yanlış olurdu — ortadaki adım (profilin kendi `.env`i) atlanırsa profil
+KURULUR, KOŞAR ve her gün sessizce ham brifinge düşer: yani yanlış çalışır, bozuk görünmez.
 KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 ```
@@ -1290,8 +1302,8 @@ dagit.sh — Meridian GENEL dağıtım betiği (WP-H/H2 kapılı). Tek-seferlik 
 [1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
 [1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
 [F9] dagit-kapsamı-dışı canlı artefaktlar (sprint@ birimi · polkit kuralı · SOUL.md ·
-hermes config.yaml · tick-watchdog service+timer · litestream.yml ·
-aylık-bucket-kopya service+timer · brifing service+timer):
+hermes config.yaml · tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya
+service+timer · brifing service+timer · @sef profili: distribution.yaml+config.yaml+SOUL.md):
 içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
 [2] rsync (state/backups/.venv/.git HARİÇ)
 [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)

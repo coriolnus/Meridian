@@ -84,6 +84,36 @@ def ozet_kur() -> dict:
             "en_yeni": en_yeni, "not": ""}
 
 
+def damgala(o: dict) -> bool:
+    """Teslim damgasını basar; damga gerçekten yazıldıysa True. `o` = GÖNDERİLEN mesajı üreten
+    `ozet_kur()` enstantanesi.
+
+    MODÜL DÜZEYİNE ÇIKARILDI (denetim 2026-08-29) — gerekçesi kardeş betikte (`alarm_backlog_
+    digest.damgala`) tam metniyle yazılı: gövde `main()` içinde bir kapanıştı, `@sef` onu
+    çağıramadığı için sözleşmenin ikinci bir kopyasını yazmak zorunda kalmıştı.
+
+    KARDEŞİNDEN FARKLI ŞEY DAMGALAR ve bu ayrım korunur: alarm tarafı KÜMÜLATİF SAYACIN kapsanan
+    değerini kendi sayaç dosyasının İÇİNE yazar; burada damga EN YENİ ZAMAN DAMGASIDIR ve AYRI bir
+    dosyada durur (okunan defter JSONL'dir, içine bir damga anahtarı koyulamaz). İkisini aynı
+    sanmak birini kalıcı olarak damgasız bırakırdı.
+
+    `store.update_json` sözleşmesi: belgeyi YERİNDE değiştir ve True dön — yeni sözlük döndürmek
+    sessizce hiçbir şey yazmaz. `en_yeni` GÖNDERİLEN mesajı üreten AYNI enstantaneden gelir; send
+    SONRASI ikinci bir defter okuması YOK (denetim bulgusu 2026-08-29): eski kod burada deftere
+    yeniden bakıyordu ve gönderim penceresinde (ağ POST'u sürerken) eklenmiş bir satırı, o satır
+    hiç mesajda YOKKEN 'gördüm' diye damgalıyordu — yarı-teslim'in ikinci bir türü, yalnızca
+    ledger okuma zamanlamasından doğan.
+
+    Dönüş değeri kayıt dürüstlüğü içindir: çağıranlar "damgalandı" diye olay yazar; yazım
+    gerçekleşmediyse o olay yazılmamalıdır."""
+    def _yaz(d: dict) -> bool:
+        d[DAMGA] = {"ts": memory.now_iso(), "son_ts": o["en_yeni"], "kapsanan": o.get("yeni")}
+        return True
+
+    belge = store.update_json(DAMGA_DOSYA, _yaz, {}) or {}
+    return isinstance(belge.get(DAMGA), dict)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--uygula", action="store_true",
@@ -109,18 +139,7 @@ def main(argv: list[str] | None = None) -> int:
               "(yarım teslim 'teslim edildi' sayılmaz)")
         return 2
 
-    def _damgala(d: dict) -> bool:
-        """`store.update_json` sözleşmesi: belgeyi YERİNDE değiştir ve True dön — yeni sözlük
-        döndürmek sessizce hiçbir şey yazmaz. `en_yeni` GÖNDERİLEN mesajı üreten AYNI `o`
-        enstantanesinden gelir — send SONRASI ikinci bir defter okuması YOK (denetim bulgusu
-        2026-08-29): eski kod burada deftere yeniden bakıyordu ve gönderim penceresinde
-        (ağ POST'u sürerken) eklenmiş bir satırı, o satır hiç mesajda YOKKEN 'gördüm' diye
-        damgalıyordu — yarı-teslim'in ikinci bir türü, yalnızca ledger okuma zamanlamasından
-        doğan."""
-        d[DAMGA] = {"ts": memory.now_iso(), "son_ts": o["en_yeni"], "kapsanan": o["yeni"]}
-        return True
-
-    store.update_json(DAMGA_DOSYA, _damgala, {})
+    damgala(o)          # gövde ve gerekçesi modül düzeyinde — tek uygulama, üç çağıran
     obs.log("oneri_brifingi_teslim", yeni=o["yeni"], toplam=o["toplam"], son_ts=o["en_yeni"],
             detail="okunmamış iyileştirme önerileri TEK özet mesajla teslim edildi ve damgalandı")
     print(f"TESLİM EDİLDİ ve damgalandı (yeni={o['yeni']})")

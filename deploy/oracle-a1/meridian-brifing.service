@@ -2,41 +2,85 @@
 #
 # KİMLİK: `EnvironmentFile=` YOK ve bu BİR EKSİK DEĞİL, ÖLÇÜLMÜŞ BİR SONUÇTUR (2026-08-29, canlı
 # A1). Telegram kimliği ortam değişkeninde değil `state/secrets.json`da yaşıyor ve `notify` onu
-# oradan okuyor: iki betik de `env -i` altında (BOŞ ortamla) kanalı ÇÖZÜYOR. Yani systemd'nin
+# oradan okuyor: kaynak betikler `env -i` altında (BOŞ ortamla) kanalı ÇÖZÜYOR ve `@sef` de AYNI
+# `notify`yi çağırıyor, yani ölçüm devrolur — yeniden ölçmeye gerek yok. Kısacası systemd'nin
 # asgari ortamı yeterlidir; bir `EnvironmentFile=-/opt/meridian/.dash.env` satırı burada sıra
 # dışı bir şey KAZANDIRMAZ. Bu not, aynı sorunun bir daha açılmaması için buradadır.
+# AYRIM (Faz 2): aşağıdaki iki `Environment=` satırı bu notu ÇÜRÜTMEZ. Onlar KİMLİK taşımaz —
+# ajan profilinin YERİ ve botun YAZMA KISITIDIR, ikisi de sır değildir. Model anahtarı hâlâ
+# birime girmez; profil onu kendi evindeki `.env`ten okur.
 #
 # KURULUM ELLE — F9 SINIFI (dagit bu dosyayı TAŞIMAZ; içerik kapısı [F9] ayrıklığı RAPORLAR).
-# Adımları `deploy/oracle-a1/deploy.sh` yürütür (sudo cp + daemon-reload + enable --now .timer).
+# Adımları `deploy/oracle-a1/deploy.sh` yürütür: sudo cp + daemon-reload + `.timer`ı KAPILI
+# enable (yalnız ZATEN açıksa açık tutar — kapalıyken hiçbir dağıtım günlük Telegram kadansını
+# operatör kararı olmadan AÇMAZ; `cutover.sh` adım 4 bu betiği çağırdığı için kapı şarttır).
 [Unit]
-# Hesaplanmış ama teslim edilmemiş çıktıları operatöre iletir. İKİSİ DE boşken SESSİZDİR —
-# karar döndürmeyen zamanlanmış iş bildirim spam'idir (spec §8, hata 4).
-Description=Meridian brifing — alarm yığını + iyileştirme önerileri (boşken sessiz)
+# Hesaplanmış ama teslim edilmemiş çıktıları operatöre iletir. HER İKİ KAYNAK DA boşken
+# SESSİZDİR — karar döndürmeyen zamanlanmış iş bildirim spam'idir (spec §8, hata 4).
+Description=Meridian brifing — @sef tek öncelikli brifing (boşken sessiz)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=oneshot
 User=ubuntu
+# BU SATIR HARNESS İÇİNDİR, AJAN İÇİN DEĞİL (düzeltme: denetim 2026-08-30). `sef_brifingi.py`
+# depo kökünden koşmalı (`sys.path` bootstrap + `state/` yolları). Ama `hermes -z` ALT SÜRECİ bu
+# dizini MİRAS ALMAMALI: ÖLÇÜLDÜ (yerel Hermes v0.18.2, `agent/prompt_builder.py::
+# load_context_files`; canlı v0.19.0 — sürüm farkı beyan edilir) hermes cwd'den `.hermes.md`/
+# `HERMES.md` (GİT KÖKÜNE kadar yukarı), `AGENTS.md`, `CLAUDE.md`, `.cursorrules` toplayıp SİSTEM
+# PROMPT'una koyuyor. Yani bu satır tek başına, deponun `CLAUDE.md`sini (A1 host'u, ssh anahtar
+# yolu, dağıtım disiplini) HER GÜN OpenRouter'a gönderirdi ve `notify.scrub` onu HİÇ GÖRMEZDİ
+# (scrub yalnız bizim kurduğumuz prompt argümanına uygulanır — spec §9.1 egress'i birinci sınıf
+# yapıyor). ÇARE HARNESS'TA: `_profili_cagir` çocuğa BOŞ bir geçici dizini `cwd=` olarak verir
+# (çivi: test_sef_brifingi_v330.py::test_COCUK_PROJE_TALIMATI_TOPLAYAMAYACAGI_BIR_DIZINDE_KOSAR).
 WorkingDirectory=/opt/meridian
-# TEK ExecStart SARMALAYICI — İKİ ŞARTI AYNI ANDA SAĞLAYAN TEK ŞEKİL (denetim 2026-08-29):
+# --- PROFİL BAĞLARI — İKİSİ DE ZORUNLU, İKİSİ DE YALNIZ BURADA VERİLEBİLİR --------------------
+# `HERMES_HOME`: `@sef` profilinin KENDİ evi. Profil = BAĞIMSIZ bir HERMES_HOME dizinidir
+#   (Hermes v0.19.0'da ölçüldü); §9.4 duruşunun tamamı — guard kancası · `cron_mode: deny` ·
+#   deny listesi · kapalı araç takımları — O dizinin `config.yaml`ındadır, ana profilinkinde
+#   DEĞİL. Harness değeri DOĞRULAR (`sef_brifingi.py`, `_profil_evini_dogrula`) ve ev `sef`
+#   profili değilse çağrıyı REDDEDER: yanlış/eksik değer bilinmeyen bir ajan kimliğini
+#   çağırmaz, HAM brifinge iner. Güvenli — ama SESSİZ: sıralama katmanı kalıcı olarak kapanır
+#   ve dışarıdan hiçbir şey bozuk görünmez. Bu yüzden satır bir konfor değil, ŞARTTIR.
+# `HERMES_WRITE_SAFE_ROOT`: botun yazabileceği TEK dizin. ÖLÇÜLDÜ (`agent/file_safety.py`,
+#   `if safe_roots:`): değişken TANIMSIZSA hiçbir yazma kısıtı UYGULANMAZ. Manifestteki
+#   `env_requires` beyanı bu satırın YERİNE GEÇMEZ — o beyan `.env` YAZMAZ, kurulu profile
+#   yalnız `.env.EXAMPLE` bırakır (`.env` kullanıcı-sahiplidir; ÖLÇÜLDÜ, v0.18.2
+#   `profile_distribution.py` `ENV_EXAMPLE_FILENAME`), yani ETKİLEŞİMLİ koşumu kapsar.
+#   ZAMANLANMIŞ koşum burada bağlanır ya da HİÇBİR YERDE bağlanmaz.
+# MODEL ANAHTARI BURADA YOK, ve bu bir eksik DEĞİL: profil kendi evindeki `.env`i okur, dağıtım
+# ona ASLA dokunmaz (operatörün kurulum adımlarından biri). Birim dosyası 0644'tür; sırrı buraya
+# yazmak `.dash.env` dersini tersine çevirmek olurdu.
+Environment=HERMES_HOME=/home/ubuntu/.hermes/profiles/sef
+Environment=HERMES_WRITE_SAFE_ROOT=/opt/meridian/var/bots/sef
+# TEK ExecStart, SARMALAYICISIZ — SADELEŞME, GEVŞEME DEĞİL (Faz 2: kadans `@sef`e devredildi).
+# Eski hâl iki betiği tek bir `/bin/sh -c` sarmalayıcıyla koşturuyordu, çünkü İKİ ŞARTI AYNI
+# ANDA sağlamanın başka yolu yoktu:
 #   (a) ilk teslimat düşse bile İKİNCİSİ KOŞAR,   (b) HERHANGİ biri düşerse birim `failed` biter.
-# Ayrı `ExecStart=` satırları bunu YAPAMAZ ve eski hâl tam da bu yüzden yanlıştı: `-` öneksiz
-# systemd ilk başarısızlıkta DURUR (b olur, a olmaz); `-` önekiyle çıkış kodu YUTULUR ve birim
-# ASLA `failed` görmez (a olur, b olmaz). Eski dosya `-` önekini kullanıyor VE yorumunda "ayrı
-# ExecStart satırları kullanılmadı" diyordu — oysa tam olarak onları kullanıyordu.
-# NEDEN ÖNEMLİ: ikisi de "kanal yapılandırılmamış"ta 2 döner; "gönderim düştü"de digest 1,
-# öneri brifingi 2 (her betiğin kendi başlığında yazılı — sayılar BİRLEŞİK DEĞİL). Telegram
-# kırılırsa iş HER GÜN sessizce düşer, yığın büyür, ve bunu haber verecek tek mekanizma zaten
-# gönderemeyen işin TA KENDİSİDİR — arızayı görünür kılan tek şey birimin `failed` olmasıdır.
-# `failed`İN OKUYUCUSU VAR, ölçüldü (denetim 2026-08-29; YASA 6 — okuyucusuz sinyal sinyal
-# değildir): `meridian/api.py` `/api/infra` uçları `ActiveState=failed`i "arizali" diye
-# sınıflıyor, yani birim düşerse panoda görünür. `OnFailure=` BİLEREK YOK: ikinci bir bildirim
-# birimi eklemek, teslimat kanalı ZATEN kırıkken çalışmayacak bir yol daha kurmaktır — arıza
-# ÇEKMELİ (panodan bakılır) okunur, İTMELİ değil. Pano da susarsa sorun bu birim değildir.
-# NOT (systemd ikame tuzağı — meridian-backup.service'in ExecStart'ıyla AYNI idiom): $rc → systemd boş
-# geçirirdi; `$$` ile kaçırıldı, sh'a `$rc` ulaşır. En kötü (en büyük) çıkış kodu yayılır.
-ExecStart=/bin/sh -c 'rc=0; /opt/meridian/.venv/bin/python /opt/meridian/ops/alarm_backlog_digest.py --uygula || rc=$$?; /opt/meridian/.venv/bin/python /opt/meridian/ops/oneri_brifingi.py --uygula || { r2=$$?; [ $$r2 -gt $$rc ] && rc=$$r2; }; exit $$rc'
+# Ayrı `ExecStart=` satırları bunu YAPAMAZ: `-` öneksiz systemd ilk başarısızlıkta DURUR (b olur,
+# a olmaz); `-` önekiyle çıkış kodu YUTULUR ve birim ASLA `failed` görmez (a olur, b olmaz).
+# ŞİMDİ TEK BETİK VAR ve iki şart YER DEĞİŞTİRDİ — kalkmadı:
+#   (a) ARTIK HARNESS'IN İÇİNDE. `sef_brifingi.py` iki kaynağı AYRI AYRI okur (`_kaynak_oku` her
+#       kaynağı kendi `try` bloğunda çağırıyor — KOD OKUNARAK doğrulandı, varsayılmadı): biri
+#       patlarsa o kaynak "ölçülemedi" diye ADIYLA basılır ve ÖTEKİ yine teslim edilir. Dahası
+#       ölçülemeyen kaynak "boş"u BOZAR, yani ölçüm zinciri kırıldığı gün brifing susmaz.
+#   (b) DÜZ, `-` ÖNEKSİZ ExecStart. Betik kanal yapılandırılmamışsa 2, gönderim düşerse 1 döner;
+#       systemd bunu olduğu gibi `failed`e çevirir. Kabuk kalktığı için `$` İKAME YÜZEYİ de
+#       ortadan kalktı — eski yükteki `$$` kaçışları tam o tuzağın kapağıydı, artık tuzak yok.
+# İKİ ESKİ BETİK BURADA ARTIK ÇAĞRILMAZ: `@sef` onların `ozet_kur()`unu okuyor ve teslimden
+# SONRA damgalarını kendisi basıyor. İkisi de koşsaydı operatör aynı yığını ÜÇ ayrı mesajda
+# görürdü (dikkat bütçesi — botun var oluş sebebinin tersi) ve iki damgalayıcı aynı dosyada
+# yarışırdı: hangisi önce damgalarsa öteki mesaj "yeni yok" derdi.
+# NEDEN ÖNEMLİ: Telegram kırılırsa iş HER GÜN sessizce düşer, yığın büyür, ve bunu haber verecek
+# tek mekanizma zaten gönderemeyen işin TA KENDİSİDİR — arızayı görünür kılan tek şey birimin
+# `failed` olmasıdır. `failed`İN OKUYUCUSU VAR, ölçüldü (denetim 2026-08-29; YASA 6 —
+# okuyucusuz sinyal sinyal değildir): `meridian/api.py` `/api/infra` uçları `ActiveState=failed`i
+# "arizali" diye sınıflıyor, yani birim düşerse panoda görünür. `OnFailure=` BİLEREK YOK: ikinci
+# bir bildirim birimi eklemek, teslimat kanalı ZATEN kırıkken çalışmayacak bir yol daha
+# kurmaktır — arıza ÇEKMELİ (panodan bakılır) okunur, İTMELİ değil. Pano da susarsa sorun bu
+# birim değildir.
+ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/sef_brifingi.py --uygula
 
 # ==================================================================================================
 # H3 SERTLEŞTİRME — filo ortak seti (meridian.service · meridian-sprint@.service ·
@@ -54,12 +98,35 @@ NoNewPrivileges=true
 CapabilityBoundingSet=
 ProtectSystem=strict
 ProtectHome=read-only
-# --- AYRIŞMA — ReadWritePaths BURADA DAR: ne `~/.hermes` ne `~/.cache`. ÖLÇÜM (yazan yollar):
-#     iki betik de yalnız `state/` altına yazar (`notify_undelivered.json` damgası,
-#     `oneri_brifingi_damga.json`, `events.jsonl` → obs.log) ve import anında `__pycache__` —
-#     hepsi /opt/meridian altındadır. `~/.hermes` YOK: bu betikler LLM/ajan ÇAĞIRMAZ.
+# --- AYRIŞMA — ReadWritePaths: `/opt/meridian` + `/home/ubuntu/.hermes`; `~/.cache` YOK.
+#     ÖLÇÜM (harness'in kendi yazdığı yollar): `state/` altındaki damgalar
+#     (`notify_undelivered.json`, `oneri_brifingi_damga.json`, `sef_brifingi_damga.json`),
+#     `events.jsonl` → obs.log, import anında `__pycache__`, ve botun kum havuzu
+#     `/opt/meridian/var/bots/sef` — hepsi /opt/meridian altındadır, tek satır kapsar
+#     (kum havuzu için AYRI bir yol GEREKMEZ; ölçülerek yazıldı, varsayılmadı).
+#     `/home/ubuntu/.hermes` ARTIK AÇIK, ve gerekçesi ŞU: bu birim Faz 2'den beri bir AJAN
+#     çağırıyor (`sef_brifingi.py` → `hermes -z`). Eski yorum "bu betikler LLM/ajan ÇAĞIRMAZ"
+#     diyordu; o cümle bugün YANLIŞ olurdu. `ProtectHome=read-only` altında ajanın kendi evine
+#     (`~/.hermes/profiles/sef`) yaptığı her yazım EROFS olur — bu depoda ÖLÇÜLMÜŞ bir vakadır
+#     (meridian.service tur-1 kırıklığı: `~/.hermes` kapalıyken ajan yazımları yutulan
+#     istisnaların altında düştü). ÇIKARIM, ÖLÇÜM DEĞİL: `hermes -z`in BU profille tam olarak
+#     ne yazdığı canlıda ölçülmedi — profilin ilk koşumunda doğrulanmalı (deploy.sh çıktısı bunu
+#     operatöre ADIYLA söyler). Yol `-` ÖNEKLİ: profil henüz kurulmamışken dizin YOKTUR ve
+#     öneksiz yol systemd'ye birimi REDDETTİRİR — aynı emsalin ikinci yarısı.
 #     `~/.cache` YOK: ExecStart `uv` DEĞİL, doğrudan `.venv/bin/python` (uv önbelleği hiç açılmaz).
-ReadWritePaths=/opt/meridian
+#
+#     AÇILAN YOL TAM HÂLİYLE: `/home/ubuntu/.hermes/profiles/sef` — PROFİL DİZİNİNE
+#     DARALTILDI, `/home/ubuntu/.hermes`in TAMAMINA DEĞİL (Rol-1 hükmü 2026-08-29).
+#     `~/.hermes` bütünüyle açılsaydı bu birim ANA profilin `config.yaml`ına (yani HER ÖTEKİ
+#     çağrının guard duruşuna) ve `.env`ine (model anahtarları) YAZABİLİRDİ. Bu tam olarak
+#     safe-root katmanında kapattığımız kendi-silahsızlandırma sınıfının bir katman aşağıda
+#     yeniden açılmasıdır — ve `HERMES_WRITE_SAFE_ROOT` bunu ENGELLEMEZ: o AJANIN ARAÇLARINI
+#     bağlar, systemd ise SÜRECİ. İki ayrı katman, ikisi de kendi başına yeterli değil.
+#     ARIZA ASİMETRİSİ, hükmün gerekçesi: ÇOK DAR olursa hermes EROFS alır, harness ham
+#     brifinge düşer, düşüş `obs.log`a ADIYLA yazılır ve alarm YİNE TESLİM EDİLİR — görünür ve
+#     kayıpsız. ÇOK GENİŞ olursa hiçbir şey olmaz, ta ki bir gün olana kadar. Ölçülmemiş bir
+#     yazma kümesi karşısında görünür arızayı seç.
+ReadWritePaths=/opt/meridian -/home/ubuntu/.hermes/profiles/sef
 PrivateTmp=true
 ProtectKernelTunables=true
 ProtectKernelModules=true

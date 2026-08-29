@@ -34,6 +34,18 @@
 #   * meridian-aylik-bucket-kopya.timer → /etc/systemd/system/        (aynı kopyanın tetiği)
 #   * meridian-brifing.service          → /etc/systemd/system/        (v327 brifing kadansı)
 #   * meridian-brifing.timer            → /etc/systemd/system/        (kadansın tek tetiği)
+#   * @sef profili (Faz 2) → ~ubuntu/.hermes/profiles/sef/ — ÜÇ dosya, ELLE kurulur. TAM REPO
+#     YOLLARIYLA yazılır, kısa adla DEĞİL: `config.yaml` ve `SOUL.md` F9 listesinde İKİ KEZ
+#     geçiyor (ana profil + @sef) ve basename eşleyen bir çivi, bu üç satır silinse bile ana
+#     profilinkiler yüzünden yeşil kalırdı (denetim 2026-08-30):
+#       - deploy/hermes/profiles/sef/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
+#       - deploy/hermes/profiles/sef/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
+#       - deploy/hermes/profiles/sef/SOUL.md            (botun kalıcı brifingi)
+#     KURULUM BU BETİKTE DEĞİL, BİLEREK: `hermes profile install` canlıda YENİ BİR AJAN KİMLİĞİ
+#     doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: botun
+#     kum havuzunu (`/opt/meridian/var/bots/sef`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR. "Tek
+#     komut" demek yanlış olurdu — ortadaki adım (profilin kendi `.env`i) atlanırsa profil
+#     KURULUR, KOŞAR ve her gün sessizce ham brifinge düşer: yani yanlış çalışır, bozuk görünmez.
 # KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 # listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 set -euo pipefail
@@ -135,8 +147,31 @@ sudo cp deploy/oracle-a1/meridian-tick-watchdog.timer   /etc/systemd/system/meri
 # çıkış kodunu yutar ve Telegram kırıldığında arıza HER GÜN sessiz kalırdı).
 # YEDEK ALINMAZ ve bu bilinçlidir: birim dosyaları repodan TAM olarak yeniden üretilir, canlıda
 # elle yazılmış bir içerikleri yoktur (aşağıdaki ~/.hermes dosyalarının tersine).
-sudo cp deploy/oracle-a1/meridian-brifing.service       /etc/systemd/system/meridian-brifing.service
-sudo cp deploy/oracle-a1/meridian-brifing.timer         /etc/systemd/system/meridian-brifing.timer
+#
+# DEVİR KAPISI — `enable` KAPISININ İKİZİ, BİR KATMAN YUKARISI (denetim 2026-08-30). Aşağıdaki
+# kapı yalnız timer'ın AÇILMASINI koruyordu; birim DOSYASI koşulsuz kopyalanıyordu. Timer A1'de
+# zaten AÇIKSA (bir kez açıldıktan sonra öyle kalır — kapı bilerek "açık tut" der) ilgisiz bir
+# sebeple koşan tek bir dağıtım günlük teslimatın ExecStart'ını sessizce `@sef`e çevirirdi:
+# profil kurulu olmadığı için HAM modda, ve kimse bu devri KARAR olarak vermemişken. `cutover.sh`
+# adım 4 bu betiği çağırıyor, yani "ilgisiz bir sebep" gündelik bir olaydır.
+# KAPININ ŞEKLİ, `enable` kapısıyla AYNI: kadans KAPALIYSA kopyalamak zararsızdır (koşan bir şey
+# yok) → kopyala. AÇIKSA yalnız (a) yürürlükteki ExecStart ZATEN `sef_brifingi.py` ise (devir
+# olmuş, tazeleme idempotenttir) ya da (b) operatör `MERIDIAN_BRIFING_DEVRI=1` ile AÇIKÇA
+# istediyse kopyalanır. Aksi hâlde DOKUNULMAZ ve yürürlükteki teslimat ADIYLA basılır.
+BRIFING_ENABLED="$(systemctl is-enabled meridian-brifing.timer 2>/dev/null || true)"
+BRIFING_EXEC="$(systemctl cat meridian-brifing.service 2>/dev/null | grep -m1 '^ExecStart=' || true)"
+if [ "$BRIFING_ENABLED" != "enabled" ] || [ "${MERIDIAN_BRIFING_DEVRI:-0}" = "1" ] || \
+   case "$BRIFING_EXEC" in *sef_brifingi.py*) true ;; *) false ;; esac; then
+  sudo cp deploy/oracle-a1/meridian-brifing.service       /etc/systemd/system/meridian-brifing.service
+  sudo cp deploy/oracle-a1/meridian-brifing.timer         /etc/systemd/system/meridian-brifing.timer
+  echo "-- brifing birimi kuruldu/tazelendi (kadans=${BRIFING_ENABLED:-yok})"
+else
+  echo "!! BRİFİNG BİRİMİ DEVREDİLMEDİ — kadans AÇIK ve YÜRÜRLÜKTEKİ teslimat repodakinden farklı."
+  echo "   YÜRÜRLÜKTEKİ: ${BRIFING_EXEC:-(okunamadı)}"
+  echo "   REPODAKİ    : $(grep -m1 '^ExecStart=' deploy/oracle-a1/meridian-brifing.service)"
+  echo "   Günlük Telegram teslimatını değiştirmek bir OPERATÖR KARARIDIR; bu dağıtım onu"
+  echo "   kendiliğinden vermez. Devretmek için:  MERIDIAN_BRIFING_DEVRI=1 bash deploy/oracle-a1/deploy.sh"
+fi
 # SPRINT ŞABLON BİRİMİ (v241, 2026-08-13 — tick-watchdog'un AYNI DERSİ, bu kez baştan uygulandı).
 # Öğrenme sprinti 2026-08-13'e dek worker'ın çocuğu olarak doğuyordu (`sprint.py` Popen) ve systemd
 # varsayılan `KillMode=control-group` yüzünden HER `systemctl restart meridian` onu biçiyordu —
@@ -214,6 +249,25 @@ if [ ! -s /opt/meridian/.dash.env ] || [ "$DASH_IZIN" != "600" ]; then
 fi
 echo "-- pano token'ı: /opt/meridian/.dash.env dolu + 0600 ✓"
 mkdir -p /home/ubuntu/backups     # yedek hedefi — timer ilk atışta var olmalı
+# @sef BOT KUM HAVUZU (Faz 2) — botun TEK yazılabilir dizini; brifing birimi
+# `HERMES_WRITE_SAFE_ROOT` ile tam buraya bağlıyor. BU SATIR OLMADAN DİZİN HİÇ DOĞMAZ ve bunu
+# ölçtük: `dagit.sh` rsync'i `/var`ı ANKORLU olarak DIŞLIYOR (aksi hâlde `--delete` botun
+# biriktirdiği her şeyi her dağıtımda silerdi) ve `.gitignore` da `/var/` taşıyor — yani depo
+# tarafında karşılığı YOK, canlıda birinin yaratması ŞART. Emsal bir üst satırdadır: yedek
+# timer'ının hedefi de tam bu gerekçeyle burada yaratılıyor.
+# 0700: kum havuzunun içeriği yalnız botu ilgilendirir ve umask'a bırakılan bir dizin makineden
+# makineye farklı izinle doğar (`.dash.env` 0600 sabitlemesiyle aynı sınıf).
+mkdir -p /opt/meridian/var/bots/sef
+chmod 700 /opt/meridian/var/bots/sef
+# SAHİPLİK ÖLÇÜLÜR, VARSAYILMAZ: betik `sudo bash deploy/...` ile koşulursa dizin ROOT'un olur ve
+# birim (`User=ubuntu`) kendi kum havuzuna YAZAMAZ — üstelik sessizce, çünkü ham-brifing düşüş
+# yolu tam bu arızayı maskeler (bot yazamaz, brifing yine gider, kimse fark etmez).
+BOT_KUM_SAHIP="$(stat -c '%U' /opt/meridian/var/bots/sef 2>/dev/null || echo YOK)"
+if [ "$BOT_KUM_SAHIP" != "ubuntu" ]; then
+  echo "-- @sef kum havuzu sahibi '$BOT_KUM_SAHIP' — ubuntu'ya alınıyor"
+  sudo chown -R ubuntu:ubuntu /opt/meridian/var/bots/sef
+fi
+echo "-- @sef kum havuzu hazır: /opt/meridian/var/bots/sef (0700, ubuntu) — manifestin kum-havuzu adımı BU BETİKTE yapıldı"
 sudo systemctl daemon-reload
 sudo systemctl enable meridian meridian-barsarchive
 sudo systemctl enable --now meridian-backup.timer   # timer şimdi başlar; service'i o tetikler
@@ -226,7 +280,9 @@ sudo systemctl enable --now meridian-tick-watchdog.timer
 # KENDİ KENDİNİ ONARIR: bir kez açıldıktan sonra her dağıtım onu AÇIK TUTAR (idempotent
 # yeniden-enable); kapalıyken hiçbir dağıtım onu açmaz. Yani kapı yalnız İLK açılışa bakar.
 # BİRİMİN KENDİSİ enable EDİLMEZ — `Type=oneshot`, tetiği timer'dır.
-BRIFING_ENABLED="$(systemctl is-enabled meridian-brifing.timer 2>/dev/null || true)"
+# `BRIFING_ENABLED` YUKARIDA, devir kapısında ÖLÇÜLDÜ — burada yeniden ölçülmez: aynı olgunun
+# iki kaynağı, ikisinin ayrışabileceği anlamına gelir (bu betiğin `$HOME` dersiyle aynı sınıf).
+# Aradaki adımlar timer'ın enable durumunu DEĞİŞTİRMEZ (yalnız dosya kopyalar).
 if [ "$BRIFING_ENABLED" = "enabled" ]; then
   sudo systemctl enable --now meridian-brifing.timer
   # "kurulu != çalışır" — kardeş bekçiye uygulanan disiplin buraya da (denetim 2026-08-29).
@@ -237,12 +293,75 @@ if [ "$BRIFING_ENABLED" = "enabled" ]; then
   fi
 else
   echo "-- brifing kadansı: dosyalar KURULDU, kadans KAPALI (bilinçli — günlük Telegram teslimatı"
-  echo "   operatör kararıdır). Açmak için TEK komut:"
+  echo "   operatör kararıdır). Kadansı açan komut (aşağıdaki @sef reçetesinin 3. adımı):"
   echo "       sudo systemctl enable --now meridian-brifing.timer"
-  echo "   UYARI (systemd sözleşmesinden ÇIKARIM, bu kutuda ÖLÇÜLMEDİ): birim `Persistent=true`"
+  # TIRNAK KAÇIŞI, SÜS DEĞİL: bu satır bir zamanlar KAÇIRILMAMIŞ ters-tırnak taşıyordu ve çift
+  # tırnak içinde ters-tırnak KOMUT İKAMESİDİR — `Persistent=true` bir atama olarak koşup BOŞ
+  # dönüyordu, yani uyarı ekrana "birim  taşıyor" diye çıkıyordu. Uyarının öznesi sessizce
+  # kayboluyordu; tam da bu betiğin her yerde kapattığı "sessiz kayıp" sınıfı.
+  echo "   UYARI (systemd sözleşmesinden ÇIKARIM, bu kutuda ÖLÇÜLMEDİ): birim \`Persistent=true\`"
   echo "   taşıyor ve hiç tetiklenmemiş bir timer'ın damgası yoktur — ilk enable ANINDA bir koşum"
   echo "   ateşleyebilir. İlk mesajın hemen gelmesi arıza DEĞİLDİR."
 fi
+
+# @sef PROFİLİ — DURUM RAPORU + REÇETE. Kapı DEĞİL, RAPOR: profilsiz bir kurulum BOZUK değildir,
+# brifing ham yolundan teslim etmeye devam eder ([F9] kapısının duruşuyla aynı — sürüklenmeyi
+# GÖRÜNÜR kıl, hükmü operatöre bırak). Aşağıdaki ÜÇ EYLEM manifestin (deploy/hermes/profiles/sef/
+# distribution.yaml) kurulum notundakilerle AYNIDIR ve bu bir dilek değil ÇİVİLİ bir olgudur
+# (tests/test_bot_profil_durusu_v329.py::test_RECETENIN_HER_EYLEMI_IKI_BELGEDE_DE_GECER). Bir
+# kez ayrıştılar: manifest timer'dan hiç söz etmiyordu ve o eksik, operatörün okuduğu taraftaydı.
+# PROFİL YOLU ÖLÇÜLÜR, VARSAYILMAZ (denetim 2026-08-30). `$HOME` bu betikte GÜVENİLİR DEĞİL:
+# başlıktaki reçete `sudo mkdir`/`sudo cp` içeriyor ve betik `sudo bash deploy/...` ile
+# koşulabilir — o hâlde `$HOME=/root` olur, kurulu profil "KURULU DEĞİL" raporlanır ve `.env`
+# uyarısı HİÇ ateşlenmez. Kum havuzunun sahipliği bir üstte `stat` ile ÖLÇÜLÜYOR; burada da
+# ölçülür: gerçek çağıran `SUDO_USER`dır, `$HOME` yalnız yedektir.
+SEF_EV="$(getent passwd "${SUDO_USER:-$(id -un)}" 2>/dev/null | cut -d: -f6)"
+SEF_PROFIL="${SEF_EV:-$HOME}/.hermes/profiles/sef"
+SEF_KAYNAK="$REPO/deploy/hermes/profiles/sef"
+echo "-- @sef profil yolu (ölçüldü, çağıran=${SUDO_USER:-$(id -un)}): $SEF_PROFIL"
+# AYNI OLGUNUN İKİ KAYNAĞI KARŞILAŞTIRILIR (denetim 2026-08-30). Profil yolu iki yerde yaşıyor:
+# burada (ölçülerek türetilir) ve birimde (`Environment=HERMES_HOME=…`, systemd `$HOME` ikamesi
+# YAPAMAZ, o yüzden SABİT yazılmak zorunda). İkisi ayrışırsa arıza SESSİZDİR: bu betik "profil
+# kurulu ✓" der, birim BAŞKA bir dizini gösterir, harness onu reddeder ve brifing sonsuza dek
+# ham gider. Karşılaştırmak bir kapı değil bir ÖLÇÜMdür — hüküm operatörün.
+SEF_BIRIM_HOME="$(grep -m1 '^Environment=HERMES_HOME=' deploy/oracle-a1/meridian-brifing.service | cut -d= -f3-)"
+if [ "$SEF_BIRIM_HOME" != "$SEF_PROFIL" ]; then
+  echo "!! @sef PROFİL YOLU AYRIŞIYOR — bu betik '$SEF_PROFIL' ölçtü, birim '$SEF_BIRIM_HOME' diyor."
+  echo "   Zamanlanmış koşumu BİRİM belirler: yol yanlışsa harness profili REDDEDER ve brifing"
+  echo "   HER GÜN sessizce ham gider (sıralama katmanı kalıcı kapanır, hiçbir şey kırmızı olmaz)."
+fi
+if [ -d "$SEF_PROFIL" ]; then
+  echo "-- @sef profili KURULU: $SEF_PROFIL"
+  # ORTADAKİ ADIM EN SESSİZ OLANIDIR, ve bu ÖLÇÜLDÜ: manifestteki env_requires .env YAZMAZ,
+  # kurulu profile yalnız .env.EXAMPLE bırakır (.env kullanıcı-sahiplidir, dağıtım ona hiç
+  # dokunamaz). Anahtarsız profil kurulur, koşar ve HER GÜN ham brifinge düşer — 'çalışıyor' görünür.
+  if [ ! -s "$SEF_PROFIL/.env" ]; then
+    echo "!! @sef .env YOK/BOŞ ($SEF_PROFIL/.env) — profil KURULU ama ANAHTARSIZ. Etkisi SESSİZ:"
+    echo "   model her koşumda düşer, brifing HAM gider, teslimat 'çalışıyor' görünür. Doldur:"
+    echo "       cp $SEF_PROFIL/.env.EXAMPLE $SEF_PROFIL/.env  &&  \${EDITOR:-nano} $SEF_PROFIL/.env"
+  fi
+else
+  echo "-- @sef profili KURULU DEĞİL — brifing HAM yoldan teslim eder (bozuk değil, SIRALAMASIZ)."
+  echo "   Kurmak ÜÇ AYRI EYLEMDİR ve 'tek komut' demek YANLIŞ olur: ortadaki atlanırsa profil"
+  echo "   KURULUR ve YANLIŞ ÇALIŞIR (anahtarsız, hiç düşünmeden); sonuncusu atlanırsa hiç KOŞMAZ."
+  echo "     1) hermes profile install $SEF_KAYNAK"
+  echo "     2) cp $SEF_PROFIL/.env.EXAMPLE $SEF_PROFIL/.env  &&  \${EDITOR:-nano} $SEF_PROFIL/.env"
+  echo "        (OPENROUTER_API_KEY — profilin KENDİ .env'i; dağıtım ona ASLA dokunmaz)"
+  echo "     3) sudo systemctl enable --now meridian-brifing.timer"
+  echo "   NOT, ADIM DEĞİL: kum havuzunu (/opt/meridian/var/bots/sef) bu betik zaten yarattı."
+  echo "   GÜNCELLEME TUZAĞI (ölçüldü): 'hermes profile update sef' config.yaml'ı KORUR —"
+  echo "   duruş değiştiyse 'hermes profile update sef --force-config' gerekir."
+fi
+# DOĞRULANMAMIŞ KALEMLER — BEYAN, İDDİA DEĞİL (UYDURMA YASAĞI). Kurulum çıktısı 'güvenli' izlenimi
+# bırakır; o izlenimin ölçülmemiş kısımları burada ADIYLA söylenir, yoksa sessizce güvence olurlar.
+echo "   DOĞRULANMADI (1): profilin pre_tool_call guard kancasının BAŞSIZ (TTY'siz) koşumda"
+echo "   gerçekten ateşlendiği CANLIDA HİÇ ölçülmedi. Bilinen: satıcının kendi testi, TTY yokken"
+echo "   ve onay bayrağı yokken kabuk kancalarının HİÇ kaydolmadığını söylüyor. Karşı-tedbir iki"
+echo "   yanlı (config: hooks_auto_accept · çağrı: --accept-hooks) ama İKİSİ DE satıcı"
+echo "   KAYNAĞINDAN okundu, gerçek bir başsız koşumdan DEĞİL."
+echo "   DOĞRULANMADI (2): birim ProtectHome=read-only altında koşuyor ve ~/.hermes yazma izni"
+echo "   ReadWritePaths'e ÇIKARIMLA açıldı (emsal: meridian.service tur-1 EROFS kırıklığı)."
+echo "   İkisini de ilk koşumdan sonra doğrula:  journalctl -u meridian-brifing -n 50"
 
 # BEKÇİ KURULUM DOĞRULAMASI — "kurulu != çalışır" (fail-notify dersi, 2026-07-30: birim iki gün
 # kuruluydu ve ilk test-ateşlemede IndentationError verdi). Burada ÜÇ ayrı gerçek ölçülür ve
