@@ -168,8 +168,13 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 - **SEÇİCİ BETİĞİ BASH'TE GEÇERSİZ İFADE TAŞIYORDU (2026-08-29; taban kırmızısı, operatör istedi):**
   `ops/etkilenen_testler.sh` üç satırda `${#DIZI[@]-0}` kullanıyordu; `-` varsayılan-değer operatörü
   `${#...}` UZUNLUK biçimiyle birleşmez. `main`in kendi kopyası koşturularak doğrulandı (dal kusuru
-  DEĞİL). SESSİZ YANLIŞ-NEGATİF DEĞİLDİ: hata `stderr`e düşüyor, karar akışını bozmuyordu — kapı
-  gürültülüydü, yanlış değil. 8/8 yeşil. Taşınabilirlik YARIM doğrulandı: konteynerde yalnız bash
+  DEĞİL). **BU SATIRDA YANILDIM ve düzeltiyorum:** "sessiz yanlış-negatif değildi, kapı
+  gürültülüydü ama doğruydu" demiştim. PR #16 (`c7a13b5`, main'e indi) bunu ÖLÇÜMLE ÇÜRÜTTÜ: betik
+  `set -e` KULLANMADIĞI için `bad substitution` ölümcül değil ama `[[ ]]` başarısız sayılıyor ve kapı
+  SESSİZCE "false" oluyordu — yani **üç kapı da ölüydü**. En pahalısı küresel-dosya kapısı:
+  `tests/conftest.py` değişince "TAM SUITE GEREKLİ" DEMİYOR, dar bir küme öneriyordu — yani
+  EKSİK-KAPSAMA, betiğin kendi sözleşmesinin tam tersi. Benim okumam yalnız stderr'e bakmıştı,
+  kapıların DÖNDÜĞÜ değere bakmamıştı. Ders: "hata ölümcül değil" ile "karar doğru" ayrı iddialardır. 8/8 yeşil. Taşınabilirlik YARIM doğrulandı: konteynerde yalnız bash
   5.2.21 var, macOS'un 3.2'si YOK — betiğin başlığı ikisini de şart koşuyor.
 
 - **BÜTÇE ARIZASI BİÇİM ARIZASI DİYE YAZILIYORDU — v97'nin GEMİNİ'DE KAPATTIĞI SINIF PORTAL AYAĞINI
@@ -789,6 +794,51 @@ dokunulmaz). Birim: adım 6(a) yedeği geri kopyalanır + daemon-reload.
 dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + --uygula anı = operatör.
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
+
+- **CANLI `state/spend.jsonl`DA 13 UYDURMA SATIR — KOD DÜZELDİ, DEFTER DÜZELMEDİ (2026-08-27;
+  sahip: A1'e erişebilen Rol-1 + operatör onayı; sınıf: "düzeltme ileriye işler, geçmişe
+  işlemez"):** `price_for` ücretsiz OpenRouter slug'larını Opus listesinden fiyatlıyordu (kök
+  neden + çivi: `tests/test_ucretsiz_katman_fiyati_v325.py`, bu commit). **KOD TARAFI KAPANDI.**
+  Kapanmayan taraf ÖLÇÜLEN defter: canlı A1'de 10 çağrı **6.49 USD** `nvidia/nemotron-3-super-
+  120b-a12b:free` + 3 çağrı **1.40 USD** `nvidia/nemotron-3-ultra-550b-a55b:free` = **7.89 USD
+  harcanmamış para**, ikisi de ücretsiz katman, gerçek maliyet 0.
+  **NEDEN KOD DÜZELTMESİ YETMEZ (yapısal, tercih değil):** `dagit.sh` rsync'i `state/` dizinini
+  DIŞLAR — dağıtım yalnız GELECEK satırları düzeltir; diskteki 13 satır dağıtımdan sonra da aynen
+  yanlış kalır ve `/api/spend` → pano onları okumaya devam eder.
+  **BEDEL "pano rakamı"NDAN BÜYÜK, ölçüldü:** `spend.over_budget()` üç yerde ücretli yolu kapatır
+  — `hermes.py:429` (claude bacağı), **`hermes.py:4275` (beyin zincirinin TAMAMI → `return None`)**,
+  `hermes.py:4398` (nous zinciri) — ayrıca `api.py:1533` Prometheus göstergesi. Yani harcanmamış
+  para gerçek bir kapıyı besliyor. Kapı BUGÜN atmadı (7.89/20 USD) ama tampon ~%39 yenmiş
+  durumda; ajan yolunun kendi kısması (`_agent_budget_take`, RPD=150) MALİYETE bakmaz, dolayısıyla
+  bu birikimi hiçbir şey durdurmuyordu. Modülün kendi docstring'inin yazdığı arıza sınıfının
+  ("harcanmamış para bütçeyi doldurur ve LLM katmanı sessizce kapanırdı") İKİNCİ örneğidir.
+  **ÜÇ SEÇENEK TARTILDI:**
+  (a) *Bırak + beyan yaz.* Canlı state'e hiç dokunulmaz. Ama pano ve defter uydurma rakamı
+      GÖSTERMEYE devam eder, yani UYDURMA YASAĞI ihlali okuyucunun GÖRDÜĞÜ yüzeyde sürer. Beyan,
+      okunmayan bir yerde durursa ihlali kapatmaz — yalnız etiketler.
+  (b) *Telafi satırı ekle (negatif `cost_usd`).* Append-only sözleşmesini korur. REDDEDİLDİ:
+      `summary()` satır SAYAR (`calls_this_month`) — 13 hayalet çağrı doğar; ayrıca "maliyeti
+      -0.649 USD olan bir çağrı" ölçülmemiş bir olgudur, yani uydurmayı uydurmayla kapatmak olur.
+  (c) **ÖNERİLEN — tek seferlik, yedekli, DENETLENEBİLİR yerinde düzeltme.** Yalnız `model`i
+      ücretsiz-varyant kuralını (`spend._is_free_variant`) sağlayan VE `cost_usd > 0` olan satırlar
+      dokunulur; `cost_usd` `spend.estimate_cost(in_tokens, out_tokens, model)` ile YENİDEN
+      HESAPLANIR (bugün 0) ve satıra `duzeltme` alanı yazılır: eski değer + gerekçe + tarih.
+      Böylece düzeltme SESSİZ olmaz, defterin kendisinde okunur. `ts`/`model`/token alanları
+      DEĞİŞMEZ. Sözleşme kontrol edildi: `ledgers.CONTRACTS["spend.jsonl"]` yalnız
+      `ts/model/cost_usd` ZORUNLU tutar ve fazladan alanı reddetmez (`validate_row`) — `duzeltme`
+      alanı sözleşmeyi bozmaz.
+  **(c)'NİN KAPILARI (hepsi şart, CLAUDE.md §5):** operatör onayı · canlı worker DURDURULMUŞ
+  (koşarken state'e yazılmaz) · bakım penceresi · önce `--dry-run` diff (kaç satır, hangi ts'ler) ·
+  yedek (`spend.jsonl.bak-<tarih>`) · değişmez: satır sayısı önce == sonra · sonrasında
+  `ledgers.validate_live("spend.jsonl")` + `spend.summary()` doğrulaması.
+  **BU TURDA BİLEREK YAPILMAYAN:** düzeltme betiği YAZILMADI. Gerekçe: betiğin tek işi canlı
+  state'i yeniden yazmaktır ve hangi seçeneğin (a/b/c) uygulanacağı bir OPERATÖR kararıdır —
+  karar verilmeden yazılan betik, onay kapısını bir dosya varlığıyla ima etmiş olurdu. Karar (c)
+  yönünde verilirse betik `ops/` altına, varsayılanı dry-run olacak biçimde yazılır.
+  **KAPSAM NOTU:** aynı uydurma `tencent/hy3:free` ve `openai/gpt-oss-20b:free` satırlarında da
+  koşmuş olabilir (ikisi de aynı kurala takılmıyordu; ROADMAP 2026-08-14 zincir taşınması). Dry-run
+  bunları ADIYLA saymalı — 13 sayısı yalnız iki nemotron slug'ı için ÖLÇÜLDÜ, defterin tamamı için
+  DEĞİL.
 
 - **`A1` KORUMA İCRASI — EMİR VERİLDİ, İCRA EDİLMEDİ (2026-08-17; sınıf: "karar aşaması kapandı,
   icra aşaması başka bir yerde"):** operatör "A1 korumayı şimdi kur" dedi ve `B2` politikasını

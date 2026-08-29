@@ -8,12 +8,14 @@ ulaştığında True döner; Hermes o zaman ücretsiz deterministik öneriye dü
 devam eder, yalnız ücretli çıkarım kapanır. `summary` ay özetini üretir (/api/spend → pano);
 `estimate_cost`/`price_for` maliyeti model-başına fiyat tablosundan hesaplar (PRICES:
 opus/sonnet/haiku/gemini/nous — model adında alt-dizge eşleşmesi; bilinmeyen model
-muhafazakâr varsayılana düşer).
+muhafazakâr varsayılana düşer). Tablodan ÖNCE `:free` VARYANT SONEĞİ bakılır: OpenRouter'ın
+ücretsiz varyantları satıcı adı hiç bilinmeden 0 fiyatlanır (bkz. FREE_VARIANT_TAG).
 
 Değişmezler: fiyat MODEL BAŞINA olmak zorundadır — tek fiyatla ücretsiz katman çağrıları da
 Opus listesinden fiyatlanır, harcanmamış para bütçeyi doldurur ve LLM katmanı sessizce
-kapanırdı ("beyin neden susuyor" sorusunun görünmez cevabı); saat dilimi UTC'dir ki satırlar
-diğer defterlerle (obs, memory, watchdog) yan yana okunabilsin; `thought_tokens` yalnız
+kapanırdı ("beyin neden susuyor" sorusunun görünmez cevabı — sınıf 2026-08-27'de İKİNCİ kez
+ölçüldü, bkz. FREE_VARIANT_TAG); saat dilimi UTC'dir ki satırlar diğer defterlerle
+(obs, memory, watchdog) yan yana okunabilsin; `thought_tokens` yalnız
 sağlayıcı bildirdiğinde yazılır (UYDURMA YASAĞI: alan yokluğu "ölçülmedi"dir, sıfır değil) ve
 maliyete katılmaz — fiyatlanan tek çıktı `out_tokens`tır.
 
@@ -46,10 +48,41 @@ PRICES: dict[str, tuple[float, float]] = {
 }
 
 
+# ÜCRETSİZ VARYANT SONEKİ — SATICI ADIYLA DEĞİL SÖZLEŞMEYLE FİYATLA (2026-08-27).
+# ÖLÇÜLEN VAKA (canlı A1 state/spend.jsonl): 10 çağrı 6.49 USD `nvidia/nemotron-3-super-120b-a12b:free`
+# + 3 çağrı 1.40 USD `nvidia/nemotron-3-ultra-550b-a55b:free` — ikisi de OpenRouter ÜCRETSİZ katman,
+# gerçek maliyet 0. Slug yukarıdaki alt-dizgelerin HİÇBİRİNİ tutmuyor ("nous" da GEÇMEZ), muhafazakâr
+# varsayılana yani tam olarak Opus listesine düşüyordu. Aynı sessiz uydurma `tencent/hy3:free` ve
+# `openai/gpt-oss-20b:free` için de koşuyordu. Bu, yukarıdaki paragrafın anlattığı arızanın AYNISIDIR;
+# ilk seferinde tabloya "gemini"/"nous" EKLENEREK kapatılmıştı — yani o günkü ÖRNEKLER kapandı, SINIF
+# açık kaldı ve bir sonraki ücretsiz sağlayıcıda geri geldi.
+#
+# NEDEN TABLOYA "nemotron"/"nvidia" EKLENMEDİ: arızayı TERSİNE çevirirdi. OpenRouter'da aynı satıcının
+# ÜCRETLİ varyantları da var (aynı slug, soneksiz) ve onlar 0'a fiyatlanırdı — bu kez HARCANMIŞ para
+# deftere hiç girmezdi. İki yön de aynı yasanın (UYDURMA YASAĞI) ihlalidir. `:free` ise OpenRouter'ın
+# KENDİ sözleşmesinde "bu varyantın ücreti sıfırdır" demektir: yarın eklenen ücretsiz bir model, adı
+# hiç bilinmeden doğru fiyatlanır. Kural tablodan ÖNCE koşar — tabloya konsaydı hüküm dict SIRASINA
+# bağlı olurdu ("opus" önce gelirse `...opus...:free` Opus listesinden fiyatlanırdı).
+#
+# NEDEN ALT-DİZGE DEĞİL SEGMENT: `":free" in m` testi `vendor/model:freeform` ve `vendor/free-tier-7b`
+# gibi ÜCRETLİ slug'ları da bedava sayardı — ölçülmemiş bir indirim, yine uydurma. Eşleşme iki nokta
+# ile ayrılmış segmentler üzerindedir. Çivi: tests/test_ucretsiz_katman_fiyati_v325.py
+FREE_VARIANT_TAG = "free"
+FREE_PRICE: tuple[float, float] = (0.0, 0.0)
+
+
+def _is_free_variant(model_lower: str) -> bool:
+    """Slug bir ücretsiz OpenRouter varyantı mı? Yalnız İKİ NOKTADAN SONRAKİ segmentlere bakılır,
+    yani `x:free` evet, `x:freeform` ve `free-tier-7b` HAYIR."""
+    return FREE_VARIANT_TAG in model_lower.split(":")[1:]
+
+
 def price_for(model: str | None) -> tuple[float, float]:
     """Model adına göre (girdi, çıktı) milyon-token fiyat çiftini verir; tanınmayan model varsayılan
-    fiyata düşer."""
-    m = str(model or "").lower()
+    fiyata düşer. `:free` varyant soneki tabloyu GEÇER (yukarıdaki gerekçe)."""
+    m = str(model or "").strip().lower()
+    if _is_free_variant(m):
+        return FREE_PRICE
     for key, pair in PRICES.items():
         if key in m:
             return pair
