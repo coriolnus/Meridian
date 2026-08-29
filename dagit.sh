@@ -286,7 +286,9 @@ deploy/oracle-a1/meridian-tick-watchdog.service|/etc/systemd/system/meridian-tic
 deploy/oracle-a1/meridian-tick-watchdog.timer|/etc/systemd/system/meridian-tick-watchdog.timer
 deploy/oracle-a1/litestream.yml|/etc/litestream.yml
 deploy/oracle-a1/meridian-aylik-bucket-kopya.service|/etc/systemd/system/meridian-aylik-bucket-kopya.service
-deploy/oracle-a1/meridian-aylik-bucket-kopya.timer|/etc/systemd/system/meridian-aylik-bucket-kopya.timer"
+deploy/oracle-a1/meridian-aylik-bucket-kopya.timer|/etc/systemd/system/meridian-aylik-bucket-kopya.timer
+deploy/oracle-a1/meridian-brifing.service|/etc/systemd/system/meridian-brifing.service
+deploy/oracle-a1/meridian-brifing.timer|/etc/systemd/system/meridian-brifing.timer"
 for _cift in $F9_LISTE; do
   _f9_repo="${_cift%%|*}"; _f9_canli="${_cift##*|}"; _f9_ad="$(basename "$_f9_repo")"
   if [[ ! -f "$REPO/$_f9_repo" ]]; then

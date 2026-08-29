@@ -1,0 +1,18 @@
+[Unit]
+# Hesaplanmış ama teslim edilmemiş çıktıları operatöre iletir. İKİSİ DE boşken SESSİZDİR —
+# karar döndürmeyen zamanlanmış iş bildirim spam'idir (spec §8, hata 4).
+Description=Meridian brifing — alarm yığını + iyileştirme önerileri (boşken sessiz)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/meridian
+# İki teslimat AYRI: biri düşerse öteki yine koşar (`;` değil ayrı ExecStart satırları
+# kullanılmadı — systemd ilk başarısızlıkta durur; `-` öneki hatayı yutar ve devam ettirir).
+ExecStart=-/opt/meridian/.venv/bin/python /opt/meridian/ops/alarm_backlog_digest.py --uygula
+ExecStart=-/opt/meridian/.venv/bin/python /opt/meridian/ops/oneri_brifingi.py --uygula
+
+[Install]
+WantedBy=multi-user.target

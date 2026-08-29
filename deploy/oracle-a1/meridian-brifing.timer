@@ -1,0 +1,12 @@
+[Unit]
+Description=Meridian brifing tetiği (günlük, seans kapanışından sonra)
+
+[Timer]
+# 21:00 UTC = ABD kapanışından ~1 saat sonra; EOD turu (~20:30 UTC) bitmiş olur.
+OnCalendar=*-*-* 21:00:00 UTC
+# Makine kapalıysa açılışta telafi edilir — kaçan tetik sessizce kaybolmaz.
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
