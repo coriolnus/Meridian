@@ -86,3 +86,7 @@ research/olcumler/yazi_tipi_2026-08-24/satoshi/woff2/
 node_modules/
 ui/node_modules/
 ui/tsconfig.tsbuildinfo
+
+# SDD çalışma alanı — plan başına geçici artefaktlar (ledger, brief, rapor, review paketi).
+# rsync .gitignore OKUMAZ: dagit.sh RSYNC_EXC listesine de eklendi (scratch-panov2 dersi).
+.superpowers/
