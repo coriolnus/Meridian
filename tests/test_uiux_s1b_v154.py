@@ -82,8 +82,27 @@ def test_t3_diskteki_belge_kaynakla_ayrismamis():
         "docs/RUNBOOK.md kaynak koddan geride kalmış — `python ops/runbook_uret.py` ile yeniden üret")
 
 
-def _capalar() -> set[str]:
-    return set(re.findall(r"\{#([^}]+)\}", RUNBOOK_MD))
+def _capalar(md: str | None = None) -> set[str]:
+    """Belgedeki ÇAPA kümesi — tanım OLUŞTURUCUDAN gelir, burada yeniden yazılmaz.
+
+    ESKİ HÂLİ BELGENİN TAMAMINDA `{#...}` arıyordu ve bu, `/runbook`u gerçekten çizen
+    ayrıştırıcıdan DAHA GENİŞ bir tanımdı: `api._MD_BASLIK` çapayı `^#{1,3} ... {#x}$` diye,
+    yani BİR BAŞLIK SONEKİ olarak tanır; `ops/runbook_uret.py` de yalnız başlık satırlarına çapa
+    yazar. Üretici ile oluşturucu zaten aynı fikirdeydi — ayrışan tek yer burasıydı.
+    Bedeli ölçüldü: günlükte bash dizi-uzunluğu ifadesinden söz eden bir cümle (runbook günlük
+    maddelerini AYNEN kopyalar) belgeye iki HAYALET ÇAPA soktu, biri "..." idi, ve kırmızı
+    oluşturucuyu işaret etti — oysa kusur o CÜMLEDEYDİ.
+
+    Oluşturucunun DERLENMİŞ deseni ithal edilir, kopyalanmaz: desen değişirse bu okuma onunla
+    birlikte değişir. İkinci bir regex yazmak, bu deponun tekrar eden "iki kopya sessizce
+    ayrışır" sınıfının ta kendisi olurdu."""
+    from meridian.api import _MD_BASLIK
+    out: set[str] = set()
+    for satir in (RUNBOOK_MD if md is None else md).splitlines():
+        m = _MD_BASLIK.match(satir)
+        if m and m.group(3):
+            out.add(m.group(3))
+    return out
 
 
 def test_t3_her_alarm_jetonu_bolum_almis():
@@ -603,3 +622,60 @@ def test_t5_bilinmeyen_gorunum_cumle_uydurmaz():
     fn = KOD_JS[KOD_JS.index("function soruCumlesi("):]
     fn = fn[:fn.index("\n}") + 2]
     assert 'if (!s) return "";' in fn, "kayıtsız görünüm için uydurma cümle riski"
+
+
+# ============ ÇAPA TANIMI TEK OLMALI (v329, 2026-08-29) ============
+# ÖLÇÜLEN VAKA: günlükte bash dizi-uzunluğu ifadesinden söz eden bir cümle
+# (`ops/runbook_uret.py` günlük maddelerini AYNEN kopyalar) belgeye İKİ HAYALET ÇAPA soktu;
+# biri düpedüz "..." idi ve `test_t3_rota_cizer_ve_capalari_html_id_yapar` kırmızıya döndü.
+#
+# KÖK NEDEN İLK SANDIĞIM ŞEY DEĞİLDİ ("kod aralıklarını ayıkla"): ÖLÇÜM üç yeri karşılaştırınca
+# çıktı. `meridian/api.py::_MD_BASLIK` — YANİ /runbook'u GERÇEKTEN ÇİZEN ayrıştırıcı — çapayı
+# `^#{1,3} ... {#x}$` diye tanır: ÇAPA BİR BAŞLIK SONEKİDİR. `ops/runbook_uret.py` de yalnız
+# başlık satırlarına çapa YAZAR (475/697/718). Yani üretici ile oluşturucu ZATEN aynı fikirdeydi;
+# AYRIŞAN TEK YER BU DOSYADAKİ `_capalar()`tı: belgenin TAMAMINDA `{#...}` arıyordu.
+# Aynı dosyanın 223. satırındaki kardeşi ise ZATEN başlık-bağlıydı (`^## ...`) — yani tutarsızlık
+# dosyanın kendi içinde de duruyordu.
+#
+# DOĞRU KURAL, tercihle değil OLUŞTURUCUYLA belirlendi: çapa = BAŞLIK SONEKİ. Düzyazıdaki
+# `{#x}` bir çapa DEĞİLDİR (ters tırnak içinde olsun olmasın) — çünkü oluşturucu onu ASLA
+# id'ye çevirmez. "Kod aralığını ayıkla" çözümü bugünü kurtarır, sınıfı KAPATMAZ: ters tırnaksız
+# bir düzyazı `{#x}` yine hayalet çapa olurdu.
+def test_capa_tanimi_olusturucunun_tanimiyla_BIREBIR(istemci):
+    """ASIL ÇİVİ: aynı girdide `_capalar()` ile GERÇEK oluşturucu AYNI kümeyi vermeli.
+    Karşılaştırma sabit bir listeye değil, `api._md_render`ın ürettiği id'lere karşı yapılır —
+    yani iki tanım ayrışırsa bu çivi düşer. İki kopya sessizce ayrışamaz."""
+    from meridian import api
+
+    ornekler = [
+        ("## Bölüm {#gercek}", {"gercek"}),                      # gerçek çapa
+        ("### Alt bölüm {#alt}", {"alt"}),                       # h3 de tanınır
+        ("- düzyazı, bash `${#ARR[@]}` anlatıyor", set()),       # ÖLÇÜLEN VAKA — çapa DEĞİL
+        ("- düzyazı, `${#YOLLAR[@]-0}` anlatıyor", set()),       # kırmızıyı doğuran birebir şekil
+        ("- ters tırnaksız düzyazı {#duz} içeriyor", set()),     # kod aralığı DEĞİL, yine çapa değil
+        ("#### Çok derin {#derin}", set()),                      # h4: oluşturucu 1-3 tanır
+    ]
+    for md, beklenen in ornekler:
+        assert _capalar(md) == beklenen, f"çıkarıcı ayrıştı: {md!r}"
+        govde, _ = api._md_render(md)
+        uretilen = set(re.findall(r'id="([^"]+)"', govde))
+        assert uretilen == beklenen, f"OLUŞTURUCU ayrıştı: {md!r} → {uretilen}"
+
+
+def test_capa_cikarici_gercek_runbookta_bos_donmuyor(istemci):
+    """ÇÜRÜTME BACAĞI: daraltma her şeyi eleyip çiviyi boşa düşürmüş olabilir. Gerçek belgede
+    çapa kümesi hâlâ DOLU olmalı ve bilinen bir bölüm içinde bulunmalı — yoksa yukarıdaki
+    'birebir aynı' iddiası iki BOŞ kümenin eşitliğiyle de sağlanırdı."""
+    capalar = _capalar()
+    assert len(capalar) >= 20, f"çapa kümesi şüpheli derecede küçük: {len(capalar)}"
+    assert "alarmlar" in capalar
+
+
+# KALDIRILAN ÇİVİ, gerekçesiyle: burada `test_duzyazi_capa_BEYAN_EDEMEZ_gercek_belgede` vardı ve
+# "belgenin HİÇBİR düzyazısında süslü-parantez-diyez geçmesin" diyordu. Yazıldığı anda yeşildi —
+# çünkü o sırada günlükteki cümle GEÇİCİ OLARAK dolaylı yazılmıştı. Cümle düz hâline döndürülünce
+# düştü ve DOĞRU davranış buydu: çivi, düzeltmenin KALDIRDIĞI kısıtı KALICI YASAYA çeviriyordu.
+# Bu turun tamamı "düzyazıdaki `${#...}` bir çapa DEĞİLDİR, zararsızdır" demek için; onu yasaklayan
+# bir çivi düzeltmeyi anlamsız kılardı. Gerçekten korunması gereken iki şey ZATEN çivili:
+# tanımın oluşturucuyla birebir olduğu (yukarıda) ve her çapanın id'ye döndüğü
+# (`test_t3_rota_cizer_ve_capalari_html_id_yapar`). Üçüncüsü yalnız yanlış bir yasa olurdu.

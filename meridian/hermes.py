@@ -47,6 +47,19 @@ from . import agent_telemetry as _at        # çağrı telemetrisi + ham iz + MA
 
 MODEL = os.environ.get("HERMES_MODEL", "claude-opus-4-8")
 
+# AYNI SINIF, ÜÇÜNCÜ SAĞLAYICI (2026-08-29). Kardeşleri `GEMINI_MAX_OUTPUT_TOKENS` ve
+# `NOUS_MAX_TOKENS`tır (aşağıda, ~640-700); bu üçü TEK sınıfın üç ayağıdır. BURADA duruyor çünkü
+# `_claude_text`in VARSAYILAN PARAMETRESİ ve o tanım bu dosyada daha yukarıda geçiyor.
+# NEDEN 4000 DARDI: bu ayak `thinking={"type": "adaptive"}` + `output_config={"effort": "high"}`
+# gönderir, yani DÜŞÜNEN bir yapılandırmadır ve Anthropic sözleşmesinde `max_tokens` modelin
+# BİLMEDİĞİ, dayatılan bir yanıt tavanıdır — düşünce o tavandan yenir. Gemini AYNI yansıma
+# prompt'unda 3838 düşünce tokenı ölçtü (GEMINI_THINKING_BUDGET yorumu), yani 4000 bu iş için
+# ölçülü biçimde dar. 16000 keyfî değil: Anthropic'in AKIŞSIZ istekler için belgelenmiş
+# varsayılanı (SDK HTTP zaman aşımının altında kalır). Daha yükseği akış ister; bu ayak akış
+# kullanmıyor, o yüzden buraya kadar. Zaman aşımı burada nous ayağındaki gibi AYRI bir düğme
+# değildir — SDK'nın kendi varsayılanı (10 dk) yönetir ve 16000 token onun içine sığar.
+CLAUDE_MAX_TOKENS = int(os.environ.get("HERMES_CLAUDE_MAX_TOKENS", "16000"))
+
 # Live view of the running coordinate-descent search, published per probe and read by
 # hermes_runtime.status() → /api/hermes → dashboard. A search runs ~a dozen walk-forwards (many minutes);
 # without this the operator sees only "reflecting: true" and cannot tell progress from a hang.
@@ -404,7 +417,7 @@ def _skill_library() -> dict:
 
 
 def _claude_text(user: str, *, note: str, schema: dict | None = None,
-                 max_tokens: int = 4000) -> str | None:
+                 max_tokens: int | None = None) -> str | None:
     """Claude çağrısının TEK GÖVDESİ — METİN döner, ayrıştırma çağıranın işi.
 
     NEDEN AYRIŞTIRILDI (nous sistem-değerlendirme katmanı): Katman B beyin zincirini
@@ -419,6 +432,13 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
         print("[hermes] anthropic SDK not installed; falling back to deterministic proposer")
         _trace_note(EMPTY_NO_CALL, detail="anthropic SDK yok")
         return None
+    # TAVAN GÖVDEDE ÇÖZÜLÜR, imzada DEĞİL — kardeşleriyle (NOUS/GEMINI) aynı davranış için.
+    # İmzaya varsayılan olarak yazılsaydı değer TANIM ANINDA bağlanırdı: `HERMES_CLAUDE_MAX_TOKENS`
+    # yine işlerdi (import'ta okunur) ama sabiti çalışma anında değiştiren biri SESSİZCE etkisiz
+    # kalırdı — üç tavandan ikisi bir türlü, biri başka türlü davranırdı. Bu turun kovaladığı
+    # "iki kopya sessizce ayrışır" sınıfının küçük ama gerçek bir örneği; ölçüldü ve kapatıldı.
+    if max_tokens is None:
+        max_tokens = CLAUDE_MAX_TOKENS
     from . import secrets
     api_key = secrets.get("HERMES_API_KEY") or secrets.get("ANTHROPIC_API_KEY")
     if not api_key:
@@ -469,6 +489,33 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
                sonuc_sinifi=(_at.SINIF_DOLU if text else _at.SINIF_BOS),
                tasiyici=_at.TASIYICI_HTTP, arac_cagri_n=None, istem=user, stdout=text,
                stop_reason=str(getattr(resp, "stop_reason", "") or "") or None)
+    # KESİLME KONTROLÜ METİN KONTROLÜNDEN ÖNCE — `_gemini_text` ve `_nous_text`teki sıranın aynısı,
+    # ve BURADAKİ KUSURUN TA KENDİSİ: `stop_reason` incelemesi aşağıdaki `if not text:` bloğunun
+    # İÇİNDEYDİ. Tavana çarpan cevap BOŞ DEĞİLDİR (kısmî metin taşır), o yüzden o ayrıma HİÇ
+    # UĞRAMIYORDU: yarım metin çağırana dönüyor, `_parse_hyp` JSON bulamıyor, defter "unparseable"
+    # yazıyordu — biçim suçlanıyor, asıl arıza (bütçe) görünmez kalıyordu.
+    # DETAY KARDEŞLERİNDEN AYRILIR, BİLEREK: gemini `thoughtsTokenCount`, OpenRouter
+    # `reasoning_tokens` RAPORLAR; Anthropic düşünce tokenını AYRI bir alanda BİLDİRMEZ
+    # (`output_tokens` içindedir). Simetri uğruna "reasoning=" yazmak ölçülmemişi ölçülmüş
+    # göstermek olurdu — UYDURMA YASAĞI. Bu yüzden yalnız ÖLÇÜLEN iki sayı yazılır.
+    # RED DE BEYAN EDİLİR — SÖZCÜKTEN TAHMİN EDİLMEZ (v328). Eskiden bu ayakta red dalı YOKTU ve
+    # reddedilmiş gövde `_parse_hyp`e gidiyordu; oradaki `_looks_like_refusal()` METNİN SÖZCÜKLERİNE
+    # bakar (`_REFUSAL_MARKS`). Yani sınıf bir TAHMİNE dayanıyordu: listede olmayan bir ifadeyle
+    # reddedilirse — başka dil, başka kalıp, ya da yalnız politika cümlesi — red sessizce
+    # "unparseable" oluyordu. Oysa Anthropic reddi BEYAN EDER (`stop_reason == "refusal"`), ve
+    # BEYAN EDİLMİŞ OLGU TAHMİN EDİLENİ EZER. Sezgi silinmedi: `_parse_hyp`teki kardeşi, reddi
+    # beyan ETMEYEN sağlayıcılar için hâlâ tek yoldur.
+    # `stop_details` YALNIZ redde dolar (ötekilerde None) — okumadan önce korunulur. `category`
+    # AÇIK bir kümedir ve null olabilir: o durumda UYDURULMAZ, None yazılır.
+    if str(getattr(resp, "stop_reason", "") or "") == "refusal":
+        _sd = getattr(resp, "stop_details", None)
+        _trace_note(EMPTY_REFUSAL, detail=f"category={getattr(_sd, 'category', None)}")
+        return None
+    if str(getattr(resp, "stop_reason", "") or "") == "max_tokens":
+        _u = getattr(resp, "usage", None)
+        _trace_note(EMPTY_TRUNCATED,
+                    detail=f"output={getattr(_u, 'output_tokens', None)}, cap={max_tokens}")
+        return None
     if not text:
         # 200 döndü ama metin bloğu yok: yalnız araç/düşünme bloğu ya da durdurma sebebi. "Başarılı"
         # sayılıp sessizce None dönmek, tam da kalibrasyonun neden hiç çift biriktirmediğinin cevabıydı.
@@ -634,6 +681,70 @@ DEFAULT_BRAIN_ORDER = "claude,nous,gemini"
 # maxOutputTokens 8000 EMNİYET PAYIDIR: düşünce ileride tekrar açılırsa/kapanmazsa cevap yine sığar.
 GEMINI_THINKING_BUDGET = int(os.environ.get("HERMES_GEMINI_THINKING_BUDGET", "0"))
 GEMINI_MAX_OUTPUT_TOKENS = int(os.environ.get("HERMES_GEMINI_MAX_OUTPUT_TOKENS", "8000"))
+
+# AYNI SINIF, İKİNCİ SAĞLAYICI (2026-08-27): PORTAL (OpenAI-uyumlu) ayağı yukarıdaki düzeltmeyi HİÇ
+# ALMADI. `_nous_text` gövdesi `max_tokens: 4000` sabitini gönderiyordu ve nemotron ailesi de DÜŞÜNEN
+# bir ailedir — akıl yürütme tokenları CEVAPTAN ÖNCE, aynı üretim tavanından yenir.
+# CANLI ÖLÇÜM (A1, state/spend.jsonl): nvidia/nemotron ailesine 13 çağrı, **7'si TAM out_tokens=4000**
+# (%54) — 5x super-120b + 1x ultra-550b reflect, 1x super-120b nous_eval; girdi ~23-27k token.
+# SAĞLAYICI SONDASI mekanizmayı gösterdi: ultra @ max_tokens=60 → finish_reason=length + içerik
+# modelin DÜŞÜNCE ÖN-EKİ (reasoning=62); ultra @ max_tokens=2000 → finish_reason=stop + geçerli JSON.
+#
+# TAVAN NEREDEN TÜRÜYOR (ve neden 4000'in "biraz üstü" DEĞİL): o 7 satır SAĞDAN SANSÜRLÜDÜR —
+# tavanda kesilen bir örnek "ihtiyaç ≥4000" der, ihtiyacın NE OLDUĞUNU söylemez. Gerçek istem
+# üzerinde ölçülmüş TEK akıl-yürütme sayısı gemini bacağınınkidir (thoughtsTokenCount=3838, aynı
+# yansıma prompt'u, GEMINI_THINKING_BUDGET yorumu). Tavan o ölçümden türer: 3838 × 4 ≈ 15,4k → 16000.
+# Fatura yok (iki model de :free; OpenRouter GET /api/v1/key usage=0 all-time), platform tavanı
+# istek/dakika ve istek/gün cinsindendir — token cinsinden DEĞİL. Yani marj bedelsizdir.
+# GERÇEK İHTİYACI ARTIK OLAY ÖLÇECEK: bu turda eklenen `truncated` sınıfı her kesilmede
+# `reasoning=N` yazar, yani bir daha çarpılırsa sayı sansürsüz görünür ve tavan ölçüyle ayarlanır.
+# ÖLÇÜLEN TAVANLAR (GET /api/v1/models — docs/OLCUM-MODEL-BUTCESI-2026-08-27.md §1): ultra:free
+# max_completion=65.536 · super:free=235.929. Yani 4000 sağlayıcının dayattığı bir sınır DEĞİLDİ,
+# Ultra'nın izin verdiğinin %6'sı, Super'in %1,7'siydi — keyfî ve aşırı muhafazakâr BİZİM sayımız.
+# Seçilen 16.384, o belgenin §6 bütçe tablosunda bu çağrı sınıfının ("arka plan derin / yansıma")
+# satırıdır ve iki modelin sağlayıcı tavanının da ALTINDADIR.
+NOUS_MAX_TOKENS = int(os.environ.get("HERMES_NOUS_MAX_TOKENS", "16384"))
+
+# ZAMAN AŞIMI TAVANDAN TÜRER — AYRI BİR SAYI DEĞİL, ve bu bu turun ÖĞRENDİĞİ derstir.
+# ÖLÇÜM (§3, aynı prompt, max_tokens=3000, ikisi de finish=length):
+#     Super 22.937 ms → 130,8 tok/sn   ·   Ultra 116.213 ms → 25,8 tok/sn   (Ultra 5 KAT yavaş)
+# SERT SONUÇ (§4): 120 sn'lik eski zaman aşımında Ultra ancak ~2.970 token üretebilir — yürürlükteki
+# 4000'e HİÇ ULAŞAMAZ. O yolda bağlayan taraf tavan değil ZAMAN AŞIMIYDI. Bu yüzden yalnız tavanı
+# yükseltmek kesilmeyi zaman aşımına ÇEVİRİR: arıza adı değişir, sonucu değişmez — üstelik daha
+# kötüsü, aşağıdaki `truncated` sınıflandırması o yolda HİÇ ATEŞLENMEZ (httpx cevap dönmeden atar).
+# BU YÜZDEN TÜRETİLMİŞTİR, sabit değil: ikisini bağımsız iki sayı olarak bırakmak, birinin
+# yükseltilip öbürünün unutulduğu tam bu vakayı bir kez daha üretirdi (emsal: HAVUZ_IS_SURESI_OLCULEN_SN
+# × HAVUZ_ATALET_MARJI). Çivi invaryantı kilitler: tavan zaman aşımı içinde ULAŞILABİLİR olmalı.
+# EN YAVAŞ model taban alınır — `_nous_portal_model()` ikisini de döndürebilir ve hızlı modele göre
+# ölçmek yavaş modeli yine kesilmeye mahkûm ederdi.
+NOUS_OLCULEN_TOK_SN = 25.8            # ultra-550b:free, ölçüm §3 — EN YAVAŞ ölçülen model
+# DEĞER BELGENİN §6 TABLOSUNDAN ALINIR, formülle TÜRETİLMEZ — ve bu bilinçli bir geri adımdır.
+# İlk hâli `NOUS_MAX_TOKENS / NOUS_OLCULEN_TOK_SN * 1.4` idi (889 sn). İKİ KUSURU VARDI:
+#   (a) ÇİVİ TOTOLOJİYE DÖNÜYORDU: invaryant "zaman aşımı >= tavan/hız" diye sınar, ama değer
+#       ZATEN o bölümün 1,4 katı olarak üretiliyorsa kontrol varsayılan yolda ASLA KIRMIZI OLAMAZ.
+#       Ölçen değil, kendi kendini onaylayan bir çiviydi (bu deponun "çürütmeyle sınandı" şartı).
+#   (b) SESSİZ ÖLÇEKLENME BİR TEHLİKEDİR: tavanı 32.768'e çıkaran biri farkında olmadan ~21
+#       dakikalık bir zaman aşımı da satın alırdı — kimsenin ÖLÇMEDİĞİ bir sayı. Doğrusu, bağ
+#       kırıldığında ÇİVİNİN KIRMIZIYA DÖNMESİ ve insanın yeniden ölçmeye zorlanmasıdır.
+# Şimdi iki sayı BAĞIMSIZDIR ve aralarındaki bağı çivi tutar (test_the_ceiling_must_be_reachable...).
+# 900 sn, §6'da bu çağrı sınıfının ("arka plan derin / yansıma") yayımlanmış değeridir; hesabı
+# 16.384 / 25,8 = 635 sn + bağlantı/gecikme ve free-tier kapasite PAYLAŞIMI payı.
+NOUS_TIMEOUT_S = float(os.environ.get("HERMES_NOUS_TIMEOUT_S", "900"))
+# ASENKRON ŞARTI DOĞRULANDI (§6 tablosu bu satır için "yalnız async" der): `_nous_text`in iki
+# çağıranı da arka plandadır — `_reflect_once_govde` (operatör tetiği `reflect_now()` ARKA PLAN
+# İŞ PARÇACIĞI açıp hemen döner, `hermes_runtime.reflect_now`) ve `nous_eval` (haftalık
+# kadans). Yani bu
+# zaman aşımı hiçbir HTTP isteğini bloklamaz. Senkron bir çağıran eklenirse bu satır YENİDEN ölçülür.
+
+# AKIL YÜRÜTME KOLU — VARSAYILAN KAPALI, BİLEREK. OpenRouter'ın `reasoning` parametresinin bu uçtaki
+# TAM şekli BU DEPODAN DOĞRULANAMADI: openrouter.ai çıkış vekilince kapalı ve burada anahtar yok.
+# UYDURMA YASAĞI istek gövdesi için de geçerlidir — doğrulanmamış alan canlıya VARSAYILAN gitmez.
+# Boşken alan gövdeye HİÇ konmaz (çivi: test_nous_reasoning_control_is_absent_unless...), yani bu
+# turun davranış değişikliği YALNIZ tavan + sınıflandırmadır.
+# AÇMADAN ÖNCE SONDA ŞART, ve dikkat: `exclude` bir BÜTÇE ayarı DEĞİLDİR — düşünceyi cevaptan gizler,
+# ÜRETİLMESİNİ engellemez, yani tavanı aynen yer. Bütçeyi kurtaran ayar düşünceyi KAPATANdır
+# (gemini'de thinkingBudget=0'ın yaptığı). İkisini karıştırmak bu sınıfı ikinci kez doğurur.
+NOUS_REASONING_EFFORT = (os.environ.get("HERMES_NOUS_REASONING_EFFORT") or "").strip().lower()
 
 # ============ 429 SOĞUMA DEFTERİ + BOŞ-CEVAP SINIFLANDIRMASI =============
 # Canlı defterde 45x hermes_brain_failed vardı ve HEPSİ aynı gemini free-tier 429'uydu — üç gün
@@ -2624,28 +2735,47 @@ def _nous_text(user: str, *, note: str) -> str | None:
     import httpx
     base = (secrets.get("NOUS_ENDPOINT") or NOUS_DEFAULT_ENDPOINT).rstrip("/")
     model = _nous_portal_model()
+    govde = {"model": model, "max_tokens": NOUS_MAX_TOKENS,
+             "messages": [{"role": "system", "content": SYSTEM},
+                          {"role": "user", "content": user}]}
+    if NOUS_REASONING_EFFORT:             # doğrulanmamış alan yalnız operatör açarsa gövdeye girer
+        govde["reasoning"] = {"effort": NOUS_REASONING_EFFORT}
     r = httpx.post(f"{base}/chat/completions",
                    headers={"Authorization": f"Bearer {secrets.get('NOUS_API_KEY')}",
                             "Content-Type": "application/json"},
-                   json={"model": model, "max_tokens": 4000,
-                         "messages": [{"role": "system", "content": SYSTEM},
-                                      {"role": "user", "content": user}]},
-                   timeout=120.0)
+                   json=govde, timeout=NOUS_TIMEOUT_S)
     r.raise_for_status()
     d = r.json()
     u = d.get("usage") or {}
+    # AKIL YÜRÜTME TOKENLARI: OpenAI-uyumlu uçta burada raporlanır (gemini'de thoughtsTokenCount) ve
+    # `completion_tokens` içinde GÖRÜNMEZLER. Alt alanı taşımayan uçlar var → ölçülmediğinde None
+    # kalır ve `spend.record` satıra HİÇ yazmaz: "0" yazmak ölçülmemişi ölçülmüş göstermek olurdu.
+    akil = (u.get("completion_tokens_details") or {}).get("reasoning_tokens")
     from . import spend
-    spend.record(u.get("prompt_tokens", 0), u.get("completion_tokens", 0), model, note=note)
+    spend.record(u.get("prompt_tokens", 0), u.get("completion_tokens", 0), model, note=note,
+                 thought_tokens=akil)
     ch = (d.get("choices") or [{}])[0] or {}
     msg = ch.get("message") or {}
     txt = str(msg.get("content") or "")
-    if not txt.strip():                   # 200 OK ama içerik yok — sebebi ayır (araç çağrısı / kesilme)
+    finish = str(ch.get("finish_reason") or "")
+    # KESİLME KONTROLÜ METİN KONTROLÜNDEN ÖNCE GELİR — `_gemini_text`teki sıranın aynısı ve buradaki
+    # KUSURUN TA KENDİSİ: eskiden finish_reason ayrımı aşağıdaki `if not txt.strip()` bloğunun
+    # İÇİNDEYDİ. Kesilen cevap BOŞ DEĞİLDİR (içinde düşünce ön-eki vardır), o yüzden bu ayrıma HİÇ
+    # UĞRAMIYORDU: yarım metin çağırana dönüyor, `_parse_hyp` JSON bulamıyor ve defter "unparseable"
+    # yazıyordu — biçim suçlanıyor, asıl arıza (bütçe) görünmez kalıyordu. Kısmî metin zaten
+    # kullanılamaz; doğru adla boş dönmek hem sınıfı hem düzeltmeyi görünür kılar.
+    if finish == "length":
+        _trace_note(EMPTY_TRUNCATED,
+                    detail=f"reasoning={akil}, completion={u.get('completion_tokens')}, "
+                           f"cap={NOUS_MAX_TOKENS}")
+        return None
+    if not txt.strip():                   # 200 OK ama içerik yok — sebebi ayır (araç çağrısı / red)
         if msg.get("tool_calls") or msg.get("function_call"):
-            _trace_note(EMPTY_TOOL_ONLY, detail=f"finish_reason={ch.get('finish_reason') or '?'}")
-        elif str(ch.get("finish_reason") or "") in ("content_filter", "refusal"):
-            _trace_note(EMPTY_REFUSAL, detail=f"finish_reason={ch.get('finish_reason')}")
+            _trace_note(EMPTY_TOOL_ONLY, detail=f"finish_reason={finish or '?'}")
+        elif finish in ("content_filter", "refusal"):
+            _trace_note(EMPTY_REFUSAL, detail=f"finish_reason={finish}")
         else:
-            _trace_note(EMPTY_NO_TEXT, detail=f"finish_reason={ch.get('finish_reason') or '?'}")
+            _trace_note(EMPTY_NO_TEXT, detail=f"finish_reason={finish or '?'}")
         return None
     return txt
 
@@ -4413,7 +4543,7 @@ def chain_text(prompt: str, *, kind: str, preload: tuple = (), timeout: int = 30
         kunye, kunye_neden = None, None    # BU AYAĞIN künyesi — okuma noktası ayağın kendi yanında
         try:
             if p == "claude":
-                txt = _claude_text(prompt, note=note or kind, max_tokens=8000)
+                txt = _claude_text(prompt, note=note or kind)   # tavan TEK yerden: CLAUDE_MAX_TOKENS
                 kunye = MODEL              # `_claude_text` gövdesi bu SABİTİ gönderir (import'ta bağlı)
             elif p == "nous":
                 # YEREL ajan varsa O kullanılır (skill kütüphanesi + MCP araçları onun yolunda).

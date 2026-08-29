@@ -62,6 +62,228 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **KILL#1 p95 ÇİVİSİ TAM SUITE'TE KIRMIZI VERDİ; ÖLÇÜM BUNUN REGRESYON OLMADIĞINI GÖSTERDİ
+  (2026-08-29, `752e51e` birleştirme koşumu):** `test_p95_dongu_suresi_kart_tavanini_ASMIYOR` 7148
+  yeşilin içinde TEK kırmızıydı. **"Flake" bir kök neden değildir**, o yüzden iki bağımsız ölçüm
+  yapıldı. **(1) ETKİ YOLU YOK:** birleştirmenin `meridian/` altında dokunduğu TEK dosya
+  `spend.py`dir (#14, `:free` fiyatlandırması); çivinin ölçtüğü döngü `on_barfeed_event`tir ve test
+  yalnız `barclock · config · faz5_cikis · intraday_cycle · intraday_shadow · store` çağırır —
+  `spend` o listede YOK. Bu turun kendi değişikliği de `hermes.py`dir, yani sıcak yolda değil.
+  **(2) ALETİN GÜRÜLTÜSÜ ÖLÇÜLDÜ:** çivi YALNIZ BAŞINA beş kez koşturuldu —
+  oran 1,024 · 1,018 · 1,014 · 0,720 · 1,006 (tavan 1,10, beşi de altında) ama negatif kontrolün
+  sapması 6,5% · 1,1% · 2,1% · **37,1%** · 0,5%. Yani aletin kendi gürültüsü, aradığı %10'luk
+  etkinin ÜÇ KATINA kadar çıkabiliyor — çivinin kendi yorumu bunu zaten yazmıştı ("taban da tavanı
+  aşıyor... aletin ÇÖZÜNÜRLÜĞÜNÜ raporluyordu").
+  **AÇIK KALAN (bu turda BİLEREK dokunulmadı):** çivinin `ÖLÇÜLEMEDİ` skip-kapısı tam bu duruma
+  karşı konmuş ama BU koşumda ateşlemedi — kontrol tesadüfen SIKI görünürken oran sıçradı. Yani kapı
+  gerçek koruma sağlıyor ama yeterli değil (tek pencerede hesaplanan kontrol, yükün açık kola düştüğü
+  durumu göremiyor). Çivi bir KILL KRİTERİDİR (`EXE-2026-003`) ve CLAUDE.md madde 3 eşik/kill-list'e
+  dokunmayı yasaklar — düzeltme kart sahibinin işidir, birleştirme turunun değil. Ayrı görev açıldı.
+
+- **ÜÇ TAVANDAN BİRİ ÖTEKİLERDEN FARKLI DAVRANIYORDU (2026-08-29; merge öncesi öz-denetimde
+  bulundu, çivi bulmadı):** `CLAUDE_MAX_TOKENS` `_claude_text`in İMZASINA varsayılan olarak
+  yazılmıştı, yani değer TANIM ANINDA bağlanıyordu. `NOUS_MAX_TOKENS` ve `GEMINI_MAX_OUTPUT_TOKENS`
+  ise gövde İÇİNDE okunur. Sonuç ölçüldü: sabiti çalışma anında değiştirmek claude ayağında
+  SESSİZCE etkisiz, ötekilerde etkili. Env yolu (`HERMES_CLAUDE_MAX_TOKENS`) her üçünde de çalışıyor
+  — yani CANLI bir arıza DEĞİL, ama bu turun kovaladığı "iki kopya sessizce ayrışır" sınıfının
+  küçük ve gerçek bir örneği, üstelik onu ben doğurmuştum. Tavan artık gövdede çözülüyor
+  (`max_tokens: int | None = None` → `if max_tokens is None`). **NEDEN KAYDA GEÇİYOR:** hiçbir çivi
+  bunu yakalamadı ve yakalayamazdı — üç ayağın davranış SİMETRİSİ o gün çivili değildi. Bulan şey
+  merge öncesi diff okumasıydı; yani "yeşil suite" ile "gözden geçirilmiş diff" ayrı güvencelerdir.
+
+- **KENDİ DÜZELTMEMİN ÇAPALARI BAYATLADI — CI YAKALADI, YEREL KOŞUM YAKALAMADI (2026-08-29):**
+  `test_ihlal_seti_GERILEMEDI` üç ardışık commit'te CI'da kırmızıydı. Sebep tam da `codelaw`ın
+  kovaladığı sınıf: çivi yorumuma `hermes.py:491` diye bir SATIR çapası yazmıştım, sonra AYNI
+  dosyaya sabit bloğu ekledim ve `propose_with_claude` 491'den 522'ye kaydı — yani çapayı bayatlatan
+  şey benim kendi düzeltmemdi. `codelaw.py`nin kendi notu bunu zaten yasaklıyordu: "ÇAPA SATIR
+  DEĞİL SEMBOL"; o not, iki nokta üst üsteli biçimin (`dosya.py:NNN`) tarayıcıya CANLI çapa
+  göründüğünü ve bir kez "anlatının, anlattığı şeyin kurbanı" olduğunu da yazıyor.
+  **DÜZELTME:** iki çapa da SEMBOLE çevrildi (`propose_with_claude`, `hermes_runtime.reflect_now`)
+  — biri ÇİVİLENMİŞTİ, öbürü henüz çözülüyordu ama aynı sınıftaydı: bile bile mayın bırakılmaz.
+  Belgedeki satır alıntıları da sembole çevrildi (aynı sebep; `.md` taranmıyor ama sayı ARTIK
+  YANLIŞTI).
+  **NEDEN YEREL KOŞUM KAÇIRDI:** kapsam testlerim (`brain_resilience`, `uiux`, `tipografi`,
+  `etkilenen_testler`) `codelaw` çivisini İÇERMİYORDU ve `ops/etkilenen_testler.sh` motor kaynağı
+  değiştiği için ZATEN "tam suite gerekli" diyordu — yani seçici doğru söylüyordu, ben tam suite'i
+  arka planda başlatıp SONUCUNU BEKLEMEDEN commit'ledim. Ders: motor kaynağına dokunan bir turda
+  push, tam suite sonucundan ÖNCE atılırsa CI onu benim yerime bulur.
+
+- **ÇAPA TANIMI İKİ YERDE İKİ TÜRLÜYDÜ — DÜZYAZI HAYALET ÇAPA BEYAN EDEBİLİYORDU (2026-08-29;
+  sınıf: "iki kopya sessizce ayrışır", bu deponun tekrar eden sınıfı):** günlükte bash dizi-uzunluğu
+  ifadesinden söz eden bir cümle (`ops/runbook_uret.py` günlük maddelerini AYNEN kopyalar) belgeye
+  İKİ HAYALET ÇAPA soktu; biri düpedüz `...` idi ve `...` bir HTML id'ye dönüşemediği için
+  `test_t3_rota_cizer_ve_capalari_html_id_yapar` kırmızıya döndü.
+  **KÖK NEDEN İLK HİPOTEZ DEĞİLDİ.** Görev kartım "kod aralıklarını ayıkla" diyordu ve ÜÇ yerin
+  (`test`, `runbook_uret`, `api`) hizalanması gerektiğini varsayıyordu. ÖLÇÜM ikisini de çürüttü:
+  `meridian/api.py::_MD_BASLIK` — `/runbook`u GERÇEKTEN çizen ayrıştırıcı — çapayı `^#{1,3} ...
+  {#x}$` diye, yani **BAŞLIK SONEKİ** olarak tanır ve `id=` YALNIZ oradan doğar (`api._md_render`in başlık dalı);
+  `ops/runbook_uret.py` de çapayı yalnız başlık satırlarına YAZAR (475/697/718) ve hiç TÜKETMEZ.
+  Yani üretici ile oluşturucu **zaten aynı fikirdeydi**; ayrışan TEK yer testteki `_capalar()`tı:
+  belgenin TAMAMINDA `{#...}` arıyordu. Üstelik aynı dosyanın 223. satırındaki kardeşi ZATEN
+  başlık-bağlıydı — tutarsızlık dosyanın kendi içinde de duruyordu. **Yani düzeltilecek yer üç
+  değil BİRDİ, ve kural "kod aralığını ayıkla" değil "çapa bir başlık sonekidir"dir.** Kod-aralığı
+  çözümü sınıfı KAPATMAZDI: ters tırnaksız bir düzyazı `{#x}` yine hayalet çapa olurdu.
+  **DÜZELTME:** `_capalar()` artık oluşturucunun DERLENMİŞ desenini (`api._MD_BASLIK`) İTHAL EDER —
+  ikinci bir regex yazmaz. Desen değişirse okuma onunla birlikte değişir.
+  **DOĞRULAMA ÇÜRÜTMEYLE, İDDİAYLA DEĞİL:** kırmızıyı doğuran cümle DÜZ hâline geri döndürüldü
+  (dolaylı yazım ve "geri düzeltmeyin" notu KALDIRILDI) — belge o diziyi hâlâ içeriyor ve testler
+  yeşil. Çivi de sabit listeye değil `api._md_render`ın ÜRETTİĞİ id'lere karşı ölçer, yani iki tanım
+  ayrışırsa düşer. Üç mutasyon üçü de yakalandı (çıkarıcıyı eski gevşek regex'e döndür · çıkarıcıyı
+  boşalt · oluşturucuyu düzyazı çapasını tanıyacak şekilde genişlet).
+  **KENDİ ÇİVİMİ GERİ ÇEKTİM, kayda geçiyor:** ilk turda `test_duzyazi_capa_BEYAN_EDEMEZ_gercek_belgede`
+  yazmıştım; yazıldığı an yeşildi ÇÜNKÜ cümle o sırada dolaylıydı. Cümle düzeltilince düştü ve
+  düşmesi DOĞRUYDU: çivi, düzeltmenin KALDIRDIĞI kısıtı KALICI YASAYA çeviriyordu — "düzyazıda
+  `${#...}` geçmesin" demek, bu turun tam tersini savunmaktır. Kaldırıldı, yerine gerekçesi yazıldı.
+  Ders: bir çivinin YEŞİL olması doğru şeyi ölçtüğü anlamına gelmez; geçici bir düzenlemenin
+  üstüne yazılmış çivi o düzenlemeyi yasalaştırır.
+
+- **SINIFIN ÜÇÜNCÜ AYAĞI DA KAPANDI — CLAUDE BACAĞI (2026-08-29; operatör istedi, önceki turda
+  "latent, bilerek dokunulmadı" diye açık bırakılmıştı):** kusur ikizlerinin aynısı, iki bacaklı.
+  **(1) TAVAN:** `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
+  (`propose_with_claude`) onu **ARGÜMANSIZ** çağırıyordu → 4000'e düşüyordu. Üstelik gövde
+  `thinking={"type": "adaptive"}` + `output_config={"effort": "high"}` gönderir, yani bu ayak da
+  **DÜŞÜNEN** bir yapılandırmadır; Anthropic sözleşmesinde `max_tokens` modelin BİLMEDİĞİ, dayatılan
+  bir yanıt tavanıdır ve düşünce o tavandan yenir. Gemini AYNI yansıma prompt'unda 3838 düşünce
+  tokenı ölçtü — yani 4000 bu iş için ÖLÇÜLÜ biçimde dardı. **(2) SINIFLANDIRMA:** `stop_reason`
+  incelemesi `if not text:` bloğunun **İÇİNDEYDİ**; tavana çarpan cevap BOŞ DEĞİLDİR (kısmî metin
+  taşır), o yüzden o ayrıma HİÇ UĞRAMIYORDU → `_parse_hyp` → `unparseable`. Portal ayağındaki
+  yapısal kusurun birebir aynısı. **DETERMİNİSTİK ÜREME:** düzeltmeden önce çivi yine
+  `assert 'unparseable' == 'truncated'` ile düştü. **DÜZELTME:** `CLAUDE_MAX_TOKENS`
+  (env `HERMES_CLAUDE_MAX_TOKENS`, vars. **16000** — Anthropic'in AKIŞSIZ istekler için belgelenmiş
+  varsayılanı; daha yükseği akış ister, bu ayak akış kullanmıyor) + kesilme kontrolü metin
+  kontrolünden ÖNCE (`stop_reason == "max_tokens"` → `EMPTY_TRUNCATED`) + `chain_text`teki elle
+  yazılmış `max_tokens=8000` KALDIRILDI, iki ayak artık TEK adlandırılmış tavanı paylaşıyor
+  (bu PR'ın kendi dersinin uygulanması: bağımsız iki sayı bırakmak, birinin değişip öbürünün
+  unutulduğu vakayı üretir). **SAĞLAYICI FARKI BİLEREK KORUNDU — UYDURMA YASAĞI:** gemini
+  `thoughtsTokenCount`, OpenRouter `reasoning_tokens` RAPORLAR; **Anthropic düşünce tokenını AYRI
+  bir alanda BİLDİRMEZ** (`output_tokens` içindedir). Kardeşlere SİMETRİ uğruna "reasoning=" yazmak
+  ölçülmemişi ölçülmüş göstermek olurdu; detayda yalnız ÖLÇÜLEN iki sayı var (`output=N, cap=N`) ve
+  bunu bir çivi kilitliyor. **ZAMAN AŞIMI BURADA AYRI DÜĞME DEĞİL** (nous ayağından farkı): SDK'nın
+  kendi varsayılanı (10 dk) yönetir ve 16000 token onun içine sığar — yani nous'taki "tavan
+  yükseldi, zaman aşımı elde kaldı" tuzağı bu ayakta YOKTUR. **ÇİVİLER (8, v327):** SDK bu depoda
+  KURULU DEĞİL (ölçüldü), o yüzden çiviler sahte bir `anthropic` modülü enjekte eder — kurulu
+  olmasına bağlanmaz, CI de kurmuyor. Beş mutasyonun beşi de yakalandı (tavanı 4000'e geri al ·
+  kesilme kontrolünü kaldır · sınıfı `unparseable`a geri al · `chain_text` yine elle 8000 geçsin ·
+  detaya uydurma `reasoning=0` ekle).
+  **BU AÇIK KALEM AYNI GÜN KAPANDI (v328, operatör istedi) — VE KAPATIRKEN YUKARIDAKİ CÜMLE
+  DÜZELTİLDİ:** açık kalem "red `EMPTY_NO_TEXT`e düşer" diyordu; ÖLÇÜM bunu çürüttü. `NO_TEXT`e
+  yalnız GÖVDESİZ red düşer. Metin TAŞIYAN red — asıl vaka — `_parse_hyp`e gidiyordu ve orada
+  `_looks_like_refusal()` METNİN SÖZCÜKLERİNE bakıyordu (`_REFUSAL_MARKS`), yani sınıf bir
+  TAHMİNDİ: listede olmayan bir ifadeyle reddedilirse sessizce **`unparseable`** oluyordu. Kırmızı
+  faz bunu birebir gösterdi: `assert 'unparseable' == 'refusal'`. **ASIL MESELE EKSİK BİR DAL
+  DEĞİL, YANLIŞ KAYNAKTAN OKUMAKTI.** Anthropic reddi BEYAN EDER (`stop_reason == "refusal"`,
+  `stop_details = {type, category, explanation}`) ve **beyan edilmiş olgu tahmin edileni EZER** —
+  bu turun tamamının dersi. **DÜZELTME:** red dalı metin kontrolünden ÖNCE, `category` beyandan
+  okunur; `stop_details` YALNIZ redde dolduğu için korumalı okunur (`getattr`), ve `category` AÇIK
+  bir kümedir + null olabilir → uydurulmaz, `None` yazılır. Sezgi SİLİNMEDİ: `_parse_hyp`teki
+  kardeşi, reddi beyan ETMEYEN sağlayıcılar için hâlâ tek yoldur. **ÇİVİLER (6):** çürütme bacağı
+  dahil — kullanılan gövde (`"Bu talep politika dışıdır."`) `_REFUSAL_MARKS`ın HİÇBİRİNE takılmaz,
+  yani çivi beyanı ölçüyor, sezgiyi değil. Beş mutasyonun beşi de yakalandı (dalı kaldır · sınıfı
+  `NO_TEXT` yap · kategoriye `unknown` uydur · `stop_details`i korumasız oku · dalı metin
+  kontrolünün ARKASINA al). Böylece üç ayağın ÜÇÜ de artık aynı sözleşmeyi taşıyor:
+  kesilme · red · araç · metin-yok ayrı ayrı adlandırılıyor.
+
+- **SEÇİCİ BETİĞİ BASH'TE GEÇERSİZ İFADE TAŞIYORDU (2026-08-29; taban kırmızısı, operatör istedi):**
+  `ops/etkilenen_testler.sh` üç satırda `${#DIZI[@]-0}` kullanıyordu; `-` varsayılan-değer operatörü
+  `${#...}` UZUNLUK biçimiyle birleşmez. `main`in kendi kopyası koşturularak doğrulandı (dal kusuru
+  DEĞİL). **BU SATIRDA YANILDIM ve düzeltiyorum:** "sessiz yanlış-negatif değildi, kapı
+  gürültülüydü ama doğruydu" demiştim. PR #16 (`c7a13b5`, main'e indi) bunu ÖLÇÜMLE ÇÜRÜTTÜ: betik
+  `set -e` KULLANMADIĞI için `bad substitution` ölümcül değil ama `[[ ]]` başarısız sayılıyor ve kapı
+  SESSİZCE "false" oluyordu — yani **üç kapı da ölüydü**. En pahalısı küresel-dosya kapısı:
+  `tests/conftest.py` değişince "TAM SUITE GEREKLİ" DEMİYOR, dar bir küme öneriyordu — yani
+  EKSİK-KAPSAMA, betiğin kendi sözleşmesinin tam tersi. Benim okumam yalnız stderr'e bakmıştı,
+  kapıların DÖNDÜĞÜ değere bakmamıştı. Ders: "hata ölümcül değil" ile "karar doğru" ayrı iddialardır. 8/8 yeşil. Taşınabilirlik YARIM doğrulandı: konteynerde yalnız bash
+  5.2.21 var, macOS'un 3.2'si YOK — betiğin başlığı ikisini de şart koşuyor.
+
+- **BÜTÇE ARIZASI BİÇİM ARIZASI DİYE YAZILIYORDU — v97'nin GEMİNİ'DE KAPATTIĞI SINIF PORTAL AYAĞINI
+  HİÇ ALMAMIŞTI (2026-08-27; sınıf: `Ö-49` kardeşi — "aynı kusur ikinci sağlayıcıda, düzeltme göç
+  etmedi"):** `_nous_text` (OpenRouter/nous portal yolu) `max_tokens: 4000` sabitini gönderiyordu.
+  Canlı defter (A1, `state/spend.jsonl`): nvidia/nemotron ailesine **13 çağrının 7'si TAM
+  `out_tokens=4000`** (%54) — 5x super-120b + 1x ultra-550b `reflect (nous)`, 1x super-120b
+  `nous_eval`; girdi ~23-27k token. Sağlayıcı sondası mekanizmayı gösterdi: `ultra @ max_tokens=60`
+  → `finish_reason=length` + içerik modelin **DÜŞÜNCE ÖN-EKİ** (reasoning=62); `@2000` →
+  `finish_reason=stop` + geçerli JSON. **KÖK NEDEN YAPISALDIR ve tavandan İBARET DEĞİL:**
+  `_nous_text`te `finish_reason` ayrımı `if not txt.strip():` bloğunun **İÇİNDEYDİ**. Kesilen cevap
+  BOŞ DEĞİLDİR — içinde düşünce ön-eki vardır — yani o ayrıma **HİÇ UĞRAMIYORDU**: yarım metin
+  çağırana dönüyor, `_parse_hyp` JSON bulamıyor, defter `unparseable` yazıyordu. Gemini'de kesilme
+  kontrolü metin kontrolünden ÖNCE gelir (`_gemini_text` docstring'i, v97); portalda o sıra yoktu.
+  Yani tavanı tek başına yükseltmek sınıfı düzeltMEZDİ: bir sonraki kesilme yine "biçim" diye
+  okunurdu. **DETERMİNİSTİK ÜREME (çıkarım değil, ölçüm — kırmızı faz):** düzeltmeden önce çivi
+  `assert 'unparseable' == 'truncated'` ile düştü; yani canlı defterdeki yanlış adın kaynağı
+  koddan yeniden üretildi. **DÜZELTME (ilk geçiş — aşağıda İKİ KEZ düzeltildi):** `NOUS_MAX_TOKENS`
+  (env: `HERMES_NOUS_MAX_TOKENS`, o an 16000; YÜRÜRLÜKTEKİ değer 16384 · 900 sn) + kesilme kontrolü metin kontrolünden ÖNCE + `EMPTY_TRUNCATED` sınıfı token sayılarıyla
+  (`reasoning=N, completion=N, cap=N`) + `reasoning_tokens` → `spend.record(thought_tokens=)`.
+  **TAVAN NEREDEN TÜRÜYOR:** o 7 satır **SAĞDAN SANSÜRLÜDÜR** — tavanda kesilen örnek "ihtiyaç
+  ≥4000" der, ihtiyacın NE OLDUĞUNU söylemez; gerçek istem üzerinde ölçülmüş tek akıl-yürütme sayısı
+  gemini'nin `thoughtsTokenCount=3838`üdür → ×4 marj = 16000. Marj bedelsiz: iki model de `:free`,
+  platform tavanı istek/dk + istek/gün cinsinden, token cinsinden DEĞİL. Gerçek ihtiyacı bundan sonra
+  `truncated` olayının kendisi ölçecek. **ÇİVİLER (10, tests/test_brain_resilience_v66.py v325):**
+  uçtan uca sınıf çivisi + `reasoning=None` (uydurma yasağı) + pozitif kontrol + tavan/gövde çivisi +
+  eski üç sınıfın korunması. Dört mutasyonun dördü de yakalandı (tavanı 4000'e geri al · sınıfı
+  `unparseable`a geri al · kesik metni yine çağırana döndür · ölçülmeyen akıl sayısına 0 yaz).
+  **BU TURUN KENDİ KUSURU — İLK GEÇİŞ YARIM DÜZELTMEYDİ (aynı gün, `main`deki ölçüm belgesi
+  yakaladı):** ilk commit (69cf842) tavanı 4000→16000 yaptı ama `timeout=120.0` sabitine
+  DOKUNMADI. `docs/OLCUM-MODEL-BUTCESI-2026-08-27.md` (e8e52cb, `main`) §3-4 bunun neden bir
+  düzeltme DEĞİL ad değişikliği olduğunu ölçmüş: Super 130,8 tok/sn ama **Ultra 25,8 tok/sn (5 KAT
+  yavaş)** → 120 sn'de ancak ~3.096 token, yani yükseltilen tavana ULAŞAMADAN zaman aşımına düşer.
+  Belgenin cümlesi birebir: "ikisini AYRI AYRI değiştirmek işe yaramaz: yalnız `max_tokens`
+  yükseltilirse kesilme zaman aşımına dönüşür". DAHA KÖTÜSÜ, belge bunu söylemiyor ama bu turda
+  ölçüldü: o yolda httpx cevap DÖNMEDEN istisna atar, yani bu turda eklenen `truncated`
+  sınıflandırması HİÇ ATEŞLENMEZ ve olay `nous_chain_failed`e düşer — bütçe arızası bu sefer TAŞIMA
+  arızası diye okunurdu. Sınıf kapanmaz, yer değiştirirdi. **DÜZELTME (ikinci geçiş):** tavan
+  16384 (belgenin §6 tablosunda bu çağrı sınıfının satırı; iki modelin sağlayıcı tavanının da
+  altında — ölçülen §1: ultra 65.536 · super 235.929) ve **zaman aşımı artık TÜRETİLİR, sabit
+  değil**: `NOUS_MAX_TOKENS / NOUS_OLCULEN_TOK_SN(25,8) × NOUS_ZAMAN_MARJI(1,4)` = 889 sn. Emsal
+  `HAVUZ_IS_SURESI_OLCULEN_SN × HAVUZ_ATALET_MARJI`dir ve gerekçe aynı: ikisini bağımsız iki sayı
+  bırakmak, birinin yükseltilip öbürünün unutulduğu TAM BU VAKAYI bir kez daha üretirdi. Çivi
+  invaryantı kilitler (tavan zaman aşımı içinde ULAŞILABİLİR olmalı) + çürütme bacağı eski çiftin
+  (4000, 120) invaryantı ÇİĞNEDİĞİNİ gösterir, yani kontrol totoloji değildir. Üç mutasyon üçü de
+  yakalandı (zaman aşımını 120'ye geri al · tavanı yükselt ama zaman aşımını türetme · tavanı
+  sağlayıcı sınırının üstüne çıkar). **ASENKRON ŞARTI DOĞRULANDI:** §6 tablosu bu satır için
+  "yalnız async" der; `_nous_text`in iki çağıranı da arka plandadır (`reflect_now()` arka plan iş
+  parçacığı açıp HEMEN döner, `hermes_runtime.reflect_now`; `nous_eval` haftalık kadans), yani 889 sn
+  hiçbir HTTP isteğini bloklamaz. Senkron çağıran eklenirse yeniden ölçülmeli.
+  **DERS:** "tavanı yükselt" tek başına bir düzeltme değildi; bağlayan tarafın HANGİSİ olduğu
+  ölçülmeden seçilen her iki sayı da keyfîdir.
+  **ÜÇÜNCÜ GEÇİŞ — ÇİVİNİN KENDİSİ TOTOLOJİYDİ (aynı gün, tablo koda karşı okunurken bulundu):**
+  ikinci geçiş zaman aşımını `NOUS_MAX_TOKENS / NOUS_OLCULEN_TOK_SN × 1,4` diye TÜRETİYORDU (889 sn)
+  ve invaryant çivisi "zaman aşımı >= tavan/hız" diye sınıyordu. 1,4 > 1 olduğu için bu kontrol
+  VARSAYILAN YOLDA ASLA KIRMIZI OLAMAZDI — ölçen değil, kendi kendini onaylayan bir çivi. Bu deponun
+  "çürütmeyle sınandı, varsayılmadı" şartının ihlali; üstelik tam da o şartı yazmak için eklenmiş
+  bir çividen. İKİNCİ KUSUR: sessiz ölçeklenme bir TEHLİKEDİR — tavanı 32.768'e çıkaran biri farkında
+  olmadan ~21 dakikalık, kimsenin ÖLÇMEDİĞİ bir zaman aşımı da satın alırdı. **DÜZELTME:** değer
+  artık §6 tablosunun yayımlanmış sayısıdır (900 sn) ve tavandan BAĞIMSIZDIR; bağı çivi tutar, yani
+  bağ kırıldığı gün çivi KIRMIZIYA DÖNER ve insanı yeniden ölçmeye zorlar — doğru davranış budur.
+  Eklenen iki çivi: (a) invaryantın AYIRT ETTİĞİ (tavan iki katına çıkarılsa çiğnenirdi) — çivinin
+  kendisini sınayan çivi; (b) kaynaktaki çiftin §6 tablosuyla BİREBİR aynı olduğu (16.384 · 900),
+  yoksa belge ile kod sessizce ayrışırdı. Üç mutasyonun üçü de yakalandı.
+
+
+  **AÇIK KALAN — ÖLÇÜLEMEDİ, UYDURULMADI (3):**
+  (1) **7 damganın olay defteriyle KORELASYONU CANLIDA DOĞRULANMADI.** Bu tur GitHub'dan klonlanan
+      *cloud* oturumunda koştu: konteynerde `ssh` ikilisi YOK, `~/.ssh/oci-a1.key` YOK, `state/`
+      versiyonlanmıyor (yalnız `goal.yaml`+`bounds.yaml` izli) — yani `journalctl -u meridian
+      -u meridian-learn` ve `spend.jsonl` bu konumdan ERİŞİLEMEZ. Mekanizma koddan deterministik
+      üretildi; "bu 7 damga şu ledger satırlarını üretti" ifadesi hâlâ ÇIKARIMDIR. A1 erişimi olan
+      Rol-1 oturumu doğrulamalı: 7 damganın ±2 dk penceresinde `nous_eval_unparseable` /
+      `hermes_brain_empty(reason=unparseable)` / `nous_chain_empty` satırı var mı.
+  (2) **AYNI SINIF CLAUDE AYAĞINDA LATENT DURUYOR (bu turda BİLEREK dokunulmadı — kapsam
+      genişletmesi olurdu):** `_claude_text` imzası `max_tokens: int = 4000` ve `propose_with_claude`
+      (`propose_with_claude`) onu **argümansız** çağırır, yani 4000'e düşer — üstelik gövde
+      `thinking={"type": "adaptive"}` gönderir, yani o ayak da DÜŞÜNEN bir yapılandırmadır ve gemini'nin
+      3838 ölçtüğü AYNI yansıma prompt'unu kullanır. `chain_text`in claude ayağı 8000 geçer,
+      `propose_with_claude` GEÇMEZ. Ayrıca `stop_reason="max_tokens"` → `EMPTY_TRUNCATED` eşlemesi orada
+      da YOK. Bugün canlıda tetiklenmiyor (sistem haritası: "claude bacağı kimliksiz") — bu yüzden
+      ACİL değil, ama kimlik girildiği gün sınıf üçüncü kez doğar.
+  (3) **`reasoning` kolu DOĞRULANMADI:** `NOUS_REASONING_EFFORT` env kolu eklendi ama **varsayılan
+      KAPALI ve boşken alan gövdeye HİÇ konmaz** (çivili). Sebep: `openrouter.ai` bu konteynerin çıkış
+      vekilince kapalı ve burada anahtar yok — parametrenin bu uçtaki tam şekli doğrulanamadı, uydurma
+      yasağı istek gövdesi için de geçerlidir. Açmadan önce sonda şart. TUZAK YAZILI: `exclude` bir
+      BÜTÇE ayarı DEĞİLDİR (düşünceyi cevaptan gizler, üretilmesini engellemez → tavanı aynen yer);
+      bütçeyi kurtaran ayar düşünceyi KAPATANdır (gemini'de `thinkingBudget=0`).
+  **KAPSAM SINIRI (varsayılmadı, brief'te ölçülmüş):** `agent_call_empty` (709) ve
+  `review_fallback_empty` (459) YEREL AJAN CLI yoludur (`_agent_call`), bu düzeltme onlara DOKUNMAZ.
+
 - **ARAMA HAVUZU 13 GÜNDÜR SIFIR SONUÇ ÜRETTİ — TAVAN İŞTEN KISAYDI (2026-08-25; sınıf: "eşik,
   ÖLÇTÜĞÜ mekanizmadan değil BAŞKA bir mekanizmadan türetildi"):** `arama_havuzu_zaman_asimi`
   olaylarının TAMAMINDA (2026-08-12'den beri **61 olayın 61'i**) `biten=0`. Şüphe kilitlenme/
