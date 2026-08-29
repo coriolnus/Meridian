@@ -1042,3 +1042,111 @@ def test_c7_auth_is_a_noop_when_no_token_is_configured(sandbox_state, monkeypatc
             kod = line.split("#", 1)[0]
             if "--host" in kod:
                 assert "0.0.0.0" not in kod, f"{f}: {line.strip()} — tüm arayüzler + token opsiyonel"
+
+
+# =================================================================================================
+# C3-b — KANCA BAŞLIĞININ İDDİASI ile GERÇEK KAPSAMI (2026-08-30 denetimi)
+# =================================================================================================
+# ÖLÇÜLEN BOŞLUK. `ops/meridian-guard.sh` başlığı "state/ altına YAZMA" diye bir yüzey ÜSTLENİYOR
+# ama hedef deseni YALNIZ ADI SAYILAN yedi aileyi blokluyordu. `state/` altında 87 dosya var ve
+# 24'ü üretim kodunca yazılıyor; korumasız kalanlar arasında `trades.jsonl` (İŞLEM DEFTERİ),
+# `equity_curve.json`, `scoreboard.json` (`update_scoreboard` KİLİTSİZ), `trade_plans.jsonl` ve
+# `notify_undelivered.json` vardı. Tek cümlelik tutarsızlık: `portfolio.json` KORUMALI,
+# `trades.jsonl` DEĞİL — ikisi aynı sınıf kanıttır.
+#
+# KAPSAMI GENİŞLETMEK ÜRETİMİ KIRMAZ, ölçüldü: o 24 dosyanın hepsi Meridian'ın KENDİ Python
+# kodundan yazılır ve o yazımlar `pre_tool_call`a HİÇ uğramaz — kanca yalnız AJANIN araçlarını
+# görür. Arıza asimetrisi hükmü verdi: fazla bloklamak ajana GÖRÜNÜR bir ret (mesaj MCP'yi adıyla
+# söyler), az bloklamak operatöre sunulan kanıtın SESSİZ tahrifi.
+
+#: Kanıt sınıfı: bir ajan buraya yazarsa operatörün gördüğü GEÇMİŞ değişir.
+KANIT_DOSYALARI = [
+    ("state/trades.jsonl", "işlem defteri — loop/run/sprint yazar, kanıtın kendisi"),
+    ("state/equity_curve.json", "sermaye eğrisi — panoda ve karnede görünen sayı"),
+    ("state/scoreboard.json", "karne — update_scoreboard KİLİTSİZ, yarış riski gerçek"),
+    ("state/trade_plans.jsonl", "plan defteri"),
+    ("state/notify_undelivered.json", "alarm sayaçları — silinirse yığın 'yok' görünür"),
+    ("state/broker_reconcile.json", "mutabakat damgası — bayatlık alarmı buna bakar"),
+    ("state/hypotheses.jsonl", "öğrenme defteri"),
+    ("state/spend.jsonl", "maliyet defteri"),
+]
+
+
+def test_c3_guard_BASLIK_IDDIASINI_TUTAR_state_yazimi_bloklu():
+    """Kancanın ÜSTLENDİĞİ yüzey ile GERÇEKTEN bloklandığı yüzey aynı olmalı.
+
+    Bir kapının kendi başlığında yazan ama tutmadığı bir söz, olmayan bir kapıdan DAHA KÖTÜDÜR:
+    okuyan onu okur ve korunduğunu sanır. Bu çivi o farkı kapatır ve kapalı tutar.
+    """
+    acik = []
+    for hedef, neden in KANIT_DOSYALARI:
+        yazma = {"tool_name": "write_file", "tool_input": {"path": hedef, "content": "{}"}}
+        kabuk = {"tool_name": "terminal", "tool_input": {"command": f"echo x >> {hedef}"}}
+        silme = {"tool_name": "terminal", "tool_input": {"command": f"rm -f {hedef}"}}
+        for etiket, pl in (("yazma", yazma), ("kabuk>>", kabuk), ("silme", silme)):
+            if not _guard_hook(pl):
+                acik.append(f"{hedef} [{etiket}] ({neden})")
+    assert not acik, (
+        "kanca başlığı 'state/ altına YAZMA' diyor ama şu yüzeyler AÇIK — operatöre sunulan "
+        f"kanıt ajan tarafından sessizce değiştirilebilir: {acik}")
+
+
+def test_c3_guard_state_OKUMASINI_BLOKLAMAZ():
+    """POZİTİF KONTROL, ve üstteki çivinin ANLAMLI olmasının şartı.
+
+    Kanca her şeyi bloklasaydı yukarıdaki yeşil hiçbir şey kanıtlamazdı. Ayrıca okuma gerçekten
+    serbest KALMALI: `cat`/`grep`/`jq` ile defter okumak ajanın işini görmesinin yoludur ve
+    kapatmak, kapıyı korumaya değil kullanılamazlığa çevirirdi. Adı SAYILAN aileler (portfolio,
+    secrets, goal…) bunun DIŞINDADIR — onlarda okuma da bloklu ve bu bilinçlidir.
+    """
+    serbest = [
+        {"tool_name": "terminal", "tool_input": {"command": "tail -5 state/trades.jsonl"}},
+        {"tool_name": "terminal", "tool_input": {"command": "jq .versions state/scoreboard.json"}},
+        {"tool_name": "terminal", "tool_input": {"command": "grep MECHANISM state/events.jsonl"}},
+        {"tool_name": "terminal", "tool_input": {"command": "ls -la"}},
+        {"tool_name": "write_file", "tool_input": {"path": "meridian/loop.py", "content": "x"}},
+        {"tool_name": "terminal", "tool_input": {"command": "echo x > /tmp/out.txt"}},
+    ]
+    bloklanan = [p for p in serbest if _guard_hook(p)]
+    assert not bloklanan, (
+        f"kanca zararsız okuma/depo-dışı yazma bloklıyor: {bloklanan} — bu kapıyı korumaya değil "
+        "kullanılamazlığa çevirir ve ajan onu atlatmanın yolunu arar")
+
+
+def test_c3_guard_BILINMEYEN_arac_sinifinda_FAIL_CLOSED():
+    """Bilinmeyen bir araç adı `state/`e yazarken GEÇEMEZ.
+
+    Yazma araçlarını SAYIP gerisini serbest bırakmak, yarın eklenecek bir aracı sessizce serbest
+    bırakmaktır — `disabled_toolsets`in kara-liste zaafının aynısı. Belirsizlik BLOKLAMALI:
+    yalnız KABUK sınıfı ad ad sayılır (hedefi ancak komut şeklinden anlaşılan tek sınıf odur).
+    Kanca zaten yalnız matcher'ın saydığı araçlar için çağrılır; bilinmeyen bir ad görmek
+    'matcher genişletildi, kanca güncellenmedi' demektir ve SESSİZ kalmamalıdır.
+    """
+    pl = {"tool_name": "gelecekteki_yazma_araci", "tool_input": {"path": "state/trades.jsonl",
+                                                                 "content": "{}"}}
+    assert _guard_hook(pl), (
+        "bilinmeyen araç sınıfı state/ altına yazabildi — kapsam kara-liste olarak yazılmış, "
+        "yani gelecekte eklenen her araç varsayılan olarak SERBEST doğuyor")
+    # ... ama bilinmeyen araç depo dosyasına yazarken bloklanMAmalı: kapı `state/` kapısıdır.
+    assert not _guard_hook({"tool_name": "gelecekteki_yazma_araci",
+                            "tool_input": {"path": "meridian/loop.py", "content": "x"}}), \
+        "bilinmeyen araç sınıfı state/ DIŞINDA da bloklanıyor — kapı kapsamını aştı"
+
+
+def test_c3_guard_FAIL_OPEN_davranisi_KORUNDU():
+    """Ayrıştırılamayan girdide kanca boş `{}` döner — ajan büsbütün kilitlenmez.
+
+    Kancanın kendi şerhinde beyanlı bir seçimdir ve genişletme onu BOZMAMALI. Ama ham payload
+    üstünden denylist YİNE koşar (o da şerhte yazılı): jq düşse bile içinde korunan bir yol
+    geçen bir istek bloklanır. İki cümle çelişmez — biri SINIFLANDIRMA, öteki AYRIŞTIRMA.
+    """
+    import subprocess
+    r = subprocess.run([str(REPO / "ops" / "meridian-guard.sh")], input="bu json degil",
+                       capture_output=True, text=True, timeout=20)
+    assert r.returncode == 0 and r.stdout.strip() == "{}", (
+        f"bozuk girdide fail-open bozuldu: çıkış={r.returncode} stdout={r.stdout!r}")
+    r2 = subprocess.run([str(REPO / "ops" / "meridian-guard.sh")],
+                        input="bozuk ama icinde state/trades.jsonl gecen bir metin",
+                        capture_output=True, text=True, timeout=20)
+    assert '"decision":"block"' in (r2.stdout or ""), (
+        "jq düştüğünde denylist ham payload üstünden KOŞMADI — kancanın kendi şerhinin sözü")
