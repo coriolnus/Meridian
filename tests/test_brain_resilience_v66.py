@@ -846,3 +846,87 @@ def test_claude_keeps_the_older_empty_classes_unchanged(seeded, claude_brain, mo
     _sahte_anthropic(monkeypatch, _SahteYanit([], "end_turn"))
     assert hermes._claude_text("SAPLI-PROMPT", note="reflect") is None
     assert _take()[0] == hermes.EMPTY_NO_TEXT
+
+
+# ============ REDDİN KENDİ SINIFI — CLAUDE AYAĞI (v328, 2026-08-29) ============
+# v327'nin AÇIK BIRAKTIĞI kalem; operatör kapatılmasını istedi. gemini ve nous ayaklarının İKİSİ de
+# reddi sınıflandırıyordu, claude ayağı SINIFLANDIRMIYORDU.
+#
+# ASIL MESELE "eksik bir dal" DEĞİL — YANLIŞ KAYNAKTAN OKUMAK. Reddedilmiş bir cevap bugün
+# `_parse_hyp`e gidiyor ve orada `_looks_like_refusal()` METNİN SÖZCÜKLERİNE bakıyor
+# (`_REFUSAL_MARKS`: "i can't", "as an ai", "üzgünüm", ...). Yani sınıf bir TAHMİNE dayanıyor:
+# listede olmayan bir ifadeyle reddedilirse — başka bir dil, başka bir kalıp, ya da model yalnız
+# politika cümlesi yazarsa — red sessizce `unparseable` olur. Oysa Anthropic reddi BEYAN EDER:
+#     stop_reason == "refusal"  ·  stop_details = {type, category, explanation}
+# ve `stop_details` YALNIZ redde dolar (ötekilerde None — okumadan önce korunmak şart).
+# BEYAN EDİLMİŞ OLGU, TAHMİN EDİLENİ EZER: kural budur, ve bu turun tamamının dersidir.
+# `category` AÇIK BİR KÜMEDİR ve null OLABİLİR — o durumda uydurulmaz, `None` yazılır.
+def _red_yanit(metin=None, kategori="cyber", aciklama="policy", detay_var=True):
+    y = _SahteYanit([_SahteBlok("text", metin)] if metin else [], "refusal")
+    if detay_var:
+        y.stop_details = type("SD", (), {"type": "refusal", "category": kategori,
+                                         "explanation": aciklama})()
+    return y
+
+
+def test_claude_refusal_is_declared_not_guessed_from_the_wording(seeded, claude_brain, monkeypatch):
+    """ASIL ÇİVİ: red, API'nin BEYANINDAN okunur — metnin sözcüklerinden tahmin edilmez.
+    Buradaki gövde `_REFUSAL_MARKS`ın HİÇBİRİNİ içermez; eski yolda `unparseable` olurdu."""
+    _take()
+    _sahte_anthropic(monkeypatch, _red_yanit(metin="Bu talep politika dışıdır."))
+
+    assert hermes._claude_text("SAPLI-PROMPT", note="reflect") is None, \
+        "reddedilmiş gövde kullanılabilir cevap değildir — ayrıştırıcıya gitmemeli"
+
+    reason, detail = _take()
+    assert reason == hermes.EMPTY_REFUSAL, "red 'unparseable' değildir: biçim değil POLİTİKA olgusu"
+    assert "cyber" in detail, "beyan edilen kategori detayda durmalı"
+
+
+def test_claude_refusal_beats_the_wording_heuristic(seeded, claude_brain, monkeypatch):
+    """ÇÜRÜTME BACAĞI — çivinin totoloji olmadığını gösterir. `_looks_like_refusal` bu metni
+    reddedilmiş SAYMAZ; yani sınıf gerçekten `stop_reason`dan geliyor, sözcük eşleşmesinden değil."""
+    assert not hermes._looks_like_refusal("Bu talep politika dışıdır."), \
+        "bu metin sözcük listesine takılıyorsa çivi beyanı DEĞİL sezgiyi ölçüyor demektir"
+
+
+def test_claude_refusal_category_is_none_not_invented(seeded, claude_brain, monkeypatch):
+    """UYDURMA YASAĞI: `category` açık bir kümedir ve null olabilir. Boşken bir kategori
+    uydurmak ya da 'unknown' yazmak, ölçülmemişi ölçülmüş göstermektir."""
+    _take()
+    _sahte_anthropic(monkeypatch, _red_yanit(kategori=None))
+    assert hermes._claude_text("SAPLI-PROMPT", note="reflect") is None
+    reason, detail = _take()
+    assert reason == hermes.EMPTY_REFUSAL and "category=None" in detail
+
+
+def test_claude_refusal_survives_absent_stop_details(seeded, claude_brain, monkeypatch):
+    """SAĞLAMLIK: `stop_details` YALNIZ redde dolar ve sözleşme onu garanti etmez — alan hiç
+    yoksa sınıf yine `refusal` olmalı, çağrı ÇÖKMEMELİ (skill: 'always guard before reading')."""
+    _take()
+    _sahte_anthropic(monkeypatch, _red_yanit(detay_var=False))
+    assert hermes._claude_text("SAPLI-PROMPT", note="reflect") is None
+    assert _take()[0] == hermes.EMPTY_REFUSAL
+
+
+def test_claude_refusal_is_never_recorded_as_unparseable(seeded, claude_brain, monkeypatch):
+    """UÇTAN UCA: defterdeki satırın SINIFI 'refusal' olmalı — ve red bir HATA değildir,
+    sağlayıcı cezalandırılmaz (kota arızası değil, politika kararı)."""
+    _sahte_anthropic(monkeypatch, _red_yanit(metin="Bu talep politika dışıdır."))
+
+    assert hermes.propose_with_llm() is None
+
+    empty = _events("hermes_brain_empty")
+    assert len(empty) == 1 and empty[0]["provider"] == "claude"
+    assert empty[0]["reason"] == hermes.EMPTY_REFUSAL
+    assert empty[0]["reason"] != hermes.EMPTY_UNPARSEABLE
+    assert _events("hermes_brain_failed") == []
+    assert hermes.brain_cooldown("claude") == 0
+
+
+def test_claude_refusal_does_not_swallow_the_truncation_class(seeded, claude_brain, monkeypatch):
+    """KURT MASALI YASAĞI: iki yeni dal birbirini yutmamalı — kesilme HÂLÂ kesilmedir."""
+    _take()
+    _sahte_anthropic(monkeypatch, _kesik_yanit())
+    assert hermes._claude_text("SAPLI-PROMPT", note="reflect") is None
+    assert _take()[0] == hermes.EMPTY_TRUNCATED

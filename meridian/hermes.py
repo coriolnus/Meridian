@@ -491,6 +491,19 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
     # `reasoning_tokens` RAPORLAR; Anthropic düşünce tokenını AYRI bir alanda BİLDİRMEZ
     # (`output_tokens` içindedir). Simetri uğruna "reasoning=" yazmak ölçülmemişi ölçülmüş
     # göstermek olurdu — UYDURMA YASAĞI. Bu yüzden yalnız ÖLÇÜLEN iki sayı yazılır.
+    # RED DE BEYAN EDİLİR — SÖZCÜKTEN TAHMİN EDİLMEZ (v328). Eskiden bu ayakta red dalı YOKTU ve
+    # reddedilmiş gövde `_parse_hyp`e gidiyordu; oradaki `_looks_like_refusal()` METNİN SÖZCÜKLERİNE
+    # bakar (`_REFUSAL_MARKS`). Yani sınıf bir TAHMİNE dayanıyordu: listede olmayan bir ifadeyle
+    # reddedilirse — başka dil, başka kalıp, ya da yalnız politika cümlesi — red sessizce
+    # "unparseable" oluyordu. Oysa Anthropic reddi BEYAN EDER (`stop_reason == "refusal"`), ve
+    # BEYAN EDİLMİŞ OLGU TAHMİN EDİLENİ EZER. Sezgi silinmedi: `_parse_hyp`teki kardeşi, reddi
+    # beyan ETMEYEN sağlayıcılar için hâlâ tek yoldur.
+    # `stop_details` YALNIZ redde dolar (ötekilerde None) — okumadan önce korunulur. `category`
+    # AÇIK bir kümedir ve null olabilir: o durumda UYDURULMAZ, None yazılır.
+    if str(getattr(resp, "stop_reason", "") or "") == "refusal":
+        _sd = getattr(resp, "stop_details", None)
+        _trace_note(EMPTY_REFUSAL, detail=f"category={getattr(_sd, 'category', None)}")
+        return None
     if str(getattr(resp, "stop_reason", "") or "") == "max_tokens":
         _u = getattr(resp, "usage", None)
         _trace_note(EMPTY_TRUNCATED,

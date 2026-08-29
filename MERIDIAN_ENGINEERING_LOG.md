@@ -90,11 +90,23 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   olmasına bağlanmaz, CI de kurmuyor. Beş mutasyonun beşi de yakalandı (tavanı 4000'e geri al ·
   kesilme kontrolünü kaldır · sınıfı `unparseable`a geri al · `chain_text` yine elle 8000 geçsin ·
   detaya uydurma `reasoning=0` ekle).
-  **AÇIK KALAN (bu turda BİLEREK yapılmadı):** claude ayağında `stop_reason == "refusal"` →
-  `EMPTY_REFUSAL` eşlemesi hâlâ YOK (red, `EMPTY_NO_TEXT`e düşer) — gemini ve nous ayaklarının
-  İKİSİ de reddi sınıflandırıyor. Bu AYRI bir sınıftır (kesilme değil red) ve operatörün isteği
-  kesilme sınıfıydı; kapsam genişletmemek için ayrı bırakıldı. Not: Anthropic `stop_details`i
-  YALNIZ `refusal`da doldurur (kategori + açıklama), yani düzeltilirse detay kardeşlerinden zengin olur.
+  **BU AÇIK KALEM AYNI GÜN KAPANDI (v328, operatör istedi) — VE KAPATIRKEN YUKARIDAKİ CÜMLE
+  DÜZELTİLDİ:** açık kalem "red `EMPTY_NO_TEXT`e düşer" diyordu; ÖLÇÜM bunu çürüttü. `NO_TEXT`e
+  yalnız GÖVDESİZ red düşer. Metin TAŞIYAN red — asıl vaka — `_parse_hyp`e gidiyordu ve orada
+  `_looks_like_refusal()` METNİN SÖZCÜKLERİNE bakıyordu (`_REFUSAL_MARKS`), yani sınıf bir
+  TAHMİNDİ: listede olmayan bir ifadeyle reddedilirse sessizce **`unparseable`** oluyordu. Kırmızı
+  faz bunu birebir gösterdi: `assert 'unparseable' == 'refusal'`. **ASIL MESELE EKSİK BİR DAL
+  DEĞİL, YANLIŞ KAYNAKTAN OKUMAKTI.** Anthropic reddi BEYAN EDER (`stop_reason == "refusal"`,
+  `stop_details = {type, category, explanation}`) ve **beyan edilmiş olgu tahmin edileni EZER** —
+  bu turun tamamının dersi. **DÜZELTME:** red dalı metin kontrolünden ÖNCE, `category` beyandan
+  okunur; `stop_details` YALNIZ redde dolduğu için korumalı okunur (`getattr`), ve `category` AÇIK
+  bir kümedir + null olabilir → uydurulmaz, `None` yazılır. Sezgi SİLİNMEDİ: `_parse_hyp`teki
+  kardeşi, reddi beyan ETMEYEN sağlayıcılar için hâlâ tek yoldur. **ÇİVİLER (6):** çürütme bacağı
+  dahil — kullanılan gövde (`"Bu talep politika dışıdır."`) `_REFUSAL_MARKS`ın HİÇBİRİNE takılmaz,
+  yani çivi beyanı ölçüyor, sezgiyi değil. Beş mutasyonun beşi de yakalandı (dalı kaldır · sınıfı
+  `NO_TEXT` yap · kategoriye `unknown` uydur · `stop_details`i korumasız oku · dalı metin
+  kontrolünün ARKASINA al). Böylece üç ayağın ÜÇÜ de artık aynı sözleşmeyi taşıyor:
+  kesilme · red · araç · metin-yok ayrı ayrı adlandırılıyor.
 
 - **SEÇİCİ BETİĞİ BASH'TE GEÇERSİZ İFADE TAŞIYORDU (2026-08-29; taban kırmızısı, operatör istedi):**
   `ops/etkilenen_testler.sh` üç satırda `${#DIZI[@]-0}` kullanıyordu; `-` varsayılan-değer operatörü
