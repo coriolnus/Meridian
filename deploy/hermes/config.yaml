@@ -42,3 +42,12 @@ approvals:
     - "git commit*"          # CLAUDE.md madde 8'in makine karşılığı
     - "*systemctl*"
     - "*serve.sh*"           # CLAUDE.md madde 5: yerelde koşma, çift-emir riski
+
+# --- SKILL KEŞFİ (görev 3 denetimi — meridian-olcum'un OKUYUCUSU) ---------------------------
+# Hermes skill'leri yalnız `~/.hermes/skills/` (kendi SSoT'u) VE burada listelenen
+# external_dirs'te arar. Depo dizinini göstermek: skill versiyonlanır, incelenebilir, HER
+# dağıtımda güncellenir — ikinci bir kopya yok, o kopyanın kendi sürüklenme kapısına ihtiyacı
+# olmaz. Bu kayıt olmadan deploy/hermes/skills/ altındaki hiçbir SKILL.md yüklenmez (YASA 6).
+skills:
+  external_dirs:
+    - /opt/meridian/deploy/hermes/skills
