@@ -15,9 +15,10 @@ evidence_refs:
   - "olcum_sonucu.json — özgün koşum (korpus 151 blok / 56.249 karakter, yüz system-ui + Recursive)"
 
 universe: >
-  `docs/RUNBOOK.md`ten `korpus_uret.py` ile türetilen ÜÇ artefakt (bugünkü hâl: 209 blok,
-  101.876 karakter, `ornek_metin.json 9f5c91203284d794`). Tarayıcı: Browser pane, ölçüm
-  makinesinin dpr'ı ve ekran boyutu SONUÇLA BİRLİKTE kaydedilir (özgün koşumda da öyleydi:
+  `docs/RUNBOOK.md`ten `korpus_uret.py` ile türetilen ÜÇ artefakt. GİRDİ ÇALIŞMA AĞACINDAKİ
+  DOSYA DEĞİL, `girdi_sabitleme.blob`dur (209 blok, 101.876 karakter, sha256 9f5c91203284d794) —
+  gerekçe orada. Tarayıcı: Browser pane, ölçüm makinesinin dpr'ı ve ekran boyutu
+  SONUÇLA BİRLİKTE kaydedilir (özgün koşumda da öyleydi:
   "2026-08-07, Chrome, dpr 2, ekran 1710x1112"). Canlıya DOKUNULMAZ; salt okuma.
 
 features_asof: >
@@ -47,11 +48,50 @@ success_metric: >
   HÜKÜM SIRALAMASI DEĞİŞMEZ İDDİASI YOKTUR: sıralama da ölçülür ve değişirse yazılır.
 
 kill_criteria:
-  - "korpus artefaktları koşum sırasında yeniden üretilirse geçersiz (girdi donmuş olmalı: 9f5c91203284d794)"
+  - "koşum girdiyi ÇALIŞMA AĞACINDAN okursa geçersiz — girdi `girdi_sabitleme.blob`dur
+     (çalışma ağacındaki dosya `test_korpus_ureticisi_artefaktlari_birebir_uretiyor` çivisi
+     yüzünden RUNBOOK her değiştiğinde yeniden üretilir; blob değişmez)"
+  - "koşum sırasında sabitlenen blob değiştirilirse ya da korpus yeniden üretilip girdi olarak
+     kullanılırsa geçersiz (hareketli hedef yasağı — özgün kriterin KORUNAN çekirdeği)"
+  - "sonuçlar görüldükten SONRA blob yeniden sabitlenirse geçersiz (koşum ÖNCESİ yeniden
+     sabitleme meşrudur ve `girdi_sabitleme.gecmis`e yazılır; sonrası ölçümü seçmektir)"
   - "dört spesifikasyondan biri ölçüm sırasında değiştirilirse geçersiz"
   - "eşikler (3 CPL / 0,3 px) ölçümden sonra oynatılırsa geçersiz"
   - "`OLCUT` yüzü Inter DIŞINDA bir şeye çevrilirse geçersiz — kart tam da 'sevk edilen yüz' iddiasını ölçüyor"
   - "canlı state'e YAZILIRSA geçersiz"
+
+girdi_sabitleme:
+  # 2026-08-29 · OPERATÖR ONAYLI DÜZELTME. DEĞİŞEN: girdinin ADRESLENMESİ.
+  # DEĞİŞMEYEN: girdinin KENDİSİ — içerik sha256 aynen `9f5c91203284d794`, yani kartın
+  # 2026-08-24'te KAYDETTİĞİ korpusun ta kendisi. Ölçüm sonradan SEÇİLMEDİ (§3).
+  #
+  # NEDEN GEREKTİ — YAPISAL ÇELİŞKİ, tek seferlik kaza değil:
+  #   Eski kriter girdinin çalışma ağacında `9f5c91203284d794` olarak DONMUŞ kalmasını şart
+  #   koşuyordu. Ama `tests/test_tipografi_rampa_v209.py::test_korpus_ureticisi_artefaktlari_
+  #   birebir_uretiyor` çivisi, `docs/RUNBOOK.md` her değiştiğinde o dosyanın YENİDEN
+  #   ÜRETİLMESİNİ zorunlu kılar. İki şart aynı anda sağlanamaz; kart koşulmadan önce girdi
+  #   ÜÇ KEZ kaybolmuştu (ölçüldü — 17e8aa3 08-25 · 0f646b1 08-26 · d976b84 08-26; ayrıntı
+  #   research/olcumler/tipografi_rampa_2026-08-07/TAZELEME-2026-08-14.md §beşinci tazeleme).
+  #   Kartın `beyanli_sinirlar` (3) maddesi bunun tersini öngörmüştü ("çapa sınıfı kapandı,
+  #   tekrar BEKLENMİYOR") — öngörü TUTMADI: RUNBOOK artık satır kaymasıyla değil gerçek
+  #   sözleşme değişiklikleriyle değişiyor ve çivi her seferinde yeniden üretimi zorluyor.
+  #
+  # ÇÖZÜM: git blob'u İÇERİK-ADRESLİDİR ve çalışma ağacından bağımsızdır. Çivi dosyayı
+  # istediği kadar yeniden üretsin, blob değişmez ve `git cat-file` ile aynen alınır.
+  # Doğrulandı: blob'un sha256'sı kartın beyan ettiği değerin AYNISI.
+  blob: e57e575bb219d37be2c069023d27b5734dacee80
+  icerik_sha256_ilk16: 9f5c91203284d794
+  yol: research/olcumler/tipografi_rampa_2026-08-07/ornek_metin.json
+  okuma: "git cat-file blob e57e575bb219d37be2c069023d27b5734dacee80"
+  dogrulama: "git cat-file blob <blob> | sha256sum  →  ilk 16 hane icerik_sha256_ilk16 ile aynı olmalı"
+  # Blob COMMIT'TEN bağımsızdır: `88c69a1` bugün onu taşıyor ama blob geçmiş yeniden
+  # yazılsa da aynı kalır — sabitleme commit'e değil İÇERİĞE yapılmıştır.
+  gecmis:
+    - {tarih: "2026-08-24", blob: e57e575bb219d37be2c069023d27b5734dacee80, neden: "ilk kayıt (o gün çalışma-ağacı yoluyla ifade edilmişti)"}
+    - {tarih: "2026-08-29", blob: e57e575bb219d37be2c069023d27b5734dacee80, neden: "adresleme çalışma ağacından git blob'una taşındı; İÇERİK DEĞİŞMEDİ"}
+  # KOŞUM ÖNCESİ yeniden sabitleme MEŞRUDUR (kart hâlâ `registered`, hiç koşulmadı) ve buraya
+  # yazılır. Daha yeni bir korpusla ölçmek istenirse: blob'u değiştir, `gecmis`e satır ekle,
+  # SONRA koş. Sonuçları gördükten sonra değiştirmek kill kriteridir.
 
 k_registry: {registered_at: "2026-08-24", trial_ids: [pending]}
 status: registered
@@ -63,6 +103,13 @@ beyanli_sinirlar: >
   (2) İKİ DEĞİŞKEN BİRDEN OYNADI (yüz + korpus) ve bu kart onları AYIRMAZ — ayırmak iki ayrı
   koşum ister ve bu kartın sorusu "hangisi ne kadar etkiledi" değil, "yürürlükteki sayı doğru mu".
   Ayrıştırma gerekirse ayrı kart açılır.
-  (3) Çapa sınıfı 2026-08-24'te kapandı (`dosya::sembol`), yani bu kart koşulduktan sonra
-  korpusun ilgisiz satır kaymalarıyla yeniden bayatlaması BEKLENMİYOR — kartın kendisi bir
+  (3) [2026-08-24'te YAZILDI] Çapa sınıfı kapandı (`dosya::sembol`), yani bu kart koşulduktan
+  sonra korpusun ilgisiz satır kaymalarıyla yeniden bayatlaması BEKLENMİYOR — kartın kendisi bir
   tekrar sınıfının SON halkasıdır.
+  (3-DÜZELTME, 2026-08-29 — ÖNGÖRÜ TUTMADI, satır SİLİNMEDİ): korpus kart kaydedildikten sonra
+  ÜÇ KEZ daha değişti (17e8aa3 · 0f646b1 · d976b84) ve bu turda dördüncü kez değişti. Sebep
+  öngörünün gözden kaçırdığı ikinci yoldur: çapa sınıfı gerçekten kapandı, ama `docs/RUNBOOK.md`
+  GERÇEK sözleşme değişiklikleriyle de değişiyor (yeni mekanizma, değişen alarm mesajı, günlük
+  maddesi) — üretilmiş belge canlı bir belgedir. Yani bayatlama "ilgisiz satır kayması"ndan
+  değil, MEŞRU içerik değişiminden geliyor ve bu SÜRECEK. `girdi_sabitleme` bloğu tam olarak
+  bu yüzden var: kart artık çalışma ağacının kararlılığına DAYANMIYOR.
