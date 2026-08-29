@@ -63,7 +63,21 @@ fi
 TEMIZ=(); for y in ${YOLLAR[@]+"${YOLLAR[@]}"}; do [[ -n "$y" ]] && TEMIZ+=("$y"); done
 YOLLAR=(${TEMIZ[@]+"${TEMIZ[@]}"})
 
-if [[ ${#YOLLAR[@]-0} -eq 0 ]]; then
+# DİZİ SAYIMINDA `-0` VARSAYILANI YOK (2026-08-29 düzeltmesi — üç kapı birden ölüydü).
+# Buradaki ve aşağıdaki iki kapı `${#DIZI[@]-0}` yazıyordu. Bash'te `${#parametre}` biçimi
+# varsayılan-değer soneki KABUL ETMEZ → `bad substitution`. Betik `set -e` KULLANMADIĞI için
+# hata ölümcül değildi: satır stderr'e düşüyor, `[[ ]]` başarısız sayılıyor ve kapı SESSİZCE
+# "false" oluyordu. ÜÇ BEDEL DE ÖLÇÜLDÜ (kapılar ADIYLA anılıyor; satır numarası yazmak bu
+# yorumun kendisiyle bayatlardı — blok aşağıdaki kapıları zaten kaydırdı):
+#   · KÜRESEL DOSYA kapısı → `tests/conftest.py` değişince "TAM SUITE GEREKLİ" DEMİYORDU, dar
+#     bir küme öneriyordu. EKSİK-KAPSAMA, yani başlıktaki sözleşmenin tam tersi — en tehlikelisi.
+#   · EŞLEŞME kapısı → "EŞLEŞME YOK" yerine boş liste basıyordu (sessiz-yeşil).
+#   · BOŞ-DIFF kapısı (hemen aşağıda) → boş bir diff'te 394 dosyayı "etkilenen" sayıyordu:
+#     jeton listesi boş kalınca `grep -rlE ""` her dosyayı tutar.
+# `-0` GEREKSİZDİ: `set -u` altında boş dizide de `${#DIZI[@]}` 0 döner (bash 3.2 dahil).
+# Korunması gereken şey SAYIM değil GENİŞLETMEdir — betiğin başka yerde `${DIZI[@]+"${DIZI[@]}"}`
+# kullanmasının sebebi odur. Çivi: tests/test_etkilenen_testler_v322.py
+if [[ ${#YOLLAR[@]} -eq 0 ]]; then
   echo "DEĞİŞİKLİK YOK — koşulacak bir şey yok."; exit 0
 fi
 
@@ -100,7 +114,7 @@ for y in "${YOLLAR[@]}"; do
     tests/conftest.py|*/conftest.py|pyproject.toml|pytest.ini|setup.cfg) KURESEL+=("$y") ;;
   esac
 done
-if [[ ${#KURESEL[@]-0} -gt 0 ]]; then
+if [[ ${#KURESEL[@]} -gt 0 ]]; then
   echo
   echo "!! TAM SUITE GEREKLİ — küresel erişimli dosya değişti:"
   printf '     %s\n' "${KURESEL[@]}"
@@ -171,7 +185,7 @@ done
 _satirlari_oku ETKI < <(printf '%s\n' ${ETKI[@]+"${ETKI[@]}"} | grep -v '^$' | sort -u)
 
 echo
-if [[ ${#ETKI[@]-0} -eq 0 ]]; then
+if [[ ${#ETKI[@]} -eq 0 ]]; then
   # UYDURMA YASAĞI komşusu: "eşleşme yok" ile "koşacak test yok" AYNI ŞEY DEĞİLDİR.
   echo "EŞLEŞME YOK — bu yolları anan bir test dosyası bulunamadı."
   echo "  Bu, 'gerileme riski yok' DEMEK DEĞİLDİR: değişiklik hiç sınanmıyor da olabilir."
