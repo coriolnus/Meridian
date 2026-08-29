@@ -217,3 +217,61 @@ beyanlı_sinirlar: >
   p25/p75 bu yüzden zorunlu çıktı, medyan tek başına karar taşımaz.
   (5) Model-farkı sütunundaki '5' goal.slippage_bps'in BUGÜNKÜ değeridir; goal değişirse koşum
   günkü değeri künyeler (sabitlemez).
+
+haftalik_kosum_2026_08_29: >
+  OTOMATİK HAFTALIK KOŞUM #2 — İLK ANLAMLI TEKRAR (zamanlanmış görev `edg042-friksiyon-haftalik`;
+  Rol-1 işledi). Artefakt: research/olcumler/edg042_kosum_2026-08-29/ (canlı snapshot sha
+  3a1f06bf…, çekim 2026-08-29T15:51:25Z, goal.slippage_bps=5 künyeli). Salt-okunur; canlıya ve
+  ana checkout state/'ine tek bayt yazılmadı; donmuş dizinler (edg042_kosum_2026-08-22/,
+  edg042_recete_short_2026-08-24/) sha256 ile doğrulandı ve DEĞİŞMEDİ.
+  KULLANILAN REÇETE = R2 (edg042_recete_short_2026-08-24/olcum.py, sha 1dcb7708…) — kartın
+  `r2_short_isaret_sozlesmesi_2026_08_24` bloğu bunu "GÜNCEL DONUK REÇETE İŞARETÇİSİ" ilan eder;
+  zamanlanmış görev metni hâlâ 2026-08-22 reçetesini yazıyordu, kart kazandı. Bu koşumda 10
+  çıkış satırının 10'u da side="long" olduğundan R2'nin short dalı HİÇ ateşlenmedi (sayılar iki
+  reçetede özdeş çıkardı) — seçim yine de karta göre yapıldı, "sonuç aynıydı" gerekçe değildir.
+  ÜÇ KOVADA DA EŞİK DOLMADI → HÜKÜMLÜ KOŞUM TETİKLENMEDİ, CI HESAPLANMADI, karar kuralı
+  UYGULANMADI. status `measuring` kalır.
+  K1 GİRİŞ (n=17, 7 seans; eşik 30/10): medyan +29,786 bps · p25/p75 −9,756/+87,148 ·
+  min/maks −130,739/+327,46 · en büyük seans payı %29,4 (kill #7 eşiği %40'ın altında) ·
+  medyan model-farkı +24,786. Damga aynen: "ÖLÇÜLEMEDİ (n=17 < 30) — sayılar betimleyicidir,
+  istatistiksel hüküm taşımaz."
+  ÇIKIŞ KOVALARI İLK KEZ ÖLÇÜLEBİLİR OLDU — bağlayıcı kısıt çözüldü: 2026-08-22'de beş aday
+  satırın beşi `broker_teyit` damgasızdı (kill #3 hepsini olculemedi'ye düşürüyordu); bu hafta
+  damga BASILMIŞ ve afp-dolu 10 satırın 10'u teyitli (olculemedi n=0). Ö-52'nin dağıtımı
+  öngörüldüğü gibi çalıştı.
+  K2 ÇIKIŞ-HEDEF (n=6, 2 seans; eşik 15/6): medyan −4,21 bps · p25/p75 −4,99/+10,496 ·
+  min/maks −46,622/+125,386 · medyan model-farkı −9,21 · EN BÜYÜK SEANS PAYI %66,7 →
+  kill #7 ŞERHİ ZORUNLU (CI zaten hesaplanmadı; şerh sonraki turlara da taşınır).
+  Damga aynen: "ÖLÇÜLEMEDİ (n=6 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz."
+  K3 ÇIKIŞ-STOP (n=4, 3 seans; eşik 15/6): medyan +0,889 bps · p25/p75 −30,742/+2,524 ·
+  min/maks −120,812/+2,61 · medyan model-farkı −4,111 · EN BÜYÜK SEANS PAYI %50,0 →
+  kill #7 ŞERHİ ZORUNLU. Damga aynen: "ÖLÇÜLEMEDİ (n=4 < 15) — ...".
+  KİLL DENETİMİ (tam): #1/#2 kayıtlı bps alanı kullanıldı, koşum günü tarihçe YENİDEN
+  ÇEKİLMEDİ, boş alan tahminle doldurulmadı · #3 teyitsiz satır kovaya girmedi (afp-boş 3
+  live_paper satırı kart filtresiyle zaten dışarıda) · #4 885 replay_seed satırı kıyas dışı ·
+  #5 kovalar birleştirilmedi · #6 alpaca_fill_beyan (n=1) yalnız sayıldı · #7 K2/K3'te şerh
+  zorunlu, beyan edildi · #8 yazma yok.
+  ÖNCEKİ KOŞUMA GÖRE DEĞİŞİM (2026-08-22 → 2026-08-29, İLK GERÇEK TEKRAR):
+    K1: n 13→17 (+4), seans 4→7 (+3), medyan +15,017→+29,786, en büyük seans payı %38,5→%29,4.
+        Yeni dört satırın DÖRDÜ DE POZİTİF ve büyük: 08-21 DE +80,699 · 08-21 PANW +87,148 ·
+        08-25 ECL +175,107 · 08-27 CRM +245,034. Medyanı yukarı taşıyan budur.
+    K2/K3: ölçülebilen n 0→10 (6 + 4) — sıfırdan çıkış.
+  BETİMLEYİCİ GÖZLEM (HÜKÜM DEĞİL; karar kuralı UYGULANMADI, uygulanamaz — eşikler dolmadı):
+  giriş bacağı ile çıkış bacağı ZIT yönde duruyor. K1 medyanı (+29,8) modelin (5) altı katı ve
+  EDG-040 başabaş bandının [5-15] ÜSTÜNDE; K2 (−4,2) ve K3 (+0,9) medyanları ise modelin
+  ALTINDA — yani bugünkü betimleyici resimde friksiyonun ağırlığı GİRİŞ bacağında toplanıyor
+  gibi görünüyor. Bu bir hüküm değildir: K2 n=6/2 seans ve K3 n=4/3 seans, ikisi de eşiğin çok
+  altında ve ikisinde de tek seans örneklemin yarısından fazlasını/yarısını taşıyor (%66,7 /
+  %50,0). "Giriş kötü, çıkış iyi" cümlesi bu sayılarla KURULAMAZ; yalnız bir sonraki koşumun
+  bakacağı yönü işaret eder.
+  EŞİĞE KALAN MESAFE (kaba izdüşüm — ÖLÇÜM DEĞİL, birikim hızı varsayımı):
+    K1: n için 13 dolum eksik; bu hafta +4 geldi → ~3-4 hafta (kabaca 2026-09-19..09-26).
+        Seans için 3 eksik; bu hafta +3 geldi → seans muhtemelen n'den ÖNCE dolar; bağlayıcı
+        kısıt n'dir.
+    K2: 9 dolum + 4 seans eksik (bağlayıcı: seans) → ~2-3 hafta.
+    K3: 11 dolum + 3 seans eksik (bağlayıcı: dolum) → ~3 hafta.
+    UYARI: bu haftanın çıkış sayıları BİRİKMİŞ ARŞİVİN damga ile bir anda açılmasından geldi,
+    haftalık akış hızından DEĞİL. Çıkış izdüşümleri bu yüzden K1'inkinden daha zayıf dayanaklıdır.
+  PENCERE HAKEM KATMANI (EXE-2026-009, ayrı kart — bu kartın hükmü değil): 1330 n=0 · 1345 n=4
+  (3 seans, medyan +131,127) · damgasız 13 → `oneri_tetigi = orneklem_birikimde` (alt-bant
+  eşiği n<10, kıyas YAPILMADI). `geri_al_onerisi` beyanı YOKTUR.

@@ -1,0 +1,63 @@
+EDG-2026-042 — HAFTALIK KOŞUM #2 (2026-08-29 Cumartesi; zamanlanmış görev `edg042-friksiyon-haftalik`)
+Kalem: Ö-54. Rol-1 (ana checkout orkestratörü) koşturdu ve hükmü işledi.
+SALT-OKUNUR: canlıya ve ana checkout state/'ine TEK BAYT yazılmadı; snapshot ssh-stdin ile çekildi.
+
+[0] REÇETE SEÇİMİ — HANGİ DONUK REÇETE, NEDEN (kart kazanır, görev metni değil)
+    Zamanlanmış görev metni `edg042_kosum_2026-08-22/` reçetesini işaret ediyordu; KART
+    (research/cards/EDG-2026-042-gercek-friksiyon-tahmini.yaml, blok
+    `r2_short_isaret_sozlesmesi_2026_08_24`) ise şunu yazıyor:
+      "REÇETE KARŞILIĞI: research/olcumler/edg042_recete_short_2026-08-24/olcum.py —
+       GÜNCEL DONUK REÇETE İŞARETÇİSİ budur".
+    Görev metninin kendi kuralı da "kart kazanır" der. Bu koşum R2 reçetesini kullandı.
+    KOPYALANAN DOSYALAR (bayt-özdeş, sha256 doğrulandı):
+      canli_cek.py  4c6b85a53f5efeb47234612e90f6e70ebee1ead62cad0ed6ccb8a66f9929e96d
+                    (R2 ile 2026-08-22 kopyası AYNI dosya — çekim tarafı hiç değişmedi)
+      olcum.py      1dcb7708e592f2daf47182e381c657d4564b0e5050dc01bc434e1aa48ef915c8
+                    (2026-08-22'nin 6d33a58c… hâli + YALNIZ R2 yön koşullaması; eşikler,
+                     bootstrap künyesi, kova listeleri, kill dalları DOKUNULMADI)
+    MADDİLİK: bu koşumun 10 çıkış satırının 10'u da side="long" — R2'nin short dalı HİÇ
+    ateşlenmedi, yani sayılar iki reçetede de özdeş çıkardı. Seçim yine de karta göre yapıldı;
+    "sonuç aynı olacaktı" gerekçe değildir.
+    Donmuş dizinlere (edg042_kosum_2026-08-22/, edg042_recete_short_2026-08-24/) tek bayt
+    YAZILMADI — bu dizin onların kopyasıdır.
+
+[1] ÇEKİM (salt-okuma; ssh-stdin deseni)
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 \
+        'cd /opt/meridian && ./.venv/bin/python -' < canli_cek.py > canli_ham.json
+    canli_ham.json  sha256 = 3a1f06bf6ce320e6d65e342844bdcebd6a96106816f331333079f97ac0313fb7
+    cekim_zamani = 2026-08-29T15:51:25+00:00 · makine = A1 (canli) · goal.slippage_bps = 5 (künye)
+
+[2] ÖLÇÜM
+    PYTHONDONTWRITEBYTECODE=1 python3 olcum.py     → sonuc.json
+    ÇIKTI: giris_n=17 · cikis_hedef_n=6 · cikis_stop_n=4
+    ÜÇ KOVADA DA EŞİK DOLMADI → CI HESAPLANMADI, karar kuralı UYGULANMADI, status `measuring`.
+      K1 giriş      n=17 / 7 seans   (eşik 30 / 10)  → damga: ÖLÇÜLEMEDİ
+      K2 çıkış-hedef n=6 / 2 seans   (eşik 15 / 6)   → damga: ÖLÇÜLEMEDİ
+      K3 çıkış-stop  n=4 / 3 seans   (eşik 15 / 6)   → damga: ÖLÇÜLEMEDİ
+    KİLL DENETİMİ: #1/#2 kayıtlı bps alanı kullanıldı, tarihçe yeniden çekilmedi, boş alan
+    doldurulmadı (olculemedi n=0 — bu tur boş alan çıkmadı) · #3 broker_teyit damgası bu hafta
+    BASILMIŞ, teyitsiz satır kovaya girmedi · #4 885 replay_seed satırı kıyas dışı · #5 kovalar
+    ayrı · #6 alpaca_fill_beyan (n=1) yalnız sayıldı · #7 K2 %66,7 ve K3 %50,0 → tek-seans şerhi
+    ZORUNLU (betikte `tek_seans_serhi_gerekli=true`; CI zaten yok, şerh yine de beyan edilir) ·
+    #8 yazma yok.
+
+[3] PENCERE HAKEM KATMANI (EXE-2026-009 · görev EK'i)
+    pencere_cek.py / pencere_altbant.py, 2026-08-22 dizininden BAYT-ÖZDEŞ kopyalandı:
+      pencere_cek.py     2ad3a00ad441bb74a05e6dd95fc7e9357bc34c82b657b123d9eff9598b4e369f
+      pencere_altbant.py 8e8321b50f078583d4239976cc22e21658068b61039e0d7f8b44c4a8cc0cc033
+    NEDEN BU DİZİNDE KOŞTURULDU (görev metni 2026-08-22 dizinini yazıyordu): pencere_altbant.py
+    çıktısını (pencere_ham.json + pencere_altbant.json) KENDİ dizinine yazar; 2026-08-22'de
+    koşturmak DONMUŞ koşum dizinine yeni dosya eklerdi. Artefaktlar koşumla aynı tarihli dizinde
+    durur. Modül `yuzdelik`i kendi dizinindeki olcum.py'den ithal eder — iki olcum.py'nin
+    `yuzdelik` gövdesi diff'lendi ve BAYT-ÖZDEŞ; ithal edilen davranış değişmedi.
+      ssh ... < pencere_cek.py > pencere_ham.json
+      pencere_ham.json sha256 = 4f4bd1554d090616068def8995e33bf12577a94c1b04b071629f62668db013ff
+      PYTHONDONTWRITEBYTECODE=1 python3 pencere_altbant.py  → pencere_altbant.json
+    SONUÇ: 1330 n=0 · 1345 n=4 (3 seans) · damgasız 13 → oneri_tetigi = "orneklem_birikimde"
+    (alt-bant eşiği n<10; kıyas YAPILMADI). `geri_al_onerisi` BEYANI YOK.
+
+[4] DOĞRULAMA
+    uv run pytest tests/test_kart_kimlik_v219.py tests/test_kart_hukum_damgasi_v251.py \
+                  tests/test_nous_eval_v131.py tests/test_wpm_sasi_v173.py
+    uv run python -c "from meridian import codelaw; print(codelaw.report()['ok'])"
+    TAM SUITE KOŞULMADI · DAĞITIM YAPILMADI (dagit.sh'a dokunulmadı).

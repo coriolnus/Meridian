@@ -1,0 +1,124 @@
+{
+  "cekim_kunyesi": {
+    "dosya": "pencere_ham.json",
+    "cekim_zamani": "2026-08-29T15:52:33+00:00",
+    "makine": "A1 (canli)"
+  },
+  "kart": "EXE-2026-009",
+  "hakem": "EDG-2026-042 K1 alt-bant katmani",
+  "yururluk_rejimi": "1345",
+  "bantlar": {
+    "1330": {
+      "n": 0,
+      "seans_sayisi": 0,
+      "ci": null,
+      "medyan_bps": null,
+      "p25_bps": null,
+      "p75_bps": null,
+      "min_bps": null,
+      "maks_bps": null,
+      "damga": "örneklem-birikimde (n=0 < 10) — kıyas yapılmaz"
+    },
+    "1345": {
+      "n": 4,
+      "seans_sayisi": 3,
+      "ci": null,
+      "medyan_bps": 131.127,
+      "p25_bps": 85.536,
+      "p75_bps": 192.589,
+      "min_bps": 80.699,
+      "maks_bps": 245.034,
+      "damga": "örneklem-birikimde (n=4 < 10) — kıyas yapılmaz"
+    }
+  },
+  "oneri_tetigi": {
+    "sonuc": "orneklem_birikimde",
+    "beyan": "örneklem-birikimde: alt-bant(lar) 1330+1345 eşik altında (n<10) — hakem kuralı gereği kıyas YAPILMADI; birikim sürüyor, sonraki koşumda yeniden değerlendirilir"
+  },
+  "damgasiz": {
+    "n": 13,
+    "satirlar": [
+      {
+        "ticker": "NUE",
+        "tarih": "2026-08-05",
+        "plan_id": "P-2026-08-05-NUE"
+      },
+      {
+        "ticker": "EMR",
+        "tarih": "2026-08-05",
+        "plan_id": "P-2026-08-05-EMR"
+      },
+      {
+        "ticker": "BKNG",
+        "tarih": "2026-08-05",
+        "plan_id": "P-2026-08-05-BKNG"
+      },
+      {
+        "ticker": "AMGN",
+        "tarih": "2026-08-05",
+        "plan_id": "P-2026-08-05-AMGN-momentum_burst"
+      },
+      {
+        "ticker": "MRK",
+        "tarih": "2026-08-13",
+        "plan_id": "P-2026-08-13-MRK"
+      },
+      {
+        "ticker": "CRM",
+        "tarih": "2026-08-13",
+        "plan_id": "P-2026-08-13-CRM"
+      },
+      {
+        "ticker": "MRNA",
+        "tarih": "2026-08-14",
+        "plan_id": "P-2026-08-14-MRNA"
+      },
+      {
+        "ticker": "HUM",
+        "tarih": "2026-08-14",
+        "plan_id": "P-2026-08-14-HUM"
+      },
+      {
+        "ticker": "MRNA",
+        "tarih": "2026-08-19",
+        "plan_id": "P-2026-08-19-MRNA"
+      },
+      {
+        "ticker": "MRK",
+        "tarih": "2026-08-19",
+        "plan_id": "P-2026-08-19-MRK"
+      },
+      {
+        "ticker": "MRVL",
+        "tarih": "2026-08-19",
+        "plan_id": "P-2026-08-19-MRVL"
+      },
+      {
+        "ticker": "LLY",
+        "tarih": "2026-08-19",
+        "plan_id": "P-2026-08-19-LLY"
+      },
+      {
+        "ticker": "BDX",
+        "tarih": "2026-08-19",
+        "plan_id": "P-2026-08-19-BDX"
+      }
+    ],
+    "not": "kaydırma-öncesi dolumlar — geriye dönük etiketlenMEZ (kill#3), kıyasa girmez"
+  },
+  "bant_disi": {
+    "n": 0,
+    "satirlar": []
+  },
+  "olculemedi": {
+    "n": 0,
+    "satirlar": []
+  },
+  "donuk_kunye": {
+    "alt_bant_n_esik": 10,
+    "B": 5000,
+    "seed": 20260812,
+    "kumeleme": "seans",
+    "kural": "alt_1345 > ust_1330 (kesişimsiz, yüksek yön) → geri-al önerisi"
+  }
+}
