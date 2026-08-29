@@ -152,10 +152,12 @@ GERÇEKTEN YAZILACAK   okuma · yorumlama · teslimat katmanı  +  @hipotez'in b
 ```
 
 ## 7. Açık kalanlar
-- [x] ~~`@kod` zemin seçimi~~ → §4, karara bağlandı
-- [ ] Faz 1 teslimat kanalı: Telegram bağlama + bot başına yönlendirme
-- [ ] Güvenlik duruşu: `approvals.cron_mode: deny` · `approvals.deny` · `HERMES_WRITE_SAFE_ROOT`
-- [ ] Botların depoya yazma yetkisi (soruldu, cevaplanmadı)
+- [x] ~~`@kod` zemin seçimi~~ → §4
+- [x] ~~Faz 1 teslimat kanalı~~ → §9.1
+- [x] ~~Güvenlik duruşu~~ → §9.2
+- [x] ~~Botların depoya yazma yetkisi~~ → §9.3
+- [ ] **Faz 2'ye ertelendi:** operatör botlarla KONUŞMAK istiyor mu? (Hermes gateway + ayrı
+      bir Telegram bot token'ı gerekir — aynı token'a iki dinleyici çakışır.)
 
 ## 8. Kaynak: "Learn 95% of Hermes Agent in 31 Minutes" (Sharbel A., 31:28)
 
@@ -190,3 +192,68 @@ yapmak — *"karar ve çıktı döndürmeyen zamanlanmış iş, bildirim spam'id
 çıktısını doğrulamadan güvenmek · (7) *"iyi talimat, iyi araç, iyi hafıza, iyi skill, iyi
 DOĞRULAMA — asıl oyun bu."*
 
+## 9. Güvenlik ve yetki duruşu (2026-08-27 kararları)
+
+### 9.0 Ölçülen mevcut durum
+
+```
+approvals            HİÇ TANIMLI DEĞİL → varsayılana düşüyor
+terminal             tanımlı değil → local (konteyner izolasyonu yok)
+security             tanımlı değil
+hooks_auto_accept    true
+pre_tool_call        → /opt/meridian/ops/meridian-guard.sh
+```
+
+`meridian-guard.sh` kapı yasasını HARNESS düzeyinde zorluyor — `state/` yazımı, `secrets.json`,
+`autonomy_level`, Alpaca emir gönderimi sert bloklu. Kendi şerhinde dürüstçe beyanlı:
+**"parse edilemezse fail-open — asıl savunma desen eşleşmesidir."** Kalkan değil, desen filtresi.
+
+**ÖLÇÜLEN RİSK, ve bu turun en önemli güvenlik bulgusu:** yeni bir profil bu kancayı
+**OTOMATİK MİRAS ALMAZ**. `hermes profile create --clone` taşır; sıfırdan kurulan profil
+**korumasız doğar**. Bot çoğaltmak, kancasız ajan sayısını çoğaltma riskidir.
+
+### 9.1 Teslimat kanalı — KARAR: Meridian'ın `notify.py`'ı
+
+Tercih değil, değişmez: `notify.py`nin şerhi *"bu modül dışarıya veri gönderen TEK yoldur ve
+'asla sır göndermez' iddiasının uygulamasıdır"* diyor ve `scrub()` giden metinden bilinen sır
+değerlerini siliyor. İkinci bir giden yol açmak o değişmezi kırar. Ayrıca Hermes tarafında
+Telegram hiç yapılandırılmamış (`~/.hermes/.env`de yalnız iki model anahtarı) ve Faz 1'de bot yok.
+
+### 9.2 Terminal arka ucu — KARAR: `local`
+
+Savunma `meridian-guard.sh` + açık deny listesi. Gerekçe: A1 dört çekirdek ve üstünde 8 sa 55 dk
+CPU yakan sprint koşuyor; docker her komuta konteyner maliyeti bindirir. Ayrıca konteyner arka
+uçlarında Hermes'in KENDİ tehlikeli-komut denetimi ATLANIR (konteyner sınır sayılır) — yani
+docker bu kutuda göründüğü kadar net bir kazanç değil.
+
+**Bu bilinçli bir riskli seçimdir:** izolasyon yok, guard fail-open. Karşılığı aşağıdaki
+yapılandırma ve çividir.
+
+```yaml
+approvals:
+  mode: smart                # şu an tanımsız — AÇIKÇA yazılacak
+  cron_mode: deny            # başsız cron tehlikeli komutu ONAYLAMASIN (zorunlu)
+  deny:                      # fnmatch; --yolo'da BİLE geçersiz
+    - "*dagit.sh*"           # dağıtım yalnız Rol-1'in (CLAUDE.md madde 5)
+    - "git push*"
+    - "git commit*"          # madde 8'in makine karşılığı
+    - "*systemctl*"
+    - "*serve.sh*"           # CLAUDE.md madde 5: yerelde koşma
+```
+
+### 9.3 Depoya yazma — KARAR: yalnız kendi artefaktına
+
+Git zaten yasak (CLAUDE.md madde 8: *"ajanlar git komutu KOŞMAZ"*). Dosya yazma ise
+`HERMES_WRITE_SAFE_ROOT` ile **tam olarak sahibi olduğu yola** kısıtlanır — sert kum havuzu,
+onayla aşılamaz. Değişiklikler çalışma ağacında birikir; commit/push Rol-1'de kalır.
+
+Bu, §2'deki "her bot bir artefaktın tek yazarı" şartının makine karşılığıdır: sözleşme artık
+bir kural değil, bir kısıt.
+
+### 9.4 Çiviler (yazılacak)
+
+1. **Her profil guard kancasını taşır.** `~/.hermes/profiles/*/config.yaml` içinde
+   `pre_tool_call → meridian-guard.sh` yoksa kırmızı. (Kural değil kontrol: korumasız profil
+   doğamaz.)
+2. **`approvals.cron_mode` `deny` dışında olamaz.**
+3. **Her botun `HERMES_WRITE_SAFE_ROOT`u kendi artefaktıyla sınırlı.**
