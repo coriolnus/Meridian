@@ -108,6 +108,12 @@ tarafından** doğrulandı ve öyle işaretlendi:
    Rol-1 atar; bu tur kimlik uydurmadı.) `P-1` 2026-08-30'da kapandı (`90f6cdc` · `dcef1c6` · `83bc47b`).
 2. **§7'nin 2026-08-30 boşluğu** — §7'nin en yeni girişi 2026-08-29'du; o tarihten sonra dokuz
    commit indi. Neden-kaydını Rol-1 yazar; satır onu kaybolmaktan korur.
+   **[GÜNCELLEME 2026-08-31 — KAPANDI, operatör istedi:]** boşluk dokuz commit değil **24 tur**
+   çıktı (`2701cf4`…`6dd38b5`; ilk sayım yalnız `git log --since` kuyruğuna bakmıştı ve 08-29
+   öğleden sonrasını kaçırmıştı — sayı tarihiyle düzeltildi, silinmedi). 24 giriş §7'ye yazıldı,
+   hepsi commit gövdelerinden TÜRETİLDİ ve blok başında **köken notu** taşıyor: girişlerin turların
+   kendi anında değil sonradan yazıldığı gizlenmiyor. Yeni hüküm verilmedi; zaten kayıtlı iki tur
+   (`177a92b`, `6b9c6ad`) tekrarlanmadı. Tahta satırı `§8.T`/I'ya taşındı.
 3. **Ayrıştırıcı kelime-içi eşliyor** — `_roadmap_madde_durumu` dört kapanış imini sözcük sınırı
    olmadan arıyor; "chop BÜTÇE-KAPALILIĞI" bu yüzden kapalı ayrıştırılıyordu. **Hüküm tesadüfen
    doğruydu, ayrıştırma değil.** `meridian/` dokunuşu tam-suite kapısı ister → Rol-1.
