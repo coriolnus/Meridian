@@ -275,3 +275,55 @@ haftalik_kosum_2026_08_29: >
   PENCERE HAKEM KATMANI (EXE-2026-009, ayrı kart — bu kartın hükmü değil): 1330 n=0 · 1345 n=4
   (3 seans, medyan +131,127) · damgasız 13 → `oneri_tetigi = orneklem_birikimde` (alt-bant
   eşiği n<10, kıyas YAPILMADI). `geri_al_onerisi` beyanı YOKTUR.
+
+acik_kalem_p3_k1_karisik_ornekem_2026_08_29: >
+  AÇIK KALEM P-3 — K1 İKİ İCRA MEKANİZMASINI TEK MEDYANDA TOPLUYOR; KURALI YOK.
+  (Rol-1, haftalık koşum #2'nin ardından; kanıt
+  research/olcumler/edg042_teshis_pencere_damgasi_2026-08-29/TESPIT.md. Kardeş kalemler P-1/P-2
+  EXE-2026-009 kartında — damga güvenilirliği ve hakemin boş kontrol kolu.)
+  BU BLOK HİÇBİR ŞEYİ DEĞİŞTİRMEZ: success_metric, örneklem eşikleri (K1 n≥30 & ≥10 seans;
+  K2/K3 n≥15 & ≥6 seans), karar kuralı (EDG-040 başabaş bandı [5-15] karşısındaki üç dal),
+  kill_criteria ve bootstrap künyesi (B=5000, seed=20260812, kümeleme=SEANS) TEK KARAKTERİ
+  DEĞİŞMEDEN yerinde durur. Kalem KAYDEDİLİR, çözülmez — çözüm operatör kararıdır.
+
+  OLGU: 2026-08-23'ten (canlı `barclock.py` mtime 14:53:43Z) beri giriş bacağının icra mekanizması
+  DEĞİŞTİ. Kaydırma öncesi dolumlar EOD gönderilen GTC marketable-limit emrin açılışta dolmasıydı;
+  sonrası 13:45 penceresinde gönderimdir. K1 ikisini AYIRMADAN tek medyanda topluyor: bugünkü
+  n=17'nin 13'ü eski mekanizmadan, 2'si (ECL, CRM) gerçek yeni mekanizmadan, 2'si (DE, PANW)
+  eski mekanizmadan olduğu hâlde "1345" damgalı (P-1).
+
+  NEDEN SADECE "DÖNEM TEMSİLİ" DEĞİL: kartın beyanlı_sinirlar (2) maddesi zaten "bu dönemin
+  friksiyonu, evrensel sabit değil" diyor — ama buradaki sorun dönem değil MEKANİZMA. Kartın
+  kendi kill#5'i tam bu mantığı kurar: "kovalar birleştirilirse geçersiz — stop ve hedef mekaniği
+  ayrı, tek medyana ezilemez". Aynı gerekçe K1'in İÇİNDEKİ 1330/1345 karışımı için de geçerlidir,
+  ama kartta bunun kuralı YOKTUR: kill#5 kovalar ARASI'nı yasaklar, kova İÇİ karışımı konuşmaz.
+  ÜSTELİK ölçüt değişmemiş olsa bile ölçtüğü ŞEY değişir: payda EDG-038'in D1 konsolide resmî
+  açılışı (09:30) olarak DONUKTUR ve 1345 dolumları o açılıştan ~15 dakika SONRA gerçekleşir —
+  yani 1345 satırlarının bps'i "icra friksiyonu" değil "icra friksiyonu + 15 dk sürüklenme"dir.
+  EXE-2026-009 bunu bilerek yapar ve beyan eder ("sürüklenme bedeli fiyata gömülü gelir; ayrı
+  bedel muhasebesi yapılmaz") — yani kusur EXE-009'da değil, iki mekanizmayı tek sayıya EZEN
+  K1'in kural boşluğundadır.
+
+  NEDEN ŞİMDİ KARARA BAĞLANMALI (kalemin zamanlaması ÖZ-DİSİPLİN meselesidir): K1 bugün n=17,
+  eşik 30. Kaba izdüşümle ~3-4 hafta. Eşik dolduğunda kart HÜKÜM üretecek ve o hüküm KARIŞIK bir
+  örneklem üzerinde hesaplanacak. Kuralı EŞİK DOLDUKTAN SONRA koymak, SAYIYA BAKARAK kural
+  seçmektir — kartın tüm ön-kayıt disiplininin yasakladığı şey budur ("eşik sonradan değişmez").
+  Kural, veri henüz eşiğin altındayken konmalıdır ya da hiç konmamalıdır.
+
+  OPERATÖR KARARI BEKLEYEN ÜÇ YOL (kart bunlardan birini SEÇMEZ, sunar):
+    (a) K1'i ikiye ayır (K1a=1330, K1b=1345) — kill#5 mantığının doğal uzantısı. BEDELİ AĞIR:
+        K1b sıfırdan n≥30 biriktirir, hüküm aylarca gecikir; ayrıca P-2 gereği 1330 kolu artık
+        büyümez, yani K1a da eşiğe hiç ulaşmayabilir.
+    (b) K1'i pooled bırak ama HÜKME ZORUNLU ŞERH bağla: "bu CI iki icra mekanizmasının karışımıdır,
+        1345 payı %X". Ucuz ve dürüst; ama karışık bir medyanı EDG-040'ın başabaş bandına karşı
+        konumlandırmanın ne anlama geldiği şerhle çözülmez, yalnız görünür kılınır.
+    (c) Kaydırma-öncesi kümeyi DONDUR (n=13 + DE/PANW) ve K1'i bundan sonra yalnız 1345 üzerinden
+        yürüt — eşiği yeniden mi sayacağı (30 sıfırdan mı, mevcut 4 üstüne mi) kart hükmü ister
+        ve bu, eşiğe dokunduğu için EN RİSKLİ yoldur (ön-kayıt disiplini).
+  HİÇBİRİ SEÇİLMEZSE YÜRÜRLÜKTE KALAN: bugünkü hâl, yani (b)'nin şerhsiz sürümü — ve haftalık
+  koşum bunu her turda bu kalemi anarak beyan eder.
+
+  ARA TEDBİR (karar gelene dek, kural DEĞİŞTİRMEDEN): haftalık koşum raporu K1 satır dökümünün
+  yanında 1330/1345/damgasız kırılımını ve P-1 kontaminasyon sayısını BEYAN eder. Bu bir ölçüt
+  değişikliği değildir; zaten `pencere_altbant.json` üretiliyor, yalnız operatör raporuna
+  taşınması güvence altına alınır (YASA 6: okuyucusuz yazım yok).

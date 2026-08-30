@@ -37,3 +37,55 @@ beyanli_sinirlar: >
   tam bunun için. (2) Sürüklenme bedeli fiyata gömülü gelir (1345 dolum fiyatları); ayrı bedel
   muhasebesi yapılmaz. (3) Kaçan-hareket etkisi (13:30-13:45 arası sinyal bozulması) bu kartta
   ölçülmez; tahtada açık soru olarak durur.
+
+acik_kalemler_2026_08_29: >
+  AÇIK KALEM KAYDI (Rol-1, EDG-042 haftalık koşum #2'nin ardından operatör sorusu üzerine yapılan
+  defter-bütünlüğü teşhisinden doğdu). Kanıt: research/olcumler/edg042_teshis_pencere_damgasi_2026-08-29/
+  (TESPIT.md + teshis_damga.py + teshis_damga.json; salt-okuma, canlıya ve state/'e yazma yok).
+  BU BLOK HÜKÜM DEĞİLDİR VE HİÇBİR ŞEYİ DEĞİŞTİRMEZ: uygulama_sozlesmesi, hakem_kurali,
+  öneri tetiği eşiği (alt-bant n≥10), kill_criteria ve success_metric TEK KARAKTERİ DEĞİŞMEDEN
+  yerinde durur (kill#2: "öneri tetiği eşiği ölçüm başladıktan sonra değişirse geçersiz").
+  Kalemlerin ÇÖZÜMÜ operatör kararıdır; bu kart onu vermez, kaydeder.
+
+  P-1 — DAMGA GÖNDERİM REJİMİNİ DEĞİL YAZIM REJİMİNİ SÖYLÜYOR (kill#3 sınıfı, MADDİ).
+  Kartın sözü: "damga dolum anındaki YÜRÜRLÜK rejimini söyler". Kodun yaptığı
+  (`meridian/loop.py:2761`, `_patch_entry_slippage`): `if "pencere" not in r: r["pencere"] =
+  barclock.pencere_rejimi()` — yani DEFTERE YAZIM anındaki sabit. Kod mevcut damganın YENİDEN
+  yazılmasına karşı korunmuş (yorumu kill#3'ü anıyor) ama BAYAT SATIRA İLK DAMGAYI BUGÜNÜN
+  REJİMİYLE basmaya karşı korunmamış. Gönderim ile yazım arasına bir dağıtım girdiğinde iki
+  cümle ayrışır ve damga sessizce yalan söyler.
+  ÖLÇÜLMÜŞ VAKA (uydurma değil): DE ve PANW satırları `ts=2026-08-21T20:32:22Z` ile EOD-GTC
+  yolundan, yani 13:30 rejimi yürürlükteyken gönderildi; canlı `barclock.py` 1345'e
+  2026-08-23T14:53:43Z'de döndü (A1 mtime; depoda d8030c0); satırlar 2026-08-24'te yazıldı ve
+  "1345" damgasını ORADA aldı. Gerçek 1345 satırları yalnız ECL (`ts=2026-08-26T13:45:01Z`) ve
+  CRM (`ts=2026-08-28T13:45:00Z`) — ikisi de pencerenin saniyesinde.
+  SONUÇ: hakemin 1345 bandı bugün 4 satırın 2'siyle KONTAMİNE (%50) ve gerçek 1345 örneklemi
+  n=2'dir, n=4 değil.
+  GÖRÜNMEZLİK (kalemin asıl zehiri): `ts` alanı NE `edg042_*/canli_cek.py`'nin E2 alan
+  listesinde NE `pencere_cek.py`'ninkinde var — yani hakem katmanı kendi kontaminasyonunu
+  ÖLÇEMEZ; bu teşhis ancak reçete DIŞINDA bir okumayla görüldü.
+  OPERATÖR KARARI BEKLEYEN: (a) damga gönderim anına (`ts`) mı bağlanacak yoksa satıra
+  gönderim-anı rejimi ayrı alan olarak mı yazılacak; (b) mevcut iki satır (DE, PANW) düzeltilecek
+  mi yoksa damgasız'a mı çekilecek — DÜZELTMENİN KENDİSİ de bir yeniden-etiketlemedir ve kill#3
+  hükmünü operatör vermeden yapılamaz; (c) hakem çekicisine `ts` eklenip kontaminasyonun her
+  koşumda BEYAN edilip edilmeyeceği.
+
+  P-2 — KONTROL KOLU YAPISAL OLARAK BOŞ; ÖNERİ TETİĞİ İNŞAEN ERİŞİLEMEZ.
+  `oneri_tetigi` (pencere_altbant.py:96) İKİ bandın da CI'ı olmasını, yani ikisinin de n≥10
+  olmasını şart koşar. 1330 bandı bugün n=0. Kaydırma SÜRESİZ (kart: "pilot süresi YOK"),
+  yürürlük rejimi 1345 ve geriye dönük etiketleme kill#3 ile yasak — dolayısıyla `pencere="1330"`
+  damgalı satır BİR DAHA HİÇ ÜRETİLMEYECEK. Bu haliyle hakem sonsuza dek "orneklem_birikimde"
+  diyebilir ve GERİ-AL ÖNERİSİ hiçbir veriyle tetiklenemez. Kartın success_metric'i "hakem
+  sözleşmesinin İŞLEMESİ"dir; işleyen bir sözleşme, açılabilen bir valf demektir.
+  BEYAN: kaydırma öncesi 13 satır damgasızdır ve kill#3 gereği 1330 SAYILAMAZ — yani "kontrol
+  kolu aslında var" savunması bu kartın kendi yasasıyla kapalıdır.
+  OPERATÖR KARARI BEKLEYEN: tetiğin kıyas tabanı ne olacak — (a) damgasız kaydırma-öncesi küme
+  AYRI ve BEYANLI bir taban olarak mı tanımlanacak (kart revizyonu ister, kill#2'ye dikkat),
+  (b) A/B için pencere dönüşümlü mü koşacak, yoksa (c) tetik tek-kollu bir eşiğe mi (örn.
+  EDG-040 başabaş bandı) bağlanacak. ÜÇÜ DE KART İŞİDİR; ölçüm başladıktan sonra eşiği kod
+  tarafında değiştirmek kill#2'yi tetikler.
+
+  ÖLÇEK NOTU (hüküm değil, n=2): bu kartın öncülü EDG-2026-047 kaydırmanın bedelini medyan
+  +4,65 bps öngörmüştü. Gerçek 1345 satırlarının ikisi +175,107 ve +245,034 bps. n=2 ile hiçbir
+  şey iddia edilemez; kayda geçirilir ki eşik dolduğunda "öngörü tutmuş muydu" sorusu
+  sonradan-akıl olmasın.
