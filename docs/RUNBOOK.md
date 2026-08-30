@@ -1142,31 +1142,44 @@ SAYI DÜZYAZIYA GÖMÜLMEZ. Bu başlık bir zamanlar "DÖRT ARTEFAKT" diyor ve d
 da operatörün KURULUM adımlarını okuduğu yerdi. Tek kaynak dagit.sh `F9_LISTE`dir; aşağısı onun
 okunur özetidir ve kapsaması çivilidir
 (tests/test_dagit_f9_beyan_v266.py::test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR
-— listedeki her ad burada geçmek ZORUNDA; sayı ölçülmez, KAPSAMA ölçülür):
-* meridian-sprint@.service          → /etc/systemd/system/        (v241 sprint cgroup birimi)
-* 50-meridian-sprint.rules          → /etc/polkit-1/rules.d/      (v241 tetik izni)
-* deploy/hermes/SOUL.md             → ~ubuntu/.hermes/SOUL.md     (v242 hermes brifingi)
-* deploy/hermes/config.yaml         → ~ubuntu/.hermes/config.yaml (v326 ajan güvenlik duruşu)
-* meridian-tick-watchdog.service    → /etc/systemd/system/        (asılı-tick bekçisi)
-* meridian-tick-watchdog.timer      → /etc/systemd/system/        (aynı bekçinin tetiği)
-* litestream.yml                    → /etc/litestream.yml         (litestream_kur.sh, 2026-08-23)
-* meridian-aylik-bucket-kopya.service → /etc/systemd/system/      (aylık bar-arşivi bucket
-kopyası; kurulumu KENDİ birim başlığındadır, bu betikte değil)
-* meridian-aylik-bucket-kopya.timer → /etc/systemd/system/        (aynı kopyanın tetiği)
-* meridian-brifing.service          → /etc/systemd/system/        (v327 brifing kadansı)
-* meridian-brifing.timer            → /etc/systemd/system/        (kadansın tek tetiği)
-* @sef profili (Faz 2) → ~ubuntu/.hermes/profiles/sef/ — ÜÇ dosya, ELLE kurulur. TAM REPO
-YOLLARIYLA yazılır, kısa adla DEĞİL: `config.yaml` ve `SOUL.md` F9 listesinde İKİ KEZ
-geçiyor (ana profil + @sef) ve basename eşleyen bir çivi, bu üç satır silinse bile ana
-profilinkiler yüzünden yeşil kalırdı (denetim 2026-08-30):
-- deploy/hermes/profiles/sef/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
-- deploy/hermes/profiles/sef/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
-- deploy/hermes/profiles/sef/SOUL.md            (botun kalıcı brifingi)
+— listedeki her artefakt burada TAM REPO YOLUYLA geçmek ZORUNDA; sayı ölçülmez, KAPSAMA
+ölçülür):
+* deploy/oracle-a1/meridian-sprint@.service   → /etc/systemd/system/  (v241 sprint cgroup birimi)
+* deploy/oracle-a1/50-meridian-sprint.rules   → /etc/polkit-1/rules.d/  (v241 tetik izni)
+* deploy/hermes/SOUL.md                       → ~ubuntu/.hermes/SOUL.md  (v242 hermes brifingi)
+* deploy/hermes/config.yaml                   → ~ubuntu/.hermes/config.yaml  (v326 ajan duruşu)
+* deploy/oracle-a1/meridian-tick-watchdog.service → /etc/systemd/system/  (asılı-tick bekçisi)
+* deploy/oracle-a1/meridian-tick-watchdog.timer   → /etc/systemd/system/  (aynı bekçinin tetiği)
+* deploy/oracle-a1/litestream.yml             → /etc/litestream.yml  (litestream_kur.sh, 2026-08-23)
+* deploy/oracle-a1/meridian-aylik-bucket-kopya.service → /etc/systemd/system/  (aylık
+bar-arşivi bucket kopyası; kurulumu KENDİ birim başlığındadır, bu betikte değil)
+* deploy/oracle-a1/meridian-aylik-bucket-kopya.timer → /etc/systemd/system/  (aynı kopyanın tetiği)
+* deploy/oracle-a1/meridian-brifing.service   → /etc/systemd/system/  (v327 — @sef kadansı 22:00 UTC)
+* deploy/oracle-a1/meridian-brifing.timer     → /etc/systemd/system/  (o kadansın tek tetiği)
+* deploy/oracle-a1/meridian-bekci.service     → /etc/systemd/system/  (Faz 3 — @bekci kadansı
+10:00 UTC; AYRI birim, brifing'e ikinci ExecStart DEĞİL — gerekçe birim başlığında)
+* deploy/oracle-a1/meridian-bekci.timer       → /etc/systemd/system/  (o kadansın tek tetiği)
+* BOT PROFİLLERİ (Faz 2: @sef · Faz 3: @bekci) → ~ubuntu/.hermes/profiles/<ad>/ — her biri
+ÜÇ dosya, ELLE kurulur. TAM REPO YOLLARIYLA yazılır, kısa adla DEĞİL — ve bu kural artık
+KOŞULSUZ: `config.yaml`, `SOUL.md` ve `distribution.yaml` listede birden çok kez geçiyor,
+basename eşleyen bir çivi bir profilin satırlarının silinmesini ötekiler yüzünden
+gizlerdi (denetim 2026-08-30; kural Faz 3'te sayımdan bağımsız hâle getirildi):
+- deploy/hermes/profiles/sef/distribution.yaml    (manifest; env beyanı — safe-root + anahtar)
+- deploy/hermes/profiles/sef/config.yaml          (duruş: guard kancası · deny · kapalı araçlar)
+- deploy/hermes/profiles/sef/SOUL.md              (botun kalıcı brifingi)
+- deploy/hermes/profiles/bekci/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
+- deploy/hermes/profiles/bekci/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
+- deploy/hermes/profiles/bekci/SOUL.md            (botun kalıcı brifingi)
 KURULUM BU BETİKTE DEĞİL, BİLEREK: `hermes profile install` canlıda YENİ BİR AJAN KİMLİĞİ
-doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: botun
-kum havuzunu (`/opt/meridian/var/bots/sef`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR. "Tek
-komut" demek yanlış olurdu — ortadaki adım (profilin kendi `.env`i) atlanırsa profil
-KURULUR, KOŞAR ve her gün sessizce ham brifinge düşer: yani yanlış çalışır, bozuk görünmez.
+doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: her
+botun kum havuzunu (`/opt/meridian/var/bots/<ad>`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR.
+"Tek komut" demek yanlış olurdu — ortadaki adım (profilin kendi `.env`i) atlanırsa profil
+KURULUR, KOŞAR ve her gün sessizce HAM teslimata düşer: yani yanlış çalışır, bozuk görünmez.
+ÇOĞALTMA BİLİNÇLİDİR, TEMBELLİK DEĞİL: profil blokları döngüye alınmadı çünkü her botun
+SÜRÜCÜ BİRİMİ ad kuralından türetilemiyor (@sef'inki `meridian-brifing`) ve o türetmeyi
+UYDURMAK, bakım penceresinde koşan bir betikte ölçülmemiş bir çıkarım olurdu. Sürüklenmeyi
+kopya DEĞİL ÇİVİ engelliyor: kapsam `deploy/hermes/profiles/` dizininden TÜRETİLİYOR
+(tests/test_bot_profil_durusu_v329.py), yani üçüncü profil bu blokları YAZMADAN eklenemez.
 KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 ```

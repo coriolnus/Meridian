@@ -271,14 +271,20 @@ fi
 #   * litestream.yml → /etc/litestream.yml (kurulum litestream_kur.sh — 2026-08-23 eklendi)
 #   * meridian-aylik-bucket-kopya.service + .timer → /etc/systemd/system/  (E-kod [4] 2026-08-23:
 #     aylık bar-arşivi bucket kopyası; kurulumu birim başlığında)
-#   * meridian-brifing.service + .timer → /etc/systemd/system/  (v327 — alarm yığını + öneri
-#     brifingi kadansı; boşken sessiz, arızada `failed`)
-#   * @sef profili: distribution.yaml + config.yaml + SOUL.md → ~ubuntu/.hermes/profiles/sef/
-#     (Faz 2 — bot roster'ın ilk Hermes profili). BURADA BİR İNCELİK VAR: rsync depo tarafını
-#     (`deploy/hermes/profiles/sef/`) canlıya TAŞIR, ama F9'un kıyasladığı şey o değil KURULU
-#     KOPYAdır — profil canlıya `hermes profile install` ile varır ve o komut operatörün
-#     kararıdır (yeni bir ajan kimliği doğurur). Yani "repoda güncel" ile "botun okuduğu dosya
-#     güncel" AYRI iki gerçektir; kapının ölçtüğü ikincisidir.
+#   * meridian-brifing.service + .timer → /etc/systemd/system/  (v327 — `@sef`in kadansı,
+#     22:00 UTC; boşken sessiz, arızada `failed`)
+#   * meridian-bekci.service + .timer → /etc/systemd/system/  (Faz 3 — `@bekci`nin kadansı,
+#     10:00 UTC. AYRI BİR TETİK, brifing'e ikinci bir ExecStart DEĞİL: iki bot ayrı artefaktın
+#     sahibi ve biri düşerse öteki koşmalı — gerekçenin tamamı birim başlığında)
+#   * @sef ve @bekci profilleri: her biri distribution.yaml + config.yaml + SOUL.md →
+#     ~ubuntu/.hermes/profiles/<ad>/ (Faz 2 ve Faz 3 — bot roster'ın ilk iki Hermes profili).
+#     BURADA BİR İNCELİK VAR: rsync depo tarafını (`deploy/hermes/profiles/<ad>/`) canlıya
+#     TAŞIR, ama F9'un kıyasladığı şey o değil KURULU KOPYAdır — profil canlıya `hermes profile
+#     install` ile varır ve o komut operatörün kararıdır (yeni bir ajan kimliği doğurur). Yani
+#     "repoda güncel" ile "botun okuduğu dosya güncel" AYRI iki gerçektir; kapının ölçtüğü
+#     ikincisidir. Roster yediye kadar büyüyecek ve liste her profilde ELLE genişler: bu bir
+#     kabul, bir unutma değil — kapsamayı `_profiller()`ten TÜRETEN çivi (v329) unutmayı
+#     kırmızıya çevirir.
 # Bu, OB-2'yi doğuran "kurulu ≠ çalışır" sınıfıdır: repo ilerler, canlı kopya yerinde sayar ve
 # hiçbir kapı bağırmazdı — denetim ölçtü: dagit'te bu dosyalara sıfır atıf vardı. [1c] yalnız
 # *.service YÖNERGELERİNİ kıyaslar; bu kapı LİSTEDEKİ HER dosyanın TAM İÇERİĞİNİ kıyaslar
@@ -304,11 +310,20 @@ deploy/oracle-a1/meridian-aylik-bucket-kopya.service|/etc/systemd/system/meridia
 deploy/oracle-a1/meridian-aylik-bucket-kopya.timer|/etc/systemd/system/meridian-aylik-bucket-kopya.timer
 deploy/oracle-a1/meridian-brifing.service|/etc/systemd/system/meridian-brifing.service
 deploy/oracle-a1/meridian-brifing.timer|/etc/systemd/system/meridian-brifing.timer
+deploy/oracle-a1/meridian-bekci.service|/etc/systemd/system/meridian-bekci.service
+deploy/oracle-a1/meridian-bekci.timer|/etc/systemd/system/meridian-bekci.timer
 deploy/hermes/profiles/sef/distribution.yaml|/home/ubuntu/.hermes/profiles/sef/distribution.yaml
 deploy/hermes/profiles/sef/config.yaml|/home/ubuntu/.hermes/profiles/sef/config.yaml
-deploy/hermes/profiles/sef/SOUL.md|/home/ubuntu/.hermes/profiles/sef/SOUL.md"
+deploy/hermes/profiles/sef/SOUL.md|/home/ubuntu/.hermes/profiles/sef/SOUL.md
+deploy/hermes/profiles/bekci/distribution.yaml|/home/ubuntu/.hermes/profiles/bekci/distribution.yaml
+deploy/hermes/profiles/bekci/config.yaml|/home/ubuntu/.hermes/profiles/bekci/config.yaml
+deploy/hermes/profiles/bekci/SOUL.md|/home/ubuntu/.hermes/profiles/bekci/SOUL.md"
 for _cift in $F9_LISTE; do
-  _f9_repo="${_cift%%|*}"; _f9_canli="${_cift##*|}"; _f9_ad="$(basename "$_f9_repo")"
+  # ETİKET TAM REPO YOLUDUR, BASENAME DEĞİL (denetim, Faz 3 dal turu 2026-08-30). İki profille
+  # `config.yaml` üç kez, `SOUL.md` üç kez, `distribution.yaml` iki kez listede: "⚠ config.yaml:
+  # AYRIK" satırı HANGİ profilin ayrıştığını SÖYLEMEZ ve kapı sürüklenmeyi görür ama anlatamaz.
+  # Bu, `deploy.sh` BAŞLIĞINDA kapatılan sınıfın (v266 çivisi) kapının KENDİ çıktısındaki hâliydi.
+  _f9_repo="${_cift%%|*}"; _f9_canli="${_cift##*|}"; _f9_ad="$_f9_repo"
   if [[ ! -f "$REPO/$_f9_repo" ]]; then
     # Repo tarafı yoksa kıyas zemini yok — bu bir sürüklenme hükmü değil, LİSTENİN bayatlamasıdır.
     echo "  ⚠ $_f9_ad: ölçülemedi — REPODA YOK ($_f9_repo); kapı listesi bayat, listeyi güncelle"

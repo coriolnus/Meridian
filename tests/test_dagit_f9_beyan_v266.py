@@ -100,13 +100,23 @@ def test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR():
     Yön TEK: başlıkta fazladan bir ad olması serbest (bağlam olabilir); listede olup başlıkta
     OLMAYAN yasaktır.
 
-    BASENAME ÇAKIŞMASI AYRI ÖLÇÜLÜR (denetim 2026-08-30 — çivi kendi ölçtüğünü sanmıyordu).
-    Faz 2'yle birlikte listede AYNI BASENAME'İ taşıyan çiftler doğdu: `config.yaml` iki kez
-    (ana profil + `@sef`), `SOUL.md` iki kez. Yalnız basename eşleyen bir çivi, `@sef`in
-    satırları başlıktan SİLİNSE bile ANA profilin satırları yüzünden YEŞİL kalırdı — yani
-    listede olup başlıkta olmayan artefakt gizlenirdi. Çakışan basename'ler için ölçü
-    BASENAME DEĞİL TAM REPO YOLUDUR; çakışmayanlar için basename yeter (başlık onları kısa
-    adla anıyor ve bu okunurluk tercihi meşru).
+    ÖLÇÜ TAM REPO YOLUDUR — KOŞULSUZ (Faz 3, 2026-08-30). Önceki hâl KOŞULLUYDU: basename
+    listede birden çok kez geçiyorsa tam yol, geçmiyorsa basename aranıyordu. O kural
+    KENDİ ÖLÇTÜĞÜ VERİYE BAĞLIYDI ve gücü listeye göre değişiyordu — `distribution.yaml` tek
+    profille TEKİLdi (yani zayıf eşleşme), ikinci profille ÇAKIŞTI (güçlü eşleşme), ve bir
+    profil emekli edilse ZAYIFA GERİ DÖNERDİ. Bir çivinin gücü, koruduğu verinin o günkü
+    şekline bağlı olamaz.
+
+    ÖLÇÜLDÜ (simülasyon, 2026-08-30): sayıma dayalı kural, `@bekci`nin üç profil dosyası
+    listeye girip başlığa girmediği senaryoda ZATEN kırmızı veriyordu — yani o senaryo açık
+    değildi. Kapatılan şey senaryo değil KURALIN KENDİSİDİR: koşulsuz tam yol, aynı hükmü
+    listenin bileşiminden BAĞIMSIZ hâle getirir.
+
+    BEDELİ ÖDENDİ: `deploy.sh` başlığı artefaktları artık kısa adla değil REPO YOLUYLA anıyor
+    (8 satır güncellendi). Okunurluk kaybı yok — operatörün kopyalayacağı yol zaten odur.
+    Yön hâlâ TEK: başlıkta fazladan bir ad olması serbest (bağlam olabilir); listede olup
+    başlıkta OLMAYAN yasaktır. TERS YÖN ayrı ölçülür (profil dosyalarının listeye GİRMESİ:
+    tests/test_bot_profil_durusu_v329.py::test_F9_PROFILIN_UC_DOSYASINI_IZLIYOR).
     """
     dagit = DAGIT.read_text()
     govde = dagit.split('F9_LISTE="', 1)[1].split('"', 1)[0]
@@ -114,20 +124,55 @@ def test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR():
     assert yollar, "F9_LISTE ayrıştırılamadı — çivi kendi hedefini kaybetmiş"
 
     baslik = (ORACLE / "deploy.sh").read_text().split("set -euo pipefail", 1)[0]
-    import collections
-    sayim = collections.Counter(pathlib.Path(y).name for y in yollar)
-    # Çakışan basename → TAM YOL aranır; tekil basename → basename yeter.
-    def _aranan(y: str) -> str:
-        return y if sayim[pathlib.Path(y).name] > 1 else pathlib.Path(y).name
-
-    eksik = [f"{y} (aranan: {_aranan(y)})" for y in yollar if _aranan(y) not in baslik]
+    eksik = [y for y in yollar if y not in baslik]
     assert not eksik, (
-        "F9_LISTE'de olup deploy.sh BAŞLIĞINDA adı geçmeyen artefakt(lar): "
+        "F9_LISTE'de olup deploy.sh BAŞLIĞINDA TAM REPO YOLUYLA geçmeyen artefakt(lar): "
         + ", ".join(eksik)
         + " — dagit sürüklenmeyi raporlar ama operatörün okuduğu kurulum başlığı onlardan "
-        "HİÇ söz etmiyor (çakışan basename'ler TAM YOLLA aranır: `config.yaml` ve `SOUL.md` "
-        "listede iki kez geçiyor ve basename eşlemesi birinin silinmesini gizlerdi)"
+        "HİÇ söz etmiyor. Ölçü koşulsuz TAM YOLDUR: basename eşlemesi, aynı adı taşıyan "
+        "kardeş dosyalar (config.yaml · SOUL.md · distribution.yaml her profilde bir kez) "
+        "yüzünden birinin silinmesini gizler"
     )
+
+def test_f9_CIKTISI_ARTEFAKTI_TEKIL_ADLANDIRIR():
+    """KAPININ KENDİ ÇIKTISI, BAŞLIKTA KAPATILAN SINIFI AÇIK BIRAKMIŞTI (dal denetimi M3,
+    2026-08-30).
+
+    `test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR` başlığı TAM REPO YOLUNA
+    bağladı — çünkü `config.yaml`, `SOUL.md` ve `distribution.yaml` her profilde bir kez geçiyor
+    ve basename eşlemesi birinin silinmesini gizliyordu. Kapının KENDİ raporu ve `F9_AYRIK` /
+    `F9_OLCULEMEDI` özetleri ise hâlâ basename basıyordu: iki profille `config.yaml` üç kez,
+    `SOUL.md` üç kez listede. Operatör "⚠ config.yaml: AYRIK" satırından HANGİ profilin
+    ayrıştığını okuyamaz — yani kapı sürüklenmeyi görür ama SÖYLEYEMEZ.
+
+    ÇİVİ ETİKETİ SİMÜLE EDER, ssh KOŞMAZ: `_f9_ad` ataması okunur, `F9_LISTE`nin her çifti için
+    etiket üretilir ve etiketlerin TEKİL olması şart koşulur. Tanınmayan bir atama biçimi de
+    kırmızıdır — bir üçüncü biçimin sessizce geçmesi, çivinin kendi hedefini kaybetmesidir."""
+    metin = DAGIT.read_text()
+    govde = metin.split('F9_LISTE="', 1)[1].split('"', 1)[0]
+    ciftler = [ln.split("|", 1) for ln in govde.strip().splitlines() if "|" in ln]
+    assert ciftler, "F9_LISTE ayrıştırılamadı — çivi kendi hedefini kaybetmiş"
+
+    atama = re.search(r'_f9_ad="([^"]*)"', metin)
+    assert atama, "`_f9_ad` ataması bulunamadı — kapının etiketi başka bir yerden geliyor"
+    kalip = atama.group(1)
+    if "basename" in kalip:
+        etiketler = [pathlib.PurePath(repo.strip()).name for repo, _ in ciftler]
+    elif kalip.strip() in ("$_f9_repo", "${_f9_repo}"):
+        etiketler = [repo.strip() for repo, _ in ciftler]
+    else:
+        raise AssertionError(f"`_f9_ad` biçimi tanınmadı ({kalip!r}) — çivi bunu ÖLÇEMEZ; "
+                             "yeni biçimi buraya ekle, sessizce geçirme")
+
+    yinelenen = sorted({e for e in etiketler if etiketler.count(e) > 1})
+    assert not yinelenen, (
+        "[F9] raporu ve özeti artefaktları AYIRT EDİLEMEYEN adlarla anıyor: "
+        + ", ".join(f"{e} ×{etiketler.count(e)}" for e in yinelenen)
+        + " — operatör hangi profilin ayrıştığını çıktıdan okuyamaz. Ölçü, başlıkta olduğu gibi "
+        "TAM REPO YOLUDUR.")
+    for satir in ("$_f9_ad: AYRIK", "$_f9_ad: canlı ile repo BİREBİR"):
+        assert satir in metin, f"[F9] rapor satırı etiketi kullanmıyor: {satir!r}"
+
 
 def test_f9_YERI_kuru_kosumda_da_gorunur():
     """YER YASASI: [F9] `--uygula` kapısından ÖNCE koşar — sürüklenme raporu kuru koşumda da

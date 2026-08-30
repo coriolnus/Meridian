@@ -64,7 +64,7 @@ YENİ bir ölçüm hesaplar ve **yokluğa** bakar (duran şeyler), varlığa de�
 
 ## Görev 1: Deterministik tespit katmanı (`ops/bekci_tarama.py`)
 
-**Dosyalar:** Oluştur `ops/bekci_tarama.py` · Oluştur `tests/test_bekci_tarama_v331.py`
+**Dosyalar:** Oluştur `ops/bekci_tarama.py` · Oluştur `tests/test_bekci_tarama_v333.py`
 
 **Arayüz (Görev 2 buna bağlı):** `tara(gun: int = 3) -> dict` — `{"takili": [...], "duran": [...],
 "olculemedi": [...]}`. Her kalem `{"ad", "deger", "ilk_gorulme", "son_gorulme", "kanit"}` taşır.

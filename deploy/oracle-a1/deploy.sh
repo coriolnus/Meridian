@@ -21,31 +21,44 @@
 # da operatörün KURULUM adımlarını okuduğu yerdi. Tek kaynak dagit.sh `F9_LISTE`dir; aşağısı onun
 # okunur özetidir ve kapsaması çivilidir
 # (tests/test_dagit_f9_beyan_v266.py::test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR
-#  — listedeki her ad burada geçmek ZORUNDA; sayı ölçülmez, KAPSAMA ölçülür):
-#   * meridian-sprint@.service          → /etc/systemd/system/        (v241 sprint cgroup birimi)
-#   * 50-meridian-sprint.rules          → /etc/polkit-1/rules.d/      (v241 tetik izni)
-#   * deploy/hermes/SOUL.md             → ~ubuntu/.hermes/SOUL.md     (v242 hermes brifingi)
-#   * deploy/hermes/config.yaml         → ~ubuntu/.hermes/config.yaml (v326 ajan güvenlik duruşu)
-#   * meridian-tick-watchdog.service    → /etc/systemd/system/        (asılı-tick bekçisi)
-#   * meridian-tick-watchdog.timer      → /etc/systemd/system/        (aynı bekçinin tetiği)
-#   * litestream.yml                    → /etc/litestream.yml         (litestream_kur.sh, 2026-08-23)
-#   * meridian-aylik-bucket-kopya.service → /etc/systemd/system/      (aylık bar-arşivi bucket
-#     kopyası; kurulumu KENDİ birim başlığındadır, bu betikte değil)
-#   * meridian-aylik-bucket-kopya.timer → /etc/systemd/system/        (aynı kopyanın tetiği)
-#   * meridian-brifing.service          → /etc/systemd/system/        (v327 brifing kadansı)
-#   * meridian-brifing.timer            → /etc/systemd/system/        (kadansın tek tetiği)
-#   * @sef profili (Faz 2) → ~ubuntu/.hermes/profiles/sef/ — ÜÇ dosya, ELLE kurulur. TAM REPO
-#     YOLLARIYLA yazılır, kısa adla DEĞİL: `config.yaml` ve `SOUL.md` F9 listesinde İKİ KEZ
-#     geçiyor (ana profil + @sef) ve basename eşleyen bir çivi, bu üç satır silinse bile ana
-#     profilinkiler yüzünden yeşil kalırdı (denetim 2026-08-30):
-#       - deploy/hermes/profiles/sef/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
-#       - deploy/hermes/profiles/sef/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
-#       - deploy/hermes/profiles/sef/SOUL.md            (botun kalıcı brifingi)
+#  — listedeki her artefakt burada TAM REPO YOLUYLA geçmek ZORUNDA; sayı ölçülmez, KAPSAMA
+#  ölçülür):
+#   * deploy/oracle-a1/meridian-sprint@.service   → /etc/systemd/system/  (v241 sprint cgroup birimi)
+#   * deploy/oracle-a1/50-meridian-sprint.rules   → /etc/polkit-1/rules.d/  (v241 tetik izni)
+#   * deploy/hermes/SOUL.md                       → ~ubuntu/.hermes/SOUL.md  (v242 hermes brifingi)
+#   * deploy/hermes/config.yaml                   → ~ubuntu/.hermes/config.yaml  (v326 ajan duruşu)
+#   * deploy/oracle-a1/meridian-tick-watchdog.service → /etc/systemd/system/  (asılı-tick bekçisi)
+#   * deploy/oracle-a1/meridian-tick-watchdog.timer   → /etc/systemd/system/  (aynı bekçinin tetiği)
+#   * deploy/oracle-a1/litestream.yml             → /etc/litestream.yml  (litestream_kur.sh, 2026-08-23)
+#   * deploy/oracle-a1/meridian-aylik-bucket-kopya.service → /etc/systemd/system/  (aylık
+#     bar-arşivi bucket kopyası; kurulumu KENDİ birim başlığındadır, bu betikte değil)
+#   * deploy/oracle-a1/meridian-aylik-bucket-kopya.timer → /etc/systemd/system/  (aynı kopyanın tetiği)
+#   * deploy/oracle-a1/meridian-brifing.service   → /etc/systemd/system/  (v327 — @sef kadansı 22:00 UTC)
+#   * deploy/oracle-a1/meridian-brifing.timer     → /etc/systemd/system/  (o kadansın tek tetiği)
+#   * deploy/oracle-a1/meridian-bekci.service     → /etc/systemd/system/  (Faz 3 — @bekci kadansı
+#     10:00 UTC; AYRI birim, brifing'e ikinci ExecStart DEĞİL — gerekçe birim başlığında)
+#   * deploy/oracle-a1/meridian-bekci.timer       → /etc/systemd/system/  (o kadansın tek tetiği)
+#   * BOT PROFİLLERİ (Faz 2: @sef · Faz 3: @bekci) → ~ubuntu/.hermes/profiles/<ad>/ — her biri
+#     ÜÇ dosya, ELLE kurulur. TAM REPO YOLLARIYLA yazılır, kısa adla DEĞİL — ve bu kural artık
+#     KOŞULSUZ: `config.yaml`, `SOUL.md` ve `distribution.yaml` listede birden çok kez geçiyor,
+#     basename eşleyen bir çivi bir profilin satırlarının silinmesini ötekiler yüzünden
+#     gizlerdi (denetim 2026-08-30; kural Faz 3'te sayımdan bağımsız hâle getirildi):
+#       - deploy/hermes/profiles/sef/distribution.yaml    (manifest; env beyanı — safe-root + anahtar)
+#       - deploy/hermes/profiles/sef/config.yaml          (duruş: guard kancası · deny · kapalı araçlar)
+#       - deploy/hermes/profiles/sef/SOUL.md              (botun kalıcı brifingi)
+#       - deploy/hermes/profiles/bekci/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
+#       - deploy/hermes/profiles/bekci/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
+#       - deploy/hermes/profiles/bekci/SOUL.md            (botun kalıcı brifingi)
 #     KURULUM BU BETİKTE DEĞİL, BİLEREK: `hermes profile install` canlıda YENİ BİR AJAN KİMLİĞİ
-#     doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: botun
-#     kum havuzunu (`/opt/meridian/var/bots/sef`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR. "Tek
-#     komut" demek yanlış olurdu — ortadaki adım (profilin kendi `.env`i) atlanırsa profil
-#     KURULUR, KOŞAR ve her gün sessizce ham brifinge düşer: yani yanlış çalışır, bozuk görünmez.
+#     doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: her
+#     botun kum havuzunu (`/opt/meridian/var/bots/<ad>`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR.
+#     "Tek komut" demek yanlış olurdu — ortadaki adım (profilin kendi `.env`i) atlanırsa profil
+#     KURULUR, KOŞAR ve her gün sessizce HAM teslimata düşer: yani yanlış çalışır, bozuk görünmez.
+#     ÇOĞALTMA BİLİNÇLİDİR, TEMBELLİK DEĞİL: profil blokları döngüye alınmadı çünkü her botun
+#     SÜRÜCÜ BİRİMİ ad kuralından türetilemiyor (@sef'inki `meridian-brifing`) ve o türetmeyi
+#     UYDURMAK, bakım penceresinde koşan bir betikte ölçülmemiş bir çıkarım olurdu. Sürüklenmeyi
+#     kopya DEĞİL ÇİVİ engelliyor: kapsam `deploy/hermes/profiles/` dizininden TÜRETİLİYOR
+#     (tests/test_bot_profil_durusu_v329.py), yani üçüncü profil bu blokları YAZMADAN eklenemez.
 # KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 # listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 set -euo pipefail
@@ -172,6 +185,29 @@ else
   echo "   Günlük Telegram teslimatını değiştirmek bir OPERATÖR KARARIDIR; bu dağıtım onu"
   echo "   kendiliğinden vermez. Devretmek için:  MERIDIAN_BRIFING_DEVRI=1 bash deploy/oracle-a1/deploy.sh"
 fi
+# BEKÇİ KADANSI (Faz 3 — @bekci). YUKARIDAKİ KAPININ İKİZİ, ve kopyalanmasının sebebi ŞU: bu
+# birim `meridian-brifing`ten AYRIDIR ve ayrı olması ASIL KARARDIR (iki bot ayrı artefaktın
+# sahibi; biri düşerse öteki koşmalı — tam gerekçe birim başlığında). Ayrı birim, ayrı kapı
+# demektir: brifing'in `is-enabled` ölçümü bu timer hakkında HİÇBİR ŞEY söylemez.
+# BUGÜN CANLIDA BU BİRİM YOK — yani "devir" bacağı bugün boş çalışır ve kapı sanki gereksizmiş
+# gibi görünür. Değil: timer bir kez açıldıktan sonra AÇIK KALIR, ve o günden sonra ilgisiz bir
+# sebeple koşan tek bir dağıtım (`cutover.sh` adım 4 bu betiği çağırıyor) çalışan bir teslimatın
+# ExecStart'ını kimse karar vermeden değiştirebilirdi. Kapıyı birim doğarken koymak, onu bir
+# vakadan SONRA koymaktan ucuzdur — `@sef`te tam tersi oldu.
+BEKCI_ENABLED="$(systemctl is-enabled meridian-bekci.timer 2>/dev/null || true)"
+BEKCI_EXEC="$(systemctl cat meridian-bekci.service 2>/dev/null | grep -m1 '^ExecStart=' || true)"
+if [ "$BEKCI_ENABLED" != "enabled" ] || [ "${MERIDIAN_BEKCI_DEVRI:-0}" = "1" ] || \
+   case "$BEKCI_EXEC" in *bekci_brifingi.py*) true ;; *) false ;; esac; then
+  sudo cp deploy/oracle-a1/meridian-bekci.service         /etc/systemd/system/meridian-bekci.service
+  sudo cp deploy/oracle-a1/meridian-bekci.timer           /etc/systemd/system/meridian-bekci.timer
+  echo "-- bekçi birimi kuruldu/tazelendi (kadans=${BEKCI_ENABLED:-yok})"
+else
+  echo "!! BEKÇİ BİRİMİ DEVREDİLMEDİ — kadans AÇIK ve YÜRÜRLÜKTEKİ teslimat repodakinden farklı."
+  echo "   YÜRÜRLÜKTEKİ: ${BEKCI_EXEC:-(okunamadı)}"
+  echo "   REPODAKİ    : $(grep -m1 '^ExecStart=' deploy/oracle-a1/meridian-bekci.service)"
+  echo "   Günlük Telegram teslimatını değiştirmek bir OPERATÖR KARARIDIR; bu dağıtım onu"
+  echo "   kendiliğinden vermez. Devretmek için:  MERIDIAN_BEKCI_DEVRI=1 bash deploy/oracle-a1/deploy.sh"
+fi
 # SPRINT ŞABLON BİRİMİ (v241, 2026-08-13 — tick-watchdog'un AYNI DERSİ, bu kez baştan uygulandı).
 # Öğrenme sprinti 2026-08-13'e dek worker'ın çocuğu olarak doğuyordu (`sprint.py` Popen) ve systemd
 # varsayılan `KillMode=control-group` yüzünden HER `systemctl restart meridian` onu biçiyordu —
@@ -268,6 +304,17 @@ if [ "$BOT_KUM_SAHIP" != "ubuntu" ]; then
   sudo chown -R ubuntu:ubuntu /opt/meridian/var/bots/sef
 fi
 echo "-- @sef kum havuzu hazır: /opt/meridian/var/bots/sef (0700, ubuntu) — manifestin kum-havuzu adımı BU BETİKTE yapıldı"
+# @bekci BOT KUM HAVUZU (Faz 3) — üstteki blokla AYNI gerekçe, AYRI DİZİN. Ayrı olması §9.3'ün
+# "her bot kendi artefaktının TEK yazarı" sözleşmesidir: paylaşılan bir kum havuzunda biri
+# ötekinin damgasını/defterini ezebilirdi ve bu, iki botun da yanlış rapor vermesi demekti.
+mkdir -p /opt/meridian/var/bots/bekci
+chmod 700 /opt/meridian/var/bots/bekci
+BEKCI_KUM_SAHIP="$(stat -c '%U' /opt/meridian/var/bots/bekci 2>/dev/null || echo YOK)"
+if [ "$BEKCI_KUM_SAHIP" != "ubuntu" ]; then
+  echo "-- @bekci kum havuzu sahibi '$BEKCI_KUM_SAHIP' — ubuntu'ya alınıyor"
+  sudo chown -R ubuntu:ubuntu /opt/meridian/var/bots/bekci
+fi
+echo "-- @bekci kum havuzu hazır: /opt/meridian/var/bots/bekci (0700, ubuntu) — manifestin kum-havuzu adımı BU BETİKTE yapıldı"
 sudo systemctl daemon-reload
 sudo systemctl enable meridian meridian-barsarchive
 sudo systemctl enable --now meridian-backup.timer   # timer şimdi başlar; service'i o tetikler
@@ -302,6 +349,24 @@ else
   echo "   UYARI (systemd sözleşmesinden ÇIKARIM, bu kutuda ÖLÇÜLMEDİ): birim \`Persistent=true\`"
   echo "   taşıyor ve hiç tetiklenmemiş bir timer'ın damgası yoktur — ilk enable ANINDA bir koşum"
   echo "   ateşleyebilir. İlk mesajın hemen gelmesi arıza DEĞİLDİR."
+fi
+# BEKÇİ KADANSI — brifing kapısının İKİZİ, aynı gerekçelerle (bkz. yukarısı). AYRI ÖLÇÜM ŞART:
+# iki timer bağımsızdır ve birinin `is-enabled` değeri öteki hakkında hiçbir şey söylemez.
+# `BEKCI_ENABLED` YUKARIDA, devir kapısında ÖLÇÜLDÜ — burada yeniden ölçülmez (aynı olgunun iki
+# kaynağı, ikisinin ayrışabileceği anlamına gelir). Aradaki adımlar enable durumunu DEĞİŞTİRMEZ.
+if [ "$BEKCI_ENABLED" = "enabled" ]; then
+  sudo systemctl enable --now meridian-bekci.timer
+  BEKCI_TIMER="$(systemctl is-active meridian-bekci.timer 2>&1 || true)"
+  echo "-- bekçi kadansı: enabled · timer=$BEKCI_TIMER · sonraki: $(systemctl list-timers meridian-bekci.timer --no-pager --no-legend 2>/dev/null | awk '{print $1, $2, $3}')"
+  if [ "$BEKCI_TIMER" != "active" ]; then
+    echo "!! meridian-bekci.timer AÇIKTI ama AKTİF DEĞİL — takılı/duran durumlar sessizce birikir"; exit 1
+  fi
+else
+  echo "-- bekçi kadansı: dosyalar KURULDU, kadans KAPALI (bilinçli — günlük Telegram teslimatı"
+  echo "   operatör kararıdır). Kadansı açan komut (aşağıdaki @bekci reçetesinin 3. adımı):"
+  echo "       sudo systemctl enable --now meridian-bekci.timer"
+  echo "   NOT: bu tetik @sef'inkinden 12 saat uzağa (10:00 UTC) kondu — iki bot AYNI operatöre"
+  echo "   AYNI kanaldan yazıyor ve dakikalar arayla düşen iki mesaj tek yığın gibi okunur."
 fi
 
 # @sef PROFİLİ — DURUM RAPORU + REÇETE. Kapı DEĞİL, RAPOR: profilsiz bir kurulum BOZUK değildir,
@@ -352,16 +417,58 @@ else
   echo "   GÜNCELLEME TUZAĞI (ölçüldü): 'hermes profile update sef' config.yaml'ı KORUR —"
   echo "   duruş değiştiyse 'hermes profile update sef --force-config' gerekir."
 fi
+
+# @bekci PROFİLİ — DURUM RAPORU + REÇETE (Faz 3). Yukarıdaki @sef bloğunun İKİZİ ve yine bir
+# KAPI DEĞİL RAPOR: profilsiz bir kurulum BOZUK değildir, bekçi ham listeyi teslim etmeye devam
+# eder (tespit deterministiktir; model yalnız SIRALAR). Aşağıdaki ÜÇ EYLEM manifestin
+# (deploy/hermes/profiles/bekci/distribution.yaml) kurulum notundakilerle AYNIDIR ve bu bir
+# dilek değil ÇİVİLİ bir olgudur (test_bot_profil_durusu_v329.py::
+# test_RECETENIN_HER_EYLEMI_IKI_BELGEDE_DE_GECER — kapsam artık profil dizininden TÜRETİLİYOR,
+# yani üçüncü bot bu bloğu yazmadan eklenemez).
+BEKCI_EV="$(getent passwd "${SUDO_USER:-$(id -un)}" 2>/dev/null | cut -d: -f6)"
+BEKCI_PROFIL="${BEKCI_EV:-$HOME}/.hermes/profiles/bekci"
+BEKCI_KAYNAK="$REPO/deploy/hermes/profiles/bekci"
+echo "-- @bekci profil yolu (ölçüldü, çağıran=${SUDO_USER:-$(id -un)}): $BEKCI_PROFIL"
+BEKCI_BIRIM_HOME="$(grep -m1 '^Environment=HERMES_HOME=' deploy/oracle-a1/meridian-bekci.service | cut -d= -f3-)"
+if [ "$BEKCI_BIRIM_HOME" != "$BEKCI_PROFIL" ]; then
+  echo "!! @bekci PROFİL YOLU AYRIŞIYOR — bu betik '$BEKCI_PROFIL' ölçtü, birim '$BEKCI_BIRIM_HOME' diyor."
+  echo "   Zamanlanmış koşumu BİRİM belirler: yol yanlışsa harness profili REDDEDER ve bekçi"
+  echo "   HER GÜN sessizce ham liste gönderir (sıralama katmanı kalıcı kapanır, hiçbir şey kırmızı olmaz)."
+fi
+if [ -d "$BEKCI_PROFIL" ]; then
+  echo "-- @bekci profili KURULU: $BEKCI_PROFIL"
+  if [ ! -s "$BEKCI_PROFIL/.env" ]; then
+    echo "!! @bekci .env YOK/BOŞ ($BEKCI_PROFIL/.env) — profil KURULU ama ANAHTARSIZ. Etkisi SESSİZ:"
+    echo "   model her koşumda düşer, liste HAM gider, teslimat 'çalışıyor' görünür. Doldur:"
+    echo "       cp $BEKCI_PROFIL/.env.EXAMPLE $BEKCI_PROFIL/.env  &&  \${EDITOR:-nano} $BEKCI_PROFIL/.env"
+  fi
+else
+  echo "-- @bekci profili KURULU DEĞİL — bekçi HAM yoldan teslim eder (bozuk değil, SIRALAMASIZ)."
+  echo "   Kurmak ÜÇ AYRI EYLEMDİR ve 'tek komut' demek YANLIŞ olur: ortadaki atlanırsa profil"
+  echo "   KURULUR ve YANLIŞ ÇALIŞIR (anahtarsız, hiç düşünmeden); sonuncusu atlanırsa hiç KOŞMAZ."
+  echo "     1) hermes profile install $BEKCI_KAYNAK"
+  echo "     2) cp $BEKCI_PROFIL/.env.EXAMPLE $BEKCI_PROFIL/.env  &&  \${EDITOR:-nano} $BEKCI_PROFIL/.env"
+  echo "        (OPENROUTER_API_KEY — profilin KENDİ .env'i; dağıtım ona ASLA dokunmaz)"
+  echo "     3) sudo systemctl enable --now meridian-bekci.timer"
+  echo "   NOT, ADIM DEĞİL: kum havuzunu (/opt/meridian/var/bots/bekci) bu betik zaten yarattı."
+  echo "   GÜNCELLEME TUZAĞI (ölçüldü): 'hermes profile update bekci' config.yaml'ı KORUR —"
+  echo "   duruş değiştiyse 'hermes profile update bekci --force-config' gerekir."
+fi
+
 # DOĞRULANMAMIŞ KALEMLER — BEYAN, İDDİA DEĞİL (UYDURMA YASAĞI). Kurulum çıktısı 'güvenli' izlenimi
 # bırakır; o izlenimin ölçülmemiş kısımları burada ADIYLA söylenir, yoksa sessizce güvence olurlar.
-echo "   DOĞRULANMADI (1): profilin pre_tool_call guard kancasının BAŞSIZ (TTY'siz) koşumda"
-echo "   gerçekten ateşlendiği CANLIDA HİÇ ölçülmedi. Bilinen: satıcının kendi testi, TTY yokken"
-echo "   ve onay bayrağı yokken kabuk kancalarının HİÇ kaydolmadığını söylüyor. Karşı-tedbir iki"
-echo "   yanlı (config: hooks_auto_accept · çağrı: --accept-hooks) ama İKİSİ DE satıcı"
-echo "   KAYNAĞINDAN okundu, gerçek bir başsız koşumdan DEĞİL."
-echo "   DOĞRULANMADI (2): birim ProtectHome=read-only altında koşuyor ve ~/.hermes yazma izni"
+# BİR KEZ BASILIR, PROFİL BAŞINA DEĞİL: ikisi de AYNI mekanizmanın ölçülmemiş kısmıdır (aynı
+# Hermes ikilisi, aynı systemd duruşu) ve her profilde tekrarlamak, uyarıyı okunmaz kılardı.
+echo "   DOĞRULANMADI (1) — KURULAN HER BOT PROFİLİ İÇİN (@sef · @bekci): profilin pre_tool_call"
+echo "   guard kancasının BAŞSIZ (TTY'siz) koşumda gerçekten ateşlendiği CANLIDA HİÇ ölçülmedi."
+echo "   Bilinen: satıcının kendi testi, TTY yokken ve onay bayrağı yokken kabuk kancalarının HİÇ"
+echo "   kaydolmadığını söylüyor. Karşı-tedbir iki yanlı (config: hooks_auto_accept · çağrı:"
+echo "   --accept-hooks) ama İKİSİ DE satıcı KAYNAĞINDAN okundu, gerçek bir başsız koşumdan DEĞİL."
+echo "   DOĞRULANMADI (2): birimler ProtectHome=read-only altında koşuyor ve ~/.hermes yazma izni"
 echo "   ReadWritePaths'e ÇIKARIMLA açıldı (emsal: meridian.service tur-1 EROFS kırıklığı)."
-echo "   İkisini de ilk koşumdan sonra doğrula:  journalctl -u meridian-brifing -n 50"
+echo "   İkisini de ilk koşumdan sonra doğrula (İKİ BİRİM DE, ayrı ayrı — biri temiz koşuyor diye"
+echo "   öteki koşuyor sayılmaz):"
+echo "       journalctl -u meridian-brifing -n 50   ·   journalctl -u meridian-bekci -n 50"
 
 # BEKÇİ KURULUM DOĞRULAMASI — "kurulu != çalışır" (fail-notify dersi, 2026-07-30: birim iki gün
 # kuruluydu ve ilk test-ateşlemede IndentationError verdi). Burada ÜÇ ayrı gerçek ölçülür ve

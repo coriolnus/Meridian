@@ -17,7 +17,9 @@
    ALMIYORDU): dağıtım yalnız **Rol-1**indir (madde 2). Yan/worktree oturumları ve ajanlar canlıya
    DAĞITMAZ ve dağıtım ÖNERMEZ — işi bitince commit + kanıt yazıp devir brief'i bırakır.
    ÖLÇÜLMÜŞ TUZAK, ezber düzeltmesi: `dagit.sh` NEREDEN çağrılırsa çağrılsın ANA CHECKOUT'u dağıtır
-   (`dagit.sh:28` `REPO="$HOME/AI-Trading"` + `cd "$REPO"`). Yani yan oturum kendi kolunu canlıya
+   (`dagit.sh`in `REPO="$HOME/AI-Trading"` ataması + `cd "$REPO"`; SATIR NUMARASI BİLEREK YOK —
+   `:28` yazıyordu ve dosya 29'a kaymıştı, üstelik hiçbir çapa tarayıcısı `.md`ye bakmıyor,
+   yani yasanın kendi çapası sessizce çürüyordu). Yani yan oturum kendi kolunu canlıya
    İTEMEZ — bunun yerine ana checkout'un O ANKİ HEAD'ini, muhtemelen BAŞKA bir oturumun yarım işini
    iter, ve kirlilik kapısı da kendi temiz ağacına değil ANA checkout'a bakar. "Ağacım temiz" hissi
    burada bir güvence DEĞİLDİR.

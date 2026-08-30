@@ -1,0 +1,129 @@
+# @bekci profilinin güvenlik duruşu. ANA PROFİLDEN MİRAS ALINMAZ (spec §9.0'ın en önemli
+# bulgusu): `hermes profile create --clone` taşır, sıfırdan/dağıtımdan kurulan profil
+# KORUMASIZ doğar. Bu dosya o boşluğun kapağıdır ve `tests/test_bot_profil_durusu_v329.py`
+# onu repo tarafında çiviler — canlıya VARMADAN.
+#
+# ÖLÇÜM KAYDI BURADA TEKRARLANMAZ, `@sef`in `config.yaml`ındadır ve oraya bakılır. Neden:
+# duruşun taşıyıcı iddiaları (araç kapatmanın gerçekten uygulandığı · `-z` yolunda
+# `HERMES_YOLO_MODE` kurulduğu · `hooks_auto_accept` olmadan kancanın başsız koşumda SESSİZCE
+# kaydolmadığı · `file_safety.py`nin `if safe_roots:` kapısı) HERMES'İN KENDİSİ hakkındadır,
+# bu profil hakkında değil — aynı ikili, aynı sürüm. O kaydı buraya KOPYALAMAK ikinci bir
+# gerçek yaratırdı ve iki kopya ayrıştığında bayatlayan taraf hep okunmayan taraf olur (bu
+# deponun baskın hata deseni). Duruşun KENDİSİ ise kopyalanmaz, ÇİVİLENİR: v329'un parametreli
+# çivileri bu dosyayı da `sef`inkiyle aynı kapıdan geçirir.
+#
+# BU PROFİL NEDEN AYRI: `@sef` hazır hesaplanmış ÖZETLERİ sıralar; `@bekci` `ops/bekci_tarama.py`
+# nin ham defter üzerinde YENİ hesapladığı bir listeyi sıralar. İkisi ayrı artefaktın sahibi ve
+# ayrı kadansta koşar (plan Görev 3) — bu yüzden ayrı kimlik, ayrı kum havuzu, ayrı `.env`.
+#
+# BU ÜÇ BLOK HARNESS TARAFINDAN DA OKUNUR: `ops/bekci_brifingi.py::_profil_evini_dogrula`
+# profili ÇAĞIRMADAN ÖNCE burada üç şey arar — guard kancası · `hooks_auto_accept: true` ·
+# beş tehlikeli takımın kapalı olması. Tutmazsa çağrı REDDEDİLİR ve brifing ham yoldan gider.
+# Yani bu dosya yalnız bir beyan değil, koşum zamanında ÖLÇÜLEN bir kapıdır: elle
+# `hermes profile create bekci` ile doğan korumasız bir profil o kapıdan geçemez.
+
+# --- KANCA VE ONAYI -------------------------------------------------------------------
+# İKİSİ BİRLİKTE BİR KORUMADIR; yalnız biri yazılırsa koruma YOKTUR. TTY yokken ve onay
+# kanallarının hiçbiri açık değilken kanca kaydı boş döner — kanca SESSİZCE KAYDOLMAZ, ve
+# varsayılan da kapalıdır. Yani zamanlanmış koşumda `hooks_auto_accept` olmadan bu dosya
+# "korumalı" GÖRÜNÜR ve koşum korumasız olur.
+hooks:
+  pre_tool_call:
+    - matcher: terminal|write_file|patch|edit|apply_patch
+      command: /opt/meridian/ops/meridian-guard.sh
+      timeout: 10
+hooks_auto_accept: true
+
+# --- ARAÇ YÜZEYİ — SAVUNMANIN EN YÜKSEK KALDIRAÇLI KATMANI ----------------------------
+# `@bekci` girdisini HAZIR HESAPLANMIŞ alır (`bekci_tarama.tara()` harness'te koşar, botta
+# DEĞİL) ve yalnız metin üretir. Araca ihtiyacı YOK.
+#
+# VE BU PROFİLDE ARAÇSIZLIK EK BİR İŞ GÖRÜR — `@sef`te olmayan bir sebeple. `@bekci`nin
+# sözleşmesi "listeyi model ÜRETMEZ, yalnız SIRALAR"dır: tespit deterministiktir, çünkü listeyi
+# model üretirse bir arıza UYDURABİLİR. Araçlı bir bot o sözleşmeyi kendi başına delebilirdi —
+# deftere kendisi bakar, kendi gördüğünü listeye ekler ve "ölçüldü" diye sunardı. `file` ve
+# `terminal`ın kapalı olması, mimari sözleşmenin MEKANİK yarısıdır; SOUL'daki "kalem ekleme"
+# kuralı ise onun sosyal yarısı. İkisi birlikte tutar.
+#
+# KALAN RİSK, dürüstçe: bu bir KARA LİSTEDİR. Hermes yeni bir tehlikeli takım eklerse buraya
+# kendiliğinden girmez. Beyaz liste tercih edilirdi; `disabled_toolsets` bugün var olan
+# kaldıraç bu — çivi en azından bu beşinin kapalı kalmasını garanti eder, ve kardeş çivi
+# adların GERÇEK toolset anahtarı olduğunu (yazım hatası sessizce takımı geri açar) ölçer.
+agent:
+  disabled_toolsets:
+    - terminal          # kabuk: silme, pkill, curl ile dışarı taşıma
+    - file              # okuma/yazma/patch: defteri kendi okuyup listeye kalem EKLEME yolu da bu
+    - code_execution    # kabuk eşdeğeri
+    - browser           # dışarı taşıma kanalı
+    - web               # dışarı taşıma kanalı
+    - delegation        # araçsız bırakılan botun araçlı bir alt ajan doğurma yolu
+    - cronjob           # kalıcılık: kendine zamanlanmış iş yaratamaz
+    - computer_use      # masaüstü kontrolü
+    - memory            # hafıza deposu safe-root DIŞINA yazar (aşağıdaki nota bak)
+    - session_search    # geçmiş oturumları okuma; bu botun işi için gereksiz
+    - image_gen
+    - video_gen
+    - tts
+
+# HAFIZA NEDEN KAPALI, VE BU PROFİLDE NEDEN DAHA ÖNEMLİ. Depo `memory` takımını iki sebeple
+# kapatıyor: (a) deposu `HERMES_HOME/memories/` altına, yani safe-root'un DIŞINA yazar;
+# (b) açmak safe-root'u profil evine genişletmeyi zorunlu kılar ve botun kendi guard
+# yapılandırmasının üstüne yazma yolunu yeniden açar (kendini silahsızlandırma).
+# `@bekci`de üçüncü bir sebep var ve en ağırı odur: bu botun konusu ZAMAN İÇİNDE DEĞİŞMEYEN
+# durumlardır. Hafızası olduğunu sanan bir model "bu dün de böyleydi" cümlesini UYDURUR —
+# ve o cümle tam olarak botun tek işidir. Tekrarı bastırmak harness'in damga dosyasının
+# işidir (`state/bekci_brifingi_damga.json`, sahibi HARNESS); bot hiçbir yazma yetkisi
+# kazanmaz ve dünü hiç görmez.
+
+# --- ONAY DURUŞU — HANGİ SATIR HANGİ YOLDA YÜK TAŞIYOR --------------------------------
+# `hermes -z` çağrının en başında yolo kipini kuruyor, yani BİZİM koşum yolumuzda (systemd →
+# `hermes --accept-hooks -z`) `approvals.mode` HİÇ DANIŞILMAZ. Ölçüm kaydı `@sef`in
+# config.yaml'ında; burada tekrarlanmaz.
+#
+# AŞAĞIDAKİ İKİ SATIR NEDEN YİNE DE YAZILI: ikisi de BAŞKA yollarda yürürlüktedir ve profil tek
+# bir çağrı biçimine kilitli değildir — `hermes -p bekci chat` (etkileşimli) ve gateway
+# oturumları `mode`u okur; `cron_mode` ise hermes'in KENDİ cron oturumları içindir (systemd
+# koşumu bir hermes cron oturumu DEĞİLDİR). Yani bu satırlar ölü değil, BU YOLDA uykudadır.
+# Spec §9.4/2 ikisini de şart koşuyor.
+approvals:
+  # ETKİLEŞİMLİ / gateway oturumları için. `-z` yolunda ÖLÜ (yolo).
+  mode: smart
+  # Hermes'in KENDİ cron oturumları için. Kod varsayılanı ZATEN `deny` — bu satır bir DELİK
+  # KAPATMAZ, bir BEYANDIR: varsayılan bir gün değişirse duruşumuz değişmez.
+  cron_mode: deny
+  # YOLO'NUN ALTINDAKİ TABAN — `-z` yolunda da ateşler; bir deny eşleşmesi yolo/mode=off
+  # atlamasından ÖNCE ateşler. Yalnız `terminal` üzerinden erişilir ve o kapalı: ikinci
+  # katman, ama SAĞLAM bir ikinci katman.
+  deny:                      # fnmatch TÜM DİZGEYİ eşler; iki yandan sarılı olmayan desen delinir
+    - "*dagit.sh*"
+    - "*git push*"
+    - "*git commit*"
+    - "*systemctl*"
+    - "*serve.sh*"
+
+# --- MODEL VE BÜTÇE -------------------------------------------------------------------
+# BİÇİM: `max_tokens` MODEL EŞLEMESİNİN İÇİNDEN okunur ve okuma bir `isinstance(dict)` kapısının
+# ardındadır — `model:` düz bir dize olsaydı bütçe SESSİZCE yok sayılırdı (dosya 8.000 der,
+# koşum modelin kendi varsayılanını kullanırdı). v329 çivisi bu biçimi ölçüyor.
+#
+# BÜTÇE `@sef` İLE AYNI SEÇİLDİ, ve bu bir kopyalama değil AYNI SINIFA düşmenin sonucu:
+# docs/OLCUM-MODEL-BUTCESI-2026-08-27.md §6'nın "özet/rapor" satırı. Bu çağrı da bir
+# özet/sıralamadır — hazır bir listeyi sıraya dizip her kaleme bir satır gerekçe yazmak.
+# `@bekci`nin girdisi `@sef`inkinden KISADIR (kalem başına birkaç yüz karakter, ve harness
+# kalem tavanı uyguluyor), yani aynı bütçe burada daha rahattır.
+model:
+  provider: openrouter
+  default: nvidia/nemotron-3-super-120b-a12b:free
+  max_tokens: 8000
+
+# ZAMAN AŞIMI, HERMES'İN GERÇEKTEN OKUDUĞU YERDE.
+# Okuma sırası `providers.<sağlayıcı>.models.<model>.timeout_seconds` →
+# `providers.<sağlayıcı>.request_timeout_seconds`. NE kökte NE model eşlemesinde bakılır;
+# kökteki bir `timeout:` anahtarı hiçbir şey yapmaz — onu yazmak, OLMAYAN bir korumaya
+# güvenmektir (v329 çivisi kökte `timeout` bulunmamasını da ölçüyor).
+# Sağlayıcı düzeyi seçildi: bu profilde tek model var, per-model satır ikinci bir sürüklenme
+# yüzeyi açardı. Değer harness'in `MODEL_TIMEOUT_S` sabitiyle AYNI olmalı ve çivi
+# (`test_HARNESS_BUTCESI_MODEL_BUTCESINDEN_BUYUK`) ikisini birlikte okur.
+providers:
+  openrouter:
+    request_timeout_seconds: 120

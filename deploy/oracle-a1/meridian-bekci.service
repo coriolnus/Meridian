@@ -1,0 +1,145 @@
+# meridian-bekci.service — @bekci: SÜREGELEN (takılı) ve DURAN durumları operatörün önüne getirir.
+#
+# NEDEN AYRI BİR BİRİM, `meridian-brifing.service`e İKİNCİ BİR ExecStart DEĞİL (Faz 3 hükmü).
+# Faz 1'in dersi "iki teslimat, tek sarmalayıcı" idi ve o ders BURADA TERSİNE geçerlidir —
+# gerekçesi de FARKLIDIR, o yüzden ezberden uygulanamaz:
+#   · Faz 1'deki iki betik AYNI mesajı kuruyordu (alarm yığını + öneri özeti tek brifinge girdi).
+#     Onları ayırmak, operatöre aynı yığını iki kez göstermek olurdu.
+#   · `@sef` ile `@bekci` AYRI artefaktın sahibidir ve AYRI mesaj kurar (§9.3: her bot kendi
+#     artefaktının TEK yazarı). Biri düşerse ÖTEKİ KOŞMALI.
+# Ve bunu tek birimde SAĞLAYAMAYIZ — sözleşme systemd'nin kendi kuralına çarpar:
+#   `-` ÖNEKSİZ iki ExecStart → ilk düşüşte DURUR: `@sef` patlarsa `@bekci` o gün HİÇ koşmaz,
+#      üstelik sessizce (birim `failed` olur ama eksik teslimatın adı hiçbir yerde geçmez).
+#   `-` ÖNEKLİ iki ExecStart → çıkış kodu YUTULUR: ikisi de koşar ama birim ASLA `failed`
+#      görmez, yani Telegram kırıldığı gün panoda hiçbir şey kırmızıya dönmez.
+# İki timer, iki birim: her teslimat kendi arızasını kendi taşır. BU YORUM BURADA, çünkü ileride
+# birini "sadeleştirme" diye ötekine katmak, yukarıdaki iki tuzaktan birine geri dönmektir.
+#
+# KİMLİK: `EnvironmentFile=` YOK ve bu BİR EKSİK DEĞİL. Telegram kimliği ortam değişkeninde
+# değil `state/secrets.json`da yaşıyor ve `notify` onu oradan okuyor — ölçüm `@sef`in biriminde
+# kayıtlı (kaynak betikler `env -i` altında, BOŞ ortamla kanalı çözüyor) ve BU BİRİM AYNI
+# `notify`yi çağırdığı için ölçüm DEVROLUR; buraya kopyalanmaz, çünkü iki kopya ayrışır.
+# Aşağıdaki iki `Environment=` satırı bunu çürütmez: onlar KİMLİK taşımaz — ajan profilinin YERİ
+# ve botun YAZMA KISITIDIR. Model anahtarı birime GİRMEZ; profil onu kendi evindeki `.env`ten
+# okur ve dağıtım o dosyaya asla dokunmaz (birim dosyası 0644'tür).
+#
+# KURULUM ELLE — F9 SINIFI (dagit bu dosyayı TAŞIMAZ; içerik kapısı [F9] ayrıklığı RAPORLAR).
+# Adımları `deploy/oracle-a1/deploy.sh` yürütür: sudo cp + daemon-reload + `.timer`ı KAPILI
+# enable (yalnız ZATEN açıksa açık tutar — kapalıyken hiçbir dağıtım günlük Telegram kadansını
+# operatör kararı olmadan AÇMAZ; `cutover.sh` adım 4 bu betiği çağırdığı için kapı şarttır).
+[Unit]
+# BOŞKEN SESSİZ, ve `@sef`ten DAHA SERT: takılı bir durum tanımı gereği her gün aynıdır, o
+# yüzden bir kalem ilk geçişte bildirilir ve sonra yalnız DEĞİŞTİĞİNDE anılır. Karar döndürmeyen
+# zamanlanmış iş bildirim spam'idir (spec §8, hata 4) — burada spam'in kaynağı tekrar olurdu.
+Description=Meridian bekçisi — @bekci takılı/duran durum brifingi (boşken sessiz)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+# BU SATIR HARNESS İÇİNDİR, AJAN İÇİN DEĞİL (`@sef` emsali, aynı ölçüm). `bekci_brifingi.py`
+# depo kökünden koşmalı (`sys.path` bootstrap + `state/` yolları). Ama `hermes -z` ALT SÜRECİ bu
+# dizini MİRAS ALMAMALI: hermes cwd'den `.hermes.md`/`HERMES.md` (git köküne kadar yukarı),
+# `AGENTS.md`, `CLAUDE.md`, `.cursorrules` toplayıp SİSTEM PROMPT'una koyuyor — yani bu satır
+# tek başına deponun `CLAUDE.md`sini (A1 host'u, ssh anahtar yolu, dağıtım disiplini) HER GÜN
+# OpenRouter'a gönderirdi ve `notify.scrub` onu HİÇ GÖRMEZDİ (scrub yalnız bizim kurduğumuz
+# prompt argümanına uygulanır). ÇARE HARNESS'TA: çocuk BOŞ bir geçici dizinde koşturulur.
+WorkingDirectory=/opt/meridian
+# --- PROFİL BAĞLARI — İKİSİ DE ZORUNLU, İKİSİ DE YALNIZ BURADA VERİLEBİLİR --------------------
+# `HERMES_HOME`: `@bekci` profilinin KENDİ evi. Profil = BAĞIMSIZ bir HERMES_HOME dizinidir;
+#   §9.4 duruşunun tamamı — guard kancası · `cron_mode: deny` · deny listesi · kapalı araç
+#   takımları — O dizinin `config.yaml`ındadır, ana profilinkinde DEĞİL. Harness değeri
+#   DOĞRULAR (`bekci_brifingi.py`, `_profil_evini_dogrula`) ve ev `bekci` profili değilse
+#   çağrıyı REDDEDER: yanlış/eksik değer bilinmeyen bir ajan kimliğini çağırmaz, HAM listeye
+#   iner. Güvenli — ama SESSİZ: sıralama katmanı kalıcı olarak kapanır ve dışarıdan hiçbir şey
+#   bozuk görünmez. Bu yüzden satır bir konfor değil, ŞARTTIR.
+# `HERMES_WRITE_SAFE_ROOT`: botun yazabileceği TEK dizin. ÖLÇÜLDÜ (`agent/file_safety.py`,
+#   `if safe_roots:`): değişken TANIMSIZSA hiçbir yazma kısıtı UYGULANMAZ. Manifestteki
+#   `env_requires` beyanı bu satırın YERİNE GEÇMEZ — o beyan `.env` YAZMAZ, kurulu profile
+#   yalnız `.env.EXAMPLE` bırakır, yani ETKİLEŞİMLİ koşumu kapsar. ZAMANLANMIŞ koşum burada
+#   bağlanır ya da HİÇBİR YERDE bağlanmaz. Dizin `@sef`inkinden AYRI, bilerek: iki bot aynı kum
+#   havuzunu paylaşsaydı biri ötekinin artefaktının üstüne yazabilirdi.
+Environment=HERMES_HOME=/home/ubuntu/.hermes/profiles/bekci
+Environment=HERMES_WRITE_SAFE_ROOT=/opt/meridian/var/bots/bekci
+# TEK ExecStart, SARMALAYICISIZ, `-` ÖNEKSİZ — üçü de bilinçli (gerekçe başlıkta).
+# Betik kanal yapılandırılmamışsa 2, gönderim düşerse 1 döner; systemd bunu olduğu gibi
+# `failed`e çevirir ve `failed`İN OKUYUCUSU VAR: `meridian/api.py` `/api/infra` uçları
+# `ActiveState=failed`i "arizali" diye sınıflıyor, yani birim düşerse PANODA görünür (YASA 6 —
+# okuyucusuz sinyal sinyal değildir). Kabuk sarmalayıcısı olmadığı için `$` İKAME YÜZEYİ de yok.
+# `OnFailure=` BİLEREK YOK: ikinci bir bildirim birimi eklemek, teslimat kanalı ZATEN kırıkken
+# çalışmayacak bir yol daha kurmaktır — arıza ÇEKMELİ (panodan bakılır) okunur, İTMELİ değil.
+# LLM DÜŞERSE BİRİM DÜŞMEZ ve bu doğrudur: harness ham listeyi yine teslim eder (tespit
+# deterministiktir, model yalnız SIRALAR). Yani buradaki `failed`, "sıralayamadım" değil
+# "TESLİM EDEMEDİM" demektir — ve panoda görülmesi gereken tam olarak odur.
+ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/bekci_brifingi.py --uygula
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (meridian.service · meridian-sprint@.service ·
+# meridian-learn.service · meridian-backup.service · meridian-aylik-bucket-kopya.service ·
+# meridian-brifing.service ile BİREBİR). Gerekçelerin TAM METNİ meridian.service'tedir; burada
+# YALNIZ ayrışan kalem yazılıdır. Dışarıda bırakılanlar (MemoryDenyWriteExecute · PrivateDevices ·
+# PrivateUsers · ProtectProc/ProcSubset · IPAddressDeny · SystemCallErrorNumber=EPERM) ve
+# gerekçeleri: meridian.service.
+# BU BİRİM NEDEN SERTLEŞTİRİLİR: maruziyeti kardeşleriyle AYNI sınıftadır — aynı `.venv`, aynı
+# kod tabanı, aynı kullanıcı, `state/secrets.json` OKUMASI (Telegram kimliği oradan gelir) ve
+# AĞA çıkış. Sertleştirme birim doğarken yazılır: `meridian-brifing.service` bir tur GECİKTİ ve
+# o gecikme "filoda sertleştirmesi hiçbir yerde olmayan tek birim" hâlini doğurdu.
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA — ReadWritePaths: `/opt/meridian` + `/home/ubuntu/.hermes/profiles/bekci`;
+#     `~/.cache` YOK.
+#     `/opt/meridian`: harness'in yazdığı HER ŞEY bu ağacın altındadır — kendi damgası
+#     (`state/bekci_brifingi_damga.json`), `state/events.jsonl` → obs.log, import anında
+#     `__pycache__`, ve botun kum havuzu `/opt/meridian/var/bots/bekci`. Tek satır kapsar; kum
+#     havuzu için AYRI bir yol GEREKMEZ (ölçülerek yazıldı, varsayılmadı).
+#     `/home/ubuntu/.hermes/profiles/bekci`: bu birim bir AJAN çağırıyor (`hermes -z`).
+#     `ProtectHome=read-only` altında ajanın kendi evine yaptığı her yazım EROFS olur — bu
+#     depoda ÖLÇÜLMÜŞ bir vakadır (meridian.service tur-1 kırıklığı: `~/.hermes` kapalıyken
+#     ajan yazımları yutulan istisnaların altında düştü). Yol `-` ÖNEKLİ: profil henüz
+#     kurulmamışken dizin YOKTUR ve öneksiz yol systemd'ye birimi REDDETTİRİR.
+#     ÇIKARIM, ÖLÇÜM DEĞİL: `hermes -z`in BU profille tam olarak ne yazdığı canlıda ölçülmedi —
+#     profilin ilk koşumunda doğrulanmalı (deploy.sh çıktısı bunu operatöre ADIYLA söyler).
+#
+#     PROFİL DİZİNİNE DARALTILDI, `/home/ubuntu/.hermes`in TAMAMINA DEĞİL (Rol-1 hükmü
+#     2026-08-29, `@sef` emsali — ve ikinci botla birlikte hüküm DAHA DA SERT: artık yalnız ana
+#     profilin değil KOMŞU BOTUN duruşu da risk altında). `~/.hermes` bütünüyle açılsaydı bu
+#     birim ANA profilin `config.yaml`ına (her öteki çağrının guard duruşu) ve `.env`ine (model
+#     anahtarları) YAZABİLİRDİ; `~/.hermes/profiles` açılsaydı `@sef`in `config.yaml`ına.
+#     `HERMES_WRITE_SAFE_ROOT` bunu ENGELLEMEZ: o AJANIN ARAÇLARINI bağlar, systemd ise SÜRECİ.
+#     İki ayrı katman, ikisi de kendi başına yeterli değil.
+#     ARIZA ASİMETRİSİ, hükmün gerekçesi: ÇOK DAR olursa hermes EROFS alır, harness ham listeye
+#     düşer, düşüş `obs.log`a ADIYLA yazılır ve liste YİNE TESLİM EDİLİR — görünür ve kayıpsız.
+#     ÇOK GENİŞ olursa hiçbir şey olmaz, ta ki bir gün olana kadar.
+#     `~/.cache` YOK: ExecStart `uv` DEĞİL, doğrudan `.venv/bin/python` (uv önbelleği hiç açılmaz).
+ReadWritePaths=/opt/meridian -/home/ubuntu/.hermes/profiles/bekci
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# Bu birim AĞA ÇIKAR (model çağrısı + Telegram POST) — liste kardeşlerle BİREBİR aynı;
+# AF_NETLINK'in bilerek dışarıda oluşunun gerekçesi meridian.service'te.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+# [Install] BÖLÜMÜ BİLEREK YOK — tetik YALNIZ meridian-bekci.timer'dır.
+# Burada bir `WantedBy=multi-user.target` dururken `systemctl enable meridian-bekci.service`
+# SESSİZCE başarılı olur ve birime kimsenin istemediği bir AÇILIŞ KOŞUMU ekler: timer kadansının
+# dışında, `Persistent=true` telafisiyle karışan ikinci bir tetik. Bölüm yokken aynı komut
+# "no installation config" diye DÜŞER — operatör hatası sessiz davranış değişikliği değil,
+# görünür bir hata olur. deploy.sh zaten yalnız `.timer`ı enable eder (orada da yazılı).
+# FİLO ÖLÇÜMÜ: timer-tetikli oneshot kardeşlerden meridian-backup.service,
+# meridian-tick-watchdog.service ve meridian-brifing.service de `[Install]` TAŞIMIYOR
+# (meridian-aylik-bucket-kopya.service taşıyor — konvansiyon filoda ayrık).
+# Çivi: tests/test_bot_profil_durusu_v329.py::test_PROFIL_BIRIMI_INSTALL_BOLUMU_TASIMAZ

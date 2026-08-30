@@ -44,7 +44,14 @@ SERTLESTIRILEN = ("meridian.service", "meridian-barsarchive.service", "meridian-
                   # 2026-08-29 denetimi: brifing birimi ortak seti BİREBİR taşıyordu ama listede
                   # DEĞİLDİ — yani ne kümesi, ne değerleri, ne "SystemCallFilter en sonda" kuralı
                   # onun için çivili değildi. Sertleştirmeyi yazmak yetmez, çiviye BAĞLAMAK gerekir.
-                  "meridian-brifing.service")
+                  "meridian-brifing.service",
+                  # Faz 3 (2026-08-30): `@bekci`nin birimi. AYNI MARUZİYET SINIFI — aynı `.venv`,
+                  # aynı kod tabanı, aynı kullanıcı, `state/secrets.json` okuması ve AĞA çıkış
+                  # (Telegram POST). Listeye kurulduğu turda giriyor: kardeşi bir tur GECİKTİ ve
+                  # o gecikme "sertleştirmesi hiçbir yerde çivili olmayan tek birim" hâlini
+                  # doğurdu. Ayrıca `test_uc_birimin_ortak_direktifleri_ayrismiyor` ancak listede
+                  # olan birimler arasında ayrışma ölçebilir — dışarıda kalan birim ayrışamaz da.
+                  "meridian-bekci.service")
 
 # Üç birimde de BİREBİR AYNI olması gereken direktifler (ReadWritePaths BİLEREK dışarıda —
 # her birimin yazma envanteri farklıdır ve ayrı testlerde ölçülür).

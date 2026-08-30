@@ -1,0 +1,94 @@
+# @bekci — sessiz arıza sınıfı. SÜREGELEN ve DURAN durumları operatörün önüne getirir.
+#
+# ============================ KURULUM — ÜÇ EYLEM, TEK KOMUT DEĞİL ============================
+# BU REÇETE İKİ YERDE DURACAK ve İKİSİ AYNI OLMAK ZORUNDA: burası ve `deploy/oracle-a1/deploy.sh`
+# ın @bekci bölümü. `@sef` emsalinde ikisi bir kez AYRIŞTI ve bayatlayan taraf tam da operatörün
+# okuduğu taraf oldu: manifest TIMER'DAN HİÇ SÖZ ETMİYORDU, yani manifesti izleyen operatör
+# kurar, anahtarı doldurur ve KADANSI HİÇ AÇMAZ. Sonuç sessizliktir ve "boşken sessiz"
+# davranışından AYIRT EDİLEMEZ.
+#
+#   1) profili kur:
+#        hermes profile install /opt/meridian/deploy/hermes/profiles/bekci
+#
+#   2) profilin KENDİ `.env`ini doldur — `env_requires` `.env` YAZMAZ, yalnız kurulu profile
+#      bir `.env.EXAMPLE` bırakır (`.env` kullanıcı-sahiplidir). Anahtarsız profil her koşumda
+#      SESSİZCE ham brifinge düşer, yani "çalışıyor" görünür:
+#        cp  ~/.hermes/profiles/bekci/.env.EXAMPLE  ~/.hermes/profiles/bekci/.env
+#        ${EDITOR:-nano} ~/.hermes/profiles/bekci/.env     # OPENROUTER_API_KEY=...
+#      (Bu adımı yapan bir profil ALT KOMUTU YOKTUR — `hermes profile` altında `env` diye bir
+#       şey yok. Adım elle yapılır, yukarıdaki iki satırla.)
+#
+#   3) günlük kadansı aç — teslimat bu satır olmadan HİÇ BAŞLAMAZ:
+#        sudo systemctl enable --now meridian-bekci.timer
+#
+# BİRİM NEDEN `meridian-brifing.timer` DEĞİL (plan Görev 3'ün hükmü): `@bekci` `@sef` ile AYNI
+# kadansa BİNMEZ. İkisi AYRI artefaktın sahibi ve AYRI mesaj kuruyor; biri düşerse öteki
+# koşmalı. Faz 1'in "tek sarmalayıcı" dersi burada TERSİNE geçerlidir — o iki teslimat AYNI
+# mesajı kuruyordu. Birimin kendisini Görev 3 yaratır; bu manifest onun ADINI bugünden sabitler
+# ki iki belge tek reçete anlatsın.
+#
+# NOT, ADIM DEĞİL: botun yazma kum havuzunu (`/opt/meridian/var/bots/bekci`) `deploy.sh` YARATIR
+# ve iznini/sahipliğini ÖLÇEREK sabitler — operatörün eli değmez. `/var` sınıfı `dagit.sh`ın
+# rsync dışlamasında ve `.gitignore`da zaten var, yani dizini rsync TAŞIMAZ ve SİLMEZ.
+# A1 DIŞINDA bir yere kurulum yapılıyorsa dizini elle yaratmak gerekir, yoksa safe-root var
+# olmayan bir yolu gösterir.
+#
+# GÜNCELLEME TUZAĞI: `hermes profile update bekci` `config.yaml`ı VARSAYILAN OLARAK KORUR —
+# `--force-config` gerekir. Yani BU DOSYAYLA birlikte dağıtılan güvenlik duruşunda (guard
+# kancası · kapalı araç takımları) yapılan bir değişiklik düz `update` ile canlı profile GİTMEZ.
+# Duruş değiştiyse:
+#        hermes profile update bekci --force-config
+#
+# Kurulum bu depoda YAPILMAZ ve dağıtım betiği de YAPMAZ: profil yaratmak canlıda yeni bir
+# ajan kimliği doğurur ve bu operatör kararıdır (CLAUDE.md madde 5).
+name: bekci
+version: 0.1.0
+description: >-
+  Meridian bekçisi. `ops/bekci_tarama.py`nin ham defterden ÖLÇTÜĞÜ süregelen (takılı) ve duran
+  durumları okur; operatöre TEK, öncelik sıralı mesaj yazar. Listeyi model ÜRETMEZ, yalnız
+  SIRALAR. Bildirilecek yeni bir şey yoksa SUSAR.
+hermes_requires: ">=0.19.0"
+author: "Meridian / Rol-1"
+license: "özel — bu depoya ait"
+
+env_requires:
+  - name: HERMES_WRITE_SAFE_ROOT
+    description: >-
+      Bu botun yazabileceği TEK dizin. ÖLÇÜLDÜ (`agent/file_safety.py`, `if safe_roots:` —
+      ölçüm kaydı `@sef`in manifestinde, aynı ikili ve aynı sürüm): değişken TANIMSIZSA
+      hiçbir yazma kısıtı uygulanmaz, yalnız kimlik yolları bloklu kalır — beyan etmemek,
+      SINIRSIZ yetki vermektir. Zamanlanmış koşumda değeri systemd birimi verir; bu satır
+      ETKİLEŞİMLİ koşum içindir.
+      DİZİN PROFİL EVİNİN DIŞINDA, bilerek: `~/.hermes/profiles/bekci` olsaydı bot kendi
+      config.yaml'ını ve guard ayarını üstüne yazabilirdi (kendini silahsızlandırma).
+      VE `@sef`İN DİZİNİNDEN AYRI, bilerek: iki bot aynı kum havuzunu paylaşsaydı biri
+      ötekinin artefaktının üstüne yazabilirdi — §9.3'ün "her bot kendi artefaktının TEK
+      yazarı" sözleşmesi tam olarak bunu yasaklar.
+    required: true
+    default: "/opt/meridian/var/bots/bekci"
+
+  - name: OPENROUTER_API_KEY
+    description: >-
+      Profilin model anahtarı. Profil = bağımsız HERMES_HOME dizini, yani KENDİ `.env`ini
+      okur ve ne ana profilin ne `@sef`in anahtarı ona GEÇER. Anahtar yoksa arıza GÜRÜLTÜLÜ
+      DEĞİLDİR: LLM her koşumda düşer, ham liste yolu devreye girer ve teslimat çalışıyor
+      GÖRÜNÜR — bot hiç düşünmeden. Sessiz bozulma tam olarak budur, ve bu botun var oluş
+      sebebi o sınıfı görünür kılmaktır.
+      `env_requires` `.env` YAZMAZ; kurulu profile `.env.EXAMPLE` bırakır (`.env`
+      kullanıcı-sahipli).
+    required: true
+
+# --- KARAR KAYDI: SOUL.md SATICI KİMLİĞİNİ DEĞİŞTİRİR, ONA EKLEMEZ -------------------
+# `agent/system_prompt.py`: SOUL yüklenirse `stable_parts`a O konur ve `DEFAULT_AGENT_IDENTITY`
+# yalnız SOUL YOKSA eklenir. Yani ana `deploy/hermes/SOUL.md`in "You are Hermes Agent…"
+# bloğunu taşımak bir üslup tercihi değil, o kimliği GERİ KOYMA hamlesidir.
+# `@bekci` onu BİLEREK geri koymuyor: bu profil araçsız, tek işli bir SIRALAYICI — genel amaçlı
+# bir asistan kimliği ona bağlam değil gürültü ekler, ve "araçların var" izlenimi bu botta
+# doğrudan sözleşmeye aykırıdır (listeyi kendi ölçmeye kalkabilir).
+# KAYIT NEDEN BURADA, SOUL'un içinde DEĞİL: SOUL.md prompt'un KENDİSİDİR ve dosya olduğu gibi
+# sistem istemine girer — markdown yorumu da dahil. Karar kaydını oraya yazmak, mühendislik
+# notunu modele okutmak olurdu.
+
+distribution_owned:
+  - SOUL.md
+  - config.yaml

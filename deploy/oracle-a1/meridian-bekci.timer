@@ -1,0 +1,60 @@
+# meridian-bekci.timer — meridian-bekci.service'i günde bir tetikler.
+#
+# SAAT SEÇİMİ: 10:00 UTC. Yuvarlak olduğu için değil; üç kısıt aynı noktayı gösterdiği için.
+#
+# (1) ÇAKIŞMA — kolay olan kısım. Filodaki takvimli tetikler: meridian-brifing 22:00 UTC (`@sef`),
+#     meridian-backup 23:30 UTC, meridian-aylik-bucket-kopya ayın 3'ü 04:00 UTC. 10:00 hiçbirine
+#     denk gelmiyor. meridian-tick-watchdog BU LİSTEDE YOK ve bu ÖLÇÜLDÜ, varsayılmadı: onun
+#     tetiği `OnUnitActiveSec=15min`dir, `OnCalendar` DEĞİL — yani duvar saatinin çeyreklerine
+#     bağlı değil, kendi son koşumundan kayarak ilerler. Kaçınılacak bir ızgara yok, o yüzden
+#     dakikayı 00'dan kaydırmak için bir SEBEP DE YOK (sebepsiz kaydırma, gerekçesiz karardır).
+#
+# (2) DİKKAT BÜTÇESİ — ASIL KARAR. `@sef` ve `@bekci` AYNI operatöre AYNI kanaldan yazıyor.
+#     Dakikalar arayla düşen iki mesaj tek bir yığın gibi okunur ve ikincisi birincisinin
+#     gürültüsü olur — bu roster tam olarak o bütçeyi korumak için var. 10:00, 22:00'nin 24
+#     saatlik daire üzerindeki TAM KARŞITIDIR (12 sa); iki mesajı birbirinden ayırmanın
+#     mümkün olan EN UZAK noktası. `@sef` gibi burada da `RandomizedDelaySec=300` var, yani
+#     ayrım 12 sa ± 5 dk — pay yenmiyor.
+#     BUNU YAPABİLİYORUZ ÇÜNKÜ İÇERİK SEANSA BAĞLI DEĞİL: `@sef` kapanış + EOD turunu beklemek
+#     ZORUNDA (kapanış EST'de 21:00 UTC), ama `@bekci`nin pencereleri GÜN cinsindendir
+#     (`bekci_brifingi.py`: takılı için gun=3, duran için duran_gun=60). Bir günün hangi saatinde
+#     taranırsa taransın aynı üç günü ve aynı 60 günü görür; "bir saat geç" diye kaçırdığı bir
+#     olgu YOKTUR. Serbestlik buradan geliyor, tercihten değil.
+#
+# (3) MAKİNE YÜKÜ — 4 çekirdekli kutu. ÖLÇÜLDÜ (`meridian/sprint.py`, `SPRINT_HOURS = (22, 6)`):
+#     otomatik öğrenme sprinti YALNIZ [22:00, 06:00) penceresinde başlar ve `search_and_submit`i
+#     çekirdek başına sonda bütçesiyle koşturur. 10:00 o pencerenin DIŞINDA, ve ABD ön-seansından
+#     da önce (açılış 13:30/14:30 UTC) — yani sistemin kendi gününün en sessiz yeri.
+#     ÇIKARIM, ÖLÇÜM DEĞİL: `should_run` pencereyi naive `datetime.now()` ile, yani SUNUCU
+#     YERELİYLE karşılaştırıyor; bu satırdaki `UTC` ise mutlak. İkisinin çakışması A1'in UTC
+#     koşmasına bağlıdır ve A1'in TZ'si bu turda ÖLÇÜLMEDİ. Yanlışsa bedel küçük (iki iş aynı
+#     saate düşer, ikisi de yavaşlar), doğrulaması ucuz: `timedatectl` bir kez okunur.
+#
+# ÖLÇÜLEMEYEN, ve bu yüzden HÜKME SOKULMADI: operatörün saat dilimi. 10:00 UTC'nin onun için
+# sabah mı gece mi olduğu BİLİNMİYOR ve TAHMİN EDİLMEDİ — yukarıdaki üç gerekçenin hiçbiri
+# insan saatine dayanmıyor, hepsi sistemin kendi ölçülebilir kısıtlarından türüyor. Operatör
+# saat dilimini söylerse slot taşınabilir; taşınırken korunması gereken iki değişmez şudur:
+# (a) `@sef`ten en az birkaç saat uzak (dikkat bütçesi), (b) sprintin gece penceresinin dışında.
+# Çiviler tam bu ikisini ölçüyor (test_bot_profil_durusu_v329.py), saati DEĞİL — bir sayı
+# çivilenirse gerekçe değil sayı korunur.
+#
+# VM'in TZ'sini DEĞİŞTİRMEYE gerek yok: OnCalendar burada açıkça UTC diyor, sunucu TZ'si ne
+# olursa olsun aynı anda koşar. (Aynı gerekçe biçimi: meridian-brifing.timer ve
+# meridian-backup.timer.)
+[Unit]
+Description=Meridian bekçi tetiği (günlük, @sef kadansının tam karşıtı)
+
+[Timer]
+OnCalendar=*-*-* 10:00:00 UTC
+# Makine kapalıysa açılışta telafi edilir — kaçan tetik sessizce kaybolmaz. TAKILI DURUM İÇİN
+# BU DAHA DA ÖNEMLİ: kaçan bir gün, "bu N turdur aynı" sayacının en çok arttığı gün olabilir.
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — BU DOSYADA YAPILACAK BİR ŞEY YOK: timer birimlerinin `[Service]` bölümü olmaz,
+# sertleştirme süreç yürütmeye aittir ve tetiklenen birimde (meridian-bekci.service) yapıldı.
+# Aynı gerekçe meridian-brifing.timer, meridian-backup.timer ve meridian-aylik-bucket-kopya.timer'da
+# da yazılıdır.
