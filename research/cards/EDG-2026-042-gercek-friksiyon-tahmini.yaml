@@ -266,6 +266,13 @@ haftalik_kosum_2026_08_29: >
   bakacağı yönü işaret eder.
   EŞİĞE KALAN MESAFE (kaba izdüşüm — ÖLÇÜM DEĞİL, birikim hızı varsayımı):
     K1: n için 13 dolum eksik; bu hafta +4 geldi → ~3-4 hafta (kabaca 2026-09-19..09-26).
+        [DÜZELTME 2026-08-30, ölçümle: BU İZDÜŞÜM BAYAT. +4'ün 2'si (DE/PANW) kaydırma
+        ÖNCESİ gönderimdi ve o yol artık yok; ileriye dönük hız yalnız 1345 yolunun hızıdır:
+        0,40 dolum/seans (öncesi 1,15). Pooled eşik ~6,5 hafta (bant 2,3-6,5), ayrık ~14 hafta
+        (bant 4,9-14). Karışık-örneklem kararı operatörde: docs/HAZIRLIK-P3-K1-KARISIK-
+        ORNEKLEM-2026-08-30.md. Plan üretim sıklığı DEĞİŞMEDİ (0,38→0,40 plan-günü/seans);
+        düşen, plan-günü başına dolum (3,0→1,0) — mekanizması bu defterle ÖLÇÜLEMEZ
+        (E2'de red/veto satırı yok), ayrı kalem adayı.]
         Seans için 3 eksik; bu hafta +3 geldi → seans muhtemelen n'den ÖNCE dolar; bağlayıcı
         kısıt n'dir.
     K2: 9 dolum + 4 seans eksik (bağlayıcı: seans) → ~2-3 hafta.

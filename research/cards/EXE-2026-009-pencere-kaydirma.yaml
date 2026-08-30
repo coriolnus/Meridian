@@ -89,3 +89,18 @@ acik_kalemler_2026_08_29: >
   +4,65 bps öngörmüştü. Gerçek 1345 satırlarının ikisi +175,107 ve +245,034 bps. n=2 ile hiçbir
   şey iddia edilemez; kayda geçirilir ki eşik dolduğunda "öngörü tutmuş muydu" sorusu
   sonradan-akıl olmasın.
+
+p1_kapanis_2026_08_30: >
+  P-1 KAPANDI (Rol-1, operatör hükmü 2026-08-29 "damgayı gönderim anına bağla, iki satırı da
+  düzelt" — iki yarısı da uygulandı). KOD: damga artık gönderim satırında basılır
+  (`mirror_submit_armed`), dolum yaması damgaya DOKUNMAZ (`_patch_entry_slippage`) — commit
+  90f6cdc, dağıtım dcef1c6 (2026-08-30T18:29Z, dağıtım-beyanı state/dagitim.json). CANLI DEFTER:
+  DE/PANW satırları 1345→1330 düzeltildi — bakım penceresinde, worker durmuşken; kuru koşu
+  duzeltilen=2, yazım mod=YAZDI, idempotens doğrulaması duzeltilen=0/zaten_duzeltilmis=2
+  (betik ops/pencere_damgasi_duzeltme_2026_08_29.py, --yaz bayrağıyla).
+  KILL#3 İSTİSNASI ADIYLA: kill#3 "damgasız/uydurma damgalı satır banda giremez" der; bu düzeltme
+  bir UYDURMA değil, iki ÖLÇÜLMÜŞ olgunun (gönderim ts=2026-08-21T20:32:22Z + canlı barclock
+  mtime=2026-08-23T14:53:43Z) karşılaştırmasından türeyen deterministik geri-atamadır ve OPERATÖR
+  İSTİSNASIYLA yapıldı — istisna yazılmadan yapılsaydı kill kriteri sessizce çiğnenmiş olurdu.
+  SONUÇ: hakem bant sayıları değişir (1345 n=4→2, 1330 n=0→2) — BEKLENEN ve doğru; eşikler
+  değişmedi, ikisi de n<10, öneri tetiği "orneklem_birikimde". P-2 ve EDG-042 P-3 AÇIK.

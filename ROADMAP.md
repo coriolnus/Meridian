@@ -192,7 +192,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 > (dün gece dosya çakışmasından koşulamadı, çakışma YOK) — **dördü de 2026-08-24'te başlatıldı.**
 > **OPERATÖR (11):** `B-AJAN-TAVAN` · `B-AJAN-GIT` · `U6` · `B-FMP-PLAN` · `B-DELIST-KAYNAK` ·
 > `bars_intraday` retention · `insider-A6` · `15c` · `15d` · `M11-Ö10` · `M2`
-> **TAKVİM (5):** `Ö-54/EDG-042` (29 Ağustos KOŞTU — eşik dolmadı; sıradaki 5 Eylül) · `Ö-55` · `Faz-5` örneklemi (11/20) ·
+> **TAKVİM (5):** `Ö-54/EDG-042` (29 Ağustos KOŞTU — eşik dolmadı; sıradaki 5 Eylül; K1 eşik izdüşümü DÜZELTİLDİ 2026-08-30: ~3-4 hafta BAYATTI — ileriye dönük hız yalnız 1345 yolu, pooled ~6,5 hf / ayrık ~14 hf, karışık-örneklem kararı operatörde: docs/HAZIRLIK-P3-…) · `Ö-55` · `Faz-5` örneklemi (11/20) ·
 > `EXE-2026-003` (~8 hafta) · `eq_ayna` kanıtı (bugünkü seans turundan sonra)
 > **BLOKE (5):** `EDG-040-a` · `EDG-2026-055` (PIT derinliği) · `propose_virgin_knob` ·
 > `L2` · `M2`
