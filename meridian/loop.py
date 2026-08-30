@@ -888,6 +888,16 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
                                else _reject_class(res.get("detail"), veto=res.get("veto"),
                                                   reachable=res.get("reachable"))),
                 "kaynak": source,
+                # `pencere` (EXE-009 P-1, operatör hükmü 2026-08-29): damga GÖNDERİM anında
+                # basılır. Eskiden dolum yamasında basılıyordu ve araya bir DAĞITIM girerse
+                # yazım-anı rejimi gönderim rejiminden ayrılıyordu — ölçülmüş vaka: DE/PANW
+                # `ts=2026-08-21T20:32Z` ile 13:30 rejiminde gönderildi, canlı barclock
+                # 08-23T14:53Z'de 1345'e döndü, satırlar 08-24'te yazılıp "1345" damgası
+                # ORADA aldı ve hakemin 1345 bandını %50 kontamine etti (teşhis:
+                # research/olcumler/edg042_teshis_pencere_damgasi_2026-08-29/TESPIT.md).
+                # Gönderim anı doğru çapadır: pencere yasası GÖNDERİMİ geciktirir, yani icra
+                # rejimini belirleyen an gönderim anıdır. Kaynak yine barclock TEK sabiti.
+                "pencere": barclock.pencere_rejimi(),
                 "qty": res.get("qty"), "fill": None,
                 "fill_vs_resmi_acilis_bps": None, "fill_vs_limit_bps": None})
             if res.get("veto"):
@@ -2753,12 +2763,15 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
                 op = r.get("resmi_acilis")
             if op is None:
                 out["acilis_yok"] += 1
-            # `pencere` (EXE-009+K2): İLK dolum yazımında YÜRÜRLÜK rejimi damgalanır (barclock
-            # tek kaynağı). Kısmi tazelemede MEVCUT damga korunur — rejim aradaki dağıtımla
-            # değişmiş olsa bile yeniden yazmak GERİYE DÖNÜK ETİKETLEME olurdu (kart kill#3).
-            # Dolumu bu turdan ESKİ satırlar (fill dolu + terminal) yukarıda zaten atlandı.
-            if "pencere" not in r:
-                r["pencere"] = barclock.pencere_rejimi()
+            # `pencere` DAMGASI BURADA BASILMAZ (EXE-009 P-1, operatör hükmü 2026-08-29).
+            # Eski kod damgasız satıra `barclock.pencere_rejimi()`yi basıyordu; kod yalnız
+            # YENİDEN yazmaya karşı korunmuştu, BAYAT satıra bugünün rejimini basmaya karşı
+            # değil. Gönderim ile bu yazım arasına bir dağıtım girdiğinde damga yalan söylüyordu
+            # (DE/PANW vakası). Damga artık gönderim satırında basılır (mirror_submit_armed) ve
+            # buradan DOKUNULMAZ — ne yeniden yazılır ne eksiği tamamlanır.
+            # DAMGASIZ SATIR DAMGASIZ KALIR: bu düzeltmeden önce gönderilmiş satırın gönderim
+            # rejimi defterden okunamaz ve UYDURULMAZ (E2'nin ikame yasağıyla aynı sınıf) —
+            # rejimi bilmeden banda atamak kontaminasyonun ta kendisiydi.
             r["fill"] = round(af, 4)
             r["fill_qty"] = o.get("filled_qty")
             r["fill_status"] = str(o.get("status", "")).lower()

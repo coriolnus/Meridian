@@ -5,8 +5,11 @@ YEDI-KARAR.md K2. Çivilenen sözleşme:
   (1) TETİK SABİTİ tek kaynak: `barclock.ENTRY_WINDOW_ET_MIN = 9*60+45` (EDT'de 13:45 UTC) ve
       damga rejimi (`pencere_rejimi`) AYNI sabitten türetilir — ikiz-değer yok (EQUIVALENT_TRUTHS
       sınıfı tuzağı). Bilinmeyen sabit değeri rejim adı UYDURMAZ (KeyError).
-  (2) DAMGA dolum yolunda: ayna dolum yaması (`_patch_entry_slippage`) satıra `pencere` yazar;
-      iç motor dolum satırı kaynakta aynı damgayı taşır (kaynak-çivisi).
+  (2) DAMGA — SÖZLEŞME 2026-08-29'da TERS ÇEVRİLDİ (EXE-009 P-1, operatör hükmü): damga artık
+      GÖNDERİM satırında basılır, dolum yaması ona DOKUNMAZ. Gerekçe ve asıl çiviler
+      `tests/test_pencere_damgasi_gonderim_ani_v335.py`de; buradaki test o hükme çevrildi
+      (tarihçe korunur, satır silinmez). İç motor dolum satırı kaynakta damgayı taşımaya
+      DEVAM eder (kaynak-çivisi) — orada gönderim/yazım ayrışması yoktur, aynı turda olur.
   (3) GERİYE DÖNÜK ETİKETLEME YOK (kart kill#3): dolumu ESKİ olan satır damgalanmaz; kısmi
       satırın mevcut damgası tazelemede DEĞİŞMEZ.
   (4) GÖNDERİM PENCERESİ: `mirror_submit_armed` pencere dışında gönderMEZ (erteler — emir
@@ -80,13 +83,17 @@ def _ayna_satir(**ek):
             "fill": None, "fill_vs_resmi_acilis_bps": None, "fill_vs_limit_bps": None, **ek}
 
 
-def test_ayna_dolum_yamasi_pencere_damgasi_basar(sandbox_state):
+def test_ayna_dolum_yamasi_pencere_damgasina_DOKUNMAZ(sandbox_state):
+    """2026-08-29 ÖNCESİ bu test tersini çiviliyordu (`assert r["pencere"] == "1345"`, yani yama
+    damgayı BASAR). Operatör hükmü sözleşmeyi çevirdi: yazım-anı rejimi gönderim rejimi değildir
+    ve araya dağıtım girdiğinde yalan söyler (DE/PANW vakası). Yama artık yalnız dolum alanlarını
+    yazar."""
     store.write_jsonl(loop.ENTRY_LEDGER, [_ayna_satir()])
     by_coid = {"P1": {"status": "filled", "filled_avg_price": "101.5", "filled_qty": "10"}}
     loop._patch_entry_slippage(by_coid, {"AAPL": 100.0}, "2026-07-23")
     r = store.read_jsonl(loop.ENTRY_LEDGER)[0]
-    assert r["fill"] == 101.5
-    assert r["pencere"] == "1345"                          # dolum anındaki YÜRÜRLÜK rejimi
+    assert r["fill"] == 101.5                              # dolum alanları yazıldı
+    assert r.get("pencere") is None                        # damga UYDURULMADI (gönderimde basılır)
 
 
 def test_geriye_donuk_etiketleme_yok(sandbox_state):
