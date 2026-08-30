@@ -96,16 +96,36 @@ Rol-1 sanıp otoriter suite/push başlatır.
 | `state/`'e yazmak | worker durmuşken | ✘ | ✘ |
 | pytest dışı, `obs`'a ulaşan koşum | bilinçli kuru koşum | ✘ | ✘ |
 
+**Ek iş nereye:** varsayılan ALT AJAN (bu turun işi — Rol-1'in ağacı, commit'i, suite'i).
+Worktree yalnız üç tetikle: iş bu turun kapsamı DIŞINDA · Rol-1'in ağacı donukken paralel
+ilerlemeli · dağıtım kararı operatörün (chip). Worktree oturumu şeridinde kalır: ana checkout'ta
+git yok (vaka 2026-08-30: şeritten çıkan oturum bayat merge + Rol-1 çekişmesi üretti).
+
 Yan/ajan tur sonu: kanıt (test çıktısı, diff özeti) + devir brief'i. Git yok, dağıtım önerisi yok.
 
 ---
 
 ## 4. Yasalar — hiçbir brief, akış veya araç gevşetemez
 
+Numara tarihî KİMLİKTİR: kodda "Yasa 4" 275, "Yasa 6" 405 atıf taşır — yeniden adlandırılmaz.
+Yasa 1-3 ve 5 HİÇ VAR OLMADI (ölçüldü 2026-08-30); yeni yasa numara ALMAZ (vNNN kimlik sınıfı).
+Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla aynı güçte değildir.
+
+**Mekanik — `codelaw` ölçer, suite kırmızı yapar:**
+- **Yasa 4 — sessiz yutma yok:** sinyalsiz `except` ihlaldir; kaçış AÇIK işaretle:
+  `# sessiz-yutma: <≥20 karakter gerekçe>`.
+- **Yasa 6 — okuyucusuz yazım yok:** okunmayan artefakt üretilmemişten farksızdır; meşru
+  istisna BEYANLA olur (`DECLARED_SINKS`, gerekçeli).
+
+**Sözleşme — çiviler parça parça zorlar, kalanı denetim yakalar:**
 - **Uydurma yasağı:** ölçülemeyen değer `None` + neden. Sıfır ile "bilmiyorum" aynı şey değildir.
-- **Yasa 4:** sessiz yutma yok — işaretli + ≥20 karakter gerekçe.
-- **Yasa 6:** okuyucusuz yazım yok.
-- **PIT'siz fundamentals proxy yasak.**
+- **Tek-kaynak yasası** (terfi 2026-08-30): aynı gerçeğin iki kopyası sessizce ayrışır —
+  sayı/liste/kural TEK kaynaktan türetilir; kopya kaçınılmazsa türetme + ayrışma çivisi
+  (vaka ×3: günlük↔CLAUDE.md zıt suite emri · F9 başlık/liste · damga mantığı).
+- **Bedel yasası** (terfi 2026-08-30): çıktıyı/gürültüyü azaltan değişiklik ne KAYBETTİĞİNİ
+  de ölçer — kazanç ölçülüp bedel ölçülmezse körlüğün belirtisi hiçbir şeydir (vaka @bekci).
+- **PIT'siz fundamentals proxy yasak** — mekanik zorlaması YOK (ölçüldü 2026-08-30; çivi işi
+  açık, operatör onaylı).
 
 ---
 
@@ -201,10 +221,14 @@ Yan/ajan tur sonu: kanıt (test çıktısı, diff özeti) + devir brief'i. Git y
 
 ## 10. Superpowers (zorunlu)
 
-Rol ayrımının üstüne eklenir: karar/tasarım → brainstorming, writing-plans · implementasyon →
-executing-plans, TDD · arıza → systematic-debugging (Faz 1 teşhis bitmeden çözüm yok) · inceleme →
-code-review · bitirmeden → verification-before-completion · paralel iş → git-worktrees
-(worktree = yan oturum). Bir akış §4–§9 ile çelişirse Meridian kuralı kazanır.
+Rol ayrımının üstüne eklenir: karar/tasarım → brainstorming, writing-plans · plan icrası (bu
+oturumda: görev başına taze ajan + görev incelemesi + dal-sonu denetimi) →
+subagent-driven-development · plan icrası (ayrı oturum/worktree) → executing-plans ·
+implementasyon → test-driven-development · arıza → systematic-debugging (Faz 1 teşhis bitmeden
+çözüm yok) · inceleme → requesting/receiving-code-review · bitirmeden →
+verification-before-completion · dal kapanışı → finishing-a-development-branch · paralel
+bağımsız işler → dispatching-parallel-agents, using-git-worktrees (worktree = yan oturum).
+Bir akış §4–§9 ile çelişirse Meridian kuralı kazanır.
 
 ---
 

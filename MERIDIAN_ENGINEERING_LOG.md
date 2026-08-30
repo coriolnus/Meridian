@@ -60,7 +60,16 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
   uçuşta), shadow_model (n=2201 birikmiş, fit kadansı uçuşta).
 - **Durum dosyaları:** state/ yalnız A1'de canlı; Mac'teki kopya taşıma anı fotoğrafı.
 
-## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
+## BU OTURUMDA BULUNAN + ÇÖZÜLEN
+
+**SUITE HÜKMÜ AŞILDI — KAYITLI RULING (2026-08-30, Rol-1).** 90f6cdc turunun otoriter suite'i
+1 failed / 7714 passed döndü; kırmızı `test_golge_planli_kol_v217::test_p95_dongu_suresi_kart_
+tavanini_ASMIYOR`. Hüküm: bilinen alet-gürültüsü sınıfı, İTİLDİ. Kanıt: (i) bu çivinin negatif-
+kontrol sapması daha önce %37,1 ölçüldü — aradığı %10 etkinin üç katı, ayrı görev açık;
+(ii) aynı donmuş ağaçta 5/5 izole koşum yeşil (1,33-4,02 sn); (iii) koşum sırasında paralel
+worktree oturumu (PIT çivisi) CPU yakıyordu ve çivi duvar saati ölçer. Yanlışsa bedeli: p95
+gerilemesi bir sonraki suite'te yine görünür — kalıcı körlük yolu yok.
+ (kök nedenleriyle)
 
 - **TUR KAPANIŞI 2026-08-29/30 — UYDURMA MALİYET TURU: DÖRT PR, HEPSİ `main`'DE (sınıf: "bir
   ölçüm kusuru çekilince ardından üç mekanizma daha geldi"):** başlangıç tek bir bulguydu —
