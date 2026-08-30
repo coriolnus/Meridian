@@ -1,4 +1,9 @@
-"""v338 · YOL HARİTASI YÜZEYİ TABLO SATIRLARINI OKUR — üretilen alanın okuyucusu olmalı.
+"""v341 · YOL HARİTASI YÜZEYİ TABLO SATIRLARINI OKUR — üretilen alanın okuyucusu olmalı.
+
+KİMLİK KAYDI (numara KİMLİKTİR — CLAUDE.md): bu dosya **v338 olarak doğdu** ve `main`de aynı numarayı
+taşıyan `tests/test_karne_brifingi_v338.py` ile çakıştı (birleşme 2026-08-31). Kural gereği AZ ÇAPALI
+taraf taşınır: bu dosyanın tek atfı kendi başlığıydı, karşı tarafınki @karne teslimatına bağlıydı →
+bu dosya v341'e taşındı. v338 kimliği karne çivisinindir ve yeniden kullanılmaz.
 
 ÖLÇÜLEN ARIZA (2026-08-31): `/api/roadmap` ucu belgeyi İKİ BİRİMde ayrıştırıyor — düzyazı
 `maddeler` ve markdown `tablolar[].satirlar[]` — ve ikisini de gövdede gönderiyor. Pano yüzeyi
