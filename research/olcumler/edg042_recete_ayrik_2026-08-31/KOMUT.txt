@@ -1,0 +1,77 @@
+EDG-2026-042 — REÇETE R3 (2026-08-31): P-3/AYRIK — K1 `ts` ANAHTARIYLA İKİ KOLA BÖLÜNDÜ
+Kalem: Ö-54 / P-3. Hazırlayan: ai-trading-85 (yan oturum). Commit/dağıtım: Rol-1 (ai-trading-dc).
+Bu bir ÖLÇÜM KOŞUMU DEĞİLDİR — hüküm üretilmedi, karta yazılmadı, canlıya tek bayt yazılmadı.
+
+[0] YETKİ VE SIRA
+    Operatör kararı 2026-08-31 (ai-trading-85 oturumu, birebir): "AYRIK, ts anahtarıyla — ara
+    işaret koyma" ve "3'te damga biçimine dokunma, ayrı alan koy".
+    Kart bloğu (p3_karar_ayrik_ts_2026_08_31) ÖNCE, reçete SONRA — kart kazanır.
+    R1 = 2026-08-22 işaret düzeltmesi · R2 = 2026-08-24 short sözleşmesi · R3 = BU.
+
+[1] DEĞİŞEN — YALNIZ İKİ DOSYA, ÜÇ NOKTA
+    canli_cek.py : E2_ALAN'a `ts` eklendi (taşınır, TÜRETİLMEZ). Tek satırlık fark + gerekçe yorumu.
+    olcum.py     : (i) PENCERE_SINIRI sabiti + tek-sınır beyanı, (ii) gonderim_kolu() çözücüsü,
+                   (iii) K1 bloğu iki kola bölündü + giris_ortak.
+    DEĞİŞMEYEN: eşik DEĞERLERİ (30/10 · 15/6), karar kuralı, kill kriterleri, bootstrap künyesi
+    (B=5000, seed=20260812, kümeleme=SEANS), K2/K3 formülleri ve R2'nin yön koşullaması.
+
+[2] KÜNYE (yeni donuk reçete)
+    canli_cek.py  sha256 = a846449eaa7fdfa8a4e47db648e5c27703be8f59747e0a1a649a74fd77e6cfa2
+                  (önceki: 4c6b85a53f5efeb47234612e90f6e70ebee1ead62cad0ed6ccb8a66f9929e96d)
+    olcum.py      sha256 = 1787a9ffe6b477484fba096ebcaf553899cf560f3b700057d985318204a1f317
+                  (önceki R2: 1dcb7708e592f2daf47182e381c657d4564b0e5050dc01bc434e1aa48ef915c8)
+    Önceki reçete dizinleri TEK BAYT değişmedi — hangi koşumun hangi reçeteyi kullandığı
+    dizinden geri izlenir (edg042_kosum_2026-08-22/ · edg042_recete_short_2026-08-24/).
+
+[3] BÖLME ANAHTARI VE SINIR
+    Anahtar `ts` (GÖNDERİM anı), `pencere` damgası DEĞİL. Sınır = 2026-08-23T14:53:43+00:00,
+    canlı barclock.py mtime (A1'de ölçüldü; depoda d8030c0). `ts` < sınır → giris_once;
+    `ts` >= sınır → giris_1345.
+    NEDEN DAMGA DEĞİL: damgaya göre bölmek kaydırma öncesi 13 DAMGASIZ satırı her iki koldan
+    düşürürdü (EXE-009 kill#3) ve n=17'lik örneklem 4'e inerdi.
+    TEK SINIR BEYANI: reçete YALNIZ bir rejim sınırı tanır; ikinci bir pencere değişikliği
+    olursa KARTSIZ genişletilemez (R2'nin short beyanıyla aynı kalıp).
+    `ts` OKUNAMAZSA: kol belirlenmez, satır `olculemedi`ye nedeniyle düşer, bps HESAPLANMAZ.
+    "Varsayılan kol" kabulü YASAK — EXE-009 P-1'i doğuran sınıfın ta kendisi.
+
+[4] `giris_once` DONUKLUĞU — DAMGA BİÇİMİNE DOKUNULMADI
+    Damga metni EDG-037 mirasıdır ve harfiyen korundu ("ÖLÇÜLEMEDİ (n=15 < 30) — sayılar
+    betimleyicidir, istatistiksel hüküm taşımaz."). Donukluk AYRI iki alanla beyan edilir:
+    `kalici_taban: true` + `kalici_taban_beyan`. giris_1345'te kalici_taban=false.
+    (Operatör hükmü 2026-08-31: "damga biçimine dokunma, ayrı alan koy".)
+
+[5] `giris` ANAHTARI KALDIRILDI
+    Havuzlanmış K1 çıktısı ÜRETİLMİYOR. Gerekçe: operatörün REDDETTİĞİ karışık sayıyı üretmeye
+    devam etmek, birinin onu okumasına davetiyedir. Tarama yapıldı: depoda EDG-042'nin
+    sonuc.json'unu okuyan KOD YOK (prescreen.py'deki dizge `prescreen_sonuc.json`, ayrı dosya;
+    test_yazitipi_v201 tipografi ölçüm dizinine bakar). Eski `giris` anahtarlı çıktılar önceki
+    donuk dizinlerde TARİHÇE olarak yaşamaya devam eder (docs/KESIF-...-2026-08-22.md atfı
+    geçerli kalır).
+
+[6] K DİSİPLİNİ — BÖLÜNME K'YI ÇARPMAZ
+    parameter_grid "K TOPLAM = 3" korunur: giris_1345 `pending-042-giris` kaydının HALEFİ,
+    giris_once bir deneme DEĞİL kalıcı betimleyici tabandır ve hüküm üretemediği için grid'de
+    SAYILMAZ. Bu cümle olmasa bir sonraki denetim bölünmeyi "K 3→4" okur ve kartı kill'e sokardı.
+
+[7] KANITLAR (bu dizinde)
+    ozdeslik.json — REGRESYON: aynı snapshot'ta (sha 41a75a45…) eski ve yeni reçete K2/K3 ve
+      cikis_ortak için BAYT-ÖZDEŞ. hukum=GEÇTİ. Satır korunumu 15+2+0 = 17 = eski n.
+      Havuzlanmış anahtar kalktı, damga biçimi korundu.
+    sinama.json — SENTETİK (SAYILAR ÖLÇÜM DEĞİLDİR): 10/10 GEÇTİ. Sınırın 1 sn öncesi/tam
+      üstü/1 sn sonrası, iki GERÇEK gönderim damgası (DE, CRM), farklı saat dilimi, ve dört
+      "kol belirlenemez" dalı (ts yok/boş/biçimsiz/saat dilimsiz).
+    sonuc_ts_yok.json — `ts` TAŞIMAYAN eski snapshot'la koşum: iki kol da n=0, 17 satırın 17'si
+      olculemedi. Uydurma yasağının gerçek veriyle kanıtı: alan yoksa kol atanmıyor.
+
+[8] BU KOŞUMDA ÖLÇÜLEN (BETİMLEYİCİ — HÜKÜM DEĞİL, iki kol da eşik altında)
+    giris_once n=15 / 5 seans · giris_1345 n=2 / 2 seans · K2 n=6 · K3 n=4 · olculemedi 0.
+    Havuzlanmış medyan 29,786 idi; kollar 16,131 ve 210,07. AYRIŞMA BÜYÜK — ama giris_1345 n=2,
+    bu bir gözlem değil bir işarettir ve karar kuralı UYGULANMAZ.
+    NOT: buradaki snapshot (41a75a45…) SINAMA amaçlıdır. Yürürlükteki haftalık koşum artefaktı
+    2026-09-05'te bu reçeteyle üretilecektir.
+
+[9] KOŞUM (yeniden üretim; canlıya YAZMAZ)
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && ./.venv/bin/python -' \
+        < canli_cek.py > canli_ham.json
+    PYTHONDONTWRITEBYTECODE=1 python3 olcum.py     → sonuc.json
+    PYTHONDONTWRITEBYTECODE=1 python3 sinama.py    → sinama.json

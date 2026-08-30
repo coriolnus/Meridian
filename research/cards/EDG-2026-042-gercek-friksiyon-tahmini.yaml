@@ -189,7 +189,7 @@ r2_short_isaret_sozlesmesi_2026_08_24: >
   işaretle ölçer, kart o gün yeniden açılmak zorunda kalmaz.
 
   REÇETE KARŞILIĞI: `research/olcumler/edg042_recete_short_2026-08-24/olcum.py` — 2026-08-22 donuk
-  reçetesinin KOPYASI + YALNIZ yön koşullaması. GÜNCEL DONUK REÇETE İŞARETÇİSİ budur; `status:`
+  reçetesinin KOPYASI + YALNIZ yön koşullaması. GÜNCEL DONUK REÇETE İŞARETÇİSİ budur [DEVREDİLDİ 2026-08-31 → `p3_karar_ayrik_ts_2026_08_31`]; `status:`
   bloğundaki 2026-08-22 işaretçisi tarihçe olarak DOKUNULMADAN durur ve o dizin
   (`edg042_kosum_2026-08-22/`) tek bayt değiştirilmedi — hangi koşumun hangi reçeteyi kullandığı
   dizinden geri izlenir.
@@ -225,7 +225,7 @@ haftalik_kosum_2026_08_29: >
   ana checkout state/'ine tek bayt yazılmadı; donmuş dizinler (edg042_kosum_2026-08-22/,
   edg042_recete_short_2026-08-24/) sha256 ile doğrulandı ve DEĞİŞMEDİ.
   KULLANILAN REÇETE = R2 (edg042_recete_short_2026-08-24/olcum.py, sha 1dcb7708…) — kartın
-  `r2_short_isaret_sozlesmesi_2026_08_24` bloğu bunu "GÜNCEL DONUK REÇETE İŞARETÇİSİ" ilan eder;
+  `r2_short_isaret_sozlesmesi_2026_08_24` bloğu bunu "GÜNCEL DONUK REÇETE İŞARETÇİSİ" ilan eder [DEVREDİLDİ 2026-08-31 → `p3_karar_ayrik_ts_2026_08_31`];
   zamanlanmış görev metni hâlâ 2026-08-22 reçetesini yazıyordu, kart kazandı. Bu koşumda 10
   çıkış satırının 10'u da side="long" olduğundan R2'nin short dalı HİÇ ateşlenmedi (sayılar iki
   reçetede özdeş çıkardı) — seçim yine de karta göre yapıldı, "sonuç aynıydı" gerekçe değildir.
@@ -334,3 +334,94 @@ acik_kalem_p3_k1_karisik_ornekem_2026_08_29: >
   yanında 1330/1345/damgasız kırılımını ve P-1 kontaminasyon sayısını BEYAN eder. Bu bir ölçüt
   değişikliği değildir; zaten `pencere_altbant.json` üretiliyor, yalnız operatör raporuna
   taşınması güvence altına alınır (YASA 6: okuyucusuz yazım yok).
+
+p3_karar_ayrik_ts_2026_08_31: >
+  P-3 HÜKÜM: K1 AYRIK ÖLÇÜLÜR, ANAHTAR `ts`. ARA İŞARET KONMAZ.
+  PROVENANS: operatör kararı 2026-08-31, `ai-trading-85` oturumunda verildi ve oturumlar-arası
+  mesajla `ai-trading-dc`ye (Rol-1) aktarıldı; birebir söz: "AYRIK, ts anahtarıyla — ara işaret
+  koyma". Damga-biçimi kararı da operatörün: "3'te damga biçimine dokunma, ayrı alan koy".
+  Karar dosyası: docs/KARAR-P3-K1-AYRIK-TS-2026-08-31.md (hazırlık: docs/HAZIRLIK-P3-K1-
+  KARISIK-ORNEKLEM-2026-08-30.md). Açık kalem bloğu `acik_kalem_p3_k1_karisik_ornekem_2026_08_29`
+  TARİHÇE OLARAK DURUR (silinmez; anahtar adındaki yazım karttaki tarihî hâlidir ve ÜÇ çapası
+  vardır — DÜZELTİLMEZ); bu blok onu KAPATIR.
+
+  KOL ADLARI, tek sözlük: K1-önce (makine anahtarı `giris_once`) · K1-1345 (makine anahtarı
+  `giris_1345`). Görev metni, reçete çıktısı (sonuc.json) ve bu blok aynı makine anahtarlarını
+  kullanır; serbest adlar yalnız okunurluk içindir.
+
+  DEĞİŞMEYEN: success_metric, örneklem eşikleri (K1 n≥30 & ≥10 seans; K2/K3 n≥15 & ≥6 seans),
+  karar kuralı (EDG-040 başabaş bandı [5-15] karşısındaki üç dal), kill_criteria, bootstrap
+  künyesi (B=5000, seed=20260812, kümeleme=SEANS). TEK KARAKTERİ DEĞİŞMEDİ. Değişen yalnız
+  K1'in KOVA TANIMIDIR: daraldı.
+
+  K DİSİPLİNİ (parameter_grid: "K TOPLAM = 3, genişletme ayrı kart ister"): K TOPLAM = 3
+  KORUNDU. Bölünme K'yı ÇARPMAZ: `giris_1345` k_registry'deki `pending-042-giris` kaydının
+  HALEFİDİR; `giris_once` hüküm üretemez, deneme değildir, grid'de SAYILMAZ. Bu cümle olmasa
+  bir sonraki denetim bölünmeyi "K 3→4" okur ve kartı kill'e sokardı.
+
+  ANAHTAR VE SINIR: satır, gönderim damgası `ts` ile bölünür.
+  Sınır = 2026-08-23T14:53:43Z — canlı `barclock.py` mtime (A1'de ölçüldü; depoda d8030c0),
+  yani 1345 sabitinin canlıya indiği an. `ts` < sınır → K1-önce · `ts` ≥ sınır → K1-1345.
+  Reçete TEK sınır tanır ve bunu beyan eder: ikinci bir pencere değişikliği olursa bu reçete
+  KARTSIZ GENİŞLETİLEMEZ (R2 short-beyanının aynı kalıbı). `ts` okunamayan satır (yok/boş/
+  biçimsiz/dilimsiz) HİÇBİR KOLA ATANMAZ — nedeniyle `olculemedi`ye düşer; "varsayılan kol"
+  kabulü tam olarak P-1'i doğuran sınıftır.
+  ANAHTAR NEDEN `pencere` DAMGASI DEĞİL: damgaya göre bölmek, kaydırma öncesi 13 satırı her iki
+  koldan düşürürdü — o satırlar damgasızdır ve EXE-009 kill#3 geriye dönük etiketlemeyi yasaklar;
+  17'lik örneklem 4'e inerdi. `ts` ile bölmek etiket YAZMAK değil, defterde ZATEN kayıtlı iki
+  ölçülmüş olguyu (gönderim damgası + canlı iniş anı) karşılaştırmaktır; kill#3'e girmez.
+
+  ANAHTAR SEÇİMİ BUGÜNKÜ VERİYLE SINANDI (2026-08-31, canlı defter salt-okuma): P-1 düzeltmesi
+  sonrası damgalı 4 satırın 4'ünde de `ts` anahtarı ile `pencere` damgası AYNI kolu gösteriyor
+  (DE/PANW ts=2026-08-21T20:32:22Z ↔ damga 1330 · ECL ts=2026-08-26T13:45:01Z ve
+  CRM ts=2026-08-28T13:45:00Z ↔ damga 1345). Bu bir hüküm değil TARİHLİ TABANDIR: ileride bir
+  ayrışma bulunursa ne zamandan sonra doğduğu buradan okunur.
+
+  BUGÜNKÜ KOLLAR (sayım; betimleyici değerler ilk kez 2026-09-05 koşumunda revize reçeteyle
+  yayımlanır — elle hesap karta girmez):
+    K1-önce (`giris_once`) : n=15, 5 plan-günü (2026-08-05 · 08-13 · 08-14 · 08-19 · 08-21)
+    K1-1345 (`giris_1345`) : n=2,  2 plan-günü (2026-08-25 · 08-27)
+
+  K1-ÖNCE BİR DAHA BÜYÜMEYECEK — VE BU KABUL EDİLMİŞ SONUÇTUR, BEKLEYEN DURUM DEĞİL. O icra yolu
+  (EOD GTC → açılış dolumu) 2026-08-23'te emekli oldu. n=15 < 30 olduğu için K1-önce HİÇBİR ZAMAN
+  hüküm üretemez: kalıcı BETİMLEYİCİ TABANDIR, her koşumda kartın ÖLÇÜLEMEDİ damgasıyla yayımlanır
+  ve eşik BEKLEMEZ. Silinmez, gizlenmez, "yakında dolacak" diye sunulmaz.
+  `giris_once` kolunun çıktısı `kalici_taban: true` + tek cümlelik beyan alanıyla işaretlenir;
+  DAMGA BİÇİMİ (EDG-037 mirası) DEĞİŞMEDİ — operatör hükmü 2026-08-31: "damga biçimine dokunma,
+  ayrı alan koy". `giris_1345` kolunda bu alan yoktur: orada "< eşik" gerçekten bekleyiştir.
+
+  ARA İŞARET KONMAMASI BİR KARARDIR, SESSİZLİK DEĞİL (2026-08-31). Öneri sunuldu ("1345 medyanı K
+  ardışık hafta 15 bps üstünde kalırsa operatöre bayrak") ve operatör REDDETTİ. Kayda geçme
+  gerekçesi: eşiği ve K'yı seçmenin tek dürüst anı veri gelmeden ÖNCEsiydi; bu blok yazıldıktan
+  sonra ara işaret eklemek, SAYIYA BAKARAK KURAL SEÇMEKTİR ve kartın ön-kayıt disiplinini deler.
+  Eklenmek istenirse yeni bir operatör kalemi ve yeni bir ön-kayıt gerekir.
+  KABUL EDİLEN BEDEL, AÇIKÇA: canlı para sorusuna ("paket başabaşı geçiyor mu") hüküm
+  ~14 haftaya kayıyor (≈ 2026-12-06); bant 4,9-14 hafta. POOLED seçilseydi ~6,5 hafta olurdu
+  (bant 2,3-6,5) ama hüküm indiğinde 30 satırın 15'i ARTIK KULLANILMAYAN bir icra yolundan
+  gelirdi. Hız yerine saflık bilinerek seçildi.
+
+  BİRİKİM HIZI — ÖLÇÜLDÜ 2026-08-30 (snapshot 3a1f06bf…), ve ÖNCEKİ İZDÜŞÜMÜ ÇÜRÜTTÜ:
+    kaydırma öncesi (08-05…08-21, 13 seans): 15 dolum → 1,15 dolum/seans
+    kaydırma sonrası (08-24…08-28,  5 seans):  2 dolum → 0,40 dolum/seans
+    plan-günü SIKLIĞI değişmedi (0,38 → 0,40/seans); düşen, plan-günü BAŞINA dolum (3,0 → 1,0).
+  ÖRNEKLEM UYARISI: hız n=2 dolum / 2 plan-günü üzerine kurulu — bir hız değil bir İŞARETTİR;
+  takvimler bu yüzden bant olarak verildi. MEKANİZMA ÖLÇÜLMEDİ ve bu defterle ölçülemez: E2'de
+  reddedilen/veto edilen ayna satırı YOK (36 satırın tamamı submitted+dolu). AYRI KALEM ADAYI.
+
+  REÇETE REVİZYONU ÜRETİLDİ (bu hükmün uygulanma şartı; `ts` donuk çekicinin E2 alan listesinde
+  yoktu): GÜNCEL DONUK REÇETE İŞARETÇİSİ = research/olcumler/edg042_recete_ayrik_2026-08-31/
+  (canli_cek.py a846449e… · olcum.py 1787a9ff…; kanıtlar aynı dizinde: ozdeslik.json — K2/K3/
+  cikis_ortak eski reçeteyle BAYT-ÖZDEŞ · sinama.json 10/10 · sonuc_ts_yok.json — ts'siz eski
+  snapshot'ta 17/17 olculemedi). R2 bloğunun işaretçi ilanı BU BLOKLA DEVRALINDI; önceki reçete
+  dizinlerine tek bayt yazılmadı. Haftalık görev metni (2026-08-31 revizyonu) reçeteyi bu
+  işaretçiden okur — işaretçi YÜK TAŞIR ve çivisi tests/test_p3_ayrik_ts_v340.py'dedir.
+
+  P-2 İLE AYRIŞMA — AÇIKÇA BEYAN (EQUIVALENT_TRUTHS sınıfı, adıyla): bu hükümden sonra EDG-042
+  K1'i `ts`ye göre, EXE-2026-009 hakemi ise `pencere` damgasına göre böler. Damgalı 4 satırda
+  ikisi AYNI sonucu verir; kaydırma öncesi 13 DAMGASIZ satırda AYRIŞIRLAR — EDG-042 onları
+  K1-önce kolunda SAYAR, EXE-009 kill#3 gereği 1330 bandına ALMAZ. İki kart aynı olguya iki
+  farklı sayı verir ve bu BİLİNEREK böyledir. Anahtarların BİRLEŞTİRİLMESİ (EXE-009 hakemini
+  `ts`ye geçirmek) kill#3'ün çerçevesine dokunur, sessizce yapılmaz: ayrı operatör kalemidir ve
+  P-2'nin yeni çerçevesi olarak listeye girer. Aynı çerçevenin İKİNCİ noktası: haftalık görev
+  metninin EK bölümü hakem betiklerini hâlâ sabit dizinle anar (2026-08-29'a bayt-özdeş kopyayla
+  fiilen bir kez aşıldı) — P-2 çözülürken aynı tek-kaynak düzeltmesini almalı.

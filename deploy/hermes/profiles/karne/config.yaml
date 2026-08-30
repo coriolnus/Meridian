@@ -1,0 +1,154 @@
+# @karne profilinin güvenlik duruşu. ANA PROFİLDEN MİRAS ALINMAZ (spec §9.0'ın en önemli
+# bulgusu): `hermes profile create --clone` taşır, sıfırdan/dağıtımdan kurulan profil
+# KORUMASIZ doğar. Bu dosya o boşluğun kapağıdır ve `tests/test_bot_profil_durusu_v329.py`
+# onu repo tarafında çiviler — canlıya VARMADAN.
+#
+# ÖLÇÜM KAYDI BURADA TEKRARLANMAZ, `@sef`in `config.yaml`ındadır ve oraya bakılır. Neden:
+# duruşun taşıyıcı iddiaları (araç kapatmanın gerçekten uygulandığı · `-z` yolunda
+# `HERMES_YOLO_MODE` kurulduğu · `hooks_auto_accept` olmadan kancanın başsız koşumda SESSİZCE
+# kaydolmadığı · `file_safety.py`nin `if safe_roots:` kapısı) HERMES'İN KENDİSİ hakkındadır,
+# bu profil hakkında değil — aynı ikili, aynı sürüm. O kaydı buraya KOPYALAMAK ikinci bir
+# gerçek yaratırdı ve iki kopya ayrıştığında bayatlayan taraf hep okunmayan taraf olur.
+#
+# BU PROFİL NEDEN AYRI: `@sef` hazır ÖZETLERİ sıralar, `@bekci` ham defterden ÖLÇÜLEN bir
+# arıza listesini sıralar; `@karne` `state/goal.yaml`ın DÖRT sorusuna verilen deterministik
+# hükmü (`ops/karne_hesap.hesapla()`) OKUNUR CÜMLEYE çevirir. Üçü ayrı artefaktın sahibi ve
+# ayrı kadansta koşar (bu profilinki HAFTALIK) — ayrı kimlik, ayrı kum havuzu, ayrı `.env`.
+#
+# BU ÜÇ BLOK HARNESS TARAFINDAN DA OKUNUR: `ops/karne_brifingi.py::_profil_evini_dogrula`
+# profili ÇAĞIRMADAN ÖNCE burada üç şey arar — guard kancası · `hooks_auto_accept: true` ·
+# beş tehlikeli takımın kapalı olması. Tutmazsa çağrı REDDEDİLİR ve ham karne yine gider.
+# Yani bu dosya yalnız bir beyan değil, koşum zamanında ÖLÇÜLEN bir kapıdır.
+
+# --- KANCA VE ONAYI -------------------------------------------------------------------
+# İKİSİ BİRLİKTE BİR KORUMADIR; yalnız biri yazılırsa koruma YOKTUR. TTY yokken ve onay
+# kanallarının hiçbiri açık değilken kanca kaydı boş döner — kanca SESSİZCE KAYDOLMAZ, ve
+# varsayılan da kapalıdır. Yani zamanlanmış koşumda `hooks_auto_accept` olmadan bu dosya
+# "korumalı" GÖRÜNÜR ve koşum korumasız olur.
+hooks:
+  pre_tool_call:
+    - matcher: terminal|write_file|patch|edit|apply_patch
+      command: /opt/meridian/ops/meridian-guard.sh
+      timeout: 10
+hooks_auto_accept: true
+
+# --- ARAÇ YÜZEYİ — SAVUNMANIN EN YÜKSEK KALDIRAÇLI KATMANI ----------------------------
+# `@karne` girdisini HAZIR HESAPLANMIŞ alır (`karne_hesap.hesapla()` harness'te koşar, botta
+# DEĞİL) ve yalnız metin üretir. Araca ihtiyacı YOK.
+#
+# VE BU PROFİLDE ARAÇSIZLIK EK BİR İŞ GÖRÜR — `@bekci`dekiyle aynı sınıf, daha keskin ucu.
+# `@karne`nin sözleşmesi "SAYIYI MODEL ÜRETMEZ, yalnız SÖZE ÇEVİRİR"dir: dört hükmün dördü de
+# Python'da verilir, çünkü hükmü model verirse "deney başarılı mı" sorusuna verilmiş MAKUL
+# GÖRÜNEN ama ölçülmemiş bir cevap üretebilir — ve o cevap kalıcı bir yalan olur. Araçlı bir
+# bot o sözleşmeyi kendi başına delebilirdi: deftere kendisi bakar, kendi getirisini hesaplar
+# ve "ölçüldü" diye sunardı. `file` ve `terminal`ın kapalı olması, mimari sözleşmenin MEKANİK
+# yarısıdır; SOUL'daki "sayı değiştirme" kuralı ise onun sosyal yarısı. İkisi birlikte tutar.
+#
+# KALAN RİSK, dürüstçe: bu bir KARA LİSTEDİR. Hermes yeni bir tehlikeli takım eklerse buraya
+# kendiliğinden girmez. Beyaz liste tercih edilirdi; `disabled_toolsets` bugün var olan
+# kaldıraç bu — çivi en azından bu beşinin kapalı kalmasını garanti eder, ve kardeş çivi
+# adların GERÇEK toolset anahtarı olduğunu (yazım hatası sessizce takımı geri açar) ölçer.
+agent:
+  disabled_toolsets:
+    - terminal          # kabuk: silme, pkill, curl ile dışarı taşıma
+    - file              # okuma/yazma/patch: defteri kendi okuyup SAYI ÜRETME yolu da bu
+    - code_execution    # kabuk eşdeğeri
+    - browser           # dışarı taşıma kanalı
+    - web               # dışarı taşıma kanalı
+    - delegation        # araçsız bırakılan botun araçlı bir alt ajan doğurma yolu
+    - cronjob           # kalıcılık: kendine zamanlanmış iş yaratamaz
+    - computer_use      # masaüstü kontrolü
+    - memory            # hafıza deposu safe-root DIŞINA yazar (aşağıdaki nota bak)
+    - session_search    # geçmiş oturumları okuma; bu botun işi için gereksiz
+    - image_gen
+    - video_gen
+    - tts
+
+# HAFIZA NEDEN KAPALI, VE BU PROFİLDE NEDEN AYRI BİR ÖNEM TAŞIYOR. Depo `memory` takımını iki
+# sebeple kapatıyor: (a) deposu `HERMES_HOME/memories/` altına, yani safe-root'un DIŞINA yazar;
+# (b) açmak safe-root'u profil evine genişletmeyi zorunlu kılar ve botun kendi guard
+# yapılandırmasının üstüne yazma yolunu yeniden açar (kendini silahsızlandırma).
+# `@karne`de üçüncü bir sebep var: bu botun mesajının EN DEĞERLİ parçası "GEÇEN HAFTAYA GÖRE NE
+# DEĞİŞTİ" cümlesidir. Hafızası olduğunu sanan bir model o cümleyi UYDURUR. Değişim burada
+# uydurulmaz, HARNESS'İN kendi damga dosyasından (`state/karne_brifingi_damga.json`, sahibi
+# HARNESS) ÖLÇÜLÜR ve modele HAZIR verilir; bot hiçbir yazma yetkisi kazanmaz.
+
+# --- ONAY DURUŞU — HANGİ SATIR HANGİ YOLDA YÜK TAŞIYOR --------------------------------
+# `hermes -z` çağrının en başında yolo kipini kuruyor, yani BİZİM koşum yolumuzda (systemd →
+# `hermes --accept-hooks -z`) `approvals.mode` HİÇ DANIŞILMAZ. Ölçüm kaydı `@sef`in
+# config.yaml'ında; burada tekrarlanmaz.
+#
+# AŞAĞIDAKİ İKİ SATIR NEDEN YİNE DE YAZILI: ikisi de BAŞKA yollarda yürürlüktedir ve profil tek
+# bir çağrı biçimine kilitli değildir — `hermes -p karne chat` (etkileşimli) ve gateway
+# oturumları `mode`u okur; `cron_mode` ise hermes'in KENDİ cron oturumları içindir (systemd
+# koşumu bir hermes cron oturumu DEĞİLDİR). Yani bu satırlar ölü değil, BU YOLDA uykudadır.
+# Spec §9.4/2 ikisini de şart koşuyor.
+approvals:
+  # ETKİLEŞİMLİ / gateway oturumları için. `-z` yolunda ÖLÜ (yolo).
+  mode: smart
+  # Hermes'in KENDİ cron oturumları için. Kod varsayılanı ZATEN `deny` — bu satır bir DELİK
+  # KAPATMAZ, bir BEYANDIR: varsayılan bir gün değişirse duruşumuz değişmez.
+  cron_mode: deny
+  # YOLO'NUN ALTINDAKİ TABAN — `-z` yolunda da ateşler; bir deny eşleşmesi yolo/mode=off
+  # atlamasından ÖNCE ateşler. Yalnız `terminal` üzerinden erişilir ve o kapalı: ikinci
+  # katman, ama SAĞLAM bir ikinci katman.
+  deny:                      # fnmatch TÜM DİZGEYİ eşler; iki yandan sarılı olmayan desen delinir
+    - "*dagit.sh*"
+    - "*git push*"
+    - "*git commit*"
+    - "*systemctl*"
+    - "*serve.sh*"
+
+# --- MODEL VE BÜTÇE -------------------------------------------------------------------
+# BİÇİM: `max_tokens` MODEL EŞLEMESİNİN İÇİNDEN okunur ve okuma bir `isinstance(dict)` kapısının
+# ardındadır — `model:` düz bir dize olsaydı bütçe SESSİZCE yok sayılırdı (dosya 2.000 der,
+# koşum modelin kendi varsayılanını kullanırdı). v329 çivisi bu biçimi ölçüyor.
+#
+# BÜTÇE `@sef`/`@bekci`DEN AYRI SEÇİLDİ ve bu bir SAPMADIR — gerekçesi burada, tek yerde:
+# `docs/OLCUM-MODEL-BUTCESI-2026-08-27.md` §6 tablosunun "interaktif" satırı (Super · 2.000 ·
+# 60 sn), kardeşlerin kullandığı "özet/rapor" satırı (Super · 8.000 · 120 sn) DEĞİL.
+#   NEDEN: tablonun birimi `model × çağrı sınıfı → (max_tokens, timeout)` ve sınıfı belirleyen
+#   şey ÇIKTININ BÜYÜKLÜĞÜDÜR. `@karne`nin metin tavanı SOUL'da 1.200 KARAKTERdir ve girdisi
+#   dört satır hüküm + kapsam — filonun en küçük çağrısı. 8.000 istemek, ölçülmemiş bir
+#   ihtiyaca ölçülmüş bir tablodan sapmaktır.
+#   MARJ, İYİMSER UÇTAN DEĞİL ARALIKLA (denetim LOW-8): 1.200 karakter ancak ~3 karakter/token
+#   varsayarsa ~400 tokendir. Türkçe bu tokenizer ailelerinde eklemeli yapı yüzünden ~2,2–3,0
+#   karakter/token bandında koşar, yani 1.200 karakter ≈ **400–550 token** ve gerçek marj
+#   **~3,6×–5×**. Hâlâ rahat, ama "~5 katı" tek başına iyimser uçtu.
+#   ZAMAN AŞIMI 60 → 120, DÜZELTİLDİ (denetim MEDIUM-6). Önceki gerekçe "tablo çiftini bozmamak"
+#   idi; bu, dokümanın kendi formülünü (`süre ≈ istenen_token ÷ ölçülen hız, üstüne pay`) bir
+#   TAVAN sanmaktı — o bir TABANDIR. Aynı satıra daha büyük pay koymak tabloda olmayan bir satır
+#   uydurmak DEĞİLDİR; token bütçesi hâlâ "interaktif" satırındadır. Satırın adındaki "operatör
+#   bekliyor" ibaresi ise tam da bu botta GEÇERSİZDİR: burada kimse beklemiyor, çağrı GÖZETİMSİZ
+#   ve HAFTALIK. Harness payının kendi gerekçesi ("kadans haftalıktır, 30 saniyenin maliyeti
+#   yoktur") 60→120 için de aynen geçerli, ve ücretsiz katmanda kuyruk gecikmesi gerçektir.
+#   DAR TUTMANIN BEDELİ ölçülebilir ve tek yönlü: 60 sn yetmezse her hafta ham karne gider ve
+#   o düşüşü yalnız `obs` görür — yani sunum katmanı sessizce ölür. Geniş tutmanın bedeli ise
+#   yalnız gözetimsiz bir işin 60 saniye daha beklemesidir.
+#   KESİLME RİSKİ VE BEDELİ, AÇIKÇA (Bedel yasası): §5'te canlı defterden ölçülen "13 nemotron
+#   çağrısının 7'si TAM 4.000 out_tokens'da bitti" bulgusu UZUN SENTEZ çağrılarına aittir
+#   (`reflect`, `nous_eval`) — bu çağrı sınıfı değil. Aynı dokümanın doğrudan konuya değen
+#   yoklaması ise Super'in küçük bir cevabı `max_tokens=60` ile bile `finish=stop` ile
+#   bitirdiğini gösteriyor, yani Super gizli bir akıl yürütme bütçesi yakmıyor. Yine de tavan
+#   yetmezse BEDEL SIFIR DEĞİLDİR ve gizli de değildir: model düşer, `karne_brifingi_llm_dustu`
+#   adıyla deftere yazılır ve ÖLÇÜLEN karne ham yoldan yine gider (susma-yok kuralı).
+#   ÖLÇÜLMEDİ: bu profilin GERÇEK çağrısı hiç yapılmadı — canlıda profil YOK. Yukarıdaki
+#   yeterlilik hükmü bir ÇIKARIMDIR; ilk canlı koşum bir DOĞRULAMA turudur. Aynı şerh "Super
+#   gizli akıl yürütme bütçesi yakmıyor" hükmü için de geçerli: o, tek bir `max_tokens=60`
+#   yoklamasına dayanır ve "hiç yakmaz"ı DEĞİL "o çağrıda yakmadı"yı gösterir.
+model:
+  provider: openrouter
+  default: nvidia/nemotron-3-super-120b-a12b:free
+  max_tokens: 2000
+
+# ZAMAN AŞIMI, HERMES'İN GERÇEKTEN OKUDUĞU YERDE.
+# Okuma sırası `providers.<sağlayıcı>.models.<model>.timeout_seconds` →
+# `providers.<sağlayıcı>.request_timeout_seconds`. NE kökte NE model eşlemesinde bakılır;
+# kökteki bir `timeout:` anahtarı hiçbir şey yapmaz — onu yazmak, OLMAYAN bir korumaya
+# güvenmektir (v329 çivisi kökte `timeout` bulunmamasını da ölçüyor).
+# Sağlayıcı düzeyi seçildi: bu profilde tek model var, per-model satır ikinci bir sürüklenme
+# yüzeyi açardı. Değer harness'in `MODEL_TIMEOUT_S` sabitiyle AYNI olmalı ve çivi
+# (`test_HARNESS_BUTCESI_MODEL_BUTCESINDEN_BUYUK`) ikisini birlikte okur.
+providers:
+  openrouter:
+    request_timeout_seconds: 120

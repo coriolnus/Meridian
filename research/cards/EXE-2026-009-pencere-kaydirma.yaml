@@ -104,3 +104,11 @@ p1_kapanis_2026_08_30: >
   İSTİSNASIYLA yapıldı — istisna yazılmadan yapılsaydı kill kriteri sessizce çiğnenmiş olurdu.
   SONUÇ: hakem bant sayıları değişir (1345 n=4→2, 1330 n=0→2) — BEKLENEN ve doğru; eşikler
   değişmedi, ikisi de n<10, öneri tetiği "orneklem_birikimde". P-2 ve EDG-042 P-3 AÇIK.
+
+p2_ayrisma_isaretcisi_2026_08_31: >
+  AYRIŞMA BEYANI TEK YERDE YAŞAR: EDG-2026-042 kartının `p3_karar_ayrik_ts_2026_08_31` bloğu.
+  Özü: EDG-042 K1'i `ts`ye göre böler, BU kartın hakemi `pencere` damgasına göre — ve bu
+  BİLİNÇLİDİR (kill#3 geriye dönük etiketlemeyi yasaklar; damgasız 13 satır burada hiçbir banda
+  girmez, EDG-042'de K1-önce kolunda sayılır). Aynı beyanı burada yeniden yazmak
+  EQUIVALENT_TRUTHS tuzağı olurdu; ayrıntı ve birleştirme kararı (P-2'nin yeni çerçevesi,
+  operatör kalemi) oradadır.
