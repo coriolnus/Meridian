@@ -398,7 +398,25 @@ def _load_thesis_store_module():
     if spec is None or spec.loader is None:
         raise ImportError(f"Could not load trader-memory-core module from {module_path}")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    # Compile from source instead of spec.loader.exec_module(). That path consults
+    # __pycache__, and a timestamp .pyc is validated by only two fields: the source's
+    # whole-second mtime and its byte size. A size-preserving edit made inside that same
+    # second is therefore invisible, and stale bytecode runs in place of the source
+    # (measured 2026-08-30; see docs/DEVIR-BAYAT-BYTECODE-2026-08-30.md).
+    #
+    # Deliberately self-contained: this script is invoked standalone
+    # (`python3 skills/pre-trade-discipline-gate/scripts/check_pre_trade_discipline.py ...`,
+    # see SKILL.md), so sys.path[0] is its own directory. Importing the repo's shared loader
+    # (ops.sasi_yukleyici) would add a repo-layout dependency and break that invocation --
+    # a worse failure than the bug it fixes. Two inline copies are the cheaper trade here.
+    #
+    # Failure mode is unchanged: read_text() on a missing file raises FileNotFoundError,
+    # exactly as exec_module did, and the caller already catches it (link_reports).
+    exec(
+        compile(module_path.read_text(encoding="utf-8"), str(module_path), "exec",
+                dont_inherit=True),
+        module.__dict__,
+    )
     return module
 
 

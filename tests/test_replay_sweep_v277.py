@@ -24,11 +24,12 @@ from __future__ import annotations
 
 import hashlib
 import importlib
-import importlib.util
 import json
 import pathlib
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 rs = importlib.import_module("ops.replay_sweep")
 
@@ -306,9 +307,7 @@ def test_arayuz_eksikse_baslamadan_durur(tmp_path):
     bos.write_text("KONTROL_HUCRE = {}\n", encoding="utf-8")
     with pytest.raises(AssertionError, match="arayüzü EKSİK"):
         rs.enjeksiyon_modulu_yukle(bos)
-    sp = importlib.util.spec_from_file_location("bos_enj_t", bos)
-    m = importlib.util.module_from_spec(sp)
-    sp.loader.exec_module(m)
+    m = betikten_modul_yukle(bos, "bos_enj_t")
     a = rs.arayuz_dogrula(m)
     assert a["gecerli"] is False
     assert set(a["eksik"]) == {"yeni_kayit", "enjekte", "oz_sinama", "kol_kimligi"}

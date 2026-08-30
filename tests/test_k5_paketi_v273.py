@@ -21,7 +21,6 @@ state işi olduğundan ops betiğine indi — betiğin sözleşmesi burada test 
 from __future__ import annotations
 
 import ast
-import importlib.util
 import json
 import pathlib
 
@@ -29,6 +28,7 @@ import pytest
 import yaml
 
 from meridian import broker, config, guard, hermes, hermes_runtime as hr, store
+from tests.conftest import betikten_modul_yukle
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 GOAL_TXT = (REPO / "state" / "goal.yaml").read_text(encoding="utf-8")
@@ -116,10 +116,8 @@ def test_b3_registry_budama_betigi_sozlesmesi():
     """25a registry kolu: budama CANLI state işi → ops betiği. Sözleşme: (1) yalnız yeniden
     doğrulanmış 3 okuyucusuz alan düşer, (2) okuyuculu alanlar korunan kümede ve kesişim boş,
     (3) budama korunanlara dokunmaz + idempotent."""
-    spec = importlib.util.spec_from_file_location(
-        "registry_budama", REPO / "ops" / "registry_olu_alan_budamasi.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = betikten_modul_yukle(REPO / "ops" / "registry_olu_alan_budamasi.py",
+                               "registry_budama")
 
     assert set(mod.OLU_ALANLAR) == {"api_free", "failure_count", "engine"}
     # envanterin 12'sinden okuyucu kazananlar korunan listede (kaldırılamaz)

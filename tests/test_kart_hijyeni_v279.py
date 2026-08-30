@@ -36,11 +36,12 @@ adıyla kapsam dışı bırakır; burası tam o boşluğun statüye bağlı yar�
 """
 from __future__ import annotations
 
-import importlib.util
 import pathlib
 
 import pytest
 import yaml
+
+from tests.conftest import betikten_modul_yukle
 
 KOK = pathlib.Path(__file__).resolve().parents[1]
 KARTLAR = KOK / "research" / "cards"
@@ -53,11 +54,7 @@ OLCULMUS_STATULER = frozenset({"measured", "measured_partial", "archived"})
 
 def _uretici():
     """`ops/kart_endeksi_uret.py`yi dosyadan yükler (ops bir paket değil, import edilemez)."""
-    spec = importlib.util.spec_from_file_location("kart_endeksi_uret", URETICI_YOLU)
-    assert spec and spec.loader, URETICI_YOLU
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(URETICI_YOLU, "kart_endeksi_uret")
 
 
 def cift_ust_duzey_anahtarlar(metin: str) -> list[str]:

@@ -44,12 +44,13 @@ aittir" kuralının çekirdeği böylece korunur; Dub da öyle yapar.
 
 from __future__ import annotations
 
-import importlib.util
 import math
 import re
 from pathlib import Path
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 SRC = Path(__file__).resolve().parent.parent
 INDEX = (SRC / "meridian" / "web" / "index.html").read_text()
@@ -428,10 +429,7 @@ def test_yon_ikinci_kanali_kodda_duruyor():
 def _tarayici():
     yol = OLCUM / "tara_emisyon.py"
     assert yol.exists(), f"ölçüm betiği YOK: {yol}"
-    spec = importlib.util.spec_from_file_location("tara_emisyon", yol)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(yol, "tara_emisyon")
 
 
 def test_kosulsuz_emisyon_tavani():

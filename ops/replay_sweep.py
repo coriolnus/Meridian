@@ -18,11 +18,12 @@ NE YAPAR — kart-güdümlü koşum iskeleti:
         tekilleştirilir; tekilleşmezse enjeksiyon modülünün beyanlı `KUNYE_YOLU`su; o da yoksa
         None + neden → DURUR. Kaynağı raporda beyan edilir.
   (b) DONMUŞ ORTAK BLOKLAR (dört emsalden harfi harfine; kanonik biçim edg048):
-      · sandbox kurulumu: edg032b şasisi importlib ile modül olarak yüklenir, `SANDBOX`ı ölçüm
-        dizinine çevrilir (artefakt koruması YAPISAL), `ARMED_BEKLENEN` B1 yasasına çevrilir
-        (edg032c'nin BEYANLI TEK UYARLAMASI; motor ARMED_SETUPS B1'den saparsa BAŞLAMADAN durur),
-        `kosum(run, smoke)` yolu OLDUĞU GİBİ çağrılır. Şasi-parametre enjeksiyonu YOK (merkez
-        hücre) — buna ihtiyaç duyan kart iskeleti kullanmaz (sınır beyanı).
+      · sandbox kurulumu: edg032b şasisi KAYNAKTAN derlenerek modül olarak yüklenir
+        (`ops.sasi_yukleyici`; `__pycache__` OKUNMAZ — 2026-08-30 bayat-bytecode ölçümü),
+        `SANDBOX`ı ölçüm dizinine çevrilir (artefakt koruması YAPISAL), `ARMED_BEKLENEN` B1
+        yasasına çevrilir (edg032c'nin BEYANLI TEK UYARLAMASI; motor ARMED_SETUPS B1'den
+        saparsa BAŞLAMADAN durur), `kosum(run, smoke)` yolu OLDUĞU GİBİ çağrılır. Şasi-parametre
+        enjeksiyonu YOK (merkez hücre) — buna ihtiyaç duyan kart iskeleti kullanmaz (sınır beyanı).
       · motor-sha künye kapısı (ÖN-UÇUŞ): 4 dosya (broker/backtest/strategy/guard) künyenin
         `motor_sha256.kosum1_once` kaydıyla birebir değilse koşum YAPILMADAN DURUR ve raporlar.
         TAZELEME PROTOKOLÜ DAHİL DEĞİL — künye tazelemek Rol-1 kararıdır (edg048 protokol
@@ -77,7 +78,6 @@ import argparse
 import contextlib
 import datetime as dt
 import hashlib
-import importlib.util
 import itertools
 import json
 import pathlib
@@ -85,6 +85,25 @@ import re
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
+
+
+def _sasi_yukleyici():
+    """`ops.sasi_yukleyici`yi KENDİ checkout'undan çözer.
+
+    NEDEN FONKSİYON, NEDEN `sys.path` EKİ — ÖLÇÜLDÜ (2026-08-30). Bu dosya DOĞRUDAN koşuluyor
+    (`.venv/bin/python ops/replay_sweep.py --kart …`, `docs/ARAC-REPLAY-SWEEP-2026-08-23.md`);
+    o durumda `sys.path[0]` kök DEĞİL, `ops/` DİZİNİdir. `ops.` ön eki o zaman editable-install
+    `.pth`i üzerinden BAŞKA BİR CHECKOUT'a düşer: worktree'den koşarken `ModuleNotFoundError`
+    alındı (ölçüldü), ana checkout'ta ise hata bile vermez — sessizce ORANIN kopyasını yüklerdi,
+    yani bu deponun "iki kopya sessizce ayrışır" sınıfı. Kök önce eklenir.
+
+    İki yükleyici de (şasi + enjeksiyon) buradan geçer; gerekçe tek yerde durur.
+    """
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))
+    import ops.sasi_yukleyici as _sy          # kaynaktan derler; `__pycache__` okunmaz/yazılmaz
+    return _sy
+
 
 # ── DONMUŞ OMURGA SABİTLERİ (dört emsalden; sapan kart iskeleti kullanmaz) ────────────────────
 REFERANS_SASI = REPO / "research" / "olcumler" / "edg032b_tamsatir_2026-08-13" / "olcum.py"
@@ -322,16 +341,8 @@ def _pf(defter: list) -> tuple[float | None, str | None]:
 def referans_modul(sandbox: pathlib.Path):
     """edg032b şasisini modül olarak yükler; SANDBOX'ı ölçüm dizinine çevirir; ARMED_BEKLENEN'i
     B1 yasasına çevirir (edg032c'nin beyanlı TEK uyarlaması AYNEN); motoru B1'e assert'ler."""
-    sp = importlib.util.spec_from_file_location("edg032b_ref", REFERANS_SASI)
-    m = importlib.util.module_from_spec(sp)
-    eski_argv = sys.argv
-    sys.argv = [str(REFERANS_SASI)]
-    try:
-        sp.loader.exec_module(m)
-    except SystemExit:                # `__main__` bloğu — içe aktarmada beklenir (desen AYNEN)
-        pass
-    finally:
-        sys.argv = eski_argv
+    # Şasi KAYNAKTAN derlenir: argv/SystemExit dansı AYNEN korunur, `__pycache__` okunmaz.
+    m = _sasi_yukleyici().referans_sasi_yukle(REFERANS_SASI)
     m.SANDBOX = pathlib.Path(sandbox)   # artefakt koruması: referans dizinlere ASLA yazılmaz
     eski_beklenen = tuple(m.ARMED_BEKLENEN)
     m.ARMED_BEKLENEN = B1_YASA
@@ -357,9 +368,13 @@ def arayuz_dogrula(modul) -> dict:
 
 def enjeksiyon_modulu_yukle(yol: pathlib.Path):
     yol = pathlib.Path(yol)
-    sp = importlib.util.spec_from_file_location("replay_sweep_enjeksiyon", yol)
-    m = importlib.util.module_from_spec(sp)
-    sp.loader.exec_module(m)
+    # KAYNAKTAN derlenir (2026-08-30) — bu yükleyicide risk EN YÜKSEĞİDİR ve sebebi yapısaldır:
+    # enjeksiyon modülü ölçümün DEĞİŞKEN parçasıdır (şasi donuk, enjeksiyon her kart için yazılır
+    # ve kolları ayarlanırken tekrar tekrar düzenlenir). Yani "aynı saniyede boyut-koruyan
+    # düzenleme" önkoşulu tam da burada, düzenle-koş-düzenle döngüsünde doğar. Bayat bytecode
+    # koşsaydı `oz_sinama`/`kol_kimligi` ESKİ sürümden gelir, aşağıdaki arayüz kapısı yine
+    # GEÇERDİ (arayüz adları değişmez, davranış değişir) ve ölçüm sessizce yanlış kolu ölçerdi.
+    m = _sasi_yukleyici().kaynaktan_yukle(yol, "replay_sweep_enjeksiyon")
     a = arayuz_dogrula(m)
     assert a["gecerli"], (f"enjeksiyon modülü arayüzü EKSİK: {a['eksik']} — koşum BAŞLAMADAN "
                           f"durdu (modül: {yol})")

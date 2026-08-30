@@ -23,11 +23,12 @@ YEREL SUNUCU KOŞULMAZ (CLAUDE.md §5): rota testleri FastAPI TestClient ile, a�
 from __future__ import annotations
 
 import ast
-import importlib.util
 import re
 from pathlib import Path
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 SRC = Path(__file__).resolve().parent.parent
 WEB = SRC / "meridian" / "web"
@@ -48,10 +49,7 @@ def _uretici():
     """`ops/` bir paket DEĞİL (ve olmamalı: ops betikleri içe aktarılmak için değil koşulmak
     için var). Üreticiyi dosya yolundan yükleriz — testin üretim koduna erişimi, üretim kodunun
     paketlenme biçimini değiştirmeden sağlanır."""
-    spec = importlib.util.spec_from_file_location("runbook_uret", URETICI_YOL)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(URETICI_YOL, "runbook_uret")
 
 
 U = _uretici()

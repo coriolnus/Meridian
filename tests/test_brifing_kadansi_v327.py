@@ -22,11 +22,12 @@ bir şey yoksa mesaj YOKTUR.
 """
 from __future__ import annotations
 
-import importlib.util
 import pathlib
 import shlex
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 KOK = pathlib.Path(__file__).resolve().parent.parent
 BETIK = KOK / "ops/oneri_brifingi.py"
@@ -37,10 +38,7 @@ TIMER = KOK / "deploy/oracle-a1/meridian-brifing.timer"
 
 def _yukle():
     assert BETIK.exists(), f"{BETIK} YOK"
-    spec = importlib.util.spec_from_file_location("oneri_brifingi", BETIK)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(BETIK, "oneri_brifingi")
 
 
 def _yukle_digest():
@@ -50,10 +48,7 @@ def _yukle_digest():
     sonra `damgala()`sını çağırır. Çivileri bu dosyada kalır çünkü ölçülen şey KAYNAĞIN kendi
     sözleşmesidir, onu kimin çağırdığı değil."""
     assert DIGEST_BETIK.exists(), f"{DIGEST_BETIK} YOK"
-    spec = importlib.util.spec_from_file_location("alarm_backlog_digest", DIGEST_BETIK)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(DIGEST_BETIK, "alarm_backlog_digest")
 
 
 def test_BOSKEN_SESSIZ(monkeypatch, sandbox_state):

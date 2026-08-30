@@ -27,6 +27,7 @@ import re
 import pytest
 
 from meridian import skills as sk, store
+from tests.conftest import betikten_modul_yukle
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SKILLS_DIR = REPO / "skills"
@@ -320,14 +321,10 @@ def test_c8_merge_target_documents_the_folded_skill(source, doc):
 
 def test_c8b_orchestrator_stage_scripts_still_resolve():
     """edge-* aşama script'leri arşive taşındı; orchestrator onları hâlâ bulmalı."""
-    import importlib.util
     import sys
     path = SKILLS_DIR / "edge-pipeline-orchestrator" / "scripts" / "orchestrate_edge_pipeline.py"
-    spec = importlib.util.spec_from_file_location("_orc_v121", path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules["_orc_v121"] = mod
     try:
-        spec.loader.exec_module(mod)
+        mod = betikten_modul_yukle(path, "_orc_v121", sys_modules_kaydet=True)
         for stage, script in mod.SCRIPT_PATHS.items():
             assert pathlib.Path(script).exists(), f"{stage} aşama script'i çözülemedi: {script}"
     finally:

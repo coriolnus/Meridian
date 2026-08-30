@@ -108,7 +108,6 @@ karta TEK BAYT yazılmaz.
 import contextlib
 import datetime as dt
 import hashlib
-import importlib.util
 import json
 import pathlib
 import sys
@@ -208,16 +207,12 @@ def referans_modul():
 
     `__main__` bloğu `sys.argv`e bakıp iş yapıyor; modül olarak yüklerken argv geçici olarak
     boşaltılır ki içe aktarma bir koşum TETİKLEMESİN (exe006b/edg040 deseni AYNEN)."""
-    sp = importlib.util.spec_from_file_location("edg032b_ref", REFERANS)
-    m = importlib.util.module_from_spec(sp)
-    eski_argv = sys.argv
-    sys.argv = [str(REFERANS)]
-    try:
-        sp.loader.exec_module(m)
-    except SystemExit:                # `raise SystemExit(main())` deseni — içe aktarmada beklenir
-        pass
-    finally:
-        sys.argv = eski_argv
+    # Şasi KAYNAKTAN derlenir (2026-08-30): argv/SystemExit dansı AYNEN korunur, ama
+    # `__pycache__` okunmaz — bayat bytecode on üç ölçümü birden sessizce bozabilirdi.
+    # Yerel ithal: `sys.path` kurulumu modül başında yapılıyor. Gerekçe:
+    # `ops/sasi_yukleyici.py` başlığı · kapı: tests/test_bayat_bytecode_v334.py §C.
+    from ops.sasi_yukleyici import referans_sasi_yukle
+    m = referans_sasi_yukle(REFERANS)
     m.SANDBOX = BURASI                # ← artefakt koruması: referans dizine ASLA yazılmaz
     # ── YENİDEN-ÇAPALAMA (b): şasinin dünya-beklentisi B1 yasasına — edg032c künyesindeki
     # BEYANLI TEK UYARLAMA deseni AYNEN (motor DEĞİL, yüklenen modülün beklenti sabiti;

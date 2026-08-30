@@ -19,13 +19,13 @@ YEDI-KARAR.md K2. Çivilenen sözleşme:
 
 `set_clock` module-global → autouse `_saat_sifirla` ZORUNLU (donuk saat sızmasın)."""
 import datetime as dt
-import importlib.util
 import re
 from pathlib import Path
 
 import pytest
 
 from meridian import barclock as bc, intraday_cycle as ic, loop, store
+from tests.conftest import betikten_modul_yukle
 
 UTC = dt.timezone.utc
 REPO = Path(__file__).resolve().parents[1]
@@ -248,10 +248,7 @@ def test_ertelenen_gonderim_sabah_kancasiyla_tamamlanir(sandbox_state, monkeypat
 # ---------------------------------------------------------------------------------------------
 def _altbant():
     yol = REPO / "research" / "olcumler" / "edg042_kosum_2026-08-22" / "pencere_altbant.py"
-    spec = importlib.util.spec_from_file_location("pencere_altbant_test", yol)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(yol, "pencere_altbant_test")
 
 
 def _bant(bps_liste, pencere, gun0=1):

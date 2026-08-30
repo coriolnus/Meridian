@@ -47,7 +47,6 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
-import importlib.util
 import json
 import pathlib
 import shutil
@@ -95,16 +94,12 @@ def motor_kunye() -> dict:
 def referans_modul():
     """Referans şasiyi modül olarak yükler; SANDBOX'ı BU dizine çevirir; ARMED_BEKLENEN'i
     B1 yasasına yeniden çiviler (modül başındaki BEYANLI TEK UYARLAMA)."""
-    sp = importlib.util.spec_from_file_location("edg032b_ref", REFERANS)
-    m = importlib.util.module_from_spec(sp)
-    eski_argv = sys.argv
-    sys.argv = [str(REFERANS)]
-    try:
-        sp.loader.exec_module(m)
-    except SystemExit:                # içe aktarmada beklenir (desen AYNEN)
-        pass
-    finally:
-        sys.argv = eski_argv
+    # Şasi KAYNAKTAN derlenir (2026-08-30): argv/SystemExit dansı AYNEN korunur, ama
+    # `__pycache__` okunmaz — bayat bytecode on üç ölçümü birden sessizce bozabilirdi.
+    # Yerel ithal: `sys.path` kurulumu modül başında yapılıyor. Gerekçe:
+    # `ops/sasi_yukleyici.py` başlığı · kapı: tests/test_bayat_bytecode_v334.py §C.
+    from ops.sasi_yukleyici import referans_sasi_yukle
+    m = referans_sasi_yukle(REFERANS)
     m.SANDBOX = BURASI                # artefakt koruması: edg032b dizinine ASLA yazılmaz
     # ── TEK UYARLAMA: şasinin dünya-beklentisi eski yasadan B1 yasasına ──
     eski_beklenen = tuple(m.ARMED_BEKLENEN)

@@ -20,7 +20,6 @@
 """
 from __future__ import annotations
 
-import importlib.util
 import json
 import pathlib
 import stat
@@ -30,16 +29,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from meridian import api, auth, recompute, secrets, sermaye, store, watchdog
+from tests.conftest import betikten_modul_yukle
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 APP_JS = (REPO / "meridian" / "web" / "app.js").read_text()
 
 
 def _ops_modul(ad: str):
-    spec = importlib.util.spec_from_file_location(f"_v274_{ad}", REPO / "ops" / f"{ad}.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(REPO / "ops" / f"{ad}.py", f"_v274_{ad}")
 
 
 # ---- [1] sentetik defter: canlı çağ + tohum dilimi + beyanlı reset ------------------------------

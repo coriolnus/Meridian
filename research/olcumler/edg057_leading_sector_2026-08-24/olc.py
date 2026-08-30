@@ -257,18 +257,13 @@ def kasa_kur() -> dict:
     dünya-beklentisi sabiti (`ARMED_BEKLENEN` → B1). Motor DEĞİŞTİRİLMEZ.
     `ref.kosum()` ÇAĞRILMAZ — bu kart tam-portföy replay'i değil, plan-başı karşı-olgusal ister.
     """
-    import importlib.util
     sys.path.insert(0, REPO)
-    sp = importlib.util.spec_from_file_location("edg032b_ref", REF_SASI)
-    ref = importlib.util.module_from_spec(sp)
-    eski_argv = sys.argv
-    sys.argv = [REF_SASI]
-    try:
-        sp.loader.exec_module(ref)
-    except SystemExit:
-        pass
-    finally:
-        sys.argv = eski_argv
+    # Şasi KAYNAKTAN derlenir (2026-08-30): argv/SystemExit dansı AYNEN korunur, ama
+    # `__pycache__` okunmaz — bayat bytecode on üç ölçümü birden sessizce bozabilirdi.
+    # Yerel ithal: `sys.path` kurulumu modül başında yapılıyor. Gerekçe:
+    # `ops/sasi_yukleyici.py` başlığı · kapı: tests/test_bayat_bytecode_v334.py §C.
+    from ops.sasi_yukleyici import referans_sasi_yukle
+    ref = referans_sasi_yukle(REF_SASI)
     ref.SANDBOX = pathlib.Path(CIKTI)              # artefakt koruması: edg032b dizinine yazılmaz
     ref.ARMED_BEKLENEN = B1_YASA
     st_dir = ref.hazirla("edg057")
