@@ -24,13 +24,14 @@ Bu dosya kapının geri dönmediğini kanıtlar:
 from __future__ import annotations
 
 import copy
-import importlib.util
 import json
 import pathlib
 import subprocess
 import sys
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 NAV = REPO / "skills" / "trading-skills-navigator"
@@ -57,11 +58,7 @@ QUERY_BATTERY = (
 
 def _load(name: str):
     path = NAV / "scripts" / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(f"_nav_{name}_v126", path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = mod
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(path, f"_nav_{name}_v126", sys_modules_kaydet=True)
 
 
 @pytest.fixture(scope="module")

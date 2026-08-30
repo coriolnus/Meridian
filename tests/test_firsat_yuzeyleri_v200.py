@@ -36,7 +36,6 @@ gerçekten koşturulur — bir dürüstlük kuralı yalnız kaynakta "yazıyor" 
 """
 from __future__ import annotations
 
-import importlib.util
 import json
 import pathlib
 import re
@@ -44,6 +43,8 @@ import shutil
 import subprocess
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 SRC = pathlib.Path(__file__).resolve().parents[1]
 WEB = SRC / "meridian" / "web"
@@ -64,10 +65,7 @@ _OLCUM = SRC / "research" / "olcumler" / "firsat_2026-08-07" / "say_zincir.py"
 
 
 def _olcum_modulu():
-    spec = importlib.util.spec_from_file_location("_firsat_olcum", _OLCUM)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(_OLCUM, "_firsat_olcum")
 
 
 # ==============================================================================================
@@ -540,9 +538,7 @@ def test_kartlar_KOSULSUZ_renk_emisyonu_uretmiyor():
     aynı iddia YENİ KARTLAR için ayrıca çivileniyor — tavanın 0 olduğu bir ölçümde bir sızıntı
     dosyanın başka bir yerinde de kırmızı verirdi ve bu test hangi kartın kaçırdığını söyler."""
     tarayici = SRC / "research" / "olcumler" / "renk_rolleri_2026-08-07" / "tara_emisyon.py"
-    spec = importlib.util.spec_from_file_location("_tara", tarayici)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = betikten_modul_yukle(tarayici, "_tara")
     ks, _kl = mod.scan(str(WEB / "app.js"))
     # Yeni kartların satır aralıkları: her üretecin gövdesinin başladığı satırdan bittiği satıra.
     satirlar = APPJS.splitlines()

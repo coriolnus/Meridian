@@ -28,10 +28,10 @@ KOŞUM (haftalık 042 koşumunun ardından, aynı dizinde):
     [B] python3 pencere_altbant.py            → pencere_altbant.json + stdout özeti
 OKUYUCU (YASA 6): haftalık koşum çıktısı (pencere_altbant.json) + operatör raporu (Rol-1 işler).
 UYDURMA YASAĞI: ölçülemeyen kalem None + neden."""
-import importlib.util
 import json
 import random
 import statistics as st
+import sys
 from pathlib import Path
 
 DIZIN = Path(__file__).resolve().parent
@@ -44,9 +44,22 @@ BANTLAR = ("1330", "1345")
 
 # `yuzdelik` 042'nin DONUK betiğinden ithal — aynı formülün ikinci bir kopyası yazılmaz
 # (EQUIVALENT_TRUTHS sınıfı: iki kopya sessizce ayrışır, hakem iki gerçekle kalırdı).
-_spec = importlib.util.spec_from_file_location("edg042_olcum_donuk", DIZIN / "olcum.py")
-_olcum = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_olcum)
+#
+# KAYNAKTAN DERLENİR (2026-08-30). Eski `exec_module` yolu `__pycache__`e bakardı ve zaman
+# damgalı pyc'nin geçerlilik kontrolü YALNIZ (tam-saniye mtime, bayt boyutu) çiftidir: boyutu
+# değiştirmeyen bir düzenleme aynı saniyede kalırsa BAYAT bytecode koşar. Sonuç, bu satırın
+# üstündeki gerekçenin TAM TERSİ olurdu — "tek kopya" diye ithal edilen `yuzdelik`, sessizce
+# ESKİ bir sürümden gelirdi ve ayrışma tam da engellemek istediğimiz yerde doğardı.
+# Gerekçe + ölçüm: `ops/sasi_yukleyici.py` başlığı · kapı: tests/test_bayat_bytecode_v334.py §C.
+#
+# `sys.path` eki ZORUNLU: bu betik DOĞRUDAN koşulur, o zaman `sys.path[0]` BU dizindir ve `ops.`
+# ön eki editable-install `.pth`i üzerinden BAŞKA BİR CHECKOUT'a düşer (ops/replay_sweep.py'de
+# ölçüldü: worktree'den `ModuleNotFoundError`, ana checkout'ta sessizce ORANIN kopyası).
+if str(DIZIN.parents[2]) not in sys.path:
+    sys.path.insert(0, str(DIZIN.parents[2]))
+from ops.sasi_yukleyici import kaynaktan_yukle                                    # noqa: E402
+
+_olcum = kaynaktan_yukle(DIZIN / "olcum.py", "edg042_olcum_donuk")
 yuzdelik = _olcum.yuzdelik
 
 

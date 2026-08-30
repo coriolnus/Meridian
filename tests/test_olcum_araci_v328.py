@@ -15,10 +15,11 @@ eder; bu dosyanın son çivileri beyanın taramadan sürüklenmesini imkânsız 
 """
 from __future__ import annotations
 
-import importlib.util
 import pathlib
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 yaml = pytest.importorskip("yaml")
 
@@ -28,10 +29,10 @@ BETIK = KOK / "ops/olcum.py"
 
 def _yukle():
     assert BETIK.exists(), f"{BETIK} YOK"
-    spec = importlib.util.spec_from_file_location("olcum", BETIK)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    # `sys_modules_kaydet` KAPALI KALIR (varsayılan): `ops/olcum.py` başlığı bu yükleme
+    # biçimine BİLEREK bağlıdır — kayıtsız yükleme + `from __future__ import annotations`
+    # birlikte `OlayTarama` dataclass'ının tip çözümünü kırıyor (orada ölçülüp yazılmış).
+    return betikten_modul_yukle(BETIK, "olcum")
 
 
 def test_GERCEK_OLAY_ADINI_BULUR():

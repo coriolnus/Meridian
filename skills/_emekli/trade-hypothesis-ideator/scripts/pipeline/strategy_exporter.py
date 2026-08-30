@@ -278,7 +278,21 @@ def _load_candidate_contract_validator():
         raise RuntimeError(f"failed to build import spec for: {CANDIDATE_CONTRACT_PATH}")
 
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    # Compile from source instead of spec.loader.exec_module(). That path consults
+    # __pycache__, and a timestamp .pyc is validated by only two fields: the source's
+    # whole-second mtime and its byte size -- so a size-preserving edit made inside that
+    # same second silently runs stale bytecode (measured 2026-08-30; see
+    # docs/DEVIR-BAYAT-BYTECODE-2026-08-30.md). Here that would mean validating candidates
+    # against an older contract while reporting the current one.
+    #
+    # Deliberately self-contained: this is a retired skill script whose only imports are
+    # stdlib + yaml. Importing the repo's shared loader (ops.sasi_yukleyici) would couple a
+    # portable script to the repo layout -- a worse failure than the bug it fixes.
+    exec(
+        compile(CANDIDATE_CONTRACT_PATH.read_text(encoding="utf-8"),
+                str(CANDIDATE_CONTRACT_PATH), "exec", dont_inherit=True),
+        module.__dict__,
+    )
 
     validate_interface_contract = getattr(module, "validate_interface_contract", None)
     if validate_interface_contract is None:

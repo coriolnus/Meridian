@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import betikten_modul_yukle
+
 KOK = Path(__file__).resolve().parents[1]
 RUNBOOK_HTML = KOK / "meridian" / "web" / "runbook.html"
 INDEX_HTML = KOK / "meridian" / "web" / "index.html"
@@ -270,11 +272,8 @@ def test_korpus_ureticisi_artefaktlari_birebir_uretiyor():
     D6 sayıları artık yürürlükteki belgeye ait değildir ve ölçüm yenilenmelidir. Düşen bu
     test 'betiği düzelt' demez, 'ölçümü tazele' der."""
     import hashlib
-    import importlib.util
 
-    spec = importlib.util.spec_from_file_location("korpus_uret", OLCUM / "korpus_uret.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = betikten_modul_yukle(OLCUM / "korpus_uret.py", "korpus_uret")
 
     ayrisan = []
     for ad, icerik in mod.uretilenler().items():

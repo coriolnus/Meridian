@@ -16,7 +16,6 @@ KOŞULMAZ: şasi kapısı koşum-öncesi kanıttır, kaydı diskte; kesintinin i
 sha ZİNCİRİYLE bağlanır: duman koşumunun motor_sha256_once kaydı == şimdi == koşum sonu
 değilse kill#5 düşer (broker.py + backtest.py + state/goal.yaml)."""
 import datetime as dt
-import importlib.util
 import json
 import pathlib
 import sys
@@ -25,9 +24,18 @@ BURASI = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(BURASI.parents[2]))
 
 # olcum.py modül olarak (argv'de --smoke yok; __main__ bloğu import'ta çalışmaz)
-_sp = importlib.util.spec_from_file_location("edg043_olcum", BURASI / "olcum.py")
-M = importlib.util.module_from_spec(_sp)
-_sp.loader.exec_module(M)
+#
+# KAYNAKTAN DERLENİR (2026-08-30). Eski `exec_module` yolu `__pycache__`e bakardı ve zaman
+# damgalı pyc'nin geçerlilik kontrolü YALNIZ (tam-saniye mtime, bayt boyutu) çiftidir: boyutu
+# değiştirmeyen bir düzenleme aynı saniyede kalırsa BAYAT bytecode koşar. Bedeli burada
+# DOĞRUDAN ölçümdür — `M.motor_sha()` ve devam koşumunun bütün hücreleri ESKİ bir `olcum.py`den
+# gelir, üstelik `sonuc.json` doğru görünür. Kesinti telafisi koşumu tam da "aynı ölçüm devam
+# ediyor" iddiasındadır; sessizce başka bir sürüme kaymak o iddiayı geçersiz kılardı.
+# Gerekçe + ölçüm: `ops/sasi_yukleyici.py` başlığı · kapı: tests/test_bayat_bytecode_v334.py §C.
+# (`sys.path` eki bu dosyanın başında ZATEN var — `ops` bu noktada çözülür.)
+from ops.sasi_yukleyici import kaynaktan_yukle                                    # noqa: E402
+
+M = kaynaktan_yukle(BURASI / "olcum.py", "edg043_olcum")
 
 PLAN = [(15.0, "A"), (15.0, "B"), (25.0, "A"), (25.0, "B"), (35.0, "A"), (35.0, "B")]
 

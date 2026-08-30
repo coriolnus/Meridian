@@ -1,8 +1,10 @@
 import hashlib
+import importlib.util
 import ipaddress
 import os
 import pathlib
 import socket
+import sys
 
 import pandas as pd
 import numpy as np
@@ -10,6 +12,11 @@ from pathlib import Path as _Path
 import pytest
 
 from meridian import config
+# BETİK YÜKLEYİCİ — TEK UYGULAMA `ops/sasi_yukleyici.py`DEDİR (üretim tarafındaki on üç şasi
+# çağrı yeri de oradan çağırır). Buradaki `betikten_modul_yukle` adı KORUNUR: on yedi test çağrı
+# yeri onu kullanıyor. İkinci bir GÖVDE yazmak bu turun kovaladığı "iki kopya sessizce ayrışır"
+# sınıfının ta kendisi olurdu. Gerekçenin tamamı o dosyanın başlığında.
+from ops.sasi_yukleyici import kaynaktan_yukle as betikten_modul_yukle  # noqa: F401
 
 # ---- MODÜL-DURUMU TABANI: BAŞLANGIÇ DEĞERİ İTHALDE FOTOĞRAFLANIR (2026-08-02) -------------------
 # `_clear_module_caches` bugüne dek her sızıntıyı TEK TEK, elle yazılmış bir literalle sıfırlıyordu
@@ -848,6 +855,13 @@ def make_bars(n=320, seed=7, trend=0.0006, breakout_at=None):
     return pd.DataFrame({"date": dates, "open": openp, "high": high, "low": low,
                          "close": close, "volume": vol})
 
+
+# ================================================================================================
+# BETİK YÜKLEYİCİ — gövde burada DEĞİL (2026-08-30)
+# ================================================================================================
+# `betikten_modul_yukle` yukarıda `ops.sasi_yukleyici.kaynaktan_yukle`den ithal edilir. Kusurun,
+# ölçümünün ve `dont_inherit=True` gerekçesinin tamamı o dosyanın başlığındadır; buraya İKİNCİ bir
+# anlatı yazmak, anlatının kendisini ayrışabilir iki kopyaya bölmek olurdu.
 
 # ================================================================================================
 # CANLI-STATE GEREKTİREN TESTLER — BEYANLI ATLAMA (2026-08-16)

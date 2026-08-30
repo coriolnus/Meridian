@@ -25,7 +25,6 @@ Kalem [6] (ampirik mini-ölçüm) ve [7] (HUM/NUE teşhisi) SALT-OKUMA canlı ra
 """
 from __future__ import annotations
 
-import importlib.util
 import json
 import pathlib
 import re
@@ -35,6 +34,7 @@ import sys
 import pytest
 
 from meridian import config, durum_sozlugu, loop, store, strategy, validation_report
+from tests.conftest import betikten_modul_yukle
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 ORACLE = REPO / "deploy" / "oracle-a1"
@@ -191,11 +191,7 @@ def test_3d_motor_listesi_ayrismasi_BEYANLI_ve_BUYUMUYOR():
 # [4] AYLIK BUCKET-KOPYA BİRİMİ
 # =================================================================================================
 def _bk_modul():
-    spec = importlib.util.spec_from_file_location("aylik_bucket_kopya",
-                                                  ORACLE / "aylik_bucket_kopya.py")
-    m = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(m)
-    return m
+    return betikten_modul_yukle(ORACLE / "aylik_bucket_kopya.py", "aylik_bucket_kopya")
 
 
 def test_4a_hedef_kova_litestream_yml_ile_AYNI():

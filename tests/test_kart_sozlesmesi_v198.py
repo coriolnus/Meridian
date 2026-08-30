@@ -34,6 +34,8 @@ import subprocess
 
 import pytest
 
+from tests.conftest import betikten_modul_yukle
+
 SRC = pathlib.Path(__file__).resolve().parents[1]
 WEB = SRC / "meridian" / "web"
 APPJS = (WEB / "app.js").read_text()
@@ -55,11 +57,7 @@ _OLCUM = SRC / "research" / "olcumler" / "kart_sozlesmesi_2026-08-07" / "say_kar
 
 
 def _olcum_modulu():
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("_kart_olcum", _OLCUM)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return betikten_modul_yukle(_OLCUM, "_kart_olcum")
 
 
 # ---- ÖLÇÜLMÜŞ TABAN (RATCHET) -----------------------------------------------------------------
