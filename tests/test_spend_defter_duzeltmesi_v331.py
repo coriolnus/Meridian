@@ -27,7 +27,6 @@ SD9  `--uygula` MANTIKSAL yedek bırakır (defter DB destekliyse dosya kopyası 
 """
 from __future__ import annotations
 
-import importlib.util
 import json
 import pathlib
 import sys
@@ -35,15 +34,14 @@ import sys
 import pytest
 
 from meridian import config, ledgers, spend, store
+from tests.conftest import betikten_modul_yukle
 
 BETIK = pathlib.Path(__file__).resolve().parents[1] / "ops" / "spend_defter_duzeltmesi.py"
 
 
 def _mod():
     assert BETIK.exists(), f"betik YOK: {BETIK}"
-    spec = importlib.util.spec_from_file_location("spend_defter_duzeltmesi", BETIK)
-    m = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(m)
+    m = betikten_modul_yukle(BETIK, "spend_defter_duzeltmesi")
     return m
 
 

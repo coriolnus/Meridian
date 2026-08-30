@@ -3,7 +3,7 @@
 > **ÖZET (tek paragraf).** `spec.loader.exec_module` yolu `__pycache__`e bakar ve zaman damgalı
 > pyc'yi YALNIZ (tam-saniye mtime, bayt boyutu) çiftiyle doğrular; boyutu değiştirmeyen bir
 > düzenleme aynı saniyede kalırsa BAYAT bytecode kaynağın yerine koşar. Depoda bu kalıbı taşıyan
-> **36 çağrı yeri** vardı: 17 test + 19 üretim. Hepsi kaynaktan derlemeye çevrildi; gövde tek
+> **37 çağrı yeri** vardı: 18 test + 19 üretim (18.'si rebase sırasında main'de DOĞDU — aşağı bak). Hepsi kaynaktan derlemeye çevrildi; gövde tek
 > yerde (`ops/sasi_yukleyici.py`), iki bilinçli satır-içi istisnayla (taşınabilir skill betikleri).
 > 12 çivi eklendi (`tests/test_bayat_bytecode_v334.py`), sürüklenme kapısı artık BOŞ cırcırdır.
 > Üç provenans çapası ve iki kardeş özdeşliği bayt olarak korundu. Üretim DAVRANIŞI değişmedi
@@ -562,3 +562,23 @@ tests/test_kart_sozlesmesi_v198.py            tests/test_triyaj_duzeltmeleri_v27
 tests/test_navigator_retirement_gate_v126.py  tests/test_uiux_s1b_v154.py
 tests/test_olcum_araci_v328.py
 ```
+
+
+---
+
+# DOKUZUNCU KALEM — CIRCIR İŞ BAŞINDA: main'de DOĞAN 18. ÇAĞRI YERİ
+
+PR açıldıktan sonra dal `origin/main`e rebase edildi (gerekçe aşağıda) ve ağaç main'in beş
+commit'ini aldı. **§B çivisi anında kırmızı verdi:** `tests/test_spend_defter_duzeltmesi_v331.py`
+ham `exec_module` kullanıyordu — ben bu turu koşarken main'de doğmuş, kalıbın 18. örneği.
+
+Bu, kapının değerinin ölçülmüş kanıtıdır: sürüklenme teorik değil, **aynı gün** gerçekleşti.
+Dosya paylaşılan yardımcıya çevrildi, ölü `importlib.util` ithali düştü. Cırcır yeniden BOŞ.
+
+## Rebase neden gerekliydi (ayrı bir merge kusuru)
+Dalın tabanı `cb0966b`, `origin/main`de **YOKTU**: Rol-1 aynı işi `5449a83` olarak yeniden
+commit'lemiş. Yani merge-base `de5de29`ye düşüyordu ve PR, bana ait olmayan bir commit'i —
+`docs/superpowers/plans/2026-08-30-faz3-bekci-profili.md`'nin **ESKİ** sürümünü (+120 satır) —
+taşıyordu. Blob'lar farklıydı (`bb98dfa7` vs `07336faa`), yani merge main'in daha yeni
+sürümünü GERİLETİRDİ. `git rebase --onto origin/main cb0966b` ile düşürüldü; PR artık tek
+commit, 37 dosya, yabancı içerik yok.
