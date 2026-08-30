@@ -1,0 +1,89 @@
+{
+  "kart": "EDG-2026-042",
+  "konu": "P-3/AYRIK — ts bölme anahtarı sentetik sınaması",
+  "sinir": "2026-08-23T14:53:43+00:00",
+  "hukum": "GEÇTİ",
+  "beyan": "SAYILAR ÖLÇÜM DEĞİLDİR — sentetik girdilerle yalnız KOL ATAMA mantığı sınanır. 'Varsayılan kol' kabulünün YASAK olduğu dört vakayla çivilenir (YOK/BOS/BICIMSIZ/TZ-SIZ): dördünde de kol None döner, satır olculemedi'ye düşer ve bps hesaplanmaz.",
+  "vakalar": [
+    {
+      "vaka": "SNR-1sn-once",
+      "ts": "2026-08-23T14:53:42+00:00",
+      "beklenen": "giris_once",
+      "olculen": "giris_once",
+      "gecti": true,
+      "aciklama": "sınırdan 1 sn ÖNCE gönderildi — eski rejim"
+    },
+    {
+      "vaka": "SNR-tam",
+      "ts": "2026-08-23T14:53:43+00:00",
+      "beklenen": "giris_1345",
+      "olculen": "giris_1345",
+      "gecti": true,
+      "aciklama": "sınırın TAM ÜSTÜ — sınır dahil yeni rejime sayılır (ts >= sınır)"
+    },
+    {
+      "vaka": "SNR-1sn-sonra",
+      "ts": "2026-08-23T14:53:44+00:00",
+      "beklenen": "giris_1345",
+      "olculen": "giris_1345",
+      "gecti": true,
+      "aciklama": "sınırdan 1 sn SONRA — yeni rejim"
+    },
+    {
+      "vaka": "GERCEK-DE",
+      "ts": "2026-08-21T20:32:22+00:00",
+      "beklenen": "giris_once",
+      "olculen": "giris_once",
+      "gecti": true,
+      "aciklama": "DE/PANW'nin gerçek gönderim damgası — eski EOD-GTC yolu"
+    },
+    {
+      "vaka": "GERCEK-CRM",
+      "ts": "2026-08-28T13:45:00+00:00",
+      "beklenen": "giris_1345",
+      "olculen": "giris_1345",
+      "gecti": true,
+      "aciklama": "CRM'nin gerçek gönderim damgası — 13:45 penceresi"
+    },
+    {
+      "vaka": "TZ-FARKLI",
+      "ts": "2026-08-23T10:53:42-04:00",
+      "beklenen": "giris_once",
+      "olculen": "giris_once",
+      "gecti": true,
+      "aciklama": "saat dilimi farklı ama AYNI an-1sn — karşılaştırma UTC'ye normalize olur"
+    },
+    {
+      "vaka": "YOK",
+      "ts": null,
+      "beklenen": null,
+      "olculen": null,
+      "gecti": true,
+      "aciklama": "ts yok → kol belirlenemez"
+    },
+    {
+      "vaka": "BOS",
+      "ts": "   ",
+      "beklenen": null,
+      "olculen": null,
+      "gecti": true,
+      "aciklama": "ts boş → kol belirlenemez"
+    },
+    {
+      "vaka": "BICIMSIZ",
+      "ts": "21 Ağustos 2026",
+      "beklenen": null,
+      "olculen": null,
+      "gecti": true,
+      "aciklama": "ts biçimsiz → kol belirlenemez"
+    },
+    {
+      "vaka": "TZ-SIZ",
+      "ts": "2026-08-21T20:32:22",
+      "beklenen": null,
+      "olculen": null,
+      "gecti": true,
+      "aciklama": "saat dilimSİZ damga kıyaslanamaz → kol belirlenemez (uydurma yok)"
+    }
+  ]
+}

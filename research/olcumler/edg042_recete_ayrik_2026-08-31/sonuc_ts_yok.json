@@ -1,0 +1,309 @@
+{
+  "kart": "EDG-2026-042",
+  "kosum": "betimleyici_ara_kosum",
+  "kosum_izni": "kart status notu: 'operatör isterse BETİMLEYİCİ ara-koşum her zaman yapılabilir (hüküm taşımaz, damgası açık)'",
+  "cekim_kunyesi": {
+    "dosya": "canli_ham.json",
+    "sha256": "3a1f06bf6ce320e6d65e342844bdcebd6a96106816f331333079f97ac0313fb7",
+    "cekim_zamani": "2026-08-29T15:51:25+00:00",
+    "makine": "A1 (canli)"
+  },
+  "model_varsayimi_bps": 5.0,
+  "model_varsayimi_kaynak": "goal.slippage_bps (koşum günü, canlı snapshot)",
+  "giris_once": {
+    "n": 0,
+    "seans_sayisi": 0,
+    "damga": "ÖLÇÜLEMEDİ (n=0 < 30) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 30,
+      "seans": 10
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": null,
+    "p25_bps": null,
+    "p75_bps": null,
+    "min_bps": null,
+    "maks_bps": null,
+    "en_buyuk_seans_payi_pct": null,
+    "tek_seans_serhi_gerekli": null,
+    "medyan_model_farki_bps": null,
+    "satir_dokumu": [],
+    "kalici_taban": true,
+    "kalici_taban_beyan": "kol DONUK — bu kolun icra yolu (EOD GTC → açılış dolumu) 2026-08-23T14:53:43+00:00'de emekli oldu ve bir daha satır ÜRETMEYECEK. Kol eşik BEKLEMEZ ve hüküm üretemez: kalıcı betimleyici tabandır, 'yakında dolacak' diye sunulmaz. Damga biçimi EDG-037 mirasıdır ve korunmuştur; oradaki '< eşik' ifadesi bir bekleyişi DEĞİL, biçim yasasını gösterir."
+  },
+  "giris_1345": {
+    "n": 0,
+    "seans_sayisi": 0,
+    "damga": "ÖLÇÜLEMEDİ (n=0 < 30) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 30,
+      "seans": 10
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": null,
+    "p25_bps": null,
+    "p75_bps": null,
+    "min_bps": null,
+    "maks_bps": null,
+    "en_buyuk_seans_payi_pct": null,
+    "tek_seans_serhi_gerekli": null,
+    "medyan_model_farki_bps": null,
+    "satir_dokumu": [],
+    "kalici_taban": false
+  },
+  "giris_ortak": {
+    "e2_toplam": 36,
+    "ayna_submitted": 17,
+    "ayna_submitted_fill_bos": 0,
+    "olculemedi": {
+      "n": 17,
+      "satirlar": [
+        {
+          "ticker": "NUE",
+          "tarih": "2026-08-05",
+          "plan_id": "P-2026-08-05-NUE",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "EMR",
+          "tarih": "2026-08-05",
+          "plan_id": "P-2026-08-05-EMR",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "BKNG",
+          "tarih": "2026-08-05",
+          "plan_id": "P-2026-08-05-BKNG",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "AMGN",
+          "tarih": "2026-08-05",
+          "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "MRK",
+          "tarih": "2026-08-13",
+          "plan_id": "P-2026-08-13-MRK",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "CRM",
+          "tarih": "2026-08-13",
+          "plan_id": "P-2026-08-13-CRM",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "MRNA",
+          "tarih": "2026-08-14",
+          "plan_id": "P-2026-08-14-MRNA",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "HUM",
+          "tarih": "2026-08-14",
+          "plan_id": "P-2026-08-14-HUM",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "MRNA",
+          "tarih": "2026-08-19",
+          "plan_id": "P-2026-08-19-MRNA",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "MRK",
+          "tarih": "2026-08-19",
+          "plan_id": "P-2026-08-19-MRK",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "MRVL",
+          "tarih": "2026-08-19",
+          "plan_id": "P-2026-08-19-MRVL",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "LLY",
+          "tarih": "2026-08-19",
+          "plan_id": "P-2026-08-19-LLY",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "BDX",
+          "tarih": "2026-08-19",
+          "plan_id": "P-2026-08-19-BDX",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "PANW",
+          "tarih": "2026-08-21",
+          "plan_id": "P-2026-08-21-PANW",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "DE",
+          "tarih": "2026-08-21",
+          "plan_id": "P-2026-08-21-DE",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "ECL",
+          "tarih": "2026-08-25",
+          "plan_id": "P-2026-08-25-ECL",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        },
+        {
+          "ticker": "CRM",
+          "tarih": "2026-08-27",
+          "plan_id": "P-2026-08-27-CRM-episodic_pivot",
+          "ts": null,
+          "neden": "gönderim damgası `ts` okunamadı (boş/biçimsiz/saat dilimsiz) — kol belirlenemedi. Varsayılan kol kabulü YASAK (EXE-009 P-1 sınıfı); satır hiçbir kola atanmadı, bps hesaplanmadı."
+        }
+      ]
+    },
+    "pencere_siniri": "2026-08-23T14:53:43+00:00",
+    "bolme_anahtari": "ts (gönderim anı) — `pencere` damgası DEĞİL",
+    "k_disiplini": "K TOPLAM = 3 korundu: giris_1345 `pending-042-giris` halefi, giris_once grid'de sayılmaz (hüküm üretemez)",
+    "not": "fill boş satır kovaya girmez (kart filtresi: fill dolu); dolmama oranı bu kartın konusu değil. Havuzlanmış `giris` anahtarı P-3/AYRIK ile KALDIRILDI — operatörün reddettiği karışık sayıyı üretmeye devam etmemesi için."
+  },
+  "cikis_hedef": {
+    "n": 6,
+    "seans_sayisi": 2,
+    "damga": "ÖLÇÜLEMEDİ (n=6 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 15,
+      "seans": 6
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": -4.21,
+    "p25_bps": -4.99,
+    "p75_bps": 10.496,
+    "min_bps": -46.622,
+    "maks_bps": 125.386,
+    "en_buyuk_seans_payi_pct": 66.7,
+    "tek_seans_serhi_gerekli": true,
+    "medyan_model_farki_bps": -9.21,
+    "satir_dokumu": [
+      {
+        "ticker": "MRK",
+        "tarih": "2026-08-19",
+        "bps": -4.728,
+        "model_farki_bps": -9.728
+      },
+      {
+        "ticker": "MRNA",
+        "tarih": "2026-08-19",
+        "bps": 15.225,
+        "model_farki_bps": 10.225
+      },
+      {
+        "ticker": "AMGN",
+        "tarih": "2026-08-27",
+        "bps": -46.622,
+        "model_farki_bps": -51.622
+      },
+      {
+        "ticker": "BKNG",
+        "tarih": "2026-08-27",
+        "bps": 125.386,
+        "model_farki_bps": 120.386
+      },
+      {
+        "ticker": "CRM",
+        "tarih": "2026-08-27",
+        "bps": -5.077,
+        "model_farki_bps": -10.077
+      },
+      {
+        "ticker": "EMR",
+        "tarih": "2026-08-27",
+        "bps": -3.691,
+        "model_farki_bps": -8.691
+      }
+    ],
+    "olculemedi": {
+      "n": 0,
+      "satirlar": []
+    }
+  },
+  "cikis_stop": {
+    "n": 4,
+    "seans_sayisi": 3,
+    "damga": "ÖLÇÜLEMEDİ (n=4 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 15,
+      "seans": 6
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": 0.889,
+    "p25_bps": -30.742,
+    "p75_bps": 2.524,
+    "min_bps": -120.812,
+    "maks_bps": 2.61,
+    "en_buyuk_seans_payi_pct": 50.0,
+    "tek_seans_serhi_gerekli": true,
+    "medyan_model_farki_bps": -4.111,
+    "satir_dokumu": [
+      {
+        "ticker": "HUM",
+        "tarih": "2026-08-19",
+        "bps": 2.61,
+        "model_farki_bps": -2.39
+      },
+      {
+        "ticker": "LLY",
+        "tarih": "2026-08-21",
+        "bps": -120.812,
+        "model_farki_bps": -125.812
+      },
+      {
+        "ticker": "MRVL",
+        "tarih": "2026-08-21",
+        "bps": 2.496,
+        "model_farki_bps": -2.504
+      },
+      {
+        "ticker": "PANW",
+        "tarih": "2026-08-25",
+        "bps": -0.718,
+        "model_farki_bps": -5.718
+      }
+    ],
+    "olculemedi": {
+      "n": 0,
+      "satirlar": []
+    }
+  },
+  "cikis_ortak": {
+    "trades_toplam": 898,
+    "kaynak_disi_replay_seed": 885,
+    "kaynak_disi_diger": 0,
+    "live_paper": 13,
+    "live_paper_afp_bos": 3,
+    "alpaca_fill_beyan_dolu": 1,
+    "siniflanamayan_exit_reason": [],
+    "not": "kill #4: replay_seed kıyasa girmedi · kill #6: alpaca_fill_beyan ölçüm değil, yalnız sayıldı · afp boş live_paper satırı kovaya girmez (kart filtresi)"
+  }
+}

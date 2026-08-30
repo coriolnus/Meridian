@@ -1,0 +1,38 @@
+{
+  "kart": "EDG-2026-042",
+  "konu": "P-3/AYRIK reçete revizyonu — regresyon kanıtı",
+  "snapshot_sha256": "41a75a45258e8b668ec948d34661ab914135b3ffa633c40ba6df26584788de09",
+  "iddia": "Revizyon YALNIZ K1'i böler. Çıkış bacakları (K2/K3) ve ortak sayımlar AYNI snapshot'ta eski ve yeni reçetede BAYT-ÖZDEŞ olmalıdır; olmazsa revizyon kapsam dışına taşmıştır ve koşum DURDURULUR.",
+  "cikis_bayt_ozdes": {
+    "cikis_hedef": true,
+    "cikis_stop": true,
+    "cikis_ortak": true
+  },
+  "hukum": "GEÇTİ",
+  "k1_bolunmesi": {
+    "eski_havuzlanmis": {
+      "n": 17,
+      "seans": 7,
+      "medyan_bps": 29.786
+    },
+    "yeni_giris_once": {
+      "n": 15,
+      "seans": 5,
+      "medyan_bps": 16.131
+    },
+    "yeni_giris_1345": {
+      "n": 2,
+      "seans": 2,
+      "medyan_bps": 210.07
+    },
+    "satir_korunumu": {
+      "eski_toplam": 17,
+      "yeni_toplam": 17,
+      "olculemedi": 0,
+      "korundu": true
+    },
+    "havuzlanmis_anahtar_kaldirildi": true,
+    "damga_bicimi_korundu": true,
+    "beyan": "Kolların medyanları BETİMLEYİCİDİR, hüküm DEĞİL — ikisi de eşik altında (giris_once kalıcı taban; giris_1345 n=2)."
+  }
+}
