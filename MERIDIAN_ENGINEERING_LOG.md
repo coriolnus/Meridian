@@ -62,6 +62,61 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **TUR KAPANIŞI 2026-08-29/30 — UYDURMA MALİYET TURU: DÖRT PR, HEPSİ `main`'DE (sınıf: "bir
+  ölçüm kusuru çekilince ardından üç mekanizma daha geldi"):** başlangıç tek bir bulguydu —
+  `spend.price_for` ücretsiz OpenRouter slug'larını Opus listesinden fiyatlıyordu (canlı A1'de
+  13 çağrı, **7.89 USD harcanmamış para**). Kuyruk ucu dörde çıktı; sırayla:
+  · **#14 `8fe683c` — `:free` VARYANT SONEĞİ.** Kural satıcı adından DEĞİL OpenRouter'ın kendi
+    sözleşmesinden türetildi. Tabloya `nemotron`/`nvidia` EKLENMEDİ, çünkü bu arızayı TERSİNE
+    çevirirdi: aynı satıcının ÜCRETLİ varyantları 0'a fiyatlanır, bu kez HARCANMIŞ para deftere
+    hiç girmezdi — aynı yasanın öbür yönden ihlali. Eşleşme alt-dizge değil iki nokta ile ayrılmış
+    SEGMENT (`":free" in m` testi `vendor/model:freeform`u da bedava sayardı). Çivi ÖNCE yazıldı
+    (11 kırmızı / 8 yeşil; yeşil kalan 8 çürütme bacağı), mutasyon 4/4. **Brief'te olmayan,
+    turda ölçülen:** aynı sessiz uydurma `tencent/hy3:free` ve `openai/gpt-oss-20b:free` için de
+    koşuyordu. **Bedel pano rakamından büyüktü:** `over_budget()` üç ücretli yolu kapatır ve
+    biri BEYİN ZİNCİRİNİN TAMAMIdır (`hermes.py:4275` → `return None`); tampon %39 yenmişti ve
+    ajan yolunun kısması (`_agent_budget_take`) RPM/RPD SAYAR, maliyete BAKMAZ.
+  · **#16 `c7a13b5` — SEÇİCİNİN ÜÇ KAPISI DA ÖLÜYDÜ.** `ops/etkilenen_testler.sh`ta üç yerde
+    `${#DIZI[@]-0}`; bash'te `${#parametre}` varsayılan-değer soneki KABUL ETMEZ →
+    `bad substitution`. Betik `set -e` KULLANMADIĞI için hata ÖLÜMCÜL DEĞİLDİ: stderr'e düşüyor,
+    `[[ ]]` başarısız sayılıyor, kapı SESSİZCE "false" oluyordu. **En tehlikelisi küresel-dosya
+    kapısı:** `tests/conftest.py` (7 autouse fikstür → 7183 testin hepsi) değişince "TAM SUITE
+    GEREKLİ" DEMİYOR, 111 dosyalık dar küme öneriyordu — EKSİK-KAPSAMA, betiğin kendi
+    başlığındaki sözleşmenin TAM TERSİ. Boş-diff kapısının HİÇ çivisi yoktu ve düşünce
+    `grep -rlE ""` her dosyayı tutuyordu: "hiçbir şey değişmedi" girdisi **394 dosya** hükmüne
+    dönüşüyordu. Eklenen ikinci çivi SINIF çivisidir (betik stderr'e genişletme hatası dökemez),
+    çünkü davranış çivileri yalnız BİLİNEN kapıları korur.
+  · **#17 `d030511` — KARTIN DONMUŞ GİRDİSİ SAĞLANAMAZ BİR ŞARTTI.** `EDG-2026-059`un kill
+    kriteri korpusun ÇALIŞMA AĞACINDA donmuş kalmasını istiyordu; ama korpus çivisi RUNBOOK her
+    değiştiğinde onun YENİDEN ÜRETİLMESİNİ zorunlu kılar. İkisi aynı anda sağlanamaz ve kart hiç
+    koşulmadan girdi ÜÇ KEZ kaybolmuştu. Girdi İÇERİK-ADRESLİ git blob'una taşındı — adresleme
+    değişti, GİRDİNİN KENDİSİ değişmedi (sha256 aynen `9f5c91203284d794`).
+  · **#18 `edc4729` — DEFTER ONARIM BETİĞİ**, varsayılanı KURU KOŞU (yukarıdaki AÇIK KALANLAR
+    kalemine bak; canlıda KOŞULMADI).
+  **ARADA ÜRETİLMİŞ BELGE ZİNCİRİ İKİ KEZ ISIRDI** (`docs/RUNBOOK.md` → D6 korpusu): tur boyunca
+  RUNBOOK üç ayrı sebeple bayatladı ve her seferinde korpus çivisi düştü. Beşinci tazeleme
+  yazıldı (`TAZELEME-2026-08-14.md`); emsalin süreç notu ("üretilmiş belgeleri TUR BAŞINA BİR
+  KEZ, tüm ajanlar indikten sonra üret") bu turda ADIYLA doğrulandı.
+
+- **İKİ "YEŞİL AMA YANLIŞ" VAKASI — ÖLÇÜM ARACININ KENDİSİ YANILTTI (2026-08-29/30; sınıf:
+  "yeşil, ölçülmüş demek değildir"):** ikisi de ancak GERÇEK koşumla görüldü ve ikisi de bu
+  deponun kendi doktrinini (ölçmeden hüküm verme) araç katmanında sınadı.
+  · **HARNESS'İN "exit code 0"I PYTEST'İN KODU DEĞİLDİR.** Arka plan sarmalayıcısı
+    `pytest > log; echo "PYTEST_RC=$?" >> log` biçimindeydi; sarmalayıcının çıkış kodu son
+    `echo`unkidir, yani HER ZAMAN 0. Bildirim iki kez "completed (exit code 0)" dedi: birinde
+    suite gerçekte KIRMIZIYDI (`PYTEST_RC=1`, 2 kırmızı), öbüründe SIGTERM'lüydü (`143`).
+    **Hüküm yalnız log'daki `PYTEST_RC` satırından okunur.**
+  · **18 ÇİVİ YEŞİLKEN BETİK KOMUT SATIRINDAN HİÇBİR ŞEY YAPMIYORDU.** `ops/spend_defter_
+    duzeltmesi.py` `parse_args([] if argv is None else argv)` yazıyordu; betik olarak koşulunca
+    `main()` argv=None alır ve `sys.argv` TAMAMEN ATILIR — `--uygula` sessizce yok sayılıyordu.
+    16 çivi bunu göremezdi çünkü hepsi `main([...])`'i DOĞRUDAN çağırıyordu: **API sınanıyordu,
+    GİRİŞ NOKTASI değil.** Bir ops betiğinin sözleşmesi komut satırıdır. Çivi SD10 alt süreçle
+    betiği gerçekten koşturur.
+  **ÜÇÜNCÜ, KENDİ HATAM (kayda geçiyor):** arka planda tam suite koşarken ana checkout'ta dal
+  değiştirdim; 14 dakikalık koşum kayan bir ağacı ölçtü ve GEÇERSİZ oldu. Sonucu raporlamak
+  yerine öldürüp attım. Kural: **arka planda otoriter suite koşarken dal DEĞİŞTİRİLMEZ**;
+  taban karşılaştırması gerekiyorsa ayrı worktree ya da `git checkout <ref> -- <yol>` kullanılır.
+
 - **KILL#1 p95 ÇİVİSİ TAM SUITE'TE KIRMIZI VERDİ; ÖLÇÜM BUNUN REGRESYON OLMADIĞINI GÖSTERDİ
   (2026-08-29, `752e51e` birleştirme koşumu):** `test_p95_dongu_suresi_kart_tavanini_ASMIYOR` 7148
   yeşilin içinde TEK kırmızıydı. **"Flake" bir kök neden değildir**, o yüzden iki bağımsız ölçüm
@@ -849,10 +904,17 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   (koşarken state'e yazılmaz) · bakım penceresi · önce `--dry-run` diff (kaç satır, hangi ts'ler) ·
   yedek (`spend.jsonl.bak-<tarih>`) · değişmez: satır sayısı önce == sonra · sonrasında
   `ledgers.validate_live("spend.jsonl")` + `spend.summary()` doğrulaması.
-  **BU TURDA BİLEREK YAPILMAYAN:** düzeltme betiği YAZILMADI. Gerekçe: betiğin tek işi canlı
-  state'i yeniden yazmaktır ve hangi seçeneğin (a/b/c) uygulanacağı bir OPERATÖR kararıdır —
-  karar verilmeden yazılan betik, onay kapısını bir dosya varlığıyla ima etmiş olurdu. Karar (c)
-  yönünde verilirse betik `ops/` altına, varsayılanı dry-run olacak biçimde yazılır.
+  **[2026-08-29'da YAZILDI] BU TURDA BİLEREK YAPILMAYAN:** düzeltme betiği YAZILMADI. Gerekçe:
+  betiğin tek işi canlı state'i yeniden yazmaktır ve hangi seçeneğin (a/b/c) uygulanacağı bir
+  OPERATÖR kararıdır — karar verilmeden yazılan betik, onay kapısını bir dosya varlığıyla ima
+  etmiş olurdu. Karar (c) yönünde verilirse betik `ops/` altına, varsayılanı dry-run olacak
+  biçimde yazılır.
+  **DÜZELTME (2026-08-30, satır SİLİNMEDİ):** operatör (c)'yi seçti ve betiği istedi — yazıldı:
+  `ops/spend_defter_duzeltmesi.py` (#18, `edc4729`), varsayılanı KURU KOŞU, çivisi
+  `tests/test_spend_defter_duzeltmesi_v331.py` (18 çivi, mutasyon 5/5). Kalem KAPANMADI, yalnız
+  YER DEĞİŞTİRDİ: açık olan şey artık "betik yok" değil, **betiğin canlıda KOŞULMAMIŞ olması**.
+  Koşma sırası: `./ops/stop-worker.sh` → kuru koşu → çıktıyı oku → `--uygula` → worker'ı başlat.
+  Betik A1'e erişemeyen bir cloud kabında yazıldı; canlı defterde HİÇ koşmadı.
   **KAPSAM NOTU:** aynı uydurma `tencent/hy3:free` ve `openai/gpt-oss-20b:free` satırlarında da
   koşmuş olabilir (ikisi de aynı kurala takılmıyordu; ROADMAP 2026-08-14 zincir taşınması). Dry-run
   bunları ADIYLA saymalı — 13 sayısı yalnız iki nemotron slug'ı için ÖLÇÜLDÜ, defterin tamamı için
@@ -1003,6 +1065,16 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   realized_30d/threshold/n + pano bütünlük yüzeyi; goal.yaml İZLİ (dagit [1b] SSoT), değişiklik ayrı turdur.
 
 ## KALICI RİSKLER / DERSLER
+
+- **YEŞİL ÇİVİ TAKIMI, GERÇEK KOŞUMUN YERİNE GEÇMEZ (2026-08-30).** Bir ops betiğinin sözleşmesi
+  `main()` değil KOMUT SATIRIDIR; bir arka plan işinin hükmü sarmalayıcının çıkış kodu değil
+  aracın KENDİ kodudur. Bu turda ikisi de yanılttı (ayrıntı §BU OTURUMDA). Kural: teslimden önce
+  aracı operatörün koşacağı BİÇİMDE bir kez koş, ve hükmü aracın kendi çıktısından oku.
+- **BİR ÇİVİ İLE BİR KART AYNI ARTEFAKTI TERS YÖNDE ŞARTA BAĞLAYABİLİR (2026-08-29).**
+  `EDG-2026-059` korpusun DONMUŞ kalmasını, `test_korpus_ureticisi_...` ise RUNBOOK değişince
+  YENİDEN ÜRETİLMESİNİ şart koşuyordu; çelişki üç kez sessizce kartı öldürdü. Ön-kayıt bir
+  artefaktı donduruyorsa, girdi ÇALIŞMA AĞACINA değil İÇERİK-ADRESLİ bir referansa (git blob)
+  bağlanmalıdır — yoksa şart, deponun kendi çivileriyle sağlanamaz hâle gelir.
 
 - Waiter/ajan-içi bekletici YASAK (iki arıza). Tam suite turda BİR kez, ön planda, senkron.
 - file_lock süreç-içi; canlı worker koşarken state'e ikinci süreçten yazma.
