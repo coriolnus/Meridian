@@ -1076,7 +1076,11 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   artefaktı donduruyorsa, girdi ÇALIŞMA AĞACINA değil İÇERİK-ADRESLİ bir referansa (git blob)
   bağlanmalıdır — yoksa şart, deponun kendi çivileriyle sağlanamaz hâle gelir.
 
-- Waiter/ajan-içi bekletici YASAK (iki arıza). Tam suite turda BİR kez, ön planda, senkron.
+- Waiter/ajan-içi bekletici YASAK (iki arıza). Tam suite turda BİR kez — **ARKA PLANDA**
+  (`run_in_background`), senkron DEĞİL. Bu satır 2026-08-30'a dek "ön planda, senkron"
+  diyordu: suite ~3.750 test / ~9 dk iken yazılmıştı ve o gün doğruydu. Bugün 7.696 test /
+  ~26 dk (6 koşum ölçümü) ve Bash tavanı 600 sn — ön plan İMKÂNSIZ. CLAUDE.md madde 7 ile
+  zıt emir veriyordu; "iki kopya sessizce ayrışır" sınıfının bu belgedeki canlı örneğiydi.
 - file_lock süreç-içi; canlı worker koşarken state'e ikinci süreçten yazma.
 - rsync dağıtımı tüm repoyu taşır — yarım iş canlıya gidebilir; önce dry-run + mtime.
 - Sınıflandırıcı curl|sh'ı engeller → kurulumlar PyPI/pipx veya sabitlenmiş git klonuyla.

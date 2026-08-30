@@ -1385,7 +1385,7 @@ olabilir: bu depoda tekrar eden şey tek tek hatalar değil, HATA SINIFLARIDIR.
 
 - **YEŞİL ÇİVİ TAKIMI, GERÇEK KOŞUMUN YERİNE GEÇMEZ (2026-08-30).** Bir ops betiğinin sözleşmesi `main()` değil KOMUT SATIRIDIR; bir arka plan işinin hükmü sarmalayıcının çıkış kodu değil aracın KENDİ kodudur. Bu turda ikisi de yanılttı (ayrıntı §BU OTURUMDA). Kural: teslimden önce aracı operatörün koşacağı BİÇİMDE bir kez koş, ve hükmü aracın kendi çıktısından oku.
 - **BİR ÇİVİ İLE BİR KART AYNI ARTEFAKTI TERS YÖNDE ŞARTA BAĞLAYABİLİR (2026-08-29).** `EDG-2026-059` korpusun DONMUŞ kalmasını, `test_korpus_ureticisi_...` ise RUNBOOK değişince YENİDEN ÜRETİLMESİNİ şart koşuyordu; çelişki üç kez sessizce kartı öldürdü. Ön-kayıt bir artefaktı donduruyorsa, girdi ÇALIŞMA AĞACINA değil İÇERİK-ADRESLİ bir referansa (git blob) bağlanmalıdır — yoksa şart, deponun kendi çivileriyle sağlanamaz hâle gelir.
-- Waiter/ajan-içi bekletici YASAK (iki arıza). Tam suite turda BİR kez, ön planda, senkron.
+- Waiter/ajan-içi bekletici YASAK (iki arıza). Tam suite turda BİR kez — **ARKA PLANDA** (`run_in_background`), senkron DEĞİL. Bu satır 2026-08-30'a dek "ön planda, senkron" diyordu: suite ~3.750 test / ~9 dk iken yazılmıştı ve o gün doğruydu. Bugün 7.696 test / ~26 dk (6 koşum ölçümü) ve Bash tavanı 600 sn — ön plan İMKÂNSIZ. CLAUDE.md madde 7 ile zıt emir veriyordu; "iki kopya sessizce ayrışır" sınıfının bu belgedeki canlı örneğiydi.
 - file_lock süreç-içi; canlı worker koşarken state'e ikinci süreçten yazma.
 - rsync dağıtımı tüm repoyu taşır — yarım iş canlıya gidebilir; önce dry-run + mtime.
 - Sınıflandırıcı curl|sh'ı engeller → kurulumlar PyPI/pipx veya sabitlenmiş git klonuyla.
