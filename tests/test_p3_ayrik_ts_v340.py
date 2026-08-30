@@ -93,3 +93,23 @@ def test_GOREV_AYNASI_DEPODA_ve_YEREL_KOPYAYLA_OZDES():
     assert ayna.read_bytes() == yerel.read_bytes(), (
         "depo aynası ile ~/.claude kopyası AYRIŞMIŞ — Cumartesi koşumu depoda görünmeyen bir "
         "metne göre çalışacak; aynayı güncelleyip yerel kopyayı ondan türet")
+
+
+def test_ISARETCI_ILANI_OKUMA_YOLUNDA_DA_TEKIL():
+    """Yük taşıyan kaydın TEKİL olması gerekir — çivide değil yalnız, OKUMA yolunda da.
+
+    Vaka (2026-08-31, yan oturum): "GÜNCEL DONUK REÇETE İŞARETÇİSİ" ifadesi kartta üç yerde
+    geçer oldu; ikisi şimdiki-zaman ilanıydı (R2 "budur" · p3 "="). Görev metni reçeteyi bu
+    ifadeyle arayan bir MODELE okutulur, regex'e değil — iki ilan gören ajan doğruyu ancak
+    devir cümlesini de okursa seçer. Bu hafta aynı sınıf bir kez pahalıya patladı (görev
+    08-22'yi işaret ederken R2 yürürlükteydi). Kural: p3 bloğundan ÖNCEKİ her ilan, KENDİ
+    satırında tarihli DEVREDİLDİ şerhi taşır — eski ilan silinmez, tarihçe olarak okunur.
+    """
+    kart = KART.read_text(encoding="utf-8")
+    p3 = kart.index("p3_karar_ayrik_ts_2026_08_31")
+    for i, satir in enumerate(kart[:p3].splitlines(), 1):
+        if "GÜNCEL DONUK REÇETE İŞARETÇİSİ" in satir:
+            assert "DEVREDİLDİ" in satir, (
+                f"kartın {i}. satırındaki ESKİ işaretçi ilanı devir şerhi taşımıyor — Cumartesi "
+                "ajanı iki şimdiki-zaman ilanı görür ve yanlış reçeteyi seçebilir; ilanın yanına "
+                "tarihli [DEVREDİLDİ → p3_karar_ayrik_ts_2026_08_31] düşülmeli")

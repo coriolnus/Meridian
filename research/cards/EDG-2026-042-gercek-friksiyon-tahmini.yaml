@@ -189,7 +189,7 @@ r2_short_isaret_sozlesmesi_2026_08_24: >
   işaretle ölçer, kart o gün yeniden açılmak zorunda kalmaz.
 
   REÇETE KARŞILIĞI: `research/olcumler/edg042_recete_short_2026-08-24/olcum.py` — 2026-08-22 donuk
-  reçetesinin KOPYASI + YALNIZ yön koşullaması. GÜNCEL DONUK REÇETE İŞARETÇİSİ budur; `status:`
+  reçetesinin KOPYASI + YALNIZ yön koşullaması. GÜNCEL DONUK REÇETE İŞARETÇİSİ budur [DEVREDİLDİ 2026-08-31 → `p3_karar_ayrik_ts_2026_08_31`]; `status:`
   bloğundaki 2026-08-22 işaretçisi tarihçe olarak DOKUNULMADAN durur ve o dizin
   (`edg042_kosum_2026-08-22/`) tek bayt değiştirilmedi — hangi koşumun hangi reçeteyi kullandığı
   dizinden geri izlenir.
@@ -225,7 +225,7 @@ haftalik_kosum_2026_08_29: >
   ana checkout state/'ine tek bayt yazılmadı; donmuş dizinler (edg042_kosum_2026-08-22/,
   edg042_recete_short_2026-08-24/) sha256 ile doğrulandı ve DEĞİŞMEDİ.
   KULLANILAN REÇETE = R2 (edg042_recete_short_2026-08-24/olcum.py, sha 1dcb7708…) — kartın
-  `r2_short_isaret_sozlesmesi_2026_08_24` bloğu bunu "GÜNCEL DONUK REÇETE İŞARETÇİSİ" ilan eder;
+  `r2_short_isaret_sozlesmesi_2026_08_24` bloğu bunu "GÜNCEL DONUK REÇETE İŞARETÇİSİ" ilan eder [DEVREDİLDİ 2026-08-31 → `p3_karar_ayrik_ts_2026_08_31`];
   zamanlanmış görev metni hâlâ 2026-08-22 reçetesini yazıyordu, kart kazandı. Bu koşumda 10
   çıkış satırının 10'u da side="long" olduğundan R2'nin short dalı HİÇ ateşlenmedi (sayılar iki
   reçetede özdeş çıkardı) — seçim yine de karta göre yapıldı, "sonuç aynıydı" gerekçe değildir.
