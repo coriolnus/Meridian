@@ -14,6 +14,15 @@
    (§1→§3, §2→§4 …) ve 151 atıf çevrildi. Kolon adlarını buraya gömmek, belgenin
    bir sonraki yeniden örgütlenmesinde panoyu SESSİZCE yanlış yapardı.
 
+   TABLO SATIRLARI DA ÇİZİLİR (2026-08-31'de eklendi, ÖLÇÜMLE). Bu yüzey açıldığı
+   günden 2026-08-31'e dek yalnız `maddeler`i okuyordu; ucun gönderdiği `tablolar[]`
+   hiçbir yerde tüketilmiyordu. Ölçülen bedel: belgede 450 düzyazı maddesi ve 188
+   tablo satırı var ve `§2 TAHTA` — AKTİF KALEM tahtası, tamamı tablo — panoda
+   "0 madde" olarak çiziliyordu. Operatörün gördüğü grafikte tahta BOŞ bir satırdı,
+   grafiği ise `§7 KARAR GÜNLÜĞÜ`nün 197 düzyazı maddesi dolduruyordu. İKİ SAYIM
+   TOPLANMAZ (ucun kendi şerhi): madde ile tablo satırı ayrı BİRİMdir, ayrı çizilir,
+   ayrı sayılır. Toplasaydık "belgede 638 kalem var" derdik — böyle bir kalem yok.
+
    "BELİRSİZ" KOVASI BİRLEŞTİRİLMEZ. Ucun ayrıştırıcısının en önemli satırı:
    işaretsiz kalem "açık" değil "belirsiz"dir (api.py:6605). Panoda o beş kovayı
    dörde indirmek — ya da "belirsiz"i "açık"a katmak — ölçülmemiş bir sayıyı
@@ -45,11 +54,13 @@ import { Hal, SaltOkunurRozet } from "./Hal";
 import {
   DURUM_ETIKETI,
   DURUM_SIRASI,
+  TABLO_DURUM_SIRASI,
   bolumBasligi,
   roadmapOku,
   type RoadmapBolumu,
   type RoadmapMaddesi,
   type RoadmapOkumasi,
+  type RoadmapTabloSatiri,
 } from "./roadmap";
 
 /* KART TAVANI: §7 karar günlüğü tek başına yüzlerce madde taşıyor (belge 4622
@@ -63,7 +74,17 @@ const durumAyari = {
   askida: { label: "askıda", color: "var(--chart-3)" },
   belirsiz: { label: "belirsiz", color: "var(--chart-1)" },
   kapali: { label: "kapalı", color: "var(--chart-4)" },
+  cok_isaretli: { label: "çok işaretli", color: "var(--chart-5)" },
 } satisfies ChartConfig;
+
+/** Bir tablo satırının kovası. Uç satırı tek hükme indiremediyse `durum` null gelir
+ *  ve nedeni `durum_neden`de yazar — o satır "belirsiz" DEĞİLDİR (işaretsiz değil,
+ *  ÇOK işaretli) ve kendi kovasına gider. Alan hiç yoksa hüküm YOK: `null` döner ve
+ *  çağıran onu "durumsuz" diye SAYAR, bir kovaya sıvamaz. */
+function tabloKovasi(r: RoadmapTabloSatiri): string | null {
+  if (r.durum !== null) return r.durum;
+  return r.durumNeden !== null ? "cok_isaretli" : null;
+}
 
 function durumRozetiTonu(durum: string | null): "default" | "secondary" | "destructive" | "outline" | "ghost" {
   if (durum === "bloke") return "destructive";
@@ -139,30 +160,140 @@ function MaddeKarti({ m }: { m: RoadmapMaddesi }) {
   );
 }
 
-function Kolon({ b, maddeler }: { b: RoadmapBolumu; maddeler: readonly RoadmapMaddesi[] }) {
+/* TABLO SATIRI KARTI — madde kartından AYRI, çünkü birim ayrı. Bir tablo satırının
+   "başlığı" yoktur; ilk hücre kalemin adıdır, kalanlar ADLI alanlardır ve o adlar
+   tablonun kendi başlık satırından gelir (uydurulmuyor: `basliklar`). Hücre metni
+   uçta 400 karakterde kırpılabilir ve kart bunu damgalar. */
+function TabloSatiriKarti({ r }: { r: RoadmapTabloSatiri }) {
+  const kova = tabloKovasi(r);
+  const [ilk, ...kalan] = r.hucreler;
+
+  return (
+    <article className="flex flex-col gap-2 rounded-xl border border-dashed bg-card p-3.5 text-card-foreground shadow-xs">
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="min-w-0 font-medium text-sm leading-5">
+          {ilk !== undefined && ilk.trim() !== "" ? (
+            <span className="line-clamp-2">{ilk}</span>
+          ) : (
+            <span className="text-muted-foreground italic">ilk hücre boş</span>
+          )}
+        </h4>
+        {kova === null ? (
+          <Badge variant="ghost" className="shrink-0 text-[11px]" title="satırda `durum` da `durum_neden` de yok">
+            durumsuz
+          </Badge>
+        ) : (
+          <Badge
+            variant={kova === "cok_isaretli" ? "secondary" : durumRozetiTonu(kova)}
+            className="shrink-0 text-[11px]"
+            title={
+              r.durumNeden ??
+              "durum satırın hücrelerinde arandı; hangi kelimeden okunduğu `hucre_durum`da"
+            }
+          >
+            {DURUM_ETIKETI[kova] ?? kova}
+          </Badge>
+        )}
+      </div>
+
+      {kalan.length > 0 ? (
+        <dl className="flex flex-col gap-1">
+          {kalan.map((h, i) => {
+            const ad = r.basliklar[i + 1];
+            if (h.trim() === "") return null;
+            return (
+              <div key={`${r.anahtar}-h${i}`} className="flex min-w-0 gap-1.5 text-xs leading-5">
+                <dt className="shrink-0 text-[10px] text-muted-foreground uppercase">
+                  {ad !== undefined && ad.trim() !== "" ? ad : `alan ${i + 2}`}
+                </dt>
+                <dd className="line-clamp-2 min-w-0 text-muted-foreground">{h}</dd>
+              </div>
+            );
+          })}
+        </dl>
+      ) : null}
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        {r.altBolum ? (
+          <Badge variant="secondary" className="max-w-full truncate text-[10px]" title={r.altBolum}>
+            {r.altBolum}
+          </Badge>
+        ) : null}
+        {r.ustuCizili ? (
+          <Badge
+            variant="outline"
+            className="gap-1 text-[10px]"
+            title="satırda üstü çizili metin var — bir kapanış iddiası GERİ ALINMIŞ olabilir"
+          >
+            <Strikethrough className="size-3" aria-hidden />
+            geri alınmış
+          </Badge>
+        ) : null}
+        {r.kirpildi ? (
+          <Badge variant="ghost" className="text-[10px]" title="satırın en az bir hücresi uçta kırpıldı">
+            kırpıldı
+          </Badge>
+        ) : null}
+        <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+          {r.satir === null ? "satırsız" : `satır ${r.satir}`}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function Kolon({
+  b,
+  maddeler,
+  tabloSatirlari,
+}: {
+  b: RoadmapBolumu;
+  maddeler: readonly RoadmapMaddesi[];
+  tabloSatirlari: readonly RoadmapTabloSatiri[];
+}) {
   const gosterilen = maddeler.slice(0, KART_TAVANI);
+  const tabloGosterilen = tabloSatirlari.slice(0, KART_TAVANI);
+  const bosMu = gosterilen.length === 0 && tabloGosterilen.length === 0;
 
   return (
     <section className="flex min-h-0 flex-col rounded-xl border bg-muted/50">
       <div className="px-4 pt-4 pb-3">
         <h3 className="break-words font-medium text-base leading-tight">{bolumBasligi(b)}</h3>
         <p className="mt-1 text-muted-foreground text-sm tabular-nums leading-none">
-          {maddeler.length} madde
+          {maddeler.length} madde · {tabloSatirlari.length} tablo satırı
           {b.altBolumN > 0 ? ` · ${b.altBolumN} alt başlık` : ""}
         </p>
       </div>
       <div className="flex max-h-[34rem] min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3 pb-3 [scrollbar-color:var(--border)_transparent] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1">
-        {gosterilen.length === 0 ? (
+        {bosMu ? (
           <p className="rounded-lg border border-dashed px-3 py-6 text-center text-muted-foreground text-xs">
-            bu süzgeçte madde yok
+            bu süzgeçte kalem yok
           </p>
-        ) : (
-          gosterilen.map((m) => <MaddeKarti key={m.anahtar} m={m} />)
-        )}
+        ) : null}
+        {gosterilen.map((m) => (
+          <MaddeKarti key={m.anahtar} m={m} />
+        ))}
         {maddeler.length > gosterilen.length ? (
           <p className="rounded-lg border border-dashed px-3 py-2 text-center text-muted-foreground text-xs">
             {gosterilen.length} / {maddeler.length} gösteriliyor — kalan {maddeler.length - gosterilen.length}{" "}
             madde tahtada ÇİZİLMEDİ (kart tavanı {KART_TAVANI}).
+          </p>
+        ) : null}
+        {tabloGosterilen.map((r) => (
+          <TabloSatiriKarti key={r.anahtar} r={r} />
+        ))}
+        {tabloSatirlari.length > tabloGosterilen.length ? (
+          <p className="rounded-lg border border-dashed px-3 py-2 text-center text-muted-foreground text-xs">
+            {tabloGosterilen.length} / {tabloSatirlari.length} tablo satırı gösteriliyor — kalan{" "}
+            {tabloSatirlari.length - tabloGosterilen.length} satır ÇİZİLMEDİ (kart tavanı {KART_TAVANI}).
+          </p>
+        ) : null}
+        {b.tabloAtlananN > 0 ? (
+          <p
+            className="rounded-lg border border-dashed px-3 py-2 text-center text-muted-foreground text-xs"
+            title="uç bu blokları `|` ile başlıyor diye tablo sanmadı; nedenlerini gövdede sayıyor"
+          >
+            {b.tabloAtlananN} boru-karakterli blok tablo SAYILMADI (uç atladı, sessizce düşürmedi).
           </p>
         ) : null}
       </div>
@@ -197,6 +328,14 @@ export function YolHaritasi() {
 function Tahta({ ham }: { ham: unknown }) {
   const okuma: RoadmapOkumasi = useMemo(() => roadmapOku(ham), [ham]);
   const [suzgec, setSuzgec] = useState<string | null>(null);
+  /* GRAFİK SÜZGECİ (yalnız iki çubuk grafiği etkiler, tahtayı DEĞİL): işaretsiz
+     kalemler dağılımı boğuyor — belgenin 450 maddesinin 327'si düzyazıdır ve
+     `§7 KARAR GÜNLÜĞÜ` tek başına 163'ünü taşır. Çözüm §7'yi ADIYLA gizlemek
+     DEĞİL (§-numaraları 2026-08-17'de bir kez zaten kaydı; bölüm adı gömmek bu
+     dosyanın kendi başlığındaki yasağa girer), İŞARETSİZ KOVASINI kapatmaktır:
+     kural bölüm ayrımı yapmaz, her bölüme aynı ölçütle uygulanır ve bir günlük
+     bölümü kendiliğinden sıfıra iner — çünkü kayıt kalem değildir. */
+  const [isaretsizGizli, setIsaretsizGizli] = useState(false);
 
   if (okuma.tur === "hata") {
     return (
@@ -260,33 +399,67 @@ function Tahta({ ham }: { ham: unknown }) {
     else kendiDurumSayimi.set(m.durum, (kendiDurumSayimi.get(m.durum) ?? 0) + 1);
   }
 
+  // TABLO TARAFI — madde tarafının birebir ikizi, ve İKİSİ TOPLANMAZ.
+  const tumTabloSatirlari = bolumler.flatMap((b) => b.tabloSatirlari);
+  const bizimTabloN = tumTabloSatirlari.length;
+  const tabloBeyanAyrisiyor = sayim.tabloSatirN !== null && sayim.tabloSatirN !== bizimTabloN;
+  const kendiTabloSayimi = new Map<string, number>();
+  let tabloDurumsuz = 0;
+  for (const r of tumTabloSatirlari) {
+    const k = tabloKovasi(r);
+    if (k === null) tabloDurumsuz += 1;
+    else kendiTabloSayimi.set(k, (kendiTabloSayimi.get(k) ?? 0) + 1);
+  }
+
   const suzulmus = (b: RoadmapBolumu) =>
     suzgec === null ? b.maddeler : b.maddeler.filter((m) => m.durum === suzgec);
+  const suzulmusTablo = (b: RoadmapBolumu) =>
+    suzgec === null ? b.tabloSatirlari : b.tabloSatirlari.filter((r) => tabloKovasi(r) === suzgec);
+
+  const kolonAdi = (b: RoadmapBolumu) => b.no ?? (b.baslik ?? "?").slice(0, 18);
+  const grafikKovalari = isaretsizGizli
+    ? DURUM_SIRASI.filter((d) => d !== "belirsiz")
+    : DURUM_SIRASI;
+  const tabloGrafikKovalari = isaretsizGizli
+    ? TABLO_DURUM_SIRASI.filter((d) => d !== "belirsiz")
+    : TABLO_DURUM_SIRASI;
 
   const grafikVerisi = bolumler.map((b) => {
-    const satir: Record<string, string | number> = { bolum: b.no ?? (b.baslik ?? "?").slice(0, 18) };
-    for (const d of DURUM_SIRASI) satir[d] = b.maddeler.filter((m) => m.durum === d).length;
+    const satir: Record<string, string | number> = { bolum: kolonAdi(b) };
+    for (const d of grafikKovalari) satir[d] = b.maddeler.filter((m) => m.durum === d).length;
     return satir;
   });
+  const tabloGrafikVerisi = bolumler.map((b) => {
+    const satir: Record<string, string | number> = { bolum: kolonAdi(b) };
+    for (const d of tabloGrafikKovalari) {
+      satir[d] = b.tabloSatirlari.filter((r) => tabloKovasi(r) === d).length;
+    }
+    return satir;
+  });
+  const gizlenenN = (kendiDurumSayimi.get("belirsiz") ?? 0) + (kendiTabloSayimi.get("belirsiz") ?? 0);
 
   interface DurumSatiri {
     readonly durum: string;
     readonly ucSayimi: number | null;
     readonly panoSayimi: number;
+    readonly tabloUc: number | null;
+    readonly tabloPano: number;
   }
-  const durumSatirlari: DurumSatiri[] = [...DURUM_SIRASI]
-    .map<DurumSatiri>((d) => ({
-      durum: d,
-      ucSayimi: sayim.durum.get(d) ?? null,
-      panoSayimi: kendiDurumSayimi.get(d) ?? 0,
-    }))
-    .concat(
-      // Ucun sözlüğünde OLMAYAN bir durum gelirse (ayrıştırıcı büyürse) sessizce
-      // düşmesin: bilinmeyen kovalar da tabloya girer.
-      [...kendiDurumSayimi.keys()]
-        .filter((d) => !DURUM_SIRASI.includes(d as (typeof DURUM_SIRASI)[number]))
-        .map((d) => ({ durum: d, ucSayimi: sayim.durum.get(d) ?? null, panoSayimi: kendiDurumSayimi.get(d) ?? 0 })),
-    );
+  const durumSatiriKur = (d: string): DurumSatiri => ({
+    durum: d,
+    ucSayimi: sayim.durum.get(d) ?? null,
+    panoSayimi: kendiDurumSayimi.get(d) ?? 0,
+    tabloUc: sayim.tabloDurum.get(d) ?? null,
+    tabloPano: kendiTabloSayimi.get(d) ?? 0,
+  });
+  // Ucun sözlüğünde OLMAYAN bir durum gelirse (ayrıştırıcı büyürse) sessizce
+  // düşmesin: bilinmeyen kovalar da tabloya girer. Kaynak ÜÇ küme: bildiğimiz sıra
+  // + panonun madde sayımı + panonun tablo sayımı.
+  const tumKovalar: string[] = [...TABLO_DURUM_SIRASI];
+  for (const d of [...kendiDurumSayimi.keys(), ...kendiTabloSayimi.keys()]) {
+    if (!tumKovalar.includes(d)) tumKovalar.push(d);
+  }
+  const durumSatirlari: DurumSatiri[] = tumKovalar.map(durumSatiriKur);
 
   return (
     <div className="flex flex-col gap-4">
@@ -346,7 +519,49 @@ function Tahta({ ham }: { ham: unknown }) {
         </Alert>
       ) : null}
 
-      {/* --------------------------- İKİ ÖLÇÜM --------------------------- */}
+      {tabloBeyanAyrisiyor ? (
+        <Alert variant="destructive">
+          <Info />
+          <AlertTitle>Tablo satırı sayısı ayrışıyor</AlertTitle>
+          <AlertDescription>
+            Uç {sayim.tabloSatirN} tablo satırı beyan etti, pano {bizimTabloN} saydı. Madde tarafının
+            ikizi bir kapı: tablo dalı sessizce atlanırsa `§2 TAHTA` yine boş görünürdü — bu yüzey
+            bir kez tam olarak bu yüzden yanlış çizmişti.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {sayim.tabloAtlananN !== null && sayim.tabloAtlananN > 0 ? (
+        <Alert>
+          <Info />
+          <AlertTitle>{sayim.tabloAtlananN} boru-karakterli blok tablo sayılmadı</AlertTitle>
+          <AlertDescription>
+            Uç bu blokları markdown tablosu olarak ayrıştıramadı (ayraç satırı yok ya da başlık
+            satırı üstünde değil) ve bunu SESSİZCE düşürmek yerine sayıyor. İçlerindeki satırlar
+            aşağıdaki hiçbir sayaca girmiyor.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {/* --------------------------- ÜÇ ÖLÇÜM --------------------------- */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-muted-foreground text-xs">GRAFİK</span>
+        <Button
+          variant={isaretsizGizli ? "default" : "outline"}
+          size="sm"
+          className="h-7 px-2.5 text-xs"
+          onClick={() => setIsaretsizGizli(!isaretsizGizli)}
+          title="Yalnız iki çubuk grafiğini etkiler; aşağıdaki tahta ve süzgeç değişmez."
+        >
+          {isaretsizGizli ? "işaretsizler gizli" : "işaretsizleri gizle"} · {gizlenenN}
+        </Button>
+        <span className="text-muted-foreground text-xs leading-5">
+          {isaretsizGizli
+            ? "İşaretsiz kova iki grafikten de çıkarıldı — kural bölüm ayırmaz, hepsine aynı uygulanır. Kronolojik bir günlük bölümü kendiliğinden sıfıra iner: kayıt kalem değildir."
+            : "İşaretsiz kova dağılımı boğuyorsa kapatabilirsin. Sayı SİLİNMEZ, yalnız çizilmez."}
+        </span>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -388,7 +603,7 @@ function Tahta({ ham }: { ham: unknown }) {
                     verticalAlign="top"
                     content={<ChartLegendContent className="justify-end" />}
                   />
-                  {DURUM_SIRASI.map((d) => (
+                  {grafikKovalari.map((d) => (
                     <Bar isAnimationActive={false} key={d} dataKey={d} stackId="d" fill={`var(--color-${d})`} />
                   ))}
                 </BarChart>
@@ -399,13 +614,75 @@ function Tahta({ ham }: { ham: unknown }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Durum dağılımı</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Rows3 className="size-4 text-muted-foreground" aria-hidden />
+              Bölüm başına tablo satırı
+            </CardTitle>
             <CardDescription>
-              Ucun ayrıştırıcısının beş kovası — pano bunları birleştirmiyor, yorumlamıyor.
+              Maddeyle TOPLANMAZ — ayrı birim. `§2 TAHTA` tamamen tablodur ve bu grafik açılana dek
+              panoda hiç görünmüyordu.
             </CardDescription>
             <CardAction>
               <Badge variant="outline" className="tabular-nums">
+                {bizimTabloN} satır
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            <div className="min-w-0 overflow-x-auto">
+              <ChartContainer
+                config={durumAyari}
+                className="w-full"
+                style={{ height: `${Math.max(200, bolumler.length * 34 + 40)}px` }}
+              >
+                <BarChart
+                  accessibilityLayer
+                  data={tabloGrafikVerisi}
+                  layout="vertical"
+                  margin={{ left: 4, right: 16 }}
+                >
+                  <CartesianGrid horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="bolum"
+                    axisLine={false}
+                    tickLine={false}
+                    tickMargin={6}
+                    width={64}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--muted)" }} />
+                  <ChartLegend
+                    align="right"
+                    verticalAlign="top"
+                    content={<ChartLegendContent className="justify-end" />}
+                  />
+                  {tabloGrafikKovalari.map((d) => (
+                    <Bar isAnimationActive={false} key={d} dataKey={d} stackId="t" fill={`var(--color-${d})`} />
+                  ))}
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Durum dağılımı</CardTitle>
+            <CardDescription>
+              Ucun ayrıştırıcısının kovaları, İKİ BİRİM için ayrı ayrı — pano bunları birleştirmiyor,
+              yorumlamıyor, toplamıyor. Her kovada uç beyanı ile pano sayımı yan yana: ayrışırlarsa
+              kırmızı.
+            </CardDescription>
+            <CardAction className="flex gap-1.5">
+              <Badge variant="outline" className="tabular-nums">
                 {bizimN} madde
+              </Badge>
+              <Badge variant="outline" className="tabular-nums">
+                {bizimTabloN} satır
               </Badge>
             </CardAction>
           </CardHeader>
@@ -415,9 +692,10 @@ function Tahta({ ham }: { ham: unknown }) {
                 <TableHeader className="bg-muted/30">
                   <TableRow>
                     <TableHead>Durum</TableHead>
-                    <TableHead>Uç beyanı</TableHead>
-                    <TableHead>Pano sayımı</TableHead>
-                    <TableHead>Pay</TableHead>
+                    <TableHead>Madde: uç</TableHead>
+                    <TableHead>Madde: pano</TableHead>
+                    <TableHead>Tablo: uç</TableHead>
+                    <TableHead>Tablo: pano</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -446,7 +724,24 @@ function Tahta({ ham }: { ham: unknown }) {
                         {s.panoSayimi}
                       </TableCell>
                       <TableCell className="tabular-nums text-xs">
-                        {bizimN === 0 ? "—" : `${Math.round((100 * s.panoSayimi) / bizimN)}%`}
+                        {s.tabloUc === null ? (
+                          <span
+                            className="text-muted-foreground"
+                            title="uç bu kovayı `sayim.tablo_durum` içinde göndermedi"
+                          >
+                            ölçülemedi
+                          </span>
+                        ) : (
+                          s.tabloUc
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "tabular-nums text-xs",
+                          s.tabloUc !== null && s.tabloUc !== s.tabloPano && "font-medium text-destructive",
+                        )}
+                      >
+                        {s.tabloPano}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -456,7 +751,12 @@ function Tahta({ ham }: { ham: unknown }) {
             <p className="text-muted-foreground text-xs leading-5">
               "belirsiz" AÇIK DEMEK DEĞİLDİR: belgedeki maddelerin çoğu düzyazıdır ve durum işareti
               taşımaz. Onları "açık" saymak, tahtanın üstüne ölçülmemiş bir sayı yazmak olurdu.
+              "çok işaretli" de belirsiz DEĞİLDİR: uç o satırı tek hükme indirmedi çünkü hücreleri
+              iki rozet taşıyor (örn. karar verilmiş = kapalı AMA kapı operatörde = bloke) — çelişki
+              olmayabilir de, ve onu bir sezgiyle çözmek ölçülmemiş bir hükmü ölçülmüş göstermek
+              olurdu.
               {durumsuz > 0 ? ` Ayrıca ${durumsuz} maddede \`durum\` alanı hiç yok.` : ""}
+              {tabloDurumsuz > 0 ? ` ${tabloDurumsuz} tablo satırında ne \`durum\` ne \`durum_neden\` var.` : ""}
             </p>
           </CardContent>
         </Card>
@@ -471,7 +771,7 @@ function Tahta({ ham }: { ham: unknown }) {
           className="h-7 px-2.5 text-xs"
           onClick={() => setSuzgec(null)}
         >
-          hepsi · {bizimN}
+          hepsi · {bizimN}+{bizimTabloN}
         </Button>
         {durumSatirlari.map((s) => (
           <Button
@@ -480,8 +780,9 @@ function Tahta({ ham }: { ham: unknown }) {
             size="sm"
             className="h-7 px-2.5 text-xs"
             onClick={() => setSuzgec(suzgec === s.durum ? null : s.durum)}
+            title={`${s.panoSayimi} madde · ${s.tabloPano} tablo satırı — ayrı birim, toplanmaz`}
           >
-            {DURUM_ETIKETI[s.durum] ?? s.durum} · {s.panoSayimi}
+            {DURUM_ETIKETI[s.durum] ?? s.durum} · {s.panoSayimi}+{s.tabloPano}
           </Button>
         ))}
       </div>
@@ -489,7 +790,7 @@ function Tahta({ ham }: { ham: unknown }) {
       {/* ---------------------------- TAHTA ------------------------------ */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {bolumler.map((b) => (
-          <Kolon key={b.anahtar} b={b} maddeler={suzulmus(b)} />
+          <Kolon key={b.anahtar} b={b} maddeler={suzulmus(b)} tabloSatirlari={suzulmusTablo(b)} />
         ))}
       </div>
     </div>
