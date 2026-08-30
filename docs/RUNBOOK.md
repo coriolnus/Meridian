@@ -929,7 +929,7 @@ meridian-guard.sh — hermes-agent pre_tool_call KORUMA HOOK'u (Meridian, 2026-0
 
 Kapı yasasını HARNESS düzeyinde ZORLAR: ajanı yalnız-öneri diye prompt'la sınırlamak ricadır; bu hook
 mekanizmadır. Ajanın terminal/dosya araçlarıyla Meridian'ın KORUNAN yüzeylerine dokunmasını SERT bloklar:
-• state/ altına YAZMA (portfolio, strategy.yaml, goal.yaml, bounds.yaml — Hermes'e değişmez)
+• state/ altına YAZMA — TÜMÜ (2026-08-30'da GERÇEKTEN tümü oldu; bkz. aşağıdaki şerh)
 • secrets.json / API anahtarları
 • MERIDIAN_MODE / MERIDIAN_I_ACCEPT_RISK / autonomy_level (gerçek-para kapıları — yalnız operatör)
 • alpaca emir gönderimi / close_all / submit_bracket (canlı emir yetkisi)
@@ -937,6 +937,25 @@ mekanizmadır. Ajanın terminal/dosya araçlarıyla Meridian'ın KORUNAN yüzeyl
 Girdi: stdin'de JSON {tool_name, tool_input:{command|path|file_path|content}, ...}.
 Çıktı: izin → {} ; blok → {"decision":"block","action":"block","reason":..,"message":..} (iki şema da).
 Parse edilemezse fail-open (boş {}) — ajanı büsbütün kilitlemeyiz; asıl savunma desen eşleşmesidir.
+
+BAŞLIĞIN İDDİASI ile GERÇEK KAPSAM 2026-08-30'a KADAR AYRIŞIKTI, ve bu şerh o günün kaydıdır.
+Üstteki ilk madde "state/ altına YAZMA" diyordu; hedef deseni ise YALNIZ ADI SAYILAN yedi
+aileyi blokluyordu. ÖLÇÜM: `state/` altında 87 dosya, 24'ü üretim kodunca yazılıyor ve
+korumasız kalanlar arasında `trades.jsonl` (İŞLEM DEFTERİ), `equity_curve.json`,
+`scoreboard.json` (`update_scoreboard` KİLİTSİZ), `trade_plans.jsonl`, `notify_undelivered.json`
+vardı. Tutarsızlık tek cümlede: `portfolio.json` KORUMALI, `trades.jsonl` DEĞİL — ikisi aynı
+sınıf kanıttır. Kendi başlığında yazan ama tutulmayan bir söz, olmayan bir kapıdan DAHA
+KÖTÜDÜR: okuyan onu okur ve korunduğunu sanır.
+HÜKÜM: kapsamı GENİŞLET, başlığı indirme. İki ölçüme dayanır.
+(a) ÜRETİMİ KIRMAZ: o 24 dosyanın hepsi Meridian'ın KENDİ Python kodundan yazılır ve o
+yazımlar `pre_tool_call`a HİÇ uğramaz — bu kanca yalnız AJANIN araçlarını görür.
+(b) ARIZA ASİMETRİSİ: fazla bloklamak ajana GÖRÜNÜR bir ret verir (mesaj MCP'yi adıyla
+söyler, geri alınabilir); az bloklamak operatöre sunulan kanıtı SESSİZCE tahrif eder.
+NASIL, kör değil keskin: `tool_name` artık ÇIKARILIYOR (şerhte hep yazılıydı, hiç okunmuyordu —
+okuma/yazma ayıramamanın kökü buydu). Yapısal yazma araçları `state/` altına HİÇ yazamaz;
+`terminal` için YALNIZ YAZMA ŞEKLİ bloklanır (`>` `>>` `tee` `sed -i` `rm/mv/cp/truncate/dd`),
+`cat`/`grep`/`jq` SERBEST kalır. Adı sayılan ailelerin TÜM-ERİŞİM bloğu aynen DURUR.
+Çiviler: tests/test_authority_boundaries_v77.py, C3-b bölümü (dördü de kancayı GERÇEKTEN koşturur).
 ```
 
 ## `ops/pull-a1-backups.sh` {#ops-pull-a1-backups-sh}
