@@ -1,0 +1,125 @@
+# @karne — amaç sorusu. `state/goal.yaml`ın DÖRT sorusuna verilen hükmü PERİYODİK olarak
+# operatörün önüne getirir.
+#
+# ============================ KURULUM — ÜÇ EYLEM, TEK KOMUT DEĞİL ============================
+# BU REÇETE İKİ YERDE DURACAK ve İKİSİ AYNI OLMAK ZORUNDA: burası ve `deploy/oracle-a1/deploy.sh`
+# ın @karne bölümü (Görev 3). `@sef` emsalinde ikisi bir kez AYRIŞTI ve bayatlayan taraf tam da
+# operatörün okuduğu taraf oldu: manifest TIMER'DAN HİÇ SÖZ ETMİYORDU, yani manifesti izleyen
+# operatör kurar, anahtarı doldurur ve KADANSI HİÇ AÇMAZ.
+#
+#   1) profili kur:
+#        hermes profile install /opt/meridian/deploy/hermes/profiles/karne
+#
+#   2) profilin KENDİ `.env`ini doldur — `env_requires` `.env` YAZMAZ, yalnız kurulu profile
+#      bir `.env.EXAMPLE` bırakır (`.env` kullanıcı-sahiplidir). Anahtarsız profil her koşumda
+#      SESSİZCE ham karneye düşer, yani "çalışıyor" görünür:
+#        cp  ~/.hermes/profiles/karne/.env.EXAMPLE  ~/.hermes/profiles/karne/.env
+#        ${EDITOR:-nano} ~/.hermes/profiles/karne/.env     # OPENROUTER_API_KEY=...
+#      (Bu adımı yapan bir profil ALT KOMUTU YOKTUR — `hermes profile` altında `env` diye bir
+#       şey yok. Adım elle yapılır, yukarıdaki iki satırla.)
+#
+#   3) haftalık kadansı aç — teslimat bu satır olmadan HİÇ BAŞLAMAZ:
+#        sudo systemctl enable --now meridian-karne.timer
+#
+# BİRİM NEDEN AYRI (`meridian-brifing`/`meridian-bekci` DEĞİL): üç bot AYRI artefaktın sahibi ve
+# AYRI mesaj kuruyor; biri düşerse öteki koşmalı. Ayrıca `@karne`nin kadansı GÜNLÜK DEĞİL
+# HAFTALIKTIR ve bu bir uygulama ayrıntısı değil TASARIM PARÇASIDIR: bu bot SUSMAZ (aşağıya
+# bak), yani dikkat bütçesini koruyan tek şey kadansın kendisidir. Birimi ve haftalık slotu
+# Görev 3 yaratır; bu manifest onun ADINI bugünden sabitler ki iki belge tek reçete anlatsın.
+#
+# NOT, ADIM DEĞİL: botun yazma kum havuzunu (`/opt/meridian/var/bots/karne`) `deploy.sh` YARATIR
+# ve iznini/sahipliğini ÖLÇEREK sabitler — operatörün eli değmez. `/var` sınıfı `dagit.sh`ın
+# rsync dışlamasında ve `.gitignore`da zaten var, yani dizini rsync TAŞIMAZ ve SİLMEZ.
+# A1 DIŞINDA bir yere kurulum yapılıyorsa dizini elle yaratmak gerekir, yoksa safe-root var
+# olmayan bir yolu gösterir.
+#
+# GÜNCELLEME TUZAĞI: `hermes profile update karne` `config.yaml`ı VARSAYILAN OLARAK KORUR —
+# `--force-config` gerekir. Yani BU DOSYAYLA birlikte dağıtılan güvenlik duruşunda (guard
+# kancası · kapalı araç takımları · model bütçesi) yapılan bir değişiklik düz `update` ile canlı
+# profile GİTMEZ. Duruş değiştiyse:
+#        hermes profile update karne --force-config
+#
+# Kurulum bu depoda YAPILMAZ ve dağıtım betiği de YAPMAZ: profil yaratmak canlıda yeni bir
+# ajan kimliği doğurur ve bu operatör kararıdır (CLAUDE.md §9).
+name: karne
+version: 0.1.0
+description: >-
+  Meridian karnesi. `ops/karne_hesap.py`nin `state/goal.yaml` üzerinden ÖLÇTÜĞÜ dört hükmü
+  (30 günlük getiri · sharpe tabanı · çekilme tavanı · başarısızlık eşiği) okunur tek mesaja
+  çevirir. Hükmü model VERMEZ, yalnız SÖZE ÇEVİRİR. Kadansı geldiyse HER ZAMAN yazar —
+  dördü de değişmemiş olsa bile.
+hermes_requires: ">=0.19.0"
+author: "Meridian / Rol-1"
+license: "özel — bu depoya ait"
+
+env_requires:
+  - name: HERMES_WRITE_SAFE_ROOT
+    description: >-
+      Bu botun yazabileceği TEK dizin. ÖLÇÜLDÜ (`agent/file_safety.py`, `if safe_roots:` —
+      ölçüm kaydı `@sef`in manifestinde, aynı ikili ve aynı sürüm): değişken TANIMSIZSA
+      hiçbir yazma kısıtı uygulanmaz, yalnız kimlik yolları bloklu kalır — beyan etmemek,
+      SINIRSIZ yetki vermektir. Zamanlanmış koşumda değeri systemd birimi verir; bu satır
+      ETKİLEŞİMLİ koşum içindir.
+      DİZİN PROFİL EVİNİN DIŞINDA, bilerek: `~/.hermes/profiles/karne` olsaydı bot kendi
+      config.yaml'ını ve guard ayarını üstüne yazabilirdi (kendini silahsızlandırma).
+      VE `@sef`/`@bekci`NİN DİZİNLERİNDEN AYRI, bilerek: iki bot aynı kum havuzunu
+      paylaşsaydı biri ötekinin artefaktının üstüne yazabilirdi — §9.3'ün "her bot kendi
+      artefaktının TEK yazarı" sözleşmesi tam olarak bunu yasaklar.
+    required: true
+    default: "/opt/meridian/var/bots/karne"
+
+  - name: OPENROUTER_API_KEY
+    description: >-
+      Profilin model anahtarı. Profil = bağımsız HERMES_HOME dizini, yani KENDİ `.env`ini
+      okur ve ne ana profilin ne kardeşlerin anahtarı ona GEÇER. Anahtar yoksa arıza GÜRÜLTÜLÜ
+      DEĞİLDİR: LLM her koşumda düşer, ham karne yolu devreye girer ve teslimat çalışıyor
+      GÖRÜNÜR — bot hiç düşünmeden. Bu profilde bedeli DAR ve ölçülmüştür: kaybolan şey
+      yalnız SUNUMdur, hükümler ve değişim işaretleri her hâlükârda gider.
+    required: true
+
+# --- KARAR KAYDI: BU BOT SUSMAZ (SUBSTRATTAN BİLİNÇLİ SAPMA) --------------------------
+# `@sef` ve `@bekci` "bildirilecek yeni bir şey yoksa SUSAR" sözleşmesini taşır ve ikisinde de
+# ARDIŞIK SESSİZLİK TAVANI vardır. `@karne` İKİSİNİ DE TAŞIMAZ, ve bu bir eksik değil bir karar:
+#   · Onlar ALARM botu, bu RAPOR botu. Alarmın bilgisi OLAYIN KENDİSİDİR; raporun bilgisi
+#     PERİYODİK GÖRÜNÜRLÜKTÜR. "Dört hüküm de geçen haftakiyle aynı" bir haber DEĞİL ama bir
+#     CEVAPTIR — ve tam olarak bugün eksik olan şey o cevaptır (`goal_failure` olayı defterde
+#     tüm tarih boyunca 0 kez; sessizlik "deney başarısız olmadı" ile "hiç ölçülmedi" arasında
+#     ayrım YAPMIYOR).
+#   · Susabilen bir karne, @bekci'nin adını koyduğu "DURAN İŞ" sınıfına KENDİSİ düşer: haftalarca
+#     susar, kimse fark etmez, ve sessizliği arızadan ayırt edilemez.
+#   · Dikkat bütçesi bastırmayla değil KADANSLA korunur: haftada bir mesaj. Bu, bastırmanın
+#     yapacağı işi yapan ama sessiz bir körlük üretmeyen tek kaldıraçtır.
+# MEKANİK SONUÇ (harness'te, `ops/karne_brifingi.py`): model sessizlik jetonunu yazarsa bu bir
+# ÖNCELİK YARGISI değil bir MEKANİZMA ANOMALİSİDİR — adıyla deftere geçer ve ham karne gider.
+#
+# --- KARAR KAYDI: TEKRAR BASTIRILMAZ, DEĞİŞİM VURGULANIR ------------------------------
+# `@bekci` kalem başına damga tutar ve DEĞİŞMEYENİ bastırır. `@karne` bastırmaz — periyodik bir
+# rapor TANIMI GEREĞİ tekrar eder ve dört sorudan birini "değişmedi" diye düşürmek, o soruyu o
+# hafta HİÇ SORULMAMIŞ hâle getirir. Onun yerine harness KENDİ damga dosyasında son TESLİM
+# EDİLEN dört hükmü tutar (`state/karne_brifingi_damga.json`, sahibi HARNESS — bot oraya
+# yazamaz) ve her hükmü DEĞİŞTİ/AYNI diye işaretler, değişimde ÖNCEKİNİ de yazar.
+# DEĞİŞTİ = YALNIZ HÜKÜM DEĞİŞİMİ (H2 hükmü, düzeltme dalgası 2026-08-30). İlk sürüm `deger`i de
+# kimliğe katıyordu; denetim bunun ekseni ÜRETİMDE yaktığını gösterdi — 30g getiri, sharpe ve
+# çekilme her işlem gününde kıpırdayan SÜREKLİ değişkenlerdir, yani üç hüküm HER HAFTA "DEĞİŞTİ"
+# okurdu ve `AYNI` görünmez olurdu. Epsilon/yuvarlama seçilmedi: hangi eşik seçilse ölçülmemiş
+# bir sayı olurdu (Uydurma yasağı). `deger` artık KANITTIR — her hafta, geçen haftaya göre DELTA
+# şerhiyle gösterilir. BEDELİ: hüküm dönmeden gerçekleşen büyük bir kötüleşme BAYRAK almaz;
+# delta gösterir, operatör okur. `esik` ise SÖZLEŞMEDİR: kimlikte değil, kendi başlık beyanında.
+# ZORUNLU BAŞTA GÖMÜLEMEYEN ÜÇ SINIF: ölçülebilirlik geçişleri (ÖLÇÜLEMEDİ↔ölçüldü) · HÜKÜM
+# dönüşü (`GECTI → KALDI`, yani `goal_failure` ANI) · EŞİK değişimi. Üçü de modelin payından
+# ÖNCE yerleştirilir; modelin metni ne derse desin zarftan itilemezler.
+#
+# --- KARAR KAYDI: SOUL.md SATICI KİMLİĞİNİ DEĞİŞTİRİR, ONA EKLEMEZ -------------------
+# `agent/system_prompt.py`: SOUL yüklenirse `stable_parts`a O konur ve `DEFAULT_AGENT_IDENTITY`
+# yalnız SOUL YOKSA eklenir. Yani ana `deploy/hermes/SOUL.md`in "You are Hermes Agent…"
+# bloğunu taşımak bir üslup tercihi değil, o kimliği GERİ KOYMA hamlesidir.
+# `@karne` onu BİLEREK geri koymuyor: bu profil araçsız, tek işli bir ANLATICI — genel amaçlı
+# bir asistan kimliği ona bağlam değil gürültü ekler, ve "araçların var" izlenimi bu botta
+# doğrudan sözleşmeye aykırıdır (sayıyı kendi ölçmeye kalkabilir).
+# KAYIT NEDEN BURADA, SOUL'un içinde DEĞİL: SOUL.md prompt'un KENDİSİDİR ve dosya olduğu gibi
+# sistem istemine girer — markdown yorumu da dahil. Karar kaydını oraya yazmak, mühendislik
+# notunu modele okutmak olurdu.
+
+distribution_owned:
+  - SOUL.md
+  - config.yaml

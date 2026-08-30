@@ -315,17 +315,196 @@ def test_CALISMAK_ICIN_GEREKEN_ANAHTAR_BEYAN_EDILIR(profil):
 # yaratıldığında yukarıdaki 11 parametreli çivi kırmızıya döndü, bu ikisi YEŞİL kaldı: yani
 # yeni bir profil, jetonu backtick'le yazan ya da hafıza vaat eden bir SOUL ile sessizce
 # doğabilirdi. Kapsam artık `_profiller()`den gelir, ad listesinden değil.
+# ---------------------------------------------------------------------------
+# SESSİZLİK JETONU — TEK ÇİVİ, İKİ ZIT SÖZLEŞME ÖLÇÜYORDU (Faz 4, 2026-08-30)
+#
+# `test_SOUL_SESSIZ_JETONUNU_CIPLAK_YAZAR` bir turdur şunu ölçüyordu: "SOUL `SESSIZ` jetonunu
+# ÇIPLAK taşır". Bu, ALARM botları için (`@sef`, `@bekci`) doğru sözleşmedir — orada jeton bir
+# YETKİdir ("bildirilecek bir şey yoksa YALNIZ bu kelimeyi yaz") ve tüketici onu ÇIPLAK
+# karşılaştırır, yani biçim taşıyıcıdır.
+#
+# `@karne` GELİNCE AYNI ASSERT ZIT BİR SÖZLEŞMEYİ ÖLÇMEYE BAŞLADI, ve bunu YEŞİL geçerek yaptı —
+# bu deponun "yanlış sebeple yeşil" sınıfının tam örneği. Ölçüldü (`ops/karne_brifingi.py::sun`,
+# `_jeton_mu`): karnede jeton bir yetki DEĞİL bir MEKANİZMA ANOMALİSİdir; model onu yazarsa
+# `karne_brifingi_sessizlik_jetonu_anomalisi` deftere düşer ve SUNUM KATMANI O HAFTA KAYBEDİLİR
+# (ham karne gider). Yani karnenin SOUL'unda jeton bir ŞABLON değil bir YASAK olarak durmalı.
+# Eski assert (`"SESSIZ" in soul`) ikisini ayırt edemiyordu: yasağı ANLATAN bir cümle de,
+# şablonu VEREN tek başına bir satır da onu yeşil geçirir.
+#
+# SINIF ADLA DEĞİL ÖLÇÜMLE BELİRLENİR. Ad listesi (`{"sef","bekci"}` vs `{"karne"}`) 4. profilde
+# bayatlar ve bayatlaması SESSİZDİR — yeni bot iki sözleşmeden HİÇBİRİYLE ölçülmez. Onun yerine
+# sınıf, botun ZAMANLANMIŞ KOŞUMDA gerçekten koşan harness'inden türetilir:
+#     profil → (Environment=HERMES_HOME ile) BİRİM → (ExecStart ile) HARNESS → harness'in
+#     sessizlik jetonuna verdiği MEKANİK ANLAM.
+# Zincirin her halkası zaten ÖLÇÜLEN bir bağdır (`_profil_birimi` aynı yolu izliyor) ve hiçbir
+# yerinde profil ADI geçmez.
+# ---------------------------------------------------------------------------
+
+# İKİ POZİTİF SİNYAL, VE İKİSİ DE YÜK TAŞIYAN KODDUR (yorum/docstring değil — AST ile okunur,
+# çünkü `karne_brifingi.py` başlığı `ARDISIK_SESSIZ_TAVANI`dan METİN olarak söz ediyor ve dizge
+# sayan bir sınıflandırıcı onu ALARM sanırdı):
+#   ALARM  ⇐ modül düzeyinde `ARDISIK_SESSIZ_TAVANI` ataması. Sabitin VARLIĞI sözleşmeyi ele
+#            verir: yalnız SUSABİLEN bir botun susmasına TAVAN koymak gerekir ("`SESSIZ` bir
+#            GÜNÜN hükmüdür, süresiz bir ruhsat değil" — @sef denetimi 2026-08-30).
+#   RAPOR  ⇐ ilk argümanı `..._sessizlik_jetonu_anomalisi` ile biten bir `obs.log(...)` çağrısı.
+#            Bu olayın VARLIĞI da sözleşmeyi ele verir: jeton kaydedilecek bir ANOMALİ ise,
+#            bir yetki DEĞİLDİR.
+# İKİSİ BİRDEN ya da HİÇBİRİ → sınıf ÖLÇÜLEMEDİ ve çivi DÜŞER (uydurma yasağı: varsayılan bir
+# sınıfa düşmek, iki sözleşmeden birini sessizce uygulamamaktır).
+_ALARM_SABITI = "ARDISIK_SESSIZ_TAVANI"
+_RAPOR_OLAY_SONU = "_sessizlik_jetonu_anomalisi"
+
+# Jeton, KELİME olarak aranır. `"SESSIZ" in metin` alt-dizge testi `SESSIZLIK` içinde de eşleşir
+# ve "jetonu anıyor" ile "sessizlik kelimesini kullanıyor" ayrımını kaybederdi.
+_JETON_KELIME = re.compile(r"(?<!\w)SESSIZ(?!\w)")
+
+# Türkçe OLUMSUZLAMA — ek biçimi dâhil, çünkü yasağın taşıyıcısı çoğu zaman fiildir (`SUSMAZ`).
+# BU BİR SÖZCÜK LİSTESİ DEĞİL, BİÇİM KURALIDIR: ad/sıfat olumsuzları + `-MAZ/-MEZ` eki.
+# BEYAN: bu bir LEKSİK VEKİLDİR, yasağın kanıtı değil — "yasak mı" sorusunun kendisi statik
+# olarak ölçülemez. Vekilin işi, jetonu ŞABLON gibi anan bir cümlenin fark edilmeden geçmesini
+# zorlaştırmaktır; sözleşmenin MEKANİK yarısını bir alttaki "tek başına satır" kuralı taşır.
+_OLUMSUZ = re.compile(r"(?<!\w)(YOK|YOKTUR|DEĞİL|DEĞİLDİR|YASAK|YASAKTIR|\w+M[AE]Z)(?!\w)")
+
+
+def _harness_yolu(profil: pathlib.Path) -> tuple[pathlib.Path | None, str]:
+    """`(harness dosyası, kaynak açıklaması)`. Birimin `ExecStart`ından ÖLÇÜLEREK bulunur.
+
+    Ad kuralından TÜRETİLMEZ (`@sef`in birimi `meridian-brifing`, harness'i `sef_brifingi.py` —
+    filoda ad kuralı yok). Canlı yol (`/opt/meridian/...`) depo köküne çevrilir; başka bir kök
+    çıkarsa `None` döner ve NEDENİ söylenir (uydurma yasağı: tanımadığımız bir yolu okumaya
+    çalışmak yerine ölçemediğimizi beyan ederiz)."""
+    svc = _profil_birimi(profil)
+    if svc is None:
+        return None, f"{profil.name}: profili koşturan birim YOK (kardeş çivi kırmızıdır)"
+    execler = [ln for ln in _yonergeler(svc) if ln.startswith("ExecStart=")]
+    if not execler:
+        return None, f"{svc.name}: `ExecStart` yok"
+    betikler = [t for t in execler[0].split() if t.endswith(".py")]
+    if not betikler:
+        return None, f"{svc.name}: `ExecStart` bir `.py` betiği çağırmıyor ({execler[0]!r})"
+    canli = betikler[0]
+    onek = "/opt/meridian/"
+    if not canli.startswith(onek):
+        return None, (f"{svc.name}: ExecStart betiği canlı kökün ({onek}) dışında ({canli!r}) — "
+                      "depo karşılığı ÖLÇÜLEMEDİ")
+    yerel = KOK / canli[len(onek):]
+    if not yerel.is_file():
+        return None, f"{svc.name}: ExecStart `{canli}` diyor ama depoda `{yerel}` YOK"
+    return yerel, canli
+
+
+def _sessizlik_sinifi(profil: pathlib.Path) -> tuple[str | None, str]:
+    """`("alarm"|"rapor"|None, gerekçe)` — harness'in jetona verdiği MEKANİK anlamdan türer."""
+    import ast
+    yol, kaynak = _harness_yolu(profil)
+    if yol is None:
+        return None, kaynak
+    try:
+        agac = ast.parse(yol.read_text(encoding="utf-8"))
+    except Exception as e:
+        return None, f"{kaynak} ayrıştırılamadı: {e!r}"
+    alarm = any(isinstance(d, ast.Assign)
+                and any(isinstance(h, ast.Name) and h.id == _ALARM_SABITI for h in d.targets)
+                for d in agac.body)
+    rapor = False
+    for d in ast.walk(agac):
+        f = getattr(d, "func", None)
+        if not (isinstance(d, ast.Call) and isinstance(f, ast.Attribute) and f.attr == "log"
+                and isinstance(f.value, ast.Name) and f.value.id == "obs"):
+            continue
+        if d.args and isinstance(d.args[0], ast.Constant) and isinstance(d.args[0].value, str) \
+                and d.args[0].value.endswith(_RAPOR_OLAY_SONU):
+            rapor = True
+    if alarm and not rapor:
+        return "alarm", f"{kaynak}: modül düzeyinde `{_ALARM_SABITI}` var (susma YETKİsi tavanlı)"
+    if rapor and not alarm:
+        return "rapor", f"{kaynak}: jeton `*{_RAPOR_OLAY_SONU}` olayına yazılıyor (susma YETKİSİZ)"
+    return None, (
+        f"{kaynak}: sessizlik sınıfı ÖLÇÜLEMEDİ — alarm sinyali={alarm}, rapor sinyali={rapor}. "
+        f"Sınıflandırıcı iki POZİTİF sinyal arar (`{_ALARM_SABITI}` ataması / "
+        f"`*{_RAPOR_OLAY_SONU}` obs olayı) ve tam birini bekler")
+
+
+def _jeton_satirlari(profil: pathlib.Path) -> tuple[list[str], list[str]]:
+    """`(jetonu KELİME olarak taşıyan satırlar, jetonun TEK BAŞINA durduğu satırlar)`."""
+    satirlar = (profil / "SOUL.md").read_text(encoding="utf-8").splitlines()
+    tasiyan = [ln for ln in satirlar if _JETON_KELIME.search(ln)]
+    tek_basina = [ln for ln in satirlar if ln.strip() == "SESSIZ"]
+    return tasiyan, tek_basina
+
+
 @pytest.mark.parametrize("profil", _profiller(), ids=lambda p: p.name)
-def test_SOUL_SESSIZ_JETONUNU_CIPLAK_YAZAR(profil):
-    """Tüketici jetonu NORMALİZE EDİP çıplak karşılaştırıyor (Görev 2). SOUL jetonu backtick
-    içinde gösterirse model de backtick'le yazar; normalizasyon backtick'i soyuyor ama bu bir
-    YEDEK, sözleşme değil — ve jetonu HİÇ taşımayan bir SOUL'da susma yeteneği tümden yoktur,
-    yani botun ASIL işi olan SUSMA iptal olur. Arıza sessiz değil, tam tersi: her gün mesaj."""
+def test_HER_PROFILIN_SESSIZLIK_SINIFI_OLCULEBILIR(profil):
+    """Sınıflandırıcı VACUOUS OLAMAZ. Aşağıdaki iki sözleşme çivisi kendi sınıfı dışındaki
+    profilde ATLAR; sınıf ölçülemezse İKİSİ BİRDEN atlar ve jeton sözleşmesi hiç ölçülmemiş
+    olur — üstelik sessizce, tam da bu bölümün kapatmak için var olduğu sınıfta."""
+    sinif, gerekce = _sessizlik_sinifi(profil)
+    assert sinif is not None, (
+        f"{profil.name}: SESSİZLİK SINIFI ÖLÇÜLEMEDİ — {gerekce}. Sınıf ölçülemeyen bir profilde "
+        "jeton sözleşmesinin İKİ çivisi de atlar: bot, ne 'susabilir' ne 'susamaz' diye "
+        "ölçülmeden canlıya çıkar")
+
+
+@pytest.mark.parametrize("profil", _profiller(), ids=lambda p: p.name)
+def test_SOUL_ALARM_SINIFINDA_JETON_SUSMA_SOZLESMESIDIR(profil):
+    """ALARM sınıfı (harness'te tavanlı susma YETKİSİ var): jeton ŞABLON olarak durmalı.
+
+    Tüketici jetonu NORMALİZE EDİP ÇIPLAK karşılaştırıyor. SOUL jetonu backtick içinde
+    gösterirse model de backtick'le yazar; normalizasyon backtick'i soyuyor ama bu bir YEDEK,
+    sözleşme değil. Ve jeton TEK BAŞINA bir satırda durmalı: alarm SOUL'ları modele "yalnız şu
+    tek kelimeyi yaz, tek başına" der ve o satır ŞABLONUN KENDİSİDİR — cümle içine gömülmüş bir
+    jeton, modele kopyalayacağı bir biçim vermez. Jetonu HİÇ taşımayan bir SOUL'da susma
+    yeteneği tümden yoktur, yani botun ASIL işi iptal olur: arıza sessiz değil, tam tersi —
+    her gün mesaj."""
+    sinif, gerekce = _sessizlik_sinifi(profil)
+    if sinif != "alarm":
+        pytest.skip(f"{profil.name}: sınıf `{sinif}` — {gerekce}")
     soul = (profil / "SOUL.md").read_text(encoding="utf-8")
-    assert "SESSIZ" in soul, f"{profil.name}: SESSIZ sözleşmesi SOUL'dan düşmüş"
+    tasiyan, tek_basina = _jeton_satirlari(profil)
+    assert tasiyan, f"{profil.name}: SESSIZ sözleşmesi SOUL'dan düşmüş ({gerekce})"
     assert "`SESSIZ`" not in soul, (
         f"{profil.name}: SOUL `SESSIZ` jetonunu backtick içinde gösteriyor — model onu "
         "backtick'le yazar ve tüketicinin çıplak karşılaştırması düşer")
+    assert tek_basina, (
+        f"{profil.name}: jeton SOUL'da hiç TEK BAŞINA bir satırda durmuyor (yalnız cümle "
+        f"içinde geçiyor: {tasiyan!r}) — bu botun susma yetkisi VAR ({gerekce}) ve model "
+        "kopyalayacağı biçimi göremezse jetonu cümleye gömer; tüketicinin çıplak "
+        "karşılaştırması o cevabı SUSMA saymaz ve bot bildirilecek şey yokken bile konuşur")
+
+
+@pytest.mark.parametrize("profil", _profiller(), ids=lambda p: p.name)
+def test_SOUL_RAPOR_SINIFINDA_JETON_YASAKTIR(profil):
+    """RAPOR sınıfı (harness'te susma yetkisi YOK): jeton YASAK olarak durmalı, şablon olarak DEĞİL.
+
+    ÖLÇÜLDÜ (`ops/karne_brifingi.py::sun`): jetonu yazan bir cevap `*_sessizlik_jetonu_anomalisi`
+    olarak deftere geçer ve `("", "ham")` döner — yani O HAFTANIN SUNUM KATMANI KAYBEDİLİR
+    (ölçülen hükümler yine gider; kaybolan şey anlam ve sıradır). İki şey birden gerekli:
+
+    (a) JETON ADIYLA ANILMALI, ve anıldığı satır OLUMSUZLAMA taşımalı. Adı hiç geçmeyen bir
+        yasak, modelin bilemeyeceği bir yasaktır — "sus" demek Türkçede jetonu yazmanın tek yolu
+        değil, ama jetonu yazmak SUNUMU KAYBETTİREN tek yoldur, o yüzden kelimenin kendisi
+        söylenmek zorunda. (Olumsuzlama ölçümü LEKSİK VEKİLDİR, beyanı `_OLUMSUZ`da.)
+    (b) JETON TEK BAŞINA BİR SATIRDA DURMAMALI. Kardeş sınıfın SOUL'larında o satır ŞABLONDUR
+        ("yalnız şu kelimeyi yaz, tek başına"); SOUL prompt'un KENDİSİ olduğu için modelin
+        biçimi aynalaması beklenen davranıştır. Yani yasağı anlatan bir SOUL'a şablon satırını
+        da koymak, aynı dosyada hem yasaklamak hem örneğini vermektir."""
+    sinif, gerekce = _sessizlik_sinifi(profil)
+    if sinif != "rapor":
+        pytest.skip(f"{profil.name}: sınıf `{sinif}` — {gerekce}")
+    tasiyan, tek_basina = _jeton_satirlari(profil)
+    assert tasiyan, (
+        f"{profil.name}: SOUL sessizlik jetonunu HİÇ ANMIYOR ({gerekce}) — yasak, adı geçmeyen "
+        "bir kelime üzerine kurulamaz; model jetonu yazar ve o haftanın sunum katmanı sessizce "
+        "kaybolur (anomali deftere düşer, operatöre yalnız ham karne gider)")
+    yasakli = [ln for ln in tasiyan if _OLUMSUZ.search(ln)]
+    assert yasakli, (
+        f"{profil.name}: jeton SOUL'da geçiyor ama geçtiği satırların HİÇBİRİ olumsuzlama "
+        f"taşımıyor: {tasiyan!r} — bu botun susma yetkisi YOK ({gerekce}), yani jeton bir "
+        "seçenek gibi sunulamaz")
+    assert not tek_basina, (
+        f"{profil.name}: jeton TEK BAŞINA bir satırda duruyor ({tek_basina!r}) — kardeş "
+        "sınıfın SOUL'unda bu satır 'yalnız şu kelimeyi yaz' ŞABLONUDUR. Bu botta susma yetkisi "
+        "YOK: model şablonu aynalarsa cevap anomali sayılır ve o haftanın sunum katmanı gider")
 
 
 @pytest.mark.parametrize("profil", _profiller(), ids=lambda p: p.name)
@@ -680,18 +859,37 @@ def _sprint_penceresi() -> tuple[int, int]:
     return int(m.group(1)), int(m.group(2))
 
 
-def _oncalendar_saati(timer: pathlib.Path) -> tuple[int, int]:
-    """Timer'ın `OnCalendar` saati — AÇIKÇA UTC yazılmış olmak ZORUNDA.
+# `OnCalendar=[<GÜN> ]<TARİH> HH:MM:SS UTC`. GÜN BACAĞI SONRADAN AÇILDI (Faz 4, 2026-08-30) ve
+# açılmasının sebebi ÖLÇÜLDÜ, tercih edilmedi: roster'ın üçüncü botu (`@karne`) HAFTALIKtır ve
+# systemd'de haftalık kadansın TEK yolu takvim ifadesine bir gün-adı ÖN EKİ koymaktır
+# (`Sat *-*-* 16:00:00 UTC`). Eski desen tarih kısmını TEK JETON (`\S+`) sayıyordu, yani gün
+# önekli her satırı EŞLEŞMEZ görüyordu — ve düşen assert "`OnCalendar` açıkça UTC saatiyle
+# yazılmamış" DİYORDU. UTC oradaydı; çivi tanımadığı bir biçimi, tanıdığı bir arıza adıyla
+# suçluyordu. Bu, bu deponun kovaladığı "yanlış sebeple kırmızı/yeşil" sınıfının aynısıdır, o
+# yüzden mesaj da ikiye ayrıldı: BİÇİM tanınmadıysa onu söyler, UTC yoksa onu.
+_ONCALENDAR = re.compile(
+    r"^OnCalendar=(?:(?P<gun>[A-Za-z][A-Za-z,.\-]*)\s+)?(?P<tarih>\S+)\s+"
+    r"(?P<sa>\d{2}):(?P<dk>\d{2}):(?P<sn>\d{2})\s+UTC\s*$", re.M)
+
+
+def _oncalendar(timer: pathlib.Path) -> tuple[str | None, int, int]:
+    """`(gün öneki ya da None, saat, dakika)`. Saat AÇIKÇA UTC yazılmış olmak ZORUNDA.
 
     Sunucu TZ'sine güvenen bir kadans, TZ değiştiği gün sessizce başka bir saate kayar
-    (`meridian-brifing.timer` başlığındaki DST dersinin aynısı)."""
-    import re as _re
-    m = _re.search(r"^OnCalendar=\S+ (\d{2}):(\d{2}):(\d{2}) UTC\s*$",
-                   timer.read_text(encoding="utf-8"), _re.M)
+    (`meridian-brifing.timer` başlığındaki DST dersinin aynısı).
+
+    GÜN ÖNEKİ DÖNDÜRÜLÜR AMA BU ÇİVİLERDE HÜKME GİRMEZ, ve bu bilinçli: aşağıdaki iki kapı
+    (ayrışma + gece penceresi) SAAT üzerinden ölçer, yani gün önekli bir botu da HER GÜN
+    koşuyormuş gibi sayar. Bu KORUYUCU yöndür — haftalık bot kendi gününde kardeşleriyle zaten
+    çakışır, ve "o gün ötekiler koşmuyor olabilir" diye pay vermek, ölçülmemiş bir gevşemedir."""
+    m = _ONCALENDAR.search(timer.read_text(encoding="utf-8"))
     assert m, (
-        f"{timer.name}: `OnCalendar` açıkça UTC saatiyle yazılmamış — sunucu TZ'si değiştiği gün "
-        "kadans sessizce kayar ve bunu hiçbir şey bildirmez")
-    return int(m.group(1)), int(m.group(2))
+        f"{timer.name}: `OnCalendar` satırı `[<Gün> ]<tarih> HH:MM:SS UTC` biçiminde DEĞİL. "
+        "İki ayrı arıza bu mesajı verir ve ikisi de sessizdir: (a) saat açıkça UTC yazılmamış — "
+        "sunucu TZ'si değiştiği gün kadans kayar ve bunu hiçbir şey bildirmez; (b) takvim "
+        "ifadesi bu çivinin tanımadığı bir biçimde (`weekly`/`OnBootSec` gibi) — o hâlde "
+        "aşağıdaki dikkat-bütçesi ve gece-penceresi kapıları bu botu HİÇ ölçemez")
+    return m.group("gun"), int(m.group("sa")), int(m.group("dk"))
 
 
 @pytest.mark.parametrize("profil", _profiller(), ids=lambda p: p.name)
@@ -725,7 +923,7 @@ def test_IKI_BOT_MESAJI_AYNI_DAKIKAYA_DUSMEZ():
         t = _profil_timeri(profil)
         if t is None:
             continue                       # kardeş çivi zaten kırmızı; burada ikinci kez bağırma
-        sa, dk = _oncalendar_saati(t)
+        _gun, sa, dk = _oncalendar(t)
         saatler[profil.name] = sa * 60 + dk
     if len(saatler) < 2:
         pytest.skip("tek profil — ayrışma ölçülemez (kapsam beyanı: bu kapı iki bottan itibaren)")
@@ -761,7 +959,7 @@ def test_GECE_PENCERESINE_IKINCI_BIR_BOT_EKLENMEZ():
         t = _profil_timeri(profil)
         if t is None:
             continue                       # kardeş çivi zaten kırmızı; burada ikinci kez bağırma
-        sa, dk = _oncalendar_saati(t)
+        _gun, sa, dk = _oncalendar(t)
         if sa >= lo or sa < hi:
             icerde.append(f"{profil.name}@{sa:02d}:{dk:02d}Z")
     assert len(icerde) <= 1, (
@@ -825,6 +1023,33 @@ def _recete_belgeleri(profil: pathlib.Path) -> dict:
 _ADIM_ECHO = re.compile(r'^\s*echo\s+"\s*\d\)\s')
 
 
+def _profil_kabuk_degiskenleri(profil: pathlib.Path) -> set[str]:
+    """deploy.sh'ta BU profile ait kabuk değişken adları — ATAMA SATIRLARINDAN türetilir.
+
+    `SEF_KAYNAK`/`KARNE_PROFIL` gibi literaller çiviye YAZILMAZ: bir profil kendi önekini
+    seçebilir ve yazılı bir ad ikinci profilde sessizce ölçmeyi bırakır (`_atanan_degisken`in
+    aynı dersi). Ölçüt, atamanın SAĞ YANININ bu profilin dizinini göstermesidir."""
+    iz = f"/profiles/{profil.name}"
+    return {v for ln in _deploy_kod()
+            if iz in ln and (v := _atanan_degisken(ln)) and not ln.lstrip().startswith("echo")}
+
+
+def _profil_recete_adimlari(profil: pathlib.Path) -> list[str]:
+    """BU profilin numaralı reçete adımları — ötekilerinkiyle karışmaz.
+
+    İZLER TÜRETİLİR: profilin kendi kabuk değişkenleri (`$X` / `${X}` biçiminde) + kendi
+    timer'ının adı (birimden gelir; filoda birim ad kuralı YOK, o yüzden ölçülür).
+    Küme BOŞ çıkarsa çiviler kırmızıya döner ve DOĞRUSU BUDUR: reçete bloğu olmayan bir profil,
+    operatörün kurulum yönergesini hiçbir yerde bulamayacağı profildir."""
+    degiskenler = _profil_kabuk_degiskenleri(profil)
+    izler = {f"${v}" for v in degiskenler} | {f"${{{v}}}" for v in degiskenler}
+    t = _profil_timeri(profil)
+    if t is not None:
+        izler.add(t.name)
+    return [ln for ln in _deploy_kod()
+            if _ADIM_ECHO.match(ln) and any(i in ln for i in izler)]
+
+
 def _recete_adimlari(profil: pathlib.Path) -> dict:
     """OPERATÖRÜN REÇETE OLARAK OKUDUĞU metin — "şu geçmeli" çivileri için.
 
@@ -837,16 +1062,30 @@ def _recete_adimlari(profil: pathlib.Path) -> dict:
     İKİ BELGEDE DE ÖLÇÜ "OPERATÖRÜN GÖRDÜĞÜ REÇETE"DİR:
       · manifest → dosyanın BAŞINDAKİ yorum bloğu (kurulum reçetesi orada yaşar; ilk yorum
         olmayan satırda biter),
-      · deploy.sh → NUMARALI adım olarak BASILAN `echo` satırları (`echo "  N) ..."`).
+      · deploy.sh → BU PROFİLİN NUMARALI adım satırları (`echo "  N) ..."`).
+
+    "BU PROFİLİN" DARALTMASI ÜÇÜNCÜ PROFİLDE ÖLÇÜLDÜ (Faz 4, 2026-08-30) — ve daraltmadan önceki
+    hâl ÖLÇÜLEREK kusurlu bulundu, varsayılarak değil. deploy.sh yakası BÜTÜN profillerin
+    numaralı adımlarını TEK metinde birleştiriyordu; `ORTAK_RECETE_EYLEMLERI` ise tanımı gereği
+    her profilde AYNI dizgedir (`hermes profile install`). Sonuç: bir profilin reçete bloğu
+    deploy.sh'tan TÜMÜYLE silinse bile, kardeşinin aynı dizgeyi taşıyan satırı çiviyi YEŞİL
+    tutuyordu. MUTASYONLA GÖSTERİLDİ: `@karne`nin 1. adım satırı silindiğinde v329 + v266
+    tamamen yeşil kaldı (132 passed). Aynı körlük `@karne` HİÇ eklenmemişken de vardı —
+    `[karne-hermes profile install]` parametresi taban koşumda ZATEN yeşildi, oysa deploy.sh'ta
+    o profile ait tek satır yoktu. Profile ÖZGÜ eylem (kendi timer'ı) bu boşluktan etkilenmiyordu,
+    yani körlük yalnız ORTAK eylemlerde ve tam da ORADA sessizdi.
+
+    BLOK AD LİSTESİYLE DEĞİL TÜRETİLEREK BULUNUR (`_profil_recete_adimlari`): profile ait kabuk
+    değişkenleri deploy.sh'ın ATAMA satırlarından okunur, timer adı birimden gelir.
     """
     manifest_bas = []
     for ln in _manifest_metni(profil).splitlines():
         if ln.strip() and not ln.lstrip().startswith("#"):
             break
         manifest_bas.append(ln)
-    adimlar = [ln for ln in _deploy_kod() if _ADIM_ECHO.match(ln)]
+    adimlar = _profil_recete_adimlari(profil)
     return {f"{profil.name}/distribution.yaml (kurulum bloğu)": "\n".join(manifest_bas),
-            "deploy.sh (numaralı reçete adımları)": "\n".join(adimlar)}
+            f"deploy.sh ({profil.name} numaralı reçete adımları)": "\n".join(adimlar)}
 
 
 def _recete_cift_listesi() -> list[tuple[pathlib.Path, str]]:
@@ -1107,3 +1346,39 @@ def test_F9_PROFILIN_BIRIM_CIFTINI_IZLIYOR(profil):
             "biriktirir")
         assert liste[repo_yol] == f"/etc/systemd/system/{yol.name}", (
             f"{profil.name}: `{repo_yol}` canlı yanı yanlış ({liste[repo_yol]})")
+
+
+def test_KARNE_KADANSI_HAFTALIKTIR_ve_seans_bos_gunde():
+    """`meridian-karne.timer` HAFTALIK ve CUMARTESİ — bu bir tercih değil, ÖNCÜLDÜR.
+
+    Görev 3'ün türetimi: `karne_hesap.hesapla()` defteri İKİ KEZ okur ve aradaki append
+    fail-closed `ayrisma` tetikler — kadans bu yüzden defterin SESSİZ olduğu güne çakılıdır,
+    ve cumartesi işlem haftası bittikten sonraki ilk seanssız gündür. `Sat` sessizce düşerse
+    kadans GÜNLÜK olur: defter-sessizliği öncülü boşa çıkar (hafta içi her koşum ayrışma
+    riskine girer) ve haftalık rapor botu günlük spam'e dönüşür — @sef'in koruduğu dikkat
+    bütçesinin tam tersi. Görev 3 bunu ad-listesiz türetememişti ve dürüstçe bırakmıştı;
+    bu çivi öncülü GEREKÇESİYLE çiviler: timer dosyası tek kaynaktır, çivi onun sözünü tutar.
+
+    ÖLÇÜ ARTIK ALT DİZGE DEĞİL, AYRIŞTIRILMIŞ GÜN KÜMESİ (dal denetimi L6). `"Sat" in satır`
+    kapısından `OnCalendar=Sat,Wed *-*-* 16:00:00 UTC` ve `Mon..Sat *-*-* …` de GEÇERDİ —
+    ikisinde de kadans haftalık DEĞİLDİR. `_oncalendar` gün önekini ZATEN ayrıştırıp
+    döndürüyordu (`m.group("gun")`) ama hiçbir kapı onu tüketmiyordu: ölçülüp kullanılmayan bir
+    değer, YASA 6'nın kendi tarifidir. Çivi adının söylediğinin ALTINI ölçüyordu.
+    """
+    timer = KOK / "deploy/oracle-a1/meridian-karne.timer"
+    metin = timer.read_text(encoding="utf-8")
+    takvim = [ln for ln in metin.splitlines() if ln.strip().startswith("OnCalendar=")]
+    assert len(takvim) == 1, f"tek OnCalendar bekleniyordu: {takvim!r}"
+    gun, _sa, _dk = _oncalendar(timer)
+    assert gun is not None, (
+        f"`OnCalendar` gün öneki TAŞIMIYOR ({takvim[0]!r}) — gün öneksiz bir takvim ifadesi "
+        "systemd'de HER GÜN ateşler: haftalık rapor botu günlük spam'e döner ve "
+        "defter-sessizliği öncülü (çift okuma ayrışması) boşa çıkar")
+    # `Mon..Sat` ARALIĞI DA TEK GÜN DEĞİLDİR — nokta-nokta ayrıştırılmadan `split(",")`
+    # bir aralığı tek jeton sayar ve kapıdan geçirirdi.
+    assert ".." not in gun, (
+        f"gün öneki bir ARALIK ({gun!r}) — haftada bir değil, aralık boyunca her gün ateşler")
+    gunler = {g.strip() for g in gun.split(",") if g.strip()}
+    assert gunler == {"Sat"}, (
+        f"karne timer'ının gün kümesi {sorted(gunler)} — tam olarak {{'Sat'}} olmalı: haftalık "
+        "rapor botu günlük spam'e döner ve defter-sessizliği öncülü boşa çıkar")

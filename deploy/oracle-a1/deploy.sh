@@ -38,7 +38,12 @@
 #   * deploy/oracle-a1/meridian-bekci.service     → /etc/systemd/system/  (Faz 3 — @bekci kadansı
 #     10:00 UTC; AYRI birim, brifing'e ikinci ExecStart DEĞİL — gerekçe birim başlığında)
 #   * deploy/oracle-a1/meridian-bekci.timer       → /etc/systemd/system/  (o kadansın tek tetiği)
-#   * BOT PROFİLLERİ (Faz 2: @sef · Faz 3: @bekci) → ~ubuntu/.hermes/profiles/<ad>/ — her biri
+#   * deploy/oracle-a1/meridian-karne.service     → /etc/systemd/system/  (Faz 4 — @karne kadansı
+#     HAFTALIK: Cumartesi 16:00 UTC. AYRI birim; kadansı kardeşlerinden FARKLI olduğu için ortak
+#     bir birime binmek bir teslimatın kadansını ötekinin kararı yapardı — gerekçe birim başlığında)
+#   * deploy/oracle-a1/meridian-karne.timer       → /etc/systemd/system/  (o kadansın tek tetiği;
+#     gün seçimi DEFTER SESSİZLİĞİdir, tercih değil — gerekçe timer başlığında)
+#   * BOT PROFİLLERİ (Faz 2: @sef · Faz 3: @bekci · Faz 4: @karne) → ~ubuntu/.hermes/profiles/<ad>/ — her biri
 #     ÜÇ dosya, ELLE kurulur. TAM REPO YOLLARIYLA yazılır, kısa adla DEĞİL — ve bu kural artık
 #     KOŞULSUZ: `config.yaml`, `SOUL.md` ve `distribution.yaml` listede birden çok kez geçiyor,
 #     basename eşleyen bir çivi bir profilin satırlarının silinmesini ötekiler yüzünden
@@ -49,6 +54,9 @@
 #       - deploy/hermes/profiles/bekci/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
 #       - deploy/hermes/profiles/bekci/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
 #       - deploy/hermes/profiles/bekci/SOUL.md            (botun kalıcı brifingi)
+#       - deploy/hermes/profiles/karne/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
+#       - deploy/hermes/profiles/karne/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
+#       - deploy/hermes/profiles/karne/SOUL.md            (botun kalıcı brifingi)
 #     KURULUM BU BETİKTE DEĞİL, BİLEREK: `hermes profile install` canlıda YENİ BİR AJAN KİMLİĞİ
 #     doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: her
 #     botun kum havuzunu (`/opt/meridian/var/bots/<ad>`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR.
@@ -208,6 +216,32 @@ else
   echo "   Günlük Telegram teslimatını değiştirmek bir OPERATÖR KARARIDIR; bu dağıtım onu"
   echo "   kendiliğinden vermez. Devretmek için:  MERIDIAN_BEKCI_DEVRI=1 bash deploy/oracle-a1/deploy.sh"
 fi
+# KARNE KADANSI (Faz 4 — @karne). YUKARIDAKİ İKİ KAPININ ÜÇÜNCÜSÜ ve aynı gerekçelerle: birim
+# `meridian-brifing`ten de `meridian-bekci`den de AYRIDIR (üç bot ayrı artefaktın sahibi; biri
+# düşerse ötekiler koşmalı), yani `is-enabled` ölçümü de AYRI olmak zorunda — bir timer'ın durumu
+# öteki hakkında HİÇBİR ŞEY söylemez.
+# BU BOTTA KAPI DAHA DA ÖNEMLİ, ÇÜNKÜ KADANS HAFTALIK: yanlışlıkla devredilen bir ExecStart
+# günlük bir teslimatta bir gün sonra fark edilir, haftalıkta BİR HAFTA sonra. Ve `@karne`
+# DEĞİŞTİ/AYNI işaretlerini son TESLİM EDİLEN karneye göre kuruyor — devir sırasında kaçan bir
+# hafta yalnız bir mesajı değil bir kıyas halkasını da düşürür.
+# BUGÜN CANLIDA BU BİRİM YOK — yani "devir" bacağı bugün boş çalışır ve kapı gereksizmiş gibi
+# görünür. Değil: timer bir kez açıldıktan sonra AÇIK KALIR, ve o günden sonra ilgisiz bir
+# sebeple koşan tek bir dağıtım (`cutover.sh` adım 4 bu betiği çağırıyor) çalışan bir teslimatın
+# ExecStart'ını kimse karar vermeden değiştirebilirdi.
+KARNE_ENABLED="$(systemctl is-enabled meridian-karne.timer 2>/dev/null || true)"
+KARNE_EXEC="$(systemctl cat meridian-karne.service 2>/dev/null | grep -m1 '^ExecStart=' || true)"
+if [ "$KARNE_ENABLED" != "enabled" ] || [ "${MERIDIAN_KARNE_DEVRI:-0}" = "1" ] || \
+   case "$KARNE_EXEC" in *karne_brifingi.py*) true ;; *) false ;; esac; then
+  sudo cp deploy/oracle-a1/meridian-karne.service         /etc/systemd/system/meridian-karne.service
+  sudo cp deploy/oracle-a1/meridian-karne.timer           /etc/systemd/system/meridian-karne.timer
+  echo "-- karne birimi kuruldu/tazelendi (kadans=${KARNE_ENABLED:-yok})"
+else
+  echo "!! KARNE BİRİMİ DEVREDİLMEDİ — kadans AÇIK ve YÜRÜRLÜKTEKİ teslimat repodakinden farklı."
+  echo "   YÜRÜRLÜKTEKİ: ${KARNE_EXEC:-(okunamadı)}"
+  echo "   REPODAKİ    : $(grep -m1 '^ExecStart=' deploy/oracle-a1/meridian-karne.service)"
+  echo "   Haftalık Telegram teslimatını değiştirmek bir OPERATÖR KARARIDIR; bu dağıtım onu"
+  echo "   kendiliğinden vermez. Devretmek için:  MERIDIAN_KARNE_DEVRI=1 bash deploy/oracle-a1/deploy.sh"
+fi
 # SPRINT ŞABLON BİRİMİ (v241, 2026-08-13 — tick-watchdog'un AYNI DERSİ, bu kez baştan uygulandı).
 # Öğrenme sprinti 2026-08-13'e dek worker'ın çocuğu olarak doğuyordu (`sprint.py` Popen) ve systemd
 # varsayılan `KillMode=control-group` yüzünden HER `systemctl restart meridian` onu biçiyordu —
@@ -315,6 +349,18 @@ if [ "$BEKCI_KUM_SAHIP" != "ubuntu" ]; then
   sudo chown -R ubuntu:ubuntu /opt/meridian/var/bots/bekci
 fi
 echo "-- @bekci kum havuzu hazır: /opt/meridian/var/bots/bekci (0700, ubuntu) — manifestin kum-havuzu adımı BU BETİKTE yapıldı"
+# @karne BOT KUM HAVUZU (Faz 4) — üstteki iki blokla AYNI gerekçe, AYRI DİZİN (§9.3: her bot
+# kendi artefaktının TEK yazarı). ÜÇÜNCÜ BOTLA AYRIKLIK DAHA DA BAĞLAYICI: paylaşılan bir kum
+# havuzunda üç botun herhangi ikisi birbirinin dosyasını ezebilirdi ve hangisinin ezdiği
+# ölçülemezdi.
+mkdir -p /opt/meridian/var/bots/karne
+chmod 700 /opt/meridian/var/bots/karne
+KARNE_KUM_SAHIP="$(stat -c '%U' /opt/meridian/var/bots/karne 2>/dev/null || echo YOK)"
+if [ "$KARNE_KUM_SAHIP" != "ubuntu" ]; then
+  echo "-- @karne kum havuzu sahibi '$KARNE_KUM_SAHIP' — ubuntu'ya alınıyor"
+  sudo chown -R ubuntu:ubuntu /opt/meridian/var/bots/karne
+fi
+echo "-- @karne kum havuzu hazır: /opt/meridian/var/bots/karne (0700, ubuntu) — manifestin kum-havuzu adımı BU BETİKTE yapıldı"
 sudo systemctl daemon-reload
 sudo systemctl enable meridian meridian-barsarchive
 sudo systemctl enable --now meridian-backup.timer   # timer şimdi başlar; service'i o tetikler
@@ -367,6 +413,24 @@ else
   echo "       sudo systemctl enable --now meridian-bekci.timer"
   echo "   NOT: bu tetik @sef'inkinden 12 saat uzağa (10:00 UTC) kondu — iki bot AYNI operatöre"
   echo "   AYNI kanaldan yazıyor ve dakikalar arayla düşen iki mesaj tek yığın gibi okunur."
+fi
+# KARNE KADANSI — iki kardeş kapının ÜÇÜNCÜSÜ, aynı gerekçelerle (bkz. yukarısı). AYRI ÖLÇÜM
+# ŞART: üç timer bağımsızdır. `KARNE_ENABLED` YUKARIDA, devir kapısında ÖLÇÜLDÜ — burada yeniden
+# ölçülmez (aynı olgunun iki kaynağı, ikisinin ayrışabileceği anlamına gelir).
+if [ "$KARNE_ENABLED" = "enabled" ]; then
+  sudo systemctl enable --now meridian-karne.timer
+  KARNE_TIMER="$(systemctl is-active meridian-karne.timer 2>&1 || true)"
+  echo "-- karne kadansı: enabled · timer=$KARNE_TIMER · sonraki: $(systemctl list-timers meridian-karne.timer --no-pager --no-legend 2>/dev/null | awk '{print $1, $2, $3}')"
+  if [ "$KARNE_TIMER" != "active" ]; then
+    echo "!! meridian-karne.timer AÇIKTI ama AKTİF DEĞİL — amaç sorusu haftalarca cevapsız kalır"; exit 1
+  fi
+else
+  echo "-- karne kadansı: dosyalar KURULDU, kadans KAPALI (bilinçli — haftalık Telegram teslimatı"
+  echo "   operatör kararıdır). Kadansı açan komut (aşağıdaki @karne reçetesinin 3. adımı):"
+  echo "       sudo systemctl enable --now meridian-karne.timer"
+  echo "   NOT: bu tetik HAFTALIKtır (Cumartesi 16:00 UTC) ve GÜN bir tercih DEĞİL: hesap defteri"
+  echo "   iki kez okuyup kıyaslıyor, araya düşen bir işlem eklemesi hükmü fail-closed olarak"
+  echo "   ÖLÇÜLEMEDİ'ye çeviriyor. Cumartesi seans olmayan ilk gündür (Cuma kapanışına 19-20 sa)."
 fi
 
 # @sef PROFİLİ — DURUM RAPORU + REÇETE. Kapı DEĞİL, RAPOR: profilsiz bir kurulum BOZUK değildir,
@@ -455,20 +519,78 @@ else
   echo "   duruş değiştiyse 'hermes profile update bekci --force-config' gerekir."
 fi
 
+# @karne PROFİLİ — DURUM RAPORU + REÇETE (Faz 4). Yukarıdaki iki bloğun ÜÇÜNCÜSÜ ve yine bir
+# KAPI DEĞİL RAPOR: profilsiz bir kurulum BOZUK değildir, karne ölçülen dört hükmü teslim etmeye
+# devam eder (hüküm deterministiktir; model yalnız SÖZE ÇEVİRİR). Aşağıdaki ÜÇ EYLEM manifestin
+# (deploy/hermes/profiles/karne/distribution.yaml) kurulum notundakilerle AYNIDIR ve bu bir dilek
+# değil ÇİVİLİ bir olgudur (test_bot_profil_durusu_v329.py::
+# test_RECETENIN_HER_EYLEMI_IKI_BELGEDE_DE_GECER — kapsam profil dizininden TÜRETİLİYOR).
+KARNE_EV="$(getent passwd "${SUDO_USER:-$(id -un)}" 2>/dev/null | cut -d: -f6)"
+KARNE_PROFIL="${KARNE_EV:-$HOME}/.hermes/profiles/karne"
+KARNE_KAYNAK="$REPO/deploy/hermes/profiles/karne"
+echo "-- @karne profil yolu (ölçüldü, çağıran=${SUDO_USER:-$(id -un)}): $KARNE_PROFIL"
+KARNE_BIRIM_HOME="$(grep -m1 '^Environment=HERMES_HOME=' deploy/oracle-a1/meridian-karne.service | cut -d= -f3-)"
+if [ "$KARNE_BIRIM_HOME" != "$KARNE_PROFIL" ]; then
+  echo "!! @karne PROFİL YOLU AYRIŞIYOR — bu betik '$KARNE_PROFIL' ölçtü, birim '$KARNE_BIRIM_HOME' diyor."
+  echo "   Zamanlanmış koşumu BİRİM belirler: yol yanlışsa harness profili REDDEDER ve karne"
+  echo "   HER HAFTA sessizce ham gider (sunum katmanı kalıcı kapanır, hiçbir şey kırmızı olmaz)."
+fi
+if [ -d "$KARNE_PROFIL" ]; then
+  echo "-- @karne profili KURULU: $KARNE_PROFIL"
+  if [ ! -s "$KARNE_PROFIL/.env" ]; then
+    echo "!! @karne .env YOK/BOŞ ($KARNE_PROFIL/.env) — profil KURULU ama ANAHTARSIZ. Etkisi SESSİZ:"
+    echo "   model her koşumda düşer, karne HAM gider, teslimat 'çalışıyor' görünür. Doldur:"
+    echo "       cp $KARNE_PROFIL/.env.EXAMPLE $KARNE_PROFIL/.env  &&  \${EDITOR:-nano} $KARNE_PROFIL/.env"
+  fi
+else
+  echo "-- @karne profili KURULU DEĞİL — karne HAM yoldan teslim eder (bozuk değil, SUNUMSUZ)."
+  echo "   Kurmak ÜÇ AYRI EYLEMDİR ve 'tek komut' demek YANLIŞ olur: ortadaki atlanırsa profil"
+  echo "   KURULUR ve YANLIŞ ÇALIŞIR (anahtarsız, hiç düşünmeden); sonuncusu atlanırsa hiç KOŞMAZ."
+  echo "     1) hermes profile install $KARNE_KAYNAK"
+  echo "     2) cp $KARNE_PROFIL/.env.EXAMPLE $KARNE_PROFIL/.env  &&  \${EDITOR:-nano} $KARNE_PROFIL/.env"
+  echo "        (OPENROUTER_API_KEY — profilin KENDİ .env'i; dağıtım ona ASLA dokunmaz)"
+  echo "     3) sudo systemctl enable --now meridian-karne.timer"
+  echo "   NOT, ADIM DEĞİL: kum havuzunu (/opt/meridian/var/bots/karne) bu betik zaten yarattı."
+  echo "   GÜNCELLEME TUZAĞI (ölçüldü): 'hermes profile update karne' config.yaml'ı KORUR —"
+  echo "   duruş değiştiyse 'hermes profile update karne --force-config' gerekir."
+fi
+# @karne BİRİM DURUMUNU NASIL OKUMALI — BU BOTTA "yeşil mi?" REFLEKSİ YETMEZ.
+# Kardeş botlarda birim durumu teslimatın ÖZETİDİR. @karne RAPOR botudur ve SUSMAZ: kadansı
+# geldiyse mesaj her hâlükârda gider, hesap patlasa bile. Sonuç ikisi birden:
+echo "-- @karne birim durumu nasıl okunur (ÖLÇÜLDÜ: ops/karne_brifingi.py::main — kaynak, canlı değil):"
+echo "     çıkış 0 = TESLİM EDİLDİ. Dört hükmün NE DEDİĞİNDEN bağımsız: bir 'KALDI' BULGUdur,"
+echo "               koşum hatası değil (aksi hâlde deneyin kötü her haftası birim arızası"
+echo "               görünür ve operatör timer'ı susturur)."
+echo "     çıkış 1 = gönderim düştü · çıkış 2 = bildirim kanalı yapılandırılmamış. İkisi de"
+echo "               birimi 'failed' yapar ve /api/infra bunu 'arizali' diye panoya taşır."
+echo "   İLK CANLI KOŞUM BİR DOĞRULAMA TURUDUR, TESLİMAT TURU DEĞİL: canlı defter uzun süredir"
+echo "   sessizse ya da 30 işlem gününden kısaysa DÖRT hüküm de meşru olarak ÖLÇÜLEMEDİ döner."
+echo "   DİKKAT — O HÂLDE BİRİM KIRMIZIYA DÖNMEZ, YEŞİL KALIR (çıkış 0): 'susmaz' sözleşmesi"
+echo "   gereği mesaj gider. Yani hükmü BİRİM DURUMUNDAN DEĞİL MESAJIN GÖVDESİNDEN oku —"
+echo "   '⚠ KARNE HESAPLANAMADI' satırı, ÖLÇÜLEMEDİ hükümleri ve kapsam beyanı oradadır:"
+echo "       journalctl -u meridian-karne -n 80   ·   uv run python ops/karne_hesap.py --json"
+echo "   ÖLÇÜLMÜŞ AÇIK KALEM (Rol-1'e devredildi, bu betik ÇÖZMEZ): ops/karne_hesap.py CLI'sı"
+echo "   'dördü de ÖLÇÜLEMEDİ → çıkış 2' kapısını taşır ve gerekçesinde 'birim tam ölçüm"
+echo "   kesintisinde sonsuza dek yeşil görünürdü' der — ama birim O CLI'yı değil harness'i"
+echo "   koşuyor ve harness kesintiyi teslim edip 0 dönüyor. Kapı bugün birime ULAŞMIYOR."
+
 # DOĞRULANMAMIŞ KALEMLER — BEYAN, İDDİA DEĞİL (UYDURMA YASAĞI). Kurulum çıktısı 'güvenli' izlenimi
 # bırakır; o izlenimin ölçülmemiş kısımları burada ADIYLA söylenir, yoksa sessizce güvence olurlar.
 # BİR KEZ BASILIR, PROFİL BAŞINA DEĞİL: ikisi de AYNI mekanizmanın ölçülmemiş kısmıdır (aynı
 # Hermes ikilisi, aynı systemd duruşu) ve her profilde tekrarlamak, uyarıyı okunmaz kılardı.
-echo "   DOĞRULANMADI (1) — KURULAN HER BOT PROFİLİ İÇİN (@sef · @bekci): profilin pre_tool_call"
+echo "   DOĞRULANMADI (1) — KURULAN HER BOT PROFİLİ İÇİN (@sef · @bekci · @karne): profilin pre_tool_call"
 echo "   guard kancasının BAŞSIZ (TTY'siz) koşumda gerçekten ateşlendiği CANLIDA HİÇ ölçülmedi."
 echo "   Bilinen: satıcının kendi testi, TTY yokken ve onay bayrağı yokken kabuk kancalarının HİÇ"
 echo "   kaydolmadığını söylüyor. Karşı-tedbir iki yanlı (config: hooks_auto_accept · çağrı:"
 echo "   --accept-hooks) ama İKİSİ DE satıcı KAYNAĞINDAN okundu, gerçek bir başsız koşumdan DEĞİL."
 echo "   DOĞRULANMADI (2): birimler ProtectHome=read-only altında koşuyor ve ~/.hermes yazma izni"
 echo "   ReadWritePaths'e ÇIKARIMLA açıldı (emsal: meridian.service tur-1 EROFS kırıklığı)."
-echo "   İkisini de ilk koşumdan sonra doğrula (İKİ BİRİM DE, ayrı ayrı — biri temiz koşuyor diye"
-echo "   öteki koşuyor sayılmaz):"
+echo "   İkisini de ilk koşumdan sonra doğrula (ÜÇ BİRİM DE, ayrı ayrı — biri temiz koşuyor diye"
+echo "   öteki koşuyor sayılmaz; @karne HAFTALIK olduğu için ilk kaydı BİR HAFTA gecikebilir,"
+echo "   beklemek yerine 'sudo systemctl start meridian-karne.service' ile elle test-ateşle —"
+echo "   'kurulu != çalışır', fail-notify dersi):"
 echo "       journalctl -u meridian-brifing -n 50   ·   journalctl -u meridian-bekci -n 50"
+echo "       journalctl -u meridian-karne -n 50"
 
 # BEKÇİ KURULUM DOĞRULAMASI — "kurulu != çalışır" (fail-notify dersi, 2026-07-30: birim iki gün
 # kuruluydu ve ilk test-ateşlemede IndentationError verdi). Burada ÜÇ ayrı gerçek ölçülür ve

@@ -1,0 +1,102 @@
+# meridian-karne.timer — meridian-karne.service'i HAFTADA BİR tetikler.
+#
+# SLOT SEÇİMİ: CUMARTESİ 16:00 UTC. Kardeş timer'lardan farklı olarak burada BELİRLEYİCİ kısıt
+# dikkat bütçesi DEĞİL, DEFTERİN SESSİZ OLMASIDIR — ve o kısıt önce GÜNÜ, sonra saati seçiyor.
+#
+# ============================================================================================
+# (1) DEFTER SESSİZ OLMALI — ASIL KARAR, VE ÖLÇÜLMÜŞ BİR MEKANİZMADAN TÜRÜYOR.
+# ============================================================================================
+# ÖLÇÜLDÜ (`ops/karne_hesap.py::hesapla`, kaynak okundu): hesap defteri İKİ KEZ okur — bir kez
+# `score.score_detail(islemler, goal)`, bir kez `watchdog.goal_failure_report()` içinden. İki
+# okumanın `realized_30d`si karşılaştırılır ve TUTMAZSA `kapsam["ayrisma"]` doğar. Bu bir uyarı
+# değil bir META-KAPIdır: ayrışma günü "başarısız DEĞİL" hükümleri `OLCULEMEDI`ye çevrilir
+# (fail-closed). Modülün kendi teşhisi de bunu adıyla söylüyor: *"En olası sebep iki okuma
+# arasına düşen bir defter eklemesidir, yani `sd`den gelen HER sayı şüphelidir."*
+# YANİ: karneyi işlem akışının İÇİNDE koşturmak, karnenin kendi cevabını düzenli olarak
+# `OLCULEMEDI`ye çevirir — üstelik en çok işlem olan, yani cevabın en çok önem taşıdığı hafta.
+#
+# CUMARTESİ, ÇÜNKÜ İŞLEM HAFTASI CUMA KAPANIŞINDA BİTER. ABD seansları Pzt–Cum; Cumartesi HER
+# İKİ DST REJİMİNDE de seans YOKTUR, yani deftere yazacak bir kapanış turu da yoktur. Marj, o
+# haftanın MÜMKÜN OLAN SON eklemesine göre ölçülür:
+#     kapanış 16:00 America/New_York SABİTTİR, UTC karşılığı DEĞİL —
+#       EDT: Cuma 20:00 UTC · aynı-akşam bacağı 20:16'da açılır (`scheduler.SAME_EVENING_DELAY_MIN`)
+#            → Cumartesi 16:00 UTC'ye 20 saat
+#       EST: Cuma 21:00 UTC · bacak 21:16'da açılır
+#            → Cumartesi 16:00 UTC'ye 19 saat
+#     İki rejimde de marj ≥ 19 saat. (Kardeş biçim: meridian-brifing.timer'ın DST tablosu.)
+# PAZAR DEĞİL, VE BU BİR TERCİH DEĞİL: rapor "hafta nasıl geçti" sorusuna cevap veriyor, soru
+# Cuma kapanışında doğuyor. Cumartesi o kapanışa EN YAKIN garanti-sessiz noktadır; Pazar aynı
+# sessizliği 24 saat DAHA BAYAT bir cevapla satın alırdı.
+#
+# NE ÖLÇÜLMEDİ, ADIYLA: A1'de Cumartesi günü deftere yazan BAŞKA bir yazıcı olup olmadığı bu
+# turda ölçülemedi (ssh yok — CLAUDE.md §3, ajan). Bilinen tek gece işi öğrenme sprintidir ve
+# ÖLÇÜLDÜ ki o `reflect.search_and_submit` koşturur (deterministik koordinat inişi), İCRA
+# ETMEZ — yani `trades.jsonl`e yazması BEKLENMEZ. "Beklenmez" bir ölçüm değildir; ilk canlı
+# koşum bu cümlenin de doğrulama turudur.
+#
+# ============================================================================================
+# (2) SAAT — DİKKAT BÜTÇESİ, VE SEÇİM TÜRETİLDİ, BEĞENİLMEDİ.
+# ============================================================================================
+# Üç bot AYNI operatöre AYNI kanaldan yazıyor. `@sef` 22:00 UTC ve `@bekci` 10:00 UTC SABİTTİR
+# (birincisi seansa bağlı, ikincisi birincisinin tam karşıtı olarak seçilmişti) — yani daire
+# üzerinde iki nokta, aralarında iki adet 12 saatlik yay var. Üçüncü noktanın "en az yakınlık"ını
+# BÜYÜTEN yer, bu yaylardan birinin ORTASIDIR: 04:00 ya da 16:00.
+#   · 04:00 ELENİR — öğrenme sprintinin gece penceresinin İÇİNDE (aşağı bak).
+#   · 16:00 KALIR, ve tek başına kalır. Ortaya çıkan üçlü: 10:00 → 16:00 → 22:00 → 10:00, yani
+#     6 sa / 6 sa / 12 sa. Kapı 4 saattir (çivi: test_IKI_BOT_MESAJI_AYNI_DAKIKAYA_DUSMEZ) ve
+#     6 saat onun üstünde bir pay bırakır.
+# `RandomizedDelaySec=300` PAYI YEMEZ: 5 dk, 6 saatin yanında ihmal edilebilir. Dakikayı 00'dan
+# kaydırmak için bir SEBEP YOK — kaçınılacak bir ızgara yok, ve sebepsiz kaydırma gerekçesiz
+# karardır (aynı muhakeme `meridian-bekci.timer`da yazılı).
+#
+# ============================================================================================
+# (3) MAKİNE YÜKÜ — 4 çekirdekli kutu.
+# ============================================================================================
+# ÖLÇÜLDÜ (`meridian/sprint.py`, `SPRINT_HOURS = (22, 6)`): otomatik öğrenme sprinti YALNIZ
+# [22:00, 06:00) penceresinde BAŞLAR ve `search_and_submit`i çekirdek başına sonda bütçesiyle
+# koşturur. 16:00 o pencerenin dışında. Filodaki öteki takvimli tetikler de uzak:
+# meridian-backup 23:30 UTC, meridian-aylik-bucket-kopya ayın 3'ü 04:00 UTC.
+# meridian-tick-watchdog BU LİSTEDE YOK ve bu ÖLÇÜLDÜ, varsayılmadı: tetiği
+# `OnUnitActiveSec=15min`dir, `OnCalendar` DEĞİL — duvar saatinin çeyreklerine bağlı değil.
+# ÇIKARIM, ÖLÇÜM DEĞİL: `should_run` pencereyi naive `datetime.now()` ile, yani SUNUCU YERELİYLE
+# karşılaştırıyor; bu satırdaki `UTC` ise mutlak. İkisinin çakışması A1'in UTC koşmasına bağlıdır
+# ve A1'in TZ'si bu turda ÖLÇÜLMEDİ (ssh yok). Yanlışsa bedel küçük (iki iş aynı saate düşer,
+# ikisi de yavaşlar), doğrulaması ucuz: `timedatectl` bir kez okunur.
+#
+# ============================================================================================
+# ÖLÇÜLEMEYEN, ve bu yüzden HÜKME SOKULMADI
+# ============================================================================================
+#   · OPERATÖRÜN SAAT DİLİMİ. Cumartesi 16:00 UTC'nin onun için öğle mi akşam mı olduğu
+#     BİLİNMİYOR ve TAHMİN EDİLMEDİ — yukarıdaki üç gerekçenin hiçbiri insan saatine dayanmıyor.
+#     Slot taşınırsa korunması gereken ÜÇ değişmez: (a) seans OLMAYAN bir gün (defter sessizliği
+#     — bu botta pazarlık dışı), (b) `@sef` ve `@bekci`den en az 4 saat uzak, (c) sprintin gece
+#     penceresinin dışında. Çiviler tam bu üçünü ölçüyor, SAATİ değil — bir sayı çivilenirse
+#     gerekçe değil sayı korunur.
+#   · A1'İN TZ'Sİ (yukarıda) ve Cumartesi günü deftere yazan başka bir süreç olup olmadığı.
+#   · Ücretsiz katman kotasının haftanın hangi saatinde daha erişilebilir olduğu. ÖLÇÜLMEDİ ve
+#     KARARA KATILMADI: kotayı tahmin ederek saat seçmek, ölçülmemiş bir ilişkiyi gerekçe diye
+#     yazmak olurdu. Kota düşerse teslimat SUSMAZ — ölçülen dört hüküm ham gider.
+[Unit]
+Description=Meridian karne tetiği (HAFTALIK — Cumartesi, işlem haftası kapandıktan sonra)
+
+[Timer]
+OnCalendar=Sat *-*-* 16:00:00 UTC
+# TELAFİ, VE BEDELİ AÇIKÇA ÖDENMİŞ (Bedel yasası).
+# KAZANÇ: kaçan bir tetik sessizce kaybolmaz. Haftalık bir birimde bu kardeşlerinden DAHA ağır
+# basar — kaçan bir GÜN değil, kaçan bir HAFTA telafi edilir; ve `@karne`nin damga dosyası
+# DEĞİŞTİ/AYNI işaretlerini SON TESLİM EDİLEN karneye göre kuruyor, yani kaçan hafta yalnız bir
+# mesajı değil bir KIYAS HALKASINI da düşürürdü.
+# BEDELİ: makine Cumartesi kapalıysa telafi koşumu HAFTA İÇİNE, yani defterin SESSİZ OLMADIĞI
+# bir güne düşebilir. Sonuç bir yanlış sayı DEĞİLDİR: ayrışma kapısı fail-closed'dur (yukarıda
+# (1)), yani en kötü hâl "OLCULEMEDI + ayrışma şerhi" taşıyan GÖRÜNÜR bir karnedir. Görünür bir
+# eksik ölçüm, kayıp bir haftadan iyidir — takas bu yönde yapıldı ve tersi de savunulabilirdi.
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — BU DOSYADA YAPILACAK BİR ŞEY YOK: timer birimlerinin `[Service]` bölümü
+# olmaz, sertleştirme süreç yürütmeye aittir ve tetiklenen birimde (meridian-karne.service)
+# yapıldı. Aynı gerekçe meridian-brifing.timer, meridian-bekci.timer, meridian-backup.timer ve
+# meridian-aylik-bucket-kopya.timer'da da yazılıdır.

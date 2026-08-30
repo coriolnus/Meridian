@@ -81,7 +81,7 @@ Environment=MERIDIAN_AGENT_RPD=600
 #     127.0.0.1 bağıdır, bkz. MERIDIAN_BIND_HOST kapısı aşağıda).
 #     DEPO–CANLI AYRIKLIĞI KAPANDI (H3 tur-2, 2026-08-02): bu satır 2026-07-31'de YALNIZ canlı
 #     birime `sed` ile eklenmişti (bakim_h9.sh:59), depodaki kopya CHANGEME'li kalmıştı. Depodaki
-#     birimi canlıya kopyalayan HER prosedür (deploy.sh:89 dahil) rotasyonu sessizce geri alırdı.
+#     birimi canlıya kopyalayan HER prosedür (`deploy.sh` → “6) systemd birimleri” bölümündeki `sudo cp … meridian.service` dahil) rotasyonu sessizce geri alırdı.
 #     Sır DOSYADA taşınır, birimde değil: `.dash.env` `dagit.sh` rsync'inden bilerek dışlanmıştır.
 EnvironmentFile=-/opt/meridian/.dash.env
 #     KALAN YÜZEY ve TUR-3 HAZIRLIĞI (2026-08-03): bu satır sırrı DOSYADAN çıkarıp SÜREÇ ORTAMINA
@@ -93,7 +93,7 @@ EnvironmentFile=-/opt/meridian/.dash.env
 #       meridian.service.d/51-dash-env-kaldir.conf  (faz 2: bu satırı etkisizleştirir)
 #       dash_token_credential.sh                    (rotasyon + kurulum + farksal doğrulama)
 #     BU DOSYAYA `LoadCredential=` YAZILMADI ve yazılmamalı: kaynak dosya (/etc/meridian/dash_token)
-#     yokken systemd birimi BAŞLATMAZ, ve `deploy.sh:89` bu birimi her dağıtımda canlıya kopyalar —
+#     yokken systemd birimi BAŞLATMAZ, ve `deploy.sh`ın “6) systemd birimleri” bölümü bu birimi her dağıtımda canlıya kopyalar —
 #     yani satır burada dururken koşacak İLK dağıtım panoyu düşürürdü. Drop-in'i kuran tek yer
 #     bakım penceresinde elle koşan `dash_token_credential.sh --faz1`dir.
 # --- BAĞLANMA ADRESİ TEK KAYNAK (denetim C1, 2026-08-02) ---------------------------------------

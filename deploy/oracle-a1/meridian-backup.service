@@ -67,7 +67,7 @@ ProtectHome=read-only
 #                         `find -delete` (7 günlük saklama). ProtectHome=read-only'yi deler.
 #                         `-` ÖNEKİ BİLEREK YOK: dizin yoksa systemd birimi AÇILIŞTA ve GÜRÜLTÜLÜ
 #                         reddeder ("Failed to set up mount namespacing"). Sessizce yedeksiz
-#                         koşmaktansa açıkça patlaması yeğdir. Dizini deploy.sh:101 kurar.
+#                         koşmaktansa açıkça patlaması yeğdir. Dizini `deploy.sh` (`mkdir -p /home/ubuntu/backups`) kurar.
 #  /home/ubuntu/.cache  : `uv run` önbelleği — yoksa ExecStart'ın python bacağı BAŞLAMAZ.
 ReadWritePaths=/opt/meridian /home/ubuntu/backups /home/ubuntu/.cache
 PrivateTmp=true

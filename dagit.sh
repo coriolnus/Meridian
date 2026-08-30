@@ -276,8 +276,12 @@ fi
 #   * meridian-bekci.service + .timer → /etc/systemd/system/  (Faz 3 — `@bekci`nin kadansı,
 #     10:00 UTC. AYRI BİR TETİK, brifing'e ikinci bir ExecStart DEĞİL: iki bot ayrı artefaktın
 #     sahibi ve biri düşerse öteki koşmalı — gerekçenin tamamı birim başlığında)
-#   * @sef ve @bekci profilleri: her biri distribution.yaml + config.yaml + SOUL.md →
-#     ~ubuntu/.hermes/profiles/<ad>/ (Faz 2 ve Faz 3 — bot roster'ın ilk iki Hermes profili).
+#   * meridian-karne.service + .timer → /etc/systemd/system/  (Faz 4 — `@karne`nin kadansı,
+#     HAFTALIK: Cumartesi 16:00 UTC. Gün bir tercih DEĞİL — hesap defteri iki kez okuyup
+#     kıyaslıyor ve araya düşen bir işlem eklemesi hükmü fail-closed olarak ÖLÇÜLEMEDİ'ye
+#     çeviriyor, o yüzden slot seansın OLMADIĞI güne konur; gerekçenin tamamı timer başlığında)
+#   * @sef, @bekci ve @karne profilleri: her biri distribution.yaml + config.yaml + SOUL.md →
+#     ~ubuntu/.hermes/profiles/<ad>/ (Faz 2, 3 ve 4 — bot roster'ın ilk üç Hermes profili).
 #     BURADA BİR İNCELİK VAR: rsync depo tarafını (`deploy/hermes/profiles/<ad>/`) canlıya
 #     TAŞIR, ama F9'un kıyasladığı şey o değil KURULU KOPYAdır — profil canlıya `hermes profile
 #     install` ile varır ve o komut operatörün kararıdır (yeni bir ajan kimliği doğurur). Yani
@@ -317,7 +321,12 @@ deploy/hermes/profiles/sef/config.yaml|/home/ubuntu/.hermes/profiles/sef/config.
 deploy/hermes/profiles/sef/SOUL.md|/home/ubuntu/.hermes/profiles/sef/SOUL.md
 deploy/hermes/profiles/bekci/distribution.yaml|/home/ubuntu/.hermes/profiles/bekci/distribution.yaml
 deploy/hermes/profiles/bekci/config.yaml|/home/ubuntu/.hermes/profiles/bekci/config.yaml
-deploy/hermes/profiles/bekci/SOUL.md|/home/ubuntu/.hermes/profiles/bekci/SOUL.md"
+deploy/hermes/profiles/bekci/SOUL.md|/home/ubuntu/.hermes/profiles/bekci/SOUL.md
+deploy/oracle-a1/meridian-karne.service|/etc/systemd/system/meridian-karne.service
+deploy/oracle-a1/meridian-karne.timer|/etc/systemd/system/meridian-karne.timer
+deploy/hermes/profiles/karne/distribution.yaml|/home/ubuntu/.hermes/profiles/karne/distribution.yaml
+deploy/hermes/profiles/karne/config.yaml|/home/ubuntu/.hermes/profiles/karne/config.yaml
+deploy/hermes/profiles/karne/SOUL.md|/home/ubuntu/.hermes/profiles/karne/SOUL.md"
 for _cift in $F9_LISTE; do
   # ETİKET TAM REPO YOLUDUR, BASENAME DEĞİL (denetim, Faz 3 dal turu 2026-08-30). İki profille
   # `config.yaml` üç kez, `SOUL.md` üç kez, `distribution.yaml` iki kez listede: "⚠ config.yaml:

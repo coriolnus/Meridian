@@ -521,7 +521,7 @@ gerilemesi bir sonraki suite'te yine görünür — kalıcı körlük yolu yok.
   zararsız gürültü üretmeye devam eder).
 
 - **İki ölü token-bekçisi (2026-08-02; sınıf: "sessiz sıfır-etkili adım" — sed-placeholder
-  vakasının İKİNCİ kuşağı):** H3 tur-2 `CHANGEME` placeholder'ını birimden çıkarınca deploy.sh:96
+  vakasının İKİNCİ kuşağı):** H3 tur-2 `CHANGEME` placeholder'ını birimden çıkarınca `deploy.sh`ın pano-token bekçisi
   `grep CHANGEME` uyarısı ve cutover.sh adım 5/6'nın desen-bağımlı sed'i SESSİZ NO-OP'a düştü —
   taze kurulum/cutover panoyu TOKEN'SIZ canlıya çıkarırdı. Çözüm: iki betik de artık desen değil
   DOSYANIN KENDİSİNİ ölçüyor — `/opt/meridian/.dash.env` yok/boşsa üretilir (openssl rand -hex 24;
@@ -728,7 +728,7 @@ emekli-sembol modülü devreye girer (payda 259→251) — BEKLENEN, doğrulama 
    kapalı). KOVA-B dağıtım yetkisini operatör açtı; pencere SAATİ yine de operatöre bildirilir
    (restart istisnası operatör kalemi).
 6. **BİRİM MİGRASYONU (pencere içinde, rsync sonrası, start öncesi — EN RİSKLİ ADIM):**
-   /etc/systemd/system/meridian.service KOPYADIR (deploy/oracle-a1/deploy.sh:89 `sudo cp`) — rsync
+   /etc/systemd/system/meridian.service KOPYADIR (`deploy/oracle-a1/deploy.sh` → “6) systemd birimleri”, `sudo cp`) — rsync
    + daemon-reload 4d695ff'i İNDİRMEZ. TOKEN KORUMA ZORUNLU (sed-placeholder vakası sınıfı: repo
    şablonunda CHANGEME var, canlı kopyada gerçek DASH_TOKEN): (a) eski birim yedeklenir
    (`meridian.service.bak-20260802`), (b) canlıdan mevcut token çekilir, (c) repo birimi cp'lenir,
