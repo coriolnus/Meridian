@@ -12,12 +12,17 @@ kapalı doğar; her cevap provenansıyla (kanıt + ispat sayısı + güven) pano
 
 ## 1. Yerleşim ve filo bedeli (beyanlı)
 
-- A1'de İKİ yeni systemd birimi: `postgresql` (pgvector'lı) + `meridian-hindsight.service`
-  (REST API, `127.0.0.1`e bind — dışa kapalı; tek giriş kapısı api.py proxy'si).
-  Docker YOK (filo kararı: native systemd; hermes-terminal kararındaki gerekçe aynen).
+- A1'de kurulum biçimi RESMÎ BEST PRACTICE'e göre seçilir (docker dahil — operatör 2026-08-31:
+  "direk reddetme, best practice ne diyorsa onu yapacağız"; önceki "Docker YOK/filo kararı"
+  cümlesi Rol-1'in aşırı-genellemesiydi — hermes-terminal kararı o bağlama özgüydü, DÜZELTİLDİ).
+  Tercih ilkesi: genel sisteme katkı sağlayabilecek bileşenler (örn. Postgres) uygulama
+  seviyesinde/native kurulmaya ADAY; karma senaryo (api konteynerde + pg native) resmî destekliyse
+  masada. Somut hüküm docs/INCELEME-HINDSIGHT-DERIN-2026-08-31.md raporundan gelir.
+  Her durumda: `127.0.0.1` bind — dışa kapalı; tek giriş kapısı api.py proxy'si.
 - Filo disiplini tam uygulanır: iki birim + sağlık kapıları (healthz + pg isalive) + F9 kaydı +
   YEDEK HİKÂYESİ: gecelik `pg_dump` timer'ı → `backups/` (litestream SQLite'a özgü — pg'de dump).
-- Kaynak beyanı: A1 4-çekirdek ARM; pg+hindsight boşta hafif, retain anları LLM-bağımlı.
+- Kaynak beyanı: A1 4-çekirdek ARM, RAM 12GB (operatör 24GB'ye yükseltebilir — hüküm inceleme raporunda,
+  iki senaryolu); pg+hindsight boşta hafif, retain anları LLM-bağımlı.
   Sprint pencereleriyle çakışma ölçülür (kartta).
 
 ## 2. Bank yapısı (kimlik ayrımı)
@@ -82,3 +87,34 @@ Bot duruşu ve SOUL kuralları · teslim/damga mekaniği · ship yetkisi (kapı)
 "hatırlanan değil ölçülen" ilkesi — hafıza katmanı ölçülen defterlerin YERİNE değil,
 üzerine arama katmanı olarak gelir. Karar günlüğü/kartlar SSoT kalır; Hindsight indeks'tir,
 kayıt değil (çelişkide defter kazanır — tek-kaynak yasası).
+
+## 8. Kapsam sorusu — "bütün altyapı için persistent memory olur mu?" (operatör, 2026-08-31)
+
+KAYIT KATMANI OLARAK HAYIR — dört ilke birden engeller: karar-yolu determinizmi ("determinist
+ve ağsız") · yeniden-üretilebilirlik (LLM çıkarımı deterministik değil — earnings-takvimi
+PIT-değil vakasının sınıfı) · tek-kaynak (defter gerçeklerinin LLM-özetli ikinci kopyası ayrışır)
+· uydurma yasağı (güven-skorlu "hatırlanan" ≠ "ölçülen").
+
+İNDEKS KATMANI OLARAK EVET, SİSTEM-GENELİ: `arsiv` bank'i her defterin insan-okur izdüşümünü
+kapsayacak şekilde büyüyebilir (kart hükümleri · karar günlüğü · mühendislik günlüğü vakaları ·
+teslimler · incident'lar · suite/dağıtım beyanları) — hepsi harness-yazımlı, git-sha'lı,
+kaynağına geri-bağlantılı. Öğrenme döngüsü Faz-3'te DANIŞABİLİR (cevap danışmadır, kapı
+defterden karar verir). Sınır tek cümle: **okuyan herkes, yazan yalnız harness, karar veren
+yalnız defter.** Gelecek kart bu bölümü kapsam-tanımı olarak devralır.
+
+## 9. Genişleme menüsü (tetikli — çekirdek + taban-çizgi kill'i geçtikten SONRA)
+
+Sınır aynı kaldıkça genişleme = bank/ingest kalemi (mimari değişmez). Değer sırasıyla:
+1. NEDENSEL ZİNCİR: olay defteri ↔ karar günlüğü ↔ commit gövdeleri graf+zamansal bağlı —
+   "alarm→müdahale→sonuç" sorguları (bugünkü elle-grep triyajlarının indeksli hâli).
+2. COMMIT GÖVDESİ ARŞİVİ: neden-kaydı kültürü aranabilir olur.
+3. SUITE/ARIZA HAFIZASI: kırmızı + kök neden + çözüm → tekrar-arıza teşhisi.
+4. MÜKERRER-ÖNLEME (danışma): yeni öneri/kart taslağına benzerleri recall'dan gelir
+   ("değerlendirildi-alınmadı" uyarısı — yeniden-tartışma önlenir).
+5. ALARM-YANI VAKA BAĞLAMI: panoda alarmın yanında sınıfının son vakaları + çözümleri.
+6. OTURUMLAR-ARASI ERİŞİM: /api üzerinden her Claude oturumu (cloud klonlar dahil — ~/.claude
+   taşınamaz sınıfının panzehiri) aynı kurumsal hafızayı sorgular.
+
+İKİ DİSİPLİN: her bank YASA 6'ya tabi (okuyucusuz bank açılmaz; recall sayacı kullanım ölçer,
+okunmayan emekli — skill kataloğu emsali) · sıralama değişmez (çekirdek taban-çizgi kill'ini
+geçmeden menü açılmaz; YAGNI hepsine şamil).
