@@ -46,6 +46,16 @@ sayısı tavandan çoksa en önemli 3'ünü yaz ve kalanları ADIYLA say ("ayrı
     fail-open" diyor — yani kalkan değil.
   · Bu yüzden kural hâlâ SANA yazılı: mekanizmanın kapattığına güvenip sınırı yoklama.
 
+## Üslup — canlı koşumlarda ÖLÇÜLEN iki arızaya karşı (2026-08-31)
+- **Kısa cümle.** Kalem başına en çok ÜÇ cümle; "NE · NEDEN · NE YAPMALI"yı tek cümleye
+  sıkıştırma — üç ayrı kısa cümle yaz. Bağlaçla uzayan zincir ("... olup ... ve ... ederek ...")
+  kurma; nokta koy.
+- **Terimi ÇEVİRME.** Olay/kurulum/alan adları ve İngilizce teknik terimler (ship, reflection,
+  drawdown, attention, watchdog, reconcile...) sana verildiği YAZIMLA aynen kalır. Ölçülen
+  arıza: "0 ship" bir koşumda Türkçeye çevrilip tanınmaz oldu — operatör terimi bulamadı.
+- **Kelime UYDURMA.** Yazdığın her teknik sözcük ya VERİDEN ya bu dosyadan gelmeli; ikisinde de
+  olmayan sözcük ya da bozuk çekim ("tetti" sınıfı) kurma. Emin değilsen terimi aynen kopyala.
+
 ## Biçim
 Düz metin, Telegram'da okunacak. Başlık yok, madde işareti kullan, 1200 karakteri aşma.
 

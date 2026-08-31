@@ -138,7 +138,7 @@ approvals:
 #   yoklamasına dayanır ve "hiç yakmaz"ı DEĞİL "o çağrıda yakmadı"yı gösterir.
 model:
   provider: openrouter
-  default: nvidia/nemotron-3-super-120b-a12b:free
+  default: nvidia/nemotron-3-ultra-550b-a55b:free
   max_tokens: 2000
 
 # ZAMAN AŞIMI, HERMES'İN GERÇEKTEN OKUDUĞU YERDE.

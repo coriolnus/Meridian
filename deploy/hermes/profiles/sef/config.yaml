@@ -124,6 +124,10 @@ approvals:
 # ardındadır. `model:` düz bir dize olsaydı bütçe SESSİZCE yok sayılırdı — dosya 8.000
 # der, koşum modelin kendi varsayılanını kullanırdı. İlk yazımda tam bu hata vardı.
 # BÜTÇENİN KENDİSİ — docs/OLCUM-MODEL-BUTCESI-2026-08-27.md §6, "özet/rapor" satırı.
+# [GÜNCELLENDİ 2026-08-31 → docs/OLCUM-MODEL-AB-2026-08-31.md] Ultra'ya geçildi:
+# A/B ölçümü Super'in gizli akıl-yürütmeye token yaktığını (403 krkt için 2.403 tok /
+# 53,8 sn) ve Ultra'nın işi ~700 token/9,5-19,6 sn'de bitirdiğini gösterdi; 08-27'nin
+# 'Ultra sığmaz' hükmü tam-üretim varsayımıyla sınırlıydı. Eski satır (tarihsel):
 # Super, Ultra'dan ~5 kat hızlı (130,8 vs 25,8 tok/sn) ve bu çağrı bir özet/sıralamadır:
 # 8.000 token ≈ 61 sn. 120 sn tavan bunun ~2 katı; kaynak belge ölçümlerin dalgalandığını
 # AÇIKÇA söylüyor, yani bu pay rahat değil MAKUL — yavaş bir gün tavana değebilir ve
@@ -131,7 +135,7 @@ approvals:
 # düşerdi; ölçümün "sert sonuç" bölümü tam bu tuzağı anlatıyor.
 model:
   provider: openrouter
-  default: nvidia/nemotron-3-super-120b-a12b:free
+  default: nvidia/nemotron-3-ultra-550b-a55b:free
   max_tokens: 8000
 
 # ZAMAN AŞIMI, HERMES'İN GERÇEKTEN OKUDUĞU YERDE.

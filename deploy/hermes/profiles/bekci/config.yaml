@@ -113,7 +113,7 @@ approvals:
 # kalem tavanı uyguluyor), yani aynı bütçe burada daha rahattır.
 model:
   provider: openrouter
-  default: nvidia/nemotron-3-super-120b-a12b:free
+  default: nvidia/nemotron-3-ultra-550b-a55b:free
   max_tokens: 8000
 
 # ZAMAN AŞIMI, HERMES'İN GERÇEKTEN OKUDUĞU YERDE.
