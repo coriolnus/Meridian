@@ -1,0 +1,1 @@
+{"yazildi": "pencere_altbant.json", "n_1330": 2, "n_1345": 2, "damgasiz": 13, "oneri_tetigi": "orneklem_birikimde"}

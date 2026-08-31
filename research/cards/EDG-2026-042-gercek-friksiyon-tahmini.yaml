@@ -425,3 +425,16 @@ p3_karar_ayrik_ts_2026_08_31: >
   P-2'nin yeni çerçevesi olarak listeye girer. Aynı çerçevenin İKİNCİ noktası: haftalık görev
   metninin EK bölümü hakem betiklerini hâlâ sabit dizinle anar (2026-08-29'a bayt-özdeş kopyayla
   fiilen bir kez aşıldı) — P-2 çözülürken aynı tek-kaynak düzeltmesini almalı.
+
+hafta_kosum_3_2026_08_31: >
+  HAFTALIK KOŞUM #3 (Rol-1, 2026-08-31 — operatör: "beklemeye gerek yok", 09-05 beklenmedi;
+  ayrıca R3/AYRIK reçetesinin İLK resmî haftalık koşumu). Artefakt:
+  research/olcumler/edg042_kosum_2026-08-31/ (snapshot sha 1278d195…; betikler R3'ten
+  bayt-özdeş, künye KOMUT.txt'te). SONUÇ — dört kova da eşik altında, BETİMLEYİCİ, CI yok,
+  karar kuralı uygulanmadı, status measuring: giris_once n=15 medyan +16,131 (kalıcı taban,
+  damga aynen) · giris_1345 n=2 medyan +210,07 · cikis_hedef n=6 medyan −4,21 · cikis_stop
+  n=4 medyan +0,889 · olculemedi 0. KOŞUM #2'YE GÖRE DEĞİŞİM SIFIR — 08-28 Cuma'dan beri seans
+  yok (hafta sonu; 08-31 seansı koşum anında tamamlanmamış): takvim çalışıyor kanıtı, yeni kanıt
+  değil. EK hakem (eski pencere-anahtarı): n_1330=2 · n_1345=2 · damgasız=13 · oneri_tetigi
+  orneklem_birikimde; geri_al_onerisi YOK. Not: EXE-2026-010 (ts-anahtarı) uygulanınca hakem
+  kontrol kolu n=15 okuyacak — o revizyon bu kartın eşiklerine dokunmaz.

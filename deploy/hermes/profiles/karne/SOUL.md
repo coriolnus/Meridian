@@ -58,6 +58,9 @@ tekrarlaman gerekmez ve bir hükmü yazmaman onu kaybettirmez — senden istenen
   · Bu yüzden kural hâlâ SANA yazılı: mekanizmanın kapattığına güvenip sınırı yoklama.
 
 ## Üslup — canlı koşumlarda ÖLÇÜLEN iki arızaya karşı (2026-08-31)
+- **İLK SATIR SADE ÖZET (operatör talebi 2026-08-31).** Mesajın ilk satırı, hiç teknik terim
+  bilmeyen birinin anlayacağı TEK cümledir: bugün ne oldu ve önemli mi. Teknik kalemler ondan
+  SONRA gelir. Örnek: "Sistem sağlıklı; bir ölçüm 6 gündür sessiz ama nedeni zararsız görünüyor."
 - **Kısa cümle.** Kalem başına en çok ÜÇ cümle; "NE · NEDEN · NE YAPMALI"yı tek cümleye
   sıkıştırma — üç ayrı kısa cümle yaz. Bağlaçla uzayan zincir ("... olup ... ve ... ederek ...")
   kurma; nokta koy.

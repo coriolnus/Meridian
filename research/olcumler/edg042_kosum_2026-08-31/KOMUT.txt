@@ -1,0 +1,7 @@
+EDG-2026-042 HAFTALIK KOŞUM 2026-08-31 (Rol-1; operatör: 'beklemeye gerek yok' — cumartesi 09-05 beklenmedi)
+Reçete: R3 (edg042_recete_ayrik_2026-08-31) — kartın GÜNCEL DONUK REÇETE İŞARETÇİSİ
+a846449eaa7fdfa8a4e47db648e5c27703be8f59747e0a1a649a74fd77e6cfa2  research/olcumler/edg042_kosum_2026-08-31/canli_cek.py
+1787a9ffe6b477484fba096ebcaf553899cf560f3b700057d985318204a1f317  research/olcumler/edg042_kosum_2026-08-31/olcum.py
+1278d195437acaf4b255fc2383b86c3e4335dd41fb04e35101663aac9f3e92c6  research/olcumler/edg042_kosum_2026-08-31/canli_ham.json
+2ad3a00ad441bb74a05e6dd95fc7e9357bc34c82b657b123d9eff9598b4e369f  research/olcumler/edg042_kosum_2026-08-31/pencere_cek.py
+00899f0327e1f53949efefa0acac06d9c1e851b1535527fcb55fd87532cc96dc  research/olcumler/edg042_kosum_2026-08-31/pencere_altbant.py
