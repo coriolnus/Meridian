@@ -6,6 +6,7 @@
 # ('yeni kartla emekli edilir') gereği YENİ numara aldı. R1 kavramı bu başlıkta yaşar.
 
 card_id: EXE-2026-010
+status: registered   # ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
 family: icra_sozlesmesi   # hakem/valf sözleşmesi revizyonu — edge hipotezi DEĞİL, hüküm üretmez
 on_kayit: 2026-08-31
 karar: >

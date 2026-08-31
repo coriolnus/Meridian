@@ -5,7 +5,12 @@
 `state/earnings.csv` PIT DEĞİLDİR — bugünden ~21 gün İLERİ bakan, sembol başına 1,0 tarih tutan bir
 snapshot'tır; geçmiş çapa biriktirmez. Buna rağmen İKİ kardeş modül onu TARİHSEL bir karara
 uyguluyordu:
-  · `cf_backfill.py:112` — `in_blackout(ticker, dstr)`, `dstr` 2022→bugün aralığında bir seans,
+  · `cf_backfill._plans_for_session` (kardeş-PIT bloğu) — `in_blackout(ticker, dstr)`, `dstr`
+    2022→bugün aralığında bir seans. ÇAPA SEMBOLE ÇEVRİLDİ (2026-08-31): burada dosya adı + satır
+    numarası yazıyordu ve EDG-2026-062'nin PIT sevki o dosyaya satır ekleyince çapa bir yorum
+    satırına kaydı — `codelaw.stale_line_anchors` ötünce görüldü. (Eski çapayı bu şerhe AYNEN
+    yazmak da olmazdı: tarayıcı onu yeni bir çapa sanar ve aynı kırmızıyı bir satır aşağıda
+    yeniden üretirdi — ölçüldü, aynı turda.) Satır çapası kayar; sembol kaymaz,
   · `shadow_variants.in_blackout` — `in_blackout(ticker, date)`, `date` `shadow_lifecycle._seed`
     bacağında GEÇMİŞ seans.
 Sonuç replay'dekiyle aynı sınıftı: kapı bu motorlarda ÖLÜ (ölçüldü: replay tarafında 390 planın
@@ -28,7 +33,10 @@ from __future__ import annotations
 
 import datetime as dt
 import inspect
+import io
+import re
 import shutil
+import tokenize
 import types
 from pathlib import Path
 
@@ -51,6 +59,54 @@ def _kod(fn) -> str:
         if govde.strip():
             out.append(govde)
     return "\n".join(out)
+
+
+#: KOD OLMAYAN token'lar — `_dosya_kodu` bunları BOŞLUĞA çevirir. `FSTRING_MIDDLE` yalnız
+#: f-string'in DÜZ METİN parçasıdır; `{...}` içindeki ifade NAME/OP olarak gelir ve KALIR.
+_KOD_DISI_TOKENLER = frozenset({tokenize.COMMENT, tokenize.STRING, tokenize.FSTRING_MIDDLE})
+
+
+def _dosya_kodu(yol: Path) -> str:
+    """Bir dosyanın yalnız KOD'u — yorumlar ve dizge METİNLERİ boşluğa çevrilmiş hâli. "Modül
+    erişimi var mı" sorusunun üzerinde ölçüldüğü metin budur.
+
+    NEDEN METİNLER ELENİR (2026-08-31, v345 turu): aşağıdaki `"earnings."` yüklemi bir PROXY'dir —
+    "nokta var, demek ki modüle erişiliyor". Yanlış-pozitif biçimi bu dosyada zaten biliniyordu
+    (`earnings_gate` bir METİN, erişim değil) ve o gün ada bakılarak elle geçilmişti. v345'te
+    İKİNCİ biçim doğdu ve elle geçilemez: `eff["earnings.pit_arsiv"]` PIT dikişinin PARAM
+    ANAHTARIDIR. Adı `strategy.py`nin dikişiyle BİREBİR aynı olmak zorundadır (tek-kaynak), yani
+    "adı değiştir" bir seçenek değildi.
+
+    NEDEN REGEX DEĞİL `tokenize` — VE BU FARK ÖLÇÜLDÜ (inceleme, 2026-08-31): bu yardımcının ilk
+    yazımı dizge literallerini regex'le siliyordu ve f-ÖNEKLİ literalleri de bütün olarak
+    siliyordu. Sonuç ölçüldü: `cf_backfill.py` gövdesinin %34'ü dedektörün göremediği bölgeye
+    düştü ve `print(f"{earnings.in_blackout(t, d)}")` biçimindeki GERÇEK erişim, ESKİ yüklemde
+    öterken YENİDE ötmez hâle geldi. Yani kazanç (yanlış-pozitifin kapanması) ölçülmüş, BEDEL
+    (dedektörün körleşmesi) ölçülmemişti — bu deponun bedel yasasının ta kendisi.
+    `tokenize` ikisini birden verir, çünkü ayrımı dilbilgisi yapar: Python 3.12'de (PEP 701)
+    f-string'in `{...}` içindeki ifadesi ayrı NAME/OP token'larıdır, yalnız düz metin parçası
+    `FSTRING_MIDDLE`tir. Yorum/dizge ayıklaması da AYNI geçişte ve doğru dilbilgisiyle olur —
+    `split("#", 1)` sırasının kırılganlığı (içinde `#` geçen bir dizge) da böylece kapanır.
+    Bu iddia BEYAN DEĞİL, ÇİVİLİDİR: `test_dosya_kodu_yuklemi_KENDI_KAPSAMINI_olcer`.
+
+    KONUM KORUNUR (silme değil BOŞLUKLA doldurma): `from . import earnings` gibi satırların
+    sütunu ve satır numarası değişmez, yoksa aşağıdaki ithal-satırı yüklemi (`startswith`)
+    sessizce anlamını yitirirdi."""
+    kaynak = yol.read_text()
+    satirlar = [list(s) for s in kaynak.splitlines()]
+    for tok in tokenize.generate_tokens(io.StringIO(kaynak).readline):
+        if tok.type not in _KOD_DISI_TOKENLER:
+            continue
+        (sr, sc), (er, ec) = tok.start, tok.end
+        for r in range(sr, er + 1):                      # çok satırlı literaller (üçlü tırnak)
+            if not 1 <= r <= len(satirlar):
+                continue
+            satir = satirlar[r - 1]
+            bas = sc if r == sr else 0
+            son = ec if r == er else len(satir)
+            for i in range(max(0, bas), min(len(satir), son)):
+                satir[i] = " "
+    return "\n".join("".join(s) for s in satirlar)
 
 
 def _gun(delta: int) -> str:
@@ -109,14 +165,51 @@ def test_cf_backfill_in_blackout_CAGIRMAZ():
 def test_cf_backfill_modulun_TAMAMINDA_kapi_cagrisi_yok():
     """Sökme kısmi olmamalı: modülün başka bir yerinde (ör. `run` içine kopyalanmış bir 'hızlı
     kontrol') aynı çağrı yeniden doğarsa ihlal geri gelir, üstelik bu kez adı olmadan."""
-    govde = "\n".join(s.split("#", 1)[0] for s in
-                      (ROOT / "meridian" / "cf_backfill.py").read_text().splitlines())
+    govde = _dosya_kodu(ROOT / "meridian" / "cf_backfill.py")
     assert "in_blackout" not in govde
-    # `earnings.` = modüle erişim (sayaç anahtarı `earnings_gate` bir METİN, erişim değil).
+    # `earnings.` = modüle ERİŞİM. Metin biçimleri (`earnings_gate` sayaç anahtarı,
+    # `"earnings.pit_arsiv"` param anahtarı) bu yüklemin konusu değildir ve `_dosya_kodu`
+    # tarafından elenir — gerekçe orada.
     assert "earnings." not in govde, "modül hâlâ çağrılıyor"
     importlar = [s for s in govde.splitlines() if s.startswith(("import ", "from "))]
     assert not [s for s in importlar if "earnings" in s], \
         "kullanılmayan içe aktarma kalmış — çağrı yolu hâlâ açık görünür"
+
+
+def test_dosya_kodu_yuklemi_KENDI_KAPSAMINI_olcer(tmp_path):
+    """DEDEKTÖRÜN KENDİSİNİ SINAYAN ÇİVİ — yukarıdaki yüklemin KAPSAMI beyan değil ÖLÇÜMDÜR.
+
+    NEDEN VAR (inceleme 2026-08-31): `_dosya_kodu`nun ilk yazımı yanlış-pozitifi kapatırken
+    f-string'lerin İÇİNİ de kör etmişti ve bunu hiçbir çivi göstermiyordu — dedektörün kaybı,
+    tanımı gereği, hiçbir kırmızıyla haber verilmez. Kazanç ölçülüp bedel ölçülmediğinde
+    körlüğün belirtisi HİÇBİR ŞEYDİR (bedel yasası). Bu çivi iki yönü birden çakar:
+      · elenmesi GEREKENLER (docstring · yorum · param anahtarı · sayaç anahtarı · f-string'in
+        DÜZ METİN parçası) gövdede KALMAZ,
+      · görünmesi GEREKENLER (düz erişim VE f-string ifadesi içindeki erişim) gövdede KALIR.
+
+    AYRICA BİR SÜRÜM VARSAYIMINI ÇAKAR: f-string ifadesinin ayrı token gelmesi PEP 701'dir
+    (Python 3.12+). Yorumlayıcı geri alınırsa dedektör sessizce körleşmez — bu çivi öter."""
+    ornek = tmp_path / "ornek_kaynak.py"
+    ornek.write_text(
+        'def f(t, d):\n'
+        '    """docstring: earnings.in_blackout"""\n'
+        '    # yorum: earnings.in_blackout\n'
+        '    eff["earnings.pit_arsiv"] = True\n'
+        '    out["earnings_gate"] = eg\n'
+        '    duz = earnings.in_blackout(t, d)\n'
+        '    print(f"{earnings.known(t)} · duz metin earnings.metinparcasi")\n'
+        '    from . import earnings_pit\n', encoding="utf-8")
+    kod = _dosya_kodu(ornek)
+    # (a) YANLIŞ-POZİTİF KAPALI — metin biçimleri elenmiş
+    assert "earnings.pit_arsiv" not in kod, "param anahtarı (dizge) elenmemiş"
+    assert "earnings_gate" not in kod, "sayaç anahtarı (dizge) elenmemiş"
+    assert "docstring" not in kod and "yorum:" not in kod, "docstring/yorum elenmemiş"
+    assert "earnings.metinparcasi" not in kod, "f-string'in DÜZ METİN parçası elenmemiş"
+    # (b) KÖRLÜK KAPALI — iki gerçek erişim biçimi de GÖRÜNÜR
+    assert "earnings.in_blackout" in kod, "düz modül erişimi kayboldu — dedektör KÖR"
+    assert "earnings.known" in kod, "f-string İÇİNDEKİ modül erişimi kayboldu — dedektör KÖR"
+    # (c) KONUM KORUNDU — ithal yüklemi sütuna bakar (`startswith`), biçim bozulamaz
+    assert "    from . import earnings_pit" in kod.splitlines()
 
 
 def test_cf_backfill_karartma_VETOSU_URETMEZ(sandbox_state, monkeypatch):
@@ -174,7 +267,13 @@ def test_cf_backfill_sayaci_SONUCA_baglanir():
     """YASA 6: sayaç üretilir VE taşınır. `run()` dönüşünde/olayında görünmezse, 'bu defterde
     karartma etkisi sıfır' bilgisi hiçbir okuyucuya ulaşmaz — sessiz sıfır, beyanlı sıfır değildir."""
     src = _kod(cf_backfill.run)
-    assert "eg: dict[str, int] = {}" in src, "sayaç kabı yok"
+    # SÖZLEŞME ÇAKILIR, TİP PARAMETRESİ DEĞİL (2026-08-31, inceleme K2). Bu satır önce
+    # `"eg: dict[str, int] = {}"` dizgesini birebir arıyordu ve o yüklem KENDİ konusunun dışına
+    # taştı: v345 sayaca üçüncü bir anahtar (`pit_arsiv`, değeri bir SÖZLÜK) ekleyince ilan
+    # ölçülebilir biçimde YANLIŞ hâle geldi — ama düzeltilemedi, çünkü bu çivi onu mekanik
+    # olarak koruyordu. Bir çivinin, yanlış olduğu ÖLÇÜLMÜŞ bir beyanı ayakta tutması, çivinin
+    # kendi amacının tersidir. Çivinin ölçmek istediği şey sayaç KABININ VARLIĞIYDI.
+    assert re.search(r"\beg: dict\[str, [^\]]+\] = \{\}", src), "sayaç kabı yok"
     assert "version, eg)" in src, "sayaç seans döngüsüne geçirilmiyor"
     assert '"earnings_gate": eg' in src, "sayaç `out` sözlüğüne (ve cf_backfill_done olayına) girmiyor"
 

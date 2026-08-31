@@ -61,6 +61,17 @@ def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version, eg: 
              for t, dfp in per.items() if len(dfp.loc[:d]) > 22}
     rj["leading_sectors"] = regime_mod.sector_momentum(srets, SECTORS)
     eff = config.resolve_params(params, by_regime, rj["regime"])
+    # PIT DİKİŞİNİN SEVKİ (EDG-2026-062) — `backtest.replay`in BİREBİR KARDEŞİ. Bu motorun canlı
+    # yolu YOKTUR: `dstr` her zaman geçmiş bir seanstır, dolayısıyla kazanç çapası bugünün
+    # `state/earnings.csv`inden değil EDGAR 8-K arşivinden sorulmalıdır (`filed <= seans-1`).
+    # BURAYA KONMASININ SEBEBİ TEK DEĞİL İKİ ÇAĞRIDIR: aşağıda tarama İKİ KEZ koşar — sıkı
+    # eşiklerle `eff`, gevşek eşiklerle `rx`. `rx` bu satırdan SONRA `relax_for_near_miss(eff)` ile
+    # TÜRETİLİR (`rx = dict(eff)` ile başlar), yani anahtarı `eff`e bir kez koymak ikisini de
+    # besler. İki çağrıya AYRI AYRI yazmak, near-miss taramasının bir gün sessizce PIT'siz
+    # takvime düşmesi demek olurdu: karar defteri PIT, gölge defteri değil — ve fark hiçbir yerde
+    # görünmezdi (çivi: parametrenin İKİ `scan_all` çağrısına da ulaştığı ölçülür).
+    # `resolve_params` taze bir sözlük döndürür → çağıranın `params`ı KİRLENMEZ.
+    eff["earnings.pit_arsiv"] = True
     budget_ok = rj["exposure_budget_pct"] > 0
     explore_mode = not budget_ok
 
@@ -154,6 +165,16 @@ def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version, eg: 
 def run(start: str | None = None, end: str | None = None, progress_every: int = 50) -> dict:
     """Tarihi seansları sırayla işle; her seansta cf.collect + cf.advance. config.STATE'e (sandbox'ta
     sandbox state) yazar. Dönüş: {sessions, opened, resolved}."""
+    # PIT ARŞİV SAYACI — İTHAL FONKSİYON İÇİNDEDİR VE BU BİLİNÇLİDİR. Modül düzeyine yazılamaz:
+    # `test_wpd_kardes_pit_v185::test_cf_backfill_modulun_TAMAMINDA_kapi_cagrisi_yok` bu dosyada
+    # `earnings` adını taşıyan modül-düzeyi bir ithal satırını İHLAL sayar (kardeş-PIT temizliğinden
+    # kalan çağrı yolunun yeniden açılmasını yakalayan çivi) — ve haklıdır: orada duran bir ad,
+    # PIT'siz takvimin geri döndüğü izlenimini verir. Emsal `strategy.py`nin kendi dikişidir; o da
+    # `earnings_pit`i fonksiyon gövdesinde ithal eder.
+    # SIFIRLAMA `backtest.replay` ile AYNI GEREKÇEDEDİR: `_SAYAC` süreç-içi ve monotondur; bu
+    # koşumun raporu, aynı süreçte daha önce koşmuş taramaların çağrılarını taşımamalıdır.
+    from . import earnings_pit
+    earnings_pit.sayac_sifirla()
     strat_cfg = config.load_strategy()
     params = strat_cfg["params"]
     by_regime = strat_cfg.get("params_by_regime")
@@ -201,7 +222,10 @@ def run(start: str | None = None, end: str | None = None, progress_every: int = 
     # KAZANÇ-KAPISI SAYACI (kardeş-PIT). YASA 6: üretilen kanıt TÜKETİLİR — bu sayaç
     # `out`a girer, `cf_backfill_done` olayına yazılır ve defteri okuyan her yer "bu tabloda karartma
     # etkisi SIFIRDIR, çünkü kapı hiç konuşmadı" bilgisini oradan görür. Sessiz sıfır değil, beyanlı.
-    eg: dict[str, int] = {}
+    # `int | dict`: iki karartma anahtarı SAYIdır, `pit_arsiv` üç kovalı bir SÖZLÜKtür (aşağıda).
+    # `backtest.replay`in `_eg` ilanıyla BİREBİR aynı — iki kardeş sayaç aynı şeyi aynı biçimde
+    # ilan eder, yoksa ilanların kendisi ayrışır (tek-kaynak yasasının beyan tarafı).
+    eg: dict[str, int | dict] = {}
     for i, d in enumerate(sessions):
         dstr = str(d.date())
         try:
@@ -222,6 +246,11 @@ def run(start: str | None = None, end: str | None = None, progress_every: int = 
         if progress_every and (i + 1) % progress_every == 0:
             print(f"  {i + 1}/{len(sessions)} seans · {dstr} · açılan toplam {n_open}", flush=True)
 
+    # DAVRANIŞ RAPORU (kart EDG-2026-062, kill-list 4) — `backtest.replay`in kardeşi. Karartma
+    # anahtarları kapının SUSUŞUNU sayar; bu blok ÇAPANIN kendisini sayar. `olculemedi` payı
+    # arşivin bu pencerede ne kadarını kapsadığını söyler: sıfır ile "bilmiyorum" ayrı kovalar.
+    # YASA 6 OKUYUCUSU: `out["earnings_gate"]` ile dönüşe VE `cf_backfill_done` olayına girer.
+    eg["pit_arsiv"] = earnings_pit.sayac_oku()
     resolved = len(store.read_jsonl(cf.LEDGER))
     still_open = len(store.read_json(cf.OPEN_FILE, []))
     # BAR TABANI DAMGASI (component_ic ile AYNI gerekçe, YASA 6): `bars_integrity` defteri cf

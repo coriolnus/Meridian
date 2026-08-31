@@ -49,6 +49,11 @@ def _warn_once(event: str, **fields) -> None:
     obs.warn(event, **fields)
 
 from . import earnings
+# PIT KAZANÇ ARŞİVİ (EDG-2026-062). Bu modül `days_since_report_pit`i DOĞRUDAN çağırmaz — çapa
+# `strategy`nin dikişinden, `eff["earnings.pit_arsiv"]` paramıyla sorulur. Buradan yalnız SAYAÇ
+# okunur/sıfırlanır: davranış değişimi raporsuz kalamaz (kart kill-list 4), yani "PIT'e bağladık"
+# cümlesinin karşılığı sonuçta GÖRÜNEN üç kova olmalıdır.
+from . import earnings_pit
 from . import config
 from . import skills as skills_mod
 from . import broker as brk
@@ -275,7 +280,13 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     # Replay'de kazanç-kapısının SAYACI. Gerekçe karar satırının
     # yanında; burada yalnız kabı var. Boş kalırsa ({}) "hiç plan değerlendirilmedi" demektir ve
     # bu, "kapı konuştu ve hiçbir şey bulmadı"dan farklı bir olgudur.
-    _eg: dict[str, int] = {}
+    # `int | dict`: iki karartma anahtarı SAYIdır, `pit_arsiv` üç kovalı bir SÖZLÜKtür (aşağıda).
+    _eg: dict[str, int | dict] = {}
+    # PIT ARŞİV SAYACI KOŞUM BAŞINDA SIFIRLANIR (EDG-2026-062). `earnings_pit._SAYAC` SÜREÇ-İÇİ
+    # ve MONOTONdur: sıfırlamazsak bu koşumun raporu, aynı süreçte daha önce koşmuş her replay'in
+    # (ve her taramanın) çağrılarını da taşırdı — yani sayı "bu koşumun kapsaması" gibi okunur ama
+    # aslında sürecin ömrünü ölçerdi. Bir raporun ölçtüğü pencere, raporun kendisi kadar açık olmalı.
+    earnings_pit.sayac_sifirla()
     pending_exits: dict[str, str] = {}  # ticker -> reason, to execute at next open
     # regime-resolved params for INTRADAY consumers (scale_out): the regime known at D's intraday is
     # D-1's (computed at the prior CLOSE) — using flat `params` here silently ignored any
@@ -382,6 +393,24 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
         regime_ok = rj["regime"] in ("trend_up", "chop") and rj["exposure_budget_pct"] > 0
         # regime-conditional params: base params overlaid with this regime's overrides (no-op if none)
         eff = config.resolve_params(params, params_by_regime, rj["regime"])
+        # PIT DİKİŞİNİN SEVKİ (EDG-2026-062). Replay TAMAMEN tarihseldir: `strat.scan_entry` →
+        # `scan_all` → `evaluate_episodic_pivot`/`evaluate_pead` zinciri kazanç çapasını bu param
+        # olmadan `state/earnings.csv`ten sorardı — bugünün ileri-pencere önbelleğini 2022 seansına
+        # uygulayan yol (pitlaw kaydı; 2026-08-31'den beri `PIT_KORUMALI_ZINCIRLER` — beyan TAM
+        # DA BU SATIRA, sevkin kendisine bağlıdır: kalkarsa kayıt çürür ve v341 çivisi öter).
+        # Param VARKEN çapa EDGAR 8-K arşivinden
+        # gelir ve `filed <= seans-1` görünürlük kuralıyla ölçülür.
+        # NEDEN BURADA: `resolve_params` HER SEANS taze bir sözlük döndürür (`eff = dict(params)`),
+        # yani bu atama `params`ı — yani çağıranın strateji sözlüğünü — KİRLETMEZ. Anahtarı
+        # `params`a yazmak canlı yola sızardı; replay'in kendi kopyası doğru yerdir.
+        # BEYAN — BU SATIR BİR KARAR YÜZEYİNİ DE ETKİLER (inceleme 2026-08-31, K3): `arming`in
+        # aday walk-forward'ları `entry.armed_extra` ile `pead`/`episodic_pivot`i SİLAHLI sayıp
+        # replay'i buradan koşturur, dolayısıyla o adayların ölçümü bu turdan sonra PIT çapasıyla
+        # yapılır (kapsam daha dar → daha az sinyal). İSTENEN değişimdir — EDG-2026-062'nin amacı
+        # tam budur — ama eski aday ölçümleriyle kıyaslanabilir DEĞİLDİR; sessiz kalması, ölçüm
+        # tabanının haber verilmeden kayması olurdu. Canlı döngü ETKİLENMEZ: `loop` bu anahtarı
+        # hiçbir yerde kurmaz (repo taraması: anahtar yalnız bu dosyada ve `cf_backfill`de yazılır).
+        eff["earnings.pit_arsiv"] = True
         prev_eff = eff                       # tomorrow's intraday (scale_out) runs under today's regime
 
         for t in list(broker.positions.keys()):
@@ -567,6 +596,13 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                     # skor yanlış. Sessizce atlanırsa backtest gerçeğe göre iyimser görünür.
                     _warn_once("markout_close_failed", ticker=t, error=f"{type(e).__name__}: {e}")
 
+    # DAVRANIŞ RAPORU (kart EDG-2026-062, kill-list 4: "davranış değişimi raporsuz kalamaz").
+    # `_eg`nin eski iki anahtarı KARARTMA kapısının susuşunu sayar; bu üçüncü blok ÇAPANIN
+    # kendisini sayar: kaç seans-sembol çağrısı True/False/ölçülemedi döndü. `olculemedi` payı
+    # arşivin KAPSAM ölçüsüdür ve sıfır ile "bilmiyorum" burada AYRI kovalardır (uydurma yasağı).
+    # YASA 6 OKUYUCUSU: alan `BacktestResult.earnings_gate` üzerinden ölçüm koşumlarının sonuç
+    # JSON'una girer — `research/olcumler/*/replay_kol.py` emsali onu oradan okur.
+    _eg["pit_arsiv"] = earnings_pit.sayac_oku()
     return BacktestResult(trades=broker.closed, equity=equity_curve, params=params, start=start,
                           end=end, plan_log=plan_log, candidate_log=candidate_log,
                           entry_rejects=entry_rejects, earnings_gate=_eg,

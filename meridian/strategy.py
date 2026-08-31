@@ -679,9 +679,11 @@ def evaluate_episodic_pivot(bars: pd.DataFrame, params: dict, rs_rating_value: i
                             ticker: str = "?") -> Optional[EntrySignal]:
     """Dördüncü kurulum — Stockbee EPISODIC PIVOT / PEAD: kazanç açıklamasına DEMİRLİ büyük boşluk/patlama
     günü (haber-güdümlü kurumsal alım), aşırı-uzamamış bir isimde, sürüklenme (drift) devamına oynar.
-    ZORUNLU çapa: son 2 seans içinde kazanç raporu (earnings.days_since_report — veri yoksa kurulum
-    DÜRÜSTÇE hiç ateşlemez, uydurma tetik yok). Kapalı barlar; keşif menüsünü genişletme turu
-    ile eklendi — momentum_burst emsali gibi önce DORMANT, silahlanma kararını olasılıksal kapı verir."""
+    ZORUNLU çapa: son 2 seans içinde kazanç raporu — veri yoksa kurulum DÜRÜSTÇE hiç ateşlemez,
+    uydurma tetik yok. Çapanın KAYNAĞI `params["earnings.pit_arsiv"]` ile seçilir: yokken canlı
+    `earnings.days_since_report`, varken PIT arşivi (`earnings_pit`); gerekçe gövdedeki dikiş
+    bloğunda. Kapalı barlar; keşif menüsünü genişletme turu ile eklendi — momentum_burst emsali
+    gibi önce DORMANT, silahlanma kararını olasılıksal kapı verir."""
     if bars is None or len(bars) < 60:
         return None
     from . import earnings as earn
@@ -693,7 +695,31 @@ def evaluate_episodic_pivot(bars: pd.DataFrame, params: dict, rs_rating_value: i
     if any(pd.isna(x) for x in (a, cprev)) or a <= 0 or cprev <= 0:
         return None
     last_date = str(df["date"].iloc[-1])[:10] if "date" in df.columns else None
-    if not last_date or not earn.days_since_report(ticker, last_date, max_days=2):
+    if not last_date:
+        return None
+    # PIT DİKİŞİ (EDG-2026-062). Çapa İKİ kaynaktan sorulabilir ve seçim PARAMLADIR — anahtar
+    # `evaluate_pead`de de aynı adla okunur, gerekçe TEK yerde (burada) durur:
+    #   · param YOK  → `earn.days_since_report` (CANLI YOL, gövdesi bu turda DEĞİŞMEDİ). O kaynak
+    #     `state/earnings.csv`tir: bugünün ileri-pencere tazeleme önbelleği, PIT arşivi DEĞİL.
+    #   · param VAR  → `earnings_pit.days_since_report_pit` (EDGAR 8-K defteri; `filed` taşır, yani
+    #     "o gün bu rapor GÖRÜNÜR MÜYDÜ" sorusu uydurulmaz, ÖLÇÜLÜR).
+    # NEDEN PARAM, neden doğrudan geçiş değil: tarihsel yeniden yürütme (replay/geri-dolum) ile
+    # canlı tarama AYNI fonksiyonu çağırır. Kaynağı gövdeye gömmek ikisini tek anda değiştirirdi;
+    # param üzerinden akınca canlı döngüyle YARIŞMAZ (emsal aynı dosyada: `scan_entry`in
+    # `entry.armed_extra` ölçüm kanalı). Kaynağı bugün açan yalnız ölçüm yollarıdır.
+    # ANAHTAR DOĞRULUK OLARAK OKUNUR, VARLIK OLARAK DEĞİL: `{"earnings.pit_arsiv": False}` PIT'i
+    # AÇMAZ, canlı yola düşer (`in params` biçimine bir yeniden yazım bunu sessizce tersine
+    # çevirirdi — çivili: `test_param_FALSY_ise_canli_yol_kullanilir`).
+    # ÜÇ DURUM İKİ KARARA KATLANIR: `not` hem False'u hem None'u yakalar — "rapor yok" ile
+    # "ölçülemedi" AYNI kararı verir (çapasız gün kurulum kurmaz) ama AYRI sayılır; ayrımın
+    # okuyucusu `earnings_pit.sayac_oku()`dur, dikişin dönüşü değil.
+    # SICAK YOL: burada `arsiv_ufku()` ÇAĞRILMAZ (O(n); ölçüldü 2026-08-31, 0,52 ms/çağrı → cf
+    # ölçeğinde dakikalar). `days_since_report_pit` ufku kendi içinde bir kez sorar; çivi sayar.
+    if params.get("earnings.pit_arsiv"):
+        from . import earnings_pit
+        if not earnings_pit.days_since_report_pit(ticker, last_date, max_days=2):
+            return None                                    # False VE None: çapa yok/ölçülemedi → kurulum yok
+    elif not earn.days_since_report(ticker, last_date, max_days=2):
         return None                                        # PEAD çapası yok → kurulum yok (veri dürüstlüğü)
     gap_pct = (opn.iloc[-1] - cprev) / cprev
     day_pct = (c - cprev) / cprev
@@ -841,8 +867,10 @@ def evaluate_pead(bars: pd.DataFrame, params: dict, rs_rating_value: int,
     """Altıncı kurulum — PEAD haftalık KIRMIZI-MUM KIRILIMI: kazanç boşluk-yükselişi sonrası düzenli geri
     çekilme (kırmızı haftalık mum), fiyat o mumun zirvesini aşınca sürüklenme devamı → GİRİŞ. episodic_pivot
     boşluk GÜNÜNDE ateşler; pead onun geri-çekilme-sonrası yeniden-kırılımını yakalar (ayrı zamanlama, ayrı
-    kurulum — DUPLİKASYON DEĞİL). FMP-kapılı kazanç çapası (earnings.csv anahtarsız Nasdaq'tan dolar); veri
-    yoksa None. DORMANT, LONG-only, kapalı barlar, ileri-dönük yok (kırmızı mum daima TAM GEÇMİŞ hafta)."""
+    kurulum — DUPLİKASYON DEĞİL). Kazanç çapası varsayılan olarak FMP-kapılıdır (earnings.csv anahtarsız
+    Nasdaq'tan dolar); `params["earnings.pit_arsiv"]` verilirse PIT arşivinden sorulur (`earnings_pit`,
+    gerekçe `evaluate_episodic_pivot`in dikiş bloğunda). Veri yoksa None. DORMANT, LONG-only, kapalı
+    barlar, ileri-dönük yok (kırmızı mum daima TAM GEÇMİŞ hafta)."""
     if bars is None or len(bars) < 60 or "date" not in bars.columns:
         return None
     from . import earnings as earn
@@ -854,7 +882,13 @@ def evaluate_pead(bars: pd.DataFrame, params: dict, rs_rating_value: int,
         return None
     watch_days = int(_f(params, "pead.watch_days", 35))
     last_date = str(df["date"].iloc[-1])[:10]
-    if not earn.days_since_report(ticker, last_date, max_days=watch_days):
+    # PIT DİKİŞİ — aynı anahtar, aynı sözleşme; gerekçe `evaluate_episodic_pivot`in dikişinde
+    # TEK yerde yazılıdır (kopyalanmaz). Fark yalnız penceredir: burada `watch_days`.
+    if params.get("earnings.pit_arsiv"):
+        from . import earnings_pit
+        if not earnings_pit.days_since_report_pit(ticker, last_date, max_days=watch_days):
+            return None                                    # False VE None: çapa yok/ölçülemedi → kurulum yok
+    elif not earn.days_since_report(ticker, last_date, max_days=watch_days):
         return None                                        # FMP-kapılı çapa yok → kurulum yok
     min_gap = _f(params, "pead.min_gap_pct", 3.0) / 100.0
     win = min(watch_days, len(df) - 2)

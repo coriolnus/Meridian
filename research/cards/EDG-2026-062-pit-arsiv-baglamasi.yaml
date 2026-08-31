@@ -2,6 +2,7 @@
 # ÖN-KAYIT 2026-08-31 — eşikler sonuç görülmeden donduruldu; girdi git blob'una sabitli (§5)
 
 card_id: EDG-2026-062
+status: measured   # 2026-08-31 hüküm: verdict_2026_08_31 bloğu
 family: veri_yolu   # ÖLÇÜM-ALTYAPISI kartı (Ö-52/broker_teyit sınıfı) — edge hipotezi DEĞİL
 on_kayit: 2026-08-31
 karar: "operatör 2026-08-31: PIT ihlal düzeltmesi (b) — çapayı PIT arşivine bağla"
@@ -51,3 +52,22 @@ basari_tanimi: >
   (1) İki BILINEN_IHLALLER kaydı beyanla düşer (pitlaw yeşil kalır) · (2) kapsama/tutarlılık
   eşikleri geçer · (3) pozitif kontrol üç dalıyla yeşil · (4) davranış-değişimi raporu yazılır
   (True satır sayısı + CF bileşim farkı) — hüküm İYİ/KÖTÜ değil, ÖLÇÜLEBİLİRLİK kazanımıdır.
+
+verdict_2026_08_31: >
+  HÜKÜM (Rol-1, ölçüm günü işlendi): DÖRT BAŞARI KRİTERİNİN DÖRDÜ DE KARŞILANDI.
+  (1) BILINEN_IHLALLER iki kaydı beyanla DÜŞTÜ — defter BOŞ; kayıtlar öz-denetimli
+  PIT_KORUMALI_ZINCIRLER'e taşındı (koruma_civisi_denetimi rapor-ok'una bağlı), pitlaw yeşil.
+  (2) Eşikler: kapsama %99,6 GEÇTİ (>=95; tek eksik SPOT — yabancı ihraççı, 8-K değil 6-K
+  dosyalar; yokluğu None üretir, False değil) · tutarlılık %0,0 uyuşmazlık GEÇTİ (<=5, ±1 gün;
+  123 kıyas noktası, donmuş canlı takvim ffb92fc0…) · blob teyidi GEÇTİ (HEAD arşivi = pin).
+  (3) Pozitif kontrol yol-tutarlı ve yeşil: JPM 2025-04-11 gerçek satırı, dört senaryo
+  scan_all üzerinden (TRUE/FALSE/OLCULEMEDI + sınır-günü ayrışması), inceleme 6/6 kart-şartı.
+  KAPSAM ŞERHİ (inceleme bulgusu): PK scan_all'da durur — pead ARMED_SETUPS'ta olmadığından
+  bu kart "pead True'su replay'de SATIR üretir"in kanıtı DEĞİLDİR; ayrıca episodic_pivot'un
+  pozitif dalının gerçek-satırlı PK'sı bu kartın metninde yoktur (istenirse YENİ kart).
+  (4) Davranış raporu bağlı: replay/cf earnings_gate'te pit_arsiv üç-kova bloğu; cf tarafı
+  yapısal {0,0,0} (date sütunu — beyanlı, çürüme çivili, kart adayı §4 havuzda).
+  K disiplini: K=0 aynen — hiçbir kurulum hakkında hüküm üretilmedi, yalnız ölçülebilirlik
+  kazanıldı. Ölçüm artefaktı: research/olcumler/edg062_pit_baglamasi_2026-08-31/ (sonuc.json).
+  Otoriter tam suite hükmü dalga-sonu commit'inin ön şartıdır; bu blok o hükümden önce
+  motor-değişikliği push'u YETKİLENDİRMEZ (§8).

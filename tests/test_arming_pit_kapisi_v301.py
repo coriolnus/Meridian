@@ -28,7 +28,34 @@ from __future__ import annotations
 
 import inspect
 
+import pytest
+
 from meridian import arming, earnings, strategy
+
+#: BOŞ ARŞİV SÖZLEŞMESİ — `earnings_pit._ufuk_turet`in boş dönüşünün birebir biçimi (uydurma
+#: aralık yok: `ilk`/`son` None + `neden` YAZILI). TEK KAYNAK: hem aşağıdaki yalıtım fikstürü
+#: hem `_ufuk_kur(arsiv_ilk=None)` bunu kullanır; iki kopya sessizce ayrışırdı.
+_BOS_ARSIV = {"ilk": None, "son": None, "n_tarih": 0, "n_sembol": 0, "dusen": 0,
+              "neden": "PIT kazanç arşivi BOŞ — ufuk ölçülemez (uydurma aralık yok)"}
+
+
+@pytest.fixture(autouse=True)
+def _arsiv_ufku_yalitimi(monkeypatch):
+    """DOSYA-YEREL YALITIM: `arsiv_ufku` varsayılan olarak BOŞ arşive sabitlenir.
+
+    NEDEN GEREKLİ: `earnings_pit.ARSIV_YOLU` `config.ROOT`tan türer, `config.STATE`ten DEĞİL —
+    yani `sandbox_state` onu yalıtmaz ve depodaki GERÇEK arşiv (`filed` 2010-01-07→2026-07-31)
+    her koşumda okunur. `_kanit_durumu`nun `arsiv_yok` dalı 2026-08-31'den beri arşivi sorduğu
+    için, üç ufku da kurmayı UNUTAN gelecekteki bir çivi ortamın arşivine göre dal seçer ve
+    "başka bir şeyin yeşili" olur — `_ufuk_kur`un docstring'indeki tuzağın üçüncü baskısı.
+    Varsayılanı boş arşive sabitlemek o çiviyi sessiz yeşil yerine GÜRÜLTÜLÜ kırmızı yapar.
+
+    DAVRANIŞSIZ: üretim kodu değişmez ve bu dosyadaki her çivi ya `_ufuk_kur` ile üç ufku da
+    AÇIKÇA kuruyor (test-düzeyi `monkeypatch` autouse'un üstüne yazar — `tests/conftest`in
+    "testin yaması kazanır" sıra garantisi) ya da arşiv yoluna hiç girmiyor. Kaldırılırsa bugün
+    hiçbir çivi kırmızıya dönmez; koruduğu şey YARININ çivisidir."""
+    from meridian import earnings_pit
+    monkeypatch.setattr(earnings_pit, "arsiv_ufku", lambda: dict(_BOS_ARSIV))
 
 
 # ---------------------------------------------------------------- takvim ufku
@@ -59,7 +86,34 @@ def test_defter_ufku_okunabiliyor():
 
 # ------------------------------------------------------- iki cümle AYRI kalır
 
-def test_PIT_capali_kurulum_insufficient_cf_DEMEZ():
+def _ufuk_kur(monkeypatch, takvim_ilk, defter_ilk, arsiv_ilk=None):
+    """Ortam bağımsız dal seçimi: ÜÇ ufuk da AÇIKÇA kurulur.
+
+    Bu olmadan test yerelde 'takvim boş' dalından geçip yeşil görünüyordu — korunmak istenen
+    dal (takvim defterden SONRA başlıyor) ise hiç koşmuyordu. Ölçüm bağlamı tuzağının
+    testteki hâli: yeşil, ama başka bir şeyin yeşili.
+
+    ÜÇÜNCÜ UFUK 2026-08-31'de EKLENDİ (EDG-2026-062): `arsiv_yok` dalı artık PIT kazanç arşivini
+    de sorar ve arşiv depoda GERÇEKTEN vardır (`research/edgar_facts/earnings_8k_tarihleri.csv`,
+    ölçüldü: `filed` 2010-01-07→2026-07-31). Arşivi kurmayan bir test aynı tuzağa ikinci kez
+    düşerdi — bu kez ters yönde: dal ortamdaki arşive göre seçilirdi. `arsiv_ilk=None` = arşiv
+    YOK (boş arşivin `ilk`/`son`u None'dur, uydurma aralık yoktur)."""
+    from meridian import counterfactual as cf, earnings_pit
+    monkeypatch.setattr(earnings, "takvim_ufku", lambda: {
+        "ilk": takvim_ilk, "son": "2026-09-11", "n_tarih": 29, "n_sembol": 219, "neden": None})
+    monkeypatch.setattr(cf, "defter_ufku", lambda: {
+        "ilk": defter_ilk, "son": "2026-08-19", "n": 8754, "neden": None})
+    monkeypatch.setattr(earnings_pit, "arsiv_ufku", lambda: (
+        {"ilk": arsiv_ilk, "son": "2026-07-31", "n_tarih": 2988, "n_sembol": 251, "dusen": 0,
+         "neden": None} if arsiv_ilk else dict(_BOS_ARSIV)))
+
+
+def test_PIT_capali_kurulum_insufficient_cf_DEMEZ(monkeypatch):
+    """ÜÇ UFUK DA KURULUR (2026-08-31): bu çivi eskiden ortamın kendi defterlerine güveniyordu
+    ve hangi daldan geçtiği YERELE bağlıydı. Korunan hüküm dala değil SINIFA aittir — çapası
+    çözülemeyen kurulum 'örneklem dolmadı' DEMEZ — ama sınıfın ölçüldüğü dal açıkça seçilmezse
+    çivi yarın başka bir şeyin yeşili olur."""
+    _ufuk_kur(monkeypatch, takvim_ilk="2026-07-20", defter_ilk="2022-01-03", arsiv_ilk=None)
     d = arming._kanit_durumu("episodic_pivot", {"n": 2, "avg_r": 1.846})
     assert d["status"] != "insufficient_cf", (
         "PIT çapası çözülemeyen kurulum 'örneklem dolmadı' diye raporlanıyor — "
@@ -70,33 +124,65 @@ def test_PIT_capali_kurulum_insufficient_cf_DEMEZ():
     assert "takvim" in d and "defter" in d, f"kanıt bloğu yok: {sorted(d)}"
 
 
-def _ufuk_kur(monkeypatch, takvim_ilk, defter_ilk):
-    """Ortam bağımsız dal seçimi: iki ufuk da AÇIKÇA kurulur.
-
-    Bu olmadan test yerelde 'takvim boş' dalından geçip yeşil görünüyordu — korunmak istenen
-    dal (takvim defterden SONRA başlıyor) ise hiç koşmuyordu. Ölçüm bağlamı tuzağının
-    testteki hâli: yeşil, ama başka bir şeyin yeşili."""
-    from meridian import counterfactual as cf
-    monkeypatch.setattr(earnings, "takvim_ufku", lambda: {
-        "ilk": takvim_ilk, "son": "2026-09-11", "n_tarih": 29, "n_sembol": 219, "neden": None})
-    monkeypatch.setattr(cf, "defter_ufku", lambda: {
-        "ilk": defter_ilk, "son": "2026-08-19", "n": 8754, "neden": None})
-
-
 def test_takvim_defterden_SONRA_baslarsa_olculemez(monkeypatch):
-    _ufuk_kur(monkeypatch, takvim_ilk="2026-07-20", defter_ilk="2022-01-03")
+    _ufuk_kur(monkeypatch, takvim_ilk="2026-07-20", defter_ilk="2022-01-03", arsiv_ilk=None)
     d = arming._kanit_durumu("episodic_pivot", {"n": 2, "avg_r": 1.846})
     assert d["status"] == "olculemez_pit_yok", f"kör dönem görülmedi: {d}"
     assert "2022-01-03" in d["neden"] and "2026-07-20" in d["neden"], (
         f"neden cümlesi iki ufku da taşımıyor: {d['neden']}")
 
 
+# ------------------------------------------------- arşiv farkındalığı (EDG-2026-062)
+
+def test_ARSIV_defteri_kapsiyorsa_arsiv_yok_DEMEZ(monkeypatch):
+    """TAŞIMANIN İKİNCİ YARISI. `arsiv_yok` cümlesi 2026-08-25'te DOĞRUYDU: çare bir PIT
+    arşiviydi ve arşiv yoktu. Arşiv geldi (EDGAR 8-K defteri, `earnings_pit`) ve tarihsel yol ona
+    SEVK EDİLDİ; artık aynı cümleyi yazmak, yapılmış işi yapılmamış göstermek ve operatörü
+    ikinci kez arşiv kurmaya yollamak olurdu. Mazeret kalıcılaşmasın (`takvim_defteri_TAM_
+    kapsiyorsa` çivisinin birebir kardeşi, bu kez ARŞİV ekseninde)."""
+    _ufuk_kur(monkeypatch, takvim_ilk="2026-07-20", defter_ilk="2022-01-03",
+              arsiv_ilk="2010-01-07")
+    d = arming._kanit_durumu("episodic_pivot", {"n": 2, "avg_r": 1.846})
+    assert d["status"] == "insufficient_cf", (
+        f"arşiv defterin başlangıcını kapsıyor ama hâlâ 'birikemez' deniyor: {d}")
+    assert d.get("alt_sebep") is None, f"kapsayan arşivde alt sebep yazılmış: {d}"
+
+
+def test_ARSIV_kapsamiyorsa_dal_DEGISMEZ(monkeypatch):
+    """Aşırıya kaçmama: arşiv VAR ama defterin başlangıcından SONRA başlıyorsa kör dönem
+    gerçektir ve hüküm 'birikemez' kalır. Kapsama sorusu bir VARLIK sorusu değildir."""
+    _ufuk_kur(monkeypatch, takvim_ilk="2026-07-20", defter_ilk="2022-01-03",
+              arsiv_ilk="2024-06-01")
+    d = arming._kanit_durumu("episodic_pivot", {"n": 2, "avg_r": 1.846})
+    assert d["status"] == "olculemez_pit_yok", f"kör dönem kayboldu: {d}"
+    assert d["alt_sebep"] == "arsiv_yok", f"beklenmeyen alt sebep: {d}"
+    assert "2024-06-01" in d["neden"], (
+        f"cümle ölçülen arşiv ufkunu taşımıyor — okuyucu neyin kapsamadığını göremez: {d['neden']}")
+
+
+def test_KAPSAYAN_arsiv_cumlesi_cf_KUYRUGU_gercegini_soyler(monkeypatch):
+    """BEDEL YASASI. "Kanıt birikiyor, bekle" cümlesi bugün TEK BAŞINA yanıltıcıdır: cf'nin
+    ÜRETTİĞİ tarama satırlarında çapa hiç sorulmaz (`_plans_for_session` kuyruğu
+    `reset_index(drop=True)` ile kurulur, `date` sütunu düşer — ölçüldü, çivi v345). Arşiv
+    kapsıyor diye 'birikiyor' demek, operatörü hiç dolmayacak bir beklemeye yollardı; cümle iki
+    gerçeği BİRLİKTE söyler."""
+    _ufuk_kur(monkeypatch, takvim_ilk="2026-07-20", defter_ilk="2022-01-03",
+              arsiv_ilk="2010-01-07")
+    d = arming._kanit_durumu("episodic_pivot", {"n": 2, "avg_r": 1.846})
+    neden = d.get("neden") or ""
+    assert "earnings_pit" in neden, f"cümle arşivi ADIYLA anmıyor: {neden}"
+    assert "2010-01-07" in neden, f"cümle ölçülen arşiv ufkunu taşımıyor: {neden}"
+    assert "date" in neden and "cf" in neden.lower(), (
+        f"cümle cf tarama kuyruğunun `date` sütunu gerçeğini söylemiyor: {neden}")
+    assert d.get("arsiv", {}).get("ilk") == "2010-01-07", \
+        f"kanıt bloğu (arşiv ufku) raporun İÇİNDE değil: {sorted(d)}"
+
+
 def test_bos_takvim_ile_arsivsiz_takvim_AYRI_alt_sebep(monkeypatch):
     """İki alt sebep, İKİ AYRI ÇARE — tek cümleye toplamak operatörü yanlış işe yollar:
     `takvim_bos` → takvimi çek (bugün yapılabilir); `arsiv_yok` → PIT arşivi kur (yapısal)."""
-    from meridian import counterfactual as cf
-    monkeypatch.setattr(cf, "defter_ufku", lambda: {
-        "ilk": "2022-01-03", "son": "2026-08-19", "n": 8754, "neden": None})
+    # Üçüncü ufuk (arşiv) burada da AÇIKÇA kurulur — `arsiv_ilk=None`: arşiv YOK.
+    _ufuk_kur(monkeypatch, takvim_ilk="2026-07-20", defter_ilk="2022-01-03", arsiv_ilk=None)
 
     monkeypatch.setattr(earnings, "takvim_ufku", lambda: {
         "ilk": None, "son": None, "n_tarih": 0, "n_sembol": 0, "neden": "kazanç takvimi BOŞ"})

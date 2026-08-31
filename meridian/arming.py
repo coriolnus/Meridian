@@ -160,15 +160,44 @@ def _dormant_setups() -> list[str]:
       * `exhaustion_hammer` — 2026-08-11'de motor-uygulandı VE silahlandı. Bugün ZARARSIZ
         (silahlı olduğu için türetim de onu uyuyan saymazdı) ama LATENT: bir gün silahtan
         düşerse hem uyuyan kümeden hem kurulum kırılımından SESSİZCE kaybolurdu.
-      * `pead` — motor-uygulanmış (strategy.py:883 `setup="pead"`, screener ENGINE_IMPLEMENTED)
+      * `pead` — motor-uygulanmış (`strategy.evaluate_pead`, `setup="pead"`; screener ENGINE_IMPLEMENTED)
         ve SİLAHSIZ, yani TANIM GEREĞİ uyuyandır; karşı-olgusal deftere satır yazar ama
         silahlanma kapısı onu HİÇ değerlendirmiyor.
     İkinci adı eklemek uyuyan-kanıt kanalının kapsamını genişletir (kapı yeni bir kurulumu
     tartmaya başlar) — bu bir ÖLÇÜM/KAPI kararıdır, kart-önce ve Rol-1'de. Bu yüzden burada
     yalnız BEYAN var, değişiklik yok; ayrışmanın büyümesi `tests/test_e_partisi_v278.py`
     (test_3d) ile çivili: kümeye üçüncü bir ad girerse kırmızı yanar.
-    `canslim` BİLEREK dışarıda: motor onu koşturur ama `evaluate_canslim` daima None döner
-    (strategy.py:900) — ENGINE_IMPLEMENTED'a da bu yüzden alınmadı."""
+    `canslim` BİLEREK dışarıda: motor onu koşturur ama `strategy.evaluate_canslim` daima None
+    döner (docstring'indeki "Faz C KAPISI") — ENGINE_IMPLEMENTED'a da bu yüzden alınmadı.
+
+    ÇAPALAR SEMBOLE ÇEVRİLDİ (2026-08-31, EDG-2026-062 Görev 2). Bu docstring İKİ satır çapası
+    taşıyordu ve ölçüm ŞUNU SÖYLEDİ: **İKİSİ DE dikişten ÖNCE zaten bayattı** — yani ikisi de
+    aynı sınıftandır, dikiş yalnız BİRİNİ mekanik olarak görünür kıldı.
+    Kaydırma unified diff başlıklarından türetildi (eski 860'tan sonra sabit **+31**; doğrulama:
+    `def evaluate_canslim` yeni 949 = eski 918):
+    MEZAR TAŞLARININ BİÇİMİ DE DÜZELTİLDİ (2026-08-31, düzeltme turu 1): aşağıdaki iki şerh
+    "çapalar sembole çevrildi" derken eski çapaları `dosya.py:SATIR` biçiminde AYNEN alıntılıyordu
+    — yani tarayıcı için ikisi hâlâ CANLI ÇAPAYDI. Ölçüldü: `codelaw._CAPA_DESENI` ham metinde
+    `<ad>.py:<sayı>` arar ve alıntı ile iddiayı ayırt EDEMEZ; bugün yeşildiler çünkü işaret
+    ettikleri satırlar tesadüfen kod satırıydı, `strategy.py` bir daha kaydığında ikisi de
+    ötecekti. Olgu (satır numaraları) korundu, ÇAPA BİÇİMİ kaldırıldı: iki nokta yerine düz
+    anlatım. Aynı ders bu turda ikinci kez ölçüldü — `tests/test_wpd_kardes_pit_v185.py`nin şerhi
+    de eski çapasını alıntılayınca aynı kırmızıyı bir satır aşağıda yeniden üretmişti.
+      çapa-mezar-taşı `strategy.py` eski 883. satırı → `setup="pead"` satırını gösterdiği
+        İDDİA EDİLİYORDU.
+        ÖLÇÜM: eski 883 = yeni 914 = `if red_high is None…` altındaki `return None`. Gerçek
+        `setup="pead"` eski **911**'deydi (yeni 942). Dikişten sonra kod satırından YORUM satırına
+        düştü ve `codelaw.stale_line_anchors` ancak O AN ötebildi (`report()["ok"]` de bu yüzden
+        düştü) — yani dikiş bu çapayı KIRMADI, zaten bayat olanı GÖRÜNÜR yaptı.
+      çapa-mezar-taşı `strategy.py` eski 900. satırı → `evaluate_canslim`i gösterdiği
+        İDDİA EDİLİYORDU.
+        ÖLÇÜM: eski 900 = yeni 931 = `evaluate_pead`in **skor eleyicisinin** (`if score <
+        score_min:`) `return None`u; `evaluate_canslim` **18 satır** aşağıdaydı (eski 918).
+        Bu çapa yanlış yeri gösterirken YEŞİLDİ ve dikişten sonra da yeşil kalırdı.
+    DERS (ikisinin ORTAK hâli): yasa "boş satır ya da yorum mu?" diye sorar, "doğru şeyi mi
+    gösteriyor?" diye DEĞİL. Kod satırına düşen bayat çapa sessizdir; bu ikisinden biri ancak
+    tesadüfen bir yorum satırına kaydığı için duyuldu (`tests/conftest._MODUL_DURUMLARI` aynı
+    sınıfı anlatır)."""
     from . import strategy as strat
     engine = ("breakout_vcp", "momentum_burst", "pullback", "episodic_pivot")
     return [s for s in engine if s not in strat.ARMED_SETUPS]
@@ -193,6 +222,12 @@ def _kanit_durumu(setup: str, r: dict) -> dict:
         boşuna. Geri dolumu tekrar koşturmak bunu ASLA çözmez; arşiv gerekir.
     Tek etikete toplamak `_olculemedi`nin şerhindeki hatanın aynısıydı: "ölçülemedi = reddedildi".
 
+    ÜÇ UFUK SORULUR (2026-08-31, EDG-2026-062 — üçüncüsü bu turda eklendi): kazanç TAKVİMİ
+    (`earnings.takvim_ufku`), karşı-olgusal DEFTER (`counterfactual.defter_ufku`) ve PIT kazanç
+    ARŞİVİ (`earnings_pit.arsiv_ufku`). Arşiv yalnız `arsiv_yok` dalında sorulur, çünkü hükmü
+    değiştirdiği tek dal odur: takvim boşsa çare bugün uygulanabilir (`earnings.refresh`) ve
+    arşivin varlığı o soruyu ilgilendirmez.
+
     KAPSAM DAR TUTULDU: PIT kaydında OLMAYAN hiçbir kurulumun cümlesi değişmez (çivi v301)."""
     n, avg = r.get("n", 0), r.get("avg_r")
     capa = PIT_CAPALI_KURULUMLAR.get(setup)
@@ -201,6 +236,7 @@ def _kanit_durumu(setup: str, r: dict) -> dict:
 
     from . import counterfactual as cf, earnings as earn
     takvim, defter = earn.takvim_ufku(), cf.defter_ufku()
+    ek: dict = {}
     # İKİ ALT SEBEP, İKİ AYRI ÇARE — tek cümleye toplamak operatörü yanlış işe yollar:
     #   takvim_bos → takvim hiç çekilmemiş; çare BUGÜN uygulanabilir (`earnings.refresh`).
     #   arsiv_yok  → takvim var ama ileriye dönük bir tazeleme önbelleği; çare bir PIT ARŞİVİdir.
@@ -211,10 +247,42 @@ def _kanit_durumu(setup: str, r: dict) -> dict:
             f"kazanç takvimi BOŞ ({takvim['neden']}) → çapa HİÇBİR gün için çözülemez. "
             "Bu bir örneklem sorunu değil: takvim çekilene kadar kurulum hiç ateşleyemez.")
     elif takvim["ilk"] and defter["ilk"] and takvim["ilk"] > defter["ilk"]:
+        # ARŞİV FARKINDALIĞI (EDG-2026-062, 2026-08-31). Bu dal 2026-08-25'te "çare bir PIT
+        # ARŞİVİdir" diyordu ve o gün DOĞRUYDU: arşiv yoktu. Arşiv geldi (`earnings_pit`, EDGAR
+        # 8-K dosyalama defteri) ve tarihsel yol ona SEVK EDİLDİ (`params["earnings.pit_arsiv"]`),
+        # yani takvimin körlüğü artık hükmün TAMAMI değildir — çapa arşivden sorulabilir.
+        # Aynı cümleyi arşiv geldikten sonra da yazmak, yapılmış işi yapılmamış göstermek ve
+        # operatörü İKİNCİ KEZ arşiv kurmaya yollamak olurdu (mazeretin kalıcılaşması: aşağıdaki
+        # `else` dalının gerekçesiyle birebir aynı sınıf, bu kez arşiv ekseninde).
+        # SOĞUK YOL: `arsiv_ufku()` O(n) bir türev taşır (ölçüldü 2026-08-31: 0,52 ms/çağrı) ve
+        # `strategy` dikişinde bu yüzden ÇAĞRILMAZ. Burası tur başına bir kez koşan RAPOR
+        # yüzeyidir (uyuyan kurulum başına bir çağrı), dolayısıyla sıcak-yol yasağı buraya
+        # uygulanmaz; kısıtı buraya taşımak ölçmeden maliyet varsaymak olurdu.
+        from . import earnings_pit
+        arsiv = earnings_pit.arsiv_ufku()
+        if arsiv["ilk"] and arsiv["ilk"] <= defter["ilk"]:
+            # Arşiv defterin BAŞINDAN itibaren kapsıyor → çapa yapısal olarak çözülebilir.
+            # BEDEL YASASI: yalnız "birikiyor, bekle" demek bugün YANILTICI olurdu — cf'nin
+            # ÜRETTİĞİ tarama satırlarında çapa hiç sorulmaz (kuyruk `date` sütununu düşürüyor),
+            # yani bekleme cf tarafında bugün doldurmaz. İki gerçek TEK cümlede söylenir.
+            return {"status": "insufficient_cf", "n": n, "avg_r": avg, "arsiv": arsiv,
+                    "neden": (
+                        f"{setup} çapası artık PIT kazanç arşivinden sorulabilir (earnings_pit, "
+                        f"EDGAR 8-K dosyalama defteri): arşiv {arsiv['ilk']}→{arsiv['son']} "
+                        f"({arsiv['n_tarih']} dosyalama günü) defterin başlangıcını "
+                        f"({defter['ilk']}) KAPSIYOR, yani kuraklık ARTIK bir örneklem "
+                        f"sorunudur — ama kanıtın cf defterinde BİRİKMESİ cf_backfill tarama "
+                        f"kuyruğunun `date` sütununu taşıma kararına bağlıdır (bugün "
+                        f"`reset_index(drop=True)` onu düşürür ve çapa cf'nin ÜRETTİĞİ "
+                        f"satırlarda hiç sorulmaz).")}
+        arsiv_metni = (f"arşiv {arsiv['ilk']}→{arsiv['son']}" if arsiv["ilk"]
+                       else f"arşiv YOK ({arsiv['neden']})")
+        ek = {"arsiv": arsiv}
         alt, cumle = "arsiv_yok", (
             f"kazanç takvimi bir NOKTA-ZAMAN ARŞİVİ değil, ileriye dönük tazeleme önbelleği: "
             f"takvim {takvim['ilk']}→{takvim['son']} ({takvim['n_tarih']} tarih), "
-            f"defter {defter['ilk']}→{defter['son']} ({defter['n']} satır). Defterin "
+            f"defter {defter['ilk']}→{defter['son']} ({defter['n']} satır). PIT kazanç arşivi "
+            f"(earnings_pit) defterin başlangıcını KAPSAMIYOR ({arsiv_metni}). Defterin "
             "başındaki seanslar için çapa sorusu SORULAMAZ; geri dolumu tekrar koşturmak "
             "kanıt üretmez, ARŞİV gerekir.")
     else:
@@ -222,7 +290,7 @@ def _kanit_durumu(setup: str, r: dict) -> dict:
         # Arşiv gelirse cümle KENDİLİĞİNDEN buraya döner; mazeret kalıcılaşmaz.
         return {"status": "insufficient_cf", "n": n, "avg_r": avg}
     return {"status": "olculemez_pit_yok", "alt_sebep": alt, "n": n, "avg_r": avg,
-            "capa": capa, "takvim": takvim, "defter": defter,
+            "capa": capa, "takvim": takvim, "defter": defter, **ek,
             "neden": f"{setup} çapasız ateşlemez ({capa}) ve {cumle}"}
 
 

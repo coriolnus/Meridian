@@ -33,6 +33,7 @@ yasanın iki sürümünü doğururdu (`codelaw._py_files`, `_ast_oku`, `_call_in
 from __future__ import annotations
 
 import ast
+import pathlib
 from typing import Any
 
 from . import codelaw
@@ -125,6 +126,19 @@ PIT_DISI_KAYNAKLAR: dict[tuple[str, str], dict[str, str]] = {
 # İHLAL DEĞİLDİR. Beyaz listeye girmenin şartı bir NİYET değil, kodda okunabilir bir as-of
 # seçimidir.
 PIT_KAYNAKLAR: dict[tuple[str, str], str] = {
+    ("earnings_pit", "days_since_report_pit"):
+        "filed <= on_date - 1 gün ile seçim (MUHAFAZAKÂR GÖRÜNÜRLÜK: dosyalamanın KENDİ günü "
+        "DAHİL DEĞİL, çünkü 8-K kabul saati çoğunlukla kapanış sonrasıdır ve modül saat "
+        "taşımaz). Kaynak `research/edgar_facts/earnings_8k_tarihleri.csv` — EDGAR 8-K item "
+        "2.02 dökümü; her satır `report_date` VE `filed` taşır, yani görünürlük uydurulmaz. "
+        "GLOBAL ufkun dışı ve arşivde HİÇ olmayan sembol `None` döner, False DEĞİL (uydurma "
+        "yasağı: 'rapor yoktu' ile 'bilmiyoruz' ayrı sayılır — `sayac_oku()` üç kovayı okur). "
+        "SINIRI KAYIT DA SÖYLER, gizlemez: ufuk GLOBAL ama kapsama SEMBOL-BAZLIdır — sembol "
+        "arşivde varken kendi kapsaması o tarihte başlamamışsa cevap `None` değil FALSE'tur "
+        "(modülün kendi K-1 ölçümü, `days_since_report_pit` başlığı: en sert vaka BLK, 8 satırın "
+        "hepsi 2024-10, 724 seans False, gerçekte 11 rapor). Beyaz listeye girmenin şartı as-of "
+        "seçimidir ve o KODDA OKUNUR; kapsama boşluğu ayrı bir eksendir ve kartın ≥%95 kapsama "
+        "eşiği onu ölçer",
     ("edgar_shares", "as_of_shares"):
         "filed <= t ile seçim; kendi başlığı: 'end <= t PIT DEĞİLDİR, geleceği sızdırır'",
     ("edgar_shares", "as_of_shares_detay"):
@@ -187,35 +201,100 @@ CANLI_TABAN = 5
 # `bilinen_ihlaller` alanında görünür. Beyanın etkisi yalnız `ok` hükmüne dokunmamasıdır —
 # aksi hâlde çivi ilk günden kırmızı doğar ve KAPATILIRDI; kapatılan çivi çivi değildir.
 # Kayıt düşerse (`bilinen_ihlal_curudu`) beyan da düşer: ölü muafiyet çürüktür.
-BILINEN_IHLALLER: dict[tuple[str, str, str], str] = {
-    ("backtest.py", "earnings", "days_since_report"):
-        "ÖLÇÜLDÜ 2026-08-30 — BEYAN EDİLMEMİŞ ASİMETRİ. backtest.replay `in_blackout`u bilerek "
-        "kesti (`olculemedi_replay` sayacı) ama AYNI dosyada `strat.scan_entry` çağrısı, "
-        "scan_all → evaluate_episodic_pivot/evaluate_pead üzerinden AYNI PIT'siz takvimi "
-        "tarihsel seansa sokuyor. Yön sözleşmesi (0 <= (d-e).days) ileri sızıntıyı engeller ve "
-        "arming._kanit_durumu bunun pratikte hep False döndüğünü ölçmüştür (takvim ufku defterin "
-        "başlangıcından sonra) — yani bugün ZARARSIZ, ama `in_blackout` ile AYNI beyan "
-        "seviyesinde değil. Düzeltme ayrı karar: ya çapa replay'de kesilir ya PIT arşivine bağlanır.",
-    ("cf_backfill.py", "earnings", "days_since_report"):
-        "ÖLÇÜLDÜ 2026-08-30 — yukarıdakinin BİREBİR KARDEŞİ. cf_backfill `in_blackout`u aynı "
-        "gerekçeyle kesip `olculemedi_cf` sayacı koydu, ama `strat.scan_all` çağrısı (iki yerde: "
-        "normal ve gevşetilmiş eşik) aynı zinciri açık bırakıyor. Aynı düzeltme kararına bağlı.",
-}
+#
+# BUGÜN BOŞ — VE BOŞLUK BİR BAŞARIDIR, BİR EKSİKLİK DEĞİL (2026-08-31, EDG-2026-062). Defterin
+# iki kaydı vardı (`backtest.py` ve `cf_backfill.py` → `earnings.days_since_report`) ve ikisi de
+# kaydın kendi yazdığı iki yoldan İKİNCİSİYLE kapandı: "ya çapa replay'de kesilir ya PIT arşivine
+# BAĞLANIR". Bağlandı — kayıtlar `PIT_KORUMALI_ZINCIRLER`e TAŞINDI (silinmedi: zincir hâlâ statik
+# olarak görünür, hüküm hâlâ beyanla verilir; değişen, beyanın SINIFIdır — borç değil, kapatılmış
+# yol). Boş defteri bir yer tutucuyla doldurmak ölü kayıt üretirdi ve bu deponun yasasına göre ölü
+# kayıt çürüktür; `test_BEYANLARIN_hepsi_hala_GERCEK` beklentiyi kayıttan TÜRETİR, yani bu sözlük
+# yarın yeniden dolarsa çivi kendiliğinden iki yönlü çalışmaya devam eder.
+BILINEN_IHLALLER: dict[tuple[str, str, str], str] = {}
 
 # KOŞUL-KORUMALI ZİNCİRLER — İHLAL DEĞİL, ama tarayıcı BUNU GÖREMEZ.
-# Statik tarayıcı bir çağrının hangi koşul altında koştuğunu DEĞERLENDİREMEZ. `shadow_variants.
-# _judge` `in_blackout`u `if pit:` bloğunun içinde çağırır: canlı turda çalışır, TOHUM (tarihsel)
-# turunda hiç çağrılmaz ve `earnings_blackout` False değil None kalır ("karartma yok" ile
-# "ölçemedik" aynı şey değildir — kardeş-PIT düzeltmesi). Yani zincir görünür ama yasa ihlal
-# edilmez. Bunu `BILINEN_IHLALLER`e koymak yanlış olurdu: orası DÜZELTİLMEMİŞ borcun defteri,
-# burası ise ÖLÇÜLMÜŞ ve KAPATILMIŞ bir yolun kaydı. Ayrımı silmek, düzeltilmiş işi borç
-# gibi göstermek olurdu.
-PIT_KORUMALI_ZINCIRLER: dict[tuple[str, str, str], str] = {
-    ("shadow_lifecycle.py", "earnings", "in_blackout"):
+# Statik tarayıcı bir çağrının hangi koşul altında koştuğunu DEĞERLENDİREMEZ. İKİ KORUMA BİÇİMİ
+# ölçüldü ve ikisi de aynı sınıftadır (zincir görünür, PIT'siz kaynağa VARILMAZ):
+#   · KOŞUL — `shadow_variants._judge` `in_blackout`u `if pit:` bloğunun içinde çağırır: canlı
+#     turda çalışır, TOHUM (tarihsel) turunda hiç çağrılmaz ve `earnings_blackout` False değil
+#     None kalır ("karartma yok" ile "ölçemedik" aynı şey değildir — kardeş-PIT düzeltmesi).
+#   · SEVK — `backtest`/`cf_backfill` çapayı `params["earnings.pit_arsiv"]` ile PIT arşivine
+#     yönlendirir (EDG-2026-062): PIT'siz dal tarihsel yolda hiç koşmaz.
+# Yani zincir görünür ama yasa ihlal edilmez. Bunu `BILINEN_IHLALLER`e koymak yanlış olurdu:
+# orası DÜZELTİLMEMİŞ borcun defteri, burası ise ÖLÇÜLMÜŞ ve KAPATILMIŞ bir yolun kaydı. Ayrımı
+# silmek, düzeltilmiş işi borç gibi göstermek olurdu.
+# HER İKİ BİÇİMDE DE BEYAN KORUMANIN KENDİSİNE BAĞLIDIR ve bu bir dilek değil bir ölçümdür:
+# koruma kalktığı gün kayıt ÇÜRÜR.
+#
+# ÇİVİ ALANI — VE NEDEN KAYDIN İÇİNDE (2026-08-31, EDG-2026-062 düzeltme turu 1). "Koruma
+# kalkarsa kayıt çürür" cümlesi 2026-08-30'da MEKANİK DEĞİLDİ ve bu ÖLÇÜLDÜ: sevk `strategy`den
+# kaldırıldığında `rapor()["ok"]` YEŞİL KALIYOR, `tarihsel_dolayli_korumali` birebir aynı
+# basılıyor — çünkü kova seçimi (`_kayitta`) yalnız ANAHTAR aramasıdır ve korumayı hiç sormaz.
+# O gün üç kaydın üçünün de bir çivisi olması bir GELENEKTİ, bir YAPI değil: dördüncü kayıt
+# hiçbir çivi talep etmeden doğabilir ve doğduğu gün kendi kendini doğrulayan beyan olurdu.
+# Her kayıt artık korumasını çürütebilen çiviyi ADIYLA taşır (`civi`) ve `koruma_civisi_denetimi`
+# o sembolün kaynakta GERÇEKTEN var olduğunu ölçer — emsal `KAPI_SOZLESMELERI` /
+# `SINYAL_SOZLESMELERI` denetimi ("kayıtsız kapı yüzeyi doğduğu gün çivi öter", CLAUDE.md §4).
+# ÇAPA SEMBOLDÜR, SATIR DEĞİL (`dosya::test_fn`): satır kayar, sembol kaymaz.
+#
+# İKİ YÖN DE BAĞLI — ve ikinci yön ZATEN vardı, bu tur birinciyi ekledi:
+#   ileri  → kayıttaki her koruma bir çivi ADI taşır ve o çivi kaynakta vardır (`koruma_civisi_
+#            denetimi`); yoksa `ok` düşer.
+#   geri   → kayıtta OLMAYAN bir korumalı zincir zaten `tarihsel_dolayli_beyansiz`a düşer ve
+#            `ok`u sıfır toleransla kırar; yani "beyansız koruma" hiçbir zaman sessiz kalmadı.
+# KAPSAM BEYANI: denetim çivinin VARLIĞINI ölçer, DOĞRULUĞUNU değil — adı taşınan bir test
+# fonksiyonu gövdesi boşaltılırsa bu denetim sessiz kalır. Gövdenin ısırdığını gösteren şey
+# mutasyondur (§6) ve o insan disiplinidir; buradaki mekanik, "hiç çivi yok" hâlini imkânsız kılar.
+PIT_KORUMALI_ZINCIRLER: dict[tuple[str, str, str], dict[str, str]] = {
+    ("shadow_lifecycle.py", "earnings", "in_blackout"): {
+        "gerekce":
         "ÖLÇÜLDÜ 2026-08-30 — shadow_lifecycle._seed → shadow_variants._judge zinciri görünür, "
         "ama `_judge` çağrıyı `if pit:` ile korur (kardeş-PIT düzeltmesi): tarihsel turda "
         "`in_blackout` HİÇ çağrılmaz, satır `olculemedi_seed` sayılır. Koruma kalkarsa bu kayıt "
         "ÇÜRÜR ve çivi öter — beyan, korumanın kendisine bağlıdır.",
+        # Çivi bu turdan ÖNCE de vardı (2026-08-03, kardeş-PIT düzeltmesiyle birlikte); eksik olan
+        # kayıt ile çivi arasındaki MEKANİK BAĞDI — ikisi iki ayrı dosyada birbirini bilmeden
+        # duruyordu. Bağ artık burada.
+        "civi": "tests/test_wpd_kardes_pit_v185.py"
+                "::test_shadow_kapi_cagrisi_PIT_KOSULUNUN_ICINDE_yasar"},
+    # --- EDG-2026-062: BORÇTAN KAPATILMIŞ YOLA. İkisi de 2026-08-30'da `BILINEN_IHLALLER`deydi;
+    # koruma biçimi shadow_lifecycle'ınkinden FARKLIDIR (koşul değil SEVK) ama sınıf AYNIDIR:
+    # zincir görünür, çağrı PIT'siz kaynağa varmaz, ve beyan korumanın kendisine bağlıdır.
+    ("backtest.py", "earnings", "days_since_report"): {
+        "gerekce":
+        "ÖLÇÜLDÜ 2026-08-31 (EDG-2026-062) — zincir görünür (backtest.replay → strat.scan_entry "
+        "→ scan_all → evaluate_episodic_pivot/evaluate_pead → earnings.days_since_report) ve "
+        "statik tarayıcı onu değerlendiremez; ama `replay` çapayı SEVK EDER: "
+        "`eff['earnings.pit_arsiv'] = True` yazar ve iki değerlendirici o param altında "
+        "`earnings_pit.days_since_report_pit`i çağırır (EDGAR 8-K defteri, `filed <= seans-1`; "
+        "PIT_KAYNAKLAR kaydı). PIT'siz `state/earnings.csv` dalı tarihsel yolda HİÇ koşmaz — "
+        "canlı dal (param YOK) ise aynen durur ve CANLI_TABAN'da sayılıdır; bu tur canlı yolu "
+        "DEĞİŞTİRMEDİ. KORUMA (sevk) KALKARSA BU KAYIT ÇÜRÜR VE ÇİVİ ÖTER — beyan, sevkin "
+        "KENDİSİNE bağlıdır (sevksiz zincir yeniden BORÇTUR ve buraya değil "
+        "`BILINEN_IHLALLER`e aittir).",
+        "civi": "tests/test_pit_yasasi_v341.py::test_PIT_SEVKI_capa_blogunda_DURUYOR"},
+    ("cf_backfill.py", "earnings", "days_since_report"): {
+        "gerekce":
+        "ÖLÇÜLDÜ 2026-08-31 (EDG-2026-062) — yukarıdakinin KARDEŞİ, AYNI sevk: "
+        "`_plans_for_session` `eff['earnings.pit_arsiv'] = True` yazar ve anahtar İKİ tarama "
+        "koluna da ulaşır (karar kolu `eff` + near-miss `rx`, `rx` `eff`ten türetilir; çivi "
+        "`test_cf_param_IKI_scan_all_cagrisina_da_ulasir`, v345) — yani zincirin ucu "
+        "`earnings_pit`tir. KAPSAM DÜRÜSTÇE DAR VE BU FARK ÖNEMLİDİR: bugün cf'nin ÜRETTİĞİ "
+        "tarama satırlarında çapa HİÇ SORULMAZ — kuyruk `dfp.loc[:d].reset_index(drop=True)` "
+        "ile kurulur, `date` sütuna dönmeden ATILIR ve iki kazanç-çapalı üretici çapadan ÖNCE "
+        "None döner (ölçüldü 2026-08-31: cf'de `pit_arsiv` sayacı {0,0,0}; çivi "
+        "`test_cf_taramasi_bugun_KAZANC_CAPASINA_ULASAMAZ`, v345). Bu 'cf defterinde kazanç "
+        "kurulumu yok' DEMEK DEĞİLDİR — defterde canlı `loop.daily_cycle`dan gelmiş episodic "
+        "satırlar bulunabilir; cümle YALNIZ cf_backfill'in kendi ürettiği satırlar hakkındadır. "
+        "Kuyruk `date` taşımaya başlarsa sevk zaten yerindedir (v345 çivisi o gün öter, çünkü "
+        "cf defterinin bileşimi değişir ve bu bir KART kararıdır). KORUMA (sevk) KALKARSA BU "
+        "KAYIT ÇÜRÜR VE ÇİVİ ÖTER — beyan, sevkin KENDİSİNE bağlıdır.",
+        # Kardeş kayıtla AYNI çivi ve bu doğru: çivi `arming.PIT_CAPALI_KURULUMLAR`tan türetilen
+        # İKİ değerlendiriciyi de gezer, yani sevk hangi tarihsel motorun kolundan kalkarsa kalksın
+        # aynı yerden ölçülür. Sevkin `cf_backfill` tarafına ULAŞTIĞI ise ayrı bir çividir
+        # (`test_cf_param_IKI_scan_all_cagrisina_da_ulasir`, v345) — bu alan TEK ad taşır, o yüzden
+        # buraya kaydın kendi gerekçesinde adıyla yazıldı.
+        "civi": "tests/test_pit_yasasi_v341.py::test_PIT_SEVKI_capa_blogunda_DURUYOR"},
 }
 
 # ---------------------------------------------------------------------------
@@ -402,6 +481,57 @@ def dolayli_zincirler(root: str = VARSAYILAN_KOK) -> list[dict]:
                             "ara_modul": m, "ara_fonksiyon": fn,
                             "uclar": uclar, "kapanim_turu": turlar})
     return out
+
+
+def _gerekce(deger: Any) -> str:
+    """Bir defter kaydının gerekçe metni. İKİ BİÇİM BİLİNÇLİ OLARAK KABUL EDİLİR:
+    `PIT_KORUMALI_ZINCIRLER` alanlı (`{"gerekce", "civi"}`), `BILINEN_IHLALLER` düz metin — ve
+    sentetik testler `rapor(bilinen=..., korumali=...)` ile düz metin enjekte eder. Enjeksiyonun
+    değeri hükme GİRMEZ (kova seçimi yalnız ANAHTARla yapılır), yalnız rapora basılır; biçimi
+    zorlamak testleri kaydın iç yapısına bağlardı."""
+    return deger.get("gerekce", "") if isinstance(deger, dict) else str(deger)
+
+
+def koruma_civisi_denetimi(root: str = VARSAYILAN_KOK,
+                           korumali: dict | None = None) -> list[dict]:
+    """KORUMALI-ZİNCİR KAYDININ KENDİ DENETİMİ — `kapi_sozlesme_denetimi`nin kardeşi, aynı
+    disiplin: kayıt bir İDDİA değildir, kaynaktan çürütülebilir olmalıdır.
+
+    Her kayıt korumasını çürütebilen çiviyi `civi` alanında `dosya::test_fn` biçiminde taşır.
+    Burada sorulan tek soru şudur: **o sembol kaynakta gerçekten var mı?** Çürüme nedenleri
+    ADIYLA döner — `civi_beyani_yok` (alan boş: kayıt korumasını kimseye bağlamamış),
+    `dosya_yok`, `sembol_yok` (çivi silinmiş ya da adı değişmiş).
+
+    NEDEN ÇİVİNİN VARLIĞI YETER (kapsam beyanı): bu denetim gövdenin ısırdığını ölçemez — onu
+    ölçen şey mutasyondur ve o insan disiplinidir (§6). Ölçtüğü şey daha dar ama tam olarak
+    eksik olandı: "hiç çivi yok" hâli artık imkânsızdır. Boş küme "koruma doğrulandı" demez,
+    "her kaydın bir çivisi VAR" der.
+
+    YOL ÇÖZÜMÜ kökün EBEVEYNİNDEN yapılır (`meridian` → depo kökü) — `codelaw._py_files`in
+    zaten dayandığı varsayımın aynısı; ikinci bir kök kavramı üretmemek için."""
+    kayit = PIT_KORUMALI_ZINCIRLER if korumali is None else korumali
+    depo = pathlib.Path(root).parent
+    curuk: list[dict] = []
+    for (m, mk, fn), deger in sorted(kayit.items()):
+        ad = f"{m}→{mk}.{fn}"
+        civi = deger.get("civi") if isinstance(deger, dict) else None
+        if not civi or "::" not in civi:
+            curuk.append({"kayit": ad, "civi": civi, "neden": "civi_beyani_yok"})
+            continue
+        dosya, _, test_fn = civi.partition("::")
+        yol = depo / dosya
+        if not yol.exists():
+            curuk.append({"kayit": ad, "civi": civi, "neden": "dosya_yok"})
+            continue
+        try:
+            tree = codelaw._ast_oku(yol)
+        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
+            codelaw._note_unscanned(yol, e, "pitlaw")
+            continue                    # taranamayan dosya `unscanned` üzerinden `ok`u zaten düşürür
+        if test_fn not in {n.name for n in ast.walk(tree)
+                           if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}:
+            curuk.append({"kayit": ad, "civi": civi, "neden": "sembol_yok"})
+    return curuk
 
 
 def _kayitta(kayit: dict, defter: dict) -> tuple[str, str, str] | None:
@@ -811,7 +941,9 @@ def rapor(root: str = VARSAYILAN_KOK, bilinen: dict | None = None,
       · tarihsel yolda BEYANSIZ ihlal YOK (sıfır tolerans),
       · canlı borç tabanı AŞILMADI (çırçır),
       · beyan edilmiş kayıtların hepsi HÂLÂ GERÇEK (ölü muafiyet çürüktür),
-      · KAYDIN SINIF ATAMASI kaynakla UYUŞUYOR (`sinif_celiskileri` boş).
+      · KAYDIN SINIF ATAMASI kaynakla UYUŞUYOR (`sinif_celiskileri` boş),
+      · her KORUMALI ZİNCİR kaydı, korumasını çürütebilen bir çiviyi ADIYLA taşıyor ve o çivi
+        kaynakta var (`korumali_civi_curuk` boş) — çivisiz koruma beyanı ölçülemez beyandır.
     Taranamayan dosya (`unscanned`) da `ok`u düşürür: eksik tarama sıfır-ihlal iddiasının şartıdır.
 
     ENJEKSİYON = YALITIM (codelaw.declared_claims emsali, ve BU TURDA ÖLÇÜLDÜ). Canlı defterler
@@ -864,8 +996,17 @@ def rapor(root: str = VARSAYILAN_KOK, bilinen: dict | None = None,
         "tarihsel_dolayli_beyansiz": beyansiz,
         "tarihsel_dolayli_beyanli": beyanli,
         "tarihsel_dolayli_korumali": korumali_bulunan,
-        "bilinen_ihlaller": {f"{m}→{mk}.{fn}": g for (m, mk, fn), g in sorted(bil.items())},
-        "korumali_zincirler": {f"{m}→{mk}.{fn}": g for (m, mk, fn), g in sorted(kor_kayit.items())},
+        "bilinen_ihlaller": {f"{m}→{mk}.{fn}": _gerekce(g) for (m, mk, fn), g in sorted(bil.items())},
+        "korumali_zincirler": {f"{m}→{mk}.{fn}": _gerekce(g)
+                               for (m, mk, fn), g in sorted(kor_kayit.items())},
+        # KORUMA ÇİVİLERİ — kayıt hangi çiviye dayanıyor, ve o çivi kaynakta duruyor mu.
+        # Denetim YALNIZ canlı kayıtta koşar (`_canli`): sentetik bir defterden gerçek bir çivi
+        # adı beklemek, sınıf hükmündeki kategori hatasının aynısı olurdu (§ `_sinif_sorulabilir`).
+        # `_ksd`/`_ssd`nin `root == VARSAYILAN_KOK` kapısından FARKI bilinçli: onlar KODU denetler
+        # (kod her ağaçta vardır), bu ise KAYDIN kendisini — enjekte edilmiş kayıt denetlenemez.
+        "korumali_civiler": {f"{m}→{mk}.{fn}": (g.get("civi") if isinstance(g, dict) else None)
+                             for (m, mk, fn), g in sorted(kor_kayit.items())},
+        "korumali_civi_curuk": (_kcd := koruma_civisi_denetimi(root) if _canli else []),
         "curuk_beyan": [f"{m}→{mk}.{fn}" for (m, mk, fn) in curuk_beyan],
         # CANLI DÜNYA — ÇIRÇIR
         "canli_karar_cagrilari": canli,
@@ -915,7 +1056,11 @@ def rapor(root: str = VARSAYILAN_KOK, bilinen: dict | None = None,
         # KAYIT DENETİMİ DE `ok`u DÜŞÜRÜR — ama YALNIZ üretim ağacında. Sentetik köklerde kayıt
         # sözleşmeleri (canlı `guard.py`) bulunamaz ve orada "çürük" hükmü kurmak, sınıf
         # hükmündeki kategori hatasının aynısı olurdu (§ `_sinif_sorulabilir`).
+        # KORUMA ÇİVİSİ ÇÜRÜMESİ DE `ok`u DÜŞÜRÜR: çivisiz bir korumalı-zincir kaydı, kendi
+        # kendini doğrulayan bir beyandır — ve bu defterin varlık sebebi tam olarak "beyan
+        # ölçülebilir olsun"dur (ölçüldü: sevk kalkınca rapor hiç değişmiyor).
         "ok": not tarihsel_dogrudan and not beyansiz and not curuk_beyan and not (celiskiler or [])
+              and not _kcd
               and len(canli) <= CANLI_TABAN and not codelaw.UNSCANNED
               and not (_ksd["curuk"] if root == VARSAYILAN_KOK else [])
               and not (_ksd["kayitsiz"] if root == VARSAYILAN_KOK else [])

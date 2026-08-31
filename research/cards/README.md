@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **75** kart.
 
-### Kayıtlı — ölçüm bekliyor (7)
+### Kayıtlı — ölçüm bekliyor (8)
 
 - **EDG-2026-019** (`registered`) — Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10) aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı…
   · HÜKÜM: 2026-08-09 Rol-1. (Aşağıya bkz: 2026-08-23 kill#1 kaydı — katman kapatma emri)
@@ -34,6 +34,9 @@ Toplam **75** kart.
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
+- **EXE-2026-010** (`registered`) — 
+  · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
+  · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
 ### Ölçümde (4)
 
@@ -50,7 +53,7 @@ Toplam **75** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (43)
+### Ölçüldü (44)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -157,6 +160,9 @@ Toplam **75** kart.
 - **EDG-2026-057** (`measured`) — `/api/topviews` (2026-08-24) toplulaştırması, planların kapı-reddi kırılımını İLK KEZ tek paydadan gösterdi.
   · HÜKÜM: HÜKÜM (Rol-1, 2026-08-24): **GÖZLEM ÇÜRÜTÜLDÜ.
   · kart: `EDG-2026-057-leading-sector-kapisi.yaml`
+- **EDG-2026-062** (`measured`) — 
+  · HÜKÜM: 2026-08-31 hüküm: verdict_2026_08_31 bloğu
+  · kart: `EDG-2026-062-pit-arsiv-baglamasi.yaml`
 - **EXE-2026-001** (`measured`) — İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra modelleri koşuyor ve ayna gap durumunda reddediliyor…
   · HÜKÜM: 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
   · kart: `EXE-2026-001-entry-execution.yaml`
@@ -230,7 +236,7 @@ Toplam **75** kart.
   · HÜKÜM: 2026-08-02 ~22:30 TR — ARŞİV (Rol-1 hükmü; kill#1 tetiklendi): İki yüzeyde de fark CI-0-içi VE |fark|<10bps: Y1 @20 −0,06bps [−2,06,+2,60] · Y2 @20 +0,27bps…
   · kart: `KYS-2026-001-kiyas-kirlenmesi.yaml`
 
-### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (6)
+### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (4)
 
 - **EDG-2026-011** (`askida`) — Aynı gün üretilen adaylar arasında "in-play" olanlar (kazanç-katalizörü yakınlığı + yüksek rvol) diğer adaylardan daha iyi ileri getiri/isabet taşır…
   · HÜKÜM: 2026-08-01 ~10:40 — kill#3 ASKI (K HARCANMADI): in-play aday-gün ÜST SINIRI bile 11-12 << 150.
@@ -242,10 +248,6 @@ Toplam **75** kart.
   · kart: `EDG-2026-060-cf-tarih-yeniden-yurutme.yaml`
 - **EDG-2026-061** (`judged`) — OPERATÖR SORUSU (2026-08-25): "OOS kapısının neden bu kadar az aday geçirdiği hâlâ oturmadı, bunu çözelim." Bir önceki tur şunu KANITLADI ve bu kart…
   · kart: `EDG-2026-061-oos-kapisi-neden-az-geciriyor.yaml`
-- **EDG-2026-062** (``) — 
-  · kart: `EDG-2026-062-pit-arsiv-baglamasi.yaml`
-- **EXE-2026-010** (``) — 
-  · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
 <!-- ENDEKS: SON -->
 

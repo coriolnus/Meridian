@@ -43,6 +43,22 @@ import meridian.obs as _obs_mod
 # örneklenirdi — `auth._FAILS` vakasının birebir tekrarı. api zaten suite'in her yerinde yüklü;
 # marjinal ithal maliyeti yok.
 import meridian.api as _api_mod
+# v345 PIT ARŞİV SAYACI (2026-08-31, EDG-2026-062 Görev 3): `earnings_pit._SAYAC` bu turda ÜRETİM
+# yolundan artmaya başladı — `backtest.replay` ve `cf_backfill.run` kazanç çapasını PIT arşivinden
+# soruyor ve her çağrı üç kovadan birine düşüyor. Yani sızıntının sınıfı büyüdü: eskiden sayacı
+# yalnız İKİ test dosyası (v344, v345) kendi autouse fikstürüyle kirletiyor ve kendi temizliyordu;
+# artık `replay`/`run` çağıran HER test dosyası onu kirletir ve hiçbiri temizlemekle yükümlü
+# değildir. Kalan sayaç bir sonraki dosyanın "kaç çağrı yapıldı" ölçümünü sessizce şişirir —
+# `scheduler._state` ve `_fmp._HEALTH` vakalarının birebir aynısı, yalnız kaynağı üretim yolu.
+# İthal maliyeti: modül `config` dışında hiçbir şeye bağlı değil ve modül düzeyinde G/Ç yapmaz
+# (kendi başlığında beyanlı: `meridian.obs`a ULAŞMAZ).
+# KAPSAMIN DÜRÜST SINIRI: bu mekanizma YALNIZ sözlükleri yerinde sıfırlar. `earnings_pit`in ufuk
+# memosu (`_NESIL` int, `_UFUK_MEMO` dict|None) buraya GİREMEZ — ve girmesi de gerekmez: memo
+# `_NESIL` ile anahtarlıdır, `_NESIL` yalnız `_CACHE` İÇERİĞİ değiştiğinde artar ve önbellek
+# anahtarı (yol, mtime) olduğundan başka bir arşive geçen test yeniden yükleme tetikler → memo
+# kendiliğinden düşer. Bayat memo okunabilmesi için iki AYRI arşivin aynı yolda aynı mtime'ı
+# taşıması gerekirdi. Sızan tek durum sayaçtır ve kayıt onu kapatır.
+import meridian.earnings_pit as _epit_mod
 
 # (modül, öznitelik) — hepsi SÖZLÜK ve hepsi YERİNDE sıfırlanır (clear+update): yeni bir dict
 # atamak, o sözlüğe başka modüllerden tutulan referansları koparır ve sıfırlama hiçbir şeye
@@ -97,6 +113,10 @@ _MODUL_DURUMLARI = (
     (_obs_mod, "_SUPPRESS_LOGGED"),
     # api._REFRESH_SON — session_refresh sel-kesimi penceresi (gerekçe ithal bloğunda, v274).
     (_api_mod, "_REFRESH_SON"),
+    # earnings_pit._SAYAC — PIT çapasının üç kovası (gerekçe ithal bloğunda, v345/Görev 3).
+    # `sayac_sifirla` da YERİNDE günceller (yeni sözlük atamaz), yani bu mekanizmayla aynı
+    # sözleşmededir: dışarıda tutulan referanslar kopmaz.
+    (_epit_mod, "_SAYAC"),
 )
 _MODUL_DURUMU0 = {f"{m.__name__}.{a}": dict(getattr(m, a)) for m, a in _MODUL_DURUMLARI}
 

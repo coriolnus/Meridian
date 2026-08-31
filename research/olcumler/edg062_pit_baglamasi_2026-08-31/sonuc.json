@@ -1,0 +1,27 @@
+{
+ "olcum_tarihi": "2026-08-31",
+ "girdi": {
+  "cf_sembol_n": 250,
+  "arsiv_sembol_n": 258,
+  "takvim_satir": 222,
+  "filed_max": "2026-07-31",
+  "blob_teyit": "8a9ff781 HEAD==kart PİN (ölçüldü)"
+ },
+ "kapsama": {
+  "yuzde": 99.6,
+  "esik": ">=95",
+  "eksik": [
+   "SPOT"
+  ],
+  "hukum": "GECTI"
+ },
+ "tutarlilik": {
+  "kiyas_n": 123,
+  "uyusmaz_n": 0,
+  "uyusmaz": [],
+  "kesisim_disi": 98,
+  "yuzde_uyusmazlik": 0.0,
+  "esik": "<=5 (±1 gun)",
+  "hukum": "GECTI"
+ }
+}

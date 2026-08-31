@@ -14,11 +14,14 @@ days_since_report`). GÖREMEDİĞİ: dinamik erişim (`getattr`), sözlükten/di
 kaydında OLMAYAN bir adaptör — üçü de `rapor()["gorulmeyen"]` kovasında ADIYLA sayılır ve
 `ok` hükmünü ETKİLEMEZ (ölçülemeyen şey ihlal değildir; ama sayılmayan körlük körlüğü gizler).
 
-BİLİNEN İHLAL VAR ve YEŞİLE ALINDI (düzeltme AYRI KARAR — bu tur ölçtü, düzeltmedi):
-`backtest.py` ve `cf_backfill.py` `earnings.in_blackout`u bilerek kesti ama AYNI dosyadaki
-`strat.scan_entry`/`scan_all` çağrısı aynı PIT'siz takvimi tarihsel seansa sokuyor. Beyan
-`pitlaw.BILINEN_IHLALLER`de gerekçesiyle duruyor ve `test_bilinen_ihlaller_HALA_GERCEK` onu
-ölü kalmaya karşı çiviler.
+BİLİNEN İHLAL VARDI ve 2026-08-31'de KAPANDI (EDG-2026-062). `backtest.py` ve `cf_backfill.py`
+`earnings.in_blackout`u bilerek kesmişti ama AYNI dosyadaki `strat.scan_entry`/`scan_all` çağrısı
+aynı PIT'siz takvimi tarihsel seansa sokuyordu. Kaydın kendi yazdığı iki çıkıştan İKİNCİSİ
+uygulandı ("PIT arşivine bağlanır"): çapa artık `params["earnings.pit_arsiv"]` ile `earnings_pit`e
+SEVK EDİLİYOR, iki kayıt `BILINEN_IHLALLER`den `PIT_KORUMALI_ZINCIRLER`e TAŞINDI ve borç defteri
+BOŞALDI. `test_BEYANLARIN_hepsi_hala_GERCEK` beklentiyi kayıttan TÜRETİR (iki yön de bağlı),
+`test_PIT_SEVKI_capa_blogunda_DURUYOR` ise korumanın kendisini bağlar — çünkü zincir tarayıcısı
+sevki GÖREMEZ ve görebilen bir çivi olmadan taşınan kayıtlar kendi kendini doğrulayan beyan olurdu.
 
 Bu dosya `sandbox_state` KULLANMAZ: `pitlaw` (ve `codelaw`) diske yazmaz, `config.STATE`e hiç
 dokunmaz — yalnız kaynak ağacını okur. `exec_module` da kullanmaz (v334 bayat-bytecode yasağı):
@@ -345,6 +348,10 @@ def test_her_kaydin_GEREKCESI_var_ve_yeterince_uzun():
     for kayit in (pitlaw.PIT_KAYNAKLAR, pitlaw.PIT_SOZLESMELI_BESLEYENI_KAPALI,
                   pitlaw.BILINEN_IHLALLER):
         kisa += [k for k, g in kayit.items() if len(str(g).strip()) < 20]
+    # KORUMALI ZİNCİRLER ALANLI KAYITTIR (`gerekce` + `civi`): `str(kayit)` ile ölçmek sözlüğün
+    # kendi gösterimini sayardı, yani gerekçe BOŞKEN bile eşiği geçerdi — sessiz muafiyet.
+    kisa += [k for k, g in pitlaw.PIT_KORUMALI_ZINCIRLER.items()
+             if len(str(g.get("gerekce", "")).strip()) < 20]
     assert kisa == [], f"gerekçesi eksik/kısa kayıtlar: {kisa}"
 
 
@@ -367,6 +374,149 @@ def test_kayittaki_ad_ara_modulde_YEREL_DEGIL():
         if adlar and (ortak := adlar & hedef):
             cakisma[m] = sorted(ortak)
     assert cakisma == {}, f"ara modülde aynı adlı yerel fonksiyon: {cakisma}"
+
+
+# ---------------------------------------------------------------------------
+# C2) SEVK ÇÜRÜMESİ — "koruma kalkarsa kayıt çürür" cümlesinin MEKANİK karşılığı
+# ---------------------------------------------------------------------------
+# `PIT_KORUMALI_ZINCIRLER`in iki yeni kaydı (backtest.py, cf_backfill.py) bir KORUMAYA dayanır:
+# `strategy.py`nin iki kazanç-çapalı değerlendiricisi çapayı `params.get("earnings.pit_arsiv")`
+# ile SEVK EDER — param varken PIT arşivi (`earnings_pit`), yokken canlı `earnings.days_since_
+# report`. Statik zincir tarayıcısı bu koşulu DEĞERLENDİREMEZ (`dolayli_zincirler` sevk dursa da
+# kalksa da AYNI zinciri görür), yani beyanın kendisi ölçülmeden duramaz: sevk bir gün sessizce
+# kaldırılırsa tarihsel yol PIT'siz takvime döner ve rapor bunu KORUMALI diye yazmaya devam
+# ederdi. Aşağıdaki iki çivi o boşluğu kapatır — biri sevkin VARLIĞINI, öteki sevkin
+# YÖNLENDİRDİĞİ kaynağın PIT kaydında olmasını bağlar.
+_SEVK_ANAHTARI = "earnings.pit_arsiv"
+
+
+def _sevk_blogu(fn_adi: str):
+    """`strategy.<fn_adi>` gövdesinde `params.get("earnings.pit_arsiv")` testini taşıyan `if`
+    düğümü (yoksa None). Kaynak AST'den okunur, metinden DEĞİL: bir yorum satırında geçen anahtar
+    adı sevk sayılmamalıdır (`pitlaw._anilan_adlar`ın aynı gerekçesi)."""
+    import inspect
+
+    from meridian import strategy
+    tree = ast.parse(textwrap.dedent(inspect.getsource(getattr(strategy, fn_adi))))
+    for n in ast.walk(tree):
+        if not isinstance(n, ast.If):
+            continue
+        for c in ast.walk(n.test):
+            if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute) \
+                    and c.func.attr == "get" \
+                    and any(isinstance(a, ast.Constant) and a.value == _SEVK_ANAHTARI
+                            for a in c.args):
+                return n
+    return None
+
+
+def _ad(cagri: ast.Call) -> tuple[str | None, str] | None:
+    """`earnings_pit.days_since_report_pit(...)` → `("earnings_pit", "days_since_report_pit")`;
+    nitelenmemiş `f(...)` → `(None, "f")`; çözülemeyen biçim → None."""
+    if isinstance(cagri.func, ast.Attribute):
+        return (cagri.func.value.id if isinstance(cagri.func.value, ast.Name) else None,
+                cagri.func.attr)
+    if isinstance(cagri.func, ast.Name):
+        return (None, cagri.func.id)
+    return None
+
+
+def _cagrilar(dugumler: list) -> list[tuple[str | None, str]]:
+    """Bu daldaki TÜM çağrılar. Varlık yüklemleri için yeterli, KAYIT yüklemleri için DEĞİL —
+    onlar `_capa_cagrilari` kullanır (gerekçe orada)."""
+    return [a for st in dugumler for n in ast.walk(st)
+            if isinstance(n, ast.Call) and (a := _ad(n)) is not None]
+
+
+def _capa_cagrilari(dugumler: list) -> list[tuple[str | None, str]]:
+    """ÇAPA SINIFI: bu dalda bir KARAR TESTİNE (`if`/`while`) giren çağrılar.
+
+    SINIF TANIMI, DIŞLAMA LİSTESİ DEĞİL — ve fark ölçülmüş bir kırılganlığı kapatıyor. Yüklem
+    eskiden "PIT dalındaki HER nitelenmiş çağrı `PIT_KAYNAKLAR`ta olmalı" diyordu; o hâlde dala
+    bir gün bir `obs.log(...)`, bir sayaç artışı ya da bir `pd.isna(...)` eklendiği an çivi
+    kırmızıya döner ve mesajı YANLIŞ TEŞHİS verirdi ("sevkin yönlendirdiği kaynak kayıtta yok").
+    Bir dışlama listesi (`{"log", "isna", ...}`) aynı kusuru erteler: liste, yazılmamış her yeni
+    yardımcı çağrı için bayat doğar. Ölçüt bunun yerine ROLDÜR: bu turda çapayı belirleyen çağrı,
+    sonucu kurulumun ateşleyip ateşlemeyeceğine karar veren çağrıdır — `pitlaw`ın kendi sınıf
+    türetiminin (`_testte_gecer`) ölçütüyle aynı ölçüt.
+
+    İKİ BİÇİM DE SAYILIR (`pitlaw._tohumlar` emsali): çağrı doğrudan testin içinde
+    (`if not earnings_pit.days_since_report_pit(...)`) ya da sonucu bir ada atanmış ve O AD testte
+    geçiyor (`x = ...pit(...)` → `if not x:`). İkincisini saymamak, çiviyi bir yeniden yazımla
+    sessizce boşa düşürürdü."""
+    out: list[tuple[str | None, str]] = []
+    for st in dugumler:
+        for n in ast.walk(st):
+            if not isinstance(n, (ast.If, ast.While)):
+                continue
+            for c in ast.walk(n.test):                       # (1) doğrudan testteki çağrı
+                if isinstance(c, ast.Call) and (a := _ad(c)) is not None:
+                    out.append(a)
+            adlar = {m.id for m in ast.walk(n.test) if isinstance(m, ast.Name)}
+            for st2 in dugumler:                             # (2) teste giren ada atanan çağrı
+                for asg in ast.walk(st2):
+                    if isinstance(asg, (ast.Assign, ast.AnnAssign)) \
+                            and isinstance(getattr(asg, "value", None), ast.Call) \
+                            and {t.id for t in ast.walk(asg)
+                                 if isinstance(t, ast.Name) and isinstance(t.ctx, ast.Store)} & adlar \
+                            and (a := _ad(asg.value)) is not None:
+                        out.append(a)
+    return out
+
+
+def _capali_degerlendiriciler() -> list[str]:
+    """Kazanç-çapalı değerlendiricilerin TEK kaydı `arming.PIT_CAPALI_KURULUMLAR`tır (çivi v301
+    onu iki yönlü bağlar). Burada ikinci bir liste yazmak, aynı gerçeğin sessizce ayrışan bir
+    kopyasını doğururdu (tek-kaynak yasası)."""
+    from meridian import arming
+    return [f"evaluate_{s}" for s in sorted(arming.PIT_CAPALI_KURULUMLAR)]
+
+
+def test_PIT_capali_degerlendirici_kaydi_BOS_DEGIL():
+    """Aşağıdaki iki çivi kaydı gezer; kayıt boşalırsa ikisi de SESSİZCE yeşil olurdu."""
+    assert _capali_degerlendiriciler(), \
+        "arming.PIT_CAPALI_KURULUMLAR boş — sevk çivileri hiçbir şeyi koruMUYOR"
+
+
+@pytest.mark.parametrize("fn_adi", _capali_degerlendiriciler())
+def test_PIT_SEVKI_capa_blogunda_DURUYOR(fn_adi):
+    """KORUMANIN KENDİSİ. Sevk kaldırılırsa `backtest.py`/`cf_backfill.py` kayıtları ÇÜRÜR:
+    tarihsel yol yeniden `state/earnings.csv`e (bugünün ileri-pencere önbelleği) döner ve
+    `PIT_KORUMALI_ZINCIRLER`in gerekçesi yalan olur. İKİ DAL DA ölçülür — param varken PIT,
+    yokken canlı: yalnız `if` dalına bakan bir çivi, canlı dalın sessizce PIT'e çevrilmesini de
+    (canlı taban ölçümünü boşa düşürerek) kaçırırdı."""
+    blok = _sevk_blogu(fn_adi)
+    assert blok is not None, (
+        f"strategy.{fn_adi} içinde `params.get(\"{_SEVK_ANAHTARI}\")` sevki YOK — "
+        "pitlaw.PIT_KORUMALI_ZINCIRLER'in backtest.py/cf_backfill.py kayıtları ÇÜRÜDÜ: "
+        "korumasız zincir BORÇTUR (BILINEN_IHLALLER), kapatılmış yol değil")
+    assert ("earnings_pit", "days_since_report_pit") in _capa_cagrilari(blok.body), (
+        f"strategy.{fn_adi}: sevk dalının ÇAPASI PIT arşivi DEĞİL — dalın karar testine giren "
+        f"çağrılar: {_capa_cagrilari(blok.body)}")
+    assert ("earnings_pit", "days_since_report_pit") not in _capa_cagrilari(blok.orelse), (
+        f"strategy.{fn_adi}: param YOKKEN de PIT arşivi soruluyor — canlı yol sessizce PIT'e "
+        "çevrilmiş: canlı taban ölçümü (CANLI_TABAN) o an anlamını yitirir")
+    assert any(fn == "days_since_report" for _sahip, fn in _capa_cagrilari(blok.orelse)), (
+        f"strategy.{fn_adi}: param YOKKEN canlı çapa çağrılmıyor — canlı yol sessizce "
+        f"değişmiş olabilir: {_capa_cagrilari(blok.orelse)}")
+
+
+@pytest.mark.parametrize("fn_adi", _capali_degerlendiriciler())
+def test_SEVKIN_YONLENDIRDIGI_KAYNAK_PIT_KAYDINDA(fn_adi):
+    """Sevk bir kaynağa YÖNLENDİRİR ve o kaynak yasanın kaydında OLMALIDIR. Kayıtsız kalırsa
+    `pitlaw` onun hakkında hiçbir hüküm taşımaz: ne PIT sözleşmeli beyaz listede, ne PIT'siz
+    kaynak defterinde — yani "tarihsel yol artık PIT" cümlesinin arkasında ölçülmüş hiçbir şey
+    kalmaz. Hedef kaynak KAYNAKTAN okunur, elle yazılmaz."""
+    blok = _sevk_blogu(fn_adi)
+    assert blok is not None, f"sevk bloğu yok: strategy.{fn_adi}"
+    hedefler = [(sahip, fn) for sahip, fn in _capa_cagrilari(blok.body) if sahip]
+    assert hedefler, (
+        f"sevk dalının karar testine giren nitelenmiş çağrı YOK: strategy.{fn_adi} — çapa artık "
+        "bir teste girmiyorsa kurulumun ateşleme kararı başka bir yerden veriliyor demektir")
+    kayitsiz = [h for h in hedefler if h not in pitlaw.PIT_KAYNAKLAR]
+    assert kayitsiz == [], (
+        f"sevkin yönlendirdiği kaynak pitlaw.PIT_KAYNAKLAR'da YOK: {kayitsiz} — "
+        "PIT beyanı kayıtsızdır, yasa o kaynak hakkında hiçbir şey söylemiyor")
 
 
 # ---------------------------------------------------------------------------
@@ -395,24 +545,79 @@ def test_canli_agacta_BEYANSIZ_dolayli_zincir_YOK(canli):
 def test_BEYANLARIN_hepsi_hala_GERCEK(canli):
     """ÖLÜ BEYAN ÇÜRÜKTÜR (emsal: codelaw.stale_sinks). Bir bilinen ihlal düzeltildiği ya da bir
     koruma kaldırıldığı gün kaydın da düşmesi gerekir; yoksa bir sonraki okuyucu düzeltilmiş bir
-    şeyi hâlâ ihlal, ya da kaldırılmış bir korumayı hâlâ koruma sanır."""
+    şeyi hâlâ ihlal, ya da kaldırılmış bir korumayı hâlâ koruma sanır.
+
+    İKİ DEFTERİN İKİ AYRI HÜKMÜ ve beklenti KAYITTAN TÜRETİLİR (tek-kaynak yasası): borç defteri
+    BOŞSA raporda beyanlı zincir de OLMAMALIDIR. Sabit bir "beyanlı zincir vardır" beklentisi,
+    borç kapandığı gün doğru işi kırmızıya çevirirdi (EDG-2026-062: iki kayıt `PIT_KORUMALI_
+    ZINCIRLER`e taşındı ve `BILINEN_IHLALLER` boşaldı)."""
     assert canli["curuk_beyan"] == [], \
         f"kodda karşılığı kalmayan beyan: {canli['curuk_beyan']}"
-    assert canli["tarihsel_dolayli_beyanli"], \
-        "BILINEN_IHLALLER dolu ama kodda tek zincir görülmedi — kayıt mı bayat, tarayıcı mı kör?"
+    if pitlaw.BILINEN_IHLALLER:
+        assert canli["tarihsel_dolayli_beyanli"], (
+            "BILINEN_IHLALLER dolu ama kodda tek zincir görülmedi — kayıt mı bayat, "
+            "tarayıcı mı kör?")
+    else:
+        assert canli["tarihsel_dolayli_beyanli"] == [], (
+            "BILINEN_IHLALLER BOŞ ama rapor beyanlı zincir gösteriyor — iki defter ayrıştı: "
+            f"{canli['tarihsel_dolayli_beyanli']}")
+
+
+def test_HER_KORUMALI_KAYIT_bir_CIVI_ADI_TASIR(canli):
+    """YAPI BOŞLUĞU KAPANDI (düzeltme turu 1). Bugüne kadar üç kaydın üçünün de bir çürüme
+    çivisi olması bir GELENEKTİ: `rapor()` korumanın var olup olmadığını hiç sormuyordu, yani
+    dördüncü bir kayıt hiçbir çivi talep etmeden doğabilir ve doğduğu gün kendi kendini
+    doğrulayan bir beyan olurdu. Emsal `KAPI_SOZLESMELERI`/`SINYAL_SOZLESMELERI` denetimidir —
+    "kayıtsız yüzey doğduğu gün çivi öter" disiplini artık bu deftere de uygulanıyor."""
+    assert canli["korumali_civi_curuk"] == [], (
+        f"korumalı zincir kaydı çürük çivi ADI taşıyor: {canli['korumali_civi_curuk']} — "
+        "kayıt, korumasını çürütebilen bir çiviye bağlı DEĞİL")
+    assert set(canli["korumali_civiler"]) == set(canli["korumali_zincirler"]), \
+        "her korumalı kaydın bir çivi alanı olmalı (kayıt kümesi ile çivi kümesi ayrıştı)"
+    assert all(canli["korumali_civiler"].values()), \
+        f"çivi adı BOŞ olan kayıt(lar): {canli['korumali_civiler']}"
+
+
+def test_IKI_DEFTER_AYRIK(canli):
+    """BORÇ DEFTERİ ile KAPATILMIŞ YOL DEFTERİ aynı anahtarı TAŞIYAMAZ.
+
+    `rapor()` bir zinciri önce `PIT_KORUMALI_ZINCIRLER`de arar; aynı anahtar `BILINEN_IHLALLER`de
+    de dururken zincir korumalı kovaya düşer ve borç kaydı `gorulen` kümesine ORTAK ANAHTAR
+    üzerinden girdiği için ÇÜRÜK de sayılmaz — yani ölü bir borç kaydı sessizce yaşardı. Ayrım bu
+    turda taşımayla kuruldu (EDG-2026-062); çakışma sessiz kalmasın."""
+    ortak = sorted(set(pitlaw.BILINEN_IHLALLER) & set(pitlaw.PIT_KORUMALI_ZINCIRLER))
+    assert ortak == [], (
+        f"aynı anahtar iki defterde birden: {ortak} — biri ölü kayıttır ve çürüme denetimi "
+        "onu göremez")
 
 
 def test_KORUMALI_zincir_ihlal_sayilmaz_ama_RAPORDA_durur(canli):
-    """`shadow_variants._judge` `in_blackout`u `if pit:` ile korur — tarihsel turda hiç
-    çağrılmaz. Statik tarayıcı koşulu değerlendiremediği için zinciri GÖRÜR; hüküm beyanla
+    """Koşul-korumalı zincirler: tarayıcı zinciri GÖRÜR (koşulu değerlendiremez), hüküm beyanla
     verilir. Kova ayrı tutulur: `BILINEN_IHLALLER` düzeltilmemiş BORCUN defteridir, bu ise
-    ölçülmüş ve KAPATILMIŞ bir yolun kaydı — ikisini karıştırmak düzeltilmiş işi borç
-    gibi göstermek olurdu."""
+    ölçülmüş ve KAPATILMIŞ bir yolun kaydı — ikisini karıştırmak düzeltilmiş işi borç gibi
+    göstermek olurdu.
+
+    Bugün ÜÇ kayıt, İKİ ayrı koruma biçimi:
+      · `shadow_lifecycle → shadow_variants._judge` — `in_blackout` `if pit:` ile korunur.
+      · `backtest` / `cf_backfill` → `strategy` — çapa `earnings.pit_arsiv` paramıyla PIT
+        arşivine SEVK EDİLİR (EDG-2026-062). Sevkin varlığı ayrıca ve MEKANİK çivilidir
+        (`test_PIT_SEVKI_capa_blogunda_DURUYOR`): kayıt "koruma kalkarsa çürür" diyor, o cümlenin
+        karşılığı bu iki çividir.
+
+    Modül kümesi KAYITTAN türetilir (tek-kaynak) — iki yön birden: raporda görünen her korumalı
+    modül kayıtta, kayıttaki her modül raporda."""
     korumali = canli["tarihsel_dolayli_korumali"]
     assert korumali, "korumalı zincir kaydı dolu ama kodda görülmedi — koruma mı kalktı?"
-    moduller = sorted({k["tarihsel_modul"] for k in korumali})
-    assert moduller == ["shadow_lifecycle.py"], f"beklenmedik korumalı zincir: {korumali}"
-    assert all(k["uclar"] == ["earnings.in_blackout"] for k in korumali), korumali
+    assert {k["tarihsel_modul"] for k in korumali} \
+        == {m for (m, _mk, _fn) in pitlaw.PIT_KORUMALI_ZINCIRLER}, \
+        f"korumalı kayıt ile rapor ayrıştı: {korumali}"
+    uclar: dict[str, set[str]] = {}
+    for k in korumali:
+        uclar.setdefault(k["tarihsel_modul"], set()).update(k["uclar"])
+    assert uclar == {"shadow_lifecycle.py": {"earnings.in_blackout"},
+                     "backtest.py": {"earnings.days_since_report"},
+                     "cf_backfill.py": {"earnings.days_since_report"}}, \
+        f"korumalı zincirlerin uçları beklenenden farklı: {uclar}"
 
 
 def test_canli_TABAN_asilmadi(canli):
@@ -446,7 +651,7 @@ def test_canli_agacta_TARANAMAYAN_dosya_yok(canli):
 def test_rapor_iki_dunyayi_BIRLIKTE_ozetler(canli):
     """`ok` üç hükmün birleşimidir; biri sessizce düşerse `ok` yalancı yeşil olurdu."""
     beklenen = (not canli["tarihsel_dogrudan"] and not canli["tarihsel_dolayli_beyansiz"]
-                and not canli["curuk_beyan"]
+                and not canli["curuk_beyan"] and not canli["korumali_civi_curuk"]
                 and len(canli["canli_karar_cagrilari"]) <= pitlaw.CANLI_TABAN
                 and not canli["unscanned"])
     assert canli["ok"] is beklenen, f"ok hükmü bileşenleriyle tutarsız: {canli}"

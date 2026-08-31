@@ -6221,10 +6221,16 @@ async function opParcalar() {
                   : (radarRows || `<p class="hint">Bugün karartmada sembol yok (takvimde ${radar.known_tickers} sembol).</p>`)}
     ${(() => { const ar = (gk.arming || {}).measurements || {}; const keys = Object.keys(ar);
       if (!keys.length) return "";
+      // `olculemez_pit_yok` (v301, 2026-08-25) BU HARİTADA YOKTU ve operatör ham jetonu + "P —"
+      // görüyordu: "birikiyor" ile "BİRİKEMEZ" ayrımı arka uçta yapılıp ekranda yutuluyordu.
+      // Detayı da ayrı: burada arama p'si YOKTUR (ölçüm hiç koşmadı), okunacak şey ALT SEBEPtir
+      // — `takvim_bos` çaresi bugün uygulanabilir, `arsiv_yok` yapısaldır (iki ayrı iş kalemi).
       const ST = { gate_passed: ["KAPI GEÇTİ — onayın bekleniyor", "t-go"], gate_rejected: ["kapı reddetti", "t-no"],
-                   gate_rejected_confirmation: ["onay yürüyüşü reddetti", "t-no"], insufficient_cf: ["kanıt birikiyor", "t-vi"] };
+                   gate_rejected_confirmation: ["onay yürüyüşü reddetti", "t-no"], insufficient_cf: ["kanıt birikiyor", "t-vi"],
+                   olculemez_pit_yok: ["KANIT BİRİKEMEZ — çapa çözülemiyor", "t-no"] };
       const rows = keys.map(k => { const m = ar[k]; let [lbl, kls] = ST[m.status] || [m.status || "—", "t-vi"];
         let det = m.status === "insufficient_cf" ? `cf ${m.n ?? 0}/30${m.avg_r != null ? " · ort " + m.avg_r + "R" : ""}`
+                  : m.status === "olculemez_pit_yok" ? `cf ${trn(m.n)}/30 · ${m.alt_sebep || "alt sebep yazılmamış"}`
                   : `P ${m.search_p ?? "—"}${m.confirm_p != null ? " · onay " + m.confirm_p : ""}`;
         // "BİRİKİYOR" ile "HİÇ ÜRETİLMİYOR" AYRI ŞEYLER (2026-07-22). n=0 iken "kanıt birikiyor"
         // demek bir VAAT'tir; oysa o kurulum defterde tek satır bile üretmemişse birikecek bir şey
@@ -6233,8 +6239,15 @@ async function opParcalar() {
           lbl = "HİÇ KANIT ÜRETİLMEDİ"; kls = "t-no";
           det = `cf 0/30 — bu kurulum defterde tek satır bile üretmedi (tarama koşuyor, ateşlemiyor)`;
         }
+        // GEREKÇENİN OKUYUCUSU (YASA 6, EDG-2026-062). `_kanit_durumu` iki durumda `neden` yazar:
+        // `olculemez_pit_yok`ta HER ZAMAN, `insufficient_cf`te ise YALNIZ PIT arşivi defteri
+        // kapsıyorken — ve o ikinci cümle etiketin BEDELİNİ taşır: "kanıt birikiyor" derken
+        // kanıtın cf'de birikmesi tarama kuyruğunun `date` sütunu kararına bağlıdır. Etiketi
+        // gösterip cümleyi yutmak, üretilip okunmayan artefakt üretmekti; satır YALNIZ alan
+        // doluyken çizilir (boş satır gürültüdür).
+        const nedenSatiri = m.neden ? `<p class="hint" style="margin:2px 0 10px">${esc(m.neden)}</p>` : "";
         return `<div class="trow" style="grid-template-columns:130px 1fr auto"><span class="tick">${esc(k)}</span>
-          <span class="chain">${esc(det)}</span><span class="tag ${kls}">${esc(lbl)}</span></div>`; }).join("");
+          <span class="chain">${esc(det)}</span><span class="tag ${kls}">${esc(lbl)}</span></div>${nedenSatiri}`; }).join("");
       // BAYATLIK: ölçüm haftalık koşuyor; defter yeniden tohumlandıysa ekrandaki sayı ESKİ dünyaya
       // ait olabilir. Sessizce göstermek, taze ölçümle aynı görünmesi demekti.
       const _ac = (gk.arming || {}).checked_at;

@@ -7,7 +7,11 @@
 > CLAUDE.md metni operatör onayıyla uyarlanarak işlendi. §2.3'teki operatör kararı VERİLDİ:
 > "(b) PIT arşivine bağla" → ön-kayıt kartı `EDG-2026-062`, uygulama planı
 > `docs/superpowers/plans/2026-08-31-edg062-pit-arsiv-baglamasi.md`. §4 madde 7'nin kalemi
-> `docs/KALEM-PIT-PARITY-BAGLAMASI-2026-08-31.md` olarak main'de. Aşağıdaki "seni bekleyenler"
+> `docs/KALEM-PIT-PARITY-BAGLAMASI-2026-08-31.md` olarak main'de.
+> **2026-08-31 akşam eki:** §2.3'ün iki `BILINEN_IHLALLER` kaydı EDG-2026-062 dalgasıyla
+> KAPANDI — tarihsel çapa arşive bağlandı, kayıtlar öz-denetimli korumalı-zincir beyanına
+> taşındı, defter BOŞ. Aşağıdaki 'tek açık ihlal beyanlı' ve 'düzeltilmedi' cümleleri o
+> tarihten itibaren tarihseldir. Aşağıdaki "seni bekleyenler"
 > dili bu tarihten itibaren bayattır; belge zincirin gerekçe arşivi olarak yerinde.
 
 **Oturum:** yan oturum (worktree `affectionate-pike-9248a8`). **Rol-1 DEĞİL.**

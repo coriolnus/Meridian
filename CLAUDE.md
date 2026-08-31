@@ -124,8 +124,9 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
   `tests/test_pit_sinif_turetimi_v342.py`. İki dünya, iki hüküm: **tarihsel yeniden yürütme**
   (replay/geri-dolum/tohum) SIFIR TOLERANS; **canlı karar yüzeyi** beyanlı taban (düşer,
   YÜKSELMEZ). Kaydın kendisi de denetlenir: sınıf ataması ve iki sözleşme kaynaktan türetilir —
-  kayıtsız kapı yüzeyi ya da tarayıcı doğduğu gün çivi öter. Açık bilinen ihlal + düzeltme
-  kararı operatörde: `docs/DEVIR-PIT-CIVISI-2026-08-30.md`.
+  kayıtsız kapı yüzeyi ya da tarayıcı doğduğu gün çivi öter. `BILINEN_IHLALLER` 2026-08-31'de
+  BOŞALDI (EDG-2026-062: tarihsel çapa EDGAR arşivine bağlandı; iki kayıt öz-denetimli
+  korumalı-zincir beyanına taşındı). Tarihçe: `docs/DEVIR-PIT-CIVISI-2026-08-30.md`.
 
 **Sözleşme — çiviler parça parça zorlar, kalanı denetim yakalar:**
 - **Uydurma yasağı:** ölçülemeyen değer `None` + neden. Sıfır ile "bilmiyorum" aynı şey değildir.
