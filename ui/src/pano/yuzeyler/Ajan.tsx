@@ -27,10 +27,18 @@
    NABIZ YOK (periyot 0): bu defter gün içinde saniyede bir değişmiyor — bir
    yansıma turu dakikalar sürüyor. 15 saniyede bir çekmek, okunan bir sohbeti
    altından kaydırmak demekti. Tazeleme elde: sağ üstteki düğme.
+
+   DÖRDÜNCÜ BÖLÜM — FİLO (2026-08-31): yukarıdaki "ne cevap verdi" cevabı hipotez
+   defterinden geliyordu, yani ÖNERİ ÜRETECİNDEN. `GET /api/ajanlar` ucu bugün
+   ikinci bir muhatap açtı: @sef · @bekci · @karne botlarının ve ana hermes
+   beyninin KENDİ oturum defterleri (`~/.hermes` altındaki `state.db`) + Telegram teslim
+   olayları. İkisi AYRI kaynaktır ve bu yüzey onları ayrı sekmede tutuyor —
+   birleştirmek, iki defteri tek gerçek sanmak olurdu. Sohbet kutusu HÂLÂ KAPALI:
+   yeni uç SALT OKUNUR, yazma dalga-B'nin işi (bkz. `SohbetHatti::Yazamaz`).
    ============================================================================ */
 import { useEffect, useMemo } from "react";
 
-import { Bot, MessagesSquare, RefreshCw, Table2 } from "lucide-react";
+import { Bot, MessagesSquare, RefreshCw, Table2, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,13 +48,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YUZEYLER } from "../alanlar";
 import { useRota, useRouter } from "../rota";
 import { useApi } from "../veri";
+import { Filo } from "./ajan/Filo";
 import { Grafikler } from "./ajan/Grafikler";
 import { HipotezDefteri } from "./ajan/HipotezDefteri";
 import { SohbetHatti } from "./ajan/SohbetHatti";
 import { Kapi, Olculemedi, bicimSayi, dizi, hipotezOku, metin, nesne, say, type Hipotez } from "./ajan/ortak";
 import { bolumOzeti, hafizaAyristir } from "./belgeler/damitim";
 
-const BOLUMLER = ["sohbet", "defter", "olcum"] as const;
+const BOLUMLER = ["sohbet", "defter", "olcum", "filo"] as const;
 type BolumAdi = (typeof BOLUMLER)[number];
 
 function bolumSec(b: string): BolumAdi {
@@ -59,6 +68,13 @@ export function Ajan() {
   const { push: git } = useRouter();
   const ajan = useApi<Record<string, unknown>>("/api/agent", 0);
   const hafiza = useApi<Record<string, unknown>>("/api/memory", 0);
+  // BEDEL BEYANI: bu uç sekme açık olmasa da yüzey açılışında BİR KEZ çekiliyor.
+  // Kaba tavan varsayılan yolda ≈240 KB (600 karakter × 20 mesaj × 5 oturum × 4 ajan)
+  // ve bedeli her Ajan yüzeyi ziyaretinde ödeniyor. Sekmeye göre koşullu çekmek
+  // ucuz görünüyordu ama `useApi` yolu `null`ken `yukleniyor: false` başlıyor —
+  // sekme açıldığı KARE boyunca kapı "okunamadı" derdi, yani sağlıklı bir uç
+  // arızalı görünürdü. Yanlış alarm, tasarruftan pahalıdır.
+  const filo = useApi<Record<string, unknown>>("/api/ajanlar", 0);
 
   // ÇAPA SEKMEYİ DE SEÇER: `#/dashboard/chat/defter` bağı sayfayı açıp sekmeyi de
   // değiştirir. Sekmeyi seçmeden yalnız kaydırsaydık, gizli bir sekmedeki bölüme
@@ -94,6 +110,7 @@ export function Ajan() {
           onClick={() => {
             ajan.tazele();
             hafiza.tazele();
+            filo.tazele();
           }}
         >
           <RefreshCw className="size-3.5" aria-hidden />
@@ -101,64 +118,80 @@ export function Ajan() {
         </Button>
       </div>
 
-      <Kapi durum={ajan} ad="`/api/agent`" yukseklik="h-96">
-        {(govde) => (
-          <div className="flex flex-col gap-6">
-            <Kunye govde={govde} hipotezler={hipotezler} />
+      {/* SEKME ROTAYA YAZILIYOR, iç duruma DEĞİL: `#/dashboard/chat/defter`
+          bağı paylaşılabilsin ve geri tuşu sekmeler arasında çalışsın diye.
+          Yerel `useState` kullansaydık derin bağ sekmeyi hiç açmazdı.
 
-            {/* SEKME ROTAYA YAZILIYOR, iç duruma DEĞİL: `#/dashboard/chat/defter`
-                bağı paylaşılabilsin ve geri tuşu sekmeler arasında çalışsın diye.
-                Yerel `useState` kullansaydık derin bağ sekmeyi hiç açmazdı. */}
-            <Tabs value={secili} onValueChange={(v) => git(`/dashboard/chat/${v}`)} className="gap-4">
-              <TabsList variant="line">
-                <TabsTrigger value="sohbet">
-                  <MessagesSquare className="size-3.5" aria-hidden />
-                  Sohbet
-                </TabsTrigger>
-                <TabsTrigger value="defter">
-                  <Table2 className="size-3.5" aria-hidden />
-                  Defter
-                </TabsTrigger>
-                <TabsTrigger value="olcum">
-                  <Bot className="size-3.5" aria-hidden />
-                  Ölçüm
-                </TabsTrigger>
-              </TabsList>
+          KAPI ARTIK SEKME ÇUBUĞUNUN ALTINDA: `Filo` AYRI bir uçtan (`/api/ajanlar`)
+          besleniyor ve `/api/agent`in düşmesi onu GİZLEMEMELİ. Eski yerleşimde tek
+          kapı tüm yüzeyi sarıyordu; hipotez ucu 500 dönseydi, ölçülmüş ve sağlam
+          bir ajan defteri de "okunamadı" kutusunun arkasında kalırdı — bir kaynağın
+          arızası başka bir kaynağın ölçümünü yutamaz. */}
+      <Tabs value={secili} onValueChange={(v) => git(`/dashboard/chat/${v}`)} className="gap-4">
+        <TabsList variant="line">
+          <TabsTrigger value="sohbet">
+            <MessagesSquare className="size-3.5" aria-hidden />
+            Sohbet
+          </TabsTrigger>
+          <TabsTrigger value="defter">
+            <Table2 className="size-3.5" aria-hidden />
+            Defter
+          </TabsTrigger>
+          <TabsTrigger value="olcum">
+            <Bot className="size-3.5" aria-hidden />
+            Ölçüm
+          </TabsTrigger>
+          <TabsTrigger value="filo">
+            <Users className="size-3.5" aria-hidden />
+            Filo
+          </TabsTrigger>
+        </TabsList>
 
-              <TabsContent value="sohbet" id="bolum-sohbet" className="scroll-mt-20">
-                <SohbetHatti
-                  hipotezler={hipotezler}
-                  hafizaBasliklari={cozulmusHafiza === null ? [] : bolumOzeti(cozulmusHafiza)}
-                  hafizaOlculemediNedeni={
-                    hafiza.oturumDustu
-                      ? "`/api/memory` 401 döndü — oturum düştü"
-                      : hafizaMetni === null
-                        ? (hafiza.hata ?? "`/api/memory` gövdesinde `lessons_md` alanı yok ya da boş")
-                        : cozulmusHafiza?.bosBeyani === true
-                          ? "uç `_No lessons yet._` döndü — `state/lessons.md` dosyası yok"
-                          : null
-                  }
-                />
-              </TabsContent>
+        {secili === "filo" ? (
+          <TabsContent value="filo" id="bolum-filo" className="scroll-mt-20">
+            <Filo durum={filo} />
+          </TabsContent>
+        ) : (
+          <Kapi durum={ajan} ad="`/api/agent`" yukseklik="h-96">
+            {(govde) => (
+              <div className="flex flex-col gap-6">
+                <Kunye govde={govde} hipotezler={hipotezler} />
 
-              <TabsContent value="defter" id="bolum-defter" className="scroll-mt-20">
-                {hipotezler.length === 0 ? (
-                  <Olculemedi
-                    neden="Gösterilecek öneri kaydı bulunamadı"
-                    teknik="`/api/agent.hypotheses` boş ya da dizi değil"
+                <TabsContent value="sohbet" id="bolum-sohbet" className="scroll-mt-20">
+                  <SohbetHatti
+                    hipotezler={hipotezler}
+                    hafizaBasliklari={cozulmusHafiza === null ? [] : bolumOzeti(cozulmusHafiza)}
+                    hafizaOlculemediNedeni={
+                      hafiza.oturumDustu
+                        ? "`/api/memory` 401 döndü — oturum düştü"
+                        : hafizaMetni === null
+                          ? (hafiza.hata ?? "`/api/memory` gövdesinde `lessons_md` alanı yok ya da boş")
+                          : cozulmusHafiza?.bosBeyani === true
+                            ? "uç `_No lessons yet._` döndü — `state/lessons.md` dosyası yok"
+                            : null
+                    }
                   />
-                ) : (
-                  <HipotezDefteri hipotezler={hipotezler} />
-                )}
-              </TabsContent>
+                </TabsContent>
 
-              <TabsContent value="olcum" id="bolum-olcum" className="scroll-mt-20">
-                <Grafikler govde={govde} hipotezler={hipotezler} />
-              </TabsContent>
-            </Tabs>
-          </div>
+                <TabsContent value="defter" id="bolum-defter" className="scroll-mt-20">
+                  {hipotezler.length === 0 ? (
+                    <Olculemedi
+                      neden="Gösterilecek öneri kaydı bulunamadı"
+                      teknik="`/api/agent.hypotheses` boş ya da dizi değil"
+                    />
+                  ) : (
+                    <HipotezDefteri hipotezler={hipotezler} />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="olcum" id="bolum-olcum" className="scroll-mt-20">
+                  <Grafikler govde={govde} hipotezler={hipotezler} />
+                </TabsContent>
+              </div>
+            )}
+          </Kapi>
         )}
-      </Kapi>
+      </Tabs>
     </div>
   );
 }

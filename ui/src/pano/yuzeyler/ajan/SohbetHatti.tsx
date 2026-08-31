@@ -395,7 +395,18 @@ function Cip({ etiket, deger }: { etiket: string; deger: string | null }) {
  *  `start|stop|backfill|sync_integrations` tanır; `/api/skills/revision`,
  *  `/api/approvals/{id}` ve `/api/plan/{id}/onayla` karar uçlarıdır, mesaj değil.
  *
- *  Bu yüzden kutu ÇALIŞIR GÖRÜNMÜYOR. Yazılabilen ama hiçbir yere gitmeyen bir
+ *  GÜNCELLEME (2026-08-31, dalga-A): ARTIK BİR AJAN UCU VAR — `GET /api/ajanlar`.
+ *  Ama o uç SALT OKUNUR: botların ve ana beynin oturum defterlerini okur, hiçbir
+ *  şey YAZMAZ (yüzeyi bu sayfanın `Filo` sekmesi). Yani gerekçenin YÖNÜ değişti,
+ *  hükmü değişmedi: okuma yolu açıldı, YAZMA yolu hâlâ yok. Kutuyu bugün açmak,
+ *  var olmayan bir yazma yolunu var göstermek olurdu — üstelik artık daha inandırıcı
+ *  bir yalan olurdu, çünkü yanındaki sekme gerçek konuşmaları gösteriyor.
+ *
+ *  DALGA-B'DE AÇILACAK ve şartı yazılıdır: hermes köprüsü (panodan profile mesaj
+ *  taşıyan yazma ucu) + DURUŞ ÇİVİLERİ (kimin yazabildiği, neyin kaydedildiği,
+ *  yazılan mesajın ajanın kararına ne yaptığı ölçülmeden bu kutu açılmaz).
+ *
+ *  Kutu bu yüzden ÇALIŞIR GÖRÜNMÜYOR. Yazılabilen ama hiçbir yere gitmeyen bir
  *  metin alanı, arayüzün söyleyebileceği en sinsi yalandır: operatör mesajı yazar,
  *  gönderir, cevap bekler — ve beklediği şey hiç var olmamıştır. */
 function Yazamaz() {
@@ -403,7 +414,7 @@ function Yazamaz() {
     <div className="flex flex-col gap-3 p-3">
       <Alert>
         <Ban />
-        <AlertTitle>Bu pano ajana mesaj gönderemez — kutu bilerek kapalı</AlertTitle>
+        <AlertTitle>Bu pano ajana mesaj gönderemez — kutu bilerek kapalı (dalga-B)</AlertTitle>
         <AlertDescription>
           <p>
             `meridian/api.py` içinde serbest metin kabul eden bir ajan ucu yok. En yakın olanlar mesaj
@@ -412,6 +423,12 @@ function Yazamaz() {
             `sync_integrations` tanır. Ajanla konuşmanın bugünkü yolu tek yönlü: sen eşiği/kartı
             değiştirirsin, o bir sonraki turda cevabını bu deftere yazar.
           </p>
+          <p className="mt-2">
+            2026-08-31'de OKUMA yolu açıldı: `GET /api/ajanlar` botların ve ana beynin gerçek
+            oturumlarını getiriyor (yandaki `Filo` sekmesi). O uç SALT OKUNUR — yazma yolu HÂLÂ
+            yok. Bu kutu dalga-B'de, hermes köprüsü ve duruş çivileriyle birlikte açılacak;
+            köprüsüz açmak, artık daha inandırıcı olan aynı yalanı söylemek olurdu.
+          </p>
         </AlertDescription>
       </Alert>
 
@@ -419,7 +436,7 @@ function Yazamaz() {
         <InputGroupTextarea
           disabled
           aria-disabled
-          placeholder="Gönderme ucu yok — bu alan devre dışı (bkz. yukarıdaki gerekçe)"
+          placeholder="Gönderme ucu yok — bu alan dalga-B'ye kadar devre dışı (bkz. yukarıdaki gerekçe)"
           className="min-h-14 px-3 py-2.5 text-sm"
         />
         <InputGroupAddon align="block-end">

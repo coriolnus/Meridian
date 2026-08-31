@@ -7474,3 +7474,338 @@ def api_karar_belgeleri(request: Request):
     # `hata` BAŞARIDA DA VAR ve None: şekil TAM tutulur, yoksa okuyucu `.get("hata")` ile
     # "hata yok" ile "alan yok"u ayırt edemez — bu depodaki baskın hata deseni.
     return {"ok": True, "dizin": gorunur, "belgeler": tarihli + tarihsiz, "hata": None}
+
+
+# ---- AJAN YÜZEYİ: üç bot + ana beyin, SALT OKUNUR --------------------
+# Operatörün bugün üç botun (`sef` · `bekci` · `karne`) ve ana hermes beyninin ne konuştuğunu
+# görmesinin TEK yolu A1'e ssh'layıp `state.db`leri elle açmaktı. Bu uç o kaynakları tek yüzeye
+# taşır. YAZMA UCU YOKTUR ve olmayacaktır: sohbet ayrı bir dalganın (B) işi.
+#
+# ÜÇ KAYNAK, ÜÇ AYRI HÜKÜM — ve bu ayrım ucun tüm anlamıdır:
+#   1. profil defterleri  `~/.hermes/profiles/<ad>/state.db`  (bot başına)
+#   2. ana beyin defteri  `~/.hermes/state.db`                (şema ÖLÇÜLDÜ 2026-08-31: aynı)
+#   3. teslim olayları    `state/events.jsonl` → `<ad>_brifingi_teslim`
+# Bir kaynağın okunamaması ÖTEKİLERİ düşürmez; her biri kendi `durum`/`neden`ini taşır.
+#
+# "BOŞ LİSTE" İLE "ÖLÇÜLEMEDİ" AYNI ŞEY DEĞİLDİR ve bu ucun en kolay bozulma yolu ikisini
+# birleştirmektir. `oturumlar: []` "bu ajanla hiç konuşulmamış" DER — bir iddiadır. `oturumlar:
+# null` + `neden` ise "defteri okuyamadım" der. Defteri okuyamadığımızda ilkini yazmak, operatöre
+# sessiz bir yalan söylemektir; `tests/test_ajan_yuzeyi_api_v347.py` bu çevirmeyi çivilemiştir.
+#
+# SALT-OKUMA BİR KOLAYLIK DEĞİL ŞARTTIR: bu defterlere CANLI hermes yazar. Pano bir okuma
+# isteğiyle onların üzerine kilit koyamaz, `-wal`/`-journal` doğuramaz, tek bayt değiştiremez.
+# Mekanizma `file:…?mode=ro` URI'sidir; çivi dizgeyi DE davranışı DA ölçer (bağlantıya gerçekten
+# yazma denenir), çünkü `mode=ro` bir yorumda da geçebilir ve dize çivisi tek başına kandırılır.
+
+#: Mesaj gövdesi tavanı (karakter). Brifing mesajları on binlerce karakter olabilir; pano zaman
+#: çizelgesi onları ham taşıyamaz. Kaba üst sınır: 600 × `AJAN_MESAJ_N` × `AJAN_OTURUM_TAVANI` ×
+#: ajan sayısı. Kırpma SESSİZ DEĞİLDİR — her mesaj `kirpildi` + `ham_uzunluk` taşır, yani kırpılmış
+#: bir metni tam sanmak imkânsızdır (`/api/roadmap`in `ham_kirpildi` emsali).
+AJAN_MESAJ_TAVANI = 600
+#: Oturum başına dönen mesaj sayısı — defterin KUYRUĞUNDAN (operatör son konuşulanı arar).
+AJAN_MESAJ_N = 20
+#: Varsayılan oturum sayısı. "Hafif varsayılan" bir tasarım kararıdır: pano bu ucu her açılışta
+#: çağırır ve varsayılanın maliyeti her operatör bakışında ödenir.
+AJAN_OTURUM_N = 5
+#: `?limit=` TAVANI. Tavansız bir sayaç bir kaynak tüketim yüzeyidir; kırpma UYGULANDIĞINDA
+#: `suzgec.limit_istenen` ile SÖYLENİR — sessiz kırpma, isteyene "500 oturum aldım" sandırırdı.
+AJAN_OTURUM_TAVANI = 50
+#: Teslim olayı kuyruğu (bayt) ve ajan başına tutulan olay sayısı. `events.jsonl` canlıda ~9 MB
+#: (ölçüldü 2026-08-07) ve tamamını ayrıştırmak her istekte ödenen bir bedel olurdu; ~120 KB/gün
+#: ölçümüyle 512 KB ≈ son 4 gün. Emsal ve gerekçe: `_SON_DONGU_KUYRUK`.
+#: TAVAN SESSİZ DEĞİLDİR: kesildiğinde `teslim_kirpildi` + `teslim_toplam` bunu SÖYLER (mesaj
+#: gövdesindeki `kirpildi`/`ham_uzunluk` ile aynı disiplin). Sessiz kesme, operatöre "bu ajanın
+#: tüm teslim tarihçesi bu" sandırırdı.
+_AJAN_TESLIM_KUYRUK = 512_000
+_AJAN_TESLIM_N = 25
+#: Çevrilemeyen bir damganın KORUNAN ham değerinin tavanı. Ham'ı hiç taşımamak, ölçülemeyen
+#: damganın NE olduğunu da yok ederdi; tavansız taşımak bozuk bir defterden telden geçen
+#: sınırsız bir gövde açardı.
+_AJAN_TS_HAM_TAVANI = 120
+#: Defter meşgulse süresiz beklemek uç ipliğini asardı; zaman aşımı `olculemedi`ye düşer.
+_AJAN_DB_TIMEOUT_S = 2.0
+#: Teslim olayının adı AJAN ADINDAN TÜRER (`sef_brifingi_teslim` → `sef`). Elle yazılmış bir
+#: olay→ajan haritası TEK-KAYNAK YASASINI çiğnerdi: dördüncü bot doğduğu gün harita sessizce
+#: eksik kalır ve o botun teslimleri hiçbir yerde görünmezdi.
+_AJAN_TESLIM_SONEKI = "_brifingi_teslim"
+#: Ana beynin ADI. Kimlik (`ad`, `tur`) ÇİFTİDİR: bir profil bu adı taşısaydı iki kayıt aynı adı
+#: paylaşır ama `tur` (`bot` vs `ana`) onları ayırırdı.
+_AJAN_ANA_ADI = "hermes"
+#: OKUNAN ŞEMANIN SÖZLEŞMESİ — canlı `~/.hermes/state.db`den ölçüldü (2026-08-31, `sqlite_master`).
+#: Yalnız GERÇEKTEN okunan sütunlar: fazlasını istemek, uca hiç dokunmayan bir şema değişikliğinde
+#: sağlam bir kaynağı `olculemedi` ilan ederdi. Eksik olan `neden`de ADIYLA geçer — "şema farklı"
+#: demek, bir sonraki teşhisi hiçbir yere götürmez.
+_AJAN_ZORUNLU_SEMA: dict[str, tuple[str, ...]] = {
+    "sessions": ("id", "model", "started_at"),
+    "messages": ("id", "session_id", "role", "content", "timestamp"),
+}
+
+
+def _ajan_profil_koku() -> Path:
+    """Bot profillerinin ÇALIŞMA kökü. Fonksiyon (modül sabiti değil) ki testler gerçek
+    `~/.hermes`e dokunmadan sentetik bir kök enjekte edebilsin."""
+    return Path.home() / ".hermes" / "profiles"
+
+
+def _ajan_ana_beyin_db() -> Path:
+    """Ana hermes beyninin defteri — profil botlarından AYRI bir muhatap."""
+    return Path.home() / ".hermes" / "state.db"
+
+
+def _ajan_bot_koku() -> Path:
+    """ROSTER'IN TEK KAYNAĞI: dağıtılan profil dizinleri. Bot listesi elle YAZILMAZ, buradan
+    TÜRER — ikinci bir liste (kod içinde bir demet) canlıyla sessizce ayrışırdı."""
+    return Path(config.ROOT) / "deploy" / "hermes" / "profiles"
+
+
+def _ajan_botlari() -> tuple[list[str] | None, str | None]:
+    """`(botlar, neden)`. Dizin okunamazsa `None` döner — BOŞ LİSTE DEĞİL: boş liste "hiç bot yok"
+    der, oysa ölçülen şey "kaç bot olduğunu bilmiyorum"dur."""
+    kok = _ajan_bot_koku()
+    try:
+        return sorted(p.name for p in kok.iterdir() if p.is_dir()), None
+    except OSError as e:
+        return None, (f"bot roster'ı ÖLÇÜLEMEDİ ({type(e).__name__}: {e}); yol: {kok}. "
+                      "Liste 'bot yok' DEĞİL, 'listeyi okuyamadım' demektir.")
+
+
+def _ajan_ts(ham) -> str | None:
+    """sqlite REAL (unix epoch) → ISO-8601 UTC metin. Çevrilemezse `None` (UYDURMA YASAĞI:
+    okunamayan bir damgayı 1970'e sabitlemek, ölçülmemiş bir tarih yazmaktır)."""
+    import datetime as _dt
+    try:
+        return _dt.datetime.fromtimestamp(float(ham), _dt.timezone.utc).isoformat(timespec="seconds")
+    except (TypeError, ValueError, OSError, OverflowError):
+        # sessiz-yutma: damga yok/biçimsiz/menzil dışı — alan None KALIR ve okuyan "ts ölçülemedi"
+        # görür; istisnayı yukarı taşımak tek bozuk satır için TÜM ajanı ölçülemez yapardı
+        return None
+
+
+def _ajan_damga(ham) -> dict:
+    """`{ts, ts_ham}` — çevrilebildiyse ISO, çevrilemediyse `ts: None` ve HAM DEĞER KORUNUR.
+
+    PLAN SÖZLEŞMESİ (T1'DEN MİRAS, 2026-08-31): "`oturum.ts`/`mesaj.ts` = damga çevrilemedi
+    (ham korunur)". Ham'ı düşürmek ölçülemezliği İKİ KAT yapardı: operatör hem damgayı göremez
+    hem defterde NE yazdığını asla öğrenemezdi — `_ajan_ts`in işaretli sessiz-yutması ancak bu
+    alan sayesinde GÖZLENEBİLİR (çivi: `test_bozuk_damga_HAM_korunur_ve_ajan_ok_kalir`).
+
+    Şekil TAM tutulur: `ts_ham` başarıda da VARDIR ve `None`dır — yoksa okuyan `.get("ts_ham")`
+    ile "ham yok" ile "alan yok"u ayırt edemezdi (bu depodaki baskın hata deseni)."""
+    iso = _ajan_ts(ham)
+    if iso is not None or ham is None:
+        return {"ts": iso, "ts_ham": None}
+    return {"ts": None, "ts_ham": str(ham)[:_AJAN_TS_HAM_TAVANI]}
+
+
+def _ajan_mesaj_govdesi(ham) -> dict:
+    """`{metin, kirpildi, ham_uzunluk}` — kırpma HER ZAMAN kendini beyan eder."""
+    s = "" if ham is None else str(ham)
+    return {"metin": s[:AJAN_MESAJ_TAVANI], "kirpildi": len(s) > AJAN_MESAJ_TAVANI,
+            "ham_uzunluk": len(s)}
+
+
+def _ajan_sema_eksigi(conn) -> str | None:
+    """Şema sözleşmesi tutuyor mu? Tutmuyorsa EKSİK OLANIN ADI, tutuyorsa `None`.
+
+    Kontrol `SELECT` denemesinden ÖNCE yapılır ve bu bilinçlidir: eksik sütun çalışma anında bir
+    `OperationalError` olurdu ve o istisnanın metni ("no such column: content") bir `except`in
+    içinde, hükümle karışmış hâlde gelirdi. Burada eksik ALAN ADIYLA, hükümden önce ölçülür."""
+    eksik: list[str] = []
+    for tablo, sutunlar in _AJAN_ZORUNLU_SEMA.items():
+        # Tablo adı MODÜL SABİTİDİR, kullanıcı girdisi değil — `PRAGMA` parametre bağlamayı
+        # desteklemediği için bu ayrım şart: uca gelen hiçbir dize buraya ulaşamaz.
+        var = {satir[1] for satir in conn.execute(f"PRAGMA table_info({tablo})")}
+        if not var:
+            eksik.append(f"`{tablo}` tablosu YOK")
+            continue
+        if yok := [s for s in sutunlar if s not in var]:
+            eksik.append(f"`{tablo}` tablosunda eksik sütun: {', '.join(yok)}")
+    return "; ".join(eksik) or None
+
+
+def _ajan_oturumlar(db: Path, oturum_n: int) -> tuple[list | None, str | None]:
+    """Bir defterden son `oturum_n` oturum + her birinin son `AJAN_MESAJ_N` mesajı.
+
+    `(oturumlar, neden)` döner ve İKİSİ BİRDEN DOLU OLMAZ: ölçülebildiyse liste (boş olabilir —
+    o zaman "hiç oturum yok" DOĞRU cevaptır), ölçülemediyse `None` + neden.
+
+    BAĞLANTI SALT-OKUNUR (`mode=ro`): bu dosyaya canlı hermes yazar."""
+    import sqlite3
+    if not db.exists():
+        return None, (f"oturum defteri ÖLÇÜLEMEDİ: dosya yok — {db}. Bu, 'bu ajanla iletişim yok' "
+                      "DEĞİLDİR; defterin kendisi bulunamadı (profil hiç koşmamış ya da yol farklı).")
+    conn = None
+    try:
+        conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=_AJAN_DB_TIMEOUT_S)
+        if eksik := _ajan_sema_eksigi(conn):
+            return None, (f"oturum defterinin ŞEMASI tanınmadı ({db}): {eksik}. Boş liste "
+                          "döndürmek 'hiç konuşulmamış' derdi; ölçülen şey şemanın farklılığıdır.")
+        oturumlar = []
+        for oid, model, ts in conn.execute(
+                "SELECT id, model, started_at FROM sessions "
+                "ORDER BY started_at DESC, id DESC LIMIT ?", (oturum_n,)).fetchall():
+            # KUYRUKTAN alınır (DESC + LIMIT) ve sunuma KRONOLOJİK çevrilir: operatör son
+            # konuşulanı arar ama bir konuşmayı tersten okumaz.
+            satirlar = conn.execute(
+                "SELECT role, timestamp, content FROM messages WHERE session_id = ? "
+                "ORDER BY timestamp DESC, id DESC LIMIT ?", (oid, AJAN_MESAJ_N)).fetchall()
+            oturumlar.append({
+                "id": oid, **_ajan_damga(ts), "model": model,
+                "mesajlar": [{"rol": rol, **_ajan_damga(mts), **_ajan_mesaj_govdesi(icerik)}
+                             for rol, mts, icerik in reversed(satirlar)]})
+        return oturumlar, None
+    except (sqlite3.Error, OSError, ValueError) as e:
+        # İSTİSNA YUTULMAZ, HÜKME ÇEVRİLİR: türü ve metni `neden`e taşınır (YASA 4'ün sinyal
+        # şartı: `e` gövdede kullanılıyor). Türü yazmak bir sonraki teşhisi "dosya mı bozuk,
+        # izin mi yok, kilit mi var" sorusundan kurtarır.
+        return None, f"oturum defteri ÖLÇÜLEMEDİ ({type(e).__name__}: {e}); yol: {db}"
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+def _ajan_teslimleri() -> tuple[dict[str, list] | None, str | None]:
+    """`state/events.jsonl` kuyruğundan `<ad>_brifingi_teslim` olayları, ajan adına kovalanmış.
+
+    Defter okunamazsa `None` — boş sözlük "hiç teslim yapılmadı" derdi.
+
+    SIRA EN YENİ ÖNCE (plan sözleşmesi: `teslimler` YENİDEN→ESKİYE). Defter kronolojik yazılır,
+    yani ters çevirme ŞARTTIR: `reversed` düşerse uç dolu ama EN ESKİ listeyi döndürür — operatör
+    hiçbir boşluk görmeden yanlış uçtan bakar. Çivi: `test_teslimler_YENIDEN_ESKIYE_siralaniyor`.
+
+    TAVAN BURADA UYGULANMAZ, çağıran uygular ve BEYAN EDER: bu fonksiyon kuyrukta GÖRDÜĞÜNÜN
+    tamamını döndürür ki `teslim_toplam` gerçek sayıyı söyleyebilsin. Kesmeyi ölçümün içine
+    gömmek, kesildiğini söyleyecek sayıyı da yok ederdi.
+
+    BEDEL BEYANI (inceleme K-5, 2026-08-31): projeksiyon dört alanlık BEYAZ LİSTEYDİ ve
+    `ops/sef_brifingi.py::main`in bastığı `olculemeyen` alanını — "hangi kaynaklar ölçülemedi"
+    listesini — sessizce düşürüyordu. Ölçülemezliği gösteren bir alanın, ölçülemezliği göstermek
+    için yazılmış bir uçta düşmesi Bedel yasasının tam konusuydu; alan artık TAŞINIYOR (olayda
+    yoksa `None`). HÂLÂ DÜŞENLER, adlarıyla: `siralama`/`sunum` (üretici içi sıralama kaynağı) ·
+    `bastirilan` (bekci) · `giren`/`gecis`/`bicimsiz` (karne). Bunlar bilinçli dışarıda: pano
+    zaman çizelgesi teslimin KİMLİĞİNİ ve KAPSAMINI çizer, üreticinin iç muhasebesini değil."""
+    p = Path(config.STATE) / "events.jsonl"
+    try:
+        boyut = p.stat().st_size
+        with open(p, "rb") as f:
+            if boyut > _AJAN_TESLIM_KUYRUK:
+                f.seek(boyut - _AJAN_TESLIM_KUYRUK)
+                f.readline()          # kuyruğun başındaki YARIM satır atılır
+            satirlar = f.read().decode("utf-8", "replace").splitlines()
+    except OSError as e:
+        return None, (f"teslim olayları ÖLÇÜLEMEDİ ({type(e).__name__}: {e}); yol: {p}. "
+                      "Boş liste 'hiç brifing teslim edilmedi' derdi — ölçülen şey bu değil.")
+    kova: dict[str, list] = {}
+    for satir in satirlar:
+        if _AJAN_TESLIM_SONEKI not in satir:
+            continue
+        try:
+            ev = json.loads(satir)
+        except ValueError:
+            # sessiz-yutma: kırpılmış/bozuk TEK satır — tarama sonraki satırla sürer; bozuk bir
+            # satır yüzünden tüm teslim tarihçesini "ölçülemedi" ilan etmek orantısız olurdu
+            continue
+        ad_olay = ev.get("event") if isinstance(ev, dict) else None
+        if not isinstance(ad_olay, str) or not ad_olay.endswith(_AJAN_TESLIM_SONEKI):
+            continue
+        kova.setdefault(ad_olay[: -len(_AJAN_TESLIM_SONEKI)], []).append(
+            {"ts": ev.get("ts"), "event": ad_olay, "damgalanan": ev.get("damgalanan"),
+             "detail": ev.get("detail"), "olculemeyen": ev.get("olculemeyen")})
+    return {ad: list(reversed(v)) for ad, v in kova.items()}, None
+
+
+@app.get("/api/ajanlar")
+def api_ajanlar(request: Request, limit: int = AJAN_OTURUM_N, ajan: str | None = None):
+    """Üç bot + ana hermes beyni: son oturumlar, mesajlar, model rozetleri ve teslim damgaları.
+    SALT OKUNUR; yazma/sohbet ucu YOKTUR (dalga-B).
+
+    `?limit=` oturum sayısı (tavan `AJAN_OTURUM_TAVANI`; kırpılırsa `suzgec.limit_istenen` söyler)
+    · `?ajan=` TÜRETİLMİŞ roster üzerinde bir ÜYELİK SÜZGECİDİR — dosya sistemine ham geçmez ve
+    eşleşmeyen bir dize hiçbir defter AÇTIRMAZ (çivi: `test_ajan_parametresi_SUZGECTIR_yol_degil`).
+
+    ÜÇ HÜKÜM ÜÇ YERDE, ve karıştırılmazlar:
+      · `ok`/`hata` — LİSTENİN kendisi hakkında: roster ve olay defteri okunabildi mi. Bir ajanın
+        defterinin okunamaması `ok`u DÜŞÜRMEZ; o, o ajanın kendi hükmüdür.
+      · ajan başına `durum`/`neden` — YALNIZ oturum kaynağı hakkında. `teslimler` AYRI bir
+        kaynaktan gelir ve `durum: olculemedi` olan bir ajanda bile ölçülmüş olabilir.
+      · `kaynak.botlar` — `null` ise roster ölçülemedi (boş liste "bot yok" derdi).
+
+    Ölçülemeyen her yerde `null` + `neden` durur, boş liste DEĞİL: boş liste 'iletişim yok' diye
+    okunur ve bu AYRI BİR İDDİADIR. `eslesmeyen_teslimler` aynı disiplinin üçüncü ayağıdır: hiçbir
+    profile karşılık gelmeyen bir teslim olayı (`oneri_brifingi_teslim` gibi) sessizce DÜŞMEZ —
+    ama SONEK DIŞI teslimler (`alarm_backlog_digest_teslim`, `ops/olcum.py`) bu sözleşmenin
+    KAPSAMI DIŞINDADIR ve buraya hiç girmez; "hiçbir teslim düşmez" cümlesi o kümede geçersizdir.
+
+    SIRA SÖZLEŞMESİ (plan: T1'DEN MİRAS, T2 bunu DEĞİŞTİRMEZ) — üçü de çivili:
+      · `oturumlar` YENİDEN→ESKİYE · `mesajlar` ESKİDEN→YENİYE (okuma akışı) ·
+        `teslimler` YENİDEN→ESKİYE.
+
+    SKALER `null` ANLAMLARI (liste `null`larından AYRI, ve birbirinden de ayrı):
+      · `model` — en yeni oturumun modeli kayıtlı değil ya da hiç oturum yok; `durum` ayırt eder.
+      · `son_oturum_ts` — hiç oturum görülmedi (ya da damgası çevrilemedi: `oturumlar[0].ts_ham`).
+      · `oturum.ts` / `mesaj.ts` — damga ÇEVRİLEMEDİ; ham değer `ts_ham`ta KORUNUR.
+      · `teslim.damgalanan` / `detail` / `olculemeyen` — üretici o alanı olaya hiç basmadı.
+
+    KIRPMALAR KENDİLERİNİ SÖYLER, üçü de: mesaj gövdesi (`kirpildi`+`ham_uzunluk`) · oturum
+    sayısı (`suzgec.limit_istenen`) · teslim listesi (`teslim_kirpildi`+`teslim_toplam`,
+    tavan `kaynak.teslim_tavani`; eşleşmeyenlerde `kaynak.eslesmeyen_toplam`)."""
+    _auth(request)
+    n = max(1, min(limit, AJAN_OTURUM_TAVANI))
+    botlar, roster_neden = _ajan_botlari()
+    profil_koku = _ajan_profil_koku()
+    ana_db = _ajan_ana_beyin_db()
+
+    # PLAN ÖNCE KURULUR, SÜZGEÇ SONRA UYGULANIR, DEFTERLER EN SON AÇILIR. Sıra bir kapıdır:
+    # süzgeç defter açılmadan ÖNCE işlediği için `?ajan=` ile gelen bir dize hiçbir dosya yoluna
+    # dönüşemez — yalnız zaten türetilmiş adlarla karşılaştırılır.
+    plan = [{"ad": b, "tur": "bot", "db": profil_koku / b / "state.db"} for b in (botlar or [])]
+    plan.append({"ad": _AJAN_ANA_ADI, "tur": "ana", "db": ana_db})
+    secili = [k for k in plan if k["ad"] == ajan] if ajan else plan
+
+    teslimler, events_neden = _ajan_teslimleri()
+    ajanlar = []
+    for k in secili:
+        oturumlar, neden = _ajan_oturumlar(k["db"], n)
+        # TAVAN BURADA KESER ve KESTİĞİNİ SÖYLER. `ham_teslim` kuyrukta görülenin tamamı;
+        # `teslim_toplam` o gerçek sayıyı taşır, `teslim_kirpildi` kesmenin OLUP OLMADIĞINI.
+        # Sessiz `[:25]`, operatöre "bu ajanın tüm teslim tarihçesi bu" sandırırdı.
+        ham_teslim = None if teslimler is None else teslimler.get(k["ad"], [])
+        ajanlar.append({
+            "ad": k["ad"], "tur": k["tur"],
+            "model": oturumlar[0]["model"] if oturumlar else None,
+            "son_oturum_ts": oturumlar[0]["ts"] if oturumlar else None,
+            "oturumlar": oturumlar,
+            "teslimler": None if ham_teslim is None else ham_teslim[:_AJAN_TESLIM_N],
+            "teslim_toplam": None if ham_teslim is None else len(ham_teslim),
+            "teslim_kirpildi": None if ham_teslim is None else len(ham_teslim) > _AJAN_TESLIM_N,
+            "durum": "ok" if neden is None else "olculemedi",
+            "neden": neden,
+        })
+
+    # EŞLEŞMEYEN TESLİMLER TAM ROSTER'A GÖRE ÖLÇÜLÜR, süzgeçlenmiş listeye göre değil: `?ajan=sef`
+    # ile bakan operatöre bekci'nin teslimlerini "sahipsiz" diye göstermek uydurma olurdu. Roster
+    # ölçülemediyse hüküm de verilemez (`None`) — kimin sahipsiz olduğu ancak tam liste bilinirken
+    # söylenebilir.
+    if teslimler is None or botlar is None:
+        eslesmeyen, eslesmeyen_toplam = None, None
+    else:
+        bilinen = set(botlar) | {_AJAN_ANA_ADI}
+        ham_eslesmeyen = [t for ad, olaylar in sorted(teslimler.items()) if ad not in bilinen
+                          for t in olaylar]
+        eslesmeyen_toplam = len(ham_eslesmeyen)
+        eslesmeyen = ham_eslesmeyen[:_AJAN_TESLIM_N]
+
+    nedenler = [x for x in (roster_neden, events_neden) if x]
+    return {
+        "ok": not nedenler,
+        "hata": "; ".join(nedenler) if nedenler else None,
+        "ajanlar": ajanlar,
+        "eslesmeyen_teslimler": eslesmeyen,
+        "kaynak": {"profil_koku": str(profil_koku), "ana_beyin": str(ana_db),
+                   "bot_koku": str(_ajan_bot_koku()), "botlar": botlar,
+                   "events": str(Path(config.STATE) / "events.jsonl"),
+                   "events_neden": events_neden, "teslim_tavani": _AJAN_TESLIM_N,
+                   "eslesmeyen_toplam": eslesmeyen_toplam},
+        "suzgec": {"limit": n, "limit_istenen": limit, "ajan": ajan,
+                   "eslesen_n": len(ajanlar), "toplam_n": len(plan)},
+    }

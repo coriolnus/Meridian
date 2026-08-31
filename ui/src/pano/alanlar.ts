@@ -188,13 +188,17 @@ export const YUZEYLER = {
     soru: "Ajana ne sorabilirim, ne cevap verdi?",
     ikon: MessageSquare,
     grup: "Sayfalar",
-    // ÜÇ SEKME = ÜÇ BÖLÜM ve derin bağ sekmeyi de SEÇİYOR (`Ajan.tsx::bolumSec`).
+    // DÖRT SEKME = DÖRT BÖLÜM ve derin bağ sekmeyi de SEÇİYOR (`Ajan.tsx::bolumSec`).
     // Çapalar gövdede zaten vardı; eksik olan kayıttı, yani kenar çubuğu üç sekmenin
     // hiçbirine bağ üretmiyordu. Sıra sekme çubuğundaki sıradır.
+    // `filo` 2026-08-31'de eklendi: ilk üçü HİPOTEZ defterini okur (öneri üreteci),
+    // dördüncüsü ajanların KENDİ oturum defterlerini (`/api/ajanlar`). İki ayrı
+    // muhatap, iki ayrı kaynak — aynı sekmede birleştirmek onları tek gerçek sanmaktı.
     bolumler: [
       { kimlik: "sohbet", baslik: "Sohbet", soru: "Ajan ne önerdi, kontrol ne cevap verdi?", ikon: MessagesSquare },
       { kimlik: "defter", baslik: "Defter", soru: "Aynı kayıtlar sıralandığında hangi öneri öne çıkıyor?", ikon: Table2 },
       { kimlik: "olcum", baslik: "Ölçüm", soru: "Kim konuştu, kontrol ne dedi, tahmin tuttu mu?", ikon: Bot },
+      { kimlik: "filo", baslik: "Filo", soru: "Botlar ve ana beyin ne konuştu, ne teslim etti?", ikon: Users },
     ],
   },
   calendar: {
