@@ -2045,6 +2045,7 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   docstring'indeki tur-12 ayrışma sınıfı. *KALDIR ya da DAMGALA (25a/25b deseni).*
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
+- **`research/edgar_facts/earnings_8k_tarihleri.csv` motorda hiç okunmuyor** (PIT çivisi ölçümü, 2026-08-31 — Yasa 6 adayı): PIT-damgalı 8-K arşivi var ama hiçbir yol tüketmiyor; PIT ihlal düzeltmesinin (b) yolu onu okuyucuya kavuşturur. Gerekçe+ayrıntı: docs/DEVIR-PIT-CIVISI-2026-08-30.md §1.4. Boyut: karta bağlı. Bağımlılık: operatörün (a)/(b) kararı.
 
 **BU BÖLÜM 2026-08-13'te BOŞALTILDI; 2026-08-14'ten beri 30-48 dalgası yine burada birikiyor —
 sahipli kalemler ilk fırsatta WP'lerine taşınmalı.** Burası artık yalnız **sahibi henüz belirlenmemiş** yeni

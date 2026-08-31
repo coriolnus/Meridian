@@ -71,6 +71,8 @@ Kurallar burada tetiklenir. Sol sütundaki şeyi yapmak üzereysen sağ sütunu 
 | Üretilmiş dosyayı düzenlemek/birleştirmek | Asla elle — yeniden üret, sonucu kıyasla (rebase'de de). |
 | Test sonucuna karar vermek | Hüküm ÜÇLÜDÜR (§6). `tail` ile asla; harness bildirimi hüküm değildir. |
 | Çivi yazdıktan sonra "yeşil" demek | Mutasyonla ısırdığını gösterdin mi? Bir turda 4 çivi yanlış sebeple yeşildi (2026-08-30). |
+| Temel-veri (earnings/insider/short-interest/float) okumak | Kaynak PIT mi (as-of alanı var ve korunuyor mu)? Tarihsel yeniden yürütmede PIT'siz kaynak SIFIR TOLERANS (§4, `pitlaw`). |
+| Yeni kapı yüzeyi (GO/NO_GO/REVIEW döndüren fn) ya da yeni tarayıcı yazmak | `pitlaw` sözleşme kaydına eklendi mi? Eklenmezse yasa o yüzeyde KÖR — çivi bilinen vokabülerle konuşursan öter, konuşmazsan ÖTMEZ. |
 | Gürültü/çıktı azaltan değişiklik | Ne KAYBETTİĞİNİ de ölçtün mü? Kazanç ölçülüp bedel ölçülmezse körlük sessizdir (vaka @bekci, 2026-08-30). |
 
 ---
@@ -116,6 +118,13 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
   `# sessiz-yutma: <≥20 karakter gerekçe>`.
 - **Yasa 6 — okuyucusuz yazım yok:** okunmayan artefakt üretilmemişten farksızdır; meşru
   istisna BEYANLA olur (`DECLARED_SINKS`, gerekçeli).
+- **PIT'siz fundamentals proxy yasak** — mekanikleşti 2026-08-31: denetçi
+  `meridian/pitlaw.py::rapor`, çiviler `tests/test_pit_yasasi_v341.py` +
+  `tests/test_pit_sinif_turetimi_v342.py`. İki dünya, iki hüküm: **tarihsel yeniden yürütme**
+  (replay/geri-dolum/tohum) SIFIR TOLERANS; **canlı karar yüzeyi** beyanlı taban (düşer,
+  YÜKSELMEZ). Kaydın kendisi de denetlenir: sınıf ataması ve iki sözleşme kaynaktan türetilir —
+  kayıtsız kapı yüzeyi ya da tarayıcı doğduğu gün çivi öter. Açık bilinen ihlal + düzeltme
+  kararı operatörde: `docs/DEVIR-PIT-CIVISI-2026-08-30.md`.
 
 **Sözleşme — çiviler parça parça zorlar, kalanı denetim yakalar:**
 - **Uydurma yasağı:** ölçülemeyen değer `None` + neden. Sıfır ile "bilmiyorum" aynı şey değildir.
@@ -124,8 +133,7 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
   (vaka ×3: günlük↔CLAUDE.md zıt suite emri · F9 başlık/liste · damga mantığı).
 - **Bedel yasası** (terfi 2026-08-30): çıktıyı/gürültüyü azaltan değişiklik ne KAYBETTİĞİNİ
   de ölçer — kazanç ölçülüp bedel ölçülmezse körlüğün belirtisi hiçbir şeydir (vaka @bekci).
-- **PIT'siz fundamentals proxy yasak** — mekanik zorlaması YOK (ölçüldü 2026-08-30; çivi işi
-  açık, operatör onaylı).
+
 
 ---
 
