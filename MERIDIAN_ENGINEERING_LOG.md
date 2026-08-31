@@ -1085,6 +1085,13 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   ailesini yeşil koştu ama `test_arayuz_dili_v323` (arayüz-dili yasası: `neden` insan cümlesidir,
   iç ayrıntı `teknik=`e) kapsamda değildi — tam suite 4 kırmızıyla yakaladı. UI dizgesi üreten
   her görev brief'ine v323 kapsam şartı yazılır; `.tsx/.ts` dizge değişikliği = v323 koşulur.
+- **ÖNCEDEN-DOĞRU DURUM, KOŞUMUN KANITI DEĞİLDİR (2026-08-31, Rol-1 kanıt hatası).**
+  `profil-guncelle --uygula` ilk gerçek koşumunda "canlı config repo ile md5-özdeş" bulgusunu
+  başarı kanıtı saydım — oysa özdeşlik koşumdan ÖNCE de vardı (dry-run sabah BİREBİR demişti);
+  gerçekte güncelleme hiç koşmamıştı (etkileşimsiz ssh PATH'inde `hermes` yok, RC=127) ve aracın
+  kendi hükmü bunu KIRMIZI basmıştı. Kural: koşum kanıtı, koşumun DEĞİŞTİRDİĞİ ya da ÜRETTİĞİ
+  şeyden gelir (taze yedek, damga, hüküm satırı); koşumdan bağımsız da doğru olacak bir gözlem
+  kanıt sepetine girmez. Araç haklıydı, ben acele ettim — hüküm satırı sorulmadan kapanış yazılmaz.
 - **YEŞİL ÇİVİ TAKIMI, GERÇEK KOŞUMUN YERİNE GEÇMEZ (2026-08-30).** Bir ops betiğinin sözleşmesi
   `main()` değil KOMUT SATIRIDIR; bir arka plan işinin hükmü sarmalayıcının çıkış kodu değil
   aracın KENDİ kodudur. Bu turda ikisi de yanılttı (ayrıntı §BU OTURUMDA). Kural: teslimden önce

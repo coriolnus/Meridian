@@ -760,3 +760,33 @@ def test_j2_TESTTE_SSH_HIC_CAGRILMAZ(tmp_path, bayrak):
     assert r.returncode == 0, f"{bayrak} rc={r.returncode}\n{r.stdout}\n{r.stderr}"
     assert not iz.exists(), (
         f"{bayrak} GERÇEKTEN ssh çalıştırdı: {iz.read_text(encoding='utf-8')!r}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  K) UZAK PATH — canlı ilk koşumun bulduğu arıza (2026-08-31, operatör terminali)
+#     Etkileşimsiz ssh kabuğu ~/.local/bin'i YÜKLEMEZ; `hermes` 127 ile düşer ve eski hüküm
+#     bunu "dizge yok — hermes değiştirmiş olabilir" diye YANLIŞ sınıfa koyuyordu.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_k1_UZAK_KOMUT_HERMESTEN_ONCE_PATH_ONEKI_TASIR():
+    """`hermes` çağrısı, ~/.local/bin'i PATH'e ekleyen bir önekten SONRA gelmeli — yoksa
+    etkileşimsiz kabukta komut hiç bulunmaz (canlıda ölçüldü: RC=127)."""
+    mod = _yukle()
+    komut = mod.profil_guncelle_komutu("sef")
+    onek = komut.find(".local/bin")
+    hermes = komut.find("hermes profile update")
+    assert onek != -1, f"uzak komutta ~/.local/bin PATH öneki YOK:\n{komut}"
+    assert hermes != -1 and onek < hermes, (
+        f"PATH öneki hermes çağrısından SONRA — etkisiz:\n{komut}")
+
+
+def test_k2_KOMUT_BULUNAMADI_ADIYLA_SOYLENIR_GENEL_DIZGE_TESHISINE_DUSMEZ():
+    """RC=127 / 'command not found' DİZGE-YOK'tan ayrı bir arızadır: hermes hiç KOŞMAMIŞTIR.
+    Genel 'başarı dizgesi yok' teşhisi operatörü hermes'i suçlamaya yollar; doğru teşhis PATH."""
+    mod = _yukle()
+    cikti = f"{mod.TAR_ISARETI}\nbash: line 1: hermes: command not found\n{mod.RC_ISARETI} 127\n"
+    ok, neden = mod.guncelleme_hukmu(cikti, 127)
+    assert ok is False
+    assert "BULUNAMADI" in neden.upper() and "PATH" in neden.upper(), (
+        f"hüküm kırmızı ama neden 127'yi ADIYLA söylemiyor: {neden!r}")
+    assert "değiştirmiş de olabilir" not in neden, "genel dizge-teşhisine düştü — yanlış sınıf"

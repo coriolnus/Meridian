@@ -441,7 +441,9 @@ def profil_guncelle_komutu(bot: str) -> str:
     return "; ".join([
         f'mkdir -p /home/ubuntu/backups && tar czf {yedek} -C {p["kok"]} {bot} '
         f'&& echo "{TAR_ISARETI}" '
-        f'&& printf "y\\n" | hermes profile update {bot} --force-config',
+        # PATH öneki ŞART (canlı ilk koşum, 2026-08-31): etkileşimsiz ssh kabuğu ~/.local/bin'i
+        # YÜKLEMEZ; öneksiz `hermes` 127 ile düşer ve güncelleme HİÇ koşmaz.
+        f'&& printf "y\\n" | PATH="$HOME/.local/bin:$PATH" hermes profile update {bot} --force-config',
         f'echo "{RC_ISARETI} $?"',
         f'echo "{DOGRULAMA_ISARETI}"',
         f'grep -nE "^  (provider|default|max_tokens):" {p["ev"]}/config.yaml',
@@ -482,6 +484,12 @@ def guncelleme_hukmu(cikti: str, rc: int | None) -> tuple[bool, str]:
     if rc is None:
         return False, (f"uzak çıkış kodu ÖLÇÜLEMEDİ ({RC_ISARETI} işareti yok) — ssh'ın kendi "
                        "RC'si bu zincirde hep 0'dır, ona güvenmek sahte başarıdır")
+    if rc == 127 or "command not found" in cikti:
+        # Dizge-yok'tan AYRI sınıf (canlı ilk koşum, 2026-08-31): hermes hiç KOŞMAMIŞTIR.
+        # Genel teşhise düşerse operatör hermes'in çıktı biçimini suçlar; ölçülen şey PATH'tir.
+        return False, ("hermes uzak kabukta BULUNAMADI (RC=127/'command not found') — "
+                       "etkileşimsiz ssh PATH'i ~/.local/bin'i yüklemez; komuttaki PATH öneki "
+                       "bunu çözer, öneksiz eski araç sürümü ya da taşınmış hermes kurulumu ara")
     if BASARI_DIZGESI not in cikti:
         return False, (f"başarı dizgesi ({BASARI_DIZGESI!r}) çıktıda YOK — güncelleme "
                        "DOĞRULANAMADI (hermes dizgeyi değiştirmiş de olabilir; ham çıktı yukarıda)")
