@@ -56,6 +56,10 @@ uygulama_kapsami: >
 
 GUNCEL_HAKEM_RECETESI: research/olcumler/edg042_kosum_2026-08-22/   # pencere_cek.py + pencere_altbant.py bugün burada donuk; R1 uygulaması yeni tarihli dizin açtığında BU SATIR o dizine güncellenir (işaretçi tekil — eski satır DEVREDİLDİ şerhi alır)
 
+k_registry: {registered_at: "2026-08-31", trial_ids: [EXE-010-hakem-ts-anahtari]}
+# trial_id SÖZDÜR, K harcaması değil (EXE-009 emsali — icra_sozlesmesi ailesi nominal kimlik
+# taşır; v279 çivisi: kayıtlı kart ya söz ya koşum gösterir). K=0 beyanı aşağıda aynen.
+
 k_disiplini: >
   K = 0 deneme. Sözleşme/veri-yolu revizyonudur: hiçbir kurulum/parametre hakkında hüküm
   üretmez, yalnız valfin İŞLEyebilirliğini kurar. Ana kartın k_registry'si değişmez.
