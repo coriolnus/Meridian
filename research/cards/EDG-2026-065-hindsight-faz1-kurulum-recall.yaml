@@ -84,6 +84,41 @@ kurulum_kayitlari:
   os_kullanici_sapmasi: >
     Eskizdeki User=hindsight yerine User=ubuntu — BLOK-1 OS kullanıcısı açmadı (yalnız DB rolü);
     /opt/hindsight ubuntu sahipli. Birim dosyasında beyanlı (deploy/hindsight/hindsight-api.service).
+  kurulum_tamam_2026_08_31: >
+    BEŞ SAĞLIK KANITI BEŞİ DE YEŞİL (17:03-17:15Z): (1) üçlü health — live 0.9.2 + ready
+    database=connected havuz=10 + version feature bayraklarıyla · (2) hindsight-api.service
+    active, MemoryMax=8G CPUQuota=200% systemctl show ile doğrulandı · (3) hindsight-yedek.timer
+    armed (sonraki 03:30Z) VE aynı gün elle test-ateşlendi: 29.516 bayt gerçek dump üretti ·
+    (4) F9 kaydı: üç birim dagit.sh F9_LISTE'ye eklendi (.env bilerek dışarıda — sır) ·
+    (5) Memory Defense meridian-arsiv bank'inde İLK GÜNDEN enabled=true (geri-okuma kanıtı;
+    kural: sensitive_data->redact). Kurulum yolu: venv + slim[local-onnx]==0.9.2 + flashrank,
+    torch-yokluğu çivisi BOŞ döndü. VAKA: ilk başlatma PermissionError ~/.postgresql/postgresql.key
+    ile öldü — ProtectHome=true + asyncpg sslmode=prefer çakışması; çözüm DSN'e ?sslmode=disable
+    (iskelete işlendi).
+  smoke_ve_mutasyon_2026_08_31: >
+    TÜRKÇE SMOKE: retain smoke-001 başarılı (usage: girdi 5869 / çıktı 762 / toplam 6631 token —
+    maliyet sütunu ölçülebilir); recall "PIT yasası ne zaman mekanikleşti?" 4 olgu, İLK sonuç
+    beklenen pasaj (pitlaw + v341/v342 + 2026-08-31) — YOL-TUTARLI POZİTİF KONTROL GEÇTİ.
+    NEGATİF PK GEÇTİ: gömülü sahte anahtar belge metninde api_key=[REDACTED:openai_key] olarak
+    saklandı, ham değer hiçbir yüzeyde yok; çit-içi sahte-talimat cümlesi yalnız VERİ olarak döndü.
+    MÜKERRER ÇİVİSİ GEÇTİ: aynı document_id ikinci retain 0 token, belge 1->1, düğüm 4->4.
+    MUTASYON TURU (çivi yeşili kanıt değildir): (1) EMBEDDINGS_PROVIDER=local -> ImportError
+    sentence-transformers ile başlatma ÖLDÜ (slim[local-onnx] kanıtı, §8.3) — geri alındı;
+    (2) RERANKER_FLASHRANK_MODEL=bozuk -> journal "now serving from member 1 (rrf)" + recall
+    4 sonuçla ÇALIŞTI (fail-open kanıtı) — geri alındı, servis active.
+  llm_model_kaydi: >
+    Operatör yönergesi (2026-08-31): ücretsiz model şart; NVIDIA veya Google olabilir; OpenRouter
+    anahtarı yeniden girilmez (sef profilinin .env'inden A1 içinde akıtıldı, değer Rol-1'e hiç
+    görünmedi; sır adımını sınıflandırıcı engeli üzerine operatör bloğu koştu). Katalog ölçümü:
+    ücretsiz Google'da ≥65k çıktı şartını karşılayan uygun model YOK (gemma-4 32k); seçim
+    nvidia/nemotron-3-ultra-550b-a55b:free (botlarla aynı; çıktı 65536, bağlam 1M). İlk retain
+    "Service temporarily overloaded" ile KIRMIZI döndü, tekrar YEŞİL — geçici; kalıcılaşırsa yedek
+    aday nvidia/nemotron-3-super-120b-a12b:free (çıktı 235929). DB parolası: BLOK-1'dekini operatör
+    bloğu rastgele yenisiyle değiştirdi (openssl rand), tek kopyası /opt/hindsight/.env chmod 600.
+  worker_etkisi_teyidi: >
+    Seans-içi kurulum penceresi (16:30-17:16Z) meridian.service journal: 0 error/restart/fail
+    satırı, servis active, bellek 15G boş — kill maddesinin "kaynak yarışı" koşulu ÖLÇÜLDÜ ve
+    tetiklenmedi; seans-içi koşum operatör yönergesiyle (dev ortamı, paper hesap) yapıldı.
 
 basari_tanimi: >
   (1) Kurulum beş sağlık kanıtıyla tamam ve F9/RUNBOOK kayıtlı · (2) arsiv ingest'i git-sha'lı

@@ -1,0 +1,10 @@
+# Hindsight yedek zamanlayıcısı — 03:30 UTC (seans dışı, gecelik bakım penceresi).
+[Unit]
+Description=Hindsight yedek zamanlayicisi
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

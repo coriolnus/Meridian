@@ -282,6 +282,9 @@ fi
 #     çeviriyor, o yüzden slot seansın OLMADIĞI güne konur; gerekçenin tamamı timer başlığında)
 #   * @sef, @bekci ve @karne profilleri: her biri distribution.yaml + config.yaml + SOUL.md →
 #     ~ubuntu/.hermes/profiles/<ad>/ (Faz 2, 3 ve 4 — bot roster'ın ilk üç Hermes profili).
+#   * hindsight-api.service + hindsight-yedek.service/.timer → /etc/systemd/system/  (EDG-2026-065
+#     Faz-1 kurulumu 2026-08-31 — bellek API'si + gecelik pg_dump. /opt/hindsight/.env F9'DA
+#     DEĞİL: sır taşır, repoda yalnız deploy/hindsight/env.iskelet durur, kıyaslanacak çift yok)
 #     BURADA BİR İNCELİK VAR: rsync depo tarafını (`deploy/hermes/profiles/<ad>/`) canlıya
 #     TAŞIR, ama F9'un kıyasladığı şey o değil KURULU KOPYAdır — profil canlıya `hermes profile
 #     install` ile varır ve o komut operatörün kararıdır (yeni bir ajan kimliği doğurur). Yani
@@ -326,7 +329,10 @@ deploy/oracle-a1/meridian-karne.service|/etc/systemd/system/meridian-karne.servi
 deploy/oracle-a1/meridian-karne.timer|/etc/systemd/system/meridian-karne.timer
 deploy/hermes/profiles/karne/distribution.yaml|/home/ubuntu/.hermes/profiles/karne/distribution.yaml
 deploy/hermes/profiles/karne/config.yaml|/home/ubuntu/.hermes/profiles/karne/config.yaml
-deploy/hermes/profiles/karne/SOUL.md|/home/ubuntu/.hermes/profiles/karne/SOUL.md"
+deploy/hermes/profiles/karne/SOUL.md|/home/ubuntu/.hermes/profiles/karne/SOUL.md
+deploy/hindsight/hindsight-api.service|/etc/systemd/system/hindsight-api.service
+deploy/hindsight/hindsight-yedek.service|/etc/systemd/system/hindsight-yedek.service
+deploy/hindsight/hindsight-yedek.timer|/etc/systemd/system/hindsight-yedek.timer"
 for _cift in $F9_LISTE; do
   # ETİKET TAM REPO YOLUDUR, BASENAME DEĞİL (denetim, Faz 3 dal turu 2026-08-30). İki profille
   # `config.yaml` üç kez, `SOUL.md` üç kez, `distribution.yaml` iki kez listede: "⚠ config.yaml:

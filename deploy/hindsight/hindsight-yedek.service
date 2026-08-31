@@ -1,0 +1,9 @@
+# Hindsight gecelik pg_dump — kart EDG-2026-065 kurulum_sozlesmesi ("gecelik pg_dump→backups/").
+# Hedef /opt/meridian/backups/hindsight/ (postgres sahipli alt dizin); 14 gün saklama.
+[Unit]
+Description=Hindsight gecelik pg_dump yedegi
+
+[Service]
+Type=oneshot
+User=postgres
+ExecStart=/bin/sh -c 'pg_dump hindsight | gzip > /opt/meridian/backups/hindsight/hindsight-$(date +%%F).sql.gz && find /opt/meridian/backups/hindsight -name "*.sql.gz" -mtime +14 -delete'
