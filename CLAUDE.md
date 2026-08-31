@@ -54,7 +54,7 @@ Kurallar burada tetiklenir. Sol sütundaki şeyi yapmak üzereysen sağ sütunu 
 | pytest DIŞI bir betik/komut koşmak | `meridian.obs`'a ulaşabilir mi? Ulaşıyorsa canlı yerel deftere YAZAR (3 vaka, 2026-08-30). Davranış görmek istiyorsan `sandbox_state`'li çivi yaz. |
 | `monkeypatch.undo()` | Hiçbir zaman — autouse fixture'ları (`sandbox_state` dahil) da geri alır (vaka 2026-08-30). |
 | `sleep`, `while`, `until`, `watch` | Bekleme döngüsü mü kuruyorum? Yasak (§7) — ön planda da arka planda da. |
-| `git` (HERHANGİ komut) | Rol-1 miyim? Ajan/yan için salt-okunur `git status` bile yasak (2 refleks vakası, 2026-08-30). |
+| `git` (HERHANGİ komut) | Rol-1 miyim? YAN oturum için salt-okunur dahil yasak (tırmanma vakası 2026-08-26). AJAN yalnız BEYAZ LİSTE okur: `log·show·blame·diff·rev-parse·status` — `stash` dahil mutasyon yapan HER ŞEY yasak (stash okuma DEĞİLDİR). Gevşetme 2026-08-31: 2 zararsız-itiraf + inceleme kalitesi ölçümüyle, operatör onayı. |
 | `git add -A` / `git add .` | Hiçbir zaman (vaka a94d425). |
 | `dagit.sh` (dry-run dahil) | Rol-1 miyim? `git status --porcelain` boş mu? Worker durdu mu? |
 | "Dağıtıma hazır" cümlesi | Rol-1 değilsem yazmam. |
@@ -92,7 +92,8 @@ Rol-1 sanıp otoriter suite/push başlatır.
 |---|---|---|---|
 | Tam suite | ✔ | ✘ | ✘ |
 | Kapsam testi | ✔ | ✔ | ✔ (ardışık) |
-| git (her komut, salt-okunur dahil) | ✔ | ✘ | ✘ |
+| git — yazan her komut | ✔ | ✘ | ✘ |
+| git salt-okunur beyaz liste (`log·show·blame·diff·rev-parse·status`) | ✔ | ✘ | ✔ (2026-08-31) |
 | Dağıtım ve dağıtım önermek | ✔ | ✘ | ✘ |
 | Ölçüm kartına hüküm | ✔ | ✘ | ✘ |
 | `state/`'e yazmak | worker durmuşken | ✘ | ✘ |
