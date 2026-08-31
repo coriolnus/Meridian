@@ -50,6 +50,15 @@ Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
   kimliği TSK olur, dış kimlik referans olarak taşınır. Operatör 2026-09-01: "EDG değiştirmek
   çok zorsa kalsın" — kalıyor. Not: akıbet defterinin kendi sözlüğü rol1/operatör-doğumlu
   öneriler için zaten 3 harfli `AKB-####` biçimini tanıyor (ops/akibet.py) — düzen uyumlu.
+- Tarihli ek (Rol-1 hükmü 2026-09-01 gece, FAZ A bulgusu; operatör onayı sabah listesinde):
+  `B-XXX` kimlikleri (B-DASH-CRED, B-AJAN-GIT…) DIŞ-VARİ sınıftır — §5 kimlik tablosunun
+  canlı çapraz-referans anahtarıdır, TSK'ya çevrilmez, madde Ref alanında taşınır. Gerekçe:
+  yeniden adlandırma kimlik tablosu/kova/envanter çapalarını kırar; koruma geri-alınabilir,
+  yeniden adlandırma değildir.
+- Atıf süpürmesi notu (Rol-1 hükmü 2026-09-01): `Ö-NN`/`#NN` sınıfı eski kimlikler madde
+  gövdesinde `eski:` satırı olarak YERİNDE korunduğundan depodaki string-atıflar kırılmaz —
+  depo-geneli süpürme bu sınıf için gereksiz churn'dür, yapılmaz. Süpürme yalnız canlı
+  test/kod çapası taşıyan kimliklerde (FAZ C listesi) zorunludur.
 - Atıf süpürmesi zorunlu: yeniden adlandırılan her kimliğin depodaki TÜM atıfları
   (testler, CLAUDE.md, docs, kod yorumları) aynı dalgada güncellenir — kırık çapa sessizdir
   (yeniden-adlandırma-kapsamı vakası).
