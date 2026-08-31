@@ -1,0 +1,71 @@
+# EXE-2026-010 — pencere hakemi anahtar revizyonu (EXE-2026-009'un R1 halefi): `pencere` damgası → `ts`-türevi kol
+# ÖN-KAYIT 2026-08-31 — kart-önce: kod bu karttan SONRA. Ana kart EXE-2026-009 AYNEN yerinde
+# durur (eşiği, kill listesi, success_metric'i tek karakter değişmeden); bu R1 yalnız HAKEMİN
+# ANAHTARINI revize eder. KİMLİK NOTU (2026-08-31): kart EXE-2026-009-R1 adıyla doğdu;
+# v219 çivisi dosya-adı-öneki=card_id ister ve ayrı-dosya revizyon emsali yok — depo yasası
+# ('yeni kartla emekli edilir') gereği YENİ numara aldı. R1 kavramı bu başlıkta yaşar.
+
+card_id: EXE-2026-010
+family: icra_sozlesmesi   # hakem/valf sözleşmesi revizyonu — edge hipotezi DEĞİL, hüküm üretmez
+on_kayit: 2026-08-31
+karar: >
+  operatör 2026-08-31 (ai-trading-85 aktarımı, birebir: "bunların hepsini main'e devret main
+  yapsın") + aynı gün konsolide icra planının onayı ("onaylıyorum, uygula" — planda bu kalem
+  "P-2/ts kart revizyonu" olarak sırada). Kill#3 çerçevesine dokunan değişiklik kartsız
+  yapılamazdı; bu kart o kaydın kendisidir.
+
+hipotez: >
+  Hakem bölmesi `pencere` damgasından `ts`-türevi kola geçince P-2 çözülür: kontrol kolu
+  (gönderim ts < canlı barclock dönüm anı) ÖLÇÜLMÜŞ n=15 olur ve alt-bant eşiğini (n>=10)
+  GEÇER; tedavi kolu bugün n=2 ve ~0,40 dolum/seans ile ~20 seans (~4 hafta) sonra dolar.
+  Bugünkü anahtarla kontrol kolu İNŞAEN boş (pencere="1330" satırı bir daha üretilemez) ve
+  geri-al valfi HİÇ açılamaz; ts ile "hiç açılamaz" → "~4 haftada işler"e döner.
+
+girdi_dondurma:
+  bolucu: research/olcumler/edg042_recete_ayrik_2026-08-31/olcum.py::gonderim_kolu
+  bolucu_git_blob: c8497cde59792556a5fce05710fbbd864d6e833e   # içerik-adresli (§5 blob kuralı)
+  donum_ani: "2026-08-23T14:53:43Z"   # canlı barclock.py 1345 dönüşü (A1 mtime; depoda d8030c0) — P-1 kapanışının ölçülmüş sabiti
+  olcum_kaynagi: "kontrol n=15 / tedavi n=2 / 0,40 dolum-seans — ai-trading-85 P-3 reçete ölçümü (edg042_recete_ayrik_2026-08-31/sonuc_ts_yok.json ailesi)"
+
+esikler_ONDEN_DONUK:
+  alt_bant_esigi: "n >= 10 — EXE-2026-009'dan AYNEN MİRAS, DEĞİŞMEDİ (kill#2 korunur: revize edilen eşik değil ANAHTARIN KAYNAĞIDIR)"
+  kol_tanimi: "kontrol = ts < donum_ani · tedavi = ts >= donum_ani; ts'siz satır HİÇBİR kola girmez ve sayısı raporda beyan edilir (bugün ölçülü: 0 — E2'de ts %100 dolu)"
+
+kill_list:
+  - "bölücü gonderim_kolu() İTHAL edilmez de ikinci kopya yazılırsa geçersiz (tek-kaynak; EQUIVALENT_TRUTHS sınıfı — altbant `yuzdelik`i nasıl alıyorsa öyle)"
+  - "alt-bant eşiğinin DEĞERİ değişirse geçersiz (ana kartın kill#2 mirası)"
+  - "ts'siz satır bir kola sokulursa geçersiz (uydurma yasağı); ayrık-beyanlı taban EDG-042 giris_once emsalidir"
+  - "ana kartın (EXE-2026-009) herhangi bir alanı bu revizyonla YERİNDE değiştirilirse geçersiz — R1 ekler, silmez/ezmez"
+
+kill3_yeniden_okuma_BEYANI: >
+  Ana kartın kill#3'ü ("geriye dönük pencere yeniden-etiketleme yapılırsa geçersiz") AYNEN
+  yürürlükte. ts-türevi bölme ETİKETLEME DEĞİLDİR: hiçbir satıra pencere alanı yazılmaz/değiştirilmez;
+  iki ÖLÇÜLMÜŞ olgu (satırın gönderim ts'i + canlı barclock dönüm anı) karşılaştırılır. Aynı
+  gerekçe iki emsalde kabul edildi: P-1 kapanışının operatör-istisnalı düzeltmesi (p1_kapanis_2026_08_30)
+  ve EDG-042 P-3/AYRIK kararı (p3_karar_ayrik_ts_2026_08_31). Fark beyanla korunur: EDG-042
+  K1'i ts'ye göre böler, bu hakem de artık ts'ye göre böler — iki kartın anahtarı BİRLEŞİR ve
+  p2_ayrisma_isaretcisi_2026_08_31'deki beyanlı ayrışma KAPANIR (o blok bu kartla tarihlenir).
+
+uygulama_kapsami: >
+  (1) pencere_altbant.py bölmeyi gonderim_kolu() ithaliyle yapar (pencere damgası okuma yolu
+  kalkar; damga alanı defterde DURUR — silme yok, yazım rejimi değişmez). (2) Haftalık görev
+  EK bölümünün sabit dizin işaretçisi ([2] emsaliyle) karta devredilir — bu kartın
+  GUNCEL_HAKEM_RECETESI kaydı yürürlükteki betik dizinini söyler. (3) Rapor her koşumda kol
+  sayılarını + ts'siz sayısını beyan eder.
+
+GUNCEL_HAKEM_RECETESI: research/olcumler/edg042_kosum_2026-08-22/   # pencere_cek.py + pencere_altbant.py bugün burada donuk; R1 uygulaması yeni tarihli dizin açtığında BU SATIR o dizine güncellenir (işaretçi tekil — eski satır DEVREDİLDİ şerhi alır)
+
+k_disiplini: >
+  K = 0 deneme. Sözleşme/veri-yolu revizyonudur: hiçbir kurulum/parametre hakkında hüküm
+  üretmez, yalnız valfin İŞLEyebilirliğini kurar. Ana kartın k_registry'si değişmez.
+
+pozitif_kontrol: >
+  YOL-TUTARLI: gerçek E2 çekimi üzerinde bölücüyle bölme — kontrol kolunda n=15 ve DE/PANW
+  satırları (ts=2026-08-21T20:32:22Z, ölçülmüş vaka) KONTROL kolunda; ECL (ts=2026-08-26T13:45:01Z)
+  ve CRM (ts=2026-08-28T13:45:00Z) TEDAVİ kolunda. Üçü de gerçek satırla, sentetikle değil.
+
+basari_tanimi: >
+  (1) Haftalık koşum iki kol için de sayı üretir ve kontrol kolu eşiği geçmiş olarak raporlanır ·
+  (2) öneri tetiği "orneklem_birikimde"yi TEDAVİ kolunun doluşuna bağlar (inşaen-kapalı hâl biter) ·
+  (3) ts'siz sayısı her koşumda beyanlı · (4) EK işaretçisi tek-kaynağa devredilmiş. Hüküm
+  İYİ/KÖTÜ değil, sözleşmenin İŞLEMESİDİR (ana kartın success_metric'iyle aynı sınıf).
