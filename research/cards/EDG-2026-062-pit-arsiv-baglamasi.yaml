@@ -13,6 +13,13 @@ hipotez: >
   ÖLÇÜLEBİLİR olur — look-ahead EKLEMEDEN: arming'in olculemez_pit_yok hükmü insufficient_cf'e
   döner ve BILINEN_IHLALLER'in iki kaydı düşer (taban 5→3; düşer-yükselmez kuralına uygun).
 
+# DÜZELTME ŞERHİ 2026-08-31 (uygulama öncesi, Rol-1): hipotezdeki "taban 5→3" DEFTER-ADI
+# KARIŞIKLIĞIDIR — ölçüldü: pitlaw'da İKİ ayrı defter var. CANLI_TABAN=5 canlı karar-yolu
+# çağrı sayacıdır ve bu kart ona DOKUNMAZ (5 kalır; canlı yol kill-list ile korunuyor).
+# Düşen defter BILINEN_IHLALLER'dir: 2→0 (iki kayıt korumalı-zincir beyanına taşınır).
+# Eşikler ve kill-list DEĞİŞMEDİ; şerh yalnız hipotez cümlesindeki sayının hangi deftere
+# ait olduğunu düzeltir. Orijinal cümle kanıt olarak yerinde bırakıldı (bayat-beyan usulü).
+
 girdi_dondurma:
   arsiv: research/edgar_facts/earnings_8k_tarihleri.csv
   git_blob: 8a9ff7811791b9f599a592fa6a6bc486ec6ef15e     # içerik-adresli — ağaç değişse kart ölmez (§5 blob kuralı, EDG-059 dersi)

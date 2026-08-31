@@ -1,5 +1,15 @@
 # Devir notu — "PIT'siz fundamentals proxy YASAK" yasasının mekanik çivileri (2026-08-30/31)
 
+> ## ✅ DEVİR TAMAMLANDI — 2026-08-31, Rol-1 (bu belge artık TARİHSEL KAYITTIR)
+> Üç dosya main'e entegre edildi (`8ef0a41`; vNNN çakışması gerçekleşti, paket v341/v342'ye
+> taşındı — kayıt dosya başlıklarında). Otoriter tam suite üçlü hükümle yeşil (8023 passed ·
+> grep boş · PYTEST_EXIT=0 · SHA donuk) ve push atıldı (`origin/main` ucu `1766e1f`).
+> CLAUDE.md metni operatör onayıyla uyarlanarak işlendi. §2.3'teki operatör kararı VERİLDİ:
+> "(b) PIT arşivine bağla" → ön-kayıt kartı `EDG-2026-062`, uygulama planı
+> `docs/superpowers/plans/2026-08-31-edg062-pit-arsiv-baglamasi.md`. §4 madde 7'nin kalemi
+> `docs/KALEM-PIT-PARITY-BAGLAMASI-2026-08-31.md` olarak main'de. Aşağıdaki "seni bekleyenler"
+> dili bu tarihten itibaren bayattır; belge zincirin gerekçe arşivi olarak yerinde.
+
 **Oturum:** yan oturum (worktree `affectionate-pike-9248a8`). **Rol-1 DEĞİL.**
 Hiçbir git komutu koşulmadı (salt-okunur dahil), `state/`e yazılmadı, tam suite koşulmadı,
 dağıtım yapılmadı ve önerilmiyor. İş **commit'siz** bırakıldı.
