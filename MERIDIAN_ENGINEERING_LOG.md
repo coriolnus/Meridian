@@ -1075,6 +1075,16 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
 
 ## KALICI RİSKLER / DERSLER
 
+- **"DOCS-ONLY PUSH" DİYE BİR ŞEY YOKTUR — PUSH DAL TAŞIR (2026-08-31, Rol-1 ihlali).** Ajan-A
+  dalga commit'i (motor `api.py` dahil) suite hükmü beklerken yerelde dururken, ÜSTÜNE atılan
+  bir belge commit'inin push'u alttaki dalga commit'ini de origin'e taşıdı — suite o an KIRMIZI
+  (v323 ×4) idi ve §8 tam bunu yasaklar; CI kırmızı gördü. Kural: motor-dokunan commit yerelde
+  suite bekliyorsa, O DALDAN HİÇBİR push atılmaz — belge partisi de bekler ya da suite-öncesi
+  ayrı pencerede push'lanır. Telafi aynı akşam: düzeltme partisi + bileşim hükmü ile kapandı.
+- **PANO/UI DALGASININ ZORUNLU KAPSAM AİLESİ v323'ü İÇERİR (2026-08-31).** T2 pano görevi kendi
+  ailesini yeşil koştu ama `test_arayuz_dili_v323` (arayüz-dili yasası: `neden` insan cümlesidir,
+  iç ayrıntı `teknik=`e) kapsamda değildi — tam suite 4 kırmızıyla yakaladı. UI dizgesi üreten
+  her görev brief'ine v323 kapsam şartı yazılır; `.tsx/.ts` dizge değişikliği = v323 koşulur.
 - **YEŞİL ÇİVİ TAKIMI, GERÇEK KOŞUMUN YERİNE GEÇMEZ (2026-08-30).** Bir ops betiğinin sözleşmesi
   `main()` değil KOMUT SATIRIDIR; bir arka plan işinin hükmü sarmalayıcının çıkış kodu değil
   aracın KENDİ kodudur. Bu turda ikisi de yanılttı (ayrıntı §BU OTURUMDA). Kural: teslimden önce

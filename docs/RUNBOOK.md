@@ -41,8 +41,8 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **19 ops betiği** başlığıyla okundu
-- **95 günlük maddesi** üç bölümden toplandı
+- **20 ops betiği** başlığıyla okundu
+- **97 günlük maddesi** üç bölümden toplandı
 
 ---
 
@@ -1362,6 +1362,17 @@ dokunulmaz; [1b] kopyası yalnız onayla yapıldığından goal/bounds geri-alma
 "versiyonlu-state adımı" bilerek YOK, [1b] kapsıyor.
 ```
 
+## `ops/filo.py` {#ops-filo-py}
+
+```
+filo.py — A1 bot filosu tek komut-satırı aracı (durum · journal · oturumlar · test-atesle · profil-guncelle)
+Elle-ssh kalıplarının yerine geçer; üç ölçülmüş tuzağı çözülmüş taşır: hermes profile update
+sahte-başarısı (boş stdin'de "cancelled"+RC=0 — hüküm RC'den değil başarı DİZGESİNDEN),
+uzak-sudo engeli (test-atesle KOŞMAZ, bloğu basar; --kanit salt-okuma doğrular),
+bot→birim eşlemesi (ezber değil birim dosyasından türetilir). Kimlik: CLI > MERIDIAN_A1_* env > sabit.
+Koşum: .venv/bin/python ops/filo.py <altkomut> — meridian İTHAL ETMEZ (obs'a ulaşamaz).
+```
+
 ---
 
 # Bilinen sınıflar ve açık kalanlar {#siniflar}
@@ -1391,6 +1402,8 @@ olabilir: bu depoda tekrar eden şey tek tek hatalar değil, HATA SINIFLARIDIR.
 
 ## KALICI RİSKLER / DERSLER {#kalici-riskler}
 
+- **"DOCS-ONLY PUSH" DİYE BİR ŞEY YOKTUR — PUSH DAL TAŞIR (2026-08-31, Rol-1 ihlali).** Ajan-A dalga commit'i (motor `api.py` dahil) suite hükmü beklerken yerelde dururken, ÜSTÜNE atılan bir belge commit'inin push'u alttaki dalga commit'ini de origin'e taşıdı — suite o an KIRMIZI (v323 ×4) idi ve §8 tam bunu yasaklar; CI kırmızı gördü. Kural: motor-dokunan commit yerelde suite bekliyorsa, O DALDAN HİÇBİR push atılmaz — belge partisi de bekler ya da suite-öncesi ayrı pencerede push'lanır. Telafi aynı akşam: düzeltme partisi + bileşim hükmü ile kapandı.
+- **PANO/UI DALGASININ ZORUNLU KAPSAM AİLESİ v323'ü İÇERİR (2026-08-31).** T2 pano görevi kendi ailesini yeşil koştu ama `test_arayuz_dili_v323` (arayüz-dili yasası: `neden` insan cümlesidir, iç ayrıntı `teknik=`e) kapsamda değildi — tam suite 4 kırmızıyla yakaladı. UI dizgesi üreten her görev brief'ine v323 kapsam şartı yazılır; `.tsx/.ts` dizge değişikliği = v323 koşulur.
 - **YEŞİL ÇİVİ TAKIMI, GERÇEK KOŞUMUN YERİNE GEÇMEZ (2026-08-30).** Bir ops betiğinin sözleşmesi `main()` değil KOMUT SATIRIDIR; bir arka plan işinin hükmü sarmalayıcının çıkış kodu değil aracın KENDİ kodudur. Bu turda ikisi de yanılttı (ayrıntı §BU OTURUMDA). Kural: teslimden önce aracı operatörün koşacağı BİÇİMDE bir kez koş, ve hükmü aracın kendi çıktısından oku.
 - **BİR ÇİVİ İLE BİR KART AYNI ARTEFAKTI TERS YÖNDE ŞARTA BAĞLAYABİLİR (2026-08-29).** `EDG-2026-059` korpusun DONMUŞ kalmasını, `test_korpus_ureticisi_...` ise RUNBOOK değişince YENİDEN ÜRETİLMESİNİ şart koşuyordu; çelişki üç kez sessizce kartı öldürdü. Ön-kayıt bir artefaktı donduruyorsa, girdi ÇALIŞMA AĞACINA değil İÇERİK-ADRESLİ bir referansa (git blob) bağlanmalıdır — yoksa şart, deponun kendi çivileriyle sağlanamaz hâle gelir.
 - Waiter/ajan-içi bekletici YASAK (iki arıza). Tam suite turda BİR kez — **ARKA PLANDA** (`run_in_background`), senkron DEĞİL. Bu satır 2026-08-30'a dek "ön planda, senkron" diyordu: suite ~3.750 test / ~9 dk iken yazılmıştı ve o gün doğruydu. Bugün 7.696 test / ~26 dk (6 koşum ölçümü) ve Bash tavanı 600 sn — ön plan İMKÂNSIZ. CLAUDE.md madde 7 ile zıt emir veriyordu; "iki kopya sessizce ayrışır" sınıfının bu belgedeki canlı örneğiydi.

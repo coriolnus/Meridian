@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# filo.py — A1 bot filosu tek komut-satırı aracı (durum · journal · oturumlar · test-atesle · profil-guncelle)
+# Elle-ssh kalıplarının yerine geçer; üç ölçülmüş tuzağı çözülmüş taşır: hermes profile update
+# sahte-başarısı (boş stdin'de "cancelled"+RC=0 — hüküm RC'den değil başarı DİZGESİNDEN),
+# uzak-sudo engeli (test-atesle KOŞMAZ, bloğu basar; --kanit salt-okuma doğrular),
+# bot→birim eşlemesi (ezber değil birim dosyasından türetilir). Kimlik: CLI > MERIDIAN_A1_* env > sabit.
+# Koşum: .venv/bin/python ops/filo.py <altkomut> — meridian İTHAL ETMEZ (obs'a ulaşamaz).
 """filo.py — A1 bot filosunu TEK komut-satırı sözleşmesinden oku. LLM yok, tahmin yok.
 
 NEDEN VAR (2026-08-31). Üç botun (@sef · @bekci · @karne) canlı durumu, journal kesiti, oturum

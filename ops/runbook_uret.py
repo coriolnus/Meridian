@@ -65,7 +65,10 @@ YAZILMADI = "runbook girdisi henüz yazılmadı"
 # 2026-08-23 KAPSAM GENİŞLEMESİ (operatör kararı K4, docs/KARAR-2026-08-23-YEDI-KARAR.md):
 # kök dagit.sh kümeye girdi — sürüm-terfisi sözleşmesi başlığında yaşıyor, belgeye kaynağından
 # akar. Sessiz genişleme değil: sınır beyanı üretilen belgede de güncellenir (aşağıda).
-BETIK_KUMESI = ("ops/*.sh", "deploy/oracle-a1/*.sh", "dagit.sh")
+BETIK_KUMESI = ("ops/*.sh", "deploy/oracle-a1/*.sh", "dagit.sh", "ops/filo.py")
+# ops/filo.py eklendi 2026-08-31 (Ajan-A kapanışı): filo aracı operatör-yüzlü sözleşme taşır —
+# RUNBOOK'ta okuyucusu olmadan yaşayamaz (Yasa 6). .py olsa da başlık sözleşmesi aynı: shebang
+# sonrası bitişik `#` bloğu. ops/*.py GENEL olarak eklenmedi — çoğu birim-içi, operatör-yüzlü değil.
 LOG_BOLUMLERI = ("AÇIK KALANLAR", "KALICI RİSKLER", "BU OTURUMDA BULUNAN")
 
 
