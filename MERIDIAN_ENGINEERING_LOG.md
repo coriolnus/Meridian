@@ -1418,3 +1418,21 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   (c) 179 aramanın 119'u hüküm üretmeden kayboldu (`hermes_search_start` 179 vs `_done` 60) ve
   `arama_havuzu_zaman_asimi` bugün hâlâ ötüyor. (d) OOS penceresi 2026-04-30'da bitiyor; aradaki
   ~4 ay hiç denenmedi — "yerel optimal" hükmü YALNIZ o donmuş pencere için geçerli.
+
+## 2026-08-31 (akşam) — Kaçak gerçek-ssh vakası ve sistemik kilit; v348 çakışması (vNNN ikinci vaka)
+VAKA — KAÇAK GERÇEK-SSH: Akıbet defteri (v349) R1 mutasyon doğrulamasında, sahte-ssh nişancı
+deseni KURULMAMIŞ tek bir test, mutasyonlu kodla GERÇEK A1'e bağlanıp canlı `oneri_akibet.jsonl`i
+tek test satırıyla YARATTI. Ajan dürüstçe itiraf etti; Rol-1 inceledi (1 satır, yalnız test
+verisi, resmî kullanım doğmamıştı), kaldırma OPERATÖRE bırakıldı (kalıcı silme Rol-1 sınıfı
+değil), operatör sildi ve defter ilk gerçek kararla temiz doğdu. KÖK NEDEN: nişancı deseni
+(testin İÇİNDE sahte-ssh kurmak) OPT-IN'dir — deseni kurmayı unutan her yeni test, mutasyon
+turlarında canlıya çıkış biletidir; tek katmanlı koruma "disiplinli yazar" varsayımına yaslanır.
+ÇÖZÜM (sistemik, R2): dosya-düzeyi autouse `_sistemik_ssh_kilidi` — PATH'in başına rc=113 dönen
+ve iz dosyası bırakan sahte-ssh konur; hiçbir test istemeden gerçek ssh'a ULAŞAMAZ, kaçış ancak
+bilinçli fixture-override ile olur. Yeniden-inceleme kilidi deneysel kanıtla doğruladı. DERS:
+canlıya dokunabilen her yol için koruma OPT-OUT olmalı, OPT-IN değil; ajan brief'lerine "gerçek
+ssh/anahtar erişimi ortamdan koparılır" maddesi eklendi (CLAUDE.md'ye taşınacaksa ölçümle).
+vNNN İKİNCİ VAKA: UI mesajlaşma göçünün ajanı yeni çivi dosyasını v348 açtı — v348
+`test_filo_araci_v348.py`nin kimliğiydi (grep yapılmadı). Kural işledi: az-çapalı taraf AYNI GÜN
+v350'ye taşındı, 5 atıf güncellendi, taşıma kaydı dosya başlığına. v331×2'den sonra ikinci vaka:
+"oluşturma anında yeniden grep" adımı ajan brief'lerinde açık madde olmalı.
