@@ -14,26 +14,34 @@ hiçbir iki madde aynı biçimde değil · İCRA SIRASI tek paragraf (~6.000 kar
 Yaşayan her madde = başlık satırı (makine-ayrıştanır) + gövde (insan-okur):
 
 ```
-- **[RM-041] Yansıma mükerrerlik kapısı** — durum: ARAYA-KALEM · doğum: 2026-09-01 · sahip: rol1 · boyut: küçük-orta · tetik: —
-  Ne: hermes_reflect öneri basmadan akıbet defterindeki açık+kararlı önerilere benzerlik kontrolü.
-  Neden: ilk karar turu %45 bellek-yokluğu israfı ölçtü (operatör 2026-09-01). Ref: N-defteri · cc5aba1.
+- **[TSK-041] Yansıma mükerrerlik kapısı** — status: INTERIM · born: 2026-09-01 · owner: rol1 · size: S-M · trigger: —
+  What: hermes_reflect öneri basmadan akıbet defterindeki açık+kararlı önerilere benzerlik kontrolü.
+  Why: ilk karar turu %45 bellek-yokluğu israfı ölçtü (operatör 2026-09-01). Ref: N-defteri · cc5aba1.
 ```
 
+Terimler İNGİLİZCE (operatör 2026-09-01: "türkçe olmasına gerek yok, ingilizce terimler
+olsun") — açıklama düzyazısı Türkçe kalır, ŞEMANIN anahtar/değer seti İngilizce'dir.
 Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
-- durum: `UÇUŞTA · SIRADA · ARAYA-KALEM · BEKLEMEDE(tetik) · MASADA(operatör) · KAPANDI(tarih·ref)`
-- sahip: `operatör · rol1 · ajan` — boyut: `küçük · orta · büyük` (ara değerler `küçük-orta` gibi tire ile)
-- tetik: BEKLEMEDE ise zorunlu ve somut; değilse `—`
+- status: `ACTIVE (uçuşta) · QUEUED (sırada) · INTERIM (araya-kalem) · GATED(trigger)
+  (tetik bekliyor) · OPERATOR (operatör masasında) · DONE(date·ref) (kapandı)`
+- owner: `operator · rol1 · agent` — size: `S · M · L` (ara değer `S-M` gibi tire ile)
+- trigger: GATED ise zorunlu ve somut; değilse `—`
 
 ## §2 Kimlik politikası (operatör düzeltmesiyle)
 
-- **ROADMAP-doğumlu kimlikler YENİDEN ADLANDIRILIR:** maddeler `RM-###` (göç sırasında
-  belge-sırasıyla numaralanır; numara KİMLİKTİR, yeniden kullanılmaz); cepheler (eski WP1-11)
-  `C-##` + ad. Eski adlar SİLİNMEZ: §∞ EŞLEME TABLOSU'na ikinci dalga olarak eklenir
+- **ROADMAP-doğumlu kimlikler YENİDEN ADLANDIRILIR:** maddeler `TSK-###` (task; 3 harf İngilizce —
+  operatör düzeltmeleri aynı gece). Numaralama DOĞUM/ATAMA sırasıyladır, belge sırasıyla değil:
+  göçten önce doğan maddeler numarasını doğduğu an alır (TSK-001 dalganın kendisi), göç kalan
+  maddeleri son atanan numaradan devam ettirir; numara KİMLİKTİR, yeniden kullanılmaz.
+  Cepheler (eski WP1-11)
+  `EPC-##` (epic) + ad. Eski adlar SİLİNMEZ: §∞ EŞLEME TABLOSU'na ikinci dalga olarak eklenir
   (2026-08-13 yeniden-numaralandırma emsali) ve her maddenin gövdesinde `eski: WP7` düşülür.
 - **DIŞ-SİSTEM kimlikleri DEĞİŞMEZ, `Ref` alanına iner:** `EDG-####` (kart dosyaları —
   card_id yasası v219), `N#####` (akıbet defteri satır kimliği), `vNNN` (test kimliği),
   `Yasa 4/6` (275+405 atıf). Bunları yeniden adlandırmak kendi sistemlerini kırar; madde
-  kimliği RM olur, dış kimlik referans olarak taşınır.
+  kimliği TSK olur, dış kimlik referans olarak taşınır. Operatör 2026-09-01: "EDG değiştirmek
+  çok zorsa kalsın" — kalıyor. Not: akıbet defterinin kendi sözlüğü rol1/operatör-doğumlu
+  öneriler için zaten 3 harfli `AKB-####` biçimini tanıyor (ops/akibet.py) — düzen uyumlu.
 - Atıf süpürmesi zorunlu: yeniden adlandırılan her kimliğin depodaki TÜM atıfları
   (testler, CLAUDE.md, docs, kod yorumları) aynı dalgada güncellenir — kırık çapa sessizdir
   (yeniden-adlandırma-kapsamı vakası).
@@ -49,15 +57,15 @@ Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
 ## §4 Zorlama (üç katman, operatör onaylı)
 
 1. Yeni çivi dosyası (vNNN — oluşturma anında grep ile boş numara): yaşayan bölümlerde
-   (a) her madde başlık-regex'ine uyar, (b) durum/sahip/boyut sözlükten, (c) RM/C kimlikleri
-   tekil, (d) BEKLEMEDE tetiksiz olamaz. Uymayan madde suite'i kırmızı yapar.
+   (a) her madde başlık-regex'ine uyar, (b) durum/sahip/boyut sözlükten, (c) TSK/EPC kimlikleri
+   tekil, (d) GATED trigger'sız olamaz. Uymayan madde suite'i kırmızı yapar.
 2. CLAUDE.md §2 kapı tablosuna satır: "ROADMAP'e madde yazmak → şema (bu belge)".
 3. Rol-1 hafıza kaydı `roadmap-madde-standardi` (yazıldı 2026-09-01).
 
 ## §5 Pano bacağı
 
 `/api/roadmap` ayrıştırıcısı başlık-satırı alanlarını yapılandırılmış döndürür
-(`maddeler[].{kimlik, ad, durum, sahip, boyut, tetik, bolum}`); `YolHaritasi` yüzeyi
+(`maddeler[].{id, name, status, owner, size, trigger, section}`); `YolHaritasi` yüzeyi
 durum/bölüm/sahip süzgeçli dinamik tahta çizer. v343 okuyucu-çivisi genişletilir (üretilen
 her yeni alanın okuyucusu — Yasa 6). Ölçülemeyen alan None+neden (şemaya uymayan eski §7/§8
 satırları "muaf-tarihçe" sınıfıyla ayrılır, uydurulmaz).
