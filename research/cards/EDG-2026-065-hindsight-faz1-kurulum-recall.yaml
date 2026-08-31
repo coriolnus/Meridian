@@ -66,6 +66,25 @@ pozitif_kontrol: >
   sonucunda VERİ olarak döner ve hiçbir yüzeyde talimat gibi işlenmez; Memory Defense sahte
   API-anahtarlı satırı [REDACTED] ile döndürür.
 
+kurulum_kayitlari:
+  blok1_2026_08_31: >
+    OPERATÖR koştu ~16:34Z, Rol-1 kanıt topladı 16:40-16:45Z (salt-okuma + operatörün verdiği
+    sudo yetkisiyle sudo -u postgres psql). KANITLAR: postgresql-17 17.11-1.pgdg24.04+2 +
+    postgresql-17-pgvector 0.8.6 kurulu · küme 17/main 5432 ONLINE, yalnız 127.0.0.1 dinliyor ·
+    rol hindsight VAR · db hindsight (owner=hindsight, UTF8) VAR · extension vector 0.8.6
+    hindsight db'sinde VAR · \dF turkish -> pg_catalog.turkish VAR (BM25 kill maddesi KAPANDI:
+    .env'e NATIVE_LANGUAGE=turkish girer, iskelet deploy/hindsight/env.iskelet) ·
+    /opt/hindsight ubuntu:ubuntu · bellek 23G toplam / 21G kullanılabilir.
+  blok1_zamanlama_sapmasi: >
+    Blok SEANS İÇİ koştu (16:34Z; seans 13:30-20:00Z) — kill maddesi "kaynak yarışına girerse
+    o adım geçersiz" der. Değerlendirme: apt+pg kurulumu hafif ve kısa (kanıt anında load 2.02,
+    bellek 21G boş, pg boşta); worker etkisi seans kapanışında journal ile ayrıca teyit edilecek.
+    DERS ALINDI: kalan ağır adımlar (pip bağımlılıkları + ~450MB model ön-indirme) 20:00Z
+    SONRASINA ertelendi — Rol-1 koşacak (operatör sudo yetkisi verdi, 2026-08-31).
+  os_kullanici_sapmasi: >
+    Eskizdeki User=hindsight yerine User=ubuntu — BLOK-1 OS kullanıcısı açmadı (yalnız DB rolü);
+    /opt/hindsight ubuntu sahipli. Birim dosyasında beyanlı (deploy/hindsight/hindsight-api.service).
+
 basari_tanimi: >
   (1) Kurulum beş sağlık kanıtıyla tamam ve F9/RUNBOOK kayıtlı · (2) arsiv ingest'i git-sha'lı
   ve tekrar-koşumda mükerrer üretmiyor (document_id upsert çivisi) · (3) donuk kümeyle iki-kollu

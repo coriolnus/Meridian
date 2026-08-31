@@ -1,0 +1,30 @@
+# Hindsight API — A1 systemd birimi (kart: EDG-2026-065, reçete: docs/INCELEME-HINDSIGHT-DERIN-2026-08-31.md adım 8)
+# Kurulum: sudo cp -> /etc/systemd/system/hindsight-api.service && sudo systemctl daemon-reload && sudo systemctl enable --now hindsight-api
+# ESKİZDEN SAPMA (2026-08-31): User=hindsight değil User=ubuntu — BLOK-1 yalnız DB ROLÜ açtı, OS kullanıcısı yok;
+# /opt/hindsight ubuntu sahipli (kanıt: ls -ld, 16:34Z). Sır dosyası .env chmod 600 ubuntu ile korunur.
+# Model önbellekleri ProtectHome=true yüzünden ev dizinine GİDEMEZ — .env HF_HOME'u /opt/hindsight altına yönlendirir.
+
+[Unit]
+Description=Hindsight agent memory API
+After=network-online.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=ubuntu
+EnvironmentFile=/opt/hindsight/.env
+ExecStart=/opt/hindsight/venv/bin/hindsight-api --host 127.0.0.1 --port 8888
+Restart=on-failure
+RestartSec=5
+# kaynak çiti — A1'i koru (24 GB sonrası revizyon: 3G->8G; şişerse Meridian değil Hindsight ölür)
+MemoryMax=8G
+CPUQuota=200%
+# sertleştirme
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hindsight
+
+[Install]
+WantedBy=multi-user.target
