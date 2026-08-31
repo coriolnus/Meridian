@@ -242,7 +242,6 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 | **AÇIK** (KISMEN: `25b` 5/6 damgalandı; `25a` operatör 'beklet' — 14 kalemin 13'ü inmiş) · `25a` KALDIR(14) / `25b` DAMGALA(6) / `25c` DİRİLT(3) / `25d` ezilme zinciri | WP6 | operatör 2026-08-16'da **beklet** dedi **[2026-08-23 GÜNCEL — kısmi: 25b fiilen 5/6 DAMGALANDI (987b552, 08-22; `tests/test_ezilen_damga_v262.py`); beklet yalnız 25a/25c/25d için sürüyor]** |
 | **AÇIK** · `Ö-49` çapa/beyan çürümesi kalanı | WP6 | yasa kuruldu, sınıf TAM kapanmadı |
 | **AÇIK** (operatörde: `15c` + `15d`; `ARSENAL` 2026-08-24 denetiminde BAYAT-KAPANMIŞ çıktı — Rol-1 doğrulaması bekliyor) · ARSENAL POLİTİKASI (15e giriş + 29 çıkış) · `15d` PIT-temiz faktör seti · `15c` evren genişletme | WP11 | 15c'nin askısı C6 uzlaştırmasıyla KALKTI |
-| ROADMAP ayrıştırıcısı kapanış sözcüklerini **kelime içinde** de eşliyor **[2026-08-30 EKLENDİ]** | WP6 | **AÇIK** · ölçüldü 2026-08-30: `meridian/api.py::_roadmap_madde_durumu` dört kapanış imini (onay imi + üç büyük harfli sözcük) **sözcük sınırı olmadan** arıyor; "chop BÜTÇE-KAPALILIĞI" satırı bu yüzden kapalı ayrıştırılıyordu. **Hüküm tesadüfen doğruydu** (kalem gerçekten kapanmıştı), ayrıştırma değil — sayaç bugün yanlış nedenle doğru. `meridian/` dokunuşu tam-suite kapısı ister → Rol-1 |
 | §6 kart indeksi ELLE tutuluyor — üretici BAŞKA dosyaya yazıyor **[2026-08-30 EKLENDİ]** | WP5 | **AÇIK** · ölçüldü 2026-08-30: `ops/kart_endeksi_uret.py` hedefi `research/cards/README.md`; ROADMAP §6 aynı gerçeğin İKİNCİ kopyasıdır ve türetilmiyor (**tek-kaynak yasası**). Ayrışma ÖLÇÜLDÜ: diskte **73** kart var, §6'nın kendi toplamı **50** diyor — 23 kart indekste yok. Yol ya üreticiye ikinci hedef, ya §6'yı indekse atıf yapan tek bloğa indirmek — karar Rol-1'de |
 | ROADMAP satır çapaları — **üçü de ZATEN çürümüş** **[2026-08-30 EKLENDİ]** | WP6 | **AÇIK** · ölçüldü 2026-08-30 **bu turdan ÖNCE** (yani bu bakım turu kırmadı): `meridian/watchdog.py` "ROADMAP :503" → §7 düzyazısına düşüyor · `meridian/config.py` "ROADMAP:1476" → runbook-sıralama kalemine · `tests/test_korunum_uyuyan_kurulum_v283.py` "ROADMAP :1164-1188" → PF tartışmasına. Üçü de SATIR çapası; **SEMBOL** çapasına çevrilmeli (CLAUDE.md kuralı). `meridian/` dokunuşu tam-suite kapısı ister → Rol-1 |
 
@@ -255,7 +254,6 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 | **BLOKE:** makine kurulumu (dotnet YOK, docker YOK) + operatörün `lean login`i · `C2-4` LEAN fizibilite · notebook koşumu `[B-QC-LOGIN]` | WP9 | ~~**BLOKE: erişim** (QC login)~~ **[2026-08-23 GÜNCEL — blok gerekçesi yanlıştı: QC FREE hesap-açma bloğu 2026-08-03'te KALKMIŞTI (WP9 keşfi); gerçek blok MAKİNE KURULUMU (dotnet YOK, docker YOK; boyut L). Notebook-koşumu operatör-bloğu ayrı ve geçerli]** |
 | `23b` çıkış slipajı | WP1 | ASKIDA: örneklem bekliyor → **MUTABIK KILINDI (2026-08-22):** sorusu iki kartta yaşıyor — gerçek-dolum bandı `EDG-2026-042` K2/K3 (birikiyor), replay-varsayım tarafı `EDG-2026-045`; ayrı iş üretmez, o ikisiyle kapanır |
 | Faz-6 BEŞ KİLİT `[B-FAZ6-KILIT]` | WP3 | **ASKIDA: kanıt-şartlı** |
-| `B1` pullback silahsızlanması — **DAĞITIM KUYRUĞU** (karar + kod 2026-08-22'de kapandı) **[2026-08-30 EKLENDİ: kapanan gövde §8.T/G'ye taşındı, kuyruk kalemi tahtada kaldı]** | WP11 | **ASKIDA:** dağıtım penceresi — Rol-1 (`043` sonrası suite'le); kimlik `[B-PULLBACK-SILAH]` |
 
 #### H6 ✅ — KAPANANLAR TAHTADA DURMAZ (2026-08-30'da boşaltıldı)
 
@@ -2419,7 +2417,7 @@ Gövdeleri tam metniyle `§8.O`/B'de.
 | kalem | kaynak | operatörden beklenen |
 |---|---|---|
 | ✅ **KARAR VERİLDİ 2026-08-31 · `EXE-2026-009` P-2 — kontrol kolu yapısal olarak BOŞ, öneri tetiği inşaen erişilemez** _(kimlik ATANMADI)_ | kart `EXE-2026-009` bloğu `acik_kalemler_2026_08_29`; ölçüm `research/olcumler/edg042_teshis_pencere_damgasi_2026-08-29/` | tetiğin kıyas tabanı: **(a)** damgasız kaydırma-öncesi küme AYRI+BEYANLI taban mı (kart revizyonu, kill#2'ye dikkat) · **(b)** A/B için pencere dönüşümlü mü koşsun · **(c)** tetik tek-kollu eşiğe mi bağlansın. Üçü de KART İŞİDİR; ölçüm başladıktan sonra eşiği kodda değiştirmek kill#2'yi tetikler → ✅ **KARAR 2026-08-31 (operatör, 85-aktarımı): kalem Rol-1'e DEVREDİLDİ** — (a)/(b)/(c) seçenekleri P-3 ölçümüyle AŞILDI: yol `ts` anahtarı (P-3 emsali; kontrol n=15 eşiği geçer, tedavi ~4 hf). Kill#3 çerçevesi kart revizyonu ister; icra kaydı §2 TAHTA satırında |
-| 🔴 **AÇIK · `EDG-2026-042` P-3 — K1 karışık örneklem** _(kimlik ATANMADI)_ | `docs/HAZIRLIK-P3-K1-KARISIK-ORNEKLEM-2026-08-30.md`; commit `dcef1c6` | karışık-örneklem kararı; ileriye dönük hız yalnız 1345 yolu (pooled ~6,5 hafta / ayrık ~14 hafta) |
+| ✅ **KARAR VERİLDİ 2026-08-31 · `EDG-2026-042` P-3 — K1 karışık örneklem** _(operatör: AYRIK/`ts`, ara işaret yok; kayıt Ö-54 satırı + kart bloğu `p3_karar_ayrik_ts_2026_08_31` + `docs/KARAR-P3-K1-AYRIK-TS-2026-08-31.md`)_ | `docs/HAZIRLIK-P3-K1-KARISIK-ORNEKLEM-2026-08-30.md`; commit `dcef1c6` | karışık-örneklem kararı; ileriye dönük hız yalnız 1345 yolu (pooled ~6,5 hafta / ayrık ~14 hafta) |
 
 _(`P-1` KAPANDI 2026-08-30: damga gönderim anına bağlandı — `90f6cdc`, dağıtım `dcef1c6`;
 kill#3 istisnası kartta ADIYLA kayıtlı — `83bc47b`.)_
@@ -4932,6 +4930,14 @@ gövdelerinden TÜRETİLDİ ve blok başında köken notuyla işaretli. Zaten ka
 `§5`'in "BENDEN BEKLENENLER" bölümü operatöre **altı kalem** gösteriyordu ve altısı da
 kapanmıştı — dördünün kararı 2026-08-17/22'de bizzat operatör tarafından verilmişti.
 Gövdeler **AYNEN** buraya alındı; `§5`'te yerlerine tarihli birer kapanış satırı kondu.
+
+
+#### J · §2'den taşınan — 2026-08-31'de KAPANDI (konsolidasyon ön-temizliği; metin AYNEN + kapanış şerhi)
+
+| Kalem | Cephe | Hüküm (taşınma anındaki metin AYNEN) |
+|---|---|---|
+| ROADMAP ayrıştırıcısı kapanış sözcüklerini **kelime içinde** de eşliyor **[2026-08-30 EKLENDİ]** | WP6 | **AÇIK** · ölçüldü 2026-08-30: `meridian/api.py::_roadmap_madde_durumu` dört kapanış imini (onay imi + üç büyük harfli sözcük) **sözcük sınırı olmadan** arıyor; "chop BÜTÇE-KAPALILIĞI" satırı bu yüzden kapalı ayrıştırılıyordu. **Hüküm tesadüfen doğruydu** (kalem gerçekten kapanmıştı), ayrıştırma değil — sayaç bugün yanlış nedenle doğru. `meridian/` dokunuşu tam-suite kapısı ister → Rol-1 → ✅ **KAPANDI 2026-08-31:** PR #23 (`325fdce`) eşlemeyi sözcük sınırına daralttı, v287'ye 11 çivi (5 yanlış-pozitif + 5 daralma bedeli); `451c7ac` dağıtımıyla canlıda |
+| `B1` pullback silahsızlanması — **DAĞITIM KUYRUĞU** (karar + kod 2026-08-22'de kapandı) **[2026-08-30 EKLENDİ: kapanan gövde §8.T/G'ye taşındı, kuyruk kalemi tahtada kaldı]** | WP11 | **ASKIDA:** dağıtım penceresi — Rol-1 (`043` sonrası suite'le); kimlik `[B-PULLBACK-SILAH]` → ✅ **KAPANDI 2026-08-31:** kod `ARMED_SETUPS`ta pullback'siz (ölçüldü) ve 08-30 `dcef1c6` + 08-31 `451c7ac` dağıtımlarıyla canlıda; kuyruk boşaldı, `[B-PULLBACK-SILAH]` kimliği kapandı |
 
 #### A · §5 **KOVA 1 — ACİL** gövdesi (A1 `[B-KORUMA-KUR]` · A2 `[B-BILDIRIM-N1]`) — ikisi de KAPALI
 
