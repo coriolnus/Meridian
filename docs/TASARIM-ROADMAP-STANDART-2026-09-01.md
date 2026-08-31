@@ -23,7 +23,15 @@ Terimler İNGİLİZCE (operatör 2026-09-01: "türkçe olmasına gerek yok, ingi
 olsun") — açıklama düzyazısı Türkçe kalır, ŞEMANIN anahtar/değer seti İngilizce'dir.
 Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
 - status: `ACTIVE (uçuşta) · QUEUED (sırada) · INTERIM (araya-kalem) · GATED(trigger)
-  (tetik bekliyor) · OPERATOR (operatör masasında) · DONE(date·ref) (kapandı)`
+  (tetik bekliyor) · OPERATOR (operatör masasında) · DONE(date·ref) (kapandı) ·
+  DROPPED(date·reason) (artık gereksiz — tarihli ek 2026-09-01, aşağıda)`
+- Tarihli ek (operatör 2026-09-01 gece: "her kalem ne durumda, artık gerekli mi gereksiz mi
+  yapıldı mı yapılmadı mı gibi kontrolleri de yap, sonrasında açık kapalı gibi sınıflandır"):
+  göç sırasında her madde GERÇEKLİK KONTROLÜNDEN geçer — depo kanıtıyla (git log, dosya
+  varlığı, günlük, kart hükmü) yapılmış olan DONE'a, geçersizleşmiş/aşılmış olan
+  DROPPED(tarih·gerekçe)'e iner; kanıtsız hüküm verilmez (uydurma yasağı). Üst sınıflandırma:
+  AÇIK = ACTIVE·QUEUED·INTERIM·GATED·OPERATOR, KAPALI = DONE·DROPPED. Ajan DROPPED'ı yalnız
+  ÖNERİR (kanıtıyla); hükmü Rol-1 verir, kararsızlar operatör listesine düşer.
 - owner: `operator · rol1 · agent` — size: `S · M · L` (ara değer `S-M` gibi tire ile)
 - trigger: GATED ise zorunlu ve somut; değilse `—`
 
