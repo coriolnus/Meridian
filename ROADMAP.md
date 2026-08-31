@@ -2045,6 +2045,35 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   docstring'indeki tur-12 ayrışma sınıfı. *KALDIR ya da DAMGALA (25a/25b deseni).*
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
+- **BACKEND MİMARİ KARARLARI (operatör, 2026-08-31 — brainstorm kapanışı, 9 kalem):**
+  Zemin iki ölçümle düzeltildi: Redis KURULU ve ENTEGRE (hotstate.py, `mrd:` şeması, Streams+
+  consumer-group üretimde) · "daemon yasağı" diye bir yasa YOK (A1'de 5 kendi daemon'ımız koşuyor;
+  gerçek yasa filo disiplini: birim+çivi+F9+yedek hikâyesi). Kalem kalem:
+  · **[UYGULA-1] SQLite göçünü bitir** — kalıcı sıcak durum `store`→SQLite WAL; "worker koşarken
+    yazma" kuralı transaction'a döner. Boyut: büyük (motor). Postgres tetiği: WAL'ın taşımadığı
+    eşzamanlı yazıcı sınıfı (bugün yok; litestream SQLite'a özgü — geçiş yedek hikâyesini yeniden kurar).
+  · **[UYGULA-2] DuckDB analitik** — adım 1: `events.jsonl`i doğrudan oku (sıfır göç, bot
+    pencere-taramaları SQL olur); adım 2: aylık Parquet sıkıştırma. Boyut: orta.
+  · **[UYGULA-3] bars→Parquet** (ay/sembol bölümlü) + DuckDB. TimescaleDB DEĞİL (debi ~98k
+    satır/gün — küçük-veri rejimi; Postgres'e biner; çözdüğü birleştirme problemi bizde yok; PIT'e ters).
+  · **[UYGULA-4] kalıcı-önbellek envanteri** — `*_cache.json` sınıfından hangisi restart-sonrası
+    gerçekten gerekli ÖLÇ; gerekenler SQLite'a, uçucular Redis'e (bedeli ödenmiş). Boyut: küçük.
+  · **[TETİKLİ-5] olay/mesajlaşma** — Redis Streams ZATEN üretimde; ikinci tüketici doğarsa yeni
+    stream anahtarı, aynı desen. Kafka tetiği: tüketici çeşitliliği + uzun replay (uzak). KOD YOK.
+  · **[TETİKLİ-6] kuyruk** — systemd kalır; "tetikleyen işi koşamaz" deseni ölçülürse arq
+    (Redis-tabanlı, async). KOD YOK.
+  · **[BEKLEMEDE-7] sır yönetimi** — operatör 2026-08-31: "şu an kalsın". Dosyada iki yol yazılı
+    (kademeli LoadCredential/sops → OpenBao · şimdi-OpenBao+OCI-KMS); gerçek engel unseal-after-reboot
+    + Vault BSL. Yeniden açılış operatörde.
+  · **[UYGULA-8, İLK SIRA] pytest-xdist spike** — `-n 4` + paylaşımcılara `xdist_group`, p95 seri
+    grupta. Tetik ATEŞLENDİ: ~26 dk × günde 6+ koşum. İlk sıra gerekçesi: sonraki her kalemin
+    suite maliyetini öder. Boyut: küçük-orta (spike + ölçüm).
+  · **[UYGULA-9] gecikme telemetrisi — Prometheus+Grafana** (operatör kararı 2026-08-31; pano-SQLite
+    alternatifi elendi). Filo disipliniyle: systemd birimleri + H3 + F9 + çiviler. Kill-kriteri
+    yeniden çapalama (EXE-2026-003 p95: CI çivisi %37 gürültülü → üretim telemetrisine) AYRI KART
+    ister — kart yasası. Boyut: orta-büyük.
+  Sıra: 8 → 4 → 2 → 1 → 3 → 9 (5/6 tetik kaydı, 7 beklemede). PIT-(b) uygulaması (EDG-2026-062)
+  bu kuyruğun ÖNÜNDE — operatör kararı daha eski.
 - **`research/edgar_facts/earnings_8k_tarihleri.csv` motorda hiç okunmuyor** (PIT çivisi ölçümü, 2026-08-31 — Yasa 6 adayı): PIT-damgalı 8-K arşivi var ama hiçbir yol tüketmiyor; PIT ihlal düzeltmesinin (b) yolu onu okuyucuya kavuşturur. Gerekçe+ayrıntı: docs/DEVIR-PIT-CIVISI-2026-08-30.md §1.4. Boyut: karta bağlı. Bağımlılık: operatörün (a)/(b) kararı.
 
 **BU BÖLÜM 2026-08-13'te BOŞALTILDI; 2026-08-14'ten beri 30-48 dalgası yine burada birikiyor —
@@ -2809,6 +2838,7 @@ Medhat-Schmeling bizde replike olmadı) · knob-bileşik çıkış paketleri mev
 > "yeniden değerlendirme" yapılamaz.
 
 ## §7 KARAR GÜNLÜĞÜ (kronolojik; yeni giriş EN ÜSTE — tek satır + tarih; ayrıntı oturum kayıtlarında) _(eski: §5)_
+- **2026-08-31 — Backend mimarisi (operatör): 9 kalem karara bağlandı** — 6 uygula (sıra 8→4→2→1→3→9; telemetri Prometheus+Grafana), 2 tetikli kayıt, sır yönetimi beklemede. Zemin: Redis entegre ölçümü + daemon-yasağının yasa olmadığı ölçümü. Ayrıntı §4 havuz girdisi.
 - **2026-08-31 — P-3: K1 AYRIK, anahtar `ts`, ara işaret YOK** (operatör). Bedel bilerek: hüküm ~14 hf'ye kayar, saflık > hız. Kart `p3_karar_ayrik_ts_2026_08_31`; P-2'nin çerçevesi değişti (iki kart, iki anahtar — beyanlı ayrışma).
 
 _**[2026-08-31 DURUM DENETİMİ — BU BÖLÜM KALEM TAŞIMAZ.]** Burası kronolojik neden-kaydıdır: her giriş OLMUŞ bir şeyin kaydıdır, açılıp kapanan bir kalem değil. Bu yüzden maddeleri durum işareti taşımaz ve `/api/roadmap` onları `belirsiz` sayar — **bu doğrudur**: "işaretsiz" burada "denetlenmemiş" değil, "durumu olan bir kalem değil" demektir. Denetim 165 girişi kalemi bu gerekçeyle rozetsiz bıraktı; kaynak: `docs/DENETIM-ROADMAP-2026-08-30.md`._

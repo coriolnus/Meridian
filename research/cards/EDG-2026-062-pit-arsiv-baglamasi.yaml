@@ -1,0 +1,46 @@
+# EDG-2026-062 — PIT arşiv bağlaması: tarihsel kazanç çapası EDGAR 8-K arşivinden
+# ÖN-KAYIT 2026-08-31 — eşikler sonuç görülmeden donduruldu; girdi git blob'una sabitli (§5)
+
+card_id: EDG-2026-062
+family: veri_yolu   # ÖLÇÜM-ALTYAPISI kartı (Ö-52/broker_teyit sınıfı) — edge hipotezi DEĞİL
+on_kayit: 2026-08-31
+karar: "operatör 2026-08-31: PIT ihlal düzeltmesi (b) — çapayı PIT arşivine bağla"
+kaynak_ihlal: "pitlaw BILINEN_IHLALLER ×2 (backtest.replay + cf_backfill scan yolu) — beyansız asimetri"
+
+hipotez: >
+  Tarihsel yolda kazanç çapası (days_since_report) PIT arşivinden (filed damgası, yalnız
+  filed <= seans-1 bilgisiyle) çözüldüğünde PEAD/episodic_pivot kurulumları tarihsel olarak
+  ÖLÇÜLEBİLİR olur — look-ahead EKLEMEDEN: arming'in olculemez_pit_yok hükmü insufficient_cf'e
+  döner ve BILINEN_IHLALLER'in iki kaydı düşer (taban 5→3; düşer-yükselmez kuralına uygun).
+
+girdi_dondurma:
+  arsiv: research/edgar_facts/earnings_8k_tarihleri.csv
+  git_blob: 8a9ff7811791b9f599a592fa6a6bc486ec6ef15e     # içerik-adresli — ağaç değişse kart ölmez (§5 blob kuralı, EDG-059 dersi)
+  yapisal_olcum_2026_08_31: "17.535 satır · 258 sembol · filed 2010-01-07→2026-07-31 · acceptance %100"
+
+esikler_ONDEN_DONUK:
+  kapsama: ">= %95 — CF penceresi evren-seanslarında sembol arşivde mevcut; altında KISMİ bağlama YASAK (ya hep ya olculemedi)"
+  tutarlilik: "<= %5 uyuşmazlık (±1 gün tolerans) — canlı takvimle kesişen dönemde report_date kıyası; üstünde KILL"
+  ufuk_sozlesmesi: "seans > arşiv filed-max ise satır OLCULEMEDI — asla 'rapor yok' (False) sayılmaz; eşik değil SÖZLEŞME"
+  zaman_cozunurlugu: "GÜN; muhafazakâr yön: filed <= seans-1 (EŞİT seans günü DAHİL DEĞİL — acceptance saat-dilimi belirsizliği çözülene dek gün-içi bilgi varsayılmaz)"
+
+k_disiplini: >
+  K = 0 deneme. Bu bir VERİ-YOLU kartıdır, edge kartı değil: hiçbir kurulum hakkında hüküm
+  ÜRETMEZ, yalnız ölçülebilirlik kazandırır. PEAD/episodic'in kendisi ileride KENDİ kartlarıyla
+  ölçülür — bu kart onların K'sını önden harcamaz.
+
+kill_list:
+  - "tutarlılık > %5 → arşiv güvenilmez, bağlama İPTAL (kart 'kaldı' kapanır)"
+  - "kapsama < %95 → kısmi bağlama yasak"
+  - "canlı yol DEĞİŞMİŞSE kill — bu kart yalnız TARİHSEL yolu bağlar; canlı days_since_report aynen kalır"
+  - "davranış değişimi RAPORSUZ kalırsa kill — replay'de True dönen satır sayısı (bugün ölçülü: 0) bağlama sonrası raporlanmak zorunda; CF örneklem bileşimi değişimi beyan edilmeden hüküm yok"
+pozitif_kontrol: >
+  YOL-TUTARLI (tek-fonksiyon değil): gerçek arşiv satırından bilinen bir vaka, replay yolunun
+  TAMAMINDAN (scan → evaluate_pead → days_since_report) geçerek True üretir; aynı sembolün
+  sınır-dışı günü False üretir; arşiv-ufku-ötesi gün OLCULEMEDI sayılır. Üçü de gerçek CSV
+  satırıyla, sentetikle değil.
+
+basari_tanimi: >
+  (1) İki BILINEN_IHLALLER kaydı beyanla düşer (pitlaw yeşil kalır) · (2) kapsama/tutarlılık
+  eşikleri geçer · (3) pozitif kontrol üç dalıyla yeşil · (4) davranış-değişimi raporu yazılır
+  (True satır sayısı + CF bileşim farkı) — hüküm İYİ/KÖTÜ değil, ÖLÇÜLEBİLİRLİK kazanımıdır.

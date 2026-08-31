@@ -11,7 +11,7 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **73** kart.
+Toplam **74** kart.
 
 ### Kayıtlı — ölçüm bekliyor (7)
 
@@ -230,7 +230,7 @@ Toplam **73** kart.
   · HÜKÜM: 2026-08-02 ~22:30 TR — ARŞİV (Rol-1 hükmü; kill#1 tetiklendi): İki yüzeyde de fark CI-0-içi VE |fark|<10bps: Y1 @20 −0,06bps [−2,06,+2,60] · Y2 @20 +0,27bps…
   · kart: `KYS-2026-001-kiyas-kirlenmesi.yaml`
 
-### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (4)
+### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (5)
 
 - **EDG-2026-011** (`askida`) — Aynı gün üretilen adaylar arasında "in-play" olanlar (kazanç-katalizörü yakınlığı + yüksek rvol) diğer adaylardan daha iyi ileri getiri/isabet taşır…
   · HÜKÜM: 2026-08-01 ~10:40 — kill#3 ASKI (K HARCANMADI): in-play aday-gün ÜST SINIRI bile 11-12 << 150.
@@ -242,6 +242,8 @@ Toplam **73** kart.
   · kart: `EDG-2026-060-cf-tarih-yeniden-yurutme.yaml`
 - **EDG-2026-061** (`judged`) — OPERATÖR SORUSU (2026-08-25): "OOS kapısının neden bu kadar az aday geçirdiği hâlâ oturmadı, bunu çözelim." Bir önceki tur şunu KANITLADI ve bu kart…
   · kart: `EDG-2026-061-oos-kapisi-neden-az-geciriyor.yaml`
+- **EDG-2026-062** (``) — 
+  · kart: `EDG-2026-062-pit-arsiv-baglamasi.yaml`
 
 <!-- ENDEKS: SON -->
 
