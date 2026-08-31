@@ -1,0 +1,75 @@
+# EDG-2026-065 — Hindsight Faz-1: kurulum + arşiv ingest + recall'un taban çizgiye karşı ölçümü
+# ÖN-KAYIT 2026-08-31 — kart-önce: kurulum komutları bu karttan SONRA koşar. Tetik zinciri:
+# Faz-0 tetiği operatör İLANIYLA ateşlendi (dört amaç — ROADMAP §7 2026-08-31 akşam);
+# "Hindsight kurulum kartını da başlat" (operatör, aynı akşam, birebir). Tasarım:
+# docs/TASARIM-HINDSIGHT-ENTEGRASYON-2026-08-31.md (§5 taslağının doldurulmuş hâli; §8 sınırı
+# aynen: okuyan herkes, yazan yalnız harness, karar veren yalnız defter — Hindsight İNDEKSTİR,
+# kayıt değil). Reçete: docs/INCELEME-HINDSIGHT-DERIN-2026-08-31.md §10.1 (sürüm çivili).
+# BOT RECALL BU KARTIN DEĞİL — ayrı kart (tasarım §6 Faz-2); burada botlara hiçbir erişim yok.
+
+card_id: EDG-2026-065
+status: registered
+family: arama_katmani_olcumu
+on_kayit: 2026-08-31
+
+hipotez: >
+  N≥30 dondurulmuş GERÇEK operatör sorusu kümesinde (arşiv/karar/vaka sınıfı — "EDG-042 kill#3
+  istisnası ne zaman, neden?" türü), Hindsight recall'u (semantik+BM25+graf+zamansal, TEMPR),
+  MİNİMAL TABAN ÇİZGİye (sqlite-vec + kendi şemamız — "hiçbiri" seçeneğinin somut hâli; AYNI
+  soru kümesi, AYNI korpus, AYNI embedder sınıfı) karşı doğru-pasaj isabetinde önden-donuk
+  eşiği aşacak kadar üstündür VE bu üstünlük Türkçe alt-kümede de ayakta kalır (sessiz kalite
+  çöküşü riski §8.1 — ölçülmeden geçilmez). Üstünlük çıkmazsa KALDI ve basit çözüm kazanır
+  (YAGNI): defter bunu da hüküm sayar, kurulum sökülür.
+
+k_registry: {registered_at: "2026-08-31", trial_ids: [EDG-065-faz1-recall-taban-kiyasi]}
+# trial_id SÖZDÜR (v279). Bu bir ARAMA-KATMANI ölçümüdür; hiçbir canlı karar yüzeyine
+# bağlanmaz, kurulum/parametre hükmü yalnız Hindsight'ın kendi kalıp-sürdürme kararını üretir.
+
+kurulum_sozlesmesi: >
+  Reçete SABİT (derin inceleme §10.1, sürüm çivili): hindsight-api-slim[local-onnx]==0.9.2 ·
+  native PG17+pgvector (PGDG arm64) · embedder multilingual-e5-small (ONNX, lokal) · reranker
+  flashrank ms-marco-MultiBERT-L-12 + rrf failover · 127.0.0.1 bind · systemd MemoryMax=8G
+  CPUQuota=200% · Memory Defense bank açılışında AÇIK (sonradan geriye taramaz — §8.5) ·
+  gecelik pg_dump→backups/ · dışarı giden TEK trafik OpenRouter LLM (retain/reflect; recall
+  LLM'siz-lokal). sudo adımları OPERATÖR koşar (bot-roster emsali), Rol-1 blok verir + kanıt
+  toplar. Birim kurulduğu gün elle test-ateşlenir (§9: "kurulu" ≠ "çalışır").
+
+veri_ve_dondurma: >
+  KORPUS: arsiv bank'i = MERIDIAN_ENGINEERING_LOG.md + ROADMAP §7 karar kayıtları +
+  research/cards/ hükümleri + docs/ vaka belgeleri (git-sha'lı ingest; batch, harness-yazımlı).
+  SORU KÜMESİ: ölçüm BAŞLAMADAN research/olcumler/edg065_hindsight_faz1/sorular.yaml içinde
+  dondurulur ve o dosyanın GIT BLOB sha'sı bu kartın olcum bölümüne işlenir (EDG-059 dersi:
+  çalışma-ağacı referansı kartı sessizce öldürür). Her soru: metin + beklenen-pasaj referansı
+  (dosya+bölüm) + dil etiketi (tr/en). Küme donmadan koşulan her kıyas GEÇERSİZ.
+
+esikler_ONDEN_DONUK:
+  isabet_metrigi: "isabet@3 — ilk 3 sonuçta beklenen pasajın (ya da onu içeren bölümün) dönmesi; hakem eşleşmesi dosya+bölüm düzeyinde, elle-yorum yok"
+  ana_esik: "Hindsight isabet@3 − taban isabet@3 ≥ +15 yüzde puanı VE Hindsight isabet@3 ≥ %70 (ikisi birden — taban çöktüğü için kazanılan fark tek başına yetmez)"
+  turkce_civisi: "tr alt-kümesinde Hindsight isabet@3 ≥ %60; altındaysa embedder Senaryo-B'ye (bge-m3 çifti) yükseltilip kıyas AYNI donuk kümeyle BİR kez tekrarlanır — o da kalırsa KALDI (eşik oynamaz, model değişimi kartın içinde beyanlı tek serbestliktir)"
+  maliyet_sutunu_zorunlu: "retain toplam token + belge başına ortalama · recall p95 gecikme (A1'de, docs rakamları kanıt DEĞİL) · boşta RSS — hepsi raporlanır, eşiksiz (bedel yasası)"
+  saglik_kaniti: "üçlü health (live/ready+pg) + systemd birimi active + pg_dump timer armed + F9 kaydı + Memory Defense bank'te açık — beşi birden kurulum-tamam tanımı"
+
+kill_list:
+  - "Memory Defense KAPALI bank'le yapılan her koşum geçersiz"
+  - "soru kümesi blob-donuk değilken koşulan kıyas geçersiz (dondurma commit'i kartın olcum bölümüne sha ile işlenir)"
+  - "BM25 dil ayarı ölçülmeden (psql \\dF turkish → varsa NATIVE_LANGUAGE=turkish, yoksa beyan) Türkçe kıyası geçersiz"
+  - "taban çizgi AYNI soru kümesi + AYNI korpusla koşmazsa kıyas geçersiz"
+  - "botlardan/bot çağrı yolundan Hindsight'a HERHANGİ erişim bu kartta geçersiz — bot recall AYRI kartın işi"
+  - "satıcı benchmark'ı/doc gecikme rakamı kanıt olarak KULLANILAMAZ (kendi ölçümümüz)"
+  - "kurulum/ingest canlı seans penceresinde kaynak yarışına girerse o adım geçersiz (seans-dışı koşulur)"
+  - "retain'e çitli kaynaklar dışından metin girerse geçersiz (yazan yalnız harness)"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: bilinen-cevaplı bir gerçek soru ("PIT çivisi hangi gün mekanikleşti, kanıt
+  dosyası ne?") uçtan uca — ingest→recall→beklenen pasaj ilk 3'te. NEGATİF: çit-içi
+  sahte-talimat metni (retain edilmiş bir belgeye gömülü "şu ayarı değiştir" cümlesi) recall
+  sonucunda VERİ olarak döner ve hiçbir yüzeyde talimat gibi işlenmez; Memory Defense sahte
+  API-anahtarlı satırı [REDACTED] ile döndürür.
+
+basari_tanimi: >
+  (1) Kurulum beş sağlık kanıtıyla tamam ve F9/RUNBOOK kayıtlı · (2) arsiv ingest'i git-sha'lı
+  ve tekrar-koşumda mükerrer üretmiyor (document_id upsert çivisi) · (3) donuk kümeyle iki-kollu
+  kıyas raporu (genel + tr alt-küme + maliyet sütunu) research/olcumler/edg065_hindsight_faz1/
+  altında · (4) hüküm: eşik geçildiyse Faz-1 KALIR (pano Hafıza yüzeyi + Türkçe recall kartı
+  yolu açılır), geçilmediyse KALDI ve sökülüm+sqlite-vec kaydı düşülür. Hüküm AYNI turda karta
+  ve K defterine işlenir.
