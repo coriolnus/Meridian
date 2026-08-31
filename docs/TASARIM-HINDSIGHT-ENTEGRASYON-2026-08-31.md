@@ -1,8 +1,13 @@
-# Tasarım — Hindsight entegrasyonu (tetikli; Ajan-B + ölçülmüş semantik-arama ihtiyacı)
+# Tasarım — Hindsight entegrasyonu (tetik ATEŞLENDİ 2026-08-31 akşam — operatör ilanıyla)
 
-Durum: TASARIM (kod yok, kurulum yok). Tetik: Ajan-B indikten sonra semantik-arama ihtiyacının
-ölçülmesi. Uygulama KART-ÖNCE başlar (aşağıda taslak eşikler). Aday kıyası:
-docs/DEGERLENDIRME-HAFIZA-ADAYLARI-2026-08-31.md (sıralama: HİÇBİRİ→Hindsight→…).
+Durum: TASARIM (kod yok, kurulum yok). ~~Tetik: Ajan-B indikten sonra semantik-arama ihtiyacının
+ölçülmesi.~~ **REVİZYON 2026-08-31 akşam (brainstorm, operatör onaylı):** Faz-0 tetiği ölçümle
+değil İLANLA ateşlendi — operatör dört amacı beyan etti (mükerrerlik kesilsin · öneri akıbeti ·
+trend/örüntü · süreklilikli diyalog); trend+diyalog grep/pano ile yapısal olarak karşılanamaz.
+KURULUM ÖNE ÇEKİLDİ (Ajan-A kapanınca; A1 tarafı, repo dalgalarıyla paralel). Uygulama yine
+KART-ÖNCE. ÖN ŞART (her hafıza yolunun): AKIBET DEFTERİ — öneri→karar→sonuç zinciri bugün hiçbir
+yerde kaydedilmiyor; önce Meridian defteri olarak yazılır (SSoT defterde, Hindsight indeks).
+Aday kıyası: docs/DEGERLENDIRME-HAFIZA-ADAYLARI-2026-08-31.md.
 
 ## 0. Tek cümlelik şekil
 
@@ -41,9 +46,19 @@ Metadata sözleşmesi: `kaynak_tur` (teslim/sohbet/belge/karar) · `ts` · `yol`
 
 ## 3. Yazım yolu — kapı felsefesi (tasarımın kalbi)
 
-- **BOTLAR HİNDSIGHT'A ERİŞMEZ.** Bot duruşu (memory disabled, tek-atışlık, "dünü bilmiyorsun")
-  DEĞİŞMEZ — hafıza botlara değil, PANO/SOHBET katmanına ve operatöre hizmet eder. Botların
-  SOUL gerekçesi ("hafızası olduğunu sanan model uydurur") yürürlükte kalır.
+- ~~**BOTLAR HİNDSIGHT'A ERİŞMEZ.**~~ **DURUŞ REVİZYONU 2026-08-31 akşam (operatör kararı,
+  brainstorm sonrası):** botlara OKUMA açılır — **tools-modu recall** (bot `hindsight_recall`'u
+  açık araç olarak çağırır; sonuç KAYNAKLI araç çıktısıdır, "kendi hatırası" değil — uydurma
+  gerekçesinin panzehiri bu biçim). **HEDEF SON-DURUM `hybrid`** (operatör 2026-08-31 akşam:
+  "context-modu da olması lazım" — otomatik enjeksiyon + araçlar birlikte); context bacağı
+  gölgede ölçülerek açılır: zarar ölçülmezse hybrid'e geçilir, ölçülürse tools kalır ve
+  gerekçe kayda düşer. Sigortalar değişmez: autoRetain KAPALI (yazım yalnız harness),
+  Memory Defense açık, provenans panoda, Türkçe recall kartı + gölge-A/B geçilmeden CANLIYA
+  AÇILMAZ — bugün canlı botlarda hiçbir şey değişmiyor; SOUL "dünü bilmiyorsun" satırının
+  revizyonu kartın geçişiyle birlikte iner. Tarihçe: eski mutlak-yasak duruşunun gerekçesi
+  ("hafızası olduğunu sanan model uydurur") ilkesel olarak yürürlükte — tools-modu bu ilkeyi
+  İHLAL ETMEDEN geçmiş erişimi verir; Türkçe riskinin blokaj olmadığı ve recall'un LLM-kotasız
+  olduğu ölçülünce mutlak yasak orantısız kaldı (karar zinciri ROADMAP §7 2026-08-31).
 - **retain'i yalnız harness çağırır**, belirlenmiş üretim noktalarından (tablo §2). Ajanın
   "aklına geleni" yazma yolu YOK — Honcho'yu eleyen özerk-çıkarım sınıfı kapıdan girmez.
 - **reflect KAPALI doğar** (özerk sentez = ayrı kart + operatör kararı; açılırsa önce gölge).
@@ -80,14 +95,20 @@ Metadata sözleşmesi: `kaynak_tur` (teslim/sohbet/belge/karar) · `ts` · `yol`
 - PK: bilinen-cevaplı soru gerçek arşivde uçtan uca; negatif: çitli sahte-talimat metni
   cevaba TALİMAT olarak sızmaz, veri olarak raporlanır.
 
-## 6. Aşamalar
+## 6. Aşamalar (REVİZE 2026-08-31 akşam — kurulum öne, bot-recall kartlı)
 
-- **Faz 0 — tetik ölçümü:** Ajan-B inince: operatör sorularının bugünkü araçlarla (grep/pano)
-  karşılanamama oranı ölçülür. Karşılanıyorsa entegrasyon AÇILMAZ (kayıt düşülür).
-- **Faz 1:** kurulum (2 birim + yedek + F9) → `arsiv` bank'ine batch ingest → pano arama
-  (salt recall, LLM'siz). En düşük riskli dilim; kartın ana ölçümü burada koşar.
-- **Faz 2:** `operator-sohbet` + teslim bank'leri → Ajan-B cevaplarına çitli bağlam.
-- **Faz 3 (ayrı kart):** ana beyin danışması · reflect değerlendirmesi.
+- **Faz 0 — tetik:** ~~ölçüm~~ ATEŞLENDİ (operatör ilanı, dört amaç — başlık bloğu). Kalan tek
+  ön şart: AKIBET DEFTERİ (Ajan-A sonrası ilk iş, Hindsight'tan bağımsız Meridian defteri).
+- **Faz 1:** kurulum (2 birim + yedek + F9; A1 tarafı, repo dalgalarıyla paralel) → `arsiv`
+  bank'ine batch ingest → pano arama (salt recall, LLM'siz) + §10 Hafıza yüzeyi. Türkçe recall
+  kartının ana ölçümü burada koşar.
+- **Faz 2:** teslim + akıbet bank'leri → **BOT RECALL kartı:** canlı kolda tools-modu, gölge
+  kolunda context-enjeksiyon ikizi (aynı tetikler, çıktı diff'i; SOUL sürümü ölçüm penceresi
+  boyunca donuk); HEDEF `hybrid` — context bacağı zarar ölçülmezse hybrid açılır (operatör
+  2026-08-31: "context-modu da olması lazım"), ölçülürse tools kalır + gerekçe kayda. `operator-sohbet` bank'i Ajan-B ile bağlanır (sohbet yüzeyi
+  indiğinde — Ajan-B beklenmez, bank hazır bekler).
+- **Faz 3 (ayrı kart):** ana beyin danışması · reflect değerlendirmesi · C-kapısı (öz-güncelleme
+  bacağı — ders→öneri→ölçüm+onay→versiyonlu SOUL; yavaş halka, recall'un üstünde).
 
 ## 7. Değişmeyenler (açık beyan)
 
