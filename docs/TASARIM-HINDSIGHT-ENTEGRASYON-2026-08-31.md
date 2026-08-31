@@ -60,7 +60,13 @@ Metadata sözleşmesi: `kaynak_tur` (teslim/sohbet/belge/karar) · `ts` · `yol`
 - **Pano arama kutusu:** LLM'siz doğrudan recall — arşiv/karar araması ("EDG-042 kill#3
   istisnası ne zaman, neden?" sınıfı sorular). Yerleşimi §10'daki Hafıza yüzeyidir.
 - Ana beynin recall danışması: FAZ-3, ayrı kart (karar yüzeyine bağlanma sınıfı — probgate
-  emsaliyle önce gölge).
+  emsaliyle önce gölge). MEKANİZMA ADAYI (2026-08-31 akşam bulgusu): Hermes'in native Hindsight
+  memory provider'ı var (`hermes memory setup`; autoRecall/autoRetain kancaları + açık araçlar;
+  modlar hybrid/context/tools — kaynak: hindsight.vectorize.io/sdks/integrations/hermes). Faz-3
+  kartı "api.py çitli bağlam" ile "native provider tools-modu"nu kıyaslayarak seçer; autoRetain
+  her durumda KAPALI (yazım harness'te — §3). Botların duruşuna dair operatör değerlendirmesi
+  AYRICA sürüyor (2026-08-31 akşam: seçenekler yeniden açıldı, karar VERİLMEDİ — bu satır
+  mekanizma envanteridir, duruş kararı değil).
 
 ## 5. Ölçüm kartı taslağı (tetik ateşlenince ön-kayıt)
 

@@ -406,6 +406,13 @@ bozulur — hata vermez, sadece kötü sonuç döner (Bedel yasasının tam vaka
 Postgres `native` BM25 için Türkçe sözlük stok PG'de **yoktur** (§9 açık soru) — bu yüzden
 `native` + `english` ile başlayıp kalibre etmek, ya da `pgroonga`ya geçmek gerekir.
 
+> **EK 2026-08-31 akşam (operatör sayfayı işaret etti — yeniden okundu):** sayfanın `native`
+> beyanı "European languages only"dir ve Türkçe'yi adıyla anmaz; §9'daki açık soru ("stok PG'de
+> `turkish` ts-config var mı?") kurulum gününde TEK komutla kapanır: `psql -c '\dF turkish'`.
+> VARSA `.env`'e `HINDSIGHT_API_TEXT_SEARCH_EXTENSION_NATIVE_LANGUAGE=turkish` yazılır (adım 7'ye
+> koşullu satır eklendi); YOKSA pgroonga değerlendirilir (§8.9 arm64 belirsizliği hâlâ geçerli).
+> Türkçe recall kartının kill-listesi bu ayar ölçülmeden koşulan kıyası zaten geçersiz sayar.
+
 ### 4.4 Model ayak izleri — türetilmiş hesap
 
 > **Yöntem (uydurma değil, türetme):** HuggingFace `config.json` dosyalarındaki gerçek boyutlardan
@@ -1048,6 +1055,9 @@ HINDSIGHT_API_REFLECT_MAX_COMPLETION_TOKENS=<maliyet tavanı>
 # --- embedding: TAM LOKAL, çok dilli, torch'suz ---
 HINDSIGHT_API_EMBEDDINGS_PROVIDER=onnx
 # ONNX varsayılan modeli zaten intfloat/multilingual-e5-small (§4.2)
+
+# --- BM25 dil ayarı: kurulum günü psql -c '\dF turkish' VARSA aç (§4.3 EK) ---
+HINDSIGHT_API_TEXT_SEARCH_EXTENSION_NATIVE_LANGUAGE=turkish
 
 # --- rerank: TAM LOKAL, çok dilli, ONNX + fail-open ---
 HINDSIGHT_API_RERANKER_PROVIDER=flashrank
