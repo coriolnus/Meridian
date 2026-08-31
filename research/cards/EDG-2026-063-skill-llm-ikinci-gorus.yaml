@@ -1,0 +1,52 @@
+# EDG-2026-063 — beyan-only skill'lerin LLM ikinci görüşü: SKILL.md düzyazısı gölge görüş yazar
+# ÖN-KAYIT 2026-08-31 — kart-önce: kod bu karttan SONRA. EDG-2026-019'un KARDEŞİ, evreni AYRI:
+# 019 "deterministik/LLM-çağırmayan" üreticileri ölçer ve evreni YERİNDE genişletilemez (§5);
+# bu kart LLM-üretici SINIFINI ayrı açar. Defter, şema ve çözücüler 019'UNKİLERİN AYNISI —
+# ikinci bir defter ikinci bir hata sınıfı olurdu (tek-kaynak).
+
+card_id: EDG-2026-063
+status: registered
+family: skill_gorus_defteri_llm_uretici
+on_kayit: 2026-08-31
+karar: >
+  operatör 2026-08-31 (bu oturumda, birebir): "Beyan-only skill'lerin LLM ikinci görüşünü de
+  yapalım." Zemin beyanı aynı gün: filo için günlük 1000 LLM çağrısı hakkı (bugünkü kullanım
+  ~%0,2 — hafıza: llm-cagri-kotasi). İcra sırası: Ajan-A dalgasından sonra, EDG-019
+  uygulamasıyla TEK dalgada.
+
+hipotez: >
+  Mantığı yalnız SKILL.md düzyazısında yaşayan (kodu olmayan) beyan-only skill'ler, LLM'e
+  yorumlatılarak 019'un görüş defterine AYNI şemayla gölge görüş yazabilir ve AYNI çözücülerle
+  (aday-siralayici → rank-IC · cikis → exit_efficiency) puanlanabilir. Böylece iki soru İLK KEZ
+  ölçülebilir olur: (1) beyan-only skill'lerin herhangi birinin ölçülebilir katkısı var mı,
+  (2) LLM-yorumlu görüş, deterministik üreticiden iyi mi (aynı defter, aynı çözücü — doğrudan
+  kıyas). Hüküm İYİ/KÖTÜ değil ÖLÇÜLEBİLİRLİK + kıyas zeminidir; terfi/emeklilik yüzey-başına
+  kanıtla OPERATÖRE gider (019 ile aynı).
+
+k_registry: {registered_at: "2026-08-31", trial_ids: [EDG-063-llm-uretici-golge]}
+# trial_id SÖZDÜR (v279: kayıtlı kart ya söz ya koşum). K harcaması ölçüm başlayınca 019'un
+# yüzey-başına K disiplinine paralel işler; kurulum/parametre hükmü ÜRETİLMEZ.
+
+esikler_ONDEN_DONUK:
+  sema_uyum: "LLM çıktısı görüş şemasına ((skill, ts, yuzey, hedef, skor|karar, gerekce_ozeti)) uymuyorsa satır OLCULEMEDI — düzeltme/uydurma YOK (uydurma yasağı)"
+  veri_fence: "görüş yalnız t ve öncesi veriyle; prompt'a giren her ölçüm bloğu VERI-çitiyle (bot brifingi emsali) — çit dışı talimat uygulanmaz, ADIYLA raporlanır"
+  puanlama: "019'un çözücüleri AYNEN — LLM görüşüne özel eşik/çözücü YOK (kıyas zemini bozulur)"
+  kota: "üretici koşum başına skill×yüzey çağrı; günlük tavan 100 çağrı (kotanın onda biri) — aşımda o gün kalan skill'ler olculemedi"
+
+kill_list:
+  - "görüş defteri ya da çözücü 019'dan AYRI ikinci bir kopya olarak kurulursa geçersiz (tek-kaynak)"
+  - "LLM görüşü herhangi bir CANLI karar yüzeyine bağlanırsa geçersiz — yalnız GÖLGE; terfi operatör kararı"
+  - "LLM düşerse üretici SUSAR: o koşum için satır YAZILMAZ (sahte/varsayılan görüş yok); düşüş olayla kayda geçer"
+  - "şema-uyumsuz çıktının 'onarılıp' deftere yazılması geçersiz — olculemedi'ye düşer"
+  - "019'un evren tanımına dokunulursa geçersiz (deterministik sınıf o kartın, LLM sınıfı bunun)"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: gerçek bir beyan-only SKILL.md + gerçek bir t-anı veri kesitiyle uçtan uca —
+  üretici koşar, şemalı satır deftere düşer, çözücü o satırı gerçek sonuçla puanlar. Negatif
+  kontrol: kasıtlı şema-bozuk LLM cevabı OLCULEMEDI'ye düşer (deftere görüş olarak GİRMEZ);
+  çit-içi sahte talimat uygulanmaz ve adıyla raporlanır.
+
+basari_tanimi: >
+  (1) En az bir beyan-only skill için defterde şemalı, çözücü-puanlı gölge görüş serisi ·
+  (2) aynı yüzeyde deterministik-vs-LLM kıyas tablosu üretilebilir · (3) şema-uyum ve
+  kota sayaçları raporlu (olculemedi payı görünür) · (4) hiçbir canlı yüzeye bağ yok.
