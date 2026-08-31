@@ -158,7 +158,7 @@ def ayristir(ham: Path, kok: Path, gun: str, limit_paket: int):
         k = ist.get(sym)
         if k is None:
             k = ist[sym] = {"q": 0, "q1s": 0, "t": 0, "hacim": 0, "spread_degisim": 0,
-                            "spread_1s": 0, "spread_islem_ek": 0, "saat_q": [0] * 24,
+                            "spread_1s": 0, "saat_q": [0] * 24,
                             "saat_t": [0] * 24, "ohlc": None}
         return k
 
@@ -218,9 +218,10 @@ def ayristir(ham: Path, kok: Path, gun: str, limit_paket: int):
                         ty.ekle(ts, sym, fiyat, lot, bayrak, None, None, None, None, None)
                     else:
                         ty.ekle(ts, sym, fiyat, lot, bayrak, kq[0], kq[1], kq[2], kq[3], kq[4])
-                        b = bekleyen.get(sym)
-                        if b is not None and (kq[3] - kq[1]) != (b[4] - b[2]):
-                            k["spread_islem_ek"] += 1
+                        # işlem-anı ek-yakalama SAYACI YOK: akış-içi sayaç totolojik çıktı
+                        # (bekleyen ve son_kotasyon aynı mesajla güncellenir — kıyas hep eşit,
+                        # 0 ölçtü; vaka EDG-066 hükmü). Gerçek ölçüm Parquet'ten ASOF join'le
+                        # yapılır (islem.k_* ↔ kotasyon_1s) — tek kaynak odur, kopya sayaç yasak.
                     o = k["ohlc"]
                     if o is None:
                         k["ohlc"] = [fiyat, fiyat, fiyat, fiyat, ts, ts]

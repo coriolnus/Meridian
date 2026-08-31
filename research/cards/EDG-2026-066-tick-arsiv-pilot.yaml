@@ -3,8 +3,51 @@ card_id: EDG-2026-066
 # `card_id`dir (emsal: tüm kartlar); Rol-1 hükmüyle düzeltildi, dosya adı önekiyle aynı.
 baslik: IEX HIST tick arşivi — pilot ölçüm (yoğunluk + gün-başı boyut) ve geri-dolum kapısı
 tarih: 2026-08-31
-durum: acik
+durum: olculdu   # 2026-09-01 ~00:40 TR — HÜKÜM (Rol-1): GEÇTİ, aşağıda
 sahip: Rol-1
+
+hukum:
+  tarih: "2026-09-01"
+  sonuc: GECTI   # başarı tanımının dört kalemi de karşılandı — geri-dolum programı AÇILIR
+  pozitif_kontrol: >
+    3/3 gün YEŞİL — ve karttaki tanımdan GÜÇLÜ biçimde: sembol-başı günlük işlem SAYISI
+    Alpaca IEX (feed=iex, adjustment=raw) ile BİREBİR eşit. 2020-09-15: 10/10 ·
+    2026-08-25: 10/10 · 2026-03-20: 10/10 (toplam 30/30; 10 likit sembol/gün).
+    Fiyat-seviyesi/OHLC kıyası ayrıca tutarlı. Kill#2 tetiklenmedi.
+  boyut:
+    tum_piyasa_mib: {2020-09-15: 79, 2026-08-25: 511, 2026-03-20: 662}
+    kapsam_top540_mib: {2020-09-15: 44, 2026-08-25: 134, 2026-03-20: 167}
+    not: "likit top-540 kapsamı kotasyon trafiğinin yalnız ~%30'u — kapsam süzgeci boyutu 3-4× düşürür"
+    projeksiyon: >
+      kapsam-süzgeçli gün-başı: 2020≈44 → 2026-normal≈134 MiB (yıllık ~%20 büyüme).
+      2020-01→2026-08 penceresi toplam ~130-135 GB; pencere ortalaması ~80 MB/gün —
+      hipotezin <=100 MB/gün ORTALAMA eşiği GEÇTİ. 120 GB tavanla pencere ~2020-03/04'e
+      ulaşır (tavan sabit, pencere ÇIKTIdır — operatör kararı bunu baştan emiyor).
+    kill3_beyani: >
+      "gün-başı >150 MB → karar operatöre döner" maddesi YALNIZ üçlü-vade outlier gününde
+      dokundu (2026-03-20: 167 MiB; yılda ~4-8 böyle gün). Güncel NORMAL gün 134 < 150.
+      Operatöre görünür kılındı; ek önlem önerilmez — 120 GB tavan bekçisi outlier günü
+      pencereyi ~yarım gün kısaltarak emer, tavan artmaz.
+  yogunluk: >
+    Evren 260 (state/bars dosya adlarından, .upper()); sayımda bulunan 250. Saatlik-medyan
+    >=60 kotasyon eşiğini geçen: 250/250 (%100 — eşik %80'di). En zayıf 8: PARA 142,
+    DOV 334, TDG 346, ROK 372, PKG 375, BLK 376, BIIB 412, REGN 414. İşlem medyanı
+    3177/gün-sembol, min 14 (işlem-akışı birkaç sembolde ince — ⑥b temsiliyet notu).
+  seyreltme_bedeli: >
+    2026-08-25: ham kotasyonun %12'si 1/sn satıra düşer; ham spread-DEĞİŞİMLERİNİN yalnız
+    %15'i 1sn ızgara satırlarında görünür (2020-09-15: %31/%31 — trafik arttıkça ızgara
+    kaybı büyür). İşlem-anı anlık görüntünün EK yakaladığı: akış-içi sayaç TOTOLOJİK çıktı
+    (bekleyen ile son_kotasyon aynı mesajla güncellenir; 0 ölçtü — bu bir ölçüm DEĞİLDİR,
+    sayaç pilot.py'dan kaldırıldı). Gerçek ölçüm Parquet'ten DuckDB ASOF join'le:
+    işlemlerin %23,9'unda (2026-08-25: 1.388.082/5.817.768) işlem-anı gerçek spread,
+    yalnız-ızgara tüketicisinin bileceğinden FARKLI — gömülü anlık görüntü bunların
+    tamamını kurtarır (2020-09-15: %14,3). Operatörün onayladığı üçüncü iyileştirme
+    kendini sayıyla doğruladı.
+  acilan_kalem: >
+    Geri-dolum programı (2 paralel işçi + pigz + indirme/ayrıştırma örtüşmesi + 120 GB
+    tavan bekçisi + seans saati duraklaması; meridian-learn program bitene dek KAPALI —
+    operatör kararı 2026-08-31) ayrı ops kalemi olarak açılır; işletme ayrıntısı bu
+    kartın dışındadır (notlar bölümündeki sözleşme gereği).
 operator_kararlari:
   # 2026-08-31 akşam sohbeti — karar sahibi operatör, kayıt buraya:
   kapsam: "S&P 500 + Nasdaq-100 birleşimi (~520-540 tekil sembol)"
