@@ -1,0 +1,55 @@
+# EDG-2026-064 — ısınma merdiveninin duvarı yeniden sınanır: süresiz ölçüm tarihli ölçüme döner
+# ÖN-KAYIT 2026-08-31 — operatör kararı (birebir): "merdiven duvarını yeniden sınayacak kartı da
+# sıraya al, burayı optimize etmemiz lazım." Birimin kendi şerhi bunu bekliyordu: "Duvar bir
+# ÖLÇÜMDÜR ama SÜRESİ YOKTUR ve yeniden sınanmaz." EDG-058'İN KARDEŞİ, sorusu AYRI: 058 K-cezası
+# sayımının kendini sıkmasını ölçer (kayıtlı, ölçülmemiş — AYNI pencerede koşulacak); bu kart
+# DUVARIN bayatlığını ve yenileme politikasını ölçer. İkisi birbirini KOPYALAMAZ.
+
+card_id: EDG-2026-064
+status: registered
+family: mekanizma_olcumu   # 058 emsali: edge DEĞİL — mekanizmanın kendi kilidini ölçer
+on_kayit: 2026-08-31
+
+hipotez: >
+  Bugünkü duvar (carpan=1; warmup_scale.json — 93+ turdur kilitli, hermes.warmup_budget) tek bir
+  geçmiş koşumun süre-tavanı ölçümüdür ve makine/önbellek koşulları değiştiği hâlde hiç yeniden
+  sınanmamıştır. Aynı makinede (A1) bugünkü önbellek sıcaklığıyla kontrollü yeniden-deneme,
+  kesildi-seviyesinin artık daha yüksek olduğunu gösterebilir; gösterirse duvar TARİHLİ ve
+  YENİLENEBİLİR bir ölçüme döner. DÜRÜST BEYAN AYNEN KORUNUR (hermes.py 2026-08-06 ölçümü):
+  duvarı açmak `cleared`ı artırmayabilir — bağlayıcı kısıt kapıdır ve bütçe K-cezasını büyütür;
+  bu kartın vaadi cleared değil KAPSAMA (UCB öncelikleri + sonda önbelleği) ve duvar
+  politikasının dürüstlüğüdür. cleared'a etki AYRICA raporlanır, vaat edilmez.
+
+k_registry: {registered_at: "2026-08-31", trial_ids: [EDG-064-duvar-yeniden-deneme]}
+# Mekanizma kartı: kurulum/parametre hükmü üretmez; 058 beyanı aynen — pozitif sonuç bile
+# kendi başına parametre değişikliği gerekçelendirmez, tasarım sorusunu (yenileme politikası)
+# operatöre kanıtla götürür.
+
+olcum_penceresi: >
+  YALNIZ A1'de (duvar A1'in ölçümüdür — yerel makinede ölçmek başka makinenin duvarını ölçmek
+  olur) ve YALNIZ seans-dışı pencerede (sprint CPU-ağır: 8s55d CPU vakası ölçülü; canlı döngüyle
+  kaynak yarışına girilmez). Koşum meridian-sprint@ şablon birimiyle, record_session=False
+  (ısınma yolu ZATEN ship etmez — ship yetkisine bu kart dokunmaz).
+
+esikler_ONDEN_DONUK:
+  kademe_grid: "carpan ∈ {1, 2, 4} — her kademede 1 kontrollü koşum; 8'e ancak 4 temizse çıkılır (K grid'i değil MEKANİZMA grid'i — sonda içerikleri ısınmanın kendi UCB seçimi)"
+  duvar_yenileme_esigi: "bir kademe ancak süre H11 tavanının %80'i ALTINDA kalırsa 'geçer' sayılır — tavanın dibine yaslanan koşum duvar teyididir, geçiş değil"
+  sure_olcumu: "her koşumda duvar-saati + evaluated + kesildi + sonda-önbellek isabeti raporlanır; k_penalty etkisi (p_required değişimi) AYRI sütun — 058'e girdi"
+  yenileme_politikasi_onerisi: "çıktının zorunlu parçası: 'duvar N turda bir yeniden denenir' önerisi ölçülen sürelerle gerekçelendirilir (N uydurulmaz, koşum maliyetinden türetilir)"
+
+kill_list:
+  - "koşum canlı seans penceresine taşarsa o koşum geçersiz (kaynak yarışı — ölçüm koşulu bozulur)"
+  - "record_session=False dışına çıkan ya da ship yolunu tetikleyen her koşum kartı geçersiz kılar"
+  - "warmup_scale.json'a ölçüm SIRASINDA elle yazılırsa geçersiz — duvar güncellemesi ancak hüküm + operatör kararıyla, merdivenin KENDİ geri-bildirim yolundan"
+  - "kademe koşumu kesildi verirse bu KILL DEĞİL SONUÇTUR: o kademe duvar teyidi olarak raporlanır"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: carpan=1 (bugünkü duvar) kontrol koşumu — mevcut davranışın aynısını üretmeli
+  (kesilmeden tamamlanır, evaluated ~bugünkü seviye). Kontrol koşumu farklı çıkarsa ölçüm
+  ortamı bozuktur ve kademeli koşumlara GEÇİLMEZ (olcum-baglami-tuzagi dersi).
+
+basari_tanimi: >
+  (1) Duvar tarihli bir ölçüme döner: her kademe için geçti/duvar hükmü + süre kanıtı ·
+  (2) yenileme-politikası önerisi ölçülü gerekçeyle operatöre gider · (3) cleared/kapsama
+  etkisi raporlanır (vaatsiz) · (4) 058'in K-sayım verisi aynı koşumlardan toplanmış olur.
+  Hüküm İYİ/KÖTÜ değil: kilidin süresizliği biter, kararı kanıtla operatör verir.
