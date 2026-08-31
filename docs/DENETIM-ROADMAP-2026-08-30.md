@@ -108,6 +108,12 @@ tarafından** doğrulandı ve öyle işaretlendi:
    Rol-1 atar; bu tur kimlik uydurmadı.) `P-1` 2026-08-30'da kapandı (`90f6cdc` · `dcef1c6` · `83bc47b`).
 2. **§7'nin 2026-08-30 boşluğu** — §7'nin en yeni girişi 2026-08-29'du; o tarihten sonra dokuz
    commit indi. Neden-kaydını Rol-1 yazar; satır onu kaybolmaktan korur.
+   **[GÜNCELLEME 2026-08-31 — KAPANDI, operatör istedi:]** boşluk dokuz commit değil **24 tur**
+   çıktı (`2701cf4`…`6dd38b5`; ilk sayım yalnız `git log --since` kuyruğuna bakmıştı ve 08-29
+   öğleden sonrasını kaçırmıştı — sayı tarihiyle düzeltildi, silinmedi). 24 giriş §7'ye yazıldı,
+   hepsi commit gövdelerinden TÜRETİLDİ ve blok başında **köken notu** taşıyor: girişlerin turların
+   kendi anında değil sonradan yazıldığı gizlenmiyor. Yeni hüküm verilmedi; zaten kayıtlı iki tur
+   (`177a92b`, `6b9c6ad`) tekrarlanmadı. Tahta satırı `§8.T`/I'ya taşındı.
 3. **Ayrıştırıcı kelime-içi eşliyor** — `_roadmap_madde_durumu` dört kapanış imini sözcük sınırı
    olmadan arıyor; "chop BÜTÇE-KAPALILIĞI" bu yüzden kapalı ayrıştırılıyordu. **Hüküm tesadüfen
    doğruydu, ayrıştırma değil.** `meridian/` dokunuşu tam-suite kapısı ister → Rol-1.
@@ -143,3 +149,70 @@ koşmadı** (Rol-1 kapısı, ~26 dk). Koşan tek şey bu turun kendi kapsam test
 (`tests/test_tahta_hijyeni_v337.py` — 5 passed) ve dönüşüm betiğinin kendi kayıpsızlık kapısıdır.
 `meridian/` ve `ops/` altına **hiç dokunulmadı**; değişen dosyalar `ROADMAP.md`, bu belge ve yeni
 çivi dosyasıdır.
+
+---
+
+# EK · 2026-08-31 — TAM BELGE DURUM DENETİMİ (operatör: *"bütün hepsinin durumunu kontrol etmek lazımdı"*)
+
+**Haklı itiraz:** ilk tur yalnız `§2 TAHTA`ya odaklandı. Diğer bölümlerin durumu ölçülmemişti.
+Bu ek o boşluğu kapatır: **428 işaretsiz kalemin tamamı** tek tek geçildi.
+
+## E.1 · Yöntem — üç kova, ve hiçbiri tahmin değil
+
+| kova | ne demek | ne yapıldı |
+|---|---|---|
+| **KALEM** | açılıp kapanan iş | depo/disk kanıtıyla rozet: `AÇIK` · `BLOKE` · `ASKIDA` · `KAPALI` |
+| **KAYIT** | olmuş bir şeyin kaydı (bulgu, ders, keşif, günlük girişi, arşiv) | bölüm başına **beyan** düşüldü: rozetsizliği DOĞRUdur |
+| **DOĞRULANMADI** | kalem ama bu turda ölçülemedi | `🟡 DOĞRULANMADI` + satırın kendi gerekçesi |
+
+Üçüncü kova bilinçlidir: rozeti tahminle doldurmak, bu turun düzelttiği `bayat-beyan` sınıfını
+ters yönde üretirdi. Bu tur **cloud klonunda** koştu; canlı defter ve `state/` okunamaz.
+
+## E.2 · Bölüm bölüm sonuç
+
+| bölüm | işaretsiz (önce → sonra) | hüküm |
+|---|---|---|
+| `§∞` eşleme | 9 → 9 | **KAYIT** — adres defteri, iş listesi değil (beyan düşüldü) |
+| `§0` sözleşme | 13 → 13 | **KAYIT** — anayasa (beyan düşüldü) |
+| `§1` hat | 7 → 7 | **KAYIT** — yaşam döngüsü kapıları (beyan düşüldü) |
+| `§2` tahta | 18 → **0** | ilk turda kapandı |
+| `§3` aktif WP | 70 → 40 | **35 rozet** (25 kanıtlı + 10 `🟡`), **30 KAYIT** (beyan düşüldü); WP özet tablosunun 11 satırı da rozetlendi |
+| `§4` havuz | 17 → **0** | 8 gövde + 9 taşıma izi, hepsi kendi sınıflandırma etiketinden |
+| `§5` operatör | 29 → 14 | 14 kanıt satırı + 3 kalem rozetlendi; 13 satır **ENVANTER** (beyan düşüldü); 1 `🟡` |
+| `§6` kartlar | 43 → 9 | 41 satır **diskten** rozetlendi + indeks↔disk mutabakatı |
+| `§7` günlük | 165 → 165 | **KAYIT** — kronolojik defter (beyan düşüldü) |
+| `§8` arşiv | 75 → 75 | **KAYIT** — tanımı gereği tarihçe (beyan düşüldü) |
+
+## E.3 · En ağır bulgu — `§6` kart indeksi 22 kart geride
+
+Diskte **73 kart** var; indeksin kendi toplamı **50** diyor. İndekste hiç geçmeyen 22 kart
+`EDG-2026-042`…`061` + `EXE-2026-008/009`, yani **2026-08-22 sonrası ölçüm dalgasının tamamı.**
+Ayrıca `measuring` (4 kart) ve `judged` (2 kart) kovaları indekste **hiç yok**.
+
+Bu tekrarlanan bir sınıf: 2026-08-17'de aynı kalem üç kart için açılıp kapatılmıştı. Kök neden
+kartlar değil, **indeksin elle tutulması** — `ops/kart_endeksi_uret.py` üretilmiş indeksi
+`research/cards/README.md`'ye yazıyor, `§6` onun türetilmeyen ikinci kopyası (**tek-kaynak yasası**).
+Bu tur 22 kartı diskten ölçüp bloğa yazdı ve her satırın rozetini **karttan** okudu; indeksin
+gövdesini elle tazelemedi — tazelemek sınıfı kapatmaz, bir sonraki dalgada aynı ayrışma doğar.
+
+## E.4 · İkinci bulgu — WP özet tablosunun 6 satırı panoda "KAPALI" okunuyordu
+
+`WP1` · `WP4` · `WP5` · `WP7` · `WP8` — beşi de **aktif cephe** — ayrıştırıcıda `kapali`
+çıkıyordu, çünkü hücrelerinin düzyazısında "KAPANDI"/"KAPALI" kelimeleri geçiyor ve ayrıştırıcı
+onları **sözcük sınırı olmadan** arıyor (aynı kusur `§2 H0`'da açık kalem olarak duruyor).
+Rozet eklendikten sonra bu satırlar `çok işaretli` okunuyor — *yanlış* değil, **eksik**: okuyucuyu
+hücreye bakmaya çağırıyor. Gerçek düzeltme `meridian/api.py`dedir ve tam-suite kapısı ister.
+
+## E.5 · Ölçüm — belgenin tamamı
+
+| | HEAD `6dd38b5` (denetim öncesi) | 2026-08-31 |
+|---|---|---|
+| düzyazı maddesi — işaretsiz | **307 / 421** | **266 / 450** |
+| düzyazı maddesi — kapalı · açık | 105 · 9 | 161 · 21 |
+| tablo satırı — işaretsiz | **113 / 166** | **66 / 188** |
+| tablo satırı — kapalı · açık | 48 · 0 | 79 · 25 |
+
+**Kalan 332 işaretsizin 322'si BEYANLI KAYIT'tır** (§7 günlük 165 · §8 arşiv 75 · §3 kayıtları 30 ·
+§5 envanteri 13 · §0/§1/§∞ 29 · §6 artığı 9 + 1); **10'u `🟡 DOĞRULANMADI`** ve her biri nedenini
+kendi satırında taşıyor. Yani belgede artık **denetlenmemiş kalem yoktur** — ya rozetli, ya
+kayıt olduğu beyanlı, ya da ölçülemediği adıyla yazılı.
