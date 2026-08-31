@@ -65,6 +65,9 @@ AYRAC = "@@BIRIM"
 #: işe yaramaz: uzak komut bir boru zinciridir ve son halka `echo`dur.
 RC_ISARETI = "@@RC"
 DOGRULAMA_ISARETI = "@@DOGRULAMA"
+#: Yedeğin GERÇEKTEN alındığının tanığı. Yedek bir VAAT değil bir KAPIDIR: yedeksiz bir
+#: güncelleme GERİ ALINAMAZ, o yüzden bu işaret yeşil hükmün ŞARTIDIR (dal-sonu incelemesi).
+TAR_ISARETI = "@@TAR tamam"
 
 #: ÖLÇÜLEN başarı dizgesi (`hermes profile update`, 2026-08-31). Hermes bu dizgeyi değiştirirse
 #: hüküm KIRMIZIYA düşer ve ham çıktı basılır — yani arıza SESSİZ değil GÜRÜLTÜLÜ olur; doğru
@@ -424,10 +427,15 @@ def profil_guncelle_komutu(bot: str) -> str:
     """
     p = _profil(bot)
     yedek = f'/home/ubuntu/backups/profil-{bot}-$(date -u +%Y%m%dT%H%M%SZ).tgz'
+    # YEDEK BİR KAPIDIR, VAAT DEĞİL. Zincir `&&` ile bağlı: tar düşerse `hermes profile update`
+    # HİÇ KOŞMAZ. Eskiden aralarında `;` vardı — yedek başarısızken güncelleme yine koşuyor ve
+    # hüküm yeşil kalabiliyordu, yani geri alınamaz bir değişiklik yedeksiz yapılıyordu.
+    # `|` önceliği `&&`den yüksektir, yani zincir `(mkdir && tar && echo) && (printf | hermes)`
+    # olarak ayrışır — doğru olan da budur. `$?` ise her hâlükârda basılır (`;` ile ayrık).
     return "; ".join([
         f'mkdir -p /home/ubuntu/backups && tar czf {yedek} -C {p["kok"]} {bot} '
-        f'&& echo "@@TAR tamam"',
-        f'printf "y\\n" | hermes profile update {bot} --force-config',
+        f'&& echo "{TAR_ISARETI}" '
+        f'&& printf "y\\n" | hermes profile update {bot} --force-config',
         f'echo "{RC_ISARETI} $?"',
         f'echo "{DOGRULAMA_ISARETI}"',
         f'grep -nE "^  (provider|default|max_tokens):" {p["ev"]}/config.yaml',
@@ -459,6 +467,12 @@ def guncelleme_hukmu(cikti: str, rc: int | None) -> tuple[bool, str]:
     if IPTAL_IZI in cikti.lower():
         return False, (f"SAHTE BAŞARI: çıktı İPTAL diyor ({IPTAL_IZI!r}) ama uzak RC={rc}. "
                        "RC'ye bakan operatör güncellemeyi YAPILMIŞ sanardı; canlı profil ESKİ.")
+    if TAR_ISARETI not in cikti:
+        # İptalden SONRA, başarı dizgesinden ÖNCE. Sonra olsaydı yedeksiz bir koşum "dizge yok"
+        # diye teşhis edilirdi ve operatör hermes'i suçlardı; oysa ölçülen şey YEDEĞİN
+        # ALINAMADIĞIDIR ve zincir bu yüzden hiç ilerlememiştir.
+        return False, (f"YEDEK ALINAMADI ({TAR_ISARETI!r} işareti yok) — tar düştüğü için "
+                       "güncelleme zinciri koşmadı. Yedeksiz güncelleme GERİ ALINAMAZ.")
     if rc is None:
         return False, (f"uzak çıkış kodu ÖLÇÜLEMEDİ ({RC_ISARETI} işareti yok) — ssh'ın kendi "
                        "RC'si bu zincirde hep 0'dır, ona güvenmek sahte başarıdır")
@@ -468,7 +482,18 @@ def guncelleme_hukmu(cikti: str, rc: int | None) -> tuple[bool, str]:
     if rc != 0:
         return False, (f"başarı dizgesi VAR ama uzak RC={rc} — iki tanık ÇELİŞİYOR, "
                        "yeşil sayılmaz")
-    return True, f"doğrulandı: {BASARI_DIZGESI!r} + uzak RC=0"
+    return True, f"doğrulandı: {TAR_ISARETI!r} + {BASARI_DIZGESI!r} + uzak RC=0"
+
+
+def canli_model_varsayilani(dogrulama_ciktisi: str) -> str | None:
+    """Doğrulama grep'inin `default:` DEĞERİ. Bulunamazsa `None` — "aynı" DEMEZ.
+
+    Neden ayrıştırılıp EŞİTLİKLE kıyaslanıyor: alt-dizge kıyası (`beklenen in canli`) ÖNEK
+    vakasında sahte-aynılık verir. `opus-4-1` beklenirken canlı `opus-4-1-ultra` ise alt-dizge
+    "AYNI" der — ve bu tam da bugünkü Ultra-geçişinin sınıfıdır (aynı ad, uzatılmış sürüm).
+    """
+    m = re.search(r"^\s*(?:\d+:)?\s*default:\s*(\S+)\s*$", dogrulama_ciktisi, re.M)
+    return m.group(1) if m else None
 
 
 def repo_model_varsayilani(bot: str) -> str | None:
@@ -606,15 +631,19 @@ def _profil_guncelle(a) -> int:
         ok, neden = False, f"ssh'ın KENDİSİ düştü (RC={rc_ssh}) — uzak komut hiç koşmamış olabilir"
     print()
     print(f"HÜKÜM: {'YEŞİL' if ok else 'KIRMIZI'} — {neden}")
-    if beklenen and DOGRULAMA_ISARETI in cikti:
-        canli = cikti.split(DOGRULAMA_ISARETI, 1)[1]
-        if beklenen in canli:
+    canli = (canli_model_varsayilani(cikti.split(DOGRULAMA_ISARETI, 1)[1])
+             if DOGRULAMA_ISARETI in cikti else None)
+    if beklenen and canli:
+        # EŞİTLİK, alt-dizge DEĞİL: `in` kıyası `opus-4-1` beklerken canlı `opus-4-1-ultra`
+        # olduğunda "AYNI" derdi — sahte aynılık (dal-sonu incelemesi Important-2).
+        if canli == beklenen:
             print(f"  · model.default canlıda repo ile AYNI: {beklenen}")
         else:
-            print(f"  · model.default AYRIŞTI — repo: {beklenen}; canlı grep yukarıda")
+            print(f"  · model.default AYRIŞTI — repo: {beklenen}; canlı: {canli}")
             ok = False
     else:
-        print("  · model kıyası YAPILMADI (repo değeri ya da doğrulama bloğu ölçülemedi)")
+        print(f"  · model kıyası YAPILMADI (repo: {beklenen or 'ÖLÇÜLEMEDİ'}; "
+              f"canlı: {canli or 'ÖLÇÜLEMEDİ'})")
     return 0 if ok else 1
 
 

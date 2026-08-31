@@ -95,8 +95,8 @@ function FiloGovdesi({ yuk }: { yuk: FiloYuku }) {
       {ajanlar.length === 0 ? (
         <OlculemediBlok
           baslik="Roster boş döndü"
-          neden="Uç hiçbir ajan kaydı göndermedi. Bu ÖLÇÜLMÜŞ bir boşluktur (liste okundu, içi boş) — `kaynak.botlar` ve `suzgec` alanları hangisi olduğunu söyler."
-          teknik="`ajanlar: []`"
+          neden="Uç hiçbir ajan kaydı göndermedi — bu ÖLÇÜLMÜŞ bir boşluk: liste okundu ve içi boştu"
+          teknik="`ajanlar: []` — hangi boşluk olduğunu `kaynak.botlar` ve `suzgec` alanları söyler"
         />
       ) : (
         <Tabs value={aktif} onValueChange={setSecili} className="gap-4">
@@ -159,7 +159,8 @@ function KaynakKarti({ yuk }: { yuk: FiloYuku }) {
     return (
       <OlculemediBlok
         baslik="Kaynak bloğu yok"
-        neden="Uç hangi defterleri okuduğunu söylemedi — gövdede `kaynak` alanı bir nesne değil."
+        neden="Uç hangi defterleri okuduğunu söylemedi"
+        teknik="gövdede `kaynak` alanı bir nesne değil"
       />
     );
   }
@@ -177,10 +178,30 @@ function KaynakKarti({ yuk }: { yuk: FiloYuku }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 text-xs">
-        <Satir etiket="roster kökü" deger={k.botKoku} neden="`kaynak.bot_koku` yazılmamış" />
-        <Satir etiket="profil kökü" deger={k.profilKoku} neden="`kaynak.profil_koku` yazılmamış" />
-        <Satir etiket="ana beyin" deger={k.anaBeyin} neden="`kaynak.ana_beyin` yazılmamış" />
-        <Satir etiket="olay defteri" deger={k.events} neden="`kaynak.events` yazılmamış" />
+        <Satir
+          etiket="roster kökü"
+          deger={k.botKoku}
+          neden="kaydedilmemiş"
+          teknik="`kaynak.bot_koku` yükte yok"
+        />
+        <Satir
+          etiket="profil kökü"
+          deger={k.profilKoku}
+          neden="kaydedilmemiş"
+          teknik="`kaynak.profil_koku` yükte yok"
+        />
+        <Satir
+          etiket="ana model"
+          deger={k.anaBeyin}
+          neden="kaydedilmemiş"
+          teknik="`kaynak.ana_beyin` yükte yok"
+        />
+        <Satir
+          etiket="olay defteri"
+          deger={k.events}
+          neden="kaydedilmemiş"
+          teknik="`kaynak.events` yükte yok"
+        />
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="w-28 shrink-0 text-muted-foreground">roster</span>
           {k.botlar === null ? (
@@ -212,7 +233,7 @@ function KaynakKarti({ yuk }: { yuk: FiloYuku }) {
           <span>
             oturum penceresi:{" "}
             {s === null || s.limit === null ? (
-              <Olculemedi neden="`suzgec.limit` yok" />
+              <Olculemedi neden="bildirilmedi" teknik="`suzgec.limit` yükte yok" />
             ) : (
               <strong className="tabular-nums">{bicimSayi(s.limit)}</strong>
             )}
@@ -225,7 +246,7 @@ function KaynakKarti({ yuk }: { yuk: FiloYuku }) {
           <span>
             teslim tavanı:{" "}
             {k.teslimTavani === null ? (
-              <Olculemedi neden="`kaynak.teslim_tavani` yok" />
+              <Olculemedi neden="bildirilmedi" teknik="`kaynak.teslim_tavani` yükte yok" />
             ) : (
               <strong className="tabular-nums">{bicimSayi(k.teslimTavani)}</strong>
             )}
@@ -262,12 +283,19 @@ function KaynakKarti({ yuk }: { yuk: FiloYuku }) {
   );
 }
 
-function Satir({ etiket, deger, neden }: { etiket: string; deger: string | null; neden: string }) {
+// `teknik` İSTEĞE BAĞLI DEĞİL BİR SÖZLEŞME PARÇASI (v323): `neden` kullanıcının okuduğu
+// cümledir, alan adı taşıyamaz. İç ayrıntı düşürülmez — `Olculemedi`nin ikinci katmanına iner.
+function Satir({
+  etiket,
+  deger,
+  neden,
+  teknik,
+}: { etiket: string; deger: string | null; neden: string; teknik?: string }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-2">
       <span className="w-28 shrink-0 text-muted-foreground">{etiket}</span>
       {deger === null ? (
-        <Olculemedi neden={neden} />
+        <Olculemedi neden={neden} teknik={teknik} />
       ) : (
         <code className="min-w-0 break-all font-mono text-[11px]">{deger}</code>
       )}
@@ -396,7 +424,7 @@ function OturumBasligi({ o, onceki }: { o: FiloOturumu; onceki: FiloOturumu | nu
     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
       <Damga ts={o.ts} tsHam={o.tsHam} neden="oturum damgası yok" />
       {o.model === null ? (
-        <Olculemedi neden="model yazılmamış" teknik="`oturum.model: null`" />
+        <Olculemedi neden="model kaydedilmemiş" teknik="`oturum.model: null`" />
       ) : (
         <Badge variant="outline" className="font-mono text-[10px]">
           {o.model}
@@ -522,7 +550,7 @@ function TeslimKarti({ a }: { a: FiloAjani }) {
         {teslimler === null ? (
           <OlculemediBlok
             baslik="Teslim defteri ölçülemedi"
-            neden="Olay defteri okunamadı — boş liste 'hiç brifing teslim edilmedi' derdi ve bu AYRI bir iddiadır. Nedeni kaynak kartında yazılı."
+            neden="Olay defteri okunamadı — boş liste 'hiç brifing teslim edilmedi' derdi ve bu AYRI bir iddiadır; nedeni kaynak kartında yazılı"
             teknik="`teslimler: null`"
           />
         ) : teslimler.length === 0 ? (
@@ -625,7 +653,7 @@ function EslesmeyenKarti({ yuk }: { yuk: FiloYuku }) {
         {liste === null ? (
           <OlculemediBlok
             baslik="Sahipsiz teslimler ölçülemedi"
-            neden="Roster ya da olay defteri okunamadı; kimin sahipsiz olduğu ancak TAM liste bilinirken söylenebilir."
+            neden="Roster ya da olay defteri okunamadı — kimin sahipsiz olduğu ancak TAM liste bilinirken söylenebilir"
             teknik="`eslesmeyen_teslimler: null`"
           />
         ) : (

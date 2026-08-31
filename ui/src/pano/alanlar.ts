@@ -198,7 +198,7 @@ export const YUZEYLER = {
       { kimlik: "sohbet", baslik: "Sohbet", soru: "Ajan ne önerdi, kontrol ne cevap verdi?", ikon: MessagesSquare },
       { kimlik: "defter", baslik: "Defter", soru: "Aynı kayıtlar sıralandığında hangi öneri öne çıkıyor?", ikon: Table2 },
       { kimlik: "olcum", baslik: "Ölçüm", soru: "Kim konuştu, kontrol ne dedi, tahmin tuttu mu?", ikon: Bot },
-      { kimlik: "filo", baslik: "Filo", soru: "Botlar ve ana beyin ne konuştu, ne teslim etti?", ikon: Users },
+      { kimlik: "filo", baslik: "Filo", soru: "Botlar ve ana model ne konuştu, ne teslim etti?", ikon: Users },
     ],
   },
   calendar: {

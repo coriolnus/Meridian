@@ -27,6 +27,7 @@ from __future__ import annotations
 import ast
 import os
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -499,16 +500,60 @@ def test_h2_BASARI_DIZGESI_YOKSA_KIRMIZI():
     assert ok is False and neden
 
 
+def _yesil_cikti(mod) -> str:
+    """Bir güncellemenin YEŞİL sayılması için gereken TÜM tanıklar. Yedek işareti bu kümenin
+    parçasıdır (düzeltme turu 2): yedeksiz bir güncelleme geri alınamaz."""
+    return f"{mod.TAR_ISARETI}\n{mod.BASARI_DIZGESI} profile\n"
+
+
 def test_h3_BASARI_DIZGESI_VARSA_VE_RC_SIFIRSA_YESIL():
     mod = _yukle()
-    ok, _ = mod.guncelleme_hukmu(f"{mod.BASARI_DIZGESI} profile\n", 0)
+    ok, _ = mod.guncelleme_hukmu(_yesil_cikti(mod), 0)
     assert ok is True
 
 
 def test_h4_RC_SIFIR_DEGILSE_DIZGE_VARSA_DA_KIRMIZI():
     mod = _yukle()
-    ok, neden = mod.guncelleme_hukmu(f"{mod.BASARI_DIZGESI} profile\n", 3)
+    ok, neden = mod.guncelleme_hukmu(_yesil_cikti(mod), 3)
     assert ok is False and "3" in neden, neden
+
+
+def test_h10_YEDEK_ALINAMADIYSA_HUKUM_KIRMIZI():
+    """Dal-sonu incelemesi Important-1: tar yedeği bir KAPI değil VAAT'ti. Yedeksiz bir
+    güncelleme GERİ ALINAMAZ — o yüzden yedek, yeşil hükmün ŞARTIDIR.
+
+    İki katman: (a) komut dizgesinde tar update'e `&&` ile BAĞLI (tar düşerse update hiç
+    koşmaz), (b) hüküm yedek işaretini ARAR ve yokluğunu ADIYLA söyler.
+    """
+    mod = _yukle()
+    # (a) KOMUT DİZGESİ: tar ile update arasında `&&` var, `;` YOK
+    k = mod.profil_guncelle_komutu("bekci")
+    ara = k[k.index("tar "):k.index("hermes profile update")]
+    assert "&&" in ara, f"tar update'e bağlı değil — düşse de update koşar:\n{ara}"
+    assert ";" not in ara, f"tar ile update arasında `;` var — bağ KOPUK:\n{ara}"
+
+    # (b) HÜKÜM: yedek işareti yoksa kırmızı VE gerekçe yedeği adıyla anıyor
+    tarsiz = f"tar: Cannot open: Permission denied\n{mod.RC_ISARETI} 2\n"
+    ok, neden = mod.guncelleme_hukmu(tarsiz, 2)
+    assert ok is False, "yedeksiz güncelleme YEŞİL geçti"
+    assert "yedek" in neden.lower(), (
+        f"hüküm kırmızı ama gerekçe yedeği ADIYLA söylemiyor — teşhis kayboldu: {neden!r}")
+    # Ters yön: yedek işareti VARSA bu gerekçe ÖTMEZ
+    ok2, _ = mod.guncelleme_hukmu(_yesil_cikti(mod), 0)
+    assert ok2 is True
+
+
+def test_h11_MODEL_KIYASI_ESITLIK_ALT_DIZGE_DEGIL():
+    """Dal-sonu incelemesi Important-2: `beklenen in canli` ÖNEK vakasında sahte-aynılık verir.
+    `opus-4-1` beklenirken canlı `opus-4-1-ultra` ise alt-dizge kıyası 'AYNI' der — ve bu tam
+    da bugünkü Ultra-geçişinin sınıfıdır (aynı ad, uzatılmış sürüm)."""
+    mod = _yukle()
+    blok = "115:  default: opus-4-1-ultra\n116:  max_tokens: 8000\n"
+    canli = mod.canli_model_varsayilani(blok)
+    assert canli == "opus-4-1-ultra", canli
+    assert canli != "opus-4-1", "önek EŞİT sayıldı — sahte aynılık"
+    # Ölçülemeyen blok `None` döner; "aynı" DEMEZ (uydurma yasağı)
+    assert mod.canli_model_varsayilani("hiç default satırı yok\n") is None
 
 
 def test_h9_UYGULA_ILE_KOMUT_YAZ_ONIZLEMEDIR_KOSUM_DEGIL(tmp_path):
@@ -540,8 +585,67 @@ def test_h8_UZAK_RC_OLCULEMEDIGINDE_SIFIR_VARSAYILMAZ():
     assert mod.uzak_rc(f"{mod.RC_ISARETI} 3\n") == 3
     assert mod.uzak_rc("hiç işaret yok\n") is None
     assert mod.uzak_rc(f"{mod.RC_ISARETI} anlamsiz\n") is None
-    ok, neden = mod.guncelleme_hukmu(f"{mod.BASARI_DIZGESI}\n", None)
+    ok, neden = mod.guncelleme_hukmu(_yesil_cikti(mod), None)
     assert ok is False and "ÖLÇÜLEMEDİ" in neden, neden
+
+
+def _guncelleme_shim(tmp_path, mod, canli_model: str):
+    """PATH'e GERÇEK bir `ssh` koyar; tam bir başarılı güncelleme çıktısını taklit eder.
+    Mock DEĞİL — ayrı süreç. Gerçek ssh'a hiçbir koşulda gidilmez."""
+    satirlar = [mod.TAR_ISARETI, f"{mod.BASARI_DIZGESI} profile", f"{mod.RC_ISARETI} 0",
+                mod.DOGRULAMA_ISARETI, f"115:  default: {canli_model}",
+                "116:  max_tokens: 8000"]
+    assert not any("'" in s for s in satirlar), satirlar
+    kutu = tmp_path / "bin"
+    kutu.mkdir()
+    sh = kutu / "ssh"
+    sh.write_text("#!/bin/sh\nprintf '%s\\n' " + " ".join(f"'{s}'" for s in satirlar) + "\n",
+                  encoding="utf-8")
+    sh.chmod(0o755)
+    return {"PATH": str(kutu)}
+
+
+def test_h12_ONEK_MODEL_CANLI_YOLDA_AYRISMA_SAYILIR(tmp_path):
+    """CLI YOLU (saf fonksiyon değil): sahte-aynılık burada operatöre ulaşırdı."""
+    mod = _yukle()
+    beklenen = mod.repo_model_varsayilani("bekci")
+    assert beklenen, "repo model.default okunamadı — çivi ölçüm YAPAMAZ"
+
+    ort = _guncelleme_shim(tmp_path, mod, f"{beklenen}-ek")
+    r = _cli("profil-guncelle", "bekci", "--uygula", ort=ort)
+    assert r.returncode == 1, f"önek AYNI sayıldı — sahte aynılık:\n{r.stdout}"
+    assert "AYRIŞTI" in r.stdout, r.stdout
+
+    esit_kok = tmp_path / "esit"
+    esit_kok.mkdir()
+    r2 = _cli("profil-guncelle", "bekci", "--uygula",
+              ort=_guncelleme_shim(esit_kok, mod, beklenen))
+    assert r2.returncode == 0, f"birebir EŞİT model kırmızı sayıldı:\n{r2.stdout}"
+    assert "AYNI" in r2.stdout, r2.stdout
+
+
+def test_h13_SQL_UCLUSU_API_ILE_AYRISMIYOR():
+    """ÇAPRAZ ÇİVİ (tek-kaynak yasası, kaçınılmaz kopya). `meridian/api.py::_ajan_oturumlar`
+    ile `ops/filo.py::oturumlar_programi` AYNI üçlüyü okur (kolonlar + ORDER BY). Araç
+    `meridian` ithal EDEMEZ (obs kapısı), yani kopya zorunludur — ama ayrışması SESSİZ olamaz.
+
+    `meridian` BURADA DA ithal edilmez: iki dosya METİN olarak okunur.
+    """
+    def _uclu(yol: pathlib.Path) -> tuple[str, str]:
+        ham = yol.read_text(encoding="utf-8")
+        # Bitişik dize literalleri birleştirilir (`"…"\n  f"…"`), yoksa SELECT ikiye bölünür
+        duz = re.sub(r'"\s*\n\s*f?"', "", ham)
+        m = re.search(r"SELECT\s+(.+?)\s+FROM sessions\s+ORDER BY\s+(.+?)\s+LIMIT", duz)
+        assert m, f"{yol.name}: sessions SELECT'i bulunamadı — çivi bayat"
+        kolon = ",".join(x.strip() for x in m.group(1).split(","))
+        sira = ",".join(x.strip() for x in m.group(2).split(","))
+        return kolon, sira
+
+    api = _uclu(KOK / "meridian/api.py")
+    filo = _uclu(BETIK)
+    assert api == filo, (
+        f"sessions sorgusu AYRIŞTI — api.py {api} vs filo.py {filo}. İki okuyucu aynı defteri "
+        "farklı sıralarsa 'son oturum' iki yüzeyde FARKLI çıkar.")
 
 
 def test_h5_BLOK_TAR_KOPYASI_ONAY_VE_FORCE_CONFIG_TASIR():
