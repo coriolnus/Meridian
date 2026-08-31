@@ -332,7 +332,12 @@ deploy/hermes/profiles/karne/config.yaml|/home/ubuntu/.hermes/profiles/karne/con
 deploy/hermes/profiles/karne/SOUL.md|/home/ubuntu/.hermes/profiles/karne/SOUL.md
 deploy/hindsight/hindsight-api.service|/etc/systemd/system/hindsight-api.service
 deploy/hindsight/hindsight-yedek.service|/etc/systemd/system/hindsight-yedek.service
-deploy/hindsight/hindsight-yedek.timer|/etc/systemd/system/hindsight-yedek.timer"
+deploy/hindsight/hindsight-yedek.timer|/etc/systemd/system/hindsight-yedek.timer
+deploy/oracle-a1/geridolum.py|/opt/veri/geridolum.py
+deploy/oracle-a1/meridian-geridolum.service|/etc/systemd/system/meridian-geridolum.service
+deploy/oracle-a1/meridian-geridolum.timer|/etc/systemd/system/meridian-geridolum.timer
+research/olcumler/edg066_tick_arsiv/pilot.py|/opt/veri/pilot.py
+research/olcumler/edg066_tick_arsiv/kapsam.txt|/opt/veri/kapsam.txt"
 for _cift in $F9_LISTE; do
   # ETİKET TAM REPO YOLUDUR, BASENAME DEĞİL (denetim, Faz 3 dal turu 2026-08-30). İki profille
   # `config.yaml` üç kez, `SOUL.md` üç kez, `distribution.yaml` iki kez listede: "⚠ config.yaml:

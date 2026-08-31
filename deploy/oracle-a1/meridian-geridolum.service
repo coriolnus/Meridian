@@ -1,0 +1,67 @@
+# meridian-geridolum.service — EDG-066 tick arşivi geri-dolumu (/opt/veri, IEX HIST).
+#
+# UZUN KOŞAN ONESHOT: sürücü (geridolum.py) tavana/pencere sonuna/seans penceresine kadar
+# döner — bir koşum GÜNLERCE sürebilir ve bu doğrudur: timer saatlik tetikler, birim zaten
+# aktifken tetik sessiz no-op'tur (systemd oneshot davranışı, start-job çakışmaz). Bu yüzden
+# TimeoutStartSec=infinity ŞARTTIR — oneshot'ın varsayılan start zaman aşımı ilk yoğun günde
+# birimi ortasından öldürürdü.
+#
+# KAYNAK TERBİYESİ: canlı döngü (meridian.service) makinenin sahibidir. Sürücü seans
+# penceresinde yeni tur AÇMAZ (bekçi geridolum.py'da — buradaki Nice/IOScheduling koşan turun
+# seansa taşan kuyruğunu terbiye eder, bekçinin yerine geçmez). İŞÇİ=2 operatör kararıdır
+# (2026-08-31: learn program bitene dek KAPALI, 2 CPU dedike) — learn geri açılırken bu birim
+# durdurulmuş/bitmiş olmalı ya da İŞÇİ düşürülmeli (kayıt: EDG-066 hüküm, acilan_kalem).
+#
+# SIR OKUMAZ, LLM ÇAĞIRMAZ: ağ çıkışı yalnız iextrading.com (HIST API + arşiv indirmesi).
+# EnvironmentFile YOK ve bu eksik değil — HIST anonim/ücretsizdir (EDG-066 kill#1 ölçümü).
+#
+# KURULUM ELLE — F9 SINIFI (dagit taşımaz; içerik kapısı [F9] ayrıklığı raporlar):
+#   sudo cp deploy/oracle-a1/geridolum.py /opt/veri/geridolum.py
+#   sudo cp research/olcumler/edg066_tick_arsiv/pilot.py /opt/veri/pilot.py
+#   sudo cp research/olcumler/edg066_tick_arsiv/kapsam.txt /opt/veri/kapsam.txt
+#   sudo cp deploy/oracle-a1/meridian-geridolum.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now meridian-geridolum.timer
+# Kurulduğu gün ELLE TEST-ATEŞLENİR (CLAUDE.md §9: "kurulu" ≠ "çalışır").
+[Unit]
+Description=Meridian tick arşivi geri-dolumu — EDG-066 (uzun koşan oneshot, timer tetikli)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/veri
+TimeoutStartSec=infinity
+# Sürücü pilot alt-süreçlerini zaten nice 10 + ionice idle ile açar; birimin kendi ağırlığı
+# (indirme + defter G/Ç) da canlının altında kalsın:
+Nice=10
+IOSchedulingClass=idle
+ExecStart=/opt/veri/pilot-venv/bin/python /opt/veri/geridolum.py
+
+# H3 SERTLEŞTİRME — filo ortak setinin bu birime UYAN alt kümesi (tam metin meridian.service).
+# AYRIŞAN kalemler: ReadWritePaths YALNIZ /opt/veri (repo ağacına, state'e, ~'ye yazım yok —
+# pytest-dışı koşumun obs.log'a yazma sınıfı bu birimde YAPISAL olarak kapalı: meridian hiç
+# ithal edilmez, süreç /opt/meridian'a yazamaz); ProtectHome=true (read-only değil — ev
+# dizininden hiçbir şey okunmaz).
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/veri
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+# [Install] BÖLÜMÜ BİLEREK YOK — tetik yalnız meridian-geridolum.timer (filo konvansiyonu:
+# bekci/brifing/backup/tick-watchdog aynı duruşta; gerekçe meridian-bekci.service başlığında).

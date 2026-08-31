@@ -1,0 +1,20 @@
+# meridian-geridolum.timer — geri-dolum sürücüsünü saatlik dener.
+#
+# SAATLİK, ÇÜNKÜ TETİK UCUZ VE KARAR SÜRÜCÜDE: seans içindeyse ya da birim zaten koşuyorsa
+# tetik saniyeler içinde sessizce döner (rth bekçisi + flock + oneshot-aktif no-op). Kadans
+# seçiminin taşıdığı tek iş "seans bitince en geç 1 saat içinde kaldığı yerden devam" — bir
+# takvim penceresi kodlamak (örn. OnCalendar=20:30Z) yaz/kış saati kaymasını buraya gömerdi;
+# sürücünün kendi UTC-dakika penceresi tek kaynaktır (tek-kaynak yasası).
+# Dakika 30: filonun takvimli tetikleri tam saatlerde (brifing 22:00Z, bekci 10:00Z,
+# backup 23:30Z — backup ile aynı DAKİKA ama o günde bir kez ve bu tetik çoğu saatte no-op;
+# çakışma maliyeti ölçülür düzeyde değil).
+[Unit]
+Description=Meridian geri-dolum tetiği (saatlik; karar sürücüde)
+
+[Timer]
+OnCalendar=*-*-* *:30:00 UTC
+# Makine kapalı kaldıysa açılışta telafi — kaçan saat sessizce kaybolmaz:
+Persistent=true
+
+[Install]
+WantedBy=timers.target

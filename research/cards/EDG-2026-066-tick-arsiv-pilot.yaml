@@ -3,7 +3,7 @@ card_id: EDG-2026-066
 # `card_id`dir (emsal: tüm kartlar); Rol-1 hükmüyle düzeltildi, dosya adı önekiyle aynı.
 baslik: IEX HIST tick arşivi — pilot ölçüm (yoğunluk + gün-başı boyut) ve geri-dolum kapısı
 tarih: 2026-08-31
-durum: olculdu   # 2026-09-01 ~00:40 TR — HÜKÜM (Rol-1): GEÇTİ, aşağıda
+durum: olculdu   # 2026-09-01 ~00:15 TR — HÜKÜM (Rol-1): GEÇTİ, aşağıda
 sahip: Rol-1
 
 hukum:
@@ -23,6 +23,17 @@ hukum:
       2020-01→2026-08 penceresi toplam ~130-135 GB; pencere ortalaması ~80 MB/gün —
       hipotezin <=100 MB/gün ORTALAMA eşiği GEÇTİ. 120 GB tavanla pencere ~2020-03/04'e
       ulaşır (tavan sabit, pencere ÇIKTIdır — operatör kararı bunu baştan emiyor).
+    ek_2026_09_01_gercek_kapsam: >
+      Hüküm yazıldıktan ~1 saat sonra, geri-dolum kurulumunda GERÇEK kapsam dosyası üretildi
+      (kapsam_uret.py: PIT-S&P 2020→2026-06-30 640 + NDX-100 anlık 102 + evren anlık 260 =
+      birleşim 662) ve üç günün boyutu bu 662 listeyle YENİDEN ölçüldü: 21 / 80 / 98 MiB
+      (2020-09-15 / 2026-08-25 / 2026-03-20). Top-540-trafik PROXY'si (44/134/167) kapsamda
+      OLMAYAN dev ETF'leri (SPY/QQQ sınıfı) içerdiği için ŞİŞKİNDİ. Yeni projeksiyon:
+      2020-01→2026-08 toplam ~73 GB — 120 GB tavanla pencere 2020-01'e RAHAT ulaşır,
+      ~45 GB ileri-birikim payı kalır. Kill#3 bu kapsamla HİÇ dokunmuyor (yoğun gün 98 < 150);
+      yukarıdaki kill3_beyani proxy ölçümünün dürüst kaydı olarak YERİNDE bırakıldı.
+      NDX tarafının PIT'sizliği beyanlıdır (ndx100 dosya başlığı + kapsam_uret.py) — ⑥a
+      kartı bu yanlılığı devralır.
     kill3_beyani: >
       "gün-başı >150 MB → karar operatöre döner" maddesi YALNIZ üçlü-vade outlier gününde
       dokundu (2026-03-20: 167 MiB; yılda ~4-8 böyle gün). Güncel NORMAL gün 134 < 150.

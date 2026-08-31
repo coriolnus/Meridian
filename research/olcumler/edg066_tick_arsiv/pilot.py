@@ -135,7 +135,12 @@ class ParquetYazici:
         self._w.close()
 
 
-def ayristir(ham: Path, kok: Path, gun: str, limit_paket: int):
+def ayristir(ham: Path, kok: Path, gun: str, limit_paket: int, kapsam=None):
+    """kapsam=None → tüm piyasa Parquet'e yazılır (pilot davranışı). kapsam=set(sembol) →
+    Parquet YALNIZ kapsamı yazar (geri-dolum programı; boyut sözleşmesi kapsam-süzgeçlidir),
+    sayım tablosu (q/t/hacim/saatlik/ohlc) HER ZAMAN tüm piyasayı sayar — kartın 'yoğunluk
+    tablosu bedava' değeri korunur. q1s/spread_1s sayaçları ızgara-emisyonuna bağlı olduğu
+    için kapsamlı koşumda yalnız kapsam için anlamlıdır."""
     import pyarrow as pa
     ts64, s32, u8 = pa.int64(), pa.int32(), pa.uint8()
     metin = pa.string()
@@ -198,14 +203,15 @@ def ayristir(ham: Path, kok: Path, gun: str, limit_paket: int):
                         son_spread[sym] = sp
                         k["spread_degisim"] += 1
                     son_kotasyon[sym] = (ts, af, al, sf, sl)
-                    sn = ts // NS
-                    b = bekleyen.get(sym)
-                    if b is not None and b[0] != sn:
-                        qy.ekle(b[1], sym, b[2], b[3], b[4], b[5])
-                        k["q1s"] += 1
-                        if (b[4] - b[2]) != (sf - af):
-                            k["spread_1s"] += 1
-                    bekleyen[sym] = [sn, ts, af, al, sf, sl]
+                    if kapsam is None or sym in kapsam:
+                        sn = ts // NS
+                        b = bekleyen.get(sym)
+                        if b is not None and b[0] != sn:
+                            qy.ekle(b[1], sym, b[2], b[3], b[4], b[5])
+                            k["q1s"] += 1
+                            if (b[4] - b[2]) != (sf - af):
+                                k["spread_1s"] += 1
+                        bekleyen[sym] = [sn, ts, af, al, sf, sl]
                 elif tip == 0x54 and mlen >= 38:    # 'T' işlem — tip baytı atlanır (ofset 1)
                     bayrak, ts, sraw, lot, fiyat, _ = tup(m, 1)
                     sym = sraw.rstrip().decode("ascii", "replace")
@@ -213,11 +219,12 @@ def ayristir(ham: Path, kok: Path, gun: str, limit_paket: int):
                     k["t"] += 1
                     k["hacim"] += lot
                     k["saat_t"][(ts // NS % 86400) // 3600] += 1
-                    kq = son_kotasyon.get(sym)
-                    if kq is None:
-                        ty.ekle(ts, sym, fiyat, lot, bayrak, None, None, None, None, None)
-                    else:
-                        ty.ekle(ts, sym, fiyat, lot, bayrak, kq[0], kq[1], kq[2], kq[3], kq[4])
+                    if kapsam is None or sym in kapsam:
+                        kq = son_kotasyon.get(sym)
+                        if kq is None:
+                            ty.ekle(ts, sym, fiyat, lot, bayrak, None, None, None, None, None)
+                        else:
+                            ty.ekle(ts, sym, fiyat, lot, bayrak, kq[0], kq[1], kq[2], kq[3], kq[4])
                         # işlem-anı ek-yakalama SAYACI YOK: akış-içi sayaç totolojik çıktı
                         # (bekleyen ve son_kotasyon aynı mesajla güncellenir — kıyas hep eşit,
                         # 0 ölçtü; vaka EDG-066 hükmü). Gerçek ölçüm Parquet'ten ASOF join'le
@@ -250,7 +257,17 @@ def main(argv=None):
     ap.add_argument("--tut-ham", action="store_true", help="ham gz dosyasını SİLME")
     ap.add_argument("--limit-paket", type=int, default=0, help="duman testi: N paketten sonra dur")
     ap.add_argument("--kuru", action="store_true", help="yalnız HIST kaydını göster, indirme yok")
+    ap.add_argument("--kapsam", type=Path, default=None,
+                    help="sembol listesi dosyası (satır başına bir sembol, # yorum); "
+                         "verilirse Parquet YALNIZ bu kapsamı yazar, sayım tüm piyasayı sayar")
     a = ap.parse_args(argv)
+
+    kapsam = None
+    if a.kapsam is not None:
+        kapsam = {s.strip().upper() for s in a.kapsam.read_text().splitlines()
+                  if s.strip() and not s.strip().startswith("#")}
+        if not kapsam:
+            raise SystemExit(f"KIRMIZI: kapsam dosyası boş: {a.kapsam}")
 
     kayit = hist_tops_kaydi(a.gun)
     print(f"GUN={a.gun} TOPS v{kayit['version']} ham={int(kayit['size'])}b")
@@ -259,7 +276,7 @@ def main(argv=None):
     ham = a.kok / "tick" / "ham" / f"{a.gun}.pcap.gz"
     ham.parent.mkdir(parents=True, exist_ok=True)
     indir(kayit["link"], ham, int(kayit["size"]))
-    oz = ayristir(ham, a.kok, a.gun, a.limit_paket)
+    oz = ayristir(ham, a.kok, a.gun, a.limit_paket, kapsam)
 
     ist = oz.pop("ist")
     sayim_yol = a.kok / "tick" / "sayim" / f"{a.gun}.json.gz"
@@ -269,7 +286,10 @@ def main(argv=None):
 
     man = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "gun": a.gun,
            "kaynak": kayit["link"].split("?")[0], "ham_bayt": int(kayit["size"]),
-           "limit_paket": a.limit_paket or None, **oz, "sembol_sayisi": len(ist)}
+           "limit_paket": a.limit_paket or None,
+           "kapsam": str(a.kapsam) if a.kapsam else None,
+           "kapsam_n": len(kapsam) if kapsam else None,
+           **oz, "sembol_sayisi": len(ist)}
     with (a.kok / "tick" / "manifest.jsonl").open("a", encoding="utf-8") as f:
         f.write(json.dumps(man, ensure_ascii=False) + "\n")
 
