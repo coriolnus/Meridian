@@ -27,6 +27,16 @@ yani fiş her koşuda aynı cümleyle yeniden doğuyor, hiçbir koşuda AKSİYON
 
 (b) çivilerinde HÜKMÜN NE OLACAĞI TAHMİN EDİLMEZ: yalnız "artık `olculemedi` değil" çivilenir.
 Eşiğe hiçbir dosyada dokunulmadı; hangi tarafa düştüğünü kod söyler.
+
+GÜNCELLEME 2026-09-01 (akıbet kalemi N00017) — KÖK A YUKARIDAN DA KAPANDI. Ship yolu artık
+`backtest_full`ı da yazıyor: `backtest.walk_forward` tam-pencere detayını (`full_detail` =
+`BacktestResult.detail(goal)` = `score_detail(...)`) ZATEN döndürüyordu ve ship yolu onu ATIYORDU
+— yani yeni bir replay koşulmadan kapatılabilen bir boşluktu. Bu dosyanın aşağıdaki AST çivisi
+(`test_A_ship_yolu_backtest_full_YAZIYOR_folds_da_YAZIYOR`) o günkü YOKLUĞU çiviliyordu; kendi
+docstring'inin verdiği izinle gövdesi yeni gerçeğe çevrildi. YEDEK BACAK KALDI ve gerekçesi
+DARALDI: (i) rejim ship'i `backtest_full` yazMAZ (tam-pencere detayı rejim dilimlenmemiştir —
+global bir popülasyonu rejim satırının ÖNCELİKLİ bacağına koymak `backtest_oos@<rejim>`
+ek-adının önlediği hatanın ta kendisi olurdu) ve (ii) operatör kalemi satırları hiçbirini yazmaz.
 """
 import ast
 import json
@@ -195,26 +205,64 @@ def test_A_c_negatif_beklenti_hala_TANIMSIZ_ORAN(sandbox_state):
 # =================================================================================================
 # KÖK A — NEDEN İKİNCİ BACAK GEREKTİ (iddianın kendisi)
 # =================================================================================================
-def test_A_ship_yolu_backtest_full_YAZMIYOR_folds_YAZIYOR():
-    """BU ÇİVİ İKİNCİ BACAĞIN VAROLUŞ SEBEBİNİ ÖLÇER, biçim değil.
+def _karne_yazim_anahtarlari(modul: str) -> set:
+    """Bir modülün `update_scoreboard`/`set_row_fields` çağrılarına GEÇİRDİĞİ alan adları (AST).
 
-    `reflect._ship` karneye `versioning.update_scoreboard(...)` ile yazar. O çağrıların anahtar
-    argümanları arasında `backtest_full` YOKTUR (yani ship edilen bir sürümün tavan hükmü doğrudan
-    bacakla ASLA ölçülemez), `backtest_folds` VARDIR (yani ölçüm diskte durur).
-
-    KIRMIZI YANARSA: birisi `backtest_full`ı ship yoluna bağlamıştır — bu bir ARIZA DEĞİL, kökün
-    yukarıdan kapanmasıdır. O hâlde yedek bacak İKİNCİL olur (öncelik zaten `backtest_full`da) ve
-    bu testin gövdesi güncellenir; yedek bacak yine de operatör-kalemi satırlar için gerekir."""
-    tree = ast.parse((SRC / "reflect.py").read_text())
+    İKİ BİÇİM DE SAYILIR ve bu 2026-09-01'de ZORUNLU oldu: düz anahtar argüman (`backtest_folds=`)
+    VE `**{...}` ile açılan SÖZLÜK SABİTİ. Ship yolu koşullu alanlarını (rejime göre yazılan
+    `backtest_oos@<rejim>`, yalnız global ship'te yazılan `backtest_full`) ikinci biçimle geçirir;
+    yalnız `kw.arg` toplayan bir dedektör tam da o alanlara KÖR olurdu — yani "karneye kim ne
+    yazıyor?" sorusunun statik cevabı, cevabın en oynak yarısını atlardı."""
+    tree = ast.parse((SRC / modul).read_text())
     anahtarlar = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.Call):
-            f = node.func
-            ad = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", "")
-            if ad in ("update_scoreboard", "set_row_fields"):
-                anahtarlar |= {kw.arg for kw in node.keywords if kw.arg}
-    assert "backtest_full" not in anahtarlar, \
-        "ship yolu artık backtest_full yazıyor — bu testin gövdesi ve yedek bacağın gerekçesi güncellensin"
+        if not isinstance(node, ast.Call):
+            continue
+        f = node.func
+        ad = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", "")
+        if ad not in ("update_scoreboard", "set_row_fields"):
+            continue
+        for kw in node.keywords:
+            if kw.arg:
+                anahtarlar.add(kw.arg)
+                continue
+            # `**{...}` — sözlük SABİTİNİN dizge anahtarları (f-string anahtarlar sabit değildir
+            # ve bilerek dışarıda kalır: `backtest_oos@{ereg}` statik olarak çözülemez).
+            anahtarlar |= {k.value for d in ast.walk(kw.value) if isinstance(d, ast.Dict)
+                           for k in d.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)}
+    return anahtarlar
+
+
+def test_A_a_full_detail_URETICIDE_VAR_ship_yolunun_okudugu_alan():
+    """SHIP YOLUNUN KAYNAĞI ÜRETİCİDE ÇİVİLENİR. Ship yolu `backtest_full`ı yeni bir replay
+    koşarak DEĞİL, `walk_forward`ın zaten döndürdüğü `full_detail`den yazar. Üretici o anahtarı
+    düşürürse ship yolu sessizce yazmayı bırakır (alan `.get` ile okunur — bkz. `reflect._ship`
+    yorumu) ve fiş 1/4/9 geri gelirdi. Kaynak burada, ADIYLA, statik olarak kilitlenir."""
+    tree = ast.parse((SRC / "backtest.py").read_text())
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "walk_forward")
+    anahtarlar = {k.value for d in ast.walk(fn) if isinstance(d, ast.Dict)
+                  for k in d.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)}
+    assert "full_detail" in anahtarlar, \
+        "walk_forward tam-pencere detayını döndürmüyor — ship yolunun backtest_full KAYNAĞI kurudu"
+
+
+def test_A_ship_yolu_backtest_full_YAZIYOR_folds_da_YAZIYOR():
+    """BU ÇİVİ İKİ BACAĞIN DA KAYNAĞINI ÖLÇER, biçim değil.
+
+    2026-08-25'te bu çivi YOKLUĞU ölçüyordu: `reflect._ship`in `update_scoreboard(...)` çağrıları
+    `backtest_folds` yazıyor, `backtest_full` YAZMIYORDU — yani ship edilen bir sürümün tavan
+    hükmü ÖNCELİKLİ bacakla asla ölçülemiyordu. 2026-09-01'de kök yukarıdan kapandı (N00017) ve
+    testin kendi docstring'i bu güncellemeye izin veriyordu: artık İKİSİ de yazılıyor.
+
+    YEDEK BACAK EMEKLİ OLMADI — gerekçesi daraldı: rejim ship'i `backtest_full` yazmaz (dilimlenmemiş
+    popülasyon) ve operatör kalemi ikisini de yazmaz. Bu iki hâlde hüküm hâlâ fold'lardan gelir.
+
+    KIRMIZI YANARSA: ship yolu bir bacağı kaybetmiştir; ÖNCE `reflect._submit_locked`in karne
+    yazımına bakılır, sonra bu gövde."""
+    anahtarlar = _karne_yazim_anahtarlari("reflect.py")
+    assert "backtest_full" in anahtarlar, \
+        "ship yolu backtest_full yazmayı bırakmış — ship edilen her sürümde ÖNCELİKLİ bacak yine boş"
     assert "backtest_folds" in anahtarlar, \
         "ship yolu backtest_folds yazmayı bırakmış — yedek bacağın KAYNAĞI kurudu"
 

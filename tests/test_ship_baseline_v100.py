@@ -161,6 +161,33 @@ def test_global_ship_ebeveyn_satirina_tabani_hukmuyle_yazar(seeded, monkeypatch)
         "ebeveyn yazımı adayın canlı sürüm işaretini ezdi — sıra bozuldu"
 
 
+def test_global_ship_aday_satirina_backtest_full_yaziyor(seeded, monkeypatch):
+    """N00017 (2026-09-01). Ship edilen sürümün TAM-PENCERE backtest defteri karneye düşer.
+
+    NEDEN: `analytics._backtest_beklenti_r`ın ÖNCELİKLİ bacağı `backtest_full.avg_r`dır ve o alanı
+    bugüne dek yalnız re-seed yazıyordu — ship edilen HER sürümde tavan hükmü "ölçülemedi" doğuyordu
+    (fiş 1/4/9). Detay `walk_forward`ın `full_detail`i olarak ZATEN hesaplanmıştı ve atılıyordu:
+    kapanan boşluk bir hesap değil bir KABLOdur, yeni replay koşulmaz.
+
+    ŞEKİL ÇİVİLENİR, DEĞER TAHMİN EDİLMEZ: `score.score_detail` çıktısı olduğu `avg_r`/`n` ile
+    doğrulanır; sayının kaça düştüğünü fikstür söyler, test iddia etmez."""
+    _kapiyi_sabitle(monkeypatch, _wf(0.10), _wf(0.90))
+
+    res = reflect.submit({"variable": "entry.min_score", "new": 65})
+
+    assert res["status"] == "shipped"
+    satir = versioning.scoreboard()["versions"][str(res["version"])]
+    bt = satir.get("backtest_full")
+    assert isinstance(bt, dict), "ship yolu tam-pencere defterini yine atıyor — fiş 1/4/9 geri geldi"
+    assert isinstance(bt["avg_r"], float), "avg_r yok/sayı değil — score_detail çıktısı değil"
+    assert int(bt["n"]) > 0, "detay örneklem taşımıyor — score_detail şekli değil"
+    # UÇTAN UCA: karneye düşen alan tavan hükmünü GERÇEKTEN besliyor mu? Alan yazılıp okunmazsa
+    # (YASA 6) bu tur hiçbir şeyi kapatmamış olurdu. Hangi tarafa düştüğü TAHMİN EDİLMEZ.
+    from meridian import analytics
+    r = analytics.live_expectancy_ceiling()
+    assert r["backtest_kaynak"] == "backtest_full", r["neden"]
+
+
 def test_hukum_dizgeleri_baseline_modulununkiyle_birebir_ayni():
     """İki yol AYRI dizge kullanırsa tüketici (`rollback._no_parent_diagnostics`, watchdog 7h)
     birinden okuduğunu diğerinde göremez — sessiz bir şema çatallanması."""
@@ -184,6 +211,14 @@ def test_rejim_shipi_ebeveyn_satirina_hukum_yazmaz(seeded, monkeypatch):
     assert "backtest_oos@chop" in vers[str(res["version"])], "rejim skoru damgasız yazıldı"
     assert "baseline_verdict" not in (vers.get("1") or {}), \
         "rejim ship'i ebeveyne GLOBAL bir taban hükmü bıraktı — uydurma delta kapısı"
+    # AYNI YASANIN İKİNCİ YÜZÜ (N00017, 2026-09-01): `backtest_full` = `walk_forward.full_detail` =
+    # replay'in TÜM işlemleri — rejim DİLİMLENMEMİŞ. Rejim satırına yazılsaydı
+    # `analytics._backtest_beklenti_r`ın ÖNCELİKLİ bacağı global bir popülasyonu okur ve rejim
+    # dilimli fold bacağını EZERDİ; `backtest_oos@chop` ek-adının önlediği hatanın ta kendisi.
+    # Yokluk = ölçülmedi (None YAZILMAZ); hüküm fold'lardan gelmeye devam eder.
+    assert "backtest_full" not in vers[str(res["version"])], \
+        "rejim satırına dilimlenmemiş bir tam-pencere defteri düştü — popülasyon karıştı"
+    assert "backtest_folds" in vers[str(res["version"])], "yedek bacağın kaynağı kurudu"
 
 
 def test_olculmemis_ebeveyn_tabani_kapidan_GECEMEZ(seeded, monkeypatch):

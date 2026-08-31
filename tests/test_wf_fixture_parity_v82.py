@@ -39,9 +39,12 @@ def test_the_fixture_derives_slices_the_same_way_the_producer_does():
 
 
 def test_the_fixture_output_has_the_keys_the_gate_reads():
-    """SÖZLEŞME KİLİDİ: kapının okuduğu her alan fabrikanın çıktısında olmalı, yoksa sessiz None."""
+    """SÖZLEŞME KİLİDİ: kapının VE SHIP YOLUNUN okuduğu her alan fabrikanın çıktısında olmalı,
+    yoksa sessiz None. `full_detail` 2026-09-01'de listeye girdi: ship yolu onu karneye
+    `backtest_full` olarak yazıyor (N00017) ve alanı `.get` ile okuyor — fikstürden düşerse
+    kırmızı değil SESSİZ bir yazmama olurdu."""
     reads = {"oos_score", "oos_folds", "oos_tail_risk", "holdout_score",
-             "oos_split", "_trades_search", "_trades_confirm"}
+             "oos_split", "_trades_search", "_trades_confirm", "full_detail"}
     out = wf.wf_from_trades(wf.trades(40, 1, wf.S_LO, wf.S_END, 0.5) +
                             wf.trades(20, 2, wf.S_END, wf.OOS_END, 0.5))
     missing = reads - set(out)

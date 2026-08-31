@@ -324,11 +324,17 @@ def _uretim_okuyuculari(alan: str) -> list[str]:
     ve burada da aynı tuzağa düşerdi."""
     a = re.escape(alan)
     py_pat = re.compile(rf"""\[\s*['"]{a}['"]\s*\]|\.(?:get|pop|setdefault)\(\s*['"]{a}['"]""")
+    # AD ÇAKIŞMASI İSTİSNASI (aynı sınıf, sözlük-aboneliği hâli): watchdog
+    # `hotstate_health_report` defterinin `olay` anahtarı broker giriş-alanı `olay` DEĞİLDİR —
+    # `_hs["defter"]["olay"]` (analytics, akıbet-dalgası 2026-09-01) giriş kaydına dokunmaz.
+    # İstisna KASITLI dar: yalnız `["defter"]["<alan>"]` zinciri düşülür; `entry["olay"]` /
+    # `.get("olay")` gibi her çıplak erişim yakalanmaya devam eder (mutasyonla doğrulandı).
+    defter_zinciri = re.compile(rf"""\[\s*['"]defter['"]\s*\]\s*\[\s*['"]{a}['"]\s*\]""")
     js_pat = re.compile(rf"""\[\s*['"]{a}['"]\s*\]|\.{a}\b""")
     hits: list[str] = []
     for f in sorted((REPO / "meridian").rglob("*.py")):
         for i, l in enumerate(_yorumsuz_py(f.read_text()).splitlines(), 1):
-            if py_pat.search(l):
+            if py_pat.search(defter_zinciri.sub("", l)):
                 hits.append(f"{f.name}:{i}")
     for f in sorted((REPO / "meridian" / "web").glob("*.js")):
         kod = [l for l in f.read_text().splitlines() if not l.lstrip().startswith("//")]

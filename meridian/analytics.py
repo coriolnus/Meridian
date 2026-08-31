@@ -2417,10 +2417,17 @@ LIVE_CEILING_DURUMLAR = ("olculemedi", "tavan_altinda", "tavan_ustunde", "suspan
 # yazıyor. Sürüm doğuran diğer iki yol onu HİÇ yazmaz — yani ölçüm diskte YAZILI olduğu hâlde kapı
 # "ölçülemedi" diyordu. Canlı satır: `current_version = 5`, v5 = {params, parent, source,
 # live_since, note}; v4'te `backtest_full` VAR (re-seed yazmış), v5'te ne o ne fold'lar.
+#
+# KÖK YUKARIDAN DA KAPANDI (2026-09-01, akıbet kalemi N00017): ship yolu artık GLOBAL ship'te
+# `backtest_full`ı da yazıyor — `walk_forward`ın `full_detail`i zaten hesaplanıyordu ve atılıyordu.
+# İKİNCİ BACAK EMEKLİ OLMADI, gerekçesi DARALDI: REJİM ship'i `backtest_full` yazmaz (tam-pencere
+# defteri rejim dilimlenmemiştir) ve operatör kalemi hiçbirini yazmaz. Yani "ship edildi ama
+# backtest_full yok" hâli hâlâ mümkündür ve fold bacağı o satırlarda tek ölçümdür.
 BACKTEST_BEKLENTI_KAYNAKLARI = ("backtest_full", "backtest_folds")
 BACKTEST_BEKLENTI_KAPSAM = {
     "backtest_full": ("TAM replay penceresi — `score.score_detail` çıktısının `avg_r` alanı "
-                      "(yazan: run.py'nin re-seed yolu)"),
+                      "(yazan: run.py'nin re-seed yolu ve reflect.py'nin ship yolu — ship "
+                      "tarafında YALNIZ global ship, rejim ship'i bu alanı yazmaz)"),
     "backtest_folds": ("Search-OOS walk-forward fold'larının n-AĞIRLIKLI ortalaması — "
                        "`backtest._fold_metrics` şekli (yazan: reflect.py'nin ship yolu). "
                        "`backtest_full`tan DAR bir penceredir: tam replay değil, OOS dilimi"),
@@ -2434,11 +2441,13 @@ def _backtest_beklenti_r(satir: dict) -> dict:
     yollar tek değildir ve hiçbiri diğerinin alanını yazmaz:
       * tam re-seed (`run.py`) → `backtest_full` = `score.score_detail(...)` çıktısı, içinde `avg_r`;
       * öğrenme döngüsünün ship yolu (`reflect.py` → `versioning.update_scoreboard`) →
-        `backtest_folds` = `backtest._fold_metrics` çıktısı (her fold `n` + `avg_r`);
-        `backtest_full` YAZMAZ ve bu bir eksiklik değil bir iş bölümüdür (`run.py`nin yorumu ağır
-        ayrıntı defterini bilerek taşımıyor);
+        `backtest_folds` = `backtest._fold_metrics` çıktısı (her fold `n` + `avg_r`) ve
+        2026-09-01'den beri GLOBAL ship'te `backtest_full` de (`walk_forward.full_detail`);
+        REJİM ship'i `backtest_full` yazmaz, çünkü tam-pencere defteri rejim dilimlenmemiştir ve
+        onu rejim satırının ÖNCELİKLİ bacağına koymak iki popülasyonu karıştırırdı;
       * operatör kalemi → İKİSİNİ DE yazmaz (yokluk BEYANLIdır, uydurulmaz).
-    Tek bacak okuyan bir kapı, ship edilen HER sürümde "ölçülemedi" der — ölçüm diskte dururken.
+    Tek bacak okuyan bir kapı, rejim ship'lerinde ve operatör satırlarında "ölçülemedi" der —
+    ölçüm diskte dururken. (2026-08-25'te bu, ship edilen HER sürüm için doğruydu.)
 
     SIRA KEYFÎ DEĞİL VE DEĞİŞMEZ: `backtest_full` TAM pencereyi, fold'lar onun OOS alt kümesini
     anlatır; GENİŞ olan önce okunur. Hangisinin okunduğu `kaynak` + `kapsam` alanlarında ADIYLA
@@ -2522,8 +2531,10 @@ def live_expectancy_ceiling(goal: dict | None = None) -> dict:
                  öncelikte çözülür: `backtest_full.avg_r` (tam replay penceresi), yoksa
                  `backtest_folds`un n-ağırlıklı `avg_r` ortalaması (Search-OOS dilimi). Hangi bacak
                  okundu → `backtest_kaynak`/`backtest_kapsam`. İkinci bacak 2026-08-25'te eklendi:
-                 ship yolu `backtest_full` YAZMIYOR, yani ship edilen her sürümde ölçüm diskte
-                 dururken taraf "ölçülemedi" görünüyordu (fiş 1/4/9). Sürüm eşleşmesi
+                 ship yolu o gün `backtest_full` YAZMIYORDU, yani ship edilen her sürümde ölçüm
+                 diskte dururken taraf "ölçülemedi" görünüyordu (fiş 1/4/9). Kök 2026-09-01'de
+                 yukarıdan da kapandı (global ship artık yazıyor); yedek bacak rejim ship'leri ve
+                 operatör satırları için DURUYOR. Sürüm eşleşmesi
                  `rollback.check_and_rollback`in popülasyon yasasıyla aynıdır; iki tarafı farklı
                  sürümlerden okumak like-for-like'ı bozardı.
 
@@ -4012,10 +4023,19 @@ def coverage_breakage_counters(days: int = TELEMETRY_EVENT_DAYS) -> dict:
       * hotstate çırpınma sayacı (`reassert_suppressed`) SÜREÇ-İÇİ bir değişkendir ve her emisyonda
         SIFIRLANIR — bu paket ayrı bir süreçte koşar, yani o sayacı okumak BAŞKA bir sürecin
         belleğine bakmak olurdu (ve okunsa 0 görünüp "çırpınma yok" YANLIŞ hükmünü verirdi).
-        Dayanıklı iz olay defterindedir; oradan sayılır ve süreç-içi sayacın okunMADIĞI beyan edilir.
+        Dayanıklı iz olay defterindedir.
+
+    HOTSTATE BLOĞU SENSÖRDEN GELİR, BURADA HESAPLANMAZ (2026-09-01, akıbet kalemi N00016). Alan
+    (`coverage_ariza.hotstate.surec_ici_sayac`) SABİT `None`du ve yanındaki beyan "OKUNMADI"
+    diyordu — oysa `watchdog.hotstate_health_report` sensörü 2026-08-26'dan beri hazırdı ve iki
+    yarımı ayrı ayrı ölçüyordu. Yani ölçüm vardı, KABLO yoktu ve fiş her koşuda yeniden doğuyordu.
+    İkinci bir hesap yazmak yerine sensör çağrılır: "alansız satır 0 DEĞİLDİR" yasası tek yerde
+    yaşar, kopyada sessizce ölmez. Süreç-içi yarım bu süreçte hâlâ `None`+neden olabilir ve bu
+    DÜRÜSTLÜKTÜR (pano süreci hotstate'e dokunmaz) — kablo o yasayı gevşetmez.
 
     PENCERE TARİH TABANLIDIR (satır limiti DEĞİL): `hotstate_down` seli defterin %60'ını tek olaya
-    çevirdi ve satır-limitli her tüketici geçmişe kör kaldı — bkz. `watchdog.events_since`."""
+    çevirdi ve satır-limitli her tüketici geçmişe kör kaldı — bkz. `watchdog.events_since`.
+    Defter AYNI TURDA BİR KEZ okunur: ham satırlar sensöre elden verilir (`olaylar=ev`)."""
     from . import watchdog as _wd
     ev = _wd.events_since(days)
     say: dict[str, int] = {}
@@ -4029,6 +4049,9 @@ def coverage_breakage_counters(days: int = TELEMETRY_EVENT_DAYS) -> dict:
                 kapsama_degerleri.append(float(v))
     kapsama_degerleri.sort()
     n_cov = len(kapsama_degerleri)
+    # TEK KAYNAK: iki yarımı da sensör ölçer. `ev` elden verilir — aynı tur defteri ikinci kez
+    # okumaz ve iki okuma arasında düşen bir satır iki farklı sayı üretemez.
+    _hs = _wd.hotstate_health_report(days, olaylar=ev)
     return {
         "pencere_gun": days, "n_olay": len(ev),
         "evren_kapsamasi": {
@@ -4040,11 +4063,26 @@ def coverage_breakage_counters(days: int = TELEMETRY_EVENT_DAYS) -> dict:
             "universe_coverage_low": say.get("universe_coverage_low", 0),
         },
         "hotstate": {
-            "hotstate_down": say.get("hotstate_down", 0),
-            "surec_ici_sayac": None,
-            "beyan": ("`hotstate.health().reassert_suppressed` OKUNMADI — süreç-içi ve her "
-                      "emisyonda sıfırlanan bir sayaç; ayrı süreçten 0 okunsa 'çırpınma yok' "
-                      "YANLIŞ hükmü çıkardı. Sayı olay defterinden gelir"),
+            # Olay sayımı da sensörden okunur: `say` ile ikinci bir sayım tutmak, iki pencere
+            # yasasının (olay adı ↔ `kind` yedeği) sessizce ayrışabileceği bir kopya olurdu.
+            "hotstate_down": _hs["defter"]["olay"],
+            # SÜREÇ-İÇİ YARIM — bu paketi ÜRETEN sürecin gördüğü. Pano/telemetri süreci hotstate'e
+            # hiç dokunmadıysa cevap None + NEDEN'dir (SIFIR BASILMAZ: "ölçtük, çırpınma yok" ile
+            # "bu süreç ölçmedi" ayrı hâllerdir). Sayacı artıran süreç raporu kendisi üretirse
+            # burada ÖLÇÜLMÜŞ bir sayı durur.
+            "surec_ici_sayac": _hs["surec_ici"]["bastirilan"],
+            "surec_ici_neden": _hs["surec_ici"]["bastirilan_neden"],
+            # DEFTER YARIMI — süreç sınırını geçen tek iz (`events.jsonl`). Sensörün sözlüğü
+            # OLDUĞU GİBİ taşınır: alan alan kopyalamak, "alansız satır 0 DEĞİLDİR" beyanını
+            # (`alt_sinir`, `*_neden`) taşımayı unutabilecek ikinci bir şema demekti.
+            "defter": _hs["defter"],
+            "capraz_surec": _hs["capraz_surec"],
+            "beyan": ("İKİ YARIM, İKİ AYRI SORU — tek kaynak `watchdog.hotstate_health_report`: "
+                      "`surec_ici_sayac` = `hotstate.health().reassert_suppressed`, YALNIZ bu "
+                      "paketi üreten sürecin gördüğü (süreç-içi ve her emisyonda sıfırlanır; "
+                      "dokunulmamışsa None + `surec_ici_neden`). `defter` = olay defterindeki "
+                      "`hotstate_down` satırları, yani BÜTÜN süreçler — sayaç süreç sınırını "
+                      "yalnız orada geçer ve alan taşımayan satırlar 0 SAYILMAZ"),
         },
         "en_sik_olaylar": [{"olay": k, "n": v} for k, v in
                            sorted(say.items(), key=lambda kv: -kv[1])[:GATE_TALLY_CAP]],

@@ -59,6 +59,11 @@ def wf_from_trades(all_trades, goal=None):
     oos = [t for t in all_trades if _in(t, S_LO, OOS_END)]
     search = [t for t in all_trades if _in(t, S_LO, S_END)]
     return {"oos_score": score_mod.score_detail(oos, goal)["score"],
+            # TAM-PENCERE DEFTERİ — üreticideki `res.detail(goal)` ile AYNI türetme: dilimsiz,
+            # replay'in BÜTÜN işlemlerinden. Ship yolu (`reflect._submit_locked`) global ship'te
+            # bunu karneye `backtest_full` olarak yazar; fikstür alanı üretmezse o kablo bu
+            # dosyayı kullanan her ship testinde sessizce kopardı.
+            "full_detail": score_mod.score_detail(all_trades, goal),
             "oos_folds": backtest._fold_metrics(all_trades, SEARCH_FOLDS, EMBARGO),
             "oos_tail_risk": score_mod.tail_risk(search),
             "holdout_score": None,

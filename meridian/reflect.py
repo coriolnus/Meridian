@@ -1493,11 +1493,33 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     # rollback read only unannotated keys, so annotated entries fall through to population-consistent
     # sources by construction).
     oos_field = {f"backtest_oos@{ereg}": cand_oos} if ereg else {"backtest_oos": cand_oos}
+    # TAM-PENCERE DEFTERİ (`backtest_full`) ARTIK SHIP YOLUNDAN DA DÜŞER (akıbet kalemi N00017).
+    # Bugüne kadar o alanı YALNIZ re-seed (`run.replay_seed`) yazıyordu, dolayısıyla
+    # `analytics._backtest_beklenti_r`ın ÖNCELİKLİ bacağı ship edilen HER sürümde boştu ve tavan
+    # hükmü "ölçülemedi" doğuyordu (fiş 1/4/9). Kapanan şey bir HESAP değil bir KABLOdur: detay
+    # `walk_forward`ın `full_detail`i olarak (= `BacktestResult.detail(goal)` = `score.score_detail`)
+    # ZATEN hesaplanmıştı ve atılıyordu — yeni bir replay koşulmaz.
+    #
+    # YALNIZ GLOBAL SHIP'TE. `full_detail` replay'in BÜTÜN işlemlerinden üretilir (rejim
+    # dilimlenmemiş), oysa rejim ship'inde sürüm yalnız o rejimin diliminde notlandırılır. Rejim
+    # satırına yazmak, ÖNCELİKLİ bacağa global bir popülasyon koyup rejim dilimli fold bacağını
+    # ezerdi — `backtest_oos@<rejim>` ek-adının önlediği hatanın ta kendisi. `backtest_full@<rejim>`
+    # diye yazmak da yalan olurdu: içerik rejim dilimi DEĞİL. Yokluk BEYANLIdır (None YAZILMAZ:
+    # "ölçtük, boş çıktı" diye okunurdu) ve o satırda hüküm fold'lardan gelmeye devam eder.
+    #
+    # `.get` + `isinstance`: üretici sözleşmesini burada SERT indeksleme değil ÇİVİ zorlar
+    # (`test_karne_veri_hatti_v293::test_A_a_full_detail_URETICIDE_VAR_ship_yolunun_okudugu_alan`).
+    # Sert indeksleme, `walk_forward`ı taklit eden bir düzine test dosyasını konuyla ilgisiz
+    # biçimde kırardı ve kırılma yeri kusuru DEĞİL fikstürü gösterirdi.
     versioning.update_scoreboard(candidate["version"], params=candidate["params"],
                                  parent=int(current.get("version", 1)),
                                  backtest_folds=cand["oos_folds"],
                                  backtest_holdout=cand["holdout_score"], overfit_suspect=overfit_suspect,
-                                 changed_variable=v.variable, live_since=memory.now_iso(), **oos_field)
+                                 changed_variable=v.variable, live_since=memory.now_iso(),
+                                 **({"backtest_full": cand["full_detail"]}
+                                    if ereg is None and isinstance(cand.get("full_detail"), dict)
+                                    else {}),
+                                 **oos_field)
     # SPY-üstü alfa DAMGASI — kapının bileşeni DEĞİL (hedef fonksiyonunu uçuşta değiştirmek
     # karşılaştırılabilirliği bozar), yalnız her ship'e yazılan raporlanan-veto-adayı. 20-30 gözlem
     # birikince kapıya kuyruk-vetosu gibi eklenip eklenmeyeceğine veriyle karar verilir.

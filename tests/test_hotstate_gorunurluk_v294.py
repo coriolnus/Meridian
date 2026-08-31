@@ -215,6 +215,94 @@ def test_parity_satiri_capraz_surec_sayacini_tasiyor(sandbox_state):
     assert "3" in r["detail"]
 
 
+# ============ 4b) FİŞİN KENDİ ALANI: SENSÖR TÜKETİCİYE BAĞLANDI ============
+# Sensör 2026-08-26'da yazıldı ama fişi DOĞURAN alan (`coverage_ariza.hotstate.surec_ici_sayac`)
+# `analytics.coverage_breakage_counters` içinde SABİT `None` kalmıştı — yanında "OKUNMADI" beyanıyla.
+# Yani ölçüm vardı, okuyanı yoktu ve fiş her koşuda aynı cümleyle yeniden doğuyordu (akıbet kalemi
+# N00016). Bu blok kabloyu çiviler: fiş alanı artık `watchdog.hotstate_health_report`tan gelir.
+def _hs_olay(dk, **ek):
+    """Pencere içinde bir `hotstate_down` satırı — alanlar isteğe bağlı (alansız satır da geçerli
+    bir hâldir ve tam da bu yüzden ayrı sayılır)."""
+    return {"ts": _damga(dk), "level": "warn", "event": "hotstate_down",
+            "error": "ConnectionError: civi", **ek}
+
+
+def test_fis_alani_defter_yarimini_GERCEK_sayilarla_tasiyor(sandbox_state):
+    """ASIL ÇİVİ. Fişin alanı artık sabit değil: başka süreçlerin bastırdığı kopuşlar, kenar
+    basımları ve süreç kimlikleri `coverage_ariza.hotstate` altında GÖRÜNÜR. Sayılar sensörün
+    (`watchdog.hotstate_health_report`) hükmüyle BİREBİR aynı olmalı — iki kopya sessizce ayrışır."""
+    from meridian import analytics, store
+    olaylar = [_hs_olay(60, suppressed=3, pid=4242, down_emits=5, suppressed_total=3),
+               _hs_olay(59, suppressed=1, pid=4242, down_emits=6, suppressed_total=4),
+               _hs_olay(58)]
+    store.write_jsonl("events.jsonl", olaylar)
+
+    hs_blok = analytics.coverage_breakage_counters(days=1)["hotstate"]
+    sensor = wd.hotstate_health_report(1)
+
+    assert hs_blok["defter"] == sensor["defter"], "fiş alanı sensörün defterinden AYRIŞMIŞ"
+    assert hs_blok["defter"]["bastirilan"] == 4, "süreçler arası sayaç fişe ULAŞMIYOR"
+    assert hs_blok["defter"]["alt_sinir"] is True, "alansız satır varken toplam alt-sınır DEĞİL"
+    assert hs_blok["defter"]["surecler"] == {"4242": 2}
+    assert hs_blok["defter"]["down_basimi"] == 6
+    assert hs_blok["hotstate_down"] == 3, "olay sayımı kayboldu/ayrıştı"
+    assert hs_blok["capraz_surec"] is True
+
+
+def test_fis_alani_surec_ici_yarimda_SIFIR_BASMAZ(sandbox_state):
+    """DÜRÜSTLÜK YARIMI KORUNDU. Bu süreç hotstate'e dokunmadı (pano süreci de dokunmaz): süreç-içi
+    sayaç None KALIR ve NEDENİ alanla birlikte taşınır. Sensörü bağlamak, "0 çırpınma" basmak için
+    bir bahane DEĞİLDİR — kablonun kendisi bu yasayı gevşetemez."""
+    from meridian import analytics, store
+    store.write_jsonl("events.jsonl", [_hs_olay(60, suppressed=2, pid=4242, down_emits=1)])
+
+    hs_blok = analytics.coverage_breakage_counters(days=1)["hotstate"]
+
+    assert hs_blok["surec_ici_sayac"] is None, "ölçülmemiş süreç-içi sayaç SIFIR basıldı"
+    assert len(hs_blok["surec_ici_neden"] or "") >= 20, "None NEDENSİZ — 'yok' ile 'ölçemedik' karışır"
+    assert str(os.getpid()) in hs_blok["surec_ici_neden"], "neden hangi süreçte ölçülemediğini demiyor"
+
+
+def test_fis_alani_surec_ici_yarimi_OLCULDUGUNDE_gercekten_okur(sandbox_state):
+    """Üçüncü hâl fişe de ulaşır: sayacı ARTIRAN sürecin kendisi bu paketi üretirse alan artık
+    None değil ÖLÇÜLMÜŞ bir sayıdır. Aksi hâlde kablo yalnız bir yarımı taşıyor olurdu."""
+    from meridian import analytics
+    hs._HEALTH.update(ok=True)
+    hs._LAST_DOWN_EMIT = 0.0
+    hs._note_down(ConnectionError("çivi: kenar"))
+    hs._note_down(ConnectionError("çivi: süregelen"))
+
+    hs_blok = analytics.coverage_breakage_counters(days=1)["hotstate"]
+
+    assert hs_blok["surec_ici_sayac"] == 1
+    assert hs_blok["surec_ici_neden"] is None, "ölçülmüş bir sayı NEDEN taşıyor — hâller karışmış"
+
+
+def test_fis_beyani_artik_OKUNMADI_demiyor(sandbox_state):
+    """BEYAN BAYATLAMA KAPISI. Eski beyan "`health().reassert_suppressed` OKUNMADI" diyordu;
+    sensör bağlandıktan sonra bu cümle bir YALANdır ve okuyucuyu var olmayan bir boşluğa
+    yönlendirir. Beyan iki yarımı da ADIYLA anmalı."""
+    from meridian import analytics
+    beyan = analytics.coverage_breakage_counters(days=1)["hotstate"]["beyan"]
+
+    assert "OKUNMADI" not in beyan, "beyan sensör bağlandıktan sonra da 'okunmadı' diyor"
+    assert "hotstate_health_report" in beyan, "beyan tek kaynağı adıyla söylemiyor"
+
+
+def test_fis_sayaci_KENDI_hesaplamiyor_sensorden_okuyor():
+    """TEK-KAYNAK YASASI, statik. Aynı sayının ikinci bir hesabı sessizce ayrışır: `analytics`
+    `hotstate_down` satırlarını kendi süzüp `suppressed` toplamaya BAŞLARSA sensörün "alansız satır
+    0 DEĞİLDİR" yasası o kopyada yaşamaz ve fiş yine sessiz bir 0 rapor ederdi."""
+    kaynak = REPO / "meridian" / "analytics.py"
+    agac = ast.parse(kaynak.read_text())
+    fn = next(n for n in ast.walk(agac)
+              if isinstance(n, ast.FunctionDef) and n.name == "coverage_breakage_counters")
+    cagrilar = {n.func.attr for n in ast.walk(fn)
+                if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)}
+    assert "hotstate_health_report" in cagrilar, \
+        "fiş alanı sensörü çağırmıyor — sayaç ikinci kez hesaplanıyor olabilir"
+
+
 # ============ 5) REDDEDİLEN İKİ YOL — YAPISAL OLARAK KAPALI ============
 def test_hotstate_hala_kalici_defter_yazmiyor(sandbox_state):
     """SEÇENEK (a) 'YENİ ARTEFAKT' NEDEN REDDEDİLDİ: `hotstate` yalnız UÇUCU Redis tutar ve bu
