@@ -49,10 +49,16 @@ Metadata sözleşmesi: `kaynak_tur` (teslim/sohbet/belge/karar) · `ts` · `yol`
 - ~~**BOTLAR HİNDSIGHT'A ERİŞMEZ.**~~ **DURUŞ REVİZYONU 2026-08-31 akşam (operatör kararı,
   brainstorm sonrası):** botlara OKUMA açılır — **tools-modu recall** (bot `hindsight_recall`'u
   açık araç olarak çağırır; sonuç KAYNAKLI araç çıktısıdır, "kendi hatırası" değil — uydurma
-  gerekçesinin panzehiri bu biçim). **HEDEF SON-DURUM `hybrid`** (operatör 2026-08-31 akşam:
-  "context-modu da olması lazım" — otomatik enjeksiyon + araçlar birlikte); context bacağı
-  gölgede ölçülerek açılır: zarar ölçülmezse hybrid'e geçilir, ölçülürse tools kalır ve
-  gerekçe kayda düşer. Sigortalar değişmez: autoRetain KAPALI (yazım yalnız harness),
+  gerekçesinin panzehiri bu biçim). **HEDEF SON-DURUM (netleşti 2026-08-31 akşam, brainstorm 2. tur — operatör onaylı):
+  "NOTLAR SAYFASI + İSTE-GETİR"** — push bacağını provider'ın autoRecall'u DEĞİL bizim
+  HARNESS'imiz derler: bot başına deterministik reçete (kendi son N teslimi + öneri akıbetleri +
+  benzer eski vakalar), sabit token bütçesi, her satırda kaynak etiketi (`[obs#id · tarih ·
+  güven]`), VERI-çitiyle; pull bacağı tek araç `hindsight_recall` (salt-okuma — bot ajan
+  döngüsüne YALNIZ bu araçla girer). Teslim şablonuna KULLANIM BEYANI alanı: bot kullandığı
+  hafıza satırlarını ID'yle beyan eder (pano provenansı + Yasa-6 gerçek-kullanım sayacı +
+  C-kapısına mezuniyet sinyali). Zarif düşüş: Hindsight düşerse sayfa `olculemedi` damgasıyla
+  boş — bot bugünkü gibi çalışır. Kart ÜÇ KOL ölçer: derlenmiş-sayfa / provider-autoRecall /
+  hafızasız taban — hedef ilk kol, diğer ikisi kanıt zemini. Sigortalar değişmez: autoRetain KAPALI (yazım yalnız harness),
   Memory Defense açık, provenans panoda, Türkçe recall kartı + gölge-A/B geçilmeden CANLIYA
   AÇILMAZ — bugün canlı botlarda hiçbir şey değişmiyor; SOUL "dünü bilmiyorsun" satırının
   revizyonu kartın geçişiyle birlikte iner. Tarihçe: eski mutlak-yasak duruşunun gerekçesi
@@ -102,10 +108,13 @@ Metadata sözleşmesi: `kaynak_tur` (teslim/sohbet/belge/karar) · `ts` · `yol`
 - **Faz 1:** kurulum (2 birim + yedek + F9; A1 tarafı, repo dalgalarıyla paralel) → `arsiv`
   bank'ine batch ingest → pano arama (salt recall, LLM'siz) + §10 Hafıza yüzeyi. Türkçe recall
   kartının ana ölçümü burada koşar.
-- **Faz 2:** teslim + akıbet bank'leri → **BOT RECALL kartı:** canlı kolda tools-modu, gölge
-  kolunda context-enjeksiyon ikizi (aynı tetikler, çıktı diff'i; SOUL sürümü ölçüm penceresi
-  boyunca donuk); HEDEF `hybrid` — context bacağı zarar ölçülmezse hybrid açılır (operatör
-  2026-08-31: "context-modu da olması lazım"), ölçülürse tools kalır + gerekçe kayda. `operator-sohbet` bank'i Ajan-B ile bağlanır (sohbet yüzeyi
+- **Faz 2:** teslim + akıbet bank'leri → **BOT RECALL kartı** (hedef: §3 "notlar sayfası +
+  iste-getir"; üç kol: derlenmiş-sayfa / provider-autoRecall / hafızasız taban; aynı tetikler,
+  çıktı diff'i; SOUL sürümü ölçüm penceresi boyunca donuk). **BOT İCRA MODELİ DEĞİŞİKLİĞİ
+  (operatör 2026-08-31 akşam: "ajan döngüsü de işlesin"):** botlar tek-atışlıktan SINIRLI ajan
+  döngüsüne geçer — araç takımı YALNIZ `hindsight_recall` (salt-okuma), tur/çağrı tavanı önden
+  donuk (kartta), başka hiçbir araç açılmaz; maliyet/süre farkı kartın zorunlu sütunu (bedel
+  yasası). Bu geçiş de kartla iner — bugün canlıda değişiklik yok. `operator-sohbet` bank'i Ajan-B ile bağlanır (sohbet yüzeyi
   indiğinde — Ajan-B beklenmez, bank hazır bekler).
 - **Faz 3 (ayrı kart):** ana beyin danışması · reflect değerlendirmesi · C-kapısı (öz-güncelleme
   bacağı — ders→öneri→ölçüm+onay→versiyonlu SOUL; yavaş halka, recall'un üstünde).
