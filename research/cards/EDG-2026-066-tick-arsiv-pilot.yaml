@@ -1,4 +1,6 @@
-kimlik: EDG-2026-066
+card_id: EDG-2026-066
+# tarihçe: `kimlik:` alanıyla doğdu (2026-08-31), aynı gün v219 çivisi yakaladı — şema alanı
+# `card_id`dir (emsal: tüm kartlar); Rol-1 hükmüyle düzeltildi, dosya adı önekiyle aynı.
 baslik: IEX HIST tick arşivi — pilot ölçüm (yoğunluk + gün-başı boyut) ve geri-dolum kapısı
 tarih: 2026-08-31
 durum: acik

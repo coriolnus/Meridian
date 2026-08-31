@@ -57,6 +57,10 @@
 #       - deploy/hermes/profiles/karne/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
 #       - deploy/hermes/profiles/karne/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
 #       - deploy/hermes/profiles/karne/SOUL.md            (botun kalıcı brifingi)
+#   * deploy/hindsight/hindsight-api.service      → /etc/systemd/system/  (Hindsight bellek API'si,
+#     Faz-1 2026-08-31; /opt/hindsight/.env F9'DA DEĞİL — sır taşır, repoda yalnız env.iskelet durur)
+#   * deploy/hindsight/hindsight-yedek.service    → /etc/systemd/system/  (gecelik pg_dump yedeği)
+#   * deploy/hindsight/hindsight-yedek.timer      → /etc/systemd/system/  (o yedeğin tetiği 03:30 UTC)
 #     KURULUM BU BETİKTE DEĞİL, BİLEREK: `hermes profile install` canlıda YENİ BİR AJAN KİMLİĞİ
 #     doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: her
 #     botun kum havuzunu (`/opt/meridian/var/bots/<ad>`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR.
