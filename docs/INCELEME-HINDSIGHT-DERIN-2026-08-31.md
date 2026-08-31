@@ -708,6 +708,16 @@ gerekirse; **veya** (b) A1'de OOM-killer Hindsight'ı ya da Meridian worker'ın�
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'free -g; nproc; lsb_release -ds; python3 -V'
 ```
 
+> **REVİZYON 2026-08-31 (aynı gün, hüküm yazıldıktan sonra):** Operatör A1'i **24 GB'ye çıkardı**
+> (reboot 13:24, kanıt turu yeşil — yükseltme bu rapordan bağımsız operatör kararıydı). Yukarıdaki
+> karar kuralı ve "12'de başla" önerisi TARİHÎ KAYIT olarak duruyor; fiili durumun sonuçları:
+> (1) Senaryo B (`bge-m3` + `bge-reranker-v2-m3`) artık **gün-1'den teknik olarak masada** — ama
+> sıra değişmez: önce Senaryo A, Türkçe recall kartı eşiği geçemezse B'ye geçilir (bedel artık RAM
+> değil yalnız kurulum+yeniden-gömme). (2) systemd `MemoryMax` çiti 3G→**8G** (aşağıda, adım 8) —
+> Senaryo B tavanının (~5,5 GB API) üstünde, Meridian yığınına ≥16 GB bırakır. (3) CPU türevli
+> sınırlar DEĞİŞMEZ: `LLM_MAX_CONCURRENT=6` ve `DB_POOL_MAX_SIZE=10` çekirdek/bağlantı kısıtıdır,
+> RAM'den bağımsız (§6.4 CPU bölümü).
+
 #### CPU (4 çekirdek) ayarı
 
 Varsayılan `HINDSIGHT_API_LLM_MAX_CONCURRENT=32` 4 çekirdek için **fazla**; retain LLM-bağımlı
@@ -1063,8 +1073,8 @@ EnvironmentFile=/opt/hindsight/.env
 ExecStart=/opt/hindsight/venv/bin/hindsight-api --host 127.0.0.1 --port 8888
 Restart=on-failure
 RestartSec=5
-# kaynak çiti — A1'i koru
-MemoryMax=3G
+# kaynak çiti — A1'i koru (REVİZE 2026-08-31: 24 GB sonrası 3G→8G, §6.4 revizyon notu)
+MemoryMax=8G
 CPUQuota=200%
 # sertleştirme
 NoNewPrivileges=true
@@ -1076,8 +1086,10 @@ ReadWritePaths=/opt/hindsight
 [Install]
 WantedBy=multi-user.target
 ```
-`MemoryMax=3G`: Senaryo A tavanının (~1,8 GB) üstünde ama A1'i OOM'dan korur — Hindsight şişerse
-**Meridian worker'ı değil Hindsight** ölür. Bu bilinçli bir tercih.
+`MemoryMax=8G` (revize 2026-08-31, 24 GB sonrası): Senaryo A tavanının (~1,8 GB) da Senaryo B
+tavanının (~5,5 GB) da üstünde — model değişiminde birim dosyasına dokunmak gerekmez — ama A1'i
+OOM'dan korumaya devam eder: Hindsight şişerse **Meridian worker'ı değil Hindsight** ölür ve
+Meridian yığınına ≥16 GB kalır. Bu bilinçli bir tercih.
 **Ve CLAUDE.md §9 gereği:** birim kurulduğu gün **elle test-ateşlenir** — "kurulu" ≠ "çalışır".
 
 **Adım 9 — ilk bank + smoke test:**

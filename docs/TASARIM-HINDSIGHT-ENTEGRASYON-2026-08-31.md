@@ -21,8 +21,10 @@ kapalı doğar; her cevap provenansıyla (kanıt + ispat sayısı + güven) pano
   Her durumda: `127.0.0.1` bind — dışa kapalı; tek giriş kapısı api.py proxy'si.
 - Filo disiplini tam uygulanır: iki birim + sağlık kapıları (healthz + pg isalive) + F9 kaydı +
   YEDEK HİKÂYESİ: gecelik `pg_dump` timer'ı → `backups/` (litestream SQLite'a özgü — pg'de dump).
-- Kaynak beyanı: A1 4-çekirdek ARM, RAM 12GB (operatör 24GB'ye yükseltebilir — hüküm inceleme raporunda,
-  iki senaryolu); pg+hindsight boşta hafif, retain anları LLM-bağımlı.
+- Kaynak beyanı: A1 4-çekirdek ARM, RAM **24GB** (2026-08-31 yükseltildi, kanıt turu yeşil;
+  inceleme raporundaki iki-senaryolu hüküm ve revizyon notu §6.4'te). systemd çiti `MemoryMax=8G`
+  (Senaryo B'yi de kapsar; Meridian yığınına ≥16GB kalır — rapor adım 8). CPU türevli sınırlar
+  RAM'den etkilenmez. pg+hindsight boşta hafif, retain anları LLM-bağımlı.
   Sprint pencereleriyle çakışma ölçülür (kartta).
 
 ## 2. Bank yapısı (kimlik ayrımı)
@@ -56,7 +58,7 @@ Metadata sözleşmesi: `kaynak_tur` (teslim/sohbet/belge/karar) · `ts` · `yol`
   semantik+BM25+graf+zamansal) → sonuçlar VERI-çitiyle hermes tek-atışlık çağrısına bağlam →
   cevap + panoda "bu cevap şu kanıtlara dayandı" satırı (observation kimlikleri + güven).
 - **Pano arama kutusu:** LLM'siz doğrudan recall — arşiv/karar araması ("EDG-042 kill#3
-  istisnası ne zaman, neden?" sınıfı sorular).
+  istisnası ne zaman, neden?" sınıfı sorular). Yerleşimi §10'daki Hafıza yüzeyidir.
 - Ana beynin recall danışması: FAZ-3, ayrı kart (karar yüzeyine bağlanma sınıfı — probgate
   emsaliyle önce gölge).
 
@@ -118,3 +120,49 @@ Sınır aynı kaldıkça genişleme = bank/ingest kalemi (mimari değişmez). De
 İKİ DİSİPLİN: her bank YASA 6'ya tabi (okuyucusuz bank açılmaz; recall sayacı kullanım ölçer,
 okunmayan emekli — skill kataloğu emsali) · sıralama değişmez (çekirdek taban-çizgi kill'ini
 geçmeden menü açılmaz; YAGNI hepsine şamil).
+
+## 10. Pano yüzeyi — "Hafıza" alanı (operatör talimatı 2026-08-31)
+
+Operatör kararı (birebir): "UI'da Hindsight'a özel bir alan olmalı ve diğer bileşenlerden buraya
+aktarabileceklerini de bu panonun altına almak lazım." Panoya ayrık bir **Hafıza yüzeyi** açılır
+(Ajan/Filo yüzeyi emsali — `ui/src/pano/yuzeyler/hafiza/`). İniş Faz-1 teslim tanımının parçasıdır:
+yüzeyi olmayan bank Yasa 6'ya takılır (okuyucusuz yazım).
+
+Yüzeyin bileşenleri (faz etiketli):
+- **Arama kutusu** (Faz 1, ana bileşen): LLM'siz doğrudan recall (§4'ten taşındı). Sonuç satırı
+  provenanslı: observation kimliği + ispat sayısı + güven + kaynağa geri-bağlantı (git-sha/yol).
+- **Bank listesi + Yasa-6 sayaçları** (Faz 1): bank başına retain/recall sayısı, son yazım,
+  Memory Defense redaksiyon sayacı. Okunmayan bank görünür şekilde "emeklilik adayı" işaretlenir.
+- **Kota/maliyet göstergesi** (Faz 1): retain başına token + günlük 1000-çağrı kotasından
+  kullanılan pay (llm-cagri-kotasi beyanı; sayı ölçülür, uydurulmaz).
+- **Knowledge Pages görüntüleyici** (Faz 2+, kill sonrası menüyle): markdown izdüşümü, salt-okunur,
+  her sayfada "TÜRETİLMİŞ — SSoT değildir" rozeti (tek-kaynak yasası §8).
+- **Mental Models listesi** (Faz 2+): sabit cevaplar — LLM'siz okuma, kota tüketmez.
+- **Ajan-B sohbet bağlam izi** (Faz 2): sohbet cevabının "şu kanıtlara dayandı" satırı buradan
+  detaylandırılır (§4'teki pano satırının derin görünümü).
+
+Diğer yüzeylerden BURAYA aktarılanlar (aktarım = derin bağ + okuma yolu; kayıt sahibi yüzey
+değişmez): alarm yüzeyinden "sınıfının son vakaları" bağı (menü-5) · Ajan yüzeyinden teslim
+arşivi araması (ham zaman çizelgesi Ajan'da kalır, semantik arama Hafıza'da) · tahta/ROADMAP
+tarafından mükerrer-öneri kontrolü (menü-4).
+
+## 11. İç bileşen göçü envanteri (operatör talimatı 2026-08-31)
+
+Operatör kararı (birebir): "içeride kullanılan bileşenlerden Hindsight'a taşınacakları da ayrıca
+taşıman lazım." Göç ilkesi §8'in sınırından türer: **taşınan her zaman OKUMA/ARAMA yoludur, kayıt
+yerinde kalır.** Her kalemde eski yol, recall sayacı yeni yolun gerçekten kullanıldığını
+gösterene kadar YAŞAR (bedel yasası: kazanç ölçülmeden eski yol sökülmez); grep reçeteleri
+RUNBOOK'ta failover olarak kalır (Hindsight düşerse dönüş yolu).
+
+| # | Bugünkü iç bileşen / kalıp | Göçtüğü yer | Faz | Emeklilik ölçütü |
+|---|---|---|---|---|
+| G1 | Elle-grep olay triyajı (`state/events.jsonl` + journal kesitleri) | nedensel zincir sorguları (menü-1) | menü | 4 hafta recall>grep kullanım sayısı |
+| G2 | `MERIDIAN_ENGINEERING_LOG.md` vaka avı (insan-grep, künye takibi) | `arsiv` bank ingest + recall | Faz 1 | künye çözünürlüğü kartın isabet ölçümünde |
+| G3 | ROADMAP §2 öneri-havuzu benzerlik kontrolü (elle) | mükerrer-önleme danışması (menü-4) | menü | "değerlendirildi-alınmadı" uyarısı ≥1 gerçek yakalama |
+| G4 | Bot teslim arşivi araması (son_brifing dosyaları + `/api/ajanlar` ham görünümü) | teslim bank'leri + Hafıza araması | Faz 2 | Ajan yüzeyi ham kalır; arama trafiği Hafıza'ya |
+| G5 | "Hiçbiri" seçeneğinin somut hâli (hermes `memories/` + şemalı defter deseni önerisi) | Hindsight kill'i GEÇERSE bu yol açılmadan emekli edilir; KALIRSA Hindsight söküleceğinden göç yok | Faz 1 hükmü | ikisi aynı anda yaşamaz (tek-kaynak) |
+| G6 | Oturumlar-arası bağlam devri (devir brief'leri + `~/.claude` hafızasının Meridian'a bakan kısmı) | `/api` üzerinden kurumsal hafıza sorgusu (menü-6) | menü | cloud klon oturumu bir devri Hindsight'tan çözer |
+
+Göç İCRASI tetiklidir: Hindsight kurulmadan hiçbir kalem taşınmaz; her faz indiğinde o fazın
+G-kalemleri o dalganın teslim tanımına girer ve tahtaya işlenir. G5 hükmü kartın kill sonucuyla
+birlikte verilir.
