@@ -34,7 +34,7 @@ Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
   göçten önce doğan maddeler numarasını doğduğu an alır (TSK-001 dalganın kendisi), göç kalan
   maddeleri son atanan numaradan devam ettirir; numara KİMLİKTİR, yeniden kullanılmaz.
   Cepheler (eski WP1-11)
-  `EPC-##` (epic) + ad. Eski adlar SİLİNMEZ: §∞ EŞLEME TABLOSU'na ikinci dalga olarak eklenir
+  `PRG-##` (program) + ad. Eski adlar SİLİNMEZ: §∞ EŞLEME TABLOSU'na ikinci dalga olarak eklenir
   (2026-08-13 yeniden-numaralandırma emsali) ve her maddenin gövdesinde `eski: WP7` düşülür.
 - **DIŞ-SİSTEM kimlikleri DEĞİŞMEZ, `Ref` alanına iner:** `EDG-####` (kart dosyaları —
   card_id yasası v219), `N#####` (akıbet defteri satır kimliği), `vNNN` (test kimliği),
@@ -57,7 +57,7 @@ Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
 ## §4 Zorlama (üç katman, operatör onaylı)
 
 1. Yeni çivi dosyası (vNNN — oluşturma anında grep ile boş numara): yaşayan bölümlerde
-   (a) her madde başlık-regex'ine uyar, (b) durum/sahip/boyut sözlükten, (c) TSK/EPC kimlikleri
+   (a) her madde başlık-regex'ine uyar, (b) durum/sahip/boyut sözlükten, (c) TSK/PRG kimlikleri
    tekil, (d) GATED trigger'sız olamaz. Uymayan madde suite'i kırmızı yapar.
 2. CLAUDE.md §2 kapı tablosuna satır: "ROADMAP'e madde yazmak → şema (bu belge)".
 3. Rol-1 hafıza kaydı `roadmap-madde-standardi` (yazıldı 2026-09-01).
