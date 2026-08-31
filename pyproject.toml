@@ -62,6 +62,10 @@ dev = [
     "hypothesis>=6.164.0",
     "import-linter>=2.13",
     "mutmut>=3.7.0",
+    # UYGULA-8 (2026-09-01): tam suite `-n 4` ile ~9 dk (seri ~26 dk; 2 temiz koşum, 8.344 test,
+    # 0 paralellik kırmızısı — xdist_group gerekmedi). Hedefli küçük koşumlar SERİ kalır:
+    # işçi açılışı küçük kümede net kayıptır. Ölçüm: MERIDIAN_ENGINEERING_LOG.md UYGULA-8 kaydı.
+    "pytest-xdist>=3.8",
 ]
 
 # ================================================================================================

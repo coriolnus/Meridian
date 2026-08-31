@@ -159,8 +159,10 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
 
 ## 6. Test
 
-- Tam suite yalnız Rol-1'de, tek-otoriter, **arka planda** (~26 dk — 6 koşum, 2026-08-30; Bash
-  tavanı 600 sn, ön plan imkânsız).
+- Tam suite yalnız Rol-1'de, tek-otoriter, **arka planda**, `-n 4` ile (~9 dk — 2 temiz koşum,
+  8.344 test, 2026-09-01; seri ~26 dk; pytest-xdist dev-grubunda pinli). ~9 dk, 600 sn Bash
+  tavanına TEHLİKELİ yakın — arka plan kuralı KALIR. Hedefli/küçük koşumlar SERİ: `-n 4`
+  küçük kümede işçi-açılışıyla net kayıptır.
 - **Donmuş ağaç:** suite koşarken dal değiştirilmez, dosya düzenlenmez. Başlarken HEAD'i çıktı
   dosyasına yaz; biterken karşılaştır — eşit değilse yeşil, tepenin ölçümü DEĞİLDİR: deltanın
   etkilenen kümesini ayrıca koş (vaka: paralel oturum, 2026-08-30).

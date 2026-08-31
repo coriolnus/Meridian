@@ -1436,3 +1436,20 @@ vNNN İKİNCİ VAKA: UI mesajlaşma göçünün ajanı yeni çivi dosyasını v3
 `test_filo_araci_v348.py`nin kimliğiydi (grep yapılmadı). Kural işledi: az-çapalı taraf AYNI GÜN
 v350'ye taşındı, 5 atıf güncellendi, taşıma kaydı dosya başlığına. v331×2'den sonra ikinci vaka:
 "oluşturma anında yeniden grep" adımı ajan brief'lerinde açık madde olmalı.
+
+## 2026-09-01 (gece) — UYGULA-8 xdist ÖLÇÜMÜ ve benimseme; donmuş-ağaç esnemesi (küçük vaka)
+ÖLÇÜM: tam suite `-n 4` (pytest-xdist 3.8.0, 4 işçi, yerel M-serisi): koşum-1 538,5 sn
+(8.344 yeşil + benim RUNBOOK ihmalim = 1 kırmızı, paralellikle İLGİSİZ — seri koşumda da
+düşüyordu), koşum-2 539,1 sn TERTEMİZ (0 FAILED/ERROR + özet + PYTEST_EXIT=0). Seri taban
+~26 dk (2026-08-30) → ~2,9× hızlanma, günde 6+ koşumda ~1,7 saat/gün. BEKLENMEDİK İYİ HABER:
+`state/` paylaşım çakışması İKİ koşumda da SIFIR — `xdist_group` işaretine gerek kalmadı
+(öngörü yanlıştı; conftest fixture'ları izolasyonu zaten sağlıyormuş). BENİMSEME: pytest-xdist
+dev-grubuna pinli; CLAUDE.md §6 "-n 4, ~9 dk" güncellendi. `-n 4` addopts'a KONMADI: hedefli
+küçük koşumlarda işçi açılışı net kayıp; tam-suite reçetesi CLAUDE.md'de. 539 sn, 600 sn Bash
+tavanına TEHLİKELİ yakın — arka plan kuralı kalır (suite büyüdükçe tavana çarpar, ön plan denemesi
+yasak kalmalı). KÜÇÜK VAKA — DONMUŞ AĞAÇ ESNEMESİ: koşum-2 uçuştayken ROADMAP commit'i atıldı
+(5b5ecb4); kuralın telafi yolu işletildi — delta tek dosya (ROADMAP.md), etkilenen küme (v337+
+v343) commit anında ayrıca yeşildi, ölçüm geçerli sayıldı. Ders: arka plan suite başlatınca
+"ağaç donuk" bayrağını tur boyunca taşı — akıbet defter yazımları (A1-yan) serbest, YEREL commit
+değil. AYRICA: RUNBOOK ayrışması (deploy.sh başlığı değişti, üretim atlandı — f0f0645) TEKRARLAYAN
+vaka sınıfının yeni örneği; xdist koşum-1 yakaladı, 883f0b0 kapattı.
