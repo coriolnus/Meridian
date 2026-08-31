@@ -344,7 +344,13 @@ export function SearchDialog() {
       >
         <Search data-icon="inline-start" />
         Ara
-        <Kbd>⌘K</Kbd>
+        {/* ⌘K ROZETİ DAR EKRANDA YOK (2026-08-31, Rol-1'in 375px ölçümü: üst barda
+            hap ile arama üst üste biniyordu). Kırıntı zaten `md` altında gizleniyor —
+            aynı eşik kullanıldı, yeni bir kırılma noktası icat edilmedi. Kaybedilen
+            şey ÖLÇÜLDÜ ve sıfırdır: `md` altı dokunmatik bir ekranda ⌘ tuşu yoktur,
+            yani rozet orada zaten uygulanamayan bir kısayolu ilan ediyordu. "Ara"
+            etiketi ve düğmenin `title`ı olduğu gibi duruyor. */}
+        <Kbd className="hidden md:inline-flex">⌘K</Kbd>
       </Button>
       <CommandDialog
         open={open}

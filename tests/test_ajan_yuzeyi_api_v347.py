@@ -811,6 +811,14 @@ _YUZEY_OKUYUCU = _KOK / "ui/src/pano/yuzeyler/ajan/filoOku.ts"
 _YUZEY_BILESEN = _KOK / "ui/src/pano/yuzeyler/ajan/Filo.tsx"
 _YUZEY_KABUK = _KOK / "ui/src/pano/yuzeyler/Ajan.tsx"
 _YUZEY_SOHBET = _KOK / "ui/src/pano/yuzeyler/ajan/SohbetHatti.tsx"
+# 2026-08-31 (mesajlaşma göçü): `ajanlar: null` dalı `Filo.tsx`ten SOL SÜTUNA taşındı.
+# T2l'nin DAL KAPSAMI korunuyor, yalnız dilimlendiği dosya değişti — dosya-kapsamlı bir
+# "üç dizge var mı" kontrolüne düşürmek, bu dosyanın kendi B4 dersine (kimlik arayan çivi
+# ısırmaz) geri dönmek olurdu.
+_YUZEY_YANLISTE = _KOK / "ui/src/pano/yuzeyler/ajan/Yanliste.tsx"
+# Saf görünüm mantığının yeni evi. T2c kapsamına GİRER (aşağıdaki sıra çivisi), çünkü
+# tersleme ve teslim sıralaması bu turda buraya taşındı.
+_YUZEY_GRAMER = _KOK / "ui/src/pano/yuzeyler/ajan/gramer.ts"
 _YUZEY_KAYIT = _KOK / "ui/src/pano/alanlar.ts"
 
 _TS_YORUM = re.compile(r"/\*.*?\*/|(?<![:'\"])//[^\n]*", re.S)
@@ -878,12 +886,13 @@ def yuzey() -> dict[str, str]:
 
     `oku` (okuma) ile `bilesen` (çizim) ayrı tutulur çünkü ikisi AYRI iddiadır: bir alanı
     okuyup çizmemek `roadmap.ts` arızasının ta kendisiydi."""
-    for p in (_YUZEY_OKUYUCU, _YUZEY_BILESEN, _YUZEY_KABUK):
+    for p in (_YUZEY_OKUYUCU, _YUZEY_BILESEN, _YUZEY_KABUK, _YUZEY_YANLISTE, _YUZEY_GRAMER):
         assert p.exists(), f"pano yüzeyi yok: {p} — uç okuyucusuz kaldı (YASA 6)"
     dallar = {"oku": _YUZEY_OKUYUCU, "bilesen": _YUZEY_BILESEN, "kabuk": _YUZEY_KABUK,
-              "sohbet": _YUZEY_SOHBET, "kayit": _YUZEY_KAYIT}
+              "sohbet": _YUZEY_SOHBET, "kayit": _YUZEY_KAYIT,
+              "yanliste": _YUZEY_YANLISTE, "gramer": _YUZEY_GRAMER}
     d = {ad: _soy(p.read_text(encoding="utf-8")) for ad, p in dallar.items()}
-    d["hepsi"] = "\n".join(d[ad] for ad in ("oku", "bilesen", "kabuk"))
+    d["hepsi"] = "\n".join(d[ad] for ad in ("oku", "bilesen", "kabuk", "yanliste"))
     return d
 
 
@@ -918,14 +927,64 @@ def test_T2b_okuyucu_NULL_donduren_dizi_okuyucusunu_kullaniyor(yuzey):
         "'ölçülemedi' ile 'ölçüldü-boş' aynı kutuya düşer")
 
 
+#: BEYANLI TERSLEME İSTİSNALARI — FONKSİYON ADIYLA sınırlı, "bir `reverse` serbest" değil.
+#: Her giriş: (fonksiyon adı, izinli çağrı, gerekçe). Gövde dışına taşan hiçbir çağrı geçmez.
+GRAMER_SIRA_ISTISNALARI = {
+    "oturumlariEskidenYeniye": (
+        ".reverse()",
+        "uç oturumları yeniden→eskiye gönderiyor, ekran eskiden→yeniye okuyor; TEK tersleme "
+        "noktası ve model-geçiş kıyası bu sıraya göre düzeltilmiş (ledger ruling 2026-08-31)"),
+    "botAkisi": (
+        ".sort(",
+        "teslim KOVALARI kendi içinde artan zamana diziliyor; mesaj sırasına DOKUNMUYOR — "
+        "yerleştirme oturum sınırında yapılıyor, satır sırası uçtan geldiği gibi kalıyor"),
+}
+
+
+def _gramer_govdesi(kaynak: str, ad: str) -> str:
+    """`export function <ad>` gövdesi — bir sonraki üst düzey bildirime kadar."""
+    bas = kaynak.index(f"export function {ad}")
+    kalan = kaynak[bas + 1:]
+    son = re.search(r"^(export |/\* -)", kalan, re.M)
+    return kalan[: son.start()] if son else kalan
+
+
 def test_T2c_SIRA_yuzeyde_ters_cevrilmiyor(yuzey):
     """SIRA SÖZLEŞMESİ UÇTAN GELİR (oturumlar yeniden→eskiye · mesajlar eskiden→yeniye ·
     teslimler yeniden→eskiye). Yüzeyde tek satırlık bir `sort`/`reverse` hiçbir şeyi kırmaz,
-    hata vermez, listeyi KISALTMAZ — yalnız operatöre konuşmayı tersten okutur."""
+    hata vermez, listeyi KISALTMAZ — yalnız operatöre konuşmayı tersten okutur.
+
+    KAPSAM GENİŞLETİLDİ 2026-08-31 (inceleme Ö-3): tersleme ve teslim sıralaması mesajlaşma
+    göçünde `gramer.ts`e taşındı ve bu çivi o dosyayı GÖRMÜYORDU — yeşildi ama hiçbir şey
+    ölçmüyordu. `gramer.ts` artık kapsamda ve istisnalar FONKSİYON ADIYLA sınırlı: "bir
+    `reverse` serbest" demek yeni bir kör nokta üretirdi."""
     for yasak in (".reverse()", ".sort("):
         assert yasak not in yuzey["hepsi"], (
             f"yüzey `{yasak}` çağırıyor — sıra ucun sözleşmesidir ve pano onu DEĞİŞTİRMEZ; "
             "görsel bir tersleme gerekiyorsa BEYANLA yapılır")
+
+
+def test_T2c2_GRAMER_terslemesi_BEYANLI_ve_ADIYLA_sinirli(yuzey):
+    """`gramer.ts` sıra değiştirebilen TEK dosya — ama yalnız beyan edilen iki gövdede."""
+    g = yuzey["gramer"]
+    izinli = {}
+    for ad, (cagri, gerekce) in GRAMER_SIRA_ISTISNALARI.items():
+        assert f"export function {ad}" in g, f"beyan edilen `{ad}` kaynakta YOK — beyan bayatlamış"
+        assert len(gerekce) >= 20, f"`{ad}` beyanı gerekçesiz (≥20 karakter şart)"
+        govde = _gramer_govdesi(g, ad)
+        assert cagri in govde, (
+            f"`{ad}` artık `{cagri}` çağırmıyor — istisna gereksiz kalmış, beyanı KALDIR "
+            "(ölü istisna bir sonraki sızıntıyı sessizce geçirir)")
+        izinli[ad] = govde
+
+    for yasak in (".reverse()", ".sort("):
+        toplam = g.count(yasak)
+        beyanli = sum(govde.count(yasak) for govde in izinli.values())
+        assert toplam == beyanli, (
+            f"`gramer.ts` {toplam} kez `{yasak}` çağırıyor ama BEYANLI olan {beyanli} tanesi — "
+            f"beyan edilmemiş bir sıralama var. İzinli gövdeler: {sorted(izinli)}. "
+            "Sıra ucun sözleşmesidir; yeni bir tersleme gerekiyorsa "
+            "`GRAMER_SIRA_ISTISNALARI`na gerekçesiyle yazılır.")
 
 
 def test_T2d_ts_ham_OKUNUYOR_ve_CIZILIYOR(yuzey):
@@ -1000,9 +1059,10 @@ def test_T2i_filo_AYRI_kapida_hipotez_ucundan_bagimsiz(yuzey):
 #
 # B1'İN ÇİVİSİ KAYNAK METNİ OKUMUYOR, DAVRANIŞI KOŞUYOR. İncelemenin B4 bulgusu tam da bunu
 # söylüyordu: `assert "<kimlik>" in kaynak` biçimindeki bir çivi, ifadeyi bozan ama kimliği
-# koruyan bir mutasyonda ISIRMAZ. `aktifAnahtar` bu yüzden SAF bir fonksiyon olarak yazıldı ve
-# burada `esbuild` + `node` ile gerçekten çağrılıyor — emsal `test_pano_palet_v152` (aynı
-# beyanlı atlama disipliniyle: araç yoksa test GEÇMİŞ sayılmaz, ATLANIR).
+# koruyan bir mutasyonda ISIRMAZ. Saf çekirdek bu yüzden `esbuild` + `node` ile GERÇEKTEN
+# çağrılıyor — emsal `test_pano_palet_v152` (aynı beyanlı atlama disipliniyle: araç yoksa
+# test GEÇMİŞ sayılmaz, ATLANIR). 2026-08-31: B1'in kendi fonksiyonu (`aktifAnahtar`) emekli
+# oldu, düzenek kaldı — bugün `ajanListesiNedeni`i (B2) koşuyor.
 
 import shutil
 import subprocess
@@ -1037,44 +1097,54 @@ def _js_cekirdek(kod: str):
         return json.loads(r.stdout)
 
 
-def _sahte_ajanlar(*adlar: str) -> str:
-    """`aktifAnahtar`ın okuduğu TEK alan `anahtar` — sahte kayıt onu taşır."""
-    return json.dumps([{"anahtar": a} for a in adlar])
+# ---------------------------------------------------------------------------------------------
+# T2j / T2k EMEKLİ EDİLDİ — 2026-08-31, mesajlaşma göçü (inceleme Ö-5 + 6.3)
+# ---------------------------------------------------------------------------------------------
+# İkisi de `filoOku.ts::aktifAnahtar`ı node'da çağırıyordu (pozitif kontrol + roster-değişimi
+# senaryosu). O fonksiyon bu turda SİLİNDİ: tek çağıranı, sekmeli `Filo` kabuğuydu ve kabuk
+# mesajlaşma gramerine taşındı. Yerini `gramer.ts::muhatapSec` aldı.
+#
+# ASSERT'LER TAŞINMADI, YENİDEN YAZILDI — çünkü İKİSİ DAVRANIŞÇA DENK DEĞİL:
+#   · eski: bayat seçim sessizce İLK AJANA düşerdi,
+#   · yeni: KANALA düşer, istenen adı `bulunamayan` ile EKRANA taşır ve "liste hiç okunamadı"
+#     hâlini `listeOlculemedi` ile AYIRIR (inceleme Ö-2).
+# Eski (b)/(c) assert'lerini olduğu gibi taşımak, yeni sözleşmeyi eskisine uydurmak olurdu.
+#
+# YENİ YERİ: `tests/test_ajan_grameri_v350.py` → `tests/civiler/gramer_civileri.mjs` içindeki
+# "[5] muhatap seçimi" bölümü (beş çivi) + oradaki POZİTİF KONTROL (`--kendini-sina`), yani
+# T2j'nin "düzenek gerçekten koşuyor mu" görevi de karşılandı.
+#
+# `_js_cekirdek` SİLİNMEDİ: T2l hâlâ `filoOku.ts::ajanListesiNedeni`i node'da çağırıyor.
+# Yol da `filoOku.ts`e SABİT kalmaya devam ediyor ve bu doğru — `gramer.ts` için ikinci bir
+# giriş noktası v350'de kuruldu, buraya sızdırılmadı.
 
 
-def test_T2j_saf_cekirdek_KOSULABILIYOR():
-    """POZİTİF KONTROL (v152 disiplini): düzenek gerçekten çalışıyor mu?
+# --- dal dilimi: ÇAPA AYRAÇLA BAĞLANIR (2026-08-31, yeniden-inceleme K-2) -------------------
+# Çıplak `"yuk.ajanlar === null ? ("` çapası `Yanliste.tsx`te İKİ yere uyuyor: aktiflik
+# şeridinin `yuk === null || yuk.ajanlar === null` dalı (önce gelir) ve ASIL ajan-listesi dalı.
+# `str.index` İLKİNİ bulduğu için dilim ~72 satıra şişiyor ve "bileşen bu DALDA çiziliyor"
+# iddiası "bu 72 satırın herhangi bir yerinde" hâline düşüyordu — yani bu dosyanın kendi B4
+# dersinin (dosyada bulunmak dalda çizilmek değildir) bir adım geri alınmış hâli.
+# Çare: kapanış ayracını çapaya dahil et (`") : yuk.ajanlar === null ? ("` yalnız asıl dala uyar)
+# ve TEKİLLİĞİ + dilim boyunu ölç — çapa yeniden çoğalırsa çivi burada öter, sessizce genişlemez.
+_DAL_BASI = ") : yuk.ajanlar === null ? ("
+_DAL_SONU = "ajanlar.length === 0 ?"
+_DAL_TAVANI = 20  # ölçüldü 2026-08-31: dilim 5 satır. Tavan, sessiz genişlemeye karşı.
 
-    Bu olmadan aşağıdaki çiviler, `_js_cekirdek` sessizce boş/aynı şeyi döndürse bile yeşil
-    kalabilirdi — "davranışı ölçtüm" cümlesi vakumda doğru olurdu."""
-    assert _js_cekirdek('F.aktifAnahtar(%s, null)' % _sahte_ajanlar("bot:sef")) == "bot:sef"
-    assert _js_cekirdek("F.aktifAnahtar([], null)") is None, (
-        "boş roster'da anahtar UYDURULUYOR — çağıran boş-durumu ayrı çizemez")
 
-
-def test_T2k_BAYAT_sekme_anahtari_sessiz_bos_panel_URETMIYOR():
-    """ROSTER-DEĞİŞİMİ SENARYOSU (inceleme B1) — DAVRANIŞ koşuluyor, kaynak metni değil.
-
-    Operatör `bekci`yi seçer, "Tazele"ye basar, roster değişir (profil silindi/eklendi ya da o
-    an ölçülemedi). Bayat anahtar hiçbir sekmeyle eşleşmezse Radix HİÇBİR panel çizmez: ekran
-    sessizce boşalır — ne hata, ne 'ölçülemedi' kutusu, ne iz."""
-    once = _sahte_ajanlar("bot:bekci", "bot:sef", "ana:hermes")
-    sonra = _sahte_ajanlar("bot:sef", "bot:karne", "ana:hermes")
-
-    # (a) GEÇERLİ seçim KORUNUR — düzeltme, çalışan seçimi ezmemeli
-    assert _js_cekirdek('F.aktifAnahtar(%s, "bot:bekci")' % once) == "bot:bekci"
-
-    # (b) BAYAT seçim İLK GEÇERLİYE düşer — asıl hüküm
-    assert _js_cekirdek('F.aktifAnahtar(%s, "bot:bekci")' % sonra) == "bot:sef", (
-        "roster değiştikten sonra bayat anahtar hâlâ dönüyor — panel SESSİZCE boşalır")
-
-    # (c) hiç seçim yokken ilk ajan
-    assert _js_cekirdek("F.aktifAnahtar(%s, null)" % sonra) == "bot:sef"
-
-    # (d) KİMLİK ÇİFTİ korunuyor: aynı `ad`, farklı `tur` AYRI anahtarlardır ve biri ötekinin
-    #     yerine geçmez (T1'in `(ad, tur)` uyarısı — bir profil `hermes` adını taşıyabilir)
-    cift = _sahte_ajanlar("bot:hermes", "ana:hermes")
-    assert _js_cekirdek('F.aktifAnahtar(%s, "ana:hermes")' % cift) == "ana:hermes"
+def _ajanlar_null_dali(y: str) -> str:
+    """`Yanliste.tsx`in `ajanlar: null` dalını, TEK ve DAR biçimde döndürür."""
+    assert y.count(_DAL_BASI) == 1, (
+        "dal çapası artık tekil değil — dilim yanlış dala kayabilir, iddia genişler")
+    assert y.count(_DAL_SONU) == 1, "dal sonu çapası tekil değil — dilim taşabilir"
+    bas, son = y.index(_DAL_BASI), y.index(_DAL_SONU)
+    assert bas < son, "dal çapaları ters sırada — dilim boş çıkar ve iddia sessizce yok olur"
+    dal = y[bas:son]
+    satir = dal.count("\n") + 1
+    assert satir <= _DAL_TAVANI, (
+        f"`ajanlar: null` dalı {satir} satıra çıkmış (tavan {_DAL_TAVANI}) — dilim büyüdükçe "
+        "'bu dalda çiziliyor' iddiası 'bu civarda bir yerde' hâline düşer")
+    return dal
 
 
 def test_T2l_ajanlar_NULL_dalinda_UCUN_HATASI_ekranda(yuzey):
@@ -1091,11 +1161,50 @@ def test_T2l_ajanlar_NULL_dalinda_UCUN_HATASI_ekranda(yuzey):
         "ucun kendi `hata`sı ekrana ulaşmıyor — operatör hangi kaynağın düştüğünü göremez")
     assert "dizi değil" in dolu, "ucun hatası BİZİM hükmümüzün yerine geçti; ikisi ayrı iddiadır"
 
-    # ve dal bunu GERÇEKTEN kullanıyor + kabuğu (hüküm şeridi + kaynak kartı) çiziyor
+    # ---- ve dal bunu GERÇEKTEN kullanıyor -------------------------------------------------
+    # DAL KAPSAMI KORUNDU, DOSYASI DEĞİŞTİ (2026-08-31, mesajlaşma göçü + inceleme K-2).
+    # `ajanlar: null` dalı `Filo.tsx::FiloGovdesi`ten SOL SÜTUNA (`Yanliste.tsx`) taşındı;
+    # dilim çapaları da onunla taşındı. Dosya-kapsamlı bir "üç dizge var mı" kontrolüne
+    # düşürmek, bu dosyanın kendi B4 dersine geri dönmek olurdu: bir bileşenin DOSYADA
+    # bulunması, o DALDA çizildiğini kanıtlamaz.
+    dal = _ajanlar_null_dali(yuzey["yanliste"])
+    assert "<ListeYok" in dal, (
+        "`ajanlar: null` dalı `<ListeYok>` çizmiyor — ucun kendi `hata`sı ekrana ulaşmaz")
+
+    # `ajanListesiNedeni` hükmü `Filo.tsx::ListeYok` gövdesinde ölçülür: dizeyi taşıyan yer orası.
     b = yuzey["bilesen"]
-    dal = b[b.index("if (ajanlar === null)"):b.index("const aktif =")]
-    assert "ajanListesiNedeni(yuk)" in dal, "sabit metin geri gelmiş — ucun hatası yine yutuluyor"
-    for bilesen in ("<HukumSeridi", "<KaynakKarti"):
-        assert bilesen in dal, (
-            f"`ajanlar: null` dalı {bilesen} çizmiyor — 'hangi defter okunamadı' sorusunun "
-            "cevabı tam da bu dalda gerekli")
+    liste_yok = b[b.index("export function ListeYok"):]
+    liste_yok = liste_yok[: liste_yok.index("export function", 10)]
+    assert "ajanListesiNedeni(yuk)" in liste_yok, (
+        "sabit metin geri gelmiş — ucun hatası yine yutuluyor")
+
+    # ---- SÖZLEŞME DEĞİŞİKLİĞİ, SESSİZ SİLME DEĞİL (ruling 2026-08-31) ----------------------
+    # Eski çivi `ajanlar: null` dalında İKİ bileşen arıyordu: `<HukumSeridi` ve `<KaynakKarti`.
+    #   · `<KaynakKarti` ARTIK YOK: okunan defterlerin künyesi ⓘ popover'ına girdi
+    #     (`Filo.tsx::KaynakOzeti`, `Ajan.tsx` içinde çiziliyor). Bu bir RULING'dir — künye bir
+    #     AYRINTI, hüküm değil. Şart bu yüzden düştü ve düşüşü burada tarihiyle yazılı.
+    #   · `<HukumSeridi` ise dala DEĞİL, HER HÂLE bağlandı: ruling'in söylediği şey "hüküm
+    #     şeridi ⓘ'ye girmez, sol listenin üstünde kalır"dı. Aşağıdaki iki çivi bunu ölçer.
+    assert "<KaynakOzeti" in yuzey["kabuk"], (
+        "künye ⓘ'den de düşmüş — 'hangi defterler okundu' sorusunun cevabı ekranda hiç yok")
+
+
+def test_T2l2_HUKUM_SERIDI_her_halde_ciziliyor(yuzey):
+    """Ruling 2026-08-31: liste hükmü bir AYRINTI değildir ve ⓘ'nin arkasına saklanmaz.
+
+    Eski çivi onu yalnız `ajanlar: null` dalında arıyordu; oysa `ok: false` ajan listesi DOLU
+    gelirken de olabilir (roster okundu, olay defteri düştü). Şerit bu yüzden dalın DIŞINDA,
+    sol sütunun üstünde çizilir — ve `ok === true` iken kendi kendini gizler."""
+    y = yuzey["yanliste"]
+    assert "<HukumSeridi" in y, "hüküm şeridi sol sütunda hiç çizilmiyor"
+    # Dalın İÇİNDE olmamalı: dal-içi bir şerit, liste dolu ama hükmü kırıkken susardı.
+    dal = _ajanlar_null_dali(y)
+    assert "<HukumSeridi" not in dal, (
+        "hüküm şeridi `ajanlar: null` dalının İÇİNE alınmış — liste dolu gelip `ok: false` "
+        "olduğunda operatör eksik ölçümü hiç görmez")
+    # Ve şeridin kendisi `ok === true` iken susuyor (gürültü değil, hüküm).
+    b = yuzey["bilesen"]
+    serit = b[b.index("export function HukumSeridi"):]
+    serit = serit[: serit.index("export function", 10)]
+    assert "yuk.ok === true" in serit and "return null" in serit, (
+        "hüküm şeridi sağlam listede de çiziliyor — hüküm gürültüye dönerse okunmaz olur")

@@ -103,6 +103,16 @@ export function gunMetni(iso: string | null): string | null {
   return new Date(t).toLocaleDateString("tr-TR", { dateStyle: "long" });
 }
 
+/** YALNIZ saat — mesajlaşma gramerinde satır sonundaki damga. Gün bilgisini
+ *  ayraç taşıyor; her balonda tam tarih tekrar etmek gürültüdür. Ayrıştırılamayan
+ *  damga GİZLENMEZ, ham döner (çağıran onu ham olarak işaretler). */
+export function saatMetni(iso: string | null): string | null {
+  if (iso === null) return null;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return iso;
+  return new Date(t).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+}
+
 /* ---- HİPOTEZ SATIRI ------------------------------------------------------ */
 
 export interface Hipotez {

@@ -18,8 +18,10 @@
      · `mesajlar`   ESKİDEN → YENİYE (okuma akışı)
      · `teslimler`  YENİDEN → ESKİYE
    Bu dosya hiçbir `sort`/`reverse` çağırmaz. Görsel katman bir terslemeye
-   ihtiyaç duyarsa onu BEYAN EDEREK yapar (`Filo.tsx::OturumBasligi` — model
-   değişimini ESKİ komşuyla karşılaştırır ve bunu şerhinde söyler).
+   ihtiyaç duyarsa onu BEYAN EDEREK yapar — bugün TEK yerde:
+   `gramer.ts::oturumlariEskidenYeniye` (ÇAPA GÜNCELLENDİ 2026-08-31: eski çapa
+   `Filo.tsx::OturumBasligi`ydı ve o sembol mesajlaşma göçünde SİLİNDİ; sıra
+   sözleşmesinin tek işaretçisi boşluğa bakıyordu — inceleme Ö-8).
 
    SKALER `null` ANLAMLARI birbirinden de ayrıdır ve tipte tek "boş"a düşmezler:
      · `model`         — oturum kaydı yok (ya da modeli yazılmamış)
@@ -243,40 +245,21 @@ export function filoOku(govdeJson: unknown): FiloYuku {
 
 /* ---- TÜRETİLMİŞ ÖLÇÜMLER (sayı UYDURULMAZ) ------------------------------- */
 
-/** Bir ajanın oturumlarındaki mesaj sayısı. `oturumlar` ölçülemediyse `null` —
- *  0 yazmak "bu ajanla hiç mesajlaşılmadı" iddiası olurdu. */
-export function mesajSayisi(a: FiloAjani): number | null {
-  if (a.oturumlar === null) return null;
-  let n = 0;
-  for (const o of a.oturumlar) {
-    if (o.mesajlar === null) return null;
-    n += o.mesajlar.length;
-  }
-  return n;
-}
+/* ÜÇ DIŞA AKTARIM EMEKLİ EDİLDİ — 2026-08-31, mesajlaşma göçü, inceleme Ö-5.
+   Üçünün de tek çağıranı bu turda silinen `Filo.tsx::{FiloGovdesi, AjanKarti}`ydı;
+   okuyucusu olmayan dışa aktarım Yasa 6'nın kuzenidir ve "ileride lazım olur" diye
+   bırakılan bir sözleşme sessizce bayatlar. Yerlerini alanlar (ve NEDEN denk değiller):
 
-/** SEKMEDE GÖSTERİLECEK ajan anahtarı — BAYAT SEÇİM SESSİZ BOŞ PANEL ÜRETMEZ.
- *
- *  ARIZA MODU (inceleme B1, 2026-08-31): iç sekme seçimi bileşen durumunda tutuluyor. Operatör
- *  `bekci`yi seçip "Tazele"ye bastığında roster DEĞİŞEBİLİR (profil eklendi/silindi, ya da
- *  roster o an ölçülemedi). Seçili anahtar artık hiçbir `TabsTrigger`/`TabsContent` ile
- *  eşleşmez ve Radix hiçbir panel çizmez: ekran SESSİZCE boşalır — ne "ölçülemedi" kutusu, ne
- *  hata, ne iz. Bu deponun tüm etiği sessiz boşluğun olmaması üzerine kurulu; bir satırlık
- *  `secili ?? ajanlar[0]?.anahtar` o etiğe delik açıyordu.
- *
- *  ÇÖZÜM SEÇİMİ BEYANLI: `Ajan.tsx`in şerhi "sekme ROTAYA yazılır, iç duruma DEĞİL" diyor ve bu
- *  fonksiyon o ilkeden SAPIYOR — sapma bilinçli ve ölçülmüş bir sınıra dayanıyor: `pano/rota.tsx`
- *  yolu `parca[2]`ye kadar ayrıştırıyor (`/dashboard/<yuzey>/<bolum>`), DÖRDÜNCÜ segment
- *  (`…/filo/<ajan>`) yok. Ajan başına derin bağ, yönlendiricinin sözleşmesini ve `yuzeyYolu`yu
- *  değiştirmeyi gerektirirdi — bu turun kapsamı dışı (devir kalemi). Kapsam içindeki hüküm şu:
- *  derin bağ OLMASA DA sessiz boşluk OLMAYACAK.
- *
- *  Saf fonksiyon olması da bilinçli: davranışı `node` ile GERÇEKTEN koşulabilsin diye
- *  (emsal `test_pano_palet_v152`), kaynak metninde kimlik arayan bir çiviyle değil. */
-export function aktifAnahtar(ajanlar: readonly FiloAjani[], secili: string | null): string | null {
-  if (secili !== null && ajanlar.some((a) => a.anahtar === secili)) return secili;
-  return ajanlar[0]?.anahtar ?? null;
-}
+     · `mesajSayisi(a)`  → `gramer.ts::mesajToplami(a)` — birebir aynı hüküm, yeni yerde
+       (muhatap başlığı). Taşındı, düşürülmedi.
+     · `modeller(a)`     → `gramer.ts::penceredekiModeller(a)` — aynı hüküm; akıştaki
+       geçiş çipiyle KARIŞTIRILMAMALI (çip komşu oturumları, bu sayı pencereyi ölçer).
+     · `aktifAnahtar(…)` → `gramer.ts::muhatapSec(…)` — DAVRANIŞÇA DENK DEĞİL ve bu
+       bilinçli: bayat seçimde eskisi sessizce ilk ajana düşüyordu, yenisi kanala düşüp
+       `bulunamayan`ı EKRANA taşıyor, ayrıca "liste okunamadı" hâlini ayırıyor.
+       Çivileri de bu yüzden taşınmadı, YENİDEN YAZILDI:
+       `tests/test_ajan_grameri_v350.py` (eski yerleri v347 T2j/T2k, orada tarihiyle
+       emekli edildi — sessiz kırık yol bırakılmadı). */
 
 /** `ajanlar` hiç dizi değilse ekrana yazılacak neden — UCUN KENDİ HÜKMÜNÜ YUTMAZ.
  *
@@ -288,13 +271,4 @@ export function ajanListesiNedeni(yuk: FiloYuku): string {
   const taban =
     "`/api/ajanlar` gövdesinde `ajanlar` bir dizi değil — bu 'ajan yok' DEĞİL, şeklin tanınmadığıdır.";
   return yuk.hata === null ? taban : `${taban} Ucun kendi hükmü: ${yuk.hata}`;
-}
-
-/** Oturum listesinde geçen MODELLER (yeniden eskiye, ilk görülen sırada, tekil).
- *  Ultra geçişi tam olarak burada görünür: liste iki ad taşıyorsa model değişmiş. */
-export function modeller(a: FiloAjani): readonly string[] | null {
-  if (a.oturumlar === null) return null;
-  const g = new Set<string>();
-  for (const o of a.oturumlar) if (o.model !== null) g.add(o.model);
-  return [...g];
 }

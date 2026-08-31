@@ -16,6 +16,7 @@
    (`#karar`, `#adaylar`, `kosu#…`, RUNBOOK bağları, çekmece çipleri) yeni evine
    yönlendiriyor.
    ============================================================================ */
+import { bolumEtiketi } from "./yuzeyler/ajan/gramer";
 import {
   Activity,
   BookOpen,
@@ -76,6 +77,24 @@ export interface Yuzey {
   readonly ikon: LucideIcon;
   readonly grup: "Panolar" | "Sayfalar";
   readonly bolumler: readonly Bolum[];
+  /** KAYITTA DURAMAYAN BÖLÜMLERİN ETİKET ÇÖZÜCÜSÜ (2026-08-31, inceleme Ö-1).
+   *
+   *  `bolumler` STATİK bir listedir. Tüketicileri SAYILDI (2026-08-31, yeniden-inceleme
+   *  Ö-1a — önceki "iki tüketici" cümlesi eksikti): `gezinme.ts` (kenar çubuğu ağacı;
+   *  `nav-main.tsx` yalnız onun ürettiğini tüketir) · `komutlar.ts` (⌘K paleti) ·
+   *  `kabuk/Ustbar.tsx` (kırıntı) · `yuzeyler/{GenelYuzey,AnalizYuzey,Operator}.tsx`
+   *  (kendi yüzeylerinin gövdeleri; `chat` bunlara hiç uğramaz, gövdesi `Ajan.tsx`) ·
+   *  `tests/test_pano_yuzey_kaydi_v288.py` (parite çivisi).
+   *  SAYILMAYAN buydu — `kabuk/Ustbar.tsx` kırıntısı
+   *  `rota.bolum`u kayıtlı `kimlik`lerle BİREBİR eşleştiriyor. Ajan yüzeyi bu turda
+   *  bölüm adresini `<muhatap>.<sekme>` biçimine taşıdı: muhatap ROSTER'DAN türüyor
+   *  (statik kayda sığmaz) ve ayraç `.` olduğu için v324'ün slug şartını da geçemez.
+   *  Kayıt bu yüzden GENİŞLETİLDİ: bir yüzey, kaydedilemeyen bölümleri için kendi
+   *  çözücüsünü verir ve kırıntı hiçbir derin bağda SESSİZCE düşmez.
+   *
+   *  `null` dönüşü "bu bölüm adının bir karşılığı yok" demektir; kırıntı o zaman
+   *  ikinci seviyeyi bilerek çizmez (eski davranış). */
+  readonly bolumCoz?: (bolum: string) => string | null;
 }
 
 /** Anahtar = şablon yolunun son parçası; yol `/dashboard/<anahtar>`. */
@@ -200,6 +219,8 @@ export const YUZEYLER = {
       { kimlik: "olcum", baslik: "Ölçüm", soru: "Kim konuştu, kontrol ne dedi, tahmin tuttu mu?", ikon: Bot },
       { kimlik: "filo", baslik: "Filo", soru: "Botlar ve ana model ne konuştu, ne teslim etti?", ikon: Users },
     ],
+    // Yeni kanonik adres `<muhatap>.<sekme>`; etiketi TEK kaynaktan (`SEKME_ETIKET`) gelir.
+    bolumCoz: bolumEtiketi,
   },
   calendar: {
     sablon: "Calendar",
@@ -298,6 +319,20 @@ export const VARSAYILAN_YUZEY: YuzeyAnahtari = "default";
 
 export function yuzeyYolu(anahtar: YuzeyAnahtari, bolum?: string): string {
   return bolum ? `${YUZEY_KOKU}/${anahtar}/${bolum}` : `${YUZEY_KOKU}/${anahtar}`;
+}
+
+/** Bir bölüm adresinin GÖRÜNEN adı — kırıntının tek sorgusu (2026-08-31, Ö-1).
+ *
+ *  ÖNCE kayıt (`bolumler`), SONRA yüzeyin kendi çözücüsü (`bolumCoz`). İkisi de
+ *  susarsa `null` döner ve kırıntı ikinci seviyeyi bilerek çizmez. Aramanın burada
+ *  durmasının sebebi TEK KAYNAK: adres biçimini bilen tek yer kayıt sistemidir,
+ *  kırıntının kendisi değil — `Ustbar` bir `split(".")` yazsaydı aynı biçim iki
+ *  yerde bilinir ve sessizce ayrışırdı. */
+export function bolumBasligi(anahtar: YuzeyAnahtari, bolum: string): string | null {
+  const a: Yuzey = YUZEYLER[anahtar];
+  const kayitli = a.bolumler.find((x) => x.kimlik === bolum);
+  if (kayitli !== undefined) return kayitli.baslik;
+  return a.bolumCoz?.(bolum) ?? null;
 }
 
 /* ESKİ ADRESLER → YENİ EVİ.

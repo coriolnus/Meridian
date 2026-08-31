@@ -50,7 +50,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 
-import { YUZEYLER, yuzeyYolu } from "../alanlar";
+import { YUZEYLER, bolumBasligi, yuzeyYolu } from "../alanlar";
 import { useBugun } from "../durum";
 import Link, { useRota } from "../rota";
 import { KrizKollari } from "./KrizKollari";
@@ -87,10 +87,24 @@ function DurumHapi() {
             ? { metin: "kesici tetikli", sinif: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400", Ikon: AlertTriangle, yol: MUDAHALE_YOLU }
             : { metin: "sakin", sinif: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400", Ikon: CircleDot, yol: null };
 
+  /* DAR EKRANDA HAP KISALIR, SİMGEYE İNMEZ (2026-08-31, Rol-1'in 375px ölçümü).
+     Ölçülen kusur: hap ile ⌘K araması aynı yatay bölgede üst üste biniyordu.
+     Kök neden aşağıdaki sağ öbekte (`shrink-0` bir kap, içinde DEĞİŞKEN genişlikte
+     bir metin) — burada yalnız o kabın verdiği daralmanın nereye ineceği yazılı:
+     simge ve iç boşluk sabit kalır, KIRPILAN yalnız cümledir.
+
+     NEDEN SİMGEYE İNDİRİLMEDİ: hâllerin İKİSİ de amber + `AlertTriangle` ("durum
+     okunamadı" ve "kesici tetikli"). Metni gizlemek o ikisini AYNI hap yapardı —
+     bu dosyanın kendi kuralının ("dört ayrı hâl, dört ayrı cümle") ihlali. Kırpma
+     ise görünür bir kayıptır: üç nokta kalır, tam cümle `title` ve DOM'da durur,
+     yani ekran okuyucu ve dokunmatik uzun-basış hiçbir şey kaybetmez. */
   const govde = (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium text-xs", hal.sinif)}>
-      <hal.Ikon className="size-3.5" aria-hidden />
-      {hal.metin}
+    <span
+      className={cn("inline-flex min-w-0 items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium text-xs", hal.sinif)}
+      title={hal.metin}
+    >
+      <hal.Ikon className="size-3.5 shrink-0" aria-hidden />
+      <span className="truncate">{hal.metin}</span>
     </span>
   );
 
@@ -98,8 +112,8 @@ function DurumHapi() {
   // "sakin" hâli bir yere götürmez — götürseydi operatör her bakışta bir eylem
   // bekleniyormuş gibi okurdu.
   return (
-    <div role="status" aria-live="polite">
-      {hal.yol ? <Link href={hal.yol} title="Müdahale koluna git">{govde}</Link> : govde}
+    <div className="flex min-w-0" role="status" aria-live="polite">
+      {hal.yol ? <Link className="min-w-0" href={hal.yol} title="Müdahale koluna git">{govde}</Link> : govde}
     </div>
   );
 }
@@ -107,7 +121,19 @@ function DurumHapi() {
 export function Ustbar() {
   const { yuzey, bolum } = useRota();
   const a = YUZEYLER[yuzey];
-  const b = a.bolumler.find((x) => x.kimlik === bolum);
+  /* KIRINTI HİÇBİR DERİN BAĞDA SESSİZCE DÜŞMEZ (2026-08-31, inceleme Ö-1).
+     Burada yalnız kayıtlı `kimlik`lerle BİREBİR eşleşme aranıyordu ve bu, kaydın
+     ÜÇÜNCÜ tüketicisiydi — sayılmamıştı. Ajan yüzeyi bölüm adresini
+     `<muhatap>.<sekme>` biçimine taşıyınca (muhatap roster'dan türüyor, statik
+     kayda sığmaz) `find` `undefined` dönüyordu: kırıntı ikinci seviyesini
+     kaybediyor ve ilk seviye bağ olmaktan çıkıyordu. Hata yok, çivi yok — kabuğun
+     bir parçası o yüzeyde susuyordu.
+
+     ÇÖZÜM KAYIT SİSTEMİNDE, BURADA DEĞİL: yüzey kaydedilemeyen bölümleri için kendi
+     çözücüsünü veriyor (`alanlar.ts::Yuzey.bolumCoz`). Kırıntının burada bölüm
+     adresini kendi başına ayrıştırması (`bolum.split(".")`) tek-kaynak ihlali
+     olurdu — aynı biçim iki yerde bilinir ve sessizce ayrışırdı. */
+  const b = bolumBasligi(yuzey, bolum);
 
   return (
     <header
@@ -129,7 +155,7 @@ export function Ustbar() {
                 <>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>{b.baslik}</BreadcrumbPage>
+                    <BreadcrumbPage>{b}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </>
               )}
@@ -141,11 +167,25 @@ export function Ustbar() {
             çıkarıyor (gerekçe o dosyanın başlığında). Sağ öbek sağa yaslı olduğu için
             KRİZ düğmesinin sağ kenara uzaklığı — yani ekrandaki YERİ — HALT çekilse de
             çekilmese de değişmez. Yeni bir denetim eklenecekse KRİZ'in SOLUNA eklenir. */}
-        <div className="flex shrink-0 items-center gap-2">
+        {/* `shrink-0` → `min-w-0` (2026-08-31, Rol-1'in 375px ölçümü: hap ile arama
+            üst üste biniyordu). Öbek DEĞİŞKEN genişlikte bir metin (durum hapı)
+            taşıyor; daralmayı yasaklamak taşmayı yasaklamaz, yalnız GÖRÜNMEZ kılar —
+            dar ekranda iki denetim aynı piksellere biniyordu. Daralma serbest
+            bırakıldı ve NEREYE ineceği tek yerde sabit: KRİZ/DEVAM düğmeleri kendi
+            dosyalarında `shrink-0`, yerleşim ve tema düğmeleri simge boyunda, yani
+            yer açan TEK şey hapın cümlesidir (kırpılır, silinmez). */}
+        <div className="flex min-w-0 items-center gap-2">
           <DurumHapi />
-          <KrizKollari />
-          <LayoutControls />
-          <ThemeSwitcher />
+          {/* İÇ ÖBEK KATI: daralmanın hapa inmesi bir TASARIM kararıdır, flex'in
+              payına bırakılmış bir tesadüf değil. Bu sarmal olmasaydı simge
+              düğmeleri de kendi iç boşluklarına kadar ezilirdi (buton `min-width`i
+              `auto`dur) ve dokunma hedefleri sessizce küçülürdü. Sıra sözleşmesi
+              korunuyor: KRİZ'in sağ kenara uzaklığı değişmedi. */}
+          <div className="flex shrink-0 items-center gap-2">
+            <KrizKollari />
+            <LayoutControls />
+            <ThemeSwitcher />
+          </div>
         </div>
       </div>
     </header>

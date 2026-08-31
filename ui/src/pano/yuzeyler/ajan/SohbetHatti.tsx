@@ -1,47 +1,49 @@
 "use client";
 
 /* ============================================================================
-   SOHBET HATTI — hipotez defteri, konuşma grameriyle
+   #ÖNERİ-HATTI — hipotez defteri, konuşma grameriyle
    ----------------------------------------------------------------------------
    BURADA UYDURULAN BİR MESAJ YOK. Her balon `state/hypotheses.jsonl`in BİR
    satırından geliyor ve iki tarafı var:
-     · SOL  (ajan)  — `rationale` alanı. Bu gerçekten ajanın kendi cümlesidir:
-                      hermes bir öneri üretirken gerekçesini bu alana yazıyor
-                      (ölçüldü: 41/41 satırda dolu, ortalama birkaç yüz karakter).
-     · SAĞ  (kapı)  — `status` + `reject_reasons` + varsa `realized_delta`. Yani
-                      cevap veren OPERATÖR DEĞİL, backtest/bekçi kapısıdır ve
-                      balonun başlığı bunu açıkça yazar. "Sen" diye bir taraf
-                      çizmek, hiç kurulmamış bir diyaloğu var göstermek olurdu.
+     · SOL  (üreteç) — `rationale` alanı. Bu gerçekten ajanın kendi cümlesidir:
+                       hermes bir öneri üretirken gerekçesini bu alana yazıyor
+                       (ölçüldü: 41/41 satırda dolu, ortalama birkaç yüz karakter).
+     · SAĞ  (kapı)   — `status` + `reject_reasons` + varsa `realized_delta`. Yani
+                       cevap veren OPERATÖR DEĞİL, backtest/bekçi kapısıdır ve
+                       balonun başlığı bunu açıkça yazar. "Sen" diye bir taraf
+                       çizmek, hiç kurulmamış bir diyaloğu var göstermek olurdu.
 
-   KRONOLOJİK VE ESKİDEN YENİYE: sohbet grameri budur ve `autoScroll` en yeniye
-   iner. Defterin kendi sırası da bu (JSONL ekleme sırası) — yeniden sıralamıyoruz,
-   yalnız `ts` yazılmamış satırları sona alıyoruz ki tarih ayracı yalan söylemesin.
+   NEDEN KANAL, NEDEN BOT DEĞİL (2026-08-31, mesajlaşma maketi): bu defterde iki
+   taraf var ve ikisi de tek bir "kişi" değil — üreteç kolları (deterministik +
+   `hermes:*`) ve kapı. Sol listede bu yüzden AJANLAR bölümünde değil KANALLAR
+   bölümünde duruyor: bir kanalda çok konuşan olur, bir botta bir tane.
+
+   KRONOLOJİK VE ESKİDEN YENİYE: sohbet grameri budur. Defterin kendi sırası da
+   bu (JSONL ekleme sırası) — yeniden sıralamıyoruz, yalnız `ts` yazılmamış
+   satırları sona alıyoruz ki tarih ayracı yalan söylemesin.
 
    GÜN AYRACI ÖLÇÜLEN DAMGADAN: `ts` yoksa ayraç "tarihsiz" der. Bugünün tarihini
    varsaymak, damgasız bir satırı bugün konuşulmuş gibi gösterirdi.
+
+   ARAMA NEREYE GİTTİ (bedel beyanı): eski kabukta arama kutusu bu panelin
+   içindeydi. Maket onu sol sütuna, tek arama kutusuna taşıdı — kutu "ajan, kanal
+   ya da mesaj ara" diyor, yani bu paneldeki metinleri de süzmeye devam etmesi
+   gerekiyordu ve ediyor (`arama` özelliği yukarıdan iniyor). ÜÇ KOVALI SÜZGEÇ
+   (hepsi / sonucu yazılmış / kapıda düşen) DÜŞÜRÜLMEDİ: makette görünmüyordu ama
+   kaldırmak ölçülmüş bir işlevi kaybetmekti — panelin üstünde ince bir şerit
+   olarak duruyor.
    ============================================================================ */
 import { useMemo, useState } from "react";
 
-import { Ban, Bot, MessageSquareOff, ScrollText, Search, Send, ShieldCheck } from "lucide-react";
+import { Bot, LockKeyhole, MessageSquareOff, ScrollText, Send, ShieldCheck } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Bubble, BubbleContent, BubbleGroup } from "@/components/ui/bubble";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from "@/components/ui/input-group";
-import { Input } from "@/components/ui/input";
 import { Marker, MarkerContent } from "@/components/ui/marker";
 import { Message, MessageAvatar, MessageContent, MessageFooter, MessageHeader } from "@/components/ui/message";
-import {
-  MessageScroller,
-  MessageScrollerButton,
-  MessageScrollerContent,
-  MessageScrollerItem,
-  MessageScrollerProvider,
-  MessageScrollerViewport,
-} from "@/components/ui/message-scroller";
-import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { DURUM_SOZLUGU, bicimSayi, gunMetni, zamanMetni, type Hipotez } from "./ortak";
@@ -68,19 +70,21 @@ function suzgectenGecer(h: Hipotez, s: Suzgec): boolean {
   return (h.durum ?? "").startsWith("rejected") || h.durum === "rolled_back";
 }
 
-/* ---- HAT ----------------------------------------------------------------- */
+/* ---- KANAL AKIŞI --------------------------------------------------------- */
 
-export function SohbetHatti({
+export function KanalAkisi({
   hipotezler,
   hafizaBasliklari,
   hafizaOlculemediNedeni,
+  arama,
 }: {
   hipotezler: readonly Hipotez[];
   /** `lessons.md` başlıkları — ajanın HER yansımaya enjekte edilen kalıcı hafızası. */
   hafizaBasliklari: readonly { readonly baslik: string; readonly n: number }[];
   hafizaOlculemediNedeni: string | null;
+  /** Sol sütundaki tek arama kutusu — liste ile aynı sorgu. */
+  arama: string;
 }) {
-  const [arama, setArama] = useState("");
   const [suzgec, setSuzgec] = useState<Suzgec>("hepsi");
 
   const sirali = useMemo(() => [...hipotezler].sort((a, b) => damga(a) - damga(b)), [hipotezler]);
@@ -99,18 +103,8 @@ export function SohbetHatti({
   }, [sirali, arama, suzgec]);
 
   return (
-    <div className="flex min-h-0 flex-col gap-3">
+    <div className="flex flex-col gap-4 px-4 py-4 sm:px-6">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-56 flex-1">
-          <Search className="-translate-y-1/2 absolute top-1/2 left-2.5 size-3.5 text-muted-foreground" aria-hidden />
-          <Input
-            value={arama}
-            onChange={(e) => setArama(e.target.value)}
-            placeholder="Gerekçede, değişkende, ret nedeninde ara…"
-            className="h-9 pl-8 text-sm"
-            aria-label="Sohbette ara"
-          />
-        </div>
         <ToggleGroup
           type="single"
           variant="outline"
@@ -124,7 +118,7 @@ export function SohbetHatti({
             if (v === "hepsi" || v === "sonuclanan" || v === "reddedilen") setSuzgec(v);
             else setSuzgec("hepsi");
           }}
-          aria-label="Sohbet süzgeci"
+          aria-label="Öneri süzgeci"
         >
           {(Object.keys(SUZGEC_ETIKET) as Suzgec[]).map((k) => (
             <ToggleGroupItem key={k} value={k} className="text-xs">
@@ -137,120 +131,93 @@ export function SohbetHatti({
         </span>
       </div>
 
-      <div className="min-h-0 rounded-lg border">
-        <MessageScrollerProvider autoScroll>
-          <MessageScroller className="h-[34rem]">
-            <MessageScrollerViewport>
-              <MessageScrollerContent className="gap-6 px-3 py-6 sm:px-4">
-                <HafizaMesaji basliklar={hafizaBasliklari} neden={hafizaOlculemediNedeni} />
+      <HafizaMesaji basliklar={hafizaBasliklari} neden={hafizaOlculemediNedeni} />
 
-                {gorunen.length === 0 ? (
-                  <Empty className="border-0">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <MessageSquareOff />
-                      </EmptyMedia>
-                      <EmptyTitle>Süzgeç hiçbir kaydı geçirmedi</EmptyTitle>
-                      <EmptyDescription>
-                        Bu, defterin boş olduğu anlamına GELMEZ: defterde {bicimSayi(hipotezler.length)} kayıt
-                        var, aramayı/süzgeci daraltan sensin.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                ) : (
-                  gorunen.map((h, i) => {
-                    const oncekiGun = i === 0 ? null : gunMetni(gorunen[i - 1]?.ts ?? null);
-                    const buGun = gunMetni(h.ts);
-                    return (
-                      <div key={h.id ?? `satir-${i}`} className="flex flex-col gap-6">
-                        {buGun !== oncekiGun ? (
-                          <Marker variant="separator">
-                            <MarkerContent>{buGun ?? "tarihsiz (ts alanı yok)"}</MarkerContent>
-                          </Marker>
-                        ) : null}
-                        <MessageScrollerItem
-                          messageId={h.id ?? `satir-${i}`}
-                          scrollAnchor={i === gorunen.length - 1}
-                        >
-                          <div className="flex flex-col gap-4">
-                            <AjanBalonu h={h} />
-                            <KapiBalonu h={h} />
-                          </div>
-                        </MessageScrollerItem>
-                      </div>
-                    );
-                  })
-                )}
-              </MessageScrollerContent>
-            </MessageScrollerViewport>
-            <MessageScrollerButton />
-          </MessageScroller>
-        </MessageScrollerProvider>
-
-        <Separator />
-        <Yazamaz />
-      </div>
+      {gorunen.length === 0 ? (
+        <Empty className="border-0">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <MessageSquareOff />
+            </EmptyMedia>
+            <EmptyTitle>Süzgeç hiçbir kaydı geçirmedi</EmptyTitle>
+            <EmptyDescription>
+              Bu, defterin boş olduğu anlamına GELMEZ: defterde {bicimSayi(hipotezler.length)} kayıt
+              var, aramayı/süzgeci daraltan sensin.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        gorunen.map((h, i) => {
+          const oncekiGun = i === 0 ? null : gunMetni(gorunen[i - 1]?.ts ?? null);
+          const buGun = gunMetni(h.ts);
+          return (
+            <div key={h.id ?? `satir-${i}`} className="flex flex-col gap-4">
+              {buGun !== oncekiGun ? (
+                <Marker variant="separator">
+                  <MarkerContent>{buGun ?? "tarihsiz (damga alanı yok)"}</MarkerContent>
+                </Marker>
+              ) : null}
+              <UretecBalonu h={h} />
+              <KapiBalonu h={h} />
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
 
-/* ---- BALONLAR ------------------------------------------------------------ */
+/* ---- SABİTLENMİŞ DERS ---------------------------------------------------- */
 
+/** Maketin en üstteki mavi kartı: damıtılmış ders. İçerik değişmedi — yeri ve
+ *  kabı değişti (balon değil, akışın başına sabitlenmiş kart). */
 function HafizaMesaji({
   basliklar,
   neden,
 }: {
   basliklar: readonly { readonly baslik: string; readonly n: number }[];
   neden: string | null;
-  teknik?: string;
 }) {
   return (
-    <Message align="start">
-      <MessageAvatar>
-        <Avatar>
-          <AvatarFallback className="bg-muted text-foreground">
-            <ScrollText className="size-4" aria-hidden />
-          </AvatarFallback>
-        </Avatar>
-      </MessageAvatar>
-      <MessageContent>
-        <MessageHeader>kalıcı hafıza · state/lessons.md</MessageHeader>
-        <BubbleGroup>
-          <Bubble variant="outline" align="start">
-            <BubbleContent className="flex flex-col gap-2">
-              <p className="text-sm leading-relaxed">
-                Bu metin ajanın HER yansımasına enjekte ediliyor (uç şerhi: "Injected into every
-                reflection"). Yani aşağıdaki her öneri, bu hafızayı okumuş bir ajandan geliyor.
-              </p>
-              {neden !== null ? (
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  Başlıklar ölçülemedi: {neden}
-                </p>
-              ) : basliklar.length === 0 ? (
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  Metinde `##` başlığı yok — dosya var ama bölümlenmemiş.
-                </p>
-              ) : (
-                <ul className="flex flex-wrap gap-1.5">
-                  {basliklar.map((b) => (
-                    <li key={b.baslik}>
-                      <Badge variant="outline" className="text-[11px]">
-                        {b.baslik} · {bicimSayi(b.n)} madde
-                      </Badge>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="text-muted-foreground text-xs">
-                Tam metin: <a className="underline underline-offset-2" href="#/dashboard/file-manager/hafiza">Belgeler → Hafıza</a>
-              </p>
-            </BubbleContent>
-          </Bubble>
-        </BubbleGroup>
-      </MessageContent>
-    </Message>
+    <div className="rounded-xl border border-sky-500/25 bg-sky-500/5 px-4 py-3">
+      <p className="flex items-center gap-1.5 font-semibold text-[10px] text-sky-700 uppercase tracking-wider dark:text-sky-400">
+        <ScrollText className="size-3.5" aria-hidden />
+        sabitlenmiş · kalıcı hafıza
+      </p>
+      <p className="mt-1.5 text-sm leading-relaxed">
+        Bu metin ajanın HER yansımasına enjekte ediliyor. Yani aşağıdaki her öneri, bu hafızayı
+        okumuş bir ajandan geliyor.
+      </p>
+      {neden !== null ? (
+        <p className="mt-1.5 text-muted-foreground text-xs leading-relaxed">
+          Başlıklar ölçülemedi: {neden}
+        </p>
+      ) : basliklar.length === 0 ? (
+        <p className="mt-1.5 text-muted-foreground text-xs leading-relaxed">
+          Metinde `##` başlığı yok — dosya var ama bölümlenmemiş.
+        </p>
+      ) : (
+        <ul className="mt-2 flex flex-wrap gap-1.5">
+          {basliklar.map((b) => (
+            <li key={b.baslik}>
+              <Badge variant="outline" className="bg-card text-[11px]">
+                {b.baslik} · {bicimSayi(b.n)} madde
+              </Badge>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-2 text-muted-foreground text-xs">
+        Tam metin:{" "}
+        <a className="underline underline-offset-2" href="#/dashboard/file-manager/hafiza">
+          Belgeler → Hafıza
+        </a>
+      </p>
+    </div>
   );
 }
+
+/* ---- BALONLAR ------------------------------------------------------------ */
 
 function bas(kaynak: string | null): string {
   if (kaynak === null) return "?";
@@ -258,20 +225,20 @@ function bas(kaynak: string | null): string {
   return kaynak.slice(0, 2).toLocaleUpperCase("tr-TR");
 }
 
-function AjanBalonu({ h }: { h: Hipotez }) {
+function UretecBalonu({ h }: { h: Hipotez }) {
   const zaman = zamanMetni(h.ts);
   return (
     <Message align="start">
       <MessageAvatar>
-        <Avatar>
-          <AvatarFallback className="bg-muted text-foreground text-xs">
-            {h.kaynak?.startsWith("hermes:") ? bas(h.kaynak) : <Bot className="size-4" aria-hidden />}
+        <Avatar className="size-7">
+          <AvatarFallback className="bg-muted text-[11px] text-foreground">
+            {h.kaynak?.startsWith("hermes:") ? bas(h.kaynak) : <Bot className="size-3.5" aria-hidden />}
           </AvatarFallback>
         </Avatar>
       </MessageAvatar>
       <MessageContent>
         <MessageHeader className="gap-2">
-          <span>{h.kaynak ?? "kaynak yazılmamış"}</span>
+          <span>üreteç · {h.kaynak ?? "kaynak kaydedilmemiş"}</span>
           {h.id === null ? null : <span className="text-muted-foreground/70">· {h.id}</span>}
           {h.asiriUyumSupheli === true ? (
             <Badge variant="destructive" className="text-[10px]">
@@ -280,16 +247,16 @@ function AjanBalonu({ h }: { h: Hipotez }) {
           ) : null}
         </MessageHeader>
         <BubbleGroup>
-          <Bubble variant="muted" align="start">
+          <Bubble variant="outline" align="start">
             <BubbleContent className="flex flex-col gap-2">
               <p className="font-medium text-sm">
-                <code className="font-mono">{h.degisken ?? "(değişken yazılmamış)"}</code>{" "}
+                <code className="font-mono">{h.degisken ?? "(değişken kaydedilmemiş)"}</code>{" "}
                 <span className="text-muted-foreground">
                   {h.eski ?? "?"} → {h.yeni ?? "?"}
                 </span>
               </p>
               <p className="whitespace-pre-line text-sm leading-relaxed">
-                {h.gerekce ?? "Bu satırda `rationale` alanı yok — ajan gerekçesini yazmamış."}
+                {h.gerekce ?? "Bu satırda gerekçe alanı yok — üreteç nedenini kaydetmemiş."}
               </p>
               <ul className="flex flex-wrap gap-1.5 pt-0.5">
                 <Cip etiket="rejim" deger={h.rejim} />
@@ -320,9 +287,9 @@ function KapiBalonu({ h }: { h: Hipotez }) {
   return (
     <Message align="end">
       <MessageAvatar>
-        <Avatar>
+        <Avatar className="size-7">
           <AvatarFallback className="bg-muted text-foreground">
-            <ShieldCheck className="size-4" aria-hidden />
+            <ShieldCheck className="size-3.5" aria-hidden />
           </AvatarFallback>
         </Avatar>
       </MessageAvatar>
@@ -337,7 +304,7 @@ function KapiBalonu({ h }: { h: Hipotez }) {
           >
             <BubbleContent className="flex flex-col gap-2">
               <p className="font-medium text-sm">
-                {sozluk?.etiket ?? h.durum ?? "hüküm yazılmamış"}
+                {sozluk?.etiket ?? h.durum ?? "hüküm kaydedilmemiş"}
                 {sozluk === undefined && h.durum !== null ? (
                   <span className="ml-1 font-normal text-xs opacity-70">(sözlükte olmayan durum)</span>
                 ) : null}
@@ -355,14 +322,14 @@ function KapiBalonu({ h }: { h: Hipotez }) {
                   // SESSİZ SIFIR YOK: sonucu yazılmamış bir tahmini "0 fark" diye
                   // göstermek, ölçülmemiş bir şeyi ölçülmüş saymak olurdu.
                   <span className="opacity-80">
-                    gerçekleşen Δ ölçülmedi — bu satıra `realized_delta` hiç yazılmamış (öneri canlıya
+                    gerçekleşen Δ ölçülmedi — bu satıra sonuç hiç yazılmamış (öneri canlıya
                     çıkmadığı için sonucu da yok)
                   </span>
                 ) : (
                   <>
                     gerçekleşen Δ <strong className="tabular-nums">{bicimSayi(h.gerceklesenDelta, 4, true)}</strong>
                     {h.kalibrasyonIsabet === null
-                      ? " · kalibrasyon isabeti yazılmamış"
+                      ? " · kalibrasyon isabeti kaydedilmemiş"
                       : h.kalibrasyonIsabet
                         ? " · tahmin tuttu"
                         : " · tahmin tutmadı"}
@@ -380,14 +347,18 @@ function KapiBalonu({ h }: { h: Hipotez }) {
 function Cip({ etiket, deger }: { etiket: string; deger: string | null }) {
   return (
     <li>
-      <Badge variant="ghost" className="text-[10px]" title={deger === null ? `${etiket} alanı yazılmamış` : undefined}>
-        {etiket}: {deger ?? "yazılmamış"}
+      <Badge
+        variant="ghost"
+        className="text-[10px]"
+        title={deger === null ? `${etiket} alanı kaydedilmemiş` : undefined}
+      >
+        {etiket}: {deger ?? "kaydedilmemiş"}
       </Badge>
     </li>
   );
 }
 
-/* ---- GİRİŞ KUTUSU: KAPALI VE NEDENİ YAZILI ------------------------------- */
+/* ---- KİLİTLİ YAZMA ŞERİDİ ------------------------------------------------ */
 
 /** ÖLÇÜM (2026-08-25, `meridian/api.py` — 78 rotanın tamamı tarandı): panodan ajana
  *  SERBEST METİN gönderen bir uç YOK. `POST /api/hermes/reflect` bir yansıma turu
@@ -396,56 +367,60 @@ function Cip({ etiket, deger }: { etiket: string; deger: string | null }) {
  *  `/api/approvals/{id}` ve `/api/plan/{id}/onayla` karar uçlarıdır, mesaj değil.
  *
  *  GÜNCELLEME (2026-08-31, dalga-A): ARTIK BİR AJAN UCU VAR — `GET /api/ajanlar`.
- *  Ama o uç SALT OKUNUR: botların ve ana beynin oturum defterlerini okur, hiçbir
- *  şey YAZMAZ (yüzeyi bu sayfanın `Filo` sekmesi). Yani gerekçenin YÖNÜ değişti,
- *  hükmü değişmedi: okuma yolu açıldı, YAZMA yolu hâlâ yok. Kutuyu bugün açmak,
- *  var olmayan bir yazma yolunu var göstermek olurdu — üstelik artık daha inandırıcı
- *  bir yalan olurdu, çünkü yanındaki sekme gerçek konuşmaları gösteriyor.
+ *  Ama o uç SALT OKUNUR: botların ve ana beynin konuşma defterlerini okur, hiçbir
+ *  şey YAZMAZ. Yani gerekçenin YÖNÜ değişti, hükmü değişmedi: okuma yolu açıldı,
+ *  YAZMA yolu hâlâ yok. Kutuyu bugün açmak, var olmayan bir yazma yolunu var
+ *  göstermek olurdu — üstelik artık daha inandırıcı bir yalan olurdu, çünkü
+ *  üstündeki akış gerçek konuşmaları gösteriyor.
  *
- *  DALGA-B'DE AÇILACAK ve şartı yazılıdır: hermes köprüsü (panodan profile mesaj
- *  taşıyan yazma ucu) + DURUŞ ÇİVİLERİ (kimin yazabildiği, neyin kaydedildiği,
- *  yazılan mesajın ajanın kararına ne yaptığı ölçülmeden bu kutu açılmaz).
+ *  İKİ MUHATAP, İKİ AYRI GEREKÇE (maket sözleşmesi): botta "yazan uç yok",
+ *  kanalda "öneriler panodan yazılmaz". Tek metne indirgemek iki ayrı olguyu tek
+ *  olgu gibi gösterirdi: birincisi eksik bir YOL, ikincisi bilinçli bir TASARIM.
  *
- *  Kutu bu yüzden ÇALIŞIR GÖRÜNMÜYOR. Yazılabilen ama hiçbir yere gitmeyen bir
- *  metin alanı, arayüzün söyleyebileceği en sinsi yalandır: operatör mesajı yazar,
- *  gönderir, cevap bekler — ve beklediği şey hiç var olmamıştır. */
-function Yazamaz() {
-  return (
-    <div className="flex flex-col gap-3 p-3">
-      <Alert>
-        <Ban />
-        <AlertTitle>Bu pano ajana mesaj gönderemez — kutu bilerek kapalı (dalga-B)</AlertTitle>
-        <AlertDescription>
-          <p>
-            `meridian/api.py` içinde serbest metin kabul eden bir ajan ucu yok. En yakın olanlar mesaj
-            değil, KUMANDA: `POST /api/hermes/reflect` gövdesiz bir yansıma turu başlatır,
-            `POST /api/hermes/{"{action}"}` yalnız `start` · `stop` · `backfill` ·
-            `sync_integrations` tanır. Ajanla konuşmanın bugünkü yolu tek yönlü: sen eşiği/kartı
-            değiştirirsin, o bir sonraki turda cevabını bu deftere yazar.
-          </p>
-          <p className="mt-2">
-            2026-08-31'de OKUMA yolu açıldı: `GET /api/ajanlar` botların ve ana beynin gerçek
-            oturumlarını getiriyor (yandaki `Filo` sekmesi). O uç SALT OKUNUR — yazma yolu HÂLÂ
-            yok. Bu kutu dalga-B'de, hermes köprüsü ve duruş çivileriyle birlikte açılacak;
-            köprüsüz açmak, artık daha inandırıcı olan aynı yalanı söylemek olurdu.
-          </p>
-        </AlertDescription>
-      </Alert>
+ *  ŞERİT MAKETTE İNCE: gerekçenin uzun hâli katlanır — ekranda DURUYOR ama
+ *  konuşmanın yerini almıyor. Gerekçeyi tamamen kısaltmak, tarihini ve açılma
+ *  şartını (dalga-B) ekrandan silmek olurdu; operatör şerh okumaz. */
+const YAZMA_GEREKCESI: Readonly<Record<"ajan" | "kanal", string>> = {
+  ajan: "Panodan ajana yazan uç yok — kutu bilerek kapalı",
+  kanal: "Öneriler panodan yazılmaz — üreteç yansıma turlarında konuşur, kapı ölçümle cevap verir",
+};
 
-      <InputGroup className="opacity-60">
+export function YazmaSeridi({ hal }: { hal: "ajan" | "kanal" }) {
+  return (
+    <div className="flex shrink-0 flex-col gap-1.5 border-t bg-card px-4 py-2.5 sm:px-6">
+      <InputGroup className="border-dashed opacity-70">
         <InputGroupTextarea
           disabled
           aria-disabled
-          placeholder="Gönderme ucu yok — bu alan dalga-B'ye kadar devre dışı (bkz. yukarıdaki gerekçe)"
-          className="min-h-14 px-3 py-2.5 text-sm"
+          placeholder={YAZMA_GEREKCESI[hal]}
+          className="min-h-9 px-3 py-2 text-xs"
         />
         <InputGroupAddon align="block-end">
+          <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <LockKeyhole className="size-3" aria-hidden />
+            gönderme ucu yok
+          </span>
           <InputGroupButton type="button" variant="default" size="icon-sm" disabled className="ml-auto">
             <Send />
             <span className="sr-only">Gönder (devre dışı)</span>
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
+      <details className="text-[11px] text-muted-foreground">
+        <summary className="cursor-pointer text-primary">kutu neden kapalı?</summary>
+        <p className="mt-1 leading-relaxed">
+          `meridian/api.py` içinde serbest metin kabul eden bir ajan ucu yok. En yakın olanlar mesaj
+          değil KUMANDA: `POST /api/hermes/reflect` gövdesiz bir yansıma turu başlatır,
+          `POST /api/hermes/{"{action}"}` yalnız `start` · `stop` · `backfill` ·
+          `sync_integrations` tanır.
+        </p>
+        <p className="mt-1 leading-relaxed">
+          2026-08-31'de OKUMA yolu açıldı: `GET /api/ajanlar` botların ve ana beynin gerçek
+          oturumlarını getiriyor (soldaki ajan satırları). O uç SALT OKUNUR — yazma yolu HÂLÂ yok.
+          Bu kutu dalga-B'de, hermes köprüsü ve duruş çivileriyle birlikte açılacak; köprüsüz
+          açmak, artık daha inandırıcı olan aynı yalanı söylemek olurdu.
+        </p>
+      </details>
     </div>
   );
 }
