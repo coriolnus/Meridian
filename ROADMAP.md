@@ -162,6 +162,8 @@ varırdı. Bu satır burada bir **hatıra değil kapı gerekçesidir**.
 
 ## §2 TAHTA — aktif kalemler: tek satır, tek aşama
 
+_**İCRA SIRASI (2026-08-31, operatör onaylı — işaret, kopya değil):** A·PIT/veri (EDG-062, uçuşta) → B·P-2/`ts` kart revizyonu → D·altyapı-8 xdist → D sırası (4→2→1→3→9), araya E·tahta borçlarından haftada 1-2 · C·WP12 Faz-5 bacağı ilk bot canlıda değer kanıtlayınca · F·operatör masası `§5.0` kendi temposuyla. Cepheler: A/B/D/E ayrıntısı bu tahtada, C `WP12` satırında._
+
 > Bugüne dek "açık kalemler" §3'ün WP tablosunda **düzyazı yığınıydı** ve hangi kalemin nerede
 > olduğu okunamıyordu. Tahta onu satırlaştırır. **Tek kural: her aktif kalem tam bir satır ve tam
 > bir aşama.** İki aşamadaysa kalem İKİYE bölünür.
@@ -2045,6 +2047,8 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   docstring'indeki tur-12 ayrışma sınıfı. *KALDIR ya da DAMGALA (25a/25b deseni).*
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
+
+_**[2026-08-31 KONSOLİDASYON — HAVUZ GİRDİSİ ROZET TAŞIMAZ.]** Burası backlog'dur: girdi tahtaya terfi ettiği gün rozet alır; havuzda rozet taşımak çift-defter olurdu. `/api/roadmap` bu maddeleri `belirsiz` sayar ve **bu doğrudur**._
 - **KART ADAYI (2026-08-31, 85-aktarımı, EDG-042 P-3 bloğunda 'AYRI KALEM ADAYI' kayıtlı): seyrelme mekanizması ölçülemiyor** — kaydırma sonrası plan-günü sıklığı değişmedi (0,38→0,40/seans) ama plan-günü başına dolum 3,0→1,0 düştü; sebep E2 ile ölçülemez çünkü defterde reddedilen/veto edilen AYNA SATIRI YOK (36/36 submitted+dolu) — "kaç plan doluma dönüşmedi" sorusu okunamıyor. Bu sayı 1345 kolunun eşik takvimini belirliyor; ölçülemedikçe EDG-042 takvimi izdüşümde kalır. Yol: E2'ye ret/veto ayna-satırı (kartlı, PIT-uyumlu).
 - **BACKEND MİMARİ KARARLARI (operatör, 2026-08-31 — brainstorm kapanışı, 9 kalem):**
   Zemin iki ölçümle düzeltildi: Redis KURULU ve ENTEGRE (hotstate.py, `mrd:` şeması, Streams+
@@ -2326,6 +2330,22 @@ kararı gerektirenler §5'e geçer.
 
 ## §5 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde) _(eski: §3)_
 
+### §5.0 OPERATÖR MASASI — konsolide işaret defteri (2026-08-31)
+
+_**BU TABLO KALEM TAŞIMAZ** — beş kovaya dağılmış operatör işlerinin TEK bakışta dizini. Satırlar durum rozeti taşımaz (rozetli asıl satırlar işaret ettikleri yerde; kopya rozet sessizce ayrışırdı — tek-kaynak). `/api/roadmap` bu satırları `belirsiz` sayar ve **bu doğrudur**._
+
+| Kalem | Ne istiyor | Asıl kayıt |
+|---|---|---|
+| Bot kurulumları (sef · bekci · karne) | profil başına üç eylem: `deploy.sh` kurulumu → birim enable → ilk elle test-ateşleme | `§3 WP12` + `§2` H1 roster satırı |
+| hermes `SOUL.md` + `config.yaml` | elle kurulum + bakım penceresi (dagit taşımaz; F9 AYRIK ölçüyor) | F9 raporu + `deploy/hermes/` |
+| `B-FINVIZ-TOKEN` | Finviz Elite anahtarı ya da delist-bar kaynak kararı | `§5` kimlik tablosu satırı |
+| `B-FMP-PLAN` | FMP plan kararı (250 çağrı/gün ↔ 251 sembol yapısal uyumsuzluğu) | `§5` kimlik tablosu satırı |
+| `B-QC-LOGIN` | `lean login` + makine kurulumu (dotnet/docker) | `§2` C2-4 LEAN satırı |
+| `B-AJAN-GIT` | ajan git yetkisi kararı | `§5` kimlik tablosu satırı |
+| Faz-6 beş kilit | kanıt-şartlı kilitler — açılış kararları | `§2` askıda satırı + WP3 |
+| Sırlar (mimari madde 7) | operatör 2026-08-31: 'şu an kalsın' — yeniden açılış operatörde | `§4` mimari bloğu BEKLEMEDE-7 |
+| PIT mid-cap üst-sınır | askıdaki karar | `§2` askıda satırı |
+
 **KİMLİK TABLOSU (2026-08-23 — tahta gerekçesi: "kimlik konumdan ayrılmalı"; her blok başlığının
 önüne `**[B-…]**` kondu; aynı konu §5'te birden çok konumda yaşıyorsa — kova bloğu + numaralı
 envanter — hepsi AYNI kimliği taşır. Kimlikler kalıcıdır; blok kapansa da kimlik yeniden kullanılmaz.):**
@@ -2344,13 +2364,13 @@ envanter — hepsi AYNI kimliği taşır. Kimlikler kalıcıdır; blok kapansa d
 | 🔴 AÇIK · `B-FINVIZ-TOKEN` | FINVIZ Elite token satın alınsın mı (KOVA-3/C1 · envanter-8) | para kararı (WP11-D uzlaştırması çözülmeden "kesinlikle gereksiz" denemez) |
 | 🔴 AÇIK · `B-FMP-PLAN` | FMP plan/kota yükseltmesi — Y4 penceresi (KOVA-3/C2 · envanter-3 + envanter-7) | para kararı |
 | 🔴 AÇIK · `B-QC-LOGIN` | QC kimliği (`lean login` ya da dotnet-engine kararı) + FREE defterin koşulması (KOVA-3/C3 · yeni-blok C2-4 · envanter-11) | anahtar/kimlik + operatör koşumu |
-| 🟡 DOĞRULANMADI · `B-NOUS-BEYIN` | NOUS_MODEL / beyin çeşitliliği — danışma yolu ölü (KOVA-3/C4 · envanter-1) | anahtar (Claude API) ya da sır-yolu model kararı; kapanmış olabilir — Rol-1 doğrulaması |
+| **AÇIK** (DOĞRULANMADI — Rol-1 doğrulaması bekliyor) · `B-NOUS-BEYIN` | NOUS_MODEL / beyin çeşitliliği — danışma yolu ölü (KOVA-3/C4 · envanter-1) | anahtar (Claude API) ya da sır-yolu model kararı; kapanmış olabilir — Rol-1 doğrulaması |
 | ✅ KAPALI · `B-SYSTEMD-143` | systemd `SuccessExitStatus=143` (OB-2) | ✅ yapıldı 2026-08-09 — tarihçe |
 | ✅ KAPALI · `B-DASH-CRED` | DASH-TOKEN LoadCredential faz-1 etkinleştirme | bakım penceresi |
 | 🔴 AÇIK · `B-AJAN-GIT` | ajan-git mekanik kapısı (PATH-shim/wrapper) | süreç/araç kararı |
 | ✅ KAPALI · `B-ORACLE-TASIMA` | Oracle sunucu taşıma (envanter-4; Faz-6 ön şartı) | operatör aksiyonu/pencere |
 | 🔴 AÇIK · `B-FAZ6-KILIT` | Faz-6 kapısı: beş kilit dolunca INTRADAY_ARM + emir bacağı onayı (envanter-5) | onay (kanıt-şartlı) |
-- **🟡 DOĞRULANMADI (bilgi kalemi; aksiyonu "dağıtımdan sonra `edge_verdict` okunur" ve o okumanın yapıldığı bu turda ÖLÇÜLEMEDİ — canlı defter cloud klonundan okunamaz)** · **🔴 36. FAZ-6 KİLİDİ MEŞRU BİÇİMDE DÜŞEBİLİR — KADANSLI YAZARIN YAN ETKİSİ** _(2026-08-14, v245-D; sahibi WP5/WP2; **operatör bilgilendirmesi**)_ _(§4-36'dan taşındı 2026-08-23; B-FAZ6-KILIT ailesi — operatör bilgilendirmesi: kilit düşerse ARIZA DEĞİL kapının çalışmasıdır)_
+- **ASKIDA — 🟡 DOĞRULANMADI (bilgi kalemi; aksiyonu "dağıtımdan sonra `edge_verdict` okunur" ve o okumanın yapıldığı bu turda ÖLÇÜLEMEDİ — canlı defter cloud klonundan okunamaz)** · **🔴 36. FAZ-6 KİLİDİ MEŞRU BİÇİMDE DÜŞEBİLİR — KADANSLI YAZARIN YAN ETKİSİ** _(2026-08-14, v245-D; sahibi WP5/WP2; **operatör bilgilendirmesi**)_ _(§4-36'dan taşındı 2026-08-23; B-FAZ6-KILIT ailesi — operatör bilgilendirmesi: kilit düşerse ARIZA DEĞİL kapının çalışmasıdır)_
   `equity_curve` kadanslı yazarı devreye girince `analytics._realized_drawdown`ın **m2m bacağı
   körlükten çıkıyor**: seri kitabın seansını kapsar hâle gelince `m2m_durum` `"donem_disi"` →
   **`"olculdu"`**, `max_dd_alt_sinir` False olur (`analytics.py:1696-1707`). Yani `edge_verdict` /
@@ -2554,6 +2574,8 @@ kaldıraçlar ve kimliklerdir (sırlar, kurtarma kolları, elle tetikler); "aç�
 olmazlar — VAR olurlar. 13 satır bu gerekçeyle rozetsiz bırakıldı ve `belirsiz` okunmaları
 doğrudur. Bir satır bir KARAR beklemeye başladığında yeri burası değil, `§5`in kimlik tablosudur._
 
+_**[2026-08-31 KONSOLİDASYON — BU TABLO REFERANSTIR, kalem değil.]** Kimlik/erişim/elle-tetik envanteri; rozet taşımaz. Karar bekleyen satır buradan `§5` karar tablosuna terfi eder._
+
 | Kalem | Ne | Neden operatörde | Nasıl kullanılır |
 |---|---|---|---|
 | `alpaca.live_client` / `live_guard` | Gerçek-para ticaret istemcisi ve onun sert kapısı (UYUYAN — hiçbir üretim yolu çağırmıyor) | Gerçek para. Kod bir insan iki bayrağı elle çevirmeden ve §8 terfi kapıları geçilmeden bu yola GİREMEZ | `MERIDIAN_MODE=live` **ve** `MERIDIAN_I_ACCEPT_RISK=true` + `goal.limits.autonomy_level >= 1`; üçü eksikse `live_guard` RuntimeError atar |
@@ -2588,6 +2610,8 @@ sayıyordu, `research/cards/*.yaml` **50** taşıyor. Ayrışan üç kart — `E
 yani indeksin son tazelemesinden [2026-08-13] SONRA). Kalem bu turda kapatıldı: üçü de aşağıya
 KENDİ kart metinlerinden yazıldı. Bu, A17/Ö-49 **beyan bayatlığı** sınıfının bir örneğidir —
 kartların kendisi doğruydu, onları sayan indeks bayattı. Sayım diskten okundu:
+
+_**[2026-08-31 KONSOLİDASYON — BU TABLO SAYIMDIR, kalem değil.]** Diskten üretilen özet; rozet taşımaz._
 
 | durum (`status:` alanı, diskten) | sayı | not |
 |---|---|---|
@@ -2802,6 +2826,7 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
   uygulama borcu → WP-S2 §3.
 
 **ARŞİV / KAPALI KARTLAR (hüküm — tam gerekçe §8 ilgili WP + §7):**
+_**[2026-08-31 KONSOLİDASYON — BU LİSTE ENDEKSTİR.]** Satırlar kart durumlarının dizinidir, açılıp kapanan kalem değil; karışık-durumlu satırlar rozetlenmez (durumlar kartlarda). `/api/roadmap` bunları `belirsiz` sayar ve bu doğrudur._
 - ✅ KAPALI (`measured`, diskten 2026-08-31) · **EDG-2026-016** turnover-ana-etkisi — **SUCCESS / YAŞAYAN SİNYAL** (@20 net +0,55% CI-0-dışı; q5 monoton; survivorship-şerhli). Kablolama açık → WP2 §3.
 - 🟡 KARIŞIK (satır birden çok kart anıyor, durumları AYRI: `EDG-2026-009`=measured · `EDG-2026-003`=measured · `EDG-2026-011`=askida) · **EDG-2026-009** trend-kolu-rafine — **measured→ALIVE/refine** (ham kol incumbent; PIT şerhi ~6-7p/yıl; gölge-kitap kod-hazır). **EDG-2026-003** rampa-p3 — measured→daraldı (P3 öldü; rampa koruması gerçek). **EDG-2026-011** inplay-önceliklendirme — **askı** (PIT-takvim; FMP-402'ye bağlı).
 - ✅ KAPALI (`archived`, diskten 2026-08-31) · **EDG-2026-013** mom-turnover — devir-arşiv (etkileşim-tezi düştü). **EDG-2026-012** net-issuance — ARŞİV (yön ters+anlamlı, U-eğrisi). **EDG-2026-014** gross-profitability — ARŞİV (bilgisiz; PIT filed-tabanlı as-of İLK KEZ meşru). **EDG-2026-010** pullback — ARŞİV (bağımsızlık gerçek, kenar yok; ders#3). **EDG-2026-015** vcp-decompose — ARŞİV (çatı bilgisiz; form=bileşen-toplamı ρ=0,95).
