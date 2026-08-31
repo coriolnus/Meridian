@@ -386,6 +386,50 @@ def test_roadmap_duzyazidaki_isaret_rozet_sayilmaz():
                                       f"kanıt={m['durum_kanit']!r})")
 
 
+@pytest.mark.parametrize("govde, bekleniyor", [
+    # ── ÖLÇÜLMÜŞ YANLIŞ POZİTİFLER (2026-08-31): kapanış imi KELİME İÇİNDE eşleşiyordu ──
+    ("chop BÜTÇE-KAPALILIĞI — OPERATÖR KARARI BEKLİYOR", "belirsiz"),
+    ("otonom döngüde KAPALIDIR — Finviz dürüstçe devre dışı kalır", "belirsiz"),
+    ("`EDG-2026-048` ÖLÇÜLDÜ — CHOP KAPALILIĞI ARTIK ÖLÇÜLMÜŞ POLİTİKA", "belirsiz"),
+    ("kapının KAPANDIĞI gün ölçüldü", "belirsiz"),
+    ("ölçüm TAMAMLANDIĞINDA hüküm yazılır", "belirsiz"),
+    # ── GERÇEK ROZETLER — daralttığımız desen bunları KAYBETMEMELİ ──
+    ("✅ KAPANDI (v1): gerçekten kapandı", "kapali"),
+    ("KAPALI KALIR — operatör kararı 2026-08-22 (A+C)", "kapali"),
+    ("KAPANDI-BAYAT: iddia bir gün sonra çürüdü", "kapali"),
+    ("**KAPALI** (cephe 2026-08-22)", "kapali"),
+    ("H6 ✅ TAMAMLANDI", "kapali"),
+])
+def test_roadmap_kapanis_imi_kelime_icinde_eslesmez(govde, bekleniyor):
+    """ÖLÇÜLMÜŞ ARIZA (2026-08-31) — desen sözcük sınırı taşımıyordu ve KELİME İÇİNDE eşliyordu.
+
+    İki gerçek vaka, ikisi de bu dosyadaki ROADMAP'ten: (1) `§2`nin "chop BÜTÇE-KAPALILIĞI —
+    OPERATÖR KARARI BEKLİYOR" satırı `kapali` sayılıyordu — kalem gerçekten kapalıydı ama
+    ayrıştırma YANLIŞ NEDENLE doğruydu; (2) daha ağırı, `§3`ün WP özet tablosunda BEŞ AKTİF CEPHE
+    (`WP1`·`WP4`·`WP5`·`WP7`·`WP8`) panoda "kapalı" okunuyordu, çünkü hücre düzyazısında "KAPANDI"
+    geçiyor ve rozet alanına düşüyordu. Tahtanın operatöre yalan söylediği yer tam olarak burasıydı.
+
+    ÇİVİ İKİ YÖNLÜDÜR ve bu şart: daraltmanın BEDELİ de ölçülür — gerçek rozetleri kaybeden bir
+    desen, yanlış pozitifi kapatırken tahtayı bu kez ters yönde yalancı yapardı."""
+    metin = f"# T\n## §9 SINAMA\n- **{govde}:** kısa gövde\n"
+    m = api._roadmap_ayristir(metin, yol="sanal.md", bayt=len(metin.encode()),
+                              mtime=None)["bolumler"][0]["maddeler"][0]
+    assert m["durum"] == bekleniyor, (f"{govde!r} → durum={m['durum']} (beklenen {bekleniyor}), "
+                                      f"kanıt={m['durum_kanit']!r}")
+
+
+def test_roadmap_kapanis_deseni_tek_kaynakli():
+    """Desen İKİ yerde okunuyor (rozet araması + üstü-çizili geri alma kontrolü). İki kopya
+    sessizce ayrışır — nitekim sözcük sınırı düzeltmesi tek kopyaya uygulansaydı, üstü çizili
+    kapanışın geri alınması ESKİ kuralla ölçülmeye devam ederdi. Desen tek sabittir ve gövde
+    metninde ALTERNATİF LİSTESİ bir kez geçer."""
+    kaynak = pathlib.Path(api.__file__).read_text(encoding="utf-8")
+    assert kaynak.count("✅|") == 1, (
+        "kapanış imi alternatif listesi kaynakta birden çok kez yazılmış — tek-kaynak yasası: "
+        "`_ROADMAP_KAPANIS` sabiti kullanılmalı")
+    assert kaynak.count("_ROADMAP_KAPANIS") >= 3, "sabit tanımlandı ama iki çağrı yerinde kullanılmıyor"
+
+
 def test_roadmap_govdesi_durum_sozlesmesini_beyan_eder(sandbox_state):
     """`belirsiz`in ne demek olduğu tüketicinin EZBERİNE bırakılamaz: 274 kalem işaretsiz ve
     onları "açık" sayan bir yüzey, ölçülmemiş bir sayıyı yönetim kararına çevirirdi."""
