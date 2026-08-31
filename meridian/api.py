@@ -6902,6 +6902,21 @@ _ROADMAP_MADDE = re.compile(r"^(\s*)([-*]) (\S.*)$")
 _ROADMAP_BASLIK = re.compile(r"^(#{1,6})\s+(.*)$")
 _ROADMAP_NO = re.compile(r"^(§[0-9∞]+)\s*(.*)$")
 _ROADMAP_CIZIK = re.compile(r"~~(.+?)~~", re.S)
+# KAPANIŞ İMLERİ — TEK KAYNAK. Aynı desen iki yerde okunuyordu (rozet araması + üstü-çizili geri
+# alma kontrolü) ve iki kopya sessizce ayrışır; artık tek yerde.
+#
+# SÖZCÜK SINIRI, VE NEDEN ÖLÇÜLDÜ (2026-08-31): sınırsız desen kelime İÇİNDE de eşliyordu.
+# İki ölçülmüş vaka: (1) `§2`nin "chop BÜTÇE-KAPALILIĞI — OPERATÖR KARARI BEKLİYOR" satırı,
+# içindeki "KAPALI" yüzünden `kapali` sayılıyordu — kalem gerçekten kapalıydı ama ayrıştırma
+# YANLIŞ NEDENLE doğruydu; (2) daha ağırı, `§3`ün WP özet tablosunda BEŞ AKTİF CEPHE
+# (`WP1`·`WP4`·`WP5`·`WP7`·`WP8`) panoda "kapalı" okunuyordu, çünkü hücre düzyazısında "KAPANDI"
+# geçiyor ve rozet alanına düşüyordu. Tahtanın yalan söylediği yer tam olarak burasıydı.
+#
+# `\b` Türkçe eklerde de doğru çalışır: desen `str` üstünde UNICODE modda koşar, yani "Ğ/İ/Ş"
+# sözcük karakteridir. EŞLEŞMEZ: "KAPALILIĞI" · "KAPANDIĞI" · "KAPALIDIR" · "TAMAMLANDIĞINDA".
+# EŞLEŞİR: "✅ KAPANDI" · "**KAPALI**" · "BÜTÇE-KAPALI" · "KAPANDI-BAYAT" · "KAPALI KALIR".
+# `✅` bir EMOJİdir ve sözcük sınırı almaz (yanındaki `\b` anlamsız olurdu) — bilerek dışarıda.
+_ROADMAP_KAPANIS = r"(✅|\bKAPANDI\b|\bKAPALI\b|\bTAMAMLANDI\b)"
 
 
 def _ROADMAP_TABLO_SATIRI(l: str) -> bool:
@@ -6938,14 +6953,14 @@ def _roadmap_madde_durumu(metin: str) -> tuple[str, str | None, bool]:
     bir sezgisel eklemedim: sezgisel, ölçülmemiş bir hükmü ölçülmüş gibi gösterirdi."""
     cizili = bool(_ROADMAP_CIZIK.search(metin))
     kalan = _ROADMAP_CIZIK.sub(" ", metin)[:_ROADMAP_ISARET_ALANI]
-    for durum, desen in (("kapali", r"(✅|KAPANDI|KAPALI|TAMAMLANDI)"),
+    for durum, desen in (("kapali", _ROADMAP_KAPANIS),
                          ("bloke", r"\bBLOKE\b"),
                          ("askida", r"\bASKIDA\b"),
                          ("acik", r"\bAÇIK\b")):
         m = re.search(desen, kalan)
         if m:
             return durum, m.group(0), cizili
-    if cizili and re.search(r"(✅|KAPANDI|KAPALI|TAMAMLANDI)", metin[:_ROADMAP_ISARET_ALANI]):
+    if cizili and re.search(_ROADMAP_KAPANIS, metin[:_ROADMAP_ISARET_ALANI]):
         # Kapanış işareti VARDI ama üstü çizilmişti → "kapandı" DEĞİL; ölçülmüş bir geri alma.
         return "belirsiz", "kapanış işareti ÜSTÜ ÇİZİLİ (geri alınmış) — kapalı sayılmaz", cizili
     return "belirsiz", None, cizili
