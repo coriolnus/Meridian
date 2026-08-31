@@ -73,13 +73,14 @@ def belgeler(sinif: str):
 
 
 def yesil_kayitlar():
-    """manifest → {(doc_id, blob_sha)} YEŞİL olanlar (istemci-tarafı mükerrer kalkanı)."""
+    """manifest → {(doc_id, blob_sha)} YEŞİL veya KUYRUKTA olanlar (mükerrer kalkanı —
+    kuyruğa girmiş belge de yeniden gönderilmez; akıbeti stats/dogrula turunda ölçülür)."""
     kume = set()
     if MANIFEST.exists():
         for i, satir in enumerate(MANIFEST.read_text(encoding="utf-8").splitlines(), 1):
             try:
                 k = json.loads(satir)
-                if k.get("durum") == "YESIL":
+                if k.get("durum") in ("YESIL", "KUYRUKTA"):
                     kume.add((k["doc_id"], k["blob_sha"]))
             except (KeyError, json.JSONDecodeError):
                 # sessiz-yutma: bozuk manifest satırı kalkanı zayıflatır ama koşumu durdurmaz;
@@ -88,15 +89,23 @@ def yesil_kayitlar():
     return kume
 
 
-def gonder(host: str, anahtar: str, doc_id: str, veri: bytes, tarih):
+def gonder(host: str, anahtar: str, doc_id: str, veri: bytes, tarih, kuyruk: bool):
     item = {"content": veri.decode("utf-8", errors="replace"), "document_id": doc_id,
             "metadata": {"blob_sha": blob_sha(veri), "kaynak": "meridian-repo"}}
     if tarih:
         item["timestamp"] = f"{tarih}T12:00:00Z"
-    yuk = json.dumps({"items": [item]}, ensure_ascii=False).encode("utf-8")
+    govde = {"items": [item]}
+    if kuyruk:
+        govde["async"] = True  # sunucu kuyruğu: teslim saniyelik, işleme worker'da —
+        # 45-chunk'lık günlük belgesinin senkron çağrıyı 660sn'de öldürdüğü vaka (2026-08-31)
+    yuk = json.dumps(govde, ensure_ascii=False).encode("utf-8")
     kom = ["ssh", "-i", anahtar, host,
            f"curl -s -m 600 -X POST {BANK_URL} -H 'Content-Type: application/json' -d @-"]
-    p = subprocess.run(kom, input=yuk, capture_output=True, timeout=660)
+    try:
+        p = subprocess.run(kom, input=yuk, capture_output=True, timeout=660)
+    except subprocess.TimeoutExpired:
+        return {"detail": "istemci-zaman-asimi-660s (sunucu işlemeye devam ediyor olabilir — "
+                          "yeniden göndermeden önce stats/documents ölç)"}
     try:
         return json.loads(p.stdout.decode("utf-8", errors="replace"))
     except json.JSONDecodeError:
@@ -111,6 +120,8 @@ def main(argv=None):
     ap.add_argument("--kuru", action="store_true", help="listele+ölç, GÖNDERME")
     ap.add_argument("--limit", type=int, default=0, help="bu koşumda en çok N belge")
     ap.add_argument("--zorla", action="store_true", help="manifest YEŞİL kalkanını ez")
+    ap.add_argument("--kuyruk", action="store_true",
+                    help="async gönder: teslim saniyelik, işleme sunucu worker'ında")
     ap.add_argument("--host", default=varsayilan_host())
     ap.add_argument("--anahtar", default=varsayilan_anahtar())
     a = ap.parse_args(argv)
@@ -136,14 +147,20 @@ def main(argv=None):
                 atlanan += 1
                 print(f"  atla (YEŞİL): {d}")
                 continue
-            cevap = gonder(a.host, a.anahtar, d, v, t)
-            if cevap.get("detail") and "overloaded" in str(cevap.get("detail")).lower():
+            cevap = gonder(a.host, a.anahtar, d, v, t, a.kuyruk)
+            if not a.kuyruk and cevap.get("detail") and \
+                    "overloaded" in str(cevap.get("detail")).lower():
                 print(f"  aşırı-yük, 30sn sonra BİR tekrar: {d}")
                 time.sleep(30)
-                cevap = gonder(a.host, a.anahtar, d, v, t)
+                cevap = gonder(a.host, a.anahtar, d, v, t, a.kuyruk)
             kayit = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                      "sinif": a.sinif, "doc_id": d, "blob_sha": sha, "bayt": len(v)}
-            if cevap.get("success"):
+            if cevap.get("success") and cevap.get("async"):
+                op = cevap.get("operation_id") or cevap.get("operation_ids")
+                kayit.update(durum="KUYRUKTA", op=op)
+                yesil += 1
+                print(f"  KUYRUKTA: {d} op={op}")
+            elif cevap.get("success"):
                 u = cevap.get("usage", {})
                 kayit.update(durum="YESIL", usage=u)
                 tok_toplam += u.get("total_tokens", 0)
