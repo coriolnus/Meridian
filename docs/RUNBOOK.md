@@ -1178,6 +1178,19 @@ gizlerdi (denetim 2026-08-30; kural Faz 3'te sayımdan bağımsız hâle getiril
 - deploy/hermes/profiles/karne/distribution.yaml  (manifest; env beyanı — safe-root + anahtar)
 - deploy/hermes/profiles/karne/config.yaml        (duruş: guard kancası · deny · kapalı araçlar)
 - deploy/hermes/profiles/karne/SOUL.md            (botun kalıcı brifingi)
+* deploy/hindsight/hindsight-api.service      → /etc/systemd/system/  (Hindsight bellek API'si,
+Faz-1 2026-08-31; /opt/hindsight/.env F9'DA DEĞİL — sır taşır, repoda yalnız env.iskelet durur)
+* deploy/hindsight/hindsight-yedek.service    → /etc/systemd/system/  (gecelik pg_dump yedeği)
+* deploy/hindsight/hindsight-yedek.timer      → /etc/systemd/system/  (o yedeğin tetiği 03:30 UTC)
+* deploy/oracle-a1/geridolum.py               → /opt/veri/geridolum.py  (EDG-066 geri-dolum
+sürücüsü; kurulum reçetesi BU BETİKTE DEĞİL, birimin KENDİ başlığındadır — /opt/veri
+ağacı meridian dağıtım yüzeyinin dışında, aylık-bucket istisnasıyla aynı sınıf)
+* deploy/oracle-a1/meridian-geridolum.service → /etc/systemd/system/  (geri-dolumun birimi)
+* deploy/oracle-a1/meridian-geridolum.timer   → /etc/systemd/system/  (saatlik tetiği)
+* research/olcumler/edg066_tick_arsiv/pilot.py → /opt/veri/pilot.py  (IEX TOPS ayrıştırıcısı —
+kart artefaktı; repo↔canlı sürüklenmesi F9 kapısında görünür)
+* research/olcumler/edg066_tick_arsiv/kapsam.txt → /opt/veri/kapsam.txt  (662 sembollük donuk
+süzgeç — ÜRETİLMİŞ, kaynağı kapsam_uret.py; elle düzenlenmez)
 KURULUM BU BETİKTE DEĞİL, BİLEREK: `hermes profile install` canlıda YENİ BİR AJAN KİMLİĞİ
 doğurur ve bu operatör kararıdır (CLAUDE.md madde 5). Betiğin yaptığı iki şey var: her
 botun kum havuzunu (`/opt/meridian/var/bots/<ad>`) YARATIR ve ÜÇ ADIMLIK reçeteyi BASAR.
