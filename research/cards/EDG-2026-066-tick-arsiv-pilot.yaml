@@ -1,0 +1,61 @@
+kimlik: EDG-2026-066
+baslik: IEX HIST tick arşivi — pilot ölçüm (yoğunluk + gün-başı boyut) ve geri-dolum kapısı
+tarih: 2026-08-31
+durum: acik
+sahip: Rol-1
+operator_kararlari:
+  # 2026-08-31 akşam sohbeti — karar sahibi operatör, kayıt buraya:
+  kapsam: "S&P 500 + Nasdaq-100 birleşimi (~520-540 tekil sembol)"
+  pencere: "hedef 2020-01 → bugün; GERİYE DOĞRU doldurulur (en yeni gün önce)"
+  seyreltme: "kotasyon 1/sn (sembol başına saniyede en fazla 1 kayıt) + işlemler TAM
+    + her işlem anında kotasyonun anlık görüntüsü (seyreltmeden bağımsız)"
+  tavan: "120 GB (/opt/veri üstünde; dolunca EN ESKİ gün silinir — panik kararı yok)"
+  motor: "Parquet (gün bölümlü) + DuckDB sorgu katmanı — satır-DB YOK; TimescaleDB
+    yeniden-açılma tetikleri CANLI akış içindir, tarihsel eğitim arşivi tetik değildir"
+  yer: "A1 /opt/veri (150G blok birim, ext4 veri150, fstab UUID+nofail, 2026-08-31)"
+
+hipotez: >
+  IEX HIST TOPS arşivinden, operatör kapsamında ve seyreltme düzeninde üretilen günlük
+  Parquet çıktısı ortalama <=100 MB/gün kalır (bu durumda 120 GB tavan 2020 başına ulaşır)
+  VE evrenimizle kesişen sembollerin >=%80'inde spread ölçümü için yeterli kotasyon
+  yoğunluğu vardır (seans içi saat başına >=60 kotasyon kaydı medyanı).
+
+olcum_plani:
+  - "3 gün indirilir-ayrıştırılır: (a) yakın dönem sakin gün, (b) yakın dönem yüksek
+    hacimli gün, (c) 2020-2021 aralığından bir gün (eski format/boyut farkını ölçer)"
+  - "çıktı 1 — boyut: gün başına ham gz baytı, ayrıştırılmış Parquet baytı (kotasyon_1s /
+    islem / islem_ani_kotasyon ayrı ayrı); 120 GB tavanla ulaşılabilir pencere PROJEKSIYONU"
+  - "çıktı 2 — yoğunluk tablosu: TÜM piyasa sembolleri için kotasyon/işlem sayıları
+    (kapsam süzgeci ölçümden SONRA çizilir; 8000 sembollük tablo pilotta bedava)"
+  - "çıktı 3 — seyreltme bedeli (bedel yasası): 1/sn ızgaranın kaçırdığı spread
+    değişimlerinin oranı; işlem-anı anlık görüntünün bunun ne kadarını geri aldığı"
+
+esikler:
+  gun_basi_parquet_mb: 100      # üstünde: pencere kısalır (tavan sabit, pencere ÇIKTIdır)
+  yogunluk_saatlik_kotasyon_medyani: 60
+  yogunluk_kapsam_orani: 0.80   # evren-kesişiminde bu oranın altı: kapsam yeniden değerlendirilir
+
+kill_list:
+  - "IEX HIST erişimi ücretsiz/anonim değilse ya da format belgelenenden sapmışsa"
+  - "pozitif kontrol tutmazsa (aşağıda) — ayrıştırıcı güvenilmez, hiçbir sayı yayılmaz"
+  - "gün-başı Parquet >150 MB ise: seyreltme/kapsam kararı OPERATÖRE döner (tavan artmaz)"
+
+pozitif_kontrol: >
+  Yol-tutarlı PK: ayrıştırılan bir günün işlem satırlarından türetilen sembol-başı günlük
+  OHLC, mevcut bar kaynağımızın aynı gün verisiyle kıyaslanır (IEX-hacim payı nedeniyle
+  birebir eşitlik BEKLENMEZ; kontrol edilen şey fiyat SEVİYELERİNİN bar aralığının içinde
+  kalması ve kapanışa yakınsaması). Tutmayan gün = ayrıştırıcı hatası, kill-list madde 2.
+
+veri_penceresi: "pilot: 3 gün (yukarıda); program: 2020-01 -> bugün, geriye doğru, 120 GB tavan"
+
+basari_tanimi: >
+  Üç günün üçünde pozitif kontrol yeşil + boyut projeksiyonu ve yoğunluk tablosu üretilmiş
+  + seyreltme bedeli sayıyla beyan edilmiş. Hipotez eşikleri tutarsa geri-dolum programı
+  (gece işi) ayrı ops kalemi olarak açılır; tutmazsa karar operatöre sayılarla döner.
+
+notlar: >
+  Ham gz dosyaları GEÇİCİDİR: ayrıştırma sonrası silinir (Yasa 6 okuyucusu: pilot raporu +
+  bu kartın hüküm alanı; kalıcı artefakt yalnız Parquet + manifest). Manifest satırı gün
+  başına ts/kaynak-url/sha256/bayt/satır-sayıları taşır. Bu kart yalnız PİLOT ölçümünü
+  bağlar; geri-dolum programının işletme ayrıntısı (timer, tavan bekçisi) kart geçtikten
+  sonra tasarlanır.
