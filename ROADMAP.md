@@ -2983,101 +2983,99 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
 > iddiaları (net P&L, PF, sharpe seviyesi).)_
 
 **AKTİF / YENİ KARTLAR (hüküm işlenmiş ya da ölçümde):**
-- ✅ KAPALI (`measured`, diskten 2026-08-31) · **EXE-2026-006** limit-bacagi-hukum-sinamasi — **kart `status: registered` (2026-08-17) AMA ÖLÇÜM
-  KOŞULDU VE HÜKÜM YAZILDI** (`research/olcumler/exe006_limit_bacagi_2026-08-17/HUKUM.md`, commit
-  `a033256`). _(indekse 2026-08-17'de eklendi — mutabakat.)_ ⚠ **KART↔ARTEFAKT AYRIŞMASI, AÇIK
-  KALEM:** hüküm yazıldı ama kartın `status:` alanı `registered` kaldı ve `verdict:` bloğu
-  yazılmadı — yani disk-sayımı bu kartı hâlâ "ölçülmedi" kovasında görüyor (yukarıdaki mutabakat
-  tablosunda `registered` 5'in biri). Hükmü karta işlemek **Rol-1 kalemidir** (madde 3: ölçüm ajanı
-  karta dokunmaz); bu satır ayrışmayı KAYDEDER, kapatmaz. **BİR HÜKMÜ sınar**,
-  edge hipotezi değil: `EXE-2026-001-R2`nin "limit bacağı MONOTON ZARARLI · kaçanlar sistematik
-  KAZANAN" hükmü, replay'in kaçan-işlem maliyetini ABARTTIĞI bir dünyada verildi. **KAPALI DÖNGÜ:**
-  hüküm UYGULANDI → canlı `goal.yaml execution_v2` bacağı etkisizleştirdi (`limit_atr_mult: 100.0` ·
-  `limit_pct_cap: 0.04` = `MAX_ENTRY_GAP_PCT` ile birebir, `max_chase` önce sınandığı için limit
-  kapısı YAPISAL OLARAK ULAŞILMAZ; kod varsayılanı bunun TERSİ 0,5/0,01) → `EXE-2026-005`in B kolu
-  bu yüzden BOŞ örneklemle döndü (`entry_missed_limit = 0`). Kart döngüyü kırar: bacağı ÖLÇÜM
-  KOLUNDA silahlandırıp E1 taramasını `bar_low` düzeltmesiyle yeniden koşar. **K = 8**
-  (`limit_pct_cap` {0,005·0,01·0,02·0,03} × `dolum_kurali` {yalniz_acilis·dinlenen_limit} — ÇARPILARAK,
-  madde 3; hepsi `MAX_ENTRY_GAP_PCT` ALTINDA, üstü ölü hücre). **CANLI DOKUNULMAZ:** `state/goal.yaml`
-  DEĞİŞMEZ; bacağı canlıda açmak strateji kimliği değişikliğidir ve §5 operatör bloğuna gider — kart
-  önerebilir, kendisi yapamaz. Beyanlı sınırlar: E1'in YERİNE GEÇMEZ (pencere/evren farkı ayrı sütun) ·
-  günlük-bar sıra belirsizliği kötümser tarafa yazılır · **`max_chase` kırpması ölçümden ÖNCE beyan
-  edildi** (dinlenen limitin dönüştürebileceği aralık `(trigger·(1+cap), trigger·1,04]` ile sınırlı)
-  → hüküm bir **ALT SINIR**dır. Şasi kapısı EXE-005'ten DEVRALINIR ama **yeniden koşulur, varsayılmaz**.
-  **✅ HÜKÜM (2026-08-17, TAM koşum: pencere 2022-01-01→2026-07-30 · evren 251 · K=8; altı kill
-  kriterinin ALTISI da geçti) — `E1 HÜKMÜ YENİDEN AÇILIR`.** Kartın ölçümden ÖNCE yazdığı kural
-  ("H1 ve H2'nin İKİSİ de ayakta kalırsa E1 doğrulanır; biri düşerse hüküm yeniden açılır") işledi:
-  **H1 DÜŞTÜ** — `dinlenen_limit` kolunda net P&L 9.773 → **19.452** → 17.948 → 17.858, tepe 0,01'de,
-  yani "MONOTON zararlı" iddiasının monotonluk ayağı bu kolda AYAKTA DEĞİL. **H2 ÖLÇÜLEMEDİ** — Ö2'nin
-  ay-kümeli bootstrap'ı (B=5000, seed 20260812) dört tavanda da CI'yı sıfırın İÇİNDE bıraktı
-  (−0,0436 · +0,0411 · +0,1007 · +0,1167; nokta tahminleri tavanla monoton ARTIYOR ama bu bir
-  **desen**, hüküm değil) → "kaçanlar sistematik KAZANAN" da "KAYBEDEN" de **söylenemez**; E1'in
-  iddiası doğrulanmadı ama çürütülmedi de. **SONUÇ: canlı yapılandırmanın (bacağın
-  `limit_pct_cap=0,04` ile etkisizleştirilmiş olması) gerekçesi ARTIK KANITLI DEĞİLDİR** — ve kart
-  bacağın AÇILMASINI ÖNERMEZ (kendi sınırı; açma kararı strateji kimliğidir → §5 operatör bloğu).
-  **Ö1 ÖLÇÜLEMEDİ (UYDURMA YASAĞI: None + neden)** — birim uyuşmazlığı: payda `entry_missed_limit`
-  bir RED OLAYI sayacı, pay DİSTİNKT İŞLEM; ham bölme %132/%141 verdi ve bir oran %100'ü aşamaz.
-  Kartın "Ö1 > %20 ise K1 şerhi açılır" kuralı bu turda **İŞLETİLEMEDİ**. **Ö3 ÖLÇÜLDÜ, sente
-  kapandı** (ΔP&L dört tavanda da POZİTİF: +146 · +7.163 · +5.759 · +7.355) ve yan kanal kartın
-  "etki TOPLAMSAL DEĞİLDİR" beyanını doğruladı — `cap=0,005`te 251 yeni işleme karşı **154 işlem
-  yerinden oldu** ve yerinden olanlar dört tavanda da KAYBEDENDİ, yani çıkmaları P&L'i iyileştirdi.
-  **BU TURDA YAPILMAYANLAR (beyanlı):** ΔP&L bootstrap CI'ı (kart istiyor, koşulmadı) · Ö1'in
-  kimlikli yeniden tanımı (ret sayacı kimlik taşımalı) · **duman penceresinin YANILTTIĞI kayda
-  geçti** — n=1..3'te Ö2 dört tavanda da NEGATİF görünüyordu, 885 işlemlik dünyada işaret DÖNDÜ ve
-  CI'ya girince ölçülemez oldu: küçük örneklem yalnız gürültülü değil **YÖN OLARAK YANILTICIYDI**.
-- ✅ KAPALI (`measured`, diskten 2026-08-31) · **EXE-2026-005** dinlenen-limit (23c) — **registered (2026-08-14); H3 İCRADA, A kolu kapısı GEÇTİ
-  (2026-08-17).** _(indekse 2026-08-17'de eklendi — mutabakat.)_ Replay limit girişini yalnız bir
-  sonraki barın AÇILIŞINA karşı sınıyor; gerçek limit emri gün boyu DİNLENİR → replay "limit tavanı
-  yüzünden kaçtı" dediği işlemlerin bir kısmını YANLIŞ sayıyor ve hata **TEK YÖNLÜ** (kaçan-işlem
-  maliyetini abartır). Veri yeterli: günlük bar `low` taşıyor, dakika barı GEREKMEZ (o 23e'dir).
-  **✅ A KOLU ÖZDEŞLİK HÜKMÜ (Rol-1, operatör onaylı):** işlemler+seanslar **bayt-özdeş**, 12 sonuç
-  bloğunun 11'i eşit; TEK ayrışan alan `n_endeks_satir` (1408 ↔ 1403) ve o **ADIYLA muaf tutuldu** —
-  bir GİRDİ ENVANTERİ SAYACIdır, şasi özelliği değil, ve her yeni seansla büyüdüğü için taban
-  tarihinden sonra kapı YAPISAL OLARAK GEÇİLEMEZDİ (geçilemeyen kapı kill kriteri değil, ölü kapıdır).
-  Daraltma **emsal değil, adıyla sınırlı tek istisna**; başka alan ayrışırsa kill AYNEN ateşler.
-  REDDEDİLEN ALTERNATİF: "tabanı yeniden üret" — EDG-032'nin dondurulmuş kanıtını yeniden üretmek
-  taban yenilemek değil TARİHİ TAHRİF ETMEK olurdu. **B KOLU KOŞULDU ve örneklem BOŞ çıktı** —
-  sebebi yapısal, kartın kendi ürünü (Ö1/Ö2/Ö3) `EXE-2026-006` çözülmeden ÜRETİLEMEZ. Beyanlı sınır:
-  `low <= limit` "dokunuldu" der ama SIRAYI söylemez → ölçüm bir ALT SINIRdır; 23d'yi (bar-içi stop
-  slipajı SIFIR) ÇÖZMEZ, yalnız asimetrinin yarısını kapatıp diğer yarıyı daha görünür kılar.
-- ✅ KAPALI (`measured`, diskten 2026-08-31) · **EDG-2026-022** evren-bağlayıcı-kısıt — **measured (2026-08-09):** de-risk+tavan BİRLİKTE %65,84
-  (CI 58,73–72,14; tamamı >%50) BASKIN → FINVIZ token harcaması **GEREKÇESİZ**; evren bağlayıcı DEĞİL
-  (%34,17). Bağlayan: `tavan_sifir` %57,54 + `derisk_bagladi` %8,28 (asıl kaldıraç de-risk rampası/
-  `eff_max_open`). KILL#3 tetiklendi (rejim-koşullu): trend_up'ta de-risk baskın, chop'ta (nadir %6,7)
-  evren baskın → FINVIZ genel gerekçesiz, chop-özel evren ayrı+küçük. OTONOM/bloksuz. → §5-8 FINVIZ.
-- **AÇIK** (`measured_partial`, diskten 2026-08-31) · **EXE-2026-004** cf-çıkış-sadakati (N4) — **measured_partial (2026-08-09):** AŞAMA-1 ölçüldü, üç
-  tüketici ölçütünün ÜÇÜ de ölçülebilir zarar göstermedi → cf çıkış-tipleri **EKLENMEDİ**; +0,039R
-  iyimserlik bir sapma olarak KAYITLI (düzeltilmedi). AŞAMA-2 (dört/altı çıkış tipi + TÜM cf tarihi
-  yeniden koşum) eşiğe ULAŞILMADI → **DONDU**; bakım penceresi şartlı (saatler, state'e yazar). Eşikler
-  ölçümden ÖNCE donmuştu, DEĞİŞMEDİ. → bakım penceresi §5.
-- ✅ KAPALI (`measured`, diskten 2026-08-31) · **EDG-2026-021** qc-delist-doğrulama — **measured (2026-08-03, QC FREE, defter v3):** DUR=None, PK
-  GEÇTİ (IC=0,0265 n=335k); @20 fazla CI-0-içi → kill#1 "ŞÜPHEDE-değerlendirme" (birincil şüpheli
-  evren-kompozisyon farkı). 2. koşum tanım-eşitleme hakkı OPERATÖRDE (§5-11; WP-K K3).
-- **AÇIK** (`registered`, diskten 2026-08-31) · **EDG-2026-019** skill-görüş-defteri (N2b) — **registered (2026-08-09); kod indi (v218), CANLI KANIT
-  KURU-KOŞU:** terfi/emeklilik R-figürleri (vcp +0,116R / momentum-burst −0,114R) canlı state'te
-  yeniden-üretilemedi (`eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi, kadans koşmadı). Birkaç EOD
-  penceresi + ölçüm kodu bekliyor. _(README numara-notu: 019 önce "emekli" damgalıydı; skill görüş defteri için yeniden kullanıldı.)_
-- **AÇIK** (`measuring`, diskten 2026-08-31) · **EXE-2026-003** gölge-planlı-kol (N2) — **registered (2026-08-09); kod indi (v217):** silahlanmamış
-  planlı kol AYRI defterde `kol: planli|silahli` (karışım kill#4'ü ateşlerdi). Faz-5 kilidini AÇMAZ
-  (kilit gerçek-iç-dolum ister); ölçeği ikincil hat verir: gölge(dakika-sim) × cf(EOD-sim).
-- ✅ KAPALI (`archived`, diskten 2026-08-31) · **EDG-2026-017** rvol-form-revizyonu — registered (K+=2); rvol≥2,5 bölgesi form-şartsız + sürekli-rvol artığı (1.4'ün torun-kartı; ölçüm-sonrası-seçim yasağına uyuldu).
-- **ASKIDA:** (`askiya_veri_kapisi`, diskten 2026-08-31) · **EDG-2026-018** pit-midcap-üst-sınır — registered (K+=1); **askıda:veri-kapısı** (delist-bar; feasibility-gate önce; §5-9).
-- ✅ KAPALI (`archived`, diskten 2026-08-31) · **EDG-2026-020** postevent-inplay — **archived (2026-08-03):** kill#1+#3 (havuz-fazlası CI-0-içi/negatif; ham +%1,1 taban-sürüklenmesi = ders#3 vakası); 011'e aleyhte-önsel not.
-- ✅ KAPALI (`archived`, diskten 2026-08-31) · **KYS-2026-001** kıyas-kirlenmesi — **ARŞİV / kill#1 (2026-08-02)**; ALTYAPI kartı, retro-hüküm yok. HÜKÜM: yanlılık iki yüzeyde de CI-0-içi ve |fark|<10bps → **pratik-önemsiz**; temiz-kıyas aracı OPSİYONEL kaldı, yeniden-okuma envanteri BOŞ. _(2026-08-17 DÜZELTME: bu satır 'registered' yazıyordu ve 'M1 = en yüksek kaldıraç' iddiasını taşıyordu — ikisi de ÖLÇÜMDEN ÖNCEye aitti; kart 15 gündür arşivdeydi.)_
-- ✅ KAPALI (`measured`, diskten 2026-08-31) · **EXE-2026-001** entry-execution — **E1-R2 (2026-08-07):** işletim noktası REF·limitsiz rejimi
-  (`limit_atr_mult:100`/`limit_pct_cap:0,04`); limit-bacağı MONOTON ZARARLI; kaçanlar sistematik kazanan.
-  E2 defteri gerçek dolumla accrues → canlı-geçiş kapısında E2 kanıtıyla yeniden hüküm (WP-E §3).
-- ✅ KAPALI (`measured`, diskten 2026-08-31) · **EXE-2026-002** faz5-çıkış-ölçümü (+R1) — **ölçüyor (v212):** `olculdu`; n_eşleşen 4/4 (kill#4 %0),
-  ort −9,69 bps; CI **hesaplanmadı** (`n_kume=1`, dört dolum tek gün). İş ister, kod DEĞİL. kill#4
-  uygulama borcu → WP-S2 §3.
+- **[EXE-2026-006] limit-bacagi-hukum-sinamasi** — status: DONE(2026-08-17·NO-GO) · owner: rol1 · size: — · trigger: —
+  What: EXE-2026-001-R2'nin "limit bacağı MONOTON ZARARLI · kaçanlar sistematik KAZANAN" hükmünü TAM pencerede (2022-01-01→2026-07-30, evren 251, K=8: `limit_pct_cap`{0,005·0,01·0,02·0,03}×`dolum_kurali`{yalniz_acilis·dinlenen_limit}) yeniden sınadı; şasi kapısı EXE-005'ten devralındı ama yeniden koşuldu.
+  Why: kart 2026-08-17'de ölçülüp hüküm yazıldığında `status:` alanı `registered` kalmıştı (verdict bloğu yazılmamıştı, `research/olcumler/exe006_limit_bacagi_2026-08-17/HUKUM.md`, commit `a033256`) — bu ayrışma 2026-09-01 GERÇEKLİK KONTROLÜNDE artık ÇÖZÜLMÜŞ görünüyor (disk `status: measured`). **✅ HÜKÜM (altı kill kriterinin ALTISI geçti) — E1 HÜKMÜ YENİDEN AÇILIR:** H1 (monotonluk) DÜŞTÜ (net P&L 9.773→19.452→17.948→17.858, tepe 0,01'de) · H2 (ay-kümeli bootstrap, B=5000) dört tavanda da CI sıfırı içeriyor → ÖLÇÜLEMEDİ · Ö1 (birim uyuşmazlığı: RED OLAYI vs DİSTİNKT İŞLEM) ÖLÇÜLEMEDİ (UYDURMA YASAĞI: None+neden) · Ö3 ÖLÇÜLDÜ (ΔP&L dört tavanda POZİTİF +146/+7.163/+5.759/+7.355$; cap=0,005'te 154 işlem yerinden oldu, hepsi kaybedendi). **SONUÇ:** canlı yapılandırmanın (`limit_pct_cap=0,04` ile bacağın etkisizleştirilmesi) gerekçesi ARTIK KANITLI DEĞİL, ama kart bacağın AÇILMASINI da ÖNERMEZ (kendi sınırı; açma kararı strateji kimliğidir → §5 operatör bloğu). CANLI DOKUNULMAZ: `state/goal.yaml` DEĞİŞMEZ. Beyanlı sınırlar: E1'in yerine geçmez, günlük-bar sıra belirsizliği kötümser tarafa yazılır, `max_chase` kırpması ölçümden önce beyan edildi → hüküm bir ALT SINIRdır. BU TURDA YAPILMAYANLAR: ΔP&L bootstrap CI'ı, Ö1'in kimlikli yeniden tanımı; duman penceresinin (n=1..3) işareti YANILTTIĞI kayda geçti (885 işlemlik dünyada işaret döndü). Ref: research/cards/EXE-2026-006-limit-bacagi-hukum-sinamasi.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EXE-2026-005] dinlenen-limit (23c)** — status: DONE(2026-08-17·GEÇTİ) · owner: rol1 · size: — · trigger: —
+  What: Replay'in limit girişini yalnız bir sonraki barın açılışına karşı sınamasının (gerçek limit emri gün boyu DİNLENİR) yarattığı tek-yönlü hata A/B kollarıyla ölçüldü; veri yeterli (günlük bar `low`, dakika barı gerekmez, o 23e'dir).
+  Why: **A KOLU ÖZDEŞLİK HÜKMÜ GEÇTİ** (Rol-1, operatör onaylı) — işlemler+seanslar bayt-özdeş, 12 sonuç bloğunun 11'i eşit; tek ayrışan alan (`n_endeks_satir`, girdi envanteri sayacı) adıyla sınırlı tek istisna olarak muaf tutuldu, şasi özelliği değil. Reddedilen alternatif: "tabanı yeniden üret" (EDG-032'nin dondurulmuş kanıtını bozardı — tarihi tahrif olurdu). **B KOLU KOŞULDU ve örneklem BOŞ çıktı** — sebep yapısal: kartın ürünü (Ö1/Ö2/Ö3) `EXE-2026-006` çözülmeden üretilemezdi (o kart artık DONE). Beyanlı sınır: ölçüm bir ALT SINIRdır, 23d'yi (bar-içi stop slipajı) çözmez, yalnız asimetrinin yarısını kapatır. Ref: research/cards/EXE-2026-005-dinlenen-limit.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-022] evren-bağlayıcı-kısıt** — status: DONE(2026-08-09·GEÇTİ) · owner: rol1 · size: — · trigger: —
+  What: De-risk rampası ile tavan kısıtının BİRLİKTE evrenin bağlayıcılığındaki payı ölçüldü.
+  Why: de-risk+tavan BİRLİKTE %65,84 (CI 58,73–72,14, tamamı >%50) BASKIN → FINVIZ token harcaması **GEREKÇESİZ**; evren bağlayıcı DEĞİL (%34,17). Bağlayan: `tavan_sifir` %57,54 + `derisk_bagladi` %8,28. KILL#3 tetiklendi (rejim-koşullu): trend_up'ta de-risk baskın, chop'ta (nadir %6,7) evren baskın → chop-özel evren ayrı+küçük konu, OTONOM/bloksuz → §5-8 FINVIZ. Ref: research/cards/EDG-2026-022-evren-baglayici-kisit.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EXE-2026-004] cf-çıkış-sadakati (N4)** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: Aşama-1 (üç tüketici ölçütü) ölçüldü; Aşama-2 (dört/altı çıkış tipi + tüm cf tarihi yeniden koşum) bakım penceresi bekliyor.
+  Why: Aşama-1'de üç ölçüt de ölçülebilir zarar göstermedi → cf çıkış-tipleri EKLENMEDİ (+0,039R iyimserlik sapma olarak KAYITLI, düzeltilmedi). Aşama-2 eşiğe ULAŞILMADI → DONDU; eşikler ölçümden ÖNCE donmuştu, DEĞİŞMEDİ. Bakım penceresi şartlı (saatler, state'e yazar) → operatör kararı §5. Ref: research/cards/EXE-2026-004-cf-cikis-sadakati.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-021] qc-delist-doğrulama** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: QC FREE defter v3 ile delist doğrulaması ölçüldü (DUR=None, PK GEÇTİ, IC=0,0265 n=335k).
+  Why: @20 fazla CI-0-içi → kill#1 "ŞÜPHEDE-değerlendirme" (birincil şüphe: evren-kompozisyon farkı); ikinci koşum için tanım-eşitleme hakkı OPERATÖRDE (§5-11; WP-K K3). Ref: research/cards/EDG-2026-021-qc-delist-dogrulama.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-019] skill-görüş-defteri (N2b)** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: Skill görüş katmanı canlıya kartsız sevk edilmiş (v218); terfi/emeklilik R-figürleri (vcp +0,116R / momentum-burst −0,114R) canlı state'te yeniden-üretilemedi (`eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi).
+  Why: 2026-08-23 Rol-1 kaydı (WP7 eleme turu, GERÇEKLİK KONTROLÜ ile bu göçte yüzeye çıktı) — kart↔kod ayrışması (kod kartsız sevk edilmiş, katmanın ürettiği hiçbir sayı resmî hüküm değil) + donuk kill#1 tetiklenmiş ama uygulanmamıştı (p95_pay 6,57 > tavan 0,10) → **katman KAPATILDI** (yazım varsayılan-kapalı bayrağa alındı, E-partisi v278). Yeniden açılış yalnız kartın RESMÎ ölçümüyle. _(README numara-notu: 019 önce "emekli" damgalıydı; bu defter için yeniden kullanıldı.)_ Ref: research/cards/EDG-2026-019-skill-gorus-defteri.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EXE-2026-003] gölge-planlı-kol (N2)** — status: ACTIVE · owner: rol1 · size: — · trigger: —
+  What: Silahlanmamış planlı kol AYRI defterde (`kol: planli|silahli`) ölçülüyor; kod indi (v217), ilk koşum yapıldı, pencere doluyor.
+  Why: karışım kill#4'ü ateşlerdi, bu yüzden ayrı defter zorunlu; Faz-5 kilidini AÇMAZ (kilit gerçek-iç-dolum ister), ölçeği ikincil hat verir: gölge(dakika-sim) × cf(EOD-sim). Anahtar/kol tanım revizyonu ölçüm SONRASI yapıldı ama eşik/kill DEĞİŞMEDİ (kart dosyasının kendi dürüstlük beyanı). Ref: research/cards/EXE-2026-003-golge-planli-kol.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-017] rvol-form-revizyonu** — status: DONE(2026-08-02·KALDI) · owner: rol1 · size: — · trigger: —
+  What: rvol≥2,5 bölgesinde form-şartsız + sürekli-rvol artığı ölçüldü (1.4'ün torun-kartı).
+  Why: ÜÇ kill de tetiklendi → ARŞİV (kartın kendi disk `status:` alanı; bu satır önceden "registered (K+=2)" yazıyordu — GERÇEKLİK KONTROLÜ ile düzeltildi, ölçüm-sonrası-seçim yasağına uyuldu). Ref: research/cards/EDG-2026-017-rvol-form-revizyonu.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-018] pit-midcap-üst-sınır** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: PIT midcap-survivor kohortu için feasibility-gate (ADIM-0) sınandı; kayıt K+=1.
+  Why: ADIM-0 DÜŞTÜ — kohort kurulamadı (PIT evren kaynağı yok) + isim eşiği 12<40 → askıda:veri-kapısı (delist-bar kaynağı ya da S&P400/600 PIT üyelik gelirse yeniden açılır; §5-9). Yan kazanım: EDG-016 penceresinde çıkan 350 isimden 338'i (%96,57) arşivde sıfır bar — survivorship şerhi sayı kazandı. Ref: research/cards/EDG-2026-018-pit-midcap-ust-sinir.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-020] postevent-inplay** — status: DONE(2026-08-03·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Post-event in-play havuz-fazlası ölçüldü.
+  Why: kill#1+#3 tetiklendi (havuz-fazlası CI-0-içi/negatif; ham +%1,1 taban-sürüklenmesi = ders#3 vakası) → ARŞİV; EDG-2026-011'e aleyhte-önsel not düşüldü. Ref: research/cards/EDG-2026-020-postevent-inplay.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[KYS-2026-001] kıyas-kirlenmesi** — status: DONE(2026-08-02·KALDI) · owner: rol1 · size: — · trigger: —
+  What: ALTYAPI kartı (retro-hüküm taşımaz) — kıyas kirlenmesi yanlılığı ölçüldü.
+  Why: kill#1 tetiklendi → ARŞİV; yanlılık iki yüzeyde de CI-0-içi ve |fark|<10bps → pratik-önemsiz, temiz-kıyas aracı OPSİYONEL kaldı, yeniden-okuma envanteri BOŞ. _(2026-08-17 düzeltme tarihçesi: satır önce 'registered' + ölçüm-öncesi 'M1' iddiası taşıyordu, kart 15 gündür zaten arşivdeydi.)_ Ref: research/cards/KYS-2026-001-kiyas-kirlenmesi.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EXE-2026-001] entry-execution** — status: DONE(2026-08-07·NO-GO) · owner: rol1 · size: — · trigger: —
+  What: E1-R2 grid koşuldu; işletim noktası REF·limitsiz rejim (`limit_atr_mult:100`/`limit_pct_cap:0,04`).
+  Why: limit-bacağı MONOTON ZARARLI, kaçanlar sistematik kazanan → bacak canlıda kapalı kalır (NO-GO). E2 defteri gerçek dolumla accrues → canlı-geçiş kapısında E2 kanıtıyla yeniden hüküm (WP-E §3). _(Bu hüküm sonradan EXE-2026-006 tarafından YENİDEN AÇILDI — H1 monotonluk düştü, bkz. o kart.)_ Ref: research/cards/EXE-2026-001-entry-execution.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EXE-2026-002] faz5-çıkış-ölçümü (+R1)** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: Faz-5 çıkış ölçüm kodu yazıldı ve koştu (v212, `meridian/faz5_cikis.py`); n_eşleşen 4/4 (kill#4 %0), ort −9,69 bps.
+  Why: CI HESAPLANMADI (`n_kume=1`, dört dolum tek gün) → istatistiksel hüküm eksik, iş (uygulama) borcu bekliyor, kod değil. kill#4 uygulama borcu → WP-S2 §3'e devredildi. Ref: research/cards/EXE-2026-002-faz5-cikis-olcumu.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
 
 **ARŞİV / KAPALI KARTLAR (hüküm — tam gerekçe §8 ilgili WP + §7):**
 _**[2026-08-31 KONSOLİDASYON — BU LİSTE ENDEKSTİR.]** Satırlar kart durumlarının dizinidir, açılıp kapanan kalem değil; karışık-durumlu satırlar rozetlenmez (durumlar kartlarda). `/api/roadmap` bunları `belirsiz` sayar ve bu doğrudur._
-- ✅ KAPALI (`measured`, diskten 2026-08-31) · **EDG-2026-016** turnover-ana-etkisi — **SUCCESS / YAŞAYAN SİNYAL** (@20 net +0,55% CI-0-dışı; q5 monoton; survivorship-şerhli). Kablolama açık → WP2 §3.
-- 🟡 KARIŞIK (satır birden çok kart anıyor, durumları AYRI: `EDG-2026-009`=measured · `EDG-2026-003`=measured · `EDG-2026-011`=askida) · **EDG-2026-009** trend-kolu-rafine — **measured→ALIVE/refine** (ham kol incumbent; PIT şerhi ~6-7p/yıl; gölge-kitap kod-hazır). **EDG-2026-003** rampa-p3 — measured→daraldı (P3 öldü; rampa koruması gerçek). **EDG-2026-011** inplay-önceliklendirme — **askı** (PIT-takvim; FMP-402'ye bağlı).
-- ✅ KAPALI (`archived`, diskten 2026-08-31) · **EDG-2026-013** mom-turnover — devir-arşiv (etkileşim-tezi düştü). **EDG-2026-012** net-issuance — ARŞİV (yön ters+anlamlı, U-eğrisi). **EDG-2026-014** gross-profitability — ARŞİV (bilgisiz; PIT filed-tabanlı as-of İLK KEZ meşru). **EDG-2026-010** pullback — ARŞİV (bağımsızlık gerçek, kenar yok; ders#3). **EDG-2026-015** vcp-decompose — ARŞİV (çatı bilgisiz; form=bileşen-toplamı ρ=0,95).
-- ✅ KAPALI (`archived`, diskten 2026-08-31) · **EDG-2026-001** 52wh · **EDG-2026-002** volume-shock (torun→EDG-017) · **EDG-2026-004** max-filter (yön TERS, kill×2) · **EDG-2026-005** sma-gate (KAPI AÇILMAZ, GÖSTERGE'ye emekli) · **EDG-2026-006** turn-of-month (yön ters) · **EDG-2026-007** residual-momentum (6/6 CI-0-içi; ρ=0,625) · **EDG-2026-008** vol-scaling-overlay (kill#3, iki pencere yönsüz) → hepsi **ARŞİV**.
-- ✅ KAPALI (`measured`, diskten 2026-08-31) · **BASE-2026-001** sistem-karnesi (+%2,5/4,5yıl, 2024-bağımlı; huni üç-darboğaz).
+- **[EDG-2026-016] turnover-ana-etkisi** — status: DONE(2026-08-01·GEÇTİ) · owner: rol1 · size: — · trigger: —
+  What: Turnover ana-etkisi ölçüldü (üç kill de tetiklenmedi).
+  Why: SUCCESS / YAŞAYAN SİNYAL — @20 net +0,55% CI-0-dışı, q5 monoton, survivorship-şerhli. Kablolama (canlıya entegrasyon) açık kalem → WP2 §3. Ref: research/cards/EDG-2026-016-turnover-ana-etkisi.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-009] trend-kolu-rafine** — status: DONE(2026-07-31·GEÇTİ) · owner: rol1 · size: — · trigger: —
+  What: Ham trend kolunun rafine edilmesi ölçüldü.
+  Why: measured→ALIVE/refine — ham kol incumbent kalır, PIT şerhi ~6-7p/yıl, gölge-kitap kod-hazır. _(önceden EDG-2026-003/EDG-2026-011 ile aynı KARIŞIK satırda taşınıyordu, bu göçte ayrıldı.)_ Ref: research/cards/EDG-2026-009-trend-kolu-rafine.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-003] rampa-p3** — status: DONE(2026-07-31·KALDI) · owner: rol1 · size: — · trigger: —
+  What: P3 rampa paketi (K=4) ölçüldü.
+  Why: measured→daraldı — P3 paketi ÖLDÜ (kill#1), rampa korumasının kendisi gerçek kaldı. _(önceden EDG-2026-009/EDG-2026-011 ile aynı KARIŞIK satırda taşınıyordu, bu göçte ayrıldı.)_ Ref: research/cards/EDG-2026-003-rampa-p3.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-011] inplay-önceliklendirme** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: In-play aday-gün önceliklendirmesi kill#3'te ASKI (K harcanmadı).
+  Why: kök neden VERİ — state/earnings.csv tarihsel takvim değil (tek ileriye-dönük anlık görüntü); PIT-takvim biriktikçe ya da EDGAR filed-tarih vekili gelirse yeniden açılır (FMP-402 erişim notu ayrıca kayıtlı). _(önceden EDG-2026-009/EDG-2026-003 ile aynı KARIŞIK satırda taşınıyordu, bu göçte ayrıldı.)_ Ref: research/cards/EDG-2026-011-inplay-onceliklendirme.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-013] mom-turnover** — status: DONE(2026-08-01·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Momentum×turnover etkileşim tezi ölçüldü (EDG-016 ana-etkisiyle birlikte).
+  Why: devir-arşiv — etkileşim-tezi düştü, EDG-016'nın kaderini belirledi (ana etki yaşıyor, etkileşim yaşamıyor). Ref: research/cards/EDG-2026-013-mom-turnover.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-012] net-issuance** — status: DONE(2026-08-01·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Net-issuance sinyali ölçüldü.
+  Why: kill#2 — yön literatürün TERSİ ve anlamlı (MAX deseni, U-eğrisi) → ARŞİV. Ref: research/cards/EDG-2026-012-net-issuance.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-014] gross-profitability** — status: DONE(2026-08-01·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Gross-profitability sinyali ölçüldü.
+  Why: kill#1 — BİLGİSİZ (üst/alt dilim ve yayılım @20+@60 anlamsız) → ARŞİV; yan not: PIT filed-tabanlı as-of yaklaşımı İLK KEZ burada meşrulaştı. Ref: research/cards/EDG-2026-014-gross-profitability.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-010] pullback** — status: DONE(2026-08-01·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Pullback setup'ı ölçüldü (ölçüt-kusuru itiraflı).
+  Why: bağımsızlık gerçek ama kenar (edge) yok → ARŞİV; ders#3 vakasına referans. Ref: research/cards/EDG-2026-010-pullback-setup.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-015] vcp-decompose** — status: DONE(2026-08-01·KALDI) · owner: rol1 · size: — · trigger: —
+  What: VCP geometrisinin bileşenlerine ayrıştırılması ölçüldü.
+  Why: kill#1 — çatı da BİLGİSİZ (form = bileşen-toplamı, ρ=0,95) → ARŞİV, WP-K açık-hipotez listesi kapandı. Ref: research/cards/EDG-2026-015-vcp-decompose.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-001] 52wh** — status: DONE(2026-07-31·KALDI) · owner: rol1 · size: — · trigger: —
+  What: 52 haftalık yüksek yakınlığı (52wh proximity) ölçüldü.
+  Why: 9/9 hücre anlamsız (tarih-kümeli bootstrap; en iyi cf@20 IC=0,037 CI[-0,030,+0,100]) → ARŞİV. Ref: research/cards/EDG-2026-001-52wh-proximity.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-002] volume-shock** — status: DONE(2026-07-31·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Hacim şoku (volume-shock) sinyali ölçüldü.
+  Why: bant yapısı hayalet-artefaktı DEĞİL ama 18 hücrenin hiçbiri ham anlamlı çıkmadı → ARŞİV; torun-kartı EDG-2026-017'ye devretti (o da ayrıca ARŞİV). Ref: research/cards/EDG-2026-002-volume-shock.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-004] max-filter** — status: DONE(2026-07-31·KALDI) · owner: rol1 · size: — · trigger: —
+  What: MAX-filtre sinyali ölçüldü.
+  Why: iki kill de tetiklendi — yön TERS (yüksek-MAX @20 DAHA İYİ) → ARŞİV. Ref: research/cards/EDG-2026-004-max-filter.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-005] sma-gate** — status: DONE(2026-07-31·KALDI) · owner: rol1 · size: — · trigger: —
+  What: SMA-kapı (gate) mekanizması ölçüldü.
+  Why: ilk "KAPI_AÇILABİLİR" hükmü mekanizma kanıtıyla düştü → KAPI AÇILMAZ, GÖSTERGE sınıfına emekli edildi. Ref: research/cards/EDG-2026-005-sma-gate.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-006] turn-of-month** — status: DONE(2026-07-31·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Ay-dönümü (turn-of-month) etkisi ölçüldü.
+  Why: kill#2 ön-adımda tetiklendi (ikiz koşum hiç açılmadı, K tasarrufu) — yön ters → ARŞİV. Ref: research/cards/EDG-2026-006-turn-of-month.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-007] residual-momentum** — status: DONE(2026-07-31·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Residual momentum sinyali ölçüldü.
+  Why: iki kill de tetiklendi — kill#1: 6/6 dilim hücresi CI-0-içi (ρ=0,625) → ARŞİV. Ref: research/cards/EDG-2026-007-residual-momentum.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-008] vol-scaling-overlay** — status: DONE(2026-07-31·KALDI) · owner: rol1 · size: — · trigger: —
+  What: Volatilite-ölçekleme overlay'i ölçüldü.
+  Why: kill#3 — iki pencerede de yönsüz/CI-0-içi → ARŞİV. Ref: research/cards/EDG-2026-008-vol-scaling-overlay.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[BASE-2026-001] sistem-karnesi** — status: DONE(2026-08-01·GEÇTİ) · owner: rol1 · size: — · trigger: —
+  What: Sistemin uçtan-uca karnesi (huni + getiri) ölçüldü.
+  Why: KARNE HÜKMÜ verildi — +%2,5/4,5 yıl, sonuç 2024-bağımlı (getiri bir yıla yoğunlaşmış, kayıtlı caveat); huni üç-darboğaz gösterdi. Ref: research/cards/BASE-2026-001-sistem-karnesi.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
 - **Retro kuyruk (README):** EAP large-cap **archived** (+9,0bps<30 eşik; PK geçti) · Insider CMP **archived** (pozitif-kontrollü 0) · Short-interest FINRA **archived** (12 hücre 0) · çıkış paketi P1/P2/P3 (K=3) **measured→shadow-accrual** · PEAD/rekonstitüsyon/sektör-takvim **archived** (kaynaklı; kill-list altta).
 
 **⑤ RETIRED çapraz-doğrulama (`research/qc_dogrulama/`, 2026-08-09; üç kaynak):** 8 emekli sembol
