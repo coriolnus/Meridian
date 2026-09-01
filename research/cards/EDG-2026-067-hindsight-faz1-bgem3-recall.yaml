@@ -165,3 +165,19 @@ basari_tanimi: >
   research/olcumler/edg067_hindsight_faz1/ altında · (4) hüküm: eşik geçildiyse Faz-1 KALIR
   (Hafıza sayfası [TSK-091] + bot-recall kartı yolu açılır), geçilmediyse KALDI ve
   sökülüm+sqlite-vec kaydı düşülür. Hüküm AYNI turda karta ve K defterine işlenir.
+
+  taban_recete_kararlari_2026_09_01: >
+    Ölçüm kodu indi (kiyas_kos.py + taban_indeks.py + 80 çivi v358, 36/36 mutasyon; koşum
+    HENÜZ YOK). Rol-1 hakem/chunk reçete hükümleri — koşumdan ÖNCE donduruldu: (1) hakem
+    document_id kıyasında `%23` kesit eki SOYULUR (ROADMAP.md%237 ↔ soruların `ROADMAP.md`
+    beklentisi; kural İKİ KOLA BİREBİR AYNI — kıyası yanlamaz). (2) Markdown başlık-bölme
+    kuralı YALNIZ .md'ye; .yaml kartlarda `#` yorumdur — başlık sayılsaydı taban kendi aleyhine
+    parçalanır, hüküm Hindsight lehine yanlardı. (3) Bölüm başlığı alt-parçalara EKLENMEZ
+    (eklense hakem-b taban kolunda otomatik geçerdi). (4) MAX_TOKENS=512 kuyruğu kırpabilir
+    (1.500 karakterlik tr chunk'ta) — bilinen sınır, "AYNI embedder sınıfı" sözleşmesine uygun,
+    raporda beyan edilir. (5) Recall cevap şeması VARSAYILMAZ: A1 koşumunun İLK adımı
+    `--sema-ornek` (ham cevap dökümü; yol tutmazsa koşum DÜŞER, sıfır raporlamaz). (6) Düşen
+    recall çağrısında retry YOK — koşum kesilir ve baştan alınır (p95 gecikmesi retry'la
+    şişirilmez; ağ arızası ıskala değildir). (7) sorular.yaml içerik-çapası çivili
+    (sha256 cf1c39bb…): dosya değişirse hüküm "yeni kart". Bağımlılık: sqlite-vec pip +
+    enable_load_extension'lı sqlite3 + onnxruntime/tokenizers/PyYAML (A1'de kurulum ayrı adım).
