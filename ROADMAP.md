@@ -2593,8 +2593,10 @@ kararı gerektirenler §5'e geçer.
   What: `deploy/oracle-a1/geridolum.py` — tek işçinin çökmesi tüm koşumu KIRMIZI'ya düşürmesin: çöken gün koşum-içi BİR kez yeniden denensin; ikinci çöküşte koşum yine KIRMIZI (pano-görünürlük korunur, sessizleşme yok — bedel yasası: kaybedilen görünürlük ölçülüp beyan edilir).
   Why: 2026-09-01 gecesi iki vaka — 08-31 sözlük boşlukları (kalıcı sınıf, ayrıca düzeltildi) ve 08-05 EOFError (kesik gzip, GEÇİCİ sınıf): geçici arızada tüm koşumun düşmesi diğer işçinin bitmiş işini yarıda bıraktı ve saatlik timer'a kadar bekletti. Operatör onayı 2026-09-01 sabah ("havuza yaz").
   Ref: gece kapanış raporu 2026-09-01 · 136ceb4 · 7b35888.
-
-## §5 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde) _(eski: §3)_
+- **[TSK-088] Model kayıt bileşeni — LLM seçimi/rota/sağlık tek kaynakta** — status: OPERATOR · born: 2026-09-01 · owner: rol1 · size: M · trigger: —
+  What: motor-içi `model_kayit` modülü: rol→model-zinciri tablosu (danışma · review · bot profilleri · Hindsight) + model kartı (kimlik, sağlayıcı-rotası, ücretsiz-mi, bilinen-ölü/alias) TEK kaynakta; sağlık görüşü YENİ ölçüm değil mevcut telemetrinin okuyucusu (`agent_calls.jsonl` dolu-oranı); pano `/api/models` yüzeyi (rol→zincir + son-N-gün dolu-oranı + ölü-ad göç sayacı); sırlarda yalnız API ANAHTARLARI kalır, model SEÇİMİ sır deposundan çıkar (geçiş dönemi: mevcut sır-override'ları öncelik-beyanlı okunmaya devam eder + ayrışma çivisi).
+  Why: ölçüm 2026-09-01 — model kararı ≥9 dosyada / 4 mekanizma sınıfında yaşıyor (hermes.py 34 atıf: zincir+ölü-ad+rota+cooldown · secrets 3 MODEL anahtarı · 4 hermes config.yaml · watchdog/spend/api okuyucuları) ve üç vaka aynı köke iniyor: 2026-08-13 iki-katman (config göçtü, sır katmanı açık kaldı) · tencent/hy3 419 sessiz-boş · 2026-09-01 canary (Gemma rota-model uyumsuzluğu elle keşfedildi). Reddedilen alternatif: harici gateway (LiteLLM sınıfı) — yeni canlı süreç/arıza yüzeyi, az-bileşen ilkesine aykırı; mevcut zincir/cooldown kodu evrilerek taşınır. Operatör sorusu 2026-09-01: "backendde halleden bir bileşen olabilir mi?"
+  Ref: TSK-020 (backend mimari kararları — bu madde o dizinin 10. kalemi olarak da sıralanabilir) · TSK-047 canary kaydı. (karar/aksiyon/kimlik/para/bakım-penceresi operatörde) _(eski: §3)_
 
 ### §5.0 OPERATÖR MASASI — konsolide işaret defteri (2026-08-31)
 
