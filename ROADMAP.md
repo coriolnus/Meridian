@@ -339,7 +339,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
   Why: DERS (Hindsight gerekçesine kanıt) — yansıma motoru kodu DOĞRULAMADAN öneriyor: 22 önerinin 2'si var-olanı istiyordu, 1'i çözülmüşü. Bu ders TSK-003'ün (yansıma mükerrerlik kapısı) gerekçesine girdi.
   Ref: commit "Akıbet-dalgası…"; bağlı: TSK-002.
 
-- **[TSK-001] ROADMAP-STANDART dalgası** — status: ACTIVE · born: 2026-09-01 · owner: rol1 · size: L · trigger: —
+- **[TSK-001] ROADMAP-STANDART dalgası** — status: DONE(2026-09-01·suite 8421 yeşil, 6baf92a zinciri) · born: 2026-09-01 · owner: rol1 · size: L · trigger: —
   What: (status notu: kapı 2026-09-01 gece çözüldü — akıbet-dalgası [TSK-057] kapandı; ek talimat: her kalem gerçeklik kontrolünden geçer + açık/kapalı sınıflanır, spec tarihli ek.) yaşayan bölümlerin (§0/2/3/4/5/6) tamamı standart madde şemasına göçer; ROADMAP-doğumlu kimlikler TSK-###/PRG-## olur (dış kimlikler EDG/N/vNNN/Yasa Ref'e iner, DEĞİŞMEZ); zorlama çivisi + CLAUDE.md kapısı + `/api/roadmap` alan-ayrıştırması + YolHaritası dinamik tahtası aynı dalgada; §7/§8 geriye dönük muaf.
   Why: operatör 2026-09-01 gece ("hiçbir madde birbirine benzemiyor… pano dinamik olmalı"; kimlik/İngilizce-terim/muafiyet/zorlama/slot onayları aynı gece).
   Ref: `docs/TASARIM-ROADMAP-STANDART-2026-09-01.md`.
