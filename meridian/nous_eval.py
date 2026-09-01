@@ -37,7 +37,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 
-from . import obs, store
+from . import mukerrerlik, obs, store
 
 PROPOSALS_FILE = "improvement_proposals.jsonl"
 RUNS_FILE = "nous_eval_runs.json"
@@ -909,6 +909,12 @@ def haftalik_degerlendirme(*, telemetri: dict | None = None, yaz: bool = True,
                             "KOŞULAMADI (şablon öneri üretilmez)")
             return {"kosu": kayit, "kabul": [], "telemetri": tel, "akibet": ak, "kopru": None}
     ayr = ayristir(text, tel)
+    # MÜKERRERLİK KAPISI, ÜÇ YOLUN AYRIM NOKTASINDA (2026-09-01). Kapı BİLEREK `_oneri_kaydet`in
+    # append'ine değil BURAYA konur: `koprule` ondan ÖNCE, `boru` ondan SONRA koşar ve fiş satırı
+    # `_oneri_kaydet`in ürettiği `id`yi taşır. Yalnız append'i korumak, mükerrer öneriye (i) bir
+    # H4 ölçüm sırası harcatır, (ii) `id: None` taşıyan — hiçbir öneriye işaret etmeyen — bir fiş
+    # doğururdu. Burada düşen öneri kalite kapısından düşenle AYNI muameleyi görür: sayılı, adlı.
+    _mukerrer_ele(ayr, hafta=h)
     kabul = ayr["kabul"]
     kopru = koprule(kabul, yaz=bool(kuyruk and yaz))
     kayit.update({"durum": ayr["durum"], "n_uretilen": ayr["n_uretilen"],
@@ -935,6 +941,62 @@ def haftalik_degerlendirme(*, telemetri: dict | None = None, yaz: bool = True,
             boru=brs["ozet"])
     return {"kosu": kayit, "kabul": kabul, "dusenler": ayr["dusenler"], "telemetri": tel,
             "akibet": ak, "kopru": kopru, "boru": brs}
+
+
+def _mukerrer_ele(ayr: dict, *, hafta: str) -> None:
+    """AKIBET DEFTERİ KAPISI: daha önce doğmuş bir fikri yeniden doğuran öneriyi `kabul`den DÜŞÜR.
+
+    NEDEN VAR (ölçüldü 2026-09-01, ilk akıbet karar turu): 22 önerinin ~%45'i bellek-yokluğu
+    israfıydı — reddedilmiş ya da zaten karara bağlanmış bir fikir, bunu söyleyecek hiçbir yer
+    olmadığı için ertesi tur yeniden doğuyordu. Hüküm `mukerrerlik.mukerrer_mi`nindir; burada
+    yalnız BASTIRMA kararı ve muhasebesi yaşar.
+
+    DÜŞÜŞ SESSİZ DEĞİLDİR — üç yerde birden görünür: (a) `dusme_nedenleri` sayacı (koşu kaydı →
+    pano), (b) `dusenler` özeti, (c) `OLAY_BASTIRILDI` olayı (eşleşen kimlik + benzerlik). Bedel
+    yasasının gereği: gürültüyü azaltan değişiklik ne KAYBETTİĞİNİ de ölçer, yoksa kapı bir gün
+    fazla ısırdığında belirti hiçbir şey olur.
+
+    FAIL-OPEN: hüküm `None` (ölçülemedi) ise öneri GEÇER ve körlük `OLAY_OLCULEMEDI` ile adıyla
+    kaydedilir — ölçülemeyen benzerlikle bastırmak sahte hüküm olurdu (uydurma yasağı)."""
+    kalan: list[dict] = []
+    for o in ayr.get("kabul") or []:
+        h = mukerrerlik.mukerrer_mi(o.get("oneri"))
+        # KÖRLÜK HÜKÜMDEN BAĞIMSIZ LOGLANIR: bir kaynak okunamamışken öteki mükerreri gösterebilir
+        # (hüküm True) ya da göstermeyebilir (hüküm False) — iki hâlde de "neyi göremedik" sorusu
+        # cevaplanabilir olmalı, yoksa eksik taramaya dayanan sessiz bir "temiz" iddiası doğar.
+        korluk = h.get("olculemeyen") or {}
+        tam = h["mukerrer"] is None
+        for kaynak, neden in sorted(korluk.items()):
+            obs.log(mukerrerlik.OLAY_OLCULEMEDI, hafta=hafta, alan=str(o.get("alan"))[:120],
+                    kaynak=kaynak, neden=neden, tam_korluk=tam,
+                    detail=("mükerrerlik kaynağı OKUNAMADI. Tam körlükte öneri GEÇER "
+                            "(fail-open, beyanlı): ölçülemeyen benzerlikle bastırmak sahte bir "
+                            "hüküm olurdu. Kısmi körlükte okunabilen kaynakla devam edilir."))
+        if tam:
+            if not korluk:
+                obs.log(mukerrerlik.OLAY_OLCULEMEDI, hafta=hafta, alan=str(o.get("alan"))[:120],
+                        kaynak=None, neden=h["neden"], tam_korluk=True,
+                        detail=("mükerrerlik ÖLÇÜLEMEDİ (kaynak arızası DEĞİL — öneri metni "
+                                "karşılaştırılabilir jeton taşımıyor); öneri GEÇTİ"))
+            kalan.append(o)
+            continue
+        if not h["mukerrer"]:
+            kalan.append(o)
+            continue
+        ayr["n_dusen"] = ayr.get("n_dusen", 0) + 1
+        ayr.setdefault("dusme_nedenleri", {})
+        ayr["dusme_nedenleri"][mukerrerlik.DUSME_NEDENI] = \
+            ayr["dusme_nedenleri"].get(mukerrerlik.DUSME_NEDENI, 0) + 1
+        ayr.setdefault("dusenler", []).append(
+            {"neden": mukerrerlik.DUSME_NEDENI, "alan": o.get("alan"), "bas": str(o)[:160]})
+        obs.log(mukerrerlik.OLAY_BASTIRILDI, hafta=hafta, alan=str(o.get("alan"))[:120],
+                eslesen_id=h["eslesen_id"], eslesen_kaynak=h["eslesen_kaynak"],
+                benzerlik=h["benzerlik"], esik=mukerrerlik.ESIK,
+                bas=str(o.get("oneri"))[:200],
+                detail=("AKIBET DEFTERİNDE EŞİ VAR — öneri DOĞMADI (deftere yazılmaz, kuyruğa "
+                        "girmez, fişlenmez). Aynı fikrin yeniden doğması ölçülmüş bir israftır "
+                        "(2026-09-01 karar turu: 22 önerinin ~%45'i bellek-yokluğu)."))
+    ayr["kabul"] = kalan
 
 
 def _say(rows: list, alan: str) -> dict:
