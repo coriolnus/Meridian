@@ -279,16 +279,15 @@ PIT_KORUMALI_ZINCIRLER: dict[tuple[str, str, str], dict[str, str]] = {
         "`_plans_for_session` `eff['earnings.pit_arsiv'] = True` yazar ve anahtar İKİ tarama "
         "koluna da ulaşır (karar kolu `eff` + near-miss `rx`, `rx` `eff`ten türetilir; çivi "
         "`test_cf_param_IKI_scan_all_cagrisina_da_ulasir`, v345) — yani zincirin ucu "
-        "`earnings_pit`tir. KAPSAM DÜRÜSTÇE DAR VE BU FARK ÖNEMLİDİR: bugün cf'nin ÜRETTİĞİ "
-        "tarama satırlarında çapa HİÇ SORULMAZ — kuyruk `dfp.loc[:d].reset_index(drop=True)` "
-        "ile kurulur, `date` sütuna dönmeden ATILIR ve iki kazanç-çapalı üretici çapadan ÖNCE "
-        "None döner (ölçüldü 2026-08-31: cf'de `pit_arsiv` sayacı {0,0,0}; çivi "
-        "`test_cf_taramasi_bugun_KAZANC_CAPASINA_ULASAMAZ`, v345). Bu 'cf defterinde kazanç "
-        "kurulumu yok' DEMEK DEĞİLDİR — defterde canlı `loop.daily_cycle`dan gelmiş episodic "
-        "satırlar bulunabilir; cümle YALNIZ cf_backfill'in kendi ürettiği satırlar hakkındadır. "
-        "Kuyruk `date` taşımaya başlarsa sevk zaten yerindedir (v345 çivisi o gün öter, çünkü "
-        "cf defterinin bileşimi değişir ve bu bir KART kararıdır). KORUMA (sevk) KALKARSA BU "
-        "KAYIT ÇÜRÜR VE ÇİVİ ÖTER — beyan, sevkin KENDİSİNE bağlıdır.",
+        "`earnings_pit`tir. KAPSAM 2026-09-02'DE GENİŞLEDİ (EDG-2026-068 kartı, TSK-011): "
+        "kuyruk artık `date`i SÜTUN olarak taşır (`reset_index()`, kardeş `backtest.replay` "
+        "biçimi) ve iki kazanç-çapalı üretici cf'nin KENDİ ürettiği tarama satırlarında da "
+        "çapaya ulaşır — fikstür kolunda ölçüldü: `pit_arsiv` {0,0,0} → "
+        "{true:54, false:126, olculemedi:180}; beyanlı-sıfır çivisi kart kararıyla ters yöne "
+        "devredildi (`test_cf_taramasi_KAZANC_CAPASINA_ULASIR`, v345 — eski ad tarihçe "
+        "bloğunda). 2026-08-31 tarihli 'çapa HİÇ SORULMAZ / sayaç {0,0,0}' beyanı O GÜNÜN "
+        "ölçümüydü ve kartla kapandı; gerçek-veri kolunun bileşim kıyası kartın açık kalemi. "
+        "KORUMA (sevk) KALKARSA BU KAYIT ÇÜRÜR VE ÇİVİ ÖTER — beyan, sevkin KENDİSİNE bağlıdır.",
         # Kardeş kayıtla AYNI çivi ve bu doğru: çivi `arming.PIT_CAPALI_KURULUMLAR`tan türetilen
         # İKİ değerlendiriciyi de gezer, yani sevk hangi tarihsel motorun kolundan kalkarsa kalksın
         # aynı yerden ölçülür. Sevkin `cf_backfill` tarafına ULAŞTIĞI ise ayrı bir çividir

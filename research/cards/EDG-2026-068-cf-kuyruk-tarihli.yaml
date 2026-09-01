@@ -1,0 +1,75 @@
+card_id: EDG-2026-068
+family: cf_karsi_olgusal_bilesim
+thesis: >
+  KART-ÖNCE ÖN-KAYDI (EXE-2026-009 emsali; bu kart bir replay taraması değil, kod-değişikliği
+  sözleşmesidir). `cf_backfill._plans_for_session` tarama kuyruğunu bugün
+  `dfp.loc[:d].reset_index(drop=True)` ile kurar: `date` indeksten SÜTUNA çevrilmeden atılır.
+  Kardeş `backtest.replay` aynı satırı drop'suz yazar. İki kazanç-çapalı üretici
+  (`evaluate_pead`: `"date" not in bars.columns` → None; `evaluate_episodic_pivot`:
+  `last_date is None` → None) bu yüzden cf'de YAPISAL ölü — PIT sevki doğru kurulu ama çapa hiç
+  sorulmuyor (v345 beyanlı-sıfır çivisi bu gerçeği kayıt altında tutuyor). DEĞİŞİKLİK: kuyruk
+  kardeşiyle aynı biçime döner (`date` sütun olarak taşınır). ETKİ: cf defterine iki UYUYAN
+  kurulum girer ve karşı-olgusal bileşim değişir — v345 çürüme çivisinin kendi sözüyle "bu bir
+  KART kararıdır, sessizce alınacak bir yan etki değil". Sözleşme ve hükümler değişiklikten
+  ÖNCE burada donar.
+evidence_refs:
+  - "EDG-2026-062 Görev-3 bulgusu (2026-08-31): cf'de pit_arsiv {0,0,0}, sebep veri kuyruğu"
+  - "tests/test_pit_baglama_yolu_v345.py::test_cf_taramasi_bugun_KAZANC_CAPASINA_ULASAMAZ (çürüme çivisi)"
+  - "ROADMAP TSK-011; strategy.ARMED_SETUPS = (breakout_vcp, exhaustion_hammer, momentum_burst) — pead/episodic DIŞARIDA"
+uygulama_sozlesmesi: >
+  (1) DEĞİŞİKLİK: `_plans_for_session` kuyruğu `date`i sütun olarak taşır (kardeş replay ile tek
+  biçim); `scan_all` imzası ve 340-bar tail penceresi DEĞİŞMEZ. (2) SİLAHLANMA DEĞİŞMEZ-BEYANI:
+  pead/episodic ARMED_SETUPS dışında — değişikliğin tek meşru etkisi uyuyan (dormant_setup) satır
+  eklemek + pit_arsiv sayaçlarını konuşturmak; sabit pencerede SİLAHLI plan kimlik kümesi bit-eş
+  kalmalı. (3) ÇİVİ DEVRİ: v345 çürüme çivisi bu kartın numarasıyla EMEKLİ edilir (beyanlı-sıfır
+  kaydı docstring'de tarihçeye döner), yerine ters-yön çivi gelir: kuyruk `date` taşır VE fikstür
+  penceresinde pit_arsiv toplamı > 0. Çivi YERİNDE gevşetilmez; devir kaydı test docstring'ine
+  bu kart kimliğiyle yazılır. (4) ÖLÇÜM İZOLASYONU: kıyas koşumları sandbox_state'li pytest
+  fikstürüyle YA DA izole state köküyle yapılır — canlı/yerel `state/`e tek satır yazılmaz.
+parameter_grid:
+  hucreler: [cf_kuyruk_tarihli]   # K += 0 — grid yok; kod-değişikliği ön-kaydı (EXE-009 sınıfı)
+cost_model: yok   # bileşim ölçümü; bedel beyanı: koşum süresi öncesi/sonrası kaydedilir (Bedel yasası)
+veri_penceresi: >
+  Fikstür kolu: v345 cf penceresi 2022-08-01..2022-10-01 (emsal fikstürle). Gerçek-veri kolu:
+  koşum anında parquet deposunda mevcut SON 120 seans; kesin tarih aralığı ilk koşumda bu kartın
+  trial kaydına yazılır ve ondan sonra DEĞİŞMEZ (yeni aralık = yeni trial satırı).
+success_metric: >
+  Üçü BİRDEN, sabit pencerede öncesi/sonrası kıyasla: (a) silahlı plan kimlik kümesi DEĞİŞMEDİ
+  (bit-eş); (b) earnings_gate.pit_arsiv toplamı 0'dan >0'a çıktı (çapa artık soruluyor);
+  (c) dormant satır deltasının TAMAMI {pead, episodic_pivot} kurulumlarından. Hüküm Rol-1'de,
+  aynı turda karta + K defterine işlenir.
+kill_criteria:
+  - "silahlı plan kümesi değişirse: değişiklik silahlanmaya sızdı — kod geri alınır, hüküm KALDI"
+  - "date sütunu varken pit_arsiv {0,0,0} kalırsa: çapa hâlâ erişilemez, hipotez çürük — geri al, yeni teşhis yeni kart"
+  - "ölçüm koşumu canlı/yerel state'e yazarsa koşum geçersiz (izolasyon şartı, tekrar koşulur)"
+  - "pozitif kontrol ateşlemezse hiçbir sonuç yorumlanmaz"
+pozitif_kontrol: >
+  YOL-TUTARLI: EDGAR arşivinde `filed <= seans-1` kaydı olan fikstür sembolüyle
+  `_plans_for_session` PORTFÖY YOLUNDAN geçerken pead/episodic değerlendiricisi çapaya ulaşır
+  (pit_arsiv sayacı artar) ve en az bir uyuyan satır doğar. Tek-enstrümanlı doğrudan
+  `evaluate_*` çağrısı pozitif kontrol SAYILMAZ (vaka 2026-08-25: tek-enstrüman PK
+  portföy-yolu hatalarına kör).
+k_registry: {registered_at: "2026-09-02", trial_ids: [EDG-068-cf-kuyruk-tarihli]}
+status: registered   # 2026-09-02 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce, TSK-011)
+
+fikstur_kolu_2026_09_02: >
+  HÜKÜM DEĞİL — fikstür kolunun ölçümü (TSK-011 ajanı, task-011-report.md; pencere
+  2022-08-01..2022-10-01, 45 seans, sandbox_state'li pytest). Kod indi: kuyruk `date`i sütun
+  taşıyor (`reset_index()`, kardeş biçim). ÖLÇÜLEN: scan_all'a tarihli çerçeve 0/180 → 180/180;
+  pit_arsiv {0,0,0} → {true:54, false:126, olculemedi:180} (olculemedi tamamen SPY — fikstür
+  arşivi kapsam dışı; True>0 = dikişin ucu EDGAR arşivine vardı, kill-2 ATEŞLEMEDİ). Çivi devri
+  yapıldı (test_cf_taramasi_KAZANC_CAPASINA_ULASIR; mutasyonda 22 çividen YALNIZ o kırmızı).
+  Bedel beyanı: fikstür çağrı süresi 0,94s → 1,00s (~%6, beklenen yön). AÇIK KALEMLER (Rol-1
+  gerçek-veri kolu, izole state şartıyla): pozitif kontrolün "en az bir uyuyan satır doğar"
+  yarısı fikstürde ATEŞLEMEDİ (opened: 0 — sentetik bar geometrisi pead/episodic sinyali
+  üretmiyor; kill-4 gereği fikstür kolundan bileşim hükmü YORUMLANMAZ) ve success_metric (a)
+  silahlı-küme bit-eş kıyası fikstürde bayağı-doğru (iki kolda da küme boş). NOT: evidence_refs
+  ikinci satırındaki eski çivi adı değişiklik-öncesi durumu anlatır, tarihsel olarak doğrudur.
+beyanli_sinirlar: >
+  (1) Bileşim değişikliği yalnız UYUYAN satırlarda — dormant_setup icraya bağlı değil (31 plan /
+  0 işlem, operatör kararı bekliyor), yani canlı karar yüzeyi bu karttan ETKİLENMEZ; kazanç cf
+  defterinin gözlem gücünde. (2) `date` sütununu taşımak hesap eklemez (kolon frame'de zaten
+  var, yalnız düşürülmüyor) — yine de koşum süresi iki kolda da kaydedilir; beklenmedik yavaşlama
+  beyan edilir, hüküm değiştirmez. (3) Bu kart uyuyan kurulumların DEĞERİNİ ölçmez (o ayrı soru,
+  uyuyan-kurulum-yolu kalemi); yalnız kuyruğun çapayı taşıyıp taşımadığını ve bileşim deltasının
+  sınıfını ölçer.

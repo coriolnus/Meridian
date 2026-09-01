@@ -88,7 +88,18 @@ def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version, eg: 
     for t, dfp in per.items():
         if t in quarantine or d not in dfp.index:
             continue
-        tail = dfp.loc[:d].reset_index(drop=True).tail(340)
+        # KUYRUK KARDEŞİYLE TEK BİÇİMDE (EDG-2026-068, 2026-09-02): `drop=True` `date` İNDEKSİNİ
+        # sütuna çevirmeden ATIYORDU ve iki kazanç-çapalı üretici çapayı `bars["date"]`in son
+        # gününden okur (`evaluate_pead` → `"date" not in bars.columns`; `evaluate_episodic_pivot`
+        # → `last_date is None`), yani ikisi de ÇAPADAN ÖNCE None dönüyordu: PIT sevki (yukarıda,
+        # `eff["earnings.pit_arsiv"]`) doğru kuruluyken çapa cf'de HİÇ SORULMUYORDU (ölçüldü
+        # 2026-08-31: `pit_arsiv` {0,0,0}). Kardeş `backtest.replay` aynı satırı zaten drop'suz
+        # yazar (`per[t].loc[:d].reset_index()`) — bu dosyanın kendi endeks/rejim çağrıları da
+        # (yukarıda) drop'suzdu; ayrık olan TEK yer burasıydı. `.tail(340)` penceresi ve `scan_all`
+        # imzası DEĞİŞMEZ; tek etki uyuyan (dormant) satırların doğması ve sayacın konuşmasıdır —
+        # pead/episodic ARMED_SETUPS DIŞINDADIR, yani silahlanma yüzeyi bu satırdan etkilenmez.
+        # Çivi: `tests/test_pit_baglama_yolu_v345.py::test_cf_taramasi_KAZANC_CAPASINA_ULASIR`.
+        tail = dfp.loc[:d].reset_index().tail(340)
         rsv = rs_map.get(t, 50)
         allsig = strat.scan_all(tail, eff, rsv, ticker=t)
         for su, s3 in strat.scan_all(tail, rx, rsv, ticker=t).items():

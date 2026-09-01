@@ -399,11 +399,14 @@ def test_cf_backfill_ciktisi_PIT_ARSIV_blogunu_tasir(sandbox_state, tmp_path, mo
     """`run()` dönüşünün (ve `cf_backfill_done` olayının) `earnings_gate`i aynı üç kovayı taşır.
     Kardeş motorun raporu ayrışamaz: cf defteri de tarihseldir ve aynı soruyu cevaplamalıdır.
 
-    TOPLAM BURADA SIFIRDIR ve bu bir ARIZA DEĞİL, ÖLÇÜLMÜŞ bir sınırdır — nedeni ve çürüme
-    çivisi bir alttaki `test_cf_taramasi_bugun_KAZANC_CAPASINA_ULASAMAZ`da. Bu yüzden bu çivi
-    `replay` kardeşinin aksine "dolu olsun" DEMEZ: sevkin ulaştığını ölçen çivi ayrıdır
-    (`test_cf_param_IKI_scan_all_cagrisina_da_ulasir`) ve bir kaba iki iş yaptırmak, ikisinin de
-    hangi sebeple kırıldığını okunmaz kılardı."""
+    BU ÇİVİ YALNIZ BİÇİM ÖLÇER ve bu bilinçlidir: bloğun DOLU olduğunu ölçen çivi ayrıdır
+    (`test_cf_taramasi_KAZANC_CAPASINA_ULASIR`), sevkin İKİ tarama koluna da ulaştığını ölçen de
+    ayrıdır (`test_cf_param_IKI_scan_all_cagrisina_da_ulasir`) — bir kaba üç iş yaptırmak,
+    hangisinin hangi sebeple kırıldığını okunmaz kılardı.
+
+    TARİHÇE: 2026-09-02'ye kadar burada toplam SIFIRDI ve bu bir ARIZA DEĞİL ölçülmüş bir sınırdı
+    (tarama kuyruğu `date` taşımıyordu). EDG-2026-068 kartıyla kuyruk kardeş `backtest.replay`
+    biçimine döndü; sıfır beyanı kapandı, bu çivinin yüklemi ise DEĞİŞMEDİ."""
     _arsiv(tmp_path, monkeypatch, _CF_ARSIV)
     _cf_dunyasi(sandbox_state, monkeypatch)
     out = cf_backfill.run(**_CF_PENCERE)
@@ -418,40 +421,51 @@ def test_cf_backfill_ciktisi_PIT_ARSIV_blogunu_tasir(sandbox_state, tmp_path, mo
 
 def test_cf_backfill_kosum_basinda_PIT_sayacini_sifirlar(sandbox_state, tmp_path, monkeypatch):
     """`backtest.replay` ile AYNI gerekçe (kardeş simetrisi): sıfırlanmayan sayaç, cf raporunu
-    aynı süreçte daha önce koşmuş her taramanın artığıyla şişirir — ve cf'de bu şişme ÖZELLİKLE
-    zehirlidir, çünkü bu motorun kendi çağrısı bugün sıfırdır (bir alttaki çivi): sıfırlama
-    olmasaydı rapor, cf'nin HİÇ yapmadığı çağrıları cf'ye yazardı."""
+    aynı süreçte daha önce koşmuş her taramanın artığıyla şişirir — "bu koşumun kapsaması" diye
+    okunan sayı sürecin ÖMRÜNÜ ölçerdi."""
     _arsiv(tmp_path, monkeypatch, _CF_ARSIV)
     _cf_dunyasi(sandbox_state, monkeypatch)
     earnings_pit._SAYAC["olculemedi"] = 5000            # "önceki koşumun artığı"
     out = cf_backfill.run(**_CF_PENCERE)
     # HÜKÜM KARDEŞİYLE AYNI YÜKLEMDE (`< 5000`), `== {0,0,0}` DEĞİL (inceleme 2026-08-31, K5):
-    # toplam-sıfır bu çivinin konusu DEĞİL, bir alttaki çürüme çivisinin konusudur. Eşitlik
-    # yazılsaydı, cf'nin veri kuyruğu düzeldiği gün bu çivi "koşum başı sıfırlama yok" diyerek
-    # kırmızıya dönerdi — sıfırlama pekâlâ çalışırken YANLIŞ TEŞHİS koyan bir çivi, teşhis
-    # koymayandan beterdir (aranan kusur, gösterdiği yerde değildir).
+    # toplam-sıfır bu çivinin konusu DEĞİL, bir alttaki çivinin konusudur. Eşitlik yazılsaydı,
+    # cf'nin veri kuyruğu düzeldiği gün bu çivi "koşum başı sıfırlama yok" diyerek kırmızıya
+    # dönerdi — sıfırlama pekâlâ çalışırken YANLIŞ TEŞHİS koyan bir çivi, teşhis koymayandan
+    # beterdir (aranan kusur, gösterdiği yerde değildir).
+    # O GÜN GELDİ (2026-09-02, EDG-2026-068): kuyruk `date` taşımaya başladı, toplam sıfır olmaktan
+    # çıktı ve bu yüklem HİÇ DEĞİŞMEDEN yeşil kaldı — K5 incelemesinin öngörüsü ÖLÇÜLDÜ.
     assert out["earnings_gate"]["pit_arsiv"]["olculemedi"] < 5000, \
         "artık taşındı — koşum başı sıfırlama yok"
 
 
-def test_cf_taramasi_bugun_KAZANC_CAPASINA_ULASAMAZ(sandbox_state, tmp_path, monkeypatch):
-    """BEYANLI SIFIR (ölçüldü 2026-08-31, Görev 3) — cf'de `pit_arsiv` bugün {0,0,0}'dır ve
-    SEBEBİ BAĞLAMA DEĞİL, CF'NİN VERİ KUYRUĞUDUR.
+def test_cf_taramasi_KAZANC_CAPASINA_ULASIR(sandbox_state, tmp_path, monkeypatch):
+    """cf tarama kuyruğu `date`i SÜTUN olarak taşır → kazanç çapası GERÇEKTEN sorulur.
 
-    `_plans_for_session` tarama kuyruğunu `dfp.loc[:d].reset_index(drop=True)` ile kurar: `date`
-    İNDEKSTİR ve `drop=True` onu SÜTUNA çevirmeden ATAR. Kardeş `backtest.replay` aynı satırı
-    `reset_index()` (drop'suz) yazar, yani orada `date` sütun olarak kalır. İki kazanç-çapalı
-    üretici çapayı `bars["date"]`in son gününden okur:
-      · `evaluate_pead`            → `"date" not in bars.columns` ile ÇAPADAN ÖNCE None,
-      · `evaluate_episodic_pivot`  → `last_date is None` ile ÇAPADAN ÖNCE None.
-    Yani bu iki kurulum cf'de YAPISAL OLARAK ölü; PIT sevki doğru kurulmuştur ama çapa hiç
-    sorulmaz. SIFIRIN SESSİZ KALMASI bu turda kapatılmak istenen kusurun ta kendisi olurdu:
-    "bağlamadık" ile "bağladık ama kuyruk taşımıyor" aynı piksele düşerdi.
+    BEYANLI-SIFIR DÖNEMİ KAPANDI — EDG-2026-068 kartıyla, 2026-09-02; eski kayıt tarihçe.
 
-    ÇÜRÜME ÇİVİSİ (`PIT_KORUMALI_ZINCIRLER` beyanlarıyla aynı usul): kuyruk bir gün `date`
-    taşımaya başlarsa bu kayıt ÇÜRÜR ve çivi ÖTER. Ötmesi doğrudur — o an cf defterine iki yeni
-    UYUYAN kurulum girer, karşı-olgusal tablonun bileşimi değişir ve bu bir KART kararıdır,
-    sessizce alınacak bir yan etki değil."""
+    TARİHÇE (`test_cf_taramasi_bugun_KAZANC_CAPASINA_ULASAMAZ`, 2026-08-31 Görev 3'te ölçülmüştü):
+    `_plans_for_session` kuyruğu `dfp.loc[:d].reset_index(drop=True)` ile kuruyordu — `date`
+    İNDEKSTİ ve `drop=True` onu SÜTUNA çevirmeden ATIYORDU; kardeş `backtest.replay` ise aynı
+    satırı drop'suz yazıyordu. İki kazanç-çapalı üretici çapayı `bars["date"]`in son gününden
+    okur (`evaluate_pead` → `"date" not in bars.columns`; `evaluate_episodic_pivot` →
+    `last_date is None`), yani ikisi de ÇAPADAN ÖNCE None dönüyordu: PIT sevki doğru kuruluyken
+    çapa hiç sorulmuyor, cf'de `pit_arsiv` {0,0,0} kalıyordu. O kayıt "kuyruk bir gün `date`
+    taşımaya başlarsa bu bir KART kararıdır, sessizce alınacak bir yan etki değil" diyordu —
+    karar EDG-2026-068 ile alındı, kuyruk kardeşiyle TEK biçime döndü.
+
+    ÖLÇÜLEN İKİ ŞEY AYRI KATMANDIR ve ikisi birden gerekir:
+      (a) KUYRUK BİÇİMİ — `scan_all`a giden HER çerçeve `date` taşır (`all`, "biri taşıdı" değil).
+          cf seansta İKİ kez tarar (karar kolu `eff` + near-miss `rx`); tek kolun düzelmesi
+          ötekini sessizce eski biçimde bırakırdı ve fark hiçbir çıktıda görünmezdi.
+      (b) ÇAPANIN SORULDUĞU — biçim doğruyken de çapa erişilemez kalabilir. Kartın kill maddesi
+          bunu adıyla yazar: "`date` sütunu varken `pit_arsiv` {0,0,0} kalırsa çapa hâlâ
+          erişilemez, hipotez çürük". Sayaç, dikişin ucunun ARŞİVE vardığının tek gözlemlenebilir
+          ürünüdür; biçim çivisi tek başına onu ölçemez.
+
+    POZİTİF KONTROL YOL-TUTARLIDIR (kart; vaka 2026-08-25): çapa doğrudan bir `evaluate_*`
+    çağrısıyla değil, `cf_backfill.run` → `_plans_for_session` PORTFÖY YOLUNDAN geçilerek
+    sorulur — tek-enstrümanlı PK portföy-yolu hatalarına kördür. Fikstür arşivi (`_CF_ARSIV`)
+    pencere içinde `filed <= seans-1` kaydı taşır, yani sayacın konuşacak verisi VARDIR."""
     _arsiv(tmp_path, monkeypatch, _CF_ARSIV)
     _cf_dunyasi(sandbox_state, monkeypatch)
     gercek_scan = strat.scan_all
@@ -464,10 +478,18 @@ def test_cf_taramasi_bugun_KAZANC_CAPASINA_ULASAMAZ(sandbox_state, tmp_path, mon
     monkeypatch.setattr(strat, "scan_all", _sayan_scan)
     out = cf_backfill.run(**_CF_PENCERE)
     assert tarihli, "hiç tarama koşmadı — çivi hiçbir şey kanıtlamaz"
-    assert not any(tarihli), ("cf tarama kuyruğu artık `date` taşıyor — BEYAN ÇÜRÜDÜ: kazanç "
-                             "çapalı iki kurulum cf'de ateşlemeye başlar, `pit_arsiv` dolar ve "
-                             "cf defterinin bileşimi değişir (kart kararı)")
-    assert out["earnings_gate"]["pit_arsiv"] == {"true": 0, "false": 0, "olculemedi": 0}
+    assert all(tarihli), ("cf tarama kuyruğu `date` taşımıyor — kuyruk kardeş `backtest.replay` "
+                         "biçiminden ayrıştı ve iki kazanç-çapalı üretici çapadan ÖNCE None "
+                         f"dönüyor (taşıyan/toplam: {sum(tarihli)}/{len(tarihli)})")
+    pit = out["earnings_gate"]["pit_arsiv"]
+    # `olculemedi` SAYILMAZ (inceleme sıkılaştırması 2026-09-02): o kova dört kısa-devre yolundan
+    # beslenir (boş arşiv / biçimsiz tarih / ufuk dışı / sembol arşivde yok) ve arşiv yolu komple
+    # kırıldığında 360 çağrının tamamı oraya düşer — `sum > 0` o dünyada da yeşil kalırdı, yani
+    # çivi kartın kill-2'sinin ("çapa hâlâ erişilemez") tam yakalamak istediği arızaya kördü.
+    # true+false = çapa SORULDU ve arşivden CEVAP ALDI (yön fark etmez); dikişin kanıtı budur.
+    assert pit["true"] + pit["false"] > 0, (
+        "kuyruk `date` taşıyor ama PIT çapası arşivden hiç CEVAP almadı — dikişin ucu arşive "
+        f"varmıyor (kart EDG-2026-068 kill maddesi; olculemedi kanıt sayılmaz): {pit}")
 
 
 def test_cf_param_IKI_scan_all_cagrisina_da_ulasir(sandbox_state, tmp_path, monkeypatch):
