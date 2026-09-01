@@ -225,6 +225,53 @@ def _is_outage_row(row, name: str) -> bool:
         and str(row.get("why", "")).startswith(_OUTAGE_PREFIX)
 
 
+# MECHANISM_STALE OLAYLARINDA AD DÜŞÜŞÜ (v369, 2026-09-02)
+# ------------------------------------------------------------------------------------------------
+# CANLI ÖLÇÜM: `watchdog_incidents` satırları yalnız `e.get("mechanism")` okuyordu ve 21 olayın
+# 19'unda o alan YOKTU — rapor `{"mechanism": null}` basıyor, "8 bekçi olayı" diyen dikkat satırı
+# HANGİ 8 olduğunu söyleyemiyordu. Alan eksikliği üreticilerin hatası değil ŞEKİL ÇEŞİTLİLİĞİ:
+# 18 çağrı noktası dört sınıfa dağılır (`mechanism=` · `kind=`+`detector=` · `kind=`+`artifact=` ·
+# yalnız mesaj — loop.py:1436 alanı TÜRKÇE `mekanizma=` diye yazar). Bu boşluk TÜKETİCİ tarafında
+# kapatılır: üretici imzalarına dokunmak 18 çağrıyı ve onların çivilerini kıpırdatır, oysa raporun
+# ihtiyacı olan tek şey "eldeki alanlardan en iyi adı türet".
+_MESAJ_ONEK = 60
+
+
+def _olay_mekanizma(e: dict) -> str | None:
+    """Bir MECHANISM_STALE olayından okunabilir mekanizma adı türetir (ilk DOLU olan kazanır):
+    `mechanism` → `kind`(+`detector`, yoksa +`artifact`) → `artifact` → mesajın ilk 60 karakteri.
+
+    SON BASAMAK None'dır ve öyle KALMALIDIR: ad ölçülemediğinde "bilinmeyen"/"?" gibi bir yer tutucu
+    basmak uydurmadır — okuyan, satırın boş olduğunu ANLAYAMAZ (uydurma yasağı). Sıra sabittir:
+    aynı olay iki turda iki farklı ad basarsa rapor satırları kıyaslanamaz hâle gelir.
+    """
+    if not isinstance(e, dict):
+        return None
+
+    def _al(k):
+        v = e.get(k)
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s or None                      # boş dize bir AD DEĞİLDİR: düşüş devam eder
+
+    ad = _al("mechanism")
+    if ad:
+        return ad
+    kind = _al("kind")
+    if kind:
+        nitel = _al("detector") or _al("artifact")   # sıra sabit: detector, artifact'ten ÖNCE
+        return f"{kind}:{nitel}" if nitel else kind  # çıplak `kind` de mesaj önekinden iyi bir addır
+    art = _al("artifact")
+    if art:
+        return art
+    msg = _al("message")
+    if msg:
+        # Kırpma İŞARETLİdir: kesik bir satır tam sanılırsa operatör mesajı yanlış okur.
+        return msg[:_MESAJ_ONEK] + ("…" if len(msg) > _MESAJ_ONEK else "")
+    return None
+
+
 def build() -> dict:
     """Tam rapor: hafta özeti + ilerleme sayaçları + DİKKAT + çelişkiler. Her alan dürüst:
     veri yoksa None/0 — hiçbir satır uydurulmaz."""
@@ -281,7 +328,10 @@ def build() -> dict:
             "ship_details": [{"id": h.get("id"), "variable": h.get("variable"),
                               "predicted_delta": h.get("predicted_delta")} for h in ships][:5],
             "cf_resolved": len(cf_week),
-            "watchdog_incidents": [{"mechanism": e.get("mechanism"), "gap_h": e.get("gap_h")}
+            # `mechanism` ham alandan DEĞİL düşüş sırasından gelir (`_olay_mekanizma`): üreticilerin
+            # çoğu o alanı göndermiyor. `gap_h` ise çıplak kalır — sınıfların çoğunda YOKTUR ve
+            # None kalması DOĞRUDUR (dürüst boşluk; ölçülmeyen değer uydurulmaz).
+            "watchdog_incidents": [{"mechanism": _olay_mekanizma(e), "gap_h": e.get("gap_h")}
                                    for e in stale_events][:8],
             # SAYININ DÜRÜSTLÜK ZARFI (K1): kaç olay SAYILDI, pencere kesildi mi, defterin en eski
             # damgası ne. `watchdog_incidents` en fazla 8 satır gösterir; toplam ayrıca yazılır ki
