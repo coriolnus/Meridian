@@ -30,7 +30,15 @@
    ============================================================================ */
 import { useMemo, useState } from "react";
 
-import { FileQuestion, FileWarning, Info, Map as MapIkonu, Rows3, Strikethrough } from "lucide-react";
+import {
+  FileQuestion,
+  FileWarning,
+  Info,
+  ListChecks,
+  Map as MapIkonu,
+  Rows3,
+  Strikethrough,
+} from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -54,13 +62,19 @@ import { Hal, SaltOkunurRozet } from "./Hal";
 import {
   DURUM_ETIKETI,
   DURUM_SIRASI,
+  SINIF_SIRASI,
+  STATUS_ETIKETI,
   TABLO_DURUM_SIRASI,
   bolumBasligi,
   roadmapOku,
+  statusSirala,
+  tahtaSatirlari,
+  tahtaSinifi,
   type RoadmapBolumu,
   type RoadmapMaddesi,
   type RoadmapOkumasi,
   type RoadmapTabloSatiri,
+  type TahtaSatiri,
 } from "./roadmap";
 
 /* KART TAVANI: §7 karar günlüğü tek başına yüzlerce madde taşıyor (belge 4622
@@ -72,6 +86,7 @@ const durumAyari = {
   bloke: { label: "bloke", color: "var(--destructive)" },
   acik: { label: "açık", color: "var(--primary)" },
   askida: { label: "askıda", color: "var(--chart-3)" },
+  atif: { label: "atıf", color: "var(--chart-2)" },
   belirsiz: { label: "belirsiz", color: "var(--chart-1)" },
   kapali: { label: "kapalı", color: "var(--chart-4)" },
   cok_isaretli: { label: "çok işaretli", color: "var(--chart-5)" },
@@ -242,6 +257,279 @@ function TabloSatiriKarti({ r }: { r: RoadmapTabloSatiri }) {
   );
 }
 
+/* ==================================================================================
+   ŞEMA TAHTASI — belgenin kendi alanlarından çizilen DİNAMİK tahta
+   ----------------------------------------------------------------------------------
+   2026-09-01 göçünden önce bu yüzeyin tek anlatısı "kaç madde, hangi kovada"ydı;
+   kalemin kendisi (kim sahibi, ne kadar iş, neyi bekliyor) yalnız ham metnin
+   içinde yaşıyordu ve panoda OKUNAMIYORDU. Uç artık başlık satırını alanlarına
+   ayırıyor (`sema`) ve tahta o alanlardan doğuyor.
+
+   ÜÇ KURAL, ÜÇÜ DE ÖLÇÜLMÜŞ BİR KUSURUN KARŞILIĞI:
+   1) SÜZGEÇ SEÇENEKLERİ GÖMÜLÜ DEĞİL — durum/bölüm/sahip listeleri gelen veriden
+      doğar. Sözlüğü buraya yazmak, belgenin bir sonraki ekinde panoyu sessizce
+      eksik gösterirdi (bu dosyanın kolon başlığındaki aynı yasak).
+   2) İKİ BİRİM TOPLANMAZ — bullet madde ile `§2` tablo satırı aynı gramerle
+      çizilir ama sayaç iki ayrı sayı basar: aynı `TSK` numarası ikisinde birden
+      yaşayabilir (belgenin bilinçli geri-bağlantı deseni) ve toplamak çift sayardı.
+   3) MUAF TARİHÇE BORÇ DEĞİL — `§7`/`§8` şema dışıdır ve öyle kalmasına operatör
+      karar verdi. Sayısı GÖSTERİLİR ama "eksik" diye değil, kapsam beyanı olarak.
+   ================================================================================== */
+const SEMA_TAHTA_TAVANI = 40;
+
+function statusRozetiTonu(status: string | null): "default" | "secondary" | "destructive" | "outline" | "ghost" {
+  if (status === "OPERATOR") return "destructive";
+  if (status === "ACTIVE" || status === "QUEUED" || status === "INTERIM") return "default";
+  if (status === "GATED") return "secondary";
+  if (status === "DONE" || status === "DROPPED") return "outline";
+  return "ghost";
+}
+
+function SemaSatiri({ s }: { s: TahtaSatiri }) {
+  const { sema } = s;
+  return (
+    <li className="flex flex-col gap-1.5 px-3 py-2.5">
+      <div className="flex flex-wrap items-start gap-2">
+        <Badge variant="outline" className="shrink-0 font-mono text-[11px]">
+          {sema.id ?? "kimliksiz"}
+        </Badge>
+        <span className="min-w-0 flex-1 text-sm leading-5">
+          {sema.ad ?? <span className="text-muted-foreground italic">ad okunamadı</span>}
+        </span>
+        {sema.status === null ? (
+          <Badge
+            variant="ghost"
+            className="shrink-0 text-[11px]"
+            title={sema.statusNeden ?? "uç durumu ölçemedi ve nedenini de yazmadı"}
+          >
+            {s.durum === "atif" ? "atıf" : "durum okunamadı"}
+          </Badge>
+        ) : (
+          <Badge
+            variant={statusRozetiTonu(sema.status)}
+            className="shrink-0 text-[11px]"
+            title={sema.statusDetay ?? sema.status}
+          >
+            {STATUS_ETIKETI[sema.status] ?? sema.status}
+          </Badge>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground">
+        <span className="font-mono">{sema.section ?? "bölümsüz"}</span>
+        {/* ALT BAŞLIK KIRPILIR AMA KAYBOLMAZ: `§2`nin tablo başlıkları sayaç ve tarih
+            notlarıyla uzun (`H1 — … **10 açık** (2026-08-31 …)`), satıra sığmaz; tam
+            metin `title`da durur. Kırpıp başlığı hiç göstermemek, satırın NEREDEN
+            geldiğini silerdi — düzleştirmenin ilk kaybı tam olarak odur. */}
+        {s.altBolum ? (
+          <span className="max-w-[16rem] truncate" title={s.altBolum}>
+            {s.altBolum}
+          </span>
+        ) : null}
+        <span>{sema.owner ?? "sahipsiz"}</span>
+        <span title="iş büyüklüğü; ölçülemediğinde belgede tire ile beyan edilir">
+          boyut {sema.size ?? "yazılmadı"}
+        </span>
+        {sema.born ? <span>doğum {sema.born.slice(0, 10)}</span> : null}
+        <Badge variant="ghost" className="text-[10px]" title="bullet madde mi, tahta tablosunun satırı mı">
+          {sema.kaynak === "tablo" ? "tablo satırı" : "madde"}
+        </Badge>
+        <span className="ml-auto font-mono">{s.satir === null ? "satırsız" : `satır ${s.satir}`}</span>
+      </div>
+
+      {sema.status === "GATED" && sema.trigger ? (
+        <p className="text-muted-foreground text-xs leading-5">
+          <span className="text-[10px] uppercase">tetik</span> {sema.trigger}
+        </p>
+      ) : null}
+      {sema.status === null && sema.statusNeden ? (
+        <p className="text-muted-foreground text-xs leading-5">{sema.statusNeden}</p>
+      ) : null}
+    </li>
+  );
+}
+
+function SuzgecSeridi({
+  ad,
+  secili,
+  secenekler,
+  sec,
+}: {
+  ad: string;
+  secili: string | null;
+  secenekler: readonly (readonly [string, string, number])[];
+  sec: (v: string | null) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="mr-1 w-14 shrink-0 text-muted-foreground text-xs">{ad}</span>
+      <Button
+        variant={secili === null ? "default" : "outline"}
+        size="sm"
+        className="h-7 px-2.5 text-xs"
+        onClick={() => sec(null)}
+      >
+        hepsi
+      </Button>
+      {secenekler.map(([deger, etiket, n]) => (
+        <Button
+          key={deger}
+          variant={secili === deger ? "default" : "outline"}
+          size="sm"
+          className="h-7 px-2.5 text-xs"
+          onClick={() => sec(secili === deger ? null : deger)}
+        >
+          {etiket} · {n}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+function SemaTahtasi({
+  satirlar,
+  muafTarihce,
+  ihlalN,
+}: {
+  satirlar: readonly TahtaSatiri[];
+  muafTarihce: number | null;
+  ihlalN: number | null;
+}) {
+  const [status, setStatus] = useState<string | null>(null);
+  const [bolum, setBolum] = useState<string | null>(null);
+  const [sahip, setSahip] = useState<string | null>(null);
+
+  const say = (secilenler: readonly TahtaSatiri[], anahtar: (s: TahtaSatiri) => string | null) => {
+    const m = new Map<string, number>();
+    for (const s of secilenler) {
+      const k = anahtar(s);
+      if (k !== null) m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return m;
+  };
+
+  const statusSayimi = say(satirlar, (s) => s.sema.status);
+  const bolumSayimi = say(satirlar, (s) => s.sema.section);
+  const sahipSayimi = say(satirlar, (s) => s.sema.owner);
+  const olculemeyen = satirlar.filter((s) => s.sema.status === null).length;
+
+  const suzulmus = satirlar.filter(
+    (s) =>
+      (status === null || s.sema.status === status) &&
+      (bolum === null || s.sema.section === bolum) &&
+      (sahip === null || s.sema.owner === sahip),
+  );
+
+  const gruplar = SINIF_SIRASI.map((g) => ({
+    ad: g,
+    satirlar: suzulmus.filter((s) => tahtaSinifi(s.sema) === g),
+  })).filter((g) => g.satirlar.length > 0);
+
+  const maddeN = suzulmus.filter((s) => s.sema.kaynak !== "tablo").length;
+  const tabloN = suzulmus.length - maddeN;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ListChecks className="size-4 text-muted-foreground" aria-hidden />
+          Kalem tahtası
+        </CardTitle>
+        <CardDescription>
+          Belgenin kendi alanlarından çiziliyor — durum, sahip ve boyut kalemin başlık satırında
+          yazılı; pano onları yorumlamıyor, okuyor.
+        </CardDescription>
+        <CardAction className="flex flex-wrap gap-1.5">
+          <Badge variant="outline" className="tabular-nums">
+            {maddeN} madde
+          </Badge>
+          <Badge variant="outline" className="tabular-nums">
+            {tabloN} tablo satırı
+          </Badge>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {ihlalN !== null && ihlalN > 0 ? (
+          <Alert variant="destructive">
+            <Info />
+            <AlertTitle>{ihlalN} kalem başlık düzenine uymuyor</AlertTitle>
+            <AlertDescription>
+              Bu satırlar düzenli bir kalem gibi yazılmış ama alanları eksik ya da sırası bozuk —
+              tahtada görünmüyorlar. Tarihçe muafiyetiyle karıştırılmamalı: bu bir bozulma.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        <SuzgecSeridi
+          ad="DURUM"
+          secili={status}
+          secenekler={statusSirala(statusSayimi.keys()).flatMap((k) => {
+            const n = statusSayimi.get(k);
+            return n === undefined ? [] : [[k, STATUS_ETIKETI[k] ?? k, n] as const];
+          })}
+          sec={setStatus}
+        />
+        <SuzgecSeridi
+          ad="BÖLÜM"
+          secili={bolum}
+          secenekler={[...bolumSayimi.entries()].sort().map(([k, n]) => [k, k, n] as const)}
+          sec={setBolum}
+        />
+        <SuzgecSeridi
+          ad="SAHİP"
+          secili={sahip}
+          secenekler={[...sahipSayimi.entries()].sort().map(([k, n]) => [k, k, n] as const)}
+          sec={setSahip}
+        />
+
+        {gruplar.length === 0 ? (
+          <p className="rounded-lg border border-dashed px-3 py-6 text-center text-muted-foreground text-xs">
+            bu süzgeçte kalem yok
+          </p>
+        ) : null}
+
+        {gruplar.map((g) => {
+          const gosterilen = g.satirlar.slice(0, SEMA_TAHTA_TAVANI);
+          return (
+            <section key={g.ad} className="rounded-xl border">
+              <header className="flex items-baseline justify-between gap-2 border-b bg-muted/30 px-3 py-2">
+                <h4 className="font-medium text-sm">{g.ad}</h4>
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  {g.satirlar.filter((s) => s.sema.kaynak !== "tablo").length} madde ·{" "}
+                  {g.satirlar.filter((s) => s.sema.kaynak === "tablo").length} tablo satırı
+                </span>
+              </header>
+              <ul className="divide-y">
+                {gosterilen.map((s) => (
+                  <SemaSatiri key={s.anahtar} s={s} />
+                ))}
+              </ul>
+              {g.satirlar.length > gosterilen.length ? (
+                <p className="border-t px-3 py-2 text-center text-muted-foreground text-xs">
+                  {gosterilen.length} / {g.satirlar.length} gösteriliyor — kalan{" "}
+                  {g.satirlar.length - gosterilen.length} satır çizilmedi (liste tavanı{" "}
+                  {SEMA_TAHTA_TAVANI}).
+                </p>
+              ) : null}
+            </section>
+          );
+        })}
+
+        <p className="text-muted-foreground text-xs leading-5">
+          İki birim ayrı sayılır ve TOPLANMAZ: aynı kalem numarası hem sıralı listede hem tahta
+          tablosunda yaşayabilir; iki satırı tek sayıya katmak o kalemi çift sayardı.
+          {olculemeyen > 0
+            ? ` ${olculemeyen} satırın durumu bu satırda yazmıyor — başka bir kaleme havale ediyor ve o kalemin satırında okunuyor.`
+            : ""}
+          {muafTarihce !== null
+            ? ` Ayrıca ${muafTarihce} kalem bu düzenin dışında: karar günlüğü ve arşiv bölümleri olduğu gibi korunuyor, düzene çevrilmiyor.`
+            : " Düzen dışı kalem sayısı bildirilmedi."}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function Kolon({
   b,
   maddeler,
@@ -385,6 +673,9 @@ function Tahta({ ham }: { ham: unknown }) {
 
   const { bolumler, sayim, kunye } = okuma;
   const tumMaddeler = bolumler.flatMap((b) => b.maddeler);
+  // ŞEMALI KALEMLER — iki birimden gelir, TOPLANMAZ; `tahtaSatirlari` her satıra
+  // hangisinden geldiğini yazar ve tahta iki sayacı ayrı basar.
+  const semaSatirlari = tahtaSatirlari(bolumler);
 
   // KENDİ SAYIMIMIZ — kart başına bir madde. Ucun `sayim.madde_n` beyanıyla
   // karşılaştırılıyor: ayrışırsa düzleştirme bir dalı atlıyordur ve bunu ekranda
@@ -542,6 +833,17 @@ function Tahta({ ham }: { ham: unknown }) {
           </AlertDescription>
         </Alert>
       ) : null}
+
+      {/* ----------------------- ŞEMA TAHTASI ---------------------------- */}
+      {/* EN ÜSTTE, ÇÜNKÜ ASIL SORU BU: "hangi iş hangi durumda, kimde?"
+          Aşağıdaki grafikler belgenin YAPISINI ölçüyor (kaç madde, kaç tablo
+          satırı, hangi kovada) — okuyucunun ilk ihtiyacı o değil, kalemin
+          kendisi. Şema alanları açılana dek bu soruyu pano cevaplayamıyordu. */}
+      <SemaTahtasi
+        satirlar={semaSatirlari}
+        muafTarihce={sayim.sema.muafTarihce}
+        ihlalN={sayim.sema.ihlalN}
+      />
 
       {/* --------------------------- ÜÇ ÖLÇÜM --------------------------- */}
       <div className="flex flex-wrap items-center gap-2">

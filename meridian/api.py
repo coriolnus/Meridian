@@ -6918,6 +6918,213 @@ _ROADMAP_CIZIK = re.compile(r"~~(.+?)~~", re.S)
 # `✅` bir EMOJİdir ve sözcük sınırı almaz (yanındaki `\b` anlamsız olurdu) — bilerek dışarıda.
 _ROADMAP_KAPANIS = r"(✅|\bKAPANDI\b|\bKAPALI\b|\bTAMAMLANDI\b)"
 
+# ---- §1 MADDE ŞEMASI (docs/TASARIM-ROADMAP-STANDART-2026-09-01.md) ------------------------------
+#
+# 2026-09-01 göçünde belgenin YAŞAYAN bölümleri tek bir başlık gramerine çevrildi:
+#
+#     - **[TSK-041] Yansıma mükerrerlik kapısı** — status: INTERIM · born: 2026-09-01 ·
+#       owner: rol1 · size: S-M · trigger: —
+#
+# ve `§2 TAHTA`nın tabloları AYNI alanları sütun olarak taşıyor
+# (`| id | name | status | owner | size | trigger |`). Bu yüzden durum artık DÜZYAZIDA ARANMAZ,
+# BEYAN EDİLDİĞİ ALANDAN OKUNUR.
+#
+# NEDEN BU AYRIM ÖLÇÜLDÜ (2026-08-31 → 09-01, `tests/test_tahta_hijyeni_v337.py` iki kırmızısı):
+# eski sözlük (`KAPANDI`/`BLOKE`/`ASKIDA`/`AÇIK`) satırın HER hücresinde aranıyordu ve göçten
+# sonra iki §2 satırı düzyazısı yüzünden "kapalı" okundu — `TSK-062`nin tetiği "learn program
+# boyunca KAPALI" diyor, `TSK-077`nin adı "…2026-08-24 elemesinde KAPANDI" diyor. İkisi de AÇIK
+# kalemdi. Sözlüğü genişletmek TEK BAŞINA bunu çözmezdi (satır o zaman "çok işaretli" olurdu);
+# çözen şey şemanın kendisidir: rozet artık KENDİ SÜTUNUNDA yaşıyor ve başka sütun rozet alanı
+# DEĞİLDİR. Bedeli de ölçüldü ve küçüktür (bedel yasası): şema tablolarında düzyazı sütunlarının
+# eski-sözlük taraması KAYBEDİLİR — kaybedilen sinyalin tamamı yukarıdaki iki yanlış pozitifti,
+# çünkü şemada kapanış zaten `status: DONE(...)` ile söylenir.
+#
+# ESKİ SÖZLÜK EMEKLİ DEĞİL: `§7 KARAR GÜNLÜĞÜ` · `§8 ARŞİV` · `§8.T TAHTA ARŞİVİ` ve göç ÖNCESİ
+# tarihçe blokları hâlâ rozet-düzyazısıyla yazılmıştır (operatör onaylı muafiyet, spec §3) —
+# şemaya uymayan her satır ESKİ yolla ölçülmeye devam eder ve `sayim.sema.muaf_tarihce`de sayılır.
+_ROADMAP_SEMA_BASLIK = re.compile(r"^\*\*\[([^\]]+)\]\s+([^*]*?)\*\*\s+—\s+(.*)$")
+# Parantez İSTEĞE BAĞLI ve önündeki boşluk SERBEST bırakıldı: `§2` tabloları (v351'in bullet
+# gramerinin DIŞINDA — o çivi bilinçli olarak yalnız `- **[` satırlarını ölçer) gerçekte
+# `QUEUED (trigger karşılandı: …)` ve `OPERATOR (operatör 2026-08-16: "beklet")` biçimleri
+# taşıyor. Daraltmak bu satırları "sözlük dışı" gösterirdi — ölçülmüş bir yanlış pozitif.
+# `.*` AÇGÖZLÜdür ve bu bilinçli: `GATED(EDG-062(b) inişinden sonra)` iç içe parantez taşıyor.
+_ROADMAP_SEMA_STATUS = re.compile(
+    r"^(ACTIVE|QUEUED|INTERIM|GATED|OPERATOR|DONE|DROPPED)\s*(?:\((.*)\))?$", re.S)
+# ATIF SATIRI — `§2`de ölçülen üçüncü biçim (3 satır: TSK-069/051/063). Kalem tahtada İKİ kez
+# görünür: gerçek satırı bir alt bölümde, ikinci satır yalnız "bu blok da o kaleme bağlı" kaydı.
+# Durumu burada ÖLÇÜLMEZ — ve uydurulmaz: `status` None kalır, nedeni alanında taşınır.
+_ROADMAP_SEMA_ATIF = re.compile(r"^\(\s*bkz\.\s*(.+?)\s*\)$", re.S)
+_ROADMAP_SEMA_ALANLARI = ("status", "born", "owner", "size", "trigger")
+# §6 KART ENDEKSİ `born` TAŞIMAZ (spec §2 tarihli eki): kartın doğum tarihi kart dosyasının
+# kendi künyesindedir; ROADMAP'e ikinci bir kopya koymak tek-kaynak yasasını çiğnerdi.
+_ROADMAP_KART_ALANLARI = ("status", "owner", "size", "trigger")
+_ROADMAP_SEMA_TABLO_BASLIKLARI = ("id", "name", "status", "owner", "size", "trigger")
+# Şema sözlüğü → bu ucun KENDİ durum kovaları. İki sözlük AYRI şeylerdir ve öyle kalmalı:
+# şema `status`u belgenin dilidir (spec §1, donuk), `durum` panonun beş kovasıdır (bu ucun
+# 2026-08-25'ten beri taşıdığı sözleşme). Eşleme burada TEK yerde yazılır.
+_ROADMAP_STATUS_DURUM = {"ACTIVE": "acik", "QUEUED": "acik", "INTERIM": "acik",
+                         "GATED": "askida", "OPERATOR": "bloke",
+                         "DONE": "kapali", "DROPPED": "kapali"}
+# Spec §1 ÜST SINIFLANDIRMASI — "AÇIK = ACTIVE·QUEUED·INTERIM·GATED·OPERATOR,
+# KAPALI = DONE·DROPPED". Panonun tahtası bu iki grubu çizer; grubu yüzeyde yeniden kurmak
+# aynı kuralın ikinci kopyası olurdu (tek-kaynak yasası), o yüzden gövdede taşınır.
+_ROADMAP_STATUS_SINIFI = {s: ("KAPALI" if s in ("DONE", "DROPPED") else "AÇIK")
+                          for s in _ROADMAP_STATUS_DURUM}
+# `atif` ALTINCI KOVA DEĞİL YEDİNCİ: `cok_isaretli` "iki rozet taşıyor" der, `atif` "rozeti
+# BAŞKA satırda" der. İkisini aynı kovaya koymak, ölçülen iki ayrı olguyu tek isim altında
+# gizlerdi — ve `belirsiz`e koymak daha kötüsü olurdu: satır durumunu SÖYLÜYOR, ölçülmemiş değil.
+_ROADMAP_DURUM_KOVALARI = ("kapali", "bloke", "askida", "acik", "belirsiz", "atif")
+
+
+def _roadmap_alanlari(govde: str) -> tuple[list[str], dict[str, str]]:
+    """`status: X · born: Y · …` → (SIRALI anahtar listesi, anahtar→değer).
+
+    PARANTEZ DERİNLİĞİNE DUYARLI, ve bu şart: gerçek veri
+    `status: DONE(2026-08-31 · v349, 28 çivi) · born: …` taşıyor. Naif bir `split(" · ")`
+    `DONE(...)` İÇİNDEKİ ayracı üst-düzey alan ayracı sanır, alan sayısı bozulur ve tamamen
+    sağlam bir satır "şemasız" görünür. Sıra ayrıca DÖNDÜRÜLÜR (sözlük değil liste): şema alan
+    SIRASINI de bağlar ve `dict` sırasına güvenmek niyeti okuyucudan gizlerdi."""
+    parcalar: list[str] = []
+    derinlik, tampon, i, n, ayrac = 0, [], 0, len(govde), " · "
+    while i < n:
+        ch = govde[i]
+        if ch == "(":
+            derinlik += 1
+        elif ch == ")":
+            derinlik -= 1
+        elif derinlik == 0 and govde[i:i + len(ayrac)] == ayrac:
+            parcalar.append("".join(tampon))
+            tampon = []
+            i += len(ayrac)
+            continue
+        tampon.append(ch)
+        i += 1
+    parcalar.append("".join(tampon))
+
+    anahtarlar: list[str] = []
+    sozluk: dict[str, str] = {}
+    for parca in parcalar:
+        if ":" in parca:
+            anahtar, deger = parca.split(":", 1)
+            anahtarlar.append(anahtar.strip())
+            sozluk[anahtar.strip()] = deger.strip()
+    return anahtarlar, sozluk
+
+
+def _roadmap_status_coz(ham: str) -> tuple[str | None, str | None, str | None]:
+    """Bir `status` DEĞERİNİ çözer → (status, status_detay, status_neden).
+
+    Üç çıkış, üçü de ölçülmüş biçimlerden: (1) sözlükteki değer (parantezli detay ayrı alana
+    iner — spec §1: parantez GATED/DONE/DROPPED'a aittir ve DETAYdır, durumun kendisi değil);
+    (2) `(bkz. …)` atfı → status None + NEDEN (durumu başka satırda yaşıyor); (3) tanınmayan
+    değer → status None + NEDEN. Hiçbir yolda değer UYDURULMAZ."""
+    deger = (ham or "").strip()
+    m = _ROADMAP_SEMA_STATUS.match(deger)
+    if m:
+        detay = (m.group(2) or "").strip() or None
+        return m.group(1), detay, None
+    atif = _ROADMAP_SEMA_ATIF.match(deger)
+    if atif:
+        # Metin EKRANA çıkıyor (pano satırın altında basıyor): ters tırnak/alan adı gibi iç
+        # ayrıntı taşımaz — v323'ün arayüz dili kuralının aynı gerekçesi.
+        return None, None, (f"durum bu satırda yazmıyor: satır {atif.group(1)} kalemine ATIF "
+                            "yapıyor, kalemin durumu kendi satırında okunur")
+    if not deger:
+        return None, None, "`status` alanı boş — durum yazılmamış"
+    return None, None, (f"`status` değeri şema sözlüğünde yok: {deger[:120]!r} "
+                        "(ACTIVE · QUEUED · INTERIM · GATED · OPERATOR · DONE · DROPPED)")
+
+
+def _roadmap_sema_kur(kimlik: str, ad: str, alanlar: dict[str, str], *, bolum_no: str | None,
+                      kaynak: str) -> dict:
+    """Çözülmüş alanlardan şema sözlüğünü kurar. ÖLÇÜLEMEYEN ALAN None KALIR."""
+    status, detay, neden = _roadmap_status_coz(alanlar.get("status", ""))
+    return {"id": kimlik or None, "name": ad or None,
+            "status": status, "status_detay": detay, "status_neden": neden,
+            "sinif": _ROADMAP_STATUS_SINIFI.get(status) if status else None,
+            # `born` tablo biçiminde YOKTUR (şemanın tablo sütunları arasında değil) — bu
+            # None bir ölçüm kusuru değil, biçimin kendisi; `sema_kapsam` bunu beyan eder.
+            "born": alanlar.get("born") or None,
+            "owner": alanlar.get("owner") or None,
+            "size": alanlar.get("size") or None,
+            "trigger": alanlar.get("trigger") or None,
+            "section": bolum_no, "kaynak": kaynak}
+
+
+def _roadmap_sema_durumu(sema: dict) -> tuple[str, str | None]:
+    """Şema satırının bu ucun durum kovasındaki karşılığı → (durum, kanıt)."""
+    if sema["status"] is None:
+        if sema["status_neden"] and "ATIF" in sema["status_neden"]:
+            return "atif", sema["status_neden"]
+        return "belirsiz", sema["status_neden"]
+    return _ROADMAP_STATUS_DURUM[sema["status"]], f"status: {sema['status']}"
+
+
+def _roadmap_madde_semasi(baslik_satiri: str,
+                          bolum_no: str | None) -> tuple[dict | None, str | None]:
+    """Bir MADDE başlık satırını §1 şemasına karşı çözer → (şema | None, ihlal nedeni | None).
+
+    ÜÇ SINIF, VE İKİSİ KARIŞTIRILMAZ:
+      · şema  → (sözlük, None)
+      · muaf  → (None, None)   şema BİÇİMİNDE değil: §7/§8 düzyazısı, tarihçe satırı, serbest
+                               metin. Bunlar İHLAL DEĞİLDİR (operatör onaylı muafiyet, spec §3)
+                               ve `muaf_tarihce` sayacına gider.
+      · ihlal → (None, neden)  şema BİÇİMİNDE (`- **[KİMLİK] Ad** — …`) AMA alanları tutmuyor.
+                               Bu bir bozulmadır ve ADIYLA sayılır — muaf sayacına karışsaydı
+                               şema çürümesi sessizce tarihçe gibi görünürdü.
+
+    SATIR başlığı alınır, KATLANMIŞ gövde değil: bu dosya madde gövdelerini sarıyor ve `What:`
+    / `Why:` satırları maddeye katlanıyor — onları alan gövdesine karıştırmak alan sayımını
+    bozardı. `§6` kart endeksinde alan seti farklıdır (`born` yok, spec §2 tarihli eki)."""
+    m = _ROADMAP_SEMA_BASLIK.match(baslik_satiri.strip())
+    if not m:
+        return None, None
+    kimlik, ad, govde = m.group(1).strip(), m.group(2).strip(), m.group(3)
+    anahtarlar, alanlar = _roadmap_alanlari(govde)
+    beklenen = _ROADMAP_KART_ALANLARI if bolum_no == "§6" else _ROADMAP_SEMA_ALANLARI
+    if tuple(anahtarlar) != beklenen:
+        return None, (f"[{kimlik}] alan sırası {list(beklenen)} bekleniyordu, bulunan: "
+                      f"{anahtarlar}")
+    sema = _roadmap_sema_kur(kimlik, ad, alanlar, bolum_no=bolum_no, kaynak="madde")
+    return sema, None
+
+
+def _roadmap_sema_sayimi(bolumler: list) -> dict:
+    """Şema sayacı — TEK yerde hesaplanır ve iki yerden çağrılır (belge geneli + `?bolum=`
+    süzgeci). İki kopya sessizce ayrışırdı; ayrışan sayaç ekranda ayrışma UYARISI değil,
+    ayrışmanın KENDİSİ olurdu."""
+    sayac = {"madde_n": 0, "tablo_satir_n": 0, "muaf_tarihce": 0, "ihlal_n": 0}
+    status: dict[str, int] = {s: 0 for s in _ROADMAP_STATUS_DURUM}
+    sinif = {"AÇIK": 0, "KAPALI": 0, "olculemedi": 0}
+
+    def _say(sema: dict | None) -> None:
+        if sema is None:
+            return
+        if sema["status"] is None:
+            sinif["olculemedi"] += 1
+        else:
+            status[sema["status"]] += 1
+            sinif[_ROADMAP_STATUS_SINIFI[sema["status"]]] += 1
+
+    def _gez(bs: list) -> None:
+        for b in bs:
+            for m in b["maddeler"]:
+                if m["sema"] is None:
+                    sayac["muaf_tarihce"] += 1
+                else:
+                    sayac["madde_n"] += 1
+                _say(m["sema"])
+            sayac["ihlal_n"] += len(b.get("sema_ihlal") or [])
+            for t in b["tablolar"]:
+                for r in t["satirlar"]:
+                    if r["sema"] is not None:
+                        sayac["tablo_satir_n"] += 1
+                    _say(r["sema"])
+            _gez(b["alt_bolumler"])
+
+    _gez(bolumler)
+    return {**sayac, "status": status, "sinif": sinif}
+
 
 def _ROADMAP_TABLO_SATIRI(l: str) -> bool:
     """Markdown tablo satırı mı? Boru ile BAŞLAR, boru ile BİTER ve en az iki boru taşır.
@@ -7076,9 +7283,8 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
     if onsoz is not None:
         kok.insert(0, onsoz)
 
-    sayim_durum = {"kapali": 0, "bloke": 0, "askida": 0, "acik": 0, "belirsiz": 0}
-    tablo_durum = {"kapali": 0, "bloke": 0, "askida": 0, "acik": 0, "belirsiz": 0,
-                   "cok_isaretli": 0}
+    sayim_durum = {k: 0 for k in _ROADMAP_DURUM_KOVALARI}
+    tablo_durum = {**{k: 0 for k in _ROADMAP_DURUM_KOVALARI}, "cok_isaretli": 0}
     tablo_sayaci = {"tablo": 0, "satir": 0, "atlanan": 0}
 
     def _hucreler(satir: str) -> list[str]:
@@ -7090,7 +7296,40 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
             parcalar = parcalar[:-1]
         return [x.strip() for x in parcalar]
 
-    def _tablolari_kur(b: dict) -> list:
+    def _sema_satiri_kur(no: int, hucreler: list[str], kok_no: str | None) -> dict:
+        """`| id | name | status | owner | size | trigger |` satırını ŞEMA olarak kurar.
+
+        DÜZYAZI SÜTUNLARI TARANMAZ ve `hucre_durum` bunu OLDUĞU GİBİ söyler: yalnız `status`
+        sütunu rozet taşır, kalanı `belirsiz`dir — çünkü kalanı VERİdir, rozet değil. Eski
+        sürüm hepsini tarıyordu ve `TSK-062`nin tetiğindeki "…boyunca KAPALI" ile `TSK-077`nin
+        adındaki "…elemesinde KAPANDI" satırları kapalı gösteriyordu (v337 iki kırmızısı)."""
+        kimlik, ad = hucreler[0], hucreler[1]
+        alanlar = dict(zip(_ROADMAP_SEMA_TABLO_BASLIKLARI[2:], hucreler[2:]))
+        sema = _roadmap_sema_kur(kimlik, ad, alanlar, bolum_no=kok_no, kaynak="tablo")
+        durum, kanit = _roadmap_sema_durumu(sema)
+        hucre_durum = ["belirsiz"] * len(hucreler)
+        sutun = _ROADMAP_SEMA_TABLO_BASLIKLARI.index("status")
+        if durum != "belirsiz":
+            hucre_durum[sutun] = durum
+        tablo_durum[durum] += 1
+        tablo_sayaci["satir"] += 1
+        kirpildi = (not tam) and any(len(h) > _ROADMAP_HAM_TAVAN for h in hucreler)
+        return {"satir": no,
+                "hucreler": [h if tam or len(h) <= _ROADMAP_HAM_TAVAN
+                             else h[:_ROADMAP_HAM_TAVAN] for h in hucreler],
+                "hucre_kirpildi": kirpildi,
+                "hucre_uzunluk": [len(h) for h in hucreler],
+                "hucre_durum": hucre_durum,
+                "durum": durum,
+                # ŞEMA SATIRI TEK HÜKÜMLÜDÜR: rozet tek sütunda yaşar, çelişki DOĞAMAZ —
+                # `durum` asla None olmaz ve `cok_isaretli` kovası bu satırlarda boş kalır.
+                "durum_neden": None if durum != "belirsiz" else sema["status_neden"],
+                "durum_kanitlari": ([{"sutun": sutun, "durum": durum, "kanit": kanit}]
+                                    if durum != "belirsiz" else []),
+                "ustu_cizili": bool(_ROADMAP_CIZIK.search(" ".join(hucreler))),
+                "sema": sema}
+
+    def _tablolari_kur(b: dict, kok_no: str | None) -> list:
         """Bitişik `|` satırlarını tablolara böler; başlık + ayraç + satırlar.
 
         DURUM HÜCRE HÜCRE ARANIR, satırın tamamında DEĞİL: tablo satırı birden çok sütundur ve
@@ -7128,10 +7367,18 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
 
         def _tabloyu_kur(baslik_satiri, govde):
             basliklar = _hucreler(baslik_satiri[1])
+            # ŞEMA TABLOSU MU: başlık hücreleri §1 şemasının sütun adlarıysa rozet KENDİ
+            # SÜTUNUNDADIR ve düzyazı sütunları rozet alanı DEĞİLDİR. Bu ayrımın gerekçesi
+            # `_ROADMAP_SEMA_BASLIK`in üstündeki şerhte ölçümüyle yazılı (v337 iki kırmızısı).
+            sema_tablosu = tuple(h.strip().lower() for h in basliklar) == \
+                _ROADMAP_SEMA_TABLO_BASLIKLARI
             blok = [baslik_satiri]
             satirlar = []
             for no, l in govde:
                 hucreler = _hucreler(l)
+                if sema_tablosu and len(hucreler) == len(_ROADMAP_SEMA_TABLO_BASLIKLARI):
+                    satirlar.append(_sema_satiri_kur(no, hucreler, kok_no))
+                    continue
                 hucre_durum, kanitlar, cizili = [], [], False
                 for h in hucreler:
                     d, k, c = _roadmap_madde_durumu(h)
@@ -7166,7 +7413,10 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
                     "hucre_uzunluk": [len(h) for h in hucreler],
                     "hucre_durum": hucre_durum,
                     "durum": durum, "durum_neden": durum_neden,
-                    "durum_kanitlari": kanitlar, "ustu_cizili": cizili})
+                    "durum_kanitlari": kanitlar, "ustu_cizili": cizili,
+                    # ŞEMASIZ TABLO: `sema` alanı VAR ve None'dır — alanı hiç yazmamak
+                    # "şemasız" ile "bu sürüm şemayı hiç ölçmüyor"u aynı gösterirdi.
+                    "sema": None})
             tablo_sayaci["tablo"] += 1
             tablolar.append({"satir": baslik_satiri[0], "basliklar": basliklar,
                              "satirlar": satirlar, "satir_n": len(satirlar)})
@@ -7182,30 +7432,46 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
             tablo_sayaci["atlanan"] += len(atlanan)
         return tablolar
 
-    def _kapat(b: dict) -> None:
-        yeni = []
+    def _kapat(b: dict, kok_no: str | None) -> None:
+        yeni, ihlaller = [], []
         for m in b["maddeler"]:
-            ham = " ".join(m.pop("_ham")).strip()
-            durum, kanit, cizili = _roadmap_madde_durumu(ham)
+            ham_liste = m.pop("_ham")
+            # ŞEMA BAŞLIK SATIRINDAN OKUNUR, KATLANMIŞ GÖVDEDEN DEĞİL: `What:`/`Why:` satırları
+            # maddeye katlanıyor ve onları alan gövdesine karıştırmak alan sayımını bozardı.
+            sema, ihlal = _roadmap_madde_semasi(ham_liste[0], kok_no)
+            ham = " ".join(ham_liste).strip()
+            if ihlal:
+                ihlaller.append({"satir": m["satir"], "bolum": kok_no, "neden": ihlal})
+            if sema is None:
+                durum, kanit, cizili = _roadmap_madde_durumu(ham)
+            else:
+                # ŞEMALI MADDE DÜZYAZIDAN ÖLÇÜLMEZ: durum beyan edildiği alandadır.
+                durum, kanit = _roadmap_sema_durumu(sema)
+                cizili = bool(_ROADMAP_CIZIK.search(ham))
             sayim_durum[durum] += 1
             kirpildi = (not tam) and len(ham) > _ROADMAP_HAM_TAVAN
             yeni.append({"satir": m["satir"], "girinti": m["girinti"],
                          "baslik": _roadmap_madde_basligi(ham) or None,
                          "ham": ham[:_ROADMAP_HAM_TAVAN] if kirpildi else ham,
                          "ham_kirpildi": kirpildi, "ham_uzunluk": len(ham),
-                         "durum": durum, "durum_kanit": kanit, "ustu_cizili": cizili})
+                         "durum": durum, "durum_kanit": kanit, "ustu_cizili": cizili,
+                         "sema": sema})
         b["maddeler"] = yeni
         b["madde_n"] = len(yeni)
-        b["tablolar"] = _tablolari_kur(b)
+        if ihlaller:
+            # `tablo_atlanan` EMSALİ: şema biçiminde olup alanları tutmayan satır SESSİZCE
+            # "tarihçe" sayılmaz — adıyla, satırıyla ve nedeniyle gövdede taşınır.
+            b["sema_ihlal"] = ihlaller
+        b["tablolar"] = _tablolari_kur(b, kok_no)
         b["tablo_satir_n"] = sum(t["satir_n"] for t in b["tablolar"])
         for alt in b["alt_bolumler"]:
-            _kapat(alt)
+            _kapat(alt, kok_no)
         b["madde_n_toplam"] = b["madde_n"] + sum(a["madde_n_toplam"] for a in b["alt_bolumler"])
         b["tablo_satir_n_toplam"] = b["tablo_satir_n"] + sum(
             a["tablo_satir_n_toplam"] for a in b["alt_bolumler"])
 
     for b in kok:
-        _kapat(b)
+        _kapat(b, b.get("no"))
 
     # ALT BÖLÜM KENDİ ADRESİNİ TAŞIR: `### WP7 …` başlığı `§N` numarası taşımaz ve tüketici
     # "bu kalem hangi bölümde?" sorusunu ancak ağacı kendi gezerek cevaplayabilirdi. `ust_no`
@@ -7232,6 +7498,10 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
                       "madde_n": sum(b["madde_n_toplam"] for b in kok), "durum": sayim_durum,
                       "tablo_n": tablo_sayaci["tablo"], "tablo_satir_n": tablo_sayaci["satir"],
                       "tablo_atlanan_n": tablo_sayaci["atlanan"], "tablo_durum": tablo_durum,
+                      # ŞEMA SAYACI AYRI KAPTA: `durum`/`tablo_durum` sözlükleri kendi
+                      # birimlerinin TAMAMINI sayar (toplamları `madde_n`/`tablo_satir_n`e eşit
+                      # olmak ZORUNDA — v287 çivisi) ve şema sayacı onların İÇİNE karışamaz.
+                      "sema": _roadmap_sema_sayimi(kok),
                       "kapsam": "belgenin TAMAMI"},
             "ham_tavan": None if tam else _ROADMAP_HAM_TAVAN,
             # SÖZLEŞME GÖVDEDE TAŞINIR: tüketici `durum` alanının NE KADARINI ölçtüğünü satırın
@@ -7242,7 +7512,25 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
                              "Üstü çizili kapanış rozeti kapalı SAYILMAZ (`ustu_cizili` alanı). "
                              "Tablo satırlarında durum HÜCRE HÜCRE aranır ve sayımı AYRI tutulur "
                              "(`sayim.tablo_durum`) — §2 TAHTA bir tablodur, madde listesi değil; "
-                             "iki sayımı toplamak kalemleri çift saymak olurdu")}
+                             "iki sayımı toplamak kalemleri çift saymak olurdu. "
+                             "ŞEMALI satırda (2026-09-01 göçü) durum DÜZYAZIDA ARANMAZ: "
+                             "`sema.status` alanından okunur ve yalnız o sütun rozet alanıdır. "
+                             "`atif` = satır durumunu BAŞKA satıra havale ediyor (`(bkz. …)`) — "
+                             "belirsiz DEĞİL, ölçülmüş bir havale"),
+            # ŞEMA SÖZLEŞMESİ — `sema` alanının ne olduğunu ve NEYİ ÖLÇMEDİĞİNİ tüketici
+            # ezberden bilemez. Özellikle iki nokta: (1) `sema: null` bir kusur değil, operatör
+            # onaylı MUAFİYETtir (§7 KARAR GÜNLÜĞÜ · §8 ARŞİV · tarihçe blokları — spec §3);
+            # (2) tablo biçimi `born` TAŞIMAZ ve o None bir ölçüm kusuru değil, biçimin kendisi.
+            "sema_kapsam": (
+                "madde/tablo satırı `docs/TASARIM-ROADMAP-STANDART-2026-09-01.md` §1 şemasına "
+                "uyuyorsa `sema` alanları taşır (id · name · status · status_detay · "
+                "status_neden · sinif · born · owner · size · trigger · section · kaynak); "
+                "uymuyorsa `sema` null'dır ve `sayim.sema.muaf_tarihce`de sayılır — bu bir "
+                "İHLAL DEĞİL, operatör onaylı muafiyettir (§7/§8 tarihçe-koru). Şema BİÇİMİNDE "
+                "olup alanları tutmayan satır AYRI sayılır (`sayim.sema.ihlal_n`, bölümde "
+                "`sema_ihlal` listesi). `born` YALNIZ bullet biçiminde vardır; §6 kart endeksi "
+                "ve §2 tablo satırları born taşımaz ve alan null kalır — uydurulmaz. "
+                "`status` null ise `status_neden` DOLUdur.")}
 
 
 def _roadmap_say(bolumler: list) -> dict:
@@ -7252,8 +7540,8 @@ def _roadmap_say(bolumler: list) -> dict:
     bırakmak, aynı `sayim` sözlüğünün yarısını bir kapsama yarısını başkasına bağlardı — okuyan
     hangi sayının neyi saydığını AYIRT EDEMEZDİ. Sayım tek kapsamlıdır ve kapsamını `kapsam`
     alanında söyler."""
-    durum = {"kapali": 0, "bloke": 0, "askida": 0, "acik": 0, "belirsiz": 0}
-    tdurum = {"kapali": 0, "bloke": 0, "askida": 0, "acik": 0, "belirsiz": 0, "cok_isaretli": 0}
+    durum = {k: 0 for k in _ROADMAP_DURUM_KOVALARI}
+    tdurum = {**{k: 0 for k in _ROADMAP_DURUM_KOVALARI}, "cok_isaretli": 0}
     sayac = {"madde": 0, "tablo": 0, "tsatir": 0, "atlanan": 0, "alt": 0}
 
     def _gez(bs: list, ust: bool) -> None:
@@ -7274,7 +7562,12 @@ def _roadmap_say(bolumler: list) -> dict:
     _gez(bolumler, True)
     return {"bolum_n": len(bolumler), "alt_bolum_n": sayac["alt"], "madde_n": sayac["madde"],
             "durum": durum, "tablo_n": sayac["tablo"], "tablo_satir_n": sayac["tsatir"],
-            "tablo_atlanan_n": sayac["atlanan"], "tablo_durum": tdurum}
+            "tablo_atlanan_n": sayac["atlanan"], "tablo_durum": tdurum,
+            # ŞEMA SAYACI DA SÜZGEÇLE DARALIR — belge-geneli bir şema sayısını süzgeçli gövdeye
+            # koymak, `kapsam` alanının söylediğiyle çelişen bir sayı üretirdi. TEK fonksiyon
+            # iki yerden çağrılır (`_roadmap_ayristir` + burası); ikinci bir gezinti yazmak
+            # sessizce ayrışan iki sayaç demek olurdu.
+            "sema": _roadmap_sema_sayimi(bolumler)}
 
 
 def _roadmap_ozetle(bolumler: list) -> list:
@@ -7286,14 +7579,19 @@ def _roadmap_ozetle(bolumler: list) -> list:
     Ayrıntı `?bolum=§N` ile tek bölüm olarak istenir."""
     def _b(b: dict) -> dict:
         return {**b,
+                # `sema` ÖZETTE DE KALIR: sökülen şey madde GÖVDESİdir (383 KB'ın kaynağı),
+                # şema ise gövdenin özeti-zaten-alınmış hâlidir — onu sökmek özeti tahtayı
+                # çizemez hâle getirirdi (dinamik tahtanın tek girdisi bu alandır).
                 "maddeler": [{"satir": m["satir"], "girinti": m["girinti"], "baslik": m["baslik"],
                               "durum": m["durum"], "durum_kanit": m["durum_kanit"],
-                              "ustu_cizili": m["ustu_cizili"], "ham_uzunluk": m["ham_uzunluk"]}
+                              "ustu_cizili": m["ustu_cizili"], "ham_uzunluk": m["ham_uzunluk"],
+                              "sema": m["sema"]}
                              for m in b["maddeler"]],
                 "tablolar": [{**t, "satirlar": [
                     {"satir": r["satir"], "etiket": (r["hucreler"][0] if r["hucreler"] else "")[:160],
                      "durum": r["durum"], "durum_neden": r["durum_neden"],
-                     "hucre_durum": r["hucre_durum"], "ustu_cizili": r["ustu_cizili"]}
+                     "hucre_durum": r["hucre_durum"], "ustu_cizili": r["ustu_cizili"],
+                     "sema": r["sema"]}
                     for r in t["satirlar"]]} for t in b["tablolar"]],
                 "alt_bolumler": [_b(a) for a in b["alt_bolumler"]]}
     return [_b(b) for b in bolumler]

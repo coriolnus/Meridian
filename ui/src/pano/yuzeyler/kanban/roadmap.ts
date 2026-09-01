@@ -50,6 +50,63 @@
    ============================================================================ */
 import { dizi, mantik, metin, nesne, sayi } from "./oku";
 
+/* ----------------------------------------------------------------------------
+   ŞEMA ALANLARI (2026-09-01 göçü) — `sema`
+   ----------------------------------------------------------------------------
+   Belgenin yaşayan bölümleri tek bir başlık gramerine çevrildi ve uç artık
+   satırı ALANLARINA ayırıyor. Bu, bu dosyanın 2026-08-31'de kapattığı arızanın
+   ikinci perdesidir: alan üretilip okunmazsa üretilmemiş sayılır.
+
+   `sema === null` BİR KUSUR DEĞİLDİR. Belgenin `§7 KARAR GÜNLÜĞÜ` ve `§8 ARŞİV`
+   bölümleri operatör onayıyla ŞEMA DIŞIDIR (tarihçe-koru, silme yok) ve bunlar
+   ucun `muaf_tarihce` sayacında yaşar. Onları "eksik" diye çizmek, korunmasına
+   karar verilmiş bir tarihçeyi borç gibi göstermek olurdu.
+
+   `status === null` ise NEDENİ taşınır (`statusNeden`): satır ya durumunu başka
+   bir satıra havale ediyordur (`(bkz. TSK-069)`) ya da sözlük dışı bir değer
+   yazılmıştır. İkisi de "durumsuz" DEĞİL, ölçülmüş iki ayrı olgudur.
+---------------------------------------------------------------------------- */
+export interface RoadmapSemasi {
+  readonly id: string | null;
+  readonly ad: string | null;
+  /** Donuk sözlük: ACTIVE · QUEUED · INTERIM · GATED · OPERATOR · DONE · DROPPED.
+   *  `null` ise `statusNeden` doludur — uydurulmuş bir değere DÜŞÜLMEZ. */
+  readonly status: string | null;
+  /** `GATED(...)` / `DONE(...)` parantezinin İÇİ — durumun kendisi değil DETAYI. */
+  readonly statusDetay: string | null;
+  readonly statusNeden: string | null;
+  /** Üst sınıflandırma: "AÇIK" | "KAPALI". Uçtan gelir, burada YENİDEN KURULMAZ —
+   *  aynı kuralın ikinci kopyası zamanla ayrışırdı. */
+  readonly sinif: string | null;
+  readonly born: string | null;
+  readonly owner: string | null;
+  readonly size: string | null;
+  readonly trigger: string | null;
+  /** Kalemin KÖK bölümü (`§2`…`§6`). */
+  readonly section: string | null;
+  /** "madde" (bullet) | "tablo" (`§2` tahtasının satırı). İki BİRİM ayrıdır. */
+  readonly kaynak: string | null;
+}
+
+function semaOku(x: unknown): RoadmapSemasi | null {
+  const n = nesne(x);
+  if (!n) return null;
+  return {
+    id: metin(n["id"]),
+    ad: metin(n["name"]),
+    status: metin(n["status"]),
+    statusDetay: metin(n["status_detay"]),
+    statusNeden: metin(n["status_neden"]),
+    sinif: metin(n["sinif"]),
+    born: metin(n["born"]),
+    owner: metin(n["owner"]),
+    size: metin(n["size"]),
+    trigger: metin(n["trigger"]),
+    section: metin(n["section"]),
+    kaynak: metin(n["kaynak"]),
+  };
+}
+
 export interface RoadmapMaddesi {
   /** React anahtarı — `satir` benzersizdir (dosyadaki satır numarası). */
   readonly anahtar: string;
@@ -64,6 +121,8 @@ export interface RoadmapMaddesi {
   /** Maddenin geldiği ALT başlık zinciri ("WP3 — Öğrenme Döngüsü"); kök bölümün
    *  kendi maddesiyse `null`. Düzleştirmede kaybolmasın diye taşınıyor. */
   readonly altBolum: string | null;
+  /** §1 şemasına uyuyorsa alanları; uymuyorsa `null` (muaf tarihçe — kusur değil). */
+  readonly sema: RoadmapSemasi | null;
 }
 
 /** Bir markdown TABLO satırı. Madde değildir ve maddeyle TOPLANMAZ (ayrı birim).
@@ -84,6 +143,9 @@ export interface RoadmapTabloSatiri {
   readonly altBolum: string | null;
   /** Satırın geldiği tablonun başlık hücreleri — kart bunları alan adı olarak basar. */
   readonly basliklar: readonly string[];
+  /** `§2 TAHTA` şema tablolarında (`| id | name | status | … |`) alanlar; başka
+   *  tablolarda `null` — o tablolar hâlâ rozet-düzyazısıyla ölçülür. */
+  readonly sema: RoadmapSemasi | null;
 }
 
 export interface RoadmapBolumu {
@@ -104,11 +166,25 @@ export interface RoadmapBolumu {
   readonly altBolumN: number;
 }
 
+/** Ucun şema sayacı (`sayim.sema`). Madde/tablo sayımıyla TOPLANMAZ: aynı
+ *  kalemleri BAŞKA bir eksende (şemalı mı, muaf mı) sayar. */
+export interface RoadmapSemaSayimi {
+  readonly maddeN: number | null;
+  readonly tabloSatirN: number | null;
+  /** Şemaya uymayan madde — `§7`/`§8` tarihçesi. Borç DEĞİL, onaylı muafiyet. */
+  readonly muafTarihce: number | null;
+  /** Şema BİÇİMİNDE olup alanları tutmayan satır. Bu gerçekten bir bozulmadır. */
+  readonly ihlalN: number | null;
+  readonly status: ReadonlyMap<string, number>;
+  readonly sinif: ReadonlyMap<string, number>;
+}
+
 export interface RoadmapSayimi {
   readonly bolumN: number | null;
   readonly altBolumN: number | null;
   readonly maddeN: number | null;
   readonly durum: ReadonlyMap<string, number>;
+  readonly sema: RoadmapSemaSayimi;
   /** Tablo tarafının ikizleri (`sayim.tablo_satir_n` / `tablo_durum` /
    *  `tablo_atlanan_n`). Madde sayımıyla TOPLANMAZ. */
   readonly tabloSatirN: number | null;
@@ -141,7 +217,36 @@ export type RoadmapOkumasi =
 
 /* Durum kovaları ucun sözlüğünden AYNEN alındı (`_roadmap_madde_durumu`).
    Sıra "kapanmışa doğru" değil, KARAR AĞIRLIĞINA göre: önce senden iş isteyenler. */
-export const DURUM_SIRASI = ["bloke", "acik", "askida", "belirsiz", "kapali"] as const;
+export const DURUM_SIRASI = ["bloke", "acik", "askida", "atif", "belirsiz", "kapali"] as const;
+
+/* ŞEMA SÖZLÜĞÜ (spec §1, DONUK) ve SIRA — yine karar ağırlığına göre. Uçtan
+   sözlükte OLMAYAN bir değer gelirse yüzey onu SESSİZCE DÜŞÜRMEZ: aşağıdaki
+   `statusSirala` bilinmeyenleri sona ekler. */
+export const STATUS_SIRASI = [
+  "OPERATOR", "ACTIVE", "QUEUED", "INTERIM", "GATED", "DONE", "DROPPED",
+] as const;
+
+/** Şema durumlarının insan karşılığı — çipte bu yazar, gövdede İngilizce anahtar
+ *  kalır (spec: şemanın anahtar/değer seti İngilizce, anlatı Türkçe). */
+export const STATUS_ETIKETI: Record<string, string> = {
+  ACTIVE: "uçuşta",
+  QUEUED: "sırada",
+  INTERIM: "araya girdi",
+  GATED: "tetik bekliyor",
+  OPERATOR: "operatörde",
+  DONE: "bitti",
+  DROPPED: "gereksizleşti",
+};
+
+/** Üst gruplama — uçtan gelir, burada yeniden KURULMAZ; yalnız sırası ve başlığı
+ *  yazılır. Üçüncü grup ("sınıfsız") ölçülemeyenler içindir ve gizlenmez. */
+export const SINIF_SIRASI = ["AÇIK", "KAPALI", "sınıfsız"] as const;
+
+export function statusSirala(gelen: Iterable<string>): string[] {
+  const sira: string[] = [...STATUS_SIRASI];
+  for (const s of gelen) if (!sira.includes(s)) sira.push(s);
+  return sira;
+}
 
 /* Tablo satırlarının ALTINCI kovası var: uç bir satırı tek hükme indiremezse
    `cok_isaretli` sayar. Madde tarafında bu kova YOKTUR (düzyazının tek rozet alanı
@@ -153,6 +258,10 @@ export const DURUM_ETIKETI: Record<string, string> = {
   bloke: "bloke",
   acik: "açık",
   askida: "askıda",
+  // `atif` "belirsiz" DEĞİLDİR: satır durumunu SÖYLÜYOR — "benim durumum şu
+  // kalemin satırında" diyor. İkisini aynı kovaya koymak, ölçülmüş bir havaleyi
+  // ölçülmemiş bir boşluk gibi gösterirdi.
+  atif: "atıf",
   belirsiz: "belirsiz",
   kapali: "kapalı",
   cok_isaretli: "çok işaretli",
@@ -173,6 +282,7 @@ function maddeOku(x: unknown, altBolum: string | null): RoadmapMaddesi | null {
     durumKanit: metin(n["durum_kanit"]),
     ustuCizili: mantik(n["ustu_cizili"]) === true,
     altBolum,
+    sema: semaOku(n["sema"]),
   };
 }
 
@@ -229,6 +339,7 @@ function tabloSatiriOku(
     ustuCizili: mantik(n["ustu_cizili"]) === true,
     altBolum,
     basliklar,
+    sema: semaOku(n["sema"]),
   };
 }
 
@@ -350,6 +461,7 @@ export function roadmapOku(ham: unknown): RoadmapOkumasi {
   };
   const durum = kovaOku(sayimN?.["durum"]);
   const tabloDurum = kovaOku(sayimN?.["tablo_durum"]);
+  const semaN = nesne(sayimN?.["sema"]);
 
   return {
     tur: "tahta",
@@ -359,6 +471,14 @@ export function roadmapOku(ham: unknown): RoadmapOkumasi {
       altBolumN: sayi(sayimN?.["alt_bolum_n"]),
       maddeN: sayi(sayimN?.["madde_n"]),
       durum,
+      sema: {
+        maddeN: sayi(semaN?.["madde_n"]),
+        tabloSatirN: sayi(semaN?.["tablo_satir_n"]),
+        muafTarihce: sayi(semaN?.["muaf_tarihce"]),
+        ihlalN: sayi(semaN?.["ihlal_n"]),
+        status: kovaOku(semaN?.["status"]),
+        sinif: kovaOku(semaN?.["sinif"]),
+      },
       tabloSatirN: sayi(sayimN?.["tablo_satir_n"]),
       tabloDurum,
       tabloAtlananN: sayi(sayimN?.["tablo_atlanan_n"]),
@@ -373,6 +493,44 @@ export function roadmapOku(ham: unknown): RoadmapOkumasi {
     },
     okunamayan,
   };
+}
+
+/* ----------------------------------------------------------------------------
+   DİNAMİK TAHTA SATIRI
+   ----------------------------------------------------------------------------
+   Şemalı kalemler İKİ BİRİMDEN gelir (bullet madde + `§2` tablo satırı) ve ikisi
+   AYNI şemayı taşır — bu yüzden aynı gramerle çizilirler. AMA SAYILARI HÂLÂ
+   TOPLANMAZ: aynı `TSK` numarası hem İCRA SIRASI bullet'ında hem `H1` tablosunda
+   yaşayabilir (belgenin bilinçli geri-bağlantı deseni) ve iki satırı tek sayıya
+   katmak o kalemi ÇİFT sayardı. Satır `kaynak` rozetini taşır, sayaç iki ayrı
+   sayı basar.
+---------------------------------------------------------------------------- */
+export interface TahtaSatiri {
+  readonly anahtar: string;
+  readonly sema: RoadmapSemasi;
+  readonly satir: number | null;
+  readonly altBolum: string | null;
+  /** Ucun beş kovalı durum hükmü — şema `status`unun bu panodaki karşılığı. */
+  readonly durum: string | null;
+}
+
+export function tahtaSatirlari(bolumler: readonly RoadmapBolumu[]): TahtaSatiri[] {
+  const out: TahtaSatiri[] = [];
+  for (const b of bolumler) {
+    for (const m of b.maddeler) {
+      if (m.sema) out.push({ anahtar: `m-${m.anahtar}`, sema: m.sema, satir: m.satir, altBolum: m.altBolum, durum: m.durum });
+    }
+    for (const r of b.tabloSatirlari) {
+      if (r.sema) out.push({ anahtar: `t-${r.anahtar}`, sema: r.sema, satir: r.satir, altBolum: r.altBolum, durum: r.durum });
+    }
+  }
+  return out;
+}
+
+/** Satırın üst grubu. Uç `sinif`i ÖLÇEMEDİYSE üçüncü gruba düşer — "AÇIK"a
+ *  sıvamak, ölçülmemiş bir hükmü ölçülmüş göstermek olurdu. */
+export function tahtaSinifi(s: RoadmapSemasi): string {
+  return s.sinif === "AÇIK" || s.sinif === "KAPALI" ? s.sinif : "sınıfsız";
 }
 
 /** Kolon başlığı: `§3 — AKTİF WP'ler`. `no` yoksa yalnız başlık — uydurulmuş bir
