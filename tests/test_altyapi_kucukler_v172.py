@@ -564,7 +564,9 @@ def test_dagit_kopya_DURDURMA_ile_BASLATMA_ARASINDA():
     değişirdi (aynı anda iki gerçek). Sonra olsaydı yeni süreç ESKİ yapılandırmayla açılır ve
     etkisi bir sonraki restart'a kadar GÖRÜNMEZDİ — tam olarak bu adımın kapattığı sessizlik."""
     dur = _satir_no("systemctl stop meridian")
-    bas = _satir_no("systemctl start meridian")
+    # TSK-092 (2026-09-02): start satırı birim adı sabitleyemez (`$_BASLAT` türetimi) — çıpa
+    # genel `systemctl start`a alındı; pencerede tek start satırı var, v367 bunu ayrıca çiviliyor.
+    bas = _satir_no("systemctl start")
     scpler = [i for i, s in enumerate(_dagit_satirlari()) if s.strip().startswith("scp ")]
     # BOŞ LİSTE ÜZERİNDE `all(...)` DAİMA TRUE: bu satır olmadan çivi, `scp` hiç yokken de yeşil
     # kalırdı — yani kopya adımı tümden silinse "yeri doğru" derdi. (Karşıt koşumda yakalandı.)

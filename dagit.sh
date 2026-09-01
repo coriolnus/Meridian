@@ -436,7 +436,27 @@ echo "=== [4/5] bakım penceresi ==="
 # (11 sa 19 dk), ve doğrulama "active" dediği için kimse görmedi.
 # RESTART UCUZ, ÖLÇÜLDÜ: sonda önbelleği diske yazılıyor (`reflect.PROBE_DISK_FILE`), döngü
 # 300 sn'de bir uyanıyor, birim `Restart=always`. Kaybedilen en fazla o anki turun taze hesabı.
+#
+# İSTENEN-DURUM KORUMASI (TSK-092; vaka ×2: 2026-08-31 + 2026-09-01). Sabit üçlü `start` paketi
+# operatörün disabled+stopped bıraktığı learn'ü İKİ gece üst üste geri açtı — "dağıtım sonrası
+# kontrol" insana yaslanıyordu ve insan atladı. Yasa: istenen durum systemd'nin KENDİ beyanıdır
+# (`is-enabled`); pencere aktifi durdurur ama yalnız `enabled` olanı geri başlatır, atlananı
+# ADIYLA söyler. Beyanlı bedel: operatörün ELLE başlattığı disabled birim pencereden sonra kapalı
+# kalır — kalıcılık isteyen `enable` eder (pano birim-anahtarı da tam bu sözlükle konuşur).
+_BIRIM_ADAYLARI="meridian meridian-barsarchive meridian-learn"
+_BASLAT="$("${SSH[@]}" 'for u in meridian meridian-barsarchive meridian-learn; do
+  [ "$(systemctl is-enabled "$u" 2>/dev/null)" = "enabled" ] && printf "%s " "$u"; done')"
+if [[ " $_BASLAT" != *" meridian "* ]]; then
+  echo "  !! ÇEKİRDEK BİRİM 'meridian' enabled DEĞİL — motoru kapalı bırakacak pencere sessiz olamaz."
+  echo "     Bilinçliyse önce birimi enable et ya da bu dağıtımı elle yürüt. DAĞITIM DURDU."
+  exit 1
+fi
 "${SSH[@]}" 'sudo systemctl stop meridian meridian-barsarchive meridian-learn && echo "  ✓ durdu"'
+for _u in $_BIRIM_ADAYLARI; do
+  if [[ " $_BASLAT" != *" $_u "* ]] && [[ "$_BASLAT" != "$_u "* ]]; then
+    echo "  · $_u: disabled — istenen duruma saygı, pencere sonunda başlatılmadı (TSK-092)"
+  fi
+done
 
 # VERSİYONLU STATE KOPYASI — DURDURMA SONRASI, BAŞLATMA ÖNCESİ (2026-08-02). Yer bilinçli:
 #   * durdurmadan ÖNCE olsaydı, koşan worker yapılandırmayı okurken altından değişirdi (yarı-okuma
@@ -479,7 +499,8 @@ else
   echo "  · versiyonlu state kopyası YOK (fark yok ya da [1b] operatöre bıraktı)"
 fi
 
-"${SSH[@]}" 'sudo systemctl daemon-reload && sudo systemctl start meridian meridian-barsarchive meridian-learn && sleep 8 && systemctl is-active meridian meridian-barsarchive meridian-learn | tr "\n" " "; echo'
+# Başlatma listesi YUKARIDA is-enabled'dan türetildi (TSK-092) — bu satırda birim adı sabitlenemez.
+"${SSH[@]}" "sudo systemctl daemon-reload && sudo systemctl start $_BASLAT && sleep 8 && systemctl is-active $_BASLAT | tr '\n' ' '; echo"
 
 echo "=== [5/5] doğrulama ==="
 "${SSH[@]}" 'curl -s -o /dev/null -w "healthz: %{http_code}\n" http://127.0.0.1:8080/healthz;

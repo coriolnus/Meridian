@@ -359,18 +359,21 @@ def test_h3_uygulama_betigi_VAR_ve_runbook_bolumu_uretildi():
 #       (a) tek başına yeterli olsaydı, yarın eklenen bir birim aynı sessizlikle unutulurdu;
 #       türetilmiş kapsam unutma sınıfını kapatır.
 def test_bakim_penceresi_ogrenme_birimini_KAPSAR():
-    """(a) `meridian-learn` durdur VE başlat satırlarında olmalı.
+    """(a) `meridian-learn` durdurma satırında VE başlatma-türetiminin aday kümesinde olmalı.
 
-    Öğrenme birimini dağıtımdan uzak tutmayı gerektiren bir şey YOK — ölçüldü: sonda önbelleği
-    diske yazılıyor (`reflect.PROBE_DISK_FILE`), döngü 300 sn'de bir uyanıyor ve birim
-    `Restart=always`. Restart'ın bedeli en fazla o anki turun taze hesabıdır."""
+    SÖZLEŞME DEĞİŞTİ (TSK-092, 2026-09-02; vaka ×2): start satırı artık birim adı SABİTLEYEMEZ —
+    başlatma listesi `is-enabled`dan türetilir (çivisi test_dagit_istenen_durum_v367). Bu çivinin
+    2026-08-24 ruhu (learn'e dağıtım sessizce etkisiz kalmasın) yeni mekanizmada korunur:
+    learn ENABLED iken türetim onu zaten başlatır (bayat bytecode imkânsız); DISABLED iken hiç
+    koşmuyordur (bayatlayacak süreç yok). Burada ölçülen: learn durdurma satırında + türetim
+    döngüsünün aday kümesinde DURUYOR — pencereden tümden düşürülmesi hâlâ ihlaldir."""
     metin = DAGIT.read_text()
-    for eylem in ("systemctl stop", "systemctl start"):
-        satir = next((s for s in _satirlar() if eylem in s and "meridian" in s), None)
-        assert satir, f"{eylem} satırı bulunamadı — çivi bayatlamış"
-        assert "meridian-learn" in satir, (
-            f"`{eylem}` satırı `meridian-learn` taşımıyor — öğrenme tarafına yapılan her dağıtım "
-            f"biri ELLE restart edene kadar sessizce etkisiz kalır (2026-08-24 vakası). Satır: {satir.strip()}")
+    stop = next((s for s in _satirlar() if "systemctl stop" in s and "meridian" in s), None)
+    assert stop and "meridian-learn" in stop, f"stop satırı learn taşımıyor: {stop}"
+    turetim = next((s for s in _satirlar() if "is-enabled" in s or
+                    ("for u in" in s and "meridian" in s)), None)
+    assert turetim and "meridian-learn" in metin.split("is-enabled")[0].rsplit("for u in", 1)[-1], \
+        "başlatma-türetiminin aday kümesinde meridian-learn yok"
     assert metin.count("meridian-learn") >= 2
 
 
