@@ -8,7 +8,7 @@
 # BOT RECALL BU KARTIN DEĞİL — ayrı kart (tasarım §6 Faz-2); burada botlara hiçbir erişim yok.
 
 card_id: EDG-2026-065
-status: registered
+status: retired  # 2026-09-01 — halef EDG-2026-067; hüküm YOK (kıyas hiç koşulmadı)
 family: arama_katmani_olcumu
 on_kayit: 2026-08-31
 
@@ -119,6 +119,15 @@ kurulum_kayitlari:
     Seans-içi kurulum penceresi (16:30-17:16Z) meridian.service journal: 0 error/restart/fail
     satırı, servis active, bellek 15G boş — kill maddesinin "kaynak yarışı" koşulu ÖLÇÜLDÜ ve
     tetiklenmedi; seans-içi koşum operatör yönergesiyle (dev ortamı, paper hesap) yapıldı.
+
+emeklilik_2026_09_01: >
+  EMEKLİ — hüküm YOK: kıyas hiç koşulmadı, bu bir GEÇTİ/KALDI hükmü değildir. Gerekçe: operatör
+  kararı 2026-09-01 ("yükseltme-önce") — embedder bge-m3 + BM25 pgroonga arşiv-ingest'ten ÖNCE
+  kurulur; bu, kartın Senaryo-A(e5-small)→ölçüm→koşullu-Senaryo-B tasarımını ölçümsüz düşürdü.
+  Kart disiplini gereği reçete YERİNDE değiştirilmez: kart emekli, halef EDG-2026-067 (aynı
+  hipotez/eşik/donuk-küme tasarımı, yükseltilmiş reçete). Kurulum kayıtları (blok1,
+  kurulum_tamam, smoke, llm_model_kaydi, worker_etkisi) TARİHÇE olarak geçerli kalır — beş
+  sağlık kanıtı ve altyapı halefe devrolur; yalnız embedder/reranker/BM25 katmanı değişir.
 
 basari_tanimi: >
   (1) Kurulum beş sağlık kanıtıyla tamam ve F9/RUNBOOK kayıtlı · (2) arsiv ingest'i git-sha'lı

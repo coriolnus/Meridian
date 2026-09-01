@@ -1,0 +1,88 @@
+# EDG-2026-067 — Hindsight Faz-1 (halef): bge-m3+pgroonga yükseltmesi + arşiv ingest + recall taban-kıyası
+# ÖN-KAYIT 2026-09-01 — selef EDG-2026-065'in (retired, hüküm yok) halefi. Operatör kararı
+# 2026-09-01 "yükseltme-önce": embedder/BM25 yükseltmesi arşiv-ingest'ten ÖNCE kurulur; selefin
+# Senaryo-A→ölçüm→koşullu-Senaryo-B tasarımı ölçümsüz düştü, reçete yerinde değiştirilmez —
+# yeni kart. Selefin kurulum kayıtları (beş sağlık kanıtı, smoke, LLM model kaydı) TARİHÇE
+# olarak devralındı; yalnız embedder/reranker/BM25 katmanı değişir. Tasarım belgeleri selefle
+# aynı: docs/TASARIM-HINDSIGHT-ENTEGRASYON-2026-08-31.md + docs/INCELEME-HINDSIGHT-DERIN-2026-08-31.md.
+# Derin doküman taraması 2026-09-01 (üç bölge) bu kartın reçete kaynağıdır — ROADMAP §7 kaydı.
+# BOT RECALL BU KARTIN DEĞİL — ayrı kart (tasarım §6 Faz-2); burada botlara hiçbir erişim yok.
+
+card_id: EDG-2026-067
+status: registered
+family: arama_katmani_olcumu
+on_kayit: 2026-09-01
+selef: EDG-2026-065
+
+hipotez: >
+  N≥30 dondurulmuş GERÇEK operatör sorusu kümesinde (arşiv/karar/vaka sınıfı), Hindsight
+  recall'u (semantik+BM25+graf+zamansal, TEMPR; embedder bge-m3), MİNİMAL TABAN ÇİZGİye
+  (sqlite-vec + kendi şemamız; AYNI soru kümesi, AYNI korpus, AYNI embedder sınıfı) karşı
+  doğru-pasaj isabetinde önden-donuk eşiği aşacak kadar üstündür VE bu üstünlük Türkçe
+  alt-kümede de ayakta kalır. Üstünlük çıkmazsa KALDI ve basit çözüm kazanır (YAGNI): defter
+  bunu da hüküm sayar, kurulum sökülür.
+
+k_registry: {registered_at: "2026-09-01", trial_ids: [EDG-067-faz1-bgem3-recall-taban-kiyasi]}
+# trial_id SÖZDÜR (v279). Arama-katmanı ölçümü; hiçbir canlı karar yüzeyine bağlanmaz.
+
+kurulum_sozlesmesi: >
+  Selef sözleşmesi aynen devralınır (hindsight-api 0.9.2 · native PG17+pgvector · 127.0.0.1
+  bind · systemd MemoryMax=8G CPUQuota=200% · Memory Defense bank açılışında AÇIK · gecelik
+  pg_dump→backups/ · dışarı giden TEK trafik OpenRouter LLM; recall LLM'siz-lokal) ŞU
+  DEĞİŞİKLİKLERLE: (1) embedder BAAI/bge-m3 (ONNX, 1024 boyut; onnx/model.onnx_data dosyası
+  modelle birlikte) — boyut 1024 kurulumda doğrulanır. (2) reranker HEDEFİ bge-reranker-v2-m3;
+  slim[local-onnx] imajının sentence-transformers taşımadığı selefte mutasyonla kanıtlı —
+  ONNX/TEI yolu kurulum adımında seçilir ve SEÇİM kurulum_kayitlarina işlenir; flashrank+rrf
+  failover korunur. (3) BM25 backend pgroonga (yalnız hindsight DB'sine; arm64 paket
+  ÖN-KONTROLLÜ) — arm64 paketi yoksa ParadeDB pg_search denenir; o da yoksa native turkish
+  KALIR ve beyan düşülür. (4) Bank YENİDEN kurulur (selefin bank'i yalnız smoke içerir;
+  e5-small embeddings ile uyumsuz — drop+create, Memory Defense İLK GÜNDEN açık). (5) sudo
+  adımları dahil kurulumu Rol-1 koşar (operatör tam yetki 2026-09-01 — selefin "operatör
+  koşar" hükmü değişti). Birim değişikliği günü elle test-ateşleme ("kurulu ≠ çalışır").
+  İşletme kararları (ROADMAP §7 2026-09-01 brainstorm): autoRetain AÇIK (Hermes katmanında;
+  bot bağlantısı yine AYRI kartın işi) · auto-consolidation + mental model AÇIK ve ana modelle
+  (nemotron-3-ultra-550b:free — selefin LLM kaydı) · prefetch_method=recall sabit ·
+  CP UI yalnız 127.0.0.1+ssh tüneli · API-key extension gün-1 + 401 canary.
+
+veri_ve_dondurma: >
+  KORPUS: arsiv bank'i = MERIDIAN_ENGINEERING_LOG.md + ROADMAP §7 karar kayıtları +
+  research/cards/ hükümleri + docs/ vaka belgeleri (git-sha'lı ingest; batch, harness-yazımlı).
+  SORU KÜMESİ: ölçüm BAŞLAMADAN research/olcumler/edg067_hindsight_faz1/sorular.yaml içinde
+  dondurulur ve dosyanın GIT BLOB sha'sı bu kartın olcum bölümüne işlenir (EDG-059 dersi).
+  Her soru: metin + beklenen-pasaj referansı (dosya+bölüm) + dil etiketi (tr/en). Küme
+  donmadan koşulan her kıyas GEÇERSİZ.
+
+esikler_ONDEN_DONUK:
+  isabet_metrigi: "isabet@3 — ilk 3 sonuçta beklenen pasajın (ya da onu içeren bölümün) dönmesi; hakem eşleşmesi dosya+bölüm düzeyinde, elle-yorum yok"
+  ana_esik: "Hindsight isabet@3 − taban isabet@3 ≥ +15 yüzde puanı VE Hindsight isabet@3 ≥ %70 (ikisi birden)"
+  turkce_civisi: "tr alt-kümesinde Hindsight isabet@3 ≥ %60 — bge-m3 ZATEN kurulu olduğundan model-değişimi serbestliği bu kartta YOKTUR (selefin Senaryo-B hakkı bu kartın doğuşuyla kullanılmış sayılır); altında kalırsa KALDI"
+  maliyet_sutunu_zorunlu: "retain toplam token + belge başına ortalama · recall p95 gecikme (A1'de) · boşta RSS · EK (yükseltmenin bedeli): bge-m3'ün selefin e5-small smoke değerlerine göre gecikme/RSS farkı — hepsi raporlanır, eşiksiz (bedel yasası)"
+  saglik_kaniti: "üçlü health (live/ready+pg) + systemd birimi active + pg_dump timer armed + F9 kaydı + Memory Defense bank'te açık + embedding boyutu 1024 doğrulanmış — altısı birden kurulum-tamam tanımı"
+
+kill_list:
+  - "Memory Defense KAPALI bank'le yapılan her koşum geçersiz"
+  - "soru kümesi blob-donuk değilken koşulan kıyas geçersiz (dondurma commit'i sha ile olcum bölümüne işlenir)"
+  - "BM25 backend'i (pgroonga/pg_search/native) kurulum kaydında BEYAN edilmeden Türkçe kıyası geçersiz"
+  - "embedding boyutu 1024 doğrulanmadan başlayan ingest geçersiz"
+  - "selefin bank'i (e5-small embeddings) üstünde koşulan her kıyas geçersiz — bank yeniden kurulmalı"
+  - "taban çizgi AYNI soru kümesi + AYNI korpusla koşmazsa kıyas geçersiz"
+  - "botlardan/bot çağrı yolundan Hindsight'a HERHANGİ erişim bu kartta geçersiz — bot recall AYRI kartın işi"
+  - "satıcı benchmark'ı/doc gecikme rakamı kanıt olarak KULLANILAMAZ (kendi ölçümümüz)"
+  - "kurulum/ingest canlı seans penceresinde kaynak yarışına girerse o adım geçersiz (seans-dışı koşulur; selefin worker_etkisi teyit yöntemi aynen)"
+  - "retain'e çitli kaynaklar dışından metin girerse geçersiz (yazan yalnız harness)"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: bilinen-cevaplı gerçek soru ("PIT çivisi hangi gün mekanikleşti, kanıt dosyası
+  ne?") uçtan uca — ingest→recall→beklenen pasaj ilk 3'te (selefte e5-small ile geçmişti;
+  bge-m3 ile YENİDEN koşulur, devralınmaz). NEGATİF: çit-içi sahte-talimat metni recall
+  sonucunda VERİ olarak döner ve hiçbir yüzeyde talimat gibi işlenmez; Memory Defense sahte
+  API-anahtarlı satırı [REDACTED] ile döndürür. MÜKERRER: aynı document_id ikinci retain
+  0 token / belge sayısı sabit.
+
+basari_tanimi: >
+  (1) Yükseltme altı sağlık kanıtıyla tamam ve F9/RUNBOOK kayıtlı · (2) arsiv ingest'i
+  git-sha'lı ve tekrar-koşumda mükerrer üretmiyor · (3) donuk kümeyle iki-kollu kıyas raporu
+  (genel + tr alt-küme + maliyet sütunu + yükseltme-bedeli satırı)
+  research/olcumler/edg067_hindsight_faz1/ altında · (4) hüküm: eşik geçildiyse Faz-1 KALIR
+  (Hafıza sayfası [TSK-091] + bot-recall kartı yolu açılır), geçilmediyse KALDI ve
+  sökülüm+sqlite-vec kaydı düşülür. Hüküm AYNI turda karta ve K defterine işlenir.
