@@ -46,7 +46,10 @@ def hist_tops_kaydi(gun: str):
     for kayit in json.loads(govde):
         if kayit.get("feed") == "TOPS":
             return kayit
-    raise SystemExit(f"KIRMIZI: {gun} listesinde TOPS yayını yok")
+    # Taze günde HIST listesi TOPS'suz da gelebiliyor (kısmî/aşamalı yayın — ölçüldü 2026-09-01:
+    # 08-31 önce 404, sonra TOPS'suz 200 verdi). 404 ile aynı sınıf: sürücünün boş-gün
+    # sözlüğüyle konuş; taze→koşum-içi atla, eski→gecilen.jsonl tatil kaydı (görünür artefakt).
+    raise SystemExit(f"KIRMIZI: HIST API {gun} için boş döndü (listede TOPS yayını yok)")
 
 
 def indir(url: str, hedef: Path, beklenen_bayt: int):
