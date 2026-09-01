@@ -131,6 +131,17 @@ kurulum_kayitlari:
     Elle test-ateşleme yapıldı ("kurulu ≠ çalışır"): birim active, container Up. Kalıcı hakikat
     yüzeyi yine TSK-091 Hafıza sayfası; CP tünelli teşhis aracıdır.
 
+olcum:
+  soru_kumesi_donduruldu_2026_09_01: >
+    research/olcumler/edg067_hindsight_faz1/sorular.yaml — GIT BLOB
+    sha 89cd1e0ce3ba1e02abf9fcff07057c9ac0e79594 (içerik-adresli; EDG-059 dersi). N=36
+    (şart N>=30) · tr 29 (%81) / en 7 · arşiv 15 / karar 13 / reçete 8 · 28 ayrı kaynak
+    dosya. Derleme: ajan taslağı 48 aday (her doğrulama alıntısı hedef dosyada grep -F ile
+    tek satırda bulundu, 48/48; Rol-1 3 adaylık örneklem teyidi ayrıca koştu) → Rol-1
+    süzmesi 12 eleme (gerekçeler dosya başlığında; en dikkati: RUNBOOK-çapalı aday
+    üretilmiş-dosya kırılganlığı yüzünden elendi — v209 sınıfı). Kill maddesi kapandı:
+    kıyas artık bu donuk kümeyle koşulabilir.
+
 basari_tanimi: >
   (1) Yükseltme altı sağlık kanıtıyla tamam ve F9/RUNBOOK kayıtlı · (2) arsiv ingest'i
   git-sha'lı ve tekrar-koşumda mükerrer üretmiyor · (3) donuk kümeyle iki-kollu kıyas raporu
