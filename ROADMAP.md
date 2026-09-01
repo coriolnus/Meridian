@@ -2589,6 +2589,10 @@ kararı gerektirenler §5'e geçer.
   What: `/api/infra.beklenmedik_birimler` alanına pano yüzeyinde okuyucu (Altyapı kartına "beklenmedik birim" rozeti + listesi) — Yasa 6 borcunu kapatır: alan 2026-09-01 gecesinden beri yayında, tests-dışı okuyucusu yok (bacağı indiren ajanın kendi açık-kalem beyanı).
   Why: ayna körlüğü bacağı gece indi (gerçek vaka: A1'de repo-dışı inactive `meridian-dash.service` artık ölçülüyor); okuyucu olmadan işaret operatöre ulaşmaz. Not: /api/infra zaman tavanı 6,5 sn'e büyüdü (8 sn TTL) — UI bağlanırken gecikme gözlenirse ölçülür.
   Ref: tests/test_pano_altyapi_v287.py çivileri · gece kapanış raporu 2026-09-01.
+- **[TSK-087] Geri-dolum işçi-çökmesi dayanıklılığı** — status: QUEUED · born: 2026-09-01 · owner: rol1 · size: S · trigger: —
+  What: `deploy/oracle-a1/geridolum.py` — tek işçinin çökmesi tüm koşumu KIRMIZI'ya düşürmesin: çöken gün koşum-içi BİR kez yeniden denensin; ikinci çöküşte koşum yine KIRMIZI (pano-görünürlük korunur, sessizleşme yok — bedel yasası: kaybedilen görünürlük ölçülüp beyan edilir).
+  Why: 2026-09-01 gecesi iki vaka — 08-31 sözlük boşlukları (kalıcı sınıf, ayrıca düzeltildi) ve 08-05 EOFError (kesik gzip, GEÇİCİ sınıf): geçici arızada tüm koşumun düşmesi diğer işçinin bitmiş işini yarıda bıraktı ve saatlik timer'a kadar bekletti. Operatör onayı 2026-09-01 sabah ("havuza yaz").
+  Ref: gece kapanış raporu 2026-09-01 · 136ceb4 · 7b35888.
 
 ## §5 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde) _(eski: §3)_
 
@@ -2715,9 +2719,9 @@ kill#3 istisnası kartta ADIYLA kayıtlı — `83bc47b`.)_
   Ref: kimlik `B-FMP-PLAN` (§5 KİMLİK TABLOSU) · bağımlı: EDG-2026-011 (askı).
 
 - **[TSK-046] QC login + notebook koşumu kararı (C3)** — status: OPERATOR · born: 2026-08-31 · owner: operator · size: S · trigger: —
-  What: `lean login` (QC "Fat Apricot Koala") YA DA dotnet-engine yolu kararı; ayrıca FREE defterin operatör tarafından KOŞULMASI bekleniyor.
+  What: `lean login` (QC "Fat Apricot Koala") YA DA dotnet-engine yolu kararı; ayrıca FREE defterin operatör tarafından KOŞULMASI bekleniyor. Konsolide detay (eski TSK-051'den, kök fizibilite 2026-08-09): toolchain hazır (colima+docker+lean 1.0.227 çalışıyor), `lean init` QC User id+API token istiyor (`~/.lean/credentials`); kimliksiz alternatif dotnet-engine (LEAN Apache-2.0 local, QC'siz) ama monorepo clone+build = L-boyut ayrı tur.
   Why: toolchain hazır (colima+docker+lean 1.0.227) ama `lean init` QC User id+API token istiyor — kimlik-bloklu. Beklerken bedel: ⑤ RETIRED çapraz-doğrulamasının tek kalan QC-adımı (1 hücrelik Security Master sondası) ve EDG-021 2. koşumu bekliyor.
-  Ref: kimlik `B-QC-LOGIN` (§5 KİMLİK TABLOSU) · bağımlı: WP9 · WP4 delist-bar hattı.
+  Ref: kimlik `B-QC-LOGIN` (§5 KİMLİK TABLOSU) · bağımlı: WP9 · WP4 delist-bar hattı · TSK-051 buraya konsolide (operatör kararı 2026-09-01).
 
 - **[TSK-047] NOUS_MODEL / beyin çeşitliliği — danışma yolu ölü olabilir mi (C4)** — status: OPERATOR · born: 2026-08-31 · owner: operator · size: S · trigger: —
   What: Claude API anahtarı EKLE ya da `NOUS_MODEL`i Google-DIŞI modele çevir kararı bekleniyor (sır yolu, koda yazılamaz).
@@ -2752,7 +2756,7 @@ durur — WP2-D, ACİL) → **OB-4 restart→PBO (M2) damgalama**;** N4 cf
   What: yasak bugün yalnız CLAUDE.md sözleşmesiyle duruyor — `dagit.sh` yalnız DAĞITIMI kapıyor, `git stash`ın pre-stash kancası yok; kapı ancak PATH-shim/wrapper'la mekanikleşir.
   Why: gece 2 ajan `git stash` koşup hasar verdi (hayalet dizin süpürüldü). Karar 2026-08-31 akşam verildi (masa→plan taşıması): İCRA SIRASI ①'de, Rol-1 — kimlik araç inince kapanır. CLAUDE.md §2'de ayrıca 2 zararsız-itirafla salt-okunur beyaz liste ajanlara AÇILDI (2026-08-31 gevşetmesi) — bu madde MEKANİK kapıyı (mutasyon engeli) kapsar, o gevşeme yalnız salt-okunur erişimi kapsıyordu.
   Ref: kimlik `B-AJAN-GIT` (§5 KİMLİK TABLOSU) · İCRA SIRASI ①.
-- **[TSK-051] QC LEAN CLI `lean login` — kimlik-bloklu (C2-4)** — status: OPERATOR · born: 2026-08-09 · owner: operator · size: S · trigger: —
+- **[TSK-051] QC LEAN CLI `lean login` — kimlik-bloklu (C2-4)** — status: DROPPED(2026-09-01·operatör kararıyla TSK-046'ya konsolide — aynı B-QC-LOGIN kimliği, örtüşen içerik) · born: 2026-08-09 · owner: operator · size: S · trigger: —
   What: toolchain hazır (colima+docker+lean 1.0.227 kurulu/çalışıyor) AMA `lean init` QC User id+API token istiyor (`~/.lean/credentials`) — LEAN CLI yolu kimlik-bloklu. Operatör `lean login` (QC Fat Apricot Koala) yaparsa CLI tam-impl açılır. Alternatif (kimliksiz): CLI'sız dotnet-engine (LEAN Apache-2.0 local, QC'siz) — ama LEAN monorepo git-clone + dotnet-build = L-boyut ayrı tur.
   Why: karar — `lean login` (kolay) mı, dotnet-engine (bağımsız, daha büyük iş) mı.
   Ref: aynı kimlik `B-QC-LOGIN` — bkz. TSK-046 (QC login + notebook koşumu, KOVA-3/C3); içerik örtüşüyor, konsolidasyon Rol-1'e önerilir. Fizibilite 2026-08-09.

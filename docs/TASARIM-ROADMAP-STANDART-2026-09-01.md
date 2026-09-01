@@ -54,7 +54,7 @@ Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
   kimliği TSK olur, dış kimlik referans olarak taşınır. Operatör 2026-09-01: "EDG değiştirmek
   çok zorsa kalsın" — kalıyor. Not: akıbet defterinin kendi sözlüğü rol1/operatör-doğumlu
   öneriler için zaten 3 harfli `AKB-####` biçimini tanıyor (ops/akibet.py) — düzen uyumlu.
-- Tarihli ek (Rol-1 hükmü 2026-09-01 gece, FAZ A bulgusu; operatör onayı sabah listesinde):
+- Tarihli ek (Rol-1 hükmü 2026-09-01 gece, FAZ A bulgusu; operatör ONAYLADI 2026-09-01 sabah):
   `B-XXX` kimlikleri (B-DASH-CRED, B-AJAN-GIT…) DIŞ-VARİ sınıftır — §5 kimlik tablosunun
   canlı çapraz-referans anahtarıdır, TSK'ya çevrilmez, madde Ref alanında taşınır. Gerekçe:
   yeniden adlandırma kimlik tablosu/kova/envanter çapalarını kırar; koruma geri-alınabilir,
@@ -67,7 +67,7 @@ Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
   (testler, CLAUDE.md, docs, kod yorumları) aynı dalgada güncellenir — kırık çapa sessizdir
   (yeniden-adlandırma-kapsamı vakası).
 
-- Tarihli ek (Rol-1 hükmü 2026-09-01 gece; operatör onayı sabah listesinde): **§6 kart endeks
+- Tarihli ek (Rol-1 hükmü 2026-09-01 gece; operatör ONAYLADI 2026-09-01 sabah): **§6 kart endeks
   satırları** şemanın başlık gramerini kullanır ama kimlik olarak kartın KENDİ dış kimliğini
   taşır: `- **[EDG-2026-0NN] Ad** — status: …` — karta ikinci bir TSK kimliği açmak aynı
   gerçeğin iki kimliği olurdu (tek-kaynak). v351 çivisi `[EDG-…]` başlığını YALNIZ §6'da kabul
