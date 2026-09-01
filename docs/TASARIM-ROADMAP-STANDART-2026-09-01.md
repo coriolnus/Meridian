@@ -32,7 +32,11 @@ Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
   DROPPED(tarih·gerekçe)'e iner; kanıtsız hüküm verilmez (uydurma yasağı). Üst sınıflandırma:
   AÇIK = ACTIVE·QUEUED·INTERIM·GATED·OPERATOR, KAPALI = DONE·DROPPED. Ajan DROPPED'ı yalnız
   ÖNERİR (kanıtıyla); hükmü Rol-1 verir, kararsızlar operatör listesine düşer.
-- owner: `operator · rol1 · agent` — size: `S · M · L` (ara değer `S-M` gibi tire ile)
+- owner: `operator · rol1 · agent` — size: `S · M · L` (ara değer `S-M` gibi tire ile);
+  tarihli ek 2026-09-01 (Rol-1, FAZ C bulgusu): boyut ÖLÇÜLEMİYORSA `—` meşrudur — uydurma
+  yasağı S/M/L uydurtmaktan üstündür; `—` yanına ya aynı alanda parantezle ya gövdede neden
+  beyanı düşülür. status parantezi YALNIZ GATED/DONE/DROPPED'a aittir; ACTIVE/QUEUED yan notu
+  gövdeye yazılır.
 - trigger: GATED ise zorunlu ve somut; değilse `—`
 
 ## §2 Kimlik politikası (operatör düzeltmesiyle)

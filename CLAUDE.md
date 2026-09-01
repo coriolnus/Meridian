@@ -60,6 +60,7 @@ Kurallar burada tetiklenir. Sol sütundaki şeyi yapmak üzereysen sağ sütunu 
 | "Dağıtıma hazır" cümlesi | Rol-1 değilsem yazmam. |
 | `research/` altına ölçüm kodu | `research/cards/` altında kart var mı? Yoksa kod yok. |
 | Kart dosyasına yazmak | Rol-1 miyim? Değilsem dokunmam. |
+| ROADMAP.md'ye madde yazmak | Şemaya uyuyor mu? (`docs/TASARIM-ROADMAP-STANDART-2026-09-01.md`: `[TSK-###]` başlık + status/born/owner/size/trigger donuk sözlükten + What/Why/Ref; cepheler PRG-##; §6 endeksi kart kimliğiyle; dış kimlikler Ref'e). Uymayanı v351 çivisi kırar. |
 | `state/`'e yazmak | Canlı worker duruyor mu? Rol-1 miyim? |
 | Yerel `state/`'ten canlı hakkında sayı okumak | Yerel defter test artefaktlarıyla kirli olabilir — o soru A1'de sorulur (vaka 2026-08-30). |
 | `./serve.sh` | Yerelde hiçbir zaman. |

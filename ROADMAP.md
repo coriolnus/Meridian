@@ -339,13 +339,13 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
   Why: DERS (Hindsight gerekçesine kanıt) — yansıma motoru kodu DOĞRULAMADAN öneriyor: 22 önerinin 2'si var-olanı istiyordu, 1'i çözülmüşü. Bu ders TSK-003'ün (yansıma mükerrerlik kapısı) gerekçesine girdi.
   Ref: commit "Akıbet-dalgası…"; bağlı: TSK-002.
 
-- **[TSK-001] ROADMAP-STANDART dalgası** — status: ACTIVE (kapı çözüldü 2026-09-01 gece, akıbet-dalgası [TSK-057] kapandı; ek talimat: her kalem gerçeklik kontrolünden geçer + açık/kapalı sınıflanır, spec tarihli ek) · born: 2026-09-01 · owner: rol1 · size: L · trigger: —
-  What: yaşayan bölümlerin (§0/2/3/4/5/6) tamamı standart madde şemasına göçer; ROADMAP-doğumlu kimlikler TSK-###/PRG-## olur (dış kimlikler EDG/N/vNNN/Yasa Ref'e iner, DEĞİŞMEZ); zorlama çivisi + CLAUDE.md kapısı + `/api/roadmap` alan-ayrıştırması + YolHaritası dinamik tahtası aynı dalgada; §7/§8 geriye dönük muaf.
+- **[TSK-001] ROADMAP-STANDART dalgası** — status: ACTIVE · born: 2026-09-01 · owner: rol1 · size: L · trigger: —
+  What: (status notu: kapı 2026-09-01 gece çözüldü — akıbet-dalgası [TSK-057] kapandı; ek talimat: her kalem gerçeklik kontrolünden geçer + açık/kapalı sınıflanır, spec tarihli ek.) yaşayan bölümlerin (§0/2/3/4/5/6) tamamı standart madde şemasına göçer; ROADMAP-doğumlu kimlikler TSK-###/PRG-## olur (dış kimlikler EDG/N/vNNN/Yasa Ref'e iner, DEĞİŞMEZ); zorlama çivisi + CLAUDE.md kapısı + `/api/roadmap` alan-ayrıştırması + YolHaritası dinamik tahtası aynı dalgada; §7/§8 geriye dönük muaf.
   Why: operatör 2026-09-01 gece ("hiçbir madde birbirine benzemiyor… pano dinamik olmalı"; kimlik/İngilizce-terim/muafiyet/zorlama/slot onayları aynı gece).
   Ref: `docs/TASARIM-ROADMAP-STANDART-2026-09-01.md`.
 
-- **[TSK-058] Skill-görüş dalgası — EDG-019 uygulaması + EDG-063 LLM-üretici sınıfı** — status: QUEUED (trigger karşılandı: Ajan-A dalgası TSK-012 kapandı) · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
-  What: kart `EDG-2026-019` (registered — defter+iki çözücülü yüzey) + kart `EDG-2026-063` (ön-kayıt: beyan-only SKILL.md'ler LLM'le AYNI deftere gölge görüş yazar). Tek dalga iki kart: altyapıyı 019 kurar, 063 LLM-üretici sınıfını AYRI kartla açar. Aynı satır §2 TAHTA H1'de tam gövdesiyle yaşar.
+- **[TSK-058] Skill-görüş dalgası — EDG-019 uygulaması + EDG-063 LLM-üretici sınıfı** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
+  What: (status notu: eski trigger karşılandı — Ajan-A dalgası TSK-012 kapandı.) kart `EDG-2026-019` (registered — defter+iki çözücülü yüzey) + kart `EDG-2026-063` (ön-kayıt: beyan-only SKILL.md'ler LLM'le AYNI deftere gölge görüş yazar). Tek dalga iki kart: altyapıyı 019 kurar, 063 LLM-üretici sınıfını AYRI kartla açar. Aynı satır §2 TAHTA H1'de tam gövdesiyle yaşar.
   Why: operatör 2026-08-31 — "beyan-only skill'lerin LLM ikinci görüşünü de yapalım"; icra Ajan-A dalgasından SONRA sıraya alındı (o dalga artık kapandı).
   Ref: kart `EDG-2026-019`, `EDG-2026-063`; §2 TAHTA H1 satırı (aynı kalem).
 
@@ -364,8 +364,8 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 
 - (bkz. **TSK-003** — YANSIMA MÜKERRERLİK KAPISI [a bacağı] araya-kalemi: geri-dolum haftasında kurulur ki learn geri açılmadan kapı önünde olsun; başarı ölçüsü donuk: bellek-yokluğu israfı %45 → ≤%10. Aynı kalem, burada tekrar anılır.)
 
-- **[TSK-060] Hindsight bot-hafızası kurulumu** — status: QUEUED (Faz-0/Faz-1 kurulum TAMAM; sıradaki: soru kümesi dondurma → arşiv ingest → taban kıyası) · born: 2026-08-31 akşam · owner: rol1 · size: L · trigger: —
-  What: kart `EDG-2026-065` — beş sağlık kanıtı yeşil: servis 0.9.2 canlı (127.0.0.1:8888, MemoryMax=8G, User=ubuntu sapması beyanlı), Memory Defense gün-1 açık (redaksiyon kanıtlı), Türkçe smoke + 2 mutasyon + mükerrer çivisi + gecelik yedek timer'ı kartın kurulum_kayitlarında; model `nvidia/nemotron-3-ultra-550b:free` (ücretsiz şartı, operatör). SIRADA: soru kümesi dondurma (N≥30, blob-sha) → arşiv ingest → taban kıyası. Ardından Türkçe recall kartı → BOT RECALL kartı (DURUŞ REVİZYONU tasarım §3, hedef: "notlar sayfası + iste-getir" — push'u harness derler [reçeteli+kaynaklı+bütçeli], pull tek araç `hindsight_recall`; botlar SINIRLI ajan döngüsüne geçer; kart üç kol: derlenmiş-sayfa/provider-autoRecall/hafızasız taban; autoRetain KAPALI, kart geçmeden canlı botlara hiçbir şey değişmez). Ön-hazırlık TAMAM: A1 24GB + Adım-0 ✓, reçete sabit: `slim[local-onnx]==0.9.2` + native PG17+pgvector + Memory Defense gün-1 + BM25 `turkish` (koşullu).
+- **[TSK-060] Hindsight bot-hafızası kurulumu** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: L · trigger: —
+  What: (status notu: Faz-0/Faz-1 kurulum TAMAM; sıradaki: soru kümesi dondurma → arşiv ingest → taban kıyası. born aslen '2026-08-31 akşam' — şema tarihi.) kart `EDG-2026-065` — beş sağlık kanıtı yeşil: servis 0.9.2 canlı (127.0.0.1:8888, MemoryMax=8G, User=ubuntu sapması beyanlı), Memory Defense gün-1 açık (redaksiyon kanıtlı), Türkçe smoke + 2 mutasyon + mükerrer çivisi + gecelik yedek timer'ı kartın kurulum_kayitlarında; model `nvidia/nemotron-3-ultra-550b:free` (ücretsiz şartı, operatör). SIRADA: soru kümesi dondurma (N≥30, blob-sha) → arşiv ingest → taban kıyası. Ardından Türkçe recall kartı → BOT RECALL kartı (DURUŞ REVİZYONU tasarım §3, hedef: "notlar sayfası + iste-getir" — push'u harness derler [reçeteli+kaynaklı+bütçeli], pull tek araç `hindsight_recall`; botlar SINIRLI ajan döngüsüne geçer; kart üç kol: derlenmiş-sayfa/provider-autoRecall/hafızasız taban; autoRetain KAPALI, kart geçmeden canlı botlara hiçbir şey değişmez). Ön-hazırlık TAMAM: A1 24GB + Adım-0 ✓, reçete sabit: `slim[local-onnx]==0.9.2` + native PG17+pgvector + Memory Defense gün-1 + BM25 `turkish` (koşullu).
   Why: Faz-0 tetiği ölçümle değil operatör İLANIYLA ateşlendi (dört amaç: mükerrerlik · öneri akıbeti · trend/örüntü · süreklilikli diyalog — trend+diyalog grep/pano ile yapısal karşılanamaz); kurulum Ajan-A kapanınca (TSK-012 dalga-A) A1 tarafında repo dalgalarıyla paralel, KART-ÖNCE.
   Ref: kart `EDG-2026-065`; tasarım `docs/TASARIM-HINDSIGHT-ENTEGRASYON-2026-08-31.md` §0/§3/§5-6/§10-11; derin inceleme `docs/INCELEME-HINDSIGHT-DERIN-2026-08-31.md`. GERÇEKLİK KONTROLÜ: commit "EDG-2026-065 ön-kayıt: Hindsight Faz-1 kurulum + recall taban-kıyası" repoda doğrulandı (FAZ B ajanı).
 
@@ -399,8 +399,8 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 
 **Pilot sonrası SİNYAL ZİNCİRİ** (operatör 2026-08-31 akşam: "bu şekilde plana dahil et"):
 
-- **[TSK-066] ⑥a — mevcut sinyallerin AN yeniden-kurulumu** — status: QUEUED (erken yazım hedefi: geri-dolumun 2.-3. günü) · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
-  What: sinyal hangi saniyede doğdu, icraya kadar fiyat ne yaptı (EDG-040 friksiyon sorusunun tick bacağı). Kartı geri-dolumun 2.-3. günü erken yazılır (PARALEL not, yukarıda).
+- **[TSK-066] ⑥a — mevcut sinyallerin AN yeniden-kurulumu** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
+  What: (status notu: erken yazım hedefi — geri-dolumun 2.-3. günü.) sinyal hangi saniyede doğdu, icraya kadar fiyat ne yaptı (EDG-040 friksiyon sorusunun tick bacağı). Kartı geri-dolumun 2.-3. günü erken yazılır (PARALEL not, yukarıda).
   Why: pilot sonrası sinyal zincirinin ilk halkası — mevcut sinyallerin tick-doğruluğunu ölçer.
   Ref: EDG-2026-040.
 
@@ -2428,7 +2428,7 @@ _**[2026-08-31 KONSOLİDASYON — HAVUZ GİRDİSİ ROZET TAŞIMAZ.]** Burası ba
   · [UYGULA-9] gecikme telemetrisi — Prometheus+Grafana (pano-SQLite alternatifi elendi); kill-kriteri yeniden çapalama AYRI KART ister.
   Why: PIT-(b) uygulaması (EDG-2026-062) bu kuyruğun ÖNÜNDE — operatör kararı daha eski.
   Ref: operatör 2026-08-31 brainstorm kapanışı; sıra 8→4→2→1→3→9 (5/6 tetik kaydı, 7 beklemede).
-- **[TSK-021] `earnings_8k_tarihleri.csv` motorda hiç okunmuyor** — status: GATED(operatörün PIT ihlal düzeltmesi (a)/(b) kararı) · born: 2026-08-31 · owner: rol1 · size: karta bağlı · trigger: operatörün (a)/(b) yol kararı
+- **[TSK-021] `earnings_8k_tarihleri.csv` motorda hiç okunmuyor** — status: GATED(operatörün PIT ihlal düzeltmesi (a)/(b) kararı) · born: 2026-08-31 · owner: rol1 · size: — (boyut seçilecek yola bağlı — ölçülemez, beyanlı) · trigger: operatörün (a)/(b) yol kararı
   What: PIT-damgalı 8-K arşivi var ama hiçbir yol tüketmiyor; PIT ihlal düzeltmesinin (b) yolu onu okuyucuya kavuşturur.
   Why: PIT çivisi ölçümü, Yasa 6 adayı (üretilen alanın okuyucusu yok).
   Ref: docs/DEVIR-PIT-CIVISI-2026-08-30.md §1.4.
@@ -2482,7 +2482,7 @@ kararı gerektirenler §5'e geçer.
 > dışarıda; boşluk 41→46 BÜYÜDÜ). Belgeler: `docs/ELEME-WP4-HAVUZ-2026-08-23.md` ·
 > `docs/ELEME-WP7-2026-08-23.md` · `docs/ELEME-WP5-2026-08-23.md`.**]**
 
-- **[TSK-022] öğrenme döngüsü API süreciyle aynı süreçte koşuyordu — GIL panoyu boğuyordu** — status: DONE(v249·pano 14,0→0,027 sn, API CPU %93→%2) · born: 2026-08-16 · owner: rol1 · size: M · trigger: —
+- **[TSK-022] öğrenme döngüsü API süreciyle aynı süreçte koşuyordu — GIL panoyu boğuyordu** — status: DONE(2026-08-17·v249: pano 14,0→0,027 sn, API CPU %93→%2) · born: 2026-08-16 · owner: rol1 · size: M · trigger: —
   What: kök neden öğrenme döngüsünün API sunucusuyla AYNI SÜREÇTE bir Python ipliği olmasıydı — GIL pano isteğini backtest hesabının arkasına diziyordu; işçi tavanı (`_havuz_tavani = max(1, min(4, cpu−2))`) bu paylaşım kusurunun YAMASIYDI, tasarım tercihi değil (2026-08-03 canlı olayı: iki işçi pano API'sini boğdu). Çözüm: öğrenme döngüsü kendi systemd birimine taşındı (emsal: `meridian-sprint`).
   Why: py-spy ölçümü 25 sn profilde patoloji göstermedi (dağınık normal backtest yükü); kök tanı restart'ın uykudaki aramayı uyandırması + GIL paylaşımıydı, regresyon DEĞİLDİ. Kazanç zinciri: pano GIL'de beklemez, tavan cpu−2'den cpu−1'e çıkabilir, faz-1 fold'lar bölünebilir hâle geldi.
   Ref: kaynak §8.T/H; sahibi WP3+WP6; kart açıldı 2026-08-23, sonuç v249'da kapandı.
