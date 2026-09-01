@@ -1478,8 +1478,15 @@ def healthz():
 
 def _local_request(request: Request) -> bool:
     """İstek bu makineden mi geliyor? Tünel/uzak istekler için hassas ölçütler
-    kısılır — panik sayfası tünelden açılabildiği için /metrics de dışarı bakabilir."""
+    kısılır — panik sayfası tünelden açılabildiği için /metrics de dışarı bakabilir.
+
+    VEKİL SINIRI (v365, 2026-09-01): kapı (APISIX) panoya 127.0.0.1'den proxy'ler — TCP eşine
+    bakmak kapı arkasındaki HER dış isteği "yerel" sayar ve /metrics hesap bilgilerini kimliksiz
+    dökerdi. X-Forwarded-For taşıyan istek vekillidir → yerel DEĞİL. Başlık uydurulabilir ama
+    tek yönü yetki DÜŞÜRMEKTİR (tam set → canlılık); doğrudan yerel scrape XFF taşımaz."""
     try:
+        if request.headers.get("x-forwarded-for"):
+            return False
         return (request.client.host if request.client else "") in ("127.0.0.1", "::1", "localhost")
     except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
         return False
@@ -7113,8 +7120,8 @@ _KAPI_FAZ_IMZALARI = (
      "Faz 1 imzası: bir rotada `ai-proxy-multi` (LLM öncelik zinciri) tanımlı"),
     ("faz2_fmp", "limit-count",
      "Faz 2 imzası: bir rotada `limit-count` (FMP egress günlük kotası) tanımlı"),
-    ("faz3_ingress", "basic-auth",
-     "Faz 3 imzası: bir rotada `basic-auth` (pano ingress kimliği; key-auth DEĞİL — tarayıcı apikey başlığı koyamaz, key-auth Faz 4 bot kilididir)"),
+    ("faz3_ingress", "limit-req",
+     "Faz 3 imzası: bir rotada `limit-req` (pano ingress hız sınırı; kimlik uygulamanın KENDİ oturumunda — kapı basic-auth'u operatör kararıyla kaldırıldı 2026-09-01, Safari fetch-401 döngüsü vakası)"),
     ("faz4_filo", "consumer-restriction",
      "Faz 4 imzası: bir rotada `consumer-restriction` (bot filosu ayrımı) tanımlı"),
 )

@@ -32,11 +32,16 @@ export const EN_AZ_KARAKTER = 12;
 
 function hataMetni(s: GonderSonucu): { readonly baslik: string; readonly govde: string } {
   if (s.kod === 409) {
+    // SIFIRLAMA KOMUTU EKRANDAN KALKTI (düzeltme-1, 2026-09-01): bir yönetim
+    // komutu ekran öğesi değildir ve bu ekran artık kimliksiz ziyaretçinin
+    // görebildiği kapının içinde. Olgu ("burası sıfırlama kapısı değil") duruyor;
+    // yordamın yeri runbook. Komut bu dosyanın BAŞLIK ŞERHİNDE kayıtlı kalıyor —
+    // şerh ekran metni değildir ve okuyucusu geliştiricidir.
     return {
       baslik: "Parola zaten kurulu",
       govde:
         (s.detay ?? "sunucu 409 döndü") +
-        " · bu uç bir sıfırlama kapısı değil. Parola unutulduysa sunucu kabuğunda: python -m meridian.auth_cli set",
+        " · burası bir sıfırlama kapısı değil. Parola unutulduysa sıfırlama yordamı sunucu tarafındadır ve runbook'ta yazılıdır.",
     };
   }
   if (s.kod === 400) {
@@ -107,10 +112,14 @@ export function KurulumFormu({ onBasari }: { readonly onBasari: () => void }) {
               {gorunur ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
             </button>
           </div>
+          {/* KAYNAK ÇAPASI EKRANDAN KALKTI (düzeltme-1): `meridian/auth.py:148`
+              hem bir dosya yolu hem bir SATIR çapasıydı — ikisi de kimliksiz
+              ziyaretçinin ekranında işi olmayan şeyler. Kuralın KENDİSİ ve
+              GEREKÇESİ duruyor; nereden geldiği `EN_AZ_KARAKTER` şerhinde. */}
           {kisa ? (
             <FieldError>
-              {parola.length}/{EN_AZ_KARAKTER} karakter. Sunucu kuralı: “parola en az 12 karakter olmalı — bu yüzey bir
-              broker hesabına bakıyor” (meridian/auth.py:148).
+              {parola.length}/{EN_AZ_KARAKTER} karakter. Sunucu en az {EN_AZ_KARAKTER} karakter istiyor: bu pano gerçek
+              bir hesabın durumunu gösteriyor.
             </FieldError>
           ) : null}
           {denendi && parola.length === 0 ? <FieldError>Parola boş — istek gönderilmedi.</FieldError> : null}
@@ -130,8 +139,7 @@ export function KurulumFormu({ onBasari }: { readonly onBasari: () => void }) {
           />
           {uyusmuyor ? <FieldError>İki alan aynı değil.</FieldError> : null}
           <FieldDescription>
-            Bu ikinci alan YALNIZ tarayıcıda karşılaştırılır — <code className="text-[11px]">/api/setup-password</code>{" "}
-            tek bir <code className="text-[11px]">password</code> alanı okur, ikinci alanı hiç görmez.
+            Bu ikinci alan YALNIZ tarayıcıda karşılaştırılır: sunucuya tek bir parola gidiyor, ikinci alanı hiç görmüyor.
           </FieldDescription>
         </Field>
       </FieldGroup>

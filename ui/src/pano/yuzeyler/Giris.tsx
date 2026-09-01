@@ -1,88 +1,81 @@
 "use client";
 
 /* ============================================================================
-   GİRİŞ YÜZEYİ — şablonun `auth/v1` + `auth/v2` ekranları, Meridian'ın GERÇEK
-   parola kapısına bağlanmış hâli
+   OTURUM YÜZEYİ (kabuk içi) — "oturumum açık mı, nasıl çıkarım"
    ----------------------------------------------------------------------------
-   ŞABLONDAN NE GELDİ: bölünmüş panel (solda `bg-primary` marka rayı, sağda form),
-   `Field*` alan grameri, tam-genişlik birincil düğme, giriş↔kayıt geçişi.
-   Kaynak: `auth/v1/login`, `auth/v1/register`, `auth/v2/layout`, `auth/_components/*`.
+   KAPSAM DARALDI, TEK CÜMLEYLE: kapı 2026-09-01'de `pano/App.tsx` seviyesine
+   çıktığı için bu yüzey ARTIK YALNIZ oturum AÇIKKEN mount ediliyor; işi de o
+   kadar — oturumun ölçülen hâlini göstermek ve çıkış kolunu taşımak.
 
-   TEK EKRAN DEĞİL, ÜÇ HÂLLİ BİR MAKİNE — ve hâli PANO SEÇMİYOR, `/api/session`
-   SÖYLÜYOR (`api.py::api_session`, /api altındaki TEK yetkisiz uç):
-     · password_set === false            → KURULUM ekranı (ilk parola)
-     · password_set && !authenticated    → GİRİŞ ekranı (+ bağsız Kayıt sekmesi)
-     · authenticated === true            → "oturum açık" + çıkış
-   Alanlardan biri HİÇ gelmezse (`=== undefined`) hiçbir ekran seçilmez ve neden
-   seçilemediği yazılır. `undefined`ı `false` saymak, parolası kurulu bir sisteme
-   "ilk parolanı belirle" ekranı göstermek olurdu — 409'a koşan bir yalan.
+   ÜÇ HÂLLİ MAKİNE BURADAN GİTTİ (düzeltme-2, 2026-09-02). Kapı taşındıktan sonra
+   bu dosyada duran kurulum/giriş dalları YAPISAL OLARAK erişilemez hâle gelmişti:
+   `App.tsx` kabuğu yalnız `hal === "acik"` iken doğuruyor, yani `Giris` mount
+   olduğunda hâl zaten "acik". Bir tur boyunca "yüzeyin dürüstlüğü kapıya BAĞLI
+   olmasın" diye bırakıldılar; bu gerekçe yanlıştı — çalışmayan bir yedek, yedek
+   değildir. Ölü dal okuyucusuna "burası da olabilir" der ve bir sonraki eli yanlış
+   yere bakmaya gönderir. Tarihçesi git'te; makinenin kendisi tek elde:
+   sınıflama `pano/oturum.tsx::hali`, ekran gövdeleri `kimlik/KapiEkrani.tsx`.
+
+   ~~YÜZEY KABUĞUN İÇİNDE ÇİZİLİYOR~~ — ÖNCÜLÜ ÖLDÜ (2026-09-01, kapı basic-auth
+   emekliliği). Kayıt siliNMEDİ, çünkü kararın NEDEN değiştiğini yalnız eski gerekçe
+   gösterir. Eski karar şuydu: "şablonun `h-dvh` tam-ekran auth düzeni BİLEREK
+   alınmadı; oturum kapısı uygulamanın ÖNÜNDE değil İÇİNDE bir yüzey — kabuğu
+   gizlemek, olmayan bir yönlendirme katmanı varmış gibi göstermek olurdu."
+   Dayandığı önerme "pano zaten bir DIŞ kapının (tünel, sonra APISIX basic-auth)
+   arkasında" idi. O kapı 2026-09-01'de operatör kararıyla kaldırıldı; tek kimlik
+   katmanı artık uygulamanın kendi oturumu ve kimliksiz ziyaretçi uygulamanın İLK
+   yüzünü görüyor — ona kabuk değil, tam-ekran kapı çıkıyor.
+
+   ŞABLONDAN NE KALDI: bölünmüş panel (solda `bg-primary` marka rayı, sağda gövde)
+   ve `Field*` grameri. Kaynak: `auth/v2/layout`, `auth/_components/*`.
 
    NABIZ 15 SANİYE ve bu bir israf değil: kayan oturum middleware'i (api.py
    `KayanOturumMiddleware`) ÇEREZLİ HER isteği tazeleme fırsatı sayar, yani bu
    yoklama panonun geri kalanıyla aynı ritimde hem oturumu ayakta tutar hem de
-   düşme anını saniyeler içinde ekrana taşır. Operatörün bildirdiği "arayüz bir
-   süre sonra kayboluyor" arızasının teşhis yüzeyi tam olarak burası.
-
-   YÜZEY KABUĞUN İÇİNDE ÇİZİLİYOR (kenar çubuğu + üst bar duruyor): şablonun
-   `h-dvh` tam-ekran auth düzeni BİLEREK alınmadı. Bu pano tek bir HTML dosyası
-   ve oturum kapısı uygulamanın ÖNÜNDE değil İÇİNDE bir yüzey — kabuğu gizlemek,
-   olmayan bir yönlendirme katmanı varmış gibi göstermek olurdu.
+   düşme anını saniyeler içinde ekrana taşır. Nabzın SAHİBİ artık bu yüzey değil
+   `OturumSaglayici` — gövde tek yerden çekiliyor ki kapı ile yüzey aynı ANI
+   okusun (`durum.tsx`teki `/api/today` gerekçesinin aynısı). Oturum düştüğünde
+   bu yüzey bir şey ÇİZMEZ: sağlayıcı hâli "giris"e taşır ve kabuk tümden sökülür.
    ============================================================================ */
-import { Fingerprint, KeyRound, LogOut, UserPlus } from "lucide-react";
+import { Fingerprint, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { YUZEYLER } from "../alanlar";
+import { useOturum } from "../oturum";
 import { useRota } from "../rota";
-import { NABIZ_MS, useApi } from "../veri";
-import { GirisFormu } from "./kimlik/GirisFormu";
 import { KapiKunyesi } from "./kimlik/KapiKunyesi";
-import { KayitFormu } from "./kimlik/KayitFormu";
-import { KurulumFormu } from "./kimlik/KurulumFormu";
+import { MarkaRayi } from "./kimlik/MarkaRayi";
 import { apiPost, type GonderSonucu } from "./kimlik/gonder";
-import { Kapi } from "./kimlik/parcalar";
-import type { OturumGovdesi } from "./kimlik/uctipleri";
 
-/* --- MARKA RAYI (şablonun v2 layout'undaki `bg-primary` sütunu) ----------- */
+/* RAYIN ALT BLOĞU YALNIZ BURADA — kabuğun içi, yani kimliği DOĞRULANMIŞ operatör.
+   Tam-ekran kapı aynı rayı ayrıntısız çağırıyor (bkz. `MarkaRayi.tsx` başlığı):
+   "kullanıcı tablosu yok" bir sistem gerçeğidir ve anonim bir ziyaretçiye
+   söylenecek şey değildir.
 
-function MarkaRayi({ baslik, altBaslik }: { readonly baslik: string; readonly altBaslik: string }) {
-  return (
-    <div className="hidden flex-col justify-between bg-primary p-8 text-primary-foreground lg:flex">
-      <div className="space-y-1">
-        <Fingerprint className="size-9" aria-hidden />
-        <h2 className="font-medium text-2xl">{baslik}</h2>
-        <p className="text-primary-foreground/80 text-sm">{altBaslik}</p>
-      </div>
-      {/* ŞABLONUN İKİ SÜTUNLU ALT BLOĞU KORUNDU, METNİ MERİDİAN'IN GERÇEĞİ:
-          şablonda "Clone the repo…" yazıyordu; burada operatörün gece yarısı
-          ihtiyacı olan iki cümle var — kaç kullanıcı var, parola unutulursa ne olur. */}
-      <div className="flex gap-3">
-        <div className="flex-1 space-y-1">
-          <h3 className="font-medium text-sm">Tek operatör</h3>
-          <p className="text-primary-foreground/80 text-xs">
-            Kullanıcı tablosu yok; kapı tek bir parola hash'i tutuyor (meridian/auth.py).
-          </p>
-        </div>
-        <Separator orientation="vertical" className="h-auto! bg-primary-foreground/20" />
-        <div className="flex-1 space-y-1">
-          <h3 className="font-medium text-sm">Parolayı unuttuysan</h3>
-          <p className="text-primary-foreground/80 text-xs">
-            Panodan sıfırlanmaz. Sunucu kabuğunda: python -m meridian.auth_cli set
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+   SIFIRLAMA KOMUTU EKRANDAN KALKTI (düzeltme-1, 2026-09-01) ve gerekçesi kapıya
+   değil İLKEYE dayanıyor: bir yönetim komutu bir ekran öğesi değildir. Operatörün
+   gece yarısı ihtiyacı olan bilgi "panodan sıfırlanmaz" — o duruyor; komutun
+   kendisi runbook'ta, tek kaynağında. `KurulumFormu.tsx` başlığı da aynı komutu
+   şerh olarak taşıyor; şerh ekran metni değildir, orada kalıyor. */
+const OPERATOR_AYRINTILARI = [
+  {
+    baslik: "Tek operatör",
+    govde: "Kullanıcı tablosu yok; kapı tek bir parola hash'i tutuyor (meridian/auth.py).",
+  },
+  {
+    baslik: "Parolayı unuttuysan",
+    govde: "Panodan sıfırlanmaz. Sıfırlama yordamı sunucu tarafındadır ve runbook'ta yazılıdır.",
+  },
+] as const;
 
-/** Bölünmüş panel kabı — üç hâlin üçü de bunun içinde çiziliyor. */
+/** Bölünmüş panel kabı — üç hâlin üçü de bunun içinde çiziliyor. Tam-ekran kapı
+ *  AYNI rayı `h-dvh` bir ızgarada kullanıyor; kap farklı, ray tek. */
 function Panel({
   marka,
   markaAlt,
@@ -95,7 +88,7 @@ function Panel({
   return (
     <Card className="gap-0 overflow-hidden p-0">
       <div className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)]">
-        <MarkaRayi baslik={marka} altBaslik={markaAlt} />
+        <MarkaRayi baslik={marka} altBaslik={markaAlt} ayrintilar={OPERATOR_AYRINTILARI} />
         <CardContent className="p-6 sm:p-8">{children}</CardContent>
       </div>
     </Card>
@@ -155,36 +148,35 @@ export function Giris() {
   // cevapladığı SORUYU tek yerde tutuyor; ikinci kez yazsaydık kayıt değiştiğinde
   // ekran sessizce eski soruyu sormaya devam ederdi.
   const y = YUZEYLER.authentication;
-  const oturum = useApi<OturumGovdesi>("/api/session", NABIZ_MS);
-  // Oturum ÖMRÜ yalnız bu sekmede giriş yapılırsa ölçülebilir (bkz. KapiKunyesi).
-  const [omurS, setOmurS] = useState<number | null>(null);
+  // GÖVDE SAĞLAYICIDAN: bu yüzey kendi `useApi("/api/session")`sini AÇMIYOR.
+  // Açsaydı kapı ile yüzey iki ayrı nabızda iki ayrı an okurdu — ve aynı ekranda
+  // iki farklı gerçek, operatörün hangisine inanacağını bilemediği bir arayüzdür.
+  const { durum: oturum, omurS, cikisBildir } = useOturum();
 
-  // SEKME ROTADAN SEÇİLİR, `defaultValue`dan DEĞİL: `#/dashboard/authentication/kayit`
-  // bağı sayfayı açmakla kalmaz, o bölümün DURDUĞU sekmeyi de açar. `defaultValue`
-  // yalnız ilk bağlanmada okunur — operatör bu yüzeydeyken kenar çubuğundan öteki
-  // bölüme tıklasaydı sekme hiç değişmez, çapa kapalı sekmenin içinde kalır ve bağ
-  // sessizce hiçbir şey yapmazdı. (`KanbanYuzey.tsx`teki desenin aynısı, aynı gerekçeyle.)
-  const [sekme, setSekme] = useState<"giris" | "kayit">(() => (bolum === "kayit" ? "kayit" : "giris"));
-  useEffect(() => {
-    if (bolum === "giris" || bolum === "kayit") setSekme(bolum);
-  }, [bolum]);
-
+  // DERİN BAĞ KAYDIRMASI — NE HEDEFLİYOR, NE HEDEFLEYEMİYOR (düzeltme-3):
+  //   · `alanlar.ts`in bu yüzey için KAYITLI iki bölümü (`giris` · `kayit`) artık
+  //     yalnız tam-ekran kapıda çiziliyor (`kimlik/KapiEkrani.tsx`). Kabuğun içinde
+  //     o çapalar YOK, yani `#/dashboard/authentication/giris` buraya geldiğinde
+  //     kaydıracak bir düğüm bulamaz: bilinçli no-op. Kalıcı çözüm bir kayıt kararı
+  //     ve `KapiEkrani.tsx` başlığında AÇIK KALEM olarak duruyor.
+  //   · Bu yüzeyde çizilen tek çapa künye kartının `bolum-kapi`si (`KapiKunyesi`,
+  //     `kimlik="kapi"` → `BolumKart` onu `id="bolum-kapi"` yapar) ve o KAYITSIZ:
+  //     kenar çubuğunda görünmez, yalnız elle yazılan hash onu hedefler. Efekt
+  //     bunun için duruyor. (Kapı yüzeyinin `bolum-kapi-*` çapaları BAŞKA bir
+  //     yüzeye ait — ad benzerliği aldatıcı, akrabalık yok.)
+  // `sekme` bağımlılığı düzeltme-2'de düştü; kare beklemesi KALDI ve gerekçesi
+  // değişti: düğüm artık aynı commit'te DOM'da, ama yumuşak kaydırma yerleşim
+  // oturmadan başlarsa hedefi ıskalar.
   useEffect(() => {
     if (!bolum) {
       window.scrollTo({ top: 0, behavior: "instant" });
       return;
     }
-    // SEKME GEÇİŞİNDEN SONRA kaydır: etkin olmayan `TabsContent` DOM'da olmayabilir,
-    // bu yüzden aynı turda `getElementById` boş döner. Bir kare beklemek, sekmenin
-    // gövdesi bağlandıktan sonra çapayı bulmayı garantiler.
     const kare = window.requestAnimationFrame(() => {
       document.getElementById(`bolum-${bolum}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     return () => window.cancelAnimationFrame(kare);
-  }, [bolum, sekme]);
-
-  const v = oturum.veri;
-  const acik = v?.authenticated === true;
+  }, [bolum]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -196,103 +188,47 @@ export function Giris() {
           </h1>
           <p className="mt-1 text-muted-foreground text-sm">{y.soru}</p>
         </div>
-        {/* ROZET YALNIZ ÖLÇÜLEN ALAN VARSA ÇİZİLİR — yokken hiç çizilmez, çünkü
-            "kapalı" rozeti ölçülmemiş bir oturumu kapalı ilan etmek olurdu. */}
-        {v?.authenticated !== undefined ? (
-          <Badge variant={acik ? "secondary" : "outline"} className="shrink-0">
-            {acik ? "oturum açık" : "oturum kapalı"}
-          </Badge>
-        ) : null}
+        {/* ROZET SABİT ve bu bir ölçüm iddiası DEĞİL, ölçümün SONUCU: bu yüzey
+            yalnız `hal === "acik"` iken mount ediliyor (`App.tsx`), yani MOUNT'UN
+            KENDİSİ ölçümdür. Eskiden burada `authenticated !== undefined` koşulu ve
+            "oturum kapalı" dalı vardı; ikisi de kapı taşındıktan sonra erişilemez
+            kaldı — koşul her zaman doğru, dal hiç seçilemez (düzeltme-2). Ölçülmemiş
+            bir oturumu "kapalı" ilan etmeme disiplini korunuyor: o hâl artık bu
+            yüzeyde değil, kapıda karşılanıyor. */}
+        <Badge variant="secondary" className="shrink-0">
+          oturum açık
+        </Badge>
       </div>
 
-      <Kapi durum={oturum} yol="/api/session">
-        {(s) => {
-          if (s.password_set === undefined || s.authenticated === undefined) {
-            // ÜÇÜNCÜ HÂL: uç cevap verdi ama karar alanları YOK. Hiçbir ekran seçilemez.
-            return (
-              <Alert variant="destructive">
-                <AlertTitle>Hangi ekranın gösterileceği ölçülemedi</AlertTitle>
-                <AlertDescription>
-                  /api/session cevap verdi ama karar alanları gelmedi (password_set:{" "}
-                  {String(s.password_set)}, authenticated: {String(s.authenticated)}). Bu alanlar olmadan kurulum ile
-                  giriş ekranı arasında seçim yapmak tahmin olurdu.
-                </AlertDescription>
-              </Alert>
-            );
-          }
-
-          if (s.password_set === false) {
-            return (
-              <Panel marka="Meridian" markaAlt="Kapı henüz kurulmadı — ilk parolayı belirle">
-                <div className="flex flex-col gap-4">
-                  <div className="space-y-1">
-                    <h2 className="flex items-center gap-2 font-medium text-xl">
-                      <KeyRound className="size-4 text-muted-foreground" aria-hidden />
-                      İlk kurulum
-                    </h2>
-                    <p className="text-muted-foreground text-sm">
-                      <code className="text-[11px]">/api/session</code> <code className="text-[11px]">password_set:
-                      false</code> döndürdü: bu kurulumda henüz parola YOK ve pano şu an korumasız.
-                    </p>
-                  </div>
-                  <KurulumFormu onBasari={oturum.tazele} />
-                </div>
-              </Panel>
-            );
-          }
-
-          if (s.authenticated === true) {
-            return (
-              <Panel marka="Meridian" markaAlt="Operatör kapısı — oturum açık">
-                <OturumAcik
-                  onCikis={() => {
-                    setOmurS(null); // ölçülen ömür bu oturuma aitti; oturum bitince ölçüm de biter
-                    oturum.tazele();
-                  }}
-                />
-              </Panel>
-            );
-          }
-
-          return (
-            <Panel marka="Meridian" markaAlt="Operatör kapısı — giriş bekleniyor">
-              <Tabs value={sekme} onValueChange={(v) => setSekme(v === "kayit" ? "kayit" : "giris")} className="gap-4">
-                <TabsList>
-                  <TabsTrigger value="giris">
-                    <KeyRound className="size-4" aria-hidden />
-                    Giriş
-                  </TabsTrigger>
-                  <TabsTrigger value="kayit">
-                    <UserPlus className="size-4" aria-hidden />
-                    Kayıt
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="giris" id="bolum-giris" className="flex scroll-mt-20 flex-col gap-4">
-                  <div className="space-y-1">
-                    <h2 className="font-medium text-xl">Panoya giriş</h2>
-                    <p className="text-muted-foreground text-sm">
-                      Bu yüzey bir broker hesabına bakıyor ve HALT kolunu taşıyor; kapı o yüzden var.
-                    </p>
-                  </div>
-                  <GirisFormu
-                    onBasari={(omur) => {
-                      setOmurS(omur);
-                      oturum.tazele();
-                    }}
-                  />
-                </TabsContent>
-                <TabsContent value="kayit" id="bolum-kayit" className="scroll-mt-20">
-                  <KayitFormu />
-                </TabsContent>
-              </Tabs>
-            </Panel>
-          );
-        }}
-      </Kapi>
-
-      <Kapi durum={oturum} yol="/api/session">
-        {(s) => <KapiKunyesi oturum={s} zaman={oturum.zaman} omurS={omurS} />}
-      </Kapi>
+      {/* `Kapi` SARMALAYICISI BU ÇAĞRI NOKTASINDAN KALKTI (düzeltme-3) — bileşenin
+          KENDİSİ yerinde, başka çağrı yerleri meşru. Buradaki sorun sarmalayıcının
+          dört dalından üçünün bu noktada yanlış davranması:
+            · "Oturum düştü" → ERİŞİLEMEZ. Yüzey yalnız `hal === "acik"` iken mount
+              oluyor ve `hali()` tablosu o hâlde `oturumDustu === false` olmasını
+              ZORUNLU kılıyor (4. satır bayrağı görürse hâl "giris" olurdu).
+            · "veri yok" iskeleti → ERİŞİLEMEZ. "acik" hâli `veri !== null` demek.
+            · "Okunamadı" → ERİŞİLEBİLİR AMA ZARARLI. `hata` bir tazeleme düşünce
+              doluyor ve `veri.ts` eski gövdeyi BİLEREK silmiyor; sarmalayıcı ise
+              `hata`yı `veri`nin ÖNÜNDE sınıyor. Sonuç: 15 sn'lik nabızda bir ağ
+              hıçkırığı, elde sağlam (bir tur bayat) gövde varken çıkış düğmesini ve
+              künyeyi ekrandan siler. Oysa künyenin işi tam da bu: "son okuma"
+              satırıyla verinin YAŞINI söyler. Bayat veriyi zaman damgasıyla
+              göstermek, sağlam veriyi hata diye gizlemekten dürüsttür.
+          Kalan tek ihtiyaç tip daraltmasıydı; onu `?? {}` karşılıyor — `OturumGovdesi`in
+          her alanı opsiyonel ve künye zaten alan-alan "bildirilmedi" çiziyor, yani
+          gövdesiz hâl UYDURULMUYOR, olduğu gibi gösteriliyor. */}
+      <Panel marka="Meridian" markaAlt="Operatör kapısı — oturum açık">
+        <OturumAcik
+          onCikis={() => {
+            // BİLEREK ÇIKIŞ BİR DÜŞME DEĞİLDİR: iz de ölçülen ömür de o oturuma
+            // aitti, ikisi de sağlayıcıda sıfırlanıyor. İzi bırakmak, kapının bir
+            // sonraki açılışında "oturumun düştü" demek olurdu.
+            cikisBildir();
+            oturum.tazele();
+          }}
+        />
+      </Panel>
+      <KapiKunyesi oturum={oturum.veri ?? {}} zaman={oturum.zaman} omurS={omurS} />
     </div>
   );
 }

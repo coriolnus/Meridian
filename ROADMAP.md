@@ -2366,6 +2366,15 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
 
+- **[TSK-097] Çok-kullanıcı kimlik paketi (kullanıcı adı/e-posta + kayıt akışı + roller, TEK pakette)** — status: GATED(operatör çok-kullanıcıya geçme kararını verdiğinde) · born: 2026-09-02 · owner: rol1 · size: L · trigger: soldaki kapı
+  What: bugünkü tek-operatör kimliği (auth.py: tek parola + oturum çerezi) çok-kullanıcıya bir bütün olarak taşınır — kullanıcı tablosu, kullanıcı adı/e-posta alanı, gerçek kayıt akışı (port edilen register v2 formu bugün bilinçli bağsız, "2. aşama" etiketli), kullanıcı-başına oturum, roller/yetkiler yüzeyleriyle bağ. Giriş formuna alan eklemek bu paketin EN KÜÇÜK parçasıdır ve paketten önce yapılmaz.
+  Why: operatör sorusu 2026-09-02 gece ("kullanıcı adı da ekleyelim mi") — karar: şimdilik hayır. Bugün eklemek ya sahte alan (tek sabit ada doğrulama, güvenlik katmaz) ya erken migrasyon artığı olurdu; gerçek korumalar TLS + kapı hız sınırı + başarısız-giriş kilidi + güçlü parola. Tek-kaynak: kimlik şeması bir kez, paket içinde tasarlanır.
+  Ref: operatör kararı 2026-09-02 · Giris/KapiEkrani (register v2 bağsız) · deploy/apisix routes pano-ingress yorumu (kimlik uygulamada).
+- **[TSK-096] Metrik trendi ihtiyacı doğarsa hafif toplayıcı (Prometheus yaygınlaştırma DEĞİL)** — status: GATED(operatör bir soruyu "zamanla nasıl değişti" biçiminde sorduğunda ve mevcut yüzeyler cevaplayamadığında) · born: 2026-09-01 · owner: rol1 · size: M · trigger: soldaki kapı
+  What: kapı rotaları dışında sisteme Prometheus YAYILMAZ (operatör sorusu 2026-09-01, cevap: hayır); trend ihtiyacı gerçekten doğarsa aday çözüm tam Prometheus+Grafana yığını değil, mevcut `/metrics` ucunu periyodik örnekleyip `state/` dışı bir zaman-serisi dosyasına yazan hafif A1-içi toplayıcı + pano grafiği.
+  Why: Yasa 6 (okuyucusuz yazım) — bugün hiçbir soru trend istemiyor; A1 4-çekirdek/24GB'da ikincil yük beyanlı tavan; tasarım dili tek-pano. Kazanç ölçülmeden altyapı kurmak bedel yasasının ters yönü.
+  Ref: operatör sorusu 2026-09-01 gece ("Prometheus'u bütün sistemde yaygınlaştırmamız gerekiyor mu").
+
 - **[TSK-002] Rejim-ship satırına rejim-dilimli backtest_full** — status: QUEUED · born: 2026-09-01 · owner: rol1 · size: M · trigger: —
   What: `backtest.walk_forward` rejim-dilimli `graded` popülasyonundan ikinci bir `score_detail` döndürsün; rejim ship satırları da kendi `backtest_full`ünü taşısın. Why: akıbet-dalgası N00017'yi yalnız GLOBAL ship için kapattı — `full_detail` rejim-dilimsiz popülasyondan üretiliyor, rejim satırına yazmak analytics'in öncelikli bacağına yanlış popülasyon koyardı (implementer endişe-1, bilinçli dışarıda bırakıldı). Ref: akibet-dalgasi-rapor · N00017.
 - **[TSK-003] Reflect belleğe danışmadan öneri basıyor (yansıma mükerrerlik kapısı)** — status: DONE(2026-09-01·131ffa8 — mukerrerlik.py + v352 28 çivi, iki-kaynaklı kapı; israf hedefi %45→≤%10 sonraki karar turunda ölçülür) · born: 2026-09-01 · owner: rol1 · size: S-M · trigger: —

@@ -64,7 +64,9 @@ plugins:
   - prometheus       # bedel ölçümü (canary ⑧) — /apisix/prometheus/metrics yalnız loopback
   # Faz 2-4 öne çekme (operatör talimatı 2026-09-01) — her biri routes.yaml'da adıyla kullanılır:
   - limit-count            # Faz 2: FMP 250/gün + Faz 4: filo 1000/gün (policy redis)
-  - basic-auth             # Faz 3: pano ingress — tarayıcı header koyamaz, key-auth İNGRESS'e uymaz (ölçüldü: browser kısıtı)
+  # basic-auth KALDIRILDI 2026-09-01: kapı kimliği emekli — tek katman uygulamanın kendi oturumu
+  # (routes.yaml pano-ingress yorumundaki Safari vakası). Liste kullanım beyanıdır; kullanılmayan
+  # plugin listede durmaz. Bu satır konteynerin SONRAKİ yeniden başlatmasında etkinleşir.
   - key-auth               # Faz 4: bot kimlikleri (apikey başlığı — makine istemcileri)
   - limit-req              # Faz 3: ingress kaba hız sınırı
   - client-control         # Faz 3: ingress gövde tavanı

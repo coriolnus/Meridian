@@ -49,11 +49,15 @@ function hataMetni(s: GonderSonucu): { readonly baslik: string; readonly govde: 
     return { baslik: "Parola hatalı", govde: s.detay ?? "sunucu 401 döndü, gerekçe metni gelmedi" };
   }
   if (s.kod === 429) {
+    // SABİT ADLARI VE MODÜL YOLU EKRANDAN KALKTI (düzeltme-1): kuralın SAYILARI
+    // operatöre de ziyaretçiye de bir şey söyler ("ne kadar bekleyeceğim"),
+    // `FAIL_MAX/FAIL_WINDOW_S` yalnız koda bakana. Sayılar duruyor, adlar aşağıdaki
+    // sabitlerin şerhinde.
     return {
       baslik: "Kaba-kuvvet kilidi devrede",
       govde:
         (s.detay ?? "sunucu 429 döndü, bekleme süresi metni gelmedi") +
-        ` · kural: ${KILIT_PENCERESI_S / 60} dk içinde ${KILIT_ESIGI} başarısız deneme (meridian/auth.py FAIL_MAX/FAIL_WINDOW_S)`,
+        ` · kural: ${KILIT_PENCERESI_S / 60} dk içinde ${KILIT_ESIGI} başarısız deneme`,
     };
   }
   if (s.kod === 0) {
@@ -126,8 +130,7 @@ export function GirisFormu({ onBasari }: { readonly onBasari: (omurS: number | n
           </div>
           {bosUyari ? <FieldError>Parola boş — istek gönderilmedi.</FieldError> : null}
           <FieldDescription>
-            Tek alan, çünkü kapı tek soru soruyor: <code className="text-[11px]">POST /api/login</code> yalnız{" "}
-            <code className="text-[11px]">{"{password}"}</code> okuyor. Kullanıcı adı/e-posta diye bir kayıt yok.
+            Tek alan, çünkü kapı tek soru soruyor: bu kurulumda kullanıcı adı ya da e-posta diye bir kayıt yok.
           </FieldDescription>
         </Field>
       </FieldGroup>
@@ -146,9 +149,8 @@ export function GirisFormu({ onBasari }: { readonly onBasari: (omurS: number | n
 
       {sekmeDeneme > 0 ? (
         <p className="text-muted-foreground text-xs">
-          Bu sekmede sayılan başarısız deneme: <span className="tabular-nums">{sekmeDeneme}</span>. Sunucunun defteri IP
-          başınadır ve süreç-içi tutulur (<code className="text-[11px]">auth._FAILS</code>) — bu sayaç kilide ne kadar
-          kaldığını DEĞİL, yalnız bir alt sınırı gösterir.
+          Bu sekmede sayılan başarısız deneme: <span className="tabular-nums">{sekmeDeneme}</span>. Sunucu kendi
+          sayacını ayrıca tutuyor — bu sayı kilide ne kadar kaldığını DEĞİL, yalnız bir alt sınırı gösterir.
         </p>
       ) : null}
     </form>

@@ -74,37 +74,39 @@ rotalar:
       nodes:
         "financialmodelingprep.com:443": 1
 
-  - id: pano-api
-    # Faz 3 vakası (2026-09-01, Safari): basic-auth /* üzerindeyken belge yükleniyor ama
-    # fetch('/api/*') çağrıları kapı-401'ine takılıp Safari'nin yerel kimlik kutusunu DÖNGÜYE
-    # sokuyordu; üstelik kapı-401'i uygulamada "oturum düştü" (yanlış sınıf) okunuyordu.
-    # Çözüm: /api/* belge-kapısından AYRILIR — kimliği uygulamanın kendi oturum çerezi taşır
-    # (401 semantiği tek kaynağa döner), kapı bu yüzeyde hız sınırı + gövde tavanı + sayaç tutar.
-    uri: /api/*
+  - id: metrics-dis
+    # /metrics dış yüzeyde CANLILIĞA indirgenir: kapı arkasında `api._local_request` TCP eşini
+    # 127.0.0.1 görür ve tam seti (öz sermaye, P&L) dökerdi — kök düzeltme motor tarafında
+    # (v365: XFF taşıyan istek yerel sayılmaz), bu rota o düzeltme CANLIYA İNENE KADAR köprü
+    # ve sonrasında derinlemesine savunma. Dış izleyicinin sözleşmesi zaten /healthz.
+    # A1-içi scrape 127.0.0.1:8080'e DOĞRUDAN gider — bu rotadan hiç geçmez, tam setini korur.
+    uri: /metrics
     plugins:
       prometheus: {}
+      proxy-rewrite:
+        uri: /healthz
       limit-req:
         rate: 10
         burst: 20
         key_type: var
         key: remote_addr
         rejected_code: 429
-      client-control:
-        max_body_size: 1048576
     upstream:
       type: roundrobin
       nodes:
         "127.0.0.1:8080": 1
 
   - id: pano-ingress
-    # Faz 3 — pano girişi: TLS dinleyicisinden (443) gelen istekler panoya (127.0.0.1:8080).
-    # basic-auth SEÇİLDİ (key-auth değil): tarayıcı 'apikey' başlığı koyamaz — ölçülmüş kısıt.
-    # Pano'nun kendi parola kapısı AYNEN kalır: çift kapı bilinçli (kapı kimliği + uygulama oturumu).
-    # uri /* — llm/fmp rotaları daha uzun önekle önce eşleşir (radixtree).
+    # Faz 3 — pano girişi: TLS dinleyicisinden gelen HER istek (belge + /api/*) panoya
+    # (127.0.0.1:8080). KİMLİK KAPIDA DEĞİL — operatör kararı 2026-09-01: tek kimlik katmanı
+    # uygulamanın kendi tam oturum sistemi (parola + çerez + fail-closed açılış duruşu;
+    # api.py::_auth ~80 uçta). Kapıdaki basic-auth İKİ ölçülmüş arıza üretti: Safari fetch-401
+    # döngüsü (yerel kimlik kutusu) + kapı-401'inin uygulamada "oturum düştü" yanlış sınıfı.
+    # Kapının işi bu yüzeyde: hız sınırı + gövde tavanı + sayaç.
+    # uri /* — llm/fmp/metrics rotaları daha uzun önekle önce eşleşir (radixtree).
     uri: /*
     plugins:
       prometheus: {}
-      basic-auth: {}
       limit-req:
         rate: 10
         burst: 20
@@ -146,7 +148,8 @@ rotalar:
 
 # --- Faz 3-4 kimlikleri (2026-09-01 öne çekme) ------------------------------------------------
 # Sır YOK: değerler $env:// ile konteyner ortamından (/opt/apisix/.env-apisix) çözülür.
-# Bot anahtarları key-auth (makine istemcisi, apikey başlığı); pano basic-auth (tarayıcı).
+# Bot anahtarları key-auth (makine istemcisi, apikey başlığı); pano kimliği uygulamanın kendi
+# oturumu (kapı basic-auth'u 2026-09-01'de emekli — pano-ingress yorumundaki vaka).
 # LLM rotalarına key-auth+consumer-restriction KİLİDİ henüz YOK — flip, tüm istemciler
 # (motor nous çağrısı + üç bot profili) anahtar taşıyınca AYRI adımda gelir (plan F4-B sırası).
 
@@ -165,11 +168,10 @@ tuketici_gruplari:
         rejected_msg: "kapi-filo-gunluk-kota"
 
 tuketiciler:
-  - username: pano_operator
-    plugins:
-      basic-auth:
-        username: operator
-        password: "$env://PANO_GIRIS_PAROLA"
+  # pano_operator (basic-auth) KALDIRILDI 2026-09-01: kapı kimliği operatör kararıyla emekli —
+  # tek kimlik katmanı uygulamanın kendi oturumu (pano-ingress yorumundaki vaka). etcd'deki
+  # kaydı ve pano-api rotası aynı gün Admin DELETE ile düşürüldü; PANO_GIRIS_PAROLA env'i
+  # /opt/apisix/.env-apisix'te zararsız artık olarak durabilir.
   - username: bot_bekci
     group_id: filo
     plugins:

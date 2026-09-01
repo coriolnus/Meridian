@@ -27,10 +27,16 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
+/* MODÜL YOLLARI EKRANDAN KALKTI (düzeltme-1, 2026-09-01): bu metin artık kimliksiz
+   ziyaretçinin gördüğü kapının Kayıt sekmesinde duruyor ve `meridian/api.py` ile
+   `meridian/auth.py` orada işi olmayan iki dosya adıydı. İDDİA AYNEN KORUNDU —
+   bu ekranın tek işi "bu düğme çalışmıyor ve NEDEN çalışmadığı" cümlesini
+   taşımak; gerekçe zayıflatılsaydı ekran kendi varlık sebebini kaybederdi.
+   Yolların kendisi yukarıdaki başlık şerhinde kayıtlı. */
 const GEREKCE =
-  "Yeni kullanıcı açan bir uç YOK: meridian/api.py'de kullanıcı oluşturan hiçbir yol bulunmuyor ve " +
-  "meridian/auth.py tek bir parola hash'i tutuyor (kullanıcı tablosu yok). Bu ekran çok-kullanıcılı " +
-  "yapının iskeleti; bağlanacağı gün alanlar aynen kalır, düğme açılır.";
+  "Yeni kullanıcı açan bir uç YOK: bu kurulumda kullanıcı tablosu diye bir şey yok ve kapı tek bir " +
+  "operatör parolası tutuyor. Bu ekran çok-kullanıcılı yapının iskeleti; bağlanacağı gün alanlar " +
+  "aynen kalır, düğme açılır.";
 
 export function KayitFormu() {
   return (
