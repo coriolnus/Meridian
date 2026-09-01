@@ -112,3 +112,37 @@ p2_ayrisma_isaretcisi_2026_08_31: >
   girmez, EDG-042'de K1-önce kolunda sayılır). Aynı beyanı burada yeniden yazmak
   EQUIVALENT_TRUTHS tuzağı olurdu; ayrıntı ve birleştirme kararı (P-2'nin yeni çerçevesi,
   operatör kalemi) oradadır.
+
+p2_kapanis_2026_09_01: >
+  P-2 KAPANIŞ HÜKMÜ (Rol-1; yetki: operatör 85-aktarımı 2026-08-31 "bunların hepsini main'e
+  devret main yapsın" + P-3 ölçümü — yol H1 kaydında ölçülmüştü): HAKEMİN ALT-BANT BÖLMESİ
+  `pencere` DAMGASINDAN GÖNDERİM `ts`SİNE GEÇER. Bölücü ve sınır P-3 reçetesiyle TEK KAYNAK:
+  `gonderim_kolu()` research/olcumler/edg042_recete_ayrik_2026-08-31/olcum.py'den İTHAL edilir
+  (ikinci kopya YAZILMAZ), sınır 2026-08-23T14:53:43Z (canlı barclock inişi, d8030c0). Kol
+  adları EDG-042 `p3_karar_ayrik_ts_2026_08_31` tek sözlüğüdür: K1-önce (`giris_once`) ·
+  K1-1345 (`giris_1345`); hakem raporu "1330/1345" bant adlarını bırakır.
+
+  NEDEN (ölçülmüş, acik_kalemler P-2): `pencere="1330"` damgalı satır bir daha HİÇ
+  üretilmeyecek — damga anahtarıyla kontrol kolu sonsuza dek n=2'de kalır, öneri tetiği İNŞAEN
+  erişilemez ve success_metric'in "işleyen sözleşme"si ölü doğar. `ts` anahtarıyla damgasız
+  kaydırma-öncesi 13 satır + P-1-düzeltmeli DE/PANW kontrol koluna ölçülerek girer.
+
+  DEĞİŞMEYEN — TEK KARAKTERİ DEĞİŞMEDİ: öneri tetiği eşiği (iki kol da n≥10 + CI ayrıklığı,
+  hakem_kurali), kill_criteria üçlüsü, success_metric, uygulama_sozlesmesi'nin DAMGA YAZIMI
+  (E2'ye `pencere` damgası dolumda basılmaya devam eder — değişen yalnız OKUYUCUNUN bölme
+  anahtarı; damga artık çapraz-doğrulama sütunudur). kill#2'ye GİRMEZ: eşik değişmedi, kova
+  TANIMI değişti (P-3'ün aynı cümlesi ve aynı sınıfı). kill#3'e GİRMEZ: ts-bölme etiket YAZMAK
+  değil, defterde ZATEN kayıtlı iki ölçülmüş olguyu karşılaştırmaktır (gerekçenin tamamı
+  EDG-042 P-3 bloğunda; burada yeniden yazmak EQUIVALENT_TRUTHS olurdu).
+
+  TARİHLİ TABAN (2026-08-31 H1 ölçümü, hüküm değil): ts anahtarıyla K1-önce n=15 · K1-1345 n=2
+  (ECL/CRM); tetik tedavi kolunun n≥10'unu bekler (~4 hafta @ 0,40 dolum/seans). Damga↔ts
+  çapraz kontrolü: damgalı 4 satırın 4'ünde iki anahtar aynı kolu gösteriyor (P-3 bloğu).
+
+  GÜNCEL DONUK HAKEM İŞARETÇİSİ: research/olcumler/edg042_kosum_2026-08-22/pencere_altbant.py
+  (+ pencere_cek.py) — ts-revizyonlu hakem betiği inince BU SATIR yeni tarihli dizine çevrilir;
+  görev EK'i (deploy/claude-tasks/edg042-friksiyon-haftalik.SKILL.md) sabit yol TAŞIMAZ,
+  buraya bakar ([2] işaretçi devrinin aynı deseni — sabit metin iki kez bayatlamıştı).
+  Uygulama kalemleri (kod): yeni tarihli hakem dizini + `gonderim_kolu` İTHALİ + pencere_cek
+  alan listesine `ts` (P-1'in görünmezlik zehiri: hakem kendi kontaminasyonunu ölçemiyordu) +
+  damga↔ts ayrışma sütunu raporda + regresyon (aynı snapshot, kol sayıları tarihli tabana eşit).

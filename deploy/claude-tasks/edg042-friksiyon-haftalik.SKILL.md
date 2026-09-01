@@ -37,10 +37,13 @@ VE ≥6 seans. `giris_once` HİÇBİR EŞİĞE TABİ DEĞİL: kalıcı betimleyi
 [6] DOĞRULAMA + KAYIT: kapsam testleri koş (uv run pytest tests/test_kart_kimlik_v219.py tests/test_kart_hukum_damgasi_v251.py tests/test_nous_eval_v131.py tests/test_wpm_sasi_v173.py) — TAM SUITE KOŞMA, DAĞITIM YAPMA (dagit.sh'a dokunma). codelaw kontrolü: uv run python -c "from meridian import codelaw; print(codelaw.report()['ok'])" True olmalı. GİT YOK: commit/push atılmaz (bkz. önsöz — ölçüm oturumusun). Bitiş: operatör raporuna EK OLARAK Rol-1'e tek mesajla tarihli dizin yolunu + DEVIR.md işaretini bildir (akran oturum varsa mesajla; yoksa raporun kendisi devirdir — dizin adı tarihlidir, Rol-1 sonraki oturumda bulur). Commit'i ve kart/ROADMAP işlemesini Rol-1 atar.
 
 [7] RAPOR: kova tablosu (n/seans/medyan/p25-p75/damga ya da CI+hüküm), önceki haftayla değişim, bir sonraki eşiğe kalan tahmini mesafe. UYDURMA YASAĞI: canlıya erişilemezse ya da bir kill kriteri tetiklenirse ölçme, nedenini yaz, kısmi sonucu tam gibi sunma.
-## EK — PENCERE HAKEM ADIMLARI (2026-08-23, EXE-2026-009 sözleşmesi)
-Betimleyici koşumdan SONRA her hafta: (1) `python3 research/olcumler/edg042_kosum_2026-08-22/pencere_cek.py`
-(canlıdan salt-okuma E2 çekimi) → (2) `python3 research/olcumler/edg042_kosum_2026-08-22/pencere_altbant.py`
-— K1'i pencere alt-bantlarında (1330/1345) raporlar ve öneri-tetiğini değerlendirir. Çıktıdaki
+## EK — PENCERE HAKEM ADIMLARI (2026-08-23, EXE-2026-009 sözleşmesi; işaretçi devri 2026-09-01)
+Betimleyici koşumdan SONRA her hafta: HAKEM BETİKLERİNİ KARTTAN OKU — EXE-2026-009 kartının
+"GÜNCEL DONUK HAKEM İŞARETÇİSİ" kaydı hangi research/olcumler/ dizininin yürürlükte olduğunu
+söyler; bu görev metni hakem dizini TAŞIMAZ ([2]'nin aynı deseni — sabit yol burada da
+bayatlamıştı: 08-22 dizini yazılıyken ts-revizyonu geldi). Sıra: (1) o dizinin `pencere_cek.py`si
+(canlıdan salt-okuma E2 çekimi) → (2) aynı dizinin `pencere_altbant.py`si
+— K1'i kollarında raporlar ve öneri-tetiğini değerlendirir. Çıktıdaki
 `geri_al_onerisi` beyanı varsa operatör raporuna AYNEN taşı (geri alma otomatik değil). `orneklem_birikimde`
 ise yalnız sayıyı yaz. Donuk 042 reçetesine (olcum.py/KOMUT.txt) DOKUNMA.
 
