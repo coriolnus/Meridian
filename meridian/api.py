@@ -3552,6 +3552,28 @@ def _eksen2_ozeti(ex: dict | None) -> dict:
 
 _GORUS_DEFTERI = "skill_gorusleri.jsonl"       # LİTERAL adlar (codelaw.artifact_graph çözebilsin)
 _GORUS_DURUM = "skill_gorus_durum.json"
+_GORUS_KUYRUK = "skill_gorus_kuyruk.jsonl"
+
+
+def _gorus_kuyrugu() -> dict:
+    """SNAPSHOT KUYRUĞUNUN DERİNLİĞİ — üretim kadanstan çıktığı için ekranın YENİ sorusu.
+
+    NEDEN GÖRÜNMELİ (EDG-2026-019 kill#1 kök çözümü, 2026-09-01): görüş üretimi artık gece
+    döngüsünde değil, seans dışında `ops/skill_gorus_uret.py` ile koşuyor. Yani "kadans koştu" ile
+    "görüş üretildi" ARTIK AYNI OLAY DEĞİL: üretici hiç koşmazsa kuyruk sessizce birikir ve defter
+    donuk kalırdı — birikmenin kendisi bir arıza sinyalidir ve ölçülmeden görünmez.
+
+    HAM KESİT TAŞIMAZ: kuyruk satırı yüzlerce gözlem taşır; uç yükü onunla büyüyemez (görüş
+    defteri hacim sayacıyla aynı disiplin)."""
+    rows = [r for r in store.read_jsonl(_GORUS_KUYRUK) if isinstance(r, dict)]
+    bekleyen = [r for r in rows if not r.get("islendi")]
+    tsler = [str(r.get("ts")) for r in bekleyen if r.get("ts")]
+    return {"n": len(rows), "bekleyen": len(bekleyen), "islenmis": len(rows) - len(bekleyen),
+            "en_eski_bekleyen_ts": (min(tsler) if tsler else None),
+            "bekleyen_gozlem": sum(int(r.get("n_gozlem") or 0) for r in bekleyen),
+            # ÜRETİCİNİN İZİ: işlenmiş snapshot'lar kaç görüş satırı doğurdu. "Kuyruk boş" ile
+            # "kuyruk işlendi ama hiçbir şey üretmedi" ekranda ayrılabilsin.
+            "uretilen_toplam": sum(int(r.get("uretilen") or 0) for r in rows if r.get("islendi"))}
 
 
 def _gorus_defter_hacmi() -> dict:
@@ -3599,11 +3621,22 @@ def _eksen2_gorus() -> dict:
         return {"durum": "ÖLÇÜLEMEDİ", "neden": f"{type(e).__name__}: {e}",
                 "defter_n": None, "kova_sayimi": None, "yuzeyler": None,
                 "terfi_adaylari": None, "emeklilik_isaretleri": None, "kill_p95": None,
-                "hacim": _gorus_defter_hacmi()}
+                "hacim": _gorus_defter_hacmi(), "kuyruk": _gorus_kuyrugu(),
+                # HÜKÜM KURULAMADI ≠ SAYAÇ YOK: kırılım ve gölge sayaçları None kalır (uydurma
+                # yasağı — boş sözlük "ölçtüm, hiç yok" diye okunurdu).
+                "uretici_kirilimi": None, "llm_uretim": None}
     d = store.read_json(_GORUS_DURUM, None)
     return {
         "durum": "dolu", "kart": r.get("kart"), "neden": None,
         "defter_n": r.get("defter_n"), "hacim": _gorus_defter_hacmi(),
+        "kuyruk": _gorus_kuyrugu(),
+        # ÜRETİCİ KIRILIMI + GÖLGE ÜRETİCİNİN SAYAÇLARI (EDG-2026-063). Satıra `uretici` künyesi
+        # yazıldıysa o künye OKUNABİLİR de olmalı (YASA 6 alan düzeyinde): "defterde N satır var"
+        # ile "N'in kaçı gölge LLM satırı" aynı ekranda aynı şeye benzeyemez. `llm_uretim` ise
+        # kota/ölçülemedi sayaçlarının KALICI yüzeyidir — ops betiğinin çıktısı kapanınca
+        # kaybolmasın diye durum defterinde durur.
+        "uretici_kirilimi": r.get("uretici_kirilimi"),
+        "llm_uretim": r.get("llm_uretim"),
         "kova_sayimi": r.get("kova_sayimi"),
         "evren": (r.get("evren") or {}).get("sayim"),
         "girdi_bekcisi": r.get("girdi_bekcisi"),
@@ -3615,9 +3648,14 @@ def _eksen2_gorus() -> dict:
         # kendi damgasıdır. İkisini tek çağrıya katlamak, panonun her açılışında ölçüm koşturmak
         # ve o ölçümü "canlı kadans süresi" diye raporlamak olurdu.
         "kill_p95": ((d or {}).get("kill_p95") if isinstance(d, dict) else None),
-        "son_kadans": ({"ts": d.get("ts"), "sure_ms": d.get("sure_ms"),
-                        "sure_p95_ms": d.get("sure_p95_ms"),
-                        "yazilan": (d.get("toplama") or {}).get("yazilan")}
+        # `yol` KÜNYESİ: aynı defteri iki kadans yolu yazar (tam koşu / kuyruk); süreyi yolu
+        # söylemeden basmak ×6,6'lık tam koşuyla ucuz kesiti aynı satırda gösterirdi. `yazilan`
+        # yalnız TAM koşuda anlamlı (kuyruk görüş yazmaz), orada None — 0 "boş çıktı" demekti.
+        # `gozetim_ms` AYRI: birikim okuması `sure_ms` penceresinin DIŞINDA ama BEDAVA değil.
+        "son_kadans": ({"ts": d.get("ts"), "yol": d.get("yol"), "sure_ms": d.get("sure_ms"),
+                        "sure_p95_ms": d.get("sure_p95_ms"), "gozetim_ms": d.get("gozetim_ms"),
+                        "yazilan": (d.get("toplama") or {}).get("yazilan"),
+                        "kuyruk_n_gozlem": (d.get("kuyruk") or {}).get("n_gozlem")}
                        if isinstance(d, dict) else None),
         "beyan": r.get("beyan"),
     }

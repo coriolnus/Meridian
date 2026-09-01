@@ -50,3 +50,12 @@ basari_tanimi: >
   (1) En az bir beyan-only skill için defterde şemalı, çözücü-puanlı gölge görüş serisi ·
   (2) aynı yüzeyde deterministik-vs-LLM kıyas tablosu üretilebilir · (3) şema-uyum ve
   kota sayaçları raporlu (olculemedi payı görünür) · (4) hiçbir canlı yüzeye bağ yok.
+
+kosum_notlari:
+  zamanlama_2026_09_01: >
+    Gölge üretici (`ops/skill_gorus_uret.py --llm --uygula`) BİLEREK systemd'ye BAĞLANMADI —
+    TSK-058 FAZ C'de kurulan `meridian-skill-gorus.service` yalnız deterministik yolu koşar.
+    İki gerekçe: (1) defter yazımının file_lock'u SÜREÇ-İÇİ — iki üretici iki ayrı süreçte
+    aynı ana düşerse yarışır; (2) LLM yolunun ilk koşumları kota/model dalgalanması
+    gözetimiyle ELLE yapılır (Rol-1, seans-dışı). Zamanlama kararı ilk elle koşumların
+    temiz çıkmasından SONRA verilir ve kendi birimiyle gelir (det birimin slotundan ayrık).

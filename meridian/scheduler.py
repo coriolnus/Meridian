@@ -527,10 +527,16 @@ def _learning_cadence(session: str) -> dict:
     DOLGU ASENKRONDUR: gün başına bir LLM çağrısı × tavan kadar gün, poll'ü dakikalarca bloklardı
     (`review_candidates_async` ile aynı gerekçe ve aynı sözleşme — Thread döner).
 
-    GÖRÜŞ DEFTERİ EKSEN-2'DEN SONRA: o da deterministik ve KOTASIZ,
+    GÖRÜŞ KUYRUĞU EKSEN-2'DEN SONRA: o da deterministik ve KOTASIZ,
     yani Eksen-2 ile aynı emsalden geçer; dolgunun ÖNÜNDE durur çünkü tek kota tüketicisi dolgudur.
     Adımın süresi ÖLÇÜLÜR (`oncesi_ms`) — kartın kill#1'i "gözlem icrayı yavaşlatamaz" der ve
-    ölçülmeyen bir gecikme, olmayan bir gecikme sayılamaz."""
+    ölçülmeyen bir gecikme, olmayan bir gecikme sayılamaz.
+
+    ADIM 3 ARTIK GÖRÜŞ ÜRETMİYOR (2026-09-01, EDG-2026-019 kill#1 kök çözümü). Eski hâli
+    `skill_gorus.kadans()` çağırıyordu — yani `topla()` + `rapor()` (bootstrap dahil) bu döngünün
+    İÇİNDE koşuyor ve canlıda kadans süresini ×6,6 katlıyordu. Bugün burada YALNIZ t-anı kesiti
+    kuyruğa eklenir; üretim seans dışına, `ops/skill_gorus_uret.py`ye taşındı. Kadansın gövdesi
+    üretim yüzeylerini (`kadans`/`topla`/`rapor`) ÇAĞIRMAZ ve bu sembol düzeyinde çivilidir."""
     import time as _time
     from . import obs, watchdog
     _t0 = _time.perf_counter()
@@ -553,14 +559,14 @@ def _learning_cadence(session: str) -> dict:
         obs.warn("axis2_cycle_failed", session=session, error=f"{type(e).__name__}: {e}",
                  detail="Eksen-2 üreteci koşmadı — atıf kanıtı bir KARARA bağlanmıyor")
         out["eksen2"] = {"error": f"{type(e).__name__}: {e}"}
-    try:                                   # 3) GÖRÜŞ DEFTERİ — deterministik, kotasız, terfisiz
+    try:                                   # 3) GÖRÜŞ KUYRUĞU — yalnız t-anı kesiti, ÜRETİM YOK
         from . import skill_gorus as _sg
-        out["gorus"] = _sg.kadans(oncesi_ms=(_time.perf_counter() - _t0) * 1000.0)
+        out["gorus"] = _sg.kuyruk_kadansi(oncesi_ms=(_time.perf_counter() - _t0) * 1000.0)
     except Exception as e:
-        # YASA 4: defter yazılmazsa skill katmanının kanıtı BİRİKMEZ ve "40 seansta sağkalan yok"
+        # YASA 4: kesit yazılmazsa skill katmanının kanıtı BİRİKMEZ ve "40 seansta sağkalan yok"
         # kill'i, ölçüm hiç koşmadığı için ateşlerdi — susan bir ölçüm, olumsuz bir hükme dönüşür.
         obs.warn("skill_gorus_cadence_failed", session=session, error=f"{type(e).__name__}: {e}",
-                 detail="görüş defteri koşmadı — skill katmanının kanıtı birikmiyor")
+                 detail="görüş kuyruğu yazılmadı — skill katmanının kanıtı birikmiyor")
         out["gorus"] = {"error": f"{type(e).__name__}: {e}"}
     _dolgu = _dolgu_kadansi(session)        # 4) DOLGU — bütçeli, asenkron, en eskiden yeniye
     # Bütçe sözlüğü defterde TEK KOPYA durur: `dolgu` bloğunun içinde de taşımak, aynı türetimi iki
@@ -575,7 +581,10 @@ def _learning_cadence(session: str) -> dict:
     obs.log("learning_cadence", session=session,
             antrenman=(out.get("antrenman") or {}).get("fitted"),
             eksen2_kaydedilen=len((out.get("eksen2") or {}).get("kaydedilen") or []),
-            gorus_yazilan=((out.get("gorus") or {}).get("toplama") or {}).get("yazilan"),
+            # ADIM ARTIK GÖRÜŞ YAZMIYOR, KESİT YAZIYOR: alan adı da onu söylemeli. "yazılan görüş"
+            # diye raporlamak, üretim seans dışına taşındıktan sonra her gece 0 gösterip katmanı
+            # ölü sandırırdı (ölçülen kusur sınıfı: doğru sayı, yanlış etiket).
+            gorus_kuyruk_n=((out.get("gorus") or {}).get("kuyruk") or {}).get("n_gozlem"),
             gorus_sure_ms=(out.get("gorus") or {}).get("sure_ms"),
             dolgu=(out.get("dolgu") or {}).get("baslatildi"),
             detail="seans-sonrası öğrenme kadansı — bar varışından BAĞIMSIZ koştu")

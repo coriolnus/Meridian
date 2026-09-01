@@ -1,0 +1,34 @@
+# meridian-skill-gorus.timer — meridian-skill-gorus.service'i GÜNDE BİR tetikler.
+#
+# SLOT SEÇİMİ: 07:30 UTC — dört kısıttan TÜRETİLDİ, beğenilmedi:
+#   (1) SEANS-DIŞI ŞART (kart EDG-2026-019 kill#1: üretim canlı döngüye maliyet bindiremez;
+#       kuyruk tasarımının bütün varlık sebebi bu). ABD seansı 13:30-20:00 UTC (EDT) /
+#       14:30-21:00 (EST); aynı-akşam bacağı 20:16/21:16'da açılır. 07:30 iki DST rejiminde de
+#       en az 6 saat uzak.
+#   (2) SPRINT PENCERESİ DIŞI: öğrenme sprinti [22:00, 06:00) penceresinde çekirdek-başına
+#       sonda koşturur (`meridian/sprint.py::SPRINT_HOURS`, ölçüm meridian-karne.timer
+#       başlığında). 07:30 pencerenin 1,5 saat sonrası — CPU yarışı yok.
+#   (3) FİLO TAKVİMİNDEN UZAK: backup 23:30 · aylık kopya ayın 3'ü 04:00 · bekçi 10:00 ·
+#       şef 22:00 · karne Cmt 16:00. En yakın komşu 2,5 saat (bekçi) — 4 saatlik bot-mesaj
+#       kapısı bu birimi BAĞLAMAZ (mesaj atmaz) ama I/O komşuluğu yine de seyrek tutuldu.
+#   (4) KUYRUK O SAATTE DOLU: kadans kesitleri gece döngüsünde düşer; 07:30'da önceki günün
+#       kesiti işlenmeyi bekliyor olur. t-çiti sayesinde saat ölçüme girmez (service başlığı).
+[Unit]
+Description=Meridian skill-görüş üretici tetiği (günlük 07:30 UTC, seans-dışı)
+
+[Timer]
+OnCalendar=*-*-* 07:30:00 UTC
+# TELAFİ: kaçan koşum açılışta telafi edilir. Bedeli ölçülü — telafi SEANS İÇİNE düşebilir;
+# kabul edildi çünkü üretici kuyruğu okur/deftere yazar, canlı döngünün p95'ine GİRMEZ (ayrı
+# süreç, ayrı zaman; kill#1'in ölçtüğü kadans-içi senkron maliyetti). En kötü hâl kısa bir
+# I/O komşuluğudur; kaybolan bir gün ise kuyruk birikimi ve (14 seansta) kadans alarmıdır.
+Persistent=true
+# Izgara çakışmasına karşı küçük pay; 5 dk, 2,5 saatlik en yakın komşulukta ihmal edilebilir.
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — BU DOSYADA YAPILACAK BİR ŞEY YOK: timer birimlerinin `[Service]` bölümü
+# olmaz, sertleştirme tetiklenen birimde (meridian-skill-gorus.service) yapıldı. Aynı gerekçe
+# filodaki bütün timer'larda yazılıdır.

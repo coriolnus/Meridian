@@ -210,9 +210,10 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Teşhis adımları
 
-- Bu jetonu **18 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+- Bu jetonu **19 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
   - `meridian/loop.py::_reconcile_gunu_atlandi` → mesaj şablonu: `"mutabakat HİÇ koşmamış — pozisyon sapması hiç ölçülmedi" if _hic else f"mutabakat {_gun} işlem günüdür koşmuyor — pozisyon sapması ÖLÇÜLMÜYOR"`
   - `meridian/selfreview.py::mechanism_failed` → mesaj şablonu: `f"mekanizma ÜRETEMİYOR: {name} — {detail} (üst üste {box['streak']} koşum)"`
+  - `meridian/skill_gorus.py::kuyruk_kadansi` → mesaj şablonu: `f"skill-görüş kuyruğunda {bekleyen} işlenmemiş kesit (tavan " f"{KUYRUK_BIRIKIM_TAVANI}) — seans-dışı üretici koşmuyor"`
   - `meridian/watchdog.py::check_and_alarm` → mesaj şablonu: `f"mekanizma gecikti: {ad} — nabız {_sure(x.get('gap_s'))} sessiz " f"(pencere {_sure(max(0, int(x['gap_s']) - int(x['asim_s'])))}, " f"aşım {_sure(x.get('asim_s'))}). Bu değer İLK TESPİT anına aittir; " "sessizlik sürüyor olabilir — gerçek uzunluk `mechanism_recovered` olayında."`
   - `meridian/watchdog.py::check_eod_supurme_and_alarm` → mesaj şablonu: `f"EOD SÜPÜRME KANITI ÖLÇÜLEMEDİ: {rep.get('olculemedi_neden')}"`
   - `meridian/watchdog.py::check_eod_supurme_and_alarm` → mesaj şablonu: `f"EOD SÜPÜRME KANITI YOK: {rep.get('neden')}"`
@@ -1185,6 +1186,11 @@ Faz-1 2026-08-31; /opt/hindsight/.env F9'DA DEĞİL — sır taşır, repoda yal
 * deploy/hindsight/hindsight-cp.service       → /etc/systemd/system/  (CP UI, EDG-2026-067
 2026-09-01; docker 0.9.2-pinli, YALNIZ 127.0.0.1:9999 + ssh tüneli; /opt/hindsight/.env-cp
 de .env gibi F9-DIŞI sırdır)
+* deploy/oracle-a1/meridian-skill-gorus.service → /etc/systemd/system/  (TSK-058 FAZ C —
+görüş kuyruğunun seans-dışı deterministik üreticisi; çıkış 1 = bayrak kapalı = failed,
+panoda görünür; bayrakla BİRLİKTE iner)
+* deploy/oracle-a1/meridian-skill-gorus.timer → /etc/systemd/system/  (günlük 07:30 UTC —
+seans + sprint penceresi + filo takvimi dışı; gerekçe timer başlığında)
 * deploy/oracle-a1/geridolum.py               → /opt/veri/geridolum.py  (EDG-066 geri-dolum
 sürücüsü; kurulum reçetesi BU BETİKTE DEĞİL, birimin KENDİ başlığındadır — /opt/veri
 ağacı meridian dağıtım yüzeyinin dışında, aylık-bucket istisnasıyla aynı sınıf)

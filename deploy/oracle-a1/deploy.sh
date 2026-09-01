@@ -64,6 +64,11 @@
 #   * deploy/hindsight/hindsight-cp.service       → /etc/systemd/system/  (CP UI, EDG-2026-067
 #     2026-09-01; docker 0.9.2-pinli, YALNIZ 127.0.0.1:9999 + ssh tüneli; /opt/hindsight/.env-cp
 #     de .env gibi F9-DIŞI sırdır)
+#   * deploy/oracle-a1/meridian-skill-gorus.service → /etc/systemd/system/  (TSK-058 FAZ C —
+#     görüş kuyruğunun seans-dışı deterministik üreticisi; çıkış 1 = bayrak kapalı = failed,
+#     panoda görünür; bayrakla BİRLİKTE iner)
+#   * deploy/oracle-a1/meridian-skill-gorus.timer → /etc/systemd/system/  (günlük 07:30 UTC —
+#     seans + sprint penceresi + filo takvimi dışı; gerekçe timer başlığında)
 #   * deploy/oracle-a1/geridolum.py               → /opt/veri/geridolum.py  (EDG-066 geri-dolum
 #     sürücüsü; kurulum reçetesi BU BETİKTE DEĞİL, birimin KENDİ başlığındadır — /opt/veri
 #     ağacı meridian dağıtım yüzeyinin dışında, aylık-bucket istisnasıyla aynı sınıf)

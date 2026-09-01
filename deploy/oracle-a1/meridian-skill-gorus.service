@@ -1,0 +1,68 @@
+# meridian-skill-gorus.service — görüş kuyruğunun SEANS-DIŞI üreticisi (EDG-2026-019 kill#1
+# kök çözümünün icra bacağı; TSK-058).
+#
+# NE KOŞAR: `ops/skill_gorus_uret.py --uygula` — gece kadansının kuyruğa bıraktığı t-anı
+# kesitlerinden görüş satırları türetir, deftere yazar, kesitleri işaretler. t-ÇİTİ betiğin
+# başlığında: satır ts'i SNAPSHOT anıdır, bu birimin gecikmesi ölçümü tazelemez, yalnız yazımı
+# erteler — yani slot kaçarsa bilgi bozulmaz, birikir (birikim >14 seans olursa kadans obs.alarm
+# atar; o alarm BU birimin değil kadansın işidir).
+#
+# YALNIZ DETERMİNİSTİK YOL. `--llm` (EDG-2026-063 gölge üreticisi) BİLEREK bu birimde YOK:
+# (a) defter yazımı file_lock'ludur ama kilit SÜREÇ-İÇİDİR (ölçüm 2026-08-20 sınıfı) — iki
+# üretici iki ayrı süreçte aynı ana düşerse yarışır; (b) LLM yolunun ilk koşumları kota/model
+# dalgalanması gözetimiyle ELLE yapılır. Gölge üreticinin zamanlanması ayrı kalemdir ve kendi
+# birimiyle gelir (kart EDG-2026-063'e not düşüldü).
+#
+# ÇIKIŞ KODU SÖZLEŞMESİ (`ops/skill_gorus_uret.py` başlığından, ölçüldü):
+#     0 = koştu (üretilecek bir şey olmasa da — boş kuyruk arıza değildir)
+#     1 = `--uygula` istendi ama `config.SKILL_GORUS_URETIM_ACIK=False` — birim `failed` olur
+#         ve OKUYUCUSU VAR: `/api/infra` failed'i "arizali" sınıflar (Yasa 6). Bayrak kapalıyken
+#         bu timer'ı kurulu bırakmak her gece kırmızı üretir — birim bayrakla BİRLİKTE iner
+#         (dağıtım reçetesi TSK-058 FAZ C), ayrı değil.
+#
+# KURULUM ELLE — F9 SINIFI (dagit bu dosyayı TAŞIMAZ; içerik kapısı [F9] ayrıklığı RAPORLAR).
+# `deploy.sh` kapılı-enable deseni: timer yalnız ZATEN açıksa açık tutulur; İLK enable kararı
+# Rol-1 dağıtım reçetesinindir (TSK-092 dersi: birimlerin istenen durumu dağıtımda korunur).
+[Unit]
+Description=Meridian skill-görüş üreticisi (kuyruktan, seans-dışı; EDG-2026-019)
+# network-online BİLEREK YOK: deterministik yol ağa çıkmaz (LLM yok, Telegram yok) — ağ
+# beklemek bu birime yalnız sahte bağımlılık eklerdi.
+
+[Service]
+Type=oneshot
+User=ubuntu
+# Depo kökünden koşmalı: betik `sys.path` bootstrap'ini kendi yapar ama `state/` yolları
+# config üzerinden köke bağlıdır.
+WorkingDirectory=/opt/meridian
+ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/skill_gorus_uret.py --uygula
+
+# H3 SERTLEŞTİRME — filo ortak seti (gerekçelerin tam metni meridian.service'te). TEK BEYANLI
+# AYRIŞMA: `RestrictAddressFamilies=AF_UNIX` — kardeşler AF_INET/AF_INET6 de taşır çünkü ağa
+# çıkarlar; bu birim ÇIKMAZ (yalnız yerel defter/state yazımı). En-az-yetki, filo-birebirlikten
+# önce gelir; bu yüzden birim `tests/test_h3_tur2_v174.py::SERTLESTIRILEN` kümesine EKLENMEDİ
+# (o küme birebir-aynı seti ölçer — buraya eklemek ya bu birime gereksiz ağ açmak ya çiviyi
+# gevşetmek olurdu; ikisi de yanlış).
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# `/opt/meridian`: defter (`state/skill_gorusleri.jsonl`), kuyruk işaretleri, durum dosyası,
+# `state/events.jsonl` → obs.log ve import `__pycache__`i — hepsi bu ağacın altında.
+ReadWritePaths=/opt/meridian
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+# [Install] BÖLÜMÜ BİLEREK YOK — tetik YALNIZ meridian-skill-gorus.timer (filo konvansiyonu:
+# timer-tetikli oneshot'larda enable hedefi timer'dır; gerekçe meridian-karne.service'te).

@@ -594,7 +594,11 @@ def _sched_env(monkeypatch, coverage: dict, index: pd.DataFrame, session="2026-0
     monkeypatch.setattr(ds, "load_live", lambda use_cache=True, session=None: (coverage, index))
     # ---- KAZANÇ TAKVİMİ BACAĞI TESTTE KAPALI (v177 ağ-kapısı turu, 2026-08-02) -------------------
     # `advance_once` gövdesinde bu dosyanın konusuyla İLGİSİZ bir haftalık kadans var
-    # (scheduler.py:777): `earnings.refresh(REPLAY_UNIVERSE)` → 251 sembol, `nasdaq_earnings_window`
+    # (çapa SEMBOLE çevrildi 2026-09-01 — buradaki eski SATIR çapası, TSK-058'in öğrenme-kadansı
+    # düzenlemesi scheduler'da satır kaydırınca bir YORUM satırını göstermeye başladı ve
+    # `codelaw.stale_line_anchors` onu ÇÜRÜK yakaladı; satır kayar, sembol kaymaz):
+    # `scheduler.advance_once::earnings.refresh(list(REPLAY_UNIVERSE))` → 251
+    # sembol, `nasdaq_earnings_window`
     # üzerinden api.nasdaq.com'a GÜN BAŞINA bir istek (-7/+21 gün ≈ 20 iş günü), Nasdaq boş dönerse
     # ayrıca 251 istekli FMP yedeği. Bu dosyanın hiçbir iddiası earnings'e bakmaz — ölçtüğü şey
     # aynı-akşam YOĞUN/SEYREK faz merdivenidir — ama bacak yamalı olmadığı için `_sched_env` kuran

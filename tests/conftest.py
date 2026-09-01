@@ -849,6 +849,33 @@ def vaka(sandbox_state):
     return yukle
 
 
+@pytest.fixture
+def kod_govdesi():
+    """`kod_govdesi(yol)` → YORUMLARI AYIKLANMIŞ kaynak metni. Kaynak-tarayıcı çivilerin ortak aleti.
+
+    NEDEN FİKSTÜR (2026-09-01, v218↔v357 tek-kaynak): iki test dosyası da "bu modülde şu çağrı
+    GEÇMİYOR" diye ölçüyor ve ikisi de naif `satir.split("#")[0]` kullanıyordu. O ayıklama bir
+    DİZGİNİN İÇİNDEKİ `#`i yorum sanar (`"a#b"` → `"a`) ve satırın gerisini sessizce siler: çivi,
+    silinen bölgede duran bir ihlali GÖREMEZ — yani yasağın kapsamı, yasak metnin nerede yazıldığına
+    bağlı olurdu. `tokenize` Python'un kendi ayrıştırıcısıdır ve dizgi ile yorumu karıştırmaz.
+    Yardımcının İKİ KOPYASI, aynı körlüğün iki yerde ayrı ayrı düzeltilmesi demekti."""
+    import io
+    import tokenize
+
+    def _al(yol) -> str:
+        # YERLEŞİM KORUNUR, YALNIZ YORUM KESİLİR: jetonları yeniden birleştirmek `sg.evren()`i
+        # `sg . evren ( )`e çevirir ve "şu çağrı geçiyor mu" araması hiçbir şey bulamaz. Yorum
+        # jetonu HER ZAMAN tek satırlıktır, o yüzden satırı başlangıç sütunundan kesmek yeter.
+        src = pathlib.Path(yol).read_text(encoding="utf-8")
+        satirlar = src.splitlines()
+        for t in tokenize.generate_tokens(io.StringIO(src).readline):
+            if t.type == tokenize.COMMENT:
+                satir, sutun = t.start
+                satirlar[satir - 1] = satirlar[satir - 1][:sutun]
+        return "\n".join(satirlar)
+    return _al
+
+
 def make_bars(n=320, seed=7, trend=0.0006, breakout_at=None):
     """Deterministic OHLCV with an optional clean breakout near the end."""
     rng = np.random.default_rng(seed)

@@ -15,7 +15,13 @@ import re
 
 import pytest
 
-from meridian import api, skill_gorus as sg, skills, store
+from meridian import api, codelaw, skill_gorus as sg, skills, store
+
+# YAZIM FİİLLERİNİN TEK KAYNAĞI: `codelaw.WRITE_CALLS` — artefakt grafiğini kuran denetçinin
+# KENDİ tanımı. Buradaki desen ondan TÜRETİLİR; ikinci bir elle liste, denetçi yeni bir yazım
+# fiili öğrendiği gün sessizce kör kalırdı (tek-kaynak yasası). `test_skill_gorus_llm_v357.py`
+# de aynı kaynaktan besleniyor.
+WRITE_CALL_RE = r"store\.(?:" + "|".join(sorted(codelaw.WRITE_CALLS)) + r")\(\s*([A-Z_]+)"
 
 
 # EDG-2026-019 KILL#1 (Rol-1 hükmü 2026-08-23): katman canlıda KAPALI (config.SKILL_GORUS_URETIM_ACIK
@@ -471,16 +477,26 @@ def test_FDR_sagkalan_bile_olsa_HICBIR_TERFI_UYGULANMAZ(kayit):
     assert "OTOMATİK DEĞİL" in r["beyan"]
 
 
-def test_gorus_modulu_KARAR_YAZAN_hicbir_cagriyi_ICERMEZ():
+def test_gorus_modulu_KARAR_YAZAN_hicbir_cagriyi_ICERMEZ(kod_govdesi):
     """Kaynak çivisi: yarın biri 'küçük bir kolaylık' diye terfi yazarsa test düşsün."""
-    src = pathlib.Path(sg.__file__).read_text()
-    kod = "\n".join(s.split("#")[0] for s in src.splitlines())
+    kod = kod_govdesi(sg.__file__)
     for yasak in ("apply_skill_action", "record_recommendation", "reconcile_enablement",
                   "auto_shadow_from_evidence", "skills_registry"):
         assert yasak not in kod, f"görüş katmanı karar yazan bir yola bağlanmış: {yasak}"
-    # Yazdığı dosyalar SAYILIDIR ve ikisi de kendi defteri.
-    yazimlar = set(re.findall(r"store\.(?:write_json|write_jsonl|append_jsonl)\(\s*([A-Z_]+)", kod))
-    assert yazimlar <= {"GORUS_DEFTERI", "DURUM_DEFTERI"}, f"beklenmeyen yazım hedefi: {yazimlar}"
+    # Yazdığı dosyalar SAYILIDIR ve ÜÇÜ DE kendi defteri.
+    # KUYRUK_DEFTERI 2026-09-01'de EKLENDİ (EDG-2026-019 kill#1 kök çözümü): görüş üretimi öğrenme
+    # kadansından çıkarıldı ve kadansta kalan iş, t-anı kesitini `skill_gorus_kuyruk.jsonl`e
+    # eklemek oldu. Çivinin SÖZÜ değişmedi — "bu katman yalnız KENDİ defterlerine yazar, hiçbir
+    # karar yüzeyine dokunmaz"; genişleyen şey katmanın kendi defter sayısıdır. Liste kapalıdır:
+    # dördüncü bir ad eklenirse bu çivi yine öter.
+    #
+    # YAZIM FİİLLERİ `codelaw.WRITE_CALLS`TAN TÜRETİLİR (tek-kaynak, 2026-09-01). Elle yazılmış
+    # liste `update_json`/`update_jsonl`/`merge_dated_jsonl`i KAÇIRIYORDU: `store.update_jsonl`
+    # ile yazan bir yol bu çiviye GÖRÜNMEZDİ, yani "yazım hedefleri sayılıdır" iddiası eksik
+    # ölçülüyordu. Denetçinin kendi tanımını kullanmak, iki listenin sessizce ayrışmasını da bitirir.
+    yazimlar = set(re.findall(WRITE_CALL_RE, kod))
+    assert yazimlar <= {"GORUS_DEFTERI", "DURUM_DEFTERI", "KUYRUK_DEFTERI"}, \
+        f"beklenmeyen yazım hedefi: {yazimlar}"
 
 
 def test_katman_IKI_YONLU_keser_negatif_kanit_EMEKLILIK_isaretine_duser(kayit):

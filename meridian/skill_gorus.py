@@ -9,11 +9,25 @@ GERÇEKLEŞEN sonuçla puanlar (sıralayıcıda rank-IC, çıkışta kıyas), h�
 BH-FDR süzgeciyle yüzey-başına kanıt olarak operatöre gider. Şemada beş yüzey vardır (YUZEYLER),
 ikisi ölçülür (OLCULEN_YUZEYLER); çözücüsü olmayan yüzeye görüş YAZILMAZ (okuyucusuz yazım yok).
 
-KİLİT GİRİŞLER. `topla` (görüş üretimi; yazım tavanlı, en eskiden yeniye), `kadans` (öğrenme
-kadansı kancası; süre örneklemi + p95 tavanı), `rapor` (FDR-sağkalan hüküm yüzeyi), `evren`
-(aktif + korumasız + deterministik küme, dışlama muhasebesiyle), `gorus_satiri` (şema doğrulamalı
-satır — kusurlu satır atılmaz, ValueError atar), `cozucu_siralayici`/`cozucu_cikis`,
-`bootstrap_p`/`bh_fdr`, `defter`.
+KİLİT GİRİŞLER. `kuyruk_kadansi` (öğrenme kadansının BUGÜNKÜ kancası: yalnız snapshot append'i),
+`kuyruktan_uret` (seans-dışı toplu üretici; ops betiğinin gövdesi), `topla` (doğrudan defterden
+üretim — kuru koşu/ölçüm aracı), `kadans` (tam ölçüm koşusu; ARTIK SCHEDULER'DAN ÇAĞRILMAZ),
+`rapor` (FDR-sağkalan hüküm yüzeyi), `evren` (aktif + korumasız + deterministik küme, dışlama
+muhasebesiyle), `gorus_satiri` (şema doğrulamalı satır — kusurlu satır atılmaz, ValueError atar),
+`cozucu_siralayici`/`cozucu_cikis`, `bootstrap_p`/`bh_fdr`, `defter`, `kuyruk_oku`.
+
+ÜRETİM KADANSTAN ÇIKTI (EDG-2026-019 kill#1 KÖK ÇÖZÜMÜ, 2026-09-01). Kill#1 "gözlem icrayı
+yavaşlatamaz" der ve canlıda p95_pay 6,57 ölçüldü: üretim, öğrenme kadansının İÇİNDE senkron
+koşuyordu. Bugünkü mimari ikiye ayırır:
+  * KADANS İÇİ — `kuyruk_kadansi`: t-anı GİRDİ KESİTİ (`_snapshot`) tek satır olarak
+    `skill_gorus_kuyruk.jsonl`e eklenir. Ağır hesap (defter okuma, tekilleştirme, bootstrap,
+    `rapor`) bu yolda YOKTUR; yolun kendi süresi aynı p95 düzeneğiyle ölçülmeye devam eder.
+  * SEANS DIŞI — `kuyruktan_uret` (ops/skill_gorus_uret.py): işlenmemiş snapshot'ları okur,
+    görüşleri türetir, deftere yazar, snapshot'ı İŞLENDİ diye işaretler. İdempotent (hem işaret
+    hem anahtar tekilleştirmesi).
+t-ÇİTİ: kuyruktan üretilen satırın `ts`'i SNAPSHOT anıdır, üretim anı değil; üretici kesitte
+olmayan hiçbir alana bakamaz (`SNAPSHOT_ALANLARI` beyaz listesi — sonradan eklenen alan sayılır
+ve düşürülür, canlı deftere geri dönülmez).
 
 DEĞİŞMEZLER — GÖLGE/GÖRÜŞ KATMANI SÖZLEŞMESİ. HİÇBİR TERFİ OTOMATİK DEĞİL: bu modül kayıt
 defterine, bayrağa, eşiğe, plana, emre DOKUNMAZ — canlı karara hiçbir yol çıkmaz; FDR-sağkalanlar
@@ -26,12 +40,16 @@ kod onları değiştiremez). Görüş üretimi kadans süresini tavanın üstün
 `api._eksen2_gorus()` (pano) + `scheduler._learning_cadence` (öğrenme defteri).
 
 OKUR: skills.catalog/ENGINE_IMPLEMENTED (evren), counterfactuals + trades sonuç defterleri,
-exit_efficiency.json (girdi bekçisi).
-YAZAR: yalnız kendi iki defteri `state/skill_gorusleri.jsonl` + `state/skill_gorus_durum.json`.
+exit_efficiency.json (girdi bekçisi), kendi snapshot kuyruğu.
+YAZAR: yalnız kendi ÜÇ defteri `state/skill_gorusleri.jsonl` + `state/skill_gorus_durum.json` +
+`state/skill_gorus_kuyruk.jsonl`. Kuyruğun DIŞ okuyucuları: `api._gorus_kuyrugu` (pano derinliği)
+ve `ops/skill_gorus_uret.py` (üretici) — YASA 6 karşılığı beyanla değil OKUYUCUYLA kapanır.
 """
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
+import json
 import time
 
 from . import store
@@ -54,6 +72,35 @@ OLCULEN_YUZEYLER = ("aday-siralayici", "cikis")
 
 GORUS_DEFTERI = "skill_gorusleri.jsonl"     # LİTERAL ad (codelaw.artifact_graph çözebilsin)
 DURUM_DEFTERI = "skill_gorus_durum.json"    # son kadans koşusu + süre örneklemleri (p95 kill'i)
+KUYRUK_DEFTERI = "skill_gorus_kuyruk.jsonl"  # t-anı girdi kesitleri (kadans yazar, ops üretici okur)
+
+# İKİ KADANS YOLU, İKİ AD. p95 örneklemi YOL BAŞINA ayrılır: kuyruk yolunun maliyeti tam koşunun
+# maliyeti DEĞİLDİR ve ikisini tek halkada karıştırmak, kill#1'in ölçtüğü sayıyı iki farklı işin
+# ortalamasına çevirirdi. `yol` alanı OLMAYAN eski örnekler KADANS sayılır — onlar kuyruk yolundan
+# ÖNCE yazıldı; "bilinmiyor" diye atmak canlıdaki kill kaydını sessizce silmek olurdu.
+KADANS_YOLU = "kadans"      # topla + rapor (tam koşu) — ARTIK scheduler'dan çağrılmaz
+KUYRUK_YOLU = "kuyruk"      # yalnız snapshot append'i — bugünkü kadans adımı
+
+# DURUM DEFTERİNİN İKİ KADANS YOLU DIŞINDA KALAN, EZİLMEMESİ GEREKEN ANAHTARI: seans-dışı gölge
+# üreticinin son koşum özeti. Kadans yazımı belgeyi BÜTÜN olarak değiştirir; bu anahtar
+# korunmasaydı her gece silinir ve "kota doldu mu / kaç ölçülemedi" sorusu kalıcı okuyucusuz
+# kalırdı (YASA 6 alan düzeyinde).
+LLM_URETIM_ANAHTARI = "son_llm_uretim"
+_DURUM_KORUNAN = (LLM_URETIM_ANAHTARI,)
+
+# KUYRUK BİRİKİM EŞİĞİ — İŞLENMEMİŞ SNAPSHOT SAYISI. Üretim kadanstan çıktı, yani "kadans koştu"
+# ile "görüş üretildi" ARTIK AYNI OLAY DEĞİL: üretici hiç koşmazsa kuyruk sessizce birikir ve
+# defter donuk kalır. Sessiz birikim tam olarak bu deponun en sık ölçtüğü arıza sınıfıdır
+# (dormant_setup dersi), o yüzden birikmenin KENDİSİ alarmdır. Sayı 14: iki haftalık gecelik
+# kadans — bir haftalık gecikme normal operatör ritmi içinde kalsın, iki hafta kalmasın.
+KUYRUK_BIRIKIM_TAVANI = 14
+
+# SNAPSHOT ŞEMASI — t-ÇİTİNİN KENDİSİ. Üretici bu beyaz listenin DIŞINDAKİ hiçbir alanı okumaz:
+# kesit alındıktan SONRA bir gözleme alan eklenirse (elle, başka bir süreçten, ya da şema
+# genişlemesiyle) o alan üretime SIZAMAZ — sayılır ve düşürülür. Liste `_gozlemler()`in ürettiği
+# alanların TAM kopyasıdır ve ikisi ayrışırsa çivi öter (v356).
+SNAPSHOT_ALANLARI = ("skill", "tarih", "hedef", "skor", "karar", "r", "mfe_r", "kaynak")
+KUYRUK_SEMA = 1             # snapshot şema sürümü; tanınmayan sürüm ONARILMAZ, adıyla atlanır
 
 # YAZIM TAVANI — kill#1'in ÖN ALICISI, bir kalite ödünü DEĞİL. Defter geçmişe dönük doluyor
 # (cf defterinde bugün 7053 çözülmüş satır var); hepsini TEK kadansta yazmak o gecenin döngüsünü
@@ -135,12 +182,21 @@ def evren() -> dict:
 # ==================================================================================================
 # GÖRÜŞ SATIRI — ŞEMA VE YAZIM
 # ==================================================================================================
-_ALANLAR = ("skill", "ts", "yuzey", "hedef", "skor", "karar", "gerekce_ozeti", "tarih")
+_ALANLAR = ("skill", "ts", "yuzey", "hedef", "skor", "karar", "gerekce_ozeti", "tarih", "uretici")
+
+# ÜRETİCİ SINIFI — TEK ALAN, İKİ KART. EDG-2026-019 deterministik üreticiyi ölçer, EDG-2026-063
+# beyan-only skill'lerin LLM gölge üreticisini. İkinci bir DEFTER açmak ikinci bir hata sınıfı
+# olurdu (063 kill-list #1: "defter ya da çözücü 019'dan AYRI ikinci bir kopya olarak kurulursa
+# geçersiz"), o yüzden defter TEK ve satır KÜNYE taşır. Varsayılan `det`tir: alanı olmayan eski
+# satırlar okunurken deterministik sayılır ve geriye dönük YENİDEN YAZILMAZ.
+URETICI_DET, URETICI_LLM = "det", "llm"
+URETICILER = (URETICI_DET, URETICI_LLM)
 
 
 def gorus_satiri(skill: str, yuzey: str, hedef: str, *, tarih: str,
                  skor: float | None = None, karar: str | None = None,
-                 gerekce_ozeti: str = "", ts: str | None = None) -> dict:
+                 gerekce_ozeti: str = "", ts: str | None = None,
+                 uretici: str = URETICI_DET) -> dict:
     """Tek görüş satırı — şema doğrulamasıyla. Kusurlu satır ATILMAZ, `ValueError` atar.
 
     `skor` ve `karar` BİRLİKTE de boş olamaz: görüşsüz bir görüş satırı, defteri sayı olarak
@@ -155,10 +211,13 @@ def gorus_satiri(skill: str, yuzey: str, hedef: str, *, tarih: str,
         raise ValueError("skill/hedef/tarih zorunlu — kimliksiz görüş çözülemez")
     if skor is None and not karar:
         raise ValueError("skor VEYA karar zorunlu — görüşsüz görüş satırı yazılmaz")
+    if uretici not in URETICILER:
+        raise ValueError(f"bilinmeyen üretici {uretici!r} — sınıflar: {URETICILER}")
     return {"skill": str(skill), "ts": ts or _now(), "yuzey": yuzey, "hedef": str(hedef),
             "skor": (None if skor is None else float(skor)),
             "karar": (str(karar) if karar else None),
-            "gerekce_ozeti": str(gerekce_ozeti)[:200], "tarih": str(tarih)}
+            "gerekce_ozeti": str(gerekce_ozeti)[:200], "tarih": str(tarih),
+            "uretici": uretici}
 
 
 def defter() -> list[dict]:
@@ -167,8 +226,23 @@ def defter() -> list[dict]:
 
 
 def _anahtar(g: dict) -> tuple:
-    """Bir görüş kaydının kimlik anahtarı: (skill, yüzey, hedef) üçlüsü — tekilleştirme/eşleştirme için."""
+    """Bir görüş kaydının kimlik anahtarı: (skill, yüzey, hedef) üçlüsü — tekilleştirme/eşleştirme için.
+
+    `uretici` ANAHTARA GİRMEZ, iki nedenle: (1) iki üretici sınıfının EVRENİ ayrıktır (019
+    `ENGINE_IMPLEMENTED` içi, 063 dışı), yani skill adı zaten sınıfı ayırır; (2) alanı olmayan
+    ESKİ satırlar `None`, yenileri `"det"` taşır — anahtara koymak aynı görüşü iki kez yazdırırdı."""
     return (g.get("skill"), g.get("yuzey"), g.get("hedef"))
+
+
+def deftere_yaz(satirlar: list[dict]) -> int:
+    """Görüş defterinin TEK YAZIM KAPISI — kaç satır yazıldığını döner.
+
+    NEDEN TEK KAPI. Defterin ikinci bir yazarı (`skill_gorus_llm`) doğdu ve `store.append_jsonl`i
+    orada tekrarlamak, `codelaw.artifact_graph`ta defterin iki yazarlı görünmesi demekti: "bu
+    dosyayı kim yazıyor" sorusunun cevabı ikiye bölünürdü. Yazan modül TEKTİR, çağıran çok."""
+    for s in satirlar:
+        store.append_jsonl(GORUS_DEFTERI, s)
+    return len(satirlar)
 
 
 # ==================================================================================================
@@ -249,10 +323,69 @@ def _gozlemler() -> dict:
     return {"satirlar": out, "atlanan": atlanan}
 
 
+def _gorusleri_tureti(gozlemler: list[dict], izinli: set, var: set, *,
+                      ts: str | None = None) -> tuple[list[dict], dict]:
+    """Gözlem kesitinden görüş satırları — İKİ ÜRETİM YOLUNUN TEK KAYNAĞI (tek-kaynak yasası).
+
+    `topla` (canlı defterden) ve `kuyruktan_uret` (snapshot'tan) AYNI türetimi kullanır; ikinci
+    bir kopya yazılsaydı iki yol aynı gözlemden farklı satır üretmeye başlar ve fark ancak
+    defterde görünürdü.
+
+    t-ÇİTİ İKİ PARÇALI:
+      1. `ts` verilirse satırın damgası SNAPSHOT anıdır (üretim anı değil) — seans-dışı üretim,
+         görüşü üretildiği geceye değil GÖZLENDİĞİ ana bağlar;
+      2. her gözlem `SNAPSHOT_ALANLARI` beyaz listesine İNDİRGENİR. Kesit alındıktan sonra
+         eklenmiş bir alan (`skor_v2`, düzeltilmiş `r`, …) üretime SIZAMAZ: sayılır (`cit_disi_alan`)
+         ve düşürülür. Eksik kanonik alan ONARILMAZ — kendi kovasına adıyla düşer."""
+    yeni: list[dict] = []
+    atlanan = {"evren_disi": 0, "zaten_var": 0, "skorsuz": 0, "cikis_olcusuz": 0,
+               "kimliksiz": 0, "cit_disi_alan": 0}
+    for ham in sorted(gozlemler, key=lambda x: (str(x.get("tarih") or ""), str(x.get("hedef") or ""))):
+        atlanan["cit_disi_alan"] += sum(1 for k in ham if k not in SNAPSHOT_ALANLARI)
+        g = {k: ham.get(k) for k in SNAPSHOT_ALANLARI}
+        sk = g.get("skill")
+        if sk not in izinli:
+            atlanan["evren_disi"] += 1
+            continue
+        if not g.get("hedef") or not g.get("tarih"):
+            atlanan["kimliksiz"] += 1        # kimliksiz görüş çözülemez — uydurulmaz, sayılır
+            continue
+        # --- aday-siralayici: skill'in plan anındaki SKOR görüşü -----------------------------
+        if g.get("skor") is None:
+            atlanan["skorsuz"] += 1
+        else:
+            s = gorus_satiri(sk, "aday-siralayici", g["hedef"], tarih=g["tarih"],
+                             skor=g["skor"], ts=ts,
+                             gerekce_ozeti=f"aday skoru (plan anı) · kaynak={g.get('kaynak')}")
+            if _anahtar(s) in var:
+                atlanan["zaten_var"] += 1
+            else:
+                yeni.append(s); var.add(_anahtar(s))
+        # --- cikis: adayın çıkış kararı ------------------------------------------------------
+        # ATIF DÜRÜSTÇE YAZILIR: çıkış kuralı MOTORUNdur, aday bu skill'indir. Gerekçe özeti bunu
+        # satırın kendi üstünde söyler — "skill'in çıkış kuralı" diye okunursa ölçüm yalan söyler.
+        if g.get("mfe_r") is None or g.get("r") is None:
+            atlanan["cikis_olcusuz"] += 1
+            continue
+        c = gorus_satiri(sk, "cikis", g["hedef"], tarih=g["tarih"], ts=ts,
+                         karar=str(g.get("karar") or "?"),
+                         gerekce_ozeti=("motor çıkış kuralı, aday bu skill'den · "
+                                        f"kaynak={g.get('kaynak')}"))
+        if _anahtar(c) in var:
+            atlanan["zaten_var"] += 1
+        else:
+            yeni.append(c); var.add(_anahtar(c))
+    return yeni, atlanan
+
+
 def topla(apply: bool = True, tavan: int | None = YAZIM_TAVANI) -> dict:
-    """Evrendeki skill'lerin görüşlerini defterle — yalnız YENİ olanları (anahtar: skill+yüzey+hedef).
+    """Evrendeki skill'lerin görüşlerini CANLI defterlerden türetip defterle — yalnız YENİ olanları.
 
     `apply=False`: hiçbir şey yazılmaz, ne yazılacağı döner (testler + kuru koşu).
+
+    BU YOL ARTIK KADANSTA DEĞİL (2026-09-01, kill#1 kök çözümü): scheduler `kuyruk_kadansi`
+    çağırır. Burası bilinçli/elle koşulan ÖLÇÜM yoludur — t-çiti YOKTUR (satır ÜRETİM anını
+    damgalar), çünkü kesit ile üretim arasında zaman geçmez.
 
     KATMAN KAPISI (EDG-2026-019 kill#1, Rol-1 hükmü 2026-08-23): `config.SKILL_GORUS_URETIM_ACIK`
     kapalıyken YAZIM YOLU ÖLÜDÜR — apply=True bile deftere dokunmaz (gerekçe bayrağın kendi
@@ -267,48 +400,17 @@ def topla(apply: bool = True, tavan: int | None = YAZIM_TAVANI) -> dict:
     ev = evren()
     izinli = set(ev["evren"])
     var = {_anahtar(g) for g in defter()}
-    yeni: list[dict] = []
     gz = _gozlemler()
+    yeni, atl = _gorusleri_tureti(gz["satirlar"], izinli, var)
     # ELEME MUHASEBESİ TEK SÖZLÜKTE: kaynak defterde düşen satır ile burada düşen satır AYRI
     # sebeplerdir ve ikisi de görünür kalmalı — "az görüş yazıldı"nın nedeni ikisinden biridir.
-    atlanan = {"evren_disi": 0, "zaten_var": 0, "skorsuz": 0, "cikis_olcusuz": 0, **gz["atlanan"]}
-    for g in sorted(gz["satirlar"], key=lambda x: (x["tarih"], x["hedef"])):
-        sk = g["skill"]
-        if sk not in izinli:
-            atlanan["evren_disi"] += 1
-            continue
-        # --- aday-siralayici: skill'in plan anındaki SKOR görüşü -----------------------------
-        if g.get("skor") is None:
-            atlanan["skorsuz"] += 1
-        else:
-            s = gorus_satiri(sk, "aday-siralayici", g["hedef"], tarih=g["tarih"],
-                             skor=g["skor"],
-                             gerekce_ozeti=f"aday skoru (plan anı) · kaynak={g['kaynak']}")
-            if _anahtar(s) in var:
-                atlanan["zaten_var"] += 1
-            else:
-                yeni.append(s); var.add(_anahtar(s))
-        # --- cikis: adayın çıkış kararı ------------------------------------------------------
-        # ATIF DÜRÜSTÇE YAZILIR: çıkış kuralı MOTORUNdur, aday bu skill'indir. Gerekçe özeti bunu
-        # satırın kendi üstünde söyler — "skill'in çıkış kuralı" diye okunursa ölçüm yalan söyler.
-        if g.get("mfe_r") is None or g.get("r") is None:
-            atlanan["cikis_olcusuz"] += 1
-            continue
-        c = gorus_satiri(sk, "cikis", g["hedef"], tarih=g["tarih"],
-                         karar=str(g.get("karar") or "?"),
-                         gerekce_ozeti=("motor çıkış kuralı, aday bu skill'den · "
-                                        f"kaynak={g['kaynak']}"))
-        if _anahtar(c) in var:
-            atlanan["zaten_var"] += 1
-        else:
-            yeni.append(c); var.add(_anahtar(c))
+    atlanan = {**atl, **gz["atlanan"]}
     kirpilan = 0
     if tavan is not None and len(yeni) > tavan:
         kirpilan = len(yeni) - tavan
         yeni = yeni[:tavan]              # EN ESKİDEN yeniye (liste tarih sıralı) — seçim yok
     if apply:
-        for s in yeni:
-            store.append_jsonl(GORUS_DEFTERI, s)
+        deftere_yaz(yeni)
     return {"yazilan": len(yeni), "kirpilan": kirpilan, "tavan": tavan,
             "atlanan": atlanan, "evren": ev["evren"], "uygulandi_mi": bool(apply),
             "defter_toplam": len(var)}
@@ -535,6 +637,49 @@ def _girdi_bekcisi() -> dict:
 
 
 # ==================================================================================================
+# ÜRETİCİ KIRILIMI — İKİ KARTIN SATIRLARI AYNI DEFTERDE, AMA AYRI SAYILIR
+# ==================================================================================================
+def satir_uretici(g: dict) -> str:
+    """Bir görüş satırının üretici sınıfı. Alanı OLMAYAN eski satırlar `det` sayılır.
+
+    GERİYE DÖNÜK YENİDEN YAZIM YOK: canlıdaki 5.500 satır bu alan doğmadan önce yazıldı ve
+    hepsi deterministik üreticidendi; onlara alan EKLEMEK defteri tahrif etmek olurdu. Varsayım
+    burada TEK yerde durur ve adıyla beyan edilir."""
+    return str(g.get("uretici") or URETICI_DET)
+
+
+def _satir_uretici_sinifi(gorusler: list[dict], skill: str) -> str | None:
+    """Bir skill'in satırlarının üretici sınıfı — KARIŞIKSA None (hüküm verilmez).
+
+    Evrenler ayrık olduğu için bir skill normalde TEK sınıfa aittir. Karışım bir arıza işaretidir
+    (019 evreni genişledi ya da bir satır yanlış künyeyle yazıldı) ve o skill hiçbir aileye
+    sokulmaz: yanlış aileye koymak, çokluk düzeltmesini sessizce kaydırırdı."""
+    siniflar = {satir_uretici(g) for g in gorusler if g.get("skill") == skill}
+    return siniflar.pop() if len(siniflar) == 1 else None
+
+
+def uretici_kirilimi(gorusler: list[dict] | None = None) -> dict:
+    """Defterin üretici × yüzey sayımı — 063'ün gölge serisi 019'un yanında ADIYLA durur.
+
+    OKUYUCU: `rapor()` (dolayısıyla `api._eksen2_gorus`) ve ops üreticisinin özeti. Künyenin
+    kendisi bir alan olarak yazıldıysa okunabilir de olmalı (YASA 6 alan düzeyinde)."""
+    satirlar = defter() if gorusler is None else gorusler
+    out: dict[str, dict] = {}
+    for g in satirlar:
+        u = satir_uretici(g)
+        y = str(g.get("yuzey") or "?")
+        kova = out.setdefault(u, {"n": 0, "yuzey": {}, "skill": {}})
+        kova["n"] += 1
+        kova["yuzey"][y] = kova["yuzey"].get(y, 0) + 1
+        sk = str(g.get("skill") or "?")
+        kova["skill"][sk] = kova["skill"].get(sk, 0) + 1
+    for kova in out.values():
+        kova["yuzey"] = dict(sorted(kova["yuzey"].items()))
+        kova["skill"] = dict(sorted(kova["skill"].items()))
+    return dict(sorted(out.items()))
+
+
+# ==================================================================================================
 # RAPOR — SAF OKUMA, HİÇBİR TERFİ OTOMATİK DEĞİL
 # ==================================================================================================
 def rapor() -> dict:
@@ -553,10 +698,34 @@ def rapor() -> dict:
             yuzeyler[yuzey] = {"durum": "HÜKÜM YOK", "neden": bekci[yuzey]["neden"],
                                "skiller": {}, "fdr": None}
             continue
+        # AİLE ÜRETİCİ BAŞINA AYRILIR (Rol-1 hükmü 2026-09-01). BH-FDR'nin eşiği `q·i/m`dir, yani
+        # AİLE BÜYÜKLÜĞÜNE bağlıdır: 063'ün gölge satırları 019'un defterine düştükçe `m` büyür,
+        # `kritik_p` kayar ve 019'un ÖLÇÜMDEN ÖNCE DONDURULMUŞ hükmü — hiçbir eşik elle
+        # değiştirilmeden — sessizce başkalaşırdı. İki üretici sınıfı iki AYRI ailedir; kıyas
+        # zemini (aynı defter, aynı çözücü, aynı eşik) bozulmaz, çünkü ayrılan şey EŞİK DEĞİL
+        # ÇOKLUK DÜZELTMESİNİN PAYDASIDIR. `skiller` haritası birleşik kalır (iki sınıfın skill
+        # adları evrenleri gereği ayrık) ve her kayıt kendi `uretici` künyesini taşır.
         c = cozucu(gorusler, sonuclar)
-        fdr = bh_fdr({sk: v.get("p") for sk, v in c["skiller"].items()})
+        aile_uretici = {sk: _satir_uretici_sinifi(gorusler, sk) for sk in c["skiller"]}
+        fdr_aileleri: dict[str, dict] = {}
+        for sinif in URETICILER:
+            uyeler = {sk: v.get("p") for sk, v in c["skiller"].items()
+                      if aile_uretici.get(sk) == sinif}
+            if uyeler:
+                fdr_aileleri[sinif] = bh_fdr(uyeler)
         for sk, v in c["skiller"].items():
-            v["fdr"] = fdr["aile"].get(sk)
+            # KARIŞIM `det`E ÇEVRİLMEZ (Rol-1 hükmü 2026-09-01). `_satir_uretici_sinifi` karışımda
+            # BİLEREK None döner; `or URETICI_DET` yazmak o "ölçemedim"i bir hükme çevirir ve
+            # okuyucu `uretici="det"` + `fdr=null` görüp nedeni hiçbir yüzeyde bulamazdı. Ölçülemeyen
+            # değer None + NEDEN (uydurma yasağı). Fail-closed davranış korunur: sınıf None ise
+            # skill hiçbir FDR ailesine girmez → `fdr` None → sagkalan False → ne terfi ne emeklilik.
+            sinif = aile_uretici.get(sk)
+            v["uretici"] = sinif
+            # AYRI ANAHTAR (`neden` DEĞİL): skill sözlüğünde `neden` zaten ÖLÇÜM tarafının gerekçesini
+            # taşıyor ("rank-IC tanımsız…"); üzerine yazmak iki farklı ölçülemezliği tek alanda
+            # katlardı. Rol-1'in beyan hükmü aynen, çakışmasız anahtarla.
+            v["uretici_neden"] = None if sinif else "karisik_uretici"
+            v["fdr"] = (fdr_aileleri.get(sinif) or {"aile": {}})["aile"].get(sk)
             sagkalan = bool((v.get("fdr") or {}).get("sagkalan"))
             yeterli = sagkalan and (v.get("n") or 0) >= KART_N_MIN
             etki = ((v.get("olcum") or {}).get("rank_ic")
@@ -571,15 +740,19 @@ def rapor() -> dict:
                                                if yuzey == "aday-siralayici" else True))
             if v["terfi_adayi"]:
                 terfi.append({"skill": sk, "yuzey": yuzey, "n": v["n"], "etki": etki,
-                              "p": v.get("p")})
+                              "p": v.get("p"), "uretici": sinif})
             elif v["emeklilik_isareti"]:
                 emeklilik.append({"skill": sk, "yuzey": yuzey, "n": v["n"], "etki": etki,
-                                  "p": v.get("p"),
+                                  "p": v.get("p"), "uretici": sinif,
                                   "beyan": ("FDR-sağkalan NEGATİF — kart 3 ARDIŞIK pencere ister; "
                                             "pencere sayacı bu turda YOK, bu satır bir İŞARETTİR, "
                                             "emeklilik ÖNERİSİ değildir")})
         yuzeyler[yuzey] = {"durum": "ölçüldü", "neden": None, "skiller": c["skiller"],
-                           "fdr": {k: fdr[k] for k in ("m", "q", "kritik_p")},
+                           # KÜNYE ÜRETİCİ BAŞINA: tek bir `m`/`kritik_p` basmak, iki ailenin
+                           # hükmünü tek sayıya katlayıp hangisinin geçerli olduğunu ölçülemez
+                           # yapardı (tek-kaynak yasasının aynı dersi).
+                           "fdr": {sinif: {k: f[k] for k in ("m", "q", "kritik_p")}
+                                   for sinif, f in fdr_aileleri.items()},
                            "metrik": c.get("metrik"), "eslesmeyen_gorus": c.get("eslesmeyen_gorus")}
     kovalar: dict[str, int] = {}
     for y in yuzeyler.values():
@@ -589,6 +762,12 @@ def rapor() -> dict:
         "kart": KART, "ts": _now(),
         "defter_n": len(gorusler), "evren": evren(),
         "yuzeyler": yuzeyler, "kova_sayimi": kovalar,
+        # ÜRETİCİ KIRILIMI RAPORDA: künye yazıldıysa okunur da olmalı. "Defterde 5.500 satır var"
+        # ile "5.500'ün 80'i gölge LLM satırı" aynı ekranda aynı şeye benzeyemez.
+        "uretici_kirilimi": uretici_kirilimi(gorusler),
+        # SEANS-DIŞI GÖLGE ÜRETİCİNİN SON KOŞUMU (EDG-2026-063): kota, ölçülemedi ve şema
+        # sayaçları. Ayrı bir rapor yüzeyi açmak, aynı defterin iki hükmü demekti.
+        "llm_uretim": (store.read_json(DURUM_DEFTERI, None) or {}).get(LLM_URETIM_ANAHTARI),
         # SONUÇ TARAFININ ELEMESİ DE RAPORDA: bir yüzeyin örneklemi beklenenden küçükse sebep
         # görüş tarafında değil SONUÇ tarafında olabilir (kanonik alanı olmayan satırlar).
         "sonuc_elemesi": gz["atlanan"],
@@ -616,9 +795,83 @@ def _yuzdelik(vals: list[float], q: float):
     return round(s[min(len(s) - 1, max(0, int(round(q * (len(s) - 1)))))], 2)
 
 
+def _durum_yaz(out: dict) -> None:
+    """Durum defterini yaz — ama KADANS DIŞI anahtarları EZMEDEN.
+
+    İki kadans yolu belgeyi bütün olarak yeniler; gölge üreticinin özeti (`son_llm_uretim`) o
+    yolların ürettiği bir şey DEĞİLDİR ve her gece silinseydi kota/ölçülemedi sayaçları kalıcı
+    okuyucusuz kalırdı.
+
+    GÜVENCENİN KAPSAMI (daraltıldı, Rol-1 hükmü 2026-09-01): `store.update_json` kilitli
+    oku-değiştir-yaz olduğu için kayıp-güncelleme YALNIZ `_DURUM_KORUNAN` anahtarları için yapısal
+    olarak imkânsızdır — birleştirme kilidin İÇİNDE, belgenin o anki hâli üzerinde koşar. `out`un
+    kendi alanları (özellikle `ornekler` halkası) bu güvencenin DIŞINDADIR: `_sure_kaydi` halkayı
+    kilitten ÖNCE okur, dolayısıyla iki kadans yolu aynı anda koşarsa biri ötekinin örneğini
+    düşürebilir. Bugün ölçülmüş bir arıza değil (tek gece döngüsü, tek süreç) ama güvence diye
+    yazılırsa yarın sessizce yanlış olur."""
+    def _birlestir(doc):
+        korunan = {k: (doc or {}).get(k) for k in _DURUM_KORUNAN if (doc or {}).get(k) is not None}
+        doc.clear()
+        doc.update({**out, **korunan})
+        return True
+    store.update_json(DURUM_DEFTERI, _birlestir, {})
+
+
+def llm_uretim_kaydi(ozet: dict) -> None:
+    """Gölge üreticinin son koşum özetini durum defterine yazar — DEFTERİN TEK YAZARI BURASI.
+
+    `skill_gorus_llm` bu kapıdan geçer; orada `store.write_*` çağırmak, aynı artefaktın iki
+    yazarlı görünmesi ve "bu dosyayı kim yazıyor" sorusunun ikiye bölünmesi demekti."""
+    store.update_json(DURUM_DEFTERI, lambda doc: doc.update({LLM_URETIM_ANAHTARI: ozet}) or True,
+                      {})
+
+
+def _sure_kaydi(*, yol: str, sure_ms: float, oncesi_ms: float | None, ek: dict) -> dict:
+    """Süre örneklemi halkası + kill#1 p95 hükmü — İKİ KADANS YOLUNUN ORTAK DÜZENEĞİ.
+
+    TEK KAYNAK: eşik okuması, örneklem tabanı ve "ÖLÇÜLEMEDİ ≠ 0" ayrımı tek gövdede durur; iki
+    yol için iki kopya yazılsaydı biri düzeltildiğinde öteki sessizce eski kuralla hüküm verirdi.
+
+    p95 YOL BAŞINA hesaplanır (halka ORTAK, hüküm AYRI): kuyruk yolunun payı ile tam koşunun payı
+    farklı işlerin ölçüsüdür. `yol` alanı taşımayan eski örnekler KADANS sayılır — canlıdaki
+    kill kaydı öyle yazıldı ve "bilinmiyor" diye atmak kanıtı silmek olurdu."""
+    pay = (round(sure_ms / oncesi_ms, 4) if (oncesi_ms and oncesi_ms > 0) else None)
+    d = store.read_json(DURUM_DEFTERI, None) or {}
+    ornek = [x for x in (d.get("ornekler") or []) if isinstance(x, dict)]
+    ornek.append({"ts": _now(), "yol": yol, "sure_ms": sure_ms, "oncesi_ms": oncesi_ms,
+                  "pay": pay, **ek})
+    ornek = ornek[-SURE_ORNEK_TAVANI:]
+    ayni = [x for x in ornek if (x.get("yol") or KADANS_YOLU) == yol]
+    sureler = [float(x["sure_ms"]) for x in ayni if x.get("sure_ms") is not None]
+    paylar = [float(x["pay"]) for x in ayni if x.get("pay") is not None]
+    p95_pay = _yuzdelik(paylar, 0.95)
+    if p95_pay is None:
+        kill = {"durum": "ÖLÇÜLEMEDİ", "p95_pay": None, "tavan": KART_P95_TAVAN,
+                "n_ornek": len(paylar), "yol": yol,
+                "neden": "kadans süresi (`oncesi_ms`) ölçülmedi — pay kurulamadı, 0 SAYILMAZ"}
+    elif len(paylar) < P95_MIN_ORNEK:
+        kill = {"durum": "ÖLÇÜLÜYOR", "p95_pay": p95_pay, "tavan": KART_P95_TAVAN,
+                "n_ornek": len(paylar), "yol": yol,
+                "neden": (f"örneklem {len(paylar)}/{P95_MIN_ORNEK} — tek/az koşudan p95 hükmü "
+                          f"VERİLMEZ (ilk koşu defteri sıfırdan doldurur, doğal olarak en "
+                          f"yavaşıdır). Ölçülen pay {p95_pay} kayda geçer, KILL geçmez.")}
+    else:
+        kill = {"durum": ("KILL" if p95_pay > KART_P95_TAVAN else "temiz"),
+                "p95_pay": p95_pay, "tavan": KART_P95_TAVAN, "n_ornek": len(paylar), "yol": yol,
+                "neden": (f"p95 pay {p95_pay} {'>' if p95_pay > KART_P95_TAVAN else '<='} "
+                          f"{KART_P95_TAVAN} — kill#1")}
+    return {"pay": pay, "sure_p50_ms": _yuzdelik(sureler, 0.5),
+            "sure_p95_ms": _yuzdelik(sureler, 0.95), "kill_p95": kill, "ornekler": ornek}
+
+
 def kadans(apply: bool = True, oncesi_ms: float | None = None,
            tavan: int | None = YAZIM_TAVANI) -> dict:
-    """Kadans adımı: görüş topla → rapor et → SÜRESİNİ ÖLÇ. Deterministik, kotasız, LLM'siz.
+    """TAM ÖLÇÜM KOŞUSU: görüş topla → rapor et → SÜRESİNİ ÖLÇ. Deterministik, kotasız, LLM'siz.
+
+    ARTIK ÖĞRENME KADANSINDAN ÇAĞRILMAZ (2026-09-01, kill#1 kök çözümü). Gece döngüsünün adımı
+    `kuyruk_kadansi`dir; burası bilinçli bir ölçüm/kuru-koşu yoludur ve kartın yeniden açılışı
+    için gereken "tam koşu ne kadar sürüyor" sayısını üretmeye devam eder (bedel yasası: kuyruk
+    yolunun ucuzluğu ancak tam koşuyla KIYASLANARAK bir sayı olur).
 
     p95 ÖLÇÜM DÜZENEĞİ (kill#1: "+%10'dan fazla artırırsa katman KAPATILIR"). Ölçülen iki sayı:
       * `sure_ms` — bu adımın kendi süresi (her koşuda halkaya yazılır, tavanı `SURE_ORNEK_TAVANI`),
@@ -629,11 +882,15 @@ def kadans(apply: bool = True, oncesi_ms: float | None = None,
     KATMAN KAPISI (EDG-2026-019 kill#1 TETİKLENDİ — Rol-1 hükmü 2026-08-23): bayrak kapalıyken
     bu adım HİÇ KOŞMAZ — ne görüş toplanır ne DURUM_DEFTERI yazılır (son KILL kaydı kanıt olarak
     yerinde kalır). Kadans defterine `kapali` beyanı döner ki gece döngüsü kapanışı sessizce
-    değil ADIYLA taşısın."""
+    değil ADIYLA taşısın. MANDAL `apply` BİÇİMİNDE (K4, 2026-09-01) — `topla` ve `kuyruk_kadansi`
+    ile aynı hizada: kapatılan şey YAZIMDIR, ÖLÇÜM DEĞİL. Kuru koşu bayraktan bağımsız yürür,
+    çünkü kartın yeniden açılışı "tam koşu ne kadar sürüyor" sayısını ister ve o sayıyı kapının
+    kendisi imkânsız kılarsa katman bir daha ÖLÇÜLEREK açılamaz."""
     from . import config as _cfg
-    if not _cfg.SKILL_GORUS_URETIM_ACIK:
+    if apply and not _cfg.SKILL_GORUS_URETIM_ACIK:
         _kapatma_olayi()
-        return {"ts": _now(), "kart": KART, "kapali": True, "uygulandi_mi": False,
+        return {"ts": _now(), "kart": KART, "yol": KADANS_YOLU, "kapali": True,
+                "uygulandi_mi": False,
                 "sure_ms": None, "oncesi_ms": oncesi_ms, "pay": None,
                 "neden": ("EDG-2026-019 kill#1: p95_pay 6,57 > tavan 0,10 canlıda ölçüldü "
                           "(skill_gorus_durum.json, 2026-08-21'den beri) — katman KAPALI; "
@@ -642,34 +899,194 @@ def kadans(apply: bool = True, oncesi_ms: float | None = None,
     t = topla(apply=apply, tavan=tavan)
     r = rapor()
     sure_ms = round((time.perf_counter() - t0) * 1000.0, 2)
-    pay = (round(sure_ms / oncesi_ms, 4) if (oncesi_ms and oncesi_ms > 0) else None)
-    d = store.read_json(DURUM_DEFTERI, None) or {}
-    ornek = [x for x in (d.get("ornekler") or []) if isinstance(x, dict)]
-    ornek.append({"ts": _now(), "sure_ms": sure_ms, "oncesi_ms": oncesi_ms, "pay": pay,
-                  "yazilan": t["yazilan"]})
-    ornek = ornek[-SURE_ORNEK_TAVANI:]
-    sureler = [float(x["sure_ms"]) for x in ornek if x.get("sure_ms") is not None]
-    paylar = [float(x["pay"]) for x in ornek if x.get("pay") is not None]
-    p95_pay = _yuzdelik(paylar, 0.95)
-    if p95_pay is None:
-        kill = {"durum": "ÖLÇÜLEMEDİ", "p95_pay": None, "tavan": KART_P95_TAVAN,
-                "n_ornek": len(paylar),
-                "neden": "kadans süresi (`oncesi_ms`) ölçülmedi — pay kurulamadı, 0 SAYILMAZ"}
-    elif len(paylar) < P95_MIN_ORNEK:
-        kill = {"durum": "ÖLÇÜLÜYOR", "p95_pay": p95_pay, "tavan": KART_P95_TAVAN,
-                "n_ornek": len(paylar),
-                "neden": (f"örneklem {len(paylar)}/{P95_MIN_ORNEK} — tek/az koşudan p95 hükmü "
-                          f"VERİLMEZ (ilk koşu defteri sıfırdan doldurur, doğal olarak en "
-                          f"yavaşıdır). Ölçülen pay {p95_pay} kayda geçer, KILL geçmez.")}
-    else:
-        kill = {"durum": ("KILL" if p95_pay > KART_P95_TAVAN else "temiz"),
-                "p95_pay": p95_pay, "tavan": KART_P95_TAVAN, "n_ornek": len(paylar),
-                "neden": (f"p95 pay {p95_pay} {'>' if p95_pay > KART_P95_TAVAN else '<='} "
-                          f"{KART_P95_TAVAN} — kill#1")}
-    out = {"ts": _now(), "kart": KART, "sure_ms": sure_ms, "oncesi_ms": oncesi_ms, "pay": pay,
-           "sure_p50_ms": _yuzdelik(sureler, 0.5), "sure_p95_ms": _yuzdelik(sureler, 0.95),
-           "kill_p95": kill, "toplama": t, "rapor": r, "ornekler": ornek,
+    k = _sure_kaydi(yol=KADANS_YOLU, sure_ms=sure_ms, oncesi_ms=oncesi_ms,
+                    ek={"yazilan": t["yazilan"]})
+    out = {"ts": _now(), "kart": KART, "yol": KADANS_YOLU,
+           "sure_ms": sure_ms, "oncesi_ms": oncesi_ms, "pay": k["pay"],
+           "sure_p50_ms": k["sure_p50_ms"], "sure_p95_ms": k["sure_p95_ms"],
+           "kill_p95": k["kill_p95"], "toplama": t, "rapor": r, "ornekler": k["ornekler"],
            "uygulandi_mi": bool(apply)}
     if apply:
-        store.write_json(DURUM_DEFTERI, out)
+        _durum_yaz(out)
     return out
+
+
+# ==================================================================================================
+# KADANS İÇİ YOL — YALNIZ SNAPSHOT APPEND'İ (kill#1 kök çözümü)
+# ==================================================================================================
+def _snapshot(ts: str | None = None) -> dict:
+    """t-ANI GİRDİ KESİTİ — üretimin İHTİYACI kadarı, bir satır.
+
+    NE VAR: o andaki evren (küme ölçüm anında kaynaktan türetilir — C10) ve evren-içi gözlemler,
+    `SNAPSHOT_ALANLARI` şemasıyla. NE YOK: görüş defteri okuması, tekilleştirme, çözücü, bootstrap,
+    `rapor()` — yani kill#1'in ölçtüğü maliyetin tamamı. Kalan iş SERİLEŞTİR + APPEND'tir.
+
+    ELEME MUHASEBESİ KESİTİN İÇİNDE TAŞINIR (`atlanan`): evren dışı kalan gözlem sayısı ÜRETİM
+    anında değil GÖZLEM anında bilinir; sonradan sayılsaydı o günün evreni değil bugünkü evren
+    sayılırdı."""
+    ev = evren()
+    izinli = set(ev["evren"])
+    gz = _gozlemler()
+    kesit, disarida = [], 0
+    for g in gz["satirlar"]:
+        if g.get("skill") not in izinli:
+            disarida += 1
+            continue
+        kesit.append({k: g.get(k) for k in SNAPSHOT_ALANLARI})
+    return {"ts": ts or _now(), "sema": KUYRUK_SEMA, "islendi": False,
+            "evren": sorted(izinli), "n_gozlem": len(kesit), "gozlemler": kesit,
+            "atlanan": {**gz["atlanan"], "evren_disi": disarida}}
+
+
+def kuyruk_oku() -> list[dict]:
+    """Snapshot kuyruğunun tamamı (saf okuma). Okuyucular: `kuyruktan_uret`, `api._gorus_kuyrugu`."""
+    return store.read_jsonl(KUYRUK_DEFTERI)
+
+
+def kuyruk_kadansi(apply: bool = True, oncesi_ms: float | None = None) -> dict:
+    """ÖĞRENME KADANSININ GÖRÜŞ ADIMI — t-anı kesitini kuyruğa yazar, GÖRÜŞ ÜRETMEZ.
+
+    KİLL#1'İN KÖK ÇÖZÜMÜ BURADA: eski adım `topla()` + `rapor()` koşturuyordu ve canlıda kadans
+    süresini ×6,6 katlamıştı. Üretim seans dışına (`kuyruktan_uret`) taşındı; kadansta kalan iş
+    kesiti serileştirip eklemektir. Ölçüm düzeneği AYNEN kalır (`_sure_kaydi`) — çünkü "ucuzladı"
+    bir iddiadır ve iddia ölçülmeden yaşayamaz; p95 payı bu yol için ayrıca birikir.
+
+    KATMAN KAPISI AYNI BAYRAK: `config.SKILL_GORUS_URETIM_ACIK` kapalıyken bu yol da ÖLÜDÜR —
+    kuyruğa da durum defterine de dokunulmaz. Kapatma hükmü "yazım durur" der ve kuyruk yazımı
+    da yazımdır; bayrağı yalnız üretim tarafına uygulamak, kapalı katmanın her gece dosya
+    büyütmesi olurdu."""
+    from . import config as _cfg
+    # MANDAL `apply` BİÇİMİNDE (K4, 2026-09-01): kapatılan şey YAZIMDIR, ÖLÇÜM DEĞİL — `topla`nın
+    # kapısıyla aynı hizada. Kuru koşu kapalı katmanda da "ne yazılacaktı" sorusunu cevaplar ve
+    # kartın yeniden açılışı için gereken ölçüm, kapının kendisi tarafından imkânsız kılınmaz
+    # (v278 9e'nin aynı hükmü).
+    if apply and not _cfg.SKILL_GORUS_URETIM_ACIK:
+        _kapatma_olayi()
+        return {"ts": _now(), "kart": KART, "yol": KUYRUK_YOLU, "kapali": True,
+                "uygulandi_mi": False, "sure_ms": None, "oncesi_ms": oncesi_ms, "pay": None,
+                "gozetim_ms": None, "kuyruk": None,
+                "neden": ("EDG-2026-019 kill#1: p95_pay 6,57 > tavan 0,10 canlıda ölçüldü "
+                          "(skill_gorus_durum.json, 2026-08-21'den beri) — katman KAPALI; "
+                          "açılış yalnız kartın resmileşmiş yeni ölçümüyle")}
+    t0 = time.perf_counter()
+    snap = _snapshot()
+    if apply:
+        store.append_jsonl(KUYRUK_DEFTERI, snap)
+    sure_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+    k = _sure_kaydi(yol=KUYRUK_YOLU, sure_ms=sure_ms, oncesi_ms=oncesi_ms,
+                    ek={"n_gozlem": snap["n_gozlem"]})
+    # BİRİKİM ÖLÇÜMÜ SÜRE ÖLÇÜMÜNÜN DIŞINDA (BİLEREK): kill#1 "gözlem icrayı yavaşlatamaz" der ve
+    # bu okuma bir GÖZETİM işidir, append'in kendisi değil. `sure_ms` yukarıda kapandı, yani
+    # kadansın ölçülen maliyeti bu satırlarla DEĞİŞMEZ.
+    #
+    # AMA ÖLÇÜM PENCERESİNİN DIŞINDA OLMAK "BEDAVA" DEMEK DEĞİLDİR (bedel yasası, Rol-1 hükmü
+    # 2026-09-01): kuyruk her gece bir satır uzuyor ve bu okuma dosyanın TAMAMINI ayrıştırıyor.
+    # `gozetim_ms` AYRI bir alan olarak ölçülür — `sure_ms`/`pay`/p95 tanımı DEĞİŞMEZ (kill hükmü
+    # aynı büyüklüğün ölçüsü kalır), ama gözetimin kendi maliyeti sayısız da kalmaz.
+    g0 = time.perf_counter()
+    bekleyen = sum(1 for s in kuyruk_oku() if isinstance(s, dict) and not s.get("islendi"))
+    gozetim_ms = round((time.perf_counter() - g0) * 1000.0, 2)
+    if apply and bekleyen > KUYRUK_BIRIKIM_TAVANI:
+        from . import obs
+        obs.alarm(obs.ALARM_MECHANISM_STALE,
+                  f"skill-görüş kuyruğunda {bekleyen} işlenmemiş kesit (tavan "
+                  f"{KUYRUK_BIRIKIM_TAVANI}) — seans-dışı üretici koşmuyor",
+                  mekanizma="skill_gorus_kuyruk", kart=KART, bekleyen=bekleyen,
+                  tavan=KUYRUK_BIRIKIM_TAVANI,
+                  detail=("üretim kadanstan çıkarıldı (kill#1 kök çözümü); kesit her gece "
+                          "birikiyor ama `ops/skill_gorus_uret.py` işlemiyor. Defter DONUK: "
+                          "kadans koşuyor olması görüş üretildiği anlamına GELMEZ"))
+    out = {"ts": _now(), "kart": KART, "yol": KUYRUK_YOLU,
+           "sure_ms": sure_ms, "oncesi_ms": oncesi_ms, "pay": k["pay"],
+           "sure_p50_ms": k["sure_p50_ms"], "sure_p95_ms": k["sure_p95_ms"],
+           "kill_p95": k["kill_p95"], "ornekler": k["ornekler"], "uygulandi_mi": bool(apply),
+           # GÖZETİM MALİYETİ ADIYLA DURUR — `sure_ms`e KATILMAZ, onun yanında raporlanır.
+           "gozetim_ms": gozetim_ms,
+           "kuyruk": {"snapshot_ts": snap["ts"], "n_gozlem": snap["n_gozlem"],
+                      "evren_n": len(snap["evren"]), "atlanan": snap["atlanan"],
+                      "bekleyen": bekleyen, "birikim_tavani": KUYRUK_BIRIKIM_TAVANI}}
+    if apply:
+        _durum_yaz(out)
+    return out
+
+
+# ==================================================================================================
+# SEANS DIŞI TOPLU ÜRETİM — KUYRUKTAN, t-ÇİTİYLE, İDEMPOTENT
+# ==================================================================================================
+def _ozet_damgasi(gozlemler: list[dict]) -> str:
+    """İşlenen kesitin içerik damgası (sha256/16) — yükü düşürülen snapshot'ın kimliği.
+
+    NEDEN YÜK DÜŞÜYOR: kuyruk bir TAŞIMA hattıdır, kanıt defteri değil. Kanıt (a) üretilen görüş
+    satırlarıdır — her biri snapshot anını `ts` olarak taşır — ve (b) bu damga + sayımlardır.
+    Yükü sonsuza dek saklamak her gece yüz kilobaytlarca tekrar biriktirirdi; damga, işlenmiş bir
+    kesitin AYNI kesit olup olmadığını hâlâ ölçülebilir kılar."""
+    ham = json.dumps(gozlemler, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha256(ham.encode("utf-8")).hexdigest()[:16]
+
+
+def kuyruktan_uret(apply: bool = True, tavan: int | None = None) -> dict:
+    """İŞLENMEMİŞ SNAPSHOT'LARDAN GÖRÜŞ ÜRET — seans dışı, toplu, idempotent.
+
+    İDEMPOTENS İKİ KATLI: (1) işlenen snapshot `islendi=True` damgası alır; (2) satırlar zaten
+    (skill, yüzey, hedef) anahtarıyla tekilleştirilir. Birinci kat düşse bile (yazımdan sonra
+    işaretleme düşerse) ikinci kat mükerrer satır YAZILMASINI engeller — bu yüzden sıra şudur:
+    ÖNCE defter, SONRA işaret.
+
+    TAVAN VE İŞARET BİRLİKTE ÇALIŞIR: tavana çarpan snapshot İŞARETLENMEZ (yarısı yazılmış bir
+    kesit "işlendi" sayılsaydı kalan gözlemler sessizce kaybolurdu). Varsayılan tavan YOKTUR;
+    seans dışı koşumun bütçesi kadans bütçesi değildir."""
+    from . import config as _cfg
+    if apply and not _cfg.SKILL_GORUS_URETIM_ACIK:
+        _kapatma_olayi()
+        return {"yazilan": 0, "islenen_snapshot": 0, "bekleyen": None, "atlanan": None,
+                "uygulandi_mi": False, "kapali": True,
+                "neden": ("EDG-2026-019 kill#1: katman KAPALI (p95_pay 6,57 > 0,10 canlıda "
+                          "ölçüldü) — üretim durdu, defterlere dokunulmadı")}
+    kuyruk = kuyruk_oku()
+    var = {_anahtar(g) for g in defter()}
+    toplam = {"evren_disi": 0, "zaten_var": 0, "skorsuz": 0, "cikis_olcusuz": 0,
+              "kimliksiz": 0, "cit_disi_alan": 0, "sema_uyumsuz_snapshot": 0,
+              "yuksuz_snapshot": 0}
+    yazilacak: list[dict] = []
+    islenen: dict[int, dict] = {}
+    kirpildi = False
+    for i, snap in enumerate(kuyruk):
+        if not isinstance(snap, dict) or snap.get("islendi"):
+            continue
+        if snap.get("sema") != KUYRUK_SEMA:
+            # ŞEMA UYUMSUZ SNAPSHOT ONARILMAZ ve İŞARETLENMEZ: tanımadığımız bir kesitten görüş
+            # türetmek, bilinmeyen bir sözleşmeyi varsaymaktır. Adıyla sayılır, kuyrukta kalır.
+            toplam["sema_uyumsuz_snapshot"] += 1
+            continue
+        gz = snap.get("gozlemler")
+        if gz is None:
+            toplam["yuksuz_snapshot"] += 1     # yükü düşürülmüş ama işaretsiz — yeniden üretilemez
+            continue
+        satirlar, atl = _gorusleri_tureti(gz, set(snap.get("evren") or []), var,
+                                          ts=snap.get("ts"))    # t-ÇİTİ: damga SNAPSHOT anı
+        if tavan is not None and len(yazilacak) + len(satirlar) > tavan:
+            # BU SNAPSHOT HİÇ İŞLENMEDİ SAYILIR: ne satırı yazılır, ne elemesi sayılır, ne
+            # işaretlenir. Yarım işlenmiş bir kesit "işlendi" damgası alsaydı kalan gözlemler
+            # sessizce kaybolurdu — kırpma bir SEÇİM değil, ERTELEMEDİR.
+            kirpildi = True
+            break
+        for k, v in atl.items():
+            toplam[k] = toplam.get(k, 0) + v
+        yazilacak.extend(satirlar)
+        islenen[i] = {"uretilen": len(satirlar), "atlanan": atl,
+                      "gozlem_ozeti": _ozet_damgasi(gz), "n_gozlem": len(gz)}
+    yazilan = deftere_yaz(yazilacak) if apply else 0
+    if apply and islenen:
+        def _isaretle(rows: list) -> bool:
+            for i, bilgi in islenen.items():
+                if i >= len(rows) or not isinstance(rows[i], dict):
+                    continue                   # kuyruk aramızda değişti — sıra kaydı çürüdü, yazma
+                rows[i] = {k: v for k, v in rows[i].items() if k != "gozlemler"}
+                rows[i].update({"islendi": True, "islendi_ts": _now(), **bilgi})
+            return True
+        store.update_jsonl(KUYRUK_DEFTERI, _isaretle)
+    bekleyen = sum(1 for s in kuyruk_oku() if isinstance(s, dict) and not s.get("islendi"))
+    return {"yazilan": yazilan, "hazirlanan": len(yazilacak),
+            "islenen_snapshot": (len(islenen) if apply else 0), "aday_snapshot": len(islenen),
+            "bekleyen": bekleyen, "kirpildi": kirpildi, "tavan": tavan,
+            "atlanan": toplam, "uygulandi_mi": bool(apply), "defter_toplam": len(var)}
