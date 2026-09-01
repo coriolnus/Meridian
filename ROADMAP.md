@@ -2725,8 +2725,8 @@ kill#3 istisnası kartta ADIYLA kayıtlı — `83bc47b`.)_
 
 - **[TSK-047] NOUS_MODEL / beyin çeşitliliği — danışma yolu ölü olabilir mi (C4)** — status: OPERATOR · born: 2026-08-31 · owner: operator · size: S · trigger: —
   What: Claude API anahtarı EKLE ya da `NOUS_MODEL`i Google-DIŞI modele çevir kararı bekleniyor (sır yolu, koda yazılamaz).
-  Why: eski gerekçe ("model adı ölü") BAYAT — v239 model-adı bacağını kapattı, beyin zinciri artık AYRIK (`brain_chain_distinct` açık). Yeni gerekçe "danışma yolu ölü": son 7 günde 788 `agent_call`, 385 boş, 1 başarılı görüş (WP7/24c) — beklerken bedel gece yansıması/review üretimi fiilen cevapsız.
-  Ref: kimlik `B-NOUS-BEYIN` (§5 KİMLİK TABLOSU) · bağımlı: WP7 (pilot-S1 ve terfi hattı) · ⚠ kalem KAPANMIŞ olabilir — canlı danışma-yolu verimi bu depodan (cloud klonu) ÖLÇÜLEMEDİ, Rol-1 doğrulaması gerekir (uydurma yasağı: DONE atanmadı).
+  Why: eski gerekçe ("model adı ölü") BAYAT — v239 model-adı bacağını kapattı, beyin zinciri artık AYRIK (`brain_chain_distinct` açık). "Danışma yolu ölü" şüphesi de KAPANDI — Rol-1 canlı ölçümü 2026-09-01 (A1 `agent_calls.jsonl`, 1.071 satır, 07 Ağu→31 Ağu): tarihsel boş-oranlar ölü ADLARDAN geliyordu (`tencent/hy3` 419/419 boş · `gemini-3.5-flash` 379/391 boş) ve o adlara son 14 günde SIFIR çağrı var (2026-08-13 iki-katmanlı ad-göçü onarımı işlemiş); bugünkü zincir `gemini-flash-latest`e gidiyor ve son 14 günün danışma çağrıları (nous_eval + reflect) %0 boş — beyanlı sınır: n=2, küçük örneklem (learn kapalı olduğundan hacim düşük), ama sınıf kesin (dolu) ve tüm-zaman `gemini-flash-latest` 81/81 dolu. KALAN KARAR yalnız ÇEŞİTLİLİK: nous ile gemini aynı Google ailesine gidiyor — Claude API anahtarı ekle / Google-dışı modele çevir / olduğu gibi bırak.
+  Ref: kimlik `B-NOUS-BEYIN` (§5 KİMLİK TABLOSU) · bağımlı: WP7 (pilot-S1 ve terfi hattı) · canlı ölçüm 2026-09-01 (Rol-1).
 
 _(Yukarıdaki üç kovada olmayan operatör kalemleri — LoadCredential faz-1, ajan-git mekanik kapısı,
 OCI bucket, Massive/QC delist-bar kaynağı, melez pozisyonlar, uyuyan-kurulum icra bağı — aşağıdaki
