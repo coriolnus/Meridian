@@ -607,7 +607,7 @@ function Fazlar({ durum }: { readonly durum: Durum<KapiGovdesi> }) {
                 </p>
               ) : (
                 <Olculemedi
-                  neden="Faz ölçümünün KAPSAMI bildirilmedi"
+                  neden="Faz ölçümünün kapsamı bildirilmedi"
                   teknik="`fazlar_kapsam_neden` gelmedi — rozetler neyi göremediğini söyleyemiyor (bedel yasası)"
                 />
               )}
