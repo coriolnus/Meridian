@@ -31,74 +31,24 @@ import { useBugun } from "../../durum";
 import { useApi } from "../../veri";
 import { Hal, OlculemedBlok, Olculemedi } from "./Hal";
 import { HukumGrafigi, type SeansHukmu } from "./Grafikler";
-import { Huni, SeansUzlasmasi, type HuniBasamagi, type HuniDususu, type HuniKarsiKart } from "./Huni";
+import { geceModeli, sonDonguOku, type SonDongu } from "./gece";
+import { Huni, SeansUzlasmasi, type HuniKarsiKart } from "./Huni";
 import { KapiTablosu, kapilariOzetle } from "./KapiTablosu";
 import { PlanKarti } from "./PlanKarti";
-import { kisaTarih, mantik, metin, nesne, sayi } from "./oku";
+import { kisaTarih, metin, nesne, sayi } from "./oku";
 import { HUKUM_BASLIGI, HUKUM_SIRASI, hukumu, planlariOku, type Hukum, type Plan } from "./planlar";
 
 /* --------------------------------------------------------------------------
-   SON DÖNGÜ — huninin kaynağı. `var:false` ise NEDENİ ekrana yazılır; huniyi
-   sıfırlarla çizmek "gece hiçbir şey bulunmadı" yalanı olurdu (api.py:1584'ün
-   kendi cümlesi: "'Sıfır aday' DEĞİL: ölçülemedi").
+   SON DÖNGÜ — huninin kaynağı. Okuma ve TÜRETME `gece.ts`te (React'siz, node'da
+   çağrılıyor); burada yalnız çizim var. `var:false` ise NEDENİ ekrana yazılır;
+   huniyi sıfırlarla çizmek "gece hiçbir şey bulunmadı" yalanı olurdu (`api.py`
+   `_son_dongu` kendi cümlesi: "'Sıfır aday' DEĞİL: ölçülemedi").
    -------------------------------------------------------------------------- */
-interface SonDongu {
-  readonly var: boolean;
-  readonly neden: string | null;
-  readonly tarih: string | null;
-  readonly yasSaat: number | null;
-  readonly aday: number | null;
-  readonly plan: number | null;
-  readonly silahli: number | null;
-  readonly veriTamam: boolean | null;
-  readonly durduruldu: boolean | null;
-  readonly rejim: string | null;
-}
-
-function sonDonguOku(ham: unknown): SonDongu | null {
-  const n = nesne(ham);
-  if (!n) return null;
-  return {
-    var: mantik(n["var"]) === true,
-    neden: metin(n["neden"]),
-    tarih: metin(n["date"]),
-    yasSaat: sayi(n["yas_saat"]),
-    aday: sayi(n["candidates"]),
-    plan: sayi(n["plans"]),
-    silahli: sayi(n["armed"]),
-    veriTamam: mantik(n["data_ok"]),
-    durduruldu: mantik(n["halted"]),
-    rejim: metin(n["regime"]),
-  };
-}
 
 /** Bu kartın kaynak beyanı ile kardeş kartınki — İKİSİ DE ekranda yazar, çünkü
  *  iki kart aynı soruyu AYRI defterlerden cevaplıyor ve farklı seansı anlatabilir. */
 const KAYNAK = "döngünün kendi kaydı (`events.jsonl` · `daily_cycle`)";
 const KARSI_KAYNAK = "günün plan defteri (`/api/today.verdict_counts`)";
-
-/** İki basamak arasında eriyen küme. Sayı ya da payda ölçülemediyse ORAN NULL
- *  döner ve nedeni taşınır — 0 yazmak "hiçbiri elenmedi" yalanı olurdu. */
-function dusus(ok: string, ad: string, once: number | null, sonra: number | null, taban: number | null): HuniDususu {
-  if (once === null || sonra === null) {
-    return {
-      ok,
-      metin: `${ad} sayısı ölçülemedi — eriyen küme hesaplanamadı`,
-      oran: null,
-      neden: "iki basamaktan biri döngü kaydında YAZILI DEĞİL (sıfır değil)",
-    };
-  }
-  const eriyen = once - sonra;
-  return {
-    ok,
-    metin:
-      eriyen > 0
-        ? `${eriyen} ${ad} · hangi kapıda düştüğü bu kayıtta YAZMIYOR — kırılım aşağıdaki "Kapı aşamaları" tablosunda`
-        : `eriyen yok · ${ad} 0`,
-    oran: taban !== null && taban > 0 ? eriyen / taban : null,
-    neden: "payda ölçülemedi — ilk basamak (taranan aday) yazılı değil",
-  };
-}
 
 function GeceKarti({ sd, planTarihi }: { sd: SonDongu | null; planTarihi: string | null }) {
   if (sd === null) {
@@ -128,31 +78,17 @@ function GeceKarti({ sd, planTarihi }: { sd: SonDongu | null; planTarihi: string
    memosuz her yoklama huniye YENİ dizi kimliği verirdi — ortak gövdedeki bütün
    türetmeler (segment yolları, monotonluk denetimi) boşuna yeniden koşardı. */
 function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | null }) {
-  const { basamaklar, dususler, olculen } = useMemo(() => {
-    // HUNİ BASAMAKLARI — ölçülemeyen aşama SIFIR ÇUBUK DEĞİL, "ölçülemedi + neden".
-    // Ortak gövde (`Huni`) bu ayrımı tipte zorunlu kılıyor: `n: null` yazan `neden`
-    // yazmak ZORUNDA, yoksa derlenmez.
-    const basamaklar: HuniBasamagi[] = [
-      sd.aday === null
-        ? { ad: "Taranan aday", n: null, neden: "döngü kaydında `candidates` alanı yok" }
-        : { ad: "Taranan aday", n: sd.aday },
-      sd.plan === null
-        ? { ad: "Kurulan plan", n: null, neden: "döngü kaydında `plans` alanı yok" }
-        : { ad: "Kurulan plan", n: sd.plan },
-      sd.silahli === null
-        ? { ad: "İşleme hazırlanan", n: null, neden: "döngü kaydında `armed` alanı yok" }
-        : { ad: "İşleme hazırlanan", n: sd.silahli },
-    ];
-    const taban = sd.aday !== null && sd.aday > 0 ? sd.aday : null;
-    return {
-      basamaklar,
-      olculen: basamaklar.filter((b) => b.n !== null).length,
-      dususler: [
-        dusus("Taranan aday → Kurulan plan", "aday plan olmadı", sd.aday, sd.plan, taban),
-        dusus("Kurulan plan → İşleme hazırlanan", "plan işleme hazırlanmadı", sd.plan, sd.silahli, taban),
-      ] as HuniDususu[],
-    };
-  }, [sd.aday, sd.plan, sd.silahli]);
+  // TÜRETME BURADA DEĞİL: basamaklar, düşüşler ve payda beyanı `gece.ts`te SAF
+  // fonksiyonda kuruluyor ve node'da çağrılarak ölçülüyor. Bu bileşende yaşadığı
+  // sürece o hükümler yalnız kaynak metnine bakan bir çiviyle "ölçülebiliyordu" —
+  // ve üç kusur da (yanlış etiket, tek dipnot, eksik payda) o körlükte yaşadı.
+  // BAĞIMLILIKLAR İLKEL, `sd` DEĞİL: `sd` her yoklamada yeniden okunuyor (yeni
+  // nesne kimliği) — nesneye bağlanan bir memo hiç tutmazdı.
+  const { basamaklar, dususler, olculen, paydaBeyani } = useMemo(
+    () => geceModeli(sd),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sd.taranan, sd.tarananNeden, sd.aday, sd.plan, sd.silahli],
+  );
 
   const seans = useMemo(
     () => ({
@@ -204,15 +140,15 @@ function GeceGovdesi({ sd, planTarihi }: { sd: SonDongu; planTarihi: string | nu
             <SeansUzlasmasi seans={seans} karsi={karsi} />
           </div>
         ) : (
+          // PAYDA BEYANI SABİT DEĞİL, MODELDEN: eski kayıtlarda huninin ağzı yok
+          // ve payda eleme SONRASI kümeye düşüyor. Sabit bir cümle o farkı gizler
+          // ve "taranan evren" iddiasını olmadığı bir gecede de basardı.
           <Huni
             basamaklar={basamaklar}
             dususler={dususler}
             seans={seans}
             karsi={karsi}
-            paydaBeyani={
-              "Payda: bu döngü kaydının TARANAN ADAY sayısı — kırpılmış sinyal defterinden (`/api/signals`) " +
-              "sayılmadı, o uç son 120 satırla kesik ve huninin ağzını olduğundan dar gösterirdi."
-            }
+            paydaBeyani={paydaBeyani}
           />
         )}
 

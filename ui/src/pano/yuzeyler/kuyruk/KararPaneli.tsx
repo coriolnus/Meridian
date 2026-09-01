@@ -123,7 +123,7 @@ export function KararPaneli({
   async function gonder(yon: Yon, h: OnayHedefi) {
     setAsama({ ad: "gonderiliyor", yon });
     setHata(null);
-    // PLAN UCU GÖVDE OKUMUYOR (api.py:6029 — `request.json()` çağrısı YOK); yine de boş
+    // PLAN UCU GÖVDE OKUMUYOR (`api.py::api_plan_onayla` — `request.json()` çağrısı YOK); yine de boş
     // nesne gidiyor çünkü `apiPost` her istekte bir gövde yazıyor ve FastAPI okumadığı
     // gövdeyi görmezden geliyor. Defter ucu ise gövdeyi ZORUNLU okuyor.
     const govde = h.cesit === "plan" ? {} : { decision: yon, reason: gerekce.trim() };
@@ -483,7 +483,7 @@ export function KararPaneli({
             <p className="mt-2 rounded-md border bg-background p-2 text-sm leading-6">{defterSonuc.not}</p>
           ) : null}
           <p className="mt-2 text-muted-foreground text-[11px] leading-4">
-            Karar YAZILDI — UYGULANMADI. Uç yalnız deftere satır ekler (api.py:6060 sözleşmesi);
+            Karar YAZILDI — UYGULANMADI. Uç yalnız deftere satır ekler (api.py::api_approve sözleşmesi);
             uygulamayı ayrı uçlar yapar (<code className="font-mono">POST /api/skills/revision</code> ·{" "}
             <code className="font-mono">POST /api/skills/apply</code>) ve onlar bu ekranda bağlı DEĞİL.
           </p>

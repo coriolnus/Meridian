@@ -4,7 +4,7 @@
    BU DOSYA `meridian/api.py` VE `meridian/loop.py` OKUNARAK YAZILDI, TAHMİN
    EDİLMEDİ. Okunan yerler ve okunan şey:
 
-     · `api_plan_onayla`      (api.py:6028) — `POST /api/plan/{plan_id}/onayla`.
+     · `api.py::api_plan_onayla`  — `POST /api/plan/{plan_id}/onayla`.
        GÖVDE OKUNMUYOR (fonksiyon `request.json()` çağırmıyor); kararı
        `loop.operator_onay_ver` veriyor ve dönüşü AYNEN yanıt gövdesi oluyor.
        Ret için `raise HTTPException(status_code=res["kod"], detail=res["neden"])`
@@ -18,7 +18,7 @@
        icra_yolu, gonderim, not, neden}.
        `icra_yolu` GÖNDERİMİN SONUCUNU söyler (loop.py:595-620): ayna kapalıysa
        "broker'a GİTMEZ", açıksa "bracket GÖNDERİLDİ / dedup / DÜŞTÜ / GÖNDERİLEMEDİ".
-     · `api_approve`          (api.py:6060) — `POST /api/approvals/{approval_id}`.
+     · `api.py::api_approve`      — `POST /api/approvals/{approval_id}`.
        GÖVDE: `{"decision": "approve"|"reject", "reason": str}` (`await request.json()`
        ZORUNLU — gövdesiz istek ayrıştırma hatası verir). YALNIZ YAZAR, hiçbir şey
        UYGULAMAZ. Dönüş: {ok, id, decision, davranissal, (not, kunye)}.

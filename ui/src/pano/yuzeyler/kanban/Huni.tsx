@@ -50,47 +50,16 @@ import { type CSSProperties, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 
 import { Olculemedi } from "./Hal";
+import { huniTabani } from "./huni_cekirdek";
+import type { HuniBasamagi, HuniDususu, HuniKarsiKart, HuniSeansi } from "./huni_cekirdek";
 
-/* ---- TİPLER ---------------------------------------------------------------
-   Basamak ayrık birleşim (`src/meridian/olcum.ts::Olcum` ile aynı desen):
-   `{ n: null }` NEDEN'siz YAZILAMAZ. Konvansiyon değil, derleyici tutuyor. */
-
-export type HuniBasamagi =
-  | { readonly ad: string; readonly n: number; readonly neden?: never }
-  | { readonly ad: string; readonly n: null; readonly neden: string };
-
-/** İki basamak ARASINDA eriyen küme — "Nerede, neden elendi" satırı.
- *  `app.js`teki `dususler` kaydıyla aynı alanlar: ok · metin · oran (+ neden). */
-export interface HuniDususu {
-  /** "Kurulan plan → Kapıyı geçen" */
-  readonly ok: string;
-  /** Eriyen kümenin ADIYLA anlatımı: "3 plan kapıda takıldı · kapı: 3 NO_GO" */
-  readonly metin: string;
-  /** Tabana göre eriyen oran. null → payda ya da sayı ölçülemedi. */
-  readonly oran: number | null;
-  /** `oran === null` iken NEDEN. Nedensiz boşluk okuyucuya "sıfır" diye okunur. */
-  readonly neden?: string;
-}
-
-/** Bu huninin SEANSI — hangi güne ait ve sayıları hangi defter verdi. */
-export interface HuniSeansi {
-  /** Kayıttan OKUNAN damga (`2026-08-21`). null → damga ölçülemedi. */
-  readonly damga: string | null;
-  /** `damga === null` iken NEDEN. Tahmini tarih UYDURULMAZ. */
-  readonly neden?: string;
-  /** Tek satırlık kaynak beyanı — hangi defterden sayıldı. */
-  readonly kaynak: string;
-}
-
-/** Aynı soruyu BAŞKA bir defterden cevaplayan kardeş kart. İki damga yan yana
- *  görünmezse okuyucu iki farklı sayının hangi güne ait olduğunu ANLAYAMAZ. */
-export interface HuniKarsiKart {
-  /** Ekrandaki adı — "Bugün · Hüküm dağılımı" */
-  readonly ad: string;
-  readonly damga: string | null;
-  readonly neden?: string;
-  readonly kaynak: string;
-}
+/* ---- TİPLER: ÇEKİRDEKTE, BURADAN YENİDEN DIŞA VERİLİYOR -------------------
+   Tipler ve taban kuralı `huni_cekirdek.ts`e taşındı çünkü orası REACT'SİZ ve
+   node'da çağrılabilir — huninin grameri artık kaynak metninden değil,
+   çağrılarak ölçülüyor (`tests/civiler/gece_hunisi_civileri.mjs`). Yeniden dışa
+   verme mevcut çağrı yerlerini (`KararZinciri`, `HukumDagilimi`) kırmıyor:
+   `import { type HuniBasamagi } from "./Huni"` aynen çalışmaya devam ediyor. */
+export type { HuniBasamagi, HuniDususu, HuniKarsiKart, HuniSeansi };
 
 /* ---- ÖLÇEK ----------------------------------------------------------------
    KAREKÖK ÖLÇEK — `app.js::PV_HUNI_US` ile AYNI SABİT (0,42) ve aynı gerekçe:
@@ -152,11 +121,10 @@ export function Huni({
   readonly paydaBeyani: string;
 }) {
   /** TABAN = ilk basamak. Yüzdeler ve şerit genişliği buna göre; ilk basamak
-   *  ölçülemediyse ORAN DA ÖLÇÜLEMEZ (0 varsayılmaz). */
-  const taban = useMemo(() => {
-    const ilk = basamaklar[0];
-    return ilk !== undefined && ilk.n !== null && ilk.n > 0 ? ilk.n : null;
-  }, [basamaklar]);
+   *  ölçülemediyse ORAN DA ÖLÇÜLEMEZ (0 varsayılmaz). KURAL ÇEKİRDEKTEN OKUNUR:
+   *  kartlar düşüş oranlarını aynı tabana bölüyor ve iki kopya bir gün sessizce
+   *  ayrışırdı — şerit bir şey, yüzdeler başka bir şey gösterirdi. */
+  const taban = useMemo(() => huniTabani(basamaklar), [basamaklar]);
 
   const kol = basamaklar.length > 1 ? W / (basamaklar.length - 1) : W;
 

@@ -1823,6 +1823,15 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # dersi, YASA 4+6): bacak koşmadıysa özet olaya 0 değil None yazılır ("ölçüldü, sıfır" ile
     # "hiç ölçülmedi" ayrı olgulardır — UYDURMA YASAĞI) ve nedeni ayrı olayla deftere düşer.
     _p2_kostu = False        # P2 taraması (near-miss gölge bacağı dahil) bu turda gerçekten koştu mu?
+    # HUNİNİN AĞZI (2026-08-31): süzgece GİREN sembol sayısı — `candidates` bunun ALTINDAKİ
+    # kesittir. Bugüne dek yalnız eleme SONRASI sayı yazılıyordu ve pano onu "Taranan aday" diye
+    # etiketliyordu: operatör "0 aday"ı "hiç tarama olmadı" diye okudu (döngü koşmuştu). Payda
+    # yazılmadıkça o iki olgu aynı görünür. `taranan` ölçüm ANINDA (süzgeç zincirinin hemen
+    # önünde) yazılır; tarama hiç koşmadıysa 0 DEĞİL None + NEDEN (uydurma yasağı).
+    # NEDEN burada değil, tarama kapısının HEMEN ÖNÜNDE hesaplanıyor: kapı `len(b.positions)`
+    # okuyor ve iki nokta arasına bir gün pozisyon değiştiren bir adım girerse, burada
+    # hesaplanmış bir gerekçe kapının kendisiyle sessizce ayrışırdı.
+    _taranan = None
     _nm_toplama = None       # cf.collect'in near-miss muhasebesi (ana çağrıdan kopya; None = collect konuşmadı)
     late_by_date = {}        # geç-bar borç kesişimleri — blok koşmadığı turda da özet olay okur (NameError koruması)
     # P3 BLOĞUNUN DIŞINDA TANIMLANIR, İÇİNDE DEĞİL: blok `halted`/`data_bad`/slot koşuluna bağlıdır
@@ -1854,9 +1863,17 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                         "varsayılanına düştü: GO→REVIEW. NO_GO'lar değişmedi; kapının körlüğü bir "
                         "sembolün suçu değildir, o yüzden red değil İNCELEME.")
     explore_mode = (not halted and not data_bad and rj["exposure_budget_pct"] <= 0)
+    # NEDEN PEŞİNEN YAZILIYOR: aşağıdaki blok yüzlerce satır ve bir `else:` kolu o mesafede
+    # sessizce ayrışırdı (koşul değişir, kol güncellenmez). Blok koşarsa neden None'a çekilir —
+    # yani "ölçülemedi" varsayılan, "ölçüldü" ispatlı hâldir.
+    _taranan_neden = ("HALT çekili — bu turda hiç tarama yapılmadı" if halted else
+                      "veri kalitesi kapısı kapalı — bozuk barla tarama yapılmaz" if data_bad else
+                      f"açık pozisyon tavanı dolu ({len(b.positions)}/{limits['max_open_positions']}) "
+                      "— yeni aday aranmadı")
     if not halted and not data_bad and (rj["exposure_budget_pct"] > 0 or explore_mode) \
             and len(b.positions) < limits["max_open_positions"]:
         _p2_kostu = True
+        _taranan_neden = None
         with skills.pipeline_run("P2_SCREEN", artifact="state/candidates.jsonl"):
             # Faz 0 KARANTİNA: validate_bars'ın 'hard' düşürdüğü ticker'lar bugüne dek yalnız
             # LİSTELENİYORDU (%25 eşiği aşılmadıkça) — bozuk barlı tek hisse aday üretebiliyordu.
@@ -1877,6 +1894,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             # ancak kanıt biriktikten sonra OOS kapısından geçerek gelebilir.
             _rx = strat.relax_for_near_miss(eff)             # TEK KAYNAK (strategy.py) — cf_backfill ile aynı
             late_by_date = _scan_debt_collect(per, d, eff)   # barı sonradan gelenlerin kaçan kesişimleri
+            # ÖLÇÜM NOKTASI: evren listesi süzgeç zincirine GİRMEDEN hemen önce. Aşağıdaki döngü
+            # karantinayı, açık pozisyonu ve bayat kuyruğu eler — o elemeler huninin İÇİDİR, ağzı
+            # değil. Sayı `data_quality.json`daki `universe` ile AYNI kaynaktan (`per`) gelir;
+            # ikisi ayrışırsa biri uydurmadır (tek-kaynak yasası, çivi: test_loop_gaps_v48).
+            _taranan = len(per)
             for _i_p, (t, df_t) in enumerate(per.items(), 1):
                 # NABIZ: evren boyu tarama — sembol başına İKİ `scan_all` (sıkı + gevşek) ve
                 # her biri gösterge penceresi hesaplar. Ağ yok ama CPU var; uzun bir yetişme turunda
@@ -2464,7 +2486,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # `near_miss*` sayaçları: üretim `near_miss` (bacak koşmadıysa None — uydurma 0
     # yok), deftere düşen `near_miss_yazilan` (cf.collect muhasebesi; collect konuşmadıysa None),
     # geç-bar borcundan gelen `near_miss_gec`. Okuyucu: pano "dün gece" kartı + teşhis.
+    # `taranan`/`taranan_neden`: huninin AĞZI (eleme öncesi evren) ve ölçülemediyse NEDENİ.
+    # Okuyucu: `api._son_dongu()` → `/api/today.son_dongu` → panonun "Gece ne buldu" hunisi.
+    # Alan YOKSA (bu turdan eski kayıtlar) okuyucu "eski kayıt" der; 0'a DÜŞMEZ.
     obs.log("daily_cycle", date=dstr, regime=rj["regime"], candidates=len(candidates), plans=len(plans),
+            taranan=_taranan, taranan_neden=_taranan_neden,
             near_miss=(len(near_miss_sigs) if _p2_kostu else None),
             near_miss_yazilan=((_nm_toplama or {}).get("nm_yazilan") if _p2_kostu else None),
             near_miss_gec=(sum(len(v) for v in (late_by_date or {}).values()) if _p2_kostu else None),
@@ -2475,6 +2501,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             # satırın okuyucusu pano "dün gece" kartı + teşhis; yazılmayan nokta SESSİZ kalamaz).
             egri_nokta=_egri_nokta)
     return {"status": "ok", "date": dstr, "regime": rj["regime"], "candidates": len(candidates),
+            "taranan": _taranan, "taranan_neden": _taranan_neden,
             "plans": len(plans), "armed": len(meta["armed"]), "open_positions": len(b.positions),
             "near_miss": (len(near_miss_sigs) if _p2_kostu else None),
             "equity": equity, "halted": halted, "breaker": breaker, "data_ok": not data_bad,

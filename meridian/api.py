@@ -1665,6 +1665,13 @@ def _son_dongu() -> dict:
         yas = None
     return {"var": True, "kaynak": "events.jsonl", "date": doc.get("date"), "ts": doc.get("ts"),
             "yas_saat": yas, "candidates": doc.get("candidates"), "plans": doc.get("plans"),
+            # HUNİNİN AĞZI (`loop.daily_cycle` → `taranan`): eleme ÖNCESİ evren. `candidates`
+            # bunun ALTINDAKİ kesittir ve pano yıllardır onu "Taranan aday" diye etiketliyordu —
+            # operatör "0 aday"ı "hiç tarama olmadı" diye okudu (2026-08-31). İKİ AYRI None hâli
+            # var ve panonun ikisini ayırması gerekiyor: alan HİÇ YOKSA (bu turdan eski kayıt)
+            # `taranan_neden` de None kalır; alan VAR ama ölçülemediyse (tarama koşmadı) neden
+            # DOLUDUR. Bu yüzden neden ayrı bir alan — 0 yazmak ikisini de siler.
+            "taranan": doc.get("taranan"), "taranan_neden": doc.get("taranan_neden"),
             "armed": doc.get("armed"), "regime": doc.get("regime"),
             "open_positions": doc.get("open_positions"), "data_ok": doc.get("data_ok"),
             "halted": doc.get("halted"),

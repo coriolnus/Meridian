@@ -229,6 +229,47 @@ def test_son_dongu_MAKBUZSUZ_satirda_None_yazildi_DEMEZ(sandbox_state):
     assert api._son_dongu()["egri_nokta"] is None
 
 
+# =================================================================================================
+# §5b — HUNİNİN AĞZI: `daily_cycle`ın `taranan` alanı panoya ULAŞIYOR (2026-08-31)
+# -------------------------------------------------------------------------------------------------
+# Aynı sınıfın ikinci vakası ve aynı yerde: `_son_dongu()` bir BEYAZ LİSTEdir, motorun yazdığı yeni
+# alan oraya girmedikçe telde kalır. `egri_nokta` bunu bir kez yaşadı (§5); `taranan` ikincisi.
+# ÖLÇÜLEN ARIZA: pano eleme-SONRASI `candidates`ı "Taranan aday" diye etiketliyordu ve operatör
+# "0 aday"ı "hiç tarama olmadı" diye okudu — oysa döngü koşmuş, 251 sembol taranmıştı.
+# =================================================================================================
+def _dongu_satiri(state, **ek):
+    """`daily_cycle` satırını İSTENEN alanlarla yazar — alanın YOKLUĞU da bir hâldir."""
+    (state / "events.jsonl").write_text(json.dumps({
+        "ts": "2026-08-14T21:05:00+00:00", "level": "info", "event": "daily_cycle",
+        "date": "2026-08-14", "candidates": 0, "plans": 0, "armed": 0, **ek}) + "\n")
+    api._SON_DONGU_ONBELLEK.update(anahtar=None, yuk=None)
+
+
+def test_son_dongu_TARANAN_evrenini_TASIR(sandbox_state):
+    """Payda telde kalmıyor: motorun ölçtüğü eleme-öncesi evren panoya ULAŞIYOR."""
+    _dongu_satiri(sandbox_state, taranan=251, taranan_neden=None)
+    sd = api._son_dongu()
+    assert sd["taranan"] == 251 and sd["taranan_neden"] is None
+    assert sd["candidates"] == 0, "eleme sonrası sayı kaybolmuş — huninin İKİ basamağı da lazım"
+
+
+def test_son_dongu_TARANAN_olculemediginde_NEDENI_de_TASIR(sandbox_state):
+    """Tarama koşmadıysa sayı None'dur ve NEDEN yanında gelir; pano 0 çizmesin diye."""
+    _dongu_satiri(sandbox_state, taranan=None, taranan_neden="HALT çekili — bu turda hiç tarama yapılmadı")
+    sd = api._son_dongu()
+    assert sd["taranan"] is None
+    assert "HALT" in sd["taranan_neden"], "neden düştü — pano 'ölçülemedi'yi 'sıfır' diye çizer"
+
+
+def test_son_dongu_ESKI_KAYITTA_taranan_SIFIR_DEMEZ(sandbox_state):
+    """Bu turdan ESKİ satırlar alanı hiç taşımıyor. İKİ None hâli birbirinden ayrılır:
+    alan yok → neden de None ("eski kayıt"); alan var ama ölçülemedi → neden DOLU."""
+    _dongu_satiri(sandbox_state)                       # `taranan` anahtarı HİÇ YOK
+    sd = api._son_dongu()
+    assert sd["taranan"] is None and sd["taranan_neden"] is None, \
+        "eski kayıt ile ölçülemeyen tarama aynı hâle indirgendi — pano ikisini ayıramaz"
+
+
 @pytest.mark.parametrize("durum", ["yazildi", "tazelendi", "idempotent_atlandi", "yazilmadi"])
 def test_beyan_SON_YAZIM_makbuzunu_DORT_HALDE_de_tasir(sandbox_state, durum):
     """`loop._persist_equity_point`in DÖRT hâli (`loop._persist_equity_point`) beyana OLDUĞU GİBİ geçer — pano

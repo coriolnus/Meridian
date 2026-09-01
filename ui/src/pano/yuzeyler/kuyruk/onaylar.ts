@@ -8,7 +8,7 @@
        (api.py:5868 `_onay_bekleyen_damgala` — SUNUCU damgalar, pano yalnız bayrağı okur;
        ölçütü burada yeniden yazmak, aynı sorunun iki cevabını üretmek olurdu)
 
-   İkisini AYRI ekranlarda göstermek, sunucunun `inbox_count`unu (api.py:5899) dört
+   İkisini AYRI ekranlarda göstermek, sunucunun `inbox_count`unu (`api.py::_inbox_count`) dört
    kaynaktan toplayıp tek rozete basmasıyla çelişirdi: rozet "4 bekleyen" derken
    operatör bu sayfada yalnız 1 görürdü.
 
@@ -21,7 +21,7 @@
    anahtarı `skill` (öneri/revizyon) ve kurulum adı (silahlanma). İkinci uç
    düşerse damga "ölçülemedi + neden" olur; UYDURULMAZ.
 
-   "İŞ İSTİYOR" SUNUCUNUN ÖLÇÜTÜYLE HESAPLANIR (`_inbox_count`, api.py:5899):
+   "İŞ İSTİYOR" SUNUCUNUN ÖLÇÜTÜYLE HESAPLANIR (`api.py::_inbox_count`):
    karar verilmiş (`approve`/`reject`) bir kayıt-önerisi gelen kutusunda DURUR ama
    iş İSTEMEZ. Bu ayrımı ekranda yapmazsak, kuyruk hiç azalmayan bir liste olur ve
    okunmayan bir liste alınmamış karar demektir.
@@ -120,7 +120,7 @@ function turCoz(tip: string | undefined): KuyrukTuru {
   return "bilinmeyen";
 }
 
-/** Bir Eksen-2 önerisi hâlâ iş istiyor mu? Ölçüt `_inbox_count` (api.py:5920) ile AYNI. */
+/** Bir Eksen-2 önerisi hâlâ iş istiyor mu? Ölçüt `api.py::_inbox_count` ile AYNI. */
 function oneriIsIstiyor(oge: OnayOgesi): { readonly istiyor: boolean; readonly durgunNeden: string | null } {
   if (oge.uygulanabilir === true) return { istiyor: true, durgunNeden: null };
   const karar = oge.karar_kaydi?.karar;

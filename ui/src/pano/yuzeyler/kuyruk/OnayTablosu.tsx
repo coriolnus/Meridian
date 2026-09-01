@@ -18,7 +18,7 @@
       ("3 gün önce") kuyruğun ne zaman dolduğunu belgelemez; yalnız mutlak yazmak
       bayatlığı gizler. Damga ölçülemeyen satırda sütun BOŞ değil, NEDEN taşır.
    3) DURUM SÜTUNU İKİ DEĞERLİ DEĞİL: "iş istiyor" ile "karar verilmiş, kayıt
-      olarak duruyor" AYRI. Sunucunun `inbox_count`u (api.py:5899) ikincisini
+      olarak duruyor" AYRI. Sunucunun `inbox_count`u (`api.py::_inbox_count`) ikincisini
       saymıyor; tablo saysaydı, hiç azalmayan bir liste çıkardı.
 
    SIRALAMA VARSAYILANI "EN ESKİ ÖNCE": bir görev listesinde en yaşlı kalem en
@@ -135,7 +135,7 @@ function kolonlariKur(
           <HukumRozet
             ton="uyari"
             metin="iş istiyor"
-            baslik="sunucunun `inbox_count` ölçütüne göre hâlâ bekliyor (api.py:5899)"
+            baslik="sunucunun `inbox_count` ölçütüne göre hâlâ bekliyor"
           />
         ) : (
           <HukumRozet

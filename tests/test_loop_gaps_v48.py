@@ -72,6 +72,45 @@ def test_cycle_records_candidates_or_says_why_not(seeded):
         assert k in s, f"özet '{k}' alanını taşımıyor"
 
 
+# ---------- TARANAN: ELEME ÖNCESİ EVREN (2026-08-31, huni kartı vakası) ----------
+# ÖLÇÜLEN ARIZA: operatör panoda "hiç tarama olmadı" okudu; gerçek "döngü koştu, 0 aday"dı.
+# Kayıtta huninin AĞZI hiç yoktu — `candidates` eleme SONRASI sayıdır ve pano onu "Taranan aday"
+# diye etiketliyordu. Payda yazılmadıkça "0 aday" ile "hiç bakılmadı" aynı görünür.
+def _olaylar(ad: str) -> list[dict]:
+    return [e for e in store.read_jsonl("events.jsonl") if e.get("event") == ad]
+
+
+def test_ozet_TARANAN_evreni_ELEME_ONCESI_tasir(seeded):
+    """Huninin ağzı: süzgece GİREN sembol sayısı. `candidates` bu sayının ALTINDAKİ bir kesittir
+    ve ikisini tek alanla anlatmak, panoyu "0 aday = hiç tarama yok" diye okutan şeydi."""
+    bars, idx = _universe()
+    s = loop.daily_cycle(bars, idx, on_date=_last_date(idx))
+    assert s["taranan"] == len(bars), f"eleme öncesi evren yazılmadı: {s.get('taranan')}"
+    assert s["taranan_neden"] is None, "ölçüldüğü hâlde neden taşıyor"
+    ozet = _olaylar("daily_cycle")[-1]
+    assert ozet["taranan"] == len(bars), "özet OLAYI evreni taşımıyor — panonun okuduğu satır bu"
+    assert ozet["taranan_neden"] is None
+    # TEK KAYNAK: veri kalitesi kartı da aynı evreni yazıyor; iki sayı ayrışırsa biri uydurmadır.
+    assert store.read_json("data_quality.json", {})["universe"] == ozet["taranan"]
+
+
+def test_TARANAN_tarama_KOSMADIGINDA_sifir_DEGIL_None_ve_NEDEN(seeded):
+    """UYDURMA YASAĞI: tarama hiç koşmadıysa payda 0 DEĞİL, ÖLÇÜLEMEDİ. `taranan: 0` yazmak
+    "251 sembole bakıldı, hiçbiri geçmedi" ile "hiç bakılmadı"yı aynı sayıya indirirdi."""
+    from meridian import health
+    bars, idx = _universe()
+    health.set_halt(True)
+    try:
+        s = loop.daily_cycle(bars, idx, on_date=_last_date(idx))
+    finally:
+        health.set_halt(False)
+    assert s["taranan"] is None, "tarama koşmadığı hâlde bir sayı yazıldı"
+    assert isinstance(s["taranan_neden"], str) and len(s["taranan_neden"]) >= 10, \
+        "ölçülemeyen değerin NEDENİ yok — okuyucu bunu 'sıfır' diye okur"
+    ozet = _olaylar("daily_cycle")[-1]
+    assert ozet["taranan"] is None and isinstance(ozet["taranan_neden"], str)
+
+
 # ---------- DETERMİNİZM: aynı gün iki kez → aynı sonuç, çoğalma yok ----------
 def test_same_day_twice_is_idempotent(seeded):
     """Canlıda yaşandı: mid-cycle istisna sonrası her 300 sn'lik yeniden deneme trades.jsonl'a
