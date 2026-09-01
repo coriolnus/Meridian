@@ -1,0 +1,58 @@
+card_id: EXE-2026-011
+family: icra_seyrelme_olcumu
+thesis: >
+  KART-ÖNCE ÖN-KAYDI (TSK-019). "Kaç plan doluma dönüşmedi ve NEREDE düştü" sorusu bugün E2'den
+  okunamıyor: E2 satırını yalnız gönderim kapısına ULAŞAN plan alır
+  (`loop.mirror_submit_armed` → `_entry_exec_write`, karar ∈ {submitted, gap_veto, unreachable,
+  rejected}) — kapıya hiç ulaşmayan plan İZ BIRAKMAZ. Canlı ölçüm (2026-08-31): defterde 36/36
+  submitted+dolu → seyrelme TAMAMEN kapı-öncesi ve ölçüsüz; pencere kaydırması sonrası plan-günü
+  başına dolum 3,0→1,0 düştü ve EDG-042 eşik takvimi bu sayıya bağlı. DEĞİŞİKLİK: seans
+  kapanışında AYNA-SATIRI — o seansın dönüşmemiş her planı için E2'ye tek satır, sebep sınıfı
+  planın KENDİ kayıtlı alanlarından türetilir (PIT: yalnız o seansta zaten yazılmış veriden).
+evidence_refs:
+  - "ROADMAP TSK-019 (born 2026-08-31): 36/36 submitted+dolu; 0,38→0,40 plan-günü/seans, dolum 3,0→1,0"
+  - "loop.mirror_submit_armed karar/red_sinifi alanları (kapıya ulaşan sınıflar ZATEN E2'de)"
+  - "EDG-2026-042 P-3 bloğu 'AYRI KALEM ADAYI' kaydı, 2026-08-31"
+uygulama_sozlesmesi: >
+  (1) YAZIM ANI: seans kapanış kancası (EOD) — o seansın plan listesi ile E2'nin o seans satırları
+  kıyaslanır; E2'de karar satırı OLMAYAN her plan için bir ayna-satırı yazılır
+  (`motor: "ayna_seyrelme"`). (2) TEKİLLİK: kapıya ulaşmış plan (karar satırı var) ayna-satırı
+  ALMAZ — aynı planın iki sonuç izi yasak; submitted-ama-dolmamış plan da ayna-satırı ALMAZ
+  (izi zaten var: karar=submitted + fill=None, dinlenen-limit ailesi EXE-2026-005'in konusu).
+  (3) SEBEP SÖZLÜĞÜ DONUK: not_armed (plan üretildi, silahlanmadı) · armed_not_submitted
+  (silahlı kaldı ama kapıya hiç girmedi — HALT/anahtar-yok/pencere-sarkıtı dahil; planın
+  broker_status/armed üyeliğinden türetilir) · olculemedi (alanlardan sınıf çözülemedi — UYDURMA
+  YASAĞI: bilinmeyen sınıf icat edilmez, adıyla sayılır). Alt-neden serbest metin `red_nedeni`ne.
+  (4) PIT: satır YALNIZ o seansta zaten diske yazılmış plan/portföy alanlarından türetilir;
+  yazıldıktan sonra güncellenmez, geriye dönük yeniden-etiketleme yasak (EXE-009 kill#3 sınıfı).
+  (5) OKUYUCU (YASA 6): haftalık öz-inceleme raporuna dönüşüm satırı — plan sayısı, dolum sayısı,
+  dönüşmeme sınıf dağılımı; EDG-042 hakem takvim sorusunun paydası buradan okunur.
+parameter_grid:
+  hucreler: [eod_ayna_satiri]   # K += 0 — grid yok; defter-yüzeyi ön-kaydı (EXE-009 sınıfı)
+cost_model: yok   # bedel beyanı: E2 satır hacmi artar (plan-günü başına ≤ plan sayısı satır); okuyucular karar alanıyla filtreler
+veri_penceresi: >
+  İleriye dönük birikim (canlı defter); fikstür kolu testlerde. Geri-dolum YOK: geçmiş seanslara
+  ayna-satırı basmak PIT'i bozar (o günün "dönüşmedi" hükmü bugünden verilemez — kill#2).
+success_metric: >
+  Sabit fikstür penceresinde her üretilmiş planın E2'de TAM OLARAK BİR sonuç izi var (karar
+  satırı YA DA ayna-satırı); sınıf dağılımı planların kayıtlı alanlarıyla birebir; haftalık
+  rapor dönüşüm satırını taşıyor. Canlıda ilk hafta: ayna-satırları birikiyor ve
+  dolum/plan-günü paydası artık defterden okunuyor. Hüküm Rol-1'de, aynı turda karta işlenir.
+kill_criteria:
+  - "aynı plana iki sonuç izi yazılırsa (karar + ayna) geçersiz — tekillik kusuru"
+  - "geçmiş seansa geri-dolum ayna-satırı basılırsa geçersiz (PIT ihlali)"
+  - "sınıf, o seansta yazılmamış/sonradan öğrenilmiş veriden türetilirse geçersiz"
+  - "pozitif kontrol ateşlemezse hiçbir sonuç yorumlanmaz"
+pozitif_kontrol: >
+  YOL-TUTARLI: fikstürde bilerek silahlandırılmayan bir plan seans kapanışından geçirilir —
+  ayna-satırı doğar, sınıfı not_armed; silahlanıp gönderilen kardeş plan ayna-satırı ALMAZ.
+  Tek-fonksiyon birim çağrısı PK sayılmaz; kanca gerçek EOD yolundan tetiklenir.
+k_registry: {registered_at: "2026-09-02", trial_ids: [EXE-011-eod-ayna]}
+status: registered   # 2026-09-02 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce, TSK-019)
+beyanli_sinirlar: >
+  (1) Bu kart seyrelmenin SEBEBİNİ çözmez — okunur kılar; "pencere kaydırması mı azalttı" hükmü
+  birikimden sonra ayrı sorudur (EDG-042 takvimi). (2) submitted+dolmamış sınıfı bilerek kapsam
+  dışı (izi zaten var; dinlenen limit EXE-2026-005'te). (3) Sözlükteki iki sınıf kod okumasıyla
+  daraltılmış çerçevedir; uygulamada plan alanları üçüncü bir AYIRT EDİLEBİLİR sınıf gösterirse
+  bu yeni sınıf sözlüğe EKLENMEZ — olculemedi'ye sayılır ve yeni kartla açılır (eşik-sonradan
+  değişmez ilkesinin sözlük karşılığı).

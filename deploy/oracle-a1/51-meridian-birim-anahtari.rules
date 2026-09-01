@@ -1,0 +1,31 @@
+// Pano birim anahtarı (TSK-098, 2026-09-02) — meridian.service içindeki API (ubuntu,
+// NoNewPrivileges=true → sudo yolu kapalı, 50-meridian-sprint.rules gerekçesi aynen) panodan
+// YALNIZ iki birimi açıp kapatabilsin: `systemctl enable|disable --now <birim>`.
+//
+// NEDEN ÜÇ EYLEM: `enable/disable` DBus'ta manage-unit-files'a düşer; `--now`un start/stop'u
+// manage-units'a; ve systemctl enable/disable işlemin sonunda Manager.Reload çağırır — o da
+// reload-daemon'a. Üçünden biri eksikse uç 502 + polkit stderr döndürür (sessiz arıza değil,
+// uç öyle tasarlandı).
+//
+// KAPSAM: birim eylemleri TAM AD eşleşmesi (önek değil) — beyaz liste api.py
+// `BIRIM_ANAHTAR_BEYAZ` ile EL İLE eşit tutulur (iki dil/iki makine: türetme kurulamaz;
+// listeyi orada genişleten buraya da yazmak zorundadır, ayrışma ilk canlı denemede 502 polkit
+// hatasıyla SESLİ kırılır). reload-daemon birim ayrıntısı TAŞIMAZ, o yüzden dar bağlanamaz:
+// verilen genişlik yalnız "unit tanımlarını yeniden okut"tur (yetki yükselmesi değil,
+// en kötüsü erişilebilirlik sınıfı) ve ubuntu zaten manage-units'in sprint ailesini taşıyor.
+polkit.addRule(function(action, subject) {
+    if (subject.user != "ubuntu") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    if (action.id == "org.freedesktop.systemd1.manage-units" ||
+        action.id == "org.freedesktop.systemd1.manage-unit-files") {
+        var unit = action.lookup("unit");
+        if (unit == "meridian-learn.service" ||
+            unit == "meridian-barsarchive.service") {
+            return polkit.Result.YES;
+        }
+    }
+    if (action.id == "org.freedesktop.systemd1.reload-daemon") {
+        return polkit.Result.YES;
+    }
+});

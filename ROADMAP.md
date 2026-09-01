@@ -2366,6 +2366,26 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
 
+- **[TSK-099] Pano `apiPost` iki birebir kopyası tek kaynağa iner** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
+  What: `ui/src/pano/yuzeyler/kimlik/gonder.ts` ve `kuyruk/onayEylem.ts` aynı `apiPost`u birebir taşıyor; ortak modüle inip iki tüketici de oradan import etmeli. TSK-098 üçüncü kopyayı YAZMADI (gonder.ts'ten import etti) — borç ikiye sabitlendi, büyümedi.
+  Why: tek-kaynak yasası — iki kopya sessizce ayrışır (hata gövdesi/başlık davranışı çatallanınca yüzeyler farklı davranır).
+  Ref: TSK-098 raporu endişe-3, 2026-09-02.
+- **[TSK-100] `BIRIM_ANAHTAR_BEYAZ` ↔ polkit kural dosyası ayrışma çivisi** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
+  What: `api.py::BIRIM_ANAHTAR_BEYAZ` ile `deploy/oracle-a1/51-meridian-birim-anahtari.rules` içindeki tam-ad listesi el ile eşit tutuluyor (iki dil/iki makine — türetme kurulamaz); repo-içi çivi iki dosyayı okuyup küme eşitliğini ölçmeli, ayrışma commit anında kırmızı olmalı.
+  Why: tek-kaynak yasası — kopya kaçınılmazsa türetme + ayrışma çivisi; bugünkü tek koruma ilk canlı denemedeki 502 polkit hatası (geç ve canlıda).
+  Ref: 51-meridian-birim-anahtari.rules başlık beyanı · TSK-098 kapanışı 2026-09-02.
+- **[TSK-101] `loop.py` broker_reconcile alarmı `mekanizma=` (Türkçe) yazıyor — tüketiciler `mechanism` bekliyor** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
+  What: MECHANISM_STALE üreticilerinden loop.py:1436 (sembol: broker_reconcile alarmı) alanı `mekanizma=` adıyla basıyor; 18 üretici içinde tek aykırı imza. Üretici alanı `mechanism`e döner (olay-defteri geçmişi için tüketici toleransı gerekmiyor — TSK-007 düşüşü mesaj-önekiyle zaten okunur kılıyor).
+  Why: imza-kayması sınıfı — gerçek ad alanda duruyor ve hiç okunmuyor; TSK-007 ölçümü sırasında yakalandı.
+  Ref: task-007-report.md endişe-2, 2026-09-02.
+- **[TSK-102] `watchdog_incidents.gap_h` için de düşüş sırası (age_h/yas_h/behind_h eşdeğerleri)** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
+  What: rapor satırındaki `gap_h` yalnız sınıf-1 (bayat-geçiş) olaylarında dolu; sınıf 3/4 olaylarının bazıları eşdeğer süre alanları taşıyor (watchdog.py:3742 `age_h`, :3484 `yas_h`, :2225 `behind_h` sınıfı) — TSK-007'nin ad-düşüşü deseniyle süre için de kurulabilir. Alan adları satır kaydığı için sembolle doğrulanmalı.
+  Why: operatörün gördüğü "gecikme" sütunu çoğunlukla boş; ölçüm varken boş sütun Yasa 6'nın ters yüzü.
+  Ref: task-007-report.md endişe-3, 2026-09-02.
+- **[TSK-098] Pano birim-anahtarı — servisleri UI'dan istenen-duruma çekme** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: M · trigger: —
+  What: Sistem-sağlığı birim satırına anahtar: kapat=`disable --now`, aç=`enable --now` (istenen durumun tek kaynağı systemd `is-enabled` — TSK-092 dagit türetimiyle aynı sözlük). Uç `_auth`'lu + beyaz-listeli (v1: meridian-learn, meridian-barsarchive; çekirdek `meridian` HARİÇ — pano kendi dalını kesemez, HALT ailesi var) + obs olayı; yetki sudo değil polkit/DBus (meridian-sprint@ emsali genişler). UI onay diyaloglu, sonuç sunucu geri-okumasından. Taslak brief hazır: .superpowers/sdd/2026-09-01-kapi-faz234/task-birim-anahtari-brief.md.
+  Why: vaka ×2 (learn dağıtımla dirildi) + operatör isteği 2026-09-02 gecesi ("servislerin üzerine tıklayıp elle durdurabilmeliyim — her seferinde uğraşmayalım"). SÜREÇ NOTU: ilk seferinde plansız implementasyona gidildi ve operatör durdurdu — kalem sıraya buradan girer, icrası triyaj onayından sonra.
+  Ref: TSK-092 (dagit istenen-durum) · 50-meridian-sprint.rules (polkit emsali) · operatör talimatı 2026-09-02.
 - **[TSK-097] Çok-kullanıcı kimlik paketi (kullanıcı adı/e-posta + kayıt akışı + roller, TEK pakette)** — status: GATED(operatör çok-kullanıcıya geçme kararını verdiğinde) · born: 2026-09-02 · owner: rol1 · size: L · trigger: soldaki kapı
   What: bugünkü tek-operatör kimliği (auth.py: tek parola + oturum çerezi) çok-kullanıcıya bir bütün olarak taşınır — kullanıcı tablosu, kullanıcı adı/e-posta alanı, gerçek kayıt akışı (port edilen register v2 formu bugün bilinçli bağsız, "2. aşama" etiketli), kullanıcı-başına oturum, roller/yetkiler yüzeyleriyle bağ. Giriş formuna alan eklemek bu paketin EN KÜÇÜK parçasıdır ve paketten önce yapılmaz.
   Why: operatör sorusu 2026-09-02 gece ("kullanıcı adı da ekleyelim mi") — karar: şimdilik hayır. Bugün eklemek ya sahte alan (tek sabit ada doğrulama, güvenlik katmaz) ya erken migrasyon artığı olurdu; gerçek korumalar TLS + kapı hız sınırı + başarısız-giriş kilidi + güçlü parola. Tek-kaynak: kimlik şeması bir kez, paket içinde tasarlanır.
@@ -2393,7 +2413,7 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   What: bu olay sınıfının defterde nasıl yaşaması gerektiği kararı gerekiyor — örneklem seyreltme / ayrı defter / özet satır seçeneklerinden biri.
   Why: 2 günlük olay kaydının %87'si tek olay (8.797/10.138) — pencereli tüketiciler (parite/inbox/selfreview/otonomi) daralmış tarih görüyor; canlı journal'da pano yolları başına 5 dk örneklemli satırlar yağıyor. Bedel yasası: gürültü kısılırken ne kaybedildiği de ölçülmeli.
   Ref: 2026-08-31 haftalık öz-değerlendirme triyajı.
-- **[TSK-007] öz-değerlendirme `watchdog_incidents` mekanizma adını yalnız `mechanism` alanından okuyor** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: S · trigger: —
+- **[TSK-007] öz-değerlendirme `watchdog_incidents` mekanizma adını yalnız `mechanism` alanından okuyor** — status: DONE(2026-09-02 gece · `_olay_mekanizma()` düşüşü `mechanism→kind[:detector|:artifact]→artifact→mesaj-öneki→None`, v369 12 çivi + 2 mutasyon kanıtı; SDD incelemesi SPEC 12/12; commit gece kapanışında; yan keşifler TSK-101/102'ye) · born: 2026-08-31 · owner: rol1 · size: S · trigger: —
   What: `selfreview.py` çıkarımı `kind`→`artifact`→mesaj önekine düşecek şekilde genişletilmeli; çivi olay-sınıfı başına birer örnekle.
   Why: 21 olayın 19'unda `mechanism` alanı yok (`kind`/`artifact` taşıyor) — Telegram özeti "8 satırın 7'si isimsiz" çıktı.
   Ref: 2026-08-31 ölçümü.
