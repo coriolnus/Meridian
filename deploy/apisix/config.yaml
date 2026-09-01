@@ -1,0 +1,48 @@
+# deploy/apisix/config.yaml — APISIX ana konfigi (TSK-089 tek-kapı, Faz 1).
+# SIRSIZ ŞABLON: admin anahtarı ${{APISIX_ADMIN_KEY}} ile /opt/apisix/.env-apisix'ten çözülür
+# (dosya 0600, F9-DIŞI sır — env.iskelet repodaki sırsız aynadır). $ENV çözüm hatası SESSİZDİR
+# (literal string kalır) — canary ② kurulum günü bilinçli-bozuk referansla error-log'u doğrular.
+#
+# GÜVENLİK DURUŞU (TSK-089 gövdesi):
+#   * proxy (9080) ve admin (9180) YALNIZ 127.0.0.1 — dış dünyaya kapalı; kapı şimdilik A1-içi
+#     egress proxy'sidir (LLM rotası). İngress fazı (pano) AYRI faz, TLS'iyle gelir.
+#   * `plugins:` listesi varsayılanı EZER — aşağıdaki liste kullanılan HER plugin'in açık
+#     beyanıdır; batch-requests (CVE-2022-24112 aracı) · server-info · inspect LİSTEDE YOK =
+#     kapalı. Yeni faz plugin'i buraya adıyla eklenir, "varsayılan zaten açıktı" yok.
+#   * worker_processes AUTO DEĞİL 2: container host'un 4 çekirdeğini görür (canary ⑨ sınıfı);
+#     kapı meridian'ın yanında ikincil iş — 2 worker beyanlı tavan.
+deployment:
+  role: traditional
+  role_traditional:
+    config_provider: etcd
+  etcd:
+    host:
+      - "http://127.0.0.1:2379"
+    prefix: /apisix
+    timeout: 30
+  admin:
+    admin_key:
+      - name: admin
+        key: ${{APISIX_ADMIN_KEY}}
+        role: admin
+    allow_admin:
+      - 127.0.0.1/32
+    admin_listen:
+      ip: 127.0.0.1
+      port: 9180
+
+apisix:
+  node_listen:
+    - ip: 127.0.0.1
+      port: 9080
+  enable_admin: true
+
+nginx_config:
+  # canary ⑨: error_log_level info — $ENV çözüm hataları ve plugin uyarıları görünür kalsın.
+  error_log_level: info
+  worker_processes: 2
+
+plugins:
+  - ai-proxy-multi   # Faz 1: LLM rotası — öncelik zinciri + fallback
+  - proxy-rewrite    # canary ③: ai-proxy varsayılanı TÜM istemci header'larını iletir — temizlik şart
+  - prometheus       # bedel ölçümü (canary ⑧) — /apisix/prometheus/metrics yalnız loopback

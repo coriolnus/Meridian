@@ -291,6 +291,12 @@ fi
 #   * meridian-skill-gorus.service/.timer → /etc/systemd/system/  (TSK-058 FAZ C 2026-09-01 —
 #     görüş kuyruğunun seans-dışı üreticisi, günlük 07:30 UTC; yalnız deterministik yol, LLM
 #     gölge üreticinin zamanlanması ayrı kalem)
+#   * apisix config.yaml → /opt/apisix/ + apisix.service + apisix-etcd.service →
+#     /etc/systemd/system/  (TSK-089 tek-kapı Faz 1, 2026-09-01 — operatör kur izni; imajlar
+#     PİNLİ apache/apisix:3.18.0-debian + quay etcd v3.5.21; 9080/9180/2379 YALNIZ 127.0.0.1;
+#     /opt/apisix/.env-apisix F9-DIŞI sırdır [admin anahtarı + OPENROUTER_AUTH]; rotaların
+#     SSoT'u deploy/apisix/routes.yaml — dagit rsync alanında, F9 çifti değil; uygulama
+#     ops/apisix_uygula.py [--uygula|--denetle drift])
 #     BURADA BİR İNCELİK VAR: rsync depo tarafını (`deploy/hermes/profiles/<ad>/`) canlıya
 #     TAŞIR, ama F9'un kıyasladığı şey o değil KURULU KOPYAdır — profil canlıya `hermes profile
 #     install` ile varır ve o komut operatörün kararıdır (yeni bir ajan kimliği doğurur). Yani
@@ -346,7 +352,10 @@ deploy/oracle-a1/meridian-geridolum.timer|/etc/systemd/system/meridian-geridolum
 research/olcumler/edg066_tick_arsiv/pilot.py|/opt/veri/pilot.py
 research/olcumler/edg066_tick_arsiv/kapsam.txt|/opt/veri/kapsam.txt
 deploy/oracle-a1/meridian-skill-gorus.service|/etc/systemd/system/meridian-skill-gorus.service
-deploy/oracle-a1/meridian-skill-gorus.timer|/etc/systemd/system/meridian-skill-gorus.timer"
+deploy/oracle-a1/meridian-skill-gorus.timer|/etc/systemd/system/meridian-skill-gorus.timer
+deploy/apisix/config.yaml|/opt/apisix/config.yaml
+deploy/apisix/apisix.service|/etc/systemd/system/apisix.service
+deploy/apisix/apisix-etcd.service|/etc/systemd/system/apisix-etcd.service"
 for _cift in $F9_LISTE; do
   # ETİKET TAM REPO YOLUDUR, BASENAME DEĞİL (denetim, Faz 3 dal turu 2026-08-30). İki profille
   # `config.yaml` üç kez, `SOUL.md` üç kez, `distribution.yaml` iki kez listede: "⚠ config.yaml:

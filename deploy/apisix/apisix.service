@@ -1,0 +1,29 @@
+# apisix.service — APISIX tek-kapı (TSK-089; Faz 1 = LLM egress rotası).
+#
+# İmaj PİNLİ: apache/apisix:3.18.0-debian (arm64; ai-proxy-multi 3.15+'ta — 3.18 taban).
+# --network host + config'te 127.0.0.1 bind'ları: proxy 9080 ve admin 9180 YALNIZ loopback.
+# Config /opt/apisix/config.yaml (repo deploy/apisix/config.yaml'ın F9 kopyası);
+# sır .env-apisix'ten (0600, F9-DIŞI): APISIX_ADMIN_KEY + rota sırları ($ENV çözümü).
+# etcd'ye bağımlı: apisix-etcd.service ÖNCE ayakta olmalı.
+# ROTALARIN SSoT'u deploy/apisix/routes.yaml — Admin API'ye elle CRUD kalıcı DEĞİLDİR;
+# uygulama ops/apisix_uygula.py ile (idempotent + drift denetimi; ?ttl= YASAK).
+[Unit]
+Description=APISIX tek-kapı (yalnız 127.0.0.1:9080; admin 9180 anahtarlı)
+After=docker.service apisix-etcd.service
+Requires=docker.service apisix-etcd.service
+
+[Service]
+Type=simple
+EnvironmentFile=/opt/apisix/.env-apisix
+ExecStartPre=-/usr/bin/docker rm -f apisix-kapi
+ExecStart=/usr/bin/docker run --rm --name apisix-kapi --network host \
+  --env-file /opt/apisix/.env-apisix \
+  -v /opt/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro \
+  apache/apisix:3.18.0-debian
+ExecStop=/usr/bin/docker stop apisix-kapi
+Restart=on-failure
+RestartSec=5
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

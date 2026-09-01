@@ -41,7 +41,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **21 ops betiği** başlığıyla okundu
+- **22 ops betiği** başlığıyla okundu
 - **98 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -754,6 +754,32 @@ normal konumları kapalıdır ve açık olmaları bir sapmadır.
 Onaylı kümedeki her betiğin KENDİ başlık sözleşmesi, olduğu gibi. Kod bloğu içinde
 veriliyor ki betiğin kendi biçimi (kullanım satırları, kurulum komutları) bozulmasın.
 
+## `ops/ajan_git_shim.sh` {#ops-ajan-git-shim-sh}
+
+```
+ops/ajan_git_shim.sh — TSK-050: git mutasyon kapısının MEKANİK v1'i (B-AJAN-GIT).
+
+NE KAPATIR — yalnız HİÇBİR oturumda meşru olmayan iki sınıf:
+* `git stash` (her alt biçimi) — gece 2 ajan stash koşup hayalet dizini süpürdü (vaka
+2026-08-26 sınıfı; CLAUDE.md §2: stash okuma DEĞİLDİR).
+* `git add -A` / `git add --all` / `git add .` — vaka a94d425 ("Hiçbir zaman"); "." yalnız
+TAM jeton olarak yakalanır, `git add ./dosya` meşrudur.
+BAŞKA HİÇBİR ŞEYİ KAPATMAZ: commit/push/checkout ayrımı oturum kimliği ister ve ortamdan
+ÖLÇÜLEMEZ (spike 2026-09-01: Rol-1 Bash'i ile ajan Bash'i AYNI işaretleri taşıyor —
+CLAUDE_CODE_CHILD_SESSION=1 + AI_AGENT=..._agent ikisinde de; ayrım bilgi-tabanlı olurdu,
+o genişleme AYRI karar). Sözleşme kapısı (CLAUDE.md §2/§3) aynen yürürlükte — bu shim onun
+yerine değil, dalgınlığa karşı mekanik bariyer.
+
+KİMİ ETKİLER: yalnız CLAUDECODE=1 ortamları (Claude Code oturumları — Rol-1 dahil, ki bu
+İYİ: iki yasak evrenseldir). Operatörün kendi terminali CLAUDECODE taşımaz → shim saydam
+exec ile gerçek git'e devreder, sıfır davranış farkı.
+KAÇIŞ (bilinçli eylem, dalgınlık değil): MERIDIAN_GIT_BYPASS=1 ile geç.
+KURULUM: cp ops/ajan_git_shim.sh ~/.local/bin/git && chmod +x ~/.local/bin/git
+(~/.local/bin PATH'in BAŞINDA — ölçüldü 2026-09-01). Yerel-makine koruması; dagit rsync'i
+bunu A1'e dosya olarak taşır ama KURMAZ (A1'de ajan oturumu yok, zararsız).
+TEST KANCASI: MERIDIAN_GERCEK_GIT — testler sahte git enjekte eder; boşsa bilinen konumlar.
+```
+
 ## `ops/barsarchive-run.sh` {#ops-barsarchive-run-sh}
 
 ```
@@ -1186,6 +1212,10 @@ Faz-1 2026-08-31; /opt/hindsight/.env F9'DA DEĞİL — sır taşır, repoda yal
 * deploy/hindsight/hindsight-cp.service       → /etc/systemd/system/  (CP UI, EDG-2026-067
 2026-09-01; docker 0.9.2-pinli, YALNIZ 127.0.0.1:9999 + ssh tüneli; /opt/hindsight/.env-cp
 de .env gibi F9-DIŞI sırdır)
+* deploy/apisix/config.yaml                   → /opt/apisix/config.yaml  (TSK-089 tek-kapı;
+sırsız şablon — admin anahtarı $env'den; .env-apisix F9-DIŞI sır)
+* deploy/apisix/apisix.service                → /etc/systemd/system/  (kapı; yalnız loopback)
+* deploy/apisix/apisix-etcd.service           → /etc/systemd/system/  (config deposu; loopback)
 * deploy/oracle-a1/meridian-skill-gorus.service → /etc/systemd/system/  (TSK-058 FAZ C —
 görüş kuyruğunun seans-dışı deterministik üreticisi; çıkış 1 = bayrak kapalı = failed,
 panoda görünür; bayrakla BİRLİKTE iner)

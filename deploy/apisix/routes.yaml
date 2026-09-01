@@ -1,0 +1,68 @@
+# deploy/apisix/routes.yaml — APISIX rotalarının TEK KAYNAĞI (TSK-089 GitOps; tek-kaynak yasası).
+# Uygulama: ops/apisix_uygula.py (idempotent PUT; --denetle drift kıyası). Admin API'ye ELLE
+# CRUD kalıcı DEĞİLDİR — tünelden yapılan her deneme ya buraya işlenir ya kaybolur (drift
+# denetimi ayrışmayı alarmlar). `?ttl=` YASAK (kaynağı sessizce siler — TSK-089).
+# SIR YOK: anahtarlar $ENV:// referansıyla iner; etcd'ye değer yazılmaz.
+
+rotalar:
+  - id: llm-danisma
+    # Faz 1 — LLM egress rotası: A1-içi istemci http://127.0.0.1:9080/llm/v1/chat/completions
+    # çağırır; kapı OpenRouter'a öncelik zinciriyle gider. Fallback: 429 + 5xx (şema teyitli
+    # fallback_strategy dizisi — kurulum günü Admin API'den ölçüldü).
+    uri: /llm/v1/chat/completions
+    plugins:
+      proxy-rewrite:
+        # canary ③: ai-proxy varsayılanı istemci header'larını iletir — burada istemciden
+        # gelen Authorization/X-* temizlenir; upstream auth'u instance'ların kendi auth'udur.
+        headers:
+          remove: ["Authorization", "X-Forwarded-For", "X-Real-IP"]
+      ai-proxy-multi:
+        fallback_strategy: ["http_429", "http_5xx"]
+        instances:
+          - name: birincil-nemotron
+            provider: openai-compatible
+            priority: 10
+            weight: 1
+            auth:
+              header:
+                Authorization: "$env://OPENROUTER_AUTH"
+            options:
+              model: nvidia/nemotron-3-ultra-550b-a55b:free
+            override:
+              endpoint: https://openrouter.ai/api/v1/chat/completions
+          - name: yedek-gemma
+            provider: openai-compatible
+            priority: 1
+            weight: 1
+            auth:
+              header:
+                Authorization: "$env://OPENROUTER_AUTH"
+            options:
+              model: google/gemma-4-26b-a4b-it:free
+            override:
+              endpoint: https://openrouter.ai/api/v1/chat/completions
+
+  - id: llm-hizli
+    # Hafif model rotası: kısa/mekanik işler + kapının kendi smoke'u. Ölçülen ders (kurulum
+    # günü): nemotron-550b free ucu dakikalarca boğulabiliyor — kapı sağlığı ağır modelin
+    # sağlığıyla ölçülmez; bu rota o ayrımı taşır.
+    uri: /llm/hizli/v1/chat/completions
+    plugins:
+      proxy-rewrite:
+        uri: /llm/v1/chat/completions
+        headers:
+          remove: ["Authorization", "X-Forwarded-For", "X-Real-IP"]
+      ai-proxy-multi:
+        fallback_strategy: ["http_429", "http_5xx"]
+        instances:
+          - name: hizli-gemma
+            provider: openai-compatible
+            priority: 10
+            weight: 1
+            auth:
+              header:
+                Authorization: "$env://OPENROUTER_AUTH"
+            options:
+              model: google/gemma-4-26b-a4b-it:free
+            override:
+              endpoint: https://openrouter.ai/api/v1/chat/completions

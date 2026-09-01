@@ -1,0 +1,35 @@
+# apisix-etcd.service — APISIX'in tek-düğüm etcd config deposu (TSK-089 Faz 1).
+#
+# NEDEN VAR: APISIX traditional modu config'i etcd'de tutar (Admin API → etcd → worker'lar).
+# TEK DÜĞÜM, YALNIZ LOOPBACK: --network host + 127.0.0.1 bind — dışarıdan erişilemez; auth
+# bilerek yok (loopback-yalnız bir tek-tüketicili depo; bedeli beyanlı: aynı makinede kök
+# olmayan başka bir süreç okuyabilirdi — A1'de tek kullanıcı ubuntu, kabul edilmiş risk).
+# Veri /opt/apisix/etcd-data'da kalıcı (birim restart'ında rotalar kaybolmaz; yine de SSoT
+# etcd DEĞİL deploy/apisix/routes.yaml'dır — drift denetimi ops/apisix_uygula.py'de).
+# İmaj PİNLİ: quay.io/coreos/etcd:v3.5.21 (arm64; "latest" kaymaz).
+# Admin API'ye ?ttl= YASAK (TSK-089: kaynağı sessizce siler) — bu birim değil apply betiği
+# zorlar; buraya not, iki kopya olmasın diye kural oradadır.
+[Unit]
+Description=APISIX etcd config deposu (tek düğüm, yalnız 127.0.0.1)
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/docker rm -f apisix-etcd
+ExecStart=/usr/bin/docker run --rm --name apisix-etcd --network host \
+  -v /opt/apisix/etcd-data:/etcd-data \
+  quay.io/coreos/etcd:v3.5.21 /usr/local/bin/etcd \
+  --name apisix-etcd --data-dir /etcd-data \
+  --listen-client-urls http://127.0.0.1:2379 \
+  --advertise-client-urls http://127.0.0.1:2379 \
+  --listen-peer-urls http://127.0.0.1:2380 \
+  --initial-advertise-peer-urls http://127.0.0.1:2380 \
+  --initial-cluster apisix-etcd=http://127.0.0.1:2380
+ExecStop=/usr/bin/docker stop apisix-etcd
+Restart=on-failure
+RestartSec=5
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target
