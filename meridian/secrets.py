@@ -52,6 +52,14 @@ ALLOWED: frozenset[str] = frozenset({
     # ayarlayamıyordu. Sonuç: "düşüş zinciri" ömrü boyunca tek elemanlı kaldı ve olay kaydı
     # "tüm model zinciri cevapsız (tried=1)" diyordu; yedeğin YOKLUĞU, BAŞARISIZLIĞI gibi okunuyordu.
     "NOUS_FALLBACK_MODEL",      # 429'da düşülecek BAĞIMSIZ kotalı model (ör. tencent/hy3:free)
+    # APISIX KAPI TÜKETİCİ ANAHTARI (F4-B istemci tarafı). Kapının key-auth eklentisi tüketiciyi
+    # `apikey` BAŞLIĞINDAN tanır; `hermes._nous_headers` bu sır DOLUYSA o başlığı Nous'a giden
+    # HTTP çağrılarına ekler (POST /chat/completions + GET /models sondası, tek kaynak).
+    # YALNIZ `NOUS_ENDPOINT` kapıya çevrildiğinde anlamlıdır: sır yokken HİÇBİR başlık eklenmez ve
+    # bugünkü davranış bit-eş kalır (dürüst bozunma — flip'ten önce değişiklik hareketsizdir).
+    # Adı ÖNCE buraya koymak, satır 50-54'teki vakanın dersidir: kodun okuduğu ama ALLOWED'da
+    # olmayan ad operatörce HİÇ ayarlanamaz. Çivi: tests/test_kapi_apikey_v370.py.
+    "KAPI_APIKEY",
     "GEMINI_API_KEY",           # Gemini brain (AI Studio key)
     "GEMINI_OAUTH_TOKEN",       # Gemini brain via OAuth Bearer (operatörün kendi OAuth akışından)
     "GEMINI_MODEL",             # optional model id override

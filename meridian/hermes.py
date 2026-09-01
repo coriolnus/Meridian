@@ -2730,6 +2730,33 @@ def _nous_portal_model() -> str:
     return secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL
 
 
+def _nous_headers() -> dict[str, str]:
+    """Nous'un UZAK ucuna giden HER HTTP çağrısının kimlik başlıkları — TEK kaynak.
+
+    İKİ KATMAN, İKİSİ DE GEREKLİ. `Authorization: Bearer <NOUS_API_KEY>` UPSTREAM'in (Nous portal)
+    kimliğidir ve hiçbir koşulda düşmez. `apikey` ise ÖNÜNE konan APISIX kapısının key-auth
+    eklentisinin tüketici kimliğidir: kapı bu başlıkla tanır, doğrular ve Bearer'ı olduğu gibi
+    upstream'e geçirir. Biri diğerinin yerine GEÇMEZ — Authorization'ı `apikey` ile değiştirmek
+    kapıyı geçip upstream'de 401 alırdı.
+
+    KOŞULLU VE DÜRÜST BOZUNAN: `KAPI_APIKEY` yoksa ya da boşsa başlık HİÇ EKLENMEZ — sözlük
+    flip'ten önceki hâliyle bit-eştir. Boş değerle göndermek de yasaktır: APISIX'in boş
+    `apikey`i geçerli tüketici SAYMAMASI beklenir (tasarım varsayımı — kilit henüz canlı değil,
+    flip'te ölçülür; inceleme 2026-09-02) ve o hâlde arıza sırrın YOKLUĞU gibi değil
+    BAŞARISIZLIĞI gibi okunurdu (`secrets`in ayrımı: sıfır ile "bilmiyorum" aynı şey değildir).
+
+    NEDEN YARDIMCI: başlığı iki çağrı yerine ayrı ayrı yazmak, tek-kaynak yasasının kapattığı
+    sınıftır — `_nous_text` POST'u ile `ping_brain` sondası ayrışırsa kilit sonrası sonda kapıdan
+    geçemez, pano "anahtar reddedildi" der ve arıza BEYİNDE sanılır. Argüman ALMAZ: iki çağrı yeri
+    iki farklı değer geçemesin. DEĞER hiçbir yolda loglanmaz. Çivi: tests/test_kapi_apikey_v370.py.
+    """
+    h = {"Authorization": f"Bearer {secrets.get('NOUS_API_KEY')}"}
+    kapi = (secrets.get("KAPI_APIKEY") or "").strip()
+    if kapi:
+        h["apikey"] = kapi
+    return h
+
+
 def _nous_text(user: str, *, note: str) -> str | None:
     """Nous'un UZAK ucunun (OpenAI-uyumlu) tek gövdesi — metin döner. Bkz. `_claude_text` notu."""
     import httpx
@@ -2741,8 +2768,7 @@ def _nous_text(user: str, *, note: str) -> str | None:
     if NOUS_REASONING_EFFORT:             # doğrulanmamış alan yalnız operatör açarsa gövdeye girer
         govde["reasoning"] = {"effort": NOUS_REASONING_EFFORT}
     r = httpx.post(f"{base}/chat/completions",
-                   headers={"Authorization": f"Bearer {secrets.get('NOUS_API_KEY')}",
-                            "Content-Type": "application/json"},
+                   headers={**_nous_headers(), "Content-Type": "application/json"},
                    json=govde, timeout=NOUS_TIMEOUT_S)
     r.raise_for_status()
     d = r.json()
@@ -2901,8 +2927,9 @@ def ping_brain(provider: str) -> dict:
             if not secrets.get("NOUS_API_KEY"):
                 return {"ok": False, "detail": "NOUS_API_KEY girilmemiş (ya da NOUS_ENDPOINT=local ile yerel kur)"}
             base = (secrets.get("NOUS_ENDPOINT") or NOUS_DEFAULT_ENDPOINT).rstrip("/")
-            r = httpx.get(f"{base}/models",
-                          headers={"Authorization": f"Bearer {secrets.get('NOUS_API_KEY')}"}, timeout=12)
+            # Sondanın URL'si BİLEREK dokunulmadan bırakıldı (`/models` rota kararı ayrı kalem);
+            # değişen yalnız BAŞLIK kaynağıdır — POST ile aynı yardımcı (tek-kaynak yasası).
+            r = httpx.get(f"{base}/models", headers=_nous_headers(), timeout=12)
             if r.status_code in (401, 403):
                 return {"ok": False, "detail": "anahtar reddedildi"}
             r.raise_for_status()
