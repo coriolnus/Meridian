@@ -1,0 +1,41 @@
+# Hindsight Control Plane (web UI, Next.js) — kart EDG-2026-067; operatör kararı ③ (2026-09-01):
+# kurulur ama YALNIZ 127.0.0.1 + ssh tüneli (CP auth'u upstream'de issue #1148; imaj ACCESS_KEY
+# destekliyor — ölçüldü 2026-09-01, savunma iki katman: loopback bind + ACCESS_KEY).
+# Docker: operatör izni 2026-09-01 ("docker kurabilirsin"); imaj 0.9.2 PİNLİ (API ile aynı sürüm).
+# Kurulum: sudo cp -> /etc/systemd/system/hindsight-cp.service && sudo systemctl daemon-reload
+#          && sudo systemctl enable --now hindsight-cp     # YALNIZ bu birim (TSK-092 dersi:
+#          start satırına başka birim eklenmez).
+# Sır dosyası /opt/hindsight/.env-cp (chmod 600, A1-içi üretim; repoya girmez):
+#   HINDSIGHT_CP_ACCESS_KEY=<openssl rand -hex 32>
+#   HINDSIGHT_CP_DATAPLANE_API_KEY=<.env'deki HINDSIGHT_API_TENANT_API_KEY ile AYNI değer>
+# Env adları imajdan ÖLÇÜLDÜ (grep /app): ACCESS_KEY · DATAPLANE_API_KEY · DATAPLANE_API_URL ·
+# HINDSIGHT_CP_HOSTNAME · HINDSIGHT_CP_PORT.
+# Erişim: ssh -i ~/.ssh/oci-a1.key -N -L 9999:127.0.0.1:9999 ubuntu@130.61.126.87
+
+[Unit]
+Description=Hindsight Control Plane UI (127.0.0.1:9999, ssh tuneli ile)
+After=docker.service hindsight-api.service
+Requires=docker.service
+
+[Service]
+Type=simple
+EnvironmentFile=/opt/hindsight/.env-cp
+ExecStartPre=-/usr/bin/docker rm -f hindsight-cp
+ExecStart=/usr/bin/docker run --rm --name hindsight-cp --network host \
+  -e HINDSIGHT_CP_HOSTNAME=127.0.0.1 \
+  -e HINDSIGHT_CP_PORT=9999 \
+  -e HOSTNAME=127.0.0.1 \
+  -e PORT=9999 \
+  -e HINDSIGHT_CP_DATAPLANE_API_URL=http://127.0.0.1:8888 \
+  -e HINDSIGHT_CP_ACCESS_KEY=${HINDSIGHT_CP_ACCESS_KEY} \
+  -e HINDSIGHT_CP_DATAPLANE_API_KEY=${HINDSIGHT_CP_DATAPLANE_API_KEY} \
+  ghcr.io/vectorize-io/hindsight-control-plane:0.9.2
+ExecStop=/usr/bin/docker stop hindsight-cp
+Restart=on-failure
+RestartSec=5
+# kaynak çiti (docs: Next.js hafif — 128-256MB bandı)
+MemoryMax=512M
+CPUQuota=100%
+
+[Install]
+WantedBy=multi-user.target

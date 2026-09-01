@@ -61,6 +61,9 @@
 #     Faz-1 2026-08-31; /opt/hindsight/.env F9'DA DEĞİL — sır taşır, repoda yalnız env.iskelet durur)
 #   * deploy/hindsight/hindsight-yedek.service    → /etc/systemd/system/  (gecelik pg_dump yedeği)
 #   * deploy/hindsight/hindsight-yedek.timer      → /etc/systemd/system/  (o yedeğin tetiği 03:30 UTC)
+#   * deploy/hindsight/hindsight-cp.service       → /etc/systemd/system/  (CP UI, EDG-2026-067
+#     2026-09-01; docker 0.9.2-pinli, YALNIZ 127.0.0.1:9999 + ssh tüneli; /opt/hindsight/.env-cp
+#     de .env gibi F9-DIŞI sırdır)
 #   * deploy/oracle-a1/geridolum.py               → /opt/veri/geridolum.py  (EDG-066 geri-dolum
 #     sürücüsü; kurulum reçetesi BU BETİKTE DEĞİL, birimin KENDİ başlığındadır — /opt/veri
 #     ağacı meridian dağıtım yüzeyinin dışında, aylık-bucket istisnasıyla aynı sınıf)

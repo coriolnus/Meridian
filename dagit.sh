@@ -285,6 +285,9 @@ fi
 #   * hindsight-api.service + hindsight-yedek.service/.timer → /etc/systemd/system/  (EDG-2026-065
 #     Faz-1 kurulumu 2026-08-31 — bellek API'si + gecelik pg_dump. /opt/hindsight/.env F9'DA
 #     DEĞİL: sır taşır, repoda yalnız deploy/hindsight/env.iskelet durur, kıyaslanacak çift yok)
+#   * hindsight-cp.service → /etc/systemd/system/  (EDG-2026-067 yükseltmesi 2026-09-01 — CP UI,
+#     docker 0.9.2-pinli imaj, YALNIZ 127.0.0.1:9999 + ssh tüneli; /opt/hindsight/.env-cp de
+#     .env gibi F9-DIŞI sırdır)
 #     BURADA BİR İNCELİK VAR: rsync depo tarafını (`deploy/hermes/profiles/<ad>/`) canlıya
 #     TAŞIR, ama F9'un kıyasladığı şey o değil KURULU KOPYAdır — profil canlıya `hermes profile
 #     install` ile varır ve o komut operatörün kararıdır (yeni bir ajan kimliği doğurur). Yani
@@ -333,6 +336,7 @@ deploy/hermes/profiles/karne/SOUL.md|/home/ubuntu/.hermes/profiles/karne/SOUL.md
 deploy/hindsight/hindsight-api.service|/etc/systemd/system/hindsight-api.service
 deploy/hindsight/hindsight-yedek.service|/etc/systemd/system/hindsight-yedek.service
 deploy/hindsight/hindsight-yedek.timer|/etc/systemd/system/hindsight-yedek.timer
+deploy/hindsight/hindsight-cp.service|/etc/systemd/system/hindsight-cp.service
 deploy/oracle-a1/geridolum.py|/opt/veri/geridolum.py
 deploy/oracle-a1/meridian-geridolum.service|/etc/systemd/system/meridian-geridolum.service
 deploy/oracle-a1/meridian-geridolum.timer|/etc/systemd/system/meridian-geridolum.timer
