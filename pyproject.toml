@@ -16,6 +16,12 @@ dependencies = [
     "jinja2>=3.1",
     "websockets>=16.1",
     "redis>=8.0.1",
+    # TSK-020 aracı `ops/olay_sorgu.py` için — DEV'DEN ANA'YA TAŞINDI (2026-09-02, dagit [0d]
+    # kapısı ısırdı): sabahki "canlı A1 kurulumuna girmesi gerekmez" kararının öncülü yanlıştı —
+    # aracın sorguladığı defter CANLIDA yaşar (yerel defter test-kirli; "o soru A1'de sorulur"),
+    # dagit [3] ise A1'e dev grubunu KURMAZ. Dev'de kalsaydı araç tam da verisinin olduğu
+    # makinede ImportError'la ölürdü. Motor hâlâ import ETMEZ (test_olay_sorgu_v355 çivili).
+    "duckdb>=1.5",
     # BEYAN-DIŞI BAĞIMLILIK KAPATILDI (2026-08-03): `streamhealth._ssl_context` certifi'yi
     # OPSİYONEL olarak import eder (ImportError → sistemin varsayılan CA bağlamı). Bugüne dek
     # ÇALIŞIYORDU çünkü httpx→httpcore certifi'yi DOLAYLI çekiyor — yani TLS doğrulamamız başka
@@ -66,12 +72,8 @@ dev = [
     # 0 paralellik kırmızısı — xdist_group gerekmedi). Hedefli küçük koşumlar SERİ kalır:
     # işçi açılışı küçük kümede net kayıptır. Ölçüm: MERIDIAN_ENGINEERING_LOG.md UYGULA-8 kaydı.
     "pytest-xdist>=3.8",
-    # TSK-020 [UYGULA-2] adım 1 (2026-09-01): `ops/olay_sorgu.py` olay defterini DuckDB ile
-    # DOĞRUDAN sorgular. MOTOR BAĞIMLILIĞI DEĞİL — `meridian/` altındaki hiçbir modül duckdb
-    # import etmez ve etmemelidir; araç `meridian`ı da import etmez (test_olay_sorgu_v355 bunu
-    # hem kaynakta hem GERÇEK koşumda çiviliyor). Dev grubunda olmasının sebebi budur: canlı
-    # A1 kurulumuna girmesi gerekmez.
-    "duckdb>=1.5",
+    # duckdb BURADAYDI (TSK-020 adım 1, 2026-09-01 sabahı) — aynı gün ANA bağımlılığa taşındı:
+    # gerekçe ana listedeki satırında, tersine dönüşün kaydıyla.
 ]
 
 # ================================================================================================

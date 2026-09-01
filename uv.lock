@@ -1313,6 +1313,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
     { name = "certifi" },
+    { name = "duckdb" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "jinja2" },
@@ -1342,7 +1343,6 @@ live = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "duckdb" },
     { name = "hypothesis" },
     { name = "import-linter" },
     { name = "mutmut" },
@@ -1355,6 +1355,7 @@ requires-dist = [
     { name = "alpaca-py", marker = "extra == 'live'", specifier = ">=0.20" },
     { name = "anthropic", marker = "extra == 'brain'", specifier = ">=0.40" },
     { name = "certifi", specifier = ">=2024.7.4" },
+    { name = "duckdb", specifier = ">=1.5" },
     { name = "fastapi", specifier = ">=0.110" },
     { name = "google-cloud-secret-manager", marker = "extra == 'brain'", specifier = ">=2.20" },
     { name = "httpx", specifier = ">=0.27" },
@@ -1374,7 +1375,6 @@ provides-extras = ["live", "brain", "dev"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "duckdb", specifier = ">=1.5" },
     { name = "hypothesis", specifier = ">=6.164.0" },
     { name = "import-linter", specifier = ">=2.13" },
     { name = "mutmut", specifier = ">=3.7.0" },
