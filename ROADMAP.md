@@ -344,6 +344,11 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
   Why: operatör 2026-09-01 gece ("hiçbir madde birbirine benzemiyor… pano dinamik olmalı"; kimlik/İngilizce-terim/muafiyet/zorlama/slot onayları aynı gece).
   Ref: `docs/TASARIM-ROADMAP-STANDART-2026-09-01.md`.
 
+- (ARAYA-KALEM BLOĞU — İLK SIRA, operatör 2026-09-01 "bunları da ilk sıraya al"; üçü de küçük, TSK-052 uçuşuyla çakışmaz:)
+- (bkz. **TSK-003** — YANSIMA MÜKERRERLİK KAPISI [a bacağı]: learn geri açılmadan kapı önde olsun; başarı ölçüsü donuk: bellek-yokluğu israfı %45 → ≤%10. Aynı kalem, İCRA SIRASI'nda burada anılır.)
+- (bkz. **TSK-005** — İNFRA-SİMETRİ araya-kalemi: `/api/infra` birim keşfine ikinci bacak. Aynı kalem, burada anılır.)
+- (bkz. **TSK-020** `2-adım1` — events.jsonl doğrudan DuckDB sorgusu; D-REVİZE notundan İLK SIRAYA alındı.)
+
 - **[TSK-058] Skill-görüş dalgası — EDG-019 uygulaması + EDG-063 LLM-üretici sınıfı** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
   What: (status notu: eski trigger karşılandı — Ajan-A dalgası TSK-012 kapandı.) kart `EDG-2026-019` (registered — defter+iki çözücülü yüzey) + kart `EDG-2026-063` (ön-kayıt: beyan-only SKILL.md'ler LLM'le AYNI deftere gölge görüş yazar). Tek dalga iki kart: altyapıyı 019 kurar, 063 LLM-üretici sınıfını AYRI kartla açar. Aynı satır §2 TAHTA H1'de tam gövdesiyle yaşar.
   Why: operatör 2026-08-31 — "beyan-only skill'lerin LLM ikinci görüşünü de yapalım"; icra Ajan-A dalgasından SONRA sıraya alındı (o dalga artık kapandı).
@@ -358,11 +363,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 
 - (Ajan dalga-B — sohbet, duruş çivili: bkz. **TSK-012** — aynı kalemin ikinci bacağı, İCRA SIRASI'nda burada tekrar anılır, ayrı numara almaz.)
 
-- (D REVİZE sırası, operatör onayı 2026-09-01 gece — bkz. **TSK-020**: sıra `8→4→2→1→3→9`'dan `4→2-adım2→3→1→9`'a revize edildi çünkü [UYGULA-8] artık DONE'dur [yukarıda not edildi]; `2-adım1` [events.jsonl doğrudan DuckDB sorgusu] araya-kalem olarak geri-dolum haftasında koşar. UYGULA-1 notu: PG artık canlıda ama SQLite→WAL kararı DEĞİŞMEZ [motor izolasyonu gerekçesi ayakta]. UYGULA-9 = Prometheus+Grafana açık adla. Bu revizyon notu TSK-020'nin dondurulu §4 gövdesine Rol-1 tarafından işlenmelidir — FAZ B §4'e dokunmaz.)
-
-- (bkz. **TSK-005** — İNFRA-SİMETRİ araya-kalemi: `/api/infra` birim keşfine ikinci bacak, geri-dolum haftasında. Aynı kalem, İCRA SIRASI'nda burada tekrar anılır.)
-
-- (bkz. **TSK-003** — YANSIMA MÜKERRERLİK KAPISI [a bacağı] araya-kalemi: geri-dolum haftasında kurulur ki learn geri açılmadan kapı önünde olsun; başarı ölçüsü donuk: bellek-yokluğu israfı %45 → ≤%10. Aynı kalem, burada tekrar anılır.)
+- (D REVİZE sırası, operatör onayı 2026-09-01 gece — bkz. **TSK-020**: sıra `8→4→2→1→3→9`'dan `4→2-adım2→3→1→9`'a revize edildi çünkü [UYGULA-8] artık DONE'dur [yukarıda not edildi]; `2-adım1` [events.jsonl doğrudan DuckDB sorgusu] İLK SIRAYA alındı (operatör 2026-09-01, sıra başındaki araya-kalem bloğu). UYGULA-1 notu: PG artık canlıda ama SQLite→WAL kararı DEĞİŞMEZ [motor izolasyonu gerekçesi ayakta]. UYGULA-9 = Prometheus+Grafana açık adla. Bu revizyon notu TSK-020'nin dondurulu §4 gövdesine Rol-1 tarafından işlenmelidir — FAZ B §4'e dokunmaz.)
 
 - **[TSK-060] Hindsight bot-hafızası kurulumu** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: L · trigger: —
   What: (status notu: Faz-0/Faz-1 kurulum TAMAM; sıradaki: soru kümesi dondurma → arşiv ingest → taban kıyası. born aslen '2026-08-31 akşam' — şema tarihi.) kart `EDG-2026-065` — beş sağlık kanıtı yeşil: servis 0.9.2 canlı (127.0.0.1:8888, MemoryMax=8G, User=ubuntu sapması beyanlı), Memory Defense gün-1 açık (redaksiyon kanıtlı), Türkçe smoke + 2 mutasyon + mükerrer çivisi + gecelik yedek timer'ı kartın kurulum_kayitlarında; model `nvidia/nemotron-3-ultra-550b:free` (ücretsiz şartı, operatör). SIRADA: soru kümesi dondurma (N≥30, blob-sha) → arşiv ingest → taban kıyası. Ardından Türkçe recall kartı → BOT RECALL kartı (DURUŞ REVİZYONU tasarım §3, hedef: "notlar sayfası + iste-getir" — push'u harness derler [reçeteli+kaynaklı+bütçeli], pull tek araç `hindsight_recall`; botlar SINIRLI ajan döngüsüne geçer; kart üç kol: derlenmiş-sayfa/provider-autoRecall/hafızasız taban; autoRetain: aşağıdaki 2026-09-01 revizyonuna bakın; kart geçmeden canlı botlara hiçbir şey değişmez). Ön-hazırlık TAMAM: A1 24GB + Adım-0 ✓, reçete sabit: `slim[local-onnx]==0.9.2` + native PG17+pgvector + Memory Defense gün-1 + BM25 `turkish` (koşullu). DERİN TARAMA + BRAINSTORM KARARLARI (operatör, 2026-09-01 — üç bölgeli doküman taraması sonrası, soru-cevap turuyla): ① autoRetain AÇIK — 2026-08-31 "her durumda kapalı" kararı DEVRİLDİ (operatör seçimi); sonuçları reçeteye girdi: botlarda `retain_async` zorunlu (retain senkron + CPU'da yavaş), Memory Defense redact açık kalır, retain LLM hacmi telemetriden günlük izlenir; araç takımı DEĞİŞMEDİ (tek araç `hindsight_recall` — retain aracı verilmedi, yazım autoRetain'le otomatik). ② Embedding/BM25 YÜKSELTME-ÖNCE: bge-m3 + `bge-reranker-v2-m3` + pgroonga (yalnız hindsight DB'sine; arm64 paket ön-kontrollü) arşiv-ingest'ten ÖNCE kurulur — EDG-2026-065 ölçülmeden EMEKLİYE ayrılır (Senaryo-A/B kıyası düştü), yükseltilmiş reçeteyle YENİ kart açılır (donuk soru kümesi hedefi korunur); gerekçe: embedding boyutu sonradan değiştirilemez (veri kaybı), ingest öncesi en ucuz an. ③ CP UI (9999) kurulur ama YALNIZ 127.0.0.1 + ssh tüneli (anahtar koruması upstream'de henüz yazılmadı — açık issue #1148); kalıcı yüzey TSK-091 Hafıza sayfası. ④ Arka plan LLM (auto-consolidation + mental model) AÇIK ve ANA MODELLE (operatör; kota telemetrisi ilk haftanın zorunlu ölçümü; baskıda işlem-bazlı override geriye açık vana). ⑤ `prefetch_method: recall` çiviyle sabit (sessiz reflect-LLM tuzağı) + reflect'in tool-calling şartı ücretsiz modelde canary + API-key extension 401 testi (auth varsayılan YOK — "kurulu ≠ korunuyor"). Tek-kapı kesişimi: `HINDSIGHT_API_LLM_BASE_URL` ileride APISIX'e tek env ile döner — kapı pilotunu BEKLEMEZ.
@@ -392,7 +393,6 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 
 (Not: F·operatör masası `§5.0` — DARALDI; masa tablosunun kendisi kalem taşımaz, bkz. §5.0 masası.)
 
-- (bkz. **TSK-062** — PARALEL ŞERİT: öğrenme-kilidi çifti [EDG-064+EDG-058] GERİ-DOLUM SONRASINA ertelendi — 2026-09-01 gece onayı: learn program boyunca KAPALI [ölçüm koşulları bozuk, kapalı learn üstünde kilit ölçümü sahte sayı üretir]. Aynı kalem §2 TAHTA H1'de tam gövdesiyle yaşar.)
 
 **F'DEN PLANA ALINANLAR** (operatör 2026-08-31 akşam: "FINVIZ/FMP/QC üçlüsü hariç diğerlerini konsolide plana al" — üçlü + delist-kaynak para-kararları MASADA KALDI):
 
@@ -410,7 +410,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 
 - (④ olarak numaralanan bu kalem yukarıda TSK-064'tür.)
 
-- (⑤ PIT mid-cap SAĞ-KALAN üst-sınır ölçümü: bkz. **TSK-065** — KART-ÖNCE, yanlılık beyanlı [EDG-018 askıda kalır, yeni kart]; seans-dışı A1 şeridine öğrenme-kilidi çiftinin [TSK-062] ardına. Aynı kalem §2 TAHTA DİK DURUM'da tam gövdesiyle yaşar.)
+- (⑤ → **TSK-065**: sıranın sonuna taşındı — paralel-şerit birleştirmesi 2026-09-01; TSK-062'nin ardında koşar.)
 
 - (⑥ TICK-ARŞİV pilotu: bkz. **TSK-056** — yukarıda tam gövdesiyle yaşar; bu madde F'DEN PLANA ALINANLAR listesindeki ikinci anılışıdır.)
 
@@ -428,7 +428,11 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 
 - **[TSK-068] ⑥c — spread dinamiği + icra zamanlaması** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: S-M · trigger: —
   What: saat-dilimi/emir-tipi kuralları — alfa değil friksiyon düşürücü.
-  Why: her aday KENDİ kartından + OOS kapılarından geçer; yeni sinyal yüzeyi doğduğu gün `pitlaw` kaydına girer; 1/sn seyreltme saniye-altı sinyalleri KAPATIR (beyanlı bedel, TSK-056'nın kabul ettiği bedelle aynı)._
+  Why: her aday KENDİ kartından + OOS kapılarından geçer; yeni sinyal yüzeyi doğduğu gün `pitlaw` kaydına girer; 1/sn seyreltme saniye-altı sinyalleri KAPATIR (beyanlı bedel, TSK-056'nın kabul ettiği bedelle aynı).
+
+- (bkz. **TSK-062** — öğrenme-kilidi çifti [EDG-064+EDG-058]: ana sıraya BİRLEŞTİRİLDİ [paralel-şerit birleştirmesi, operatör 2026-09-01]; slot GERİ-DOLUM BİTİŞİ — learn program boyunca KAPALI [ölçüm koşulları bozuk, kapalı learn üstünde kilit ölçümü sahte sayı üretir; 2026-09-01 gece onayı]. Aynı kalem §2 TAHTA H1'de tam gövdesiyle yaşar.)
+
+- (bkz. **TSK-065** — PIT mid-cap SAĞ-KALAN üst-sınır ölçümü: KART-ÖNCE, yanlılık beyanlı [EDG-018 askıda kalır, yeni kart]; TSK-062'nin hemen ardında koşar [paralel-şerit birleştirmesi 2026-09-01 — eski "seans-dışı şerit" kavramı kapandı]. Aynı kalem §2 TAHTA DİK DURUM'da tam gövdesiyle yaşar.)_
 
 > Bugüne dek "açık kalemler" §3'ün WP tablosunda **düzyazı yığınıydı** ve hangi kalemin nerede
 > olduğu okunamıyordu. Tahta onu satırlaştırır. **Tek kural: her aktif kalem tam bir satır ve tam
@@ -3135,6 +3139,7 @@ Medhat-Schmeling bizde replike olmadı) · knob-bileşik çıkış paketleri mev
 > "yeniden değerlendirme" yapılamaz.
 
 ## §7 KARAR GÜNLÜĞÜ (kronolojik; yeni giriş EN ÜSTE — tek satır + tarih; ayrıntı oturum kayıtlarında) _(eski: §5)_
+- **2026-09-01 — PARALEL ŞERİT BİRLEŞTİRİLDİ (operatör):** ayrı-şerit kavramı kapandı, tek konsolide sıra — TSK-062 (öğrenme-kilidi çifti) + TSK-065 (PIT mid-cap) ana İCRA SIRASI sonuna taşındı; slot geri-dolum bitişi, sıra 062→065; TSK-012/050/009/061 zaten sıra içindeydi, dokunulmadı. EK (aynı gün): üç araya-kalem (TSK-003 a-bacağı · TSK-005 ikinci bacak · TSK-020 `2-adım1`) İLK SIRAYA alındı — operatör: "bunları da ilk sıraya al".
 - **2026-09-01 — HİNDSİGHT DERİN TARAMA + BRAINSTORM (operatör, 6 karar, soru-cevap turu):** ① autoRetain AÇIK — 2026-08-31 "her durumda kapalı" kararı DEVRİLDİ (araç takımı değişmedi: tek araç `hindsight_recall`; retain_async zorunlu, Memory Defense açık kalır, retain hacmi telemetriden izlenir) ② embedding/BM25 YÜKSELTME-ÖNCE: bge-m3 çifti + pgroonga arşiv-ingest'ten önce; EDG-2026-065 ölçülmeden EMEKLİ → yükseltilmiş reçeteyle yeni kart ③ CP UI (9999) kurulur ama yalnız 127.0.0.1+ssh tüneli ④ arka plan LLM (auto-consolidation + mental model) AÇIK ve ANA MODELLE — kota telemetrisi ilk haftanın zorunlu ölçümü ⑤ `prefetch_method: recall` çivili + reflect tool-calling canary + API-key 401 testi ⑥ Hafıza sayfası TSK-091 (Hindsight dashboard'u bizim UI'da ayrı sayfa). AYNI GÜN EK (operatör "aynı şekilde"): APISIX gömülü dashboard kararı revize — kapalı değil TÜNELLİ + apply betiğine drift denetimi (TSK-089/090 güncellendi). SIRA REVİZYONU: kapı+hafıza hattı (TSK-091/089/090) TSK-060 ardına taşındı. Tarama: 3 bölge (kavram+API · kurulum/işletme · retrieval/olgunluk); ayrıntı TSK-060 gövdesinde.
 - **2026-09-01 — TEK-KAPI MİMARİSİ (operatör onayı, tam doküman taraması sonrası):** genel API kapısı + LLM kapısı TEK bileşende birleşti — Apache APISIX (traditional+etcd, 3.18.x pin); Kong tedarik-zinciri gerekçesiyle kapandı (OSS imajları 3.10'da kesildi, hat 3.9.x bakım-modunda; öz-derleme teknik-mümkün/stratejik-ret), LiteLLM pilotu superseded (taslaklar commit'siz geri çekildi). Dört faz + 9 canary TSK-089'da; pano "Kapı sayfası" TSK-090'da (gömülü dashboard kapalı, konsolidasyon bizim UI'da). Kurulum operatör iznine kilitli ("kuruluma hemen geçme" yürürlükte). Tarama: 4 bölge + 114 plugin kataloğu, ~70 plugin gerekçeli elendi.
 - **2026-08-31 — Backend mimarisi (operatör): 9 kalem karara bağlandı** — 6 uygula (sıra 8→4→2→1→3→9; telemetri Prometheus+Grafana), 2 tetikli kayıt, sır yönetimi beklemede. Zemin: Redis entegre ölçümü + daemon-yasağının yasa olmadığı ölçümü. Ayrıntı §4 havuz girdisi.
