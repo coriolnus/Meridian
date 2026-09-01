@@ -1554,3 +1554,59 @@ Operatör talimatı ("Faz 2-3-4'ü öne çek" + "OCI CLI kur, gerekeni yap") ile
 Üç vaka: (1) **443 bind reddi** — imajın nginx'i root değil, ssl.listen 443 konteyneri çakılma döngüsüne soktu; 9443'e çevrildi (config yorumu künyeli). Ders: ayrıcalıklı port varsayımı konteyner kullanıcısıyla birlikte ölçülür. (2) **upstream düşürme 503'ü** — uygula betiği Faz-1 çağından yalnız uri+plugins PUT'luyordu; upstream'li ilk rota "missing upstream" ile öldü. Betik-sözleşmesi genişlerken PUT gövdesinin kapsamı da ölçülür. (3) **apikey log sızıntısı** — access-log $request + error info, FMP anahtarını iki ayrı satıra yazdı; ölçüldü, biçim sorgusuz + warn ile kesildi, sıfır-geçiş teyitli. Kısıt "görünüyorsa kapat"tı — görünmeden önce değil, ölçüp kapattık.
 
 Sınıflandırıcı bu gece sudo/anahtar-malzemesi sınıfının tamamını reddetti (setfacl, cp, systemctl, ssl-yükleme, hatta bir salt-okunur durum sorgusu); akış operatör tek-satırlarıyla yürüdü ve ssl-yükleme kalıcı ops betiğine döndü (ops/apisix_ssl_yukle.py — certbot yenilemesinin de yolu). OCI güvenlik listesi sürprizi: "all 0.0.0.0/0" zaten açıkmış — etkin duvar host iptables'mış; daraltma operatör masasına. v351 çivisi kapanış notumu ısırdı (çıplak DONE) — şema çivileri Rol-1'i de ısırır, bu iyi bir şeydir.
+## 2026-09-02 (gece-4) — Kimlik modeli flip'i: kapı kimliği emekli, tek katman uygulama oturumu; tam-ekran giriş kapısı
+
+**Operatör kararları (2026-09-01/02 gecesi):** (1) kapıdaki basic-auth'tan "sistemin içindeki
+full authentication"a geçilsin — port edilen UI'ın login v2 / register v2 ekranları kullanılsın;
+(2) sistem bugün tek kullanıcı, ileride çok-kullanıcı (Kayıt bağsız kalır); (3) kullanıcı adı
+ŞİMDİ eklenmez → TSK-097 (GATED çok-kullanıcı kimlik paketi).
+
+**Zincir:** Safari fetch-401 döngüsü vakası (gece-3, 44afc2b: /api/* ayrı rotaya) kalıcı çözüme
+büyüdü: kapı kimliği İKİ ölçülmüş arıza üretiyordu (yerel kimlik kutusu döngüsü + kapı-401'inin
+uygulamada "oturum düştü" yanlış sınıfı). Karar: kimlik TEK katmanda — uygulamanın parola+çerez
+oturumu (fail-closed açılış duruşu, ~80 uçta _auth, beyanlı muafiyet listesi). Kapının işi
+ingress'te hız sınırı + gövde tavanı + sayaç.
+
+**Flip'ten önce ölçülen delik — /metrics vekil körlüğü (v365):** `_local_request` yalnız TCP
+eşine bakıyordu (ssh-tünel dönemi varsayımı). Kapı 127.0.0.1'den proxy'lediği için dış HERKES
+"yerel" sayılır, /metrics tam seti (öz sermaye, P&L) kimliksiz dökerdi. TDD: XFF taşıyan istek
+yerel SAYILMAZ (uydurma yalnız yetki DÜŞÜRÜR; A1-içi doğrudan scrape XFF'siz, tam set korunur).
+Testte ikinci ölçüm: parolasız sandbox `_auth`'un belgeli no-op dalına düşüyor — test parola
+kurarak canlı duruşa oturtuldu. Motor düzeltmesi canlıya inene kadar kapıda köprü:
+`metrics-dis` rotası /metrics→/healthz (dış izleyicinin sözleşmesi zaten healthz; sonrası
+derinlemesine savunma). /api/halt dahil yazan uçlar _auth'lu ölçüldü — başka açık yok.
+
+**Konfig:** routes.yaml pano-ingress basic-auth'suz; pano-api rotası katlandı (tek-kaynak —
+kimlik ayrımı kalkınca iki rota aynı politikaya inmişti); pano_operator tüketicisi kaldırıldı
+(etcd DELETE operatör satırında, PANO_GIRIS_PAROLA env'i zararsız artık); config.yaml plugin
+listesinden basic-auth düştü (sonraki restart'ta etkin). Faz3 imzası basic-auth→limit-req
+(api.py + v361). Dış canary: GET / 200 gri kutusuz · /api/session {authenticated:false,
+password_set:true} · /api/summary·today·secrets·performance 401 · /metrics yalnız canlılık.
+Operatörün "direk dashboard geliyor" gözlemi delik değil kendi geçerli çereziydi (dıştan
+kimliksiz 401'lerle ayrıştırıldı).
+
+**UI — tam-ekran giriş kapısı (SDD: opus implementer, 3 tur; sonnet inceleme):** Giris.tsx'in
+"yüzey kabuğun içinde" kararının öncülü (dış kapı var) öldü → kapı App seviyesine çıktı:
+kimliksiz ziyaretçi kabuğu HİÇ görmez (RotaSaglayici/BugunSaglayici da mount olmaz — kimliksize
+/api/today nabzı bile açılmıyor), şablonun auth v2 bölünmüş paneli tam-ekran; `undefined`
+hâlinde ne kabuk ne kapı (nötr kart + "Yeniden sor"). Tek oturum nabzı `oturum.tsx`
+sağlayıcısında; `hali()` iki girdili saf fonksiyon (oturumDustu bayat-"acik"i ezer — bayrak
+yazılıyor-okunmuyor sınıfı inceleme bulgusuydu). Kayıt sekmesi dürüst: "2. aşama — bugün hiçbir
+yere bağlı değil", alanlar devre dışı. İnceleme döngüsünün kazıları: Giris.tsx yüzeyi
+oturum-durumu+çıkışa küçüldü (−194 satır erişilemez dal); Kapi sarmalayıcısının "Okunamadı"
+dalı bu çağrı noktasında ZARARLIydı (15 sn nabızdaki tek ağ hıçkırığı, elde sağlam gövde
+varken çıkış düğmesini/künyeyi siliyordu) → kaldırıldı. İzleyici ayrımı: kapı ekranlarında iç
+ad/komut ifşası sıfır (MarkaRayi `ayrintilar` bloğu yalnız kabuk-içi); auth_cli yönergesinin
+yeri runbook, ekran değil.
+
+**Hakemlik notu:** incelemecinin "bolum-kapi çapası yok" iddiasını implementer kod referansıyla
+çürüttü (KapiKunyesi→parcalar id üretimi); grep'le doğrulandı — inceleme bulgusu da her zaman
+bir iddiadır, ölçümle tartılır.
+
+**Çalışma anı doğrulaması (pano_stub, 4 hâl + mobil + 2 geçiş):** giriş/kurulum/bekleme/açık ✓,
+375px tek sütun ✓, düşüş geçişi (kabuk→"Oturumun kapandı" varyantı, bir nabızda) ✓, nabız
+hıçkırığında künye+Çıkış yerinde ✓.
+
+**Açık kalemler:** EksikEnvanteri.tsx auth_cli metni (kabuk-içi, hükümle kaldı) · alanlar.ts
+giris/kayit derin bağları kapı-yüzeyinde no-op (bilinçli, KapiEkrani başlığında) ·
+Kullanicilar.tsx üçüncü /api/session nabzı (parkta) · healthz "stale" gözlemi sabah paketine.
