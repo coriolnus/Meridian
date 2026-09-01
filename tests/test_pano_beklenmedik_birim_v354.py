@@ -4,77 +4,84 @@ NE ÖLÇÜLÜYOR. `/api/infra` 2026-09-01 gecesinden beri `beklenmedik_birimler`
 `beklenmedik_birimler_neden` + `beklenmedik_olcum` yayınlıyor (`api.py::_infra_beklenmedik`,
 çivileri `tests/test_pano_altyapi_v287.py` L bölümü). Alan YAYINDAYDI ama pano yüzeyinde
 HİÇBİR okuyucusu yoktu: `Bilesenler.tsx` bu üç alana hiç dokunmuyordu. YASA 6'nın tanımı
-budur — okunmayan artefakt üretilmemişten farksızdır; bacağı indiren ajan bunu kendi açık
-kalemi olarak beyan etti (ROADMAP TSK-086).
+budur — okunmayan artefakt üretilmemişten farksızdır (ROADMAP TSK-086).
 
 ALANIN TAŞIDIĞI GERÇEK — TERS YÖN: `bilesenler` "depoda var, makinede EKSİK" olanı gösterir;
 bu alan "makinede DURUYOR, depoda YOK" olanı. Ölçülmüş vaka (canlı A1, 2026-09-01):
-`meridian-dash.service` makinede duruyordu ve `deploy/` ağacında karşılığı yoktu — pano
-"bileşenler listelendi" derken listelenmeyen bir birim vardı.
+`meridian-dash.service` makinede duruyordu ve `deploy/` ağacında karşılığı yoktu.
 
 ÜÇ TUZAK BURADA AÇIKÇA KARŞILANIYOR
 
   1) `[]` İLE `null` ASLA KARIŞMAZ. Boş liste "ÖLÇTÜK, fazlalık yok"tur; `null` "ÖLÇEMEDİK".
-     İkisini aynı çizmek, panoya ölçülmemiş bir TEMİZLİK beyan ettirirdi — ucun kendi çivisi
-     (v287 `test_temiz_makinede_BOS_LISTE_doner_None_DEGIL`) bunu uçta kapatıyor; bu dosya
-     EKRANDA kapatıyor. Üçüncü hâl de ayrı: alan HİÇ gelmediyse (eski gövde) `false`/boş
-     VARSAYILMAZ, "ölçülemedi"ye düşer.
+     İkisini aynı çizmek, panoya ölçülmemiş bir TEMİZLİK beyan ettirirdi. Üçüncü hâl de ayrı:
+     alan HİÇ gelmediyse (eski gövde) `[]` VARSAYILMAZ.
 
-  2) BOŞ LİSTE ROZET ÇİZDİRMEZ. Temiz makinede "0 beklenmedik birim" rozeti, her gün her
-     bakışta okunan ve hiçbir zaman iş çıkarmayan bir gürültüdür; sinyal gürültüde kaybolur.
-     Sessizlik burada bir karardır — ve karşı yönü ÇİVİLİ: "ölçülemedi" hâli SESSİZ DEĞİLDİR,
-     çünkü o hâlde temizlik iddia edilemez.
+  2) BOŞ LİSTE ROZET ÇİZDİRMEZ. Temiz makinede "0 beklenmedik birim" rozeti, her gün okunan ve
+     hiçbir zaman iş çıkarmayan bir gürültüdür. Sessizlik burada bir karardır — ve karşı yönü
+     ÇİVİLİ: "ölçülemedi" hâli SESSİZ DEĞİLDİR.
 
   3) `durum` SÜTUNU "KOŞUYOR MU" DEMEK DEĞİLDİR. `list-unit-files` STATE sütunu systemd
-     `UnitFileState`tir (enabled/disabled/static/masked), `ActiveState` DEĞİL — ucun kendi
-     beyanı `beklenmedik_olcum.durum_alani`dır. Ekranda `disabled` görüp "duruyor" diye
-     okumak, ölçülmemiş bir hüküm kurmaktır; beyan ekranda TAŞINMALI.
+     `UnitFileState`tir, `ActiveState` DEĞİL — ucun beyanı `beklenmedik_olcum.durum_alani`dır
+     ve ekranda TAŞINMALI.
+
+HÜKÜM DOĞRU KURULUP EKRANA HİÇ ÇIKMAYABİLİR — BU ÖLÇÜLDÜ (görev incelemesi, 2026-09-01).
+İlk sürümde saf okuyucular doğruydu, kaynak-biçimi çivileri yeşildi, blok da JSX'te duruyordu;
+ama blok kartın GÖVDESİNİN İÇİNDEYDİ ve gövde `bilesenler` ölçülemediğinde ERKEN ÇIKIYORDU.
+Sonuç: `systemctl` olmayan her makinede — yani yerel geliştirmenin BASKIN hâlinde — ikinci
+bacağın "ölçemedik" beyanı ekrana HİÇ düşmüyordu, üstelik 18 çivi yeşilken. Ders: saf-işlev
+çağrısı bir MONTAJ kanıtı DEĞİLDİR. Bu yüzden aşağıda ikinci bir ölçüm katmanı var — bileşen
+`react-dom/server` ile GERÇEKTEN çizilir ve HTML çıktısı okunur.
 
 NEDEN ÖLÇÜM DAVRANIŞ ÜZERİNDE. Alt-dize tuzağı bu depoda tekrar tekrar yakalandı: bir alan
-adının kaynakta (hele yorumda) geçmesi OKUNDUĞUNU kanıtlamaz. Bu yüzden karar veren üç saf
-işlev TSX'ten SÖKÜLÜP esbuild ile çevriliyor ve node'da GERÇEKTEN koşturuluyor. Sökme/çeviri
-yardımcıları `test_infra_okuyucu_v316`ten İTHAL EDİLİYOR, kopyalanmıyor (tek-kaynak yasası:
-aynı ayrıştırıcının iki kopyası sessizce ayrışır).
-
-VE BİR KÖPRÜ ÇİVİSİ: ucun GERÇEK gövdesi (TestClient, saplı `systemctl`) doğrudan pano
-okuyucusuna veriliyor. İki tarafın alan adları ayrıştığı gün — uçta `beklenmedik_birimler`,
-panoda başka bir ad — davranış çivileri kurgu sözlükleriyle YEŞİL kalırdı; köprü öter.
+adının kaynakta (hele yorumda) geçmesi OKUNDUĞUNU kanıtlamaz. Sök/çevir/koştur ve çizim hattı
+`tests/conftest.py`te TEK yerde durur; v316 de aynı hattı kullanır (tek-kaynak yasası — bu
+dosyanın ilk sürümü hattı KOPYALAYIP "ithal ediliyor" diye beyan etmişti).
 """
 from __future__ import annotations
 
-import json
 import re
 import shutil
 import subprocess
-import tempfile
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from meridian import api
-
-# TEK-KAYNAK: TSX sökme/çeviri ayrıştırıcısı v316'da yazıldı ve orada çivili. İkinci bir kopya
-# yazmak, aynı gerçeğin iki sürümünü üretirdi (bu deponun terfi etmiş yasası). İthal kırılırsa
-# SESSİZ kalmaz — toplama anında patlar.
-from tests.test_infra_okuyucu_v316 import (  # noqa: E402
-    BILESENLER,
-    ESBUILD,
-    UCTIPLERI,
-    _govde,
-    _islev,
-    _soy,
+from tests.conftest import (
+    ESBUILD_YOLU,
+    tsx_bileseni_cizdir,
+    tsx_islev_cagir,
+    tsx_islev_govdesi,
+    tsx_saf_islevleri_cevir,
+    tsx_yorumlari_soy,
 )
 
 KOK = Path(__file__).resolve().parent.parent
+SISTEM = KOK / "ui" / "src" / "pano" / "yuzeyler" / "sistem"
+BILESENLER = SISTEM / "Bilesenler.tsx"
+UCTIPLERI = SISTEM / "uctipleri.ts"
 
 pytestmark = pytest.mark.skipif(not BILESENLER.exists(), reason="ui/ yok — pano kaynağı bu ağaçta değil")
 
-_ARAC_YOK = shutil.which("node") is None or not ESBUILD.exists()
+_ARAC_YOK = shutil.which("node") is None or not ESBUILD_YOLU.exists()
 arac_gerek = pytest.mark.skipif(_ARAC_YOK, reason="node/esbuild yok — TSX davranışı bu ağaçta koşturulamaz")
+
+#: UCUN YAYINLADIĞI ALANLAR — TEK KAYNAK. Ad dört ayrı çivide geçiyor (okuyucu haritası, tip
+#: sözleşmesi, köprü hata metni, gövde kurgusu); dördünü elle yazmak, birini değiştirip ötekileri
+#: unutmanın açık davetiydi.
+ALAN_LISTE = "beklenmedik_birimler"
+ALAN_NEDEN = "beklenmedik_birimler_neden"
+ALAN_OLCUM = "beklenmedik_olcum"
+UC_ALANLARI = (ALAN_LISTE, ALAN_NEDEN, ALAN_OLCUM)
 
 #: Panoya eklenen SAF okuyucular. Hepsi tek nesne alır, hüküm döndürür, JSX taşımaz.
 OKUYUCULAR = ("beklenmedikOku", "beklenmedikDurumOku", "beklenmedikBedelOku")
+
+#: EKRANDA ARANAN ÇAPALAR — çizim çivileri bu metinleri HTML'de arar.
+METIN_OLCULEMEDI = "Makinede fazladan duran birimler bu ölçümde sayılamadı"
+METIN_VAR = "Makinede duruyor, depoda karşılığı yok"
+METIN_KART = "Meridian bileşenleri"
 
 _GEREKCE_ASGARI = 20          # "yok" bir gerekçe değildir
 
@@ -88,37 +95,41 @@ _CEVRILMIS: str | None = None
 
 
 def _kaynak() -> str:
-    return _soy(BILESENLER.read_text(encoding="utf-8"))
+    return tsx_yorumlari_soy(BILESENLER.read_text(encoding="utf-8"))
 
 
 def _cevir() -> str:
-    """Üç saf okuyucuyu TSX'ten söküp esbuild ile JS'e çevirir (bir kez)."""
     global _CEVRILMIS
     if _CEVRILMIS is None:
-        ham = _kaynak()
-        parcalar = []
-        for ad in OKUYUCULAR:
-            imza = f"export function {ad}("
-            assert imza in ham, f"`{ad}` DIŞA AKTARILMIŞ bir işlev değil — davranışı ölçülemez"
-            parcalar.append(_islev(ham, imza))
-        ts = "\n".join(parcalar).replace("export function", "function")
-        cp = _GERCEK_RUN([str(ESBUILD), "--loader=ts"], input=ts, capture_output=True,
-                         text=True, timeout=60)
-        assert cp.returncode == 0, f"esbuild çeviremedi: {cp.stderr}"
-        _CEVRILMIS = cp.stdout
+        _CEVRILMIS = tsx_saf_islevleri_cevir(_kaynak(), OKUYUCULAR, kosucu=_GERCEK_RUN)
     return _CEVRILMIS
 
 
 def _cagir(ad: str, *argumanlar) -> object:
-    """Sökülen okuyucuyu node'da GERÇEKTEN çağırır ve dönen hükmü verir."""
-    js = (_cevir() + "\nconst __a = " + json.dumps(list(argumanlar), ensure_ascii=False)
-          + f";\nconsole.log(JSON.stringify({ad}(...__a)));\n")
-    with tempfile.TemporaryDirectory() as d:
-        yol = Path(d) / "olcum.mjs"
-        yol.write_text(js, encoding="utf-8")
-        cp = _GERCEK_RUN(["node", str(yol)], capture_output=True, text=True, timeout=60)
-    assert cp.returncode == 0, f"node çalıştıramadı: {cp.stderr}"
-    return json.loads(cp.stdout.strip().split("\n")[-1])
+    return tsx_islev_cagir(_cevir(), ad, *argumanlar, kosucu=_GERCEK_RUN)
+
+
+# --- ÇİZİM HATTI: KARTI GERÇEKTEN ÇİZ -------------------------------------
+# `Bilesenler` KARTIN TAMAMIDIR — blok tek başına değil KART İÇİNDEN çizilir, çünkü ölçülen şey
+# tam olarak MONTAJdır: bloğu izole çizmek, kartın erken çıkışlarının onu yutmasını göremezdi
+# (kusurun kendisi buydu).
+_GIRIS = """
+import { renderToStaticMarkup } from "react-dom/server";
+import { Bilesenler } from "./Bilesenler";
+const govde = JSON.parse(process.env.GOVDE ?? "{}");
+console.log(renderToStaticMarkup(
+  <Bilesenler durum={{ veri: govde, hata: null, oturumDustu: false }} />));
+"""
+
+
+def _ciz(govde: dict) -> str:
+    import json as _json
+    html = tsx_bileseni_cizdir(_GIRIS, SISTEM, {"GOVDE": _json.dumps(govde, ensure_ascii=False)},
+                               kosucu=_GERCEK_RUN)
+    assert METIN_KART in html, (
+        "kart hiç çizilmedi — çizim hattı boş döndü ve aşağıdaki 'şu metin var/yok' hükümleri "
+        f"anlamsız olurdu. Çıktı: {html[:200]!r}")
+    return html
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +144,7 @@ def test_olcum_hatti_GERCEKTEN_KOSUYOR():
     js = _cevir()
     for ad in OKUYUCULAR:
         assert f"function {ad}" in js, f"`{ad}` çeviriye girmemiş"
-    assert _cagir("beklenmedikOku", {"beklenmedik_birimler": []})["hal"] == "temiz"
+    assert _cagir("beklenmedikOku", {ALAN_LISTE: []})["hal"] == "temiz"
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +154,7 @@ def test_olcum_hatti_GERCEKTEN_KOSUYOR():
 @arac_gerek
 def test_BOS_LISTE_OLCULDU_DEMEKTIR_temiz():
     """`[]` ucun "ÖLÇTÜM ve fazlalık YOK" hükmüdür — belirsizlik değil, sonuçtur."""
-    o = _cagir("beklenmedikOku", {"beklenmedik_birimler": [], "beklenmedik_birimler_neden": None})
+    o = _cagir("beklenmedikOku", {ALAN_LISTE: [], ALAN_NEDEN: None})
     assert o["hal"] == "temiz", f"boş liste `{o['hal']}` diye okundu"
     assert o["birimler"] == [] and o["neden"] is None, (
         "temiz hâl gerekçe/birim taşıyor — ekranda açıklanacak bir şey yok")
@@ -151,11 +162,9 @@ def test_BOS_LISTE_OLCULDU_DEMEKTIR_temiz():
 
 @arac_gerek
 def test_NULL_TEMIZ_DEGILDIR_olculemedi():
-    """`null` "ÖLÇEMEDİK"tir. Temiz sayılırsa pano ölçülmemiş bir temizlik beyan eder —
-    uçta kapatılan kusurun (v287) EKRAN tarafı."""
+    """`null` "ÖLÇEMEDİK"tir. Temiz sayılırsa pano ölçülmemiş bir temizlik beyan eder."""
     neden = "`systemctl` bu makinede yok (Darwin) — makinede duran birimler sayılamadı"
-    o = _cagir("beklenmedikOku",
-               {"beklenmedik_birimler": None, "beklenmedik_birimler_neden": neden})
+    o = _cagir("beklenmedikOku", {ALAN_LISTE: None, ALAN_NEDEN: neden})
     assert o["hal"] == "olculemedi", f"ölçülemeyen bacak `{o['hal']}` diye okundu"
     assert o["neden"] == neden, "ucun gerekçesi taşınmıyor — okuyucu iddiayı doğrulayamaz"
     assert o["birimler"] == [], "ölçülemeyen bacak birim listesi uyduruyor"
@@ -173,7 +182,7 @@ def test_ALAN_HIC_GELMEDIYSE_de_olculemedi():
 
 @arac_gerek
 def test_DOLU_LISTE_var_hali_ve_birimleri_TASIR():
-    o = _cagir("beklenmedikOku", {"beklenmedik_birimler": [
+    o = _cagir("beklenmedikOku", {ALAN_LISTE: [
         {"birim": "meridian-dash.service", "durum": "disabled", "durum_neden": None},
         {"birim": "meridian-eski.timer", "durum": None, "durum_neden": "STATE sütunu gelmedi"}]})
     assert o["hal"] == "var"
@@ -202,24 +211,26 @@ def test_SATIR_DURUMU_OLCULEMEDIYSE_UYDURULMAZ():
         assert d["olculdu"] is False, f"{govde} → durum ölçülmüş sayıldı"
         assert d["metin"] is None, f"{govde} → ölçülmemiş durum metne çevrildi: {d['metin']!r}"
         assert d["neden"] == gerekce, f"{govde} → ucun gerekçesi taşınmadı"
-    # Gerekçe HİÇ gelmediyse uydurulmaz ama boş da bırakılmaz.
     bos = _cagir("beklenmedikDurumOku", {"birim": "x.service"})
     assert bos["olculdu"] is False
     assert isinstance(bos["neden"], str) and len(bos["neden"].strip()) >= _GEREKCE_ASGARI
 
 
 # ---------------------------------------------------------------------------
-# 3) BEDEL VE KAPSAM EKRANDA TAŞINIR
+# 3) BEDEL, KAPSAM VE KOMUT EKRANDA TAŞINIR
 # ---------------------------------------------------------------------------
 
 @arac_gerek
-def test_BEDEL_OKUYUCUSU_kapsami_ve_sayimi_TASIR():
+def test_BEDEL_OKUYUCUSU_kapsami_sayimi_ve_KOMUTU_TASIR():
     """BEDEL YASASI: bacak yalnız dar bir deseni sorar ve desene uymayan birimlere KÖRDÜR.
-    Kazanç ekranda, bedel ekranda değilse körlüğün belirtisi hiçbir şeydir (vaka @bekci)."""
-    b = _cagir("beklenmedikBedelOku", {"beklenmedik_olcum": {
+    KOMUT da okunur: ucun yayınladığı ama kimsenin okumadığı alan YASA 6 borcudur ve ekranda
+    durması operatörün ölçümü KENDİ ELİYLE tekrarlamasını sağlar."""
+    b = _cagir("beklenmedikBedelOku", {ALAN_OLCUM: {
+        "komut": "systemctl list-unit-files 'meridian-*' --no-legend --no-pager",
         "durum_alani": "STATE sütunu `UnitFileState`tir, `ActiveState` DEĞİLDİR",
         "kapsam_disi": "yalnız `meridian-*` deseni sorgulanır; desene uymayanlar görünmez",
         "makinedeki_birim_n": 4, "makinedeki_birim_n_neden": None, "repo_birim_n": 12}})
+    assert "list-unit-files" in (b["komut"] or ""), "ölçümün komutu taşınmıyor"
     assert "UnitFileState" in (b["durumAlani"] or ""), "durum sütununun NE OLDUĞU taşınmıyor"
     assert "meridian-*" in (b["kapsam"] or ""), "taramanın DAR kapsamı ekrana taşınmıyor"
     assert b["makinedeN"] == 4 and b["repoN"] == 12
@@ -228,19 +239,78 @@ def test_BEDEL_OKUYUCUSU_kapsami_ve_sayimi_TASIR():
 @arac_gerek
 def test_BEDEL_OLCULEMEDIGINDE_SIFIR_UYDURULMAZ():
     """Sayım ölçülemediğinde `0` yazmak, "hiç birim yok" diye okunur — uydurma yasağı."""
-    b = _cagir("beklenmedikBedelOku", {"beklenmedik_olcum": {
+    b = _cagir("beklenmedikBedelOku", {ALAN_OLCUM: {
         "makinedeki_birim_n": None,
         "makinedeki_birim_n_neden": "`systemctl` koşturulamadı — makinedeki birimler sayılmadı"}})
     assert b["makinedeN"] is None, "ölçülmeyen sayım 0'a çevrildi"
     assert isinstance(b["makinedeNeden"], str) and b["makinedeNeden"].strip()
-    # Künye bloğu HİÇ gelmediyse de sessizce sıfırlanmaz.
     yok = _cagir("beklenmedikBedelOku", {})
     assert yok["makinedeN"] is None and yok["repoN"] is None
-    assert yok["kapsam"] is None and yok["durumAlani"] is None
+    assert yok["kapsam"] is None and yok["durumAlani"] is None and yok["komut"] is None
 
 
 # ---------------------------------------------------------------------------
-# 4) KÖPRÜ — UCUN GERÇEK GÖVDESİ PANO OKUYUCUSUNA VERİLİR
+# 4) MONTAJ — HÜKÜM EKRANA GERÇEKTEN ÇIKIYOR MU
+# ---------------------------------------------------------------------------
+# Bu bölüm bir ARIZANIN bedelidir (2026-09-01): saf okuyucular doğruyken ve `<BeklenmedikBirimler>`
+# etiketi kaynakta dururken, blok kartın erken çıkışlarının ardında kaldığı için `systemctl`siz
+# makinede EKRANA HİÇ ÇIKMIYORDU. Aşağısı kartı GERÇEKTEN çizer.
+
+@arac_gerek
+def test_BILESEN_BACAGI_OLCULEMEZKEN_BLOK_YINE_CIZILIR():
+    """B1'İN ÇİVİSİ — BASKIN SENARYO. `systemctl` olmayan makinede uç HER İKİ bacağı da
+    ölçemez: `bilesenler` null gelir ve kart gövdesi erken çıkar. İkinci bacağın "ölçemedik"
+    beyanı bu çıkıştan BAĞIMSIZ olarak ekranda olmalı — yoksa pano, ölçülmemiş bir bacağı
+    ölçülmüş gibi (yani hiç) gösterir."""
+    gerekce = "SENTINEL42 systemctl bu makinede yok, makinedeki birimler sayilamadi"
+    html = _ciz({"bilesenler": None,
+                 "bilesenler_olculemedi_neden": "birinci bacak da olculemedi",
+                 ALAN_LISTE: None, ALAN_NEDEN: gerekce})
+    assert METIN_OLCULEMEDI in html, (
+        "bileşen listesi ölçülemezken ters yön bloğu EKRANA HİÇ ÇIKMADI — kart erken çıkıyor ve "
+        "blok o çıkışın ardında kalıyor olabilir (ölçülmüş kusur, 2026-09-01)")
+    assert gerekce in html, (
+        "blok çizildi ama UCUN GEREKÇESİ ekranda yok — 'ölçemedik' demek, NEDEN ölçemediğini "
+        "söylemeden yarım bir beyandır")
+
+
+@arac_gerek
+def test_OLCULMUS_TEMIZLIKTE_HIC_CIZILMEZ():
+    """(2) SESSİZLİK KARARI, DAVRANIŞLA. Boş liste = ölçüldü ve fazlalık yok; ekranda hiçbir
+    satır doğmaz. Kart yine çizilir (pozitif kontrol `_ciz` içinde), yalnız bu blok susar."""
+    html = _ciz({"bilesenler": None, "bilesenler_olculemedi_neden": "birinci bacak olculemedi",
+                 ALAN_LISTE: [], ALAN_NEDEN: None})
+    assert METIN_OLCULEMEDI not in html, "ÖLÇÜLMÜŞ temizlikte 'ölçülemedi' satırı çizildi"
+    assert METIN_VAR not in html, "boş listede rozet/liste çizildi — her gün okunan bir gürültü"
+
+
+@arac_gerek
+def test_DOLU_LISTEDE_ROZET_BIRIM_ADLARI_ve_KUNYE_CIZILIR():
+    """Asıl teslimat: rozet + birim adları + satır durumu + ölçüm künyesi ekranda."""
+    html = _ciz({
+        "bilesenler": None, "bilesenler_olculemedi_neden": "birinci bacak olculemedi",
+        ALAN_LISTE: [
+            {"birim": "meridian-dash.service", "durum": "disabled", "durum_neden": None},
+            {"birim": "meridian-eski.timer", "durum": None,
+             "durum_neden": "SENTINEL7 STATE sutunu gelmedi"}],
+        ALAN_NEDEN: None,
+        ALAN_OLCUM: {"komut": "systemctl list-unit-files 'meridian-*' --no-legend --no-pager",
+                     "durum_alani": "UnitFileState, ActiveState degil",
+                     "kapsam_disi": "yalniz meridian-* deseni sorgulanir",
+                     "makinedeki_birim_n": 4, "makinedeki_birim_n_neden": None,
+                     "repo_birim_n": 12}})
+    assert METIN_VAR in html, "dolu listede blok çizilmedi"
+    assert "2 beklenmedik birim" in html, "rozet sayıyı taşımıyor"
+    for ad in ("meridian-dash.service", "meridian-eski.timer"):
+        assert ad in html, f"`{ad}` ekranda yok — liste birim adlarını basmıyor"
+    assert "disabled" in html, "ölçülmüş satır durumu ekranda yok"
+    assert "SENTINEL7" in html, "ölçülemeyen satırın gerekçesi ekranda yok"
+    assert "list-unit-files" in html, "ölçümün komutu ekranda yok (YASA 6 borcu sürüyor)"
+    assert "4 birim" in html, "kaç birim tarandığı ekranda yok — bedel beyansız kaldı"
+
+
+# ---------------------------------------------------------------------------
+# 5) KÖPRÜ — UCUN GERÇEK GÖVDESİ PANO OKUYUCUSUNA VERİLİR
 # ---------------------------------------------------------------------------
 
 _LIST_CIKTISI = (
@@ -262,6 +332,25 @@ def _onbellekleri_bosalt(monkeypatch):
     yield
 
 
+def _repo_birimi(ad: str, *, sablon: bool = False) -> dict:
+    return {"ad": ad, "dosya": ad, "tur": ad.rsplit(".", 1)[-1], "sablon": sablon,
+            "yol": f"deploy/oracle-a1/{ad}", "beklenen": True,
+            "beklenen_neden": "test kurgusu: host dizininde duruyor"}
+
+
+def _sahte_kaynak(monkeypatch):
+    """REPO BEKLENTİSİ SAPLANIR — çivi GERÇEK `deploy/oracle-a1/` ağacına bağlanmamalı.
+
+    Bağlı kalsaydı, depoya bir birim dosyası eklendiği ya da silindiği gün `repo_birim_n`
+    değişir ve bu çivi ölçtüğü şeyle (pano okuyucusunun sözleşmesi) İLGİSİZ bir sebeple
+    kırmızıya dönerdi."""
+    monkeypatch.setattr(api, "_infra_birim_adlari", lambda: {
+        "birimler": [_repo_birimi("meridian-backup.service"),
+                     _repo_birimi("meridian-backup.timer"),
+                     _repo_birimi("meridian-sprint@.service", sablon=True)],
+        "dizin": "deploy/oracle-a1", "olculemedi_neden": None})
+
+
 def _sahte_systemctl(monkeypatch, cikti: str):
     """`subprocess.run` saplaması (v287 emsali): `show` çağrıları bu çivinin konusu değil."""
     import subprocess as _sp
@@ -280,13 +369,14 @@ def _sahte_systemctl(monkeypatch, cikti: str):
 def test_UCUN_GERCEK_GOVDESI_PANO_OKUYUCUSUNDAN_GECER(monkeypatch, sandbox_state):
     """İKİ TARAF TEK SÖZLEŞME: kurgu sözlüklerle koşan davranış çivileri, uç alan adını
     değiştirdiği gün YEŞİL kalırdı. Bu çivi ucun GERÇEK gövdesini pano okuyucusuna verir."""
+    _sahte_kaynak(monkeypatch)
     _sahte_systemctl(monkeypatch, _LIST_CIKTISI)
     yuk = TestClient(api.app).get("/api/infra?taze=1").json()
 
     o = _cagir("beklenmedikOku", yuk)
     assert o["hal"] == "var", (
-        f"ucun gövdesi panoda `{o['hal']}` diye okundu — alan adları ayrışmış olabilir: "
-        f"{sorted(k for k in yuk if 'beklenmedik' in k)}")
+        f"ucun gövdesi panoda `{o['hal']}` diye okundu — alan adları ayrışmış olabilir. "
+        f"Beklenen: {UC_ALANLARI}; gövdede: {sorted(k for k in yuk if 'beklenmedik' in k)}")
     assert [b["birim"] for b in o["birimler"]] == ["meridian-dash.service"]
 
     d = _cagir("beklenmedikDurumOku", o["birimler"][0])
@@ -294,13 +384,17 @@ def test_UCUN_GERCEK_GOVDESI_PANO_OKUYUCUSUNDAN_GECER(monkeypatch, sandbox_state
 
     b = _cagir("beklenmedikBedelOku", yuk)
     assert b["makinedeN"] == 4, f"makinede sayılan birim adedi taşınmadı: {b}"
-    assert b["kapsam"] and b["durumAlani"], "bedel/kapsam beyanı panoya ulaşmıyor"
+    assert b["repoN"] == 3, f"repo beklentisinin adedi taşınmadı: {b}"
+    assert b["kapsam"] and b["durumAlani"] and b["komut"], "bedel/kapsam/komut panoya ulaşmıyor"
 
 
 @arac_gerek
 def test_SYSTEMCTL_YOKKEN_PANO_TEMIZ_DEMEZ(monkeypatch, sandbox_state):
-    """Yerel macOS'un GERÇEK hâli: `systemctl` yok → uç `None` + gerekçe döner. Pano bunu
-    "temiz" diye okursa, ölçülmemiş bir temizlik ekrana yazılmış olur."""
+    """Yerel macOS'un GERÇEK hâli: `systemctl` yok → uç `None` + gerekçe döner.
+
+    BU ÇİVİ TEK BAŞINA MONTAJ KANITI DEĞİLDİR (2026-09-01 dersi): yalnız SAF OKUYUCUyu ölçer
+    ve tam bu senaryoda blok ekrana hiç çıkmazken de YEŞİLDİ. Montajın çivisi
+    `test_BILESEN_BACAGI_OLCULEMEZKEN_BLOK_YINE_CIZILIR`; bu çivi onun tamamlayıcısı."""
     monkeypatch.setattr(api.shutil, "which", lambda ad: None)
     yuk = TestClient(api.app).get("/api/infra?taze=1").json()
     o = _cagir("beklenmedikOku", yuk)
@@ -309,48 +403,33 @@ def test_SYSTEMCTL_YOKKEN_PANO_TEMIZ_DEMEZ(monkeypatch, sandbox_state):
 
 
 # ---------------------------------------------------------------------------
-# 5) OKUYUCULAR ÖKSÜZ DEĞİL — EKRANA BAĞLILAR
+# 6) OKUYUCULAR ÖKSÜZ DEĞİL — KAYNAK BİÇİMİ
 # ---------------------------------------------------------------------------
 
 def test_BLOK_KARTA_BAGLI():
-    """Okuyucular hesaplanıp çizilmezse YASA 6 boşluğu kapanmaz: alan hâlâ okunmuyordur."""
+    """Blok kartın gövdesine bağlı mı.
+
+    BU ÇİVİ TEK BAŞINA MONTAJ KANITI DEĞİLDİR (2026-09-01 dersi): yalnız JSX ETİKETİNİN
+    varlığını görür, etiketin ERİŞİLEBİLİR bir dalda durduğunu görmez — blok erken çıkışların
+    ardındayken de YEŞİLDİ. Montajın hükmü §4'teki çizim çivilerindedir; bu çivi ucuz bir ön
+    kontroldür (etiket hiç yoksa çizim çivilerinin hata metni okunmaz olurdu)."""
     ham = _kaynak()
     assert re.search(r"function BeklenmedikBirimler\(", ham), (
         "`BeklenmedikBirimler` diye bir blok YOK — alan hâlâ ekransız")
     assert re.search(r"<BeklenmedikBirimler\b[^>]*\bg=\{g\}", ham), (
-        "blok Altyapı kartının gövdesine bağlanmamış — hesaplanan hüküm ekrana çıkmıyor")
+        "blok kartın gövdesine bağlanmamış — hesaplanan hüküm ekrana çıkmıyor")
 
 
 def test_BLOK_UC_OKUYUCUYU_DA_CAGIRIR():
-    g = _govde(_kaynak(), "function BeklenmedikBirimler(")
+    g = tsx_islev_govdesi(_kaynak(), "function BeklenmedikBirimler(")
     for ad in OKUYUCULAR:
         assert re.search(rf"\b{ad}\s*\(", g), f"`{ad}` blokta çağrılmıyor — öksüz okuyucu"
-
-
-def test_BOS_LISTEDE_ROZET_CIZILMEZ():
-    """SESSİZLİK BİR KARARDIR: temiz makinede rozet çizmek, hiçbir zaman iş çıkarmayan bir
-    gürültü üretirdi. Erken çıkış BLOĞUN KENDİSİNDE olmalı — çağıran tarafta değil, yoksa
-    ikinci bir çağıran eklendiği gün gürültü sessizce geri gelir."""
-    g = _govde(_kaynak(), "function BeklenmedikBirimler(")
-    assert re.search(r'hal\s*===\s*"temiz"[\s\S]{0,60}?return null', g), (
-        "temiz hâlde blok `null` döndürmüyor — boş listede rozet/liste çizilir ve pano her gün "
-        "okunan ama hiçbir zaman iş çıkarmayan bir satır kazanır")
-
-
-def test_OLCULEMEDI_HALI_SESSIZ_DEGILDIR():
-    """(2)'nin TERS YÖNÜ — gürültüyü susturayım derken SİNYALİ susturmak kusuru ikiye katlar.
-    `temiz` dışındaki tek erken çıkış olmamalı: ölçülemeyen bacak ekranda görünür."""
-    g = _govde(_kaynak(), "function BeklenmedikBirimler(")
-    assert len(re.findall(r"return null", g)) == 1, (
-        "blokta birden fazla sessiz çıkış var — 'ölçülemedi' de susturulmuş olabilir")
-    assert re.search(r'hal\s*===\s*"olculemedi"', g), (
-        "ölçülemeyen hâlin ayrı bir ekran karşılığı yok — 'ölçemedik' ile 'temiz' aynı görünür")
 
 
 def test_DIKKAT_TONU_KOMSUDAN_GELIR_YENI_RENK_ICAT_EDILMEZ():
     """TASARIM DİLİ: rozet tonu bu kartın kendi ton sözlüğünden okunur. Yeni bir hue bandı
     icat etmek, rezerve renk kaydını (mod/nav/şiddet) sessizce delerdi."""
-    g = _govde(_kaynak(), "function BeklenmedikBirimler(")
+    g = tsx_islev_govdesi(_kaynak(), "function BeklenmedikBirimler(")
     assert re.search(r"TON_METNI\.dikkat|TON_METNI\[\s*[\"']dikkat[\"']\s*\]", g), (
         "rozet rengi kartın ton sözlüğünden gelmiyor — elle yazılmış bir renk tasarım dilinden kopar")
     assert re.search(r"TON_NOKTASI\.dikkat|TON_NOKTASI\[\s*[\"']dikkat[\"']\s*\]", g), (
@@ -360,9 +439,9 @@ def test_DIKKAT_TONU_KOMSUDAN_GELIR_YENI_RENK_ICAT_EDILMEZ():
 # Hangi alan HANGİ İŞLEVDE okunmalı. "Dosyada bir yerde geçiyor" YETMEZ (v316 dersi): alan bir
 # yorumda ya da tip beyanında geçebilir ve hiçbir şey kanıtlamaz.
 OKUYUCU_HARITASI = (
-    ("beklenmedikOku", ("beklenmedik_birimler", "beklenmedik_birimler_neden")),
+    ("beklenmedikOku", (ALAN_LISTE, ALAN_NEDEN)),
     ("beklenmedikDurumOku", ("durum", "durum_neden")),
-    ("beklenmedikBedelOku", ("beklenmedik_olcum",)),
+    ("beklenmedikBedelOku", (ALAN_OLCUM, "komut")),
 )
 
 
@@ -372,7 +451,7 @@ def test_UC_ALANIN_UI_OKUYUCUSU_VAR():
     ölçüme hiç girmiyor — tip beyanı okuyucu DEĞİLDİR)."""
     ham = _kaynak()
     for islev, alanlar in OKUYUCU_HARITASI:
-        g = _govde(ham, f"function {islev}(")
+        g = tsx_islev_govdesi(ham, f"function {islev}(")
         for alan in alanlar:
             assert re.search(rf"\.{alan}\b", g), (
                 f"`{alan}` `{islev}` içinde okunmuyor — YASA 6 borcu kapanmadı")
@@ -382,9 +461,9 @@ def test_TIP_BEYANI_UCUN_SOZLESMESINI_TASIR():
     """Tip beyanı okuyucu değildir ama SÖZLEŞMEdir: `[]` ile `null` ayrımı tipte de durmalı,
     yoksa bir gün `?: Birim[]` yazılır ve derleyici üçüncü hâli görmez."""
     s = UCTIPLERI.read_text(encoding="utf-8")
-    for alan in ("beklenmedik_birimler", "beklenmedik_birimler_neden", "beklenmedik_olcum"):
+    for alan in UC_ALANLARI:
         assert re.search(rf"^\s*readonly {alan}\?:", s, re.M), f"`{alan}` tipte beyan edilmemiş"
-    m = re.search(r"readonly beklenmedik_birimler\?:\s*([^;]+);", s)
+    m = re.search(rf"readonly {ALAN_LISTE}\?:\s*([^;]+);", s)
     assert m and "null" in m.group(1), (
-        f"`beklenmedik_birimler` tipi `null`ı taşımıyor ({m.group(1) if m else '—'}) — 'ölçemedik' "
+        f"`{ALAN_LISTE}` tipi `null`ı taşımıyor ({m.group(1) if m else '—'}) — 'ölçemedik' "
         "hâli tipten silinirse ekranda da silinir")

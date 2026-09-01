@@ -877,6 +877,146 @@ def make_bars(n=320, seed=7, trend=0.0006, breakout_at=None):
 
 
 # ================================================================================================
+# TSX DAVRANIŞ ÖLÇÜM HATTI — SÖK · ÇEVİR · KOŞTUR (2026-09-01)
+# ================================================================================================
+# NEDEN BURADA. Pano çivileri "kaynakta şu dize geçiyor mu" diye ölçmez; karar veren SAF işlevleri
+# TSX'ten söker, `esbuild` ile çevirir ve `node`da GERÇEKTEN çağırır. Alt-dize tuzağı bu depoda
+# tekrar tekrar yakalandı: bir alan adının kaynakta (hele yorumda) geçmesi OKUNDUĞUNU kanıtlamaz.
+#
+# HAT ÖNCE v316'DA YAZILDI, SONRA v354'E KOPYALANDI ve ikinci kopya "ithal ediliyor" diye beyan
+# edildi — beyanla gerçeğin ayrıştığı nokta (görev incelemesi, 2026-09-01). TEK-KAYNAK YASASI:
+# ayrıştırıcı TEK yerde durur, iki çivi de buradan alır. Kopya kalsaydı, biri düzeltilip öteki
+# düzeltilmediğinde iki çivi AYNI TSX hakkında farklı hüküm kurardı.
+#
+# `kosucu` PARAMETRESİ BİR ARIZANIN BEDELİDİR: köprü çivileri `subprocess.run`u SÜREÇ GENELİNDE
+# saplıyor (komutun kendisi de sözleşmenin parçası olduğu için). Saplama açıkken hattın kendi
+# `esbuild`/`node` çağrıları da o saplamaya düşer ve ölçüm aracı sessizce `returncode=1` alır —
+# çivi, ölçtüğü şey yüzünden DEĞİL kendi hattı yüzünden kırmızıya döner. Çağıran, saplamadan ÖNCE
+# yakaladığı gerçek koşucuyu buraya verir.
+import json as _json
+import re
+import subprocess as _subprocess
+import tempfile as _tempfile
+
+UI_KOK = _Path(__file__).resolve().parent.parent / "ui"
+ESBUILD_YOLU = UI_KOK / "node_modules/.bin/esbuild"
+
+
+def tsx_yorumlari_soy(metin: str) -> str:
+    """Yorumları atar. Bir kuralın YORUMDA geçmesi uygulandığını kanıtlamaz."""
+    metin = re.sub(r"\{/\*.*?\*/\}", "", metin, flags=re.S)
+    metin = re.sub(r"/\*.*?\*/", "", metin, flags=re.S)
+    return re.sub(r"^\s*//.*$", "", metin, flags=re.M)
+
+
+def _tsx_esle(metin: str, bas: int, ac: str, kapa: str) -> int:
+    """`bas`taki açılış imini eşleyen kapanışın BİR SONRASI."""
+    derinlik, j = 0, bas
+    while j < len(metin):
+        if metin[j] == ac:
+            derinlik += 1
+        elif metin[j] == kapa:
+            derinlik -= 1
+            if derinlik == 0:
+                return j + 1
+        j += 1
+    raise AssertionError(f"{ac} eşleşmedi (konum {bas})")
+
+
+def _tsx_kapsam(metin: str, imza: str) -> tuple[int, int]:
+    """İşlev GÖVDESİNİN açılış `{`si ile eşleşen `}`inin konumları.
+
+    NEDEN BU KADAR DİKKATLİ: "imzadan sonraki ilk `{`" YANLIŞ cevaptır. Parametre yıkımı
+    (`function X({ b }: …)`) ve nesne DÖNÜŞ TİPİ (`): { hal: … } {`) o ilk süslüyü çalar; ölçüm
+    sessizce yanlış metni inceler ve çivi hiçbir şeyi tutmaz."""
+    i = metin.find(imza)
+    assert i != -1, f"`{imza}` bulunamadı (yorumlar soyulmuş kaynakta)"
+    j = _tsx_esle(metin, metin.index("(", i), "(", ")")   # parametre listesini geç
+    while True:
+        while j < len(metin) and (metin[j].isspace() or metin[j] == ":"):
+            j += 1                                         # dönüş tipi imi (`:`) ve boşluk
+        assert j < len(metin) and metin[j] == "{", f"`{imza}` gövdesi bulunamadı"
+        bas, son = j, _tsx_esle(metin, j, "{", "}")
+        k = son
+        while k < len(metin) and metin[k].isspace():
+            k += 1
+        if k < len(metin) and metin[k] == "{":
+            j = k          # az önceki süslü DÖNÜŞ TİPİydi; gövde bir sonraki
+            continue
+        return bas, son
+
+
+def tsx_islev_govdesi(metin: str, imza: str) -> str:
+    """İşlevin gövdesi (süslü parantezler dâhil).
+
+    NEDEN GÖVDE, NEDEN DOSYA GENELİ DEĞİL: bir ifadenin dosyada BİR YERDE geçmesi, o ifadenin ŞU
+    işlevde durduğunu kanıtlamaz — kapı sökülüp başka bir işlevde bırakılsa dosya geneline bakan
+    ölçüm yeşil kalırdı."""
+    bas, son = _tsx_kapsam(metin, imza)
+    return metin[bas:son]
+
+
+def tsx_islev_kaynagi(metin: str, imza: str) -> str:
+    """İmzasıyla birlikte işlevin TAM kaynağı — çeviriye bu gider."""
+    _, son = _tsx_kapsam(metin, imza)
+    return metin[metin.find(imza):son]
+
+
+def tsx_saf_islevleri_cevir(kaynak: str, adlar, *, kosucu=None) -> str:
+    """Adı verilen DIŞA AKTARILMIŞ saf işlevleri söküp `esbuild` ile JS'e çevirir."""
+    kosucu = kosucu or _subprocess.run
+    parcalar = []
+    for ad in adlar:
+        imza = f"export function {ad}("
+        assert imza in kaynak, f"`{ad}` DIŞA AKTARILMIŞ bir işlev değil — davranışı ölçülemez"
+        parcalar.append(tsx_islev_kaynagi(kaynak, imza))
+    ts = "\n".join(parcalar).replace("export function", "function")
+    cp = kosucu([str(ESBUILD_YOLU), "--loader=ts"], input=ts, capture_output=True,
+                text=True, timeout=60)
+    assert cp.returncode == 0, f"esbuild çeviremedi: {cp.stderr}"
+    return cp.stdout
+
+
+def tsx_islev_cagir(cevrilmis: str, ad: str, *argumanlar, kosucu=None):
+    """Sökülen okuyucuyu `node`da GERÇEKTEN çağırır ve dönen hükmü verir."""
+    kosucu = kosucu or _subprocess.run
+    js = (cevrilmis + "\nconst __a = " + _json.dumps(list(argumanlar), ensure_ascii=False)
+          + f";\nconsole.log(JSON.stringify({ad}(...__a)));\n")
+    with _tempfile.TemporaryDirectory() as d:
+        yol = _Path(d) / "olcum.mjs"
+        yol.write_text(js, encoding="utf-8")
+        cp = kosucu(["node", str(yol)], capture_output=True, text=True, timeout=60)
+    assert cp.returncode == 0, f"node çalıştıramadı: {cp.stderr}"
+    return _json.loads(cp.stdout.strip().split("\n")[-1])
+
+
+def tsx_bileseni_cizdir(giris_tsx: str, cozum_dizini, ortam: dict | None = None,
+                        *, kosucu=None) -> str:
+    """Bir REACT BİLEŞENİNİ `node`da SUNUCU TARAFINDA çizer ve HTML çıktısını verir.
+
+    NEDEN SAF İŞLEV ÇAĞRISI YETMİYOR (ölçülmüş kusur, 2026-09-01): saf okuyucular doğru hüküm
+    kurabilir ve o hüküm EKRANA HİÇ ÇIKMAYABİLİR — bileşen, kartın erken çıkışlarının ardında
+    dururken tam olarak bu oldu. Montaj bir MONTAJ ölçümü ister: gövdeyi ver, HTML'i oku.
+
+    `--format=cjs` ZORUNLU: `react-dom/server` CJS'tir ve ESM paketine gömüldüğünde `require`
+    (`util`) çözülemez — ilk denemede tam olarak bu düştü.
+    """
+    kosucu = kosucu or _subprocess.run
+    with _tempfile.TemporaryDirectory() as d:
+        paket = _Path(d) / "cizim.cjs"
+        yap = kosucu([str(ESBUILD_YOLU), "--bundle", "--format=cjs", "--platform=node",
+                      "--loader=tsx", "--jsx=automatic",
+                      f"--tsconfig={UI_KOK / 'tsconfig.json'}", f"--outfile={paket}"],
+                     input=giris_tsx, capture_output=True, text=True, timeout=180,
+                     cwd=str(cozum_dizini))
+        assert yap.returncode == 0, f"esbuild paketleyemedi:\n{yap.stderr}"
+        cp = kosucu(["node", str(paket)], capture_output=True, text=True, timeout=120,
+                    env={**os.environ, **(ortam or {})})
+    assert cp.returncode == 0, f"node çizemedi:\n{cp.stderr}"
+    return cp.stdout
+
+
+# ================================================================================================
 # BETİK YÜKLEYİCİ — gövde burada DEĞİL (2026-08-30)
 # ================================================================================================
 # `betikten_modul_yukle` yukarıda `ops.sasi_yukleyici.kaynaktan_yukle`den ithal edilir. Kusurun,

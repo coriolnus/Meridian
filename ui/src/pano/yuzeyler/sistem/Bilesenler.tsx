@@ -433,6 +433,7 @@ export function beklenmedikDurumOku(b: InfraBeklenmedikBirim): {
  * `0` yazılmaz: "hiç birim yok" diye okunurdu.
  */
 export function beklenmedikBedelOku(g: InfraGovdesi): {
+  komut: string | null;
   kapsam: string | null;
   durumAlani: string | null;
   makinedeN: number | null;
@@ -443,6 +444,10 @@ export function beklenmedikBedelOku(g: InfraGovdesi): {
   const n = o?.makinedeki_birim_n;
   const r = o?.repo_birim_n;
   return {
+    // KOMUT DA OKUNUR: ucun yayınladığı ama kimsenin okumadığı bir alan, YASA 6'nın tanımıyla
+    // üretilmemişten farksızdır. Ekranda durması ayrıca operatörün ölçümü KENDİ ELİYLE
+    // tekrarlamasını sağlar — "pano öyle diyor" ile "makineye sordum" arasındaki fark.
+    komut: o?.komut ?? null,
     kapsam: o?.kapsam_disi ?? null,
     durumAlani: o?.durum_alani ?? null,
     makinedeN: typeof n === "number" ? n : null,
@@ -455,17 +460,17 @@ export function beklenmedikBedelOku(g: InfraGovdesi): {
 function BeklenmedikBirimler({ g }: { readonly g: InfraGovdesi }) {
   const bek = beklenmedikOku(g);
   if (bek.hal === "temiz") return null;
-  const bedel = beklenmedikBedelOku(g);
   if (bek.hal === "olculemedi") {
     return (
-      <div>
-        <Olculemedi
-          neden="Makinede fazladan duran birimler bu ölçümde sayılamadı"
-          teknik={bek.neden ?? undefined}
-        />
-      </div>
+      <Olculemedi
+        neden="Makinede fazladan duran birimler bu ölçümde sayılamadı"
+        teknik={bek.neden ?? undefined}
+      />
     );
   }
+  // Künye YALNIZ dolu listede okunur: ölçülemeyen dalda kullanılmıyordu ve orada hesaplanması
+  // okuyucuya "bu dalda da bir bedel beyanı var" diye yanlış bir izlenim veriyordu.
+  const bedel = beklenmedikBedelOku(g);
   return (
     <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -528,9 +533,439 @@ function BeklenmedikBirimler({ g }: { readonly g: InfraGovdesi }) {
         <span title={bedel.kapsam ?? "Taramanın kapsamı bildirilmedi"}>
           Tarama dar kapsamlıdır: desene uymayan birimler bu listede görünmez.
         </span>{" "}
-        Listedeki durum, birim dosyasının etkinliğidir — şu an koşup koşmadığı değil.
+        Listedeki durum, birim dosyasının etkinliğidir — şu an koşup koşmadığı değil. Ölçümün
+        komutu:{" "}
+        {bedel.komut === null ? (
+          <Olculemedi
+            neden="Ölçümün hangi komutla yapıldığı bildirilmedi"
+            teknik="ölçüm künyesinde komut alanı gelmedi — operatör sonucu kendi eliyle doğrulayamaz"
+            kisa
+          />
+        ) : (
+          <span className="font-mono">{bedel.komut}</span>
+        )}
       </p>
     </div>
+  );
+}
+
+/**
+ * BİRİNCİ BACAK — depodan makineye bakan gövde (özet · süreç · pay çubuğu · tablo).
+ *
+ * AYRI BİLEŞEN OLMASI BİR ARIZANIN BEDELİDİR (ölçüldü 2026-09-01, görev incelemesi): bu gövde
+ * ÜÇ YERDE erken çıkıyor (`bilesenler` null · alan hiç gelmedi · boş liste) ve ters yön bloğu
+ * bu çıkışların ARDINDA duruyordu. Sonuç: `systemctl` olmayan HER makinede — yani yerel
+ * geliştirmenin BASKIN hâlinde — birinci bacak "ölçülemedi" deyip çıkıyor, ikinci bacağın
+ * "ölçemedik" beyanı ekrana HİÇ düşmüyordu. İki bacak birbirinden BAĞIMSIZ ölçülür; birinin
+ * susması ötekini susturamaz, bu yüzden ikisi artık kardeş, iç içe değil.
+ */
+function BilesenGovdesi({ g }: { readonly g: InfraGovdesi }) {
+  if (g.bilesenler === null) {
+    return (
+      <Olculemedi
+        neden="Bileşen listesi ölçülemedi"
+        teknik={
+          g.bilesenler_olculemedi_neden ??
+          "/api/infra `bilesenler` null döndürdü ama nedenini yazmadı — boş liste 'bileşen yok' diye okunurdu"
+        }
+      />
+    );
+  }
+  if (g.bilesenler === undefined) {
+    return <Olculemedi neden="Bileşen listesi bildirilmedi" teknik="/api/infra `bilesenler` alanını hiç döndürmüyor" />;
+  }
+  const satirlar = g.bilesenler;
+  if (satirlar.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Uç ölçtü ve HİÇ birim bulmadı (boş liste). Bu "ölçemedim" DEĞİL — ölçemediğinde uç
+        `bilesenler: null` + neden döndürüyor.
+      </p>
+    );
+  }
+
+  // --- BELLEK PAYI: yalnız RSS'İ ÖLÇÜLMÜŞ satırlar; elenenler sayılıp yazılır.
+  const olculen = satirlar.filter((b) => typeof b.rss_bayt === "number" && b.rss_bayt >= 0);
+  const elenen = satirlar.length - olculen.length;
+  const sirali = [...olculen].sort((a, b) => (b.rss_bayt ?? 0) - (a.rss_bayt ?? 0));
+  const ust = sirali.slice(0, DILIM_TAVANI);
+  const kalan = sirali.slice(DILIM_TAVANI);
+  const kalanToplam = kalan.reduce((t, b) => t + (b.rss_bayt ?? 0), 0);
+  const toplamRss = sirali.reduce((t, b) => t + (b.rss_bayt ?? 0), 0);
+
+  // Anahtarlar CSS değişkeni adına giriyor (`--color-<anahtar>`), bu yüzden birim adı
+  // DEĞİL güvenli bir takma ad kullanılıyor: `meridian-sprint@.service` içindeki `@` ve `.`
+  // geçerli bir özel-özellik adı üretmez.
+  const yapilandirma: ChartConfig = {};
+  ust.forEach((b, i) => {
+    yapilandirma[`b${i}`] = { label: b.ad ?? `birim #${i + 1}`, color: `var(--chart-${i + 1})` };
+  });
+  if (kalan.length > 0) {
+    yapilandirma.diger = { label: `diğer (${kalan.length} bileşen)`, color: "var(--muted-foreground)" };
+  }
+  const cubuk: Record<string, number | string> = { ad: "RSS payı" };
+  ust.forEach((b, i) => {
+    cubuk[`b${i}`] = b.rss_bayt ?? 0;
+  });
+  if (kalan.length > 0) cubuk.diger = kalanToplam;
+
+  const sayi = (...siniflar: readonly InfraDurumSinifi[]) =>
+    satirlar.filter((b) => siniflar.includes(sinifiOku(b).sinif)).length;
+  const aktifN = sayi("kosuyor");
+  // SAĞLIKLI BEKLEYİŞ: `inactive` görünen ama tetikleyicisi ÖLÇÜLMÜŞ ve sağlam birimler.
+  // Bu sayı olmasaydı operatör tabloda üç "duruyor" görür ve üçünü de iş sanardı.
+  const bekleyenN = sayi("sirada_timer", "ariza_yok_onfailure");
+  // İKİ "KURULU DEĞİL" AYRI SAYILIR: biri sudo bekler, öteki hiçbir şey beklemez.
+  // Tek sayıya toplamak, gerçek eylemi envanter gürültüsünün içinde kaybediyordu.
+  const kurulmaliN = satirlar.filter((b) => sinifiOku(b).sinif === "kurulmali").length;
+  const gurultuN = sayi("envanter_gurultusu");
+  const sablonN = satirlar.filter((b) => b.sablon).length;
+  // DİKKAT KOVASI: gerçekten düşmüş servisler + sağlığı ÖLÇÜLEMEYEN tetikleyiciler.
+  // Şablon ve envanter satırları buraya GİRMEZ (adlandırılmış, eylemsiz hâller).
+  const dikkatN = sayi("olu", "arizali", "tetikleyici_bozuk", "tetikleyici_olculemedi",
+                       "tetikleyici_yok");
+  // BEKLENTİSİ ÖLÇÜLEMEYEN SATIRLAR AYRI SAYILIR: "kurulmalı" ile "beklenmiyor" arasındaki
+  // fark bir EYLEM farkıdır (sudo mu, hiçbir şey mi) ve ölçülemediğinde ikisi de iddia
+  // edilemez. Sayı ekranda durmasaydı, hüküm kurulamayan satırlar tabloda kaybolurdu.
+  const beklentisizN = satirlar.filter((b) => beklentiOku(b).hal === "olculemedi").length;
+  // KANITI EKSİK OLDUĞU İÇİN İDDİASI GERİ ÇEKİLEN SATIRLAR (`kanitKapisi`).
+  const kanitsizN = satirlar.filter((b) => kanitKapisi(b, sinifiOku(b).sinif,
+                                                       SINIF[sinifiOku(b).sinif].ton).eksik !== null).length;
+  const surec = g.surec;
+
+  return (
+    <>
+      <div className="grid gap-x-6 sm:grid-cols-2">
+        <div>
+          <Satir etiket="Bildirilen birim">
+            <span className="tabular-nums">{satirlar.length}</span>
+          </Satir>
+          <Satir etiket="Koşan (active)">
+            <span className="tabular-nums text-emerald-600 dark:text-emerald-400">{aktifN}</span>
+          </Satir>
+          <Satir etiket="Sağlıklı bekleyiş (oneshot)">
+            <span
+              className="tabular-nums text-emerald-600 dark:text-emerald-400"
+              title="Duruyor görünen ama tetikleyicisi ÖLÇÜLMÜŞ ve sağlam birimler: timer'ı aktif olanlar + `OnFailure` kancaları. Eylem gerektirmez."
+            >
+              {bekleyenN}
+            </span>
+          </Satir>
+          <Satir etiket="Kurulmalı (eylem) / şablon">
+            <span className="tabular-nums">
+              <span
+                className={cn(kurulmaliN > 0 && "font-medium text-amber-600 dark:text-amber-400")}
+                title="Birim dosyası `deploy/<host>/` altında var ama makineye kurulmamış — sudo ister, operatör işi."
+              >
+                {kurulmaliN}
+              </span>
+              {" / "}
+              <span title="`@.service` şablonu — düz adla sorgu sahte `inactive` verir, durumu `/api/sprint`ten okunur">
+                {sablonN}
+              </span>
+            </span>
+          </Satir>
+          <Satir etiket="Envanter kopyası (eylemsiz)">
+            <span
+              className="tabular-nums text-muted-foreground"
+              title="`deploy/` kökünde duran eski/genel birim dosyaları — kurulmaları BEKLENMİYOR, eksik değiller."
+            >
+              {gurultuN}
+            </span>
+          </Satir>
+          <Satir etiket="Dikkat gerektiren">
+            <span className={cn("tabular-nums", dikkatN > 0 && "text-amber-600 dark:text-amber-400")}>
+              {dikkatN}
+              {dikkatN > 0 ? " (durmuş / arızalı / tetikleyicisi ölçülemeyen)" : ""}
+            </span>
+          </Satir>
+          <Satir etiket="Kurulum beklentisi ölçülemeyen">
+            <span
+              className="tabular-nums text-muted-foreground"
+              title="Uç bu satırlar için `beklenen` bildirmedi — birimin kurulmasının BEKLENİP beklenmediği bilinmiyor. `false` varsaymak gerçek bir eksiği envanter gürültüsü sayardı."
+            >
+              {beklentisizN}
+            </span>
+          </Satir>
+          <Satir etiket="İddiası kanıtsız kalan">
+            <span
+              className={cn("tabular-nums", kanitsizN > 0 && "text-amber-600 dark:text-amber-400")}
+              title="Ucun sınıfı bir sağlık iddiası taşıyor ama dayandığı ölçüm (`Type=oneshot` / `beklenen` / ham `ActiveState`) bu satırda yok — rozet yeşile boyanmadı, `kanıtsız` işaretiyle amber'e düştü."
+            >
+              {kanitsizN}
+            </span>
+          </Satir>
+        </div>
+        <div>
+          <Satir etiket="Toplam ölçülen RSS">
+            {olculen.length === 0 ? (
+              <Olculemedi neden="Hiçbir birimin bellek kullanımı ölçülemedi" teknik="hiçbir satırda `rss_bayt` ölçülmedi" kisa />
+            ) : (
+              <span className="tabular-nums">{baytMetni(toplamRss)}</span>
+            )}
+          </Satir>
+          <Satir etiket="Paydan elenen satır">
+            <span className="tabular-nums">
+              {elenen}
+              {elenen > 0 ? " (RSS ölçülemedi — 0 sayılmadı)" : ""}
+            </span>
+          </Satir>
+          <Satir etiket="Restart taşıyan birim">
+            <span className="tabular-nums">
+              {satirlar.filter((b) => (b.restart_n ?? 0) > 0).length}
+            </span>
+          </Satir>
+        </div>
+      </div>
+
+      {/* --- ÜÇÜNCÜ KAT: PANO SÜRECİNİN KENDİSİ ---
+          systemd'nin `meridian.service` satırıyla AYNI ŞEY DEĞİL (o birim compose'u sarar);
+          uç bunu ayrı bir blok olarak veriyor (`api.py::_infra_surec`) ve operatörün ilk sorusu bu:
+          "panoyu servis eden süreç kendisi ne kadar yiyor?" */}
+      {surec === undefined ? (
+        <Olculemedi neden="Panoyu servis eden sürecin ölçümü bildirilmedi" teknik="/api/infra `surec` bloğunu döndürmedi" />
+      ) : (
+        <div className="rounded-lg border bg-muted/30 p-3">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="font-medium text-sm">Bu API süreci</span>
+            <Badge variant="outline" className="text-[10px]" title="systemd biriminden AYRI ölçüm">
+              systemd birimi DEĞİL
+            </Badge>
+          </div>
+          <div className="grid gap-x-6 sm:grid-cols-2">
+            <div>
+              <Satir etiket="PID">
+                <Deger deger={surec.pid} neden="Sürecin numarası bildirilmedi" teknik="`surec.pid` gelmedi" />
+              </Satir>
+              <Satir etiket="Çalışma süresi">
+                {sureMetni(surec.uptime_s) ?? <Olculemedi neden="Sürecin çalışma süresi bildirilmedi" teknik="`surec.uptime_s` gelmedi" kisa />}
+              </Satir>
+            </div>
+            <div>
+              <Satir etiket="CPU">
+                {surec.cpu_yuzde === null || surec.cpu_yuzde === undefined ? (
+                  <Olculemedi
+                    neden="İşlemci kullanımı ilk ölçümde hesaplanamaz"
+                    teknik={surec.cpu_yuzde_neden ?? "CPU bir DELTA'dır — ilk örnekte ölçülemez"}
+                    kisa
+                  />
+                ) : (
+                  <span className="tabular-nums">{surec.cpu_yuzde.toFixed(1)}%</span>
+                )}
+              </Satir>
+              <Satir etiket="RSS">
+                {typeof surec.rss_bayt === "number" ? (
+                  <span className="tabular-nums">{baytMetni(surec.rss_bayt)}</span>
+                ) : (
+                  <Olculemedi
+                    neden="Sürecin bellek kullanımı ölçülemedi"
+                    teknik={surec.rss_bayt_neden ?? "`surec.rss_bayt` gelmedi"}
+                    kisa
+                  />
+                )}
+              </Satir>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- YIĞILMIŞ ÇUBUK: BELLEK PAYI --- */}
+      {olculen.length > 0 ? (
+        <>
+          <ChartContainer config={yapilandirma} className="aspect-auto h-16 w-full">
+            <BarChart data={[cubuk]} layout="vertical" margin={{ left: 0, right: 0, top: 4, bottom: 0 }}>
+              <XAxis type="number" hide />
+              <YAxis type="category" dataKey="ad" hide />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    hideLabel
+                    formatter={(deger, ad) => {
+                      const b = baytMetni(typeof deger === "number" ? deger : null);
+                      const etiket = yapilandirma[String(ad)]?.label ?? String(ad);
+                      return (
+                        <span className="flex w-full justify-between gap-4">
+                          <span className="text-muted-foreground">{etiket}</span>
+                          <span className="font-mono tabular-nums">{b ?? "ölçülemedi"}</span>
+                        </span>
+                      );
+                    }}
+                  />
+                }
+              />
+              {ust.map((b, i) => (
+                <Bar isAnimationActive={false}
+                  key={b.ad ?? `b${i}`}
+                  dataKey={`b${i}`}
+                  stackId="rss"
+                  barSize={26}
+                  fill={`var(--color-b${i})`}
+                  radius={i === 0 ? [4, 0, 0, 4] : kalan.length === 0 && i === ust.length - 1 ? [0, 4, 4, 0] : 0}
+                />
+              ))}
+              {kalan.length > 0 ? (
+                <Bar isAnimationActive={false} dataKey="diger" stackId="rss" barSize={26} fill="var(--color-diger)" radius={[0, 4, 4, 0]} />
+              ) : null}
+            </BarChart>
+          </ChartContainer>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {/* KÜNYE RECHARTS'IN LEGEND'İ DEĞİL: onunki tek satırdır ve birim adları uzun
+                (`meridian-tick-watchdog.service`) — altı dilim yan yana taşardı. */}
+            {Object.entries(yapilandirma).map(([anahtar, k]) => (
+              <span key={anahtar} className="flex items-center gap-1.5 text-xs">
+                {/* RENK DOĞRUDAN YAPILANDIRMADAN: `--color-<anahtar>` değişkenlerini
+                    `ChartStyle` YALNIZ `[data-chart=…]` kapsayıcısının İÇİNE yazıyor
+                    (chart.tsx). Bu şerit kapsayıcının DIŞINDA, orada o değişken çözülmez
+                    ve şeritteki her kare şeffaf kalırdı. */}
+                <span
+                  className="size-2 shrink-0 rounded-[2px]"
+                  style={{ backgroundColor: k.color ?? "var(--muted-foreground)" }}
+                />
+                <span className="text-muted-foreground">{k.label}</span>
+              </span>
+            ))}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Yığılmış çubuk, ÖLÇÜLEN RSS toplamının ({baytMetni(toplamRss)}) bileşenlere dağılımıdır —
+            makinenin toplam belleğinin değil. En büyük {Math.min(DILIM_TAVANI, ust.length)} bileşen
+            ayrı dilim; kalanlar "diğer"de.
+            {elenen > 0
+              ? ` RSS'i ölçülemeyen ${elenen} satır paya HİÇ girmedi (0 saymak, ölçülmemişi boşta göstermek olurdu).`
+              : ""}
+          </p>
+        </>
+      ) : (
+        <Olculemedi neden="Hiçbir bileşenin bellek kullanımı ölçülemedi — pay çubuğu çizilemez" teknik="hiçbir bileşenin `rss_bayt` değeri ölçülmedi" />
+      )}
+
+      {/* --- BİLEŞEN TABLOSU --- */}
+      <div className="overflow-x-auto">
+        <Table className="min-w-[62rem]">
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead>Birim</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead>Beklenti · ölçüm · bağ</TableHead>
+              <TableHead className="text-right">CPU</TableHead>
+              <TableHead className="text-right">RSS</TableHead>
+              <TableHead className="text-right">Bellek payı</TableHead>
+              <TableHead className="text-right">Çalışma süresi</TableHead>
+              <TableHead className="text-right">Restart</TableHead>
+              <TableHead>Tanım</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {satirlar.map((b, i) => {
+              const pay =
+                typeof b.rss_bayt === "number" && toplamRss > 0 ? (b.rss_bayt / toplamRss) * 100 : null;
+              return (
+                <TableRow key={b.ad ?? `bilesen-${i}`}>
+                  <TableCell className="font-medium font-mono text-xs">
+                    <span className="flex items-center gap-1.5">
+                      {b.ad ?? <Olculemedi neden="Birimin adı bildirilmedi" teknik="satır `ad` taşımıyor" kisa />}
+                      {b.sablon ? (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px]"
+                          title="Şablon birim (`@.service`) — düz adla sorgu sahte `inactive` verir; durumu uydurulmaz."
+                        >
+                          şablon
+                        </Badge>
+                      ) : null}
+                      {b.tur === "timer" ? (
+                        <Badge variant="outline" className="text-[10px]" title="systemd timer birimi">
+                          timer
+                        </Badge>
+                      ) : null}
+                    </span>
+                  </TableCell>
+                  <TableCell>{durumRozeti(b)}</TableCell>
+                  <TableCell className="max-w-[14rem]">
+                    <BeklentiHucresi b={b} />
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {b.cpu_yuzde === null || b.cpu_yuzde === undefined ? (
+                      <Olculemedi
+                        neden="İşlemci kullanımı tek örnekle hesaplanamaz"
+                        teknik={b.cpu_yuzde_neden ?? "CPU bir DELTA'dır — tek örnekle ölçülemez"}
+                        kisa
+                      />
+                    ) : (
+                      `${b.cpu_yuzde.toFixed(1)}%`
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {typeof b.rss_bayt === "number" ? (
+                      baytMetni(b.rss_bayt)
+                    ) : (
+                      <Olculemedi
+                        neden="Bellek kullanımı ölçülemedi"
+                        teknik={b.rss_bayt_neden ?? "`rss_bayt` ölçülemedi (systemd sentineli olabilir)"}
+                        kisa
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {pay === null ? (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    ) : (
+                      <span className="flex items-center justify-end gap-2">
+                        <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted-foreground/20 sm:block">
+                          <span
+                            className="block h-full rounded-full bg-primary"
+                            style={{ width: `${Math.min(100, pay)}%` }}
+                          />
+                        </span>
+                        {pay.toFixed(1)}%
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-xs">
+                    {sureMetni(b.uptime_s) ?? (
+                      <Olculemedi neden="Çalışma süresi bildirilmedi" teknik={b.uptime_s_neden ?? "`uptime_s` gelmedi"} kisa />
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {b.restart_n === null || b.restart_n === undefined ? (
+                      <Olculemedi neden="Yeniden başlatma sayısı bildirilmedi" teknik={b.restart_n_neden ?? "`restart_n` gelmedi"} kisa />
+                    ) : (
+                      <span
+                        className={cn(
+                          b.restart_n > 0 && "font-medium text-amber-600 dark:text-amber-400",
+                        )}
+                      >
+                        <Deger deger={b.restart_n} neden="Yeniden başlatma sayacı bildirilmedi" teknik="restart sayacı gelmedi" />
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="max-w-[20rem] truncate text-muted-foreground text-xs">
+                    {b.aciklama ?? b.dosya ?? (
+                      <Olculemedi neden="Birimin ne iş yaptığı bildirilmedi" teknik="birim tanımı/dosya adı gelmedi" kisa />
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <p className="text-muted-foreground text-xs">
+        Birim adları `{g.bilesen_kaynagi?.dizin ?? "deploy/"}` altındaki GERÇEK
+        `.service`/`.timer` dosyalarından geliyor ({g.bilesen_kaynagi?.birim_n ?? satirlar.length} dosya) —
+        uç uydurulmuş bir ad bildirirse çivi (`test_birim_adlari_diskteki_gercek_dosyalardan_gelir`)
+        kırmızıya döner. `systemctl` yolu:{" "}
+        {g.bilesen_kaynagi?.systemctl_yolu ?? (
+          <Olculemedi
+            neden="Servis yönetim aracının yeri bildirilmedi"
+            teknik={g.bilesen_kaynagi?.systemctl_yolu_neden ?? "yol beyanı gelmedi"}
+            kisa
+          />
+        )}
+        . Bu tablo hiçbir birimi başlatmaz/durdurmaz; salt okunurdur.
+      </p>
+    </>
   );
 }
 
@@ -543,420 +978,16 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
       ikon={Boxes}
     >
       <Kapi durum={durum} yol="/api/infra">
-        {(g) => {
-          if (g.bilesenler === null) {
-            return (
-              <Olculemedi
-                neden="Bileşen listesi ölçülemedi"
-                teknik={
-                  g.bilesenler_olculemedi_neden ??
-                  "/api/infra `bilesenler` null döndürdü ama nedenini yazmadı — boş liste 'bileşen yok' diye okunurdu"
-                }
-              />
-            );
-          }
-          if (g.bilesenler === undefined) {
-            return <Olculemedi neden="Bileşen listesi bildirilmedi" teknik="/api/infra `bilesenler` alanını hiç döndürmüyor" />;
-          }
-          const satirlar = g.bilesenler;
-          if (satirlar.length === 0) {
-            return (
-              <p className="text-muted-foreground text-sm">
-                Uç ölçtü ve HİÇ birim bulmadı (boş liste). Bu "ölçemedim" DEĞİL — ölçemediğinde uç
-                `bilesenler: null` + neden döndürüyor.
-              </p>
-            );
-          }
-
-          // --- BELLEK PAYI: yalnız RSS'İ ÖLÇÜLMÜŞ satırlar; elenenler sayılıp yazılır.
-          const olculen = satirlar.filter((b) => typeof b.rss_bayt === "number" && b.rss_bayt >= 0);
-          const elenen = satirlar.length - olculen.length;
-          const sirali = [...olculen].sort((a, b) => (b.rss_bayt ?? 0) - (a.rss_bayt ?? 0));
-          const ust = sirali.slice(0, DILIM_TAVANI);
-          const kalan = sirali.slice(DILIM_TAVANI);
-          const kalanToplam = kalan.reduce((t, b) => t + (b.rss_bayt ?? 0), 0);
-          const toplamRss = sirali.reduce((t, b) => t + (b.rss_bayt ?? 0), 0);
-
-          // Anahtarlar CSS değişkeni adına giriyor (`--color-<anahtar>`), bu yüzden birim adı
-          // DEĞİL güvenli bir takma ad kullanılıyor: `meridian-sprint@.service` içindeki `@` ve `.`
-          // geçerli bir özel-özellik adı üretmez.
-          const yapilandirma: ChartConfig = {};
-          ust.forEach((b, i) => {
-            yapilandirma[`b${i}`] = { label: b.ad ?? `birim #${i + 1}`, color: `var(--chart-${i + 1})` };
-          });
-          if (kalan.length > 0) {
-            yapilandirma.diger = { label: `diğer (${kalan.length} bileşen)`, color: "var(--muted-foreground)" };
-          }
-          const cubuk: Record<string, number | string> = { ad: "RSS payı" };
-          ust.forEach((b, i) => {
-            cubuk[`b${i}`] = b.rss_bayt ?? 0;
-          });
-          if (kalan.length > 0) cubuk.diger = kalanToplam;
-
-          const sayi = (...siniflar: readonly InfraDurumSinifi[]) =>
-            satirlar.filter((b) => siniflar.includes(sinifiOku(b).sinif)).length;
-          const aktifN = sayi("kosuyor");
-          // SAĞLIKLI BEKLEYİŞ: `inactive` görünen ama tetikleyicisi ÖLÇÜLMÜŞ ve sağlam birimler.
-          // Bu sayı olmasaydı operatör tabloda üç "duruyor" görür ve üçünü de iş sanardı.
-          const bekleyenN = sayi("sirada_timer", "ariza_yok_onfailure");
-          // İKİ "KURULU DEĞİL" AYRI SAYILIR: biri sudo bekler, öteki hiçbir şey beklemez.
-          // Tek sayıya toplamak, gerçek eylemi envanter gürültüsünün içinde kaybediyordu.
-          const kurulmaliN = satirlar.filter((b) => sinifiOku(b).sinif === "kurulmali").length;
-          const gurultuN = sayi("envanter_gurultusu");
-          const sablonN = satirlar.filter((b) => b.sablon).length;
-          // DİKKAT KOVASI: gerçekten düşmüş servisler + sağlığı ÖLÇÜLEMEYEN tetikleyiciler.
-          // Şablon ve envanter satırları buraya GİRMEZ (adlandırılmış, eylemsiz hâller).
-          const dikkatN = sayi("olu", "arizali", "tetikleyici_bozuk", "tetikleyici_olculemedi",
-                               "tetikleyici_yok");
-          // BEKLENTİSİ ÖLÇÜLEMEYEN SATIRLAR AYRI SAYILIR: "kurulmalı" ile "beklenmiyor" arasındaki
-          // fark bir EYLEM farkıdır (sudo mu, hiçbir şey mi) ve ölçülemediğinde ikisi de iddia
-          // edilemez. Sayı ekranda durmasaydı, hüküm kurulamayan satırlar tabloda kaybolurdu.
-          const beklentisizN = satirlar.filter((b) => beklentiOku(b).hal === "olculemedi").length;
-          // KANITI EKSİK OLDUĞU İÇİN İDDİASI GERİ ÇEKİLEN SATIRLAR (`kanitKapisi`).
-          const kanitsizN = satirlar.filter((b) => kanitKapisi(b, sinifiOku(b).sinif,
-                                                               SINIF[sinifiOku(b).sinif].ton).eksik !== null).length;
-          const surec = g.surec;
-
-          return (
-            <>
-              <div className="grid gap-x-6 sm:grid-cols-2">
-                <div>
-                  <Satir etiket="Bildirilen birim">
-                    <span className="tabular-nums">{satirlar.length}</span>
-                  </Satir>
-                  <Satir etiket="Koşan (active)">
-                    <span className="tabular-nums text-emerald-600 dark:text-emerald-400">{aktifN}</span>
-                  </Satir>
-                  <Satir etiket="Sağlıklı bekleyiş (oneshot)">
-                    <span
-                      className="tabular-nums text-emerald-600 dark:text-emerald-400"
-                      title="Duruyor görünen ama tetikleyicisi ÖLÇÜLMÜŞ ve sağlam birimler: timer'ı aktif olanlar + `OnFailure` kancaları. Eylem gerektirmez."
-                    >
-                      {bekleyenN}
-                    </span>
-                  </Satir>
-                  <Satir etiket="Kurulmalı (eylem) / şablon">
-                    <span className="tabular-nums">
-                      <span
-                        className={cn(kurulmaliN > 0 && "font-medium text-amber-600 dark:text-amber-400")}
-                        title="Birim dosyası `deploy/<host>/` altında var ama makineye kurulmamış — sudo ister, operatör işi."
-                      >
-                        {kurulmaliN}
-                      </span>
-                      {" / "}
-                      <span title="`@.service` şablonu — düz adla sorgu sahte `inactive` verir, durumu `/api/sprint`ten okunur">
-                        {sablonN}
-                      </span>
-                    </span>
-                  </Satir>
-                  <Satir etiket="Envanter kopyası (eylemsiz)">
-                    <span
-                      className="tabular-nums text-muted-foreground"
-                      title="`deploy/` kökünde duran eski/genel birim dosyaları — kurulmaları BEKLENMİYOR, eksik değiller."
-                    >
-                      {gurultuN}
-                    </span>
-                  </Satir>
-                  <Satir etiket="Dikkat gerektiren">
-                    <span className={cn("tabular-nums", dikkatN > 0 && "text-amber-600 dark:text-amber-400")}>
-                      {dikkatN}
-                      {dikkatN > 0 ? " (durmuş / arızalı / tetikleyicisi ölçülemeyen)" : ""}
-                    </span>
-                  </Satir>
-                  <Satir etiket="Kurulum beklentisi ölçülemeyen">
-                    <span
-                      className="tabular-nums text-muted-foreground"
-                      title="Uç bu satırlar için `beklenen` bildirmedi — birimin kurulmasının BEKLENİP beklenmediği bilinmiyor. `false` varsaymak gerçek bir eksiği envanter gürültüsü sayardı."
-                    >
-                      {beklentisizN}
-                    </span>
-                  </Satir>
-                  <Satir etiket="İddiası kanıtsız kalan">
-                    <span
-                      className={cn("tabular-nums", kanitsizN > 0 && "text-amber-600 dark:text-amber-400")}
-                      title="Ucun sınıfı bir sağlık iddiası taşıyor ama dayandığı ölçüm (`Type=oneshot` / `beklenen` / ham `ActiveState`) bu satırda yok — rozet yeşile boyanmadı, `kanıtsız` işaretiyle amber'e düştü."
-                    >
-                      {kanitsizN}
-                    </span>
-                  </Satir>
-                </div>
-                <div>
-                  <Satir etiket="Toplam ölçülen RSS">
-                    {olculen.length === 0 ? (
-                      <Olculemedi neden="Hiçbir birimin bellek kullanımı ölçülemedi" teknik="hiçbir satırda `rss_bayt` ölçülmedi" kisa />
-                    ) : (
-                      <span className="tabular-nums">{baytMetni(toplamRss)}</span>
-                    )}
-                  </Satir>
-                  <Satir etiket="Paydan elenen satır">
-                    <span className="tabular-nums">
-                      {elenen}
-                      {elenen > 0 ? " (RSS ölçülemedi — 0 sayılmadı)" : ""}
-                    </span>
-                  </Satir>
-                  <Satir etiket="Restart taşıyan birim">
-                    <span className="tabular-nums">
-                      {satirlar.filter((b) => (b.restart_n ?? 0) > 0).length}
-                    </span>
-                  </Satir>
-                </div>
-              </div>
-
-              {/* --- TERS YÖN: MAKİNEDE FAZLADAN DURAN BİRİMLER ---
-                  Özetin hemen ardında, çünkü triyaj yukarıdan aşağı okunur ve bu blok bir EYLEM
-                  taşır (birimi kaldır ya da depoya al). Ölçülmüş temizlikte hiç çizilmez. */}
-              <BeklenmedikBirimler g={g} />
-
-              {/* --- ÜÇÜNCÜ KAT: PANO SÜRECİNİN KENDİSİ ---
-                  systemd'nin `meridian.service` satırıyla AYNI ŞEY DEĞİL (o birim compose'u sarar);
-                  uç bunu ayrı bir blok olarak veriyor (`api.py::_infra_surec`) ve operatörün ilk sorusu bu:
-                  "panoyu servis eden süreç kendisi ne kadar yiyor?" */}
-              {surec === undefined ? (
-                <Olculemedi neden="Panoyu servis eden sürecin ölçümü bildirilmedi" teknik="/api/infra `surec` bloğunu döndürmedi" />
-              ) : (
-                <div className="rounded-lg border bg-muted/30 p-3">
-                  <div className="mb-1 flex items-center gap-2">
-                    <span className="font-medium text-sm">Bu API süreci</span>
-                    <Badge variant="outline" className="text-[10px]" title="systemd biriminden AYRI ölçüm">
-                      systemd birimi DEĞİL
-                    </Badge>
-                  </div>
-                  <div className="grid gap-x-6 sm:grid-cols-2">
-                    <div>
-                      <Satir etiket="PID">
-                        <Deger deger={surec.pid} neden="Sürecin numarası bildirilmedi" teknik="`surec.pid` gelmedi" />
-                      </Satir>
-                      <Satir etiket="Çalışma süresi">
-                        {sureMetni(surec.uptime_s) ?? <Olculemedi neden="Sürecin çalışma süresi bildirilmedi" teknik="`surec.uptime_s` gelmedi" kisa />}
-                      </Satir>
-                    </div>
-                    <div>
-                      <Satir etiket="CPU">
-                        {surec.cpu_yuzde === null || surec.cpu_yuzde === undefined ? (
-                          <Olculemedi
-                            neden="İşlemci kullanımı ilk ölçümde hesaplanamaz"
-                            teknik={surec.cpu_yuzde_neden ?? "CPU bir DELTA'dır — ilk örnekte ölçülemez"}
-                            kisa
-                          />
-                        ) : (
-                          <span className="tabular-nums">{surec.cpu_yuzde.toFixed(1)}%</span>
-                        )}
-                      </Satir>
-                      <Satir etiket="RSS">
-                        {typeof surec.rss_bayt === "number" ? (
-                          <span className="tabular-nums">{baytMetni(surec.rss_bayt)}</span>
-                        ) : (
-                          <Olculemedi
-                            neden="Sürecin bellek kullanımı ölçülemedi"
-                            teknik={surec.rss_bayt_neden ?? "`surec.rss_bayt` gelmedi"}
-                            kisa
-                          />
-                        )}
-                      </Satir>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* --- YIĞILMIŞ ÇUBUK: BELLEK PAYI --- */}
-              {olculen.length > 0 ? (
-                <>
-                  <ChartContainer config={yapilandirma} className="aspect-auto h-16 w-full">
-                    <BarChart data={[cubuk]} layout="vertical" margin={{ left: 0, right: 0, top: 4, bottom: 0 }}>
-                      <XAxis type="number" hide />
-                      <YAxis type="category" dataKey="ad" hide />
-                      <ChartTooltip
-                        cursor={false}
-                        content={
-                          <ChartTooltipContent
-                            hideLabel
-                            formatter={(deger, ad) => {
-                              const b = baytMetni(typeof deger === "number" ? deger : null);
-                              const etiket = yapilandirma[String(ad)]?.label ?? String(ad);
-                              return (
-                                <span className="flex w-full justify-between gap-4">
-                                  <span className="text-muted-foreground">{etiket}</span>
-                                  <span className="font-mono tabular-nums">{b ?? "ölçülemedi"}</span>
-                                </span>
-                              );
-                            }}
-                          />
-                        }
-                      />
-                      {ust.map((b, i) => (
-                        <Bar isAnimationActive={false}
-                          key={b.ad ?? `b${i}`}
-                          dataKey={`b${i}`}
-                          stackId="rss"
-                          barSize={26}
-                          fill={`var(--color-b${i})`}
-                          radius={i === 0 ? [4, 0, 0, 4] : kalan.length === 0 && i === ust.length - 1 ? [0, 4, 4, 0] : 0}
-                        />
-                      ))}
-                      {kalan.length > 0 ? (
-                        <Bar isAnimationActive={false} dataKey="diger" stackId="rss" barSize={26} fill="var(--color-diger)" radius={[0, 4, 4, 0]} />
-                      ) : null}
-                    </BarChart>
-                  </ChartContainer>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1">
-                    {/* KÜNYE RECHARTS'IN LEGEND'İ DEĞİL: onunki tek satırdır ve birim adları uzun
-                        (`meridian-tick-watchdog.service`) — altı dilim yan yana taşardı. */}
-                    {Object.entries(yapilandirma).map(([anahtar, k]) => (
-                      <span key={anahtar} className="flex items-center gap-1.5 text-xs">
-                        {/* RENK DOĞRUDAN YAPILANDIRMADAN: `--color-<anahtar>` değişkenlerini
-                            `ChartStyle` YALNIZ `[data-chart=…]` kapsayıcısının İÇİNE yazıyor
-                            (chart.tsx). Bu şerit kapsayıcının DIŞINDA, orada o değişken çözülmez
-                            ve şeritteki her kare şeffaf kalırdı. */}
-                        <span
-                          className="size-2 shrink-0 rounded-[2px]"
-                          style={{ backgroundColor: k.color ?? "var(--muted-foreground)" }}
-                        />
-                        <span className="text-muted-foreground">{k.label}</span>
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    Yığılmış çubuk, ÖLÇÜLEN RSS toplamının ({baytMetni(toplamRss)}) bileşenlere dağılımıdır —
-                    makinenin toplam belleğinin değil. En büyük {Math.min(DILIM_TAVANI, ust.length)} bileşen
-                    ayrı dilim; kalanlar "diğer"de.
-                    {elenen > 0
-                      ? ` RSS'i ölçülemeyen ${elenen} satır paya HİÇ girmedi (0 saymak, ölçülmemişi boşta göstermek olurdu).`
-                      : ""}
-                  </p>
-                </>
-              ) : (
-                <Olculemedi neden="Hiçbir bileşenin bellek kullanımı ölçülemedi — pay çubuğu çizilemez" teknik="hiçbir bileşenin `rss_bayt` değeri ölçülmedi" />
-              )}
-
-              {/* --- BİLEŞEN TABLOSU --- */}
-              <div className="overflow-x-auto">
-                <Table className="min-w-[62rem]">
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead>Birim</TableHead>
-                      <TableHead>Durum</TableHead>
-                      <TableHead>Beklenti · ölçüm · bağ</TableHead>
-                      <TableHead className="text-right">CPU</TableHead>
-                      <TableHead className="text-right">RSS</TableHead>
-                      <TableHead className="text-right">Bellek payı</TableHead>
-                      <TableHead className="text-right">Çalışma süresi</TableHead>
-                      <TableHead className="text-right">Restart</TableHead>
-                      <TableHead>Tanım</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {satirlar.map((b, i) => {
-                      const pay =
-                        typeof b.rss_bayt === "number" && toplamRss > 0 ? (b.rss_bayt / toplamRss) * 100 : null;
-                      return (
-                        <TableRow key={b.ad ?? `bilesen-${i}`}>
-                          <TableCell className="font-medium font-mono text-xs">
-                            <span className="flex items-center gap-1.5">
-                              {b.ad ?? <Olculemedi neden="Birimin adı bildirilmedi" teknik="satır `ad` taşımıyor" kisa />}
-                              {b.sablon ? (
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px]"
-                                  title="Şablon birim (`@.service`) — düz adla sorgu sahte `inactive` verir; durumu uydurulmaz."
-                                >
-                                  şablon
-                                </Badge>
-                              ) : null}
-                              {b.tur === "timer" ? (
-                                <Badge variant="outline" className="text-[10px]" title="systemd timer birimi">
-                                  timer
-                                </Badge>
-                              ) : null}
-                            </span>
-                          </TableCell>
-                          <TableCell>{durumRozeti(b)}</TableCell>
-                          <TableCell className="max-w-[14rem]">
-                            <BeklentiHucresi b={b} />
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {b.cpu_yuzde === null || b.cpu_yuzde === undefined ? (
-                              <Olculemedi
-                                neden="İşlemci kullanımı tek örnekle hesaplanamaz"
-                                teknik={b.cpu_yuzde_neden ?? "CPU bir DELTA'dır — tek örnekle ölçülemez"}
-                                kisa
-                              />
-                            ) : (
-                              `${b.cpu_yuzde.toFixed(1)}%`
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {typeof b.rss_bayt === "number" ? (
-                              baytMetni(b.rss_bayt)
-                            ) : (
-                              <Olculemedi
-                                neden="Bellek kullanımı ölçülemedi"
-                                teknik={b.rss_bayt_neden ?? "`rss_bayt` ölçülemedi (systemd sentineli olabilir)"}
-                                kisa
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {pay === null ? (
-                              <span className="text-muted-foreground text-xs">—</span>
-                            ) : (
-                              <span className="flex items-center justify-end gap-2">
-                                <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted-foreground/20 sm:block">
-                                  <span
-                                    className="block h-full rounded-full bg-primary"
-                                    style={{ width: `${Math.min(100, pay)}%` }}
-                                  />
-                                </span>
-                                {pay.toFixed(1)}%
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums text-xs">
-                            {sureMetni(b.uptime_s) ?? (
-                              <Olculemedi neden="Çalışma süresi bildirilmedi" teknik={b.uptime_s_neden ?? "`uptime_s` gelmedi"} kisa />
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {b.restart_n === null || b.restart_n === undefined ? (
-                              <Olculemedi neden="Yeniden başlatma sayısı bildirilmedi" teknik={b.restart_n_neden ?? "`restart_n` gelmedi"} kisa />
-                            ) : (
-                              <span
-                                className={cn(
-                                  b.restart_n > 0 && "font-medium text-amber-600 dark:text-amber-400",
-                                )}
-                              >
-                                <Deger deger={b.restart_n} neden="Yeniden başlatma sayacı bildirilmedi" teknik="restart sayacı gelmedi" />
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="max-w-[20rem] truncate text-muted-foreground text-xs">
-                            {b.aciklama ?? b.dosya ?? (
-                              <Olculemedi neden="Birimin ne iş yaptığı bildirilmedi" teknik="birim tanımı/dosya adı gelmedi" kisa />
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <p className="text-muted-foreground text-xs">
-                Birim adları `{g.bilesen_kaynagi?.dizin ?? "deploy/"}` altındaki GERÇEK
-                `.service`/`.timer` dosyalarından geliyor ({g.bilesen_kaynagi?.birim_n ?? satirlar.length} dosya) —
-                uç uydurulmuş bir ad bildirirse çivi (`test_birim_adlari_diskteki_gercek_dosyalardan_gelir`)
-                kırmızıya döner. `systemctl` yolu:{" "}
-                {g.bilesen_kaynagi?.systemctl_yolu ?? (
-                  <Olculemedi
-                    neden="Servis yönetim aracının yeri bildirilmedi"
-                    teknik={g.bilesen_kaynagi?.systemctl_yolu_neden ?? "yol beyanı gelmedi"}
-                    kisa
-                  />
-                )}
-                . Bu tablo hiçbir birimi başlatmaz/durdurmaz; salt okunurdur.
-              </p>
-            </>
-          );
-        }}
+        {(g) => (
+          <>
+            {/* TERS YÖN, GÖVDENİN ERKEN ÇIKIŞLARININ ÖNÜNDE — konum bir kaza değil bir onarım:
+                blok gövdenin İÇİNDEYKEN `systemctl`siz makinede hiç çizilmiyordu. Kardeş
+                olduğu için artık birinci bacak ölçülemese de kendi hükmünü söyleyebiliyor.
+                Ölçülmüş temizlikte hiçbir şey çizmez, yani sağlıklı hâlde yer kaplamaz. */}
+            <BeklenmedikBirimler g={g} />
+            <BilesenGovdesi g={g} />
+          </>
+        )}
       </Kapi>
     </BolumKart>
   );

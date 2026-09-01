@@ -27,23 +27,32 @@ Bu yüzden karar veren üç saf işlev TSX kaynağından SÖKÜLÜP esbuild ile 
 node'da GERÇEKTEN KOŞTURULUYOR — dönen hüküm ölçülüyor. Kaynak-biçimi çivileri yalnız
 o işlevlerin EKRANA BAĞLI olduğunu (öksüz kalmadığını) sınamak için var; onlarda da
 yorumlar önce soyuluyor.
+
+SÖK/ÇEVİR/KOŞTUR HATTI ARTIK `tests/conftest.py`TE (2026-09-01). Hat burada doğdu, sonra
+v354'e KOPYALANDI ve kopya "ithal ediliyor" diye beyan edildi — beyanla gerçeğin ayrıştığı
+nokta. Tek-kaynak yasası gereği ayrıştırıcı tek yere taşındı; bu dosya davranışını
+DEĞİŞTİRMEDEN oradan alıyor.
 """
 from __future__ import annotations
 
-import json
 import re
 import shutil
-import subprocess
-import tempfile
 from pathlib import Path
 
 import pytest
+
+from tests.conftest import (
+    ESBUILD_YOLU as ESBUILD,          # araç yolu da tek kaynaktan: ikinci bir sabit ayrışırdı
+    tsx_islev_cagir,
+    tsx_islev_govdesi,
+    tsx_saf_islevleri_cevir,
+    tsx_yorumlari_soy,
+)
 
 KOK = Path(__file__).resolve().parent.parent
 SISTEM = KOK / "ui" / "src" / "pano" / "yuzeyler" / "sistem"
 BILESENLER = SISTEM / "Bilesenler.tsx"
 UCTIPLERI = SISTEM / "uctipleri.ts"
-ESBUILD = KOK / "ui" / "node_modules" / ".bin" / "esbuild"
 
 pytestmark = pytest.mark.skipif(not BILESENLER.exists(), reason="ui/ yok — pano kaynağı bu ağaçta değil")
 
@@ -54,70 +63,12 @@ arac_gerek = pytest.mark.skipif(_ARAC_YOK, reason="node/esbuild yok — TSX davr
 OKUYUCULAR = ("beklentiOku", "kuruluOku", "kanitKapisi", "baglarOku")
 
 
-def _soy(metin: str) -> str:
-    """Yorumları atar. Bir kuralın YORUMDA geçmesi uygulandığını kanıtlamaz —
-    bu deponun tekrar eden ölçüm hatası (`test_plan_cekmecesi_v311._soy` emsali)."""
-    metin = re.sub(r"\{/\*.*?\*/\}", "", metin, flags=re.S)
-    metin = re.sub(r"/\*.*?\*/", "", metin, flags=re.S)
-    metin = re.sub(r"^\s*//.*$", "", metin, flags=re.M)
-    return metin
-
-
 def _kaynak() -> str:
-    return _soy(BILESENLER.read_text(encoding="utf-8"))
-
-
-def _esle(metin: str, bas: int, ac: str, kapa: str) -> int:
-    """`bas`taki açılış imini eşleyen kapanışın BİR SONRASI."""
-    derinlik, j = 0, bas
-    while j < len(metin):
-        if metin[j] == ac:
-            derinlik += 1
-        elif metin[j] == kapa:
-            derinlik -= 1
-            if derinlik == 0:
-                return j + 1
-        j += 1
-    raise AssertionError(f"{ac} eşleşmedi (konum {bas})")
-
-
-def _kapsam(metin: str, imza: str) -> tuple[int, int]:
-    """İşlev GÖVDESİNİN açılış `{`si ile eşleşen `}`inin konumları.
-
-    NEDEN BU KADAR DİKKATLİ: "imzadan sonraki ilk `{`" YANLIŞ cevaptır. Parametre
-    yıkımı (`function X({ b }: …)`) ve nesne DÖNÜŞ TİPİ (`): { hal: … } {`) o ilk
-    süslüyü çalar; ölçüm sessizce yanlış metni inceler ve çivi hiçbir şeyi tutmaz."""
-    i = metin.find(imza)
-    assert i != -1, f"`{imza}` bulunamadı (yorumlar soyulmuş kaynakta)"
-    j = _esle(metin, metin.index("(", i), "(", ")")   # parametre listesini geç
-    while True:
-        while j < len(metin) and (metin[j].isspace() or metin[j] == ":"):
-            j += 1                                     # dönüş tipi imi (`:`) ve boşluk
-        assert j < len(metin) and metin[j] == "{", f"`{imza}` gövdesi bulunamadı"
-        bas, son = j, _esle(metin, j, "{", "}")
-        k = son
-        while k < len(metin) and metin[k].isspace():
-            k += 1
-        if k < len(metin) and metin[k] == "{":
-            j = k          # az önceki süslü DÖNÜŞ TİPİydi; gövde bir sonraki
-            continue
-        return bas, son
+    return tsx_yorumlari_soy(BILESENLER.read_text(encoding="utf-8"))
 
 
 def _govde(metin: str, imza: str) -> str:
-    """İşlevin gövdesi (süslü parantezler dâhil).
-
-    NEDEN GÖVDE, NEDEN DOSYA GENELİ DEĞİL: bir ifadenin dosyada BİR YERDE geçmesi, o
-    ifadenin ŞU işlevde durduğunu kanıtlamaz — kapı sökülüp başka bir işlevde bırakılsa
-    dosya geneline bakan ölçüm yeşil kalırdı."""
-    bas, son = _kapsam(metin, imza)
-    return metin[bas:son]
-
-
-def _islev(metin: str, imza: str) -> str:
-    """İmzasıyla birlikte işlevin TAM kaynağı — çeviriye bu gider."""
-    _, son = _kapsam(metin, imza)
-    return metin[metin.find(imza):son]
+    return tsx_islev_govdesi(metin, imza)
 
 
 _CEVRILMIS: str | None = None
@@ -127,30 +78,13 @@ def _cevir() -> str:
     """Dört saf okuyucuyu TSX'ten söküp esbuild ile JS'e çevirir (bir kez)."""
     global _CEVRILMIS
     if _CEVRILMIS is None:
-        ham = _kaynak()
-        parcalar = []
-        for ad in OKUYUCULAR:
-            imza = f"export function {ad}("
-            assert imza in ham, f"`{ad}` DIŞA AKTARILMIŞ bir işlev değil — davranışı ölçülemez"
-            parcalar.append(_islev(ham, imza))
-        ts = "\n".join(parcalar).replace("export function", "function")
-        cp = subprocess.run([str(ESBUILD), "--loader=ts"], input=ts, capture_output=True,
-                            text=True, timeout=60)
-        assert cp.returncode == 0, f"esbuild çeviremedi: {cp.stderr}"
-        _CEVRILMIS = cp.stdout
+        _CEVRILMIS = tsx_saf_islevleri_cevir(_kaynak(), OKUYUCULAR)
     return _CEVRILMIS
 
 
 def _cagir(ad: str, *argumanlar) -> object:
     """Sökülen okuyucuyu node'da GERÇEKTEN çağırır ve dönen hükmü verir."""
-    js = (_cevir() + "\nconst __a = " + json.dumps(list(argumanlar), ensure_ascii=False)
-          + f";\nconsole.log(JSON.stringify({ad}(...__a)));\n")
-    with tempfile.TemporaryDirectory() as d:
-        yol = Path(d) / "olcum.mjs"
-        yol.write_text(js, encoding="utf-8")
-        cp = subprocess.run(["node", str(yol)], capture_output=True, text=True, timeout=60)
-    assert cp.returncode == 0, f"node çalıştıramadı: {cp.stderr}"
-    return json.loads(cp.stdout.strip().split("\n")[-1])
+    return tsx_islev_cagir(_cevir(), ad, *argumanlar)
 
 
 # --- POZİTİF KONTROL: ölçüm hattının kendisi çalışıyor mu ------------------
