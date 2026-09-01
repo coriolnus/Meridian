@@ -416,6 +416,37 @@ export interface InfraBilesen {
   readonly aciklama_neden?: string | null;
 }
 
+/**
+ * TERS YÖN — makinede DURAN ama `deploy/` ağacında karşılığı OLMAYAN bir birim
+ * (`api.py::_infra_beklenmedik`). `bilesenler` EKSİĞİ gösterir, bu satırlar FAZLAYI.
+ *
+ * `durum` systemd `UnitFileState`tir (enabled/disabled/static/masked), `ActiveState` DEĞİL:
+ * birimin ŞU AN koşup koşmadığını SÖYLEMEZ. Ucun kendi beyanı `beklenmedik_olcum.durum_alani`
+ * alanında gelir ve pano onu ekranda taşır — yoksa `disabled` gören operatör "duruyor" diye
+ * okur ve ölçülmemiş bir hüküm kurar.
+ */
+export interface InfraBeklenmedikBirim {
+  readonly birim?: string;
+  /** null = STATE sütunu bu satırda gelmedi (gerekçe `durum_neden`) — "kapalı" DEĞİL. */
+  readonly durum?: string | null;
+  readonly durum_neden?: string | null;
+}
+
+/**
+ * Bacağın ÖLÇÜM KÜNYESİ — kazanç kadar BEDEL de beyanlı (`api.py::_infra_beklenmedik`).
+ * Sorgu DAR bir desenle sınırlıdır; desene uymayan birimler bu bacağa GÖRÜNMEZ ve bu körlük
+ * ekranda söylenmeli (bedel yasası).
+ */
+export interface InfraBeklenmedikOlcum {
+  readonly komut?: string;
+  readonly durum_alani?: string;
+  readonly kapsam_disi?: string;
+  /** null = makinedeki birimler sayılamadı (gerekçe kardeşinde) — 0 DEĞİL. */
+  readonly makinedeki_birim_n?: number | null;
+  readonly makinedeki_birim_n_neden?: string | null;
+  readonly repo_birim_n?: number;
+}
+
 export interface InfraGovdesi {
   readonly hesaplama_ts?: string;
   readonly onbellekten?: boolean;
@@ -428,6 +459,14 @@ export interface InfraGovdesi {
   /** null = `systemctl` yok / ölçülemedi. BOŞ LİSTE DEĞİL — ikisi ayrı gerçek. */
   readonly bilesenler?: readonly InfraBilesen[] | null;
   readonly bilesenler_olculemedi_neden?: string | null;
+  /**
+   * KEŞFİN İKİNCİ (TERS) BACAĞI. `null` = ölçülemedi (gerekçe `beklenmedik_birimler_neden`);
+   * `[]` = ÖLÇÜLDÜ ve fazlalık yok. İkisi ASLA karışmaz — karıştıkları gün pano ölçülmemiş bir
+   * TEMİZLİK beyan eder. Alanın hiç gelmemesi de üçüncü hâldir (eski gövde).
+   */
+  readonly beklenmedik_birimler?: readonly InfraBeklenmedikBirim[] | null;
+  readonly beklenmedik_birimler_neden?: string | null;
+  readonly beklenmedik_olcum?: InfraBeklenmedikOlcum;
   readonly bilesen_kaynagi?: {
     readonly dizin?: string;
     readonly birim_n?: number;

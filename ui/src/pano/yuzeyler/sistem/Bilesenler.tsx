@@ -45,7 +45,7 @@ import { cn } from "@/lib/utils";
 
 import type { Durum } from "../../veri";
 import { BolumKart, Deger, Kapi, Olculemedi, Satir, baytMetni, sureMetni } from "./parcalar";
-import type { InfraBilesen, InfraDurumSinifi, InfraGovdesi } from "./uctipleri";
+import type { InfraBeklenmedikBirim, InfraBilesen, InfraDurumSinifi, InfraGovdesi } from "./uctipleri";
 
 /** Yığılmış çubukta en çok bu kadar AYRI bileşen; kalanı tek "diğer" dilimine iner.
  *  Sınır palet genişliğinden geliyor: `--chart-1..5` beş rol jetonu var ve altıncı
@@ -354,6 +354,186 @@ function BeklentiHucresi({ b }: { readonly b: InfraBilesen }) {
   );
 }
 
+/* --- TERS YÖN: MAKİNEDE DURUYOR, DEPODA KARŞILIĞI YOK ----------------------
+   Yukarıdaki her şey TEK YÖNLÜDÜR: soru kümesi `deploy/` ağacındaki dosya listesinden doğar,
+   yani makinede duran ama repoda karşılığı OLMAYAN bir birim o bacağa HİÇ görünmez — çünkü hiç
+   sorulmaz. Ölçülmüş vaka (canlı A1, 2026-09-01): `meridian-dash.service` makinede duruyordu,
+   `deploy/` ağacında yoktu; pano "bileşenler listelendi" derken listelenmeyen bir birim vardı.
+   Uç ikinci bacağı 2026-09-01'de yayına aldı (`api.py::_infra_beklenmedik`); aşağısı onun
+   EKRAN tarafıdır — o güne kadar alanın hiçbir okuyucusu yoktu (YASA 6 borcu, TSK-086).
+
+   ÜÇ AYRIM BURADA TAŞINIYOR:
+   1) `[]` ile `null` ASLA KARIŞMAZ. Boş liste "ölçtük, fazlalık yok"; `null` "ölçemedik".
+      İkincisi ekranda GÖRÜNÜR — ölçülmemiş bir temizlik beyan edilemez. Yerelde (macOS,
+      `systemctl` yok) normal hâl budur ve doğrudur.
+   2) BOŞ LİSTE ROZET ÇİZDİRMEZ. "0 beklenmedik birim" her gün okunan, hiçbir zaman iş
+      çıkarmayan bir satır olurdu; sinyal gürültüde kaybolur. Sessizlik burada bir KARARDIR —
+      ama yalnız ÖLÇÜLMÜŞ temizlik için: "ölçemedik" susturulmaz.
+   3) `durum` "KOŞUYOR MU" DEMEK DEĞİLDİR. `list-unit-files` STATE sütunu `UnitFileState`tir
+      (enabled/disabled/static/masked), `ActiveState` DEĞİL. Ucun beyanı (`durum_alani`) ekranda
+      ipucu olarak taşınıyor; `disabled` görüp "duruyor" diye okumak ölçülmemiş bir hükümdür.
+
+   Okuyucular SAF ve DIŞA AKTARILMIŞ (JSX yok, kancasız): davranışları
+   `tests/test_pano_beklenmedik_birim_v354.py` içinde node'da GERÇEKTEN koşturularak ölçülür —
+   "kaynakta şu dize geçiyor mu" diye değil. Yükleme/oturum/hata hâlleri bu bloğun işi DEĞİL:
+   `Kapi` üstte hepsini karşılıyor (uç en kötü ~6,5 sn sürebilir, nabız 15 sn). */
+
+export type BeklenmedikHali = "temiz" | "var" | "olculemedi";
+
+/**
+ * BACAĞIN HÜKMÜ — ÜÇ DEĞERLİ ve üçü de ekranda ayrı.
+ *
+ * `null` (ölçülemedi) ile `[]` (ölçüldü, temiz) BİLEREK `Array.isArray` ile değil AÇIK
+ * boşluk kontrolüyle ayrılıyor: alanın HİÇ GELMEMESİ de (eski/kırpılmış gövde) üçüncü bir
+ * hâldir ve `[]` varsaymak, hiç sorulmamış bir soruya olumlu cevap uydurmak olurdu.
+ */
+export function beklenmedikOku(g: InfraGovdesi): {
+  hal: BeklenmedikHali;
+  birimler: readonly InfraBeklenmedikBirim[];
+  neden: string | null;
+} {
+  const liste = g.beklenmedik_birimler;
+  if (liste === null || liste === undefined) {
+    return {
+      hal: "olculemedi",
+      birimler: [],
+      neden:
+        g.beklenmedik_birimler_neden ??
+        "Uç makinede fazladan duran birimleri bu istekte bildirmedi — makinenin temiz olduğu ölçülmedi",
+    };
+  }
+  if (liste.length === 0) return { hal: "temiz", birimler: [], neden: null };
+  return { hal: "var", birimler: liste, neden: null };
+}
+
+/**
+ * BİR SATIRIN ETKİNLİK DURUMU. Boş/eksik `durum` "kapalı" DEĞİL "ölçülemedi"dir: uç STATE
+ * sütununu göremediğinde `durum_neden` yazıyor ve o gerekçe ekranda taşınır.
+ */
+export function beklenmedikDurumOku(b: InfraBeklenmedikBirim): {
+  metin: string | null;
+  olculdu: boolean;
+  neden: string | null;
+} {
+  const d = b.durum;
+  if (typeof d === "string" && d.trim() !== "") return { metin: d.trim(), olculdu: true, neden: null };
+  return {
+    metin: null,
+    olculdu: false,
+    neden:
+      b.durum_neden ??
+      "Birim dosyasının etkinlik durumu bu satırda gelmedi — durum uydurulmuyor",
+  };
+}
+
+/**
+ * ÖLÇÜMÜN KÜNYESİ — BEDEL YASASI'nın ekran tarafı. Bacak yalnız dar bir desen sorar ve desene
+ * uymayan birimlere KÖRDÜR; kazanç (bulunan fazlalık) ekranda dururken bu körlük ekranda
+ * durmazsa, körlüğün belirtisi hiçbir şeydir (vaka @bekci, 2026-08-30). Sayım ölçülemediğinde
+ * `0` yazılmaz: "hiç birim yok" diye okunurdu.
+ */
+export function beklenmedikBedelOku(g: InfraGovdesi): {
+  kapsam: string | null;
+  durumAlani: string | null;
+  makinedeN: number | null;
+  makinedeNeden: string | null;
+  repoN: number | null;
+} {
+  const o = g.beklenmedik_olcum;
+  const n = o?.makinedeki_birim_n;
+  const r = o?.repo_birim_n;
+  return {
+    kapsam: o?.kapsam_disi ?? null,
+    durumAlani: o?.durum_alani ?? null,
+    makinedeN: typeof n === "number" ? n : null,
+    makinedeNeden: o?.makinedeki_birim_n_neden ?? null,
+    repoN: typeof r === "number" ? r : null,
+  };
+}
+
+/** Rozet + liste. Ölçülmüş temizlikte HİÇBİR ŞEY çizmez (tek sessiz çıkış, bilerek tek). */
+function BeklenmedikBirimler({ g }: { readonly g: InfraGovdesi }) {
+  const bek = beklenmedikOku(g);
+  if (bek.hal === "temiz") return null;
+  const bedel = beklenmedikBedelOku(g);
+  if (bek.hal === "olculemedi") {
+    return (
+      <div>
+        <Olculemedi
+          neden="Makinede fazladan duran birimler bu ölçümde sayılamadı"
+          teknik={bek.neden ?? undefined}
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <Badge
+          variant="outline"
+          className={cn("gap-1.5", TON_METNI.dikkat)}
+          title="Bu birimler makinede duruyor ama dağıtım ağacında karşılıkları yok — yukarıdaki tablo onları hiç sormaz"
+        >
+          <span className={cn("size-1.5 rounded-full", TON_NOKTASI.dikkat)} />
+          {bek.birimler.length} beklenmedik birim
+        </Badge>
+        <span className="font-medium text-sm">Makinede duruyor, depoda karşılığı yok</span>
+      </div>
+      <ul className="flex flex-col gap-1">
+        {bek.birimler.map((b, i) => {
+          const d = beklenmedikDurumOku(b);
+          return (
+            <li key={b.birim ?? `beklenmedik-${i}`} className="flex flex-wrap items-baseline gap-2">
+              <span className="font-mono text-xs">
+                {b.birim ?? (
+                  <Olculemedi neden="Birimin adı bildirilmedi" teknik="satır birim adı taşımıyor" kisa />
+                )}
+              </span>
+              {d.olculdu ? (
+                <span
+                  className="text-muted-foreground text-xs"
+                  title={
+                    bedel.durumAlani ??
+                    "Bu sütunun ne ölçtüğü bildirilmedi — birimin şu an koşup koşmadığını söylemez"
+                  }
+                >
+                  {d.metin}
+                </span>
+              ) : (
+                <Olculemedi
+                  neden="Birim dosyasının etkinlik durumu ölçülemedi"
+                  teknik={d.neden ?? undefined}
+                  kisa
+                />
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-2 text-muted-foreground text-xs">
+        Ters yön: yukarıdaki tablo depoda olup makinede EKSİK olanı, bu blok makinede olup depoda
+        OLMAYANI gösterir.{" "}
+        {bedel.makinedeN === null ? (
+          <Olculemedi
+            neden="Makinede kaç birim tarandığı bildirilmedi"
+            teknik={bedel.makinedeNeden ?? undefined}
+            kisa
+          />
+        ) : (
+          <span className="tabular-nums">
+            Tarama {bedel.makinedeN} birim gördü
+            {bedel.repoN === null ? "" : `, depoda tanınan ${bedel.repoN}`}.
+          </span>
+        )}{" "}
+        <span title={bedel.kapsam ?? "Taramanın kapsamı bildirilmedi"}>
+          Tarama dar kapsamlıdır: desene uymayan birimler bu listede görünmez.
+        </span>{" "}
+        Listedeki durum, birim dosyasının etkinliğidir — şu an koşup koşmadığı değil.
+      </p>
+    </div>
+  );
+}
+
 export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
   return (
     <BolumKart
@@ -521,6 +701,11 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                   </Satir>
                 </div>
               </div>
+
+              {/* --- TERS YÖN: MAKİNEDE FAZLADAN DURAN BİRİMLER ---
+                  Özetin hemen ardında, çünkü triyaj yukarıdan aşağı okunur ve bu blok bir EYLEM
+                  taşır (birimi kaldır ya da depoya al). Ölçülmüş temizlikte hiç çizilmez. */}
+              <BeklenmedikBirimler g={g} />
 
               {/* --- ÜÇÜNCÜ KAT: PANO SÜRECİNİN KENDİSİ ---
                   systemd'nin `meridian.service` satırıyla AYNI ŞEY DEĞİL (o birim compose'u sarar);
