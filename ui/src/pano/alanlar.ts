@@ -4,8 +4,14 @@
    OPERATÖR KARARI (2026-08-25): pano tamamen studio-admin şablonuna geçiyor ve
    gezinme AĞACI ŞABLONUNKİDİR — Meridian'ın eski yedi yüzeyi (bugun/portfoy/
    karar/analiz/saglik/ogrenme/kilitler) artık bir gezinme birimi DEĞİL. Şablonun
-   tuttuğumuz on beş yüzeyi (7 pano + 8 sayfa) ve Meridian'ın yirmi iki bölümü
-   burada BİREBİR eşleşiyor; eşleşmeyen bölüm YOK ve düşen bölüm YOK.
+   tuttuğumuz on beş yüzeyi (7 pano + 8 sayfa) ve Meridian'ın o günkü yirmi iki bölümü
+   burada BİREBİR eşleşiyordu; eşleşmeyen bölüm YOK ve düşen bölüm YOK.
+
+   KAYIT O GÜNDEN BERİ BÜYÜDÜ ve sayı burada DONDURULMAZ (bayat-beyan sınıfı): bugün
+   16 yüzey · 36 bölüm (ölçüldü 2026-09-01). Onaltıncısı `gateway` (Kapı, TSK-090) ve
+   ŞABLONDA KARŞILIĞI YOK — yukarıdaki "birebir eşleşme" cümlesi göç turunun ölçümüdür,
+   bugünün sözleşmesi değil. Yeni yüzey şablondan değil Meridian'ın kendi altyapısından
+   doğduğu için `sablon` alanı bunu açıkça yazar.
 
    YOLLAR ŞABLONUNKİYLE AYNI (`/dashboard/finance` …) ve bu bilinçli: şablondan
    alınan arama iletişimi, kenar çubuğu ve gelecekte alınacak sayfa gövdeleri bu
@@ -25,9 +31,11 @@ import {
   Brain,
   CalendarDays,
   CandlestickChart,
+  ChartColumn,
   ClipboardCheck,
   Cpu,
   Database,
+  DoorOpen,
   Eye,
   FileText,
   FlaskConical,
@@ -36,6 +44,7 @@ import {
   GaugeCircle,
   GraduationCap,
   Hammer,
+  HeartPulse,
   Kanban,
   KeyRound,
   Layers,
@@ -46,6 +55,7 @@ import {
   Map as HaritaIkonu,
   MessageSquare,
   MessagesSquare,
+  Milestone,
   Radar,
   Scale,
   Send,
@@ -58,6 +68,7 @@ import {
   UserRound,
   Users,
   Wallet,
+  Waypoints,
 } from "lucide-react";
 
 export interface Bolum {
@@ -186,6 +197,31 @@ export const YUZEYLER = {
       { kimlik: "veriboru", baslik: "Veri borusu", soru: "Veri nereden geliyor, nerede tıkandı?", ikon: Database },
       { kimlik: "market", baslik: "Piyasa", soru: "Kaç bar bayat, evren taze mi?", ikon: CandlestickChart },
       { kimlik: "intraday", baslik: "Seans içi akış", soru: "Gün içi akış canlı mı?", ikon: Activity },
+    ],
+  },
+  /* KAPI — TSK-090. ŞABLONDA KARŞILIĞI OLMAYAN İLK YÜZEY ve `sablon` alanı bunu SÖYLER.
+     Buraya uydurma bir şablon adı ("Gateway") yazmak, kaydın kendi sözleşmesini ("eşleşmenin
+     hangi sayfadan geldiği KAYBOLMASIN") tersine çevirirdi: alan tam da hangi eşleşmenin
+     GERÇEK olduğunu tutuyor, ve burada gerçek olan eşleşme YOKLUĞUdur.
+
+     SİSTEM SAĞLIĞININ HEMEN ARDINDA, ve sıra bir kaza değil: ikisi de "makine sağlam mı"
+     sorusunun katmanları — biri kutuyu ve süreçleri, öteki kutunun ÖNÜNDEKİ kapıyı ölçer.
+     Bir arıza triyajı yukarıdan aşağı okunur ve kapı, uygulamaya varmadan önceki duraktır.
+
+     DÖRT BÖLÜM = EKRANDAKİ DÖRT `bolum-kapi-*` ÇAPASI (v288 paritesi). Kimlikler `kapi-`
+     önekli çünkü kayıt sözlüğü bölüm kimliğini KÜRESEL tutuyor: çıplak `saglik`/`metrikler`
+     bir gün başka bir yüzeyde de doğar ve biri ötekini sessizce ezerdi. */
+  gateway: {
+    sablon: "(şablonda karşılığı yok — Meridian'a özgü)",
+    baslik: "Kapı",
+    soru: "İstekler dışarı hangi kapıdan çıkıyor, kapı sağlam mı?",
+    ikon: DoorOpen,
+    grup: "Panolar",
+    bolumler: [
+      { kimlik: "kapi-saglik", baslik: "Kapının sağlığı", soru: "APISIX'in yönetim ve metrik yüzeyleri okunabiliyor mu?", ikon: HeartPulse },
+      { kimlik: "kapi-rotalar", baslik: "LLM rotaları", soru: "Hangi model önce deneniyor, düşerse nereye geçiliyor?", ikon: Waypoints },
+      { kimlik: "kapi-metrikler", baslik: "Kapıdan geçen trafik", soru: "Hangi rotadan kaç istek geçti, hangi durum koduyla döndü?", ikon: ChartColumn },
+      { kimlik: "kapi-fazlar", baslik: "Kurulum fazları", soru: "Kapının hangi fazı canlı, hangisi hâlâ bekliyor?", ikon: Milestone },
     ],
   },
   "file-manager": {

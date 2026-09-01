@@ -1,10 +1,16 @@
 /* ============================================================================
    KENAR ÇUBUĞU MADDELERİ — `YUZEYLER`den TÜRETİLİR, elle yazılmaz
    ----------------------------------------------------------------------------
-   Şablonun `sidebar-items.ts`i elle yazılmış sabit bir listeydi ve on beş yüzeyin
+   Şablonun `sidebar-items.ts`i elle yazılmış sabit bir listeydi ve her yüzeyin
    adı orada, yolu başka yerde, içeriği üçüncü bir yerde duruyordu. Burada liste
    bir TÜREVDİR: bir bölüm eklemek `alanlar.ts`e bir satır yazmaktır; gezinme,
    yönlendirme, arama ve sayfa gövdesi dördü birden takip eder.
+
+   `sidebar-items.ts`teki `sidebarItems` sabiti BU YÜZDEN ÖLÜDÜR: oradan yalnız TİPLER
+   (`NavGroup`/`NavMainItem`) alınıyor, liste hiçbir yerde tüketilmiyor (ölçüldü
+   2026-09-01: tek tüketici `search-dialog.tsx` ve o da `gezinmeGruplari`yi alıyor).
+   Yeni bir yüzeyi oraya da yazmak, ekranda hiçbir şey değiştirmeyen ama sessizce
+   ayrışacak İKİNCİ bir kopya üretirdi — tek-kaynak yasasının kapattığı sınıf.
 
    GRUPLAMA ŞABLONUNKİDİR (Panolar / Sayfalar) — operatörün seçtiği ağaç bu.
    ============================================================================ */

@@ -151,6 +151,13 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   tercihler: ["tema", "yerlesim", "yuz", "arayuz", "gece", "gunduz"],
   giris: ["login", "parola", "oturum", "sifre", "kapi"],
   kayit: ["register", "yeni kullanici", "signup", "ilk parola"],
+  // KAPI YÜZEYİ (TSK-090). Kimlikler `kapi-` önekli (kayıt sözlüğü bölüm kimliğini KÜRESEL
+  // tutuyor) ama operatör "apisix", "rota", "429" diye arar — anahtarlar onun aklındaki
+  // kelimeyi taşır, başlıktakini değil.
+  "kapi-saglik": ["apisix", "gateway", "admin api", "prometheus", "9180", "9091"],
+  "kapi-rotalar": ["rota", "route", "llm", "openrouter", "model", "fallback", "zincir", "egress"],
+  "kapi-metrikler": ["trafik", "istek", "durum kodu", "429", "sayac", "metrik"],
+  "kapi-fazlar": ["faz", "tsk-089", "kurulum", "ingress", "filo", "kota"],
 };
 
 const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {
@@ -160,6 +167,7 @@ const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {
   productivity: ["antrenman", "sprint", "hermes", "makine"],
   academy: ["ogrenme", "karne", "akademi", "beyin"],
   infrastructure: ["saglik", "altyapi", "sistem", "makine", "alarm", "kilit"],
+  gateway: ["kapi", "apisix", "gateway", "rota", "llm", "egress", "proxy", "vekil"],
   "file-manager": ["belge", "hafiza", "dosya", "ders"],
   chat: ["ajan", "sohbet", "chat"],
   calendar: ["cizelge", "takvim", "zamanlanmis"],
