@@ -12,10 +12,10 @@ göre scheduler, hermes_runtime, mirror_stream, marketstream/barfeed ve intraday
 ayağa kaldırır), `_auth` (oturum çerezi + başlık token'ı), `_auth_posture_check` (açılış yetki
 duruşu), `_NativeRoute` (her uç dönüşü `store.sanitize`den geçer: numpy tipleri ve NaN/±Inf telden
 çıkamaz). Uç aileleri: /healthz, /metrics, /api/summary, /api/diagnostics, /api/hermes,
-/api/scheduler, /api/alpaca, /api/approvals, /api/halt, /api/resume, /api/infra, /api/roadmap…
-Son ikisi state/ DIŞINA bakan tek okuma yüzeyleridir: `/api/infra` işletim sistemine (çekirdek,
-bellek, disk, systemd birimleri), `/api/roadmap` depo kökündeki `ROADMAP.md`ye. İkisi de yalnız
-standart kütüphaneyle ölçer (psutil bağımlılığı YOK) ve ölçemediği alanı None + neden döndürür.
+/api/scheduler, /api/alpaca, /api/approvals, /api/halt, /api/resume, /api/infra, /api/roadmap,
+/api/gateway… Son ÜÇÜ state/ DIŞINA bakar: `/api/infra` işletim sistemine (çekirdek, bellek, disk,
+systemd), `/api/roadmap` depo kökündeki `ROADMAP.md`ye, `/api/gateway` APISIX kapısına (Admin API +
+prometheus, loopback). Üçü de yalnız stdlib'le ölçer (psutil YOK), ölçemediğini None + neden yazar.
 
 Değişmezler: loopback DIŞINA parolasız bağlanma süreci BAŞLATMAZ (fail-closed RuntimeError); okuma
 uçları durum ÜRETMEZ (hesabı analytics/health/scheduler yapar); yazma yüzeyi operatör niyetiyle
@@ -7058,6 +7058,289 @@ def api_infra(request: Request, taze: int = 0):
     _INFRA_CACHE.clear()            # tek girdi: kum havuzu anahtarları birikip sızmasın (diag emsali)
     _INFRA_CACHE[anahtar] = (yuk, _time.monotonic())
     return yuk
+
+
+# =================================================================================================
+# v361 · KAPI YÜZEYİ — `/api/gateway` (TSK-090 Görev 1): APISIX'in SALT-OKUNUR pano vekili
+# =================================================================================================
+#
+# NEDEN VEKİL, NEDEN DOĞRUDAN DEĞİL. APISIX'in yönetim yüzeyi (Admin API 9180) ve metrik yüzeyi
+# (prometheus 9091) A1'de YALNIZ loopback'te dinler ve Admin API `X-API-KEY` ister. Tarayıcının
+# oraya gitmesinin iki yolu olurdu: (a) portları dışarı açmak, (b) admin anahtarını panoya
+# indirmek. İkisi de altyapının tamamını bir XSS'in menziline sokar. Bu uç üçüncü yoldur: SUNUCU
+# okur, SÜZER, anahtarsız bir gövde döner. Bu yüzden buradaki en sert sözleşme sır sözleşmesidir.
+#
+# SIR ÜÇ YERDEN SIZABİLİRDİ, ÜÇÜ DE KAPALI:
+#   1. Admin anahtarı — yalnız giden isteğin başlığında yaşar; gövdeye, `neden`e, loga GİRMEZ.
+#   2. İstisna metni — alt katmanlar kimlik bilgisini hata metnine basabilir (URL'e gömülü
+#      credential klasiği). `_kapi_maskele` ikinci savunma hattıdır: gerekçe SİLİNMEZ (körlük
+#      açardı), yalnız sır maskelenir.
+#   3. Rota gövdesindeki `auth.header.Authorization` — tasarım kararı "sırlar $ENV referansı
+#      olarak, değer asla" (TSK-090). `$env://…` bir sır DEĞİL, sırra bir referanstır ve operatör
+#      "hangi env okunuyor" sorusunu panodan cevaplar. Ama `$env://` ile BAŞLAMAYAN bir değer,
+#      etcd'ye kazara yazılmış GERÇEK bir anahtar demektir (tünel-CRUD sapması — TSK-089'un adlı
+#      riski) ve panoya çıkMAZ. Gizleme SESSİZ değildir: alanda "gizlendi" beyanı kalır.
+#
+# ÖLÇÜLEMEZLİK BU UCUN NORMAL HÂLİDİR. Geliştirme makinesinde 9180 de 9091 de yoktur ve
+# `/opt/apisix/.env-apisix` de yoktur. `istek_n: 0` yazmak panoda "kapıdan hiç istek geçmemiş"
+# diye okunur — oysa ölçülen "ölçemedim"dir. Bu yüzden: erişilemezlik 500 DEĞİL (pano tümden
+# kararırdı), 200 + `saglik.*=false` + DOLU `neden`. Ve `atlanan_satir` erişilemezken `0` değil
+# `None`dır: "bozuk satır yok" ile "hiç satır görmedim" aynı şey değildir.
+#
+# ZAMAN AŞIMI SÖZLEŞMESİ. Kapı düşüp SYN'i yutarsa varsayılan soket zaman aşımı SONSUZdur; 15
+# sn'de bir yoklanan bir pano ucunda bu, istek ipliklerinin birikmesi demektir. İki çağrının
+# ikisi de ≤2 sn (çivili: `tests/test_kapi_yuzeyi_v361.py`).
+KAPI_ADMIN_URL = "http://127.0.0.1:9180/apisix/admin/routes"
+KAPI_PROMETHEUS_URL = "http://127.0.0.1:9091/apisix/prometheus/metrics"
+# Anahtar dosyası A1'de 0600 ve F9 dışıdır (TSK-089 kurulum kaydı). Yol bir SABİTTİR, testler
+# monkeypatch'ler — bu makinede dosya yoktur ve olmaması ihlal değil, ÖLÇÜM SONUCUDUR.
+KAPI_ENV_DOSYASI = "/opt/apisix/.env-apisix"
+KAPI_ANAHTAR_ONEKI = "APISIX_ADMIN_KEY="
+KAPI_ZAMAN_ASIMI_S = 2.0
+KAPI_ROTA_KAYNAGI = "deploy/apisix/routes.yaml"
+
+# FAZ İMZALARI — TSK-089'un dört fazı SABİT METİN DEĞİLDİR. Sabit yazılsaydı Faz 2 indiği gün
+# pano "bekliyor" demeye devam ederdi ve kimse fark etmezdi (F9 sınıfı ayrışma). Her faz, rota
+# gövdesinde ARANAN bir plugin imzasından türetilir ve kanıtı gövdeye BEYAN edilir.
+#
+# BEDELİ AÇIKÇA TAŞINIR (bedel yasası): türetim YALNIZ `/apisix/admin/routes`u okur. Rota DIŞINDA
+# yaşayan artefaktlar — consumer_groups, ssl nesneleri — bu yüzeyden görünmez; yani Faz 4'ün
+# filo kotası consumer-group'ta kurulup rotaya hiç dokunmazsa bu uç onu "bekliyor" görür.
+# Kazanılan: dört faz için tek kaynak ve otomatik güncellik. Kaybedilen: rota-dışı kurulum
+# gecikmeli görünür. Kapsam beyanı `fazlar_kapsam_neden` alanında panoya da çıkar.
+_KAPI_FAZ_IMZALARI = (
+    ("faz1_llm", "ai-proxy-multi",
+     "Faz 1 imzası: bir rotada `ai-proxy-multi` (LLM öncelik zinciri) tanımlı"),
+    ("faz2_fmp", "limit-count",
+     "Faz 2 imzası: bir rotada `limit-count` (FMP egress günlük kotası) tanımlı"),
+    ("faz3_ingress", "key-auth",
+     "Faz 3 imzası: bir rotada `key-auth` (pano ingress consumer kimliği) tanımlı"),
+    ("faz4_filo", "consumer-restriction",
+     "Faz 4 imzası: bir rotada `consumer-restriction` (bot filosu ayrımı) tanımlı"),
+)
+_KAPI_FAZ_KAPSAMI = ("Fazlar YALNIZ /apisix/admin/routes gövdelerindeki plugin imzalarından "
+                     "türetilir; rota DIŞINDA yaşayan artefaktlar (consumer_groups, ssl) bu "
+                     "yüzeyden görünmez ve o fazlar gecikmeli 'canli' olur.")
+
+# `apisix_http_status{code="200",route="llm-danisma",…} 12` — sondaki isteğe bağlı jeton
+# prometheus'un zaman damgası alanıdır (APISIX basmaz, ama basan bir sürüm çıkarsa satır BOZUK
+# sayılmamalı: bozuk sayacının değeri gerçek bozulmayı göstermesinden gelir).
+_KAPI_PROM_SATIR = re.compile(r"^apisix_http_status\{(?P<etiket>[^}]*)\}\s+(?P<deger>\S+)(?:\s+\S+)?$")
+_KAPI_PROM_ETIKET = re.compile(r'(\w+)="([^"]*)"')
+_KAPI_METRIK_ONEKI = "apisix_http_status"
+
+
+def _kapi_maskele(metin: str, sir: str | None) -> str:
+    """İKİNCİ SAVUNMA HATTI: bir sır kazara metne girdiyse dışarı çıkmaz.
+
+    Birinci hat anahtarı hiçbir yere YAZMAMAKTIR; bu fonksiyon o hattın delindiği günü karşılar
+    (alt kütüphaneler kimlik bilgisini istisna metnine basabilir). Gerekçenin KENDİSİ silinmez —
+    silmek sızıntıyı kapatıp körlüğü açardı."""
+    if sir and len(sir) >= 8 and sir in metin:
+        return metin.replace(sir, "***")
+    return metin
+
+
+def _kapi_admin_anahtari() -> tuple[str | None, str | None]:
+    """`(anahtar, neden)` — anahtar DÖNER ama hiçbir çıktıya BASILMAZ; `neden` sır taşımaz."""
+    yol = Path(KAPI_ENV_DOSYASI)
+    try:
+        satirlar = yol.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as e:
+        return None, (f"admin anahtar dosyası okunamadı ({type(e).__name__}): {KAPI_ENV_DOSYASI} "
+                      f"— bu makinede APISIX kurulu değil ya da dosya erişilemez")
+    for satir in satirlar:
+        if satir.startswith(KAPI_ANAHTAR_ONEKI):
+            deger = satir.split("=", 1)[1].strip()
+            if deger:
+                return deger, None
+            return None, f"{KAPI_ENV_DOSYASI} içindeki {KAPI_ANAHTAR_ONEKI} satırı BOŞ"
+    return None, f"{KAPI_ENV_DOSYASI} içinde {KAPI_ANAHTAR_ONEKI} satırı yok"
+
+
+def _kapi_getir(url: str, basliklar: dict | None, sir: str | None) -> tuple[bytes | None, str | None]:
+    """Tek GET. `(govde, neden)` — ikisinden tam biri doludur."""
+    import urllib.request                    # dosya konvansiyonu: dar kullanımlı import fonksiyonda
+    istek = urllib.request.Request(url, headers=basliklar or {}, method="GET")
+    try:
+        with urllib.request.urlopen(istek, timeout=KAPI_ZAMAN_ASIMI_S) as cevap:
+            return cevap.read(), None
+    except Exception as e:
+        # GENİŞ YAKALAMA BİLİNÇLİ: ağ yolu URLError/HTTPError/socket.timeout/OSError/ssl.SSLError
+        # ve bozuk URL'de ValueError atabilir; kapının bir arıza sınıfı panonun TAMAMINI 500'e
+        # düşürmemeli. SESSİZ DEĞİL: sınıf + metin `neden` olarak GÖVDEYE çıkar (Yasa 4 sinyali
+        # yanıtın kendisidir), yalnız sır maskelenir.
+        return None, _kapi_maskele(f"{url} okunamadı ({type(e).__name__}: {e})", sir)
+
+
+def _kapi_auth_referansi(deger) -> str | None:
+    """`$env://…` AYNEN geçer (referans sır değildir); başka her şey GİZLENİR ama SESSİZCE değil."""
+    if deger is None:
+        return None
+    metin = str(deger)
+    if metin.lower().startswith("$env://"):
+        return metin
+    return "(gizlendi: `$env://` referansı değil — literal değer panoya çıkmaz)"
+
+
+def _kapi_rota_cevir(kalem: dict) -> dict:
+    """Admin API zarfının bir kalemini PANO şemasına indirger.
+
+    ŞEMA DARALTMASI KASITLI: Admin API `create_time`/`update_time`/`status`/`priority` ekler ve
+    upstream düğüm adresleri taşır. "Gövdeyi olduğu gibi döndür" en kolay yoldur ve tam olarak bu
+    ucun engellemek için var olduğu şeydir — panoya YALNIZ beyan edilen alanlar çıkar."""
+    govde = kalem.get("value") or {}
+    plugins = govde.get("plugins") or {}
+    ai = plugins.get("ai-proxy-multi") or {}
+    proxy_basliklar = ((plugins.get("proxy-rewrite") or {}).get("headers") or {})
+    zincir = []
+    for ornek in (ai.get("instances") or []):
+        auth_basliklari = ((ornek.get("auth") or {}).get("header") or {})
+        zincir.append({
+            "ad": ornek.get("name"),
+            "model": (ornek.get("options") or {}).get("model"),
+            "oncelik": ornek.get("priority"),
+            "auth_referansi": _kapi_auth_referansi(auth_basliklari.get("Authorization")),
+        })
+    # SIRALAMA SUNUCUDA: zincirin anlamı SIRASIDIR (önce hangi model denenir) ve onu UI'ın
+    # sorumluluğuna bırakmak, aynı gerçeğin ikinci bir kopyasını üretirdi (tek-kaynak yasası).
+    # Önceliksiz örnek EN SONA düşer — uydurma bir öncelik atamaktansa dizinin sonunda görünsün.
+    zincir.sort(key=lambda z: z["oncelik"] if isinstance(z["oncelik"], (int, float)) else float("-inf"),
+                reverse=True)
+    return {
+        "id": govde.get("id") or str(kalem.get("key", "")).rsplit("/", 1)[-1] or None,
+        "uri": govde.get("uri"),
+        "zincir": zincir,
+        "fallback_tetikleri": list(ai.get("fallback_strategy") or []),
+        "temizlenen_basliklar": list(proxy_basliklar.get("remove") or []),
+    }
+
+
+def _kapi_rotalari_coz(ham: bytes, sir: str | None) -> tuple[list[dict], list[dict], str | None]:
+    """`(pano_rotalari, ham_gövdeler, neden)`. Ham gövdeler faz türetimi içindir, panoya ÇIKMAZ."""
+    try:
+        zarf = json.loads(ham.decode("utf-8", errors="replace") or "{}")
+    except ValueError as e:
+        return [], [], _kapi_maskele(f"Admin API gövdesi JSON değil ({type(e).__name__}: {e})", sir)
+    if not isinstance(zarf, dict):
+        return [], [], f"Admin API gövdesi beklenen zarf değil (tip: {type(zarf).__name__})"
+    kalemler = zarf.get("list")
+    if not isinstance(kalemler, list):
+        return [], [], "Admin API zarfında `list` dizisi yok — şema değişmiş olabilir"
+    ham_govdeler = [(k.get("value") or {}) for k in kalemler if isinstance(k, dict)]
+    rotalar = [_kapi_rota_cevir(k) for k in kalemler if isinstance(k, dict)]
+    return rotalar, ham_govdeler, None
+
+
+def _kapi_metrik_ayristir(metin: str) -> tuple[dict, int]:
+    """`(rota_basina, atlanan_satir)` — prometheus metninden `apisix_http_status` sayaçları.
+
+    ATLANAN İLE İLGİSİZ AYRIMI ÇİVİNİN KALBİDİR: `# HELP`, `# TYPE` ve başka metrikler bozuk
+    DEĞİL, ilgisizdir; onları saymak sayacı gürültüye boğar ve alarmı işe yaramaz kılar. Bozuk
+    sayılan: `apisix_http_status` diye BAŞLAYIP rota/kod/sayı üçlüsünü veremeyen satır."""
+    import math
+    rota_basina: dict = {}
+    atlanan = 0
+    for satir in metin.splitlines():
+        s = satir.strip()
+        if not s.startswith(_KAPI_METRIK_ONEKI):
+            continue                        # ilgisiz satır — ATLANAN DEĞİL
+        m = _KAPI_PROM_SATIR.match(s)
+        if not m:
+            atlanan += 1
+            continue
+        etiketler = dict(_KAPI_PROM_ETIKET.findall(m.group("etiket")))
+        rota, kod = etiketler.get("route") or "", etiketler.get("code") or ""
+        try:
+            sayi = float(m.group("deger"))
+        except ValueError:  # sessiz-yutma: SESSİZ DEĞİL — sayıya çevrilemeyen satır `atlanan_satir` sayacına girer ve beyanla panoya çıkar; burada uyarı basmak her pano yoklamasında aynı satır için gürültü üretirdi
+            atlanan += 1
+            continue
+        # NaN/±Inf BOZUK SINIFINA DÜŞER. Telde patlamazlar — `_NativeRoute`→`store.sanitize`
+        # sonlu olmayan float'ı `None`a çevirir (ÖLÇÜLDÜ: store.py `sanitize`). Zarar tam da bu
+        # sessizlikte: NaN toplamaya girerse `istek_n` KOMPLE NaN olur ve panoda "ölçülemedi"
+        # diye görünür — oysa geri kalan sayaçlar ölçülmüştü. Bir bozuk satır bütün rotanın
+        # trafiğini silerdi; burada sayılır ve `atlanan_satir` ile BEYAN edilir.
+        if not math.isfinite(sayi) or not rota or not kod:
+            atlanan += 1
+            continue
+        deger = int(sayi) if sayi.is_integer() else sayi
+        kutu = rota_basina.setdefault(rota, {"istek_n": 0, "durum_kirilimi": {}})
+        kutu["durum_kirilimi"][kod] = kutu["durum_kirilimi"].get(kod, 0) + deger
+        kutu["istek_n"] += deger
+    return rota_basina, atlanan
+
+
+def _kapi_fazlar(ham_govdeler: list[dict], admin_ok: bool) -> tuple[dict, dict]:
+    """`(fazlar, kanit)` — üç hâl: `canli` · `bekliyor` · `olculemedi`.
+
+    ÜÇÜNCÜ HÂL ŞART: admin okunamadığında "bekliyor" yazmak bir ÖLÇÜM İDDİASIDIR ve yereldeki
+    her yoklamada dört fazı da yanlış beyan ederdi."""
+    fazlar, kanit = {}, {}
+    for alan, plugin, aciklama in _KAPI_FAZ_IMZALARI:
+        if not admin_ok:
+            fazlar[alan] = "olculemedi"
+        else:
+            var = any(plugin in ((g.get("plugins") or {})) for g in ham_govdeler)
+            fazlar[alan] = "canli" if var else "bekliyor"
+        kanit[alan] = aciklama
+    return fazlar, kanit
+
+
+@app.get("/api/gateway")
+def api_gateway(request: Request):
+    """APISIX KAPISININ PANO YÜZEYİ — salt-okunur, anahtarsız, ölçemediğini söyleyen.
+
+    · `saglik`: iki kaynağın (Admin API + prometheus) ayrı ayrı okunabilirliği + `neden`.
+    · `rotalar`: rota başına LLM zinciri (öncelik desc), fallback tetikleri, temizlenen başlıklar.
+    · `metrikler`: rota başına istek sayısı + durum-kodu kırılımı + `atlanan_satir`.
+    · `fazlar`: TSK-089'un dört fazı, plugin imzalarından TÜRETİLMİŞ (sabit metin değil).
+
+    Yazma yolu YOKTUR: konfigürasyonun tek kaynağı `deploy/apisix/routes.yaml` + GitOps
+    (`ops/apisix_uygula.py`). Bu uç etcd'ye dokunsaydı, panodan yapılan bir değişiklik ilk
+    `--uygula` koşumunda sessizce geri alınırdı."""
+    _auth(request)
+    import datetime as _dt          # dosyanın konvansiyonu: datetime fonksiyon içinde import edilir
+
+    anahtar, admin_neden = _kapi_admin_anahtari()
+    rotalar: list[dict] = []
+    ham_govdeler: list[dict] = []
+    if anahtar:
+        ham, admin_neden = _kapi_getir(KAPI_ADMIN_URL, {"X-API-KEY": anahtar}, anahtar)
+        if ham is not None:
+            rotalar, ham_govdeler, admin_neden = _kapi_rotalari_coz(ham, anahtar)
+    admin_ok = admin_neden is None
+
+    # Prometheus BAĞIMSIZ ölçülür: anahtar dosyası yoksa da metrik ucu açık olabilir. İki bacağı
+    # birbirine bağlamak, tek arızayı iki körlüğe çevirirdi.
+    prom_ham, prom_neden = _kapi_getir(KAPI_PROMETHEUS_URL, None, anahtar)
+    if prom_ham is None:
+        metrikler = {"kaynak_ok": False, "rota_basina": {}, "atlanan_satir": None,
+                     "neden": prom_neden}
+    else:
+        rota_basina, atlanan = _kapi_metrik_ayristir(prom_ham.decode("utf-8", errors="replace"))
+        metrikler = {"kaynak_ok": True, "rota_basina": rota_basina, "atlanan_satir": atlanan,
+                     "neden": None}
+
+    fazlar, faz_kanit = _kapi_fazlar(ham_govdeler, admin_ok)
+    saglik_neden = "; ".join(p for p in (
+        None if admin_ok else f"admin_api: {admin_neden}",
+        None if prom_ham is not None else f"prometheus: {prom_neden}") if p) or None
+    return {
+        "hesaplama_ts": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
+        "saglik": {"admin_api": admin_ok, "prometheus": prom_ham is not None,
+                   "neden": saglik_neden},
+        "rotalar": rotalar,
+        # Kardeş gerekçe (v287 `<alan>_neden` idiomu): pano BOŞ liste ile ÖLÇÜLEMEDİ'yi ayırsın.
+        "rotalar_neden": admin_neden,
+        "metrikler": metrikler,
+        "fazlar": fazlar,
+        "fazlar_kanit": faz_kanit,
+        "fazlar_kapsam_neden": _KAPI_FAZ_KAPSAMI,
+        "kaynak": {"admin_url": KAPI_ADMIN_URL, "prometheus_url": KAPI_PROMETHEUS_URL,
+                   "rota_kaynagi_repo": KAPI_ROTA_KAYNAGI,
+                   "zaman_asimi_s": KAPI_ZAMAN_ASIMI_S},
+    }
 
 
 # ------------------------------------------------------------------ /api/roadmap ---------------
