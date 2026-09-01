@@ -41,7 +41,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **20 ops betiği** başlığıyla okundu
+- **21 ops betiği** başlığıyla okundu
 - **98 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -1384,6 +1384,18 @@ sahte-başarısı (boş stdin'de "cancelled"+RC=0 — hüküm RC'den değil baş
 uzak-sudo engeli (test-atesle KOŞMAZ, bloğu basar; --kanit salt-okuma doğrular),
 bot→birim eşlemesi (ezber değil birim dosyasından türetilir). Kimlik: CLI > MERIDIAN_A1_* env > sabit.
 Koşum: .venv/bin/python ops/filo.py <altkomut> — meridian İTHAL ETMEZ (obs'a ulaşamaz).
+```
+
+## `ops/olay_sorgu.py` {#ops-olay-sorgu-py}
+
+```
+olay_sorgu.py — state/events.jsonl olay defterinin DuckDB sorgulayıcısı (ozet · son · tip · serbest SELECT)
+`grep | wc -l` zincirlerinin yerine geçer: defteri YERİNDE okur, ara dosya/DB/parquet üretmez,
+tek çıktısı stdout'tur. Bozuk JSON satırı atlanır ama SAYILIP stderr'e raporlanır (Yasa 4).
+Serbest `--sql` bir YAZMA MUHAFIZINDAN geçer: DuckDB'nin kendi ayrıştırıcısı tek SELECT olduğunu
+doğrular; COPY/ATTACH/INSTALL/DDL/DML ve `SELECT 1; DROP ...` kaçışı reddedilir. Bağlantı bellek
+içidir, temp_directory boşaltılır, eklenti oto-indirme kapatılır. Muhafız KUM HAVUZU DEĞİLDİR.
+Koşum: .venv/bin/python ops/olay_sorgu.py — meridian İTHAL ETMEZ (obs'a ulaşamaz).
 ```
 
 ---

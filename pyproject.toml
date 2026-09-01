@@ -66,6 +66,12 @@ dev = [
     # 0 paralellik kırmızısı — xdist_group gerekmedi). Hedefli küçük koşumlar SERİ kalır:
     # işçi açılışı küçük kümede net kayıptır. Ölçüm: MERIDIAN_ENGINEERING_LOG.md UYGULA-8 kaydı.
     "pytest-xdist>=3.8",
+    # TSK-020 [UYGULA-2] adım 1 (2026-09-01): `ops/olay_sorgu.py` olay defterini DuckDB ile
+    # DOĞRUDAN sorgular. MOTOR BAĞIMLILIĞI DEĞİL — `meridian/` altındaki hiçbir modül duckdb
+    # import etmez ve etmemelidir; araç `meridian`ı da import etmez (test_olay_sorgu_v355 bunu
+    # hem kaynakta hem GERÇEK koşumda çiviliyor). Dev grubunda olmasının sebebi budur: canlı
+    # A1 kurulumuna girmesi gerekmez.
+    "duckdb>=1.5",
 ]
 
 # ================================================================================================
