@@ -1,0 +1,70 @@
+EXE-2026-009 — HAKEM REVİZYONU P-2 (2026-09-01): BÖLME ANAHTARI `pencere` DAMGASI → GÖNDERİM `ts`
+Kalem: TSK-059 (kod yarısı). Hazırlayan: alt ajan. Commit/işaretçi devri/dağıtım: Rol-1.
+Bu dizin bir ÖLÇÜM KOŞUMU DEĞİLDİR — koşum yapılmadı, hüküm üretilmedi, karta yazılmadı,
+canlıya ve state/'e tek bayt yazılmadı. Burada YALNIZ revize hakem betikleri durur.
+
+[0] YETKİ VE SIRA
+    Kart hükmü ÖNCE, kod SONRA — kart kazanır:
+      research/cards/EXE-2026-009-pencere-kaydirma.yaml → `p2_kapanis_2026_09_01`
+      research/cards/EDG-2026-042-gercek-friksiyon-tahmini.yaml → `p3_karar_ayrik_ts_2026_08_31`
+        (kol adlarının TEK SÖZLÜĞÜ · sınır · "ts okunamazsa hiçbir kola atanmaz" kuralı)
+    Hakem sürümleri: H1 = 2026-08-22 (`pencere` damgasıyla bölen) · H2 = BU (ts ile bölen).
+
+[1] KOŞUM SIRASI — TEK SATIR (iki adım; [A] A1'de, [B] yerelde)
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && ./.venv/bin/python -' < research/olcumler/edg042_hakem_2026-09-01/pencere_cek.py > research/olcumler/edg042_hakem_2026-09-01/pencere_ham.json && .venv/bin/python research/olcumler/edg042_hakem_2026-09-01/pencere_altbant.py
+    [A] SALT-OKUMA çekim (canlıya DOSYA YAZILMAZ) → pencere_ham.json
+    [B] rapor (yerelde; betik `meridian`e HİÇ uzanmaz, `obs`a erişimi yoktur) →
+        pencere_altbant.json + stdout özeti
+    Çekim yoksa [B] rapor ÜRETMEZ: "olculemedi + neden" basar ve 2 ile çıkar (uydurma yasağı).
+
+[2] KÜNYE — BU DİZİN
+    pencere_altbant.py  sha256 = 3d8eda316d15dd3b7fb14154f2dc9bd2fe213d63414b9972d9f5861b1b72cf02
+    pencere_cek.py      sha256 = 9ad462a56e40ae585ce8268b94fca4488fb7751a24666cf728f74632b360690b
+
+    İTHAL EDİLEN BÖLÜCÜNÜN KAYNAĞI (kopya YOK — `gonderim_kolu` + `PENCERE_SINIRI` + `yuzdelik`):
+    research/olcumler/edg042_recete_ayrik_2026-08-31/olcum.py
+                        sha256 = 1787a9ffe6b477484fba096ebcaf553899cf560f3b700057d985318204a1f317
+    (o dizinin kendi KOMUT.txt [2] künyesiyle AYNI değer — provenans zinciri doğrulandı)
+
+    TARİHÇE TEK BAYT DEĞİŞMEDİ (H1, salt-okundu):
+    research/olcumler/edg042_kosum_2026-08-22/pencere_altbant.py
+                        sha256 = 00899f0327e1f53949efefa0acac06d9c1e851b1535527fcb55fd87532cc96dc
+    research/olcumler/edg042_kosum_2026-08-22/pencere_cek.py
+                        sha256 = 2ad3a00ad441bb74a05e6dd95fc7e9357bc34c82b657b123d9eff9598b4e369f
+
+[3] DEĞİŞEN — İKİ DOSYA, DÖRT NOKTA
+    pencere_cek.py     : E2_ALAN'a `ts` EKLENDİ (taşınır, TÜRETİLMEZ). Eski liste + `ts`;
+                         başka alan eklenmedi/çıkarılmadı. `pencere` KALDI — artık bölmüyor,
+                         çapraz sütunun girdisi.
+    pencere_altbant.py : (i) bölme `gonderim_kolu(r["ts"])` — reçeteden İTHAL, ikinci kopya YOK,
+                         (ii) kol adları `giris_once`/`giris_1345` ("1330"/"1345" bant adlandırması
+                         BIRAKILDI; rapor başlıkları K1-önce / K1-1345),
+                         (iii) damga↔ts ÇAPRAZ SÜTUNU (ayrışan sayısı + listesi),
+                         (iv) `ts` okunamayan satır hiçbir kola girmez → nedenli `olculemedi`.
+    DEĞİŞMEYEN — TEK KARAKTERİ DEĞİŞMEDİ (kart kill#2 buna bakar): öneri tetiği eşiği
+    (ALT_BANT_N_ESIK=10, iki kol da n>=10 + CI ayrıklığı), bootstrap künyesi (B=5000,
+    seed=20260812, kümeleme=SEANS), 042-K1 satır filtresi, E2 ikame yasağı, karar metinlerinin
+    GÖVDESİ — eşik sayısı, karşılaştırma yönü ve üç dalın anlamı aynen. Karar metinlerinde
+    değişen tek şey VOKABÜLERDİR: bant adları ("1330"/"1345") + "alt-bant" sözcüğü → kol
+    vokabüleri. Eşik değişmedi, ADLANDIRMA değişti; bu ayrım bulanık kalırsa kill#2 ölçülemez.
+
+[4] ÇAPRAZ SÜTUN NE SAYAR
+    Payda = kola ATANMIŞ ve `pencere` damgası DOLU satırlar. Damgasız satır ayrışma DEĞİLDİR
+    (kaydırma-öncesi kayıt, ayrıca sayılır); sözlükte olmayan damga kıyaslanamaz, adıyla
+    raporlanır — ona "ayrışma" demek uydurma olurdu.
+    TARİHLİ TABAN (kart, 2026-08-31 — hüküm değil): damgalı 4 satırın 4'ünde iki anahtar AYNI
+    kolu gösteriyordu; kol sayıları K1-önce n=15 · K1-1345 n=2.
+
+[5] ÇİVİ
+    tests/test_hakem_ts_gecisi_v359.py — 26 çivi, yedi kümede: (a) tarihli taban kol sayıları
+    15/2 · (b) `ts` okunamayan satır kola GİRMEZ (6 varyant) · (c) damga↔ts ayrışma sütunu ·
+    (d) bölücünün ikinci kopyası YOK (ast + kod nesnesinin kaynak dosyası) · (e) tetik eşiği
+    donuk hakemle AYNI (ast ile kıyas) · (f) çekim listesi = eski liste + `ts` ·
+    (g) operatörün koşacağı giriş noktası (`main()`, yalıtılmış tmp dizinde).
+    H1'in çivisi (tests/test_pencere_kaydirma_v272.py §6) H1'i çivilemeye DEVAM eder — iki dosya
+    iki AYRI şeyi ölçer, biri diğerinin regresyonu değildir.
+
+[6] AÇIK — ROL-1'E
+    Kart işaretçisi ("GÜNCEL DONUK HAKEM İŞARETÇİSİ", `p2_kapanis_2026_09_01` bloğu) hâlâ
+    edg042_kosum_2026-08-22/'yi gösteriyor; BU dizine çevrilmesi Rol-1'in kalemidir (ajan karta
+    dokunmaz). Çevrilene kadar haftalık görev EK'i eski hakemi bulur.

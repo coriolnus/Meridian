@@ -41,7 +41,9 @@ VE ≥6 seans. `giris_once` HİÇBİR EŞİĞE TABİ DEĞİL: kalıcı betimleyi
 Betimleyici koşumdan SONRA her hafta: HAKEM BETİKLERİNİ KARTTAN OKU — EXE-2026-009 kartının
 "GÜNCEL DONUK HAKEM İŞARETÇİSİ" kaydı hangi research/olcumler/ dizininin yürürlükte olduğunu
 söyler; bu görev metni hakem dizini TAŞIMAZ ([2]'nin aynı deseni — sabit yol burada da
-bayatlamıştı: 08-22 dizini yazılıyken ts-revizyonu geldi). Sıra: (1) o dizinin `pencere_cek.py`si
+bayatlamıştı: 08-22 dizini yazılıyken ts-revizyonu geldi). KOŞMADAN ÖNCE: işaretçi kaydındaki
+sha256'larla diskteki iki betiği kıyasla — ayrışıyorsa KOŞMA, ayrışmayı raporla (içerik-adresli
+işaretçi, EDG-059 dersi). Sıra: (1) o dizinin `pencere_cek.py`si
 (canlıdan salt-okuma E2 çekimi) → (2) aynı dizinin `pencere_altbant.py`si
 — K1'i kollarında raporlar ve öneri-tetiğini değerlendirir. Çıktıdaki
 `geri_al_onerisi` beyanı varsa operatör raporuna AYNEN taşı (geri alma otomatik değil). `orneklem_birikimde`

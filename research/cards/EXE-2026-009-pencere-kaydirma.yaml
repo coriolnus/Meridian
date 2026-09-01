@@ -139,10 +139,18 @@ p2_kapanis_2026_09_01: >
   (ECL/CRM); tetik tedavi kolunun n≥10'unu bekler (~4 hafta @ 0,40 dolum/seans). Damga↔ts
   çapraz kontrolü: damgalı 4 satırın 4'ünde iki anahtar aynı kolu gösteriyor (P-3 bloğu).
 
-  GÜNCEL DONUK HAKEM İŞARETÇİSİ: research/olcumler/edg042_kosum_2026-08-22/pencere_altbant.py
-  (+ pencere_cek.py) — ts-revizyonlu hakem betiği inince BU SATIR yeni tarihli dizine çevrilir;
-  görev EK'i (deploy/claude-tasks/edg042-friksiyon-haftalik.SKILL.md) sabit yol TAŞIMAZ,
+  GÜNCEL DONUK HAKEM İŞARETÇİSİ [ÇEVRİLDİ 2026-09-01, kod inişiyle aynı tur]:
+  research/olcumler/edg042_hakem_2026-09-01/ — pencere_altbant.py (sha256 3d8eda316d15dd3b…)
+  + pencere_cek.py (sha256 9ad462a56e40ae58…); içerik-adresli (EDG-059 dersi), koşucu diskteki
+  dosyayı bu sha'larla kıyaslar, ayrışıyorsa KOŞMAZ ve raporlar. Eski işaretçi
+  edg042_kosum_2026-08-22/ TARİHÇEDİR (tek bayt değişmedi). Görev EK'i sabit yol TAŞIMAZ,
   buraya bakar ([2] işaretçi devrinin aynı deseni — sabit metin iki kez bayatlamıştı).
-  Uygulama kalemleri (kod): yeni tarihli hakem dizini + `gonderim_kolu` İTHALİ + pencere_cek
-  alan listesine `ts` (P-1'in görünmezlik zehiri: hakem kendi kontaminasyonunu ölçemiyordu) +
-  damga↔ts ayrışma sütunu raporda + regresyon (aynı snapshot, kol sayıları tarihli tabana eşit).
+  KOVA BEYANI (uygulamada doğdu): `damga_bilinmeyen` — damgası dolu ama tanınmayan satır;
+  ts'yle kola GİRER (bölme anahtarı ts), yalnız damga↔ts çapraz sütununda kıyaslanmaz —
+  "ayrışma" saymak uydurma olurdu. Vokabüler: rapor kol adlarıyla konuşur (giris_once/
+  giris_1345), "1330/1345 alt-bant" adlandırması bırakıldı; eşik/yön/karar dalları TEK
+  KARAKTER değişmedi (beyan betikte + KOMUT.txt'de).
+  İLK ATEŞLEME 2026-09-01 ("kurulu ≠ çalışır", gerçek A1 çekimi, salt-okuma): giris_once
+  n=15 (tarihli tabanla BİREBİR) · giris_1345 n=3 (taban 2 + 1 yeni dolum — tedavi kolu
+  birikiyor) · damga↔ts ayrışan 0 · olculemedi 0 · tetik "orneklem_birikimde" (3<10, doğru).
+  Artefaktlar dizinde (pencere_ham.json + pencere_altbant.json — 08-22 emsalinin deseni).
