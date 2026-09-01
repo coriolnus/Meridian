@@ -63,6 +63,13 @@ Alan sözlükleri DONUKTUR (yeni değer = bu belgeye tarihli ek):
   (testler, CLAUDE.md, docs, kod yorumları) aynı dalgada güncellenir — kırık çapa sessizdir
   (yeniden-adlandırma-kapsamı vakası).
 
+- Tarihli ek (Rol-1 hükmü 2026-09-01 gece; operatör onayı sabah listesinde): **§6 kart endeks
+  satırları** şemanın başlık gramerini kullanır ama kimlik olarak kartın KENDİ dış kimliğini
+  taşır: `- **[EDG-2026-0NN] Ad** — status: …` — karta ikinci bir TSK kimliği açmak aynı
+  gerçeğin iki kimliği olurdu (tek-kaynak). v351 çivisi `[EDG-…]` başlığını YALNIZ §6'da kabul
+  eder. status burada kart yaşam döngüsünü söyler: ACTIVE (ölçüm sürüyor) · DONE(tarih·hüküm:
+  GEÇTİ/KALDI/NO-GO) · OPERATOR (hüküm işlenmedi).
+
 ## §3 Kapsam
 
 - TAM GÖÇ: §0 (sıralama/İCRA SIRASI → sıralı standart-madde tablosu), §2 TAHTA, §3 cepheler

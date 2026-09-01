@@ -30,9 +30,13 @@ B. **ÜRETİLEN HER TABLO ALANININ OKUYUCUSU VAR — ve liste ELLE YAZILMADI.** 
    Okunmayan alan ihlaldir; meşru istisna **BEYANLA** olur — `OKUNMAYAN_ALANLAR`, gerekçesiyle.
 C. **İKİ SAYIM TOPLANMAZ.** Ucun kendi şerhi "iki sayımı toplamak kalemleri çift saymak olurdu"
    der. Yüzey iki birimi ayrı sayar ve ayrı çizer; bunu ekranda da söyler.
-D. **ARIZANIN ÖNCÜLÜ HÂLÂ GERÇEK.** `§2 TAHTA`nın düzyazı maddesi YOK ve tablo satırı VAR — yani
-   tablo dalını okumayan bir yüzey tahtayı bugün de boş gösterirdi. Öncül çürürse (tahtaya düzyazı
-   madde girerse) bu çivinin gerekçesi de değişmeli; test o günü sessizce geçmez.
+D. **ÖNCÜL 2026-09-01'DE ÇÜRÜDÜ, KAYIT GÜNCELLENDİ.** Yazıldığı gün `§2 TAHTA`nın düzyazı
+   maddesi YOK, yalnız tablo satırı VARdı. TSK/PRG madde-şeması göçünde (FAZ B,
+   `docs/TASARIM-ROADMAP-STANDART-2026-09-01.md`) İCRA SIRASI paragrafı §2'nin altına sıralı
+   TSK madde listesi olarak taşındı — artık §2 HEM düzyazı madde HEM tablo satırı taşıyor.
+   Asıl çivi (tablo dalı okunmazsa tahtanın yarısı panoda BOŞ görünür) hâlâ geçerli: satır
+   sayısı > 0 şartı kalıyor; madde sayısı > 0 şartı yeni öncülü ölçer (0'a dönerse göç geri
+   alınmış olabilir — bu da sessizce geçmemeli).
 """
 import pathlib
 
@@ -129,15 +133,16 @@ def test_c_iki_sayim_toplanmiyor(kaynaklar: str):
     )
 
 
-def test_d_arizanin_onculu_hala_gercek():
-    """`§2 TAHTA` düzyazı maddesi taşımıyor ama tablo satırı taşıyor."""
+def test_d_onculun_2026_09_01_govdesi():
+    """`§2 TAHTA` artık HEM düzyazı TSK maddesi HEM tablo satırı taşıyor (2026-09-01 göçü)."""
     yuk = _yuk()
     tahta = [k for k in yuk["bolumler"] if (k.get("no") or "") == "§2"]
     assert len(tahta) == 1, "belgede `§2` kök bölümü bulunamadı — numaralandırma değişmiş olabilir"
     madde = sum(len(b["maddeler"]) for b in _gez(tahta[0]))
     satir = sum(len(t["satirlar"]) for b in _gez(tahta[0]) for t in b["tablolar"])
     assert satir > 0, "`§2 TAHTA`da hiç tablo satırı yok — tahta tablo olmaktan çıkmışsa bu çivinin gerekçesi de değişmeli"
-    assert madde == 0, (
-        f"`§2 TAHTA` artık {madde} düzyazı maddesi taşıyor. Çivinin öncülü (tahta TAMAMEN tablodur) "
-        "çürüdü; kayıt güncellensin — sessizce geçmesin."
+    assert madde > 0, (
+        "`§2 TAHTA` hiç düzyazı madde taşımıyor — 2026-09-01 göçünde buraya taşınan İCRA SIRASI "
+        "TSK listesi kaybolmuş ya da başka bölüme geri taşınmış olabilir; kayıt yeniden gözden "
+        "geçirilmeli, sessizce geçmemeli."
     )
