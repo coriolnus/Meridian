@@ -40,6 +40,10 @@ TAVAN_BAYT = 120 * 1000**3          # kart: "120 GB" — GB, GiB değil
 DISK_PAYI_BAYT = 25 * 1000**3       # ham gz geçicileri (yoğun gün ~15 GB) + emniyet
 PENCERE_BASI = dt.date(2020, 1, 1)
 ISCI = 2
+# Operatör kararı 2026-09-01 ("geri dolum kesintisiz çalışmalı, seans içi dahil"): seans
+# penceresi kilidi kapatıldı. Eski davranışa dönüş: True. Kaynak sınırları (ISCI=2, TAVAN,
+# DISK_PAYI) AYNEN — kesintisizlik kaynak çitlerini gevşetmez.
+SEANS_KILIDI = False
 TAZE_GUN = 5                        # bundan yeni boş HIST cevabı "henüz yayımlanmadı" sayılır
 
 
@@ -103,7 +107,7 @@ def main() -> int:
     atlanan: set[str] = set()   # taze-boş günler — bu KOŞUM içinde tekrar denenmez
     while True:
         bugun = dt.date.today()   # koşum günlerce sürebilir — her turda tazelenir
-        if rth_yakin():
+        if SEANS_KILIDI and rth_yakin():
             print("seans penceresi (ya da <35 dk kala) — tur açılmadı, çıkılıyor")
             return 0
         kullanilan = tick_bayt()
