@@ -74,6 +74,28 @@ rotalar:
       nodes:
         "financialmodelingprep.com:443": 1
 
+  - id: pano-api
+    # Faz 3 vakası (2026-09-01, Safari): basic-auth /* üzerindeyken belge yükleniyor ama
+    # fetch('/api/*') çağrıları kapı-401'ine takılıp Safari'nin yerel kimlik kutusunu DÖNGÜYE
+    # sokuyordu; üstelik kapı-401'i uygulamada "oturum düştü" (yanlış sınıf) okunuyordu.
+    # Çözüm: /api/* belge-kapısından AYRILIR — kimliği uygulamanın kendi oturum çerezi taşır
+    # (401 semantiği tek kaynağa döner), kapı bu yüzeyde hız sınırı + gövde tavanı + sayaç tutar.
+    uri: /api/*
+    plugins:
+      prometheus: {}
+      limit-req:
+        rate: 10
+        burst: 20
+        key_type: var
+        key: remote_addr
+        rejected_code: 429
+      client-control:
+        max_body_size: 1048576
+    upstream:
+      type: roundrobin
+      nodes:
+        "127.0.0.1:8080": 1
+
   - id: pano-ingress
     # Faz 3 — pano girişi: TLS dinleyicisinden (443) gelen istekler panoya (127.0.0.1:8080).
     # basic-auth SEÇİLDİ (key-auth değil): tarayıcı 'apikey' başlığı koyamaz — ölçülmüş kısıt.
