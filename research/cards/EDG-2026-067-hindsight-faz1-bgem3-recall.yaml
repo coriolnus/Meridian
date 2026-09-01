@@ -131,6 +131,22 @@ kurulum_kayitlari:
     Elle test-ateşleme yapıldı ("kurulu ≠ çalışır"): birim active, container Up. Kalıcı hakikat
     yüzeyi yine TSK-091 Hafıza sayfası; CP tünelli teşhis aracıdır.
 
+  ingest_plani_2026_09_01: >
+    ARŞİV INGEST KURULDU + ZAMANLANDI (Rol-1, seans-dışı 12:3x-12:5xZ): korpus manifesti HEAD
+    ac824e1c9'dan üretildi — 214 dosya / 3.624 KB (LOG + ROADMAP.md%237 kesiti + 80 kart yaml
+    + 132 docs .md; RUNBOOK ÜRETİLMİŞ→korpus DIŞI beyanlı, kart README'si glob dışı). Her
+    girdi blob-sha + head_commit metadata'lı, document_id=repo yolu (upsert=idempotens).
+    Betikler research/olcumler/edg067_hindsight_faz1/{manifest_uret,ingest067}.py — taban
+    kıyası "AYNI korpus" kill maddesi manifest_uret ile tekrarlanabilir. Koşum A1'de
+    systemd-run tek-atım edg067-ingest 2026-09-01 20:05Z (seans 23:00 TRT'de biter; 20:05Z=23:05
+    TRT). Betik kapıları: DIMENSIONS=1024 doğrulanmadan ABORT (kill maddesi) · defense
+    geri-okumada enabled!=true ABORT · deneme-3 backoff · ilerleme.jsonl ile kaldığı-yerden ·
+    usage token toplamı loglanır (maliyet sütunu). ELLE TEST-ATEŞLEME ("kurulu ≠ çalışır"):
+    baş kapılar üçü de geçti; 180 sn'lik sınırlı koşumda client koptu ama sunucu LOG belgesini
+    tamamladı (bank belge=1) — ÖLÇÜLEN DERS: 138KB belge 180 sn'de bitmez, API timeout
+    900→3600 sn'ye çekildi; gece LOG yeniden gönderilir = mükerrer kontrolü kendiliğinden
+    ikinci kez sınanır.
+
 olcum:
   soru_kumesi_donduruldu_2026_09_01: >
     research/olcumler/edg067_hindsight_faz1/sorular.yaml — GIT BLOB
