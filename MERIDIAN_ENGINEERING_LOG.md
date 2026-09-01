@@ -1453,3 +1453,44 @@ v343) commit anında ayrıca yeşildi, ölçüm geçerli sayıldı. Ders: arka p
 "ağaç donuk" bayrağını tur boyunca taşı — akıbet defter yazımları (A1-yan) serbest, YEREL commit
 değil. AYRICA: RUNBOOK ayrışması (deploy.sh başlığı değişti, üretim atlandı — f0f0645) TEKRARLAYAN
 vaka sınıfının yeni örneği; xdist koşum-1 yakaladı, 883f0b0 kapattı.
+
+## 2026-09-01 (gece, otonom) — Akıbet-dalgası kapanışı; TSK-001 tam göç; geri-dolum sözlük vakaları
+
+Operatör gece emri: "açık kalemleri sabaha kadar full otonom bitir" + sudo delegasyonu kaldırıldı
+(önce kendim denerim) + göçte GERÇEKLİK KONTROLÜ talimatı (yapıldı-mı/gerekli-mi + açık/kapalı)
++ Sonnet ajanlarına izin (kompleks olmayan görevler).
+
+**AKIBET-DALGASI kapandı** (21b4d2c): N00017 ship yolu `backtest_full` + N00016 hotstate
+tek-kaynak; defterde uygulandi+sonuc, 0 açık. HARNESS-EXIT VAKASI (3. kez): bildirim "exit 0"
+derken gerçek 1 failed/PYTEST_EXIT=1 — üçlü hüküm kuralı yine ödedi. Kırmızı v280'di:
+ölü-alan dedektörü `_hs["defter"]["olay"]` sensör anahtarını broker giriş alanı sandı
+(docstring'in uyardığı ad-çakışması sınıfının sözlük-aboneliği hâli) — dar `["defter"][alan]`
+zincir istisnası, 5-vaka mutasyon kanıtlı.
+
+**TSK-001 ROADMAP-STANDART tam göç** (ed4b1fe→cf6ccff, suite 8421 yeşil): A(§4+§5, 49 madde)
+→ B(§0/§2/§3/§∞, TSK-052..085 + PRG-01..11) → B2(§6 endeksi 30 kart, EDG/EXE-başlıklı) →
+C(v351 çivisi 50 test + CLAUDE.md kapısı) → D(api sema alanları + muaf_tarihce=432 muhasebeli +
+dinamik tahta; v337 kökü SÖZLÜK değil ARAMA ALANI çıktı — rozet kendi sütunundan okunur).
+Süreç dersleri: (1) v351 ilk turda 21 GERÇEK ihlal buldu — çözüm pinli-envanter değil KÖKTEN
+temizlik; 16'sında haklı taraf ihlaldi → spec'e `size: —` meşruiyeti (uydurma yasağı S/M/L
+uydurtmaktan üstün). (2) FAZ B'nin bilinçli DURMA NOKTASI (v337 davranış çivisi) doğru karardı
+— düzeltme FAZ D'nin işiydi, ROADMAP'e eski-sözlük kelimesi sıkıştırmak yeni spec'i bozardı.
+(3) Ajan gerçeklik-kontrolü + Rol-1 canlı ölçümü birlikte çalıştı: TSK-049 GATED önerisi
+A1 kanıtıyla (LoadCredential SET, servis ACTIVE) DONE'a düzeltildi.
+
+**GERİ-DOLUM iki sözlük vakası** (136ceb4 + 7b35888): HIST taze günü boş-liste yerine önce
+404, sonra TOPS'suz-200 ile veriyor — `hist_tops_kaydi`'nin iki raise'i de sürücünün
+"boş döndü" vokabülerini konuşmuyordu → her yeni işlem gününde servis düşerdi. İkisi de aynı
+sözlüğe çevrildi (taze/tatil ayrımı sürücüde), scp+restart, canlı "taze-boş" kanıtı. 08-05
+EOFError'ı ayrı sınıf: kesik gzip, indir() boyut-uyuşmazlığında yeniden indirir — bilinçli
+kod değişikliği YOK. İZLEYİCİ DERSİ: Bash aracı zsh — tırnaksız `$SSH` kelime-bölünmez,
+rc=127 yanlış "A1 kopması" alarmı üretti; izleyici betikleri zsh semantiğiyle yazılır.
+
+**Araya-kalemler**: mükerrerlik kapısı (131ffa8 — ayrım-noktasında, İKİ kaynak, 28 çivi;
+hedef %45→≤%10 sonraki karar turunda ölçülür) · infra-simetri (c9b8c64 — beklenmedik_birimler,
+[]≠None; gerçek vaka meridian-dash; okuyucu borcu TSK-086) · huni üçlüsü (c32d13d — taranan
+alanı; v314 çırçırında 9 çapa satırdan SEMBOLE çevrildi, 8 anlamca-kaymış çapa AÇIK KALEM).
+
+**Açık kalemler**: 8 drift'li tsx çapası (niyet okuma ister) · TSK-086 okuyucu · 2-adım1
+(geceye sığmadı) · işçi-çökmesi-koşumu-düşürmesin iyileştirmesi (operatör görüşüne) · spec
+tarihli eklerinin operatör onayı (B-XXX, §6 endeks, size —, DROPPED).
