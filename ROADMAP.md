@@ -2436,16 +2436,16 @@ _**[2026-08-31 KONSOLİDASYON — HAVUZ GİRDİSİ ROZET TAŞIMAZ.]** Burası ba
   What: E2'ye ret/veto ayna-satırı eklenmeli (kartlı, PIT-uyumlu) — "kaç plan doluma dönüşmedi" sorusu bugün okunamıyor.
   Why: kaydırma sonrası plan-günü sıklığı değişmedi (0,38→0,40/seans) ama plan-günü başına dolum 3,0→1,0 düştü; sebep E2 ile ölçülemez çünkü defterde 36/36 submitted+dolu, ayna satırı yok. Bu sayı 1345 kolunun eşik takvimini belirliyor; ölçülemedikçe EDG-042 takvimi izdüşümde kalır.
   Ref: 85-aktarımı, EDG-042 P-3 bloğu "AYRI KALEM ADAYI" kaydı, 2026-08-31.
-- **[TSK-020] backend mimari kararları — 9 kalem, operatör onaylı sıra 8→4→2→1→3→9** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: L · trigger: —
+- **[TSK-020] backend mimari kararları — 9 kalem; sıra REVİZE (operatör 2026-09-01 gece): `4→2-adım2→3→1→9` (eski `8→4→2→1→3→9`; UYGULA-8 DONE, `2-adım1` İLK SIRA araya-kalem bloğuna alındı)** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: L · trigger: —
   What: operatör brainstorm kapanışı (2026-08-31), zemin iki ölçümle düzeltildi — Redis KURULU ve ENTEGRE (hotstate.py, `mrd:` şeması, Streams+consumer-group üretimde); "daemon yasağı" diye bir yasa YOK (A1'de 5 kendi daemon'ımız koşuyor, gerçek yasa filo disiplini: birim+çivi+F9+yedek hikâyesi). Kalemler:
   · [UYGULA-1] SQLite göçünü bitir — kalıcı sıcak durum `store`→SQLite WAL; boyut büyük (motor); Postgres tetiği eşzamanlı yazıcı sınıfı (bugün yok).
-  · [UYGULA-2] DuckDB analitik — adım 1 `events.jsonl`i doğrudan oku, adım 2 aylık Parquet sıkıştırma; boyut orta.
+  · [UYGULA-2] DuckDB analitik — adım 1 `events.jsonl`i doğrudan oku (İCRA'DA 2026-09-01: araya-kalem bloğu, ops aracı ajanda), adım 2 aylık Parquet sıkıştırma; boyut orta.
   · [UYGULA-3] bars→Parquet (ay/sembol bölümlü) + DuckDB; TimescaleDB DEĞİL (debi ~98k satır/gün, küçük-veri rejimi, PIT'e ters).
   · [UYGULA-4] kalıcı-önbellek envanteri — `*_cache.json` sınıfından hangisi restart-sonrası gerçekten gerekli ÖLÇ; boyut küçük.
   · [TETİKLİ-5] olay/mesajlaşma — Redis Streams zaten üretimde; Kafka tetiği tüketici çeşitliliği + uzun replay (uzak). KOD YOK.
   · [TETİKLİ-6] kuyruk — systemd kalır; "tetikleyen işi koşamaz" deseni ölçülürse arq (Redis-tabanlı, async). KOD YOK.
   · [BEKLEMEDE-7] sır yönetimi — operatör "şu an kalsın"; kademeli yolun ilk basamağı (LoadCredential/sops hazırlığı) İCRA SIRASI ④'e alındı, OpenBao/unseal adımı beklemede.
-  · [UYGULA-8, İLK SIRA] pytest-xdist spike — `-n 4` + `xdist_group`; tetik ATEŞLENDİ (~26 dk × günde 6+ koşum); ilk sıra çünkü sonraki her kalemin suite maliyetini öder.
+  · [UYGULA-8] pytest-xdist spike — **DONE (2026-09-01):** `-n 4` pyproject'e pinlendi (~9 dk, 2 temiz koşum, 8.344 test, 0 paralellik kırmızısı — `xdist_group` gerekmedi); tarihçe: tetik ~26 dk × günde 6+ koşumla ateşlenmişti, ilk sıra olarak koştu.
   · [UYGULA-9] gecikme telemetrisi — Prometheus+Grafana (pano-SQLite alternatifi elendi); kill-kriteri yeniden çapalama AYRI KART ister.
   Why: PIT-(b) uygulaması (EDG-2026-062) bu kuyruğun ÖNÜNDE — operatör kararı daha eski.
   Ref: operatör 2026-08-31 brainstorm kapanışı; sıra 8→4→2→1→3→9 (5/6 tetik kaydı, 7 beklemede).
