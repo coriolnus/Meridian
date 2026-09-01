@@ -64,7 +64,13 @@ dokuman_taban = TABAN.dokuman_taban
 
 #: Soru başına kaç sonuç sayılır (kart metriği: isabet@3).
 K = 3
-ZAMAN_ASIMI = 120
+# 120 → 360 (ölçüldü 2026-09-01 ~16:00Z): uzun Türkçe soruda recall 129,8 sn sürdü ve 120 sn
+# sabiti isteği tam bitmek üzereyken kesti (sunucu logu: RECALL CANCELLED, client disconnected;
+# kısa sorgu 3 sn — fark sorgu karmaşıklığı + o saatte tıkalı ücretsiz LLM ucu). İki not daha,
+# aynı ölçümden: (a) `limit` parametresini sunucu TANIMIYOR ("Unknown parameters ignored") —
+# sunucu varsayılanı döner (23 sonuç), hüküm zaten istemci-tarafı `[:K]` kesmesiyle verilir;
+# (b) bu yüzden k'yı sunucuya taşıma girişimi YAPILMAZ.
+ZAMAN_ASIMI = 360
 
 #: Hindsight cevabında `document_id`nin ARANDIĞI yollar — SIRALI ve DONUK. Bu bir tahmin
 #: DEĞİL bir arama planıdır: hangisinin tuttuğu rapora yazılır, hiçbiri tutmazsa koşum düşer.
