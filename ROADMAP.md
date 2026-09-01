@@ -2341,15 +2341,15 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 - **[TSK-002] Rejim-ship satırına rejim-dilimli backtest_full** — status: QUEUED · born: 2026-09-01 · owner: rol1 · size: M · trigger: —
   What: `backtest.walk_forward` rejim-dilimli `graded` popülasyonundan ikinci bir `score_detail` döndürsün; rejim ship satırları da kendi `backtest_full`ünü taşısın. Why: akıbet-dalgası N00017'yi yalnız GLOBAL ship için kapattı — `full_detail` rejim-dilimsiz popülasyondan üretiliyor, rejim satırına yazmak analytics'in öncelikli bacağına yanlış popülasyon koyardı (implementer endişe-1, bilinçli dışarıda bırakıldı). Ref: akibet-dalgasi-rapor · N00017.
-- **[TSK-003] Reflect belleğe danışmadan öneri basıyor (yansıma mükerrerlik kapısı)** — status: QUEUED · born: 2026-09-01 · owner: rol1 · size: S-M · trigger: —
+- **[TSK-003] Reflect belleğe danışmadan öneri basıyor (yansıma mükerrerlik kapısı)** — status: DONE(2026-09-01·131ffa8 — mukerrerlik.py + v352 28 çivi, iki-kaynaklı kapı; israf hedefi %45→≤%10 sonraki karar turunda ölçülür) · born: 2026-09-01 · owner: rol1 · size: S-M · trigger: —
   What: hermes_reflect öneri üretirken hiçbir belleğe (akıbet defteri/kod/Hindsight) danışmıyor; öneri (a) reflect anında akıbet defterindeki açık+kararlı önerilere ucuz benzerlik kontrolü, (b) ingest-sonrası Hindsight recall'a terfi.
   Why: ilk karar turu ölçtü — 22 önerinin ~10'u (%45) bellek-yokluğu sınıfı (7 kopya + 3 zaten-var/çözülmüş/planda); hedef sonraki turda ≤%10. (a) bacağı aynı gece İCRA SIRASI D-revize araya-kalemine alındı (operatör, 2026-09-01); (b) arşiv ingest + recall kartını bekliyor.
   Ref: operatör sorusu 2026-09-01 gece · BOT RECALL kartı.
-- **[TSK-004] "Gece ne buldu" hunisi üç kusur taşıyor** — status: OPERATOR · born: 2026-09-01 · owner: operator · size: S · trigger: —
+- **[TSK-004] "Gece ne buldu" hunisi üç kusur taşıyor** — status: DONE(2026-09-01·c32d13d — taranan alanı + etiket + üç-dallı dipnot; v353+17 UI çivisi; operatörün gece-otonomi emri kapsamında) · born: 2026-09-01 · owner: operator · size: S · trigger: —
   What: (a) ilk basamak etiketi "Taranan aday" yazıyor ama eleme-SONRASI `candidates`e bağlı (KararZinciri.tsx `GeceGovdesi`); (b) aday=0 gününde düşüş dipnotu yanlış nedeni gösteriyor ("ilk basamak yazılı değil" yerine "payda 0"); (c) `daily_cycle` olayına eleme-öncesi evren büyüklüğü (`taranan`) alanı eklenmeli.
   Why: operatör 2026-08-31 hunisini "hiç tarama olmadı" diye okudu; gerçek döngü 20:55Z'de koştu (0 aday + 1 near-miss, olağan). Boyut küçük ama okunabilirlik hatası tekrar eden yanlış-alarm üretiyor.
   Ref: operatör sorusu 2026-09-01 gece — akıbet-dalgası sınıfı bir sonraki küçük dalgaya mı yoksa havuzda mı kalacağı operatörde.
-- **[TSK-005] `/api/infra` birim keşfi tek yönlü — makinede koşan-ama-repoda-yok birimler görünmüyor** — status: INTERIM · born: 2026-09-01 · owner: rol1 · size: S · trigger: —
+- **[TSK-005] `/api/infra` birim keşfi tek yönlü — makinede koşan-ama-repoda-yok birimler görünmüyor** — status: DONE(2026-09-01·c9b8c64 — beklenmedik_birimler bacağı 11 çivi; pano okuyucu bacağı TSK-086'da) · born: 2026-09-01 · owner: rol1 · size: S · trigger: —
   What: bugünkü keşif yalnız `deploy/**`'ten repo→makine yönünü tarıyor; ikinci bacak `systemctl list-unit-files 'meridian-*' 'hindsight-*'` çıktısından repo listesinde olmayanları "repoda-yok/beklenmedik" bayrağıyla eklemeli.
   Why: kör yön aynı gece yaşandı — meridian-geridolum birimi makinede koşuyor ama canlı ağaçta dosyası henüz yok, panoda hiç görünmüyor; tek yönlü dedektör sürüklenmenin yarısını kaçırır.
   Ref: operatör sorusu 2026-09-01 gece ("birimler dinamik olmalı değil mi") — aynı gece İCRA SIRASI D-revize araya-kalemine alındı.
