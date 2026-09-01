@@ -402,6 +402,22 @@ export interface InfraBilesen {
   readonly durum_neden?: string | null;
   readonly alt_durum?: string | null;
   readonly alt_durum_neden?: string | null;
+  /**
+   * İSTENEN DURUM — systemd `UnitFileState` (enabled/disabled/static/masked). `ActiveState` ile
+   * AYNI ŞEY DEĞİL ve karıştırmak operatörün 2026-09-02 vakasının ta kendisidir: birim `disabled`
+   * bırakılmıştı, dağıtım onu `enabled` yaptı — ikisi de `active` görünürken. Anahtarın "açık mı"
+   * hükmü bu alan ile `durum`un BİRLİKTE okunmasından çıkar.
+   * `null` = ölçülemedi (gerekçe kardeşinde) — `disabled` DEĞİL.
+   */
+  readonly etkin_durum?: string | null;
+  readonly etkin_durum_neden?: string | null;
+  /**
+   * Bu satır panodan anahtarlanabilir mi (`api.py::BIRIM_ANAHTAR_BEYAZ`). Liste UÇTAN gelir ve
+   * panoda İKİNCİ kez sabitlenmez: iki kopya ayrıştığı gün pano yetkisi olmayan bir satıra
+   * anahtar çizer, tıklama reddedilir ve operatör panoyu bozuk sanar.
+   * İKİ DEĞERLİ (alanın `null` hâli yok): liste bir ölçüm değil bir karardır, her zaman bilinir.
+   */
+  readonly anahtar_var?: boolean;
   readonly cpu_yuzde?: number | null;
   readonly cpu_yuzde_neden?: string | null;
   readonly rss_bayt?: number | null;
@@ -476,4 +492,25 @@ export interface InfraGovdesi {
   };
   /** 'stdlib (psutil YOK; /proc + os + shutil.disk_usage + systemctl)'. */
   readonly olcum_yolu?: string;
+}
+
+/**
+ * `POST /api/infra/birim/{ad}/istek` 200 gövdesi (`api.py::api_birim_istek`).
+ *
+ * `enabled`/`active` KOMUTUN DEĞİL MAKİNENİN cevabıdır: uç `enable --now` başarılı dönse bile
+ * durumu `is-enabled` + `is-active` ÇIKTILARINDAN geri okur. Pano bu yüzden İYİMSER GÜNCELLEME
+ * YAPMAZ — anahtarı isteğin hedefinden değil bu iki alandan çizer. İkisi de `null` olabilir
+ * (ölçülemedi, gerekçe kardeşinde) ve o hâlde anahtar "bilinmiyor" der, kapalı DEĞİL.
+ */
+export interface BirimIstekSonucu {
+  readonly birim?: string;
+  /** İsteğin hedefi ('acik' | 'kapali') — SONUÇ DEĞİL, sonuç yukarıdaki iki alandadır. */
+  readonly hedef?: string;
+  /** Operatörün kendi eliyle koşabileceği biçimde komut — 'pano öyle diyor'un panzehiri. */
+  readonly komut?: string;
+  readonly komut_rc?: number | null;
+  readonly enabled?: string | null;
+  readonly enabled_neden?: string | null;
+  readonly active?: string | null;
+  readonly active_neden?: string | null;
 }

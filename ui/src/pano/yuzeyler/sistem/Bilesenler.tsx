@@ -44,6 +44,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 
 import type { Durum } from "../../veri";
+import { BirimAnahtari, anahtarsizNeden } from "./BirimAnahtari";
 import { BolumKart, Deger, Kapi, Olculemedi, Satir, baytMetni, sureMetni } from "./parcalar";
 import type { InfraBeklenmedikBirim, InfraBilesen, InfraDurumSinifi, InfraGovdesi } from "./uctipleri";
 
@@ -559,7 +560,16 @@ function BeklenmedikBirimler({ g }: { readonly g: InfraGovdesi }) {
  * "ölçemedik" beyanı ekrana HİÇ düşmüyordu. İki bacak birbirinden BAĞIMSIZ ölçülür; birinin
  * susması ötekini susturamaz, bu yüzden ikisi artık kardeş, iç içe değil.
  */
-function BilesenGovdesi({ g }: { readonly g: InfraGovdesi }) {
+function BilesenGovdesi({
+  g,
+  tazele,
+  veriTs,
+}: {
+  readonly g: InfraGovdesi;
+  readonly tazele: () => void;
+  /** Gövdenin son BAŞARILI okuma damgası (ms) — anahtarın yaş kıyası buna dayanır. */
+  readonly veriTs: number | null;
+}) {
   if (g.bilesenler === null) {
     return (
       <Olculemedi
@@ -841,11 +851,15 @@ function BilesenGovdesi({ g }: { readonly g: InfraGovdesi }) {
 
       {/* --- BİLEŞEN TABLOSU --- */}
       <div className="overflow-x-auto">
-        <Table className="min-w-[62rem]">
+        <Table className="min-w-[70rem]">
           <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead>Birim</TableHead>
               <TableHead>Durum</TableHead>
+              {/* ANAHTAR SÜTUNU DURUMUN HEMEN YANINDA: hüküm ile ona verilecek cevap yan yana
+                  durmazsa operatör tabloyu iki kez tarar. Sağ uçtaki sayı sütunlarının arasına
+                  koymak, yazan tek hücreyi okunan sekiz hücrenin içinde kaybederdi. */}
+              <TableHead>Anahtar</TableHead>
               <TableHead>Beklenti · ölçüm · bağ</TableHead>
               <TableHead className="text-right">CPU</TableHead>
               <TableHead className="text-right">RSS</TableHead>
@@ -881,6 +895,24 @@ function BilesenGovdesi({ g }: { readonly g: InfraGovdesi }) {
                     </span>
                   </TableCell>
                   <TableCell>{durumRozeti(b)}</TableCell>
+                  {/* ANAHTAR HAKKI UÇTAN OKUNUR, PANODA TÜRETİLMEZ: beyaz listeyi burada ikinci
+                      kez yazsaydık iki kopya sessizce ayrışır ve pano yetkisi olmayan bir satıra
+                      anahtar çizerdi — tıklama reddedilir, operatör panoyu bozuk sanardı.
+                      `=== true` AÇIKÇA YAZILDI: alan hiç gelmediyse (eski gövde) anahtar
+                      ÇİZİLMEZ — "izin var" varsaymak, olmayan bir yetkiyi ekranda vaat etmekti. */}
+                  <TableCell>
+                    {b.anahtar_var === true ? (
+                      <BirimAnahtari b={b} veriTs={veriTs} onDegisti={tazele} />
+                    ) : (
+                      <span className="text-muted-foreground text-xs" title={
+                        b.anahtar_var === undefined
+                          ? "Uç bu satır için anahtar hakkını bildirmedi — izin VARSAYILMIYOR"
+                          : "Anahtarlanabilir birimlerin listesi uçta tanımlı (`api.py::BIRIM_ANAHTAR_BEYAZ`)"
+                      }>
+                        {anahtarsizNeden(b)}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell className="max-w-[14rem]">
                     <BeklentiHucresi b={b} />
                   </TableCell>
@@ -963,7 +995,9 @@ function BilesenGovdesi({ g }: { readonly g: InfraGovdesi }) {
             kisa
           />
         )}
-        . Bu tablo hiçbir birimi başlatmaz/durdurmaz; salt okunurdur.
+        . Tablonun tek yazan hücresi anahtar sütunudur ve yalnız uçun izin verdiği birimlerde
+        çizilir; kalan her sütun salt okunurdur. Anahtar birimi hem şimdi hem de açılışta
+        etkiler — dağıtımlar da istenen durumu korur.
       </p>
     </>
   );
@@ -985,7 +1019,14 @@ export function Bilesenler({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                 olduğu için artık birinci bacak ölçülemese de kendi hükmünü söyleyebiliyor.
                 Ölçülmüş temizlikte hiçbir şey çizmez, yani sağlıklı hâlde yer kaplamaz. */}
             <BeklenmedikBirimler g={g} />
-            <BilesenGovdesi g={g} />
+            {/* `tazele` AŞAĞI GEÇİYOR ÇÜNKÜ TABLO ARTIK YAZIYOR: bir anahtar çevrildiğinde satır
+                yeniden okunmalı. Nabzın 15 sn'sini beklemek, operatöre "hiçbir şey olmadı"
+                hissi verirdi — ve o his, iyimser güncellemenin yasak olduğu bir yüzeyde
+                tıklamayı tekrarlatır. */}
+            {/* OKUMA DAMGASI AŞAĞI GEÇİYOR: anahtar, sunucudan aldığı cevabın ne zaman
+                önceliğini kaybettiğini bu damgayla ölçüyor. Onsuz cevap ÖMÜR BOYU kazanır ve
+                birim sonradan düşse bile pano eski cevabı gösterirdi (K1). */}
+            <BilesenGovdesi g={g} tazele={durum.tazele} veriTs={durum.zaman?.getTime() ?? null} />
           </>
         )}
       </Kapi>

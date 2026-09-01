@@ -6740,6 +6740,12 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
     for b in birimler:
         s: dict = {"ad": b["ad"], "dosya": b["dosya"], "tur": b["tur"], "sablon": b["sablon"],
                    "birim_dosyasi": b["yol"],
+                   # ANAHTAR HAKKI UÇTAN GELİR (v368): pano hangi satıra anahtar çizeceğini
+                   # BURADAN öğrenir, beyaz listeyi İKİNCİ kez kendi içinde sabitlemez — iki
+                   # kopya ayrıştığı gün pano yetkisi olmayan bir satıra anahtar çizer ve
+                   # tıklama 403 alır. Alan İKİ DEĞERLİDİR ve bu bilinçli: liste bir ÖLÇÜM
+                   # değil bir KARARDIR, her zaman bilinir, `None` hâli yoktur.
+                   "anahtar_var": birim_anahtar_var(b["ad"]),
                    # KURULUM BEKLENTİSİ diskten gelir (`_infra_birim_adlari`), systemd'den değil:
                    # systemd kurulmamış bir birim için yalnız `not-found` der, "kurulmalı mıydı"
                    # sorusunun cevabı depodaki YOLDADIR.
@@ -6749,6 +6755,13 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
                    "durum_sinifi": None, "durum_sinifi_neden": None,
                    "kurulu": None, "kurulu_neden": None,
                    "durum": None, "durum_neden": None, "alt_durum": None, "alt_durum_neden": None,
+                   # İSTENEN DURUM (`UnitFileState`) ile ŞU ANKİ DURUM (`ActiveState`) AYRI
+                   # SORULARDIR ve operatörün vakası tam bu ayrımda doğdu (2026-09-02): birim
+                   # `disabled` bırakılmıştı, dağıtım onu `enabled` yaptı. `active` tek başına o
+                   # farkı GÖSTERMEZ — bir birim `disabled` olup hâlâ koşuyor, ya da `enabled`
+                   # olup düşmüş olabilir. Alan systemd'den ZATEN çekiliyordu (`_SYSTEMCTL_ALANLARI`)
+                   # ama hiçbir yere yazılmıyordu: okuyucusu olmayan bir ölçüm (YASA 6 borcu).
+                   "etkin_durum": None, "etkin_durum_neden": None,
                    "cpu_yuzde": None, "cpu_yuzde_neden": None, "rss_bayt": None, "rss_bayt_neden": None,
                    "uptime_s": None, "uptime_s_neden": None, "restart_n": None, "restart_n_neden": None,
                    "pid": None, "pid_neden": None, "aciklama": None, "aciklama_neden": None}
@@ -6757,7 +6770,7 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
                        "— koşan şey şablon değil, örneğidir (`ad@<örnek>.service`). Bu birimin "
                        "gerçek durumu `/api/sprint` üzerinden okunur; buradan UYDURULMAZ")
             for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
-                         "restart_n", "pid", "aciklama", "servis_turu"):
+                         "restart_n", "pid", "aciklama", "servis_turu", "etkin_durum"):
                 s[f"{alan}_neden"] = _sablon
             satirlar.append(s)
             continue
@@ -6765,7 +6778,7 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
             _butce = (f"zaman bütçesi doldu ({_SYSTEMCTL_BUTCE_S} sn): bu birim bu istekte "
                       "sorgulanmadı — bütçe, 15 sn'de bir yoklanan ucun kilitlenmemesi için var")
             for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
-                         "restart_n", "pid", "aciklama", "servis_turu"):
+                         "restart_n", "pid", "aciklama", "servis_turu", "etkin_durum"):
                 s[f"{alan}_neden"] = _butce
             satirlar.append(s)
             continue
@@ -6773,7 +6786,7 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
         if not ham:
             _yok = "`systemctl show` bu birim için çıktı vermedi (hata/zaman aşımı) — ölçülemedi"
             for alan in ("kurulu", "durum", "alt_durum", "cpu_yuzde", "rss_bayt", "uptime_s",
-                         "restart_n", "pid", "aciklama", "servis_turu"):
+                         "restart_n", "pid", "aciklama", "servis_turu", "etkin_durum"):
                 s[f"{alan}_neden"] = _yok
             satirlar.append(s)
             continue
@@ -6810,6 +6823,16 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
         else:
             _d = s["kurulu_neden"] or "`ActiveState` alanı çıktıda yok"
             s["durum_neden"] = s["alt_durum_neden"] = _d
+
+        # İSTENEN DURUM. `LoadState`e BAĞLANMADI (bilinçli, `durum`dan farklı): kurulu OLMAYAN bir
+        # birimin de dosya durumu okunabilir (`masked`, `not-found`) ve o bilgi tam da "neden
+        # açılmıyor" sorusunun cevabıdır. Boş/eksik alan `disabled` diye BASILMAZ — anahtar o gün
+        # kapalı görünür ve operatör kapatılmamış bir birimi kapalı sanardı.
+        etkin = ham.get("UnitFileState") or None
+        s["etkin_durum"] = etkin
+        if etkin is None:
+            s["etkin_durum_neden"] = ("`UnitFileState` alanı çıktıda yok/boş — birimin açılışta "
+                                      "başlaması İSTENİYOR mu ölçülemedi; `disabled` SAYILMAZ")
 
         def _sayi(alan: str):
             v = ham.get(alan)
@@ -7065,6 +7088,206 @@ def api_infra(request: Request, taze: int = 0):
     _INFRA_CACHE.clear()            # tek girdi: kum havuzu anahtarları birikip sızmasın (diag emsali)
     _INFRA_CACHE[anahtar] = (yuk, _time.monotonic())
     return yuk
+
+
+# =================================================================================================
+# v368 · BİRİM ANAHTARI — `POST /api/infra/birim/{ad}/istek` (TSK-098): İSTENEN DURUM
+# =================================================================================================
+#
+# OPERATÖR VAKASI (2026-09-02 gecesi, ×2): `meridian-learn` elle `disable --now` bırakılmıştı ve
+# dağıtım onu geri açtı. Vakanın dagit yarısı TSK-092'de kapandı (başlatma listesi artık
+# `is-enabled`dan türetiliyor); bu uç öteki yarısıdır — operatörün istenen durumu PANODAN
+# söyleyebilmesi. `/api/infra` ailesinin YEGÂNE yazan ucu budur ve o yüzden ayrı bir başlık taşır.
+#
+# İSTENEN DURUMUN TEK KAYNAĞI SYSTEMD'DİR (tek-kaynak yasası). Bizde `state/` altında bir
+# "istenen durum" dosyası TUTULMAZ ve tutulmamalıdır: ikinci bir kopya, systemd'nin kendi beyanıyla
+# (`is-enabled`) sessizce ayrışır ve o gün hangisinin doğru olduğunu kimse bilemez. Bu yüzden
+# `enable --now` / `disable --now` seçildi — `start`/`stop` YALNIZ o anki koşumu değiştirir ve
+# yeniden başlatmada (ya da dagit bakım penceresinde) sessizce geri döner; operatörün şikâyeti tam
+# olarak buydu.
+#
+# SUDO YOK. `meridian.service` `NoNewPrivileges` taşır: `sudo` bu süreçte YÜKSELTEMEZ, yalnız
+# sessizce düşer. Yetki polkit/DBus kural dosyasındadır (`deploy/oracle-a1/`) ve o dosya bu ucun
+# işi DEĞİL — burada sudo aramak, kurulumun eksik olduğu bir makinede hatayı yanlış yere
+# gösterirdi. Yetki yoksa `systemctl` rc≠0 + stderr döner ve uç onu AYNEN taşır (502).
+#
+# ÜÇ ARIZA HÂLİ ÜÇ AYRI GERÇEKTİR ve hiçbiri 2xx değildir:
+#   · `systemctl` PATH'te yok      → komut HİÇ koşmadı            → 503
+#   · komut başladı, sonuç okunamadı (zaman aşımı/OS hatası)      → 502, "uygulandı mı BİLİNMİYOR"
+#   · komut koştu ve REDDEDİLDİ (rc≠0)                            → 502, stderr'in ilk 200 baytı
+# Üçünü tek koda toplamak, operatörü yanlış müdahaleye gönderirdi (kural dosyası mı kur, tekrar mı
+# dene, makineye mi bak).
+BIRIM_ANAHTAR_BEYAZ = ("meridian-learn", "meridian-barsarchive")
+# ÇEKİRDEK BİRİM (`meridian`) LİSTEDE YOK VE EKLENMEZ: panonun kendisi o birimin içinde koşuyor —
+# kapatan istek, kapatıldığını bildiren yanıtı gönderemeden ölürdü (pano kendi altındaki dalı
+# keser). Acil durdurma yüzeyi ZATEN VAR ve ayrı bir sınıftır: HALT ailesi.
+#
+# BEYAZ LİSTENİN İKİ BİÇİMİ VAR ÇÜNKÜ İKİ DÜNYA VAR: uç sade birim adıyla (`meridian-learn`)
+# konuşulabilir, ama `/api/infra` satırları DOSYA adı taşır (`meridian-learn.service`, kaynağı
+# `deploy/**` ağacı) ve pano tıkladığı satırın adını gönderir. İki biçim de AÇIKÇA listelenir —
+# `.service` ekini SOYUP karşılaştırmak `meridian-learn.timer`ı da geçirirdi ve o BAŞKA bir
+# birimdir (bugün yok, yarın doğabilir; süzgeç o günü beklemez).
+#
+# LİSTE ÇAĞRI ANINDA TÜRETİLİR, MODÜL YÜKLENİRKEN DEĞİL: donmuş bir ikinci demet, sabiti
+# daralttığında sessizce eski listeyi taşımaya devam ederdi — tek-kaynak yasasının tam ihlali
+# (çivi: `test_anahtar_var_TEK_KAYNAKTAN_turer`).
+BIRIM_ANAHTAR_HEDEFLERI = {"acik": "enable", "kapali": "disable"}
+# Ad süzgeci İKİNCİ KATTIR: `subprocess` zaten LİSTE argv + `shell=False` kullanıyor, yani kabuk
+# hiç devreye girmiyor. Yine de dar tutuluyor — bir gün biri bu adı kabuklu bir yola taşırsa
+# süzgeç orada duruyor olsun. `[a-z0-9@.-]` systemd birim adlarının bu depodaki tamamını kapsar
+# (şablon `@` dahil); büyük harf ve `/` BİLEREK dışarıda.
+# İLK KARAKTER AYRI KISITLANIR (görev incelemesi, 2026-09-02): `[a-z0-9@.-]{1,128}` deseni
+# `-h`, `--version` ve `.` gibi adları GEÇİRİYORDU. Bugün beyaz liste onları 403 ile durduruyor,
+# ama o BAŞKA bir korumadır ve süzgecin kendi işi ARGV-BAYRAK sınıfını kesmektir: `systemctl`e
+# argüman olarak giden bir ad `-` ile başlıyorsa artık bir birim adı değil bir BAYRAKtır.
+# İki korumanın ayrı ölçülmesi mutasyon-1 dersinin devamıdır (biri düşerse öteki sessizce örtmesin).
+_BIRIM_AD_DESENI = re.compile(r"[a-z0-9][a-z0-9@.-]{0,127}")
+# 400 gövdesinde yankılanan istek verisinin TAVANI: gövde saldırganın kontrolündedir ve
+# sınırsız yansıtma, defteri/ekranı istekle doldurmanın bedava yoludur.
+_BIRIM_YANKI_TAVANI = 80
+_BIRIM_KOMUT_ZAMAN_ASIMI_S = 20.0   # `enable --now` birimi BAŞLATIR: 2 sn'lik okuma bütçesi yetmez
+_BIRIM_STDERR_TAVANI = 200          # sır sınıfı içermez (systemd/polkit metni), yine de kırpılır
+
+
+def birim_anahtar_var(ad: str) -> bool:
+    """`ad` panodan anahtarlanabilir mi? BEYAZ LİSTENİN TEK OKUYUCUSU — hem `/api/infra` alanı
+    hem de yazan uç buradan sorar, yoksa iki kopya ayrışır ve pano yetkisi olmayan bir satıra
+    anahtar çizer (tıklama 403 alır, operatör "pano bozuk" der)."""
+    return ad in BIRIM_ANAHTAR_BEYAZ or ad in tuple(f"{a}.service" for a in BIRIM_ANAHTAR_BEYAZ)
+
+
+def _systemctl_kos(argv: list[str], *, zaman_asimi: float) -> tuple[object | None, str | None]:
+    """`systemctl <argv…>` koşar; `(CompletedProcess, None)` ya da `(None, neden)`.
+
+    AYRI FONKSİYON OLMASI `_systemctl_show` EMSALİDİR ama SAPLAMA NOKTASI DEĞİLDİR: çiviler
+    `subprocess.run`ın KENDİSİNİ saplar, çünkü sözleşmenin yarısı KOMUT SATIRIDIR. Bu katmanı
+    saplayan bir çivi, `--now` düştüğünde ya da başına `sudo` geldiğinde yine yeşil kalırdı
+    (vaka 2026-08-30: 18 çivi yeşilken `--uygula` sessizce yok sayılıyordu)."""
+    import subprocess
+    yol = shutil.which("systemctl")
+    if not yol:
+        import platform as _pf
+        return None, (f"`systemctl` bu makinede yok ({_pf.system()}) — komut HİÇ KOŞMADI, "
+                      "birimin durumu DEĞİŞMEDİ")
+    try:
+        return subprocess.run([yol, *argv], capture_output=True, text=True,
+                              timeout=zaman_asimi), None
+    except (OSError, subprocess.SubprocessError) as e:
+        # ZAMAN AŞIMI "UYGULANMADI" DEMEK DEĞİLDİR: komut başlamıştı ve `enable --now` ilk
+        # milisaniyede diski değiştirmiş olabilir. "Başarısız" demek, olmuş bir değişikliği
+        # olmamış saymaktı — belirsizlik ADIYLA taşınır.
+        return None, (f"`systemctl {' '.join(argv)}` başlatıldı ama sonucu okunamadı "
+                      f"({type(e).__name__}) — birimin durumu DEĞİŞTİ Mİ BİLİNMİYOR")
+
+
+def _birim_durum_oku(alt_komut: str, ad: str) -> tuple[str | None, str | None]:
+    """`systemctl is-enabled|is-active <ad>` çıktısı — `(değer, neden)`.
+
+    RC'YE BAKILMAZ, STDOUT'A BAKILIR ve bu bir tuzağın kapanışıdır: systemd bu iki alt komutta
+    NORMAL hâllerde bile rc≠0 döndürür (`disabled` → 1, `inactive` → 3). rc'yi hüküm sanan bir
+    okuyucu, tam da operatörün görmek istediği hâli "ölçülemedi" diye basardı.
+
+    Boş çıktı `None` + neden döner — "kapalı" DEĞİL: ölçülemeyen durum uydurulmaz."""
+    cp, hata = _systemctl_kos([alt_komut, ad], zaman_asimi=5.0)
+    if cp is None:
+        return None, f"geri okuma yapılamadı: {hata}"
+    metin = (getattr(cp, "stdout", "") or "").strip()
+    if not metin:
+        return None, (f"`{alt_komut}` bu birim için boş çıktı verdi (çıkış kodu "
+                      f"{getattr(cp, 'returncode', None)}) — durum ÖLÇÜLEMEDİ, kapalı SAYILMAZ")
+    # Çok satırlı çıktının İLK satırı hükümdür (`is-enabled` maskeli birimde ek satır basabilir).
+    return metin.splitlines()[0].strip(), None
+
+
+@app.post("/api/infra/birim/{ad}/istek")
+async def api_birim_istek(ad: str, request: Request):
+    """Bir systemd birimini İSTENEN DURUMA çeker: `acik` → `enable --now`, `kapali` → `disable --now`.
+
+    YANIT KOMUTU DEĞİL MAKİNEYİ SÖYLER. Komut rc=0 dönse bile `enabled`/`active` alanları
+    `is-enabled` + `is-active` ÇIKTILARINDAN doldurulur — "enable çağırdım, demek ki açıktır" bir
+    ölçüm değil bir varsayımdır ve maskeli birim / preset çakışması / başlatılamayan servis tam
+    olarak orada saklanır. Pano bu yüzden iyimser güncelleme YAPMAZ: anahtarı sunucunun geri
+    okumasından çizer.
+
+    Yazan uç olduğu için `/api/infra`nın 8 sn'lik zarfı BOŞALTILIR; yoksa operatör anahtarı
+    çevirdikten sonra değişiklik ÖNCESİ satırı geri okur ("hiçbir şey olmadı" hissi)."""
+    _auth(request)
+    if not _BIRIM_AD_DESENI.fullmatch(ad):
+        raise HTTPException(status_code=400, detail=(
+            "birim adı biçimsiz — küçük harf ya da rakamla BAŞLAMALI, devamında yalnız "
+            "`a-z 0-9 @ . -` kabul edilir (`-` ile başlayan bir ad birim değil BAYRAKtır; "
+            "`systemctl` argümanı kabuktan geçmez, bu süzgeç ikinci kattır)"))
+    if not birim_anahtar_var(ad):
+        raise HTTPException(status_code=403, detail=(
+            f"`{ad}` panodan anahtarlanamaz. Anahtarlanabilen birimler: "
+            f"{', '.join(BIRIM_ANAHTAR_BEYAZ)}. Çekirdek birim BİLEREK dışarıda — pano kendi "
+            f"altındaki dalı keserdi; acil durdurma için HALT yüzeyi var"))
+    try:
+        govde = await request.json()
+    except Exception:  # sessiz-yutma: gövde okunamazsa hedef BOŞ sayılır ve alttaki kapı 400 ile reddeder — uydurma bir hedef seçmektense dürüst ret
+        govde = {}
+    hedef = govde.get("hedef") if isinstance(govde, dict) else None
+    eylem = BIRIM_ANAHTAR_HEDEFLERI.get(hedef) if isinstance(hedef, str) else None
+    if eylem is None:
+        raise HTTPException(status_code=400, detail=(
+            f"istenen durum okunamadı: gövde `hedef` alanı "
+            f"{', '.join(sorted(BIRIM_ANAHTAR_HEDEFLERI))} değerlerinden biri olmalı "
+            # YANKI KIRPILIR: `hedef` isteğin gövdesinden gelir, yani ÇAĞIRANIN kontrolündedir.
+            # Sınırsız yansıtmak, megabaytlık bir dizgeyi hem yanıta hem operatörün ekranına
+            # bedava bastırmanın yoluydu (görev incelemesi, 2026-09-02).
+            f"(alınan: {repr(hedef)[:_BIRIM_YANKI_TAVANI]})"))
+
+    komut_metni = f"systemctl {eylem} --now {ad}"
+    # İŞ İPLİĞİNE TAŞINIYOR — VE BU SÜSLEME DEĞİL, BU UCA ÖZGÜ BİR ZORUNLULUK. Bu fonksiyon
+    # `async` olmak ZORUNDA (gövdeyi `await request.json()` ile okuyor) ve `async` bir uçta
+    # yapılan ENGELLEYİCİ çağrı olay döngüsünü tutar: `enable --now` birimi BAŞLATIR ve saniyeler
+    # sürebilir (bütçe 20 sn). O süre boyunca panonun TAMAMI — nabız, HALT yüzeyi, her uç —
+    # donardı; yani bir servisi açma isteği, acil müdahale yüzeyini kapatırdı. Senkron (`def`)
+    # uçlarda bu sorun yok, çünkü FastAPI onları zaten iş ipliğinde koşturuyor (`/api/infra`
+    # `systemctl show` çağrılarını böyle yapıyor); `async` olan bu ucun aynı güvenceyi AÇIKÇA
+    # kurması gerekiyor.
+    from starlette.concurrency import run_in_threadpool
+    cp, hata = await run_in_threadpool(
+        _systemctl_kos, [eylem, "--now", ad], zaman_asimi=_BIRIM_KOMUT_ZAMAN_ASIMI_S)
+    rc = None if cp is None else getattr(cp, "returncode", None)
+    # OLAY HER YOLDA YAZILIR — 502'de de. Sessiz arıza en pahalı hâldir: operatör "tıkladım,
+    # olmadı" der ve defterde hiçbir iz kalmazsa kök-neden aranacak yer yoktur. Okuyucusu olay
+    # defteri (`/api/events`) ve karar zinciri yüzeyidir (YASA 6 beyanı hazır).
+    # IP DE YAZILIR (`password_set`/`session_drop` emsali): bu uç canlı bir servisi durduruyor ve
+    # "kim" sorusunun cevabı defterde durmalı. Tek-operatör tasarımında bugün tek bir loopback
+    # adresi görünür — değeri, o beklentinin BOZULDUĞU gün ortaya çıkar.
+    obs.warn("birim_istek", birim=ad, hedef=hedef, rc=rc, komut=komut_metni,
+             kanal="pano", ip=_client_ip(request), hata=hata)
+    # Komut duruma DOKUNMUŞ olabilir (rc≠0 ve zaman aşımı dahil) → bayat zarf her hâlde düşer.
+    #
+    # BEYANLI YARIŞ (görev incelemesi, 2026-09-02 — nesil sayacı BİLEREK KURULMADI): bu `clear()`
+    # ile eşzamanlı koşan bir `GET /api/infra`, zarfını BU SATIRDAN ÖNCE hesaplayıp SONRA yazabilir.
+    # O durumda önbellekte tıklama-ÖNCESİ anlık görüntü kalır ve en fazla `INFRA_TTL_S` (8 sn)
+    # boyunca servis edilir. TAVANI BU: 8 sn, kendiliğinden kapanır, kalıcı değildir.
+    # BEDELİ KİM ÖDER: anahtarın KENDİSİ etkilenmez — pano onu isteğin sunucu cevabından çiziyor
+    # (`BirimAnahtari::anahtarOku`, `kaynak: "sunucu"`), yani yanlış konuma düşmez. Ödeyen, aynı
+    # satırın Durum/CPU/RSS sütunlarıdır: 8 sn kadar bayat görünebilirler.
+    # NEDEN SAYAÇ YOK: nesil sayacı, kozmetik ve kendiliğinden kapanan bir bayatlık için her
+    # okuma yoluna kalıcı bir eşzamanlılık mekanizması eklemek olurdu — taşıması, bozulduğunda
+    # sessiz kalması ve yanlış anlaşılması, düzelttiği şeyden pahalı. Kayıtlı borç, gizli borç değil.
+    _INFRA_CACHE.clear()
+    if cp is None:
+        # `systemctl` yokluğu ile zaman aşımı AYRI kodlar: birincisinde komut hiç koşmadı
+        # (durum kesin DEĞİŞMEDİ), ikincisinde koştu ve sonucu bilinmiyor.
+        kosmadi = "HİÇ KOŞMADI" in (hata or "")
+        raise HTTPException(status_code=503 if kosmadi else 502, detail=hata)
+    if rc != 0:
+        stderr = ((getattr(cp, "stderr", "") or "").strip()
+                  .encode("utf-8")[:_BIRIM_STDERR_TAVANI].decode("utf-8", errors="ignore"))
+        raise HTTPException(status_code=502, detail=(
+            f"`{komut_metni}` çıkış kodu {rc} ile REDDEDİLDİ. Makinenin cevabı: "
+            f"{stderr or '(stderr boş)'}"))
+    # Geri okuma da engelleyicidir (iki alt süreç daha) — aynı gerekçeyle iş ipliğinde.
+    enabled, enabled_neden = await run_in_threadpool(_birim_durum_oku, "is-enabled", ad)
+    active, active_neden = await run_in_threadpool(_birim_durum_oku, "is-active", ad)
+    return {"birim": ad, "hedef": hedef, "komut": komut_metni, "komut_rc": rc,
+            "enabled": enabled, "enabled_neden": enabled_neden,
+            "active": active, "active_neden": active_neden}
 
 
 # =================================================================================================
