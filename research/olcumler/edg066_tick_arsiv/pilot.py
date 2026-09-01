@@ -22,7 +22,7 @@ Sözleşme KOMUT SATIRIdır:
   sayim/GUN.json.gz         sembol başına yoğunluk, seyreltme bedeli, işlemlerden OHLC (PK girdisi)
   manifest.jsonl            gün başına tek satır: kaynak url/sha256/bayt, satır sayıları, süre
 """
-import argparse, gzip, hashlib, json, struct, sys, time, urllib.request
+import argparse, gzip, hashlib, json, struct, sys, time, urllib.error, urllib.request
 from pathlib import Path
 
 HIST_API = "https://iextrading.com/api/1.0/hist?date={g}"
@@ -31,8 +31,16 @@ NS = 1_000_000_000
 
 def hist_tops_kaydi(gun: str):
     g = gun.replace("-", "")
-    with urllib.request.urlopen(HIST_API.format(g=g), timeout=60) as r:
-        govde = r.read()
+    try:
+        with urllib.request.urlopen(HIST_API.format(g=g), timeout=60) as r:
+            govde = r.read()
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            # HIST, yayımlanmamış taze günde boş liste DEĞİL 404 döndürüyor (ölçüldü 2026-09-01:
+            # 2026-08-31→404, 08-14/08-17→200). Sürücünün boş-gün sözlüğüyle ("boş döndü") konuş —
+            # taze/tatil ayrımı sürücüde; 404 dışındaki HTTP hataları gürültülü kalır.
+            raise SystemExit(f"KIRMIZI: HIST API {gun} için boş döndü (HTTP 404 — kayıt yok)")
+        raise
     if not govde.strip():
         raise SystemExit(f"KIRMIZI: HIST API {gun} için boş döndü (tatil/işlem-dışı gün?)")
     for kayit in json.loads(govde):
