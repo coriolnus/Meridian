@@ -6815,6 +6815,131 @@ def _infra_bilesenler(birimler: list[dict]) -> tuple[list | None, str | None]:
     return satirlar, None
 
 
+# ---- İKİNCİ KEŞİF BACAĞI: AYNA KÖRLÜĞÜ (2026-09-01) --------------------------------------------
+#
+# BİRİNCİ BACAK TEK YÖNLÜDÜR. `_infra_birim_adlari` → `_infra_bilesenler` zinciri DEPODAN
+# MAKİNEYE bakar: `deploy/**` altındaki her birim dosyası için "kurulu mu, koşuyor mu" diye sorar.
+# Sorduğu soru kümesi repodaki DOSYA LİSTESİYLE sınırlıdır — makinede DURAN ama repoda karşılığı
+# OLMAYAN bir birim o bacağa GÖRÜNMEZ, çünkü hakkında hiç soru sorulmaz. Eksiği gösteren bir
+# envanter, FAZLAYA kördür.
+#
+# ÖLÇÜLMÜŞ VAKA (canlı A1, 2026-09-01): `meridian-dash.service` makinede duruyor (`inactive`) ve
+# `deploy/` ağacının HİÇBİR yerinde yok. Pano "bileşenler listelendi" diyordu; listelenmeyen bir
+# birim vardı ve onu ne kuran ne emekli eden bir kayıt kaldı.
+#
+# `[]` İLE `None` BURADA İKİ AYRI GERÇEKTİR ve bu ayrım bacağın kendisi kadar önemlidir: boş liste
+# "ölçtük, makinede fazlalık yok" der; `None` "ölçemedik" der. Karıştıkları gün pano ÖLÇÜLMEMİŞ
+# bir temizlik beyan eder — `bilesenler`de kapatılan kusurun tam kardeşi.
+#
+# BEDEL (bedel yasası): sorgu `meridian-*` deseniyle DAR tutuluyor. Bu, makinedeki üçüncü taraf
+# birimlerini ve desene uymayan `meridian.service`/`litestream.service`i kapsam DIŞINDA bırakır.
+# Alternatif — deseni kaldırıp makinenin TÜM birimlerini listelemek — 200+ satırlık bir çıktıyı 8
+# sn'lik bir zarfa sokup panoya "beklenmedik" diye basardı; kazanılan sinyal, üretilen gürültünün
+# altında kalırdı. Kapsam gövdede `beklenmedik_olcum.kapsam_disi` ile BEYANLIDIR.
+_BEKLENMEDIK_DESEN = "meridian-*"
+# 5 sn: `_SYSTEMCTL_BUTCE_S` (1,5 sn) ile TOPLANIR — en kötü 6,5 sn ve uç 15 sn'de bir yoklanıyor,
+# yani nabız kilitlenmez. Tek fork'tur (birim başına değil), o yüzden birinci bacağın sıkı
+# bütçesine ihtiyaç duymaz.
+_LIST_UNIT_FILES_TIMEOUT_S = 5.0
+# `--no-legend` başlığı susturur ama systemd sürümüne göre `14 unit files listed.` dipnotu
+# gelebilir. Dipnotu birim sanmak, panoya var olmayan bir birim adı bastırmak olurdu.
+_SYSTEMD_BIRIM_SONEKI = re.compile(
+    r"\.(service|timer|socket|path|target|mount|automount|swap|slice|scope|device)$")
+
+
+def _sablon_koku(ad: str) -> str:
+    """`ad@örnek.service` → `ad@.service`; şablon olmayan ad AYNEN döner.
+
+    NEDEN (şablon tuzağının ikinci yüzü): repoda duran dosya `meridian-sprint@.service`dir, ama
+    makinede şablonun KALICI BİR ÖRNEĞİ de görünebilir (`meridian-sprint@2026-08-13.service`).
+    Örneği ham adıyla kıyaslamak onu "repoda yok" sayardı ve pano her sprint gününde YENİ bir
+    sahte "beklenmedik birim" basardı — gürültü, üstelik tarihli ve sonsuz."""
+    kok, ayrac, son = ad.rpartition(".")
+    if not ayrac or "@" not in kok:
+        return ad
+    return f"{kok.split('@', 1)[0]}@.{son}"
+
+
+def _systemctl_birim_dosyalari() -> tuple[list[tuple[str, str | None]] | None, str | None]:
+    """Bu MAKİNEDE duran `meridian-*` birim DOSYALARI — `(ad, UnitFileState)` çiftleri + gerekçe.
+
+    ÖLÇÜLEMEZSE BOŞ LİSTE DEĞİL `None`: boş liste çağıranda "fazlalık yok" hükmüne dönüşür ve
+    panoya ölçülmemiş bir temizlik olarak gider.
+
+    `list-unit-files` SEÇİLDİ, `list-units` DEĞİL: ikincisi yalnız systemd'nin O AN belleğinde
+    tuttuğu birimleri verir ve hiç tetiklenmemiş bir birim orada YOKTUR — aradığımız şey tam
+    olarak "duruyor ama kimse dokunmuyor" sınıfıdır. Bedeli: dönen sütun `UnitFileState`tir
+    (enabled/disabled/static), `ActiveState` DEĞİL; gövde bunu `durum_alani` ile beyan eder.
+
+    AYRI FONKSİYON OLMASI BİLİNÇLİ (`_systemctl_show` emsali): alt süreç çağrısı testlerde tek
+    noktadan saplanabilmeli — ama saplama KOMUTUN KENDİSİNİ de görebilsin diye çağrı burada,
+    ayrıştırmayla AYNI yerde duruyor."""
+    import subprocess
+    yol = shutil.which("systemctl")
+    if not yol:
+        import platform as _pf
+        return None, (f"`systemctl` bu makinede yok ({_pf.system()}) — makinede duran birimler "
+                      "ancak systemd'ye sorularak sayılabilir ve bu ölçüm yalnız canlı Linux "
+                      "sunucusunda (A1) yapılabilir; süreç taraması bilerek kullanılmadı "
+                      "(tahmini otoriteye çevirirdi)")
+    komut = [yol, "list-unit-files", _BEKLENMEDIK_DESEN, "--no-legend", "--no-pager"]
+    try:
+        cp = subprocess.run(komut, capture_output=True, text=True,
+                            timeout=_LIST_UNIT_FILES_TIMEOUT_S)
+    except (OSError, subprocess.SubprocessError) as e:
+        return None, (f"`systemctl list-unit-files {_BEKLENMEDIK_DESEN}` koşturulamadı — "
+                      f"{type(e).__name__}: {e}. Makinedeki birimler bu istekte ÖLÇÜLMEDİ; "
+                      "zaman aşımı ya da açılamayan komut 'fazlalık yok' DEMEK DEĞİLDİR")
+    if cp.returncode != 0:
+        return None, (f"`systemctl list-unit-files {_BEKLENMEDIK_DESEN}` çıkış kodu "
+                      f"{cp.returncode} döndürdü (stderr: "
+                      f"{' '.join((cp.stderr or '').split())[:200] or '(boş)'}) — makinedeki "
+                      "birimler ölçülemedi")
+    satirlar: list[tuple[str, str | None]] = []
+    for ham in cp.stdout.split("\n"):
+        parcalar = ham.split()
+        if not parcalar or not _SYSTEMD_BIRIM_SONEKI.search(parcalar[0]):
+            continue                 # başlık/dipnot satırı ("14 unit files listed.") birim DEĞİL
+        satirlar.append((parcalar[0], parcalar[1] if len(parcalar) > 1 else None))
+    return satirlar, None
+
+
+def _infra_beklenmedik(birimler: list[dict]) -> dict:
+    """MAKİNEDE OLUP REPODA OLMAYAN birimler — keşfin ikinci (ters) bacağı.
+
+    `birimler`: `_infra_birim_adlari()["birimler"]`, yani repo BEKLENTİSİNİN tamamı. Kıyas
+    `beklenen` bayrağına DEĞİL ADIN VARLIĞINA bakar: `deploy/` kökünde duran (kurulması
+    beklenmeyen) bir birim de repo tarafından BİLİNİYOR demektir; onu "beklenmedik" saymak,
+    zaten `envanter_gurultusu` diye sınıflanmış bir satırı ikinci kez, bu kez yanlış adla
+    bastırırdı."""
+    olcum: dict = {
+        "komut": f"systemctl list-unit-files '{_BEKLENMEDIK_DESEN}' --no-legend --no-pager",
+        "durum_alani": ("`list-unit-files` STATE sütunu = systemd `UnitFileState` "
+                        "(enabled/disabled/static/masked) — `ActiveState` DEĞİLDİR: birimin ŞU AN "
+                        "koşup koşmadığını bu sütun SÖYLEMEZ"),
+        "kapsam_disi": (f"yalnız `{_BEKLENMEDIK_DESEN}` deseni sorgulanır; desene uymayan birimler "
+                        "(`meridian.service`, `litestream.service`, üçüncü taraf birimler) bu "
+                        "bacağa GÖRÜNMEZ — dar kapsam bilinçli (gürültü bedeli), körlük beyanlı"),
+        "makinedeki_birim_n": None,
+        "makinedeki_birim_n_neden": None,
+        "repo_birim_n": len(birimler),
+    }
+    makinedeki, neden = _systemctl_birim_dosyalari()
+    if makinedeki is None:
+        olcum["makinedeki_birim_n_neden"] = neden
+        return {"birimler": None, "neden": neden, "olcum": olcum}
+    olcum["makinedeki_birim_n"] = len(makinedeki)
+    bilinen = {_sablon_koku(b["ad"]) for b in birimler}
+    satirlar = [
+        {"birim": ad, "durum": durum,
+         "durum_neden": None if durum else (
+             "`list-unit-files` bu satırda STATE sütunu vermedi — birim dosyasının etkinlik "
+             "durumu ölçülemedi")}
+        for ad, durum in sorted(makinedeki, key=lambda t: t[0])
+        if _sablon_koku(ad) not in bilinen]
+    return {"birimler": satirlar, "neden": None, "olcum": olcum}
+
+
 def _infra_yaslandir(yuk: dict, yas: float) -> dict:
     """Önbellekten servis edilen yükün YAŞ alanlarını zarfın yaşıyla toplar (`_diag_yaslandir`
     emsali, aynı yasa): hiçbir alan içinde bulunduğu zarftan taze olduğunu iddia edemez.
@@ -6845,6 +6970,9 @@ def api_infra(request: Request, taze: int = 0):
       doluluğu, çalışma süresi.
     · `surec`: bu API sürecinin kendisi (pid, uptime, CPU%, RSS) — systemd birimiyle AYNI ŞEY DEĞİL.
     · `bilesenler`: `deploy/` altındaki GERÇEK systemd birimleri için durum/CPU%/RSS/uptime/restart.
+    · `beklenmedik_birimler`: TERS YÖN — makinede duran ama `deploy/` ağacında karşılığı OLMAYAN
+      `meridian-*` birimleri. `bilesenler` eksiği gösterir, bu alan FAZLAYI; ikisi olmadan envanter
+      tek yönlüdür (vaka: `meridian-dash.service`, canlı A1, 2026-09-01).
 
     ÖNBELLEK: 8 sn, `hesaplama_ts` + `onbellekten` + `zarf_yasi_s` ile BEYANLI; `?taze=1` zorlar
     (`/api/diagnostics` deseni). Ölçülemeyen HER alan `None` + neden taşır — 0 yazmak yalandır."""
@@ -6859,6 +6987,7 @@ def api_infra(request: Request, taze: int = 0):
                 return {**_infra_yaslandir(yuk, yas), "onbellekten": True}
     kaynak = _infra_birim_adlari()
     bilesenler, bilesen_neden = _infra_bilesenler(kaynak["birimler"])
+    beklenmedik = _infra_beklenmedik(kaynak["birimler"])
     import datetime as _dt          # dosyanın konvansiyonu: datetime fonksiyon içinde import edilir
     yuk = {
         "hesaplama_ts": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
@@ -6867,6 +6996,13 @@ def api_infra(request: Request, taze: int = 0):
         "surec": _infra_surec(),
         "bilesenler": bilesenler,
         "bilesenler_olculemedi_neden": bilesen_neden,
+        # İKİNCİ KEŞİF BACAĞI — ters yön: makinede olup repoda OLMAYAN birimler.
+        # Gerekçe alanı `<alan>_neden` KARDEŞİ olarak adlandırıldı (`beklenmedik_neden` değil):
+        # `tests/test_pano_altyapi_v287.py::_gerekcesiz_none` GENEL taraması kardeş adı arıyor ve
+        # kısa ad o taramanın DIŞINDA kalırdı — yani gerekçe bir gün düşse hiçbir çivi ötmezdi.
+        "beklenmedik_birimler": beklenmedik["birimler"],
+        "beklenmedik_birimler_neden": beklenmedik["neden"],
+        "beklenmedik_olcum": beklenmedik["olcum"],
         "bilesen_kaynagi": {"dizin": kaynak["dizin"], "birim_n": len(kaynak["birimler"]),
                             "systemctl_yolu": shutil.which("systemctl"),
                             "systemctl_yolu_neden": None if shutil.which("systemctl")

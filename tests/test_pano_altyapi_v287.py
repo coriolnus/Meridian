@@ -55,12 +55,24 @@ J. DOSYA YOKSA — boş liste DEĞİL, `hata` + `yol` taşıyan dürüst gövde.
 K. JSON SÖZLEŞMESİ — iki gövde de `allow_nan=False` ile serileşmeli (numpy/NaN sızmıyor).
    `_NativeRoute` bunu zaten yapıyor ama sözleşme burada çivilenir, yoksa bir gün uç
    `JSONResponse` döndürmeye geçse sarıcı devre dışı kalırdı.
+
+L. AYNA KÖRLÜĞÜ — KEŞİF İKİ YÖNLÜ OLMALI (ikinci bacak, 2026-09-01). D/E/F'nin çivilediği bacak
+   DEPODAN MAKİNEYE bakar: `deploy/**` altındaki her birim dosyası için "kurulu mu, koşuyor mu"
+   diye sorar. Sorduğu soru kümesi repodaki DOSYA LİSTESİYLE sınırlıdır — yani makinede DURAN ama
+   repoda karşılığı OLMAYAN bir birim o bacağa hiç görünmez, çünkü hiç sorulmaz. ÖLÇÜLMÜŞ VAKA
+   (canlı A1, 2026-09-01): `meridian-dash.service` makinede duruyor ve `deploy/` ağacında YOK;
+   pano "bileşenler listelendi" diyordu, listelenmeyen bir birim vardı.
+
+   Ve bu bacakta `[]` ile `None` ARASINDAKİ FARK ÇİVİNİN KENDİSİDİR: boş liste "ölçtük, temiz"
+   demektir, `None` "ölçemedik". İkisi karıştığı gün pano ölçülmemiş bir temizlik beyan eder —
+   D/E/F'de `bilesenler` için kapatılan kusurun tam kardeşi.
 """
 from __future__ import annotations
 
 import json
 import pathlib
 import re
+import subprocess
 
 import pytest
 from fastapi.testclient import TestClient
@@ -284,6 +296,165 @@ def test_memorycurrent_ayarsiz_sentineli_sayi_olarak_sizmaz(monkeypatch, sandbox
     for s in yuk["bilesenler"]:
         assert s["rss_bayt"] is None, f"sentinel sayı olarak sızdı: {s['rss_bayt']}"
         assert isinstance(s.get("rss_bayt_neden"), str) and s["rss_bayt_neden"].strip()
+
+
+# ---------------------------------------------------------------- L. AYNA KÖRLÜĞÜ (2. bacak)
+
+# Gerçek `systemctl list-unit-files 'meridian-*' --no-legend --no-pager` çıktısının biçimi:
+# `<BİRİM> <STATE> [<PRESET>]`, boşlukla hizalı. Üçüncü sütun systemd sürümüne göre YOK olabilir.
+_LIST_CIKTISI = (
+    "meridian-backup.service              enabled   enabled\n"
+    "meridian-backup.timer                enabled   enabled\n"
+    "meridian-sprint@.service             static    -\n"
+    "meridian-dash.service                disabled  disabled\n"
+    "14 unit files listed.\n"          # dipnot satırı: birim DEĞİLDİR, birim sanılırsa uydurma
+)
+
+
+def _sahte_systemctl(monkeypatch, cikti: str = "", *, rc: int = 0, patlat: Exception | None = None):
+    """`subprocess.run` saplaması — argv'yi KAYDEDER, çünkü çivinin yarısı KOMUTUN KENDİSİDİR.
+
+    Çıktıyı `_systemctl_birim_dosyalari`yi saplayarak vermek daha kolay olurdu ve komut satırını
+    ölçüm DIŞINDA bırakırdı: uç `list-unit-files` yerine bambaşka bir şey koşsa çivi yine yeşil
+    kalırdı (vaka 2026-08-30: 18 çivi yeşilken `--uygula` sessizce yok sayılıyordu). Bu yüzden
+    saplama alt sürecin KENDİSİNDE duruyor ve argv/kwargs testlere geri veriliyor.
+
+    `show` çağrıları bu çivilerin konusu DEĞİLDİR (birinci bacak D/E/F'de çivili) — onlara
+    `returncode=1` dönüyor, yani birinci bacak "ölçülemedi" diye geçiyor."""
+    import subprocess as _sp
+    cagrilar: list[tuple[list[str], dict]] = []
+
+    def _run(argv, *a, **kw):
+        cagrilar.append((list(argv), dict(kw)))
+        if "list-unit-files" in argv:
+            if patlat is not None:
+                raise patlat
+            return _sp.CompletedProcess(argv, rc, cikti, "sahte stderr" if rc else "")
+        return _sp.CompletedProcess(argv, 1, "", "")
+
+    monkeypatch.setattr(_sp, "run", _run)
+    monkeypatch.setattr(api.shutil, "which",
+                        lambda ad: "/usr/bin/systemctl" if ad == "systemctl" else None)
+    return cagrilar
+
+
+def _liste_cagrisi(cagrilar) -> tuple[list[str], dict]:
+    return next((a, k) for a, k in cagrilar if "list-unit-files" in a)
+
+
+def test_makinede_olup_repoda_olmayan_birim_beklenmedik_isaretlenir(monkeypatch, sandbox_state):
+    """ÖLÇÜLMÜŞ VAKA (canlı A1, 2026-09-01): `meridian-dash.service` makinede duruyor, repoda YOK.
+    Birinci bacak onu HİÇ sormaz — bu bacak onu görmezse sistem kendi makinesine kördür."""
+    cagrilar = _sahte_systemctl(monkeypatch, _LIST_CIKTISI)
+    yuk = _client().get("/api/infra?taze=1").json()
+
+    bek = yuk["beklenmedik_birimler"]
+    assert bek is not None, f"ölçüm yapıldı ama None döndü: {yuk.get('beklenmedik_birimler_neden')!r}"
+    assert [b["birim"] for b in bek] == ["meridian-dash.service"], (
+        f"beklenmedik birim listesi yanlış: {bek}")
+    assert bek[0]["durum"] == "disabled", "STATE sütunu okunmadı — durum UYDURULAMAZ"
+    assert yuk["beklenmedik_birimler_neden"] is None, "ölçüm yapıldı ama gerekçe yazılmış (çelişki)"
+    assert "14 unit files listed." not in str(bek), "dipnot satırı birim sanıldı"
+
+
+def test_repodaki_birim_beklenmedik_sayilmaz(monkeypatch, sandbox_state):
+    """Ters yön (bedel çivisi): repoda KARŞILIĞI OLAN birim beklenmedik SAYILMAZ. Bu ayrım
+    olmadan bacak her canlı birimi 'beklenmedik' diye basardı ve sinyal gürültüde kaybolurdu."""
+    _sahte_systemctl(monkeypatch, _LIST_CIKTISI)
+    adlar = {b["birim"] for b in _client().get("/api/infra?taze=1").json()["beklenmedik_birimler"]}
+    for repoda_olan in ("meridian-backup.service", "meridian-backup.timer"):
+        assert repoda_olan not in adlar, f"repoda VAR olan `{repoda_olan}` beklenmedik sayıldı"
+
+
+def test_sablon_ORNEGI_beklenmedik_sayilmaz(monkeypatch, sandbox_state):
+    """ŞABLON TUZAĞININ İKİNCİ YÜZÜ (MEMORY: 'meridian-sprint şablon birim'). Repoda duran dosya
+    `meridian-sprint@.service`; makinede hem şablonun kendisi hem KALICI BİR ÖRNEĞİ görünebilir.
+    Örneği ham adıyla kıyaslamak onu 'repoda yok' sayardı ve pano her sprint gününde YENİ bir
+    sahte 'beklenmedik birim' basardı — gürültü, üstelik tarihli."""
+    _sahte_systemctl(monkeypatch,
+                     "meridian-sprint@.service            static   -\n"
+                     "meridian-sprint@2026-08-13.service  static   -\n")
+    bek = _client().get("/api/infra?taze=1").json()["beklenmedik_birimler"]
+    assert bek == [], f"şablon ve/veya örneği beklenmedik sayıldı: {bek}"
+
+
+def test_temiz_makinede_BOS_LISTE_doner_None_DEGIL(monkeypatch, sandbox_state):
+    """`[]` = "ÖLÇTÜK, TEMİZ"; `None` = "ÖLÇEMEDİK". İkisi ASLA karışmaz — karıştıkları gün pano
+    ölçülmemiş bir temizlik beyan eder. Bu, `bilesenler`de kapatılan kusurun tam kardeşidir."""
+    _sahte_systemctl(monkeypatch, "meridian-backup.service   enabled   enabled\n")
+    yuk = _client().get("/api/infra?taze=1").json()
+    assert yuk["beklenmedik_birimler"] == [], "temiz makinede boş liste beklenir"
+    assert yuk["beklenmedik_birimler_neden"] is None
+    assert yuk["beklenmedik_olcum"]["makinedeki_birim_n"] == 1, (
+        "boş liste 'temiz' diye okunacaksa KAÇ birimin ölçüldüğü de bildirilmeli — yoksa "
+        "'hiç satır görmedik' ile 'hepsi tanıdık' aynı görünür")
+
+
+def test_systemctl_yoksa_beklenmedik_None_ve_gerekce(monkeypatch, sandbox_state):
+    """UYDURMA YASAĞI: systemctl yoksa (darwin/test) boş liste 'temiz' diye okunurdu."""
+    monkeypatch.setattr(api.shutil, "which", lambda ad: None)
+    yuk = _client().get("/api/infra?taze=1").json()
+    assert yuk["beklenmedik_birimler"] is None, ("`systemctl` yokken boş liste döndü — 'ölçtük, "
+                                                 "temiz' ile 'ölçemedik' karıştı")
+    neden = yuk["beklenmedik_birimler_neden"]
+    assert isinstance(neden, str) and len(neden.strip()) >= _GEREKCE_ASGARI, f"gerekçe yok: {neden!r}"
+    assert "systemctl" in neden
+    assert yuk["beklenmedik_olcum"]["makinedeki_birim_n"] is None
+    assert not _gerekcesiz_none(yuk)
+
+
+@pytest.mark.parametrize("kurulum, ipucu", [
+    ({"rc": 4}, "4"),                                                   # komut hata döndürdü
+    ({"patlat": subprocess.TimeoutExpired("systemctl", 5.0)}, "Timeout"),
+    ({"patlat": FileNotFoundError("systemctl")}, "FileNotFound"),
+])
+def test_komut_dusunce_None_ve_gerekce(kurulum, ipucu, monkeypatch, sandbox_state):
+    """Hata dalı İŞARETLİ-GEREKÇELİ olmalı: zaman aşımı da, sıfırdan farklı çıkış da, açılamayan
+    komut da 'ölçemedik'tir — hiçbiri 'temiz' DEĞİLDİR."""
+    _sahte_systemctl(monkeypatch, "", **kurulum)
+    yuk = _client().get("/api/infra?taze=1").json()
+    assert yuk["beklenmedik_birimler"] is None, "düşen komut boş liste (=temiz) diye raporlandı"
+    neden = yuk["beklenmedik_birimler_neden"]
+    assert isinstance(neden, str) and len(neden.strip()) >= _GEREKCE_ASGARI
+    assert ipucu in neden, f"gerekçe arıza sınıfını söylemiyor: {neden!r}"
+    assert not _gerekcesiz_none(yuk)
+
+
+def test_komut_operatorun_kosacagi_bicimde_kurulur(monkeypatch, sandbox_state):
+    """Ops disiplini: alt süreç ÇAĞRISI da sözleşmenin parçasıdır. Desen/`--no-legend` düşse
+    ayrıştırma sessizce başka bir şeyi okurdu; zaman aşımı düşse uç 15 sn'lik nabzı kilitlerdi."""
+    cagrilar = _sahte_systemctl(monkeypatch, _LIST_CIKTISI)
+    _client().get("/api/infra?taze=1")
+    argv, kw = _liste_cagrisi(cagrilar)
+    assert argv[0] == "/usr/bin/systemctl" and argv[1] == "list-unit-files"
+    assert "meridian-*" in argv, f"desen komuta girmemiş: {argv}"
+    assert "--no-legend" in argv and "--no-pager" in argv, f"argv: {argv}"
+    assert isinstance(kw.get("timeout"), (int, float)) and 0 < kw["timeout"] <= 10, (
+        f"alt süreç zaman aşımsız/aşırı çağrıldı (timeout={kw.get('timeout')!r}) — 8 sn TTL'li, "
+        "15 sn'de bir yoklanan bir uç kilitlenemez")
+
+
+def test_olcum_bedelini_beyan_eder(monkeypatch, sandbox_state):
+    """BEDEL YASASI: bacak yalnız `meridian-*` desenini sorar; desene UYMAYAN birimler
+    (`meridian.service`, `litestream.service`, üçüncü taraf birimler) bu bacağa GÖRÜNMEZ.
+    Kazanç ölçülüp bedel ölçülmezse körlüğün belirtisi hiçbir şeydir."""
+    _sahte_systemctl(monkeypatch, _LIST_CIKTISI)
+    olcum = _client().get("/api/infra?taze=1").json()["beklenmedik_olcum"]
+    assert "list-unit-files" in olcum["komut"] and "meridian-*" in olcum["komut"]
+    assert "ActiveState" in olcum["durum_alani"], (
+        "`durum` sütununun NE OLDUĞU beyan edilmiyor — `UnitFileState` `ActiveState` DEĞİLDİR "
+        "ve okuyan onu 'koşuyor mu' sanır")
+    assert isinstance(olcum["kapsam_disi"], str) and len(olcum["kapsam_disi"].strip()) >= _GEREKCE_ASGARI
+    assert olcum["repo_birim_n"] == len(api._infra_birim_adlari()["birimler"])
+
+
+def test_beklenmedik_bacak_gerekce_kardesi_adlandirmasina_uyar(sandbox_state):
+    """TEK-KAYNAK/AD SÖZLEŞMESİ: gerekçe alanı `<alan>_neden` kardeşi olarak adlandırılmalı,
+    yoksa B'deki GENEL uydurma-yasağı taraması (`_gerekcesiz_none`) bu alanı GÖRMEZ ve yarın
+    gerekçe düşse kimse fark etmez. Ad `beklenmedik_neden` olsaydı çivi sessizce körelirdi."""
+    yuk = _client().get("/api/infra?taze=1").json()
+    assert "beklenmedik_birimler" in yuk and "beklenmedik_birimler_neden" in yuk
+    assert not _gerekcesiz_none(yuk)
 
 
 # ---------------------------------------------------------------- G. ÖNBELLEK BEYANI

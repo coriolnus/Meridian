@@ -2585,6 +2585,10 @@ kararı gerektirenler §5'e geçer.
   What: `goal.yaml`ın beyan ettiği "AYRILMAZ" çift (`max_open_positions: 20` + `position_size_r: 0.5`) iki ayrı dosyada ve iki ayrı yedek davranışındaydı — `strategy.yaml` bozulursa `config.strategy()` sessizce `default_strategy()`e düşüyordu (orada `position_size_r: 1.0`). Seviye düzeltmesi: bu bir toplam-risk patlaması değil, portföy ŞEKLİ değişimiydi (`heat_hard_r` yine bağlıyordu).
   Why: sessiz olan yedeğin DEĞERİYDİ (`strategy_file_unusable` uyarısı zaten basılıyordu); WP2 kapanışında `config.py:364` yedek 0,5'e çekilip BEKLENEN_BOYUT çivisiyle kapatıldı.
   Ref: docs/RAPOR-HAVUZ-SINIFLANDIRMA-2026-08-23.md; WP6-26 turunun devrettiği kalem. eski: Ö-30 · §4-30.
+- **[TSK-086] İnfra-simetri pano okuyucusu** — status: QUEUED · born: 2026-09-01 · owner: rol1 · size: S · trigger: —
+  What: `/api/infra.beklenmedik_birimler` alanına pano yüzeyinde okuyucu (Altyapı kartına "beklenmedik birim" rozeti + listesi) — Yasa 6 borcunu kapatır: alan 2026-09-01 gecesinden beri yayında, tests-dışı okuyucusu yok (bacağı indiren ajanın kendi açık-kalem beyanı).
+  Why: ayna körlüğü bacağı gece indi (gerçek vaka: A1'de repo-dışı inactive `meridian-dash.service` artık ölçülüyor); okuyucu olmadan işaret operatöre ulaşmaz. Not: /api/infra zaman tavanı 6,5 sn'e büyüdü (8 sn TTL) — UI bağlanırken gecikme gözlenirse ölçülür.
+  Ref: tests/test_pano_altyapi_v287.py çivileri · gece kapanış raporu 2026-09-01.
 
 ## §5 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde) _(eski: §3)_
 
