@@ -11,6 +11,10 @@ rotalar:
     # fallback_strategy dizisi — kurulum günü Admin API'den ölçüldü).
     uri: /llm/v1/chat/completions
     plugins:
+      # `plugins:` varsayılanı EZER (TSK-089): prometheus açıkça yazılmazsa rota-başına
+      # apisix_http_status sayacı HİÇ üretilmez — Kapı sayfasının metrik bölümü boş kalır
+      # (ölçüldü 2026-09-01: istek geçti, sayaç 0 satır). Yalnız sayaç üretir, gövdeye dokunmaz.
+      prometheus: {}
       proxy-rewrite:
         # canary ③: ai-proxy varsayılanı istemci header'larını iletir — burada istemciden
         # gelen Authorization/X-* temizlenir; upstream auth'u instance'ların kendi auth'udur.
@@ -48,6 +52,7 @@ rotalar:
     # sağlığıyla ölçülmez; bu rota o ayrımı taşır.
     uri: /llm/hizli/v1/chat/completions
     plugins:
+      prometheus: {}   # yukarıdaki notla aynı: sayaç ancak açık yazılınca doğar
       proxy-rewrite:
         uri: /llm/v1/chat/completions
         headers:
