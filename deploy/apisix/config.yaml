@@ -36,13 +36,36 @@ apisix:
     - ip: 127.0.0.1
       port: 9080
   enable_admin: true
+  # Faz 3 (2026-09-01): TLS ingress dinleyicisi. 0.0.0.0'a bağlanır ama dış dünya İKİ ayrı
+  # kapıyla kapalı (host iptables yalnız 22 + OCI güvenlik listesi) — dış açılış, rota
+  # kimlik korumaları canary'lendikten SONRA operatörün konsol adımıyla olur. Sertifika
+  # Admin API /ssls'e yüklenir (self-signed geçici; alan adı kararı → certbot).
+  ssl:
+    enable: true
+    listen:
+      - ip: 0.0.0.0
+        port: 9443   # 443 DEĞİL — ölçüldü (2026-09-01): imajın nginx'i root olmayan kullanıcıda,
+                     # <1024 bind'ı "Permission denied" ile konteyneri düşürdü. Dış URL :9443 taşır.
 
 nginx_config:
-  # canary ⑨: error_log_level info — $ENV çözüm hataları ve plugin uyarıları görünür kalsın.
-  error_log_level: info
+  # error_log_level: kurulum canary'leri (⑨) info ile koşuldu ve KAPANDI; info düzeyi balancer
+  # satırına TAM istek URI'sini (FMP apikey sorgu parametresi DAHİL) yazıyor — ölçüldü 2026-09-01.
+  # warn'da $ENV çözüm hataları görünmeye devam eder, istek-başına sızıntı satırı kesilir.
+  error_log_level: warn
   worker_processes: 2
+  http:
+    # SIR SIZINTISI ÖNLEMİ (ölçüldü 2026-09-01): varsayılan biçim $request taşır = sorgu dizesi
+    # = FMP apikey loga düşer. Biçim $uri kullanır (sorgusuz); kalan alanlar teşhis için yeter.
+    access_log_format: '$remote_addr - $remote_user [$time_local] $host "$request_method $uri" $status $body_bytes_sent $request_time "$http_user_agent" $upstream_addr $upstream_status $upstream_response_time "$apisix_request_id"'
 
 plugins:
   - ai-proxy-multi   # Faz 1: LLM rotası — öncelik zinciri + fallback
   - proxy-rewrite    # canary ③: ai-proxy varsayılanı TÜM istemci header'larını iletir — temizlik şart
   - prometheus       # bedel ölçümü (canary ⑧) — /apisix/prometheus/metrics yalnız loopback
+  # Faz 2-4 öne çekme (operatör talimatı 2026-09-01) — her biri routes.yaml'da adıyla kullanılır:
+  - limit-count            # Faz 2: FMP 250/gün + Faz 4: filo 1000/gün (policy redis)
+  - basic-auth             # Faz 3: pano ingress — tarayıcı header koyamaz, key-auth İNGRESS'e uymaz (ölçüldü: browser kısıtı)
+  - key-auth               # Faz 4: bot kimlikleri (apikey başlığı — makine istemcileri)
+  - limit-req              # Faz 3: ingress kaba hız sınırı
+  - client-control         # Faz 3: ingress gövde tavanı
+  - consumer-restriction   # Faz 4: LLM rotaları yalnız filo+motor tüketicilerine

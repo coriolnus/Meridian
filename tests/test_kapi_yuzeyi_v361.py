@@ -445,14 +445,15 @@ def test_zaman_asimi_sabiti_beyanli():
 # ------------------------------------------------------------------- G. FAZLAR
 
 def test_fazlar_plugin_imzasindan_turetilir(monkeypatch, tmp_path, sandbox_state):
-    """Faz 1 canlı (routes.yaml'da `ai-proxy-multi` VAR), 2/3/4 bekliyor. Sabit metin olsaydı
-    Faz 2 indiği gün pano yalan söylemeye başlardı ve kimse fark etmezdi."""
+    """Faz 1/2/3 canlı (routes.yaml'da `ai-proxy-multi` + `limit-count` + `basic-auth` VAR),
+    Faz 4 bekliyor. Sabit metin olsaydı Faz 2 indiği gün pano yalan söylemeye başlardı ve
+    kimse fark etmezdi."""
     _kurulum(monkeypatch, tmp_path)
     f = _client().get("/api/gateway").json()["fazlar"]
     assert set(f) == {"faz1_llm", "faz2_fmp", "faz3_ingress", "faz4_filo"}, sorted(f)
     assert f["faz1_llm"] == "canli"
-    assert f["faz2_fmp"] == "bekliyor"
-    assert f["faz3_ingress"] == "bekliyor"
+    assert f["faz2_fmp"] == "canli"  # 2026-09-01: fmp-veri rotası limit-count ile indi
+    assert f["faz3_ingress"] == "canli"  # pano-ingress basic-auth ile indi; imza basic-auth'a çevrildi
     assert f["faz4_filo"] == "bekliyor"
 
 

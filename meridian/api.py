@@ -7113,8 +7113,8 @@ _KAPI_FAZ_IMZALARI = (
      "Faz 1 imzası: bir rotada `ai-proxy-multi` (LLM öncelik zinciri) tanımlı"),
     ("faz2_fmp", "limit-count",
      "Faz 2 imzası: bir rotada `limit-count` (FMP egress günlük kotası) tanımlı"),
-    ("faz3_ingress", "key-auth",
-     "Faz 3 imzası: bir rotada `key-auth` (pano ingress consumer kimliği) tanımlı"),
+    ("faz3_ingress", "basic-auth",
+     "Faz 3 imzası: bir rotada `basic-auth` (pano ingress kimliği; key-auth DEĞİL — tarayıcı apikey başlığı koyamaz, key-auth Faz 4 bot kilididir)"),
     ("faz4_filo", "consumer-restriction",
      "Faz 4 imzası: bir rotada `consumer-restriction` (bot filosu ayrımı) tanımlı"),
 )

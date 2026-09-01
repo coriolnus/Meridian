@@ -22,10 +22,16 @@ earnings_dates'te boş liste "kazanç yok" ile "istek düştü"yü ayıramaz —
 anlarının damgalı listesi; oku-değiştir-yaz file_lock ile kilitli); başka önbellek tutmaz — bar
 önbelleği adapters/data.py'nin, üyelik önbelleği adapters/constituents.py'nindir."""
 from __future__ import annotations
+import os
 import httpx
 from .. import secrets
 
-BASE = "https://financialmodelingprep.com/stable"
+# TABAN ADRESİ ENV'DEN (TSK-089 Faz 2, kapı yönlendirmesi): FMP trafiğini APISIX kapısına
+# çevirebilmek için taban dağıtımda değiştirilebilir olmalı — kod değişikliği gerektirmeden.
+# Yönlendirme OPT-IN'dir: env yokken VARSAYILAN DAVRANIŞ DEĞİŞMEZ (aynı sağlayıcı ucu).
+# Sondaki `/` kırpılır çünkü tek tüketim noktası (_get_with_key) tabanı bölü + yol ile
+# bitiştirir — kırpılmazsa "…/fmp//quote" gibi çift-bölü üretir (bazı kapılar ayrı yol sayar).
+BASE = os.environ.get("MERIDIAN_FMP_BASE", "https://financialmodelingprep.com/stable").rstrip("/")
 
 
 def available() -> bool:

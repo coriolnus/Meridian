@@ -46,6 +46,56 @@ rotalar:
             override:
               endpoint: https://openrouter.ai/api/v1/chat/completions
 
+  - id: fmp-veri
+    # Faz 2 — FMP egress: adapter (meridian/adapters/fmp.py) MERIDIAN_FMP_BASE env'iyle buraya
+    # yönlenir; anahtar ADAPTER'da kalır (?apikey sorgu parametresi — rotasyon + anahtar-başına
+    # kota muhasebesi adapter'ın ölçülü işi; kapıya taşımak o muhasebeyi köreltirdi. ROADMAP'teki
+    # "$ENV anahtar" hedefinden BEYANLI sapma, tek-kaynak gerekçesiyle). Kapının işi: günlük
+    # tavan (mekanik kill), durum-kodu GEÇİRGENLİĞİ (402≠429 adapter'a bozulmadan iner) ve sayaç.
+    uri: /fmp/*
+    plugins:
+      prometheus: {}
+      proxy-rewrite:
+        regex_uri: ["^/fmp/(.*)", "/stable/$1"]
+        host: financialmodelingprep.com
+      limit-count:
+        count: 250                # FMP ücretsiz plan tavanı — anahtar-başına değil rota-geneli emniyet kemeri
+        time_window: 86400
+        policy: redis
+        redis_host: 127.0.0.1
+        redis_port: 6379
+        key_type: constant
+        key: fmp-gunluk
+        rejected_code: 429
+        rejected_msg: "kapi-fmp-gunluk-kota"   # FMP'nin kendi 429'undan ayırt edilebilir gövde
+    upstream:
+      type: roundrobin
+      scheme: https
+      nodes:
+        "financialmodelingprep.com:443": 1
+
+  - id: pano-ingress
+    # Faz 3 — pano girişi: TLS dinleyicisinden (443) gelen istekler panoya (127.0.0.1:8080).
+    # basic-auth SEÇİLDİ (key-auth değil): tarayıcı 'apikey' başlığı koyamaz — ölçülmüş kısıt.
+    # Pano'nun kendi parola kapısı AYNEN kalır: çift kapı bilinçli (kapı kimliği + uygulama oturumu).
+    # uri /* — llm/fmp rotaları daha uzun önekle önce eşleşir (radixtree).
+    uri: /*
+    plugins:
+      prometheus: {}
+      basic-auth: {}
+      limit-req:
+        rate: 10
+        burst: 20
+        key_type: var          # şema ölçümü 2026-09-01: constant enum'da YOK (o limit-count'un)
+        key: remote_addr       # istemci-IP başına — ingress için doğrusu zaten bu
+        rejected_code: 429
+      client-control:
+        max_body_size: 1048576   # 1 MiB — pano POST'ları küçüktür; büyük gövde bu yüzeyin işi değil
+    upstream:
+      type: roundrobin
+      nodes:
+        "127.0.0.1:8080": 1
+
   - id: llm-hizli
     # Hafif model rotası: kısa/mekanik işler + kapının kendi smoke'u. Ölçülen ders (kurulum
     # günü): nemotron-550b free ucu dakikalarca boğulabiliyor — kapı sağlığı ağır modelin
@@ -71,3 +121,50 @@ rotalar:
               model: google/gemma-4-26b-a4b-it:free
             override:
               endpoint: https://openrouter.ai/api/v1/chat/completions
+
+# --- Faz 3-4 kimlikleri (2026-09-01 öne çekme) ------------------------------------------------
+# Sır YOK: değerler $env:// ile konteyner ortamından (/opt/apisix/.env-apisix) çözülür.
+# Bot anahtarları key-auth (makine istemcisi, apikey başlığı); pano basic-auth (tarayıcı).
+# LLM rotalarına key-auth+consumer-restriction KİLİDİ henüz YOK — flip, tüm istemciler
+# (motor nous çağrısı + üç bot profili) anahtar taşıyınca AYRI adımda gelir (plan F4-B sırası).
+
+tuketici_gruplari:
+  - id: filo
+    plugins:
+      limit-count:
+        count: 1000               # LLM kota memory'si: filo günlük 1000 çağrı — mekanikleşiyor
+        time_window: 86400
+        policy: redis
+        redis_host: 127.0.0.1
+        redis_port: 6379
+        key_type: constant
+        key: filo-gunluk
+        rejected_code: 429
+        rejected_msg: "kapi-filo-gunluk-kota"
+
+tuketiciler:
+  - username: pano_operator
+    plugins:
+      basic-auth:
+        username: operator
+        password: "$env://PANO_GIRIS_PAROLA"
+  - username: bot_bekci
+    group_id: filo
+    plugins:
+      key-auth:
+        key: "$env://BOT_KEY_BEKCI"
+  - username: bot_karne
+    group_id: filo
+    plugins:
+      key-auth:
+        key: "$env://BOT_KEY_KARNE"
+  - username: bot_sef
+    group_id: filo
+    plugins:
+      key-auth:
+        key: "$env://BOT_KEY_SEF"
+  - username: motor_meridian
+    # Motor filo kotasının DIŞINDA: nous çevirisi + warmup sınıfı kendi bütçesiyle yaşar.
+    plugins:
+      key-auth:
+        key: "$env://BOT_KEY_MERIDIAN"
