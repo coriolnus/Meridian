@@ -1,6 +1,12 @@
 # Hindsight Control Plane (web UI, Next.js) — kart EDG-2026-067; operatör kararı ③ (2026-09-01):
 # kurulur ama YALNIZ 127.0.0.1 + ssh tüneli (CP auth'u upstream'de issue #1148; imaj ACCESS_KEY
 # destekliyor — ölçüldü 2026-09-01, savunma iki katman: loopback bind + ACCESS_KEY).
+# HOSTNAME=localhost ZORUNLU, 127.0.0.1 DEĞİL (vaka 2026-09-01): Next 16.3.2 middleware
+# rewrite'ı (intl localePrefix "never": / -> /en) kendi origin'iyle kıyaslar; origin'i hep
+# "localhost:PORT" kurar. HOSTNAME=127.0.0.1 ile kıyas cross-origin düşer, rewrite 307
+# redirect'e çevrilir -> HER sayfa kendine yönlenir, login dahil sonsuz döngü (curl ile
+# ölçüldü, Host başlığından ve çerezden bağımsız). "localhost" bind'ı yine 127.0.0.1'e
+# çözülür (ss ile doğrulandı) — dışa açılmaz.
 # Docker: operatör izni 2026-09-01 ("docker kurabilirsin"); imaj 0.9.2 PİNLİ (API ile aynı sürüm).
 # Kurulum: sudo cp -> /etc/systemd/system/hindsight-cp.service && sudo systemctl daemon-reload
 #          && sudo systemctl enable --now hindsight-cp     # YALNIZ bu birim (TSK-092 dersi:
@@ -22,9 +28,9 @@ Type=simple
 EnvironmentFile=/opt/hindsight/.env-cp
 ExecStartPre=-/usr/bin/docker rm -f hindsight-cp
 ExecStart=/usr/bin/docker run --rm --name hindsight-cp --network host \
-  -e HINDSIGHT_CP_HOSTNAME=127.0.0.1 \
+  -e HINDSIGHT_CP_HOSTNAME=localhost \
   -e HINDSIGHT_CP_PORT=9999 \
-  -e HOSTNAME=127.0.0.1 \
+  -e HOSTNAME=localhost \
   -e PORT=9999 \
   -e HINDSIGHT_CP_DATAPLANE_API_URL=http://127.0.0.1:8888 \
   -e HINDSIGHT_CP_ACCESS_KEY=${HINDSIGHT_CP_ACCESS_KEY} \

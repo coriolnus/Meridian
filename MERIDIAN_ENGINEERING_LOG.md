@@ -1494,3 +1494,19 @@ alanı; v314 çırçırında 9 çapa satırdan SEMBOLE çevrildi, 8 anlamca-kaym
 **Açık kalemler**: 8 drift'li tsx çapası (niyet okuma ister) · TSK-086 okuyucu · 2-adım1
 (geceye sığmadı) · işçi-çökmesi-koşumu-düşürmesin iyileştirmesi (operatör görüşüne) · spec
 tarihli eklerinin operatör onayı (B-XXX, §6 endeks, size —, DROPPED).
+
+**Hindsight CP UI login döngüsü — kök neden HOSTNAME** (vaka 2026-09-01, akşam): Operatör
+Safari'de "çok fazla yönlendirme" gördü; iki yanlış hipotez ölçümle elendi (konteyner env'i
+tam — ilk "eksik ACCESS_KEY" sinyalini kendi sır-filtrem üretmişti; CP↔dataplane anahtarları
+sha256-aynı). Gerçek kök: Next 16.3.2 middleware rewrite origin'ini HEP "localhost:PORT"
+kurarken birim HOSTNAME=127.0.0.1 veriyordu → intl rewrite'ı (localePrefix "never", / → /en)
+cross-origin sayılıp 307'ye çevriliyor, middleware yeniden koşup /en/login'i muafiyet
+listesinde bulamıyor → kimliksiz istek login formunu ASLA göremiyor (curl ile Host/çerez
+bağımsız doğrulandı). Çare tek satır: HOSTNAME=localhost (bind yine 127.0.0.1'e çözülür,
+ss ile doğrulandı; ACCESS_KEY katmanı geri takıldı). İkincil ölçüm: login POST alanı `key`
+(accessKey değil), çerez `hindsight_cp_access` 24 saat geçerli — yeniden giriş günlüktür.
+Zincir A1'de VE operatör tünelinden uçtan uca yeşil: /login 200 → POST 200+çerez →
+/dashboard 200. Ders: "auth döngüsü" görünümü iki bağımsız katmanın (origin kıyası + muafiyet
+listesi) bileşkesiydi; ilk katman düzelince ikincisi hiç tetiklenmiyor. Teşhis sırasında
+sır-filtresinin (grep -v KEY) yapı satırlarını da gizleyip sahte kanıt ürettiği not edildi —
+filtre değerlere, satırlara değil.
