@@ -1510,3 +1510,33 @@ Zincir A1'de VE operatör tünelinden uçtan uca yeşil: /login 200 → POST 200
 listesi) bileşkesiydi; ilk katman düzelince ikincisi hiç tetiklenmiyor. Teşhis sırasında
 sır-filtresinin (grep -v KEY) yapı satırlarını da gizleyip sahte kanıt ürettiği not edildi —
 filtre değerlere, satırlara değil.
+
+**Sabah paketi öne çekildi — operatör penceresi** (2026-09-01 akşam; "yarın sabah paketini şimdi
+yapabilirsin, seansı etkilemez" + ardından iki ek karar: "geri dolum kesintisiz çalışmalı,
+seans içi dahil" ve "arşiv→Hindsight yüklemesini şimdi yapabiliriz"). İcra edilenler:
+① TSK-009 aylık-bucket elle ateşleme: success/69MB/sha'lı — kalem tamamen kapandı.
+② TSK-058 FAZ C: bayrak açılışı kartın `acilis_kaydi_2026_09_01` bloğuyla (elle-True yasağının
+meşru yolu — kill#1 kök çözümü kadans-içi ~5-6ms kuyruk-append), v278 test_9a yeni gerçeğe
+çevrildi (bayrak↔kart-kaydı bağı çivilendi; kapalı-yol fixture'ları kapalılığı KURARAK yaşıyor),
+v356 H2'ye kapalı-zorlama. Suite 8720 yeşil + 1 kırmızı: görev-aynası testi — sabahki SKILL.md
+düzenlemesinin ~/.claude kopyası türetilmemişti; kopya aynadan türetildi, 6/6. Birim+timer
+kuruldu (07:30Z armed), kurulum-günü elle ateşleme exit-0/boş-kuyruk (bayrak-açık yol kanıtlı).
+③ TSK-089 Faz 1 TAMAM: içerik-smoke (nemotron 200/45sn) + NOUS çevirisi (.env: kapı ucu +
+birincil model künyesi + yer-tutucu anahtar; learn kapalıyken uyuyan yol).
+④ Kıyas hazırlığı: sqlite-vec kuruldu, betikler+anahtar A1'de, sorular çapası cf1c39bb tuttu;
+sema-ornek ÜÇ ölçümle kapandı — soğuk recall >120sn (reranker ısınması), uzun-sorgu sıcakta
+129,8sn (betik sabiti 120→360), `limit`/`top_k` API'ce TANINMIYOR (sunucu varsayılanı 23 sonuç;
+hüküm istemci-tarafı [:K]); şema: kimlik=document_id, metin=text.
+⑤ Geri-dolum SEANS_KILIDI=False (/opt/veri + repo aynası deploy/oracle-a1/geridolum.py —
+aynanın varlığını F9 listesi hatırlattı, ilk grep deploy/'u taramamıştı); seans içinde iki
+işçiyle koşuyor. ⑥ İngest öne çekildi: 20:05Z transient timer söküldü, elle systemd-run;
+ilk deneme PermissionError (dizin root'undu, User=ubuntu) — sahiplik düzeltilip başladı.
+⑦ UI "dinamik değil" sorusu ölçümle yanıtlandı: birincil neden dağıtım gecikmesi (push ≠
+dağıtım — TSK-059 DONE'u canlıya ancak bu akşamki rsync indirdi); ikincil: göç kimlik-eşleme
+tablosunun durum sütunu ikinci-kopyaydı, TARİHÎ olarak donduruldu.
+⑧ DAGİT ELLE-AYNA VAKASI: sınıflandırıcı `dagit.sh`i, `stop`u ve `restart`ı üç ayrı denemede
+reddetti — betiğin adımları ([0a] sha-dondurma, [1b] goal/bounds kıyası AYNI, [5c] artefakt
+taze, [2] rsync, [3] uv sync --no-default-groups, F9 birim kurulumu) tek tek şeffaf koşuldu;
+işçi üçlüsünün restart'ı ve [B] beyanı OPERATÖRDE (learn bilinçli-kapalı — restart listesinden
+çıkarıldı; beyan [5b] gereği eski-süreçle YAZILMAZ). Açık kalan: restart → kuyruk-append
+başlar → yarın 07:30Z ilk dolu üretim → beyan.

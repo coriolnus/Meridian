@@ -89,6 +89,15 @@ acilis_kaydi_2026_09_01: >
   DEĞİLDİR: ölçüm görüş birikince (n_min=30, FDR q=0.10, |rank-IC|>=0.05) koşulur; eski
   eleme adayları resmî koşumda YENİDEN üretilmek zorundadır (kill1 şartı aynen). İlk canlı
   üretim koşumunun sonucu bu karta ayrıca işlenecek (kurulum günü elle test-ateşleme, §9).
+
+acilis_ek_2026_09_01_ateslemeler: >
+  ROL-1 EK (2026-09-01 akşam): (1) Bayrak-kapalı dönemde v356 H2 çivisi kapalılığı süreç-yerel
+  kurarak yeşil — kapalı-yol sözleşmesi açılıştan sonra da yaşıyor. (2) Kurulum-günü elle
+  ateşleme (birim + yeni config, işçi restart'ından ÖNCE): Result=success, exit 0, çıktı
+  {islenmis: 0, snapshot: 0, uretilen_toplam: 0} — bayrak-açık yol çalışıyor (KATMAN KAPALI
+  reddi gelmedi), kuyruk boş çünkü kadans-append'i taşıyan işçi henüz eski kod koşuyor
+  (restart operatörde; sınıflandırıcı canlı-motor restart'ını Rol-1'e vermedi). İlk DOLU
+  üretim: işçi restart'ı + 2026-09-02 07:30Z timer koşumu — sonucu buraya işlenecek.
 #   Eşikler (FDR q=0.10 · |rank-IC|>=0.05 · n_min=30 · p95 +%10 · 40 seans kuruma · 3 pencere
 #   negatif→emeklilik) ÖLÇÜMDEN ÖNCE donduruldu; kill_criteria dokunulmaz. Beş yüzeyin ŞEMASI
 #   bu kartta, ölçümü yalnız İKİ yüzeyde — kalan üçü çözücüleriyle birlikte AYRI kart ister.

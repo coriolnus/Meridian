@@ -135,7 +135,7 @@ ROADMAP.md'nin kendi `eski:` satırları:**
 **C. FAZ B doğumlu maddeler (TSK-052…085, §0 İCRA SIRASI + §2 TAHTA) — kaynak: bu dalganın kendi
 İCRA SIRASI listesi + TAHTA H1/H0/DİK DURUM tabloları:**
 
-| eski | yeni | not |
+| eski | yeni | not (göç anı durumu — TARİHÎ 2026-08-31, GÜNCELLENMEZ; güncel durum maddenin kendi `status:` satırındadır) |
 |---|---|---|
 | İCRA SIRASI adsız ①-madde | **TSK-052** A·PIT/veri (EDG-062) | ACTIVE |
 | İCRA SIRASI adsız madde | **TSK-053** Akıbet Defteri | DONE |
@@ -350,7 +350,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (bkz. **TSK-020** `2-adım1` — **DONE 2026-09-01**: `ops/olay_sorgu.py` + v355 36 çivi; SELECT-kapısı bypass avı temiz, bağlantı sertleştirmesi [temp_directory/autoinstall kapalı], RUNBOOK kümesine kayıtlı. Adım-2 [aylık Parquet] TSK-020 gövdesinde sırasını bekliyor.)
 
 - **[TSK-058] Skill-görüş dalgası — EDG-019 uygulaması + EDG-063 LLM-üretici sınıfı** — status: ACTIVE · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
-  What: (status notu: implementasyon İNDİ 2026-09-01 — kuyruk+LLM üreticisi, SDD tam döngü 2 fix turuyla, 16/16 mutasyon kanıtı, commit 697655a; KALAN=FAZ C: bayrak açılışı + `meridian-skill-gorus.timer` dağıtımı + ilk canlı koşum + kart kayıtları, seans-dışı pencerede. Eski trigger karşılandı — Ajan-A dalgası TSK-012 kapandı.) kart `EDG-2026-019` (registered — defter+iki çözücülü yüzey) + kart `EDG-2026-063` (ön-kayıt: beyan-only SKILL.md'ler LLM'le AYNI deftere gölge görüş yazar). Tek dalga iki kart: altyapıyı 019 kurar, 063 LLM-üretici sınıfını AYRI kartla açar. Aynı satır §2 TAHTA H1'de tam gövdesiyle yaşar.
+  What: (status notu: implementasyon İNDİ 2026-09-01 — kuyruk+LLM üreticisi, SDD tam döngü 2 fix turuyla, 16/16 mutasyon kanıtı, commit 697655a. FAZ C UYGULANDI 2026-09-01 akşam [operatör "sabah paketini şimdi yap"]: bayrak kartın `acilis_kaydi_2026_09_01` resmî kaydıyla açıldı [d5d738e, suite 8720+6 yeşil — tek kırmızı repo-dışı ayna kopyasıydı, türetilip kapandı]; birim+timer kuruldu, timer armed 07:30Z; kurulum-günü elle ateşleme Result=success/exit-0 — boş kuyruk, tasarım gereği arıza değil. KALAN: işçi üçlüsünün yeni kodla restart'ı [sınıflandırıcı canlı-motor restart'ını reddetti — komut operatöre verildi] → kadans kuyruk-append başlar → ilk DOLU üretim koşumu yarın 07:30Z, sonucu karta.) kart `EDG-2026-019` (registered — defter+iki çözücülü yüzey) + kart `EDG-2026-063` (ön-kayıt: beyan-only SKILL.md'ler LLM'le AYNI deftere gölge görüş yazar). Tek dalga iki kart: altyapıyı 019 kurar, 063 LLM-üretici sınıfını AYRI kartla açar. Aynı satır §2 TAHTA H1'de tam gövdesiyle yaşar.
   Why: operatör 2026-08-31 — "beyan-only skill'lerin LLM ikinci görüşünü de yapalım"; icra Ajan-A dalgasından SONRA sıraya alındı (o dalga artık kapandı).
   Ref: kart `EDG-2026-019`, `EDG-2026-063`; §2 TAHTA H1 satırı (aynı kalem).
 
