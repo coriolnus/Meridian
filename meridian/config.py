@@ -129,8 +129,12 @@ def limits() -> dict:
 # skill_gorus_durum.json üreticileri birlikte susar); defterlere DOKUNULMAZ — son KILL kaydı
 # kanıt olarak yerinde kalır, okuma yüzeyleri (api._eksen2_gorus, rapor) açık kalır.
 # AÇILIŞ YALNIZ kartın RESMİLEŞMİŞ YENİ ÖLÇÜMÜYLE (kart-önce) — elle True yapmak yasak.
-# Çivi: tests/test_e_partisi_v278.py (bayrak kapalıyken yazım yolu ölü + defter dokunulmamış).
-SKILL_GORUS_URETIM_ACIK = False
+# AÇILDI 2026-09-01: kill#1 kök çözümü indi (kadans içinde YALNIZ kuyruk-append ~5-6 ms;
+# tam üretim koşusu kadanstan çıkarıldı → `ops/skill_gorus_uret.py`, seans-dışı birim
+# meridian-skill-gorus.timer 07:30Z). Kartta `acilis_kaydi_2026_09_01` bloğu bu açılışın
+# resmî kaydıdır; kill#1 p95 mandalı AYNEN armed — tekrar aşarsa katman otomatik kapanır.
+# Çivi: tests/test_e_partisi_v278.py (bayrak↔kart-açılış-kaydı bağı + kapalı-durum yolları).
+SKILL_GORUS_URETIM_ACIK = True
 
 LIVE_EXPECTANCY_CAP_MULT = 0.5    # canlıdan BEKLENEN tavan = backtest beklentisi × bu katsayı
 LIVE_SUSPEND_RATIO = 0.4          # canlı/backtest bu oranın ALTINA düşerse süspansiyon değerlendirmesi

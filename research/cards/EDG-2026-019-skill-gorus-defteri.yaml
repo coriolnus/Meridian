@@ -74,6 +74,21 @@ kill1_kaydi_2026_08_23: >
   sığdırılmış: async/örneklem/toplu-yazım sınıfı bir tasarım) kartın koşumundan ÖNCE gelir;
   eşikler AYNEN (kill-list dokunulmaz). Eleme raporundaki FDR-sağkalan adaylar (vcp-screener,
   cikis; emeklilik işareti exhaustion-hammer) resmî koşumda YENİDEN üretilmek zorundadır.
+
+acilis_kaydi_2026_09_01: >
+  ROL-1 KAYDI (2026-09-01): kill#1 KÖK ÇÖZÜMÜ İNDİ ve bayrak bu kayıtla açıldı. Tasarım
+  kill1 kaydının istediği sınıftan (async/toplu-yazım): kadans içinde artık YALNIZ
+  kuyruk-append koşar (tek jsonl satırı; TSK-058 implementasyon turunda ölçüldü 2026-09-01:
+  kuyruk-append 5,4-5,7 ms — eski kadans-içi tam koşu 88-220 ms idi ve kadanstan TAMAMEN
+  çıkarıldı); görüş üretimi `ops/skill_gorus_uret.py --uygula` ile ayrı süreçte, seans-dışı
+  `meridian-skill-gorus.timer` (07:30Z) biriminde. Çiviler: v356 (13+ kuyruk/CLI çivisi,
+  16/16 mutasyon kanıtı) + v278 (bayrak↔bu kayıt bağı; kapalı-yol çivileri kapalılığı
+  KURARAK yaşamaya devam eder). EŞİKLER VE KILL-LIST AYNEN: p95 mandalı kodda armed
+  (kuyruk_kadansi pay/p95 tanımı değişmedi; gozetim_ms AYRI alan olarak ölçülür) — tavan
+  yine aşılırsa katman otomatik kapanır ve olay adıyla düşer. BU AÇILIŞ RESMÎ FDR ÖLÇÜMÜ
+  DEĞİLDİR: ölçüm görüş birikince (n_min=30, FDR q=0.10, |rank-IC|>=0.05) koşulur; eski
+  eleme adayları resmî koşumda YENİDEN üretilmek zorundadır (kill1 şartı aynen). İlk canlı
+  üretim koşumunun sonucu bu karta ayrıca işlenecek (kurulum günü elle test-ateşleme, §9).
 #   Eşikler (FDR q=0.10 · |rank-IC|>=0.05 · n_min=30 · p95 +%10 · 40 seans kuruma · 3 pencere
 #   negatif→emeklilik) ÖLÇÜMDEN ÖNCE donduruldu; kill_criteria dokunulmaz. Beş yüzeyin ŞEMASI
 #   bu kartta, ölçümü yalnız İKİ yüzeyde — kalan üçü çözücüleriyle birlikte AYRI kart ister.

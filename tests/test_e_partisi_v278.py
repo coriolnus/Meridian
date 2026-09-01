@@ -408,8 +408,11 @@ def test_5e_cikis_yamasinda_zaman_olculemezse_fiyat_YINE_islenir(sandbox_state):
 # =================================================================================================
 @pytest.fixture
 def sg_kapali(monkeypatch):
-    """Süreç-içi mandal testler arası SIZAR (tek-atış olay). Her çivi kendi mandalıyla koşar."""
+    """Süreç-içi mandal testler arası SIZAR (tek-atış olay). Her çivi kendi mandalıyla koşar.
+    2026-09-01 açılışından beri üretim varsayılanı AÇIK — 'kapalı' durumu artık varsayılan
+    değil, bu fixture'ın KURDUĞU durumdur (kapalı-yol çivileri açılıştan sonra da yaşar)."""
     from meridian import skill_gorus as sg
+    monkeypatch.setattr(config, "SKILL_GORUS_URETIM_ACIK", False)
     monkeypatch.setattr(sg, "_KAPATMA_OLAYI_BASILDI", False)
     return sg
 
@@ -424,15 +427,23 @@ def _gorus_evreni(monkeypatch, sg):
         "atlanan": {}})
 
 
-def test_9a_bayrak_varsayilan_KAPALI():
-    """Varsayılanın kendisi hükümdür: kill#1 tetiklendi, açılış yalnız kartın resmileşmiş YENİ
-    ölçümüyle olur. Bir sonraki tur bunu 'geçici bir deneme bayrağı' sanmasın diye çivili."""
-    assert config.SKILL_GORUS_URETIM_ACIK is False
+def test_9a_bayrak_ACIK_ve_kart_acilis_kaydina_BAGLI():
+    """Varsayılanın kendisi hükümdür — iki yönde de. Kill#1 döneminde bu çivi 'varsayılan
+    KAPALI'yı korudu; 2026-09-01 açılışından beri koruduğu şey AÇIKLIĞIN MEŞRUİYETİ: bayrak
+    ancak kartta resmî açılış kaydı VARKEN açık olabilir (elle-True yasağının çivisi budur —
+    kaydı silip bayrağı açık bırakan tur burada kırılır). Kill#1 tarihçesi yorumdan silinemez."""
+    assert config.SKILL_GORUS_URETIM_ACIK is True
     src = (REPO / "meridian" / "config.py").read_text(encoding="utf-8")
-    blok = src[:src.index("SKILL_GORUS_URETIM_ACIK = False")]
+    blok = src[:src.index("SKILL_GORUS_URETIM_ACIK = True")]
     blok = blok[blok.rindex("# ── SKILL-GÖRÜŞ"):]
-    for parca in ("EDG-2026-019", "kill#1", "GÖZLEM İCRAYI YAVAŞLATAMAZ"):
+    for parca in ("EDG-2026-019", "kill#1", "GÖZLEM İCRAYI YAVAŞLATAMAZ",
+                  "acilis_kaydi_2026_09_01"):
         assert parca in blok, f"bayrağın gerekçesinde eksik: {parca!r}"
+    kart = (REPO / "research" / "cards" / "EDG-2026-019-skill-gorus-defteri.yaml"
+            ).read_text(encoding="utf-8")
+    assert "acilis_kaydi_2026_09_01" in kart, \
+        "bayrak açık ama kartta açılış kaydı yok — açılışın meşruiyet zinciri kopuk"
+    assert "kill1_kaydi_2026_08_23" in kart, "kill#1 kaydı karttan silinmiş — tarihçe kanıttır"
 
 
 def test_9b_KAPALIYKEN_yazim_yolu_olu_ve_defter_DOKUNULMAMIS(sandbox_state, monkeypatch, sg_kapali):

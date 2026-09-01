@@ -522,13 +522,15 @@ def _kum(tmp_path: pathlib.Path) -> pathlib.Path:
     return tmp_path
 
 
-def _kos(kok: pathlib.Path, *bayrak: str, acik: bool = False):
+def _kos(kok: pathlib.Path, *bayrak: str, acik: bool = False, kapali: bool = False):
     ort = {**os.environ, "MERIDIAN_ROOT": str(kok), "MERIDIAN_DB": "off"}
-    if acik:
-        # BAYRAK SÜREÇ-YEREL AÇILIR ve GİRİŞ NOKTASI YİNE KOMUT SATIRIDIR (`runpy` + `sys.argv`):
-        # `main([...])` çağırmak API'yi sınardı, operatörün koştuğu yolu değil (vaka SD10, v331).
+    if acik or kapali:
+        # BAYRAK SÜREÇ-YEREL AÇILIR/KAPANIR ve GİRİŞ NOKTASI YİNE KOMUT SATIRIDIR (`runpy` +
+        # `sys.argv`): `main([...])` çağırmak API'yi sınardı, operatörün koştuğu yolu değil
+        # (vaka SD10, v331). `kapali` 2026-09-01 açılışıyla geldi: üretim varsayılanı artık
+        # AÇIK, kapalı-katman çivileri kapalılığı KURARAK koşar (v278 sg_kapali ile aynı ilke).
         kod = ("import runpy, sys; import meridian.config as c; "
-               "c.SKILL_GORUS_URETIM_ACIK = True; "
+               f"c.SKILL_GORUS_URETIM_ACIK = {bool(acik)}; "
                f"sys.argv = ['skill_gorus_uret.py', {', '.join(repr(b) for b in bayrak)}]; "
                f"runpy.run_path({str(BETIK)!r}, run_name='__main__')")
         return subprocess.run([sys.executable, "-c", kod], capture_output=True, text=True,
@@ -546,9 +548,11 @@ def test_H1_CLI_durum_kosar_ve_hicbir_sey_YAZMAZ(tmp_path):
 
 
 def test_H2_CLI_uygula_KAPALI_katmanda_SESSIZCE_basarili_olmaz(tmp_path):
-    """Ölçülmüş sınıf (vaka 2026-08-30): 18 çivi yeşilken `--uygula` sessizce yok sayılıyordu."""
+    """Ölçülmüş sınıf (vaka 2026-08-30): 18 çivi yeşilken `--uygula` sessizce yok sayılıyordu.
+    Açılıştan (2026-09-01) beri kapalılık süreç-yerel KURULUR — çivinin sözü değişmedi:
+    kapalı katman sessizce başarılı olmaz."""
     kok = _kum(tmp_path)
-    r = _kos(kok, "--uygula")
+    r = _kos(kok, "--uygula", kapali=True)
     assert r.returncode == 1, f"kapalı katmanda --uygula 0 döndü: {r.stdout}"
     assert "KATMAN KAPALI" in r.stderr and "SKILL_GORUS_URETIM_ACIK" in r.stderr
     assert not (kok / "state" / sg.GORUS_DEFTERI).exists()
