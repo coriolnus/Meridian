@@ -88,14 +88,12 @@ export interface KapiMetrikleri {
   readonly neden?: string | null;
 }
 
-/** Bir fazın ÜÇ HÂLİ (`api.py::_kapi_fazlar`). Dördüncü bir dize gelirse ekran onu HAM basar. */
-export type KapiFazHali = "canli" | "bekliyor" | "olculemedi";
-
 /**
  * Faz anahtarları UCUN listesinden gelir (`api.py::_KAPI_FAZ_IMZALARI`) ve UI onları SAYMAZ:
  * dört faz burada sabit yazılsaydı beşincisi doğduğu gün ekranda hiç görünmezdi (F9 sınıfı
- * ayrışma). Değer tipi `string`tir — `KapiFazHali` bir DARALTMA hedefidir, bir vaat değil:
- * telden tanımayan bir hâl gelirse ekran onu "tanınmayan" işaretiyle ham basar (v280 disiplini).
+ * ayrışma). Değer tipi `string`tir: telden tanımayan bir hâl gelirse ekran onu "tanınmayan"
+ * işaretiyle ham basar (v280 disiplini). Bilinen ÜÇ HÂLİN (`canli`/`bekliyor`/`olculemedi`)
+ * sözlüğü burada YİNELENMEZ — tek kaynak `KapiYuzey.tsx::FAZ_HAL`dır (tek-kaynak yasası).
  */
 export type KapiFazlari = Readonly<Record<string, string>>;
 

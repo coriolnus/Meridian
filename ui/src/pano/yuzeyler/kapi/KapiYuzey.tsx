@@ -641,6 +641,13 @@ export function KapiYuzey() {
   const rotaN = g?.rotalar?.length;
   const canliFaz = g?.fazlar ? Object.values(g.fazlar).filter((h) => h === "canli").length : undefined;
   const fazN = g?.fazlar ? Object.keys(g.fazlar).length : undefined;
+  // ADMİN OKUNAMADIĞINDA `_kapi_fazlar` DÖRT ANAHTARI DA "olculemedi" DÖNDÜRÜR (global
+  // uygulama — karma hâl yok): bu durumda `canliFaz` sessizce 0'a düşer ve rozet "0/N faz
+  // canlı" derdi, yani ÖLÇÜLEMEYEN bir şeyi ÖLÇÜLMÜŞ sıfır gibi basardı (uydurma yasağı).
+  // Bekçi HEPSİ "olculemedi" mi diye sorar — `rotalar` çipinin `!g?.rotalar_neden`
+  // bekçisiyle aynı disiplin.
+  const fazDegerleri = g?.fazlar ? Object.values(g.fazlar) : undefined;
+  const fazlarOlculemedi = !!fazDegerleri && fazDegerleri.length > 0 && fazDegerleri.every((h) => h === "olculemedi");
 
   return (
     <div className="flex flex-col gap-6">
@@ -654,17 +661,21 @@ export function KapiYuzey() {
         </div>
         {/* ROZET ŞERİDİ YALNIZ ÖLÇÜLENİ TAŞIR (SistemSagligiYuzey kuralı): alanı gövdede
             OLMAYAN rozet HİÇ çizilmez — boş bir rozet "0" diye okunurdu. `rotalar_neden`
-            doluyken rota sayısı da basılmaz: o sayı bir ölçüm değil. */}
+            doluyken rota sayısı da basılmaz: o sayı bir ölçüm değil. Aynı disiplin faz
+            çipinde de geçerli: `fazlarOlculemedi` iken "N/4 faz canlı" da basılmaz — admin
+            okunamadığında dört fazın hepsi "olculemedi" döner ve bu sayı bir ölçüm değildir. */}
         <div className="flex flex-wrap items-center gap-2">
           {rotaN !== undefined && !g?.rotalar_neden ? (
             <Badge variant="outline" className="tabular-nums">{rotaN} rota</Badge>
           ) : null}
-          {canliFaz !== undefined && fazN !== undefined ? (
+          {canliFaz !== undefined && fazN !== undefined && !fazlarOlculemedi ? (
             <Badge variant="outline" className="tabular-nums">
               {canliFaz}/{fazN} faz canlı
             </Badge>
           ) : null}
-          {g?.saglik?.admin_api === false || g?.saglik?.prometheus === false ? (
+          {g?.saglik?.admin_api === false && g?.saglik?.prometheus === false ? (
+            <Badge variant="destructive">kapı okunamadı</Badge>
+          ) : g?.saglik?.admin_api === false || g?.saglik?.prometheus === false ? (
             <Badge variant="destructive">kapı kısmen okunamadı</Badge>
           ) : null}
         </div>
