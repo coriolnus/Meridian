@@ -98,6 +98,16 @@ acilis_ek_2026_09_01_ateslemeler: >
   reddi gelmedi), kuyruk boş çünkü kadans-append'i taşıyan işçi henüz eski kod koşuyor
   (restart operatörde; sınıflandırıcı canlı-motor restart'ını Rol-1'e vermedi). İlk DOLU
   üretim: işçi restart'ı + 2026-09-02 07:30Z timer koşumu — sonucu buraya işlenecek.
+
+ilk_dolu_kosum_2026_09_01: >
+  ROL-1 KAYDI (2026-09-01 22:06Z; elle ateşleme — operatör satırı, timer beklenmedi):
+  Result=success, oneshot bitti. İşlenen snapshot 1 · üretilen/yazılan görüş 636 ·
+  kirpildi=false · tavan=null · koşum sonrası kuyruk {bekleyen: 0, islenmis: 1} · defter
+  toplamı 6.136 satır (state/skill_gorusleri.jsonl, 1,68 MB). Örnek satırlar şema-uyumlu:
+  (skill, ts, yuzey, hedef, skor|karar, gerekce_ozeti, tarih, uretici=det) — aday-siralayici
+  skorlu, cikis kararlı; kaynak=gercek etiketi taşıyor. HÜKÜM DEĞİLDİR: ölçüm eşikleri
+  (n_min=30 görüş-pencere şartları) doluncaya dek koşumlar birikir; bu kayıt yalnız üretim
+  hattının DOLU veriyle çalıştığının ölçümüdür. 07:30Z timer rutini yerinde duruyor.
 #   Eşikler (FDR q=0.10 · |rank-IC|>=0.05 · n_min=30 · p95 +%10 · 40 seans kuruma · 3 pencere
 #   negatif→emeklilik) ÖLÇÜMDEN ÖNCE donduruldu; kill_criteria dokunulmaz. Beş yüzeyin ŞEMASI
 #   bu kartta, ölçümü yalnız İKİ yüzeyde — kalan üçü çözücüleriyle birlikte AYRI kart ister.
