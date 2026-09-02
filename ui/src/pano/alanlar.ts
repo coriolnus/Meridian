@@ -8,7 +8,8 @@
    burada BİREBİR eşleşiyordu; eşleşmeyen bölüm YOK ve düşen bölüm YOK.
 
    KAYIT O GÜNDEN BERİ BÜYÜDÜ ve sayı burada DONDURULMAZ (bayat-beyan sınıfı): bugün
-   17 yüzey · 40 bölüm (ölçüldü 2026-09-02). Şablonda karşılığı OLMAYAN iki yüzey var:
+   17 yüzey · 44 bölüm (ölçüldü 2026-09-02, TSK-108 sonrası: Hafıza dörtten sekize
+   çıktı). Şablonda karşılığı OLMAYAN iki yüzey var:
    `gateway` (Kapı, TSK-090) ve `memory` (Hafıza, TSK-091) — yukarıdaki "birebir
    eşleşme" cümlesi göç turunun ölçümüdür, bugünün sözleşmesi değil. İkisi de şablondan
    değil Meridian'ın kendi altyapısından doğduğu için `sablon` alanı bunu açıkça yazar.
@@ -41,14 +42,13 @@ import {
   FlaskConical,
   Fingerprint,
   FolderOpen,
-  Gauge,
   GaugeCircle,
   GraduationCap,
   Hammer,
   HeartPulse,
+  Home,
   Kanban,
   KeyRound,
-  Landmark,
   Layers,
   LineChart,
   ListTodo,
@@ -58,8 +58,10 @@ import {
   MessageSquare,
   MessagesSquare,
   Milestone,
+  Network,
   Radar,
   Scale,
+  Search,
   Send,
   Server,
   Settings2,
@@ -239,7 +241,24 @@ export const YUZEYLER = {
      yüzeyinde ZATEN DOLU. Önek olmasaydı iki kayıttan biri ötekini sessizce ezer ve
      bir bölüm derin bağda YANLIŞ yüzeye çözülürdü.
 
-     DÖRT BÖLÜM = EKRANDAKİ DÖRT `bolum-hafiza-*` ÇAPASI (v288 paritesi). */
+     SEKİZ BÖLÜM, VE SIRA UYDURULMADI — OKUNDU (TSK-108, 2026-09-02). Hafıza servisinin
+     KENDİ denetim yüzeyi (Hindsight Control Plane v0.9.2, `sidebar.tsx::navItems`) sekiz
+     duraklı bir kenar çubuğu taşıyor ve sırası şudur:
+         home · data · knowledge · recall · reflect · documents · entities · profile
+     Aşağıdaki sekiz satır o sıranın birebir karşılığıdır. Alfabetik ya da "bize göre
+     mantıklı" bir sıraya çekmek, birebirleştirmenin ÖLÇÜLEBİLİR yarısını kaybetmek
+     olurdu: o yüzeyi bilen bir okuyucu aynı yerde aynı maddeyi bulamazdı. Sıranın
+     ikinci tüketicisi yüzeyin kendi kenar çubuğudur (`hafiza/gorunumler.ts`) ve o liste
+     BU KAYITTAN okur — iki başlık listesi tutmak, içerideki adla dışarıdaki adın
+     sessizce ayrışması demekti.
+
+     ÜÇ ESKİ BÖLÜM EMEKLİ OLDU ve yer imleri KIRILMADI: `hafiza-bankalar` ·
+     `hafiza-operasyon` · `hafiza-kota` adresleri yüzeyin kendi eski-adres tablosundan
+     (`hafiza/gorunumler.ts::ESKI_GORUNUM_ADRESLERI`) yeni evlerine çözülüyor. Emekli
+     bölümlerin İÇERİĞİNİN bu turda çizilmediği ise ekranda yazılı — sessizce boş bir
+     sayfaya düşmüyorlar.
+
+     SEKİZ BÖLÜM = EKRANDAKİ SEKİZ `bolum-hafiza-*` ÇAPASI (v288 paritesi). */
   memory: {
     sablon: "(şablonda karşılığı yok — Meridian'a özgü)",
     baslik: "Hafıza",
@@ -247,10 +266,14 @@ export const YUZEYLER = {
     ikon: Brain,
     grup: "Panolar",
     bolumler: [
-      { kimlik: "hafiza-bankalar", baslik: "Hafıza bankaları", soru: "Hangi bankalar var, hafıza servisi ayakta mı?", ikon: Landmark },
-      { kimlik: "hafiza-bellekler", baslik: "Kayıtlar", soru: "Bu bankada ne yazılı, tek tek ne diyor?", ikon: BookOpen },
-      { kimlik: "hafiza-operasyon", baslik: "Yazma ve okuma hareketleri", soru: "Bankaya son günlerde ne işlendi?", ikon: Activity },
-      { kimlik: "hafiza-kota", baslik: "Model çağrısı kullanımı", soru: "Hafıza servisi ne kadar model çağrısı harcadı?", ikon: Gauge },
+      { kimlik: "hafiza-anasayfa", baslik: "Ana Sayfa", soru: "Bu bankada ne birikti, en son ne zaman yazıldı?", ikon: Home },
+      { kimlik: "hafiza-bellekler", baslik: "Bellekler", soru: "Bu bankada ne yazılı, tek tek ne diyor?", ikon: Database },
+      { kimlik: "hafiza-bilgi", baslik: "Bilgi Tabanı", soru: "Hangi bilgi sayfaları var, içlerinde ne yazıyor?", ikon: Network },
+      { kimlik: "hafiza-recall", baslik: "Recall", soru: "Bir soruya bu banka ne cevap verirdi?", ikon: Search },
+      { kimlik: "hafiza-reflect", baslik: "Reflect", soru: "Bankanın kendi çıkarımları ne durumda?", ikon: Sparkles },
+      { kimlik: "hafiza-belgeler", baslik: "Belgeler", soru: "Hangi belgeler işlendi, içlerinden kaç kayıt çıktı?", ikon: FileText },
+      { kimlik: "hafiza-varliklar", baslik: "Varlıklar", soru: "Kayıtlarda hangi isimler geçiyor?", ikon: Users },
+      { kimlik: "hafiza-yapilandirma", baslik: "Yapılandırma", soru: "Bu banka nasıl ayarlanmış, arkada neler koştu?", ikon: Settings2 },
     ],
   },
   "file-manager": {

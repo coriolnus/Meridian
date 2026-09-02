@@ -158,15 +158,26 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   "kapi-rotalar": ["rota", "route", "llm", "openrouter", "model", "fallback", "zincir", "egress"],
   "kapi-metrikler": ["trafik", "istek", "durum kodu", "429", "sayac", "metrik"],
   "kapi-fazlar": ["faz", "tsk-089", "kurulum", "ingress", "filo", "kota"],
-  // HAFIZA YÜZEYİ (TSK-091). Kapı ile aynı gerekçe: kimlikler `hafiza-` önekli (kayıt
-  // sözlüğü bölüm kimliğini KÜRESEL tutuyor ve çıplak `hafiza` Belgeler'de dolu) ama
-  // operatör "recall", "bank", "token" diye arar — anahtarlar onun aklındaki kelimeyi
-  // taşır, başlıktakini değil. Değerler KATLANMIŞ yazılır (ö/ü/ş yok), tablonun geri
-  // kalanıyla aynı biçimde.
-  "hafiza-bankalar": ["bank", "hindsight", "banka", "arsiv", "fact"],
-  "hafiza-bellekler": ["recall", "kayit", "bellek", "memory", "ders", "metin"],
-  "hafiza-operasyon": ["retain", "consolidation", "denetim", "audit", "hareket", "yazim"],
-  "hafiza-kota": ["llm", "kota", "token", "cagri", "kullanim"],
+  // HAFIZA YÜZEYİ (TSK-091, bilgi mimarisi TSK-108'de sekiz görünüme genişledi).
+  // Kapı ile aynı gerekçe: kimlikler `hafiza-` önekli (kayıt sözlüğü bölüm kimliğini
+  // KÜRESEL tutuyor ve çıplak `hafiza` Belgeler'de dolu) ama operatör "recall", "bank",
+  // "token" diye arar — anahtarlar onun aklındaki kelimeyi taşır, başlıktakini değil.
+  // Değerler KATLANMIŞ yazılır (ö/ü/ş yok), tablonun geri kalanıyla aynı biçimde.
+  //
+  // EMEKLİ ÜÇ KİMLİĞİN ANAHTARLARI KAYBOLMADI, TAŞINDI: `hafiza-bankalar`ın kelimeleri
+  // Ana Sayfa'ya, `hafiza-operasyon` ve `hafiza-kota`nınkiler Yapılandırma'ya geçti.
+  // Emekli bir kimliği bu tabloda BIRAKMAK ölü satır olurdu — anahtar tablosu yalnız
+  // KAYITLI bölümler için okunuyor (`ARAMA_ANAHTARLARI`), yani orada kalan satır
+  // hiçbir aramayı bulmaz ve okunmadığı için de bayatladığı fark edilmez.
+  "hafiza-anasayfa": ["bank", "hindsight", "banka", "arsiv", "fact", "ozet", "istatistik", "tazelik"],
+  "hafiza-bellekler": ["kayit", "bellek", "memory", "ders", "metin", "world", "experience", "gozlem"],
+  "hafiza-bilgi": ["bilgi", "knowledge", "sayfa", "agac", "not"],
+  "hafiza-recall": ["recall", "sorgu", "arama", "cevap", "getir"],
+  "hafiza-reflect": ["reflect", "zihin modeli", "mental model", "cikarim", "consolidation"],
+  "hafiza-belgeler": ["belge", "document", "parca", "chunk", "ice aktarim", "kaynak"],
+  "hafiza-varliklar": ["varlik", "entity", "isim", "graf", "kisi"],
+  "hafiza-yapilandirma": ["config", "ayar", "retain", "denetim", "audit", "hareket", "yazim",
+                          "llm", "kota", "token", "cagri", "kullanim", "islem"],
 };
 
 const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {
