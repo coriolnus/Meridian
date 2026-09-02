@@ -41,64 +41,20 @@
    alan düştü) iki uzaydan hangisinin doğru olduğu BİLİNMİYOR demektir. Tahmin edip
    göndermek, yukarıdaki sessiz kaybın ta kendisi olurdu — engel döner, sebebiyle.
    ============================================================================ */
+import { apiPost, type GonderSonucu } from "../../gonder";
 import type { KuyrukOgesi } from "./onaylar";
 import type { PlanOzeti } from "./tipler";
 
-/* --- YAZAN İSTEK ---------------------------------------------------------- */
+/* --- YAZAN İSTEK ----------------------------------------------------------
+   `apiPost`/`GonderSonucu` artık ortak yazma kapısından (`../../gonder`) geliyor
+   — burdaki kopya paralel-ajan turu için SÜRELİ bir tekrardı (tek-kaynak
+   yasası, CLAUDE.md §4); tur kapanışında (2026-09-02) birleştirildi.
 
-/* NEDEN `kimlik/gonder.ts`TEN İMPORT EDİLMEDİ (bilinçli tekrar, `parcalar.tsx`
-   başlığındaki gerekçenin aynısı): bu tur paralel ajanlarla koşuyor ve dosya
-   ayrıklığı YAZMA tarafını ayırıyor. Başka bir ajanın uçuş hâlindeki dosyasından
-   import etmek, onun dışa aktarım kümesi değiştiği an bu yüzeyi derlenemez hâle
-   getirirdi. Birleştirme tur-kapanışı işidir. */
-
-export interface GonderSonucu {
-  readonly ok: boolean;
-  /** HTTP durum kodu. `0` = yanıt HİÇ gelmedi (ağ/iptal) — sunucunun sustuğu hâl. */
-  readonly kod: number;
-  /** FastAPI `detail` alanı. Okunamadıysa `null` — boş dizge YAZILMAZ (yalan olurdu). */
-  readonly detay: string | null;
-  /** Başarı gövdesi. Ayrıştırılamadıysa `null`. */
-  readonly govde: unknown;
-}
-
-function detaydanMetin(g: unknown): string | null {
-  if (g === null || typeof g !== "object") return null;
-  const d = (g as { detail?: unknown }).detail;
-  if (typeof d === "string" && d.trim() !== "") return d;
-  // FastAPI doğrulama hatası `detail`i bir DİZİDİR ({loc,msg,type}); `msg`leri birleştiriyoruz.
-  if (Array.isArray(d)) {
-    const m = d
-      .map((x) => (x !== null && typeof x === "object" ? (x as { msg?: unknown }).msg : null))
-      .filter((x): x is string => typeof x === "string");
-    if (m.length > 0) return m.join(" · ");
-  }
-  return null;
-}
-
-/** Tek POST. Ne fırlatır ne yutar: her hâl dönüş nesnesinde ADIYLA durur. */
-export async function apiPost(yol: string, govde?: unknown): Promise<GonderSonucu> {
-  let y: Response;
-  try {
-    y = await fetch(yol, {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(govde ?? {}),
-    });
-  } catch (e) {
-    // AĞ DÜŞMESİ BİR HTTP CEVABI DEĞİLDİR: `kod: 0` onu "sunucu bir şey söyledi"den ayırır.
-    return { ok: false, kod: 0, detay: e instanceof Error ? e.message : String(e), govde: null };
-  }
-  let cozulen: unknown = null;
-  try {
-    cozulen = await y.json();
-  } catch {
-    // YASA 4 · sessiz-yutma İŞARETLİ: gövde JSON değilse (proxy'nin düz metin 502'si)
-    // ayrıştırma hatası ASIL sonucu gizlememeli — durum kodu `kod` alanında duruyor.
-  }
-  return { ok: y.ok, kod: y.status, detay: detaydanMetin(cozulen), govde: y.ok ? cozulen : null };
-}
+   RE-EXPORT KORUNUYOR (ölçüldü, DURUM notunun kaçırdığı bağımlılık):
+   `KararPaneli.tsx` bu ikisini `./onayEylem`den çekiyor (`import { apiPost, ...}
+   from "./onayEylem"`) — o dosya bu turun dokunma kapsamı DIŞINDA, yani bu
+   dosya onun için de bir geçiş yüzeyi. */
+export { apiPost, type GonderSonucu };
 
 /* --- PLANIN OKUNAN KESİTİ ------------------------------------------------- */
 

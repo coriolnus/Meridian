@@ -56,12 +56,15 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
-/* APIPOST İMPORT EDİLDİ, ÜÇÜNCÜ BİR KOPYA YAZILMADI (tek-kaynak yasası). Depoda bu
-   yardımcının bugün İKİ birebir kopyası var (`kimlik/gonder.ts`, `kuyruk/onayEylem.ts`)
-   ve ikincisinin şerhi gerekçesini SÜRELİ yazmıştı: "bu tur paralel ajanlarla koşuyor…
-   Birleştirme tur-kapanışı işidir." O süre bu dosyayı bağlamaz; üçüncü kopya, ayrışması
-   kaçınılmaz üçüncü bir gerçek olurdu. */
-import { apiPost } from "../kimlik/gonder";
+/* APIPOST ORTAK YAZMA KAPISINDAN ALINIYOR (`pano/gonder.ts`, tek-kaynak yasası) —
+   üçüncü bir kopya yazılmadı. Bu satır eskiden `../kimlik/gonder`e gidiyordu: bu
+   (sistem) yüzeyi ile kimlik yüzeyi arasında bir çapraz-yüzey importuydu, üstelik
+   kendisi de bir kopyaydı. `kimlik/gonder.ts` ve `kuyruk/onayEylem.ts`teki iki
+   birebir kopya tur kapanışında (2026-09-02) `pano/gonder.ts`de birleştirildi; bu
+   satır artık doğrudan o kapıya bakıyor. YOL `../../gonder`: `sistem/` `kimlik/`
+   ile AYNI derinlikte (ikisi de `yuzeyler/` altında), `pano/gonder.ts`e ulaşmak
+   iki seviye yukarı gerektiriyor — `kuyruk/onayEylem.ts`in kullandığı yolun aynısı. */
+import { apiPost } from "../../gonder";
 import { Olculemedi } from "./parcalar";
 import type { BirimIstekSonucu, InfraBilesen } from "./uctipleri";
 

@@ -20,57 +20,12 @@
      · POST /api/setup-password gövde {"password": str} → 200 {ok}
                                 409 {detail:"parola zaten kurulu"} · 400 {detail:<ValueError metni>}
      · POST /api/logout         gövde YOK → 200 {ok:true}; yetki İSTEMEZ
+
+   TANIM ARTIK `pano/gonder.ts`TE (genel yazma kapısı, `veri.ts`nin yazan
+   kardeşi — tek-kaynak yasası, CLAUDE.md §4). BU DOSYA yalnız yukarıdaki
+   sözleşme dokümantasyonunu taşır (o kimlik yüzeyinin bilgisidir, genel
+   kapının değil) ve bir GEÇİŞ YÜZEYİdir: Giris.tsx, GirisFormu, KurulumFormu,
+   SirGirisi buradan almaya devam edebilir.
    ============================================================================ */
 
-export interface GonderSonucu {
-  readonly ok: boolean;
-  /** HTTP durum kodu. `0` = yanıt HİÇ gelmedi (ağ/iptal) — sunucunun sustuğu hâl. */
-  readonly kod: number;
-  /** FastAPI `detail` alanı. Okunamadıysa `null` — boş dizge YAZILMAZ (yalan olurdu). */
-  readonly detay: string | null;
-  /** Başarı gövdesi (ör. `{ok, expires_in}`). Ayrıştırılamadıysa `null`. */
-  readonly govde: unknown;
-}
-
-function detaydanMetin(g: unknown): string | null {
-  if (g === null || typeof g !== "object") return null;
-  const d = (g as { detail?: unknown }).detail;
-  if (typeof d === "string" && d.trim() !== "") return d;
-  // FastAPI doğrulama hatası `detail`i bir DİZİDİR ({loc,msg,type} nesneleri). Düz
-  // metne indirgerken `msg` alanlarını birleştiriyoruz; hiçbiri yoksa null döneriz.
-  if (Array.isArray(d)) {
-    const m = d
-      .map((x) => (x !== null && typeof x === "object" ? (x as { msg?: unknown }).msg : null))
-      .filter((x): x is string => typeof x === "string");
-    if (m.length > 0) return m.join(" · ");
-  }
-  return null;
-}
-
-/** Tek POST. Ne fırlatır ne yutar: her hâl dönüş nesnesinde ADIYLA durur. */
-export async function apiPost(yol: string, govde?: unknown): Promise<GonderSonucu> {
-  let y: Response;
-  try {
-    y = await fetch(yol, {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(govde ?? {}),
-    });
-  } catch (e) {
-    // AĞ DÜŞMESİ BİR HTTP CEVABI DEĞİLDİR ve öyle gösterilemez: `kod: 0` ile
-    // "sunucu bir şey söyledi" hâlinden ayrılır, mesaj tarayıcının kendi metnidir.
-    return { ok: false, kod: 0, detay: e instanceof Error ? e.message : String(e), govde: null };
-  }
-
-  let cozulen: unknown = null;
-  try {
-    cozulen = await y.json();
-  } catch {
-    // YASA 4 · sessiz-yutma İŞARETLİ: gövde JSON değilse (proxy'nin düz metin 502'si,
-    // Caddy'nin hata sayfası) ayrıştırma hatası ASIL sonucu gizlememeli — durum kodu
-    // zaten `kod` alanında taşınıyor ve çağıranın dallanması için yeterli.
-  }
-
-  return { ok: y.ok, kod: y.status, detay: detaydanMetin(cozulen), govde: y.ok ? cozulen : null };
-}
+export { apiPost, type GonderSonucu } from "../../gonder";
