@@ -15,7 +15,14 @@
 #      bir `.env.EXAMPLE` bırakır (ölçüm aşağıda; `.env` kullanıcı-sahiplidir). Anahtarsız
 #      profil her koşumda SESSİZCE ham brifinge düşer, yani "çalışıyor" görünür:
 #        cp  ~/.hermes/profiles/sef/.env.EXAMPLE  ~/.hermes/profiles/sef/.env
-#        ${EDITOR:-nano} ~/.hermes/profiles/sef/.env     # OPENROUTER_API_KEY=...
+#        ${EDITOR:-nano} ~/.hermes/profiles/sef/.env     # BOT_KEY_SEF=...
+#      ANAHTAR ADI DEĞİŞTİ (TSK-105, 2026-09-02): bot artık OpenRouter'a DEĞİL kapıya gider
+#      (`config.yaml` → `model.provider: custom:kapi`), yani okuduğu anahtar `BOT_KEY_SEF`tir.
+#      DOSYA YERİ ÖLÇÜLDÜ (`hermes_cli/env_loader.py`, v0.18.2): yüklenen `.env`,
+#      `HERMES_HOME/.env`dir ve birim `HERMES_HOME`u bu profil dizinine kurar — yani yukarıdaki
+#      yol, çıplak `~/.hermes/.env` DEĞİL. Değer kapının `bot_sef` tüketicisinin anahtarıyla
+#      AYNI olmak zorunda (`deploy/apisix/routes.yaml` → `$env://BOT_KEY_SEF`); ayrıştıklarında
+#      bot 401 alır ve brifing SESSİZCE ham gider.
 #      (Bu adım bir zamanlar bir profil alt komutuyla belgeliydi; o alt komut YOK. ÖLÇÜLDÜ,
 #       yerel v0.18.2 `build_profile_parser` — tam liste: list · use · create · delete ·
 #       describe · show · alias · rename · export · import · install · update · info.
@@ -58,15 +65,31 @@ env_requires:
     required: true
     default: "/opt/meridian/var/bots/sef"
 
-  - name: OPENROUTER_API_KEY
+  - name: BOT_KEY_SEF
     description: >-
-      Profilin model anahtarı. Profil = bağımsız HERMES_HOME dizini, yani KENDİ `.env`ini
-      okur ve ana profilin anahtarı ona GEÇMEZ. Anahtar yoksa arıza GÜRÜLTÜLÜ DEĞİLDİR:
-      LLM her koşumda düşer, Görev 2'nin ham-brifing düşüş yolu devreye girer ve teslimat
-      çalışıyor GÖRÜNÜR — bot hiç düşünmeden. Sessiz bozulma tam olarak budur.
+      Profilin KAPI anahtarı — koşumun GERÇEKTEN okuduğu anahtar (TSK-105, 2026-09-02).
+      `config.yaml` `model.provider: custom:kapi` diyor ve o girdinin `key_env`i tam bu addır;
+      hermes değeri `Authorization: Bearer` olarak gönderir, kapıdaki köprü `apikey`e çevirir,
+      `key-auth` doğrular. Değer KAPININ tüketici beyanıyla AYNI olmak zorunda
+      (`deploy/apisix/routes.yaml` → `bot_sef` → `$env://BOT_KEY_SEF`).
+      Profil = bağımsız HERMES_HOME dizini, yani KENDİ `.env`ini okur (ÖLÇÜLDÜ, v0.18.2
+      `hermes_cli/env_loader.py`: yüklenen dosya `HERMES_HOME/.env`) ve ana profilin anahtarı
+      ona GEÇMEZ. Anahtar yoksa/yanlışsa arıza GÜRÜLTÜLÜ DEĞİLDİR: kapı 401 döner, LLM her
+      koşumda düşer, Görev 2'nin ham-brifing düşüş yolu devreye girer ve teslimat çalışıyor
+      GÖRÜNÜR — bot hiç düşünmeden. Sessiz bozulma tam olarak budur.
       `env_requires` `.env` YAZMAZ; ÖLÇÜLDÜ (v0.18.2 `profile_distribution.py`,
       `ENV_EXAMPLE_FILENAME`): kurulu profile `.env.EXAMPLE` bırakır (`.env` kullanıcı-sahipli).
     required: true
+
+  - name: OPENROUTER_API_KEY
+    description: >-
+      GERİ DÖNÜŞ YOLUNUN anahtarı — göçten (TSK-105) sonra koşum bunu OKUMAZ. `config.yaml`da
+      `providers.openrouter` girdisi hâlâ duruyor (`model.provider`ı `openrouter`a çevirmek tek
+      satırlık bir geri alma olsun diye), ama bugünkü sağlayıcı `custom:kapi` ve okunan anahtar
+      `BOT_KEY_SEF`tir. Beyan SİLİNMEDİ, `required` DÜŞÜRÜLDÜ: silmek geri dönüş reçetesini
+      belgesiz bırakırdı, `required: true` bırakmak ise operatöre koşumun kullanmadığı bir
+      anahtarı zorunlu diye okuturdu — ikisi de yanlış, ve ikisinin de belirtisi sessizdir.
+    required: false
 
 # --- KARAR KAYDI: SOUL.md SATICI KİMLİĞİNİ DEĞİŞTİRİR, ONA EKLEMEZ (ölçüldü) ---------
 # `agent/system_prompt.py`: SOUL yüklenirse `stable_parts`a O konur ve `DEFAULT_AGENT_IDENTITY`

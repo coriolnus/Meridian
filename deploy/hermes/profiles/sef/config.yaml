@@ -134,10 +134,17 @@ approvals:
 # değdiğinde ham brifing gider (Görev 2'nin düşüş yolu). Ultra bu bütçede zaman aşımına
 # düşerdi; ölçümün "sert sonuç" bölümü tam bu tuzağı anlatıyor.
 model:
-  provider: openrouter
+  # KAPIYA BAKAR (TSK-105, 2026-09-02) — gerekçe ve ölçüm aşağıdaki sağlayıcı bölümünde.
+  provider: custom:kapi
+  # KÜNYE DEĞİŞMEDİ ve değişmemeli. Kapının `ai-proxy-multi` instance'ları `options.model`i
+  # SABİTLER (v361 ölçümü), yani istemcinin model alanı kapıda EZİLİR ve gerçek modeli zincir
+  # seçer. Alan yine de ölü değildir: `obs` kayıtlarında operatörün gördüğü ad budur — ve
+  # FALLBACK anında künye BİRİNCİL adı göstermeye devam eder (bilinen sınır, TSK-089 kaydıyla
+  # aynı). v376 çivisi künyeyi routes.yaml'ın instance modellerine bağlar.
   default: nvidia/nemotron-3-ultra-550b-a55b:free
   max_tokens: 8000
 
+# --- SAĞLAYICILAR ---------------------------------------------------------------------
 # ZAMAN AŞIMI, HERMES'İN GERÇEKTEN OKUDUĞU YERDE.
 # ÖLÇÜLDÜ (`hermes_cli/timeouts.py::get_provider_request_timeout`): okuma sırası
 # `providers.<sağlayıcı>.models.<model>.timeout_seconds` → `providers.<sağlayıcı>.
@@ -145,6 +152,43 @@ model:
 # `timeout: 120` anahtarı hiçbir şey yapmıyordu — yani olmayan bir korumaya güveniyorduk.
 # Sağlayıcı düzeyi seçildi: bu profilde tek model var, per-model satır ikinci bir
 # sürüklenme yüzeyi açardı.
+#
+# ÖLÇÜM KAYDI — KAPI GÖÇÜNÜN HERMES YARISI (TSK-105, 2026-09-02). Roster kuralı gereği bu
+# kayıt YALNIZ BURADA durur (`@bekci`/`@karne` buraya bakar): iddialar HERMES'İN KENDİSİ
+# hakkındadır — aynı ikili, aynı sürüm. Kaynak: yerel hermes ağacı v0.18.2
+# (`~/.hermes/hermes-agent`); CANLI sürüm v0.19.0 ve fark BEYAN EDİLİR, gizlenmez.
+#   (1) SEÇİM. `model.provider: custom:kapi` aşağıdaki `providers.kapi` girdisini seçer:
+#       `runtime_provider.py::_get_named_custom_provider` istenen adı
+#       `{ep_name, name_norm, "custom:"+name_norm}` kümesiyle karşılaştırır.
+#   (2) ANAHTAR. Girdinin `key_env`i bir ENV ADIdır; değer `_getenv` ile çözülür ve standart
+#       OpenAI-uyumlu istemciye `api_key` olarak verilir — yani tel üzerinde
+#       `Authorization: Bearer <anahtar>`. Kapıdaki köprü (routes.yaml, serverless-pre-function)
+#       onu `apikey`e çevirir. `extra_headers` ile anahtarı buraya YAZMAK MÜMKÜN DEĞİLDİ:
+#       `config.py::normalize_extra_headers` ENV GENİŞLETMEZ, literal taşır (sır yasağı).
+#   (3) ZAMAN AŞIMININ EVİ DEĞİŞTİ — göçün SESSİZ bedeli. Adlandırılmış custom sağlayıcı
+#       çözüldüğünde runtime sözlüğü `{"provider": "custom", …}` döner
+#       (`_resolve_custom_provider_runtime`) ve çağıran onu `agent.provider` yapar
+#       (`cli_agent_setup_mixin.py` + `hermes_cli/oneshot.py` — botlar `-z`, yani ONESHOT
+#       yolundan koşar). `get_provider_request_timeout` O DİZGEYLE arar:
+#       `config["providers"]["custom"]`. Yani `kapi` girdisi ÇÖZÜMLEMEYİ taşır, zaman aşımını
+#       TAŞIMAZ. Kapak olmasaydı arıza GÖRÜNMEZDİ: hiçbir çivi kırmızı değil, hiçbir kayıt
+#       düşmez, asılan bir upstream'de bot 120 sn yerine istemci varsayılanı kadar bekler.
+#   (4) SAYI TEK YERDE: YAML çapası (`&`/`*`) iki okuyucuyu tek değere bağlar — iki kopya
+#       sessizce ayrışırdı (tek-kaynak yasası). Çapa silinirse YAML GÜRÜLTÜLÜ patlar.
 providers:
+  # GERİ DÖNÜŞ EVİ + HARNESS BAĞI. Flip'ten sonra hermes bu girdiyi OKUMAZ (sağlayıcı artık
+  # `custom`); duruyor çünkü (a) `provider: openrouter`a dönmek tek satırlık bir işlem olsun,
+  # (b) harness↔profil bütçe çivisi (v330/v332/v338) bütçenin kaynağını burada okur.
   openrouter:
-    request_timeout_seconds: 120
+    request_timeout_seconds: &istek_zaman_asimi_sn 120
+  # KAPI SAĞLAYICISI. Taban A1-İÇİ loopback: kapı 9080'i dışarı açmaz, bot ile kapı aynı
+  # makinededir. `key_env` anahtarın ADIdır — DEĞERİ repoda değil, A1'deki bot servisinin
+  # env'indedir. Ad, kapının kendi tüketici beyanıyla eşleşmek ZORUNDA: routes.yaml
+  # `bot_sef` → `$env://BOT_KEY_SEF`. v376 çivisi iki belgeyi karşılaştırır — ayrıştıklarında
+  # bot 401 alır ve düşüş SESSİZDİR (harness ham brifinge iner, teslimat devam eder).
+  kapi:
+    base_url: http://127.0.0.1:9080/llm/v1
+    key_env: BOT_KEY_SEF
+  # ZAMAN AŞIMININ CANLI EVİ — yukarıdaki (3).
+  custom:
+    request_timeout_seconds: *istek_zaman_asimi_sn

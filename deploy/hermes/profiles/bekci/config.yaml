@@ -112,10 +112,22 @@ approvals:
 # `@bekci`nin girdisi `@sef`inkinden KISADIR (kalem başına birkaç yüz karakter, ve harness
 # kalem tavanı uyguluyor), yani aynı bütçe burada daha rahattır.
 model:
-  provider: openrouter
+  # KAPIYA BAKAR (TSK-105, 2026-09-02). `custom:kapi` aşağıdaki `providers.kapi` girdisini
+  # seçer — ölçüldü (`hermes_cli/runtime_provider.py::_get_named_custom_provider`, yerel
+  # kaynak v0.18.2): istenen ad `{ep_name, name_norm, "custom:"+name_norm}` kümesiyle
+  # karşılaştırılır. `openrouter` kalsaydı bot kapıyı ATLARDI ve filo kotası (limit-count
+  # 1000/gün, consumer-group `filo`) onu SAYMAZDI.
+  provider: custom:kapi
+  # KÜNYE DEĞİŞMEDİ ve değişmemeli. Kapının `ai-proxy-multi` instance'ları `options.model`i
+  # SABİTLER (v361 ölçümü), yani istemcinin model alanı kapıda EZİLİR ve gerçek modeli zincir
+  # seçer. Alan yine de ölü değildir: `obs` kayıtlarında operatörün gördüğü ad budur — ve
+  # FALLBACK anında künye BİRİNCİL adı göstermeye devam eder (bilinen sınır, TSK-089 kaydıyla
+  # aynı). Kapının sunmadığı bir ad yazmak o kaydı sessizce yalana çevirirdi; v376 çivisi
+  # künyeyi routes.yaml'ın instance modellerine bağlar.
   default: nvidia/nemotron-3-ultra-550b-a55b:free
   max_tokens: 8000
 
+# --- SAĞLAYICILAR ---------------------------------------------------------------------
 # ZAMAN AŞIMI, HERMES'İN GERÇEKTEN OKUDUĞU YERDE.
 # Okuma sırası `providers.<sağlayıcı>.models.<model>.timeout_seconds` →
 # `providers.<sağlayıcı>.request_timeout_seconds`. NE kökte NE model eşlemesinde bakılır;
@@ -124,6 +136,28 @@ model:
 # Sağlayıcı düzeyi seçildi: bu profilde tek model var, per-model satır ikinci bir sürüklenme
 # yüzeyi açardı. Değer harness'in `MODEL_TIMEOUT_S` sabitiyle AYNI olmalı ve çivi
 # (`test_HARNESS_BUTCESI_MODEL_BUTCESINDEN_BUYUK`) ikisini birlikte okur.
+#
+# GÖÇTEN SONRA ZAMAN AŞIMININ EVİ DEĞİŞTİ (TSK-105): hermes onu `providers.custom` altında
+# arar, `providers.kapi` altında DEĞİL. ÖLÇÜM KAYDI BURADA TEKRARLANMAZ — dosya başındaki
+# kuralın aynısı: iddia HERMES'İN KENDİSİ hakkındadır, bu profil hakkında değil, ve kaydı
+# `@sef`in `config.yaml`ındadır. Kopyalamak ikinci bir gerçek yaratırdı.
+# SAYI TEK YERDE: YAML çapası (`&`/`*`) iki okuyucuyu tek değere bağlar — iki kopya sessizce
+# ayrışırdı (tek-kaynak yasası). Çapa silinirse YAML GÜRÜLTÜLÜ patlar, sessizce sapmaz.
 providers:
+  # GERİ DÖNÜŞ EVİ + HARNESS BAĞI. Flip'ten sonra hermes bu girdiyi OKUMAZ (sağlayıcı artık
+  # `custom`); duruyor çünkü (a) `provider: openrouter`a dönmek tek satırlık bir işlem olsun,
+  # (b) harness↔profil bütçe çivisi (v332/v338/v330) bütçenin kaynağını burada okur.
   openrouter:
-    request_timeout_seconds: 120
+    request_timeout_seconds: &istek_zaman_asimi_sn 120
+  # KAPI SAĞLAYICISI. Taban A1-İÇİ loopback: kapı 9080'i dışarı açmaz, bot ile kapı aynı
+  # makinededir. `key_env` anahtarın ADIdır — DEĞERİ repoda değil, A1'deki bot servisinin
+  # env'indedir (`deploy/` versiyonlanır; sır yasağı). Ad, kapının kendi tüketici beyanıyla
+  # eşleşmek ZORUNDA: routes.yaml `bot_bekci` → `$env://BOT_KEY_BEKCI`. v376 çivisi iki
+  # belgeyi karşılaştırır — ayrıştıklarında bot 401 alır ve düşüş SESSİZDİR (harness ham yola
+  # iner, teslimat devam eder).
+  kapi:
+    base_url: http://127.0.0.1:9080/llm/v1
+    key_env: BOT_KEY_BEKCI
+  # ZAMAN AŞIMININ CANLI EVİ — yukarıdaki ölçüm gerekçesi.
+  custom:
+    request_timeout_seconds: *istek_zaman_asimi_sn

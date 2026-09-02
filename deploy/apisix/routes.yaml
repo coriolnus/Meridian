@@ -15,7 +15,40 @@ rotalar:
       # apisix_http_status sayacı HİÇ üretilmez — Kapı sayfasının metrik bölümü boş kalır
       # (ölçüldü 2026-09-01: istek geçti, sayaç 0 satır). Yalnız sayaç üretir, gövdeye dokunmaz.
       prometheus: {}
-      key-auth: {}             # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+      # BEARER → APIKEY KÖPRÜSÜ (TSK-105, 2026-09-02). Üç LLM rotasının üçünde de aynı gövde.
+      # NEDEN KAPIDA, HERMES TARAFINDA DEĞİL: hermes'in `extra_headers` alanı ENV GENİŞLETMESİ
+      # YAPMAZ (ölçüldü — `hermes_cli/config.py::normalize_extra_headers` literal değer taşır),
+      # yani botun `apikey` başlığını repo'daki profile yazmanın tek yolu SIRRIN KENDİSİNİ
+      # repoya koymaktı. O yol kapalı. Kalan yol: bot standart `Authorization: Bearer <anahtar>`
+      # gönderir (custom provider `key_env`i), kapı onu `apikey`e çevirir, `key-auth` bugünkü
+      # gibi doğrular. Tanım TEK KAYNAKTA kalır ve drift denetimi (`apisix_uygula --denetle`)
+      # kapsar; A1-yerel bir hermes config'ine literal başlık yazma alternatifi REDDEDİLDİ
+      # (sır dosyası çoğalır + tanım repo/A1'e bölünür).
+      # MOTOR YOLU DEĞİŞMEZ: `apikey` başlığı ZATEN varsa fonksiyon hiçbir şeye dokunmaz —
+      # `motor_meridian` kendi anahtarıyla gelmeye devam eder. Kapı sırası (aynı `rewrite`
+      # fazında köprünün `key-auth`tan önce koşması) plugin önceliğine bağlıdır ve UYGULAMA
+      # CANARY'sinde doğrulanır; yanlışsa bot 401 alır — sessiz arıza değil.
+      # Çivi: tests/test_bot_kapi_gocu_v376.py (yapı + imza + sıra; Lua KOŞULMAZ).
+      serverless-pre-function:
+        phase: rewrite
+        functions:
+          - |
+            return function(conf, ctx)
+                local h = ngx.req.get_headers()
+                if not h["apikey"] then
+                    local auth = h["Authorization"] or h["authorization"]
+                    if type(auth) == "string" and auth:sub(1, 7) == "Bearer " then
+                        ngx.req.set_header("apikey", auth:sub(8))
+                    end
+                end
+            end
+      key-auth:                # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+        # AÇIK KAPANDI (TSK-105): varsayılan `hide_credentials: false`tur, yani DOĞRULANAN
+        # `apikey` başlığı upstream'e (OpenRouter'a) olduğu gibi giderdi. `Authorization`ı
+        # aşağıdaki proxy-rewrite zaten siliyordu; `apikey`i hiçbir şey silmiyordu. Göç bu
+        # açığı büyütürdü: bugün yalnız motorun anahtarı geçiyor, göçten sonra üç botunki de.
+        # CANLI doğrulaması uygulama canary'sinde (üç başlığın da upstream'e gitmediği).
+        hide_credentials: true
       consumer-restriction:
         whitelist: [bot_bekci, bot_karne, bot_sef, motor_meridian]
       proxy-rewrite:
@@ -130,7 +163,25 @@ rotalar:
     uri: /llm/hizli/v1/chat/completions
     plugins:
       prometheus: {}   # yukarıdaki notla aynı: sayaç ancak açık yazılınca doğar
-      key-auth: {}             # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+      # Köprü + `hide_credentials`: gerekçe llm-danisma'da, TEK YERDE (TSK-105). Gövde birebir
+      # aynıdır ve aynı olmak ZORUNDADIR — botun hangi rotaya gittiği çağrı sınıfına bağlı,
+      # kimlik yolu değişmemeli. (Kopya kaçınılmaz: APISIX plugin gövdeleri rota-başınadır;
+      # ayrışma çivisi v376'nın parametreli köprü çivileridir — üç rotayı aynı kapıdan geçirir.)
+      serverless-pre-function:
+        phase: rewrite
+        functions:
+          - |
+            return function(conf, ctx)
+                local h = ngx.req.get_headers()
+                if not h["apikey"] then
+                    local auth = h["Authorization"] or h["authorization"]
+                    if type(auth) == "string" and auth:sub(1, 7) == "Bearer " then
+                        ngx.req.set_header("apikey", auth:sub(8))
+                    end
+                end
+            end
+      key-auth:                # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+        hide_credentials: true   # doğrulanan anahtar upstream'e GİTMEZ (gerekçe: llm-danisma)
       consumer-restriction:
         whitelist: [bot_bekci, bot_karne, bot_sef, motor_meridian]
       proxy-rewrite:
@@ -162,7 +213,24 @@ rotalar:
     uri: /llm/v1/models
     plugins:
       prometheus: {}
-      key-auth: {}             # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+      # Köprü + `hide_credentials`: gerekçe llm-danisma'da (TSK-105). BU ROTADA ÖZELLİKLE
+      # GEREKLİ: nous sağlık sondası `GET {base}/models` çağırır ve bot tabanı kapıya
+      # flip'lendiğinde sonda BU rotadan geçer — köprüsüz kalırsa sağlık yanlış KIRMIZI olur.
+      serverless-pre-function:
+        phase: rewrite
+        functions:
+          - |
+            return function(conf, ctx)
+                local h = ngx.req.get_headers()
+                if not h["apikey"] then
+                    local auth = h["Authorization"] or h["authorization"]
+                    if type(auth) == "string" and auth:sub(1, 7) == "Bearer " then
+                        ngx.req.set_header("apikey", auth:sub(8))
+                    end
+                end
+            end
+      key-auth:                # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+        hide_credentials: true   # doğrulanan anahtar upstream'e GİTMEZ (gerekçe: llm-danisma)
       consumer-restriction:
         whitelist: [bot_bekci, bot_karne, bot_sef, motor_meridian]
       proxy-rewrite:
@@ -182,9 +250,14 @@ rotalar:
 # oturumu (kapı basic-auth'u 2026-09-01'de emekli — pano-ingress yorumundaki vaka).
 # F4-B KİLİDİ İNDİ (2026-09-02 sabah penceresi): üç LLM rotasında key-auth +
 # consumer-restriction whitelist. Motor anahtarlı (KAPI_APIKEY, hermes._nous_headers apikey
-# başlığı; anahtar eşitliği hash kıyasıyla doğrulandı). ÜÇ BOT KAPIDA DEĞİL — hermes
-# Authorization: Bearer gönderir, key-auth apikey bekler (ölçüldü); botlar doğrudan
-# OpenRouter'da kalır, göç TSK-105 (whitelist'teki bot tüketicileri o gün için hazır).
+# başlığı; anahtar eşitliği hash kıyasıyla doğrulandı).
+# BOT GÖÇÜ — REPO YARISI İNDİ (TSK-105, 2026-09-02): hermes Authorization: Bearer gönderir,
+# key-auth apikey bekler (ölçüldü) → köprü üç LLM rotasının plugin bloğunda (yukarıda,
+# gerekçesi llm-danisma'da). Bot profilleri de kapıya bakıyor (deploy/hermes/profiles/*/
+# config.yaml, `providers.kapi` + `model.provider: custom:kapi`).
+# UYGULANMADI: bu dosya etcd'ye PUT edilene ve bot env'lerine BOT_KEY_* girip botlar yeniden
+# başlatılana kadar botlar CANLIDA hâlâ doğrudan OpenRouter'a gider ve filo kotası onları
+# saymaz. O adımlar operatör penceresindedir (T2) — "beyan edildi" ile "koşuyor" ayrı hâller.
 
 tuketici_gruplari:
   - id: filo

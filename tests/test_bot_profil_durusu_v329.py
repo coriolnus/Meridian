@@ -138,6 +138,32 @@ def test_MODEL_BLOGU_ESLEME_ve_max_tokens_ICINDE(profil):
         f"kökte duran bir kopya okunmaz (bulunan: {model.get('max_tokens')!r})")
 
 
+def _zaman_asimi_anahtari(saglayici: str | None) -> str:
+    """`model.provider` → Hermes'in `providers` altında GERÇEKTEN aradığı anahtar.
+
+    DÜZELTİLDİ (TSK-105, 2026-09-02 — kapı göçü bu ayrımı DOĞURDU, icat etmedi). Çivi bir tur
+    önce `providers[model.provider]` diyordu ve bu, sağlayıcı adı ile arama anahtarının AYNI
+    olduğu dünyada doğruydu. `custom:<ad>` biçiminde ikisi AYRIŞIR:
+
+      · SEÇİM `custom:kapi` ile olur (`runtime_provider.py::_get_named_custom_provider`:
+        istenen ad `{ep_name, name_norm, "custom:"+name_norm}` kümesiyle karşılaştırılır),
+      · ama çözülen runtime sözlüğü `{"provider": "custom", …}` döner
+        (`_resolve_custom_provider_runtime`) ve çağıran onu `agent.provider` yapar
+        (`cli_agent_setup_mixin.py` + `hermes_cli/oneshot.py` — botlar `-z`/oneshot yolundan
+        koşar), yani `get_provider_request_timeout` `providers["custom"]`e bakar.
+
+    Düzeltilmeseydi çivi kırmızı kalırdı ve KIRMIZILIĞI DOĞRUYDU: `providers["custom:kapi"]`
+    diye bir girdi yoktur. Düzeltmenin yönü önemli — çivi konfigürasyona uydurulmadı,
+    HERMES'İN OKUMASINA uyduruldu; kapağın kendisi (`providers.custom`) profillere eklendi.
+
+    SÜRÜM BEYANI: ölçüm yerel kaynak v0.18.2'de yapıldı, canlı v0.19.0. Üst akım bu türetimi
+    değiştirirse çivi yerel sürüme göre yeşil kalıp canlıda yanılabilir — aynı şerh kardeş
+    çivi `test_KAPALI_TAKIM_ADLARI_GERCEK_TOOLSET_ANAHTARIDIR`ta da var.
+    """
+    s = (saglayici or "").strip().lower()
+    return "custom" if s == "custom" or s.startswith("custom:") else s
+
+
 @pytest.mark.parametrize("profil", _profiller(), ids=lambda p: p.name)
 def test_TIMEOUT_HERMESIN_OKUDUGU_YERDE(profil):
     """ÖLÇÜLDÜ (`hermes_cli/timeouts.py::get_provider_request_timeout`): istek zaman aşımı
@@ -145,11 +171,14 @@ def test_TIMEOUT_HERMESIN_OKUDUGU_YERDE(profil):
     `providers.<saglayici>.models.<model>.timeout_seconds` → `providers.<saglayici>.
     request_timeout_seconds`. Kökteki bir `timeout:` anahtarı hiçbir şey yapmaz; onu
     yazmak, olmayan bir korumaya güvenmektir.
+
+    `<saglayici>` `model.provider`ın KENDİSİ DEĞİL, ondan TÜRETİLİR — gerekçe
+    `_zaman_asimi_anahtari`nin docstring'inde (kapı göçü, `custom:<ad>` ayrışması).
     """
     cfg = yaml.safe_load((profil / "config.yaml").read_text(encoding="utf-8")) or {}
     assert "timeout" not in cfg, (
         f"{profil.name}: kökte `timeout` var — Hermes burayı OKUMAZ, anahtar ölü yatar")
-    saglayici = ((cfg.get("model") or {}).get("provider"))
+    saglayici = _zaman_asimi_anahtari((cfg.get("model") or {}).get("provider"))
     p_cfg = ((cfg.get("providers") or {}).get(saglayici) or {})
     model_ust = ((p_cfg.get("models") or {}).get(MODEL_ANAHTARI) or {})
     deger = model_ust.get("timeout_seconds") or p_cfg.get("request_timeout_seconds")
