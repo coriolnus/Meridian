@@ -1,25 +1,42 @@
 "use client";
 
 /* ============================================================================
-   HAFIZA — `state/lessons.md`in okunur belge yüzeyi
+   HAFIZA · MERİDİAN DERSLERİ — Bilgi Tabanı görünümünün üçüncü alt sekmesi
    ----------------------------------------------------------------------------
+   BU SEKME ÜST YÜZEYDE YOKTUR VE ADINDA BUNU SÖYLER. Hindsight Control Plane'in
+   Bilgi Tabanı görünümü iki alt sekme taşır (sayfa ağacı · zihin modelleri);
+   üçüncüsü Meridian'ın kendi eklediğidir ve içeriği Hindsight korpusunun
+   PARÇASI DEĞİLDİR: korpus depo belgelerinden beslenir (docs/, araştırma
+   kartları, üst düzey .md), `state/` dizini dışarıdadır. Buradaki dersler
+   Meridian'ın KENDİ öğrenme döngüsünün çıktısıdır ve o çıktı hafıza bankasına
+   hiç girmemiştir. Etiketsiz bir sekme, iki ayrı korpusu tek korpus sanmaya
+   davet ederdi.
+
+   NEREDEN GELDİ: bu sunum eski "Belgeler" rafı yüzeyindeydi (`Hafiza.tsx`) ve o
+   yüzey 2026-09-02'de tümüyle kalktı — rafın iki bölümü Hafıza yüzeyinin ilgili
+   görünümlerine dağıldı, çift üretim olmadan. Ayrıştırıcı da (`damitim.ts`)
+   kopyalanmadı, taşındı.
+
    BU DOSYA AJANIN HAFIZASIDIR, bir günlük değil: uç şerhi "Injected into every
    reflection" diyor (api.py::api_memory) — yani buradaki her madde, bir sonraki
    öneri turunda modele geri veriliyor. Panoda okunur durmasının nedeni bu:
    ajanın neyi bir daha denemeyeceğini operatör de görebilsin.
 
    ÜÇ AYRI "BOŞ" VAR ve üçü ayrı cümle kurar:
-     · uç okunamadı            → hata metni (Kapi çiziyor)
-     · uç `_No lessons yet._`  → DOSYA YOK (api.py'nin açık boşluk beyanı)
-     · dosya var, bölüm yok    → belge var ama `##` başlığı taşımıyor
+     · uç okunamadı            → hata metni (kapı çiziyor)
+     · uç boşluk beyanı döndü  → DOSYA YOK (ucun açık boşluk beyanı)
+     · dosya var, bölüm yok    → belge var ama bölüm başlığı taşımıyor
    Üçünü tek "hafıza boş" kartına indirmek, dosyanın olmadığı durumla dosyanın
    boş olduğu durumu aynı şey saymak olurdu; birincisinde bakılacak yer diskte,
    ikincisinde ajanda.
 
-   ARAMA MADDE DÜZEYİNDE: metnin tamamında `Ctrl+F` zaten var; buradaki süzgecin
-   işi bölümleri KORUYARAK maddeleri elemek, böylece "hangi bölümde kaç eşleşme"
-   sorusu da cevaplanır. Süzgeç boş sonuç verdiğinde "kayıt yok" DEMİYOR —
-   "süzgeç geçirmedi" diyor ve toplamı yanına yazıyor.
+   ARAMA MADDE DÜZEYİNDE: metnin tamamında tarayıcının kendi araması zaten var;
+   buradaki süzgecin işi bölümleri KORUYARAK maddeleri elemek, böylece "hangi
+   bölümde kaç eşleşme" sorusu da cevaplanır. Süzgeç boş sonuç verdiğinde "kayıt
+   yok" DEMİYOR — "süzgeç geçirmedi" diyor ve toplamı yanına yazıyor.
+
+   NABIZ YOK: damıtım dosyası bir yansıma turunda bir kez yazılıyor; on beş
+   saniyede bir çekmek okunan bir belgeyi altından kaydırmak olurdu.
    ============================================================================ */
 import { useMemo, useState } from "react";
 
@@ -34,12 +51,55 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-import { bicimSayi } from "./ortak";
+import { useApi } from "../../veri";
+import { Kapi as UcKapisi, Olculemedi } from "../sistem/parcalar";
 import { hafizaAyristir, vurguSok, type Hafiza as HafizaBelgesi } from "./damitim";
+import { metin } from "./parcalar";
+
+const UC_DERSLER = "/api/memory";
 
 const YAPI = { n: { label: "madde" } } satisfies ChartConfig;
 
-export function Hafiza({ ham }: { ham: string }) {
+/** Sayıyı tr-TR biçiminde yazar — eski raf yüzeyinin ortak yardımcısının yerine,
+ *  bu görünümün kendi tek satırlık karşılığı (raf yüzeyi kalktı). */
+function bicimSayi(n: number): string {
+  return n.toLocaleString("tr-TR");
+}
+
+export function MeridianDersleri() {
+  /* YOKLANMAZ: bu dosya bir yansıma turunda bir kez yazılıyor (dosya başlığı). */
+  const durum = useApi<Record<string, unknown>>(UC_DERSLER, 0);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="rounded-md border border-dashed p-3 text-muted-foreground text-xs leading-relaxed">
+        <span className="font-medium text-foreground">Bu sekme üst yüzeyde yok. </span>
+        Buradaki dersler Meridian&apos;ın kendi öğrenme döngüsünün çıktısıdır (çalışma durumundaki
+        damıtım dosyası) ve hafıza bankasının korpusunda DEĞİLDİR — korpus depo belgelerinden
+        beslenir, çalışma durumu dizini dışarıdadır. İki listeyi aynı korpus sanmamak için not
+        burada duruyor.
+      </p>
+      <UcKapisi durum={durum} yol={UC_DERSLER}>
+        {(g) => {
+          const ham = metin(g["lessons_md"]);
+          if (ham === null) {
+            // 200 GELDİ AMA ALAN YOK: bu bir ağ hatası değil, bir SÖZLEŞME ihlali;
+            // ikisini aynı kutuya koymak operatörü ağa baktırırdı.
+            return (
+              <Olculemedi
+                neden="Ders metni bildirilmedi"
+                teknik="uç cevap verdi ama gövdesinde ders metni alanı yok — sözleşme bu alanı her zaman yazmalı (api.py::api_memory)"
+              />
+            );
+          }
+          return <Dersler ham={ham} />;
+        }}
+      </UcKapisi>
+    </div>
+  );
+}
+
+function Dersler({ ham }: { readonly ham: string }) {
   const belge = useMemo(() => hafizaAyristir(ham), [ham]);
   const [arama, setArama] = useState("");
 
@@ -47,11 +107,10 @@ export function Hafiza({ ham }: { ham: string }) {
     return (
       <Alert>
         <FileText />
-        <AlertTitle>Hafıza dosyası YOK</AlertTitle>
+        <AlertTitle>Ders dosyası YOK</AlertTitle>
         <AlertDescription>
-          `/api/memory` gövdesi `_No lessons yet._` döndü. Bu, api.py’nin açık boşluk beyanıdır:
-          `state/lessons.md` diskte bulunmuyor. "Ajan hiçbir şey öğrenmedi" ile AYNI ŞEY DEĞİL —
-          damıtım dosyası hiç yazılmamış.
+          Uç açık boşluk beyanı döndürdü: damıtım dosyası diskte bulunmuyor. &quot;Ajan hiçbir şey
+          öğrenmedi&quot; ile AYNI ŞEY DEĞİL — dosya hiç yazılmamış.
         </AlertDescription>
       </Alert>
     );
@@ -67,26 +126,6 @@ export function Hafiza({ ham }: { ham: string }) {
           <BolumGrafigi belge={belge} />
         </div>
       </div>
-    </div>
-  );
-}
-
-/* ---- KÜNYE --------------------------------------------------------------- */
-
-function Kunye({ belge }: { belge: HafizaBelgesi }) {
-  const maddeN = belge.bolumler.reduce((a, b) => a + b.maddeler.length, 0);
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Badge variant="outline" className="gap-1">
-        <FileText className="size-3" aria-hidden />
-        state/lessons.md
-      </Badge>
-      <Badge variant="ghost">{bicimSayi(belge.bolumler.length)} bölüm</Badge>
-      <Badge variant="ghost">{bicimSayi(maddeN)} madde</Badge>
-      <Badge variant="ghost">{bicimSayi(belge.karakterN)} karakter</Badge>
-      <span className="text-muted-foreground text-xs">
-        salt okunur — bu dosyayı yazan değerlendirme turudur, pano değil
-      </span>
     </div>
   );
 }
@@ -183,6 +222,36 @@ function Belge({
         </ScrollArea>
       </CardContent>
     </Card>
+  );
+}
+
+/* ---- KÜNYE --------------------------------------------------------------- */
+
+/* BELGE BAŞLIĞI VE KÜNYE SATIRLARI BURADA OKUNUR — ve bu bir taşıma değil,
+   OKUYUCU DEVRİDİR: ikisini de eskiden madde listesi kartı çiziyordu. O kart
+   konsolide listeye devredilirken başlık ve künye okunmadan kalsaydı,
+   ayrıştırıcı onları üretmeye devam eder ama kimse görmezdi. */
+function Kunye({ belge }: { belge: HafizaBelgesi }) {
+  const maddeN = belge.bolumler.reduce((a, b) => a + b.maddeler.length, 0);
+  return (
+    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-wrap items-center gap-2">
+      <Badge variant="outline" className="gap-1">
+        <FileText className="size-3" aria-hidden />
+        state/lessons.md
+      </Badge>
+      <Badge variant="ghost">{bicimSayi(belge.bolumler.length)} bölüm</Badge>
+      <Badge variant="ghost">{bicimSayi(maddeN)} madde</Badge>
+      <Badge variant="ghost">{bicimSayi(belge.karakterN)} karakter</Badge>
+      <span className="text-muted-foreground text-xs">
+        salt okunur — bu dosyayı yazan değerlendirme turudur, pano değil
+      </span>
+    </div>
+      <p className="text-muted-foreground text-xs leading-relaxed">
+        {belge.baslik ?? "(belgede başlık satırı yok)"}
+        {belge.kunye.length === 0 ? null : ` · ${belge.kunye.map((k) => vurguSok(k)).join(" · ")}`}
+      </p>
+    </div>
   );
 }
 

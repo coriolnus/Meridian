@@ -209,8 +209,8 @@ function HafizaMesaji({
       )}
       <p className="mt-2 text-muted-foreground text-xs">
         Tam metin:{" "}
-        <a className="underline underline-offset-2" href="#/dashboard/file-manager/hafiza">
-          Belgeler → Hafıza
+        <a className="underline underline-offset-2" href="#/dashboard/memory/hafiza-bilgi">
+          Hafıza → Bilgi Tabanı → Meridian dersleri
         </a>
       </p>
     </div>

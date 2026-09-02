@@ -41,11 +41,11 @@
    tetiğine bağlı, yoklamaya değil.
    ============================================================================ */
 import { useState } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
 import type { Bolum } from "../../alanlar";
@@ -74,7 +74,11 @@ type ZamanAlani = (typeof ZAMAN_ALANLARI)[number]["deger"];
 /* SERİLER — RENK BİR KİMLİK KANALI, BİR HÜKÜM DEĞİL. Panonun grafik rampası
    akromatiktir (tema.css) ve anlamı taşıyan şey ETİKETtir; üst yüzeyin mor/pembe/
    çivit paletini taşımak, panonun rezerve renk bantlarına (mod/gezinme/şiddet)
-   girmeden de tasarım dilini bozardı. Taşınan şey düzen ve içerik, piksel değil. */
+   girmeden de tasarım dilini bozardı. Taşınan şey düzen ve içerik, piksel değil.
+
+   SEMANTİK ROL ÜST YÜZEYLE AYNI ve sıra da aynı: dünya bilgisi · deneyim · gözlem.
+   Yığının sırası bir süs değil — aynı sırayı bilen bir okuyucu iki ekranda aynı
+   bandı aynı yerde arar. */
 const SERI_YAPISI = {
   world: { label: "Dünya bilgisi", color: "var(--chart-2)" },
   experience: { label: "Deneyim", color: "var(--chart-3)" },
@@ -82,6 +86,12 @@ const SERI_YAPISI = {
 } satisfies ChartConfig;
 
 const SERI_ANAHTARLARI = ["world", "experience", "observation"] as const;
+type SeriAnahtari = (typeof SERI_ANAHTARLARI)[number];
+
+/** Y ekseni kısaltması — üst yüzeyin `formatCompact`inin karşılığı, tr-TR ile. */
+function kisaSayi(n: number): string {
+  return n.toLocaleString("tr-TR", { notation: "compact", maximumFractionDigits: 1 });
+}
 
 /* ---------------------------------------------------------------------------
    SAYAÇ ŞERİDİ
@@ -213,11 +223,27 @@ function Tazelik({ stats }: { readonly stats: BankaSayaclari }) {
  * ÇIPLAK "—" DE YOK: gerekçesiz bir tire, ölçülmemiş bir boşluğu ölçülmüş gibi
  * gösterir (`sistem/parcalar.tsx::Olculemedi` sözleşmesi).
  */
+/**
+ * OFSETSİZ ISO DİZGESİNE UTC ÇIPASI — üst yüzeyin `parseBucketIso` kuralının
+ * karşılığı (inceleme M-2, kaynak `bank-stats-view.tsx` @ ebad4782).
+ *
+ * Kova damgaları zaman serisi ucundan KANONİK UTC olarak geliyor. ECMA-262
+ * gereği ofset taşımayan bir ISO dizgesi (`2026-04-18T00:00:00`) `new Date()`
+ * tarafından YEREL saat sayılır ve kova, tarayıcının saat dilimi kadar KAYAR.
+ * Negatif ofsetli bir tarayıcıda gün kovası bir gün geriye düşerdi — sessizce,
+ * çünkü etiket yine geçerli bir tarih basar.
+ *
+ * Ofset VARSA dokunulmaz: `Z` eklemek o durumda damgayı gerçekten bozardı.
+ */
+function utcCipasi(iso: string): string {
+  return /[+Z-]$/.test(iso) || /[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`;
+}
+
 function kovaEtiketi(zaman: unknown, trunc: unknown): string {
   const s = metin(zaman);
   if (s === null) return "— (kova damgası gelmedi)";
   if (!ISO_BENZERI.test(s)) return s;
-  const t = new Date(s);
+  const t = new Date(utcCipasi(s));
   if (Number.isNaN(t.getTime())) return s;
   if (trunc === "day") return t.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
   if (trunc === "hour" || trunc === "minute") {
@@ -226,7 +252,41 @@ function kovaEtiketi(zaman: unknown, trunc: unknown): string {
   return t.toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" });
 }
 
-function Seri({ seri, neden }: { readonly seri: ZamanSerisi | null | undefined; readonly neden: string | null | undefined }) {
+/**
+ * ZAMAN SERİSİ — ÜST YÜZEYİN GRAFİĞİYLE AYNI TİP (operatör bulgusu 2026-09-02).
+ *
+ * İLK YAZIM YIĞILMIŞ ÇUBUK ÇİZİYORDU ve operatör görsel turda "üst yüzeyde
+ * sürekli, bizde merdiven" dedi. ÖLÇÜLDÜ (`bank-stats-view.tsx::MemoriesActivityChart`):
+ * grafik `AreaChart`tır — üç seri `stackId` ile YIĞILI, `type="monotone"`,
+ * 2 piksel çizgi ve tepeden dibe sönen bir dolgu geçişi, animasyon kapalı.
+ * Izgara yalnız yatay, X ekseninde etiket sıkışması `minTickGap` ile açılıyor,
+ * Y ekseni ondalıksız ve kısaltılmış. Aşağıdaki çizim o ölçümün karşılığıdır.
+ *
+ * KOVA ÇÖZÜNÜRLÜĞÜ EŞLEMESİ ZATEN BİREBİRDİ VE BU DA ÖLÇÜLDÜ: pencere→kova
+ * kararını İSTEMCİ vermiyor, üst servis veriyor ve `trunc` alanında geri
+ * bildiriyor. Vekil pencereyi aynen geçiriyor (yalnız tanımadığı değeri beyanlı
+ * varsayılana oturtuyor), yani altı pencerenin altısında da bizim kovamız üst
+ * yüzeyin kovasıdır. Buraya bir eşleme tablosu yazmak, sunucunun kararını
+ * istemcide İKİNCİ kez tahmin etmek olurdu.
+ *
+ * SERİ ANAHTARLARI TIKLANABİLİR ve toplam SEÇİLİ serilerin toplamıdır — üst
+ * yüzeyin davranışının aynısı. Kapalı bir seriyi toplama katmak, ekranda
+ * görünmeyen bir sayıyı toplamda göstermek olurdu.
+ *
+ * BOŞ KOVA GİZLENMEZ: sıfırlı kovalar da eksende yerini alır (üst yüzey de öyle
+ * yapıyor) — atlanan bir kova, zaman eksenini sessizce sıkıştırırdı.
+ */
+function Seri({
+  seri,
+  neden,
+  acik,
+  cevir,
+}: {
+  readonly seri: ZamanSerisi | null | undefined;
+  readonly neden: string | null | undefined;
+  readonly acik: Readonly<Record<SeriAnahtari, boolean>>;
+  readonly cevir: (k: SeriAnahtari) => void;
+}) {
   if (neden) return <Olculemedi neden="Zaman serisi okunamadı" teknik={neden} />;
   if (seri === undefined) return <Olculemedi neden="Zaman serisi bildirilmedi" teknik="uç seri bacağını hiç döndürmedi" />;
   if (seri === null) return <Olculemedi neden="Ölçüm denendi, seri gelmedi" teknik="seri alanı boş döndü ve gerekçe de taşınmadı" />;
@@ -246,7 +306,8 @@ function Seri({ seri, neden }: { readonly seri: ZamanSerisi | null | undefined; 
     experience: sayi(k.experience) ?? 0,
     observation: sayi(k.observation) ?? 0,
   }));
-  const toplam = veri.reduce((a, b) => a + b.world + b.experience + b.observation, 0);
+  const acikAnahtarlar = SERI_ANAHTARLARI.filter((k) => acik[k]);
+  const toplam = veri.reduce((a, b) => a + acikAnahtarlar.reduce((x, k) => x + b[k], 0), 0);
   const sayiliKova = kovalar.some((k) => sayi(k.world) !== null || sayi(k.experience) !== null || sayi(k.observation) !== null);
 
   if (kovalar.length > 0 && !sayiliKova) {
@@ -259,26 +320,47 @@ function Seri({ seri, neden }: { readonly seri: ZamanSerisi | null | undefined; 
   }
   if (veri.length === 0 || toplam === 0) {
     return (
-      <p className="text-muted-foreground text-sm">
-        Bu pencere okundu ve içinde hiç kayıt yok — bu ölçülmüş bir boşluktur, "okuyamadım" ile aynı
-        şey değildir
-      </p>
+      <div className="flex flex-col gap-2">
+        <SeriAnahtarlari acik={acik} cevir={cevir} toplam={toplam} />
+        <p className="text-muted-foreground text-sm">
+          {acikAnahtarlar.length === 0
+            ? "Seçili tür yok — yukarıdaki anahtarlardan en az birini aç."
+            : "Bu pencere okundu ve seçili türlerde hiç kayıt yok — bu ölçülmüş bir boşluktur, \"okuyamadım\" ile aynı şey değildir"}
+        </p>
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-2">
+      <SeriAnahtarlari acik={acik} cevir={cevir} toplam={toplam} />
       <ChartContainer config={SERI_YAPISI} className="aspect-auto h-52 w-full">
-        <BarChart data={veri} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-          <CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <XAxis dataKey="etiket" tickLine={false} axisLine={false} tickMargin={6} className="text-[11px]" interval="preserveStartEnd" />
-          <YAxis tickLine={false} axisLine={false} width={44} className="text-[11px]" allowDecimals={false} />
+        <AreaChart data={veri} margin={{ top: 8, right: 8, bottom: 0, left: -10 }}>
+          <defs>
+            {acikAnahtarlar.map((k) => (
+              <linearGradient key={k} id={`hafiza-seri-${k}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={`var(--color-${k})`} stopOpacity={0.35} />
+                <stop offset="100%" stopColor={`var(--color-${k})`} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
+          <CartesianGrid vertical={false} strokeDasharray="2 4" />
+          <XAxis dataKey="etiket" tickLine={false} axisLine={false} tickMargin={6} minTickGap={20} className="text-[11px]" />
+          <YAxis tickLine={false} axisLine={false} width={44} allowDecimals={false} tickFormatter={kisaSayi} className="text-[11px]" />
           <ChartTooltip content={<ChartTooltipContent labelKey="etiket" />} />
-          <ChartLegend content={<ChartLegendContent />} />
-          {SERI_ANAHTARLARI.map((k) => (
-            <Bar key={k} dataKey={k} stackId="a" fill={`var(--color-${k})`} isAnimationActive={false} radius={k === "observation" ? [3, 3, 0, 0] : 0} />
+          {acikAnahtarlar.map((k) => (
+            <Area
+              key={k}
+              type="monotone"
+              dataKey={k}
+              stackId="a"
+              stroke={`var(--color-${k})`}
+              strokeWidth={2}
+              fill={`url(#hafiza-seri-${k})`}
+              isAnimationActive={false}
+            />
           ))}
-        </BarChart>
+        </AreaChart>
       </ChartContainer>
       <p className="text-muted-foreground text-xs tabular-nums">
         Pencerede toplam {toplam.toLocaleString("tr-TR")} kayıt · kova çözünürlüğü{" "}
@@ -288,11 +370,62 @@ function Seri({ seri, neden }: { readonly seri: ZamanSerisi | null | undefined; 
   );
 }
 
+/** SERİ ANAHTARLARI — üst yüzeyin tıklanabilir efsanesinin karşılığı.
+ *  Toplam yanlarında durur çünkü toplam SEÇİME bağlıdır: anahtarı kapatmak
+ *  sayıyı da değiştirir ve ikisi ayrı yerlerde dursaydı bağ görünmezdi. */
+function SeriAnahtarlari({
+  acik,
+  cevir,
+  toplam,
+}: {
+  readonly acik: Readonly<Record<SeriAnahtari, boolean>>;
+  readonly cevir: (k: SeriAnahtari) => void;
+  readonly toplam: number;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Kayıt türü anahtarları">
+        {SERI_ANAHTARLARI.map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => cevir(k)}
+            aria-pressed={acik[k]}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-2 py-0.5 font-medium text-[11px] transition-colors",
+              acik[k] ? "bg-muted text-foreground" : "text-muted-foreground/70 hover:text-muted-foreground",
+            )}
+          >
+            <span
+              className="size-2 rounded-[2px]"
+              style={{ backgroundColor: `var(--color-${k})`, opacity: acik[k] ? 1 : 0.3 }}
+              aria-hidden
+            />
+            {SERI_YAPISI[k].label}
+          </button>
+        ))}
+      </div>
+      <span className="text-muted-foreground text-xs tabular-nums">
+        {toplam.toLocaleString("tr-TR")} kayıt
+      </span>
+    </div>
+  );
+}
+
 /* --------------------------------------------------------------------------- */
 
 export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readonly kayit: Bolum }) {
   const [pencere, setPencere] = useState<Pencere>("7d");
   const [zamanAlani, setZamanAlani] = useState<ZamanAlani>("created_at");
+  /* SERİ ANAHTARLARI KABUKTA TUTULUR, GRAFİĞİN İÇİNDE DEĞİL: seçim pencere
+     değiştiğinde de korunmalı — grafiğin içinde dursaydı her okumada sıfırlanır
+     ve operatör aynı anahtarı her pencerede yeniden kapatırdı. */
+  const [acikSeriler, setAcikSeriler] = useState<Record<SeriAnahtari, boolean>>({
+    world: true,
+    experience: true,
+    observation: true,
+  });
+  const seriCevir = (k: SeriAnahtari) => setAcikSeriler((o) => ({ ...o, [k]: !o[k] }));
 
   /* YOKLANMAZ (periyot verilmez): bu okuma GEZİNMEYLE tetiklenir. Banka
      sayaçları saniyede bir kaymaz ve otuz saniyede bir yeniden çekmek, operatör
@@ -402,7 +535,7 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
           ))}
         </div>
         <UcKapisi durum={ozet} yol={UC_OZET}>
-          {(o) => <Seri seri={o.zaman_serisi} neden={o.zaman_serisi_neden} />}
+          {(o) => <Seri seri={o.zaman_serisi} neden={o.zaman_serisi_neden} acik={acikSeriler} cevir={seriCevir} />}
         </UcKapisi>
       </BolumKart>
     </>

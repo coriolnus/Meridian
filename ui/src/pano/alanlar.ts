@@ -8,8 +8,12 @@
    burada BİREBİR eşleşiyordu; eşleşmeyen bölüm YOK ve düşen bölüm YOK.
 
    KAYIT O GÜNDEN BERİ BÜYÜDÜ ve sayı burada DONDURULMAZ (bayat-beyan sınıfı): bugün
-   17 yüzey · 44 bölüm (ölçüldü 2026-09-02, TSK-108 sonrası: Hafıza dörtten sekize
-   çıktı). Şablonda karşılığı OLMAYAN iki yüzey var:
+   16 yüzey · 42 bölüm (ölçüldü 2026-09-02, TSK-108 Görev 5 sonrası: Hafıza dörtten
+   sekize çıktı; şablonun "File Manager" karşılığı olan belge rafı yüzeyi İKİ bölümüyle
+   birlikte KALKTI — dersler Hafıza'nın Bilgi Tabanı görünümüne, karar arşivi künyesi
+   Hafıza'nın Belgeler görünümüne taşındı, çünkü o belgeler hafıza bankasına zaten
+   işlenmişti ve pano onları iki ayrı sayfada iki kez gösteriyordu).
+   Şablonda karşılığı OLMAYAN iki yüzey var:
    `gateway` (Kapı, TSK-090) ve `memory` (Hafıza, TSK-091) — yukarıdaki "birebir
    eşleşme" cümlesi göç turunun ölçümüdür, bugünün sözleşmesi değil. İkisi de şablondan
    değil Meridian'ın kendi altyapısından doğduğu için `sablon` alanı bunu açıkça yazar.
@@ -26,7 +30,6 @@
 import { bolumEtiketi } from "./yuzeyler/ajan/gramer";
 import {
   Activity,
-  BookOpen,
   Bot,
   Boxes,
   Brain,
@@ -41,7 +44,6 @@ import {
   FileText,
   FlaskConical,
   Fingerprint,
-  FolderOpen,
   GaugeCircle,
   GraduationCap,
   Hammer,
@@ -92,6 +94,22 @@ export interface Yuzey {
   readonly ikon: LucideIcon;
   readonly grup: "Panolar" | "Sayfalar";
   readonly bolumler: readonly Bolum[];
+  /** ALT BÖLÜMLERİ KÜRESEL KENAR ÇUBUĞU ÇİZSİN Mİ (2026-09-02, operatör görsel turu).
+   *
+   *  ÖLÇÜLEN KUSUR: bir yüzey KENDİ İÇİNDE bir gezinme taşıyorsa (Hafıza'nın sekiz
+   *  duraklı kenar çubuğu gibi), küresel kenar çubuğu aynı sekiz durağı İKİNCİ kez
+   *  çiziyordu. Operatör aynı listeyi iki yerde görüyor, hangisinin "asıl" olduğunu
+   *  ekrandan okuyamıyordu — üstelik küresel çubuk maddeyi açılır tetiğe çevirdiği
+   *  için yüzeye TEK TIKLA girmek de mümkün değildi.
+   *
+   *  BEYAN BÖLÜMLERİ SİLMEZ, YALNIZ KÜRESEL ÇUBUĞU SUSTURUR: bölümler kayıtta
+   *  KALIR ve komut paleti, kırıntı, derin bağlar ve v288 parite çivisi onları
+   *  okumaya devam eder. Bölümleri kayıttan çıkarmak, adreslerini de öldürürdü.
+   *
+   *  `"yuzey-ici"` = "bu yüzeyin alt gezinmesi gövdenin içindedir". Alan YOKSA
+   *  eski davranış aynen sürer (açılır alt madde listesi) — yani beyan bir
+   *  İSTİSNADIR, varsayılan değil. */
+  readonly altBolumNav?: "yuzey-ici";
   /** KAYITTA DURAMAYAN BÖLÜMLERİN ETİKET ÇÖZÜCÜSÜ (2026-08-31, inceleme Ö-1).
    *
    *  `bolumler` STATİK bir listedir. Tüketicileri SAYILDI (2026-08-31, yeniden-inceleme
@@ -265,13 +283,19 @@ export const YUZEYLER = {
      söylemek zorunda — yoksa kenar çubuğu ipucu, kırıntı ve ⌘K paleti üç ayrı
      yerde aynı yanlış vaadi tekrarlar.
 
-     SEKİZ BÖLÜM = EKRANDAKİ SEKİZ `bolum-hafiza-*` ÇAPASI (v288 paritesi). */
+     SEKİZ BÖLÜM = EKRANDAKİ SEKİZ `bolum-hafiza-*` ÇAPASI (v288 paritesi).
+
+     KÜRESEL KENAR ÇUBUĞUNDA TEK GİRDİ (`altBolumNav`, operatör görsel turu
+     2026-09-02): bu sekiz durak yüzeyin KENDİ kenar çubuğunda zaten var ve
+     küresel çubuk onları ikinci kez çiziyordu. Bölümler kayıtta DURUYOR —
+     palet, kırıntı ve derin bağlar aynen çalışır. */
   memory: {
     sablon: "(şablonda karşılığı yok — Meridian'a özgü)",
     baslik: "Hafıza",
     soru: "Sistem ne hatırlıyor, bu bilgi nereden geldi?",
     ikon: Brain,
     grup: "Panolar",
+    altBolumNav: "yuzey-ici",
     bolumler: [
       { kimlik: "hafiza-anasayfa", baslik: "Ana Sayfa", soru: "Bu bankada ne birikti, en son ne zaman yazıldı?", ikon: Home },
       { kimlik: "hafiza-bellekler", baslik: "Bellekler", soru: "Bu bankada ne yazılı, tek tek ne diyor?", ikon: Database },
@@ -281,17 +305,6 @@ export const YUZEYLER = {
       { kimlik: "hafiza-belgeler", baslik: "Belgeler", soru: "Hangi belgeler işlendi, içlerinden kaç kayıt çıktı?", ikon: FileText },
       { kimlik: "hafiza-varliklar", baslik: "Varlıklar", soru: "Kayıtlarda hangi isimler geçiyor?", ikon: Users },
       { kimlik: "hafiza-yapilandirma", baslik: "Yapılandırma", soru: "Bu banka nasıl ayarlanmış, arkada neler koştu?", ikon: Settings2 },
-    ],
-  },
-  "file-manager": {
-    sablon: "File Manager",
-    baslik: "Belgeler",
-    soru: "Ne öğrenildi ve nereye yazıldı?",
-    ikon: FolderOpen,
-    grup: "Panolar",
-    bolumler: [
-      { kimlik: "hafiza", baslik: "Hafıza", soru: "Hangi dersler biriktirildi?", ikon: BookOpen },
-      { kimlik: "belgeler", baslik: "Karar belgeleri", soru: "Hangi karar hangi turda verildi?", ikon: FileText },
     ],
   },
 
@@ -469,7 +482,10 @@ export const ROTA_TAKMA_ADLARI: Readonly<Record<string, { yuzey: YuzeyAnahtari; 
   ajan: { yuzey: "academy", bolum: "ajan" },
   skiller: { yuzey: "academy", bolum: "skiller" },
   hermes: { yuzey: "productivity", bolum: "hermes" },
-  hafiza: { yuzey: "file-manager", bolum: "hafiza" },
+  // `hafiza` ESKİ ADI ARTIK HAFIZA YÜZEYİNİN BİLGİ TABANI GÖRÜNÜMÜNE ÇÖZÜLÜR
+  // (2026-09-02): belge rafı yüzeyi kalktı, dersler oraya taşındı. Takma adı
+  // silmek `#hafiza` yer imini varsayılan yüzeye düşürürdü — sessiz yanlış varış.
+  hafiza: { yuzey: "memory", bolum: "hafiza-bilgi" },
   mudahale: { yuzey: "infrastructure", bolum: "mudahale" },
   ayarlar: { yuzey: "profile", bolum: "ayarlar" },
 };

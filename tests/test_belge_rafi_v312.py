@@ -320,7 +320,7 @@ def test_uc_kullanicidan_YOL_almiyor():
     assert list(imza.parameters) == ["request"], f"uç yeni bir girdi aldı: {list(imza.parameters)}"
 
 
-# ===================== KUSUR 3 · rafın OKUYUCUSU (YASA 6) =====================
+# ===================== KUSUR 3 · UCUN OKUYUCUSU (YASA 6) =====================
 #
 # Uç yazıldı, okuyucusu yazılmadı — ve pano ekranda kendi ucunu YALANLAMAYA devam etti. Bu
 # bölümün çivileri panonun KAYNAK METNİNİ ölçer, çünkü bu depoda tarayıcı koşturan bir sınama
@@ -330,8 +330,44 @@ def test_uc_kullanicidan_YOL_almiyor():
 #     SÖKÜLMÜŞ metinde ve ÇAĞRI BİÇİMİ regex'iyle ölçer.
 #   · YOKLUK çivileri bunun TERSİDİR ve bilerek HAM metni tarar: bayat bir beyan yorumda dursa
 #     da kusurdur — bir sonraki okuyucu onu ölçüm sanar (bu tur tam olarak bu oldu).
+#
+# ---------------------------------------------------------------------------------------------
+# OKUYUCULAR TAŞINDI, ÇİVİLER DE TAŞINDI (2026-09-02, TSK-108 Görev 5 · operatör kararı)
+# ---------------------------------------------------------------------------------------------
+# Panonun ayrı bir "Belgeler" rafı yüzeyi vardı ve bu bölüm onu ölçüyordu. Raf KALKTI: karar/hüküm
+# dosyaları hafıza bankasına zaten işlenmiş durumda ve pano onları iki ayrı sayfada iki kez
+# gösteriyordu. Okuyucular yeni evlerine TAŞINDI (kopyalanmadı) ve `yuzeyler/belgeler/` dizini
+# SİLİNDİ:
+#     arşiv okuması        → yuzeyler/hafiza/kararArsivi.ts        (uç sözleşmesini bilen tek yer)
+#     arşiv EKRAN tüketimi → yuzeyler/hafiza/Belgeler.tsx           (banka belgeleriyle birleşim)
+#     uç yoklaması (HEAD)  → yuzeyler/hafiza/ucyoklama.ts + Belgeler.tsx karar şeridi
+#     ders damıtımı        → yuzeyler/hafiza/MeridianDersleri.tsx  (Bilgi Tabanı alt sekmesi)
+#
+# ÇİVİLERİ TAŞIMAK ZORUNLUYDU, YOKSA "KENDİNİ DOĞRULAYAN ÇİVİ" DOĞACAKTI: eski çiviler yalnız
+# `KararBelgeleri.tsx`e bakıyordu ve o dosya ucun dokuz alanını okumaya devam ettiği sürece YEŞİL
+# kalıyordu — oysa EKRAN yalnız `belgeler` alanını okuyor, `ok` ve `dizin` sessizce düşmüştü
+# (T5 incelemesi I-1). Bu yüzden bölüm İKİ HALKALI: (1) okuyucu modülü ucun her alanını okuyor mu,
+# (2) o okumanın EKRANDA bir tüketicisi var mı. Tek halka, ölçtüğünü sandığı şeyi ölçmez.
+#
+# HEAD ÇİVİLERİNİN (KUSUR 1) UI TÜKETİCİSİ DE BURADA ÇİVİLİ: yoklama bir tur boyunca okuyucusuz
+# kaldı ve o sırada beş HEAD çivisi, ekranda kimsenin sormadığı bir soruyu ölçüyordu. Aşağıdaki
+# `test_runbook_yoklamasinin_EKRAN_TUKETICISI_var` o boşluğu kapatır.
 
-_PANO_BELGELER = Path(api.config.ROOT) / "ui" / "src" / "pano" / "yuzeyler" / "belgeler"
+_PANO_HAFIZA = Path(api.config.ROOT) / "ui" / "src" / "pano" / "yuzeyler" / "hafiza"
+#: Kalkan raf dizini — DİRİLMESİ de bir kusurdur (iki ayrı sayfada iki ayrı liste).
+_ESKI_RAF_DIZINI = Path(api.config.ROOT) / "ui" / "src" / "pano" / "yuzeyler" / "belgeler"
+
+_ARSIV_OKUYUCUSU = "kararArsivi.ts"
+_UC_YOKLAMASI = "ucyoklama.ts"
+_BELGELER_GORUNUMU = "Belgeler.tsx"
+_DERSLER_GORUNUMU = "MeridianDersleri.tsx"
+
+#: Bu bölümün ÖLÇTÜĞÜ dosyalar. Kapsam bilerek DAR ve dizinin tamamı değil: `hafiza/` altında bu
+#: kalemin dışında yirmiye yakın dosya var ve biri (`Recall.tsx`) JSX metninde düz kesme işareti
+#: taşıyor — sökücü orada bilerek bağırıyor (aşağıdaki (a) çivisi). Dizinin tamamını taramak, bu
+#: kalemin çivisini başka bir kalemin borcuyla kırmızıya çevirirdi; yanlış gerekçeyle kırmızı,
+#: yeşile alıştırır.
+_OLCULEN_DOSYALAR = (_ARSIV_OKUYUCUSU, _UC_YOKLAMASI, _BELGELER_GORUNUMU, _DERSLER_GORUNUMU)
 
 #: Bayat boyut iddiası. PARÇALI yazılıyor: bu dosyanın kendi gövdesi de çivinin taradığı
 #: hedeflerden biri ve bir dizeyi hem yasaklayıp hem metninde taşımak, çivinin ilk kurbanı
@@ -389,11 +425,7 @@ def _yorumsuz(kaynak: str) -> str:
 
 
 def _pano_kaynak(ad: str) -> str:
-    return (_PANO_BELGELER / ad).read_text(encoding="utf-8")
-
-
-def _pano_dosyalari() -> list[Path]:
-    return sorted(p for p in _PANO_BELGELER.iterdir() if p.suffix in (".ts", ".tsx"))
+    return (_PANO_HAFIZA / ad).read_text(encoding="utf-8")
 
 
 def test_yorum_sokucusu_KENDISI_olculuyor():
@@ -406,41 +438,47 @@ def test_yorum_sokucusu_KENDISI_olculuyor():
     assert "/*" not in soyulmus and "*/" not in soyulmus, soyulmus
 
 
-#: Yorumları SÖKÜLMÜŞ metin üzerinden ölçülen dosyalar. Kapsam dar tutuluyor: sökümün
-#: artık bırakmadığını iddia etmek, ancak o dosyada gerçekten iddia edilebilir (bkz. aşağıdaki
-#: çivinin şerhi).
-_SOKUMLE_OLCULENLER = ("KararBelgeleri.tsx", "ortak.tsx")
+def test_ESKI_RAF_YUZEYI_dirilmedi():
+    """Raf dizini SİLİNDİ ve geri gelmemeli.
+
+    NEDEN ÇİVİ: karar/hüküm belgeleri hafıza bankasına ZATEN işlenmiş durumda. Ayrı bir raf
+    yüzeyi, aynı belgeleri iki ayrı sayfada iki ayrı listede gösteriyordu — ve iki liste iki ayrı
+    süzgeçle iki ayrı sayı verdiği gün hangisinin doğru olduğu hiçbir yerden okunamazdı. Dizinin
+    geri doğması bu kusurun geri doğmasıdır."""
+    assert not _ESKI_RAF_DIZINI.exists(), (
+        f"kalkmış raf yüzeyinin dizini geri doğmuş: {_ESKI_RAF_DIZINI} — okuyucular "
+        "`yuzeyler/hafiza/` altında yaşıyor (kararArsivi.ts · ucyoklama.ts · Belgeler.tsx)")
 
 
 def test_sokucu_gercek_dosyalarda_TEMIZ_bitiyor():
-    r"""Sökücü, ÖLÇTÜĞÜ dosyalarda gerçekten çalışıyor mu? İki kanıt, iki ayrı kapsam.
+    r"""Sökücü, ÖLÇTÜĞÜ dosyalarda gerçekten çalışıyor mu? İki kanıt, tek dar kapsam.
 
-    (a) DİZE İÇİNDE BİTMİYOR — dizinin TAMAMI için: `_yorumsuz` kandırılırsa bağırır, yani
-        Hafiza.tsx ve damitim.ts de bu turnikeden geçer.
-    (b) ARTIK YORUM İŞARETİ KALMIYOR — yalnız sökümle ölçülen iki dosya için. Kapsam bilerek
-        dar: bir REGEX LİTERALİ meşru olarak `*/` taşıyabilir (ölçüldü — damitim.ts::vurguSok
-        içindeki `/\*\*(.+?)\*\*/g`), ve o dosyayı da kapsama katmak çiviyi yanlış bir
-        gerekçeyle kırmızıya çevirirdi. Yanlış gerekçeyle kırmızı, yeşile alıştırır."""
-    for p in _pano_dosyalari():
-        soyulmus = _yorumsuz(p.read_text(encoding="utf-8"))
-        if p.name in _SOKUMLE_OLCULENLER:
-            assert "/*" not in soyulmus and "*/" not in soyulmus, f"{p.name}: sökücü kandırılmış"
-    assert set(_SOKUMLE_OLCULENLER) <= {p.name for p in _pano_dosyalari()}, (
-        "sökümle ölçülen dosya adı bayatladı — çivi olmayan bir dosyayı sınıyor")
+    (a) DİZE İÇİNDE BİTMİYOR: `_yorumsuz` kandırılırsa bağırır.
+    (b) ARTIK YORUM İŞARETİ KALMIYOR.
+
+    KAPSAM DAR VE BU ÖLÇÜLDÜ: bir REGEX LİTERALİ meşru olarak `*/` taşıyabilir (aynı dizindeki
+    `damitim.ts::vurguSok` içindeki `/\*\*(.+?)\*\*/g`) ve bu kalemin dışındaki bir dosya
+    (`Recall.tsx`) JSX metninde düz kesme işareti taşıyor. İkisini de kapsama katmak, çiviyi
+    yanlış bir gerekçeyle kırmızıya çevirirdi."""
+    for ad in _OLCULEN_DOSYALAR:
+        soyulmus = _yorumsuz(_pano_kaynak(ad))
+        assert "/*" not in soyulmus and "*/" not in soyulmus, f"{ad}: sökücü kandırılmış"
+    eksik = [ad for ad in _OLCULEN_DOSYALAR if not (_PANO_HAFIZA / ad).exists()]
+    assert eksik == [], f"ölçülen dosya adı bayatladı — çivi olmayan bir dosyayı sınıyor: {eksik}"
 
 
-def test_raf_ARSIV_UCUNU_gercekten_cagiriyor():
+def test_arsiv_UCUNU_gercekten_cagiriyor():
     """YASA 6 — uç yazıyor, PANO OKUYOR. Varlık kontrolü değil ÇAĞRI BİÇİMİ çivileniyor: yolun
     kaynakta geçmesi kanıt değil (bir yorumda da geçebilir, bu turda üç kez bu tuzağa düşüldü),
-    `useApi<…>("…")` çağrısının kendisi kanıttır."""
-    s = _yorumsuz(_pano_kaynak("KararBelgeleri.tsx"))
+    `useApi<…>(…)` çağrısının kendisi kanıttır."""
+    s = _yorumsuz(_pano_kaynak(_ARSIV_OKUYUCUSU))
     # İKİ HALKALI ZİNCİR, ikisi de BİÇİM çivisi: (1) sabit gerçekten bu yola bağlı,
     # (2) `useApi` gerçekten o sabitle çağrılıyor. Tek halka yetmezdi — sabit başka bir yola
     # kaydırılsa çağrı biçimi aynı kalır ve çivi ötmezdi.
     baglama = r'const\s+ARSIV_UCU\s*=\s*"' + re.escape(ARSIV_UCU) + r'"\s*;'
     assert re.search(baglama, s), f"`ARSIV_UCU` sabiti {ARSIV_UCU} yoluna bağlı değil"
-    assert re.search(r"useApi<[^;()]*>\(\s*ARSIV_UCU\b", s), (
-        "raf ucu okumuyor: `useApi<…>(ARSIV_UCU)` çağrısı yok — uç yazıldı, okuyucusu yok")
+    assert re.search(r"useApi<[^;()]*>\([^)]*\bARSIV_UCU\b", s), (
+        "arşiv ucu okunmuyor: `useApi<…>(… ARSIV_UCU …)` çağrısı yok — uç yazıldı, okuyucusu yok")
 
 
 def test_ucun_HER_ALANININ_bir_okuyucusu_var(monkeypatch):
@@ -452,9 +490,74 @@ def test_ucun_HER_ALANININ_bir_okuyucusu_var(monkeypatch):
     assert g["belgeler"], "arşiv boş döndü — alan taraması tabansız kalırdı"
     alanlar = sorted(set(g) | set(g["belgeler"][0]))
     assert len(alanlar) >= 9, f"uç sözleşmesi daraldı, tarama tabansız: {alanlar}"
-    s = _yorumsuz(_pano_kaynak("KararBelgeleri.tsx"))
+    s = _yorumsuz(_pano_kaynak(_ARSIV_OKUYUCUSU))
     okunmayan = [a for a in alanlar if not re.search(r'\[\s*"' + re.escape(a) + r'"\s*\]', s)]
     assert okunmayan == [], f"uç yazıyor, pano okumuyor: {okunmayan}"
+
+
+def test_arsiv_okumasinin_EKRAN_TUKETICISI_var():
+    """İKİNCİ HALKA — ve bu halka ÖLÇÜLMÜŞ BİR BOŞLUKTAN doğdu (T5 incelemesi I-1).
+
+    Okuyucu modülü ucun dokuz alanını okumaya devam ederken EKRAN yalnız `belgeler` alanını
+    tüketiyordu; `ok` ve `dizin` sessizce düşmüştü. Sonuç yalnız ölü kod değildi: `ok:false`
+    yani KISMİ bir arşivden "bankada yok" hükmü kurulabiliyordu ve operatör eksikliği hiçbir
+    yerden okuyamıyordu. Bir halkalı çivi bunu göremez — kendini doğrular."""
+    s = _yorumsuz(_pano_kaynak(_BELGELER_GORUNUMU))
+    assert re.search(r'from\s+"\./' + re.escape(_ARSIV_OKUYUCUSU.removesuffix(".ts")) + r'"', s), (
+        "Belgeler görünümü arşiv okuyucusunu içe aktarmıyor — birleşim kopmuş")
+    assert re.search(r"\buseArsiv\s*\(", s), "arşiv kancası ekranda çağrılmıyor"
+
+
+def test_ARSIVIN_TAMLIK_BAYRAGI_ekranda_okunuyor():
+    """`ok` ve `dizin` alanlarının EKRAN okuyucusu (T5 incelemesi I-1).
+
+    `ok` bir süs değil HÜKÜM KAPISIDIR: düşükken liste KISMİ olabilir ve "bankada yok" gibi
+    kapsayıcı bir hüküm o listeden kurulamaz. `dizin` de bir ölçümdür — hangi klasörün tarandığı
+    yazılmazsa sayılar neyin sayısı olduğunu söylemez."""
+    s = _yorumsuz(_pano_kaynak(_BELGELER_GORUNUMU))
+    for alan in ("ok", "dizin"):
+        assert re.search(r"\b(?:govde|arsivGovdesi)(?:\??\.)" + alan + r"\b", s), (
+            f"arşiv gövdesinin `{alan}` alanının ekranda okuyucusu yok — "
+            "eksik okunmuş bir arşivden kapsayıcı hüküm kurulabilir")
+    # Hüküm gerçekten bayrağa BAĞLI mı: "bankada yok" cümlesi tamlık kapısından geçmeli.
+    assert re.search(r"arsivTam", s), "tamlık bayrağı hiçbir hükme bağlanmamış"
+
+
+def test_TUR_SUZGECI_arsiv_ARIZASINI_yutmuyor():
+    """Arşiv okunamadığında tür süzgeci "eşleşme yok" DEMEZ (T5 incelemesi I-4).
+
+    Süzgeç eşleşmeyi arşiv haritasından okuyor; uç düştüğünde harita BOŞ kalır ve
+    "Karar / Hüküm" seçimi hiçbir satırı geçiremez. Bunu "bu sayfada eşleşme yok" diye yazmak,
+    bir ölçüm ARIZASINI ölçüm SONUCU gibi göstermektir — bu deponun kovaladığı sınıfın ta
+    kendisi. Aynı ekranın eşleşme bloğu bu ayrımı zaten doğru yapıyordu; çivi ikisinin AYNI
+    gerekçeden (tek kaynak) beslendiğini de ister."""
+    s = _yorumsuz(_pano_kaynak(_BELGELER_GORUNUMU))
+    assert re.search(r"const\s+arsivNeden\b", s), (
+        "arşiv arızasının gerekçesi tek yerde türetilmiyor — süzgeç ve eşleşme bloğu ayrışır")
+    assert re.search(r'turSuzgeci\s*!==\s*"hepsi"\s*&&\s*arsivNeden\s*!==\s*null', s), (
+        "tür süzgeci arşiv arızasını yutuyor: arıza dalı yok, ekran 'eşleşme yok' der")
+
+
+def test_runbook_yoklamasinin_EKRAN_TUKETICISI_var():
+    """HEAD çivilerinin (KUSUR 1) UI TÜKETİCİSİ — ve bu da ölçülmüş bir boşluktan doğdu.
+
+    Raf kalkarken yoklama kancası okuyucusuz kaldı ve bir tur boyunca beş HEAD çivisi, ekranda
+    KİMSENİN sormadığı bir soruyu ölçtü. Yeşil bir çivi, ölçtüğünü sandığı şeyi ölçmüyordu."""
+    y = _yorumsuz(_pano_kaynak(_UC_YOKLAMASI))
+    assert re.search(r'method:\s*"HEAD"', y), "yoklama kancası HEAD ile sormuyor"
+    s = _yorumsuz(_pano_kaynak(_BELGELER_GORUNUMU))
+    assert re.search(r'useUcYoklama\(\s*"/runbook"\s*\)', s), (
+        "teşhis belgesi yoklaması ekranda çağrılmıyor — HEAD çivilerinin UI tüketicisi yok")
+
+
+def test_DERS_UCUNUN_okuyucusu_var():
+    """Ders damıtımı da bir uçtan geliyor ve okuyucusu taşındı (raf → Bilgi Tabanı alt sekmesi).
+    Taşınan bir okuyucunun sessizce düşmesi, rafın kalkışını bir KAYBA çevirirdi."""
+    s = _yorumsuz(_pano_kaynak(_DERSLER_GORUNUMU))
+    assert re.search(r'const\s+UC_DERSLER\s*=\s*"/api/memory"\s*;', s), (
+        "ders ucu sabiti `/api/memory` yoluna bağlı değil")
+    assert re.search(r"useApi<[^;()]*>\([^)]*\bUC_DERSLER\b", s), (
+        "ders ucu okunmuyor: `useApi<…>(UC_DERSLER …)` çağrısı yok")
 
 
 def test_pano_KENDI_UCUNU_yalanlamiyor():
@@ -462,36 +565,38 @@ def test_pano_KENDI_UCUNU_yalanlamiyor():
     kusur tam da yorumdaki cümlenin ölçüm sanılmasıydı: rafta "uç yok" rozeti, "sunum ucu yok"
     uyarı kartı ve dosya başında "listeleyen ya da sunan bir uç YOK" beyanı, uç canlıyken
     duruyordu."""
-    ham = _pano_kaynak("KararBelgeleri.tsx")
-    duz = " ".join(ham.split())
-    bayat = [c for c in ("listeleyen ya da sunan bir uç",
-                         "LİSTELEYEN ya da SUNAN bir uç",
-                         "arşivinin sunum ucu yok") if c in duz]
-    assert bayat == [], f"pano kendi ucunu yalanlıyor: {bayat}"
-    assert not re.search(r">\s*uç yok\s*<", ham), '"uç yok" rozeti hâlâ çiziliyor'
-    assert not re.search(r"\buc:\s*null", _yorumsuz(ham)), "rafta hâlâ uçsuz satır tanımı var"
+    for ad in _OLCULEN_DOSYALAR:
+        ham = _pano_kaynak(ad)
+        duz = " ".join(ham.split())
+        bayat = [c for c in ("listeleyen ya da sunan bir uç",
+                             "LİSTELEYEN ya da SUNAN bir uç",
+                             "arşivinin sunum ucu yok") if c in duz]
+        assert bayat == [], f"{ad}: pano kendi ucunu yalanlıyor: {bayat}"
+        assert not re.search(r">\s*uç yok\s*<", ham), f'{ad}: "uç yok" rozeti hâlâ çiziliyor'
+        assert not re.search(r"\buc:\s*null", _yorumsuz(ham)), f"{ad}: hâlâ uçsuz satır tanımı var"
 
 
-def test_ortak_YANLIS_TEKNIK_IDDIAYI_tasimiyor():
+def test_yoklama_YANLIS_TEKNIK_IDDIAYI_tasimiyor():
     """"Starlette GET rotalarına HEAD'i kendisi ekler" cümlesi FastAPI `APIRoute` için YANLIŞTI
     ve 405'in kök nedeni tam olarak bu yanlış ölçüttü. Yorumda kalan yanlış bir teknik iddia bir
     sonraki teşhisi de yanlış yöne sürer; bu yüzden hem yanlış genellemenin YOKLUĞU hem doğru
-    ölçütün VARLIĞI çivileniyor — birincisi olmadan ikincisi "iki iddia yan yana" demek olurdu."""
-    duz = " ".join(_pano_kaynak("ortak.tsx").split())
+    ölçütün VARLIĞI çivileniyor — birincisi olmadan ikincisi "iki iddia yan yana" demek olurdu.
+
+    DERS KANCAYLA BİRLİKTE TAŞINDI: kanca `ortak.tsx`ten `ucyoklama.ts`e gitti ve ölçülmüş ders
+    onunla birlikte gitti. Dersi geride bırakmak, kancayı gerekçesiz bırakmak olurdu."""
+    duz = " ".join(_pano_kaynak(_UC_YOKLAMASI).split())
     assert "GET rotalarına HEAD" not in duz, "yanlış genelleme hâlâ yorumda"
     assert re.search(r"APIRoute.{0,80}EKLEMEZ", duz), "doğru ölçüt yazılmamış (`APIRoute` … EKLEMEZ)"
     assert "YALNIZ GET kaydeder" in duz, "`@app.get`in yalnız GET kaydettiği yazılmamış"
 
 
 def test_belge_yuzeyinde_SATIR_CAPASI_kalmadi():
-    """`dosya.py:NNN` biçimli çapa bu dizinde SIFIR. Satır numarası kaydıkça sessizce
+    """`dosya.py:NNN` biçimli çapa bu kalemin dosyalarında SIFIR. Satır numarası kaydıkça sessizce
     yalanlaşır, sembol adı kaymaz. Ölçülen borç (2026-08-25): ortak.tsx bir, KararBelgeleri.tsx
-    iki çapa taşıyordu; üçü de sembol adına çevrildi (`api.py::runbook` ·
-    `api.py::api_karar_belgeleri`) ya da tümüyle gereksizleşti.
+    iki çapa taşıyordu; üçü de sembol adına çevrildi ya da tümüyle gereksizleşti.
     Sayılar buraya KANIT diye bile yazılmıyor — mezar taşı da bir çapadır ve o da bayatlar."""
     capa = re.compile(r"\b[\w./-]+\.py:\d+")
-    kalan = {p.name: sorted(set(capa.findall(p.read_text(encoding="utf-8"))))
-             for p in _pano_dosyalari()}
+    kalan = {ad: sorted(set(capa.findall(_pano_kaynak(ad)))) for ad in _OLCULEN_DOSYALAR}
     kalan = {a: c for a, c in kalan.items() if c}
     assert kalan == {}, f"satır çapası duruyor: {kalan}"
 
@@ -500,5 +605,5 @@ def test_OLCULMEMIS_BOYUT_iddiasi_kalmadi():
     """Panoda duran boyut rakamı hiçbir ölçümün sonucu değildi. Yerine ölçülen değer yazıldı
     (2026-08-25: `docs/RUNBOOK.md` 184 776 bayt, sunulan sayfa 238 785 bayt) ve ölçüm TARİHİYLE
     birlikte duruyor — tarihsiz bir rakam, bayatladığında bayat olduğunu söyleyemez."""
-    kirli = [p.name for p in _pano_dosyalari() if _BAYAT_BOYUT in p.read_text(encoding="utf-8")]
+    kirli = [ad for ad in _OLCULEN_DOSYALAR if _BAYAT_BOYUT in _pano_kaynak(ad)]
     assert kirli == [], f"ölçülmemiş boyut iddiası duruyor: {kirli}"

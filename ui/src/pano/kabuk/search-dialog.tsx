@@ -65,7 +65,10 @@ import { cn } from "@/lib/utils";
 import type { NavMainItem } from "@/navigation/sidebar/sidebar-items";
 import { yuzeyYolu } from "@/pano/alanlar";
 import { useBugun } from "@/pano/durum";
-import { gezinmeGruplari as sidebarItems } from "@/pano/gezinme";
+/* PALET AĞACI, KENAR ÇUBUĞU AĞACI DEĞİL (2026-09-02): kendi gezinmesi olan
+   yüzeylerin alt bölümleri çubuktan kalktı ama paletten KALKMAMALI — adres
+   yaşıyor, yalnız çubuk onu ikinci kez asmıyor (gerekçe `pano/gezinme.ts`). */
+import { paletGruplari as sidebarItems } from "@/pano/gezinme";
 import {
   ARAMA_ANAHTARLARI,
   BELGE_ANAHTARLARI,

@@ -82,7 +82,7 @@ import {
   type SekmeAdi,
 } from "./ajan/gramer";
 import { Kapi, Olculemedi, bicimSayi, dizi, hipotezOku, metin, nesne, say, zamanMetni, type Hipotez } from "./ajan/ortak";
-import { bolumOzeti, hafizaAyristir } from "./belgeler/damitim";
+import { bolumOzeti, hafizaAyristir } from "./hafiza/damitim";
 
 const KANAL_ADI = "#öneri-hattı";
 

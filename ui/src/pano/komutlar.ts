@@ -142,8 +142,6 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   skiller: ["skill", "arac", "beceri", "katki", "emekli", "kutuphane"],
   hermes: ["beyin", "llm", "mlops", "dikkat", "oz-degerlendirme", "dusun", "reflect", "backfill"],
   sprint: ["antrenman", "train", "kmax", "butce", "kosu"],
-  hafiza: ["ders", "lesson", "memory", "cikarim", "lessons.md"],
-  belgeler: ["karar belgesi", "hukum", "docs", "tur", "arsiv"],
   sohbet: ["ajan", "oneri", "konusma", "chat", "soru"],
   defter: ["kayit", "siralama", "oneri", "tablo"],
   olcum: ["tahmin", "kapi", "kim konustu", "isabet"],
@@ -177,12 +175,21 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   // sekmesinin ikinci alt sekmesindedir. Anahtar eski yerinde kalsaydı palet
   // operatörü modelleri ÇİZMEYEN bir sayfaya gönderirdi — çalışan ama yanlış
   // yere giden bir bağ, çalışmayan bağdan daha sinsidir.
+  // BELGE RAFI YÜZEYİ KALKTI (2026-09-02) VE ANAHTARLARI BURAYA TAŞINDI, silinmedi:
+  // rafın `hafiza` bölümü ("ders", "lesson", "lessons.md") artık bu görünümün
+  // "Meridian dersleri" alt sekmesidir. Emekli bir bölüm kimliğini tabloda BIRAKMAK
+  // ölü satır olurdu — anahtar tablosu yalnız KAYITLI bölümler için okunuyor
+  // (`ARAMA_ANAHTARLARI`), orada kalan satır hiçbir aramayı bulmaz ve okunmadığı
+  // için bayatladığı da fark edilmez.
   "hafiza-bilgi": ["bilgi", "knowledge", "sayfa", "agac", "not", "zihin modeli", "mental model",
-                   "cikarim", "tazelik", "cron"],
+                   "cikarim", "tazelik", "cron", "ders", "lesson", "lessons.md", "damitim"],
   "hafiza-recall": ["recall", "sorgu", "arama", "cevap", "getir", "skor", "iz", "trace"],
   "hafiza-reflect": ["reflect", "dusun", "think", "gozlem", "observation", "kapsam", "scope",
                      "consolidation"],
-  "hafiza-belgeler": ["belge", "document", "parca", "chunk", "ice aktarim", "kaynak"],
+  // Rafın `belgeler` bölümünün anahtarları da buraya taşındı: karar/hüküm künyeleri
+  // artık bu görünümde, banka belgeleriyle dosya adı üzerinden eşleşerek duruyor.
+  "hafiza-belgeler": ["belge", "document", "parca", "chunk", "ice aktarim", "kaynak",
+                      "karar belgesi", "hukum", "docs", "tur", "arsiv", "dosya"],
   "hafiza-varliklar": ["varlik", "entity", "isim", "graf", "kisi", "bag", "harita", "birlikte"],
   "hafiza-yapilandirma": ["config", "ayar", "retain", "denetim", "audit", "hareket", "yazim",
                           "llm", "kota", "token", "cagri", "kullanim", "islem", "operations",
@@ -198,7 +205,6 @@ const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {
   infrastructure: ["saglik", "altyapi", "sistem", "makine", "alarm", "kilit"],
   gateway: ["kapi", "apisix", "gateway", "rota", "llm", "egress", "proxy", "vekil"],
   memory: ["hafiza", "hindsight", "bellek", "bank", "retain", "consolidation", "recall"],
-  "file-manager": ["belge", "hafiza", "dosya", "ders"],
   chat: ["ajan", "sohbet", "chat"],
   calendar: ["cizelge", "takvim", "zamanlanmis"],
   kanban: ["karar", "zincir", "tahta", "aday"],

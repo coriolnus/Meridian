@@ -42,6 +42,7 @@ import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -51,7 +52,8 @@ import type { Bolum } from "../../alanlar";
 import { useApi, type Durum } from "../../veri";
 import { BolumKart, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcalar";
 
-import { Bolme, Faz2Dugme, Faz2Grup, HamSatirlar, KovaSeridi, PencereDugmeleri, Sayfalama, Secim, VARSAYILAN_ISTATISTIK_PENCERESI, ZarfKapisi, damga, damgaMs, kovaToplami, metin, sayi, secimDegeri, sozluk } from "./parcalar";
+import { CIZILEN_ALANLAR, CP_YAPILANDIRMA, type AlanBicimi, type CpAlan } from "./cpyapilandirma";
+import { Bolme, Cipler, FAZ2_ROZET, Faz2Dugme, Faz2Grup, HamSatirlar, KovaSeridi, PencereDugmeleri, Sayfalama, Secim, VARSAYILAN_ISTATISTIK_PENCERESI, ZarfKapisi, damga, damgaMs, kovaToplami, metin, sayi, secimDegeri, sozluk } from "./parcalar";
 import type { DenetimKaydi, HafizaGovdesi, HafizaZarfi, HamGovde, IslemGovdesi, IslemKaydi, IstatistikGovdesi, ModelCagrisi, SayfaliGovde, YapilandirmaGovdesi } from "./uctipleri";
 
 const UC_ISLEMLER = "/api/hindsight/islemler";
@@ -544,24 +546,267 @@ function Savunma({ govde }: { readonly govde: YapilandirmaGovdesi }) {
 }
 
 /* ---------------------------------------------------------------------------
-   AYARLAR — ÇÖZÜLMÜŞ DEĞER İLE GEÇERSİZ KILMA AYRI
-   Üst yüzeyin kendi gerekçesi: çözülmüş değer "devralınan doğru" ile "elle doğru
-   yapılmış"ı ayırt edemez. Zarfın bu iki alanı gerçekten taşıyıp taşımadığı bu
-   turda ölçülmedi — ekran hangisinin gelmediğini yazar.
+   AYARLAR — ÜST YÜZEYİN FORMU, BİREBİR VE DEVRE DIŞI
+   ----------------------------------------------------------------------------
+   OPERATÖR BULGUSU (2026-09-02, görsel tur): "Bank Configuration üst yüzeyde bir
+   FORM — alanlar görünür; bizde yalnız sayaç ve salt-okunur döküm, konfigürasyon
+   yapacak yer bile yok." Ölçüm bunu doğruladı: bu sekme iki ham anahtar-değer
+   listesi çiziyordu ve hangi ayarın NE OLDUĞU ekranda hiç yazmıyordu.
+
+   ŞİMDİ ÜST YÜZEYİN SEKİZ BÖLÜMÜ, ALAN ALAN, KENDİ SIRASIYLA ÇİZİLİYOR
+   (`cpyapilandirma.ts` tablosu — sıra ve alan listesi oradan, kaynağı da orada
+   yazılı). Etiketler Türkçe, ALAN ADLARI değil: alan adı üst servisin sözlüğüdür
+   ve çevirmek onu aranamaz kılardı.
+
+   FORM ÇALIŞMIYOR VE BUNU SÖYLÜYOR. Girdiler DEVRE DIŞI, "Kaydet" düğmeleri
+   devre dışı ve gerekçe düğmenin/alanın ERİŞİLEBİLİR ADINDA duruyor — yalnız
+   `title` olsaydı klavye kullanıcısı hiç okuyamazdı (devre dışı denetim odak
+   almaz). Rozet form başına BİR KEZ basılır: yirmi alanın yanında tekrarlanan
+   bir rozet, uyarıyı gürültüye çevirirdi.
+
+   ---------------------------------------------------------------------------
+   DÖRT AYRI "DEĞER YOK" VE DÖRDÜ AYRI CÜMLE KURAR
+   ---------------------------------------------------------------------------
+     · ayar bloğunun kendisi gelmedi    → "Ayar bloğu gelmedi" (sözleşme boşluğu)
+     · iki blokta da anahtar YOK        → "— (alan gelmedi)"
+     · anahtar var, değeri boş          → "sunucu varsayılanı" (devralınıyor)
+     · anahtar var, tipi beklenenden    → "tanınmayan biçim" (şema sürüklenmesi)
+   Dördünü tek boş kutuya indirmek, devralınan bir ayarla hiç gelmemiş bir alanı
+   aynı şey saymak olurdu — biri normal hâl, öteki bir sözleşme boşluğu.
+
+   İLK YAZIM BEŞİNCİ HÂLİ SAYMAMIŞTI (inceleme I-2) ve en sık karşılaşılanı oydu:
+   `overrides` bloğunda anahtarın OLMAMASI. O hâl "gelmedi" değil DEVRALINIYOR
+   demektir ve değer çözülmüş ayarlarda DURUR — `alanOku` artık zinciri izliyor.
+
+   İKİ ROZET, İKİ AYRI CÜMLE: "bankaya özgü" = `overrides` bloğunda duruyor, elle
+   ayarlanmış · "devralındı" = geçersiz kılma yok, değer çözülmüş ayardan geldi.
+   Çözülmüş değer bu ayrımı tek başına yapamaz — üst yüzeyin kendi gerekçesi de bu.
    --------------------------------------------------------------------------- */
+
+/** Bir alanın okunmasının DÖRT sonucu — ekranda dördü de ayrı cümle. */
+type AlanDurumu = "kaynak-yok" | "alan-yok" | "devralinan" | "dolu";
+
+interface AlanOkumasi {
+  readonly durum: AlanDurumu;
+  readonly ham: unknown;
+  /** `overrides` bloğunda da duruyor mu — "bankaya özgü" rozetinin tek ölçütü. */
+  readonly ozgu: boolean;
+  /** Değer geçersiz kılma bloğunda YOKTU, çözülmüş ayarlardan okundu — yani
+   *  DEVRALINIYOR. Rozet bunu söyler; sessiz kalmak "bu banka böyle ayarlamış"
+   *  yanılgısını doğururdu. */
+  readonly devralindi: boolean;
+}
+
+/**
+ * GEÇERSİZ KILMA BLOĞUNDA OLMAMAK BİR EKSİKLİK DEĞİL, NORMAL HÂLDİR — VE İLK
+ * YAZIM BUNU "ALAN GELMEDİ" SAYIYORDU (inceleme I-2).
+ *
+ * Üst yüzey yedi alanı `overrides`tan okuyor çünkü çözülmüş değer "devralınan
+ * açık" ile "elle açık yapılmış"ı ayırt edemez. Ama okuma `overrides.X ?? null`
+ * biçimindedir: anahtar YOKSA bu "ayar gelmedi" DEĞİL "devralınıyor" demektir ve
+ * üst yüzey o hâlde ÇÖZÜLMÜŞ değeri gösterir ("sunucu varsayılanı (açık)").
+ * Hiç geçersiz kılma yapmamış bir bankada — yani en sık karşılaşılan hâlde —
+ * ilk yazım yedi satırda birden "alan gelmedi" diyordu: hem yanlış cümle, hem
+ * elimizde OLAN değeri göstermemek.
+ *
+ * ZİNCİR: geçersiz kılma → yoksa çözülmüş ayar → o da yoksa gerçekten "gelmedi".
+ * "— (alan gelmedi)" ancak zincirin İKİ halkası da boşken yazılır.
+ */
+function alanOku(alan: CpAlan, ayarlar: HamGovde | null, ozgunler: HamGovde | null): AlanOkumasi {
+  const ozgu = ozgunler !== null && Object.hasOwn(ozgunler, alan.anahtar);
+  if (alan.kaynak === "overrides" && ozgu) {
+    const ham = (ozgunler as HamGovde)[alan.anahtar];
+    return ham === null
+      ? { durum: "devralinan", ham: null, ozgu: true, devralindi: false }
+      : { durum: "dolu", ham, ozgu: true, devralindi: false };
+  }
+  // Buraya düşen her alan çözülmüş ayarlardan okunur: `config` kaynaklı alanlar
+  // zaten oradan, `overrides` kaynaklı olanlar da geçersiz kılma YOKKEN oradan.
+  const devralindi = alan.kaynak === "overrides";
+  if (ayarlar === null) return { durum: "kaynak-yok", ham: undefined, ozgu, devralindi };
+  if (!Object.hasOwn(ayarlar, alan.anahtar)) {
+    return { durum: "alan-yok", ham: undefined, ozgu, devralindi };
+  }
+  const ham = ayarlar[alan.anahtar];
+  if (ham === null) return { durum: "devralinan", ham: null, ozgu, devralindi };
+  return { durum: "dolu", ham, ozgu, devralindi };
+}
+
+/** Değerin okunur hâli. `null` = tip beklenenle uyuşmadı (şema sürüklenmesi). */
+function degerMetni(bicim: AlanBicimi, ham: unknown): string | null {
+  switch (bicim) {
+    case "sayi": {
+      const n = sayi(ham);
+      return n === null ? null : n.toLocaleString("tr-TR");
+    }
+    case "olcek": {
+      const n = sayi(ham);
+      return n === null ? null : `${n.toLocaleString("tr-TR")} / 5`;
+    }
+    case "acik-kapali":
+      return ham === true ? "açık" : ham === false ? "kapalı" : null;
+    case "liste":
+      return Array.isArray(ham) ? `${ham.length.toLocaleString("tr-TR")} öğe` : null;
+    case "sozluk": {
+      const s = sozluk(ham);
+      return s === null ? null : `${Object.keys(s).length.toLocaleString("tr-TR")} tanım`;
+    }
+    default:
+      return metin(ham);
+  }
+}
+
+/** Listelerin ve sözlüklerin İÇİNDEKİ adlar — sayı tek başına "hangileri?"
+ *  sorusunu cevaplamıyor. Ad çıkarılamayan öğe ATILMAZ, sırasıyla anılır. */
+function ogeAdlari(bicim: AlanBicimi, ham: unknown): readonly string[] {
+  if (bicim === "sozluk") {
+    const s = sozluk(ham);
+    return s === null ? [] : Object.keys(s);
+  }
+  if (bicim !== "liste" || !Array.isArray(ham)) return [];
+  return ham.map((o, i) => {
+    const d = metin(o);
+    if (d !== null) return d;
+    const s = sozluk(o);
+    return metin(s?.key) ?? metin(s?.category) ?? metin(s?.value) ?? `öğe ${i + 1}`;
+  });
+}
+
+function AlanSatiri({
+  alan,
+  okuma,
+}: {
+  readonly alan: CpAlan;
+  readonly okuma: AlanOkumasi;
+}) {
+  const kimlikli = `cfg-${alan.anahtar}`;
+  const gorunen = okuma.durum === "dolu" ? degerMetni(alan.bicim, okuma.ham) : null;
+  const adlar = okuma.durum === "dolu" ? ogeAdlari(alan.bicim, okuma.ham) : [];
+  return (
+    <div className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-start md:justify-between md:gap-6">
+      <div className="min-w-0 flex-1">
+        {/* GEREKÇE ERİŞİLEBİLİR ADIN İÇİNDE (Faz-2 düğmesindeki desenin aynısı):
+            devre dışı bir girdi odak almaz, yani yalnız fare ipucuna yazılan bir
+            gerekçeyi klavye kullanıcısı hiç okuyamazdı. */}
+        <label htmlFor={kimlikli} className="font-medium text-sm">
+          {alan.etiket}
+          <span className="sr-only"> — salt okunur, {FAZ2_ROZET}</span>
+        </label>
+        <p className="mt-0.5 text-muted-foreground text-xs leading-relaxed">{alan.aciklama}</p>
+        <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/80">{alan.anahtar}</p>
+      </div>
+      <div className="flex shrink-0 flex-col items-stretch gap-1 md:w-72">
+        {alan.okunmuyor ? (
+          <Olculemedi neden="Bu ayar panoda okunmuyor" teknik={alan.okunmuyor} />
+        ) : okuma.durum === "kaynak-yok" ? (
+          <Olculemedi
+            neden="Ayar bloğu gelmedi"
+            teknik="yapılandırma gövdesi bu alanın okunduğu bloğu hiç döndürmedi"
+          />
+        ) : okuma.durum === "alan-yok" ? (
+          <Olculemedi
+            neden="— (alan gelmedi)"
+            teknik={`${alan.anahtar} anahtarı gövdede yok — bu sürümde tanımlı olmayabilir`}
+          />
+        ) : okuma.durum === "devralinan" ? (
+          <Input id={kimlikli} value="sunucu varsayılanı" disabled readOnly className="text-sm" />
+        ) : gorunen === null ? (
+          <Olculemedi
+            neden="Değer tanınmayan bir biçimde geldi"
+            teknik="alan geldi ama beklenen tipte değil — şema sürüklenmiş olabilir"
+          />
+        ) : (
+          <Input id={kimlikli} value={gorunen} disabled readOnly className="text-sm" />
+        )}
+        {/* SAYI "HANGİLERİ" SORUSUNU CEVAPLAMIYOR: liste ve sözlük alanlarında
+            öğe adları da basılır, tavanı aşan kısım sayıyla anılır. */}
+        {adlar.length === 0 ? null : <Cipler degerler={adlar} tavan={4} ne={alan.etiket} />}
+        {okuma.ozgu ? (
+          <Badge variant="outline" className="w-fit font-normal text-[11px]" title="bu banka için elle ayarlanmış — devralınan değil">
+            bankaya özgü
+          </Badge>
+        ) : okuma.devralindi && (okuma.durum === "dolu" || okuma.durum === "devralinan") ? (
+          /* DEVRALINAN DEĞER SESSİZ KALMAZ (inceleme I-2): rozet olmasaydı
+             çözülmüş değer "bu banka böyle ayarlamış" diye okunurdu. */
+          <Badge
+            variant="outline"
+            className="w-fit font-normal text-[11px] text-muted-foreground"
+            title="bu banka için geçersiz kılma yok — değer sunucu varsayılanından devralınıyor"
+          >
+            devralındı
+          </Badge>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function Ayarlar({ govde }: { readonly govde: YapilandirmaGovdesi }) {
   const ayarlar = sozluk(govde.config);
-  const gecersizKilmalar = sozluk(govde.overrides);
+  const ozgunler = sozluk(govde.overrides);
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      {/* ROZET FORM BAŞINA BİR KEZ (R24): her alanın yanında tekrarlansaydı
+          uyarı gürültüye dönerdi ve gürültü okunmaz. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="font-normal text-[11px] text-muted-foreground">
+          {FAZ2_ROZET}
+        </Badge>
+        <span className="text-muted-foreground text-xs">
+          Alanlar üst yüzeydeki yerlerinde ve değerleriyle duruyor; değiştirme yolu bu panoda açık
+          değil.
+        </span>
+      </div>
+
+      {CP_YAPILANDIRMA.map((b) => {
+        /* KOŞULLU ALAN ÜST YÜZEYİN KENDİ KURALIDIR: özel çıkarım istemi yalnız
+           çıkarım kipi custom iken görünüyor. Kuralı burada gevşetmek, üst
+           yüzeyde olmayan bir alanı varmış gibi göstermek olurdu. */
+        const gorunur = b.alanlar.filter((a) => {
+          if (a.kosul === undefined) return true;
+          return metin(ayarlar?.[a.kosul.anahtar]) === a.kosul.deger;
+        });
+        return (
+          <section key={b.kimlik} className="flex flex-col gap-2">
+            <div>
+              <h4 className="font-semibold text-base">{b.baslik}</h4>
+              <p className="text-muted-foreground text-xs">{b.aciklama}</p>
+            </div>
+            <div className="rounded-lg border">
+              {b.altBaslik ? (
+                <p className="border-b px-4 py-2 font-medium text-sm">{b.altBaslik}</p>
+              ) : null}
+              <div className="divide-y">
+                {gorunur.map((a) => (
+                  <AlanSatiri key={a.anahtar} alan={a} okuma={alanOku(a, ayarlar, ozgunler)} />
+                ))}
+              </div>
+              <div className="flex justify-end border-t px-4 py-3">
+                <Faz2Dugme ne={`${b.baslik} bölümünün ayarlarını kaydeder`}>Kaydet</Faz2Dugme>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* MERİDİAN EKİ, ÜST YÜZEYDE YOK — VE BU BİLEREK: yukarıdaki form üst
+          yüzeyin bildiği alanları çiziyor, gövdede o listenin DIŞINDA gelen her
+          anahtar burada ham basılıyor. Olmasaydı, yeni doğan bir ayar ekrandan
+          sessizce düşerdi ve bunu ancak kaynağı okuyan biri fark ederdi.
+          Atlanan alan listesi tabloDAN türer, elle yazılmaz. */}
       <Bolme
-        baslik="Çözülmüş ayarlar"
-        aciklama="Bankanın şu an geçerli ayarları — devralınanlar dahil. Alan adları üst servisin sözlüğüdür ve çevrilmez."
+        baslik="Gövdede kalan alanlar (Meridian eki)"
+        aciklama="Yukarıdaki formda çizilmeyen her anahtar — üst yüzeyde karşılığı olmayan ya da bu sürümde yeni doğan ayarlar."
       >
         {ayarlar === null ? (
-          /* GÖVDE SARMALSIZ GELMİŞ OLABİLİR: zarf ölçülmedi. `config` yoksa
-             gövdenin KENDİSİ ayarlar olabilir — ikisi de çizilir, hangisinin
-             okunduğu yazılı. */
+          /* SARMALSIZ GÖVDE YİNE DE OKUNUR — VE BEYAN BUNU SÖYLEDİĞİ İÇİN DOĞRU
+             OLMAK ZORUNDA (inceleme I-3). İlk yazım bu yedeği kaldırmış ama
+             cümleyi bırakmıştı: ekran "aşağıda ham basılıyor" derken hiçbir şey
+             basmıyordu — bu dosyanın kendi tarihçesindeki "pano kendi ucunu
+             yalanladı" vakasının aynısı. Üst yüzeyde ham döküm YOK (ölçüldü:
+             `bank-config-view.tsx::loadAll` gövdeyi doğrudan forma bağlıyor);
+             yani bu blok Meridian ekidir ve başlığında öyle yazıyor. */
           <>
             <Olculemedi
               neden="Ayarlar sarmalı gelmedi"
@@ -570,27 +815,22 @@ function Ayarlar({ govde }: { readonly govde: YapilandirmaGovdesi }) {
             <HamSatirlar govde={govde} atla={["overrides"]} />
           </>
         ) : (
-          <HamSatirlar govde={ayarlar} />
+          <HamSatirlar govde={ayarlar} atla={CIZILEN_ALANLAR} />
         )}
       </Bolme>
       <Bolme
-        baslik="Bankaya özgü geçersiz kılmalar"
+        baslik="Bankaya özgü geçersiz kılmalar (Meridian eki)"
         aciklama="Yalnız bu banka için elle ayarlanmış olanlar. Boş olması bir arıza değil: hiçbir ayar devralınandan sapmıyor demektir."
       >
-        {gecersizKilmalar === null ? (
+        {ozgunler === null ? (
           <Olculemedi
             neden="Geçersiz kılmalar gelmedi"
             teknik="gövde geçersiz kılma bloğunu döndürmedi — hangi ayarın devralındığı bu okumadan ayırt edilemiyor"
           />
         ) : (
-          <HamSatirlar govde={gecersizKilmalar} />
+          <HamSatirlar govde={ozgunler} />
         )}
       </Bolme>
-      <Faz2Grup>
-        <Faz2Dugme ne="banka ayarlarını değiştirir">Ayarları değiştir</Faz2Dugme>
-        <Faz2Dugme ne="bankanın şablonunu dışa aktarır">Şablonu dışa aktar</Faz2Dugme>
-        <Faz2Dugme ne="çıkarımı yazmadan dener">Kuru koşum</Faz2Dugme>
-      </Faz2Grup>
     </div>
   );
 }
@@ -707,22 +947,25 @@ export function Yapilandirma({
 
   return (
     <BolumKart kimlik="hafiza-yapilandirma" baslik={kayit.baslik} soru={kayit.soru} ikon={kayit.ikon}>
-      <Bolme
-        baslik="Sayaçlar"
-        aciklama="Bu iki kutu panonun toplu okumasından gelir — bu görünüm için yeni bir çağrı açılmaz. Pencere üst servisin varsayılanıdır (7 gün): alt sekmelerdeki şeritler 7 günde AYNI sayıyı, 1/30 güne çevrilince başka bir sayıyı gösterir."
-      >
-        <SayacKutulari toplu={toplu} bank={bank} />
-      </Bolme>
-
+      {/* SAYAÇ KUTULARI SEKMELERİN ÜSTÜNDEN KENDİ SEKMESİNE İNDİ (R24, operatör
+          görsel turu 2026-09-02). İki kutu ÜST YÜZEYDE YOK — bizim eklediğimiz
+          ölçümler — ve sekmelerin üstünde dururken üst yüzeyin banka
+          yapılandırma sayfasının bir parçasıymış gibi okunuyorlardı. Adında
+          "(Meridian)" yazan kendi sekmesine inince yapılandırma sekmeleri üst
+          yüzeyle birebir kalıyor ve ek olanın ek olduğu ekrandan okunuyor.
+          Kutuların KAYNAĞI değişmedi: hâlâ kabuğun toplu okumasından besleniyor,
+          yeni bir çağrı açılmıyor. */}
       <Tabs value={sekme} onValueChange={setSekme} className="flex flex-col gap-3">
         <TabsList className="flex-wrap">
           <TabsTrigger value="genel">Genel</TabsTrigger>
           <TabsTrigger value="savunma">Bellek savunması</TabsTrigger>
-          <TabsTrigger value="ayarlar">Ayarlar</TabsTrigger>
+          <TabsTrigger value="ayarlar">Yapılandırma</TabsTrigger>
           <TabsTrigger value="webhook">Webhook</TabsTrigger>
           <TabsTrigger value="denetim">Denetim kaydı</TabsTrigger>
           <TabsTrigger value="model">Model çağrıları</TabsTrigger>
+          <TabsTrigger value="sayaclar">Sayaçlar (Meridian)</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="genel">
           <Bolme
@@ -1101,6 +1344,15 @@ export function Yapilandirma({
             </Bolme>
           </div>
         </TabsContent>
+        <TabsContent value="sayaclar">
+          <Bolme
+            baslik="Sayaçlar"
+            aciklama="Bu iki kutu panonun toplu okumasından gelir — bu görünüm için yeni bir çağrı açılmaz. Pencere üst servisin varsayılanıdır (7 gün): alt sekmelerdeki şeritler 7 günde AYNI sayıyı, 1/30 güne çevrilince başka bir sayıyı gösterir. Üst yüzeyde bu iki kutunun karşılığı YOK; sekmenin adı bunu söylüyor."
+          >
+            <SayacKutulari toplu={toplu} bank={bank} />
+          </Bolme>
+        </TabsContent>
+
       </Tabs>
 
       <Sheet

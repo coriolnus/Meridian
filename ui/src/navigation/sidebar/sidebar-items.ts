@@ -4,7 +4,6 @@ import {
   ChartBar,
   CheckSquare,
   Fingerprint,
-  FolderOpen,
   Forklift,
   Gauge,
   GraduationCap,
@@ -121,13 +120,11 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/infrastructure",
         icon: Server,
       },
-      {
-        id: "file-manager",
-        title: "File Manager",
-        url: "/dashboard/file-manager",
-        icon: FolderOpen,
-        badge: "new",
-      },
+      // ŞABLONUN "File Manager" GİRDİSİ KALDIRILDI (2026-09-02): Meridian'da o
+      // yüzeyin karşılığı olan belge rafı kalktı (içeriği Hafıza yüzeyine taşındı).
+      // Bu liste ÖLÜ (tüketicisi yok, yalnız tipleri alınıyor — gerekçe
+      // `pano/gezinme.ts` başlığı) ama "ölü ve yanlış" bir satır, "ölü ve doğru"
+      // bir satırdan daha maliyetlidir: bir sonraki okuyucu onu var sanar.
       {
         id: "patient-monitoring",
         title: "Patient Monitoring",

@@ -1,10 +1,14 @@
 /* ============================================================================
    lessons.md AYRIŞTIRICISI — ham metni belge yapısına çevirir
    ----------------------------------------------------------------------------
-   DOSYA ADI `damitim.ts`, `hafiza.ts` DEĞİL: aynı klasörde `Hafiza.tsx` bileşeni
-   duruyor ve macOS dosya sistemi büyük/küçük harfe duyarsız — iki ad TypeScript
-   tarafında çakışıyordu (TS1149). Ad çakışmasını yeniden adlandırarak çözmek,
-   derleyiciyi harf durumuna güvendirmekten sağlamdır (aynı depo Linux'ta koşuyor).
+   DOSYA `hafiza/` ALTINA TAŞINDI (2026-09-02, operatör kararı): dersler artık
+   Hafıza yüzeyinin Bilgi Tabanı görünümünde yaşıyor ve eski belge rafı yüzeyi
+   tümüyle kalktı. Ayrıştırıcı KOPYALANMADI, taşındı — iki uygulama olsaydı bölüm
+   sayıları sessizce ayrışır ve hangisinin doğru olduğu hiçbir yerde yazmazdı.
+
+   DOSYA ADI `damitim.ts`, `hafiza.ts` DEĞİL: ad çakışmasını yeniden adlandırarak
+   çözmek, derleyiciyi harf durumuna güvendirmekten sağlamdır (macOS dosya sistemi
+   büyük/küçük harfe duyarsız, aynı depo Linux'ta koşuyor — TS1149).
    ----------------------------------------------------------------------------
    KAYNAK: `GET /api/memory` → `lessons_md`. Uç `state/lessons.md` dosyasını HAM
    döndürüyor; dosya yoksa `"_No lessons yet._"` yazıyor (api.py::api_memory).
@@ -20,7 +24,7 @@
    satır, okunmamış bir ders demektir.
 
    NEDEN AJAN YÜZEYİ DE BURAYI KULLANIYOR: aynı dosyanın iki ayrı ayrıştırıcısı
-   olsaydı (biri sohbetteki "kalıcı hafıza" balonu, biri belge görünümü), bölüm
+   olsaydı (biri sohbetteki "kalıcı hafıza" balonu, biri ders görünümü), bölüm
    sayıları sessizce ayrışabilir ve hangisinin doğru olduğu hiçbir yerde yazmazdı.
    Tek uygulama, tek gerçek.
    ============================================================================ */

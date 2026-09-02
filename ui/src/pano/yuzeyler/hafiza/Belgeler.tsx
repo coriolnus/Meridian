@@ -32,11 +32,36 @@
    PARÇALAR İSTEK ÜZERİNE OKUNUR: sekmeye basılmadan çağrı açılmaz. Bir belgenin
    parçaları yüzlerce satır olabilir ve tabloyu açan herkes için önden çekmek,
    okunmayan bir yükü her tıklamada taşımak olurdu.
+
+   ---------------------------------------------------------------------------
+   KARAR ARŞİVİ BURAYA BİRLEŞTİ (operatör kararı 2026-09-02, görsel tur)
+   ---------------------------------------------------------------------------
+   Panonun ayrı bir "Belgeler" rafı yüzeyi vardı ve orada Meridian'ın karar/hüküm
+   dosyalarının künyesi listeleniyordu. O dosyalar hafıza bankasına ZATEN
+   işlenmiş durumda, yani iki sayfa aynı belgeleri iki kez gösteriyordu — raf
+   yüzeyi kalktı, künye bu tabloya BİRLEŞTİ.
+
+   EŞLEME ANAHTARI DOSYA ADIDIR, VE NEDEN ÖYLE OLDUĞU ÖLÇÜLDÜ: banka belgesinin
+   kimliği (`id`) içe aktarımda depo yoludur; arşiv ucu ise yalnız dosya ADINI
+   döndürüyor (`ad`). İki tarafın ORTAK olduğu tek parça son yol parçasıdır. Bu
+   yüzden karşılaştırma iki tarafın da son parçası üzerinden yapılır.
+
+   ÖLÇÜMÜN SINIRI YAZILI (uydurma yasağı): kimliğin GERÇEK biçimi bu turda
+   ölçülemedi — canlı ölçüm yalnız ANAHTAR ADLARINI saydı, değerleri değil. Yani
+   eşleşmeme bir arıza olabileceği gibi kimliğin başka bir biçimde tutulması da
+   olabilir; ekran bu yüzden "eşleşmedi" der ve NEDENİNİ yazar, "bu belge yok"
+   demez.
+
+   "HİNDSIGHT'TA YOK" HÜKMÜ ANCAK LİSTENİN TAMAMI ELDEYKEN KURULUR: tablo
+   sayfalı ve bir sayfada eşleşmeyen belge sonraki sayfada duruyor olabilir.
+   Hüküm bu yüzden iki kademeli — tüm liste tek sayfada geldiyse "bankada yok",
+   gelmediyse "bu sayfada eşleşmedi".
    ============================================================================ */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileText } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -61,6 +86,8 @@ import {
   uzunlukMetni,
 } from "./parcalar";
 import type { BelgeParcasi, HafizaBelgesi, HafizaZarfi, SayfaliGovde } from "./uctipleri";
+import { useArsiv, type Arsiv, type ArsivKaydi } from "./kararArsivi";
+import { useUcYoklama, type UcYoklamasi } from "./ucyoklama";
 
 const UC_BELGELER = "/api/hindsight/belgeler";
 const UC_PARCALAR = "/api/hindsight/belge-parcalari";
@@ -69,6 +96,44 @@ const UC_PARCALAR = "/api/hindsight/belge-parcalari";
    sunucu tavanı burada TEKRAR YAZILMAZ, iki kopya sessizce ayrışır. */
 const SAYFA_BOYU = 25;
 const PARCA_SAYFA_BOYU = 25;
+
+/* ---------------------------------------------------------------------------
+   KARAR ARŞİVİ EŞLEMESİ — dosya başlığındaki şerhin mekaniği
+   --------------------------------------------------------------------------- */
+
+/** Bir yolun son parçası. Yol ayracı taşımayan dizge kendisidir — "yol değil"
+ *  demek için ayrıca bir kural yazmak, olmayan bir ayrımı uydurmak olurdu. */
+function dosyaAdi(deger: string | null): string | null {
+  if (deger === null) return null;
+  const parcalar = deger.split("/").filter((p) => p.length > 0);
+  return parcalar.at(-1) ?? null;
+}
+
+/** Arşiv kaydının TÜRÜ dosya adının önekinden okunur — uç ayrı bir tür alanı
+ *  döndürmüyor ve uydurmak yerine adın kendisinden türetmek ölçülebilir. Desen
+ *  dışı ad ATILMAZ: "diğer" diye anılır, çünkü uç bir gün deseni gevşetebilir. */
+type ArsivTuru = "karar" | "hukum" | "diger";
+
+function arsivTuru(ad: string | null): ArsivTuru {
+  if (ad === null) return "diger";
+  if (ad.startsWith("KARAR-")) return "karar";
+  if (ad.startsWith("HUKUM-")) return "hukum";
+  return "diger";
+}
+
+const TUR_ETIKET: Readonly<Record<ArsivTuru, string>> = {
+  karar: "Karar",
+  hukum: "Hüküm",
+  diger: "Arşiv",
+};
+
+/** Tablo üstündeki süzgeç. "diğer" = arşivde HİÇ eşleşmeyen banka belgesi. */
+const TUR_SUZGECLERI = [
+  { deger: "hepsi", etiket: "Hepsi" },
+  { deger: "arsiv", etiket: "Karar / Hüküm" },
+  { deger: "diger", etiket: "Diğer belgeler" },
+] as const;
+type TurSuzgeci = (typeof TUR_SUZGECLERI)[number]["deger"];
 
 /* ZARF KAPISI ARTIK ORTAK (`parcalar.tsx`) — VE BU BİR TEK-KAYNAK DÜZELTMESİDİR.
    Bu dosya onu kendi içinde tanımlıyordu; Görev 3'ün beş görünümü de aynı zarfı
@@ -127,8 +192,178 @@ function ParcaSatiri({ parca }: { readonly parca: BelgeParcasi }) {
    ÇEKMECE
    --------------------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------------
+   KARAR ŞERİDİ — düşen üç çıktının evi (bedel yasası, inceleme R26 + I-1)
+   ----------------------------------------------------------------------------
+   Raf yüzeyi kalkarken ÜÇ ölçüm ekrandan düşmüştü ve üçü de burada geri:
+     · arşiv künye özeti  — hangi klasör, kaç belge, kaç karar/hüküm, kaç bayt
+     · uç yoklaması       — teşhis belgesi (runbook) cevap veriyor mu (HEAD)
+     · EKSİK OKUMA UYARISI — uç `ok:false` dediğinde liste KISMİ olabilir
+
+   ÜÇÜNCÜSÜ BİR SÜS DEĞİL, HÜKÜM KAPISI: `ok:false` iken aşağıdaki "bankada yok"
+   hükmü EKSİK bir arşivden kurulurdu ve operatör eksikliği hiçbir yerden
+   okuyamazdı. Uyarı ekranda, hüküm de o bayrağa bağlı (aşağıdaki `arsivTam`).
+
+   SAYILAR YALNIZ ÖLÇÜLENİN TOPLAMIDIR: boyutu okunamayan belge sıfır sayılıp
+   toplama katılmaz, SAYISI yanına yazılır — eksik bir toplamı tam gibi
+   göstermek, ölçülmemişi ölçülmüş ilan etmektir.
+   --------------------------------------------------------------------------- */
+function KararSeridi({
+  arsiv,
+  govde,
+  runbook,
+}: {
+  readonly arsiv: Durum<Record<string, unknown>>;
+  readonly govde: Arsiv | null;
+  readonly runbook: UcYoklamasi;
+}) {
+  const kayitlar = govde?.belgeler ?? null;
+  const kararN = (kayitlar ?? []).filter((k) => arsivTuru(k.ad) === "karar").length;
+  const hukumN = (kayitlar ?? []).filter((k) => arsivTuru(k.ad) === "hukum").length;
+  const digerN = (kayitlar ?? []).length - kararN - hukumN;
+  let toplamBayt = 0;
+  let baytsizN = 0;
+  for (const k of kayitlar ?? []) {
+    if (k.bayt === null) baytsizN += 1;
+    else toplamBayt += k.bayt;
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-muted-foreground text-xs">Karar arşivi</span>
+        {kayitlar === null ? (
+          <Olculemedi
+            neden={arsiv.oturumDustu ? "Oturum düştü" : "Depo arşivi okunamadı"}
+            teknik={
+              arsiv.oturumDustu
+                ? "arşiv ucu 401 döndü — çaresi yeniden giriş"
+                : (arsiv.hata ??
+                  govde?.hata ??
+                  (arsiv.yukleniyor
+                    ? "okuma sürüyor"
+                    : "arşiv gövdesi belge listesini ne dizi ne boş olarak döndürdü"))
+            }
+          />
+        ) : (
+          <>
+            {/* KLASÖRÜN ADI DA BİR ÖLÇÜMDÜR: hangi dizinin tarandığı yazılmazsa
+                sayılar "neyin" sayısı olduğunu söylemez. */}
+            {govde?.dizin === null || govde?.dizin === undefined ? (
+              <Olculemedi neden="Taranan klasör bildirilmedi" teknik="arşiv gövdesi dizin alanını yazmadı" kisa />
+            ) : (
+              <Badge variant="outline" className="font-mono font-normal text-[11px]">{govde.dizin}</Badge>
+            )}
+            <Badge variant="outline" className="font-normal text-[11px] tabular-nums">
+              {kayitlar.length.toLocaleString("tr-TR")} belge
+            </Badge>
+            <Badge variant="outline" className="font-normal text-[11px] tabular-nums">
+              {kararN.toLocaleString("tr-TR")} karar
+            </Badge>
+            <Badge variant="outline" className="font-normal text-[11px] tabular-nums">
+              {hukumN.toLocaleString("tr-TR")} hüküm
+            </Badge>
+            {digerN === 0 ? null : (
+              <Badge variant="destructive" className="text-[10px] tabular-nums" title="desen dışı ad — uç süzgeci gevşemiş olabilir">
+                {digerN.toLocaleString("tr-TR")} desen dışı
+              </Badge>
+            )}
+            <Badge variant="outline" className="font-normal text-[11px] tabular-nums">
+              {toplamBayt.toLocaleString("tr-TR")} bayt
+              {baytsizN === 0 ? null : ` (${baytsizN.toLocaleString("tr-TR")} ölçülemedi)`}
+            </Badge>
+          </>
+        )}
+        <span className="text-muted-foreground text-xs">· Teşhis belgesi</span>
+        <RunbookRozeti runbook={runbook} />
+      </div>
+      {/* EKSİK OKUMA UYARISI — hüküm kapısının görünür yüzü (I-1). */}
+      {govde !== null && govde.belgeler !== null && !govde.ok ? (
+        <p className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-amber-700 text-xs leading-relaxed dark:text-amber-300">
+          Arşiv EKSİK okundu: uç listeyi verdi ama işi tamamlayamadığını bildirdi. Aşağıdaki
+          eşleşme sayıları ve &quot;bankada yok&quot; hükmü bu yüzden KURULMUYOR.{" "}
+          {govde.hata ?? "Gerekçe yazılmamış."}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function RunbookRozeti({ runbook }: { readonly runbook: UcYoklamasi }) {
+  if (runbook.ok === null && runbook.hata === null) {
+    return <span className="text-muted-foreground text-xs">yoklanıyor…</span>;
+  }
+  if (runbook.hata !== null) {
+    return <Olculemedi neden="Teşhis belgesi yoklanamadı" teknik={runbook.hata} kisa />;
+  }
+  return runbook.ok === true ? (
+    <Badge variant="outline" className="font-normal text-[11px] tabular-nums">
+      HTTP {(runbook.kod ?? 0).toLocaleString("tr-TR")} · cevap veriyor
+    </Badge>
+  ) : (
+    <Badge variant="destructive" className="text-[10px] tabular-nums" title="503 = teşhis belgesi henüz üretilmemiş olabilir">
+      HTTP {runbook.kod === null ? "?" : runbook.kod.toLocaleString("tr-TR")}
+    </Badge>
+  );
+}
+
+function KararKunyesi({ kayit }: { readonly kayit: ArsivKaydi }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+        Karar arşivi künyesi
+      </h4>
+      <div>
+        <Satir etiket="Tür">
+          <Badge variant="outline">{TUR_ETIKET[arsivTuru(kayit.ad)]}</Badge>
+        </Satir>
+        <Satir etiket="Dosya">
+          {kayit.ad === null ? (
+            <Olculemedi neden="Dosya adı gelmedi" teknik="arşiv künyesinde ad alanı yok ya da dizge değil" kisa />
+          ) : (
+            <span className="break-all font-mono text-xs">{kayit.ad}</span>
+          )}
+        </Satir>
+        <Satir etiket="Başlık">
+          {kayit.baslik ?? (
+            <Olculemedi
+              neden={kayit.neden === null ? "Başlık gelmedi" : "Başlık ölçülemedi"}
+              teknik={kayit.neden ?? "arşiv künyesinde başlık alanı yok ya da dizge değil"}
+              kisa
+            />
+          )}
+        </Satir>
+        <Satir etiket="Tarih">
+          {kayit.tarih ?? (
+            <Olculemedi
+              neden={kayit.neden === null ? "Tarih gelmedi" : "Tarih ölçülemedi"}
+              teknik={kayit.neden ?? "arşiv künyesinde tarih alanı yok ya da dizge değil"}
+              kisa
+            />
+          )}
+        </Satir>
+        <Satir etiket="Boyut">
+          {kayit.bayt === null ? (
+            <Olculemedi
+              neden={kayit.neden === null ? "Boyut gelmedi" : "Boyut ölçülemedi"}
+              teknik={kayit.neden ?? "arşiv künyesinde bayt alanı yok ya da sayı değil"}
+              kisa
+            />
+          ) : (
+            <span className="tabular-nums">{kayit.bayt.toLocaleString("tr-TR")} bayt</span>
+          )}
+        </Satir>
+      </div>
+      <p className="text-muted-foreground text-xs">
+        Bu satır depo arşivinden geldi ve banka belgesiyle dosya adı üzerinden eşleşti. Kararın TAM
+        METNİ bu panoda okunmuyor: arşiv ucu yalnız künye döndürüyor.
+      </p>
+    </div>
+  );
+}
+
 function BelgeCekmecesi({
   belge,
+  arsivKaydi,
   parcalar,
   parcaAtlanan,
   setParcaAtlanan,
@@ -136,6 +371,8 @@ function BelgeCekmecesi({
   setSekme,
 }: {
   readonly belge: HafizaBelgesi;
+  /** Depo arşivinde eşleşen künye; `null` = eşleşmedi (gerekçe çekmecede yazılı). */
+  readonly arsivKaydi: ArsivKaydi | null;
   readonly parcalar: Durum<HafizaZarfi<SayfaliGovde<BelgeParcasi>>>;
   readonly parcaAtlanan: number;
   readonly setParcaAtlanan: (f: (n: number) => number) => void;
@@ -173,6 +410,8 @@ function BelgeCekmecesi({
             <Cipler degerler={listeye(belge.tags)} tavan={10} ne="Etiket alanı" />
           </Satir>
         </div>
+
+        {arsivKaydi === null ? null : <KararKunyesi kayit={arsivKaydi} />}
 
         <div className="flex flex-col gap-2">
           <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Belge künyesi</h4>
@@ -267,6 +506,7 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
   const [etiketler, setEtiketler] = useState("");
   const [esleme, setEsleme] = useState("any");
   const [atlanan, setAtlanan] = useState(0);
+  const [turSuzgeci, setTurSuzgeci] = useState<TurSuzgeci>("hepsi");
   const [acikBelge, setAcikBelge] = useState<HafizaBelgesi | null>(null);
   const [sekme, setSekme] = useState("genel");
   const [parcaAtlanan, setParcaAtlanan] = useState(0);
@@ -299,9 +539,53 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
           .join("&");
   const belgeler = useApi<HafizaZarfi<SayfaliGovde<HafizaBelgesi>>>(sorgu);
 
+  /* DEPO ARŞİVİ AYRI BİR UÇTAN, AYRI BİR GEREKÇEYLE: banka listesi düşse bile
+     arşiv okunur, arşiv düşse bile banka listesi çizilir. İkisini bağlamak tek
+     arızayı iki körlüğe çevirirdi (`ozet` ucunun iki bacağıyla aynı desen). */
+  const { durum: arsiv, okunan: arsivGovdesi } = useArsiv(bank !== null);
+  /* TEŞHİS BELGESİ YOKLAMASI (R26): bir bağın "çalışıyor" diye yazılması bir
+     iddiadır; HEAD bunu ölçüme çevirir. Gövde indirilmez (gerekçe `ucyoklama.ts`). */
+  const runbook = useUcYoklama("/runbook");
+  const arsivKayitlari = arsivGovdesi?.belgeler ?? null;
+
+  /* ARŞİV ARIZASININ GEREKÇESİ TEK YERDE TÜRETİLİR (inceleme I-4): süzgeç dalı
+     ile aşağıdaki eşleşme bloğu aynı soruyu iki ayrı yerde sormasın. `null` =
+     arşiv okundu; dolu = okunamadı ve NEDENİ budur. */
+  const arsivNeden: string | null = arsiv.oturumDustu
+    ? "arşiv ucu 401 döndü — çaresi yeniden giriş"
+    : arsivKayitlari === null
+      ? (arsiv.hata ??
+        arsivGovdesi?.hata ??
+        (arsiv.yukleniyor
+          ? "arşiv okuması henüz dönmedi"
+          : "arşiv gövdesi belge listesini ne dizi ne boş olarak döndürdü"))
+      : null;
+
+  /* ARŞİV TAM MI (inceleme I-1): uç `ok:false` dediğinde liste KISMİ olabilir ve
+     kapsayıcı hükümler ("bankada yok", "hepsi eşleşti") o listeden KURULAMAZ. */
+  const arsivTam = arsivNeden === null && arsivGovdesi?.ok === true;
+
+  /* EŞLEME HARİTASI DOSYA ADIYLA KURULUR (dosya başlığındaki ölçüm). Adsız kayıt
+     haritaya GİRMEZ — anahtarsız bir satırı boş anahtara koymak, adsız iki kaydı
+     birbirine eşitlerdi. */
+  const arsivHaritasi = useMemo(() => {
+    const m = new Map<string, ArsivKaydi>();
+    for (const k of arsivKayitlari ?? []) {
+      const ad = dosyaAdi(k.ad);
+      if (ad !== null && !m.has(ad)) m.set(ad, k);
+    }
+    return m;
+  }, [arsivKayitlari]);
+
+  const arsivKaydi = (belge: HafizaBelgesi): ArsivKaydi | null => {
+    const ad = dosyaAdi(metin(belge.id));
+    return ad === null ? null : (arsivHaritasi.get(ad) ?? null);
+  };
+
   /* PARÇALAR YALNIZ SEKME AÇIKKEN OKUNUR (dosya başlığındaki bedel şerhi):
      yol boşken `useApi` hiç istek açmaz. */
   const acikKimlik = acikBelge === null ? null : metin(acikBelge.id);
+  const acikArsiv = acikBelge === null ? null : arsivKaydi(acikBelge);
 
   /* Anahtar KAPANIŞTA sabit kalır: `acikKimlik` null olduğunda son açık kimlik
      korunur, böylece kapanış animasyonu kesilmez. */
@@ -338,6 +622,33 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
         aramaEtiketi="Belgelerde ara"
       />
 
+      {/* TÜR SÜZGECİ SUNUCUDA DEĞİL, BU SAYFADA ÇALIŞIR — ve bu ekranda YAZILI.
+          Uç bir "tür" parametresi tanımıyor; süzgeci sorguya koymak, sunucunun
+          sessizce yok sayacağı bir parametre göndermek olurdu. Sayfa-içi süzgeç
+          dürüsttür ama sınırlıdır: yalnız AÇIK SAYFADAKİ satırları eler. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-muted-foreground text-xs">Tür</span>
+        <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Belge türü süzgeci">
+          {TUR_SUZGECLERI.map((t) => (
+            <Button
+              key={t.deger}
+              type="button"
+              variant={t.deger === turSuzgeci ? "secondary" : "ghost"}
+              size="xs"
+              aria-pressed={t.deger === turSuzgeci}
+              onClick={() => setTurSuzgeci(t.deger)}
+            >
+              {t.etiket}
+            </Button>
+          ))}
+        </div>
+        <span className="text-muted-foreground text-[11px]">
+          bu süzgeç yalnız açık sayfayı eler — sunucu tür parametresi tanımıyor
+        </span>
+      </div>
+
+      <KararSeridi arsiv={arsiv} govde={arsivGovdesi} runbook={runbook} />
+
       <UcKapisi durum={belgeler} yol={UC_BELGELER}>
         {(z) => (
           <ZarfKapisi zarf={z} ne="Belgeler">
@@ -354,6 +665,31 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
                   </p>
                 );
               }
+              /* SÜZGEÇ ARŞİVE BAĞLIDIR VE ARIZASINI YUTMAZ (inceleme I-4): arşiv
+                 okunamadığında harita BOŞ kalır ve "Karar / Hüküm" süzgeci hiçbir
+                 satırı geçiremez — bunu "eşleşme yok" diye yazmak, bir ölçüm
+                 ARIZASINI ölçüm SONUCU gibi göstermek olurdu. */
+              if (turSuzgeci !== "hepsi" && arsivNeden !== null) {
+                return (
+                  <Olculemedi
+                    neden="Tür süzgeci uygulanamadı: karar arşivi okunamadı"
+                    teknik={arsivNeden}
+                  />
+                );
+              }
+              const satirlar = g.items.filter((b) => {
+                if (turSuzgeci === "hepsi") return true;
+                const eslesen = arsivKaydi(b) !== null;
+                return turSuzgeci === "arsiv" ? eslesen : !eslesen;
+              });
+              if (satirlar.length === 0) {
+                return (
+                  <p className="text-muted-foreground text-sm">
+                    Tür süzgeci bu sayfada hiçbir satırı geçirmedi — liste boş DEĞİL, sonraki
+                    sayfada eşleşen satır olabilir.
+                  </p>
+                );
+              }
               return (
                 <div className="overflow-x-auto">
                   <Table className="min-w-[46rem]">
@@ -366,10 +702,11 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {g.items.map((b, i) => {
+                      {satirlar.map((b, i) => {
                         const kimlik = metin(b.id);
                         const guncelleme = damga(b.updated_at);
                         const n = sayi(b.memory_unit_count);
+                        const kunye = arsivKaydi(b);
                         return (
                           <TableRow
                             key={kimlik ?? `belge-${atlanan + i}`}
@@ -384,12 +721,21 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
                                   {kimlik}
                                 </span>
                               )}
-                              <span className="mt-0.5 block text-muted-foreground text-[11px]">
+                              <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-muted-foreground text-[11px]">
+                                {/* TÜR ROZETİ YALNIZ EŞLEŞEN SATIRDA ÇIKAR: eşleşmeyene
+                                    "diğer" rozeti basmak, ölçülmemiş bir sınıflandırmayı
+                                    ölçülmüş gibi göstermek olurdu. */}
+                                {kunye === null ? null : (
+                                  <Badge variant="outline" className="font-normal text-[10px]">
+                                    {TUR_ETIKET[arsivTuru(kunye.ad)]}
+                                  </Badge>
+                                )}
                                 {guncelleme ? (
                                   `güncelleme ${guncelleme}`
                                 ) : (
                                   <Olculemedi neden="Güncelleme zamanı gelmedi" teknik="güncelleme damgası gelmedi ya da çözülemedi" kisa />
                                 )}
+                                {kunye?.tarih ? <span className="tabular-nums">arşiv {kunye.tarih}</span> : null}
                               </span>
                             </TableCell>
                             <TableCell>
@@ -436,6 +782,94 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
         }
       </UcKapisi>
 
+      {/* ARŞİVDE OLUP LİSTEDE EŞLEŞMEYENLER — hüküm İKİ KADEMELİ (dosya başlığı).
+          Liste sayfalıysa "bankada yok" diyemeyiz: eşleşmeyen belge sonraki
+          sayfada duruyor olabilir. Blok bu yüzden önce ne bildiğini söyler. */}
+      {/* AYNI HATA ÜÇÜNCÜ KEZ ÇİZİLMESİN (inceleme M-3): bu blok kendi `UcKapisi`sını
+          kurmuyor — uç düştüğünde ya da 401'de yukarıdaki iki kapı zaten konuşuyor,
+          üçüncü bir kopya uyarıyı gürültüye çevirirdi. Veri yoksa blok susar. */}
+      {(() => {
+        const z = belgeler.veri;
+        if (belgeler.hata !== null || belgeler.oturumDustu) return null;
+        if (!z || z.neden || !z.govde || !Array.isArray(z.govde.items)) return null;
+        {
+          const toplam = sayi(z.govde.total);
+          /* HÜKÜM İKİ KAPIDAN GEÇER (inceleme I-1): (1) banka listesinin TAMAMI
+             elimizde mi, (2) ARŞİV tam okundu mu. İkincisi düşükken kısmi bir
+             arşivden "bankada yok" demek, ölçülmemişi ölçülmüş ilan etmektir. */
+          const tamListe = atlanan === 0 && toplam !== null && z.govde.items.length >= toplam;
+          const hukumKurulabilir = tamListe && arsivTam;
+          const gorulen = new Set(
+            z.govde.items.map((b) => dosyaAdi(metin(b.id))).filter((a): a is string => a !== null),
+          );
+          const eslesmeyen = (arsivKayitlari ?? []).filter((k) => {
+            const ad = dosyaAdi(k.ad);
+            return ad === null || !gorulen.has(ad);
+          });
+          return (
+            <div className="flex flex-col gap-2 rounded-lg border p-3">
+              <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                Depo arşivinde olup bu listede eşleşmeyenler
+              </h4>
+              {/* GEREKÇE TEK KAYNAKTAN (`arsivNeden`): süzgeç dalı ile bu blok aynı
+                  soruyu iki ayrı biçimde cevaplasaydı sessizce ayrışırlardı. */}
+              {arsivNeden !== null ? (
+                <Olculemedi neden="Depo arşivi okunamadı" teknik={arsivNeden} />
+              ) : eslesmeyen.length === 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  {arsivTam
+                    ? "Depo arşivinin her kaydı bu sayfadaki bir banka belgesiyle eşleşti."
+                    : "Okunabilen arşiv kayıtlarının hepsi eşleşti — ama arşiv EKSİK okundu, yani okunamayanlar bu cümlenin dışında."}
+                </p>
+              ) : (
+                <>
+                  <p className="text-muted-foreground text-xs">
+                    {hukumKurulabilir
+                      ? "Banka listesinin tamamı tek sayfada geldi ve arşiv tam okundu, yani aşağıdakiler bankada YOK — henüz işlenmemiş olabilirler."
+                      : !arsivTam
+                        ? "Arşiv EKSİK okundu: aşağıdakiler hakkında hüküm KURULMUYOR — liste kısmi olabilir."
+                        : "Liste sayfalı: aşağıdakiler BU SAYFADA eşleşmedi. Sonraki sayfalarda duruyor olabilirler — kesin hüküm için listenin tamamı gerekir."}
+                  </p>
+                  <ul className="flex flex-col gap-1">
+                    {eslesmeyen.map((k, i) => (
+                      <li key={k.ad ?? `adsiz-${i}`} className="flex flex-wrap items-center gap-2 text-xs">
+                        <Badge variant="outline" className="font-normal text-[10px]">
+                          {TUR_ETIKET[arsivTuru(k.ad)]}
+                        </Badge>
+                        {k.ad === null ? (
+                          <Olculemedi
+                            neden="Dosya adı gelmedi"
+                            teknik={k.neden ?? "arşiv künyesinde ad alanı yok — eşleme anahtarı kurulamadı"}
+                            kisa
+                          />
+                        ) : (
+                          <span className="break-all font-mono">{k.ad}</span>
+                        )}
+                        <span className="text-muted-foreground">
+                          {k.baslik ?? "başlık gelmedi"}
+                        </span>
+                        <Badge variant="outline" className="font-normal text-[10px] text-muted-foreground">
+                          {hukumKurulabilir
+                            ? "bankada yok"
+                            : arsivTam
+                              ? "bu sayfada eşleşmedi"
+                              : "— (arşiv eksik okundu)"}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <p className="text-muted-foreground text-[11px]">
+                Eşleme anahtarı DOSYA ADIDIR: banka belgesinin kimliği içe aktarımda depo yoludur,
+                arşiv ucu yalnız adı döndürür. Kimliğin gerçek biçimi bu turda ölçülmedi — eşleşmeme
+                bir işleme boşluğu kadar, kimliğin başka biçimde tutulması da olabilir.
+              </p>
+            </div>
+          );
+        }
+      })()}
+
       {/* ÜST YÜZEYDE TABLONUN ÜSTÜNDE İKİ YAZMA DÜĞMESİ VAR (içe/dışa aktarım). */}
       <Faz2Grup>
         <Faz2Dugme ne="bankaya yeni belge yükler">İçe aktar</Faz2Dugme>
@@ -480,6 +914,7 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
             ) : (
               <BelgeCekmecesi
                 belge={acikBelge}
+                arsivKaydi={acikArsiv}
                 parcalar={parcalar}
                 parcaAtlanan={parcaAtlanan}
                 setParcaAtlanan={setParcaAtlanan}

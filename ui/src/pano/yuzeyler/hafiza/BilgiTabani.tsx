@@ -44,6 +44,7 @@ import { useApi } from "../../veri";
 import { BolumKart, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcalar";
 
 import { Bolme, Cipler, Faz2Dugme, Faz2Grup, HamSatirlar, ZarfKapisi, damga, listeye, metin, sayi } from "./parcalar";
+import { MeridianDersleri } from "./MeridianDersleri";
 import { TazelikSatiri, ZihinModelleri } from "./ZihinModelleri";
 import type { BilgiAgaci, BilgiAramaGovdesi, BilgiDugumu, BilgiSayfasi, HafizaZarfi, ZihinModeli } from "./uctipleri";
 
@@ -450,9 +451,22 @@ export function BilgiTabani({ bank, kayit }: { readonly bank: string | null; rea
         <TabsList>
           <TabsTrigger value="sayfalar">Sayfalar</TabsTrigger>
           <TabsTrigger value="modeller">Zihin modelleri</TabsTrigger>
+          {/* ÜÇÜNCÜ SEKME ÜST YÜZEYDE YOK ve adı bunu söylüyor (2026-09-02):
+              buradaki dersler Meridian'ın kendi öğrenme döngüsünden gelir ve
+              hafıza bankasının korpusunda değildir. Adsız bir "Dersler" sekmesi,
+              iki ayrı korpusu tek korpus sanmaya davet ederdi. */}
+          <TabsTrigger value="dersler">Meridian dersleri</TabsTrigger>
         </TabsList>
         <TabsContent value="sayfalar">
           <Sayfalar bank={bank} />
+        </TabsContent>
+        <TabsContent value="dersler">
+          <Bolme
+            baslik="Meridian dersleri"
+            aciklama="Meridian'ın kendi öğrenme döngüsünün damıtımı — hafıza bankasının korpusunda değil, çalışma durumundan okunuyor."
+          >
+            <MeridianDersleri />
+          </Bolme>
         </TabsContent>
         <TabsContent value="modeller">
           <Bolme
