@@ -164,3 +164,13 @@ modelleri listesi, `/ozet` timeseries; FAILED tıklaması → başarısız belle
 consolidation_state=failed` — R1 ölçümünde parametre var; vekil süzgeci yoksa eklenir [api.py,
 ayrı ajan]) salt-okunur panel; "yeniden dene"/recover düğmesi görünür-devre-dışı + rozet →
 TSK-111 dilimi. Takımyıldız CP'de nerede duruyorsa orada (ölç; MEMORY STORE'un üstünde DEĞİL).
+
+### Task 11-A (TSK-111 dilim 1, vekil): Hindsight yazma uçları — operasyon iptal/yeniden dene/sil + konsolidasyon kurtarma
+Operatör 2026-09-02 ~20:40 UTC: "butonların çalışması lazım" (Operasyonlar: İptal et · Yeniden dene · Kaydı sil;
+Ana Sayfa FAILED paneli: yeniden dene). Upstream (openapi @ ebad4782): `DELETE /operations/{id}` cancel_operation ·
+`POST /operations/{id}/retry` retry_operation · `DELETE /operations/{id}/delete` delete_operation ·
+`POST /consolidation/recover` recover_consolidation · (`POST /consolidate` trigger_consolidation — bu dilimde DEĞİL).
+Ruling R30: vekil yazma uçları `POST /api/hindsight/islem/{eylem}` (eylem ∈ iptal|yeniden-dene|sil; gövde {bank, id})
++ `POST /api/hindsight/konsolidasyon/kurtar` ({bank}); `_auth` kapılı; sözlük-kapalı yol eşlemesi (uydurma yok);
+her çağrı `obs.log` izi (v54) + `_diag_onbellek_bosalt` (v181); upstream yanıtı aynen (govde); zaman aşımı ≤2 sn;
+ayrı `_hafiza_yaz` çekirdeği (`_kapi_istek` DELETE/POST); çiviler kırmızı-önce + mutasyon; UI onayı Task 11-B.
