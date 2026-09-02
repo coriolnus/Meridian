@@ -88,6 +88,15 @@ def test_every_mutating_endpoint_leaves_a_trace():
         # Güvenlik açısından anlamlı yarı (BAŞARISIZ giriş) zaten kayıtlı ve sınırlı.
         if path == "/api/logout":
             continue
+        # /api/hindsight/recall (2026-09-02, Hafıza yüzeyi CP-UI birebirleştirme) — SORGU
+        # SINIFI bir POST'tur: CP `recall` araması gövde ister (types/tags/temporal_window/
+        # min_scores bir GET'e sığmaz), sunucuda HİÇBİR ŞEYİ DEĞİŞTİRMEZ (bkz. rota docstring'i
+        # ve `test_recall_state_defterine_yazmaz`). Uç `_auth` kapılı (KİMLİKLİ), ama defterde
+        # satır üretmemesi bilinçli: arama bir EYLEM değil, operatörün kanıt defterine kullanıcı-
+        # tetikli her sorguyu yazmak gürültü üretirdi. Faz-1 planının (docs/superpowers/plans/
+        # 2026-09-02-hafiza-cpui-birebir.md, "Kapsam kararı") beyanlı istisnası.
+        if path == "/api/hindsight/recall":
+            continue
         if "obs.log" in b or "obs.warn" in b or "obs.alarm" in b:
             continue
         # eylemi ÇAĞIRDIĞI modülde loglayanlar (delege edilmiş iz) — beyan edilmiş istisnalar

@@ -4034,6 +4034,8 @@ def _diag_onbellek_bosalt(neden: str) -> None:
     ENVANTER DIŞI VE NEDENİ: `/api/login`, `/api/logout`, `/api/setup-password` (oturum kimliği
     teşhis yükünde tek bir alanı bile değiştirmez) ve `/api/hermes/pool_key` (anahtar hermes CLI
     havuzuna yazılır; teşhis yükünde karşılığı yok). İkisi de zarfı boşuna düşürmemeli.
+    `/api/hindsight/recall` de dışarıda: sorgu-sınıfı bir POST'tur (Hindsight recall gövde ister),
+    durum DEĞİŞTİRMEZ — teşhis zarfını düşürecek bir şey yok.
     """
     if not _DIAG_CACHE:
         return                      # zaten boş — düşürülecek bir iddia yok

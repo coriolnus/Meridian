@@ -386,7 +386,8 @@ def test_ENVANTER_EKSIKSIZ_her_mutasyon_rotasi_ya_cagirir_ya_BEYANLI_disaridadir
     her POST/DELETE ucu YA yardımcıyı çağırır YA da muafiyeti yardımcının envanterinde YAZILIDIR."""
     muaf = {"/api/login", "/api/logout", "/api/setup-password",   # oturum kimliği: teşhis yükünde yok
             "/api/hermes/pool_key",                               # anahtar hermes CLI havuzuna gider
-            "/api/control/halt"}                                  # /api/halt-/api/resume'a DELEGE eder
+            "/api/control/halt",                                  # /api/halt-/api/resume'a DELEGE eder
+            "/api/hindsight/recall"}                              # sorgu-sınıfı POST, durum değiştirmez
     envanter = inspect.getdoc(api._diag_onbellek_bosalt) or ""
     assert "ENVANTER" in envanter and "ENVANTER DIŞI" in envanter, "envanter yorumu kaybolmuş"
 
