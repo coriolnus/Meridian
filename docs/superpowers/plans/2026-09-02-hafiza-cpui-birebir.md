@@ -97,3 +97,53 @@ Modify `alanlar.ts`/`komutlar.ts`.
 ### Task 4 (Rol-1): dal-sonu
 - [ ] Tam suite (donmuş ağaç, üçlü) · ROADMAP hizası · commit zinciri + push · dağıtım
   penceresi + canlı doğrulama (operatörle) · eski bundle temizliği.
+
+## Operatör görsel turu (2026-09-02 akşam, dağıtım sonrası) — beş bulgu → T5/T6
+
+Bulgular (operatör): ① küresel nav'da Hafıza alt bölümleri + yüzey-içi kenar çubuğu = çift nav;
+alt sekmeler YALNIZ uygulama UI'ında olmalı; ayrıca "Belgeler" rafı "Hafıza" + "Karar belgeleri"
+taşıyor — ad çakışması, konsolide edilmeli · ② "Hafızaya giren kayıtlar" grafiği CP'de sürekli
+(recharts), bizde merdiven çubuk · ③/④ constellation yok; varlık grafı (çember yerleşimi)
+orijinaliyle ilgisiz · ⑤ Bank Configuration CP'de form (alanlar görünür), bizde yalnız sayaç +
+salt-okunur dökum — "konfigürasyon yapacak yer bile yok".
+
+Ölçüm (Rol-1): CP api ağacında constellation yolu YOK — `constellation.tsx` + `graph-data.ts`
+mevcut uçlardan istemci tarafında kurar; CP grafikleri `recharts ^3.5`; bizim `ui/package.json`
+`recharts ^3.8` zaten var → yeni vekil ucu / bağımlılık gerekmez. Raf: `alanlar.ts` "Belgeler"
+yüzeyinin `hafiza` bölümü ("Hangi dersler biriktirildi?") eski dersler kategorisi.
+
+Rulings: R20 küresel nav'da Hafıza TEK girdi (yüzey `altBolumNav: "yuzey-ici"` beyanı), yüzey-içi
+kenar çubuğu kalır; komut paleti/derin bağlar bölüm kayıtlarını kullanmaya devam eder ·
+R21 KESİN (operatör 2026-09-02 ~19:05: "raftakilerin içeriklerini mevcut yeni sayfa ile duplike
+olmayacak şekilde konsolide et — redirect ya da ikisini tek yerde vermek değil"): "Belgeler" rafı
+yüzeyi KALKAR; dersler (`/api/memory` = state/lessons.md damıtımı, Hindsight korpusunda yok) →
+Hafıza ▸ Bilgi Tabanı "Meridian dersleri" alt sekmesi (mantık taşınır); karar arşivi
+(`/api/karar-belgeleri` = docs/KARAR-*/HUKUM-*, Hindsight'a ingest edilmiş → çift) → Hafıza ▸
+Belgeler listesine yol/ad eşlemesiyle birleşir (tür rozeti + süzgeç, eşleşmeyen dürüst); yönlendirme
+yok, raf dizini silinir, parite çivileri gerekçeli hizalanır ·
+R22 ana sayfa grafiği CP'nin recharts tipi/kova çözünürlüğü/pencere eşlemesiyle birebir ·
+R23 constellation EVET (operatör: "bayağı başarılı"), canvas + kendi kuvvet yerleşimi, kütüphane
+yok; varlık grafı aynı yerleşime geçer; CP `graph-data.ts` veri kuralı ölçülüp taşınır ·
+R24 Bank Configuration CP formu birebir, alanlar değerleriyle DEVRE-DIŞI + tek rozet; Meridian
+sayaçları ayrı alt sekme ("Sayaçlar") — yazma yolu Faz-2 kararı operatörde.
+
+### Task 5: nav konsolidasyonu + raf adları + ana sayfa grafiği + bank config formu (UI)
+**Files:** `ui/src/pano/alanlar.ts`, `ui/src/pano/sistem/nav-main.tsx` (ölçülür), `ui/src/pano/yuzeyler/hafiza/{HafizaYuzey,AnaSayfa,Yapilandirma,uctipleri,parcalar}`
+- [ ] R20 · R21 · R22 · R24; kontrol+build; v288/v323/v324/v314/v373 + parite mutasyonu.
+
+### Task 6: constellation — ÖLÇÜLDÜ (Rol-1, CP kaynağı ebad4782)
+CP `constellation.tsx` (1.642 satır, canvas; kuvvet simülasyonu YOK — deterministik yerleşim: id-hash
+halkası ya da `clusterKeyFn` ile küme merkezleri etrafında yarı-saydam "blob" + etiket; nokta yarıçapı
+bağ sayısından, ısı rengi `sqrt(lc/maxLinkCount)`; çizim tavanı 6.000 bağ; hover kartı metin sarma
+[`@chenglou/pretext` — bizde canvas fillText + elle sarma]). Veri: `client.getGraph({bank_id,
+limit: GRAPH_NODE_CAP=200})` = dataplane **`GET /banks/{id}/graph`** (BELLEK grafı; params type ·
+limit [default 1000] · q · tags · tags_match; cytoscape-biçimi `{data:{id,label,color,type}}` /
+`{data:{source,target,weight,linkType,entityName}}`), ana sayfada fact-type kümeli; tam graf Bellekler
+görünümünde. T1 yalnız `/entities/graph`ı vekilledi (varlık grafı) — bellek grafı vekili YOK.
+**T6-A (api.py, TDD):** `GET /api/hindsight/bellek-graf` → upstream `/graph` (type/limit/q/tags/tags_match
+süzülmüş geçiş, `_HAFIZA_UC_TAVANI` ölçülür, zarf aynen) + v375 çivileri kırmızı-önce + mutasyon.
+**T6-B (UI):** `takimyildizi.tsx` canvas bileşeni (CP yerleşim kuralları), ana sayfada 200-düğüm
+kümeli özet, Bellekler görünümünde tam graf sekmesi; varlık grafı (`graf.tsx`) aynı bileşene geçer
+(çember yerleşimi emekli). Sıra: T5 → T6-A → T6-B (aynı dizin + eşzamanlı pytest yasağı).
+
+### Task 7 (Rol-1): T4 tekrarı — tam suite gerekmez (yalnız UI) → etkilenen küme + dağıtım penceresi + görsel tur → DONE.

@@ -2413,6 +2413,10 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
 
+- **[TSK-111] Hafıza sayfası Faz-2 yazma yolu — Bank Configuration düzenleme (PATCH vekili + onay adımı + denetim izi)** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: M · trigger: —
+  What: TSK-108 Faz-1 salt-okunur sözleşmesi Yapılandırma formunu devre-dışı çizer (T5, R24). Faz-2: `PATCH /api/hindsight/yapilandirma` vekili (beyaz-listeli alanlar), panoda iki adımlı onay (fark özeti → uygula), `obs` denetim izi (kim/ne/önce-sonra), v375 çivileri kırmızı-önce; ardılları: bellek düzenle/geçersiz kıl, reflect tetikleme, consolidate/recover, webhook CRUD (her biri ayrı karar).
+  Why: operatör 2026-09-02 akşam görsel turu ("konfigürasyon yapacak yer bile yok") + karar 2-A: "şimdilik devre-dışı, ayrı kalem". Yazma vekili motor koduna girer (tam suite + iz çivileri), panodan yanlış ayar canlı hafızayı bozabilir — bu yüzden onay adımı ve iz şart.
+  Ref: TSK-108 plan eki R24; CP `bank-config-view.tsx` (v0.9.2 = ebad4782); upstream openapi `PATCH /banks/{id}/config` şeması.
 - **[TSK-109] Hafıza sayfası webhook okuması — Faz-1 vekilinde yok, sekme dürüst boş** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
   What: TSK-108 Faz-1 salt-okunur kapsamı webhook listesini (CP bank-config 'webhooks') vekile almadı; Yapılandırma sekmesi "bu pano webhook'ları okumuyor" diyor (≠ "webhook yok"). Kalem: `GET` webhook listesi vekile (salt-okunur), CRUD düğmeleri Faz-2 rozetiyle kalır.
   Why: T3 incelemesi endişe-3 — okunmayan sekme UI'da dürüst ama eksik; T1 uç haritası CP api ağacının bu dalını atlamıştı.
@@ -2796,8 +2800,8 @@ envanter — hepsi AYNI kimliği taşır. Kimlikler kalıcıdır; blok kapansa d
 | 🔴 AÇIK · `B-DELIST-KAYNAK` | Massive/QC delist-bar kaynağı kararı (envanter-9) | karar + para (QC platform-içi VEYA Massive plan) |
 | ✅ KAPALI · `B-OCI-BUCKET` | OCI Object Storage bucket + S3-uyumlu anahtar — Litestream aşama-2 (envanter-10) | hesap/anahtar |
 | ✅ KAPALI · `B-DD-ESIK` | `goal.max_drawdown` ↔ ölçülen dd gerilimi (envanter-12) | ✅ çözüldü 2026-08-13 (0,16) — tarihçe |
-| 🔴 AÇIK · `B-TAVAN-502` | hepsi-ücretsiz kararının bedeli (2026-09-02): OpenRouter günlük ücretsiz-model tavanı dolunca kapı zinciri 502 döner, botlar o koşumu boş geçer — kabul mü, "sessiz atla + sabah tekrar" mı? | karar (politika) |
-| 🔴 AÇIK · `B-PG-ROTASYON` | Hindsight Postgres parolası 2026-09-02'de Rol-1 terminaline düştü (DATABASE_URL süzgeç kaçağı; DB yalnız 127.0.0.1) — rotasyon evet/hayır | karar + ~2 dk pencere |
+| ✅ KAPALI · `B-TAVAN-502` | hepsi-ücretsiz kararının bedeli: OpenRouter günlük ücretsiz-model tavanı dolunca kapı zinciri 502 döner, botlar o koşumu boş geçer | ✅ karar 2026-09-02 akşam (A): olduğu gibi kalır — 502 bilinçli ve sayaçta görünür, sabah bütçesiyle düzelir; "sessiz atla" varyantı bedel ölçümü istediği için AÇILMADI |
+| ✅ KAPALI · `B-PG-ROTASYON` | Hindsight Postgres parolası 2026-09-02'de Rol-1 terminaline düştü (DATABASE_URL süzgeç kaçağı; DB yalnız 127.0.0.1) | ✅ karar (A) + icra 2026-09-02 18:08 UTC (operatör tek-satırı): ALTER USER + .env + restart; kanıt (Rol-1, A1): eski parola reddedildi, yeni `select 1` = 1, yedek birimi `User=postgres` (peer, etkilenmez), health 200 |
 **[2026-08-30 KİMLİK DENETİMİ — 22 kimliğin 14'ü KAPALI, 7'si AÇIK, 1'i DOĞRULANAMADI.]**
 Rozetler yukarıdaki tabloya işlendi (satır metinleri korundu, başına durum kondu). Kapalı
 sayılanların kanıtı — hepsi **bu depoda** doğrulandı, canlı gerektiren üçü ayrıca işaretlidir:
