@@ -11,9 +11,9 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **82** kart.
+Toplam **84** kart.
 
-### Kayıtlı — ölçüm bekliyor (12)
+### Kayıtlı — ölçüm bekliyor (14)
 
 - **EDG-2026-019** (`registered`) — Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10) aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı…
   · HÜKÜM: 2026-08-09 Rol-1. (Aşağıya bkz: 2026-08-23 kill#1 kaydı — katman kapatma emri)
@@ -40,6 +40,10 @@ Toplam **82** kart.
 - **EDG-2026-068** (`registered`) — KART-ÖNCE ÖN-KAYDI (EXE-2026-009 emsali; bu kart bir replay taraması değil, kod-değişikliği sözleşmesidir).
   · HÜKÜM: 2026-09-02 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce, TSK-011)
   · kart: `EDG-2026-068-cf-kuyruk-tarihli.yaml`
+- **EDG-2026-069** (`registered`) — 
+  · kart: `EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml`
+- **EDG-2026-070** (`registered`) — 
+  · kart: `EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`

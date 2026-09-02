@@ -19,7 +19,8 @@ Gerçek ağ, gerçek /opt/veri ve obs YOK: `urlopen` ve `subprocess.Popen` sahte
 """
 from __future__ import annotations
 
-import importlib.util
+import importlib.util  # noqa: F401 — yalnız spec türü için; yükleme conftest yardımcısıyla
+from tests.conftest import betikten_modul_yukle  # noqa: E402
 import json
 import pathlib
 import re
@@ -35,10 +36,9 @@ def _yukle(ad: str, yol: pathlib.Path):
     """F9 ayrık artefaktları paket değildir — dosya yolundan yüklenir. Modül yüklemesi dosya
     AÇMAZ (ölçüldü 2026-09-02: /opt/veri sabitleri yalnız Path nesnesi üretir), bu yüzden
     import yan etkisizdir; tembelleştirme gerekmedi."""
-    spec = importlib.util.spec_from_file_location(ad, yol)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    # v334 kuralı: ham `exec_module` YASAK (`__pycache__` kaynağın önüne geçebilir) — depo
+    # yardımcısı `tests.conftest.betikten_modul_yukle` (ops.sasi_yukleyici.kaynaktan_yukle).
+    return betikten_modul_yukle(yol, ad)
 
 
 pilot = _yukle("edg066_pilot_v377", PILOT_YOL)
