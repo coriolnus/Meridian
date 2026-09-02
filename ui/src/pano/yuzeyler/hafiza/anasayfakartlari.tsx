@@ -34,15 +34,17 @@
        eşleme yazmak, aynı sayfada aynı bağ türünü iki renkte göstermek olurdu.
 
    ---------------------------------------------------------------------------
-   YAZMA YOLU YOK — DÜĞME CP'DEKİ YERİNDE DURUR, DEVRE DIŞI
+   YAZMA YOLU AÇILDI — VE YALNIZ BU DÜĞMEDE (2026-09-03)
    ---------------------------------------------------------------------------
-   Üst yüzeyin düşen-birleştirme penceresinde "hepsini yeniden dene" düğmesi var
-   ve iki yazma çağrısı yapıyor (kurtarma + birleştirme tetiği). Bizde karşılığı
-   YOK: Faz-1 salt-okunur. Düğme gizlenmez, devre dışı çizilir ve rozeti nedenini
-   söyler (`parcalar.tsx::Faz2Dugme` sözleşmesi).
+   Düşen-birleştirme penceresindeki "Hepsini yeniden dene" artık gerçekten
+   yazıyor: üst yüzeyin sırasıyla önce kurtarma, sonra birleştirme tetiği
+   (gerekçe `yazma.tsx::kurtarVeTetikle`). Devre dışı rozeti bu eylemden
+   KALKTI; sayfadaki başka bir yazma düğmesi yok, dolayısıyla burada kalan
+   rozet de yok. Eylem İKİ ADIMLIDIR (onay penceresi + uygula) ve pencerede
+   bütçe uyarısı durur: birleştirme model çağrısı üretir.
    ============================================================================ */
 import { useMemo, useState } from "react";
-import { AlertCircle, ArrowRight, Brain, CheckCircle2, Clock, FileText, XCircle } from "lucide-react";
+import { AlertCircle, ArrowRight, Brain, CheckCircle2, Clock, FileText, RefreshCw, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,8 +61,9 @@ import { cn } from "@/lib/utils";
 
 import { useApi } from "../../veri";
 import { Deger, Kapi as UcKapisi, Olculemedi } from "../sistem/parcalar";
-import { Faz2Dugme, Faz2Grup, ZarfKapisi, damga, goreliDamga, listeye, metin, sayi, sozluk } from "./parcalar";
+import { ZarfKapisi, damga, goreliDamga, listeye, metin, sayi, sozluk } from "./parcalar";
 import { BAG_TURU_ETIKETI, BAG_TURU_JETONU, JETONLAR } from "./takimyildizi";
+import { KURTARMA_KUNYESI, YazmaOnayi, kurtarVeTetikle } from "./yazma";
 import type {
   BankaSayaclari,
   BilgiAgaci,
@@ -397,11 +400,19 @@ export function KonsolidasyonKarti({
   stats,
   bank,
   simdi,
+  tazele,
 }: {
   readonly stats: BankaSayaclari;
   readonly bank: string;
   /** Göreli zamanın çözüldüğü an — okumanın kendi anı (çağıranın ölçümü). */
   readonly simdi: number;
+  /**
+   * SAYAÇLARI YENİDEN OKUR — kurtarma düğmesinin sonucu buradan görünür.
+   * Kart sayaçları KENDİ okumadığı için (özet okuması çağıranda) tazeleme de
+   * çağıranın işidir; kartın içinde ikinci bir okuma açmak, aynı sayının iki
+   * kopyasını doğururdu.
+   */
+  readonly tazele: () => void;
 }) {
   const [acik, setAcik] = useState(false);
   const toplam = sayi(stats.total_nodes);
@@ -491,7 +502,7 @@ export function KonsolidasyonKarti({
           )}
         </Hucre>
       </div>
-      <DusenlerPenceresi acik={acik} kapat={() => setAcik(false)} bank={bank} sayac={dusen} simdi={simdi} />
+      <DusenlerPenceresi acik={acik} kapat={() => setAcik(false)} bank={bank} sayac={dusen} simdi={simdi} tazele={tazele} />
     </div>
   );
 }
@@ -517,6 +528,7 @@ function DusenlerPenceresi({
   bank,
   sayac,
   simdi,
+  tazele,
 }: {
   readonly acik: boolean;
   readonly kapat: () => void;
@@ -524,6 +536,8 @@ function DusenlerPenceresi({
   /** Sayaçtan gelen düşen sayısı — listeyle KIYASLANIR, biri ötekini doğrular. */
   readonly sayac: number | null;
   readonly simdi: number;
+  /** Banka sayaçlarını yeniden okur (kart sahibinin okuması). */
+  readonly tazele: () => void;
 }) {
   const yol = acik
     ? `${UC_LISTE}?bank=${encodeURIComponent(bank)}&consolidation_state=failed&limit=${DUSEN_TAVANI}`
@@ -543,9 +557,34 @@ function DusenlerPenceresi({
           </DialogDescription>
         </DialogHeader>
 
-        <Faz2Grup>
-          <Faz2Dugme ne="Düşen birleştirmeleri yeniden kuyruğa alır">Hepsini yeniden dene</Faz2Dugme>
-        </Faz2Grup>
+        {/* İKİ SAYIYI DA OKUR, HİÇBİRİNİ VARSAYMAZ: düğme yalnız düşen kayıt
+            OLDUĞU ÖLÇÜLDÜĞÜNDE basılabilir. Sayaç gelmediğinde "belki vardır"
+            diye açık bırakmak, ölçülmemiş bir sayıyı varsaymak olurdu; sıfır
+            olduğunda da kurtarılacak bir şey yoktur (üst yüzey de aynı kapıyı
+            koyuyor). Rozet bu eylemden KALKTI — yolu açıldı. */}
+        <div className="flex flex-wrap items-center gap-2">
+          <YazmaOnayi
+            kunye={KURTARMA_KUNYESI}
+            hedef={bank}
+            hedefEtiketi="Uygulanacağı banka"
+            ikon={RefreshCw}
+            engel={
+              sayac === null
+                ? "Düşen sayacı gelmedi — kurtarılacak kayıt olup olmadığı ölçülemedi"
+                : sayac === 0
+                  ? "Düşen birleştirme yok — kurtarılacak kayıt yok"
+                  : null
+            }
+            calistir={() => kurtarVeTetikle(bank)}
+            basarili={() => {
+              /* İKİ OKUMA DA TAZELENİR: pencere içindeki liste ve kartın
+                 sayaçları AYRI uçlardan gelir; yalnız birini tazelemek, aynı
+                 ekranda iki farklı gerçek bırakırdı. */
+              liste.tazele();
+              tazele();
+            }}
+          />
+        </div>
 
         {/* OKUMANIN ÜÇ HÂLİ PAYLAŞILAN KAPIDAN (`sistem/parcalar.tsx::Kapi`): oturum
             düşmesi, ağ arızası ve "henüz dönmedi" ayrı ayrı çizilir ve cümleleri

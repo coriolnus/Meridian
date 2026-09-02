@@ -32,6 +32,19 @@ export interface GonderSonucu {
   readonly detay: string | null;
   /** Başarı gövdesi (ör. `{ok, expires_in}`). Ayrıştırılamadıysa `null`. */
   readonly govde: unknown;
+  /**
+   * ÇÖZÜLEN GÖVDE — BAŞARISIZ YANITLARDA DA DOLU. `govde` bilerek yalnız 2xx'te
+   * doluyor (o alan "istek tuttu, işte sonucu" demek); ama bazı uçlar HATA
+   * yanıtında da KENDİ dört alanlı sonuç zarfını gönderiyor ve o zarfın gerekçe
+   * cümlesi `detail` alanında DEĞİL. `detay` onu göremez, `govde` onu düşürür.
+   *
+   * BU ALAN İKİNCİ BİR YAZMA KAPISI AÇMAMAK İÇİN VAR (tek-kaynak yasası): tek
+   * eksik parça ham gövde olduğu için ayrı bir `fetch` sarmalayıcısı yazmak,
+   * dosyanın başlığında "birleştirilmeyecek" diye yazılı ayrımı BOZAR — çünkü
+   * ikinci kopya okuma/yazma ayrımını değil, YAZMA tarafını ikiye bölerdi.
+   * Ayrıştırılamadıysa `null`.
+   */
+  readonly ham: unknown;
 }
 
 function detaydanMetin(g: unknown): string | null {
@@ -62,7 +75,7 @@ export async function apiPost(yol: string, govde?: unknown): Promise<GonderSonuc
   } catch (e) {
     // AĞ DÜŞMESİ BİR HTTP CEVABI DEĞİLDİR ve öyle gösterilemez: `kod: 0` ile
     // "sunucu bir şey söyledi" hâlinden ayrılır, mesaj tarayıcının kendi metnidir.
-    return { ok: false, kod: 0, detay: e instanceof Error ? e.message : String(e), govde: null };
+    return { ok: false, kod: 0, detay: e instanceof Error ? e.message : String(e), govde: null, ham: null };
   }
 
   let cozulen: unknown = null;
@@ -74,5 +87,5 @@ export async function apiPost(yol: string, govde?: unknown): Promise<GonderSonuc
     // zaten `kod` alanında taşınıyor ve çağıranın dallanması için yeterli.
   }
 
-  return { ok: y.ok, kod: y.status, detay: detaydanMetin(cozulen), govde: y.ok ? cozulen : null };
+  return { ok: y.ok, kod: y.status, detay: detaydanMetin(cozulen), govde: y.ok ? cozulen : null, ham: cozulen };
 }

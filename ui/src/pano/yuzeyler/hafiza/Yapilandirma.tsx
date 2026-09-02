@@ -39,6 +39,7 @@
    cevaplar.
    ============================================================================ */
 import { useEffect, useState } from "react";
+import { RotateCcw, Trash2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -54,6 +55,7 @@ import { BolumKart, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcal
 
 import { CIZILEN_ALANLAR, CP_YAPILANDIRMA, type AlanBicimi, type CpAlan } from "./cpyapilandirma";
 import { Bolme, Cipler, FAZ2_ROZET, Faz2Dugme, Faz2Grup, HamSatirlar, KovaSeridi, PencereDugmeleri, Sayfalama, Secim, VARSAYILAN_ISTATISTIK_PENCERESI, ZarfKapisi, damga, damgaMs, kovaToplami, metin, sayi, secimDegeri, sozluk } from "./parcalar";
+import { ISLEM_KUNYELERI, YazmaOnayi, islemEylemleri, islemUygula, type IslemEylemi } from "./yazma";
 import type { DenetimKaydi, HafizaGovdesi, HafizaZarfi, HamGovde, IslemGovdesi, IslemKaydi, IstatistikGovdesi, ModelCagrisi, SayfaliGovde, YapilandirmaGovdesi } from "./uctipleri";
 
 const UC_ISLEMLER = "/api/hindsight/islemler";
@@ -329,7 +331,11 @@ function Islemler({ bank }: { readonly bank: string }) {
               }
               return (
                 <div className="overflow-x-auto">
-                  <Table className="min-w-[52rem]">
+                  {/* ASGARİ GENİŞLİK ALTINCI SÜTUNLA YENİDEN SAYILDI (inceleme bulgusu
+                      M-4): sabit sütunlar 7+11+11+14+13 = 56rem, üstüne esnek "Tür"
+                      sütunu. Eski 52rem bir kırılma üretmiyordu (sarmalayıcı yatay
+                      kaydırıyor) ama tablonun asgarisini artık TARİF ETMİYORDU. */}
+                  <Table className="min-w-[64rem]">
                     <TableHeader className="bg-muted/50">
                       <TableRow>
                         <TableHead className="w-28">Kimlik</TableHead>
@@ -337,6 +343,7 @@ function Islemler({ bank }: { readonly bank: string }) {
                         <TableHead className="w-44">Oluşturma</TableHead>
                         <TableHead className="w-44">Güncelleme</TableHead>
                         <TableHead className="w-56">Durum</TableHead>
+                        <TableHead className="w-52">Eylemler</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -344,6 +351,14 @@ function Islemler({ bank }: { readonly bank: string }) {
                         const kimlik = metin(o.id);
                         const ilerleme = sozluk(o.progress);
                         const hata = metin(o.error_message);
+                        const durumu = metin(o.status);
+                        /* HEDEF ADI: kimliğin ilk sekiz karakteri + varsa belge/dosya adı.
+                           Onay penceresinde operatörün "hangi satır" sorusunu cevaplayan
+                           tek şey bu — tam kimlik başlıkta durur, satırdaki kısaltmayla
+                           AYNI parçadır ki iki ekran aynı satırı gösterdiğini söylesin. */
+                        const belge = metin(o.filename) ?? metin(o.document_id);
+                        const hedef =
+                          kimlik === null ? null : `${kimlik.slice(0, 8)}${belge === null ? "" : ` · ${belge}`}`;
                         return (
                           <TableRow key={kimlik ?? `islem-${atlanan + i}`}>
                             <TableCell className="font-mono text-[11px]">
@@ -417,6 +432,15 @@ function Islemler({ bank }: { readonly bank: string }) {
                                 ) : null}
                               </div>
                             </TableCell>
+                            <TableCell>
+                              <IslemEylemleri
+                                bank={bank}
+                                kimlik={kimlik}
+                                hedef={hedef}
+                                durum={durumu}
+                                tazele={islemler.tazele}
+                              />
+                            </TableCell>
                           </TableRow>
                         );
                       })}
@@ -444,11 +468,74 @@ function Islemler({ bank }: { readonly bank: string }) {
         }
       </UcKapisi>
 
-      <Faz2Grup>
-        <Faz2Dugme ne="bekleyen işi iptal eder">İptal et</Faz2Dugme>
-        <Faz2Dugme ne="düşmüş işi yeniden kuyruğa alır">Yeniden dene</Faz2Dugme>
-        <Faz2Dugme ne="bitmiş işin kaydını siler">Kaydı sil</Faz2Dugme>
-      </Faz2Grup>
+      {/* FAZ-2 ROZETİ BU ÜÇ EYLEMDEN KALKTI (2026-09-03): düğmeler artık satırın
+          İÇİNDE ve gerçekten çalışıyor. Rozet, kalan yazma düğmelerinde (ayar
+          kaydetme, savunma değiştirme, webhook ekleme) AYNEN duruyor — kalkması
+          bir yetenek beyanıdır ve yalnız yolu açılan eylemde kalkar. */}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   BİR SATIRIN EYLEMLERİ — HANGİ DÜĞMENİN ÇİZİLECEĞİNİ DURUM SÖYLER
+   ----------------------------------------------------------------------------
+   Kapı tablosu bu dosyada DEĞİL (`yazma.tsx::ISLEM_KAPILARI`): aynı kapı ana
+   sayfada da okunabilir olmalı ve iki kopya sessizce ayrışırdı.
+
+   İKİ AYRI BOŞLUK, İKİ AYRI CÜMLE: durum hiç gelmediyse hangi eylemin
+   uygulanabildiği ÖLÇÜLEMEZ; durum geldi ama hiçbir kapıya uymuyorsa (koşan bir
+   iş) uygulanabilir eylem YOKTUR. İkisini tek çizgiyle geçmek, ölçüm yokluğunu
+   ölçülmüş bir boşluk gibi gösterirdi.
+   --------------------------------------------------------------------------- */
+const ISLEM_IKONLARI: Record<IslemEylemi, typeof X> = {
+  iptal: X,
+  "yeniden-dene": RotateCcw,
+  sil: Trash2,
+};
+
+function IslemEylemleri({
+  bank,
+  kimlik,
+  hedef,
+  durum,
+  tazele,
+}: {
+  readonly bank: string;
+  /** Satırın kimliği; gelmediyse hiçbir eylem gönderilemez. */
+  readonly kimlik: string | null;
+  /** Onay penceresinde gösterilen ad (kimlik + belge). */
+  readonly hedef: string | null;
+  readonly durum: string | null;
+  /** Başarıdan sonra listeyi yeniden okur — sonucu okumayan istek yapılmaz. */
+  readonly tazele: () => void;
+}) {
+  if (durum === null) {
+    return (
+      <Olculemedi
+        neden="Durum gelmediği için uygulanabilir eylem okunamadı"
+        teknik="düğme kapıları işlemin durumundan türetilir; durum alanı gelmedi"
+        kisa
+      />
+    );
+  }
+  const eylemler = islemEylemleri(durum);
+  if (eylemler.length === 0) {
+    return <span className="text-muted-foreground text-[11px]">bu durumda uygulanabilir eylem yok</span>;
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {eylemler.map((e) => (
+        <YazmaOnayi
+          key={e}
+          kunye={ISLEM_KUNYELERI[e]}
+          hedef={hedef}
+          ikon={ISLEM_IKONLARI[e]}
+          kisa
+          engel={kimlik === null ? "Satırın kimliği gelmedi — eylem kimliksiz gönderilemez" : null}
+          calistir={() => islemUygula(e, bank, kimlik ?? "")}
+          basarili={tazele}
+        />
+      ))}
     </div>
   );
 }

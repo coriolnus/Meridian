@@ -541,7 +541,13 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
           ikon={GitMerge}
           className="min-w-0"
         >
-          <SayaclarKapisi ozet={ozet}>{(s) => <KonsolidasyonKarti stats={s} bank={bank} simdi={simdi} />}</SayaclarKapisi>
+          <SayaclarKapisi ozet={ozet}>
+            {/* TAZELEME ÇAĞIRANIN İŞİ: sayaçlar bu sayfanın özet okumasından
+                geliyor, kartın kendi okuması yok. Kurtarma düğmesi tuttuğunda
+                aynı okuma yeniden yapılır — yoksa ekran, değişmiş bir gerçeği
+                eski sayılarla göstermeye devam ederdi. */}
+            {(s) => <KonsolidasyonKarti stats={s} bank={bank} simdi={simdi} tazele={ozet.tazele} />}
+          </SayaclarKapisi>
         </BolumKart>
 
         <BolumKart

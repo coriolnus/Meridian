@@ -174,3 +174,31 @@ Ruling R30: vekil yazma uçları `POST /api/hindsight/islem/{eylem}` (eylem ∈ 
 + `POST /api/hindsight/konsolidasyon/kurtar` ({bank}); `_auth` kapılı; sözlük-kapalı yol eşlemesi (uydurma yok);
 her çağrı `obs.log` izi (v54) + `_diag_onbellek_bosalt` (v181); upstream yanıtı aynen (govde); zaman aşımı ≤2 sn;
 ayrı `_hafiza_yaz` çekirdeği (`_kapi_istek` DELETE/POST); çiviler kırmızı-önce + mutasyon; UI onayı Task 11-B.
+
+### Task 11-B (TSK-111 dilim 1, UI): yazma düğmeleri — iki adımlı onay + sonuç + iz
+R30-ek (11-A bulgusu): upstream `recover` yalnız `consolidation_failed_at`i temizler; CP diyaloğu ardından
+`triggerConsolidation` (POST /consolidate) çağırır → vekile `POST /api/hindsight/konsolidasyon/tetikle`
+(11-A düzeltme turu). UI: Operasyonlar satır eylemleri (İptal et / Yeniden dene / Kaydı sil) +
+Ana Sayfa FAILED paneli "Hepsini yeniden dene" (= kurtar → tetikle, CP sırası) — her eylem iki adım
+(niyet → fark özeti + bütçe uyarısı [ücretsiz günlük tavan] → uygula), uçuşta çift-gönderim kilidi,
+sonuç bildirimi `{ok, http, neden}`den, liste yeniden okunur; devre-dışı rozetler bu dört eylemden KALKAR,
+diğer yazma düğmeleri (config PATCH, bellek düzenle/geçersiz kıl, reprocess, webhook CRUD) rozetli kalır.
+
+### Task 12 (TSK-112, gece kuyruğu #4): Varlıklar — düğüm tıklaması → varlık künyesi paneli
+12-A (api.py, TDD): `GET /api/hindsight/varlik?bank=&id=` → upstream `GET /banks/{bank}/entities/{entity_id}`
+(get_entity; zarf aynen — openapi'den ölç) + `/liste`ye `entity_id` süzgeci (upstream list_memories
+parametresi, T1 R1 ölçümünde var; kapalı sözlüğe eklenir). Çiviler kırmızı-önce; kaçırma/duvar
+yardımcıları 11-A'dakiler (tek kaynak). 12-B (UI): CP `entities-view.tsx` @ ebad4782 :232-237, :287,
+:432-517 — takımyıldız/liste düğümü tıklanınca künye paneli (ad · anılma · ilk/son görülme · kimlik) +
+o varlığa bağlı kayıtların zaman çizelgesi (`/liste?entity_id=`); çekmece/panel deseni T2 (Belgeler).
+Sıra: 12-A → 12-B (aynı dizin, pytest tek sıra).
+
+### Task 13 (TSK-020 [UYGULA-2] adım 2, gece kuyruğu #12): olay defteri aylık Parquet sıkıştırma
+`state/events.jsonl` (27.9k satır / 9 MB, 2026-09-01) → `ops/olay_sikistir.py`: geçmiş AYLARI (cari
+ay HARİÇ) `state/olaylar/AAAA-AA.parquet` olarak yazar, yazılan satırları defterden KIRPMAZ (adım 2
+yalnız sıkıştırır; kırpma ayrı karar — bedel yasası: defter okuyucuları [pano recent, obs.recent,
+olay_sorgu] hâlâ jsonl'e bakıyor); `ops/olay_sorgu.py` parquet+jsonl birleşik okur (Yasa 6: parquet'in
+okuyucusu bu). Idempotent (ay dosyası varsa sha kıyası), bozuk satır sayımı stderr'e, DuckDB
+`read_json_objects` deseni (map_inference dersi olay_sorgu başlığında). Çiviler: sentetik defter →
+ay dosyaları, cari ay hariç, idempotent, olay_sorgu birleşik sayım = jsonl sayımı. Canlı koşum ops
+kalemi (Rol-1, obs'a ulaşmaz — meridian import etmez).
