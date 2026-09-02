@@ -5,7 +5,7 @@
 
      · `/api/approvals.inbox`  → silahlanma ölçümü · skill revizyonu · Eksen-2 önerisi
      · `/api/today.todays_plans[onay_bekliyor]` → operatörün onayını bekleyen REVIEW planı
-       (api.py:5868 `_onay_bekleyen_damgala` — SUNUCU damgalar, pano yalnız bayrağı okur;
+       (api.py::_onay_bekleyen_damgala — SUNUCU damgalar, pano yalnız bayrağı okur;
        ölçütü burada yeniden yazmak, aynı sorunun iki cevabını üretmek olurdu)
 
    İkisini AYRI ekranlarda göstermek, sunucunun `inbox_count`unu (`api.py::_inbox_count`) dört
@@ -13,10 +13,10 @@
    operatör bu sayfada yalnız 1 görürdü.
 
    GELİŞ ZAMANI BU UÇTAN GELMİYOR — İKİNCİ KAYNAKTAN OKUNUYOR. `api_approvals`
-   (api.py:5755) her öğeyi ELDEN kuruyor ve damgayı taşımıyor: revizyon kaydının
+   (api.py::api_approvals) her öğeyi ELDEN kuruyor ve damgayı taşımıyor: revizyon kaydının
    `at` alanı ve öneri satırının `ts` alanı gelen kutusu sözlüğüne HİÇ girmiyor.
    Damga yine de ölçülebilir, çünkü aynı ham satırlar `/api/skills`ten
-   (`recommendations` / `revisions`, api.py:1838-1839) HAM hâlleriyle çıkıyor;
+   (`recommendations` / `revisions`, api.py::api_skills) HAM hâlleriyle çıkıyor;
    silahlanmanınki ise `/api/diagnostics.gatekeeper.arming.checked_at`. Eşleşme
    anahtarı `skill` (öneri/revizyon) ve kurulum adı (silahlanma). İkinci uç
    düşerse damga "ölçülemedi + neden" olur; UYDURULMAZ.

@@ -1360,7 +1360,14 @@ TSX_UZANTILAR = (".ts", ".tsx")
 #: YÖN TEK TARAFLIDIR (kill-list disiplini): temizlik yapıldıkça bu sayı DÜŞÜRÜLÜR; YÜKSELTMEK
 #: yasaktır — tabanı büyütmek borcu ödemek değil, borcu meşrulaştırmaktır ve tavan
 #: `tests/test_codelaw_tsx_capa_v314.py`de ayrıca çivilidir.
-TSX_CAPA_TABANI = 32
+#:
+#: BORÇ KAPANDI — 32 → 0 (TSK-094, ölçüldü 2026-09-02). `ui/src` altındaki 141 satır çapasının
+#: TAMAMI `dosya.py::sembol` biçimine taşındı; bugün ağaçta TEK BİR `dosya.py:NNN` çapası yok
+#: (`grep -rEn "[a-z_]+\.py:[0-9]" ui/src` → boş), dolayısıyla bayat olabilecek çapa da yok.
+#: Taban 0 "çapa yasak" DEMEK DEĞİLDİR: tarayıcı yalnız BAYAT çapayı sayar, yani yeni yazılan
+#: taze bir satır çapası hüküm almaz — ama bayatladığı gün öter. Sembol çapalarının kendi hükmü
+#: AYRIDIR ve orada taban HİÇ YOKTUR (`capa_uyusmasi` → `sembol_capa_curume`).
+TSX_CAPA_TABANI = 0
 
 #: Beyanlı muafiyet işareti — İKİ DÜNYADA DA AYNI. Bayat çapayı KANIT olarak alıntılayan satır
 #: (dersin kendisi "şu çapa bayatladı" ise) bulgu değildir; işaret GÖRÜNÜR ve zorunludur.
@@ -1494,6 +1501,184 @@ def tsx_capa_nuksu(capalar: list[dict], taban: int | None = None) -> bool:
     return len(capalar) > (TSX_CAPA_TABANI if taban is None else taban)
 
 
+# ---------------------------------------------------------------------------
+# SEMBOL ÇAPASI — SATIR DEĞİL AD (TSK-030 adım-2, 2026-09-02)
+# ---------------------------------------------------------------------------
+#: `dosya.py::sembol` — pytest düğüm sözdizimi. Sembol NOKTALI olabilir (`Sinif.metot`):
+#: yalnız modül-seviyesi adları tanısaydık `broker.py::PaperBroker.size_position` gibi
+#: ÖLÇÜLEBİLİR bir çapa sessizce çürük sayılırdı ve yanlış alarm, yasanın en pahalı arızasıdır.
+_SEMBOL_CAPA_DESENI = re.compile(
+    r"((?:[A-Za-z0-9_.-]+/)*)([A-Za-z_][A-Za-z0-9_]*\.py)::"
+    r"([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)")
+
+#: `modül.sembol` — PYTHON TARAFININ BİÇİMİ (`DECLARED_*` beyanları çapayı böyle yazar:
+#: `hermes.search_progress_oku`). BACKTICK ZORUNLU ve gerekçesi `capa_uyusmasi`ta yazılı.
+_MODUL_CAPA_DESENI = re.compile(
+    r"`([a-z_][a-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)(?=[`(\s,;])")
+
+#: DOSYA ADI SEMBOL DEĞİLDİR. Backtick içindeki `secrets.json` · `api.py` · `shadow_variants.jsonl`
+#: `modül.sembol` desenine BİREBİR uyar ve ilk ölçümde 11 YANLIŞ ÇÜRÜME üretti (2026-09-02) —
+#: yasanın en pahalı arızası yanlış alarmdır: susturulan bekçi, olmayan bekçiden beterdir.
+_CAPA_UZANTILARI = frozenset((
+    "py", "pyi", "json", "jsonl", "yaml", "yml", "toml", "ini", "cfg", "conf", "env", "lock",
+    "ts", "tsx", "js", "jsx", "css", "html", "md", "txt", "csv", "log", "sh", "sql",
+    "service", "timer", "socket", "png", "svg", "xml", "db", "gz", "zip"))
+
+
+def _modul_adlari(tree: ast.AST) -> set[str]:
+    """Bir modülün AST'inden ÇAPALANABİLİR adları toplar: modül-seviyesi `def`/`class`/atama,
+    artı sınıf gövdesindeki üyeler `Sinif.uye` biçiminde.
+
+    İTHAL EDİLEN ADLAR KASTEN DIŞARIDA: `from x import y` bu modülü `y`nin TANIMI yapmaz ve
+    çapa tanımı gösterir. İçeri alsaydık, silinen bir fonksiyon ithal edildiği her modülde
+    hâlâ "var" görünürdü — yasanın ölçtüğü çürümenin tam tersi."""
+    adlar: set[str] = set()
+    for d in getattr(tree, "body", []):
+        if isinstance(d, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            adlar.add(d.name)
+            if isinstance(d, ast.ClassDef):
+                for u in d.body:
+                    if isinstance(u, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                        adlar.add(f"{d.name}.{u.name}")
+                    elif isinstance(u, ast.AnnAssign) and isinstance(u.target, ast.Name):
+                        adlar.add(f"{d.name}.{u.target.id}")
+                    elif isinstance(u, ast.Assign):
+                        adlar.update(f"{d.name}.{t.id}" for t in u.targets
+                                     if isinstance(t, ast.Name))
+        elif isinstance(d, ast.AnnAssign) and isinstance(d.target, ast.Name):
+            adlar.add(d.target.id)
+        elif isinstance(d, ast.Assign):
+            adlar.update(t.id for t in d.targets if isinstance(t, ast.Name))
+    return adlar
+
+
+def capa_uyusmasi(metinler, py_kokler: tuple[str, ...] | None = None,
+                  modul_bicimi: bool = False) -> dict:
+    """SEMBOL ÇAPASI YASASININ ÇEKİRDEĞİ: metinlerdeki `dosya.py::sembol` (ve backtick içindeki
+    `modül.sembol`) çapalarını çıkarır, hedef modülü AST ile ayrıştırır ve sembolün VARLIĞINI
+    doğrular.
+
+    NEDEN SEMBOL: satır çapası (`dosya.py:NNN`) sessizce çürür — hedefe eklenen bir satır bloku
+    onlarcasını birden kaydırır ve numara hâlâ "bir satırı" gösterdiği için bayatlık otomatik
+    ölçülemez. Sembol çapası da çürür, ama SESLİ çürür: ad silinince ya da değişince AST'de
+    bulunamaz ve hüküm o an kurulur.
+
+    `metinler`: `(kaynak, metin)` çiftleri. TEK ÇEKİRDEK, İKİ BESLEME (tek-kaynak yasası):
+    `DECLARED_*` beyan metinleri ve `ui/src` tsx/ts kaynağı buraya AYNI kapıdan girer; ikiye
+    bölünseydi çürüme sınıfının tanımı zamanla ayrışırdı (`_capalari_olc`in satır dünyasında
+    paylaşılma gerekçesinin aynısı).
+
+    ÜÇ KOVA, HEPSİ ADLI (v214 deseni — "0 çürük" cümlesi, kaçının hakkında hüküm KURULAMADIĞI
+    bilinmeden okunamaz):
+      * `cozulen`     — hedef modül ayrıştırıldı, sembol BULUNDU,
+      * `curuyen`     — modül VAR, sembol YOK (`sembol_yok`) → İHLAL,
+      * `cozulemeyen` — hüküm kurulamadı: `hedef_yok` · `ikircikli` · `kapsam_disi` ·
+                        `ayristirilamaz` · `okunamadi`. İHLAL DEĞİL (UYDURMA YASAĞI: AST
+                        kurulamadıysa sembolün yokluğu KANITLANMIŞ değildir), ama SAYILIR.
+
+    KAPSAM SINIRI VE BEDELİ (bedel yasası — kazanç ölçülüp bedel ölçülmezse körlük sessizdir):
+
+      1. `modül.sembol` biçimi YALNIZ `modul_bicimi=True` beslemelerinde okunur ve o besleme
+         PYTHON TARAFIDIR (`DECLARED_*` beyanları). Panonun `.ts`/`.tsx` düzyazısında aynı desen
+         SEMBOL DEĞİL ALAN ADI anlamına geliyor — ilk canlı ölçümde (2026-09-02) `scheduler.last_tick`
+         `sprint.sebep` `component_ic.verdict` `auth.header.Authorization` gibi JSON ALAN adları
+         yanlış çürüme üretti. Pano tarafının biçimi bu yüzden TEK: `dosya.py::sembol`.
+      2. Backtick ZORUNLU ve modül adres defterinde ÇÖZÜLMELİ. Türkçe düzyazı `r.json()` ·
+         `self.ALAN` gibi yüzlerce `x.y` belirteci taşır; hepsini çapa saymak `cozulemeyen`
+         kovasını gürültüye çevirir ve "kaç çapayı ölçemedim" sorusunu okunamaz yapardı.
+      3. Sembol parçası bir DOSYA UZANTISI olamaz (`_CAPA_UZANTILARI`).
+
+    KAYIP AÇIK: modül adı YANLIŞ YAZILMIŞ bir `modül.sembol` çapası burada prozadan ayırt
+    edilemez, yani görünmez. Kayıp `dosya.py::sembol` biçiminde kapalıdır — orada `.py::`
+    sözdizimi belirteci çapa OLARAK işaretler ve çözülemeyen hedef ADIYLA sayılır.
+
+    Muafiyet işareti satır dünyasıyla AYNI (`çapa-mezar-taşı`): çürümüş çapayı KANIT olarak
+    alıntılayan satır bulgu değildir. İkinci bir işaret icat etmek, taşınan dersi sessizce
+    ihlale çevirirdi."""
+    if py_kokler is None:
+        py_kokler = ("meridian", *_EK_CAPA_KOKLERI)
+    adres = _capa_adres_defteri(py_kokler)
+    ad_memo: dict[pathlib.Path, set[str] | str] = {}     # yol → adlar | hata sınıfı
+    out: dict[str, Any] = {"cozulen": [], "curuyen": [], "cozulemeyen": []}
+
+    def _adlar(yol: pathlib.Path):
+        if yol not in ad_memo:
+            try:
+                ad_memo[yol] = _modul_adlari(_ast_oku(yol))
+            except SyntaxError:  # sessiz-yutma: AST kurulamayan hedefte sembolün YOKLUĞU kanıtlanamaz; sinyal ÇAĞIRANA `ayristirilamaz` kovasıyla ADIYLA döner (UYDURMA YASAĞI — ölçülemeyen ihlal sayılmaz)
+                ad_memo[yol] = "ayristirilamaz"
+            except (OSError, ValueError) as e:  # sessiz-yutma: hedef okunamıyorsa hüküm veremeyiz; ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI) ve körlük UNSCANNED'e yazılır
+                _note_unscanned(str(yol), e, "capa_uyusmasi")
+                ad_memo[yol] = "okunamadi"
+        return ad_memo[yol]
+
+    def _hukum(kaynak: str, capa: str, onek: str, hedef_ad: str, sembol: str) -> None:
+        hedefler = adres.get(hedef_ad, [])
+        if onek:
+            tam = (onek + hedef_ad).lstrip("./")
+            hedefler = [h for h in hedefler if str(h) == tam or str(h).endswith("/" + tam)]
+            if not hedefler:
+                out["cozulemeyen"].append({"kaynak": kaynak, "capa": capa,
+                                           "neden": "kapsam_disi", "aday_n": 0})
+                return
+        if len(hedefler) != 1:
+            out["cozulemeyen"].append({
+                "kaynak": kaynak, "capa": capa,
+                "neden": "hedef_yok" if not hedefler else "ikircikli", "aday_n": len(hedefler)})
+            return
+        adlar = _adlar(hedefler[0])
+        if isinstance(adlar, str):
+            out["cozulemeyen"].append({"kaynak": kaynak, "capa": capa,
+                                       "neden": adlar, "aday_n": 1})
+            return
+        kova = "cozulen" if sembol in adlar else "curuyen"
+        kayit = {"kaynak": kaynak, "capa": capa, "hedef": str(hedefler[0]), "sembol": sembol}
+        if kova == "curuyen":
+            kayit["neden"] = "sembol_yok"
+        out[kova].append(kayit)
+
+    for kaynak, metin in metinler:
+        for satir in (metin or "").splitlines():
+            if _CAPA_MUAFIYETI in satir:
+                continue
+            for m in _SEMBOL_CAPA_DESENI.finditer(satir):
+                _hukum(kaynak, m.group(0), m.group(1), m.group(2), m.group(3))
+            if not modul_bicimi:
+                continue                      # KAPSAM SINIRI (1) — gerekçesi docstring'de yazılı
+            for m in _MODUL_CAPA_DESENI.finditer(satir):
+                hedef_ad = f"{m.group(1)}.py"
+                if len(adres.get(hedef_ad, [])) != 1:
+                    continue                  # KAPSAM SINIRI (2)
+                if m.group(2) in _CAPA_UZANTILARI:
+                    continue                  # KAPSAM SINIRI (3) — dosya adı, sembol değil
+                _hukum(kaynak, m.group(0).lstrip("`"), "", hedef_ad, m.group(2))
+    return out
+
+
+def _beyan_metinleri() -> list[tuple[str, str]]:
+    """BESLEME (a): `DECLARED_*` beyan metinleri. Kaynak adı `DECLARED_…` önekiyle yazılır —
+    `test_IKI_BESLEME_de_AYNI_CEKIRDEKTEN_gecer` iki beslemeyi bu önekten ayırt eder."""
+    ler: list[tuple[str, str]] = []
+    for ad, gerekce in DECLARED_SINKS.items():
+        ler.append((f"DECLARED_SINKS[{ad}]", gerekce))
+    for ad, kayit in DECLARED_SINK_PATTERNS.items():
+        ler.append((f"DECLARED_SINK_PATTERNS[{ad}]", " ".join(map(str, kayit.values()))))
+    for ad, kayit in HUMAN_INVOKED_SINKS.items():
+        ler.append((f"DECLARED_HUMAN[{ad}]", " ".join(map(str, kayit.values()))))
+    return ler
+
+
+def _tsx_metinleri(root: str) -> list[tuple[str, str]]:
+    """BESLEME (b): `ui/src` tsx/ts kaynağı. Dosya adı satır dünyasıyla AYNI biçimde yazılır."""
+    ler: list[tuple[str, str]] = []
+    for f in _ts_files(root):
+        try:
+            ler.append((f.name, _kaynak_oku(f)))
+        except (OSError, ValueError) as e:  # sessiz-yutma: okunamayan tek dosya bekçiyi çökertmez; körlük UNSCANNED'e yazılır ve report()["ok"]i oradan düşürür
+            _note_unscanned(str(f), e, "capa_uyusmasi")
+    return ler
+
+
 def stale_line_anchors(root: str = "meridian",
                        cozulemeyen_out: list | None = None,
                        ek_kokler: tuple[str, ...] = ()) -> list[dict]:
@@ -1562,6 +1747,19 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
         tsx_capalar = stale_tsx_line_anchors(tsx_hedef, py_kokler=(root, *ek),
                                              cozulemeyen_out=tsx_kor)
         tsx_nuks = tsx_capa_nuksu(tsx_capalar)
+    # SEMBOL ÇAPALARI — TEK ÇEKİRDEK, İKİ BESLEME. Ölçüm alanı tsx ile AYNI kapıya bağlı:
+    # sentetik bir kökle çağıran test kendi ağacını ölçer, deponun `ui/src`i karışmaz.
+    sembol: dict | None = None
+    sembol_curume: bool | None = None
+    if tsx_hedef is not None:
+        # İKİ BESLEME, TEK ÇEKİRDEK — ayrışan yalnız BİÇİM KAPSAMI: Python tarafı `modül.sembol`
+        # de yazar, pano tarafı YALNIZ `dosya.py::sembol` (gerekçe `capa_uyusmasi` kapsam sınırı 1).
+        beyan, tsx_met = _beyan_metinleri(), _tsx_metinleri(tsx_hedef)
+        s_beyan = capa_uyusmasi(beyan, py_kokler=(root, *ek), modul_bicimi=True)
+        s_tsx = capa_uyusmasi(tsx_met, py_kokler=(root, *ek))
+        sembol = {k: [*s_beyan[k], *s_tsx[k]] for k in ("cozulen", "curuyen", "cozulemeyen")}
+        sembol["besleme"] = {"beyan": len(beyan), "tsx": len(tsx_met)}
+        sembol_curume = bool(sembol["curuyen"])
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
@@ -1598,7 +1796,12 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
             "tsx_line_anchor_taban": TSX_CAPA_TABANI,
             "tsx_line_anchor_nuks": tsx_nuks,
             "tsx_line_anchor_unresolved": tsx_kor,
-            # `tsx_nuks is True` AÇIK YAZILDI: `not tsx_nuks` deseydik ölçülmemiş (None) durum
-            # sessizce "temiz" sayılırdı — hükmü olmayanı yeşile yazmak UYDURMA olurdu.
+            # SEMBOL ÇAPALARI — ÜÇÜNCÜ DÜNYA, ÜÇÜNCÜ HÜKÜM: burada TABAN YOKTUR. Satır dünyasının
+            # çırçırı birikmiş borcun büyümesini engellemek içindi; sembol çapasının çürümesi ise
+            # ADI OLAN ve düzeltmesi MEKANİK bir kusurdur — kayıtlı borç değil.
+            "sembol_capalari": sembol,
+            "sembol_capa_curume": sembol_curume,
+            # `… is not True` AÇIK YAZILDI: `not x` deseydik ölçülmemiş (None) durum sessizce
+            # "temiz" sayılırdı — hükmü olmayanı yeşile yazmak UYDURMA olurdu.
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED
-                  and not capalar and tsx_nuks is not True}
+                  and not capalar and tsx_nuks is not True and sembol_curume is not True}

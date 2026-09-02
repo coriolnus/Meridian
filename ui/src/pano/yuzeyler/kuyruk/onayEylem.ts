@@ -9,14 +9,14 @@
        `loop.operator_onay_ver` veriyor ve dönüşü AYNEN yanıt gövdesi oluyor.
        Ret için `raise HTTPException(status_code=res["kod"], detail=res["neden"])`
        — yani 404/409'un gerekçesi `detail` alanında METİN olarak geliyor.
-     · `loop.operator_onay_ver` (loop.py:477) — ret kodları ÖLÇÜLDÜ:
+     · `loop.operator_onay_ver` (loop.py::operator_onay_ver) — ret kodları ÖLÇÜLDÜ:
          404 plan defterde yok
          409 NO_GO · REVIEW değil · tarihsiz · seansı geçmiş · HALT · zaten açık
              pozisyon · slot yok
        200 gövdesi: {ok, kod, plan_id, ticker, date, gate_verdict, operator_onayi,
        silahli, zaten_onayliydi, zaten_silahliydi, icra_yasasi, armed_n, ts,
        icra_yolu, gonderim, not, neden}.
-       `icra_yolu` GÖNDERİMİN SONUCUNU söyler (loop.py:595-620): ayna kapalıysa
+       `icra_yolu` GÖNDERİMİN SONUCUNU söyler (loop.py::operator_onay_ver): ayna kapalıysa
        "broker'a GİTMEZ", açıksa "bracket GÖNDERİLDİ / dedup / DÜŞTÜ / GÖNDERİLEMEDİ".
      · `api.py::api_approve`      — `POST /api/approvals/{approval_id}`.
        GÖVDE: `{"decision": "approve"|"reject", "reason": str}` (`await request.json()`
@@ -25,7 +25,7 @@
        403: `KAPI_OKUYAN_ONEKLER` ("rev", "rec") L0'da reddedilir; tanınmayan önek
        de L0'da 403 alır (fail-closed).
 
-   KİMLİK UZAYI — YANLIŞ UCA GÖNDERMEK SESSİZ BİR KAYIPTIR (api.py:1948, 2044):
+   KİMLİK UZAYI — YANLIŞ UCA GÖNDERMEK SESSİZ BİR KAYIPTIR (api.py::api_skill_revision · api.py::api_skills_apply):
      `arming:{kurulum}`        kapı OKUMAZ → karar kaydı, davranış değişmez
      `rev:{skill}`             kapı OKUR   → `POST /api/skills/revision` bunu arar
      `rec:{skill}`             kapı OKUR   → `POST /api/skills/apply` bunu arar
@@ -113,7 +113,7 @@ export async function apiPost(yol: string, govde?: unknown): Promise<GonderSonuc
  * side · size_r · skill_chain · stop · strategy_version · targets · ticker.
  *
  * `risk_dollars` ve ADET (`qty`) BU SATIRDA YOK ve alan olarak da eklenmedi —
- * `broker.size_position` (broker.py:544) ikisini de GÖNDERİM ANINDA öz sermayeden
+ * `broker.py::PaperBroker.size_position` ikisini de GÖNDERİM ANINDA öz sermayeden
  * hesaplıyor. Ekranda "ölçülemedi + neden" olarak durur; uydurulmaz.
  */
 export interface PlanAyrintisi extends PlanOzeti {
@@ -186,9 +186,9 @@ function sayi(x: number | null | undefined, basamak = 2): string | null {
 /**
  * GERİ ALINAMAZ VARSAYILIR — VE BU BİR ÖLÇÜM SONUCU, KORKAKLIK DEĞİL.
  * Panonun elindeki tek broker göstergesi `/api/today.broker` ve o alan
- * `"Alpaca · paper" if _alpaca_present() else "Dahili broker · paper"` (api.py:276),
+ * `"Alpaca · paper" if _alpaca_present() else "Dahili broker · paper"` (analytics.py::today),
  * yani ADAPTÖRÜN ERİŞİLEBİLİRLİĞİNİ ölçüyor. Gönderim dalını seçen anahtar ise
- * `config.BROKER == "alpaca_paper"` (loop.py:595) ve o değer HİÇBİR uçtan pano'ya
+ * `config.BROKER == "alpaca_paper"` (loop.py::operator_onay_ver) ve o değer HİÇBİR uçtan pano'ya
  * gelmiyor. İki ayrı soru; birine bakıp öbürüne cevap vermek tam da bu deponun
  * "ölçüm bağlamı tuzağı" sınıfı olurdu. Gerçek icra yolu ancak yanıtın `icra_yolu`
  * alanından öğrenilir — yani ONAYDAN SONRA.
@@ -454,7 +454,7 @@ export function hataMetni(sonuc: GonderSonucu, yol: string): HataMetni {
       baslik: "Uç bu kimliğe karar yazmayı REDDETTİ (403)",
       govde:
         (d ?? "uç gerekçe yazmadı") +
-        " — `rev:` ve `rec:` uzayları YALNIZ L1+'ta yazılabilir (api.py:6086): o satırlar bir " +
+        " — `rev:` ve `rec:` uzayları YALNIZ L1+'ta yazılabilir (api.py::api_approve): o satırlar bir " +
         "uygulama kapısı açtığı için L0'da yazılan karar yarın icraya dönüşebilirdi. Karar YAZILMADI.",
       oturumDustu: false,
     };

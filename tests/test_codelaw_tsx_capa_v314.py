@@ -26,7 +26,14 @@ from meridian import codelaw
 #: `codelaw.TSX_CAPA_TABANI` bu değerin ALTINA inebilir (temizlik yapıldıkça inmeli), ama
 #: ÜSTÜNE ÇIKAMAZ: tabanı yükseltmek, borcu ödemek yerine borcu meşrulaştırmak olurdu
 #: (kill-list disiplini — `test_ihlal_seti_GERILEMEDI`nin `SINK_TABANI` deseni).
-OLCULEN_TAVAN = 32
+#:
+#: 32 → 0 (TSK-094, ölçüldü 2026-09-02): `ui/src` altındaki 141 satır çapasının TAMAMI
+#: `dosya.py::sembol` biçimine taşındı ve ağaçta bayatlayabilecek satır çapası KALMADI.
+#: Çırçır bu yüzden emekli DEĞİL, KAPANDI: bundan sonra `ui/src`e yazılan bir satır çapası
+#: bayatladığı gün TEK BAŞINA `report()["ok"]`i düşürür — borç sıfırlandığı için tolerans da
+#: sıfırdır. Bu dosyanın geri kalanı (sentetik pozitif kontroller) DEĞİŞMEDEN duruyor: tarayıcı
+#: hâlâ ölçülüyor, yalnız canlı ağaçta ölçecek borç kalmadı.
+OLCULEN_TAVAN = 0
 
 
 def _sentetik_agac(kok: pathlib.Path, tsx_govde: str, ad: str = "Kart.tsx") -> None:

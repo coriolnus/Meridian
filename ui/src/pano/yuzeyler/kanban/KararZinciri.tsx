@@ -14,7 +14,7 @@
    iki farklı soruyla kesiyor; birini seçtirmek diğerini kaybettirirdi.
 
    SAYIM ÇAPRAZ DENETLENİR: kolon sayaçlarını kendimiz sayıyoruz ama uç da
-   `verdict_counts` gönderiyor (analytics.py:259). İkisi ayrışırsa EKRANDA YAZAR —
+   `verdict_counts` gönderiyor (analytics.py::today). İkisi ayrışırsa EKRANDA YAZAR —
    sessizce kendi sayımıza güvenmek, ucun ve panonun iki farklı gerçeği
    göstermesi demek olurdu.
    ============================================================================ */

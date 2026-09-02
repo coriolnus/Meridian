@@ -6,7 +6,7 @@
    arkasında dosya:satır yoksa o cümle buraya girmedi.
 
    ── 1 · SOFT HALT ──────────────────────────────────────────────────────────
-   `POST /api/halt` (api.py:5980). Gövde OKUNMUYOR (`request.json()` çağrısı YOK).
+   `POST /api/halt` (api.py::api_halt). Gövde OKUNMUYOR (`request.json()` çağrısı YOK).
    `health.set_halt(True)`e delege eder — bayrak dosyasına kendi eliyle dokunmaz.
    Yan etkiler: nabız `note: "HALT via dashboard"` ile YENİDEN yazılır (mevcut
    alanlar korunur), `obs.alarm(ALARM_HALT)` düşer, `notify.halted(True)` denenir,
@@ -15,12 +15,12 @@
    within one bar."}`.  GERİ ALINABİLİR: `POST /api/resume`.
 
    ── 1' · RESUME ────────────────────────────────────────────────────────────
-   `POST /api/resume` (api.py:6010). `health.set_halt(False)`; İDEMPOTENT (bayrak
+   `POST /api/resume` (api.py::api_resume). `health.set_halt(False)`; İDEMPOTENT (bayrak
    dosyası yoksa no-op). DÖNÜŞ: `{"halted": false, "message": "HALT cleared."}`.
 
    ── 2 · CANCEL-OPEN ────────────────────────────────────────────────────────
-   `POST /api/control/cancel_open` (api.py:2903). Gövde OKUNMUYOR (senkron `def`).
-   `alpaca.cancel_open_entries()` (alpaca.py:585) çağrılır:
+   `POST /api/control/cancel_open` (api.py::api_control_cancel_open). Gövde OKUNMUYOR (senkron `def`).
+   `alpaca.cancel_open_entries()` (alpaca.py::cancel_open_entries) çağrılır:
      · Açık emirler `nested=True` çekilir (OCO/bracket bacakları `legs` altında).
      · Her emir `coid_sinifi` ile sınıflanır: `giris` · `koruma` · `yabanci`.
      · YALNIZ `giris` sınıfı VE `filled_qty == 0` VE durumu
@@ -29,14 +29,14 @@
        (operatörün kendi emri) SAYILIR ama dokunulmaz.
    DÖNÜŞ: `{ok, cancelled[], kept[], foreign[], siniflar{giris,koruma,yabanci}}`.
    ⚠ ADAPTÖR ARIZASI HTTP 200 İÇİNDE GELİR: `except` dalı `{"ok": false, "detail":
-   "..."}` DÖNDÜRÜR (alpaca.py:638) ve uç bunu 200 ile geçirir. Yani "200 = oldu"
+   "..."}` DÖNDÜRÜR (alpaca.py::cancel_open_entries) ve uç bunu 200 ile geçirir. Yani "200 = oldu"
    BURADA YANLIŞTIR; hüküm `ok` alanından okunur.
 
    ── 3 · FLATTEN ────────────────────────────────────────────────────────────
-   `POST /api/alpaca/close_all?confirm=FLATTEN-PAPER` (api.py:5196 · alpaca.py:1111).
+   `POST /api/alpaca/close_all?confirm=FLATTEN-PAPER` (api.py::api_alpaca_close_all · alpaca.py::close_all).
    `confirm` bir SORGU parametresidir, gövde değil. Jeton `CLOSE_ALL_CONFIRM`
-   (alpaca.py:60) = "FLATTEN-PAPER".
-     · JETONSUZ çağrı HİÇBİR ŞEYE DOKUNMAZ (alpaca.py:1120-1124): yalnız
+   (alpaca.py::CLOSE_ALL_CONFIRM) = "FLATTEN-PAPER".
+     · JETONSUZ çağrı HİÇBİR ŞEYE DOKUNMAZ (alpaca.py::close_all): yalnız
        `{"ok": false, "detail": "confirm token required", "dry_run": true,
          "would_flatten": [...], "foreign": [...]}` raporlar. KURU KOŞU budur ve
        bu ekran ölçümünü ORADAN alır — sunucunun kendi cevabı, panonun tahmini değil.
@@ -44,10 +44,10 @@
        DÖNÜŞ `{"ok": r.status_code < 400, "status": <int>}`; istisnada
        `{"ok": false, "detail": "..."}` — yine HTTP 200 içinde.
    GERİ ALINAMAZ. Ve `foreign` boş değilse bu emir OPERATÖRÜN KENDİ varlığına
-   dokunur (alpaca.py:1114 — "İNSANIN varlığına dokunmasıdır").
+   dokunur (alpaca.py::close_all — "İNSANIN varlığına dokunmasıdır").
 
    ── 4 · HALT LEARNING ──────────────────────────────────────────────────────
-   `POST /api/control/learn_halt` (api.py:2890). `async def` ve `await request.json()`
+   `POST /api/control/learn_halt` (api.py::api_control_learn_halt). `async def` ve `await request.json()`
    ZORUNLU: gövdesiz istek ayrıştırma hatası verir. Gövde `{"on": bool}`.
    `health.set_learn_halt(on)`; işlemler DEVAM eder, `reflect.submit` erken döner
    (yeni strateji sürümü SHIP EDİLEMEZ), rollback güvenlik olarak açık kalır.
@@ -65,7 +65,7 @@
    DEMEZ; "durumu ÖLÇ, körlemesine tekrar gönderme" der.
    ============================================================================ */
 
-/** `alpaca.CLOSE_ALL_CONFIRM` (alpaca.py:60) — jeton BURADA da literal, çünkü
+/** `alpaca.CLOSE_ALL_CONFIRM` (alpaca.py::CLOSE_ALL_CONFIRM) — jeton BURADA da literal, çünkü
     sorgu parametresini pano yazıyor. Değişirse uç 200/dry_run döner ve ekran
     bunu BAŞARISIZLIK olarak okur (bkz. `flattenSonucu`). */
 export const FLATTEN_JETON = "FLATTEN-PAPER";
@@ -248,7 +248,7 @@ export function kolIstegi(kimlik: KolKimlik, learnHaltAc?: boolean): { yol: stri
     case "flatten":
       return { yol: `/api/alpaca/close_all?confirm=${encodeURIComponent(FLATTEN_JETON)}`, govde: {} };
     case "learn_halt":
-      // GÖVDE ZORUNLU: uç `await request.json()` çağırıyor (api.py:2894). `undefined`
+      // GÖVDE ZORUNLU: uç `await request.json()` çağırıyor (api.py::api_control_learn_halt). `undefined`
       // geçilseydi `krizPost` yine `{}` yazardı ve `on` sessizce `false` olurdu — yani
       // "ship'i durdur" düğmesi ship'i SERBEST BIRAKIRDI. Yön burada AÇIKÇA taşınır.
       return { yol: "/api/control/learn_halt", govde: { on: learnHaltAc === true } };
@@ -363,7 +363,7 @@ export function kolSonucu(kimlik: KolKimlik, govde: unknown, learnHaltAc?: boole
         basarili: false,
         baslik: "Yanıt `halted` alanını YAZMADI — kolun hâli ölçülemedi",
         satirlar: [
-          "Uç 200 döndü ama gövdesinde `halted` yok. Bu uçlar (api.py:6008/6027) onu HER ZAMAN " +
+          "Uç 200 döndü ama gövdesinde `halted` yok. Bu uçlar (api.py::api_halt · api.py::api_resume) onu HER ZAMAN " +
             "yazar; yokluğu bir kusurdur. Kolun çekilip çekilmediğini üst bardaki durum hapından ÖLÇ.",
         ],
       };
@@ -393,7 +393,7 @@ export function kolSonucu(kimlik: KolKimlik, govde: unknown, learnHaltAc?: boole
       return {
         basarili: false,
         baslik: "Yanıt `learn_halted` alanını YAZMADI — kolun hâli ölçülemedi",
-        satirlar: ["Uç (api.py:2900) bu alanı her zaman yazar; yokluğu bir kusurdur. Paneli kapat-aç ve ölç."],
+        satirlar: ["Uç (api.py::api_control_learn_halt) bu alanı her zaman yazar; yokluğu bir kusurdur. Paneli kapat-aç ve ölç."],
       };
     }
     if (lh !== (learnHaltAc === true)) {
@@ -523,7 +523,7 @@ function flattenSonucu(g: Record<string, unknown>): KolSonucu {
 
 /* ---- ÖLÇÜM: FLATTEN'IN ONAY CÜMLESİNİ KURAN SAYILAR ---------------------- */
 
-/** `/api/alpaca` gövdesinin BU EKRANIN okuduğu kesiti (api.py:5136 · alpaca.py:1616). */
+/** `/api/alpaca` gövdesinin BU EKRANIN okuduğu kesiti (api.py::api_alpaca · alpaca.py::dashboard_view). */
 export interface AlpacaGovdesi {
   readonly paper_available?: boolean;
   readonly account?: {
@@ -539,7 +539,7 @@ export interface AlpacaGovdesi {
   } | null;
 }
 
-/** Jetonsuz `close_all` yanıtı — KURU KOŞU (alpaca.py:1120-1124). Hiçbir şeye dokunmaz. */
+/** Jetonsuz `close_all` yanıtı — KURU KOŞU (alpaca.py::close_all). Hiçbir şeye dokunmaz. */
 export interface KuruKosu {
   readonly dry_run?: boolean;
   readonly would_flatten?: readonly string[];
@@ -563,11 +563,11 @@ export interface PozisyonOlcumu {
  * Broker pozisyonlarını ÖLÇER. Kitabın (`/api/today.open_positions`) değil,
  * BROKER'ın pozisyonlarını — çünkü Flatten broker'da işlem yapar ve bu iki defterin
  * AYRIŞTIĞI bu depoda ölçülmüş bir olgudur (`sermaye.pozisyon_mutabakati`,
- * api.py:1687: "yedi açık pozisyonun yedisinde de adet ayrışıyordu"). Yanlış deftere
+ * api.py::api_today: "yedi açık pozisyonun yedisinde de adet ayrışıyordu"). Yanlış deftere
  * bakan bir onay cümlesi, doğru görünen bir yalandır.
  *
  * `[]` BOŞLUĞU KANITLAMAZ: `alpaca.positions()` arıza hâlinde de `[]` döner
- * (alpaca.py:304-313 — "ya gerçekten pozisyon yok YA DA API ulaşılamadı"). Bu yüzden
+ * (alpaca.py::positions — "ya gerçekten pozisyon yok YA DA API ulaşılamadı"). Bu yüzden
  * sıfır adet, `connected` bayrağıyla BİRLİKTE okunur ve belirsizlik `neden`e yazılır.
  */
 export function pozisyonlariOlc(a: AlpacaGovdesi | null, hata: string | null): PozisyonOlcumu {
@@ -601,7 +601,7 @@ export function pozisyonlariOlc(a: AlpacaGovdesi | null, hata: string | null): P
       olculemeyen.push(ad);
       return;
     }
-    // PİYASA DEĞERİ TÜRETİLDİ, OKUNMADI: `dashboard_view` (alpaca.py:1625) Alpaca'nın
+    // PİYASA DEĞERİ TÜRETİLDİ, OKUNMADI: `dashboard_view` (alpaca.py::dashboard_view) Alpaca'nın
     // `market_value` alanını GEÇİRMİYOR — yalnız qty/current/avg_entry/upl. Çarpım bu
     // yüzden burada yapılıyor ve türetilmiş olduğu ekranda YAZILI.
     toplam += Math.abs(q * c);
@@ -612,7 +612,7 @@ export function pozisyonlariOlc(a: AlpacaGovdesi | null, hata: string | null): P
     poz.length === 0
       ? bagli
         ? "broker LİSTE BOŞ döndü ve hesap bağlı görünüyor — ama `positions()` arızada da boş döner " +
-          "(alpaca.py:305), yani \"pozisyon yok\" KANITLANMIŞ değildir"
+          "(alpaca.py::positions), yani \"pozisyon yok\" KANITLANMIŞ değildir"
         : "broker liste boş VE `connected` doğrulanmadı — bu boşluk büyük olasılıkla ÖLÇÜM EKSİKLİĞİ"
       : null;
   return {

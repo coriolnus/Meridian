@@ -5,7 +5,7 @@
 
      · `/api/diagnostics.cizelge.damgalar` → "bu adım EN SON NE ZAMAN koştu"
        (`mechanism_beats.json`, epoch → ISO; damgası olmayan adımın anahtarı
-       dosyada HİÇ YOKTUR — saat üretilmez, api.py:4003 şerhi)
+       dosyada HİÇ YOKTUR — saat üretilmez, api.py::_hat_cizelgesi şerhi)
      · `/api/diagnostics.watchdog`        → "bu adım penceresini AŞTI MI"
        (`watchdog.report`, üç kova: `stale` · `never` · `askida`)
 
@@ -14,7 +14,7 @@
    yüzden bir süsleme değil, sorunun cevabının ta kendisi.
 
    ── EN İNCE NOKTA: "PENCERESİNDE" BİR HÜKÜMDÜR, VARSAYIM DEĞİL ──────────────
-   Bekçi YALNIZ `EXPECTED` sözlüğündeki mekanizmaları izliyor (watchdog.py:41).
+   Bekçi YALNIZ `EXPECTED` sözlüğündeki mekanizmaları izliyor (watchdog.py::EXPECTED).
    Damgası olan ama `EXPECTED`te olmayan bir adım hiçbir kovada görünmez — onu
    "penceresinde" saymak, HİÇ İZLENMEYEN bir mekanizmayı yeşile boyamak olurdu.
    `EXPECTED`in adları uçtan gelmiyor; ama SAYISI geliyor (`n_ok` + kova

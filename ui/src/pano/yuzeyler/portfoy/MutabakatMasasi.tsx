@@ -5,20 +5,20 @@
    ----------------------------------------------------------------------------
    Bu bölüm bir FARKI göstermez, farkı AÇIKLAR. Sistem ayrışmayı zaten biliyordu
    (`sermaye_koken.ayrisik`); eksik olan köprüydü — operatör iki sayı görüyor,
-   aradaki terimleri göremiyordu (api.py:1683 şerhi, operatör şikâyeti 2026-08-21).
+   aradaki terimleri göremiyordu (api.py::api_today şerhi, operatör şikâyeti 2026-08-21).
 
    ÜÇ AYRI SORU, ÜÇ AYRI KART — ve birbirinin yerine GEÇMEZLER:
      1. PARA köprüsü (`broker_mutabakati`): farkın BÜYÜKLÜĞÜ, terim terim.
      2. ADET mutabakatı (`pozisyon_mutabakati`): farkın NEREDEN geldiği. Yön
         kaybolmaz — "kitapta var brokerda yok" (karşılıksız) ile tersi (kitabın
-        bilmediği pozisyon) ayrı kovalardadır (sermaye.py:820).
+        bilmediği pozisyon) ayrı kovalardadır (sermaye.py::pozisyon_mutabakati).
      3. AYNA turu (`/api/alpaca.reconcile`): son mutabakat turu ne yaptı, neyi
         atladı, hangi gönderim reddedildi.
 
    `aciklanamayan === null` "fark yok" DEĞİLDİR. Beş terimden biri bile
-   ölçülemediyse kalıntı UYDURULMAZ (sermaye.py:779) — kart o hâlde tutarı değil
+   ölçülemediyse kalıntı UYDURULMAZ (sermaye.py::broker_mutabakati) — kart o hâlde tutarı değil
    `olculemedi_neden`i yazar. `defter_teyit` ise `try` bloğunun içinde doğuyor
-   (api.py:1691): köprü patlarsa alan HİÇ YOKTUR, `null` değil — bu yüzden
+   (api.py::api_today): köprü patlarsa alan HİÇ YOKTUR, `null` değil — bu yüzden
    `=== undefined` sınanır, doğruluğu değil VARLIĞI.
    ============================================================================ */
 import { AlertTriangle, ArrowLeftRight, Check } from "lucide-react";
@@ -53,7 +53,7 @@ function KopruKarti({ m }: { m: BrokerMutabakati | undefined }) {
           <Olculemedi
             kisa="alan hiç gelmedi"
             neden="Broker ile kitap arasındaki köprü bu turda hiç gelmedi"
-            teknik="/api/today gövdesinde `broker_mutabakati` anahtarı YOK. api.py:1696 onu her iki dalda da yazıyor — anahtarın hiç olmaması, uç sürümünün bu alandan önceki hâlde olduğunu ya da gövdenin kırpıldığını gösterir."
+            teknik="/api/today gövdesinde `broker_mutabakati` anahtarı YOK. api.py::api_today onu her iki dalda da yazıyor — anahtarın hiç olmaması, uç sürümünün bu alandan önceki hâlde olduğunu ya da gövdenin kırpıldığını gösterir."
           />
         </CardContent>
       </Card>
@@ -111,7 +111,7 @@ function KopruKarti({ m }: { m: BrokerMutabakati | undefined }) {
                         m.olculemedi_neden ??
                         `${s.etiket} bildirilmedi. Türetmek yasak — bilgisizliğimiz para farkı gibi okunamaz.`
                       }
-                      teknik="uç bu terimi döndürmedi (sermaye.py:779: beş terimin biri eksikse köprü türetilmez)"
+                      teknik="uç bu terimi döndürmedi (sermaye.py::broker_mutabakati: beş terimin biri eksikse köprü türetilmez)"
                     />
                   </TableCell>
                 </TableRow>
@@ -130,7 +130,7 @@ function KopruKarti({ m }: { m: BrokerMutabakati | undefined }) {
                   m.olculemedi_neden ??
                   "Kalıntı hesaplanmadı ve nedeni bildirilmedi. Bu bir 'fark yok' cevabı değil — beş terimin beşi ölçülmeden kalıntı üretilmez."
                 }
-                teknik="`aciklanamayan` null ve `olculemedi_neden` boş (sermaye.py:779)"
+                teknik="`aciklanamayan` null ve `olculemedi_neden` boş (sermaye.py::broker_mutabakati)"
               />
             ) : (
               /* KALINTININ RENGİ K/Z RENGİ DEĞİLDİR — bilerek. Pozitif kalıntı
@@ -261,7 +261,7 @@ function AdetKarti({ m }: { m: PozisyonMutabakati | undefined }) {
 // 3 · DEFTER TEYİDİ
 // ---------------------------------------------------------------------------
 function TeyitKarti({ t }: { t: DefterTeyit | undefined }) {
-  // ALANIN VARLIĞI SINANIR, DOĞRULUĞU DEĞİL: `defter_teyit` api.py:1691'de `try`
+  // ALANIN VARLIĞI SINANIR, DOĞRULUĞU DEĞİL: `defter_teyit` api.py::api_today içinde `try`
   // bloğunun İÇİNDE yazılıyor — broker köprüsü patlarsa anahtar HİÇ olmaz.
   // `{}` ile "hepsi sıfır" arasındaki fark tam olarak budur.
   if (t === undefined) {
@@ -273,7 +273,7 @@ function TeyitKarti({ t }: { t: DefterTeyit | undefined }) {
         <CardContent>
           <p className="text-muted-foreground text-sm">
             <span className="font-medium text-foreground">Ölçülemedi:</span> `/api/today` gövdesinde `defter_teyit`
-            anahtarı YOK. Bu alan broker köprüsü try bloğunun içinde yazılıyor (api.py:1691) — anahtarın olmaması,
+            anahtarı YOK. Bu alan broker köprüsü try bloğunun içinde yazılıyor (api.py::api_today) — anahtarın olmaması,
             köprünün o istekte patladığını gösterir. Sıfır teyit ile bakılamamış teyit aynı şey değildir.
           </p>
         </CardContent>
@@ -415,7 +415,7 @@ function AynaKarti({ r, akis }: { r: MutabakatKaydi | undefined; akis: AkisSagli
           </p>
         )}
 
-        {/* AKIŞ SAĞLIĞI: `stream_ok === null` ÜÇÜNCÜ HÂLDİR (api.py:521) — ayna hiç
+        {/* AKIŞ SAĞLIĞI: `stream_ok === null` ÜÇÜNCÜ HÂLDİR (api.py::_stream_view) — ayna hiç
             koşmamış demek, "KOPUK" demek değil. İkisini aynı renge boyamak, ayna
             kullanmayan bir kurulumda sonsuza dek arıza raporlamak olurdu. */}
         <div className="border-t pt-3">

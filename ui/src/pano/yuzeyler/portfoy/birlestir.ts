@@ -8,13 +8,13 @@
        gerçekleşmemiş K/Z. Stop/risk yok.
    Tutarı (piyasa değeri) ölçmek için ikisi de gerekir. Yalnız birine bakan bir
    grafik, diğerinde olup burada olmayan pozisyonu SESSİZCE düşürürdü — ve tam
-   olarak o düşen satır mutabakat masasının konusudur (sermaye.py:820 "yön
+   olarak o düşen satır mutabakat masasının konusudur (sermaye.py::pozisyon_mutabakati "yön
    kaybolmaz" yasası). Bu yüzden BİRLEŞİM alınır, kesişim değil.
 
    ÜÇÜNCÜ KAYNAK — FİYAT YEDEĞİ: broker aynası düştüğünde (ya da kitapta olup
    broker'da olmayan bir sembolde) son fiyat `/api/market` satırından okunur.
    O uç EOD KAPANIŞTIR ve canlı fiyat servis ETMEDİĞİNİ kendisi beyan ediyor
-   (api.py:1758). Bu yüzden her satır fiyatının NEREDEN geldiğini taşır; ekranda
+   (api.py::api_market). Bu yüzden her satır fiyatının NEREDEN geldiğini taşır; ekranda
    "brokerden gelen 128,40$" ile "dün kapanışından okunan 128,40$" aynı görünmez.
 
    UYDURMA YASAĞI BURADA ÜÇ YERDE İŞLER:
@@ -24,7 +24,7 @@
      · K/Z broker'dan geliyorsa "broker", giriş × adet farkından hesaplandıysa
        "türetildi" damgası taşır — ikisi aynı güvende değil (broker maliyet
        bazını bilir, biz kitabın giriş fiyatını biliriz ve ikisi AYRIŞIYOR:
-       `pozisyon_mutabakati` yedi sembolde yedi ayrışma ölçtü, sermaye.py:814).
+       `pozisyon_mutabakati` yedi sembolde yedi ayrışma ölçtü, sermaye.py::pozisyon_mutabakati).
    ============================================================================ */
 import { metin, sayi } from "./olcum";
 import type { BrokerPozisyonu, KitapPozisyonu, PiyasaSatiri } from "./tipler";
@@ -82,7 +82,7 @@ function sembol(v: unknown): string | null {
 /** Fiyat yedeğini `/api/market` satırından çıkarır. Seans içi kapanış EOD'a
  *  TERCİH EDİLİR ama ikisi ayrı damgalanır — marketview yalnız SİLAHLI sembollerde
  *  ve yalnız KAPANMIŞ + TAZE dakikalık barda `intraday_close` yazıyor
- *  (marketview.py:13 şerhi), yani varlığı bir istisnadır, kural değil. */
+ *  (marketview modül başlığı şerhi), yani varlığı bir istisnadır, kural değil. */
 function piyasaFiyati(r: PiyasaSatiri | undefined): { fiyat: number; kaynak: FiyatKaynagi; an: string | null } | null {
   if (!r) return null;
   const ic = sayi(r.intraday_close);

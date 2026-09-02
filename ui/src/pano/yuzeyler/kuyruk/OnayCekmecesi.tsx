@@ -126,7 +126,7 @@ function KapiDokumu({ kontroller }: { readonly kontroller: readonly KapiKontrolu
  * yapılıyor. Daraltma bir İDDİA DEĞİL: eklenen alanların HEPSİ opsiyonel, yani
  * gelmeyen alan `undefined` kalır ve ekranda "ölçülemedi + neden" olur.
  *
- * ADET VE `risk_dollars` BU SATIRDA YOK: `broker.size_position` (broker.py:544)
+ * ADET VE `risk_dollars` BU SATIRDA YOK: `broker.py::PaperBroker.size_position`
  * ikisini de GÖNDERİM ANINDA öz sermayeden hesaplıyor. Yokluk yazılır, türetilmez.
  */
 function PlanBloku({ plan }: { readonly plan: PlanOzeti }) {

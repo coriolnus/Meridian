@@ -4,9 +4,10 @@
    KURULUM × REJİM — verim matrisi (şerit parsel haritası)
    ----------------------------------------------------------------------------
    YOĞUNLUĞU `n` ÇİZİYOR, ORTALAMAYI RENK DEĞİL. Uç `n`i tam bu iş için dışarı
-   veriyor (api.py:2266 şerhi: "pano onu yoğunluk olarak çizer — 3 işlemlik bir
-   hücre seyrek görünür, 55 işlemlik hücre dolu. Az örnekli bir ortalamayı çok
-   örnekliymiş gibi göstermek bu sistemin reddettiği tek şeydir"). Bu yüzden
+   veriyor (api.py::_setup_regime_matrix — hücre başına `n`/`mean_r`/`hit`): pano
+   onu yoğunluk olarak çizer, 3 işlemlik bir hücre seyrek görünür, 55 işlemlik
+   hücre dolu. Az örnekli bir ortalamayı çok örnekliymiş gibi göstermek bu
+   sistemin reddettiği tek şeydir. Bu yüzden
    hücrenin ZEMİNİ örneklem yoğunluğunu, YAZI RENGİ ise ortalama R'nin işaretini
    taşıyor: koyu bir hücre "çok işlem", yeşil bir sayı "artıda" demek. Tek kanala
    sıkıştırmak, 3 işlemlik parlak bir hücreyi 55 işlemlikle aynı gösterirdi.

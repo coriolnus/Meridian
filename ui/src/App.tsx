@@ -9,7 +9,7 @@
    ÖLÇÜLEN İHLAL VE DÜZELTMESİ (stil.css'te yazılı): CLI kendi paletini enjekte etti ve
    iki rengi rezerve NAV bandımızın (255-272°) içine düştü. Palet silindi, shadcn'in
    `--sidebar-*` jetonları rol katmanına bağlandı. Bu dosyada çıplak hex ve Tailwind
-   hazır renk skalası GEÇMEZ — çivi test_ui_pilot_kapilari_v286::test_G1b.
+   hazır renk skalası GEÇMEZ — çivi test_ui_pilot_kapilari_v286::test_G1b_ciplak_hex_ve_deger_jetonu_BILESENDE_yok.
    ============================================================================ */
 import {
   Breadcrumb,

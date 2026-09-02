@@ -6,10 +6,10 @@
    birleştirip varsayılan vermek, ölçülmemiş bir yetkiyi ölçülmüş göstermek olurdu
    — ve burada ölçülen şey YETKİDİR, yani en pahalı yalan sınıfı.
 
-   `/api/session` bu deponun TEK yetkisiz /api ucu (api.py:1367) ve döndürdüğü üç
+   `/api/session` bu deponun TEK yetkisiz /api ucu (api.py::api_session) ve döndürdüğü üç
    alan, sistemin kimlik hakkında bildiği HER ŞEYDİR: oturum geçerli mi, parola
    kurulu mu, çerez Secure mi. Ad yok, e-posta yok, kullanıcı kimliği yok —
-   `state/auth.json` yalnız `{salt, hash}` tutuyor (meridian/auth.py:150-152).
+   `state/auth.json` yalnız `{salt, hash}` tutuyor (auth.py::set_password).
    ============================================================================ */
 
 /** `GET /api/session` — açık uç; panonun açılışta sorduğu tek soru. */
@@ -39,7 +39,7 @@ export interface Merdiven {
   readonly current_level?: number;
   readonly levels?: readonly MerdivenSeviyesi[];
   readonly l0_to_l1?: readonly MerdivenOlcutu[];
-  /** Yalnız OTOMATİK ölçütlerin sayacı — elle adımlar paydanın dışında (analytics.py:226-227). */
+  /** Yalnız OTOMATİK ölçütlerin sayacı — elle adımlar paydanın dışında (analytics.py::autonomy_ladder). */
   readonly auto_progress?: { readonly met?: number; readonly total?: number };
 }
 

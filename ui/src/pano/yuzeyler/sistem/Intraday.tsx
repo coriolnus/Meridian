@@ -8,9 +8,9 @@
    dördü de `ok: true|false|null` üçlüsünü taşır (`null` = "hiç kurulmadı", bozuk
    DEĞİL). Tek bir "akış sağlıklı" hapı basmak, hangi halkanın koptuğunu gizlerdi —
    ve bu depoda ölçülmüş bir vaka var: `stream_ok: true` diskte DONMUŞ, son olay
-   3 gün eskiydi (api.py:4516 şerhi). Bu yüzden bayrağın yanına nabız yaşı yazılır.
+   3 gün eskiydi (api.py::api_diagnostics şerhi). Bu yüzden bayrağın yanına nabız yaşı yazılır.
 
-   "BUGÜN" SAYACI TOPLAMDAN AYRI (api.py:4473): ömür boyu biriken toplam, "bugün
+   "BUGÜN" SAYACI TOPLAMDAN AYRI (api.py::api_audit_trail): ömür boyu biriken toplam, "bugün
    akış çalıştı mı?" sorusunu ASLA cevaplayamaz — dünkü 400 satır bugünkü sessizliği
    gizler.
 
@@ -193,7 +193,7 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
 
               {/* --- AKIŞ BOŞLUĞU: ÜÇÜNCÜ HÂL AYRI --- */}
               {bosluk === null || bosluk === undefined ? (
-                <Olculemedi neden="Boşluk taraması bu süreçte hiç koşmadı — boşluk yok değil, bakılmadı" teknik="`akis_boslugu` null (api.py:4491)" />
+                <Olculemedi neden="Boşluk taraması bu süreçte hiç koşmadı — boşluk yok değil, bakılmadı" teknik="`akis_boslugu` null (api.py::api_diagnostics)" />
               ) : bosluk.durum && bosluk.durum !== "ok" ? (
                 <p className="text-muted-foreground text-sm">
                   Boşluk taraması karar VERMEDİ — durum: <span className="font-mono">{bosluk.durum}</span> (

@@ -36,9 +36,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { apiPost, type GonderSonucu } from "./gonder";
 import type { GirisBasarisi } from "./uctipleri";
 
-/** `meridian/auth.py:80` — pencerede bu kadar başarısızlıktan sonra IP kilitlenir. */
+/** `auth.py::FAIL_MAX` — pencerede bu kadar başarısızlıktan sonra IP kilitlenir. */
 const KILIT_ESIGI = 8;
-/** `meridian/auth.py:79` — kayan pencere, saniye. */
+/** `auth.py::FAIL_WINDOW_S` — kayan pencere, saniye. */
 const KILIT_PENCERESI_S = 900;
 
 function hataMetni(s: GonderSonucu): { readonly baslik: string; readonly govde: string } {

@@ -7,13 +7,13 @@
    nokta ekliyor; hafta sonları ve duran günler seride HİÇ YOK. Zaman eksenine
    çizersek boşluklar düz bir çizgi olarak görünür ve okuyucu "o günlerde sermaye
    sabitti" diye okur — oysa o günler ölçülmedi. Uç da boşlukları TAM BU YÜZDEN
-   dizin (`i`) ile işaretliyor (api.py:2537: "seri dizin ekseninde çizilir, yani
+   dizin (`i`) ile işaretliyor (api.py::_egri_beyani: "seri dizin ekseninde çizilir, yani
    boşluk grafikte normal bir adım gibi görünür; işaret olmadan delik GÖRÜNMEZ").
    Dikey işaretler o deliği geri koyuyor.
 
    DÜŞÜŞ SERİSİ TARAYICIDA TÜRETİLİR ve bu ekranda AÇIKÇA yazıyor. `score_detail.
    max_drawdown` ile AYNI SAYI DEĞİLDİR: o, KAPANMIŞ İŞLEM eğrisinden hesaplanır
-   (score.py:121) ve gerekirse günlük M2M eğrisinin daha kötüsüyle değiştirilir;
+   (score.py::score_detail) ve gerekirse günlük M2M eğrisinin daha kötüsüyle değiştirilir;
    buradaki seri ise `equity_curve.json` noktalarının kendi tepe-altı yüzdesidir.
    İki sayıyı tek etiketle göstermek, farklı iki ölçümü aynıymış gibi okutmak
    olurdu — ikisi de basılıyor ve farkın nereden geldiği yazıyor.

@@ -10,11 +10,11 @@
    kartın altında AYNEN duruyor — sayaçlar diske yazılmıyor, yeniden başlatmada sıfırlanıyor.
 
    HATA ORANI GRAFİĞİ yalnız ÇAĞRI YAPILMIŞ sağlayıcıları çizer: `cagri` 0 iken oran
-   `null` döner (api.py:3075) ve sıfır çubuk çizmek "hiç bozulmadı" diye okunurdu.
+   `null` döner (api.py::_saglayici_satiri) ve sıfır çubuk çizmek "hiç bozulmadı" diye okunurdu.
    Elenen satır sayısı grafiğin altında yazılı — sessiz eleme yok (YASA 4).
 
    İKİ AYRI "ÇAPRAZ KONTROL" KARIŞTIRILMAZ: `crosscheck` endeks düzeyi, `massive_crosscheck`
-   sembol düzeyi (api.py:4855 şerhi). Bu kart ikisini de göstermez — göstermediğini söyler.
+   sembol düzeyi (api.py::api_diagnostics şerhi). Bu kart ikisini de göstermez — göstermediğini söyler.
    ============================================================================ */
 import { Database } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -85,7 +85,7 @@ export function Veriboru({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                   )}
                   {elenen > 0 ? (
                     <p className="text-muted-foreground text-xs">
-                      Grafikten elenen satır: {elenen} — `cagri` 0 olduğu için hata oranı ölçülemez (api.py:3075).
+                      Grafikten elenen satır: {elenen} — `cagri` 0 olduğu için hata oranı ölçülemez (api.py::_saglayici_satiri).
                       Satırların kendisi aşağıdaki tabloda duruyor.
                     </p>
                   ) : null}

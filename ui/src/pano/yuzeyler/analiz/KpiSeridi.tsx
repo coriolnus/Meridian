@@ -3,7 +3,7 @@
 /* ============================================================================
    KPI ŞERİDİ — defterin dört (beş) sayısı, hiçbiri uydurulmadan
    ----------------------------------------------------------------------------
-   ŞERİT `score_detail`E BAKAR VE O UÇ İKİ ŞEKİLLİDİR (score.py:113):
+   ŞERİT `score_detail`E BAKAR VE O UÇ İKİ ŞEKİLLİDİR (score.py::score_detail):
    örneklem `min_sample`in altındayken uç YALNIZ `{score, n, min_sample, reason}`
    basar — `win_rate`, `avg_r`, `max_drawdown`, `sharpe` alanları HİÇ YOKTUR.
    Bu yüzden her kart alanın VARLIĞINI sorar (`=== undefined`), değerine bakmaz;
@@ -12,7 +12,7 @@
 
    SHARPE'IN AYRI BİR TUZAĞI VAR: uç ölçemediğinde `sharpe`ı 0.0 basar (muhafazakâr
    taraf, kapıyı gevşetmesin diye) ve ölçülebilirliği AYRI bir bayrakla söyler
-   (`sharpe_measurable`, score.py:135-142). Yalnız sayıya bakan bir kart "Sharpe 0"
+   (`sharpe_measurable`, score.py::score_detail). Yalnız sayıya bakan bir kart "Sharpe 0"
    yazar ve bu YANLIŞ okunur. Kart önce bayrağa bakar.
    ============================================================================ */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -35,7 +35,7 @@ export interface SkorKirilimi {
   readonly realized_30d?: number;
   readonly max_drawdown?: number;
   readonly sharpe?: number;
-  /** `sharpe: 0.0` "ölçüldü sıfır" mı "ölçülemedi" mi — ayracı BU bayrak (score.py:135). */
+  /** `sharpe: 0.0` "ölçüldü sıfır" mı "ölçülemedi" mi — ayracı BU bayrak (score.py::score_detail). */
   readonly sharpe_measurable?: boolean;
   readonly avg_r?: number;
   readonly win_rate?: number;
@@ -51,7 +51,7 @@ export interface SkorKirilimi {
   };
 }
 
-/** Eğrideki bir boşluk: `i` = boşluğun SOLUNDAKİ ham nokta dizini (api.py:2537). */
+/** Eğrideki bir boşluk: `i` = boşluğun SOLUNDAKİ ham nokta dizini (api.py::_egri_beyani). */
 export interface EgriBoslugu {
   readonly onceki?: string;
   readonly sonraki?: string;
@@ -185,7 +185,7 @@ export interface FacetSatiri {
   readonly wins?: number;
   readonly pf?: number | null;
   readonly kazanma?: number | null;
-  /** `pf === null` iken NEDEN — sonsuz DEĞİL, tanımsız (topviews.py:92-96). */
+  /** `pf === null` iken NEDEN — sonsuz DEĞİL, tanımsız (topviews.py::PF_YOK_R_YOK). */
   readonly pf_yok_nedeni?: string | null;
 }
 

@@ -13,7 +13,7 @@
    "ölçülemedi" der ve ham değeri ekrana yazar — beşinci hâle katlamak, bilmediğim bir
    şeyi biliyormuş gibi göstermek olurdu.
 
-   DEFTERİN PAYDASI KARNENİN EN BÜYÜK YALANIYDI (analytics.py:711 şerhi): `trades_total`
+   DEFTERİN PAYDASI KARNENİN EN BÜYÜK YALANIYDI (analytics.py::learning_scorecard şerhi): `trades_total`
    ham satır sayısıdır ve gövdesi REPLAY TOHUMUdur. Kompozisyon grafiği bu yüzden dört
    kovayı AYRI çizer ve min_sample paydasının hangi kovalardan oluştuğunu uçtan gelen
    `orneklem_kapsam` cümlesiyle yazar.

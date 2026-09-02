@@ -37,7 +37,7 @@ export function mantik(x: unknown): boolean | null {
 }
 
 /** Dizideki METİN olan öğeler. Metin OLMAYAN öğeler düşürülür ve bu bilinçli:
- *  `gate_reasons` serbest metin listesidir (`loop.py:1894` onu düz cümlelerle
+ *  `gate_reasons` serbest metin listesidir (`loop.py::daily_cycle` onu düz cümlelerle
  *  dolduruyor); içine düşen bir nesneyi "[object Object]" diye ekrana basmak
  *  gerekçeyi okunmaz kılardı. Tek çağıran `planlar.ts` ve orada bu liste yalnız
  *  GÖSTERİM içindir — hiçbir sayaç ondan türemiyor, yani düşen öğe bir ölçümü

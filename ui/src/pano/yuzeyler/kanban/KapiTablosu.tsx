@@ -4,12 +4,12 @@
    KAPI TABLOSU — hangi ölçüt kaç adayı eledi
    ----------------------------------------------------------------------------
    `gate_checks` alanı 2026-07-21'den beri her planda karar ağacını taşıyor ama
-   "kapı neyi eliyor" sorusu panoda hiç ölçülmemişti (analytics.py:3675'in
+   "kapı neyi eliyor" sorusu panoda hiç ölçülmemişti (analytics.py::gate_veto_tally'nin
    şerhi). Bu tablo o soruyu O SEANSIN planları üzerinde cevaplıyor.
 
    PAYDA DÜRÜSTÇE BEYAN EDİLİYOR: bir kapı satırı YALNIZ onu yazan planlarda
    değerlendirilir. `gate_checks` taşımayan planlar (eski satırlar, replay
-   tohumu — `backtest.py:472`) paydanın DIŞINDADIR ve sayıları tablonun altında
+   tohumu — `backtest.py::replay`) paydanın DIŞINDADIR ve sayıları tablonun altında
    ayrıca yazılı. Onları payda saymak, hiç sorulmamış bir kapıyı "geçti" diye
    saymak olurdu.
 

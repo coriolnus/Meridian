@@ -5,9 +5,9 @@
    ----------------------------------------------------------------------------
    TAKVİM BİR TAKVİM DEĞİL, BİR PENCERE HARİTASIDIR ve bunu ekranda yazmak zorunda:
    işaretsiz bir gün "o gün koşmadı" DEMEK DEĞİLDİR. İki kaynak da SINIRLI:
-     · koşu defteri uçta son 40 satırda kırpılıyor (api.py:4029) → ~2-3 gece
+     · koşu defteri uçta son 40 satırda kırpılıyor (api.py::_hat_cizelgesi) → ~2-3 gece
      · `donguler` son 8 `daily_cycle` olayı ve o da bir OLAY PENCERESİNDEN süzülüyor
-       (`obs.recent(3000)`, api.py:4038) — pencerenin dışı görünmez
+       (`obs.recent(3000)`, api.py::_hat_cizelgesi) — pencerenin dışı görünmez
    Bu yüzden takvim yalnız "bu pencerede kanıt gördüm" der. Boş bir hücreye
    "koşmadı" hükmü basmak, penceresi 3 gün olan bir ölçümü tarihin tamamı gibi
    okumak olurdu — bu deponun tekrar eden kusur sınıfı.

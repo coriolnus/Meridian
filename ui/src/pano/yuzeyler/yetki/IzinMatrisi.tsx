@@ -6,7 +6,7 @@
    ŞABLONUN "permission sets" TABLOSUNUN GRAMERİ, MERİDİAN'IN GERÇEK YETKİ EKSENİ.
    Bu depoda "rol" diye bir kavram YOK; yetki tek bir sayıyla ifade ediliyor:
    `state/goal.yaml → limits.autonomy_level`. O sayı bir KİŞİYE değil SİSTEME ait,
-   ve üç değeri var (L0/L1/L2 — meridian/analytics.py:230-234).
+   ve üç değeri var (L0/L1/L2 — analytics.py::autonomy_ladder).
 
    HER HÜCRE BİR KAYNAK SATIRI TAŞIR. Bir yetki matrisinde "muhtemelen şöyledir"
    diye doldurulmuş bir hücre, olmayan bir kısıtı var (ya da var olan bir kısıtı
@@ -47,7 +47,7 @@ const SATIRLAR: readonly YetkiSatiri[] = [
     l0: { deger: "yok", not: "canlı mod istense bile REDDEDİLİR — guard: `autonomy_level<1`" },
     l1: { deger: "kosullu", not: "seviye adı: “Live, every order approved” — her emir onaydan geçer" },
     l2: { deger: "var", not: "seviye adı: “Live, autonomous”" },
-    kaynak: "meridian/guard.py:353-354 · meridian/analytics.py:231-233",
+    kaynak: "guard.py::check_trade · analytics.py::autonomy_ladder",
   },
   {
     kimlik: "onay-defteri",
@@ -55,7 +55,7 @@ const SATIRLAR: readonly YetkiSatiri[] = [
     l0: { deger: "kosullu", not: "403 `approvals are L1+ only`. İSTİSNA: kapıya BAĞLANMAYAN kimlikler yazılabilir" },
     l1: { deger: "var", not: "karar deftere düşer ve uygulama kapısını açar" },
     l2: { deger: "var", not: "aynı defter; kapı L1'deki gibi bağlar" },
-    kaynak: "meridian/api.py:6027-6047",
+    kaynak: "api.py::_onay_bekleyen_damgala",
   },
   {
     kimlik: "onay-kapisi",
@@ -63,7 +63,7 @@ const SATIRLAR: readonly YetkiSatiri[] = [
     l0: { deger: "yok", not: "kapı NÖTR: deftere hiç bakmaz, `gecti=True` döner — davranış birebir eski hâl" },
     l1: { deger: "var", not: "`approve` satırı yoksa uygulama yapılmaz (fail-closed)" },
     l2: { deger: "var", not: "aynı kapı; onay kimliğe bağlı, öneri örneğine değil" },
-    kaynak: "meridian/api.py:2135-2170 (`_onay_kapisi`)",
+    kaynak: "api.py::_onay_kapisi",
   },
   {
     kimlik: "pending-defteri",
@@ -71,7 +71,7 @@ const SATIRLAR: readonly YetkiSatiri[] = [
     l0: { deger: "yok", not: "HER ZAMAN boş dizi — “defter boş” anlamına GELMEZ, defter hiç okunmaz" },
     l1: { deger: "var", not: "`approvals.jsonl` satırları listelenir" },
     l2: { deger: "var", not: "aynı defter" },
-    kaynak: "meridian/api.py:5818-5821",
+    kaynak: "api.py::api_approvals",
   },
   {
     kimlik: "canli-import",
@@ -79,7 +79,7 @@ const SATIRLAR: readonly YetkiSatiri[] = [
     l0: { deger: "kosullu", not: "SEVİYEDEN BAĞIMSIZ: elle kurulan iki ortam bayrağına bağlı" },
     l1: { deger: "kosullu", not: "aynı iki bayrak; seviye tek başına yetmez" },
     l2: { deger: "kosullu", not: "aynı iki bayrak; seviye tek başına yetmez" },
-    kaynak: "meridian/config.py:49-52 — `MERIDIAN_MODE=live` + `MERIDIAN_I_ACCEPT_RISK=true`",
+    kaynak: "config.py::live_enabled — `MERIDIAN_MODE=live` + `MERIDIAN_I_ACCEPT_RISK=true`",
   },
 ];
 

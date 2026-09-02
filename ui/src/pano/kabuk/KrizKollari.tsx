@@ -262,7 +262,7 @@ export function KrizKollari() {
 
   const halted = bugun.veri?.halted;
   // ÇAPRAZ OKUMA, ÇAPRAZ UYDURMA DEĞİL: `risk.learn_halted` ve `hud.learn_halted` aynı
-  // `health.learn_halted()`u okur (api.py:4632 / 4561). İlki yoksa ikincisi denenir;
+  // `health.learn_halted()`u okur (api.py::api_diagnostics). İlki yoksa ikincisi denenir;
   // ikisi de yoksa `undefined` KALIR — "serbest"e çevrilmez.
   const learnHalted = teshis.veri?.risk?.learn_halted ?? teshis.veri?.hud?.learn_halted;
 

@@ -16,7 +16,7 @@
      · /api/infra        15 sn — kutu + süreç + birimler; ucun kendi TTL'i 8 sn
        (api.py `INFRA_TTL_S`), yani her anket TAZE ölçüm alır
      · /api/alerts       15 sn — çalan alarm; gecikirse triyaj gecikir
-     · /api/diagnostics  30 sn — ucun önbelleği 45 sn (api.py:4348), yani bazı
+     · /api/diagnostics  30 sn — ucun önbelleği 45 sn (api.py::DIAG_TTL_S), yani bazı
        anketler KOPYA döner; gövde bunu `onbellekten` ile kendisi beyan ediyor.
        Daha sık sormanın faydası yok, daha seyrek sormak kolları bayatlatırdı.
      · /api/market       60 sn — EOD kapanış; seans içinde saniyede bir değişmez

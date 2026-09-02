@@ -48,7 +48,7 @@ interface Ornek {
 }
 
 /**
- * Bellek doluluğunu UÇ ÖLÇÜYOR (`bellek.kullanim_yuzde`, api.py:6240) — burada YENİDEN
+ * Bellek doluluğunu UÇ ÖLÇÜYOR (`bellek.kullanim_yuzde`, api.py::_infra_makine) — burada YENİDEN
  * HESAPLANMAZ. İkinci bir hesap, aynı yasanın iki kaynağı demektir ve ucun yuvarlaması ile
  * bizimki ayrıştığında ekranda hangisinin doğru olduğu bilinemezdi.
  */
@@ -272,7 +272,7 @@ export function Makine({ durum }: { readonly durum: Durum<InfraGovdesi> }) {
                     )}
                   </Satir>
                   {/* AĞ SAYAÇLARI BU UÇTA YOK ve bu bir eksiklik olarak YAZILIYOR: operatörün
-                      KATMAN-1 listesinde ağ vardı, `/api/infra` gövdesinde (api.py:6304 return
+                      KATMAN-1 listesinde ağ vardı, `/api/infra` gövdesinde (api.py::api_infra return
                       bloğu) yok. Boş bir satır çizip geçmek, sorulan soruyu sorulmamış saymak
                       olurdu; açık kalem olarak duruyor. */}
                   <Satir etiket="Ağ (rx/tx)">

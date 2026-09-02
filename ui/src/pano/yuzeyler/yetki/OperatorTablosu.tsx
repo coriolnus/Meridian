@@ -7,8 +7,8 @@
    Şablonun users tablosu on kullanıcıyla dolu geliyor (users/_components/data.tsx);
    o veriyi taşımak, olmayan bir yeteneği — çok kullanıcılı erişim yönetimini —
    var göstermek olurdu. Meridian'da kullanıcı kaydı YOK: `state/auth.json` tek bir
-   `{salt, hash}` çifti tutuyor (meridian/auth.py:150-152) ve `api_login` bir
-   PAROLA doğruluyor, bir KİMLİK değil (api.py:1323-1340).
+   `{salt, hash}` çifti tutuyor (auth.py::set_password) ve `api_login` bir
+   PAROLA doğruluyor, bir KİMLİK değil (api.py::api_login).
 
    Bu yüzden tablo TEK satırlıdır ve o satır bir "kullanıcı" değil, OTURUMDUR.
    Satırın adı bile ölçülmüş değil — sistemin ad alanı yok; "oturum sahibi" bu
@@ -134,7 +134,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
             {v ? "parola kurulu" : "parola KURULU DEĞİL"}
           </Badge>
           <span className="text-muted-foreground text-xs">
-            {v ? "scrypt (auth.py:138-141) · tek parola, kullanıcı ayrımı yok" : "pano kurulum ekranı gösterir"}
+            {v ? "scrypt (auth.py::_derive) · tek parola, kullanıcı ayrımı yok" : "pano kurulum ekranı gösterir"}
           </span>
         </div>
       );
@@ -193,7 +193,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
     cell: () => (
       <AlanYok
         neden="Son etkinlik bir kişiye bağlanamıyor"
-        teknik="`login_ok` olayı IP ve TTL yazıyor, kimlik yazmıyor (api.py:1348)"
+        teknik="`login_ok` olayı IP ve TTL yazıyor, kimlik yazmıyor (api.py::api_login)"
       />
     ),
   },

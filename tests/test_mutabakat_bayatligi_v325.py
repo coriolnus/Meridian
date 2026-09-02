@@ -27,10 +27,15 @@ gerçekten bozulduğunda kimse bakmaz. `test_HAFTA_SONU_...` tam bu implementasy
 reddeder.
 
 NEDEN YENİ SAYAÇ YOK: son başarılı mutabakatın tarihi zaten `broker_reconcile.json`da
-duruyor ve o dosya BAŞARISIZLIKTA HİÇ YAZILMIYOR (loop.py:2936 şerhi). İkinci bir
-sayaç tutmak, ayrışabilecek ikinci bir gerçek üretirdi (`broker.py`de aynı gerekçeyle
-`open_risk_dollars()` çıkarılmıştı — SATIR NUMARASI BİLEREK YOK: hedef bir yorum bloku,
-çapa çürür ve codelaw bekçisi bu dosyanın İLK yazımında tam onu yakaladı).
+duruyor ve o dosya BAŞARISIZLIKTA HİÇ YAZILMIYOR (`loop._adet_benimse` içindeki
+`adet_benimsendi` şerhi). İkinci bir sayaç tutmak, ayrışabilecek ikinci bir gerçek
+üretirdi (`broker.py`de aynı gerekçeyle `open_risk_dollars()` çıkarılmıştı).
+
+ÇAPA SEMBOLE ÇEVRİLDİ (2026-09-02, TSK-019 turu): yukarıdaki şerh bu dosyaya bir
+`loop.py` SATIR NUMARASIYLA girmişti — oysa aynı paragraf iki satır aşağıda "SATIR
+NUMARASI BİLEREK YOK" diye yazıyordu; kural yazılıydı, uygulanmamıştı. Numara
+`loop.py`ye satır ekleyen İLK turda kaydı ve ölçüldüğünde önce ilgisiz bir `return`
+satırını, sonra bir yorum blokunu gösteriyordu. Sembol çapası kaymaz.
 """
 from __future__ import annotations
 

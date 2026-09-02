@@ -148,7 +148,7 @@ type EvrenHali =
   | { readonly hal: "okundu"; readonly satirlar: readonly PiyasaSatiri[]; readonly asOf: string | null; readonly zaman: number }
   | { readonly hal: "hata"; readonly neden: string };
 
-/** `/api/market` EOD kapanıştır (api.py:1761) — seans içinde bile saniyede bir
+/** `/api/market` EOD kapanıştır (api.py::api_market) — seans içinde bile saniyede bir
  *  değişmez. Palet her açılışta 251 satırı yeniden çekseydi, bir kısayolun
  *  bedeli ölçülebilir bir ağ yükü olurdu. */
 const EVREN_TAZELIK_MS = 10 * 60_000;

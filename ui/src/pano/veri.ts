@@ -10,7 +10,7 @@
    okuyucuya "ölçtük, hiçbir şey yok" der ve bu bir yalandır. `hata` alanı doluyken
    çizen bileşen bunu yazmak ZORUNDA.
 
-   OTURUM DÜŞMESİ AYRI BİR HÂL: pano parola kapısının arkasında (api.py:465) ve
+   OTURUM DÜŞMESİ AYRI BİR HÂL: pano parola kapısının arkasında (api.py::_auth) ve
    oturum süresi dolduğunda uçlar 401 döner. Bunu "veri okunamadı" diye göstermek
    operatörü yanlış yere — ağa, sunucuya — bakmaya gönderirdi.
    ============================================================================ */

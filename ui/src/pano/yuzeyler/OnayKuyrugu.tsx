@@ -15,7 +15,7 @@
        öğeleri damga taşımıyor; gerekçe `onaylar.ts` başlığında). Seyrek olmasının
        AYRI bir sebebi var: bu uç salt-okuma değil, kayıt defterine yazıyor.
      · /api/diagnostics 45 sn — YALNIZ silahlanma raporu (`gatekeeper.arming`);
-       sunucuda 45 sn önbellekli (api.py:4348), daha sık sormak aynı kopyayı
+       sunucuda 45 sn önbellekli (api.py::DIAG_TTL_S), daha sık sormak aynı kopyayı
        yeniden indirmek olurdu
 
    KARAR YOLU BAĞLI — AMA SATIR SONUNDA DEĞİL (2026-08-25). Önceki turda onay/ret
@@ -70,7 +70,7 @@ export function OnayKuyrugu() {
   const onay = useApi<OnayGovdesi>("/api/approvals", NABIZ_MS);
   // `/api/skills` NABZI BİLEREK SEYREK (5 dk) — ÖLÇÜLMÜŞ BİR YAN ETKİ YÜZÜNDEN: bu uç
   // salt-okuma DEĞİL, `skills.reconcile_enablement()` çağırıyor ve kayıt defterine YAZIYOR
-  // (api.py:1828). Bu sayfanın ondan tek istediği geliş damgaları (`ts`/`at`) ve o damgalar
+  // (api.py::api_skills). Bu sayfanın ondan tek istediği geliş damgaları (`ts`/`at`) ve o damgalar
   // dakikada bir değişmiyor. Kuyruk açık dururken sunucuya dakikada bir defter yazdırmak,
   // okumak için yazmak olurdu.
   const skiller = useApi<SkillGovdesi>("/api/skills", NABIZ_MS * 20);

@@ -14,7 +14,7 @@
    TEK İSTEK, TEK AN: dördü de `/api/diagnostics`ten geliyor ve TEK `useApi` ile
    okunuyor. Blok başına ayrı istek açsaydık aynı ekranda "bekçi 17/17" ile
    "çizelge 16 adım" gibi İKİ FARKLI AN görünebilirdi (`durum.tsx`taki gerekçenin
-   aynısı). Nabız 45 sn: uç SUNUCUDA 45 sn önbellekli (api.py:4348) — daha sık
+   aynısı). Nabız 45 sn: uç SUNUCUDA 45 sn önbellekli (api.py::DIAG_TTL_S) — daha sık
    sormak aynı kopyayı yeniden indirmek olurdu.
 
    TAKVİM GÖRÜNÜMÜ VAR AMA BAŞROLDE DEĞİL: veri penceresi 2-3 gecelik (koşu defteri

@@ -15,7 +15,7 @@
 
    ÖLÇÜM (2026-08-25):
      · `meridian/auth.py` — dosyada "user/kullanıcı" geçen SIFIR satır; kimlik
-       defterine yalnız `salt` + `hash` yazılıyor (auth.py:150-152).
+       defterine yalnız `salt` + `hash` yazılıyor (auth.py::set_password).
      · `meridian/api.py` — 81 rota tanımlı; adında `user|invite|member|role|team`
        geçen rota SIFIR (rota listesi taraması).
    ============================================================================ */
@@ -46,37 +46,37 @@ export const EKSIKLER: readonly EksikSatiri[] = [
     kimlik: "kullanici-tablosu",
     eksik: "Kullanıcı tablosu",
     bugun: "Tek parola kaydı: `state/auth.json` → {salt, hash}. Ad, e-posta, kullanıcı kimliği alanı yok.",
-    kanit: "meridian/auth.py:144-161 (`set_password` / `password_set`)",
+    kanit: "auth.py::set_password · auth.py::password_set",
   },
   {
     kimlik: "davet-ucu",
     eksik: "Davet / kayıt ucu",
     bugun: "`POST /api/setup-password` yalnız İLK parolayı kurar; kurulduktan sonra 409 döner.",
-    kanit: "meridian/api.py:1376-1383 · rota taraması: 81 rotanın hiçbirinde user/invite/member yok",
+    kanit: "api.py::api_setup_password · rota taraması: 81 rotanın hiçbirinde user/invite/member yok",
   },
   {
     kimlik: "rol-atamasi",
     eksik: "Rol ataması (kullanıcı → rol)",
     bugun: "Rol kavramı yok. Tek yetki ekseni `autonomy_level` ve o KİŞİYE değil SİSTEME ait.",
-    kanit: "state/goal.yaml `limits.autonomy_level` · meridian/analytics.py:229",
+    kanit: "state/goal.yaml `limits.autonomy_level` · analytics.py::autonomy_ladder",
   },
   {
     kimlik: "kisi-denetim",
     eksik: "Kişi bazlı denetim izi",
     bugun: "`login_ok` olayı IP ve oturum ömrünü yazıyor; kimliği yazmıyor (yazacak kimlik yok).",
-    kanit: "meridian/api.py:1348 — `obs.log(\"login_ok\", ip=…, ttl_s=…)`",
+    kanit: "api.py::api_login — `obs.log(\"login_ok\", ip=…, ttl_s=…)`",
   },
   {
     kimlik: "oturum-defteri",
     eksik: "Açık oturum listesi / tek tek iptal",
     bugun: "Oturum DURUMSUZ: imzalı çerez. Sunucuda oturum defteri yok, tek oturum geri alınamaz.",
-    kanit: "meridian/auth.py:230-275 (`_parse_session` / `verify_session` — yalnız imza + `exp`)",
+    kanit: "auth.py::_parse_session · auth.py::verify_session (yalnız imza + `exp`)",
   },
   {
     kimlik: "parola-sifirlama",
     eksik: "Panodan parola sıfırlama",
     bugun: "Yok ve bilinçli: sıfırlama kabuktan (`python -m meridian.auth_cli set`) — sunucuya erişim ister.",
-    kanit: "meridian/api.py:1378-1381 şerhi (arka kapı DEĞİL)",
+    kanit: "api.py::api_setup_password şerhi (arka kapı DEĞİL)",
   },
 ];
 

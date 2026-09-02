@@ -9,7 +9,7 @@
      · `ajan_yukleme_n` / `ajan_acilma_n` — LLM katmanı: birincisi "biz isteme bastık",
                                   ikincisi "model kendi açtı". Toplamaları YASAK.
    Bunları tek bir "kullanım" sayısına indirgemek, üç farklı olguyu tek rakama katlamak
-   olurdu; katalog zaten (skills.py:505) bu ayrımı yazıyor ve pano onu koruyor.
+   olurdu; katalog zaten (skills.py::catalog) bu ayrımı yazıyor ve pano onu koruyor.
 
    AJAN SAYAÇLARININ YOKLUĞU SIFIR DEĞİLDİR. Uç bunu açıkça söylüyor: sayaç dosyasında
    bir ad hiç geçmiyorsa "hiç kullanılmadı" ile "CLI o adı hiç kaydetmedi" bu dosyadan

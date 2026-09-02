@@ -259,7 +259,7 @@ export function Operasyon({ durum }: { readonly durum: Durum<AlarmGovdesi> }) {
               <p className="flex items-start gap-1.5 text-muted-foreground text-xs">
                 <Inbox className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                 Kaynak `events.jsonl` — ikinci bir alarm defteri YOK. "Gördüm" işareti hiçbir alarmı
-                silmez, yalnız okunma sınırını ilerletir (api.py:2963).
+                silmez, yalnız okunma sınırını ilerletir (api.py::api_alerts_ack).
               </p>
             </>
           );

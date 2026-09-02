@@ -6,7 +6,7 @@
    OPERATÖR KARARI (2026-08-25): bu yüzey çok kullanıcılı yapının 2. AŞAMA
    İSKELETİDİR. Bugün Meridian TEK OPERATÖRLÜ — `meridian/api.py::api_login` bir
    PAROLA doğruluyor, kullanıcı tablosu YOK; kimlik defteri (`state/auth.json`)
-   yalnız `{salt, hash}` tutuyor (meridian/auth.py:150-152).
+   yalnız `{salt, hash}` tutuyor (auth.py::set_password).
 
    BU TURUN EN ÖNEMLİ KISITI: dolu görünen ama hiçbir kaydı olmayan bir tablo
    çizmek, olmayan bir yeteneği VAR göstermektir. Şablonun users tablosu on
@@ -18,7 +18,7 @@
    2. aşamada değişecek olan VERİ KAYNAĞIDIR, iskelet değil.
 
    İKİ UÇ, İKİ GEREKÇE:
-     · `/api/session`  → bu deponun TEK yetkisiz /api ucu (api.py:1367). Kimlik
+     · `/api/session`  → bu deponun TEK yetkisiz /api ucu (api.py::api_session). Kimlik
        hakkında sistemin bildiği HER ŞEY burada: oturum geçerli mi, parola kurulu
        mu, çerez Secure mi. Nadiren değişir — 60 sn'de bir yoklanıyor, panonun
        15 sn'lik nabzıyla yarıştırmanın ölçülecek bir karşılığı yok.
@@ -166,7 +166,7 @@ export function Kullanicilar() {
         </Kapi>
         <p className="text-muted-foreground text-xs leading-5">
           Bu tablo tek satırlıdır çünkü sistemde tek kayıt vardır. `api_login` bir PAROLA doğruluyor,
-          bir KİMLİK değil (meridian/api.py:1323-1340) — yani "kim girdi" sorusunun cevabı bugün
+          bir KİMLİK değil (api.py::api_login) — yani "kim girdi" sorusunun cevabı bugün
           yalnızca "geçerli parolayı bilen biri"dir. Satırın adı bile ölçülmüş değil; sistemin ad
           alanı yok.
         </p>

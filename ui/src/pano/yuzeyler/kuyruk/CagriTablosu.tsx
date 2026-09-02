@@ -6,7 +6,7 @@
    ÜÇ EKSEN, ÜÇ AYRI SORU: adım damgaları "dişli döndü mü", koşu defteri "hat ne
    kadar sürdü", çağrı defteri "beyin gerçekten cevap verdi mi". Üçüncüsü olmadan
    koşan ama BOŞ dönen bir gece "başarılı" görünür — `empty` sütunu tam olarak bunu
-   ölçüyor (`agent_call_empty` olayı ayrı bir olay adıdır, api.py:4041).
+   ölçüyor (`agent_call_empty` olayı ayrı bir olay adıdır, api.py::_hat_cizelgesi).
 
    PENCERE SINIRLI VE BU SÖYLENİYOR: uç son 30 çağrıyı, o da `obs.recent(3000)`
    olay penceresinden süzerek veriyor. Boş liste "çağrı yapılmadı" DEĞİLDİR, "bu

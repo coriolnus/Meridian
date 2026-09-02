@@ -1,8 +1,8 @@
 /* ============================================================================
    ROADMAP GÖVDE OKUYUCUSU — `GET /api/roadmap` (ÖLÇÜLDÜ, tahmin edilmedi)
    ----------------------------------------------------------------------------
-   Alan adları `meridian/api.py::api_roadmap` + `_roadmap_ayristir` OKUNARAK
-   alındı (api.py:6654-6798). Şekil bir DÜZ LİSTE DEĞİL, BÖLÜM AĞACIdır:
+   Alan adları `meridian/api.py::api_roadmap` + `api.py::_roadmap_ayristir`
+   OKUNARAK alındı. Şekil bir DÜZ LİSTE DEĞİL, BÖLÜM AĞACIdır:
 
      { ok, yol, bayt, satir_n, mtime, baslik,
        bolumler: [ {no, baslik, ham_baslik, seviye, satir,
@@ -401,7 +401,7 @@ export function roadmapOku(ham: unknown): RoadmapOkumasi {
   }
 
   // HATA YOLU: uç dosyayı okuyamadığında 200 + {ok:false, bolumler:null, hata, yol} döner.
-  // `bolumler`in boş liste DEĞİL null olması bilinçli (api.py:6760) — o ayrımı koruyoruz.
+  // `bolumler`in boş liste DEĞİL null olması bilinçli (api.py::api_roadmap) — o ayrımı koruyoruz.
   const hata = metin(g["hata"]);
   if (hata !== null || mantik(g["ok"]) === false) {
     return {

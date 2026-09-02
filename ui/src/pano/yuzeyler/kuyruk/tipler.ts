@@ -7,10 +7,10 @@
    yapıp `0` varsaymak, ölçülmemiş bir kuyruğu boş kuyruk diye çizdirirdi.
 
    `api.py` OKUNARAK YAZILDI, TAHMİN EDİLMEDİ:
-     · `api_approvals`            (api.py:5755) — üç öğe türü, alan kümeleri FARKLI
-     · `api_skills`               (api.py:1818) — `recommendations`/`revisions` HAM satırlar
-     · `_hat_cizelgesi`           (api.py:4003) — damgalar + koşular + çağrılar + döngüler
-     · `watchdog.report`          (watchdog.py:192) — stale / never / askida / n_ok / total
+     · `api_approvals`            (api.py::api_approvals) — üç öğe türü, alan kümeleri FARKLI
+     · `api_skills`               (api.py::api_skills) — `recommendations`/`revisions` HAM satırlar
+     · `_hat_cizelgesi`           (api.py::_hat_cizelgesi) — damgalar + koşular + çağrılar + döngüler
+     · `watchdog.report`          (watchdog.py::report) — stale / never / askida / n_ok / total
    Emin olunamayan hiçbir alan zorunlu yazılmadı; yokluğu ekranda dürüstçe görünür.
    ============================================================================ */
 
@@ -110,7 +110,7 @@ export interface PlanOzeti {
   readonly traded?: boolean;
   readonly last_close?: number;
   readonly drift_pct?: number;
-  /** Sunucu DAMGALAR (`_onay_bekleyen_damgala`, api.py:5868); pano yalnız bayrağı okur. */
+  /** Sunucu DAMGALAR (`api.py::_onay_bekleyen_damgala`); pano yalnız bayrağı okur. */
   readonly onay_bekliyor?: boolean;
   readonly operator_onayi?: Record<string, unknown>;
 }

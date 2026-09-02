@@ -7,7 +7,7 @@
    şeyi tek yerde tutar:
 
      1. `sayi()` — ayrıştırmanın TEK kapısı. `/api/alpaca` Alpaca REST yanıtını
-        HAM geçiriyor (adapters/alpaca.py:310 `r.json()`) ve Alpaca sayısal
+        HAM geçiriyor (adapters/alpaca.py::positions `r.json()`) ve Alpaca sayısal
         alanları DİZGE döndürür: `"qty":"10"`, `"unrealized_pl":"-12.3"`. Bunları
         doğrudan çarpmak `NaN` üretir ve `NaN` ekranda "—" olur — yani bir ölçüm
         hatası sessizce "veri yok"a dönüşür. Kapı dizgeyi de sayıyı da kabul

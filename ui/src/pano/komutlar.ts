@@ -252,7 +252,7 @@ export interface SembolHedefi {
 /* HEDEF SATIRIN ÖLÇÜLEN HÂLİNDEN TÜRETİLİR, TAHMİNDEN DEĞİL.
 
    `plans_n` BİLEREK KULLANILMIYOR: `marketview.build()` onu `trade_plans.jsonl`in
-   TAMAMINDAN sayıyor (marketview.py:283-289), yani "bir zamanlar planı olmuş"
+   TAMAMINDAN sayıyor (marketview.py::build), yani "bir zamanlar planı olmuş"
    demek — "bugünkü aday tahtasında var" DEMEK DEĞİL. Onunla Adaylar'a götürseydik
    palet, tahtada bulunmayan bir kartı vaat ederdi. `position` ise `portfolio.json`
    pozisyonlarından geliyor ve BUGÜNÜN gerçeği: Portföy · Brifing'deki pozisyon

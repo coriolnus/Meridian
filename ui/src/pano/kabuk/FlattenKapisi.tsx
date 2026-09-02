@@ -10,12 +10,12 @@
 
    1 · ÖLÇÜM — kaç pozisyon, hangi semboller, ne kadar piyasa değeri. Kaynak
        BROKER (`/api/alpaca`), kitap DEĞİL: Flatten broker'da işlem yapar ve iki
-       defterin ayrıştığı bu depoda ÖLÇÜLMÜŞTÜR (api.py:1687 — "yedi açık
+       defterin ayrıştığı bu depoda ÖLÇÜLMÜŞTÜR (api.py::api_today — "yedi açık
        pozisyonun yedisinde de adet ayrışıyordu"). Kitaba bakan bir onay cümlesi
        doğru görünen bir yalan olurdu.
 
    2 · SUNUCUNUN KENDİ CEVABI — jetonsuz `POST /api/alpaca/close_all` bir KURU
-       KOŞUDUR ve hiçbir şeye dokunmaz (alpaca.py:1120-1124: jeton yoksa yalnız
+       KOŞUDUR ve hiçbir şeye dokunmaz (alpaca.py::close_all: jeton yoksa yalnız
        `would_flatten` + `foreign` raporlanır, tek satır bile emir çıkmaz). Bu,
        "ne olacak" sorusunun panodan değil UÇTAN gelen cevabıdır — ve tek başına
        `/api/alpaca`nın veremeyeceği bir şeyi verir: hangi pozisyonun MOTORA ait
@@ -25,7 +25,7 @@
        NEDEN SEMBOL DEĞİL DE JETON: sembolü yazdırmak, ölçüm düştüğünde onayı
        İMKÂNSIZ kılardı — broker okunamıyorken hangi sembolü yazacaktı operatör?
        Acil bir anda ölçüm eksikliğinin operatörü ENGELLEMEMESİ turun açık şartı.
-       Jeton ise ucun kendi sözleşmesidir (alpaca.py:60), her koşulda bilinir ve
+       Jeton ise ucun kendi sözleşmesidir (alpaca.py::CLOSE_ALL_CONFIRM), her koşulda bilinir ve
        yazılabilir; kas hafızasıyla değil, okuyarak yazılır — istenen fren bu.
 
    ÖLÇÜM DÜŞERSE KAPI YİNE AÇILIR: her ölçüm satırı "ölçülemedi + neden" yazar ve
@@ -88,7 +88,7 @@ export function FlattenKapisi({
 
   // KURU KOŞU KAPI AÇILIRKEN BİR KEZ. `POST` olması rahatsız edici görünebilir; kaynağı
   // okundu ve jetonsuz dal broker'a yalnız GET atıyor (orders + positions), sonra dönüyor
-  // (alpaca.py:1120-1124). Yani bu POST'un yan etkisi YOKTUR — ve karşılığında sunucunun
+  // (alpaca.py::close_all). Yani bu POST'un yan etkisi YOKTUR — ve karşılığında sunucunun
   // "ben şunları düzleştirirdim" cevabını veriyor.
   useEffect(() => {
     let canli = true;

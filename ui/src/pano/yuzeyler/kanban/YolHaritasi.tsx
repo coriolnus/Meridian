@@ -24,7 +24,7 @@
    ayrı sayılır. Toplasaydık "belgede 638 kalem var" derdik — böyle bir kalem yok.
 
    "BELİRSİZ" KOVASI BİRLEŞTİRİLMEZ. Ucun ayrıştırıcısının en önemli satırı:
-   işaretsiz kalem "açık" değil "belirsiz"dir (api.py:6605). Panoda o beş kovayı
+   işaretsiz kalem "açık" değil "belirsiz"dir (api.py::_roadmap_madde_durumu). Panoda o beş kovayı
    dörde indirmek — ya da "belirsiz"i "açık"a katmak — ölçülmemiş bir sayıyı
    yönetim kararına çevirirdi.
    ============================================================================ */
@@ -119,8 +119,8 @@ function MaddeKarti({ m }: { m: RoadmapMaddesi }) {
       <div className="flex items-start justify-between gap-2">
         {/* BAŞLIĞA ÜSTÜ-ÇİZİK UYGULANMIYOR: `ustu_cizili` maddenin GÖVDESİNDE bir
             üstü-çizik ARALIĞI olduğunu söyler, başlığın kendisinin çizildiğini DEĞİL
-            (ayrıştırıcı başlığı üretirken `~~...~~` işaretlerini zaten söküyor,
-            api.py:6648). Tüm başlığı çizmek, ölçülenden fazlasını iddia ederdi —
+            (ayrıştırıcı başlığı üretirken `~~...~~` işaretlerini zaten söküyor —
+            api.py::_roadmap_madde_basligi). Tüm başlığı çizmek, ölçülenden fazlasını iddia ederdi —
             bilgi aşağıdaki "geri alınmış" rozetinde duruyor. */}
         <h4 className="min-w-0 font-medium text-sm leading-5">
           {m.baslik ?? <span className="text-muted-foreground italic">başlık çıkarılamadı</span>}

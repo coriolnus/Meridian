@@ -9,7 +9,7 @@
 
    `skills_declared_not_run` SÜTUNU BİLEREK DURUYOR: "beyan edildi ama koşmadı",
    bir hattın sessizce boş dönmesinin tek kanıtıdır ve yalnız bu defterde ölçülüyor
-   (api.py:1846 şerhi). Sıfırdan büyükse satır ayrışır — `status: ok` bir koşunun
+   (api.py::api_skills şerhi). Sıfırdan büyükse satır ayrışır — `status: ok` bir koşunun
    iş yaptığını KANITLAMAZ.
 
    SIFIR SANİYE BİR ÖLÇÜMDÜR, BİR EKSİKLİK DEĞİL: `started == finished` satırlar
@@ -240,7 +240,7 @@ export function KosuTablosu({ satirlar }: { readonly satirlar: readonly KosuSati
       </div>
 
       <p className="text-muted-foreground text-xs leading-5">
-        Defteri uç <strong>son 40 satırda kırpıyor</strong> (api.py:4029) — liste hattın tarihi
+        Defteri uç <strong>son 40 satırda kırpıyor</strong> (api.py::_hat_cizelgesi) — liste hattın tarihi
         değil, son iki-üç gecesidir. Kırmızı rozet: beyan edilip koşmayan skill; sayı sıfırdan
         büyükken <code className="font-mono text-[11px]">status: ok</code> tek başına
         &quot;iş yapıldı&quot; anlamına gelmez.

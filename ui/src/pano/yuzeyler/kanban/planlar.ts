@@ -9,7 +9,7 @@
    Bu yüzden hepsi isteğe bağlı ve yokluk ekranda "yok" diye geçer, "false" diye
    değil.
 
-   `gate_checks` satırının şekli `meridian/loop.py:1888-1930`dan ÖLÇÜLDÜ:
+   `gate_checks` satırının şekli `loop.py::daily_cycle`dan ÖLÇÜLDÜ:
    `{check, passed, severity, value, threshold, coverage?, note?}`. `note` bilerek
    `null` olabiliyor (kontrol geçtiyse söylenecek bir şey yok).
    ============================================================================ */
@@ -118,7 +118,7 @@ export function planlariOku(ham: unknown): PlanDefteri | null {
 /* ---------------------------------------------------------------------------
    HÜKÜM EKSENİ — kolonlar. Sıra kapının YÖNÜdür: reddedilen solda, geçen sağda.
    `?` kolonu UYDURMA DEĞİL, ölçümün kendisi: `analytics.today()` bir planın
-   `gate_verdict` alanı yoksa onu `"?"` diye sayıyor (analytics.py:261) ve o plan
+   `gate_verdict` alanı yoksa onu `"?"` diye sayıyor (analytics.py::today) ve o plan
    gerçekten var — kolonu gizlemek onu yok saymak olurdu.
    --------------------------------------------------------------------------- */
 export const HUKUM_SIRASI = ["NO_GO", "REVIEW", "GO"] as const;
@@ -141,7 +141,7 @@ export const HUKUM_BASLIGI: Record<Hukum, string> = {
    DÜŞTÜĞÜ KAPI. Dört ayrı cevap var ve dördü de FARKLI şey söylüyor; tek bir
    "—" hepsini aynı görünüme sıkıştırırdı:
      · alan yok            → plan `gate_checks` TAŞIMIYOR (eski satır / replay tohumu;
-                             `backtest.py:472` bunun ölçülmüş vakası)
+                             `backtest.py::replay` bunun ölçülmüş vakası)
      · dizi boş            → alan var, hiç kontrol yazılmamış
      · düşen kontrol var   → adı + notu (ölçülen cevap)
      · hepsi geçti         → hüküm başka yerden geldi; gerekçe `gate_reasons`ta

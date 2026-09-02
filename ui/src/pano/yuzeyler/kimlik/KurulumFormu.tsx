@@ -10,7 +10,7 @@
    Ekranda da böyle yazıyor: operatörün buraya bakıp "sıfırlarım" diye düşünmesi,
    sunucuya erişimi olmadığı bir gecede kaybedilmiş bir saat demek olurdu.
 
-   12 KARAKTER SINIRI UYDURULMADI, OKUNDU: `meridian/auth.py:148`
+   12 KARAKTER SINIRI UYDURULMADI, OKUNDU: `auth.py::set_password`
    `if len(password) < 12: raise ValueError(...)`. İstemcide de sınamamızın tek
    sebebi turu ağa çıkmadan kesmek; SON SÖZ sunucunundur ve 400 gövdesindeki
    metin aynen basılır. İki alanın eşitliği ise TAMAMEN istemci tarafı bir
@@ -27,7 +27,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 import { apiPost, type GonderSonucu } from "./gonder";
 
-/** `meridian/auth.py:148` — sunucunun dayattığı alt sınır. Burada TEKRARLANIYOR, TÜRETİLMİYOR. */
+/** `auth.py::set_password` — sunucunun dayattığı alt sınır. Burada TEKRARLANIYOR, TÜRETİLMİYOR. */
 export const EN_AZ_KARAKTER = 12;
 
 function hataMetni(s: GonderSonucu): { readonly baslik: string; readonly govde: string } {
@@ -112,7 +112,7 @@ export function KurulumFormu({ onBasari }: { readonly onBasari: () => void }) {
               {gorunur ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
             </button>
           </div>
-          {/* KAYNAK ÇAPASI EKRANDAN KALKTI (düzeltme-1): `meridian/auth.py:148`
+          {/* KAYNAK ÇAPASI EKRANDAN KALKTI (düzeltme-1): `auth.py::set_password`
               hem bir dosya yolu hem bir SATIR çapasıydı — ikisi de kimliksiz
               ziyaretçinin ekranında işi olmayan şeyler. Kuralın KENDİSİ ve
               GEREKÇESİ duruyor; nereden geldiği `EN_AZ_KARAKTER` şerhinde. */}

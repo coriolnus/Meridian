@@ -4,7 +4,7 @@
    TERFİ TABLOSU — L0'dan L1'e geçmek için sağlanması gereken ölçütler
    ----------------------------------------------------------------------------
    BU EKRANDAKİ TEK CANLI ÖLÇÜM BURADA: `/api/summary.ladder` bu listeyi her
-   çağrıda GERÇEK durumdan hesaplıyor (meridian/analytics.py:205-227) — kapanmış
+   çağrıda GERÇEK durumdan hesaplıyor (analytics.py::autonomy_ladder) — kapanmış
    işlem sayısı, kaç rejimde pozitif skor, gözlenen maksimum düşüş, kalibre olmuş
    hipotez sayısı, devre kesici sicili. Yani "ajan paraya ne kadar yakın" sorusunun
    cevabı bir belgeden değil, defterden okunuyor.
@@ -33,7 +33,7 @@ import type { Merdiven, MerdivenOlcutu } from "./tipler";
 
 const KADRAN_CONFIG: ChartConfig = { deger: { label: "sağlanan ölçüt" } };
 
-/** Otomatik ölçüt ilerlemesinin kadranı. `analytics.py:226-227` paydayı ELLE
+/** Otomatik ölçüt ilerlemesinin kadranı. `analytics.py::autonomy_ladder` paydayı ELLE
  *  adımlar hariç kuruyor; burada da aynısı gösterilir, yeniden hesaplanmaz. */
 function IlerlemeKadrani({ met, total }: { readonly met?: number; readonly total?: number }) {
   if (met === undefined || total === undefined || !Number.isFinite(met) || !Number.isFinite(total) || total <= 0) {
@@ -197,7 +197,7 @@ export function TerfiTablosu({ merdiven }: { readonly merdiven: Merdiven | undef
 
         <p className="text-muted-foreground text-xs leading-5">
           Bu tablo CANLI: `/api/summary.ladder.l0_to_l1` her çağrıda defterden hesaplanıyor
-          (meridian/analytics.py:205-227). "Elle" işaretli {elleN} adım operatör/altyapı işidir ve
+          (analytics.py::autonomy_ladder). "Elle" işaretli {elleN} adım operatör/altyapı işidir ve
           otomatik sayacın DIŞINDADIR — onları saymak, ajanın yapmadığı bir işi başarı hanesine
           yazmak olurdu.
         </p>

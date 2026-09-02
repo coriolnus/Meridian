@@ -11,7 +11,7 @@
    BUGÜN GERÇEKTEN VAR OLAN YETKİ KAVRAMI OTONOMİ SEVİYESİDİR:
    `state/goal.yaml → limits.autonomy_level`, üç değerli (L0/L1/L2) ve KİŞİYE
    DEĞİL SİSTEME ait. Seviyelerin adları uydurulmadı, uçtan geliyor:
-   `/api/summary.ladder.levels[].name` (meridian/analytics.py:230-234).
+   `/api/summary.ladder.levels[].name` (analytics.py::autonomy_ladder).
 
    ÜÇ BÖLÜM, ÜÇ AYRI KAYNAK GÜVENİ:
      · seviyeler → UÇTAN (canlı)

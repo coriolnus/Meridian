@@ -7,7 +7,7 @@
    ≈ 91 KB, marketview.build şerhinde ÖLÇÜLMÜŞ) ve bu bölüm kıvılcım çizmiyor.
    İstemek, çizmediğimiz bir yükü her tazelemede taşımak olurdu.
 
-   BAYATLIK EMEKLİYE SORULMAZ (marketview.py:341): delist gününde donmuş bir
+   BAYATLIK EMEKLİYE SORULMAZ (marketview.py::build): delist gününde donmuş bir
    sembolün barı as_of'un gerisinde olmak ZORUNDADIR. Bu yüzden `stale_n` ucun
    kendi hesabıdır ve biz yeniden hesaplamıyoruz — aynı yasanın iki kaynağı, bu
    depodaki baskın hata desenidir. Tabloda gösterdiğimiz "bayat satırlar" listesi
@@ -50,7 +50,7 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
         {(m) => {
           const rows: readonly PiyasaSatiri[] = m.rows ?? [];
           // TAZELİK DAĞILIMI: satırları son bar seansına göre sayar. Emekliler AYRI
-          // kovada — ucun `stale_n` kuralı da onları dışarıda bırakıyor (marketview.py:341).
+          // kovada — ucun `stale_n` kuralı da onları dışarıda bırakıyor (marketview.py::build).
           const sayac = new Map<string, number>();
           let emekli = 0;
           let tarihsiz = 0;

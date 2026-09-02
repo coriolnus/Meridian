@@ -249,7 +249,7 @@ export function KararPaneli({
           <AlertDescription>
             Kimlik öneki bir uygulama kapısı açıyor (<code className="font-mono text-[11px]">rev:</code> /{" "}
             <code className="font-mono text-[11px]">rec:</code>) ve uç bunları L1+&apos;a kısıtlıyor
-            (api.py:6086): L0&apos;da yazılan bir <code className="font-mono text-[11px]">approve</code>{" "}
+            (api.py::api_approve): L0&apos;da yazılan bir <code className="font-mono text-[11px]">approve</code>{" "}
             yarın icraya dönüşebilirdi. Sistem şu an L{seviye}. Düğme kilitli — 403 alacağı belli olan
             bir isteği göndermek, operatöre yanlış bir &quot;denedim&quot; hissi verirdi.
           </AlertDescription>
@@ -272,7 +272,7 @@ export function KararPaneli({
           />
           <p className="text-muted-foreground text-[11px] leading-4">
             Gerekçe yazarsan uç ayrıca <code className="font-mono text-[11px]">memory.distill_lessons()</code>{" "}
-            çağırıyor (api.py:6107) — yani metin ders damıtmasına girer. Boşsa çağrılmaz.
+            çağırıyor (api.py::api_approve) — yani metin ders damıtmasına girer. Boşsa çağrılmaz.
           </p>
         </div>
       ) : null}

@@ -5,9 +5,9 @@
    ----------------------------------------------------------------------------
    BU KART BOŞ GÖRÜNDÜĞÜNDE "KARAR VERİLMEDİ" DEMEK DEĞİLDİR ve bu, ölçülmüş bir
    uç davranışıdır: `api_approvals` defteri YALNIZ `autonomy_level >= 1` iken
-   döndürüyor (api.py:5818 — `pending: ... if lvl >= 1 else []`). L0'da liste HER
+   döndürüyor (api.py::api_approvals — `pending: ... if lvl >= 1 else []`). L0'da liste HER
    ZAMAN boş gelir, oysa defterde satır OLABİLİR: `POST /api/approvals/{id}` L0'da
-   da yazıyor (kapı-bağlamayan `kayit:` ve `arming:` önekleri için, api.py:6049).
+   da yazıyor (kapı-bağlamayan `kayit:` ve `arming:` önekleri için, api.py::_onay_bekleyen_damgala).
    Yani L0'da bu kart bir ÖLÇÜM DEĞİL, bir KAPIDIR — ve öyle yazıyor.
 
    `davranissal: false` SATIRIN KENDİ KÜNYESİDİR: defteri okuyan, o kararın hiçbir
