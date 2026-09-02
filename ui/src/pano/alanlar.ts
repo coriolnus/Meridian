@@ -94,22 +94,6 @@ export interface Yuzey {
   readonly ikon: LucideIcon;
   readonly grup: "Panolar" | "Sayfalar";
   readonly bolumler: readonly Bolum[];
-  /** ALT BÖLÜMLERİ KÜRESEL KENAR ÇUBUĞU ÇİZSİN Mİ (2026-09-02, operatör görsel turu).
-   *
-   *  ÖLÇÜLEN KUSUR: bir yüzey KENDİ İÇİNDE bir gezinme taşıyorsa (Hafıza'nın sekiz
-   *  duraklı kenar çubuğu gibi), küresel kenar çubuğu aynı sekiz durağı İKİNCİ kez
-   *  çiziyordu. Operatör aynı listeyi iki yerde görüyor, hangisinin "asıl" olduğunu
-   *  ekrandan okuyamıyordu — üstelik küresel çubuk maddeyi açılır tetiğe çevirdiği
-   *  için yüzeye TEK TIKLA girmek de mümkün değildi.
-   *
-   *  BEYAN BÖLÜMLERİ SİLMEZ, YALNIZ KÜRESEL ÇUBUĞU SUSTURUR: bölümler kayıtta
-   *  KALIR ve komut paleti, kırıntı, derin bağlar ve v288 parite çivisi onları
-   *  okumaya devam eder. Bölümleri kayıttan çıkarmak, adreslerini de öldürürdü.
-   *
-   *  `"yuzey-ici"` = "bu yüzeyin alt gezinmesi gövdenin içindedir". Alan YOKSA
-   *  eski davranış aynen sürer (açılır alt madde listesi) — yani beyan bir
-   *  İSTİSNADIR, varsayılan değil. */
-  readonly altBolumNav?: "yuzey-ici";
   /** KAYITTA DURAMAYAN BÖLÜMLERİN ETİKET ÇÖZÜCÜSÜ (2026-08-31, inceleme Ö-1).
    *
    *  `bolumler` STATİK bir listedir. Tüketicileri SAYILDI (2026-08-31, yeniden-inceleme
@@ -285,17 +269,20 @@ export const YUZEYLER = {
 
      SEKİZ BÖLÜM = EKRANDAKİ SEKİZ `bolum-hafiza-*` ÇAPASI (v288 paritesi).
 
-     KÜRESEL KENAR ÇUBUĞUNDA TEK GİRDİ (`altBolumNav`, operatör görsel turu
-     2026-09-02): bu sekiz durak yüzeyin KENDİ kenar çubuğunda zaten var ve
-     küresel çubuk onları ikinci kez çiziyordu. Bölümler kayıtta DURUYOR —
-     palet, kırıntı ve derin bağlar aynen çalışır. */
+     ÇİFT NAV ÇÖZÜMÜ TERSİNE DÖNDÜ (operatör kararı 2026-09-02, dağıtım sonrası
+     ekran görüntüsü): iki gezinme vardı — küresel sol çubukta sekiz alt madde ve
+     yüzeyin İÇİNDE ikinci bir kenar çubuğu. Ara çözüm küresel çubuğu susturmuştu
+     (`altBolumNav` beyanı); operatör bunun tersini seçti — "alt başlıklar sol
+     nav'da, Hafıza'nın altında; sağdaki ikinci sütun tamamen kalkar". Yani PANONUN
+     KENDİ KALIBI kazanıyor: bu yüzey de diğer on beşi gibi açılır bir madde.
+     Beyan mekanizması TÜMÜYLE kaldırıldı (tek kullanıcısı buydu, ölü kod yok);
+     yüzey içi kenar çubuğu da (`HafizaYuzey.tsx::Kenar`) kalktı. */
   memory: {
     sablon: "(şablonda karşılığı yok — Meridian'a özgü)",
     baslik: "Hafıza",
     soru: "Sistem ne hatırlıyor, bu bilgi nereden geldi?",
     ikon: Brain,
     grup: "Panolar",
-    altBolumNav: "yuzey-ici",
     bolumler: [
       { kimlik: "hafiza-anasayfa", baslik: "Ana Sayfa", soru: "Bu bankada ne birikti, en son ne zaman yazıldı?", ikon: Home },
       { kimlik: "hafiza-bellekler", baslik: "Bellekler", soru: "Bu bankada ne yazılı, tek tek ne diyor?", ikon: Database },

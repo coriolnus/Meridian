@@ -112,8 +112,9 @@ mevcut uçlardan istemci tarafında kurar; CP grafikleri `recharts ^3.5`; bizim 
 `recharts ^3.8` zaten var → yeni vekil ucu / bağımlılık gerekmez. Raf: `alanlar.ts` "Belgeler"
 yüzeyinin `hafiza` bölümü ("Hangi dersler biriktirildi?") eski dersler kategorisi.
 
-Rulings: R20 küresel nav'da Hafıza TEK girdi (yüzey `altBolumNav: "yuzey-ici"` beyanı), yüzey-içi
-kenar çubuğu kalır; komut paleti/derin bağlar bölüm kayıtlarını kullanmaya devam eder ·
+Rulings: ~~R20 küresel nav'da Hafıza TEK girdi, yüzey-içi kenar çubuğu kalır~~ → R20' (operatör
+2026-09-02 ~20:45, ekran görüntüsü + soru): alt başlıklar SOL nav'da Hafıza'nın altında (panonun kendi
+kalıbı = "uygulama UI'ı"), sayfa-içi CP kenar çubuğu KALKAR, beyan mekanizması ölü kalırsa silinir; komut paleti/derin bağlar bölüm kayıtlarını kullanmaya devam eder ·
 R21 KESİN (operatör 2026-09-02 ~19:05: "raftakilerin içeriklerini mevcut yeni sayfa ile duplike
 olmayacak şekilde konsolide et — redirect ya da ikisini tek yerde vermek değil"): "Belgeler" rafı
 yüzeyi KALKAR; dersler (`/api/memory` = state/lessons.md damıtımı, Hindsight korpusunda yok) →
@@ -147,3 +148,19 @@ kümeli özet, Bellekler görünümünde tam graf sekmesi; varlık grafı (`graf
 (çember yerleşimi emekli). Sıra: T5 → T6-A → T6-B (aynı dizin + eşzamanlı pytest yasağı).
 
 ### Task 7 (Rol-1): T4 tekrarı — tam suite gerekmez (yalnız UI) → etkilenen küme + dağıtım penceresi + görsel tur → DONE.
+
+### Task 9: Ana Sayfa = CP home birebir (operatör ekran görüntüsü 2026-09-02 23:36 TR)
+Operatör: "bu kısım da hiç benzemiyor; failed'in üzerine tıklayınca açılıp retry edebileceğim
+düğmeler geliyor". CP home (v0.9.2, canlı ekran): **MEMORY STORE** (Memories · Documents · Links
+kartları + Memory composition çubuğu [world/experience/observations, sayı+%] + Link types çubuğu
+[temporal/semantic/entity]) → **CONSOLIDATION** (ilerleme N/M %, DONE · PENDING · FAILED [tıklanır →
+başarısız liste] · LAST) + **Mental Models** kartı → **ACTIVITY** (Memories by ingested time grafiği
+[T5 R22] + **Operations** durum kartı: toplam + durum çubuğu + completed/processing sayı+%).
+T2'nin home okuması (bank stats + freshness + next-refresh) CP'nin bu yapısıyla örtüşmüyordu.
+Ruling R29: Ana Sayfa bölüm sırası/kartları CP `home-view.tsx` JSX'inden ÖLÇÜLÜR (rapor değil,
+kaynak); veri `stats` (total_nodes/total_documents/total_links/nodes_by_fact_type/links_by_link_type/
+pending_consolidation/failed_consolidation/last_consolidated_at/operations_by_status), zihin
+modelleri listesi, `/ozet` timeseries; FAILED tıklaması → başarısız bellek listesi (`/liste?
+consolidation_state=failed` — R1 ölçümünde parametre var; vekil süzgeci yoksa eklenir [api.py,
+ayrı ajan]) salt-okunur panel; "yeniden dene"/recover düğmesi görünür-devre-dışı + rozet →
+TSK-111 dilimi. Takımyıldız CP'de nerede duruyorsa orada (ölç; MEMORY STORE'un üstünde DEĞİL).

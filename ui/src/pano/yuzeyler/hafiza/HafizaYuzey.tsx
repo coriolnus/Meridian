@@ -21,11 +21,19 @@
    NEDEN SEKİZ GÖRÜNÜM — VE NEDEN BU SIRA
    ---------------------------------------------------------------------------
    Bu sayfa DÖRT bölümlü tek bir kaydırma sütunuydu. Yeni hâli, hafıza servisinin
-   KENDİ denetim yüzeyinin bilgi mimarisidir: üstte banka seçici, solda sekiz
-   duraklı bir kenar çubuğu, sağda seçilen görünüm. Sıra bizim tercihimiz değil,
-   o yüzeyin `sidebar.tsx` dosyasından okunan sıradır (gerekçe `gorunumler.ts`).
+   KENDİ denetim yüzeyinin bilgi mimarisidir: sekiz görünüm ve o yüzeyin
+   `sidebar.tsx` dosyasından okunan SIRA (gerekçe `gorunumler.ts`).
 
-   Kazanç: aynı servisi iki yerde tanıyan bir operatör aynı yerde aynı şeyi bulur.
+   AMA GEZİNME KABI PANONUNKİDİR — VE BU BİR OPERATÖR KARARIDIR (2026-09-02,
+   dağıtım sonrası ekran görüntüsü). İlk hâlde sekiz durak bu sayfanın İÇİNDE,
+   solda ikinci bir kenar çubuğunda duruyordu ve küresel sol nav da aynı sekizi
+   asıyordu — çift gezinme. Ara çözüm küresel çubuğu susturmuştu; operatör
+   TERSİNİ seçti: "alt başlıklar sol nav'da, Hafıza'nın altında; sağdaki ikinci
+   sütun tamamen kalkar". Yüzey içi kenar çubuğu bu yüzden YOK ve bu sayfa artık
+   panonun on beş yüzeyiyle aynı kalıpta: gezinme solda, gövde tek sütun.
+
+   Kazanç: aynı servisi iki yerde tanıyan bir operatör aynı SIRAYI bulur, ve
+   panonun her sayfasında olduğu gibi "neredeyim" sorusunun tek bir cevabı olur.
    Bedel, ve açıkça yazılı: BİR EKRANDA HEPSİNİ GÖRME hâli kayboldu — eski sayfa
    dört bloğu alt alta çiziyordu, yenisinde her seferinde bir görünüm var. Bu,
    birebirleştirmenin bilinçli olarak ödenen bedeli.
@@ -45,9 +53,10 @@
    "Belgeler"e basıyor, adres zaten o olduğu için HİÇBİR ŞEY olmuyor. İki gezinme
    "neredesin" sorusuna iki ayrı cevap veriyor, bağ bozuk görünüyordu.
 
-   Adres tek kaynak olunca üçü de düzeliyor: iki çubuk aynı şeyi vurguluyor,
-   vurgulanana basmak beklendiği gibi çalışıyor, paletin derin bağları
-   (`komutlar.ts`, aynı adres biçimi) görünümü seçiyor.
+   O ayrışma artık YAPISAL OLARAK İMKÂNSIZ: ikinci çubuk kalktı, geriye tek
+   gezinme kaldı ve o da adresi yazan taraf. Adres hâlâ tek kaynak — görünüm
+   ondan türer, paletin derin bağları (`komutlar.ts`, aynı adres biçimi) da onu
+   seçer.
 
    BEDEL ÖLÇÜLDÜ VE ÖDENDİ: artık her görünüm değişimi bir tarayıcı geçmişi
    girdisi doğuruyor, yani "geri" önceki sayfaya değil önceki görünüme dönüyor.
@@ -76,10 +85,9 @@ import { Brain } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 
-import { YUZEYLER, yuzeyYolu } from "../../alanlar";
-import { useRota, useRouter } from "../../rota";
+import { YUZEYLER } from "../../alanlar";
+import { useRota } from "../../rota";
 import { NABIZ_MS, useApi, type Durum } from "../../veri";
 import { Olculemedi } from "../sistem/parcalar";
 import { AnaSayfa } from "./AnaSayfa";
@@ -91,7 +99,6 @@ import { Reflect } from "./Reflect";
 import { Varliklar } from "./Varliklar";
 import { Yapilandirma } from "./Yapilandirma";
 import {
-  HAFIZA_GORUNUMLERI,
   VARSAYILAN_GORUNUM,
   bolumKaydi,
   gorunumCoz,
@@ -198,44 +205,6 @@ function BankaSecici({
   );
 }
 
-/** Sekiz duraklı kenar çubuğu — sıra üst yüzeyden, etiketler yüzey kaydından. */
-function Kenar({ aktif, sec }: { readonly aktif: HafizaGorunumu; readonly sec: (g: HafizaGorunumu) => void }) {
-  return (
-    <nav aria-label="Hafıza görünümleri" className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
-      {HAFIZA_GORUNUMLERI.map((k) => {
-        const kayit = bolumKaydi(k);
-        if (kayit === null) {
-          /* KAYITTAN DÜŞEN GÖRÜNÜM GİZLENMEZ, YAZILIR (`gorunumler.ts` şerhi):
-             gizleseydik gezinmeden sessizce düşer ve kimse fark etmezdi. */
-          return (
-            <span key={k} className="rounded-lg border border-dashed px-3 py-2 text-muted-foreground text-xs">
-              {k} — yüzey kaydında yok
-            </span>
-          );
-        }
-        const Ikon = kayit.ikon;
-        const etkin = k === aktif;
-        return (
-          <button
-            key={k}
-            type="button"
-            onClick={() => sec(k)}
-            aria-current={etkin ? "true" : undefined}
-            title={kayit.soru}
-            className={cn(
-              "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-left font-medium text-sm transition-colors",
-              etkin ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-            )}
-          >
-            <Ikon className="size-4 shrink-0" aria-hidden />
-            <span className="truncate">{kayit.baslik}</span>
-          </button>
-        );
-      })}
-    </nav>
-  );
-}
-
 /* --------------------------------------------------------------------------- */
 
 export function HafizaYuzey() {
@@ -251,8 +220,9 @@ export function HafizaYuzey() {
   /* GÖRÜNÜM ADRESTEN TÜRER, KOPYALANMAZ (dosya başlığındaki şerh). Tanınmayan
      bölüm varsayılana düşer — yüzeyin adressiz ilk açılışıyla AYNI hâl. */
   const gorunum = gorunumCoz(bolum) ?? VARSAYILAN_GORUNUM;
-  const { push: adreseGit } = useRouter();
-  const gorunumeGit = (k: HafizaGorunumu) => adreseGit(yuzeyYolu("memory", k));
+  /* GÖRÜNÜME GİDEN BAĞLARI ARTIK BU SAYFA ÜRETMİYOR: küresel sol gezinme
+     üretiyor (`gezinme.ts`, `alanlar.ts` kaydından). Burada ikinci bir üretici
+     tutmak, aynı adresin iki yerde kurulması demekti. */
 
   /* GÖRÜNÜM DEĞİŞİNCE BAŞA DÖN: eski sayfa tek bir kaydırma sütunuydu ve derin bağ
      çapaya kaydırıyordu; yenisinde görünümler birbirinin YERİNE geçiyor. Kaydırma
@@ -277,11 +247,25 @@ export function HafizaYuzey() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="flex items-center gap-2 font-semibold text-2xl tracking-tight">
+          {/* BAŞLIK AÇIK GÖRÜNÜMÜ DE SÖYLER (2026-09-02): yüzey içi kenar çubuğu
+              kalkınca "hangi görünümdeyim" sorusunun tek cevabı sol gezinmenin
+              vurgusu kalırdı; sayfanın kendisi de söylemeli. İkon ve ad KAYITTAN
+              gelir — ikinci bir başlık listesi tutmak, gezinmedeki adla gövdedeki
+              adın sessizce ayrışması demekti. */}
+          <h1 className="flex flex-wrap items-center gap-2 font-semibold text-2xl tracking-tight">
             <Brain className="size-5 shrink-0 text-muted-foreground" aria-hidden />
             {y.baslik}
+            {kayit === null ? null : (
+              <>
+                <span className="text-muted-foreground/50" aria-hidden>
+                  /
+                </span>
+                <kayit.ikon className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+                <span>{kayit.baslik}</span>
+              </>
+            )}
           </h1>
-          <p className="mt-1 text-muted-foreground text-sm">{y.soru}</p>
+          <p className="mt-1 text-muted-foreground text-sm">{kayit === null ? y.soru : kayit.soru}</p>
         </div>
         {/* ROZET ŞERİDİ YALNIZ ÖLÇÜLENİ TAŞIR (KapiYuzey kuralı): banka sayısı
             ancak gerekçe BOŞKEN basılır — aksi hâlde o sıfır bir ölçüm değil,
@@ -311,18 +295,18 @@ export function HafizaYuzey() {
         {saglik?.neden ? <span className="text-destructive text-xs">{saglik.neden}</span> : null}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <Kenar aktif={gorunum} sec={gorunumeGit} />
-        <div className="flex min-w-0 flex-col gap-4">
-          {kayit === null ? (
-            <Olculemedi
-              neden="Bu görünüm yüzey kaydında bulunamadı"
-              teknik={`${gorunum} kimliği kenar çubuğu kaydından düşmüş — gezinme ve ekran ayrışmış olabilir`}
-            />
-          ) : (
-            <Govde bank={bank} kayit={kayit} toplu={hafiza} />
-          )}
-        </div>
+      {/* TEK SÜTUN: görünüm SEÇİCİSİ ARTIK BU SAYFADA DEĞİL, küresel sol
+          gezinmede (operatör kararı 2026-09-02). Burada bir kenar çubuğu daha
+          çizmek, aynı sekiz durağı ikinci kez asmak olurdu. */}
+      <div className="flex min-w-0 flex-col gap-4">
+        {kayit === null ? (
+          <Olculemedi
+            neden="Bu görünüm yüzey kaydında bulunamadı"
+            teknik={`${gorunum} kimliği yüzey kaydından düşmüş — gezinme ve ekran ayrışmış olabilir`}
+          />
+        ) : (
+          <Govde bank={bank} kayit={kayit} toplu={hafiza} />
+        )}
       </div>
     </div>
   );

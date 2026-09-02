@@ -17,10 +17,15 @@
    çubuğunun içindeki adla dışındaki adın sessizce ayrışması demekti.
 
    BU DOSYA KAYITTAN NE İSTER: sekiz kimliğin her birinin `alanlar.ts`te KAYITLI
-   olmasını. İstemediği tek şey SESSİZLİK — bir kimlik kayıttan düşerse kenar
-   çubuğu onu gizlemez, "kayıtta yok" diye ÇİZER (`HafizaYuzey.tsx::Kenar`).
+   olmasını. İstemediği tek şey SESSİZLİK — bir kimlik kayıttan düşerse sayfa onu
+   gizlemez, "yüzey kaydında bulunamadı" diye ÇİZER (`HafizaYuzey.tsx`).
    Gizleseydi bir görünüm gezinmeden düşer ve kimse fark etmezdi; bu deponun
    defalarca ölçtüğü sessiz kayıp sınıfı tam olarak budur.
+
+   SIRANIN TÜKETİCİSİ DEĞİŞTİ (2026-09-02, operatör kararı): yüzey içi kenar
+   çubuğu kalktı ve sekiz durak küresel sol gezinmeye taşındı. Sıra oradan da
+   KAYITTAN okunuyor (`alanlar.ts::YUZEYLER.memory.bolumler` → `gezinme.ts`),
+   yani bu dizinin sözleşmesi değişmedi: adres çözümü ve varsayılan görünüm.
    ============================================================================ */
 import { YUZEYLER, type Bolum } from "../../alanlar";
 import type { Durum } from "../../veri";

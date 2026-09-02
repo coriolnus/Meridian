@@ -14,32 +14,24 @@
 
    GRUPLAMA ŞABLONUNKİDİR (Panolar / Sayfalar) — operatörün seçtiği ağaç bu.
    ============================================================================ */
-import { YUZEYLER, YUZEY_ANAHTARLARI, yuzeyYolu, type Yuzey, type YuzeyAnahtari } from "./alanlar";
+import { YUZEYLER, YUZEY_ANAHTARLARI, yuzeyYolu, type YuzeyAnahtari } from "./alanlar";
 import type { NavGroup, NavMainItem } from "@/navigation/sidebar/sidebar-items";
 
-function madde(anahtar: YuzeyAnahtari, altBolumleriAc: boolean): NavMainItem {
-  /* TİP ANOTASYONU ŞART, SÜS DEĞİL: `YUZEYLER` `as const` ile donuk ve her
-     yüzeyin literal tipi yalnız KENDİ yazdığı alanları taşır — isteğe bağlı
-     `altBolumNav` alanı, onu yazmayan on beş yüzeyin tipinde HİÇ yoktur ve
-     birleşim üstünde okunamaz. `Yuzey` sözleşmesine daraltmak, kaydın kendi
-     arayüzünü okumaktır. */
-  const y: Yuzey = YUZEYLER[anahtar];
+function madde(anahtar: YuzeyAnahtari): NavMainItem {
+  const y = YUZEYLER[anahtar];
   const temel = { id: anahtar, title: y.baslik, icon: y.ikon };
 
   // BÖLÜMSÜZ YÜZEY DÜZ BAĞ OLUR: açıldığında hiçbir şey göstermeyen bir ok koymak,
   // tıklandığında boşluk açan bir vaat olurdu.
   //
-  // KENDİ GEZİNMESİ OLAN YÜZEY DE DÜZ BAĞ OLUR (`altBolumNav: "yuzey-ici"`,
-  // 2026-09-02 operatör görsel turu): Hafıza'nın sekiz durağı yüzeyin KENDİ kenar
-  // çubuğunda zaten çiziliyordu ve küresel çubuk aynı listeyi ikinci kez asıyordu
-  // — çift gezinme. Kararı burada VERMİYORUZ, kayıttan OKUYORUZ: hangi yüzeyin
-  // kendi gezinmesi olduğunu bilen tek yer yüzey kaydıdır ve o bilgiyi ikinci kez
-  // (bu dosyada bir yüzey adı listesi olarak) yazmak, sessizce ayrışacak bir kopya
-  // üretirdi. Bölümler kayıtta DURUR: palet, kırıntı ve derin bağlar okumaya devam
-  // eder — susturulan yalnız bu ağaçtır.
-  if (y.bolumler.length === 0 || (!altBolumleriAc && y.altBolumNav === "yuzey-ici")) {
-    return { ...temel, url: yuzeyYolu(anahtar) };
-  }
+  // BÖLÜMÜ OLAN HER YÜZEY AÇILIR MADDEDİR — İSTİSNASI YOK (operatör kararı
+  // 2026-09-02). Bir tur boyunca `altBolumNav: "yuzey-ici"` diye bir istisna
+  // vardı: kendi kenar çubuğunu taşıyan yüzey (Hafıza) küresel çubukta düz bağ
+  // oluyordu. Operatör dağıtımda gördü ve TERSİNİ seçti — alt başlıklar sol
+  // nav'da, Hafıza'nın altında; yüzey içindeki ikinci sütun kalktı. İstisna
+  // ortadan kalkınca mekanizma da kalktı (tek kullanıcısı oydu; ölü kod yok) ve
+  // bu dosya tek ağaç üretmeye döndü — palet de o ağacı okuyor.
+  if (y.bolumler.length === 0) return { ...temel, url: yuzeyYolu(anahtar) };
 
   return {
     ...temel,
@@ -52,27 +44,10 @@ function madde(anahtar: YuzeyAnahtari, altBolumleriAc: boolean): NavMainItem {
   };
 }
 
-const grupla = (ad: "Panolar" | "Sayfalar", altBolumleriAc: boolean) =>
-  YUZEY_ANAHTARLARI.filter((a) => YUZEYLER[a].grup === ad).map((a) => madde(a, altBolumleriAc));
+const grupla = (ad: "Panolar" | "Sayfalar") =>
+  YUZEY_ANAHTARLARI.filter((a) => YUZEYLER[a].grup === ad).map(madde);
 
-/** KENAR ÇUBUĞUNUN AĞACI — `altBolumNav` beyanına UYAR. */
 export const gezinmeGruplari: NavGroup[] = [
-  { id: 1, label: "Panolar", items: grupla("Panolar", false) },
-  { id: 2, label: "Sayfalar", items: grupla("Sayfalar", false) },
-];
-
-/* KOMUT PALETİNİN AĞACI — BEYANI UMURSAMAZ, VE BU BİR KOPYA DEĞİL AYNI ÜRETİCİDİR.
-   İki tüketicinin iki ayrı sorusu var: kenar çubuğu "operatör buraya nereden
-   TIKLAR" diye sorar, palet "operatör bu adı YAZARSA nereye gitmeli" diye. Bir
-   yüzeyin alt gezinmesi kendi gövdesindeyse çubuk onu ikinci kez ASMAMALI ama
-   palet onu unutmamalı: `#/dashboard/memory/hafiza-recall` gerçek bir adrestir ve
-   ⌘K onu bulamazsa operatör sekiz görünüme yalnız fareyle ulaşabilirdi.
-
-   ÖLÇÜLEN RİSK, VARSAYIM DEĞİL: palet maddelerini `search-dialog.tsx`
-   `gezinmeGruplari`den türetiyor ve alt maddesi olmayan bir yüzey için YALNIZ
-   yüzeyin kendisini listeliyor. Beyan tek ağaca uygulansaydı sekiz görünüm
-   paletten SESSİZCE düşerdi — hata vermeden, yalnız aramada bulunmayarak. */
-export const paletGruplari: NavGroup[] = [
-  { id: 1, label: "Panolar", items: grupla("Panolar", true) },
-  { id: 2, label: "Sayfalar", items: grupla("Sayfalar", true) },
+  { id: 1, label: "Panolar", items: grupla("Panolar") },
+  { id: 2, label: "Sayfalar", items: grupla("Sayfalar") },
 ];
