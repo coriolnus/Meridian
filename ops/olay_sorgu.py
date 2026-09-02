@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # olay_sorgu.py — state/events.jsonl olay defterinin DuckDB sorgulayıcısı (ozet · son · tip · serbest SELECT)
-# `grep | wc -l` zincirlerinin yerine geçer: defteri YERİNDE okur, ara dosya/DB/parquet üretmez,
+# `grep | wc -l` zincirlerinin yerine geçer: defteri YERİNDE okur, ara dosya/DB üretmez,
 # tek çıktısı stdout'tur. Bozuk JSON satırı atlanır ama SAYILIP stderr'e raporlanır (Yasa 4).
+# BİRLEŞİK OKUR (2026-09-03): jsonl + `state/olaylar/AAAA-AA.parquet` arşivi (ops/olay_sikistir.py
+# üretir) TEK `olaylar` görünümünde birleşir — parquet'lenmiş ay jsonl'den süzülür, çift sayım yok.
 # Serbest `--sql` bir YAZMA MUHAFIZINDAN geçer: DuckDB'nin kendi ayrıştırıcısı tek SELECT olduğunu
 # doğrular; COPY/ATTACH/INSTALL/DDL/DML ve `SELECT 1; DROP ...` kaçışı reddedilir. Bağlantı bellek
 # içidir, temp_directory boşaltılır, eklenti oto-indirme kapatılır. Muhafız KUM HAVUZU DEĞİLDİR.
@@ -14,8 +16,28 @@ kaç kere öttü" sorusu bugüne kadar `grep | wc -l` zincirleriyle soruluyordu:
 tek-kullanımlık boru hattı, hiçbiri tekrarlanabilir değil. Bu araç defteri SQL yüzeyine açar.
 
 DOĞRUDAN OKUR — ARA ARTEFAKT YOK (YASA 6). DuckDB dosyayı yerinde tarar: ne `.duckdb` dosyası,
-ne parquet, ne kopya üretilir. Bağlantı BELLEK İÇİdir. Aracın TEK çıktısı stdout'tur, okuyucusu
-komutu yazan operatördür. (Parquet sıkıştırma [UYGULA-2] adım 2'dir — burada YOK.)
+ne kopya üretilir. Bağlantı BELLEK İÇİdir. Aracın TEK çıktısı stdout'tur, okuyucusu komutu yazan
+operatördür. BU ARAÇ HİÇBİR ŞEY YAZMAZ — parquet arşivini `ops/olay_sikistir.py` üretir
+([UYGULA-2] adım 2); bu araç onun OKUYUCUSUdur (Yasa 6: okuyucusuz yazım yok).
+
+BİRLEŞİK OKUMA + ÇİFT SAYIM KURALI (2026-09-03, adım 2). `olaylar` görünümü İKİ kaynağın
+birleşimidir: `state/olaylar/*.parquet` (geçmiş aylar) + `state/events.jsonl` (defterin kendisi).
+Defter adım 2'de KIRPILMADIĞI için aynı satır İKİ kaynakta birden durabilir. Kural tek cümledir:
+**PARQUET KAZANIR** — parquet'te bulunan her AY jsonl tarafından süzülür (`ay NOT IN (...)`).
+  · Neden bu yön: tersi ("jsonl kazanır") seçilseydi, defter kırpılmadığı sürece parquet'ten
+    HİÇBİR satır gelmezdi; arşiv okunmayan bir dosya olurdu ve Yasa 6'nın okuyucusu SÖZDE kalırdı.
+  · Kuralın güvenlik ağı sıkıştırıcıdadır: bir ay parquet'lendikten SONRA o aya satır eklenirse
+    `olay_sikistir.py` ikinci koşumda sayım+içerik damgası farkını görür, `.yeni` yazar ve
+    KIRMIZI döner (sessizce eskimiş arşiv yok).
+  · AY'a atanamayan satır (ts yok/çözülemiyor) ASLA süzülmez — o satırların ayı NULL'dur,
+    sıkıştırıcı onları hiç yazmaz, birleşimde jsonl'den gelirler.
+  · Geri dönüş yolu: `--yalniz-jsonl` arşivi yok sayar (kırpılmış defterde EKSİK sonuç verir).
+
+AY ANAHTARI UTC'DİR. `ay` sütunu `ts`in UTC ayıdır (`AT TIME ZONE 'UTC'`), `gun`/`zaman`
+sütunlarıysa `ts`in YAZILDIĞI hâlidir (TIMESTAMP cast ofseti yok sayar — ölçüldü). Gerçek
+defterde ikisi ÇAKIŞIR: 27.887 satırın 27.887'si `+00:00` taşıyor (ölçüm 2026-09-03, 2026-07:
+27.273 · 2026-08: 614). Ofsetli bir kaynak eklenirse ayrım görünür hâle gelir; bu yüzden
+sütunlar ayrı adlarla durur, biri diğerinden TÜRETİLMEZ.
 
 `read_json_objects`, `read_json_auto` DEĞİL — ÖLÇÜLMÜŞ GEREKÇE. `read_json_auto` bu defterde
 tek sütun (`MAP(VARCHAR, JSON)`) veriyor, ama YALNIZCA defterde 235 farklı anahtar olduğu ve
@@ -46,7 +68,11 @@ BAĞLANTI SERTLEŞTİRMESİ (ölçüldü, duckdb 1.5.5 varsayılanları): `temp_
 `.tmp` ve CWD-GÖRELİdir — büyük bir sıralama operatörün bulunduğu dizine sessizce `.tmp/`
 döker; boşaltılır. `autoinstall_known_extensions`/`autoload_known_extensions` varsayılan
 TRUE'dur — bir sorgu bilinmeyen bir fonksiyona dokunduğunda DuckDB AĞDAN eklenti indirebilir;
-ikisi de kapatılır. Yerel bir defter okuyucusunun ne diske dökmeye ne ağa çıkmaya işi vardır.
+ikisi de kapatılır. `TimeZone` varsayılanı MAKİNENİN yerelidir (bu makinede `Europe/Istanbul`,
+ölçüldü) — ofsetsiz bir `ts` o dilime göre çözülürdü ve aynı defter iki makinede iki farklı AYA
+düşerdi (ölçüldü: naif `2026-03-01T02:00:00` → Istanbul'da `2026-02`, UTC'de `2026-03`);
+`UTC`ye sabitlenir. Yerel bir defter okuyucusunun ne diske dökmeye, ne ağa çıkmaya, ne de
+makinenin saat diliminden sonuç almaya işi vardır.
 
 SQL YÜZEYİ. `olaylar` görünümü şu sütunları verir — adlar defterin KENDİ sözlüğüdür
 (`ts`/`level`/`event`), uydurulmadı:
@@ -55,6 +81,8 @@ SQL YÜZEYİ. `olaylar` görünümü şu sütunları verir — adlar defterin KE
     gun    DATE     — `zaman`ın günü; `zaman` NULL ise NULL
     level  VARCHAR  — satırdaki `level`
     event  VARCHAR  — satırdaki `event`
+    ay     VARCHAR  — `ts`in UTC ayı (`AAAA-AA`); çözülemezse NULL. Arşiv bölmesinin anahtarı.
+    kaynak VARCHAR  — 'jsonl' | 'parquet'. Satırın NEREDEN geldiği: birleşim sessiz olmasın diye.
     json   JSON     — satırın TAMAMI; 235 alanın hepsi buradan `json_extract_string` ile okunur
 
 KULLANIM:
@@ -64,6 +92,8 @@ KULLANIM:
     python ops/olay_sorgu.py --sql "SELECT level, count(*) FROM olaylar GROUP BY 1"
     python ops/olay_sorgu.py --sorgu ozet --json               # satır-JSON (kesme YOK)
     python ops/olay_sorgu.py --dosya /yol/baska.jsonl          # başka defter
+    python ops/olay_sorgu.py --yalniz-jsonl                    # arşivi yok say (ham defter)
+    python ops/olay_sorgu.py --parquet-dizin /yol/arsiv        # başka arşiv dizini
 
 BEDEL (metin kipi): `detay` sütunu okunur kalsın diye 100 karakterde KESİLİR ve kesik `…` ile
 GÖRÜNÜR olur. Kaybedilen hiçbir şey yok değil — geri alma yolu `--json`, orada kesme yapılmaz.
@@ -80,11 +110,15 @@ import json as _json
 import pathlib
 import re
 import sys
+import typing
 
 import duckdb
 
 KOK = pathlib.Path(__file__).resolve().parents[1]
 VARSAYILAN_DEFTER = KOK / "state" / "events.jsonl"
+#: Arşiv dizini defterin YANINDA durur (state/events.jsonl → state/olaylar/). Sabit bir mutlak
+#: yol yazılsaydı `--dosya` ile başka bir deftere bakan koşum SESSİZCE canlı arşivi karıştırırdı.
+ARSIV_ALT_DIZIN = "olaylar"
 
 # İlk jeton kapısı: ayrıştırıcı SELECT dese bile yalnız bu jetonlarla BAŞLAYAN sorgu geçer.
 # Gerekçe ÖLÇÜLDÜ (duckdb 1.5.5): PRAGMA'lar TEK sınıfa düşmüyor — `PRAGMA enable_profiling`
@@ -99,10 +133,13 @@ DETAY_TAVAN = 100  # metin kipinde `detay` kesme sınırı; `--json` kesmez
 #: Bağlantı sertleştirme ayarları. DEĞERLER ÖLÇÜLDÜ (duckdb 1.5.5 varsayılanları): temp_directory
 #: '.tmp' (CWD-göreli — operatörün dizinine döker), iki eklenti bayrağı da True (ağdan indirir).
 #: `SET` ifadeleri bağlantı açılır açılmaz, HERHANGİ bir kullanıcı sorgusundan ÖNCE koşar.
+#: `TimeZone` 2026-09-03'te eklendi (adım 2): ay anahtarı UTC olmalı; varsayılan makine yerelidir
+#: ve ofsetsiz bir `ts` makineye göre başka aya düşerdi (başlıktaki ölçüm).
 SERTLESTIRME = (
     "SET temp_directory=''",
     "SET autoinstall_known_extensions=false",
     "SET autoload_known_extensions=false",
+    "SET TimeZone='UTC'",
 )
 
 
@@ -114,38 +151,144 @@ def baglanti_kur() -> duckdb.DuckDBPyConnection:
     return con
 
 
-def _sql_metni(yol: pathlib.Path) -> str:
+def sql_metni(yol: pathlib.Path) -> str:
     """Yolu DuckDB dize sabitine çevirir (tek tırnak ikilenir). Yol argv'den gelir; kaçış
     yapılmazsa tırnak içeren bir dizin adı sorguyu bozar."""
     return "'" + str(yol).replace("'", "''") + "'"
 
 
-def gorunumu_kur(con: duckdb.DuckDBPyConnection, yol: pathlib.Path) -> int:
-    """`olaylar` görünümünü kurar ve AYRIŞTIRILAMAYAN SATIR SAYISINI döndürür (Yasa 4).
+def arsiv_dizini(defter: pathlib.Path) -> pathlib.Path:
+    """Defterin YANINDAKİ arşiv dizini (state/events.jsonl → state/olaylar/). Sıkıştırıcı da
+    okuyucu da BU fonksiyondan türetir — iki yerde yazılsaydı sessizce ayrışırlardı."""
+    return defter.parent / ARSIV_ALT_DIZIN
+
+
+def parquet_dosyalari(dizin: pathlib.Path | None) -> list[pathlib.Path]:
+    """Arşiv dizinindeki `*.parquet` dosyaları (adına göre sıralı). Dizin yoksa BOŞ liste —
+    hata değil: sıkıştırıcı hiç koşmamış olabilir. `.yeni` uzantılı FARK dosyaları BİLEREK
+    dışarıdadır: onlar operatörün kıyaslaması için duran adaylardır, kabul edilmiş arşiv değil."""
+    if dizin is None or not dizin.is_dir():
+        return []
+    return sorted(p for p in dizin.glob("*.parquet") if p.is_file())
+
+
+def ay_ifadesi(json_ifadesi: str) -> str:
+    """`ts`in UTC ayını (`AAAA-AA`) veren SQL ifadesi — çözülemezse NULL (uydurma yasağı:
+    substr tahmini YOK). Ay anahtarının TEK kaynağı burasıdır: sıkıştırıcı ve okuyucu aynı
+    ifadeyi kullanır, yoksa arşivin bölmesi ile sorgunun süzgeci sessizce ayrışırdı."""
+    return (f"strftime(try_cast(json_extract_string({json_ifadesi}, '$.ts') AS TIMESTAMPTZ) "
+            "AT TIME ZONE 'UTC', '%Y-%m')")
+
+
+def _okuma_ifadesi(yol: pathlib.Path) -> str:
+    return (f"read_json_objects({sql_metni(yol)}, "
+            "format='newline_delimited', ignore_errors=true)")
+
+
+def jsonl_kaynak_sql(yol: pathlib.Path) -> str:
+    """Defterin `(ay, ham)` yüzeyi — arşivin de birleşik görünümün de TEK jsonl kaynağı.
+
+    `ham` satırın JSON metnidir. Ölçüldü (duckdb 1.5.5): `read_json_objects` belgenin metnini
+    OLDUĞU GİBİ taşır, `CAST(json AS VARCHAR)` girdideki boşluğu da korur. Yine de sözleşme
+    METİN AYNILIĞI değil İÇERİK AYNILIĞIdır: arşivin damgası bu metinden hesaplanır, dolayısıyla
+    DuckDB bir gün normalize etmeye başlarsa bedel biçimsel boşluktur, anlam değil."""
+    return (f"SELECT {ay_ifadesi('json')} AS ay, CAST(json AS VARCHAR) AS ham "
+            f"FROM {_okuma_ifadesi(yol)} WHERE json IS NOT NULL")
+
+
+def parquet_kaynak_sql(parquetler: list[pathlib.Path]) -> str:
+    """Arşivin `(ay, ham)` yüzeyi. Şema jsonl yüzeyiyle AYNIdır: birleşim ancak böyle mümkün."""
+    liste = "[" + ", ".join(sql_metni(p) for p in parquetler) + "]"
+    return f"SELECT ay, ham FROM read_parquet({liste})"
+
+
+def ay_damgasi(con: duckdb.DuckDBPyConnection, kaynak_sql: str, ay: str) -> tuple[int, str]:
+    """Bir ayın (SATIR SAYISI, İÇERİK DAMGASI) çifti — idempotency kıyasının TEK ölçüsü.
+
+    Damga PARQUET BAYTLARININ değil İÇERİĞİN sha256'sıdır: bayt kıyası DuckDB sürümü
+    değiştiğinde (dosyaya gömülü üretici damgası) YANLIŞ KIRMIZI verirdi. Sıralama `ORDER BY
+    ham` ile sabitlenir, böylece damga tarama sırasından bağımsızdır; satır sayısı ayrıca
+    döner çünkü "aynı içerik, farklı sayı" (yinelenmiş satır) yalnız sayımda görünür."""
+    sayi, damga = con.execute(
+        f"SELECT count(*), sha256(coalesce(string_agg(ham, chr(10) ORDER BY ham), '')) "
+        f"FROM ({kaynak_sql}) AS _k WHERE ay = ?", [ay]).fetchone()
+    return int(sayi), str(damga)
+
+
+def bozuk_sayimi(con: duckdb.DuckDBPyConnection, yol: pathlib.Path) -> int:
+    """Ayrıştırılamayan satır SAYISI (tahmin değil sayım — `ignore_errors=true` bozuk satırı
+    atmaz, NULL satır koyar: ölçüldü). İki araç da bu tek kaynaktan sayar."""
+    return int(con.execute(
+        f"SELECT count(*) FILTER (WHERE json IS NULL) FROM {_okuma_ifadesi(yol)}").fetchone()[0])
+
+
+def bozuk_uyar(bozuk: int, dosya: pathlib.Path, akis=sys.stderr) -> None:
+    """Ayrıştırılamayan satır sayısını raporlar (Yasa 4). Sıfırsa hiçbir şey basılmaz:
+    bilgi taşımayan uyarı gürültüdür. İki araç da BU fonksiyondan geçer."""
+    if bozuk:
+        print(f"UYARI: {bozuk} satır JSON olarak ayrıştırılamadı ve atlandı "
+              f"(dosya: {dosya}). Bu satırlar sonuçlara GİRMEDİ.", file=akis)
+
+
+class Kaynak(typing.NamedTuple):
+    """`gorunumu_kur`un hükmü: kaç satır bozuktu, hangi arşiv dosyaları okundu, hangi aylar
+    jsonl'den SÜZÜLDÜ. Üçü de çağırana döner çünkü üçü de sonucun ANLAMINI değiştirir."""
+    bozuk: int
+    parquetler: list[pathlib.Path]
+    aylar: list[str]
+    aysiz_parquet: int
+
+
+def gorunumu_kur(con: duckdb.DuckDBPyConnection, yol: pathlib.Path,
+                 parquet_dizin: pathlib.Path | None = None) -> Kaynak:
+    """`olaylar` görünümünü kurar (jsonl + arşiv birleşik) ve `Kaynak` hükmünü döndürür.
 
     Bozuk satırlar görünümün DIŞINDA bırakılır (`json IS NOT NULL`) ama önce SAYILIR —
-    "atlandı" ile "hiç yoktu" bu araçta aynı görünmez."""
-    kaynak = (
-        f"read_json_objects({_sql_metni(yol)}, "
-        "format='newline_delimited', ignore_errors=true)"
-    )
-    bozuk = con.execute(
-        f"SELECT count(*) FILTER (WHERE json IS NULL) FROM {kaynak}"
-    ).fetchone()[0]
+    "atlandı" ile "hiç yoktu" bu araçta aynı görünmez (Yasa 4).
+
+    ÇİFT SAYIM KURALI (başlıkta gerekçesi): arşivde bulunan her AY jsonl'den süzülür. Süzgeç
+    `ay IS NULL OR ay NOT IN (...)` biçimindedir — `NOT IN` tek başına yazılsaydı ayı NULL olan
+    satırlar (ts yok/çözülemiyor) SQL'in üç-değerli mantığı yüzünden SESSİZCE düşerdi."""
+    jsonl = jsonl_kaynak_sql(yol)
+    bozuk = bozuk_sayimi(con, yol)
+
+    parquetler = parquet_dosyalari(parquet_dizin)
+    aylar: list[str] = []
+    aysiz_parquet = 0
+    if parquetler:
+        for ay, adet in con.execute(
+                f"SELECT ay, count(*) FROM ({parquet_kaynak_sql(parquetler)}) AS _p "
+                "GROUP BY ay ORDER BY 1").fetchall():
+            if ay is None:
+                aysiz_parquet = int(adet)   # süzgece giremez → çift sayım riski; çağıran UYARIR
+            else:
+                aylar.append(str(ay))
+
+    if parquetler:
+        suzgec = ""
+        if aylar:
+            suzgec = ("WHERE ay IS NULL OR ay NOT IN ("
+                      + ", ".join(sql_metni(a) for a in aylar) + ")")
+        birlesik = (f"SELECT ay, ham, 'parquet' AS kaynak FROM ({parquet_kaynak_sql(parquetler)}) AS _p "
+                    f"UNION ALL "
+                    f"SELECT ay, ham, 'jsonl' AS kaynak FROM ({jsonl}) AS _j {suzgec}")
+    else:
+        birlesik = f"SELECT ay, ham, 'jsonl' AS kaynak FROM ({jsonl}) AS _j"
 
     con.execute(f"""
         CREATE VIEW olaylar AS
         SELECT
-            json_extract_string(json, '$.ts')                           AS ts,
-            try_cast(json_extract_string(json, '$.ts') AS TIMESTAMP)    AS zaman,
-            CAST(try_cast(json_extract_string(json, '$.ts') AS TIMESTAMP) AS DATE) AS gun,
-            json_extract_string(json, '$.level')                        AS level,
-            json_extract_string(json, '$.event')                        AS event,
-            json                                                        AS json
-        FROM {kaynak}
-        WHERE json IS NOT NULL
+            json_extract_string(ham, '$.ts')                           AS ts,
+            try_cast(json_extract_string(ham, '$.ts') AS TIMESTAMP)    AS zaman,
+            CAST(try_cast(json_extract_string(ham, '$.ts') AS TIMESTAMP) AS DATE) AS gun,
+            json_extract_string(ham, '$.level')                        AS level,
+            json_extract_string(ham, '$.event')                        AS event,
+            ay                                                         AS ay,
+            kaynak                                                     AS kaynak,
+            CAST(ham AS JSON)                                          AS json
+        FROM ({birlesik}) AS _b
     """)
-    return int(bozuk)
+    return Kaynak(int(bozuk), parquetler, aylar, aysiz_parquet)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -294,6 +437,12 @@ def _ayristirici() -> argparse.ArgumentParser:
     a.add_argument("--sql", default=None, help="serbest sorgu — YALNIZ tek SELECT")
     a.add_argument("--json", action="store_true", dest="json_kipi",
                    help="satır-JSON bas (kesme yok)")
+    # default=None BİLEREK (aynı gerekçe `--sorgu`daki gibi): operatörün AÇIKÇA verdiği dizin ile
+    # defterden türetilen varsayılan ayırt edilemezse `--yalniz-jsonl` çelişkisi sessizce yutulur.
+    a.add_argument("--parquet-dizin", type=pathlib.Path, default=None, dest="parquet_dizin",
+                   help="parquet arşiv dizini (varsayılan: defterin yanındaki `olaylar/`)")
+    a.add_argument("--yalniz-jsonl", action="store_true", dest="yalniz_jsonl",
+                   help="arşivi YOK SAY, yalnız jsonl defterini oku (kırpılmış defterde EKSİK)")
     return a
 
 
@@ -315,24 +464,42 @@ def main(argv: list[str] | None = None) -> int:
                   "Bayrak sessizce yok sayılmaz.", file=sys.stderr)
             return 2
 
+    # Çelişki sessizce yutulmaz: "arşivi yok say" ile "şu arşivi oku" aynı anda söylenemez.
+    if args.yalniz_jsonl and args.parquet_dizin is not None:
+        print("HATA: `--yalniz-jsonl` ile `--parquet-dizin` birlikte kullanılamaz — biri arşivi "
+              "yok saymayı, diğeri belirli bir arşivi okumayı söyler. Bayrak sessizce yok "
+              "sayılmaz.", file=sys.stderr)
+        return 2
+
     sorgu_adi = args.sorgu or "ozet"
     if args.sql is None and sorgu_adi == "tip" and not args.tip:
         print("HATA: `--sorgu tip` için `--tip <olay_adi>` zorunludur — filtresiz döküm "
               "istiyorsan `--sorgu son` kullan.", file=sys.stderr)
         return 2
 
+    arsiv = None if args.yalniz_jsonl else (args.parquet_dizin or arsiv_dizini(args.dosya))
+
     con = baglanti_kur()
     try:
         try:
-            bozuk = gorunumu_kur(con, args.dosya)
+            kaynak = gorunumu_kur(con, args.dosya, arsiv)
         except duckdb.Error as e:
             # Sinyalli: defter okunamadıysa boş tablo basmak YERİNE gerekçeyle düşülür.
             print(f"HATA: defter okunamadı ({args.dosya}): {e}", file=sys.stderr)
             return 2
 
-        if bozuk:
-            print(f"UYARI: {bozuk} satır JSON olarak ayrıştırılamadı ve atlandı "
-                  f"(dosya: {args.dosya}). Bu satırlar sonuçlara GİRMEDİ.", file=sys.stderr)
+        bozuk_uyar(int(kaynak.bozuk), args.dosya)
+
+        # Sonucun ANLAMI kaynağa bağlı: birleşik okumada bazı aylar arşivden gelir ve o aylar
+        # defterden SÜZÜLÜR. Bunu söylememek, sorguyu sessizce başka bir soruya çevirirdi.
+        if kaynak.parquetler:
+            print(f"BİLGİ: birleşik okuma — {len(kaynak.parquetler)} parquet dosyası; "
+                  f"şu aylar ARŞİVden geldi ve defterden süzüldü: {', '.join(kaynak.aylar)}. "
+                  f"Ham defter için `--yalniz-jsonl`.", file=sys.stderr)
+        if kaynak.aysiz_parquet:
+            print(f"UYARI: arşivde AY'ı boş {kaynak.aysiz_parquet} satır var — bu satırlar "
+                  f"defterden süzülemez, ÇİFT SAYILMIŞ olabilirler (arşiv elle mi düzenlendi?).",
+                  file=sys.stderr)
 
         if args.sql is not None:
             gerekce = select_kapisi(con, args.sql)
