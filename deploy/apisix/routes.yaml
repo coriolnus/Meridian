@@ -15,6 +15,9 @@ rotalar:
       # apisix_http_status sayacı HİÇ üretilmez — Kapı sayfasının metrik bölümü boş kalır
       # (ölçüldü 2026-09-01: istek geçti, sayaç 0 satır). Yalnız sayaç üretir, gövdeye dokunmaz.
       prometheus: {}
+      key-auth: {}             # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+      consumer-restriction:
+        whitelist: [bot_bekci, bot_karne, bot_sef, motor_meridian]
       proxy-rewrite:
         # canary ③: ai-proxy varsayılanı istemci header'larını iletir — burada istemciden
         # gelen Authorization/X-* temizlenir; upstream auth'u instance'ların kendi auth'udur.
@@ -127,6 +130,9 @@ rotalar:
     uri: /llm/hizli/v1/chat/completions
     plugins:
       prometheus: {}   # yukarıdaki notla aynı: sayaç ancak açık yazılınca doğar
+      key-auth: {}             # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+      consumer-restriction:
+        whitelist: [bot_bekci, bot_karne, bot_sef, motor_meridian]
       proxy-rewrite:
         uri: /llm/v1/chat/completions
         headers:
@@ -156,6 +162,9 @@ rotalar:
     uri: /llm/v1/models
     plugins:
       prometheus: {}
+      key-auth: {}             # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+      consumer-restriction:
+        whitelist: [bot_bekci, bot_karne, bot_sef, motor_meridian]
       proxy-rewrite:
         uri: /api/v1/models
         host: openrouter.ai
@@ -171,8 +180,11 @@ rotalar:
 # Sır YOK: değerler $env:// ile konteyner ortamından (/opt/apisix/.env-apisix) çözülür.
 # Bot anahtarları key-auth (makine istemcisi, apikey başlığı); pano kimliği uygulamanın kendi
 # oturumu (kapı basic-auth'u 2026-09-01'de emekli — pano-ingress yorumundaki vaka).
-# LLM rotalarına key-auth+consumer-restriction KİLİDİ henüz YOK — flip, tüm istemciler
-# (motor nous çağrısı + üç bot profili) anahtar taşıyınca AYRI adımda gelir (plan F4-B sırası).
+# F4-B KİLİDİ İNDİ (2026-09-02 sabah penceresi): üç LLM rotasında key-auth +
+# consumer-restriction whitelist. Motor anahtarlı (KAPI_APIKEY, hermes._nous_headers apikey
+# başlığı; anahtar eşitliği hash kıyasıyla doğrulandı). ÜÇ BOT KAPIDA DEĞİL — hermes
+# Authorization: Bearer gönderir, key-auth apikey bekler (ölçüldü); botlar doğrudan
+# OpenRouter'da kalır, göç TSK-105 (whitelist'teki bot tüketicileri o gün için hazır).
 
 tuketici_gruplari:
   - id: filo
