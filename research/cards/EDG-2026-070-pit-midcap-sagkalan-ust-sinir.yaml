@@ -1,0 +1,77 @@
+# EDG-2026-070 — PIT mid-cap SAĞ-KALAN üst-sınır ölçümü (EDG-2026-018'in halefi; yanlılık kalıcı-beyanlı)
+# ÖN-KAYIT 2026-09-03 gece (Rol-1, operatör gece yetkisi; TSK-065: "sağ-kalan üst-sınır ölçümü plana alındı,
+# kart-önce, yanlılık beyanlı — EDG-018 askıda kalır, yeni kart"). Ölçüm KODU YOK — kart operatör onayına kadar sözdür.
+# SELEF: EDG-2026-018 status=askiya_veri_kapisi (2026-08-02 ADIM-0 düştü: sağkalan mid-cap kapsaması yetersizdi).
+# NE DEĞİŞTİ (ölçülmesi gereken varsayım, kartın ADIM-0'ı): bar kaynağı o günden beri genişledi mi
+# (Alpaca IEX tarihsel barlar 2016'ya kadar — hafıza kaydı 'alpaca-a1-uzerinden'; barsarchive birimi canlı).
+# YANLILIK BEYANI (kalıcı): delist edilmiş mid-cap'lerin barı yok → sonuç ÜST-SINIRDIR ("sağkalanlarda en iyi
+# ihtimalle şu kadar"), "mid-cap'te de sağ / değil" DEĞİL. Delist-bar kilidi (B-DELIST-KAYNAK) açılırsa yeni kart.
+
+card_id: EDG-2026-070
+status: registered
+family: pit_midcap_ust_sinir
+on_kayit: 2026-09-03
+selef: EDG-2026-018
+ref: [EDG-2026-018, EDG-2026-016, EDG-2026-009, TSK-065, B-DELIST-KAYNAK]
+
+hipotez: >
+  EDG-016'nın large-cap S&P 500 evreninde ön-kayıtlı ölçtüğü turnover ana etkisi (üst-dilim
+  fazlası @20g anlamlı pozitif VE rvol20+momentum kontrolünde artık katkı anlamlı) PIT-doğru
+  (sp500_uyelik_tarihi.csv) mid-cap SAĞKALAN kohortunda da aynı yönde ve CI-0-dışı olarak ölçülür
+  (ÜST-SINIR: sağkalan yanlılığı etkiyi YUKARI çarpıtır; bu yüzden POZİTİF sonuç "en iyi ihtimalle
+  var", NEGATİF/bilgisiz sonuç ise güçlü bir "yok" işaretidir — asimetri kartın kendi beyanıdır).
+
+k_registry: {registered_at: "2026-09-03", trial_ids: [EDG-070-midcap-ust-dilim-fazlasi-20g, EDG-070-midcap-artik-katki-20g]}
+# K=2 (EDG-016'nın iki birincil ölçüsüyle bire bir). 10g ufku TANI (K'ye 1×2 olarak çarpılır).
+
+adim_0_fizibilite: >
+  ZORUNLU, ölçümden ÖNCE ve EDG-018'in aynı kapısı (eşik DEĞİŞMEZ — aynı ölçümün tekrarıdır,
+  kart yenilendi çünkü veri kaynağı değişmiş olabilir): PIT mid-cap kohortu (üyelik tarihli
+  listeden, ölçüm penceresinde S&P 500 DIŞI kalıp mid-cap bandında olan isimler — bant tanımı
+  EDG-018'deki gibi) için bar ARŞİV KAPSAMASI: kapsanan isim sayısı ≥ 40 VE ortalama bar-geçmişi
+  ≥ 3 yıl. Kaynak sırası: yerel bar arşivi → Alpaca IEX tarihsel (A1-içi, hafıza kaydı) → yoksa
+  düşer. Düşerse status → askiya_veri_kapisi (kapsama haritası + hangi kaynağın ne kadar
+  kapsadığı teslim; B-DELIST-KAYNAK kararına girdi). Kapsama haritası çalışma ağacına değil git
+  BLOB'una bağlanır (EDG-059 vakası ×3).
+
+olcum_plani:
+  - "EDG-016 tasarımı AYNEN, evren yerine PIT mid-cap sağkalan kohortu: kesit dilim, günlük gözlem, ileri getiri 10/20g, taban = aynı-gün kohort ortalaması, 21g blok CI"
+  - "birincil-1: turnover üst-dilim fazlası @20g (bps) + %95 blok-CI"
+  - "birincil-2: rvol20-dilimi VE koşulsuz-momentum kontrolünde artık katkı @20g + CI"
+  - "tanı: aynı iki ölçü @10g; large-cap (EDG-016) sonucuyla yan yana tablo — KIYAS, hüküm değil"
+  - "yanlılık göstergesi: kohortun ölçüm penceresi boyunca 'hâlâ listede' oranı ve pencere sonunda mid-cap bandından çıkanların payı — sayı olarak raporlanır"
+  - "cost_model EDG-016 ile aynı (10 bps + not); mid-cap likidite farkı NOT'a, modele değil (tek değişken evren)"
+
+esikler:
+  kapsanan_isim_alt: 40                 # EDG-018 ADIM-0 ile AYNI — değişmez
+  ortalama_bar_gecmisi_yil_alt: 3       # EDG-018 ADIM-0 ile AYNI
+  # birincil ölçüler için eşik EDG-016'nın ön-kayıtlı tanımıdır: 'anlamlı pozitif' = %95 blok-CI alt sınırı > 0;
+  # sayısal bps eşiği YOK (EDG-016'da da yok) — yön + CI-0-dışılık. Bu kart yeni bps eşiği UYDURMAZ.
+
+kill_list:
+  - "ADIM-0 düşer → askiya_veri_kapisi (kill değil)"
+  - "pozitif kontrol tutmazsa → hiçbir sayı yayılmaz"
+  - "kohort listesi PIT değilse (üyelik tarihi as-of alanı korunmuyorsa) → SIFIR TOLERANS, ölçüm geçersiz (pitlaw)"
+  - "üst-dilim fazlası CI-0-içi → 'bilgisiz' (arşiv); EDG-016 dili aynen"
+  - "eşik/kohort tanımı sonradan değişmez; delist-bar kilidi açılırsa YENİ kart (üst-sınır → gerçek ölçüm)"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: (1) aynı ölçüm kodu large-cap PIT kohortuna koşulunca EDG-016'nın kayıtlı sayılarını
+  (yön + CI-0-dışılık) YENİDEN ÜRETMELİ — üretmiyorsa kod ya da veri yolu bozuk, kill-list madde 2;
+  (2) rastgele 20 kohort-gün için dilim ataması ve ileri getiri ELLE (bar dosyalarından) doğrulanır;
+  (3) yanlılık göstergesi sentetik testte (kohorttan bilinçli 10 isim düşürülünce) beklenen yönde
+  hareket etmeli.
+
+veri_penceresi: "EDG-016 ile aynı takvim penceresi (kartındaki gibi) — PIT kohort as-of günlük; kapsama ADIM-0'da ölçülür ve kayda blob-sha ile bağlanır"
+
+basari_tanimi: >
+  ADIM-0 geçmiş (ya da düşüp kapsama haritası teslim edilmiş — bu da başarıdır: veri kilidi
+  ölçülmüş olur) + üç pozitif kontrol yeşil + iki birincil ölçü CI'larıyla ve yanlılık göstergesiyle
+  raporlanmış + K defterine 2 (+1×2 tanı) yazılmış + hükümde "ÜST-SINIR" damgası. Hüküm Rol-1
+  tarafından aynı turda karta + K defterine işlenir.
+
+notlar: >
+  Kod yalnız operatör onayından sonra `research/olcumler/edg070_pit_midcap/` altında,
+  `sandbox_state`li. EDG-018'in kendisi askıda KALIR (aynı kartta eşik/kapsam düzeltilmez — CLAUDE.md
+  §5); bu kart onun veri-kaynağı-değişti tekrarıdır. Sonuç ne olursa olsun B-DELIST-KAYNAK para
+  kararına sayısal girdi üretir.

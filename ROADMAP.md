@@ -361,7 +361,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (PARALEL not: ⑥a kartı [bkz. **TSK-066**] geri-dolumun 2.-3. günü erken yazılır — İCRA SIRASI'nın kendi zamanlama notu, ⑥a'nın gövdesinde tekrar edilmez.)
 
 - **[TSK-066] ⑥a — mevcut sinyallerin AN yeniden-kurulumu** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
-  What: (status notu: erken yazım hedefi — geri-dolumun 2.-3. günü.) sinyal hangi saniyede doğdu, icraya kadar fiyat ne yaptı (EDG-040 friksiyon sorusunun tick bacağı). Kartı geri-dolumun 2.-3. günü erken yazılır (PARALEL not, yukarıda).
+  What: (status notu 2026-09-03 gece: KART YAZILDI — EDG-2026-069, §6; operatör onayı bekler, ölçüm kodu onaydan sonra.) sinyal hangi saniyede doğdu, icraya kadar fiyat ne yaptı (EDG-040 friksiyon sorusunun tick bacağı). Kartı geri-dolumun 2.-3. günü erken yazılır (PARALEL not, yukarıda).
   Why: pilot sonrası sinyal zincirinin ilk halkası — mevcut sinyallerin tick-doğruluğunu ölçer.
   Ref: EDG-2026-040.
 
@@ -606,7 +606,7 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 | TSK-085 | `23b` çıkış slipajı (örneklem bekliyor — ayrı iş üretmez) (WP: WP1) | QUEUED(TSK-069 [EDG-042 K2/K3] + EDG-045 üzerinden kapanacak) | rol1 | — | — |
 | TSK-063 | (bkz. TSK-063 — Faz-6 BEŞ KİLİT, kanıt-şartlı) (WP: WP3) | (bkz. TSK-063) | rol1 | — | — |
 
-  Not (TSK-065): PIT mid-cap üst-sınır — durum: **ASKIDA: veri kapısı** · `EDG-2026-018` status=`askiya_veri_kapisi` · **2026-08-31 akşam: sağ-kalan üst-sınır ölçümü PLANA alındı (İCRA SIRASI ⑤; kart-önce, yanlılık beyanlı — EDG-018 askıda kalır, yeni kart)**
+  Not (TSK-065): PIT mid-cap üst-sınır — durum: **ASKIDA: veri kapısı** · `EDG-2026-018` status=`askiya_veri_kapisi` · **2026-09-03 gece: KART YAZILDI EDG-2026-070 (§6, operatör onayı bekler)** · 2026-08-31 akşam: sağ-kalan üst-sınır ölçümü PLANA alındı (İCRA SIRASI ⑤; kart-önce, yanlılık beyanlı — EDG-018 askıda kalır, yeni kart)**
   Not (TSK-084): delist-bar kaynağı + FINVIZ · `dataset.load↔bars_integrity` `[B-DELIST-KAYNAK · B-FINVIZ-TOKEN]` — durum: **BLOKE: erişim**
   Not (TSK-051): **BLOKE:** makine kurulumu (dotnet YOK, docker YOK) + operatörün `lean login`i · `C2-4` LEAN fizibilite · notebook koşumu `[B-QC-LOGIN]` — durum: ~~**BLOKE: erişim** (QC login)~~ **[2026-08-23 GÜNCEL — blok gerekçesi yanlıştı: QC FREE hesap-açma bloğu 2026-08-03'te KALKMIŞTI (WP9 keşfi); gerçek blok MAKİNE KURULUMU (dotnet YOK, docker YOK; boyut L). Notebook-koşumu operatör-bloğu ayrı ve geçerli]**
   Not (TSK-085): `23b` çıkış slipajı — durum: ASKIDA: örneklem bekliyor → **MUTABIK KILINDI (2026-08-22):** sorusu iki kartta yaşıyor — gerçek-dolum bandı `EDG-2026-042` K2/K3 (birikiyor), replay-varsayım tarafı `EDG-2026-045`; ayrı iş üretmez, o ikisiyle kapanır
@@ -3242,6 +3242,14 @@ _**[2026-08-31 KONSOLİDASYON — BU LİSTE ENDEKSTİR.]** Satırlar kart duruml
 - **[BASE-2026-001] sistem-karnesi** — status: DONE(2026-08-01·GEÇTİ) · owner: rol1 · size: — · trigger: —
   What: Sistemin uçtan-uca karnesi (huni + getiri) ölçüldü.
   Why: KARNE HÜKMÜ verildi — +%2,5/4,5 yıl, sonuç 2024-bağımlı (getiri bir yıla yoğunlaşmış, kayıtlı caveat); huni üç-darboğaz gösterdi. Ref: research/cards/BASE-2026-001-sistem-karnesi.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-069] sinyal-tetik-dolum-tick-bacagi** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: ⑥a (TSK-066) ön-kayıt 2026-09-03 gece: tetik kırılma saniyesi → dolum gecikmesi (≤60 sn) ve kayması (≤15 bps), K=2 (+3×2 tanı), ADIM-0 fizibilite (n≥30, dolum_ts ≤%30 eksik), yol-tutarlı üç PK; kod YOK — operatör onayı bekler.
+  Why: EDG-040 friksiyon sorusunun tick yarısı; tick arşivi 129 gün + trades.extra_json.dolum_ts ölçüldü.
+  Ref: research/cards/EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml; EDG-2026-038/040/066.
+- **[EDG-2026-070] pit-midcap-sagkalan-ust-sinir** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: EDG-018 halefi (askıda kalır), ön-kayıt 2026-09-03 gece: aynı ADIM-0 kapısı (≥40 isim, ≥3 yıl; yeni bar kaynağı Alpaca IEX tarihsel), EDG-016 tasarımı PIT mid-cap sağkalan kohortuna, ÜST-SINIR damgalı, K=2 (+1×2 tanı); kod YOK — operatör onayı bekler.
+  Why: TSK-065 (İCRA SIRASI ⑤) — delist-bar kilidi (B-DELIST-KAYNAK) para kararına sayısal girdi.
+  Ref: research/cards/EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml; EDG-2026-018/016.
 - **Retro kuyruk (README):** EAP large-cap **archived** (+9,0bps<30 eşik; PK geçti) · Insider CMP **archived** (pozitif-kontrollü 0) · Short-interest FINRA **archived** (12 hücre 0) · çıkış paketi P1/P2/P3 (K=3) **measured→shadow-accrual** · PEAD/rekonstitüsyon/sektör-takvim **archived** (kaynaklı; kill-list altta).
 
 **⑤ RETIRED çapraz-doğrulama (`research/qc_dogrulama/`, 2026-08-09; üç kaynak):** 8 emekli sembol

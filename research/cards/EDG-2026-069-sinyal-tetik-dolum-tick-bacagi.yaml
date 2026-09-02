@@ -1,0 +1,86 @@
+# EDG-2026-069 — ⑥a: mevcut sinyallerin AN yeniden-kurulumu — tetik→dolum tick bacağı (EDG-040 friksiyon sorusunun tick yarısı)
+# ÖN-KAYIT 2026-09-03 gece (Rol-1, operatör gece yetkisi; TSK-066 "geri-dolumun 2.-3. günü erken yazılır").
+# Ölçüm KODU YOK — kart operatör onayına kadar sözdür; onay + ADIM-0 geçişi olmadan hiçbir sayı yayılmaz.
+# GİRDİLER (ölçüldü 2026-09-03 ~21:30 UTC, uydurulmadı):
+#   · tick arşivi /opt/veri/tick: islem/<gün>.parquet (ts, sembol, fiyat, lot, kosul, k_ts, k_alis_fiyat,
+#     k_alis_lot, k_satis_fiyat, …) + kotasyon_1s/<gün>.parquet (ts, sembol, alis_fiyat, alis_lot,
+#     satis_fiyat, satis_lot); 129 gün (2026-03-02→2026-09-01 + pilot 2020-09-15), geriye doğru büyüyor;
+#     kapsam 662 sembol; SEYRELTME 1/sn (EDG-066 çıktı-3 bedeli: 1 sn ızgara).
+#   · canlı kâğıt işlemleri: state/meridian.db `trades` (899 satır; kaynak=live_paper; ts_open/ts_close
+#     GÜN çözünürlüğünde) — saniye damgası `extra_json.dolum_ts` + `alpaca_fill_price` + `broker_teyit`.
+#   · planlar: `trade_plans` (entry_trigger, stop, profit_target, setup, gate_verdict).
+#   · bar-tabanlı giriş friksiyonu emsali: EDG-2026-038 kanonik ölçüt (giriş medyan +29,0 bps, n=4).
+
+card_id: EDG-2026-069
+status: registered
+family: sinyal_tetik_dolum_tick
+on_kayit: 2026-09-03
+selef: null
+ref: [EDG-2026-040, EDG-2026-038, EDG-2026-066, TSK-066]
+
+hipotez: >
+  Canlı kâğıt dolumlarında (live_paper, tick arşivi kapsamındaki günler), planın giriş tetiğinin
+  (`entry_trigger`) tick verisinde İLK kırıldığı saniye (islem/ akışında fiyat ≥ tetik [long] /
+  ≤ tetik [short] olan ilk kayıt) ile broker dolum anı (`dolum_ts`) arasındaki GECİKME medyanı
+  60 saniyeyi aşmaz VE tetik fiyatı → dolum fiyatı KAYMASI (bps, aleyhte pozitif) medyanı 15 bps'i
+  aşmaz. Bu iki sayı EDG-038'in bar-tabanlı +29 bps giriş friksiyonunu iki bileşene ayırır:
+  (a) tetik-sonrası fiyat yolu (tick ile ölçülür, burada) ve (b) bar-payda artefaktı (kalan).
+  Hipotez tutmazsa (gecikme > 60 sn ya da kayma > 15 bps) sinyal-icra hattının tick düzeyinde
+  yavaş/pahalı olduğu ÖLÇÜLMÜŞ olur ve ⑥b/⑥c kartlarının (yeni sinyal / spread-zamanlama)
+  gerekçesi güçlenir; tutarsa friksiyonun kaynağı bar-payda tarafındadır ve ⑥b'nin önceliği düşer.
+
+k_registry: {registered_at: "2026-09-03", trial_ids: [EDG-069-tetik-dolum-gecikme, EDG-069-tetik-dolum-kayma]}
+# İki birincil ölçüm = K=2. Setup-bazlı kırılım (breakout_vcp / momentum_burst / pead) TANI'dır,
+# hüküm için sayılmaz ama K defterine "3 alt-dilim × 2" olarak ÇARPILARAK yazılır (CLAUDE.md §5).
+
+adim_0_fizibilite: >
+  ZORUNLU, ölçümden ÖNCE (EDG-018 emsali): (1) live_paper işlemlerinden `extra_json.dolum_ts`
+  TAŞIYAN ve işlem günü tick arşivinde (islem/<gün>.parquet) BULUNAN ve sembolü kapsamda olan
+  işlem sayısı n_uygun; (2) `dolum_ts` eksik oranı. Kapı: n_uygun ≥ 30 VE dolum_ts eksik ≤ %30.
+  Düşerse: status → askiya_veri_kapisi, kapsama haritası (hangi günler/semboller eksik) teslim —
+  KILL DEĞİL, veri kilidi; geri-dolum ilerledikçe yeniden ölçülür (ADIM-0 tekrarı kart açmaz).
+
+olcum_plani:
+  - "her uygun işlem için: tetik kırılma saniyesi t_k (islem/ akışında ilk kayıt; long: fiyat ≥ tetik,
+     short: fiyat ≤ tetik; aynı gün, seans içi), dolum saniyesi t_d (`dolum_ts`), gecikme = t_d − t_k (sn)"
+  - "kayma_bps = (dolum_fiyat − tetik) / tetik × 1e4 × yön (long +1, short −1) — aleyhte pozitif;
+     dolum_fiyat = `alpaca_fill_price` (yoksa `entry`), ikisi ayrışırsa `broker_teyit` kazanır ve ayrışma sayılır"
+  - "t_k bulunamazsa (tetik o gün hiç kırılmadı ama dolum var): 'tetiksiz dolum' sınıfı — ayrı sayılır,
+     medyana GİRMEZ, oranı raporlanır (sinyal-icra tutarsızlığı işareti)"
+  - "kotasyon_1s ile t_k anındaki spread (satis−alis) bps: TANI sütunu (⑥c girdisi), hüküm değil"
+  - "medyanlar 1.000 bootstrap ile %95 CI; CI eşiği içeriyorsa 'bilgisiz' (EDG-016 dili)"
+  - "seyreltme bedeli beyanı: t_k ±1 sn (1/sn ızgara); gecikme sonucu bu belirsizlikle birlikte yazılır"
+
+esikler:
+  gecikme_medyan_sn_ust: 60        # tasarım seçimi, ön-kayıt: 1 dk üstü 'yavaş icra'
+  kayma_medyan_bps_ust: 15         # tasarım seçimi: EDG-038'in 29 bps'inin yarısı — kalan yarı bar-payda artefaktı sayılır
+  n_uygun_alt: 30
+  dolum_ts_eksik_oran_ust: 0.30
+  tetiksiz_dolum_oran_ust: 0.20    # üstünde: tetik tanımı ile icra ayrışıyor, sonuç 'sinyal-icra tutarsız' notuyla yayılır
+
+kill_list:
+  - "ADIM-0 düşer → askiya_veri_kapisi (kill değil, veri kilidi)"
+  - "pozitif kontrol tutmazsa → ölçüm kodu güvenilmez, hiçbir sayı yayılmaz"
+  - "tick arşivinde işlem gününün parquet'i sonradan yeniden yazılırsa (manifest sha değişir) → o gün ölçümden düşer, sayım raporlanır"
+  - "eşik sonradan değişmez; farklı eşik = yeni kart"
+
+pozitif_kontrol: >
+  YOL-TUTARLI (tek-enstrümanlı PK yetmez — CLAUDE.md §5): (1) SENTETİK: bir işlem için dolum
+  fiyatı := tetik ve dolum_ts := t_k konursa ölçüm 0 sn / 0 bps vermeli (kimlik kontrolü, aynı
+  kod yolu); (2) GERÇEK: rastgele seçilen 3 işlem için t_k ve kayma ELLE (parquet'i doğrudan
+  okuyarak) hesaplanır, otomatik sonuçla birebir eşleşmeli; (3) BAR ÇAPRAZI: tick'ten türetilen
+  gün OHLC, bar kaynağının aynı gün barının içinde kalmalı (EDG-066 PK'sının aynısı) — üçünden
+  biri tutmazsa kill-list madde 2.
+
+veri_penceresi: "live_paper işlemleri ∩ tick arşivi kapsamı: 2026-03-02 → ölçüm günü (arşiv geriye doğru büyüdükçe pencere ADIM-0 tekrarıyla genişler; ölçüm anındaki manifest sha'ları kartın kurulum kaydına yazılır — çalışma ağacı değil BLOB)"
+
+basari_tanimi: >
+  ADIM-0 geçmiş + üç pozitif kontrol yeşil + iki birincil medyan CI'larıyla raporlanmış + K defterine
+  2 (+ 3×2 tanı) yazılmış + seyreltme bedeli beyan edilmiş. Hipotezin tutup tutmaması başarı
+  değildir; ölçülmüş olması başarıdır. Hüküm aynı turda karta + K defterine işlenir (Rol-1).
+
+notlar: >
+  Bu kart ÖLÇÜM koşmaz, ölçümü TANIMLAR. Kod yalnız operatör onayından sonra `research/olcumler/
+  edg069_tetik_dolum/` altında, `sandbox_state`li, canlı deftere yazmadan. Tick arşivi şu an 129
+  gün; geri-dolum 2020'ye doğru sürüyor — pencere büyüdükçe ADIM-0 yeniden ölçülür. Bedel yasası:
+  bu ölçüm hiçbir çıktıyı azaltmaz, yalnız ekler.
