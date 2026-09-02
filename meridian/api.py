@@ -8450,6 +8450,63 @@ def api_hindsight_yapilandirma(request: Request, bank: str | None = None):
     return _hafiza_zarf(bank, "/config")
 
 
+# ---------------------------------------------------- K. GÖREV 6-A EKLENTİSİ (2026-09-02) ----
+#
+# İKİ YENİ SALT-OKUNUR UÇ (TSK-108 Görev 6-A). Yol haritası AYNI disiplinle ölçüldü — bu kez
+# `hindsight-clients/go/api/openapi.yaml`in KENDİSİNDEN, commit
+# ebad478240d3171bb88201ececda5e8d9883d22d (dosya başlığındaki çapa, `test_hafiza_yuzeyi_v375.py`).
+#
+# `bellek-graf` → `GET /v1/default/banks/{bank_id}/graph` (`get_graph`). Parametreler brief'in
+# ÖLÇTÜĞÜ kümeyle sınırlı: `type`/`limit`/`q`/`tags`/`tags_match`. Upstream şemasında AYRICA
+# `document_id`/`chunk_id` var ama CP'nin graf görünümü onları kullanmıyor (kapsam kararı) —
+# buraya eklenmedi; FastAPI tanımadığı sorgu parametresini zaten sessizce yok sayar.
+#
+# VARSAYILAN LİMİT UYDURULMADI (R7): CP varsayılanı (200, ana sayfa çağrısı) > openapi'nin KENDİ
+# varsayılanı (1000) > parametre hiç gönderilmez. CP'nin sözleşmesi upstream'in kendi
+# varsayılanından ÖNCELİKLİDİR — pano zaten 1000'e hiç varmıyor, o sayıyı taşımak ölçülmemiş bir
+# yükü upstream'e bindirirdi. `limit.maximum` ÖLÇÜLDÜ VE YOKTUR (openapi'de yalnız `minimum: 0`
+# var) — bu yüzden `_HAFIZA_UC_TAVANI`ye girmedi; sözleşme tavanımız (`HAFIZA_LISTE_TAVANI`) hem
+# varsayılan hem tavan olarak kalır (`_hafiza_sayfa_sorgusu`nun ölçülmemiş-uç kuralıyla AYNI
+# mantık) — ama bu uçta `offset` YOKTUR (upstream şemasında da yok), o yüzden o yardımcı değil
+# `_hafiza_sorgu_dizesi` doğrudan kullanılır (`/varlik-graf` emsali, aynı gerekçeyle).
+#
+# `profil` → `GET /v1/default/banks/{bank_id}/profile` (`get_bank_profile`). Openapi'de
+# `deprecated: true` — ama CP'nin hâlâ kullandığı TEK profil ucu bu; alternatif yol ölçülmedi.
+# Zarf AYNEN geçer: canlı ölçüm (A1, 18:15 UTC) `{background, bank_id, disposition, mission,
+# name}` döndü — `BankProfileResponse` şemasıyla ALAN ADI düzeyinde tutarlı.
+#
+# ÜÇÜNCÜ UÇ YAZILMADI ("ozellikler"). "features" upstream'de BAĞIMSIZ bir yol DEĞİLDİR — ölçüldü:
+# openapi'de ayrı bir `features` yolu YOK; `features` yalnız `/version` gövdesinin
+# (`VersionResponse.features` → `FeaturesInfo`) BİR ALANI olarak var, banka altında değil —
+# CP'nin `features.observations` bayrağı tam olarak burayı okur. `/api/hindsight`in `saglik`
+# bacağı `/version`i zaten anahtarsız çekiyor ama yalnız `surum`u (`_hafiza_surum`) çıkarıyor;
+# `features` bugün hiçbir yere taşınmıyor. Uydurma yasağı: olmayan bir yola vekil yazmak yerine
+# bulgu devir raporuna taşındı — ekleme kararı (varsa) Rol-1'e bırakıldı.
+
+@app.get("/api/hindsight/bellek-graf")
+def api_hindsight_bellek_graf(request: Request, bank: str | None = None, type: str | None = None,
+                              limit: str | None = None, q: str | None = None,
+                              tags: str | None = None, tags_match: str | None = None):
+    """CP ana sayfa/graf görünümü → upstream `/graph` (`get_graph`). Zarf AYNEN geçer:
+    `{edges, limit, nodes, table_rows, total_units}` (canlı ölçüm + `GraphDataResponse`,
+    yukarıdaki K şerhi)."""
+    _auth(request)
+    etiketler = _hafiza_etiketler(tags)
+    return _hafiza_zarf(bank, "/graph", sorgu=_hafiza_sorgu_dizesi(
+        type=type, q=q, tags=etiketler,
+        tags_match=_hafiza_sozluk(tags_match, _HAFIZA_ETIKET_ESLEME) if etiketler else None,
+        limit=_hafiza_sayi(limit, HAFIZA_LISTE_TAVANI, 1, HAFIZA_LISTE_TAVANI)))
+
+
+@app.get("/api/hindsight/profil")
+def api_hindsight_profil(request: Request, bank: str | None = None):
+    """CP banka profili paneli → upstream `/profile` (`get_bank_profile`, openapi'de deprecated
+    ama TEK ölçülen yol). Zarf AYNEN geçer: `{background, bank_id, disposition, mission, name}`
+    (yukarıdaki K şerhi)."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/profile")
+
+
 # ------------------------------------------------ recall: SALT-OKUNUR'UN BEYANLI İSTİSNASI ----
 
 def _hafiza_recall_govdesi(ham: dict) -> dict:

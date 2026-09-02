@@ -38,6 +38,20 @@ J. CP-UI GENİŞLEMESİ (TSK-108 Görev 1, 2026-09-02) — yüzey üç uçtan yi
    A–I'nin HER sözleşmesi yeni uçlarda da PARAMETRİK olarak koşar (tek tek yazılan çivi,
    yirmi ikinci uçta unutulur). Ek olarak: sorgu-dizesi enjeksiyonu, enum süzme, ve `recall`
    POST'unun "sorgu sınıfı" beyanlı istisnası.
+K. GÖREV 6-A EKLENTİSİ (TSK-108 Görev 6-A, 2026-09-02) — İKİ yeni uç: `bellek-graf`
+   (`GET /v1/default/banks/{bank}/graph`, `get_graph`) ve `profil`
+   (`GET /v1/default/banks/{bank}/profile`, `get_bank_profile` — openapi'de `deprecated: true`
+   ama CP'nin hâlâ kullandığı TEK profil ucu). İkisi de `CPUI` tablosuna girdi, yani J'nin
+   PARAMETRİK çivilerinin TAMAMINDAN geçerler; burada yalnız tabloya SIĞMAYAN üç şey ayrıca
+   çivilendi: R7 varsayılan-limit önceliği (CP > openapi > gönderme), `type` geçişi, ve
+   kapsam-dışı bırakılan `document_id`/`chunk_id`. Fixture'ların İKİSİ DE sınıf (1) — A1'de
+   2026-09-02 18:15 UTC'de ölçüldü (`GRAF_CANLI_GOVDE`/`PROFIL_GOVDE`, aşağıda).
+
+   ÜÇÜNCÜ UÇ ("ozellikler") YAZILMADI. Brief `features` ucunun YOLUNU ölçmeyi istedi; ölçüm
+   sonucu: upstream'de BAĞIMSIZ bir `features` yolu YOKTUR — `features` yalnız `/version`
+   gövdesinin (`VersionResponse.features` → `FeaturesInfo`) bir ALANIdIR, banka altında değil
+   (CP'nin `features.observations` bayrağı tam olarak burayı okur). Uydurma yasağı: olmayan bir
+   yola vekil yazılmadı; bulgu devir raporuna taşındı.
 
 UPSTREAM ÇAPASI — ÖLÇÜM BUGÜN YENİDEN TÜRETİLEBİLİR OLMALI
 ----------------------------------------------------------
@@ -67,7 +81,8 @@ Bu dosyanın kurucu dersi "fixture = ölçülmüş gerçek gövde"dir (düzeltme
 "gerçek" etiketi yetmez, çünkü üç AYRI epistemik sınıf var ve karıştırılırsa yalan söylerler:
 
   (1) ÖLÇÜLDÜ — A1'deki canlı Hindsight'tan 2026-09-02'de alınan gövde. Aşağıdaki
-      `BANKALAR_GOVDE` / `VERSION_GOVDE` / `AUDIT_GOVDE` bu sınıftadır.
+      `BANKALAR_GOVDE` / `VERSION_GOVDE` / `AUDIT_GOVDE` bu sınıftadır; Görev 6-A'nın
+      `GRAF_CANLI_GOVDE` / `PROFIL_GOVDE`si (18:15 UTC ölçümü) de AYNI sınıftadır.
   (2) KAYNAKTAN TÜRETİLDİ — upstream deposunun KENDİ yayımladığı OpenAPI sözleşmesindeki
       `example:` blokları (yukarıdaki commit çapası). Bunlar benim analojim DEĞİL, upstream'in
       yazdığı örneklerdir: ALAN ADLARI gerçektir. DEĞERLER örnektir — canlıda görülmüş sayılar
@@ -247,6 +262,43 @@ AUDIT_GOVDE = json.dumps({
     "bank_id": "meridian-arsiv", "period": "7d", "trunc": "day",
     "start": "2026-08-26T08:36:44.641719+00:00", "buckets": [],
 }).encode()
+
+#: GÖREV 6-A (2026-09-02, A1 18:15 UTC, bank meridian-arsiv) — `banks/{id}/profile` gövdesinin
+#: GERÇEK ANAHTARLARI. Ölçüm kaydı yalnız anahtar adlarını taşıyor ("yalnız ANAHTAR ADLARI
+#: ölçüldü, değerler değil" — STATS_GOVDE/LLM_GOVDE emsali); DEĞERLER TEMSİLİdir. `background`
+#: openapi'nin KENDİ `example:`inde YOK (alan nullable, örnek onu atlamış) ama CANLI gövdede
+#: VARDI — bu da fixture'ın openapi örneğinden değil ÖLÇÜMDEN geldiğinin kanıtıdır.
+#:
+#: `_CPUI_GOVDELER`in KENDİ SÖZLEŞMESİYLE (`_cpui_esleme`) UYUMLU: aşağıdaki sınıf-1 gövdeler
+#: `_tam_esleme`nin ÖN-KODLANMIŞ `bytes` kayıtlarından (`AUDIT_GOVDE` vb.) FARKLI olarak HAM
+#: `dict`tir — `_cpui_esleme` her kaydı KENDİSİ `json.dumps().encode()`ler; burada da `.encode()`
+#: edilseydi çift-kodlama olurdu (ölçüldü: kırmızı-önce turunda `TypeError: bytes JSON
+#: serializable değil`).
+PROFIL_GOVDE = {
+    "bank_id": "meridian-arsiv", "name": "Meridian Arşiv", "background": None,
+    "disposition": {"skepticism": 3, "literalism": 3, "empathy": 3},
+    "mission": "Meridian'ın uzun-vadeli hafıza bankası",
+}
+
+#: GÖREV 6-A (2026-09-02, A1 18:15 UTC, bank meridian-arsiv, `?limit=2`) — `banks/{id}/graph`
+#: gövdesinin GERÇEK ANAHTARLARI. Zarf {edges, limit, nodes, table_rows, total_units} —
+#: `GraphDataResponse` (openapi) ile ALAN ADI düzeyinde tutarlı. `node.data`/`edge.data` İÇİ,
+#: openapi'nin KISALTILMIŞ örneğinden DAHA ZENGİN ölçüldü (`type` YOK, `color`/`context`/`date`/
+#: `entities`/`label`/`text` VAR — node; `color`/`entityName`/`lineStyle`/`linkType`/`source`/
+#: `target`/`weight` VAR — edge); DEĞERLER yine TEMSİLİdir. HAM `dict` (yukarıdaki şerh).
+GRAF_CANLI_GOVDE = {
+    "nodes": [{"data": {"id": "n1", "label": "Alice works at Google", "color": "#42a5f5",
+                        "context": "Work info", "date": "2026-08-15T10:30:00Z",
+                        "entities": "Alice (PERSON), Google (ORGANIZATION)",
+                        "text": "Alice works at Google"}}],
+    "edges": [{"data": {"id": "n1-n2", "source": "n1", "target": "n2", "weight": 5,
+                        "color": "#9e9e9e", "entityName": "Alice", "lineStyle": "solid",
+                        "linkType": "semantic"}}],
+    "table_rows": [{"id": "n1", "text": "Alice works at Google", "context": "Work info",
+                    "date": "2026-08-15T10:30:00Z",
+                    "entities": "Alice (PERSON), Google (ORGANIZATION)"}],
+    "total_units": 1, "limit": 2,
+}
 
 
 def _tam_esleme(**degistir) -> dict[str, bytes | str]:
@@ -863,6 +915,9 @@ CPUI: tuple[tuple[str, str], ...] = (
     ("/api/hindsight/denetim-istatistik?bank=B", "/banks/B/audit-logs/stats"),
     ("/api/hindsight/islemler?bank=B", "/banks/B/operations"),
     ("/api/hindsight/yapilandirma?bank=B", "/banks/B/config"),
+    # ---- Görev 6-A (2026-09-02) ----
+    ("/api/hindsight/bellek-graf?bank=B", "/banks/B/graph"),
+    ("/api/hindsight/profil?bank=B", "/banks/B/profile"),
 )
 CPUI_YOLLAR = tuple(y for y, _ in CPUI)
 
@@ -889,6 +944,7 @@ CPUI_LIMITLI = (
     ("/api/hindsight/denetim?bank=B", "/banks/B/audit-logs"),
     ("/api/hindsight/islemler?bank=B", "/banks/B/operations"),
     ("/api/hindsight/varlik-graf?bank=B", "/banks/B/entities/graph"),
+    ("/api/hindsight/bellek-graf?bank=B", "/banks/B/graph"),
 )
 
 #: `tags` + `tags_match` ÇİFTİNİ kabul eden uçlar. DÜZELTME TURU 1 (I-3): `tags_match`in tek
@@ -899,6 +955,7 @@ CPUI_ETIKETLI = (
     ("/api/hindsight/liste?bank=B", "/banks/B/memories/list"),
     ("/api/hindsight/belgeler?bank=B", "/banks/B/documents"),
     ("/api/hindsight/zihin-modelleri?bank=B", "/banks/B/mental-models"),
+    ("/api/hindsight/bellek-graf?bank=B", "/banks/B/graph"),
 )
 
 #: ÖLÇÜLEN upstream `limit.maximum` değerleri (openapi, commit çapası dosya başlığında). Yalnız
@@ -1079,6 +1136,8 @@ _CPUI_GOVDELER: dict[str, object] = {
     "/banks/B/audit-logs/stats": DENETIM_ISTATISTIK_ORNEK,
     "/banks/B/operations": ISLEM_ORNEK,
     "/banks/B/config": YAPILANDIRMA_ORNEK,
+    "/banks/B/graph": GRAF_CANLI_GOVDE,
+    "/banks/B/profile": PROFIL_GOVDE,
 }
 #: beklenen zarf gövdesi — yolun kendisinden değil, TABLODAN türetilir (tek kaynak).
 CPUI_BEKLENEN = {yol: _CPUI_GOVDELER[parca] for yol, parca in CPUI}
@@ -1608,6 +1667,48 @@ def test_taninmayan_period_beyanli_varsayilana_oturur(monkeypatch, tmp_path, san
     for url in ilgili:
         assert kotu not in url, f"tanınmayan {ad} upstream'e sızdı: {url}"
         assert f"{ad}={varsayilan}" in url, url
+
+
+# ------------------------------------- J-K. GÖREV 6-A: bellek-graf'a ÖZGÜ (tabloya sığmayan) ----
+#
+# bellek-graf/profil GENEL CPUI/CPUI_LIMITLI/CPUI_ETIKETLI parametrik çivilerinden zaten geçer
+# (yetki, ölçülemezlik, zarf-aynen-geçiş, sır duvarı, limit tavanı, tags/tags_match, yol
+# enjeksiyonu, state defterine yazmama — J-A..J-G). Burada yalnız bu uca ÖZGÜ, tabloya sığmayan
+# üç davranış çivilenir.
+
+def test_bellek_graf_limitsiz_istekte_cp_varsayilanini_kullanir(monkeypatch, tmp_path,
+                                                                sandbox_state):
+    """R7 (brief): CP varsayılanı (200, ana sayfa çağrısı) > openapi'nin KENDİ varsayılanı
+    (1000) > parametre hiç gönderilmez. `limit` hiç verilmezse upstream'e giden değer 200'dür —
+    openapi'nin 1000'ini aynen taşımak, CP'nin gerçekte hiç istemediği bir yükü upstream'e
+    bindirirdi (`limit.maximum` ÖLÇÜLDÜ VE YOKTUR, bu yüzden `UPSTREAM_LIMIT_MAKSIMUMU`da yok —
+    kıyas çivisi bu ucu atlar, `test_gonderilen_limit_upstream_maksimumunu_asmaz` skip eder)."""
+    casus = _cpui(monkeypatch, tmp_path)
+    _client().get("/api/hindsight/bellek-graf?bank=B")
+    url = casus.cagri("/banks/B/graph")["url"]
+    assert "limit=200" in url, url
+    assert "limit=1000" not in url, url
+
+
+def test_bellek_graf_type_upstreame_gecer(monkeypatch, tmp_path, sandbox_state):
+    """`type` (world/experience/observation) HAM geçer — openapi'de bu alan enum DEĞİLDİR
+    (`nullable: true, type: string`), yani süzülmez, aynen taşınır. `q` aynı çağrıda geçtiği
+    için birlikte ölçülür (ikisi de basit geçiş, ayrı testler tekrar olurdu)."""
+    casus = _cpui(monkeypatch, tmp_path)
+    _client().get("/api/hindsight/bellek-graf?bank=B&type=world&q=alice")
+    url = casus.cagri("/banks/B/graph")["url"]
+    assert "type=world" in url and "q=alice" in url, url
+
+
+def test_bellek_graf_document_id_kapsam_disi(monkeypatch, tmp_path, sandbox_state):
+    """`document_id`/`chunk_id` upstream `/graph` şemasında VAR ama brief'in ölçtüğü CP ana
+    sayfa kümesi (`type`/`limit`/`q`/`tags`/`tags_match`) DEĞİL — bu uçta karşılığı YOK ve
+    FastAPI tanımadığı sorgu parametresini sessizce yok sayar; upstream'e hiç gitmemeleri
+    kapsam kararının (brief) DAVRANIŞLA doğrulanmasıdır."""
+    casus = _cpui(monkeypatch, tmp_path)
+    _client().get("/api/hindsight/bellek-graf?bank=B&document_id=d1&chunk_id=c1")
+    url = casus.cagri("/banks/B/graph")["url"]
+    assert "document_id=" not in url and "chunk_id=" not in url, url
 
 
 # ----------------------------------------------------- J-F. EKSİK PARAMETRE 400 DEĞİL
