@@ -1686,3 +1686,44 @@ inince TAM mekanizmasıyla ısırdı (türetim doğru, beklenti bayattı — cf3
 pytest hükmüne bağlanmadan atıldı (bd3ae0f, 1 kırmızıyla push; ders defterde: zincirde git,
 hüküm değişkenine bağlanır). Açık: EDG-067 ingest sürüyor (süpürme bekliyor) · nous sondası +
 FMP'nin kapıdan ilk doğal trafiği bir sonraki döngüde sayaçtan teyit edilecek.
+
+## 2026-09-02 (gündüz penceresi) — Üç karar işlendi; Hafıza sayfası + bot göçü aynı günde canlıya; iki "çivi kendini doğruluyordu" vakası
+
+**Üç sabah kararının işlenmesi** massive-403 kalem AÇMADAN kapandı: önerilen mekanizma
+(403'ü hatırla, o gün deneme) `1cee514`'ten beri kodda ve canlıdaydı (`_YETKI_RET`); A1 ölçümü
+gürültüyü günde 1-2 olayda gösterdi — tasarım gereği yol-başına-günde-bir yeniden deneme.
+DERS: karar listesi kalemi koda karşı ölçülmeden sevk edilmez — mükerrer kalem uydurma sınıfı.
+TSK-106 (session_refresh günlük özet) aynı gün TDD ile indi (90acfaa): yol boyu v274'ün
+middleware çivisinin BUGÜNE DEK yanlış sebeple yeşil olduğu çıktı (taze çerez tazelemeyi hiç
+tetiklemiyordu — bastırma hiç ölçülmemişti); düzeltildi, mutasyonla ısırdığı gösterildi.
+
+**TSK-091 Hafıza sayfası** (5c1ed2c + bea75b0, dağıtım ab0ed5b): `/api/hindsight` vekili
+(ruling: `/api/memory` doluydu) + dört bölümlü sayfa. İki inceleme yakalaması: (a) canlı gövde
+ölçümü bir varsayımı düşürdü — `/version` alanı `api_version`; fixture da aynı varsayımı
+taşıdığından çivi KENDİNİ doğruluyordu (v274 vakasıyla aynı sınıf, aynı günde ikinci örnek);
+fixture gerçeğe çekilince eski kod 7 kırmızı verdi. (b) `HamDeger` her skaleri `zamanMetni`ne
+sokuyordu — V8 `new Date("42")` → 01.01.2042: ekranda uydurma tarih; `zamanMetni`nin 30+
+çağrısının tek spekülatif olanıydı, ISO süzgeciyle kapandı. DERS (iki vakanın ortak adı):
+fixture/çağrı bir VARSAYIMI paylaşıyorsa yeşil, varsayımın değil kendinin kanıtıdır — gerçek
+gövde ölçümü fixture'a girmeden "çivi yeşil" cümlesi şema kanıtı sayılmaz.
+
+**TSK-105 bot göçü** (925f241 + a751c07, aynı pencere): hermes `extra_headers` env
+genişletmiyor (ölçüldü — sır repoya giremez) → köprü KAPIDA: rewrite-fazlı
+serverless-pre-function (Bearer→apikey) + `key-auth hide_credentials` (mevcut açık: apikey
+upstream'e sızıyordu). İki sessiz-arıza ölçümle önlendi: zaman-aşımı sözlüğü `custom:kapi`de
+`providers.custom`a bakar (kapak kondu, yoksa 120 sn sessiz düşerdi); anahtar evi
+`HERMES_HOME/.env` = profil-başına (benim "~/.hermes/.env" tek-satırım sessiz-401 üretecekti —
+implementer env_loader ölçümüyle düzeltti). İnceleme üçüncüyü yakaladı: distribution/deploy.sh
+reçeteleri hâlâ OKUNMAYAN eski anahtarı yazdırıyordu. PENCERE VAKASI: `serverless-pre-function`
+config.yaml allowlist'inde yoktu → PUT 400 "unknown plugin" — liste kullanım beyanı VE
+zorlayıcı; v376'ya routes↔config kıyas çivisi eklendi. UÇTAN UCA KANIT: bekçi tek-atımlık
+koşumu kapıdan kimlikli geçti — sayaç `code=502 consumer=bot_bekci ×3`; filo kotası artık
+botları SAYIYOR (LLM kota memory'sinin mekanik yarısı tamam). 502'nin kendisi ayrı gerçek:
+OpenRouter günlük ücretsiz-model tavanı DOLU — Hindsight ingest'i (~1.250 çağrı/gün, kapıyı
+bypass eder) tavanı yiyor; motor+bot LLM çağrıları gün dönümüne dek 502 alır. Açık gözlem
+olarak operatör masasında (seçenekler: bekle · ingest'i duraklat · hesap/kapı kararı).
+
+**Ayrıca:** geri-dolum 2026-04-23 kesik-gz KIRMIZI'sı triyajlandı — sınıf bilinen-geçici
+(boyut-kapılı önbellek), eylemsiz kapandı; teşhis iyileştirmesi TSK-107 havuzda. TSK-099/100
+gerçekte bitmişti, DONE hizası. dagit [4] istenen-durum koruması üretimdeki ilk koşumunda
+doğru çalıştı (learn kapalı kaldı).
