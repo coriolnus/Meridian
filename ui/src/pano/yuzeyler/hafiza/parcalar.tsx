@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+import { goreliMetin } from "../kuyruk/parcalar";
 import { Olculemedi, Satir, zamanMetni } from "../sistem/parcalar";
 import type { HafizaZarfi, HamGovde, IstatistikKovasi } from "./uctipleri";
 
@@ -107,6 +108,26 @@ export function damgaMs(deger: unknown): number | null {
   if (s === null || !ISO_BENZERI.test(s)) return null;
   const t = Date.parse(s);
   return Number.isFinite(t) ? t : null;
+}
+
+/**
+ * GÖRELİ ZAMAN — AYNI KAPIDAN, İKİNCİ BİR ÇÖZÜCÜ YAZILMADAN (Görev 9).
+ *
+ * Üst yüzeyin ana sayfası damgaları "5 saat önce" biçiminde yazıyor
+ * (`relative-time.ts::formatRelativeTime`) ve bizde o cümleyi kuran işlev ZATEN
+ * VARDI — kuyruk yüzeyinin `goreliMetin`i. İkinci bir tanesini yazmak, aynı
+ * gerçeğin iki kopyası olurdu: biri "3sa 12dk önce" derken öteki "3 saat önce"
+ * der ve kullanıcı iki ekranda iki ayrı ürün görürdü.
+ *
+ * KAPI YİNE `damgaMs`: ham dizge doğrudan çözücüye verilseydi bu dosyanın en
+ * pahalı dersi (bir sayacı tarihe çeviren korumasız çözüm) geri gelirdi.
+ *
+ * `simdi` DIŞARIDAN GELİR, içeride okunmaz: göreli zaman OKUMANIN anına göre
+ * yazılır. İçeride her çizimde yeniden okunsaydı, aynı yanıtın iki satırı iki
+ * ayrı "şimdi"ye göre yazılabilirdi.
+ */
+export function goreliDamga(deger: unknown, simdi: number): string | null {
+  return goreliMetin(damgaMs(deger), simdi);
 }
 
 /**

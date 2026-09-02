@@ -167,7 +167,7 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   // Emekli bir kimliği bu tabloda BIRAKMAK ölü satır olurdu — anahtar tablosu yalnız
   // KAYITLI bölümler için okunuyor (`ARAMA_ANAHTARLARI`), yani orada kalan satır
   // hiçbir aramayı bulmaz ve okunmadığı için de bayatladığı fark edilmez.
-  "hafiza-anasayfa": ["bank", "hindsight", "banka", "arsiv", "fact", "ozet", "istatistik", "tazelik"],
+  "hafiza-anasayfa": ["bank", "hindsight", "banka", "arsiv", "fact", "ozet", "istatistik", "konsolidasyon", "takimyildizi"],  // "tazelik" kalktı: Görev 9 tazelik bloğunu CP kartlarına dağıttı
   "hafiza-bellekler": ["kayit", "bellek", "memory", "ders", "metin", "world", "experience", "gozlem"],
   //
   // "ZIHIN MODELI" TSK-108 GÖREV 3'TE REFLECT'TEN BILGI'YE TAŞINDI — ve bu bir

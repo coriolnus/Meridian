@@ -3,21 +3,37 @@
 /* ============================================================================
    HAFIZA · ANA SAYFA — hafıza servisinin kendi `home` görünümünün karşılığı
    ----------------------------------------------------------------------------
-   ÜST YÜZEYİN ANA SAYFASI BEŞ BLOK ÇİZİYOR ve bizde İKİSİ VAR. Bu bir eksik
-   değil, ÖLÇÜLMÜŞ BİR KAPSAM — ve kapsamın yazılı durması bedel yasasının şartı:
+   BÖLÜM SIRASI KAYNAKTAN ÖLÇÜLDÜ (2026-09-02, Görev 9 · üst yüzey v0.9.2, çapa
+   ebad4782). `home-view.tsx::HomeView` gövdesinin sırası şudur ve ekran onu
+   birebir izler:
 
-     ÇİZİLEN                  kaynak
-     · banka sayaç kartı      özet ucunun sayaç bacağı
-     · ingest zaman serisi    özet ucunun seri bacağı
+     1. ÜST SATIR, iki sütun: SOLDA (2/3) bellek takımyıldızı · SAĞDA (1/3) iki
+        kart — bilgi sayfaları, sonra son belgeler. Her ikisinin başlığında
+        "tümü" bağı ve varış görünümü de oradan ölçüldü.
+     2. HAFIZA DEPOSU kartı (`bank-stats-view.tsx::MemoryStoreCard`): üç sayaç
+        şeridi + kayıt bileşimi + bağ türleri.
+     3. ETKİNLİK: ingest zaman serisi (`::MemoriesActivityChart`).
 
-     · bellek takımyıldızı    kendi ucundan, kendi kartında (aşağıda)
+   ÜÇ BAŞLIKLI BÖLÜM (depo · birleştirme · etkinlik) üst yüzeyin KAYNAĞINDA
+   `bank-stats-view.tsx::BankStatsView` bileşenindedir; operatörün ekranında ise
+   ana sayfanın altında duruyor. İkisi burada BİLEREK birleştirildi: sıra ve kart
+   içerikleri kaynaktan, sayfadaki yerleri operatörün gördüğü ekrandan. Sapma
+   gizlenmedi — devir raporunda satır çapalarıyla yazılı.
 
-     ÇİZİLMEYEN               nedeni
-     · bilgi sayfası ağacı    Bilgi Tabanı görünümüne ait, aynı tur
-     · son eklenen belgeler   Belgeler görünümüne ait, aynı tur
-   İkisi de kenar çubuğunda KENDİ duraklarıyla duruyor; ana sayfaya kısayol olarak
-   kopyalanmaları sonraki turun işi. Boş bir kutu çizip "yakında" yazmak yerine
-   hiç çizmemek, ekranı olduğundan dolu göstermemek demek.
+   ---------------------------------------------------------------------------
+   NE ÇİZİLMİYOR VE NEDEN (bedel yasası)
+   ---------------------------------------------------------------------------
+   · "Sonraki tazeleme" satırı KALKTI. Görev 2'de bir gerekçe satırı olarak
+     duruyordu; Görev 9 ölçümü üst yüzeyin ana sayfasında böyle bir parça
+     OLMADIĞINI gösterdi (kaynakta ne bileşen ne çağrı var). Ölçülmemiş bir
+     eksikliği ekranda taşımak, birebirliği kendi tahminimizle bozmaktı.
+   · "Tazelik" bloğu KALKTI: taşıdığı sayıların hepsi artık kendi kartlarında
+     (birleştirme kuyruğu → birleştirme kartı, arka plan işleri → işler kartı).
+     İki yerde çizmek aynı sayının iki kopyası olurdu. TEK kayıp "son yazım"
+     damgasının etiketli satırıydı; o değer ham sayaç dökümünde duruyor ve oradan
+     okunabiliyor — sessizce düşmedi.
+   · Bilgi sayfaları kartı üst yüzeyde AĞACIN tamamıdır, bizde sayfa listesidir;
+     gerekçesi ve bedeli kartın kendi dosyasında yazılı.
 
    ---------------------------------------------------------------------------
    TAKIMYILDIZ AYRI OKUNUR — VE BU BİR BEDEL KARARIDIR
@@ -29,16 +45,9 @@
    ucunu kendi kartında okur, sayaçlar onu beklemez, o da sayaçları beklemez.
    Tavan da aynı sayıdır (üst yüzeyin ana sayfa çağrısı 200 düğüm).
 
-   ---------------------------------------------------------------------------
-   "SONRAKİ TAZELEME" NEDEN BİR SAYI DEĞİL, BİR GEREKÇE
-   ---------------------------------------------------------------------------
-   Üst yüzeyin `next-refresh` parçası ÖLÇÜLDÜ: girdisi bir bankanın sayaçları
-   DEĞİL, bir zihin modelinin tetikleyicisidir (`refresh_cron` /
-   `refresh_after_consolidation`) ve o alanlar bu ekranın okuduğu sayaç
-   gövdesinde YOKTUR. Bir sayı yazmak için elimizde iki seçenek vardı ve ikisi de
-   yalan olurdu: panonun kendi yoklama aralığını "servisin tazeleme zamanı" diye
-   göstermek, ya da bir varsayılan uydurmak. Ekran bu yüzden değeri değil
-   NEDENİNİ yazıyor ve nerede yaşadığını söylüyor.
+   Sağ sütunun iki kartı da AYNI desendedir: her biri kendi ucunu okur. Biri
+   düşerse öteki çizilmeye devam eder; tek bir toplu okuma, tek arızayı üç
+   körlüğe çevirirdi.
 
    ---------------------------------------------------------------------------
    PENCERE DEĞİŞTİRMENİN BEDELİ (bedel yasası)
@@ -50,28 +59,40 @@
    HTTP çağrısı değil, ucun içindeki bir ek bacak — ve o bacak zaten kullanıcı
    tetiğine bağlı, yoklamaya değil.
    ============================================================================ */
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { Activity, Brain, Database, FileText, GitMerge, Layers, Link2, ListChecks, Network } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
 import { yuzeyYolu, type Bolum } from "../../alanlar";
 import { useRouter } from "../../rota";
-import { useApi } from "../../veri";
-import { BolumKart, Deger, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcalar";
-import { HamSatirlar, ISO_BENZERI, damga, metin, sayi, sozluk } from "./parcalar";
+import { useApi, type Durum } from "../../veri";
+import { BolumKart, Kapi as UcKapisi, Olculemedi } from "../sistem/parcalar";
+import {
+  BAG_TURU_SIRASI,
+  BilgiSayfalari,
+  Dagilim,
+  KAYIT_TURU_SIRASI,
+  IslemlerKarti,
+  KonsolidasyonKarti,
+  SERI_ANAHTARLARI,
+  SERI_YAPISI,
+  Sayac,
+  SonBelgeler,
+  ZihinModelleriKarti,
+  bagTuruEtiketi,
+  bagTuruRengi,
+  kayitTuruEtiketi,
+  kayitTuruRengi,
+  kisaSayi,
+  type SeriAnahtari,
+} from "./anasayfakartlari";
+import { HamSatirlar, ISO_BENZERI, metin, sayi } from "./parcalar";
 import { GrafPaneli } from "./takimyildizi";
-import type {
-  BankaSayaclari,
-  BellekGrafi,
-  HafizaOzeti,
-  HafizaZarfi,
-  SeriKovasi,
-  ZamanSerisi,
-} from "./uctipleri";
+import type { BankaSayaclari, BellekGrafi, HafizaOzeti, HafizaZarfi, SeriKovasi, ZamanSerisi } from "./uctipleri";
 
 const UC_OZET = "/api/hindsight/ozet";
 const UC_BELLEK_GRAF = "/api/hindsight/bellek-graf";
@@ -97,141 +118,6 @@ const ZAMAN_ALANLARI = [
   { deger: "occurred_start", etiket: "Gerçekleşme", uzun: "Olayın gerçekten olduğu an" },
 ] as const;
 type ZamanAlani = (typeof ZAMAN_ALANLARI)[number]["deger"];
-
-/* SERİLER — RENK BİR KİMLİK KANALI, BİR HÜKÜM DEĞİL. Panonun grafik rampası
-   akromatiktir (tema.css) ve anlamı taşıyan şey ETİKETtir; üst yüzeyin mor/pembe/
-   çivit paletini taşımak, panonun rezerve renk bantlarına (mod/gezinme/şiddet)
-   girmeden de tasarım dilini bozardı. Taşınan şey düzen ve içerik, piksel değil.
-
-   SEMANTİK ROL ÜST YÜZEYLE AYNI ve sıra da aynı: dünya bilgisi · deneyim · gözlem.
-   Yığının sırası bir süs değil — aynı sırayı bilen bir okuyucu iki ekranda aynı
-   bandı aynı yerde arar. */
-const SERI_YAPISI = {
-  world: { label: "Dünya bilgisi", color: "var(--chart-2)" },
-  experience: { label: "Deneyim", color: "var(--chart-3)" },
-  observation: { label: "Gözlem", color: "var(--chart-5)" },
-} satisfies ChartConfig;
-
-const SERI_ANAHTARLARI = ["world", "experience", "observation"] as const;
-type SeriAnahtari = (typeof SERI_ANAHTARLARI)[number];
-
-/** Y ekseni kısaltması — üst yüzeyin `formatCompact`inin karşılığı, tr-TR ile. */
-function kisaSayi(n: number): string {
-  return n.toLocaleString("tr-TR", { notation: "compact", maximumFractionDigits: 1 });
-}
-
-/* ---------------------------------------------------------------------------
-   SAYAÇ ŞERİDİ
-   --------------------------------------------------------------------------- */
-
-function Sayac({ etiket, deger, teknik }: { readonly etiket: string; readonly deger: unknown; readonly teknik: string }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-0.5 rounded-lg border p-3">
-      <span className="text-muted-foreground text-xs">{etiket}</span>
-      <span className="font-semibold text-lg">
-        <Deger deger={sayi(deger)} neden="Bu sayaç gelmedi" teknik={teknik} />
-      </span>
-    </div>
-  );
-}
-
-/**
- * BİR SAYI SÖZLÜĞÜNÜN DAĞILIMI — anahtarlar TELDEN gelir.
- *
- * Üst yüzeyin kendi bileşeni bu sözlüğü ÜÇ ada daraltıyor; üst servisin şeması
- * ise onu açık bir sayı sözlüğü ilan ediyor ve kendi örneğinde BAŞKA adlar
- * kullanıyor. Daraltan taraf, yeni bir tür doğduğu gün onu sessizce düşürür ve
- * parçaların toplamı ile toplam tutmaz. Bu yüzden burada anahtar listesi YOK.
- */
-function Dagilim({ govde }: { readonly govde: unknown }) {
-  const s = sozluk(govde);
-  const hepsi: (readonly [string, number])[] = s
-    ? Object.entries(s)
-        .map(([k, v]) => [k, sayi(v)] as const)
-        .filter((p): p is readonly [string, number] => p[1] !== null)
-    : [];
-  if (s === null) {
-    return <Olculemedi neden="Dağılım gelmedi" teknik="alan sözlük değil ya da hiç gelmedi — şema sürüklenmiş olabilir" />;
-  }
-  if (hepsi.length === 0) {
-    return <p className="text-muted-foreground text-sm">Dağılım okundu ve içi boş geldi — bu ölçülmüş bir boşluktur</p>;
-  }
-  const tavan = Math.max(...hepsi.map(([, v]) => v), 1);
-  return (
-    <div className="flex flex-col gap-1.5">
-      {hepsi.map(([ad, n]) => (
-        <div key={ad} className="flex items-center gap-2">
-          <span className="w-32 shrink-0 truncate text-muted-foreground text-xs" title={ad}>
-            {ad}
-          </span>
-          <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
-            <span className="block h-full rounded-full bg-muted-foreground/50" style={{ width: `${(n / tavan) * 100}%` }} />
-          </span>
-          <span className="w-16 shrink-0 text-right text-sm tabular-nums">{n.toLocaleString("tr-TR")}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
-   TAZELİK — "en son ne oldu" sorusunun ölçülebilen yarısı
-   --------------------------------------------------------------------------- */
-
-function Tazelik({ stats }: { readonly stats: BankaSayaclari }) {
-  const yazim = damga(stats.last_memory_write_at);
-  const birlestirme = damga(stats.last_consolidated_at);
-  return (
-    <div>
-      <Satir etiket="Son yazım">
-        {yazim ?? (
-          <Olculemedi
-            neden={stats.last_memory_write_at === null ? "Bu bankaya henüz kayıt girmemiş" : "Son yazım zamanı okunamadı"}
-            teknik="son yazım/düzenleme/birleştirme damgası gelmedi ya da çözülemeyen bir biçimde geldi"
-            kisa
-          />
-        )}
-      </Satir>
-      <Satir etiket="Son birleştirme">
-        {birlestirme ?? (
-          <Olculemedi
-            neden={stats.last_consolidated_at === null ? "Hiç birleştirme yapılmamış" : "Son birleştirme zamanı okunamadı"}
-            teknik="birleştirme damgası gelmedi ya da çözülemeyen bir biçimde geldi"
-            kisa
-          />
-        )}
-      </Satir>
-      {/* SONRAKİ TAZELEME: değeri değil gerekçesi (dosya başlığındaki şerh). */}
-      <Satir etiket="Sonraki tazeleme">
-        <Olculemedi
-          neden="Sonraki tazeleme zamanı bu okumada gelmiyor"
-          teknik="üst yüzey bu değeri zihin modeli tetikleyicilerinden (cron / birleştirme sonrası) türetiyor; o alanlar banka sayaçlarında yok ve ilgili görünüm bu turda çizilmiyor"
-          kisa
-        />
-      </Satir>
-      <Satir etiket="Birleştirme kuyruğu">
-        <span className="flex flex-wrap items-center justify-end gap-1.5">
-          <Badge variant="outline" className="tabular-nums">
-            bekleyen <Deger deger={sayi(stats.pending_consolidation)} neden="gelmedi" teknik="bekleyen birleştirme sayacı gelmedi" />
-          </Badge>
-          <Badge variant="outline" className="tabular-nums">
-            düşen <Deger deger={sayi(stats.failed_consolidation)} neden="gelmedi" teknik="düşen birleştirme sayacı gelmedi" />
-          </Badge>
-        </span>
-      </Satir>
-      <Satir etiket="Arka plan işleri">
-        <span className="flex flex-wrap items-center justify-end gap-1.5">
-          <Badge variant="outline" className="tabular-nums">
-            bekleyen <Deger deger={sayi(stats.pending_operations)} neden="gelmedi" teknik="bekleyen iş sayacı gelmedi" />
-          </Badge>
-          <Badge variant="outline" className="tabular-nums">
-            düşen <Deger deger={sayi(stats.failed_operations)} neden="gelmedi" teknik="düşen iş sayacı gelmedi" />
-          </Badge>
-        </span>
-      </Satir>
-    </div>
-  );
-}
 
 /* ---------------------------------------------------------------------------
    ZAMAN SERİSİ
@@ -317,7 +203,6 @@ function Seri({
   if (neden) return <Olculemedi neden="Zaman serisi okunamadı" teknik={neden} />;
   if (seri === undefined) return <Olculemedi neden="Zaman serisi bildirilmedi" teknik="uç seri bacağını hiç döndürmedi" />;
   if (seri === null) return <Olculemedi neden="Ölçüm denendi, seri gelmedi" teknik="seri alanı boş döndü ve gerekçe de taşınmadı" />;
-
   const kovalar: readonly SeriKovasi[] = Array.isArray(seri.buckets) ? seri.buckets : [];
   if (!Array.isArray(seri.buckets)) {
     return <Olculemedi neden="Seri kovaları tanınmayan bir biçimde geldi" teknik="beklenen dizi, gelen başka bir tip — şema sürüklenmiş olabilir" />;
@@ -449,18 +334,33 @@ function SeriAnahtarlari({
 }
 
 /* ---------------------------------------------------------------------------
-   BELLEK TAKIMYILDIZI — üst yüzeyin ana sayfa görselinin karşılığı
+   SAYAÇ KAPISI — ÜÇ KART AYNI GÖVDEYİ OKUR, KAPI TEK YERDE
    ----------------------------------------------------------------------------
-   ÜÇ KURAL ÜST YÜZEYİN ANA SAYFASINDAN ÖLÇÜLDÜ:
-     · KÜMELEME KAYIT TÜRÜNE GÖRE. Üst yüzey kümeyi düğümün kendi tür alanından
-       kuruyor; bizim ölçtüğümüz gövdede o alan YOK (A1, 2026-09-02) ve tür tablo
-       satırlarında yaşıyor. Küme bu yüzden kimlik eşlemesiyle kurulur — ölçülmüş
-       bir sapmadır, gizlenmiyor: eşleşmeyen düğüm kümesiz kalır ve KAÇI olduğu
-       ekranda sayıyla yazar.
-     · NOKTA BOYUTU bağ ağırlıklarının toplamından, karekök ölçekli.
-     · TIKLAMA KAYIT LİSTESİNE GÖTÜRÜR. Üst yüzeyde de böyle: ana sayfadaki graf
-       bir gezinme yüzeyidir, kayıt detayı Bellekler görünümünün işidir.
+   Depo, birleştirme ve arka plan işleri kartlarının üçü de aynı sayaç gövdesini
+   okuyor. Kapıyı üç kez yazsaydık üç ayrı gerekçe cümlesi doğardı ve biri
+   düzeltilirken ötekiler eskirdi (tek-kaynak yasası).
    --------------------------------------------------------------------------- */
+function SayaclarKapisi({
+  ozet,
+  children,
+}: {
+  readonly ozet: Durum<HafizaOzeti>;
+  readonly children: (stats: BankaSayaclari) => ReactNode;
+}) {
+  return (
+    <UcKapisi durum={ozet} yol={UC_OZET}>
+      {(o) => {
+        if (o.stats_neden) return <Olculemedi neden="Banka sayaçları okunamadı" teknik={o.stats_neden} />;
+        if (o.stats === undefined) return <Olculemedi neden="Sayaçlar bildirilmedi" teknik="uç sayaç bacağını hiç döndürmedi" />;
+        if (o.stats === null) {
+          return <Olculemedi neden="Ölçüm denendi, sayaçlar gelmedi" teknik="sayaç alanı boş döndü ve gerekçe de taşınmadı" />;
+        }
+        return <>{children(o.stats)}</>;
+      }}
+    </UcKapisi>
+  );
+}
+
 /* --------------------------------------------------------------------------- */
 
 export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readonly kayit: Bolum }) {
@@ -488,11 +388,25 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
   const grafYolu = bank === null ? null : `${UC_BELLEK_GRAF}?bank=${encodeURIComponent(bank)}&limit=${GRAF_TAVANI}`;
   const graf = useApi<HafizaZarfi<BellekGrafi>>(grafYolu);
 
+  /* GÖRELİ ZAMANIN "ŞİMDİ"Sİ OKUMAYA ÇAPALANIR, ÇİZİME DEĞİL: her çizimde yeniden
+     okunsaydı aynı yanıtın iki satırı iki ayrı ana göre yazılabilirdi. Özet
+     tazelendiğinde "5 saat önce" cümleleri de tazelenir.
+
+     ÇAPA TEK UCA BAĞLI VE SINIRI YAZILI (inceleme M-6): sayfadaki üç okuma ayrı
+     uçlardan geliyor, "şimdi" ise yalnız özet okumasıyla ilerliyor. Özet düşer ama
+     belgeler/sayfalar okunursa, sağ sütunun göreli zamanları montaj anına göre
+     yazılır — sapma bir okuma penceresi kadardır, damganın kendisi değil. Her karta
+     kendi "şimdi"sini vermek, aynı ekranda üç ayrı şimdi doğururdu. */
+  const simdi = useMemo(() => Date.now(), [ozet.zaman]);
+
   const { push: adreseGit } = useRouter();
   /* Üst yüzeyde de böyle: ana sayfadaki graf bir GEZİNME yüzeyidir, kayıt detayı
      Bellekler görünümünün işidir. Düğüm bilgisi kullanılmıyor ve kullanılmadığı
-     yazılı — adres kayda değil GÖRÜNÜME gidiyor. */
+     yazılı — adres kayda değil GÖRÜNÜME gidiyor. Sağ sütunun iki "tümü" bağının
+     varış görünümleri de üst yüzeyden ölçüldü. */
   const listeyeGit = useCallback(() => adreseGit(yuzeyYolu("memory", "hafiza-bellekler")), [adreseGit]);
+  const bilgiyeGit = useCallback(() => adreseGit(yuzeyYolu("memory", "hafiza-bilgi")), [adreseGit]);
+  const belgelereGit = useCallback(() => adreseGit(yuzeyYolu("memory", "hafiza-belgeler")), [adreseGit]);
 
   if (bank === null) {
     return (
@@ -504,121 +418,190 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
 
   return (
     <>
-      {/* SIRA ÜST YÜZEYDEN: takımyıldız ana sayfanın İLK ve en büyük bloğudur,
-          sayaçlar onun ALTINDA durur. Sayaçları öne almak, "bu bankada ne var"
-          sorusunu bir tablo olarak cevaplamak olurdu; üst yüzey onu bir HARİTA
-          olarak cevaplıyor ve operatörün beğendiği şey tam olarak bu. */}
-      <BolumKart
-        kimlik="hafiza-takimyildizi"
-        baslik="Bellek takımyıldızı"
-        soru="Bu bankadaki kayıtlar birbirine nasıl bağlanıyor?"
-        ikon={kayit.ikon}
-      >
-        <UcKapisi durum={graf} yol={UC_BELLEK_GRAF}>
-          {/* PANEL PAYLAŞIMLI (inceleme I-1/I-2): kırpma zinciri, rozetler ve
-              "tanınmayan biçim" cümlesi Bellekler'deki tam grafla AYNI yerden
-              gelir. İki ekran yalnız ad, yükseklik ve tıklamada ayrışır. */}
-          {(z) => (
-            <GrafPaneli zarf={z} ad="Bellek takımyıldızı" yukseklik={464} dugumTiklandi={listeyeGit} />
-          )}
-        </UcKapisi>
-      </BolumKart>
+      {/* ÜST SATIR — üst yüzeyin ana sayfa ızgarası: takımyıldız solda ve geniş,
+          sağda iki dar kart. Sayaçlar bu satırın ALTINDA durur; öne almak, "bu
+          bankada ne var" sorusunu bir tabloyla cevaplamak olurdu, oysa üst yüzey
+          onu bir HARİTAYLA cevaplıyor ve operatörün beğendiği şey tam olarak bu. */}
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
+        <BolumKart
+          kimlik="hafiza-takimyildizi"
+          baslik="Bellek takımyıldızı"
+          soru="Bu bankadaki kayıtlar birbirine nasıl bağlanıyor?"
+          ikon={Network}
+          className="min-w-0 lg:col-span-2"
+        >
+          <UcKapisi durum={graf} yol={UC_BELLEK_GRAF}>
+            {/* PANEL PAYLAŞIMLI (inceleme I-1/I-2): kırpma zinciri, rozetler ve
+                "tanınmayan biçim" cümlesi Bellekler'deki tam grafla AYNI yerden
+                gelir. İki ekran yalnız ad, yükseklik ve tıklamada ayrışır. */}
+            {(z) => (
+              <GrafPaneli zarf={z} ad="Bellek takımyıldızı" yukseklik={464} dugumTiklandi={listeyeGit} />
+            )}
+          </UcKapisi>
+        </BolumKart>
 
+        <div className="flex min-w-0 flex-col gap-4">
+          <BolumKart
+            kimlik="hafiza-sayfalar"
+            baslik="Bilgi sayfaları"
+            soru="Bu bankada hangi sayfalar yazılı?"
+            ikon={Layers}
+            className="min-w-0"
+          >
+            <BilgiSayfalari bank={bank} simdi={simdi} git={bilgiyeGit} />
+          </BolumKart>
+
+          <BolumKart
+            kimlik="hafiza-son-belgeler"
+            baslik="Son belgeler"
+            soru="Belge listesinin başında hangi kayıtlar duruyor?"
+            ikon={FileText}
+            className="min-w-0"
+          >
+            <SonBelgeler bank={bank} simdi={simdi} git={belgelereGit} />
+          </BolumKart>
+        </div>
+      </div>
+
+      {/* HAFIZA DEPOSU — üst yüzeyin `MemoryStoreCard`ı: üç sayaç + iki dağılım */}
       <BolumKart kimlik="hafiza-anasayfa" baslik={kayit.baslik} soru={kayit.soru} ikon={kayit.ikon}>
-        <UcKapisi durum={ozet} yol={UC_OZET}>
-          {(o) => {
-            if (o.stats_neden) return <Olculemedi neden="Banka sayaçları okunamadı" teknik={o.stats_neden} />;
-            if (o.stats === undefined) return <Olculemedi neden="Sayaçlar bildirilmedi" teknik="uç sayaç bacağını hiç döndürmedi" />;
-            if (o.stats === null) {
-              return <Olculemedi neden="Ölçüm denendi, sayaçlar gelmedi" teknik="sayaç alanı boş döndü ve gerekçe de taşınmadı" />;
-            }
-            const s = o.stats;
-            return (
-              <>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Sayac etiket="Kayıt" deger={s.total_nodes} teknik="toplam kayıt sayacı gelmedi ya da sayı değil" />
-                  <Sayac etiket="Belge" deger={s.total_documents} teknik="toplam belge sayacı gelmedi ya da sayı değil" />
-                  <Sayac etiket="Bağ" deger={s.total_links} teknik="toplam bağ sayacı gelmedi ya da sayı değil" />
-                </div>
+        <SayaclarKapisi ozet={ozet}>
+          {(s) => (
+            <>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <Sayac etiket="Kayıt" ikon={Database} deger={s.total_nodes} teknik="toplam kayıt sayacı gelmedi ya da sayı değil" />
+                <Sayac etiket="Belge" ikon={FileText} deger={s.total_documents} teknik="toplam belge sayacı gelmedi ya da sayı değil" />
+                <Sayac etiket="Bağ" ikon={Link2} deger={s.total_links} teknik="toplam bağ sayacı gelmedi ya da sayı değil" />
+              </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Kayıt bileşimi</h3>
-                    {/* GÖZLEM SAYACI BURAYA EKLENMEZ — VE İLK YAZIM EKLİYORDU
-                        (düzeltme turu 1, inceleme bulgusu I-1). Şerh "gözlem türü
-                        dağılımın içinde gelmiyor" diyordu; canlı ölçüm bunu ÇÜRÜTTÜ:
-                        tür dağılımı `experience`/`observation`/`world` anahtarlarını
-                        TAŞIYOR. Eklemek aynı adı listeye iki kez koyuyordu — ekranda
-                        aynı etiketle iki çubuk, üstelik tekrarlı bir React anahtarı.
-                        Toplam gözlem sayacı aşağıdaki ham satırlarda görünür. */}
-                    <Dagilim govde={s.nodes_by_fact_type} />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Bağ türleri</h3>
-                    <Dagilim govde={s.links_by_link_type} />
-                  </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="flex min-w-0 flex-col gap-2">
+                  <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Kayıt bileşimi</h3>
+                  {/* GÖZLEM SAYACI BURAYA EKLENMEZ — VE İLK YAZIM EKLİYORDU
+                      (düzeltme turu 1, inceleme bulgusu I-1). Şerh "gözlem türü
+                      dağılımın içinde gelmiyor" diyordu; canlı ölçüm bunu ÇÜRÜTTÜ:
+                      tür dağılımı `experience`/`observation`/`world` anahtarlarını
+                      TAŞIYOR. Eklemek aynı adı listeye iki kez koyuyordu — ekranda
+                      aynı etiketle iki çubuk, üstelik tekrarlı bir React anahtarı.
+                      Toplam gözlem sayacı aşağıdaki ham satırlarda görünür. */}
+                  {/* GÖZLEM DİLİMİNİN KAYNAĞI ÜST YÜZEYDEN AYRIŞIYOR VE BU YAZILI
+                      (inceleme M-1): üst yüzey üçüncü dilimi ayrı bir toplam gözlem
+                      sayacından ve bir özellik bayrağına bağlı çiziyor; biz tür
+                      dağılımının kendi anahtarından çiziyoruz (plan ruling'i bu alanı
+                      adıyla söylüyor). Seçimin kazancı: parçaların toplamı çubuğun
+                      paydasına EŞİT — iki ayrı sayacı karıştıran bir çubuk, yüzdeleri
+                      sessizce yanlış yapardı. Bedeli: iki sayaç eşit olmak zorunda
+                      değil, yani buradaki gözlem sayısı üst yüzeydekinden farklı
+                      çıkabilir. Kıyas canlı pencerede bir kez yapılmalı (devir kalemi). */}
+                  <Dagilim
+                    govde={s.nodes_by_fact_type}
+                    sira={KAYIT_TURU_SIRASI}
+                    renk={kayitTuruRengi}
+                    etiket={kayitTuruEtiketi}
+                    bosCumle="Dağılım okundu ve içi boş geldi — bu ölçülmüş bir boşluktur"
+                  />
                 </div>
+                <div className="flex min-w-0 flex-col gap-2">
+                  <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Bağ türleri</h3>
+                  <Dagilim
+                    govde={s.links_by_link_type}
+                    sira={BAG_TURU_SIRASI}
+                    renk={bagTuruRengi}
+                    etiket={bagTuruEtiketi}
+                    bosCumle="Dağılım okundu ve içi boş geldi — bu ölçülmüş bir boşluktur"
+                  />
+                </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Tazelik</h3>
-                    <Tazelik stats={s} />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Sayaç gövdesinin tamamı</h3>
-                    {/* Yukarıda ÇİZİLEN alanlar burada tekrarlanmaz; geri kalan her
-                        anahtar ham basılır, böylece tanımadığımız bir alan ekrandan
-                        sessizce düşmez. */}
-                    <HamSatirlar
-                      govde={s}
-                      atla={[
-                        "total_nodes", "total_documents", "total_links", "nodes_by_fact_type",
-                        "links_by_link_type", "last_memory_write_at",
-                        "last_consolidated_at", "pending_consolidation", "failed_consolidation",
-                        "pending_operations", "failed_operations",
-                      ]}
-                    />
-                  </div>
-                </div>
-              </>
-            );
-          }}
-        </UcKapisi>
+              <div className="flex min-w-0 flex-col gap-2">
+                <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Sayaç gövdesinin tamamı</h3>
+                {/* Yukarıda ya da aşağıdaki kartlarda ÇİZİLEN alanlar burada
+                    tekrarlanmaz; geri kalan her anahtar ham basılır, böylece
+                    tanımadığımız bir alan ekrandan sessizce düşmez. */}
+                <HamSatirlar
+                  govde={s}
+                  atla={[
+                    "total_nodes", "total_documents", "total_links", "nodes_by_fact_type",
+                    "links_by_link_type", "last_consolidated_at", "pending_consolidation",
+                    "failed_consolidation", "operations_by_status",
+                  ]}
+                />
+              </div>
+            </>
+          )}
+        </SayaclarKapisi>
       </BolumKart>
 
-      <BolumKart
-        kimlik="hafiza-akis"
-        baslik="Hafızaya giren kayıtlar"
-        soru="Seçilen pencerede ne kadar yazıldı, hangi türden?"
-        ikon={kayit.ikon}
-        aksiyon={
+      {/* BİRLEŞTİRME — üst yüzeyin ikinci bölümü: birleştirme kartı + zihin modelleri */}
+      <div className="grid min-w-0 gap-4 md:grid-cols-2">
+        <BolumKart
+          kimlik="hafiza-birlestirme"
+          baslik="Birleştirme"
+          soru="Kaç kayıt bağlandı, kaçı bekliyor, kaçı düştü?"
+          ikon={GitMerge}
+          className="min-w-0"
+        >
+          <SayaclarKapisi ozet={ozet}>{(s) => <KonsolidasyonKarti stats={s} bank={bank} simdi={simdi} />}</SayaclarKapisi>
+        </BolumKart>
+
+        <BolumKart
+          kimlik="hafiza-zihin-ozeti"
+          baslik="Zihin modelleri"
+          soru="Kaç model güncel, kaçının kapsamında okunmamış kayıt var?"
+          ikon={Brain}
+          className="min-w-0"
+        >
+          <ZihinModelleriKarti bank={bank} />
+        </BolumKart>
+      </div>
+
+      {/* ETKİNLİK — üst yüzeyin üçüncü bölümü: ingest grafiği + arka plan işleri */}
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
+        <BolumKart
+          kimlik="hafiza-akis"
+          baslik="Hafızaya giren kayıtlar"
+          soru="Seçilen pencerede ne kadar yazıldı, hangi türden?"
+          ikon={Activity}
+          className="min-w-0 lg:col-span-2"
+          aksiyon={
+            <div className="flex flex-wrap items-center gap-1">
+              {PENCERELER.map((p) => (
+                <Button key={p} variant={p === pencere ? "secondary" : "ghost"} size="xs" onClick={() => setPencere(p)}>
+                  {p}
+                </Button>
+              ))}
+            </div>
+          }
+        >
           <div className="flex flex-wrap items-center gap-1">
-            {PENCERELER.map((p) => (
-              <Button key={p} variant={p === pencere ? "secondary" : "ghost"} size="xs" onClick={() => setPencere(p)}>
-                {p}
+            {ZAMAN_ALANLARI.map((z) => (
+              <Button
+                key={z.deger}
+                variant={z.deger === zamanAlani ? "secondary" : "ghost"}
+                size="xs"
+                title={z.uzun}
+                onClick={() => setZamanAlani(z.deger)}
+                className={cn(z.deger === zamanAlani && "font-medium")}
+              >
+                {z.etiket}
               </Button>
             ))}
           </div>
-        }
-      >
-        <div className="flex flex-wrap items-center gap-1">
-          {ZAMAN_ALANLARI.map((z) => (
-            <Button
-              key={z.deger}
-              variant={z.deger === zamanAlani ? "secondary" : "ghost"}
-              size="xs"
-              title={z.uzun}
-              onClick={() => setZamanAlani(z.deger)}
-              className={cn(z.deger === zamanAlani && "font-medium")}
-            >
-              {z.etiket}
-            </Button>
-          ))}
-        </div>
-        <UcKapisi durum={ozet} yol={UC_OZET}>
-          {(o) => <Seri seri={o.zaman_serisi} neden={o.zaman_serisi_neden} acik={acikSeriler} cevir={seriCevir} />}
-        </UcKapisi>
-      </BolumKart>
+          <UcKapisi durum={ozet} yol={UC_OZET}>
+            {(o) => <Seri seri={o.zaman_serisi} neden={o.zaman_serisi_neden} acik={acikSeriler} cevir={seriCevir} />}
+          </UcKapisi>
+        </BolumKart>
+
+        <BolumKart
+          kimlik="hafiza-islemler"
+          baslik="Arka plan işleri"
+          soru="Bu bankada hangi işler koştu, hangi durumdalar?"
+          ikon={ListChecks}
+          className="min-w-0"
+        >
+          <SayaclarKapisi ozet={ozet}>{(s) => <IslemlerKarti stats={s} />}</SayaclarKapisi>
+        </BolumKart>
+      </div>
     </>
   );
 }

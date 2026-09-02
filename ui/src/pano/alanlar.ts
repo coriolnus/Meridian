@@ -267,7 +267,11 @@ export const YUZEYLER = {
      söylemek zorunda — yoksa kenar çubuğu ipucu, kırıntı ve ⌘K paleti üç ayrı
      yerde aynı yanlış vaadi tekrarlar.
 
-     SEKİZ BÖLÜM = EKRANDAKİ SEKİZ `bolum-hafiza-*` ÇAPASI (v288 paritesi).
+     SEKİZ BÖLÜM = SEKİZ GEZİNME DURAĞI (v288 paritesi: her kayıtlı bölümün ekranda bir
+     `bolum-hafiza-*` çapası VAR). Tersi zorunlu değil: ekranda kayıtsız alt-çapalar da yaşar
+     (Görev 9'da Ana Sayfa beş alt-çapa doğurdu — bellek deposu/konsolidasyon/etkinlik…);
+     v288 ters yönü 2026-08-25'te bilerek çividen çıkardı ("bir çapa gezinme durağı olmak
+     zorunda değildir").
 
      ÇİFT NAV ÇÖZÜMÜ TERSİNE DÖNDÜ (operatör kararı 2026-09-02, dağıtım sonrası
      ekran görüntüsü): iki gezinme vardı — küresel sol çubukta sekiz alt madde ve

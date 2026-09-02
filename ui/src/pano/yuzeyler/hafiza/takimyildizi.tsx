@@ -97,7 +97,10 @@ import type {
    --------------------------------------------------------------------------- */
 
 /** Jeton adı → panonun jeton değişkeni. Başka renk kaynağı YOKTUR. */
-const JETONLAR = {
+/* İHRAÇ EDİLDİ (Görev 9): ana sayfanın "bağ türleri" çubuğu AYNI hue eşlemesini
+   ve AYNI kelimeleri kullanır. İkinci bir eşleme yazmak, aynı sayfada aynı bağ
+   türünü iki renkte ve iki adla göstermek olurdu (tek-kaynak yasası). */
+export const JETONLAR = {
   mavi: "--color-seri-6",
   turuncu: "--color-seri-7",
   mor: "--color-seri-8",
@@ -233,14 +236,14 @@ function isiRengi(palet: Palet, t: number): Rgb {
 /* BAĞ TÜRÜ RENKLERİ — üst yüzeyin dört türü, hue eşlemesiyle bizim jetonlarımıza.
    Üst yüzey: anlamsal mavi · zamansal camgöbeği-yeşil · varlık kehribar · nedensel
    mor. Aşağıdaki eşleme aynı hue sırasını korur. */
-const BAG_TURU_JETONU: Readonly<Record<string, JetonAdi>> = {
+export const BAG_TURU_JETONU: Readonly<Record<string, JetonAdi>> = {
   semantic: "mavi",
   temporal: "camgobegi",
   entity: "turuncu",
   causal: "mor",
 };
 
-const BAG_TURU_ETIKETI: Readonly<Record<string, string>> = {
+export const BAG_TURU_ETIKETI: Readonly<Record<string, string>> = {
   semantic: "anlamsal",
   temporal: "zamansal",
   entity: "varlık",
