@@ -348,7 +348,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (D REVİZE sırası, operatör onayı 2026-09-01 gece — bkz. **TSK-020**: sıra `8→4→2→1→3→9`'dan `4→2-adım2→3→1→9`'a revize edildi çünkü [UYGULA-8] artık DONE'dur [yukarıda not edildi]; `2-adım1` [events.jsonl doğrudan DuckDB sorgusu] İLK SIRAYA alındı (operatör 2026-09-01, sıra başındaki araya-kalem bloğu). UYGULA-1 notu: PG artık canlıda ama SQLite→WAL kararı DEĞİŞMEZ [motor izolasyonu gerekçesi ayakta]. UYGULA-9 = Prometheus+Grafana açık adla. Bu revizyon notu TSK-020'nin dondurulu §4 gövdesine Rol-1 tarafından işlenmelidir — FAZ B §4'e dokunmaz.)
 
 - **[TSK-064] Sır-yönetimi kademeli YOL-1** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
-  What: kalan sırların LoadCredential/sops'a taşınma hazırlığı (B-DASH-CRED faz-1 emsali, TSK-049); OpenBao/unseal adımı BEKLEMEDE-7'de operatörde.
+  What: (status notu 2026-09-03 gece: REPO-TARAFI HAZIRLIK YAZILDI — `docs/TASARIM-SIR-YOL1-2026-09-03.md`: envanter [5 dosya, yalnız adlar; 16 sır / 32 ayar], sınıf A/B/C/D, Faz-0..1C; Bulgu: `.env-apisix` mod 640 → 600 [sabah], DASH_TOKEN iki dosyada, vekil TENANT anahtarını dosyadan okuyor. Canlıya dokunulmadı.) kalan sırların LoadCredential/sops'a taşınma hazırlığı (B-DASH-CRED faz-1 emsali, TSK-049); OpenBao/unseal adımı BEKLEMEDE-7'de operatörde.
   Why: sır-yönetiminin kademeli göçünün ilk basamağı — mimari madde 7, `§4` bloğunun BEKLEMEDE-7 kaydı.
   Ref: TSK-049 emsali; `BEKLEMEDE-7`.
 
