@@ -235,3 +235,43 @@ def test_hist_bos_gun_yeniden_denenmez_gecilen_defteri_degismez(gd_tezgah, capsy
     satirlar = (kok / "tick" / "gecilen.jsonl").read_text().splitlines()
     assert len(satirlar) == 1 and json.loads(satirlar[0])["gun"] == "2019-06-03"
     assert olaylar.count("baslat:2019-06-03") == 1, "boş-gün yeniden denendi"
+
+
+# --------------------------------- küçük düzeltme turu (inceleme 2026-09-03, Minor-1 / Minor-2)
+
+def test_retry_veri_yok_gununde_bitince_gecti_diye_SAYILMAZ(gd_tezgah, capsys):
+    """Minor-1: retry 'boş döndü' ile biterse bu bir pilot BAŞARISI değil, bir ATLAMADIR.
+
+    Özet onu ayrı sayar — bedel yasası sayının doğru sınıfta durmasını da ister; "geçti"
+    diye sayılan atlama, operatöre olmayan bir başarı gösterir."""
+    olaylar, kok = gd_tezgah(
+        plan={"2019-06-03": [(1, "Traceback\nEOFError\n"),
+                             (1, "KIRMIZI: HIST API 2019-06-03 için boş döndü (HTTP 404)\n")],
+              "2020-01-02": [(0, "OZET\n")]},
+        turlar=[["2019-06-03", "2020-01-02"], []])
+    assert gd.main() == 0
+    cikti = capsys.readouterr().out
+    assert olaylar.count("baslat:2019-06-03") == 2, olaylar
+    assert "0 gün 2. denemede geçti" in cikti, cikti
+    assert "1 gün 2. denemede geçildi [veri-yok günü]" in cikti, cikti
+    assert "0 gün kaldı" in cikti, cikti
+    assert (kok / "tick" / "gecilen.jsonl").exists(), "defter yazımı bozuldu"
+
+
+def test_kesik_indirme_main_icinde_tek_satir_basar_ve_rc1(
+        tmp_path, sahte_ag, monkeypatch, capsys):
+    """Minor-2: journald'e ham traceback DÜŞMEZ — arıza tek satırda, doğru adıyla okunur.
+
+    Sınıflama değişmez: basılan satır 'kesik indirme' taşır, geri-dolum `_ariza_sinifi` ile
+    onu aynı şekilde tanır. Ayrıştırmaya HİÇ girilmez (vakanın ~8 dk CPU'su yanmaz)."""
+    sahte_ag(b"x" * 10)
+    monkeypatch.setattr(pilot, "hist_tops_kaydi",
+                        lambda gun: {"version": "1.6", "size": 100, "link": "http://ornek/x.gz"})
+    ayristirildi: list = []
+    monkeypatch.setattr(pilot, "ayristir", lambda *a, **k: ayristirildi.append(a))
+    rc = pilot.main(["--gun", "2020-09-15", "--kok", str(tmp_path)])
+    cikti = capsys.readouterr().out
+    assert rc == 1, cikti
+    assert ayristirildi == [], "kesik gz ayrıştırmaya girdi — vakanın ~8 dk CPU'su yine yanıyor"
+    assert "KIRMIZI: kesik indirme 2020-09-15.pcap.gz 10/100 bayt" in cikti, cikti
+    assert "Traceback" not in cikti, cikti

@@ -99,15 +99,22 @@ def _sonuc_isle(g: str, p: subprocess.Popen, bugun: dt.date, atlanan: set[str]) 
     return "cokme", cikti
 
 
-def _ozet(dusen: list[tuple[str, str]], gecen2: list[str],
+def _ozet(dusen: list[tuple[str, str]], gecen2: list[str], gecildi2: list[str],
           kalan: list[tuple[str, str]]) -> str:
     """Bedel yasası: yeniden deneme GÜRÜLTÜYÜ azaltır — ne kadarını yuttuğu ölçülmeden
-    sessizleşmesi körlüktür. Bu özet her düşüşlü turda basılır (okuyucu: journald)."""
+    sessizleşmesi körlüktür. Bu özet her düşüşlü turda basılır (okuyucu: journald).
+
+    'geçti' ile 'geçildi' AYRI sayılır (inceleme Minor-1, 2026-09-03): retry'de HIST 'boş
+    döndü' cevabına denk gelen gün bir veri-yok günüdür, bir pilot başarısı değil."""
     satir = [f"ÖZET (işçi dayanıklılığı): {len(dusen)} gün 1. denemede düştü, "
-             f"{len(gecen2)} gün 2. denemede geçti, {len(kalan)} gün kaldı",
+             f"{len(gecen2)} gün 2. denemede geçti, "
+             f"{len(gecildi2)} gün 2. denemede geçildi [veri-yok günü], "
+             f"{len(kalan)} gün kaldı",
              "  1. deneme sınıfları: " + ", ".join(f"{g}={s}" for g, s in dusen)]
     if gecen2:
         satir.append("  2. denemede geçen: " + ", ".join(gecen2))
+    if gecildi2:
+        satir.append("  2. denemede geçildi [veri-yok günü]: " + ", ".join(gecildi2))
     if kalan:
         satir.append("  KALAN (2. deneme de düştü): " + ", ".join(f"{g}={s}" for g, s in kalan))
     return "\n".join(satir)
@@ -212,7 +219,8 @@ def main() -> int:
                       f"BİR kez yeniden deneniyor\n" + cikti[-2000:], flush=True)
                 yeniden.append((g, _isci_baslat(g)))
 
-        gecen2: list[str] = []
+        gecen2: list[str] = []      # retry'de pilot GERÇEKTEN geçti
+        gecildi2: list[str] = []    # retry 'boş döndü'ye denk geldi — geçiş DEĞİL, atlama
         kalan: list[tuple[str, str]] = []
         for g, p in yeniden:
             durum, cikti = _sonuc_isle(g, p, bugun, atlanan)
@@ -221,11 +229,15 @@ def main() -> int:
                 kalan.append((g, sinif))
                 print(f"KIRMIZI: {g} rc={p.returncode} (2. deneme de düştü) · {sinif}\n"
                       + cikti[-2000:], flush=True)
-            else:
+            elif durum == "tamam":
                 gecen2.append(g)
+            else:
+                # inceleme Minor-1 (2026-09-03): 'gecildi'/'taze' bir pilot başarısı DEĞİLDİR;
+                # "geçti" diye sayılırsa özet operatöre olmayan bir başarı gösterir.
+                gecildi2.append(g)
 
         if dusen:
-            print(_ozet(dusen, gecen2, kalan), flush=True)
+            print(_ozet(dusen, gecen2, gecildi2, kalan), flush=True)
         if kalan:
             return 1   # birim failed → panoda görünür; timer sonraki saatte yeniden dener
     # not: while True'dan tek çıkışlar yukarıdaki return'lerdir

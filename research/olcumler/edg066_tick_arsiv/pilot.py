@@ -316,7 +316,14 @@ def main(argv=None):
         return 0
     ham = a.kok / "tick" / "ham" / f"{a.gun}.pcap.gz"
     ham.parent.mkdir(parents=True, exist_ok=True)
-    indir(kayit["link"], ham, int(kayit["size"]))
+    try:
+        indir(kayit["link"], ham, int(kayit["size"]))
+    except KesikIndirme as e:
+        # inceleme Minor-2 (2026-09-03): journald'e ham traceback düşmesin — arıza TEK satırda
+        # ve doğru adıyla okunur. Sınıflama DEĞİŞMEZ: satır "kesik indirme" taşır, geri-dolum
+        # sürücüsü (_ariza_sinifi) onu aynı şekilde tanır. Yarım gz'yi indir() zaten sildi.
+        print(e, flush=True)
+        return 1
     oz = ayristir(ham, a.kok, a.gun, a.limit_paket, kapsam)
 
     ist = oz.pop("ist")
