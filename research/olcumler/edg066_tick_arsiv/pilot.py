@@ -52,8 +52,34 @@ def hist_tops_kaydi(gun: str):
     raise SystemExit(f"KIRMIZI: HIST API {gun} için boş döndü (listede TOPS yayını yok)")
 
 
+class KesikIndirme(RuntimeError):
+    """İnen bayt sayısı HIST'in bildirdiği boyutla uyuşmadı (TSK-107, vaka 2026-09-02 07:08Z).
+
+    O vakada kesik gz sessizce diske yazıldı, ~8 dk ayrıştırma CPU'sundan SONRA gzip
+    `EOFError` ile patladı ve arıza YANLIŞ ADLA (gzip iç hatası gibi) göründü. Bu sınıf
+    arızayı doğduğu yerde ve doğru adla söyler; yarım dosya önbellekte BIRAKILMAZ."""
+
+
+def _boyut_uyar(hedef: Path, beklenen_bayt):
+    """Tek kaynak: hem önbellek kapısı hem indirme-sonrası doğrulama BUNU çağırır — aynı
+    gerçeğin iki kopyası sessizce ayrışır (tek-kaynak yasası).
+
+    True = boyut tuttu · False = tutmadı · None = HÜKÜM YOK (beklenen bilinmiyor). Üçüncü
+    hâl uydurma yasağıdır: 'bilmiyorum' ile 'eşit değil' aynı şey değildir."""
+    if not beklenen_bayt:
+        return None
+    if not hedef.exists():
+        return False
+    return hedef.stat().st_size == beklenen_bayt
+
+
 def indir(url: str, hedef: Path, beklenen_bayt: int):
-    if hedef.exists() and hedef.stat().st_size == beklenen_bayt:
+    if _boyut_uyar(hedef, beklenen_bayt) is None:
+        # Yasa 6: kıyasın ATLANDIĞI görünür olmalı — sessiz atlama, geçmiş kıyastan
+        # ayırt edilemez. Çağrı başına bir kez (iki kapı da aynı yardımcıdan besleniyor).
+        print(f"  NOT: beklenen boyut bilinmiyor ({beklenen_bayt!r}) — boyut kıyası atlandı "
+              f"(önbellek kapısı da, indirme-sonrası doğrulama da)")
+    elif _boyut_uyar(hedef, beklenen_bayt):
         print(f"  ham dosya zaten var ({beklenen_bayt}b) — indirme atlandı")
         return
     h = hashlib.sha256()
@@ -62,7 +88,11 @@ def indir(url: str, hedef: Path, beklenen_bayt: int):
         while parca := r.read(1 << 22):
             h.update(parca)
             f.write(parca)
-    print(f"  indirildi: {hedef.stat().st_size}b {time.time()-t0:.0f}sn sha256={h.hexdigest()[:16]}…")
+    inen = hedef.stat().st_size
+    if _boyut_uyar(hedef, beklenen_bayt) is False:
+        hedef.unlink()   # yarım gz önbellekte kalırsa sonraki tur yine EOFError'a yürür
+        raise KesikIndirme(f"KIRMIZI: kesik indirme {hedef.name} {inen}/{beklenen_bayt} bayt")
+    print(f"  indirildi: {inen}b {time.time()-t0:.0f}sn sha256={h.hexdigest()[:16]}…")
 
 
 def paketler(f):

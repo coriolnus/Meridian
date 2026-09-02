@@ -19,6 +19,12 @@ Bekçiler (her turda, iş AÇILMADAN önce):
   · Disk payı: ham gz geçicileri için <25 GB boş kaldıysa KIRMIZI çık (ENOSPC'ye yürüme).
   · flock tekilliği: iki sürücü aynı anda koşamaz (timer + elle koşum çakışması).
 
+İşçi dayanıklılığı (TSK-087, 2026-09-02): rc≠0 veren gün AYNI koşumda BİR kez yeniden
+denenir — öteki işçi sürerken, onun bitmiş işi kesilmeden. İkinci çöküşte koşum yine
+KIRMIZI'dır; her düşüşlü tur bedel özeti basar (kaç gün düştü / 2. denemede geçti / kaldı).
+Kalıcı-geçici arıza sınıfı ayrımı YALNIZ mesajdadır: sınıf rc'den ölçülemez, karar ona
+bağlanmaz. Kilit/tavan/pencere/defter mantığı DEĞİŞMEDİ.
+
 Hüküm/okuyucu (Yasa 6): stdout → journald (birim düşerse /api/infra 'arizali' sınıflar —
 failed'in okuyucusu var); kalıcı defter /opt/veri/tick/manifest.jsonl (pilot yazar) +
 gecilen.jsonl (tatil/veri-yok günleri, bu sürücü yazar).
@@ -45,6 +51,66 @@ ISCI = 2
 # DISK_PAYI) AYNEN — kesintisizlik kaynak çitlerini gevşetmez.
 SEANS_KILIDI = False
 TAZE_GUN = 5                        # bundan yeni boş HIST cevabı "henüz yayımlanmadı" sayılır
+
+
+def _isci_baslat(g: str) -> subprocess.Popen:
+    print(f"başlıyor: {g}", flush=True)
+    return subprocess.Popen(
+        ["nice", "-n", "10", "ionice", "-c", "3", str(PY), str(PILOT),
+         "--gun", g, "--kapsam", str(KAPSAM)],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+
+def _ariza_sinifi(cikti: str) -> str:
+    """YALNIZ MESAJ içindir — yeniden deneme kararı bundan TÜREMEZ (TSK-087).
+
+    Sınıf rc'den ölçülemez, ancak çıktı metninden TAHMİN edilir; tahmine karar bağlanmaz,
+    bu yüzden geçici de kalıcı da bir kez yeniden denenir. Ayrım operatörün okuduğu özette
+    yaşar: "hep aynı sınıf" deseni gerçek kök nedene işaret eder."""
+    if "kesik indirme" in cikti:
+        return "kesik indirme (geçici)"
+    if "EOFError" in cikti:
+        return "gz akışı erken bitti (geçici)"
+    return "sınıf bilinmiyor (kalıcı olabilir)"
+
+
+def _sonuc_isle(g: str, p: subprocess.Popen, bugun: dt.date, atlanan: set[str]) -> tuple[str, str]:
+    """Bir işçinin bitişini işler: 'tamam' | 'gecildi' | 'taze' | 'cokme' + ham çıktı.
+
+    manifest.jsonl'i pilot yazar; gecilen.jsonl yazımı burada ve TSK-087'de DEĞİŞMEDİ —
+    HIST boş-gün dalı çökme SAYILMAZ, dolayısıyla yeniden denenmez."""
+    cikti, _ = p.communicate()
+    son = cikti.strip().splitlines()[-3:] if cikti.strip() else ["<çıktı yok>"]
+    if p.returncode == 0:
+        print(f"bitti: {g} · " + " | ".join(son), flush=True)
+        return "tamam", cikti
+    if "boş döndü" in cikti:
+        yas = (bugun - dt.date.fromisoformat(g)).days
+        if yas > TAZE_GUN:
+            with (KOK / "tick" / "gecilen.jsonl").open("a") as f:
+                f.write(json.dumps({
+                    "ts": dt.datetime.now(dt.timezone.utc).isoformat(),
+                    "gun": g, "neden": "hist-bos (tatil/yarım gün)"}) + "\n")
+            print(f"geçildi: {g} — HIST boş, yaş {yas} gün (tatil sayıldı)", flush=True)
+            return "gecildi", cikti
+        atlanan.add(g)   # bu koşumda atla, kalıcı kayıt YOK — sonraki koşum yine dener
+        print(f"taze-boş: {g} — henüz yayımlanmamış olabilir, kalıcı kayıt yok", flush=True)
+        return "taze", cikti
+    return "cokme", cikti
+
+
+def _ozet(dusen: list[tuple[str, str]], gecen2: list[str],
+          kalan: list[tuple[str, str]]) -> str:
+    """Bedel yasası: yeniden deneme GÜRÜLTÜYÜ azaltır — ne kadarını yuttuğu ölçülmeden
+    sessizleşmesi körlüktür. Bu özet her düşüşlü turda basılır (okuyucu: journald)."""
+    satir = [f"ÖZET (işçi dayanıklılığı): {len(dusen)} gün 1. denemede düştü, "
+             f"{len(gecen2)} gün 2. denemede geçti, {len(kalan)} gün kaldı",
+             "  1. deneme sınıfları: " + ", ".join(f"{g}={s}" for g, s in dusen)]
+    if gecen2:
+        satir.append("  2. denemede geçen: " + ", ".join(gecen2))
+    if kalan:
+        satir.append("  KALAN (2. deneme de düştü): " + ", ".join(f"{g}={s}" for g, s in kalan))
+    return "\n".join(satir)
 
 
 def rth_yakin(pay_dk: int = 35) -> bool:
@@ -129,35 +195,39 @@ def main() -> int:
                 dt.datetime.now(dt.timezone.utc).isoformat() + "\n")
             return 0
 
-        surecler = []
-        for g in gunler:
-            print(f"başlıyor: {g}", flush=True)
-            p = subprocess.Popen(
-                ["nice", "-n", "10", "ionice", "-c", "3", str(PY), str(PILOT),
-                 "--gun", g, "--kapsam", str(KAPSAM)],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            surecler.append((g, p))
+        surecler = [(g, _isci_baslat(g)) for g in gunler]
 
+        # TSK-087: çöken gün AYNI koşumda bir kez yeniden denenir. Eski davranış ilk rc≠0'da
+        # `return 1` idi — öteki işçinin BİTMİŞ işi toplanmadan koşum ölüyor, saatlik timer'a
+        # kadar bekleniyordu. Yeniden deneme, öteki işçi hâlâ sürerken başlatılır (ISCI=2
+        # paralelliği korunur); ikinci çöküşte koşum yine KIRMIZI.
+        dusen: list[tuple[str, str]] = []
+        yeniden: list[tuple[str, subprocess.Popen]] = []
         for g, p in surecler:
-            cikti, _ = p.communicate()
-            son = cikti.strip().splitlines()[-3:] if cikti.strip() else ["<çıktı yok>"]
-            if p.returncode == 0:
-                print(f"bitti: {g} · " + " | ".join(son), flush=True)
-            elif "boş döndü" in cikti:
-                yas = (bugun - dt.date.fromisoformat(g)).days
-                if yas > TAZE_GUN:
-                    with (KOK / "tick" / "gecilen.jsonl").open("a") as f:
-                        f.write(json.dumps({
-                            "ts": dt.datetime.now(dt.timezone.utc).isoformat(),
-                            "gun": g, "neden": "hist-bos (tatil/yarım gün)"}) + "\n")
-                    print(f"geçildi: {g} — HIST boş, yaş {yas} gün (tatil sayıldı)", flush=True)
-                else:
-                    atlanan.add(g)   # bu koşumda atla, kalıcı kayıt YOK — sonraki koşum yine dener
-                    print(f"taze-boş: {g} — henüz yayımlanmamış olabilir, kalıcı kayıt yok",
-                          flush=True)
+            durum, cikti = _sonuc_isle(g, p, bugun, atlanan)
+            if durum == "cokme":
+                sinif = _ariza_sinifi(cikti)
+                dusen.append((g, sinif))
+                print(f"DÜŞTÜ (1. deneme): {g} rc={p.returncode} · {sinif} — aynı koşumda "
+                      f"BİR kez yeniden deneniyor\n" + cikti[-2000:], flush=True)
+                yeniden.append((g, _isci_baslat(g)))
+
+        gecen2: list[str] = []
+        kalan: list[tuple[str, str]] = []
+        for g, p in yeniden:
+            durum, cikti = _sonuc_isle(g, p, bugun, atlanan)
+            if durum == "cokme":
+                sinif = _ariza_sinifi(cikti)
+                kalan.append((g, sinif))
+                print(f"KIRMIZI: {g} rc={p.returncode} (2. deneme de düştü) · {sinif}\n"
+                      + cikti[-2000:], flush=True)
             else:
-                print(f"KIRMIZI: {g} rc={p.returncode}\n" + cikti[-2000:], flush=True)
-                return 1   # birim failed → panoda görünür; timer sonraki saatte yeniden dener
+                gecen2.append(g)
+
+        if dusen:
+            print(_ozet(dusen, gecen2, kalan), flush=True)
+        if kalan:
+            return 1   # birim failed → panoda görünür; timer sonraki saatte yeniden dener
     # not: while True'dan tek çıkışlar yukarıdaki return'lerdir
 
 
