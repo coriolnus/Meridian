@@ -63,3 +63,37 @@ def test_durdurma_sabit_kalabilir_ama_ucluyu_kapsar():
     assert stop, "durdurma satırı yok"
     assert all(x in stop[0] for x in ("meridian", "meridian-barsarchive", "meridian-learn")), \
         "durdurma aday kümesi daraltılmış — durdurmak güvenli yöndür, küme kalır"
+
+
+def test_turetim_disabled_son_elemanla_SIFIR_cikar(tmp_path):
+    """VAKA 2026-09-02 (sabah penceresi, ilk gerçek koşum): `[ … ] && printf` kalıbı döngünün
+    SON elemanı disabled olunca uzak kabuğu 1 ile bitirdi; ssh 1 döndürdü, yerel `set -e`
+    `_BASLAT=$( … )` atamasında dagit'i [4] başlığından hemen sonra SESSİZCE öldürdü — rsync
+    inmiş, worker restart edilmemiş, beyan yazılmamıştı (iki gerçek: diskte yeni, süreçte eski
+    kod). Betiğin kendi 132. satır doktrini tam bu sınıfı yasaklar; v367'nin metin çivileri
+    türetmeyi KOŞMADIĞI için tuzak yeşilken yaşadı. Bu çivi türetme snippet'ini dagit.sh'nin
+    GERÇEK metninden söküp sahte `systemctl` ile koşar: disabled son elemanla çıkış kodu 0
+    ve liste yalnız enabled birimleri taşımalı."""
+    m = re.search(r"_BASLAT=\"\$\(\"\$\{SSH\[@\]\}\" '(.+?)'\)\"", METIN, re.S)
+    assert m, "_BASLAT türetim snippet'i dagit.sh'de bulunamadı (yapı değiştiyse çiviyi taşı)"
+    snippet = m.group(1)
+
+    stub = tmp_path / "systemctl"
+    stub.write_text(
+        "#!/bin/bash\n"
+        "# sahte is-enabled: gerçek semantik — enabled→stdout'a 'enabled' + çıkış 0;\n"
+        "# disabled→stdout'a 'disabled' + ÇIKIŞ 1 (vakanın tetiği tam bu koddur).\n"
+        'case "$2" in\n'
+        "  meridian|meridian-barsarchive) echo enabled; exit 0;;\n"
+        "  meridian-learn) echo disabled; exit 1;;\n"
+        "  *) echo unknown; exit 1;;\n"
+        "esac\n", encoding="utf-8")
+    stub.chmod(0o755)
+
+    p = subprocess.run(["bash", "-c", snippet], capture_output=True, text=True,
+                       env={"PATH": f"{tmp_path}:/usr/bin:/bin"})
+    assert p.returncode == 0, (
+        f"türetim snippet'i disabled-son-eleman dünyasında {p.returncode} ile çıktı — "
+        f"set -e altındaki atama dagit'i yine sessizce öldürür (stderr: {p.stderr!r})")
+    assert p.stdout.split() == ["meridian", "meridian-barsarchive"], \
+        f"liste yanlış: {p.stdout!r} — enabled ikili beklenirdi, learn dışarıda"

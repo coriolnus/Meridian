@@ -445,7 +445,13 @@ echo "=== [4/5] bakım penceresi ==="
 # kalır — kalıcılık isteyen `enable` eder (pano birim-anahtarı da tam bu sözlükle konuşur).
 _BIRIM_ADAYLARI="meridian meridian-barsarchive meridian-learn"
 _BASLAT="$("${SSH[@]}" 'for u in meridian meridian-barsarchive meridian-learn; do
-  [ "$(systemctl is-enabled "$u" 2>/dev/null)" = "enabled" ] && printf "%s " "$u"; done')"
+  if [ "$(systemctl is-enabled "$u" 2>/dev/null)" = "enabled" ]; then printf "%s " "$u"; fi; done')"
+# AÇIK `if` — `[ … ] && printf` DEĞİL (satır ~132 doktrininin UZAK-kabuk hâli; vaka 2026-09-02
+# sabah penceresi, İLK gerçek koşum): son eleman disabled olunca `&&` kalıbı döngüyü 1 ile
+# bitirir, ssh 1 döner ve yerel `set -e` bu atamada betiği [4] başlığından hemen sonra SESSİZCE
+# öldürür — rsync inmiş, restart/beyan kalmıştı (diskte yeni, süreçte eski kod). ssh'ın GERÇEK
+# arızası yine yüksek sesli kalır: bağlantı düşerse liste boş döner ve alttaki çekirdek-birim
+# kapısı dağıtımı adıyla durdurur. Çivi: test_dagit_istenen_durum_v367 (davranışsal, sahte systemctl).
 if [[ " $_BASLAT" != *" meridian "* ]]; then
   echo "  !! ÇEKİRDEK BİRİM 'meridian' enabled DEĞİL — motoru kapalı bırakacak pencere sessiz olamaz."
   echo "     Bilinçliyse önce birimi enable et ya da bu dağıtımı elle yürüt. DAĞITIM DURDU."
