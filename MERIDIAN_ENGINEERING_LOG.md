@@ -1812,3 +1812,26 @@ gösterir — üç sayı adıyla (çizilen/vekil/toplam) ve gelmeyen alan "— (
 9d6b81a → kapı 67b5f47 → T2 d968e4c → ROADMAP 61763fa → T4 e8f899f → T3 1ecbbe4 → bu kayıt; push +
 dağıtım penceresi + canlı görsel doğrulama → TSK-108 DONE. Havuza iki kalem: TSK-109 (webhook
 okuması), TSK-110 (pano bayat-gövde sınıfı).
+
+**Görsel tur dalgası (aynı gece, T5/T6):** operatörün beş bulgusu (çift nav · raf ad çakışması ·
+grafik tipi · constellation yok / varlık grafı uzak · bank config formsuz) iki görevle kapandı. T5
+(ebc8da0): küresel nav'da yüzey `altBolumNav: "yuzey-ici"` beyanı; eski "Belgeler" rafı yüzeyi KALKTI
+— içeriği konsolide: dersler (`/api/memory`, Hindsight korpusunda yok) → Bilgi Tabanı "Meridian
+dersleri", karar arşivi (`/api/karar-belgeleri`; Hindsight'a ingest edilmiş, çiftti) → Belgeler
+listesine `basename(id) ↔ ad` join (canlıda doğrulandı: belge id = repo yolu), karar şeridi (özet,
+runbook-HEAD, ok:false — bedel yasası), v312 22→28; ana sayfa grafiği CP AreaChart satır satır;
+Bank Configuration 8 bölüm/21 alan devre-dışı, overrides absent=INHERIT. T6-A (5fd4ff1 + c1dac25):
+`/bellek-graf` (→/graph; limit.maximum yok; R7 CP varsayılanı 200), `/profil`; `features` ayrı yol
+değil → `/version`dan `saglik.ozellikler` (R28). T6-B (3fdd746): kütüphanesiz canvas takımyıldızı —
+CP constellation.tsx'in ~30 kuralı çapalı; ölçülmüş sapmalar: node.data'da `type` yok (fact-type
+`table_rows`tan), CP'de tam graf yok (Bellekler "Tam graf" Meridian eklentisi), lejant `--color-*`
+kapsam hatası doğrulanıp düzeltildi. Tam suite #2: 1 failed (v286 çıplak hex — canvas yedek paleti)
+/ 9480 passed → hex yedekleri kaldırıldı, jeton çözülemezse dürüst hâl; etkilenen küme yeşil.
+DERS-4 (yorum): "konsolide" operatörde İÇERİK tekilleştirmesidir (aynı şey iki yerde olmasın), sunum
+birleştirme/redirect değil — üç düzeltme turu; bölüm-bazlı veri kaynağı ölçülmeden brief verilmez
+(hafıza kaydı). DERS-5 (süreç): `git add -A -- <dizin>` bile shim'e takılır ve commit eksik atılır;
+çok dosyalı ekleme porcelain'den tek tek, commit sonrası `git show --stat` kıyası (bugün iki vaka:
+T2 bundle, T5 ui/src). DERS-6: mutasyon turu build'den ÖNCE — aksi hâlde dagit [5c] tazelik kapısı
+içerik aynıyken mtime'a takılır. Havuza: TSK-111 (Faz-2 yazma), TSK-112 (varlık künyesi paneli).
+Kararlar: B-TAVAN-502 kapalı (502 bilinçli), B-PG-ROTASYON icra+kanıt, konsolidasyon gece dokunulmadı.
+DONE koşulu: dağıtım + operatör görsel turu.
