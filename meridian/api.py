@@ -7455,20 +7455,13 @@ def _kapi_maskele(metin: str, sir: str | None) -> str:
 
 
 def _kapi_admin_anahtari() -> tuple[str | None, str | None]:
-    """`(anahtar, neden)` — anahtar DÖNER ama hiçbir çıktıya BASILMAZ; `neden` sır taşımaz."""
-    yol = Path(KAPI_ENV_DOSYASI)
-    try:
-        satirlar = yol.read_text(encoding="utf-8", errors="replace").splitlines()
-    except OSError as e:
-        return None, (f"admin anahtar dosyası okunamadı ({type(e).__name__}): {KAPI_ENV_DOSYASI} "
-                      f"— bu makinede APISIX kurulu değil ya da dosya erişilemez")
-    for satir in satirlar:
-        if satir.startswith(KAPI_ANAHTAR_ONEKI):
-            deger = satir.split("=", 1)[1].strip()
-            if deger:
-                return deger, None
-            return None, f"{KAPI_ENV_DOSYASI} içindeki {KAPI_ANAHTAR_ONEKI} satırı BOŞ"
-    return None, f"{KAPI_ENV_DOSYASI} içinde {KAPI_ANAHTAR_ONEKI} satırı yok"
+    """`(anahtar, neden)` — anahtar DÖNER ama hiçbir çıktıya BASILMAZ; `neden` sır taşımaz.
+
+    GÖVDESİ `_env_anahtari`ye ÇIKARILDI (2026-09-02, TSK-091): aynı ayrıştırma Hindsight
+    yüzeyinde de gerekiyordu ve iki kopya sessizce ayrışırdı (tek-kaynak yasası). Bu ad
+    SARMALAYICI olarak KALIR — v361 çivileri ve `api_gateway` ona yaslanıyor. Sabit MODÜL
+    DÜZEYİNDE okunur: testler `api.KAPI_ENV_DOSYASI`i monkeypatch'liyor."""
+    return _env_anahtari(KAPI_ENV_DOSYASI, KAPI_ANAHTAR_ONEKI)
 
 
 def _kapi_getir(url: str, basliklar: dict | None, sir: str | None) -> tuple[bytes | None, str | None]:
@@ -7654,6 +7647,281 @@ def api_gateway(request: Request):
                    "rota_kaynagi_repo": KAPI_ROTA_KAYNAGI,
                    "zaman_asimi_s": KAPI_ZAMAN_ASIMI_S},
     }
+
+
+# =================================================================================================
+# HAFIZA YÜZEYİ — /api/hindsight (TSK-091 Görev 1)
+# =================================================================================================
+#
+# Yukarıdaki `v361 · KAPI YÜZEYİ` bloğunun KARDEŞİDİR ve onun üç sözleşmesini AYNEN devralır:
+# sır yalnız giden başlıkta yaşar · ölçülemezlik 500 değil 200 + dolu `neden` · her dış çağrı
+# zaman aşımlı. O gerekçeler BURADA TEKRARLANMAZ (tek-kaynak yasası: iki kopya sessizce ayrışır) —
+# yukarıya bak. Aşağıda yalnız Hindsight'a ÖZGÜ olanlar yazılıdır.
+#
+# KİMLİK DESENİ KOPYALANAMAZ, ÖLÇÜLDÜ (2026-09-02). Hindsight'ın `/v1/*` uçları
+# `Authorization: Bearer <anahtar>` ile 200, `X-API-Key` ile 401 verir. v361'in `X-API-KEY` deseni
+# buraya kopyalansaydı yüzey sessizce 401 alır ve pano "Hindsight yok" derdi — yani ÖLÇÜM
+# ARIZASINI ALTYAPI ARIZASI diye gösterirdi. Çivi: `test_hafiza_yuzeyi_v375.py`.
+#
+# İKİ BACAK AYRI ÖLÇÜLÜR. `saglik` (anahtarsız `/health` + `/version`) ile `bankalar` (kimlikli
+# `/v1/*`) birbirine BAĞLANMAZ: anahtar dosyası bu makinede yoktur ama Hindsight'ın ayakta olup
+# olmadığı hâlâ ölçülebilir. Bağlamak tek arızayı iki körlüğe çevirirdi (v361'in prometheus dersi).
+# `/health` ve `/version` anahtarsız çağrılır: sırrı gereksiz yere tele koymak, sızıntı yüzeyini
+# BEDELSİZ büyütmektir.
+#
+# BEDEL AÇIKÇA TAŞINIR (bedel yasası). `/api/hindsight` banka başına ÜÇ çağrı yapar; toplam
+# `2 + 1 + 3N`. Kazanılan: pano tek yoklamada bütün Hafıza tablosunu doldurur. Kaybedilen: gecikme
+# N ile DOĞRUSAL büyür ve N'e TAVAN YOKTUR — bugün N=2 (`meridian-arsiv`, `smoke-067`; ölçüldü
+# 2026-09-02), ama bot bank'leri doğduğunda bu uç 15 sn'lik pano yoklamasının altında kalamayabilir.
+# Tavan/sayfalama UYDURULMADI: ölçülmemiş bir eşik yazmak, ölçülmüş bir sayı gibi okunurdu.
+HAFIZA_TABAN_URL = "http://127.0.0.1:8888"
+# A1'de 0600 ve F9 dışı. Bu makinede dosya YOKTUR ve olmaması ihlal değil ÖLÇÜM SONUCUDUR
+# (`KAPI_ENV_DOSYASI` emsali birebir); testler monkeypatch'ler.
+HAFIZA_ENV_DOSYASI = "/opt/hindsight/.env"
+HAFIZA_ANAHTAR_ONEKI = "HINDSIGHT_API_TENANT_API_KEY="
+# BEYAN, ZORLAYICI DEĞİL: zaman aşımını gerçekten uygulayan `_kapi_getir`in okuduğu
+# `KAPI_ZAMAN_ASIMI_S`dir. Sözleşme sabiti brief'te birebir verildiği için türetme yerine AYRIŞMA
+# ÇİVİSİ kuruldu (`test_zaman_asimi_kopyasi_ayrisirsa_isirir`): ikisi ayrışırsa gövdedeki beyan
+# yalan söylemeye başlar ve pano 15 sn'lik yoklamada asılır.
+HAFIZA_ZAMAN_ASIMI_S = 2.0
+HAFIZA_LISTE_TAVANI = 200
+
+# Hindsight'ın LİSTE ZARFININ ŞEKLİ bu makinede ÖLÇÜLEMEDİ: openapi'den yol listesi ölçüldü, gövde
+# ÖRNEKLERİ değil. Bu yüzden yaygın zarf alanları sırayla denenir — ve hiçbiri tutmazsa SESSİZ `[]`
+# DÖNÜLMEZ, `neden` üretilir. Sessiz boş liste panoda "hafıza boş" diye okunurdu; oysa ölçülen şey
+# "zarfı tanımadım"dır ve bu bir ŞEMA SÜRÜKLENMESİ ALARMIdır.
+_HAFIZA_DIZI_ALANLARI = ("items", "data", "results", "banks", "memories")
+# Banka kimliğinin hangi alanda geldiği de ölçülmedi; aynı gerekçeyle birden çok ad denenir.
+_HAFIZA_KIMLIK_ALANLARI = ("bank_id", "id", "name")
+# SÜRÜM ALANI — İLK SIRADAKİ ÖLÇÜLDÜ (2026-09-02, A1: `{"api_version":"0.9.2","features":{…}}`;
+# kayıt `.superpowers/sdd/2026-09-02-hafiza-sayfasi/upstream-govde-olcumu.txt`). Önce `version`
+# VARSAYILMIŞTI ve canlıda `surum` sonsuza dek `null` kalacaktı — üstelik SESSİZCE. Ders: skaler
+# alan da dizi/kimlik zarfları kadar sürüklenir; "tanımadığını sessizce boş sayma" ilkesinin
+# İSTİSNASI YOKTUR.
+_HAFIZA_SURUM_ALANLARI = ("api_version", "version")
+
+
+def _env_anahtari(dosya: str, onek: str) -> tuple[str | None, str | None]:
+    """`(anahtar, neden)` — anahtar DÖNER ama hiçbir çıktıya BASILMAZ; `neden` sır taşımaz.
+
+    TEK KAYNAK (2026-09-02 çıkarımı): aynı `.env` ayrıştırması iki yüzeyde (v361 APISIX + v375
+    Hindsight) kopyalanacaktı; iki kopya sessizce ayrışır ve "anahtar yok" ile "satır boş"
+    ayrımı bir tarafta kaybolurdu. `_kapi_admin_anahtari` artık bunun sarmalayıcısıdır."""
+    yol = Path(dosya)
+    try:
+        satirlar = yol.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as e:
+        return None, (f"anahtar dosyası okunamadı ({type(e).__name__}): {dosya} "
+                      f"— bu makinede ilgili servis kurulu değil ya da dosya erişilemez")
+    for satir in satirlar:
+        if satir.startswith(onek):
+            deger = satir.split("=", 1)[1].strip()
+            if deger:
+                return deger, None
+            # BOŞ DEĞER ANAHTAR DEĞİLDİR: `Bearer ` göndermek 401 döndürür ve arıza "yanlış
+            # anahtar" gibi görünür; gerçek arıza "anahtar hiç yok"tur.
+            return None, f"{dosya} içindeki {onek} satırı BOŞ"
+    return None, f"{dosya} içinde {onek} satırı yok"
+
+
+def _hafiza_anahtari() -> tuple[str | None, str | None]:
+    """Hindsight tenant anahtarı — `_env_anahtari`nin Hindsight bacağı."""
+    return _env_anahtari(HAFIZA_ENV_DOSYASI, HAFIZA_ANAHTAR_ONEKI)
+
+
+def _hafiza_kacir(deger: str) -> str:
+    """Kullanıcı girdisini upstream URL'inin PATH'ine sokmadan önceki TEK savunma.
+
+    `quote(safe="")` `/`yi `%2F` yapar ama NOKTAYI kaçırMAZ (`.` "her zaman güvenli" kümesindedir):
+    `../..` upstream'e `..%2F..` diye giderdi ve `%2F`yi ROTALAMADAN ÖNCE çözen bir vekil/sunucu
+    katmanı (bilinen bypass sınıfı) onu yine yol atlaması olarak okurdu. Bu yüzden nokta da açıkça
+    kaçırılır: geriye yalnız harf/rakam/`-`/`_`/`~` ve yüzde-sekizlileri kalır. Bu uç SALT-OKUNUR
+    olduğu için değil, salt-okunur KALSIN diye — kaçırılmamış bir kimlik, sözleşmeyi istemcinin
+    insafına bırakırdı."""
+    import urllib.parse                # dosya konvansiyonu: dar kullanımlı import fonksiyonda
+    return urllib.parse.quote(deger, safe="").replace(".", "%2E")
+
+
+def _hafiza_json(yol: str, anahtar: str | None) -> tuple[object | None, str | None]:
+    """Tek kimlikli GET + JSON çözümü. `(veri, neden)` — ikisinden tam biri doludur.
+
+    MASKELEME TEK BOĞAZDAN GEÇER: gövde metni JSON'a çevrilMEDEN ÖNCE maskelenir. Böylece sır
+    yalnız istisna metninden değil, UPSTREAM GÖVDESİNİN İÇİNDEN gelse bile (Hindsight bir gün
+    tenant anahtarını `stats` cevabına yazarsa) dışarı çıkamaz — "aynen geçiş" sözleşmesi maskeyi
+    ıskalamaz."""
+    url = f"{HAFIZA_TABAN_URL}{yol}"
+    basliklar = {"Authorization": f"Bearer {anahtar}"} if anahtar else None
+    ham, neden = _kapi_getir(url, basliklar, anahtar)
+    if ham is None:
+        # `_kapi_getir` gerekçesini ZATEN maskeler; burada TEKRAR maskelenmesi fazlalık DEĞİL:
+        # gövdeye metin basan boğaz BURASIDIR ve ikinci hattın anlamı, birinci hattın delindiği
+        # günü karşılamaktır. Çağıranın maskelediğine güvenmek, güvenceyi çağırana taşırdı.
+        return None, _kapi_maskele(neden or "", anahtar) or neden
+    metin = _kapi_maskele(ham.decode("utf-8", errors="replace"), anahtar)
+    try:
+        return json.loads(metin or "null"), None
+    except ValueError as e:
+        # Sinyal YANITIN KENDİSİDİR (Yasa 4): sınıf + metin `neden` olarak gövdeye çıkar. Sessiz
+        # `{}` dönmek "Hindsight boş cevap verdi" yalanı olurdu.
+        return None, _kapi_maskele(f"{url} gövdesi JSON değil ({type(e).__name__}: {e})", anahtar)
+
+
+def _hafiza_dizi(veri: object) -> tuple[list | None, str | None]:
+    """Tanınan zarflardan diziyi çıkarır; TANIMADIĞINI SESSİZCE BOŞ SAYMAZ."""
+    if isinstance(veri, list):
+        return veri, None
+    if isinstance(veri, dict):
+        for alan in _HAFIZA_DIZI_ALANLARI:
+            if isinstance(veri.get(alan), list):
+                return veri[alan], None
+        return None, ("Hindsight gövdesi bir dizi taşımıyor — liste zarfı değişmiş olabilir "
+                      f"(görülen anahtarlar: {sorted(str(a) for a in veri)[:8]})")
+    return None, f"Hindsight gövdesi beklenmeyen tip ({type(veri).__name__}) — liste zarfı değil"
+
+
+def _hafiza_surum(veri: object) -> tuple[str | None, str | None]:
+    """`/version` gövdesinden sürümü çıkarır; TANIMADIĞINI SESSİZCE BOŞ SAYMAZ.
+
+    `_hafiza_dizi`nin skaler kardeşi. Gerekçe alan ADLARINI taşır — adlar sır değildir ve
+    "hangi şemayla karşılaştım" sorusunu operatör panodan cevaplar; alan DEĞERLERİ gövdeye
+    GİRMEZ (bir gün o gövdeye jeton yazılırsa gerekçe onu taşımasın)."""
+    if not isinstance(veri, dict):
+        return None, (f"/version gövdesi sözlük değil ({type(veri).__name__}) — "
+                      f"sürüm şeması değişmiş olabilir")
+    for alan in _HAFIZA_SURUM_ALANLARI:
+        deger = veri.get(alan)
+        if isinstance(deger, str) and deger:
+            return deger, None
+    return None, ("/version gövdesinde sürüm alanı tanınmadı "
+                  f"(görülen anahtarlar: {sorted(str(a) for a in veri)[:8]}) — "
+                  f"beklenen adlar: {list(_HAFIZA_SURUM_ALANLARI)}")
+
+
+def _hafiza_bank_kimligi(oge: object) -> str | None:
+    """Banka kimliğini öğeden çıkarır; çıkaramazsa `None` (uydurma bir kimlikle çağrı yapmaktansa
+    o bankayı hiç saymamak dürüsttür — sayım eksikliği `bankalar_neden`e değil, GÖRÜNÜR bir eksik
+    satıra dönüşür)."""
+    if isinstance(oge, str):
+        return oge or None
+    if isinstance(oge, dict):
+        for alan in _HAFIZA_KIMLIK_ALANLARI:
+            deger = oge.get(alan)
+            if isinstance(deger, str) and deger:
+                return deger
+    return None
+
+
+def _hafiza_sayi(ham: str | None, varsayilan: int, taban: int, tavan: int) -> int:
+    """İstemciden gelen sayıyı SUNUCUDA sınırlar. Ayrıştırılamayan değer bir ÖLÇÜM DEĞİLDİR:
+    sessizce `0`a değil, beyan edilmiş varsayılana oturur (`limit=0` kimi API'de "hepsi" demektir
+    ve tavanı sessizce delerdi)."""
+    try:
+        deger = int(str(ham).strip())
+    except (TypeError, ValueError):
+        # sessiz-yutma: ayrıştırılamayan sayı bir ARIZA değil, istemcinin verdiği kirli girdidir —
+        # taşınacak bir arıza bilgisi yoktur. Sinyal davranışın KENDİSİDİR: beyan edilmiş
+        # varsayılana oturulur ve 422 yerine 200 dönülür (eksik-parametre sözleşmesinin kardeşi;
+        # çivi: test_liste_bozuk_sayi_400_degil_tavana_oturur).
+        deger = varsayilan
+    return max(taban, min(deger, tavan))
+
+
+@app.get("/api/hindsight")
+def api_hindsight(request: Request):
+    """HINDSIGHT'IN PANO YÜZEYİ — salt-okunur, anahtarsız, ölçemediğini söyleyen.
+
+    · `saglik`: Hindsight ayakta mı + sürümü (anahtarsız uçlardan; `bankalar`dan BAĞIMSIZ).
+    · `bankalar`: banka başına `stats` — upstream gövdesinin AYNEN geçişi + kendi `stats_neden`i.
+    · `kota`: banka başına `llm-requests/stats`.
+    · `operasyon`: banka başına `audit-logs/stats`.
+
+    Yazma yolu YOKTUR: Hindsight'ın memory ekleme/silme fiilleri bu yüzeyden GEÇMEZ."""
+    _auth(request)
+    _, saglik_neden = _hafiza_json("/health", None)
+    erisilebilir = saglik_neden is None
+
+    surum, surum_neden = None, None
+    if erisilebilir:
+        surum_veri, surum_neden = _hafiza_json("/version", None)
+        if surum_neden is None:
+            surum, surum_neden = _hafiza_surum(surum_veri)
+
+    anahtar, bankalar_neden = _hafiza_anahtari()
+    bankalar: list[dict] = []
+    kota: dict[str, dict] = {}
+    operasyon: dict[str, dict] = {}
+    if anahtar:
+        ham_liste, bankalar_neden = _hafiza_json("/v1/default/banks", anahtar)
+        kimlikler: list[str] = []
+        if bankalar_neden is None:
+            ogeler, bankalar_neden = _hafiza_dizi(ham_liste)
+            kimlikler = [k for k in (_hafiza_bank_kimligi(o) for o in (ogeler or [])) if k]
+
+        for kimlik in kimlikler:
+            kok = f"/v1/default/banks/{_hafiza_kacir(kimlik)}"
+            # HER BACAK AYRI: bir bankanın `stats`i düşerse ÖTEKİ banka (ve aynı bankanın kota/
+            # operasyon bacakları) hâlâ ölçülür. Tek bozuk banka bütün sayfayı karartamaz.
+            stats, stats_neden = _hafiza_json(f"{kok}/stats", anahtar)
+            bankalar.append({"bank_id": kimlik, "stats": stats, "stats_neden": stats_neden})
+            llm_stats, llm_neden = _hafiza_json(f"{kok}/llm-requests/stats", anahtar)
+            kota[kimlik] = {"llm_stats": llm_stats, "neden": llm_neden}
+            audit_stats, audit_neden = _hafiza_json(f"{kok}/audit-logs/stats", anahtar)
+            operasyon[kimlik] = {"audit_stats": audit_stats, "neden": audit_neden}
+
+    return {
+        "saglik": {"erisilebilir": erisilebilir, "surum": surum,
+                   "neden": "; ".join(p for p in (saglik_neden, surum_neden) if p) or None},
+        "bankalar": bankalar,
+        # Kardeş gerekçe (v287 `<alan>_neden` idiomu): pano BOŞ liste ile ÖLÇÜLEMEDİ'yi ayırsın.
+        "bankalar_neden": bankalar_neden,
+        "kota": kota,
+        "operasyon": operasyon,
+    }
+
+
+@app.get("/api/hindsight/liste")
+def api_hindsight_liste(request: Request, bank: str | None = None,
+                        limit: str | None = None, offset: str | None = None):
+    """Bir bankanın hafıza kayıtları. `{ogeler, neden}`.
+
+    PARAMETRELER `str` TİPLİ, BİLEREK: FastAPI `int` gördüğü an bozuk girdide 422 üretir ve pano
+    o cevabı gövde sanıp kararır. Sınırlama SUNUCUDA yapılır (`_hafiza_sayi`) — istemciye güven
+    yok: `limit=9999` hem Hindsight sorgusunu hem pano yükünü sınırsız büyütürdü."""
+    _auth(request)
+    if not bank:
+        return {"ogeler": [], "neden": "`bank` parametresi verilmedi — hangi hafıza bankasının "
+                                       "okunacağı belirsiz; upstream'e hiç gidilmedi"}
+    anahtar, neden = _hafiza_anahtari()
+    if not anahtar:
+        return {"ogeler": [], "neden": neden}
+
+    kirpik = _hafiza_sayi(limit, HAFIZA_LISTE_TAVANI, 1, HAFIZA_LISTE_TAVANI)
+    atlanan = _hafiza_sayi(offset, 0, 0, 2 ** 31)
+    veri, neden = _hafiza_json(
+        f"/v1/default/banks/{_hafiza_kacir(bank)}/memories/list?limit={kirpik}&offset={atlanan}",
+        anahtar)
+    if neden is not None:
+        return {"ogeler": [], "neden": neden}
+    ogeler, neden = _hafiza_dizi(veri)
+    return {"ogeler": ogeler or [], "neden": neden}
+
+
+@app.get("/api/hindsight/detay")
+def api_hindsight_detay(request: Request, bank: str | None = None, kimlik: str | None = None):
+    """Tek hafıza kaydı. `{oge, neden}` — bulunamayan kayıtta `oge` `None`dır, BOŞ SÖZLÜK DEĞİL
+    ("kayıt var ama içi boş" yalanı olurdu)."""
+    _auth(request)
+    if not bank or not kimlik:
+        eksik = ", ".join(a for a, d in (("bank", bank), ("kimlik", kimlik)) if not d)
+        return {"oge": None, "neden": f"eksik parametre ({eksik}) — hangi bankadan hangi kaydın "
+                                      f"okunacağı belirsiz; upstream'e hiç gidilmedi"}
+    anahtar, neden = _hafiza_anahtari()
+    if not anahtar:
+        return {"oge": None, "neden": neden}
+
+    veri, neden = _hafiza_json(
+        f"/v1/default/banks/{_hafiza_kacir(bank)}/memories/{_hafiza_kacir(kimlik)}", anahtar)
+    return {"oge": veri if neden is None else None, "neden": neden}
 
 
 # ------------------------------------------------------------------ /api/roadmap ---------------
