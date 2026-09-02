@@ -7,21 +7,45 @@
 // reload-daemon'a. Üçünden biri eksikse uç 502 + polkit stderr döndürür (sessiz arıza değil,
 // uç öyle tasarlandı).
 //
-// KAPSAM: birim eylemleri TAM AD eşleşmesi (önek değil) — beyaz liste api.py
-// `BIRIM_ANAHTAR_BEYAZ` ile EL İLE eşit tutulur (iki dil/iki makine: türetme kurulamaz;
-// listeyi orada genişleten buraya da yazmak zorundadır, ayrışma ilk canlı denemede 502 polkit
-// hatasıyla SESLİ kırılır). reload-daemon birim ayrıntısı TAŞIMAZ, o yüzden dar bağlanamaz:
-// verilen genişlik yalnız "unit tanımlarını yeniden okut"tur (yetki yükselmesi değil,
-// en kötüsü erişilebilirlik sınıfı) ve ubuntu zaten manage-units'in sprint ailesini taşıyor.
+// KAPSAM İKİ KATMANLI — ve iki eylem AYNI DARLIKTA BAĞLANAMAZ (ölçüldü, vaka 2026-09-02
+// ilk canlı deneme): systemd `manage-unit-files` eyleminde polkit'e BİRİM ADI VERMEZ
+// (ayrıntı yalnız `verb` taşır; ilk sürümün `action.lookup("unit")` beklentisi orada hep
+// null kaldı ve varsayılan politika "Interactive authentication required" ile reddetti).
+//   * manage-units (start/stop): TAM AD eşleşmesi — beyaz liste api.py
+//     `BIRIM_ANAHTAR_BEYAZ` ile EL İLE eşit tutulur (iki dil/iki makine: türetme kurulamaz;
+//     ayrışma çivisi tests/test_birim_anahtari_v368.py::test_polkit_kurali_BEYAZ_LISTEYLE_AYRISMAZ).
+//   * manage-unit-files (enable/disable): birim ayrıntısı YOK → darlık fiil düzeyinde
+//     (yalnız enable|disable; mask/link/preset vb. DIŞARIDA). BEDEL BEYANLI: bu, ubuntu'ya
+//     HERHANGİ bir mevcut birimi enable/disable etme yetkisi açar. Birim-düzeyi darlık API
+//     beyaz listesinde yaşamaya devam eder (uç başka birimi hiç istemez, v368 çivili);
+//     etkileşimli ubuntu zaten parolasız sudo taşıyor — genişleme yalnız NNP'li servis
+//     süreci için anlamlı ve sınıfı erişilebilirlik (birim dosyası YAZMAK yine root ister,
+//     exec/içerik değişmez; en kötü durum: ele geçmiş API mevcut birimleri aç/kapatabilir).
+//   * reload-daemon: birim ayrıntısı zaten taşımaz; verilen genişlik yalnız "unit
+//     tanımlarını yeniden okut" (erişilebilirlik sınıfı) ve ubuntu manage-units'in sprint
+//     ailesini zaten taşıyor.
+//
+// DENETİM İZİ (YASA 6): her YES kararı polkit.log ile journal'a düşer (okuyucu: birim
+// anahtarı denemelerinin canlı doğrulaması — bu vaka journal'da ayrıntı yokluğundan
+// kör kalmıştı, iz o körlüğü kapatır).
 polkit.addRule(function(action, subject) {
     if (subject.user != "ubuntu") {
         return polkit.Result.NOT_HANDLED;
     }
-    if (action.id == "org.freedesktop.systemd1.manage-units" ||
-        action.id == "org.freedesktop.systemd1.manage-unit-files") {
+    if (action.id == "org.freedesktop.systemd1.manage-units") {
         var unit = action.lookup("unit");
         if (unit == "meridian-learn.service" ||
             unit == "meridian-barsarchive.service") {
+            polkit.log("meridian-birim-anahtari: manage-units verb=" +
+                       action.lookup("verb") + " unit=" + unit + " -> YES");
+            return polkit.Result.YES;
+        }
+    }
+    if (action.id == "org.freedesktop.systemd1.manage-unit-files") {
+        var verb = action.lookup("verb");
+        if (verb == "enable" || verb == "disable") {
+            polkit.log("meridian-birim-anahtari: manage-unit-files verb=" + verb +
+                       " unit=" + action.lookup("unit") + " -> YES");
             return polkit.Result.YES;
         }
     }
