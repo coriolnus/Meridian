@@ -39,6 +39,7 @@ if str(KOK) not in sys.path:
 from tests.conftest import betikten_modul_yukle  # noqa: E402
 
 ROTA_KAYNAGI = KOK / "deploy" / "apisix" / "routes.yaml"
+KAPI_CONFIG = KOK / "deploy" / "apisix" / "config.yaml"
 PROFIL_KOKU = KOK / "deploy" / "hermes" / "profiles"
 BETIK = KOK / "ops" / "apisix_uygula.py"
 
@@ -100,6 +101,28 @@ def _kapinin_sundugu_modeller() -> set[str]:
     return modeller
 
 
+def _beyan_edilen_pluginler() -> list[str]:
+    """`deploy/apisix/config.yaml`ın `plugins:` listesi — kapının AÇIK plugin beyanı."""
+    veri = yaml.safe_load(KAPI_CONFIG.read_text(encoding="utf-8")) or {}
+    return [str(p) for p in (veri.get("plugins") or [])]
+
+
+def _kullanilan_pluginler() -> dict[str, list[str]]:
+    """`{plugin adı: [kullanıldığı yerler]}` — routes.yaml'ın ÜÇ bölümünden birden.
+
+    Yalnız `rotalar`a bakan bir tarama eksik olurdu: `tuketici_gruplari` (`limit-count`) ve
+    `tuketiciler` (`key-auth`) de plugin ADI taşır ve aynı 400'ü üretebilir.
+    """
+    veri = _routes()
+    out: dict[str, list[str]] = {}
+    for bolum, kimlik in (("rotalar", "id"), ("tuketici_gruplari", "id"),
+                          ("tuketiciler", "username")):
+        for kalem in (veri.get(bolum) or []):
+            for ad in (kalem.get("plugins") or {}):
+                out.setdefault(str(ad), []).append(f"{bolum}/{kalem.get(kimlik)}")
+    return out
+
+
 def _cfg(profil: pathlib.Path) -> dict:
     return yaml.safe_load((profil / "config.yaml").read_text(encoding="utf-8")) or {}
 
@@ -120,6 +143,42 @@ def test_LLM_ROTA_KUMESI_BOS_DEGIL():
 def test_PROFIL_KUMESI_BOS_DEGIL():
     assert _profiller(), (
         f"{PROFIL_KOKU} altında `distribution.yaml` taşıyan profil YOK — profil çivileri vakumda")
+
+
+def test_ROTALARDA_KULLANILAN_HER_PLUGIN_KAPI_CONFIGINDE_BEYANLI():
+    """VAKA 2026-09-02 (uygulama penceresi) — v376'nın ilk turdaki KÖR NOKTASI.
+
+    Bu dosyanın on küsur çivisi routes.yaml'ı baştan sona doğru buldu ve `apisix_uygula
+    --uygula` yine de **400 "unknown plugin"** ile düştü: `deploy/apisix/config.yaml`ın
+    `plugins:` listesi varsayılanı EZER, yani orada adı geçmeyen bir plugin APISIX'te YOKTUR.
+    `serverless-pre-function` o listeye yazılmamıştı. Düzeltme canlıda yapıldı (a751c07).
+
+    KUSURUN SINIFI, ADIYLA: iki dosya arasında ZORLAYICI bir bağ vardı ve hiçbir çivi onu
+    görmüyordu — routes.yaml "bu plugin'i kullanıyorum" der, config.yaml "bu plugin var" der,
+    ve ikisi ayrıştığında belirti dağıtım ANINDA çıkar (sessiz değil, ama GEÇ: pencere açık,
+    operatör bekliyor, teşhis Admin API'nin tek satırlık hata gövdesinde). Bu çivi o bağı
+    dağıtımdan ÖNCEYE, repoya çeker.
+
+    KÜME TÜRETİLİR: plugin adları üç bölümün `plugins` bloklarından okunur, liste yazılmaz —
+    yarın doğacak bir Faz plugin'i bu çiviyi kendiliğinden kapsar. Tuzağı yeniden kuracak olan
+    "routes'a plugin ekleyen herkes"tir, ve tam da o an bu çivi kırmızıya döner.
+    """
+    kullanilan = _kullanilan_pluginler()
+    beyanli = _beyan_edilen_pluginler()
+    assert kullanilan, (
+        f"{ROTA_KAYNAGI} hiçbir plugin kullanmıyor görünüyor — çivi vakumda (şema mı değişti?)")
+    assert beyanli, (
+        f"{KAPI_CONFIG} `plugins:` listesi BOŞ/YOK — liste varsayılanı EZER, yani bu hâlde "
+        "kapıda HİÇBİR plugin çalışmaz; kıyas da anlamsızlaşır")
+
+    eksik = {ad: yerler for ad, yerler in kullanilan.items() if ad not in beyanli}
+    assert not eksik, (
+        "routes.yaml'da KULLANILAN ama `deploy/apisix/config.yaml` `plugins:` listesinde "
+        f"BEYAN EDİLMEYEN plugin(ler): "
+        + " · ".join(f"`{ad}` ({', '.join(yerler)})" for ad, yerler in sorted(eksik.items()))
+        + ". Liste varsayılanı EZER: beyansız plugin APISIX'te YOKTUR ve `apisix_uygula "
+        "--uygula` 400 `unknown plugin` ile düşer (VAKA 2026-09-02, düzeltme a751c07). "
+        "Adı config.yaml'a ekle — 'varsayılan zaten açıktı' yok.")
 
 
 # ------------------------------------------------------------------- B. KAPIDAKİ KÖPRÜ
