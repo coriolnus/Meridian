@@ -2413,6 +2413,10 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
 
+- **[TSK-112] Hafıza ▸ Varlıklar: düğüm tıklaması → varlık künyesi paneli (CP entities-view birebirliği; vekil `/entities/{id}` + `entity_id` süzgeci)** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S-M · trigger: —
+  What: CP `entities-view.tsx` (v0.9.2 = ebad4782 :232-237, :287, :432-517) düğüme tıklayınca varlık künyesi (ad · anılma sayısı · ilk/son görülme · kimlik) + o varlığa bağlı kayıtların zaman çizelgesini (`memories/list?entity_id=`) açar; bizde takımyıldız düğümleri tıklanamaz (ekranda gerekçesiyle yazılı). Kalem: vekile `GET /api/hindsight/varlik?bank=&id=` (→ `/entities/{id}`) + `/liste`ye `entity_id` süzgeci (upstream `list_memories` parametresi, T1 R1 ölçümü) + panel.
+  Why: T6-B incelemesi Q1 — birebirlik defterinde açık kalem; bağ LİSTESİ ise CP'de yok (Meridian icadıydı, kaldırılması kabul edilmiş bedel).
+  Ref: TSK-108 T6-B inceleme (task-6b-review.md Q1); `hindsight-clients/go/api/openapi.yaml` @ ebad4782 `get_entity` / `list_memories.entity_id`.
 - **[TSK-111] Hafıza sayfası Faz-2 yazma yolu — Bank Configuration düzenleme (PATCH vekili + onay adımı + denetim izi)** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: M · trigger: —
   What: TSK-108 Faz-1 salt-okunur sözleşmesi Yapılandırma formunu devre-dışı çizer (T5, R24). Faz-2: `PATCH /api/hindsight/yapilandirma` vekili (beyaz-listeli alanlar), panoda iki adımlı onay (fark özeti → uygula), `obs` denetim izi (kim/ne/önce-sonra), v375 çivileri kırmızı-önce; ardılları: bellek düzenle/geçersiz kıl, reflect tetikleme, consolidate/recover, webhook CRUD (her biri ayrı karar).
   Why: operatör 2026-09-02 akşam görsel turu ("konfigürasyon yapacak yer bile yok") + karar 2-A: "şimdilik devre-dışı, ayrı kalem". Yazma vekili motor koduna girer (tam suite + iz çivileri), panodan yanlış ayar canlı hafızayı bozabilir — bu yüzden onay adımı ve iz şart.
