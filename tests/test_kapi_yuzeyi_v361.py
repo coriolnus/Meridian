@@ -445,16 +445,18 @@ def test_zaman_asimi_sabiti_beyanli():
 # ------------------------------------------------------------------- G. FAZLAR
 
 def test_fazlar_plugin_imzasindan_turetilir(monkeypatch, tmp_path, sandbox_state):
-    """Faz 1/2/3 canlı (routes.yaml'da `ai-proxy-multi` + `limit-count` + `limit-req` VAR),
-    Faz 4 bekliyor. Sabit metin olsaydı Faz 2 indiği gün pano yalan söylemeye başlardı ve
-    kimse fark etmezdi."""
+    """Dört faz da canlı — her biri routes.yaml'daki KENDİ plugin imzasından türetilir
+    (`ai-proxy-multi` + `limit-count` + `limit-req` + `key-auth`). Sabit metin olsaydı her
+    faz indiği gün pano yalan söylemeye başlardı ve kimse fark etmezdi — bu çivi F4-B kilidi
+    indiği sabah (2026-09-02) tam bu mekanizmayla kırmızı verdi: beklenti eski dünyada
+    kalmıştı, türetim gerçeği söylüyordu."""
     _kurulum(monkeypatch, tmp_path)
     f = _client().get("/api/gateway").json()["fazlar"]
     assert set(f) == {"faz1_llm", "faz2_fmp", "faz3_ingress", "faz4_filo"}, sorted(f)
     assert f["faz1_llm"] == "canli"
     assert f["faz2_fmp"] == "canli"  # 2026-09-01: fmp-veri rotası limit-count ile indi
     assert f["faz3_ingress"] == "canli"  # imza limit-req (2026-09-01: kapı basic-auth'u emekli — kimlik uygulama oturumunda)
-    assert f["faz4_filo"] == "bekliyor"
+    assert f["faz4_filo"] == "canli"  # imza key-auth (2026-09-02: F4-B kilidi üç LLM rotasında; botlar TSK-105'e dek doğrudan)
 
 
 def test_faz2_imzasi_dogunca_canli_olur(monkeypatch, tmp_path, sandbox_state):
