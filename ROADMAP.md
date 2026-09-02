@@ -2497,7 +2497,7 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   What: `selfreview.py` çıkarımı `kind`→`artifact`→mesaj önekine düşecek şekilde genişletilmeli; çivi olay-sınıfı başına birer örnekle.
   Why: 21 olayın 19'unda `mechanism` alanı yok (`kind`/`artifact` taşıyor) — Telegram özeti "8 satırın 7'si isimsiz" çıktı.
   Ref: 2026-08-31 ölçümü.
-- **[TSK-008] dagit bakım penceresi `meridian-learn`'ü yeniden başlatıyor — geri-dolum haftasında olmamalı** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: S · trigger: —
+- **[TSK-008] dagit bakım penceresi `meridian-learn`'ü yeniden başlatıyor — geri-dolum haftasında olmamalı** — status: DONE(2026-09-03 gece · ÖLÇÜLDÜ, kod gerekmedi: dagit [4] bakım penceresi TSK-092 istenen-durum korumasıyla `meridian-learn: disabled — istenen duruma saygı, pencere sonunda başlatılmadı` diyor — 2026-09-02'de iki dağıtımda (17:04 ve 20:19 UTC) doğrulandı, learn geri-dolum haftası boyunca kapalı kaldı [systemctl is-active inactive]) · born: 2026-08-31 · owner: rol1 · size: S · trigger: —
   What: kalıcı çözüm adayı — dagit'in restart listesini birim enabled-durumuna saygılı yapmak (disabled birim restart edilmemeli).
   Why: operatör kararıyla learn, geri-dolum bitene dek KAPALI (disabled+stopped); dagit onu yine de yeniden başlatıyor — bu akşam bir kez yakalanıp elle durduruldu. Her dağıtım sonrası "learn hâlâ kapalı mı" kontrolü şart; geri-dolum bitince learn'ü GERİ AÇMAK kapanış kaleminin parçası.
   Ref: 2026-08-31 geri-dolum haftası reçete notu.
