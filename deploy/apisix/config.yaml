@@ -71,3 +71,7 @@ plugins:
   - limit-req              # Faz 3: ingress kaba hız sınırı
   - client-control         # Faz 3: ingress gövde tavanı
   - consumer-restriction   # Faz 4: LLM rotaları yalnız filo+motor tüketicilerine
+  - serverless-pre-function # TSK-105: Bearer→apikey köprüsü (bot göçü) — rewrite fazı, yalnız
+                            # LLM rotalarında; Lua yalnız istek başlığı işler, log/print yok.
+                            # VAKA 2026-09-02: listeye yazılmadan routes PUT'u 400 verdi
+                            # ("unknown plugin") — liste kullanım beyanıdır ve ZORLAYICIDIR.
