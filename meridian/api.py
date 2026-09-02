@@ -7464,10 +7464,25 @@ def _kapi_admin_anahtari() -> tuple[str | None, str | None]:
     return _env_anahtari(KAPI_ENV_DOSYASI, KAPI_ANAHTAR_ONEKI)
 
 
-def _kapi_getir(url: str, basliklar: dict | None, sir: str | None) -> tuple[bytes | None, str | None]:
-    """Tek GET. `(govde, neden)` — ikisinden tam biri doludur."""
+def _kapi_istek(url: str, basliklar: dict | None, sir: str | None, *,
+                govde: bytes | None = None,
+                yontem: str = "GET") -> tuple[bytes | None, str | None]:
+    """Zaman aşımlı, sır maskeleyen TEK dış-çağrı boğazı. `(govde, neden)` — tam biri doludur.
+
+    ÇEKİRDEĞE ÇIKARILDI (2026-09-02, TSK-108 düzeltme turu 1): `_hafiza_post` bu gövdenin
+    satır-satır kopyasıydı — aynı `try/urlopen(timeout=…)`, aynı geniş yakalama, aynı maskeleme,
+    hatta aynı yorum. İki kopya sessizce ayrışır: buradaki her düzeltme (yeniden deneme,
+    `Retry-After`, başlık politikası) POST bacağında EKSİK kalırdı. Emsal aynı dosyada:
+    `_env_anahtari` çıkarımında da ortak gövde çekirdeğe alınmış, eski ad sarmalayıcı kalmıştı.
+
+    İKİ ESKİ AD SARMALAYICI OLARAK KALIR (`_kapi_getir`, `_hafiza_post`): imzaları v361/v375
+    çivilerinin ve çağıranların yaslandığı yüzeydir. Delegasyonun kendisi çivili
+    (`test_iki_bacak_da_ortak_cekirdege_delege_eder`) — sarmalayıcı çekirdekten koparılırsa öter.
+
+    ZAMAN AŞIMI HER YOLDA: `data` verilse de verilmese de `KAPI_ZAMAN_ASIMI_S` uygulanır.
+    Zaman aşımsız bir POST recall sorgusunda panoyu SONSUZA kadar asardı."""
     import urllib.request                    # dosya konvansiyonu: dar kullanımlı import fonksiyonda
-    istek = urllib.request.Request(url, headers=basliklar or {}, method="GET")
+    istek = urllib.request.Request(url, data=govde, headers=basliklar or {}, method=yontem)
     try:
         with urllib.request.urlopen(istek, timeout=KAPI_ZAMAN_ASIMI_S) as cevap:
             return cevap.read(), None
@@ -7477,6 +7492,11 @@ def _kapi_getir(url: str, basliklar: dict | None, sir: str | None) -> tuple[byte
         # düşürmemeli. SESSİZ DEĞİL: sınıf + metin `neden` olarak GÖVDEYE çıkar (Yasa 4 sinyali
         # yanıtın kendisidir), yalnız sır maskelenir.
         return None, _kapi_maskele(f"{url} okunamadı ({type(e).__name__}: {e})", sir)
+
+
+def _kapi_getir(url: str, basliklar: dict | None, sir: str | None) -> tuple[bytes | None, str | None]:
+    """Tek GET — `_kapi_istek`in sarmalayıcısı. İMZA DEĞİŞMEDİ (v361 yüzeyi ona yaslanıyor)."""
+    return _kapi_istek(url, basliklar, sir)
 
 
 def _kapi_auth_referansi(deger) -> str | None:
@@ -7685,11 +7705,71 @@ HAFIZA_ANAHTAR_ONEKI = "HINDSIGHT_API_TENANT_API_KEY="
 # yalan söylemeye başlar ve pano 15 sn'lik yoklamada asılır.
 HAFIZA_ZAMAN_ASIMI_S = 2.0
 HAFIZA_LISTE_TAVANI = 200
+# RECALL'IN "LİMİT"İ BU ALANDIR. Ölçüldü (openapi v0.9.2, `RecallRequest`): şemada `limit` alanı
+# YOKTUR; istemcinin sınırsız büyütebileceği tek maliyet ekseni `max_tokens`tır — ve o eksen bir
+# LLM çağrısını besler, yani bedeli gecikme + kotadır. TAVAN UYDURULMADI: upstream'in KENDİ
+# varsayılanı alındı. Daha büyük bir sayı yazmak ölçülmemiş bir eşiği ölçülmüş gibi gösterirdi;
+# daha küçüğü upstream'in normal çalışmasını sessizce kısardı.
+HAFIZA_RECALL_TOKEN_TAVANI = 4096
 
-# Hindsight'ın LİSTE ZARFININ ŞEKLİ bu makinede ÖLÇÜLEMEDİ: openapi'den yol listesi ölçüldü, gövde
-# ÖRNEKLERİ değil. Bu yüzden yaygın zarf alanları sırayla denenir — ve hiçbiri tutmazsa SESSİZ `[]`
-# DÖNÜLMEZ, `neden` üretilir. Sessiz boş liste panoda "hafıza boş" diye okunurdu; oysa ölçülen şey
-# "zarfı tanımadım"dır ve bu bir ŞEMA SÜRÜKLENMESİ ALARMIdır.
+# ---- ÖLÇÜLEN SÖZLÜKLER (upstream `openapi.yaml`; commit çapası: tests/test_hafiza_yuzeyi_v375.py
+#      dosya başlığı — `v0.9.2` bir TAG'dir ve oynatılabilir, sha oradadır)
+#
+# TANIMADIĞINI GÖNDERME. Upstream tanımadığı enum değerine 422 döner; o 422 bizim `neden`imize
+# "hafıza okunamadı" diye yazılır ve operatör ALTYAPI ARIZASI sanır — oysa ölçülen şey istemcinin
+# verdiği kirli girdidir (v375'in kurucu yalan sınıfı: ölçüm arızasını altyapı arızası gibi
+# göstermek). İki farklı davranış, iki farklı gerekçe:
+#   · FİLTRE (state/consolidation_state/tags_match/detail): tanınmayan değer DÜŞÜRÜLÜR. Filtresiz
+#     sonuç dürüsttür — "hepsi" göstermek, yanlış alt kümeyi göstermekten iyidir.
+#   · PENCERE (period/time_field): tanınmayan değer BEYAN EDİLMİŞ varsayılana oturur. Düşürmek
+#     upstream'in kendi varsayılanına bırakırdı ve pano "7 gün" yazarken başka bir pencereyi
+#     çizebilirdi.
+#
+# İLKE NEREYE UYGULANMAZ — VE BU DA ÖLÇÜLDÜ (düzeltme turu 1). İnceleme haklı olarak "ilke beyan
+# edildiği kadar uygulanmıyor" dedi; ham geçen alanların ŞEMALARI okundu ve ayrım şudur:
+#   · `/operations` `status`+`type`, `/llm-requests` `status`/`operation`/`scope`, `/audit-logs`
+#     `action`/`transport`/`start_date`/`end_date` — hepsi şemada DÜZ `type: string` (nullable);
+#     `description` alanı örnek değerler sayar ama ENUM DEĞİLDİR. Tanınmayan değer 422 üretmez,
+#     yalnız boş sonuç verir. Sözlük yazmak, ölçülmemiş bir kısıtı ölçülmüş gibi gösterirdi.
+#   · `detail` GERÇEK bir enum'dur ve ham geçiyordu — tek gerçek boşluk oydu, aşağıda kapandı.
+_HAFIZA_ETIKET_ESLEME = ("any", "all", "any_strict", "all_strict", "exact")
+_HAFIZA_KAYIT_DURUMU = ("valid", "invalidated")
+_HAFIZA_BIRLESTIRME_DURUMU = ("failed", "pending", "done")
+#: `mental-models` ve `mental-models/{id}` — `detail` şemada enum, `default: full`. Tanınmayan
+#: değer DÜŞER; düşünce upstream kendi `full`unu uygular, yani düşürme = varsayılana oturma.
+_HAFIZA_DETAY_DUZEYI = ("metadata", "content", "full")
+#: `stats/memories-timeseries` — `MemoriesTimeseriesResponse.period`: "One of: 1h, 12h, 1d, 7d, 30d, 90d."
+_HAFIZA_SERI_PENCERESI = ("1h", "12h", "1d", "7d", "30d", "90d")
+#: `audit-logs/stats` ve `llm-requests/stats` — parametre açıklaması: "Time period: 1d, 7d, or 30d".
+_HAFIZA_ISTATISTIK_PENCERESI = ("1d", "7d", "30d")
+_HAFIZA_ZAMAN_ALANI = ("created_at", "mentioned_at", "occurred_start")
+_HAFIZA_VARSAYILAN_PENCERE = "7d"          # her üç uçta da upstream'in `default`u
+_HAFIZA_VARSAYILAN_ZAMAN_ALANI = "created_at"
+_HAFIZA_BANK_KOKU = "/v1/default/banks"
+#: UPSTREAM'İN KENDİ `limit.maximum`U — bizimkinden DÜŞÜK olan uçlar (ölçüldü, düzeltme turu 1).
+#:
+#: BU ÖLÇÜLMEMİŞ BİR 422 SINIFIYDI. `HAFIZA_LISTE_TAVANI` (200) her listeleyen uca aynen
+#: gidiyordu ve varsayılan limit de O'ydu — yani `/islemler` HİÇBİR parametre verilmeden
+#: `limit=200` yolluyordu, upstream `maximum: 100` diyor, cevap 422. O 422 `neden`e "hafıza
+#: okunamadı" diye yazılır ve operatör ALTYAPI ARIZASI sanardı: bu bloğun kapatmak için var
+#: olduğu yalan sınıfının ta kendisi. Tavanı ölçmeden koymak, sunucuda tavan kurmanın bedelini
+#: ödeyip faydasını almamaktı. Yazılı olmayan uçların şemasında `maximum` YOKTUR ya da 200'ün
+#: üstündedir (chunks/mental-models 1000, audit-logs/llm-requests 500); oralarda kendi tavanımız
+#: geçerlidir. Kıyas çivisi ölçümü ayrıca taşır: `UPSTREAM_LIMIT_MAKSIMUMU` (v375).
+_HAFIZA_UC_TAVANI = {"/operations": 100, "/knowledge-base/search": 50}
+#: `recall` gövdesinin BEYAZ LİSTESİ — `RecallRequest` şemasından okundu. Şemadaki hiçbir alan
+#: yazma yapmaz; liste yine de KAPALIdır, çünkü upstream yarın yazan bir alan eklerse "aynen
+#: geçiş" onu istemcinin insafına açardı (kapsam ruling'i: recall SORGU sınıfıdır).
+_HAFIZA_RECALL_ALANLARI = ("query", "types", "prefer_observations", "budget", "trace",
+                           "query_timestamp", "tags", "tags_match")
+
+# Hindsight'ın LİSTE ZARFI bu makinede CANLIDAN ölçülemedi; upstream openapi `items` diyor
+# (`ListMemoryUnitsResponse`) ve `total`/`limit`/`offset` ile birlikte ZORUNLU. Şerh 2026-09-02'de
+# DÜZELTİLDİ: burada önce "gövde ÖRNEKLERİ ölçülmedi" yazıyordu, oysa openapi `example:` blokları
+# taşıyor ve okundu (v375 sınıf-2 fixture'ları). Yine de tek ada bağlanılmaz — sözleşme yarın
+# değişebilir ve bu vekil yirmi iki uçta ayakta kalmalı. Hiçbiri tutmazsa SESSİZ `[]` DÖNÜLMEZ,
+# `neden` üretilir: sessiz boş liste panoda "hafıza boş" diye okunurdu; oysa ölçülen şey "zarfı
+# tanımadım"dır ve bu bir ŞEMA SÜRÜKLENMESİ ALARMIdır.
 _HAFIZA_DIZI_ALANLARI = ("items", "data", "results", "banks", "memories")
 # Banka kimliğinin hangi alanda geldiği de ölçülmedi; aynı gerekçeyle birden çok ad denenir.
 _HAFIZA_KIMLIK_ALANLARI = ("bank_id", "id", "name")
@@ -7742,28 +7822,63 @@ def _hafiza_kacir(deger: str) -> str:
     return urllib.parse.quote(deger, safe="").replace(".", "%2E")
 
 
-def _hafiza_json(yol: str, anahtar: str | None) -> tuple[object | None, str | None]:
-    """Tek kimlikli GET + JSON çözümü. `(veri, neden)` — ikisinden tam biri doludur.
+def _hafiza_govde_coz(url: str, ham: bytes | None, neden: str | None,
+                      anahtar: str | None) -> tuple[object | None, str | None]:
+    """Ham cevabı maskeleyip JSON'a çevirir. `(veri, neden)` — ikisinden tam biri doludur.
 
     MASKELEME TEK BOĞAZDAN GEÇER: gövde metni JSON'a çevrilMEDEN ÖNCE maskelenir. Böylece sır
     yalnız istisna metninden değil, UPSTREAM GÖVDESİNİN İÇİNDEN gelse bile (Hindsight bir gün
     tenant anahtarını `stats` cevabına yazarsa) dışarı çıkamaz — "aynen geçiş" sözleşmesi maskeyi
-    ıskalamaz."""
-    url = f"{HAFIZA_TABAN_URL}{yol}"
-    basliklar = {"Authorization": f"Bearer {anahtar}"} if anahtar else None
-    ham, neden = _kapi_getir(url, basliklar, anahtar)
+    ıskalamaz.
+
+    GET VE POST BACAKLARININ ORTAK BOĞAZI (TSK-108). Bu gövde `_hafiza_json`ın içindeydi ve
+    `recall` POST'u için kopyalanacaktı; iki kopya sessizce ayrışır ve maske BİR bacakta kalırdı
+    (tek-kaynak yasası). Yirmi iki uçlu bir yüzeyde "hangi bacakta maskeleniyordu" sorusu
+    sorulmamalı."""
     if ham is None:
-        # `_kapi_getir` gerekçesini ZATEN maskeler; burada TEKRAR maskelenmesi fazlalık DEĞİL:
+        # Alt katman gerekçesini ZATEN maskeler; burada TEKRAR maskelenmesi fazlalık DEĞİL:
         # gövdeye metin basan boğaz BURASIDIR ve ikinci hattın anlamı, birinci hattın delindiği
         # günü karşılamaktır. Çağıranın maskelediğine güvenmek, güvenceyi çağırana taşırdı.
         return None, _kapi_maskele(neden or "", anahtar) or neden
     metin = _kapi_maskele(ham.decode("utf-8", errors="replace"), anahtar)
     try:
-        return json.loads(metin or "null"), None
+        veri = json.loads(metin or "null")
     except ValueError as e:
         # Sinyal YANITIN KENDİSİDİR (Yasa 4): sınıf + metin `neden` olarak gövdeye çıkar. Sessiz
         # `{}` dönmek "Hindsight boş cevap verdi" yalanı olurdu.
         return None, _kapi_maskele(f"{url} gövdesi JSON değil ({type(e).__name__}: {e})", anahtar)
+    if veri is None:
+        # "TAM BİRİ DOLUDUR" BEYANININ KENAR DURUMU (düzeltme turu 1). Literal `null` — ya da BOŞ
+        # gövde, ki `metin or "null"` onu buraya getirir — `(None, None)` üretirdi ve zarf
+        # `{govde: None, neden: None}` olurdu: panonun "ÖLÇÜLEMEDİ" ile "BOŞ" ayrımı tam da bu
+        # yüzeyin kurucu dersinin olduğu yerde kaybolurdu. `null` bu uçların hiçbirinde geçerli
+        # bir gövde DEĞİLDİR; ölçülen şey "gövde gelmedi"dir ve söylenir.
+        return None, (f"{url} gövdesi boş/`null` — Hindsight bir kayıt döndürmedi; "
+                      f"bu 'sonuç yok' DEĞİL 'cevap gelmedi' demektir")
+    return veri, None
+
+
+def _hafiza_json(yol: str, anahtar: str | None) -> tuple[object | None, str | None]:
+    """Tek kimlikli GET + JSON çözümü. `(veri, neden)` — ikisinden tam biri doludur."""
+    url = f"{HAFIZA_TABAN_URL}{yol}"
+    basliklar = {"Authorization": f"Bearer {anahtar}"} if anahtar else None
+    ham, neden = _kapi_getir(url, basliklar, anahtar)
+    return _hafiza_govde_coz(url, ham, neden, anahtar)
+
+
+def _hafiza_post(url: str, basliklar: dict | None, sir: str | None,
+                 govde: bytes) -> tuple[bytes | None, str | None]:
+    """Tek POST — `_kapi_istek`in sarmalayıcısı; `(govde, neden)` sözleşmesi GET ile AYNIdır.
+
+    GÖVDE 2026-09-02'de ÇEKİRDEĞE ÇIKARILDI (düzeltme turu 1). Önce `_kapi_getir`in satır-satır
+    KOPYASIydı ve gerekçesi "v361 bloğuna dokunmam"dı; o gerekçeyi aynı dosyanın kendi emsali
+    (`_env_anahtari` çıkarımı) çürütüyordu — ortak gövde çekirdeğe alınır, eski adlar sarmalayıcı
+    kalır ve hiçbir çivi kırılmaz. Kopya kalsaydı v361 tarafındaki her düzeltme burada SESSİZCE
+    eksik kalırdı. Bu ad KALIR: v375 çivileri ve `_hafiza_recall` ona yaslanıyor.
+
+    AĞ MUHAFIZI DA BUNU BİLİR: v375'in autouse `_ag_kapali` fixture'ı iki bacağı da kapatır —
+    yalnız GET'i kapatan bir muhafız POST çivilerini canlı 8888'e gönderirdi."""
+    return _kapi_istek(url, basliklar, sir, govde=govde, yontem="POST")
 
 
 def _hafiza_dizi(veri: object) -> tuple[list | None, str | None]:
@@ -7797,6 +7912,25 @@ def _hafiza_surum(veri: object) -> tuple[str | None, str | None]:
                   f"beklenen adlar: {list(_HAFIZA_SURUM_ALANLARI)}")
 
 
+def _hafiza_toplam(veri: object) -> int | None:
+    """Liste zarfındaki `total`; SÖYLENMEDİYSE `None` — `0` DEĞİL.
+
+    ALAN ADI ÖLÇÜLDÜ, VARSAYILMADI: `ListMemoryUnitsResponse.total`, şemada ZORUNLU `integer`
+    (upstream openapi; commit çapası v375 başlığında). Kod bir alanı ADIYLA okuduğu her yer,
+    bu dosyanın `_hafiza_surum` dersinin geçerli olduğu yerdir — orada uydurulmuş bir ad
+    canlıda sonsuza dek `null` üretirdi ve üstelik SESSİZCE.
+
+    `_hafiza_dizi`nin kardeşi ve aynı dersin sayısal hâli: sıfır bir ÖLÇÜMDÜR ("hiç kayıt yok"),
+    `None` ise "kaç kayıt olduğunu söylemedi"dir. İkisini birleştirmek panoda sayfalamayı sessizce
+    yok eder. `bool` KASITLA REDDEDİLİR: Python'da `True` bir `int`tir ve `total: true` gibi bir
+    şema sürüklenmesi burada `1` diye okunurdu."""
+    if isinstance(veri, dict):
+        deger = veri.get("total")
+        if isinstance(deger, int) and not isinstance(deger, bool):
+            return deger
+    return None
+
+
 def _hafiza_bank_kimligi(oge: object) -> str | None:
     """Banka kimliğini öğeden çıkarır; çıkaramazsa `None` (uydurma bir kimlikle çağrı yapmaktansa
     o bankayı hiç saymamak dürüsttür — sayım eksikliği `bankalar_neden`e değil, GÖRÜNÜR bir eksik
@@ -7824,6 +7958,146 @@ def _hafiza_sayi(ham: str | None, varsayilan: int, taban: int, tavan: int) -> in
         # çivi: test_liste_bozuk_sayi_400_degil_tavana_oturur).
         deger = varsayilan
     return max(taban, min(deger, tavan))
+
+
+# =================================================================================================
+# CP-UI GENİŞLEMESİ — TSK-108 Görev 1 (2026-09-02)
+# =================================================================================================
+#
+# Yüzey üç uçtan yirmi iki uca çıktı. YOL HARİTASI UYDURULMADI: her uç, Hindsight Control
+# Plane'in (v0.9.2) kendi vekil rotasının gittiği dataplane ucuna gider. İki upstream kaynak
+# okundu ve ikisi de BAĞLAYICI referanstı:
+#   · `hindsight-control-plane/src/app/api/**/route.ts` — CP hangi uca hangi parametreyle gidiyor
+#   · `hindsight-clients/go/api/openapi.yaml` — dataplane'in KENDİ sözleşmesi (69 yol)
+#
+# ÜÇ ŞEY BÜYÜMEDİ, BİLEREK. (1) Sözleşmeler: 200+neden · `_kapi_maskele` · ≤2 sn — hepsi
+# yukarıdaki üç uçtan AYNEN devralındı. (2) Kopya: yirmi uç tek `_hafiza_zarf` boğazından geçer,
+# yani "hangi uçta kaçırmayı unuttum" sorusu SORULAMAZ hâle geldi. (3) Poll maliyeti:
+# `/api/hindsight`in banka-başına 3 çağrısına DOKUNULMADI — yeni uçlar GÖRÜNÜM başına, kullanıcı
+# tetiğiyle çağrılır. Zaman serisini poll'a eklemek `2+1+4N` yapardı ve dosyanın kendi uyarısına
+# göre N'e tavan yoktur.
+#
+# BEDEL AÇIKÇA TAŞINIR (bedel yasası). Kazanılan: CP'nin bilgi mimarisi panoda birebir açılabilir.
+# Kaybedilen: yüzey alanı 7 kat büyüdü — yani sır duvarı, yol kaçırma ve tavan sözleşmelerinin
+# HER BİRİ artık yirmi iki yerde doğru olmak zorunda. Bedel tek boğazla ödendi; çiviler bu yüzden
+# uç uç değil PARAMETRİK yazıldı (`CPUI` tablosu, v375).
+#
+# YAZMA YOLU HÂLÂ YOKTUR. Bellek düzenleme/geçersizleme, config PATCH, reflect tetikleme,
+# consolidate/recover, document reprocess ve webhook CRUD Faz-1 DIŞIdır ve bu dosyada KARŞILIĞI
+# YOKTUR. Tek istisna `POST /recall`: durum değiştirmez, SORGU sınıfıdır — ve istisna olduğu için
+# beyaz listeyle süzülür (aşağıda).
+
+
+def _hafiza_eksik(**parametreler) -> str | None:
+    """Verilmemiş/boş parametrelerin gerekçesi; hepsi doluysa `None`.
+
+    BOŞ DİZGE DE EKSİKTİR: `?belge=` bir değer DEĞİLDİR ve upstream'e `/documents//chunks` diye
+    giderdi. FastAPI'nin varsayılanı ZORUNLU parametrede 422'dir ve pano o cevabı gövde sanıp
+    KARARIR; bu yüzden eksiklik bir HATA değil bir ÖLÇÜM SONUCU olarak döner."""
+    eksik = [ad for ad, deger in parametreler.items() if not deger]
+    if not eksik:
+        return None
+    return (f"eksik parametre ({', '.join(eksik)}) — hangi bankadan neyin okunacağı belirsiz; "
+            f"upstream'e hiç gidilmedi")
+
+
+def _hafiza_sozluk(ham, sozluk: tuple[str, ...], varsayilan: str | None = None) -> str | None:
+    """Ölçülmüş sözlükteki değeri geçirir; TANIMADIĞINI upstream'e GÖNDERMEZ.
+
+    `varsayilan=None` → tanınmayan değer DÜŞER (filtre davranışı). Dolu varsayılan → tanınmayan
+    değer ona oturur (pencere davranışı). Gerekçe sabitlerin başında."""
+    return ham if ham in sozluk else varsayilan
+
+
+def _hafiza_etiketler(ham: str | None) -> list[str]:
+    """Virgüllü etiket dizesini diziye açar — upstream `tags`i TEKRARLANAN parametre bekliyor
+    (ölçüldü: openapi `explode: true`, `type: array`). Tek dizge göndermek "a,b" adlı TEK bir
+    etiket araması olurdu ve sonuç sessizce boş dönerdi."""
+    return [p.strip() for p in (ham or "").split(",") if p.strip()]
+
+
+def _hafiza_sorgu_dizesi(**alanlar) -> str:
+    """`None`/boş alanları ATAR, kalanları KODLAR; liste değer tekrarlanan parametreye açılır.
+
+    KODLAMA ŞARTTIR — SORGU DİZESİ ENJEKSİYONU, yol enjeksiyonunun az konuşulan kardeşidir:
+    `q=x&limit=99999` ham yapıştırılırsa upstream URL'inde İKİNCİ bir `limit` doğar ve sunucuda
+    kurulan tavan (bu dosyanın `_hafiza_sayi` ile ödediği bedel) SESSİZCE delinir. `urlencode`
+    `&` ve `#`i kaçırır. Çivi: `test_sorgu_degeri_ikinci_parametre_uretemez`."""
+    import urllib.parse                # dosya konvansiyonu: dar kullanımlı import fonksiyonda
+    ciftler: list[tuple[str, str]] = []
+    for ad, deger in alanlar.items():
+        for tek in (deger if isinstance(deger, list) else [deger]):
+            if tek is None or tek == "":
+                continue
+            ciftler.append((ad, str(tek)))
+    return urllib.parse.urlencode(ciftler)
+
+
+def _hafiza_bank_json(bank: str, kuyruk: str = "", *, kimlikler: tuple = (),
+                      sorgu: str = "") -> tuple[object | None, str | None]:
+    """`/v1/default/banks/<bank><kuyruk>` — kimlikli GET. `(veri, neden)`.
+
+    KAÇIRMA ÇAĞIRANIN DİSİPLİNİNE BIRAKILMADI. `kuyruk` bir ŞABLONdur (`"/memories/{}/history"`)
+    ve içine giren her kullanıcı parçası `kimlikler` üzerinden `_hafiza_kacir`den GEÇEREK
+    yerleşir. Alternatif — her uçta f-string ile elle kaçırmak — yirmi iki uçta bir kez
+    unutulurdu ve o tek unutuş, `../../` ile Hindsight'ın YAZAN bir ucuna gitmeye yeterdi.
+    Sözleşme burada TİPLE zorlanıyor: şablona ham dizge sokmanın yolu yok."""
+    anahtar, neden = _hafiza_anahtari()
+    if not anahtar:
+        return None, neden
+    yol = f"{_HAFIZA_BANK_KOKU}/{_hafiza_kacir(bank)}" \
+          f"{kuyruk.format(*(_hafiza_kacir(k) for k in kimlikler))}"
+    return _hafiza_json(f"{yol}?{sorgu}" if sorgu else yol, anahtar)
+
+
+def _hafiza_zarf(bank: str | None, kuyruk: str = "", *, kimlikler: tuple = (), sorgu: str = "",
+                 ek: dict | None = None) -> dict:
+    """CP-UI uçlarının TEK zarfı: `{govde, neden}` — ikisinden tam biri doludur.
+
+    `ogeler` DEĞİL `govde`, ve DİZİ ÇIKARILMAZ. `_hafiza_dizi` bir listeyi zarftan söker; bu
+    uçlarda sökmek `total`/`limit`/`offset`i SESSİZCE düşürürdü ve pano "50 belgeden 20'si"
+    diyemezdi — sayfalamanın gerçeği kaybolurdu. Gürültü azaltmanın bedeli ölçülür (bedel yasası):
+    burada kazanç (daha sade zarf) bedele (sayfalama körlüğü) DEĞMEZ. `/liste` ve `/detay`
+    tarihî zarflarını korur; onları değiştirmek mevcut panoyu kırardı — ama `/liste` aynı
+    körlüğü yaşamasın diye `toplam`ı EK alan olarak taşır (düzeltme turu 1, R4)."""
+    eksik = _hafiza_eksik(bank=bank, **(ek or {}))
+    if eksik:
+        return {"govde": None, "neden": eksik}
+    veri, neden = _hafiza_bank_json(bank, kuyruk, kimlikler=kimlikler, sorgu=sorgu)
+    return {"govde": veri if neden is None else None, "neden": neden}
+
+
+def _hafiza_sayfa_sorgusu(limit, offset, *, uc: str = "", **ek) -> str:
+    """Her listeleyen ucun ortak kırpması. Tavan SUNUCUDADIR — "UI zaten 50 gönderiyor" bir
+    güvence DEĞİLDİR ve on ucun her birinde ayrı ayrı hatırlanamaz.
+
+    `uc` UPSTREAM KUYRUĞUDUR ve tavanı ÖLÇÜLEN sınıra indirir (`_HAFIZA_UC_TAVANI`). Tek bir
+    tavanı on uca birden uygulamak, iki uçta upstream'in KENDİ `maximum`unun üstüne çıkıyordu ve
+    422 üretiyordu (gerekçe sabitin başında). Varsayılan boş dizgedir: sınırı ölçülmemiş bir uç
+    kendi sözleşme tavanımızla kalır — sessizce daraltmak da ölçüm değil tahmin olurdu."""
+    tavan = _HAFIZA_UC_TAVANI.get(uc, HAFIZA_LISTE_TAVANI)
+    return _hafiza_sorgu_dizesi(
+        limit=_hafiza_sayi(limit, tavan, 1, tavan),
+        offset=_hafiza_sayi(offset, 0, 0, 2 ** 31), **ek)
+
+
+def _hafiza_liste_sorgusu(*, limit, offset, tur=None, q=None, state=None,
+                          consolidation_state=None, document_id=None, entity_id=None,
+                          tags=None, tags_match=None) -> str:
+    """`memories/list` sorgusu — `/liste` ve `/gozlemler` AYNI yerden kurar (tek-kaynak).
+
+    `tags_match` YALNIZ `tags` ile gider (CP'nin kendi davranışı, `documents/route.ts`'te
+    gerekçeli): tek başına gönderilirse filtresiz bir listelemede upstream'in varsayılanını
+    sessizce ezerdi."""
+    etiketler = _hafiza_etiketler(tags)
+    return _hafiza_sayfa_sorgusu(
+        limit, offset,
+        # `fact_type` → upstream'de `type` (CP de bu takma adı kabul eder, `list/route.ts`).
+        type=tur, q=q,
+        state=_hafiza_sozluk(state, _HAFIZA_KAYIT_DURUMU),
+        consolidation_state=_hafiza_sozluk(consolidation_state, _HAFIZA_BIRLESTIRME_DURUMU),
+        document_id=document_id, entity_id=entity_id, tags=etiketler,
+        tags_match=_hafiza_sozluk(tags_match, _HAFIZA_ETIKET_ESLEME) if etiketler else None)
 
 
 @app.get("/api/hindsight")
@@ -7881,47 +8155,373 @@ def api_hindsight(request: Request):
 
 @app.get("/api/hindsight/liste")
 def api_hindsight_liste(request: Request, bank: str | None = None,
-                        limit: str | None = None, offset: str | None = None):
-    """Bir bankanın hafıza kayıtları. `{ogeler, neden}`.
+                        limit: str | None = None, offset: str | None = None,
+                        fact_type: str | None = None, q: str | None = None,
+                        state: str | None = None, consolidation_state: str | None = None,
+                        document_id: str | None = None, entity_id: str | None = None,
+                        tags: str | None = None, tags_match: str | None = None):
+    """Bir bankanın hafıza kayıtları — CP `data-view`ın vekili. `{ogeler, neden, toplam}`.
 
     PARAMETRELER `str` TİPLİ, BİLEREK: FastAPI `int` gördüğü an bozuk girdide 422 üretir ve pano
     o cevabı gövde sanıp kararır. Sınırlama SUNUCUDA yapılır (`_hafiza_sayi`) — istemciye güven
-    yok: `limit=9999` hem Hindsight sorgusunu hem pano yükünü sınırsız büyütürdü."""
+    yok: `limit=9999` hem Hindsight sorgusunu hem pano yükünü sınırsız büyütürdü.
+
+    FİLTRELER 2026-09-02'de EKLENDİ (TSK-108). Hepsi upstream'in `list_memories` sorgusundan
+    ÖLÇÜLDÜ; tanınmayan enum değeri upstream'e GÖNDERİLMEZ (`_hafiza_sozluk`). Brief'te adı geçen
+    `scope` filtresi ÖLÇÜLDÜ VE YOKTUR — `list_memories` şemasında böyle bir parametre
+    tanımlı değil (kayıt: v375 dosya başlığı, commit çapasıyla; çivi:
+    `test_liste_scope_upstreame_gitmez`). Gönderilseydi 422 üretirdi.
+
+    `toplam` EKLENDİ (düzeltme turu 1, R4). Zarf `ogeler`/`neden` sözleşmesini AYNEN korur, ek
+    alandır. Gerekçe bir tutarsızlıktır: `/gozlemler` AYNI upstream çağrısına gidiyor ve zarfın
+    tamamını (`total` dâhil) taşıyor; burada dizi sökülünce sayfalamanın gerçeği düşüyordu ve
+    pano "150 kayıttan 20'si" diyemiyordu. Sayı UYDURULMAZ: upstream söylemediyse `None`
+    (`0` değil — `0` panoda "hiç kayıt yok" diye okunur)."""
     _auth(request)
     if not bank:
-        return {"ogeler": [], "neden": "`bank` parametresi verilmedi — hangi hafıza bankasının "
-                                       "okunacağı belirsiz; upstream'e hiç gidilmedi"}
-    anahtar, neden = _hafiza_anahtari()
-    if not anahtar:
-        return {"ogeler": [], "neden": neden}
-
-    kirpik = _hafiza_sayi(limit, HAFIZA_LISTE_TAVANI, 1, HAFIZA_LISTE_TAVANI)
-    atlanan = _hafiza_sayi(offset, 0, 0, 2 ** 31)
-    veri, neden = _hafiza_json(
-        f"/v1/default/banks/{_hafiza_kacir(bank)}/memories/list?limit={kirpik}&offset={atlanan}",
-        anahtar)
+        return {"ogeler": [], "toplam": None,
+                "neden": "`bank` parametresi verilmedi — hangi hafıza bankasının "
+                         "okunacağı belirsiz; upstream'e hiç gidilmedi"}
+    veri, neden = _hafiza_bank_json(bank, "/memories/list", sorgu=_hafiza_liste_sorgusu(
+        limit=limit, offset=offset, tur=fact_type, q=q, state=state,
+        consolidation_state=consolidation_state, document_id=document_id, entity_id=entity_id,
+        tags=tags, tags_match=tags_match))
     if neden is not None:
-        return {"ogeler": [], "neden": neden}
+        return {"ogeler": [], "toplam": None, "neden": neden}
     ogeler, neden = _hafiza_dizi(veri)
-    return {"ogeler": ogeler or [], "neden": neden}
+    return {"ogeler": ogeler or [], "toplam": _hafiza_toplam(veri), "neden": neden}
 
 
 @app.get("/api/hindsight/detay")
 def api_hindsight_detay(request: Request, bank: str | None = None, kimlik: str | None = None):
-    """Tek hafıza kaydı. `{oge, neden}` — bulunamayan kayıtta `oge` `None`dır, BOŞ SÖZLÜK DEĞİL
-    ("kayıt var ama içi boş" yalanı olurdu)."""
+    """Tek hafıza kaydı + tarihçesi. `{oge, neden, tarihce, tarihce_neden}`.
+
+    Bulunamayan kayıtta `oge` `None`dır, BOŞ SÖZLÜK DEĞİL ("kayıt var ama içi boş" yalanı olurdu).
+
+    İKİ BACAK, İKİ GEREKÇE (TSK-108). Tarihçe upstream'de AYRI bir uçtur
+    (`/memories/{id}/history`) ve `get_memory` gövdesindeki `history` alanı ÖLÇÜLDÜ: upstream onu
+    "deprecated, her zaman boş liste" diye belgeliyor — yani tek çağrıyla okumak SESSİZCE boş
+    tarihçe gösterirdi. Bacaklar birbirini düşürmez: tarihçe okunamazsa kaydın kendisi hâlâ
+    görünür (CP'nin memory-detail-panel davranışı).
+
+    BEDELİ YAZILI (bedel yasası, düzeltme turu 1): iki bacak ARDIŞIKtır, yani bu ucun kullanıcıya
+    görünen EN KÖTÜ gecikmesi ~2 sn'den ~4 sn'ye çıktı. Sözleşme ihlali değil — kısıt "≤2 sn dış
+    çağrı başına"dır ve iki çağrının her biri onu zorlar — ama T2 iskeletini buna göre çizmeli
+    (tarihçe ayrı yüklenen bir panel olabilir). `/ozet` de aynı sınıftadır."""
     _auth(request)
-    if not bank or not kimlik:
-        eksik = ", ".join(a for a, d in (("bank", bank), ("kimlik", kimlik)) if not d)
-        return {"oge": None, "neden": f"eksik parametre ({eksik}) — hangi bankadan hangi kaydın "
-                                      f"okunacağı belirsiz; upstream'e hiç gidilmedi"}
+    eksik = _hafiza_eksik(bank=bank, kimlik=kimlik)
+    if eksik:
+        return {"oge": None, "neden": eksik, "tarihce": None, "tarihce_neden": eksik}
+
+    veri, neden = _hafiza_bank_json(bank, "/memories/{}", kimlikler=(kimlik,))
+    tarihce, tarihce_neden = _hafiza_bank_json(bank, "/memories/{}/history", kimlikler=(kimlik,))
+    return {"oge": veri if neden is None else None, "neden": neden,
+            "tarihce": tarihce if tarihce_neden is None else None,
+            "tarihce_neden": tarihce_neden}
+
+
+# ---------------------------------------------------------- CP görünüm uçları (salt-okunur) ----
+
+@app.get("/api/hindsight/ozet")
+def api_hindsight_ozet(request: Request, bank: str | None = None, period: str | None = None,
+                       time_field: str | None = None):
+    """CP `banks/[bankId]?view=home` görünümünün vekili: banka istatistiği + ingest zaman serisi.
+
+    `/api/hindsight`TEN AYRI, BİLEREK. O uç BANKA LİSTESİ düzeyindedir ve pano onu 15 sn'de bir
+    yokluyor; zaman serisini oraya eklemek banka başına DÖRDÜNCÜ çağrı olurdu (`2+1+4N`) ve
+    dosyanın kendi uyarısına göre N'e TAVAN YOKTUR. Bu uç ise TEK bankanın home görünümü açıkken
+    çağrılır — maliyet kullanıcı tetiğine bağlıdır, poll'a değil.
+
+    İKİ BACAK AYRI ÖLÇÜLÜR (`saglik`/`bankalar` emsali): `stats` düşerse zaman serisi hâlâ
+    okunur. Bağlamak tek arızayı iki körlüğe çevirirdi."""
+    _auth(request)
+    eksik = _hafiza_eksik(bank=bank)
+    if eksik:
+        return {"stats": None, "stats_neden": eksik,
+                "zaman_serisi": None, "zaman_serisi_neden": eksik}
+
+    stats, stats_neden = _hafiza_bank_json(bank, "/stats")
+    seri, seri_neden = _hafiza_bank_json(bank, "/stats/memories-timeseries",
+                                         sorgu=_hafiza_sorgu_dizesi(
+                                             period=_hafiza_sozluk(period, _HAFIZA_SERI_PENCERESI,
+                                                                   _HAFIZA_VARSAYILAN_PENCERE),
+                                             time_field=_hafiza_sozluk(
+                                                 time_field, _HAFIZA_ZAMAN_ALANI,
+                                                 _HAFIZA_VARSAYILAN_ZAMAN_ALANI)))
+    return {"stats": stats, "stats_neden": stats_neden,
+            "zaman_serisi": seri, "zaman_serisi_neden": seri_neden}
+
+
+@app.get("/api/hindsight/varliklar")
+def api_hindsight_varliklar(request: Request, bank: str | None = None,
+                            limit: str | None = None, offset: str | None = None):
+    """CP `entities-view` listesi → upstream `/entities`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/entities", sorgu=_hafiza_sayfa_sorgusu(limit, offset))
+
+
+@app.get("/api/hindsight/varlik-graf")
+def api_hindsight_varlik_graf(request: Request, bank: str | None = None,
+                              limit: str | None = None, min_count: str | None = None):
+    """CP `entities-graph`/`constellation` verisi → upstream `/entities/graph`.
+
+    Çizim TAŞINMAZ (plan ruling'i: birebirlik düzen ve bilgi düzeyinde, piksel değil); buradan
+    geçen şey yalnız düğüm/kenar verisidir."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/entities/graph", sorgu=_hafiza_sorgu_dizesi(
+        limit=_hafiza_sayi(limit, HAFIZA_LISTE_TAVANI, 1, HAFIZA_LISTE_TAVANI),
+        min_count=_hafiza_sayi(min_count, 1, 1, 2 ** 31)))
+
+
+@app.get("/api/hindsight/belgeler")
+def api_hindsight_belgeler(request: Request, bank: str | None = None, q: str | None = None,
+                           tags: str | None = None, tags_match: str | None = None,
+                           limit: str | None = None, offset: str | None = None):
+    """CP `documents-view` listesi → upstream `/documents`."""
+    _auth(request)
+    etiketler = _hafiza_etiketler(tags)
+    return _hafiza_zarf(bank, "/documents", sorgu=_hafiza_sayfa_sorgusu(
+        limit, offset, q=q, tags=etiketler,
+        tags_match=_hafiza_sozluk(tags_match, _HAFIZA_ETIKET_ESLEME) if etiketler else None))
+
+
+@app.get("/api/hindsight/belge-parcalari")
+def api_hindsight_belge_parcalari(request: Request, bank: str | None = None,
+                                  belge: str | None = None, limit: str | None = None,
+                                  offset: str | None = None):
+    """CP documents-view'ın chunk çekmecesi → upstream `/documents/{id}/chunks`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/documents/{}/chunks", kimlikler=(belge,), ek={"belge": belge},
+                        sorgu=_hafiza_sayfa_sorgusu(limit, offset))
+
+
+@app.get("/api/hindsight/zihin-modelleri")
+def api_hindsight_zihin_modelleri(request: Request, bank: str | None = None,
+                                  detail: str | None = None, tags: str | None = None,
+                                  tags_match: str | None = None, limit: str | None = None,
+                                  offset: str | None = None):
+    """CP `mental-models-view` listesi → upstream `/mental-models`."""
+    _auth(request)
+    etiketler = _hafiza_etiketler(tags)
+    return _hafiza_zarf(bank, "/mental-models", sorgu=_hafiza_sayfa_sorgusu(
+        limit, offset, detail=_hafiza_sozluk(detail, _HAFIZA_DETAY_DUZEYI), tags=etiketler,
+        tags_match=_hafiza_sozluk(tags_match, _HAFIZA_ETIKET_ESLEME) if etiketler else None))
+
+
+@app.get("/api/hindsight/zihin-modeli")
+def api_hindsight_zihin_modeli(request: Request, bank: str | None = None,
+                               kimlik: str | None = None, detail: str | None = None):
+    """CP mental-model detay paneli → upstream `/mental-models/{id}`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/mental-models/{}", kimlikler=(kimlik,), ek={"kimlik": kimlik},
+                        sorgu=_hafiza_sorgu_dizesi(
+                            detail=_hafiza_sozluk(detail, _HAFIZA_DETAY_DUZEYI)))
+
+
+@app.get("/api/hindsight/zihin-modeli-tarihce")
+def api_hindsight_zihin_modeli_tarihce(request: Request, bank: str | None = None,
+                                       kimlik: str | None = None):
+    """CP mental-model `diagnostics`/tarihçe sekmesi → upstream `/mental-models/{id}/history`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/mental-models/{}/history", kimlikler=(kimlik,),
+                        ek={"kimlik": kimlik})
+
+
+@app.get("/api/hindsight/bilgi-tabani")
+def api_hindsight_bilgi_tabani(request: Request, bank: str | None = None):
+    """CP `knowledge-base-view` ağacı → upstream `/knowledge-base/tree`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/knowledge-base/tree")
+
+
+@app.get("/api/hindsight/bilgi-arama")
+def api_hindsight_bilgi_arama(request: Request, bank: str | None = None, q: str | None = None,
+                              limit: str | None = None):
+    """CP knowledge-base araması → upstream `/knowledge-base/search`.
+
+    `q` BOŞSA UPSTREAM'E GİDİLMEZ: CP de boş sorguda `{results: [], total: 0}` döner. Boş sorguyu
+    tele koymak bir BM25+vektör aramasını bedelsiz tetiklerdi.
+
+    TAVAN BU UÇTA 50'dir (ölçüldü: `limit.maximum`, düzeltme turu 1). Varsayılan zaten upstream'in
+    kendi 10'uydu, ama istemcinin `limit=200` demesi 422 üretirdi."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/knowledge-base/search", ek={"q": q}, sorgu=_hafiza_sorgu_dizesi(
+        q=q, limit=_hafiza_sayi(limit, 10, 1, _HAFIZA_UC_TAVANI["/knowledge-base/search"])))
+
+
+@app.get("/api/hindsight/bilgi-sayfasi")
+def api_hindsight_bilgi_sayfasi(request: Request, bank: str | None = None,
+                                sayfa: str | None = None):
+    """CP knowledge page görüntüleyicisi → upstream `/knowledge-base/pages/{id}`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/knowledge-base/pages/{}", kimlikler=(sayfa,),
+                        ek={"sayfa": sayfa})
+
+
+@app.get("/api/hindsight/gozlemler")
+def api_hindsight_gozlemler(request: Request, bank: str | None = None,
+                            limit: str | None = None, offset: str | None = None,
+                            tags: str | None = None, tags_match: str | None = None):
+    """CP `observation-history-view` → upstream `memories/list?type=observation`.
+
+    ÖLÇÜLDÜ, TAHMİN EDİLMEDİ: dataplane'de `GET /observations` YOKTUR — openapi v0.9.2'de o yol
+    yalnız `DELETE` tanımlar (yani "gözlem ucu var" varsayımı 404 üretir ve pano "gözlem yok"
+    derdi). CP'nin observations route'u da tam bu yüzden `list_memories`i `type=observation` ile
+    çağırır. Buradaki tekrar `/liste` ile AYNI sorgu kurucusundan gelir (tek-kaynak)."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/memories/list", sorgu=_hafiza_liste_sorgusu(
+        limit=limit, offset=offset, tur="observation", tags=tags, tags_match=tags_match))
+
+
+@app.get("/api/hindsight/gozlem-kapsamlari")
+def api_hindsight_gozlem_kapsamlari(request: Request, bank: str | None = None):
+    """Gözlem kapsamları (etiket kümeleri) → upstream `/observations/scopes`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/observations/scopes")
+
+
+@app.get("/api/hindsight/llm-istekleri")
+def api_hindsight_llm_istekleri(request: Request, bank: str | None = None,
+                                status: str | None = None, operation: str | None = None,
+                                scope: str | None = None, limit: str | None = None,
+                                offset: str | None = None):
+    """CP `llm-requests-view` → upstream `/llm-requests`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/llm-requests", sorgu=_hafiza_sayfa_sorgusu(
+        limit, offset, status=status, operation=operation, scope=scope))
+
+
+@app.get("/api/hindsight/llm-istatistik")
+def api_hindsight_llm_istatistik(request: Request, bank: str | None = None,
+                                 operation: str | None = None, period: str | None = None):
+    """CP llm-health/kota özeti → upstream `/llm-requests/stats`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/llm-requests/stats", sorgu=_hafiza_sorgu_dizesi(
+        operation=operation,
+        period=_hafiza_sozluk(period, _HAFIZA_ISTATISTIK_PENCERESI, _HAFIZA_VARSAYILAN_PENCERE)))
+
+
+@app.get("/api/hindsight/denetim")
+def api_hindsight_denetim(request: Request, bank: str | None = None, action: str | None = None,
+                          transport: str | None = None, start_date: str | None = None,
+                          end_date: str | None = None, limit: str | None = None,
+                          offset: str | None = None):
+    """CP `audit-logs-view` (+ `memory-defense-section`) → upstream `/audit-logs`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/audit-logs", sorgu=_hafiza_sayfa_sorgusu(
+        limit, offset, action=action, transport=transport,
+        start_date=start_date, end_date=end_date))
+
+
+@app.get("/api/hindsight/denetim-istatistik")
+def api_hindsight_denetim_istatistik(request: Request, bank: str | None = None,
+                                     action: str | None = None, period: str | None = None):
+    """CP audit özeti → upstream `/audit-logs/stats`."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/audit-logs/stats", sorgu=_hafiza_sorgu_dizesi(
+        action=action,
+        period=_hafiza_sozluk(period, _HAFIZA_ISTATISTIK_PENCERESI, _HAFIZA_VARSAYILAN_PENCERE)))
+
+
+@app.get("/api/hindsight/islemler")
+def api_hindsight_islemler(request: Request, bank: str | None = None, status: str | None = None,
+                           islem_turu: str | None = None, limit: str | None = None,
+                           offset: str | None = None, exclude_parents: str | None = None):
+    """CP `bank-operations-view` → upstream `/operations`. `islem_turu` → upstream `type`.
+
+    TAVAN BU UÇTA DAHA DÜŞÜKTÜR (ölçüldü: `limit.maximum` = 100, düzeltme turu 1). Sözleşme
+    tavanımız 200'dü ve VARSAYILAN da oydu — yani bu uç hiçbir parametre verilmeden 422
+    alıyordu."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/operations", sorgu=_hafiza_sayfa_sorgusu(
+        limit, offset, uc="/operations", status=status, type=islem_turu,
+        exclude_parents="true" if exclude_parents == "true" else None))
+
+
+@app.get("/api/hindsight/yapilandirma")
+def api_hindsight_yapilandirma(request: Request, bank: str | None = None):
+    """CP `bank-config-view` OKUMA yüzeyi → upstream `GET /config`.
+
+    PATCH/DELETE KARŞILIĞI YOKTUR ve bu bir eksiklik değil KAPSAM KARARIdır: config yazımı
+    Faz-1 DIŞIdır (plan ruling'i). Pano düğmeyi CP'deki yerinde ama DEVRE DIŞI çizer."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/config")
+
+
+# ------------------------------------------------ recall: SALT-OKUNUR'UN BEYANLI İSTİSNASI ----
+
+def _hafiza_recall_govdesi(ham: dict) -> dict:
+    """İstemci gövdesini BEYAZ LİSTEyle süzer ve `max_tokens`ı sunucuda kırpar.
+
+    "AYNEN GEÇİŞ" BURADA UYGULANMAZ, bilerek: okuma uçlarında aynen geçen şey UPSTREAM'İN
+    CEVABIdır (bize gelen), burada söz konusu olan İSTEMCİNİN İSTEĞİdir (dışarı giden). İstek
+    gövdesini süzmeden geçirmek, upstream'in yarın ekleyeceği yazan bir alanı bugünden
+    istemcinin insafına açardı — recall'ın "durum değiştirmez" beyanı o gün sessizce yalan olurdu.
+
+    TAVAN BİR SINIRDIR, DAYATMA DEĞİL (düzeltme turu 1, M-7). Önce `max_tokens` istemci hiç
+    sormasa da gövdeye YAZILIYORDU; sabit ise "upstream'in KENDİ varsayılanı" diye beyanlıydı.
+    İkisi ayrışıyordu: upstream yarın varsayılanını değiştirse bu vekil onu sessizce 4096'ya
+    SABİTLERDİ ve beyan yalan olurdu. İstemci sormadıysa alan hiç gitmez; sorduysa kırpılır."""
+    suzuk = {ad: ham[ad] for ad in _HAFIZA_RECALL_ALANLARI if ad in ham}
+    if "tags_match" in suzuk:
+        gecerli = _hafiza_sozluk(suzuk["tags_match"], _HAFIZA_ETIKET_ESLEME)
+        suzuk["tags_match"] = gecerli
+        if gecerli is None:
+            del suzuk["tags_match"]
+    if "max_tokens" in ham:
+        suzuk["max_tokens"] = _hafiza_sayi(ham["max_tokens"], HAFIZA_RECALL_TOKEN_TAVANI,
+                                           1, HAFIZA_RECALL_TOKEN_TAVANI)
+    return suzuk
+
+
+def _hafiza_recall(bank: str, govde: dict) -> dict:
+    """Kimlikli POST + `{govde, neden}`. Ağ çağrısı yapar — iş parçacığı havuzunda çalıştırılır."""
     anahtar, neden = _hafiza_anahtari()
     if not anahtar:
-        return {"oge": None, "neden": neden}
+        return {"govde": None, "neden": neden}
+    url = (f"{HAFIZA_TABAN_URL}{_HAFIZA_BANK_KOKU}/{_hafiza_kacir(bank)}/memories/recall")
+    ham, neden = _hafiza_post(url, {"Authorization": f"Bearer {anahtar}",
+                                    "Content-Type": "application/json"},
+                              anahtar, json.dumps(govde).encode("utf-8"))
+    veri, neden = _hafiza_govde_coz(url, ham, neden, anahtar)
+    return {"govde": veri if neden is None else None, "neden": neden}
 
-    veri, neden = _hafiza_json(
-        f"/v1/default/banks/{_hafiza_kacir(bank)}/memories/{_hafiza_kacir(kimlik)}", anahtar)
-    return {"oge": veri if neden is None else None, "neden": neden}
+
+@app.post("/api/hindsight/recall")
+async def api_hindsight_recall(request: Request):
+    """CP `recall` oyun alanı — SALT-OKUNUR SÖZLEŞMESİNİN TEK BEYANLI İSTİSNASI.
+
+    Neden POST: upstream `recall` bir SORGUdur ama gövdesi bir GET'e sığmaz (types/tags/
+    temporal_window/min_scores). Durum DEĞİŞTİRMEZ — çivili: `test_recall_state_defterine_yazmaz`
+    ve rota tablosu çivisi (`/api/hindsight*` altında POST'a izin verilen TEK yol burasıdır).
+
+    `bank` YALNIZ `bank` ALANINDAN OKUNUR. CP `body.bank_id || body.agent_id || "default"` yazar;
+    o zincir alan eksikken SESSİZCE `default` bankasını okur — yani operatörün sorduğundan BAŞKA
+    bir bankanın içeriğini gösterir. Burada eksik alan bir varsayılana değil `neden`e döner.
+
+    ASENKRON, ÇÜNKÜ GÖVDE OKUNUYOR: FastAPI eşzamanlı uçta ham gövdeye erişemez ve tipli bir
+    gövde bozuk JSON'da 422 üretirdi (pano kararırdı — GET tarafında kapatılan sınıf). Ağ çağrısı
+    bloklayıcı olduğu için `run_in_threadpool`a verilir; olay döngüsünü 2 sn tutmak canlı panonun
+    ÖTEKİ isteklerini de bekletirdi."""
+    _auth(request)
+    try:
+        ham = await request.json()
+    except (ValueError, UnicodeDecodeError) as e:
+        return {"govde": None,
+                "neden": f"istek gövdesi JSON olarak okunamadı ({type(e).__name__}: {e}) — "
+                         f"upstream'e hiç gidilmedi"}
+    if not isinstance(ham, dict):
+        return {"govde": None,
+                "neden": f"istek gövdesi sözlük değil ({type(ham).__name__}) — `bank`/`query` "
+                         f"alanları okunamadı; upstream'e hiç gidilmedi"}
+
+    bank, sorgu = ham.get("bank"), ham.get("query")
+    eksik = _hafiza_eksik(bank=bank, query=sorgu)
+    if eksik:
+        return {"govde": None, "neden": eksik}
+
+    from starlette.concurrency import run_in_threadpool   # dar kullanımlı import fonksiyonda
+    return await run_in_threadpool(_hafiza_recall, bank, _hafiza_recall_govdesi(ham))
 
 
 # ------------------------------------------------------------------ /api/roadmap ---------------
