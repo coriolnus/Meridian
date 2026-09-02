@@ -258,6 +258,13 @@ export const YUZEYLER = {
      bölümlerin İÇERİĞİNİN bu turda çizilmediği ise ekranda yazılı — sessizce boş bir
      sayfaya düşmüyorlar.
 
+     İKİ SORU TSK-108 GÖREV 3'TE DÜZELTİLDİ, ÇÜNKÜ ÖLÇÜM İLK YAZIMI ÇÜRÜTTÜ: üst
+     yüzeyde çıkarım belgeleri (zihin modelleri) `reflect` sekmesinde DEĞİL,
+     `knowledge` sekmesinin ikinci alt sekmesinde yaşıyor; `reflect` sekmesinde
+     duran şey bir cevap üreticisidir. Sorular ekranın GERÇEKTE cevapladığı şeyi
+     söylemek zorunda — yoksa kenar çubuğu ipucu, kırıntı ve ⌘K paleti üç ayrı
+     yerde aynı yanlış vaadi tekrarlar.
+
      SEKİZ BÖLÜM = EKRANDAKİ SEKİZ `bolum-hafiza-*` ÇAPASI (v288 paritesi). */
   memory: {
     sablon: "(şablonda karşılığı yok — Meridian'a özgü)",
@@ -268,9 +275,9 @@ export const YUZEYLER = {
     bolumler: [
       { kimlik: "hafiza-anasayfa", baslik: "Ana Sayfa", soru: "Bu bankada ne birikti, en son ne zaman yazıldı?", ikon: Home },
       { kimlik: "hafiza-bellekler", baslik: "Bellekler", soru: "Bu bankada ne yazılı, tek tek ne diyor?", ikon: Database },
-      { kimlik: "hafiza-bilgi", baslik: "Bilgi Tabanı", soru: "Hangi bilgi sayfaları var, içlerinde ne yazıyor?", ikon: Network },
+      { kimlik: "hafiza-bilgi", baslik: "Bilgi Tabanı", soru: "Hangi bilgi sayfaları ve çıkarım belgeleri var, içlerinde ne yazıyor?", ikon: Network },
       { kimlik: "hafiza-recall", baslik: "Recall", soru: "Bir soruya bu banka ne cevap verirdi?", ikon: Search },
-      { kimlik: "hafiza-reflect", baslik: "Reflect", soru: "Bankanın kendi çıkarımları ne durumda?", ikon: Sparkles },
+      { kimlik: "hafiza-reflect", baslik: "Reflect", soru: "Banka kendi kendine ne çıkardı, hangi kapsamdan?", ikon: Sparkles },
       { kimlik: "hafiza-belgeler", baslik: "Belgeler", soru: "Hangi belgeler işlendi, içlerinden kaç kayıt çıktı?", ikon: FileText },
       { kimlik: "hafiza-varliklar", baslik: "Varlıklar", soru: "Kayıtlarda hangi isimler geçiyor?", ikon: Users },
       { kimlik: "hafiza-yapilandirma", baslik: "Yapılandırma", soru: "Bu banka nasıl ayarlanmış, arkada neler koştu?", ikon: Settings2 },

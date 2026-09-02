@@ -23,6 +23,8 @@
    defalarca ölçtüğü sessiz kayıp sınıfı tam olarak budur.
    ============================================================================ */
 import { YUZEYLER, type Bolum } from "../../alanlar";
+import type { Durum } from "../../veri";
+import type { HafizaGovdesi } from "./uctipleri";
 
 /** CP `sidebar.tsx::navItems` sırası — kimlikler `hafiza-` önekli (v288 tekillik). */
 export const HAFIZA_GORUNUMLERI = [
@@ -54,9 +56,10 @@ export const VARSAYILAN_GORUNUM: HafizaGorunumu = "hafiza-anasayfa";
      · operasyon  → CP bu sayaçları banka yapılandırma tarafında topluyor
      · kota       → aynı ev
 
-   AMA YÖNLENDİRME BİR TELAFİ DEĞİL: `operasyon` ve `kota`nın İÇERİĞİ bu turda
-   çizilmiyor (Görev 3). Gideceği ekran bunu kendi ağzıyla söylüyor — sessizce
-   boş bir sayfaya düşmüyor.
+   YÖNLENDİRMENİN KARŞILIĞI ARTIK DOLU (TSK-108 Görev 3): `operasyon` ve `kota`
+   içerikleri Yapılandırma görünümünde çiziliyor — işler tablosu, denetim kaydı,
+   model çağrıları ve iki sayaç kutusu. Yani bu tablo bir telafi değil, gerçek
+   bir evin adresidir.
    --------------------------------------------------------------------------- */
 export const ESKI_GORUNUM_ADRESLERI: Readonly<Record<string, HafizaGorunumu>> = {
   "hafiza-bankalar": "hafiza-anasayfa",
@@ -65,9 +68,14 @@ export const ESKI_GORUNUM_ADRESLERI: Readonly<Record<string, HafizaGorunumu>> = 
 };
 
 /**
- * Bir bölüm adresini görünüme çevirir. Tanınmayan adres `null` döner —
- * VARSAYILANA DÜŞMEZ: çağıran o zaman yerel seçimini korur, yani yanlış bir
- * adres kullanıcının açık olan görünümünü altından çekmez.
+ * Bir bölüm adresini görünüme çevirir. Tanınmayan adreste `null` döner.
+ *
+ * ŞERH DÜZELTİLDİ (T2 yeniden-incelemesi): burada önce "çağıran yerel seçimini
+ * korur" yazıyordu ve o cümle I-4 düzeltmesinden sonra YANLIŞ. Görünüm artık
+ * yerel bir durumda değil ADRESTE yaşıyor (`HafizaYuzey.tsx` başlığı), yani
+ * korunacak bir yerel seçim yok: `null` gören çağıran varsayılana — yüzeyin
+ * adressiz ilk açılışıyla AYNI hâle — düşer. Bayat bir şerh, olmayan bir
+ * şerhten kötüdür: okuyucu davranışı kaynaktan değil yorumdan öğrenir.
  */
 export function gorunumCoz(bolum: string | null | undefined): HafizaGorunumu | null {
   if (!bolum) return null;
@@ -99,4 +107,25 @@ export function bolumKaydi(kimlik: HafizaGorunumu): Bolum | null {
 export interface GorunumOzellikleri {
   readonly bank: string | null;
   readonly kayit: Bolum;
+  /**
+   * KABUĞUN ZATEN YAPTIĞI TOPLU OKUMA — yeni bir çağrı DEĞİL, mevcut olanın
+   * paylaşılması.
+   *
+   * NEDEN VAR (bedel yasası, Görev 2 incelemesi M-2): `/api/hindsight` banka
+   * başına kota ve operasyon sayaçlarını da getiriyor ve Görev 2'den sonra o iki
+   * bacağı HİÇBİR ekran okumuyordu — otuz saniyede bir okuyucusuz iki upstream
+   * çağrısı. Sayaçların evi Yapılandırma görünümüdür; onları oradan ikinci kez
+   * ÇEKMEK aynı gerçeğin iki kopyasını üretirdi (üstelik iki farklı pencereyle:
+   * toplu uç pencere göndermiyor, ayrık uçlar 7 günü açıkça soruyor). Bu yüzden
+   * gövde çekilmiyor, PAYLAŞILIYOR.
+   *
+   * `Durum` olarak iniyor, çıplak gövde olarak değil: "yoklama henüz dönmedi"
+   * ile "alan gelmedi" ekranda ayrı cümlelerdir ve çıplak gövde ikisini tek
+   * `undefined`e indirirdi.
+   *
+   * Sekiz görünümün sekizi de alır, yalnız biri okur — ve bu bilinçli: özelliği
+   * tek görünüme özel yapmak, gövde tablosunu (`HafizaYuzey.tsx::GOVDELER`) tek
+   * tipte tutulamaz hâle getirir ve sessiz yedeklere kapı açardı.
+   */
+  readonly toplu: Durum<HafizaGovdesi>;
 }

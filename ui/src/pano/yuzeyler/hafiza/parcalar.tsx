@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 
 import { Olculemedi, Satir, zamanMetni } from "../sistem/parcalar";
-import type { HamGovde } from "./uctipleri";
+import type { HafizaZarfi, HamGovde, IstatistikKovasi } from "./uctipleri";
 
 /* ---------------------------------------------------------------------------
    HAM GÖVDE ÇİZİMİ — "tanımadığını sessizce boş sayma" ilkesinin ekran karşılığı
@@ -90,6 +90,23 @@ export function sayi(deger: unknown): number | null {
 export function damga(deger: unknown): string | null {
   const s = metin(deger);
   return s !== null && ISO_BENZERI.test(s) ? zamanMetni(s) : null;
+}
+
+/**
+ * Damganın MİLİSANİYESİ — aynı kapıdan, aynı gerekçeyle (inceleme I-2).
+ *
+ * `damga()` bir dizge döndürür; iki damga arasındaki SÜREYİ hesaplayan çağıran
+ * ise sayıya ihtiyaç duyar ve kendi `Date.parse`ını yazma eğilimindedir. İlk
+ * yazımda Yapılandırma tam bunu yaptı: korumasız `Date.parse` — yani `"3"`
+ * dizgesi 01.03.2001'e çözülüp UYDURMA bir süre bastıracak yol (Görev 2
+ * incelemesi I-3'ün birebir dönüşü). Üçlü kapı burada TEK yerde durur:
+ * dizge mi → ISO'ya benziyor mu → çözülebiliyor mu.
+ */
+export function damgaMs(deger: unknown): number | null {
+  const s = metin(deger);
+  if (s === null || !ISO_BENZERI.test(s)) return null;
+  const t = Date.parse(s);
+  return Number.isFinite(t) ? t : null;
 }
 
 /**
@@ -467,4 +484,282 @@ export function Sayfalama({
       ) : null}
     </div>
   );
+}
+
+/* ============================================================================
+   GÖREV 3'ÜN ORTAK PARÇALARI — beş görünümün AYNI üç sorusu
+   ----------------------------------------------------------------------------
+   Bu blok TSK-108 Görev 3 ile doğdu ve buraya AİT: kalan beş görünüm de aynı üç
+   soruyu soruyor — "zarf geldi mi", "hangi pencere seçili", "kova dizisi ne
+   diyor". Üçünü beş dosyada beş kez yazmak, `ETIKET_ESLEME` sözlüğünün ilk
+   yazımda iki kopyaya bölünmesiyle AYNI sınıftır (Görev 2 incelemesi, I-5):
+   aynı gerçeğin iki kopyası sessizce ayrışır.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   ZARF KAPISI — DÖRT HÂL AYRI
+   `api.py::_hafiza_zarf` on dokuz uçta aynı zarfı döndürüyor: `{govde, neden}`.
+   Dördü tek `if`e indirilseydi "uç gövde alanını hiç döndürmedi" (şema
+   sürüklenmesi) ile "ölçüm denendi ve düştü" (ağ/anahtar) ekranda aynı görünür,
+   operatör de yanlış yere bakardı.
+   --------------------------------------------------------------------------- */
+export function ZarfKapisi<G>({
+  zarf,
+  ne,
+  children,
+}: {
+  readonly zarf: HafizaZarfi<G> | null;
+  /** Neyin okunamadığı — gerekçe cümlesinin öznesi. */
+  readonly ne: string;
+  readonly children: (govde: G) => ReactNode;
+}) {
+  if (zarf === null) return null;
+  if (zarf.neden) return <Olculemedi neden={`${ne} okunamadı`} teknik={zarf.neden} />;
+  if (zarf.govde === undefined) {
+    return <Olculemedi neden={`${ne} bildirilmedi`} teknik="uç gövde alanını hiç döndürmedi" />;
+  }
+  if (zarf.govde === null) {
+    return (
+      <Olculemedi
+        neden={`${ne} için ölçüm denendi, gövde gelmedi`}
+        teknik="gövde boş döndü ve gerekçe de taşınmadı"
+      />
+    );
+  }
+  return <>{children(zarf.govde)}</>;
+}
+
+/* ---------------------------------------------------------------------------
+   BÖLME — bir görünümün içindeki adlandırılmış bölüm
+   Üst yüzey bu bölümleri SEKME olarak ayırıyor; biz sekmeyi de kullanıyoruz ama
+   sekmenin içindeki her blok yine kendi başlığını ve — varsa — kapsam cümlesini
+   taşıyor. Başlıksız bir blok, iki ölçümü tek ölçüm gibi okutur.
+   --------------------------------------------------------------------------- */
+export function Bolme({
+  baslik,
+  aciklama,
+  aksiyon,
+  children,
+}: {
+  readonly baslik: string;
+  /** Bu bloğun cevapladığı soru ya da kapsamının sınırı. */
+  readonly aciklama?: string;
+  readonly aksiyon?: ReactNode;
+  readonly children: ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{baslik}</h4>
+        {aksiyon}
+      </div>
+      {aciklama ? <p className="text-muted-foreground text-xs">{aciklama}</p> : null}
+      {children}
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   İSTATİSTİK PENCERESİ — SÖZLÜK SUNUCUNUNKİDİR
+   `api.py::_HAFIZA_ISTATISTIK_PENCERESI` = ("1d","7d","30d") ve varsayılan
+   `_HAFIZA_VARSAYILAN_PENCERE` = "7d". Buraya fazladan bir değer yazmak (ör.
+   "90d", ki seri ucunda GEÇERLİdir) düğmeyi çalışır gösterir ama sunucu onu
+   tanımaz ve sessizce varsayılana düşerdi: ekran bir pencereyi seçili gösterip
+   başka bir pencerenin sayısını çizerdi.
+   --------------------------------------------------------------------------- */
+/* İHRAÇ EDİLMEZ: tek tüketicisi aşağıdaki `PencereDugmeleri`. Dışarıya açılsaydı
+   ikinci bir pencere şeridi doğar ve sunucunun sözlüğüyle sessizce ayrışırdı. */
+const ISTATISTIK_PENCERELERI = [
+  { deger: "1d", etiket: "1 gün" },
+  { deger: "7d", etiket: "7 gün" },
+  { deger: "30d", etiket: "30 gün" },
+] as const;
+
+export const VARSAYILAN_ISTATISTIK_PENCERESI = "7d";
+
+export function PencereDugmeleri({
+  pencere,
+  setPencere,
+}: {
+  readonly pencere: string;
+  readonly setPencere: (p: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {ISTATISTIK_PENCERELERI.map((p) => (
+        <Button
+          key={p.deger}
+          type="button"
+          size="sm"
+          variant={pencere === p.deger ? "secondary" : "ghost"}
+          className="h-7 px-2 text-xs"
+          aria-pressed={pencere === p.deger}
+          onClick={() => setPencere(p.deger)}
+        >
+          {p.etiket}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   SEÇİM ŞERİDİ — etiketli tek seçim
+   Süzgeç değerlerinin SÖZLÜĞÜ her çağıranda kendi yerinde durur (her uç farklı
+   bir sözlük taşıyor); ortak olan yalnız KABIDIR. Kabı da her dosyada yeniden
+   yazmak, aynı denetimi beş ayrı biçimde çizmek olurdu.
+   --------------------------------------------------------------------------- */
+export function Secim({
+  etiket,
+  deger,
+  setDeger,
+  secenekler,
+  genislik = "w-44",
+}: {
+  readonly etiket: string;
+  readonly deger: string;
+  readonly setDeger: (d: string) => void;
+  /** `deger: ""` = süzgeç kapalı; çağıran bunu sorguya HİÇ koymaz. */
+  readonly secenekler: readonly { readonly deger: string; readonly etiket: string }[];
+  readonly genislik?: string;
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-muted-foreground text-xs">{etiket}</span>
+      <Select value={deger} onValueChange={setDeger}>
+        <SelectTrigger className={cn("h-8", genislik)} aria-label={etiket}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {secenekler.map((s) => (
+            <SelectItem key={s.deger === "" ? "__hepsi" : s.deger} value={s.deger === "" ? "__hepsi" : s.deger}>
+              {s.etiket}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </label>
+  );
+}
+
+/** Seçicinin "hepsi" nöbetçisini sorgu değerine çevirir. Radix boş dizgeli bir
+ *  seçenek kabul etmiyor, o yüzden nöbetçi gerekiyor; nöbetçinin sorguya
+ *  SIZMAMASI da bu tek yerde garanti edilir. */
+export function secimDegeri(ham: string): string {
+  return ham === "__hepsi" ? "" : ham;
+}
+
+/* ---------------------------------------------------------------------------
+   KOVA ŞERİDİ — zaman serisi kovalarının kütüphanesiz çizimi
+   ----------------------------------------------------------------------------
+   ÜST YÜZEY BUNU BİR ÇİZGİ GRAFİĞİ OLARAK ÇİZİYOR; burada yatay çubuk şeridi
+   var ve fark bilinçli: çubuk şeridi her kovanın SAYISINI da yazabiliyor, yani
+   ekran "yüksekliği gördün" demekle yetinmiyor, ölçülen sayıyı gösteriyor.
+
+   ÖLÇEK EN BÜYÜK KOVAYA GÖRE ve bu bir SIRALAMA ölçüsüdür, mutlak değil —
+   çubuğun uzunluğuna bakıp "çok" demek yalnız aynı şerit içinde anlamlıdır.
+   Bu cümle şeridin altında YAZILI durur, çünkü bir grafiği yanlış okumak
+   ölçülmemiş bir sonuca varmanın en kolay yoludur.
+
+   ÜÇ HÂL AYRI: dizi değil (şema sürüklenmesi) · boş dizi (ölçülmüş boşluk) ·
+   dolu. Sayısı okunamayan kova ATILMAZ, "sayı gelmedi" diye çizilir.
+   --------------------------------------------------------------------------- */
+export function KovaSeridi({
+  kovalar,
+  deger,
+  ne,
+  birim = "",
+}: {
+  readonly kovalar: unknown;
+  /** Kovadan çizilecek sayıyı çeker. `null` = bu kovada sayı ölçülemedi. */
+  readonly deger: (k: IstatistikKovasi) => number | null;
+  /** Neyin sayıldığı — boşluk cümlesinin öznesi. */
+  readonly ne: string;
+  readonly birim?: string;
+}) {
+  if (!Array.isArray(kovalar)) {
+    return (
+      <Olculemedi
+        neden={`${ne} kovaları tanınmayan bir biçimde geldi`}
+        teknik="beklenen dizi, gelen başka bir tip — şema sürüklenmiş olabilir"
+      />
+    );
+  }
+  /* ÖĞE KAPISI (inceleme M-8): dizinin İÇİ de doğrulanır. `null` bir öğe gelirse
+     (şema sürüklenmesi) `deger(k)` bir tip hatası atar ve BÜTÜN görünüm düşer —
+     oysa bu dosyanın her yerindeki disiplin "tanımadığını çiz, düşme". Sözlük
+     olmayan öğe atılmaz, SAYILIR ve sayısı aşağıda yazılır. */
+  const ham = kovalar as readonly unknown[];
+  const liste = ham.filter((k): k is IstatistikKovasi => sozluk(k) !== null);
+  const taninmayanKova = ham.length - liste.length;
+  if (liste.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Bu pencere okundu ve içinde hiç {ne.toLocaleLowerCase("tr-TR")} yok — bu ölçülmüş bir
+        boşluktur, "okuyamadım" ile aynı şey değildir
+      </p>
+    );
+  }
+  const sayilar = liste.map((k) => deger(k));
+  const enBuyuk = sayilar.reduce<number>((m, n) => (n !== null && n > m ? n : m), 0);
+  const olculen = sayilar.filter((n): n is number => n !== null);
+  const toplam = olculen.reduce((a, b) => a + b, 0);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="tabular-nums">
+          toplam {toplam.toLocaleString("tr-TR")}
+          {birim}
+        </Badge>
+        {olculen.length !== liste.length ? (
+          <Badge variant="outline" className="font-normal text-[11px] text-muted-foreground">
+            {liste.length - olculen.length} kovanın sayısı okunamadı — toplama katılmadı
+          </Badge>
+        ) : null}
+        {taninmayanKova > 0 ? (
+          <Badge variant="outline" className="font-normal text-[11px] text-muted-foreground">
+            {taninmayanKova} kova sözlük olarak okunamadı — hiç çizilmedi
+          </Badge>
+        ) : null}
+      </div>
+      <div className="flex flex-col gap-0.5">
+        {liste.map((k, i) => {
+          const n = deger(k);
+          const ham = metin(k.time);
+          const etiket = damga(k.time) ?? ham ?? `kova ${i + 1}`;
+          const oran = n === null || enBuyuk <= 0 ? 0 : (n / enBuyuk) * 100;
+          return (
+            <div key={ham ?? `kova-${i}`} className="flex items-center gap-2">
+              <span className="w-40 shrink-0 truncate text-[11px] text-muted-foreground" title={ham ?? undefined}>
+                {etiket}
+              </span>
+              <span className="h-3 min-w-0 flex-1 rounded-sm bg-muted">
+                <span
+                  className="block h-full rounded-sm bg-foreground/25"
+                  style={{ width: `${oran}%` }}
+                  aria-hidden
+                />
+              </span>
+              <span className="w-24 shrink-0 text-right text-[11px] tabular-nums">
+                {n === null ? (
+                  <Olculemedi neden="Sayı gelmedi" teknik="kovanın sayacı gelmedi ya da sayı değil" kisa />
+                ) : (
+                  `${n.toLocaleString("tr-TR")}${birim}`
+                )}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-muted-foreground text-[11px]">
+        Çubuk uzunluğu ŞERİDİN EN BÜYÜK KOVASINA göredir — iki ayrı şeridin çubukları
+        karşılaştırılamaz; karşılaştırılabilen şey yazılı sayılardır
+      </p>
+    </div>
+  );
+}
+
+/** Kovanın toplam sayacı — iki istatistik ucunda da `total`. */
+export function kovaToplami(k: IstatistikKovasi): number | null {
+  return sayi(k.total);
 }

@@ -52,6 +52,7 @@ import {
   HamSatirlar,
   Sayfalama,
   SuzgecSeridi,
+  ZarfKapisi,
   damga,
   listeye,
   metin,
@@ -69,29 +70,12 @@ const UC_PARCALAR = "/api/hindsight/belge-parcalari";
 const SAYFA_BOYU = 25;
 const PARCA_SAYFA_BOYU = 25;
 
-/**
- * Zarftan sayfalı gövdeyi çıkarır — DÖRT HÂL AYRI.
- *
- * Bu yüzeydeki on dokuz uç aynı zarfı döndürüyor (`api.py::_hafiza_zarf`) ve
- * zarfın içindeki gövde ÜST SERVİSİN cevabıdır: diziyi zarftan sökmüyoruz,
- * çünkü sökmek toplam/limit/atlanan üçlüsünü düşürürdü.
- */
-function ZarfKapisi<S>({
-  zarf,
-  ne,
-  children,
-}: {
-  readonly zarf: HafizaZarfi<SayfaliGovde<S>> | null;
-  /** Neyin okunamadığı — gerekçe cümlesinin öznesi. */
-  readonly ne: string;
-  readonly children: (govde: SayfaliGovde<S>) => React.ReactNode;
-}) {
-  if (zarf === null) return null;
-  if (zarf.neden) return <Olculemedi neden={`${ne} okunamadı`} teknik={zarf.neden} />;
-  if (zarf.govde === undefined) return <Olculemedi neden={`${ne} bildirilmedi`} teknik="uç gövde alanını hiç döndürmedi" />;
-  if (zarf.govde === null) return <Olculemedi neden={`${ne} için ölçüm denendi, gövde gelmedi`} teknik="gövde boş döndü ve gerekçe de taşınmadı" />;
-  return <>{children(zarf.govde)}</>;
-}
+/* ZARF KAPISI ARTIK ORTAK (`parcalar.tsx`) — VE BU BİR TEK-KAYNAK DÜZELTMESİDİR.
+   Bu dosya onu kendi içinde tanımlıyordu; Görev 3'ün beş görünümü de aynı zarfı
+   okuyunca ikinci bir kopya doğacaktı ve iki kopya sessizce ayrışırdı (Görev 2
+   incelemesi, bulgu I-5'in aynı sınıfı). Ortak sürüm daha GENELdir: yalnız
+   sayfalı gövdeyi değil, herhangi bir gövdeyi okur — buradaki kullanım onun bir
+   örneğidir. */
 
 /* ---------------------------------------------------------------------------
    PARÇA SATIRI — üst yüzeyin `ChunkRow`unun karşılığı: kapalı hâlde künye,
@@ -286,6 +270,8 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
   const [acikBelge, setAcikBelge] = useState<HafizaBelgesi | null>(null);
   const [sekme, setSekme] = useState("genel");
   const [parcaAtlanan, setParcaAtlanan] = useState(0);
+  /* ÇEKMECE ANAHTARI: yalnız AÇIKKEN ilerler (aşağıdaki `SheetContent` şerhi). */
+  const [cekmeceAnahtari, setCekmeceAnahtari] = useState("bos");
 
   useEffect(() => {
     setAtlanan(0);
@@ -316,6 +302,12 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
   /* PARÇALAR YALNIZ SEKME AÇIKKEN OKUNUR (dosya başlığındaki bedel şerhi):
      yol boşken `useApi` hiç istek açmaz. */
   const acikKimlik = acikBelge === null ? null : metin(acikBelge.id);
+
+  /* Anahtar KAPANIŞTA sabit kalır: `acikKimlik` null olduğunda son açık kimlik
+     korunur, böylece kapanış animasyonu kesilmez. */
+  useEffect(() => {
+    if (acikKimlik !== null) setCekmeceAnahtari(acikKimlik);
+  }, [acikKimlik]);
   const parcaYolu =
     bank === null || acikKimlik === null || sekme !== "parcalar"
       ? null
@@ -456,13 +448,18 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
           if (!a) setAcikBelge(null);
         }}
       >
-        {/* `key` BELGE KİMLİĞİDİR (düzeltme turu 1, inceleme bulgusu M-5): veri
-            katmanı yol değişince eski gövdeyi TEMİZLEMİYOR ve kapı yalnız "veri
-            boş mu" diye soruyor. Anahtar olmadan A belgesinin parçaları, B'nin
-            başlığı altında çizilebiliyordu — içerik yanlış belgeye atfediliyordu.
-            Anahtar değişince çekmece gövdesi yeniden kuruluyor ve bayat gövde
-            hiç görünmüyor. */}
-        <SheetContent key={acikKimlik ?? "bos"} side="right" className="w-full sm:max-w-2xl">
+        {/* `key` ÇEKMECE ANAHTARIDIR (Görev 2 incelemesi M-5 + T2 yeniden-incelemesi).
+            SORUN: veri katmanı yol değişince eski gövdeyi TEMİZLEMİYOR ve kapı
+            yalnız "veri boş mu" diye soruyor; anahtar olmadan A belgesinin
+            parçaları B'nin başlığı altında çizilebiliyordu — içerik YANLIŞ
+            belgeye atfediliyordu.
+            AMA ANAHTAR KAPANIŞTA DEĞİŞMEZ: doğrudan `acikKimlik ?? "bos"` yazmak,
+            çekmece kapanırken (aynı render'da `open` false olurken) anahtarı da
+            değiştiriyordu ve Radix'in kapanış animasyonu atlanıyordu — kutu
+            görünüp yok oluyordu. Anahtar bu yüzden SON AÇIK kimlikte kalır ve
+            yalnız yeni bir belge açılırken değişir: veri-atıf düzeltmesi korunur,
+            kapanış animasyonu geri gelir. */}
+        <SheetContent key={cekmeceAnahtari} side="right" className="w-full sm:max-w-2xl">
           <SheetHeader className="pr-10">
             <SheetTitle className="flex items-center gap-2 text-base leading-6">
               <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />

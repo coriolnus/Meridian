@@ -85,7 +85,11 @@ import { Olculemedi } from "../sistem/parcalar";
 import { AnaSayfa } from "./AnaSayfa";
 import { Bellekler } from "./Bellekler";
 import { Belgeler } from "./Belgeler";
-import { BilgiTabani, Recall, Reflect, Varliklar, Yapilandirma } from "./Yakinda";
+import { BilgiTabani } from "./BilgiTabani";
+import { Recall } from "./Recall";
+import { Reflect } from "./Reflect";
+import { Varliklar } from "./Varliklar";
+import { Yapilandirma } from "./Yapilandirma";
 import {
   HAFIZA_GORUNUMLERI,
   VARSAYILAN_GORUNUM,
@@ -316,7 +320,7 @@ export function HafizaYuzey() {
               teknik={`${gorunum} kimliği kenar çubuğu kaydından düşmüş — gezinme ve ekran ayrışmış olabilir`}
             />
           ) : (
-            <Govde bank={bank} kayit={kayit} />
+            <Govde bank={bank} kayit={kayit} toplu={hafiza} />
           )}
         </div>
       </div>

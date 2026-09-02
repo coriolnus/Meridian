@@ -171,13 +171,22 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   // hiçbir aramayı bulmaz ve okunmadığı için de bayatladığı fark edilmez.
   "hafiza-anasayfa": ["bank", "hindsight", "banka", "arsiv", "fact", "ozet", "istatistik", "tazelik"],
   "hafiza-bellekler": ["kayit", "bellek", "memory", "ders", "metin", "world", "experience", "gozlem"],
-  "hafiza-bilgi": ["bilgi", "knowledge", "sayfa", "agac", "not"],
-  "hafiza-recall": ["recall", "sorgu", "arama", "cevap", "getir"],
-  "hafiza-reflect": ["reflect", "zihin modeli", "mental model", "cikarim", "consolidation"],
+  //
+  // "ZIHIN MODELI" TSK-108 GÖREV 3'TE REFLECT'TEN BILGI'YE TAŞINDI — ve bu bir
+  // ölçüm sonucudur, tercih değil: üst yüzeyde çıkarım belgeleri `knowledge`
+  // sekmesinin ikinci alt sekmesindedir. Anahtar eski yerinde kalsaydı palet
+  // operatörü modelleri ÇİZMEYEN bir sayfaya gönderirdi — çalışan ama yanlış
+  // yere giden bir bağ, çalışmayan bağdan daha sinsidir.
+  "hafiza-bilgi": ["bilgi", "knowledge", "sayfa", "agac", "not", "zihin modeli", "mental model",
+                   "cikarim", "tazelik", "cron"],
+  "hafiza-recall": ["recall", "sorgu", "arama", "cevap", "getir", "skor", "iz", "trace"],
+  "hafiza-reflect": ["reflect", "dusun", "think", "gozlem", "observation", "kapsam", "scope",
+                     "consolidation"],
   "hafiza-belgeler": ["belge", "document", "parca", "chunk", "ice aktarim", "kaynak"],
-  "hafiza-varliklar": ["varlik", "entity", "isim", "graf", "kisi"],
+  "hafiza-varliklar": ["varlik", "entity", "isim", "graf", "kisi", "bag", "harita", "birlikte"],
   "hafiza-yapilandirma": ["config", "ayar", "retain", "denetim", "audit", "hareket", "yazim",
-                          "llm", "kota", "token", "cagri", "kullanim", "islem"],
+                          "llm", "kota", "token", "cagri", "kullanim", "islem", "operations",
+                          "webhook", "bellek savunmasi", "memory defense"],
 };
 
 const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {

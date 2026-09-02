@@ -168,15 +168,17 @@ export interface HafizaBankasi {
  * Sözlüğün ANAHTARI banka kimliğidir; sabit bir banka listesi burada YAZILMAZ —
  * yeni banka doğduğu gün ekranda kendiliğinden görünsün diye (F9 sınıfı ayrışma).
  *
- * OKURU YOK — VE BU YAZILI DURMAK ZORUNDA (düzeltme turu 1, inceleme M-2).
- * Bu blok ve kardeşi `HafizaOperasyonKutusu` bugün HİÇBİR ekran tarafından
- * okunmuyor: eski sayfanın iki sayaç kutusu yeni bilgi mimarisinde Yapılandırma
- * görünümüne taşındı ve o görünüm bu turda çizilmedi. Tipler duruyor çünkü ZARF
- * gerçekten bu alanları taşıyor (tipten silmek zarfı yanlış anlatırdı) — ama
- * maliyet ödenmeye devam ediyor: `api.py::api_hindsight` banka başına bu iki
- * bacağı 30 sn'lik yoklamada okuyor ve sonucu kimse okumuyor. Bacakları
- * durdurmak `meridian/api.py` değişikliğidir ve bu turun dosya sahipliği
- * dışındadır; kayıt Görev 3 brief'ine düşürüldü.
+ * OKURU GERİ GELDİ (TSK-108 Görev 3) — VE BU DA YAZILI DURMAK ZORUNDA.
+ * Görev 2'den sonra bu blok ve kardeşi `HafizaOperasyonKutusu` HİÇBİR ekran
+ * tarafından okunmuyordu: eski sayfanın iki sayaç kutusu yeni bilgi mimarisinde
+ * Yapılandırma görünümüne taşınmıştı ve o görünüm o turda çizilmemişti — yani
+ * `api.py::api_hindsight` banka başına iki upstream bacağını 30 sn'de bir
+ * okuyucusuz koşuyordu (inceleme M-2).
+ *
+ * Artık okuyucusu var ve tek: `Yapilandirma.tsx::SayacKutulari`. Gövde ORAYA
+ * ÇEKİLMİYOR, kabuğun zaten yaptığı okumadan paylaşılıyor
+ * (`gorunumler.ts::GorunumOzellikleri.toplu` şerhi) — ikinci bir çağrı aynı
+ * gerçeğin iki kopyası olurdu ve ikisi farklı pencerelerle gelirdi.
  */
 export interface HafizaKotaKutusu {
   readonly llm_stats?: HamGovde | null;
@@ -452,4 +454,384 @@ export interface BelgeParcasi extends HamGovde {
   readonly chunk_index?: unknown;
   readonly chunk_text?: unknown;
   readonly created_at?: unknown;
+}
+
+/* ==========================================================================
+   TSK-108 GÖREV 3 — KALAN BEŞ GÖRÜNÜMÜN GÖVDE TİPLERİ
+   --------------------------------------------------------------------------
+   Aynı sözleşme, aynı üç kaynak sınıfı (dosya başlığı). BU BLOKTA SINIF (C)
+   AĞIR BASIYOR ve bu bir zayıflıktır, saklanmıyor: yukarıdaki üç görünümün
+   alanları canlıda ölçülmüştü; buradaki yedi yüzeyin çoğu (bilgi ağacı, zihin
+   modeli, işlem, denetim, model çağrısı, yapılandırma) canlıda ÖLÇÜLMEDİ —
+   ölçüm dökümünde yalnız zarfları var (`.superpowers/sdd/2026-09-02-hafiza-cpui/
+   canli-olcum-2026-09-02.md`). Ekran bu yüzden her alanın yokluğunu AYRI çizer
+   ve gövdenin tamamını ham basar: yanlış bir ad SESSİZ kalmaz.
+   ========================================================================== */
+
+/* ==========================================================================
+   BİLGİ TABANI — `api.py::api_hindsight_bilgi_tabani` · `::api_hindsight_bilgi_arama`
+                  · `::api_hindsight_bilgi_sayfasi`
+   ========================================================================== */
+
+/**
+ * AĞAÇ DÜĞÜMÜ — CP `knowledge-base-view.tsx::TreeNode`in okuduğu alanlar (sınıf (C)).
+ *
+ * `kind` KLASÖR İLE SAYFAYI AYIRIR ve ekran bu ayrımı UYDURMAZ: alan gelmezse
+ * düğüm "türü bildirilmedi" diye çizilir, klasör VARSAYILMAZ. Klasör varsaymak
+ * bir sayfayı açılamaz bir kutuya çevirirdi.
+ */
+export interface BilgiDugumu extends HamGovde {
+  readonly id?: unknown;
+  readonly name?: unknown;
+  /** `"folder"` | `"page"` — sınıf (C). Başka bir değer gelirse ekran onu yazar. */
+  readonly kind?: unknown;
+  readonly children?: readonly BilgiDugumu[];
+  /** Sayfanın kendi kapsamında yeni kayıt var mı — üç değerli (`null` = bilinmiyor). */
+  readonly is_stale?: unknown;
+  /** Zihin modelinin tetikleyicisi; "sonraki tazeleme" BURADAN türer. */
+  readonly trigger?: unknown;
+  /** Son güncelleme damgası (CP `node.timestamp`). */
+  readonly timestamp?: unknown;
+  readonly tags?: unknown;
+  /** Sayfa bir zihin modeli tarafından mı yönetiliyor (CP `managed` rozeti). */
+  readonly managed?: unknown;
+  /** Sayfayı besleyen zihin modelinin kimliği. */
+  readonly mental_model_id?: unknown;
+}
+
+/** `/knowledge-base/tree` gövdesi — canlıda ölçülen TEK anahtar `roots` (sınıf (A)). */
+export interface BilgiAgaci extends HamGovde {
+  readonly roots?: readonly BilgiDugumu[];
+}
+
+/**
+ * TEK SAYFA — CP sayfa görüntüleyicisinin okuduğu alanlar (sınıf (C)).
+ * `description` sayfanın KAYNAK SORGUSUdur (CP onu tırnak içinde çiziyor),
+ * `body` sentezlenmiş metindir.
+ */
+export interface BilgiSayfasi extends HamGovde {
+  readonly id?: unknown;
+  readonly name?: unknown;
+  readonly tags?: unknown;
+  readonly description?: unknown;
+  readonly body?: unknown;
+  readonly timestamp?: unknown;
+}
+
+/** Arama vuruşu — CP `r.id/name/snippet/score` okuyor (sınıf (C)). */
+export interface BilgiVurusu extends HamGovde {
+  readonly id?: unknown;
+  readonly name?: unknown;
+  readonly snippet?: unknown;
+  readonly score?: unknown;
+}
+
+/** `/knowledge-base/search` gövdesi — vekilin şerhi `{results, total}` diyor (sınıf (B)). */
+export interface BilgiAramaGovdesi extends HamGovde {
+  readonly results?: readonly BilgiVurusu[];
+  readonly total?: unknown;
+}
+
+/* ==========================================================================
+   ZİHİN MODELLERİ — `::api_hindsight_zihin_modelleri` · `::api_hindsight_zihin_modeli`
+                     · `::api_hindsight_zihin_modeli_tarihce`
+   ========================================================================== */
+
+/**
+ * TETİKLEYİCİ — ve bu bloğun NEDEN AYRI TİPİ VAR.
+ *
+ * Görev 2 "sonraki tazeleme"yi Ana Sayfa'da çizemedi ve gerekçesini yazdı: o
+ * değer bir BANKA alanı değil, bir ZİHİN MODELİNİN tetikleyicisidir. Bu tur o
+ * tetikleyiciyi ÖLÇTÜ (CP `mental-models-view.tsx::MentalModel.trigger`) ve
+ * değerin evi burasıdır. Alanlar sınıf (C).
+ */
+export interface ZihinTetigi extends HamGovde {
+  readonly mode?: unknown;
+  readonly refresh_after_consolidation?: unknown;
+  readonly refresh_cron?: unknown;
+  readonly min_refresh_interval_seconds?: unknown;
+  readonly fact_types?: unknown;
+  readonly tags_match?: unknown;
+  readonly include_chunks?: unknown;
+  readonly recall_max_tokens?: unknown;
+  readonly keep_trace?: unknown;
+}
+
+/** BİR ZİHİN MODELİ — CP `MentalModel` arayüzü (sınıf (C)); canlıda liste BOŞ geldi,
+ *  yani öğe şekli ÖLÇÜLEMEDİ ve bu bilerek yazılı duruyor. */
+export interface ZihinModeli extends HamGovde {
+  readonly id?: unknown;
+  readonly bank_id?: unknown;
+  readonly name?: unknown;
+  /** Modelin kapsamını belirleyen sorgu. */
+  readonly source_query?: unknown;
+  /** Sentezlenmiş metin — yalnız `detail=content|full` istendiğinde dolu gelir. */
+  readonly content?: unknown;
+  readonly tags?: unknown;
+  readonly max_tokens?: unknown;
+  readonly trigger?: ZihinTetigi;
+  readonly last_refreshed_at?: unknown;
+  /** Modelin OKUDUĞU en yeni kaydın damgası — tazelik bununla kıyaslanır. */
+  readonly last_memory_seen_at?: unknown;
+  /** Üç değerli: `true`/`false`/bilinmiyor. */
+  readonly is_stale?: unknown;
+  readonly created_at?: unknown;
+  /** Son tazelemenin ham yanıtı (kaynaklar, iz). Şekli ölçülmedi. */
+  readonly reflect_response?: unknown;
+}
+
+/* ==========================================================================
+   VARLIKLAR — `::api_hindsight_varliklar` · `::api_hindsight_varlik_graf`
+   ========================================================================== */
+
+/** BİR VARLIK — alanların TAMAMI A1'DE ÖLÇÜLDÜ (sınıf (A), `entities?limit=2`). */
+export interface VarlikKaydi extends HamGovde {
+  readonly id?: unknown;
+  readonly canonical_name?: unknown;
+  readonly mention_count?: unknown;
+  readonly first_seen?: unknown;
+  readonly last_seen?: unknown;
+  readonly metadata?: unknown;
+}
+
+/**
+ * GRAF DÜĞÜMÜ/KENARI — CP `graph-data.ts::convertHindsightGraphData`ın okuduğu
+ * biçim (sınıf (C)): gövde `{nodes:[{data:{…}}], edges:[{data:{…}}]}` şeklinde
+ * İÇ İÇE bir `data` sarmalı taşıyor (Cytoscape mirası). Sarmalı düzleştirmiyoruz:
+ * düzleştirmek, ölçülmemiş bir biçimi ölçülmüş gibi göstermek olurdu.
+ */
+export interface GrafDugumu extends HamGovde {
+  readonly data?: {
+    readonly id?: unknown;
+    readonly label?: unknown;
+    readonly color?: unknown;
+  };
+}
+
+export interface GrafKenari extends HamGovde {
+  readonly data?: {
+    readonly source?: unknown;
+    readonly target?: unknown;
+    readonly weight?: unknown;
+    readonly similarity?: unknown;
+    readonly linkType?: unknown;
+    readonly entityName?: unknown;
+    /** Son birlikte geçiş damgası — CP ısı ölçeğini bundan kuruyor. */
+    readonly lastCooccurred?: unknown;
+  };
+}
+
+export interface VarlikGrafi extends HamGovde {
+  readonly nodes?: readonly GrafDugumu[];
+  readonly edges?: readonly GrafKenari[];
+  /* ---- KIRPMANIN ÜÇ SAYISI — sınıf (A), A1'de ölçüldü (16:25 UTC eki) ----
+     `entities/graph` zarfı `edges·limit·nodes·total_edges·total_entities` taşıyor.
+     ÜÇÜ DE OKUNMAK ZORUNDA, çünkü bu uç SUNUCUDA kırpılıyor: vekil limiti kendi
+     tavanına (200) indiriyor (`api.py::_hafiza_sayi` + `HAFIZA_LISTE_TAVANI`) ve
+     canlı bankada isim sayısı bunun kat kat üstünde. Yalnız dönen diziyi sayan bir
+     ekran, eksik bir grafiği TAM gösterirdi — `graf.tsx` başlığının kendi yasağı.
+     Sayılar telde duruyordu; okunmadıkları sürece yokluk ekranın körlüğüydü. */
+  /** Bankadaki TOPLAM isim sayısı (kırpma öncesi). */
+  readonly total_entities?: unknown;
+  /** Bankadaki TOPLAM bağ sayısı (kırpma öncesi). */
+  readonly total_edges?: unknown;
+  /** Sunucunun UYGULADIĞI tavan — istemcinin sorduğu değil (vekil kırpar). */
+  readonly limit?: unknown;
+}
+
+/* ==========================================================================
+   RECALL — `::api_hindsight_recall` (POST, beyaz listeli gövde)
+   ========================================================================== */
+
+/** Bir recall vuruşunun skorları — CP tam duyarlıkta basıyor, YUVARLAMIYOR
+ *  (`search-debug-view.tsx::fmtScore`: yuvarlamak anlamlı farkı gizler). */
+export interface RecallSkorlari extends HamGovde {
+  readonly final?: unknown;
+  readonly reranker?: unknown;
+  readonly semantic?: unknown;
+  readonly keyword?: unknown;
+}
+
+/** BİR RECALL SONUCU — CP sonuç kartının okuduğu alanlar (sınıf (C)). */
+export interface RecallSonucu extends HamGovde {
+  readonly id?: unknown;
+  readonly text?: unknown;
+  readonly type?: unknown;
+  readonly context?: unknown;
+  readonly occurred_start?: unknown;
+  readonly scores?: RecallSkorlari;
+}
+
+/** Recall'ın gözlem bölümü — `proof_count` ve `relevance` CP'de ayrı çiziliyor. */
+export interface RecallGozlemi extends HamGovde {
+  readonly id?: unknown;
+  readonly text?: unknown;
+  readonly proof_count?: unknown;
+  readonly relevance?: unknown;
+}
+
+/**
+ * RECALL GÖVDESİ — `{results, observations, entities, chunks, trace}` (sınıf (C)).
+ * `entities`/`chunks` bu panoda HİÇ dolmaz ve nedeni ekranda yazılı: onları
+ * isteyen `include` alanı vekilin beyaz listesinde YOKTUR
+ * (`api.py::_HAFIZA_RECALL_ALANLARI`).
+ */
+export interface RecallGovdesi extends HamGovde {
+  readonly results?: readonly RecallSonucu[];
+  readonly observations?: readonly RecallGozlemi[];
+  readonly entities?: unknown;
+  readonly chunks?: unknown;
+  readonly trace?: unknown;
+}
+
+/** POST `/api/hindsight/recall` zarfı — `{govde, neden}` (`api.py::_hafiza_recall`). */
+export interface RecallZarfi {
+  readonly govde?: RecallGovdesi | null;
+  readonly neden?: string | null;
+}
+
+/* ==========================================================================
+   GÖZLEMLER — `::api_hindsight_gozlem_kapsamlari`
+   ========================================================================== */
+
+/** BİR GÖZLEM KAPSAMI — CP `observation-scope-filter.tsx::ObservationScope`
+ *  (sınıf (C)): bir ETİKET KÜMESİ ve o kümedeki gözlem sayısı. BOŞ etiket kümesi
+ *  bir eksiklik değil, "küresel kapsam"tır — ekran ikisini ayırır. */
+export interface GozlemKapsami extends HamGovde {
+  readonly tags?: unknown;
+  readonly count?: unknown;
+}
+
+export interface GozlemKapsamlari extends HamGovde {
+  readonly scopes?: readonly GozlemKapsami[];
+  readonly items?: readonly GozlemKapsami[];
+}
+
+/* ==========================================================================
+   İŞLEMLER — `::api_hindsight_islemler`
+   ========================================================================== */
+
+/** İşlemin son ilerleme fotoğrafı — CP `OperationProgress` (sınıf (C)). */
+export interface IslemIlerlemesi extends HamGovde {
+  readonly stage?: unknown;
+  readonly processed?: unknown;
+  readonly total?: unknown;
+  /** Son kalp atışı damgası. */
+  readonly at?: unknown;
+}
+
+/** BİR İŞLEM — CP `bank-operations-view.tsx::Operation` (sınıf (C)); `filename`
+ *  A1'de ölçüldü (sınıf (A)) ve CP'nin arayüzünde YOK — daraltmadık. */
+export interface IslemKaydi extends HamGovde {
+  readonly id?: unknown;
+  readonly task_type?: unknown;
+  readonly items_count?: unknown;
+  readonly document_id?: unknown;
+  readonly filename?: unknown;
+  readonly created_at?: unknown;
+  readonly updated_at?: unknown;
+  readonly status?: unknown;
+  readonly error_message?: unknown;
+  readonly next_retry_at?: unknown;
+  readonly progress?: IslemIlerlemesi;
+}
+
+/**
+ * İŞLEM ZARFI — VE BU DOSYADAKİ EN PAHALI ÖLÇÜM.
+ *
+ * Bu uç `SayfaliGovde` DEĞİLDİR: diziyi `items` altında değil `operations`
+ * altında veriyor (A1'de ölçüldü, sınıf (A): `operations?limit=100` →
+ * `bank_id, total, limit, offset, operations`). `SayfaliGovde<IslemKaydi>`
+ * yazsaydık ekran her zaman "işlem yok" derdi — üstelik SESSİZCE, çünkü
+ * `items` gerçekten `undefined` olurdu ve hiçbir gerekçe doğmazdı.
+ *
+ * `items` YİNE DE OKUNUR: vekil zarfı aynen geçiriyor ve upstream bir gün adı
+ * tekilleştirirse tek ada bağlı ekran sessizce boşalırdı (`_hafiza_surum` dersi).
+ */
+export interface IslemGovdesi extends HamGovde {
+  readonly operations?: readonly IslemKaydi[];
+  readonly items?: readonly IslemKaydi[];
+  readonly total?: unknown;
+  readonly limit?: unknown;
+  readonly offset?: unknown;
+  readonly bank_id?: unknown;
+}
+
+/* ==========================================================================
+   DENETİM VE MODEL ÇAĞRILARI — `::api_hindsight_denetim` · `::api_hindsight_llm_istekleri`
+                                 (+ iki istatistik ucu)
+   ========================================================================== */
+
+/** BİR DENETİM SATIRI — CP `audit-logs-view.tsx` tablosu ve detay kutusu (sınıf (C)). */
+export interface DenetimKaydi extends HamGovde {
+  readonly id?: unknown;
+  readonly action?: unknown;
+  readonly transport?: unknown;
+  readonly started_at?: unknown;
+  readonly ended_at?: unknown;
+  readonly request?: unknown;
+  readonly response?: unknown;
+  readonly metadata?: unknown;
+}
+
+/** BİR MODEL ÇAĞRISI — CP `llm-requests-view.tsx::LLMRequestEntry` (sınıf (C)). */
+export interface ModelCagrisi extends HamGovde {
+  readonly id?: unknown;
+  readonly operation?: unknown;
+  readonly scope?: unknown;
+  readonly status?: unknown;
+  readonly provider?: unknown;
+  readonly model?: unknown;
+  readonly started_at?: unknown;
+  readonly duration_ms?: unknown;
+  readonly input_tokens?: unknown;
+  readonly output_tokens?: unknown;
+  readonly cached_tokens?: unknown;
+  readonly total_tokens?: unknown;
+  readonly span_id?: unknown;
+  readonly parent_span_id?: unknown;
+  readonly error?: unknown;
+}
+
+/** İSTATİSTİK KOVASI — iki istatistik ucu da `{time, total}` veriyor; model
+ *  çağrısı ucu ayrıca `tokens{input,output,cached,total}` taşıyor (sınıf (C)). */
+export interface IstatistikKovasi extends HamGovde {
+  readonly time?: unknown;
+  readonly total?: unknown;
+  readonly tokens?: {
+    readonly input?: unknown;
+    readonly output?: unknown;
+    readonly cached?: unknown;
+    readonly total?: unknown;
+  };
+}
+
+/** İSTATİSTİK GÖVDESİ — `trunc` kovanın çözünürlüğüdür ve UYDURULMAZ; gelmezse
+ *  eksen etiketi ham damgadan çizilir. */
+export interface IstatistikGovdesi extends HamGovde {
+  readonly buckets?: readonly IstatistikKovasi[];
+  readonly trunc?: unknown;
+  readonly period?: unknown;
+  readonly bank_id?: unknown;
+}
+
+/* ==========================================================================
+   YAPILANDIRMA — `::api_hindsight_yapilandirma` (GET /config)
+   ========================================================================== */
+
+/**
+ * BANKA YAPILANDIRMASI — İKİ KATMAN, VE CP İKİSİNİ AYIRIYOR.
+ *
+ * CP `bank-config-view.tsx` ÇÖZÜLMÜŞ değeri (`config`) ile BANKAYA ÖZGÜ
+ * geçersiz kılmaları (`overrides`) ayrı okuyor ve gerekçesini yazıyor: çözülmüş
+ * değer "devralınan true" ile "elle true yapılmış"ı ayırt edemez. Zarfın bu iki
+ * alanı GERÇEKTEN taşıyıp taşımadığı BU TURDA ÖLÇÜLMEDİ (canlı ölçüm dökümünde
+ * `/config` yok) — ikisi de isteğe bağlı ve ekran hangisinin gelmediğini yazar.
+ */
+export interface YapilandirmaGovdesi extends HamGovde {
+  readonly config?: HamGovde | null;
+  readonly overrides?: HamGovde | null;
+  /** Bellek savunması politikası — CP `memory-defense-section.tsx::readPolicy`
+   *  bunu `config.memory_defense` altında arıyor; kök düzeyde de okunur. */
+  readonly memory_defense?: unknown;
 }
