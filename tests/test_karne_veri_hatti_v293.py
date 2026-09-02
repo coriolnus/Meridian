@@ -34,9 +34,12 @@ GÜNCELLEME 2026-09-01 (akıbet kalemi N00017) — KÖK A YUKARIDAN DA KAPANDI. 
 — yani yeni bir replay koşulmadan kapatılabilen bir boşluktu. Bu dosyanın aşağıdaki AST çivisi
 (`test_A_ship_yolu_backtest_full_YAZIYOR_folds_da_YAZIYOR`) o günkü YOKLUĞU çiviliyordu; kendi
 docstring'inin verdiği izinle gövdesi yeni gerçeğe çevrildi. YEDEK BACAK KALDI ve gerekçesi
-DARALDI: (i) rejim ship'i `backtest_full` yazMAZ (tam-pencere detayı rejim dilimlenmemiştir —
-global bir popülasyonu rejim satırının ÖNCELİKLİ bacağına koymak `backtest_oos@<rejim>`
-ek-adının önlediği hatanın ta kendisi olurdu) ve (ii) operatör kalemi satırları hiçbirini yazmaz.
+DARALDI: (i) rejim ship'i DÜZ `backtest_full` yazMAZ — bu hâlâ doğru; ama 2026-09-02'den beri
+(TSK-002, v371) rejim ship'i EK-ADLI kardeşini (`backtest_full@<rejim>`, içerik GERÇEKTEN rejim
+dilimi — `walk_forward.full_detail_graded`) yazar, yani "rejim satırında tam-pencere defteri hiç
+yok" okuması artık yanlıştır; düz-anahtar yasağının gerekçesi (global popülasyonu öncelikli
+bacağa koymak) aynen yerinde ve çivisi `v371::test_2b`dedir; (ii) operatör kalemi satırları
+hiçbirini yazmaz.
 """
 import ast
 import json

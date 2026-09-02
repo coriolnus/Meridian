@@ -215,7 +215,13 @@ def test_rejim_shipi_ebeveyn_satirina_hukum_yazmaz(seeded, monkeypatch):
     # replay'in TÜM işlemleri — rejim DİLİMLENMEMİŞ. Rejim satırına yazılsaydı
     # `analytics._backtest_beklenti_r`ın ÖNCELİKLİ bacağı global bir popülasyonu okur ve rejim
     # dilimli fold bacağını EZERDİ; `backtest_oos@chop` ek-adının önlediği hatanın ta kendisi.
-    # Yokluk = ölçülmedi (None YAZILMAZ); hüküm fold'lardan gelmeye devam eder.
+    # GÜNCELLEME 2026-09-02 (TSK-002): bu iddia artık KOŞULLU — üretici rejimli çağrıda
+    # `full_detail_graded` verirse rejim satırı EK-ADLI defteri (`backtest_full@<rejim>`) taşır
+    # ve hüküm o bacaktan gelir; düz-anahtar yasağı değişmedi. KÖRLÜK BEYANI (ölçüldü, inceleme
+    # 2026-09-02): bu fikstürün `wf_from_scores` fabrikası `full_detail_graded` üretmez, yani
+    # aşağıdaki assert ek-ad↔düz ayrışmasına KÖRDÜR — o dalın çivisi `v371::test_2b`dedir ve
+    # buradaki assert yalnız düz-anahtar yasağının fikstür-yolu bekçisi olarak kalır (Rol-1
+    # hükmü: fikstür büyütülmedi, körlük kayıtla bırakıldı).
     assert "backtest_full" not in vers[str(res["version"])], \
         "rejim satırına dilimlenmemiş bir tam-pencere defteri düştü — popülasyon karıştı"
     assert "backtest_folds" in vers[str(res["version"])], "yedek bacağın kaynağı kurudu"

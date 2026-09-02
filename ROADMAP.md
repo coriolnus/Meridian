@@ -2367,6 +2367,10 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
 
+- **[TSK-103] `full_detail_graded` span-türevi alanların dürüstleştirilmesi (span_days kararı)** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
+  What: rejim-dilimli tam-pencere defteri bugün `span_days`/`mtm_equity` VERMEDEN hesaplanır (bilinçli — düz kardeşiyle tek yasa; bedel beyanı madde-3 backtest.py'de): span-türevi alanlar (score/sharpe/realized_30d/trades_per_year) dilim kümelenmesinden yıllıklanır, max_drawdown yaşanmamış portföy yolunundur. Karar: ya `span_days=segment takvimi` geçir (sayılar değişir — düz kardeşle ayrışma beyan ister) ya beyanla kal. Bugünkü tek tüketici yalnız avg_r+n okur, aciliyet yok.
+  Why: TSK-002 incelemesi bulgu-1 (orta): kalıcı deftere "kardeş" adıyla yazılan alanın bazı alanları kıyaslanabilir değil; beyan yazıldı, kararın kendisi ruling kalemi.
+  Ref: task-002 inceleme raporu 2026-09-02 · backtest.py bedel beyanı madde-3 · score.py span docstring'i.
 - **[TSK-099] Pano `apiPost` iki birebir kopyası tek kaynağa iner** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
   What: `ui/src/pano/yuzeyler/kimlik/gonder.ts` ve `kuyruk/onayEylem.ts` aynı `apiPost`u birebir taşıyor; ortak modüle inip iki tüketici de oradan import etmeli. TSK-098 üçüncü kopyayı YAZMADI (gonder.ts'ten import etti) — borç ikiye sabitlendi, büyümedi.
   Why: tek-kaynak yasası — iki kopya sessizce ayrışır (hata gövdesi/başlık davranışı çatallanınca yüzeyler farklı davranır).
@@ -2396,7 +2400,7 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   Why: Yasa 6 (okuyucusuz yazım) — bugün hiçbir soru trend istemiyor; A1 4-çekirdek/24GB'da ikincil yük beyanlı tavan; tasarım dili tek-pano. Kazanç ölçülmeden altyapı kurmak bedel yasasının ters yönü.
   Ref: operatör sorusu 2026-09-01 gece ("Prometheus'u bütün sistemde yaygınlaştırmamız gerekiyor mu").
 
-- **[TSK-002] Rejim-ship satırına rejim-dilimli backtest_full** — status: QUEUED · born: 2026-09-01 · owner: rol1 · size: M · trigger: —
+- **[TSK-002] Rejim-ship satırına rejim-dilimli backtest_full** — status: DONE(2026-09-02 gece · üç yüzey: walk_forward.full_detail_graded → backtest_full@<rejim> → analytics ek-adlı 1b bacağı; v371 17 çivi + 2 hedefli mutasyon; SDD incelemesi ONAY + 6 kapanış kalemi aynı turda işlendi; span_days kararı TSK-103'e; commit gece kapanışında, push tam-suite hükmüyle) · born: 2026-09-01 · owner: rol1 · size: M · trigger: —
   What: `backtest.walk_forward` rejim-dilimli `graded` popülasyonundan ikinci bir `score_detail` döndürsün; rejim ship satırları da kendi `backtest_full`ünü taşısın. Why: akıbet-dalgası N00017'yi yalnız GLOBAL ship için kapattı — `full_detail` rejim-dilimsiz popülasyondan üretiliyor, rejim satırına yazmak analytics'in öncelikli bacağına yanlış popülasyon koyardı (implementer endişe-1, bilinçli dışarıda bırakıldı). Ref: akibet-dalgasi-rapor · N00017.
 - **[TSK-003] Reflect belleğe danışmadan öneri basıyor (yansıma mükerrerlik kapısı)** — status: DONE(2026-09-01·131ffa8 — mukerrerlik.py + v352 28 çivi, iki-kaynaklı kapı; israf hedefi %45→≤%10 sonraki karar turunda ölçülür) · born: 2026-09-01 · owner: rol1 · size: S-M · trigger: —
   What: hermes_reflect öneri üretirken hiçbir belleğe (akıbet defteri/kod/Hindsight) danışmıyor; öneri (a) reflect anında akıbet defterindeki açık+kararlı önerilere ucuz benzerlik kontrolü, (b) ingest-sonrası Hindsight recall'a terfi.

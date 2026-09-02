@@ -1500,12 +1500,22 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     # `walk_forward`ın `full_detail`i olarak (= `BacktestResult.detail(goal)` = `score.score_detail`)
     # ZATEN hesaplanmıştı ve atılıyordu — yeni bir replay koşulmaz.
     #
-    # YALNIZ GLOBAL SHIP'TE. `full_detail` replay'in BÜTÜN işlemlerinden üretilir (rejim
-    # dilimlenmemiş), oysa rejim ship'inde sürüm yalnız o rejimin diliminde notlandırılır. Rejim
-    # satırına yazmak, ÖNCELİKLİ bacağa global bir popülasyon koyup rejim dilimli fold bacağını
-    # ezerdi — `backtest_oos@<rejim>` ek-adının önlediği hatanın ta kendisi. `backtest_full@<rejim>`
-    # diye yazmak da yalan olurdu: içerik rejim dilimi DEĞİL. Yokluk BEYANLIdır (None YAZILMAZ:
-    # "ölçtük, boş çıktı" diye okunurdu) ve o satırda hüküm fold'lardan gelmeye devam eder.
+    # İKİ SHIP, İKİ ANAHTAR, İKİ POPÜLASYON (2026-09-02'de tamamlandı — TSK-002).
+    # `full_detail` replay'in BÜTÜN işlemlerinden üretilir (rejim dilimlenmemiş), oysa rejim
+    # ship'inde sürüm yalnız o rejimin diliminde notlandırılır. TARİHÇE: 2026-09-01'de rejim satırı
+    # bilinçli olarak BOŞ bırakılmıştı ve gerekçesi şuydu — düz `backtest_full` yazmak ÖNCELİKLİ
+    # bacağa global bir popülasyon koyup rejim dilimli fold bacağını ezerdi (`backtest_oos@<rejim>`
+    # ek-adının önlediği hatanın ta kendisi), `backtest_full@<rejim>` yazmak ise YALAN olurdu çünkü
+    # içerik rejim dilimi DEĞİLDİ. O gerekçe hâlâ geçerli; ORTADAN KALKAN şey ikinci şıkkın
+    # önkoşuluydu: `walk_forward` artık rejimli çağrıda İKİNCİ bir defter döndürüyor
+    # (`full_detail_graded` = `score_detail(graded, goal)`, popülasyon = `_regime_slice(...)`),
+    # yani ek-adlı anahtarın içeriği ARTIK GERÇEKTEN rejim dilimidir.
+    #
+    # DÜZ ANAHTAR REJİM SATIRINA YİNE ASLA DÜŞMEZ: `analytics`in düz-anahtar geri-düşüşü damgasız
+    # girdiyi GLOBAL sayar; `rollback` ise `backtest_full`ü HİÇ okumaz (ölçüldü, inceleme
+    # 2026-09-02) — onun damgasız yasası `backtest_oos` içindir (yukarıdaki `oos_field` notu).
+    # Ek-ad, düz anahtarın YANINA değil YERİNE geçer. Üretici defteri vermezse anahtar HİÇ yazılmaz;
+    # `None` yazmak "ölçtük, boş çıktı" diye okunurdu. Çivi: `test_rejim_tam_pencere_v371`.
     #
     # `.get` + `isinstance`: üretici sözleşmesini burada SERT indeksleme değil ÇİVİ zorlar
     # (`test_karne_veri_hatti_v293::test_A_a_full_detail_URETICIDE_VAR_ship_yolunun_okudugu_alan`).
@@ -1518,6 +1528,14 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
                                  changed_variable=v.variable, live_since=memory.now_iso(),
                                  **({"backtest_full": cand["full_detail"]}
                                     if ereg is None and isinstance(cand.get("full_detail"), dict)
+                                    else {}),
+                                 # `if ereg` (doğruluk) — `oos_field`in yasasıyla BİR: boş dizge de
+                                 # globaldir (`_regime_slice` filtre uygulamaz) ve `is not None`
+                                 # burada okunamayan bir `backtest_full@` doğururdu (inceleme
+                                 # 2026-09-02 bulgu-2; üreticinin kendi kapısı da `if eval_regime`).
+                                 **({f"backtest_full@{ereg}": cand["full_detail_graded"]}
+                                    if ereg
+                                    and isinstance(cand.get("full_detail_graded"), dict)
                                     else {}),
                                  **oos_field)
     # SPY-üstü alfa DAMGASI — kapının bileşeni DEĞİL (hedef fonksiyonunu uçuşta değiştirmek

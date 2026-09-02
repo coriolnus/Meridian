@@ -2420,65 +2420,136 @@ LIVE_CEILING_DURUMLAR = ("olculemedi", "tavan_altinda", "tavan_ustunde", "suspan
 #
 # KÖK YUKARIDAN DA KAPANDI (2026-09-01, akıbet kalemi N00017): ship yolu artık GLOBAL ship'te
 # `backtest_full`ı da yazıyor — `walk_forward`ın `full_detail`i zaten hesaplanıyordu ve atılıyordu.
-# İKİNCİ BACAK EMEKLİ OLMADI, gerekçesi DARALDI: REJİM ship'i `backtest_full` yazmaz (tam-pencere
-# defteri rejim dilimlenmemiştir) ve operatör kalemi hiçbirini yazmaz. Yani "ship edildi ama
-# backtest_full yok" hâli hâlâ mümkündür ve fold bacağı o satırlarda tek ölçümdür.
-BACKTEST_BEKLENTI_KAYNAKLARI = ("backtest_full", "backtest_folds")
+#
+# REJİM SATIRI DA KAPANDI (2026-09-02, TSK-002) — AMA KENDİ POPÜLASYONUYLA. 2026-09-01'de rejim
+# ship'i bu alanı bilerek yazmıyordu: `full_detail` dilimlenmemiştir ve onu rejim satırının
+# ÖNCELİKLİ bacağına koymak `backtest_oos@<rejim>` ek-adının önlediği hatanın ta kendisi olurdu.
+# `walk_forward` artık rejimli çağrıda İKİNCİ bir defter döndürüyor (`full_detail_graded`, nüfusu
+# `_regime_slice`) ve rejim ship'i onu `backtest_full@<rejim>` diye yazıyor — yani ÜÇÜNCÜ bir
+# kaynak doğdu ve okuma sırasına DÜZ anahtarın hemen ardına girdi (aşağıdaki sıra yasası).
+#
+# İKİNCİ BACAK (fold'lar) YİNE EMEKLİ OLMADI, gerekçesi bir kez daha DARALDI: operatör kalemi
+# hiçbirini yazmaz ve üretici dilimli defteri veremezse rejim satırında da yalnız fold'lar kalır.
+# Yani "ship edildi ama tam-pencere defteri yok" hâli hâlâ mümkündür.
+#
+# ŞABLON ANAHTAR: ek-adlı kaynağın SOMUT adı satırdan türetilir (rejim orada yazılıdır), o yüzden
+# sözleşme kaydına ŞABLONUYLA girer. `<rejim>` yer tutucusu hem kayıt anahtarında hem kapsam
+# metnindedir ve dönen `kapsam` o metinden ÜRETİLİR — iki yerde ayrı ayrı yazılsaydı sessizce
+# ayrışırlardı (TEK-KAYNAK YASASI).
+EK_ADLI_TAM_PENCERE = "backtest_full@<rejim>"
+BACKTEST_BEKLENTI_KAYNAKLARI = ("backtest_full", EK_ADLI_TAM_PENCERE, "backtest_folds")
+#: Satırdaki rejim damgasının okunduğu yer: ship yolu OOS skorunu HER rejim ship'inde bu ön ekle
+#: yazar (`reflect._submit_locked`), tam-pencere defterini ise ancak üretici verirse. Rejimi
+#: buradan türetmek, "hangi dilim?" sorusunu satırın KENDİSİNE sordurur — okuyucunun tahminine değil.
+OOS_EK_ONEKI = "backtest_oos@"
 BACKTEST_BEKLENTI_KAPSAM = {
     "backtest_full": ("TAM replay penceresi — `score.score_detail` çıktısının `avg_r` alanı "
                       "(yazan: run.py'nin re-seed yolu ve reflect.py'nin ship yolu — ship "
-                      "tarafında YALNIZ global ship, rejim ship'i bu alanı yazmaz)"),
+                      "tarafında YALNIZ global ship; rejim ship'i ek-adlı kardeşini yazar)"),
+    EK_ADLI_TAM_PENCERE: ("TAM replay penceresinin <rejim> dilimi — `score.score_detail` çıktısı, "
+                          "nüfusu `backtest._regime_slice(res.trades, '<rejim>')` (yazan: "
+                          "reflect.py'nin REJİM ship yolu, kaynağı `walk_forward.full_detail_graded`). "
+                          "Düz `backtest_full` ile AYNI pencere, DAR nüfus; okunan alan `avg_r`dir "
+                          "— span-türevi alanlar (score/sharpe/realized_30d) dilim kümelenmesinden "
+                          "yıllıklanır, kıyaslanabilir sayılmaz (üreticideki bedel beyanı, madde 3)"),
     "backtest_folds": ("Search-OOS walk-forward fold'larının n-AĞIRLIKLI ortalaması — "
                        "`backtest._fold_metrics` şekli (yazan: reflect.py'nin ship yolu). "
                        "`backtest_full`tan DAR bir penceredir: tam replay değil, OOS dilimi"),
 }
 
 
+def _tam_pencere_okumasi(bt, alan_adi: str, ariza: list) -> dict | None:
+    """Bir TAM-PENCERE defterinden (`score.score_detail` şekli) `avg_r`/`n` çıkarır — düz ve
+    ek-adlı bacağın ORTAK gövdesi.
+
+    NEDEN ORTAK: iki bacak aynı şekli okur ve aynı arıza sınıflarını ("alan yok" ↔ "alan bozuk")
+    ayırt etmek zorundadır. İki kopya sessizce ayrışırdı: biri bir gün `n`i zorunlu kılar, diğeri
+    kılmaz ve rejim satırları global satırlardan FARKLI bir yasayla okunmaya başlar (TEK-KAYNAK
+    YASASI). `alan_adi` yalnız arıza METNİ içindir — okuyucu koda inmeden hangi alanın bozuk
+    olduğunu görsün.
+
+    None döner = bu bacak çözülmedi (yok ya da bozuk); bozuksa `ariza` listesi ADIYLA konuşur."""
+    if not (isinstance(bt, dict) and bt.get("avg_r") is not None):
+        return None
+    try:
+        _r = float(bt["avg_r"])
+    except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — biçimsiz alanın adı `ariza` listesine girer ve hiçbir bacak çözülmezse dönüşteki `neden` cümlesinde ADIYLA basılır ("alan yok" ile "alan bozuk" ayrı arıza sınıflarıdır); sonraki bacaklar yine denenir, yani bilgi kaybı da yok
+        ariza.append(f"`{alan_adi}.avg_r` BİÇİMSİZ")
+        return None
+    _n = bt.get("n")
+    try:
+        _n = None if _n is None else int(_n)
+    except (TypeError, ValueError):  # sessiz-yutma: yalnız RAPOR alanı olan örneklem sayısı; beklentinin kendisi ölçüldü ve n=None "sayı bilinmiyor" diye okunur, hüküm bu alandan türemiyor
+        _n = None
+    return {"avg_r": _r, "n": _n}
+
+
 def _backtest_beklenti_r(satir: dict) -> dict:
     """Karne satırından BACKTEST BEKLENTİSİNİ (R = işlem başına ortalama) çözen TEK yer.
 
-    NEDEN İKİ BACAK. "Bu sürümün backtest beklentisi nedir?" TEK bir sorudur, ama karneye yazan
+    NEDEN ÜÇ BACAK. "Bu sürümün backtest beklentisi nedir?" TEK bir sorudur, ama karneye yazan
     yollar tek değildir ve hiçbiri diğerinin alanını yazmaz:
       * tam re-seed (`run.py`) → `backtest_full` = `score.score_detail(...)` çıktısı, içinde `avg_r`;
-      * öğrenme döngüsünün ship yolu (`reflect.py` → `versioning.update_scoreboard`) →
+      * öğrenme döngüsünün GLOBAL ship yolu (`reflect.py` → `versioning.update_scoreboard`) →
         `backtest_folds` = `backtest._fold_metrics` çıktısı (her fold `n` + `avg_r`) ve
-        2026-09-01'den beri GLOBAL ship'te `backtest_full` de (`walk_forward.full_detail`);
-        REJİM ship'i `backtest_full` yazmaz, çünkü tam-pencere defteri rejim dilimlenmemiştir ve
-        onu rejim satırının ÖNCELİKLİ bacağına koymak iki popülasyonu karıştırırdı;
-      * operatör kalemi → İKİSİNİ DE yazmaz (yokluk BEYANLIdır, uydurulmaz).
+        2026-09-01'den beri `backtest_full` de (`walk_forward.full_detail`);
+      * REJİM ship yolu → `backtest_folds` ve 2026-09-02'den beri `backtest_full@<rejim>`
+        (`walk_forward.full_detail_graded` — AYNI pencere, `_regime_slice` ile DAR nüfus).
+        DÜZ `backtest_full` rejim satırına ASLA düşmez: damgasız bir girdi `rollback`un
+        düz-anahtar geri-düşüşlerinde GLOBAL sayılır ve uydurma delta üretirdi;
+      * operatör kalemi → HİÇBİRİNİ yazmaz (yokluk BEYANLIdır, uydurulmaz).
     Tek bacak okuyan bir kapı, rejim ship'lerinde ve operatör satırlarında "ölçülemedi" der —
     ölçüm diskte dururken. (2026-08-25'te bu, ship edilen HER sürüm için doğruydu.)
 
-    SIRA KEYFÎ DEĞİL VE DEĞİŞMEZ: `backtest_full` TAM pencereyi, fold'lar onun OOS alt kümesini
-    anlatır; GENİŞ olan önce okunur. Hangisinin okunduğu `kaynak` + `kapsam` alanlarında ADIYLA
-    durur — iki farklı popülasyon aynı sayı sanılamaz (bu, ikinci bacağın bedelidir ve gizlenmez).
+    SIRA KEYFÎ DEĞİL VE DEĞİŞMEZ: tam-pencere defterleri fold'lardan GENİŞtir, GENİŞ olan önce
+    okunur. Düz anahtar ek-adlıdan önce gelir çünkü damgasızlık GLOBAL demektir ve global nüfus
+    hiçbir dilime indirgenemez. Hangisinin okunduğu `kaynak` + `kapsam` alanlarında ADIYLA durur —
+    iki farklı popülasyon aynı sayı sanılamaz (bu, ek bacakların bedelidir ve gizlenmez).
+
+    EK-ADLI BACAĞIN REJİMİ SATIRDAN TÜRETİLİR, TAHMİN EDİLMEZ: rejim ship'i OOS skorunu HER ZAMAN
+    `backtest_oos@<rejim>` diye damgalar, yani "bu satır hangi dilimde notlandı?" sorusunun cevabı
+    satırın kendisindedir. BİRDEN ÇOK ek-adlı OOS anahtarı görülürse (bugünkü üretici tekli yazar)
+    HİÇBİRİ seçilmez — "herhalde ilki" bir tahmindir ve tavan hükmü o tahmine dayanırdı.
 
     AĞIRLIK n'DİR, DÜZ ORTALAMA DEĞİL: fold'lar eşit uzunlukta değildir. Düz ortalama, 7 işlemlik
     bir pencerenin gürültüsünü 45 işlemlik bir pencereyle aynı ağırlıkta sayardı — `backtest`in
     `FOLD_MIN_N` gerekçesiyle birebir aynı kusur, farklı yüzeyden.
 
     ÖLÇÜLEMEYEN 0 DEĞİLDİR: hiçbir bacak çözülmezse `avg_r` None döner ve `neden` hangi alanın
-    eksik, hangisinin biçimsiz olduğunu söyler. 0.0 yazmak "ölçtük, beklenti sıfır" demek olurdu
-    ve `bt_r <= 0` kapısı o sahte sayıya dayanırdı."""
+    eksik, hangisinin biçimsiz/belirsiz olduğunu söyler. 0.0 yazmak "ölçtük, beklenti sıfır" demek
+    olurdu ve `bt_r <= 0` kapısı o sahte sayıya dayanırdı."""
     satir = satir if isinstance(satir, dict) else {}
+    # 1. BACAK AİLESİNİN ARIZA DEFTERİ: biçimsiz alanlar VE ek-adlı seçim belirsizliği. İkisi de
+    # "ölçüm yok" değil "ölçüme ULAŞILAMADI" sınıfıdır ve yedek bacak okunsa BİLE dönüşteki
+    # `neden`e taşınır — yoksa okuyucu fold'ları bir TERCİH sanar, oysa bir ARIZA TELAFİSİdir.
     bicimsiz = []
 
-    # --- 1. BACAK: tam replay detayı ------------------------------------------------------------
-    bt = satir.get("backtest_full")
-    if isinstance(bt, dict) and bt.get("avg_r") is not None:
-        try:
-            _r = float(bt["avg_r"])
-        except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — biçimsiz alanın adı `bicimsiz` listesine girer ve hiçbir bacak çözülmezse dönüşteki `neden` cümlesinde ADIYLA basılır ("alan yok" ile "alan bozuk" ayrı arıza sınıflarıdır); ikinci bacak yine de denenir, yani bilgi kaybı da yok
-            bicimsiz.append("`backtest_full.avg_r` BİÇİMSİZ")
-            _r = None
-        if _r is not None:
-            _n = bt.get("n")
-            try:
-                _n = None if _n is None else int(_n)
-            except (TypeError, ValueError):  # sessiz-yutma: yalnız RAPOR alanı olan örneklem sayısı; beklentinin kendisi ölçüldü ve n=None "sayı bilinmiyor" diye okunur, hüküm bu alandan türemiyor
-                _n = None
-            return {"avg_r": _r, "n": _n, "kaynak": "backtest_full",
-                    "kapsam": BACKTEST_BEKLENTI_KAPSAM["backtest_full"], "neden": None}
+    # --- 1. BACAK: tam replay detayı (DÜZ anahtar = global nüfus) --------------------------------
+    _c = _tam_pencere_okumasi(satir.get("backtest_full"), "backtest_full", bicimsiz)
+    if _c:
+        return {**_c, "kaynak": "backtest_full",
+                "kapsam": BACKTEST_BEKLENTI_KAPSAM["backtest_full"], "neden": None}
+
+    # --- 1b. BACAK: EK-ADLI tam replay detayı (rejim ship'i — AYNI pencere, DAR nüfus) -----------
+    _ekler = sorted(k for k in satir if isinstance(k, str) and k.startswith(OOS_EK_ONEKI))
+    if len(_ekler) > 1:
+        # TAHMİN YASAK. Arıza deftere ADLARIYLA yazılır: okuyucu satırın hangi iki (ya da daha
+        # fazla) dilim damgası taşıdığını koda inmeden görsün ve YAZANI arasın.
+        # Kapı OOS damgasını sayar; "tek oos@ + iki full@" gibi çapraz varyantlar da aynı
+        # ulaşılamazlık ailesindendir (sürüm numarası asla yeniden kullanılmaz + re-seed satırı
+        # sıfırdan kurar ve @'lı anahtarları taşımaz) — o dallar bu yüzden YAZILMADI (v100'ün
+        # "ulaşılamaz dal yazılmaz" emsali; gerekçenin tamamı TSK-002 rapor §5 + incelemesi).
+        bicimsiz.append(f"ek-adlı tam-pencere bacağı SEÇİLEMEDİ — satırda birden çok rejim damgası "
+                        f"var ({', '.join(_ekler)}); hangi dilimin defteri okunacağı TAHMİN EDİLMEZ")
+    elif _ekler:
+        _rejim = _ekler[0][len(OOS_EK_ONEKI):]
+        _ad = EK_ADLI_TAM_PENCERE.replace("<rejim>", _rejim)
+        _c = _tam_pencere_okumasi(satir.get(_ad), _ad, bicimsiz)
+        if _c:
+            return {**_c, "kaynak": _ad,
+                    "kapsam": BACKTEST_BEKLENTI_KAPSAM[EK_ADLI_TAM_PENCERE].replace("<rejim>",
+                                                                                    _rejim),
+                    "neden": None}
 
     # --- 2. BACAK: ship yolunun walk-forward fold'ları ------------------------------------------
     folds = satir.get("backtest_folds")
@@ -2498,9 +2569,10 @@ def _backtest_beklenti_r(satir: dict) -> dict:
         toplam_r += _fn * _fr
         toplam_n += _fn
     if toplam_n > 0:
-        # UYARI METNİ İKİ KAYBI DA TAŞIR: düşen fold'lar VE (varsa) birinci bacağın biçimsizliği.
-        # İkincisi buraya taşınmazsa "backtest_full bozuktu ama fold'lardan okuduk" bilgisi
-        # KAYBOLURDU — okuyucu ikinci bacağı bir tercih sanardı, oysa bir ARIZA telafisiydi.
+        # UYARI METNİ İKİ KAYBI DA TAŞIR: düşen fold'lar VE (varsa) tam-pencere bacaklarının
+        # arızası (biçimsiz alan ya da ek-adda çözülemeyen rejim belirsizliği). İkincisi buraya
+        # taşınmazsa "tam-pencere defteri okunamadı ama fold'lardan okuduk" bilgisi KAYBOLURDU —
+        # okuyucu yedek bacağı bir tercih sanardı, oysa bir ARIZA telafisiydi.
         uyari = [f"{atilan} fold ölçülmemiş/biçimsiz olduğu için paydaya GİRMEDİ" if atilan else "",
                  *bicimsiz]
         uyari = [u for u in uyari if u]
@@ -2511,6 +2583,10 @@ def _backtest_beklenti_r(satir: dict) -> dict:
     # --- HİÇBİRİ ÇÖZÜLMEDİ ----------------------------------------------------------------------
     # `backtest_full.avg_r` YOK ibaresi BEYANLI olarak bu cümlede kalır: fiş metinleri ve
     # `test_wpm_borclari_v146` onu arıyor; ikinci bacak eklendi diye ilk bacağın adı düşürülemez.
+    # SINIR (inceleme 2026-09-02): `bicimsiz` artık seçim-belirsizliğini de taşır — düz anahtar
+    # gerçekten YOK + çoklu damga hâlinde ibare belirsizlik metnine düşer. Bilinçli: o hâl bugün
+    # ulaşılamaz (yukarıdaki ulaşılamazlık notu) ve iki metni yapıştırmak v146'nın aradığı cümleyi
+    # başka bir arızanın gövdesine gömerdi.
     eksik = "`backtest_full.avg_r` YOK" if not bicimsiz else " + ".join(bicimsiz)
     fold_neden = (f"`backtest_folds` VAR ama ölçülmüş fold taşımıyor ({atilan} fold düştü)"
                   if isinstance(folds, list) and folds else "`backtest_folds` da YOK")
@@ -2528,13 +2604,15 @@ def live_expectancy_ceiling(goal: dict | None = None) -> dict:
                  (live_paper + belirsiz; `replay_seed` TRAINING sayılır ve girmez) — aynı depoda
                  "canlı defter kimdir?" sorusunun ikinci bir cevabı olamaz.
       backtest — karnedeki AYNI sürümün backtest beklentisi, `_backtest_beklenti_r` ile YAZILI bir
-                 öncelikte çözülür: `backtest_full.avg_r` (tam replay penceresi), yoksa
-                 `backtest_folds`un n-ağırlıklı `avg_r` ortalaması (Search-OOS dilimi). Hangi bacak
-                 okundu → `backtest_kaynak`/`backtest_kapsam`. İkinci bacak 2026-08-25'te eklendi:
-                 ship yolu o gün `backtest_full` YAZMIYORDU, yani ship edilen her sürümde ölçüm
-                 diskte dururken taraf "ölçülemedi" görünüyordu (fiş 1/4/9). Kök 2026-09-01'de
-                 yukarıdan da kapandı (global ship artık yazıyor); yedek bacak rejim ship'leri ve
-                 operatör satırları için DURUYOR. Sürüm eşleşmesi
+                 öncelikte çözülür: `backtest_full.avg_r` (tam replay penceresi, GLOBAL nüfus),
+                 yoksa `backtest_full@<rejim>.avg_r` (aynı pencerenin rejim dilimi — rejim
+                 ship'leri), yoksa `backtest_folds`un n-ağırlıklı `avg_r` ortalaması (Search-OOS
+                 dilimi). Hangi bacak okundu → `backtest_kaynak`/`backtest_kapsam`. Fold bacağı
+                 2026-08-25'te eklendi: ship yolu o gün `backtest_full` YAZMIYORDU, yani ship
+                 edilen her sürümde ölçüm diskte dururken taraf "ölçülemedi" görünüyordu
+                 (fiş 1/4/9). Kök 2026-09-01'de global ship'te, 2026-09-02'de rejim ship'inde
+                 yukarıdan da kapandı; fold bacağı operatör satırları ve üreticinin defter
+                 veremediği hâller için DURUYOR. Sürüm eşleşmesi
                  `rollback.check_and_rollback`in popülasyon yasasıyla aynıdır; iki tarafı farklı
                  sürümlerden okumak like-for-like'ı bozardı.
 
@@ -2649,7 +2727,9 @@ def live_expectancy_ceiling(goal: dict | None = None) -> dict:
         "birim": "R (işlem başına ortalama)",
         "kaynak": ("canlı: trades.jsonl · yürürlükteki sürüm · replay_seed HARİÇ (payda yasası "
                    "learning_scorecard ile aynı) | backtest: scoreboard.json "
-                   "versions[<sürüm>].backtest_full.avg_r, yoksa aynı satırdaki backtest_folds'un "
+                   "versions[<sürüm>].backtest_full.avg_r, yoksa aynı satırdaki "
+                   "backtest_full@<rejim>.avg_r (rejim satırlarında; rejim satırın kendi "
+                   "backtest_oos@<rejim> damgasından türetilir), yoksa backtest_folds'un "
                    "n-ağırlıklı avg_r ortalaması (öncelik yazılıdır; okunan bacak "
                    "`backtest_kaynak` alanında durur)"),
         "kapsam": ("ADVISORY KOLON — `result_verdict`in dört ölçütünden hiçbirini değiştirmez, "

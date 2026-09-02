@@ -1039,6 +1039,39 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
         "oos_folds_full": folds_full, "oos_tail_risk_full": tail_full,
         "holdout_score": hold_d["score"], "holdout_detail": hold_d,
         "full_detail": res.detail(goal),
+        # REJİM-DİLİMLİ TAM-PENCERE DEFTERİ. `full_detail` yukarıda replay'in BÜTÜN
+        # işlemlerinden üretilir; bu ikinci defter AYNI pencerenin (`[is_start, holdout_end]`) ama
+        # YALNIZ `graded` popülasyonunun karnesidir — çağrı biçimi birebir aynı, değişen tek şey
+        # nüfus. Rejim ship'i karneye bunu `backtest_full@<rejim>` olarak yazar
+        # (`reflect._submit_locked`); dilimlenmemiş olanı yazsaydı rejim satırının ÖNCELİKLİ
+        # beklenti bacağına GLOBAL bir popülasyon koymuş olurdu — `backtest_oos@<rejim>`
+        # ek-adının önlediği hatanın ta kendisi.
+        #
+        # ANAHTAR YALNIZ REJİMLİ ÇAĞRIDA VAR, ve bu bir eksiklik DEĞİL BEYANdır: `eval_regime`
+        # boşken `_regime_slice` filtre uygulamaz, yani `graded is res.trades` ve ikinci defter
+        # birincinin BİREBİR KOPYASI olurdu. Aynı gerçeğin iki kopyası sessizce ayrışır
+        # (TEK-KAYNAK YASASI); `None` yazmak da yanlış olurdu ("ölçtük, boş çıktı" diye okunurdu).
+        # Çivi: `test_rejim_tam_pencere_v371`.
+        #
+        # BEDEL BEYANI (`_mtm_search`in aynı sayfadaki beyanıyla aynı disiplin — bir alan EKLEMEK
+        # de bedelini söylemek zorundadır). İKİ bedel var, ikisi de küçük ve İKİSİ DE ÖLÇÜLDÜ,
+        # tahmin edilmedi:
+        #   (1) HESAP: `score_detail` ikinci kez koşar — AMA yalnız rejimli çağrıda ve `graded`
+        #       zaten dilimlenmiş durumda. Yeni replay YOKtur; ek iş, dar bir listede tek geçiş.
+        #   (2) DİSK: `reflect._inc_disk_save` incumbent walk'ın TÜM sözlüğünü `inc_cache.json`a
+        #       serileştirir, yani bu anahtar O DOSYAYI büyütür. Üst sınır türetilir, uydurulmaz:
+        #       `score_detail` çıktısı sabit şemadır (skalarlar + iki küçük iç sözlük, LİSTE YOK)
+        #       ≈ 0,5 KB; `INC_DISK_CAP` 40 girdidir; yani mutlak tavan ≈ 20 KB ve o tavana ancak
+        #       40 girdinin HEPSİ rejimli walk olursa ulaşılır (dosya bugün 190 KB).
+        #   (3) ÖLÇÜM KALİTESİ (inceleme 2026-09-02, TSK-002 bulgu-1): `span_days`/`mtm_equity`
+        #       verilmez — bilerek, düz `full_detail` ile AYNI çağrı biçimi (iki defter tek yasayla
+        #       hesaplanmalı). BEDELİ: span-türevi alanlar (`score`, `realized_30d`, `sharpe`,
+        #       `trades_per_year`, `components`) dilimin kendi KÜMELENMESİNDEN yıllıklanır ve
+        #       `max_drawdown` yalnız-rejim işlemlerinden kurulmuş, hiç yaşanmamış bir portföy
+        #       yolunundur; popülasyon-dürüst alanlar `avg_r`/`n`/`win_rate`/`total_return`dur ve
+        #       bugünkü TEK tüketici (`analytics._backtest_beklenti_r`) yalnız `avg_r`+`n` okur.
+        #       `span_days` geçirmek ayrı bir ruling kalemidir — sayıları değiştirir.
+        **({"full_detail_graded": score_mod.score_detail(graded, goal)} if eval_regime else {}),
         # AÇIK-POZİSYON DÜŞÜŞÜ: TAM replay penceresinin ([is_start,
         # holdout_end]) M2M eğrisi üzerinden. Dilim SEÇİLMEZ çünkü blok kapıya girmez ve dilim
         # seçmek "hangi pencerede kırmızı?" sorusunu rapor okuyucusundan gizlerdi; pencere
