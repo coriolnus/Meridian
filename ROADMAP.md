@@ -313,7 +313,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 **KOVA A — KAPANIŞ DALGASI (bugün–yarın; uçuştakini bitir):**
 
 - **[TSK-108] Hafıza sayfası CP-UI birebirleştirmesi** — status: ACTIVE · born: 2026-09-02 · owner: rol1 · size: M-L · trigger: —
-  What: operatör 2026-09-02: TSK-091 v1 sayfası "hindsight UI'ı ile alakası yok" — karar: CP UI incelenip BİREBİR taşınır. CP v0.9.2 kaynağından ölçüldü: bank-kapsamlı 8-görünümlü kenar çubuğu (home/data/knowledge/recall/reflect/documents/entities/profile) + stats/operasyon/denetim/LLM/mental-models/memory-defense görünümleri + graf. Faz-1 salt-okunur görünümler + recall (beyanlı sorgu-sınıfı POST istisnası); YAZAN her şey görünür-devre-dışı rozetle Faz-2'ye (yazma-vekili kararı ayrı kalem). Plan: docs/superpowers/plans/2026-09-02-hafiza-cpui-birebir.md.
+  What: (status notu 2026-09-02 akşam: T1 9d6b81a · T2 d968e4c · T3 1ecbbe4 · T4 e8f899f [recall sorgu-sınıfı muafiyeti adıyla beyanlı]; tam suite 9430 yeşil + etkilenen küme yeşil; SDD üç görev × inceleme+düzeltme+yeniden-inceleme; kalan: push → dağıtım penceresi → CANLI GÖRSEL DOĞRULAMA → DONE. Park [nihai inceleme]: fixture terfisi, `_HAFIZA_UC_TAVANI` doğrudan indeks, `_hafiza_toplam` bool dalı çivisi, M-10 3. örnek, bayat JSDoc.) operatör 2026-09-02: TSK-091 v1 sayfası "hindsight UI'ı ile alakası yok" — karar: CP UI incelenip BİREBİR taşınır. CP v0.9.2 kaynağından ölçüldü: bank-kapsamlı 8-görünümlü kenar çubuğu (home/data/knowledge/recall/reflect/documents/entities/profile) + stats/operasyon/denetim/LLM/mental-models/memory-defense görünümleri + graf. Faz-1 salt-okunur görünümler + recall (beyanlı sorgu-sınıfı POST istisnası); YAZAN her şey görünür-devre-dışı rozetle Faz-2'ye (yazma-vekili kararı ayrı kalem). Plan: docs/superpowers/plans/2026-09-02-hafiza-cpui-birebir.md.
   Why: orijinal talimat "birebir aktarılmalı"ydı (2026-09-01); v1 bunu Kapı-deseni dar yorumuyla uyguladı — spec gerilimi operatör aleyhine çözülmüştü, düzeltiliyor.
   Ref: TSK-091 (v1) · vectorize-io/hindsight v0.9.2 hindsight-control-plane/src · plan dosyası.
 
@@ -2413,6 +2413,14 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 ## §4 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler _(eski: §2)_
 
+- **[TSK-109] Hafıza sayfası webhook okuması — Faz-1 vekilinde yok, sekme dürüst boş** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
+  What: TSK-108 Faz-1 salt-okunur kapsamı webhook listesini (CP bank-config 'webhooks') vekile almadı; Yapılandırma sekmesi "bu pano webhook'ları okumuyor" diyor (≠ "webhook yok"). Kalem: `GET` webhook listesi vekile (salt-okunur), CRUD düğmeleri Faz-2 rozetiyle kalır.
+  Why: T3 incelemesi endişe-3 — okunmayan sekme UI'da dürüst ama eksik; T1 uç haritası CP api ağacının bu dalını atlamıştı.
+  Ref: TSK-108 (T3 raporu §endişeler); upstream `hindsight-clients/go/api/openapi.yaml` (v0.9.2 = ebad4782) webhooks yolları.
+- **[TSK-110] Pano bayat-gövde sınıfı: `sistem/parcalar.tsx::Kapi` + `veri.ts` — çekmece/kapı yeniden açılınca eski veri** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: M · trigger: —
+  What: `useApi` gövdesi ebeveynde yaşadığı için alt bileşene `key` vermek bayatlığı çözmüyor (T3 incelemesi M-7, ölçüldü); gerçek çare `Kapi` + `veri.ts` seviyesinde (panonun TÜM yüzeyleri) — tek kaynaklı yeniden-çekme sözleşmesi + çivi.
+  Why: hafıza sayfasında iki yerde (Belgeler/ZihinModelleri çekmeceleri) görünür; pano-geneli olduğu için TSK-108 turunda bilerek yapılmadı (>10 satır, diff okunabilirliği).
+  Ref: TSK-108 T3 inceleme M-7; `ui/src/pano/sistem/parcalar.tsx`, `ui/src/pano/veri.ts`.
 - **[TSK-107] Geri-dolum `indir()` indirme-sonrası boyut doğrulaması (erken kesik-dosya kırmızısı)** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
   What: `pilot.py::indir` indirme BİTTİKTEN sonra `hedef.stat().st_size == beklenen_bayt` kıyası yapmıyor; kesik inen gz ancak ~8 dk'lık ayrıştırma CPU'sundan sonra gzip `EOFError`'ıyla patlıyor ve birim failed'a düşüyor. İndirme sonrası boyut kıyası + net "KIRMIZI: kesik indirme (X/Y bayt)" mesajı arızayı dakikalar erken ve doğru adla yakalar; önbellek kapısı (var-olan boyut kıyası) zaten sonraki koşumda yeniden indirtiyor — sınıf kendi kendine iyileşiyor, bu kalem yalnız teşhis süresini/adını düzeltir.
   Why: vaka 2026-09-02 07:08Z — 2026-04-23 kesik gz, EOFError, servis failed; 2026-08-05 aynı sınıftan düşüp yeniden denemede geçmişti. Triyaj hükmü: eylem-gerektirmez ama teşhis pahalı ve yanlış adlı (gzip iç hatası gibi görünüyor).

@@ -1727,3 +1727,88 @@ olarak operatör masasında (seçenekler: bekle · ingest'i duraklat · hesap/ka
 (boyut-kapılı önbellek), eylemsiz kapandı; teşhis iyileştirmesi TSK-107 havuzda. TSK-099/100
 gerçekte bitmişti, DONE hizası. dagit [4] istenen-durum koruması üretimdeki ilk koşumunda
 doğru çalıştı (learn kapalı kaldı).
+
+## 2026-09-02 (akşam penceresi) — Tavan açma bir gün yaşadı ve geri alındı; ingest kök-nedeni sağlayıcı havuzu; TSK-108 T1-T2 indi; İCRA SIRASI dört kova
+
+**Ücretli→ücretsiz zinciri (operatör kararları: 13:00 "tavan hemen açılsın" → 14:4x "ücretsiz
+olması gerekiyordu" → "onlar da gitsin, hepsi ücretsiz olsun").** Sabahki 502'nin sahibi günlük
+ücretsiz-model tavanıydı; öğlen kapıya ücretli son-çare instance'ları (öncelik 0) + Hindsight'a
+aynı modelin ücretli varyantı kondu (7f015ad/fcc4020 + .env flip). İngest ölmemişti, BİTMİŞTİ:
+10:11'de "BITTI · basarisiz: 74" (429 free-models-per-day, 3'er deneme). Ücretli modelle yeniden
+koşum yine 429 verdi ama mesaj değişmişti — "Provider returned error … engine_overloaded,
+limit_source=upstream_provider_shared_pool" (DeepInfra, BaseTen). Kök neden: nemotron-3-ultra'nın
+ücretli havuzunda üç sağlayıcının ikisi dolu/bozuk (BaseTen status −2), Venice sağlıklı; aynı
+7,5 KB dosya `provider.order=[Venice]` ile 200 ($0,003), `[DeepInfra]` ile 429 — boyut değil
+havuz. Çare `HINDSIGHT_API_LLM_EXTRA_BODY={"provider":{"order":["Venice"],"allow_fallbacks":true}}`
+(hindsight config'inde ölçülen düğme) — 429 kayboldu, gerçek token sayılı çağrılar aktı. Sonra
+bedel ölçüldü: OpenRouter `usage_daily` 14:00→14:40 UTC $1,36→$4,13 (~$3/saat: ingest +
+konsolidasyonun ücretli modelde de süren pydantic-retry'ları + bot son-çare). Operatör "ücretsiz
+olmalıydı" dedi → .env `:free` + EXTRA_BODY kaldırıldı + restart (env mtime 14:45:31 < servis
+14:46:19, doğrulandı); kapıdan iki ücretli instance çıkarıldı (67b5f47; 11 PUT 200, drift boş;
+v361 zincir beklentisi 2+1'e indi + `test_tum_ai_proxy_instance_modelleri_ucretsiz` routes.yaml'ı
+okur, mutasyon öttü). Kalan 74 dosya transient timer `ingest067-yeniden` 2026-09-03 00:10 UTC'de
+(tavan sıfırlanınca) sürer; ikinci `systemd-run` "already loaded" ile reddedildi = tek zamanlayıcı.
+DERS-1 (Bedel yasası, ters yönde): tavan açmanın bedeli ölçülmeden karar verildi; $/saat sayısı
+ancak 40 dakika sonra görüldü — ücretli yol açılırken `auth/key` usage_daily'nin saatlik deltası
+ilk 30 dakikada okunur. DERS-2: "429" tek sınıf değil — gövdedeki `limit_source` alanı okunmadan
+(hesap tavanı ↔ sağlayıcı havuzu) çare seçilmez; sağlayıcı yönlendirmesi modeli değiştirmeden
+çözer (EDG-067 model sabiti korundu). Politika bedeli açık kimlik: `B-TAVAN-502` (tavan dolunca
+botlar 502 — kabul mü, sessiz-atla mı).
+
+**hindsight-api OOM (14:30:59 UTC):** dev belge retain'inde kernel OOM-kill (systemd tepe 3,0G,
+birim MemoryMax=8G — sınır dolmadan global OOM; makine 24G/18G kullanılabilir görünürken), 5 sn'de
+otomatik restart. Nedeni ölçülmedi (açık kalem TSK-060 gövdesine); ingest'in üç deneme/90 sn
+backoff'u restart'ı atlattı. Konsolidasyonun `_ConsolidationBatchResponse model_type` uyarısı
+(LLM list döndürüyor, dict bekleniyor) ücretsiz/ücretli fark etmeden sürüyor — model şeması
+sorunu, motor alt-yığını bölüp kurtarıyor; izleme.
+
+**Sır süzgeci vakası (Rol-1 ihlali, itiraf edildi):** `.env`'i `grep -v "KEY|SECRET|PASS|TOKEN"`
+ile okurken `DATABASE_URL` satırı süzgeci geçti → Postgres parolası terminale basıldı (DB yalnız
+127.0.0.1). Kara-liste sırın ADINI tahmin eder; URL-gömülü kimlik bilgisi adında PASS taşımaz.
+Kural sertleşti (hafıza): canlı sır dosyasından yalnız BEYAZ-LİSTE değişken adları basılır;
+rotasyon operatör kararı `B-PG-ROTASYON`. Üç küçük ssh dersi de aynı pencerede (hafıza):
+nohup'ta stdin yönlendirilmezse ssh asılı kalır; `pkill -f` deseni ssh kabuğunu da öldürür (boş
+çıktı, hüküm yok); asılı komut yeniden koşulunca aynı ingest İKİ süreç oldu (idempotent upsert
+bankayı bozmadı, parayı ikiye katladı) — `pgrep` tekillik doğrulaması başlatma protokolüne girdi.
+
+**TSK-108 (Hafıza CP-UI) T1+T2 indi, SDD tam döngü.** T1 (9d6b81a): vekil 3→22 uç; en değerli
+keşif upstream `hindsight-clients/go/api/openapi.yaml` (v0.9.2 = ebad4782) — sentetik fixture
+sıfır; ölçülmüş sürprizler: `GET /observations` yok (memories/list?type=observation), `history`
+deprecated/boş, `RecallRequest.limit` yok (`max_tokens`), `scope` parametresi yok. İnceleme 4
+Önemli: istatistik gövdeleri liste örneğine bağlanmıştı (aynı dosyadaki canlı-ölçülmüş
+audit-stats'la çelişerek), `tags_match=hepsi` çivisi vakumda yeşildi, `_hafiza_post` satır-satır
+kopyaydı → `_kapi_istek` çekirdek + sarmalayıcılar. Düzeltme turunda YENİ arıza: `/islemler`
+upstream `limit≤100` (biz 200) → 422; `_HAFIZA_UC_TAVANI` + kıyas çivisi, canlıda doğrulandı
+(200→422, 100→200). T2 (d968e4c): CP kabuğu (8'li kenar çubuğu, adres tek kaynak — küresel
+nav'la desenkron incelemede yakalandı) + üç görünüm; alan adları canlıdan ölçüldü (memories/list
+22 anahtar, `source_memory_ids` — fixture `source_memories` diyordu; `nodes_by_fact_type` zaten
+`observation` taşıyor — çift satır düşürüldü). VAKA: ilk T2 commit'i yeni bundle çiftini
+KAÇIRDI (çok satırlı değişkenle `for` → tek pathspec, fatal; commit yine atıldı) — amend +
+manifest↔ağaç kıyası; ders: build-çıktısı commit'inden sonra manifest referansları ağaçta
+var mı diye ölçülür (dagit'te eksik bundle = ölü pano). T3 iki fazlı (ortak dosya çakışması:
+Faz A yalnız yeni dosyalar, Faz B T2 turu inince) — operatör "T3'ü de sevk et" dedi, çakışma
+fazla çözüldü.
+
+**ROADMAP İCRA SIRASI dört kova (61763fa, operatör "onayla, yeniden yaz"):** A kapanış dalgası
+(108→060→089→058→kapanış) · B hazır küçükler · C kart isteyenler · D operatör masası. Bilgi
+kaybı sıfır betik-çivili (eski bölgenin her satırı yeni bölgede), DONE'lar KAPANANLAR alt
+bloğunda bir dalga, TSK-108 §4'ten tahtaya; yedi ROADMAP çivisi 260 yeşil.
+
+**Açık kalemler:** ingest 74 dosya (yarın 00:10 UTC timer → BITTI hükmü + OOM tekrarı mı) ·
+TSK-089 kapanışı (`/models` sondası kararı + DONE beyanı) · TSK-058 ilk dolu koşum 07:30Z sonucu
+karta · `B-TAVAN-502` · `B-PG-ROTASYON` · konsolidasyon şema uyarısı · TSK-108 T3/T4 (bu kayda
+kapanışta eklenir).
+
+**T4 kapanışı (aynı akşam):** tam suite donmuş ağaçta (parmak izi: HEAD 61763fa + diff/untracked
+sha'ları, başta ve sonda eşit) 2 failed / 9430 passed — ikisi de T1'in `POST /api/hindsight/recall`
+ucunun v181 (teşhis-zarfı envanteri) ve v54 (iz çivisi) tarafından MUTASYON sayılması. Ruling R14:
+recall sorgu-sınıfı bir POST'tur (Hindsight araması gövde ister), iz UYDURULMAZ, muafiyet adıyla +
+gerekçeyle beyan edilir (v181 `muaf` + `_diag_onbellek_bosalt` ENVANTER DIŞI satırı; v54 `/api/logout`
+emsali) — e8f899f; etkilenen küme 496 yeşil, iki mutasyon ısırdı. T3 (1ecbbe4) iki fazla (ortak dosya
+çakışması) + inceleme 3 Önemli (graf toplamları okunmuyordu — eksik graf tam görünüyordu; korumasız
+`Date.parse` T2 sınıfının dönüşü; `query_timestamp` saat dilimsiz) → düzeltme → yeniden-inceleme temiz.
+DERS-3 (T2+T3 ortak): "toplam" alanı telde dururken ekranın kendi tavanını sayması, eksikliği tam
+gösterir — üç sayı adıyla (çizilen/vekil/toplam) ve gelmeyen alan "— (alan gelmedi)". Zincir: T1
+9d6b81a → kapı 67b5f47 → T2 d968e4c → ROADMAP 61763fa → T4 e8f899f → T3 1ecbbe4 → bu kayıt; push +
+dağıtım penceresi + canlı görsel doğrulama → TSK-108 DONE. Havuza iki kalem: TSK-109 (webhook
+okuması), TSK-110 (pano bayat-gövde sınıfı).
