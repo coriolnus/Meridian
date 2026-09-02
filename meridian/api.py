@@ -4031,6 +4031,15 @@ def _diag_onbellek_bosalt(neden: str) -> None:
       * yapılandırma: `/api/secrets/{name}` (POST+DELETE), `/api/skills/apply`,
         `/api/skills/revision` → pipeline.finviz, saglayicilar, ogrenme.eksen2
       * onay: `/api/approvals/{id}` → onay defteri + damıtılan dersler
+      * hafıza yazma: `/api/hindsight/islem/{eylem}`, `/api/hindsight/konsolidasyon/{eylem}`
+        (TSK-111 dilim 1; ikinci yol düzeltme turu 1'de `…/kurtar`dan sözlükleşti) → BEDELİ
+        AÇIKÇA TAŞINIR: `/api/diagnostics` yükü BUGÜN hiçbir
+        Hindsight alanı taşımıyor (ölçüldü 2026-09-02), yani bu iki çağrı zarfı düşürerek
+        HİÇBİR bayat iddiayı düzeltmiyor — kazandığı tek şey, Hafıza sayacı yarın teşhis
+        yüküne girdiğinde kancanın ZATEN doğru yerde olmasıdır. Alternatifi bir MUAFİYETTİ ve
+        reddedildi: bu yardımcının kendi kuralı "sessiz muafiyet yok"tur ve muafiyet, alan
+        eklendiği gün kimsenin bakmadığı bir körlüğe dönüşürdü. Maliyet sınırlı: yalnız
+        BAŞARILI operatör tıklamasında, yani seyrek.
     ENVANTER DIŞI VE NEDENİ: `/api/login`, `/api/logout`, `/api/setup-password` (oturum kimliği
     teşhis yükünde tek bir alanı bile değiştirmez) ve `/api/hermes/pool_key` (anahtar hermes CLI
     havuzuna yazılır; teşhis yükünde karşılığı yok). İkisi de zarfı boşuna düşürmemeli.
@@ -7468,7 +7477,8 @@ def _kapi_admin_anahtari() -> tuple[str | None, str | None]:
 
 def _kapi_istek(url: str, basliklar: dict | None, sir: str | None, *,
                 govde: bytes | None = None,
-                yontem: str = "GET") -> tuple[bytes | None, str | None]:
+                yontem: str = "GET",
+                durum: dict | None = None) -> tuple[bytes | None, str | None]:
     """Zaman aşımlı, sır maskeleyen TEK dış-çağrı boğazı. `(govde, neden)` — tam biri doludur.
 
     ÇEKİRDEĞE ÇIKARILDI (2026-09-02, TSK-108 düzeltme turu 1): `_hafiza_post` bu gövdenin
@@ -7482,17 +7492,32 @@ def _kapi_istek(url: str, basliklar: dict | None, sir: str | None, *,
     (`test_iki_bacak_da_ortak_cekirdege_delege_eder`) — sarmalayıcı çekirdekten koparılırsa öter.
 
     ZAMAN AŞIMI HER YOLDA: `data` verilse de verilmese de `KAPI_ZAMAN_ASIMI_S` uygulanır.
-    Zaman aşımsız bir POST recall sorgusunda panoyu SONSUZA kadar asardı."""
+    Zaman aşımsız bir POST recall sorgusunda panoyu SONSUZA kadar asardı.
+
+    `durum` — İSTEĞE BAĞLI ÖLÇÜM KABI (TSK-111 dilim 1, 2026-09-02). Verilirse `durum["http"]`
+    upstream'in DÖNDÜĞÜ HTTP koduyla doldurulur. NEDEN OUT-PARAMETRE, NEDEN ÜÇÜNCÜ DÖNÜŞ DEĞİL:
+    bu çekirdeğin `(govde, neden)` ikilisi v361/v375'in ve iki sarmalayıcının yaslandığı
+    yüzeydir; arity'yi büyütmek her çağıranı kırardı. Kelime-anahtarlı ve varsayılanı `None`
+    olduğu için okuma bacakları DEĞİŞMEZ (çivili: `test_okuma_bacaklari_durum_kutusu_istemez`).
+    KOD YOKSA `None` YAZILIR, `0` DEĞİL: bağlantı reddinde/zaman aşımında upstream hiçbir cevap
+    vermemiştir ve `0` yazmak ölçülmemiş bir sunucu cevabını ölçülmüş gibi gösterirdi
+    (uydurma yasağı). Kodu `neden` metninden regex'le sökmek alternatifti ve REDDEDİLDİ: hata
+    cümlesi değiştiği gün pano sessizce yanlış kod gösterirdi."""
     import urllib.request                    # dosya konvansiyonu: dar kullanımlı import fonksiyonda
     istek = urllib.request.Request(url, data=govde, headers=basliklar or {}, method=yontem)
     try:
         with urllib.request.urlopen(istek, timeout=KAPI_ZAMAN_ASIMI_S) as cevap:
+            if durum is not None:
+                durum["http"] = getattr(cevap, "status", None)
             return cevap.read(), None
     except Exception as e:
         # GENİŞ YAKALAMA BİLİNÇLİ: ağ yolu URLError/HTTPError/socket.timeout/OSError/ssl.SSLError
         # ve bozuk URL'de ValueError atabilir; kapının bir arıza sınıfı panonun TAMAMINI 500'e
         # düşürmemeli. SESSİZ DEĞİL: sınıf + metin `neden` olarak GÖVDEYE çıkar (Yasa 4 sinyali
         # yanıtın kendisidir), yalnız sır maskelenir.
+        if durum is not None:
+            # `HTTPError.code` VARDIR; `URLError`/`OSError`/`timeout`ta YOKTUR → `None` kalır.
+            durum["http"] = getattr(e, "code", None)
         return None, _kapi_maskele(f"{url} okunamadı ({type(e).__name__}: {e})", sir)
 
 
@@ -7883,6 +7908,26 @@ def _hafiza_post(url: str, basliklar: dict | None, sir: str | None,
     return _kapi_istek(url, basliklar, sir, govde=govde, yontem="POST")
 
 
+def _hafiza_yaz_istek(url: str, basliklar: dict | None, sir: str | None, *,
+                      govde: bytes | None = None, yontem: str = "GET",
+                      durum: dict | None = None) -> tuple[bytes | None, str | None]:
+    """YAZMA bacağının boğazı — `_kapi_istek`in ÜÇÜNCÜ sarmalayıcısı (TSK-111 dilim 1).
+
+    NEDEN ÜÇÜNCÜ BİR AD, İKİSİNDEN BİRİ DEĞİL. `_kapi_getir` GET'e, `_hafiza_post` POST'a
+    sabitlenmiş; yazma bacağı ise fiili ÇAĞIRANDAN alır (DELETE de olabilir) ve HTTP DURUMUNU
+    ölçer. Ama asıl gerekçe test yüzeyidir ve ölçülmüştür: v375'in `_ag_kapali` muhafızı ağ
+    çağrılarını AD ÜZERİNDEN kapatır. Yazma bacağı doğrudan `_kapi_istek`i çağırsaydı muhafız
+    onu kapatamazdı (çekirdeği kapatmak, gerçek `urlopen`i tuzaklayan mevcut iki çiviyi
+    kırardı) — ve casusunu kurmayı unutan BİR çivi, bu makinede AYAKTA olan gerçek 8888'e
+    GERÇEK bir `sil` gönderirdi. Okuma bacağında bedel yanlış ölçüm, burada GERİ ALINAMAZ
+    veri kaybıdır. Delegasyonun kendisi çivili: `test_yaz_bacagi_ortak_cekirdege_delege_eder`.
+
+    GÖVDESİ YOK, BİLEREK: tek satır delegasyondur. Kopya olsaydı `_kapi_istek`teki her
+    düzeltme (yeniden deneme, `Retry-After`, başlık politikası) burada sessizce eksik kalırdı —
+    `_hafiza_post`un düzeltme turu 1'de öğrenilmiş dersi."""
+    return _kapi_istek(url, basliklar, sir, govde=govde, yontem=yontem, durum=durum)
+
+
 def _hafiza_dizi(veri: object) -> tuple[list | None, str | None]:
     """Tanınan zarflardan diziyi çıkarır; TANIMADIĞINI SESSİZCE BOŞ SAYMAZ."""
     if isinstance(veri, list):
@@ -8069,13 +8114,26 @@ def _hafiza_bank_json(bank: str, kuyruk: str = "", *, kimlikler: tuple = (),
     ve içine giren her kullanıcı parçası `kimlikler` üzerinden `_hafiza_kacir`den GEÇEREK
     yerleşir. Alternatif — her uçta f-string ile elle kaçırmak — yirmi iki uçta bir kez
     unutulurdu ve o tek unutuş, `../../` ile Hindsight'ın YAZAN bir ucuna gitmeye yeterdi.
-    Sözleşme burada TİPLE zorlanıyor: şablona ham dizge sokmanın yolu yok."""
+    Sözleşme burada TİPLE zorlanıyor: şablona ham dizge sokmanın yolu yok. YOL KURULUMU
+    `_hafiza_bank_yolu`ya ÇIKARILDI (düzeltme turu 1, I-3a) — yazan bacak da onu çağırır."""
     anahtar, neden = _hafiza_anahtari()
     if not anahtar:
         return None, neden
-    yol = f"{_HAFIZA_BANK_KOKU}/{_hafiza_kacir(bank)}" \
-          f"{kuyruk.format(*(_hafiza_kacir(k) for k in kimlikler))}"
+    yol = _hafiza_bank_yolu(bank, kuyruk, kimlikler)
     return _hafiza_json(f"{yol}?{sorgu}" if sorgu else yol, anahtar)
+
+
+def _hafiza_bank_yolu(bank: str, kuyruk: str = "", kimlikler: tuple = ()) -> str:
+    """`/v1/default/banks/<kaçırılmış bank><doldurulmuş kuyruk>` — KAÇIRMA POLİTİKASININ TEK YERİ.
+
+    ÇIKARIM GEREKÇESİ (inceleme I-3a, 2026-09-02): `_hafiza_yaz` bu iki satırın satır-satır
+    kopyasıydı ve docstring'i "AYNEN devralınır" diye açıkça kabul ediyordu. Ayrışma riski
+    teorik değil: kaçırma kuralı (örn. `~` ya da `%`) bir tarafta güncellenirse YAZAN bacak
+    sessizce eski politikada kalır — ve o bacakta "başka bir uca gitmek" `iptal` yerine `sil`
+    demektir. Bu turun kendi dersi buydu (`_hafiza_post` kopyası `_kapi_istek`e çıkarılmıştı);
+    aynı ders bir fonksiyon aşağıda tekrar uygulanmamıştı. Çivi: `test_bank_yolu_TEK_kaynaktan`."""
+    return (f"{_HAFIZA_BANK_KOKU}/{_hafiza_kacir(bank)}"
+            f"{kuyruk.format(*(_hafiza_kacir(k) for k in kimlikler))}")
 
 
 def _hafiza_zarf(bank: str | None, kuyruk: str = "", *, kimlikler: tuple = (), sorgu: str = "",
@@ -8574,6 +8632,31 @@ def _hafiza_recall_govdesi(ham: dict) -> dict:
     return suzuk
 
 
+async def _hafiza_istek_govdesi(request: Request,
+                                alanlar: tuple[str, ...]) -> tuple[dict | None, str | None]:
+    """İstek gövdesini sözlük olarak okur; okunamazsa GEREKÇE döner. `(ham, neden)`.
+
+    TİPLİ BİR PYDANTIC GÖVDESİ KULLANILMADI: bozuk JSON'da FastAPI 422 üretir, pano o cevabı
+    gövde sanıp KARARIR — GET tarafında kapatılan sınıfın POST'taki hâli.
+
+    İKİ ÇAĞIRAN, TEK GÖVDE (düzeltme turu 1, I-3b): `recall` bu metnin satır-içi kopyasını
+    taşıyordu ve alan TİPİ duvarının (I-1) düzeltmesi İKİ yerde yapılmak zorunda kalacaktı.
+    `alanlar` yalnız GEREKÇE METNİ içindir (hangi alanların okunamadığını söyler) — okuma
+    davranışı çağırandan bağımsızdır. STATÜ KARARI ÇAĞIRANDA: `recall` ve yazma uçları bu dala
+    200+neden döner (gövdeyi HİÇ okuyamamak, isteğin kendisinin ölçülemezliğidir); alanı okuyup
+    REDDETMEK ise ayrı bir sınıftır ve 400 döner (`_hafiza_yol_parcasi_guvenli`)."""
+    try:
+        ham = await request.json()
+    except (ValueError, UnicodeDecodeError) as e:
+        return None, (f"istek gövdesi JSON olarak okunamadı ({type(e).__name__}: {e}) — "
+                      f"upstream'e hiç gidilmedi")
+    if not isinstance(ham, dict):
+        return None, (f"istek gövdesi sözlük değil ({type(ham).__name__}) — "
+                      f"{'/'.join(f'`{a}`' for a in alanlar)} alanları okunamadı; "
+                      f"upstream'e hiç gidilmedi")
+    return ham, None
+
+
 def _hafiza_recall(bank: str, govde: dict) -> dict:
     """Kimlikli POST + `{govde, neden}`. Ağ çağrısı yapar — iş parçacığı havuzunda çalıştırılır."""
     anahtar, neden = _hafiza_anahtari()
@@ -8604,16 +8687,9 @@ async def api_hindsight_recall(request: Request):
     bloklayıcı olduğu için `run_in_threadpool`a verilir; olay döngüsünü 2 sn tutmak canlı panonun
     ÖTEKİ isteklerini de bekletirdi."""
     _auth(request)
-    try:
-        ham = await request.json()
-    except (ValueError, UnicodeDecodeError) as e:
-        return {"govde": None,
-                "neden": f"istek gövdesi JSON olarak okunamadı ({type(e).__name__}: {e}) — "
-                         f"upstream'e hiç gidilmedi"}
-    if not isinstance(ham, dict):
-        return {"govde": None,
-                "neden": f"istek gövdesi sözlük değil ({type(ham).__name__}) — `bank`/`query` "
-                         f"alanları okunamadı; upstream'e hiç gidilmedi"}
+    ham, neden = await _hafiza_istek_govdesi(request, ("bank", "query"))
+    if ham is None:
+        return {"govde": None, "neden": neden}
 
     bank, sorgu = ham.get("bank"), ham.get("query")
     eksik = _hafiza_eksik(bank=bank, query=sorgu)
@@ -8622,6 +8698,285 @@ async def api_hindsight_recall(request: Request):
 
     from starlette.concurrency import run_in_threadpool   # dar kullanımlı import fonksiyonda
     return await run_in_threadpool(_hafiza_recall, bank, _hafiza_recall_govdesi(ham))
+
+
+# ------------------------------------- L. YAZMA UÇLARI (TSK-111 dilim 1, 2026-09-02) ----------
+#
+# SALT-OKUNURLUK BURADA BİTER — VE BİTİŞİ BEYANLIDIR. Yukarıdaki yirmi iki uç ve `recall` bu
+# bloğun "vekil OKUR, yazmaz" sözleşmesini taşır. Operatör kararı (2026-09-02 ~20:40 UTC,
+# "butonların çalışması lazım") o sözleşmeyi CP'nin Operasyonlar tablosundaki üç düğme ve Ana
+# Sayfa FAILED panelindeki kurtarma için AÇTI. Ruling R30 (plan dosyası) kapsamı çiziyor:
+# `trigger_consolidation` BU DİLİMDE DEĞİL.
+#
+# UPSTREAM ÖLÇÜLDÜ, TÜRETİLMEDİ (openapi.yaml, commit ebad478240d3171bb88201ececda5e8d9883d22d —
+# çapa `tests/test_hafiza_yuzeyi_v375.py` dosya başlığında; satır çapaları sırasıyla 2775 / 2880 /
+# 2926 / 3622). Dört ucun DÖRDÜNDE DE `requestBody` YOKTUR: parametreler yalnız YOLDA
+# (`bank_id`, `operation_id`) ve isteğe bağlı `authorization` başlığında. CP'nin KENDİ istemcisi
+# de (`hindsight-control-plane/src/lib/api.ts`) dördünü gövdesiz çağırıyor. Bu yüzden bizim
+# istemci gövdemiz ADRESLEME içindir ve upstream'e İLETİLMEZ — `recall`ın beyaz listesi DOLUydu
+# çünkü `RecallRequest` şeması doluydu; burada ölçüm sonucu BOŞTUR ve boşluk çivilidir.
+#
+# ÜÇ EK DUVAR (okuma uçlarında olmayan):
+#   1. SÖZLÜK KAPALI. `eylem` istemciden gelir ama upstream yolu ondan TÜRETİLMEZ. Açık bir
+#      eşleme (`f"/operations/{id}/{eylem}"`) bu ucun tamamını yol-enjeksiyonu yüzeyine
+#      çevirirdi. Tanınmayan eylem upstream'e HİÇ gitmez.
+#   2. KİMLİK AÇIKÇA REDDEDİLİR, yalnız kaçırılmaz. `_hafiza_kacir` `/`yi `%2F` yapar ama
+#      `%2F`yi ROTALAMADAN ÖNCE çözen bir vekil katmanı (bilinen bypass sınıfı) onu yine yol
+#      atlaması olarak okur. Okuma uçlarında bedeli yanlış bir GÖRÜNTÜydü; burada `iptal`in
+#      `delete`e dönmesi, yani GERİ ALINAMAZ bir kayıp. İki hat birlikte çalışır.
+#   3. İZ ZORUNLU. Operatörün bastığı her düğme deftere düşer (Yasa 6 / v54 sözleşmesi):
+#      izsiz bir eylem "bu neden böyle oldu" sorusunu cevapsız bırakır. Defterin İÇİNE upstream
+#      URL'i de tenant anahtarı da GİRMEZ — deftere yazılan sır, sızan sırdır.
+#
+# ÖLÇÜLEMEZLİK SÖZLEŞMESİ AYNEN DEVRALINIR (200 + dolu `neden`): upstream 4xx/5xx panoyu 500'e
+# düşürmez, düğme operatöre NEDEN olmadığını söyler. Buna EK olarak `http` taşınır — 404
+# ("kayıt zaten yok") ile 500 ("upstream bozuk") operatör için AYNI şey değildir. Kod
+# ölçülemezse (bağlantı reddi) `None` kalır, `0` YAZILMAZ.
+#
+# BEDEL AÇIKÇA TAŞINIR (bedel yasası): kazanılan, operatörün panodan ayrılmadan başarısız bir
+# operasyonu kurtarabilmesi. Kaybedilen, `/api/hindsight*` yüzeyinin artık "okur, yazmaz" diye
+# tek cümleyle özetlenememesi — yazan fiil listesi bundan sonra ELLE bakımlı bir beyandır
+# (çivisi: `test_yazan_fiil_yalniz_beyanli_yollarda`).
+
+#: EYLEM → (upstream FİİL, upstream yol kuyruğu). KAPALI SÖZLÜK: istemci yalnız ANAHTAR seçer.
+#: Kuyruktaki `{}` `_hafiza_bank_json`in kuyruk konvansiyonudur (`/memories/{}` emsali) ve
+#: `_hafiza_kacir`den GEÇMİŞ kimlikle doldurulur. `iptal` ile `yeniden-dene` aynı ön eki
+#: paylaşır (`/operations/{}` ⊂ `/operations/{}/retry`) — bu yüzden FİİL de tabloda: yalnız yola
+#: bakan bir eşleme, bir fiil sapmasını sessizce başka bir uca çevirirdi.
+#: EYLEM → (upstream FİİL, upstream yol kuyruğu, gövde BEYAZ LİSTESİ). KAPALI SÖZLÜK: istemci
+#: yalnız ANAHTAR seçer. Kuyruktaki `{}` `_hafiza_bank_yolu`nun konvansiyonudur
+#: (`/memories/{}` emsali) ve `_hafiza_kacir`den GEÇMİŞ kimlikle doldurulur. `iptal` ile
+#: `yeniden-dene` aynı ön eki paylaşır (`/operations/{}` ⊂ `/operations/{}/retry`) — bu yüzden
+#: FİİL de tabloda: yalnız yola bakan bir eşleme, bir fiil sapmasını sessizce başka bir uca
+#: çevirirdi. ÜÇÜNCÜ SÜTUN ÖLÇÜMDÜR: üç operasyon ucunun `requestBody`si YOK, o yüzden boş.
+_HAFIZA_ISLEM_EYLEMLERI: dict[str, tuple[str, str, tuple]] = {
+    "iptal":        ("DELETE", "/operations/{}", ()),          # cancel_operation (openapi ~2775)
+    "yeniden-dene": ("POST",   "/operations/{}/retry", ()),    # retry_operation  (openapi ~2880)
+    "sil":          ("DELETE", "/operations/{}/delete", ()),   # delete_operation (openapi ~2926)
+}
+#: KONSOLİDASYON DA SÖZLÜKLEŞTİ (düzeltme turu 1, R30-ek). `kurtar` tek başına bir rotaydı ve
+#: `tetikle` yan yana konsaydı aynı 15 satır (auth → gövde → duvar → threadpool → iz → diag)
+#: ÜÇÜNCÜ kez yazılacaktı — inceleme bunu I-3'ün büyümesi olarak işaretledi. `{eylem}` deseni
+#: `islem`in aynısı ve `/konsolidasyon/kurtar` YOLU DEĞİŞMEDİ (`{eylem}` onu da eşler).
+#:
+#: DÖRDÜN BOŞLUĞU BEŞİNCİSİ İÇİN KANIT DEĞİLDİ — VE ÖLÇÜM İKİSİNİ AYIRDI: `recover_consolidation`
+#: gövdesizdir (openapi ~3622), ama `trigger_consolidation`ın (~3829) `requestBody`si VARDIR:
+#: `ConsolidationRequest`, tek alan `observation_scopes` (nullable, array-of-array-of-string).
+#: Zorunlu DEĞİL ve CP de göndermiyor (`lib/api.ts::triggerConsolidation` gövdesiz) — bu yüzden
+#: istemci sormadıkça alan HİÇ gitmez (`recall`ın `max_tokens` dersi).
+_HAFIZA_KONSOLIDASYON_EYLEMLERI: dict[str, tuple[str, str, tuple]] = {
+    "kurtar":  ("POST", "/consolidation/recover", ()),
+    "tetikle": ("POST", "/consolidate", ("observation_scopes",)),
+}
+#: Yol parçasında GÖRÜLDÜĞÜ ANDA reddedilen diziler. `..` tek başına da yasak: kaçırılmış
+#: `%2E%2E` bile, yüzde-çözen bir ara katmandan sonra üst dizin demektir. `%` DE YASAK — istemci
+#: zaten kaçırılmamış ham kimlik gönderir; içinde `%` olan bir değer ya çift-kodlamadır ya da
+#: kaçırmayı delme denemesidir, ikisi de bu yüzeyde meşru değildir.
+_HAFIZA_YASAK_PARCA = ("..", "/", "\\", "%")
+
+
+def _hafiza_yol_parcasi_guvenli(ad: str, deger) -> tuple[str | None, str | None]:
+    """Upstream PATH'ine girecek bir istemci alanının TEK duvarı. `(neden, sınıf)`; güvenliyse
+    `(None, None)`. `sınıf` deftere yazılır — gerekçe METNİ değil (ham değer taşır), SINIFI.
+
+    İKİ ALANA DA UYGULANIR (düzeltme turu 1, I-2). Önce yalnız `id` kontrol ediliyordu; `bank`
+    yalnız kaçırılıyordu. Ama duvarın BEYAN EDİLMİŞ gerekçesi ("`%2F`yi rotalamadan ÖNCE çözen
+    bir ara katman kaçırmayı delebilir") `bank` için de aynen geçerlidir: `bank` da upstream
+    yolunun bir segmentidir. Gerekçe doğruysa duvar yarım olamaz; yanlışsa duvar gereksizdi.
+
+    TİP DUVARI ÖNCE (düzeltme turu 1, I-1 — İNCELEMENİN ÖLÇTÜĞÜ ARIZA). Eski duvar
+    `parca in kimlik` yapıyordu ve tip körüydü: `{"id": 123}` → `"/" in 123` → `TypeError` →
+    YAKALANMAMIŞ İSTİSNA → 500, yani "bozuk istek panoyu KARARTMAZ" sözleşmesinin ihlali.
+    Daha kötüsü `{"id": ["../x"]}`: `"/" in ["../x"]` → `False`, yani duvar "GÜVENLİ" diyordu ve
+    değeri kaçırıcıya bırakıyordu — bugün orada `TypeError` atıyor diye güvenli değildi, yalnız
+    ŞANSLIYDI. `bool` de dizge değildir ve `True` reddedilir (JSON `true` bir kimlik değildir).
+
+    BOŞLUK DA REDDEDİLİR: kaçırma onu `%20` yapar ve upstream'e giden yol sessizce başka bir
+    kimliğe işaret eder; operatörün gördüğü hata "kayıt yok" olur, oysa ölçülen şey kirli girdidir."""
+    if not isinstance(deger, str):
+        return (f"`{ad}` alanı dizge değil ({type(deger).__name__}) — upstream yolunun bir "
+                f"segmenti olacak bu alan yalnız boş-olmayan bir dizge olabilir; "
+                f"upstream'e hiç gidilmedi"), "alan_tipi"
+    if not deger:
+        return (f"`{ad}` alanı boş — hangi banka/kayıt üzerinde çalışılacağı belirsiz; "
+                f"upstream'e hiç gidilmedi"), "alan_bos"
+    for parca in _HAFIZA_YASAK_PARCA:
+        if parca in deger:
+            return (f"`{ad}` alanında yol kaçışı var ({parca!r}) — upstream'e hiç gidilmedi; "
+                    f"yazan bir uçta bu, başka bir kayda basmak demektir"), "yol_kacisi"
+    if any(k.isspace() for k in deger):
+        return (f"`{ad}` alanında boşluk karakteri var — kaçırma onu `%20`ye çevirir ve istek "
+                f"sessizce başka bir kimliğe gider; upstream'e hiç gidilmedi"), "alan_boslugu"
+    return None, None
+
+
+def _hafiza_suzuk_govde(ham: dict, beyaz_liste: tuple[str, ...]) -> dict | None:
+    """İstemci gövdesini BEYAZ LİSTEden geçirir. Hiçbir alan gelmediyse `None` — gövde HİÇ gitmez.
+
+    `None` DÖNMESİ BİR KARARDIR, kolaylık değil: `/consolidate`in `requestBody`si ZORUNLU DEĞİL
+    ve boş bir `{}` göndermek upstream'in kendi varsayılanını sessizce EZEBİLİRDİ (`recall`ın
+    `max_tokens` dersi, düzeltme turu 1 M-7). Liste KAPALIdır — şemada olmayan hiçbir alan
+    geçmez. ŞEKİL DOĞRULANMAZ, bilerek: `observation_scopes`in array-of-array-of-string olduğu
+    upstream'in sözleşmesidir ve orada zorlanır (422 → `neden`); burada bir tip kontrolü
+    uydurmak, ölçülmemiş bir kısıtı ölçülmüş gibi gösterirdi. Bu alan URL'e DEĞİL JSON gövdeye
+    girer — yani beyaz liste bir GÜVENLİK sınırıdır, bir şema doğrulayıcısı değil."""
+    if not beyaz_liste:
+        return None
+    suzuk = {ad: ham[ad] for ad in beyaz_liste if ad in ham}
+    return suzuk or None
+
+
+def _hafiza_yaz(yontem: str, kuyruk: str, bank: str, *, kimlikler: tuple = (),
+                govde: dict | None = None) -> dict:
+    """Kimlikli YAZAN upstream çağrısı → `{ok, http, govde, neden}`. Ağ çağrısı yapar.
+
+    URL KURULUMU `_hafiza_bank_yolu`DAN GELİR (düzeltme turu 1, I-3a) — okuma bacağıyla AYNI
+    kaçırma politikası, tek yerde. Ayrıştığı üç şey: fiil çağırandan gelir, HTTP durumu ölçülür,
+    ve zarf `ok` taşır — pano bir düğmenin sonucunu `neden`in dolu olup olmamasından ÇIKARMAK
+    zorunda kalmasın (çıkarım, sözleşme değildir).
+
+    `ok` = "CEVAP ÇÖZÜLDÜ **VE** 2xx" (düzeltme turu 1, M-2). Önce yalnız `neden is None`di ve
+    iki ayrı gerçeği birleştiriyordu: upstream yazmayı YAPIP çözülemez/boş bir gövde döndürürse
+    pano `ok:false` görür, operatör "olmadı" sanıp TEKRAR basardı — `sil`de bu ikinci bir
+    GERİ ALINAMAZ çağrıdır. "Çağrı gitti mi" sorusunun cevabı artık ayrı bir alanda: `http`
+    doluysa upstream cevap vermiştir, `ok:false` yalnız "cevabını kullanamadım" demektir."""
+    anahtar, neden = _hafiza_anahtari()
+    if not anahtar:
+        return {"ok": False, "http": None, "govde": None, "neden": neden}
+    url = f"{HAFIZA_TABAN_URL}{_hafiza_bank_yolu(bank, kuyruk, kimlikler)}"
+    basliklar = {"Authorization": f"Bearer {anahtar}"}
+    ham_govde = None
+    if govde is not None:
+        basliklar["Content-Type"] = "application/json"
+        ham_govde = json.dumps(govde).encode("utf-8")
+    durum: dict = {}
+    ham, neden = _hafiza_yaz_istek(url, basliklar, anahtar, govde=ham_govde,
+                                   yontem=yontem, durum=durum)
+    veri, neden = _hafiza_govde_coz(url, ham, neden, anahtar)
+    http = durum.get("http")
+    return {"ok": neden is None and http is not None and 200 <= http < 300,
+            "http": http, "govde": veri if neden is None else None, "neden": neden}
+
+
+def _hafiza_yazma_reddi(eylem: str | None, sinif: str, neden: str, http: int,
+                        **olcum) -> JSONResponse:
+    """İSTEMCİ HATASI, ÖLÇÜLEMEZLİK DEĞİL — bu yüzden 200 DEĞİL 4xx; ve HER RET DEFTERE DÜŞER.
+
+    STATÜ AYRIMI: 200+neden "ölçemedim" demektir ve pano onu geçici bir upstream arızası gibi
+    gösterir; burada ölçülen şey isteğin KENDİSİNİN kabul edilemez olduğudur ve tekrar denemek
+    düzeltmez. Zarf yine AYNI dört alandır — pano tek bir şekil tanır, kararmaz.
+
+    RET İZİ (düzeltme turu 1, I-4): "operatörün bastığı her düğme deftere düşer" beyanı yarımdı —
+    iz yalnız upstream'e ULAŞAN çağrılar için atılıyordu. Oysa `..` içeren bir `id` denemesi bu
+    yüzeyde bir SONDA denemesidir ve tam olarak defterde görülmek istenen şeydir. v54 bunu
+    yakalayamaz: rota bloğunda `obs.log` METNİNİ görüp geçer. İzin BURADA olması bir tercih değil
+    SÖZLEŞME: ret dallarından biri unutulursa izi de unutulurdu.
+
+    HAM DEĞER DEFTERE GİRMEZ. `sinif` + `alan` + `tip` + `uzunluk` yeter; ham dizge yazmak, kapıya
+    erişen bir sondacıya kanıt defterine SINIRSIZ metin yazdırma imkânı verirdi (`/api/logout`un
+    v54'te beyan edilmiş gerekçesinin aynısı). `eylem` de yalnız KAPALI SÖZLÜKTEN gelirse yazılır;
+    tanınmayan eylemde `None`dır — istemcinin dizgesini oraya koymak aynı kapıyı yeniden açardı."""
+    obs.log("hafiza_yazma_red", eylem=eylem, sinif=sinif, http_yanit=http, **olcum)
+    return JSONResponse(status_code=http,
+                        content={"ok": False, "http": None, "govde": None, "neden": neden})
+
+
+async def _hafiza_yazma_girdisi(request: Request, sozluk: dict, eylem: str, *,
+                                kimlik_gerekli: bool) -> tuple[dict | None, object | None]:
+    """İki yazma rotasının ORTAK ÖN KAPISI: sözlük → gövde → duvar. `(paket, hata)` — tam biri dolu.
+
+    ÜÇÜNCÜ KOPYA ENGELLENDİ (düzeltme turu 1, I-3 + R30-ek): `tetikle` eklenirken aynı akış
+    üçüncü kez yazılacaktı. `obs.log` ve `_diag_onbellek_bosalt` BİLEREK burada DEĞİL rotalarda
+    kalır — v54 ve v181 kaynak metni ROTA BLOĞUNDA tarar, buraya taşımak o iki çiviyi kör ederdi.
+    Ret izleri ise burada (`_hafiza_yazma_reddi`), çünkü ret dalları rotalarda tekrarlanmaz."""
+    eslesme = sozluk.get(eylem)
+    if eslesme is None:
+        return None, _hafiza_yazma_reddi(
+            None, "eylem_taninmiyor",
+            f"tanınmayan eylem — geçerli eylemler: {sorted(sozluk)}; upstream'e hiç gidilmedi",
+            404, uzunluk=len(eylem))
+
+    alanlar = ("bank", "id") if kimlik_gerekli else ("bank",)
+    ham, neden = await _hafiza_istek_govdesi(request, alanlar)
+    if ham is None:
+        # 200: gövdeyi HİÇ okuyamamak isteğin kendisinin ölçülemezliğidir ve `recall` da böyle
+        # davranır (tek okuyucu, tek şekil). Ret izi yine düşer.
+        obs.log("hafiza_yazma_red", eylem=eylem, sinif="govde_cozulemedi", http_yanit=200)
+        return None, {"ok": False, "http": None, "govde": None, "neden": neden}
+
+    degerler = {ad: ham.get(ad) for ad in alanlar}
+    for ad, deger in degerler.items():
+        neden, sinif = _hafiza_yol_parcasi_guvenli(ad, deger)
+        if neden:
+            return None, _hafiza_yazma_reddi(
+                eylem, sinif, neden, 400, alan=ad, tip=type(deger).__name__,
+                uzunluk=len(deger) if isinstance(deger, str) else None)
+
+    fiil, kuyruk, beyaz_liste = eslesme
+    return {"fiil": fiil, "kuyruk": kuyruk, "bank": degerler["bank"],
+            "kimlik": degerler.get("id"),
+            "kimlikler": (degerler["id"],) if kimlik_gerekli else (),
+            "govde": _hafiza_suzuk_govde(ham, beyaz_liste)}, None
+
+
+@app.post("/api/hindsight/islem/{eylem}")
+async def api_hindsight_islem(eylem: str, request: Request):
+    """CP `bank-operations-view` satır düğmeleri → upstream operasyon eylemleri.
+
+    `eylem` ∈ `_HAFIZA_ISLEM_EYLEMLERI` (iptal · yeniden-dene · sil). Gövde: `{bank, id}`,
+    ikisi de boş-olmayan DİZGE. SIRA ÖNEMLİ: `_auth` ÖNCE koşar — sözlük kontrolü yetkiden önce
+    olsaydı kimliksiz bir çağıran, 404 ile 401 farkından hangi eylemlerin var olduğunu okuyabilirdi.
+
+    CP'DEKİ DÜĞME KAPILARI BURADA UYGULANMAZ, BİLEREK (ölçüldü: CP `iptal`i yalnız `pending`,
+    `yeniden-dene`yi `failed|cancelled`, `sil`i `failed|cancelled|completed` satırlarda çizer).
+    Durum kapısı bir GÖRÜNÜM kuralıdır ve tek doğrusu upstream'dedir; burada tekrarlansaydı iki
+    kopya sessizce ayrışır ve vekil, upstream'in izin verdiği bir eylemi reddetmeye başlardı."""
+    _auth(request)
+    paket, hata = await _hafiza_yazma_girdisi(request, _HAFIZA_ISLEM_EYLEMLERI, eylem,
+                                              kimlik_gerekli=True)
+    if hata is not None:
+        return hata
+
+    from starlette.concurrency import run_in_threadpool   # dar kullanımlı import fonksiyonda
+    sonuc = await run_in_threadpool(_hafiza_yaz, paket["fiil"], paket["kuyruk"], paket["bank"],
+                                    kimlikler=paket["kimlikler"], govde=paket["govde"])
+    obs.log("hafiza_yazma", eylem=eylem, bank=paket["bank"], id=paket["kimlik"],
+            ok=sonuc["ok"], http=sonuc["http"])
+    if sonuc["ok"]:
+        _diag_onbellek_bosalt(f"hafiza_islem_{eylem}")
+    return sonuc
+
+
+@app.post("/api/hindsight/konsolidasyon/{eylem}")
+async def api_hindsight_konsolidasyon(eylem: str, request: Request):
+    """CP `bank-stats-view` FAILED diyaloğu → upstream konsolidasyon eylemleri.
+
+    `eylem` ∈ `_HAFIZA_KONSOLIDASYON_EYLEMLERI` (`kurtar` → `POST /consolidation/recover` ·
+    `tetikle` → `POST /consolidate`). Gövde: `{bank}` + eylemin beyaz listesindeki alanlar
+    (`tetikle`: `observation_scopes`, ölçüldü; `kurtar`: hiçbiri, ölçüldü).
+
+    ZİNCİR UI'DA KALIR, VEKİLDE DEĞİL (düzeltme turu 1 kararı). CP
+    `bank-stats-view.tsx::handleRecover` `recover` sonrası `retried_count > 0` ise `trigger`ı
+    çağırıyor, çünkü upstream'in kurtarma ucu yalnız `consolidation_failed_at`i temizler — işi
+    KUYRUĞA ALMAZ. Bunu burada tek uçta zincirlemek üç şeyi bozardı: (a) `{ok, http}` zarfı TEK
+    bir upstream cevabını tarif ediyor, iki çağrı iki `http` demek; (b) tek `obs.log` satırı iki
+    geri-alınamaz yazmayı gizler ve v54'ün "her eylem deftere" sözleşmesi zayıflar; (c)
+    `retried_count > 0` bir GÖRÜNÜM kuralıdır — bu turun kendi kararı (CP düğme kapıları vekile
+    kopyalanmadı) onu UI'da tutmayı gerektirir. UI İKİ çağrı yapar, her biri kendi izini bırakır."""
+    _auth(request)
+    paket, hata = await _hafiza_yazma_girdisi(request, _HAFIZA_KONSOLIDASYON_EYLEMLERI, eylem,
+                                              kimlik_gerekli=False)
+    if hata is not None:
+        return hata
+
+    from starlette.concurrency import run_in_threadpool   # dar kullanımlı import fonksiyonda
+    sonuc = await run_in_threadpool(_hafiza_yaz, paket["fiil"], paket["kuyruk"], paket["bank"],
+                                    kimlikler=paket["kimlikler"], govde=paket["govde"])
+    obs.log("hafiza_yazma", eylem=f"konsolidasyon-{eylem}", bank=paket["bank"], id=None,
+            ok=sonuc["ok"], http=sonuc["http"])
+    if sonuc["ok"]:
+        _diag_onbellek_bosalt(f"hafiza_konsolidasyon_{eylem}")
+    return sonuc
 
 
 # ------------------------------------------------------------------ /api/roadmap ---------------

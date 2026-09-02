@@ -47,6 +47,24 @@ K. GÖREV 6-A EKLENTİSİ (TSK-108 Görev 6-A, 2026-09-02) — İKİ yeni uç: `
    kapsam-dışı bırakılan `document_id`/`chunk_id`. Fixture'ların İKİSİ DE sınıf (1) — A1'de
    2026-09-02 18:15 UTC'de ölçüldü (`GRAF_CANLI_GOVDE`/`PROFIL_GOVDE`, aşağıda).
 
+L. YAZMA UÇLARI (TSK-111 dilim 1, Task 11-A, 2026-09-02) — SALT-OKUNURLUK ARTIK MUTLAK DEĞİL.
+   Operatör kararı: "butonların çalışması lazım" (Operasyonlar satırındaki İptal/Yeniden dene/
+   Kaydı sil; Ana Sayfa FAILED panelindeki kurtarma). Yüzeye İKİ yazan uç girdi:
+   `POST /api/hindsight/islem/{eylem}` (eylem ∈ iptal|yeniden-dene|sil) ve
+   `POST /api/hindsight/konsolidasyon/kurtar`. Bu bölümün çivilediği şey, o iki ucun
+   salt-okunur kardeşleriyle AYNI dört duvarı taşıdığı (sır · ölçülemezlik · zaman aşımı ·
+   yol enjeksiyonu) VE yazan bir ucun iki EK duvarı olduğudur:
+     · SÖZLÜK KAPALI — `eylem` istemciden gelir ama upstream yolu ONDAN TÜRETİLMEZ; kapalı bir
+       sözlükten okunur. Açık bir eşleme, "eylem" adını upstream yoluna çeviren bir istemci-
+       kontrollü şablon olurdu ve bu ucun tamamı bir yol-enjeksiyonu yüzeyine dönerdi.
+     · İZ ZORUNLU — operatörün BASTIĞI her düğme deftere düşer (v54 sözleşmesi). Yazan ama iz
+       bırakmayan bir uç, "bu neden böyle oldu" sorusunu cevapsız bırakır — ve buradaki eylem
+       GERİ ALINAMAZ (`sil` bir operasyon kaydını KALICI olarak siler).
+   Upstream ölçüldü (aynı commit çapası): dört ucun HİÇBİRİNDE `requestBody` YOKTUR — ne
+   `cancel_operation`, ne `retry_operation`, ne `delete_operation`, ne `recover_consolidation`.
+   CP'nin KENDİ istemcisi de gövdesiz çağırıyor (`lib/api.ts`, ölçüldü). Yani "beyaz liste"
+   BOŞTUR ve boşluğu çivilidir — yarın bir alan eklenirse sessizce geçmesin diye.
+
    ÜÇÜNCÜ UÇ ("ozellikler") YAZILMADI. Brief `features` ucunun YOLUNU ölçmeyi istedi; ölçüm
    sonucu: upstream'de BAĞIMSIZ bir `features` yolu YOKTUR — `features` yalnız `/version`
    gövdesinin (`VersionResponse.features` → `FeaturesInfo`) bir ALANIdIR, banka altında değil
@@ -129,6 +147,12 @@ GERCEK_HAFIZA_POST = api._hafiza_post
 #: GET bacağının gerçek fonksiyonu, AYNI gerekçeyle (delegasyon çivisi onu çağırır — muhafızın
 #: tuzağını çağırsaydı ölçtüğü şey yine kod değil tuzak olurdu).
 GERCEK_KAPI_GETIR = api._kapi_getir
+#: YAZMA bacağının gerçek fonksiyonu (TSK-111 dilim 1). ÜÇÜNCÜ bir bacak var çünkü yazan uçlar
+#: `_kapi_getir`den de `_hafiza_post`tan da GEÇMEZ: fiil DELETE olabiliyor ve HTTP DURUMU
+#: ölçülüyor. Muhafız üç bacağı da kapatmazsa, yazma çivileri bu makinede AYAKTA olan gerçek
+#: 8888'e GERÇEK bir `sil` gönderirdi — okuma çivilerinde yalnız yanlış ölçüm olan şey burada
+#: GERİ ALINAMAZ bir veri kaybıdır.
+GERCEK_HAFIZA_YAZ_ISTEK = api._hafiza_yaz_istek
 
 
 # --------------------------------------------------------------------------- yardımcılar
@@ -146,6 +170,13 @@ class _Casus:
     def __init__(self, esleme: dict[str, bytes | str]):
         self.esleme = esleme
         self.cagrilar: list[dict] = []
+        #: Arıza dalında upstream'in DÖNDÜĞÜ HTTP kodu. Varsayılan `None` KASITLI: ağ arızasında
+        #: (bağlantı reddi, zaman aşımı) HİÇBİR HTTP kodu yoktur ve `0`/`500` yazmak uydurma
+        #: olurdu — `None` ile "kod ölçülemedi" arasındaki fark bu ucun tüm dersidir.
+        self.ariza_http: int | None = None
+        #: Başarı dalının HTTP kodu. 200 varsayılan; `ok`un "2xx" şartını ölçen çivi bunu
+        #: 2xx DIŞINA çeker (M-2: "çağrı gitti" ile "cevap çözüldü" ayrı gerçeklerdir).
+        self.basari_http: int = 200
 
     def __call__(self, url, basliklar=None, sir=None):
         return self._cevap({"url": url, "basliklar": basliklar or {}, "sir": sir,
@@ -159,6 +190,19 @@ class _Casus:
         saklanır — `recall`ın süzülmüş-geçiş çivisi tam olarak onu okur."""
         return self._cevap({"url": url, "basliklar": basliklar or {}, "sir": sir,
                             "fiil": "POST", "govde": govde})
+
+    def yaz(self, url, basliklar=None, sir=None, *, govde=None, yontem="GET", durum=None):
+        """`_hafiza_yaz_istek` casusu — AYNI eşleme tablosu (kardeşlerinin gerekçesi).
+
+        FİİLİ CASUS DEĞİL ÇAĞIRAN SÖYLER: `yontem` kaydedilir ve çivi onu okur. Bir `DELETE`in
+        sessizce `POST`a dönmesi (ya da tersi) upstream'de BAŞKA bir uca gitmek demektir —
+        `/operations/{id}` (iptal) ile `/operations/{id}/retry` (yeniden dene) aynı ön eki
+        paylaşıyor, yani yalnız URL'e bakan bir çivi o sapmayı GÖREMEZ."""
+        cevap = self._cevap({"url": url, "basliklar": basliklar or {}, "sir": sir,
+                             "fiil": yontem, "govde": govde})
+        if durum is not None:
+            durum["http"] = self.basari_http if cevap[1] is None else self.ariza_http
+        return cevap
 
     def _cevap(self, kayit: dict):
         self.cagrilar.append(kayit)
@@ -193,18 +237,25 @@ def _ag_kapali(monkeypatch):
     casusunu kurmayan bir test GERÇEK Hindsight'ı okur ve ölçtüğü şey artık kod değil o anki
     makine durumu olur. Her test kendi casusunu KENDİ kurar.
 
-    İKİ BACAK KAPATILIR (TSK-108): `recall` POST'u `_kapi_getir`den GEÇMEZ — kendi boğazı
-    `_hafiza_post`tur. Yalnız GET bacağını kapatan bir muhafız, POST çivilerinin CANLI 8888'e
-    gitmesine izin verirdi ve o testler kodu değil makineyi ölçerdi. Bu fixture'ın kendisi de
-    çivili: `test_ag_muhafizi_iki_bacagi_da_kapatir`."""
+    ÜÇ BACAK KAPATILIR (TSK-108 + TSK-111 dilim 1): `recall` POST'u `_kapi_getir`den GEÇMEZ —
+    kendi boğazı `_hafiza_post`tur; YAZMA uçları da ikisinden geçmez — boğazları
+    `_hafiza_yaz_istek`tir. Eksik kapatılan her bacak, o bacağın çivilerinin CANLI 8888'e
+    gitmesine izin verir ve o testler kodu değil makineyi ölçer. Yazma bacağında bedel daha
+    ağırdır: kaçan bir çağrı gerçek bir operasyon kaydını SİLER. Bu fixture'ın kendisi de
+    çivili: `test_ag_muhafizi_uc_bacagi_da_kapatir`."""
     def _yasak(*a, **kw):
         raise AssertionError("test kendi `_kapi_getir` casusunu kurmadı — gerçek ağ çağrısı yasak")
 
     def _yasak_post(*a, **kw):
         raise AssertionError("test kendi `_hafiza_post` casusunu kurmadı — gerçek ağ çağrısı yasak")
 
+    def _yasak_yaz(*a, **kw):
+        raise AssertionError("test kendi `_hafiza_yaz_istek` casusunu kurmadı — "
+                             "gerçek ağ çağrısı yasak")
+
     monkeypatch.setattr(api, "_kapi_getir", _yasak)
     monkeypatch.setattr(api, "_hafiza_post", _yasak_post)
+    monkeypatch.setattr(api, "_hafiza_yaz_istek", _yasak_yaz)
     yield
 
 
@@ -324,6 +375,7 @@ def _kurulum(monkeypatch, tmp_path, *, esleme=None, anahtar=SAHTE_ANAHTAR) -> _C
     casus = _Casus(_tam_esleme() if esleme is None else esleme)
     monkeypatch.setattr(api, "_kapi_getir", casus)
     monkeypatch.setattr(api, "_hafiza_post", casus.post)
+    monkeypatch.setattr(api, "_hafiza_yaz_istek", casus.yaz)
     return casus
 
 
@@ -1271,20 +1323,26 @@ def test_her_hafiza_ucu_tabloda_kayitli():
     kapsamsız doğar. Rota tablosu ile bu dosyanın tablosu AYRIŞIRSA burada öter."""
     kayitli = set(_hafiza_rotalari())
     beklenen = {y.split("?")[0] for y in CPUI_YOLLAR} | {
-        "/api/hindsight", "/api/hindsight/liste", "/api/hindsight/detay", RECALL}
+        "/api/hindsight", "/api/hindsight/liste", "/api/hindsight/detay", RECALL} | set(YAZAN_YOLLAR)
     assert kayitli == beklenen, (
         f"rota tablosu ile çivi tablosu ayrıştı — yalnız rotada: {sorted(kayitli - beklenen)}; "
         f"yalnız çivide: {sorted(beklenen - kayitli)}")
 
 
-def test_yazan_fiil_yalniz_recallda():
-    """SALT-OKUNUR SÖZLEŞMESİNİN TEK KAYNAĞI. Uç uç `405` denemek yerine ROTA TABLOSU okunur:
-    böylece yarın eklenen bir uç, çiviye dokunulmadan kapsama girer. `recall` BEYANLI
-    İSTİSNAdır — durum değiştirmez, sorgu sınıfıdır (plan kapsam ruling'i, 2026-09-02) — ve
-    istisna olduğu için TEK BAŞINA yazılır: listeye ikinci bir POST sızarsa burada öter."""
+def test_yazan_fiil_yalniz_beyanli_yollarda():
+    """SALT-OKUNURLUĞUN TEK KAYNAĞI. Uç uç `405` denemek yerine ROTA TABLOSU okunur: böylece
+    yarın eklenen bir uç, çiviye dokunulmadan kapsama girer.
+
+    ADI DEĞİŞTİ, SÖZLEŞMESİ DEĞİL (TSK-111 dilim 1, 2026-09-02). Eski adı
+    `test_yazan_fiil_yalniz_recallda`ydı ve o ad artık YALAN söylerdi: operatör kararıyla
+    (`butonların çalışması lazım`) yüzeye İKİ gerçek yazan uç girdi. Değişen şey listenin
+    KENDİSİ, kuralı değil: yazan fiil YALNIZ burada ADIYLA yazılı yollarda olabilir; listeye
+    beyansız bir POST/DELETE sızarsa burada öter. `recall` hâlâ istisnadır ama artık
+    "durum değiştirmediği için" (sorgu sınıfı), ötekiler "operatör onayıyla" listede."""
+    beyanli = set(YAZAN_YOLLAR) | {RECALL}
     for yol, fiiller in _hafiza_rotalari().items():
         yazanlar = fiiller - {"GET", "HEAD", "OPTIONS"}
-        if yol == RECALL:
+        if yol in beyanli:
             assert yazanlar == {"POST"}, f"{yol}: beklenen yalnız POST, bulunan {sorted(fiiller)}"
         else:
             assert not yazanlar, f"{yol}: YAZAN fiil tanımlı ({sorted(yazanlar)}) — salt-okunur ihlali"
@@ -2037,18 +2095,27 @@ def test_post_bacagi_arizayi_yutmaz_ve_maskeler(monkeypatch, tmp_path, sandbox_s
     assert SAHTE_ANAHTAR not in neden, "POST arıza metni sırrı taşıdı"
 
 
-def test_ag_muhafizi_iki_bacagi_da_kapatir():
+def test_ag_muhafizi_uc_bacagi_da_kapatir():
     """FIXTURE'IN KENDİSİ ÇİVİLİ. `_ag_kapali` yalnız `_kapi_getir`i kapatsaydı, recall çivileri
     bu makinede AYAKTA olan gerçek 8888'e gider ve kodu değil makineyi ölçerdi.
 
     "VAR MI" DEĞİL "TUZAK KURULDU MU" ÖLÇÜLÜR. İlk hâli `hasattr(api, "_hafiza_post")` diyordu ve
     VAKUMDA koşuyordu: fixture `raising=False` ile adı ZATEN yaratıyordu, yani `_hafiza_post` hiç
     yazılmamış olsa bile çivi yeşildi (ölçüldü, mutasyon turu 2026-09-02). Artık iki şey ölçülür:
-    (a) muhafız gerçek fonksiyonun YERİNE geçmiş, (b) çağrılırsa GERÇEKTEN patlıyor."""
-    assert api._hafiza_post is not GERCEK_HAFIZA_POST, \
-        "ağ muhafızı POST bacağını kapatmamış — recall çivileri canlı 8888'e gidebilir"
-    with pytest.raises(AssertionError, match="casusunu kurmadı"):
-        api._hafiza_post("http://127.0.0.1:8888/x", {}, None, b"{}")
+    (a) muhafız gerçek fonksiyonun YERİNE geçmiş, (b) çağrılırsa GERÇEKTEN patlıyor.
+
+    ÜÇÜNCÜ BACAK (TSK-111 dilim 1): yazma boğazı. Kaçan bir yazma çağrısının bedeli okuma
+    bacağınınkinden AĞIRdır — `sil` gerçek bir operasyon kaydını KALICI olarak siler."""
+    for ad, gercek, cagri in (
+            ("_hafiza_post", GERCEK_HAFIZA_POST,
+             lambda: api._hafiza_post("http://127.0.0.1:8888/x", {}, None, b"{}")),
+            ("_hafiza_yaz_istek", GERCEK_HAFIZA_YAZ_ISTEK,
+             lambda: api._hafiza_yaz_istek("http://127.0.0.1:8888/x", {}, None,
+                                           yontem="DELETE"))):
+        assert getattr(api, ad) is not gercek, \
+            f"ağ muhafızı `{ad}` bacağını kapatmamış — çiviler canlı 8888'e gidebilir"
+        with pytest.raises(AssertionError, match="casusunu kurmadı"):
+            cagri()
 
 
 def _defter_izi(kok) -> list:
@@ -2091,3 +2158,798 @@ def test_recall_max_tokens_istemci_sormadikca_dayatilmaz(monkeypatch, tmp_path, 
     _client().post(RECALL, json={"bank": "B", "query": "alice"})
     coz = json.loads(casus.cagri("/memories/recall")["govde"].decode())
     assert "max_tokens" not in coz, f"istemci sormadan token tavanı dayatıldı: {coz}"
+
+
+# =================================================================================================
+# L. YAZMA UÇLARI — TSK-111 dilim 1 (Task 11-A, 2026-09-02)
+# =================================================================================================
+#
+# YOL HARİTASI YİNE ÖLÇÜLDÜ, TÜRETİLMEDİ. Dört upstream ucu da aynı commit çapasından okundu
+# (`hindsight-clients/go/api/openapi.yaml`, ebad4782…; satır çapaları: `cancel_operation` 2775,
+# `retry_operation` 2880, `delete_operation` 2926, `recover_consolidation` 3622) ve CP'nin KENDİ
+# istemcisiyle (`hindsight-control-plane/src/lib/api.ts`) karşılaştırıldı. İki bulgu:
+#   · HİÇBİRİNDE `requestBody` YOK — parametreler yalnız YOLDA (`bank_id`, `operation_id`) ve
+#     isteğe bağlı `authorization` başlığında. CP de gövdesiz çağırıyor.
+#   · `cancel` ile `retry`nin yolları aynı ön eki paylaşıyor (`/operations/{id}` ⊂
+#     `/operations/{id}/retry`), yani yalnız URL'e bakan bir çivi fiil sapmasını GÖREMEZ —
+#     bu yüzden aşağıdaki tablo FİİLİ de taşır ve çivi ikisini BİRLİKTE ölçer.
+
+#: (bizim `eylem`, upstream FİİL, upstream URL'de görülmesi gereken parça). ÖLÇÜM KAYDIdır.
+YAZMA_EYLEMLERI: tuple[tuple[str, str, str], ...] = (
+    ("iptal", "DELETE", "/banks/B/operations/o1"),
+    ("yeniden-dene", "POST", "/banks/B/operations/o1/retry"),
+    ("sil", "DELETE", "/banks/B/operations/o1/delete"),
+)
+#: KONSOLİDASYON DA SÖZLÜKLEŞTİ (düzeltme turu 1, R30-ek). `kurtar` tek başına bir rotaydı;
+#: `tetikle` eklenince aynı 15 satır (auth → gövde → duvar → threadpool → iz → diag) ÜÇÜNCÜ kez
+#: yazılacaktı. `{eylem}` deseni `islem`in aynısıdır ve `/konsolidasyon/kurtar` YOLU DEĞİŞMEDİ —
+#: `{eylem}` onu da eşler, yani 11-B'nin yazacağı istemci kırılmaz (çivi: `test_kurtar_yolu_AYNEN`).
+ISLEM_KOK = "/api/hindsight/islem"
+KONSOLIDASYON_KOK = "/api/hindsight/konsolidasyon"
+KURTAR = f"{KONSOLIDASYON_KOK}/kurtar"
+TETIKLE = f"{KONSOLIDASYON_KOK}/tetikle"
+#: Rota tablosunda YAZAN fiile izin verilen yollar — `test_yazan_fiil_yalniz_beyanli_yollarda`
+#: ve `test_her_hafiza_ucu_tabloda_kayitli` bundan beslenir (tek kaynak).
+YAZAN_YOLLAR = (f"{ISLEM_KOK}/{{eylem}}", f"{KONSOLIDASYON_KOK}/{{eylem}}")
+
+#: (eylem, upstream FİİL, upstream URL parçası, gövde BEYAZ LİSTESİ). Dördüncü sütun ÖLÇÜMDÜR:
+#: `recover_consolidation`ın `requestBody`si YOK, `trigger_consolidation`ınki VAR
+#: (`ConsolidationRequest.observation_scopes`, openapi ~3829). "Dördünün boşluğu beşincisi için
+#: kanıt değildir" — inceleme bu kalemi ayrıca ölçmemizi istedi ve ölçüm ikisini AYIRDI.
+KONSOLIDASYON_EYLEMLERI: tuple[tuple[str, str, str, tuple], ...] = (
+    ("kurtar", "POST", "/banks/B/consolidation/recover", ()),
+    ("tetikle", "POST", "/banks/B/consolidate", ("observation_scopes",)),
+)
+
+
+def _islem(eylem: str) -> str:
+    return f"{ISLEM_KOK}/{eylem}"
+
+
+def _konsolidasyon(eylem: str) -> str:
+    return f"{KONSOLIDASYON_KOK}/{eylem}"
+
+
+# ---- KAYNAKTAN TÜRETİLEN GÖVDELER (sınıf 2) — upstream `example:` blokları, aynı commit çapası.
+#      `CancelOperationResponse`/`RetryOperationResponse`/`DeleteOperationResponse` ÜÇÜ DE aynı üç
+#      alanı taşır (`success`/`message`/`operation_id`, üçü de `required`); yalnız `message`
+#      metni ayrışır — o yüzden tek şablondan türetilir, üç kez YAZILMAZ (tek-kaynak yasası).
+ORNEK_ISLEM_KIMLIGI = "550e8400-e29b-41d4-a716-446655440000"
+
+
+def _islem_ornegi(mesaj_sonu: str) -> dict:
+    return {"success": True, "message": f"Operation {ORNEK_ISLEM_KIMLIGI} {mesaj_sonu}",
+            "operation_id": ORNEK_ISLEM_KIMLIGI}
+
+
+#: `RecoverConsolidationResponse.example` — TEK alan (`retried_count`, `required`).
+KURTAR_ORNEK = {"retried_count": 42}
+#: `ConsolidationResponse.example` — `operation_id` (required) + `deduplicated` (default false).
+#: DEĞER GERÇEKTEN BÖYLE: upstream'in kendi örneği alan adını değer olarak yazmış; "temsili"
+#: diye düzeltmek, sınıf-2 etiketini (kaynaktan TÜRETİLDİ) yalan yapardı.
+TETIKLE_ORNEK = {"operation_id": "operation_id", "deduplicated": False}
+#: Yazma uçlarının upstream gövdeleri; anahtarlar `_Casus` eşleme tablosunun parçalarıdır.
+_YAZMA_GOVDELER: dict[str, object] = {
+    "/banks/B/operations/o1": _islem_ornegi("cancelled"),
+    "/banks/B/operations/o1/retry": _islem_ornegi("queued for retry"),
+    "/banks/B/operations/o1/delete": _islem_ornegi("deleted"),
+    "/banks/B/consolidation/recover": KURTAR_ORNEK,
+    "/banks/B/consolidate": TETIKLE_ORNEK,
+}
+
+
+def _yazma(monkeypatch, tmp_path, *, anahtar=SAHTE_ANAHTAR, **degistir) -> _Casus:
+    """Yazma çivilerinin casusu: CP-UI okuma tablosu + dört yazma ucu AYNI eşlemede.
+
+    NEDEN AYNI TABLO: bir yazma ucu yanlışlıkla bir OKUMA yoluna saparsa (ya da tersi) casus
+    "beklenmeyen kaynak" diye patlamaz — ama `cagri()` tekliği ve fiil kıyası sapmayı yakalar.
+    Ayrı tablo kursaydık sapma "beklenmeyen kaynak" olarak görünürdü ve HANGİ uca gittiği
+    kaybolurdu."""
+    esleme = _cpui_esleme(**{p: json.dumps(g).encode() for p, g in _YAZMA_GOVDELER.items()})
+    esleme.update(degistir)
+    return _kurulum(monkeypatch, tmp_path, esleme=esleme, anahtar=anahtar)
+
+
+def _yazma_govdesi(**ek) -> dict:
+    return {"bank": "B", "id": "o1", **ek}
+
+
+# ------------------------------------------------------------------- L-A. SÖZLÜK KAPALI
+
+def test_islem_eylem_sozlugu_olculen_upstream_yollariyla_ayrismaz():
+    """KIYAS ÇİVİSİ (`UPSTREAM_LIMIT_MAKSIMUMU` emsali): kodun sözlüğü upstream ÖLÇÜMÜNDEN
+    türetilmez, KIYASLANIR. Ayrışırlarsa bir düğme sessizce BAŞKA bir upstream ucuna basar —
+    ve bu uçlarda "başka uç" demek `iptal` yerine `sil` demek olabilir (geri alınamaz)."""
+    olculen = {eylem: (fiil, parca.split("/banks/B", 1)[1], ())
+               for eylem, fiil, parca in YAZMA_EYLEMLERI}
+    kodun = {eylem: (fiil, kuyruk.format("o1"), beyaz)
+             for eylem, (fiil, kuyruk, beyaz) in api._HAFIZA_ISLEM_EYLEMLERI.items()}
+    assert kodun == olculen, f"eylem sözlüğü upstream ölçümüyle ayrıştı: {kodun} ≠ {olculen}"
+
+
+#: `""` LİSTEDEN ÇIKARILDI (düzeltme turu 1, M-4c): boş segment rotayı HİÇ eşleştirmiyor, yani
+#: o vaka bizim sözlüğümüzü değil FastAPI'yi ölçüyordu — sayıyı şişiren vakumlu bir parametre.
+@pytest.mark.parametrize("eylem", ["yok", "consolidate", "../sil", "iptal2", "IPTAL"])
+def test_islem_taninmayan_eylem_upstreame_gitmez(monkeypatch, tmp_path, sandbox_state, eylem):
+    """SÖZLÜK KAPALI OLMASAYDI bu uç bir yol-enjeksiyonu yüzeyi olurdu: `eylem` istemciden gelir.
+    İki şey birlikte ölçülür — (a) 4xx döner, (b) upstream'e HİÇ çağrı gitmez. Yalnız (a)'yı
+    ölçen bir çivi, "önce çağır sonra hata dön" gibi bir sapmayı GÖREMEZ."""
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(_islem(eylem), json=_yazma_govdesi())
+    assert r.status_code in (400, 404), f"{eylem!r} → {r.status_code}"
+    assert casus.cagrilar == [], f"tanınmayan eylem upstream'e gitti: {casus.url_ler()}"
+
+
+def test_islem_taninmayan_eylem_gerekcesi_olculu(monkeypatch, tmp_path, sandbox_state):
+    """4xx'in gövdesi de DOLU olmalı: pano düğmeyi neden reddettiğini operatöre söyler."""
+    _yazma(monkeypatch, tmp_path)
+    govde = _client().post(_islem("yok"), json=_yazma_govdesi()).json()
+    assert govde["ok"] is False and _dolu(govde["neden"]), govde
+    assert govde["govde"] is None and govde["http"] is None, govde
+
+
+# --------------------------------------------------------- L-B. ÜÇ EYLEM, DOĞRU FİİL + YOL
+
+@pytest.mark.parametrize("eylem,fiil,parca", YAZMA_EYLEMLERI)
+def test_islem_dogru_fiil_ve_yola_gider(monkeypatch, tmp_path, sandbox_state, eylem, fiil, parca):
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(_islem(eylem), json=_yazma_govdesi())
+    assert r.status_code == 200, r.text
+    cagri = casus.cagri(parca)
+    assert cagri["fiil"] == fiil, f"{eylem}: fiil {cagri['fiil']}, beklenen {fiil}"
+    assert cagri["url"].endswith(parca), f"{eylem}: {cagri['url']} → {parca} beklenirdi"
+
+
+@pytest.mark.parametrize("eylem,fiil,parca", YAZMA_EYLEMLERI)
+def test_islem_upstream_govdesi_aynen_gecer(monkeypatch, tmp_path, sandbox_state,
+                                            eylem, fiil, parca):
+    """Vekil upstream cevabını SÜZMEZ: pano `success`/`message`/`operation_id`i olduğu gibi
+    görür. Süzseydik upstream yarın bir alan eklediğinde pano onu sessizce kaybederdi."""
+    _yazma(monkeypatch, tmp_path)
+    govde = _client().post(_islem(eylem), json=_yazma_govdesi()).json()
+    assert govde["govde"] == _YAZMA_GOVDELER[parca], govde
+    assert govde["ok"] is True and govde["neden"] is None and govde["http"] == 200, govde
+
+
+def test_islem_govdesiz_gider(monkeypatch, tmp_path, sandbox_state):
+    """ÖLÇÜLDÜ: üç upstream ucunun HİÇBİRİNDE `requestBody` YOK (openapi, aynı çapa) ve CP de
+    gövdesiz çağırıyor. İstemcinin gövdesini upstream'e iletmek, ölçülmemiş bir sözleşmeyi
+    ölçülmüş gibi göstermek olurdu."""
+    casus = _yazma(monkeypatch, tmp_path)
+    _client().post(_islem("iptal"), json=_yazma_govdesi(fazladan="sızmamalı"))
+    cagri = casus.cagri("/banks/B/operations/o1")
+    assert cagri["govde"] is None, f"gövdesiz uca gövde gitti: {cagri['govde']!r}"
+
+
+# ------------------------------------------------------------------ L-C. KONSOLİDASYON KURTARMA
+
+def test_kurtar_dogru_yola_gider(monkeypatch, tmp_path, sandbox_state):
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(KURTAR, json={"bank": "B"})
+    assert r.status_code == 200, r.text
+    cagri = casus.cagri("/consolidation/recover")
+    assert cagri["fiil"] == "POST" and cagri["url"].endswith("/banks/B/consolidation/recover")
+    assert r.json()["govde"] == KURTAR_ORNEK, r.json()
+
+
+def test_kurtar_beyaz_listesi_BOS_olculdu(monkeypatch, tmp_path, sandbox_state):
+    """`recall`ın beyaz listesi DOLU çünkü `RecallRequest` şeması dolu. Burada ölçüm sonucu
+    BOŞTUR: `recover_consolidation`ın `requestBody`si YOKTUR (openapi ~3622; CP `lib/api.ts`
+    `recoverConsolidation` da gövdesiz gönderiyor). Boşluk ÇİVİLİDİR — yarın upstream bir alan
+    eklerse "aynen geçiş" onu istemcinin insafına açmasın diye."""
+    casus = _yazma(monkeypatch, tmp_path)
+    _client().post(KURTAR, json={"bank": "B", "force": True, "limit": 999, "id": "o1"})
+    assert casus.cagri("/consolidation/recover")["govde"] is None, "kurtarmaya gövde sızdı"
+
+
+def test_kurtar_bank_zorunlu(monkeypatch, tmp_path, sandbox_state):
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(KURTAR, json={})
+    assert r.status_code == 400, r.text
+    assert r.json()["ok"] is False and _dolu(r.json()["neden"]), r.json()
+    assert casus.cagrilar == [], f"eksik `bank` ile upstream'e gidildi: {casus.url_ler()}"
+
+
+# ------------------------------------------------------------------------- L-D. YOL GÜVENLİĞİ
+
+@pytest.mark.parametrize("kimlik", ["../../v1/default/banks/other/operations/x",
+                                    "o1/delete", "..", "a/b", "o1\\x"])
+def test_islem_yol_kacisi_reddedilir(monkeypatch, tmp_path, sandbox_state, kimlik):
+    """OKUMA UÇLARINDA KAÇIRMA YETERLİYDİ, BURADA DEĞİL. `_hafiza_kacir` `/`yi `%2F`, `.`yı
+    `%2E` yapar — ama `%2F`yi ROTALAMADAN ÖNCE çözen bir vekil katmanı (bilinen bypass sınıfı)
+    onu yine yol atlaması olarak okur. Okumada bedeli yanlış bir GÖRÜNTÜ; burada `iptal`in
+    `delete`e dönmesi, yani GERİ ALINAMAZ bir kayıp. İki savunma birlikte: açık RED + kaçırma."""
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(_islem("iptal"), json={"bank": "B", "id": kimlik})
+    assert r.status_code == 400, f"{kimlik!r} → {r.status_code}"
+    assert casus.cagrilar == [], f"yol kaçışı upstream'e gitti: {casus.url_ler()}"
+
+
+def test_islem_kimligi_kacirilarak_gider(monkeypatch, tmp_path, sandbox_state):
+    """AÇIK RED TEK BAŞINA YETMEZ: reddedilmeyen ama yine de tehlikeli karakterler (`?`, `#`,
+    `%`) URL'in SORGU/PARÇA sınırını kaydırabilir. Kaçırma ikinci hattır ve ölçülür."""
+    casus = _yazma(monkeypatch, tmp_path,
+                   **{"/operations/o%3Fx%23y": b'{"success": true}'})
+    _client().post(_islem("iptal"), json={"bank": "B", "id": "o?x#y"})
+    url = casus.cagrilar[0]["url"]
+    assert url.endswith("/operations/o%3Fx%23y"), url
+
+
+def test_islem_bank_kimligi_de_kacirilir(monkeypatch, tmp_path, sandbox_state):
+    casus = _yazma(monkeypatch, tmp_path, **{"/operations/o1": b'{"success": true}'})
+    _client().post(_islem("iptal"), json={"bank": "b?n", "id": "o1"})
+    assert "/banks/b%3Fn/operations/o1" in casus.cagrilar[0]["url"], casus.cagrilar[0]["url"]
+
+
+def test_islem_alanlari_zorunlu(monkeypatch, tmp_path, sandbox_state):
+    """DÜZELTME TURU 1 (I-1): eksik/boş alan artık 200+neden DEĞİL **400**+neden.
+
+    OKUMA UÇLARININ "F" SÖZLEŞMESİNDEN (eksik parametre 400 değil) BİLİNÇLİ SAPMA. O sözleşme
+    panonun 15 sn'de bir yokladığı GET uçları içindir: eksik parametreyle gelen bir yoklama
+    sayfayı karartmamalı. Burada istek pano tarafından ELLE kurulur ve eksik alan bir İSTEMCİ
+    HATASIdır; 200 döndürmek onu geçici bir ölçüm arızası gibi gösterirdi ve 11-B'nin hatası
+    canlıda "Hindsight cevap vermiyor" diye okunurdu. Zarf AYNI dört alandır — pano kararmaz."""
+    casus = _yazma(monkeypatch, tmp_path)
+    for govde in ({}, {"bank": "B"}, {"id": "o1"}, {"bank": "", "id": "o1"},
+                  {"bank": "B", "id": ""}):
+        r = _client().post(_islem("iptal"), json=govde)
+        assert r.status_code == 400, (govde, r.status_code, r.text)
+        assert r.json()["ok"] is False and _dolu(r.json()["neden"]), (govde, r.json())
+    assert casus.cagrilar == [], f"eksik alanla upstream'e gidildi: {casus.url_ler()}"
+
+
+@pytest.mark.parametrize("yol", ["/api/hindsight/islem/iptal", KURTAR])
+def test_yazma_bozuk_json_panoyu_karartmaz(monkeypatch, tmp_path, sandbox_state, yol):
+    """GET tarafında kapatılan sınıf (422 → pano kararması) POST tarafında da kapalı."""
+    _yazma(monkeypatch, tmp_path)
+    r = _client().post(yol, content=b"{bozuk", headers={"Content-Type": "application/json"})
+    assert r.status_code == 200, r.text
+    assert r.json()["ok"] is False and _dolu(r.json()["neden"]), r.json()
+
+
+# ---------------------------------------------------------------------------- L-E. İZ + ZARF
+
+@pytest.mark.parametrize("yol,govde,eylem", [
+    ("/api/hindsight/islem/iptal", {"bank": "B", "id": "o1"}, "iptal"),
+    ("/api/hindsight/islem/yeniden-dene", {"bank": "B", "id": "o1"}, "yeniden-dene"),
+    ("/api/hindsight/islem/sil", {"bank": "B", "id": "o1"}, "sil"),
+    (KURTAR, {"bank": "B"}, "konsolidasyon-kurtar"),
+])
+def test_yazma_deftere_iz_birakir(monkeypatch, tmp_path, sandbox_state, yol, govde, eylem):
+    """v54 SÖZLEŞMESİ DAVRANIŞLA ÖLÇÜLÜR. v54 kaynak metninde `obs.log` ARAR — yani orada bir
+    satır bulunması izin GERÇEKTEN atıldığını kanıtlamaz. Burada `obs.log` casuslanır ve
+    ALANLAR okunur: operatörün hangi bankada hangi operasyona ne yaptığı defterde YAZILI mı."""
+    _yazma(monkeypatch, tmp_path)
+    satirlar: list = []
+    monkeypatch.setattr(api.obs, "log", lambda olay, **alan: satirlar.append((olay, alan)))
+    r = _client().post(yol, json=govde)
+    assert r.status_code == 200, r.text
+    izler = [a for o, a in satirlar if o == "hafiza_yazma"]
+    assert len(izler) == 1, f"`hafiza_yazma` izi {len(izler)} kez atıldı: {satirlar}"
+    iz = izler[0]
+    assert iz["eylem"] == eylem and iz["bank"] == "B", iz
+    # M-1: boole başarı alanının bu dosyadaki konvansiyonu `ok=` (5 emsal); `sonuc=` ile yazılan
+    # bir satırı `ok=` ile tarayan her defter sorgusu ıskalardı.
+    assert iz["ok"] is True and iz["http"] == 200, iz
+    assert iz["id"] == govde.get("id"), iz
+
+
+def test_yazma_izi_upstream_yolunu_ve_anahtari_TASIMAZ(monkeypatch, tmp_path, sandbox_state):
+    """DEFTERE YAZILAN SIR, SIZAN SIRDIR (`session_drop` emsali, aynı dosya). İz operatörün
+    eylemini anlatır; upstream URL'i ya da tenant anahtarı defterin işi DEĞİLDİR."""
+    _yazma(monkeypatch, tmp_path)
+    satirlar: list = []
+    monkeypatch.setattr(api.obs, "log", lambda olay, **alan: satirlar.append((olay, alan)))
+    _client().post(_islem("sil"), json={"bank": "B", "id": "o1"})
+    metin = repr([a for o, a in satirlar if o == "hafiza_yazma"])
+    assert SAHTE_ANAHTAR not in metin, f"iz satırı anahtar taşıdı: {metin}"
+    assert api.HAFIZA_TABAN_URL not in metin and "/v1/default/banks" not in metin, metin
+
+
+@pytest.mark.parametrize("yol,govde", [("/api/hindsight/islem/iptal", {"bank": "B", "id": "o1"}),
+                                       (KURTAR, {"bank": "B"})])
+def test_yazma_diag_zarfini_dusurur(monkeypatch, tmp_path, sandbox_state, yol, govde):
+    """v181 SÖZLEŞMESİ DAVRANIŞLA ÖLÇÜLÜR (kaynak metni değil): operatörün AZ ÖNCE bastığı
+    düğmenin sonucu 45 saniyelik teşhis zarfının arkasında kalmamalı."""
+    _yazma(monkeypatch, tmp_path)
+    nedenler: list = []
+    monkeypatch.setattr(api, "_diag_onbellek_bosalt", lambda neden: nedenler.append(neden))
+    _client().post(yol, json=govde)
+    assert len(nedenler) == 1 and _dolu(nedenler[0]), nedenler
+
+
+def test_yazma_basarisizken_diag_zarfi_dusmez(monkeypatch, tmp_path, sandbox_state):
+    """`_diag_onbellek_bosalt`ın KENDİ sözleşmesi: YALNIZ BAŞARIDA. Düşürseydi her başarısız
+    tıklama bir TAM teşhis hesabı tetiklerdi — geçersizleştirme kendi çözdüğü sorunu geri
+    getirirdi."""
+    _yazma(monkeypatch, tmp_path, **{"/banks/B/operations/o1": "upstream 500"})
+    nedenler: list = []
+    monkeypatch.setattr(api, "_diag_onbellek_bosalt", lambda neden: nedenler.append(neden))
+    r = _client().post(_islem("iptal"), json={"bank": "B", "id": "o1"})
+    assert r.json()["ok"] is False, r.json()
+    assert nedenler == [], f"başarısız yazma teşhis zarfını düşürdü: {nedenler}"
+
+
+# ---------------------------------------------------------- L-F. ÖLÇÜLEMEZLİK + SIR + YETKİ
+
+def test_yazma_upstream_arizasi_200_ve_neden(monkeypatch, tmp_path, sandbox_state):
+    """500 DEĞİL 200 + DOLU `neden` (bu bloğun kurucu sözleşmesi): pano kararmaz, düğme
+    operatöre NEDEN olmadığını söyler. `http` de geçer — 404 (kayıt zaten yok) ile 500
+    (upstream bozuk) operatör için AYNI şey değildir."""
+    casus = _yazma(monkeypatch, tmp_path,
+                   **{"/banks/B/operations/o1/retry": "upstream 500 döndü"})
+    casus.ariza_http = 500
+    r = _client().post(_islem("yeniden-dene"), json={"bank": "B", "id": "o1"})
+    assert r.status_code == 200, r.text
+    govde = r.json()
+    assert govde["ok"] is False and govde["govde"] is None, govde
+    assert _dolu(govde["neden"]) and govde["http"] == 500, govde
+
+
+def test_yazma_http_kodu_yoksa_None_kalir(monkeypatch, tmp_path, sandbox_state):
+    """UYDURMA YASAĞI'NIN BU UÇTAKİ HÂLİ: bağlantı reddinde HTTP kodu YOKTUR. `0` ya da `500`
+    yazmak, ölçülmemiş bir sunucu cevabını ölçülmüş gibi gösterirdi."""
+    casus = _yazma(monkeypatch, tmp_path,
+                   **{"/banks/B/operations/o1": "baglanti reddedildi"})
+    assert casus.ariza_http is None
+    govde = _client().post(_islem("iptal"), json={"bank": "B", "id": "o1"}).json()
+    assert govde["http"] is None and govde["ok"] is False and _dolu(govde["neden"]), govde
+
+
+def test_yazma_anahtar_yokken_200_ve_neden(monkeypatch, tmp_path, sandbox_state):
+    """`/opt/hindsight/.env` bu makinede YOKTUR — bu ucun NORMAL hâli."""
+    casus = _yazma(monkeypatch, tmp_path, anahtar=None)
+    r = _client().post(_islem("iptal"), json={"bank": "B", "id": "o1"})
+    assert r.status_code == 200, r.text
+    assert r.json()["ok"] is False and _dolu(r.json()["neden"]), r.json()
+    assert casus.cagrilar == [], "anahtarsız çağrı yine de tele çıktı"
+
+
+@pytest.mark.parametrize("yol,govde", [("/api/hindsight/islem/sil", {"bank": "B", "id": "o1"}),
+                                       (KURTAR, {"bank": "B"})])
+def test_yazma_sir_gonderilir_ama_sizmaz(monkeypatch, tmp_path, sandbox_state, yol, govde):
+    """VAKUM DEĞİL: gönderilmemiş bir sırrın yanıtta olmaması hiçbir şey kanıtlamaz. İki şey
+    birlikte — (a) `Authorization: Bearer <anahtar>` GERÇEKTEN gitti, (b) yanıtta yok."""
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(yol, json=govde)
+    assert SAHTE_ANAHTAR not in r.text, "tenant anahtarı yanıta sızdı"
+    cagri = casus.cagrilar[0]
+    assert cagri["basliklar"].get("Authorization") == f"Bearer {SAHTE_ANAHTAR}", cagri["basliklar"]
+    assert cagri["sir"] == SAHTE_ANAHTAR, "yazma bacağı maskeleyiciye sırrı VERMEDİ — ikinci hat kör"
+
+
+def test_yazma_ariza_metnindeki_sir_maskelenir(monkeypatch, tmp_path, sandbox_state):
+    """İKİNCİ SAVUNMA HATTI: alt katman kimlik bilgisini istisna metnine basarsa gerekçe
+    SİLİNMEZ (körlük açardı), yalnız sır maskelenir."""
+    _yazma(monkeypatch, tmp_path,
+           **{"/banks/B/operations/o1":
+              f"OSError: baglanti reddedildi (Bearer {SAHTE_ANAHTAR})"})
+    govde = _client().post(_islem("iptal"), json={"bank": "B", "id": "o1"}).json()
+    assert SAHTE_ANAHTAR not in json.dumps(govde), govde
+    assert "OSError" in govde["neden"], govde
+
+
+@pytest.mark.parametrize("yol,govde", [("/api/hindsight/islem/iptal", {"bank": "B", "id": "o1"}),
+                                       (KURTAR, {"bank": "B"})])
+def test_yazma_auth_cagiriyor(monkeypatch, tmp_path, sandbox_state, yol, govde):
+    _yazma(monkeypatch, tmp_path)
+    cagrildi: list = []
+    monkeypatch.setattr(api, "_auth", lambda request: cagrildi.append(1))
+    r = _client().post(yol, json=govde)
+    assert r.status_code == 200, r.text
+    assert cagrildi == [1], f"`{yol}`: `_auth` çağrılmadı — yazma yüzeyi yetkisiz açık"
+
+
+@pytest.mark.parametrize("yol,govde,jetonlu_kod", [
+    ("/api/hindsight/islem/iptal", {"bank": "B", "id": "o1"}, 200),
+    ("/api/hindsight/islem/yok", {"bank": "B", "id": "o1"}, 404),
+    (KURTAR, {"bank": "B"}, 200),
+    (TETIKLE, {"bank": "B"}, 200),
+])
+def test_yazma_jetonsuz_401(monkeypatch, tmp_path, sandbox_state, yol, govde, jetonlu_kod):
+    """GERÇEK kapı (`_auth` casuslanmadan). TANINMAYAN EYLEM DE LİSTEDE, bilerek: sözlük
+    kontrolü yetkiden ÖNCE koşsaydı, kimliksiz bir çağıran hangi eylemlerin var olduğunu
+    404/401 farkından okuyabilirdi (vokabüler sızıntısı).
+
+    DÜZELTME TURU 1 (M-4a/b): iki gevşeklik kapandı. (a) 401 dalında `cagrilar == []` de ölçülür —
+    "401 döndü ama upstream'e de gitti" sapması eskiden görünmezdi. (b) jetonlu çağrının NE
+    döndüğü artık parametrede YAZILI; `in (200, 400, 404)` yalnız "401 değil"i ölçüyordu."""
+    casus = _yazma(monkeypatch, tmp_path)
+    monkeypatch.setattr(api, "DASH_TOKEN", "v375-pano-jetonu")
+    monkeypatch.setattr(api.auth, "password_set", lambda: False)
+    assert _client().post(yol, json=govde).status_code == 401, yol
+    assert casus.cagrilar == [], f"401 döndü ama upstream'e gidildi: {casus.url_ler()}"
+    r = _client().post(yol, json=govde, headers={"x-meridian-token": "v375-pano-jetonu"})
+    assert r.status_code == jetonlu_kod, r.text
+
+
+# ------------------------------------------------------- L-G. ÇEKİRDEK: DELEGASYON + DURUM
+
+def test_yaz_bacagi_ortak_cekirdege_delege_eder(monkeypatch, tmp_path, sandbox_state):
+    """ÜÇÜNCÜ BACAK DA KOPYA DEĞİL SARMALAYICI (kardeşlerinin dersi). Kopya olsaydı
+    `_kapi_istek`teki her düzeltme (yeniden deneme, `Retry-After`, başlık politikası) yazma
+    bacağında SESSİZCE eksik kalırdı."""
+    cagrilar: list = []
+
+    def _sahte_cekirdek(url, basliklar, sir, *, govde=None, yontem="GET", durum=None):
+        cagrilar.append({"url": url, "govde": govde, "yontem": yontem})
+        if durum is not None:
+            durum["http"] = 204
+        return b'{"ok": true}', None
+
+    monkeypatch.setattr(api, "_kapi_istek", _sahte_cekirdek)
+    kutu: dict = {}
+    assert GERCEK_HAFIZA_YAZ_ISTEK("http://x/3", {"A": "b"}, "s", yontem="DELETE",
+                                   durum=kutu) == (b'{"ok": true}', None)
+    assert cagrilar == [{"url": "http://x/3", "govde": None, "yontem": "DELETE"}], cagrilar
+    assert kutu == {"http": 204}, kutu
+
+
+def test_yaz_bacagi_gercek_DELETE_gonderir_ve_zaman_asimli(monkeypatch, tmp_path, sandbox_state):
+    """DAVRANIŞ ÇİVİSİ (`_hafiza_post`un kardeşi): `urlopen`e GERÇEKTEN `DELETE` ve sözleşmenin
+    beyan ettiği zaman aşımı gidiyor mu. Zaman aşımsız bir yazma çağrısı, operatör düğmeye
+    bastığında panoyu SONSUZA kadar asardı."""
+    gorulen: dict = {}
+
+    class _Sahte:
+        status = 200
+
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return b'{"success": true}'
+
+    def _sahte_urlopen(istek, timeout=None):
+        gorulen["timeout"] = timeout
+        gorulen["method"] = istek.get_method()
+        return _Sahte()
+
+    import urllib.request
+    monkeypatch.setattr(urllib.request, "urlopen", _sahte_urlopen)
+    kutu: dict = {}
+    veri, neden = GERCEK_HAFIZA_YAZ_ISTEK("http://127.0.0.1:8888/x", {"Authorization": "Bearer y"},
+                                          "y", yontem="DELETE", durum=kutu)
+    assert (veri, neden) == (b'{"success": true}', None)
+    assert gorulen["method"] == "DELETE", gorulen
+    assert gorulen["timeout"] == api.KAPI_ZAMAN_ASIMI_S == api.HAFIZA_ZAMAN_ASIMI_S, gorulen
+    assert kutu == {"http": 200}, kutu
+
+
+def test_yaz_bacagi_HTTPError_kodunu_olcer(monkeypatch, tmp_path, sandbox_state):
+    """`http` ALANI UYDURULMADI, ÖLÇÜLDÜ: `urlopen` 4xx/5xx'te `HTTPError` atar ve kodu
+    `.code`tadır. Kodu `neden` metninden AYRIŞTIRMAK (regex) kırılgan olurdu ve upstream'in
+    hata cümlesi değiştiği gün pano sessizce yanlış kod gösterirdi."""
+    import urllib.error
+    import urllib.request
+
+    def _patlat(istek, timeout=None):
+        raise urllib.error.HTTPError("http://x", 409, "Conflict", {}, None)
+
+    monkeypatch.setattr(urllib.request, "urlopen", _patlat)
+    kutu: dict = {}
+    veri, neden = GERCEK_HAFIZA_YAZ_ISTEK("http://x", {}, None, yontem="POST", durum=kutu)
+    assert veri is None and _dolu(neden), neden
+    assert kutu == {"http": 409}, kutu
+
+
+def test_yaz_bacagi_ag_arizasinda_kod_uydurmaz(monkeypatch, tmp_path, sandbox_state):
+    import urllib.request
+
+    def _patlat(istek, timeout=None):
+        raise OSError("baglanti reddedildi")
+
+    monkeypatch.setattr(urllib.request, "urlopen", _patlat)
+    kutu: dict = {}
+    veri, neden = GERCEK_HAFIZA_YAZ_ISTEK("http://x", {}, None, yontem="DELETE", durum=kutu)
+    assert veri is None and "OSError" in neden, neden
+    assert kutu == {"http": None}, f"HTTP kodu olmayan arızaya kod uyduruldu: {kutu}"
+
+
+def test_okuma_bacaklari_durum_kutusu_istemez():
+    """SARMALAYICILAR BOZULMADI (v361 yeşil kalmalı): `durum` KELİMESİ-ANAHTARLI ve
+    VARSAYILANI `None` — eski iki sarmalayıcının imzası ve davranışı DEĞİŞMEDİ."""
+    import inspect
+    imza = inspect.signature(api._kapi_istek).parameters["durum"]
+    assert imza.kind is inspect.Parameter.KEYWORD_ONLY and imza.default is None, imza
+    for ad in ("_kapi_getir", "_hafiza_post"):
+        assert "durum" not in inspect.signature(GERCEK_KAPI_GETIR if ad == "_kapi_getir"
+                                                else GERCEK_HAFIZA_POST).parameters, ad
+
+
+# =================================================================================================
+# L-H … L-K. DÜZELTME TURU 1 (inceleme: I-1 · I-2 · I-3 · I-4 · M-2 · R30-ek `tetikle`)
+# =================================================================================================
+
+# ---------------------------------------------------- L-H. TİP DUVARI + BANK DUVARI (I-1, I-2)
+#
+# İNCELEMENİN ÖLÇTÜĞÜ ŞEY (saf stdlib, pytest'siz): duvarlar TİP KÖRÜYDÜ.
+#   `{"id": 123}`      → `"/" in 123`            → TypeError → yakalanmamış → **500**
+#   `{"id": ["../x"]}` → `"/" in ["../x"]`       → False, yani duvar "GÜVENLİ" diyordu;
+#                        sonra `_hafiza_kacir([...])` → TypeError → **500**
+#   `{"bank": {...}}`  → `bank` için duvar ZATEN YOKTU → `_hafiza_kacir` → **500**
+# İki şey birden bozuktu: (a) "bozuk istek panoyu KARARTMAZ" sözleşmesi (500 = kararma),
+# (b) duvar-2'nin güvencesi bir TİP TESADÜFÜNE yaslanıyordu — `["../x"]` bugün kaçırıcıda
+# patlıyor diye güvenli değildi, yalnız ŞANSLIYDI.
+
+#: (alan, değer, beklenen ret sınıfı). TEK yardımcı iki alana da uygulanır (I-2): duvarın
+#: BEYAN EDİLMİŞ gerekçesi ("`%2F`yi rotalamadan ÖNCE çözen ara katman") `bank` için de aynen
+#: geçerli — gerekçe doğruysa duvar yarım olamaz, yanlışsa duvar gereksiz olurdu.
+YOL_PARCASI_RETLERI = (
+    ("id", 123, "alan_tipi"),
+    ("id", ["../x"], "alan_tipi"),
+    ("id", {"a": 1}, "alan_tipi"),
+    ("id", None, "alan_tipi"),
+    ("id", True, "alan_tipi"),
+    ("id", "", "alan_bos"),
+    ("id", "../../v1/default/banks/x/operations/y", "yol_kacisi"),
+    ("id", "o1/delete", "yol_kacisi"),
+    ("id", "%2E%2E", "yol_kacisi"),
+    ("id", "o 1", "alan_boslugu"),
+    ("id", "o\t1", "alan_boslugu"),
+    ("bank", 123, "alan_tipi"),
+    ("bank", {"a": 1}, "alan_tipi"),
+    ("bank", None, "alan_tipi"),
+    ("bank", "", "alan_bos"),
+    ("bank", "..", "yol_kacisi"),
+    ("bank", "b/operations/o1/delete", "yol_kacisi"),
+    ("bank", "b%2Fc", "yol_kacisi"),
+    ("bank", "b n", "alan_boslugu"),
+)
+
+
+@pytest.mark.parametrize("alan,deger,sinif", YOL_PARCASI_RETLERI)
+def test_yol_parcasi_duvari_iki_alana_da_uygulanir(monkeypatch, tmp_path, sandbox_state,
+                                                   alan, deger, sinif):
+    """400 + dolu neden + upstream'e HİÇ gitmeme — üçü birlikte. Yalnız "500 değil"i ölçen bir
+    çivi, sessizce upstream'e giden bir sapmayı göremezdi."""
+    casus = _yazma(monkeypatch, tmp_path)
+    govde = {"bank": "B", "id": "o1"}
+    govde[alan] = deger
+    r = _client().post(_islem("iptal"), json=govde)
+    assert r.status_code == 400, f"{alan}={deger!r} → {r.status_code}: {r.text[:200]}"
+    g = r.json()
+    assert g == {"ok": False, "http": None, "govde": None, "neden": g["neden"]}, g
+    assert _dolu(g["neden"]), g
+    assert casus.cagrilar == [], f"{alan}={deger!r} upstream'e gitti: {casus.url_ler()}"
+
+
+@pytest.mark.parametrize("deger", [123, {"a": 1}, "", "..", "b/c", "b n"])
+def test_konsolidasyon_bank_duvari_da_ayni(monkeypatch, tmp_path, sandbox_state, deger):
+    """AYNI YARDIMCI, AYNI DUVAR — ikinci rota unutulursa burada öter."""
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(KURTAR, json={"bank": deger})
+    assert r.status_code == 400, f"{deger!r} → {r.status_code}: {r.text[:200]}"
+    assert casus.cagrilar == [], f"{deger!r} upstream'e gitti: {casus.url_ler()}"
+
+
+def test_yol_parcasi_duvari_TEK_yardimcidir():
+    """TEK KAYNAK, DAVRANIŞLA: yardımcı casuslanır ve İKİ rotanın da ondan geçtiği ölçülür.
+    Kaynak metni taramak (iki çağrı var mı) beyanı ölçerdi; bu, gerçek çağrıyı ölçer."""
+    assert callable(api._hafiza_yol_parcasi_guvenli)
+    # Yardımcının KENDİSİ: sözleşmesi `(neden, sinif)` ve güvenlide ikisi de `None`.
+    assert api._hafiza_yol_parcasi_guvenli("id", "o1") == (None, None)
+    neden, sinif = api._hafiza_yol_parcasi_guvenli("bank", 5)
+    assert sinif == "alan_tipi" and _dolu(neden) and "bank" in neden, (neden, sinif)
+
+
+@pytest.mark.parametrize("yol,govde", [("/api/hindsight/islem/iptal", {"bank": "B", "id": "o1"}),
+                                       (KURTAR, {"bank": "B"})])
+def test_iki_rota_da_yol_parcasi_yardimcisini_cagirir(monkeypatch, tmp_path, sandbox_state,
+                                                      yol, govde):
+    _yazma(monkeypatch, tmp_path)
+    gorulen: list = []
+
+    def _casus(ad, deger):
+        gorulen.append(ad)
+        return None, None
+
+    monkeypatch.setattr(api, "_hafiza_yol_parcasi_guvenli", _casus)
+    assert _client().post(yol, json=govde).status_code == 200
+    assert "bank" in gorulen, f"{yol}: `bank` duvardan geçmedi ({gorulen})"
+
+
+# --------------------------------------------------------------- L-I. TEK KAYNAK (I-3 a + b)
+
+def test_bank_yolu_TEK_kaynaktan_kurulur(monkeypatch, tmp_path, sandbox_state):
+    """(a) OKUMA ve YAZMA bacakları AYNI URL kurucusunu çağırır. Kopya kalsaydı kaçırma
+    politikasındaki bir düzeltme (örn. `~` ya da `%` kuralı) yazan bacakta SESSİZCE eski
+    politikada kalırdı — ve bu bacakta "başka bir uca gitmek" `iptal` yerine `sil` demektir.
+    Bu turun KENDİ dersi buydu (`_hafiza_post` kopyası `_kapi_istek`e çıkarılmıştı)."""
+    _yazma(monkeypatch, tmp_path)
+    gorulen: list = []
+    gercek = api._hafiza_bank_yolu
+
+    def _casus(bank, kuyruk="", kimlikler=()):
+        gorulen.append((bank, kuyruk, kimlikler))
+        return gercek(bank, kuyruk, kimlikler)
+
+    monkeypatch.setattr(api, "_hafiza_bank_yolu", _casus)
+    _client().get("/api/hindsight/islemler?bank=B")           # OKUMA bacağı
+    _client().post(_islem("sil"), json={"bank": "B", "id": "o1"})   # YAZMA bacağı
+    assert [g[1] for g in gorulen] == ["/operations", "/operations/{}/delete"], gorulen
+
+
+def test_bank_yolu_kacirmayi_kendisi_yapar():
+    """Kurucunun SÖZLEŞMESİ: kök + kaçırılmış bank + kaçırılmış kimliklerle doldurulmuş kuyruk."""
+    assert api._hafiza_bank_yolu("b.n", "/operations/{}", ("o.1",)) == (
+        f"{api._HAFIZA_BANK_KOKU}/b%2En/operations/o%2E1")
+
+
+def test_istek_govdesi_okuyucusu_TEK_kaynaktan(monkeypatch, tmp_path, sandbox_state):
+    """(b) `recall` satır-içi kopyasını korumuştu; I-1'in düzeltmesi İKİ yerde yapılmak zorunda
+    kalacaktı. Artık tek okuyucu — ve recall'ın davranışı DEĞİŞMEDİ (kardeş çiviler yeşil)."""
+    _yazma(monkeypatch, tmp_path)
+    gorulen: list = []
+    gercek = api._hafiza_istek_govdesi
+
+    async def _casus(request, alanlar):
+        gorulen.append(tuple(alanlar))
+        return await gercek(request, alanlar)
+
+    monkeypatch.setattr(api, "_hafiza_istek_govdesi", _casus)
+    _client().post(RECALL, json={"bank": "B", "query": "alice"})
+    _client().post(_islem("iptal"), json={"bank": "B", "id": "o1"})
+    _client().post(KURTAR, json={"bank": "B"})
+    assert gorulen == [("bank", "query"), ("bank", "id"), ("bank",)], gorulen
+
+
+# ------------------------------------------------------------------- L-J. RET İZİ (I-4)
+#
+# "OPERATÖRÜN BASTIĞI HER DÜĞME DEFTERE DÜŞER" BEYANI YARIMDI: iz yalnız upstream'e ULAŞAN
+# çağrılar için atılıyordu. `..` içeren bir `id` denemesi bu yüzeyde bir SONDA denemesidir ve tam
+# olarak defterde görmek isteyeceğin şeydir; hiçbir yerde görünmüyordu. v54 bunu yakalayamaz —
+# rota bloğunda `obs.log` METNİNİ görüp geçer.
+
+#: (yol, gövde, beklenen sınıf). Dört ret dalı da temsil edilir.
+RET_DALLARI = (
+    ("/api/hindsight/islem/yok", {"bank": "B", "id": "o1"}, "eylem_taninmiyor"),
+    ("/api/hindsight/islem/iptal", [1, 2], "govde_cozulemedi"),
+    ("/api/hindsight/islem/iptal", {"bank": "B"}, "alan_tipi"),
+    ("/api/hindsight/islem/iptal", {"bank": "B", "id": "../x"}, "yol_kacisi"),
+    ("/api/hindsight/konsolidasyon/yok", {"bank": "B"}, "eylem_taninmiyor"),
+    ("/api/hindsight/konsolidasyon/kurtar", {"bank": ".."}, "yol_kacisi"),
+)
+
+
+@pytest.mark.parametrize("yol,govde,sinif", RET_DALLARI)
+def test_reddedilen_yazma_da_deftere_dusar(monkeypatch, tmp_path, sandbox_state,
+                                           yol, govde, sinif):
+    _yazma(monkeypatch, tmp_path)
+    satirlar: list = []
+    monkeypatch.setattr(api.obs, "log", lambda olay, **alan: satirlar.append((olay, alan)))
+    _client().post(yol, json=govde)
+    retler = [a for o, a in satirlar if o == "hafiza_yazma_red"]
+    assert len(retler) == 1, f"ret izi {len(retler)} kez atıldı: {satirlar}"
+    assert retler[0]["sinif"] == sinif, retler[0]
+
+
+def test_ret_izi_HAM_DEGER_tasimaz(monkeypatch, tmp_path, sandbox_state):
+    """SEL VE SIZINTI RİSKİ: ret dalı kimliksiz değil ama yine de istemci-tetiklidir. Deftere
+    ham dize yazmak, bir sondacıya kanıt defterine SINIRSIZ metin yazdırma imkânı verirdi
+    (`/api/logout`un v54'te beyan edilmiş gerekçesinin aynısı). Sınıf + tip + uzunluk yeter."""
+    _yazma(monkeypatch, tmp_path)
+    satirlar: list = []
+    monkeypatch.setattr(api.obs, "log", lambda olay, **alan: satirlar.append((olay, alan)))
+    zehir = "../../etc/passwd-COK-OZEL-DIZGE"
+    _client().post(_islem("iptal"), json={"bank": "B", "id": zehir})
+    _client().post(_islem("SONDA-EYLEMI-COK-OZEL"), json={"bank": "B", "id": "o1"})
+    metin = repr([a for o, a in satirlar if o == "hafiza_yazma_red"])
+    assert zehir not in metin and "SONDA-EYLEMI" not in metin, f"ret izi ham değer taşıdı: {metin}"
+    assert "uzunluk" in metin and "sinif" in metin, metin
+
+
+def test_ret_izi_tanimayan_eylemde_eylem_alanini_UYDURMAZ(monkeypatch, tmp_path, sandbox_state):
+    """`eylem` KAPALI SÖZLÜĞÜN anahtarıdır. Tanınmayan bir eylemde o alan `None` olmalı —
+    istemcinin verdiği dizgeyi oraya yazmak, ham değeri kapı arkasından deftere sokardı."""
+    _yazma(monkeypatch, tmp_path)
+    satirlar: list = []
+    monkeypatch.setattr(api.obs, "log", lambda olay, **alan: satirlar.append((olay, alan)))
+    _client().post(_islem("yok"), json={"bank": "B", "id": "o1"})
+    ret = [a for o, a in satirlar if o == "hafiza_yazma_red"][0]
+    assert ret["eylem"] is None and ret["sinif"] == "eylem_taninmiyor", ret
+    _client().post(_islem("sil"), json={"bank": "B", "id": "../x"})
+    ret2 = [a for o, a in satirlar if o == "hafiza_yazma_red"][1]
+    assert ret2["eylem"] == "sil", ret2       # tanınan eylem YAZILIR: sözlükten gelir, hamdan değil
+
+
+# ------------------------------------------------------------------- L-K. `ok` SÖZLEŞMESİ (M-2)
+
+def test_ok_cevap_cozuldu_VE_2xx_demektir(monkeypatch, tmp_path, sandbox_state):
+    """İNCELEMENİN M-2'Sİ: `ok` iki gerçeği birleştiriyordu. Upstream yazmayı YAPIP çözülemez bir
+    gövde döndürürse pano `ok:false` görür ve operatör TEKRAR basar — `sil`de bu ikinci bir
+    geri-alınamaz çağrıdır. Ayrım UCUZ çünkü `http` zaten ölçülüyor: `ok:false` + `http:200`
+    "çağrı gitti, cevabı çözemedim" demektir ve UI bunu "olmadı" diye çizemez."""
+    casus = _yazma(monkeypatch, tmp_path, **{"/banks/B/operations/o1": b"{bu json degil"})
+    casus.ariza_http = 200
+    g = _client().post(_islem("iptal"), json={"bank": "B", "id": "o1"}).json()
+    assert g["ok"] is False and _dolu(g["neden"]), g
+    assert g["http"] == 200, f"çağrının GİTTİĞİ bilgisi kayboldu: {g}"
+
+
+def test_ok_2xx_DISINDA_dogru_olamaz(monkeypatch, tmp_path, sandbox_state):
+    """Sözleşmenin ÖTEKİ yarısı: gövde çözülse bile 2xx olmayan bir cevap başarı değildir."""
+    casus = _yazma(monkeypatch, tmp_path)
+    casus.basari_http = 302
+    g = _client().post(_islem("iptal"), json={"bank": "B", "id": "o1"}).json()
+    assert g["ok"] is False and g["http"] == 302, g
+
+
+# --------------------------------------------------- L-L. KONSOLİDASYON SÖZLÜĞÜ (R30-ek)
+
+def test_konsolidasyon_eylem_sozlugu_olculen_upstreamle_ayrismaz():
+    olculen = {eylem: (fiil, parca.split("/banks/B", 1)[1], beyaz)
+               for eylem, fiil, parca, beyaz in KONSOLIDASYON_EYLEMLERI}
+    kodun = {eylem: (fiil, kuyruk, beyaz)
+             for eylem, (fiil, kuyruk, beyaz) in api._HAFIZA_KONSOLIDASYON_EYLEMLERI.items()}
+    assert kodun == olculen, f"konsolidasyon sözlüğü ölçümle ayrıştı: {kodun} ≠ {olculen}"
+
+
+def test_kurtar_yolu_AYNEN_calisir(monkeypatch, tmp_path, sandbox_state):
+    """R30-ek'in KOŞULU: `{eylem}` desenine geçiş, 11-B'nin yazacağı `/konsolidasyon/kurtar`
+    yolunu KIRMAMALI. Yol değişikliğinin maliyeti bugün sıfır çünkü tüketen istemci yok — ama
+    yolun kendisi sözleşmedir ve burada kilitlenir."""
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post("/api/hindsight/konsolidasyon/kurtar", json={"bank": "B"})
+    assert r.status_code == 200, r.text
+    assert r.json()["govde"] == KURTAR_ORNEK, r.json()
+    assert casus.cagri("/consolidation/recover")["fiil"] == "POST"
+
+
+@pytest.mark.parametrize("eylem,fiil,parca,beyaz", KONSOLIDASYON_EYLEMLERI)
+def test_konsolidasyon_dogru_fiil_ve_yola_gider(monkeypatch, tmp_path, sandbox_state,
+                                                eylem, fiil, parca, beyaz):
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(_konsolidasyon(eylem), json={"bank": "B"})
+    assert r.status_code == 200, r.text
+    cagri = casus.cagri(parca)
+    assert cagri["fiil"] == fiil and cagri["url"].endswith(parca), cagri
+    assert r.json()["govde"] == _YAZMA_GOVDELER[parca], r.json()
+
+
+@pytest.mark.parametrize("eylem", ["yok", "recover", "consolidate", "KURTAR", "../sil"])
+def test_konsolidasyon_taninmayan_eylem_upstreame_gitmez(monkeypatch, tmp_path, sandbox_state,
+                                                         eylem):
+    casus = _yazma(monkeypatch, tmp_path)
+    r = _client().post(_konsolidasyon(eylem), json={"bank": "B"})
+    assert r.status_code in (400, 404), f"{eylem!r} → {r.status_code}"
+    assert casus.cagrilar == [], f"tanınmayan eylem upstream'e gitti: {casus.url_ler()}"
+
+
+def test_tetikle_beyaz_listesi_DOLU_olculdu(monkeypatch, tmp_path, sandbox_state):
+    """DÖRDÜN BOŞLUĞU BEŞİNCİSİ İÇİN KANIT DEĞİLDİ (inceleme kalemi, ölçüldü): `/consolidate`in
+    `requestBody`si VAR — `ConsolidationRequest`, tek alan `observation_scopes` (nullable
+    array-of-array-of-string). Beyaz liste bu kez DOLU ve KAPALI: şemada olmayan hiçbir alan
+    geçmez. Şeklin KENDİSİ upstream'e bırakılır (422 → `neden`); beyaz liste güvenlik sınırıdır,
+    şema doğrulayıcısı değil — uydurulmuş bir doğrulama, ölçülmemiş bir kısıtı ölçülmüş gibi
+    gösterirdi."""
+    casus = _yazma(monkeypatch, tmp_path)
+    _client().post(TETIKLE, json={"bank": "B", "observation_scopes": [["a", "b"]],
+                                  "force": True, "id": "o1", "limit": 9})
+    coz = json.loads(casus.cagri("/banks/B/consolidate")["govde"].decode())
+    assert coz == {"observation_scopes": [["a", "b"]]}, coz
+
+
+def test_tetikle_istemci_sormadikca_govde_HIC_gitmez(monkeypatch, tmp_path, sandbox_state):
+    """`recall`ın `max_tokens` dersi (düzeltme turu 1, M-7) burada da geçerli: upstream'in
+    `requestBody`si ZORUNLU DEĞİL ve CP de gövdesiz çağırıyor (`lib/api.ts::triggerConsolidation`).
+    Boş bir `{}` göndermek, upstream'in kendi varsayılanını sessizce EZEBİLİRDİ."""
+    casus = _yazma(monkeypatch, tmp_path)
+    _client().post(TETIKLE, json={"bank": "B"})
+    assert casus.cagri("/banks/B/consolidate")["govde"] is None, "istemci sormadan gövde gitti"
+
+
+def test_kurtar_hala_govdesiz_gider(monkeypatch, tmp_path, sandbox_state):
+    """`tetikle` gövde alıyor diye `kurtar` da almaya BAŞLAMAMALI — sözlükteki beyaz liste
+    eylem BAŞINA ölçüldü."""
+    casus = _yazma(monkeypatch, tmp_path)
+    _client().post(KURTAR, json={"bank": "B", "observation_scopes": [["a"]]})
+    assert casus.cagri("/consolidation/recover")["govde"] is None
+
+
+def test_tetikle_govde_dali_json_baslikli_gider(monkeypatch, tmp_path, sandbox_state):
+    """M-3 KAPANDI: `_hafiza_yaz`ın `govde` dalı ölü ve çivisizdi; `tetikle` onun İLK kullanıcısı.
+    Dal `Content-Type` politikası taşıyor ve o politika artık ölçülü."""
+    casus = _yazma(monkeypatch, tmp_path)
+    _client().post(TETIKLE, json={"bank": "B", "observation_scopes": [["a"]]})
+    basliklar = casus.cagri("/banks/B/consolidate")["basliklar"]
+    assert basliklar.get("Content-Type") == "application/json", basliklar
+    assert basliklar.get("Authorization") == f"Bearer {SAHTE_ANAHTAR}", basliklar
