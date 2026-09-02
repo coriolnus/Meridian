@@ -146,6 +146,27 @@ rotalar:
             override:
               endpoint: https://openrouter.ai/api/v1/chat/completions
 
+  - id: llm-models
+    # Flip köprüsü (2026-09-02, sabah penceresi): nous sağlık sondası GET {base}/models çağırır
+    # (hermes._nous_headers iki yüzeyin ikisinde de — TSK-089 istemci turu) ve base kapıya
+    # flip'lenince bu rota olmadan sonda 404'e düşer, sağlık yanlış KIRMIZI olur (sabah paketi
+    # B-ek uyarısı). Geçiş: OpenRouter /api/v1/models — herkese açık katalog ucu, auth İSTEMEZ;
+    # istemci başlıkları yine temizlenir (llm-danisma canary-③ gerekçesi). Auth gerektirdiği
+    # ölçülürse $env://OPENROUTER_AUTH başlığı eklenir — önden eklenmez (YAGNI + sır yüzeyi).
+    uri: /llm/v1/models
+    plugins:
+      prometheus: {}
+      proxy-rewrite:
+        uri: /api/v1/models
+        host: openrouter.ai
+        headers:
+          remove: ["Authorization", "X-Forwarded-For", "X-Real-IP"]
+    upstream:
+      type: roundrobin
+      scheme: https
+      nodes:
+        "openrouter.ai:443": 1
+
 # --- Faz 3-4 kimlikleri (2026-09-01 öne çekme) ------------------------------------------------
 # Sır YOK: değerler $env:// ile konteyner ortamından (/opt/apisix/.env-apisix) çözülür.
 # Bot anahtarları key-auth (makine istemcisi, apikey başlığı); pano kimliği uygulamanın kendi
