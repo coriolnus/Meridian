@@ -42,12 +42,18 @@ polkit.addRule(function(action, subject) {
         }
     }
     if (action.id == "org.freedesktop.systemd1.manage-unit-files") {
-        var verb = action.lookup("verb");
-        if (verb == "enable" || verb == "disable") {
-            polkit.log("meridian-birim-anahtari: manage-unit-files verb=" + verb +
-                       " unit=" + action.lookup("unit") + " -> YES");
-            return polkit.Result.YES;
-        }
+        // FİİL KONTROLÜ DE YOK — ölçüldü (vaka 2026-09-02, ikinci tur): bu eylemde polkit'e
+        // NE unit NE verb ayrıntısı iniyor (pkcheck detaysız sorgusu da challenge aldı;
+        // verb=="enable|disable" şartlı ilk düzeltme de aynı "Interactive authentication
+        // required" ile düştü). Eşleşme eylem kimliğiyledir. BEDEL BÜYÜDÜ ve BEYANLI:
+        // ubuntu'ya TÜM unit-file fiilleri açılır (mask/link/preset dahil). Birim-düzeyi
+        // darlık API beyaz listesinde (v368), etkileşimli ubuntu zaten parolasız sudo;
+        // birim dosyası YAZMAK yine root ister. polkit.log bu polkitd yapısında (v124,
+        // duktape) SESSİZCE KAYBOLUYOR — ölçüldü: stop'un YES'i dahil hiçbir iz journal'a
+        // düşmedi; satırlar gelecekteki bir motorda dirilir diye kalıyor, DENETİM İZİ
+        // OLARAK GÜVENİLMEZ (gerçek iz: api.py birim_istek obs kaydı).
+        polkit.log("meridian-birim-anahtari: manage-unit-files -> YES");
+        return polkit.Result.YES;
     }
     if (action.id == "org.freedesktop.systemd1.reload-daemon") {
         return polkit.Result.YES;
