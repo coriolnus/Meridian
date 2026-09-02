@@ -17,7 +17,9 @@ ExecStart=/opt/hindsight/venv/bin/hindsight-api --host 127.0.0.1 --port 8888
 Restart=on-failure
 RestartSec=5
 # kaynak çiti — A1'i koru (24 GB sonrası revizyon: 3G->8G; şişerse Meridian değil Hindsight ölür)
-MemoryMax=8G
+MemoryMax=12G
+# 2026-09-02 gece: 14:30 UTC cgroup OOM (anon-rss 8,37 GB > 8G) dev belge retain'inde — makine 23 GB,
+# kalan tüketiciler ~3 GB → tavan 12G (ingest 00:10Z öncesi; Rol-1, operatör gece yetkisi).
 CPUQuota=200%
 # sertleştirme
 NoNewPrivileges=true
