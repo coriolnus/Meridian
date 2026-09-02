@@ -530,6 +530,55 @@ export function ZarfKapisi<G>({
 }
 
 /* ---------------------------------------------------------------------------
+   KIRPMA ZİNCİRİ — "çizilen / vekilin döndürdüğü / bankadaki toplam"
+   ----------------------------------------------------------------------------
+   ÜÇ SAYI, ÜÇÜ DE ADIYLA. Tek bir "N çizildi" rozetinin sorunu doğru olmasına
+   rağmen EKSİK olmasıydı: okuyucu N'yi bankanın tamamı sanıyordu. Kırpma üç
+   halkalıdır — bankadaki TOPLAM → vekilin döndürdüğü DİLİM (vekil limiti kendi
+   tavanına indiriyor) → ekranın çizdiği kadarı. Eksik olan sayı UYDURULMAZ:
+   toplam gelmezse yerinde gerekçe durur.
+
+   BURADA YAŞIYOR ÇÜNKÜ İKİ GÖRÜNÜM OKUYOR (bellek grafı + varlık grafı) ve iki
+   kopya sessizce ayrışırdı. Grafın kendisiyle (`takimyildizi.tsx`) birlikte
+   yaşasaydı, graf çizmeyen bir sayfa aynı zinciri yeniden yazmak zorunda kalırdı.
+   --------------------------------------------------------------------------- */
+export function KirpmaZinciri({
+  ne,
+  cizilen,
+  vekil,
+  tavan,
+  toplam,
+}: {
+  /** Sayılan şeyin adı — "kayıt", "isim", "bağ". */
+  readonly ne: string;
+  readonly cizilen: number;
+  readonly vekil: number;
+  /** Sunucunun uyguladığı tavan; `null` = bildirilmedi. */
+  readonly tavan: number | null;
+  /** Bankadaki toplam; `null` = alan gelmedi. */
+  readonly toplam: number | null;
+}) {
+  const n = (x: number) => x.toLocaleString("tr-TR");
+  return (
+    <p className="text-muted-foreground text-xs tabular-nums">
+      <span className="font-medium text-foreground">{n(cizilen)}</span> {ne} çizildi
+      {" · "}vekil {n(vekil)} döndürdü
+      {tavan === null ? " (tavan bildirilmedi)" : ` (tavan ${n(tavan)})`}
+      {" · "}bankada toplam{" "}
+      {toplam === null ? (
+        <Olculemedi
+          neden="— (alan gelmedi)"
+          teknik="üst servisin toplam sayacı bu yanıtta yok — kaçının dışarıda kaldığı ölçülemiyor"
+          kisa
+        />
+      ) : (
+        <span className="font-medium text-foreground">{n(toplam)}</span>
+      )}
+    </p>
+  );
+}
+
+/* ---------------------------------------------------------------------------
    BÖLME — bir görünümün içindeki adlandırılmış bölüm
    Üst yüzey bu bölümleri SEKME olarak ayırıyor; biz sekmeyi de kullanıyoruz ama
    sekmenin içindeki her blok yine kendi başlığını ve — varsa — kapsam cümlesini

@@ -10,14 +10,24 @@
      · banka sayaç kartı      özet ucunun sayaç bacağı
      · ingest zaman serisi    özet ucunun seri bacağı
 
+     · bellek takımyıldızı    kendi ucundan, kendi kartında (aşağıda)
+
      ÇİZİLMEYEN               nedeni
-     · bellek takımyıldızı    graf verisi ayrı bir uçtan gelir ve Varlıklar
-                              görünümüne aittir (bu turun kapsamı dışında)
      · bilgi sayfası ağacı    Bilgi Tabanı görünümüne ait, aynı tur
      · son eklenen belgeler   Belgeler görünümüne ait, aynı tur
-   Üçü de kenar çubuğunda KENDİ duraklarıyla duruyor; ana sayfaya kısayol olarak
+   İkisi de kenar çubuğunda KENDİ duraklarıyla duruyor; ana sayfaya kısayol olarak
    kopyalanmaları sonraki turun işi. Boş bir kutu çizip "yakında" yazmak yerine
    hiç çizmemek, ekranı olduğundan dolu göstermemek demek.
+
+   ---------------------------------------------------------------------------
+   TAKIMYILDIZ AYRI OKUNUR — VE BU BİR BEDEL KARARIDIR
+   ---------------------------------------------------------------------------
+   Üst yüzeyin ana sayfası graf verisini KENDİ isteğiyle, sayaçlardan bağımsız
+   çekiyor ve gerekçesini de yazıyor: kenar sayısı düğüm sayısıyla süper-doğrusal
+   büyüyor (yaklaşık bin düğüm → yetmiş bin kenar), bu yüzden ana sayfada düğüm
+   TAVANI var ve okuma panoyu bekletmiyor. Burada da aynı: takımyıldız kendi
+   ucunu kendi kartında okur, sayaçlar onu beklemez, o da sayaçları beklemez.
+   Tavan da aynı sayıdır (üst yüzeyin ana sayfa çağrısı 200 düğüm).
 
    ---------------------------------------------------------------------------
    "SONRAKİ TAZELEME" NEDEN BİR SAYI DEĞİL, BİR GEREKÇE
@@ -40,7 +50,7 @@
    HTTP çağrısı değil, ucun içindeki bir ek bacak — ve o bacak zaten kullanıcı
    tetiğine bağlı, yoklamaya değil.
    ============================================================================ */
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
@@ -48,13 +58,30 @@ import { Button } from "@/components/ui/button";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
-import type { Bolum } from "../../alanlar";
+import { yuzeyYolu, type Bolum } from "../../alanlar";
+import { useRouter } from "../../rota";
 import { useApi } from "../../veri";
 import { BolumKart, Deger, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcalar";
 import { HamSatirlar, ISO_BENZERI, damga, metin, sayi, sozluk } from "./parcalar";
-import type { BankaSayaclari, HafizaOzeti, SeriKovasi, ZamanSerisi } from "./uctipleri";
+import { GrafPaneli } from "./takimyildizi";
+import type {
+  BankaSayaclari,
+  BellekGrafi,
+  HafizaOzeti,
+  HafizaZarfi,
+  SeriKovasi,
+  ZamanSerisi,
+} from "./uctipleri";
 
 const UC_OZET = "/api/hindsight/ozet";
+const UC_BELLEK_GRAF = "/api/hindsight/bellek-graf";
+
+/* TAKIMYILDIZ DÜĞÜM TAVANI — üst yüzeyin ana sayfa çağrısıyla AYNI sayı (200).
+   Vekilin kendi tavanı da 200 (`api.py::HAFIZA_LISTE_TAVANI`), yani buraya daha
+   büyük bir sayı yazmak sessizce 200'e inerdi ve ekran istediğinden başka bir
+   şey aldığını bilmezdi. İki tavan bugün eşit; ayrıştıkları gün istek düşer ve
+   kırpma zinciri farkı SAYIYLA gösterir. */
+const GRAF_TAVANI = 200;
 
 /* PENCERELER VE ZAMAN ALANLARI SUNUCUNUN SÖZLÜĞÜNDEN GELİR, buradan değil:
    `api.py::_HAFIZA_SERI_PENCERESI` ve `::_HAFIZA_ZAMAN_ALANI` tanımadıkları
@@ -372,7 +399,16 @@ function Seri({
 
 /** SERİ ANAHTARLARI — üst yüzeyin tıklanabilir efsanesinin karşılığı.
  *  Toplam yanlarında durur çünkü toplam SEÇİME bağlıdır: anahtarı kapatmak
- *  sayıyı da değiştirir ve ikisi ayrı yerlerde dursaydı bağ görünmezdi. */
+ *  sayıyı da değiştirir ve ikisi ayrı yerlerde dursaydı bağ görünmezdi.
+ *
+ *  RENK NOKTASI DOĞRUDAN SERİ TANIMINDAN OKUNUR — VE İLK YAZIM ÖYLE DEĞİLDİ
+ *  (T6 dış gözlemi, ölçüldü 2026-09-02). Noktalar grafiğin seri değişkenlerini
+ *  kullanıyordu; o değişkenler grafik KABININ içinde tanımlı (shadcn grafik
+ *  sarmalayıcısı onları `[data-chart=…]` kapsamında yazıyor) ve bu şerit kabın
+ *  DIŞINDA duruyor. Sonuç sessizdi: geçersiz bir arka plan değeri, yani RENKSİZ
+ *  noktalar — efsane vardı, rengi yoktu. Seri tanımı zaten tek kaynak (grafiğin
+ *  kendi değişkenleri de ondan türetiliyor), o yüzden buradan okumak kopya
+ *  üretmez. */
 function SeriAnahtarlari({
   acik,
   cevir,
@@ -398,7 +434,7 @@ function SeriAnahtarlari({
           >
             <span
               className="size-2 rounded-[2px]"
-              style={{ backgroundColor: `var(--color-${k})`, opacity: acik[k] ? 1 : 0.3 }}
+              style={{ backgroundColor: SERI_YAPISI[k].color, opacity: acik[k] ? 1 : 0.3 }}
               aria-hidden
             />
             {SERI_YAPISI[k].label}
@@ -412,6 +448,19 @@ function SeriAnahtarlari({
   );
 }
 
+/* ---------------------------------------------------------------------------
+   BELLEK TAKIMYILDIZI — üst yüzeyin ana sayfa görselinin karşılığı
+   ----------------------------------------------------------------------------
+   ÜÇ KURAL ÜST YÜZEYİN ANA SAYFASINDAN ÖLÇÜLDÜ:
+     · KÜMELEME KAYIT TÜRÜNE GÖRE. Üst yüzey kümeyi düğümün kendi tür alanından
+       kuruyor; bizim ölçtüğümüz gövdede o alan YOK (A1, 2026-09-02) ve tür tablo
+       satırlarında yaşıyor. Küme bu yüzden kimlik eşlemesiyle kurulur — ölçülmüş
+       bir sapmadır, gizlenmiyor: eşleşmeyen düğüm kümesiz kalır ve KAÇI olduğu
+       ekranda sayıyla yazar.
+     · NOKTA BOYUTU bağ ağırlıklarının toplamından, karekök ölçekli.
+     · TIKLAMA KAYIT LİSTESİNE GÖTÜRÜR. Üst yüzeyde de böyle: ana sayfadaki graf
+       bir gezinme yüzeyidir, kayıt detayı Bellekler görünümünün işidir.
+   --------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------- */
 
 export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readonly kayit: Bolum }) {
@@ -433,6 +482,18 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
   const yol = bank === null ? null : `${UC_OZET}?bank=${encodeURIComponent(bank)}&period=${pencere}&time_field=${zamanAlani}`;
   const ozet = useApi<HafizaOzeti>(yol);
 
+  /* AYRI OKUMA, AYRI DURUM (dosya başlığındaki bedel şerhi): graf ucu ağırdır ve
+     pencere/zaman alanı değişimlerinden ETKİLENMEZ — özet yoluna eklenseydi her
+     pencere düğmesine basışta yeniden çekilirdi. */
+  const grafYolu = bank === null ? null : `${UC_BELLEK_GRAF}?bank=${encodeURIComponent(bank)}&limit=${GRAF_TAVANI}`;
+  const graf = useApi<HafizaZarfi<BellekGrafi>>(grafYolu);
+
+  const { push: adreseGit } = useRouter();
+  /* Üst yüzeyde de böyle: ana sayfadaki graf bir GEZİNME yüzeyidir, kayıt detayı
+     Bellekler görünümünün işidir. Düğüm bilgisi kullanılmıyor ve kullanılmadığı
+     yazılı — adres kayda değil GÖRÜNÜME gidiyor. */
+  const listeyeGit = useCallback(() => adreseGit(yuzeyYolu("memory", "hafiza-bellekler")), [adreseGit]);
+
   if (bank === null) {
     return (
       <BolumKart kimlik="hafiza-anasayfa" baslik={kayit.baslik} soru={kayit.soru} ikon={kayit.ikon}>
@@ -443,6 +504,26 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
 
   return (
     <>
+      {/* SIRA ÜST YÜZEYDEN: takımyıldız ana sayfanın İLK ve en büyük bloğudur,
+          sayaçlar onun ALTINDA durur. Sayaçları öne almak, "bu bankada ne var"
+          sorusunu bir tablo olarak cevaplamak olurdu; üst yüzey onu bir HARİTA
+          olarak cevaplıyor ve operatörün beğendiği şey tam olarak bu. */}
+      <BolumKart
+        kimlik="hafiza-takimyildizi"
+        baslik="Bellek takımyıldızı"
+        soru="Bu bankadaki kayıtlar birbirine nasıl bağlanıyor?"
+        ikon={kayit.ikon}
+      >
+        <UcKapisi durum={graf} yol={UC_BELLEK_GRAF}>
+          {/* PANEL PAYLAŞIMLI (inceleme I-1/I-2): kırpma zinciri, rozetler ve
+              "tanınmayan biçim" cümlesi Bellekler'deki tam grafla AYNI yerden
+              gelir. İki ekran yalnız ad, yükseklik ve tıklamada ayrışır. */}
+          {(z) => (
+            <GrafPaneli zarf={z} ad="Bellek takımyıldızı" yukseklik={464} dugumTiklandi={listeyeGit} />
+          )}
+        </UcKapisi>
+      </BolumKart>
+
       <BolumKart kimlik="hafiza-anasayfa" baslik={kayit.baslik} soru={kayit.soru} ikon={kayit.ikon}>
         <UcKapisi durum={ozet} yol={UC_OZET}>
           {(o) => {

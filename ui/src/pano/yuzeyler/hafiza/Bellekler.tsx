@@ -36,8 +36,22 @@
    ARAMA "ENTER"A BASINCA GİDER, HER TUŞA DEĞİL: her harfte bir üst servis
    sorgusu açmak hem gereksiz yük hem de yarım yazılmış bir kelimenin boş
    sonucunu "kayıt yok" diye gösterirdi.
+
+   ---------------------------------------------------------------------------
+   "TAM GRAF" KİPİ — ÜST YÜZEYDE YOK, VE BU ÖLÇÜLDÜ
+   ---------------------------------------------------------------------------
+   Üst yüzeyin ana sayfası kendi graf bloğunun yanına şunu yazıyor: "tam graf
+   Bellekler görünümünde." O CÜMLE BAYAT. Ölçüldü (üst yüzey kaynağı, 1.461
+   satırlık `data-view` dosyası, aynı sürüm): o dosyada ne takımyıldız çağrısı
+   ne de bir graf bloğu var — takımyıldız yalnız İKİ yerde kullanılıyor, ana
+   sayfa ve varlıklar. Yani bu kip üst yüzeyin BİR EKSİĞİNİ kapatıyor, birebir
+   bir taşıma DEĞİL; sıfattan kaçınmak için burada adıyla yazıyor.
+
+   İKİ SÜZGEÇ FARKI VAR VE İKİSİ DE EKRANDA YAZILI: graf ucu kayıt DURUMUNU
+   (geçerli / geçersiz kılınmış) süzmüyor — o parametre bu uçta yok — ve
+   sayfalama yok, yalnız bir düğüm tavanı var.
    ============================================================================ */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { History } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -49,11 +63,44 @@ import { cn } from "@/lib/utils";
 import type { Bolum } from "../../alanlar";
 import { useApi, type Durum } from "../../veri";
 import { BolumKart, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcalar";
-import { Cipler, Faz2Dugme, Faz2Grup, HamSatirlar, Sayfalama, SuzgecSeridi, damga, listeye, metin, sozluk } from "./parcalar";
-import type { HafizaDetayi, HafizaKaydi, HafizaListesi } from "./uctipleri";
+import {
+  Cipler,
+  Faz2Dugme,
+  Faz2Grup,
+  HamSatirlar,
+  Sayfalama,
+  Secim,
+  SuzgecSeridi,
+  damga,
+  listeye,
+  metin,
+  secimDegeri,
+  sozluk,
+} from "./parcalar";
+import { GrafPaneli } from "./takimyildizi";
+import type {
+  BellekGrafi,
+  HafizaDetayi,
+  HafizaKaydi,
+  HafizaListesi,
+  HafizaZarfi,
+  TakimyildiziDugumu,
+} from "./uctipleri";
 
 const UC_LISTE = "/api/hindsight/liste";
 const UC_DETAY = "/api/hindsight/detay";
+const UC_GRAF = "/api/hindsight/bellek-graf";
+
+/* DÜĞÜM TAVANI SEÇENEKLERİ — sunucu tavanının ÜSTÜNE ÇIKMAZ. Vekil limiti kendi
+   tavanına (200) kırpıyor, yani 500 yazan bir seçenek düğmeyi çalışır gösterir,
+   ekran 200 düğüm alır ve farkı kimse görmezdi. Kırpma zinciri farkı yine de
+   sayıyla yazar — bu liste onu gereksiz kılmaz, yalnız yalancı bir seçenek
+   sunmaz. */
+const TAVAN_SECENEKLERI = [
+  { deger: "50", etiket: "en çok 50 düğüm" },
+  { deger: "100", etiket: "en çok 100 düğüm" },
+  { deger: "200", etiket: "en çok 200 düğüm" },
+] as const;
 
 /* SAYFA BOYU BİR GÖRÜNÜM KARARIDIR, BİR ÖLÇÜM DEĞİL — ve bu ayrım yazılı durmalı.
    Sunucu tavanı 200 (`api.py::HAFIZA_LISTE_TAVANI`); burada 50 seçildi çünkü tek
@@ -281,6 +328,13 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
   const [esleme, setEsleme] = useState<string>("any");
   const [atlanan, setAtlanan] = useState(0);
   const [acikKayit, setAcikKayit] = useState<string | null>(null);
+  /* AÇILIŞ LİSTE KİPİNDE: bu görünümün üst yüzeydeki karşılığı bir TABLOdur;
+     graf bizim eklediğimiz ikinci bir okuma biçimi (dosya başlığı). */
+  const [kip, setKip] = useState<"liste" | "graf">("liste");
+  /* Graf düğümüne tıklamak, tablodaki satıra tıklamakla AYNI çekmeceyi açar —
+     iki okuma biçimi, tek detay yüzeyi. */
+  const grafDugumu = useCallback((d: TakimyildiziDugumu) => setAcikKayit(d.kimlik), []);
+  const [grafTavani, setGrafTavani] = useState("200");
 
   /* SÜZGEÇ DEĞİŞTİĞİNDE SAYFA BAŞA DÖNER: 4. sayfadayken süzgeci daraltmak, kısa
      bir sonuç kümesinin 4. sayfasını sormak olurdu ve boş bir tablo çizip "bu
@@ -291,7 +345,7 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
   }, [bank, tur, durumSuzgeci, arama, etiketler, esleme]);
 
   const sorgu =
-    bank === null
+    bank === null || kip !== "liste"
       ? null
       : [
           `${UC_LISTE}?bank=${encodeURIComponent(bank)}`,
@@ -305,6 +359,24 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
           .filter(Boolean)
           .join("&");
   const liste = useApi<HafizaListesi>(sorgu);
+
+  /* GRAF UCU AYNI SÜZGEÇLERİ ALIR — DURUM HARİÇ, çünkü o parametre bu uçta YOK
+     (dosya başlığı). Sorgu adı da farklı: liste ucu tür süzgecini `fact_type`,
+     graf ucu `type` diye alıyor; ikisini tek ada indirmek, süzgeci sessizce
+     düşüren bir "aynılık" varsayımı olurdu. */
+  const grafSorgusu =
+    bank === null || kip !== "graf"
+      ? null
+      : [
+          `${UC_GRAF}?bank=${encodeURIComponent(bank)}`,
+          `limit=${encodeURIComponent(grafTavani)}`,
+          tur ? `type=${encodeURIComponent(tur)}` : "",
+          arama ? `q=${encodeURIComponent(arama)}` : "",
+          etiketler ? `tags=${encodeURIComponent(etiketler)}&tags_match=${encodeURIComponent(esleme)}` : "",
+        ]
+          .filter(Boolean)
+          .join("&");
+  const graf = useApi<HafizaZarfi<BellekGrafi>>(grafSorgusu);
 
   const detayYolu =
     bank === null || acikKayit === null
@@ -321,7 +393,36 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
   }
 
   return (
-    <BolumKart kimlik="hafiza-bellekler" baslik={kayit.baslik} soru={kayit.soru} ikon={kayit.ikon}>
+    <BolumKart
+      kimlik="hafiza-bellekler"
+      baslik={kayit.baslik}
+      soru={kayit.soru}
+      ikon={kayit.ikon}
+      aksiyon={
+        <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={kip === "liste" ? "secondary" : "ghost"}
+            className="h-7 px-2 text-xs"
+            aria-pressed={kip === "liste"}
+            onClick={() => setKip("liste")}
+          >
+            Liste
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={kip === "graf" ? "secondary" : "ghost"}
+            className="h-7 px-2 text-xs"
+            aria-pressed={kip === "graf"}
+            onClick={() => setKip("graf")}
+          >
+            Tam graf
+          </Button>
+        </div>
+      }
+    >
       {/* SÜZGEÇ ŞERİDİ — sonuç boş kalsa bile ÇİZİLİR, yoksa listeyi boşaltan bir
           süzgeç geri alınamazdı (üst yüzeyin kendi ölçülmüş dersi). */}
       <div className="flex flex-col gap-3">
@@ -331,17 +432,25 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
               {t.etiket}
             </Button>
           ))}
-          <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-          {DURUMLAR.map((d) => (
-            <Button
-              key={d.deger}
-              variant={d.deger === durumSuzgeci ? "secondary" : "ghost"}
-              size="xs"
-              onClick={() => setDurumSuzgeci(d.deger)}
-            >
-              {d.etiket}
-            </Button>
-          ))}
+          {kip === "liste" ? (
+            <>
+              <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+              {DURUMLAR.map((d) => (
+                <Button
+                  key={d.deger}
+                  variant={d.deger === durumSuzgeci ? "secondary" : "ghost"}
+                  size="xs"
+                  onClick={() => setDurumSuzgeci(d.deger)}
+                >
+                  {d.etiket}
+                </Button>
+              ))}
+            </>
+          ) : (
+            <span className="text-muted-foreground text-[11px]">
+              geçerli / geçersiz ayrımı graf kipinde SÜZÜLMEZ — bu okumada öyle bir seçenek yok
+            </span>
+          )}
         </div>
 
         <SuzgecSeridi
@@ -355,6 +464,31 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
         />
       </div>
 
+      {kip === "graf" ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <p className="max-w-prose text-muted-foreground text-xs">
+              Aynı süzgeçler, tablo yerine bağ haritası. Bir düğüme tıklamak kaydın tamamını yandaki
+              panelde açar. Bu kip üst yüzeyde YOK — orada graf yalnız ana sayfada ve varlıklarda
+              çiziliyor; buraya eklendi çünkü aynı soruyu liste olarak soramadığın hâller var.
+            </p>
+            <Secim
+              etiket="Düğüm tavanı"
+              deger={grafTavani}
+              setDeger={(d) => setGrafTavani(secimDegeri(d))}
+              secenekler={TAVAN_SECENEKLERI}
+              genislik="w-44"
+            />
+          </div>
+          <UcKapisi durum={graf} yol={UC_GRAF}>
+            {(z) => (
+              <GrafPaneli zarf={z} ad="Bellek grafı" yukseklik={620} dugumTiklandi={grafDugumu} />
+            )}
+          </UcKapisi>
+        </div>
+      ) : null}
+
+      {kip === "liste" ? (
       <UcKapisi durum={liste} yol={UC_LISTE}>
         {(l) =>
           l.neden ? (
@@ -444,12 +578,18 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
           )
         }
       </UcKapisi>
+      ) : null}
 
       {/* SAYFALAMA KAPININ İÇİNDE (düzeltme turu 1, inceleme bulgusu M-4): dışarıda
           dururken istek düştüğünde üstte "Okunamadı" uyarısı, altında "0. kayıttan
           sonrası okundu" + Önceki/Sonraki çiziliyordu — yani ölçülmemiş bir sayfa
           konumu ölçülmüş gibi görünüyordu. Görev 1 incelemesinin B-2 bulgusunun
-          küçük kardeşi: kapı, okuduğu şeyin ÜSTÜNDE durmalı. */}
+          küçük kardeşi: kapı, okuduğu şeyin ÜSTÜNDE durmalı.
+
+          GRAF KİPİNDE HİÇ ÇİZİLMEZ: graf ucunda sayfalama YOK (ne atlama ne de
+          sayfa boyu parametresi var), yalnız bir düğüm tavanı var. Sayfalamayı
+          orada da göstermek, olmayan bir gezinmeyi varmış gibi çizerdi. */}
+      {kip === "liste" ? (
       <UcKapisi durum={liste} yol={UC_LISTE} iskelet={<></>}>
         {(l) =>
           l.neden ? null : (
@@ -463,6 +603,7 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
           )
         }
       </UcKapisi>
+      ) : null}
 
       <Sheet
         open={acikKayit !== null}

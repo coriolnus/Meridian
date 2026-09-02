@@ -605,6 +605,15 @@ export interface GrafDugumu extends HamGovde {
     readonly id?: unknown;
     readonly label?: unknown;
     readonly color?: unknown;
+    /* ---- BELLEK GRAFININ DÜĞÜM ALANLARI — A1'de ölçüldü (18:15 UTC eki) ----
+       `graph` ucunun düğümleri `entities/graph`ınkinden ZENGİN geliyor: metin,
+       bağlam, tarih ve varlık listesi düğümün kendisinde de var. KAYIT TÜRÜ
+       BURADA YOK ve bu ölçülmüş bir eksikliktir — tür `table_rows` satırında
+       yaşıyor (aşağıya bkz.). */
+    readonly text?: unknown;
+    readonly context?: unknown;
+    readonly date?: unknown;
+    readonly entities?: unknown;
   };
 }
 
@@ -618,7 +627,85 @@ export interface GrafKenari extends HamGovde {
     readonly entityName?: unknown;
     /** Son birlikte geçiş damgası — CP ısı ölçeğini bundan kuruyor. */
     readonly lastCooccurred?: unknown;
+    /** Kesikli çizgi işareti — CP tür gelmediğinde bundan zamansal bağ türetiyor. */
+    readonly lineStyle?: unknown;
+    readonly color?: unknown;
+    readonly id?: unknown;
   };
+}
+
+/**
+ * BELLEK GRAFININ TABLO SATIRI — düğümün KÜNYESİ.
+ *
+ * Anahtarların TAMAMI A1'de ölçüldü (2026-09-02 19:35 UTC eki). Buradaki tek
+ * kritik alan kayıt türüdür: düğüm gövdesinde YOK, satırda VAR ve kimlikle
+ * eşleşiyor. CP kümeyi düğümün tür alanından kuruyor; bizim ölçtüğümüz gövdede o
+ * alan olmadığı için küme bu eşlemeyle kurulur (ölçülmüş sapma, çizim tarafında
+ * da yazılı).
+ */
+export interface GrafSatiri extends HamGovde {
+  readonly id?: unknown;
+  readonly text?: unknown;
+  readonly context?: unknown;
+  readonly date?: unknown;
+  readonly entities?: unknown;
+  readonly fact_type?: unknown;
+  readonly tags?: unknown;
+  readonly document_id?: unknown;
+  readonly chunk_id?: unknown;
+  readonly occurred_start?: unknown;
+  readonly occurred_end?: unknown;
+  readonly mentioned_at?: unknown;
+  readonly created_at?: unknown;
+  readonly proof_count?: unknown;
+}
+
+/**
+ * BELLEK GRAFI — `api.py::api_hindsight_bellek_graf` zarfı, AYNEN.
+ *
+ * Varlık grafından İKİ farkı var ve ikisi de ölçüldü: (1) tablo satırları,
+ * (2) toplam sayacın adı tek ve `total_units`. Aynı tipi iki uç için kullanmak,
+ * bir uçta olmayan bir alanı öteki uçta varmış gibi okutmak olurdu.
+ */
+export interface BellekGrafi extends HamGovde {
+  readonly nodes?: readonly GrafDugumu[];
+  readonly edges?: readonly GrafKenari[];
+  readonly table_rows?: readonly GrafSatiri[];
+  /** Bankadaki TOPLAM kayıt sayısı (kırpma öncesi). */
+  readonly total_units?: unknown;
+  /** Sunucunun UYGULADIĞI tavan — istemcinin sorduğu değil (vekil kırpar). */
+  readonly limit?: unknown;
+}
+
+/* --------------------------------------------------------------------------
+   ÇİZİLEBİLİR GRAF — telin İKİ biçiminin ORTAK karşılığı
+   ---------------------------------------------------------------------------
+   Tel iki ayrı zarf gönderiyor (bellek grafı ve varlık grafı) ve ikisi de aynı
+   görsele akıyor. Çizim bileşeni HİÇBİRİNİ tanımaz: yalnız bu düz biçimi tanır.
+   Ayrım bilinçli — çizim tel biçimini tanısaydı üçüncü bir graf ucu doğduğu gün
+   çizim kodu da dallanırdı, ve iki dal sessizce ayrışırdı.
+   -------------------------------------------------------------------------- */
+
+export interface TakimyildiziDugumu {
+  readonly kimlik: string;
+  readonly etiket: string;
+  /** Küme anahtarı — `null` = bu düğümün kümesi ÖLÇÜLEMEDİ, halkada kalır. */
+  readonly kume: string | null;
+  /** Üzerine gelince açılan künyenin kaynağı — `null` = künye yok. */
+  readonly kunye: HamGovde | null;
+}
+
+export interface TakimyildiziBagi {
+  readonly kaynak: string;
+  readonly hedef: string;
+  /** Bağ türü — `null` = bildirilmedi; çizim onu anlamsal sayar (CP kuralı). */
+  readonly tur: string | null;
+  readonly agirlik: number | null;
+}
+
+export interface TakimyildiziVerisi {
+  readonly dugumler: readonly TakimyildiziDugumu[];
+  readonly baglar: readonly TakimyildiziBagi[];
 }
 
 export interface VarlikGrafi extends HamGovde {
@@ -629,8 +716,9 @@ export interface VarlikGrafi extends HamGovde {
      ÜÇÜ DE OKUNMAK ZORUNDA, çünkü bu uç SUNUCUDA kırpılıyor: vekil limiti kendi
      tavanına (200) indiriyor (`api.py::_hafiza_sayi` + `HAFIZA_LISTE_TAVANI`) ve
      canlı bankada isim sayısı bunun kat kat üstünde. Yalnız dönen diziyi sayan bir
-     ekran, eksik bir grafiği TAM gösterirdi — `graf.tsx` başlığının kendi yasağı.
-     Sayılar telde duruyordu; okunmadıkları sürece yokluk ekranın körlüğüydü. */
+     ekran, eksik bir grafiği TAM gösterirdi — kırpma zincirinin (`parcalar.tsx::
+     KirpmaZinciri`) var olma sebebi budur. Sayılar telde duruyordu; okunmadıkları
+     sürece yokluk ekranın körlüğüydü. */
   /** Bankadaki TOPLAM isim sayısı (kırpma öncesi). */
   readonly total_entities?: unknown;
   /** Bankadaki TOPLAM bağ sayısı (kırpma öncesi). */

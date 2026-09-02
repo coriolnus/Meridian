@@ -21,12 +21,25 @@
    Üst yüzeyde bir isme tıklamak İKİ okuma açıyor: tek-varlık ucu (`/entities/
    {id}`) ve o ismin geçtiği kayıtların ters araması (`memories/list` üzerinde
    varlık süzgeci). VEKİLDE İKİSİNİN DE KARŞILIĞI YOK (`api.py`nin hafıza
-   bloğunda ne tek-varlık ucu ne de listede varlık süzgeci var). Bu yüzden bir
-   isme tıklamak burada kaydı DEĞİL, o ismin BAĞLARINI açar — ve eksik olanın
-   adı ekranda yazılı durur. "Tıkladım, bir şey olmadı" ile "bu pano onu
-   okumuyor" iki ayrı cümledir.
+   bloğunda ne tek-varlık ucu ne de listede varlık süzgeci var). Bu yüzden graf
+   TIKLANABİLİR DEĞİL: bir düğüme tıklamanın açacağı ekran bu panoda mevcut
+   olmadığı için imleç de değişmiyor. "Tıkladım, bir şey olmadı" ile "bu pano onu
+   okumuyor" iki ayrı cümledir; ikincisi hem aşağıda yazılı, hem de imlecin
+   kendisi tarafından söyleniyor.
+
+   ---------------------------------------------------------------------------
+   ÇEMBER YERLEŞİMİ EMEKLİ (operatör görsel turu, 2026-09-02)
+   ---------------------------------------------------------------------------
+   Bu görünümün ilk grafı kütüphanesiz bir SVG çemberdi: düğümler ağırlığa göre
+   sıralı, yerleşim anlamsız, yakınlaştırma yok. Operatör üst yüzeyle kıyasladı
+   ("orijinaldeki bayağı başarılı, bizimkinin alakası yok") ve karar verildi:
+   varlık grafı da bellek grafıyla AYNI takımyıldız görseline geçer. Kazanç:
+   yakınlaştırma/kaydırma, komşu vurgusu, üst yüzeyin kendi ısı ve boyut
+   kuralları. Bedel ve ödendiği yer: seçili düğümün bağ LİSTESİ kayboldu —
+   yerine üzerine gelince açılan künye geldi; bağların tek tek okunması gereken
+   bir soru için liste kipi hâlâ duruyor.
    ============================================================================ */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,10 +48,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { Bolum } from "../../alanlar";
 import { useApi } from "../../veri";
 import { BolumKart, Kapi as UcKapisi, Olculemedi } from "../sistem/parcalar";
-import { Graf } from "./graf";
+import { KimliksizRozeti, Takimyildizi, TaninmayanBicim, varlikGrafiniCoz } from "./takimyildizi";
 
-import { Bolme, Sayfalama, Secim, ZarfKapisi, damga, metin, sayi } from "./parcalar";
-import type { HafizaZarfi, SayfaliGovde, VarlikGrafi, VarlikKaydi } from "./uctipleri";
+import { Bolme, KirpmaZinciri, Sayfalama, Secim, ZarfKapisi, damga, damgaMs, metin, sayi } from "./parcalar";
+import type { HafizaZarfi, SayfaliGovde, TakimyildiziDugumu, VarlikGrafi, VarlikKaydi } from "./uctipleri";
 
 const UC_VARLIKLAR = "/api/hindsight/varliklar";
 const UC_GRAF = "/api/hindsight/varlik-graf";
@@ -66,6 +79,99 @@ const ESIK_SECENEKLERI = [
 ] as const;
 
 type Kip = "iliskiler" | "liste";
+
+/* ---------------------------------------------------------------------------
+   BAĞ HARİTASI — takımyıldız, üst yüzeyin varlık görünümünün KENDİ ayarlarıyla
+   ----------------------------------------------------------------------------
+   Üç kural üst yüzeyin `entities-view` dosyasından ölçüldü ve birebir taşındı:
+     · NOKTA BOYUTU birlikte geçiş ağırlıklarının toplamından, karekök ölçekli
+       (3 piksel yalnız kalan isim → 14 piksel merkez isim). Karekök uzun kuyruğu
+       düzleştirir: tek bir merkez ötekileri görünmez kılmaz.
+     · RENK TAZELİK: düğümün EN SON birlikte geçişi. Boyut "ne kadar", renk "ne
+       zaman" der — iki eksen birbirine karışmaz.
+     · ETİKETLER SIK: varlık adları kısadır; kayıt metinlerine göre ayarlanmış
+       seyrek yerleşim burada etiketlerin çoğunu gizlerdi.
+   Tazelik damgası HİÇ gelmezse ısı ekseni ÇİZİLMEZ (üst yüzey de öyle yapıyor):
+   bir ölçek çizip uçlarını yazamamak, rengi ölçüm gibi gösterirdi.
+   --------------------------------------------------------------------------- */
+function BagHaritasi({ govde }: { readonly govde: VarlikGrafi }) {
+  const cozum = useMemo(() => varlikGrafiniCoz(govde, damgaMs), [govde]);
+
+  const enAgir = useMemo(() => {
+    let m = 1;
+    for (const w of cozum.agirliklar.values()) if (w > m) m = w;
+    return m;
+  }, [cozum]);
+
+  /* ISI ARALIĞI ÇÖZÜCÜDEN GELİR, DÜĞÜMLERDEN TÜRETİLMEZ (inceleme M-3).
+     İlk yazım aralığı düğüm başına EN SON damgaların en küçüğü/en büyüğü olarak
+     kuruyordu; üst yüzey ise BÜTÜN kenar damgalarından kuruyor. Fark sessiz ama
+     gerçek: bizim alt ucumuz her zaman üst yüzeyinkine eşit ya da ondan YENİ
+     çıkardı, yani efsanenin sol ucundaki tarih ve renk dağılımı ayrışırdı. */
+  const tazelikAraligi = cozum.tazelikAraligi;
+
+  const boyutFn = useCallback(
+    (d: TakimyildiziDugumu) => 3 + Math.sqrt((cozum.agirliklar.get(d.kimlik) ?? 0) / enAgir) * 11,
+    [cozum, enAgir],
+  );
+  const isiFn = useCallback(
+    (d: TakimyildiziDugumu) => {
+      if (tazelikAraligi === null) return 0.5;
+      const t = cozum.tazelikler.get(d.kimlik);
+      if (t === undefined) return 0;
+      return (t - tazelikAraligi.alt) / (tazelikAraligi.ust - tazelikAraligi.alt);
+    },
+    [cozum, tazelikAraligi],
+  );
+
+  const gun = (ms: number) => new Date(ms).toLocaleDateString("tr-TR");
+
+  if (!Array.isArray(govde.nodes)) return <TaninmayanBicim />;
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* KIRPMA ZİNCİRİ — ÜÇ SAYI, ÜÇÜ DE ADIYLA. Bu uç SUNUCUDA kırpılıyor ve
+          yalnız dönen diziyi sayan bir ekran eksik bir grafiği TAM gösterirdi. */}
+      <div className="flex flex-col gap-1">
+        <KirpmaZinciri
+          ne="isim"
+          cizilen={cozum.veri.dugumler.length}
+          vekil={cozum.vekilDugum}
+          tavan={cozum.tavan}
+          toplam={cozum.toplamDugum}
+        />
+        <KirpmaZinciri
+          ne="bağ"
+          cizilen={cozum.veri.baglar.length}
+          vekil={cozum.vekilBag}
+          tavan={cozum.tavan}
+          toplam={cozum.toplamBag}
+        />
+      </div>
+
+      <KimliksizRozeti sayi={cozum.kimliksiz} />
+
+      <Takimyildizi
+        veri={cozum.veri}
+        yukseklik={560}
+        boyutFn={boyutFn}
+        isiFn={tazelikAraligi === null ? undefined : isiFn}
+        isiEtiketi={tazelikAraligi === null ? undefined : "tazelik · son birlikte geçiş"}
+        isiUclari={tazelikAraligi === null ? undefined : [gun(tazelikAraligi.alt), gun(tazelikAraligi.ust)]}
+        boyutEtiketi="birlikte geçiş"
+        sikEtiket
+        aciklama={`Varlık bağ haritası: ${cozum.veri.dugumler.length} isim, ${cozum.veri.baglar.length} bağ`}
+      />
+
+      {tazelikAraligi === null ? (
+        <p className="text-muted-foreground text-[11px]">
+          Isı ekseni çizilmedi: bağların son birlikte geçiş zamanı bu okumada gelmedi ya da hepsi
+          aynı ana düşüyor. Renk bu durumda bağ sayısını gösterir.
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 export function Varliklar({ bank, kayit }: { readonly bank: string | null; readonly kayit: Bolum }) {
   /* AÇILIŞ KİPİ ÜST YÜZEYDEN: orada da varsayılan "ilişkiler". Liste ile açsaydık
@@ -135,13 +241,13 @@ export function Varliklar({ bank, kayit }: { readonly bank: string | null; reado
       {kip === "iliskiler" ? (
         <Bolme
           baslik="Bağ haritası"
-          aciklama="Hangi isim hangisiyle birlikte geçiyor. Çizim bu panoya özgüdür ve sınırları haritanın altında yazılı."
+          aciklama="Hangi isim hangisiyle birlikte geçiyor. Nokta büyüklüğü birlikte geçiş ağırlığını, rengi son geçişin tazeliğini gösterir; sınırlar haritanın üstünde sayıyla yazılı."
           aksiyon={<Secim etiket="Bağ eşiği" deger={esik} setDeger={setEsik} secenekler={ESIK_SECENEKLERI} genislik="w-36" />}
         >
           <UcKapisi durum={graf} yol={UC_GRAF}>
             {(z) => (
               <ZarfKapisi zarf={z} ne="Bağ haritası">
-                {(g) => <Graf govde={g} />}
+                {(g) => <BagHaritasi govde={g} />}
               </ZarfKapisi>
             )}
           </UcKapisi>
@@ -278,8 +384,8 @@ export function Varliklar({ bank, kayit }: { readonly bank: string | null; reado
         <span className="font-medium">Bu görünümün kapsamı: </span>
         üst yüzeyde bir isme tıklamak o ismin künyesini ve geçtiği kayıtları açıyor; ikisinin de
         panoda karşılığı YOK (ne tek-varlık okuması ne de kayıt listesinde isim süzgeci vekilde
-        var). Burada bir isme tıklamak yalnız BAĞLARINI vurgular. Bu bir arıza değil, ölçülmüş bir
-        kapsam sınırı.
+        var). Haritadaki düğümler bu yüzden TIKLANABİLİR DEĞİL — üzerlerine gelmek bağlarını
+        vurgular ve künyelerini açar. Bu bir arıza değil, ölçülmüş bir kapsam sınırı.
       </p>
 
       {/* ÜST YÜZEYDE BU GÖRÜNÜMDE YAZAN DÜĞME YOK — ve bunu yazmak gerekiyor:
