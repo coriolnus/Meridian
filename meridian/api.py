@@ -7312,6 +7312,10 @@ async def api_birim_istek(ad: str, request: Request):
     # Geri okuma da engelleyicidir (iki alt süreç daha) — aynı gerekçeyle iş ipliğinde.
     enabled, enabled_neden = await run_in_threadpool(_birim_durum_oku, "is-enabled", ad)
     active, active_neden = await run_in_threadpool(_birim_durum_oku, "is-active", ad)
+    # BAŞARIDA (rc==0, buraya kadar hiçbir HTTPException düşmemiş): teşhis zarfı da boşalır — kardeş
+    # kapılarla (`api_halt`/`api_resume` vb.) aynı yer, aynı gerekçe: bir birim aç/kapat sistem
+    # durumunu değiştirir, pano teşhis önbelleği 45 sn boyunca değişiklik-öncesi görüntü göstermemeli.
+    _diag_onbellek_bosalt("birim_istek")
     return {"birim": ad, "hedef": hedef, "komut": komut_metni, "komut_rc": rc,
             "enabled": enabled, "enabled_neden": enabled_neden,
             "active": active, "active_neden": active_neden}

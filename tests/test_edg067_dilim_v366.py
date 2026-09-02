@@ -18,14 +18,13 @@ SÖZLEŞME (dilimle):
 """
 from __future__ import annotations
 
-import importlib.util
 import pathlib
+
+from tests.conftest import betikten_modul_yukle
 
 _yol = pathlib.Path(__file__).resolve().parent.parent / \
     "research/olcumler/edg067_hindsight_faz1/dilim_sup.py"
-_spec = importlib.util.spec_from_file_location("dilim_sup", _yol)
-dilim_sup = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_spec and dilim_sup)
+dilim_sup = betikten_modul_yukle(_yol, "dilim_sup")
 
 
 def _birlestir(dilimler):

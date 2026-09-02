@@ -11,9 +11,9 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **80** kart.
+Toplam **82** kart.
 
-### Kayıtlı — ölçüm bekliyor (11)
+### Kayıtlı — ölçüm bekliyor (12)
 
 - **EDG-2026-019** (`registered`) — Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10) aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı…
   · HÜKÜM: 2026-08-09 Rol-1. (Aşağıya bkz: 2026-08-23 kill#1 kaydı — katman kapatma emri)
@@ -37,6 +37,9 @@ Toplam **80** kart.
   · kart: `EDG-2026-064-merdiven-duvari-yeniden-sinama.yaml`
 - **EDG-2026-067** (`registered`) — 
   · kart: `EDG-2026-067-hindsight-faz1-bgem3-recall.yaml`
+- **EDG-2026-068** (`registered`) — KART-ÖNCE ÖN-KAYDI (EXE-2026-009 emsali; bu kart bir replay taraması değil, kod-değişikliği sözleşmesidir).
+  · HÜKÜM: 2026-09-02 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce, TSK-011)
+  · kart: `EDG-2026-068-cf-kuyruk-tarihli.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -59,7 +62,7 @@ Toplam **80** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (44)
+### Ölçüldü (45)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -190,6 +193,9 @@ Toplam **80** kart.
 - **EXE-2026-008** (`measured`) — B-E1-LIMIT operatör kararı (2026-08-23 brainstorm 3/7): E1 hükmü EXE-006'yla yeniden açık ama düşük-güçlü kaldı (H1 kırık, H2 ölçülemedi, Ö3 CI'ları…
   · HÜKÜM: HÜKÜM (Rol-1, 2026-08-23): **ÜÇÜNCÜ DAL — "İKİ DÜNYADA DA BELİRSİZ"; kalem EDG-2026-042 gerçek-bandına PARK, bacak KAPALI kalır.** H1 DÜŞTÜ: dinlenen kolda eğri monoton…
   · kart: `EXE-2026-008-limit-bacagi-yeni-dunya.yaml`
+- **EXE-2026-011** (`measured_partial`) — KART-ÖNCE ÖN-KAYDI (TSK-019). "Kaç plan doluma dönüşmedi ve NEREDE düştü" sorusu bugün E2'den okunamıyor: E2 satırını yalnız gönderim kapısına ULAŞAN…
+  · HÜKÜM: 2026-09-02 Rol-1 — FİKSTÜR KOLU ÖLÇÜLDÜ + hüküm aşağıda; CANLI İLK-HAFTA KOLU AÇIK (dağıtım sonrası birikim)
+  · kart: `EXE-2026-011-seyrelme-ayna-satiri.yaml`
 - **KYS-2026-002** (`measured_partial`) — DSR/PBO sert kapısı (validation.py, 2026-07-30 operatör-onaylı MOD-FARKINDALIKLI tasarım) 2026-08-09'a kadar canlıda fiilen İŞSİZDİ: pencere_id…
   · HÜKÜM: R1 penceresi PBO = 0.6286 (motorun kendi pbo_cscv'si; n_aday=179, n_gozlem=207, 8 blok, 70 kombinasyon, ort_oos_sira=0.4018; deterministik — iki koşum aynı md5;…
   · kart: `KYS-2026-002-pbo-dsr-r1-taban.yaml`

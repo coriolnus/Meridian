@@ -224,14 +224,18 @@ def test_t3_govde_atesleme_kurtarma_yoneticisini_eslestirir():
 
 
 def test_t3_kapsam_disi_kaynak_sizmamis():
-    """Onaylı küme `ops/*.sh` + `deploy/oracle-a1/*.sh`. Üst düzey `deploy/*.sh` (monitoring.sh
-    dahil) BİLEREK dışarıda ve sınır belgede yazılı. Sessiz bir kapsam genişlemesi, 'runbook'un
-    kaynağı ne' sorusunu bir daha cevaplanamaz kılardı."""
+    """Onaylı küme artık üç desen + iki tekil dosya: `ops/*.sh`, `deploy/oracle-a1/*.sh`, ops/
+    altındaki operatör-yüzlü .py araçları (`filo.py`, `olay_sorgu.py`) — ve tekiller `dagit.sh`,
+    `meridian/auth_cli.py`. Üst düzey `deploy/*.sh` (monitoring.sh dahil) BİLEREK dışarıda ve
+    sınır belgede yazılı. Sessiz bir kapsam genişlemesi, 'runbook'un kaynağı ne' sorusunu bir
+    daha cevaplanamaz kılardı."""
     yollar = [b["yol"] for b in U.betik_basliklari()]
     assert yollar, "hiç betik okunamadı — kaynak kümesi kırılmış"
     for y in yollar:
-        assert y.startswith("ops/") or y.startswith("deploy/oracle-a1/") or y == "dagit.sh", (
-                f"kapsam dışı betik: {y}")  # dagit.sh 2026-08-23 K4 operatör kararıyla kümede
+        assert (y.startswith("ops/") or y.startswith("deploy/oracle-a1/") or y == "dagit.sh"
+                or y == "meridian/auth_cli.py"), f"kapsam dışı betik: {y}"
+        # dagit.sh 2026-08-23 K4 operatör kararıyla kümede
+        # meridian/auth_cli.py 2026-09-02 parola-kilidi vakası: unutulan-parola reçetesi RUNBOOK'a akar — Yasa 6
     # SINIR "BÖLÜM AÇMA"DIR, "ADI HİÇ GEÇMESİN" DEĞİL: `deploy/monitoring.sh` adı belgede
     # geçiyor çünkü `obs.py`'nin KENDİ yorumu ondan söz ediyor ("Tokens matched by
     # deploy/monitoring.sh log filters") ve o yorum onaylı bir kaynaktan ALINTIDIR. Alıntıyı
