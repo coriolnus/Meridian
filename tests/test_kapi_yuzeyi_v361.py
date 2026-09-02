@@ -257,7 +257,12 @@ def test_bozuk_admin_json_yutulmaz(monkeypatch, tmp_path, sandbox_state):
 # ------------------------------------------------------------ C. ROTA ŞEMASI BİREBİR
 
 def test_rota_semasi_birebir_gercek_routes_yaml(monkeypatch, tmp_path, sandbox_state):
-    """Girdi `deploy/apisix/routes.yaml`ın KENDİSİDİR (tek-kaynak): dosya şekil değiştirirse ısırır."""
+    """Girdi `deploy/apisix/routes.yaml`ın KENDİSİDİR (tek-kaynak): dosya şekil değiştirirse ısırır.
+
+    VAKA 2026-09-02 (tavan açma, 7f015ad): günlük ücretsiz-model tavanı hesap-geneli olduğu için
+    iki `:free` instance birden 429'a düşüp zincir 502'ye kapanıyordu; her iki LLM rotasına
+    `priority: 0` bir ÜCRETLİ son çare eklendi. Beklenti o gerçeğe hizalandı — çivi eskisi kadar
+    sıkı: zincir hâlâ TAM liste olarak, sırasıyla karşılaştırılıyor."""
     _kurulum(monkeypatch, tmp_path)
     g = _client().get("/api/gateway").json()
 
@@ -274,9 +279,22 @@ def test_rota_semasi_birebir_gercek_routes_yaml(monkeypatch, tmp_path, sandbox_s
     assert danisma["temizlenen_basliklar"] == ["Authorization", "X-Forwarded-For", "X-Real-IP"]
 
     assert set(danisma["zincir"][0]) == {"ad", "model", "oncelik", "auth_referansi"}
-    assert [z["ad"] for z in danisma["zincir"]] == ["birincil-nemotron", "yedek-gemma"]
+    assert [z["ad"] for z in danisma["zincir"]] == [
+        "birincil-nemotron", "yedek-gemma", "soncare-nemotron-ucretli"]
     assert danisma["zincir"][0]["model"] == "nvidia/nemotron-3-ultra-550b-a55b:free"
     assert danisma["zincir"][0]["oncelik"] == 10
+    # SON ÇARE ZİNCİRİN SONUNDA: `priority: 0` en düşük öncelik demek ve sıralama AZALAN.
+    # Ücretli varyant başa geçseydi her çağrı para yakardı — sıra burada bir maliyet kapısıdır.
+    assert danisma["zincir"][-1]["oncelik"] == 0
+    assert danisma["zincir"][-1]["model"] == "nvidia/nemotron-3-ultra-550b-a55b", \
+        "son çare ücretli varyant olmalı (`:free` soneki YOK) — aksi halde tavan dolunca da 429"
+
+    # llm-hizli aynı vakada kendi son çaresini aldı; kardeş rota kapsanmazsa yarı ölçüm olurdu.
+    hizli = next(r for r in g["rotalar"] if r["id"] == "llm-hizli")
+    assert [z["ad"] for z in hizli["zincir"]] == ["hizli-gemma", "hizli-soncare-ucretli"]
+    assert hizli["zincir"][-1]["oncelik"] == 0
+    assert hizli["zincir"][-1]["model"] == "google/gemma-4-26b-a4b-it", \
+        "son çare ücretli varyant olmalı (`:free` soneki YOK)"
 
 
 def test_admin_gurultu_alanlari_govdeye_sizmaz(monkeypatch, tmp_path, sandbox_state):
