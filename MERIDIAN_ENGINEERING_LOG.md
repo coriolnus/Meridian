@@ -1610,3 +1610,44 @@ hıçkırığında künye+Çıkış yerinde ✓.
 **Açık kalemler:** EksikEnvanteri.tsx auth_cli metni (kabuk-içi, hükümle kaldı) · alanlar.ts
 giris/kayit derin bağları kapı-yüzeyinde no-op (bilinçli, KapiEkrani başlığında) ·
 Kullanicilar.tsx üçüncü /api/session nabzı (parkta) · healthz "stale" gözlemi sabah paketine.
+
+## 2026-09-02 (gece-5, otonom) — Gece kuyruğu kapanışı: yedi kalem SDD tam döngüyle; iki kart-önce ölçüm; tarayıcı-sınırı dersi
+
+Onaylı gece kuyruğunun yedi kalemi tek oturumda kapandı — her biri taze implementer + görev
+incelemesi + gerektiği kadar düzeltme turu + yeniden-incelemeyle: TSK-098 pano birim-anahtarı
+(polkit kuralı yazıldı, kurulum+ilk ateşleme sabah penceresinde) · TSK-007 watchdog mekanizma
+sırası · TSK-011 cf kuyruğu date sütunu (EDG-2026-068 kart-önce; gerçek-veri kolu Rol-1'de
+açık) · TSK-089/F4-B istemci koşullu apikey (kilit flip'i sabaha) · TSK-002 rejim ship'inin
+tam-pencere defteri · TSK-019 EOD seyrelme ayna-satırı (EXE-2026-011 kart-önce →
+measured_partial) · TSK-094+030 TSX çapa göçü + `codelaw.capa_uyusmasi` doğuşu. Hükümler ve
+ruling'ler SDD defterinde; commit zinciri 18ed103…a62ae03 + bu kapanış commit'i.
+
+**Ölçülen ders — tarayıcı VARLIK ölçer, YERİNDELİK ölçmez (TSK-094):** göçen 141 çapanın 9'u
+(%6,4) gerçek-ama-yanlış sembole bağlıydı ve dokuzunda da AST doğrulayıcısı yeşildi — inceleme
+örneklemi 2'sini yakaladı, zorunlu kılınan tam süpürme 7'sini daha çıkardı (birinde sahte
+alıntı atfı da vardı). "Yorumun iddiası ↔ hedef sembolün gövdesi" doğrulaması otomatikleşemeyen
+ayrı bir iş sınıfı olarak kalır; tur-öncesi var olan 116 eski sembol çapası bu doğrulamadan
+geçmedi (açık kalem, TSK-030 adım-3).
+
+**Kohort beyanı (TSK-019):** ayna-satırı kohortu naif okunuşla ("bu turun planları") pencere
+yasası yüzünden her gece kill#1 üretirdi — akşam gönderimi sabah kancasına ertelendiğinden her
+silahlı plan önce ayna-satırı sonra submitted satırı alırdı. Kohort=meta[last_date] (dolum
+fırsatını bu açılışta tüketen planlar); beyan kartta, çift-iz sınıfı yapısal kapalı. İnceleme
+zinciri üç gerçek zayıflık daha kapattı: kapı damgalı anomali yolunun sınıf uydurması
+(olculemedi'ye), ısırmayan ayrışma çivisi (kopya kaçınılmaz değildi — önek tek kaynaktan
+türetildi), yanlış kopya-beyanı (gerçek okuyucu analytics'ti). Yan ölçüm: loop.py'ye satır
+ekleyen tur yine komşu satır-çapalarını kırdı (v280 ×2, gecenin üçüncü tekrarı) — loop.py
+çapa süpürmesi kalem adayı.
+
+Parola-kilidi vakasının açık kalemi kapandı: unutulan-parola reçetesi `auth_cli` başlığına,
+oradan RUNBOOK'a akar (giriş ekranı "sıfırlama runbook'ta" diyordu, runbook'ta yoktu — Yasa 6).
+
+**Şafak suite'i #1 KIRMIZI — yedi çivi gecenin işini ısırdı, yedisi de meşru:** kart endeksi
+(EXE-011 status değişti, README üretilmemişti) · v181 envanteri (098'in birim ucu teşhis
+zarfını düşürmüyordu — kardeş desenle kapatıldı) · v334 (v366 ham exec_module) · v351 r08 ×2
+(TSK-104 QUEUED dururken trigger doluydu → GATED) · v209 (RUNBOOK değişince D6 korpus
+artefaktı bayatladı — yeniden üretildi) · v154 (BETIK_KUMESI'nin auth_cli genişlemesi sınır
+çivisine yansımamıştı). Ders yeni değil ama ölçümü taze: kapsamlı koşumlar yeşilken bile
+depo-geneli tutarlılık çivileri (endeks, envanter, şema, sınır beyanı) yalnız TAM suite'te
+öter — gece boyu hedefli koşumların hiçbiri bu yediliyi göremezdi. Suite #2 (a62ae03 tepesinde
+donmuş ağaç): **8923 passed / 3 skipped / EXIT=0**. Push tur kapanışında; sabah paketi operatöre.

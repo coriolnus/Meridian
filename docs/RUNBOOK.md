@@ -41,7 +41,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **22 ops betiği** başlığıyla okundu
+- **23 ops betiği** başlığıyla okundu
 - **98 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -1435,6 +1435,22 @@ Serbest `--sql` bir YAZMA MUHAFIZINDAN geçer: DuckDB'nin kendi ayrıştırıcı
 doğrular; COPY/ATTACH/INSTALL/DDL/DML ve `SELECT 1; DROP ...` kaçışı reddedilir. Bağlantı bellek
 içidir, temp_directory boşaltılır, eklenti oto-indirme kapatılır. Muhafız KUM HAVUZU DEĞİLDİR.
 Koşum: .venv/bin/python ops/olay_sorgu.py — meridian İTHAL ETMEZ (obs'a ulaşamaz).
+```
+
+## `meridian/auth_cli.py` {#meridian-auth-cli-py}
+
+```
+auth_cli.py — operatör parolası + oturum imza anahtarı CLI'sı (set · status · logout-all)
+.venv/bin/python -m meridian.auth_cli set        # parola belirle/değiştir (mevcut parola sorulur)
+.venv/bin/python -m meridian.auth_cli status     # kurulu mu, dosya izni, oturum ömrü
+.venv/bin/python -m meridian.auth_cli logout-all # imza anahtarı döner → tüm oturumlar düşer
+PAROLA UNUTULDUYSA (vaka 2026-09-02) — hash geri okunamaz, tek yol sıfırdan kurmak. A1'de
+üretilmiş-parola tek satırı (değer YALNIZ operatör terminaline basılır, komutta değer geçmez):
+cd /opt/meridian && P=$(openssl rand -hex 16) && rm -f state/auth.json \
+&& printf "%s\n%s\n" "$P" "$P" | .venv/bin/python -m meridian.auth_cli set \
+&& echo && echo "YENİ PAROLA: $P"
+`rm`↔`set` arası ~1 sn parolasız pencere internete açıktır — satırı BÖLME. Girişte tarayıcının
+kaydetme teklifini kabul etmek bu reçeteye bir daha dönmemenin yoludur.
 ```
 
 ---

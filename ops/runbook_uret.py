@@ -66,7 +66,11 @@ YAZILMADI = "runbook girdisi henüz yazılmadı"
 # kök dagit.sh kümeye girdi — sürüm-terfisi sözleşmesi başlığında yaşıyor, belgeye kaynağından
 # akar. Sessiz genişleme değil: sınır beyanı üretilen belgede de güncellenir (aşağıda).
 BETIK_KUMESI = ("ops/*.sh", "deploy/oracle-a1/*.sh", "dagit.sh", "ops/filo.py",
-                "ops/olay_sorgu.py")
+                "ops/olay_sorgu.py", "meridian/auth_cli.py")
+# meridian/auth_cli.py eklendi 2026-09-02 (parola-kilidi vakası): operatör-yüzlü CLI sözleşmesi
+# + unutulan-parola reçetesi taşıyor — reçetenin RUNBOOK'ta okuyucusu olmadan yaşaması Yasa 6
+# ihlaliydi (giriş ekranı 'sıfırlama runbook'ta' diyor, runbook'ta yoktu). Başlık sözleşmesi
+# filo/olay_sorgu ile aynı: shebang sonrası bitişik `#` bloğu. meridian/*.py GENEL eklenmedi.
 # ops/olay_sorgu.py eklendi 2026-09-01 (TSK-020 [UYGULA-2] adım 1): olay defteri sorgulayıcısı
 # operatör-yüzlü komut-satırı sözleşmesi taşır (ozet/son/tip/--sql + 0/2/3/4 çıkış kodları) —
 # RUNBOOK'ta okuyucusu olmadan yaşayamaz (Yasa 6). filo.py ile aynı başlık sözleşmesi:

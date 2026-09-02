@@ -1,3 +1,15 @@
+#!/usr/bin/env python3
+# auth_cli.py — operatör parolası + oturum imza anahtarı CLI'sı (set · status · logout-all)
+#   .venv/bin/python -m meridian.auth_cli set        # parola belirle/değiştir (mevcut parola sorulur)
+#   .venv/bin/python -m meridian.auth_cli status     # kurulu mu, dosya izni, oturum ömrü
+#   .venv/bin/python -m meridian.auth_cli logout-all # imza anahtarı döner → tüm oturumlar düşer
+# PAROLA UNUTULDUYSA (vaka 2026-09-02) — hash geri okunamaz, tek yol sıfırdan kurmak. A1'de
+# üretilmiş-parola tek satırı (değer YALNIZ operatör terminaline basılır, komutta değer geçmez):
+#   cd /opt/meridian && P=$(openssl rand -hex 16) && rm -f state/auth.json \
+#     && printf "%s\n%s\n" "$P" "$P" | .venv/bin/python -m meridian.auth_cli set \
+#     && echo && echo "YENİ PAROLA: $P"
+# `rm`↔`set` arası ~1 sn parolasız pencere internete açıktır — satırı BÖLME. Girişte tarayıcının
+# kaydetme teklifini kabul etmek bu reçeteye bir daha dönmemenin yoludur.
 """auth_cli.py — operatör parolasını ve oturum imza anahtarını kabuktan yöneten CLI.
 
     .venv/bin/python -m meridian.auth_cli set        # parola belirle / değiştir
@@ -14,6 +26,8 @@ NEDEN KABUKTAN. `POST /api/setup-password` yalnız parola HENÜZ KURULU DEĞİLK
 kurulduktan sonra değiştirmenin tek yolu buradan geçer, yani `state/auth.json`a — dolayısıyla
 sunucuya — erişim gerekir. Web üzerinden "parolamı unuttum" akışı BİLEREK yoktur: tek operatörlü
 bir sistemde o akış, saldırgan için ikinci bir giriş kapısından başka bir şey değildir.
+
+PAROLA UNUTULDUYSA: reçete dosya BAŞLIĞINDA (RUNBOOK'a oradan akar — tek kaynak).
 
 SIR DİSİPLİNİ. Parola getpass ile alınır: ekrana yazılmaz, kabuk geçmişine düşmez, argüman olarak
 da alınmaz; hiçbir değer loglanmaz. `status` çıktısındaki oturum-ömrü sayıları auth sabitlerinden
