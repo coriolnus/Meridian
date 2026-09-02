@@ -259,10 +259,14 @@ def test_bozuk_admin_json_yutulmaz(monkeypatch, tmp_path, sandbox_state):
 def test_rota_semasi_birebir_gercek_routes_yaml(monkeypatch, tmp_path, sandbox_state):
     """Girdi `deploy/apisix/routes.yaml`ın KENDİSİDİR (tek-kaynak): dosya şekil değiştirirse ısırır.
 
-    VAKA 2026-09-02 (tavan açma, 7f015ad): günlük ücretsiz-model tavanı hesap-geneli olduğu için
-    iki `:free` instance birden 429'a düşüp zincir 502'ye kapanıyordu; her iki LLM rotasına
-    `priority: 0` bir ÜCRETLİ son çare eklendi. Beklenti o gerçeğe hizalandı — çivi eskisi kadar
-    sıkı: zincir hâlâ TAM liste olarak, sırasıyla karşılaştırılıyor."""
+    VAKA 2026-09-02 (tavan açma, 7f015ad → geri alma, operatör kararı ~14:50 UTC): sabah günlük
+    ücretsiz-model tavanı hesap-geneli olduğu için iki `:free` instance birden 429'a düşüp zincir
+    502'ye kapanıyordu; her iki LLM rotasına `priority: 0` bir ÜCRETLİ son çare eklenmişti. O
+    instance ölçülen bedelle (~$3/saat sınıfı) bir gün yaşadı — operatör "onlar da gitsin, hepsi
+    ücretsiz olsun" dedi ve ikisi de routes.yaml'dan çıkarıldı. Beklenti o gerçeğe hizalandı: çivi
+    eskisi kadar sıkı, zincir hâlâ TAM liste olarak sırasıyla karşılaştırılıyor — yalnız artık
+    kısa liste (ücretli varyant yok) ve ücretli-varyant kapıları (öncelik==0 / `:free`-yok)
+    KALDIRILDI, çünkü ölçülecek ücretli varyant kalmadı."""
     _kurulum(monkeypatch, tmp_path)
     g = _client().get("/api/gateway").json()
 
@@ -279,22 +283,42 @@ def test_rota_semasi_birebir_gercek_routes_yaml(monkeypatch, tmp_path, sandbox_s
     assert danisma["temizlenen_basliklar"] == ["Authorization", "X-Forwarded-For", "X-Real-IP"]
 
     assert set(danisma["zincir"][0]) == {"ad", "model", "oncelik", "auth_referansi"}
-    assert [z["ad"] for z in danisma["zincir"]] == [
-        "birincil-nemotron", "yedek-gemma", "soncare-nemotron-ucretli"]
+    assert [z["ad"] for z in danisma["zincir"]] == ["birincil-nemotron", "yedek-gemma"]
     assert danisma["zincir"][0]["model"] == "nvidia/nemotron-3-ultra-550b-a55b:free"
     assert danisma["zincir"][0]["oncelik"] == 10
-    # SON ÇARE ZİNCİRİN SONUNDA: `priority: 0` en düşük öncelik demek ve sıralama AZALAN.
-    # Ücretli varyant başa geçseydi her çağrı para yakardı — sıra burada bir maliyet kapısıdır.
-    assert danisma["zincir"][-1]["oncelik"] == 0
-    assert danisma["zincir"][-1]["model"] == "nvidia/nemotron-3-ultra-550b-a55b", \
-        "son çare ücretli varyant olmalı (`:free` soneki YOK) — aksi halde tavan dolunca da 429"
 
-    # llm-hizli aynı vakada kendi son çaresini aldı; kardeş rota kapsanmazsa yarı ölçüm olurdu.
+    # llm-hizli aynı vakada kardeş rotaydı; kapsanmazsa yarı ölçüm olurdu.
     hizli = next(r for r in g["rotalar"] if r["id"] == "llm-hizli")
-    assert [z["ad"] for z in hizli["zincir"]] == ["hizli-gemma", "hizli-soncare-ucretli"]
-    assert hizli["zincir"][-1]["oncelik"] == 0
-    assert hizli["zincir"][-1]["model"] == "google/gemma-4-26b-a4b-it", \
-        "son çare ücretli varyant olmalı (`:free` soneki YOK)"
+    assert [z["ad"] for z in hizli["zincir"]] == ["hizli-gemma"]
+
+
+def test_tum_ai_proxy_instance_modelleri_ucretsiz():
+    """OPERATÖR KARARI 2026-09-02 ~14:50 UTC'NİN MEKANİK ÇİVİSİ: "onlar da gitsin, hepsi ücretsiz
+    olsun" — sabahki tavan-açma turunda (7f015ad) eklenen iki ÜCRETLİ son-çare instance'ı bu
+    turda routes.yaml'dan çıkarıldı (ölçülen bedel ~$3/saat sınıfı, bir gün yaşadı). Bu çivi o
+    kararın KALICILIĞINI ölçer: `deploy/apisix/routes.yaml`daki HER `ai-proxy-multi` instance'ının
+    `options.model` değeri `:free` ile bitmeli — biri yarın sessizce ücretli bir model eklerse
+    kırmızı verir.
+
+    SABİT LİSTE TUTULMAZ (uydurma yasağı + tek-kaynak yasası): girdi DOĞRUDAN
+    `deploy/apisix/routes.yaml`dan (`_gercek_rotalar()`, aynı tek-kaynak okuyucusu) türetilir —
+    rota/instance sayısı yarın değişse de çivi kendiliğinden kapsar, isim listesi bayatlamaz."""
+    instanceler = []
+    for rota in _gercek_rotalar():
+        multi = (rota.get("plugins") or {}).get("ai-proxy-multi") or {}
+        for inst in multi.get("instances") or []:
+            instanceler.append(
+                (rota.get("id"), inst.get("name"), (inst.get("options") or {}).get("model")))
+
+    assert instanceler, (
+        f"{ROTA_KAYNAGI} içinde hiçbir `ai-proxy-multi` instance'ı yok — çivi vakumda "
+        "(şema mı değişti?)")
+
+    ucretli = [(rid, ad, model) for rid, ad, model in instanceler
+               if not isinstance(model, str) or not model.endswith(":free")]
+    assert not ucretli, (
+        "ücretli (`:free`-siz ya da model alanı bozuk) instance(lar) var — operatör kararı "
+        f"2026-09-02 'hepsi ücretsiz olsun'u ihlal ediyor: {ucretli}")
 
 
 def test_admin_gurultu_alanlari_govdeye_sizmaz(monkeypatch, tmp_path, sandbox_state):

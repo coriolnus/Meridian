@@ -81,23 +81,10 @@ rotalar:
               model: google/gemma-4-26b-a4b-it:free
             override:
               endpoint: https://openrouter.ai/api/v1/chat/completions
-          - name: soncare-nemotron-ucretli
-            # TAVAN AÇMA (operatör kararı 2026-09-02 "tavan hemen açılsın"): günlük ücretsiz-model
-            # tavanı hesap-genelidir — iki :free instance birden 429'a düşer, zincir 502'ye
-            # kapanırdı (ölçüldü: bekçi canary'si, code=502 consumer=bot_bekci). Bu instance
-            # SON ÇARE (en düşük öncelik): free'ler yaşarken hiç konuşmaz, tavan dolunca zinciri
-            # ÜCRETLİ aynı modelle açık tutar ($0.625/M girdi + $3.125/M çıktı — ölçüm 2026-09-02
-            # /models kataloğu). Model bilinçli AYNI: künye/kalite sabiti değişmez.
-            provider: openai-compatible
-            priority: 0
-            weight: 1
-            auth:
-              header:
-                Authorization: "$env://OPENROUTER_AUTH"
-            options:
-              model: nvidia/nemotron-3-ultra-550b-a55b
-            override:
-              endpoint: https://openrouter.ai/api/v1/chat/completions
+          # ÜCRETLİ SON-ÇARE KALDIRILDI (operatör kararı 2026-09-02 ~14:50 UTC "onlar da gitsin, hepsi
+          # ücretsiz olsun"): sabahki tavan-açma instance'ı (öncelik 0, :free'siz aynı model) 1 gün
+          # yaşadı — ölçülen bedel ~$3/saat sınıfı (Hindsight+konsolidasyon+bot son-çare toplamı).
+          # Zincir yeniden YALNIZ :free; tavan dolunca 502 BİLİNÇLİ (v361 'hepsi ücretsiz' çivisi).
 
   - id: fmp-veri
     # Faz 2 — FMP egress: adapter (meridian/adapters/fmp.py) MERIDIAN_FMP_BASE env'iyle buraya
@@ -219,19 +206,8 @@ rotalar:
               model: google/gemma-4-26b-a4b-it:free
             override:
               endpoint: https://openrouter.ai/api/v1/chat/completions
-          - name: hizli-soncare-ucretli
-            # TAVAN AÇMA — llm-danisma'daki soncare-nemotron-ucretli şerhinin eşi; aynı model
-            # ücretli varyant ($0.07/M girdi + $0.34/M çıktı, ölçüm 2026-09-02).
-            provider: openai-compatible
-            priority: 0
-            weight: 1
-            auth:
-              header:
-                Authorization: "$env://OPENROUTER_AUTH"
-            options:
-              model: google/gemma-4-26b-a4b-it
-            override:
-              endpoint: https://openrouter.ai/api/v1/chat/completions
+          # ÜCRETLİ SON-ÇARE KALDIRILDI (operatör kararı 2026-09-02 ~14:50 UTC "onlar da gitsin, hepsi
+          # ücretsiz olsun") — llm-danisma'daki şerhin eşi; yalnız :free kalır.
 
   - id: llm-models
     # Flip köprüsü (2026-09-02, sabah penceresi): nous sağlık sondası GET {base}/models çağırır
