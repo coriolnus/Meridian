@@ -3902,6 +3902,21 @@ def _diag_yaslandir(yuk: dict, yas: float) -> dict:
     return out
 
 
+def _sr_donusum(sr: dict | None) -> dict:
+    """`self_review.json`daki dönüşüm satırının TEŞHİS ÇEKİRDEĞİ (kart EXE-2026-011 §5).
+
+    Dört alan: `plan_n` (payda — EDG-2026-042 hakem takviminin paydası), `dolum_n` (pay),
+    `dolum_orani`, `sinif_dagilimi` (dönüşmeme sınıfları). Şekil VARSAYILMAZ: rapor eski
+    şemadaysa, hiç üretilmediyse ya da blok boşsa dördü de `None` döner — 0 basmak "hiçbir plan
+    dönüşmedi" demek olurdu ve o cümle ölçülmemiştir (UYDURMA YASAĞI, `selfreview._donusum_ozeti`
+    ile aynı sözleşme). Sözlüğün ANAHTAR kümesi sabittir: alan bir gün kaybolursa pano `undefined`
+    değil dürüst bir `None` görür."""
+    blok = ((sr or {}).get("week") or {}).get("donusum")
+    if not isinstance(blok, dict):
+        blok = {}
+    return {k: blok.get(k) for k in ("plan_n", "dolum_n", "dolum_orani", "sinif_dagilimi")}
+
+
 def _diag_onbellek_oku(taze: bool) -> dict | None:
     """Geçerli (TTL içinde) bir kopya varsa yaşlandırılmış hâlini döndürür, yoksa None.
     `taze` zorla-tazeleme yoludur: operatör bir düzeltmenin canlıya değdiğini 45 sn beklemeden
@@ -4665,7 +4680,19 @@ def api_diagnostics(request: Request, taze: int = 0):
     return _diag_onbellege_yaz({
         "selfreview_summary": ({"attention": (_sr.get("attention") or [])[:5],
                                 "contradictions": (_sr.get("contradictions") or [])[:4],
-                                "generated": _sr.get("generated")} if _sr else None),
+                                "generated": _sr.get("generated"),
+                                # PLAN → DOLUM DÖNÜŞÜMÜ (kart EXE-2026-011 §5) — YASA 6'nın CANLI
+                                # bacağı. Sayıyı `selfreview._donusum_ozeti` üretir, self_review.json
+                                # taşır; buraya kadar gelmeseydi tek okuma yolu EMEKLİ
+                                # `/api/selfreview` olurdu ("yeni tüketici bağlanmaz" şerhli) ve
+                                # EDG-2026-042 hakemi paydayı canlı yüzeyden HİÇ okuyamazdı.
+                                # ÇEKİRDEK DÖRT ALAN: payda · pay · oran · sınıf dağılımı.
+                                # Zarf alanları (beyan/pencere_kesildi/durum) BİLEREK burada değil
+                                # — teşhis zarfı özet taşır, raporun tamamını değil; tamamı
+                                # `self_review.json`da ve ajanın kanıt paketinde durur.
+                                # ALAN YOKSA None, 0 DEĞİL (uydurma yasağı): rapor henüz
+                                # üretilmediyse ya da eski şemadaysa "hiç plan yok" DEMEZ.
+                                "donusum": _sr_donusum(_sr)} if _sr else None),
         "hud": {"mode": config.MODE, "broker": config.BROKER,
                 "regime": hb.get("regime"), "exposure_budget_pct": hb.get("exposure_budget_pct"),
                 "explore_mode": bool(hb.get("explore_mode")), "equity": hb.get("equity"),

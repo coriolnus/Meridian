@@ -48,7 +48,21 @@ pozitif_kontrol: >
   ayna-satırı doğar, sınıfı not_armed; silahlanıp gönderilen kardeş plan ayna-satırı ALMAZ.
   Tek-fonksiyon birim çağrısı PK sayılmaz; kanca gerçek EOD yolundan tetiklenir.
 k_registry: {registered_at: "2026-09-02", trial_ids: [EXE-011-eod-ayna]}
-status: registered   # 2026-09-02 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce, TSK-019)
+status: measured_partial   # 2026-09-02 Rol-1 — FİKSTÜR KOLU ÖLÇÜLDÜ + hüküm aşağıda; CANLI İLK-HAFTA KOLU AÇIK (dağıtım sonrası birikim)
+fikstur_kolu_2026_09_02:
+  pozitif_kontrol: "ATEŞLEDİ — test_a1 (v372): silahlandırılmayan plan GERÇEK EOD yolundan geçirildi, ayna-satırı not_armed doğdu; gönderilen kardeş plan satır ALMADI; mutasyon-1 ile ısırma kanıtlı"
+  sonuc: "v372 16 çivi passed / PYTEST_EXIT=0 (SDD: inceleme + 2 düzeltme turu sonrası); success_metric'in fikstür cümlesi SAĞLANDI — her plan tam bir sonuç izi (JOIN tekilliği), sınıf dağılımı kayıtlı alanlardan, haftalık rapor week.donusum + /api/diagnostics.selfreview_summary taşıyor"
+  kill_kontrol: "4/4 tetiklenmedi — kill#1 yapısal kapalı (kohort=önceki seans, aşağıdaki beyan); kill#2 geri-dolum yok (kohort süzgeci tek seans); kill#3 PIT fotoğrafı açılış fazından ÖNCE; kill#4 PK ateşledi"
+  hukum_siniri: "fikstür kolu CANLI DAVRANIŞ HÜKMÜ DEĞİLDİR — canlı kol: ilk hafta ayna-satırı birikimi + dolum/plan-günü paydasının defterden okunması (sabah paketi izleme kalemi; TSK-104 tetiği bu birikim)"
+  gozlem: "kod okuması: armed_not_submitted'ın tek temiz üreticisi _llm_veto_filter — kütlenin çoğu not_armed'a düşecek; not_armed'ın İÇ kırılımı (kapı hükmü dağılımı) bugün red_nedeni serbest metninde, SAYILMIYOR — ayrı kart adayı"
+kohort_sapmasi_beyani: >
+  Rol-1 yorumu (2026-09-02, eşik/kill DEĞİŞMEDİ — yazım-ânı yorumu): uygulama_sozlesmesi(1)
+  "o seansın plan listesi" ifadesi "dolum fırsatını BU açılışta tüketen kohort", yani
+  meta[last_date] (önceki seansın planları) olarak uygulanır. Naif okuma (bu turun planları)
+  pencere yasası (EXE-009+K2: akşam gönderimi sabah kancasına ertelenir) yüzünden HER silahlı
+  plana önce armed_not_submitted ayna-satırı, ertesi sabah submitted satırı yazdırır — kill#1
+  her gece tetiklenirdi. Kohort seçimiyle çift-iz sınıfı yapısal olarak kapanır; seans atlansa
+  da adres doğru kalır (last_date tanımı gereği).
 beyanli_sinirlar: >
   (1) Bu kart seyrelmenin SEBEBİNİ çözmez — okunur kılar; "pencere kaydırması mı azalttı" hükmü
   birikimden sonra ayrı sorudur (EDG-042 takvimi). (2) submitted+dolmamış sınıfı bilerek kapsam

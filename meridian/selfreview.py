@@ -272,6 +272,82 @@ def _olay_mekanizma(e: dict) -> str | None:
     return None
 
 
+# ---- HAFTALIK DÖNÜŞÜM SATIRI (kart EXE-2026-011 §5 — ayna-satırının OKUYUCUSU, YASA 6) ----------
+# Kart o satırı ÜRETİR (loop._ayna_seyrelme_yaz), bu blok onu OKUR. Okuyucusu olmayan bir defter
+# yüzeyi üretilmemişten farksızdır; "kaç plan doluma dönüşmedi ve NEREDE düştü" sorusunun cevabı
+# ancak burada bir sayıya dönüşür ve EDG-2026-042 hakem takvim sorusunun PAYDASI budur.
+_DONUSUM_BEYAN = (
+    "Payda E2 defterinde İZİ OLAN planları sayar. Ayna-satırı yürürlüğe girmeden ÖNCEKİ "
+    "seansların kapı-öncesi planları defterde hiç yoktur ve bu sayıya GİRMEZ — geriye dönük "
+    "doldurulmaları da yasaktır (kart kill#2, PIT). Yani ilk haftalarda payda ARTARAK gerçeğe "
+    "yaklaşır; düşük payda 'az plan üretildi' DEĞİL 'defter henüz o kadar görüyor' demektir.")
+
+
+def _donusum_ozeti(since: str) -> dict:
+    """PLAN → DOLUM dönüşümü, haftalık pencerede, E2 defterinden.
+
+    ÜÇ SAYI (kart §5): plan sayısı (payda) · dolum sayısı (pay) · dönüşmeme SINIF dağılımı.
+    Sözlük ve motor adı `loop`tan İTHAL edilir — ikinci bir nüsha sessizce ayrışır ve rapor bir
+    gün var olmayan bir sınıfı sayardı (tek-kaynak yasası).
+
+    DOLUMUN TANIMI TEKTİR ve yazılıdır: iç motorun `karar="fill"` satırı. Aynanın `submitted`
+    satırı bir GÖNDERİMDİR, dolum değil; ikisini toplamak payı şişirirdi.
+
+    DÜRÜST BOŞLUK (uydurma yasağı): defter BOŞSA sayılar `None` — 0 basmak "hiçbir plan dönüşmedi"
+    demek olurdu, oysa doğru cevap "ölçmedim"dir. Defter DOLU ama pencere boşsa 0 dürüsttür: baktık
+    ve bulamadık. İkisini ayırt eden alan `pencere_kesildi` — defterin en eski satırı pencerenin
+    başlangıcından YENİYSE haftanın bir kısmı defterde HİÇ yoktur (budama/taşıma)."""
+    from . import loop as _loop
+    tum = store.read_jsonl(_loop.ENTRY_LEDGER)
+    alt = since[:10]
+    if not tum:
+        return {"plan_n": None, "dolum_n": None, "dolum_orani": None, "donusmeyen_n": None,
+                "sinif_dagilimi": None, "sinif_disi_n": None, "pencere_kesildi": None,
+                "pencere_baslangic": alt, "beyan": _DONUSUM_BEYAN,
+                "durum": "E2 defteri BOŞ — dönüşüm ÖLÇÜLMEDİ (0 DEĞİL: sıfır 'hiçbir plan "
+                         "dönüşmedi' der, ölçülmemiş pencere hiçbir şey demez)"}
+    pencere = [r for r in tum if str(r.get("date") or "") >= alt]
+    en_eski = min((str(r["date"]) for r in tum if r.get("date")), default="")
+    planlar = {r["plan_id"] for r in pencere if r.get("plan_id")}
+    # KOPYA BEYANI (K-2; adresi düzeltme turu 2'de ONARILDI): `"ic"` ve `"fill"` literalleri BU
+    # DOSYADA ÜRETİLMEZ. Literal ÇİFTİNİN bugün ölçülen üç yeri:
+    #   1. YAZAN   — `loop.daily_cycle`ın dolum dalı: `_base` içinde `"motor": "ic"`, satırda
+    #                `"karar": "fill"`. Tek üretici burasıdır.
+    #   2. OKUYAN  — `analytics.entry_execution_summary`: `motor == "ic"` kovası + `karar == "fill"`
+    #                süzgeci (`ic_dolan`) + iki-motor mutabakatındaki `ic_girdi` kıyası.
+    #   3. OKUYAN  — bu satır.
+    # DÜZELTME TURU 2 ŞERHİ: ilk beyan ikinci yer olarak `loop._patch_entry_slippage`i gösteriyordu
+    # ve bu YANLIŞTI — o fonksiyon `motor != "ayna"` ile süzer ve `fill`i bir DEĞER alanı olarak
+    # yazar, `karar == "fill"` kıyasını hiçbir yerde yapmaz. Yanlış adresli bir tek-kaynak beyanı
+    # ters çalışır: sabit ihracını yapacak sonraki tur yanlış dosyaya bakardı.
+    # Sabit ihraç edilmedi: üç yerin ikisi bu turun dokunma sınırının dışındaki modüllerde ve
+    # `analytics` kendi kovalarını kill-paydası olarak kullanıyor. Kopya kaçınılmaz olduğu için
+    # koruma DAVRANIŞSAL bir çividir, kaynak taraması değil:
+    # `test_seyrelme_ayna_v372::test_d4_dolum_sayisi_GERCEK_loop_yolundan_yazilan_satiri_sayar`
+    # satırı gerçek `daily_cycle` yolundan yazdırır ve burada sayılmasını şart koşar — `loop`un
+    # literali değişirse çivi öter.
+    dolan = {r["plan_id"] for r in pencere
+             if r.get("plan_id") and r.get("motor") == "ic" and r.get("karar") == "fill"}
+    ayna = [r for r in pencere if r.get("motor") == _loop.AYNA_SEYRELME_MOTOR]
+    dagilim = {s: 0 for s in _loop.AYNA_SEYRELME_SINIFLARI}      # DONUK sözlük: üçü de yazılır
+    disi = 0
+    for r in ayna:
+        s = str(r.get("red_sinifi") or "")
+        if s in dagilim:
+            dagilim[s] += 1
+        else:
+            disi += 1        # sözlük DIŞI değer: sessizce katlanmaz, ADIYLA sayılır
+    return {
+        "plan_n": len(planlar), "dolum_n": len(dolan),
+        "dolum_orani": (round(len(dolan) / len(planlar), 4) if planlar else None),
+        "donusmeyen_n": len(ayna), "sinif_dagilimi": dagilim, "sinif_disi_n": disi,
+        # Defterin en eski satırı pencere başlangıcından YENİYSE haftanın bir kısmı hiç görülmedi.
+        "pencere_kesildi": (en_eski > alt) if en_eski else None,
+        "pencere_baslangic": alt, "beyan": _DONUSUM_BEYAN,
+        "durum": "dolu",
+    }
+
+
 def build() -> dict:
     """Tam rapor: hafta özeti + ilerleme sayaçları + DİKKAT + çelişkiler. Her alan dürüst:
     veri yoksa None/0 — hiçbir satır uydurulmaz."""
@@ -340,6 +416,9 @@ def build() -> dict:
             "window_truncated": _truncated,
             "window_oldest_ts": _oldest_ts or None,
             "window_since": since,
+            # PLAN → DOLUM DÖNÜŞÜMÜ (kart EXE-2026-011 §5): "kaç plan doluma dönüşmedi ve NEREDE
+            # düştü" — EDG-2026-042 hakem takvim sorusunun paydası buradan okunur.
+            "donusum": _donusum_ozeti(since),
         },
         "progress": {   # her satır: "karara ne kadar kaldı?" — milestone para birimi
             "shadow_promotion": {"have": shadow.get("n_live", 0), "need": 30},

@@ -5,8 +5,9 @@ Bulgular bu turda BAĞIMSIZ olarak yeniden ölçüldü (kör uygulama yok) — a
 kaynak koddan doğrulandı:
 
 (1) DEĞER-KÖRLÜĞÜ. `loop.py` bir silahlı planın kaybolma sebebini plan defterine `broker_status`
-    alanıyla yazar ve ÜÇ değer üretir: `failed_broker_rejection` (`loop` pano-dürüstlük bloğu/852),
-    `gap_veto` (loop.py:813) ve `armed_dropped_<kapı>` (loop.py:332, f-string). Pano yalnız
+    alanıyla yazar ve ÜÇ değer üretir: `failed_broker_rejection` ve `gap_veto` (ikisini de
+    `loop.mirror_submit_armed` kendi içinde basar) ve `armed_dropped_<kapı>`
+    (`loop._armed_drop_row`, `ARMED_DAMGA_ONEKI` önekinden türetilen f-string). Pano yalnız
     BİRİNCİSİNİ tanıyordu: `nextSessionCard`in `else` dalı diğer HER değeri nötr/olumlu
     "gönderilecek" rozetiyle çiziyor, `_durumEmirKarti` ise `bekleyen = silahlı − gönderilen −
     ret` aritmetiğiyle onları "gönderilecekte kaldı" sayacına yazıyordu. Yani gap-vetosuyla ya da
@@ -237,8 +238,22 @@ def test_d2_armed_dropped_oneki_ve_kapi_adlari_karsilaniyor():
     """`armed_dropped_<kapı>` bir f-string'dir; önek jenerik karşılanır, bilinen kapı adları da
     sözlükte olmalı (yoksa operatör 'DÜŞTÜ: data_bad' gibi ham bir anahtar okur)."""
     kod = _yorumsuz_py(LOOP)
-    assert 'f"armed_dropped_{' in kod, (
-        "üretici damga biçimi değişmiş — pano öneki artık yanlış yerde arıyor olabilir")
+    # ÖNEK ARTIK ÜRETİCİDE LİTERAL DEĞİL, SABİT (2026-09-02, TSK-019 düzeltme turu 2): eski hâl
+    # `'f"armed_dropped_{' in kod` diye üreticinin METNİNİ pinliyordu. Üretici `loop.
+    # ARMED_DAMGA_ONEKI`den türetmeye geçince o metin kayboldu — ama bu testin KORUDUĞU sözleşme
+    # kaybolmadı, GÜÇLENDİ: artık Python tarafında tek bir kaynak var ve karşılaştırma o kaynağın
+    # DEĞERİ ile panonun JS literali arasında yapılıyor (diller arası tek-kaynak kıyası). Metin
+    # pinlemek üreticinin biçimini dondururdu; bu ise ANLAMI bağlar.
+    from meridian import loop as _loop
+    assert "ARMED_DAMGA_ONEKI" in kod, (
+        "üretici öneki sabitten türetmiyor — damga biçimi değişmiş olabilir ve pano öneki "
+        "yanlış yerde arıyor olabilir")
+    _js_onek = re.search(r'indexOf\("([a-z_]+)"\)\s*===\s*0', APPJS)
+    assert _js_onek, "pano `armed_dropped_` önek eşleşmesi bulunamadı — kıyas kurulamıyor"
+    assert _js_onek.group(1) == _loop.ARMED_DAMGA_ONEKI, (
+        f"önek İKİ DİLDE AYRIŞTI: pano={_js_onek.group(1)!r} "
+        f"üretici(loop.ARMED_DAMGA_ONEKI)={_loop.ARMED_DAMGA_ONEKI!r} — düşen planlar panoda "
+        f"'tanınmayan durum' diye ham basılır")
     sozluk = re.search(r"const AYNA_KAPI_TR = \{(.*?)\};", APPJS, re.S)
     assert sozluk, "AYNA_KAPI_TR sözlüğü bulunamadı"
     taninan = set(re.findall(r"(\w+):", sozluk.group(1)))

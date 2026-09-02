@@ -328,7 +328,12 @@ def _armed_drop_row(pl: dict, dstr: str, gate: str, **extra) -> None:
     betimleyici, oran/eşik ÜRETMEZ) ve pano mutabakat masası onu yüzeye çıkarıyor; eski okuyucular
     — olay defteri (`armed_dropped`) ve plan satırının `broker_status` damgası — yanında aynen
     duruyor (gap-veto ile birebir aynı desen)."""
-    status = f"armed_dropped_{gate}"
+    # ÖNEK SABİTTEN TÜRER, TEKRARLANMAZ (düzeltme turu 2): okuyan taraf `_damga_sinifi` bu öneke
+    # bakarak "silahlıydı, kapıya hiç girmedi" hükmü veriyor. İki tarafın önekini AYRI AYRI yazmak
+    # sessizce ayrışabilen bir kopyaydı ve onu koruduğu sanılan AST çivisi f-string'in METNİNİ hiç
+    # okumuyordu — yani kopya korumasızdı. Sabit bu modülde tanımlı (aşağıda, ayna-satırı bloğunda;
+    # modül düzeyi ad çağrı anında çözülür), o yüzden kopya KAÇINILMAZ DEĞİLDİ. Davranış birebir aynı.
+    status = f"{ARMED_DAMGA_ONEKI}{gate}"
     pl["broker_status"] = status
     obs.warn("armed_dropped", ticker=pl.get("ticker"), plan_id=pl.get("id"), gate=gate,
              broker_status=status, plan_date=pl.get("date"),
@@ -338,6 +343,213 @@ def _armed_drop_row(pl: dict, dstr: str, gate: str, **extra) -> None:
                        "karar": status, "fill": None,
                        "fill_vs_resmi_acilis_bps": None, "fill_vs_limit_bps": None,
                        "red_detay": {"kapi": gate, **extra}})
+
+
+# ==================================================================================================
+# E2 AYNA-SATIRI — KAPI-ÖNCESİ SEYRELMENİN TEK İZİ (kart EXE-2026-011, TSK-019)
+# ==================================================================================================
+# ÖLÇÜLEN KUSUR: E2 satırını yalnız GÖNDERİM KAPISINA ULAŞAN plan alır (`mirror_submit_armed` →
+# karar ∈ {submitted, gap_veto, unreachable, rejected}) ya da kapıda DÜŞEN silahlı plan
+# (`_armed_drop_row`, motor="kapi"). Kapıya HİÇ ulaşmayan plan — üretildi, silahlanmadı — defterde
+# İZ BIRAKMAZ. Canlı ölçüm (2026-08-31): defterde 36/36 submitted+dolu, yani seyrelmenin TAMAMI
+# kapı-öncesinde ve ÖLÇÜSÜZ; "dolum / plan-günü" paydası defterden okunamıyordu ve EDG-2026-042
+# hakem eşik takvimi tam o sayıya bağlıydı.
+#
+# `motor="ayna_seyrelme"` BİLİNÇLİ ve `_armed_drop_row`ın "motor=kapi" gerekçesiyle AYNI sınıftan:
+# satır bir İCRA KARARI DEĞİLDİR ve `analytics.entry_execution_summary`in üç kovasına (ayna/ic/kapi)
+# GİRMEZ — hiçbir oranın payını ya da PAYDASINI kaydırmaz (kill-list dokunulmazdır).
+#
+# BEDEL, BEYANLI (bedel yasası): E2 satır hacmi seans başına ≤ üretilen plan sayısı kadar artar ve
+# `ENTRY_LEDGER_CAP` sabit kaldığı için defterin GERİYE görüş penceresi KISALIR. Kazanç ölçüldü
+# (ölçülemeyen seyrelme okunur oluyor); bedel de yazılıdır — okuyucular pencereyi TARİHE göre kurar
+# (`analytics._entry_rows`, `selfreview._donusum_ozeti`), satır sayısına göre değil.
+AYNA_SEYRELME_MOTOR = "ayna_seyrelme"
+AYNA_SEYRELME_KARAR = "donusmedi"     # E2 `karar` alanı: icra hükmü değil, DÖNÜŞÜM hükmü
+# SEBEP SÖZLÜĞÜ DONUK (kart §3 + beyanlı_sınırlar 3): ÜÇ sınıf. Uygulamada dördüncü bir AYIRT
+# EDİLEBİLİR sınıf görülürse sözlüğe EKLENMEZ — `olculemedi`ye sayılır ve yeni kartla açılır
+# (eşiğin sonradan değişmemesi ilkesinin sözlük karşılığı).
+AYNA_SINIF_NOT_ARMED = "not_armed"                      # üretildi, silahlı kümeye HİÇ girmedi
+AYNA_SINIF_ARMED_NOT_SUBMITTED = "armed_not_submitted"  # silahlıydı, gönderim kapısına hiç girmedi
+AYNA_SINIF_OLCULEMEDI = "olculemedi"                    # alanlardan çözülemedi (UYDURMA YASAĞI)
+AYNA_SEYRELME_SINIFLARI = (AYNA_SINIF_NOT_ARMED, AYNA_SINIF_ARMED_NOT_SUBMITTED,
+                           AYNA_SINIF_OLCULEMEDI)
+# TÜRETME, KOPYA DEĞİL (tek-kaynak yasası): aşağıdaki iki vokabüler BAŞKA yerde ÜRETİLİR, burada
+# yalnız OKUNUR. Kopya kaçınılmaz (üreticiler çalışma anında taranamaz — biri f-string, öteki AST
+# denetimi), o yüzden AYRIŞMA ÇİVİSİ var: `test_seyrelme_ayna_v372::test_b4_vokabuler_KAYNAKTAN_
+# turer_ayrisma_civisi` üreticileri kaynaktan tarar ve bu iki demetle karşılaştırır.
+#   ARMED_DAMGALARI / ARMED_DAMGA_ONEKI ← yazan: `mirror_submit_armed` (gap_veto ·
+#       failed_broker_rejection) ve `_armed_drop_row` (armed_dropped_<kapı>)
+#   KAPI_HUKUMLERI ← `guard.classify_gate`; kaynaktan okuyan denetçi `pitlaw.karar_vokabuleri`
+ARMED_DAMGALARI = ("gap_veto", "failed_broker_rejection")
+ARMED_DAMGA_ONEKI = "armed_dropped_"
+KAPI_HUKUMLERI = ("GO", "REVIEW", "NO_GO")
+
+
+def _damga_sinifi(bs) -> str:
+    """`broker_status` damgasını YAZARINA göre sınıflar — DÖRT cevap. Damganın varlığı değil,
+    onu KİMİN bastığı sınıf üretir.
+
+      `yok`            — damga yok.
+      `kapi_disi`      — `armed_dropped_<kapı>`; yazan `_armed_drop_row`. Plan silahlıydı ve
+                         gönderim kapısına HİÇ ulaşmadan düşürüldü → gerçek SİLAHLILIK KANITI.
+      `kapiya_ulasti`  — `gap_veto` / `failed_broker_rejection`; ikisini de `mirror_submit_armed`
+                         KENDİ İÇİNDE basar, yani plan kapıya ULAŞMIŞTIR ve karar satırını da
+                         orada alır. İzsiz kalmışsa geriye tek olasılık kalır: karar satırı
+                         YAZILAMADI. Bu, donuk sözlükteki iki sınıfın hiçbiri değildir.
+      `taninmiyor`     — bilinmeyen damga; panonun `aynaDurumu` disiplini (ham bas, kovaya katlama).
+
+    NEDEN DÖRT (düzeltme turu 1, K-1): eskiden `kapiya_ulasti` dalı `kapi_disi` ile aynı kovadaydı
+    ve `armed_not_submitted` üretiyordu. Bu, aynı fonksiyonun `gonderilmis` dalıyla ÇELİŞİYORDU:
+    orada "kapıya ulaştı → `olculemedi`" deniyor, burada aynı olgu "silahlı kaldı, kapıya hiç
+    girmedi" diye sınıflanıyordu. İki dal artık aynı şeyi söylüyor."""
+    if not bs:
+        return "yok"
+    s = str(bs)
+    if s.startswith(ARMED_DAMGA_ONEKI):
+        return "kapi_disi"
+    if s in ARMED_DAMGALARI:
+        return "kapiya_ulasti"
+    return "taninmiyor"
+
+
+def _ayna_seyrelme_sinifi(pl: dict, *, silahliydi: bool, gonderilmis: bool) -> str:
+    """İzsiz kalmış bir planın DÖNÜŞMEME sınıfı — YALNIZ planın kendi kayıtlı alanlarından.
+
+    PIT (kart §4): girdiler o seansta ZATEN diske yazılmış alanlardır — plan satırının
+    `gate_verdict`/`broker_status`/`llm_veto` damgaları ve kitabın `armed`/`alpaca_submitted`
+    üyeliği. Sonradan öğrenilen hiçbir şey kullanılmaz; satır yazıldıktan sonra GÜNCELLENMEZ ve
+    geriye dönük yeniden-etiketleme yasaktır (EXE-009 kill#3 sınıfı).
+
+    SINIRIN DÜRÜST TARAFI — `olculemedi` DÖRT yerden doğar ve dördü de "bilmiyorum"dur:
+      (a) plan gönderim kümesinde ama karar satırı yok → kapıya ULAŞMIŞ; donuk sözlükteki iki
+          sınıfın hiçbiri bunu anlatmaz ve ÜÇÜNCÜ bir sınıf İCAT EDİLMEZ;
+      (b) `broker_status` kapı damgası taşıyor (`gap_veto`/`failed_broker_rejection`) — (a) ile
+          AYNI olgu, ikinci bir kanıt yolundan: plan kapıya ulaştı, karar satırı yazılamadı;
+      (c) `broker_status` TANINMAYAN bir damga taşıyor (bkz. `_damga_sinifi`);
+      (d) plan satırı kapı hükmü taşımıyor (şema eksik/eski) → silahlanma yolu okunamaz.
+
+    SIRA ÖNEMLİ: kapı damgası `silahliydi`YE BASKIN ÇIKAR. İkisi birden doğruysa daha GEÇ olan
+    olgu (kapıya ulaşma) sınıfı belirler — plan hem silahlanmış hem kapıya girmiştir ve "kapıya
+    hiç girmedi" demek yanlış olurdu."""
+    if gonderilmis:
+        return AYNA_SINIF_OLCULEMEDI
+    damga = _damga_sinifi(pl.get("broker_status"))
+    if damga in ("kapiya_ulasti", "taninmiyor"):
+        return AYNA_SINIF_OLCULEMEDI
+    if damga == "kapi_disi" or silahliydi or pl.get("llm_veto") is True:
+        return AYNA_SINIF_ARMED_NOT_SUBMITTED
+    if str(pl.get("gate_verdict") or "") in KAPI_HUKUMLERI:
+        return AYNA_SINIF_NOT_ARMED
+    return AYNA_SINIF_OLCULEMEDI
+
+
+def _ayna_seyrelme_nedeni(pl: dict, sinif: str) -> str:
+    """Alt-neden SERBEST METİN (kart §3): sınıf donuktur, gerekçe değil. Satır, sınıfın HANGİ
+    ALANLARDAN türediğini kendi üstünde taşır — "neden bu sınıf?" sorusu sonradan deftere
+    sorulabilsin ve cevabı kodun o günkü hâline değil satıra bağlı olsun.
+
+    KAPI DAMGASI HÂLİ ADIYLA YAZILIR (K-1): `olculemedi`nin en bilgi taşıyan alt-hâli budur ve
+    ham alan dökümüne gömülürse okuyan onu "sınıf çözülemedi" diye geçer — oysa söylediği şey
+    çok daha dardır: plan kapıya ULAŞTI, karar satırı yazılamadı."""
+    _d = _damga_sinifi(pl.get("broker_status"))
+    _on = ("kapı damgası var ama karar satırı yok — E2 yazım arızası sınıfı; "
+           if _d == "kapiya_ulasti" and sinif == AYNA_SINIF_OLCULEMEDI else "")
+    return (f"{_on}sinif={sinif} · gate_verdict={pl.get('gate_verdict')!r} "
+            f"broker_status={pl.get('broker_status')!r} llm_veto={pl.get('llm_veto')!r} "
+            f"setup={pl.get('setup')!r}")[:200]
+
+
+def _ayna_seyrelme_yaz(meta: dict, dstr: str, kohort: str | None,
+                       silahli_baslangic: set) -> int:
+    """SEANS KAPANIŞI: kaderi BU SEANSTA kapanmış izsiz her plana bir ayna-satırı. Yazılan satır
+    sayısını döndürür.
+
+    KOHORT NEDEN `meta["last_date"]`, YANİ BU TURUN PLANLARI DEĞİL: bir planın dolum fırsatı
+    üretildiği seansın kapanışı değil, BİR SONRAKİ seansın AÇILIŞIDIR. Bu turda üretilen planlar
+    daha yolun başındadır — pencere yasası akşam gönderimini SABAH kancasına erteler
+    (`mirror_submit_armed`, EXE-009+K2), yani bugün "gönderilmedi" hükmü vermek yarın sabah
+    gönderilecek plana İKİNCİ bir sonuç izi yazmak olurdu (kill#1, çift-satır). Kitabın son
+    işlediği seansın planları ise bu turun AÇILIŞ fazında son şansını KULLANDI. Arada seans
+    atlanmış olsa bile adres doğru kalır: `last_date` tam olarak "dolum fırsatını BU açılışta
+    kullanan planlar"ın üretim günüdür.
+
+    NEDEN İŞ-2-EOD KEMERİNDEN SONRA: geç-gönderim kemeri (`mirror_gec_gonderim`) bu turun SON
+    gönderim şansıdır; ondan ÖNCE dikilseydi kemerin göndereceği plana "gönderilmedi" denirdi.
+
+    TEKİLLİK (kart §2, kill#1): E2'de HERHANGİ bir satırı olan plan ayna-satırı ALMAZ — karar
+    satırı hangi tarihte yazılmış olursa olsun (gönderim satırı kohort seansında, dolum/kapı satırı
+    bu seansta yazılır), JOIN tarihe değil `plan_id`ye göredir. Bu aynı zamanda İDEMPOTENSTİR:
+    yazılan ayna-satırının KENDİSİ de bir E2 satırıdır, ikinci koşum onu görür ve yazmaz.
+
+    HÂLÂ SİLAHLI PLAN HÜKÜM ALMAZ: barı yayınlanmamış plan taşınır (`_carry_armed_without_bar`) ve
+    bir sonraki seansta dolabilir — kaderi kapanmadan "dönüşmedi" demek erken hükümdür (kill#2'nin
+    ileri yönlü ikizi).
+
+    GERİ-DOLUM YOK (kill#2): süzgeç YALNIZ kohort seansıdır. Daha eski izsiz planlar bilerek
+    dışarıda kalır — o günün "dönüşmedi" hükmü bugünden verilemez.
+
+    ÖLÇÜM KATMANI KARARI ASLA BLOKLAMAZ (`_entry_exec_write` ile aynı sözleşme): gövde kendi
+    istisnasını yutmaz, ADIYLA kaydeder ve turu düşürmez."""
+    if not kohort or kohort == dstr:
+        return 0
+    try:
+        planlar = [r for r in store.read_jsonl("trade_plans.jsonl")
+                   if str(r.get("date") or "") == kohort]
+        if not planlar:
+            return 0
+        # YARIŞ PENCERESİ, BEYANLI (K-3, düzeltme turu 1 — kilit BÜYÜTÜLMEDİ): bu okuma
+        # `file_lock(ENTRY_LEDGER)` DIŞINDADIR. Teorik kusur şudur: okuma ile `_entry_exec_write`
+        # arasına gün-içi bir `mirror_submit_armed` karar satırı düşerse `izli` bayat kalır ve
+        # aynı plana ikinci bir iz (ayna-satırı) yazılabilir — yani kill#1.
+        # PENCERE NEDEN DAR: (a) kohort planlarının gönderim şansı bu satıra gelindiğinde
+        # TÜKENMİŞTİR (kohort akşamı + sabah kancası + İŞ-2-EOD kemeri, hepsi geride); yani bu
+        # anda o planlar için karar satırı yazacak bir yazar KALMAMIŞTIR. (b) Gün-içi yazarlar
+        # (4b, onay anı, pano düğmesi) BU turun planlarıyla ilgilenir, kohortunkilerle değil.
+        # (c) Aralık milisaniyeler mertebesinde ve EOD saatinde tetik penceresi kapalıdır.
+        # NEDEN KİLİT BÜYÜTÜLMEDİ: `izli`yi kilit altına almak, döngünün en uzun ölçüm bloğunu
+        # E2 kilidinin İÇİNE alır ve gün-içi gönderim yolunu EOD boyunca bloklardı — mutabakat
+        # yolunu ölçüm katmanı için durdurmak, ölçümün kararı bloklamaması yasasının ihlali olurdu.
+        # YAKALAYICI: yarış gerçekleşse bile iz KALICI DEĞİLDİR — bir sonraki koşumun plan_id
+        # JOIN'i iki satırı da görür ve ÜÇÜNCÜSÜNÜ yazmaz; çift satır `analytics` kovalarına
+        # girmediği için hiçbir oranı da kaydırmaz. Ölçülmüş bir vaka YOKTUR (bu bir kod okuması).
+        izli = {r.get("plan_id") for r in store.read_jsonl(ENTRY_LEDGER) if r.get("plan_id")}
+        hala_silahli = {p.get("id") for p in (meta.get("armed") or []) if p.get("id")}
+        gonderilmis = set(meta.get("alpaca_submitted") or [])
+        n, dagilim = 0, {}
+        for pl in planlar:
+            pid = pl.get("id")
+            if not pid:
+                obs.warn("ayna_seyrelme_kimliksiz_plan", date=dstr, plan_date=kohort,
+                         ticker=pl.get("ticker"),
+                         detail="plan satırında `id` yok — E2 ile eşleşemez, ayna-satırı "
+                                "yazılamaz (tekillik JOIN'i kimliğe dayanır); satır sessizce "
+                                "atlanmadı, bu olay onun kaydıdır")
+                continue
+            if pid in izli or pid in hala_silahli:
+                continue
+            sinif = _ayna_seyrelme_sinifi(pl, silahliydi=pid in silahli_baslangic,
+                                          gonderilmis=pid in gonderilmis)
+            _entry_exec_write({"date": dstr, "plan_id": pid, "ticker": pl.get("ticker"),
+                               "motor": AYNA_SEYRELME_MOTOR, "karar": AYNA_SEYRELME_KARAR,
+                               "entry_trigger": pl.get("entry_trigger"), "fill": None,
+                               "red_sinifi": sinif, "red_nedeni": _ayna_seyrelme_nedeni(pl, sinif),
+                               "plan_date": kohort, "kaynak": "eod_ayna"})
+            n += 1
+            dagilim[sinif] = dagilim.get(sinif, 0) + 1
+        if n:
+            obs.log("ayna_seyrelme_yazildi", date=dstr, plan_date=kohort, n=n,
+                    sinif_dagilimi=dagilim, kohort_plan=len(planlar),
+                    detail="kapı-öncesi seyrelme E2'ye yazıldı — her üretilmiş plan artık TEK "
+                           "sonuç izi taşır (karar satırı YA DA ayna-satırı); okuyan: "
+                           "selfreview haftalık dönüşüm satırı")
+        return n
+    except Exception as e:
+        obs.warn("ayna_seyrelme_yazim_dustu", error=f"{type(e).__name__}: {e}", date=dstr,
+                 plan_date=kohort,
+                 detail="seyrelme ayna-satırı yazımı istisnayla düştü — ölçüm katmanı turu "
+                        "DÜŞÜRMEZ, ama o seansın seyrelmesi defterde EKSİK kalır ve bu eksiklik "
+                        "'0 dönüşmeyen' diye okunamaz: bu olay onun kaydıdır")
+        return 0
 
 
 # İKİ ÇAĞIRAN, İKİ OLAY ADI: aynı iptal YOLU iki FARKLI olguyu anlatır.
@@ -1552,6 +1764,15 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         _reconcile_gunu_atlandi("noop", dstr, takvim=all_dates)                    # B7b: atlanan mutabakat OLAYLI
         return {"status": "noop", "date": dstr}
 
+    # KOHORT FOTOĞRAFI (kart EXE-2026-011) — seyrelme ayna-satırının İKİ PIT girdisi, AÇILIŞ fazı
+    # kümeyi tüketmeden ÖNCE okunur. `_ayna_kohort`: kitabın son işlediği seans, yani bu turun
+    # açılışında dolum fırsatını kullanan planların ÜRETİM günü. `_ayna_silahli0`: o planların
+    # silahlı üyeliği — diskten gelir (kohort seansının kapanışında yazıldı) ve aşağıda
+    # `_llm_veto_filter`, dolum dalı ve kapı dalı tarafından TÜKETİLİR. Sonra okunsaydı
+    # "silahlıydı" kanıtı kaybolur, silahlı-ama-izsiz plan `not_armed` diye YANLIŞ sınıflanırdı.
+    _ayna_kohort = str(meta.get("last_date") or "") or None
+    _ayna_silahli0 = {p.get("id") for p in (meta.get("armed") or []) if p.get("id")}
+
     marks = _marks(per, d)
     # OPEN-phase risk decisions (breaker, de-risk, sizing) mark at D's OPEN — the close isn't known at
     # the open (close-marks here let the morning decisions see the afternoon's move).
@@ -1742,6 +1963,19 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                          n=len(_ic_dolan_gonderilmemis),
                          detail="geç-gönderim kemeri istisnayla düştü — aynasız iç dolumları "
                                 "reconcile split_brain + ONAYLI_PLAN_GONDERILMEDI bekçisi yakalar")
+
+    # SEYRELME AYNA-SATIRI (kart EXE-2026-011) — İŞ-2-EOD KEMERİNDEN SONRA, P4 AÇIKLIĞININ DIŞINDA.
+    # YER İKİ KOŞULLA BELİRLENDİ:
+    #   (a) kemer bu turun SON gönderim şansıdır; ayna-satırı ancak geç-gönderim şansı TÜKENDİKTEN
+    #       sonra dikilebilir — daha erken dikilse kemerin göndereceği plana "gönderilmedi" denirdi
+    #       ve aynı plan iki sonuç izi taşırdı (kart kill#1).
+    #   (b) blok P4'ün DENETLENEN açıklığının DIŞINDA durur — `shadow_variants`ın P3 dışına
+    #       alınmasıyla birebir aynı gerekçe: ölçüm katmanının maliyeti/arızası denetlenen icra
+    #       açıklığına yazılmasın. P4'ün beyan ettiği artefakt `state/trades.jsonl`, bu blok ise
+    #       E2 defterine yazar.
+    # Kohorttaki planların gönderim şansı bu turdan ÖNCE de vardı (sabah kancası) ve dolum şansı bu
+    # turun açılışıydı; ikisi de bu satıra gelindiğinde kapanmıştır.
+    _ayna_seyrelme_yaz(meta, dstr, _ayna_kohort, _ayna_silahli0)
 
     # GÜNLÜK KESİCİ PENCERESİ İKİ MOTORDA AYNI. Bu yazım seansın SONUNDA
     # ve KAPANIŞ markıyla yapılıyordu (`b.equity(_marks(per, d))`); okuma tarafı ise D+1'in AÇILIŞ
