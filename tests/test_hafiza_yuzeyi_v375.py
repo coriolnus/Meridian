@@ -71,6 +71,23 @@ L. YAZMA UÇLARI (TSK-111 dilim 1, Task 11-A, 2026-09-02) — SALT-OKUNURLUK ART
    (CP'nin `features.observations` bayrağı tam olarak burayı okur). Uydurma yasağı: olmayan bir
    yola vekil yazılmadı; bulgu devir raporuna taşındı.
 
+M. `/varlik` — TSK-112 GÖREV 12-A (2026-09-03) — CP `entities-view` künye paneli tek bir yeni uç
+   ister: `GET /api/hindsight/varlik?bank=&id=` → upstream `GET /entities/{entity_id}`
+   (`get_entity`, aynı commit çapası, `EntityDetailResponse`). Zarf `{govde, neden}` —
+   `zihin-modeli` emsali (TEK bacaklı okuma; `/detay`nin iki bacaklı `oge`/`tarihce`si BURADA
+   GEÇERLİ DEĞİL, ayrı bir tarihçe ucu YOK). `/liste`nin `entity_id` süzgeci brief'te bu görevin
+   parçası olarak anılıyor ama ÖLÇÜM SONUCU ZATEN VARDI (T1 R1, `list_memories` parametresi) —
+   bu turun kendisi onu yeniden EKLEMEDİ, mutasyonla DOĞRULADI.
+
+   `id` DUVARI 11-A'DAN ÖDÜNÇ (`_hafiza_yol_parcasi_guvenli`, tek-kaynak yasası), `bank`'TAN
+   FARKLI POLİTİKAYLA: yirmi iki kardeş CPUI ucunda kimlik yalnız KAÇIRILIR (`_hafiza_kacir`) —
+   kirli girdi upstream'e escape'lenmiş gider, sözleşme 200'dür. `/varlik`ın `id`si REDDEDİLİR
+   (400): CP künye panelinin `id`si her zaman `/varliklar`/`bellek-graf` düğümünden gelen bir
+   UUID'dir, serbest metin değil. `bank` kardeş uçlarla AYNI kaçırma politikasında KALIR — yalnız
+   `id` için sözleşme değişti. Uç `CPUI` TABLOSUNDADIR (bank enjeksiyonu/auth/sır/zarf/limit-yok
+   çivilerinin TAMAMINDAN parametrik geçer) ama `CPUI_IKI_KIMLIKLI`YE BİLEREK EKLENMEDİ — o liste
+   ikinci kimliğin KAÇIRILDIĞINI varsayar; `id`nin REDDİ ayrı çivilerle test edilir (J-L).
+
 UPSTREAM ÇAPASI — ÖLÇÜM BUGÜN YENİDEN TÜRETİLEBİLİR OLMALI
 ----------------------------------------------------------
 Bu dosyanın ve `meridian/api.py` HAFIZA bloğunun BÜTÜN upstream iddiaları tek bir kaynaktan
@@ -1018,6 +1035,7 @@ def test_hafiza_sabitleri_olculen_degerlerde():
 CPUI: tuple[tuple[str, str], ...] = (
     ("/api/hindsight/ozet?bank=B", "/banks/B/stats/memories-timeseries"),
     ("/api/hindsight/varliklar?bank=B", "/banks/B/entities"),
+    ("/api/hindsight/varlik?bank=B&id=e1", "/banks/B/entities/e1"),
     ("/api/hindsight/varlik-graf?bank=B", "/banks/B/entities/graph"),
     ("/api/hindsight/belgeler?bank=B", "/banks/B/documents"),
     ("/api/hindsight/belge-parcalari?bank=B&belge=d1", "/banks/B/documents/d1/chunks"),
@@ -1126,6 +1144,13 @@ VARLIKLAR_ORNEK = {"items": [{"id": "123e4567-e89b-12d3-a456-426614174000",
                               "first_seen": "2024-01-15T10:30:00Z",
                               "last_seen": "2024-02-01T14:00:00Z"}],
                    "total": 150, "limit": 100, "offset": 0}
+#: `EntityDetailResponse` (openapi v0.9.2, commit ebad4782 — `get_entity`) `example:` bloğu, TSK-112
+#: Görev 12-A. Sınıf (2): alan ADLARI upstream'in, DEĞERLER upstream'in kurgusal örneği.
+VARLIK_TEK_ORNEK = {"id": "123e4567-e89b-12d3-a456-426614174000", "canonical_name": "John",
+                    "mention_count": 15, "first_seen": "2024-01-15T10:30:00Z",
+                    "last_seen": "2024-02-01T14:00:00Z",
+                    "observations": [{"text": "John works at Google",
+                                       "mentioned_at": "2024-01-15T10:30:00Z"}]}
 GRAF_ORNEK = {"nodes": [{"data": {"id": "uuid-1", "label": "Alice", "mentionCount": 12,
                                   "color": "#42a5f5"}}],
               "edges": [{"data": {"id": "uuid-1-uuid-2", "source": "uuid-1", "target": "uuid-2",
@@ -1238,6 +1263,7 @@ _CPUI_GOVDELER: dict[str, object] = {
     "/banks/B/stats": STATS_ORNEK,
     "/banks/B/stats/memories-timeseries": ZAMAN_SERISI_ORNEK,
     "/banks/B/entities": VARLIKLAR_ORNEK,
+    "/banks/B/entities/e1": VARLIK_TEK_ORNEK,
     "/banks/B/entities/graph": GRAF_ORNEK,
     "/banks/B/documents": BELGELER_ORNEK,
     "/banks/B/documents/d1/chunks": PARCALAR_ORNEK,
@@ -1962,6 +1988,56 @@ def test_sorgu_degeri_ikinci_parametre_uretemez(monkeypatch, tmp_path, sandbox_s
     url = casus.cagri(parca)["url"]
     assert "limit=99999" not in url, f"sorgu değeri ikinci bir parametre üretti: {url}"
     assert "%26" in url, f"`&` kodlanmadı — değer ham geçti: {url}"
+
+
+# --------------------------------- J-L. GÖREV 12-A: `/varlik`a ÖZGÜ (id duvarı, tabloya sığmayan)
+#
+# `/varlik` CPUI TABLOSUNDADIR (yukarıda) ve o yüzden J-A…J-G'nin PARAMETRİK çivilerinin
+# TAMAMINDAN geçer — `bank` enjeksiyon çivisi (J-G, `test_cpui_bank_yol_enjeksiyonuna_kapali`)
+# dâhil: bu ucun `bank`ı kardeşleriyle AYNI kaçırma politikasındadır. Burada YALNIZ tabloya
+# SIĞMAYAN şey çivilenir: `id`nin 11-A'dan ödünç alınan REDDETME duvarı. `CPUI_IKI_KIMLIKLI`ye
+# BİLEREK EKLENMEDİ — o liste ikinci kimliğin KAÇIRILDIĞINI varsayar
+# (`test_cpui_ikinci_kimlik_yol_enjeksiyonuna_kapali` kirli bir kimliğin upstream'e
+# ESCAPE'lenerek GİTTİĞİNİ ölçer, `casus.cagrilar` boş olursa öter); `/varlik`ın `id`si onun
+# yerine REDDEDİLİR ve upstream'e HİÇ gidilmez — aynı listeye eklenseydi o çivi "kimlik verildiği
+# hâlde upstream'e hiç gidilmedi" diye YANLIŞ nedenle kırmızı olurdu.
+
+@pytest.mark.parametrize("sorgu,eksik_alan", [
+    ("", "bank"), ("?bank=B", "id"), ("?id=e1", "bank"),
+    ("?bank=&id=e1", "bank"), ("?bank=B&id=", "id"),
+])
+def test_varlik_eksik_parametre_400_degil_neden(monkeypatch, tmp_path, sandbox_state,
+                                                 sorgu, eksik_alan):
+    """BOŞ DİZGE DE EKSİKTİR (F/J-F emsali): `?id=` bir değer DEĞİLDİR. Eksiklik `_hafiza_eksik`
+    ile `_hafiza_yol_parcasi_guvenli` DEVREYE GİRMEDEN ÖNCE yakalanır — ikisi karışırsa "eksik"
+    (200 + neden) "kirli" (400) diye YANLIŞ kodla dönerdi."""
+    casus = _cpui(monkeypatch, tmp_path)
+    r = _client().get(f"/api/hindsight/varlik{sorgu}")
+    assert r.status_code == 200, f"{sorgu!r}: {r.status_code} — eksik parametre 400 üretti"
+    g = r.json()
+    assert set(g) == {"govde", "neden"}, sorted(g)
+    assert g["govde"] is None
+    assert _dolu(g["neden"]) and eksik_alan in g["neden"], g["neden"]
+    assert casus.cagrilar == [], f"{sorgu!r}: parametre eksikken upstream'e gidildi"
+
+
+@pytest.mark.parametrize("kotu", ["../../../stats", "a/../../etc", "a%2Fb", "a b", "e1/../x"])
+def test_varlik_id_yol_kacisi_reddedilir(monkeypatch, tmp_path, sandbox_state, kotu):
+    """ID DUVARI (TSK-112 Görev 12-A, 11-A'dan ÖDÜNÇ): `id` upstream URL'inin PATH'ine giriyor ve
+    CP künye panelinde her zaman `/varliklar`/`bellek-graf`tan gelen bir UUID'dir — serbest metin
+    DEĞİL. Kardeş uçların aksine kirli girdi burada KAÇIRILIP GEÇİRİLMEZ, REDDEDİLİR: 400 +
+    `govde: None` + DOLU `neden`, upstream'e HİÇ gidilmeden (11-A'nın `test_islem_yol_kacisi_
+    reddedilir` emsali, okuma tarafının aynısı — GİRDİ İSTEMCİ TARAFINDA KAÇIRILIR ki sunucunun
+    GERÇEKTEN gördüğü değer `kotu` olsun, G bölümünün mutasyon dersi)."""
+    import urllib.parse
+    casus = _cpui(monkeypatch, tmp_path)
+    r = _client().get(f"/api/hindsight/varlik?bank=B&id={urllib.parse.quote(kotu, safe='')}")
+    assert r.status_code == 400, f"{kotu!r}: {r.status_code} — kirli id upstream'e kaçırılarak geçti"
+    g = r.json()
+    assert set(g) == {"govde", "neden"}, sorted(g)
+    assert g["govde"] is None
+    assert _dolu(g["neden"]) and "id" in g["neden"], g["neden"]
+    assert casus.cagrilar == [], f"{kotu!r}: kirli id'yle yine de upstream'e gidildi"
 
 
 # ------------------------------------------- J-H. RECALL: SORGU SINIFI, SÜZÜLMÜŞ GEÇİŞ

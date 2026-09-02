@@ -8356,6 +8356,30 @@ def api_hindsight_varliklar(request: Request, bank: str | None = None,
     return _hafiza_zarf(bank, "/entities", sorgu=_hafiza_sayfa_sorgusu(limit, offset))
 
 
+@app.get("/api/hindsight/varlik")
+def api_hindsight_varlik(request: Request, bank: str | None = None, id: str | None = None):
+    """CP `entities-view` künye paneli (düğüm tıklaması) → upstream `/entities/{entity_id}`
+    (`get_entity`, TSK-112 Görev 12-A). Zarf `{govde, neden}` — `zihin-modeli` emsali (TEK
+    bacaklı okuma: upstream `EntityDetailResponse` tek çağrıdan gelir, `/detay`nin iki bacaklı
+    `oge`/`tarihce` zarfı burada GEÇERLİ DEĞİL çünkü ayrı bir tarihçe ucu YOK).
+
+    `id` DUVARI 11-A'DAN ÖDÜNÇ (`_hafiza_yol_parcasi_guvenli`, tek-kaynak yasası), `bank`'TAN
+    FARKLI POLİTİKAYLA. Yirmi iki kardeş CPUI ucunda kimlik yalnız KAÇIRILIR (`_hafiza_kacir`) —
+    kirli girdi upstream'e ESCAPE'lenmiş gider, sözleşme 200'dür. Burada `id` REDDEDİLİR: CP
+    künye panelinin `id`si her zaman `/varliklar`/`bellek-graf` düğümünden gelen bir UUID'dir,
+    serbest metin değil — kaçırmak yerine reddetmek "bu bir kimlik değil" sinyalini erken verir.
+    `bank` kardeş uçlarla AYNI kaçırma politikasında KALIR (CPUI'nin `bank`-enjeksiyon çivisi
+    escape-through varsayar; politika burada değişseydi o çivi yanlış nedenle kırmızı olurdu)."""
+    _auth(request)
+    eksik = _hafiza_eksik(bank=bank, id=id)
+    if eksik:
+        return {"govde": None, "neden": eksik}
+    neden, _sinif = _hafiza_yol_parcasi_guvenli("id", id)
+    if neden:
+        return JSONResponse(status_code=400, content={"govde": None, "neden": neden})
+    return _hafiza_zarf(bank, "/entities/{}", kimlikler=(id,))
+
+
 @app.get("/api/hindsight/varlik-graf")
 def api_hindsight_varlik_graf(request: Request, bank: str | None = None,
                               limit: str | None = None, min_count: str | None = None):
