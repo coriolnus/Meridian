@@ -8,10 +8,10 @@
    burada BİREBİR eşleşiyordu; eşleşmeyen bölüm YOK ve düşen bölüm YOK.
 
    KAYIT O GÜNDEN BERİ BÜYÜDÜ ve sayı burada DONDURULMAZ (bayat-beyan sınıfı): bugün
-   16 yüzey · 36 bölüm (ölçüldü 2026-09-01). Onaltıncısı `gateway` (Kapı, TSK-090) ve
-   ŞABLONDA KARŞILIĞI YOK — yukarıdaki "birebir eşleşme" cümlesi göç turunun ölçümüdür,
-   bugünün sözleşmesi değil. Yeni yüzey şablondan değil Meridian'ın kendi altyapısından
-   doğduğu için `sablon` alanı bunu açıkça yazar.
+   17 yüzey · 40 bölüm (ölçüldü 2026-09-02). Şablonda karşılığı OLMAYAN iki yüzey var:
+   `gateway` (Kapı, TSK-090) ve `memory` (Hafıza, TSK-091) — yukarıdaki "birebir
+   eşleşme" cümlesi göç turunun ölçümüdür, bugünün sözleşmesi değil. İkisi de şablondan
+   değil Meridian'ın kendi altyapısından doğduğu için `sablon` alanı bunu açıkça yazar.
 
    YOLLAR ŞABLONUNKİYLE AYNI (`/dashboard/finance` …) ve bu bilinçli: şablondan
    alınan arama iletişimi, kenar çubuğu ve gelecekte alınacak sayfa gövdeleri bu
@@ -41,12 +41,14 @@ import {
   FlaskConical,
   Fingerprint,
   FolderOpen,
+  Gauge,
   GaugeCircle,
   GraduationCap,
   Hammer,
   HeartPulse,
   Kanban,
   KeyRound,
+  Landmark,
   Layers,
   LineChart,
   ListTodo,
@@ -222,6 +224,33 @@ export const YUZEYLER = {
       { kimlik: "kapi-rotalar", baslik: "LLM rotaları", soru: "Hangi model önce deneniyor, düşerse nereye geçiliyor?", ikon: Waypoints },
       { kimlik: "kapi-metrikler", baslik: "Kapıdan geçen trafik", soru: "Hangi rotadan kaç istek geçti, hangi durum koduyla döndü?", ikon: ChartColumn },
       { kimlik: "kapi-fazlar", baslik: "Kurulum fazları", soru: "Kapının hangi fazı canlı, hangisi hâlâ bekliyor?", ikon: Milestone },
+    ],
+  },
+  /* HAFIZA — TSK-091. Kapı'nın KARDEŞİ: şablonda karşılığı olmayan İKİNCİ yüzey ve
+     `sablon` alanı bunu yine SÖYLER (uydurma bir şablon adı, kaydın kendi sözleşmesini
+     tersine çevirirdi — alan hangi eşleşmenin GERÇEK olduğunu tutuyor).
+
+     KAPI'NIN HEMEN ARDINDA, ve sıra yine bir kaza değil: sistem sağlığı kutuyu, Kapı
+     kutunun ÖNÜNDEKİ kapıyı, Hafıza da o kapıdan geçen bilginin NEREDE BİRİKTİĞİNİ
+     ölçer. Üçü bir triyajın üç durağıdır ve yukarıdan aşağı okunur.
+
+     KİMLİKLER `hafiza-` ÖNEKLİ, VE ÖNEK BİR SÜS DEĞİL: kayıt sözlüğü bölüm kimliğini
+     KÜRESEL tutuyor (v288 tekillik çivisi) ve ÇIPLAK `hafiza` kimliği Belgeler
+     yüzeyinde ZATEN DOLU. Önek olmasaydı iki kayıttan biri ötekini sessizce ezer ve
+     bir bölüm derin bağda YANLIŞ yüzeye çözülürdü.
+
+     DÖRT BÖLÜM = EKRANDAKİ DÖRT `bolum-hafiza-*` ÇAPASI (v288 paritesi). */
+  memory: {
+    sablon: "(şablonda karşılığı yok — Meridian'a özgü)",
+    baslik: "Hafıza",
+    soru: "Sistem ne hatırlıyor, bu bilgi nereden geldi?",
+    ikon: Brain,
+    grup: "Panolar",
+    bolumler: [
+      { kimlik: "hafiza-bankalar", baslik: "Hafıza bankaları", soru: "Hangi bankalar var, hafıza servisi ayakta mı?", ikon: Landmark },
+      { kimlik: "hafiza-bellekler", baslik: "Kayıtlar", soru: "Bu bankada ne yazılı, tek tek ne diyor?", ikon: BookOpen },
+      { kimlik: "hafiza-operasyon", baslik: "Yazma ve okuma hareketleri", soru: "Bankaya son günlerde ne işlendi?", ikon: Activity },
+      { kimlik: "hafiza-kota", baslik: "Model çağrısı kullanımı", soru: "Hafıza servisi ne kadar model çağrısı harcadı?", ikon: Gauge },
     ],
   },
   "file-manager": {

@@ -158,6 +158,15 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   "kapi-rotalar": ["rota", "route", "llm", "openrouter", "model", "fallback", "zincir", "egress"],
   "kapi-metrikler": ["trafik", "istek", "durum kodu", "429", "sayac", "metrik"],
   "kapi-fazlar": ["faz", "tsk-089", "kurulum", "ingress", "filo", "kota"],
+  // HAFIZA YÜZEYİ (TSK-091). Kapı ile aynı gerekçe: kimlikler `hafiza-` önekli (kayıt
+  // sözlüğü bölüm kimliğini KÜRESEL tutuyor ve çıplak `hafiza` Belgeler'de dolu) ama
+  // operatör "recall", "bank", "token" diye arar — anahtarlar onun aklındaki kelimeyi
+  // taşır, başlıktakini değil. Değerler KATLANMIŞ yazılır (ö/ü/ş yok), tablonun geri
+  // kalanıyla aynı biçimde.
+  "hafiza-bankalar": ["bank", "hindsight", "banka", "arsiv", "fact"],
+  "hafiza-bellekler": ["recall", "kayit", "bellek", "memory", "ders", "metin"],
+  "hafiza-operasyon": ["retain", "consolidation", "denetim", "audit", "hareket", "yazim"],
+  "hafiza-kota": ["llm", "kota", "token", "cagri", "kullanim"],
 };
 
 const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {
@@ -168,6 +177,7 @@ const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {
   academy: ["ogrenme", "karne", "akademi", "beyin"],
   infrastructure: ["saglik", "altyapi", "sistem", "makine", "alarm", "kilit"],
   gateway: ["kapi", "apisix", "gateway", "rota", "llm", "egress", "proxy", "vekil"],
+  memory: ["hafiza", "hindsight", "bellek", "bank", "retain", "consolidation", "recall"],
   "file-manager": ["belge", "hafiza", "dosya", "ders"],
   chat: ["ajan", "sohbet", "chat"],
   calendar: ["cizelge", "takvim", "zamanlanmis"],

@@ -3,7 +3,7 @@
 /* ============================================================================
    YÜZEY SEÇİCİ — rotanın işaret ettiği gövdeyi çizer
    ----------------------------------------------------------------------------
-   TABLO AÇIK VE EKSİKSİZ: on altı yüzeyin hepsi burada adıyla var ve hiçbiri
+   TABLO AÇIK VE EKSİKSİZ: on yedi yüzeyin hepsi burada adıyla var ve hiçbiri
    `?? GenelYuzey` gibi sessiz bir yedeğe düşmüyor. Sessiz yedek olsaydı UNUTULAN
    bir yüzey ile BİLEREK ertelenmiş bir yüzey ekranda aynı görünürdü — ve hangisinin
    hangisi olduğu yalnız git geçmişinden okunabilirdi. `Record<YuzeyAnahtari, ...>`
@@ -24,6 +24,7 @@ import { Belgeler } from "./yuzeyler/Belgeler";
 import { BugunYuzeyi } from "./yuzeyler/BugunYuzeyi";
 import { Cizelge } from "./yuzeyler/Cizelge";
 import { Giris } from "./yuzeyler/Giris";
+import { HafizaYuzey } from "./yuzeyler/hafiza/HafizaYuzey";
 import { KanbanYuzey } from "./yuzeyler/KanbanYuzey";
 import { KapiYuzey } from "./yuzeyler/kapi/KapiYuzey";
 import { Kullanicilar } from "./yuzeyler/Kullanicilar";
@@ -42,6 +43,7 @@ const GOVDELER: Record<YuzeyAnahtari, ComponentType> = {
   academy: Ogrenme,
   infrastructure: SistemSagligiYuzey,
   gateway: KapiYuzey,
+  memory: HafizaYuzey,
   "file-manager": Belgeler,
   chat: Ajan,
   calendar: Cizelge,

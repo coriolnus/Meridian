@@ -7694,7 +7694,7 @@ _HAFIZA_DIZI_ALANLARI = ("items", "data", "results", "banks", "memories")
 # Banka kimliğinin hangi alanda geldiği de ölçülmedi; aynı gerekçeyle birden çok ad denenir.
 _HAFIZA_KIMLIK_ALANLARI = ("bank_id", "id", "name")
 # SÜRÜM ALANI — İLK SIRADAKİ ÖLÇÜLDÜ (2026-09-02, A1: `{"api_version":"0.9.2","features":{…}}`;
-# kayıt `.superpowers/sdd/2026-09-02-hafiza-sayfasi/upstream-govde-olcumu.txt`). Önce `version`
+# kayıt `tests/test_hafiza_yuzeyi_v375.py::VERSION_GOVDE`/`SURUM_OLCULEN`). Önce `version`
 # VARSAYILMIŞTI ve canlıda `surum` sonsuza dek `null` kalacaktı — üstelik SESSİZCE. Ders: skaler
 # alan da dizi/kimlik zarfları kadar sürüklenir; "tanımadığını sessizce boş sayma" ilkesinin
 # İSTİSNASI YOKTUR.

@@ -114,23 +114,51 @@ def _env_dosyasi(monkeypatch, tmp_path, anahtar: str | None = SAHTE_ANAHTAR) -> 
     return yol
 
 
-#: Bugün A1'de ölçülen bank'ler (2026-09-02). Bot bank'leri YOK — "bank yok" ≠ "ölçülemedi".
+# =================================================================================================
+# ÖLÇÜLMÜŞ GERÇEK GÖVDELER — kaynak: A1 Hindsight, 2026-09-02 ölçümü. KAYIT BURADADIR.
+# =================================================================================================
+#
+# ÇAPA BU DOSYANIN İÇİNDE, BİLEREK (E-9, düzeltme turu 2): burada önce ölçüm çıktısının dosya
+# yoluna atıf vardı; `.superpowers/` GIT-IGNORE'ludur, yani o çapa cloud klonunda ÖLÜdür ve
+# okuyanı hiçbir yere götürmez. Ölçümün KENDİSİ aşağıdaki fixture'lara taşındı — kanıt, ona atıf
+# veren şerhle değil, gövdenin kendisiyle yaşar.
+#
+# NE DOĞRULANIR, NE DOĞRULANMAZ (E-10): bu fixture'lar vekilin ZARFINI çivilerler — "upstream ne
+# döndürdüyse `stats`/`llm_stats`/`audit_stats` alanına AYNEN geçer". UPSTREAM ŞEMASINI
+# ÇİVİLEMEZLER: Hindsight bir gün alan adı değiştirirse bu dosya yeşil kalır (vekil süzmediği için
+# davranışı gerçekten değişmez) — sürüklenmeyi yakalayan şey `/version` çivileridir, çünkü orada
+# vekil bir alanı ADIYLA okur. Yani "çivi yeşil" cümlesi burada şemanın doğruluğunu KANITLAMAZ.
+
+#: Bugün A1'de ölçülen bank'ler. Bot bank'leri YOK — "bank yok" ≠ "ölçülemedi".
 BANKALAR_GOVDE = json.dumps({"banks": [{"bank_id": "meridian-arsiv"}, {"bank_id": "smoke-067"}]}).encode()
 
-#: `/version` GERÇEK gövdesi — A1'de ÖLÇÜLDÜ 2026-09-02
-#: (`.superpowers/sdd/2026-09-02-hafiza-sayfasi/upstream-govde-olcumu.txt`).
-#: DÜZELTME TURU 1: burada önce `{"version": …}` yazıyordu — UYDURULMUŞ bir alan adı. Kod da aynı
-#: adı bekliyordu, yani çivi KENDİ VARSAYIMINI doğruluyordu ve canlıda `surum` sonsuza dek `null`
-#: kalırdı. Fixture'ın gerçeğe çekilmesi, çivinin artık kodu değil DÜNYAYI ölçtüğünün kanıtıdır.
+#: `/version` GERÇEK gövdesi. DÜZELTME TURU 1: burada önce `{"version": …}` yazıyordu — UYDURULMUŞ
+#: bir alan adı. Kod da aynı adı bekliyordu, yani çivi KENDİ VARSAYIMINI doğruluyordu ve canlıda
+#: `surum` sonsuza dek `null` kalırdı. Fixture'ın gerçeğe çekilmesi, çivinin artık kodu değil
+#: DÜNYAYI ölçtüğünün kanıtıdır (`api_version`, `version` DEĞİL).
 SURUM_OLCULEN = "0.9.2"
 VERSION_GOVDE = json.dumps({
     "api_version": SURUM_OLCULEN,
     "features": {"observations": True, "mcp": True, "worker": True, "bank_config_api": True,
                  "bank_llm_health": False, "file_upload_api": True},
 }).encode()
+
+#: `banks/{id}/stats` ve `llm-requests/stats`: gövde şekli ölçüm kaydında kesilmişti; bu ikisi
+#: TEMSİLİdir (vekil aynen geçirdiği için davranış bunlardan bağımsızdır — yukarıdaki şerh).
 STATS_GOVDE = json.dumps({"memory_count": 42, "size_bytes": 8192}).encode()
 LLM_GOVDE = json.dumps({"request_count": 7, "total_tokens": 1234}).encode()
-AUDIT_GOVDE = json.dumps({"event_count": 3}).encode()
+
+#: `audit-logs/stats` GERÇEK gövdesi (ölçüldü 2026-09-02). DÜZELTME TURU 2 (E-10): burada önce
+#: `{"event_count": 3}` yazıyordu — UYDURULMUŞ bir şema; gerçek gövde kova tabanlıdır.
+#:
+#: `buckets` ÖLÇÜM ANINDA BOŞTU ve BOŞ BIRAKILDI: kova ELEMANININ şekli ölçülMEDİ, uydurulmuş bir
+#: kova tam da bu turda kapatılan sahte-şema sınıfını geri getirirdi ("ölçemediğini uydurma" —
+#: `{"time":…,"statuses":{…}}` benzeri bir eleman `llm-requests/stats`ten ANALOJİYLE türetilirdi,
+#: ölçümden değil). İç içe gövdenin aynen geçtiği ayrıca çivili: `test_ic_ice_govde_aynen_gecer`.
+AUDIT_GOVDE = json.dumps({
+    "bank_id": "meridian-arsiv", "period": "7d", "trunc": "day",
+    "start": "2026-08-26T08:36:44.641719+00:00", "buckets": [],
+}).encode()
 
 
 def _tam_esleme(**degistir) -> dict[str, bytes | str]:
@@ -362,11 +390,31 @@ def test_bankalar_stats_kota_operasyon_akisi(monkeypatch, tmp_path, sandbox_stat
     assert g["kota"]["meridian-arsiv"] == {"llm_stats": {"request_count": 7, "total_tokens": 1234},
                                            "neden": None}
     assert set(g["operasyon"]) == {"meridian-arsiv", "smoke-067"}
-    assert g["operasyon"]["smoke-067"] == {"audit_stats": {"event_count": 3}, "neden": None}
+    assert g["operasyon"]["smoke-067"] == {"audit_stats": json.loads(AUDIT_GOVDE),
+                                           "neden": None}
 
     # Ölçülen uçlar BİREBİR: uç yeni bir upstream'e gitmeye başlarsa (ya da bir bacağı düşürürse)
     # bu sayım ısırır. 2 (health+version) + 1 (banks) + 3×2 (banka başına stats/llm/audit) = 9.
     assert len(casus.cagrilar) == 9, casus.url_ler()
+
+
+def test_ic_ice_govde_aynen_gecer(monkeypatch, tmp_path, sandbox_state):
+    """AYNEN-GEÇİŞİN DERİNLİĞİ. Ölçülen `audit-logs/stats` gövdesinde `buckets` BOŞTU, yani gerçek
+    fixture iç içe bir yapı taşımıyor ve "derin gövde de bozulmadan geçiyor mu" sorusu onunla
+    ölçülemez.
+
+    Buradaki gövde AÇIKÇA SENTETİKTİR — Hindsight'ın kova şeması olduğunu İDDİA ETMEZ (o şekil
+    ölçülmedi). Ölçtüğü tek şey vekilin davranışıdır: sözlük/liste/sayı/`null` iç içe gelse de
+    süzülmez, yeniden adlandırılmaz, düzleştirilmez."""
+    sentetik = {"buckets": [{"time": "2026-09-01T00:00:00+00:00", "sayilar": [1, 2, 3],
+                             "ic": {"derin": {"deger": None, "bayrak": False}}}],
+                "toplam": 3}
+    _kurulum(monkeypatch, tmp_path, esleme=_tam_esleme(
+        **{"/banks/meridian-arsiv/audit-logs/stats": json.dumps(sentetik).encode()}))
+
+    g = _client().get("/api/hindsight").json()
+    assert g["operasyon"]["meridian-arsiv"]["audit_stats"] == sentetik, \
+        "iç içe gövde aynen geçmedi — vekil süzüyor/düzleştiriyor"
 
 
 def test_upstream_yollari_olculen_openapi_ile_ayni(monkeypatch, tmp_path, sandbox_state):
