@@ -35,8 +35,19 @@ Yorumlar bu yüzden ölçümden önce SOYULUR.
      gönderilen ret 200 döner ve deftere gerekçeli bir GÖRME kaydı YAZAR. Ekran artık
      ucun ne yapacağını söyler ve düğmeyi neden ÇİZMEDİĞİNİ ayrıca gerekçelendirir.
  11. SATIR ÇAPASI YOK. `dosya.py:NNN` çapaları ilk düzenlemede bayatlar ve YANLIŞ yere
-     işaret eder (ölçüldü: `api.py:5841` artık `_enrich_stale_plans` değil
-     `api_approvals`). Çapa SEMBOL adıyla atılır.
+     işaret eder (çapa-mezar-taşı; ölçüldü: `api.py:5841` artık `_enrich_stale_plans`
+     değil `api_approvals`). Çapa SEMBOL adıyla atılır.
+
+MUAFİYET İŞARETİ SONRADAN KONDU (TSK-106 turu, 2026-09-02) ve nedeni tam da bu dosyanın
+dersidir: bu üç satır bayat bir çapayı KANIT olarak alıntılıyor, yani `_CAPA_MUAFIYETI`nin
+(`çapa-mezar-taşı`) tanımına birebir giriyorlar — ama işaret yoktu ve `codelaw` onları
+İHLAL sayacaktı. Bugüne kadar geçmelerinin sebebi doğruluk değil KAZAydı:
+çapa-mezar-taşı `api.py:5841` tesadüfen bir KOD satırına düşüyordu; api.py'de satır ekleyen
+ilk değişiklikte (bu tur) çapa bir YORUM satırına kaydı ve üçü birden ötmeye başladı — yani
+dosyanın 11. maddesi kendi gövdesinde ölçüldü (bu paragrafın kendisi de dördüncü kez ötürdü:
+alıntının işaretsizi yoktur). Doğru tepki numarayı güncellemek DEĞİL
+(çapa zaten mezar taşı), alıntıyı beyanlı muafiyetle işaretlemektir; `tests/conftest.py`
+aynı sınıfı 2026-08-24'te aynı işaretle kapatmıştı.
 """
 from __future__ import annotations
 
@@ -507,7 +518,7 @@ def test_taninmayan_hukumde_karar_bolumu_susmuyor():
 def test_bugun_yuzeyinde_dosya_satir_capasi_kalmadi():
     """`dosya.py:NNN` çapaları ilk düzenlemede bayatlar ve YANLIŞ yeri gösterir.
 
-    ÖLÇÜLDÜ (2026-08-25): `PlanTablosu.tsx` içindeki `api.py:5841` çapası `drift_pct`
+    ÖLÇÜLDÜ (2026-08-25; çapa-mezar-taşı): `PlanTablosu.tsx` içindeki `api.py:5841` çapası `drift_pct`
     yazımına işaret ettiğini iddia ediyordu; o satır artık `api_approvals` fonksiyonunun
     ilk satırı — yazım `_enrich_stale_plans`e taşınmış. Çapa YANLIŞ yere götürüyordu ve
     hiçbir şey ötmüyordu. Sembol adı taşındığında da doğru kalır; satır numarası kalmaz.
@@ -516,7 +527,7 @@ def test_bugun_yuzeyinde_dosya_satir_capasi_kalmadi():
     hiçbir zaman ötmeyen bir çivi olurdu.
     """
     desenler = (
-        re.compile(r"[A-Za-z_][A-Za-z0-9_]*\.py:\d+"),      # api.py:5841
+        re.compile(r"[A-Za-z_][A-Za-z0-9_]*\.py:\d+"),      # çapa-mezar-taşı: api.py:5841
         re.compile(r"sat[\u0131i]r\s+\d+"),                    # (satır 1611)
     )
     kusurlu: dict[str, list[str]] = {}

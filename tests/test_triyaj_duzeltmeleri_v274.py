@@ -7,6 +7,11 @@
     ölçülemiyorsa satır adıyla "ölçülemedi" der, uydurmaz.
 [2] session_refresh sel kesimi: aynı (ip, yol) çifti ~5 dk'da bir olaya örneklenir; aradakiler
     `atlanan_n` sayacında taşınır — bilgi kaybı yok, sel yok.
+    EVRİLDİ (TSK-106, 2026-09-02): 5 dk'lık örnekleme UTC GÜNLÜK ÖZETe indi. Bu bölümün iki
+    çivisi SİLİNMEDİ, yeni sözleşmeye TAŞINDI — kesimin kendisi (çiftin ilk olayı anında,
+    sonrakiler bastırılmış) v274'ün ölçtüğü davranıştır ve o davranış duruyor; değişen yalnız
+    pencerenin cinsi ve taşınan alanlar (`atlanan_n`/`orneklem_s` → `ozet`/`gun`/`toplam_n`/
+    `ilk_ts`/`son_ts`). Yeni sözleşmenin TAM çivisi `tests/test_session_refresh_gunluk_v374.py`.
 [3] /api/diagnostics `dagitim` bloğu: dagit.sh beyanının YASA-6 okuyucusu — dosya yokken adlı
     boşluk, varken alanlar.
 [4] trade_plans retention KURALI: işleme dönüşen plan kırpılmaz (store.merge_dated_jsonl);
@@ -134,23 +139,41 @@ def test_watchdog_sermaye_taban_kanonikten_ve_reseed_gerilemesi_yok(sandbox_stat
     assert not [r for r in rep.get("regressions", []) if r["field"] == "sermaye_taban"], rep
 
 
-# ---- [2] session_refresh örneklemesi ------------------------------------------------------------
-def test_ornekleme_penceresi_ve_atlanan_n(sandbox_state):
+# ---- [2] session_refresh kesimi (TSK-106: örnekleme → günlük özet) -----------------------------
+def test_gun_penceresi_ve_toplam_n(sandbox_state):
+    """TSK-106 (2026-09-02) — v274'ün örnekleme çivisi yeni sözleşmeye TAŞINDI.
+
+    Ölçülen şey DEĞİŞMEDİ: çiftin ilk olayı YAZILIR, pencere içindekiler bastırılır ve sayaçta
+    birikir, farklı yol AYRI penceredir, pencere dolunca birikmiş sayı deftere GİRER. Değişen
+    yalnız pencerenin cinsi (5 dk monotonic → UTC takvim günü) ve alan adları."""
     f = api._session_refresh_ornekle
-    t0 = 1000.0
-    assert f("127.0.0.1", "/api/summary", now=t0) == 0            # ilk olay: yaz, atlanan 0
-    assert f("127.0.0.1", "/api/summary", now=t0 + 10) is None    # pencere içi: biriktir
+    t0 = 1788307200.0                                             # 2026-09-02T00:00:00Z
+    assert f("127.0.0.1", "/api/summary", now=t0) == {"ozet": False}   # ilk olay: ANINDA yaz
+    assert f("127.0.0.1", "/api/summary", now=t0 + 10) is None    # gün içi: biriktir
     assert f("127.0.0.1", "/api/summary", now=t0 + 20) is None
     assert f("127.0.0.1", "/api/summary", now=t0 + 30) is None
     # farklı yol AYRI pencere: selin anahtarı (ip, yol) çiftidir
-    assert f("127.0.0.1", "/api/today", now=t0 + 31) == 0
-    # pencere dolunca: yaz ve ATLANANLARI taşı (bilgi kaybı yok)
-    n = f("127.0.0.1", "/api/summary", now=t0 + api.REFRESH_ORNEKLEM_S + 1)
-    assert n == 3, n
-    assert f("127.0.0.1", "/api/summary", now=t0 + api.REFRESH_ORNEKLEM_S + 2) is None
+    assert f("127.0.0.1", "/api/today", now=t0 + 31) == {"ozet": False}
+    # gün dönünce: ÖNCEKİ günün özeti tek satır (bilgi kaybı yok — toplam korunumu formülü)
+    o = f("127.0.0.1", "/api/summary", now=t0 + 86400 + 1)
+    assert o == {"ozet": True, "gun": "2026-09-02", "toplam_n": 3,
+                 "ilk_ts": "2026-09-02T00:00:00+00:00",
+                 "son_ts": "2026-09-02T00:00:30+00:00"}, o
+    assert 1 + o["toplam_n"] == 4, "toplam korunumu: 1 anında satır + 3 bastırılmış"
+    assert f("127.0.0.1", "/api/summary", now=t0 + 86400 + 2) is None
 
 
-def test_middleware_ayni_pencerede_TEK_session_refresh_olayi(sandbox_state, monkeypatch):
+def test_middleware_ayni_GUNDE_TEK_session_refresh_olayi(sandbox_state, monkeypatch):
+    """TSK-106 (2026-09-02) — v274'ün middleware çivisi yeni sözleşmeye TAŞINDI: iki tazeleme
+    hâlâ TEK satır basar (kesim duruyor), ama pencere gün, alanlar `ozet` sınıfından.
+
+    İKİNCİ İSTEĞİN ÇEREZİ DÜZELTİLDİ ve bu bir üslup tercihi değil bir ÖLÇÜM DÜZELTMESİdir:
+    çivi ikinci isteği r1'in DÖNDÜRDÜĞÜ TAZE çerezle atıyordu. Taze çerez yarı-ömrünü geçmemiştir,
+    yani `auth.refresh_session` None döner ve middleware kesim koduna HİÇ girmez — "ikinci
+    tazeleme bastırıldı" cümlesi ölçülmüyordu; tek satır, kesim çalıştığı için değil ikinci
+    tazeleme HİÇ OLMADIĞI için tekti. (TSK-106 sayaç iddiasını ekleyince görüldü: sayaç 0'dı.)
+    Doğrusu AYNI yarı-ömrü geçmiş çerezi iki kez göndermektir — o zaman iki gerçek tazeleme olur
+    ve bastırma gerçekten sınanır. §6 dersinin birebir örneği: yeşil, yanlış sebeple yeşildi."""
     auth.set_password("cok-uzun-ve-guclu-parola-123")
     iat = int(time.time()) - 7 * 3600
     tok = auth._sign(iat + 12 * 3600, iat)
@@ -159,13 +182,19 @@ def test_middleware_ayni_pencerede_TEK_session_refresh_olayi(sandbox_state, monk
     hdr = {"cookie": f"{auth.COOKIE_NAME}={tok}"}
     r1 = c.get("/api/summary", headers=hdr)
     assert r1.status_code == 200
-    # ikinci tazeleme AYNI (ip, yol) penceresinde → olay YAZILMAZ, sayaç birikir
-    yeni = [v for v in r1.headers.get_list("set-cookie") if v.startswith(auth.COOKIE_NAME)][0]
-    c.get("/api/summary", headers={"cookie": yeni.split(";")[0]})
+    assert [v for v in r1.headers.get_list("set-cookie") if v.startswith(auth.COOKIE_NAME)], \
+        "ilk istek tazelemedi — çivi kesimi değil, tazelemenin yokluğunu ölçerdi"
+    # ikinci GERÇEK tazeleme AYNI (ip, yol) gününde → olay YAZILMAZ, sayaç birikir
+    r2 = c.get("/api/summary", headers=hdr)
+    assert [v for v in r2.headers.get_list("set-cookie") if v.startswith(auth.COOKIE_NAME)], \
+        "ikinci istek tazelemedi — bastırma iddiası ölçülemez"
     evs = [json.loads(s) for s in (sandbox_state / "events.jsonl").read_text().splitlines() if s.strip()]
     ref = [e for e in evs if e.get("event") == "session_refresh"]
     assert len(ref) == 1, [e.get("event") for e in evs]
-    assert ref[0].get("atlanan_n") == 0 and ref[0].get("orneklem_s") == 300, ref[0]
+    assert ref[0].get("ozet") is False, ref[0]          # anında yazılan görünürlük satırı
+    assert "atlanan_n" not in ref[0] and "orneklem_s" not in ref[0], ref[0]   # emekli alanlar
+    # bastırılan olay KAYBOLMADI: sayaç bellekte durur ve gün dönüşünde özete girer
+    assert api._REFRESH_SON[("testclient", "/api/summary")][1] == 1
 
 
 # ---- [3] dagitim bloğu --------------------------------------------------------------------------

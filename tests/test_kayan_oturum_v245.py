@@ -310,6 +310,10 @@ def test_BASARILI_giris_olay_basar_ve_PAROLA_JETON_GECMEZ(sandbox_state, monkeyp
 
 
 def test_TAZELEME_olay_basar_ve_jeton_TASIMAZ(sandbox_state, monkeypatch):
+    """TSK-106 (2026-09-02) ile HİZALANDI: defter (ip, yol) başına günlük özete indi, ama bu
+    çivinin ölçtüğü şey DEĞİŞMEDİ — çiftin İLK tazelemesi hâlâ ANINDA basılır. Sözleşmenin
+    görünürlük yarısı tam da budur, o yüzden burada ayırt edici alan da çivilenir (`ozet=False`):
+    kesim bir gün "ilk olayı da beklet" diye evrilirse bu satır ötsün, sessizce kaybolmasın."""
     auth.set_password(PAROLA)
     now = int(time.time())
     iat = now - 7 * 3600
@@ -322,6 +326,7 @@ def test_TAZELEME_olay_basar_ve_jeton_TASIMAZ(sandbox_state, monkeypatch):
     tazeleme = [o for o in _olaylar(sandbox_state) if o.get("event") == "session_refresh"]
     assert len(tazeleme) == 1, "oturum tazelemesi hiçbir yere yazılmadı"
     assert tazeleme[0].get("ip") == "testclient"
+    assert tazeleme[0].get("ozet") is False, tazeleme[0]   # TSK-106: ANINDA satır, özet değil
     ham = (sandbox_state / "events.jsonl").read_text()
     assert yeni_tok not in ham and eski not in ham, "tazeleme olayı jeton taşıyor"
 

@@ -37,11 +37,15 @@ import meridian.adapters.fmp as _fmp_mod
 # ikisinin de modül düzeyinde G/Ç yan etkisi yok.
 import meridian.adapters.alpaca as _alp_mod
 import meridian.obs as _obs_mod
-# v274 SEL-KESİMİ SAYACI (2026-08-23): api._REFRESH_SON — session_refresh örnekleme penceresi
-# (ip, yol) başına süreç-içi durum tutar. TestClient'ın IP'si her testte aynıdır ("testclient"),
-# yani tazeleme olayını ölçen bir test pencereyi doldurunca SONRAKİ testin refresh olayı sessizce
-# örneklenirdi — `auth._FAILS` vakasının birebir tekrarı. api zaten suite'in her yerinde yüklü;
-# marjinal ithal maliyeti yok.
+# v274 SEL-KESİMİ SAYACI (2026-08-23): api._REFRESH_SON — session_refresh kesimi (ip, yol) başına
+# süreç-içi durum tutar. TestClient'ın IP'si her testte aynıdır ("testclient"), yani tazeleme
+# olayını ölçen bir test pencereyi doldurunca SONRAKİ testin refresh olayı sessizce örneklenirdi —
+# `auth._FAILS` vakasının birebir tekrarı. api zaten suite'in her yerinde yüklü; marjinal ithal
+# maliyeti yok.
+# TSK-106 (2026-09-02) SIZINTIYI BÜYÜTTÜ, KÜÇÜLTMEDİ: pencere artık 5 dk'lık örneklem değil UTC
+# TAKVİM GÜNÜ ve "anında yazılan satır" yalnız çiftin İLK olayına ait. Yani kayıt sızarsa sonraki
+# testin tazelemesi 5 dk sonra değil ERTESİ GÜNE kadar hiç yazılmaz — sızıntının sonucu
+# "geç görünen satır"dan "hiç görünmeyen satır"a döndü. Bu sıfırlama artık daha da bağlayıcı.
 import meridian.api as _api_mod
 # v345 PIT ARŞİV SAYACI (2026-08-31, EDG-2026-062 Görev 3): `earnings_pit._SAYAC` bu turda ÜRETİM
 # yolundan artmaya başladı — `backtest.replay` ve `cf_backfill.run` kazanç çapasını PIT arşivinden
@@ -111,7 +115,8 @@ _MODUL_DURUMLARI = (
     # `monkeypatch.setattr(obs, "_SUPPRESS_LOGGED", {})` ile kendi başına çözüyor — yani sızıntı
     # zaten BİLİNİYOR, yalnız tek yerden kapatılmamıştı.
     (_obs_mod, "_SUPPRESS_LOGGED"),
-    # api._REFRESH_SON — session_refresh sel-kesimi penceresi (gerekçe ithal bloğunda, v274).
+    # api._REFRESH_SON — session_refresh kesiminin gün defteri (gerekçe ithal bloğunda,
+    # v274 + TSK-106).
     (_api_mod, "_REFRESH_SON"),
     # earnings_pit._SAYAC — PIT çapasının üç kovası (gerekçe ithal bloğunda, v345/Görev 3).
     # `sayac_sifirla` da YERİNDE günceller (yeni sözlük atamaz), yani bu mekanizmayla aynı

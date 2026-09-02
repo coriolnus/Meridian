@@ -1246,42 +1246,91 @@ def _oturum_cerezi_yazilmis(basliklar) -> bool:
                for ad, deger in basliklar)
 
 
-# ---- session_refresh SEL KESİMİ (2026-08-23 canlı pano ihlal triyajı) --------------------------
-# ÖLÇÜLEN SEL: canlıda 127.0.0.1'den gelen çerezli yoklayıcı (repo-içi iz: deploy/cutover.sh +
-# deploy.sh'ın önerdiği `ssh -L 8080:127.0.0.1:8080` tüneli üzerinden açık pano sekmesi — tünelde
-# XFF yoktur, istemci 127.0.0.1 görünür; pano 15 sn'de bir birden çok ucu anketler) saatte ~420
-# `session_refresh` olayı bastırıyordu. Olay defteri gelen kutusunun ve TÜM makullük
-# dedektörlerinin okuduğu kaynaktır — sel, sinyali gömer (notify_suppressed'in pencere-başına-tek-
-# satır dersiyle aynı sınıf). KESİM ÖRNEKLEMEDİR, SANSÜR DEĞİL: aynı (ip, yol) çifti için en fazla
-# ~5 dk'da BİR olay yazılır; aradakiler sayaçta birikir ve bir SONRAKİ örneklem olayına
-# `atlanan_n` alanıyla girer — bilgi kaybı yok (toplam = satır sayısı + Σ atlanan_n), sel yok.
-REFRESH_ORNEKLEM_S = 300.0
-_REFRESH_SON: dict[tuple[str, str], list] = {}   # (ip, yol) → [son_kayit_monotonic, atlanan_n]
-_REFRESH_TAVAN = 4096                            # bellek tavanı: en eski kayıt düşer (aşağıda)
+# ---- session_refresh DEFTER KESİMİ (2026-08-23 sel kesimi → 2026-09-02 günlük özet) ------------
+# ÖLÇÜLEN SEL (2026-08-23 canlı pano ihlal triyajı): canlıda 127.0.0.1'den gelen çerezli yoklayıcı
+# (repo-içi iz: deploy/cutover.sh + deploy.sh'ın önerdiği `ssh -L 8080:127.0.0.1:8080` tüneli
+# üzerinden açık pano sekmesi — tünelde XFF yoktur, istemci 127.0.0.1 görünür; pano 15 sn'de bir
+# birden çok ucu anketler) saatte ~420 `session_refresh` olayı bastırıyordu. Olay defteri gelen
+# kutusunun ve TÜM makullük dedektörlerinin okuduğu kaynaktır — sel, sinyali gömer
+# (notify_suppressed'in pencere-başına-tek-satır dersiyle aynı sınıf). İLK KESİM ÖRNEKLEMEYDİ:
+# (ip, yol) başına en fazla ~5 dk'da BİR satır (`REFRESH_ORNEKLEM_S = 300.0`), aradakiler
+# `atlanan_n` sayacında taşınırdı.
+#
+# TSK-106 (operatör kararı 2026-09-02): kalan ~5 dk'lık kadans hâlâ günde ONLARCA satırdı. Defter
+# (ip, yol) başına GÜNLÜK ÖZETe iner ve pencere UTC TAKVİM GÜNÜ olur (monotonic pencere DEĞİL):
+#   * çiftin İLK olayı (süreç belleğinde kaydı yokken) ANINDA yazılır, `ozet=False` — "tazeleme
+#     hiç çalışıyor mu" görünürlüğü bir gün beklemez,
+#   * aynı UTC günündeki sonraki olaylar YAZILMAZ; sayaç + ilk/son görülme damgası bellekte birikir,
+#   * gün dönüşünde ÖNCEKİ günün özeti TEK satır düşer: `ozet=True` + `gun` + `toplam_n` +
+#     `ilk_ts` + `son_ts`. Yeni gün madde-2 anındalığına DÖNMEZ (çiftin kaydı artık var) —
+#     kararlı durumda çift başına GÜNDE ~1 SATIR.
+# OLAY ADI DEĞİŞMEDİ (`session_refresh`): grep sürekliliği bir kolaylık değil, geçmiş defterin tek
+# sorguyla okunabilmesidir. İki satır SINIFI birbirinden `ozet` alanıyla ayrılır — okuyucunun
+# alanın YOKLUĞUNA bakmak zorunda kalmaması için ANINDA satırı da `ozet=False` taşır.
+#
+# BEDEL BEYANI (Bedel yasası: gürültüyü azaltan değişiklik ne KAYBETTİĞİNİ de ölçer).
+# KAZANÇ: satır sayısı çift başına günde ~288'den ~1'e. KAYIP, üç kalem ve üçü de kabul edildi:
+#   1) GÜN-İÇİ KADANS ÇÖZÜNÜRLÜĞÜ. "Hangi 5 dk'da kaç tazeleme" defterden ARTIK OKUNMAZ; yerine
+#      günlük toplam + ilk/son damga okunur. Yoklayıcının gün ortasında susup susmadığı ancak
+#      `son_ts` üzerinden ve gün dönüşünden SONRA görülür.
+#   2) SÜREÇ YENİDEN BAŞLARSA O GÜNÜN SAYACI. Bellek süreç-içidir; restart biriken `toplam_n`i
+#      siler. Bedelin SINIFI aynı, BÜYÜKLÜĞÜ değişti: eski bedel ≤5 dk'lık bir sayaçtı, yenisi
+#      ≤1 GÜNlük. (Restart sonrası ilk olay YENİ bir kayıttır → anında yazılır; yani "hiç
+#      görünmüyor" hâline düşülmez, kaybolan yalnız sayıdır.)
+#   3) DUVAR SAATİ ARTIK ANLAMLI. Gün anahtarı monotonic değildir: saat geri alınırsa (NTP
+#      sıçraması, elle düzeltme) aynı `gun` için İKİNCİ bir özet satırı doğabilir. Alternatifi
+#      (monotonic sayaç + takvim günü eşlemesi) "UTC günü" kavramını hiç taşıyamıyordu; tekrar
+#      eden gün anahtarı BEYANLI kabul edildi ve `test_session_refresh_gunluk_v374.py`de çivili.
+# TOPLAM KORUNUMU (formül TSK-106 ile GÜNCELLENDİ) — bir günün GERÇEK olay sayısı =
+#   (o gün anında yazılan ilk satır varsa 1, yoksa 0) + o günün özet satırındaki `toplam_n`.
+# Eski formül (`toplam = satır sayısı + Σ atlanan_n`) örnekleme dünyasına aitti; `atlanan_n` ve
+# `REFRESH_ORNEKLEM_S` bu turda EMEKLİ edildi — ölçüldü 2026-09-02: ikisinin de api.py ve
+# `tests/` dışında hiçbir tüketicisi yoktu (depo taraması, `state/` defteri hariç).
+_REFRESH_TAVAN = 4096                # bellek tavanı: EN ESKİ GÖRÜLEN kayıt düşer (aşağıda)
+#: (ip, yol) → [gun, toplam_n, ilk_ts, son_ts]; `gun` = YYYY-MM-DD, damgalar ISO/UTC saniye.
+#: `tests/conftest.py` bu sözlüğü her testte YERİNDE sıfırlar (sızıntı gerekçesi orada yazılı).
+_REFRESH_SON: dict[tuple[str, str], list] = {}
 
 
-def _session_refresh_ornekle(ip: str, yol: str, now: float | None = None) -> int | None:
-    """Bu tazeleme olayı LOGLANMALI MI? None → pencere içinde, sayaç birikti (yazma);
-    int → yaz, dönen değer bu örneklemin kapsadığı ATLANAN olay sayısıdır (0 dahil — ölçülmüş sıfır).
+def _session_refresh_ornekle(ip: str, yol: str, now: float | None = None) -> dict | None:
+    """Bu tazeleme olayı deftere NE yazdırır? `None` → hiçbir şey (gün içi; sayaç birikti).
+    dict → `obs.log("session_refresh", …, **dönen)` ile basılacak AYIRT EDİCİ alanlar:
+      * `{"ozet": False}`                                        → çiftin İLK olayı (görünürlük),
+      * `{"ozet": True, "gun", "toplam_n", "ilk_ts", "son_ts"}`   → ÖNCEKİ günün özeti.
 
-    Saat `time.monotonic`tir (duvar saati geri alınırsa pencere şişmez). Sözlük (ip, yol) başına
-    TEK girdi tutar; `_REFRESH_TAVAN` aşılırsa en eski girdi düşer — düşen girdinin biriken sayacı
-    bir olay olarak DEĞİL, yeni penceresinin ilk örnekleminde 0'dan sayılır (tavan ancak binlerce
-    ayrık (ip, yol) çiftiyle aşılır; pano yoklayıcısı tek çifttir)."""
-    import time as _t
-    now = _t.monotonic() if now is None else now
+    AD TARİHÎ KİMLİKTİR: fonksiyon artık örneklemiyor, ÖZETLİYOR — ama adı `ROADMAP.md`
+    TSK-106 kaleminin `Ref`i ve v274 çivisi tarafından çapalanmış durumda. Ad değişseydi o iki
+    çapa sessizce çürürdü ve `.md` çapasını hiçbir tarayıcı görmez; sözleşme docstring'de,
+    gerekçe üstteki blokta durur.
+
+    SAAT: `now` UTC EPOCH SANİYEdir (`time.time()`), monotonic DEĞİL — takvim günü ancak duvar
+    saatinden okunur ve bedeli üstteki blokta beyanlıdır. `gun` ile iki damga TEK `now` değerinden
+    türetilir (tek-kaynak: iki ayrı saat okuması tam gün sınırında ayrışabilirdi).
+
+    TAVAN: `_REFRESH_TAVAN` aşılırsa EN ESKİ GÖRÜLEN (`son_ts`i en küçük) kayıt düşer — yaratılış
+    sırasına göre DEĞİL, çünkü canlı yoklayıcı yıllarca aynı çifti kullanır ve yaratılışa göre
+    düşürmek en CANLI kaydı kurban ederdi. Düşen kaydın biriken sayacı KAYBOLUR (beyanlı bedel);
+    tavan ancak binlerce ayrık (ip, yol) çiftiyle aşılır — pano yoklayıcısı tek çifttir."""
+    import datetime as _dt
+    now = _time.time() if now is None else now
+    # ISO/UTC saniye — `obs._emit`in `ts` alanıyla AYNI biçim (damgalar kıyaslanabilir olmalı) ve
+    # sabit genişlikte, yani tavanın `min()`i sözlüksel sırayla kronolojik sırayı ölçer.
+    an = _dt.datetime.fromtimestamp(now, _dt.timezone.utc).isoformat(timespec="seconds")
+    gun = an[:10]
     k = (str(ip), str(yol))
     rec = _REFRESH_SON.get(k)
     if rec is None:
         if len(_REFRESH_SON) >= _REFRESH_TAVAN:
-            _REFRESH_SON.pop(min(_REFRESH_SON, key=lambda x: _REFRESH_SON[x][0]), None)
-        _REFRESH_SON[k] = [now, 0]
-        return 0
-    if now - rec[0] >= REFRESH_ORNEKLEM_S:
-        atlanan, rec[0], rec[1] = rec[1], now, 0
-        return atlanan
-    rec[1] += 1
-    return None
+            _REFRESH_SON.pop(min(_REFRESH_SON, key=lambda x: _REFRESH_SON[x][3]), None)
+        _REFRESH_SON[k] = [gun, 0, an, an]
+        return {"ozet": False}          # `toplam_n` 0: anında yazılan satır kendini SAYMAZ
+    if rec[0] == gun:
+        rec[1] += 1
+        rec[3] = an
+        return None
+    ozet = {"ozet": True, "gun": rec[0], "toplam_n": rec[1], "ilk_ts": rec[2], "son_ts": rec[3]}
+    _REFRESH_SON[k] = [gun, 1, an, an]  # yeni gün: dönüşü TETİKLEYEN olay sayaçtan başlar
+    return ozet
 
 
 class KayanOturumMiddleware:
@@ -1367,15 +1416,18 @@ class KayanOturumMiddleware:
             # ZATEN tazelenmiş olur; önce yazsaydık bir kayıt arızası, düzeltmeye çalıştığımız
             # arızanın ta kendisini (oturum düşmesi) geri getirebilirdi.
             # PAROLA DA JETON DA GEÇMEZ — yalnız kim/nereye/ne kadar kaldı.
-            # SEL KESİMİ: aynı (ip, yol) çifti ~5 dk'da bir yazılır; aradakiler `atlanan_n`
-            # sayacında taşınır (gerekçe `_session_refresh_ornekle` üstündeki blokta). Tazelemenin
-            # KENDİSİ örneklenmez — çerez her istekte yenilenir; yalnız KAYDI seyreltilir.
+            # DEFTER KESİMİ (TSK-106, 2026-09-02): aynı (ip, yol) çiftinin İLK olayı anında
+            # yazılır, sonrakiler UTC GÜNLÜK ÖZETe iner (gerekçe + BEDEL BEYANI
+            # `_session_refresh_ornekle` üstündeki blokta). Tazelemenin KENDİSİ kesilmez — çerez
+            # her istekte yenilenir; kesilen yalnız KAYDIdır.
+            # ÖZET SATIRINDAKİ `kalan_s` ÖZETLENEN GÜNÜN DEĞİL, özeti TETİKLEYEN tazelemenin
+            # kalanıdır (ölçülmüş bir değerdir, uydurulmuş değil) — iki satır sınıfı `ozet`
+            # alanıyla ayrıldığı için okuyucu ikisini karıştırmaz.
             if yazilacak:
                 _yol = scope.get("path", "")
-                _atlanan = _session_refresh_ornekle(ip, _yol)
-                if _atlanan is not None:
-                    obs.log("session_refresh", ip=ip, kalan_s=kalan, yol=_yol,
-                            atlanan_n=_atlanan, orneklem_s=int(REFRESH_ORNEKLEM_S))
+                _karar = _session_refresh_ornekle(ip, _yol)
+                if _karar is not None:
+                    obs.log("session_refresh", ip=ip, kalan_s=kalan, yol=_yol, **_karar)
 
         await self.app(scope, receive, _send)
 
