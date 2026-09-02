@@ -245,6 +245,9 @@ VERSION_GOVDE = json.dumps({
     "features": {"observations": True, "mcp": True, "worker": True, "bank_config_api": True,
                  "bank_llm_health": False, "file_upload_api": True},
 }).encode()
+#: TEK KAYNAK (Ruling R28, takip turu): `VERSION_GOVDE`nin İÇİNDEN türetilir, yeniden
+#: YAZILMAZ — iki kopya (biri burada, biri yukarıda) sessizce ayrışırdı.
+OZELLIKLER_OLCULEN = json.loads(VERSION_GOVDE)["features"]
 
 #: `banks/{id}/stats` ve `llm-requests/stats`: gövde şekli ölçüm kaydında kesilmişti; bu ikisi
 #: TEMSİLİdir (vekil aynen geçirdiği için davranış bunlardan bağımsızdır — yukarıdaki şerh).
@@ -409,6 +412,7 @@ def test_env_yokken_saglik_BAGIMSIZ_olculur(monkeypatch, tmp_path, sandbox_state
 
     assert g["saglik"]["erisilebilir"] is True, "anahtar yokluğu sağlık bacağını da düşürdü"
     assert g["saglik"]["surum"] == SURUM_OLCULEN
+    assert g["saglik"]["ozellikler"] == OZELLIKLER_OLCULEN, "anahtar yokluğu features bacağını da düşürdü"
     assert g["saglik"]["neden"] is None
     assert not any("/v1/" in u for u in casus.url_ler()), \
         "anahtar yokken kimlikli `/v1/*` ucuna anahtarsız istek atıldı"
@@ -447,6 +451,68 @@ def test_taninmayan_surum_alani_sessizce_null_kalmaz(monkeypatch, tmp_path, sand
     assert "9.9.9" not in (s["neden"] or ""), "gerekçe alan DEĞERİNİ gövdeye taşıdı"
 
 
+# --------------------------------------------------- RULING R28 (2026-09-02, Görev 6-A takibi)
+#
+# `features` upstream'de BAĞIMSIZ bir yol DEĞİLDİR (Görev 6-A raporu, `task-6a-report.md`) —
+# `VersionResponse.features`tır, `/version`in KENDİ gövdesinde. Bu yüzden YENİ bir uç AÇILMADI:
+# `api_hindsight`in ZATEN çektiği `/version` gövdesinden `saglik.ozellikler` adıyla, AYNEN (opak,
+# süzülmeden) geçirilir. Aşağıdaki dört çivi: (1) varken aynen geçer + İKİNCİ istek açılmaz,
+# (2) yokken None+neden, (3) `surum` bacağının arızasından BAĞIMSIZ ölçülür, (4) gerekçe metni
+# DEĞER taşımaz (`_hafiza_surum` emsaliyle AYNI disiplin — sır sızmaz).
+
+def test_ozellikler_govde_aynen_gecer(monkeypatch, tmp_path, sandbox_state):
+    """`features` VARKEN `saglik.ozellikler` adıyla AYNEN (opak) geçer. AYNI ÇAĞRIDAN: `surum`u
+    besleyen `/version` isteğiyle AYNI gövde kullanılır — İKİNCİ bir `/version` isteği AÇILMAZ
+    (çağrı sayısı ölçülür, kaynak-metin değil davranış)."""
+    casus = _kurulum(monkeypatch, tmp_path)
+    g = _client().get("/api/hindsight").json()
+
+    assert g["saglik"]["ozellikler"] == OZELLIKLER_OLCULEN, "features aynen geçmedi"
+    assert g["saglik"]["neden"] is None
+    version_cagrilari = [c for c in casus.cagrilar if c["url"].endswith("/version")]
+    assert len(version_cagrilari) == 1, \
+        f"`ozellikler` İKİNCİ bir /version isteği açtı: {len(version_cagrilari)} çağrı"
+
+
+def test_ozellikler_yokken_none_ve_neden(monkeypatch, tmp_path, sandbox_state):
+    """`features` alanı YOKSA UYDURULMAZ: `ozellikler: None` + DOLU `neden` — sessiz `{}` panoda
+    "hiç özellik yok" YALANI olurdu; oysa ölçülen "alan adını tanımadım"dır."""
+    _kurulum(monkeypatch, tmp_path, esleme=_tam_esleme(
+        **{"/version": json.dumps({"api_version": SURUM_OLCULEN}).encode()}))
+    g = _client().get("/api/hindsight").json()
+
+    assert g["saglik"]["ozellikler"] is None, "features UYDURULDU"
+    assert g["saglik"]["surum"] == SURUM_OLCULEN, "ozellikler arızası surum bacağını da düşürdü"
+    assert _dolu(g["saglik"]["neden"]) and "features" in g["saglik"]["neden"], g["saglik"]["neden"]
+
+
+def test_ozellikler_surum_arizasindan_BAGIMSIZ_olculur(monkeypatch, tmp_path, sandbox_state):
+    """İZOLASYON (`saglik`in bacak-ayrımı emsali, `_hafiza_ozellikler` docstring'i): `surum` alanı
+    tanınmasa da (`api_version` yerine `surum` adıyla geldiyse) `features` HÂLÂ ayrı okunur — tek
+    bacağın arızası ötekini karartmamalı. İkisi de AYNI ham `surum_veri`den okunduğu için bu,
+    `surum_neden`in `_hafiza_surum` çağrısıyla EZİLMESİNİN `ozellikler`i etkilemediğinin kanıtıdır."""
+    _kurulum(monkeypatch, tmp_path, esleme=_tam_esleme(
+        **{"/version": b'{"surum":"9.9.9","features":{"mcp":true}}'}))
+    g = _client().get("/api/hindsight").json()
+
+    assert g["saglik"]["surum"] is None, "tanınmayan alandan surum UYDURULDU"
+    assert g["saglik"]["ozellikler"] == {"mcp": True}, "surum arızası features bacağını da düşürdü"
+
+
+def test_ozellikler_neden_deger_tasimaz(monkeypatch, tmp_path, sandbox_state):
+    """SIR SIZMAZ (R28), `_hafiza_surum`in emsaliyle AYNI disiplin: `features` yokken üretilen
+    `neden` gövdenin DEĞERLERİNİ taşımaz — yalnız görülen alan ADLARINI. `/version` anahtarsız
+    çağrıldığı için (`test_anahtarsiz_uclara_anahtar_gonderilmez`) bu gövde `_kapi_maskele`den
+    sırsız (`sir=None`) geçer; gerçek ikinci savunma hattı gerekçe metninin DEĞER taşımamasıdır."""
+    _kurulum(monkeypatch, tmp_path, esleme=_tam_esleme(
+        **{"/version": json.dumps({"api_version": "gizli-deger-9.9.9"}).encode()}))
+    g = _client().get("/api/hindsight").json()
+
+    assert g["saglik"]["ozellikler"] is None
+    assert _dolu(g["saglik"]["neden"])
+    assert "gizli-deger-9.9.9" not in g["saglik"]["neden"], "neden GÖVDE DEĞERİNİ taşıdı"
+
+
 def test_saglik_erisilemez_200_ama_durust(monkeypatch, tmp_path, sandbox_state):
     """Hindsight tamamen düşükken: 200, `erisilebilir` YANLIŞ, `surum` `None` (0 ya da "" değil),
     `neden` DOLU."""
@@ -459,6 +525,7 @@ def test_saglik_erisilemez_200_ama_durust(monkeypatch, tmp_path, sandbox_state):
     g = r.json()
     assert g["saglik"]["erisilebilir"] is False
     assert g["saglik"]["surum"] is None, "ölçülemeyen sürüm UYDURULDU"
+    assert g["saglik"]["ozellikler"] is None, "ölçülemeyen features UYDURULDU"
     assert _dolu(g["saglik"]["neden"])
     assert g["bankalar"] == [] and _dolu(g["bankalar_neden"])
 
@@ -518,7 +585,8 @@ def test_bankalar_stats_kota_operasyon_akisi(monkeypatch, tmp_path, sandbox_stat
     g = r.json()
 
     assert set(g) == {"saglik", "bankalar", "bankalar_neden", "kota", "operasyon"}, sorted(g)
-    assert g["saglik"] == {"erisilebilir": True, "surum": SURUM_OLCULEN, "neden": None}
+    assert g["saglik"] == {"erisilebilir": True, "surum": SURUM_OLCULEN,
+                           "ozellikler": OZELLIKLER_OLCULEN, "neden": None}
 
     assert [b["bank_id"] for b in g["bankalar"]] == ["meridian-arsiv", "smoke-067"]
     for b in g["bankalar"]:

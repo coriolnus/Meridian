@@ -7914,6 +7914,32 @@ def _hafiza_surum(veri: object) -> tuple[str | None, str | None]:
                   f"beklenen adlar: {list(_HAFIZA_SURUM_ALANLARI)}")
 
 
+#: Ruling R28 (2026-09-02, TSK-108 Görev 6-A takibi): `features` upstream'de BAĞIMSIZ bir yol
+#: DEĞİLDİR (ölçüldü, Görev 6-A raporu) — `VersionResponse.features` alanıdır. Adı SABİT: openapi
+#: şemasının kendi alan adı, uydurulmadı.
+_HAFIZA_OZELLIK_ALANI = "features"
+
+
+def _hafiza_ozellikler(veri: object) -> tuple[object | None, str | None]:
+    """`/version` gövdesinden `features` alt-gövdesini AYNEN çıkarır — `_hafiza_surum`nin
+    kardeşi ama OPAK (Ruling R28). `surum` SKALER bir alanı ADIYLA okur ve DEĞERİNİ doğrular;
+    bu ise bir ALT-GÖVDEYİ süzmeden taşır. Süzmek burada YANLIŞ ilke uygulaması olurdu:
+    `FeaturesInfo`nin anahtarları (`observations`, `mcp`, …) upstream'in KENDİ sürümüyle
+    değişebilir ve bir alan-listesi doğrulaması, upstream'in yarın ekleyeceği bir bayrağı
+    SESSİZCE düşürürdü — tam da dosyanın "tanımadığını sessizce boş sayma" ilkesinin TERSİ.
+
+    ALANIN KENDİSİ tanınmıyorsa (`features` hiç yok ya da gövde sözlük değil) sessiz kalınmaz:
+    o bir şema sürüklenmesi alarmıdır — `_hafiza_dizi`/`_hafiza_surum` ile AYNI disiplin.
+    Gerekçe (`_hafiza_surum` emsali) alan ADLARINI taşır, DEĞERLERİ TAŞIMAZ."""
+    if not isinstance(veri, dict):
+        return None, (f"/version gövdesi sözlük değil ({type(veri).__name__}) — "
+                      f"`{_HAFIZA_OZELLIK_ALANI}` okunamadı")
+    if _HAFIZA_OZELLIK_ALANI not in veri:
+        return None, (f"/version gövdesinde `{_HAFIZA_OZELLIK_ALANI}` alanı yok "
+                      f"(görülen anahtarlar: {sorted(str(a) for a in veri)[:8]})")
+    return veri[_HAFIZA_OZELLIK_ALANI], None
+
+
 def _hafiza_toplam(veri: object) -> int | None:
     """Liste zarfındaki `total`; SÖYLENMEDİYSE `None` — `0` DEĞİL.
 
@@ -8106,7 +8132,8 @@ def _hafiza_liste_sorgusu(*, limit, offset, tur=None, q=None, state=None,
 def api_hindsight(request: Request):
     """HINDSIGHT'IN PANO YÜZEYİ — salt-okunur, anahtarsız, ölçemediğini söyleyen.
 
-    · `saglik`: Hindsight ayakta mı + sürümü (anahtarsız uçlardan; `bankalar`dan BAĞIMSIZ).
+    · `saglik`: Hindsight ayakta mı + sürümü + özellik bayrakları (anahtarsız uçlardan;
+      `bankalar`dan BAĞIMSIZ).
     · `bankalar`: banka başına `stats` — upstream gövdesinin AYNEN geçişi + kendi `stats_neden`i.
     · `kota`: banka başına `llm-requests/stats`.
     · `operasyon`: banka başına `audit-logs/stats`.
@@ -8117,10 +8144,18 @@ def api_hindsight(request: Request):
     erisilebilir = saglik_neden is None
 
     surum, surum_neden = None, None
+    ozellikler, ozellikler_neden = None, None
     if erisilebilir:
         surum_veri, surum_neden = _hafiza_json("/version", None)
         if surum_neden is None:
+            # AYNI GÖVDEDEN İKİ BAĞIMSIZ OKUMA (Ruling R28). `surum_veri` TEK bir `/version`
+            # isteğinin sonucudur — `ozellikler` için İKİNCİ bir istek AÇILMAZ. Bacaklar yine de
+            # AYRI ölçülür (yukarıdaki "HER BACAK AYRI" ilkesinin skaler/opak-alan hâli): `surum`
+            # tanınmayan bir alan adıyla düşerse `ozellikler` bundan ETKİLENMEZ, çünkü ikisi de
+            # HAM `surum_veri`den okur — `surum`u üreten satırın `surum_neden`i EZMESİ (bir
+            # sonraki satırda) yalnız `surum` bacağını ilgilendirir.
             surum, surum_neden = _hafiza_surum(surum_veri)
+            ozellikler, ozellikler_neden = _hafiza_ozellikler(surum_veri)
 
     anahtar, bankalar_neden = _hafiza_anahtari()
     bankalar: list[dict] = []
@@ -8145,8 +8180,9 @@ def api_hindsight(request: Request):
             operasyon[kimlik] = {"audit_stats": audit_stats, "neden": audit_neden}
 
     return {
-        "saglik": {"erisilebilir": erisilebilir, "surum": surum,
-                   "neden": "; ".join(p for p in (saglik_neden, surum_neden) if p) or None},
+        "saglik": {"erisilebilir": erisilebilir, "surum": surum, "ozellikler": ozellikler,
+                   "neden": "; ".join(p for p in (saglik_neden, surum_neden, ozellikler_neden)
+                                      if p) or None},
         "bankalar": bankalar,
         # Kardeş gerekçe (v287 `<alan>_neden` idiomu): pano BOŞ liste ile ÖLÇÜLEMEDİ'yi ayırsın.
         "bankalar_neden": bankalar_neden,
@@ -8482,6 +8518,11 @@ def api_hindsight_yapilandirma(request: Request, bank: str | None = None):
 # bacağı `/version`i zaten anahtarsız çekiyor ama yalnız `surum`u (`_hafiza_surum`) çıkarıyor;
 # `features` bugün hiçbir yere taşınmıyor. Uydurma yasağı: olmayan bir yola vekil yazmak yerine
 # bulgu devir raporuna taşındı — ekleme kararı (varsa) Rol-1'e bırakıldı.
+#
+# TAKİP — RULING R28 (2026-09-02): Rol-1 karar verdi — YENİ UÇ AÇILMADI, bunun yerine `features`
+# `api_hindsight`in ZATEN çektiği `/version` gövdesinden `saglik.ozellikler` adıyla AYNEN
+# (opak) geçirilir (`_hafiza_ozellikler`, yukarıda). İKİNCİ bir `/version` isteği YOKTUR — aynı
+# `surum_veri`den okunur.
 
 @app.get("/api/hindsight/bellek-graf")
 def api_hindsight_bellek_graf(request: Request, bank: str | None = None, type: str | None = None,
