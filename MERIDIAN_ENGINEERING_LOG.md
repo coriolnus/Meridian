@@ -1835,3 +1835,60 @@ T2 bundle, T5 ui/src). DERS-6: mutasyon turu build'den ÖNCE — aksi hâlde dag
 içerik aynıyken mtime'a takılır. Havuza: TSK-111 (Faz-2 yazma), TSK-112 (varlık künyesi paneli).
 Kararlar: B-TAVAN-502 kapalı (502 bilinçli), B-PG-ROTASYON icra+kanıt, konsolidasyon gece dokunulmadı.
 DONE koşulu: dağıtım + operatör görsel turu.
+
+## 2026-09-03 (gece kuyruğu, otonom) — 18 kalem onaylı: TSK-108 kapanış dalgası + TSK-111 dilim 1 canlıya; iki kart ön-kayıt; geri-dolum dayanıklılığı; OOM tavanı
+
+**Yetki ve çerçeve:** operatör 2026-09-02 ~23:00 TR: "gece boyu konsolide plan üzerinde çalış, full
+otonom, sudo dahil dağıtım yetkin var" → 18 kalemlik kuyruk gösterildi, onaylandı ("18 kaleme onay,
+full otonom devam"). Yapılmayanlar baştan sınırlandı: seans kilidi · konsolidasyon · ücretli harcama ·
+bank config yazma · strateji/evren/parametre · sır değerleri. Ledger `.superpowers/sdd/…/progress.md`
+"[G#]" satırları; saatler `date -u` ile (ilk etiketlerim +1-1,5 saat şişkindi — düzeltildi).
+
+**Canlıya inen (dağıtım d0c7927, 22:52:40Z; healthz 200, learn kapalı, kod-tazelik ✓):**
+- TSK-108: T9 Ana Sayfa = CP home (operatörün canlı CP ekranı ölçüt; CP'nin home-view + bank-stats-view
+  ikilisi tek sayfada — beyanlı sapma; DONE = max(0,total−pending−failed) CP formülü; FAILED tıklanır →
+  `consolidation_state=failed` listesi; bant sırası sabit, `caused_by` "tanınmayan tür" rozetiyle sona).
+  R20' (operatör ekran görüntüsüyle: alt başlıklar SOL nav'da, sayfa-içi kenar çubuğu ve beyan
+  mekanizması silindi — R20 ters uygulanmıştı; "uygulama UI'ı" = panonun kendi kalıbı). Stub önizleme
+  (statik + boş /api, uygulama yüklenmeden — hafıza kaydı) yapıyı doğruladı; dolu hâli operatör turu.
+- TSK-111 dilim 1: 11-A vekil yazma uçları (`/islem/{iptal|yeniden-dene|sil}`, `/konsolidasyon/
+  {kurtar|tetikle}`; güvenlik listesi 9/9; bank/id tip+duvar tek yardımcı; ret dallarında da iz;
+  `/consolidate` gövdeli ÇIKTI — "dördün boşluğu beşinci için kanıt değil") + 11-B UI (iki adımlı onay,
+  çift-gönderim kilidi, kısmi başarı pencerede bacak başına {ok,http,neden}, sr-only gerekçe; CP durum
+  matrisi ölçüldü; CP onay sormuyor — beyanlı sapma; v378 30 çivi kalıcı). Kurtarma CP sırasıyla
+  recover → retried_count>0 ise trigger (CP gövdesiz).
+- hindsight-api MemoryMax 8G→12G: 14:30Z OOM cgroup'tu (anon-rss 8,37 GB > 8G; systemd "3,0G tepe"
+  yanıltıcıydı); makine 23 GB. Birim dosyası repo+canlı (F9 aynası birebir).
+- TSK-107/087 (/opt/veri kopyası kuruldu; koşan tur eski kodla): kesik indirme erken KIRMIZI (boyut
+  kıyası, yarım gz silinir, `KesikIndirme` main'de tek satır) + işçi çökmesinde bir kez yeniden deneme
+  (öteki işçi kesilmez; ikinci çöküşte KIRMIZI + bedel özeti). v377 13 çivi.
+
+**Ölçümle kapananlar:** TSK-089 DONE (`/models` sondası "açık" BAYATTI — kapıda `llm-models` rotası
+var, motor 200) · TSK-008 DONE (TSK-092 koruması iki dağıtımda learn'ü kapalı tuttu) · B-NOUS-BEYIN:
+zincir doğru (NOUS_ENDPOINT=kapı, model, anahtar; models 200) — chat canary tavan sıfırlanınca ·
+Evren sapması 13 sembol tam liste (universe_drift.json; endeks çıkışı, delist değil; açık pozisyon
+kesişimi BOŞ) → sabah karar paketi.
+
+**Kart ön-kayıtları (kod yok, operatör onayı):** EDG-2026-069 ⑥a tetik→dolum tick bacağı (gecikme
+≤60 sn, kayma ≤15 bps; ADIM-0 n≥30; girdiler ölçüldü: tick arşivi 129 gün 1/sn, `trades.extra_json.
+dolum_ts`) · EDG-2026-070 PIT mid-cap sağ-kalan üst-sınır (EDG-018 halefi, aynı ADIM-0, yeni bar
+kaynağı). §6 OPERATOR; README endeksi üretildi (v279 yakaladı).
+
+**TSK-064 hazırlık belgesi** `docs/TASARIM-SIR-YOL1-2026-09-03.md`: 5 dosya/16 sır (yalnız adlar),
+sınıf A/B/C/D, Faz-0..1C; bulgular: `.env-apisix` 640, DASH_TOKEN iki dosyada, vekil TENANT'ı dosyadan
+okuyor.
+
+**Suite hükümleri (üçü de donmuş ağaç, parmak izi eşit):** #2 9480/1F (v286 çıplak hex — canvas yedek
+paleti; kaldırıldı, jeton çözülemezse dürüst hâl) · #3 9628/2F (v334 ham exec_module — v377 conftest
+yardımcısına; v279 README endeksi üretilmemiş — üretildi). Etkilenen kümeler yeşil; push d0c7927.
+
+**Vakalar / dersler:** `.claude/launch.json` OKUMADAN üzerine yazıldı (stub yapılandırması; eski
+içerik bilinmiyor, .claude git-ignore) — operatöre itiraf, Write-öncesi-Read hafıza kaydı ·
+git shim `add -A -- dizin`i de reddetti, ilk T5 commit'i ui/src'siz atıldı → porcelain'den tek tek +
+`git show --stat` kıyası (bugün 2.) · "konsolide" = içerik tekilleştirmesi (üç yorum turu; hafıza) ·
+saat etiketleri ölçülmeden yazılmaz.
+
+**Açık (sabah):** kart onayları 069/070 · TSK-064 Faz-0 (chmod 600) · 11-A bank allowlist · geri-dolum
+seans kilidi (intraday_gap bedeli: 0→232/273/242) · evren sapması 13 sembol · konsolidasyon başarısız
+258 (retry düğmesi canlı) · ingest 00:10Z koşumu hükmü · TSK-112 (12-A uçuşta) / TSK-020 2-adım2 /
+TSK-029 / TSK-109 / TSK-110 sıradaki.
