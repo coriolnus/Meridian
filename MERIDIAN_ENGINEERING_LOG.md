@@ -1651,3 +1651,38 @@ artefaktı bayatladı — yeniden üretildi) · v154 (BETIK_KUMESI'nin auth_cli 
 depo-geneli tutarlılık çivileri (endeks, envanter, şema, sınır beyanı) yalnız TAM suite'te
 öter — gece boyu hedefli koşumların hiçbiri bu yediliyi göremezdi. Suite #2 (a62ae03 tepesinde
 donmuş ağaç): **8923 passed / 3 skipped / EXIT=0**. Push tur kapanışında; sabah paketi operatöre.
+
+## 2026-09-02 (sabah penceresi) — Kapı dört fazıyla canlı; iki ölçüm vakası: dagit sessiz ölümü, polkit çift körlüğü
+
+Operatör elle + Rol-1 doğrulama/onarım döngüsüyle pencere kapandı: dağıtım (a18075d) →
+kapı config+rotalar (drift boş) → motor flip (FMP+NOUS+KAPI_APIKEY, tek restart) → polkit
+kuralı → pano birim-anahtarının İLK canlı toggle'ı iki yönde rc=0 (07:04; şafak yedilisinin
+v181 düzeltmesi `diag_cache_invalidated` iziyle üretimde ilk gün çalıştı) → F4-B kilidi üç
+LLM rotasında. Kilit dört kanıtla: anahtarsız 401 · yanlış anahtar 401 · motor anahtarı 200 ·
+sayaçta `consumer=motor_meridian`. Anahtar eşitliği hash kıyasıyla (değer hiçbir terminale
+basılmadan). Dış canary 9443 → 200. Botlar bilerek kapı DIŞINDA (TSK-105: hermes Bearer
+gönderir, key-auth apikey bekler — ölçüldü, göç ayrı kalem).
+
+**Vaka 1 — dagit [4] sessiz ölümü (TSK-092'nin ilk gerçek koşumu):** `is-enabled` türetimi
+`[ … ] && printf` ile bitiyordu; son eleman (learn) disabled → uzak kabuk 1 → `set -e` atamada
+betiği başlıktan hemen sonra öldürdü — rsync inmiş, restart/beyan kalmış, diskte-yeni/süreçte-
+eski ikiliği doğmuştu. v367'nin metin çivileri türetmeyi KOŞMUYORDU; davranışsal çivi eklendi
+(dagit metninden sökülen snippet + sahte systemctl, kırmızı doğdu) ve betik kendi ~132
+doktrinine (açık `if`) getirildi. "Çivi yeşili kanıt değildir"in ops-betiği hâli.
+
+**Vaka 2 — polkit çift körlüğü (iki ölçüm turu):** (1) systemd `manage-unit-files` eyleminde
+polkit'e birim adı VERMEZ — kuralın tam-ad beklentisi hep null kaldı, ilk canlı deneme 502.
+(2) Fiil-şartlı düzeltme de düştü: o eylemde `verb` ayrıntısı DA inmiyor VE `polkit.log` bu
+polkitd yapısında (v124 duktape) sessizce kayboluyor — `stop`un logsuz YES'i kuralın çalışıp
+izin doğmadığının kanıtı oldu; geçici 49-debug gözlem kuralı ve detaysız `pkcheck` teşhisi
+tamamladı. Eşleşme eylem kimliğine indi; büyüyen genişlik kuralda BEYANLI (birim darlığı API
+beyaz listesinde, v368; gerçek denetim izi api.py `birim_istek` obs kaydı — polkit.log
+güvenilmez, ölçüldü). Ders: iki dilin/iki daemonun arasındaki sözleşme ancak CANLI denemeyle
+ölçülür; tasarım-varsayımı yorumları ölçüm damgası taşımalı.
+
+Ayrıca: apiPost tek kaynağa indi (062e989 — pano/gonder.ts yazma kapısı; implementer brief'imin
+iki ölçüm hatasını yakaladı: KararPaneli bağımlılığı + yol derinliği) · v361 faz çivisi kilit
+inince TAM mekanizmasıyla ısırdı (türetim doğru, beklenti bayattı — cf3b480) · bir commit
+pytest hükmüne bağlanmadan atıldı (bd3ae0f, 1 kırmızıyla push; ders defterde: zincirde git,
+hüküm değişkenine bağlanır). Açık: EDG-067 ingest sürüyor (süpürme bekliyor) · nous sondası +
+FMP'nin kapıdan ilk doğal trafiği bir sonraki döngüde sayaçtan teyit edilecek.
