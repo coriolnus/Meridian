@@ -71,7 +71,7 @@ betiği bu turun H2'sinde `tests/` çivisine dönüşür, §5) · literal sayım
 | KRİTİK | 336°–6° | `sev-1` | gece `red` 1° içeride |
 | UYARI + YÖN-EKSİ | 8°–30° | `sev-2`, `yon-eksi` | ikisi aynı bantta: bilinçli (turuncu-kırmızı ailesi), ışıklılıkla ayrılır |
 | BAŞARI + YÖN-ARTI | 132°–155° | `sev-3`, `yon-arti` | emerald-500 (~160°) DIŞARIDA — literal sınıflar jetona taşınınca hizalanır |
-| 195° AİLESİ | 185°–210° | `sky/blue/sapphire` | rolü beyan edilecek (S3); beyan edilmezse bant serbest kalır |
+| BİLGİ (195° ailesi) | 185°–210° | `sky/blue/sapphire` → `--bilgi` | **S3 KARAR (operatör 2026-09-03 ~10:50Z): BİLGİ rolü, REZERVE.** Bedel: `--color-seri-9` (camgöbeği, 192°) artık bantta — TSK-124 takımyıldızı düğümü GEÇİCİ BEYANLI İSTİSNA (K-4'e kadar) |
 | GEZİNME | 210°–232° | `nav-*` | |
 | MOD | 245°–270° | `mod-kesif`, `mod-canli` | gece 251–254° içeride |
 | SERBEST (veri serileri) | 32°–130° · 156°–184° · 234°–244° · 272°–334° | seri rampası | fiilen dört kullanılabilir hue: ~60° (sarı — beyaz zeminde zayıf), ~95° (zeytin/lime), ~175° (teal), ~290° (mor) ve ~320° (macenta) |
@@ -125,7 +125,12 @@ regresyon riski (ekran değişmez iddiası jeton eşitliğiyle çivilenir: `emer
 renk DEĞİŞİKLİĞİDİR, "aynı" değil; 160°→145°). Ölçülmeyen: colorblind-safe ayrım (deuteranopi'de 145° ↔ 20°
 ayrımı ışıklılıkla taşınıyor mu) — palet turunda ölçülür, S4.
 
-## 7. Operatör soruları
+## 7. Operatör soruları — KARARLAR (2026-09-03 ~10:45–10:50Z)
+
+- **S1 → A′** · **S2 → huni seriye bağlanır** (A′ ile kapandı) · **S3 → BİLGİ rolü, rezerve** · **S4 → renk körlüğü ölçümü BU TURDA** (H2 planına simülasyon + parlaklık farkı eşiği girer) · **S5 → dört dilim, aile başına** (uyarı 238 → başarı 135 → kritik 31 → bilgi 12).
+- H2: writing-plans ile dört dilimlik plan; TSK-124'ün `DUGUM_STILI` istisnası K-4'te kapanır.
+
+Sorulan hâlleri (kayıt):
 
 - **S1** Seri rampası: A′ (öneri) · A · B · C?
 - **S2** Huni: seri'ye bağlansın mı (öneri), yoksa "huni = rol kopyası" beyanıyla kalsın mı?
