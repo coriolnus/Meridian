@@ -32,6 +32,7 @@ import os
 import re
 import shutil
 import time as _time
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -7794,9 +7795,9 @@ _HAFIZA_RECALL_ALANLARI = ("query", "types", "prefer_observations", "budget", "t
 # (`ListMemoryUnitsResponse`) ve `total`/`limit`/`offset` ile birlikte ZORUNLU. Şerh 2026-09-02'de
 # DÜZELTİLDİ: burada önce "gövde ÖRNEKLERİ ölçülmedi" yazıyordu, oysa openapi `example:` blokları
 # taşıyor ve okundu (v375 sınıf-2 fixture'ları). Yine de tek ada bağlanılmaz — sözleşme yarın
-# değişebilir ve bu vekil yirmi iki uçta ayakta kalmalı. Hiçbiri tutmazsa SESSİZ `[]` DÖNÜLMEZ,
-# `neden` üretilir: sessiz boş liste panoda "hafıza boş" diye okunurdu; oysa ölçülen şey "zarfı
-# tanımadım"dır ve bu bir ŞEMA SÜRÜKLENMESİ ALARMIdır.
+# değişebilir ve bu vekil CPUI tablosundaki her uçta ayakta kalmalı. Hiçbiri tutmazsa SESSİZ
+# `[]` DÖNÜLMEZ, `neden` üretilir: sessiz boş liste panoda "hafıza boş" diye okunurdu; oysa
+# ölçülen şey "zarfı tanımadım"dır ve bu bir ŞEMA SÜRÜKLENMESİ ALARMIdır.
 _HAFIZA_DIZI_ALANLARI = ("items", "data", "results", "banks", "memories")
 # Banka kimliğinin hangi alanda geldiği de ölçülmedi; aynı gerekçeyle birden çok ad denenir.
 _HAFIZA_KIMLIK_ALANLARI = ("bank_id", "id", "name")
@@ -8037,9 +8038,9 @@ def _hafiza_sayi(ham: str | None, varsayilan: int, taban: int, tavan: int) -> in
 # CP-UI GENİŞLEMESİ — TSK-108 Görev 1 (2026-09-02)
 # =================================================================================================
 #
-# Yüzey üç uçtan yirmi iki uca çıktı. YOL HARİTASI UYDURULMADI: her uç, Hindsight Control
-# Plane'in (v0.9.2) kendi vekil rotasının gittiği dataplane ucuna gider. İki upstream kaynak
-# okundu ve ikisi de BAĞLAYICI referanstı:
+# Yüzey 2026-09-02'de üç uçtan yirmi iki uca çıktı. YOL HARİTASI UYDURULMADI: her uç, Hindsight
+# Control Plane'in (v0.9.2) kendi vekil rotasının gittiği dataplane ucuna gider. İki upstream
+# kaynak okundu ve ikisi de BAĞLAYICI referanstı:
 #   · `hindsight-control-plane/src/app/api/**/route.ts` — CP hangi uca hangi parametreyle gidiyor
 #   · `hindsight-clients/go/api/openapi.yaml` — dataplane'in KENDİ sözleşmesi (69 yol)
 #
@@ -8052,12 +8053,14 @@ def _hafiza_sayi(ham: str | None, varsayilan: int, taban: int, tavan: int) -> in
 #
 # BEDEL AÇIKÇA TAŞINIR (bedel yasası). Kazanılan: CP'nin bilgi mimarisi panoda birebir açılabilir.
 # Kaybedilen: yüzey alanı 7 kat büyüdü — yani sır duvarı, yol kaçırma ve tavan sözleşmelerinin
-# HER BİRİ artık yirmi iki yerde doğru olmak zorunda. Bedel tek boğazla ödendi; çiviler bu yüzden
-# uç uç değil PARAMETRİK yazıldı (`CPUI` tablosu, v375).
+# HER BİRİ artık tablodaki uçların tümünde doğru olmak zorunda. Bedel tek boğazla ödendi;
+# çiviler bu yüzden uç uç değil PARAMETRİK yazıldı (`CPUI` tablosu, v375).
 #
 # YAZMA YOLU HÂLÂ YOKTUR. Bellek düzenleme/geçersizleme, config PATCH, reflect tetikleme,
-# consolidate/recover, document reprocess ve webhook CRUD Faz-1 DIŞIdır ve bu dosyada KARŞILIĞI
-# YOKTUR. Tek istisna `POST /recall`: durum değiştirmez, SORGU sınıfıdır — ve istisna olduğu için
+# consolidate/recover, document reprocess ve webhook YAZIMI (create/update/delete + teslimat
+# geçmişi) Faz-1 DIŞIdır ve bu dosyada KARŞILIĞI YOKTUR — webhook LİSTESİ okunur (TSK-109,
+# aşağıdaki M şerhi); okumak yazmak değildir. Tek istisna `POST /recall`: durum değiştirmez,
+# SORGU sınıfıdır — ve istisna olduğu için
 # beyaz listeyle süzülür (aşağıda).
 
 
@@ -8112,9 +8115,9 @@ def _hafiza_bank_json(bank: str, kuyruk: str = "", *, kimlikler: tuple = (),
 
     KAÇIRMA ÇAĞIRANIN DİSİPLİNİNE BIRAKILMADI. `kuyruk` bir ŞABLONdur (`"/memories/{}/history"`)
     ve içine giren her kullanıcı parçası `kimlikler` üzerinden `_hafiza_kacir`den GEÇEREK
-    yerleşir. Alternatif — her uçta f-string ile elle kaçırmak — yirmi iki uçta bir kez
-    unutulurdu ve o tek unutuş, `../../` ile Hindsight'ın YAZAN bir ucuna gitmeye yeterdi.
-    Sözleşme burada TİPLE zorlanıyor: şablona ham dizge sokmanın yolu yok. YOL KURULUMU
+    yerleşir. Alternatif — her uçta f-string ile elle kaçırmak — CPUI tablosundaki uçlardan
+    birinde bir kez unutulurdu ve o tek unutuş, `../../` ile Hindsight'ın YAZAN bir ucuna
+    gitmeye yeterdi. Sözleşme burada TİPLE zorlanıyor: şablona ham dizge sokmanın yolu yok. YOL KURULUMU
     `_hafiza_bank_yolu`ya ÇIKARILDI (düzeltme turu 1, I-3a) — yazan bacak da onu çağırır."""
     anahtar, neden = _hafiza_anahtari()
     if not anahtar:
@@ -8137,7 +8140,8 @@ def _hafiza_bank_yolu(bank: str, kuyruk: str = "", kimlikler: tuple = ()) -> str
 
 
 def _hafiza_zarf(bank: str | None, kuyruk: str = "", *, kimlikler: tuple = (), sorgu: str = "",
-                 ek: dict | None = None) -> dict:
+                 ek: dict | None = None,
+                 donustur: Callable[[dict], dict] | None = None) -> dict:
     """CP-UI uçlarının TEK zarfı: `{govde, neden}` — ikisinden tam biri doludur.
 
     `ogeler` DEĞİL `govde`, ve DİZİ ÇIKARILMAZ. `_hafiza_dizi` bir listeyi zarftan söker; bu
@@ -8145,12 +8149,61 @@ def _hafiza_zarf(bank: str | None, kuyruk: str = "", *, kimlikler: tuple = (), s
     diyemezdi — sayfalamanın gerçeği kaybolurdu. Gürültü azaltmanın bedeli ölçülür (bedel yasası):
     burada kazanç (daha sade zarf) bedele (sayfalama körlüğü) DEĞMEZ. `/liste` ve `/detay`
     tarihî zarflarını korur; onları değiştirmek mevcut panoyu kırardı — ama `/liste` aynı
-    körlüğü yaşamasın diye `toplam`ı EK alan olarak taşır (düzeltme turu 1, R4)."""
+    körlüğü yaşamasın diye `toplam`ı EK alan olarak taşır (düzeltme turu 1, R4).
+
+    `donustur` — İSTEĞE BAĞLI KANCA, VARSAYILANI `None` (Rol-1 hükmü 2026-09-03, TSK-109
+    düzeltme turu 1). "Aynen geçiş" bu yüzeyin kurucu sözleşmesidir ve TEK bir uç için
+    DELİNMEZ: uç uç `if` yazmak yerine kanca eklendi, çünkü `None` varsayılanı kalan uçların
+    davranışını BAYT DÜZEYİNDE değiştirmez ve bu ayrıca çivilidir
+    (`test_zarf_kancasi_VARSAYILAN_OLARAK_KAPALI`). Kancayı kullanan uçlar çivi tarafında
+    BEYANLIDIR (`CPUI_DONUSTURULEN`) — beyansız bir dönüşüm, aynen-geçiş çivisinden sessizce
+    düşmüş bir uç demektir. Kanca YALNIZ `neden is None` iken (yani ölçüm başarılıyken)
+    koşar: arıza dalında dönüştürülecek gövde zaten yoktur."""
     eksik = _hafiza_eksik(bank=bank, **(ek or {}))
     if eksik:
         return {"govde": None, "neden": eksik}
     veri, neden = _hafiza_bank_json(bank, kuyruk, kimlikler=kimlikler, sorgu=sorgu)
+    if neden is None and donustur is not None:
+        veri = donustur(veri)
     return {"govde": veri if neden is None else None, "neden": neden}
+
+
+#: Upstream alan adı ve onun yerine geçen BEYAN. İkisi de TEK yerde: süzgeç ile çivi aynı adı
+#: okumalı, yoksa "sır düştü" iddiası bir yazım hatasıyla sessizce doğru görünürdü.
+_WEBHOOK_SIR_ALANI = "secret"
+_WEBHOOK_SIR_BEYANI = "secret_tanimli"
+
+
+def _webhook_sirrini_suz(govde: dict) -> dict:
+    """`items[*].secret`i SİLER, yerine `secret_tanimli: bool` yazar. Başka alana DOKUNMAZ.
+
+    ROL-1 HÜKMÜ (2026-09-03 gece, TSK-109 düzeltme turu 1). İlk yazımda sır aynen geçiyordu ve
+    gerekçe "CP de düzenleme penceresinde indiriyor"du. Hüküm o gerekçeyi reddetti:
+
+      · YASA 6 — OKUYUCUSUZ YAZIM YOK. Bu panonun webhook YAZMA yolu YOKTUR, yani imzalama
+        sırrının tarayıcıda hiçbir okuyucusu yok. CP'nin düzenleme penceresi VAR, bizim YOK —
+        "CP ile birebir" bir gerekçe değil, bir benzetmeydi.
+      · SIR HİJYENİ — okunmayan bir sırrı tele koymanın bedeli bedava değildir.
+
+    ÜÇ HÂL KORUNUR (uydurma yasağı): alan HİÇ gelmediyse `secret_tanimli` de YAZILMAZ — yazmak,
+    upstream'in söylemediği bir şeyi ("sır tanımlı değil") ölçülmüş gibi göstermek olurdu.
+    Alan geldiyse boş/`null` → `False`, dolu → `True`.
+
+    `items` YOKSA ya da liste DEĞİLSE gövde AYNEN döner ve bu hükmün AÇIK dalıdır (sessiz
+    yutma değil): süzgecin sözleşmesi tek bir alan üzerinedir ve tanımadığı bir şekli
+    yeniden yazmaya kalkmak, upstream şeması kaydığında gövdeyi BİZİM bozmamız olurdu."""
+    ogeler = govde.get("items") if isinstance(govde, dict) else None
+    if not isinstance(ogeler, list):
+        return govde
+    suzulmus = []
+    for oge in ogeler:
+        if not isinstance(oge, dict) or _WEBHOOK_SIR_ALANI not in oge:
+            suzulmus.append(oge)
+            continue
+        kalan = {ad: deger for ad, deger in oge.items() if ad != _WEBHOOK_SIR_ALANI}
+        kalan[_WEBHOOK_SIR_BEYANI] = bool(oge[_WEBHOOK_SIR_ALANI])
+        suzulmus.append(kalan)
+    return {**govde, "items": suzulmus}
 
 
 def _hafiza_sayfa_sorgusu(limit, offset, *, uc: str = "", **ek) -> str:
@@ -8630,6 +8683,61 @@ def api_hindsight_profil(request: Request, bank: str | None = None):
     return _hafiza_zarf(bank, "/profile")
 
 
+# ------------------------------------------------------- M. TSK-109 EKLENTİSİ (2026-09-03) ----
+#
+# BİR SALT-OKUNUR UÇ DAHA: `webhooklar` → `GET /v1/default/banks/{bank_id}/webhooks`
+# (`list_webhooks`, aynı openapi çapası — dosya `test_hafiza_yuzeyi_v375.py` başlığında).
+# Panonun Hafıza ▸ Yapılandırma sayfasındaki webhook alt sekmesi bugüne kadar "bu pano
+# webhook'ları okumuyor" diyordu: uydurma değil, DÜRÜST bir kapsam sınırı beyanıydı. Bu uç o
+# sınırı kaldırır — sekme artık ölçtüğünü gösterir.
+#
+# ÜÇ ÖLÇÜM KARDEŞ LİSTE UÇLARINDAN AYRIŞTI, ve üçü de kalıbı refleksle kopyalamaya karşı:
+#
+# (1) SORGU PARAMETRESİ YOKTUR. `list_webhooks`in parametrelerinin TAMAMI: yol `bank_id`,
+#     başlık `authorization`. `limit`/`offset` YOK — bu yüzden `_hafiza_sayfa_sorgusu`
+#     ÇAĞRILMAZ ve `_HAFIZA_UC_TAVANI`ye kayıt girmez. Kalıbı kopyalasaydık FastAPI o iki
+#     parametreyi upstream'de sessizce yok sayardı: 422 çıkmaz, `neden` boş kalır, ve URL'de
+#     var olmayan bir sözleşme yazılı dururdu (çivi: `test_webhooklar_upstreame_sorgu_gondermez`).
+#
+# (2) YANITTA `total` YOKTUR. `WebhookListResponse`in tek alanı — ve tek `required`i — `items`.
+#     `/liste`ye eklenen `toplam` (düzeltme turu 1, R4) BU UCA TAŞINAMAZ: orada upstream `total`
+#     gönderiyordu, burada göndermiyor. Taşımak sayfalama sayısını UYDURMAK olurdu; pano bu uçta
+#     "N'den M'si" cümlesini kurmaz (çivi: `test_webhooklar_zarfinda_toplam_yoktur`).
+#
+# (3) GÖVDE `secret` TAŞIR — VE VEKİLDE SÜZÜLÜR (Rol-1 hükmü 2026-09-03 gece, TSK-109 düzeltme
+#     turu 1). `WebhookResponse.secret` webhook imzalama sırrıdır ve upstream onu liste
+#     yanıtında döndürüyor. İLK YAZIM ONU AYNEN GEÇİRİYORDU, gerekçesi "CP'nin düzenleme
+#     penceresi de indiriyor"du; hüküm gerekçeyi reddetti: CP'nin YAZMA yolu VAR, bu panonun
+#     YOK — yani sırrın burada hiçbir okuyucusu yok (YASA 6) ve okunmayan bir sırrı taşımanın
+#     bedeli bedava değil (sır hijyeni). `_webhook_sirrini_suz` alanı SİLER, yerine
+#     `secret_tanimli: bool` yazar; üç hâl korunur (alan hiç gelmediyse anahtar da YAZILMAZ).
+#     TEK BOĞAZ DELİNMEDİ: süzgeç uç uç bir `if` değil, `_hafiza_zarf`in `donustur` kancasıdır
+#     ve kancanın varsayılanı `None`dır — kalan uçlar bayt düzeyinde AYNEN geçmeye devam eder
+#     (`test_zarf_kancasi_VARSAYILAN_OLARAK_KAPALI`). Kancayı kullanan uçlar çivi tarafında
+#     BEYANLIDIR (`CPUI_DONUSTURULEN`): beyansız bir dönüşüm, aynen-geçiş çivisinden sessizce
+#     düşmüş bir uç demek olurdu. Bu dosyanın KENDİ sır duvarı (tenant anahtarı,
+#     `_kapi_maskele`) bundan bağımsız ayaktadır — iki sır iki ayrı şeydir.
+#
+# YAZMA YOLU AÇILMADI: `create_webhook`/`update_webhook`/`delete_webhook` ve
+# `list_webhook_deliveries` bu turun DIŞINDA. Pano düğmeleri CP'deki yerlerinde ama DEVRE DIŞI
+# çizilir (Faz-2 rozeti) — `/yapilandirma`nın PATCH kararıyla aynı kalıp.
+
+@app.get("/api/hindsight/webhooklar")
+def api_hindsight_webhooklar(request: Request, bank: str | None = None):
+    """CP `webhooks-view` listesi → upstream `/webhooks` (`list_webhooks`).
+
+    SORGUSUZ ÇAĞRILIR (yukarıdaki M şerhi, ölçüm (1)): upstream bu uçta `limit`/`offset`
+    tanımıyor, o yüzden `_hafiza_sayfa_sorgusu` yok. Zarf `{govde, neden}` — `/belgeler`
+    emsali; gövde `{items:[…]}`, `total` YOK.
+
+    İMZA SIRRI SÜZÜLÜR (`donustur=_webhook_sirrini_suz`) — Rol-1 hükmü 2026-09-03, düzeltme
+    turu 1; gerekçe Yasa 6 (okuyucusuz yazım: bu panonun webhook YAZMA yolu yok) + sır
+    hijyeni. Bu, bu yüzeyin "aynen geçiş" sözleşmesinin TEK beyanlı istisnasıdır ve çivi
+    tarafında da beyanlıdır (`CPUI_DONUSTURULEN`)."""
+    _auth(request)
+    return _hafiza_zarf(bank, "/webhooks", donustur=_webhook_sirrini_suz)
+
+
 # ------------------------------------------------ recall: SALT-OKUNUR'UN BEYANLI İSTİSNASI ----
 
 def _hafiza_recall_govdesi(ham: dict) -> dict:
@@ -8726,9 +8834,9 @@ async def api_hindsight_recall(request: Request):
 
 # ------------------------------------- L. YAZMA UÇLARI (TSK-111 dilim 1, 2026-09-02) ----------
 #
-# SALT-OKUNURLUK BURADA BİTER — VE BİTİŞİ BEYANLIDIR. Yukarıdaki yirmi iki uç ve `recall` bu
-# bloğun "vekil OKUR, yazmaz" sözleşmesini taşır. Operatör kararı (2026-09-02 ~20:40 UTC,
-# "butonların çalışması lazım") o sözleşmeyi CP'nin Operasyonlar tablosundaki üç düğme ve Ana
+# SALT-OKUNURLUK BURADA BİTER — VE BİTİŞİ BEYANLIDIR. Yukarıdaki salt-okunur uçların TÜMÜ ve
+# `recall`, bu bloğun "vekil OKUR, yazmaz" sözleşmesini taşır. Operatör kararı
+# (2026-09-02 ~20:40 UTC, "butonların çalışması lazım") o sözleşmeyi CP'nin Operasyonlar tablosundaki üç düğme ve Ana
 # Sayfa FAILED panelindeki kurtarma için AÇTI. Ruling R30 (plan dosyası) kapsamı çiziyor:
 # `trigger_consolidation` BU DİLİMDE DEĞİL.
 #

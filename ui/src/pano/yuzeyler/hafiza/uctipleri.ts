@@ -947,3 +947,57 @@ export interface YapilandirmaGovdesi extends HamGovde {
    *  bunu `config.memory_defense` altında arıyor; kök düzeyde de okunur. */
   readonly memory_defense?: unknown;
 }
+
+/* ==========================================================================
+   WEBHOOK LİSTESİ — `::api_hindsight_webhooklar` (GET /webhooks)  · TSK-109
+   --------------------------------------------------------------------------
+   BU ZARF KARDEŞLERİNDEN FARKLI, VE FARK ÖLÇÜLDÜ: `WebhookListResponse`in TEK
+   alanı (ve tek `required`i) `items`tır — `total`/`limit`/`offset` YOKTUR. Yani
+   burada `SayfaliGovde` KULLANILAMAZ: onu kullanmak, ekranın gelmeyecek bir
+   `total`ı beklemesi ve sayfalama şeridini sonsuza dek "toplam gelmedi" diye
+   çizmesi olurdu. Upstream bu uçta sorgu parametresi de tanımıyor
+   (`api.py::api_hindsight_webhooklar` M şerhi) — sayfalama diye bir şey yok.
+
+   `secret` BU TİPTE YOKTUR ÇÜNKÜ ZARFTA DA YOKTUR (Rol-1 hükmü 2026-09-03,
+   TSK-109 düzeltme turu 1). Alan upstream'in liste yanıtında vardır ama vekil onu
+   SÜZER (`api.py::_webhook_sirrini_suz`) ve yerine `secret_tanimli` yazar; gerekçe
+   Yasa 6 — bu panonun webhook YAZMA yolu yok, yani imzalama sırrının tarayıcıda
+   hiçbir okuyucusu yok. Tipe yine de yazmak, gelmeyecek bir alanı VAR gibi
+   göstermek olurdu. `secret_tanimli` da ÜÇ HÂLLİDİR: upstream alanı hiç
+   göndermediyse vekil bu anahtarı da yazmaz — `undefined` "ölçülemedi" demektir,
+   `false` "ölçüldü, sır tanımsız".
+   ========================================================================== */
+
+/** WEBHOOK HTTP TESLİMAT AYARI — upstream `WebhookHttpConfig` (sınıf (B)).
+ *  `method` şemada `default: POST` taşır; VARSAYILANI EKRAN UYDURMAZ — alan
+ *  gelmediyse "gelmedi" yazılır (CP burada sessizce "POST" basıyor). */
+export interface WebhookHttpAyari extends HamGovde {
+  readonly method?: unknown;
+  readonly timeout_seconds?: unknown;
+  readonly headers?: unknown;
+  readonly params?: unknown;
+}
+
+/** BİR WEBHOOK — upstream `WebhookResponse` (sınıf (B)); CP `webhooks-view.tsx`
+ *  tablosu bu adların beşini okuyor: `url`·`http_config.method`·`event_types`·
+ *  `enabled`·`created_at` (sınıf (C), aynı adlar). */
+export interface WebhookKaydi extends HamGovde {
+  readonly id?: unknown;
+  readonly bank_id?: unknown;
+  readonly url?: unknown;
+  /** SIRRIN KENDİSİ DEĞİL, VARLIĞININ BEYANI — vekilin yazdığı alan
+   *  (`api.py::_webhook_sirrini_suz`). Üç hâl: yok = upstream alanı hiç
+   *  göndermedi · `false` = sır tanımsız · `true` = tanımlı. Ekran bugün hiçbirini
+   *  ÇİZMİYOR; tipte durması, zarfın gerçeğini kaydeder. */
+  readonly secret_tanimli?: boolean;
+  readonly event_types?: unknown;
+  readonly enabled?: unknown;
+  readonly http_config?: unknown;
+  readonly created_at?: unknown;
+  readonly updated_at?: unknown;
+}
+
+/** WEBHOOK LİSTESİ — `SayfaliGovde` DEĞİL (yukarıdaki blok şerhi). */
+export interface WebhookListesi extends HamGovde {
+  readonly items?: readonly WebhookKaydi[];
+}

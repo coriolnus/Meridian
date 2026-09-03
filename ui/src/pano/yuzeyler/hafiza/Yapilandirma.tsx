@@ -9,9 +9,13 @@
        genel · bellek savunması · yapılandırma · webhook · denetim kaydı ·
        model çağrıları
 
-   Bir tanesi bizde BOŞ ve boşluğun nedeni ekranda yazılı: WEBHOOK okumasının
-   vekilde karşılığı YOK. Sekmeyi silmek "böyle bir şey yok" derdi; boş bırakıp
-   susmak "ölçtük, hiç webhook yok" derdi. İkisi de yanlış.
+   ALTINCISI ARTIK BOŞ DEĞİL (TSK-109, 2026-09-03). Webhook sekmesi bugüne kadar
+   "bu pano webhook'ları okumuyor" diyordu: uydurma değil, DÜRÜST bir kapsam
+   sınırı beyanıydı — sekmeyi silmek yeteneğin yokluğunu, boş bırakıp susmak da
+   "ölçtük, hiç webhook yok"u söylerdi. Vekile salt-okunur liste ucu girince
+   (`api.py::api_hindsight_webhooklar`) beyan yerini ÖLÇÜME bıraktı. Yazma yolu
+   AÇILMADI: dört düğme (ekle · teslimatlar · düzenle · sil) üst yüzeydeki
+   yerlerinde ama devre dışı duruyor.
 
    ---------------------------------------------------------------------------
    KAYBEDİLEN İKİ SAYAÇ KUTUSU GERİ GELDİ — VE HİÇ YENİ ÇAĞRI AÇMADAN
@@ -51,12 +55,12 @@ import { cn } from "@/lib/utils";
 
 import type { Bolum } from "../../alanlar";
 import { useApi, type Durum } from "../../veri";
-import { BolumKart, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcalar";
+import { BolumKart, Kapi as UcKapisi, OkRozet, Olculemedi, Satir } from "../sistem/parcalar";
 
 import { CIZILEN_ALANLAR, CP_YAPILANDIRMA, type AlanBicimi, type CpAlan } from "./cpyapilandirma";
-import { Bolme, Cipler, FAZ2_ROZET, Faz2Dugme, Faz2Grup, HamSatirlar, KovaSeridi, PencereDugmeleri, Sayfalama, Secim, VARSAYILAN_ISTATISTIK_PENCERESI, ZarfKapisi, damga, damgaMs, kovaToplami, metin, sayi, secimDegeri, sozluk } from "./parcalar";
+import { Bolme, Cipler, FAZ2_ROZET, Faz2Dugme, Faz2Grup, HamSatirlar, KovaSeridi, PencereDugmeleri, Sayfalama, Secim, VARSAYILAN_ISTATISTIK_PENCERESI, ZarfKapisi, damga, damgaMs, kovaToplami, listeye, metin, sayi, secimDegeri, sozluk } from "./parcalar";
 import { ISLEM_KUNYELERI, YazmaOnayi, islemEylemleri, islemUygula, type IslemEylemi } from "./yazma";
-import type { DenetimKaydi, HafizaGovdesi, HafizaZarfi, HamGovde, IslemGovdesi, IslemKaydi, IstatistikGovdesi, ModelCagrisi, SayfaliGovde, YapilandirmaGovdesi } from "./uctipleri";
+import type { DenetimKaydi, HafizaGovdesi, HafizaZarfi, HamGovde, IslemGovdesi, IslemKaydi, IstatistikGovdesi, ModelCagrisi, SayfaliGovde, WebhookKaydi, WebhookListesi, YapilandirmaGovdesi } from "./uctipleri";
 
 const UC_ISLEMLER = "/api/hindsight/islemler";
 const UC_YAPILANDIRMA = "/api/hindsight/yapilandirma";
@@ -64,6 +68,7 @@ const UC_DENETIM = "/api/hindsight/denetim";
 const UC_DENETIM_IST = "/api/hindsight/denetim-istatistik";
 const UC_LLM = "/api/hindsight/llm-istekleri";
 const UC_LLM_IST = "/api/hindsight/llm-istatistik";
+const UC_WEBHOOKLAR = "/api/hindsight/webhooklar";
 const UC_TOPLU = "/api/hindsight";
 
 const SAYFA_BOYU = 25;
@@ -537,6 +542,211 @@ function IslemEylemleri({
         />
       ))}
     </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   WEBHOOK LİSTESİ — DÜRÜST BOŞLUK ÖLÇÜME BIRAKTI (TSK-109, 2026-09-03)
+   ----------------------------------------------------------------------------
+   ÜST YÜZEYİN BÖLÜMÜ `bank-config-view.tsx`TE DEĞİL — VE BU ÖLÇÜLDÜ. Görev
+   tanımı webhook bölümünü banka yapılandırma bileşeninin içinde arıyordu; o
+   dosyada `webhook` geçen TEK satır bile yok. Bölüm KENDİ bileşeninde yaşıyor:
+   `webhooks-view.tsx`. Sütunlar, boş hâl metni ve düğmeler ORADAN okundu; yanlış
+   dosyaya bakıp "bölüm yok" demek, olmayan bir yokluğu ölçmek olurdu.
+
+   BEŞ SÜTUN, ÜST YÜZEYİN KENDİ SIRASIYLA (`tableHeader*` anahtarları):
+   URL · yöntem · olay türleri · durum · oluşturulma. Altıncı sütun düğmelerdir.
+
+   ÜÇ YERDE ÜST YÜZEYDEN AYRILDIK, ÜÇÜ DE AYNI YASADAN (uydurma yasağı):
+     · YÖNTEM VARSAYILANI UYDURULMAZ. CP `http_config?.method || "POST"` yazıyor,
+       yani alan gelmediğinde ekrana "POST" basıyor. Şemadaki `default: POST`
+       sunucunun O KAYIT İÇİN ne tuttuğunu söylemez — gelmemiş bir değeri
+       varsayılanla doldurmak ölçülmemişi ölçülmüş göstermektir.
+     · BOŞ OLAY LİSTESİ BİR OKUMA OLARAK ETİKETLENİR. CP boş listeyi "All events"
+       diye çiziyor; upstream sözleşmesi boş listenin anlamını YAZMIYOR
+       (`event_types` açıklaması yalnız üç desteklenen türü sayıyor, varsayılanı
+       `["consolidation.completed"]`). Cümleyi taşıdık ama KİMİN cümlesi olduğunu
+       da taşıdık — sessizce benimsemek, CP'nin yorumunu bizim ölçümümüz gibi
+       gösterirdi.
+     · SIR SÜTUNU YOK — VE SIR ARTIK BURAYA HİÇ GELMİYOR. `secret` vekilde
+       süzülüyor (`api.py::_webhook_sirrini_suz`, Rol-1 hükmü 2026-09-03); zarfta
+       yerine `secret_tanimli` var. Üst yüzeyin tablosu da sırrı göstermiyor;
+       biz beyanı da çizmiyoruz — çizecek bir soru henüz yok.
+
+   YAZMA DÜĞMELERİ GÖRÜNÜR AMA DEVRE DIŞI: üst yüzeyin dördü de (ekle ·
+   teslimatlar · düzenle · sil) yerinde durur, gerekçe erişilebilir adın
+   parçasıdır (`Faz2Dugme`). Rozet grubun başında BİR KEZ — satır başına
+   tekrarlansaydı beş satırda on beş kez aynı vaat okunurdu.
+   --------------------------------------------------------------------------- */
+function Webhooklar({ bank }: { readonly bank: string }) {
+  /* YASA 6 — YALNIZ SEKME AÇIKKEN OKUNUR: bu bileşen `TabsContent`in içinde
+     yaşıyor ve Radix kapalı sekmeyi MONTE ETMİYOR (`Islemler` emsali, aynı
+     dosya). Çağrı kabuğun otuz saniyelik toplu okumasına da EKLENMEDİ: webhook
+     listesi sürekli izlenen bir sayı değil, operatörün açtığı bir ekran. */
+  const webhooklar = useApi<HafizaZarfi<WebhookListesi>>(
+    `${UC_WEBHOOKLAR}?bank=${encodeURIComponent(bank)}`,
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Faz2Grup>
+          <Faz2Dugme ne="yeni bir webhook tanımlar">Webhook ekle</Faz2Dugme>
+        </Faz2Grup>
+      </div>
+      <UcKapisi durum={webhooklar} yol={UC_WEBHOOKLAR}>
+        {(z) => (
+          <ZarfKapisi zarf={z} ne="Webhook listesi">
+            {(g) => <WebhookTablosu govde={g} />}
+          </ZarfKapisi>
+        )}
+      </UcKapisi>
+    </div>
+  );
+}
+
+/* GÖVDENİN ÜÇ HÂLİ AYRI CÜMLEDİR. Üst yüzey ikisini tek cümleyle geçiyor ("No
+   webhooks configured"); bizde `items` HİÇ GELMEMESİ (şema kayması olabilir) ile
+   GELİP BOŞ OLMASI (ölçüldü, tanımlı webhook yok) ayrı — birincisini ikincisi
+   gibi okutmak, bir şema kaymasını "her şey yolunda" diye göstermek olurdu. */
+function WebhookTablosu({ govde }: { readonly govde: WebhookListesi }) {
+  const ogeler: readonly WebhookKaydi[] | null = Array.isArray(govde.items) ? govde.items : null;
+
+  if (ogeler === null) {
+    return (
+      <Olculemedi
+        neden="Webhook listesi bildirilmedi"
+        teknik="`items` alanı yanıtta yok ya da dizi olarak okunamayan bir tiple geldi"
+      />
+    );
+  }
+
+  if (ogeler.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Tanımlı webhook yok — ölçüldü, liste boş döndü. Eklemek bu panodan yapılmıyor: {FAZ2_ROZET}.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {/* SAYI NEREDEN GELİYOR, YANINDA YAZILI. Üst yüzey "N webhooks" diyor ve
+          sayıyı yine çizdiği satırlardan alıyor; fark şu ki bu uçta `total`
+          ALANI YOKTUR (ölçüldü) — ama sorgu parametresi de yoktur, yani
+          upstream kırpmıyor. İkisini birlikte söylemezsek okuyucu N'yi bir
+          sayfanın ilk dilimi sanabilirdi (`Sayfalama` şeridinin dersi). */}
+      <p className="text-muted-foreground text-xs">
+        {ogeler.length.toLocaleString("tr-TR")} webhook. Sayı çizilen satırlardan gelir: bu uç
+        toplam alanı göndermiyor — ama sayfalama da yok (üst servis bu uçta sınır/atlama
+        parametresi tanımıyor), yani liste tamdır.
+      </p>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>URL</TableHead>
+              <TableHead>Yöntem</TableHead>
+              <TableHead>Olay türleri</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead>Oluşturulma</TableHead>
+              <TableHead className="w-[15rem]">Eylemler</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ogeler.map((w, sira) => (
+              <WebhookSatiri key={metin(w.id) ?? `kimliksiz-${sira}`} webhook={w} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function WebhookSatiri({ webhook }: { readonly webhook: WebhookKaydi }) {
+  const url = metin(webhook.url);
+  const ayar = sozluk(webhook.http_config);
+  const yontem = ayar === null ? null : metin(ayar.method);
+  const olaylar = listeye(webhook.event_types);
+  const olusturma = damga(webhook.created_at);
+  /* ÜÇ DEĞERLİ: `true`/`false` ölçüldü, ötekiler ÖLÇÜLEMEDİ. `Boolean(x)` yazmak
+     gelmemiş alanı "kapalı" diye okuturdu — kapalı bir webhook'la hiç bilinmeyen
+     bir webhook aynı ekranda aynı görünürdü. */
+  const etkin = typeof webhook.enabled === "boolean" ? webhook.enabled : null;
+
+  return (
+    <TableRow>
+      <TableCell className="max-w-[22rem]">
+        {url === null ? (
+          <Olculemedi neden="URL gelmedi" teknik="`url` alanı yok ya da dizge değil" kisa />
+        ) : (
+          <span className="block truncate font-mono text-xs" title={url}>
+            {url}
+          </span>
+        )}
+      </TableCell>
+      <TableCell>
+        {yontem === null ? (
+          <Olculemedi
+            neden="Yöntem gelmedi"
+            teknik="`http_config.method` yok ya da dizge değil — şemadaki POST varsayılanı bu kaydın ölçümü DEĞİLDİR, o yüzden doldurulmadı"
+            kisa
+          />
+        ) : (
+          <Badge variant="outline" className="font-mono font-normal text-[11px]">
+            {yontem}
+          </Badge>
+        )}
+      </TableCell>
+      <TableCell>
+        {olaylar === null ? (
+          <Olculemedi
+            neden="Olay türleri gelmedi"
+            teknik="`event_types` alanı yok ya da liste olarak okunamayan bir tiple geldi"
+            kisa
+          />
+        ) : olaylar.length === 0 ? (
+          <span
+            className="text-muted-foreground text-xs italic"
+            title="Üst yüzey boş listeyi 'All events' diye çiziyor (webhooks-view.tsx). Üst servisin sözleşmesi boş listenin anlamını YAZMIYOR — bu yüzden bir ölçüm değil, üst yüzeyin okuması olarak etiketlendi."
+          >
+            tüm olaylar (üst yüzeyin okuması)
+          </span>
+        ) : (
+          <Cipler degerler={olaylar} ne="Olay türleri" tavan={3} />
+        )}
+      </TableCell>
+      <TableCell>
+        <OkRozet
+          ok={etkin}
+          iyi="etkin"
+          kotu="kapalı"
+          neden="Durum gelmedi"
+          teknik="`enabled` alanı yok ya da mantıksal değer değil"
+        />
+      </TableCell>
+      <TableCell className="text-sm">
+        {olusturma === null ? (
+          <Olculemedi
+            neden="Oluşturulma zamanı gelmedi"
+            teknik="`created_at` gelmedi ya da damga olarak çözülemedi"
+            kisa
+          />
+        ) : (
+          olusturma
+        )}
+      </TableCell>
+      <TableCell>
+        {/* ROZET BURADA YOK, GRUBUN BAŞINDA (bir kez). Gerekçe her düğmenin
+            erişilebilir adının içinde durmaya devam ediyor. */}
+        <div className="flex flex-wrap items-center gap-1">
+          <Faz2Dugme ne="bu webhook'un teslimat geçmişini açar">Teslimatlar</Faz2Dugme>
+          <Faz2Dugme ne="bu webhook'un ayarlarını değiştirir">Düzenle</Faz2Dugme>
+          <Faz2Dugme ne="bu webhook'u kalıcı olarak siler">Sil</Faz2Dugme>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -1089,18 +1299,11 @@ export function Yapilandirma({
         </TabsContent>
 
         <TabsContent value="webhook">
-          <Bolme baslik="Webhook" aciklama="Üst yüzeyin bu alt sekmesi bu panoda okunmuyor.">
-            {/* "ÖLÇÜLEMEDİ" DEĞİL, "OKUNMUYOR": burada bir ölçüm denenip düşmüyor.
-                Webhook uçlarının vekilde karşılığı yok — sekmeyi silmek yeteneğin
-                yokluğunu, boş bırakmak da "hiç webhook yok"u söylerdi. */}
-            <p className="text-muted-foreground text-sm">
-              Bu sekmenin okuması panoda YOK: webhook listesi vekilin yirmi iki ucunun arasında
-              değil. Bu bir ölçüm sonucu değil, bir kapsam sınırı — "bu bankada webhook yok"
-              demiyoruz, "bu pano webhook'ları okumuyor" diyoruz.
-            </p>
-            <Faz2Grup>
-              <Faz2Dugme ne="yeni bir webhook tanımlar">Webhook ekle</Faz2Dugme>
-            </Faz2Grup>
+          <Bolme
+            baslik="Webhook"
+            aciklama="Bankaya tanımlı teslimat uçları — üst yüzeyin listesiyle aynı beş sütun. Okuma açık, yazma değil."
+          >
+            <Webhooklar bank={bank} />
           </Bolme>
         </TabsContent>
 

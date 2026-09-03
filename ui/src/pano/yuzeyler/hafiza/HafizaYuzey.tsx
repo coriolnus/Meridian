@@ -10,8 +10,8 @@
    yer `api.py`nin hafıza vekilidir: sunucu okur, maskeler, anahtarsız bir gövde
    döner.
 
-   YAZMA YOLU YOK. Vekilin yirmi iki ucundan yirmi biri salt-okunur GET; tek
-   istisna `recall`dır ve o da bir SORGUdur (durum değiştirmez, gövdesi beyaz
+   YAZMA YOLU YOK. Vekilin CPUI tablosundaki uçlarının tümü salt-okunur GET;
+   tek istisna `recall`dır ve o da bir SORGUdur (durum değiştirmez, gövdesi beyaz
    listeyle süzülür). Hafızaya yazan/silen/düzelten fiillerin bu panoda karşılığı
    YOKTUR. Düğmeleri GİZLEMİYORUZ (`parcalar.tsx::Faz2Grup` şerhi): görünür ama
    devre dışı duruyorlar, çünkü "böyle bir yetenek yok" ile "yetenek var, bu

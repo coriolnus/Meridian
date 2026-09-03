@@ -24,7 +24,7 @@ sıralama/kova/kart kuralları `data-view.tsx::TimelineView`. Aşağıdaki bekle
 kopyasıdır ve koddan TÜRETİLMEZ — türetseydi çivi kendini doğrulardı.
 
 `veri.ts::hataEki` DE BURADA ÖLÇÜLÜYOR ve bu bilinçli bir genişlemedir (inceleme I-3): o kapı
-yirmi iki ucun ortak hata okuyucusu ve ret gövdesindeki üç adın SIRASI geriye dönük uyumun
+tablodaki uçların TÜMÜNÜN ortak hata okuyucusu ve ret gövdesindeki üç adın SIRASI geriye dönük uyumun
 kendisidir. Turla birlikte ölen bir scratchpad çivisi onu koruyamazdı.
 """
 from __future__ import annotations

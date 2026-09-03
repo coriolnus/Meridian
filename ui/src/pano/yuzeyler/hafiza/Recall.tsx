@@ -3,8 +3,8 @@
 /* ============================================================================
    HAFIZA · RECALL — üst yüzeyin `recall` oyun alanının karşılığı
    ----------------------------------------------------------------------------
-   BU YÜZEYİN TEK "GÖNDEREN" EKRANI, VE BEYANI BURADA DURUYOR. Vekilin yirmi iki
-   ucundan yirmi biri salt-okunur GET; `recall` POST'tur ve nedeni bir yetki
+   BU YÜZEYİN TEK "GÖNDEREN" EKRANI, VE BEYANI BURADA DURUYOR. Vekilin CPUI
+   tablosundaki uçlarının tümü salt-okunur GET; `recall` POST'tur ve nedeni bir yetki
    değil bir BOYUTtur: sorgu gövdesi (türler, etiketler, zaman damgası, bütçe)
    bir adres satırına sığmaz. Durum DEĞİŞTİRMEZ ve bu çivili
    (`api.py::api_hindsight_recall` şerhi + `test_recall_state_defterine_yazmaz`).

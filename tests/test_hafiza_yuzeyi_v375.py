@@ -36,7 +36,7 @@ I. TEK-KAYNAK ÇIKARIMI — `_env_anahtari(dosya, onek)` iki çağıranı da bes
    davranışını KORUR.
 J. CP-UI GENİŞLEMESİ (TSK-108 Görev 1, 2026-09-02) — yüzey üç uçtan yirmi iki uca çıktı;
    A–I'nin HER sözleşmesi yeni uçlarda da PARAMETRİK olarak koşar (tek tek yazılan çivi,
-   yirmi ikinci uçta unutulur). Ek olarak: sorgu-dizesi enjeksiyonu, enum süzme, ve `recall`
+   bir sonraki uçta unutulur). Ek olarak: sorgu-dizesi enjeksiyonu, enum süzme, ve `recall`
    POST'unun "sorgu sınıfı" beyanlı istisnası.
 K. GÖREV 6-A EKLENTİSİ (TSK-108 Görev 6-A, 2026-09-02) — İKİ yeni uç: `bellek-graf`
    (`GET /v1/default/banks/{bank}/graph`, `get_graph`) ve `profil`
@@ -80,13 +80,50 @@ M. `/varlik` — TSK-112 GÖREV 12-A (2026-09-03) — CP `entities-view` künye 
    bu turun kendisi onu yeniden EKLEMEDİ, mutasyonla DOĞRULADI.
 
    `id` DUVARI 11-A'DAN ÖDÜNÇ (`_hafiza_yol_parcasi_guvenli`, tek-kaynak yasası), `bank`'TAN
-   FARKLI POLİTİKAYLA: yirmi iki kardeş CPUI ucunda kimlik yalnız KAÇIRILIR (`_hafiza_kacir`) —
-   kirli girdi upstream'e escape'lenmiş gider, sözleşme 200'dür. `/varlik`ın `id`si REDDEDİLİR
-   (400): CP künye panelinin `id`si her zaman `/varliklar`/`bellek-graf` düğümünden gelen bir
+   FARKLI POLİTİKAYLA: CPUI tablosundaki kardeş uçların tümünde kimlik yalnız KAÇIRILIR
+   (`_hafiza_kacir`) — kirli girdi upstream'e escape'lenmiş gider, sözleşme 200'dür.
+   `/varlik`ın `id`si REDDEDİLİR (400): CP künye panelinin `id`si her zaman `/varliklar`/`bellek-graf` düğümünden gelen bir
    UUID'dir, serbest metin değil. `bank` kardeş uçlarla AYNI kaçırma politikasında KALIR — yalnız
    `id` için sözleşme değişti. Uç `CPUI` TABLOSUNDADIR (bank enjeksiyonu/auth/sır/zarf/limit-yok
    çivilerinin TAMAMINDAN parametrik geçer) ama `CPUI_IKI_KIMLIKLI`YE BİLEREK EKLENMEDİ — o liste
    ikinci kimliğin KAÇIRILDIĞINI varsayar; `id`nin REDDİ ayrı çivilerle test edilir (J-L).
+
+N. `/webhooklar` — TSK-109 (2026-09-03) — DÜRÜST BOŞLUK KAPANDI. Panonun Hafıza ▸ Yapılandırma
+   sayfasındaki webhook alt sekmesi bugüne kadar "bu pano webhook'ları okumuyor" diyordu: bir
+   ölçüm sonucu değil bir KAPSAM SINIRI beyanıydı. Bu tur o sınırı SALT-OKUNUR bir listeyle
+   kaldırıyor — `GET /api/hindsight/webhooklar?bank=` → upstream
+   `GET /v1/default/banks/{bank_id}/webhooks` (`list_webhooks`, aynı commit çapası). Zarf
+   `{govde, neden}`, `/belgeler` emsali.
+
+   ÜÇ ŞEY ÖLÇÜLDÜ VE ÜÇÜ DE KARDEŞ LİSTE UÇLARINDAN FARKLI ÇIKTI — refleksle kopyalanan kalıp
+   üçünde de yalan söylerdi:
+     · SORGU PARAMETRESİ YOKTUR. `list_webhooks`in parametrelerinin TAMAMI şudur — yol:
+       `bank_id`; başlık: `authorization`. `limit`/`offset` YOK. Bu yüzden uç `CPUI_LIMITLI`ye
+       GİRMEZ ve `_hafiza_sayfa_sorgusu` ÇAĞRILMAZ; çağrılsaydı upstream'in tanımadığı iki
+       parametre tele giderdi ve FastAPI onları sessizce yok saydığı için hata GÖRÜNMEZDİ.
+     · ZARFTA `total` YOKTUR. `WebhookListResponse`in tek alanı — ve tek `required`i — `items`.
+       Yani bu uçta sayfalama ÇİZİLEMEZ: "50'den 20'si" cümlesi kurulamaz, kurulmaya da
+       ÇALIŞILMAZ (uydurma yasağı). `/liste`nin `toplam` eki BU UCA TAŞINAMAZ.
+     · GÖVDE `secret` TAŞIR VE VEKİLDE SÜZÜLÜR (Rol-1 hükmü, 2026-09-03, düzeltme turu 1).
+       `WebhookResponse.secret` webhook imzalama sırrıdır ve upstream onu liste yanıtında
+       döndürür. İlk yazımda aynen geçiyordu ("CP de indiriyor" gerekçesiyle); hüküm bunu
+       ÇEVİRDİ ve gerekçe İKİ YASA: (a) YASA 6 — bu panonun webhook YAZMA yolu YOK, yani sırrın
+       tarayıcıda HİÇBİR OKUYUCUSU yok; CP'nin düzenleme penceresi vardır, bizim yoktur, o
+       yüzden "CP ile birebir" burada bir gerekçe DEĞİL. (b) sır hijyeni. Süzgeç `secret`
+       anahtarını SİLER ve yerine `secret_tanimli: bool` yazar — üç hâl korunur: alan hiç
+       gelmediyse anahtar HİÇ YAZILMAZ (uydurma yasağı), geldi ve boşsa/`null`sa `False`,
+       doluysa `True`. Başka hiçbir alana dokunulmaz.
+
+       TEK BOĞAZ DELİNMEDİ: `_hafiza_zarf` isteğe bağlı bir `donustur` kancası aldı ve
+       VARSAYILANI `None`dır — yani kalan uçların gövdesi bayt-aynı geçmeye devam eder
+       (`test_zarf_kancasi_VARSAYILAN_OLARAK_KAPALI`). Aynen-geçiş çivisi bu ucu artık
+       `CPUI_AYNEN` listesinden DIŞLAR ve dışlama BEYANLIDIR (`CPUI_DONUSTURULEN`) — sessiz bir
+       istisna, unutulmuş bir istisnadır.
+
+   YAZMA YOLU AÇILMADI. CRUD (`create_webhook`/`update_webhook`/`delete_webhook`) ve teslimat
+   geçmişi (`list_webhook_deliveries`) bu turun DIŞINDA; panodaki düğmeler Faz-2 rozetiyle
+   görünür ama devre dışı kalır. Rota tablosu çivisi (`test_yazan_fiil_yalniz_beyanli_yollarda`)
+   bunu davranışla zorlar: bu yola yazan bir fiil sızarsa öter.
 
 UPSTREAM ÇAPASI — ÖLÇÜM BUGÜN YENİDEN TÜRETİLEBİLİR OLMALI
 ----------------------------------------------------------
@@ -143,6 +180,7 @@ edilen sınıfında OLMADIĞINI ölçtü ve üçü de burada düzeltildi:
 """
 from __future__ import annotations
 
+import inspect
 import json
 import pathlib
 
@@ -1025,9 +1063,9 @@ def test_hafiza_sabitleri_olculen_degerlerde():
 # Bu yüzden aşağıdaki `CPUI` tablosu bir TASARIM DEĞİL bir ÖLÇÜM KAYDIdır: sağ sütun upstream'de
 # gerçekten var olan yoldur. Uç yeni bir yola kayarsa `_Casus` "beklenmeyen kaynak" diye patlar.
 #
-# NEDEN PARAMETRİK: yüzey 3 uçtan 22 uca çıktı. Sözleşme başına TEK TEK yazılan çivi, yirmi ikinci
-# uçta unutulur — ve unutulan çivi, olmayan çividen DAHA kötüdür (dosya "kapsıyorum" der).
-# Aşağıdaki tablo ÇİVİLERİN GİRDİSİdir: yeni bir uç tabloya eklenmeden doğarsa
+# NEDEN PARAMETRİK: yüzey 2026-09-02'de 3 uçtan 22 uca çıktı. Sözleşme başına TEK TEK yazılan
+# çivi, bir sonraki uçta unutulur — ve unutulan çivi, olmayan çividen DAHA kötüdür (dosya
+# "kapsıyorum" der). Aşağıdaki tablo ÇİVİLERİN GİRDİSİdir: yeni bir uç tabloya eklenmeden doğarsa
 # `test_her_hafiza_ucu_tabloda_kayitli` öter.
 
 #: (bizim yol + sorgu, upstream URL'de GÖRÜLMESİ gereken parça).
@@ -1056,11 +1094,24 @@ CPUI: tuple[tuple[str, str], ...] = (
     # ---- Görev 6-A (2026-09-02) ----
     ("/api/hindsight/bellek-graf?bank=B", "/banks/B/graph"),
     ("/api/hindsight/profil?bank=B", "/banks/B/profile"),
+    # ---- TSK-109 (2026-09-03): sorgusuz, `total`sız, `secret` taşıyan liste ----
+    ("/api/hindsight/webhooklar?bank=B", "/banks/B/webhooks"),
 )
 CPUI_YOLLAR = tuple(y for y, _ in CPUI)
 
 #: `{govde, neden}` zarfını taşıyan uçlar — yani `/ozet` (iki bacaklı) ve mevcut üçlü DIŞINDAKİLER.
 CPUI_ZARFLI = tuple(y for y, _ in CPUI if not y.startswith("/api/hindsight/ozet"))
+
+#: GÖVDESİ AYNEN GEÇMEYEN UÇLAR — BEYANLI İSTİSNA LİSTESİ (Rol-1 hükmü 2026-09-03).
+#: `_hafiza_zarf`in `donustur` kancasını kullanan uçlar buraya YAZILIR. Liste boş kaldığı sürece
+#: `CPUI_AYNEN == CPUI_ZARFLI`dir. Neden beyanlı: aynen-geçiş çivisinden bir ucu SESSİZCE
+#: çıkarmak (ör. `if yol != …` diye) o ucun gövde sözleşmesini ÇİVİSİZ bırakırdı ve dosya yine
+#: "kapsıyorum" derdi. Buraya giren her uç, KENDİ dönüşümünü ayrıca çivilemek zorundadır —
+#: `/webhooklar` için `test_webhooklar_imza_sirri_VEKILDE_SUZULUR` + `..._UC_HALLI`.
+CPUI_DONUSTURULEN = ("/api/hindsight/webhooklar?bank=B",)
+
+#: Gövdesi upstream'den AYNEN geçen uçlar (aynen-geçiş çivisinin girdisi).
+CPUI_AYNEN = tuple(y for y in CPUI_ZARFLI if y not in CPUI_DONUSTURULEN)
 
 #: İkinci bir kimlik ZORUNLU olan uçlar: (yol, eksik parametrenin adı).
 CPUI_IKI_KIMLIKLI = (
@@ -1219,6 +1270,21 @@ YAPILANDIRMA_ORNEK = {"bank_id": "my-bank",
                       "config": {"retain_chunk_size": 3000,
                                  "retain_extraction_mode": "verbose"},
                       "overrides": {"retain_extraction_mode": "verbose"}}
+#: `WebhookListResponse` + `WebhookResponse` + `WebhookHttpConfig` (`list_webhooks`, aynı commit
+#: çapası) `example:` blokları, TSK-109. Sınıf (2): alan ADLARI upstream'in, DEĞERLER upstream'in
+#: kurgusal örneği. Örnekteki İKİNCİ (birebir aynı) öğe kısaltıldı — dosya konvansiyonu.
+#:
+#: ZARFI KARDEŞLERİNDEN FARKLI VE BU ÖLÇÜLDÜ: `total`/`limit`/`offset` YOKTUR; şemanın tek alanı
+#: ve tek `required`i `items`. `secret` upstream'in KENDİ liste yanıtındadır — fixture'a bizim
+#: eklediğimiz bir alan DEĞİL; vekil onu SÜZER ve fixture o süzgecin GİRDİSİdir
+#: (çivi: `test_webhooklar_imza_sirri_VEKILDE_SUZULUR`).
+WEBHOOK_LISTE_ORNEK = {"items": [{"id": "id", "bank_id": "bank_id", "url": "url",
+                                  "secret": "secret", "event_types": ["event_types"],
+                                  "enabled": True,
+                                  "http_config": {"method": "POST", "timeout_seconds": 0,
+                                                  "headers": {"key": "headers"},
+                                                  "params": {"key": "params"}},
+                                  "created_at": "created_at", "updated_at": "updated_at"}]}
 RECALL_ORNEK = {"results": [{"id": "123e4567-e89b-12d3-a456-426614174000",
                              "text": "Alice works at Google on the AI team", "type": "world",
                              "context": "work info", "entities": ["Alice", "Google"],
@@ -1284,6 +1350,7 @@ _CPUI_GOVDELER: dict[str, object] = {
     "/banks/B/config": YAPILANDIRMA_ORNEK,
     "/banks/B/graph": GRAF_CANLI_GOVDE,
     "/banks/B/profile": PROFIL_GOVDE,
+    "/banks/B/webhooks": WEBHOOK_LISTE_ORNEK,
 }
 #: beklenen zarf gövdesi — yolun kendisinden değil, TABLODAN türetilir (tek kaynak).
 CPUI_BEKLENEN = {yol: _CPUI_GOVDELER[parca] for yol, parca in CPUI}
@@ -1529,11 +1596,15 @@ def test_detay_tarihce_arizasi_kaydi_dusurmez(monkeypatch, tmp_path, sandbox_sta
 
 # ---------------------------------------------------------------- J-C. ZARF AYNEN GEÇER
 
-@pytest.mark.parametrize("yol", CPUI_ZARFLI)
+@pytest.mark.parametrize("yol", CPUI_AYNEN)
 def test_cpui_govde_aynen_gecer(monkeypatch, tmp_path, sandbox_state, yol):
     """AYNEN GEÇİŞ, ZARF SOYULMADAN. Dikkat: burada `items` dizisi ÇIKARILMAZ. Çıkarmak
     `total`/`limit`/`offset`i SESSİZCE düşürürdü ve pano "50 belgeden 20'si" diyemezdi —
-    sayfalamanın gerçeği kaybolurdu (bedel yasası: gürültü azaltmanın bedeli ölçülür)."""
+    sayfalamanın gerçeği kaybolurdu (bedel yasası: gürültü azaltmanın bedeli ölçülür).
+
+    GİRDİSİ `CPUI_ZARFLI` DEĞİL `CPUI_AYNEN` (Rol-1 hükmü 2026-09-03): dönüştüren uçlar BEYANLI
+    bir listeden (`CPUI_DONUSTURULEN`) çıkarılır ve kendi dönüşüm çivilerini taşır. Fark
+    önemli — sessiz bir `if` ile atlamak, o ucun gövde sözleşmesini çivisiz bırakırdı."""
     _cpui(monkeypatch, tmp_path)
     r = _client().get(yol)
     assert r.status_code == 200, r.text
@@ -1623,7 +1694,7 @@ def test_cpui_istisna_metnindeki_anahtar_maskelenir(monkeypatch, tmp_path, sandb
 @pytest.mark.parametrize("yol", CPUI_ZARFLI)
 def test_cpui_upstream_govdesindeki_anahtar_maskelenir(monkeypatch, tmp_path, sandbox_state, yol):
     """Sır upstream'in KENDİ gövdesinden de gelebilir. Aynen-geçiş sözleşmesi maskeyi ISKALAMAZ —
-    ve bu, 22 uçta tek tek değil TEK BOĞAZDA (`_hafiza_json`) sağlanmalı."""
+    ve bu, tablodaki uçların tümünde tek tek değil TEK BOĞAZDA (`_hafiza_json`) sağlanmalı."""
     _kurulum(monkeypatch, tmp_path, esleme={
         p: json.dumps({"tenant_key": SAHTE_ANAHTAR}).encode() for p in _CPUI_GOVDELER})
     r = _client().get(yol)
@@ -1936,9 +2007,9 @@ def test_recall_govde_sozluk_degilse_neden(monkeypatch, tmp_path, sandbox_state)
 
 @pytest.mark.parametrize("yol", CPUI_YOLLAR)
 def test_cpui_bank_yol_enjeksiyonuna_kapali(monkeypatch, tmp_path, sandbox_state, yol):
-    """`bank` KULLANICI GİRDİSİDİR ve 22 uçta upstream PATH'ine giriyor. Tek bir uçta unutulan
-    kaçırma, `../../` ile YAZAN bir uca gidilmesine yeter — salt-okunur sözleşmesi istemcinin
-    insafına kalırdı. Kaçırma bu yüzden çağıranın disiplinine değil TEK YARDIMCIYA bağlıdır."""
+    """`bank` KULLANICI GİRDİSİDİR ve CPUI tablosundaki her uçta upstream PATH'ine giriyor.
+    Tek bir uçta unutulan kaçırma, `../../` ile YAZAN bir uca gidilmesine yeter — salt-okunur
+    sözleşmesi istemcinin insafına kalırdı. Kaçırma bu yüzden çağıranın disiplinine değil TEK YARDIMCIYA bağlıdır."""
     import urllib.parse
     kotu = "../../../v1/default/banks"
     casus = _cpui(monkeypatch, tmp_path,
@@ -2038,6 +2109,175 @@ def test_varlik_id_yol_kacisi_reddedilir(monkeypatch, tmp_path, sandbox_state, k
     assert g["govde"] is None
     assert _dolu(g["neden"]) and "id" in g["neden"], g["neden"]
     assert casus.cagrilar == [], f"{kotu!r}: kirli id'yle yine de upstream'e gidildi"
+
+
+# ------------------------------ J-M. TSK-109: `/webhooklar`a ÖZGÜ (tabloya sığmayan üç ölçüm) ---
+#
+# Uç `CPUI` TABLOSUNDADIR, yani J-A…J-G'nin PARAMETRİK çivilerinin TAMAMINDAN geçer: kayıt,
+# yalnız-GET, `_auth`, ölçülemezlik yutulmaz (arıza/JSON-değil/boş gövde), zarf aynen geçer, sır
+# duvarı (istek + istisna + upstream gövdesi), eksik `bank`, `bank` yol enjeksiyonu, deftere
+# yazmama. `CPUI_LIMITLI`ye ve `CPUI_ETIKETLI`ye GİRMEDİ — ve girmemesi bir tercih değil bir
+# ÖLÇÜM SONUCUDUR; ilk çivi tam olarak onu kaydeder.
+
+def test_webhooklar_upstreame_sorgu_gondermez(monkeypatch, tmp_path, sandbox_state):
+    """ÖLÇÜLDÜ: `list_webhooks`in parametrelerinin TAMAMI yol `bank_id` + başlık `authorization`.
+    SORGU PARAMETRESİ YOKTUR — `limit`/`offset` dâhil.
+
+    NEDEN ÇİVİ GEREKİYOR: kardeş on listeleyen uç `_hafiza_sayfa_sorgusu`dan geçiyor ve o kalıbı
+    refleksle kopyalamak burada SESSİZ bir yalan üretirdi — FastAPI tanımadığı sorgu
+    parametresini yok sayar, yani upstream 422 vermez, `neden` boş kalır ve URL'de var olmayan
+    bir sözleşme yazılı durur. İstemci ne gönderirse göndersin sonuç aynı olmalı: uç `limit`i
+    imzasında TAŞIMAZ, dolayısıyla upstream URL'i sorgusuz kalır."""
+    casus = _cpui(monkeypatch, tmp_path)
+    _client().get("/api/hindsight/webhooklar?bank=B&limit=9999&offset=5")
+    url = casus.cagri("/banks/B/webhooks")["url"]
+    assert "?" not in url, f"upstream'de karşılığı olmayan bir sorgu dizesi kuruldu: {url}"
+
+
+def test_webhooklar_zarfinda_toplam_yoktur(monkeypatch, tmp_path, sandbox_state):
+    """`WebhookListResponse`in TEK alanı `items`tır (`required: [items]`, ölçüldü) — kardeş liste
+    uçlarının `total`/`limit`/`offset` üçlüsü BU UÇTA YOKTUR.
+
+    İKİ ŞEYİ BİRDEN TUTAR: (a) fixture'ın kaydı upstream şemasıyla aynı kalır — ikinci bir alan
+    eklenirse burada öter, çünkü o alan artık ÖLÇÜLMÜŞ değil UYDURULMUŞ olur; (b) vekil zarfa
+    kendi `toplam`ını EKLEMEZ. `/liste`ye `toplam` eklenmesi (düzeltme turu 1, R4) meşruydu
+    çünkü orada upstream `total` GÖNDERİYORDU; buraya taşınması taşınacak sayı olmadığı için
+    uydurma olurdu ve pano "N webhook'tan M'si" diye YANLIŞ bir cümle kurardı."""
+    assert set(WEBHOOK_LISTE_ORNEK) == {"items"}, (
+        "fixture upstream şemasından ayrıştı — `WebhookListResponse` yalnız `items` taşır")
+    _cpui(monkeypatch, tmp_path)
+    g = _client().get("/api/hindsight/webhooklar?bank=B").json()
+    assert set(g) == {"govde", "neden"}, sorted(g)
+    assert set(g["govde"]) == {"items"}, (
+        f"zarfa upstream'de olmayan bir alan eklendi: {sorted(g['govde'])}")
+
+
+#: SINIF (3) — SENTETİK. Upstream'in kendi `example:`i `secret` DEĞERİNİ de "secret" yazıyor,
+#: yani anahtar adıyla değeri AYNI dizge. O fixture'la "değer sızmadı" demek ölçemezdi: `secret`
+#: kelimesinin yanıtta olmaması anahtarın mı değerin mi düştüğünü söylemez. Bu sabit yalnız
+#: SÜZGECİN DAVRANIŞINI ölçmek için var ve upstream şeması olduğunu İDDİA ETMEZ.
+WEBHOOK_SIRRI_SENTETIK = "wh-imza-sirri-CIVI-SENTETIK"
+
+#: `_webhook_govdesi`nin "anahtar HİÇ yok" hâli — `None` bir DEĞERdir ve üçüncü hâlle karışırdı.
+_SIR_ANAHTARI_YOK = object()
+
+
+def _webhook_govdesi(sir: object = _SIR_ANAHTARI_YOK) -> bytes:
+    """Casus gövdesi FIXTURE'IN KENDİSİNDEN türer, elle yazılmaz — yalnız `secret` değişir.
+
+    Elle yazılsaydı iki kayıt (fixture + bu gövde) sessizce ayrışırdı ve "başka alana
+    dokunulmadı" çivisi kendi kopyasını doğrulardı (tek-kaynak yasası)."""
+    oge = dict(WEBHOOK_LISTE_ORNEK["items"][0])
+    if sir is _SIR_ANAHTARI_YOK:
+        oge.pop("secret", None)
+    else:
+        oge["secret"] = sir
+    return json.dumps({"items": [oge]}).encode()
+
+
+def test_webhooklar_imza_sirri_VEKILDE_SUZULUR(monkeypatch, tmp_path, sandbox_state):
+    """ROL-1 HÜKMÜ (2026-09-03 gece, TSK-109 düzeltme turu 1). Bu çivi ilk yazımda TERSİNİ
+    söylüyordu (`..._suzulmeden_gecer`): sır aynen geçiyordu ve gerekçe "CP de indiriyor"du.
+    Hüküm gerekçeyi reddetti, iki yasayla:
+
+      (a) YASA 6 — OKUYUCUSUZ YAZIM YOK. Bu panonun webhook YAZMA yolu YOKTUR; sırrın
+          tarayıcıda hiçbir okuyucusu yok. CP'nin düzenleme penceresi VAR, bizim YOK — yani
+          "CP ile birebir" burada bir gerekçe değil, bir benzetme.
+      (b) SIR HİJYENİ — okunmayan bir sırrı taşımak, taşımanın bedelini bedava sanmaktır.
+
+    ÖLÇÜLEN ÜÇ ŞEY: sır DEĞERİ yanıtın hiçbir yerinde yok · `secret` anahtarı yok ·
+    `secret_tanimli` doğru. DÖRDÜNCÜSÜ AYRI VE ÖNEMLİ: başka HİÇBİR alana dokunulmadı —
+    beklenen gövde fixture'dan TÜRETİLİR, elle yazılmaz."""
+    casus = _cpui(monkeypatch, tmp_path,
+                  **{"/banks/B/webhooks": _webhook_govdesi(WEBHOOK_SIRRI_SENTETIK)})
+    r = _client().get("/api/hindsight/webhooklar?bank=B")
+    assert r.status_code == 200, r.text
+    assert casus.cagri("/banks/B/webhooks"), "vakum: upstream'e hiç gidilmedi, süzgeç ölçülmedi"
+    assert WEBHOOK_SIRRI_SENTETIK not in r.text, "WEBHOOK İMZALAMA SIRRI PANOYA SIZDI"
+
+    oge = r.json()["govde"]["items"][0]
+    assert "secret" not in oge, "`secret` anahtarı zarfta duruyor — süzgeç değeri değil adı da siler"
+    assert oge["secret_tanimli"] is True, (
+        f"sır DOLUYKEN `secret_tanimli` doğru değil: {oge.get('secret_tanimli')!r}")
+
+    beklenen = {k: v for k, v in WEBHOOK_LISTE_ORNEK["items"][0].items() if k != "secret"}
+    assert {k: v for k, v in oge.items() if k != "secret_tanimli"} == beklenen, (
+        "süzgeç `secret` dışında bir alana da dokundu — sözleşme TEK alanla sınırlı")
+
+
+@pytest.mark.parametrize("sir,beklenen", [
+    (WEBHOOK_SIRRI_SENTETIK, True),
+    (None, False),
+    ("", False),
+    (_SIR_ANAHTARI_YOK, None),
+])
+def test_webhooklar_secret_tanimli_UC_HALLI(monkeypatch, tmp_path, sandbox_state, sir, beklenen):
+    """ÜÇ HÂL, ÜÇÜ AYRI — UYDURMA YASAĞININ SÜZGEÇTEKİ KARŞILIĞI. `secret_tanimli`yi her zaman
+    yazmak, alan HİÇ gelmediğinde "sır tanımlı değil" diye ÖLÇÜLMEMİŞ bir hüküm basardı; oysa
+    o durumda bilinen tek şey upstream'in bu alanı göndermediğidir. `beklenen is None` =
+    anahtar HİÇ YAZILMAMALI."""
+    _cpui(monkeypatch, tmp_path, **{"/banks/B/webhooks": _webhook_govdesi(sir)})
+    oge = _client().get("/api/hindsight/webhooklar?bank=B").json()["govde"]["items"][0]
+    assert "secret" not in oge, "her hâlde `secret` anahtarı düşer"
+    if beklenen is None:
+        assert "secret_tanimli" not in oge, (
+            "upstream alanı hiç göndermedi ama vekil bir hüküm yazdı — ölçülmemiş `False`")
+    else:
+        assert oge["secret_tanimli"] is beklenen, (
+            f"{sir!r} için beklenen {beklenen}, gelen {oge.get('secret_tanimli')!r}")
+
+
+def test_zarf_kancasi_VARSAYILAN_OLARAK_KAPALI(monkeypatch, tmp_path, sandbox_state):
+    """TEK BOĞAZ DELİNMEDİ. Süzme, `_hafiza_zarf`e `donustur` adında İSTEĞE BAĞLI bir kanca
+    eklenerek yapıldı; kancanın varsayılanı `None`dır ve o hâlde gövde AYNEN geçer. Burada
+    ikisi ölçülür: imzadaki varsayılan ve kardeş bir ucun gövdesinin bayt düzeyinde aynılığı.
+
+    KAPSAM SINIRI BEYANLI (mutasyonla ÖLÇÜLDÜ, düzeltme turu 1): bu çivi kancanın YANLIŞ BİR
+    UCA BAĞLANMASINI YAKALAYAMAZ. `donustur=_webhook_sirrini_suz` `/belgeler`e verildiğinde
+    süzgeç orada NO-OP'tur (belge öğelerinde `secret` yoktur), yani gövde bayt-aynı kalır ve
+    bu çivi YEŞİL kalır — mutasyon koşuldu, geçti. Bağlantının kendisini ölçen çivi ayrıdır:
+    `test_zarf_kancasi_YALNIZ_BEYANLI_UCLARDA_BAGLI`. İkisini tek çivi sanmak, "yeşil" ile
+    "kapsanmış"ı karıştırmak olurdu."""
+    varsayilan = inspect.signature(api._hafiza_zarf).parameters["donustur"].default
+    assert varsayilan is None, f"`donustur` kancasının varsayılanı değişti: {varsayilan!r}"
+
+    ham = json.dumps(BELGELER_ORNEK).encode()
+    _cpui(monkeypatch, tmp_path, **{"/banks/B/documents": ham})
+    govde = _client().get("/api/hindsight/belgeler?bank=B").json()["govde"]
+    assert json.dumps(govde, sort_keys=True) == json.dumps(json.loads(ham), sort_keys=True), (
+        "kancanın varsayılanı kardeş ucun gövdesini değiştirdi — sessiz bir yüzey değişikliği")
+
+
+def test_zarf_kancasi_YALNIZ_BEYANLI_UCLARDA_BAGLI(monkeypatch, tmp_path, sandbox_state):
+    """KANCA HANGİ UÇLARA BAĞLI — DAVRANIŞTAN ÖLÇÜLÜR, KAYNAK METNİNDEN DEĞİL.
+
+    Bu çivi `CPUI_DONUSTURULEN` beyanının DOĞRU olduğunu zorlar: tablodaki her uç çağrılır ve
+    `_hafiza_zarf`e `donustur` GERÇEKTEN verilen uçların kümesi beyanla kıyaslanır. İki yönlü
+    ısırır — beyansız bir uca kanca bağlanırsa da (o uç aynen-geçiş çivisinden düşmeden gövdesi
+    değişmiş olurdu), beyanlı bir uçtan kanca DÜŞERSE de (sır sızardı).
+
+    NEDEN GEREKTİ: kardeşi (`..._VARSAYILAN_OLARAK_KAPALI`) yanlış bağlantıyı GÖREMİYOR — süzgeç
+    başka bir uçta no-op olduğu için gövde bayt-aynı kalıyor ve çivi yeşil geçiyordu (mutasyonla
+    ölçüldü, düzeltme turu 1). "Çivi yeşili kanıt değildir" dersinin bu turdaki karşılığı."""
+    _cpui(monkeypatch, tmp_path)
+    ozgun = api._hafiza_zarf
+    kancali: list[str] = []
+    izlenen: dict[str, str] = {}
+
+    def sarmal(*konum, donustur=None, **ad):
+        if donustur is not None:
+            kancali.append(izlenen["yol"])
+        return ozgun(*konum, donustur=donustur, **ad)
+
+    monkeypatch.setattr(api, "_hafiza_zarf", sarmal)
+    for yol in CPUI_ZARFLI:
+        izlenen["yol"] = yol
+        r = _client().get(yol)
+        assert r.status_code == 200, f"{yol}: {r.status_code} — süpürme eksik ölçtü"
+
+    assert sorted(set(kancali)) == sorted(CPUI_DONUSTURULEN), (
+        f"kanca beyanla ayrıştı — kancalı: {sorted(set(kancali))}; "
+        f"beyanlı: {sorted(CPUI_DONUSTURULEN)}")
 
 
 # ------------------------------------------- J-H. RECALL: SORGU SINIFI, SÜZÜLMÜŞ GEÇİŞ
