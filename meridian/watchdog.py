@@ -3821,7 +3821,9 @@ def check_universe_and_alarm() -> dict:
 #
 # KÖK: v220+v221 koruma×süpürücü kök düzeltmesinin kapanış maddesi "davranışsal EOD kanıtı
 # Pazartesi 13:30 UTC sonrası ilk gerçek süpürmede" diye söz verdi; o Pazartesi (2026-08-10)
-# geçti, KAYIT hiç doğmadı (ROADMAP :503). Ölçüm (research/olcumler/wp2_eod_supurme_2026-08-22,
+# geçti, KAYIT hiç doğmadı (ROADMAP.md §8 ARŞİV → "SB-2 drift_sinifi · davranışsal EOD süpürme
+# kanıtı" satırı, H6 ✅ KAPANDI 2026-08-22 v265 — TSK-083, 2026-09-03: satır çapası ROADMAP :503
+# çürümüştü, sembole çevrildi). Ölçüm (research/olcumler/wp2_eod_supurme_2026-08-22,
 # canlı, salt-okuma): davranış ASLINDA VAR — son 10 işlenen seansın 10'unda günlük-kadans
 # süpürme olayı defterde (20:31-20:50 UTC), 10'unda da cancelled=0 / koruma sınıfına
 # DOKUNULMAMIŞ (`mirror_cancel_sinif_dokumu` 10/10; broker emir defterinde v220 sonrası tek bir

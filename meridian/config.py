@@ -400,7 +400,9 @@ def default_strategy() -> dict:
         # `EDG-2026-048` ile sınandı ve NO-GO çıktı (Δ(taban60−taban45) nokta −18.266$, CI 0-içi;
         # chop açılımı hem kendi kaybediyor hem chop-dışı +22,6R'lik işlemleri yerinden ediyordu).
         # Haritanın CANLANMASI yalnız YENİ ölçüm kartıyla olur (kart-önce; 048'in kendi kuralı) —
-        # elle/varsayılan doldurma YASAK. ROADMAP:1476-bağlı kalemin kapanış dili Rol-1'de.
+        # elle/varsayılan doldurma YASAK. Kapanış dili Rol-1'de — ROADMAP.md §5 kimlik
+        # `B-CHOP-BUTCE` (chop bütçe-kapalılığı; TSK-083, 2026-09-03: satır çapası ROADMAP:1476
+        # çürümüştü, sembole çevrildi).
         "params_by_regime": {r: {} for r in VALID_REGIMES},
     }
 

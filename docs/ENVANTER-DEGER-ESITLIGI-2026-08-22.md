@@ -181,3 +181,92 @@ ortamlar-arası üçlü ancak elle denetlenebilir.
 *Envanter ajanı, 2026-08-22. Salt-okunur tur; yazılan tek dosya budur. Kanıtsız satır yoktur —
 her hüküm bugünkü `dosya:satır` ölçümüne dayanır; canlıya bağlanılmadığı için ortamlar-arası
 çiftlerin canlı bacağı None + nedenle bırakılmıştır, "eşit" diye uydurulmamıştır (UYDURMA YASAĞI).*
+
+---
+
+## 6. GÜNCELLEME — 2026-09-03 (TSK-083 · TSK-078 · TSK-073 · TSK-082 bakım dilimi, kalem TSK-078)
+
+Bu bölüm §4.2'nin "ortamlar-arası üçlü"sünü (#2 · #3 · #4) BUGÜNKÜ koddan yeniden ölçer. Tur sınırı
+§0 ile AYNI: ajan A1'e bağlanamaz (CLAUDE.md §3 ajan rolü — ssh/canlı yasak bu görevde), `git`
+yalnız salt-okunur (`log`/`show`/grep bu turda kullanıldı), `meridian/` dokunulmadı, kod yazılmadı.
+Kanıtlar yerel ağaç + `git log`/`git show` (salt-okunur) + `MERIDIAN_ENGINEERING_LOG.md`/`ROADMAP.md`
+kayıtlarından.
+
+### #2 — repo ↔ canlı kod (108 yüzey): **KAPANDI**
+
+P0-b dağıtım-beyanı ARTIK VAR: `dagit.sh` `[B]` bloğu (satır ~607-731, başlık: *"[B]
+DAĞITIM-BEYANI (P0-b — docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md §4.2). Ortamlar-arası #2"*) her
+başarılı dağıtım sonunda canlıya `state/dagitim.json` yazar: `deployed_sha` · `dagitildi_utc` ·
+`dagitan_host` · `kirli_gec_kullanildi` (dört alan). Mekanizma yalnız KURULU değil — ÇALIŞTIĞI
+KANITLI: `MERIDIAN_ENGINEERING_LOG.md` ve `ROADMAP.md` (TSK-115 günlük kaydı, 2026-09-03) "dağıtım
+#7: `0bda163`, 12:27:57Z, beyan bayt-özdeş" ölçümünü taşıyor — yani beyan en az bir GERÇEK
+dağıtımda üretildi ve doğrulandı (bayt-özdeş = beyan edilen sha, yazılan dosyada birebir).
+
+**Kanıt sembolü düzeltmesi (uydurma yok — önce okunup doğrulandı):** bu kalemin görev brifi kanıt
+olarak `tests/test_dagit_istenen_durum_v367.py`yi işaret ediyordu. Dosya OKUNDU: bu çivi `dagit.sh`
+`[4/5]` BAKIM PENCERESİ bloğunu (meridian-learn birimi start/stop istenen-durumu, TSK-092/TSK-008)
+çiviliyor — `[B]` dağıtım-beyanını DEĞİL. `[B]`nin gerçek çivisi `tests/test_dagit_f9_beyan_v266.py`
+(başlığının kendi cümlesi: *"② P0-b DAĞITIM-BEYANI (ENVANTER §4.2)"* — bu belgeye DOĞRUDAN atıf
+taşıyor; dört alanı + `.tmp`→`mv` atomikliği + repo'da yerel `dagitim.json` doğmaması ayrı ayrı
+çivili). Doğru kanıt çifti: `dagit.sh` `[B]` bloğu + `tests/test_dagit_f9_beyan_v266.py`.
+
+Sınıf: **c 🔶 (ortamlar-arası, bağlanmamış) → KAPANDI (mekanizma kuruldu + canlı kanıt var).**
+
+### #4 — yerel-defter ↔ canlı-DB: **KAPANDI** (brief'in "hâlâ uygulanmamış" öncülü YANLIŞ ÇIKTI)
+
+Görev brifi bu çiftin P2 önerisinin (`yerel_donmus_defter` damgası) "hâlâ uygulanmamış" olduğunu
+söylüyordu. ÖLÇÜLDÜ, ÖNCÜL YANLIŞ: `grep -rn yerel_donmus_defter meridian/ tests/` bugün BOŞ
+DEĞİL — `meridian/storage.py` (modül docstring'i + `_YEREL_OLCULDU` mandalı + `obs.warn(
+"yerel_donmus_defter", ...)` çağrısı, satır ~29/125/393) P2'yi TAM UYGULUYOR: DB dosyası YOKKEN
+kanonik defter dosyaları duruyorsa süreç başına BİR KEZ damgalanıyor — `db_off_kaynaklar_arsivde`
+(2026-08-22'nin tek yönlü uyarısı) artık SİMETRİK. Docstring'in kendi cümlesi bu belgeye atıf
+taşıyor: *"süreç-içi dedektör bu ayrışmayı yapısal olarak göremez (envanter 2026-08-22 #4)"*.
+
+`git log` (salt-okunur): commit `375abd5` "WP6 küçük kalemler: A17 çapa düzeltmeleri +
+yerel_donmus_defter damgası + #11 mezar taşı (v268)", **2026-08-23 01:28:52 +0300** — yani bu
+belgenin 2026-08-22 tarihli ölçümünden yalnız BİR GÜN SONRA kapatılmış (bu dilimden ÖNCE, brief
+yazımından ~11 gün önce). Testli: `tests/test_wp6_kucuk_kalemler_v268.py` bölüm (e) — pozitif kontrol
+(damga gerçekten basıyor), negatif kontrol (DB varken basmıyor), süreç-çağı dosyada gürültü
+üretmeme (fotoğraf şartı) ayrı ayrı çivili; ayrıca `tests/test_karne_hesabi_v339.py` tüketiyor.
+
+Sınıf: **c 🔶 (ortamlar-arası, bağlanmamış) → KAPANDI (2026-08-23, v268/375abd5) — bu turdan ÖNCE,
+ama envanterin kendisine hiç işlenmemişti.**
+
+**Rol-1'e öneri (ajan ROADMAP'e yazmaz, CLAUDE.md §3):** `ROADMAP.md` TSK-078 notu (§2 TAHTA,
+"kalan yalnız ortamlar-arası 3 çift" cümlesi) bu bulguyla BAYAT — bugünkü ölçümle üçten ikisi
+(#2, #4) kapandı, yalnız #3 açık kalıyor; not TSK-078'in kapanışında güncellenmeli. Yeni bir
+uygulama kalemi YAZILMASINA gerek YOK (brief'in önerdiği aksine) — iş zaten 2026-08-23'te bitmiş.
+
+### #3 — `max_drawdown` ortamlar-arası: **AÇIK kalır** (None + neden), önkoşulu daraldı
+
+Repo-tarafı BUGÜN yeniden nokta-kontrol edildi ve HÂLÂ eşit (2026-08-22'den beri sürüklenme yok):
+`state/goal.yaml::max_drawdown` = 0,16 · `meridian/analytics.py::EDGE_MAXDD_MAX` = 0,16 ·
+`meridian/analytics.py::RESULT_MAXDD_MAX` = 0,16 · `meridian/shadowlaw.py::DD_VETO_MARGIN`
+= 0,08 (yarısı → 0,16) — dört kaynak ÖRTÜŞÜYOR. (Çapalar SEMBOLdür, satır değil — düzeltme turu
+2026-09-03: bu bölümün ilk yazımı `dosya.py:SATIR` biçimini kullanmıştı; `watchdog.py:2216`
+atfının bu turda ZATEN çürüdüğü ölçüldü — dosya büyümüş, `EQUIVALENT_TRUTHS` bugün 2550'de; sembole
+çevrilmeseydi bu ek de birkaç tur içinde aynı sınıf çürükle katılırdı.)
+
+Canlı bacağı bu turda da **ÖLÇÜLEMEDİ** (ajan A1'e bağlanamaz — bu görevde ssh açıkça yasak).
+ÖNKOŞUL KISMEN DEĞİŞTİ: #2'nin kapanışı bu çiftin de kökündeki "iki ağacı aynı anda gören SÜREÇ
+yok" engelini gevşetti — `deployed_sha` artık BEYANLI, yani bir sonraki A1 turunda Rol-1 beyan
+edilen sha'yı `git show <sha>:state/goal.yaml` ile kıyaslayıp COMMİT-düzeyinde eşitliği
+doğrulayabilir. Bu HÂLÂ #3'ün asıl sorusunu (canlı DOSYANIN o an GERÇEKTEN o commit'in değerini mi
+taşıdığı — sha değişmeden elle bir A1-içi düzenleme `goal.yaml`ı ezebilir) TAM KAPATMAZ, yalnız
+DARALTIR: kalan adım A1'de `cat state/goal.yaml` + üç Python sabitinin canlı değeriyle kıyas,
+tek SSH turu yeter.
+
+Sınıf: **c¹ (kısmen bağlı — süreç-içi bacak `meridian/watchdog.py::EQUIVALENT_TRUTHS` `"max_drawdown"`
+anahtarında bağlı) → AÇIK kalır, canlı bacağı None + neden.**
+
+### Yönetici özeti güncellemesi
+
+2026-08-22 tarihli §1 tablosu (12 kapanmış · 5 bağlı · 9 bağlanmamış) BUGÜN: ortamlar-arası
+üçlünün İKİSİ (#2, #4) kapandı — biri bu turda (mekanizma kuruldu + kanıtlandı), biri 2026-08-23'te
+zaten kapanmış ama envantere hiç işlenmemişti. **Kalan tek gerçekten açık ortamlar-arası kalem: #3.**
+Diğer altısı (#10/#11/#16/#24/#25/#26) bu turda yeniden ölçülmedi — kapsam dışı (brief bu üçle
+sınırlıydı).
+
+*Ek, TSK-078 (B-15 bakım dilimi, tek ajan), 2026-09-03. Ajan sınırı: `git` yalnız salt-okunur
+(log/show/grep), ssh/A1 yok, `meridian/` dokunulmadı — yalnız bu belge yazıldı. Kanıtsız satır
+yoktur; #3'ün canlı bacağı None + nedenle bırakılmıştır (UYDURMA YASAĞI aynen sürer).*

@@ -37,6 +37,7 @@ adıyla kapsam dışı bırakır; burası tam o boşluğun statüye bağlı yar�
 from __future__ import annotations
 
 import pathlib
+import re
 
 import pytest
 import yaml
@@ -197,3 +198,86 @@ def test_her_statu_endekste_bir_kovaya_dusuyor(statu):
     assert "SENTETIK-2026-000" in metin, f"{statu} statülü kart endeksten DÜŞTÜ"
     if statu not in bilinen:
         assert "Diğer" in metin
+
+
+# ==================================================================================
+# (d) ROADMAP.md §6 — kart SAYISI tek kaynak README'de (TSK-082, 2026-09-03)
+# ==================================================================================
+#
+# ÖLÇÜLEN AYRIŞMA (kart altında, 2026-08-31): ROADMAP §6 elle tutulan bir kart İNDEKSİ
+# (durum→sayı pipe-tabloları + kart-listesi pipe-tabloları) taşıyordu; disk 73 kart derken
+# §6'nın kendi toplamı 50 diyordu — aynı gerçeğin türetilmeyen İKİNCİ kopyası (tek-kaynak
+# yasası). Rol-1 yol kararı (brief .superpowers/sdd/2026-09-03-bakim-dilimi/brief.md):
+# tablolar kaldırılır, yerine `research/cards/README.md`ye atıf yapan TEK blok konur; §6'nın
+# KALEM listesi (`- **[EDG-2026-0xx] …** — status: …` satırları, v351 şemasının çivilediği)
+# AYNEN kalır. Bu çivi o kararın SÜRDÜĞÜNÜ ölçer — birisi "hızlı bir güncel-sayı" ekleyip
+# aynı ayrışmayı yeniden doğurursa kırmızı olur.
+
+ROADMAP_YOLU = KOK / "ROADMAP.md"
+#: pipe-tablo satırı: ya doğrudan (`| ...`) ya alıntı-içi (`> | ...`).
+_PIPE_TABLO_DESENI = re.compile(r"^(?:>\s*)?\|", re.MULTILINE)
+#: README'nin kendi "Toplam **85** kart." biçimi — ROADMAP §6'da YENİDEN görünmemeli.
+_TOPLAM_SAYI_DESENI = re.compile(
+    r"toplam\s*\*\*\d+\*\*\s*kart|\*\*toplam\*\*\s*\|\s*\*\*\d+\*\*", re.IGNORECASE)
+
+
+def _roadmap_s6_bolumu(metin: str | None = None) -> str:
+    """ROADMAP.md'nin `## §6 …` başlığıyla bir sonraki `## §7 …` başlığı arasındaki gövdesi."""
+    metin = metin if metin is not None else ROADMAP_YOLU.read_text(encoding="utf-8")
+    basla = metin.index("\n## §6 ")
+    bitir = metin.index("\n## §7 ", basla)
+    return metin[basla:bitir]
+
+
+def s6_ihlalleri(s6_metni: str) -> list[str]:
+    """§6 gövdesinde tek-kaynak yasasını ihlal eden desenleri adlarıyla döndürür."""
+    ihlaller = []
+    if _PIPE_TABLO_DESENI.search(s6_metni):
+        ihlaller.append("pipe-tablo satırı (elle tutulan kart indeksi)")
+    if _TOPLAM_SAYI_DESENI.search(s6_metni):
+        ihlaller.append("'Toplam **N** kart' biçiminde sayı (README'nin tekrarı)")
+    return ihlaller
+
+
+def test_roadmap_s6_elle_tutulan_kart_tablosu_yok():
+    s6 = _roadmap_s6_bolumu()
+    ihlaller = s6_ihlalleri(s6)
+    assert not ihlaller, (
+        "ROADMAP.md §6 tek-kaynak yasasını ihlal ediyor — kart durum/sayı SADECE "
+        f"research/cards/README.md'de yaşamalı (TSK-082, 2026-09-03): {ihlaller}"
+    )
+
+
+def test_roadmap_s6_kalem_listesi_AYNEN_kaldi():
+    """v351 şemasının çivilediği `- **[EDG-2026-0xx] …** — status: …` KALEM listesi silinmedi."""
+    s6 = _roadmap_s6_bolumu()
+    assert "- **[EDG-2026-019] skill-görüş-defteri" in s6
+    assert "- **[EDG-2026-022] evren-bağlayıcı-kısıt" in s6
+    assert s6.count("- **[EDG-2026-") + s6.count("- **[EXE-2026-") + s6.count("- **[KYS-2026-") >= 20
+
+
+def test_s6_ihlal_dedektoru_sentetik_pipe_tabloyu_YAKALAR():
+    """POZİTİF KONTROL (d): dedektör her zaman boş mu dönüyor, yoksa gerçekten mi ölçüyor?"""
+    sentetik_tablo = (
+        "## §6 KANIT/KARTLAR\n\n"
+        "| durum | sayı |\n|---|---:|\n| measured | 41 |\n\n"
+        "- **[EDG-2026-999] örnek** — status: DONE(2026-01-01·GEÇTİ) · owner: rol1 · size: — · trigger: —\n"
+    )
+    assert s6_ihlalleri(sentetik_tablo) == ["pipe-tablo satırı (elle tutulan kart indeksi)"]
+
+
+def test_s6_ihlal_dedektoru_sentetik_toplam_sayiyi_YAKALAR():
+    """POZİTİF KONTROL (d, ikinci desen): 'Toplam **N** kart' biçimi de yakalanıyor mu?"""
+    sentetik_prose = "## §6 KANIT/KARTLAR\n\nToplam **73** kart.\n\n- **[EDG-2026-999] örnek** — status: ACTIVE\n"
+    assert s6_ihlalleri(sentetik_prose) == ["'Toplam **N** kart' biçiminde sayı (README'nin tekrarı)"]
+
+
+def test_s6_ihlal_dedektoru_temiz_metinde_YANLIS_ALARM_VERMEZ():
+    temiz = (
+        "## §6 KANIT/KARTLAR\n\n"
+        "**Kart durumları `research/cards/README.md`'de** — `ops/kart_endeksi_uret.py` üretir; "
+        "sayı burada TEKRAR EDİLMEZ.\n\n"
+        "- **[EDG-2026-019] skill-görüş-defteri** — status: OPERATOR · owner: rol1 · size: — · trigger: —\n"
+        "  What: örnek | pipe karakteri satır İÇİNDE, satır BAŞI değil.\n"
+    )
+    assert s6_ihlalleri(temiz) == []

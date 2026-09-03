@@ -1,4 +1,6 @@
-"""v283 · KORUNUM KOVASI — `uyuyan_kurulum` terminal sınıfı (WP5-F/16, ROADMAP :1164-1188).
+"""v283 · KORUNUM KOVASI — `uyuyan_kurulum` terminal sınıfı (WP5-F/16, ROADMAP.md §3 "WP5-F ·
+KORUNUM SINIFI — uyuyan-kurulum planlarına terminal sınıf" başlığı; TSK-083, 2026-09-03: satır
+çapası ROADMAP :1164-1188 çürümüştü, sembole çevrildi).
 
 NİÇİN VAR. `watchdog.conservation_report` bir planı ancak ŞU altı yoldan biriyle açıklayabiliyordu:
 işleme döndü · olayla düştü (`dropped`) · kapıda öldü (`NO_GO`) · henüz taze · tetik gelmedi
