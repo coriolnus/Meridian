@@ -30,18 +30,38 @@ export interface Durum<T> {
 
 export class OturumHatasi extends Error {}
 
+/**
+ * RET GÖVDESİNİN CÜMLESİ — ÜÇ AD, TEK OKUYUCU.
+ *
+ * GÖVDE OKUNUR ÇÜNKÜ TEŞHİS ORADA: sunucunun hata gövdeleri "dağıtım eksik",
+ * "sunulan kümede YOK" gibi cümleler taşıyor ve o cümle operatörü doğru yere
+ * gönderiyor. Yutmak, "500" yazıp teşhisi çöpe atmak olurdu.
+ *
+ * SIRA GERİYE DÖNÜK UYUMLUDUR VE CÜMLEYLE YAZILI (inceleme, düzeltme turu 1):
+ * `detail` ve `error` ESKİ adlardır ve ikisinden biri varsa KAZANIR; `neden`
+ * ancak ikisi de yokken devreye girer, yani hiçbir mevcut uçta gösterilen mesaj
+ * DEĞİŞMEZ. Üçüncü ad bir ölçüm sonucu (TSK-112): hafıza vekilinin tek 4xx
+ * döndüren okuma ucu (`api.py::api_hindsight_varlik`) gerekçesini kendi zarf
+ * adıyla taşıyor — iki ada bakan bir okuyucu o cümleyi yutar ve ekranda yalnız
+ * durum kodu kalırdı ("kimlik reddedildi" ile "sunucu düştü" ayırt edilemezdi).
+ *
+ * TEK KAPI, ÇÜNKÜ İKİNCİ KOPYA GERİDE KALDI (inceleme I-2): aynı dört satır
+ * `Recall.tsx`in kendi gönderiminde de yaşıyordu ve üçüncü adı ÖĞRENMEMİŞTİ.
+ * "Ret gövdesi neye benzer" tek bir gerçektir; iki kopyası sessizce ayrışır.
+ */
+export function hataEki(govde: unknown): string {
+  const g = govde as { detail?: unknown; error?: unknown; neden?: unknown } | null | undefined;
+  const d = g?.detail ?? g?.error ?? g?.neden;
+  return typeof d === "string" ? ` — ${d}` : "";
+}
+
 export async function apiGet<T>(yol: string, signal?: AbortSignal): Promise<T> {
   const y = await fetch(yol, { signal, credentials: "same-origin", headers: { Accept: "application/json" } });
   if (y.status === 401) throw new OturumHatasi("oturum düştü");
   if (!y.ok) {
-    // GÖVDEYİ OKUMAYA ÇALIŞ: api.py hata gövdelerinde teşhis taşıyor ("dağıtım eksik",
-    // "sunulan kümede YOK" gibi) ve o cümle operatörü doğru yere gönderiyor. Yutmak,
-    // "500" yazıp teşhisi çöpe atmak olurdu.
     let ek = "";
     try {
-      const g = (await y.json()) as { detail?: unknown; error?: unknown };
-      const d = g.detail ?? g.error;
-      if (typeof d === "string") ek = ` — ${d}`;
+      ek = hataEki(await y.json());
     } catch {
       // YASA 4 · sessiz-yutma İŞARETLİ: gövde JSON değilse (proxy'nin düz metin 502'si,
       // Caddy'nin kendi hata sayfası) ayrıştırma hatası ASIL hatayı gizlememeli; durum

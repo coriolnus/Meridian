@@ -44,7 +44,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import type { Bolum } from "../../alanlar";
-import { OturumHatasi } from "../../veri";
+import { OturumHatasi, hataEki } from "../../veri";
 import { BolumKart, Olculemedi, Satir } from "../sistem/parcalar";
 
 import { Bolme, ETIKET_ESLEME, HamSatirlar, Secim, damga, metin, sayi, sozluk } from "./parcalar";
@@ -95,11 +95,13 @@ async function recallGonder(govde: Record<string, unknown>): Promise<RecallZarfi
   });
   if (y.status === 401) throw new OturumHatasi("oturum düştü");
   if (!y.ok) {
+    /* RET GÖVDESİNİN OKUYUCUSU ORTAK (`veri.ts::hataEki`, inceleme I-2): burada
+       dört satırlık bir ikizi duruyordu ve üçüncü ret adını (`neden`) ÖĞRENMEMİŞTİ.
+       Bugün etkisi yoktu — bu uç ret hâllerini 200 + gerekçe zarfıyla döndürüyor —
+       ama bir gün 400 döndürdüğünde cümle SESSİZCE düşerdi. */
     let ek = "";
     try {
-      const g = (await y.json()) as { detail?: unknown; error?: unknown };
-      const d = g.detail ?? g.error;
-      if (typeof d === "string") ek = ` — ${d}`;
+      ek = hataEki(await y.json());
     } catch {
       // sessiz-yutma: gövde JSON değilse (vekil önündeki bir katmanın düz metin
       // hatası) ayrıştırma hatası ASIL hatayı gizlememeli; durum kodu aşağıda yazılı.

@@ -595,6 +595,30 @@ export interface VarlikKaydi extends HamGovde {
 }
 
 /**
+ * TEK VARLIĞIN KÜNYESİ — `api.py::api_hindsight_varlik`, zarf `{govde, neden}`.
+ *
+ * LİSTE SATIRININ TIPKISI DEĞİL, VE FARK ÖLÇÜLDÜ (12-A, upstream
+ * `EntityDetailResponse` şeması): tek-varlık gövdesi liste satırının altı alanına
+ * EK olarak bir `observations` dizisi taşıyor. `VarlikKaydi`yi burada yeniden
+ * kullanmak o alanı tipten silmezdi ama GÖRÜNMEZ kılardı — ekranın ham blokta
+ * bastığı şeyin tipte adı olmaması, "ölçtük ama yazmadık" hâlidir.
+ *
+ * ÜST YÜZEY BU GÖVDENİN TAMAMINI ÇİZMİYOR (`entities-view.tsx` künye paneli
+ * yalnız ad + anılma + ilk görülme + kimlik basıyor); bizim panelimiz son görülme
+ * ile kalan alanları da gösteriyor ve farkı ekranda yazıyor.
+ */
+export interface VarlikKunyesi extends HamGovde {
+  readonly id?: unknown;
+  readonly canonical_name?: unknown;
+  readonly mention_count?: unknown;
+  readonly first_seen?: unknown;
+  readonly last_seen?: unknown;
+  readonly metadata?: unknown;
+  /** Üst yüzeyin künye panelinde ÇİZİLMEYEN alan; şemada zorunlu bir dizi. */
+  readonly observations?: unknown;
+}
+
+/**
  * GRAF DÜĞÜMÜ/KENARI — CP `graph-data.ts::convertHindsightGraphData`ın okuduğu
  * biçim (sınıf (C)): gövde `{nodes:[{data:{…}}], edges:[{data:{…}}]}` şeklinde
  * İÇ İÇE bir `data` sarmalı taşıyor (Cytoscape mirası). Sarmalı düzleştirmiyoruz:

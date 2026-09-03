@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 
 import { goreliMetin } from "../kuyruk/parcalar";
 import { Olculemedi, Satir, zamanMetni } from "../sistem/parcalar";
-import type { HafizaZarfi, HamGovde, IstatistikKovasi } from "./uctipleri";
+import type { HafizaKaydi, HafizaZarfi, HamGovde, IstatistikKovasi } from "./uctipleri";
 
 /* ---------------------------------------------------------------------------
    HAM GÖVDE ÇİZİMİ — "tanımadığını sessizce boş sayma" ilkesinin ekran karşılığı
@@ -271,6 +271,67 @@ export function Cipler({
         </span>
       ) : null}
     </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   BİR KAYDIN ÖZETİ — İKİ GÖRÜNÜMÜN ORTAK SATIRI
+   ----------------------------------------------------------------------------
+   Üst yüzeyde de tek bir çizim iki yerde yaşıyor: bellek tablosunun satırı ile
+   varlık künyesindeki zaman çizelgesinin kartı AYNI üç şeyi gösteriyor — kaydın
+   türü, metni (iki satıra kırpılmış) ve bağlamı. İkinci bir kopya yazmak, aynı
+   gerçeğin iki çizimini üretirdi: biri tür rozetini gösterirken öteki göstermez,
+   biri metni iki satıra kırparken öteki üçe — ve fark yalnız iki ekranı yan yana
+   koyan birinin gözünden anlaşılırdı (tek-kaynak yasası).
+
+   VARLIK ÇİPLERİ İSTEĞE BAĞLI ÇÜNKÜ YERİ DEĞİŞİYOR: bellek tablosunda varlıklar
+   AYRI BİR SÜTUN (kendi başlığıyla), çizelge kartında ise metnin altında. Aynı
+   bileşene zorlamak, tabloda çipleri iki kez çizerdi.
+   --------------------------------------------------------------------------- */
+
+/** Kaydın TÜRÜ — iki ad, iki kaynak (`uctipleri.ts::HafizaKaydi` şerhi). */
+export function kayitTuru(o: HafizaKaydi): string | null {
+  return metin(o.fact_type) ?? metin(o.type);
+}
+
+export function KayitOzeti({
+  kayit,
+  varliklar = false,
+}: {
+  readonly kayit: HafizaKaydi;
+  /** Varlık çipleri metnin ALTINA çizilsin mi (çizelge kartı) — tablo kendi
+   *  sütununda çizdiği için orada kapalıdır. */
+  readonly varliklar?: boolean;
+}) {
+  const tur = kayitTuru(kayit);
+  const govdeMetni = metin(kayit.text);
+  const baglam = metin(kayit.context);
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        {tur === null ? (
+          <Olculemedi neden="Türü bildirilmedi" teknik="tür alanı iki bilinen addan hiçbiriyle gelmedi" kisa />
+        ) : (
+          <Badge variant="outline" className="shrink-0 font-mono text-[10px]">
+            {tur}
+          </Badge>
+        )}
+        {govdeMetni === null ? (
+          <Olculemedi neden="Kaydın metni okunamadı" teknik="metin alanı gelmedi ya da dizge değil" kisa />
+        ) : (
+          <span className="line-clamp-2 min-w-0 text-sm">{govdeMetni}</span>
+        )}
+      </div>
+      {baglam ? (
+        <span className="mt-0.5 block truncate text-muted-foreground text-[11px]">{baglam}</span>
+      ) : null}
+      {/* ÜST YÜZEYİN ÇİP TAVANI ÜÇ (çizelge kartı, artanı sayıyla yazıyor) — aynı sayı. */}
+      {varliklar ? (
+        <div className="mt-1">
+          <Cipler degerler={listeye(kayit.entities)} tavan={3} ne="Varlık alanı" />
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -569,6 +630,7 @@ export function KirpmaZinciri({
   vekil,
   tavan,
   toplam,
+  toplamEtiketi = "bankada toplam",
 }: {
   /** Sayılan şeyin adı — "kayıt", "isim", "bağ". */
   readonly ne: string;
@@ -576,8 +638,20 @@ export function KirpmaZinciri({
   readonly vekil: number;
   /** Sunucunun uyguladığı tavan; `null` = bildirilmedi. */
   readonly tavan: number | null;
-  /** Bankadaki toplam; `null` = alan gelmedi. */
+  /** Üçüncü halkanın sayısı; `null` = alan gelmedi. */
   readonly toplam: number | null;
+  /**
+   * ÜÇÜNCÜ SAYININ ADI ÇAĞIRANDA (inceleme I-1, düzeltme turu 1).
+   *
+   * Sabit "bankada toplam" metni üç çağıran için DOĞRUYDU (graf uçları banka
+   * geneli sayıyor), ama süzülmüş bir listeyi besleyen dördüncü çağıranda YALAN
+   * söyledi: varlık künyesindeki zincir `entity_id` ile süzülmüş yanıtın
+   * toplamını basıyor ve "bankada toplam 12" cümlesi operatöre bankada 12 kayıt
+   * olduğunu düşündürüyordu. Sayı doğruydu, ADI yanlıştı — bu yüzeyin kapatmak
+   * için var olduğu sınıfın ta kendisi. Varsayılan eski metindir: üç eski çağıran
+   * dokunulmadan kalır.
+   */
+  readonly toplamEtiketi?: string;
 }) {
   const n = (x: number) => x.toLocaleString("tr-TR");
   return (
@@ -585,7 +659,7 @@ export function KirpmaZinciri({
       <span className="font-medium text-foreground">{n(cizilen)}</span> {ne} çizildi
       {" · "}vekil {n(vekil)} döndürdü
       {tavan === null ? " (tavan bildirilmedi)" : ` (tavan ${n(tavan)})`}
-      {" · "}bankada toplam{" "}
+      {" · "}{toplamEtiketi}{" "}
       {toplam === null ? (
         <Olculemedi
           neden="— (alan gelmedi)"

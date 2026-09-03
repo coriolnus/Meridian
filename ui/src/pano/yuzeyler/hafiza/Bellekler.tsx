@@ -68,10 +68,12 @@ import {
   Faz2Dugme,
   Faz2Grup,
   HamSatirlar,
+  KayitOzeti,
   Sayfalama,
   Secim,
   SuzgecSeridi,
   damga,
+  kayitTuru,
   listeye,
   metin,
   secimDegeri,
@@ -137,10 +139,9 @@ const DURUMLAR = [
   { deger: "invalidated", etiket: "Geçersiz kılınmış" },
 ] as const;
 
-/** Kaydın TÜRÜ — iki ad, iki kaynak (`uctipleri.ts::HafizaKaydi` şerhi). */
-function kayitTuru(o: HafizaKaydi): string | null {
-  return metin(o.fact_type) ?? metin(o.type);
-}
+/* TÜR ÇÖZÜMÜ VE SATIR ÖZETİ ARTIK ORTAK PARÇADA (`parcalar.tsx::KayitOzeti`):
+   varlık künyesinin zaman çizelgesi aynı satırı çiziyor ve iki kopya sessizce
+   ayrışırdı (tek-kaynak yasası, TSK-112). */
 
 function kayitKimligi(o: HafizaKaydi): string | null {
   return metin(o.id);
@@ -516,7 +517,6 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
                 <TableBody>
                   {l.ogeler.map((o, i) => {
                     const k = kayitKimligi(o);
-                    const govdeMetni = metin(o.text);
                     const gerceklesme = damga(o.occurred_start);
                     const anilma = damga(o.mentioned_at);
                     return (
@@ -526,23 +526,9 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
                         onClick={k === null ? undefined : () => setAcikKayit(k)}
                       >
                         <TableCell className="max-w-0">
-                          <div className="flex items-center gap-2">
-                            {kayitTuru(o) ? (
-                              <Badge variant="outline" className="shrink-0 font-mono text-[10px]">
-                                {kayitTuru(o)}
-                              </Badge>
-                            ) : (
-                              <Olculemedi neden="Türü bildirilmedi" teknik="tür alanı iki bilinen addan hiçbiriyle gelmedi" kisa />
-                            )}
-                            {govdeMetni === null ? (
-                              <Olculemedi neden="Kaydın metni okunamadı" teknik="metin alanı gelmedi ya da dizge değil" kisa />
-                            ) : (
-                              <span className="line-clamp-2 min-w-0 text-sm">{govdeMetni}</span>
-                            )}
-                          </div>
-                          {metin(o.context) ? (
-                            <span className="mt-0.5 block truncate text-muted-foreground text-[11px]">{metin(o.context)}</span>
-                          ) : null}
+                          {/* SATIR ÖZETİ ORTAK (`parcalar.tsx::KayitOzeti`): aynı çizim
+                              varlık künyesinin zaman çizelgesinde de kullanılıyor. */}
+                          <KayitOzeti kayit={o} />
                           {k === null ? (
                             <span className="mt-1 block text-[11px] text-muted-foreground italic">
                               kimliği gelmediği için bu kaydın tamamı açılamaz
