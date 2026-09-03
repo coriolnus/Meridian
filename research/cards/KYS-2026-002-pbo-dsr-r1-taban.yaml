@@ -71,3 +71,17 @@ verdict:   # 2026-08-10 Rol-1 hükmü — ölçüm ajanı karta dokunmadı.
 status_eski: registered   # 2026-08-10 Rol-1 — ölçüm kodu YAZILMADI; kart ön şart. M2'nin restart-bloğu kalktı,
 #   taban artık ölçülebilir. Eşik İCAT EDİLMEZ: kapının kendi donuk eşikleri referans; bu kart yalnız
 #   İLK GERÇEK taban değerlerini kayda geçirir. Kimlik tekilliği doğrulandı (KYS-002 boştu).
+
+# ŞEMA KARARI + R2 PLANI (Rol-1, 2026-09-03 sabah; TSK-077 / M2 DSR-yarısı; operatör: "Rol-1 şema kararını verir, kartı yazar"):
+#   ÖLÇÜM: kapının DSR girdisi `_ret = pnl_dollars/START_EQUITY` adayın KENDİ arama işlemlerinden gelir
+#   (`reflect.py` `_cts_all = cand.get("_trades_search")`, satır ~680) — bu liste hiçbir deftere yazılmıyor; validation
+#   satırındaki `seri` (kapanış-günü r_multiple) ölçek-eşdeğer DEĞİL (medyan Sharpe sapması 0,0131 — yukarıda). Dolayısıyla
+#   "ayrı donmuş-çekim betiği" GEÇMİŞ adaylar için İMKÂNSIZ (veri yok); tek yol İLERİYE DÖNÜK DAMGA.
+#   KARAR: pnl-serisi damgası — `validation.record_candidate` satırına `ret_seri: [float]` (adayın `_ret` listesi, kapının
+#   gördüğü haliyle, yuvarlama YOK) ve `ret_n` eklenir; retro-damga YASAK (eski satırlar None kalır, sayıları raporlanır).
+#   Bedel: defter satırı büyür (aday başına ~n_işlem float; LEDGER_CAP ile sınırlı) — beyanlı.
+#   R2 (K+=1, trial_id `kys002_pbo_dsr_taban/r2_dsr_damgali` — koşum gününde k_registry'ye yazılır): damgalı satır
+#   birikince (ADIM-0 eşiği: PBO_MIN_ADAY=8 damgalı aday ≥ bir pencere) DSR yarısı `validation.deflated_sharpe` ile,
+#   pencere-başına, motorun kendi fonksiyonuyla; kill#2'nin ölçek-eşdeğerlik şartı damga ile ortadan kalkar (seri artık
+#   kapının gördüğü serinin KENDİSİ — kıyas gerekmez; yine de `seri`↔`ret_seri` Sharpe sapması TANI olarak basılır).
+#   Uygulama (damga kodu + v-çivisi) KOVA C C-10 altında, kart onayından sonra; eşik icat edilmez (kapının donuk eşikleri).

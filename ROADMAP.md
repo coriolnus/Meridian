@@ -363,7 +363,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (B-16 **TSK-075** `13` scale-out latent kusuru — AYRI dilim [operatör 2026-09-03 sabah]; motor kodu, tam suite. Gövde TAHTA H0'da.)
 - (B-17 **TSK-079** `25a` kaldır + `25c` dirilt + `25d` ezilme zinciri — TEK DİLİM [operatör 2026-09-03 sabah: "üçünü de sıraya al"]; 25c dirilt canlı davranışı etkilerse KART-ÖNCE (KOVA C'ye taşınır). Gövde TAHTA H0'da.)
 - (B-18 **TSK-080** `Ö-49` çapa/beyan çürümesi kalanı — İKİNCİ BAKIM DİLİMİ, B-15'ten sonra [operatör 2026-09-03 sabah]; ölçüm önce: kalan sayısı. Gövde TAHTA H0'da.)
-- (B-19 **TSK-081** ARSENAL doğrulama ölçümü [Rol-1, ~30 dk, kod/beyan okuması]: 2026-08-24 denetiminin "ARSENAL bayat-kapanmış" hükmü doğru mu; sonra `15c`/`15d` operatör kararı (044/084 ile bağlı) [operatör 2026-09-03 sabah]. Gövde TAHTA H0'da.)
+- (B-19 **TSK-081** ARSENAL doğrulama ölçümü — **KAPANDI 2026-09-03 sabah (Rol-1 ölçümü):** 2026-08-24 hükmü DOĞRU — ARSENAL politikası `docs/POLITIKA-ARSENAL.md` olarak VAR (K7 2026-08-23), 15e giriş yarısı DONE; `15d` PIT-temiz faktör seti için tasarım belgesi `docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md` VAR → KOVA C kart adayı (kart-önce); `15c` evren genişletme 044/084 kararına bağlı, BEKLEMEDE [operatör C-084 2026-09-03: beklemede]. Gövde TAHTA H0'da.)
 - (B-20 **EXE-2026-004** cf çıkış-sadakati Aşama-2 koşumu — HAFTA SONU bakım penceresi [operatör 2026-09-03 sabah]: Cumartesi seans dışı, worker durdurulur, saatler sürer, state'e yazar; hüküm karta + K-defterine. Gövde §6'da.)
 - (B-21 **TSK-119** TSK-030 adım-4: `tests/`+`ops/` satır çapaları (59 satır / 28 dosya) — B-15 bakım dilimiyle birlikte ya da hemen ardından; dilim incelemesi Ö3, 2026-09-03.)
 - (B-22 **TSK-120** api.py 7 çürük sembol çapası + capa_uyusmasi üçüncü besleme — B-21 ile aynı dilimde; dilim tur-2 devri, 2026-09-03.)
@@ -371,8 +371,8 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 
 **KOVA C — KART İSTEYENLER (ölçüm dalgası; kart-önce, §5 yasası):**
 
-- (C-9 **TSK-074** `propose_virgin_knob` canlı-params süzgeci — KART-ÖNCE [operatör 2026-09-03 sabah]; tasarım belgesi `docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md` hazır, kartı Rol-1 yazar, onaya gelir; learn kapalıyken kurulup ölçülür. Gövde TAHTA H0'da.)
-- (C-10 **TSK-077** WP5 kalıntıları: `M2` DSR-yarısı (K=1) + `M11` kova-6 taraması — [operatör 2026-09-03 sabah]: Rol-1 önce şema kararını verir (pnl-serisi damgası mı, ayrı donmuş-çekim betiği mi — mevcut `olcum_araclari` deseni ölçülerek), sonra kartı yazar, onaya gelir. Gövde TAHTA H0'da.)
+- (C-9 **TSK-074** `propose_virgin_knob` hayalet-düğme süzgeci — KART-ÖNCE [operatör 2026-09-03 sabah]; **KART YAZILDI 2026-09-03 sabah: `EDG-2026-071` (§6, `registered`, K=2 + ADIM-0 donmuş `hypotheses.jsonl` kopyası, kill: yanlış-pozitif>0) — operatör ONAYI bekler; kod onaydan sonra.** Tasarım belgesi `docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md`; learn kapalıyken kurulup ölçülür. Gövde TAHTA H0'da.)
+- (C-10 **TSK-077** WP5 kalıntıları: `M2` DSR-yarısı (K=1) + `M11` kova-6 taraması — **ŞEMA KARARI VERİLDİ 2026-09-03 sabah (Rol-1, ölçümle): DAMGA** — kapının DSR girdisi `_ret` adayın `_trades_search` listesinden gelir ve hiçbir deftere yazılmıyor (geçmiş için donmuş-çekim İMKÂNSIZ); `validation.record_candidate` satırına `ret_seri`+`ret_n` damgası, retro-damga YASAK. KYS-2026-002 kartına R2 planı yazıldı (trial `r2_dsr_damgali`, ADIM-0 ≥8 damgalı aday). Damga kodu + çivi: onaydan sonra C-10 altında (küçük motor değişikliği, `meridian/reflect.py`). `M11` kova-6 taraması ayrı kart, sırada. Gövde TAHTA H0'da.)
 - (~~C-11 **EDG-2026-021** ikinci koşum~~ KAPANDI 2026-09-03 08:1xZ: Rol-1 CLI push + Chrome'da koşturdu; hüküm ŞÜPHEDE-bilgisiz → arşiv, EDG-016 canlıda; KAPANANLAR bloğuna iner.)
 
 **Pilot sonrası SİNYAL ZİNCİRİ** (operatör 2026-08-31 akşam: "bu şekilde plana dahil et"):
@@ -591,15 +591,15 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 
 | id | name | status | owner | size | trigger |
 |---|---|---|---|---|---|
-| TSK-074 | `propose_virgin_knob` canlı-params süzgeci (WP: WP3) — operatör 2026-09-03 sabah: KOVA C, kart-önce (C-9) | QUEUED | rol1 | M | — |
+| TSK-074 | `propose_virgin_knob` hayalet-düğme süzgeci (WP: WP3) — operatör 2026-09-03 sabah: KOVA C, kart-önce (C-9); kart EDG-2026-071 yazıldı 2026-09-03, onay bekler | QUEUED | rol1 | M | — |
 | TSK-069 | (bkz. TSK-069 — EDG-2026-042 K1/K3 bandı; bu satır ACİL C+mb keşfinin kaydı, aynı bant eşiğine bağlı) (WP: WP1) | (bkz. TSK-069) | rol1 | — | — |
 | TSK-075 | `13` scale-out latent kusuru (23e/23f kapandı, kalan tasarım yalnız 13) (WP: WP1) | QUEUED | rol1 | S-M | — |
 | TSK-076 | OPT — parametre-evrim boru hattı (Faz-1 serbest, Faz-2 28d'ye bağımlı) (WP: WP3) — operatör 2026-09-03 sabah: kapalı kalsın, OPT beklesin | GATED(28d/chop-bütçe kapalılığı operatör kararı) | rol1 | L | 28d tıkanıklığının/chop-bütçe kararının çözülmesi |
-| TSK-077 | WP5 metodoloji/eşik kalıntıları — M2 DSR-yarısı kart-adayı + M11 kova-6 taraması (diğer 12 alt-madde 2026-08-24 elemesinde KAPANDI) (WP: WP5) — operatör 2026-09-03 sabah: Rol-1 şema kararı + kart (C-10) | QUEUED | rol1 | M | — |
+| TSK-077 | WP5 metodoloji/eşik kalıntıları — M2 DSR-yarısı kart-adayı + M11 kova-6 taraması (diğer 12 alt-madde 2026-08-24 elemesinde KAPANDI) (WP: WP5) — operatör 2026-09-03 sabah: Rol-1 şema kararı + kart (C-10); şema kararı 2026-09-03: DAMGA (`ret_seri`), KYS-002 R2 planı yazıldı | QUEUED | rol1 | M | — |
 | TSK-078 | `26` değer-eşitliği — kalan 9 çiftin gerekçe envanteri (ortamlar-arası 3 çift) (WP: WP6) | QUEUED | rol1 | S | — |
 | TSK-079 | `25a` KALDIR(14) / `25c` DİRİLT(3) / `25d` ezilme zinciri (25b 5/6 damgalandı) (WP: WP6) — operatör 2026-09-03 sabah: "üçünü de sıraya al" (25c dirilt kart-önce şartlı) | QUEUED | rol1 | S-M | — |
 | TSK-080 | `Ö-49` çapa/beyan çürümesi kalanı (WP: WP6) — operatör 2026-09-03 sabah: ikinci bakım dilimi (B-18) | QUEUED | rol1 | M | — |
-| TSK-081 | ARSENAL POLİTİKASI (15e giriş) · `15d` PIT-temiz faktör seti · `15c` evren genişletme (askı C6 uzlaştırmasıyla kalktı) (WP: WP11) — operatör 2026-09-03 sabah: önce Rol-1 doğrulama ölçümü (B-19), sonra 15c/15d kararı | QUEUED | rol1 | M | — |
+| TSK-081 | ARSENAL POLİTİKASI (15e giriş) · `15d` PIT-temiz faktör seti · `15c` evren genişletme (askı C6 uzlaştırmasıyla kalktı) (WP: WP11) — B-19 ölçümü 2026-09-03: ARSENAL politikası VAR (15e yarısı DONE), 15d tasarım belgesi var → kart adayı, 15c 044/084'e bağlı beklemede | QUEUED | rol1 | M | — |
 | TSK-082 | §6 kart indeksi ELLE tutuluyor — üretici başka dosyaya yazıyor (WP: WP5) | QUEUED(Rol-1 yol kararı: üreticiye ikinci hedef mi, §6 indeks-atıflı tek blok mu) | rol1 | S | Rol-1 kararı |
 | TSK-083 | ROADMAP satır çapaları — üçü de çürümüş (SATIR→SEMBOL çevrimi gerekiyor) (WP: WP6) | QUEUED | rol1 | S | — |
 
@@ -2457,9 +2457,9 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   Why: operatör K5 2026-09-03 sabah: "13'ünü emekli et, listeye işle".
   Ref: hafıza kaydı evren-emekliligi; ledger [G18]; `meridian/universe` RETIRED_SYMBOLS.
 - **[TSK-117] Palet turu: rezerve hue bantları + anlam jetonları (`--success` vb.)** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: M · trigger: —
-  What: TSK-108 nihai düzeltmesinde "başarı" rengi yeşilden mevcut seri rampasının bir durağına (camgöbeği, `--color-seri-9`) indi ve aynı jeton takımyıldızında bir kümeyi boyuyor (bedel şerhte). İş: H1 tasarım belgesi ÖNCE — başarı/uyarı/kritik + mod + nav için rezerve hue bantları (hafıza kaydı: palet turunun ilk adımı rezerve bantlar, güvenlik kaydı), anlam jetonları açık/koyu, seri rampası yalnız veri serilerine; sonra uygulama + v286 ailesi çivileri.
+  What: (status notu 2026-09-03 sabah: H1 TASARIM BELGESİ YAZILDI — `docs/TASARIM-PALET-REZERVE-HUE-2026-09-03.md`: 9 rol hue'su + seri 6–10'un BEŞİ de rol bantlarında (seri-6=nav hex, seri-8=mod-canlı hex) + 416 literal Tailwind renk sınıfı/56 dosya + gece yön-eksi↔red çakışması (K-0); operatör soruları S1–S5 bekler.) TSK-108 nihai düzeltmesinde "başarı" rengi yeşilden mevcut seri rampasının bir durağına (camgöbeği, `--color-seri-9`) indi ve aynı jeton takımyıldızında bir kümeyi boyuyor (bedel şerhte). İş: H1 tasarım belgesi ÖNCE — başarı/uyarı/kritik + mod + nav için rezerve hue bantları (hafıza kaydı: palet turunun ilk adımı rezerve bantlar, güvenlik kaydı), anlam jetonları açık/koyu, seri rampası yalnız veri serilerine; sonra uygulama + v286 ailesi çivileri.
   Why: operatör K7 2026-09-03 sabah: "rezerve hue bantlarıyla palet turu aç".
-  Ref: nihai UI incelemesi K-5 + yeniden-inceleme Y-8 (2026-09-03); `ui/src/pano/tema.css`; hafıza tasarim-dili-tasima-degil-benimseme.
+  Ref: nihai UI incelemesi K-5 + yeniden-inceleme Y-8 (2026-09-03); `ui/src/tema.css` (seri rampası `--seri-*`/`--color-seri-*`) + `ui/src/jetonlar.css` (rol jetonları, üretilmiş); hafıza tasarim-dili-tasima-degil-benimseme.
 - **[TSK-118] ⌘K "Meridian dersleri" → dokuzuncu Hafıza nav durağı** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: S · trigger: —
   What: Bilgi Tabanı sekmesi adresten (`?sekme=`) türüyor ama komut paleti maddeleri kenar çubuğu ağacından üretildiği için "lessons.md/ders/damitim" aramaları sayfalar sekmesine iniyor (PARK-1, gerekçe `komutlar.ts`te çivili). İş: Hafıza altına 9. alt başlık "Meridian dersleri" (bölüm kimliği + `alanlar.ts` sayaçları 16/42→16/43 + ilgili çiviler), palet doğrudan oraya iner; `?sekme=dersler` adresi yeni durağa çözülür (ESKI_GORUNUM_ADRESLERI deseni).
   Why: operatör K8 2026-09-03 sabah: "dokuzuncu nav durağı aç".
@@ -3305,6 +3305,10 @@ _**[2026-08-31 KONSOLİDASYON — BU LİSTE ENDEKSTİR.]** Satırlar kart duruml
   What: (ONAY 2026-09-03 sabah, operatör K2 → ACTIVE: ölçüm kodu KOVA C sırasında; eşikler donuk.) EDG-018 halefi (askıda kalır), ön-kayıt 2026-09-03 gece: aynı ADIM-0 kapısı (≥40 isim, ≥3 yıl; yeni bar kaynağı Alpaca IEX tarihsel), EDG-016 tasarımı PIT mid-cap sağkalan kohortuna, ÜST-SINIR damgalı, K=2 (+1×2 tanı); kod YOK — operatör onayı bekler.
   Why: TSK-065 (İCRA SIRASI ⑤) — delist-bar kilidi (B-DELIST-KAYNAK) para kararına sayısal girdi.
   Ref: research/cards/EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml; EDG-2026-018/016.
+- **[EDG-2026-071] hayalet-dugme-oneri-suzgeci** — status: OPERATOR · owner: rol1 · size: — · trigger: —
+  What: TSK-074 (C-9) ön-kayıt 2026-09-03 sabah: öneri katmanının bounds'ta olup motorda okuyucusu olmayan (hayalet) düğmelere bütçe harcadığı hipotezi; K=2 (tarihsel hayalet payı üretici kırılımıyla + sandbox yanlış-pozitif sayımı), ADIM-0 donmuş `hypotheses.jsonl` kopyası git blob'una, kill: kablolu 32 düğmeden biri süzülürse; yol-tutarlı PK (sentetik hayalet + gerçek okunan anahtar, gerçek öneri yolu). Kod YOK — operatör onayı bekler.
+  Why: Ö-48'in asıl tamiratı; tasarım belgesi 2026-08-22 §4 Q1/Q6/Q7'yi ölçümle cevaplar.
+  Ref: research/cards/EDG-2026-071-hayalet-dugme-oneri-suzgeci.yaml; docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md; tests/test_hayalet_dugme_v263.py.
 - **Retro kuyruk (README):** EAP large-cap **archived** (+9,0bps<30 eşik; PK geçti) · Insider CMP **archived** (pozitif-kontrollü 0) · Short-interest FINRA **archived** (12 hücre 0) · çıkış paketi P1/P2/P3 (K=3) **measured→shadow-accrual** · PEAD/rekonstitüsyon/sektör-takvim **archived** (kaynaklı; kill-list altta).
 
 **⑤ RETIRED çapraz-doğrulama (`research/qc_dogrulama/`, 2026-08-09; üç kaynak):** 8 emekli sembol

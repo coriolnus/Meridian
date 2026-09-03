@@ -1,0 +1,71 @@
+# EDG-2026-071 — Öneri katmanı HAYALET DÜĞME süzgeci (TSK-074, Ö-48'in asıl tamiratı) — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-03 sabah (Rol-1; operatör 2026-09-03: "074 KOVA C kart-önce, kartı Rol-1 yazar, onaya gelir").
+# Ölçüm KODU YOK — kart operatör onayına kadar sözdür. Tasarım kanıtı: docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md
+# (§1 bugünkü davranış, §2 Ö-48 süzgecinin yeniden kullanılabilirliği ÖLÇÜLDÜ, §3 seçenekler A–F patlama yarıçapıyla,
+# §4 açık sorular Q1–Q7). Bu kart Q1/Q6/Q7'yi ÖLÇÜMLE cevaplar; Q2–Q5 uygulama turunun tasarım kararlarıdır (kart
+# onayından sonra, bu kartın kill-listesi altında).
+
+card_id: EDG-2026-071
+status: registered
+family: hayalet_dugme_oneri_suzgeci
+on_kayit: 2026-09-03
+ref: [TSK-074, Ö-48, TSK-062, docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md, tests/test_hayalet_dugme_v263.py]
+
+hipotez: >
+  Öneri katmanı (hermes.virgin_knobs → propose_virgin_knob · istem bölümü B · evidence_pack) bounds'ta olup
+  motorda OKUYUCUSU OLMAYAN ("hayalet") düğmelere keşif bütçesi harcıyor (tarihi vaka: 47 önerinin 29'u iki
+  hayalet düğmeye — tasarım belgesi §0/§1.5). Okuyucu-tabanlı süzgeç (`reflect.hayalet_suzgeci`, Ö-48 AST
+  çekirdeği; TANIM = "bounds anahtarı var, motor sabit-zincirinde okuyucu yok" — Q1 cevabı: params-tabanlı
+  DEĞİL, çünkü `live=unset` bakir yolun erdemi) tek boğazda (Seçenek A: `hermes.virgin_knobs`) uygulanınca
+  hayalet önerisi 0'a iner VE kablolu düğmeleri (bugün 32/32) SÜZMEZ (yanlış-pozitif 0).
+
+k_registry: {registered_at: "2026-09-03", trial_ids: [EDG-071-hayalet-payi-uretici-kirilimi, EDG-071-yanlis-pozitif-sayimi]}
+# K=2: (1) hayalet payı ve üretici-başına kırılım (Q6, tarihsel defter), (2) süzgecin yanlış-pozitif sayımı (sandbox).
+# Uygulama sonrası "önce/sonra" tekrarı K'ya 1×2 olarak çarpılır (tanı, hüküm değil).
+
+adim_0_fizibilite: >
+  ZORUNLU, ölçümden ÖNCE: (a) canlı `state/hypotheses.jsonl` (memory.record defteri) DONMUŞ kopyası A1'den
+  Rol-1 ile çekilir (ölçüm ajanı canlıya DOKUNMAZ), git BLOB'una bağlanır (EDG-059 vakası ×3); satırlarda
+  üretici/kaynak etiketi ve düğme adı OKUNABİLİYOR MU — okunamıyorsa Q6 kırılımı "ölçülemedi + neden", kart
+  yalnız K=2'nin ikinci ölçüsünü taşır. (b) `reflect.motor_okunan_sabitler()` bugünkü ağaçta None DEĞİL
+  (fail-open hâli) — None ise süzgeç ölçülemez, kart askıya (askiya_veri_kapisi değil: askiya_arac_kapisi).
+
+olcum_plani:
+  - "K1 (tarihsel): kopya defterdeki öneriler için düğme × üretici (deterministik havuz / LLM istem-B / arama) matrisi; her düğme için 'o an okuyucusu var mıydı' AST ile o günkü commit'te ölçülür (git blob) — hayalet payı = hayalet öneri / toplam öneri, üretici başına"
+  - "K2 (sandbox): süzgeç Seçenek A yerleşimiyle (`hermes.virgin_knobs` içinde `reflect.hayalet_suzgeci(b, kaynak=\"hermes.virgin_knobs\")`) bugünkü bounds.yaml'a uygulanır: süzülen anahtar sayısı ve adları; kablolu 32 anahtarın kaçı süzüldü (yanlış-pozitif)"
+  - "tanı: (b) istem-B ve (c) evidence_pack yüzeylerinin (a)'dan bağımsız hayalet taşıyıp taşımadığı sayılır (Seçenek B/F gerekliliği için girdi — hüküm değil)"
+  - "tanı: fail-open (`hayalet=None`) hâlinin öneri sözlüğünde nasıl beyan edileceği (Q2) — yalnız gözlem"
+
+esikler:
+  hayalet_payi_alt_anlamli: 0.10   # K1: tarihsel hayalet payı ≥ %10 ise "vaka gövdesi süzgeçle kapanır" iddiası geçerli (tasarım §0: %62)
+  yanlis_pozitif_ust: 0            # K2: kablolu düğmelerden SIFIR süzülme (Ö-48'in kendi kuralı; tek istisna yok)
+  # eşikler donuk; sonradan değişmez (yeni eşik = yeni kart)
+
+kill_list:
+  - "K2 yanlış-pozitif > 0 (32/32 kablolu evrende tek bir gerçek düğme süzülürse) → TASARIM GEÇERSİZ, süzgeç uygulanmaz (Q7-i)"
+  - "fail-open hâli (motor_okunan_sabitler None) sessizleşiyorsa (süzgeç None'ı 'temiz' okuyorsa) → geçersiz (Q7-ii)"
+  - "H2 karnesi payda çivisi (`tests/test_hafta3b_v125.py` payda == len(bounds)) kırılıyorsa → Seçenek B yolu geçersiz, A/C'ye dönülür (Q7-iii)"
+  - "ADIM-0 (a) düşer (üretici etiketi okunamaz) → K1 'ölçülemedi', kart K2 ile yarım ölçülür ve bunu beyan eder"
+  - "pozitif kontrol tutmazsa → hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI (tek-fonksiyon PK portföy/öneri-yolu hatalarına kördür): sandbox bounds'a (1) okuyucusu OLMAYAN
+  sentetik bir anahtar (`sentetik.hayalet_x`) ve (2) okuyucusu OLAN gerçek bir anahtar (ör. `entry.w_turnover`,
+  strategy.py'de okunuyor) konur; GERÇEK öneri yolu (`propose_virgin_knob`) koşturulur: (1) `atlanan`a
+  `:hayalet` etiketiyle düşmeli, (2) aday listesinde KALMALI. Ayrıca `tests/test_hayalet_dugme_v263.py`nin
+  mevcut 10 çivisi bozulmadan geçmeli (süzgecin arama tarafı sözleşmesi).
+
+veri_penceresi: "K1: hypotheses.jsonl donmuş kopyası, tarihi vaka penceresini (2026-08 başı) kapsayan tüm satırlar; K2: bugünkü bounds.yaml + HEAD ağacı (blob sha kayda)"
+
+basari_tanimi: >
+  ADIM-0 geçmiş (ya da (a) düşüp beyan edilmiş) + PK yeşil + K1 hayalet payı üretici kırılımıyla raporlanmış
+  + K2 süzülen liste ve yanlış-pozitif = 0 + K defterine 2 yazılmış. Hüküm Rol-1'de, aynı turda karta + K defterine:
+  yanlış-pozitif 0 VE hayalet payı ≥ eşik → "süzgeç uygulanır (Seçenek A, ikinci tur B/F tanıya göre)";
+  yanlış-pozitif 0 VE hayalet payı < eşik → "süzgeç uygulanır ama vaka gövdesi başka yerde — tanı raporlanır";
+  yanlış-pozitif > 0 → kill.
+
+notlar: >
+  Kod yalnız operatör onayından sonra `research/olcumler/edg071_hayalet_suzgec/` altında, `sandbox_state`li;
+  uygulama (süzgecin canlıya girmesi) ayrı tur — bu kartın hükmü ve kill-listesi altında, ARSENAL çıtası
+  gerekmez (cephanelik değil öneri katmanı). Learn birimi bugün kapalı (TSK-092 saygısı) — kurulup ölçülmesi
+  canlıyı etkilemez.
