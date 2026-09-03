@@ -181,9 +181,14 @@ def test_kusur3c_kismi_satis_altinda_da_mfe_gercek_yuksegi_yakalar():
     b = _clean_broker()
     pos = b.fill_entry(_plan(target=130.0), next_open=100.0, ts="d0", equity=100_000)
     prm = {"exit.scale_out_frac": 0.5, "exit.scale_out_r": 2.0}   # 110'da yarısını sat, stop breakeven=100
-    # bar1 low, kısmi satış sonrası breakeven stop'un (100) ÜSTÜNDE kalmalı — yoksa aynı barda stop'a
-    # düşer; senaryo kısmi satış + tepeye yürüyüş, erken stop değil.
-    bars = [{"open": 101.0, "high": 112.0, "low": 100.5, "close": 110.0},  # 110 → kısmi satış tetiği (2R)
+    # BY-PASS KALDIRILDI (TSK-075, 2026-09-03). Eskiden bar1'in low'u (100.5) breakeven stop'un (100)
+    # ÜSTÜNDE tutuluyordu ve yorum bunu "yoksa aynı barda stop'a düşer" diye AÇIKÇA beyan ediyordu —
+    # yani bu çivi, `13` latent kusurunu (bankalama barında ratchet'in AYNI BARA uygulanması) bilerek
+    # DOLANIYORDU ve birebir sayılan yol kusurun üstünden atlıyordu. Artık bar1 entry'nin ALTINA
+    # (99.0) iniyor: bankalama barının dokunuş kontrolü bankalama-ÖNCESİ stop (95) ile yapıldığı için
+    # koşucu YAŞAR ve tepeye yürüyüş gerçekten ölçülür. Kusurlu kodda bu satır aynı barda stop üretir
+    # (EDG-2026-029 F1x; `tests/test_scaleout_bankalama_bari_v390.py` doğrudan sınar).
+    bars = [{"open": 101.0, "high": 112.0, "low": 99.0, "close": 110.0},  # 110 → kısmi satış tetiği (2R)
             {"open": 110.0, "high": 128.0, "low": 108.0, "close": 126.0},  # ara tepe 128
             {"open": 126.0, "high": 130.0, "low": 125.0, "close": 130.0}]  # hedef 130 dolar (tepe = 130)
     ex = _walk_like_backtest(b, pos, bars, prm)

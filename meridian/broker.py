@@ -441,6 +441,19 @@ class Position:
     # barlarda BAŞKA bir sayı verir ve pozisyon, girerken sınadığı seviyeden farklı bir seviyeye göre
     # itlaf edilirdi — iki motorun ayrışmasından beter, TEK motorun kendi kendinden ayrışması olurdu.
     pivot: float = 0.0
+    # BANKALAMA BARININ DOKUNUŞ TABANI (TSK-075, 2026-09-03 — EDG-2026-029 F1x'in motor karşılığı).
+    # `scale_out` kalanı breakeven'e ratchetler (`trail_stop = max(trail, entry)`) ve çağıranların
+    # ÜÇÜ de (`loop` INTRADAY(D) · `backtest.replay` · `shadow_lifecycle`) hemen ardından AYNI BAR
+    # için `_touch_exit` çağırır. Ratchet o barın ZATEN BASILMIŞ açılışına da uygulanınca, entry'nin
+    # ALTINDA açılan bir bar koşucuyu, bankalamayı doğuran yükselişi hiç göremeden `stop_gap`le
+    # açılış fiyatından kesiyordu (ölçüldü: ENPH +12,3R → 0,72R; R imzası ≈0,7346).
+    # Bu alan O BARIN dokunuş kontrolünün kullanacağı BANKALAMA-ÖNCESİ eff_stop'u taşır;
+    # `_touch_exit` onu TEK ATIMLIK tüketir (okur ve siler) → ratchet bir SONRAKİ bardan tam etkir.
+    # None = "bu barda bankalama olmadı" → eff_stop bugünkü ifadedir; `frac=0` yolunda DAİMA None.
+    # RATCHET'İN KENDİSİ ERTELENMEZ: `trail_stop` bankalama anında yazılır (v24 k2b sözleşmesi), yalnız
+    # GERİYE dönük uygulanması engellenir — böylece ratchet hiçbir kaydetme/yükleme arasında kaybolamaz
+    # ve pano/ayna/`manage_position` bayat stop görmez. Çiviler: `tests/test_scaleout_bankalama_bari_v390.py`.
+    pre_scale_stop: float | None = None
 
 
 # =================================================================================================
@@ -743,7 +756,18 @@ class PaperBroker:
             pos.hi_water = max(pos.hi_water, float(h))
         if pos.lo_water > 0:
             pos.lo_water = min(pos.lo_water, float(l))
-        eff_stop = max(pos.stop, pos.trail_stop)
+        # TSK-075 (2026-09-03) — BANKALAMA BARININ TABANI, TEK ATIMLIK. `scale_out` bu barda
+        # bankaladıysa breakeven ratchet'i `trail_stop`a ZATEN yazılmıştır; ama o ratchet bar İÇİNDE
+        # öğrenilen bir seviyedir ve barın İLK basılan fiyatına (açılış) geriye dönük uygulanamaz.
+        # EDG-2026-029'un ölçtüğü F1x düzeltmesi tam bunu yapıyordu (ölçüm-içi monkeypatch: bankalama
+        # barında trail bankalama-ÖNCESİ değerde kalır, ratchet SONRAKİ bardan etkir) ve kendi etkisi
+        # POZİTİF ölçüldü: F1x−H1 = +0,0874R CI[+0,034; +0,153], `bars_held=0` ile kapanan scaled
+        # işlem 18 → 2. Burada aynı davranış motorda, trail'i geri yazmadan üretilir.
+        # TABAN OKUNDUĞU YERDE SİLİNİR: bir sonraki bara taşarsa breakeven hiç etkimezdi.
+        # `pos.stop` (sert stop) hiçbir koşulda atlanmaz — taban yalnız TRAIL bacağının yerine geçer.
+        taban = pos.pre_scale_stop
+        pos.pre_scale_stop = None
+        eff_stop = max(pos.stop, pos.trail_stop if taban is None else taban)
         # 1) açılış — kesin sıra
         if o <= eff_stop:
             return o, "stop_gap"
@@ -759,6 +783,8 @@ class PaperBroker:
     def scale_out(self, pos: Position, bar: dict, params: dict) -> bool:
         """#8 partial scale-out: once the bar's high reaches entry + exit.scale_out_r·R, bank
         exit.scale_out_frac of the position at that level and ratchet the stop to breakeven for the rest.
+        Ratchet, bankalama barının DOKUNUŞ kontrolüne uygulanmaz; bir SONRAKİ bardan etkir
+        (`Position.pre_scale_stop` — TSK-075, 2026-09-03, EDG-2026-029 F1x'in motor karşılığı).
         The banked P&L is folded into the SINGLE final closed-trade row (one trade, qty-weighted R), so
         min_sample / per-fold n are unaffected. exit.scale_out_frac=0 → off (default).
 
@@ -766,10 +792,15 @@ class PaperBroker:
         buradaki params okuması) TAMDIR ama alet KAPALIDIR ve silahlanması EDG-2026-027 hükmüne
         tabidir — 027 (çıkış paketi OAT) + EDG-2026-029 (düzeltilmiş scale-out) kavramı CI-negatif
         ölçtü (B −0.053 / C −0.045), TCA hükmü GÜÇLENDİRDİ (ek dolum bacağı gerçek friksiyonda
-        daha zararlı). ZORUNLULUK ŞARTI (ROADMAP WP1-C latent kusur): `exit.scale_out_frac` bir
-        gün açılacaksa ÖNCE bankalama-barı trail=entry_fill → aynı-bar stop_gap kusuru düzeltilir;
-        motor değişikliği = yeni kart + yeniden ölçüm. Arama bu düğmeyi bulup açamaz: açılış
-        DONUK-EŞİK-OTOMATİĞE sınıfında bile 027 hükmünün bilinçli iptalini ister (operatör)."""
+        daha zararlı). ZORUNLULUK ŞARTI (ROADMAP WP1-C latent kusur) 2026-09-03'te KARŞILANDI
+        (TSK-075): bankalama-barı trail=entry_fill → aynı-bar stop_gap kusuru düzeltildi, düzeltme
+        EDG-2026-029'un F1x hücresinde ZATEN ölçülmüştü (F1x−H1 = +0,0874R CI[+0,034; +0,153]),
+        bu yüzden yeni ölçüm kartı AÇILMADI (Rol-1 kapsam kararı D2). Kusur latentti: canlı
+        `exit.scale_out_frac = 0.0` ve 893 işlemde `scaled_out` 0 — düzeltme canlı davranışı
+        DEĞİŞTİRMEZ. ALET HÂLÂ KAPALI: `frac>0` açılışı hem 027/029 hükmünün bilinçli iptalini
+        (operatör) hem YENİ bir ölçüm kartını ister, ayrıca Alpaca ayna bracket'ının kısmi-satış
+        bacağı TASARLANMAMIŞTIR (`loop.py` "BİLİNÇLİ boşluk" notu). Arama bu düğmeyi bulup açamaz:
+        açılış DONUK-EŞİK-OTOMATİĞE sınıfında bile o iptali ister."""
         if pos.scaled_out:
             return False
         frac = float(params.get("exit.scale_out_frac", 0.0))
@@ -818,6 +849,10 @@ class PaperBroker:
         pos.banked_pnl += pnl_partial
         pos.qty -= sell_qty
         pos.trail_stop = max(pos.trail_stop, pos.entry)       # lock the runner at breakeven
+        # TSK-075 (2026-09-03): ratchet YAZILDI ama BU BARA uygulanmaz — `eff_stop` yukarıda
+        # bankalama-ÖNCESİ değerle hesaplandı ve `_touch_exit` onu tek atımlık tüketir. Gerekçe,
+        # ölçülmüş büyüklük ve EDG-2026-029 F1x atfı: `Position.pre_scale_stop` + `_touch_exit`.
+        pos.pre_scale_stop = eff_stop
         pos.scaled_out = True
         return True
 
