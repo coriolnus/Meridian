@@ -464,7 +464,8 @@ def test_web_katmaninda_dolduruldu_dizesi_ARTIK_VAR():
 # api/loop olay yazıcıları HER olayda koşulsuz int(...)/len(...) basar, boş kova KAYNAKTA 0'a
 # düşer = ÖLÇÜLMÜŞ sıfır, bu deponun zaten (b) saydığı biriktirici/bölümleme deseni). Hiçbiri
 # liveness/manşet ölçülemedi-dalına sızmadı (manşet `!= null` üçlemesi kullanır, `?? 0` değil).
-# `opCancelOpen`inki AYRICA v225 (test_dalga2_kucukler_v225.py:190) tarafından ZORUNLU. Satır satır:
+# `opCancelOpen`inki AYRICA v225 (tests/test_dalga2_kucukler_v225.py::test_kalem10_opCancelOpen_siniflari_OKUR)
+# tarafından ZORUNLU. Satır satır:
 # research/olcumler/nullsifir_triyaj_2026-08-06/RAPOR.md §7. Frozen 211/167/44/30/137 DEĞİŞMEDİ.
 NULLSIFIR_TAVAN = 192
 

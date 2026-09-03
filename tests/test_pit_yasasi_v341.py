@@ -54,8 +54,9 @@ def _yaz(kok: pathlib.Path, ad: str, govde: str) -> None:
 
 
 def _dosya(yer: str) -> str:
-    """`"backtest.py:5"` → `"backtest.py"`. Çağrı yerini ADIYLA sınamak için; beklenen değeri
-    tam biçimde yazmak bu dosyada SAHTE BİR SATIR ÇAPASI doğururdu (bkz. ilk pozitif kontrol)."""
+    """`"backtest.py" + ":5"` birleşimi → `"backtest.py"`. Çağrı yerini ADIYLA sınamak için;
+    beklenen değeri dosya-adı:satır-numarası tam biçiminde yazmak bu dosyada SAHTE BİR SATIR
+    ÇAPASI doğururdu (bkz. ilk pozitif kontrol)."""
     return yer.rsplit(":", 1)[0]
 
 
@@ -99,7 +100,8 @@ def test_pozitif_kontrol_tarihsel_modul_DOGRUDAN_cagirinca_yakalanir(tmp_path):
             return earnings.in_blackout("AAPL", gun)
     """)
     r = pitlaw.rapor(str(tmp_path))
-    # ÇAPA DOĞURMA: beklenen değer `"backtest.py:5"` biçiminde YAZILMAZ. O dizge codelaw'ın
+    # ÇAPA DOĞURMA: beklenen değer `"backtest.py" + ":5"` (dosya-adı:satır-numarası) biçiminde
+    # YAZILMAZ. O dizge codelaw'ın
     # satır-çapası yasasına (`_CAPA_DESENI`, sıfır tolerans, `tests/` de taranır) gerçek bir çapa
     # gibi görünür ve hükmü DEPODAKİ `meridian/backtest.py`nin 5. satırına bağlanırdı — bu testin
     # sentetik tmp ağacıyla hiç ilgisi olmayan bir dosyaya. Dosya ve satır AYRI sınanır.

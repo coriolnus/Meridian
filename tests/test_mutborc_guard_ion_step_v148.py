@@ -8,7 +8,7 @@ YAZILIYDI ama KORUNMUYORDU; adım denetimini sessizce gevşeten bir değişiklik
 toleransın 1e-6 yerine ~1.0 olması) ızgara DIŞI her değeri "adım üstünde" ilan ederdi ve arama
 uzayı sessizce sürekliye dönerdi.
 
-GERÇEK KOD (meridian/guard.py:37-42):
+GERÇEK KOD (guard.py::_on_step):
     k = round((new - lo) / step)
     nearest = lo + k * step
     if typ == "int":

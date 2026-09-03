@@ -189,7 +189,7 @@ def test_dump_yaml_history_alt_dizin_goreli_ad(sandbox_state, monkeypatch):
 
 
 def test_dump_yaml_STATE_disi_yol_mutlak(sandbox_state, monkeypatch, tmp_path):
-    """STATE DIŞI yol (sprint sandbox'ı, sprint.py:208) mutlak yolla geçer — relative_to fallback."""
+    """STATE DIŞI yol (sprint sandbox'ı, sprint.py::_reset_sandbox_state) mutlak yolla geçer — relative_to fallback."""
     disari = tmp_path / "disari" / "snap.yaml"
     seen = _capture_write_text(monkeypatch)
     config.dump_yaml({"version": 1}, disari)

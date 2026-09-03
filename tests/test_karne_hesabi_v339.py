@@ -962,7 +962,7 @@ def test_YAZMA_MUHASEBESI_GIRIS_NOKTALARI_KAYNAKTA_GERCEKTEN_CAGRILIYOR():
 
 
 def test_SATIR_CAPASI_YOK():
-    """`dosya.py:123` biçimi CI'da sessizce çürür — çapa SATIR değil SEMBOL olmalı."""
+    """`dosya-adı:satır-numarası` biçimi CI'da sessizce çürür — çapa SATIR değil SEMBOL olmalı."""
     capa = re.findall(r"\b[\w/]+\.py:\d+", BETIK.read_text(encoding="utf-8"))
     assert not capa, f"satır çapası: {capa}"
 

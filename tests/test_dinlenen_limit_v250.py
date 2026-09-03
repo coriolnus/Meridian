@@ -70,7 +70,7 @@ def _acilis(lim: float) -> float:
 
 
 def _broker():
-    """`PaperBroker(equity, slippage_bps, commission_per_share)` — `mutation.py:179` ile aynı kurulum.
+    """`PaperBroker(equity, slippage_bps, commission_per_share)` — `mutation.py::_build_ledgers` ile aynı kurulum.
 
     SKIP KAÇIŞI BİLEREK YOK (2026-08-17 vakası): ilk hâlde `hasattr(B, "Broker")` yanlış ada
     bakıyordu ve `pytest.skip` üç çiviyi sessizce yuttu — koşum "1 passed, 3 skipped" ile YEŞİL

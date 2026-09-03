@@ -336,7 +336,7 @@ def test_7h_MEVCUT_dortlunun_davranisi_DEGISMEDI():
 
 
 def test_7i_beyanli_ikizleme_KAYDA_girer_kiyasa_GIRMEZ(sandbox_state):
-    """`derisk_tabani`: `broker.DERISK_FLOOR_DD` bağı 2026-08-12'de BİLEREK koparıldı (broker.py:33).
+    """`derisk_tabani`: `broker.DERISK_FLOOR_DD` bağı 2026-08-12'de BİLEREK koparıldı (broker.py::DERISK_FLOOR_DD).
     Kayda giriyor ki muafiyet SESSİZ olmasın; kıyasa girmiyor ki yanlış alarm üretmesin."""
     kaynaklar = wd.EQUIVALENT_TRUTHS["derisk_tabani"]["kaynaklar"]
     assert kaynaklar[1][0] == "broker.DERISK_FLOOR_DD" and kaynaklar[1][2] == "beyanli-ayri"

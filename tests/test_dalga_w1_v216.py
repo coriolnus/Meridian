@@ -19,7 +19,8 @@ NE ÖLÇER (her iş kendi çivisiyle, kaynakları satır satır yazılı):
        (kaynak: docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md §4.1)
 
   Ç5   `broker.DERISK_FLOOR_DD` ve `shadowlaw.DD_VETO_MARGIN` goal'a TEST-kaynaklı bağlanır.
-       (emsal: tests/test_hafta3a_v119.py:78 — `broker.py`/`shadowlaw.py`ye DOKUNULMADI)
+       (emsal: tests/test_hafta3a_v119.py::test_A_esikler_adlandirilmis_sabit_olarak_TEK_yerde_durur —
+       `broker.py`/`shadowlaw.py`ye DOKUNULMADI)
 
   #10  `watchdog.mutabakat_tazelik_report` — ayna mutabakat kaydının SEANS tazeliği.
        (kaynak: docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md §4.2/§4.5 — 24,3 sa bayat ölçümü)

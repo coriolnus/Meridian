@@ -172,7 +172,7 @@ def test_ayristirilamayan_kapsama_olcusu_UYDURULMAZ(sandbox_state):
 def test_pencere_ve_esik_motorun_sabitlerinden_OKUNUR(sandbox_state):
     """Sihirli sayı yasağı: bekçi kendi eşiğini icat edemez. Pencere motorun kovalama ufkudur
     (`loop.UNIVERSE_LAG_MAX_D`), eşik motorun kapsama yasasıdır (`loop.UNIVERSE_MIN_COVERAGE`) —
-    scheduler.py:890'daki "tek yasa, tek ölçüm" ile aynı gerekçe."""
+    scheduler.py::advance_once'taki "tek yasa, tek ölçüm" ile aynı gerekçe."""
     from meridian import loop
 
     pencere, esik = wd._kapsama_penceresi()

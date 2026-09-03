@@ -111,7 +111,8 @@ _MODUL_DURUMLARI = (
     # GÖZLENMEDİ (v215 ölçtü, `/api/halt` bisect'te temiz çıktı). Mekanizma yine de birebir aynı:
     # her alarm jeton başına 6 saatlik SUSTURMA penceresini bu sözlüğe yazar (`obs._emit` (olay yazım yolu)-152), yani
     # alarm ateşleyen bir test, bildirim davranışını ölçen bir SONRAKİ testi kendi kurmadığı bir
-    # susturmayla karşılaştırır. `tests/test_alarm_delivery_v71.py:177` bunu bugün tek satırlık bir
+    # susturmayla karşılaştırır. `tests/test_alarm_delivery_v71.py::test_suppression_is_logged_once_per_window_not_once_per_alarm`
+    # bunu bugün tek satırlık bir
     # `monkeypatch.setattr(obs, "_SUPPRESS_LOGGED", {})` ile kendi başına çözüyor — yani sızıntı
     # zaten BİLİNİYOR, yalnız tek yerden kapatılmamıştı.
     (_obs_mod, "_SUPPRESS_LOGGED"),

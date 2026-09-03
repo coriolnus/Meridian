@@ -497,7 +497,7 @@ def test_uyusmazlik_alarmi_basar_ama_karantina_yok(monkeypatch):
     teşhisi olmayan bir tedavi olurdu.
 
     SEVİYE DÜZELTMESİ (K1, 2026-07-30): bu testin adı ve v1 kararı ilk günden "ALARM" diyordu ama
-    kod `obs.warn` basıyordu — ve `notify.py:84` alarm-olmayan her satırı eler, yani uyuşmazlık
+    kod `obs.warn` basıyordu — ve `notify.py::inbox` alarm-olmayan her satırı eler, yani uyuşmazlık
     bildirim/inbox/telefon zincirine HİÇ giremiyordu. Test artık gerçek seviyeyi çiviliyor:
     DATA_QUALITY jetonu + makine-okunur `kind` adı (obs.alarm olay adını değiştirdiği için ad
     `kind` alanında yaşar — `failed_broker_rejection` tuzağının tekrarlanmaması için)."""

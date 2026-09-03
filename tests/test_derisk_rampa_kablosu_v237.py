@@ -6,7 +6,7 @@ kaydetmişti: "canlı defterde plan kesen bir risk eşiği HİÇBİR yönetişim
 örnek yerinde durdu: `derisk_mult`in 0,03 / 0,08 eşikleri FONKSİYON GÖVDESİNDEYDİ — ne operatörün
 değişmez zarfında (goal.yaml) ne arama uzayında (bounds.yaml). Sonucu ölçümde görüldü: EDG-2026-023
 ve EDG-2026-026 bandı ancak MONKEYPATCH ile oynatabildi
-(research/olcumler/edg026_slot20_2026-08-12/olcum.py:178 `_rampa_fn`).
+(research/olcumler/edg026_slot20_2026-08-12/olcum.py::_rampa_fn).
 
 BU TURDA NE OLDU (2026-08-12): eşikler `goal.yaml` → `limits.derisk_full_dd` /
 `limits.derisk_floor_dd`ye taşındı, tek okuyucu `broker.derisk_ramp()`. Operatör kararı (karar
@@ -54,7 +54,7 @@ def test_kaynak_alani_dogruyu_soyler():
 
 def test_max_positions_at_ayni_bandi_gorur():
     """Çarpan tek başına kalmaz: eşzamanlı pozisyon tavanı aynı banttan türer (026 öz-sınaması
-    olcum.py:306-307 — 5 tabanında 4, 20 tabanında 15)."""
+    research/olcumler/edg026_slot20_2026-08-12/olcum.py::kosum — 5 tabanında 4, 20 tabanında 15)."""
     assert broker.max_positions_at(80.0, 100.0, 5) == 4
     assert broker.max_positions_at(80.0, 100.0, 20) == 15
     dar = {"full_dd": 0.03, "floor_dd": 0.08}
@@ -153,7 +153,7 @@ def test_kaynakta_mod_kosullu_rampa_yolu_YOK():
 # ÇİVİ 4 — 026 SEMANTİK AYNASI (ölçülen dünya == kablolanan dünya)
 # =================================================================================================
 def _olcum_rampasi(tam_dd: float, sifir_dd: float):
-    """research/olcumler/edg026_slot20_2026-08-12/olcum.py:178 `_rampa_fn` — BİREBİR KOPYA.
+    """research/olcumler/edg026_slot20_2026-08-12/olcum.py::_rampa_fn — BİREBİR KOPYA.
     Kasıtlı ikiz: ölçümün koştuğu fonksiyon dondurulmuş bir dosyada yaşıyor ve oradan import
     edilemez (ölçüm sandbox'ı repo modülü değildir). Kopyanın işi, kablonun o dosyadan SAPMASINI
     yakalamaktır — ikisi ayrışırsa 026/032'nin damgaladığı sayılar bugünkü motoru anlatmaz."""
@@ -170,7 +170,8 @@ def _olcum_rampasi(tam_dd: float, sifir_dd: float):
 
 
 def test_026_oz_sinamasinin_UC_NOKTASI_birebir():
-    """olcum.py:302-304'ün üç `assert`i, kablolu fonksiyonda AYNEN geçmeli."""
+    """research/olcumler/edg026_slot20_2026-08-12/olcum.py::kosum'un üç `assert`i, kablolu
+    fonksiyonda AYNEN geçmeli."""
     assert broker.derisk_mult(90.0, 100.0) == 1.0
     assert abs(broker.derisk_mult(80.0, 100.0) - 0.7619) < 1e-9
     assert broker.derisk_mult(64.0, 100.0) == 0.0

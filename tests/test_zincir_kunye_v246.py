@@ -195,7 +195,7 @@ def test_k8_KAYNAK_CIVISI_kunye_alani_artik_active_model_okumuyor():
 
 
 def test_k9_TUKETICI_SOZLESMESI_KIRILMADI_nous_eval(zincir, monkeypatch):
-    """TÜKETİCİ ADIYLA: tek üretim tüketicisi `nous_eval.haftalik_degerlendirme` (nous_eval.py:695).
+    """TÜKETİCİ ADIYLA: tek üretim tüketicisi `nous_eval.haftalik_degerlendirme` (nous_eval.py::haftalik_degerlendirme).
     GERÇEK `chain_text` dönüşüyle koşar; okuduğu dört anahtar (text/beyin/model/neden) yerinde."""
     _sir(monkeypatch)
     monkeypatch.setattr(hermes, "_hermes_bin", lambda: None)     # zincir boş → "kosulamadi" dalı

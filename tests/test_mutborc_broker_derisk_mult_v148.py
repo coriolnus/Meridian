@@ -150,7 +150,8 @@ def test_sinir_dd_tam_boy_ucu():
 def test_sinir_dd_taban_sifir():
     """dd == %36 TAM sınırında yeni boy YOK. (mutmut_10'un dokunduğu nokta; rampa orada da 0.0
     verdiği için mutant eşdeğer.) Bu satır EDG-2026-026 ölçüm şasisinin öz-sınamasıyla BİREBİR
-    aynı noktadır (olcum.py:304 `derisk_mult(64.0, 100.0) == 0.0`) — kablo, ölçülen semantiği
+    aynı noktadır (research/olcumler/edg026_slot20_2026-08-12/olcum.py::kosum içindeki
+    `derisk_mult(64.0, 100.0) == 0.0`) — kablo, ölçülen semantiği
     taşıyor mu sorusunun tek-nokta cevabı."""
     assert (100.0 - 64.0) / 100.0 == DERISK_FLOOR_DD
     assert derisk_mult(64.0, 100.0) == 0.0

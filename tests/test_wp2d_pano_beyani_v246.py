@@ -60,7 +60,7 @@ APPJS_KOD = "\n".join(l for l in APPJS.splitlines() if not l.lstrip().startswith
 # YARDIMCILAR
 # =================================================================================================
 def _isaret(egri_son="2026-07-20", id_="SR-20260801T151429+0000"):
-    """`sermaye.uygula`nın zarfa bastığı işaretin şekli (sermaye.py:413-419)."""
+    """`sermaye.uygula`nın zarfa bastığı işaretin şekli (sermaye.py::uygula)."""
     return {"id": id_, "tarih": "2026-08-01T15:14:29+00:00", "tip": "paper_equity_reset",
             "onceki_deger": 94457.91, "yeni_deger": 100000.0,
             "egri_son_nokta": [egri_son, 94457.91], "gerekce": "fikstür"}
@@ -433,7 +433,7 @@ def test_KALEM2_dusus_SESSIZ_DEGIL_uyari_hala_basiliyor(sandbox_state, monkeypat
 
 
 def test_KALEM2_DOSYA_YOK_hali_BUGUN_sessiz_BEYANLI_olgu(sandbox_state, monkeypatch):
-    """DÜRÜST BEYAN, ONAY DEĞİL: dosyanın HİÇ olmaması bugün uyarı basmaz (config.py:187-188) —
+    """DÜRÜST BEYAN, ONAY DEĞİL: dosyanın HİÇ olmaması bugün uyarı basmaz (config.py::load_strategy) —
     çünkü bu, `run.bootstrap_v01`in sahibi olduğu TAZE KURULUM yoludur. Olgu burada çivilenir ki
     bir gün değişirse BİLEREK değişsin; Rol-1'e ayrı kalem olarak raporlandı (uyarıyı buraya
     eklemek her çağrıda bir satır üretirdi — `_CALENDAR_WARNED` deseni gerektiren ayrı bir karar)."""

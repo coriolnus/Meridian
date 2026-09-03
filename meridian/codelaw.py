@@ -1392,6 +1392,16 @@ TSX_CAPA_TABANI = 0
 #: (dersin kendisi "şu çapa bayatladı" ise) bulgu değildir; işaret GÖRÜNÜR ve zorunludur.
 _CAPA_MUAFIYETI = "çapa-mezar-taşı"
 
+#: İKİNCİ muafiyet işareti — TSK-119, 2026-09-03. `_CAPA_MUAFIYETI` ("mezar taşı") bir DERSİ
+#: taşır: bayatlamış GERÇEK bir çapayı kanıt olarak alıntılayan satır. Bu işaret AYRI bir sınıfı
+#: taşır: `tests/`in kendi tarayıcı testlerinde `tmp_path`e yazılan SENTETİK fikstür dizgeleri
+#: (uydurma dosya adı artı uydurma satır numarası, ör. "hedef" + ".py" + ":" + "999" birleşimi) —
+#: hiçbir zaman gerçek olmadılar, "bayatladılar" değil "hiç var olmadılar" denir. Tek kaynak: bu
+#: sabit BURADA yaşar, `tests/test_tests_ops_satir_capasi_v401.py` (ve `_capalari_olc` üstünden
+#: `stale_line_anchors`/`stale_tsx_line_anchors`/`stale_docs_line_anchors`in üçü) buradan okur —
+#: ikinci bir işaret icat ETMEZLER.
+_CAPA_SENTETIK_ISARETI = "çapa-sentetik"
+
 
 def _ts_files(root: str):
     """`root` altındaki `.ts`/`.tsx` dosyalarını ad sırasıyla üretir (`_py_files`in tsx ikizi);
@@ -1424,9 +1434,12 @@ def _capalari_olc(dosyalar, adres: dict[str, list[pathlib.Path]],
 
     ÜÇ tarayıcı (py, tsx, docs — TSK-080 düzeltme turu 1'de düzeltildi: `stale_docs_line_anchors`
     da bu gövdeye bağlandı, 2026-09-03) bu gövdeyi PAYLAŞIR ve paylaşmak zorundadır: çürüme
-    sınıfının tanımı (`menzil_disi` · `bos_satir` · `yorum`), muafiyet işareti ve çözülemeyen-çapa
-    kaydı üç dünyada da AYNI olmalı. Ayrışan yalnız HÜKÜM (py ve docs = sıfır tolerans, tsx =
-    çırçır) — ölçüm değil."""
+    sınıfının tanımı (`menzil_disi` · `bos_satir` · `yorum`), muafiyet işareti(leri) ve
+    çözülemeyen-çapa kaydı üç dünyada da AYNI olmalı. Ayrışan yalnız HÜKÜM (py ve docs = sıfır
+    tolerans, tsx = çırçır) — ölçüm değil. İKİ muafiyet işareti VAR (TSK-119, 2026-09-03):
+    `_CAPA_MUAFIYETI` (mezar taşı) ve `_CAPA_SENTETIK_ISARETI` (sentetik fikstür) — ikisi de bu
+    gövdenin satır taramasında birlikte geçer, `tests/test_tests_ops_satir_capasi_v401.py` bu
+    ikinciyi kendi dünyasında (`tests/`+`ops/`) ayrıca zorunlu kılar."""
     curuk: list[dict] = []
     for f in dosyalar:
         try:
@@ -1439,7 +1452,11 @@ def _capalari_olc(dosyalar, adres: dict[str, list[pathlib.Path]],
             _note_unscanned(str(f), e, evre)
             continue
         for i, satir in enumerate(satirlar, 1):
-            if _CAPA_MUAFIYETI in satir:
+            # İKİ MUAFİYET İŞARETİ DE GEÇER (TSK-119, 2026-09-03): mezar taşı (bayatlamış GERÇEK
+            # çapayı kanıt olarak alıntılayan satır) ve sentetik (hiç var olmamış fikstür dizgesi,
+            # `_CAPA_SENTETIK_ISARETI` şerhinde ayrımı yazılı) — ayrı sınıflar, tek satırda birlikte
+            # kontrol edilir; ikinci bir tarama dalı AÇILMAZ.
+            if _CAPA_MUAFIYETI in satir or _CAPA_SENTETIK_ISARETI in satir:
                 continue
             for m in _CAPA_DESENI.finditer(satir):
                 onek, hedef_ad, n = m.group(1), m.group(2), int(m.group(3))

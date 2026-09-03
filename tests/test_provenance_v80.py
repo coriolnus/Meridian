@@ -84,7 +84,8 @@ def test_a_read_with_an_explicit_default_is_optional_by_design(izle):
 
 def test_a_polymorphic_ledger_yields_inconclusive_not_a_violation(izle):
     """KORUMA 3 — dedektörün KENDİ kurt masalı, canlıda yakalandı: events.jsonl'de `plan_id`
-    sürüklenmesi bildirmişti. Oysa üretici (loop.py:114) alanı doğru yazıyor; o alanı taşıyan beş
+    sürüklenmesi bildirmişti. Oysa üretici (loop.py:114, çapa-mezar-taşı — 2026-07-22 tarihli
+    anlatı; üretici bugün adıyla yeniden doğrulanmadı) alanı doğru yazıyor; o alanı taşıyan beş
     olay türünden dördü bu defterde henüz hiç ateşlememişti. Çok-biçimli bir defterde YOKLUK
     hüküm vermez. Kanıtlanamayan şey 'ihlal' değil 'belirsiz' yazılır."""
     satir = []

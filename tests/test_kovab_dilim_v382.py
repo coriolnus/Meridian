@@ -327,7 +327,7 @@ def test_capa_DESENI_de_CODELAW_TEK_KAYNAGINDAN_gelir():
     Kopyanın somut kaybı ölçüldü: tek ve altı haneli çapalar."""
     desen = _satir_capasi_deseni()
     muaf = _muafiyet()
-    for ornek in ("uydurma_modul.py:7", "uydurma_modul.py:412345"):
+    for ornek in ("uydurma_modul.py:7", "uydurma_modul.py:412345"):  # çapa-sentetik: desen örneği, gerçek dosya değil (TSK-119, 2026-09-03)
         assert desen.search(ornek), f"türetilen desen `{ornek}` çapasını görmüyor"
         assert list(_capa_ihlalleri(f"# bkz. {ornek}\n", muaf)) == [(1, ornek)], ornek
 
@@ -345,9 +345,9 @@ def test_capa_tarayicisi_SENTETIK_ihlali_yakalar_ve_MUAFI_gecer():
     """POZİTİF KONTROL + muafiyet kapısı tek çivide: tarayıcı boşta 'temiz' demiyor, ve
     muafiyetli satırı ihlal SAYMIYOR (aksi hâlde mezar taşları yasayı susturmaya zorlardı)."""
     muaf = _muafiyet()
-    yakalanan = list(_capa_ihlalleri("# bkz. uydurma_modul.py:4211 satırı\n", muaf))
-    assert yakalanan == [(1, "uydurma_modul.py:4211")], yakalanan
-    assert list(_capa_ihlalleri(f"# bkz. uydurma_modul.py:4211 ({muaf})\n", muaf)) == []
+    yakalanan = list(_capa_ihlalleri("# bkz. uydurma_modul.py:4211 satırı\n", muaf))  # çapa-sentetik: desen örneği, gerçek dosya değil (TSK-119, 2026-09-03)
+    assert yakalanan == [(1, "uydurma_modul.py:4211")], yakalanan  # çapa-sentetik: yukarıdaki örneğin beklenen değeri, gerçek dosya değil (TSK-119, 2026-09-03)
+    assert list(_capa_ihlalleri(f"# bkz. uydurma_modul.py:4211 ({muaf})\n", muaf)) == []  # çapa-sentetik: desen örneği, gerçek dosya değil (TSK-119, 2026-09-03)
 
 
 #: BU TURDA ÇEVRİLEN CANLI ÇAPALAR — (kaynak modül, yeni çapa metni, hedef bu depoda mı)

@@ -2188,3 +2188,39 @@ değişimi); v381 `kopyalari_bul(desen)`; 510 passed, mutasyon 3/3; bundle pano-
 **Dağıtım #8:** 20:07Z cron'u SİLİNDİ (TSK-116/121 ağaçta çalışırken [0a] temiz-ağaç kapısı düşerdi) → 21:47Z (00:47 yerel) tek-seferlik; temiz +
 suite-yeşil değilse yarın pre-market. Suite #10 kapsamı: b81b19b (116) · ec4616d (118) · 2211977 (121) · TSK-120 (uçuşta: sembol çapası üçüncü
 besleme) → tek suite. TSK-119 brief'i (v401) 120'den sonra; TSK-117 planı (8 görev, v395–v400) 121'den sonra G1 ile başlar.
+
+### 2026-09-03 gece (Rol-1) — suite #10 hükmü · dağıtım #8 · TSK-119 · gece gözlemleri
+
+**Suite #10 (a57e2c8, 18:36→18:44Z, `-n 4`): 10171 passed / 1 FAILED** — `test_audit_fixes.py::test_scheduler_refetches_once_per_session_not_per_poll`:
+`fake_load(use_cache=True)` sabit imzası `mock.patch("meridian.dataset.load", …)` DİZGE biçimindeydi, TSK-116 r2'nin `setattr` grep'i kaçırdı;
+canlı yol artık `load(use_cache=…, universe=_canli_korunan_evren())` geçiyor → TypeError. Rol-1 imzayı `universe=None` ile genişletti, delta
+14 passed (262 s'lik test), commit cbdac82 + push 18:5xZ. Ders (hafıza `imza-degisikligi-sahte-taramasi`): imza genişleten her dilimde
+tests/ sahteleri `setattr|mock.patch("…")|patch.object|def fake_|lambda` beş biçimiyle grep'lenir — iki tam suite turu bedeli.
+
+**Dağıtım #8 (cbdac82, 21:20→21:22Z):** oturum-içi cron'lar (20:07Z dağıtım, 20:37Z ingest özeti) ATEŞLENMEDİ — oturum boşta kaldı, tetikler
+listede "bekliyor" görünüyordu; 21:19Z'de fark edildi, elle koşuldu. Kuru koşum RC 0 (31 dosya: motor 15 + pano bundle J6CDxFmr + kartlar);
+`*deleting .env.bak-2026-09-03-tsk079` — rsync `--delete` A1-yerel yedeği silecekti → dağıtım öncesi `~/`ya taşındı (sır sınıfı, kanal push_secret;
+`.env` dışlanır ama `.env.bak-*` dışlanmaz — dagit dışlama listesine aday). [F10] ✓, [5c] ✓, [5b] ✓; beyan `deployed_sha` cbdac82 21:21:56Z;
+healthz 200; `meridian`/`barsarchive` active, `learn` inactive (TSK-092 beklenen); **canlı evren 238 / replay 251 / index-exited 13** (TSK-116
+canlı doğrulandı); scheduler rehydrate `last_refetch_coverage 0.984`. Canlıya giren kod: TSK-075 (pre_scale_stop) · 077 (ret_seri damgası) · 080
+(codelaw docs dünyası) · 116 · 118 · 120 · 121 + api.py çapaları. ROADMAP: 075/077/080 tahtadan `§8.T` "dağıtım #8 kapanış kaydı"na (H0 12→9),
+116/120 DONE, 119 ACTIVE, 129 kapsam notu; 118/121 görsel tur sonrası. Ders: oturum cron'u dağıtım tetiği olarak GÜVENİLMEZ — kaçırıldığı
+anlaşılınca hemen elle koşulur; kritik saatli iş A1 timer'ında yaşar (hafıza `oturum-cron-guvenilmez`).
+
+**TSK-119 (satır çapaları), SDD tek sonnet ajan WORKTREE'de (ana ağaç dağıtım için donmuştu; §3 worktree tetiği), 41 dk / 259 araç:**
+ÖLÇÜM 76 çapa / 30 dosya (B-21'in "59/28"i 63b64ab mesajından, eskimiş) — 31 canlı şerh (B) + 6 tarihsel (A) → `dosya.py::sembol`, 22 benzersiz
+hedef `codelaw._modul_adlari(_ast_oku)` ile doğrulandı; 1 mezar taşı (v80 `loop.py` 2026-07-22 üreticisi bulunamadı); 4 illüstratif cümle
+yeniden yazıldı; 34 tmp_path fikstürü `# çapa-sentetik:` (codelaw `_CAPA_SENTETIK_ISARETI`, `_capalari_olc` tek gövde). v401 v382'den İTHAL,
+tests/+ops/ özyineli, taban ≥300 (ölçülen 495). Turun kendi tuzakları: sabitin ilk şerhi `hedef.py:999` yazdı → v382 kırdı; v401 öz-taraması —
+ikisi aynı turda kapandı. 34 dosya 814 passed. Mutasyon-1 ısırdı (34 sentetik satır); **mutasyon-2 ÖTMEDİ** — v373 yalnız DECLARED_SINKS +
+ui/src okur, tests/ yorum sembol çapaları TSK-120'nin GÖZLEMSEL beslemesinde: 37 yeni sembol çapası bugün korumasız → TSK-129 kapsamı.
+İnceleme (sonnet): 8+ hedef bağımsız doğrulandı, **1 BLOKER** — v206 `scheduler.py::_intraday_gap_check` yanlış ("tek yasa, tek ölçüm"
+`advance_once` içinde; Rol-1 doğruladı) → r1 tek satır, 58/0. D4 (takimyildizi.tsx 3 `.tsx:NNN`) sevk direktifi ui/src'i yasakladığı için
+yapılmadı → TSK-117 G1'e katlandı (Ruling). Ders: "bugünkü satırdaki sembol" tuzağı — çapa kaydığı için satırın bugün gösterdiği sembol
+DEĞİL, metnin anlattığı davranışın sembolü bağlanır; mekanik çivi bunu yakalamaz, yalnız davranış okuması. Yama ana ağaca `git apply`
+(32 dosya +287/−75), worktree silindi; suite #11 uçuşta.
+
+**TSK-115 gece koşumu (A1 `ingest067-tsk115`, 20:20Z):** 21:22Z'de hâlâ koşuyor (63 dk, uyku/retry beklemesi, %0 CPU); `ilerleme.jsonl`
+155 satır = 146 eski şema (`durum` yok) + 9 yeni: LOG.md 9 dilimin **7 ok / 2 başarısız** (#2/9, #3/9: Hindsight HTTP 500 — openrouter
+`ProviderResponseError`, deneme-2 de başarısız); dilim süreleri 62–667 s, tok 6–33k. Hüküm sabah (tavan 300 çağrı; 429 → temiz durur).
+Brifing 22:00Z SOUL denetimi: cron 22:13Z (tek kalan oturum cron'u — ateşlenmezse sabah A1'den okunur).

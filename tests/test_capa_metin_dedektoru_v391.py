@@ -102,15 +102,15 @@ def _sentetik_docs_agac(kok: pathlib.Path) -> None:
     (kok / "meridian" / "hedef.py").write_text("x = 1\n", encoding="utf-8")
     (kok / "docs").mkdir()
     (kok / "docs" / "yasayan.md").write_text(
-        "kaynak: hedef.py:999 (menzil dışı)\n", encoding="utf-8")
+        "kaynak: hedef.py:999 (menzil dışı)\n", encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     (kok / "docs" / "TESHIS-2026-08-13.md").write_text(
-        "kaynak: hedef.py:999 (menzil dışı, tarihli)\n", encoding="utf-8")
+        "kaynak: hedef.py:999 (menzil dışı, tarihli)\n", encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     (kok / "docs" / "RUNBOOK.md").write_text(
-        "kaynak: hedef.py:999 (menzil dışı, üretilmiş)\n", encoding="utf-8")
+        "kaynak: hedef.py:999 (menzil dışı, üretilmiş)\n", encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     (kok / "docs" / "superpowers").mkdir()
     (kok / "docs" / "superpowers" / "plans").mkdir()
     (kok / "docs" / "superpowers" / "plans" / "2026-08-17-sentetik-plan.md").write_text(
-        "kaynak: hedef.py:999 (menzil dışı, plan)\n", encoding="utf-8")
+        "kaynak: hedef.py:999 (menzil dışı, plan)\n", encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
 
 
 def test_docs_capasi_ARTIK_GORULUYOR(tmp_path, monkeypatch):
@@ -191,13 +191,13 @@ def test_docs_capasi_COZULEMEYENI_SESSIZCE_ATMAZ(tmp_path, monkeypatch):
     (tmp_path / "meridian" / "hedef.py").write_text("x = 1\n", encoding="utf-8")
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "yasayan.md").write_text(
-        "yok_boyle_bir_dosya.py:12 ve hedef.py:1\n", encoding="utf-8")
+        "yok_boyle_bir_dosya.py:12 ve hedef.py:1\n", encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     monkeypatch.chdir(tmp_path)
     kor: list = []
     curuk = codelaw.stale_docs_line_anchors("docs", py_kokler=("meridian",), cozulemeyen_out=kor)
     assert curuk == []
     assert [k["neden"] for k in kor] == ["hedef_yok"], kor
-    assert kor[0]["capa"] == "yok_boyle_bir_dosya.py:12"
+    assert kor[0]["capa"] == "yok_boyle_bir_dosya.py:12"  # çapa-sentetik: yukarıdaki fikstürün beklenen değeri, gerçek dosya değil (TSK-119, 2026-09-03)
 
 
 # ---------------------------------------------------------------------------
@@ -223,7 +223,7 @@ def test_docs_line_anchor_var_ok_HUKMUNU_DUSURUR_sentetik(tmp_path, monkeypatch)
     (tmp_path / "meridian").mkdir()
     (tmp_path / "meridian" / "hedef.py").write_text("x = 1\n", encoding="utf-8")
     (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "yasayan.md").write_text("hedef.py:999\n", encoding="utf-8")
+    (tmp_path / "docs" / "yasayan.md").write_text("hedef.py:999\n", encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     (tmp_path / "tests").mkdir()
     (tmp_path / "ops").mkdir()
     (tmp_path / "ui").mkdir()

@@ -43,7 +43,7 @@ def _islem(i: int, ts_open: str, ts_close: str, pnl_pct: float, *, setup="breako
 
 
 def _reset_isareti(egri_son: str, id_: str = "SR-20260801T151429") -> dict:
-    """`sermaye.uygula`nın eğri ZARFINA yazdığı işaretin ŞEKLİ (sermaye.py:413-419).
+    """`sermaye.uygula`nın eğri ZARFINA yazdığı işaretin ŞEKLİ (sermaye.py::uygula).
 
     Alan adları uydurulmaz: anahtar `sermaye.CURVE_MARK_KEY`den, `egri_son_nokta` ise yazımın
     kendi biçiminden (`list(pts[-1])`) gelir. Fikstür yazımın şeklini taklit eder; ŞEKLİN OTORİTESİ
@@ -59,7 +59,7 @@ def _tohum_yazimi(trades: list, egri_son: str, *, isaret: bool = True) -> None:
 
       1. `run.replay_seed` defterin TAMAMINI ve HEMEN ardından `equity_curve.json`ı yazar
          (`run.replay_seed`);
-      2. `sermaye.uygula` eğrinin ZARFINA reset işaretini basar (sermaye.py:413-421) ve o işaret
+      2. `sermaye.uygula` eğrinin ZARFINA reset işaretini basar (sermaye.py::uygula) ve o işaret
          `egri_son_nokta`yı DONDURUR.
 
     WP2-D bacak-1 ONARIMI: `seed_boundary` sınırı artık (1)'in SON NOKTASINDAN değil (2)'nin donmuş

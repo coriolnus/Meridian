@@ -109,8 +109,8 @@ def test_c15_baska_sprintin_damgasi_TASINMAZ(sprint_sandbox):
 #       yazımı bu yüzden ÖLÜYDÜ — docstring "sprint BUGÜN koştu (gun=0)" diyordu ama fiilen koşan
 #       kurulum hiçbir zaman gun=0 olmadı. İki gerçek bir aradaydı ve kimse ikisini kıyaslamadı.
 #   (2) `sprint.should_run` `gun` bacağını ENJEKTE EDİLEN `now`dan DEĞİL, `dt.datetime.now(utc)`
-#       ile gerçek saatten hesaplıyor (ÖLÇÜM: sprint.py:400). `now=` parametresi YALNIZ `saat`/
-#       `pencere` bacağını taşır (sprint.py:405, 415). Yani testin tarihi çivilediği SANILAN yer
+#       ile gerçek saatten hesaplıyor (ÖLÇÜM: sprint.py::should_run). `now=` parametresi YALNIZ
+#       `saat`/`pencere` bacağını taşır (sprint.py::should_run). Yani testin tarihi çivilediği SANILAN yer
 #       tarihi hiç çivilemiyordu.
 #
 # İkisi birleşince `gun = bugün − 2026-08-02` her gün BİR ARTIYOR: 08-08'de 6 (< 7 → tetik_yok,
@@ -159,7 +159,7 @@ def _c15_kadans_karari(sprint_sandbox, monkeypatch, gecen_gun: int) -> dict:
     sprint_run._write_live_status(_child_payload(phase="done", progress=8, total=520,
                                                  n_v1=0, started_at=taban))
 
-    # `now` YALNIZ SAATİ taşır (sprint.py:405/415) — 23:00 pencere İÇİNDE (22→06). Gün bacağını
+    # `now` YALNIZ SAATİ taşır (sprint.py::should_run) — 23:00 pencere İÇİNDE (22→06). Gün bacağını
     # taşımadığı ölçüldü; tarih burada bir çivi DEĞİLDİR ve öyleymiş gibi okunmamalı.
     return sprint.should_run(now=dt.datetime(2026, 8, 2, 23, 30))
 

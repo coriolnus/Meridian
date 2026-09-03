@@ -53,15 +53,15 @@ def _sentetik_agac(kok: pathlib.Path, tsx_govde: str, ad: str = "Kart.tsx") -> N
 def test_tsx_capasi_ARTIK_GORULUYOR(tmp_path):
     """`.tsx` içindeki menzil-dışı çapa yakalanır. Kör noktanın kendisi budur: aynı metin bir
     `.py` dosyasında olsaydı yasa onu bugün de görüyordu."""
-    _sentetik_agac(tmp_path, '// kaynak: sentetik_hedef.py:999\nexport const K = 1;\n')
+    _sentetik_agac(tmp_path, '// kaynak: sentetik_hedef.py:999\nexport const K = 1;\n')  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     curuk = codelaw.stale_tsx_line_anchors(str(tmp_path), py_kokler=(str(tmp_path),))
-    assert [(c["capa"], c["neden"]) for c in curuk] == [("sentetik_hedef.py:999", "menzil_disi")], curuk
+    assert [(c["capa"], c["neden"]) for c in curuk] == [("sentetik_hedef.py:999", "menzil_disi")], curuk  # çapa-sentetik: yukarıdaki fikstürün beklenen değeri, gerçek dosya değil (TSK-119, 2026-09-03)
 
 
 def test_ts_uzantisi_da_taranir(tmp_path):
     """Kapsam `.tsx` ile sınırlı DEĞİL: ölçülen bayatların en yoğun kaynağı düz `.ts` dosyaları
     (`krizUclari.ts` 4, `tipler.ts` 3, `onayEylem.ts` 3)."""
-    _sentetik_agac(tmp_path, 'export const U = "sentetik_hedef.py:999";\n', ad="uclar.ts")
+    _sentetik_agac(tmp_path, 'export const U = "sentetik_hedef.py:999";\n', ad="uclar.ts")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     curuk = codelaw.stale_tsx_line_anchors(str(tmp_path), py_kokler=(str(tmp_path),))
     assert [c["kaynak"] for c in curuk] == ["uclar.ts:1"], curuk
 
@@ -72,7 +72,7 @@ def test_tsx_capasi_YORUM_ve_BOS_SATIRI_da_curuk_sayar(tmp_path):
     gören bir tarayıcı bugünkü borcun TAMAMINI kaçırırdı."""
     (tmp_path / "sentetik_hedef.py").write_text("# yorum satiri\n\nx = 1\n", encoding="utf-8")
     (tmp_path / "Kart.tsx").write_text(
-        "// sentetik_hedef.py:1\n// sentetik_hedef.py:2\n// sentetik_hedef.py:3\n", encoding="utf-8")
+        "// sentetik_hedef.py:1\n// sentetik_hedef.py:2\n// sentetik_hedef.py:3\n", encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     curuk = codelaw.stale_tsx_line_anchors(str(tmp_path), py_kokler=(str(tmp_path),))
     assert [c["neden"] for c in curuk] == ["yorum", "bos_satir"], curuk
 
@@ -88,11 +88,11 @@ def test_tsx_capasi_MEZAR_TASINI_muaf_tutar(tmp_path):
 def test_tsx_COZULEMEYENI_SESSIZCE_ATMAZ(tmp_path):
     """Hükmü kurulamayan tsx çapası SAYILIR (py tarafındaki `line_anchor_unresolved` disiplini):
     "0 çürük" cümlesi, kaçının hakkında hüküm KURULAMADIĞI bilinmeden okunamaz."""
-    _sentetik_agac(tmp_path, '// yok_boyle_bir_dosya.py:12 ve sentetik_hedef.py:1\n')
+    _sentetik_agac(tmp_path, '// yok_boyle_bir_dosya.py:12 ve sentetik_hedef.py:1\n')  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     kor: list[dict] = []
     assert codelaw.stale_tsx_line_anchors(str(tmp_path), py_kokler=(str(tmp_path),),
                                           cozulemeyen_out=kor) == []
-    assert [(k["neden"], k["capa"]) for k in kor] == [("hedef_yok", "yok_boyle_bir_dosya.py:12")], kor
+    assert [(k["neden"], k["capa"]) for k in kor] == [("hedef_yok", "yok_boyle_bir_dosya.py:12")], kor  # çapa-sentetik: yukarıdaki fikstürün beklenen değeri, gerçek dosya değil (TSK-119, 2026-09-03)
 
 
 def test_KOK_YOKSA_KORLUK_KAYDA_GECER(tmp_path):
@@ -162,7 +162,7 @@ def test_PY_TARAFI_TSX_capasini_GORMEZ(tmp_path):
     """`stale_line_anchors` `.tsx` dosyalarını TARAMAZ ve bu bilinçli: iki tarayıcı iki farklı
     hüküm veriyor (py = sıfır tolerans, tsx = çırçır). `.tsx`i py tarayıcısına eklemek 35 bayatı
     anında sıfır-tolerans kapısına sokar ve tam suite kırmızıya dönerdi."""
-    _sentetik_agac(tmp_path, '// sentetik_hedef.py:999\n')
+    _sentetik_agac(tmp_path, '// sentetik_hedef.py:999\n')  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     assert codelaw.stale_line_anchors(str(tmp_path)) == []
     assert len(codelaw.stale_tsx_line_anchors(str(tmp_path), py_kokler=(str(tmp_path),))) == 1
 
@@ -183,7 +183,7 @@ def test_PY_TARAFINDA_TEK_CAPA_BILE_DUSURUR(tmp_path, monkeypatch):
     r = codelaw.report(str(tmp_path))
     assert r["stale_line_anchors"] == [] and r["ok"] is True, r
     assert r["tsx_line_anchors"] is None, "sentetik kökte tsx ÖLÇÜLMEZ"
-    (tmp_path / "beyan.py").write_text('S = "sentetik_hedef.py:999"\n', encoding="utf-8")
+    (tmp_path / "beyan.py").write_text('S = "sentetik_hedef.py:999"\n', encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     r = codelaw.report(str(tmp_path))
     assert len(r["stale_line_anchors"]) == 1, r["stale_line_anchors"]
     assert r["ok"] is False, "py tarafında TEK çapa bile düşürmeli — orada taban YOK"
@@ -217,7 +217,7 @@ def test_TSX_NUKSU_report_OKUNU_DUSURUR(tmp_path, monkeypatch):
     ikisinde de False çıkar ve deney tsx hakkında hiçbir şey ölçmezdi."""
     codelaw.UNSCANNED.clear()
     monkeypatch.setattr(codelaw, "stale_claims", lambda *a, **k: [])
-    _sentetik_agac(tmp_path, '// sentetik_hedef.py:999\n')
+    _sentetik_agac(tmp_path, '// sentetik_hedef.py:999\n')  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     monkeypatch.setattr(codelaw, "TSX_CAPA_TABANI", 1)
     r = codelaw.report(str(tmp_path), tsx_kok=str(tmp_path))
     assert [c["neden"] for c in r["tsx_line_anchors"]] == ["menzil_disi"], r["tsx_line_anchors"]

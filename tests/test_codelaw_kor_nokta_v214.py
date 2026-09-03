@@ -281,7 +281,7 @@ def test_YANLIS_MUAFIYET_BEYANI_yakalanir_sentetik(tmp_path):
     # YENİ dedektör görüyor.
     curuk = codelaw.stale_claims(str(tmp_path), declared=beyan)
     assert len(curuk) == 1, codelaw.declared_claims(str(tmp_path), declared=beyan)
-    assert curuk[0]["external_accessors"] == {"defter.rapor": ["karar.py:3"]}
+    assert curuk[0]["external_accessors"] == {"defter.rapor": ["karar.py:3"]}  # çapa-sentetik: tmp_path'e yazılan sentetik fikstürün ölçülen çıktısı, gerçek dosya değil (TSK-119, 2026-09-03)
 
 
 def test_dogru_beyan_yanlis_pozitif_uretmez(tmp_path):
@@ -302,7 +302,7 @@ def test_dogru_beyan_yanlis_pozitif_uretmez(tmp_path):
     c = codelaw.declared_claims(str(tmp_path), declared=beyan)
     assert c[0]["claims_no_prod_reader"] is False
     assert c[0]["stale_claim"] is False
-    assert c[0]["external_accessors"] == {"defter.rapor": ["karar.py:3"]}
+    assert c[0]["external_accessors"] == {"defter.rapor": ["karar.py:3"]}  # çapa-sentetik: tmp_path'e yazılan sentetik fikstürün ölçülen çıktısı, gerçek dosya değil (TSK-119, 2026-09-03)
 
 
 def test_iddia_dogruysa_curuk_sayilmaz(tmp_path):
@@ -646,7 +646,7 @@ def test_capa_yasasi_CURUGU_GERCEKTEN_GORUR(tmp_path):
     """Pozitif kontrol (test_codelaw_v59 disiplini): sıfır iddiası ancak dedektör çalışıyorsa
     anlamlıdır. Sentetik bir menzil-dışı çapa verilir, yakalanması beklenir."""
     (tmp_path / "hedef.py").write_text("x = 1\n")
-    (tmp_path / "beyan.py").write_text('S = "kaynak: hedef.py:999"\n')
+    (tmp_path / "beyan.py").write_text('S = "kaynak: hedef.py:999"\n')  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     curuk = codelaw.stale_line_anchors(str(tmp_path))
     assert [c["neden"] for c in curuk] == ["menzil_disi"], curuk
 
@@ -663,11 +663,11 @@ def test_capa_yasasi_COZULEMEYENI_SESSIZCE_ATMAZ(tmp_path):
     """Hükmü kurulamayan çapa SAYILIR. Yasa "0 çürük" derken kaçının hakkında hüküm KURAMADIĞINI
     da söylemek zorundadır — yoksa kendi kovaladığı sınıfın (körlüğü gizleme) örneği olur."""
     (tmp_path / "hedef.py").write_text("x = 1\n")
-    (tmp_path / "beyan.py").write_text('S = "yok_boyle_bir_dosya.py:12 ve hedef.py:1"\n')
+    (tmp_path / "beyan.py").write_text('S = "yok_boyle_bir_dosya.py:12 ve hedef.py:1"\n')  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     kor: list[dict] = []
     assert codelaw.stale_line_anchors(str(tmp_path), cozulemeyen_out=kor) == []
     assert [k["neden"] for k in kor] == ["hedef_yok"], kor
-    assert kor[0]["capa"] == "yok_boyle_bir_dosya.py:12"
+    assert kor[0]["capa"] == "yok_boyle_bir_dosya.py:12"  # çapa-sentetik: yukarıdaki fikstürün beklenen değeri, gerçek dosya değil (TSK-119, 2026-09-03)
 
 
 def test_capa_yasasi_IKIRCIKLI_hedefi_ADIYLA_sayar(tmp_path):
@@ -677,7 +677,7 @@ def test_capa_yasasi_IKIRCIKLI_hedefi_ADIYLA_sayar(tmp_path):
     (tmp_path / "b").mkdir()
     (tmp_path / "a" / "ayni.py").write_text("x = 1\n")
     (tmp_path / "b" / "ayni.py").write_text("y = 2\n")
-    (tmp_path / "beyan.py").write_text('S = "ayni.py:99"\n')
+    (tmp_path / "beyan.py").write_text('S = "ayni.py:99"\n')  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     kor: list[dict] = []
     assert codelaw.stale_line_anchors(str(tmp_path), cozulemeyen_out=kor) == []
     assert [(k["neden"], k["aday_n"]) for k in kor] == [("ikircikli", 2)], kor
@@ -775,7 +775,8 @@ def test_YOL_BELIRTEN_CAPA_ayni_adli_BASKA_dosyaya_hukum_ETTIRMEZ(tmp_path, monk
     """Tam yol yazan bir çapa, aynı TABAN ADI taşıyan BAŞKA bir dosya üzerinden yargılanamaz.
 
     ÖLÇÜLEN VAKA (2026-08-29). Depoda dört çapa
-    `research/olcumler/edg026_slot20_2026-08-12/olcum.py:178` diyor — üçü tam yolu YAZARAK.
+    `research/olcumler/edg026_slot20_2026-08-12/olcum.py::_rampa_fn`i gösteriyordu — üçü tam yolu YAZARAK
+    (TSK-119, 2026-09-03: dört çapa da o zamandan beri sembole çevrildi; bu satır ölçüm ANINI anlatır).
     `research/` taranan köklerin DIŞINDA, yani çözücü o dosyayı HİÇ GÖREMEZ. Ama desen yalnız
     TABAN ADI yakalıyordu (`([A-Za-z_]\\w*\\.py):(\\d+)`), yol görünmez oluyordu ve `adres`te
     `olcum.py` TEK aday olarak `ops/olcum.py`ye çözülüyordu — apayrı bir dosya. Sonuç: yasa
@@ -793,7 +794,7 @@ def test_YOL_BELIRTEN_CAPA_ayni_adli_BASKA_dosyaya_hukum_ETTIRMEZ(tmp_path, monk
     (tmp_path / "taranan" / "olcum.py").write_text("a = 1\nb = 2\nc = 3\nd = 4\n\n", encoding="utf-8")
     # Çapa TAM YOL yazıyor ve o yol taranan kökün DIŞINDA.
     (tmp_path / "taranan" / "kaynak.py").write_text(
-        "# bkz. disarida/olcum.py:5 `_fn`\nx = 1\n", encoding="utf-8")
+        "# bkz. disarida/olcum.py:5 `_fn`\nx = 1\n", encoding="utf-8")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     (tmp_path / "disarida" / "olcum.py").write_text("z = 9\n" * 20, encoding="utf-8")
 
     monkeypatch.chdir(tmp_path)
@@ -803,6 +804,6 @@ def test_YOL_BELIRTEN_CAPA_ayni_adli_BASKA_dosyaya_hukum_ETTIRMEZ(tmp_path, monk
     assert curuk == [], (
         "yol belirten çapa, taranan kökteki AYNI ADLI başka dosya üzerinden çürük ilan edildi — "
         f"yasa göremediği hedef hakkında hüküm verdi: {curuk!r}")
-    assert any("olcum.py:5" in k.get("capa", "") for k in cozulemeyen), (
+    assert any("olcum.py:5" in k.get("capa", "") for k in cozulemeyen), (  # çapa-sentetik: yukarıdaki fikstürün beklenen değeri, gerçek dosya değil (TSK-119, 2026-09-03)
         "hüküm verilemeyen çapa KAYDA da geçmedi — sessizce düştü, ki bu yasanın kapatmak için "
         f"var olduğu körlüğün ta kendisi: {cozulemeyen!r}")

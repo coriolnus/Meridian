@@ -243,7 +243,7 @@ def test_korumasiz_pozisyon_sev1_alarmi_uretir_ve_MANDALLANIR(ayna, monkeypatch)
     # docstring'ine yazmıştı — `obs._maybe_notify`in 6 saatlik susturma penceresi JETON BAŞINADIR,
     # yani gürültülü bir mutabakat gecesinde ADET SAPMASI alarmları bu sev-1 alarmın TESLİMATINI
     # bastırabiliyordu. Ödünç bitti; `obs.ALARM_NAKED_POSITION` `NOTIFY_TOKENS` türetmesine
-    # kendiliğinden girer (obs.py:98). Pencerenin ARTIK paylaşılmadığının davranışsal çivisi:
+    # kendiliğinden girer (obs.py::NOTIFY_TOKENS). Pencerenin ARTIK paylaşılmadığının davranışsal çivisi:
     # tests/test_dalga_w1_v216.py::test_N1_iki_alarm_ARTIK_AYNI_susturma_penceresini_paylasmaz
     assert a["alarm"] == obs.ALARM_NAKED_POSITION    # teslim edilen jeton sınıfı (NOTIFY_TOKENS)
     assert a["korumasiz"] == 4 and a["toplam"] == 4 and a["payda_beyani"]

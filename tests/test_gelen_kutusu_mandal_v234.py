@@ -103,7 +103,7 @@ def test_icra_ve_koruma_dolumu_siniflari_mandallanmaz(sandbox_state):
 
 
 def test_ayracsiz_mirror_drift_satiri_oldugu_gibi_akar(sandbox_state):
-    """`drift_sinifi` taşımayan yayıcı (ör. loop.py:184 çıkış-kapatılamadı) mandala HİÇ girmez —
+    """`drift_sinifi` taşımayan yayıcı (ör. loop.py::_mirror_exit_sync çıkış-kapatılamadı) mandala HİÇ girmez —
     tanımadığımız satırı 'bilinen durum' saymak uydurma olurdu (fail-open)."""
     for i in range(2):
         obs.alarm(obs.ALARM_MIRROR_DRIFT, "ayna çıkışı kapatılamadı: NVDA",

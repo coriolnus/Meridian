@@ -249,7 +249,7 @@ def test_C1_capa_SEMBOLDUR_ve_kaynakla_UYUSUYOR():
 
 def test_C2_capada_SATIR_NUMARASI_YOK():
     """Sınıfın kökü: satır numarası gömen çapa, çapaladığı dosyanın HER düzenlemesinde bayatlar ve
-    bayatlığı hiçbir yerde görünmez. Bu beyanda `dosya.py:123` biçimi YASAK."""
+    bayatlığı hiçbir yerde görünmez. Bu beyanda `dosya-adı:satır-numarası` biçimi YASAK."""
     assert not re.search(r"\w+\.py:\d+", codelaw.DECLARED_SINKS["auth.json"]), \
         "beyana yeniden satır-numarası çapası girdi (A17 çürüme sınıfı)"
 

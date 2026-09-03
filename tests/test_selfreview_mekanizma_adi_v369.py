@@ -7,9 +7,11 @@ diyen dikkat satırı, hangi 8 olduğunu söyleyemiyordu.
 
 ÜRETİCİ İMZALARI TEK DEĞİL, DÖRT SINIF (hepsi `obs.alarm("MECHANISM_STALE", msg, **fields)`;
 alanlar olay sözlüğünün TEPESİNE düşer — `obs._emit`):
-  1. `mechanism=` var                       — watchdog.py:349 (gap_h/gap_s/asim_s ile), :2123 (kind="starved" ile)
-  2. `kind=` + `detector=`, mechanism YOK   — watchdog.py:2114 (kind="detector_failed", detector=<ad>)
-  3. `kind=` + `artifact=`/`check=`          — watchdog.py:2200 (kind="parity", check, artifact), :2225 (kind="coherence", artifact)
+  1. `mechanism=` var                       — watchdog.py::check_and_alarm (gap_h/gap_s/asim_s ile),
+                                              watchdog.py::check_integrity_and_alarm (kind="starved" ile)
+  2. `kind=` + `detector=`, mechanism YOK   — watchdog.py::check_integrity_and_alarm (kind="detector_failed", detector=<ad>)
+  3. `kind=` + `artifact=`/`check=`          — watchdog.py::check_integrity_and_alarm (kind="parity", check, artifact;
+                                              kind="coherence", artifact de aynı fonksiyonda)
   4. tanınan alan YOK (yalnız mesaj)        — `loop._reconcile_gunu_atlandi` (alan adı `mekanizma=`,
                                               TÜRKÇE — tüketicinin beklediği `mechanism` DEĞİL;
                                               ÜRETİCİ 2026-09-03'te TSK-101 ile düzeltildi, geçmiş
@@ -40,7 +42,7 @@ from meridian import selfreview, store
 # A) DÜŞÜŞ SIRASI — sınıf başına bir GERÇEK imza
 # =================================================================================================
 def test_mechanism_dolu_ise_dogrudan_doner_ve_dusus_ORADA_durur():
-    """Sınıf 1 (watchdog.py:2123 imzası): `mechanism` VE `kind` birlikte gelir. Düşüş sırası ilk
+    """Sınıf 1 (watchdog.py::check_integrity_and_alarm imzası): `mechanism` VE `kind` birlikte gelir. Düşüş sırası ilk
     basamakta durmazsa "starved" gibi bir SINIF ADI, mekanizma adının yerine geçerdi."""
     e = {"alarm": "MECHANISM_STALE", "message": "mekanizma ÜRETMİYOR: cf_advance — (0 çıktı)",
          "mechanism": "cf_advance", "kind": "starved"}
@@ -54,7 +56,7 @@ def test_mechanism_bos_ise_dususe_devam_eder():
 
 
 def test_kind_ve_detector_birlesir():
-    """Sınıf 2 (watchdog.py:2114): mechanism YOK, ad `detector`da. Yalnız "detector_failed" demek
+    """Sınıf 2 (watchdog.py::check_integrity_and_alarm): mechanism YOK, ad `detector`da. Yalnız "detector_failed" demek
     HANGİ dedektörün düştüğünü gizler."""
     e = {"alarm": "MECHANISM_STALE",
          "message": "BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: determinism hüküm veremedi — KeyError",
@@ -63,7 +65,7 @@ def test_kind_ve_detector_birlesir():
 
 
 def test_kind_ve_artifact_birlesir():
-    """Sınıf 3 (watchdog.py:2225): kind="coherence", artifact=<defter adı>."""
+    """Sınıf 3 (watchdog.py::check_integrity_and_alarm): kind="coherence", artifact=<defter adı>."""
     e = {"alarm": "MECHANISM_STALE", "message": "BAYAT TÜREV: plans.json kaynağından 30 sa geride",
          "kind": "coherence", "artifact": "plans.json"}
     assert selfreview._olay_mekanizma(e) == "coherence:plans.json"
@@ -77,7 +79,7 @@ def test_detector_artifactten_ONCE_gelir():
 
 
 def test_ciplak_kind_de_gecerli_bir_addir():
-    """Sınıf 3'ün ikinci hâli (watchdog.py:2207): kind="parity" + `check` — `check` tanınan bir alan
+    """Sınıf 3'ün ikinci hâli (watchdog.py::check_integrity_and_alarm): kind="parity" + `check` — `check` tanınan bir alan
     DEĞİL, ama çıplak `kind` yine de mesaj önekinden iyi bir addır."""
     e = {"alarm": "MECHANISM_STALE", "message": "MAKULLÜK: universe_coverage — ATLANDI",
          "kind": "parity", "check": "universe_coverage"}

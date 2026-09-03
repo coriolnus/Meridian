@@ -50,7 +50,7 @@ def _islem(i: int, ts_close: str, pnl: float, kaynak: str = ledgerstamp.REPLAY_S
 
 
 def _isaret(egri_son: str, id_: str = "SR-20260801T151429") -> dict:
-    """`sermaye.uygula`nın zarfa bastığı işaretin şekli (sermaye.py:413-419)."""
+    """`sermaye.uygula`nın zarfa bastığı işaretin şekli (sermaye.py::uygula)."""
     return {"id": id_, "tarih": "2026-08-01T15:14:29+00:00", "tip": "paper_equity_reset",
             "onceki_deger": 94457.91, "yeni_deger": 100000.0,
             "egri_son_nokta": [egri_son, 94457.91], "gerekce": "fikstür"}
@@ -368,7 +368,7 @@ def test_C_CIVI_yazar_daily_cycle_ICINDE_cagriliyor():
 # D — TÜKETİCİLER BOZULMADI
 # =================================================================================================
 def test_D_karne_sinirin_KAYNAGINI_tasir(sandbox_state):
-    """`analytics.learning_scorecard` sınırı `defter["sinir"]`de servis ediyor (analytics.py:673) —
+    """`analytics.learning_scorecard` sınırı `defter["sinir"]`de servis ediyor (analytics.py::learning_scorecard) —
     sözleşme genişledi (yeni alanlar), daralmadı: eski anahtarlar yerinde."""
     from meridian import analytics
     store.write_jsonl(ledgerstamp.LEDGER, [_islem(i, f"2023-02-0{i+1}", -1000.0) for i in range(3)])
