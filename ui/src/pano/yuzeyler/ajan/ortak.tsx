@@ -29,7 +29,9 @@ import { Info, LockKeyhole, TriangleAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+import { Bildiri } from "../../parcalar/bildiri";
 import { type AdEki, kapiKur } from "../../parcalar/kapi";
+import { olculemediKur } from "../../parcalar/olculemedi";
 
 /* ---- HAM OKUYUCULAR ------------------------------------------------------ */
 
@@ -191,22 +193,10 @@ export const DURUM_SOZLUGU: Readonly<
   rejected_by_confirmation: { etiket: "teyit reddetti", ton: "olumsuz" },
 };
 
-/* ---- ÖLÇÜLEMEDİ ---------------------------------------------------------- */
-
-/** Ölçülemeyen bir DEĞERİN yerine geçer. "0" ya da "—" yazmak bu depoda yalandır. */
-export function Olculemedi({ neden, teknik, className }: { neden: string; teknik?: string; className?: string }) {
-  return (
-    <span
-      className={cn(
-        "cursor-help text-muted-foreground text-xs underline decoration-dotted underline-offset-2",
-        className,
-      )}
-      title={teknik ? `${neden} — ${teknik}` : neden}
-    >
-      {neden}
-    </span>
-  );
-}
+/* ---- ÖLÇÜLEMEDİ ----------------------------------------------------------
+   TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`. Bu yüzeyin
+   gövdesi "span" ailesinin "altcizgi" stili — her zaman altçizgili, `className` alır. */
+export const Olculemedi = olculemediKur("span", { stil: "altcizgi" });
 
 /** Değer varsa yazar, yoksa nedeni taşıyan "ölçülemedi" basar. */
 export function Deger({
@@ -238,58 +228,32 @@ export function OlculemediBlok({ baslik, neden, teknik }: { baslik: string; nede
   );
 }
 
-/* ---- DÖRT HÂL KAPISI ----------------------------------------------------- */
-
-function Bildiri({
-  ikon: Ikon,
-  baslik,
-  govde,
-  uyari,
-}: {
-  ikon: typeof TriangleAlert;
-  baslik: string;
-  govde: string;
-  uyari: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-start gap-3 rounded-lg border border-dashed p-4",
-        uyari ? "border-destructive/40 bg-destructive/5" : "border-border bg-muted/30",
-      )}
-    >
-      <Ikon
-        className={cn("mt-0.5 size-4 shrink-0", uyari ? "text-destructive" : "text-muted-foreground")}
-        aria-hidden
-      />
-      <div className="min-w-0">
-        <p className="font-medium text-sm">{baslik}</p>
-        <p className="mt-0.5 break-words text-muted-foreground text-xs leading-relaxed">{govde}</p>
-      </div>
-    </div>
-  );
-}
+/* ---- DÖRT HÂL KAPISI -----------------------------------------------------
+   `Bildiri` TANIMI BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/bildiri.tsx`.
+   Eski `{govde, uyari: boolean}` çifti ortak `{metin, tonu: "uyari"|"notr"}` sözleşmesine
+   ÇAĞRI YERİNDE eşlenir (`metin=govde`, `tonu=uyari?"uyari":"notr"`) — markup zaten birebirdi,
+   fark yalnız prop adlarındaydı. */
 
 /** Yükleniyor / okunamadı / oturum düştü / bayat-ama-var — dördü AYRI çare ister.
  *  TANIM BURADA DEĞİL (TSK-113, 2026-09-03): yedi yüzey aynı `Kapi<T>` gövdesini kopyalıyordu.
- *  KARAR tek kaynakta (`parcalar/kapi.tsx`), ÇİZİM burada — bu yüzeyin metinleri ve `Bildiri`
- *  kabuğu kendisinindir, sıra ortaktır. `bayat` verildiği için hata veriyi EZMEZ: veri varken
- *  şerit olur (A ailesinin `Alert` kapıları bunun tersini yapar ve bu ayrım kabuktan türetilir). */
+ *  KARAR tek kaynakta (`parcalar/kapi.tsx`), ÇİZİM burada — bu yüzeyin metinleri kendisinindir,
+ *  sıra ortaktır. `bayat` verildiği için hata veriyi EZMEZ: veri varken şerit olur (A ailesinin
+ *  `Alert` kapıları bunun tersini yapar ve bu ayrım kabuktan türetilir). */
 export const Kapi = kapiKur<AdEki>({
   oturum: ({ ad }) => (
     <Bildiri
       ikon={LockKeyhole}
-      uyari={false}
+      tonu="notr"
       baslik="Oturum düştü"
-      govde={`${ad} 401 döndü. Bu bir veri arızası DEĞİL — pano parola kapısının arkasında, yeniden giriş gerekiyor.`}
+      metin={`${ad} 401 döndü. Bu bir veri arızası DEĞİL — pano parola kapısının arkasında, yeniden giriş gerekiyor.`}
     />
   ),
   bos: (hata, { ad }) => (
     <Bildiri
       ikon={TriangleAlert}
-      uyari
+      tonu="uyari"
       baslik={`${ad} okunamadı`}
-      govde={hata ?? `${ad} ne tamamlandı ne düştü — bu boş bir sonuç DEĞİL.`}
+      metin={hata ?? `${ad} ne tamamlandı ne düştü — bu boş bir sonuç DEĞİL.`}
     />
   ),
   iskelet: ({ yukseklik = "h-40" }) => (

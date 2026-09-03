@@ -26,6 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+import { olculemediKur } from "../../parcalar/olculemedi";
+
 /* --- BÖLÜM KABI --------------------------------------------------------- */
 
 export function BolumKart({
@@ -69,17 +71,10 @@ export { Kapi } from "../../parcalar/kapi";
 
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ---------------------------------- */
 
-/** Ölçülemeyen değerin yeri. `neden` ZORUNLU — "—" tek başına yalandır. */
-export function Olculemedi({ neden, teknik, kisa = false }: { readonly neden: string; readonly teknik?: string; readonly kisa?: boolean }) {
-  return (
-    <span
-      className={cn("text-muted-foreground text-xs italic", kisa && "inline-block max-w-[22rem] truncate align-bottom")}
-      title={teknik ? `${neden} — ${teknik}` : neden}
-    >
-      {neden}
-    </span>
-  );
-}
+/** Ölçülemeyen değerin yeri. `neden` ZORUNLU — "—" tek başına yalandır.
+ *  TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`, "satir"
+ *  ailesi (22rem, altçizgi YOK — `sistem/parcalar.tsx` ile birebir). */
+export const Olculemedi = olculemediKur("satir", { maxGenislik: "22rem", altCizgiTeknikte: false });
 
 /** Sayı ya da "ölçülemedi". `undefined` = alan HİÇ gelmedi, `null` = ölçüldü sonuç yok. */
 export function Deger({

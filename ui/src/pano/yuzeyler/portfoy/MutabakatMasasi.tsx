@@ -51,7 +51,7 @@ function KopruKarti({ m }: { m: BrokerMutabakati | undefined }) {
         </CardHeader>
         <CardContent>
           <Olculemedi
-            kisa="alan hiç gelmedi"
+            kisaMetin="alan hiç gelmedi"
             neden="Broker ile kitap arasındaki köprü bu turda hiç gelmedi"
             teknik="/api/today gövdesinde `broker_mutabakati` anahtarı YOK. api.py::api_today onu her iki dalda da yazıyor — anahtarın hiç olmaması, uç sürümünün bu alandan önceki hâlde olduğunu ya da gövdenin kırpıldığını gösterir."
           />
@@ -125,7 +125,7 @@ function KopruKarti({ m }: { m: BrokerMutabakati | undefined }) {
             <span className="font-medium text-sm">Açıklanamayan kalıntı</span>
             {kalinti === null ? (
               <Olculemedi
-                kisa="ölçülemedi"
+                kisaMetin="ölçülemedi"
                 neden={
                   m.olculemedi_neden ??
                   "Kalıntı hesaplanmadı ve nedeni bildirilmedi. Bu bir 'fark yok' cevabı değil — beş terimin beşi ölçülmeden kalıntı üretilmez."
@@ -170,7 +170,7 @@ function AdetKarti({ m }: { m: PozisyonMutabakati | undefined }) {
         </CardHeader>
         <CardContent>
           <Olculemedi
-            kisa="alan hiç gelmedi"
+            kisaMetin="alan hiç gelmedi"
             neden="Pozisyon adet mutabakatı bu turda hiç gelmedi"
             teknik="/api/today gövdesinde `pozisyon_mutabakati` anahtarı YOK."
           />
@@ -299,7 +299,7 @@ function TeyitKarti({ t }: { t: DefterTeyit | undefined }) {
           <div key={k.ad} className="rounded-md border p-3">
             <div className={cn("font-semibold text-2xl tabular-nums", k.renk)}>
               {k.n === undefined ? (
-                <Olculemedi kisa="—" neden={`${k.ad} kovası bildirilmedi.`} teknik="`defter_teyit` bu kovayı taşımıyor" />
+                <Olculemedi kisaMetin="—" neden={`${k.ad} kovası bildirilmedi.`} teknik="`defter_teyit` bu kovayı taşımıyor" />
               ) : (
                 k.n
               )}
@@ -325,7 +325,7 @@ function AynaKarti({ r, akis }: { r: MutabakatKaydi | undefined; akis: AkisSagli
         </CardHeader>
         <CardContent>
           <Olculemedi
-            kisa="alan hiç gelmedi"
+            kisaMetin="alan hiç gelmedi"
             neden="Son mutabakat turunun kaydı gelmedi"
             teknik="/api/alpaca gövdesinde `reconcile` anahtarı yok."
           />
@@ -365,7 +365,7 @@ function AynaKarti({ r, akis }: { r: MutabakatKaydi | undefined; akis: AkisSagli
         <div className="flex flex-wrap items-center gap-2">
           {r.api_ok === undefined ? (
             <Olculemedi
-              kisa="api_ok yok"
+              kisaMetin="api_ok yok"
               neden="Turun broker tarafına ulaşıp ulaşamadığı bildirilmedi"
               teknik="`reconcile.api_ok` gövdede yok"
             />
@@ -423,13 +423,13 @@ function AynaKarti({ r, akis }: { r: MutabakatKaydi | undefined; akis: AkisSagli
             <span className="font-medium text-sm">Ayna akışı</span>
             {akis === undefined ? (
               <Olculemedi
-                kisa="stream bloğu yok"
+                kisaMetin="stream bloğu yok"
                 neden="Broker tarafındaki canlı akışın durumu bildirilmedi"
                 teknik="/api/alpaca gövdesinde `stream` anahtarı yok."
               />
             ) : akis.stream_ok === null || akis.stream_ok === undefined ? (
               <Olculemedi
-                kisa="hiç koşmadı"
+                kisaMetin="hiç koşmadı"
                 neden="Canlı akış bu kurulumda hiç çalışmamış — bu 'kopuk' demek değildir"
                 teknik="`stream_ok` null: nabız damgası da, son olay da, kopuş anı da yok"
               />

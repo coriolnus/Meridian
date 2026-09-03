@@ -15,10 +15,10 @@
    ============================================================================ */
 import { LockKeyhole, TriangleAlert } from "lucide-react";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-
+import { Bildiri } from "../../parcalar/bildiri";
+import { BayatSerit, YukleniyorIskeleti } from "../../parcalar/bayat";
 import { type AdEki, kapiKur } from "../../parcalar/kapi";
+import { olculemediKur } from "../../parcalar/olculemedi";
 
 /* ---- SAYI BASIMI --------------------------------------------------------- */
 
@@ -70,31 +70,18 @@ export function pnlRengi(v: unknown): string {
   return v > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
 }
 
-/* ---- ÖLÇÜLEMEDİ ---------------------------------------------------------- */
+/* ---- ÖLÇÜLEMEDİ ----------------------------------------------------------
+   TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`. Bu yüzeyin
+   iki gövdesi (blok + satır-içi) "hucre" ailesinin iki `bicim`i — `Olculemedi` blok-biçimli,
+   `OlculemediHucre` satır-içi; `ogrenme/ortak.tsx` bu ailenin diğer üyesi (blok'ta teknik-
+   koşullu altçizgi EK DALI taşır, burada taşımaz — `altCizgiTeknikte: false`). */
 
 /** Blok biçimi: nedeni GÖRÜNÜR yazar. Kart gövdesinde kullanılır. */
-export function Olculemedi({ neden, teknik, className }: { neden: string; teknik?: string; className?: string }) {
-  return (
-    <span className={cn("flex flex-col gap-0.5", className)}>
-      <span className="text-muted-foreground text-sm italic" title={teknik}>
-        {neden}
-      </span>
-    </span>
-  );
-}
+export const Olculemedi = olculemediKur("hucre", { bicim: "blok", altCizgiTeknikte: false });
 
 /** Satır-içi biçim: dar hücrede nedeni `title` ile taşır (noktalı altı çizgi =
  *  "üstüne gel"). Nedeni tamamen düşürmek yasak; yalnız yerleşimi değişir. */
-export function OlculemediHucre({ neden, teknik }: { neden: string; teknik?: string }) {
-  return (
-    <span
-      className="cursor-help text-muted-foreground text-xs underline decoration-dotted underline-offset-2"
-      title={teknik ? `${neden} — ${teknik}` : neden}
-    >
-      {neden}
-    </span>
-  );
-}
+export const OlculemediHucre = olculemediKur("hucre", { bicim: "satirici", altCizgiTeknikte: false });
 
 /** Sayı varsa yazar, yoksa `neden`i taşıyan "ölçülemedi" basar. */
 export function Deger({
@@ -112,66 +99,15 @@ export function Deger({
   return <span className={className}>{metin}</span>;
 }
 
-/* ---- ÜÇ (DÖRT) HÂL KAPISI ------------------------------------------------ */
-
-function Bildiri({
-  ikon: Ikon,
-  baslik,
-  metin,
-  tonu,
-}: {
-  ikon: typeof TriangleAlert;
-  baslik: string;
-  metin: string;
-  tonu: "uyari" | "notr";
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-start gap-3 rounded-lg border border-dashed p-4",
-        tonu === "uyari" ? "border-destructive/40 bg-destructive/5" : "border-border bg-muted/30",
-      )}
-    >
-      <Ikon
-        className={cn("mt-0.5 size-4 shrink-0", tonu === "uyari" ? "text-destructive" : "text-muted-foreground")}
-        aria-hidden
-      />
-      <div className="min-w-0">
-        <p className="font-medium text-sm">{baslik}</p>
-        <p className="mt-0.5 break-words text-muted-foreground text-xs leading-relaxed">{metin}</p>
-      </div>
-    </div>
-  );
-}
-
-export function YukleniyorIskeleti({ yukseklik = "h-40" }: { yukseklik?: string }) {
-  return (
-    <div className="flex flex-col gap-3">
-      <Skeleton className="h-4 w-40" />
-      <Skeleton className={cn("w-full", yukseklik)} />
-    </div>
-  );
-}
-
-/** Tazeleme düştü ama elde ESKİ veri var — çizilir, "taze" DENMEZ. */
-function BayatSerit({ hata, zaman }: { hata: string; zaman: Date | null }) {
-  return (
-    <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2">
-      <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-      <p className="min-w-0 break-words text-amber-700 text-xs leading-relaxed dark:text-amber-300">
-        Tazeleme düştü — aşağıdaki sayılar{" "}
-        {zaman ? `${zaman.toLocaleTimeString("tr-TR")} okumasından` : "önceki bir okumadan"} kalma, ŞU ANI göstermiyor.{" "}
-        {hata}
-      </p>
-    </div>
-  );
-}
+/* ---- ÜÇ (DÖRT) HÂL KAPISI ------------------------------------------------
+   `Bildiri`/`YukleniyorIskeleti`/`BayatSerit` TANIMLARI BURADA DEĞİL (TSK-121, 2026-09-03):
+   tek kaynak `parcalar/bildiri.tsx` ve `parcalar/bayat.tsx` — üçü de yukarıda ithal edilir. */
 
 /** Yükleniyor / okunamadı / oturum düştü / bayat-ama-var — dördü AYRI çare ister.
  *  TANIM BURADA DEĞİL (TSK-113, 2026-09-03): yedi yüzey aynı `Kapi<T>` gövdesini kopyalıyordu.
- *  KARAR tek kaynakta (`parcalar/kapi.tsx`), ÇİZİM burada — bu yüzeyin metinleri ve `Bildiri`
- *  kabuğu kendisinindir, sıra ortaktır. `bayat` verildiği için hata veriyi EZMEZ: veri varken
- *  şerit olur (A ailesinin `Alert` kapıları bunun tersini yapar ve bu ayrım kabuktan türetilir). */
+ *  KARAR tek kaynakta (`parcalar/kapi.tsx`), ÇİZİM burada — bu yüzeyin metinleri kendisinindir,
+ *  sıra ortaktır. `bayat` verildiği için hata veriyi EZMEZ: veri varken şerit olur (A ailesinin
+ *  `Alert` kapıları bunun tersini yapar ve bu ayrım kabuktan türetilir). */
 export const Kapi = kapiKur<AdEki>({
   oturum: ({ ad }) => (
     <Bildiri

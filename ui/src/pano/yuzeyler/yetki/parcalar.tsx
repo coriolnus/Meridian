@@ -19,6 +19,8 @@ import { Check, Minus, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+import { olculemediKur } from "../../parcalar/olculemedi";
+
 /* --- BÖLÜM KABI ---------------------------------------------------------- */
 
 /** Bölüm kartı. `kimlik` derin bağ ÇAPASIDIR (`#/dashboard/users/oturum`) —
@@ -66,17 +68,10 @@ export { Kapi } from "../../parcalar/kapi";
 
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ----------------------------------- */
 
-/** Ölçülemeyen değerin yeri. `neden` ZORUNLU. */
-export function Olculemedi({ neden, teknik, kisa = false }: { readonly neden: string; readonly teknik?: string; readonly kisa?: boolean }) {
-  return (
-    <span
-      className={cn("text-muted-foreground text-xs italic", kisa && "inline-block max-w-[20rem] truncate align-bottom")}
-      title={teknik ? `${neden} — ${teknik}` : neden}
-    >
-      {neden}
-    </span>
-  );
-}
+/** Ölçülemeyen değerin yeri. `neden` ZORUNLU.
+ *  TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`, "satir"
+ *  ailesi (20rem, altçizgi YOK — `kimlik`in aksine `teknik`te altçizgiye geçmez). */
+export const Olculemedi = olculemediKur("satir", { maxGenislik: "20rem", altCizgiTeknikte: false });
 
 /** Sistemde KARŞILIĞI OLMAYAN alan. "ölçülemedi"den AYRI: orada bir ölçüm denendi ve
  *  başarısız oldu; burada ölçülecek bir şey HİÇ YOK — veri modelinde alan bulunmuyor. */

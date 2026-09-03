@@ -32,7 +32,10 @@ import re
 
 KOK = pathlib.Path(__file__).resolve().parents[1]
 PANO = KOK / "ui/src/pano"
-ORTAK = PANO / "yuzeyler/ogrenme/ortak.tsx"
+#: TANIM TAŞINDI (TSK-121, 2026-09-03): `Olculemedi`nin on üç kopyası `parcalar/olculemedi.tsx`teki
+#: TEK kabuk-enjeksiyonuna (`olculemediKur`) indi — sözleşme testleri artık O dosyayı ölçer,
+#: `ogrenme/ortak.tsx` yalnız bir çağrı yeridir (`olculemediKur("hucre", …)`).
+ORTAK = PANO / "parcalar/olculemedi.tsx"
 
 #: `neden` içinde GÖRÜLMEMESİ gerekenler — kullanıcı bunları bilemez.
 IC_AYRINTI = [
@@ -66,19 +69,23 @@ def _neden_cagrilari() -> list[tuple[str, str]]:
 
 def test_bilesen_TEKNIK_katmanini_tasiyor():
     """Sözleşmenin kendisi: iç ayrıntının gideceği AYRI bir yer olmalı, yoksa çağrı
-    yerlerinde tek dizeye sıkışmaya devam eder."""
+    yerlerinde tek dizeye sıkışmaya devam eder.
+    TANIM TAŞINDI (TSK-121, 2026-09-03): `Olculemedi` artık `olculemediKur(...)`nin döndürdüğü
+    kapanış — `teknik` inline destructuring'te değil, ortak `OlculemediOzellikleri` arayüzünde
+    taşınır (aile gövdelerinin HEPSİ aynı arayüzü kullanır)."""
     s = ORTAK.read_text(encoding="utf-8")
-    assert re.search(r"export function Olculemedi\([^)]*teknik", s, re.S), (
-        "`Olculemedi` `teknik` katmanını taşımıyor — iç ayrıntı birincil metinde kalmak zorunda")
+    assert re.search(r"interface OlculemediOzellikleri\s*\{[^}]*readonly teknik\?:\s*string", s), (
+        "`OlculemediOzellikleri` `teknik` katmanını taşımıyor — iç ayrıntı birincil metinde kalmak zorunda")
 
 
 def test_TEKNIK_katmani_DUSURULMUYOR():
     """Aşırıya kaçma çivisi: `teknik` verilmişse EKRANDA bir yerde erişilebilir olmalı.
-    Onu tamamen atmak, dürüstlük disiplinini (sebebi taşı) delerdi — teşhis kaybolur."""
+    Onu tamamen atmak, dürüstlük disiplinini (sebebi taşı) delerdi — teşhis kaybolur.
+    TANIM TAŞINDI (TSK-121, 2026-09-03): en az bir aile gövdesi `o.teknik`i `title`a
+    BAĞLAMALI — `teknik` katmanının hiçbir ailede kullanılmaması bu çiviyi kırar."""
     s = ORTAK.read_text(encoding="utf-8")
-    govde = s[s.index("export function Olculemedi"):][:1200]
-    assert "teknik" in govde and re.search(r"title=|{teknik}", govde), (
-        "`teknik` bileşende kullanılmıyor — verilen sebep sessizce yutuluyor")
+    assert re.search(r"title=\{[^}]*o\.teknik|\{o\.teknik\}", s), (
+        "`teknik` hiçbir aile gövdesinde kullanılmıyor — verilen sebep sessizce yutuluyor")
 
 
 def test_INSAN_CUMLESI_ic_ayrinti_TASIMIYOR():
@@ -224,13 +231,18 @@ def test_SOZLUK_DEGISEN_TERIMLERI_gezinmede_YOK():
 # "8 passed" dedi). "Çivi yeşili kanıt değildir" (CLAUDE.md §6): bileşenin `teknik` alanını
 # TAŞIMASI, çağrı yerlerinin onu VERMESİ demek değildir.
 #
-# KAPSAM (brief'in kapsamı): hafıza yüzeyi — `ui/src/pano/yuzeyler/hafiza/**.tsx`, ölçüm günü
-# 192 çağrı, 192'si `neden=` VE `teknik=` taşıyor, 0 okunamayan. Pano genelinde de sınıf-A
-# ihlali 0 ölçüldü (2026-09-03) ama zorunlu çivi hafızayla sınırlı tutuldu: bu dilimin kalemi
-# o kapsamdı, geniş çivi başka yüzeylerin kalemlerini bu dosyada kırardı (ayrı kalem).
+# KAPSAM GENİŞLEDİ — PANO GENELİ (TSK-121, 2026-09-03): ilk yazımda kapsam hafıza yüzeyiyle
+# SINIRLIYDI (`ui/src/pano/yuzeyler/hafiza/**.tsx`, ölçüm günü 192 çağrı) çünkü `Olculemedi`nin
+# ON ÜÇ kopyası vardı ve geniş bir çivi başka yüzeylerin kalemlerini bu dosyada kırardı. TSK-121
+# on üç kopyayı `parcalar/olculemedi.tsx`teki TEK kabuk-enjeksiyonuna indirdi — kök zaten
+# `PANO = KOK/"ui/src/pano"` (aşağıdaki `_tsx()`) olduğundan kapsamı hafızaya daraltan tek şey
+# `_hafiza_cagrilari()`nin FİLTRESİYDİ; filtre kalktı. Ölçüm (2026-09-03, TSK-121 dilimi):
+# pano geneli 565 çağrı, 565'i okunuyor (0 kaçak), 39'u saf-ifade `neden` (sınıf-A kuralının
+# dışında, `SAF_IFADE_TAVANI` ile beyanlı), sınıf-A ihlali (ölçülen alan yokluğu + `teknik` yok)
+# BİR taneydi (`kanban/Huni.tsx` — TSK-121 turunda `teknik=` eklenerek düzeltildi, bu genişleme
+# olmasa görünmeyecek bir ölçülmüş boşluktu). `_hafiza_cagrilari()` ADI KORUNDU (yeniden adlandırma
+# bu dilimin kapsamı değil) ama artık PANO GENELİNİ tarar.
 # ============================================================================
-
-HAFIZA = PANO / "yuzeyler/hafiza"
 
 #: Çağrı başı: `Olculemedi`, `OlculemediHucre`, `OlculemediBlok` — ama `OlculemediHali` DEĞİL
 #: (ayrı bileşen; `\b` ile sayıldığında ham sayımı şişiriyordu, ölçüldü).
@@ -303,10 +315,12 @@ def _acilis_etiketleri(s: str) -> tuple[list[str], list[str]]:
 
 
 def _hafiza_cagrilari() -> list[tuple[str, str]]:
+    """AD KORUNDU, KAPSAM GENİŞLEDİ (TSK-121, 2026-09-03): `HAFIZA not in p.parents` filtresi
+    kalktı — `_tsx()` zaten `PANO.rglob("*.tsx")` (pano geneli) döndüğünden bu fonksiyon artık
+    PANO GENELİNİ tarar. İsim değişmedi: yeniden adlandırma bu dilimin kapsamı değil ve mevcut
+    dört çağıran (aşağıdaki testler) hâlâ aynı adı kullanıyor."""
     out = []
     for p, s in _tsx():
-        if HAFIZA not in p.parents:
-            continue
         tam, _ = _acilis_etiketleri(s)
         out.extend((str(p.relative_to(KOK)), c) for c in tam)
     return out
@@ -427,18 +441,21 @@ def _neden_statik(cagri: str) -> str | None:
 #: SAF-İFADE `neden` TAVANI (düzeltme turu 1, inceleme Ö-1, 2026-09-03). `test_OLCUM_KAPSAMI_
 #: BEYANLI` emsali: kural yalnız STATİK metni okuyabilir; `neden={zarf.neden}` gibi saf ifade
 #: değerleri sınıflandırılamaz ve bu SESSİZ kalamaz.
-#: TAVANI BRIEF DEĞİL ÖLÇÜM SÖYLER — ölçüm (2026-09-03, hafıza yüzeyi): 192 çağrının 191'i
-#: statik olarak okunuyor, 1'i saf ifade (`Varliklar.tsx`, `neden={neden}` — o çağrı `teknik`
-#: taşıyor, elle bakıldı). Tavan 3: ölçüm günü sayısı + küçük pay. Pay TAM SAYI değil çünkü
-#: yeni bir saf-ifade çağrısı meşru olabilir; ama üçü aşarsa kuralın kapsamı sessizce
-#: daralıyordur ve tavan YENİ bir ölçümle güncellenmelidir (sonucu görüp eşiği yükseltmek DEĞİL).
-SAF_IFADE_TAVANI = 3
+#: TAVANI BRIEF DEĞİL ÖLÇÜM SÖYLER. KAPSAM PANO GENELİNE GENİŞLEDİ (TSK-121, 2026-09-03) —
+#: eski ölçüm (hafıza yüzeyi) 192 çağrının 1'ini saf-ifade buluyordu, tavan 3'tü. YENİ ölçüm
+#: (pano geneli): 565 çağrının 39'u saf-ifade (`neden={x}` gibi türetilen değerler — çoğu
+#: `Deger`/`OlculemediHucre` sarmalayıcılarının kendi `neden`i taşıyan çağrı yerleri, elle
+#: örneklendi). Tavan 45: ölçüm günü sayısı + küçük pay. Pay TAM SAYI değil çünkü yeni bir
+#: saf-ifade çağrısı meşru olabilir; ama aşılırsa kuralın kapsamı sessizce daralıyordur ve
+#: tavan YENİ bir ölçümle güncellenmelidir (sonucu görüp eşiği yükseltmek DEĞİL).
+SAF_IFADE_TAVANI = 45
 
 
 def test_CAGRI_TARAYICISI_HIC_KACAK_BIRAKMIYOR():
     """KÖRLÜK ALARMI — aşağıdaki üç çivinin hükmü bu satıra dayanır: tarayıcı bir çağrıyı
     okuyamazsa o çağrı 'ihlalsiz' sayılır ve 'sıfır ihlal' cümlesi bir okuma YOKLUĞU olur.
-    Ham sayım ile okunan sayım EŞİT olmalı (ölçüm günü hafızada 192/192, 0 kaçak).
+    Ham sayım ile okunan sayım EŞİT olmalı (kapsam PANO GENELİ, TSK-121, 2026-09-03: 565/565,
+    0 kaçak).
 
     `ham == okunan` İDDİASI TOTOLOJİYE YAKINDIR ve öyle okunmasın (inceleme K-4, düzeltme
     turu 1, 2026-09-03): `kacak == 0` geçtikten sonra her eşleşme ya `tam` ya `kirik` listesine
@@ -452,8 +469,6 @@ def test_CAGRI_TARAYICISI_HIC_KACAK_BIRAKMIYOR():
     ham = okunan = kacak = 0
     kacaklar: list[str] = []
     for p, s in _tsx():
-        if HAFIZA not in p.parents:
-            continue
         ham += len(_CAGRI_BASI.findall(s))
         tam, kirik = _acilis_etiketleri(s)
         okunan += len(tam)
@@ -461,9 +476,12 @@ def test_CAGRI_TARAYICISI_HIC_KACAK_BIRAKMIYOR():
         kacaklar.extend(f"{p.name}: {' '.join(k.split())[:110]}" for k in kirik)
     assert kacak == 0, f"{kacak} çağrı etiketi kapanmadan okundu:\n" + "\n".join(kacaklar[:10])
     assert ham == okunan, f"tarayıcı {ham} çağrının {okunan}'ini okudu — hüküm eksik kapsamda"
-    # TABAN: hafıza yüzeyi 2026-09-03'te 192 çağrı taşıyordu. Taban, tarama kırılıp BOŞ
-    # dönerse "temiz" demesin diye var; tam sayı DEĞİL çünkü çağrı silmek meşru bir iştir.
-    assert okunan >= 150, f"hafıza yüzeyinde yalnız {okunan} çağrı okundu (2026-09-03: 192)"
+    # TABAN: KAPSAM PANO GENELİNE GENİŞLEDİ (TSK-121, 2026-09-03) — eski taban (hafıza yüzeyi,
+    # 192 çağrı) >= 150'ydi. YENİ ölçüm 565 çağrı; taban >= 500'e kalibre edildi. Taban, tarama
+    # kırılıp BOŞ dönerse "temiz" demesin diye var (ya da HAFIZA filtresi GERİ KONURSA — pano
+    # geneli 565'ten hafıza-yalnız ~192'ye düşer ve bu satır öter); tam sayı DEĞİL çünkü çağrı
+    # silmek meşru bir iştir.
+    assert okunan >= 500, f"pano genelinde yalnız {okunan} çağrı okundu (2026-09-03: 565)"
 
     cagrilar = _hafiza_cagrilari()
     saf = [f"{d}: {' '.join(c.split())[:110]}"

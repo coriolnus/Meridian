@@ -222,7 +222,7 @@ export function PortfoyYuzey() {
                 rozet={
                   gunKz === null ? (
                     <Olculemedi
-                      kisa="gün %?"
+                      kisaMetin="gün %?"
                       neden="Günlük değişim henüz hesaplanmadı"
                       teknik="`day_pnl_pct` nabızda yok"
                     />
@@ -247,7 +247,7 @@ export function PortfoyYuzey() {
                 }
               >
                 {brokerNedeni !== null ? (
-                  <Olculemedi kisa="ayna yok" neden={brokerNedeni} />
+                  <Olculemedi kisaMetin="ayna yok" neden={brokerNedeni} />
                 ) : (
                   <Deger
                     v={hesap?.equity}
@@ -263,7 +263,7 @@ export function PortfoyYuzey() {
                 alt="Alpaca hesabının serbest nakdi — kitabın nakdinden AYRI bir sayı, ikisi mutabakat masasında köprülenir"
               >
                 {brokerNedeni !== null ? (
-                  <Olculemedi kisa="ayna yok" neden={brokerNedeni} />
+                  <Olculemedi kisaMetin="ayna yok" neden={brokerNedeni} />
                 ) : (
                   <Deger
                     v={hesap?.cash}
@@ -284,7 +284,7 @@ export function PortfoyYuzey() {
               >
                 {defter.toplamDeger === null ? (
                   <Olculemedi
-                    kisa={defter.toplamSatir === 0 ? "0 pozisyon" : "toplanamadı"}
+                    kisaMetin={defter.toplamSatir === 0 ? "0 pozisyon" : "toplanamadı"}
                     neden={
                       defter.toplamSatir === 0
                         ? "İki defter de boş — açık pozisyon yok. Bu ölçülmüş bir olgu."
@@ -313,7 +313,7 @@ export function PortfoyYuzey() {
               >
                 {defter.toplamKz === null ? (
                   <Olculemedi
-                    kisa={defter.toplamSatir === 0 ? "—" : "toplanamadı"}
+                    kisaMetin={defter.toplamSatir === 0 ? "—" : "toplanamadı"}
                     neden={
                       defter.toplamSatir === 0
                         ? "Açık pozisyon yok, toplanacak kâr/zarar da yok."

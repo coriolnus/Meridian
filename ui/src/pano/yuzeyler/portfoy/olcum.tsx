@@ -28,6 +28,8 @@ import type { ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+import { olculemediKur } from "../../parcalar/olculemedi";
+
 /** Sayıya çevrilebiliyorsa sayı, aksi hâlde `null`. Dizge Alpaca yüzünden şart. */
 export function sayi(v: unknown): number | null {
   if (typeof v === "number") return Number.isFinite(v) ? v : null;
@@ -113,25 +115,14 @@ export function kzOrnegi(v: number | null): string {
   return "bg-muted-foreground/20 ring-1 ring-muted-foreground/60";
 }
 
-/** "—" YAZMANIN TEK YASAL BİÇİMİ: tire NEDENİYLE birlikte gelir. */
-export function Olculemedi({ neden, teknik, kisa = "ölçülemedi", className }: { neden: string; teknik?: string; kisa?: string; className?: string }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          title={teknik ? `${neden} — ${teknik}` : neden}
-          className={cn(
-            "cursor-help text-muted-foreground text-xs underline decoration-dotted underline-offset-4",
-            className,
-          )}
-        >
-          {kisa}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-sm">{neden}</TooltipContent>
-    </Tooltip>
-  );
-}
+/** "—" YAZMANIN TEK YASAL BİÇİMİ: tire NEDENİYLE birlikte gelir.
+ *  TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`, "tooltip"
+ *  ailesi (Radix Tooltip, tek üye bu yüzey). BEYANLI BEDEL: eski `kisa: string` (kısa ETİKET
+ *  metni, varsayılan "ölçülemedi") ortak sözleşmede `kisaMetin`e taşındı — `kisa` artık HER
+ *  AİLEDE boolean bir kısaltma bayrağı. Çağrı yerleri `kisaMetin=` kullanır; TAM SAYI ve dosya
+ *  listesi TEK KAYNAKTA — `parcalar/olculemedi.tsx`nin "BEYANLI BEDEL" şerhi (düzeltme turu 1,
+ *  2026-09-03: burada kopyalanmıyor, aynı sayı iki yerde ayrışmasın diye). */
+export const Olculemedi = olculemediKur("tooltip");
 
 /** Ölçüldüyse `bicim(v)`, ölçülemediyse nedenli tire. Sayı hücrelerinin ortak kapısı. */
 export function Deger({

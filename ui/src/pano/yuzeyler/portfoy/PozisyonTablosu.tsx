@@ -230,7 +230,7 @@ export function PozisyonTablosu({ satirlar }: { satirlar: readonly PozisyonSatir
               <TableCell className="text-right tabular-nums text-muted-foreground">
                 {s.riskUsd === null ? (
                   <Olculemedi
-                    kisa="kitapta yok"
+                    kisaMetin="kitapta yok"
                     neden={`${s.ticker}: risk_dollars yalnız KİTAP pozisyonunda yaşar; bu satır ${NEREDE_ETIKETI[s.nerede]}`}
                   />
                 ) : (

@@ -14,7 +14,7 @@
    ============================================================================ */
 import type { ReactNode } from "react";
 
-import { cn } from "@/lib/utils";
+import { olculemediKur } from "../../parcalar/olculemedi";
 
 /* ---- BİÇİMLENDİRME ---------------------------------------------------------
    `tr-TR` bilinçli: panonun bütün metni Türkçe ve binlik ayracı ile ondalık
@@ -49,19 +49,10 @@ export function pnlRengi(n: number | null | undefined): string {
 
 /** Ölçülemeyen bir değerin yerine geçen tek işaret. `neden` ZORUNLU: nedensiz bir
  *  "ölçülemedi", okuyucuyu "acaba bozuk mu?" diye sunucu günlüklerine gönderir —
- *  oysa cevabın kendisi burada yazılabilir. */
-export function Olculemedi({ neden, teknik, className }: { neden: string; teknik?: string; className?: string }) {
-  return (
-    <span className={cn("inline-flex flex-col gap-0.5", className)}>
-      <span
-        className="font-medium text-muted-foreground text-base leading-snug tracking-tight"
-        title={teknik}
-      >
-        {neden}
-      </span>
-    </span>
-  );
-}
+ *  oysa cevabın kendisi burada yazılabilir.
+ *  TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`, "kpi"
+ *  ailesi (KPI başlığı stili — italik DEĞİL, tek üye bu yüzey). */
+export const Olculemedi = olculemediKur("kpi");
 
 /* ---- ÜÇ HÂL ---------------------------------------------------------------
    `veri.ts` üç hâli AYRI taşıyor (yükleniyor / hata / oturum düştü) ve dördüncüsü

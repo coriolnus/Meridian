@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 
+import { olculemediKur } from "../parcalar/olculemedi";
 import type { Durum } from "../veri";
 import {
   FLATTEN_JETON,
@@ -60,16 +61,11 @@ type KuruHal =
   | { readonly ad: "okundu"; readonly govde: KuruKosu }
   | { readonly ad: "okunamadi"; readonly neden: string };
 
-function Olculemedi({ neden, teknik }: { readonly neden: string; readonly teknik?: string }) {
-  return (
-    <span
-      className="text-muted-foreground text-xs italic"
-      title={teknik ? `${neden} — ${teknik}` : neden}
-    >
-      ölçülemedi — <span className="not-italic">{neden}</span>
-    </span>
-  );
-}
+/** TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`, "span"
+ *  ailesinin "italik-onekli" stili — `ajan/ortak.tsx`nin "altcizgi" stilinden ayrı (burada
+ *  italik + hardcoded "ölçülemedi — " öneki var, altçizgi yok). Dışa aktarılmaz (eskisi de
+ *  aktarmıyordu). */
+const Olculemedi = olculemediKur("span", { stil: "italik-onekli" });
 
 export function FlattenKapisi({
   alpaca,

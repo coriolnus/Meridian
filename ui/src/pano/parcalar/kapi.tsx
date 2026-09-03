@@ -21,8 +21,8 @@
  *
  * BEYANLI BEDEL: (1) prop yüzeyi genişledi — `kuyruk`un kapısı artık `iskelet?` prop'unu da kabul
  * eder (eski gövdesinde yoktu; hiçbir çağrı yeri geçmiyor, çizim aynı). (2) Kabuk çizimleri hâlâ
- * yüzeylerde durur (`Bildiri`/`BayatSerit` kopyaları ogrenme/analiz/ajan'da) — o ayrı bir kalem,
- * bu dilimin kapsamı `Kapi`nin KARARIdır.
+ * yüzeylerde durur (`Bildiri`/`BayatSerit` kopyaları TSK-121 (2026-09-03) ile `parcalar/bildiri.tsx`
+ * + `parcalar/bayat.tsx`e taşındı) — bu dilimin kapsamı hâlâ yalnız `Kapi`nin KARARIdır.
  */
 import type { ReactNode } from "react";
 

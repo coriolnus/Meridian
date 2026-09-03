@@ -32,6 +32,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { cn } from "@/lib/utils";
 
 import { kapiKur, yolKabugu } from "../../parcalar/kapi";
+import { olculemediKur } from "../../parcalar/olculemedi";
 
 /* --- BÖLÜM KABI --------------------------------------------------------- */
 
@@ -86,25 +87,10 @@ export const Kapi = kapiKur(yolKabugu(" (Giriş yüzeyi)"));
 /** Dürüst boşluk — İKİ KATMAN (2026-08-26 sözleşmesi, bkz. ogrenme/ortak.tsx):
  *  `neden` İNSAN CÜMLESİdir ve görünür; `teknik` iç ayrıntıdır ve üstüne gelince çıkar.
  *  "ölçülemedi — " öneki KALKTI: 178 yerde aynı kelime, hiçbirinde ne olduğunu
- *  söylemiyordu. Çivi: tests/test_arayuz_dili_v323.py. */
-export function Olculemedi({
-  neden,
-  teknik,
-  kisa = false,
-}: { readonly neden: string; readonly teknik?: string; readonly kisa?: boolean }) {
-  return (
-    <span
-      className={cn(
-        "text-muted-foreground text-xs italic",
-        kisa && "inline-block max-w-[20rem] truncate align-bottom",
-        teknik && "cursor-help underline decoration-dotted underline-offset-2",
-      )}
-      title={teknik ? `${neden} — ${teknik}` : neden}
-    >
-      {neden}
-    </span>
-  );
-}
+ *  söylemiyordu. Çivi: tests/test_arayuz_dili_v323.py.
+ *  TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`, "satir"
+ *  ailesi — bu yüzeyin farkı (`yetki`ye göre) `teknik` varken altçizgi EK DALI taşımasıdır. */
+export const Olculemedi = olculemediKur("satir", { maxGenislik: "20rem", altCizgiTeknikte: true });
 
 /** Sayı ya da "ölçülemedi". `undefined` = alan HİÇ gelmedi, `null` = ölçüldü sonuç yok. */
 export function Deger({

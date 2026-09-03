@@ -57,6 +57,21 @@ def soy(p: pathlib.Path) -> str:
 _KAPI_TANIM = re.compile(r"function Kapi<")
 
 
+def kopyalari_bul(desen: re.Pattern[str]) -> tuple[pathlib.Path, ...]:
+    """`ui/src/pano/**/*.tsx` içinde `desen`i taşıyan HER dosya — ELLE YAZILMIŞ bir liste
+    DEĞİL. GENELLEŞTİRİLDİ (TSK-121, 2026-09-03): önceki adı `_kapi_kopyalarini_bul` yalnız
+    `function Kapi<` desenini arıyordu ve tek kullanıcısı vardı; TSK-121'in Bildiri/BayatSerit/
+    YukleniyorIskeleti/Olculemedi çivileri AYNI tarama şeklini (rglob + şerh-soyulmuş metin +
+    tek desen) ayrı ayrı yeniden yazacaktı — tek-kaynak yasası (§4) bunu parametreleştirmeyi
+    ister. `_kapi_kopyalarini_bul()` aşağıda BU fonksiyona delege eder (davranış değişmedi);
+    v384 zaten `_kapi_kopyalarini_bul`ı ithal ediyordu ve dokunulmadı. v403 bu fonksiyonu
+    DOĞRUDAN ithal eder — kopyalamaz."""
+    return tuple(sorted(
+        p for p in PANO.rglob("*.tsx")
+        if desen.search(soy(p))
+    ))
+
+
 def _kapi_kopyalarini_bul() -> tuple[pathlib.Path, ...]:
     """`ui/src/pano/**/*.tsx` içinde `function Kapi<` tanımı taşıyan HER dosya —
     ELLE YAZILMIŞ bir liste DEĞİL (düzeltme turu 1, inceleme Önemli-1, 2026-09-03): ilk turun
@@ -68,11 +83,11 @@ def _kapi_kopyalarini_bul() -> tuple[pathlib.Path, ...]:
 
     KAPSAM GENİŞLEDİ (TSK-113, 2026-09-03): tarama `yuzeyler/` ile SINIRLIYDI. Tek kaynağa
     inildiğinde tanım `parcalar/kapi.tsx`e taşındı — dar tarama onu göremez ve "kopya yok"
-    derdi; yani çivi tam işini bitirdiği gün kör olurdu. Kapsam `pano/**`."""
-    return tuple(sorted(
-        p for p in PANO.rglob("*.tsx")
-        if _KAPI_TANIM.search(soy(p))
-    ))
+    derdi; yani çivi tam işini bitirdiği gün kör olurdu. Kapsam `pano/**`.
+
+    GÖVDE GENELLEŞTİRİLDİ (TSK-121, 2026-09-03): artık `kopyalari_bul(_KAPI_TANIM)`e delege
+    eder — davranış AYNI, kaynak TEK."""
+    return kopyalari_bul(_KAPI_TANIM)
 
 
 #: TSK-113 ÖNCESİ kendi `Kapi<T>` tanımını taşıyan yedi yüzey (PANO-göreli). ELLE YAZILI OLMASI

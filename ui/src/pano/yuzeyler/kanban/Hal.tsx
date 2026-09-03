@@ -20,8 +20,8 @@ import { AlertTriangle, Info, LockKeyhole } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
+import { olculemediKur } from "../../parcalar/olculemedi";
 import type { Durum } from "../../veri";
 
 export function Hal<T>({
@@ -86,18 +86,10 @@ export function Hal<T>({
 }
 
 /** Ölçülemeyen bir DEĞERİN yerine geçer. "—" yazmıyoruz: tire, okuyucuya "ölçtük,
- *  sonuç yok" der ve bu bu depoda bir yalandır (CLAUDE.md §4). */
-export function Olculemedi({ neden, teknik, kisa = false }: { neden: string; teknik?: string; kisa?: boolean }) {
-  return (
-    <span
-      className={cn("inline-flex items-center gap-1 text-muted-foreground", kisa ? "text-xs" : "text-sm")}
-      title={teknik ? `${neden} — ${teknik}` : neden}
-    >
-      <Info className="size-3 shrink-0" aria-hidden />
-      {neden}
-    </span>
-  );
-}
+ *  sonuç yok" der ve bu bu depoda bir yalandır (CLAUDE.md §4).
+ *  TANIM BURADA DEĞİL (TSK-121, 2026-09-03): tek kaynak `parcalar/olculemedi.tsx`, "ikonlu"
+ *  ailesi (Info ikonlu — tek üye bu yüzey). */
+export const Olculemedi = olculemediKur("ikonlu");
 
 /** Ölçülemeyen bir BLOĞUN yerine geçer — nedeni gizlemeden yazar. */
 export function OlculemedBlok({ baslik, neden, teknik }: { baslik: string; neden: string; teknik?: string }) {

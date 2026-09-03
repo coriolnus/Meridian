@@ -208,7 +208,8 @@ export function Huni({
         {seans.damga === null ? (
           <Olculemedi
             kisa
-            neden={seans.neden ?? "kayıtta seans damgası yok — hangi güne ait olduğu okunamadı"}
+            neden={seans.neden ?? "Bu huninin hangi güne ait olduğu okunamadı"}
+            teknik="kayıtta seans damgası yok"
           />
         ) : (
           <Badge variant="outline" className="tabular-nums">
