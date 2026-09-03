@@ -253,8 +253,8 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 _Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §3 GÜNCEL DURUM'dadır (bayat referans, tarihçe)._
 ### SIRALAMA (güncel — rev. 2026-09-02 akşam, operatör onayı): §2 İCRA SIRASI dört kova —
 **A kapanış dalgası** (TSK-108 → TSK-060 → TSK-089 → TSK-058 → günlük/ROADMAP kapanışı) →
-**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075 · 079 [25a/25c/25d]) →
-**C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035) → **D operatör masası** (§5.0).
+**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075 · 079 [25a/25c/25d] · 080 · 081-doğrulama) →
+**C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035 · 074 · 077) → **D operatör masası** (§5.0).
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
 (Eski WP-dönemi sıralaması §∞ eşleme tablosunda ve §2 SIRA TARİHÇESİ'nde aynen durur.)
 
@@ -362,8 +362,13 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (B-15 **TSK-083** · **TSK-078** · **TSK-073** · **TSK-082** — BAKIM DİLİMİ, tek ajan [operatör 2026-09-03 sabah]: ROADMAP satır çapaları → sembol · `26` değer-eşitliği 9 çift envanteri · 24b skill-görüş defteri kalanı · §6 kart indeksi üreticiye [Rol-1 yol kararı bu dilimde]. Gövdeler TAHTA H0'da.)
 - (B-16 **TSK-075** `13` scale-out latent kusuru — AYRI dilim [operatör 2026-09-03 sabah]; motor kodu, tam suite. Gövde TAHTA H0'da.)
 - (B-17 **TSK-079** `25a` kaldır + `25c` dirilt + `25d` ezilme zinciri — TEK DİLİM [operatör 2026-09-03 sabah: "üçünü de sıraya al"]; 25c dirilt canlı davranışı etkilerse KART-ÖNCE (KOVA C'ye taşınır). Gövde TAHTA H0'da.)
+- (B-18 **TSK-080** `Ö-49` çapa/beyan çürümesi kalanı — İKİNCİ BAKIM DİLİMİ, B-15'ten sonra [operatör 2026-09-03 sabah]; ölçüm önce: kalan sayısı. Gövde TAHTA H0'da.)
+- (B-19 **TSK-081** ARSENAL doğrulama ölçümü [Rol-1, ~30 dk, kod/beyan okuması]: 2026-08-24 denetiminin "ARSENAL bayat-kapanmış" hükmü doğru mu; sonra `15c`/`15d` operatör kararı (044/084 ile bağlı) [operatör 2026-09-03 sabah]. Gövde TAHTA H0'da.)
 
 **KOVA C — KART İSTEYENLER (ölçüm dalgası; kart-önce, §5 yasası):**
+
+- (C-9 **TSK-074** `propose_virgin_knob` canlı-params süzgeci — KART-ÖNCE [operatör 2026-09-03 sabah]; tasarım belgesi `docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md` hazır, kartı Rol-1 yazar, onaya gelir; learn kapalıyken kurulup ölçülür. Gövde TAHTA H0'da.)
+- (C-10 **TSK-077** WP5 kalıntıları: `M2` DSR-yarısı (K=1) + `M11` kova-6 taraması — [operatör 2026-09-03 sabah]: Rol-1 önce şema kararını verir (pnl-serisi damgası mı, ayrı donmuş-çekim betiği mi — mevcut `olcum_araclari` deseni ölçülerek), sonra kartı yazar, onaya gelir. Gövde TAHTA H0'da.)
 
 **Pilot sonrası SİNYAL ZİNCİRİ** (operatör 2026-08-31 akşam: "bu şekilde plana dahil et"):
 
@@ -581,15 +586,15 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 
 | id | name | status | owner | size | trigger |
 |---|---|---|---|---|---|
-| TSK-074 | `propose_virgin_knob` canlı-params süzgeci (WP: WP3) | QUEUED | rol1 | M | — |
+| TSK-074 | `propose_virgin_knob` canlı-params süzgeci (WP: WP3) — operatör 2026-09-03 sabah: KOVA C, kart-önce (C-9) | QUEUED | rol1 | M | — |
 | TSK-069 | (bkz. TSK-069 — EDG-2026-042 K1/K3 bandı; bu satır ACİL C+mb keşfinin kaydı, aynı bant eşiğine bağlı) (WP: WP1) | (bkz. TSK-069) | rol1 | — | — |
 | TSK-075 | `13` scale-out latent kusuru (23e/23f kapandı, kalan tasarım yalnız 13) (WP: WP1) | QUEUED | rol1 | S-M | — |
 | TSK-076 | OPT — parametre-evrim boru hattı (Faz-1 serbest, Faz-2 28d'ye bağımlı) (WP: WP3) — operatör 2026-09-03 sabah: kapalı kalsın, OPT beklesin | GATED(28d/chop-bütçe kapalılığı operatör kararı) | rol1 | L | 28d tıkanıklığının/chop-bütçe kararının çözülmesi |
-| TSK-077 | WP5 metodoloji/eşik kalıntıları — M2 DSR-yarısı kart-adayı + M11 kova-6 taraması (diğer 12 alt-madde 2026-08-24 elemesinde KAPANDI) (WP: WP5) | QUEUED | rol1 | M | — |
+| TSK-077 | WP5 metodoloji/eşik kalıntıları — M2 DSR-yarısı kart-adayı + M11 kova-6 taraması (diğer 12 alt-madde 2026-08-24 elemesinde KAPANDI) (WP: WP5) — operatör 2026-09-03 sabah: Rol-1 şema kararı + kart (C-10) | QUEUED | rol1 | M | — |
 | TSK-078 | `26` değer-eşitliği — kalan 9 çiftin gerekçe envanteri (ortamlar-arası 3 çift) (WP: WP6) | QUEUED | rol1 | S | — |
 | TSK-079 | `25a` KALDIR(14) / `25c` DİRİLT(3) / `25d` ezilme zinciri (25b 5/6 damgalandı) (WP: WP6) — operatör 2026-09-03 sabah: "üçünü de sıraya al" (25c dirilt kart-önce şartlı) | QUEUED | rol1 | S-M | — |
-| TSK-080 | `Ö-49` çapa/beyan çürümesi kalanı (WP: WP6) | QUEUED | rol1 | M | — |
-| TSK-081 | ARSENAL POLİTİKASI (15e giriş) · `15d` PIT-temiz faktör seti · `15c` evren genişletme (askı C6 uzlaştırmasıyla kalktı) (WP: WP11) | QUEUED | rol1 | M | — |
+| TSK-080 | `Ö-49` çapa/beyan çürümesi kalanı (WP: WP6) — operatör 2026-09-03 sabah: ikinci bakım dilimi (B-18) | QUEUED | rol1 | M | — |
+| TSK-081 | ARSENAL POLİTİKASI (15e giriş) · `15d` PIT-temiz faktör seti · `15c` evren genişletme (askı C6 uzlaştırmasıyla kalktı) (WP: WP11) — operatör 2026-09-03 sabah: önce Rol-1 doğrulama ölçümü (B-19), sonra 15c/15d kararı | QUEUED | rol1 | M | — |
 | TSK-082 | §6 kart indeksi ELLE tutuluyor — üretici başka dosyaya yazıyor (WP: WP5) | QUEUED(Rol-1 yol kararı: üreticiye ikinci hedef mi, §6 indeks-atıflı tek blok mu) | rol1 | S | Rol-1 kararı |
 | TSK-083 | ROADMAP satır çapaları — üçü de çürümüş (SATIR→SEMBOL çevrimi gerekiyor) (WP: WP6) | QUEUED | rol1 | S | — |
 

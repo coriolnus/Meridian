@@ -1975,3 +1975,5 @@ ders: her commit'in ROADMAP flip'i aynı turda, kapanış partisinde "DONE'lar l
 (B-16). Dört karar: 076 OPT → **kapalı kalsın**; 079 `25a/25c/25d` → **üçü de sıraya** (B-17, 25c kart-önce şartlı);
 084 delist-bar → **beklemede**; 021 → sorulmadı, **ölçümle DONE** (`earnings_pit.py` csv'yi okuyor; EDG-062 d9bad5f) —
 üçüncü bayat flip (011, 109/110'dan sonra). 074/080/077/081 değerlendirme operatörle (aşağıda, sohbet).
+**Dördüncü tur (07:0xZ, operatör "onayla, hepsini roadmap'e işle"):** 074 → KOVA C kart-önce (C-9, kart Rol-1) · 077 → Rol-1
+şema kararı + kart (C-10) · 080 → ikinci bakım dilimi (B-18) · 081 → önce Rol-1 doğrulama ölçümü (B-19), sonra 15c/15d kararı.
