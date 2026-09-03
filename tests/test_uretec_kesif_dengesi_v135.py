@@ -272,7 +272,9 @@ def test_virgin_fallback_KAPATILABILIR_eski_davranis_birebir(sandbox_state, monk
                         lambda *a, **k: {"status": "no_clearing_candidate", "search": {}})
     monkeypatch.setattr(hermes, "SEARCH_BUDGET", 1)
     import meridian.dataset as _ds
-    monkeypatch.setattr(_ds, "load", lambda: (None, None))
+    # TSK-116 düzeltme turu 2 (2026-09-03): _load_live_inner artık load(..., universe=...)
+    # çağırıyor — sahte fonksiyon yeni imzayı kabul etmeli (davranış İDDİASI değişmedi).
+    monkeypatch.setattr(_ds, "load", lambda use_cache=True, universe=None: (None, None))
 
     r = hermes.reflect_once(target_regime=None)
 

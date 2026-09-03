@@ -8,8 +8,8 @@ Reconnect/backoff/nabız/down-reassert YASASI `streamhealth.run_stream`ten gelir
 ile aynı nesne); bu modülde yalnız akışa-özgü olan vardır: data URL, auth+`bars` aboneliği, `b`→ingest.
 
 KİLİT GİRİŞLER: start()/stop() (idempotent singleton görev), listener(), health() (hiç koşmamışsa
-ok=None — 'unknown ≠ broken'), subscribed_symbols() (açık pozisyonlar → SPY → REPLAY_UNIVERSE;
-pozisyonlar en başta — izlenmeyen pozisyon sıcak-fiyat kör noktasıdır), FEED (MERIDIAN_DATA_FEED,
+ok=None — 'unknown ≠ broken'), subscribed_symbols() (açık pozisyonlar → SPY → dataset._canli_
+korunan_evren(); pozisyonlar en başta — izlenmeyen pozisyon sıcak-fiyat kör noktasıdır), FEED (MERIDIAN_DATA_FEED,
 varsayılan iex), MAX_SYMBOLS (opsiyonel güvenlik valfi; iex `bars` kanalı sembol-sınırsız).
 
 DEĞİŞMEZLER — WS dinleyici ortak yasası + kapalı-bar disiplini: abonelik YALNIZ `bars` kanalıdır ve
@@ -42,14 +42,25 @@ INDEX_SYMBOL = "SPY"
 
 
 def subscribed_symbols() -> list[str]:
-    """Abone olunacak evren: açık POZİSYONLAR → SPY → REPLAY_UNIVERSE, tekilleştirilmiş. Pozisyonlar EN
-    BAŞTA — izlenmeyen bir pozisyon sıcak-fiyat kör noktasıdır. Varsayılan kırpma YOK (iex sınırsız)."""
-    from .adapters.data import REPLAY_UNIVERSE
-    from . import store
+    """Abone olunacak evren: açık POZİSYONLAR → SPY → `dataset._canli_korunan_evren()`,
+    tekilleştirilmiş. Pozisyonlar EN BAŞTA — izlenmeyen bir pozisyon sıcak-fiyat kör noktasıdır.
+
+    TSK-116 düzeltme turu 3 (2026-09-03, Rol-1 kararı — review Bulgu 4): kuyruk artık DOĞRUDAN
+    `data.LIVE_UNIVERSE` DEĞİL, `dataset._canli_korunan_evren()` — TEK KAYNAK, `dataset.py`nin
+    canlı bar yükleyicisiyle AYNI yardımcı. Önceki tasarım yalnız `positions`i (bu fonksiyonun kendi
+    manuel öneki üzerinden) koruyordu; `armed` (onaylı, henüz dolmamış plan) bir endeks-çıkışı
+    sembolde WS aboneliği hiç olmadan kalabiliyordu — modülün kendi uyardığı sınıf ("izlenmeyen
+    pozisyon sıcak-fiyat kör noktasıdır") ama "izlenmeyen ARMED plan" için. `dataset -> marketstream`
+    yönünde mevcut bir importlinter sözleşmesi yok (`pyproject.toml`: `meridian.marketstream` hiçbir
+    sözleşmede source/target olarak geçmiyor; `meridian.dataset` yalnız çekirdek-altyapının {store,
+    storage, config, obs} import ETMEMESİ gereken bir HEDEF — bu YÖN `marketstream -> dataset`i
+    yasaklamıyor) — statik okumayla doğrulandı, `lint-imports` KOŞULMADI (pytest-dışı araç, ajan
+    kapsamı dışı). Varsayılan kırpma YOK (iex sınırsız)."""
+    from . import dataset, store
     pf = store.read_json("portfolio.json", {}) or {}
     out: list[str] = []
     seen: set[str] = set()
-    for t in list((pf.get("positions") or {}).keys()) + [INDEX_SYMBOL] + list(REPLAY_UNIVERSE):
+    for t in list((pf.get("positions") or {}).keys()) + [INDEX_SYMBOL] + list(dataset._canli_korunan_evren()):
         t = str(t).strip().upper()
         if t and t not in seen:
             seen.add(t)

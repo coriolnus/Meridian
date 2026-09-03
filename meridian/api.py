@@ -4678,7 +4678,9 @@ def api_diagnostics(request: Request, taze: int = 0):
     if _kopya is not None:
         return _kopya
     from . import analytics as an, earnings
-    from .adapters.data import REPLAY_UNIVERSE
+    # TSK-116, 2026-09-03: karartma radarı CANLI evren yüzeyidir — 13 endeks-çıkışı sembol
+    # taranmaz, LIVE_UNIVERSE kullanılır (REPLAY_UNIVERSE yalnız backtest/recompute'un).
+    from .adapters.data import LIVE_UNIVERSE
     rc = store.read_json("broker_reconcile.json", {})
     pf = store.read_json("portfolio.json", {})
     mirror = store.read_json("mirror_orders.json", {})
@@ -4767,7 +4769,7 @@ def api_diagnostics(request: Request, taze: int = 0):
     # çağırmak aynı yanıtın içinde iki farklı gerçek doğurabilirdi (radar takvim tazelemesiyle
     # değişir) ve radar evren boyunda bir hesap — bedeli ikiye katlamanın karşılığı yok.
     _rejim_doc = store.read_json("regime.json", {})
-    _radar = earnings.blackout_radar(list(REPLAY_UNIVERSE), today)
+    _radar = earnings.blackout_radar(list(LIVE_UNIVERSE), today)
     warm_ticks = int(hstat.get("_warm_ticks") or 0)
     try:
         from .hermes_runtime import WARMUP_EVERY_POLLS as _wep

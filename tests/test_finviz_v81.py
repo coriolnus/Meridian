@@ -57,19 +57,33 @@ def test_replay_load_never_touches_finviz(sandbox_state, monkeypatch):
 
 def test_load_live_does_not_pollute_the_shared_cache(sandbox_state, monkeypatch):
     """load_live evreni genişletir AMA `_cache`'i mutasyona uğratmaz — sonraki `load()` (replay yolu)
-    genişlemiş evreni GÖRMEMELİ. `{**bars, ...}` yeni sözlük olduğu için _cache dokunulmaz kalır."""
+    genişlemiş evreni GÖRMEMELİ. `{**bars, ...}` yeni sözlük olduğu için _cache dokunulmaz kalır.
+
+    TSK-116 düzeltme turu 3 (2026-09-03): canlı taban artık `LIVE_UNIVERSE` + korunan ticker'lardır
+    (`REPLAY_UNIVERSE` DEĞİL, bkz. `_canli_korunan_evren`) — bu yüzden REPLAY önbelleğinde duran
+    keyfi bir "AAA" ismi artık `live_bars`e KARIŞMAZ; bu, review Ö-3'ün düzelttiği TAM şeydir (canlı
+    yol yalnız KENDİ evrenini görür, REPLAY'in süpersetini değil). Asıl iddia DEĞİŞMEDİ: paylaşılan
+    REPLAY önbelleği (`_cache["bars"]`) `load_live` sonrası AYNI kalmalı. `data.load_bars` (SPY)
+    BİLEREK sağlıklı sabitlenir — endeks bozuk-kapı/kurtarma dalı bu testin konusu DEĞİL (o Ö-3
+    çivileriyle v393'te ayrıca ölçülüyor)."""
     dataset._cache.clear()
-    dataset._cache["bars"] = {"AAA": _bars()}          # REPLAY_UNIVERSE önbelleği (sabit)
+    dataset._cache["bars"] = {"AAA": _bars()}          # REPLAY_UNIVERSE önbelleği (sabit, KEYFİ isim)
     dataset._cache["index"] = _bars()
     monkeypatch.setattr(finviz, "discover_universe", lambda use_cache=True: ["FINVIZ1"])
+    monkeypatch.setattr(dataset.data, "load_bars", lambda *a, **k: _bars())  # SPY sağlıklı — kurtarma dalına GİRİLMEZ
+    monkeypatch.setattr(dataset, "_index_hard_issues", lambda idx: [])       # `_bars()` "date" kolonsuz; validate_bars'ın kendisi bu testin konusu değil (aynı desen: test_replay_load_never_touches_finviz)
     monkeypatch.setattr(dataset.data, "load_many", lambda syms, *a, **k: {s: _bars() for s in syms})
 
     live_bars, _ = dataset.load_live(use_cache=True)
-    assert "FINVIZ1" in live_bars and "AAA" in live_bars, "canlı evren genişlemedi"
+    assert "FINVIZ1" in live_bars, "canlı evren Finviz keşfiyle genişlemedi"
+    assert "AAPL" in live_bars, "canlı taban (LIVE_UNIVERSE) hiç yüklenmemiş"
+    assert "AAA" not in live_bars, \
+        "REPLAY önbelleğindeki keyfi isim canlı taramaya sızdı — taban artık LIVE_UNIVERSE olmalıydı"
     # ASIL İDDİA: paylaşılan cache genişlemedi → replay yolu temiz kaldı
     assert set(dataset._cache["bars"]) == {"AAA"}, "load_live cache'i KİRLETTİ — look-ahead sızıntısı"
     replay_bars, _ = dataset.load(use_cache=True)
     assert "FINVIZ1" not in replay_bars, "replay yolu Finviz ticker'ı gördü"
+    dataset._cache.clear()
 
 
 # ---------------- 2) DÜRÜST BOZUNMA ----------------

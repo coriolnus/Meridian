@@ -1074,10 +1074,13 @@ def advance_once() -> dict:
                     # haftayı boşa yakıyordu ve takvim 7 gün daha boş kalıyordu. Sınırlı sabır:
                     # haftada en çok 5 deneme, sonra pes edildiği LOGLANIR (sessiz açlık yok).
                     from . import earnings, obs, watchdog
-                    from .adapters.data import REPLAY_UNIVERSE
+                    # TSK-116, 2026-09-03: CANLI tazeleme LIVE_UNIVERSE'e geçti — 13 endeks-çıkışı
+                    # sembol için takvim tazelenmez (FMP yedeğine düşerse kota da 13 sembol tasarruf
+                    # eder); REPLAY_UNIVERSE burada kullanılmaz, o yalnız backtest/recompute'un.
+                    from .adapters.data import LIVE_UNIVERSE
                     att = _state.get("earnings_attempts", 0) + 1
                     nabiz("kazanc_takvimi")   # v186: gün başına bir HTTP + nezaket beklemesi (~15 gün)
-                    n = earnings.refresh(list(REPLAY_UNIVERSE))
+                    n = earnings.refresh(list(LIVE_UNIVERSE))
                     if n > 0:
                         watchdog.beat("earnings_refresh")
                         _state["earnings_week"] = list(wk)
@@ -1117,7 +1120,7 @@ def advance_once() -> dict:
                         # karar turu GO yerine REVIEW üretir (fail-open sessizce açık kalmaz).
                         _state["earnings_gaveup_day"] = _bugun
                         _state["earnings_attempts"] = 0
-                        _cov = earnings.coverage(list(REPLAY_UNIVERSE)) or {}
+                        _cov = earnings.coverage(list(LIVE_UNIVERSE)) or {}
                         obs.warn("earnings_calendar_gave_up", attempts=att,
                                  blackout_days=getattr(earnings, "BLACKOUT_DAYS", None),
                                  marj_gun=_cov.get("marj_gun"), ileri_gun=_cov.get("ileri_gun"),

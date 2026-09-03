@@ -6,9 +6,12 @@ günlük trend şablonu ilk işlem gününden itibaren geçerli olsun. Endeks (S
 kapısından geçemezse ve elde iyi bir süreç-içi kopya yoksa IndexUnavailable FIRLATILIR: boş endeksle
 devam etmek "veri yok" demek değil, bilinmeyen bir rejimi UYDURMAK olurdu (uydurma yasağı).
 
-KİLİT GİRİŞLER: load() (replay evreni: bars_by_ticker + index_bars, süreç-içi önbellekli),
-load_live() (canlı tarama: REPLAY_UNIVERSE + Finviz keşfi; `session` yalnız KAPANMIŞ seans için
-aynı-akşam bacağını açar), load_cached() (ağa hiç çıkmadan yalnız diskteki CSV önbelleğinden —
+KİLİT GİRİŞLER: load() (replay evreni: bars_by_ticker + index_bars, süreç-içi önbellekli; TSK-116
+düzeltme turu 1, 2026-09-03: opsiyonel `universe=` — None ise REPLAY_UNIVERSE ve önbelleğe
+yazar/okur, liste verilirse önbelleği ATLAR), load_live() (canlı tarama: LIVE_UNIVERSE + açık
+pozisyon/silahlı planı olan endeks-çıkışı ticker'lar (`_canli_korunan_evren`) + Finviz keşfi;
+`session` yalnız KAPANMIŞ seans için aynı-akşam bacağını açar), load_cached() (ağa hiç çıkmadan
+yalnız diskteki CSV önbelleğinden —
 havuz işçileri birbirinin barlarını yeniden yazmasın, tüm walk-forward'lar aynı donmuş barları
 görsün), fetch_end() (çağrı başına BUGÜN; import anında donmuş sabit uzun ömürlü süreçte
 zamanlayıcıyı kalıcı kilitlemişti), pencere sabitleri: FETCH_START, IS_START, OOS_START, OOS_END,
@@ -188,16 +191,63 @@ def _index_hard_issues(index) -> list[dict]:
     return [] if ok else [i for i in issues if i.get("severity") == "hard"]
 
 
-def load(use_cache: bool = True) -> tuple[dict, pd.DataFrame]:
+def load(use_cache: bool = True, universe: list[str] | None = None) -> tuple[dict, pd.DataFrame]:
     """Return (bars_by_ticker, index_bars) for the replay universe. Cached in-process.
+
+    `universe` (TSK-116, 2026-09-03, Rol-1 kararı): `None` (varsayılan) REPLAY_UNIVERSE sorar ve
+    düz `_cache["bars"]`/`_cache["index"]` çiftini kullanır — replay/backtest/recompute davranışı
+    BİREBİR, hiçbir çağıranın imzası ya da şekli değişmedi (dış testler bu iki anahtara doğrudan
+    yazıyor/okuyor, bkz. test_finviz_v81.py). Bir LİSTE verilirse (canlı yolun LIVE_UNIVERSE +
+    korunan ticker çağrısı, bkz. `_load_live_inner`) AYRI bir bölmede (`_cache["custom"][imza]`)
+    hafızaya alınır — imza `tuple(sorted(upper(ticker)))`.
+
+    ÖNBELLEK TASARIMI r3'te DEĞİŞTİ (düzeltme turu 3, 2026-09-03 — review Bulgu 1, "bedel yasası"):
+    r1'de custom çağrı önbelleği NE okuyor NE yazıyordu ("zararsız" sanılmıştı) — ama `_load_live_inner`
+    HER canlı pollde custom çağırdığı için (`_canli_korunan_evren()` asla None dönmez) canlı yolun
+    süreç-içi kısayolu TAMAMEN devre dışı kalmıştı: `scheduler.py`nin "cache-only poll" fazı (300sn
+    kadans, günde ~288 tur) her turda ~238 CSV'yi baştan okuyup sanitize ediyordu — SEYREK FAZ'ın var
+    oluş sebebi olan maliyeti tam da onun içinde yeniden ödetiyordu. ÇÖZÜM: custom evren de kendi
+    imzasıyla hafızaya alınır — AYNI imzayla (canlı poll AYNI LIVE_UNIVERSE+korunan kümesini ister,
+    yalnız pozisyon/silahlı-plan değiştiğinde kayar) ikinci çağrı DİSKTEN OKUMAZ. LOOK-AHEAD
+    KARANTİNASI GEÇERLİLİĞİNİ KORUR: custom bölme REPLAY'in `_cache["bars"]`ına hiç yazmaz/okumaz,
+    kendi ayrı anahtarında durur — replay'in donmuş barlarına hâlâ karışmaz, yalnız KENDİ evreni
+    kendi kendini kirletmiyor.
+
+    BOZUK-ENDEKS KURTARMA DALI (`have_good`) İMZAYA SADIK KALIR (review Ö-3): önceki tasarım
+    `custom`'a BAKMADAN REPLAY-ölçekli `_cache["bars"]`'ı (251, 13 endeks-çıkışı DAHİL) dönüyordu —
+    "zararsız superset" savı yalnız replay/backtest için doğrudur; canlı/aday-tarama yolunda `bars`
+    aday havuzunun KENDİSİdir (`loop.daily_cycle`), yani "fazla" burada D2/D4'ün "yeni giriş
+    üretmez" garantisini bozar. Artık kurtarma dalı ÖNCE kendi imzalı bölmesine (`slot[sig]`) bakar;
+    yoksa REPLAY'in `_cache["bars"]`'ını `uni`ye KIRPAR (`{t: v for t, v in ... if t in uni}`) —
+    döndürülen anahtar kümesi HER ZAMAN `uni`nin alt kümesidir, asla üst kümesi değil.
 
     Raises IndexUnavailable when the index series fails the HARD integrity gate and no previously
     good in-process copy exists."""
-    if _cache.get("bars") is not None and use_cache:
+    custom = universe is not None
+    uni = list(universe) if custom else data.REPLAY_UNIVERSE
+    sig = tuple(sorted({str(t).upper() for t in uni})) if custom else None
+    slot = _cache.setdefault("custom", {}) if custom else None
+
+    def _kirp_kurtarma():
+        """Kurtarma dalı ortak gövdesi (Ö-3): önce AYNI imzalı önceki sonuç, yoksa REPLAY
+        önbelleğinin `uni`ye kırpılmış hâli — asla REPLAY'in tam süperseti DEĞİL."""
+        if not custom:
+            return _cache["bars"], _cache["index"]
+        onceki = slot.get(sig)
+        if onceki is not None:
+            return onceki
+        taban = _cache.get("bars") or {}
+        istenen = set(uni)
+        return {t: v for t, v in taban.items() if t in istenen}, _cache["index"]
+
+    if custom:
+        if use_cache and sig in slot:
+            return slot[sig]
+    elif _cache.get("bars") is not None and use_cache:
         return _cache["bars"], _cache["index"]
     end = fetch_end()                                  # per-call TODAY — never the import-time snapshot
     index = data.load_bars(data.INDEX_SYMBOL, FETCH_START, end, use_cache=use_cache)
-    bars = data.load_many(data.REPLAY_UNIVERSE, FETCH_START, end, use_cache=use_cache)
+    bars = data.load_many(uni, FETCH_START, end, use_cache=use_cache)
     # the ONE series that drives regime classification was the only one never validated
     hard = _index_hard_issues(index)
     if hard:
@@ -213,7 +263,7 @@ def load(use_cache: bool = True) -> tuple[dict, pd.DataFrame]:
             # transient all-source outage during a cache-bypassing refetch must NOT pin an empty
             # dataset for the rest of the session (the scheduler would then run daily_cycle on zero
             # data) — keep the last good in-process copy instead.
-            return _cache["bars"], _cache["index"]
+            return _kirp_kurtarma()
         # BOZUK ENDEKSİ ASLA ÖNBELLEĞE ÇİVİLEME: eskiden buraya düşen tur `_cache["index"] = <boş>`
         # yazıyordu ve süreç ömrü boyunca HER `load(use_cache=True)` o boş seriyi sessizce servis
         # ediyordu — tek bir geçici kesinti kalıcı bir yanlış duruma dönüşüyordu.
@@ -221,8 +271,11 @@ def load(use_cache: bool = True) -> tuple[dict, pd.DataFrame]:
             "endeks (%s) sert bütünlük kapısını geçemedi: %s" %
             (data.INDEX_SYMBOL, ", ".join(str(i.get("code")) for i in hard)))
     if not bars and _cache.get("bars"):
-        return _cache["bars"], _cache["index"]
-    _cache["bars"], _cache["index"] = bars, index
+        return _kirp_kurtarma()
+    if custom:
+        slot[sig] = (bars, index)
+    else:
+        _cache["bars"], _cache["index"] = bars, index
     return bars, index
 
 
@@ -244,16 +297,59 @@ def load_live(use_cache: bool = True, session: str | None = None) -> tuple[dict,
          `reflect.load()` aynı genişletilmiş cache'i okur ve gelecek bilgisi 2023 replay'ine sızardı.
       2. DÜRÜST BOZUNMA: Finviz düşükse `discover_universe()` boş döner (olayı kendi yazar) ve evren
          sessizce REPLAY_UNIVERSE'e iner. Finviz ekstra ticker'ların barı FMP zincirinden gelir;
-         barı çekilemeyen ticker zaten `load_many` içinde düşer (tarama onu görmez)."""
+         barı çekilemeyen ticker zaten `load_many` içinde düşer (tarama onu görmez).
+
+    TABAN ARTIK LIVE_UNIVERSE (TSK-116 düzeltme turu 1, 2026-09-03, Rol-1 kararı): önceki turda bu
+    fonksiyonun tabanı (`load()`) hâlâ REPLAY_UNIVERSE'i sorup 13 endeks-çıkışı sembolü `bars`e
+    dahil ediyordu — yalnız Finviz'in yeniden-keşfi engelleniyordu, ki `extra`nın zaten `bars`'ta
+    olan bir ismi hiç içermemesi yüzünden bu süzgeç fiilen no-op'tu. Artık `_load_live_inner`
+    `load(universe=...)`u AÇIKÇA `LIVE_UNIVERSE + korunan ticker'lar` ile çağırıyor (bkz.
+    `_canli_korunan_evren`): `loop.daily_cycle`ın gördüğü aday havuzu GERÇEKTEN 238 sembole
+    daralır (+ açık pozisyon/silahlı planı olan endeks-çıkışı ticker'lar, YALNIZ çıkış yönetimi
+    için — yeni giriş üretmezler, çünkü kapı/arming katmanı skor/sinyal üretimini bu `bars`
+    kümesinden türetir)."""
     with data.live_session_leg(session):
         return _load_live_inner(use_cache=use_cache)
+
+
+def _canli_korunan_evren() -> list[str]:
+    """LIVE_UNIVERSE + açık pozisyon/silahlı (onaylanmış, henüz dolmamış) plan taşıyan endeks-çıkışı
+    ticker'lar (TSK-116 düzeltme turu 1, 2026-09-03, Rol-1 kararı: 'yalnız canlıdan çıkar' kararı
+    açık pozisyonu barsız bırakmaz — manage_position/mirror çıkışı yönetebilsin diye barı YİNE
+    yüklenir; yeni GİRİŞ zaten LIVE_UNIVERSE'in kendisi tarafından engellenir, çünkü endeks-çıkışı
+    sembol aday havuzunda hiç görünmez).
+
+    ÖLÇÜM: `portfolio.json` İKİ kümeyi de taşır — `positions` (açık pozisyonlar, dict) ve `armed`
+    (onaylanmış/silahlı plan listesi, her biri kendi `ticker` alanıyla — bkz. `loop.py::_arm_yama`).
+    İkisi de dataset katmanından ERİŞİLEBİLİR: `store.read_json` aynı yol, `marketstream.
+    subscribed_symbols`ın pozisyonlar için kullandığı YOLUN BİREBİR aynısı — o yüzden ek bir
+    parametre (`load_live(..., ek_semboller=...)`) AÇILMADI, dataset katmanı zaten yeterli."""
+    from . import store
+    pf = store.read_json("portfolio.json", {}) or {}
+    korunacak = {str(t).strip().upper() for t in (pf.get("positions") or {}).keys()}
+    for pl in (pf.get("armed") or []):
+        t = (pl or {}).get("ticker")
+        if t:
+            korunacak.add(str(t).strip().upper())
+    korunan_endeks_disi = sorted(t for t in korunacak if data.is_index_exited(t))
+    if not korunan_endeks_disi:
+        return data.LIVE_UNIVERSE
+    # SESSİZ İSTİSNA OLMAZ: LIVE_UNIVERSE'in "endeks-çıkışı sembol yok" kuralına neden bir istisna
+    # açıldığı görünür olmalı — aksi hâlde "neden bu sembol hâlâ taranıyor" sorusu cevapsız kalır.
+    from . import obs
+    obs.log("index_exited_position_bars_kept", tickers=",".join(korunan_endeks_disi),
+            n=len(korunan_endeks_disi),
+            detail="endeks-çıkışı sembolde açık pozisyon/silahlı plan var — barı canlı yolda YİNE "
+                   "yüklendi (yeni giriş üretmez, yalnız manage_position/mirror çıkışı yönetsin "
+                   "diye); TSK-116 düzeltme turu 1, 2026-09-03")
+    return data.LIVE_UNIVERSE + korunan_endeks_disi
 
 
 def _load_live_inner(use_cache: bool = True) -> tuple[dict, pd.DataFrame]:
     """load_live'ın GÖVDESİ. Ayrı fonksiyon çünkü bacak kapısı bir `with` bloğudur ve `return`
     noktaları üçe dağılmıştı — kapıyı her çıkışta tek tek kapatmak, bir gün eklenen dördüncü
     çıkışta unutulurdu (bacak açık kalır ve sonraki çağıran onu miras alırdı)."""
-    bars, index = load(use_cache=use_cache)
+    bars, index = load(use_cache=use_cache, universe=_canli_korunan_evren())
     try:
         from .adapters import finviz
         extra = [t for t in finviz.discover_universe(use_cache=use_cache) if t not in bars]
@@ -261,15 +357,26 @@ def _load_live_inner(use_cache: bool = True) -> tuple[dict, pd.DataFrame]:
         # olmuş bir ismi (kalıntı kayıt, gecikmiş endeks) yeniden önerebilir; o isim buradan geçerse
         # tarama evrenine girer, barı çekilmeye çalışılır ve ölü bir sembol hakkında karar üretilir.
         emekli = [t for t in extra if data.is_retired(t)]
-        if emekli:
-            extra = [t for t in extra if not data.is_retired(t)]
+        # TSK-116, 2026-09-03: endeks-çıkışı AYRI bir hüküm sınıfıdır — RETIRED_SYMBOLS ile
+        # INDEX_EXITED kesişmez (data.py'de çivilenir), o yüzden aynı ticker iki listeye BİRDEN
+        # düşmez. Ayrı olay adıyla yazılır ki "delist" ile "S&P 500 çıkışı" karıştırılmasın.
+        endeks_disi = [t for t in extra if data.is_index_exited(t)]
+        if emekli or endeks_disi:
+            extra = [t for t in extra if not data.is_retired(t) and not data.is_index_exited(t)]
             # SESSİZ FİLTRE OLMAZ: eleme kendi başına doğru davranıştır ama SEBEBİ görünmezse,
             # keşif kaynağının bayat bir evren servis ettiğini kimse öğrenemez. Olay o kaynağa
             # bakmak için yazılır — elenen sembole değil.
             from . import obs
-            obs.log("retired_symbol_rediscovered", tickers=",".join(sorted(emekli)), n=len(emekli),
-                    detail="Finviz keşfi delist olmuş sembol önerdi — evrene ALINMADI "
-                           "(data.RETIRED_SYMBOLS); keşif kaynağının listesi bayat olabilir")
+            if emekli:
+                obs.log("retired_symbol_rediscovered", tickers=",".join(sorted(emekli)), n=len(emekli),
+                        detail="Finviz keşfi delist olmuş sembol önerdi — evrene ALINMADI "
+                               "(data.RETIRED_SYMBOLS); keşif kaynağının listesi bayat olabilir")
+            if endeks_disi:
+                obs.log("index_exited_symbol_rediscovered", tickers=",".join(sorted(endeks_disi)),
+                        n=len(endeks_disi),
+                        detail="Finviz keşfi S&P 500 dışına çıkmış (ama aktif) sembol önerdi — "
+                               "canlı evrene ALINMADI (data.INDEX_EXITED); geçmiş replay etkilenmez "
+                               "(TSK-116, 2026-09-03)")
     except Exception as e:  # sessiz-yutma DEĞİL: Finviz keşfi düşse bile canlı tarama REPLAY_UNIVERSE ile sürer; olay burada yazılır ve evren daralması dürüstçe görünür
         from . import obs
         obs.warn("finviz_discover_failed", error=f"{type(e).__name__}: {e}",

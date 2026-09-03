@@ -378,7 +378,9 @@ def _scheduler_stub(monkeypatch, coverage_bars: dict, index: pd.DataFrame):
     from meridian import dataset as ds, health, loop, reflect, scheduler, watchdog
     monkeypatch.setattr(scheduler, "_last_closed_session", lambda: "2026-07-15")
     monkeypatch.setattr(health, "halted", lambda: False)
-    monkeypatch.setattr(ds, "load", lambda use_cache=True: (coverage_bars, index))
+    # TSK-116 düzeltme turu 2 (2026-09-03): _load_live_inner artık load(..., universe=...)
+    # çağırıyor — sahte fonksiyon yeni imzayı kabul etmeli (davranış İDDİASI değişmedi).
+    monkeypatch.setattr(ds, "load", lambda use_cache=True, universe=None: (coverage_bars, index))
     monkeypatch.setattr(watchdog, "beat", lambda *a, **k: None)
     monkeypatch.setattr(watchdog, "check_and_alarm", lambda *a, **k: None)
     monkeypatch.setattr(reflect, "clear_wf_caches", lambda *a, **k: None)

@@ -10,7 +10,8 @@ gerisinde kalan kaynak zinciri KESMEZ, en taze sonuç kazanır. HATA ≠ BOŞ: h
 `outcomes`ta ayrıdır; istek arızası sembol hakkında hüküm değildir.
 (b) Kilit girişler: fetch(), load_bars(), load_many(), sanitize_bars(), validate_bars(),
 measurement_bars(), bars_integrity()/safe_start(), ghost_report()/integrity_report(),
-crosscheck_report(), seam_report(), no_data_report(), nasdaq_earnings_window(), REPLAY_UNIVERSE.
+crosscheck_report(), seam_report(), no_data_report(), nasdaq_earnings_window(), REPLAY_UNIVERSE,
+LIVE_UNIVERSE (TSK-116, 2026-09-03 — REPLAY_UNIVERSE'in endeks-çıkışı süzülmüş canlı-evren hâli).
 (c) Değişmezler: takvim kapısı (geçerli XNYS seansı olmayan tarihin satırı düşer; KİTLESEL uyuşmazlık
 silinmez, adjudikasyon REDDEDİLİR ve duyurulur) ile düzeltilmemiş-satır karantinası sanitize_bars'ın
 tek boğazından her kaynak/okuma yoluna uygulanır; kaynak sabitleme + dikiş koruması aynı sembole iki
@@ -2710,6 +2711,54 @@ def is_retired(ticker: str) -> bool:
     """Sembol emekli mi? Tek kapı: her tüketici `RETIRED_SYMBOLS`u kendi normalizasyonuyla
     sorgularsa (biri .upper() yapar, biri yapmaz) defter aynı sembol için iki farklı cevap verir."""
     return str(ticker or "").upper() in RETIRED_SYMBOLS
+
+
+# ENDEKS ÇIKIŞI DEFTERİ — "S&P 500 üyeliği bitti ama şirket YAŞIYOR" hükmü TEK YERDE (TSK-116,
+# 2026-09-03, operatör revize kararı: sabahki "RETIRED_SYMBOLS'a taşı" kararı REVİZE edildi).
+#
+# RETIRED_SYMBOLS'TAN FARKI: o defter DELİST (şirket artık işlem görmüyor) ve sembolü
+# REPLAY_UNIVERSE'DEN de çıkarır (bar hattı gerçekten bitti). Bu defter ÇIKARMAZ: şirket hâlâ
+# aktif işlem görüyor, yalnız S&P 500 üyeliği bitti. REPLAY_UNIVERSE tarihe duyarsız TEK bir
+# listedir (`meridian/pitlaw.py` ruhu — PIT değildir) ve bu 13 şirket geçmiş dönemde GERÇEKTEN S&P
+# 500 üyesiydi (A1 ölçümü: trade_plans'ta 10'u, trades'te 11'i geçiyor — ör. ROKU 11, VFC 11, SPOT
+# 10, SNAP 8 işlem). Tam emeklilik (RETIRED_SYMBOLS'a taşımak) geçmiş replay/backtest'ten de bu
+# sembolleri silerdi ve sağkalan yanlılığını ARTIRIRDI — o yüzden yalnız CANLI evrenden çıkarılırlar.
+#
+# ÖLÇÜM: `state/universe_drift.json`, 2026-09-03 gece, kaynak wikipedia S&P 500 listesi.
+#
+# KAPSAM: `LIVE_UNIVERSE` (aşağıda türetilir) bu defterden süzülür ve YALNIZ canlı yüzeyleri besler
+# (Finviz keşif filtresi, marketstream aboneliği, scheduler canlı taramaları, api.py evren sayısı
+# yüzeyleri, shortinterest/insider canlı çekimleri). REPLAY_UNIVERSE DEĞİŞMEZ — backtest/recompute/
+# cf_backfill/trend_shadow/component_ic bu 13 sembolü geçmişte üye oldukları için GÖRMEYE devam eder.
+INDEX_EXITED: dict[str, str] = {
+    "AVB": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "BURL": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "CAG": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "EA": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "ENPH": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "EQR": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "LNG": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "MTCH": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "PINS": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "ROKU": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "SNAP": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "SPOT": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+    "VFC": "S&P 500 çıkışı; ölçüm 2026-09-03 universe_drift; şirket aktif",
+}
+
+
+def is_index_exited(ticker: str) -> bool:
+    """Sembol S&P 500'den çıktı mı (ama hâlâ aktif)? Tek kapı: `is_retired` ile AYNI desen —
+    normalize edilmemiş sorgu aynı sembol için iki farklı cevap üretmesin (TSK-116, 2026-09-03)."""
+    return str(ticker or "").upper() in INDEX_EXITED
+
+
+# CANLI evren: REPLAY_UNIVERSE'in endeks-çıkışı 13 sembol süzülmüş hâli (TSK-116, 2026-09-03).
+# TEK yerde türetilir (tek-kaynak yasası) — canlı tüketiciler (Finviz keşif filtresi, marketstream
+# aboneliği, scheduler canlı taramaları, api.py evren sayısı yüzeyleri, shortinterest/insider canlı
+# çekimleri) buradan okur. REPLAY tüketicileri (backtest/recompute/cf_backfill/trend_shadow/
+# component_ic) REPLAY_UNIVERSE'i kullanmaya DEVAM eder — bu listeye DOKUNMAZLAR.
+LIVE_UNIVERSE = [t for t in REPLAY_UNIVERSE if not is_index_exited(t)]
 
 
 # Nasdaq takviminin `time` alanı → kanonik BMO/AMC. ÖLÇÜM (2026-08-01, 6 iş günü / 1307 satır):

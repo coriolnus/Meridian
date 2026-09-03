@@ -30,7 +30,9 @@ def test_scheduler_catches_up_every_unprocessed_session(sandbox_state, monkeypat
     index = pd.DataFrame({"date": dates, "close": [100.0, 101.0, 102.0]})
     monkeypatch.setattr(health, "halted", lambda: False)
     monkeypatch.setattr(scheduler, "_last_closed_session", lambda: "2026-07-17")
-    monkeypatch.setattr(dataset, "load", lambda use_cache=True: ({}, index))
+    # TSK-116 düzeltme turu 1 (2026-09-03): `_load_live_inner` artık `load(..., universe=...)`
+    # çağırıyor — sahte fonksiyon yeni imzayı kabul etmeli (tek satır×2, davranış İDDİASI değişmedi).
+    monkeypatch.setattr(dataset, "load", lambda use_cache=True, universe=None: ({}, index))
     store.write_json("portfolio.json", {"last_date": "2026-07-15", "positions": {}, "armed": []})
     scheduler._state["last_refetch_session"] = "2026-07-17"   # tazeleme dalını sustur
 
@@ -55,7 +57,9 @@ def test_scheduler_current_when_no_new_session(sandbox_state, monkeypatch):
     index = pd.DataFrame({"date": pd.to_datetime(["2026-07-17"]), "close": [102.0]})
     monkeypatch.setattr(health, "halted", lambda: False)
     monkeypatch.setattr(scheduler, "_last_closed_session", lambda: "2026-07-17")
-    monkeypatch.setattr(dataset, "load", lambda use_cache=True: ({}, index))
+    # TSK-116 düzeltme turu 1 (2026-09-03): `_load_live_inner` artık `load(..., universe=...)`
+    # çağırıyor — sahte fonksiyon yeni imzayı kabul etmeli (tek satır×2, davranış İDDİASI değişmedi).
+    monkeypatch.setattr(dataset, "load", lambda use_cache=True, universe=None: ({}, index))
     store.write_json("portfolio.json", {"last_date": "2026-07-17", "positions": {}, "armed": []})
     scheduler._state["last_refetch_session"] = "2026-07-17"
     monkeypatch.setattr(loop, "daily_cycle",

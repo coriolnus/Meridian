@@ -238,15 +238,24 @@ def universe_drift() -> dict:
     # (elle düzenleme, birleşme sonrası kopyala-yapıştır) delist olmuş bir sembolü tarama evrenine
     # geri koymuş demektir — sessiz kalırsa motor günlerce ölü bir isim hakkında karar üretirdi.
     retired_in_universe = sorted(t for t in REPLAY_UNIVERSE if _data.is_retired(t))
+    # DÖRDÜNCÜ KANIT — ENDEKS-ÇIKIŞI BEKÇİSİ (TSK-116, 2026-09-03). `retired_in_universe`nin
+    # kardeşi ama FARKLI evrende ölçülür: 13 endeks-çıkışı sembol BİLEREK REPLAY_UNIVERSE'de KALIR
+    # (sağkalan yanlılığı artırmamak için — bkz. data.py INDEX_EXITED şerhi), o yüzden onu
+    # REPLAY_UNIVERSE'e karşı ölçmek HER ZAMAN doğru-pozitif üretirdi. Bekçi LIVE_UNIVERSE'e karşı
+    # ölçer: LIVE_UNIVERSE'in KENDİ TANIMI bu 13'ü zaten süzdüğü için normalde BOŞ döner; boş
+    # DEĞİLSE biri LIVE_UNIVERSE türetmesini (elle düzenleme, monkeypatch) bozmuş demektir.
+    index_exited_in_live = sorted(t for t in _data.LIVE_UNIVERSE if _data.is_index_exited(t))
     members = current()
     if not _plausible(members):
         return {"status": "unknown", "reason": _HEALTH.get("error") or "üyelik kaynağı yok",
                 "universe": len(REPLAY_UNIVERSE), "stale": [], "n_stale": 0,
                 "no_data": no_data, "n_no_data": len(no_data),
-                "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe}
+                "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe,
+                "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live}
     mset = {m.upper() for m in members}
     stale = sorted(t for t in REPLAY_UNIVERSE if t.upper() not in mset)
     return {"status": "ok", "source": _HEALTH.get("source"), "universe": len(REPLAY_UNIVERSE),
             "members": len(mset), "stale": stale, "n_stale": len(stale),
             "no_data": no_data, "n_no_data": len(no_data),
-            "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe}
+            "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe,
+            "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live}

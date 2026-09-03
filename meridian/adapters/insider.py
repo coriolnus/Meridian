@@ -2,8 +2,8 @@
 defter + Cohen–Malloy–Pomorski (2012) rutin/fırsatçı sınıflaması.
 
 (a) Ne yapar: FMP stable'ın `insider-trading/latest` akışını (piyasa geneli — maliyet evren
-boyundan BAĞIMSIZ: sembol başına değil sayfa başına istek) artımlı tarar, REPLAY_UNIVERSE
-kesişimini ham deftere işler ve sembol-başına özet skor üretir. `insider-trading/search` (sembol
+boyundan BAĞIMSIZ: sembol başına değil sayfa başına istek) artımlı tarar, LIVE_UNIVERSE
+kesişimini ham deftere işler (TSK-116, 2026-09-03) ve sembol-başına özet skor üretir. `insider-trading/search` (sembol
 başına geçmiş) ücretsiz FMP planında HTTP 402 döner (kota değil PLAN sınırı — canlı ölçüldü; aynı
 sondayla limit>100 ve page>=1 de 402, `date=` sessizce yok sayılıyor); `--gecmis` yolu 402'yi
 dürüstçe raporlar, plan yükselirse çalışır. Rotasyon/kota/maskeleme/muhasebe adapters/fmp.py'den
@@ -117,9 +117,10 @@ def _store():
 
 
 def _universe() -> list[str]:
-    """REPLAY_UNIVERSE — canlı evren. Geç import: data.py ağır (pandas) ve döngüsel bağımlılık riski."""
+    """LIVE_UNIVERSE — canlı evren (TSK-116, 2026-09-03: REPLAY_UNIVERSE eksi 13 endeks-çıkışı
+    sembol). Geç import: data.py ağır (pandas) ve döngüsel bağımlılık riski."""
     from . import data
-    return list(data.REPLAY_UNIVERSE)
+    return list(data.LIVE_UNIVERSE)
 
 
 def _iso(v) -> str | None:

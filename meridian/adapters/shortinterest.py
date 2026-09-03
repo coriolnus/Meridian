@@ -67,10 +67,11 @@ def _store():
 
 
 def _universe() -> list[str]:
-    """Kesişimde kullanılacak sembol evreni: `adapters.data.REPLAY_UNIVERSE`ün kopyası (elle bakımlı
-    liste). FINRA tüm piyasayı döndürür; kapsam bu evrenle sınırlanır."""
+    """Kesişimde kullanılacak sembol evreni: `adapters.data.LIVE_UNIVERSE`nin kopyası (CANLI çekim —
+    TSK-116, 2026-09-03: REPLAY_UNIVERSE eksi 13 endeks-çıkışı sembol). FINRA tüm piyasayı döndürür;
+    kapsam bu evrenle sınırlanır."""
     from . import data
-    return list(data.REPLAY_UNIVERSE)
+    return list(data.LIVE_UNIVERSE)
 
 
 # ------------------------------------------------------------------ FINRA çekimi

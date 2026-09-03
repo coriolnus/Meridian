@@ -485,7 +485,9 @@ def test_scheduler_flag_survives_publish_lag(seeded_sandbox, monkeypatch):
     fresh = (_uni(True), pd.DataFrame({"date": [pd.Timestamp("2026-07-20")]}))
     feed = {"now": stale}
     from meridian import dataset, loop
-    monkeypatch.setattr(dataset, "load", lambda use_cache=True: seen.append(use_cache) or feed["now"])
+    # TSK-116 düzeltme turu 2 (2026-09-03): _load_live_inner artık load(..., universe=...)
+    # çağırıyor — sahte fonksiyon yeni imzayı kabul etmeli (davranış İDDİASI değişmedi).
+    monkeypatch.setattr(dataset, "load", lambda use_cache=True, universe=None: seen.append(use_cache) or feed["now"])
     monkeypatch.setattr(loop, "daily_cycle",
                     lambda b, i, on_date=None: {"status": "ok", "date": "2026-07-20"})
     scheduler._state.update(last_refetch_session=None, refetch_attempts=0)

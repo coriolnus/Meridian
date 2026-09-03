@@ -153,7 +153,10 @@ def test_finviz_emekli_geri_giremez(sandbox_state, monkeypatch):
     index_df = make_bars(n=300)
     istenen: list = []
 
-    monkeypatch.setattr(dataset, "load", lambda use_cache=True: ({}, index_df.copy()))
+    # TSK-116 düzeltme turu 1 (2026-09-03): `_load_live_inner` artık `load(..., universe=...)`
+    # çağırıyor — sahte fonksiyon yeni imzayı kabul etmeli (tek satır, sahiplik: dataset.py'yi
+    # değiştiren turun sorumluluğu, davranış İDDİASI değişmedi).
+    monkeypatch.setattr(dataset, "load", lambda use_cache=True, universe=None: ({}, index_df.copy()))
     monkeypatch.setattr(finviz, "discover_universe", lambda **k: ["ANSS", "NVDA"])
 
     def sahte_load_many(tickers, start, end, use_cache=True, **k):
