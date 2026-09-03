@@ -1010,6 +1010,35 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
     # Search'te yarışır; kazanan Confirm'de teyit yürüyüşüne girer (oos_pipeline). Embargo Search'ün
     # alt sınırına aynen uygulanır — kapının hiçbir parçası farklı popülasyon göremez.
     _s_end = _search_end
+    # TSK-103 (2026-09-03, operatör K6): `full_detail_graded`in span_days'i DEĞERLENDİRME
+    # PENCERESİNİN takvim günüdür, trade kümesinin KENDİ aralığı DEĞİL — `segment_score`in
+    # kullandığı `(seg_end - lo).days` deseniyle AYNI (bu fonksiyonun kendi `is_d`/`oos_d`/`hold_d`
+    # çağrılarının zaten devraldığı desen). Ölçülen sınır:
+    # `is_start` (UN-EMBARGOED — `is_d`nin kendi `lo`su da `_embargoed_start(is_start, 0) ==
+    # is_start`dır, embargo yalnız OOS alt sınırına uygulanır) → `holdout_end` (replay'in TÜM
+    # penceresinin üst sınırı, `hold_d`nin de üst sınırı). Trade kümelenmesinden BAĞIMSIZ: bir rejim
+    # dilimi doğası gereği SEYREK olabilir ve kendi dar aralığından yıllıklanırsa yıllıklandırma
+    # paydası küçülür — `score.score_detail` docstring'i tam bu sınıfı adlandırıyor: "a 20-day burst
+    # inside a 183-day OOS window inflated realized_30d ~9x". Sınır çözülemezse (tarih ayrıştırma
+    # hatası) BUGÜNKÜ davranışa düşülür: span_days VERİLMEZ (`score_detail` kendi `_span_days`
+    # yedeğine döner) — uydurma yok, tek-seferlik `obs` uyarısı konuşur. Çivi: `test_span_dilim_
+    # takvimi_v386`.
+    _fdg_span = None
+    if eval_regime:
+        try:
+            import datetime as _dt
+            _fdg_span = (_dt.date.fromisoformat(holdout_end) - _dt.date.fromisoformat(is_start)).days
+        except Exception as e:
+            # PENCERE SINIRI OKUNAMADI: span_days'i UYDURMAK yerine ESKİ (trade-span) davranışa
+            # düşülür — ama bu düşüş SESSİZ DEĞİLDİR, `_warn_once` operatöre haber verir. Asla
+            # sessiz olamaz.
+            _warn_once("full_detail_graded_span_pencere_yok", is_start=str(is_start),
+                       holdout_end=str(holdout_end), error=f"{type(e).__name__}: {e}",
+                       detail="full_detail_graded span_days hesaplanamadı — trade kümesinin kendi aralığına düşüldü")
+            _fdg_span = None
+    _fdg = score_mod.score_detail(graded, goal, span_days=_fdg_span) if eval_regime else None
+    if _fdg is not None and _fdg_span is not None:
+        _fdg["span_days"] = _fdg_span
     return {
         "params": params, "n_trades_total": len(res.trades),
         "eval_regime": eval_regime, "n_trades_graded": len(graded),
@@ -1041,8 +1070,9 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
         "full_detail": res.detail(goal),
         # REJİM-DİLİMLİ TAM-PENCERE DEFTERİ. `full_detail` yukarıda replay'in BÜTÜN
         # işlemlerinden üretilir; bu ikinci defter AYNI pencerenin (`[is_start, holdout_end]`) ama
-        # YALNIZ `graded` popülasyonunun karnesidir — çağrı biçimi birebir aynı, değişen tek şey
-        # nüfus. Rejim ship'i karneye bunu `backtest_full@<rejim>` olarak yazar
+        # YALNIZ `graded` popülasyonunun karnesidir — değişen NÜFUS'tur (bugüne dek çağrı biçimi de
+        # birebir aynıydı; TSK-103'ten beri span_days de ayrışıyor, aşağıdaki BEDEL BEYANI madde-3).
+        # Rejim ship'i karneye bunu `backtest_full@<rejim>` olarak yazar
         # (`reflect._submit_locked`); dilimlenmemiş olanı yazsaydı rejim satırının ÖNCELİKLİ
         # beklenti bacağına GLOBAL bir popülasyon koymuş olurdu — `backtest_oos@<rejim>`
         # ek-adının önlediği hatanın ta kendisi.
@@ -1063,15 +1093,23 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
         #       `score_detail` çıktısı sabit şemadır (skalarlar + iki küçük iç sözlük, LİSTE YOK)
         #       ≈ 0,5 KB; `INC_DISK_CAP` 40 girdidir; yani mutlak tavan ≈ 20 KB ve o tavana ancak
         #       40 girdinin HEPSİ rejimli walk olursa ulaşılır (dosya bugün 190 KB).
-        #   (3) ÖLÇÜM KALİTESİ (inceleme 2026-09-02, TSK-002 bulgu-1): `span_days`/`mtm_equity`
-        #       verilmez — bilerek, düz `full_detail` ile AYNI çağrı biçimi (iki defter tek yasayla
-        #       hesaplanmalı). BEDELİ: span-türevi alanlar (`score`, `realized_30d`, `sharpe`,
-        #       `trades_per_year`, `components`) dilimin kendi KÜMELENMESİNDEN yıllıklanır ve
-        #       `max_drawdown` yalnız-rejim işlemlerinden kurulmuş, hiç yaşanmamış bir portföy
-        #       yolunundur; popülasyon-dürüst alanlar `avg_r`/`n`/`win_rate`/`total_return`dur ve
-        #       bugünkü TEK tüketici (`analytics._backtest_beklenti_r`) yalnız `avg_r`+`n` okur.
-        #       `span_days` geçirmek ayrı bir ruling kalemidir — sayıları değiştirir.
-        **({"full_detail_graded": score_mod.score_detail(graded, goal)} if eval_regime else {}),
+        #   (3) ÖLÇÜM KALİTESİ (TSK-103, 2026-09-03 — inceleme 2026-09-02, TSK-002 bulgu-1'in
+        #       RULING'i, operatör K6): `span_days` ARTIK VERİLİR — DEĞERLENDİRME PENCERESİNİN
+        #       takvim günü (`[is_start, holdout_end]`, `segment_score`in kullandığı sınır
+        #       dilbilgisiyle AYNI; pencere sınırı çözülemezse ESKİ davranışa düşülür: span_days
+        #       VERİLMEZ + tek-seferlik `obs` uyarısı, uydurulmaz). `mtm_equity` HÂLÂ verilmez —
+        #       bu madde onu KAPSAMAZ, kapsam dışı kalmaya devam eder. AYRIŞMA BİLEREK ve BEYANLI:
+        #       `graded`: pencere takvimi (TSK-103); düz `full_detail` (yukarıda, `res.detail`):
+        #       trade-span — kardeşi ÇIPLAK KALIR, trade kümesinin KENDİ span'iyle yıllıklanmaya
+        #       devam eder — İKİSİ AYNI SAYI DEĞİL: biri pencere takvimiyle, öbürü trade-span'le
+        #       yıllıklanmış `score`/`realized_30d`/`sharpe`/`trades_per_year`/`components` taşır.
+        #       `max_drawdown` yine yalnız-rejim işlemlerinden kurulmuş, hiç yaşanmamış bir portföy
+        #       yolunundur (bu madde onu değiştirmez). Popülasyon-dürüst alanlar
+        #       `avg_r`/`n`/`win_rate`/`total_return`dur ve bugünkü TEK tüketici
+        #       (`analytics._backtest_beklenti_r`) yalnız `avg_r`+`n` okur — bu ruling SAYILARI
+        #       DEĞİŞTİRİR ama o tüketiciyi KIRMAZ (span-türevi alanlara dokunmuyor). Çivi:
+        #       `test_span_dilim_takvimi_v386`.
+        **({"full_detail_graded": _fdg} if eval_regime else {}),
         # AÇIK-POZİSYON DÜŞÜŞÜ: TAM replay penceresinin ([is_start,
         # holdout_end]) M2M eğrisi üzerinden. Dilim SEÇİLMEZ çünkü blok kapıya girmez ve dilim
         # seçmek "hangi pencerede kırmızı?" sorusunu rapor okuyucusundan gizlerdi; pencere

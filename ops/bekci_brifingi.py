@@ -119,6 +119,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from meridian import hermes as _hermes_modulu                # noqa: E402
 from meridian import notify, obs, store                      # noqa: E402
 from ops import bekci_tarama as _tarama_kaynak               # noqa: E402
+from ops import soul_denetimi                                # noqa: E402
 
 # Tarama penceresi. Görev 1'in varsayılanıyla AYNI ve bilerek: pencereyi burada bağımsızca
 # değiştirmek, tarayıcının kendi kapsam beyanıyla mesajın kapsam satırını ayrıştırırdı.
@@ -641,6 +642,11 @@ def _zorunlu_bas(ham: dict) -> str:
     parcalar = [f"{BASLIK} — {n} kalem"]
     if ham.get("zorla_neden"):
         parcalar.append(str(ham["zorla_neden"]))
+    if ham.get("kural_beyani"):
+        # TESLİM ÖNCESİ KURAL DENETİMİNİN BEYANI (TSK-014) — zorunlu, çünkü "denetlenemedi" ya
+        # da "kural-uyumsuz sıralama reddedildi" bilgisini yalnız deftere yazmak, operatörün
+        # mesajı DENETLENMİŞ sanmasıdır. Zarf kırpması onu düşüremez.
+        parcalar.append(f"\u2139 {ham['kural_beyani']}")
     if ham.get("tarama_hatasi"):
         parcalar.append(f"⚠ TARAMA ÖLÇÜLEMEDİ · {ham['tarama_hatasi']} — bu bir 'arıza yok' "
                         "bulgusu DEĞİLDİR")
@@ -932,8 +938,16 @@ def sirala(ham: dict) -> tuple[str | None, str]:
     tabanın altında kalır; sıra ters olsaydı geçerli bir sessizlik hükmü "çöp cevap" sayılırdı)."""
     if ham["bos"]:
         return None, "ham"
+    # İSTEM `try` İÇİNDE KURULUR — ve bu, HEAD'in davranışının GERİ ALINMASIDIR (yeniden-inceleme
+    # §2, 2026-09-03). Eskiden satır `cevap = _profili_cagir(_prompt_kur(ham))` idi, yani prompt
+    # kurulumu da bu `except`in kapsamındaydı. TSK-014 istemi (yeniden-üretim ekinde tekrar
+    # kullanmak için) DEĞİŞKENE çıkarırken çağrıyı yanlışlıkla `try`ın DIŞINA taşıdı: `_prompt_kur`
+    # patlarsa `main`in ÇIPLAK `metin, kaynak = sirala(ham)` çağrısı onu yakalamaz, birim `failed` olur ve O GÜNKÜ
+    # mesaj HİÇ GİTMEZ. Yani teslimat garantisini korumak için eklenen katman, garantiyi bir satır
+    # önce deliyordu. Değişken yine tek kez kurulur (yeniden-üretim AYNI `istem`i kullanır).
     try:
-        cevap = _profili_cagir(_prompt_kur(ham))
+        istem = _prompt_kur(ham)
+        cevap = _profili_cagir(istem)
     except Exception as e:
         # SESSİZ YUTMA DEĞİL: hemen aşağıda `obs.log` ile ADIYLA kayda geçer. Kayıt olmasaydı
         # profil haftalarca ölü kalır, liste her gün ham gider ve kimse fark etmezdi.
@@ -988,7 +1002,42 @@ def sirala(ham: dict) -> tuple[str | None, str]:
         obs.log("bekci_brifingi_cevap_makul_degil", neden=neden, cevap=cevap[:200],
                 detail="model çıktısı sıralama sayılamaz — onarılmaz, ölçülen liste ham gider")
         return "", "ham"
-    return cevap, "llm"
+    return _kural_gecisi(cevap, istem, ham)
+
+
+def _kural_gecisi(cevap: str, istem: str, ham: dict) -> tuple[str, str]:
+    """TESLİM ÖNCESİ İKİNCİ GÖRÜŞ — bağlama (TSK-014). Akış `ops/soul_denetimi.py::gecir`dedir ve
+    üç bot da AYNI akışı çağırır; burada yalnız BU botun sözleşmesine çeviri var.
+
+    KURAL İHLALİ SIRALAMAYI DÜŞÜRÜR, ÖLÇÜLEN LİSTEYİ ASLA: burada YÜK ölçülen listedir ve model
+    metni SIRALAMADIR (`sirala` docstring'i). `("", "ham")` tam olarak bunu söyler.
+
+    `veri_terimleri` DAR TUTULUR: SOUL modele kalem tavanı koyuyor, yani ölçülen listenin bütün
+    jetonlarını "korunmalı" saymak HER koşumda ihlal üretir ve sıralama katmanını sessizce
+    kapatırdı. Listeye yalnız promptun ZATEN "susturamazsın" dediği ölçülemeyen kalem adları
+    girer.
+
+    KATMANIN KENDİSİ TESLİMATI DÜŞÜREMEZ (inceleme K-1, 2026-09-03). TSK-014'ten ÖNCE mutlu yol
+    (`return cevap, "llm"`) SIFIR yeni düşme yüzeyi taşıyordu; şimdi her başarılı koşum bir
+    `obs.log` yazımına, bir `dogrula` çağrısına ve bir dosya okumasına bağlı. Oradan çıkan tek bir
+    istisna `main`e kadar yürüse birim `failed` olur ve O GÜNKÜ BRİFİNG HİÇ GİTMEZ — yani teslimat
+    garantisini KORUMAK için eklenen katman, garantiyi delen şey olurdu. Sarmalayıcı bu yüzden
+    yapısaldır, seçilmiş değil: modül docstring'inin "hiçbir dal teslimatı düşüremez" iddiası
+    ancak burada MEKANİKLEŞİR."""
+    try:
+        g = soul_denetimi.gecir(profil_evi=HERMES_PROFIL_HOME, ilk_metin=cevap, ilk_istem=istem,
+                                veri_terimleri=[b["ad"] for b in _olculemeyenler(ham)],
+                                cagir=_profili_cagir, dogrula=lambda c: _cevap_makul(c, ham),
+                                bot=PROFIL_ADI)
+        ham["kural_beyani"] = g.beyan
+        return ("", "ham") if g.metin is None else (g.metin, "llm")
+    except Exception as e:  # sessiz-yutma: SESSİZ DEĞİL, SİNYALLİ — düşüş hem `obs.log` ile ADIYLA deftere hem gövdedeki BEYAN satırına geçer; yakalama tek amaç içindir: geçiş katmanının kendisi teslimatı DÜŞÜREMEZ (fail-open sözleşmesi, inceleme K-1)
+        obs.log("bekci_brifingi_kural_gecisi_patladi", hata=repr(e)[:300],
+                detail="teslim öncesi kural denetimi KATMANI düştü — denetim yapılmadı, "
+                       "sıralama AYNEN teslim edilir (fail-open, beyanlı)")
+        ham["kural_beyani"] = ("kural denetimi yapılamadı: geçiş katmanı düştü "
+                               f"({type(e).__name__})")
+        return cevap, "llm"
 
 
 # ================================================================================================

@@ -125,6 +125,7 @@ from meridian import hermes as _hermes_modulu                # noqa: E402
 from meridian import memory, notify, obs, store              # noqa: E402
 from ops import alarm_backlog_digest as _alarm_kaynak        # noqa: E402
 from ops import oneri_brifingi as _oneri_kaynak              # noqa: E402
+from ops import soul_denetimi                                # noqa: E402
 
 SELF_REVIEW_DOSYA = "self_review.json"
 
@@ -134,6 +135,10 @@ SELF_REVIEW_DOSYA = "self_review.json"
 DAMGA_DOSYA = "sef_brifingi_damga.json"
 SON_BRIFING = "son_brifing"
 SESSIZ_SAYAC = "ardisik_sessiz"
+# TESLİM ÖNCESİ KURAL DENETİMİNİN SON HÜKMÜ (TSK-014, 2026-09-03). Olay `events.jsonl`de de
+# duruyor, ama defteri operatör OKUMAZ — damga dosyasındaki kopyanın okuyucusu `_durum_satiri`dır
+# ve o, HER koşumun ilk satırıdır (YASA 6: okuyucusuz yazım yok).
+KURAL_DENETIMI = "son_kural_denetimi"
 
 # ARDIŞIK SESSİZLİK TAVANI — devredilen yolun TESLİMAT GARANTİSİNİN yerine geçen taban.
 #
@@ -342,6 +347,31 @@ def _son_brifingi_yaz(metin: str, kaynak: str = "ham") -> None:
     store.update_json(DAMGA_DOSYA, _yaz, {})
 
 
+def _kural_denetimini_yaz(kayit: dict | None) -> None:
+    """Kural denetiminin son hükmünü damga dosyasına yazar (TSK-014 · D6).
+
+    `_son_brifingi_yaz` İLE AYNI DİSİPLİN: YALNIZ gerçekten teslim edildikten sonra çağrılır.
+    Kuru koşumda yazılsaydı operatörün hiç görmediği bir mesajın hükmü "son hüküm" sayılırdı."""
+    if not kayit:
+        return
+
+    def _yaz(d: dict) -> bool:
+        # `bot` ALANI DAMGAYA YAZILMAZ (inceleme Ö-4): bu dosya `@sef`in KENDİ damgasıdır, alan
+        # sabittir ve okunacak bir şey taşımaz. Yasa 6 iki yönlüdür — okunmayacak alan YAZILMAZ.
+        # (Olay kaydında `bot` KALIR: `events.jsonl` üç botun ortak defteridir.)
+        d[KURAL_DENETIMI] = {k: v for k, v in kayit.items() if k != "bot"} | {
+            "ts": memory.now_iso()}
+        return True
+
+    store.update_json(DAMGA_DOSYA, _yaz, {})
+
+
+def _son_kural_denetimi() -> dict:
+    """Damgadaki son kural hükmü — `_durum_satiri`nin OKUDUĞU alan (YASA 6'nın okuyucu tarafı)."""
+    d = (store.read_json(DAMGA_DOSYA, {}) or {}).get(KURAL_DENETIMI) or {}
+    return d if isinstance(d, dict) else {}
+
+
 def _ardisik_sessiz() -> int:
     """Üst üste kaç gün `SESSIZ` hükmü verildi (teslimat YOK). Okunamayan/eksik değer 0'dır —
     tabanın kendi arızası teslimatı DÜŞÜREMEZ, yalnız tavanı geciktirir."""
@@ -479,6 +509,11 @@ def _ham_parcalari(ham: dict) -> tuple[list[str], list[tuple[str, str]]]:
     zorunlu = [BASLIK]
     if ham.get("zorla_neden"):
         zorunlu.append(str(ham["zorla_neden"]))
+    if ham.get("kural_beyani"):
+        # KURAL DENETİMİ BEYANI DA ZORUNLUDUR (TSK-014). "Denetlenemedi" ya da "kural-uyumsuz
+        # çıktı reddedildi" bilgisini yalnız deftere yazmak, operatörün mesajı DENETLENMİŞ
+        # sanmasıdır — zarf kırpması onu düşüremez.
+        zorunlu.append(f"ℹ {ham['kural_beyani']}")
     return (zorunlu + _olculemedi_satirlari(ham),
             [(k["kaynak"], k["mesaj"]) for k in ham["teslim_edilecek"]])
 
@@ -795,8 +830,16 @@ def sirala(ham: dict) -> tuple[str | None, str]:
     tabanın altında kalır; sıra ters olsaydı geçerli bir sessizlik hükmü "çöp cevap" sayılırdı)."""
     if ham["bos"]:
         return None, "ham"
+    # İSTEM `try` İÇİNDE KURULUR — ve bu, HEAD'in davranışının GERİ ALINMASIDIR (yeniden-inceleme
+    # §2, 2026-09-03). Eskiden satır `cevap = _profili_cagir(_prompt_kur(ham))` idi, yani prompt
+    # kurulumu da bu `except`in kapsamındaydı. TSK-014 istemi (yeniden-üretim ekinde tekrar
+    # kullanmak için) DEĞİŞKENE çıkarırken çağrıyı yanlışlıkla `try`ın DIŞINA taşıdı: `_prompt_kur`
+    # patlarsa `main`in ÇIPLAK `metin, kaynak = sirala(ham)` çağrısı onu yakalamaz, birim `failed` olur ve O GÜNKÜ
+    # mesaj HİÇ GİTMEZ. Yani teslimat garantisini korumak için eklenen katman, garantiyi bir satır
+    # önce deliyordu. Değişken yine tek kez kurulur (yeniden-üretim AYNI `istem`i kullanır).
     try:
-        cevap = _profili_cagir(_prompt_kur(ham))
+        istem = _prompt_kur(ham)
+        cevap = _profili_cagir(istem)
     except Exception as e:
         # SESSİZ YUTMA DEĞİL: hemen aşağıda `obs.log` ile ADIYLA kayda geçer. Kayıt olmasaydı
         # profil haftalarca ölü kalır, brifing her gün ham gider ve kimse fark etmezdi.
@@ -855,7 +898,42 @@ def sirala(ham: dict) -> tuple[str | None, str]:
         obs.log("sef_brifingi_cevap_makul_degil", neden=neden, cevap=cevap[:200],
                 detail="model çıktısı brifing sayılamaz — onarılmaz, HAM brifing gider")
         return _ham_metin(ham), "ham"
-    return cevap, "llm"
+    return _kural_gecisi(cevap, istem, ham)
+
+
+def _kural_gecisi(cevap: str, istem: str, ham: dict) -> tuple[str, str]:
+    """TESLİM ÖNCESİ İKİNCİ GÖRÜŞ — bağlama (TSK-014). Akışın tamamı `ops/soul_denetimi.py`dedir
+    ve üç bot da AYNI akışı çağırır; burada yalnız BU botun sözleşmesine çeviri var.
+
+    `veri_terimleri` DAR TUTULUR ve gerekçesi ölçümdür: SOUL modele "en çok üç kalem" diyor, yani
+    kaynak metinlerinin bütün jetonlarını "korunmalı" saymak HER koşumda ihlal üretir ve sıralama
+    katmanını sessizce kapatırdı (kazanç ölçülüp bedel ölçülmeyen değişiklik sınıfı). Listeye
+    yalnız promptun ZATEN "bunları SUSTURAMAZSIN" dediği kaynak adları girer.
+
+    HÜKÜM KURAL-UYUMSUZSA HAM GİDER: model metni düşer, kaynakların hesabı DÜŞMEZ.
+
+    KATMANIN KENDİSİ TESLİMATI DÜŞÜREMEZ (inceleme K-1, 2026-09-03). TSK-014'ten ÖNCE mutlu yol
+    (`return cevap, "llm"`) SIFIR yeni düşme yüzeyi taşıyordu; şimdi her başarılı koşum bir
+    `obs.log` yazımına, bir `dogrula` çağrısına ve bir dosya okumasına bağlı. Oradan çıkan tek bir
+    istisna `main`e kadar yürüse birim `failed` olur ve O GÜNKÜ BRİFİNG HİÇ GİTMEZ — yani teslimat
+    garantisini KORUMAK için eklenen katman, garantiyi delen şey olurdu. Sarmalayıcı bu yüzden
+    yapısaldır, seçilmiş değil: modül docstring'inin "hiçbir dal teslimatı düşüremez" iddiası
+    ancak burada MEKANİKLEŞİR."""
+    try:
+        g = soul_denetimi.gecir(profil_evi=HERMES_PROFIL_HOME, ilk_metin=cevap, ilk_istem=istem,
+                                veri_terimleri=[k["ad"] for k in ham["olculemeyen"]],
+                                cagir=_profili_cagir, dogrula=lambda c: _cevap_makul(c, ham),
+                                bot=PROFIL_ADI)
+        ham["kural_beyani"] = g.beyan
+        ham["kural_kaydi"] = g.kayit(PROFIL_ADI)      # damgayı `main` teslimattan SONRA yazar
+        return (_ham_metin(ham), "ham") if g.metin is None else (g.metin, "llm")
+    except Exception as e:  # sessiz-yutma: SESSİZ DEĞİL, SİNYALLİ — düşüş hem `obs.log` ile ADIYLA deftere hem gövdedeki BEYAN satırına geçer; yakalama tek amaç içindir: geçiş katmanının kendisi teslimatı DÜŞÜREMEZ (fail-open sözleşmesi, inceleme K-1)
+        obs.log("sef_brifingi_kural_gecisi_patladi", hata=repr(e)[:300],
+                detail="teslim öncesi kural denetimi KATMANI düştü — denetim yapılmadı, "
+                       "sıralama AYNEN teslim edilir (fail-open, beyanlı)")
+        ham["kural_beyani"] = ("kural denetimi yapılamadı: geçiş katmanı düştü "
+                               f"({type(e).__name__})")
+        return cevap, "llm"
 
 
 # ================================================================================================
@@ -896,6 +974,11 @@ def _paketle(metin: str, kaynak: str, ham: dict) -> tuple[str, list[str]]:
             beyan = (f"\n\n⏭ {len(ham['teslim_edilecek'])} kaynak var ama sıralama en çok "
                      f"{SOUL_KALEM_TAVANI} kalem taşır — HİÇBİRİ DAMGALANMADI, yarın yeniden "
                      "bildirilecek (tam liste panoda).")
+        if ham.get("kural_beyani"):
+            # LLM DALINDA DA ZORUNLU (TSK-014): denetlenemeyen bir metni "denetlendi" gibi
+            # göndermek, denetimi hiç yapmamaktan beterdir. Beyan paydan ÖNCE eklenir — zarf
+            # hesabına girmeyen bir beyan, `_paketle`nin kapattığı sınıfı geri açardı.
+            beyan += f"\n\nℹ {ham['kural_beyani']}"
         # BEYAN ZARF HESABINA GİRER: beyanı paydan SONRA eklemek, tam da bu fonksiyonun kapattığı
         # "kesilen mesaj + basılan damga" sınıfını zarf tarafından geri açardı (mesaj 4096'yı aşar
         # ve Telegram gövdeyi reddeder → gönderim düşer, ama biz sığdı sanmıştık).
@@ -980,9 +1063,38 @@ def _damgala(ham: dict, izinli: list[str]) -> list[str]:
 # ================================================================================================
 
 def _durum_satiri(ham: dict) -> str:
+    """Operatörün HER koşumda (kuru koşum dâhil) gördüğü ilk satır — ve damgadaki kural hükmünün
+    OKUYUCUSU (YASA 6). Hükmü yalnız `events.jsonl`e yazmak, operatörün hiç bakmadığı bir yere
+    yazmaktır; kural denetiminin çalıştığı ya da haftalardır düştüğü buradan görünür."""
     teslim = ", ".join(k["ad"] for k in ham["teslim_edilecek"]) or "yok"
     eksik = ", ".join(k["ad"] for k in ham["olculemeyen"]) or "yok"
-    return f"teslim edilecek kaynak: {teslim} · ölçülemeyen: {eksik}"
+    return (f"teslim edilecek kaynak: {teslim} · ölçülemeyen: {eksik} · "
+            f"kural denetimi: {_kural_denetimi_satiri()}")
+
+
+def _kural_denetimi_satiri() -> str:
+    """Damgadaki kural hükmünün OKUNABİLİR hâli — damgaya YAZILAN HER ALANI okur (Yasa 6).
+
+    TARİH ZORUNLU (inceleme Ö-4, 2026-09-03): damga YALNIZ `notify.send` başarısından sonra
+    yazılır, yani teslimat haftalarca düşse bile buradaki hüküm yerinde durur. Tarihsiz basılan
+    bir satır o hükmü TAZE gösterirdi — TSK-110'un kapattığı "bayat gövde" sınıfının aynısı, bu
+    kez operatörün gördüğü İLK satırda.
+
+    TEŞHİS DE OKUNUR: `ihlal` ve `gerekce` yazılıp okunmasaydı, yazımın kendisi Yasa 6'nın
+    kapattığı sınıf olurdu — hükmün NEDENİ deftere gömülü kalır, operatör yalnız etiketi görürdü."""
+    kd = _son_kural_denetimi()
+    if not kd:
+        return "hiç koşmadı (damgada kayıt yok)"
+    parcalar = [f"{kd.get('hukum')}/{kd.get('kaynak')}",
+                f"{kd.get('cagri_n')} çağrı",
+                "yeniden-üretim VAR" if kd.get("yeniden_uretim") else "yeniden-üretim yok",
+                f"ts={kd.get('ts') or 'BİLİNMİYOR'}"]
+    ihlal = kd.get("ihlal") or []
+    if ihlal:
+        parcalar.append("ihlal: " + " | ".join(str(x) for x in ihlal))
+    if kd.get("gerekce"):
+        parcalar.append(f"gerekçe: {kd['gerekce']}")
+    return " · ".join(parcalar)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1029,6 +1141,7 @@ def main(argv: list[str] | None = None) -> int:
 
     damgalanan = _damgala(ham, damgalanabilir)
     _son_brifingi_yaz(govde, kaynak)
+    _kural_denetimini_yaz(ham.get("kural_kaydi"))
     # TESLİMAT ARDIŞIK SESSİZLİK ZİNCİRİNİ KIRAR — zorla teslim de dâhil (operatöre ULAŞTI).
     _sessiz_sayaci_sifirla()
     obs.log("sef_brifingi_teslim", siralama=kaynak, damgalanan=damgalanan,

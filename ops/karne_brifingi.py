@@ -157,6 +157,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from meridian import hermes as _hermes_modulu                # noqa: E402
 from meridian import notify, obs, store                      # noqa: E402
 from ops import karne_hesap as _karne_hesap                  # noqa: E402
+from ops import soul_denetimi                                # noqa: E402
 
 # SORU LİSTESİ VE HÜKÜM ADLARI GÖREV 1'İN KAYNAĞINDAN GELİR, BURADA YENİDEN YAZILMAZ
 # (Tek-kaynak yasası). Harness'in kendi kopyası olsaydı, hesap bir soru eklediği gün karne
@@ -1322,8 +1323,16 @@ def sun(ham: dict) -> tuple[str, str]:
         # döndürmeyecek bir koşum için ücretsiz katman kotası harcamak, kotanın gerçekten
         # gerektiği haftayı riske atar. TESLİMAT YİNE OLUR — arıza beyanı zaten zorunlu baştadır.
         return "", "ham"
+    # İSTEM `try` İÇİNDE KURULUR — ve bu, HEAD'in davranışının GERİ ALINMASIDIR (yeniden-inceleme
+    # §2, 2026-09-03). Eskiden satır `cevap = _profili_cagir(_prompt_kur(ham))` idi, yani prompt
+    # kurulumu da bu `except`in kapsamındaydı. TSK-014 istemi (yeniden-üretim ekinde tekrar
+    # kullanmak için) DEĞİŞKENE çıkarırken çağrıyı yanlışlıkla `try`ın DIŞINA taşıdı: `_prompt_kur`
+    # patlarsa `main`in ÇIPLAK `metin, kaynak = sun(ham)` çağrısı onu yakalamaz, birim `failed` olur ve O GÜNKÜ
+    # mesaj HİÇ GİTMEZ. Yani teslimat garantisini korumak için eklenen katman, garantiyi bir satır
+    # önce deliyordu. Değişken yine tek kez kurulur (yeniden-üretim AYNI `istem`i kullanır).
     try:
-        cevap = _profili_cagir(_prompt_kur(ham))
+        istem = _prompt_kur(ham)
+        cevap = _profili_cagir(istem)
     except Exception as e:
         # SESSİZ YUTMA DEĞİL: hemen aşağıda `obs.log` ile ADIYLA kayda geçer. Kayıt olmasaydı
         # profil aylarca ölü kalır, karne her hafta ham gider ve kimse fark etmezdi.
@@ -1352,7 +1361,41 @@ def sun(ham: dict) -> tuple[str, str]:
         obs.log("karne_brifingi_cevap_makul_degil", neden=neden, cevap=cevap[:200],
                 detail="model çıktısı sunum sayılamaz — onarılmaz, ölçülen karne ham gider")
         return "", "ham"
-    return cevap, "llm"
+    return _kural_gecisi(cevap, istem, ham)
+
+
+def _kural_gecisi(cevap: str, istem: str, ham: dict) -> tuple[str, str]:
+    """TESLİM ÖNCESİ İKİNCİ GÖRÜŞ — bağlama (TSK-014). Akış `ops/soul_denetimi.py::gecir`dedir ve
+    üç bot da AYNI akışı çağırır; burada yalnız BU botun sözleşmesine çeviri var.
+
+    `("", "ham")` BURADA "SUNUM YOK" DEMEKTİR, "teslimat yok" değil (SAPMA 1): ölçülen karne her
+    hâlükârda gider. Yani kural ihlali en fazla o haftanın SUNUMUNU düşürür.
+
+    `veri_terimleri` BOŞTUR ve bu ÖLÇÜLMÜŞ BİR KARARDIR: ölçülen karne satırlarını BETİK yazıyor
+    (`_olculen_karne`) ve tahrif edilmiş kopyalarını `_degistirilmis_satirlari_dus` zaten mekanik
+    olarak düşürüyor. Aynı satırları bir de "korunmalı terim" saymak, modelin SUNUM bölgesinde
+    onları TEKRARLAMASINI ZORUNLU kılardı — `_cevap_makul`in tam tersini istemek olurdu.
+
+    KATMANIN KENDİSİ TESLİMATI DÜŞÜREMEZ (inceleme K-1, 2026-09-03). TSK-014'ten ÖNCE mutlu yol
+    (`return cevap, "llm"`) SIFIR yeni düşme yüzeyi taşıyordu; şimdi her başarılı koşum bir
+    `obs.log` yazımına, bir `dogrula` çağrısına ve bir dosya okumasına bağlı. Oradan çıkan tek bir
+    istisna `main`e kadar yürüse birim `failed` olur ve O GÜNKÜ BRİFİNG HİÇ GİTMEZ — yani teslimat
+    garantisini KORUMAK için eklenen katman, garantiyi delen şey olurdu. Sarmalayıcı bu yüzden
+    yapısaldır, seçilmiş değil: modül docstring'inin "hiçbir dal teslimatı düşüremez" iddiası
+    ancak burada MEKANİKLEŞİR."""
+    try:
+        g = soul_denetimi.gecir(profil_evi=HERMES_PROFIL_HOME, ilk_metin=cevap, ilk_istem=istem,
+                                veri_terimleri=[], cagir=_profili_cagir,
+                                dogrula=lambda c: _cevap_makul(c, ham), bot=PROFIL_ADI)
+        ham["kural_beyani"] = g.beyan
+        return ("", "ham") if g.metin is None else (g.metin, "llm")
+    except Exception as e:  # sessiz-yutma: SESSİZ DEĞİL, SİNYALLİ — düşüş hem `obs.log` ile ADIYLA deftere hem gövdedeki BEYAN satırına geçer; yakalama tek amaç içindir: geçiş katmanının kendisi teslimatı DÜŞÜREMEZ (fail-open sözleşmesi, inceleme K-1)
+        obs.log("karne_brifingi_kural_gecisi_patladi", hata=repr(e)[:300],
+                detail="teslim öncesi kural denetimi KATMANI düştü — denetim yapılmadı, "
+                       "sunum AYNEN teslim edilir (fail-open, beyanlı)")
+        ham["kural_beyani"] = ("kural denetimi yapılamadı: geçiş katmanı düştü "
+                               f"({type(e).__name__})")
+        return cevap, "llm"
 
 
 # ================================================================================================
@@ -1464,6 +1507,11 @@ def _paketle(metin: str, kaynak: str, ham: dict, bas: str | None = None) -> tupl
     liste_govde = zarf["liste"]
 
     parcalar = [bas]
+    if ham.get("kural_beyani"):
+        # TESLİM ÖNCESİ KURAL DENETİMİNİN BEYANI (TSK-014). Zorunlu başın HEMEN ARDINDA, model
+        # payının DIŞINDA durur: "denetlenemedi" bilgisini modelin payına koymak, onu kırpılabilir
+        # yapardı. Zarf aşılırsa son çare KAPSAMI kısaltır — hükümler yine korunur.
+        parcalar.append(f"\u2139 {ham['kural_beyani']}")
     # GERÇEKLEŞEN SUNUM KAYNAĞI, `sun()`un NİYETİ DEĞİL (denetim LOW-5b). `sun()` "llm" döndürse
     # bile aşağıdaki üç dal metni boşaltabilir; `kaynak`ı olduğu gibi deftere yazmak, GİTMEMİŞ
     # bir sunumu "gitti" diye kaydetmektir. `"llm_dusuruldu"` AYRI bir değerdir: "model hiç
