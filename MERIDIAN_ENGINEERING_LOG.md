@@ -2163,3 +2163,28 @@ fail-open korunur. Implementer: `_gate_eval` record_candidate satırına `ret_se
 **TSK-116 revizesi (16:27Z):** keşif REPLAY_UNIVERSE'in tek liste olduğunu gösterdi — 13 endeks-çıkışı sembolünü tam emekli etmek geçmiş replay'de sağkalan yanlılığını artırırdı (A1: açık pozisyon 8'de yok, ama trades'te 11'i, planlarda 10'u geçmişte var). Operatöre sade dille soruldu → **"yalnız canlıdan çıkar"**: yeni `INDEX_EXITED` işareti + türetilmiş `LIVE_UNIVERSE` (238), REPLAY_UNIVERSE 251 ve RETIRED 8 dokunulmaz; sevk (sonnet). Sabahki K5 kararı bu revizeyle ROADMAP'e işlenecek.
 
 **Gece kapanışı:** __GECE__
+
+### 2026-09-03 akşam-2 (Rol-1) — TSK-116 · TSK-118 · TSK-121 kapanışları, dağıtım #8 ertelemesi
+
+**TSK-116 (yalnız canlıdan çıkar), 1 inceleme + 3 düzeltme + yeniden-inceleme temiz, commit b81b19b:** r0 açık kalem — Finviz süzgeci pratikte
+no-op, `dataset.load()` tabanı canlı yolda 251 → aday taraması 13'ü hâlâ görüyordu (implementer dürüstçe raporladı; brief D2 eksikti) → r1
+`load(universe=)` + canlı yol LIVE ∪ açık pozisyon/armed (`portfolio` doc, `_canli_korunan_evren`); r2 Rol-1 risk kümesi 3 kırmızı (sabit-imzalı
+`dataset.load` sahteleri v67/regime_patch/v135) → 6 sahte güncellendi; inceleme (sonnet) 2 kritik: custom evren süreç-içi önbelleği devre dışı
+bırakmıştı (5 dk poll × 238 CSV — bedel ölçülmemişti) + kurtarma dalı 251 superset dönüyordu → r3 imzalı önbellek (soğuk 716 ms / sıcak
+0,045 ms sandbox), kırpılmış kurtarma, marketstream positions∪armed; 329 passed, mutasyon 7/7. Ders: "canlı yol için parametre aç" değişikliği
+önbellek yolunu sessizce kaybetti — bedel yasası tam bu sınıfı yakaladı; ağ tasarrufu varsayımı da ölçümle çürüdü (üç yüzey evren boyutundan
+bağımsız). Canlı payda 238 restart sonrası (dağıtım #8).
+
+**TSK-118 (dokuzuncu Hafıza görünümü), commit ec4616d push:** `MeridianDersleri` Bilgi Tabanı'ndan `hafiza-dersler` görünümüne TAŞINDI (çoğaltılmadı),
+`?sekme=dersler` köprüsü, palet anahtarları taşındı, PARK-1 ilkesi korundu ("palet görünüme iner" — dersler artık görünüm); 42→43 ölçüldü; v394
+17 çivi, 896 passed. İnceleme: "SEKİZ BÖLÜM" şerhi kalmıştı → düzeltildi, build yeniden (hash aynı). 2285 sabiti: iki sökücü farkı (ölçüm komutu raporda).
+
+**TSK-121 (komşu kopyalar), commit 2211977:** `parcalar/bildiri.tsx`, `bayat.tsx`, `olculemedi.tsx` (`olculemediKur(aile, ek)` — altı aile:
+satir/hucre/kpi/span/ikonlu/tooltip); 13+3+2 varyant incelemede `git show HEAD:` ile bağımsız birebir doğrulandı; portföy `kisa: string` →
+`kisaMetin` 30 çağrı yeri (`PortfoyYuzey.tsx` ilk taramada kaçtı, `npm run kontrol` yakaladı); v323 pano-geneli: 565 çağrı, taban 150→500,
+saf-ifade tavanı 3→45 (ölçülen 39); sınıf-A ihlali pano genelinde 1 (Huni.tsx `neden` teknik ayrıntı taşıyordu) → düzeltildi (tek beyanlı metin
+değişimi); v381 `kopyalari_bul(desen)`; 510 passed, mutasyon 3/3; bundle pano-J6CDxFmr.js, CSS sabit. SIRA: 121 → 117 (göç tek yerde).
+
+**Dağıtım #8:** 20:07Z cron'u SİLİNDİ (TSK-116/121 ağaçta çalışırken [0a] temiz-ağaç kapısı düşerdi) → 21:47Z (00:47 yerel) tek-seferlik; temiz +
+suite-yeşil değilse yarın pre-market. Suite #10 kapsamı: b81b19b (116) · ec4616d (118) · 2211977 (121) · TSK-120 (uçuşta: sembol çapası üçüncü
+besleme) → tek suite. TSK-119 brief'i (v401) 120'den sonra; TSK-117 planı (8 görev, v395–v400) 121'den sonra G1 ile başlar.
