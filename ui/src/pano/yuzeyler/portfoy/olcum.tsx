@@ -76,7 +76,7 @@ export function adet(v: number): string {
 export function kzSinifi(v: number | null): string {
   if (v === null) return "text-muted-foreground";
   if (v > 0) return "text-[var(--yon-arti)]";
-  if (v < 0) return "text-red-600 dark:text-red-400";
+  if (v < 0) return "text-[var(--yon-eksi)]";
   return "text-muted-foreground";
 }
 
@@ -101,7 +101,7 @@ export function kzDolgusu(v: number | null): string {
      boşluktur ve kârla aynı görsel ağırlığı taşımamalı. */
   if (v === null) return "fill-muted-foreground/20 stroke-muted-foreground/60";
   if (v > 0) return "fill-[var(--yon-arti)]/85 stroke-[var(--yon-arti)]";
-  if (v < 0) return "fill-red-500/85 stroke-red-600 dark:stroke-red-400";
+  if (v < 0) return "fill-[var(--yon-eksi)]/85 stroke-[var(--yon-eksi)]";
   return "fill-muted-foreground/20 stroke-muted-foreground/60";
 }
 
@@ -111,7 +111,7 @@ export function kzDolgusu(v: number | null): string {
 export function kzOrnegi(v: number | null): string {
   if (v === null) return "bg-muted-foreground/20 ring-1 ring-muted-foreground/60";
   if (v > 0) return "bg-[var(--yon-arti)]/85 ring-1 ring-[var(--yon-arti)]";
-  if (v < 0) return "bg-red-500/85 ring-1 ring-red-600 dark:ring-red-400";
+  if (v < 0) return "bg-[var(--yon-eksi)]/85 ring-1 ring-[var(--yon-eksi)]";
   return "bg-muted-foreground/20 ring-1 ring-muted-foreground/60";
 }
 

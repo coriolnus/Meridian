@@ -302,7 +302,7 @@ export function KalibrasyonKarti({
                     className={
                       Math.sign(p.tahmin) === Math.sign(p.gerceklesen)
                         ? "text-basari"
-                        : "text-red-600 dark:text-red-400"
+                        : "text-kritik"
                     }
                   >
                     {Math.sign(p.tahmin) === Math.sign(p.gerceklesen) ? "yön tuttu" : "yön ters"}

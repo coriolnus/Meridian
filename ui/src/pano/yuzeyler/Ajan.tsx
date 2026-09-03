@@ -378,7 +378,7 @@ function Baslik({
       <span
         className={cn(
           "grid size-8 shrink-0 place-items-center border bg-muted font-semibold text-xs",
-          tur === "kanal" ? "rounded-lg border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-400" : null,
+          tur === "kanal" ? "rounded-lg border-bilgi-h bg-bilgi-t text-bilgi" : null,
           a?.tur === "ana" || sahipsiz ? "rounded-lg" : tur === "kanal" ? null : "rounded-full",
         )}
       >

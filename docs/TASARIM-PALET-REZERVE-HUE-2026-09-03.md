@@ -71,7 +71,7 @@ betiği bu turun H2'sinde `tests/` çivisine dönüşür, §5) · literal sayım
 | KRİTİK | 336°–6° | `sev-1` | gece `red` 1° içeride |
 | UYARI + YÖN-EKSİ | 8°–30° | `sev-2`, `yon-eksi` | ikisi aynı bantta: bilinçli (turuncu-kırmızı ailesi), ışıklılıkla ayrılır |
 | BAŞARI + YÖN-ARTI | 132°–155° | `sev-3`, `yon-arti` | emerald-500 (~160°) DIŞARIDA — literal sınıflar jetona taşınınca hizalanır |
-| BİLGİ (195° ailesi) | 185°–210° | `sky/blue/sapphire` → `--bilgi` | **S3 KARAR (operatör 2026-09-03 ~10:50Z): BİLGİ rolü, REZERVE.** Bedel: `--color-seri-9` (camgöbeği, 192°) artık bantta — TSK-124 takımyıldızı düğümü GEÇİCİ BEYANLI İSTİSNA (K-4'e kadar) |
+| BİLGİ (195° ailesi) | 185°–210° | `sky/blue/sapphire` → `--bilgi` | **S3 KARAR (operatör 2026-09-03 ~10:50Z): BİLGİ rolü, REZERVE.** Bedel: `--color-seri-9` (camgöbeği, 192°) artık bantta — TSK-124 takımyıldızı düğümü GEÇİCİ BEYANLI İSTİSNA (K-4'e kadar) · **K-2d TAMAM (2026-09-04):** 3 dosyadaki 12 literal `sky-*` kullanımı `bilgi`/`bilgi-h`/`bilgi-t` utility'lerine göçtü (tavan v397'de 12→0); gezinme/veri serisi anlamı taşıyan kullanım YOK — 12'sinin tamamı bilgi rozeti/çağrı-kutusu (task-5-6-report.md) |
 | GEZİNME | 210°–232° | `nav-*` | |
 | MOD | 245°–270° | `mod-kesif`, `mod-canli` | gece 251–254° içeride |
 | SERBEST (veri serileri) | 32°–130° · 156°–184° · 234°–244° · 272°–334° | seri rampası | fiilen dört kullanılabilir hue: ~60° (sarı — beyaz zeminde zayıf), ~95° (zeytin/lime), ~175° (teal), ~290° (mor) ve ~320° (macenta) |

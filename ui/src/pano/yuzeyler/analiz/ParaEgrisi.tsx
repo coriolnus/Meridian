@@ -535,7 +535,7 @@ function RiskKartlari({ veri }: { veri: PerformansGovdesi }) {
           <CardTitle className="font-normal text-muted-foreground text-sm">Kuyruk riski (CVaR)</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          <div className="text-2xl leading-none tracking-tight text-red-600 tabular-nums dark:text-red-400">
+          <div className="text-2xl leading-none tracking-tight text-kritik tabular-nums">
             <Deger
               metin={kuyruk === null ? null : rKati(kuyruk.cvar_r === undefined ? undefined : -kuyruk.cvar_r)}
               neden="Defterde yeterli işlem yok — kuyruk kaybı hesaplanamadı" teknik="tail_risk null — 12'den (TAIL_MIN_SAMPLE) az r_multiple var; blok-bootstrap'ın dürüstçe söyleyeceği bir şey yok"

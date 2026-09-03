@@ -137,7 +137,7 @@ const kolonlar: ColumnDef<DataTableFeatures, Hipotez>[] = [
         <span
           className={cn(
             "text-xs tabular-nums",
-            g > 0 ? "text-[var(--yon-arti)]" : g < 0 ? "text-red-600 dark:text-red-400" : undefined,
+            g > 0 ? "text-[var(--yon-arti)]" : g < 0 ? "text-[var(--yon-eksi)]" : undefined,
           )}
         >
           {bicimSayi(g, 4, true)}

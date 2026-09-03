@@ -179,8 +179,8 @@ function HafizaMesaji({
   neden: string | null;
 }) {
   return (
-    <div className="rounded-xl border border-sky-500/25 bg-sky-500/5 px-4 py-3">
-      <p className="flex items-center gap-1.5 font-semibold text-[10px] text-sky-700 uppercase tracking-wider dark:text-sky-400">
+    <div className="rounded-xl border border-bilgi-h bg-bilgi-t px-4 py-3">
+      <p className="flex items-center gap-1.5 font-semibold text-[10px] text-bilgi uppercase tracking-wider">
         <ScrollText className="size-3.5" aria-hidden />
         sabitlenmiş · kalıcı hafıza
       </p>

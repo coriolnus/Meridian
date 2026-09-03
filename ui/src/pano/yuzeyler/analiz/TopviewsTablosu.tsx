@@ -212,7 +212,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, TopSatir>[] = [
       <Deger
         metin={rKati(row.original.gross_loss)}
         neden={rYokNedeni(row.original, "brüt zarar")}
-        className="text-red-600 tabular-nums dark:text-red-400"
+        className="text-[var(--yon-eksi)] tabular-nums"
       />
     ),
   },

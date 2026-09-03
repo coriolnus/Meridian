@@ -116,7 +116,7 @@ function PozisyonTablosu({ pozisyonlar }: { readonly pozisyonlar: readonly NonNu
                         ? undefined
                         : upl >= 0
                           ? "text-[var(--yon-arti)]"
-                          : "text-red-600 dark:text-red-400"
+                          : "text-[var(--yon-eksi)]"
                     }
                   />
                 </TableCell>

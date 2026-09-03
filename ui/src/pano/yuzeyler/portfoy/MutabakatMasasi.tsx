@@ -283,7 +283,7 @@ function TeyitKarti({ t }: { t: DefterTeyit | undefined }) {
 
   const kovalar = [
     { ad: "Teyitli", n: t.teyitli, renk: "text-basari", not: "Broker emir defterinde plan kimliğiyle dolmuş emir var" },
-    { ad: "Karşılıksız", n: t.karsiliksiz, renk: "text-red-600 dark:text-red-400", not: "Brokerda hiç iz yok — ve defter kırpık DEĞİLKEN bakıldı" },
+    { ad: "Karşılıksız", n: t.karsiliksiz, renk: "text-kritik", not: "Brokerda hiç iz yok — ve defter kırpık DEĞİLKEN bakıldı" },
     { ad: "Bakılamadı", n: t.olculemedi, renk: "text-muted-foreground", not: "Pencere/kimlik/kırpık defter — 'karşılıksız' DEĞİL" },
     { ad: "Kapsam dışı", n: t.kapsam_disi, renk: "text-muted-foreground", not: "Başlangıç verisi/belirsiz satır: kill kriteri gereği kıyasa girmez" },
   ];

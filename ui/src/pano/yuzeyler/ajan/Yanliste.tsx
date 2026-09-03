@@ -70,7 +70,7 @@ function Avatar({ m, aktif }: { m: Muhatap; aktif: Aktiflik | null }) {
     <span
       className={cn(
         "relative grid size-9 shrink-0 place-items-center border bg-muted font-semibold text-sm",
-        m.tur === "kanal" ? "rounded-lg border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-400" : null,
+        m.tur === "kanal" ? "rounded-lg border-bilgi-h bg-bilgi-t text-bilgi" : null,
         m.ajan?.tur === "ana" ? "rounded-lg" : m.tur === "kanal" ? null : "rounded-full",
       )}
     >

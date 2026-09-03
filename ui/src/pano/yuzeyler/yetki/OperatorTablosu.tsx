@@ -152,7 +152,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
       }
       return (
         <Badge variant="outline" className="w-fit gap-1.5">
-          <span className={cn(NOKTA, v ? "bg-basari" : "bg-red-500")} />
+          <span className={cn(NOKTA, v ? "bg-basari" : "bg-kritik")} />
           {v ? "açık" : "kapalı"}
         </Badge>
       );

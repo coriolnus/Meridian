@@ -136,7 +136,7 @@ export function PlanKarti({ p }: { p: Plan }) {
             variant="ghost"
             className={cn(
               "gap-1 tabular-nums",
-              p.sapmaYuzde >= 0 ? "text-[var(--yon-arti)]" : "text-red-600 dark:text-red-400",
+              p.sapmaYuzde >= 0 ? "text-[var(--yon-arti)]" : "text-[var(--yon-eksi)]",
             )}
             title="son kapanışın giriş tetiğinden sapması (`drift_pct`)"
           >

@@ -9,6 +9,18 @@ DESEN = re.compile(r"\b(?:bg|text|border|ring|from|to|fill|stroke)-(amber|emeral
 # Görev 3 sonrası: amber 0. Görev 4: green 0, emerald 4 (KAPANMADI — bilerek, aşağı bkz).
 # Görev 5: red 0. Görev 6: sky 0.
 #
+# red İKİ AİLEYE BÖLÜNDÜ (Görev 5, TSK-117 K-2c, ölçüldü 2026-09-04): 31 kullanımın (5 konum,
+# 9'u) `kritik` (hata/eşleşmedi/izin-yok/oturum-kapalı/risk anlamı — sev-1 bandı), (10 konum,
+# 22'si) `--yon-eksi` (K/Z'nin NEGATİF ucu, `--yon-arti`nin zaten kurulu bracket eşi: `pnlRengi`/
+# `kzSinifi`/`kzDolgusu`/`kzOrnegi`/`upl`/`sapmaYuzde`/`gross_loss` — hepsi pozitif dalında ZATEN
+# `text-[var(--yon-arti)]` kullanıyordu, task-4-report.md §10'un öngördüğü simetrik liste).
+# Tavan yine de 0: iki aile de literal `red-*` DEĞİL (task-5-6-report.md §"yön-eksi adayı").
+#
+# sky (Görev 6, TSK-117 K-2d, ölçüldü 2026-09-04): 12 kullanımın TAMAMI `bilgi` — 3 dosyanın
+# ikisi ("kanal" tipi muhatap rozeti) kategorik-bilgi rozeti, biri (SohbetHatti.tsx sabitlenmiş
+# ders kartı) bilgi çağrı-kutusu; "gezinme/aktif sekme" ya da veri serisi ANLAMI TAŞIYAN kullanım
+# YOK (spec §2 S3 kararıyla 195° ailesi zaten BİLGİ rezervinde, gezinme 210°-232° ayrı bant).
+#
 # emerald TAVANI 0 DEĞİL (Görev 4, TSK-117 K-2b, ölçüldü 2026-09-04): `SeansTakvimi.tsx`
 # takvim lejantında `dongu` (gece döngüsü kaydı) işaretleyicisi `emerald-500` kullanıyor —
 # "kosu" (hat koşusu) kardeş işaretleyici `ring-primary` (nötr marka rengi) taşıyor, yani
@@ -17,7 +29,7 @@ DESEN = re.compile(r"\b(?:bg|text|border|ring|from|to|fill|stroke)-(amber|emeral
 # "iyi sonuçlandı" anlamlarını karıştırırdı — böyle bir ayrım burada YOK. Kalan 4 kullanım
 # bilerek dokunulmadı (task-4-report.md §"seri/dekoratif, dokunulmadı"); tavan bunu ÖLÇÜLMÜŞ
 # hâliyle 4'e beyan eder (0'a zorlamak sahte bir yeşil üretirdi — uydurma yasağı).
-LITERAL_TAVAN = {"amber": 0, "emerald": 4, "green": 0, "red": 31, "sky": 12}
+LITERAL_TAVAN = {"amber": 0, "emerald": 4, "green": 0, "red": 0, "sky": 0}
 ESLEME = {"amber": "uyari", "emerald": "basari", "green": "basari", "red": "kritik", "sky": "bilgi"}
 
 def _sayim():
