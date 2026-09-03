@@ -107,7 +107,9 @@ def uret() -> tuple[str, list[str]]:
     css += blok(":root", kova["kok"] + kova["gunduz"])
     # GECE: nitelikle DE, medya sorgusuyla DA — operatörün açık seçimi sistem tercihini yener,
     # seçim yoksa sistem tercihi tohum olur (theme.js sözleşmesi, D5 2026-08-07).
-    css += blok('[data-theme="dark"]', kova["gece"])
+    # TSK-117 (2026-09-03): pano (ui/src) temayı `.dark` sınıfıyla anahtarlar (shadcn); eski yüzeyler
+    # `[data-theme="dark"]` ile. İki seçici, TEK blok — değer takımı ayrışamaz (v208 ruhu).
+    css += blok('[data-theme="dark"], .dark', kova["gece"])
     gece = blok(":root:not([data-theme='light'])", kova["gece"])
     if gece:
         css += "@media (prefers-color-scheme: dark) {\n" + "\n".join(

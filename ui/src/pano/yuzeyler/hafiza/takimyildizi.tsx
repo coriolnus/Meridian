@@ -1679,12 +1679,13 @@ export function GrafPaneli({
   /* NOKTA BOYUTU — CP `home-view.tsx` constellation çağrısının KURALI: yarıçap, bağ
      ağırlıklarının düğüm başına toplamının KAREKÖKÜYLE ölçeklenir.
 
-     ÇAPA SATIR DEĞİL KURAL (TSK-124, 2026-09-03): burada `home-view.tsx:160-173`
-     yazıyordu ve bu iki kere kırık bir çapaydı — satır numaraları kayar (CLAUDE.md §2)
-     ve hedef dosya BU DEPODA YOK, yani hiçbir tarayıcı onu doğrulayamaz; sessizce
-     çürüyen bir atıf, olmayan bir atıftan kötüdür çünkü okuyucu ona güvenir. Taşınan
-     şey KURAL: karekök ölçek. Aralık ise CP'den değil `DUGUM_STILI`den gelir ve orada
-     "referans ölçülemedi" diye BEYANLI (piksel değeri hiçbir yerde ölçülmedi).
+     ÇAPA SATIR DEĞİL KURAL (TSK-124, 2026-09-03; TSK-117 D4, 2026-09-03): burada eski hâl
+     CP `home-view.tsx`in constellation çağrısına SATIR numarasıyla bağlanıyordu ve bu iki
+     kere kırık bir çapaydı — satır numaraları kayar (CLAUDE.md §2) ve hedef dosya BU DEPODA
+     YOK, yani hiçbir tarayıcı onu doğrulayamaz; sessizce çürüyen bir atıf, olmayan bir
+     atıftan kötüdür çünkü okuyucu ona güvenir. Taşınan şey KURAL: karekök ölçek. Aralık ise
+     CP'den değil `DUGUM_STILI`den gelir ve orada "referans ölçülemedi" diye BEYANLI (piksel
+     değeri hiçbir yerde ölçülmedi).
 
      Ağırlık toplamı TEK yerde hesaplanır ve en büyüğü ondan türer: iki ayrı döngü
      aynı sayıyı iki kez üretirdi ve biri değişince öteki sessizce eskirdi. */
@@ -1797,10 +1798,10 @@ export function KimliksizRozeti({ sayi: adet }: { readonly sayi: number }) {
  * etiket → tablo satırının metni (40 karakterde kırpılır, üç nokta eklenir) →
  * kimliğin ilk 8 karakteri. Sayılar oradan, uydurma değil.
  *
- * NOT: takımyıldızın kendi iç yedeği BAŞKA bir sayı kullanıyor
- * (`constellation.tsx:372,1056`, kimliğin ilk 12'si) ve o yedek bizde HİÇ
- * çalışmaz: buradaki zincir her düğüme zaten bir etiket verdiği için çizim
- * tarafına boş etiket ulaşmıyor.
+ * NOT (TSK-117 D4, 2026-09-03): takımyıldızın kendi iç yedeği BAŞKA bir sayı kullanıyor —
+ * CP `constellation.tsx`: kimlik kısaltılamadığında düğüm kimliğinin ilk 12 karakterine
+ * düşen dahili yedek (dış kaynak, satırsız) — ve o yedek bizde HİÇ çalışmaz: buradaki
+ * zincir her düğüme zaten bir etiket verdiği için çizim tarafına boş etiket ulaşmıyor.
  */
 function etiketSec(etiket: string | null, satirMetni: string | null, kimlik: string): string {
   if (etiket !== null && etiket !== "") return etiket;
@@ -1914,7 +1915,8 @@ export interface VarlikGrafiCozumu {
   /** Düğüm başına EN SON birlikte geçiş (ms) — ısı rengi bundan türer. */
   readonly tazelikler: ReadonlyMap<string, number>;
   /**
-   * Isı ölçeğinin İKİ UCU — üst yüzeyin kuralı (`entities-view.tsx:200-219`):
+   * Isı ölçeğinin İKİ UCU — üst yüzeyin kuralı (TSK-117 D4, 2026-09-03; CP
+   * `entities-view.tsx`: dış kaynak, satırsız):
    * aralık BÜTÜN kenar damgalarından kurulur, düğüm başına en son damgalardan
    * DEĞİL. İki türetim aynı değil: düğüm başına maksimumların en küçüğü, tüm
    * damgaların en küçüğünden her zaman eşit ya da DAHA YENİdir — yani efsanenin

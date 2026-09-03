@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "./jetonlar.css"; /* TSK-117, 2026-09-03: rol jetonları panoya bağlandı (tokens.json tek kaynak).
+   ÖLÇÜLDÜ: jetonlar.css `ui/src/tema.css` ile AYNI dizinde (`ui/src/`) — `../jetonlar.css`
+   (planın ilk taslağı) bir dizin YUKARI çıkar ve `vite build` gerçekte "Can't resolve
+   '../jetonlar.css' in ui/src" ile KIRILIYORDU (ölçüldü); tek doğru göreli yol `./`. */
 
 /* Theme preset styles: these override CSS variables based on the selected data-theme-preset */
 @import "./styles/presets/brutalist.css";
@@ -50,6 +54,12 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
+
+  /* ANLAM JETONLARI (TSK-117, 2026-09-03) — utility: bg-basari, bg-basari-t, text-uyari, border-kritik-h, text-bilgi … */
+  --color-basari: var(--basari);   --color-basari-h: var(--basari-h);   --color-basari-t: var(--basari-t);
+  --color-uyari: var(--uyari);     --color-uyari-h: var(--uyari-h);     --color-uyari-t: var(--uyari-t);
+  --color-kritik: var(--kritik);   --color-kritik-h: var(--kritik-h);   --color-kritik-t: var(--kritik-t);
+  --color-bilgi: var(--bilgi);     --color-bilgi-h: var(--bilgi-h);     --color-bilgi-t: var(--bilgi-t);
 }
 
 /* ============================================================================
