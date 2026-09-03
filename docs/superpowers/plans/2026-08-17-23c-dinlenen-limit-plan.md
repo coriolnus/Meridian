@@ -10,7 +10,7 @@
 |---|---|---|
 | temiz ağaç (EDG-033 dersi) | `git status` | ✅ temiz |
 | A kolu tabanı mevcut | `research/olcumler/edg032b_tamsatir_2026-08-13` | ✅ var |
-| `low` alanı erişilebilir | `backtest.py:303` çağrısı `per[t].loc[d, "open"]` geçiyor → **tam bar satırı elde** | ✅ ek veri ÇEKİLMEYECEK |
+| `low` alanı erişilebilir | `backtest.py::replay` çağrısı `per[t].loc[d, "open"]` geçiyor → **tam bar satırı elde** | ✅ ek veri ÇEKİLMEYECEK |
 
 ## 1 · Tek gerçek risk: dolum kuralının İKİ YERE düşmesi
 
@@ -21,9 +21,9 @@ geçersiz."* Ölçülen durum bu riski somutlaştırıyor:
 
 | çağıran | ne geçiyor | sınıf |
 |---|---|---|
-| `backtest.py:303` | `per[t].loc[d, "open"]` | **REPLAY — kartın konusu** |
+| `backtest.py::replay` | `per[t].loc[d, "open"]` | **REPLAY — kartın konusu** |
 | `loop.py:1407` | `_open` | **CANLI — DOKUNULMAZ** |
-| `shadow_lifecycle.py:260` | `bar["open"]` | gölge |
+| `shadow_lifecycle.py::step` | `bar["open"]` | gölge |
 | `intraday_shadow.py:343` | `sim_price` | gölge (gün-içi) |
 | `mutation.py:223` | `px` | mutasyon taraması |
 
@@ -47,7 +47,7 @@ bilinmez. Böylece canlı davranışın değişmezliği **yapısal** olur, disip
 
 **DOKUNULMAYACAK ÇAĞIRANLAR (5/6):** `loop.py` · `shadow_lifecycle.py` · `intraday_shadow.py` ·
 `mutation.py` — hiçbiri `bar_low` geçmez, hiçbirinin davranışı değişmez. **Tek değişen çağıran
-`backtest.py:303`.**
+`backtest.py::replay`.**
 
 ## 2 · İki kol
 
@@ -65,7 +65,7 @@ HAT'ın H3 kapısı: **çivi önce.** Sıra bağlayıcıdır:
    uydurma dolumdur" — kill kriteri); (d) canlı çağıranların hiçbiri `bar_low` geçmiyor (kaynak
    taraması, `test_ogrenme_birimi_ayrimi_v249` desenindeki gibi).
 2. `fill_entry`ye `bar_low` ekle → çiviler YEŞİL.
-3. `backtest.py:303`ü tek satırda `bar_low` geçecek şekilde bayrakla (A/B).
+3. `backtest.py::replay` içindeki çağrıyı tek satırda `bar_low` geçecek şekilde bayrakla (A/B).
 4. **A kolunu koş → `edg032b` ile bit-özdeşlik SINA. Geçmezse DUR.**
 5. B kolunu koş.
 

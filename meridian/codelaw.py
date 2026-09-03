@@ -20,13 +20,19 @@ buldu ve bu modül ikisini de çalışma zamanına hiç dokunmadan, ast ile kayn
   `stale_claims`/`unverifiable_claims` iddiaları fonksiyon-çağrı düzeyinde sınar.
 
   SATIR ÇAPASI — `dosya.py:NNN` biçimindeki her çapa ÖLÇÜLÜR: gösterdiği satır bugün ne? Yasanın
-  İKİ DÜNYASI vardır ve hükümleri AYRIDIR: `.py` kaynağında sıfır tolerans
-  (`stale_line_anchors`), panonun `.ts`/`.tsx` kaynağında ÇIRÇIR (`stale_tsx_line_anchors` +
-  `TSX_CAPA_TABANI` — yüzlerce çapalık birikmiş borç tek turda temizlenmez, çırçır borcun BÜYÜMESİNİ
-  engeller). Ölçüm gövdesi ortaktır (`_capalari_olc`), ayrışan yalnız hükümdür.
+  ÜÇ DÜNYASI vardır ve hükümleri AYRIDIR: `.py` kaynağında sıfır tolerans (`stale_line_anchors`),
+  panonun `.ts`/`.tsx` kaynağında ÇIRÇIR (`stale_tsx_line_anchors` + `TSX_CAPA_TABANI` — yüzlerce
+  çapalık birikmiş borç tek turda temizlenmez, çırçır borcun BÜYÜMESİNİ engeller), `docs/`
+  kaynağında YİNE SIFIR TOLERANS ama üç sınıf (tarihli teşhis belgesi + üretilmiş RUNBOOK + tarih-
+  önekli superpowers plan/spec, TSK-080 düzeltme turu 1) baştan dışlanmış olarak
+  (`stale_docs_line_anchors`, TSK-080). Ölçüm gövdesi ortaktır (`_capalari_olc`),
+  ayrışan yalnız hükümdür. DÖRDÜNCÜ, AYRI bir sınıf — düz-metin/çapraz-biçim çapası
+  (`stale_text_anchors`, TSK-080): `.py` DIŞI hedefler (`goal.yaml:27`) ve dosya adı bitişik
+  OLMAYAN Türkçe "satır NNN" biçimi. Bu sınıfın hükmü YAPISAL OLARAK DAR (içerik uyumu ölçülemez)
+  ve `report()["ok"]`i ETKİLEMEZ — adıyla raporlanır, bekçiyi kırmızıya çekmez.
 
 Modül SAF DENETİMDİR: durum değiştirmez, karar vermez, diske yazmaz; yalnız kaynak ağacını
-(meridian/*.py ve ui/src/*.ts[x]) okur. Toplu hüküm `report()` ile panoya ve bekçiye çıkar."""
+(meridian/*.py, ui/src/*.ts[x], docs/*.md) okur. Toplu hüküm `report()` ile panoya ve bekçiye çıkar."""
 from __future__ import annotations
 
 import ast
@@ -1406,9 +1412,11 @@ def _capalari_olc(dosyalar, adres: dict[str, list[pathlib.Path]],
                   cozulemeyen_out: list | None, evre: str) -> list[dict]:
     """ÇAPA HÜKMÜNÜN TEK GÖVDESİ: verilen dosyalardaki her `dosya.py:NNN` çapasını ölçer.
 
-    İki tarayıcı (py ve tsx) bu gövdeyi PAYLAŞIR ve paylaşmak zorundadır: çürüme sınıfının tanımı
-    (`menzil_disi` · `bos_satir` · `yorum`), muafiyet işareti ve çözülemeyen-çapa kaydı iki dünyada
-    da AYNI olmalı. Ayrışan yalnız HÜKÜM (py = sıfır tolerans, tsx = çırçır) — ölçüm değil."""
+    ÜÇ tarayıcı (py, tsx, docs — TSK-080 düzeltme turu 1'de düzeltildi: `stale_docs_line_anchors`
+    da bu gövdeye bağlandı, 2026-09-03) bu gövdeyi PAYLAŞIR ve paylaşmak zorundadır: çürüme
+    sınıfının tanımı (`menzil_disi` · `bos_satir` · `yorum`), muafiyet işareti ve çözülemeyen-çapa
+    kaydı üç dünyada da AYNI olmalı. Ayrışan yalnız HÜKÜM (py ve docs = sıfır tolerans, tsx =
+    çırçır) — ölçüm değil."""
     curuk: list[dict] = []
     for f in dosyalar:
         try:
@@ -1721,6 +1729,268 @@ def stale_line_anchors(root: str = "meridian",
                          cozulemeyen_out, "stale_line_anchors")
 
 
+# ---------------------------------------------------------------------------
+# SATIR ÇAPASI — ÜÇÜNCÜ DÜNYA: `docs/` (TSK-080, Ö-49 KALANI, 2026-09-03)
+# ---------------------------------------------------------------------------
+#: `docs/` DAHA ÖNCE `_EK_CAPA_KOKLERI`YE KASTEN ALINMAMIŞTI (bkz. o sabitin yorumu, 2026-08-16):
+#: 2324 çapanın 704'ü çürüktü ve büyük çoğunluğu TARİHLİ TEŞHİS BELGESİYDİ — geriye dönük
+#: "düzeltmek" tarihi tahrif ederdi. TSK-080 TAZE ÖLÇÜMÜ (2026-09-03, `_capalari_olc` ile GERÇEK
+#: çözümleme — ham grep DEĞİL): 139 `.md`, 2997 çapa, 1020 çürük → 951 tarihli teşhis belgesinde ·
+#: 64 `RUNBOOK.md`de (üretilmiş) · 5 YAŞAYAN belgede (`docs/superpowers/plans/2026-08-17-23c-…md`,
+#: bu turda sembole çevrildi — bkz. commit). Kapsam bu yüzden `_py_files`i DEĞİL yeni bir `.md`
+#: tarayıcısını (`_md_files`) ve ÜÇ SINIFLIK bir dışlamayı (`_docs_capa_disi`) ister; `.py`
+#: dünyasının SIFIR TOLERANSI korunur, yalnız üç sınıf hüküm alanı DIŞINDA tutulur. (c) sınıfı
+#: DÜZELTME TURU 1'DE (2026-09-03) eklendi — bkz. aşağıdaki sabit.
+DOCS_CAPA_KOKU = "docs"
+
+#: (a) TARİHLİ TEŞHİS BELGESİ — dosya adında `-YYYY-AA-GG` künyesi. WP6-E'nin ta kendisi: bu
+#: belgeler yazıldıkları GÜN doğruydu, bir vaka kaydıdır (`MERIDIAN_ENGINEERING_LOG.md`daki
+#: "(vaka YYYY-AA-GG)" künyesiyle AYNI disiplin — CLAUDE.md §0) ve geriye dönük düzeltme tarihi
+#: tahrif eder.
+_DOCS_TARIHLI_TESHIS_RE = re.compile(r"-20\d\d-\d\d-\d\d")
+
+#: (b) ÜRETİLMİŞ — `docs/RUNBOOK.md` (`ops/runbook_uret.py` çıktısı), elle düzenlenmez.
+#: TSK-080 ÖLÇÜMÜ (2026-09-03) BEKLENENİN AKSİNE: 64 çürüğün TAMAMI (29 essiz çapa metni)
+#: `ops/*.sh`/`deploy/oracle-a1/*.sh` BAŞLIK YORUMUNDAN (ONAYLI KAYNAK SÖZLEŞMESİ madde-1) DEĞİL,
+#: madde-2'den geliyor: `MERIDIAN_ENGINEERING_LOG.md`nin "KALICI RİSKLER / DERSLER" bölümünden
+#: BİREBİR excerpt. O günlük KENDİSİ vaka-künyeli tarihsel kayıttır (yukarıki (a) ile AYNI sınıf)
+#: ve depo KÖKÜNDE, `docs/` DIŞINDA — TSK-080'in dosya sahipliği (`docs/` altı + `codelaw.py`)
+#: onu KAPSAMAZ. Kök nedeni düzeltmek (log excerpt'lerini sembole çevirmek) AYRI, sahibi Rol-1
+#: olan bir kalemdir — rapora açık madde olarak düşüldü.
+_DOCS_URETILMIS = frozenset({"RUNBOOK.md"})
+
+#: (c) TARİH-ÖNEKLİ SUPERPOWERS PLAN/SPEC — RULING (TSK-080 düzeltme turu 1, inceleme sorusu-1,
+#: 2026-09-03, Rol-1 onayı). YALNIZ bu iki dizinin İÇİNDE, dosya adı `YYYY-AA-GG-` ÖNEKİYLE
+#: başlıyorsa: `writing-plans` skill konvansiyonu bu adı üretir ve belge bir turun/kararın o
+#: günkü FOTOĞRAFIDIR — (a)'daki tarihli teşhis belgesiyle AYNI aile, yalnız KUYRUK değil ÖNEK
+#: tarih taşır. DİZİN SINIRI KASTEN DAR: kökte ya da başka bir `docs/` alt dizininde tarih-ÖNEKLİ
+#: bir dosya adı bu sınıfa GİRMEZ — geniş bir "önekte tarih varsa dışla" kuralı ilgisiz dosyaları
+#: da (ör. `docs/mutasyon/2026-08-01.md`, ayrı bir günlük türü) yutardı.
+#:
+#: BEDEL (bedel yasası — kazanç ölçülüp bedel ölçülmezse körlük sessizdir): 14 dosya (12 plan +
+#: 2 spec, ölçüldü 2026-09-03) satır-çapası yasasının GÖRÜŞ ALANI DIŞINA çıkar — DONMUŞ sayılırlar,
+#: SONSUZA DEK güncel tutulma yükümlülüğü YOK. Bu dosyalardaki bir çapa gelecekte bayatlarsa
+#: (hedef fonksiyon taşınır/silinir) SESSİZCE ÇÜRÜR, `codelaw` bunu bir daha YAKALAMAZ. Ölçülen
+#: örnek (inceleme, 2026-09-03): `2026-08-17-23c-dinlenen-limit-plan.md`daki DOKUNULMAYAN
+#: `loop.py:1407` anchor'ı bugün `loop.py:1839`a kaymış (`fill_entry(..., _open, ...)` çağrısı
+#: taşınmış) — yasa bunu GÖRMEZ; dışlama bu bedeli BİLEREK öder (plan donmuş bir kayıttır).
+_DOCS_SUPERPOWERS_TARIHLI_DIZINLER = ("docs/superpowers/plans", "docs/superpowers/specs")
+_DOCS_SUPERPOWERS_ONEK_RE = re.compile(r"^20\d\d-\d\d-\d\d-")
+
+
+def _docs_capa_disi(yol) -> bool:
+    """DOCS satır-çapası yasasının kapsamı DIŞINDA mı? TEK KAPI — hem tarayıcılar
+    (`stale_docs_line_anchors`, `stale_text_anchors`) hem mutasyon testleri AYNI fonksiyonu
+    çağırır (tek-kaynak yasası: dışlama listesi birden çok yerde ayrı ayrı yaşamaz).
+
+    ÜÇ SINIF: (a) tarihli teşhis belgesi (dosya adında KUYRUK `-YYYY-AA-GG`), (b) üretilmiş
+    RUNBOOK, (c) `docs/superpowers/plans|specs` İÇİNDE ÖNEK-tarihli plan/spec (RULING,
+    2026-09-03 — bkz. `_DOCS_SUPERPOWERS_TARIHLI_DIZINLER`). `yol` basename (geriye-dönük
+    uyum: (a)/(b) yalnız ada bakar) ya da tam/relatif yol OLABİLİR — (c) İÇİN dizin bilgisi
+    gerekir, bu yüzden `str`/`pathlib.Path` kabul edilir."""
+    yol = pathlib.Path(yol)
+    dosya_adi = yol.name
+    if dosya_adi in _DOCS_URETILMIS or bool(_DOCS_TARIHLI_TESHIS_RE.search(dosya_adi)):
+        return True
+    yol_str = yol.as_posix()
+    if any(yol_str.startswith(d + "/") for d in _DOCS_SUPERPOWERS_TARIHLI_DIZINLER):
+        if _DOCS_SUPERPOWERS_ONEK_RE.match(dosya_adi):
+            return True
+    return False
+
+
+def _md_files(root: str):
+    """`root` altındaki `.md` dosyalarını ad sırasıyla üretir (`_py_files`/`_ts_files` ikizi)."""
+    kok = pathlib.Path(root)
+    for f in sorted(kok.rglob("*.md")):
+        if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
+            continue
+        yield f
+
+
+def stale_docs_line_anchors(root: str = DOCS_CAPA_KOKU,
+                            py_kokler: tuple[str, ...] | None = None,
+                            cozulemeyen_out: list | None = None,
+                            disla_out: list | None = None) -> list[dict]:
+    """SATIR ÇAPASI YASASI, ÜÇÜNCÜ DÜNYA: `docs/` altındaki `.md` kaynağındaki `dosya.py:NNN`
+    çapalarını ölçer. Çürüme sınıfları ve muafiyet `.py`/`.tsx` dünyasıyla BİREBİR AYNIDIR
+    (`_capalari_olc`); hüküm de `.py` gibi SIFIR TOLERANSTIR (tsx'in çırçırı burada YOK) — ama
+    kapsam `_docs_capa_disi` ile ÜÇ SINIFI (tarihli teşhis belgeleri + üretilmiş RUNBOOK +
+    tarih-önekli superpowers plan/spec, TSK-080 düzeltme turu 1) BAŞTAN dışlar: onlar hakkında
+    hüküm KURULMAZ. SESSİZCE değil — dışlanan her dosya adı
+    `disla_out`a yazılır (verilirse) ve `report()`te `docs_line_anchor_excluded` olarak GÖRÜNÜR
+    (Yasa 6 disiplini: dışlanan kapsam da adıyla sayılır, sessizce yutulmaz).
+
+    Hedef adres defteri `.py` dünyasıyla AYNI köklerden kurulur (`py_kokler`, varsayılan
+    `meridian` + `_EK_CAPA_KOKLERI`): docs'taki çapa bir Python dosyasını gösterir.
+
+    KÖK YOKSA SESSİZ YEŞİL YOK (`stale_tsx_line_anchors` emsali): `docs` bulunamazsa körlük
+    UNSCANNED'e yazılır ve `report()["ok"]` bu yüzden düşer."""
+    if py_kokler is None:
+        py_kokler = ("meridian", *_EK_CAPA_KOKLERI)
+    kok = pathlib.Path(root)
+    if not kok.exists():
+        _note_unscanned(root, FileNotFoundError(f"docs çapa kökü yok: {root}"),
+                        "stale_docs_line_anchors")
+        return []
+    dosyalar = []
+    for f in _md_files(root):
+        if _docs_capa_disi(f):
+            if disla_out is not None:
+                disla_out.append(f.name)
+            continue
+        dosyalar.append(f)
+    return _capalari_olc(dosyalar, _capa_adres_defteri(py_kokler),
+                         cozulemeyen_out, "stale_docs_line_anchors")
+
+
+# ---------------------------------------------------------------------------
+# DÜZ-METİN / ÇAPRAZ-BİÇİM ÇAPASI — DÖRDÜNCÜ DÜNYA (TSK-080, 2026-09-03)
+# ---------------------------------------------------------------------------
+#: `stale_line_anchors`/`stale_tsx_line_anchors`/`stale_docs_line_anchors` ÜÇÜ DE TEK SÖZDİZİMİ
+#: tanır: dosya-adı BİTİŞİK `:NNN`, hedef DAİMA `.py`. Bu tarayıcı KOPYA DEĞİL — iki AYRI kör
+#: noktayı kapatan YENİ bir desen sınıfı:
+#:   (a) ÇAPRAZ-BİÇİM — hedef `.py` DEĞİL (`goal.yaml:27`, `ROADMAP.md:503`), opsiyonel `NNN-MMM`
+#:       ARALIK biçimiyle.
+#:   (b) DÜZ-METİN — Türkçe "satır NNN"/"satırı NNN": dosya adı çapanın kendi metninde bitişik
+#:       DEĞİL, AYNI SATIRDA daha önce geçen bir dosya-adı belirtecinden ÇÖZÜLÜR (canlı örnekler —
+#:       `RUNBOOK.md`, `ARTEFAKT-TARAMASI-2026-08-07.md:420` "`bararchive.py`… (satır 13-18)" — hep
+#:       bu şekli izler: dosya adı ÖNCE anılır, "satır NNN" birkaç kelime sonra gelir).
+#: `.py` UZANTISI (a)'nın ÇAPA DESENİNDE YOK — o zaten üç dünyanın konusu, aynı hedefi ikinci bir
+#: yasayla ölçmek KOPYA ölçüm üretirdi. (b)'nin ÇÖZÜMLEME uzantı listesinde `.py`/`.ts`/`.tsx` DA
+#: VAR — bare "satır NNN" biçimi pratikte `.py` hedeflerine de yazılıyor (yukarıki örnek) ve bu
+#: TAM OLARAK üç dünyanın da GÖRMEDİĞİ kör noktadır (onlar yalnız bitişik `:NNN` sözdizimini tanır).
+_TEXT_CAPA_UZANTILARI = ("yaml", "yml", "md", "json", "sh")
+_TEXT_DOSYA_ADI_UZANTILARI = (*_TEXT_CAPA_UZANTILARI, "py", "ts", "tsx")
+
+_TEXT_CAPA_DESENI = re.compile(
+    r"((?:[A-Za-z0-9_.-]+/)*)([A-Za-z_][A-Za-z0-9_.-]*\.(?:"
+    + "|".join(_TEXT_CAPA_UZANTILARI) + r")):(\d+)(?:-(\d+))?\b")
+_TEXT_SATIR_DESENI = re.compile(r"\bsatır[ıi]?\s+(\d+)(?:-(\d+))?\b")
+_TEXT_DOSYA_ADI_DESENI = re.compile(
+    r"([A-Za-z0-9_.-]+\.(?:" + "|".join(_TEXT_DOSYA_ADI_UZANTILARI) + r"))(?=[`'\"\s):,]|$)")
+
+#: HEDEF ARAMA KÖKLERİ — REPO GENELİNE YAYILMAZ. `mutants/` (mutmut'un ~410 MB'lık ağaç kopyası,
+#: `.gitignore`li) gibi devasa/ilgisiz dizinler kökten `rglob` ile taranırdı; bunun yerine SABİT,
+#: KÜÇÜK bir küme kullanılır — üretim + belge kökleri. Depo KÖKÜ (`.`) yalnız TEK SEVİYE taranır
+#: (`ROADMAP.md`, `CLAUDE.md` gibi kök-düzeyi belgeler için), `rglob` DEĞİL.
+_TEXT_HEDEF_KOKLERI = ("meridian", "tests", "ops", "docs", "state")
+
+
+def _text_hedef_dosyalari(kokler: tuple[str, ...] = _TEXT_HEDEF_KOKLERI) -> dict[str, list[pathlib.Path]]:
+    """Metin çapası hedeflerinin BASENAME → yollar defteri. `_capa_adres_defteri`nin çapraz-uzantı
+    ikizi: `.py` yerine `_TEXT_DOSYA_ADI_UZANTILARI`nın HEPSİ taranır."""
+    adres: dict[str, list[pathlib.Path]] = {}
+    for ad in sorted(pathlib.Path(".").iterdir()):
+        if ad.is_file() and ad.suffix.lstrip(".") in _TEXT_DOSYA_ADI_UZANTILARI:
+            adres.setdefault(ad.name, []).append(ad)
+    for k in kokler:
+        kok = pathlib.Path(k)
+        if not kok.exists():
+            continue
+        for uzanti in _TEXT_DOSYA_ADI_UZANTILARI:
+            for f in sorted(kok.rglob(f"*.{uzanti}")):
+                if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
+                    continue
+                adres.setdefault(f.name, []).append(f)
+    return adres
+
+
+def stale_text_anchors(root: str = DOCS_CAPA_KOKU,
+                       hedef_kokler: tuple[str, ...] = _TEXT_HEDEF_KOKLERI,
+                       cozulemeyen_out: list | None = None) -> list[dict]:
+    """DÜZ-METİN / ÇAPRAZ-BİÇİM ÇAPASI YASASI (TSK-080). Hüküm KASTEN DAR — yalnız İKİ ŞEY
+    ÖLÇÜLEBİLİR: (1) hedef dosya taranan ağaçta VAR MI (yoksa `hedef_yok`/`ikircikli`/
+    `kapsam_disi`, `.py` dünyasıyla AYNI disiplin: ölçülemeyen hüküm SAYILMAZ ama KAYDEDİLİR),
+    (2) satır (ya da ARALIĞIN HER İKİ UCU) dosyanın satır sayısı İÇİNDE mi (`menzil_disi`) ve
+    — yalnız TEKİL satır için — o satır BOŞ/YORUM mu. İÇERİK UYUMU (numara doğru satırı mı
+    gösteriyor, prosa doğru mu) ÖLÇÜLEMEZ: bu tarayıcının YAPISAL sınırıdır ve bu yüzden
+    `report()`te `ok`U DÜŞÜRMEZ (v214 emsali — `line_anchor_unresolved` ile aynı disiplin,
+    `text_anchor_stale` ADIYLA raporlanır ama bekçiyi kırmızıya çekmez).
+
+    (b) biçimi için dosya çözümü: "satır NNN" belirtecinden ÖNCE AYNI SATIRDA geçen SON dosya-adı
+    belirteci (`_TEXT_DOSYA_ADI_DESENI`) hedef sayılır. Belirteç yoksa hüküm KURULMAZ
+    (`dosya_belirtilmemis` ile kaydedilir) — UYDURMA YASAĞI: dosya adı yoksa hedef uydurulmaz.
+
+    Kapsam `_docs_capa_disi` ile B1'le AYNI üç sınıfı (tarihli teşhis belgeleri + üretilmiş
+    RUNBOOK + tarih-önekli superpowers plan/spec) dışlar — tek dışlama kapısı, iki tarayıcı."""
+    kok = pathlib.Path(root)
+    if not kok.exists():
+        _note_unscanned(root, FileNotFoundError(f"metin çapa kökü yok: {root}"),
+                        "stale_text_anchors")
+        return []
+    adres = _text_hedef_dosyalari(hedef_kokler)
+    curuk: list[dict] = []
+
+    def _coz_ve_hukum(kaynak: str, capa_metni: str, onek: str, hedef_ad: str,
+                      n1: int, n2: int | None) -> None:
+        hedefler = adres.get(hedef_ad, [])
+        if onek:
+            # YOL BELİRTİLMİŞ → yalnız O yol ölçülür (`_capalari_olc`/`capa_uyusmasi._hukum`
+            # emsali — `test_YOL_BELIRTEN_CAPA_ayni_adli_BASKA_dosyaya_hukum_ETTIRMEZ`).
+            tam = (onek + hedef_ad).lstrip("./")
+            hedefler = [h for h in hedefler if str(h) == tam or str(h).endswith("/" + tam)]
+            if not hedefler:
+                if cozulemeyen_out is not None:
+                    cozulemeyen_out.append({"kaynak": kaynak, "capa": capa_metni,
+                                            "neden": "kapsam_disi", "aday_n": 0})
+                return
+        if len(hedefler) != 1:
+            if cozulemeyen_out is not None:
+                cozulemeyen_out.append({
+                    "kaynak": kaynak, "capa": capa_metni,
+                    "neden": "hedef_yok" if not hedefler else "ikircikli",
+                    "aday_n": len(hedefler)})
+            return
+        try:
+            satirlar = _kaynak_oku(hedefler[0]).splitlines()
+        except (OSError, ValueError):
+            # sessiz-yutma: hedef okunamıyorsa çapa hakkında hüküm veremeyiz; ölçülemeyen şey
+            # ihlal SAYILMAZ (UYDURMA YASAĞI) — okunamayan dosyanın kendisi başka bir taramada
+            # (`_md_files`/`_py_files` döngüsü) zaten `_note_unscanned`e düşer.
+            return
+        ust = n2 if n2 is not None else n1
+        if n1 < 1 or ust > len(satirlar) or n1 > ust:
+            curuk.append({"kaynak": kaynak, "capa": capa_metni, "neden": "menzil_disi"})
+            return
+        if n2 is None:          # ARALIK için boş/yorum sınanmaz — beyanlı sınır (docstring'de yazılı)
+            govde = satirlar[n1 - 1].strip()
+            if not govde:
+                curuk.append({"kaynak": kaynak, "capa": capa_metni, "neden": "bos_satir"})
+            elif govde.startswith("#"):
+                curuk.append({"kaynak": kaynak, "capa": capa_metni, "neden": "yorum"})
+
+    for f in _md_files(root):
+        if _docs_capa_disi(f):
+            continue
+        try:
+            src = _kaynak_oku(f)
+        except (OSError, ValueError) as e:
+            # sessiz-yutma: okunamayan tek dosya taramayı çökertmez; körlük UNSCANNED'e yazılır
+            _note_unscanned(str(f), e, "stale_text_anchors")
+            continue
+        for i, satir in enumerate(src.splitlines(), 1):
+            if _CAPA_MUAFIYETI in satir:
+                continue
+            kaynak = f"{f.name}:{i}"
+            for m in _TEXT_CAPA_DESENI.finditer(satir):
+                onek, hedef_ad, n1s, n2s = m.groups()
+                _coz_ve_hukum(kaynak, m.group(0), onek, hedef_ad, int(n1s),
+                             int(n2s) if n2s else None)
+            for m in _TEXT_SATIR_DESENI.finditer(satir):
+                onceki = list(_TEXT_DOSYA_ADI_DESENI.finditer(satir, 0, m.start()))
+                if not onceki:
+                    if cozulemeyen_out is not None:
+                        cozulemeyen_out.append({"kaynak": kaynak, "capa": m.group(0),
+                                                "neden": "dosya_belirtilmemis", "aday_n": 0})
+                    continue
+                hedef_ad = onceki[-1].group(1)
+                n1s, n2s = m.group(1), m.group(2)
+                _coz_ve_hukum(kaynak, m.group(0), "", hedef_ad, int(n1s),
+                             int(n2s) if n2s else None)
+    return curuk
+
+
 def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
     """İki yasanın birlikte durumu — tek bakışta 'kaç ihlal' cevabı.
 
@@ -1750,6 +2020,25 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
         tsx_capalar = stale_tsx_line_anchors(tsx_hedef, py_kokler=(root, *ek),
                                              cozulemeyen_out=tsx_kor)
         tsx_nuks = tsx_capa_nuksu(tsx_capalar)
+    # DOCS ÇAPALARI — ÜÇÜNCÜ DÜNYA (TSK-080). tsx ile AYNI kapıya bağlı: sentetik kökle çağıran
+    # test deponun `docs/`ini karıştırmaz. ÖLÇÜLMEYEN None'DIR (UYDURMA YASAĞI, tsx emsali).
+    docs_kor: list[dict] | None = None
+    docs_disla: list[str] | None = None
+    docs_capalar: list[dict] | None = None
+    docs_curuk_var: bool | None = None
+    if tsx_hedef is not None:                    # AYNI kapı: `root == "meridian"` (ya da beyanlı)
+        docs_kor = []
+        docs_disla = []
+        docs_capalar = stale_docs_line_anchors(DOCS_CAPA_KOKU, py_kokler=(root, *ek),
+                                               cozulemeyen_out=docs_kor, disla_out=docs_disla)
+        docs_curuk_var = bool(docs_capalar)
+    # DÜZ-METİN/ÇAPRAZ-BİÇİM ÇAPASI — DÖRDÜNCÜ DÜNYA (TSK-080). `ok`u ETKİLEMEZ (docstringte
+    # yazılı yapısal sınır: içerik uyumu ölçülemez) — AYNI kapıya bağlı, ÖLÇÜLMEYEN None'dır.
+    text_kor: list[dict] | None = None
+    text_capalar: list[dict] | None = None
+    if tsx_hedef is not None:
+        text_kor = []
+        text_capalar = stale_text_anchors(DOCS_CAPA_KOKU, cozulemeyen_out=text_kor)
     # SEMBOL ÇAPALARI — TEK ÇEKİRDEK, İKİ BESLEME. Ölçüm alanı tsx ile AYNI kapıya bağlı:
     # sentetik bir kökle çağıran test kendi ağacını ölçer, deponun `ui/src`i karışmaz.
     sembol: dict | None = None
@@ -1799,7 +2088,22 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
             "tsx_line_anchor_taban": TSX_CAPA_TABANI,
             "tsx_line_anchor_nuks": tsx_nuks,
             "tsx_line_anchor_unresolved": tsx_kor,
-            # SEMBOL ÇAPALARI — ÜÇÜNCÜ DÜNYA, ÜÇÜNCÜ HÜKÜM: burada TABAN YOKTUR. Satır dünyasının
+            # DOCS ÇAPALARI — ÜÇÜNCÜ DÜNYA (TSK-080). `.py` gibi SIFIR TOLERANS (tsx'in çırçırı
+            # burada YOK), ama üç sınıf (tarihli teşhis belgesi + üretilmiş RUNBOOK + tarih-önekli
+            # superpowers plan/spec) baştan dışlanır — dışlanan dosya adları
+            # `docs_line_anchor_excluded`te GÖRÜNÜR kalır,
+            # sessizce yutulmaz. `docs_line_anchor_var` `ok`u ETKİLER (tsx_nuks ile aynı disiplin).
+            "docs_line_anchors": docs_capalar,
+            "docs_line_anchor_unresolved": docs_kor,
+            "docs_line_anchor_excluded": docs_disla,
+            "docs_line_anchor_var": docs_curuk_var,
+            # DÜZ-METİN/ÇAPRAZ-BİÇİM ÇAPASI — DÖRDÜNCÜ DÜNYA (TSK-080). `ok`U ETKİLEMEZ: içerik
+            # uyumu ölçülemez, bu yapısal bir sınırdır (`stale_text_anchors` docstring'i) —
+            # v214 emsali, `line_anchor_unresolved` ile aynı disiplin: adıyla raporlanır ama
+            # bekçiyi kırmızıya çekmez.
+            "text_anchor_stale": text_capalar,
+            "text_anchor_unresolved": text_kor,
+            # SEMBOL ÇAPALARI — BEŞİNCİ DÜNYA, BEŞİNCİ HÜKÜM: burada TABAN YOKTUR. Satır dünyasının
             # çırçırı birikmiş borcun büyümesini engellemek içindi; sembol çapasının çürümesi ise
             # ADI OLAN ve düzeltmesi MEKANİK bir kusurdur — kayıtlı borç değil.
             "sembol_capalari": sembol,
@@ -1807,4 +2111,5 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
             # `… is not True` AÇIK YAZILDI: `not x` deseydik ölçülmemiş (None) durum sessizce
             # "temiz" sayılırdı — hükmü olmayanı yeşile yazmak UYDURMA olurdu.
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED
-                  and not capalar and tsx_nuks is not True and sembol_curume is not True}
+                  and not capalar and tsx_nuks is not True and docs_curuk_var is not True
+                  and sembol_curume is not True}
