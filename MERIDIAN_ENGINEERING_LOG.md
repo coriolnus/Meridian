@@ -2016,3 +2016,48 @@ partisinde commit listesi ↔ ROADMAP DONE'ları kıyaslanır (kalem: kapanış 
 0855305..ae958ce. **Dağıtım #5:** ae958ce 08:46:54Z — kapılar git temiz ✓ uv audit 0 ✓ lint-imports 5/5 ✓ daralt-güvenli ✓
 birim ayrıklığı 14/14 ✓ F9 ✓; learn disabled saygı; healthz 200; [5c] tazelik TAMAM; [5b] kod-tazelik ✓; beyan bayt-özdeş.
 (`bar_ghost_session_dropped` EA 2025-05-26 warn — bilinen sınıf, her dağıtım doğrulamasında görünüyor.)
+
+### 2026-09-03 sabah, üçüncü blok (Rol-1) — B-12 dilimi + belge şeridi
+
+**B-12 (TSK-092 · TSK-113 · TSK-114), tek ajan, SDD:** implementer DONE_WITH_CONCERNS (306 passed, mutasyon 6/6,
+bundle `pano-CG5m2R0W.js`); görev incelemesi (opus, salt-okunur) 0 kritik / 4 önemli / 9 küçük — yedi `Kapi<T>`
+gövdesi `git show HEAD:` ile birebir kıyaslandı (metin, dal sırası, iskelet, prop'lar aynı; CSS hash sabit).
+Ruling'ler: Ö-1..Ö-4 kabul, K-7 ret. **Rol-1 ek (R-0), ölçümle:** A1'de üç aday birim `Type=simple`,
+`Restart=always`, `TriggeredBy=` boş → `enabled + inactive` hâli bir simple birimin normal durumu DEĞİL (elle stop
+ya da start-limit düşüşü); dağıtım o birimi [5]'te sessizce diriltip olayı maskelerdi → `dagit.sh` YENİ `[F10]`
+kapısı: rsync/stop/dry-run çıkışından ÖNCE, rc 3, override yok, iki çare adıyla (`start` / `disable --now`).
+Bedel (beyanlı): v367'nin "enabled+inactive → stop YOK / start VAR" dünyası DUR'a çevrildi; elle stop edilmiş birim
+dağıtımı bloklar — çaresi tek komut. Düzeltme turu 1 (taze opus; ilk ajan erişilemez): 246 passed/0/exit 0 (10 dosya,
+seri), mutasyon 4/4 ısırdı (Ö-1 şablon dalı düzeltmeden ÖNCE kördü: 13 passed; Ö-4 kapsam 7→1 daralması ölçüldü),
+Ö-1 sayımı "192/192" → kural kapsamı 191/192 + beyanlı saf ifade 1 (tavan 3). Yan etkiler: v172 çapası
+`systemctl start $_BASLAT`a daraltıldı, v266 F9 blok sınırı "bir sonraki `=== [` başlığı"na daraltıldı.
+Bundle değişmedi. Yeniden-inceleme (sonnet): TEMİZ — commit'e hazır (K-7 ret tutarlı, kapsam dışı dokunuş yok); tek açık uç E-1 (dagit.sh başlığı [F10]'u anmıyor) Rol-1'de kapatıldı: başlığa [F10] satırı + RUNBOOK yeniden üretildi (diff yalnız o 2 satır). Commit fb07a16 (eski bundle `git rm`).
+
+**Ders (ajan erişimi):** implementer ajanın kimliği ledger'a yazılmamıştı; bağlam sıkıştırmasından sonra
+`ListAgents` boş döndü ve düzeltme turu taze ajanla (yeniden okuma maliyeti) yapıldı. Kural: sevk satırına ajan
+kimliği yazılır (ledger), r1 aynı ajana gider.
+
+**Belge şeridi (paralel, Rol-1; commit d278741):**
+- **TSK-081 (B-19) KAPANDI:** 2026-08-24 "ARSENAL bayat-kapanmış" hükmü DOĞRU — `docs/POLITIKA-ARSENAL.md` VAR
+  (K7 2026-08-23); 15e giriş yarısı DONE; 15d tasarım belgesi VAR → KOVA C kart adayı; 15c 044/084'e bağlı beklemede.
+- **TSK-074 → [EDG-2026-071]** ön-kayıt: hipotez "öneri katmanı hayalet düğmelere bütçe harcıyor"; K=2 (tarihsel
+  hayalet payı üretici kırılımıyla + sandbox yanlış-pozitif); ADIM-0 donmuş `hypotheses.jsonl` kopyası (git blob);
+  kill: kablolu 32 düğmeden biri süzülürse; yol-tutarlı PK (sentetik hayalet + gerçek okunan anahtar, gerçek öneri
+  yolu). §6 OPERATOR — onay bekler.
+- **TSK-077 şema kararı: DAMGA.** Ölçüm: kapının DSR girdisi `_ret` adayın `cand["_trades_search"]` listesinden
+  gelir (`reflect.py`), hiçbir deftere yazılmıyor; validation satırındaki `seri` ölçek-eşdeğer değil (medyan Sharpe
+  sapması 0,0131, kart R1). Geçmiş adaylar için donmuş-çekim İMKÂNSIZ → `record_candidate` satırına `ret_seri`+`ret_n`,
+  retro-damga yasak; KYS-002'ye R2 planı (trial `r2_dsr_damgali`, ADIM-0 ≥8 damgalı aday). Kod onaydan sonra (C-10).
+- **TSK-117 H1 tasarım belgesi** `docs/TASARIM-PALET-REZERVE-HUE-2026-09-03.md`: gündüz 9 rol hue'su ölçüldü
+  (17° yön-eksi · 20° sev-2 · 142° yön-artı · 145° sev-3 · 195° sky ailesi · 215–226° nav · 253/262° mod · 346° sev-1);
+  seri rampası 6–10'un BEŞİ de rol bantlarında — seri-6 = `--nav` hex, seri-8 = `--mod-canli` hex (K-5/Y-8 vakasının
+  kökü: "başarı"yı seri-9'a bağlamak veri kimliğine anlam yüklemekti); `--huni-1/2/3` rol hex kopyası; 416 literal
+  Tailwind renk sınıfı / 56 dosya (amber 238 · emerald+green 135 · red 31 · sky 12) — anlam jetonu yok; **bağımsız
+  kusur K-0:** gece `--yon-eksi` (0°, l74) ↔ gece `--red` (1°, l74) aynı renk. Seçenekler A/A′/B/C (öneri A′),
+  operatör soruları S1–S5. ROADMAP TSK-117 Ref'i var olmayan `ui/src/pano/tema.css`i gösteriyordu → `ui/src/tema.css`.
+- ROADMAP çivileri v351/v337/v343 + v279: 90 passed/0/exit 0.
+
+**K6 (konsolidasyon tetiği):** kuyruk 09:02Z'de boş ölçüldü (40 completed / 0 pending / 0 failed) — tetiklenecek iş
+kalmadı; kalem kapalı, yeni ingest (TSK-115) sonrası yeniden bakılır.
+
+**Kapanış:** suite #6 9920 passed / 8 skipped / 0 FAILED-ERROR / exit 0, 9 dk 23 sn, HEAD fb07a16 başlangıç=bitiş, diff/izsiz parmak izi eşit; push cebf329..fb07a16 (d278741 + fb07a16) · dağıtım #6 **fb07a16, 10:27:57Z, beyan bayt-özdeş.** İlk `--uygula` (10:25Z) [5c] artefakt tazeliğinde DURDU (exit 1): r1'in K-8 boşluk düzeltmesi (yetki/parcalar.tsx 10:00:52Z) ajanın build'inden SONRA yapılmıştı → ui kaynak mtime > pano.html; içerik aynıydı (yeniden derleme aynı hash `pano-CG5m2R0W.js`, ağaç temiz) ama kapı HAKLIYDI — kaynak artefakttan yeniydi. İkinci koşum TAMAM. Bedel: bakım penceresi iki kez açıldı (iki restart, 10:25 ve 10:27, pre-market). **Ders:** implementer brief şablonuna "`npm run build` EN SON adımdır — son düzenlemeden sonra" kuralı. Kod ilk koşumda zaten canlıdaydı (rsync + restart tamam, healthz 200) ama `dagitim.json` ae958ce'de kalmıştı — [B] beyanı [5c]'den sonra yazılıyor; "canlıda ne var" sorusu o iki dakikada beyandan değil bundle'dan okunurdu. [F10] ilk canlı koşumu: ✓ anomali yok; türetilmiş stop ilk kez: "durdu: meridian meridian-barsarchive", learn "pencere öncesi inactive — stop gönderilmedi" + "disabled — başlatılmadı"; [5b] koşan birimler dağıtılan kodu taşıyor; healthz 200 ([F10] kapısının ilk canlı koşumu).
