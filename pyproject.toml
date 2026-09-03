@@ -307,32 +307,86 @@ pytest_add_cli_args_test_selection = [
     #     ayrıştırılmalı. Ters yön de ölçüldü: `tests/test_trend_shadow_v144.py` listede DURUYOR
     #     ama üç modülün hiçbirini import etmiyor (zararsız fazlalık; daraltma da bir karardır,
     #     bu turda dokunulmadı — 8 koşumluk dışlama-kovalamacasının dersi).
+    #
+    # TSK-029 SINIFLANDIRMA TURU (2026-09-03, ROADMAP §4): 2026-08-24 masa-başı kararı — "körlemesine
+    # eklenemez, DAVRANIŞSAL olanlar eklenir, METİN-TARAYANLAR skoru şişirir" — mekanik uygulandı.
+    # ÖLÇÜM SÜRÜKLENDİ: bugün kural **92** test modülü buluyor (79 değil — 2026-08-14'ten beri 13
+    # yeni dosya kuralı sağlıyor); önceki liste **39**ydu ve içlerinden BİRİ (`test_trend_shadow_
+    # v144.py`, yukarıda not düşülmüş) kuralı hiç sağlamıyor — yani gerçek kesişim 38, boşluk 54.
+    # SINIFLANDIRMA ÖLÇÜTÜ: her boşluk dosyasındaki `test_*` fonksiyonlarının kaçı kaynak-metin
+    # okuyor (`open(`/`read_text(`/`getsource(`/`ast.parse(`, yerel yardımcı fonksiyonlar üzerinden
+    # bir-adım kapanışla) vs kaçı meridian API'sini (aynı kapanışla) ÇAĞIRIYOR — betik: `.superpowers/
+    # sdd/2026-09-02-hafiza-cpui/task-15-report.md`'de anılan scratchpad AST betiği (bu depoda
+    # SAKLANMADI — geçici ölçüm aracı, `research/cards/` kartı yok çünkü bu bir ÖLÇÜM değil
+    # SINIFLANDIRMA turu). SONUÇ: 47 dosya DAVRANIŞSAL/davranış-ağırlıklı → aşağıya eklendi; 5 dosya
+    # metin-ağırlıklı/karışık kaldı DIŞARIDA (aşağıda adıyla, gerekçeyle); `test_golge_v2_yasam_
+    # dongusu_v132.py` bu turda da davranış-ağırlıklı ÖLÇÜLDÜ ama 2026-08-01 ortam-testi gerekçesi
+    # (aşağıda) BAĞIMSIZ ve HÂLÂ geçerli — bu tur onu EZMEDİ, iki gerekçe ayrı katmanlarda yaşıyor.
+    "tests/test_altyapi_kucukler_v172.py",
     "tests/test_audit_fixes.py",
+    "tests/test_authority_boundaries_v77.py",
+    "tests/test_batch_j.py",
     "tests/test_batch_k.py",
     "tests/test_batch_l.py",
+    "tests/test_bayat_sermaye_koku_v213.py",
     "tests/test_broker_audit_v24.py",
     "tests/test_canslim_v94.py",
+    "tests/test_dalga2_motor_v222.py",
+    "tests/test_dalga_w1_v216.py",
     "tests/test_decision_v3.py",
     # 2026-08-12: de-risk rampası artık goal-kablosu (broker.derisk_ramp) — türetme kuralı gereği
     # (karar-çekirdeğini DOĞRUDAN import eden test dosyaları) listeye girer; yoksa rampanın yeni
     # dalları (kelepçe, fail-safe, kaynak beyanı) mutasyon skorunda ÖLÇÜLMEDEN kalırdı.
     "tests/test_derisk_rampa_kablosu_v237.py",
+    "tests/test_dinlenen_limit_v250.py",
+    "tests/test_engine.py",
     "tests/test_evidence_v4.py",
     "tests/test_execution_fidelity_v75.py",
     "tests/test_exhaustion_hammer_v92.py",
+    "tests/test_g3b_cikis_v124.py",
     "tests/test_gaps_batch_v51.py",
     "tests/test_gaps_final_v52.py",
+    "tests/test_gate_statistics_v74.py",
+    "tests/test_goal_cift_bag_v284.py",
+    "tests/test_gorunmez_suzgec_v247.py",
+    "tests/test_guard_audit_v27.py",
+    "tests/test_hafta3a_v119.py",
+    "tests/test_hafta3b_v125.py",
+    "tests/test_hermes_prompt_v106.py",
     # test_golge_v2_yasam_dongusu_v132.py BİLEREK LİSTE DIŞI (2026-08-01): dört ayrı ortam testi
     # üç koşumu ayrı ayrı kırdı (VM-dışı çekici, LaunchAgent, A1-bildirim-birimi...) ve statik
     # taramayla güvenilir sayılamadılar — dosya gerçek suite'te 32 testiyle tam güçte yaşar.
+    # (TSK-029, 2026-09-03: metin/davranış sınıflandırmasında davranış-ağırlıklı ÖLÇÜLDÜ — 19/27
+    # fonksiyon meridian API'sini çağırıyor — ama bu ortam-gerekçesi AYRI ve HÂLÂ geçerli, ezilmedi.)
     "tests/test_icra_gercekligi_v141.py",
+    "tests/test_icra_yetkisi_v233.py",
     "tests/test_intraday_shadow_v105.py",
+    "tests/test_karne_hesabi_v339.py",
+    "tests/test_karne_veri_hatti_v293.py",
+    "tests/test_koruma_dolum_zinciri_v232.py",
+    "tests/test_koruma_tif_v210.py",
+    "tests/test_kovab_borclar_v167.py",
+    "tests/test_kovab_dalga3_v166.py",
+    "tests/test_kovab_icra_v161.py",
+    "tests/test_kovab_ikimotor_v164.py",
+    "tests/test_kuzey_yildizi_v109.py",
+    "tests/test_learning.py",
+    "tests/test_learning_roundtrip_v76.py",
     "tests/test_ledger_contract_v57.py",
     "tests/test_llm_advisor_v6.py",
     "tests/test_na_revision_v53.py",
+    "tests/test_ogrenme_durmasi_yamalari_v236.py",
+    "tests/test_ogrenme_hafiza_kunye_v245.py",
+    "tests/test_ops_v5.py",
+    "tests/test_opt_faz1_kablolama_v276.py",
+    "tests/test_para_v3_borclari_v145.py",
+    "tests/test_para_v3_tamamlama_v178.py",
+    "tests/test_para_yasasi_v127.py",
     "tests/test_pead_v93.py",
     "tests/test_recompute_v62.py",
+    "tests/test_regime_audit_v37.py",
     "tests/test_regime_patch.py",
+    "tests/test_rejim_tam_pencere_v371.py",
     "tests/test_risk.py",
     "tests/test_score_audit_v40.py",
     # 2026-08-14 (WP-15g devri, ROADMAP §2-35a): sektör tavanının paydası artık KENDİ anahtarını
@@ -341,8 +395,28 @@ pytest_add_cli_args_test_selection = [
     # yok say", "türetme dalını sabitle") ölmeden hayatta kalır ve haftalık ritüel gerçek boşluğu
     # gizler — v237 de-risk rampası satırı tam bu gerekçeyle eklenmişti.
     "tests/test_sektor_tavani_ayristirma_v245.py",
+    "tests/test_sermaye_ayristirma_v150.py",
+    "tests/test_sermaye_beyani_v187.py",
+    "tests/test_seyrelme_ayna_v372.py",
     "tests/test_temizlik_kablolama_v137.py",
     "tests/test_trend_shadow_v144.py",
+    "tests/test_turnover_kablolama_v149.py",
+    "tests/test_uretec_kesif_dengesi_v135.py",
+    "tests/test_vaka_sabitleme_v197.py",
+    "tests/test_warning_hygiene_v69.py",
+    "tests/test_wp2d_egri_kadansli_yazar_v245.py",
+    "tests/test_wpe_dolum_boslugu_v234.py",
+    "tests/test_wpm_para_ikizi_v183.py",
+    # TSK-029 (2026-09-03) METİN-AĞIRLIKLI/KARIŞIK — BİLEREK LİSTE DIŞI (aynı ölçütle, "hangi yarı
+    # ağır basıyorsa" kararı metin lehine düştü): `test_beyan_bayatligi_v246.py` (9/15 fonksiyon
+    # kaynak-metin okuyor — kendisi zaten bu türetme kuralının ÇİVİSİ, davranışsal payı sadece
+    # `guard.classify_gate`e tek doğrudan çağrı); `test_k5_paketi_v273.py` (8/21 metin > 7/21
+    # davranış — mezar-taşı/kaldırılan-anahtar taramaları ağır basıyor, SINIR YAKIN — insan gözden
+    # geçirmesi önerilir); `test_karne_brifingi_v338.py` (99 fonksiyonun yalnız 4'ü meridian'a
+    # dokunuyor — dosya esasen `ops/karne_brifingi.py` sunum mantığını sentetik veriyle sınıyor);
+    # `test_wp6_kucuk_kalemler_v268.py` (6/6 metin, 2/6 davranış); `test_wpd_kardes_pit_v185.py`
+    # (10/17 metin > 7/17 davranış). Beşi de listeye eklenirse mutasyon süresi büyür ama skor
+    # broker/guard/score DAVRANIŞINDA ölçülmüyor — masa-başı kararının yasakladığı tam o sınıf.
     # MUTANT-BORCU dosyaları (2026-08-01 Workflow turu — skor bunlarsız kör kalırdı; doğrulayıcı bulgusu):
     "tests/test_mutborc_broker_derisk_mult_v148.py",
     "tests/test_mutborc_broker_entry_law_v148.py",
