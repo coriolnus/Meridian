@@ -2061,3 +2061,48 @@ kimliği yazılır (ledger), r1 aynı ajana gider.
 kalmadı; kalem kapalı, yeni ingest (TSK-115) sonrası yeniden bakılır.
 
 **Kapanış:** suite #6 9920 passed / 8 skipped / 0 FAILED-ERROR / exit 0, 9 dk 23 sn, HEAD fb07a16 başlangıç=bitiş, diff/izsiz parmak izi eşit; push cebf329..fb07a16 (d278741 + fb07a16) · dağıtım #6 **fb07a16, 10:27:57Z, beyan bayt-özdeş.** İlk `--uygula` (10:25Z) [5c] artefakt tazeliğinde DURDU (exit 1): r1'in K-8 boşluk düzeltmesi (yetki/parcalar.tsx 10:00:52Z) ajanın build'inden SONRA yapılmıştı → ui kaynak mtime > pano.html; içerik aynıydı (yeniden derleme aynı hash `pano-CG5m2R0W.js`, ağaç temiz) ama kapı HAKLIYDI — kaynak artefakttan yeniydi. İkinci koşum TAMAM. Bedel: bakım penceresi iki kez açıldı (iki restart, 10:25 ve 10:27, pre-market). **Ders:** implementer brief şablonuna "`npm run build` EN SON adımdır — son düzenlemeden sonra" kuralı. Kod ilk koşumda zaten canlıdaydı (rsync + restart tamam, healthz 200) ama `dagitim.json` ae958ce'de kalmıştı — [B] beyanı [5c]'den sonra yazılıyor; "canlıda ne var" sorusu o iki dakikada beyandan değil bundle'dan okunurdu. [F10] ilk canlı koşumu: ✓ anomali yok; türetilmiş stop ilk kez: "durdu: meridian meridian-barsarchive", learn "pencere öncesi inactive — stop gönderilmedi" + "disabled — başlatılmadı"; [5b] koşan birimler dağıtılan kodu taşıyor; healthz 200 ([F10] kapısının ilk canlı koşumu).
+
+### 2026-09-03 öğle (Rol-1) — TSK-014 · TSK-103 · TSK-115 · görsel tur → TSK-124/125
+
+**Operatör kararları (~10:45Z):** EDG-2026-071 ONAY (ölçüm kodu KOVA C) · TSK-077 damga kodu ONAY (C-10, KOVA B sırası) · TSK-117
+S1 = A′, S3 = 195° ailesi BİLGİ rolü, S4 = renk körlüğü BU TURDA, S5 = literal göç DÖRT dilim · paralel şerit: TSK-115 ·
+görsel tur: "ekran görüntüleriyle sen göster".
+
+**TSK-014 SOUL kural denetimi (B-13), tek opus ajan, 1 inceleme + 2 düzeltme turu, commit 2f204c2:** `ops/soul_denetimi.py`
+ortak kütüphane; üç bot bağlı (sef/bekci `sirala`, karne `sun`; @oneri LLM yok). İnceleme (opus): 2 kritik / 5 önemli / 7 küçük —
+K-1 fail-open sözleşmesi yapısal değildi (`gecir`/`obs.log` sarmasız), K-2 denetçi aynı profil: SOUL `## Biçim` "düz metin/SESSIZ"
+ile KATI JSON çelişiyordu (→ biçim-üstünlüğü cümlesi; yeni profil RET), Ö-2 motive eden "0 ship çevrildi" vakası ne mekanik ne LLM
+tarafından yakalanıyor (bu turda BEYAN; kapatma → TSK-122), Ö-5 bedel sayısı yanlıştı (karne timer HAFTALIK: doğrusu +2…+6/gün,
++1…+3/hafta; `TimeoutStartSec` üç serviste de yok → TSK-123). r1: 14/14, 629 passed, mutasyon 3/3. Yeniden-inceleme (sonnet)
+K-1 KISMİ buldu: `istem = _prompt_kur(ham)` refaktörle `try` DIŞINA çıkmıştı (HEAD'de içerideydi) → r2: try içine, çivi K1B (üç bot),
+632 passed, mutasyon D ısırdı. Ders: "hiçbir dal teslimatı düşüremez" iddiası koddan güçlüydü; sarmalayıcıyı ekleyen tur, sarmalayıcının
+DIŞINDA kalan yeni satırı görmedi — yeniden-inceleme tam bu yüzden var. Canlı doğrulama AÇIK: dağıtım #7 sonrası 22:00 UTC brifingde
+`brifing_kural_denetimi.kaynak` (llm mi llm_dustu mu) — K-2 çelişkisi biçim cümlesiyle çözülmüş mü ancak gerçek modelle görülür.
+
+**TSK-103 span_days (B-14), sonnet, 1 inceleme + 1 düzeltme, aynı commit:** `full_detail_graded` için span_days = pencere takvimi
+(`is_start`→`holdout_end`, `segment_score` deseni); düz kardeş trade-span (beyanlı); pencere yoksa `_warn_once` jetonu. v386 7 çivi,
+202 passed, mutasyon 3/3 (kesin-küçüklük çivisi `test_1c` eklendi: oran≤1,2 çivisi mutasyon-1'de kör kalıyordu — oran 1,0 da ≤1,2).
+Test verisinde realized_30d 0,3808 → 0,0359 (10,6×; docstring "~9x" ile aynı mertebe). İnceleme: spec ONAY, 3 küçük (şerh etiketi,
+kullanılmayan import, "835. satır" referansı → sembol) — Rol-1 grep ile doğruladı.
+
+**TSK-115 ingest067 (paralel şerit), sonnet:** A1 ölçümü: 158 OK / 348 HATA (146'sı 429) / 1 502; HTTP 500 "1/1 chunks failed …
+ProviderResponseError" = hindsight kendi içinde bölmüyor, hata sağlayıcıda; her deneme ~4 dk. Brief: dilimli ana yol (`dilim_sup.dilimle`
+ithal, `yol#k/n`), hata sınıflandırma (429 → DUR; 5xx/overloaded/ağ → geçici 3 deneme 60/120/240; diğer → kalıcı), `--cagri-tavani 300`,
+ilerleme.jsonl başarısızı da yazar, bant×sonuç özeti, `--kuru`. Implementer: 112 passed, mutasyon 3/3. İnceleme uçuşta (merceğin
+ortası: ESKİ ilerleme.jsonl satırları (146) yeni okuyucuda "bitti" sayılıyor mu — sayılmazsa 146 belge yeniden gönderilir, upsert bankayı
+korur ama LLM maliyeti iki kat). A1'e kopya + boş-saat tetiği Rol-1 (elle; dagit kapsamı dışı).
+
+**Görsel tur (operatör panelde giriş yaptı; ssh tüneli 18080→A1 8080):** Varlıklar · Yapılandırma▸Webhook · Bilgi Tabanı (?sekme=dersler)
+gösterildi. Operatör bulguları: Hafıza giriş sayfasında takımyıldızı kartı Bellekler görünümünün kopyası; son belgeler ve bilgi sayfaları
+kartları da kopya; düğümler mor tek renk ve büyük (orijinal CP: küçük, türe göre renkli); "Ana Sayfa" adı uygulama ana sayfasını andırıyor
+→ ad "Genel bakış" (operatör seçti). → **[TSK-124]** düzeltme dilimi sevk (opus). "Neden hiç bilgi sayfası yok": A1'de mental-models
+total 0, pages/knowledge uçları 404; yazan yok (ingest yalnız retain; sayfa oluşturma Faz-2 kapalı) → **[TSK-125]** üretici/tetik ölçümü.
+TSK-108…112 DONE damgası TSK-124'ün görsel turuna kaldı (tur dağıtım #7 sonrası açıldı, hüküm operatörde). Yeni kalemler: TSK-122 (terim korunumu kapatma), TSK-123 (TimeoutStartSec).
+
+**Ders (superpowers):** operatör "her şey için superpowers mı" sordu — dürüst döküm: SDD döngüsü tam; brainstorming/writing-plans TSK-117
+için resmen çağrılmadı (depo brief geleneği); palet göçü dört dilimlik plan → writing-plans ile, H2 tasarımı brainstorming ile.
+
+**Saat etiketi notu:** 10:28Z (dağıtım #6) ile 12:04Z (A1 timer kurulumu, ölçüldü) arasındaki ledger/ROADMAP etiketleri `date -u` ile ÖLÇÜLMEDEN yazıldı ve ~+1 saat şişkin çıktı (hafıza kaydı saat-etiketi-olculur'un TEKRARI); ölçülmüş çapalara göre düzeltildi (~ işaretli). Kural yeniden: her ledger satırı `date -u` ile.
+
+**Kapanış:** suite #7: 10037 passed / 9 skipped / 0 FAILED-ERROR / exit 0, 11 dk 07 sn (12:13:17→12:24:26Z; -n 4 ile ~9 dk'dan 11'e uzadı — 8.344→10.037 test, dikkat: 600 sn Bash tavanına yakın), HEAD 0bda163 başlangıç=bitiş, parmak izi eşit; push 1c72407..0bda163 (2f204c2 · 520fcd7 · 3f90b2a · c2a3e90 · 0bda163) · **dağıtım #7: 0bda163, 12:27:57Z, beyan bayt-özdeş**; kapılar ✓ (F10 anomali yok, [5c] TAMAM ilk denemede — build EN SON kuralı işledi, [5b] ✓, healthz 200); learn saygı. Görsel tur (panel, tünel 18080): Hafıza ▸ **Genel bakış** başlığı, 'Ayrıntı görünümleri' kartı (3 özet satırı + bağlantı: 6,8 B kayıt · 88,9 B bağ → Bellekler; bilgi sayfası yok — ölçüldü, boş → Bilgi Tabanı; 170 belge → Belgeler), sayılar/tazelik kartları kaldı; Bellekler ▸ Tam graf takımyıldızı — operatör hükmü bekleniyor (108…112 + 124 DONE damgası). Günlük yazıldığı an 12:30Z · TSK-115 A1: `ingest067.py` + `dilim_sup.py` kopyalandı (sha eşit; dilim_sup A1'de HİÇ yoktu — keşif yanılmıştı), `--kuru` 12:0xZ: 124 dilim planı (≤8k 30 · ≤16k 22 · ≤32k 72), 146 eski kayıt atlandı; transient timer `ingest067-tsk115` 20:20Z (seans sonrası, sprint/brifing öncesi; Nice=10). Gözlem: 20:20Z sonrası log.txt özeti (bant×sonuç, 429/dur) → TSK-115 hükmü.
+**Ders (pgrep):** "pytest sırası dolu" kontrolü kendi kabuğunu yakaladı, üç kez sahte erteleme + bir çivisiz ROADMAP commit'i (çivi sonradan 78/0 yeşil) — hafıza kaydı pytest-sira-kontrolu-kendi-kabugu.
