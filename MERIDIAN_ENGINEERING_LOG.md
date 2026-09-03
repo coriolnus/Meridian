@@ -1963,3 +1963,10 @@ fazla iddialıydı; ROADMAP'te TSK-109/110 da QUEUED kalmıştı (canlıdalar) �
 - K7 palet → rezerve hue bantlarıyla PALET TURU (H1 belge önce) → **[TSK-117]**.
 - K8 ⌘K dersler → dokuzuncu Hafıza nav durağı → **[TSK-118]**.
 - Ayrıca: "o dört kalemi de tek dilimde sıraya al" → KOVA B B-3/4 tek dilim (101/102/006/030).
+
+**Sabah kararları — ikinci tur (06:3x–06:4xZ):** plana ROADMAP'ten ek kalemler: KOVA B'ye **092+113+114 tek dilim**
+(B-12) ve **014** ayrı dilim (B-13); dört-kalem dilimi (101/102/006/030) tek ajana SEVK EDİLDİ. KOVA D beş karar:
+044 FINVIZ · 045 FMP · 047 beyin · 095 openrouter/auto → **beklemede** (bedel sürer); 046 QC → **operatör giriş yapacak**,
+sonra Rol-1 devam. 103 → `span_days` dilim takvimi geçirilir (B-14). 013 tick → beklemede. **011 ölçümle DONE**: b5f9c8d
+(EDG-2026-068 kart-önce) zaten indirmiş, ROADMAP flip'i atlanmıştı — bu sabah ikinci bayat-flip (109/110'dan sonra);
+ders: her commit'in ROADMAP flip'i aynı turda, kapanış partisinde "DONE'lar listesi" ölçülür.

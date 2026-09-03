@@ -253,7 +253,7 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 _Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §3 GÜNCEL DURUM'dadır (bayat referans, tarihçe)._
 ### SIRALAMA (güncel — rev. 2026-09-02 akşam, operatör onayı): §2 İCRA SIRASI dört kova —
 **A kapanış dalgası** (TSK-108 → TSK-060 → TSK-089 → TSK-058 → günlük/ROADMAP kapanışı) →
-**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014) →
+**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103) →
 **C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035) → **D operatör masası** (§5.0).
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
 (Eski WP-dönemi sıralaması §∞ eşleme tablosunda ve §2 SIRA TARİHÇESİ'nde aynen durur.)
@@ -358,6 +358,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (B-11 **TSK-117** palet turu: rezerve hue bantları + anlam jetonları — H1 tasarım belgesi ÖNCE; operatör K7 2026-09-03 sabah.)
 - (B-12 **TSK-092** · **TSK-113** · **TSK-114** — TEK DİLİM [operatör 2026-09-03 sabah: "092+113+114 tek dilim"]: dağıtım reçetesi istenen-durum koruması + çivi · `Kapi` 7 kopya → tek kaynak · v323 `teknik` çağrı-yeri kapsaması; tek ajan, tek inceleme.)
 - (B-13 **TSK-014** teslim-öncesi ikinci-görüş geçişi (SOUL kural denetimi) — AYRI dilim [operatör 2026-09-03 sabah]; günlük kota kullanımı ~%0,2, üç bot kapsar.)
+- (B-14 **TSK-103** `full_detail_graded` span_days = dilim takvimi — operatör K6 2026-09-03 sabah; sayılar değişir, ayrışma beyanı + çivi.)
 
 **KOVA C — KART İSTEYENLER (ölçüm dalgası; kart-önce, §5 yasası):**
 
@@ -2472,7 +2473,7 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   Why: sabah penceresi 2026-09-02 — F4-B kilidi motor-yalnız uygulandı; botlar doğrudan OpenRouter'da kaldı (kırılma yok ama kota muhasebesi kör). LLM kota memory'sinin mekanikleşmesi bu göçü bekliyor.
   Ref: deploy/apisix/routes.yaml tuketiciler bloğu · meridian/hermes.py::_nous_headers (motor emsali: apikey başlığı) · günlük gece-5.
 - **[TSK-103] `full_detail_graded` span-türevi alanların dürüstleştirilmesi (span_days kararı)** — status: QUEUED · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
-  What: rejim-dilimli tam-pencere defteri bugün `span_days`/`mtm_equity` VERMEDEN hesaplanır (bilinçli — düz kardeşiyle tek yasa; bedel beyanı madde-3 backtest.py'de): span-türevi alanlar (score/sharpe/realized_30d/trades_per_year) dilim kümelenmesinden yıllıklanır, max_drawdown yaşanmamış portföy yolunundur. Karar: ya `span_days=segment takvimi` geçir (sayılar değişir — düz kardeşle ayrışma beyan ister) ya beyanla kal. Bugünkü tek tüketici yalnız avg_r+n okur, aciliyet yok.
+  What: (operatör K6 2026-09-03 sabah: `span_days` = DİLİM TAKVİMİ GEÇİRİLİR — sayılar değişir; düz kardeşle ayrışma BEYANLI + çivi; KOVA B B-14.) rejim-dilimli tam-pencere defteri bugün `span_days`/`mtm_equity` VERMEDEN hesaplanır (bilinçli — düz kardeşiyle tek yasa; bedel beyanı madde-3 backtest.py'de): span-türevi alanlar (score/sharpe/realized_30d/trades_per_year) dilim kümelenmesinden yıllıklanır, max_drawdown yaşanmamış portföy yolunundur. Karar: ya `span_days=segment takvimi` geçir (sayılar değişir — düz kardeşle ayrışma beyan ister) ya beyanla kal. Bugünkü tek tüketici yalnız avg_r+n okur, aciliyet yok.
   Why: TSK-002 incelemesi bulgu-1 (orta): kalıcı deftere "kardeş" adıyla yazılan alanın bazı alanları kıyaslanabilir değil; beyan yazıldı, kararın kendisi ruling kalemi.
   Ref: task-002 inceleme raporu 2026-09-02 · backtest.py bedel beyanı madde-3 · score.py span docstring'i.
 - **[TSK-099] Pano `apiPost` iki birebir kopyası tek kaynağa iner** — status: DONE(2026-09-02 · 062e989: `ui/src/pano/gonder.ts` yazma kapısı doğdu [apiPost + GonderSonucu + detaydanMetin], üç tüketici tek kaynaktan; kimlik/gonder.ts sözleşme dokümanı + re-export; `npm run kontrol` + build + 10 pano test dosyası yeşil) · born: 2026-09-02 · owner: rol1 · size: S · trigger: —
@@ -2540,7 +2541,7 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   Why: değerlendirme 2026-08-31, operatör sorusu üzerine — ihtiyaç henüz ölçülmedi.
   Ref: operatör sorusu 2026-08-31.
 
-- **[TSK-011] cf tarama kuyruğu `reset_index(drop=True)` — kazanç-çapalı üreticiler çapaya ulaşamıyor** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: S · trigger: —
+- **[TSK-011] cf tarama kuyruğu `reset_index(drop=True)` — kazanç-çapalı üreticiler çapaya ulaşamıyor** — status: DONE(2026-09-02 · b5f9c8d: cf tarama kuyruğu `date` sütununu taşır, kart EDG-2026-068 kart-önce; çivi v345 `test_cf_taramasi_KAZANC_CAPASINA_ULASIR` — ROADMAP durumu 2026-09-03 sabah ölçümle DÜZELTİLDİ, flip atlanmıştı) · born: 2026-08-31 · owner: rol1 · size: S · trigger: —
   What: `cf_backfill._plans_for_session` kuyruğuna `date` sütunu eklenmeli; düzeltme kartsız yapılamaz (kart-önce) çünkü `drop=True`ı kaldırmak cf defterine iki uyuyan kurulum sokar ve karşı-olgusal bileşimi değiştirir.
   Why: kazanç-çapalı iki üretici (pead/episodic) cf'de çapaya HİÇ ulaşamıyor; beyanlı-sıfır + çürüme çivisi v345'te zaten bu gerçeği anıyor (korumalı-zincir kaydı).
   Ref: EDG-062 Görev-3 bulgusu, 2026-08-31.
@@ -2553,7 +2554,7 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 _**[2026-08-31 KONSOLİDASYON — HAVUZ GİRDİSİ ROZET TAŞIMAZ.]** Burası backlog'dur: girdi tahtaya terfi ettiği gün rozet alır; havuzda rozet taşımak çift-defter olurdu. `/api/roadmap` bu maddeleri `belirsiz` sayar ve **bu doğrudur**._
 
 - **[TSK-013] tick programı — ücretsiz kaynak değerlendirmesi** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
-  What: tam bant (SIP) ücretsiz YOK; iki ücretsiz sınıf ölçüldü — (1) Alpaca IEX canlı akışı (30 kanal tavanı, ~%2-3 hacim), (2) IEX Exchange HIST (T+1 ücretsiz pcap, replay/araştırma sınıfı). SENARYO-A (icra-anı quote kaydı, yalnız o günkü plan+pozisyon sembolleri) 30-kanal tavanına TAM oturuyor — pilot tamamen ücretsiz kurulabilir. Kart-önce: pilot EDG-kartı (kayıp oranı · IEX-quote/dolum tutarlılığı · disk-CPU · worker etkisi kill'i) açılmadan kod yok.
+  What: (operatör 2026-09-03 sabah: BEKLEMEDE — Senaryo-A kart-önce önerisi ertelendi, reddedilmedi.) tam bant (SIP) ücretsiz YOK; iki ücretsiz sınıf ölçüldü — (1) Alpaca IEX canlı akışı (30 kanal tavanı, ~%2-3 hacim), (2) IEX Exchange HIST (T+1 ücretsiz pcap, replay/araştırma sınıfı). SENARYO-A (icra-anı quote kaydı, yalnız o günkü plan+pozisyon sembolleri) 30-kanal tavanına TAM oturuyor — pilot tamamen ücretsiz kurulabilir. Kart-önce: pilot EDG-kartı (kayıp oranı · IEX-quote/dolum tutarlılığı · disk-CPU · worker etkisi kill'i) açılmadan kod yok.
   Why: operatör "tick için ücretsiz kaynakları değerlendirelim" dedi; SENARYO-B (tam akış) ücretsizle olmuyor — ücretli bant kararı operatörde.
   Ref: operatör 2026-08-31 gece; ikincil aday Finnhub free websocket (bant kaynağı/yeniden-dağıtım şartı doğrulanmadı).
 - **[TSK-014] teslim-öncesi ikinci-görüş geçişi (SOUL kural denetimi)** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: S-M · trigger: —
@@ -2594,7 +2595,7 @@ _**[2026-08-31 KONSOLİDASYON — HAVUZ GİRDİSİ ROZET TAŞIMAZ.]** Burası ba
   Why: PIT-(b) uygulaması (EDG-2026-062) bu kuyruğun ÖNÜNDE — operatör kararı daha eski.
   Ref: operatör 2026-08-31 brainstorm kapanışı; sıra 8→4→2→1→3→9 (5/6 tetik kaydı, 7 beklemede).
 - **[TSK-095] openrouter/auto değerlendirmesi — künyesiz LLM yüzeyleri için** — status: OPERATOR · born: 2026-09-01 · owner: operator · size: S · trigger: —
-  What: OpenRouter duyurusu (operatör iletti, 2026-09-01 maili): `openrouter/auto` istek başına model seçiyor (task sınıflandırma + topluluk 7-gün harcama sıralaması; router ücreti yok, SEÇİLEN modelin fiyatı ödenir; `cost_tier` bandı; hesap-düzeyi model kısıtları auto'ya da uygulanır). DEĞERLENDİRME (Rol-1): canlı ÖLÇÜM yüzeylerinde KULLANILMAZ — model künyesi önceden bilinemez ve 7-günlük pencereyle KAYAR (ölçüm tekrarlanabilirliği + kart model-kaydı disiplipiyle çelişir; EDG-063/hindsight künye şartı). ADAY yüzey: künye gerektirmeyen sohbet/ikinci-görüş sınıfı — ANCAK önce hesapta "yalnız :free modeller" kısıtının auto'yu gerçekten bağladığı ÖLÇÜLMELİ (bağlamazsa her istek bilinmeyen tutarlı harcama = para kararı). Bugünkü kapı zinciri (ai-proxy-multi, pinli modeller) deterministik ve beyanlı — auto onun yerine değil, olsa olsa yanına.
+  What: (operatör 2026-09-03 sabah: BEKLEMEDE — karar ertelendi, bedel aynen sürer.) OpenRouter duyurusu (operatör iletti, 2026-09-01 maili): `openrouter/auto` istek başına model seçiyor (task sınıflandırma + topluluk 7-gün harcama sıralaması; router ücreti yok, SEÇİLEN modelin fiyatı ödenir; `cost_tier` bandı; hesap-düzeyi model kısıtları auto'ya da uygulanır). DEĞERLENDİRME (Rol-1): canlı ÖLÇÜM yüzeylerinde KULLANILMAZ — model künyesi önceden bilinemez ve 7-günlük pencereyle KAYAR (ölçüm tekrarlanabilirliği + kart model-kaydı disiplipiyle çelişir; EDG-063/hindsight künye şartı). ADAY yüzey: künye gerektirmeyen sohbet/ikinci-görüş sınıfı — ANCAK önce hesapta "yalnız :free modeller" kısıtının auto'yu gerçekten bağladığı ÖLÇÜLMELİ (bağlamazsa her istek bilinmeyen tutarlı harcama = para kararı). Bugünkü kapı zinciri (ai-proxy-multi, pinli modeller) deterministik ve beyanlı — auto onun yerine değil, olsa olsa yanına.
   Why: bugün ölçülen free-havuz boğulması (nemotron timeout + gemma 429) auto'nun çözdüğü sınıfa yakın; ama bedeli opak yönlendirme. Öneri-akışı kuralı: kaybolmasın diye işlendi.
   Ref: operatör maili 2026-09-01 · TSK-089 Faz 1 §7 kaydı (ölçülen dersler).
 - **[TSK-094] TSX satır-çapalarının sembol-çapaya göçü** — status: DONE(2026-09-02 gece · SDD tam döngü: implementer + inceleme + düzeltme turu + re-review onayı; 141/141 TSX çapası `dosya.py::sembol`e göçtü, ui/src'te kalan satır çapası 0, `TSX_CAPA_TABANI` 32→0; süpürmede 9 yanlış eşleme yorum-doğrulamasıyla bulunup düzeltildi — tarayıcı 9'unda da yeşildi, VARLIK≠YERİNDELİK sınırı rapor §2.1'de; v373 20 + v314 16 çivi) · born: 2026-09-01 · owner: rol1 · size: S · trigger: —
@@ -2896,22 +2897,22 @@ kill#3 istisnası kartta ADIYLA kayıtlı — `83bc47b`.)_
 #### KOVA 3 — ERİŞİM / KİMLİK (para ya da hesap gerektiren)
 
 - **[TSK-044] FINVIZ Elite token satın alınsın mı (C1)** — status: OPERATOR · born: 2026-08-31 · owner: operator · size: S · trigger: —
-  What: satın alma kararı bekleniyor — Elite token evreni 251'in üstüne çıkarır.
+  What: (operatör 2026-09-03 sabah: BEKLEMEDE — karar ertelendi, bedel aynen sürer.) satın alma kararı bekleniyor — Elite token evreni 251'in üstüne çıkarır.
   Why: EDG-2026-022 ölçtü — evren bağlayıcı DEĞİL (%34,17; de-risk+tavan %65,84 baskın) → harcama DE-RISK edildi; beklerken bedel evren kalıcı 251 kalıyor (`finviz_unavailable` 3.746 / `finviz_universe` 0).
   Ref: kimlik `B-FINVIZ-TOKEN` (§5 KİMLİK TABLOSU, WP4/WP11-A) · bağımlı: WP11-D uzlaştırma çözülmeden "kesinlikle gereksiz" DENEMEZ (EDG-026: "bağlayıcı kısıt EVREN %99.55").
 
 - **[TSK-045] FMP plan/kota yükseltmesi kararı (C2)** — status: OPERATOR · born: 2026-08-31 · owner: operator · size: S · trigger: —
-  What: plan yükseltme kararı bekleniyor — ücretsiz planda `page>=1`/`limit>100`/`search?symbol` 402 dönüyor, `date=` sessizce yok sayılıyor.
+  What: (operatör 2026-09-03 sabah: BEKLEMEDE — karar ertelendi, bedel aynen sürer.) plan yükseltme kararı bekleniyor — ücretsiz planda `page>=1`/`limit>100`/`search?symbol` 402 dönüyor, `date=` sessizce yok sayılıyor.
   Why: beklerken bedel — Y4 içeriden-işlem penceresi günde tek sayfa (~100 dosyalama, evren isabeti ~6/100) ile ancak 3 yıl BEKLEYEREK dolar.
   Ref: kimlik `B-FMP-PLAN` (§5 KİMLİK TABLOSU) · bağımlı: EDG-2026-011 (askı).
 
 - **[TSK-046] QC login + notebook koşumu kararı (C3)** — status: OPERATOR · born: 2026-08-31 · owner: operator · size: S · trigger: —
-  What: `lean login` (QC "Fat Apricot Koala") YA DA dotnet-engine yolu kararı; ayrıca FREE defterin operatör tarafından KOŞULMASI bekleniyor. Konsolide detay (eski TSK-051'den, kök fizibilite 2026-08-09): toolchain hazır (colima+docker+lean 1.0.227 çalışıyor), `lean init` QC User id+API token istiyor (`~/.lean/credentials`); kimliksiz alternatif dotnet-engine (LEAN Apache-2.0 local, QC'siz) ama monorepo clone+build = L-boyut ayrı tur.
+  What: (operatör 2026-09-03 sabah: OPERATÖR QC GİRİŞİNİ YAPACAK; sonra Rol-1 Security Master sondası + EDG-021 ikinci koşumu.) `lean login` (QC "Fat Apricot Koala") YA DA dotnet-engine yolu kararı; ayrıca FREE defterin operatör tarafından KOŞULMASI bekleniyor. Konsolide detay (eski TSK-051'den, kök fizibilite 2026-08-09): toolchain hazır (colima+docker+lean 1.0.227 çalışıyor), `lean init` QC User id+API token istiyor (`~/.lean/credentials`); kimliksiz alternatif dotnet-engine (LEAN Apache-2.0 local, QC'siz) ama monorepo clone+build = L-boyut ayrı tur.
   Why: toolchain hazır (colima+docker+lean 1.0.227) ama `lean init` QC User id+API token istiyor — kimlik-bloklu. Beklerken bedel: ⑤ RETIRED çapraz-doğrulamasının tek kalan QC-adımı (1 hücrelik Security Master sondası) ve EDG-021 2. koşumu bekliyor.
   Ref: kimlik `B-QC-LOGIN` (§5 KİMLİK TABLOSU) · bağımlı: WP9 · WP4 delist-bar hattı · TSK-051 buraya konsolide (operatör kararı 2026-09-01).
 
 - **[TSK-047] NOUS_MODEL / beyin çeşitliliği — danışma yolu ölü olabilir mi (C4)** — status: OPERATOR · born: 2026-08-31 · owner: operator · size: S · trigger: —
-  What: Claude API anahtarı EKLE ya da `NOUS_MODEL`i Google-DIŞI modele çevir kararı bekleniyor (sır yolu, koda yazılamaz).
+  What: (operatör 2026-09-03 sabah: BEKLEMEDE — karar ertelendi, bedel aynen sürer.) Claude API anahtarı EKLE ya da `NOUS_MODEL`i Google-DIŞI modele çevir kararı bekleniyor (sır yolu, koda yazılamaz).
   Why: eski gerekçe ("model adı ölü") BAYAT — v239 model-adı bacağını kapattı, beyin zinciri artık AYRIK (`brain_chain_distinct` açık). "Danışma yolu ölü" şüphesi de KAPANDI — Rol-1 canlı ölçümü 2026-09-01 (A1 `agent_calls.jsonl`, 1.071 satır, 07 Ağu→31 Ağu): tarihsel boş-oranlar ölü ADLARDAN geliyordu (`tencent/hy3` 419/419 boş · `gemini-3.5-flash` 379/391 boş) ve o adlara son 14 günde SIFIR çağrı var (2026-08-13 iki-katmanlı ad-göçü onarımı işlemiş); bugünkü zincir `gemini-flash-latest`e gidiyor ve son 14 günün danışma çağrıları (nous_eval + reflect) %0 boş — beyanlı sınır: n=2, küçük örneklem (learn kapalı olduğundan hacim düşük), ama sınıf kesin (dolu) ve tüm-zaman `gemini-flash-latest` 81/81 dolu. Operatör yönü 2026-09-01: ÜCRETSİZ olmalı, Gemma tercih. Canary turu (2026-08-13 dersi: kimlik+yönlendirme+dolu-cevap sınanmadan ad değişmez): çıplak Google rotası Gemma taşımıyor (`gemma-3-27b-it`/`-12b-it` → 404); OpenRouter `:free` rotasında kimlikler VAR ve yönlendirme doğru (`google/gemma-4-31b-it:free`, `google/gemma-4-26b-a4b-it:free` → 429 = havuz kapasitesi, ad hatası değil); ayrıştırıcı karşı-test aynı dakikada `nemotron-super:free` DOLU cevap verdi → sorun hesap kotası DEĞİL, Gemma ücretsiz havuzuna özgü. ÖNERİLEN KURULUM (pano sır yüzeyi, iki alan): `NOUS_MODEL=google/gemma-4-31b-it:free` + `NOUS_FALLBACK_MODEL=nvidia/nemotron-3-super-120b-a12b:free` — zincir 429/boşta sıradakine düşer (hermes zincir döngüsü), yani Gemma havuzu tıkalıyken bile yol kanıtlı-canlı nemotron'da kalır ve telemetri (`agent_calls.jsonl`) Gemma'nın gerçek dolu-oranını önümüzdeki günlerde ölçer; dolu-cevap kanıtı Gemma'dan HENÜZ alınmadı (beyanlı — fallback bu riski taşınabilir kılıyor). UYGULAMA OPERATÖRDE: pano sır formu.
   Ref: kimlik `B-NOUS-BEYIN` (§5 KİMLİK TABLOSU) · bağımlı: WP7 (pilot-S1 ve terfi hattı) · canlı ölçüm + canary 2026-09-01 (Rol-1).
 
