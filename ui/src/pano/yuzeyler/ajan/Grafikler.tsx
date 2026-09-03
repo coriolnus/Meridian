@@ -301,7 +301,7 @@ export function KalibrasyonKarti({
                   <span
                     className={
                       Math.sign(p.tahmin) === Math.sign(p.gerceklesen)
-                        ? "text-emerald-600 dark:text-emerald-400"
+                        ? "text-basari"
                         : "text-red-600 dark:text-red-400"
                     }
                   >

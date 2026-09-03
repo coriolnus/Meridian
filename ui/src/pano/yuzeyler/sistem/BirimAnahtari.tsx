@@ -299,7 +299,7 @@ export function BirimAnahtari({
           <span
             className={cn(
               "text-xs",
-              oku.hal === "acik" && "text-emerald-600 dark:text-emerald-400",
+              oku.hal === "acik" && "text-basari",
               oku.hal === "karisik" && "text-uyari",
               oku.hal !== "acik" && oku.hal !== "karisik" && "text-muted-foreground",
             )}

@@ -354,10 +354,10 @@ function IlerlemeSatiri({
         </span>
       </div>
       <span className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        {/* BAŞARI RENGİ MEVCUT RAMPADAN, VE BEDELİ YAZILI (Y-8): `--seri-9` camgöbeğidir ve
-            aynı jeton takımyıldız efsanesinde bir KÜMEYİ boyuyor — yeşilin evrensel
-            "tamam" okuması gitti. Gerekçe `yazma.tsx::BacakSatiri` şerhinde, tek yerde. */}
-        <span className="h-full rounded-full bg-[var(--color-seri-9)]" style={{ width: `${toplam > 0 ? p : 0}%` }} />
+        {/* BAŞARI RENGİ KENDİ JETONUNDAN (TSK-117 K-3, 2026-09-03): eskiden `--seri-9`
+            camgöbeğini ödünç alıyordu (gerekçe `yazma.tsx::BacakSatiri` şerhindeydi) — palet
+            turu o borcu kapattı, `basari` kendi rezerve bandına taşındı. */}
+        <span className="h-full rounded-full bg-basari" style={{ width: `${toplam > 0 ? p : 0}%` }} />
       </span>
     </div>
   );
@@ -437,7 +437,7 @@ export function KonsolidasyonKarti({
         }
       />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Hucre etiket="Tamamlanan" ikon={CheckCircle2} ikonSinifi="text-[var(--color-seri-9)]">
+        <Hucre etiket="Tamamlanan" ikon={CheckCircle2} ikonSinifi="text-basari">
           <Deger
             deger={biten}
             neden="Tamamlanan sayısı türetilemedi"
@@ -751,7 +751,7 @@ function ZihinOzeti({ govde }: { readonly govde: SayfaliGovde<ZihinModeli> }) {
     <div className="flex flex-col gap-4">
       <IlerlemeSatiri biten={uyumlu} toplam={ogeler.length} teknik="okunan model sayısı ölçülemedi" />
       <div className="grid grid-cols-3 gap-3">
-        <Hucre etiket="Güncel" ikon={CheckCircle2} ikonSinifi="text-[var(--color-seri-9)]">
+        <Hucre etiket="Güncel" ikon={CheckCircle2} ikonSinifi="text-basari">
           {tam(uyumlu)}
         </Hucre>
         <Hucre etiket="Bayat" ikon={AlertCircle} ikonSinifi="text-uyari">
@@ -796,8 +796,12 @@ const ISLEM_DURUM_ETIKETI: Readonly<Record<string, string>> = {
   cancelled: "iptal",
 };
 
+/* SONUÇ RENGİ ANLAMLIDIR, ARA-DURUM RENGİ KATEGORİKTİR (TSK-117 K-3, 2026-09-03):
+   `completed` zaten `failed` gibi bir SONUÇ — ikisi de rol jetonundan (`basari`/`destructive`)
+   okunur. `processing`/`pending` geçici ara-durumlar, kimlikleri seri rampasından
+   (`--color-seri-6/7`) kalır — üçü de aynı hue'ya sıkışsaydı lejant "kim kim" söyleyemezdi. */
 const ISLEM_DURUM_RENGI: Readonly<Record<string, string>> = {
-  completed: "var(--color-seri-9)",
+  completed: "var(--basari)",
   processing: "var(--color-seri-6)",
   pending: "var(--color-seri-7)",
   failed: "var(--destructive)",

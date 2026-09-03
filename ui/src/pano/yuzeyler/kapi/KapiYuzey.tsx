@@ -72,14 +72,14 @@ const FAZ_HAL: Readonly<Record<string, { etiket: string; ton: FazTonu }>> = {
 };
 
 const FAZ_TON_SINIFI: Readonly<Record<FazTonu, string>> = {
-  canli: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  canli: "bg-basari-t text-basari",
   bekliyor: "text-muted-foreground",
   olculemedi: "text-muted-foreground",
   taninmiyor: "bg-uyari-t text-uyari",
 };
 
 const FAZ_NOKTA_SINIFI: Readonly<Record<FazTonu, string>> = {
-  canli: "bg-emerald-500",
+  canli: "bg-basari",
   bekliyor: "bg-muted-foreground/40",
   olculemedi: "bg-muted-foreground/60",
   taninmiyor: "bg-uyari",
@@ -511,7 +511,7 @@ function Metrikler({ durum }: { readonly durum: Durum<KapiGovdesi> }) {
                                       variant="outline"
                                       className={cn(
                                         "font-mono text-[11px] tabular-nums",
-                                        kod.startsWith("2") && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                                        kod.startsWith("2") && "bg-basari-t text-basari",
                                         (kod.startsWith("4") || kod.startsWith("5")) &&
                                           "bg-uyari-t text-uyari",
                                       )}

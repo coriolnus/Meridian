@@ -412,7 +412,7 @@ export function KararPaneli({
           <div
             className={
               gonderimTonu(planSonuc) === "iyi"
-                ? "mt-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3"
+                ? "mt-2 rounded-md border border-basari-h bg-basari-t p-3"
                 : "mt-2 rounded-md border border-uyari-h bg-uyari-t p-3"
             }
           >

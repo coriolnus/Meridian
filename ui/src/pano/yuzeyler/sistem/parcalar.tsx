@@ -134,9 +134,9 @@ export function OkRozet({
   return (
     <Badge
       variant={ok ? "secondary" : "destructive"}
-      className={cn("gap-1.5", ok && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400")}
+      className={cn("gap-1.5", ok && "bg-basari-t text-basari")}
     >
-      <span className={cn("size-1.5 rounded-full", ok ? "bg-emerald-500" : "bg-destructive")} />
+      <span className={cn("size-1.5 rounded-full", ok ? "bg-basari" : "bg-destructive")} />
       {ok ? iyi : kotu}
     </Badge>
   );
@@ -159,10 +159,10 @@ export function KolRozet({ cekili, cekiliMetin, serbestMetin }: { readonly cekil
         "gap-1.5",
         cekili
           ? "bg-uyari-t text-uyari"
-          : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+          : "bg-basari-t text-basari",
       )}
     >
-      <span className={cn("size-1.5 rounded-full", cekili ? "bg-uyari" : "bg-emerald-500")} />
+      <span className={cn("size-1.5 rounded-full", cekili ? "bg-uyari" : "bg-basari")} />
       {cekili ? cekiliMetin : serbestMetin}
     </Badge>
   );
@@ -212,7 +212,7 @@ export function OlcekCubugu({
         <span className="font-medium text-muted-foreground">{etiket}</span>
         <span
           className={cn(
-            "font-medium text-emerald-600 tabular-nums dark:text-emerald-400",
+            "font-medium text-basari tabular-nums",
             uyarida && "text-uyari",
             kritikte && "text-destructive",
           )}
@@ -223,7 +223,7 @@ export function OlcekCubugu({
       <span className="block h-1.5 overflow-hidden rounded-full bg-muted-foreground/20">
         <span
           className={cn(
-            "block h-full rounded-full bg-emerald-500",
+            "block h-full rounded-full bg-basari",
             uyarida && "bg-uyari",
             kritikte && "bg-destructive",
           )}

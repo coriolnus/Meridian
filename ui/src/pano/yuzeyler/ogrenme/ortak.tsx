@@ -81,7 +81,7 @@ export function para(v: unknown, basamak = 2): string | null {
 /** Kâr/zarar (ve delta) rengi. `null`/0 için NÖTR: sıfırı yeşile boyamak "kazandık" der. */
 export function pnlRengi(v: unknown): string {
   if (typeof v !== "number" || !Number.isFinite(v) || v === 0) return "text-foreground";
-  return v > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400";
+  return v > 0 ? "text-[var(--yon-arti)]" : "text-red-600 dark:text-red-400";
 }
 
 /** Metin alanı gerçekten dolu mu? Boş dizge de "yok" sayılır — `""` basmak boş
@@ -196,7 +196,7 @@ export function UcDegerli({
       variant="outline"
       className={cn(
         iyi
-          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+          ? "border-basari-h bg-basari-t text-basari"
           : "border-uyari-h bg-uyari-t text-uyari",
       )}
     >

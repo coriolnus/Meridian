@@ -289,7 +289,7 @@ function NavItemBadge({ badge }: { badge?: NavBadge }) {
       className={cn(
         "rounded-sm border capitalize",
         badge === "new" &&
-          "border-green-600 text-green-600 peer-hover/menu-button:text-green-600 peer-data-active/menu-button:text-green-600",
+          "border-basari text-basari peer-hover/menu-button:text-basari peer-data-active/menu-button:text-basari",
         badge === "soon" && "border-muted-foreground text-muted-foreground",
       )}
     >

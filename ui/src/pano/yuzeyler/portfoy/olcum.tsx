@@ -75,7 +75,7 @@ export function adet(v: number): string {
  *  izin verilen emerald/red çiftinden gelir (brief: "Kâr/zarar için … kabul"). */
 export function kzSinifi(v: number | null): string {
   if (v === null) return "text-muted-foreground";
-  if (v > 0) return "text-emerald-600 dark:text-emerald-400";
+  if (v > 0) return "text-[var(--yon-arti)]";
   if (v < 0) return "text-red-600 dark:text-red-400";
   return "text-muted-foreground";
 }
@@ -92,7 +92,7 @@ export function kzSinifi(v: number | null): string {
  *  etiket, analytics/top-traffic-sources.tsx). */
 export function kzDolgusu(v: number | null): string {
   /* DOLGU OPAKLIĞI %25'TEN %85'E ÇIKTI (2026-08-25, tarayıcıda ölçüldü).
-     Önceki hâl `fill-emerald-500/25` idi ve niyeti "içi soluk, kenarı keskin çubuk"tu;
+     Önceki hâl yön-artı rengini %25 alfayla dolduruyordu ve niyeti "içi soluk, kenarı keskin çubuk"tu;
      ama ölçüm başka söyledi: 1440px'te çubuklar 64×28 px ve %25 dolgu + 1px kontur
      beyaz zeminde OKUNMUYORDU — yüzeyin merkezindeki grafik boş görünüyordu, veri
      tastamam yerindeyken. Kontur DURUYOR (çubuğun sınırını verir, bitişik çubukları
@@ -100,7 +100,7 @@ export function kzDolgusu(v: number | null): string {
      ÖLÇÜLEMEYEN HÂL BİLEREK SOLUK KALDI (%20): "K/Z ölçülemedi" bir değer değil bir
      boşluktur ve kârla aynı görsel ağırlığı taşımamalı. */
   if (v === null) return "fill-muted-foreground/20 stroke-muted-foreground/60";
-  if (v > 0) return "fill-emerald-500/85 stroke-emerald-600 dark:stroke-emerald-400";
+  if (v > 0) return "fill-[var(--yon-arti)]/85 stroke-[var(--yon-arti)]";
   if (v < 0) return "fill-red-500/85 stroke-red-600 dark:stroke-red-400";
   return "fill-muted-foreground/20 stroke-muted-foreground/60";
 }
@@ -110,7 +110,7 @@ export function kzDolgusu(v: number | null): string {
  *  söylemediği bir şey söyler. */
 export function kzOrnegi(v: number | null): string {
   if (v === null) return "bg-muted-foreground/20 ring-1 ring-muted-foreground/60";
-  if (v > 0) return "bg-emerald-500/85 ring-1 ring-emerald-600 dark:ring-emerald-400";
+  if (v > 0) return "bg-[var(--yon-arti)]/85 ring-1 ring-[var(--yon-arti)]";
   if (v < 0) return "bg-red-500/85 ring-1 ring-red-600 dark:ring-red-400";
   return "bg-muted-foreground/20 ring-1 ring-muted-foreground/60";
 }

@@ -107,7 +107,7 @@ function haliCoz(s: SprintDurumu): Hal {
 }
 
 const HAL_STILI: Readonly<Record<Hal["kod"], { ikon: typeof Activity; sinif: string }>> = {
-  kosuyor: { ikon: CircleDot, sinif: "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300" },
+  kosuyor: { ikon: CircleDot, sinif: "border-basari-h bg-basari-t text-basari" },
   yarida: { ikon: TriangleAlert, sinif: "border-uyari-h bg-uyari-t text-uyari" },
   bitti: { ikon: Pause, sinif: "border-border bg-muted/30 text-foreground" },
   hic: { ikon: CircleSlash, sinif: "border-border bg-muted/30 text-muted-foreground" },
@@ -282,7 +282,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
                   arama.cleared === 0
                     ? "border-uyari-h text-uyari"
                     : typeof arama.cleared === "number"
-                      ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                      ? "border-basari-h text-basari"
                       : ""
                 }
               >
@@ -446,7 +446,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
                 variant="outline"
                 className={
                   kadans.kos === true
-                    ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                    ? "border-basari-h text-basari"
                     : kadans.kos === false
                       ? "text-muted-foreground"
                       : ""
@@ -534,7 +534,7 @@ function IzTablosu({ iz, evaluated }: { iz: readonly SprintIzi[]; evaluated: num
                 <TableCell className="py-2.5 text-right text-xs tabular-nums">{t.fold_wins ?? "—"}</TableCell>
                 <TableCell className="py-2.5">
                   {t.passes ? (
-                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-300">
+                    <Badge variant="outline" className="border-basari-h text-basari">
                       kapıyı geçti
                     </Badge>
                   ) : (

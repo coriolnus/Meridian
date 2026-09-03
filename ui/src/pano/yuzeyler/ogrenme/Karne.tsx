@@ -89,7 +89,7 @@ function Merdiven({ hal }: { hal: string | undefined }) {
                   zayifSon
                     ? "border-uyari-h bg-uyari-t text-uyari"
                     : tamam
-                      ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                      ? "border-basari-h bg-basari-t text-basari"
                       : takili
                         ? "border-uyari-h bg-uyari-t text-uyari"
                         : "border-border bg-muted/40 text-muted-foreground",
@@ -110,7 +110,7 @@ function Merdiven({ hal }: { hal: string | undefined }) {
                 <span
                   className={cn(
                     "my-1 w-px flex-1 md:my-0 md:mx-2 md:h-px md:w-auto",
-                    tamam ? "bg-emerald-500/40" : "bg-border",
+                    tamam ? "bg-basari-t" : "bg-border",
                   )}
                   aria-hidden
                 />

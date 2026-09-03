@@ -193,7 +193,7 @@ function Cizelge({ ajan }: { ajan: AjanGovdesi }) {
                         </Badge>
                       ) : null}
                       {s.reinstated ? (
-                        <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-300">
+                        <Badge variant="outline" className="border-basari-h text-basari">
                           yeniden yürürlükte
                         </Badge>
                       ) : null}

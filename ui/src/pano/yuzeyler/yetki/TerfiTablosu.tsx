@@ -162,7 +162,7 @@ export function TerfiTablosu({ merdiven }: { readonly merdiven: Merdiven | undef
                             className={cn(
                               "inline-flex items-center gap-1.5 text-xs",
                               saglandi
-                                ? "text-emerald-600 dark:text-emerald-400"
+                                ? "text-basari"
                                 : "text-muted-foreground",
                             )}
                           >

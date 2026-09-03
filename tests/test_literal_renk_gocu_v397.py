@@ -6,8 +6,18 @@ from meridian import config
 
 UI = pathlib.Path(config.ROOT) / "ui" / "src"
 DESEN = re.compile(r"\b(?:bg|text|border|ring|from|to|fill|stroke)-(amber|emerald|green|red|sky)-[0-9]{2,3}\b")
-# Görev 3 sonrası: amber 0. Görev 4: emerald+green 0. Görev 5: red 0. Görev 6: sky 0.
-LITERAL_TAVAN = {"amber": 0, "emerald": 130, "green": 5, "red": 31, "sky": 12}
+# Görev 3 sonrası: amber 0. Görev 4: green 0, emerald 4 (KAPANMADI — bilerek, aşağı bkz).
+# Görev 5: red 0. Görev 6: sky 0.
+#
+# emerald TAVANI 0 DEĞİL (Görev 4, TSK-117 K-2b, ölçüldü 2026-09-04): `SeansTakvimi.tsx`
+# takvim lejantında `dongu` (gece döngüsü kaydı) işaretleyicisi `emerald-500` kullanıyor —
+# "kosu" (hat koşusu) kardeş işaretleyici `ring-primary` (nötr marka rengi) taşıyor, yani
+# ikisi de "başarı/başarısızlık" değil YALNIZ İKİ KAYIT TÜRÜNÜ ayırt eden bir takvim
+# lejantı (kategorik/dekoratif, S1 ilkesi). `basari`ye taşımak "gece döngüsü kaydı VAR" ile
+# "iyi sonuçlandı" anlamlarını karıştırırdı — böyle bir ayrım burada YOK. Kalan 4 kullanım
+# bilerek dokunulmadı (task-4-report.md §"seri/dekoratif, dokunulmadı"); tavan bunu ÖLÇÜLMÜŞ
+# hâliyle 4'e beyan eder (0'a zorlamak sahte bir yeşil üretirdi — uydurma yasağı).
+LITERAL_TAVAN = {"amber": 0, "emerald": 4, "green": 0, "red": 31, "sky": 12}
 ESLEME = {"amber": "uyari", "emerald": "basari", "green": "basari", "red": "kritik", "sky": "bilgi"}
 
 def _sayim():
@@ -29,3 +39,16 @@ def test_gocen_aileler_anlam_utility_kullaniyor():
         if tavan == 0:
             assert re.search(rf"\b(?:bg|text|border|ring)-{ESLEME[aile]}(?:-t|-h)?\b", metin), \
                 f"{aile} 0'a indi ama {ESLEME[aile]} utility'si hiç kullanılmıyor — sınıflar silinmiş, dönüştürülmemiş"
+
+
+TARANAN_TABAN = 100  # ölçüldü 2026-09-03: 195 .tsx dosyası; taban körlüğü yakalayacak kadar gevşek (v398 emsali)
+
+
+def test_taranan_govde_taban_alti_degil():
+    """Körlük alarmı (G3 incelemesi KÜÇÜK → G4 incelemesi ÖNEMLİ; TSK-117, 2026-09-03): `UI.rglob`
+    boş/az dönerse sayım {0,…} ile bütün tavanların altında kalır ve tavan çivisi SESSİZCE yeşil
+    olur — az tarama kırmızı olmalı."""
+    n = sum(1 for _ in UI.rglob("*.tsx"))
+    assert n >= TARANAN_TABAN, (
+        f"UI taraması yalnız {n} .tsx dosyası buldu (taban {TARANAN_TABAN}) — yol yanlış olabilir (`{UI}`)"
+    )

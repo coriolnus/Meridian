@@ -91,7 +91,7 @@ export function Piyasa({ durum }: { readonly durum: Durum<PiyasaGovdesi> }) {
                         className={
                           m.stale_n > 0
                             ? "font-medium text-uyari tabular-nums"
-                            : "tabular-nums text-emerald-600 dark:text-emerald-400"
+                            : "tabular-nums text-basari"
                         }
                       >
                         {m.stale_n}

@@ -202,7 +202,7 @@ export function gunAnahtari(iso: string | null | undefined): string | null {
 export type HukumTonu = "iyi" | "uyari" | "kotu" | "notr" | "olculemedi";
 
 const TON_SINIFI: Record<HukumTonu, string> = {
-  iyi: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  iyi: "bg-basari-t text-basari",
   uyari: "bg-uyari-t text-uyari",
   kotu: "bg-destructive/10 text-destructive",
   notr: "bg-muted text-muted-foreground",
@@ -210,7 +210,7 @@ const TON_SINIFI: Record<HukumTonu, string> = {
 };
 
 const TON_NOKTASI: Record<HukumTonu, string> = {
-  iyi: "bg-emerald-500",
+  iyi: "bg-basari",
   uyari: "bg-uyari",
   kotu: "bg-destructive",
   notr: "bg-muted-foreground/50",

@@ -52,7 +52,7 @@ import {
 import type { FiloYuku } from "./filoOku";
 
 const NOKTA: Readonly<Record<Aktiflik, string>> = {
-  aktif: "bg-emerald-500",
+  aktif: "bg-basari",
   sessiz: "bg-muted-foreground",
   olculemedi: "bg-uyari",
 };
@@ -248,7 +248,7 @@ export function Yanliste({
                     onClick={() => sec(m)}
                     title={m.ad}
                     className={cn(
-                      "grid size-8 place-items-center border-2 border-emerald-500 bg-muted font-semibold text-xs",
+                      "grid size-8 place-items-center border-2 border-basari bg-muted font-semibold text-xs",
                       m.ajan?.tur === "ana" ? "rounded-lg" : "rounded-full",
                     )}
                   >

@@ -217,7 +217,7 @@ export function KaynakOzeti({ yuk }: { yuk: FiloYuku }) {
           şey "bilmiyorum". */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <i className="size-2 rounded-full bg-emerald-500" aria-hidden />
+          <i className="size-2 rounded-full bg-basari" aria-hidden />
           bugün konuştu ya da teslim etti
         </span>
         <span className="flex items-center gap-1.5">
@@ -352,8 +352,8 @@ function TeslimCipi({ t }: { t: FiloTeslimi }) {
   const damga = t.ts === null ? null : (zamanMetni(t.ts) ?? t.ts);
   return (
     <Collapsible className="self-center">
-      <CollapsibleTrigger className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] text-foreground transition-colors hover:bg-emerald-500/15">
-        <Package className="size-3 text-emerald-700 dark:text-emerald-400" aria-hidden />
+      <CollapsibleTrigger className="flex items-center gap-1.5 rounded-full border border-basari-h bg-basari-t px-3 py-1 text-[11px] text-foreground transition-colors hover:bg-basari-t">
+        <Package className="size-3 text-basari" aria-hidden />
         <span>{t.olay ?? "teslim olayı"}</span>
         <span className="text-muted-foreground tabular-nums">{damga ?? "damgası okunamadı"}</span>
       </CollapsibleTrigger>

@@ -459,17 +459,12 @@ export async function kurtarVeTetikle(bank: string): Promise<YazmaSonucu> {
  * operatör "tutmadı" okur ve TEKRAR BASAR. `sil`de bu, dalın kendi adlandırdığı
  * GERİ ALINAMAZ çift-gönderim sınıfıdır.
  *
- * BAŞARI RENGİ JETONDAN (K-5, Rol-1 hükmü): burada `emerald-*` vardı — bu dalda
- * doğan yeni bir palet kaynağı. Gece yeni bir jeton DOĞMAZ; renk `ISLEM_DURUM_RENGI`
- * hangi rampayı kullanıyorsa oradan okunur (`completed` → `var(--color-seri-9)`).
- *
- * BEDEL ÖLÇÜLDÜ VE ÖDENDİ (bedel yasası, düzeltme turu 2 Y-8): `--seri-9` CAMGÖBEĞİdir
- * (light `cyan-600` / dark `cyan-400`) ve AYNI jeton `takimyildizi.tsx::JETONLAR`da bir
- * graf KÜMESİNİ boyuyor. Kazanç: yeni bir palet kaynağı doğmadı ve renk tema duyarlı kaldı.
- * Kayıp: "başarı" ile bir graf kümesi aynı hue'ya oturdu ve YEŞİLİN EVRENSEL OKUMASI gitti —
- * operatör bu satırı artık renkten değil METİNDEN okuyor ("tuttu"). Kalıcı çare bir palet
- * kararıdır (rezerve hue bandı: mod/nav/şiddet gibi "başarı" da bant ister); o karar
- * operatörün palet turuna aittir, gece verilmez.
+ * BAŞARI RENGİ ARTIK KENDİ JETONUNDAN (TSK-117 K-3, palet turu, 2026-09-03):
+ * bu satır önce (gece, Y-8) veri-serisi rampasının dokuzuncu tonunu (camgöbeği)
+ * ÖDÜNÇ almıştı — palet turu o borcu kapattı, "başarı" kendi rezerve hue bandına
+ * (`basari`) taşındı. Ödünç alınan ton yalnız veri/grafik kimliği taşımaya geri
+ * döndü (`takimyildizi.tsx::JETONLAR`); bu satır artık o rampayla PAYLAŞMIYOR —
+ * yeşilin evrensel "tamam" okuması geri geldi.
  */
 function BacakSatiri({ b }: { readonly b: YazmaBacagi }) {
   const kodOlculdu = b.http !== null;
@@ -481,7 +476,7 @@ function BacakSatiri({ b }: { readonly b: YazmaBacagi }) {
         <span
           className={cn(
             "text-xs",
-            b.ok ? "text-[var(--color-seri-9)]" : cevapsizBasari ? "text-foreground" : "text-destructive",
+            b.ok ? "text-basari" : cevapsizBasari ? "text-foreground" : "text-destructive",
           )}
         >
           {b.ok ? "tuttu" : cevapsizBasari ? "çağrı gitti, cevabı okunamadı" : "tutmadı"}

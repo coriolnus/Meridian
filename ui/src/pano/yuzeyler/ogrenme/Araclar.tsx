@@ -183,7 +183,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, AracSatir>[] = [
             variant="outline"
             className={
               s.acik
-                ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                ? "border-basari-h text-basari"
                 : "text-muted-foreground"
             }
           >

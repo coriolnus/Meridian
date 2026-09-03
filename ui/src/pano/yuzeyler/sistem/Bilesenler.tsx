@@ -117,13 +117,13 @@ const SINIF: Record<InfraDurumSinifi, { etiket: string; ton: RozetTonu; ipucu: s
 };
 
 const TON_METNI: Record<RozetTonu, string> = {
-  iyi: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  iyi: "bg-basari-t text-basari",
   notr: "text-muted-foreground",
   dikkat: "bg-uyari-t text-uyari",
   kotu: "",
 };
 const TON_NOKTASI: Record<RozetTonu, string> = {
-  iyi: "bg-emerald-500",
+  iyi: "bg-basari",
   notr: "bg-muted-foreground/60",
   dikkat: "bg-uyari",
   kotu: "bg-destructive",
@@ -651,11 +651,11 @@ function BilesenGovdesi({
             <span className="tabular-nums">{satirlar.length}</span>
           </Satir>
           <Satir etiket="Koşan (active)">
-            <span className="tabular-nums text-emerald-600 dark:text-emerald-400">{aktifN}</span>
+            <span className="tabular-nums text-basari">{aktifN}</span>
           </Satir>
           <Satir etiket="Sağlıklı bekleyiş (oneshot)">
             <span
-              className="tabular-nums text-emerald-600 dark:text-emerald-400"
+              className="tabular-nums text-basari"
               title="Duruyor görünen ama tetikleyicisi ÖLÇÜLMÜŞ ve sağlam birimler: timer'ı aktif olanlar + `OnFailure` kancaları. Eylem gerektirmez."
             >
               {bekleyenN}

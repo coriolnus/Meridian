@@ -26,7 +26,7 @@ function Satir({ ad, deger, vurgu }: { ad: string; deger: string; vurgu?: "iyi" 
       <span
         className={
           "font-medium tabular-nums " +
-          (vurgu === "uyari" ? "text-uyari" : vurgu === "iyi" ? "text-emerald-600 dark:text-emerald-400" : "")
+          (vurgu === "uyari" ? "text-uyari" : vurgu === "iyi" ? "text-basari" : "")
         }
       >
         {deger}

@@ -237,7 +237,7 @@ function Govde({ doc, kucuk }: { doc: BilesenIcBelgesi | null; kucuk: Kucultulmu
                         <span className={cn("tabular-nums", hucre.anlamli ? "font-medium" : "text-muted-foreground")}>
                           {sayi(hucre.ic, 4)}
                           {hucre.anlamli ? (
-                            <Badge variant="outline" className="ml-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-300">
+                            <Badge variant="outline" className="ml-1.5 border-basari-h text-basari">
                               anlamlı
                             </Badge>
                           ) : null}

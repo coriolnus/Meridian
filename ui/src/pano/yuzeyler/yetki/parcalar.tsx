@@ -107,7 +107,7 @@ export function IzinHucresi({ deger, not }: { readonly deger: IzinDegeri; readon
   const Ikon = deger === "var" ? Check : deger === "yok" ? X : Minus;
   const renk =
     deger === "var"
-      ? "text-emerald-600 dark:text-emerald-400"
+      ? "text-basari"
       : deger === "yok"
         ? "text-red-600 dark:text-red-400"
         : "text-uyari";

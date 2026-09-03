@@ -116,7 +116,7 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                         {zamanMetni(hud.stream_down_since) ?? hud.stream_down_since}
                       </span>
                     ) : hud.stream_down_since === null ? (
-                      <span className="text-emerald-600 dark:text-emerald-400">kopuş kaydı yok</span>
+                      <span className="text-basari">kopuş kaydı yok</span>
                     ) : (
                       <Olculemedi neden="Kopukluğun ne zaman başladığı bildirilmedi" teknik="stream_down_since alanı gelmedi" kisa />
                     )}

@@ -184,9 +184,9 @@ export function OkRozet({
   return (
     <Badge
       variant={ok ? "secondary" : "destructive"}
-      className={cn("gap-1.5", ok && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400")}
+      className={cn("gap-1.5", ok && "bg-basari-t text-basari")}
     >
-      <span className={cn("size-1.5 rounded-full", ok ? "bg-emerald-500" : "bg-destructive")} />
+      <span className={cn("size-1.5 rounded-full", ok ? "bg-basari" : "bg-destructive")} />
       {ok ? iyi : kotu}
     </Badge>
   );

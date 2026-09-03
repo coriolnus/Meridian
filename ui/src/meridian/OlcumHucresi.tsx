@@ -5,8 +5,8 @@
    anatomi. Fark: orada sözleşme yorumda ve çivide yaşıyordu, burada TİPTE.
 
    Renk YALNIZ rol jetonundan gelir (index.html:296-299 sözleşmesi). Tailwind'in
-   hazır skalası (`text-green-600`) bir rol DEĞİLDİR ve bu dosyada geçmez —
-   çivi: tests/test_ui_pilot_kapilari_v286.py::test_G1b_ciplak_hex_ve_deger_jetonu_BILESENDE_yok.
+   hazır paleti (ör. yeşil/emerald ailesinin literal tonları) bir rol DEĞİLDİR ve bu
+   dosyada geçmez — çivi: tests/test_ui_pilot_kapilari_v286.py::test_G1b_ciplak_hex_ve_deger_jetonu_BILESENDE_yok.
    ============================================================================ */
 import type { Kanit, Olcum, RozetAnahtari } from "./olcum";
 import { ROZET } from "./olcum";

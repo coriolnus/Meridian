@@ -390,7 +390,7 @@ function BeyinZinciri({ s }: { s: HermesDurumu | undefined }) {
                           variant="outline"
                           className={
                             hazir
-                              ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+                              ? "border-basari-h text-basari"
                               : "text-muted-foreground"
                           }
                           title={uygun?.reason ?? undefined}

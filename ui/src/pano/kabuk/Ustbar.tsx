@@ -85,7 +85,7 @@ function DurumHapi() {
           ? { metin: "DURDURULDU", sinif: "border-destructive/50 bg-destructive/10 text-destructive", Ikon: OctagonPause, yol: MUDAHALE_YOLU }
           : veri.heartbeat?.breaker_tripped
             ? { metin: "kesici tetikli", sinif: "border-uyari-h bg-uyari-t text-uyari", Ikon: AlertTriangle, yol: MUDAHALE_YOLU }
-            : { metin: "sakin", sinif: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400", Ikon: CircleDot, yol: null };
+            : { metin: "sakin", sinif: "border-basari-h bg-basari-t text-basari", Ikon: CircleDot, yol: null };
 
   /* DAR EKRANDA HAP KISALIR, SİMGEYE İNMEZ (2026-08-31, Rol-1'in 375px ölçümü).
      Ölçülen kusur: hap ile ⌘K araması aynı yatay bölgede üst üste biniyordu.
