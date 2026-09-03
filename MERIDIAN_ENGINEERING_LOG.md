@@ -2137,3 +2137,29 @@ Bekleme döngüsü değil, harness zamanlayıcısı.
 **Kapanış:** suite #8: 10071 passed / 9 skipped / 0 FAILED-ERROR / exit 0, 11 dk 23 sn (13:53:58→14:05:23Z), HEAD d0ed07d başlangıç=bitiş; push 59573d3..d0ed07d · dağıtım #8: dry-run ✓ (F10 ✓) ama **SEANS SONRASINA ERTELENDİ** (14:07Z = 10:07 ET, piyasa açık; `loop._save_broker` günde tek kez koşuyor → seans içi restart gün-içi broker durumunu riske atar; bugünkü önceki iki dağıtım pre-market'ti). Tek-seferlik hatırlatıcı 20:05Z (yerel 23:05): dry-run tekrar + --uygula + doğrulama. **EDG-019 operatör kararı 14:18Z: 'tasarım kalemi aç' → [TSK-126] skill görüş terfisi tasarım belgesi.**.
 
 **TSK-079 (B-17) — keşif + Rol-1 ölçümü, implementer gerekmedi (15:03Z):** 25d tamam (10 zincir damgası 8324177), 25a son kalem A1 `.env` bayat token kopyası SİLİNDİ (ölçüm: EnvironmentFile drop-in ile boşaltılmış, LoadCredential canlı, süreç ortamında token yok, .dash.env değeri farklı, barsarchive token okumuyor; yedek 0600), 25c '3 aday' bayattı → 2; 25c-1 rejim-koşullu çıkış sevk kapısı: operatör 'kart-önce aç' → **EDG-2026-072** yazıldı (K=2, C-şasi, kontrol bit-özdeşlik, PK sentetik override), 25c-2 debi bekliyor. Ders: TAHTA sayıları (3 aday) kodla ayrışmıştı — keşif ölçümü kapanmış işi yeniden açmayı önledi.
+
+### 2026-09-03 akşam (Rol-1) — TSK-080 · TSK-077 · EDG-072 · gece kapanışı
+
+**TSK-080 Ö-49 kalanı (B-18), tek sonnet ajan:** ÖLÇÜM ÖNCE (operatör şartı) — codelaw gerçek çözümlemesiyle docs/ 139 dosya:
+2.997 çapa / 1.020 çürük → 951 tarihli teşhis belgesi (meşru, dışlandı), 64 docs/RUNBOOK.md (ÜRETİLMİŞ; 29 eşsiz metnin TAMAMI
+günlüğün ops/runbook_uret.py madde-2 excerpt'inden — kaynak depo kökünde, docs/ dışı → **[TSK-127]**), 5 yaşayan (tek plan dosyası;
+sembole çevrildi). B1: codelaw'a ÜÇÜNCÜ dünya (`stale_docs_line_anchors`, tek dışlama kapısı `_docs_capa_disi`, dışlananlar raporda
+görünür 110/139, `docs_line_anchor_var` ok'u ETKİLER — sıfır tolerans). B2: DÖRDÜNCÜ dünya `stale_text_anchors` (`x.yaml:NNN`,
+`ROADMAP.md:NNN-MMM`, "satır NNN"+önceki dosya belirteci; hüküm dar: hedef var/menzil/boş-yorum; ok'u DÜŞÜRMEZ, körlük tabanı ≥20 .md).
+B3 docstring-gömülü sayı: tasarım notu (mekanik değil) · SCC: operatör. 134 passed, mutasyon 3/3 (mutasyon-1'de çivi ilk hâlde yanlış
+sebeple yeşildi — `stale_claims` izole edilerek düzeltildi; §6 dersinin canlı örneği). İnceleme (sonnet): spec ONAY, kalite düzeltmeyle
+onay — Ö-1 `_capalari_olc` docstring'i kendi eliyle çürüdü ("iki tarayıcı"), Ö-2 bedel ölçülmemiş (`report()` 27 çağrı, docs taraması
+önbelleksiz), ruling: tarih-ÖNEKLİ `docs/superpowers/{plans,specs}/` planları TARİHSEL → dışla (14 dosya, bedel beyanlı). r1: docstring 'ÜÇ tarayıcı'; bedel ÖLÇÜLDÜ — ilk kaba ölçüm 0,67 s sıra-önyargılıydı, interleaved n=10 ile fark 0,085 s/çağrı, 27 çağrıda ≈2,3 s → önbellek eşik (0,3) altı, eklenmedi; plans/specs önek dışlaması (dışlanan 110→124; canlı ağaçta o 14 dosyada mekanik çürük 0 — `loop.py:1407→1839` kayması içerik-uyumu sınıfı, yasanın beyanlı sınırı dışında). 139 passed. Commit 05bfc41.
+
+**TSK-077 DSR damgası (C-10 → KOVA B), tek sonnet ajan:** keşif — `_ret` `_gate_eval`'de koşulsuz hesaplı; `record_candidate` satırı
+32 alan → 34 (`ret_seri` yuvarlamasız, `ret_n`); CONTRACTS required değişmez; LEDGER_CAP okuma penceresi, defter dosyası sınırsız
+büyür (bugün de) — kırpma ayrı kalem; yazan tek sürekli süreç meridian-learn KAPALI → damga learn açılana dek birikmez (beyan);
+fail-open korunur. Implementer: `_gate_eval` record_candidate satırına `ret_seri` (kapının DSR girdisi `_ret`in kendisi, yuvarlamasız) + `ret_n`; `_trades_search` None → None+beyan, boş → []/0; ledgers.py CONTRACTS notuna paragraf (required değişmedi); validation.py dokunulmadı (tek-kaynak). 219 passed, mutasyon 3/3 (yuvarla/alanı düşür/beyanı kaldır). Kırpma → **[TSK-128]**. İnceleme (sonnet): spec ONAY / kalite ONAY (2 küçük; kart satırı 'LEDGER_CAP ile sınırlı' yanlıştı → Rol-1 düzeltti). Commit 2578061.
+
+**EDG-2026-072** (rejim-koşullu çıkış override'ı, TSK-079 25c-1) operatör onayı → ACTIVE, KOVA C sırası 069/070/071/072.
+
+**Suite #9 (HEAD 2578061; 16:13→16:25Z, 12 dk 07 sn — süre yine uzadı, 10.113 test):** 10104 passed / **1 FAILED** — `tests/test_kovab_dilim_v382.py::test_meridian_kaynaginda_MUAFIYETSIZ_satir_capasi_YOK`: TSK-080'in codelaw.py şerhine incelemecinin örneği (`loop.py:1407`→`1839`) LİTERAL çapa biçiminde girmişti; ironi: çapa yasasının kendi dosyası. Kök neden yorum metni; davranış yok. Yorum çapa biçiminden çıkarıldı, delta kümesi (v382+v391+v59+v214+v314+v373) 164/0, commit 0c69ec8 push. Ders: inceleme raporundaki `dosya.py:NNN` örnekleri koda kopyalanırken çapa yasası dosya türüne bakmaz — implementer brief'lerine "şerhte bile çapa biçimi yazma" cümlesi eklendi.
+
+**TSK-116 revizesi (16:27Z):** keşif REPLAY_UNIVERSE'in tek liste olduğunu gösterdi — 13 endeks-çıkışı sembolünü tam emekli etmek geçmiş replay'de sağkalan yanlılığını artırırdı (A1: açık pozisyon 8'de yok, ama trades'te 11'i, planlarda 10'u geçmişte var). Operatöre sade dille soruldu → **"yalnız canlıdan çıkar"**: yeni `INDEX_EXITED` işareti + türetilmiş `LIVE_UNIVERSE` (238), REPLAY_UNIVERSE 251 ve RETIRED 8 dokunulmaz; sevk (sonnet). Sabahki K5 kararı bu revizeyle ROADMAP'e işlenecek.
+
+**Gece kapanışı:** __GECE__
