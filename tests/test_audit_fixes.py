@@ -88,7 +88,7 @@ def test_scheduler_refetches_once_per_session_not_per_poll(sandbox_state):
     idx = pd.DataFrame({"date": pd.to_datetime(["2026-07-13"])})   # latest data bar lags the calendar
     loads = []
 
-    def fake_load(use_cache=True):
+    def fake_load(use_cache=True, universe=None):   # TSK-116, 2026-09-03: canlı yol load(universe=) geçer; sahte imza uyumlu
         loads.append(use_cache)
         return ({}, idx)
     with mock.patch.object(scheduler, "_last_closed_session", lambda: "2026-07-15"), \
