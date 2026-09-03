@@ -694,7 +694,9 @@ def trade_alpha_beta() -> dict:
 # defterde İKİ ship vardı (H00026 v1→v2, H00029 v2→v3) ve İKİ DÜĞME DE CANLIDA (v5, parent 3).
 #
 # `superseded` NEDEN SHIP'TİR: `rollback.sweep_orphan_hypotheses` YALNIZ `status == "live"` olanı
-# bu duruma taşır (rollback.py:367-375) ve bir hipotez ancak SHIP ETTİYSE `live` olur. Yani
+# bu duruma taşır (`rollback.py::sweep_orphan_hypotheses`) ve bir hipotez ancak SHIP ETTİYSE `live`
+# olur (çapa sembole çevrildi 2026-09-03, TSK-030 adım-3; hedef okundu: gövde `status != "live"`
+# olanı atlar ve kalanı `superseded`e taşır — çapanın anlattığı şey oradadır). Yani
 # sonradan eklenen bir HİJYEN mekanizması, daha eski bir sayacın varsayımını geçersiz kılmış ve
 # öğrenmenin kanıtını karneden sessizce silmişti. Arıza biçimi makul bir cümle olduğu için
 # ("sistem hiç öğrenmedi") kimse fark etmedi. Çivi v304 süpürmenin HEDEF durumunu kaynaktan

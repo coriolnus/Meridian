@@ -3555,8 +3555,12 @@ def sync_agent_skills() -> dict:
     yapıldı:
       (A) SPRINT'E KENDİ DİZİNİNİ VER — bu tur reddedildi, ama İMKÂNSIZ OLDUĞU İÇİN DEĞİL.
           ÖLÇÜLDÜ, VARSAYILMADI (yerel hermes-agent kaynağı v0.18.2, 2026-08-13):
-            `tools/skill_usage.py:81` `_skills_dir() = get_hermes_home() / "skills"`
-            `hermes_constants.py:56-67` `HERMES_HOME` env değişkeni VARSA o, yoksa `~/.hermes`.
+            `tools/skill_usage.py::_skills_dir` = `get_hermes_home() / "skills"`
+            `hermes_constants.py::HERMES_HOME` env değişkeni VARSA o, yoksa `~/.hermes`.
+          (Çapalar sembole çevrildi 2026-09-03, TSK-030 adım-3. HEDEF BU DEPODA DEĞİL —
+          hermes-agent v0.18.2 kaynağı; sembolün varlığı buradan DOĞRULANAMAZ ve doğrulandı
+          diye yazmak uydurma olurdu. Sembol çapası yine de satır çapasından üstündür: ad
+          değişirse dış depoda ARANABİLİR, satır numarası ise sessizce başka bir şeyi gösterir.)
           Yani skill dizinini taşımanın bir kolu GERÇEKTEN var. Bedeli şu: `HERMES_HOME` skill
           dizinini değil TÜM ajan evini taşır — `auth.json` (kimlik havuzu), `config.yaml`
           (MCP/hook/model), `logs/`, `sessions/`. Boş bir eve işaret eden sprint'in ajan çağrıları

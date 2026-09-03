@@ -12,6 +12,11 @@
     sonrakiler bastırılmış) v274'ün ölçtüğü davranıştır ve o davranış duruyor; değişen yalnız
     pencerenin cinsi ve taşınan alanlar (`atlanan_n`/`orneklem_s` → `ozet`/`gun`/`toplam_n`/
     `ilk_ts`/`son_ts`). Yeni sözleşmenin TAM çivisi `tests/test_session_refresh_gunluk_v374.py`.
+    İKİNCİ KEZ EVRİLDİ (TSK-006, 2026-09-03): anahtar (ip, yol) DEĞİL yalnız IP oldu — canlı
+    ölçüm restart başına 57 ayrı yol için 57 "ilk olay" satırı gösterdi. Bu bölümün çivileri
+    YİNE taşındı, silinmedi: v274'ün ÖLÇTÜĞÜ şey (ilk olay anında, sonrakiler bastırılmış,
+    biriken sayı gün dönüşünde özete girer) aynen duruyor; değişen anahtarın kapsamı ve özetin
+    `yollar`/`diger_n` dağılımını da taşıması.
 [3] /api/diagnostics `dagitim` bloğu: dagit.sh beyanının YASA-6 okuyucusu — dosya yokken adlı
     boşluk, varken alanlar.
 [4] trade_plans retention KURALI: işleme dönüşen plan kırpılmaz (store.merge_dated_jsonl);
@@ -143,23 +148,24 @@ def test_watchdog_sermaye_taban_kanonikten_ve_reseed_gerilemesi_yok(sandbox_stat
 def test_gun_penceresi_ve_toplam_n(sandbox_state):
     """TSK-106 (2026-09-02) — v274'ün örnekleme çivisi yeni sözleşmeye TAŞINDI.
 
-    Ölçülen şey DEĞİŞMEDİ: çiftin ilk olayı YAZILIR, pencere içindekiler bastırılır ve sayaçta
-    birikir, farklı yol AYRI penceredir, pencere dolunca birikmiş sayı deftere GİRER. Değişen
-    yalnız pencerenin cinsi (5 dk monotonic → UTC takvim günü) ve alan adları."""
+    Ölçülen şey DEĞİŞMEDİ: ilk olay YAZILIR, pencere içindekiler bastırılır ve sayaçta birikir,
+    pencere dolunca birikmiş sayı deftere GİRER. Değişen yalnız pencerenin cinsi (5 dk monotonic
+    → UTC takvim günü), anahtarın kapsamı ((ip, yol) → ip; TSK-006) ve alan adları."""
     f = api._session_refresh_ornekle
     t0 = 1788307200.0                                             # 2026-09-02T00:00:00Z
     assert f("127.0.0.1", "/api/summary", now=t0) == {"ozet": False}   # ilk olay: ANINDA yaz
     assert f("127.0.0.1", "/api/summary", now=t0 + 10) is None    # gün içi: biriktir
     assert f("127.0.0.1", "/api/summary", now=t0 + 20) is None
     assert f("127.0.0.1", "/api/summary", now=t0 + 30) is None
-    # farklı yol AYRI pencere: selin anahtarı (ip, yol) çiftidir
-    assert f("127.0.0.1", "/api/today", now=t0 + 31) == {"ozet": False}
+    # TSK-006: farklı yol ARTIK AYRI pencere DEĞİL — aynı IP'nin kaydına, dağılıma girer
+    assert f("127.0.0.1", "/api/today", now=t0 + 31) is None
     # gün dönünce: ÖNCEKİ günün özeti tek satır (bilgi kaybı yok — toplam korunumu formülü)
     o = f("127.0.0.1", "/api/summary", now=t0 + 86400 + 1)
-    assert o == {"ozet": True, "gun": "2026-09-02", "toplam_n": 3,
+    assert o == {"ozet": True, "gun": "2026-09-02", "toplam_n": 4,
                  "ilk_ts": "2026-09-02T00:00:00+00:00",
-                 "son_ts": "2026-09-02T00:00:30+00:00"}, o
-    assert 1 + o["toplam_n"] == 4, "toplam korunumu: 1 anında satır + 3 bastırılmış"
+                 "son_ts": "2026-09-02T00:00:31+00:00",
+                 "yollar": {"/api/summary": 3, "/api/today": 1}, "diger_n": 0}, o
+    assert 1 + o["toplam_n"] == 5, "toplam korunumu: 1 anında satır + 4 bastırılmış"
     assert f("127.0.0.1", "/api/summary", now=t0 + 86400 + 2) is None
 
 
@@ -184,7 +190,7 @@ def test_middleware_ayni_GUNDE_TEK_session_refresh_olayi(sandbox_state, monkeypa
     assert r1.status_code == 200
     assert [v for v in r1.headers.get_list("set-cookie") if v.startswith(auth.COOKIE_NAME)], \
         "ilk istek tazelemedi — çivi kesimi değil, tazelemenin yokluğunu ölçerdi"
-    # ikinci GERÇEK tazeleme AYNI (ip, yol) gününde → olay YAZILMAZ, sayaç birikir
+    # ikinci GERÇEK tazeleme AYNI IP'nin aynı gününde → olay YAZILMAZ, sayaç birikir (TSK-006)
     r2 = c.get("/api/summary", headers=hdr)
     assert [v for v in r2.headers.get_list("set-cookie") if v.startswith(auth.COOKIE_NAME)], \
         "ikinci istek tazelemedi — bastırma iddiası ölçülemez"
@@ -194,7 +200,9 @@ def test_middleware_ayni_GUNDE_TEK_session_refresh_olayi(sandbox_state, monkeypa
     assert ref[0].get("ozet") is False, ref[0]          # anında yazılan görünürlük satırı
     assert "atlanan_n" not in ref[0] and "orneklem_s" not in ref[0], ref[0]   # emekli alanlar
     # bastırılan olay KAYBOLMADI: sayaç bellekte durur ve gün dönüşünde özete girer
-    assert api._REFRESH_SON[("testclient", "/api/summary")][1] == 1
+    assert api._REFRESH_SON["testclient"][1] == 1
+    # ve bastırılan olayın YOLU da kaybolmadı — dağılımda durur, ertesi gün özete girer
+    assert api._REFRESH_SON["testclient"][4] == {"/api/summary": 1}
 
 
 # ---- [3] dagitim bloğu --------------------------------------------------------------------------

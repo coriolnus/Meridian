@@ -1319,7 +1319,10 @@ def dashboard_mentions(term: str, path: str = "meridian/web/app.js") -> bool:
 #: çevirir. Bu depoda tam olarak bu sınıf ölçüldü ve elle ~117 yerde düzeltildi; ELLE DÜZELTME
 #: SINIFI KAPATMADI (aynı turda yenisi doğdu ve bir test onu dondurdu). Yasa bu yüzden var.
 # YOL ÖNEKİ DE YAKALANIR (2026-08-29 denetimi). Desen eskiden yalnız TABAN ADI görüyordu ve
-# `research/olcumler/edg026_slot20_2026-08-12/olcum.py:178` gibi TAM YOL yazan bir çapa,
+# `research/olcumler/edg026_slot20_2026-08-12/olcum.py:178` gibi TAM YOL yazan bir çapa,  # çapa-mezar-taşı
+# (^ o satır bir ÇAPA DEĞİL, DESEN ÖRNEĞİdir: yasanın yakalaması GEREKEN biçimi alıntılar.
+#  Sembole çevirmek belgeyi kendi konusunu anlatamaz hâle getirirdi — TSK-030 adım-3, 2026-09-03.
+#  Muafiyet işareti `_CAPA_MUAFIYETI` ile AYNIdır; ikinci bir işaret icat edilmedi.)
 # taranan kökteki apayrı bir `olcum.py` üzerinden yargılanıyordu — yasa GÖREMEDİĞİ bir hedef
 # hakkında hüküm veriyor, üstelik tesadüfen yeşil verip körlüğünü gizliyordu. Grup 1 = yol öneki
 # (boş olabilir), grup 2 = taban ad, grup 3 = satır. `m.group(0)` artık öneki de taşır: kayıtlar

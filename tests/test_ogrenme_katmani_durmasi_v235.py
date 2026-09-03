@@ -286,7 +286,13 @@ def test_gercek_gerileme_YINE_alarmlar(sandbox_state):
 
 def test_yarim_sent_tasiyan_kaynak_deterministik(sandbox_state):
     """(b) BACAĞININ BELGESİ: bugünkü broker dünyasında realized_pnl yarım-sent taşıyabilir
-    (ham birikim, broker.py:569/595 — WP-E yama planı). Kanonik türetim o dünyada bile TEK ve
+    (birikim noktaları `broker.py::PaperBroker.scale_out` ve `::PaperBroker.close_position`).
+    ÇAPA SEMBOLE ÇEVRİLDİ + HEDEF ÖLÇÜLDÜ (2026-09-03, TSK-030 adım-3): burada
+    `broker.py:569/595` yazıyordu [çapa-mezar-taşı]; bu turun `broker.py`ye eklediği satırlar onu kaydırdı ve ölçüldüğünde
+    `:569` zaten `fill_entry` DOCSTRING'ine düşüyordu. Parantezin İDDİASI da bayat: "WP-E yama planı"
+    inmiş durumda — birikim artık HAM değil SENT-TAM (`round(..., 2)`, 2026-08-12 canlı alarmı).
+    Yani yarım-sent bir `realized_pnl` bugün ancak ESKİ bir defterden gelebilir — çivinin
+    determinizm iddiası tam bu yüzden hâlâ gerekli. Kanonik türetim o dünyada bile TEK ve
     satır-sırasından bağımsız bir değer verir (Σ sent-tam olduğu için tek oynak terim realized'ın
     kendisidir; onun sent değeri IEEE gereği o double için sabittir)."""
     store.write_json("portfolio.json", {"cash": 0.0, "realized_pnl": 5542.085})

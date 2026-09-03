@@ -10,19 +10,27 @@ CEVAP: GEÇTİ. İki kez. Ve iki düğme de BUGÜN CANLIDA.
     H00029  entry.w_prox               v2→v3  reject_reasons=None
     canlı strategy.yaml: version 5 · parent 3 · pivot_proximity_pct 2,3 · w_prox 0,15
 
-Operatörün okuduğu cümle `analytics.py:730`du:
+Operatörün okuduğu cümle `analytics.py::learning_scorecard`ın hüküm satırıydı:
     "hiçbir öneri OOS kapısını geçemedi — canlı strateji hâlâ v1 (parent yok)"
 İKİ İDDİA DA YANLIŞ: iki öneri geçti, ve canlı v5/parent 3.
 
 KÖK NEDEN — SONRADAN EKLENEN HİJYEN, ESKİ SAYACIN VARSAYIMINI GEÇERSİZ KILDI:
-`ever_shipped` (analytics.py:708) = live + promoted + rolled_back. `superseded` YOK.
-Ama `rollback.sweep_orphan_hypotheses` (rollback.py:367-375) YALNIZ `status == "live"` olanları
+`ever_shipped` (aynı gövde, `analytics.py::learning_scorecard`) = live + promoted + rolled_back.
+`superseded` YOK. Ama `rollback.py::sweep_orphan_hypotheses` YALNIZ `status == "live"` olanları
 `superseded`e taşır — ve bir hipotez ancak SHIP ETTİYSE `live` olur. Yani süpürme, öğrenmenin
 kanıtını karneden SESSİZCE SİLİYORDU. Arıza biçimi ("sistem hiç öğrenmedi") makul bir cümle
 olduğu için kimse fark etmedi.
-AYNI DOSYA ZATEN DOĞRUSUNU BİLİYORDU: `analytics.py:1115` (`deflate_why`) superseded'i ship
-sayıyor ve docstring'i (satır 1109) "defterde ship VARDI (2 superseded)" diyor. Tek dosya,
-iki farklı ship tanımı; operatöre yanlış olan servis ediliyordu.
+AYNI DOSYA ZATEN DOĞRUSUNU BİLİYORDU: `analytics.py::deflate_why` superseded'i ship sayıyor ve
+docstring'i "defterde ship VARDI (2 superseded)" diyor. Tek dosya, iki farklı ship tanımı;
+operatöre yanlış olan servis ediliyordu.
+
+ÇAPALAR SEMBOLE ÇEVRİLDİ (2026-09-03, TSK-030 adım-3). Bu docstring beş SATIR çapası taşıyordu
+(`analytics.py:730` · `:708` · `:1115` · "satır 1109" · `rollback.py:367-375`) [çapa-mezar-taşı].
+`analytics.py:730` [çapa-mezar-taşı] BU TURDA `analytics.py`ye eklenen 2 satırla bir YORUM
+satırına kaydı ve `codelaw` onu aynı turda yakaladı; tur öncesinde tesadüfen bir KOD satırına
+düşüyordu — v311'in anlattığı "kaza" deseninin birebir tekrarı. DERS: çapa, çapaladığı dosyanın
+HER düzenlemesinde sessizce kayar; kayan çapayı KENDİ turun kırar ve kimse fark etmez
+(CLAUDE.md §2: "Çapa taşıyan dosyada satır eklemek/silmek BAŞKA çapaları kırar").
 """
 from __future__ import annotations
 

@@ -258,7 +258,9 @@ def test_C5_kuyruk_BIRIKINCE_alarm_oter(kayit):
                if e.get("alarm") == obs.ALARM_MECHANISM_STALE]
     assert olaylar, "tavan aşıldı ama alarm ötmedi"
     a = olaylar[0]
-    assert a["mekanizma"] == "skill_gorus_kuyruk" and a["kart"] == sg.KART
+    # ALAN ADI `mechanism` (TSK-101, 2026-09-03): ilk yazımda TÜRKÇE `mekanizma=` idi ve
+    # tüketicilerin hiçbiri (`selfreview._olay_mekanizma`, `notify._signature`) o adı okumuyordu.
+    assert a["mechanism"] == "skill_gorus_kuyruk" and a["kart"] == sg.KART
     assert a["bekleyen"] == sg.KUYRUK_BIRIKIM_TAVANI + 1 and a["tavan"] == sg.KUYRUK_BIRIKIM_TAVANI
     assert obs.ALARM_MECHANISM_STALE in a["event"], "jeton satır metnine girmemiş (izleyici arar)"
 
@@ -269,7 +271,7 @@ def test_C6_POZITIF_KONTROL_kuyruk_birikmemisken_alarm_YOK(kayit):
     _defterler(n=2)
     sg.kuyruk_kadansi(apply=True, oncesi_ms=1000.0)
     olaylar = [e for e in store.read_jsonl("events.jsonl")
-               if e.get("mekanizma") == "skill_gorus_kuyruk"]
+               if e.get("mechanism") == "skill_gorus_kuyruk"]
     assert olaylar == [], f"tek kesitte yanlış alarm: {olaylar}"
     assert obs.ALARM_MECHANISM_STALE     # jeton gerçekten var (yanlış ada alarm basılmasın)
 

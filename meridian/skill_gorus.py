@@ -991,7 +991,7 @@ def kuyruk_kadansi(apply: bool = True, oncesi_ms: float | None = None) -> dict:
         obs.alarm(obs.ALARM_MECHANISM_STALE,
                   f"skill-görüş kuyruğunda {bekleyen} işlenmemiş kesit (tavan "
                   f"{KUYRUK_BIRIKIM_TAVANI}) — seans-dışı üretici koşmuyor",
-                  mekanizma="skill_gorus_kuyruk", kart=KART, bekleyen=bekleyen,
+                  mechanism="skill_gorus_kuyruk", kart=KART, bekleyen=bekleyen,
                   tavan=KUYRUK_BIRIKIM_TAVANI,
                   detail=("üretim kadanstan çıkarıldı (kill#1 kök çözümü); kesit her gece "
                           "birikiyor ama `ops/skill_gorus_uret.py` işlemiyor. Defter DONUK: "

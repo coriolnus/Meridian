@@ -231,9 +231,16 @@ def _is_outage_row(row, name: str) -> bool:
 # 19'unda o alan YOKTU — rapor `{"mechanism": null}` basıyor, "8 bekçi olayı" diyen dikkat satırı
 # HANGİ 8 olduğunu söyleyemiyordu. Alan eksikliği üreticilerin hatası değil ŞEKİL ÇEŞİTLİLİĞİ:
 # 18 çağrı noktası dört sınıfa dağılır (`mechanism=` · `kind=`+`detector=` · `kind=`+`artifact=` ·
-# yalnız mesaj — loop.py:1436 alanı TÜRKÇE `mekanizma=` diye yazar). Bu boşluk TÜKETİCİ tarafında
-# kapatılır: üretici imzalarına dokunmak 18 çağrıyı ve onların çivilerini kıpırdatır, oysa raporun
-# ihtiyacı olan tek şey "eldeki alanlardan en iyi adı türet".
+# yalnız mesaj). Bu boşluk TÜKETİCİ tarafında kapatılır: üretici imzalarına dokunmak 18 çağrıyı ve
+# onların çivilerini kıpırdatır, oysa raporun ihtiyacı olan tek şey "eldeki alanlardan en iyi adı
+# türet".
+#
+# TARİHÇE — TÜRKÇE ALAN DÜZELTİLDİ (2026-09-03, TSK-101): yukarıdaki sınıf-4'ün bir bacağı
+# "alan TÜRKÇE `mekanizma=` diye yazılıyor" idi ve iki üreticide ölçülmüştü
+# (`loop._reconcile_gunu_atlandi` → broker_reconcile, `skill_gorus.kuyruk_kadansi` → skill_gorus_kuyruk).
+# İKİSİ DE `mechanism=` yazar oldu; artık düşüşün İLK basamağında ad verirler. Aşağıdaki mesaj-öneki
+# basamağı YİNE DE KALIR: defterdeki GEÇMİŞ satırlar Türkçe alanla yazılmıştır ve pencereli
+# tüketiciler onları hâlâ okur — düşüşü kaldırmak geçmişi okunamaz yapardı.
 _MESAJ_ONEK = 60
 
 
@@ -270,6 +277,69 @@ def _olay_mekanizma(e: dict) -> str | None:
         # Kırpma İŞARETLİdir: kesik bir satır tam sanılırsa operatör mesajı yanlış okur.
         return msg[:_MESAJ_ONEK] + ("…" if len(msg) > _MESAJ_ONEK else "")
     return None
+
+
+# MECHANISM_STALE OLAYLARINDA SÜRE DÜŞÜŞÜ (v382, 2026-09-03 — TSK-102)
+# ------------------------------------------------------------------------------------------------
+# AD DÜŞÜŞÜNÜN (yukarısı) KARDEŞ SORUNU: rapor satırı süre için YALNIZ `gap_h` okuyordu ve o alan
+# tek bir sınıfta (bayat-GEÇİŞ, `watchdog.check_and_alarm`) doludur. Diğer sınıflar aynı büyüklüğü
+# BAŞKA adla taşır — ölçüm VAR, sütun BOŞ (Yasa 6'nın ters yüzü).
+#
+# CANLI ÖLÇÜM (2026-09-03, üretici tarafı):
+#   `gap_h`    — `watchdog.check_and_alarm`                  : nabız sessizliği (ilk tespit anı)
+#   `age_h`    — `watchdog.check_liveness_and_alarm`         : sprint orphan / learning stalled
+#   `yas_h`    — `watchdog.check_mutabakat_and_alarm`        : mutabakat kaydının yaşı
+#   `behind_h` — `watchdog.check_integrity_and_alarm`        : türevin kaynağından geride kalması
+# `behind_h` bu tura kadar OLAY ALANI DEĞİLDİ (yalnız alarm metninde geçiyordu); dördüncü basamağın
+# ölü kalmaması için üretici aynı turda alanı basmaya başladı.
+#
+# SIRA SABİTTİR ve ADI RAPORA YAZILIR: `gap_h` (sessizlik) ile `behind_h` (türev gecikmesi) AYNI
+# BÜYÜKLÜK DEĞİLDİR — kaynağını söylemeyen tek bir "gecikme" sayısı dört farklı olguyu tek sütunda
+# birbirine karıştırırdı. `gap_h` alanı satırda AYRICA KORUNUR: mevcut okuyucular için sözleşme
+# değişmez, `sure_h` onun YERİNE geçmez, YANINA gelir.
+_SURE_ALANLARI = ("gap_h", "age_h", "yas_h", "behind_h")
+
+
+def _olay_sure_h(e) -> tuple[float | None, str | None]:
+    """Bir MECHANISM_STALE olayından saat cinsinden süreyi ve OKUNDUĞU ALANI türetir.
+
+    Dönüş `(deger, kaynak_alan)`; ölçülemezse `(None, None)` — 0.0 DEĞİL. Sıfır "gecikme yok" der,
+    None "ölçmedim" der ve ikisi aynı şey değildir (uydurma yasağı).
+    """
+    if not isinstance(e, dict):
+        return (None, None)
+    for alan in _SURE_ALANLARI:
+        ham = e.get(alan)
+        if ham is None or (isinstance(ham, str) and not ham.strip()):
+            continue
+        if isinstance(ham, bool):
+            continue          # `float(True)` 1.0 eder: bir BAYRAK, bir SÜRE DEĞİLDİR
+        try:
+            return (float(ham), alan)
+        except (TypeError, ValueError):
+            # sessiz-yutma: bozuk/sayı olmayan alan bir SÜRE DEĞİLDİR — düşüş devam eder, yoksa
+            # tek bozuk alan arkasındaki ölçülmüş süreyi gizlerdi (satır sessizce boş çıkardı)
+            continue
+    return (None, None)
+
+
+def _bekci_satiri(e: dict) -> dict:
+    """Haftalık raporun bir `watchdog_incidents` satırı. Dört alanlı ZARF SABİTTİR: `gap_h` ham
+    alandan (v369 sözleşmesi korunur), `sure_h`/`sure_kaynak` düşüş sırasından."""
+    sure, kaynak = _olay_sure_h(e)
+    return {"mechanism": _olay_mekanizma(e), "gap_h": e.get("gap_h"),
+            "sure_h": sure, "sure_kaynak": kaynak}
+
+
+def _bekci_gecikme_metni(rows: list) -> str:
+    """Dikkat satırının süre kuyruğu: en uzun ÖLÇÜLEN gecikme + okunduğu alan. Hiç ölçüm yoksa
+    BOŞ DİZE döner — "0 sa" yazmak ölçülmemiş bir sayıyı ölçülmüş gibi gösterirdi."""
+    olculen = [(r["sure_h"], r["sure_kaynak"]) for r in rows
+               if isinstance(r, dict) and r.get("sure_h") is not None]
+    if not olculen:
+        return ""
+    deger, kaynak = max(olculen, key=lambda t: t[0])
+    return f" (en uzun {deger} sa · {kaynak})"
 
 
 # ---- HAFTALIK DÖNÜŞÜM SATIRI (kart EXE-2026-011 §5 — ayna-satırının OKUYUCUSU, YASA 6) ----------
@@ -405,10 +475,11 @@ def build() -> dict:
                               "predicted_delta": h.get("predicted_delta")} for h in ships][:5],
             "cf_resolved": len(cf_week),
             # `mechanism` ham alandan DEĞİL düşüş sırasından gelir (`_olay_mekanizma`): üreticilerin
-            # çoğu o alanı göndermiyor. `gap_h` ise çıplak kalır — sınıfların çoğunda YOKTUR ve
-            # None kalması DOĞRUDUR (dürüst boşluk; ölçülmeyen değer uydurulmaz).
-            "watchdog_incidents": [{"mechanism": _olay_mekanizma(e), "gap_h": e.get("gap_h")}
-                                   for e in stale_events][:8],
+            # çoğu o alanı göndermiyor. `gap_h` HAM alandan gelmeye DEVAM eder (v369 sözleşmesi,
+            # mevcut okuyucular) ve sınıfların çoğunda None kalır — dürüst boşluk.
+            # `sure_h`/`sure_kaynak` (TSK-102) o boşluğun ÖLÇÜLEBİLİR kısmını kapatır: dört alanlı
+            # düşüş + okunan alanın ADI. `gap_h`'ı DOLDURMAZ (kaynak ayrımı kaybolmasın).
+            "watchdog_incidents": [_bekci_satiri(e) for e in stale_events][:8],
             # SAYININ DÜRÜSTLÜK ZARFI (K1): kaç olay SAYILDI, pencere kesildi mi, defterin en eski
             # damgası ne. `watchdog_incidents` en fazla 8 satır gösterir; toplam ayrıca yazılır ki
             # "8" bir tavan mı gerçek mi olduğu okunabilsin.
@@ -474,8 +545,12 @@ def _attention(rep: dict) -> list:
     if fid and fid.get("n", 0) >= 10 and not fid.get("fidelity_ok"):
         out.append({"why": f"cf sadakati ONAYSIZ (r={fid.get('corr')}, sapma {fid.get('mean_diff_r')}R) — "
                            "cf-beslemeli kalibrasyonları iskontolu oku", "sev": "yüksek"})
-    if rep["week"]["watchdog_incidents"]:
-        out.append({"why": f"{len(rep['week']['watchdog_incidents'])} bekçi olayı — mekanizma gecikmeleri",
+    _bekci = rep["week"]["watchdog_incidents"]
+    if _bekci:
+        # `sure_h`in OKUYUCUSU (Yasa 6): ölçülen en uzun gecikme satıra ADIYLA basılır. Ölçüm
+        # yoksa kuyruk BOŞTUR — sayısız satır, uydurulmuş "0 sa" değil.
+        out.append({"why": f"{len(_bekci)} bekçi olayı — mekanizma gecikmeleri"
+                           + _bekci_gecikme_metni(_bekci),
                     "sev": "orta"})
     gm = cal.get("gate_meta") or {}
     if gm.get("extra_p"):

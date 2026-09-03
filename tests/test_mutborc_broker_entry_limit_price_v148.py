@@ -32,8 +32,15 @@ EŞDEĞER — ÖLDÜRÜLEMEZ: YOK. Ama 7 için ŞERH (YASA 4 ruhu: yutulan hiçb
     = 0 → 0 + 0 = 0.0). Öldürülebildiği TEK gözlenebilir kanal, kapının YASAYI OKUMADAN dönmesidir:
     orijinal `cfg["limit_pct_cap"]`e hiç dokunmaz, mutant dokunur. A3 tam olarak bunu sınar ve bu
     UYDURMA bir sözleşme değildir — geçersiz tetik yasa uygulanmadan elenmelidir; yarım bir yasa
-    sözlüğüyle çağrılan sıfır tetik KeyError'a dönüşmemelidir (`fill_entry`/ayna yollarının ikisi de
-    cfg'yi dışarıdan geçiriyor: broker.py:136 ve broker.py:334).
+    sözlüğüyle çağrılan sıfır tetik KeyError'a dönüşmemelidir. Yasayı `broker.py::entry_law` üretir;
+    onu DIŞARIDAN alan iki yüzey `broker.py::entry_limit_price` ve `broker.py::entry_order_decision`
+    (ikisi de `cfg: dict | None = None` alır ve `cfg = cfg or entry_law()` ile düşer), çağıran
+    yollar da `fill_entry` ile aynadır.
+    ÇAPALAR SEMBOLE ÇEVRİLDİ (2026-09-03, TSK-030 adım-3): burada `broker.py:136` ve  [çapa-mezar-taşı]
+    `broker.py:334` yazıyordu [çapa-mezar-taşı]. `:136` `entry_law`i gösteriyordu ve bu turda `broker.py`ye eklenen
+    iki satırla BOŞ BİR SATIRA kaydı (`codelaw` aynı turda yakaladı); `:334` ise ÖLÇÜLDÜĞÜNDE
+    ZATEN yanlış yeri gösteriyordu — `derisk_ramp` gövdesine düşüyor, yani cümlenin anlattığı
+    şeyle ilgisi yok. Satır çapasının iki çürüme biçimi de tek cümlede görüldü.
 
 Fikstür sözleşmesi: hiçbir test canlı `state/`e YAZMAZ ve `goal.yaml` OKUMAZ — her çağrı cfg'yi
 açıkça geçer. Limit hesabının sonucu dosyanın o günkü içeriğine bağlı olmamalıdır (yasanın kendi

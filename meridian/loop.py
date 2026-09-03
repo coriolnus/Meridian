@@ -1649,7 +1649,7 @@ def _reconcile_gunu_atlandi(sinif: str, dstr: str, takvim=None) -> None:
                   ("mutabakat HİÇ koşmamış — pozisyon sapması hiç ölçülmedi"
                    if _hic else
                    f"mutabakat {_gun} işlem günüdür koşmuyor — pozisyon sapması ÖLÇÜLMÜYOR"),
-                  mekanizma="broker_reconcile", gun=_gun, sinif=sinif, date=dstr,
+                  mechanism="broker_reconcile", gun=_gun, sinif=sinif, date=dstr,
                   esik=RECONCILE_BAYAT_ISLEM_GUNU)
 
 

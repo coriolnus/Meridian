@@ -10,9 +10,16 @@ alanlar olay sözlüğünün TEPESİNE düşer — `obs._emit`):
   1. `mechanism=` var                       — watchdog.py:349 (gap_h/gap_s/asim_s ile), :2123 (kind="starved" ile)
   2. `kind=` + `detector=`, mechanism YOK   — watchdog.py:2114 (kind="detector_failed", detector=<ad>)
   3. `kind=` + `artifact=`/`check=`          — watchdog.py:2200 (kind="parity", check, artifact), :2225 (kind="coherence", artifact)
-  4. tanınan alan YOK (yalnız mesaj)        — loop.py:1436 (alan adı `mekanizma=`, TÜRKÇE — tüketicinin
-                                              beklediği `mechanism` DEĞİL), watchdog.py:3736-3754 (kind var ama
-                                              bu sınıfın saf hâli: hiçbir tanınan alan yok)
+  4. tanınan alan YOK (yalnız mesaj)        — `loop._reconcile_gunu_atlandi` (alan adı `mekanizma=`,
+                                              TÜRKÇE — tüketicinin beklediği `mechanism` DEĞİL;
+                                              ÜRETİCİ 2026-09-03'te TSK-101 ile düzeltildi, geçmiş
+                                              defter satırları bu şekilde KALIR),
+                                              `watchdog.py::check_liveness_and_alarm` (kind var ama
+                                              bu sınıfın saf hâli: hiçbir tanınan alan yok).
+                                              ÇAPA SEMBOLE ÇEVRİLDİ (2026-09-03, TSK-030 adım-3):
+                                              `watchdog.py:3736-3754` [çapa-mezar-taşı] yazıyordu ve BU TURUN
+                                              `watchdog.py`ye eklediği 4 satır onu kaydırdı —
+                                              satır çapasının çürüme biçimi tam olarak budur.
 
 ÇİVİLENEN İDDİA (uygulama değil): `_olay_mekanizma(e)` bir DÜŞÜŞ SIRASI uygular —
 mechanism → kind(+detector|artifact) → artifact → message[:60] → None. Son basamak ÖNEMLİDİR:
@@ -84,9 +91,14 @@ def test_kindsiz_artifact_tek_basina_doner():
 
 
 def test_yalniz_mesaj_60_karakterde_kirpilir():
-    """Sınıf 4 (loop.py:1436 — alan adı `mekanizma`, TÜRKÇE; tüketici onu TANIMAZ). Ad yerine
-    mesajın öneki geçer: uydurma değildir, olayın kendi metnidir. Kırpma İŞARETLİdir — kesik bir
-    satır tam sanılırsa operatör yanlış okur."""
+    """Sınıf 4 — GEÇMİŞ DEFTER satırı (alan adı `mekanizma`, TÜRKÇE; tüketici onu TANIMAZ). Ad
+    yerine mesajın öneki geçer: uydurma değildir, olayın kendi metnidir. Kırpma İŞARETLİdir —
+    kesik bir satır tam sanılırsa operatör yanlış okur.
+
+    ÜRETİCİ DÜZELTİLDİ (2026-09-03, TSK-101): bu şekli yazan iki üretici
+    (`loop._reconcile_gunu_atlandi`, `skill_gorus.kuyruk_kadansi`) artık `mechanism=` basar. ÇİVİ KALIR ve
+    fikstür de Türkçe alanla kalır: defterde YAZILI geçmiş satırlar bu şekildedir ve pencereli
+    tüketiciler onları okumaya devam eder — düşüşün bu basamağı geçmişin okunabilirliğidir."""
     mesaj = "mutabakat 3 işlem günüdür koşmuyor — pozisyon sapması ÖLÇÜLMÜYOR ve bu satır uzundur"
     assert len(mesaj) > 60, "fikstür mesajı 60'tan kısa — çivi kırpmayı ölçmüyor"
     e = {"alarm": "MECHANISM_STALE", "message": mesaj,
@@ -124,8 +136,13 @@ def test_rapor_satiri_mechanismsiz_olayda_da_ad_tasir(sandbox_state):
     assert len(rows) == 1, rows
     assert rows[0]["mechanism"] == "detector_failed:determinism", \
         "rapor satırı hâlâ ham `mechanism` alanını okuyor — düşüş sırası build()'e bağlanmamış"
-    # ZARF DEĞİŞMEDİ: `gap_h` bu sınıfta YOKTUR ve None kalması dürüst boşluktur (uydurulmaz).
-    assert rows[0]["gap_h"] is None and set(rows[0]) == {"mechanism", "gap_h"}, rows[0]
+    # `gap_h` bu sınıfta YOKTUR ve None kalması dürüst boşluktur (uydurulmaz).
+    # ZARF BÜYÜDÜ (2026-09-03, TSK-102): satır `sure_h`/`sure_kaynak` de taşır. `gap_h`ın
+    # KORUNMASI bu çivinin asıl iddiasıdır — yeni alanlar onun YERİNE geçmez, YANINA gelir.
+    assert rows[0]["gap_h"] is None, rows[0]
+    assert set(rows[0]) == {"mechanism", "gap_h", "sure_h", "sure_kaynak"}, rows[0]
+    # detector_failed olayında hiçbir süre alanı yok → ölçülemeyen süre uydurulmaz
+    assert rows[0]["sure_h"] is None and rows[0]["sure_kaynak"] is None, rows[0]
 
 
 def test_rapor_mechanismli_olayda_ham_adi_KORUR(sandbox_state):
@@ -137,4 +154,6 @@ def test_rapor_mechanismli_olayda_ham_adi_KORUR(sandbox_state):
         "alarm": "MECHANISM_STALE", "message": "mekanizma gecikti: cf_advance — nabız sessiz",
         "mechanism": "cf_advance", "gap_h": 31.5, "gap_s": 113400, "asim_s": 3600})
     rows = selfreview.build()["week"]["watchdog_incidents"]
-    assert len(rows) == 1 and rows[0] == {"mechanism": "cf_advance", "gap_h": 31.5}, rows
+    # `sure_h`/`sure_kaynak` 2026-09-03'te (TSK-102) eklendi; sınıf 1'de kaynak `gap_h`tır.
+    assert len(rows) == 1 and rows[0] == {"mechanism": "cf_advance", "gap_h": 31.5,
+                                          "sure_h": 31.5, "sure_kaynak": "gap_h"}, rows

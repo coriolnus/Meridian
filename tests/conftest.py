@@ -37,8 +37,8 @@ import meridian.adapters.fmp as _fmp_mod
 # ikisinin de modül düzeyinde G/Ç yan etkisi yok.
 import meridian.adapters.alpaca as _alp_mod
 import meridian.obs as _obs_mod
-# v274 SEL-KESİMİ SAYACI (2026-08-23): api._REFRESH_SON — session_refresh kesimi (ip, yol) başına
-# süreç-içi durum tutar. TestClient'ın IP'si her testte aynıdır ("testclient"), yani tazeleme
+# v274 SEL-KESİMİ SAYACI (2026-08-23): api._REFRESH_SON — session_refresh kesimi IP başına
+# süreç-içi durum tutar (anahtar 2026-09-03'te TSK-006 ile (ip, yol) çiftinden IP'ye indi). TestClient'ın IP'si her testte aynıdır ("testclient"), yani tazeleme
 # olayını ölçen bir test pencereyi doldurunca SONRAKİ testin refresh olayı sessizce örneklenirdi —
 # `auth._FAILS` vakasının birebir tekrarı. api zaten suite'in her yerinde yüklü; marjinal ithal
 # maliyeti yok.
@@ -116,7 +116,9 @@ _MODUL_DURUMLARI = (
     # zaten BİLİNİYOR, yalnız tek yerden kapatılmamıştı.
     (_obs_mod, "_SUPPRESS_LOGGED"),
     # api._REFRESH_SON — session_refresh kesiminin gün defteri (gerekçe ithal bloğunda,
-    # v274 + TSK-106).
+    # v274 + TSK-106 + TSK-006). ANAHTAR ARTIK IP (TSK-006, 2026-09-03) ve değer bir iç sözlük
+    # (`yollar`) taşıyor; bu mekanizma etkilenmez — taban `{}` ve sıfırlama YERİNDE (clear+update),
+    # yani anahtar tipi ile değer şekli ondan bağımsızdır (v382'de ayrıca çivili).
     (_api_mod, "_REFRESH_SON"),
     # earnings_pit._SAYAC — PIT çapasının üç kovası (gerekçe ithal bloğunda, v345/Görev 3).
     # `sayac_sifirla` da YERİNDE günceller (yeni sözlük atamaz), yani bu mekanizmayla aynı

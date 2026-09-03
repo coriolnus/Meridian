@@ -213,9 +213,13 @@ def replay_seed(start: str, end: str) -> dict:
     #   YAN ETKİ BEYANI (A17, sessiz bırakılmıyor): bu düzeltme aşağıdaki iki yazımı ~13 satır
     #   aşağı kaydırdı, dolayısıyla `ledgerstamp.py`nin `run.py:203`/`run.py:204` SATIR çapaları  (çapa-mezar-taşı)
     #   bayatladı (metin çapaları — alıntıladıkları kod satırları — geçerli). O dosya bu turun
-    #   dosya sınırının DIŞINDA, düzeltme sahibine devredildi; `ledgerstamp.py:82`nin
+    #   dosya sınırının DIŞINDA, düzeltme sahibine devredildi; `ledgerstamp.py:82`nin  (çapa-mezar-taşı)
     #   "run.py:157 ve 158" çapası zaten bu turdan ÖNCE de bayattı (çapa-mezar-taşı). DERS: satır-numarası çapası,
     #   BAŞKA bir dosyadaki yorum düzenlemesini sessizce yük taşıyan bir işlem hâline getirir.
+    #   SONRAKİ ÖLÇÜM (2026-09-03, TSK-030 adım-3): yukarıdaki paragraf artık TAMAMEN tarihçedir —
+    #   `ledgerstamp.py` bugün HİÇ satır çapası taşımıyor (ölçüldü: 0), yani devredilen düzeltme
+    #   yapılmış. Paragraf yine de duruyor: dersin kendisi "şu çapalar bayatladı"dır ve çapaları
+    #   silmek dersi silerdi.
     # KİLİT (B3): iki yazım ARDIŞIK kalmalı (yukarıdaki gerekçe) ve ikisi de defterin tamamını
     # ezer — kilit ikisini tek sıraya alır, aradaki adım hâlâ tek bir sözlük kurmaktır.
     with store.file_lock("trades.jsonl"), store.file_lock("equity_curve.json"):

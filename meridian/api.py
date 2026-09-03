@@ -1265,6 +1265,42 @@ def _oturum_cerezi_yazilmis(basliklar) -> bool:
 #   * gün dönüşünde ÖNCEKİ günün özeti TEK satır düşer: `ozet=True` + `gun` + `toplam_n` +
 #     `ilk_ts` + `son_ts`. Yeni gün madde-2 anındalığına DÖNMEZ (çiftin kaydı artık var) —
 #     kararlı durumda çift başına GÜNDE ~1 SATIR.
+#
+# TSK-006 (Rol-1 hükmü 2026-09-03) — ANAHTAR (ip, yol) DEĞİL, YALNIZ ip.
+# CANLI ÖLÇÜM (A1, son 24 saat, 2026-09-03 06:3xZ): 977 olayın 106'sı `session_refresh` (%11 —
+# TSK-106 ÖNCESİ %87), 97'si `ozet=False` İLK-SATIR, 3'ü `ozet=True`. Yani kesim çalıştı ama KALAN
+# SINIF anahtardaydı: (ip, yol) çifti, restart/pano açılışında 57 AYRI YOL için birer "ilk olay"
+# doğuruyordu (saatlik tepe 44) ve kararlı durumda günlük özet de yol başına bir satır olacaktı
+# (57/gün). Anahtar IP'ye inince:
+#   * anında satır IP başına BİR olur (`yol` alanı TETİKLEYEN olayın yolunu taşır),
+#   * günlük özet IP başına BİR satır olur ve yol dağılımını `yollar` sözlüğünde taşır
+#     ({yol: n}, en sık `_REFRESH_YOL_OZET` + `diger_n`); `toplam_n`/`ilk_ts`/`son_ts` AYNEN kalır.
+# OLAY ADI YİNE DEĞİŞMEDİ ve TOPLAM KORUNUMU FORMÜLÜ DE DEĞİŞMEDİ (aşağıda) — kesim satır sayısını
+# değiştirir, sayının ANLAMINI değiştirmez.
+#
+# BEDEL BEYANI (TSK-006) — kazanç ölçüldü, kayıp da ölçülüyor:
+#   KAZANÇ: restart başına ~57 satır → 1; gün başına ~57 → 1.
+#   KAYIP: YOL DÜZEYİNDE "İLK GÖRÜNÜRLÜK" BİR GÜN GECİKİR. Eskiden yeni bir yolun tazelenmeye
+#   başladığı ANDA bir satır düşerdi; artık o bilgi ertesi günün özetindeki `yollar` sözlüğünde
+#   görünür. "Tazeleme hiç çalışıyor mu" sorusu gecikmez (IP'nin ilk satırı anında düşer);
+#   geciken yalnız "HANGİ YOLLAR" sorusudur. Kabul edildi: operatörün canlıda sorduğu soru
+#   birincisidir, ikincisi haftalık okumadır.
+#   İKİNCİ KAYIP — YOL ÇEŞİTLİLİĞİNİN BELLEK SINIRI ARTIK AÇIKTIR: eski anahtarda `_REFRESH_TAVAN`
+#   yol çeşitliliğini de dolaylı sınırlıyordu. Yerine `_REFRESH_YOL_TAVANI` kondu (aşağıda,
+#   gerekçesiyle); taşan olaylar sayıyı kaybetmez, `diger_n`e düşer.
+#   SAYIYLA (bedel yasası sayı ister): eski üst sınır 4096 `(ip, yol)` girdisiydi; yeni üst sınır
+#   4096 IP × 256 yol ≈ 1,05 MİLYON sözlük girdisi. SONLU ama iki büyüklük mertebesi büyük. Bunu
+#   doldurmak 4096 ayrı KİMLİKLİ istemci gerektirir — kesim `auth.refresh_session` BAŞARILI
+#   olduktan sonra çalışır, yani anonim trafik bu sözlüğe hiç dokunamaz. Kabul edildi ve YAZILDI:
+#   ölçülmemiş bir "sınırlı" iddiası, sınırsızlıktan farksızdır.
+#
+#   ASİMETRİ KAYDI (2026-09-03 incelemesi, K5): `atlanan_n` bir gün önce "api.py ve tests/ dışında
+#   tüketicisi yok" ölçütüyle EMEKLİ edilmişti; `yollar`/`diger_n` aynı ölçüte göre bakılırsa kod
+#   tüketicisi YOKTUR. Fark BİLEREKTİR: `atlanan_n` bir sayıyı TEKRAR ediyordu (toplam korunumu
+#   formülünden türetilebilirdi), `yollar` ise BAŞKA HİÇBİR YERDE olmayan bir dağılımı taşır ve
+#   okuyucusu İNSANDIR (haftalık defter okuması — kesimin bedeli olarak bir gün geciken "hangi
+#   yollar" sorusunun TEK cevabı). Bu kayıt olmadan gelecek bir tur `atlanan_n` gerekçesini
+#   kopyalayıp `yollar`ı emekli eder ve kesimin bedelini geri alınamaz kılar.
 # OLAY ADI DEĞİŞMEDİ (`session_refresh`): grep sürekliliği bir kolaylık değil, geçmiş defterin tek
 # sorguyla okunabilmesidir. İki satır SINIFI birbirinden `ozet` alanıyla ayrılır — okuyucunun
 # alanın YOKLUĞUNA bakmak zorunda kalmaması için ANINDA satırı da `ozet=False` taşır.
@@ -1287,17 +1323,35 @@ def _oturum_cerezi_yazilmis(basliklar) -> bool:
 # Eski formül (`toplam = satır sayısı + Σ atlanan_n`) örnekleme dünyasına aitti; `atlanan_n` ve
 # `REFRESH_ORNEKLEM_S` bu turda EMEKLİ edildi — ölçüldü 2026-09-02: ikisinin de api.py ve
 # `tests/` dışında hiçbir tüketicisi yoktu (depo taraması, `state/` defteri hariç).
-_REFRESH_TAVAN = 4096                # bellek tavanı: EN ESKİ GÖRÜLEN kayıt düşer (aşağıda)
-#: (ip, yol) → [gun, toplam_n, ilk_ts, son_ts]; `gun` = YYYY-MM-DD, damgalar ISO/UTC saniye.
+_REFRESH_TAVAN = 4096                # bellek tavanı: EN ESKİ GÖRÜLEN IP kaydı düşer (aşağıda)
+#: IP BAŞINA bellekte tutulan AYRIK yol sayısı. TSK-006 ile ZORUNLU oldu: anahtar (ip, yol) iken
+#: yol çeşitliliğini `_REFRESH_TAVAN` dolaylı sınırlıyordu; anahtar IP olunca o sınır KALKTI ve
+#: tek bir kaydın yol sözlüğü sınırsız büyüyebilirdi (tarayan bir istemci binlerce ayrık yol
+#: üretir). Tavan AYRINTIYI keser, SAYIYI kesmez: taşan olaylar `diger_n`e düşer.
+#: DEĞER ÖLÇÜMLE SEÇİLDİ: canlı pano açılışında 57 ayrık yol görüldü (A1, 2026-09-03) — 256 o
+#: sayının dört katından fazlası, yani normal işletimde HİÇ ısırmaz ve yalnız anormali kırpar.
+_REFRESH_YOL_TAVANI = 256
+#: Özet SATIRINA yazılan en sık yol sayısı (kalanı `diger_n`). Bellek tavanından AYRIDIR: biri
+#: belleği, diğeri satır boyunu sınırlar — tek sayıya bağlansalardı defter satırını kısaltmak
+#: bellek davranışını da sessizce değiştirirdi.
+_REFRESH_YOL_OZET = 20
+#: ip → [gun, toplam_n, ilk_ts, son_ts, yollar, tasan_n]; `gun` = YYYY-MM-DD, damgalar ISO/UTC
+#: saniye, `yollar` = {yol: n} (yalnız bellek tavanına sığanlar), `tasan_n` = tavana sığmayan
+#: olayların sayısı (kaybolmaz, özette `diger_n`e girer).
 #: `tests/conftest.py` bu sözlüğü her testte YERİNDE sıfırlar (sızıntı gerekçesi orada yazılı).
-_REFRESH_SON: dict[tuple[str, str], list] = {}
+_REFRESH_SON: dict[str, list] = {}
 
 
 def _session_refresh_ornekle(ip: str, yol: str, now: float | None = None) -> dict | None:
     """Bu tazeleme olayı deftere NE yazdırır? `None` → hiçbir şey (gün içi; sayaç birikti).
     dict → `obs.log("session_refresh", …, **dönen)` ile basılacak AYIRT EDİCİ alanlar:
-      * `{"ozet": False}`                                        → çiftin İLK olayı (görünürlük),
-      * `{"ozet": True, "gun", "toplam_n", "ilk_ts", "son_ts"}`   → ÖNCEKİ günün özeti.
+      * `{"ozet": False}`                                       → IP'nin İLK olayı (görünürlük),
+      * `{"ozet": True, "gun", "toplam_n", "ilk_ts", "son_ts",
+          "yollar", "diger_n"}`                                 → ÖNCEKİ günün özeti.
+
+    ANINDA SATIR YOL SAYISI TAŞIMAZ. O anda ölçülmüş tek şey TETİKLEYEN olayın yoludur ve o
+    zaten `obs.log(..., yol=…)` alanında durur; `yollar_n` gibi bir sayaç, ölçülmemiş bir
+    büyüklüğü ölçülmüş gibi gösterirdi (uydurma yasağı).
 
     AD TARİHÎ KİMLİKTİR: fonksiyon artık örneklemiyor, ÖZETLİYOR — ama adı `ROADMAP.md`
     TSK-106 kaleminin `Ref`i ve v274 çivisi tarafından çapalanmış durumda. Ad değişseydi o iki
@@ -1309,29 +1363,62 @@ def _session_refresh_ornekle(ip: str, yol: str, now: float | None = None) -> dic
     türetilir (tek-kaynak: iki ayrı saat okuması tam gün sınırında ayrışabilirdi).
 
     TAVAN: `_REFRESH_TAVAN` aşılırsa EN ESKİ GÖRÜLEN (`son_ts`i en küçük) kayıt düşer — yaratılış
-    sırasına göre DEĞİL, çünkü canlı yoklayıcı yıllarca aynı çifti kullanır ve yaratılışa göre
+    sırasına göre DEĞİL, çünkü canlı yoklayıcı yıllarca aynı IP'yi kullanır ve yaratılışa göre
     düşürmek en CANLI kaydı kurban ederdi. Düşen kaydın biriken sayacı KAYBOLUR (beyanlı bedel);
-    tavan ancak binlerce ayrık (ip, yol) çiftiyle aşılır — pano yoklayıcısı tek çifttir."""
+    tavan ancak binlerce ayrık IP ile aşılır — pano yoklayıcısı tek IP'dir."""
     import datetime as _dt
     now = _time.time() if now is None else now
     # ISO/UTC saniye — `obs._emit`in `ts` alanıyla AYNI biçim (damgalar kıyaslanabilir olmalı) ve
     # sabit genişlikte, yani tavanın `min()`i sözlüksel sırayla kronolojik sırayı ölçer.
     an = _dt.datetime.fromtimestamp(now, _dt.timezone.utc).isoformat(timespec="seconds")
     gun = an[:10]
-    k = (str(ip), str(yol))
+    k = str(ip)
+    y = str(yol)
     rec = _REFRESH_SON.get(k)
     if rec is None:
         if len(_REFRESH_SON) >= _REFRESH_TAVAN:
             _REFRESH_SON.pop(min(_REFRESH_SON, key=lambda x: _REFRESH_SON[x][3]), None)
-        _REFRESH_SON[k] = [gun, 0, an, an]
-        return {"ozet": False}          # `toplam_n` 0: anında yazılan satır kendini SAYMAZ
+        # `toplam_n` 0 ve `yollar` BOŞ: anında yazılan satır kendini SAYMAZ (toplam korunumu
+        # formülünün payı odur) — dağılım da onu saymaz ki iki sayı hizalı kalsın.
+        _REFRESH_SON[k] = [gun, 0, an, an, {}, 0]
+        return {"ozet": False}
     if rec[0] == gun:
         rec[1] += 1
         rec[3] = an
+        _yol_say(rec, y)
         return None
-    ozet = {"ozet": True, "gun": rec[0], "toplam_n": rec[1], "ilk_ts": rec[2], "son_ts": rec[3]}
-    _REFRESH_SON[k] = [gun, 1, an, an]  # yeni gün: dönüşü TETİKLEYEN olay sayaçtan başlar
+    ozet = {"ozet": True, "gun": rec[0], "toplam_n": rec[1], "ilk_ts": rec[2], "son_ts": rec[3],
+            **_yol_ozeti(rec)}
+    # yeni gün: dönüşü TETİKLEYEN olay sayaçtan başlar (dağılıma da o yol girer)
+    _REFRESH_SON[k] = [gun, 1, an, an, {y: 1}, 0]
     return ozet
+
+
+def _yol_say(rec: list, yol: str) -> None:
+    """Kayda bir yol olayı işler. Bellekte YENİ bir yol açmak tavana bağlıdır; tavan dolduysa
+    olay `tasan_n`e düşer — SAYI ASLA KAYBOLMAZ, yalnız hangi yol olduğu bilinmez olur."""
+    yollar = rec[4]
+    if yol in yollar:
+        yollar[yol] += 1
+    elif len(yollar) < _REFRESH_YOL_TAVANI:
+        yollar[yol] = 1
+    else:
+        rec[5] += 1
+
+
+def _yol_ozeti(rec: list) -> dict:
+    """Özet satırının dağılım kısmı: en sık `_REFRESH_YOL_OZET` yol + `diger_n`.
+
+    DAĞILIM KORUNUMU: `sum(yollar.values()) + diger_n == toplam_n`. Kırpma (hem bellek tavanı
+    hem satır kırpması) AYRINTIYI eksiltir, SAYIYI eksiltmez — kırpılan sayı `diger_n`e girer.
+    EN SIK olanlar tutulur: operatörün sorduğu soru "en çok hangi uç yokladı"dır ve rastgele
+    yirmi yol o soruya cevap vermezdi.
+    """
+    yollar, tasan = rec[4], rec[5]
+    sirali = sorted(yollar.items(), key=lambda kv: (-kv[1], kv[0]))
+    tutulan = dict(sirali[:_REFRESH_YOL_OZET])
+    return {"yollar": tutulan,
+            "diger_n": tasan + sum(n for _y, n in sirali[_REFRESH_YOL_OZET:])}
 
 
 class KayanOturumMiddleware:
@@ -1424,6 +1511,9 @@ class KayanOturumMiddleware:
             # ÖZET SATIRINDAKİ `kalan_s` ÖZETLENEN GÜNÜN DEĞİL, özeti TETİKLEYEN tazelemenin
             # kalanıdır (ölçülmüş bir değerdir, uydurulmuş değil) — iki satır sınıfı `ozet`
             # alanıyla ayrıldığı için okuyucu ikisini karıştırmaz.
+            # AYNISI `yol` İÇİN DE GEÇERLİDİR (2026-09-03 incelemesi, K4): `ozet=True` satırındaki
+            # `yol`, özetlenen günün değil gün dönüşünü TETİKLEYEN (yani ERTESİ günün ilk) olayının
+            # yoludur; ÖZETLENEN günün dağılımı `yollar` alanındadır. İkisi farklı günlere aittir.
             if yazilacak:
                 _yol = scope.get("path", "")
                 _karar = _session_refresh_ornekle(ip, _yol)

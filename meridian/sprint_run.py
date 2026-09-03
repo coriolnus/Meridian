@@ -111,9 +111,14 @@ def _sessions(index, lo: str, hi: str) -> list[str]:
 # ESKİ HÂL: `[t for t in trace if t.get("passes")][:6]`. `cleared == 0` iken bu ifade TANIM GEREĞİ
 # `[]` döndürüyordu; yani sprintin en sık sonucu (2026-08-21 koşumu: evaluated 6, cleared 0)
 # durum dosyasına HİÇBİR iz bırakmıyordu. Ölçülen bedel: "kapı ölçemedi" · "aday kötü" ·
-# "aday atıl düğme" hükümleri birbirinden AYIRT EDİLEMİYORDU — ve `reflect.py:2091` her reddedilen
-# ize `why` alanını ZATEN yazıyordu, yani bilgi üretiliyor, süzgeçte ölüyordu (YASA 6'nın tersi:
-# okuyucusu olan bir alanın YAZAR tarafından kırpılması).
+# "aday atıl düğme" hükümleri birbirinden AYIRT EDİLEMİYORDU — ve `reflect.py::coordinate_descent_search`
+# her reddedilen ize `why` alanını ZATEN yazıyordu, yani bilgi üretiliyor, süzgeçte ölüyordu
+# (YASA 6'nın tersi: okuyucusu olan bir alanın YAZAR tarafından kırpılması).
+# ÇAPA SEMBOLE ÇEVRİLDİ VE HEDEFİ DÜZELTİLDİ (2026-09-03, TSK-030 adım-3): burada `reflect.py:2091`  (çapa-mezar-taşı)
+# yazıyordu ve o numara BAYATLAMIŞTI — bugün iç içe bir `_kesinti` yardımcısını gösteriyor.
+# İddianın gerçek yeri `coordinate_descent_search` gövdesindeki "RED GEREKÇESİ İZE GİRER" bloğudur
+# (`trace.append(... "why": (None if passes else _why))`). Çapanın ANLATTIĞI şey doğrulandı,
+# GÖSTERDİĞİ yer yanlıştı — satır çapasının sessiz çürüme biçimi tam olarak budur.
 #
 # YENİ ALAN AÇILMADI, BİLEREK: `trace` adı korunuyor ve içeriği zenginleşiyor. Yeni bir anahtar
 # (`trace_red` gibi) eklemek, okuyucusu olmayan bir alan üretirdi (`sprint.status()` → /api/sprint

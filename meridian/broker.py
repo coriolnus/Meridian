@@ -38,7 +38,9 @@ MAX_NOTIONAL_PCT = 0.25    # a single position's notional (qty·entry) may not e
 # --- DE-RISK RAMPASI: KOD-İÇİ FAIL-SAFE VARSAYILANLARI ------------------------------------------
 # Bu iki sayı 2026-08-12'ye kadar `derisk_mult` GÖVDESİNDE gömülüydü (0.03 / 0.08) — yani ne
 # operatörün değişmez zarfında ne arama uzayında görünüyorlardı; ölçümler onları
-# ancak MONKEYPATCH ile oynatabildi (research/olcumler/edg026_slot20_2026-08-12/olcum.py:178).
+# ancak MONKEYPATCH ile oynatabildi
+# (research/olcumler/edg026_slot20_2026-08-12/olcum.py::_rampa_fn — çapa sembole çevrildi
+# 2026-09-03, TSK-030 adım-3; hedef donmuş ölçüm dizinindedir, `codelaw` kökleri onu TARAMAZ).
 # Artık goal.yaml `limits` bloğundan okunur (`derisk_ramp()`), buradaki değerler yalnız FAIL-SAFE:
 # dosya/anahtar yoksa ya da değer bozuksa yasa YOK olmaz, BENİMSENEN banda düşer.
 # DEĞERLER = operatör kararı 2026-08-12: 15/36, TEK RAMPA HER MODDA
@@ -362,8 +364,9 @@ def derisk_mult(equity: float, peak: float, cfg: dict | None = None) -> float:
     YOK (operatör kararı 2026-08-12: kâğıt = gerçek-para birebir).
 
     Bant `derisk_ramp()`ten gelir (goal.yaml → limits). Gövde ölçülen fonksiyonun
-    BİREBİR aynısıdır (research/olcumler/edg026_slot20_2026-08-12/olcum.py:178 `_rampa_fn`) — yalnız 0.03/0.08 yerine parametre; yuvarlama
-    hanesi (4) ve sınır yönleri (`<=` / `>=`) dahil hiçbir şey değişmedi."""
+    BİREBİR aynısıdır (research/olcumler/edg026_slot20_2026-08-12/olcum.py::_rampa_fn) — yalnız
+    0.03/0.08 yerine parametre; yuvarlama hanesi (4) ve sınır yönleri (`<=` / `>=`) dahil hiçbir
+    şey değişmedi."""
     if peak <= 0:
         return 1.0
     cfg = cfg or derisk_ramp()
@@ -382,9 +385,12 @@ def max_positions_at(equity: float, peak: float, base_max: int, cfg: dict | None
     is permitted; 0 once the de-risk floor is hit.
 
     ÜÇÜNCÜ ARGÜMAN YALNIZ VERİLDİĞİNDE GEÇİLİR — kolaylık değil UYUMLULUK: dondurulmuş ölçüm
-    şasileri `broker.derisk_mult`i İKİ argümanlı bir fonksiyonla monkeypatch'liyor
-    (olcum.py:299) ve `max_positions_at` yamayı GLOBAL çözümle görüyor (yayılım çivisi
-    olcum.py:306-307). Koşulsuz `derisk_mult(e, p, cfg)` çağrısı o şasileri TypeError'la
+    şasileri `broker.derisk_mult`i İKİ argümanlı bir fonksiyonla monkeypatch'liyor VE
+    `max_positions_at` yamayı GLOBAL çözümle gördüğünü aynı gövdede kanıtlıyor — ikisi de
+    research/olcumler/edg026_slot20_2026-08-12/olcum.py::kosum içindedir (çapa sembole çevrildi
+    2026-09-03, TSK-030 adım-3: eski `olcum.py:299`/`olcum.py:306-307` (çapa-mezar-taşı) ÇIPLAK taban adıydı ve
+    yasa onu taranan kökteki apayrı bir `olcum.py` üzerinden yargılamaya çalışıyordu).
+    Koşulsuz `derisk_mult(e, p, cfg)` çağrısı o şasileri TypeError'la
     düşürürdü — yani bugünkü kablonun doğrulandığı ölçümler bir daha koşturulamazdı."""
     m = derisk_mult(equity, peak) if cfg is None else derisk_mult(equity, peak, cfg)
     if m <= 0.0:

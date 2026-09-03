@@ -2224,7 +2224,11 @@ def check_integrity_and_alarm() -> None:
         if tok not in prev:
             obs.alarm("MECHANISM_STALE",
                       f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride",
-                      kind="coherence", artifact=st["artifact"])
+                      # `behind_h` ALAN olarak da basılır (TSK-102, 2026-09-03): değer zaten
+                      # ölçülüyordu ama YALNIZ mesaj metnindeydi, yani hiçbir tüketici onu
+                      # ayrıştırmadan okuyamıyordu. `selfreview._olay_sure_h` düşüşünün dördüncü
+                      # basamağı bu alan olmadan ÖLÜ bir daldı.
+                      kind="coherence", artifact=st["artifact"], behind_h=st["behind_h"])
     for rg in rep["monotonicity"].get("regressions", []):      # #5 ileri-only nicelik geri gitti
         tok = f"regress:{rg['field']}"
         now.add(tok)
