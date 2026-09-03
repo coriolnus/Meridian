@@ -113,3 +113,6 @@ status_eski: registered   # 2026-08-09 Rol-1. ÖLÇÜM KODU YAZILMADI — bu kar
 #   kapalı); AŞAMA 2 yeniden-koşumu canlı worker DURDURULARAK + counterfactuals.jsonl YEDEKLİ
 #   yapılır (geri-alınabilir). Eşikler (iki-aşama sırası, üç tüketici ölçütü, sadakat-CI,
 #   kill'ler) ÖLÇÜMDEN ÖNCE donduruldu; dokunulmaz.
+
+# KARAR 2026-09-03 sabah (operatör, Rol-1 işledi): Aşama-2 HAFTA SONU bakım penceresinde koşulur (Cumartesi seans dışı,
+# worker durdurulur; saatler sürer, state yazar). Eşikler DEĞİŞMEZ (ölçümden önce donmuştu). Hüküm aynı turda karta + K-defterine.

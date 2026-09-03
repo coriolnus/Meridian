@@ -253,8 +253,8 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 _Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §3 GÜNCEL DURUM'dadır (bayat referans, tarihçe)._
 ### SIRALAMA (güncel — rev. 2026-09-02 akşam, operatör onayı): §2 İCRA SIRASI dört kova —
 **A kapanış dalgası** (TSK-108 → TSK-060 → TSK-089 → TSK-058 → günlük/ROADMAP kapanışı) →
-**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075 · 079 [25a/25c/25d] · 080 · 081-doğrulama) →
-**C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035 · 074 · 077) → **D operatör masası** (§5.0).
+**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075 · 079 [25a/25c/25d] · 080 · 081-doğrulama · EXE-004-Aşama-2 [hafta sonu]) →
+**C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035 · 074 · 077 · EDG-021-2.koşum [QC girişi]) → **D operatör masası** (§5.0).
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
 (Eski WP-dönemi sıralaması §∞ eşleme tablosunda ve §2 SIRA TARİHÇESİ'nde aynen durur.)
 
@@ -364,11 +364,13 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (B-17 **TSK-079** `25a` kaldır + `25c` dirilt + `25d` ezilme zinciri — TEK DİLİM [operatör 2026-09-03 sabah: "üçünü de sıraya al"]; 25c dirilt canlı davranışı etkilerse KART-ÖNCE (KOVA C'ye taşınır). Gövde TAHTA H0'da.)
 - (B-18 **TSK-080** `Ö-49` çapa/beyan çürümesi kalanı — İKİNCİ BAKIM DİLİMİ, B-15'ten sonra [operatör 2026-09-03 sabah]; ölçüm önce: kalan sayısı. Gövde TAHTA H0'da.)
 - (B-19 **TSK-081** ARSENAL doğrulama ölçümü [Rol-1, ~30 dk, kod/beyan okuması]: 2026-08-24 denetiminin "ARSENAL bayat-kapanmış" hükmü doğru mu; sonra `15c`/`15d` operatör kararı (044/084 ile bağlı) [operatör 2026-09-03 sabah]. Gövde TAHTA H0'da.)
+- (B-20 **EXE-2026-004** cf çıkış-sadakati Aşama-2 koşumu — HAFTA SONU bakım penceresi [operatör 2026-09-03 sabah]: Cumartesi seans dışı, worker durdurulur, saatler sürer, state'e yazar; hüküm karta + K-defterine. Gövde §6'da.)
 
 **KOVA C — KART İSTEYENLER (ölçüm dalgası; kart-önce, §5 yasası):**
 
 - (C-9 **TSK-074** `propose_virgin_knob` canlı-params süzgeci — KART-ÖNCE [operatör 2026-09-03 sabah]; tasarım belgesi `docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md` hazır, kartı Rol-1 yazar, onaya gelir; learn kapalıyken kurulup ölçülür. Gövde TAHTA H0'da.)
 - (C-10 **TSK-077** WP5 kalıntıları: `M2` DSR-yarısı (K=1) + `M11` kova-6 taraması — [operatör 2026-09-03 sabah]: Rol-1 önce şema kararını verir (pnl-serisi damgası mı, ayrı donmuş-çekim betiği mi — mevcut `olcum_araclari` deseni ölçülerek), sonra kartı yazar, onaya gelir. Gövde TAHTA H0'da.)
+- (C-11 **EDG-2026-021** QC delist doğrulaması İKİNCİ KOŞUM — KAPI: operatör QC girişi [TSK-046]; evren PIT üyelikle eşitlenir (tanım-eşitleme onaylandı 2026-09-03), eşikler donuk; hüküm karta + K-defterine. Gövde §6'da.)
 
 **Pilot sonrası SİNYAL ZİNCİRİ** (operatör 2026-08-31 akşam: "bu şekilde plana dahil et"):
 
@@ -3197,10 +3199,10 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
   What: De-risk rampası ile tavan kısıtının BİRLİKTE evrenin bağlayıcılığındaki payı ölçüldü.
   Why: de-risk+tavan BİRLİKTE %65,84 (CI 58,73–72,14, tamamı >%50) BASKIN → FINVIZ token harcaması **GEREKÇESİZ**; evren bağlayıcı DEĞİL (%34,17). Bağlayan: `tavan_sifir` %57,54 + `derisk_bagladi` %8,28. KILL#3 tetiklendi (rejim-koşullu): trend_up'ta de-risk baskın, chop'ta (nadir %6,7) evren baskın → chop-özel evren ayrı+küçük konu, OTONOM/bloksuz → §5-8 FINVIZ. Ref: research/cards/EDG-2026-022-evren-baglayici-kisit.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
 - **[EXE-2026-004] cf-çıkış-sadakati (N4)** — status: OPERATOR · owner: rol1 · size: — · trigger: —
-  What: Aşama-1 (üç tüketici ölçütü) ölçüldü; Aşama-2 (dört/altı çıkış tipi + tüm cf tarihi yeniden koşum) bakım penceresi bekliyor.
+  What: (operatör 2026-09-03 sabah: Aşama-2 HAFTA SONU bakım penceresinde koşulur — Cumartesi seans dışı, worker durdurulur, sonuç karta + K-defterine; KOVA B B-20.) Aşama-1 (üç tüketici ölçütü) ölçüldü; Aşama-2 (dört/altı çıkış tipi + tüm cf tarihi yeniden koşum) bakım penceresi bekliyor.
   Why: Aşama-1'de üç ölçüt de ölçülebilir zarar göstermedi → cf çıkış-tipleri EKLENMEDİ (+0,039R iyimserlik sapma olarak KAYITLI, düzeltilmedi). Aşama-2 eşiğe ULAŞILMADI → DONDU; eşikler ölçümden ÖNCE donmuştu, DEĞİŞMEDİ. Bakım penceresi şartlı (saatler, state'e yazar) → operatör kararı §5. Ref: research/cards/EXE-2026-004-cf-cikis-sadakati.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
 - **[EDG-2026-021] qc-delist-doğrulama** — status: OPERATOR · owner: rol1 · size: — · trigger: —
-  What: QC FREE defter v3 ile delist doğrulaması ölçüldü (DUR=None, PK GEÇTİ, IC=0,0265 n=335k).
+  What: (operatör 2026-09-03 sabah: QC girişinden [TSK-046] sonra İKİNCİ KOŞUM, evren PIT üyelik listesiyle eşitlenerek — tanım-eşitleme ONAYLANDI, eşikler donuk; KOVA C C-11.) QC FREE defter v3 ile delist doğrulaması ölçüldü (DUR=None, PK GEÇTİ, IC=0,0265 n=335k).
   Why: @20 fazla CI-0-içi → kill#1 "ŞÜPHEDE-değerlendirme" (birincil şüphe: evren-kompozisyon farkı); ikinci koşum için tanım-eşitleme hakkı OPERATÖRDE (§5-11; WP-K K3). Ref: research/cards/EDG-2026-021-qc-delist-dogrulama.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
 - **[EDG-2026-019] skill-görüş-defteri (N2b)** — status: OPERATOR · owner: rol1 · size: — · trigger: —
   What: Skill görüş katmanı canlıya kartsız sevk edilmiş (v218); terfi/emeklilik R-figürleri (vcp +0,116R / momentum-burst −0,114R) canlı state'te yeniden-üretilemedi (`eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi).

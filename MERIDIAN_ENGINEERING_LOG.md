@@ -1977,3 +1977,7 @@ ders: her commit'in ROADMAP flip'i aynı turda, kapanış partisinde "DONE'lar l
 üçüncü bayat flip (011, 109/110'dan sonra). 074/080/077/081 değerlendirme operatörle (aşağıda, sohbet).
 **Dördüncü tur (07:0xZ, operatör "onayla, hepsini roadmap'e işle"):** 074 → KOVA C kart-önce (C-9, kart Rol-1) · 077 → Rol-1
 şema kararı + kart (C-10) · 080 → ikinci bakım dilimi (B-18) · 081 → önce Rol-1 doğrulama ölçümü (B-19), sonra 15c/15d kararı.
+**Beşinci tur (07:0xZ, "üzerinden geçilmeyen kalem kaldı mı"):** ölçüm — 73 açık kalemden kovada olmayan ve bugün
+dokunulmayan 6: EXE-2026-004 → **Aşama-2 hafta sonu bakım penceresi** (B-20) · EDG-2026-021 → **QC girişi sonrası ikinci
+koşum, evren eşitlenerek** (C-11; tanım-eşitleme onayı) · TSK-010/015/016/093 GATED, kapıları gerçek (MCP ihtiyacı ·
+Ajan-B · skill taban ölçümü · iki-üreticili skill) — dokunulmadı. Kararlar kart yorumlarına da düşüldü.
