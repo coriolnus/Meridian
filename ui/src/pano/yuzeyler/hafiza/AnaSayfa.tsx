@@ -1,15 +1,22 @@
 "use client";
 
 /* ============================================================================
-   HAFIZA · ANA SAYFA — hafıza servisinin kendi `home` görünümünün karşılığı
+   HAFIZA · GENEL BAKIŞ — hafıza servisinin kendi `home` görünümünün karşılığı
    ----------------------------------------------------------------------------
-   BÖLÜM SIRASI KAYNAKTAN ÖLÇÜLDÜ (2026-09-02, Görev 9 · üst yüzey v0.9.2, çapa
-   ebad4782). `home-view.tsx::HomeView` gövdesinin sırası şudur ve ekran onu
-   birebir izler:
+   GÖRÜNEN AD "Genel bakış" (TSK-124, 2026-09-03); dosya adı ve görünüm kimliği
+   (`hafiza-anasayfa`) BİLEREK aynı kaldı — adres, palet anahtarları ve emekli
+   adres tablosu o kimlikten besleniyor. Etiketin tek kaynağı yüzey kaydıdır
+   (`alanlar.ts`), bu dosya onu `kayit.baslik` olarak ALIR, yazmaz.
 
-     1. ÜST SATIR, iki sütun: SOLDA (2/3) bellek takımyıldızı · SAĞDA (1/3) iki
-        kart — bilgi sayfaları, sonra son belgeler. Her ikisinin başlığında
-        "tümü" bağı ve varış görünümü de oradan ölçüldü.
+   BÖLÜM SIRASI KAYNAKTAN ÖLÇÜLDÜ (2026-09-02, Görev 9 · üst yüzey v0.9.2, çapa
+   ebad4782) ve BİR YERDE BİLEREK AYRILDI (TSK-124):
+
+     1. ÜST SATIR — ÖLÇÜLEN HÂL: solda (2/3) bellek takımyıldızı, sağda (1/3) iki
+        kart (bilgi sayfaları · son belgeler). BUGÜNKÜ HÂL: üç ÖZET SATIRI, tek
+        kart. Sapma bir tahmin değil OPERATÖR KARARIDIR ve gerekçesi ölçülmüştür:
+        üçü de kendi görünümlerinin listesini/grafiğini TEKRARLIYORDU (aynı uç,
+        aynı bileşen). Birebirlik burada kopyanın korunmasını isteseydi, korunan
+        şey birebirlik değil çift kayıt olurdu.
      2. HAFIZA DEPOSU kartı (`bank-stats-view.tsx::MemoryStoreCard`): üç sayaç
         şeridi + kayıt bileşimi + bağ türleri.
      3. ETKİNLİK: ingest zaman serisi (`::MemoriesActivityChart`).
@@ -32,22 +39,24 @@
      İki yerde çizmek aynı sayının iki kopyası olurdu. TEK kayıp "son yazım"
      damgasının etiketli satırıydı; o değer ham sayaç dökümünde duruyor ve oradan
      okunabiliyor — sessizce düşmedi.
-   · Bilgi sayfaları kartı üst yüzeyde AĞACIN tamamıdır, bizde sayfa listesidir;
-     gerekçesi ve bedeli kartın kendi dosyasında yazılı.
+   · Bilgi sayfası ve belge LİSTELERİ kalktı (TSK-124): ikisi de kendi
+     görünümlerinin listesiydi. Kalan şey sayı ve tazelik — Genel bakış'a özgü
+     olan yarı. Bedeli özet satırlarının kendi dosyasında yazılı.
 
    ---------------------------------------------------------------------------
-   TAKIMYILDIZ AYRI OKUNUR — VE BU BİR BEDEL KARARIDIR
+   TAKIMYILDIZ ARTIK BURADA OKUNMUYOR (TSK-124, 2026-09-03)
    ---------------------------------------------------------------------------
-   Üst yüzeyin ana sayfası graf verisini KENDİ isteğiyle, sayaçlardan bağımsız
-   çekiyor ve gerekçesini de yazıyor: kenar sayısı düğüm sayısıyla süper-doğrusal
-   büyüyor (yaklaşık bin düğüm → yetmiş bin kenar), bu yüzden ana sayfada düğüm
-   TAVANI var ve okuma panoyu bekletmiyor. Burada da aynı: takımyıldız kendi
-   ucunu kendi kartında okur, sayaçlar onu beklemez, o da sayaçları beklemez.
-   Tavan da aynı sayıdır (üst yüzeyin ana sayfa çağrısı 200 düğüm).
+   Bu dosya 200 düğümlük graf ucunu kendi kartında okuyordu ve Bellekler görünümü
+   AYNI ucu AYNI bileşenle (`GrafPaneli`) yeniden okuyor. Operatör görsel turda
+   kopyayı adıyla saydı: "takımyıldızı kartı hem ana sayfada var hem Bellekler'de
+   — ana sayfada olmasına gerek yok". Okuma buradan tümüyle kalktı; grafın evi
+   Bellekler'dir ve düğüm tavanı sabiti de orada yaşıyor.
 
-   Sağ sütunun iki kartı da AYNI desendedir: her biri kendi ucunu okur. Biri
-   düşerse öteki çizilmeye devam eder; tek bir toplu okuma, tek arızayı üç
-   körlüğe çevirirdi.
+   YERİNE GELEN ŞEY YENİ BİR OKUMA DEĞİL: takımyıldız satırının sayıları sayfanın
+   zaten yaptığı özet okumasından (`stats.total_nodes` / `total_links`) türüyor.
+   Kalan iki özet (bilgi sayfası · belge) kendi uçlarını okumaya DEVAM eder ve
+   AYNI desendedir: biri düşerse öteki çizilir; tek bir toplu okuma, tek arızayı
+   üç körlüğe çevirirdi.
 
    ---------------------------------------------------------------------------
    PENCERE DEĞİŞTİRMENİN BEDELİ (bedel yasası)
@@ -60,7 +69,7 @@
    tetiğine bağlı, yoklamaya değil.
    ============================================================================ */
 import { useCallback, useMemo, useState, type ReactNode } from "react";
-import { Activity, Brain, Database, FileText, GitMerge, Layers, Link2, ListChecks, Network } from "lucide-react";
+import { Activity, Brain, Database, FileText, GitMerge, Link2, ListChecks, Network } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Button } from "@/components/ui/button";
@@ -73,15 +82,16 @@ import { useApi, type Durum } from "../../veri";
 import { BolumKart, Kapi as UcKapisi, Olculemedi } from "../sistem/parcalar";
 import {
   BAG_TURU_SIRASI,
-  BilgiSayfalari,
+  BelgeOzeti,
   Dagilim,
+  GecisSatiri,
   KAYIT_TURU_SIRASI,
   IslemlerKarti,
   KonsolidasyonKarti,
   SERI_ANAHTARLARI,
   SERI_YAPISI,
   Sayac,
-  SonBelgeler,
+  SayfaOzeti,
   ZihinModelleriKarti,
   bagTuruEtiketi,
   bagTuruRengi,
@@ -91,18 +101,13 @@ import {
   type SeriAnahtari,
 } from "./anasayfakartlari";
 import { HamSatirlar, ISO_BENZERI, metin, sayi } from "./parcalar";
-import { GrafPaneli } from "./takimyildizi";
-import type { BankaSayaclari, BellekGrafi, HafizaOzeti, HafizaZarfi, SeriKovasi, ZamanSerisi } from "./uctipleri";
+import type { BankaSayaclari, HafizaOzeti, SeriKovasi, ZamanSerisi } from "./uctipleri";
 
 const UC_OZET = "/api/hindsight/ozet";
-const UC_BELLEK_GRAF = "/api/hindsight/bellek-graf";
 
-/* TAKIMYILDIZ DÜĞÜM TAVANI — üst yüzeyin ana sayfa çağrısıyla AYNI sayı (200).
-   Vekilin kendi tavanı da 200 (`api.py::HAFIZA_LISTE_TAVANI`), yani buraya daha
-   büyük bir sayı yazmak sessizce 200'e inerdi ve ekran istediğinden başka bir
-   şey aldığını bilmezdi. İki tavan bugün eşit; ayrıştıkları gün istek düşer ve
-   kırpma zinciri farkı SAYIYLA gösterir. */
-const GRAF_TAVANI = 200;
+/* GRAF UCU BU DOSYADAN KALKTI (TSK-124, 2026-09-03): 200 düğümlük okuma da,
+   düğüm tavanı sabiti de Bellekler görünümünde YAŞIYOR — kaldırılan şey ikinci
+   kopyaydı, ucun kendisi değil. */
 
 /* PENCERELER VE ZAMAN ALANLARI SUNUCUNUN SÖZLÜĞÜNDEN GELİR, buradan değil:
    `api.py::_HAFIZA_SERI_PENCERESI` ve `::_HAFIZA_ZAMAN_ALANI` tanımadıkları
@@ -361,6 +366,19 @@ function SayaclarKapisi({
   );
 }
 
+/**
+ * Geçiş satırındaki sayı — ölçülemediyse SAYI GİBİ GÖRÜNMEZ (uydurma yasağı).
+ *
+ * `?? 0` YAZILMADI VE BU BİLİNÇLİ: sıfır ile "bilmiyorum" aynı şey değildir ve
+ * bir geçiş satırında "0 kayıt" cümlesi operatörü boş bir görünüme yollardı.
+ */
+function Sayilan({ deger, birim, ne }: { readonly deger: number | null; readonly birim: string; readonly ne: string }) {
+  if (deger === null) {
+    return <Olculemedi neden={`${ne} okunamadı`} teknik="alan yanıtta yok ya da sayı değil" kisa />;
+  }
+  return <span className="tabular-nums">{kisaSayi(deger)} {birim}</span>;
+}
+
 /* --------------------------------------------------------------------------- */
 
 export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readonly kayit: Bolum }) {
@@ -382,12 +400,6 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
   const yol = bank === null ? null : `${UC_OZET}?bank=${encodeURIComponent(bank)}&period=${pencere}&time_field=${zamanAlani}`;
   const ozet = useApi<HafizaOzeti>(yol);
 
-  /* AYRI OKUMA, AYRI DURUM (dosya başlığındaki bedel şerhi): graf ucu ağırdır ve
-     pencere/zaman alanı değişimlerinden ETKİLENMEZ — özet yoluna eklenseydi her
-     pencere düğmesine basışta yeniden çekilirdi. */
-  const grafYolu = bank === null ? null : `${UC_BELLEK_GRAF}?bank=${encodeURIComponent(bank)}&limit=${GRAF_TAVANI}`;
-  const graf = useApi<HafizaZarfi<BellekGrafi>>(grafYolu);
-
   /* GÖRELİ ZAMANIN "ŞİMDİ"Sİ OKUMAYA ÇAPALANIR, ÇİZİME DEĞİL: her çizimde yeniden
      okunsaydı aynı yanıtın iki satırı iki ayrı ana göre yazılabilirdi. Özet
      tazelendiğinde "5 saat önce" cümleleri de tazelenir.
@@ -400,10 +412,11 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
   const simdi = useMemo(() => Date.now(), [ozet.zaman]);
 
   const { push: adreseGit } = useRouter();
-  /* Üst yüzeyde de böyle: ana sayfadaki graf bir GEZİNME yüzeyidir, kayıt detayı
-     Bellekler görünümünün işidir. Düğüm bilgisi kullanılmıyor ve kullanılmadığı
-     yazılı — adres kayda değil GÖRÜNÜME gidiyor. Sağ sütunun iki "tümü" bağının
-     varış görünümleri de üst yüzeyden ölçüldü. */
+  /* VARIŞLAR GÖRÜNÜM KİMLİĞİNDEN KURULUR (`yuzeyYolu`), elle yazılmış bir hash'ten
+     değil: elle yazılan bir adres, kimlik değiştiği gün sessizce varsayılana
+     düşerdi — "bağ çalıştı sanırsın, yanlış yerdesindir" sınıfı. Üç varış da
+     üst yüzeyden ölçülmüştü ve bu turda DEĞİŞMEDİ; değişen yalnız o varışa giden
+     şeyin bir KART değil bir SATIR olması. */
   const listeyeGit = useCallback(() => adreseGit(yuzeyYolu("memory", "hafiza-bellekler")), [adreseGit]);
   const bilgiyeGit = useCallback(() => adreseGit(yuzeyYolu("memory", "hafiza-bilgi")), [adreseGit]);
   const belgelereGit = useCallback(() => adreseGit(yuzeyYolu("memory", "hafiza-belgeler")), [adreseGit]);
@@ -418,50 +431,49 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
 
   return (
     <>
-      {/* ÜST SATIR — üst yüzeyin ana sayfa ızgarası: takımyıldız solda ve geniş,
-          sağda iki dar kart. Sayaçlar bu satırın ALTINDA durur; öne almak, "bu
-          bankada ne var" sorusunu bir tabloyla cevaplamak olurdu, oysa üst yüzey
-          onu bir HARİTAYLA cevaplıyor ve operatörün beğendiği şey tam olarak bu. */}
-      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
-        <BolumKart
-          kimlik="hafiza-takimyildizi"
-          baslik="Bellek takımyıldızı"
-          soru="Bu bankadaki kayıtlar birbirine nasıl bağlanıyor?"
-          ikon={Network}
-          className="min-w-0 lg:col-span-2"
-        >
-          <UcKapisi durum={graf} yol={UC_BELLEK_GRAF}>
-            {/* PANEL PAYLAŞIMLI (inceleme I-1/I-2): kırpma zinciri, rozetler ve
-                "tanınmayan biçim" cümlesi Bellekler'deki tam grafla AYNI yerden
-                gelir. İki ekran yalnız ad, yükseklik ve tıklamada ayrışır. */}
-            {(z) => (
-              <GrafPaneli zarf={z} ad="Bellek takımyıldızı" yukseklik={464} dugumTiklandi={listeyeGit} />
-            )}
-          </UcKapisi>
-        </BolumKart>
+      {/* ÜST SATIR — ÜÇ KOPYA KART GİTTİ, YERİNE ÜÇ ÖZET SATIRI GELDİ
+          (TSK-124, 2026-09-03 · operatör görsel turu).
 
-        <div className="flex min-w-0 flex-col gap-4">
-          <BolumKart
-            kimlik="hafiza-sayfalar"
-            baslik="Bilgi sayfaları"
-            soru="Bu bankada hangi sayfalar yazılı?"
-            ikon={Layers}
-            className="min-w-0"
-          >
-            <BilgiSayfalari bank={bank} simdi={simdi} git={bilgiyeGit} />
-          </BolumKart>
+          KALDIRILANLAR VE NEREYE GİTTİKLERİ:
+            · Bellek takımyıldızı → Bellekler görünümü (aynı bileşen, aynı uç, tam
+              graf ve 620 px; buradaki 464 px'lik hâli İKİNCİ kopyaydı)
+            · Bilgi sayfaları listesi → Bilgi Tabanı görünümü (orada AĞAÇ, üstelik
+              klasörleriyle — burada yalnız düz listeydi)
+            · Son belgeler listesi → Belgeler görünümü (aynı ucun tam listesi)
 
-          <BolumKart
-            kimlik="hafiza-son-belgeler"
-            baslik="Son belgeler"
-            soru="Belge listesinin başında hangi kayıtlar duruyor?"
-            ikon={FileText}
-            className="min-w-0"
-          >
-            <SonBelgeler bank={bank} simdi={simdi} git={belgelereGit} />
-          </BolumKart>
-        </div>
-      </div>
+          KALAN ŞEY GENEL BAKIŞ'A ÖZGÜ OLANDIR: sayı ve tazelik. Üçünün de varışı
+          satırın kendi düğmesinde ADIYLA yazılı — kaldırılan kartlarda üçü de
+          "Tümü" diyordu ve üçü ayrı yere gidiyordu.
+
+          BEDEL AÇIKÇA YAZILI (bedel yasası, D5): bu ekran KÜÇÜLDÜ. Graf haritası,
+          sekiz sayfa adı ve altı belge kimliği artık burada değil. Kazanç: aynı
+          gerçeğin iki kopyası kalmadı ve sayfa bir okumayı (200 düğümlük graf)
+          tamamen bıraktı. */}
+      <BolumKart
+        kimlik="hafiza-gecisler"
+        baslik="Ayrıntı görünümleri"
+        soru="Bu bankada ne kadar var, ayrıntısı hangi görünümde?"
+        ikon={Network}
+        className="min-w-0"
+      >
+        {/* TAKIMYILDIZ SATIRI YENİ BİR OKUMA AÇMAZ: sayılar sayfanın ZATEN yaptığı
+            özet okumasından türer. Bir satır için graf ucunu çekmek, kaldırılan
+            kopyanın maliyetini geri getirirdi (yeni vekil ucu da yok). */}
+        <SayaclarKapisi ozet={ozet}>
+          {(s) => (
+            <GecisSatiri git={listeyeGit} varis="Bellekler">
+              <Sayilan deger={sayi(s.total_nodes)} birim="kayıt" ne="Kayıt sayacı" />
+              {" · "}
+              <Sayilan deger={sayi(s.total_links)} birim="bağ" ne="Bağ sayacı" />
+              {" · bellek takımyıldızı ve tek tek kayıtlar Bellekler görünümünde"}
+            </GecisSatiri>
+          )}
+        </SayaclarKapisi>
+
+        <SayfaOzeti bank={bank} git={bilgiyeGit} />
+
+        <BelgeOzeti bank={bank} simdi={simdi} git={belgelereGit} />
+      </BolumKart>
 
       {/* HAFIZA DEPOSU — üst yüzeyin `MemoryStoreCard`ı: üç sayaç + iki dağılım */}
       <BolumKart kimlik="hafiza-anasayfa" baslik={kayit.baslik} soru={kayit.soru} ikon={kayit.ikon}>

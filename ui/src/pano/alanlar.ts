@@ -288,7 +288,14 @@ export const YUZEYLER = {
     ikon: Brain,
     grup: "Panolar",
     bolumler: [
-      { kimlik: "hafiza-anasayfa", baslik: "Ana Sayfa", soru: "Bu bankada ne birikti, en son ne zaman yazıldı?", ikon: Home },
+      /* ADI DEĞİŞTİ, KİMLİĞİ DEĞİŞMEDİ (TSK-124, 2026-09-03 · operatör görsel turu):
+         "Ana Sayfa" panonun KENDİ ana ekranını çağrıştırıyordu — operatörün sözleriyle
+         "uygulamanın ana sayfasını andırıyor". Görünen ad bu kayıttan TEK KAYNAK olarak
+         iniyor (kenar çubuğu · başlık · kırıntı · ⌘K paleti dördü de `bolumKaydi`den okur),
+         o yüzden değişiklik tek satır. `hafiza-anasayfa` KİMLİĞİ dokunulmadı: adreste,
+         palet anahtarlarında ve `ESKI_GORUNUM_ADRESLERI` tablosunda yaşıyor; kimliği de
+         çevirmek operatörün yer imlerini ve üç emekli adresin evini sessizce kırardı. */
+      { kimlik: "hafiza-anasayfa", baslik: "Genel bakış", soru: "Bu bankada ne birikti, en son ne zaman yazıldı?", ikon: Home },
       { kimlik: "hafiza-bellekler", baslik: "Bellekler", soru: "Bu bankada ne yazılı, tek tek ne diyor?", ikon: Database },
       { kimlik: "hafiza-bilgi", baslik: "Bilgi Tabanı", soru: "Hangi bilgi sayfaları ve çıkarım belgeleri var, içlerinde ne yazıyor?", ikon: Network },
       { kimlik: "hafiza-recall", baslik: "Recall", soru: "Bir soruya bu banka ne cevap verirdi?", ikon: Search },

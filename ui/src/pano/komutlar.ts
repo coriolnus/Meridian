@@ -167,8 +167,16 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   // Emekli bir kimliği bu tabloda BIRAKMAK ölü satır olurdu — anahtar tablosu yalnız
   // KAYITLI bölümler için okunuyor (`ARAMA_ANAHTARLARI`), yani orada kalan satır
   // hiçbir aramayı bulmaz ve okunmadığı için de bayatladığı fark edilmez.
-  "hafiza-anasayfa": ["bank", "hindsight", "banka", "arsiv", "fact", "ozet", "istatistik", "konsolidasyon", "takimyildizi"],  // "tazelik" kalktı: Görev 9 tazelik bloğunu CP kartlarına dağıttı
-  "hafiza-bellekler": ["kayit", "bellek", "memory", "ders", "metin", "world", "experience", "gozlem"],
+  // GÖRÜNEN AD "Genel bakış" OLDU (TSK-124, 2026-09-03) ve iki anahtar buna göre oynadı:
+  // "genel bakis" EKLENDİ, "anasayfa" da EKLENDİ — eski ad operatörün kas hafızasında duruyor
+  // ve emekli bir kelimeyi tablodan çıkarmak aramayı BOŞ döndürürdü ("hafiza-bankalar"
+  // taşımasının aynı gerekçesi). "takimyildizi" ise TAŞINDI, silinmedi: graf artık bu
+  // görünümde ÇİZİLMİYOR (kopya kart kalktı), Bellekler'de çiziliyor — çalışan ama yanlış
+  // yere giden bağ, çalışmayan bağdan sinsidir (bu tablonun kendi kuralı, yukarıda).
+  "hafiza-anasayfa": ["bank", "hindsight", "banka", "arsiv", "fact", "ozet", "genel bakis",
+                      "anasayfa", "istatistik", "konsolidasyon"],  // "tazelik" kalktı: Görev 9 tazelik bloğunu CP kartlarına dağıttı
+  "hafiza-bellekler": ["kayit", "bellek", "memory", "ders", "metin", "world", "experience", "gozlem",
+                       "takimyildizi", "graf", "harita"],
   //
   // "ZIHIN MODELI" TSK-108 GÖREV 3'TE REFLECT'TEN BILGI'YE TAŞINDI — ve bu bir
   // ölçüm sonucudur, tercih değil: üst yüzeyde çıkarım belgeleri `knowledge`

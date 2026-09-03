@@ -115,6 +115,69 @@ export const JETONLAR = {
 
 type JetonAdi = keyof typeof JETONLAR;
 
+/* ---------------------------------------------------------------------------
+   DÜĞÜM STİLİ SÖZLEŞMESİ — TEK TABLO (TSK-124, 2026-09-03)
+   ----------------------------------------------------------------------------
+   TETİK (operatör görsel turu): "mor noktalar çok büyük, orijinalinde farklı
+   renklerle daha küçük".
+
+   ÖLÇÜLEN KÖK NEDEN — TERCİH DEĞİL ZİNCİR: ısı rampasının üç durağı
+   `[mavi, mor, turuncu]` idi ve kayıt türü GELMEYEN düğümler (canlı ölçümde
+   çoğunluk: tür `table_rows.fact_type`te yaşıyor ve o alan gelmeyebiliyor) ısı
+   rengiyle boyanıyor. Rampanın ORTA durağı `mor` ve düğümlerin çoğu ortaya
+   düşüyor — ekranda "hepsi mor" diye okunan şey buydu. Yarıçap ise
+   `GrafPaneli::boyutFn`de `4 + sqrt(w/wmax)*9`, yani 4–13 px @1x idi.
+
+   REFERANS ÖLÇÜLEMEDİ VE UYDURULMADI: "orijinal" Hindsight control plane
+   (`constellation.tsx` / `home-view.tsx` @ ebad4782) BU DEPODA YOK. Depodaki tek
+   kayıt `docs/superpowers/plans/2026-09-02-hafiza-cpui-birebir.md` Task 6'dır ve
+   yalnız KURALI taşır ("nokta yarıçapı bağ sayısından, ısı rengi
+   sqrt(lc/maxLinkCount)"), piksel değeri taşımaz; yukarıdaki 4/9 sayıları dış bir
+   SATIR çapasına dayanıyordu ve o çapa buradan doğrulanamaz. Bu yüzden aşağıdaki
+   sözleşme bir ölçüm kopyası değil, BEYANLI bir yedektir: 2–4 px @1x, renk TÜRE
+   göre, tonlar rol hue bantlarının dışında
+   (`docs/TASARIM-PALET-REZERVE-HUE-2026-09-03.md` §2 — gezinme 210–232° · mod
+   245–270° · şiddet 336–6°/8–30°/132–155°).
+
+   NEDEN YALNIZ İKİ KROMATİK TON (bedel yasası): bugünkü jeton kümesinde rol
+   bantlarının DIŞINDA kalan seri jetonu İKİ tanedir — `camgobegi` (192,3°) ve
+   `pembe` (329,2°); `mavi` 221,3° GEZİNME, `mor` 265,5° MOD, `turuncu` 18,0°
+   UYARI bandında (ölçüldü 2026-09-03, çivi hue'yu jetondan HESAPLAR). Üçüncü tür
+   ve tür gelmeyen düğüm bu yüzden AKROMATİK jetonlara bağlandı. Serbest bantlara
+   yeni kromatik hue TSK-117 K-4 (palet turu, operatör kararı S1) ile gelir ve o gün
+   DEĞİŞECEK TEK YER burasıdır — yeni jeton yaratmak bu turun işi değil.
+
+   GEÇİCİ BEYANLI İSTİSNA — CAMGÖBEĞİ (TSK-124, 2026-09-03):
+   camgöbeği 192° BİLGİ bandında (S3, 2026-09-03); geçici istisna, TSK-117 K-4 palet
+   turu serbest tonu verince değişir — o gün tek yer burası.
+
+   AÇIK HÂLİ: operatör kararı S3 (2026-09-03 ~10:50Z, ROADMAP TSK-117 notu) 195°
+   ailesini (185–210°) BİLGİ rolüne REZERVE etti; belge §2'de o bant "rolü beyan
+   edilecek" diye duruyordu ve bu tur onu "serbest" sayarak `world`ü camgöbeğine
+   bağlamıştı. Beyandan sonra rol bandı dışında kalan TEK kromatik seri jetonu
+   `pembe`dir — üç türü tek kromatik tona sıkıştırmak, renk kimlik kanalını
+   tümüyle kaybetmek olurdu. Bu yüzden ihlal SİLİNMEDİ, BEYAN EDİLDİ: v388'in
+   istisna listesi (`ISTISNALAR`) tek kaynaktır ve her istisnanın gerekçesi bir
+   `TSK-` künyesi taşımak zorundadır — künyesiz bir istisna, süresi olmayan bir
+   istisnadır ve sessizce kalıcılaşır.
+   --------------------------------------------------------------------------- */
+export const DUGUM_STILI = {
+  /** Yarıçap px @1x: derecesi sıfır olan düğüm tabanda, en ağır düğüm tavanda. */
+  yaricapTabani: 2,
+  yaricapTavani: 4,
+  /** Kayıt türü → jeton. Tanınmayan tür `soluk`a düşer (aşağıda) — renk bir ÖLÇÜM
+   *  değil bir kimlik kanalıdır, bilinmeyen bir tür de çizilir. */
+  tur: {
+    world: "camgobegi",
+    experience: "pembe",
+    observation: "soluk",
+    entity: "yazi",
+  },
+  /** Isı rampası: soğuk → köprü → sıcak. Sıra KROMA ile de tek yönlü (akromatik →
+   *  camgöbeği → pembe), yani okuyucu çubuğa bakmadan da sıralayabilir. */
+  isiDuraklari: ["soluk", "camgobegi", "pembe"],
+} as const;
+
 type Rgb = readonly [number, number, number];
 
 interface Palet {
@@ -215,9 +278,14 @@ function paletOku(): Palet | null {
     koyu: document.documentElement.classList.contains("dark"),
     renk,
     rgb: cozulen,
-    /* ÜST YÜZEYİN YAPISI AYNEN: soğuk (az) → ara köprü → sıcak (çok). Ara durak
-       parlaklığı tek yönlü tutar, yani okuyucu çubuğa bakmadan da sıralayabilir. */
-    isiDuraklari: [cozulen.mavi, cozulen.mor, cozulen.turuncu],
+    /* DURAKLAR SÖZLEŞME TABLOSUNDAN (TSK-124, 2026-09-03): burada ikinci bir liste
+       tutmak, tür renkleriyle ısı renklerinin sessizce ayrışması demekti — ve
+       ayrışmanın ölçülen bedeli tam olarak "hepsi mor" ekranıydı. */
+    isiDuraklari: [
+      cozulen[DUGUM_STILI.isiDuraklari[0]],
+      cozulen[DUGUM_STILI.isiDuraklari[1]],
+      cozulen[DUGUM_STILI.isiDuraklari[2]],
+    ],
   };
 }
 
@@ -251,15 +319,11 @@ export const BAG_TURU_ETIKETI: Readonly<Record<string, string>> = {
   cooccurrence: "birlikte geçiş",
 };
 
-/* KÜME RENKLERİ — bellek grafının üç kayıt türü. Üst yüzeyin ana sayfası da
-   kümeleri kayıt türüne göre renklendiriyor (mor / pembe / çivit); eşleme yine
-   hue düzeyinde birebir. */
-const KUME_JETONU: Readonly<Record<string, JetonAdi>> = {
-  world: "mor",
-  experience: "pembe",
-  observation: "mavi",
-  entity: "camgobegi",
-};
+/* KÜME RENKLERİ — TÜRETİLİR, İKİNCİ KEZ YAZILMAZ (TSK-124, 2026-09-03).
+   Eski hâl kendi tablosunu taşıyordu (`world: "mor"` …) ve o tablo ısı
+   rampasından bağımsız yaşıyordu; aynı grafın iki renk kaynağı vardı. Artık ikisi
+   de `DUGUM_STILI`den doğuyor — tek-kaynak yasası. */
+const KUME_JETONU: Readonly<Record<string, JetonAdi>> = DUGUM_STILI.tur;
 
 const KUME_ETIKETI: Readonly<Record<string, string>> = {
   world: "dünya bilgisi",
@@ -388,7 +452,10 @@ function disbukeyZarf(noktalar: readonly Nokta[]): Nokta[] {
  *  düşer — renk bir ÖLÇÜM değil bir kimlik kanalıdır, bilinmeyen bir tür de
  *  çizilir. */
 function kumeRgb(palet: Palet, anahtar: string): Rgb {
-  return palet.rgb[KUME_JETONU[anahtar] ?? "mavi"];
+  /* YEDEK `mavi` DEĞİL `soluk` (TSK-124): `mavi` gezinme bandının jetonudur
+     (`--color-seri-6` = `--nav` ile aynı hex) ve tanınmayan bir türü panonun
+     "seçili/gezinme" rengiyle boyamak, renge yanlış bir anlam yüklemekti. */
+  return palet.rgb[KUME_JETONU[anahtar] ?? "soluk"];
 }
 
 function hazirla(
@@ -1091,11 +1158,16 @@ export function Takimyildizi({
       const komsu =
         ustBaglar.size > 0 && (h.bagIndeksi.get(k.i) ?? []).some((bi) => ustBaglar.has(bi));
 
+      /* İKİ YOL DA AYNI ARALIKTAN (TSK-124, 2026-09-03): boyut işlevi verilmediğinde
+         yarıçap bağ sayısından türer ama TABAN/TAVAN yine sözleşmeden gelir. İki
+         yol iki farklı aralık kullansaydı aynı graf iki ekranda iki boyutta çizilir
+         ve "büyük nokta" kusuru yalnız birinden kalkardı. */
       const hamR = boyutRef.current
         ? boyutRef.current(g.dugum)
-        : 2.5 + Math.min(g.bagSayisi * 0.15, 2.5);
+        : DUGUM_STILI.yaricapTabani +
+          Math.min(g.bagSayisi * 0.15, DUGUM_STILI.yaricapTavani - DUGUM_STILI.yaricapTabani);
       const nabiz = hareket ? 1 + 0.13 * Math.sin(zaman * 1.05 + g.faz) : 1;
-      const r = Math.max(1.5, hamR * nabiz * Math.min(yakinlik, 2));
+      const r = Math.max(1, hamR * nabiz * Math.min(yakinlik, 2));
 
       const kirpisma = hareket ? 0.82 + 0.18 * Math.sin(zaman * 1.4 + g.faz * 2.1) : 1;
       const tabanAlfa = (0.45 + Math.min(g.bagSayisi * 0.03, 0.5)) * kirpisma;
@@ -1206,10 +1278,13 @@ export function Takimyildizi({
       ctx.font = YAZITIPI_TEK_ARALIK;
       ctx.fillText("az", 12, 98);
       const bas = 12 + ctx.measureText("az").width + 8;
+      /* EFSANE ARALIĞI DA SÖZLEŞMEDEN (TSK-124): sabit 2/4/6 yazsaydık efsane,
+         noktalar küçüldükten sonra ekranda OLMAYAN bir boyutu vaat ederdi. */
+      const ortaR = (DUGUM_STILI.yaricapTabani + DUGUM_STILI.yaricapTavani) / 2;
       for (const [dx, dr] of [
-        [2, 2],
-        [14, 4],
-        [30, 6],
+        [2, DUGUM_STILI.yaricapTabani],
+        [14, ortaR],
+        [30, DUGUM_STILI.yaricapTavani],
       ] as const) {
         ctx.beginPath();
         ctx.arc(bas + dx, 94, dr, 0, Math.PI * 2);
@@ -1601,10 +1676,18 @@ export function GrafPaneli({
   const govde = zarf.govde ?? null;
   const cozum = useMemo(() => (govde === null ? null : bellekGrafiniCoz(govde)), [govde]);
 
-  /* NOKTA BOYUTU — üst yüzeyin ana sayfa kuralı (`home-view.tsx:160-173`):
-     bağ ağırlıklarının düğüm başına toplamı, karekök ölçekli. Ağırlık toplamı TEK
-     yerde hesaplanır ve en büyüğü ondan türer: iki ayrı döngü aynı sayıyı iki kez
-     üretirdi ve biri değişince öteki sessizce eskirdi. */
+  /* NOKTA BOYUTU — CP `home-view.tsx` constellation çağrısının KURALI: yarıçap, bağ
+     ağırlıklarının düğüm başına toplamının KAREKÖKÜYLE ölçeklenir.
+
+     ÇAPA SATIR DEĞİL KURAL (TSK-124, 2026-09-03): burada `home-view.tsx:160-173`
+     yazıyordu ve bu iki kere kırık bir çapaydı — satır numaraları kayar (CLAUDE.md §2)
+     ve hedef dosya BU DEPODA YOK, yani hiçbir tarayıcı onu doğrulayamaz; sessizce
+     çürüyen bir atıf, olmayan bir atıftan kötüdür çünkü okuyucu ona güvenir. Taşınan
+     şey KURAL: karekök ölçek. Aralık ise CP'den değil `DUGUM_STILI`den gelir ve orada
+     "referans ölçülemedi" diye BEYANLI (piksel değeri hiçbir yerde ölçülmedi).
+
+     Ağırlık toplamı TEK yerde hesaplanır ve en büyüğü ondan türer: iki ayrı döngü
+     aynı sayıyı iki kez üretirdi ve biri değişince öteki sessizce eskirdi. */
   const agirlik = useMemo(() => {
     const toplamlar = new Map<string, number>();
     if (cozum !== null) {
@@ -1619,8 +1702,14 @@ export function GrafPaneli({
     return { toplamlar, enAgir };
   }, [cozum]);
 
+  /* ARALIK SÖZLEŞMEDEN (TSK-124, 2026-09-03): eski hâl `4 + sqrt(...)*9` = 4–13 px
+     @1x idi ve operatörün "çok büyük" dediği şey buydu. Kural (karekök ölçek)
+     korundu, ARALIK sözleşmeye bağlandı. */
   const boyutFn = useCallback(
-    (d: TakimyildiziDugumu) => 4 + Math.sqrt((agirlik.toplamlar.get(d.kimlik) ?? 0) / agirlik.enAgir) * 9,
+    (d: TakimyildiziDugumu) =>
+      DUGUM_STILI.yaricapTabani +
+      Math.sqrt((agirlik.toplamlar.get(d.kimlik) ?? 0) / agirlik.enAgir) *
+        (DUGUM_STILI.yaricapTavani - DUGUM_STILI.yaricapTabani),
     [agirlik],
   );
 

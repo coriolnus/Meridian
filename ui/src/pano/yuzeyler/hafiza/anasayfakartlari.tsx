@@ -43,8 +43,8 @@
    rozet de yok. Eylem İKİ ADIMLIDIR (onay penceresi + uygula) ve pencerede
    bütçe uyarısı durur: birleştirme model çağrısı üretir.
    ============================================================================ */
-import { useMemo, useState } from "react";
-import { AlertCircle, ArrowRight, Brain, CheckCircle2, Clock, FileText, RefreshCw, XCircle } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { AlertCircle, ArrowRight, Brain, CheckCircle2, Clock, RefreshCw, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -883,20 +883,30 @@ export function IslemlerKarti({ stats }: { readonly stats: BankaSayaclari }) {
 }
 
 /* ---------------------------------------------------------------------------
-   SON BELGELER — üst yüzeyin ana sayfa sağ sütunundaki `recentDocs` kartı
+   BELGE ÖZETİ — KART DEĞİL, TEK SATIR + BAĞLANTI (TSK-124, 2026-09-03)
    ----------------------------------------------------------------------------
-   ALTI SATIR, ÜST YÜZEYLE AYNI SAYI. Üst yüzey belge adı DİYE bir alan kullanmıyor
-   (belge künyesi serbest biçimli), kimliği basıyor — bizde de kimlik basılır ve
-   kimlik zaten depo yoludur (ölçüldü: belge kimliği repo yolu).
+   ÖNCEKİ HÂL BİR KOPYAYDI: "Son belgeler" kartı `/api/hindsight/belgeler`i okuyup
+   ALTI SATIRLIK bir liste çiziyordu; aynı ucun aynı listesi Belgeler görünümünün
+   TAMAMIdır. Operatör görsel turda bunu adıyla saydı ("son belgeler de duplike").
+   Kural (Rol-1 D2): bir görünümün LİSTESİNİ tekrar eden kart kalkar, yerine tek
+   satır özet + bağlantı gelir.
 
-   SIRALAMA İDDİA EDİLMEZ: üst yüzey de sıralama parametresi göndermiyor, sıra üst
-   servisin döndürdüğü sıradır. "En yeni altı" demek, ölçülmemiş bir sıralamayı
-   ölçülmüş gibi göstermek olurdu — kart bunu kendi alt satırında yazıyor.
+   OKUMA DURUYOR, LİSTE GİDİYOR — ve bu bilinçli: sayı ve tazelik Genel bakış'a
+   ÖZGÜ içeriktir (o soruyu Belgeler görünümü kendi başlığında cevaplamıyor),
+   satırların kendisi değil. Tavan 6'dan 1'e indi: tek satırlık bir özet için altı
+   kayıt çekmek, kaldırılan kopyanın maliyetini geri getirirdi.
+
+   BEDEL (bedel yasası): altı belge kimliği + altı damga Genel bakış'tan KALKTI.
+   Kayıp gerçek ama telafisi bir tık uzakta ve BAĞLANTI o tıkı ekranda gösteriyor.
+
+   SIRALAMA HÂLÂ İDDİA EDİLMİYOR: üst servis sıralama parametresi almıyor, sıra
+   onun döndürdüğü sıradır. "En yeni" demek ölçülmemiş bir sıralamayı ölçülmüş gibi
+   göstermek olurdu — satır "listenin başındaki kayıt" diyor, "en yenisi" demiyor.
    --------------------------------------------------------------------------- */
 
-const SON_BELGE_SAYISI = 6;
+const BELGE_OZET_TAVANI = 1;
 
-export function SonBelgeler({
+export function BelgeOzeti({
   bank,
   simdi,
   git,
@@ -905,20 +915,20 @@ export function SonBelgeler({
   readonly simdi: number;
   readonly git: () => void;
 }) {
-  const yol = `${UC_BELGELER}?bank=${encodeURIComponent(bank)}&limit=${SON_BELGE_SAYISI}`;
+  const yol = `${UC_BELGELER}?bank=${encodeURIComponent(bank)}&limit=${BELGE_OZET_TAVANI}`;
   const durum = useApi<HafizaZarfi<SayfaliGovde<HafizaBelgesi>>>(yol);
   return (
     <UcKapisi durum={durum} yol={UC_BELGELER}>
       {(z) => (
         <ZarfKapisi zarf={z} ne="Belge listesi">
-          {(govde) => <BelgeSatirlari govde={govde} simdi={simdi} git={git} />}
+          {(govde) => <BelgeOzetSatiri govde={govde} simdi={simdi} git={git} />}
         </ZarfKapisi>
       )}
     </UcKapisi>
   );
 }
 
-function BelgeSatirlari({
+function BelgeOzetSatiri({
   govde,
   simdi,
   git,
@@ -936,61 +946,56 @@ function BelgeSatirlari({
     );
   }
   const ogeler = govde.items;
+  const toplam = typeof govde.total === "number" && Number.isFinite(govde.total) ? govde.total : null;
   if (ogeler.length === 0) {
-    return <p className="text-muted-foreground text-sm">Bu bankada belge yok — ölçüldü, boş</p>;
+    return (
+      <GecisSatiri git={git} varis="Belgeler">
+        {toplam === 0
+          ? "Bu bankada belge yok — ölçüldü, boş"
+          : "Bu okumada belge gelmedi ve toplam sayı da bildirilmedi"}
+      </GecisSatiri>
+    );
   }
-
+  const bas = ogeler[0];
+  const gorece = bas === undefined ? null : goreliDamga(bas.created_at, simdi);
   return (
-    <div className="flex flex-col gap-2">
-      <ul className="flex flex-col">
-        {ogeler.map((b, i) => {
-          const kimlik = metin(b.id);
-          const gorece = goreliDamga(b.created_at, simdi);
-          return (
-            <li key={kimlik ?? `belge-${i}`} className="flex items-center justify-between gap-2 py-1">
-              <span className="flex min-w-0 items-center gap-1.5">
-                <FileText className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-                <span className="min-w-0 truncate font-mono text-xs" title={kimlik ?? undefined}>
-                  {kimlik ?? (
-                    <Olculemedi neden="Belge kimliği gelmedi" teknik="kimlik alanı yok ya da dizge değil" kisa />
-                  )}
-                </span>
-              </span>
-              <span className="shrink-0 text-[11px] text-muted-foreground" title={damga(b.created_at) ?? undefined}>
-                {gorece ?? (
-                  <Olculemedi
-                    neden="Eklenme zamanı gelmedi"
-                    teknik="oluşturma damgası yanıtta yok ya da çözülemeyen bir biçimde geldi"
-                    kisa
-                  />
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="text-muted-foreground text-[11px]">
-        Sıra üst servisin döndürdüğü sıradır — bu kart ilk {tam(ogeler.length)} kaydı çiziyor
-      </p>
-      <Button variant="ghost" size="xs" className="self-start" onClick={git}>
-        Tümü <ArrowRight className="size-3" aria-hidden />
-      </Button>
-    </div>
+    <GecisSatiri git={git} varis="Belgeler" ipucu={bas === undefined ? undefined : damga(bas.created_at) ?? undefined}>
+      {toplam === null ? (
+        <Olculemedi neden="Belge sayısı bildirilmedi" teknik="toplam alanı yanıtta yok ya da sayı değil" kisa />
+      ) : (
+        <span className="tabular-nums">{tam(toplam)} belge</span>
+      )}
+      {" · listenin başındaki kayıt "}
+      {gorece ?? (
+        <Olculemedi
+          neden="eklenme zamanı gelmedi"
+          teknik="oluşturma damgası yanıtta yok ya da çözülemeyen bir biçimde geldi"
+          kisa
+        />
+      )}
+      {gorece === null ? "" : " eklendi"}
+    </GecisSatiri>
   );
 }
 
 /* ---------------------------------------------------------------------------
-   BİLGİ SAYFALARI — üst yüzeyin ana sayfa sağ sütunundaki `pages` kartı
+   BİLGİ SAYFASI ÖZETİ — AYNI KURAL, AYNI GEREKÇE (TSK-124, 2026-09-03)
    ----------------------------------------------------------------------------
-   ÜST YÜZEY BURADA AĞACIN TAMAMINI, KLASÖRLERİ AÇIK ve SALT-OKUNUR çiziyor
-   (`home-view.tsx` → `knowledge-base-view.tsx::TreeRow`). BURADA SAYFA LİSTESİ
-   ÇİZİLİYOR ve bu bir SAPMADIR, gerekçesi yazılı: ağaç satırı Bilgi Tabanı
-   görünümünün kendi bileşenidir ve ikinci bir kopyasını yazmak, aynı gerçeğin iki
-   kopyası olurdu (tek-kaynak yasası). BEDELİ: klasör yapısı bu kartta görünmez —
-   kart bunu kendi alt satırında söylüyor, sessizce kaybetmiyor.
-   --------------------------------------------------------------------------- */
+   Kart sekiz sayfalık bir LİSTE çiziyordu; sayfa listesinin evi Bilgi Tabanı
+   görünümüdür (üstelik orada AĞAÇ olarak, klasörleriyle). Operatör bunu da saydı
+   ("bilgi sayfaları da duplike olabilir") ve Rol-1 D4 kesinleştirdi.
 
-const SAYFA_SAYISI = 8;
+   ÖZETE KALAN ŞEY GENEL BAKIŞ'A ÖZGÜ OLANDIR: sayfa SAYISI ve TAZELİK (kapsamında
+   okunmamış kayıt taşıyan sayfa adedi). İkisi de Bilgi Tabanı'nın kendi başlığının
+   cevapladığı sorular değil.
+
+   DÜŞÜRÜLEN DÜĞÜM SAYIMI KÜÇÜLMEDİ: `sayfalar()` çözücüsü ve `okunamayan` okuyucusu
+   AYNEN duruyor. Kart küçüldü diye sessizce atlanan bir düğüm sayıyı işaretsiz
+   küçültemez (v378 `test_DUSURULEN_dugum_SAYILIYOR_ve_EKRANDA` sözleşmesi).
+
+   BEDEL: sekiz sayfa adı ve sekiz damga bu ekrandan KALKTI; klasör yapısı zaten
+   burada hiç yoktu. Telafisi bağlantının kendisidir.
+   --------------------------------------------------------------------------- */
 
 /** Ağacı düz listeye açar — yalnız sayfa düğümleri. */
 /** Sayfa listesi + DÜŞÜRÜLEN düğüm sayısı (`KovaSeridi` emsali: say + atla). */
@@ -1022,7 +1027,7 @@ function sayfalar(dugumler: readonly BilgiDugumu[]): SayfaTaramasi {
   return { sayfalar: cikti, okunamayan };
 }
 
-export function BilgiSayfalari({ bank, simdi, git }: { readonly bank: string; readonly simdi: number; readonly git: () => void }) {
+export function SayfaOzeti({ bank, git }: { readonly bank: string; readonly git: () => void }) {
   const yol = `${UC_AGAC}?bank=${encodeURIComponent(bank)}`;
   const durum = useApi<HafizaZarfi<BilgiAgaci>>(yol);
 
@@ -1034,27 +1039,18 @@ export function BilgiSayfalari({ bank, simdi, git }: { readonly bank: string; re
     <UcKapisi durum={durum} yol={UC_AGAC}>
       {(z) => (
         <ZarfKapisi zarf={z} ne="Bilgi ağacı">
-          {(govde) => <SayfaSatirlari govde={govde} simdi={simdi} git={git} />}
+          {(govde) => <SayfaOzetSatiri govde={govde} git={git} />}
         </ZarfKapisi>
       )}
     </UcKapisi>
   );
 }
 
-function SayfaSatirlari({
-  govde,
-  simdi,
-  git,
-}: {
-  readonly govde: BilgiAgaci;
-  readonly simdi: number;
-  readonly git: () => void;
-}) {
+function SayfaOzetSatiri({ govde, git }: { readonly govde: BilgiAgaci; readonly git: () => void }) {
   const kokler = govde.roots;
   /** `null` = ağaç geldi ama kök dizisi tanınmayan biçimde. */
   const tarama = useMemo(() => (Array.isArray(kokler) ? sayfalar(kokler) : null), [kokler]);
-  const liste = tarama === null ? null : tarama.sayfalar;
-  if (liste === null || tarama === null) {
+  if (tarama === null) {
     return (
       <Olculemedi
         neden="Bilgi ağacı tanınmayan bir biçimde geldi"
@@ -1062,48 +1058,24 @@ function SayfaSatirlari({
       />
     );
   }
+  const liste = tarama.sayfalar;
   if (liste.length === 0) {
-    return <p className="text-muted-foreground text-sm">Bu bankada bilgi sayfası yok — ölçüldü, boş</p>;
+    return (
+      <GecisSatiri git={git} varis="Bilgi Tabanı">
+        Bu bankada bilgi sayfası yok — ölçüldü, boş
+      </GecisSatiri>
+    );
   }
-
-  const cizilen = liste.slice(0, SAYFA_SAYISI);
+  const bayat = liste.filter((d) => d.is_stale === true).length;
   return (
-    <div className="flex flex-col gap-2">
-      <ul className="flex flex-col">
-        {cizilen.map((d, i) => {
-          const ad = metin(d.name);
-          const gorece = goreliDamga(d.timestamp, simdi);
-          return (
-            <li key={metin(d.id) ?? `sayfa-${i}`} className="flex items-center justify-between gap-2 py-1">
-              <span className="flex min-w-0 items-center gap-1.5">
-                <FileText className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-                <span className="min-w-0 truncate text-sm" title={ad ?? undefined}>
-                  {ad ?? <Olculemedi neden="Sayfanın adı gelmedi" teknik="ad alanı yok ya da dizge değil" kisa />}
-                </span>
-                {d.is_stale === true ? (
-                  <span
-                    className="size-1.5 shrink-0 rounded-full bg-amber-500"
-                    title="kapsamında okunmamış kayıt var"
-                    aria-hidden
-                  />
-                ) : null}
-              </span>
-              <span className="shrink-0 text-[11px] text-muted-foreground" title={damga(d.timestamp) ?? undefined}>
-                {gorece ?? (
-                  <Olculemedi
-                    neden="Güncelleme zamanı gelmedi"
-                    teknik="güncelleme damgası yanıtta yok ya da çözülemeyen bir biçimde geldi"
-                    kisa
-                  />
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="text-muted-foreground text-[11px] tabular-nums">
-        {tam(liste.length)} sayfanın {tam(cizilen.length)} tanesi çizildi · klasör yapısı Bilgi Tabanı görünümünde
-      </p>
+    <div className="flex flex-col gap-1">
+      <GecisSatiri git={git} varis="Bilgi Tabanı">
+        <span className="tabular-nums">{tam(liste.length)} bilgi sayfası</span>
+        {" · "}
+        {bayat > 0
+          ? `${tam(bayat)} tanesinin kapsamında okunmamış kayıt var`
+          : "hiçbirinin kapsamında okunmamış kayıt yok"}
+      </GecisSatiri>
       {/* OKUNAMAYAN DÜĞÜM SAYISI EKRANDA (düzeltme turu 2, Y-4 · `KovaSeridi` emsali):
           yukarıdaki sayı bir SAYIMdır; sessizce atlanan düğüm onu işaretsiz küçültürdü. */}
       {tarama.okunamayan > 0 ? (
@@ -1111,8 +1083,40 @@ function SayfaSatirlari({
           {tam(tarama.okunamayan)} düğüm okunamadı — sözlük olarak çözülemedi, bu sayıma girmedi
         </p>
       ) : null}
-      <Button variant="ghost" size="xs" className="self-start" onClick={git}>
-        Tümü <ArrowRight className="size-3" aria-hidden />
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   GEÇİŞ SATIRI — ÖZET + VARIŞ, TEK YERDE
+   ----------------------------------------------------------------------------
+   İki özet (belge · bilgi sayfası) ve Genel bakış'ın kendi takımyıldızı satırı aynı
+   biçimi kullanıyor: bir cümle, sonunda varış görünümünün ADIYLA bir düğme. Üç kez
+   yazsaydık üç ayrı hizalama ve üç ayrı düğme etiketi doğardı (tek-kaynak yasası).
+
+   VARIŞ ADIYLA YAZILIR, "Tümü" DEĞİL: operatör nereye gideceğini düğmeye basmadan
+   okuyabilmeli — kaldırılan kartlarda üçü de "Tümü" diyordu ve üçü ayrı yere
+   gidiyordu.
+   --------------------------------------------------------------------------- */
+
+export function GecisSatiri({
+  git,
+  varis,
+  ipucu,
+  children,
+}: {
+  readonly git: () => void;
+  readonly varis: string;
+  readonly ipucu?: string;
+  readonly children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <span className="min-w-0 text-muted-foreground text-sm" title={ipucu}>
+        {children}
+      </span>
+      <Button variant="ghost" size="xs" className="shrink-0" onClick={git}>
+        {varis} <ArrowRight className="size-3" aria-hidden />
       </Button>
     </div>
   );
