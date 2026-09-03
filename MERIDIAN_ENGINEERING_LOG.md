@@ -1981,3 +1981,38 @@ ders: her commit'in ROADMAP flip'i aynı turda, kapanış partisinde "DONE'lar l
 dokunulmayan 6: EXE-2026-004 → **Aşama-2 hafta sonu bakım penceresi** (B-20) · EDG-2026-021 → **QC girişi sonrası ikinci
 koşum, evren eşitlenerek** (C-11; tanım-eşitleme onayı) · TSK-010/015/016/093 GATED, kapıları gerçek (MCP ihtiyacı ·
 Ajan-B · skill taban ölçümü · iki-üreticili skill) — dokunulmadı. Kararlar kart yorumlarına da düşüldü.
+
+## 2026-09-03 (sabah, ikinci blok) — KOVA B dilimi indi; QC girişi + EDG-021 ikinci koşum + ⑤ sondası Rol-1 eliyle bulutta
+
+**KOVA B tek dilim (TSK-101/102/006/030) — 63b64ab:** alarm imzası `mechanism=` (ölçüm: 2 üretici, brief "18 içinde tek"
+demişti — çivi tabanı ≥8 ölçülerek yazıldı) · `watchdog_incidents` süre düşüşü `gap_h→age_h→yas_h→behind_h` (behind_h alarm
+METNİNDEYDİ, üretici alanı basar oldu) · `session_refresh` anahtarı IP + özet `yollar` (restart başına 57→1 satır; canlı
+24 saat: 977 olayın 106'sı; TSK-106 sonrası %87→%11'di, kalan sınıf buydu) · 16 satır çapası → 8 sembol / 8 beyanlı
+muafiyet; tur içinde KAYDIRILAN 4 çapa (analytics:730 · broker:136 · watchdog:3736 · broker:569) — "meridian/'ye satır
+eklemek başkasının çapasını kaydırır" sınıfı ölçüldü → [TSK-119] tests/+ops/ 59 satır · [TSK-120] api.py 7 çürük sembol
+çapası + capa_uyusmasi üçüncü besleme. İnceleme: 2 tur; "doğarken çürük sembol çapası" sınıfı DÖRT kez tekrarlandı
+(skill_gorus.olc, notify._imza, watchdog._sessiz_hat, iki uydurma check_* adı) — ders: sembol çapası yazmadan `def` ölçülür;
+v382 bölüm E kendi dosyalarını capa_uyusmasi çekirdeğiyle ölçer. Ajan: 1558 + 2512 çivi seri yeşil; Rol-1 271 yeşil.
+**QC (TSK-046 DONE):** operatör Google hesabıyla girdi (parola yok; API jetonu "Reset My Token" ile — "Request Token"
+ücretli-org uyarısı verdi); operatör CLI kullanımına onay verdi (KEŞİF 08-09 RED notu operatör kararıyla aşıldı);
+`lean whoami` ✓, kimlik dosyası 600. Ölçümler: `lean cloud pull/push` ücretsiz hesapta ÇALIŞIYOR (IDE yazma kilidi →
+`--force`); Research defteri CLI'dan koşulamaz → Chrome (Claude in Chrome) ile IDE'de koşuldu; çıktı alma: airlock dosya
+yazımı buluta düşmüyor, Object Store yazma izni yok, çıktı webview cross-origin → ÇÖZÜM: `get_ipython().set_next_input`
+ile JSON'u hücre KAYNAĞINA yazıp `lean cloud pull` (kaynaklar çekiliyor, çıktılar çekilmiyor); `research.ipynb` 64.000 kr
+DOSYA sınırı ölçüldü → ayrı küçük defterler (`cikti_v4.ipynb`, `cikti_sonda.ipynb`) VS Code "Jupyter Session" ile mevcut
+kernel'e bağlanarak. Yanlış hücre tıklaması defteri bir kez daha koşturdu (deterministik, aynı sonuç).
+**EDG-021 ikinci koşum (v4, PIT S&P 500 evreni, delist dahil) — ae958ce:** @20 fazla +0,48% CI[−0,10; +1,19] CI-0-içi
+(v3 [−0,78; +1,85] — yarıya daraldı), @10 +0,25% CI[−0,06; +0,63]; PK IC 0,024 geçti; kapsama 0,915; dilim medyan
+turnover 0,0233→0,0133 (EDG-016 p75 0,0089) — evren-kompozisyon şüphesi büyük ölçüde elendi; EDG-016 (+0,65%) ile yön
+aynı, nokta ~%74. Kart kuralı gereği ortak karar (operatör): **ŞÜPHEDE-bilgisiz → ARŞİV, EDG-016 canlıda kalır.**
+Kalan tanım sapması: shares_outstanding vekili (884 hücre). İkinci koşum hakkı kullanıldı; K defteri iki deneme.
+**⑤ Security Master delist sondası:** 8 emekli sembol — AYNI 3 (ANSS/K/WBA) · AYRIK ≤3 gün 3 (DFS/HES/IPG; QC delist =
+son bar+1 kalıbı) · QC süreklilik 2 (FI, PARA — yeniden adlandırma/devir, eski sembol işlem görmüyor) → 8/8 emeklilik
+kararı ÇELİŞMEDİ; ⑤ kapandı. Sonda ilk yazımında WARNING tarihi delist sayılabiliyordu — inceleme yakaladı, düzeltilip
+yeniden koşuldu.
+**Bayat flip vakaları (sabah):** TSK-109/110, TSK-011, TSK-021 — üç kez "commit var, ROADMAP QUEUED"; ders: kapanış
+partisinde commit listesi ↔ ROADMAP DONE'ları kıyaslanır (kalem: kapanış çivisi adayı).
+**Kapanış:** tam suite #5 (ae958ce, donuk ağaç, parmak izi eşit): 9893 passed / 0 failed / 8 skipped (562 s). Push
+0855305..ae958ce. **Dağıtım #5:** ae958ce 08:46:54Z — kapılar git temiz ✓ uv audit 0 ✓ lint-imports 5/5 ✓ daralt-güvenli ✓
+birim ayrıklığı 14/14 ✓ F9 ✓; learn disabled saygı; healthz 200; [5c] tazelik TAMAM; [5b] kod-tazelik ✓; beyan bayt-özdeş.
+(`bar_ghost_session_dropped` EA 2025-05-26 warn — bilinen sınıf, her dağıtım doğrulamasında görünüyor.)
