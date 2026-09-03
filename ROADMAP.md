@@ -253,7 +253,7 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 _Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §3 GÜNCEL DURUM'dadır (bayat referans, tarihçe)._
 ### SIRALAMA (güncel — rev. 2026-09-02 akşam, operatör onayı): §2 İCRA SIRASI dört kova —
 **A kapanış dalgası** (TSK-108 → TSK-060 → TSK-089 → TSK-058 → günlük/ROADMAP kapanışı) →
-**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075 · 079 [25a/25c/25d] · 080 · 081-doğrulama · EXE-004-Aşama-2 [hafta sonu] · 119 · 120) →
+**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075 · 079 [25a/25c/25d] · 080 · 081-doğrulama · EXE-004-Aşama-2 [hafta sonu] · 119 · 120 · 121) →
 **C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035 · 074 · 077 · EDG-021-2.koşum [QC girişi]) → **D operatör masası** (§5.0).
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
 (Eski WP-dönemi sıralaması §∞ eşleme tablosunda ve §2 SIRA TARİHÇESİ'nde aynen durur.)
@@ -367,6 +367,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (B-20 **EXE-2026-004** cf çıkış-sadakati Aşama-2 koşumu — HAFTA SONU bakım penceresi [operatör 2026-09-03 sabah]: Cumartesi seans dışı, worker durdurulur, saatler sürer, state'e yazar; hüküm karta + K-defterine. Gövde §6'da.)
 - (B-21 **TSK-119** TSK-030 adım-4: `tests/`+`ops/` satır çapaları (59 satır / 28 dosya) — B-15 bakım dilimiyle birlikte ya da hemen ardından; dilim incelemesi Ö3, 2026-09-03.)
 - (B-22 **TSK-120** api.py 7 çürük sembol çapası + capa_uyusmasi üçüncü besleme — B-21 ile aynı dilimde; dilim tur-2 devri, 2026-09-03.)
+- (B-23 **TSK-121** pano komşu kopyaları (Bildiri/BayatSerit/YukleniyorIskeleti/Olculemedi) + TSK-114 pano-geneli — B-12 devri, 2026-09-03.)
 
 **KOVA C — KART İSTEYENLER (ölçüm dalgası; kart-önce, §5 yasası):**
 
@@ -2435,6 +2436,10 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   What: (status notu 2026-09-03 gece: KOD İNDİ — 12-A vekil f4fcbb3 [/varlik + entity_id süzgeci doğrulandı; açık: kimlik yol-parçası duvarı tutarlılığı] + 12-B UI 345a5cd [künye çekmecesi + zaman çizelgesi, veri.ts hataEki tek kapı, v380]; dağıtım sonraki pencere [tam suite]; DONE = operatör görsel turu.) CP `entities-view.tsx` (v0.9.2 = ebad4782 :232-237, :287, :432-517) düğüme tıklayınca varlık künyesi (ad · anılma sayısı · ilk/son görülme · kimlik) + o varlığa bağlı kayıtların zaman çizelgesini (`memories/list?entity_id=`) açar; bizde takımyıldız düğümleri tıklanamaz (ekranda gerekçesiyle yazılı). Kalem: vekile `GET /api/hindsight/varlik?bank=&id=` (→ `/entities/{id}`) + `/liste`ye `entity_id` süzgeci (upstream `list_memories` parametresi, T1 R1 ölçümü) + panel.
   Why: T6-B incelemesi Q1 — birebirlik defterinde açık kalem; bağ LİSTESİ ise CP'de yok (Meridian icadıydı, kaldırılması kabul edilmiş bedel).
   Ref: TSK-108 T6-B inceleme (task-6b-review.md Q1); `hindsight-clients/go/api/openapi.yaml` @ ebad4782 `get_entity` / `list_memories.entity_id`.
+- **[TSK-121] Pano komşu kopyaları tek kaynağa: `Bildiri` ×3 · `BayatSerit`/`YukleniyorIskeleti` ×2 · `Olculemedi` ×13** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: S-M · trigger: —
+  What: TSK-113 (`Kapi` 7→1, 2026-09-03) aynı sınıfın komşularını ölçtü ve kapsam dışı bıraktı: `Bildiri` üç tanım (markup özdeş, prop adları farklı), `BayatSerit`/`YukleniyorIskeleti` ikişer, `Olculemedi` ON ÜÇ tanım. İş: TSK-113 deseni (`ui/src/pano/parcalar/` ortak modülü, kabuktan türetim, re-export, ekran değişmez, v384 dinamik `==1` taraması her ad için) — Olculemedi'nin 13 kopyası v323 `teknik`/`neden` çivisinin de tek hedefi olur. Ek: TSK-114'ün çağrı-yeri çivisi pano geneline (566/566 ölçüldü, sınıf-A ihlali 0) genişletilir — bu kalemde.
+  Why: tek-kaynak yasası; TSK-099/113 emsali; implementer raporu endişe-4/5 (2026-09-03).
+  Ref: .superpowers sdd kovab-b12 report.md (git-dışı) · TSK-113 · `ui/src/pano/parcalar/kapi.tsx`.
 - **[TSK-120] `meridian/api.py`de 7 çürük `modül.sembol` şerh çapası + `capa_uyusmasi`ya depo-geneli üçüncü besleme** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: S-M · trigger: —
   What: KOVA B dilimi (2026-09-03) `capa_uyusmasi(modul_bicimi=True)` çekirdeğini kendi dosyalarıyla besleyince api.py'de tur ÖNCESİNDEN kalma 7 çürük sembol çapası ölçüldü (`shadow_model.terfi` ×2, `shadow_model.refit_and_save`, `skills.ARSIV`, `ledgers.cf_resolved`, `durum_sozlugu.satirlar`, `auth.header.Authorization`) — hiçbir kapı görmüyor. İş: (1) yedi çapayı hedef okuyarak düzelt/muafiyetle; (2) `codelaw.report()` `capa_uyusmasi` beslemesine `meridian/**` + `tests/**` yorum metinlerindeki `x.py::sembol` ve `modül.sembol` çapalarını ekle (üçüncü besleme) — doğarken çürük sembol çapası sınıfı bu dilimde DÖRT kez tekrarlandı (`skill_gorus.olc`, `notify._imza`, `watchdog._sessiz_hat`, iki uydurma `check_*` adı); v382 bölüm E yalnız dilim dosyalarını kapsıyor, depo geneli kör.
   Why: TSK-030'un amacı 'çürüme SESLİ olsun'du; sembol çapası da sessiz çürüyorsa amaç yarım. Dilim tur-2 endişe-1/3.
