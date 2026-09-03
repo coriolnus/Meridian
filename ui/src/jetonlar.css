@@ -226,10 +226,10 @@
   --yon-arti-h: rgba(74,222,128,.35);
   --yon-arti-t: rgba(74,222,128,.10);
   --yon-arti-zemin: rgba(74,222,128,.08);
-  --yon-eksi: #f98080;
-  --yon-eksi-h: rgba(249,128,128,.35);
-  --yon-eksi-t: rgba(249,128,128,.10);
-  --yon-eksi-zemin: rgba(249,128,128,.07);
+  --yon-eksi: #f6966f;
+  --yon-eksi-h: rgba(246,150,111,.35);
+  --yon-eksi-t: rgba(246,150,111,.10);
+  --yon-eksi-zemin: rgba(246,150,111,.07);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
@@ -325,9 +325,9 @@
     --yon-arti-h: rgba(74,222,128,.35);
     --yon-arti-t: rgba(74,222,128,.10);
     --yon-arti-zemin: rgba(74,222,128,.08);
-    --yon-eksi: #f98080;
-    --yon-eksi-h: rgba(249,128,128,.35);
-    --yon-eksi-t: rgba(249,128,128,.10);
-    --yon-eksi-zemin: rgba(249,128,128,.07);
+    --yon-eksi: #f6966f;
+    --yon-eksi-h: rgba(246,150,111,.35);
+    --yon-eksi-t: rgba(246,150,111,.10);
+    --yon-eksi-zemin: rgba(246,150,111,.07);
   }
 }
