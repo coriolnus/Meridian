@@ -264,7 +264,21 @@ CONTRACTS: dict[str, Contract] = {
              "ızgarasında havuzlanamaz — aşınma sayacı da her yeni pencerede sıfırdan başlar, yani "
              "düşük bir R1 sayacı 'aşınma yok' demek değil 'R1'de henüz ölçülmedi' demektir. "
              "HABERSİZ KIYAS YASAK; R0 kayıtları silinmedi, `arsiv_R0` işareti aldı "
-             "(oos_erosion.arsivle — içerik değişmez, yalnız etiket eklenir)"),
+             "(oos_erosion.arsivle — içerik değişmez, yalnız etiket eklenir). "
+             "DSR DAMGASI (TSK-077, KYS-2026-002 R2, 2026-09-03): satır ayrıca `ret_seri` "
+             "(kapının `deflated_sharpe`'a verdiği getiri listesinin KENDİSİ — "
+             "`_ret = pnl_dollars/START_EQUITY`, reflect._gate_eval, YUVARLAMA YOK) ve `ret_n` "
+             "(`len(ret_seri)`) taşır. R1 tabanının DSR yarısı `seri`nin (kapanış-günü, r_multiple) "
+             "ölçek-eşdeğer OLMADIĞI ölçülünce (kill#2, karta bkz.) durmuştu — `ret_seri` bu "
+             "ikamesizliği KENDİ ölçeğinde, ikinci bir türetme olmadan kapatır. Zorunlu alan "
+             "DEĞİLDİR ve olmayacaktır: TSK-077 öncesi satırlarda yokturlar ve retro damga yasağı "
+             "gereği geriye dönük doldurulmazlar. UYDURMA YASAĞI alan düzeyinde: `_trades_search` "
+             "anahtarı YOKSA `ret_seri`/`ret_n` None kalır (`beyan` alanına neden eklenir); anahtar "
+             "VARSA ve BOŞSA []/0 yazılır — None ile boş liste AYRI GERÇEKLERDİR, biri 'ölçülmedi' "
+             "biri 'ölçüldü, sıfır çıktı' der. BEDEL: satır başına ~n_işlem ek float (kapı serilerinin "
+             "çoğu 70-110 işlem taşır, validation.DSR_MIN_N kalibrasyon notu); LEDGER_CAP bu "
+             "büyümeyi SINIRLAMAZ (yalnız okuma penceresi — dosya sınırsız büyür, bugün de öyle); "
+             "kırpma/compact bu turun kapsamı DIŞINDA, ayrı ROADMAP kalemi"),
     # İKİ İNTRADAY DEFTERİ SÖZLEŞMEYE GİRİYOR. Faz 4a/4b defterleri bugüne kadar
     # sözleşme yasasının TAMAMEN dışındaydı: `watchdog.parity_report` yalnız CONTRACTS'ı gezer, ve
     # CONTRACTS 8 eski defterle sınırlıydı. Yani yedi hatayı doğuran "sözleşmesiz

@@ -798,6 +798,24 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
         _inc_p, _cand_p = inc.get("params") or {}, cand.get("params") or {}
         _degisen = {k: v for k, v in _cand_p.items() if _inc_p.get(k) != v}
         _od = cand.get("oos_detail") or {}
+        # ---- DSR DAMGASI (TSK-077, KYS-2026-002 R2, 2026-09-03) --------------------------------
+        # R1 tabanının DSR yarısı kill#2 ile durmuştu: donmuş kopya kapının `_ret` girdisini
+        # TAŞIMIYORDU, `seri` (kapanış-günü, r_multiple) ölçek-eşdeğer DEĞİL (motorun kendi
+        # _moments'ıyla ÖLÇÜLDÜ ve REDDEDİLDİ — karta bkz.). Tek yol İLERİYE DÖNÜK DAMGA: `_ret`
+        # (satır ~681, koşulsuz kurulan, `deflated_sharpe`a verilen AYNI liste) buradan itibaren
+        # deftere de yazılır — YENİDEN HESAP YOK, aynı nesne kullanılır.
+        # UYDURMA YASAĞI: `_trades_search` anahtarı YOKSA (None) `_ret` `_cts_all = ... or []`
+        # (satır 680) yüzünden zaten [] — ama "yok" ile "ölçüldü, boş çıktı" AYNI ŞEY DEĞİLDİR;
+        # ayrım burada RAW anahtara bakılarak (satır 680'in `or []` düşmesinden ÖNCEki hâl) yeniden
+        # kurulur. Anahtar YOKSA ret_seri/ret_n None + beyana neden eklenir; anahtar VARSA ve boşsa
+        # []/0 de bir ölçümdür. RETRO-DAMGA YASAK: eski satırlara dokunulmaz (ledgers.py sözleşme
+        # notu; `required` DEĞİŞMEDİ).
+        _cts_raw = cand.get("_trades_search")
+        _ret_seri = None if _cts_raw is None else _ret
+        _ret_n = None if _cts_raw is None else len(_ret)
+        _beyan = "ADVISORY defter — kapı passes semantiğine girmez (Hafta 3a)"
+        if _cts_raw is None:
+            _beyan += " · ret_seri: _trades_search yok (TSK-077)"
         validation.record_candidate({
             "ts": memory.now_iso(), "fingerprint": _fp,
             # PENCERE DAMGASI (R1): PBO/DSR bu defteri TEK POPÜLASYON sanarak okur.
@@ -836,7 +854,10 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             # farklı gerçek olurdu).
             "seri": [[str(t.get("ts_close") or "")[:10], round(float(t.get("r_multiple") or 0.0), 4)]
                      for t in _cts_all if t.get("ts_close")],
-            "beyan": "ADVISORY defter — kapı passes semantiğine girmez (Hafta 3a)"})
+            # RET_SERİ/RET_N (TSK-077): `_ret`in KENDİSİ, yuvarlamasız — PBO'nun ham maddesi `seri`
+            # gibi bir yeniden-türetme DEĞİL, kapının DSR'a verdiği serinin BİREBİR kopyası.
+            "ret_seri": _ret_seri, "ret_n": _ret_n,
+            "beyan": _beyan})
     return passes, gate, why
 
 

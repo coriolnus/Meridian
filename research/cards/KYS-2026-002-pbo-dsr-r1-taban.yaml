@@ -79,7 +79,7 @@ status_eski: registered   # 2026-08-10 Rol-1 — ölçüm kodu YAZILMADI; kart �
 #   "ayrı donmuş-çekim betiği" GEÇMİŞ adaylar için İMKÂNSIZ (veri yok); tek yol İLERİYE DÖNÜK DAMGA.
 #   KARAR: pnl-serisi damgası — `validation.record_candidate` satırına `ret_seri: [float]` (adayın `_ret` listesi, kapının
 #   gördüğü haliyle, yuvarlama YOK) ve `ret_n` eklenir; retro-damga YASAK (eski satırlar None kalır, sayıları raporlanır).
-#   Bedel: defter satırı büyür (aday başına ~n_işlem float; LEDGER_CAP ile sınırlı) — beyanlı.
+#   Bedel: defter satırı büyür (aday başına ~n_işlem float; LEDGER_CAP YALNIZ OKUMA PENCERESİ, dosya sınırsız büyür — TSK-077 keşfi 2026-09-03, kırpma → TSK-128) — beyanlı.
 #   R2 (K+=1, trial_id `kys002_pbo_dsr_taban/r2_dsr_damgali` — koşum gününde k_registry'ye yazılır): damgalı satır
 #   birikince (ADIM-0 eşiği: PBO_MIN_ADAY=8 damgalı aday ≥ bir pencere) DSR yarısı `validation.deflated_sharpe` ile,
 #   pencere-başına, motorun kendi fonksiyonuyla; kill#2'nin ölçek-eşdeğerlik şartı damga ile ortadan kalkar (seri artık
