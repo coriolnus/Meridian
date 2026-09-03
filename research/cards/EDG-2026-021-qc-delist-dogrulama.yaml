@@ -36,8 +36,8 @@ guards:
      (sonuc_021.json: hücre/CI/n/evren-sayıları/PK/beyanlar)"
   - "operatör koşum kanıtı: QC çıktısının TAM JSON'u research/olcumler/qc_dogrulama/'ya konur;
      hüküm kanıtla aynı commit'te"
-k_registry: {registered_at: "2026-08-03T00:40Z", trial_ids: [qc_dogrulama/turnover_ust20]}
-status: measured   # 2026-08-03 ~08:55 UTC — KOŞULDU (defter v3, QC FREE, DUR=None, PK GEÇTİ IC=0.0265 n=335k)
+k_registry: {registered_at: "2026-08-03T00:40Z", trial_ids: [qc_dogrulama/turnover_ust20, qc_dogrulama/turnover_ust20_v4_pit]}  # ikinci deneme 2026-09-03 (kill#1 tanım-eşitleme hakkı)
+status: archived   # 2026-09-03 KARAR (operatör + Rol-1, kartın kill#1 kuralı): ŞÜPHEDE-bilgisiz → ARŞİV; EDG-016 canlıda kalır, ağırlık DEĞİŞMEZ; ikinci koşum hakkı kullanıldı (v4 PIT evren), üçüncü yok. Tarihçe: measured 2026-08-03 (v3)
 # HÜKÜM (Rol-1, kill#1 DALI): @20 üst-%20 evren-fazlası +0,48% CI[−0,78%,+1,85%] · @10 +0,18%
 # CI[−0,55%,+0,92%] — İKİSİ DE CI-0-İÇİ → success karşılanmadı; kartın kendi lafzıyla OTOMATİK
 # KILL DEĞİL: "YAŞAYAN SİNYAL ŞÜPHEDE — Rol-1+operatör birlikte değerlendirir; evren/tanım
@@ -63,3 +63,17 @@ notes: >
 
 # KARAR 2026-09-03 sabah (operatör, Rol-1 işledi): QC girişi (TSK-046, operatör) sonrası İKİNCİ KOŞUM; evren PIT üyelik
 # listesiyle EŞİTLENİR (tanım-eşitleme hakkı kullanıldı — §5-11 / WP-K K3). Eşikler DEĞİŞMEZ; K defterine ikinci deneme yazılır.
+# KOŞUM-2 (2026-09-03 08:00Z, defter v4, QC FREE, Rol-1 Chrome'dan koşturdu; kanıt research/olcumler/qc_dogrulama/sonuc_021_v4.json):
+#   EVREN = PIT S&P 500 üyeliği (as-of gün, research/pit_universe/sp500_uyelik_tarihi.csv sha 39a9202c…) ∩ üye-içi dolar-hacim
+#   üst-250 · delist DAHİL · kapsama (ticker eşleşmesi) toplam 0,915 (2020 0,894 → 2026 0,947) · PIT veri sonu 2026-06-30
+#   (19 panel günü evren dışı, taşınmadı). DUR=None · PK GEÇTİ (IC 0,0241, n=362.732, 1.459 gün). Determinizm sınaması True.
+#   @20 üst-%20 evren-fazlası +0,48% CI95[−0,10%, +1,19%] (n_sembol_gun 72.022, 415 sembol) · @10 +0,25% CI[−0,06%, +0,63%].
+#   Dilim medyan turnover21 0,0233 (v3) → 0,0133 (v4); EDG-016 p75 0,0089 — evren-kompozisyon farkı BÜYÜK ÖLÇÜDE ELENDİ.
+#   Kıyas (EDG-016 sağkalan large-cap): @20 +0,648% · @10 +0,31%. v4 nokta tahmini EDG-016'nın ~%74'ü, aynı yön; CI genişliği
+#   v3'e göre yarıya indi ama 0'ı hâlâ kapsıyor. Kalan tanım sapmaları: shares_outstanding vekili (884 hücre basic_average_shares —
+#   EDG-016'nın reddettiği seviye), ticker eşlemesi %91,5, delist muhasebesi VEKİL (Delisting olayı sorulmadı — ⑤ sondası ayrı).
+# HÜKÜM-2 (Rol-1, kill#1 dalı, 2026-09-03): fazla @20 CI-0-İÇİ → YAŞAYAN SİNYAL ŞÜPHEDE-bilgisiz (arşiv), KILL DEĞİL; ikinci
+#   koşum hakkı KULLANILDI, üçüncü hak yok. Operatörle birlikte değerlendirme (kartın kendi kuralı) — karar günlükte.
+# KARAR (operatör 2026-09-03 08:1xZ, Rol-1 işledi): "Şüphede-bilgisiz, arşive; EDG-016 canlıda kalsın" — delist dünyasında etki 'yok'
+#   denemedi, 'var' da denemedi; sinyal mevcut ağırlığıyla kalır. Kalan tanım sapması (hisse sayısı vekili) ayrı not; delist-bar
+#   kaynağı (TSK-084) açılırsa yeni kart. ⑤ Security Master sondası ayrı çıktı (sonda_delist_8.json), bu hükmü etkilemez.

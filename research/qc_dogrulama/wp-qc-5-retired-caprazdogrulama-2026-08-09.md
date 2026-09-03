@@ -48,3 +48,27 @@ bir emeklilik kararını çelişki AÇARSA ROADMAP'e yazılır (açmadı — aş
 FREE planda `Delisting` olayı / Security Master delist-otoritesi sorgulanıyor mu? Evetse ⑤ trivial olarak
 kapanır (8 sembol deterministik) **ve PARA'nın üçüncü-kaynak boşluğu da QC'de kapatılır.** Massive zaten
 7/8'i bağımsızca doğruladığı için bu sonda artık bir *teyit*, bir *bilinmeyen* değil.
+
+## QC Security Master delist sondası — KOŞULDU 2026-09-03 08:22Z (⑤'in tek kalan adımı)
+Yol: `qc_sonda_delist_8.py` (Rol-1, QC Research, Chrome; `lean cloud push` + mevcut kernel oturumu); çıktı
+`research/olcumler/qc_dogrulama/sonda_delist_8.json`; kıyas `qc_sonda_delist_8_kiyas.py --qc … --json` →
+`sonda_delist_8_kiyas.json`. Delisting olayı iki biçimle sorgulandı; `qc_delist_tarihi` yalnız DELISTED olayından,
+WARNING ayrı alanda, son bar açık VEKİL (uydurma yasağı).
+
+| ticker | yerel delist | QC DELISTED | fark | mutabakat |
+|---|---|---|---|---|
+| ANSS | 2025-07-18 | 2025-07-18 | 0 | AYNI |
+| DFS | 2025-05-19 | 2025-05-22 | +3 | AYRIK |
+| FI | 2025-11-11 | — | — | QC_OLCULEMEDI (bar 2026-07-30'a kadar sürüyor: QC'de süreklilik/yeniden adlandırma) |
+| HES | 2025-07-21 | 2025-07-19 | −2 | AYRIK |
+| IPG | 2025-11-28 | 2025-11-27 | −1 | AYRIK |
+| K | 2025-12-12 | 2025-12-12 | 0 | AYNI |
+| PARA | 2025-08-08 | — | — | QC_OLCULEMEDI (bar 2026-07-30'a kadar sürüyor: devir/yeniden adlandırma; PSKY bilerek evren dışı) |
+| WBA | 2025-08-29 | 2025-08-29 | 0 | AYNI |
+
+Özet: AYNI 3 · AYRIK 3 · QC_OLCULEMEDI 2 · QC_SONDASINDA_YOK 0. Altı olayın altısında QC WARNING = son bar günü,
+DELISTED = son bar + 1 iş günü (tutarlı kalıp). AYRIK'ların üçü de ≤3 gün TARİH farkı, NEDEN çelişkisi değil.
+**Hüküm (Rol-1, operatörle birlikte 2026-09-03):** 8/8 emeklilik kararı ÇELİŞMEDİ — 6'sı QC Security Master'da
+delist olarak doğrulandı (tarih ±3 gün, kaynakların "delist günü" tanımı farkı), 2'si QC'de süreklilik (eski sembol
+işlem görmüyor; yerel karar eski sembolü emekli etmekti — doğru). ⑤ KAPANDI; delist-bar kaynağı kararı (TSK-084)
+bu kayıttan bağımsız, beklemede.

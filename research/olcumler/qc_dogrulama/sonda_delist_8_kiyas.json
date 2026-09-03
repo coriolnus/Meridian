@@ -1,0 +1,129 @@
+{
+  "kaynaklar": {
+    "beyan": "meridian/adapters/data.py::RETIRED_SYMBOLS (ast, ithalsiz)",
+    "vekil_ve_otorite": "research/qc_dogrulama/wp-qc-5-retired-caprazdogrulama-2026-08-09.md",
+    "qc": "qc_sonda_delist_8.py çıktısı"
+  },
+  "beyan": "Hüküm YOKTUR. 'AYRIK' bir kill değil, bir ÇELİŞKİdir — wp-qc-5'in çakışma istisnası (Security Master tarih/neden çelişkisi) buradan tetiklenir ve kararı Rol-1+operatör verir. 'QC_OLCULEMEDI' ölçülemedidir, 'aynı değil' DEĞİLDİR. 'QC_UYARI_TIPI' = yalnız DelistingType.WARNING geldi; WARNING delist gününden bir gün ÖNCE gelir, kıyasa GİRMEZ (uyari_fark_gun yalnız TANIDIR). qc_son_bar_VEKIL de kıyasa GİRMEZ (delist tarihi değildir).",
+  "ozet": {
+    "AYNI": 3,
+    "AYRIK": 3,
+    "QC_UYARI_TIPI": 0,
+    "QC_OLCULEMEDI": 2,
+    "QC_SONDASINDA_YOK": 0
+  },
+  "satirlar": [
+    {
+      "ticker": "ANSS",
+      "retired_delist": "2025-07-18",
+      "uyelik_son_gorulme": "2025-07-09",
+      "massive_delisted_utc": "2025-07-18",
+      "qc_delist_tarihi": "2025-07-18",
+      "qc_uyari_tarihi": "2025-07-17",
+      "uyari_fark_gun": -1,
+      "qc_son_bar_VEKIL": "2025-07-17",
+      "qc_neden": null,
+      "fark_gun": 0,
+      "mutabakat": "AYNI",
+      "kaynak_celiskisi": null
+    },
+    {
+      "ticker": "DFS",
+      "retired_delist": "2025-05-19",
+      "uyelik_son_gorulme": "2025-03-24",
+      "massive_delisted_utc": "2025-05-19",
+      "qc_delist_tarihi": "2025-05-22",
+      "qc_uyari_tarihi": "2025-05-21",
+      "uyari_fark_gun": 2,
+      "qc_son_bar_VEKIL": "2025-05-21",
+      "qc_neden": null,
+      "fark_gun": 3,
+      "mutabakat": "AYRIK",
+      "kaynak_celiskisi": null
+    },
+    {
+      "ticker": "FI",
+      "retired_delist": "2025-11-11",
+      "uyelik_son_gorulme": "2025-11-04",
+      "massive_delisted_utc": "2025-11-11",
+      "qc_delist_tarihi": null,
+      "qc_uyari_tarihi": null,
+      "uyari_fark_gun": null,
+      "qc_son_bar_VEKIL": "2026-07-30",
+      "qc_neden": "Delisting olayı ALINAMADI (Yol-1 iki biçimde de olay vermedi, Yol-2 delist alanı göstermedi) — son_bar_tarihi VEKİLDİR, delist tarihi DEĞİLDİR",
+      "fark_gun": null,
+      "mutabakat": "QC_OLCULEMEDI",
+      "kaynak_celiskisi": null
+    },
+    {
+      "ticker": "HES",
+      "retired_delist": "2025-07-21",
+      "uyelik_son_gorulme": "2025-07-18",
+      "massive_delisted_utc": "2025-07-21",
+      "qc_delist_tarihi": "2025-07-19",
+      "qc_uyari_tarihi": "2025-07-18",
+      "uyari_fark_gun": -3,
+      "qc_son_bar_VEKIL": "2025-07-18",
+      "qc_neden": null,
+      "fark_gun": -2,
+      "mutabakat": "AYRIK",
+      "kaynak_celiskisi": null
+    },
+    {
+      "ticker": "IPG",
+      "retired_delist": "2025-11-28",
+      "uyelik_son_gorulme": "2025-11-11",
+      "massive_delisted_utc": "2025-11-28",
+      "qc_delist_tarihi": "2025-11-27",
+      "qc_uyari_tarihi": "2025-11-26",
+      "uyari_fark_gun": -2,
+      "qc_son_bar_VEKIL": "2025-11-26",
+      "qc_neden": null,
+      "fark_gun": -1,
+      "mutabakat": "AYRIK",
+      "kaynak_celiskisi": null
+    },
+    {
+      "ticker": "K",
+      "retired_delist": "2025-12-12",
+      "uyelik_son_gorulme": "2025-11-28",
+      "massive_delisted_utc": "2025-12-12",
+      "qc_delist_tarihi": "2025-12-12",
+      "qc_uyari_tarihi": "2025-12-11",
+      "uyari_fark_gun": -1,
+      "qc_son_bar_VEKIL": "2025-12-11",
+      "qc_neden": null,
+      "fark_gun": 0,
+      "mutabakat": "AYNI",
+      "kaynak_celiskisi": null
+    },
+    {
+      "ticker": "PARA",
+      "retired_delist": "2025-08-08",
+      "uyelik_son_gorulme": "2025-07-23",
+      "massive_delisted_utc": null,
+      "qc_delist_tarihi": null,
+      "qc_uyari_tarihi": null,
+      "uyari_fark_gun": null,
+      "qc_son_bar_VEKIL": "2026-07-30",
+      "qc_neden": "Delisting olayı ALINAMADI (Yol-1 iki biçimde de olay vermedi, Yol-2 delist alanı göstermedi) — son_bar_tarihi VEKİLDİR, delist tarihi DEĞİLDİR",
+      "fark_gun": null,
+      "mutabakat": "QC_OLCULEMEDI",
+      "kaynak_celiskisi": null
+    },
+    {
+      "ticker": "WBA",
+      "retired_delist": "2025-08-29",
+      "uyelik_son_gorulme": "2025-08-08",
+      "massive_delisted_utc": "2025-08-29",
+      "qc_delist_tarihi": "2025-08-29",
+      "qc_uyari_tarihi": "2025-08-28",
+      "uyari_fark_gun": -1,
+      "qc_son_bar_VEKIL": "2025-08-28",
+      "qc_neden": null,
+      "fark_gun": 0,
+      "mutabakat": "AYNI",
+      "kaynak_celiskisi": null
+    }
+  ]
+}

@@ -1,6 +1,117 @@
 # EDG-2026-021 · OPERATÖR TALİMATI — QC doğrulama defterini koşturma (defter v2)
 
-## §0 — CANLI DURUM (2026-08-03 ~12:05 UTC, Rol-1 oturumu bıraktı)
+> **BU DOSYADA GEÇERLİ OLAN BÖLÜM AŞAĞIDAKİ "## v4" BÖLÜMÜDÜR.** Altındaki §0–§8 v2/v3
+> turlarının kaydıdır: yükleme adımları, dosya listesi ve `for _p in ("a", "b", "c")` hücresi
+> **BAYAT**tır. Gerekçe bölümleri (PK-DUR, fiyat çapraz-kontrolü, daraltma anahtarları) hâlâ
+> geçerlidir ve v4'te de aynen okunur.
+
+---
+
+## v4 (2026-09-03) — PIT evren
+
+**NE DEĞİŞTİ.** İlk koşumun hükmü "ŞÜPHEDE — evren-kompozisyon farkı" idi: evren günlük
+dolar-hacim üst-250 **vekiliydi** ve dilim-medyan turnover21 0,0233 çıktı; EDG-016'nın
+`full_251` statik evreninde p75 0,0089'du. Yani karşılaştırılan iki popülasyon farklıydı ve
+fark yalnız survivorship'e atfedilemedi. Kartın kill#1 dalı bu durum için **ikinci koşum hakkı**
+tanıyor: **tanım-eşitleme** — eşik-esnetme DEĞİL.
+
+v4 evreni **PIT S&P 500 üyeliğiyle** eşitler:
+
+| | v3 | v4 |
+|---|---|---|
+| evren | gün içi dolar-hacim üst-250 | **o günün S&P 500 üyeliği** ∩ üye-içi dolar-hacim üst-250 |
+| kaynak | QC `universe_history` sıralaması | `research/pit_universe/sp500_uyelik_tarihi.csv` → parça `_d` |
+| eşikler/sabitler | — | **AYNEN AYNI** (`ANAHTAR`da yalnız `EVREN_KAYNAGI` eklendi) |
+| dosya | a · b · c | a · **d** · b · c |
+
+**Eşiklere, `ANAHTAR` sabitlerine ve PK bandına yine DOKUNULMAZ** (§4 aynen geçerli).
+
+**QC dosya başına sınırı — TEK KAYNAK: 32.000 karakter** (ÖLÇÜLDÜ, v3 turu). Bu bant o sayının
+tek kaynağıdır; `pit_araliklari_uret.py::QC_TAVAN` ve `v383::QC_KARAKTER_SINIRI` aynı sayıyı
+taşır, `cikti_semasi.md` buraya yönlendirir. Sınırın KARAKTER mi BAYT mı sayıldığı ölçülmedi —
+üretici ve çivi ikisini birden tutar (dar olan kazanır). §2'deki 64.000 **BAYAT**tır.
+İKİ AYRI ARTEFAKT (YB-1, Rol-1 ölçümü 2026-09-03 08:06Z): 32.000 = `.py` DOSYASI başına yükleme sınırı; 64.000 = `research.ipynb`/notebook DOSYASI sınırı (IDE: "File research.ipynb not saved. It exceeds the maximum size of 64000 characters" — koşum çıktısı hücre kaynağına yazılınca ölçüldü). §2'deki 64.000 `.py` sınırı olarak BAYAT'tır; notebook sınırı olarak GERÇEKTİR — ikisi birbirinin yerine geçmez. Bu yüzden büyük JSON çıktıları ayrı küçük defterde (`cikti_v4.ipynb`, `cikti_sonda.ipynb`) alınır.
+
+### Yükleme — Rol-1 yapar, operatör YAPMAZ
+
+Dosyalar QC projesine **Rol-1 tarafından `lean cloud push` ile** yüklenir
+(`qc_defter_021_a.py` · `_d.py` · `_b.py` · `_c.py` ve ⑤ için `qc_sonda_delist_8.py`).
+Projedeki eski `defter_021.py` (v3 parça A) **kaldırılmaz** — exec zinciri yeni adları
+kullanır, eskisine dokunmaz. Operatörün elle dosya oluşturması/yapıştırması gerekmez.
+
+### Operatörün TEK işi — notebook'ta tek hücre
+
+Notebook'taki tüm hücreleri sil (ya da `Restart`), tek hücre bırak:
+
+```python
+for _p in ("a", "d", "b", "c"):
+    exec(open(f"qc_defter_021_{_p}.py").read(), globals())
+```
+
+**Sıra keyfî değildir:** `_b`nin evren seçicisi `_d`nin `pit_uyeler()` yardımcısını çağırır,
+o yüzden `_d` `_b`den ÖNCE gelir. `_d` yüklenmemişse `_b` sessizce v3'e dönmez —
+**RuntimeError** verip durur. Parçalardan biri eksik yüklenirse `_d`nin bütünlük bekçisi
+(`pit_butunluk`) bağırır: yarım evrenle koşum YOKTUR.
+
+**Beklenen çıktı sırası:** `H0 tamam · … | evren kaynağı: pit_sp500` → `MİNİ-SONDA (10g):
+n_kayit=… · PIT havuz=… kapsama=[…]` → panel dilimleri → `KAPSAMA · {yıl: oran} · toplam …`
+→ PK → ölçüm → JSON.
+
+**Sonuç:** `<<<SONUC_021_JSON_BASLANGIC>>>` ve `<<<SONUC_021_JSON_SON>>>` işaretleri
+ARASINDAKİ metni kopyala, **`research/olcumler/qc_dogrulama/sonuc_021_v4.json`** olarak
+kaydet (ya da sohbete yapıştır). v3'ün `sonuc_021.json` dosyasının ÜZERİNE YAZMA — iki koşum
+yan yana okunacak.
+
+### v4'te JSON şemasına EKLENEN alanlar (kalanı `cikti_semasi.md` v3 şemasıdır)
+
+| alan | anlamı |
+|---|---|
+| `defter_surumu` | artık `"v4"` |
+| `evren.kaynak` | `"pit_sp500"` (ya da geri dönülürse `"dolar_hacim"`) |
+| `evren.kapsama` | **yeni blok** — yıl yıl `{gun, pit_uye_ort, qc_eslesen_ort, oran}`, `toplam_oran`, `secici_sayaci`, `veri_sonu`, kaynak sha256 + üretim damgası |
+| `evren.mini_sonda.kapsama` | ilk 5 günün kapsama ön-okuması (7 yıllık çekimden ÖNCE) |
+| `tanimlar.evren` | evren tanımı + PIT kaynak sha'sı + veri aralığı |
+
+**KAPSAMA NEDİR, NE DEĞİLDİR.** QC'nin `symbol.value` alanı *nokta-zamanlı* ticker'dır; yerel
+PIT listesi de ticker taşır. Yeniden adlandırma/devir günlerinde ikisi ayrışabilir ve o isim
+kapsama oranına düşer. **Kartta kapsama EŞİĞİ YOKTUR** → bu blok DUR üretmez, yalnız sayar
+ve `tanim_sapmalari`na düşer. Düşük oran görürsen **koşumu durdurma**, JSON'u ilet.
+
+**PIT verisi pencereden ÖNCE bitiyor.** Kaynak dosya 2026-06-30'da bitiyor, defter penceresi
+2026-07-28'e gidiyor. Aradaki günlerde üyelik **bilinmiyor** ve taşınmadı (uydurma yasağı);
+o günler evren dışında kaldı ve `evren.kapsama.veri_sonu` altında **sayıldı**. Bu beklenen
+davranıştır, arıza değildir.
+
+---
+
+## v4 EK — ⑤ Security Master delist sondası (AYRI hücre, AYRI çıktı)
+
+Bu, `wp-qc-5-retired-caprazdogrulama-2026-08-09.md`nin bıraktığı tek açık adımdır: sekiz emekli
+sembolün (ANSS · DFS · FI · HES · IPG · K · PARA · WBA) delist olayı QC'de sorgulanabiliyor mu?
+Defterle **ilgisi yoktur**, defterin hükmünü etkilemez; ayrı bir notebook hücresinde koşar:
+
+```python
+exec(open("qc_sonda_delist_8.py").read(), globals())
+```
+
+Çıktıyı `<<<SONDA_DELIST_JSON_BASLANGIC>>>` / `<<<SONDA_DELIST_JSON_SON>>>` arasından kopyala,
+**`research/olcumler/qc_dogrulama/sonda_delist_8.json`** olarak kaydet. Kıyas **yerelde**
+yapılır (QC repo dosyalarını göremez):
+
+```bash
+python research/qc_dogrulama/qc_sonda_delist_8_kiyas.py \
+    --qc research/olcumler/qc_dogrulama/sonda_delist_8.json
+```
+
+Sonda **yerel tarih taşımaz**; kıyas betiği yerel tabloyu `RETIRED_SYMBOLS`tan (ast ile, ithal
+etmeden) ve wp-qc-5 tablosundan okur. `qc_delist_tarihi` yalnız **gerçek bir Delisting olayı**
+gelirse dolar; gelmezse `None` + neden yazılır ve `son_bar_tarihi_VEKIL` alanı **vekil** olarak
+ayrı durur — delist tarihi diye okunmaz. "QC'de yol yok" da bir ölçümdür (QC belgesi
+Delisting'in history ile çekilebildiğini söylemiyor — sonda bunu deneyip yazıyor).
+
+---
+
+## §0 — CANLI DURUM (2026-08-03 ~12:05 UTC, Rol-1 oturumu bıraktı) · **BAYAT (v2/v3 turu)**
 
 **QC projesi:** `Fat Apricot Koala` (id 34763939), Research notebook `research.ipynb`, çekirdek
 `Foundation-Py-Default` seçili ve çalışıyor.
@@ -86,9 +197,14 @@ DataFrame+nesne çift normalizasyonu, aylık evren yeniden-örnekleme makinesi.
 
 ---
 
-## 2. Adım adım — **yükleme yöntemi v1'den FARKLI**
+## 2. Adım adım — **yükleme yöntemi v1'den FARKLI** · **BAYAT (v1/v2 turu)**
 
-QuantConnect **dosya başına 64.000 karakter** sınırı koyuyor ve bu sınır bir notebook
+> **BAYAT SAYI UYARISI:** aşağıdaki paragraf "64.000 karakter" diyor. Bu v1/v2 turunun
+> TAHMİNİdir. Ölçülmüş sınır **32.000 karakter**tir (v3 turu) ve tek kaynağı yukarıdaki
+> `## v4` bandıdır; üretici (`pit_araliklari_uret.py::QC_TAVAN`) ve çivi
+> (`v383::QC_KARAKTER_SINIRI`) aynı sayıyı taşır.
+
+QuantConnect **dosya başına 64.000 karakter** (BAYAT — ölçülmüş: 32.000) sınırı koyuyor ve bu sınır bir notebook
 hücresine yapıştırılan metni de vuruyor (ipynb'de JSON şişmesiyle daha da kötü). Bu yüzden
 defter artık **.py dosyası olarak yüklenir**, hücreye yapıştırılmaz.
 

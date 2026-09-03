@@ -1,4 +1,18 @@
-"""EDG-2026-021 · QC DELİST-DAHİL DOĞRULAMA DEFTERİ · v2 (mimari yeniden yazım)
+"""EDG-2026-021 · QC DELİST-DAHİL DOĞRULAMA DEFTERİ · v4 (PIT S&P 500 evreni)
+
+v4 (2026-09-03) — İKİNCİ KOŞUM, TANIM-EŞİTLEME (kart kill#1 dalının açıkça tanıdığı hak;
+eşik-esnetme DEĞİLDİR). İlk koşumun hükmü "ŞÜPHEDE — evren-kompozisyon farkı" idi: evren
+GÜNLÜK dolar-hacim üst-250 vekiliydi, dilim-medyan turnover21 0,0233 çıktı; EDG-016'nın
+full_251 statik evreninde p75 0,0089'du (çok daha spekülatif popülasyon). v4 evreni
+PIT S&P 500 ÜYELİĞİYLE eşitler: `ANAHTAR["EVREN_KAYNAGI"] = "pit_sp500"` → seçici ve
+ölçüm evreni `pit_uyeler(t)` süzgecinden geçer (parça _d). EŞİKLER VE SABİTLER AYNEN
+KALDI — kart guard'ı; tek fark evren KAYNAĞI ve sürüm damgasıdır.
+TICKER EŞLEME SINIRI BEYANLI: QC `symbol.value` NOKTA-ZAMANLI ticker'dır (QC belgesi),
+yerel PIT listesi de ticker taşır; ikisi yeniden adlandırma/devir günlerinde ayrışabilir.
+v4 bunu KAPSAMA ölçümüyle raporlar (`evren.kapsama`) — kartta kapsama EŞİĞİ YOKTUR, bu
+yüzden DUR üretmez, yalnız SAYI basar ve `tanim_sapmalari`na düşer.
+
+--- v2 (mimari yeniden yazım) şerhi aşağıda korunur ---
 
 Kart : research/cards/EDG-2026-021-qc-delist-dogrulama.yaml (eşikler DEĞİŞMEDİ)
 İkiz : EDG-2026-016 · Zemin: research/qc_dogrulama/QC_API_ZEMIN_GERCEGI.md (canlı ÖLÇÜM)
@@ -20,20 +34,24 @@ PAYLAŞILMAZ — durumu değişmiş bir örnekte universe_history sessizce 0 sat
 (v2'nin H2-DUR'unun kök nedeni). QB_BAR (H1) · QB_PANEL (H2, taze) · QB_SPX (H2b, taze).
 H2 panel çekiminden ÖNCE 10 günlük MİNİ-SONDA koşar; satır dönmezse HEMEN DUR der.
 
-KOŞUM — defter QC'nin dosya başına sınırı için ÜÇ PARÇAYA bölündü. Üçünü de projeye yükle
-ve notebook'ta TEK hücrede, AYNI namespace'e sırayla koştur:
+KOŞUM — defter QC'nin dosya başına sınırı için DÖRT PARÇAYA bölündü (v4'te _d eklendi).
+Dördünü de projeye yükle ve notebook'ta TEK hücrede, AYNI namespace'e sırayla koştur:
 
-    for _p in ("a", "b", "c"):
+    for _p in ("a", "d", "b", "c"):
         exec(open(f"qc_defter_021_{_p}.py").read(), globals())
 
-`globals()` ŞART: parçalar tek bir durum sözlüğünü (`S`) paylaşır. Sıra a → b → c'dir;
-_b ve _c önce _a koşmadıysa hata verir. _c (JSON) DUR hâlinde de koşturulmalıdır.
+SIRA a → d → b → c'DİR ve keyfî değildir: _b'nin evren seçicisi _d'nin `pit_uyeler`
+yardımcısını ÇAĞIRIR, o yüzden _d ondan ÖNCE gelir. _d hiçbir şeye bağlı değildir (saf veri
++ saf-Python yardımcı), _a'dan önce de koşabilir; sıra okunabilirlik için a ile başlar.
+`globals()` ŞART: parçalar tek bir durum sözlüğünü (`S`) paylaşır. _b ve _c önce _a
+koşmadıysa hata verir. _c (JSON) DUR hâlinde de koşturulmalıdır.
 
 HÜCRELER — [a] H0 ayarlar · H1 QB_BAR+bar yardımcısı · H1b ölçüm araçları+determinizm |
-[b] H2 evren+MİNİ-SONDA · H2b panel çekimi · H3 fiyat çapraz-kontrolü · H4 öznitelikler+
-süreklilik bekçileri+delist vekili | [c] H5 POZİTİF KONTROL (KAPI) · H6 turnover21 ·
-H7 kesit+dilim+taban · H8 ÖLÇÜM (fazla+CI+maliyet) · H9 alt-dönem · H10 delist muhasebesi ·
-H11 SONUÇ JSON
+[d] PIT üyelik aralıkları (ÜRETİLMİŞ — pit_araliklari_uret.py; elle düzenlenmez) |
+[b] H2 evren+PIT süzgeci+MİNİ-SONDA · H2b panel çekimi+kapsama · H3 fiyat çapraz-kontrolü ·
+H4 öznitelikler+süreklilik bekçileri+delist vekili | [c] H5 POZİTİF KONTROL (KAPI) ·
+H6 turnover21 · H7 kesit+dilim+taban · H8 ÖLÇÜM (fazla+CI+maliyet) · H9 alt-dönem ·
+H10 delist muhasebesi · H11 SONUÇ JSON
 """
 
 # %%
@@ -47,9 +65,15 @@ ANAHTAR = {
     # --- kartın beyanı (DEĞİŞTİRME: değişirse koşum kart-dışı olur) ---
     "PENCERE_BAS":  datetime(2020, 8, 1),
     "PENCERE_SON":  datetime(2026, 7, 28),
-    "EVREN_N":      250,          # ÖLÇÜM evreni: günlük dolar-hacim üst-N
+    "EVREN_N":      250,          # ÖLÇÜM evreni TAVANI: gün içi dolar-hacim üst-N
     "UST_PCT":      0.20,         # kayıtlı dilim: turnover üst %20
     "UFUKLAR":      (10, 20),
+
+    # --- v4 EVREN KAYNAĞI (EŞİK DEĞİL — seçici) ---
+    # "pit_sp500" : evren = PIT S&P 500 üyeliği (as-of gün, parça _d) ∩ gün içi dolar-hacim
+    #               üst-EVREN_N. Tavan KALKMAZ; üyelik kimin YARIŞA GİRDİĞİNİ belirler.
+    # "dolar_hacim": v3'ün davranışı (yalnız üst-EVREN_N) — kıyas/geri dönüş için korunur.
+    "EVREN_KAYNAGI": "pit_sp500",
 
     # --- EDG-016 ile ortak ölçüm sabitleri (ikizlik şartı) ---
     "BLOK":         21,           # blok bootstrap: 21 ARDIŞIK GÖZLEM GÜNÜ
@@ -113,6 +137,7 @@ def _olculemedi(alan, neden):
 
 
 print("H0 tamam ·", ANAHTAR["PENCERE_BAS"].date(), "→", ANAHTAR["PENCERE_SON"].date(),
+      "| evren kaynağı:", ANAHTAR["EVREN_KAYNAGI"],
       "| ölçüm evreni üst-N:", ANAHTAR["EVREN_N"], "| panel üst-N:",
       ANAHTAR["EVREN_N"] * ANAHTAR["PANEL_CARPANI"], "| YIL_LIMIT:", ANAHTAR["YIL_LIMIT"])
 

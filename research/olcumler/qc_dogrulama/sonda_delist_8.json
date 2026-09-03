@@ -1,0 +1,418 @@
+{
+ "sonda": "EDG-2026-021 ⑤ QC Security Master delist sondası",
+ "surum": "1.0",
+ "kosum": {
+  "zaman_utc": "2026-09-03 08:22:42.676318Z",
+  "ortam": "QuantConnect Research (QuantBook)",
+  "qb": "TAZE QuantBook() — yalnız bu sonda için, paylaşılmaz",
+  "pencere": [
+   "2024-01-01",
+   "2026-07-31"
+  ],
+  "cozum_tarihi": "2025-01-02"
+ },
+ "beyan": {
+  "rol": "SAYI/OLGU üretir, hüküm vermez; yerel kıyas ayrı betikte (qc_sonda_delist_8_kiyas.py). Bu JSON yerel tarih TAŞIMAZ.",
+  "id_tarihi": "symbol.id.date = EN ERKEN LİSTELENME tarihi (QC belgesi) — DELİST DEĞİL.",
+  "son_bar_vekili": "son_bar_tarihi bir VEKİLDİR: veri kesintisi/likidite çöküşü ile gerçek delist'i AYIRAMAZ; qc_delist_tarihi alanına yazılmaz.",
+  "history_delisting": "QC belgesi Delisting'in history ile çekilebildiğini SÖYLEMİYOR; Yol-1 bunu ölçer, varsaymaz.",
+  "warning_ayrimi": "qc_delist_tarihi YALNIZ DelistingType.DELISTED olayından dolar. WARNING olayı delist gününden bir gün ÖNCE gelir ve AYRI alana (qc_uyari_tarihi) yazılır — aynı alana yazılsaydı kıyas sistematik 'AYRIK -1 gün' üretir, sahte otorite çelişkisi doğardı."
+ },
+ "semboller": [
+  {
+   "ticker": "ANSS",
+   "qc_delist_tarihi": "2025-07-18",
+   "qc_uyari_tarihi": "2025-07-17",
+   "neden": null,
+   "yollar": {
+    "add_equity": {
+     "oldu": true,
+     "sembol": "ANSS",
+     "deger": "ANSS",
+     "id_tarihi": "1998-01-02"
+    },
+    "history(Delisting, sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "DataFrame"
+    },
+    "history[Delisting](sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 2,
+     "olaylar": [
+      {
+       "tarih": "2025-07-17",
+       "tip": "WARNING"
+      },
+      {
+       "tarih": "2025-07-18",
+       "tip": "DELISTED"
+      }
+     ],
+     "tip": "MemoizingEnumerable[Delisting]"
+    },
+    "ozellikler": {
+     "id_tarihi": "1998-01-02",
+     "id_tarihi_beyani": "EN ERKEN LİSTELENME (QC belgesi) — delist DEĞİL",
+     "security.is_delisted": false,
+     "security.IsDelisted": false
+    },
+    "son_bar": {
+     "oldu": true,
+     "n": 386,
+     "ilk": "2024-01-02",
+     "son": "2025-07-17"
+    }
+   },
+   "son_bar_tarihi_VEKIL": "2025-07-17",
+   "uyari_olay_sayisi": 1,
+   "delist_olay_sayisi": 1
+  },
+  {
+   "ticker": "DFS",
+   "qc_delist_tarihi": "2025-05-22",
+   "qc_uyari_tarihi": "2025-05-21",
+   "neden": null,
+   "yollar": {
+    "add_equity": {
+     "oldu": true,
+     "sembol": "DFS",
+     "deger": "DFS",
+     "id_tarihi": "2007-07-02"
+    },
+    "history(Delisting, sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "DataFrame"
+    },
+    "history[Delisting](sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 2,
+     "olaylar": [
+      {
+       "tarih": "2025-05-21",
+       "tip": "WARNING"
+      },
+      {
+       "tarih": "2025-05-22",
+       "tip": "DELISTED"
+      }
+     ],
+     "tip": "MemoizingEnumerable[Delisting]"
+    },
+    "ozellikler": {
+     "id_tarihi": "2007-07-02",
+     "id_tarihi_beyani": "EN ERKEN LİSTELENME (QC belgesi) — delist DEĞİL",
+     "security.is_delisted": false,
+     "security.IsDelisted": false
+    },
+    "son_bar": {
+     "oldu": true,
+     "n": 348,
+     "ilk": "2024-01-02",
+     "son": "2025-05-21"
+    }
+   },
+   "son_bar_tarihi_VEKIL": "2025-05-21",
+   "uyari_olay_sayisi": 1,
+   "delist_olay_sayisi": 1
+  },
+  {
+   "ticker": "FI",
+   "qc_delist_tarihi": null,
+   "qc_uyari_tarihi": null,
+   "neden": "Delisting olayı ALINAMADI (Yol-1 iki biçimde de olay vermedi, Yol-2 delist alanı göstermedi) — son_bar_tarihi VEKİLDİR, delist tarihi DEĞİLDİR",
+   "yollar": {
+    "add_equity": {
+     "oldu": true,
+     "sembol": "FI",
+     "deger": "FI",
+     "id_tarihi": "1998-01-02"
+    },
+    "history(Delisting, sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "DataFrame"
+    },
+    "history[Delisting](sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "MemoizingEnumerable[Delisting]"
+    },
+    "ozellikler": {
+     "id_tarihi": "1998-01-02",
+     "id_tarihi_beyani": "EN ERKEN LİSTELENME (QC belgesi) — delist DEĞİL",
+     "security.is_delisted": false,
+     "security.IsDelisted": false
+    },
+    "son_bar": {
+     "oldu": true,
+     "n": 646,
+     "ilk": "2024-01-02",
+     "son": "2026-07-30"
+    }
+   },
+   "son_bar_tarihi_VEKIL": "2026-07-30"
+  },
+  {
+   "ticker": "HES",
+   "qc_delist_tarihi": "2025-07-19",
+   "qc_uyari_tarihi": "2025-07-18",
+   "neden": null,
+   "yollar": {
+    "add_equity": {
+     "oldu": true,
+     "sembol": "HES",
+     "deger": "HES",
+     "id_tarihi": "1998-01-02"
+    },
+    "history(Delisting, sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "DataFrame"
+    },
+    "history[Delisting](sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 2,
+     "olaylar": [
+      {
+       "tarih": "2025-07-18",
+       "tip": "WARNING"
+      },
+      {
+       "tarih": "2025-07-19",
+       "tip": "DELISTED"
+      }
+     ],
+     "tip": "MemoizingEnumerable[Delisting]"
+    },
+    "ozellikler": {
+     "id_tarihi": "1998-01-02",
+     "id_tarihi_beyani": "EN ERKEN LİSTELENME (QC belgesi) — delist DEĞİL",
+     "security.is_delisted": false,
+     "security.IsDelisted": false
+    },
+    "son_bar": {
+     "oldu": true,
+     "n": 387,
+     "ilk": "2024-01-02",
+     "son": "2025-07-18"
+    }
+   },
+   "son_bar_tarihi_VEKIL": "2025-07-18",
+   "uyari_olay_sayisi": 1,
+   "delist_olay_sayisi": 1
+  },
+  {
+   "ticker": "IPG",
+   "qc_delist_tarihi": "2025-11-27",
+   "qc_uyari_tarihi": "2025-11-26",
+   "neden": null,
+   "yollar": {
+    "add_equity": {
+     "oldu": true,
+     "sembol": "IPG",
+     "deger": "IPG",
+     "id_tarihi": "1998-01-02"
+    },
+    "history(Delisting, sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "DataFrame"
+    },
+    "history[Delisting](sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 2,
+     "olaylar": [
+      {
+       "tarih": "2025-11-26",
+       "tip": "WARNING"
+      },
+      {
+       "tarih": "2025-11-27",
+       "tip": "DELISTED"
+      }
+     ],
+     "tip": "MemoizingEnumerable[Delisting]"
+    },
+    "ozellikler": {
+     "id_tarihi": "1998-01-02",
+     "id_tarihi_beyani": "EN ERKEN LİSTELENME (QC belgesi) — delist DEĞİL",
+     "security.is_delisted": false,
+     "security.IsDelisted": false
+    },
+    "son_bar": {
+     "oldu": true,
+     "n": 479,
+     "ilk": "2024-01-02",
+     "son": "2025-11-26"
+    }
+   },
+   "son_bar_tarihi_VEKIL": "2025-11-26",
+   "uyari_olay_sayisi": 1,
+   "delist_olay_sayisi": 1
+  },
+  {
+   "ticker": "K",
+   "qc_delist_tarihi": "2025-12-12",
+   "qc_uyari_tarihi": "2025-12-11",
+   "neden": null,
+   "yollar": {
+    "add_equity": {
+     "oldu": true,
+     "sembol": "K",
+     "deger": "K",
+     "id_tarihi": "1998-01-02"
+    },
+    "history(Delisting, sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "DataFrame"
+    },
+    "history[Delisting](sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 2,
+     "olaylar": [
+      {
+       "tarih": "2025-12-11",
+       "tip": "WARNING"
+      },
+      {
+       "tarih": "2025-12-12",
+       "tip": "DELISTED"
+      }
+     ],
+     "tip": "MemoizingEnumerable[Delisting]"
+    },
+    "ozellikler": {
+     "id_tarihi": "1998-01-02",
+     "id_tarihi_beyani": "EN ERKEN LİSTELENME (QC belgesi) — delist DEĞİL",
+     "security.is_delisted": false,
+     "security.IsDelisted": false
+    },
+    "son_bar": {
+     "oldu": true,
+     "n": 489,
+     "ilk": "2024-01-02",
+     "son": "2025-12-11"
+    }
+   },
+   "son_bar_tarihi_VEKIL": "2025-12-11",
+   "uyari_olay_sayisi": 1,
+   "delist_olay_sayisi": 1
+  },
+  {
+   "ticker": "PARA",
+   "qc_delist_tarihi": null,
+   "qc_uyari_tarihi": null,
+   "neden": "Delisting olayı ALINAMADI (Yol-1 iki biçimde de olay vermedi, Yol-2 delist alanı göstermedi) — son_bar_tarihi VEKİLDİR, delist tarihi DEĞİLDİR",
+   "yollar": {
+    "add_equity": {
+     "oldu": true,
+     "sembol": "PARA",
+     "deger": "PARA",
+     "id_tarihi": "2019-12-05"
+    },
+    "history(Delisting, sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "DataFrame"
+    },
+    "history[Delisting](sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "MemoizingEnumerable[Delisting]"
+    },
+    "ozellikler": {
+     "id_tarihi": "2019-12-05",
+     "id_tarihi_beyani": "EN ERKEN LİSTELENME (QC belgesi) — delist DEĞİL",
+     "security.is_delisted": false,
+     "security.IsDelisted": false
+    },
+    "son_bar": {
+     "oldu": true,
+     "n": 646,
+     "ilk": "2024-01-02",
+     "son": "2026-07-30"
+    }
+   },
+   "son_bar_tarihi_VEKIL": "2026-07-30"
+  },
+  {
+   "ticker": "WBA",
+   "qc_delist_tarihi": "2025-08-29",
+   "qc_uyari_tarihi": "2025-08-28",
+   "neden": null,
+   "yollar": {
+    "add_equity": {
+     "oldu": true,
+     "sembol": "WBA",
+     "deger": "WBA",
+     "id_tarihi": "1998-01-02"
+    },
+    "history(Delisting, sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 0,
+     "olaylar": [],
+     "tip": "DataFrame"
+    },
+    "history[Delisting](sym, t0, t1)": {
+     "oldu": true,
+     "n_olay": 2,
+     "olaylar": [
+      {
+       "tarih": "2025-08-28",
+       "tip": "WARNING"
+      },
+      {
+       "tarih": "2025-08-29",
+       "tip": "DELISTED"
+      }
+     ],
+     "tip": "MemoizingEnumerable[Delisting]"
+    },
+    "ozellikler": {
+     "id_tarihi": "1998-01-02",
+     "id_tarihi_beyani": "EN ERKEN LİSTELENME (QC belgesi) — delist DEĞİL",
+     "security.is_delisted": false,
+     "security.IsDelisted": false
+    },
+    "son_bar": {
+     "oldu": true,
+     "n": 416,
+     "ilk": "2024-01-02",
+     "son": "2025-08-28"
+    }
+   },
+   "son_bar_tarihi_VEKIL": "2025-08-28",
+   "uyari_olay_sayisi": 1,
+   "delist_olay_sayisi": 1
+  }
+ ],
+ "olculemedi": [
+  {
+   "alan": "FI.qc_delist_tarihi",
+   "neden": "Delisting olayı ALINAMADI (Yol-1 iki biçimde de olay vermedi, Yol-2 delist alanı göstermedi) — son_bar_tarihi VEKİLDİR, delist tarihi DEĞİLDİR"
+  },
+  {
+   "alan": "PARA.qc_delist_tarihi",
+   "neden": "Delisting olayı ALINAMADI (Yol-1 iki biçimde de olay vermedi, Yol-2 delist alanı göstermedi) — son_bar_tarihi VEKİLDİR, delist tarihi DEĞİLDİR"
+  }
+ ],
+ "ozet": {
+  "sembol": 8,
+  "qc_delist_alinan": 6,
+  "yalniz_uyari": 0,
+  "yalniz_vekil": 2,
+  "hicbir_sey": 0
+ }
+}

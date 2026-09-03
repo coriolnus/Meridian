@@ -1,7 +1,7 @@
-"""EDG-2026-021 · QC defteri v3 — PARÇA C/3 (H5 KAPI … H11 SONUÇ JSON)
+"""EDG-2026-021 · QC defteri v4 — PARÇA C/4 (H5 KAPI … H10b KAPSAMA … H11 SONUÇ JSON)
 
-TEK BAŞINA KOŞMAZ. Sıra: _a.py → _b.py → _c.py, hepsi AYNI namespace'e.
-H11 (JSON) DUR hâlinde de koşar — bu parça HER HÂLÜKÂRDA koşturulmalıdır.
+TEK BAŞINA KOŞMAZ. Sıra: _a.py → _d.py → _b.py → _c.py, hepsi AYNI namespace'e.
+H10b (kapsama) ve H11 (JSON) DUR hâlinde de koşar — bu parça HER HÂLÜKÂRDA koşturulmalıdır.
 """
 
 if "S" not in globals() or "gun_blok_bootstrap_ort" not in globals():
@@ -312,6 +312,83 @@ if _kapi("10"):
 
 
 # %%
+# --- H10b — v4 KAPSAMA ÖLÇÜMÜ (KAPI YOK: DUR hâlinde de koşar) ----------------------
+# Sorulan: yerel PIT listesindeki ticker, QC'nin o günkü evreninde KAÇ kez bulundu? Kaçak
+# kaynakları: yeniden adlandırma/devir (QC symbol.value NOKTA-ZAMANLI ticker'dır), QC'de o gün
+# fundamental kaydı olmayan isim, PANEL_N kırpması. KARTTA KAPSAMA EŞİĞİ YOKTUR → bu blok DUR
+# ÜRETMEZ, yalnız SAYAR (uydurma eşik yasak); okuması Rol-1'dedir.
+
+if globals().get("PIT_MOD") and S.get("panel") is not None:
+    _yil = {}
+    for _ts, _n_uye, _n_es in pit_gun_muh:
+        _r = _yil.setdefault(str(pd.Timestamp(_ts).year),
+                             {"gun": 0, "pit_uye_top": 0, "qc_eslesen_top": 0})
+        _r["gun"] += 1
+        _r["pit_uye_top"] += int(_n_uye)
+        _r["qc_eslesen_top"] += int(_n_es)
+    # BEDEL YASASI: yukarıdaki eşleşme KIRPMADAN ÖNCE sayılır. Panele giren satır ise
+    # üst-PANEL_N kırpmasından SONRAdır ve o gün üye sayısı (~503) PANEL_N'i (500) AŞABİLİR —
+    # yani en düşük dolar-hacimli birkaç üye panele hiç girmez. Kazancı ölçüp bedeli ölçmemek
+    # sessiz körlüktür; ikisi de yıl yıl basılır. (Ölçüm evreni üye-içi üst-EVREN_N olduğu için
+    # kırpılanlar 250. sıranın ÇOK altındadır; yine de SAYILIR, varsayılmaz.)
+    _Bk = S["panel"]
+    _yk = _Bk["tarih"].dt.year.astype(str)
+    _gun_y = _Bk.groupby(_yk)["tarih"].nunique()
+    _pu_y = _Bk.groupby(_yk)["pit_uye"].sum()
+    _eu_y = _Bk.groupby(_yk)["evren_uye"].sum()
+    for _y, _r in _yil.items():
+        _r["pit_uye_ort"] = _r["pit_uye_top"] / max(1, _r["gun"])
+        _r["qc_eslesen_ort"] = _r["qc_eslesen_top"] / max(1, _r["gun"])
+        _r["oran"] = _r["qc_eslesen_top"] / max(1, _r["pit_uye_top"])
+        # PAYDA TEKTİR: `gun` (kesitin kurulduğu gün sayısı). İki *_ort farklı tabana
+        # bölünseydi `panel_kirpma_ort` iki ayrı paydadan çıkarma yapardı. `panel_gun` ayrıca
+        # basılır: ikisi ayrışırsa fiyatı okunamayan (px yok/≤0) günler var demektir.
+        _g = max(1, _r["gun"])
+        _r["panel_gun"] = int(_gun_y.get(_y, 0))
+        _r["panel_uye_ort"] = float(_pu_y.get(_y, 0)) / _g       # kırpmadan SONRA
+        _r["evren_uye_ort"] = float(_eu_y.get(_y, 0)) / _g       # ölçüme giren
+        _r["panel_kirpma_ort"] = _r["qc_eslesen_ort"] - _r["panel_uye_ort"]
+    _pgun = sorted({str(pd.Timestamp(t).date()) for t in S["panel"]["tarih"].unique()})
+    _veri_disi = [g for g in _pgun if not pit_veri_icinde(g)]
+    S["kapsama"] = {
+        "beyan": "KARTTA KAPSAMA EŞİĞİ YOK → DUR üretmez, yalnız SAYAR. Oran = QC evreninde "
+                 "eşleşen / o günün PIT üye sayısı (gün gün toplanmış, KIRPMADAN ÖNCE). "
+                 "panel_uye_ort kırpmadan SONRA, evren_uye_ort ölçüme GİREN satırdır.",
+        "kaynak": PIT_KAYNAK, "kaynak_sha256": PIT_KAYNAK_SHA256,
+        "uretim_damgasi": PIT_URETIM_DAMGASI, "butunluk": S.get("pit_butunluk"),
+        "pit_havuz_ticker": len(PIT_HAVUZ), "yil": _yil,
+        "toplam_oran": (sum(r["qc_eslesen_top"] for r in _yil.values())
+                        / max(1, sum(r["pit_uye_top"] for r in _yil.values()))),
+        "secici_sayaci": dict(PIT_SECICI_SAYAC),
+        "uyelik_arama_damgasi": "Üyelik araması QC PANEL ZAMAN DAMGASIYLA yapılır "
+                                "(pit_uyeler(ts), ts = universe_history indeksinden). Ölçülen "
+                                "şey tarihin İNDEKSTEN geldiğidir; damganın PİYASA gününe eşit "
+                                "olduğu DEĞİL — kaymayı `fiyat_capraz_kontrol."
+                                "kayma_taramasi`/`en_iyi_kayma` ölçer (ilk koşumda 1g idi). "
+                                "Üyelik yılda 12-19 kez değiştiği için 1 günlük kayma yalnız o "
+                                "değişim günlerinde üyeliği bir gün geç okur — kapsamanın %100 "
+                                "olmamasının cevap adaylarından biridir.",
+        "eslesme_siniri": "QC `symbol.value` NOKTA-ZAMANLI ticker'dır (QC belgesi); yerel PIT "
+                          "listesi de ticker taşır. Yeniden adlandırma/devir günlerinde iki "
+                          "taraf AYRIŞABİLİR; kayıp isim orana DÜŞER — ÖLÇÜLÜR, düzeltilmez.",
+        "veri_sonu": {"pit_veri_son": PIT_VERI_SON,
+                      "pencere_son": str(ANAHTAR["PENCERE_SON"].date()),
+                      "panel_gunu_veri_disinda": len(_veri_disi),
+                      "beyan": "PIT kaynağı pencere sonundan önce bitiyorsa aşan günlerde "
+                               "üyelik BİLİNMİYOR; taşıma YAPILMADI (uydurma yasağı) → o "
+                               "günler evren dışında kaldı ve kesitten düştü."},
+    }
+    print("   KAPSAMA ·", json.dumps({y: round(r["oran"], 4) for y, r in sorted(_yil.items())},
+                                     ensure_ascii=False),
+          "· toplam", round(S["kapsama"]["toplam_oran"], 4),
+          "· veri-dışı panel günü", len(_veri_disi))
+    if _veri_disi:
+        _sapma("pit_veri_sonu", f"{len(_veri_disi)} panel günü PIT verisi DIŞINDA",
+               f"PIT kaynağı {PIT_VERI_SON}'da bitiyor, pencere "
+               f"{ANAHTAR['PENCERE_SON'].date()}'e gidiyor; taşıma YAPILMADI")
+
+
+# %%
 # --- H11 — TEK JSON BLOĞU (şema: cikti_semasi.md) -----------------------------------
 # DUR hâlinde de koşar: operatörün elinde iletilecek kanıt olur. JSON'da HÜKÜM YOKTUR.
 
@@ -346,11 +423,14 @@ def _json_guvenli(o):
 CIKTI = {
     "kart": "EDG-2026-021",
     "aile": "qc_delist_dogrulama",
-    "defter_surumu": "3.0",
+    "defter_surumu": "v4",
     "defter_mimarisi": "TEK KAYNAK add_universe+universe_history → list[Fundamental]; evren, "
                        "fiyat, hacim, as-of hisse aynı çağrıdan. v1'in history(Fundamental)/"
                        "CoarseFundamental/get_fundamental yolları FREE hesapta BOŞ dönüyor "
-                       "(QC_API_ZEMIN_GERCEGI.md) → çıkarıldı.",
+                       "(QC_API_ZEMIN_GERCEGI.md) → çıkarıldı. v4: evren KAYNAĞI değişti — "
+                       "dolar-hacim vekili yerine PIT S&P 500 üyeliği (yerel üyelik dosyası, "
+                       "parça _d). EŞİK VE SABİTLER v3 ile AYNI (kart guard'ı); ikinci koşum "
+                       "TANIM-EŞİTLEMEDİR, eşik-esnetme DEĞİLDİR.",
     "defter_sha256": None,
     "defter_sha256_neden": "koşan defter kendi kaynağını okumaz; sha256 REPO tarafında alınır",
     "rol": "ölçüm defteri — SAYI üretir, HÜKÜM VERMEZ. Eşik içermez. Hüküm Rol-1'de.",
@@ -366,10 +446,20 @@ CIKTI = {
     "DUR": S.get("DUR"),
     "pozitif_kontrol": S.get("pk"),
     "evren": {
-        "beyan": f"GÜNLÜK dolar-hacim üst-{ANAHTAR['EVREN_N']} — DELİST DAHİL (geçmiş günün QC "
-                 "evren kesiti; o gün borsada olan, bugün olmayan isimler İÇERİDEDİR). Panel "
-                 f"üst-{ANAHTAR['EVREN_N'] * ANAHTAR['PANEL_CARPANI']} taşır; fazlası pencere "
-                 "sürekliliği TAMPONUDUR, ölçüm satırı yalnız evren_uye olanlardır.",
+        "kaynak": ANAHTAR.get("EVREN_KAYNAGI"),
+        "beyan": (
+            (f"PIT S&P 500 ÜYELİĞİ (as-of gün, yerel üyelik dosyası) ∩ ÜYE-İÇİ dolar-hacim "
+             f"üst-{ANAHTAR['EVREN_N']} — DELİST DAHİL (geçmiş günün QC evren kesiti; o gün "
+             "borsada olan, bugün olmayan isimler İÇERİDEDİR). v3'ün dolar-hacim VEKİLİ "
+             "bırakıldı: ilk koşumun hükmü 'evren-kompozisyon farkı' idi ve ikinci koşum hakkı "
+             "TANIM-EŞİTLEME içindir. Eşleme TICKER üzerindendir; kapsama `evren.kapsama`da "
+             "SAYILIDIR (kartta kapsama eşiği YOK → DUR üretmez).")
+            if globals().get("PIT_MOD") else
+            (f"GÜNLÜK dolar-hacim üst-{ANAHTAR['EVREN_N']} — DELİST DAHİL (geçmiş günün QC "
+             "evren kesiti; o gün borsada olan, bugün olmayan isimler İÇERİDEDİR).")
+        ) + (f" Panel üst-{ANAHTAR['EVREN_N'] * ANAHTAR['PANEL_CARPANI']} taşır; fazlası "
+             "pencere sürekliliği TAMPONUDUR, ölçüm satırı yalnız evren_uye olanlardır."),
+        "kapsama": S.get("kapsama"),
         "mini_sonda": S.get("mini_sonda"),
         "spx_uyelik_denemesi": S.get("spx_uyelik_denemesi"),
         "panel_muhasebesi": S.get("panel_muhasebe"),
@@ -378,6 +468,15 @@ CIKTI = {
     },
     "fiyat_capraz_kontrol": S.get("fiyat_capraz_kontrol"),
     "tanimlar": {
+        "evren": (
+            ("evren = PIT S&P 500 üyeliği (as-of gün) ∩ üye-içi dolar-hacim üst-"
+             f"{ANAHTAR['EVREN_N']}; kaynak {globals().get('PIT_KAYNAK')} "
+             f"sha256 {globals().get('PIT_KAYNAK_SHA256')}, veri "
+             f"{globals().get('PIT_VERI_BAS')} → {globals().get('PIT_VERI_SON')} "
+             "(AS-OF adım fonksiyonu: bir satır sonraki satıra kadar geçerli; veri sonundan "
+             "sonrası TAŞINMAZ)")
+            if globals().get("PIT_MOD") else
+            f"evren = gün içi dolar-hacim üst-{ANAHTAR['EVREN_N']} (SPX süzgeç-vekili)"),
         "turnover21": "medyan21(hacim) / shares_outstanding(as-of t)",
         "rvol20": "hacim(t)/SMA20(hacim)[t] — payda BUGÜNÜ İÇERİR (meridian.indicators)",
         "dilim": f"gün içi turnover21 yüzdelik rütbesi > {1 - ANAHTAR['UST_PCT']}",
@@ -418,7 +517,7 @@ CIKTI = {
 print("\n" + "=" * 78)
 print("EDG-2026-021 · SONUÇ JSON")
 print("KOPYALANACAK ŞEY: aşağıdaki iki işaret ARASINDAKİ metin (işaretler DAHİL DEĞİL).")
-print("kaydet: research/olcumler/qc_dogrulama/sonuc_021.json")
+print("kaydet: research/olcumler/qc_dogrulama/sonuc_021_v4.json")
 print("=" * 78)
 print("<<<SONUC_021_JSON_BASLANGIC>>>")
 print(json.dumps(_json_guvenli(CIKTI), ensure_ascii=False, indent=2, sort_keys=False))

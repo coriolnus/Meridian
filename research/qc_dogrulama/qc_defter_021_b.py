@@ -1,27 +1,70 @@
-"""EDG-2026-021 · QC defteri v3 — PARÇA B/3 (H2 evren+mini-sonda · H2b panel · H3 fiyat · H4)
+"""EDG-2026-021 · QC defteri v4 — PARÇA B/4 (H2 evren+PIT+mini-sonda · H2b panel · H3 · H4)
 
-TEK BAŞINA KOŞMAZ. Sıra: _a.py → _b.py → _c.py, hepsi AYNI namespace'e:
-    for _p in ("a", "b", "c"):
+TEK BAŞINA KOŞMAZ. Sıra: _a.py → _d.py → _b.py → _c.py, hepsi AYNI namespace'e:
+    for _p in ("a", "d", "b", "c"):
         exec(open(f"qc_defter_021_{_p}.py").read(), globals())
+
+v4 PIT süzgeci İKİ yerdedir ve ikisi de gereklidir: (1) seçicide TARİHSİZ havuz (QC seçicisine
+gün geçmez — `f.end_time` ÖLÇÜLMEDİ, varsayılmaz), (2) H2b'de GÜN GÜN as-of (`pit_uyeler(ts)`;
+tarih Series indeksinden gelir — ÖLÇÜLDÜ). `evren_uye` sütununu İKİNCİSİ belirler.
 """
 
 if "ANAHTAR" not in globals() or "S" not in globals():
-    raise RuntimeError("ÖNCE qc_defter_021_a.py koşmalı (aynı namespace) — sıra: a → b → c")
+    raise RuntimeError("ÖNCE qc_defter_021_a.py koşmalı (aynı namespace) — sıra: a → d → b → c")
+PIT_MOD = (ANAHTAR.get("EVREN_KAYNAGI") == "pit_sp500")
+if PIT_MOD and "pit_uyeler" not in globals():
+    raise RuntimeError("EVREN_KAYNAGI='pit_sp500' ama qc_defter_021_d.py YÜKLENMEDİ — "
+                       'sıra: for _p in ("a", "d", "b", "c")')
 S["_parca_b_yuklendi"] = True
 
 # %%
 # --- H2 — PANEL: universe_history YIL YIL (TEK KAYNAK) ------------------------------
-# DELİST-DAHİLLİK KENDİLİĞİNDEN: panel geçmiş bir GÜNÜN kesitinden kurulur (bugünün listesi
-# geçmişe taşınmaz). TAMPON: seçici üst-(EVREN_N×PANEL_CARPANI) alır, ÖLÇÜM evreni yine
+# DELİST-DAHİLLİK KENDİLİĞİNDEN: panel geçmiş bir GÜNÜN kesitinden kurulur. TAMPON: seçici
+# üst-(EVREN_N×PANEL_CARPANI) alır, ÖLÇÜM evreni yine üst-EVREN_N'dir (gerekçe cikti_semasi §5.1).
 
 if _kapi("2"):
     PANEL_N = int(ANAHTAR["EVREN_N"] * ANAHTAR["PANEL_CARPANI"])
 
+    # PIT HAVUZU (tarihsiz üst-küme): pencerede HERHANGİ bir gün üye olmuş ticker'lar.
+    # ARALIKLARDAN kurulur, gün örneklemesiyle DEĞİL — örnekleme iki örnek arasında doğup ölen
+    # kısa üyelikleri sessizce düşürürdü. Kesin as-of süzgeç H2b'dedir.
+    PIT_HAVUZ = set()
+    if PIT_MOD:
+        _o0 = pit_gun_ofseti(ANAHTAR["PENCERE_BAS"])
+        _o1 = pit_gun_ofseti(ANAHTAR["PENCERE_SON"])
+        PIT_HAVUZ = {t for t, ar in PIT_ARALIKLARI.items()
+                     if any(b >= _o0 and a <= _o1 for a, b in ar)}
+        S["pit_butunluk"] = pit_butunluk()
+        if not S["pit_butunluk"]["tam"]:
+            S["DUR"] = f"PIT parçaları EKSİK: {S['pit_butunluk']}"
+            _olculemedi("pit_araliklari", S["DUR"])
+
+    PIT_SECICI_SAYAC = {"cagri": 0, "ham_toplam": 0, "havuz_gecen": 0, "ticker_hatasi": 0}
+
+    def _tic(f):
+        """Fundamental → nokta-zamanlı ticker. QC belgesi: `symbol.value` POINT-IN-TIME ticker."""
+        try:
+            return str(f.symbol.value)
+        except Exception:
+            # sessiz-yutma: yabancı runtime alanı; yutulmuyor SAYILIYOR — ticker_hatasi
+            # kapsama JSON'una (secici_sayaci) düşer ve boş ticker havuz süzgecinden geçemez
+            PIT_SECICI_SAYAC["ticker_hatasi"] += 1
+            return ""
+
     def _secici(fundamental):
         try:
-            s = sorted(fundamental, key=lambda f: -(f.dollar_volume or 0.0))
+            ham = list(fundamental)
         except Exception:
-            s = list(fundamental)
+            ham = []
+        PIT_SECICI_SAYAC["cagri"] += 1
+        PIT_SECICI_SAYAC["ham_toplam"] += len(ham)
+        if PIT_MOD:
+            ham = [f for f in ham if _tic(f) in PIT_HAVUZ]
+            PIT_SECICI_SAYAC["havuz_gecen"] += len(ham)
+        try:
+            s = sorted(ham, key=lambda f: -(f.dollar_volume or 0.0))
+        except Exception:
+            s = ham
         return [f.symbol for f in s[:PANEL_N]]
 
     # TAZE-QB (canlı ölçüm): evren örneği burada, SIFIRDAN kurulur. Üzerinde başka hiçbir
@@ -48,18 +91,42 @@ if _kapi("2"):
     # KENDİNİ-DOĞRULAYAN AÇILIŞ: 7 yıllık boş çekim bir daha yaşanmasın diye panelden ÖNCE
     # aynı örnek + aynı seçiciyle SONDA_GUN günlük mini-sonda koşar. Satır yoksa HEMEN DUR.
     sonda = {"pencere_gun": ANAHTAR["SONDA_GUN"], "n_kayit": None, "neden": None,
+             "evren_kaynagi": ANAHTAR.get("EVREN_KAYNAGI"),
+             "pit_havuz_ticker": (len(PIT_HAVUZ) if PIT_MOD else None),
+             "kapsama": None,
              "beyan": "aynı QB_PANEL örneği ve aynı seçiciyle; panel çekimiyle birebir aynı yol"}
     try:
         _ss = QB_PANEL.universe_history(
             u, ANAHTAR["PENCERE_BAS"],
             ANAHTAR["PENCERE_BAS"] + timedelta(days=int(ANAHTAR["SONDA_GUN"])))
         sonda["n_kayit"] = _sonda_say(_ss)
+        if PIT_MOD and sonda["n_kayit"]:
+            # KAPSAMA ÖN-OKUMASI: 7 yıllık çekimden ÖNCE ticker eşlemesi tutuyor mu?
+            _kap = []
+            for _a2, _d2 in list(_ss.items()):
+                try:
+                    _lst = list(_d2)
+                except Exception:
+                    # sessiz-yutma: mini-sonda ÖN-OKUMADIR; tanınmayan kap o günü atlar,
+                    # asıl kapı n_kayit==0 → DUR'dur ve o kapı bu döngünün DIŞINDADIR
+                    continue
+                if not _lst:
+                    continue
+                _ts = _a2[-1] if isinstance(_a2, tuple) else _a2
+                _uy = pit_uyeler(_ts)
+                if not _uy:
+                    continue
+                _es = len({_tic(f) for f in _lst} & _uy)
+                _kap.append({"gun": str(_ts)[:10], "pit_uye": len(_uy), "qc_eslesen": _es,
+                             "oran": round(_es / max(1, len(_uy)), 4)})
+            sonda["kapsama"] = _kap[:5]
         del _ss
     except Exception as e:
         sonda["neden"] = f"{type(e).__name__}: {e}"
     S["mini_sonda"] = sonda
     print(f"   MİNİ-SONDA ({ANAHTAR['SONDA_GUN']}g): n_kayit={sonda['n_kayit']} "
-          f"neden={sonda['neden']}")
+          f"neden={sonda['neden']} · PIT havuz={sonda['pit_havuz_ticker']} "
+          f"kapsama={sonda['kapsama']}")
     if not sonda["n_kayit"]:
         S["DUR"] = ("QuantBook örneği evren döndürmüyor — taze örnek kuralı ihlal/etkisiz. "
                     f"{ANAHTAR['SONDA_GUN']} günlük mini-sonda 0 kayıt verdi "
@@ -121,6 +188,7 @@ if _kapi("2b"):
                 rap[yol] = f"<yok: {type(e).__name__}>"
         return rap
 
+    pit_gun_muh = []          # (ts, o günün PIT üye sayısı, QC'de eşleşen sayı) → kapsama
     dilimler = []
     _t = ANAHTAR["PENCERE_BAS"]
     while _t <= ANAHTAR["PENCERE_SON"]:
@@ -167,20 +235,31 @@ if _kapi("2b"):
                       "\n   → panel fiyat alanı:", S["fiyat_alani"], flush=True)
             PXA = S["fiyat_alani"]
             ts = pd.Timestamp(anahtar[-1] if isinstance(anahtar, tuple) else anahtar).normalize()
+            # PIT: o GÜNÜN as-of üyeliği. universe_history seçiciyi UYGULAMAYABİLİR (ham
+            # liste — n_ham_medyan ölçer) → havuz süzgeci BURADA DA; yoksa v4 sessizce v3.
+            uyeler_bugun = pit_uyeler(ts) if PIT_MOD else None
             # 1) TÜM üyeden yalnız dollar_volume okunur ve üst-N kırpılır (nesne tutulmaz)
-            aday = []
+            aday, n_pit_gun = [], 0
             for f in lst:
                 dv = _f_sayi(f, "dollar_volume")
                 if dv is None or dv <= 0:
                     continue
-                aday.append((dv, f))
+                tk = _tic(f) if PIT_MOD else None
+                if PIT_MOD:
+                    if tk not in PIT_HAVUZ:
+                        continue
+                    if tk in uyeler_bugun:
+                        n_pit_gun += 1
+                aday.append((dv, f, tk))
             if not aday:
                 continue
             n_ham.append(len(lst))
             n_gun += 1
+            if PIT_MOD:
+                pit_gun_muh.append((ts, len(uyeler_bugun), n_pit_gun))
             aday.sort(key=lambda z: -z[0])
             # 2) kalan alanlar YALNIZ üst-N için okunur
-            for dv, f in aday[:PANEL_N]:
+            for dv, f, tk in aday[:PANEL_N]:
                 px = _f_sayi(f, PXA)
                 if px is None or px <= 0:
                     continue
@@ -193,12 +272,13 @@ if _kapi("2b"):
                     except Exception:
                         TICKER[sid] = sid
                 sh, sk = _f_hisse(f)
-                kayit.append((ts, sid, dv, px, _f_sayi(f, "volume"), sh, sk))
+                kayit.append((ts, sid, dv, px, _f_sayi(f, "volume"), sh, sk,
+                              bool(PIT_MOD and tk in uyeler_bugun)))
         del seri, ogeler
         gc.collect()
         if kayit:
             d = pd.DataFrame(kayit, columns=["tarih", "sid", "dolar_hacim", "fiyat",
-                                            "hacim", "shares", "shares_kaynak"])
+                                            "hacim", "shares", "shares_kaynak", "pit_uye"])
             for c, tp in (("dolar_hacim", "float64"), ("fiyat", "float64"),
                           ("hacim", "float64"), ("shares", "float64"),
                           ("shares_kaynak", "int8")):
@@ -224,10 +304,19 @@ if _kapi("2b"):
         gc.collect()
         B = B.drop_duplicates(subset=["sid", "tarih"], keep="first")
         B = B.sort_values(["tarih", "sid"], kind="mergesort").reset_index(drop=True)
-        # ÖLÇÜM EVRENİ: gün içi dolar-hacim rütbesi ≤ EVREN_N (tampon HARİÇ)
+        # ÖLÇÜM EVRENİ. v3: gün içi dolar-hacim rütbesi ≤ EVREN_N. v4/PIT: ÖNCE o günün PIT
+        # üyeliği, SONRA ÜYE-İÇİ dolar-hacim rütbesi ≤ EVREN_N (rütbe panel geneli üzerinden
+        # alınsaydı üst-250 PIT dışı isimlerle dolar, kesit sessizce daralırdı).
         B["dv_rutbe"] = B.groupby("tarih")["dolar_hacim"].rank(ascending=False,
                                                               method="first").astype("int32")
-        B["evren_uye"] = (B["dv_rutbe"] <= ANAHTAR["EVREN_N"]).to_numpy()
+        if PIT_MOD:
+            _uy = B["pit_uye"].to_numpy()
+            B["pit_rutbe"] = (B[_uy].groupby("tarih")["dolar_hacim"]
+                              .rank(ascending=False, method="first")
+                              .reindex(B.index).fillna(10 ** 9).astype("int64"))
+            B["evren_uye"] = (_uy & (B["pit_rutbe"] <= ANAHTAR["EVREN_N"]).to_numpy())
+        else:
+            B["evren_uye"] = (B["dv_rutbe"] <= ANAHTAR["EVREN_N"]).to_numpy()
         B = B.sort_values(["sid", "tarih"], kind="mergesort").reset_index(drop=True)
         S["panel"] = B
         S["sym_kutugu"] = SYM_KUTUGU
@@ -290,16 +379,22 @@ if _kapi("2b"):
             spx["neden"] = f"{type(e).__name__}: {e}"
         if not spx["basarili"]:
             print(f"   SPX/ETF üyeliği ALINAMADI ({spx['neden']})")
-        _sapma("large_cap_suzgeci", f"günlük dolar-hacim üst-{ANAHTAR['EVREN_N']} (delist dahil)",
-               "evren birebir SPX üyeliği DEĞİL, süzgeç-vekilidir (kartın izin verdiği yol); "
-               f"SPX kesişim tanısı: {spx.get('n_kesisim')}")
+        _sapma("large_cap_suzgeci",
+               (f"PIT S&P 500 üyeliği (as-of gün) ∩ üye-içi dolar-hacim üst-{ANAHTAR['EVREN_N']}"
+                if PIT_MOD else f"günlük dolar-hacim üst-{ANAHTAR['EVREN_N']}") + " · delist DAHİL",
+               (f"v4 TANIM-EŞİTLEME: dolar-hacim VEKİLİ bırakıldı, evren yerel PIT dosyasından "
+                f"(sha {PIT_KAYNAK_SHA256[:12]}…). Eşleme TICKER üzerinden; kapsama oranı "
+                "`evren.kapsama`da SAYILI."
+                if PIT_MOD else
+                "evren birebir SPX üyeliği DEĞİL, süzgeç-vekilidir (kartın izin verdiği yol).")
+               + f" QC SPX/ETF kesişim tanısı: {spx.get('n_kesisim')}")
         S["spx_uyelik_denemesi"] = spx
 
 
 # %%
 # --- H3 — FİYAT SERİSİ ÇAPRAZ-KONTROLÜ (zaman kayması + bölünme) --------------------
 # SORU (varsayım değil, ÖLÇÜM): panelin fiyat serisi ileri getiri için yeterli mi?
-#  (a) ZAMAN KAYMASI ölçümü bozmaz — öznitelik de ileri getiri de AYNI indeksten kurulur;
+#  (gerekçenin tamamı: cikti_semasi.md §6 / OPERATOR_TALIMATI.md §5)
 
 if _kapi("3"):
     B = S["panel"]
@@ -423,7 +518,7 @@ if _kapi("3"):
 # %%
 # --- H4 — ÖZNİTELİKLER + SÜREKLİLİK BEKÇİLERİ + DELİST VEKİLİ -----------------------
 # EDG-016 / meridian.indicators birebir: rvol20(t)=hacim(t)/SMA20(hacim)[t] (payda BUGÜNÜ
-# İÇERİR) · med_hacim21(t)=medyan(hacim[t-20..t]) · fwd_h(t)=px(t+h)/px(t)-1. Geriye
+# İÇERİR) · med_hacim21(t)=medyan(hacim[t-20..t]) · fwd_h(t)=px(t+h)/px(t)-1.
 
 if _kapi("4"):
     B = S["panel"]
@@ -454,9 +549,8 @@ if _kapi("4"):
         B[f"fwd{h}"] = ileri.where(okf)
         bekci[f"fwd{h}_span_kapatti"] = int((ileri.notna() & ~okf).sum())
 
-    # DELİST VEKİLİ: erken biten sembol "çıkış adayı"dır ama çıkış SEBEBİ panelden ayırt
-    # edilemez (delist mi, dolar-hacim sıralamasından düşüş mü). Ayırt edici ÇIKIŞ RÜTBESİ:
-    # üst-EVREN_N içindeyken kaybolan isim, kuyrukta solarak çıkandan delist'e yakındır.
+    # DELİST VEKİLİ: erken biten sembol "çıkış adayı"dır; çıkış SEBEBİ panelden ayırt edilemez.
+    # Ayırt edici ÇIKIŞ RÜTBESİ (gerekçe: cikti_semasi.md §11).
     son_bar = B.groupby("sid")["tarih"].max()
     panel_son = B["tarih"].max()
     esik = panel_son - pd.Timedelta(days=int(ANAHTAR["DELIST_TAMPON_GUN"] * 1.6))

@@ -1,4 +1,4 @@
-# EDG-2026-021 · QC doğrulama defteri — ÇIKTI ŞEMASI (`sonuc_021.json`) · defter v3.0
+# EDG-2026-021 · QC doğrulama defteri — ÇIKTI ŞEMASI · defter **v4** (v3 gövdesi + v4 bandı)
 
 Kart: `research/cards/EDG-2026-021-qc-delist-dogrulama.yaml`
 Defter: **üç parça** — `qc_defter_021_a.py` · `_b.py` · `_c.py` (H11/JSON `_c`'dedir)
@@ -13,7 +13,82 @@ parça yüklenmediyse hata verir. **`_c` DUR hâlinde de koşturulmalıdır** �
 Kaydedilecek yer: `research/olcumler/qc_dogrulama/sonuc_021.json`
 Zemin gerçeği: `research/qc_dogrulama/QC_API_ZEMIN_GERCEGI.md`
 
-> **Bu doküman defterin uzun gerekçesini de taşır.** QC dosya başına 64.000 karakter sınırı
+---
+
+## v4 (2026-09-03) — PIT evren · **ŞEMA DELTASI (bu bant geçerlidir)**
+
+Aşağıdaki §0–§11 gövdesi **v3 şemasıdır ve geçerliliğini korur**; v4 onu YIKMAZ, üstüne ekler.
+Değişen ve eklenen her şey burada, tek yerde:
+
+| alan | v3 | v4 |
+|---|---|---|
+| `defter_surumu` | `"3.0"` | **`"v4"`** |
+| exec zinciri | `for _p in ("a", "b", "c")` | **`for _p in ("a", "d", "b", "c")`** (`_b` → `_d`'nin `pit_uyeler`'ini çağırır) |
+| hedef dosya | `sonuc_021.json` | **`sonuc_021_v4.json`** (v3 çıktısı KORUNUR, yan yana okunur) |
+| `evren.kaynak` | *(yok)* | **YENİ** — `"pit_sp500"` \| `"dolar_hacim"` (ANAHTAR'daki `EVREN_KAYNAGI`) |
+| `evren.beyan` | dolar-hacim üst-250 vekili | PIT S&P 500 üyeliği (as-of gün) ∩ **üye-içi** dolar-hacim üst-250 |
+| `evren.kapsama` | *(yok)* | **YENİ BLOK** — aşağıda |
+| `evren.mini_sonda.kapsama` | *(yok)* | **YENİ** — ilk ≤5 günün kapsama ön-okuması (7 yıllık çekimden ÖNCE) |
+| `evren.mini_sonda.{evren_kaynagi,pit_havuz_ticker}` | *(yok)* | **YENİ** |
+| `tanimlar.evren` | *(yok)* | **YENİ** — evren tanımı + PIT kaynak sha256 + veri aralığı |
+| `anahtarlar.EVREN_KAYNAGI` | *(yok)* | **YENİ** — v4'ün ANAHTAR'a eklediği TEK anahtar; eşik/sabitlerin hiçbiri değişmedi (kart guard'ı, `v383` çivisi) |
+
+### `evren.kapsama` (YENİ · v4)
+
+```
+{ "beyan": str, "kaynak": str, "kaynak_sha256": str, "uretim_damgasi": obj,
+  "butunluk": {"tam": bool, "yuklu_ticker": int, "beklenen_ticker": int, "parcalar": [str]},
+  "pit_havuz_ticker": int,
+  "yil": { "2020": {"gun": int, "panel_gun": int,
+                    "pit_uye_top": int, "qc_eslesen_top": int,
+                    "pit_uye_ort": float, "qc_eslesen_ort": float,     # kırpmadan ÖNCE
+                    "panel_uye_ort": float,                            # kırpmadan SONRA
+                    "evren_uye_ort": float,                            # ÖLÇÜME GİREN
+                    "panel_kirpma_ort": float,                         # eslesen − panel_uye
+                    "oran": float}, ... },
+  "toplam_oran": float, "secici_sayaci": {...},
+  "uyelik_arama_damgasi": str, "eslesme_siniri": str,
+  "veri_sonu": {"pit_veri_son": str, "pencere_son": str,
+                "panel_gunu_veri_disinda": int, "beyan": str} }
+```
+
+**KARTTA KAPSAMA EŞİĞİ YOKTUR.** Bu blok `DUR` ÜRETMEZ, yalnız SAYAR (uydurma eşik yasak) ve
+`tanim_sapmalari`na düşer. `_kapi()` kapısının DIŞINDADIR: DUR hâlinde de basılır.
+
+- `oran` = `qc_eslesen_top / pit_uye_top` — **iki toplam da aynı günlerden** gelir, kırpmadan
+  ÖNCEdir; veri sonrası günlerde hem pay hem payda 0 eklenir, yani oran SULANMAZ.
+- Bütün `*_ort` alanları **aynı paydaya** (`gun` = kesitin kurulduğu gün sayısı) bölünür;
+  `panel_gun` ayrıca raporlanır — ikisi ayrışırsa fiyatı okunamayan günler vardır.
+- `panel_kirpma_ort` = `PANEL_N` (500) kırpmasının bedelidir: günlük üye sayısı ~503 ölçüldüğü
+  için en düşük dolar-hacimli birkaç üye panele hiç girmez. **Kazanç ölçülüp bedel ölçülmezse
+  körlük sessizdir** — ikisi de basılır.
+- `uyelik_arama_damgasi`: üyelik araması QC panel zaman damgasıyla yapılır;
+  `fiyat_capraz_kontrol` içindeki `panel_zaman_kaymasi` bu damganın piyasa gününe göre kaymasını
+  ölçer. Üyelik yılda 12–19 kez değiştiği için 1 günlük kayma yalnız o değişim günlerinde
+  üyeliği bir gün geç okur — **kapsamanın %100 olmamasının cevap adaylarından biridir.**
+- `eslesme_siniri`: QC `symbol.value` NOKTA-ZAMANLI ticker'dır; yerel PIT listesi de ticker
+  taşır. Yeniden adlandırma/devir günlerinde iki taraf ayrışır ve kayıp isim orana DÜŞER —
+  ÖLÇÜLÜR, düzeltilmez.
+
+### `## v4 EK` — ⑤ delist sondası
+
+Sondanın kendi JSON'u AYRI dosyadır (`sonda_delist_8.json`), bu şemaya girmez; alanları
+`qc_sonda_delist_8.py` başlığında ve `OPERATOR_TALIMATI.md ## v4 EK` bölümündedir. Tek kural
+burada da aynıdır: `qc_delist_tarihi` yalnız `DelistingType.DELISTED` olayından dolar; WARNING
+`qc_uyari_tarihi`ne, son bar `son_bar_tarihi_VEKIL`e gider.
+
+### QC dosya başına sınırı — TEK KAYNAK
+
+**32.000 karakter** (ÖLÇÜLDÜ, v3 turu — `OPERATOR_TALIMATI.md ## v4` bandı tek kaynaktır;
+üretici `pit_araliklari_uret.py::QC_TAVAN` ve çivi `v383::QC_KARAKTER_SINIRI` aynı sayıyı
+taşır). Aşağıdaki gövdedeki **64.000** rakamı **BAYAT**tır (v1/v2 turunun tahmini). AYRIM (2026-09-03, YB-1): 64.000 `.py` sınırı olarak BAYAT, ama `research.ipynb` DOSYASI sınırı olarak GERÇEK ve ÖLÇÜLMÜŞ (IDE hata metni, Rol-1); 32.000 yalnız `.py` yüklemesi içindir.
+
+---
+
+
+> **Bu doküman defterin uzun gerekçesini de taşır.** (BAYAT SAYI: aşağıdaki 64.000 v1/v2
+> tahminidir; ölçülmüş sınır 32.000 karakterdir — bkz. yukarıdaki v4 bandı.) QC dosya başına
+> 64.000 karakter (BAYAT) sınırı
 > koyduğu için defterin içindeki açıklamalar tek cümleye indirildi; her `beyan`/`neden`
 > alanının **tam gerekçesi burada** durur. Hüküm yazılırken ikisi birlikte okunur.
 
@@ -93,7 +168,7 @@ Evren seçimi, fiyat, hacim ve **as-of hisse sayısı** aynı çağrıdan gelir.
 | alan | tip | anlamı |
 |---|---|---|
 | `kart` / `aile` | str | `"EDG-2026-021"` / `"qc_delist_dogrulama"` |
-| `defter_surumu` | str | `"3.0"` |
+| `defter_surumu` | str | v4: `"v4"` (v3 gövdesinde `"3.0"` yazıyordu — bkz. v4 bandı) |
 | `defter_mimarisi` | str | tek-kaynak beyanı + v1'in ölü yollarının neden çıkarıldığı |
 | `defter_sha256` | null | koşan defter kendi kaynağını okumaz; sha REPO tarafında alınır |
 | `rol` | str | "sayı üretir, hüküm vermez" beyanı |
