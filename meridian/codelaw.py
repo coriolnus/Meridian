@@ -1772,7 +1772,7 @@ _DOCS_URETILMIS = frozenset({"RUNBOOK.md"})
 #: SONSUZA DEK güncel tutulma yükümlülüğü YOK. Bu dosyalardaki bir çapa gelecekte bayatlarsa
 #: (hedef fonksiyon taşınır/silinir) SESSİZCE ÇÜRÜR, `codelaw` bunu bir daha YAKALAMAZ. Ölçülen
 #: örnek (inceleme, 2026-09-03): `2026-08-17-23c-dinlenen-limit-plan.md`daki DOKUNULMAYAN
-#: `loop.py:1407` anchor'ı bugün `loop.py:1839`a kaymış (`fill_entry(..., _open, ...)` çağrısı
+#: `1407` anchor'ı bugün `1839 (loop.py içindeki eski bir çapa; TSK-080 incelemesi örneği — burada ÇAPA biçiminde yazılmaz, v382)`a kaymış (`fill_entry(..., _open, ...)` çağrısı
 #: taşınmış) — yasa bunu GÖRMEZ; dışlama bu bedeli BİLEREK öder (plan donmuş bir kayıttır).
 _DOCS_SUPERPOWERS_TARIHLI_DIZINLER = ("docs/superpowers/plans", "docs/superpowers/specs")
 _DOCS_SUPERPOWERS_ONEK_RE = re.compile(r"^20\d\d-\d\d-\d\d-")
