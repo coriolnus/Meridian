@@ -253,7 +253,7 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 _Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §3 GÜNCEL DURUM'dadır (bayat referans, tarihçe)._
 ### SIRALAMA (güncel — rev. 2026-09-02 akşam, operatör onayı): §2 İCRA SIRASI dört kova —
 **A kapanış dalgası** (TSK-108 → TSK-060 → TSK-089 → TSK-058 → günlük/ROADMAP kapanışı) →
-**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103) →
+**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075) →
 **C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035) → **D operatör masası** (§5.0).
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
 (Eski WP-dönemi sıralaması §∞ eşleme tablosunda ve §2 SIRA TARİHÇESİ'nde aynen durur.)
@@ -359,6 +359,8 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (B-12 **TSK-092** · **TSK-113** · **TSK-114** — TEK DİLİM [operatör 2026-09-03 sabah: "092+113+114 tek dilim"]: dağıtım reçetesi istenen-durum koruması + çivi · `Kapi` 7 kopya → tek kaynak · v323 `teknik` çağrı-yeri kapsaması; tek ajan, tek inceleme.)
 - (B-13 **TSK-014** teslim-öncesi ikinci-görüş geçişi (SOUL kural denetimi) — AYRI dilim [operatör 2026-09-03 sabah]; günlük kota kullanımı ~%0,2, üç bot kapsar.)
 - (B-14 **TSK-103** `full_detail_graded` span_days = dilim takvimi — operatör K6 2026-09-03 sabah; sayılar değişir, ayrışma beyanı + çivi.)
+- (B-15 **TSK-083** · **TSK-078** · **TSK-073** · **TSK-082** — BAKIM DİLİMİ, tek ajan [operatör 2026-09-03 sabah]: ROADMAP satır çapaları → sembol · `26` değer-eşitliği 9 çift envanteri · 24b skill-görüş defteri kalanı · §6 kart indeksi üreticiye [Rol-1 yol kararı bu dilimde]. Gövdeler TAHTA H0'da.)
+- (B-16 **TSK-075** `13` scale-out latent kusuru — AYRI dilim [operatör 2026-09-03 sabah]; motor kodu, tam suite. Gövde TAHTA H0'da.)
 
 **KOVA C — KART İSTEYENLER (ölçüm dalgası; kart-önce, §5 yasası):**
 
