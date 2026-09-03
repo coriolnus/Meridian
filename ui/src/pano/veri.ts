@@ -72,13 +72,65 @@ export async function apiGet<T>(yol: string, signal?: AbortSignal): Promise<T> {
   return (await y.json()) as T;
 }
 
-/** Bir ucu okur ve (istenirse) periyodik tazeler. Dönen nesne ÜÇ HÂLİ de ayrı taşır. */
+/**
+ * BAYAT GÖVDE SINIFI (TSK-110, ölçüm TSK-108 T3 M-7): `veri`/`hata` eskiden `yol`dan BAĞIMSIZ
+ * durumlardı. Çekmece/kapı yeniden açılıp `yol` A→B değişince yeni istek bitene kadar `veri`
+ * A'nınkini taşırdı — tüketici ("veri !== null → children(veri)") A'nın gövdesini B'nin başlığı
+ * altında çizerdi. Alt bileşene `key` vermek çözmez, çünkü hook EBEVEYNDE yaşıyor (key ebeveyni
+ * yeniden kurmaz). Aynı sınıf `hata` için de geçerliydi: eski yolun "okunamadı" metni yeni yolun
+ * altında görünürdü.
+ *
+ * ÇARE — TÜRETİM, SIFIRLAMA DEĞİL: iç durum yol-bağlı KAYDA döner (`okuma` = {yol, veri, zaman}
+ * TEK atomik kayıt; `hataKaydi` = {yol, metin} TEK kayıt) ve DIŞARI VERİLEN `veri`/`hata`/`zaman`
+ * her render'da `okuma.yol === yol` / `hataKaydi.yol === yol` eşitliğiyle TÜRETİLİR. Efektte
+ * `yol` değiştiğinde `setOkuma(null)` ÇAĞRILMAZ — sıfırlama React'ın boyama SIRASINDA değil
+ * SONRA koşan bir efektte olurdu ve bu bir kare (boyama → efekt) bayat gövde çizdirirdi (TSK-112
+ * `cekmeceAnahtari`nin RENDER sırasında ilerlemesiyle AYNI ders — Varliklar.tsx). Türetim ise
+ * yeni `yol` geldiği ANKİ render'da zaten `okuma.yol !== yol` olduğu için `null` döner; ara kare
+ * yoktur.
+ *
+ * KORUNAN SÖZLEŞMELER (brief TSK-110, madde madde):
+ * (1) AYNI yolun tazelemesi düşerse eski veri SİLİNMEZ, taze SAYILMAZ — `hataKaydi` dolar,
+ *     `okuma` (dolayısıyla `zaman`) olduğu yerde kalır. Bir ağ hıçkırığında ekranı boşaltmak da
+ *     yanlış, bayatı taze diye okutmak da yanlış; ayrı tutmak doğru (eski şerh aynen).
+ * (2) FARKLI yola geçince (`okuma.yol !== yol`) eski veri/hata GÖRÜNMEZ — tüketiciye `null` gider,
+ *     `Kapi` iskelet/yükleniyor çizer. `okuma`/`hataKaydi` kaydın kendisi bellekte kalabilir (yeni
+ *     yol için gövde henüz gelmedi) ama TÜRETİLEN alan onu dışarı sızdırmaz.
+ *     TEK-SLOT KAYIT, YOL-BAŞINA ÖNBELLEK DEĞİL (inceleme ⚠️, düzeltme turu 1, 2026-09-03): `okuma`/
+ *     `hataKaydi` yalnız EN SON tamamlanan isteğin kaydını tutar. A→B→A geçişinde B başarıyla
+ *     dönerse `okuma.yol` B'ye geçer; A'ya dönüldüğünde `okuma.yol(=B) !== A` olduğu için A'nın
+ *     ESKİ gövdesi GERİ GELMEZ — A yeniden "yükleniyor" görünür, B'nin gövdesiyle DEĞİL (çapraz-yol
+ *     sızıntısı yok, madde-(2) ile çelişmez — tersine daha muhafazakâr). "Aynı yolun son başarılı
+ *     okuması" ifadesi yol-başına-ayrı-cache izlenimi verebilirdi; gerçek davranış öyle değil.
+ * (3) `yol === null` → türetilen veri/zaman/hata hepsi `null` (eşitlik zaten `yol !== null` şartı
+ *     taşıyor).
+ * (4) `oturumDustu` yoldan BAĞIMSIZ kalır — 401 küreseldir (oturum kapısı tek, hangi uç düşürdüğü
+ *     önemsiz), yol-bağlı kayda taşınmaz.
+ * (5) `periyotMs` tazelemesi aynı yolda çalışır; davranış değişmedi (tetik → aynı `yol` için efekt
+ *     yeniden koşar → `okuma.yol === yol` zaten doğru kalır, yalnız `zaman` ilerler).
+ * (6) `apiGet`/`hataEki`/`OturumHatasi`/`NABIZ_MS` DOKUNULMADI.
+ *
+ * `Durum<T>` ARAYÜZÜ SABİT: altı alan aynen (veri·yukleniyor·hata·oturumDustu·zaman·tazele) —
+ * bu satırın altında hiçbir tüketici ve hiçbir `Kapi` kopyası dokunulmadı. KOPYA SAYISI 7'DİR
+ * (inceleme Önemli-1, düzeltme turu 1: ilk turun "5 kopya" sayımı `kimlik/parcalar.tsx` ve
+ * `yetki/parcalar.tsx`'i kaçırmıştı — `function Kapi<` tanımı taşıyan yedi dosya: sistem/kuyruk/
+ * kimlik/yetki `parcalar.tsx` + ogrenme/ajan/analiz `ortak.tsx`); kopyaların birleştirilmesi AYRI
+ * bir ROADMAP kalemi.
+ *
+ * `yukleniyor` DE TÜRETİLİR, DÜZ EFEKT-STATE DEĞİL (inceleme Önemli-2, düzeltme turu 1): `yol`
+ * değiştiği ANDA (aynı render'da) efekt henüz koşmamıştır — efekt render'dan SONRA çalışır — ve
+ * o anki render'da `guncel`/`hata` zaten (doğru biçimde) `null`e düşmüştür. Yalnız efekt-state'e
+ * (`yukleniyorDurumu`) güvenmek bir kare "veri=null (doğru) + yukleniyor=false (henüz
+ * güncellenmemiş) + hata=null" görünmesine yol açardı — `Kapi` bu kareyi YANLIŞ veri göstermeden
+ * ama iskeleti VE yükleniyor göstergesini birlikte kapatarak geçirirdi. `yukleniyorDurumu ||
+ * (bu yol için ne okuma ne hata var)` türetimi bu kareyi kapatır.
+ */
 export function useApi<T>(yol: string | null, periyotMs = 0): Durum<T> {
-  const [veri, setVeri] = useState<T | null>(null);
-  const [yukleniyor, setYukleniyor] = useState<boolean>(yol !== null);
-  const [hata, setHata] = useState<string | null>(null);
+  const [okuma, setOkuma] = useState<{ readonly yol: string; readonly veri: T; readonly zaman: Date } | null>(null);
+  const [hataKaydi, setHataKaydi] = useState<{ readonly yol: string; readonly metin: string } | null>(null);
+  // Ham efekt bayrağı — DIŞARI VERİLEN `yukleniyor` bu DEĞİL, aşağıda türetilen hâli (şerh yukarıda).
+  const [yukleniyorDurumu, setYukleniyorDurumu] = useState<boolean>(yol !== null);
   const [oturumDustu, setOturumDustu] = useState(false);
-  const [zaman, setZaman] = useState<Date | null>(null);
   const [tetik, setTetik] = useState(0);
   const iptal = useRef<AbortController | null>(null);
 
@@ -91,29 +143,29 @@ export function useApi<T>(yol: string | null, periyotMs = 0): Durum<T> {
     const kontrol = new AbortController();
     iptal.current = kontrol;
 
-    setYukleniyor(true);
+    setYukleniyorDurumu(true);
     apiGet<T>(yol, kontrol.signal)
       .then((d) => {
         if (!canli) return;
-        setVeri(d);
-        setHata(null);
+        setOkuma({ yol, veri: d, zaman: new Date() });
+        setHataKaydi(null);
         setOturumDustu(false);
-        setZaman(new Date());
       })
       .catch((e: unknown) => {
         if (!canli || kontrol.signal.aborted) return;
         if (e instanceof OturumHatasi) {
           setOturumDustu(true);
-          setHata(null);
+          setHataKaydi(null);
           return;
         }
-        // ESKİ VERİ SİLİNMEZ ama TAZE SAYILMAZ: `zaman` olduğu yerde kalır, `hata` dolar.
-        // Silmek, bir ağ hıçkırığında ekrandaki her sayıyı boşaltmak olurdu; taze saymak
-        // ise bayat sayıyı canlı diye okutmak. İkisi de yanlış; ayrı tutmak doğru.
-        setHata(e instanceof Error ? e.message : String(e));
+        // ESKİ VERİ SİLİNMEZ ama TAZE SAYILMAZ: `okuma` (ve dolayısıyla `zaman`) olduğu yerde
+        // kalır, `hataKaydi` bu yolla dolar. Silmek, bir ağ hıçkırığında ekrandaki her sayıyı
+        // boşaltmak olurdu; taze saymak ise bayat sayıyı canlı diye okutmak. İkisi de yanlış;
+        // ayrı tutmak doğru.
+        setHataKaydi({ yol, metin: e instanceof Error ? e.message : String(e) });
       })
       .finally(() => {
-        if (canli) setYukleniyor(false);
+        if (canli) setYukleniyorDurumu(false);
       });
 
     return () => {
@@ -128,7 +180,14 @@ export function useApi<T>(yol: string | null, periyotMs = 0): Durum<T> {
     return () => window.clearInterval(t);
   }, [yol, periyotMs, tazele]);
 
-  return { veri, yukleniyor, hata, oturumDustu, zaman, tazele };
+  // TÜRETİM (sıfırlama DEĞİL — yukarıdaki şerh): kayıt hâlâ eski yola aitse dışarı sızmaz.
+  const guncel = yol !== null && okuma !== null && okuma.yol === yol ? okuma : null;
+  const hata = yol !== null && hataKaydi !== null && hataKaydi.yol === yol ? hataKaydi.metin : null;
+  // TEK KARE İSKELET-FLAŞI KAPATILIYOR (şerh yukarıda): bu yol için ne okuma ne hata varsa
+  // efekt henüz koşmamış olsa BİLE "okuma sürüyor" sayılır.
+  const yukleniyor = yukleniyorDurumu || (yol !== null && guncel === null && hata === null && !oturumDustu);
+
+  return { veri: guncel?.veri ?? null, yukleniyor, hata, oturumDustu, zaman: guncel?.zaman ?? null, tazele };
 }
 
 /** Panonun nabız periyodu — eski panoyla AYNI (app.js `refreshStatus`, 15 sn). */
