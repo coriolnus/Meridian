@@ -40,10 +40,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 import type { Bolum } from "../../alanlar";
+import { useRota, useRouter } from "../../rota";
 import { useApi } from "../../veri";
 import { BolumKart, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcalar";
 
-import { Bolme, Cipler, Faz2Dugme, Faz2Grup, HamSatirlar, ZarfKapisi, damga, listeye, metin, sayi } from "./parcalar";
+import { bilgiSekmesiCoz, sekmeliYol, type HafizaBilgiSekmesi } from "./gorunumler";
+import { Bolme, Cipler, Faz2Dugme, Faz2Grup, HamSatirlar, ZarfKapisi, damga, listeye, metin, sayi, sozluk } from "./parcalar";
 import { MeridianDersleri } from "./MeridianDersleri";
 import { TazelikSatiri, ZihinModelleri } from "./ZihinModelleri";
 import type { BilgiAgaci, BilgiAramaGovdesi, BilgiDugumu, BilgiSayfasi, HafizaZarfi, ZihinModeli } from "./uctipleri";
@@ -64,12 +66,36 @@ const ARAMA_TAVANI = 20;
  * okuyor. İkisini sayfa gövdesinde aramak, her sayfada "tazelik bildirilmedi"
  * yazdırırdı — doğru cümle değil: değer var, başka gövdede.
  */
-function duzListe(dugumler: readonly BilgiDugumu[], cikti: BilgiDugumu[] = []): BilgiDugumu[] {
-  for (const d of dugumler) {
-    cikti.push(d);
-    if (Array.isArray(d.children) && d.children.length > 0) duzListe(d.children, cikti);
-  }
-  return cikti;
+/** Düz listenin SONUCU + DÜŞÜRÜLEN ÖĞE SAYISI — `KovaSeridi` emsali (say + atla). */
+export interface DuzAgac {
+  readonly dugumler: readonly BilgiDugumu[];
+  /** Sözlük olarak okunamadığı için atlanan düğüm sayısı. `0` = ölçüldü, hepsi okundu. */
+  readonly okunamayan: number;
+}
+
+function duzListe(dugumler: readonly BilgiDugumu[]): DuzAgac {
+  const cikti: BilgiDugumu[] = [];
+  let okunamayan = 0;
+  const gez = (liste: readonly BilgiDugumu[]) => {
+    for (const d of liste) {
+      // ÖĞE KAPISI (nihai inceleme K-1, `parcalar.tsx::KovaSeridi` deseni): dizinin
+      // İÇİ de doğrulanır. `null` bir öğe gelirse aşağıdaki `d.children` okuması bir
+      // tip hatası atar ve BÜTÜN ağaç düşer — oysa bu yüzeyin disiplini
+      // "tanımadığını çiz, düşme".
+      //
+      // ATLAMAK YETMEZ, SAYMAK GEREKİR (düzeltme turu 2, Y-4): sessizce düşen bir düğüm
+      // ekrandaki sayıyı İŞARETSİZ küçültürdü — `KovaSeridi`nin kendi dersi ("okunamayan
+      // öğeyi sıfır sayma, SAYIP yaz"). Sayının okuyucusu çağıranda.
+      if (sozluk(d) === null) {
+        okunamayan += 1;
+        continue;
+      }
+      cikti.push(d);
+      if (Array.isArray(d.children) && d.children.length > 0) gez(d.children);
+    }
+  };
+  gez(dugumler);
+  return { dugumler: cikti, okunamayan };
 }
 
 /* ---------------------------------------------------------------------------
@@ -92,6 +118,15 @@ function AgacSatiri({
   readonly secili: string | null;
   readonly sec: (kimlik: string) => void;
 }) {
+  /* ÖĞE KAPISI — İKİNCİ HAT (düzeltme turu 2 Y-4 → düzeltme turu 4 K-1).
+     BİRİNCİ HAT ÇAĞRI YERİNDEDİR: iki `.map` da listeyi `sozluk` ile SÜZER, yani bu bileşene
+     `null` bir düğüm bugün ULAŞAMAZ. Bu satır yine de duruyor ve bu bir tercih: üçüncü bir
+     çağrı yeri eklendiği gün (ör. arama sonucundan ağaca dönen bir yol) süzmeyi unutmak
+     BÜTÜN ağacı düşürürdü — `_kapi_maskele`nin "ikinci hattın anlamı birinci hattın delindiği
+     günü karşılamaktır" gerekçesinin aynısı. "Say + atla" BURADA yapılmaz: sayının okuyucusu
+     çağırandadır (`Sayfalar` altındaki "N düğüm okunamadı" satırı) ve o sayım `duzListe`den
+     gelir — ikinci bir sayaç aynı gerçeğin iki kopyası olurdu. */
+  if (sozluk(dugum) === null) return null;
   const kimlik = metin(dugum.id);
   const ad = metin(dugum.name);
   const tur = metin(dugum.kind);
@@ -100,19 +135,39 @@ function AgacSatiri({
   const sayfa = tur === "page";
   const acik = kimlik !== null && acikKlasorler.has(kimlik);
 
+  /* TEK EYLEM KAPISI: fare de klavye de BURADAN geçer. İki ayrı gövde yazmak,
+     zamanla iki farklı davranışın başlangıcı olurdu. */
+  const ac = () => {
+    if (kimlik === null) return;
+    if (klasor) klasorAc(kimlik);
+    else sec(kimlik);
+  };
+
   return (
     <div>
+      {/* TREEITEM + KLAVYE (nihai inceleme Ö-6, 2026-09-03): satır `onClick` +
+          `cursor-pointer` ile tıklanabilirdi ama odaklanamıyordu (ne `tabIndex`,
+          ne `onKeyDown`, ne içinde bir düğme) — yani ağacın TAMAMI yalnız fareyle
+          gezilebiliyordu. Kardeşi `Varliklar.tsx` aynı sorunu bu dalda çözmüş ve
+          v380 çiviliyor. Klasörde `aria-expanded` de bildirilir: açık/kapalı
+          yalnız bir ok ikonuyla söyleniyordu, yani görsel tek kanaldı. */}
       <div
+        role="treeitem"
+        tabIndex={kimlik === null ? -1 : 0}
+        aria-expanded={klasor ? acik : undefined}
+        aria-selected={secili !== null && secili === kimlik}
         className={cn(
           "flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm",
           kimlik !== null && "cursor-pointer hover:bg-muted/60",
           secili !== null && secili === kimlik && "bg-muted",
         )}
         style={{ paddingLeft: `${derinlik * 0.9 + 0.375}rem` }}
-        onClick={() => {
-          if (kimlik === null) return;
-          if (klasor) klasorAc(kimlik);
-          else sec(kimlik);
+        onClick={ac}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          // BOŞLUK SAYFAYI KAYDIRMASIN: `treeitem` bir düğme gibi davranıyor.
+          e.preventDefault();
+          ac();
         }}
       >
         {klasor ? (
@@ -165,8 +220,15 @@ function AgacSatiri({
           {cocuklar.length} alt düğüm çizilmedi — bu düğümün türü bildirilmediği için açılamıyor
         </div>
       ) : null}
-      {klasor && acik
-        ? cocuklar.map((c, i) => (
+      {/* ÇOCUKLAR `role="group"` İÇİNDE (ARIA ağaç sözleşmesi): grup kabı ÖĞENİN
+          KENDİSİ değil, öğenin ALTINDAKİ listedir — öğeyi sarmak `aria-expanded`
+          ile grubu ilişkilendirmeyi bozardı. */}
+      {klasor && acik ? (
+        <div role="group">
+          {/* AYNI SÜZME, ÖZYİNELEMEDE (düzeltme turu 4, K-1): `key={metin(c.id) …}` de bileşen
+              çağrılmadan değerlendirilir. `cocuklar` HAM kalır (yukarıdaki "N alt düğüm
+              çizilmedi" sayısı okunamayanları da SAYMALI — çizilmeyen çizilmeyendir). */}
+          {cocuklar.filter((c) => sozluk(c) !== null).map((c, i) => (
             <AgacSatiri
               key={metin(c.id) ?? `dugum-${derinlik}-${i}`}
               dugum={c}
@@ -176,8 +238,9 @@ function AgacSatiri({
               secili={secili}
               sec={sec}
             />
-          ))
-        : null}
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -209,7 +272,10 @@ function Sayfalar({ bank }: { readonly bank: string }) {
   /* AÇIK SAYFANIN AĞAÇTAKİ DÜĞÜMÜ — tazelik ve tetikleyici oradan gelir (yukarıdaki
      şerh). Bulunamazsa `null` ve tazelik satırı bunu kendi diliyle yazar; sessiz
      bir varsayılan koysaydık bayat bir sayfa "güncel" görünürdü. */
-  const agacDugumleri = Array.isArray(agac.veri?.govde?.roots) ? duzListe(agac.veri.govde.roots) : [];
+  const duz: DuzAgac = Array.isArray(agac.veri?.govde?.roots)
+    ? duzListe(agac.veri.govde.roots)
+    : { dugumler: [], okunamayan: 0 };
+  const agacDugumleri = duz.dugumler;
   const seciliDugum = secili === null ? null : (agacDugumleri.find((d) => metin(d.id) === secili) ?? null);
 
   const klasorAc = (kimlik: string) =>
@@ -267,18 +333,40 @@ function Sayfalar({ bank }: { readonly bank: string }) {
                     );
                   }
                   return (
-                    <div className="rounded-lg border p-1">
-                      {g.roots.map((d, i) => (
-                        <AgacSatiri
-                          key={metin(d.id) ?? `kok-${i}`}
-                          dugum={d}
-                          derinlik={0}
-                          acikKlasorler={acikKlasorler}
-                          klasorAc={klasorAc}
-                          secili={secili}
-                          sec={setSecili}
-                        />
-                      ))}
+                    /* YAPI DA BİLDİRİLİR (nihai inceleme Ö-6, 2026-09-03): satırlar
+                       tıklanabilir ama odaklanamıyordu VE ağaç olduğu hiçbir yerde
+                       yazmıyordu — ekran okuyucu için burası yalnız iç içe kutulardı. */
+                    <div className="flex flex-col gap-1">
+                      {/* OKUNAMAYAN DÜĞÜM SAYISI EKRANDA (düzeltme turu 2, Y-4 · `KovaSeridi`
+                          emsali): sessizce atlanan bir düğüm, ağaçtaki eksikliği İŞARETSİZ
+                          bırakırdı — "okuyamadım" ile "yok" aynı görünürdü. */}
+                      {duz.okunamayan > 0 ? (
+                        <p className="text-muted-foreground text-[11px]">
+                          {duz.okunamayan} düğüm okunamadı — sözlük olarak çözülemedi, ağaçta
+                          çizilmedi (şema sürüklenmiş olabilir)
+                        </p>
+                      ) : null}
+                      <div className="rounded-lg border p-1" role="tree" aria-label="Bilgi tabanı ağacı">
+                        {/* SÜZME `.map`TEN ÖNCE (düzeltme turu 4, tur-2 yeniden-incelemesi K-1):
+                            kapı `AgacSatiri` GÖVDESİNİN ilk satırındaydı, ama `key={metin(d.id) …}`
+                            bileşen HİÇ ÇAĞRILMADAN önce değerlendirilir — `d` `null` ise orada
+                            senkron TypeError atar ve "bütün ağaç düşer" sınıfı bir satır YUKARI
+                            taşınmış olurdu. Süzme, sınıfı taşımak yerine YOK EDER: bileşene
+                            `null` bir düğüm hiç ulaşmaz. Düşürülen SAYILIR ve yukarıda yazılır —
+                            sayım `duzListe`den gelir (aynı ağaç, tek sayaç); burada ikinci bir
+                            sayaç kurmak aynı gerçeğin iki kopyası olurdu. */}
+                        {g.roots.filter((d) => sozluk(d) !== null).map((d, i) => (
+                          <AgacSatiri
+                            key={metin(d.id) ?? `kok-${i}`}
+                            dugum={d}
+                            derinlik={0}
+                            acikKlasorler={acikKlasorler}
+                            klasorAc={klasorAc}
+                            secili={secili}
+                            sec={setSecili}
+                          />
+                        ))}
+                      </div>
                     </div>
                   );
                 }}
@@ -432,7 +520,16 @@ function Sayfalar({ bank }: { readonly bank: string }) {
 /* --------------------------------------------------------------------------- */
 
 export function BilgiTabani({ bank, kayit }: { readonly bank: string | null; readonly kayit: Bolum }) {
-  const [sekme, setSekme] = useState("sayfalar");
+  /* SEKME ADRESTEN TÜRER, YEREL DURUMDAN DEĞİL (nihai inceleme Ö-1, 2026-09-03).
+     İlk yazım `useState("sayfalar")` idi ve üç giriş kapısı da (sohbet hattındaki
+     "Bilgi Tabanı → Meridian dersleri" bağı, `#hafiza` yer imi, ⌘K'nın ders
+     anahtarları) hep sayfa ağacını açıyordu: bağ çalışıyor, varış yanlış.
+     Görünümün kendisi zaten adresten türüyordu (`HafizaYuzey.tsx`); sekme aynı
+     kuralın bir kademe altıdır. */
+  const rota = useRota();
+  const router = useRouter();
+  const sekme = bilgiSekmesiCoz(rota.sorgu);
+  const sekmeSec = (yeni: string) => router.push(sekmeliYol(rota.yol, yeni as HafizaBilgiSekmesi));
 
   if (bank === null) {
     return (
@@ -447,7 +544,7 @@ export function BilgiTabani({ bank, kayit }: { readonly bank: string | null; rea
 
   return (
     <BolumKart kimlik="hafiza-bilgi" baslik={kayit.baslik} soru={kayit.soru} ikon={kayit.ikon}>
-      <Tabs value={sekme} onValueChange={setSekme} className="flex flex-col gap-3">
+      <Tabs value={sekme} onValueChange={sekmeSec} className="flex flex-col gap-3">
         <TabsList>
           <TabsTrigger value="sayfalar">Sayfalar</TabsTrigger>
           <TabsTrigger value="modeller">Zihin modelleri</TabsTrigger>

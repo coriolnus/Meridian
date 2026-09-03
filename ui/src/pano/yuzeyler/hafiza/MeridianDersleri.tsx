@@ -54,17 +54,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useApi } from "../../veri";
 import { Kapi as UcKapisi, Olculemedi } from "../sistem/parcalar";
 import { hafizaAyristir, vurguSok, type Hafiza as HafizaBelgesi } from "./damitim";
+/* SAYI BİÇİMİ İTHAL EDİLİR, KOPYALANMAZ (nihai inceleme K-3, 2026-09-03): burada
+   tek satırlık bir `bicimSayi` kopyası duruyordu ve şerhi "eski raf yüzeyinin
+   ortak yardımcısının yerine" diyordu — ölçüm bunu yalanladı: yardımcı raf
+   yüzeyinde DEĞİL `ajan/ortak.tsx`te yaşıyor, hâlâ ihraç ediliyor ve `Ajan.tsx`
+   onu kullanıyor. Kopya davranışsal bir gerekçe de taşımıyordu (`maximumFraction
+   Digits` kullandığı için tam sayılarda çıktı AYNI). */
+import { bicimSayi } from "../ajan/ortak";
 import { metin } from "./parcalar";
 
 const UC_DERSLER = "/api/memory";
 
 const YAPI = { n: { label: "madde" } } satisfies ChartConfig;
-
-/** Sayıyı tr-TR biçiminde yazar — eski raf yüzeyinin ortak yardımcısının yerine,
- *  bu görünümün kendi tek satırlık karşılığı (raf yüzeyi kalktı). */
-function bicimSayi(n: number): string {
-  return n.toLocaleString("tr-TR");
-}
 
 export function MeridianDersleri() {
   /* YOKLANMAZ: bu dosya bir yansıma turunda bir kez yazılıyor (dosya başlığı). */
@@ -118,7 +119,7 @@ function Dersler({ ham }: { readonly ham: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Kunye belge={belge} />
+      <BelgeKunyesi belge={belge} />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Belge belge={belge} arama={arama} setArama={setArama} />
         <div className="flex flex-col gap-4">
@@ -231,7 +232,12 @@ function Belge({
    OKUYUCU DEVRİDİR: ikisini de eskiden madde listesi kartı çiziyordu. O kart
    konsolide listeye devredilirken başlık ve künye okunmadan kalsaydı,
    ayrıştırıcı onları üretmeye devam eder ama kimse görmezdi. */
-function Kunye({ belge }: { belge: HafizaBelgesi }) {
+/* AD DİZİNDE TEKİL (düzeltme turu 2, Y-12): `Kunye` bu dizinde ÜÇ ayrı sözleşmeyle
+   yaşıyordu; ikisi K-2 turunda adlandırıldı (`VarlikKunyesiPaneli` · `DugumKunyesi`),
+   üçüncüsü burada kalmıştı. İhraç edilmediği için bugün zararsızdı — ama `Yapilandirma
+   .tsx::araSuresi` şerhinin yazdığı tehlike ("aynı yüzeyde aynı adın iki sözleşmesi …
+   yanlış olanı içe aktarmayı SESSİZ kılar") aynen geçerliydi. */
+function BelgeKunyesi({ belge }: { belge: HafizaBelgesi }) {
   const maddeN = belge.bolumler.reduce((a, b) => a + b.maddeler.length, 0);
   return (
     <div className="flex flex-col gap-1.5">

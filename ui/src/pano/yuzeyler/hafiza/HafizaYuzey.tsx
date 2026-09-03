@@ -10,12 +10,24 @@
    yer `api.py`nin hafıza vekilidir: sunucu okur, maskeler, anahtarsız bir gövde
    döner.
 
-   YAZMA YOLU YOK. Vekilin CPUI tablosundaki uçlarının tümü salt-okunur GET;
-   tek istisna `recall`dır ve o da bir SORGUdur (durum değiştirmez, gövdesi beyaz
-   listeyle süzülür). Hafızaya yazan/silen/düzelten fiillerin bu panoda karşılığı
-   YOKTUR. Düğmeleri GİZLEMİYORUZ (`parcalar.tsx::Faz2Grup` şerhi): görünür ama
-   devre dışı duruyorlar, çünkü "böyle bir yetenek yok" ile "yetenek var, bu
-   panodan kullanılamıyor" iki ayrı cümledir.
+   OKUMA YÜZEYİ SALT-OKUNURDUR; YAZMA YOLU BEYANLI VE DAR. Vekilin CPUI
+   tablosundaki uçlarının tümü salt-okunur GET. Tablonun DIŞINDA iki şey var ve
+   ikisi de beyanlıdır: `recall` (POST, ama bir SORGU — durum değiştirmez, gövdesi
+   beyaz listeyle süzülür) ve TSK-111 dilim 1 ile açılan yazan uçlar
+   (`yazma.tsx`; sunucu tarafı `api.py::api_hindsight_islem` ve
+   `api.py::api_hindsight_konsolidasyon`, listenin beyanlılığı çivili) — işlem
+   satırındaki iptal/yeniden dene/kaydı sil ve düşen birleştirmenin
+   kurtar→tetikle zinciri. O yol bir
+   OPERATÖR KARARIYLA açıldı (2026-09-02) ve kapsamı o dört eylemle sınırlıdır.
+
+   ŞERH DÜZELTİLDİ (TSK-109 incelemesi Ö-3, 2026-09-03): burada "YAZMA YOLU YOK …
+   yazan/silen/düzelten fiillerin bu panoda karşılığı YOKTUR" yazıyordu ve TSK-111
+   o cümleyi indiği gün yalanladı; düzeltme turu tam o satırı elden geçirirken
+   görmedi. Bayat bir beyan, olmayan bir beyandan kötüdür.
+
+   YOLU HÂLÂ AÇILMAMIŞ fiillerin düğmelerini GİZLEMİYORUZ (`parcalar.tsx::Faz2Grup`
+   şerhi): görünür ama devre dışı duruyorlar, çünkü "böyle bir yetenek yok" ile
+   "yetenek var, bu panodan kullanılamıyor" iki ayrı cümledir.
 
    ---------------------------------------------------------------------------
    NEDEN SEKİZ GÖRÜNÜM — VE NEDEN BU SIRA

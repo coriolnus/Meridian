@@ -235,7 +235,11 @@ def test_ret_govdesi_okuyucusu_TEK_KAPI():
     assert "export function hataEki" in v
     assert "g?.detail ?? g?.error ?? g?.neden" in v, "ret adlarının sırası değişti ya da kayboldu"
     r = soy(RECALL)
-    assert "hataEki(await y.json())" in r, "gönderim ortak kapıdan geçmiyor"
+    # DESEN GÜNCELLENDİ (nihai inceleme Ö-2, 2026-09-03): `recallGonder` kendi `fetch`ini
+    # açıyordu ve `hataEki`yi ham yanıttan çağırıyordu. Artık panonun TEK yazma kapısından
+    # (`gonder.ts::apiPost`) geçiyor; ret gövdesi o kapının `ham` alanında taşınıyor.
+    assert "hataEki(s.ham)" in r, "gönderim ortak ret okuyucusundan geçmiyor"
+    assert "apiPost(UC_RECALL" in r, "gönderim ortak yazma kapısından geçmiyor"
     assert "g.detail" not in r, "ikiz okuyucu hâlâ yerinde"
 
 
@@ -247,15 +251,43 @@ def test_ret_govdesi_okuyucusu_TEK_KAPI():
 _IKIZ_IMZASI = re.compile(r"detail\s*\?\?\s*[A-Za-z_$.?]*\berror\b")
 
 
+#: HAM METİNDE eşleşip SOYULMUŞ metinde kaybolan dosyalar — BEYANLI muafiyet listesi.
+#: Bugün BOŞ (ölçüldü 2026-09-03). Bir dosya buraya girdiğinde gerekçesi de yazılır:
+#: "şerhinde yasaklanan deseni ALINTILIYOR" (Meridian'ın belge geleneği) ya da "sökücü
+#: burada kod yiyor" (aşağıdaki körlük).
+IKIZ_HAM_MUAFLARI: tuple[str, ...] = ()
+
+
 def test_baska_dosyada_UCUNCU_ikiz_dogmadi():
-    """Aynı gerçeğin üçüncü kopyası sessizce doğarsa bu çivi öter."""
+    """Aynı gerçeğin üçüncü kopyası sessizce doğarsa bu çivi öter.
+
+    YANLIŞ NEGATİF KAPATILDI (nihai inceleme K6, 2026-09-03): tarama `soy()`un çıktısında
+    yapılıyor ve `soy()` bir REGEX SÖKÜCÜSÜdür — ölçüldü ki beş `pano/` dosyasında v312'nin
+    karakter-tarayan `_yorumsuz`undan DAHA FAZLASINI yiyor (en büyüğü ~3.000 karakter).
+    Yani gerçek bir ikiz, sökücünün yediği bir bloğun içinde kalıp SESSİZCE görünmez
+    olabilirdi ve çivi "kopya yok" derdi.
+
+    ÇARE: HAM metin de taranır. Ham'da eşleşip soyulmuşta kaybolan her dosya BEYANLI
+    muafiyet ister — yani "yorumda alıntılanmış" hükmünü insan verir, sökücü değil.
+    (v312'nin karakter-tarayan sökücüsü buraya taşınamadı: bir `pano/` dosyası JSX
+    metninde düz kesme işareti taşıyor ve o sökücü orada BAĞIRIR — ağaç genelinde
+    kullanılamaz. Bedel ölçüldü ve bu ikinci hatla ödendi.)"""
     kopyalar = []
+    hamda_kaybolan = []
     for p in sorted(PANO.rglob("*.ts")) + sorted(PANO.rglob("*.tsx")):
         if p == VERI:
             continue
-        if _IKIZ_IMZASI.search(soy(p)):
-            kopyalar.append(p.relative_to(KOK).as_posix())
+        ad = p.relative_to(KOK).as_posix()
+        soyulmus_eslesme = _IKIZ_IMZASI.search(soy(p)) is not None
+        ham_eslesme = _IKIZ_IMZASI.search(p.read_text(encoding="utf-8")) is not None
+        if soyulmus_eslesme:
+            kopyalar.append(ad)
+        elif ham_eslesme and ad not in IKIZ_HAM_MUAFLARI:
+            hamda_kaybolan.append(ad)
     assert kopyalar == [], f"ret gövdesi okuyucusunun yeni kopyası: {kopyalar}"
+    assert hamda_kaybolan == [], (
+        f"desen HAM metinde var, soyulmuşta yok: {hamda_kaybolan} — ya yorumda alıntılanmış "
+        f"(muafiyet listesine gerekçesiyle yaz) ya da sökücü kod yedi (çivi kör)")
 
 
 def test_IKIZ_TARAYICISI_sessizce_bos_DEGIL():
@@ -264,6 +296,34 @@ def test_IKIZ_TARAYICISI_sessizce_bos_DEGIL():
     assert _IKIZ_IMZASI.search("const d = g.detail ?? g.error ?? g.neden;")
     assert _IKIZ_IMZASI.search("const d = govde.detail ?? govde.error;")
     assert not _IKIZ_IMZASI.search('const d = (g as { detail?: unknown }).detail;')
+
+
+def test_YORUM_SOKUCUSU_kendisi_olculuyor():
+    """POZİTİF KONTROL, AMA TARAYICININ DEĞİL SÖKÜCÜNÜN (nihai inceleme K6, v312
+    `test_yorum_sokucusu_KENDISI_olculuyor` emsali).
+
+    Kardeşi (`..._sessizce_bos_DEGIL`) yalnız `_IKIZ_IMZASI` regex'ini ölçüyordu; `soy()`
+    çalışmasaydı yukarıdaki bütün VARLIK çivileri sessizce yalan söylerdi (yorumdaki dize
+    "kod" sayılır). Sentetik örnekte aynı iz ÜÇ yorumda ve İKİ dizede geçiyor; sökümden
+    sonra tam iki tanesi kalmalı."""
+    ornek = 'const a = "IZ";\n// IZ\n/* IZ */\n{/* IZ */}\nconst b = `IZ`;\n'
+    soyulmus = _YORUM.sub(" ", ornek)
+    assert soyulmus.count("IZ") == 2, soyulmus
+    assert "/*" not in soyulmus and "*/" not in soyulmus, soyulmus
+    # İKİNCİ YARI (düzeltme turu 2, Y-2): sökücü BİLİNEN BİR KOD BLOĞUNU YEMEZ — yalnız
+    # "yorum gitti" demek, HER ŞEYİ yiyen bir sökücüyle de yeşil kalırdı.
+    kod = 'const re = /ab/g;\nif (a < b) { x(); }\nconst t = `${a}/${b}`;\n'
+    assert _YORUM.sub(" ", kod) == kod, _YORUM.sub(" ", kod)
+    # ÜÇÜNCÜ YARI — ÖLÇÜLEN KÖRLÜK ADIYLA (bedel yasası). İki sınıf ölçüldü 2026-09-03:
+    # (a) bir DİZENİN içindeki `//` de yeniyor (lookbehind yalnız `:` `'` `"` koruyor);
+    # (b) BEŞ `pano/` dosyasında sökücü v312'nin karakter-tarayanından FAZLASINI yiyor —
+    #     `KapiYuzey.tsx` 2.973 · `komutlar.ts` 2.286 · `MutabakatMasasi.tsx` 1.047 ·
+    #     `HukumDagilimi.tsx` 157 · `PozisyonSeyri.tsx` 73 karakter (tablo v378'de:
+    #     `SOKUCUNUN_FAZLA_YEDIGI`, tek kaynak — burada ADIYLA anılıyor, kopyalanmıyor).
+    # Aşağıdaki ağaç-geneli tarama bu yüzden HAM metni de okur.
+    kor = 'const u = "a//b";\n'
+    assert _YORUM.sub(" ", kor) != kor, (
+        "sökücünün bilinen körlüğü kapanmış — ham-metin ikinci hattının gerekçesi bayat")
 
 
 # ============================================================================

@@ -36,7 +36,7 @@ from collections.abc import Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse, Response
 from fastapi.routing import APIRoute
 from fastapi.middleware.cors import CORSMiddleware
@@ -7784,10 +7784,34 @@ _HAFIZA_BANK_KOKU = "/v1/default/banks"
 #: ödeyip faydasını almamaktı. Yazılı olmayan uçların şemasında `maximum` YOKTUR ya da 200'ün
 #: üstündedir (chunks/mental-models 1000, audit-logs/llm-requests 500); oralarda kendi tavanımız
 #: geçerlidir. Kıyas çivisi ölçümü ayrıca taşır: `UPSTREAM_LIMIT_MAKSIMUMU` (v375).
+#:
+#: ÜÇ UÇ ADIYLA YAZILDI (nihai inceleme K1, ölçüm 2026-09-03 — openapi.yaml @ ebad4782,
+#: `gh api`): `/documents` (`list_documents`) limit `default:100 minimum:0`, `/entities`
+#: (`list_entities`) limit `default:100 minimum:0`, `/entities/graph` (`get_entity_graph`)
+#: limit `default:1000 minimum:0`. ÜÇÜNDE DE `maximum` YOKTUR, yani üçü de bu tabloya GİRMEZ ve
+#: bizim 200'ümüz geçerlidir. Toplu bir cümlenin altında kalan bir iddia, yanlış olduğu gün
+#: `/islemler`in bu turda kapattığı 422 sınıfını aynen geri getirirdi: varsayılan limit = tavan
+#: ve uç hiçbir parametre verilmeden 422 alır — o 422 `neden`e "hafıza okunamadı" diye yazılır.
 _HAFIZA_UC_TAVANI = {"/operations": 100, "/knowledge-base/search": 50}
-#: `recall` gövdesinin BEYAZ LİSTESİ — `RecallRequest` şemasından okundu. Şemadaki hiçbir alan
-#: yazma yapmaz; liste yine de KAPALIdır, çünkü upstream yarın yazan bir alan eklerse "aynen
-#: geçiş" onu istemcinin insafına açardı (kapsam ruling'i: recall SORGU sınıfıdır).
+#: `recall` gövdesinin BEYAZ LİSTESİ — `RecallRequest` şemasının FAZ-1 KAPSAMINDAKİ ALT KÜMESİ.
+#: Şemadaki hiçbir alan yazma yapmaz; liste yine de KAPALIdır, çünkü upstream yarın yazan bir
+#: alan eklerse "aynen geçiş" onu istemcinin insafına açardı (kapsam ruling'i: recall SORGU
+#: sınıfıdır).
+#:
+#: "ŞEMADAN OKUNDU" DEĞİL "ŞEMANIN ALT KÜMESİ" (nihai inceleme Ö2, 2026-09-03). Eski şerh
+#: listeyi TAM gösteriyordu; ölçüm (bu deponun kendi kaydı, `docs/INCELEME-HINDSIGHT-DERIN-
+#: 2026-08-31.md` §1.5) şemada DÖRT alan daha olduğunu söylüyor. Kapsam dışı bırakılan dördü
+#: ve gerekçeleri BURADA yaşar — TEK KAYNAK; `ui/src/pano/yuzeyler/hafiza/Recall.tsx` bu şerhe
+#: İŞARET eder, kopyalamaz (iki kopya sessizce ayrışır):
+#:   · `temporal_window` {start,end} — Faz-1 oyun alanında zaman aralığı denetimi YOK; alanı
+#:     geçirmek, ekranda karşılığı olmayan bir süzgeci sessizce açardı.
+#:   · `tag_groups` (array-of-array) — etiket GRUPLARI CP oyun alanında da yok; `tags` +
+#:     `tags_match` Faz-1'in ölçülmüş yüzeyi.
+#:   · `include` {chunks,source_facts,entities} — cevabın ŞEKLİNİ büyütür; pano bugün yalnız
+#:     `results`i çiziyor, yani gelen ek gövdenin OKUYUCUSU YOK (Yasa 6).
+#:   · `min_scores` {…} — eşik seçimi bir ÖLÇÜM kararıdır; ekranda gerekçesiz bir sayı kutusu
+#:     açmak, operatöre ölçülmemiş bir eşik uydurtmak olurdu.
+#: Dördü de "yasak" değil KAPSAM DIŞI: yolu açılırsa hem liste hem ekran birlikte büyür.
 _HAFIZA_RECALL_ALANLARI = ("query", "types", "prefer_observations", "budget", "trace",
                            "query_timestamp", "tags", "tags_match")
 
@@ -7861,8 +7885,13 @@ def _hafiza_govde_coz(url: str, ham: bytes | None, neden: str | None,
 
     GET VE POST BACAKLARININ ORTAK BOĞAZI (TSK-108). Bu gövde `_hafiza_json`ın içindeydi ve
     `recall` POST'u için kopyalanacaktı; iki kopya sessizce ayrışır ve maske BİR bacakta kalırdı
-    (tek-kaynak yasası). Yirmi iki uçlu bir yüzeyde "hangi bacakta maskeleniyordu" sorusu
-    sorulmamalı."""
+    (tek-kaynak yasası). CPUI tablosundaki uçların TÜMÜNÜ taşıyan bir yüzeyde "hangi bacakta
+    maskeleniyordu" sorusu sorulmamalı.
+
+    SAYI PROSE'DAN ÇIKTI (TSK-109 incelemesi Ö-1, 2026-09-03): burada "yirmi iki uçlu" yazıyordu
+    ve uç sayısı 23 olduğu gün cümle sessizce yanlışa döndü — üstelik aynı cümlenin v375
+    kopyası düzeltilmişti, yani iki kopya ayrışmıştı. Sayının TEK kaydı çivi tarafındaki `CPUI`
+    tablosunun UZUNLUĞUdur; prose sayı taşımaz."""
     if ham is None:
         # Alt katman gerekçesini ZATEN maskeler; burada TEKRAR maskelenmesi fazlalık DEĞİL:
         # gövdeye metin basan boğaz BURASIDIR ve ikinci hattın anlamı, birinci hattın delindiği
@@ -7881,8 +7910,15 @@ def _hafiza_govde_coz(url: str, ham: bytes | None, neden: str | None,
         # `{govde: None, neden: None}` olurdu: panonun "ÖLÇÜLEMEDİ" ile "BOŞ" ayrımı tam da bu
         # yüzeyin kurucu dersinin olduğu yerde kaybolurdu. `null` bu uçların hiçbirinde geçerli
         # bir gövde DEĞİLDİR; ölçülen şey "gövde gelmedi"dir ve söylenir.
-        return None, (f"{url} gövdesi boş/`null` — Hindsight bir kayıt döndürmedi; "
-                      f"bu 'sonuç yok' DEĞİL 'cevap gelmedi' demektir")
+        #
+        # MASKE BU DALDA DA (nihai inceleme K2, 2026-09-03): bu fonksiyonun kendi docstring'i
+        # "MASKELEME TEK BOĞAZDAN GEÇER" diyor ve bu tek dal istisnaydı. `url` bugün sır
+        # taşımıyor (anahtar BAŞLIKTA) — ama ikinci savunma hattının BEYAN EDİLMİŞ anlamı tam
+        # olarak "birinci hattın delindiği günü karşılamak"tır; istisnası olan bir hat, hat
+        # değildir.
+        return None, _kapi_maskele(
+            f"{url} gövdesi boş/`null` — Hindsight bir kayıt döndürmedi; "
+            f"bu 'sonuç yok' DEĞİL 'cevap gelmedi' demektir", anahtar)
     return veri, None
 
 
@@ -8119,29 +8155,71 @@ def _hafiza_bank_json(bank: str, kuyruk: str = "", *, kimlikler: tuple = (),
     birinde bir kez unutulurdu ve o tek unutuş, `../../` ile Hindsight'ın YAZAN bir ucuna
     gitmeye yeterdi. Sözleşme burada TİPLE zorlanıyor: şablona ham dizge sokmanın yolu yok. YOL KURULUMU
     `_hafiza_bank_yolu`ya ÇIKARILDI (düzeltme turu 1, I-3a) — yazan bacak da onu çağırır."""
+    # DUVAR ANAHTARDAN ÖNCE: kirli bir `bank` reddi, bu makinede anahtarın olup olmamasına
+    # BAĞLI OLAMAZ — sıra tersine olsaydı aynı istek iki makinede iki farklı gerekçe alırdı.
+    yol, neden = _hafiza_bank_yolu(bank, kuyruk, kimlikler)
+    if yol is None:
+        return None, neden
     anahtar, neden = _hafiza_anahtari()
     if not anahtar:
         return None, neden
-    yol = _hafiza_bank_yolu(bank, kuyruk, kimlikler)
     return _hafiza_json(f"{yol}?{sorgu}" if sorgu else yol, anahtar)
 
 
-def _hafiza_bank_yolu(bank: str, kuyruk: str = "", kimlikler: tuple = ()) -> str:
-    """`/v1/default/banks/<kaçırılmış bank><doldurulmuş kuyruk>` — KAÇIRMA POLİTİKASININ TEK YERİ.
+def _hafiza_bank_yolu(bank: str, kuyruk: str = "",
+                      kimlikler: tuple = ()) -> tuple[str | None, str | None]:
+    """`/v1/default/banks/<kaçırılmış bank><doldurulmuş kuyruk>` — KAÇIRMA VE `bank` DUVARININ
+    TEK YERİ. `(yol, neden)` — ikisinden tam biri doludur.
 
     ÇIKARIM GEREKÇESİ (inceleme I-3a, 2026-09-02): `_hafiza_yaz` bu iki satırın satır-satır
     kopyasıydı ve docstring'i "AYNEN devralınır" diye açıkça kabul ediyordu. Ayrışma riski
     teorik değil: kaçırma kuralı (örn. `~` ya da `%`) bir tarafta güncellenirse YAZAN bacak
     sessizce eski politikada kalır — ve o bacakta "başka bir uca gitmek" `iptal` yerine `sil`
     demektir. Bu turun kendi dersi buydu (`_hafiza_post` kopyası `_kapi_istek`e çıkarılmıştı);
-    aynı ders bir fonksiyon aşağıda tekrar uygulanmamıştı. Çivi: `test_bank_yolu_TEK_kaynaktan`."""
+    aynı ders bir fonksiyon aşağıda tekrar uygulanmamıştı. Çivi: `test_bank_yolu_TEK_kaynaktan`.
+
+    `bank` DUVARI BURAYA TAŞINDI (nihai inceleme Ö1, Rol-1 hükmü 2026-09-03). Önce duvar
+    (`_hafiza_yol_parcasi_guvenli`) yalnız YAZMA bacağında koşuyordu; yardımcının kendi metni
+    "İKİ ALANA DA UYGULANIR" diyordu ama okuma bacağının 22 ucunda `bank` YALNIZ kaçırılıyordu.
+    Yani yardımcının beyanı çağıranlarının yarısında yalan söylüyordu ve üçüncü bir çağıran iki
+    çelişen emsal buluyordu.
+
+    KAÇIRMA TEK BAŞINA BİR YOL-PARÇASI DUVARI DEĞİLDİR — ÖLÇÜLDÜ (2026-09-03): uvicorn ASGI
+    kapsamındaki yolu ROTALAMADAN ÖNCE çözer (`uvicorn/protocols/http/h11_impl.py` ve
+    `httptools_impl.py` aynı satırı taşır: `path = unquote(raw_path)`), ve upstream Hindsight
+    de uvicorn üstünde koşar. Yani bizim `%2F`miz ara katmanda yeniden `/` olur; "kaçırdım,
+    yeter" cümlesi bu bypass sınıfının tam olarak kurbanıdır. Duvar kaçırmanın YERİNE değil
+    YANINDA durur: ikisi birlikte iki hattır.
+
+    KAPSAM: `bank` VE `kimlikler`in HER ÖĞESİ — yani bu fonksiyonun upstream PATH'ine
+    koyduğu HER SEGMENT (nihai düzeltme turu 2, Y-1). İlk yazımda duvar yalnız `bank`a
+    uygulanıyordu ve ikinci kimlik (`/memories/{}`, `/documents/{}/chunks`, `/entities/{}` …)
+    yalnız kaçırılıyordu — yani Ö1'in reddettiği "yarım duvar" bir kademe aşağı taşınmıştı.
+    Gerekçe alan ayrımı YAPMAZ: `unquote` rotalamadan önce koşar ve `%2F`yi `/`ye çevirir;
+    hangi segmentte olduğunun önemi yoktur. Dalın kendi cümlesi bağlayıcı: "Gerekçe doğruysa
+    duvar yarım olamaz; yanlışsa duvar gereksizdi."
+
+    ALAN ADI `kimlik`, ÇAĞIRANIN ADI DEĞİL — VE BU BİR TERCİH: bu fonksiyon kuyruk şablonunu
+    dolduran değerlerin dışarıdaki adını (`belge`/`sayfa`/`kimlik`/`id`) BİLMEZ ve bilmesi
+    için çağırandan ikinci bir liste alması gerekirdi (ayrışacak ikinci kopya). Gerekçe
+    metnindeki ad bu yüzden genel; hangi ucun reddettiği zaten yanıtın kendisinden okunur.
+
+    RET NEREDE GÖRÜNÜR: okuma bacağında zarfın `neden`i (200 — ölçülemezlik sözleşmesi
+    aynen), yazma bacağında `{ok, http, govde, neden}` zarfının `neden`i. Yazma rotaları
+    duvarı ZATEN `_hafiza_yazma_girdisi`nde koşturur ve 400 + ret izi üretir; buradaki ikinci
+    geçiş o kapının atlandığı günü karşılar (ikinci hat, `_kapi_maskele` emsali)."""
+    for ad, deger in (("bank", bank), *(("kimlik", k) for k in kimlikler)):
+        neden, _sinif = _hafiza_yol_parcasi_guvenli(ad, deger)
+        if neden:
+            return None, neden
     return (f"{_HAFIZA_BANK_KOKU}/{_hafiza_kacir(bank)}"
-            f"{kuyruk.format(*(_hafiza_kacir(k) for k in kimlikler))}")
+            f"{kuyruk.format(*(_hafiza_kacir(k) for k in kimlikler))}"), None
 
 
 def _hafiza_zarf(bank: str | None, kuyruk: str = "", *, kimlikler: tuple = (), sorgu: str = "",
                  ek: dict | None = None,
-                 donustur: Callable[[dict], dict] | None = None) -> dict:
+                 donustur: Callable[[object], tuple[object | None, str | None]] | None = None
+                 ) -> dict:
     """CP-UI uçlarının TEK zarfı: `{govde, neden}` — ikisinden tam biri doludur.
 
     `ogeler` DEĞİL `govde`, ve DİZİ ÇIKARILMAZ. `_hafiza_dizi` bir listeyi zarftan söker; bu
@@ -8158,52 +8236,45 @@ def _hafiza_zarf(bank: str | None, kuyruk: str = "", *, kimlikler: tuple = (), s
     (`test_zarf_kancasi_VARSAYILAN_OLARAK_KAPALI`). Kancayı kullanan uçlar çivi tarafında
     BEYANLIDIR (`CPUI_DONUSTURULEN`) — beyansız bir dönüşüm, aynen-geçiş çivisinden sessizce
     düşmüş bir uç demektir. Kanca YALNIZ `neden is None` iken (yani ölçüm başarılıyken)
-    koşar: arıza dalında dönüştürülecek gövde zaten yoktur."""
+    koşar: arıza dalında dönüştürülecek gövde zaten yoktur.
+
+    KANCANIN SÖZLEŞMESİ `(govde, neden)`dir, düz gövde DEĞİL (Rol-1 hükmü 2026-09-03, TSK-109
+    düzeltme turu endişesi). Bir süzgeç gövdenin şeklini TANIMAYABİLİR ve o hâlde "aynen
+    geçir" demek, sır süzen bir kancanın upstream şema sürüklendiği gün sessizce AÇILMASI
+    olurdu. `neden` dönebilen bir kanca, zarfın kendi ölçülemezlik sözleşmesine düşer."""
     eksik = _hafiza_eksik(bank=bank, **(ek or {}))
     if eksik:
         return {"govde": None, "neden": eksik}
     veri, neden = _hafiza_bank_json(bank, kuyruk, kimlikler=kimlikler, sorgu=sorgu)
     if neden is None and donustur is not None:
-        veri = donustur(veri)
+        veri, neden = donustur(veri)
     return {"govde": veri if neden is None else None, "neden": neden}
 
 
-#: Upstream alan adı ve onun yerine geçen BEYAN. İkisi de TEK yerde: süzgeç ile çivi aynı adı
-#: okumalı, yoksa "sır düştü" iddiası bir yazım hatasıyla sessizce doğru görünürdü.
-_WEBHOOK_SIR_ALANI = "secret"
-_WEBHOOK_SIR_BEYANI = "secret_tanimli"
+def _hafiza_okuma_reddi(uc: str, sinif: str, neden: str, http: int, **olcum) -> JSONResponse:
+    """OKUMA TARAFININ RET İZİ — `_hafiza_yazma_reddi`nin kardeşi, AYNI sözleşmeyle.
+
+    NEDEN AYRI FONKSİYON: zarf ŞEKLİ ayrı. Okuma uçları `{govde, neden}` döner, yazma uçları
+    `{ok, http, govde, neden}`; tek fonksiyona iki şekil koymak, panonun "tek şekil tanır"
+    güvencesini bir bayrağa bağlardı. ORTAK OLAN sözleşme metinde tutulur, kodda değil.
+
+    NEDEN VAR (nihai inceleme Ö4, 2026-09-03): `/varlik` `id` duvarını 11-A'dan ödünç aldı ama
+    sözleşmesinin bir parçasını (İZ) ödünç almadı — ölçülen `sinif` alınıp ÇÖPE gidiyordu ve
+    400 dönerken defter boş kalıyordu. Yazma tarafının kendi gerekçesi ("`..` içeren bir `id`
+    denemesi bu yüzeyde bir SONDA denemesidir ve tam olarak defterde görülmek istenen şeydir")
+    okuma ucunda da aynen geçerlidir: sonda denemesi, hangi ucun reddettiğine göre değişmez.
+
+    HAM DEĞER DEFTERE GİRMEZ (yazma tarafıyla aynı kural): `sinif` + `alan` + `tip` + `uzunluk`
+    yeter. `uc` da KAPALI bir değerdir — rota kendi adını verir, istemcinin dizgesini değil."""
+    obs.log("hafiza_okuma_red", uc=uc, sinif=sinif, http_yanit=http, **olcum)
+    return JSONResponse(status_code=http, content={"govde": None, "neden": neden})
 
 
-def _webhook_sirrini_suz(govde: dict) -> dict:
-    """`items[*].secret`i SİLER, yerine `secret_tanimli: bool` yazar. Başka alana DOKUNMAZ.
+#: WEBHOOK İMZA SIRRI SÜZGECİ — TANIMI `M.` BLOĞUNDADIR (`api_hindsight_webhooklar`ın yanında,
+#: TSK-109 incelemesi K-7, 2026-09-03). Kancanın BUGÜNKÜ TEK TÜKETİCİSİ o uçtur; süzgeci uca
+#: bakan okurun bulabileceği yere koymak, genel zarf bloğunu tek bir ucun ayrıntısıyla
+#: doldurmamaktan daha değerli. Kancanın KENDİSİ (`donustur`) burada, çünkü o genel.
 
-    ROL-1 HÜKMÜ (2026-09-03 gece, TSK-109 düzeltme turu 1). İlk yazımda sır aynen geçiyordu ve
-    gerekçe "CP de düzenleme penceresinde indiriyor"du. Hüküm o gerekçeyi reddetti:
-
-      · YASA 6 — OKUYUCUSUZ YAZIM YOK. Bu panonun webhook YAZMA yolu YOKTUR, yani imzalama
-        sırrının tarayıcıda hiçbir okuyucusu yok. CP'nin düzenleme penceresi VAR, bizim YOK —
-        "CP ile birebir" bir gerekçe değil, bir benzetmeydi.
-      · SIR HİJYENİ — okunmayan bir sırrı tele koymanın bedeli bedava değildir.
-
-    ÜÇ HÂL KORUNUR (uydurma yasağı): alan HİÇ gelmediyse `secret_tanimli` de YAZILMAZ — yazmak,
-    upstream'in söylemediği bir şeyi ("sır tanımlı değil") ölçülmüş gibi göstermek olurdu.
-    Alan geldiyse boş/`null` → `False`, dolu → `True`.
-
-    `items` YOKSA ya da liste DEĞİLSE gövde AYNEN döner ve bu hükmün AÇIK dalıdır (sessiz
-    yutma değil): süzgecin sözleşmesi tek bir alan üzerinedir ve tanımadığı bir şekli
-    yeniden yazmaya kalkmak, upstream şeması kaydığında gövdeyi BİZİM bozmamız olurdu."""
-    ogeler = govde.get("items") if isinstance(govde, dict) else None
-    if not isinstance(ogeler, list):
-        return govde
-    suzulmus = []
-    for oge in ogeler:
-        if not isinstance(oge, dict) or _WEBHOOK_SIR_ALANI not in oge:
-            suzulmus.append(oge)
-            continue
-        kalan = {ad: deger for ad, deger in oge.items() if ad != _WEBHOOK_SIR_ALANI}
-        kalan[_WEBHOOK_SIR_BEYANI] = bool(oge[_WEBHOOK_SIR_ALANI])
-        suzulmus.append(kalan)
-    return {**govde, "items": suzulmus}
 
 
 def _hafiza_sayfa_sorgusu(limit, offset, *, uc: str = "", **ek) -> str:
@@ -8410,27 +8481,39 @@ def api_hindsight_varliklar(request: Request, bank: str | None = None,
 
 
 @app.get("/api/hindsight/varlik")
-def api_hindsight_varlik(request: Request, bank: str | None = None, id: str | None = None):
+def api_hindsight_varlik(request: Request, bank: str | None = None,
+                         kimlik: str | None = Query(default=None, alias="id")):
     """CP `entities-view` künye paneli (düğüm tıklaması) → upstream `/entities/{entity_id}`
     (`get_entity`, TSK-112 Görev 12-A). Zarf `{govde, neden}` — `zihin-modeli` emsali (TEK
     bacaklı okuma: upstream `EntityDetailResponse` tek çağrıdan gelir, `/detay`nin iki bacaklı
     `oge`/`tarihce` zarfı burada GEÇERLİ DEĞİL çünkü ayrı bir tarihçe ucu YOK).
 
     `id` DUVARI 11-A'DAN ÖDÜNÇ (`_hafiza_yol_parcasi_guvenli`, tek-kaynak yasası), `bank`'TAN
-    FARKLI POLİTİKAYLA. Yirmi iki kardeş CPUI ucunda kimlik yalnız KAÇIRILIR (`_hafiza_kacir`) —
+    FARKLI POLİTİKAYLA. CPUI tablosundaki kardeş uçların tümünde kimlik yalnız KAÇIRILIR
+    (`_hafiza_kacir`) —
     kirli girdi upstream'e ESCAPE'lenmiş gider, sözleşme 200'dür. Burada `id` REDDEDİLİR: CP
     künye panelinin `id`si her zaman `/varliklar`/`bellek-graf` düğümünden gelen bir UUID'dir,
     serbest metin değil — kaçırmak yerine reddetmek "bu bir kimlik değil" sinyalini erken verir.
-    `bank` kardeş uçlarla AYNI kaçırma politikasında KALIR (CPUI'nin `bank`-enjeksiyon çivisi
-    escape-through varsayar; politika burada değişseydi o çivi yanlış nedenle kırmızı olurdu)."""
+    `bank` ARTIK KAÇIRMA + DUVAR (nihai inceleme Ö1, 2026-09-03): duvar `_hafiza_bank_yolu`ya
+    taşındı, yani CPUI tablosundaki kardeş uçlarla AYNI politikadadır ve o politika artık iki
+    hatlıdır. Burada
+    kalan fark yalnız `id`nin sınıfıdır: kardeşlerde kaçırılıp geçilen bir kimlik, burada
+    REDDEDİLİR.
+
+    PARAMETRE ADI `kimlik`, SORGU ADI `id` (`Query(alias=…)`, K4): yerleşik `id`yi gölgelemek
+    kardeş uçların (`kimlik`/`belge`/`sayfa`) adlandırmasından da sapıyordu. DIŞARIDAKİ
+    sözleşme değişmedi — `?id=` aynen çalışır ve gerekçe metni de `id` der (v380
+    `id=${encodeURIComponent(kimlik)}` çivisi bunu zorluyor)."""
     _auth(request)
-    eksik = _hafiza_eksik(bank=bank, id=id)
+    eksik = _hafiza_eksik(bank=bank, id=kimlik)
     if eksik:
         return {"govde": None, "neden": eksik}
-    neden, _sinif = _hafiza_yol_parcasi_guvenli("id", id)
+    neden, sinif = _hafiza_yol_parcasi_guvenli("id", kimlik)
     if neden:
-        return JSONResponse(status_code=400, content={"govde": None, "neden": neden})
-    return _hafiza_zarf(bank, "/entities/{}", kimlikler=(id,))
+        return _hafiza_okuma_reddi("varlik", sinif, neden, 400, alan="id",
+                                   tip=type(kimlik).__name__,
+                                   uzunluk=len(kimlik) if isinstance(kimlik, str) else None)
+    return _hafiza_zarf(bank, "/entities/{}", kimlikler=(kimlik,))
 
 
 @app.get("/api/hindsight/varlik-graf")
@@ -8516,7 +8599,14 @@ def api_hindsight_bilgi_arama(request: Request, bank: str | None = None, q: str 
     tele koymak bir BM25+vektör aramasını bedelsiz tetiklerdi.
 
     TAVAN BU UÇTA 50'dir (ölçüldü: `limit.maximum`, düzeltme turu 1). Varsayılan zaten upstream'in
-    kendi 10'uydu, ama istemcinin `limit=200` demesi 422 üretirdi."""
+    kendi 10'uydu, ama istemcinin `limit=200` demesi 422 üretirdi.
+
+    BU UÇTA `offset` YOKTUR — ÖLÇÜLDÜ, ATLANMADI (nihai inceleme K5; openapi.yaml @ ebad4782,
+    `gh api`, 2026-09-03): `search_knowledge_base` parametrelerinin TAMAMI yol `bank_id` ·
+    sorgu `q` · sorgu `limit` · başlık `authorization`. Bu yüzden `_hafiza_sayfa_sorgusu`
+    ÇAĞRILMAZ ve `_hafiza_sorgu_dizesi` doğrudan kullanılır (`/varlik-graf` ve `/bellek-graf`
+    emsali, AYNI gerekçeyle). Sapma sessiz kalsaydı bir sonraki okuyucu onu "unutulmuş sayfalama"
+    sanıp `offset` eklerdi ve uç 422 dönerdi."""
     _auth(request)
     return _hafiza_zarf(bank, "/knowledge-base/search", ek={"q": q}, sorgu=_hafiza_sorgu_dizesi(
         q=q, limit=_hafiza_sayi(limit, 10, 1, _HAFIZA_UC_TAVANI["/knowledge-base/search"])))
@@ -8722,6 +8812,66 @@ def api_hindsight_profil(request: Request, bank: str | None = None):
 # `list_webhook_deliveries` bu turun DIŞINDA. Pano düğmeleri CP'deki yerlerinde ama DEVRE DIŞI
 # çizilir (Faz-2 rozeti) — `/yapilandirma`nın PATCH kararıyla aynı kalıp.
 
+#: Upstream alan adı ve onun yerine geçen BEYAN. İkisi de TEK yerde: süzgeç ile çivi aynı adı
+#: okumalı, yoksa "sır düştü" iddiası bir yazım hatasıyla sessizce doğru görünürdü.
+#:
+#: `secret_tanimli` BUGÜN OKUYUCUSUZ — VE BİLEREK (TSK-109 incelemesi K-6, 2026-09-03). Yasa 6'nın
+#: `secret`i kaldırtan gerekçesi ("okunmayan bir alanı tele koymanın bedeli bedava değildir")
+#: yerine konan alan için de sorulur ve cevabı şudur: alan bir SIR DEĞİLDİR (bool), ve
+#: cevapladığı soru "bu webhook imzalı mı?"dır — Faz-2'de webhook DÜZENLEME penceresi açıldığı
+#: gün o pencerenin ilk okuyacağı şey budur. Bugün SÜTUN EKLENMEZ: ekrana bugün çizilmeyen bir
+#: sütun, CP'den sapma olurdu ve "beş sütun birebir" ölçümünü bozardı. Beyan sözleşme tarafında
+#: durur (`DECLARED_SINKS` DEĞİL — o mekanizma artefakt yazımı içindir, alan sözleşmesi için
+#: değil); okuyucusu doğduğu gün bu satır silinir.
+_WEBHOOK_SIR_ALANI = "secret"
+_WEBHOOK_SIR_BEYANI = "secret_tanimli"
+
+
+def _webhook_sirrini_suz(govde: object) -> tuple[object | None, str | None]:
+    """`items[*].secret`i SİLER, yerine `secret_tanimli: bool` yazar. Başka alana DOKUNMAZ.
+    `(govde, neden)` — ikisinden tam biri doludur.
+
+    ROL-1 HÜKMÜ (2026-09-03 gece, TSK-109 düzeltme turu 1). İlk yazımda sır aynen geçiyordu ve
+    gerekçe "CP de düzenleme penceresinde indiriyor"du. Hüküm o gerekçeyi reddetti:
+
+      · YASA 6 — OKUYUCUSUZ YAZIM YOK. Bu panonun webhook YAZMA yolu YOKTUR, yani imzalama
+        sırrının tarayıcıda hiçbir okuyucusu yok. CP'nin düzenleme penceresi VAR, bizim YOK —
+        "CP ile birebir" bir gerekçe değil, bir benzetmeydi.
+      · SIR HİJYENİ — okunmayan bir sırrı tele koymanın bedeli bedava değildir.
+
+    ÜÇ HÂL KORUNUR (uydurma yasağı): alan HİÇ gelmediyse `secret_tanimli` de YAZILMAZ — yazmak,
+    upstream'in söylemediği bir şeyi ("sır tanımlı değil") ölçülmüş gibi göstermek olurdu.
+    Alan geldiyse boş/`null` → `False`, dolu → `True`.
+
+    `items` YOKSA ya da liste DEĞİLSE GÖVDE VERİLMEZ — FAIL-CLOSED (Rol-1 hükmü 2026-09-03,
+    TSK-109 düzeltme turu endişesi). İlk yazım burada gövdeyi AYNEN geçiriyordu ve gerekçesi
+    "tanımadığım şekli bozmam"dı. Hüküm o gerekçeyi reddetti: bu kanca bir SIR SÜZGECİdir ve
+    tanımadığı şekilde "aynen geçir" demek, upstream şeması kaydığı gün (sır başka bir alana
+    ya da başka bir zarfa taşındığında) süzgecin SESSİZCE AÇILMASI demektir. Fail-open bir sır
+    duvarı, duvar değildir.
+
+    BEDEL ÖLÇÜLDÜ VE KABUL EDİLDİ (bedel yasası): kazanılan, sır hijyeninin şema sürüklenmesine
+    dayanması; kaybedilen, o gün webhook listesinin panoda HİÇ görünmemesi — ama ekranda
+    "ölçülemedi + gerekçe" yazar (bu yüzeyin kurucu sözleşmesi), yani sessiz bir boşluk değil
+    ADI KONMUŞ bir arızadır ve operatör onu görür. Sır hijyeni > erişilebilirlik.
+
+    SESSİZ YUTMA DEĞİLDİR: dal `neden` üretir, yani sinyal YANITIN KENDİSİDİR (Yasa 4)."""
+    ogeler = govde.get("items") if isinstance(govde, dict) else None
+    if not isinstance(ogeler, list):
+        return None, (
+            "webhook zarfı tanınmayan şekilde (`items` listesi yok) — imza sırrı "
+            "süzülemediği için gövde verilmedi; upstream şema sürüklenmesi olabilir")
+    suzulmus = []
+    for oge in ogeler:
+        if not isinstance(oge, dict) or _WEBHOOK_SIR_ALANI not in oge:
+            suzulmus.append(oge)
+            continue
+        kalan = {ad: deger for ad, deger in oge.items() if ad != _WEBHOOK_SIR_ALANI}
+        kalan[_WEBHOOK_SIR_BEYANI] = bool(oge[_WEBHOOK_SIR_ALANI])
+        suzulmus.append(kalan)
+    return {**govde, "items": suzulmus}, None
+
+
 @app.get("/api/hindsight/webhooklar")
 def api_hindsight_webhooklar(request: Request, bank: str | None = None):
     """CP `webhooks-view` listesi → upstream `/webhooks` (`list_webhooks`).
@@ -8790,11 +8940,19 @@ async def _hafiza_istek_govdesi(request: Request,
 
 
 def _hafiza_recall(bank: str, govde: dict) -> dict:
-    """Kimlikli POST + `{govde, neden}`. Ağ çağrısı yapar — iş parçacığı havuzunda çalıştırılır."""
+    """Kimlikli POST + `{govde, neden}`. Ağ çağrısı yapar — iş parçacığı havuzunda çalıştırılır.
+
+    YOL ÜÇÜNCÜ KOPYAYDI (nihai inceleme Ö1'in kapsamı, 2026-09-03): burada URL kökten elle
+    kuruluyordu, yani okuma ve yazma bacaklarına taşınan `bank` duvarı bu bacağa GELMEZDİ ve
+    "duvar tek boğazda" cümlesi doğduğu gün yarım olurdu. Artık `_hafiza_bank_yolu` — kaçırma
+    da duvar da tek yerde."""
+    yol, neden = _hafiza_bank_yolu(bank, "/memories/recall")
+    if yol is None:
+        return {"govde": None, "neden": neden}
     anahtar, neden = _hafiza_anahtari()
     if not anahtar:
         return {"govde": None, "neden": neden}
-    url = (f"{HAFIZA_TABAN_URL}{_HAFIZA_BANK_KOKU}/{_hafiza_kacir(bank)}/memories/recall")
+    url = f"{HAFIZA_TABAN_URL}{yol}"
     ham, neden = _hafiza_post(url, {"Authorization": f"Bearer {anahtar}",
                                     "Content-Type": "application/json"},
                               anahtar, json.dumps(govde).encode("utf-8"))
@@ -8806,8 +8964,13 @@ def _hafiza_recall(bank: str, govde: dict) -> dict:
 async def api_hindsight_recall(request: Request):
     """CP `recall` oyun alanı — SALT-OKUNUR SÖZLEŞMESİNİN TEK BEYANLI İSTİSNASI.
 
-    Neden POST: upstream `recall` bir SORGUdur ama gövdesi bir GET'e sığmaz (types/tags/
-    temporal_window/min_scores). Durum DEĞİŞTİRMEZ — çivili: `test_recall_state_defterine_yazmaz`
+    Neden POST: upstream `recall` bir SORGUdur ama gövdesi bir GET'e sığmaz — `types` ve `tags`
+    DİZİdir, `query` serbest metindir (uzunluk sınırı yok), `prefer_observations`/`trace`
+    bayraklarıyla birlikte sorgu dizesi hem kırılgan hem kayıt defterlerine düşen bir yer olurdu.
+    ÖRNEK BEYAZ LİSTEDEN SEÇİLİR (nihai inceleme Ö2): burada önce `_HAFIZA_RECALL_ALANLARI`
+    listesinde OLMAYAN iki alan yazıyordu — yani KODUN DÜŞÜRDÜĞÜ alanlar, POST olmanın gerekçesi
+    gösteriliyordu. Kapsam dışı alanların adı ve gerekçesi TEK yerdedir: o sabitin şerhi.
+    Durum DEĞİŞTİRMEZ — çivili: `test_recall_state_defterine_yazmaz`
     ve rota tablosu çivisi (`/api/hindsight*` altında POST'a izin verilen TEK yol burasıdır).
 
     `bank` YALNIZ `bank` ALANINDAN OKUNUR. CP `body.bank_id || body.agent_id || "default"` yazar;
@@ -8870,11 +9033,6 @@ async def api_hindsight_recall(request: Request):
 # tek cümleyle özetlenememesi — yazan fiil listesi bundan sonra ELLE bakımlı bir beyandır
 # (çivisi: `test_yazan_fiil_yalniz_beyanli_yollarda`).
 
-#: EYLEM → (upstream FİİL, upstream yol kuyruğu). KAPALI SÖZLÜK: istemci yalnız ANAHTAR seçer.
-#: Kuyruktaki `{}` `_hafiza_bank_json`in kuyruk konvansiyonudur (`/memories/{}` emsali) ve
-#: `_hafiza_kacir`den GEÇMİŞ kimlikle doldurulur. `iptal` ile `yeniden-dene` aynı ön eki
-#: paylaşır (`/operations/{}` ⊂ `/operations/{}/retry`) — bu yüzden FİİL de tabloda: yalnız yola
-#: bakan bir eşleme, bir fiil sapmasını sessizce başka bir uca çevirirdi.
 #: EYLEM → (upstream FİİL, upstream yol kuyruğu, gövde BEYAZ LİSTESİ). KAPALI SÖZLÜK: istemci
 #: yalnız ANAHTAR seçer. Kuyruktaki `{}` `_hafiza_bank_yolu`nun konvansiyonudur
 #: (`/memories/{}` emsali) ve `_hafiza_kacir`den GEÇMİŞ kimlikle doldurulur. `iptal` ile
@@ -8896,25 +9054,54 @@ _HAFIZA_ISLEM_EYLEMLERI: dict[str, tuple[str, str, tuple]] = {
 #: `ConsolidationRequest`, tek alan `observation_scopes` (nullable, array-of-array-of-string).
 #: Zorunlu DEĞİL ve CP de göndermiyor (`lib/api.ts::triggerConsolidation` gövdesiz) — bu yüzden
 #: istemci sormadıkça alan HİÇ gitmez (`recall`ın `max_tokens` dersi).
+#:
+#: `observation_scopes` BUGÜN OKUYUCUSUZ — VE BU BİLEREK (nihai inceleme K7, Yasa 6 beyanı,
+#: 2026-09-03). Pano onu HİÇ göndermiyor ve göndermemesi ayrıca ÇİVİLİ (v378
+#: `test_tetikleme_UST_YUZEY_GIBI_GOVDESIZ_gider`), yani beyaz listedeki tek ad bugün ölü bir
+#: yol açıyor gibi görünür. Yasa 6'nın sorduğu soru "okuyanı gösterebiliyor musun"dur; buradaki
+#: cevap "hayır, ve alan bu yüzden ZORUNLU DEĞİL — liste bir GÜVENLİK SINIRIdır, bir yetenek
+#: beyanı değil". Liste boş olsaydı `_hafiza_suzuk_govde` istemcinin GÖNDERDİĞİ hiçbir alanı
+#: geçirmezdi ve upstream'in bu ucunun gövdeli çağrısı BİZDE hiç var olamazdı; alanı ADIYLA
+#: yazmak, ölçülmüş şemayı kaydeder ve yolu açan turun ölçüm yapmasını gereksiz kılar.
 _HAFIZA_KONSOLIDASYON_EYLEMLERI: dict[str, tuple[str, str, tuple]] = {
     "kurtar":  ("POST", "/consolidation/recover", ()),
     "tetikle": ("POST", "/consolidate", ("observation_scopes",)),
 }
-#: Yol parçasında GÖRÜLDÜĞÜ ANDA reddedilen diziler. `..` tek başına da yasak: kaçırılmış
-#: `%2E%2E` bile, yüzde-çözen bir ara katmandan sonra üst dizin demektir. `%` DE YASAK — istemci
-#: zaten kaçırılmamış ham kimlik gönderir; içinde `%` olan bir değer ya çift-kodlamadır ya da
-#: kaçırmayı delme denemesidir, ikisi de bu yüzeyde meşru değildir.
-_HAFIZA_YASAK_PARCA = ("..", "/", "\\", "%")
+#: DEĞERİN HERHANGİ BİR YERİNDE görüldüğü anda reddedilen imler.
+#:   · `%` — istemci zaten kaçırılmamış ham kimlik gönderir; içinde `%` olan bir değer ya
+#:     ÇİFT KODLAMAdır ya da kaçırmayı delme denemesidir (`%2E%2E` → yüzde-çözen bir ara
+#:     katmandan sonra üst dizin), ikisi de bu yüzeyde meşru değildir.
+#:   · `\\` — HTTP yolunun ayırıcısı değildir ve ölçülen hiçbir meşru kimlikte yoktur (repo
+#:     yolları `/` kullanır, UUID'lerde hiç yoktur); Windows biçimli bir traversal denemesinin
+#:     tek girişi odur. Listede kalması bir SIKILAŞTIRMAdır ve bedeli ölçüldü: SIFIR.
+_HAFIZA_YASAK_IM = ("%", "\\")
+#: SEGMENT olarak (yani `/` ile bölündüğünde) reddedilen değerler. Traversal YALNIZ `..` ile
+#: mümkündür; `.` zararsızdır (aynı dizin) ve kaçırma onu zaten `%2E` yapar.
+_HAFIZA_YASAK_SEGMENT = ("..",)
 
 
 def _hafiza_yol_parcasi_guvenli(ad: str, deger) -> tuple[str | None, str | None]:
-    """Upstream PATH'ine girecek bir istemci alanının TEK duvarı. `(neden, sınıf)`; güvenliyse
+    r"""Upstream PATH'ine girecek bir istemci alanının TEK duvarı. `(neden, sınıf)`; güvenliyse
     `(None, None)`. `sınıf` deftere yazılır — gerekçe METNİ değil (ham değer taşır), SINIFI.
 
-    İKİ ALANA DA UYGULANIR (düzeltme turu 1, I-2). Önce yalnız `id` kontrol ediliyordu; `bank`
-    yalnız kaçırılıyordu. Ama duvarın BEYAN EDİLMİŞ gerekçesi ("`%2F`yi rotalamadan ÖNCE çözen
-    bir ara katman kaçırmayı delebilir") `bank` için de aynen geçerlidir: `bank` da upstream
-    yolunun bir segmentidir. Gerekçe doğruysa duvar yarım olamaz; yanlışsa duvar gereksizdi.
+    ÜÇ ÇAĞIRAN, ÜÇÜ DE TAM (düzeltme turu 1 I-2 + nihai inceleme Ö1, 2026-09-03). Önce yalnız
+    `id` kontrol ediliyordu; `bank` yalnız kaçırılıyordu. Sonra yazma bacağı (`_hafiza_yazma_
+    girdisi`) ikisini de duvardan geçirdi — ama okuma bacağının 22 ucunda `bank` HÂLÂ yalnız
+    kaçırılıyordu, yani bu docstring çağıranlarının yarısında yalan söylüyordu. Duvarın BEYAN
+    EDİLMİŞ gerekçesi ("`%2F`yi rotalamadan ÖNCE çözen bir ara katman kaçırmayı delebilir")
+    `bank` için de aynen geçerlidir: `bank` da upstream yolunun bir segmentidir. Gerekçe
+    doğruysa duvar yarım olamaz; yanlışsa duvar gereksizdi — ve gerekçe ÖLÇÜLDÜ (2026-09-03:
+    uvicorn `path = unquote(raw_path)`, h11 ve httptools uygulamalarının ikisinde de,
+    rotalamadan ÖNCE; upstream Hindsight de uvicorn üstünde koşuyor).
+
+    ÇAĞIRANLAR VE KAPSAMLARI: (1) `_hafiza_bank_yolu` — `bank` VE kuyruk şablonunu dolduran
+    HER kimlik; OKUMA + YAZMA + RECALL bacaklarının hepsi oradan geçer, yani upstream PATH'ine
+    giren her segment buradan geçmiş demektir (düzeltme turu 2, Y-1); (2) `_hafiza_yazma_girdisi`
+    — `bank` + `id`, ret izini de üretir ve 400 döner; (3) `api_hindsight_varlik` — `id`, okuma
+    tarafında ERKEN reddeden tek uç (ret izi `_hafiza_okuma_reddi`, 400). (2) ve (3) hâlâ
+    ayrıca çağırır çünkü ret SINIFI farklıdır: (1)'in reddi bir ÖLÇÜLEMEZLİKtir (200+neden),
+    (2)/(3)'ünki isteğin KENDİSİNİN kabul edilemez olmasıdır (4xx + iz).
+    Dördüncü bir çağıran eklenirse iz sözleşmesi de eklenmelidir.
 
     TİP DUVARI ÖNCE (düzeltme turu 1, I-1 — İNCELEMENİN ÖLÇTÜĞÜ ARIZA). Eski duvar
     `parca in kimlik` yapıyordu ve tip körüydü: `{"id": 123}` → `"/" in 123` → `TypeError` →
@@ -8924,7 +9111,34 @@ def _hafiza_yol_parcasi_guvenli(ad: str, deger) -> tuple[str | None, str | None]
     ŞANSLIYDI. `bool` de dizge değildir ve `True` reddedilir (JSON `true` bir kimlik değildir).
 
     BOŞLUK DA REDDEDİLİR: kaçırma onu `%20` yapar ve upstream'e giden yol sessizce başka bir
-    kimliğe işaret eder; operatörün gördüğü hata "kayıt yok" olur, oysa ölçülen şey kirli girdidir."""
+    kimliğe işaret eder; operatörün gördüğü hata "kayıt yok" olur, oysa ölçülen şey kirli
+    girdidir. Kontrol karakterleri aynı sınıftadır (`\x00` bir kimlik değildir).
+
+    `/` İÇERİDE İZİNLİDİR — VE BU BİR REGRESYON DÜZELTMESİDİR (düzeltme turu 3, Rol-1 hükmü
+    2026-09-03). Düzeltme turu 2 duvarı bütün kimliklere yaydı ve kural o gün `/`yi de
+    reddediyordu; ÖLÇÜM bunun bu depodaki BÜTÜN belgeleri kırdığını gösterdi:
+
+      · ÖLÇÜM (A1, 2026-09-03 02:31Z): Hindsight'taki belge kimlikleri REPO YOLUdur —
+        `research/cards/EDG-2026-037-tca-gercek-friksiyon.yaml`, `docs/…md`; parçalar
+        `ROADMAP.md#7` gibi. İçe alma betiği `document_id`yi repo yoluna EŞİTLİYOR.
+      · ÖLÇÜM (aynı oturum): upstream `documents/{document_id}/chunks` bu kimliği HEM `%2F`
+        ile kaçırılmış hâliyle (200) HEM ham `/` ile (200) kabul ediyor.
+      · SONUÇ: "kimliklerde `/` reddedilir" kuralı `/belge-parcalari` (Belgeler çekmecesi) ve
+        `/belge` detayını her belgemiz için kırdı — tur 2 öncesi kaçırma-geçişiyle ÇALIŞIYORDU.
+
+    TRAVERSAL YALNIZ `..` İLE MÜMKÜNDÜR ve o REDDEDİLİR (segment olarak: `^\.\.$` · `/../` ·
+    baştaki `../` · sondaki `/..`). Boş segment (`//`), baştaki `/` ve boş dizge de reddedilir:
+    ikisi de upstream yolunda sessizce başka bir rotaya düşer.
+
+    BEDEL AÇIKÇA BEYAN EDİLİR (bedel yasası): `/` içeren bir kimlik, AYNI KİRACI içinde başka
+    bir rotaya düşebilir (ör. `.../documents/a/chunks` yerine `.../documents/a/b/chunks`).
+    Kazanılan, yüzeyin gerçek veriyle çalışması; kaybedilen, "kimlik tek segmenttir" güvencesi.
+    Kayıp SINIRLIdır ve sınırı ölçülmüştür: kimlikli oturumun ZATEN sahip olduğu yetkiden
+    fazlası değildir — banka kökü (`_HAFIZA_BANK_KOKU` + kaçırılmış `bank`) sabittir ve ondan
+    YUKARI çıkmanın tek yolu `..`dır, o da bu duvarda kesilir.
+
+    KAÇIRMA POLİTİKASI DEĞİŞMEDİ: `_hafiza_kacir` `quote(safe="")` ile `/`yi `%2F` yapmaya
+    devam eder. Yani `/` "izinli" olmak ham geçmek DEĞİLDİR; iki hat hâlâ birlikte."""
     if not isinstance(deger, str):
         return (f"`{ad}` alanı dizge değil ({type(deger).__name__}) — upstream yolunun bir "
                 f"segmenti olacak bu alan yalnız boş-olmayan bir dizge olabilir; "
@@ -8932,13 +9146,22 @@ def _hafiza_yol_parcasi_guvenli(ad: str, deger) -> tuple[str | None, str | None]
     if not deger:
         return (f"`{ad}` alanı boş — hangi banka/kayıt üzerinde çalışılacağı belirsiz; "
                 f"upstream'e hiç gidilmedi"), "alan_bos"
-    for parca in _HAFIZA_YASAK_PARCA:
-        if parca in deger:
-            return (f"`{ad}` alanında yol kaçışı var ({parca!r}) — upstream'e hiç gidilmedi; "
+    for im in _HAFIZA_YASAK_IM:
+        if im in deger:
+            return (f"`{ad}` alanında yol kaçışı var ({im!r}) — upstream'e hiç gidilmedi; "
                     f"yazan bir uçta bu, başka bir kayda basmak demektir"), "yol_kacisi"
-    if any(k.isspace() for k in deger):
-        return (f"`{ad}` alanında boşluk karakteri var — kaçırma onu `%20`ye çevirir ve istek "
-                f"sessizce başka bir kimliğe gider; upstream'e hiç gidilmedi"), "alan_boslugu"
+    if any(k.isspace() or ord(k) < 32 or ord(k) == 127 for k in deger):
+        return (f"`{ad}` alanında boşluk ya da kontrol karakteri var — kaçırma onu `%20`/`%00` "
+                f"yapar ve istek sessizce başka bir kimliğe gider; upstream'e hiç gidilmedi"
+                ), "alan_boslugu"
+    segmentler = deger.split("/")
+    if any(s in _HAFIZA_YASAK_SEGMENT for s in segmentler):
+        return (f"`{ad}` alanında yol kaçışı var (`..` segmenti) — upstream'e hiç gidilmedi; "
+                f"yazan bir uçta bu, başka bir kayda basmak demektir"), "yol_kacisi"
+    if any(s == "" for s in segmentler):
+        return (f"`{ad}` alanında boş yol segmenti var (baştaki `/`, sondaki `/` ya da `//`) — "
+                f"upstream yolunda sessizce başka bir rotaya düşer; upstream'e hiç gidilmedi"
+                ), "bos_segment"
     return None, None
 
 
@@ -8972,10 +9195,15 @@ def _hafiza_yaz(yontem: str, kuyruk: str, bank: str, *, kimlikler: tuple = (),
     pano `ok:false` görür, operatör "olmadı" sanıp TEKRAR basardı — `sil`de bu ikinci bir
     GERİ ALINAMAZ çağrıdır. "Çağrı gitti mi" sorusunun cevabı artık ayrı bir alanda: `http`
     doluysa upstream cevap vermiştir, `ok:false` yalnız "cevabını kullanamadım" demektir."""
+    # DUVAR ANAHTARDAN ÖNCE (okuma bacağıyla AYNI sıra, aynı gerekçe): ret, bu makinede
+    # anahtarın olup olmamasına bağlı olamaz.
+    yol, neden = _hafiza_bank_yolu(bank, kuyruk, kimlikler)
+    if yol is None:
+        return {"ok": False, "http": None, "govde": None, "neden": neden}
     anahtar, neden = _hafiza_anahtari()
     if not anahtar:
         return {"ok": False, "http": None, "govde": None, "neden": neden}
-    url = f"{HAFIZA_TABAN_URL}{_hafiza_bank_yolu(bank, kuyruk, kimlikler)}"
+    url = f"{HAFIZA_TABAN_URL}{yol}"
     basliklar = {"Authorization": f"Bearer {anahtar}"}
     ham_govde = None
     if govde is not None:
@@ -9062,7 +9290,17 @@ async def api_hindsight_islem(eylem: str, request: Request):
     CP'DEKİ DÜĞME KAPILARI BURADA UYGULANMAZ, BİLEREK (ölçüldü: CP `iptal`i yalnız `pending`,
     `yeniden-dene`yi `failed|cancelled`, `sil`i `failed|cancelled|completed` satırlarda çizer).
     Durum kapısı bir GÖRÜNÜM kuralıdır ve tek doğrusu upstream'dedir; burada tekrarlansaydı iki
-    kopya sessizce ayrışır ve vekil, upstream'in izin verdiği bir eylemi reddetmeye başlardı."""
+    kopya sessizce ayrışır ve vekil, upstream'in izin verdiği bir eylemi reddetmeye başlardı.
+
+    `obs.log` SARMALANMADI — KARAR YAZILI (nihai inceleme K3, 2026-09-03). Aynı dosyada
+    `_diag_onbellek_bosalt` gerekçeli olarak sarılıyor ("kayıt kanalının düşmesi bir HALT/onay
+    isteğini 500'e çeviremez"), yani sarmamak bir sapmadır ve sapma ölçülür: `obs._emit` store
+    arızasını ZATEN yutar, geriye yalnız STDOUT arızası kalır (kapalı boru / dolu disk). O
+    gerçekleşirse BAŞARILI bir `sil`den sonra 500 döner ve operatör tekrar basar — kabul edilen
+    bedel budur ve KÜÇÜK olduğu için kabul edildi. Sarmamanın karşılığı ise büyük: bir `try`
+    bloğu buradaki izi "en iyi çaba" sınıfına indirirdi, oysa v54'ün sözleşmesi ("operatörün
+    bastığı her düğme deftere düşer") tam olarak iz KAYBOLMASIN diye var. İz ZORUNLUDUR;
+    zorunlu bir yazımı sessizce yutan bir sarmalayıcı, Yasa 4'ün adını koyduğu şeydir."""
     _auth(request)
     paket, hata = await _hafiza_yazma_girdisi(request, _HAFIZA_ISLEM_EYLEMLERI, eylem,
                                               kimlik_gerekli=True)

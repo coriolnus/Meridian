@@ -408,10 +408,22 @@ export function ZihinModelleri({ bank }: { readonly bank: string }) {
                                   teknik="ad alanı yok ya da dizge değil"
                                   kisa
                                 />
-                              ) : (
+                              ) : kimlik === null ? (
                                 <span className="block truncate font-medium text-sm" title={ad}>
                                   {ad}
                                 </span>
+                              ) : (
+                                /* DÜĞME, ÇÜNKÜ KLAVYE (nihai inceleme Ö-6): satır
+                                   tıklanabilirdi ama odaklanamıyordu — `Varliklar.tsx`
+                                   deseni, aynı gerekçeyle. */
+                                <button
+                                  type="button"
+                                  className="block w-full truncate text-left font-medium text-sm hover:underline"
+                                  title={ad}
+                                  onClick={() => setAcik(m)}
+                                >
+                                  {ad}
+                                </button>
                               )}
                               <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
                                 {metin(m.source_query) ?? (

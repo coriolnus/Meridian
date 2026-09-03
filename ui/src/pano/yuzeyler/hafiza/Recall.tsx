@@ -3,25 +3,32 @@
 /* ============================================================================
    HAFIZA · RECALL — üst yüzeyin `recall` oyun alanının karşılığı
    ----------------------------------------------------------------------------
-   BU YÜZEYİN TEK "GÖNDEREN" EKRANI, VE BEYANI BURADA DURUYOR. Vekilin CPUI
-   tablosundaki uçlarının tümü salt-okunur GET; `recall` POST'tur ve nedeni bir yetki
+   `recall` CPUI TABLOSUNDA DEĞİLDİR — kendi beyanıyla POST'tur. Tablodaki
+   okuma uçlarının tümü salt-okunur GET; `recall`ın POST olma nedeni bir yetki
    değil bir BOYUTtur: sorgu gövdesi (türler, etiketler, zaman damgası, bütçe)
    bir adres satırına sığmaz. Durum DEĞİŞTİRMEZ ve bu çivili
    (`api.py::api_hindsight_recall` şerhi + `test_recall_state_defterine_yazmaz`).
    İstek gövdesi sunucuda BEYAZ LİSTEyle süzülür (`::_HAFIZA_RECALL_ALANLARI`):
    burada yazdığımız bir alan listede yoksa upstream'e HİÇ gitmez.
 
-   ---------------------------------------------------------------------------
-   ÜST YÜZEYDE OLUP BURADA OLMAYAN İKİ DENETİM — VE NEDENLERİ
-   ---------------------------------------------------------------------------
-   Üst yüzeyin sorgu şeridi bizde OLMAYAN iki şey daha gönderiyor ve ikisi de
-   ekranda adıyla yazılı duruyor:
+   "TEK GÖNDEREN EKRAN" İDDİASI KALKTI (TSK-109 incelemesi Ö-3, 2026-09-03):
+   TSK-111 dilim 1 bu yüzeye GERÇEK yazan uçlar soktu (`yazma.tsx`, beyanlı
+   `YAZAN_YOLLAR`) ve o cümle o gün sessizce yalana döndü. Gönderim yolu bu
+   ekranda da artık panonun TEK yazma kapısıdır (`gonder.ts::apiPost`).
 
-     · EK GÖVDE (`include`) — "parçaları da getir" / "varlıkları da getir"
-       kutuları. Alan vekilin beyaz listesinde YOK. Kutuyu çizip göndermemek,
-       operatöre çalışan bir düğme göstermek olurdu: kutu işaretlenir, yanıtta
-       hiçbir şey değişmez ve kimse nedenini bilmez.
-     · ZAMAN PENCERESİ (`temporal_window`) — aynı sebep, aynı sonuç.
+   ---------------------------------------------------------------------------
+   ÜST YÜZEYDE OLUP BURADA OLMAYAN İKİ DENETİM — GEREKÇE TEK KAYNAKTA
+   ---------------------------------------------------------------------------
+   Üst yüzeyin sorgu şeridi bizde OLMAYAN iki şey daha gönderiyor: EK GÖVDE
+   (`include`) ve ZAMAN PENCERESİ (`temporal_window`). Kutuyu çizip göndermemek,
+   operatöre çalışan bir düğme göstermek olurdu: kutu işaretlenir, yanıtta hiçbir
+   şey değişmez ve kimse nedenini bilmez.
+
+   KAPSAM DIŞI ALANLARIN LİSTESİ VE GEREKÇELERİ BURADA DEĞİL, `api.py`
+   `::_HAFIZA_RECALL_ALANLARI` ŞERHİNDEDİR (nihai inceleme Ö2, tek-kaynak yasası):
+   orada DÖRT alan var (`temporal_window` · `tag_groups` · `include` · `min_scores`)
+   ve buradaki iki maddelik kopya, listenin TAM olduğu izlenimini veriyordu. Bu
+   satır o şerhe İŞARET eder, onu kopyalamaz.
 
    Bu yüzden gövdenin `entities`/`chunks` bölümleri bu panoda HER ZAMAN boş
    gelir ve ekran bunu "sonuç yok" diye DEĞİL, "istenmedi" diye yazar. İkisi
@@ -44,6 +51,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import type { Bolum } from "../../alanlar";
+import { apiPost } from "../../gonder";
 import { OturumHatasi, hataEki } from "../../veri";
 import { BolumKart, Olculemedi, Satir } from "../sistem/parcalar";
 
@@ -75,45 +83,64 @@ const BUTCELER = [
 const VARSAYILAN_TOKEN = "4096";
 
 /**
- * TEK GÖNDERİM — ve neden `veri.ts`e yazılmadı.
+ * TEK GÖNDERİM — VE ARTIK PANONUN TEK YAZMA KAPISINDAN (nihai inceleme Ö-2).
  *
- * Panonun veri katmanı bugün yalnız GET biliyor (`apiGet`/`useApi`). Oraya genel
- * bir gönderim yardımcısı eklemek, panonun HER yüzeyine yazma yolu açan bir
- * kapıyı bu turda açmak olurdu — oysa gönderen tek ekran bu ve gönderdiği şey
- * bir SORGU. Yardımcı bu yüzden burada, dar kapsamda yaşıyor. Genel bir ihtiyaç
- * doğduğu gün taşınır; o gün geldiğinde taşımak, bugün genelleştirmekten ucuzdur.
+ * BURADA İKİNCİ BİR POST KAPISI VARDI. Kendi `fetch`ini açıyor, 401 çevrimini,
+ * JSON ayrıştırmasını ve `hataEki` çağrısını yeniden yazıyordu; eski şerh yalnız
+ * "neden `veri.ts`e yazılmadı" sorusunu cevaplıyor, `gonder.ts::apiPost`ın ZATEN
+ * var olduğuna hiç değinmiyordu. İki POST uygulaması sessizce ayrışır: kimlik
+ * bilgisi, başlık ya da zaman aşımı politikası `apiPost`ta değişirse recall onu
+ * ALMAZDI — ve v378'in `fetch(` yasağı (yazma yüzeyinin tek-kapı çivisi) bu
+ * dosyayı hiç görmüyordu.
  *
  * OTURUM DÜŞMESİ AYRI HÂL (`veri.ts` sözleşmesi): 401'i "okunamadı" diye
  * göstermek operatörü ağa bakmaya gönderirdi; çaresi yalnız yeniden giriştir.
+ * Çevrim BURADA yapılır, `apiPost`a "401'i fırlat" kipi EKLENMEDİ: kapı ne
+ * fırlatır ne yutar (kendi başlığındaki sözleşme) ve o sözleşmeyi bir bayrakla
+ * delmek, kapıyı iki davranışlı yapardı.
+ *
+ * `kod === 0` = YANIT HİÇ GELMEDİ (ağ/iptal). "HTTP 0" diye yazmak, sunucunun
+ * söylemediği bir şeyi söylemiş gibi göstermek olurdu.
  */
 async function recallGonder(govde: Record<string, unknown>): Promise<RecallZarfi> {
-  const y = await fetch(UC_RECALL, {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(govde),
-  });
-  if (y.status === 401) throw new OturumHatasi("oturum düştü");
-  if (!y.ok) {
+  const s = await apiPost(UC_RECALL, govde);
+  if (s.kod === 401) throw new OturumHatasi("oturum düştü");
+  if (s.kod === 0) throw new Error(`${UC_RECALL} → istek gitmedi: ${s.detay ?? "ağ hatası"}`);
+  if (!s.ok) {
     /* RET GÖVDESİNİN OKUYUCUSU ORTAK (`veri.ts::hataEki`, inceleme I-2): burada
        dört satırlık bir ikizi duruyordu ve üçüncü ret adını (`neden`) ÖĞRENMEMİŞTİ.
        Bugün etkisi yoktu — bu uç ret hâllerini 200 + gerekçe zarfıyla döndürüyor —
-       ama bir gün 400 döndürdüğünde cümle SESSİZCE düşerdi. */
-    let ek = "";
-    try {
-      ek = hataEki(await y.json());
-    } catch {
-      // sessiz-yutma: gövde JSON değilse (vekil önündeki bir katmanın düz metin
-      // hatası) ayrıştırma hatası ASIL hatayı gizlememeli; durum kodu aşağıda yazılı.
-    }
-    throw new Error(`${UC_RECALL} → HTTP ${y.status}${ek}`);
+       ama bir gün 400 döndürdüğünde cümle SESSİZCE düşerdi. `apiPost` ham gövdeyi
+       (`ham`) tam da bunun için taşıyor. */
+    throw new Error(`${UC_RECALL} → HTTP ${s.kod}${hataEki(s.ham)}`);
   }
-  return (await y.json()) as RecallZarfi;
+  /* 2xx + ÇÖZÜLEMEYEN GÖVDE ÜÇÜNCÜ HÂLDİR (düzeltme turu 2, Y-3). `apiPost` JSON ayrıştırma
+     hatasını İŞARETLİ olarak yutar ve `govde: null` döner — `ok` hâlâ `true`dur. Bunu zarf
+     diye geçirmek `zarf === null` demekti ve çağıran o hâli "henüz sorulmadı" diye çiziyor:
+     operatör "Sor"a basar, ekranda HİÇBİR ŞEY olmaz, gerekçe hiçbir yerde yoktur. Eski
+     `fetch` yazımı bu sınıfta ATIYORDU; tek kapıya geçerken kaybolan tek şey buydu.
+     "Ölçülemedi" ile "henüz sorulmadı" tek `null`da birleşemez — bu yüzeyin kurucu dersi. */
+  if (s.govde === null) {
+    throw new Error(`${UC_RECALL} → yanıt gövdesi çözülemedi (HTTP ${s.kod})`);
+  }
+  return s.govde as RecallZarfi;
 }
 
-/** Skor satırı — HAM basılır (dosya başlığındaki şerh). */
+/** Skor satırı — HAM basılır (dosya başlığındaki şerh).
+ *
+ *  EKSİK SKOR SESSİZ DEĞİL (nihai inceleme K-7, 2026-09-03): burada `null`
+ *  dönülüyordu, yani gelmeyen bir skor ekrandan tamamen kayboluyordu ve dosya
+ *  başlığı "skorlar ham basılır" derken okuyucu eksik skoru "sıfır" ya da
+ *  "önemsiz" sanabiliyordu. Ölçülen şey ise şu: bu alanı üst servis yalnız
+ *  yeniden sıralayıcı (reranker) AÇIKKEN doldurur. Cümle o yüzden gerekçelidir. */
 function Skor({ ad, deger }: { readonly ad: string; readonly deger: unknown }) {
-  if (deger === undefined || deger === null) return null;
+  if (deger === undefined || deger === null) {
+    return (
+      <span className="font-mono text-[10px] text-muted-foreground/70">
+        {ad} — gelmedi (yeniden sıralayıcı kapalı ya da bu kayıtta skor üretilmedi)
+      </span>
+    );
+  }
   const n = sayi(deger);
   return (
     <span className="font-mono text-[10px] text-muted-foreground">

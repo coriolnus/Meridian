@@ -43,9 +43,10 @@
    cevaplar.
    ============================================================================ */
 import { useEffect, useState } from "react";
-import { RotateCcw, Trash2, X } from "lucide-react";
+import { RefreshCw, RotateCcw, Trash2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -587,9 +588,41 @@ function Webhooklar({ bank }: { readonly bank: string }) {
     `${UC_WEBHOOKLAR}?bank=${encodeURIComponent(bank)}`,
   );
 
+  /* SON OKUMA DAMGASI MUTLAK, GÖRELİ DEĞİL (düzeltme turu 2, Y-5) — VE TEK KAPIDAN
+     (`parcalar.tsx::damga`; ikinci bir tarih biçimlendiricisi aynı gerçeğin iki kopyası olurdu).
+
+     İLK YAZIM GÖRELİYDİ VE ÖLÇMÜYORDU: `goreliDamga(zaman, simdi)` bir `simdi` durumu istiyor,
+     o durum yalnız montajda ve Yenile'ye basınca güncelleniyordu — ama bu uç BİLEREK
+     YOKLANMIYOR (`useApi` periyotsuz). Yani sekme kırk dakika açık kalsa da etiket "az önce"
+     derdi: ekranda ölçüm gibi duran ama ölçmeyen bir cümle. Kalemin gerekçesi tam olarak
+     bayatlığın İŞARETİYDİ. Mutlak damga bir satır ve hiç yalan söylemez; kardeş desen
+     (`AnaSayfa::simdi = useMemo(…, [ozet.zaman])`) YOKLAYAN uçlarda anlamlıdır, burada değil. */
+  const sonOkuma = damga(webhooklar.zaman?.toISOString());
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* YENİLE DÜĞMESİ — ÜST YÜZEYDE ÖLÇÜLDÜ VE TAŞINDI (TSK-109 incelemesi
+            Ö-4, 2026-09-03). `webhooks-view.tsx` başlığında bir `RefreshCw`
+            düğmesi var; bizde YOKTU ve `useApi` periyotsuz çağrıldığı için liste
+            sekme monte olduğunda BİR kez okunuyordu — operatörün elinde tazeleme
+            yolu (sekmeden çıkıp girmek dışında) hiç yoktu ve bayatlığın işareti
+            de yoktu. Bu bir YAZMA düğmesi değil OKUMA denetimidir, yani "yazma
+            yolu Faz-2" gerekçesi onu kapsamıyordu. Emsal: `Islemler`in `tazele`
+            kullanımı, aynı dosyada. */}
+        <span className="text-muted-foreground text-[11px] tabular-nums">
+          {sonOkuma === null ? "henüz okunmadı" : `son okuma ${sonOkuma}`}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="xs"
+          aria-label="Webhook listesini yenile"
+          onClick={() => webhooklar.tazele()}
+        >
+          <RefreshCw className="size-3.5" aria-hidden />
+          Yenile
+        </Button>
         <Faz2Grup>
           <Faz2Dugme ne="yeni bir webhook tanımlar">Webhook ekle</Faz2Dugme>
         </Faz2Grup>
@@ -623,8 +656,12 @@ function WebhookTablosu({ govde }: { readonly govde: WebhookListesi }) {
 
   if (ogeler.length === 0) {
     return (
+      /* ROZET BİR KEZ (TSK-109 incelemesi K-5, 2026-09-03): başlıktaki `Faz2Grup`
+         rozeti zaten ekranda duruyor ve bu cümle onu ikinci kez okutuyordu —
+         `Faz2Grup` şerhinin kendi kuralı "rozet grubun başında BİR KEZ". */
       <p className="text-muted-foreground text-sm">
-        Tanımlı webhook yok — ölçüldü, liste boş döndü. Eklemek bu panodan yapılmıyor: {FAZ2_ROZET}.
+        Tanımlı webhook yok — ölçüldü, liste boş döndü. Eklemek bu panodan yapılmıyor
+        (yukarıdaki rozet).
       </p>
     );
   }
@@ -638,8 +675,9 @@ function WebhookTablosu({ govde }: { readonly govde: WebhookListesi }) {
           sayfanın ilk dilimi sanabilirdi (`Sayfalama` şeridinin dersi). */}
       <p className="text-muted-foreground text-xs">
         {ogeler.length.toLocaleString("tr-TR")} webhook. Sayı çizilen satırlardan gelir: bu uç
-        toplam alanı göndermiyor — ama sayfalama da yok (üst servis bu uçta sınır/atlama
-        parametresi tanımıyor), yani liste tamdır.
+        toplam alanı göndermiyor — ve kırpıldığına dair bir işaret de yok (üst servis bu uçta
+        sınır/atlama parametresi tanımıyor, gövde de toplam alanı taşımıyor). Bu bir ÇIKARIMDIR,
+        ölçüm değil: sunucunun kendi tavanı olsaydı bu ekrandan görünmezdi.
       </p>
       <div className="overflow-x-auto">
         <Table>
@@ -700,13 +738,24 @@ function WebhookSatiri({ webhook }: { readonly webhook: WebhookKaydi }) {
         )}
       </TableCell>
       <TableCell>
-        {olaylar === null ? (
-          <Olculemedi
-            neden="Olay türleri gelmedi"
-            teknik="`event_types` alanı yok ya da liste olarak okunamayan bir tiple geldi"
-            kisa
-          />
-        ) : olaylar.length === 0 ? (
+        {/* BOŞ LİSTE CÜMLESİ YALNIZ GERÇEKTEN BOŞ DİZİDE (TSK-109 incelemesi K-4,
+            2026-09-03): `listeye` sözleşmesi gereği boş dizi ÜÇ upstream hâlinden
+            gelebilir — (a) gerçekten boş dizi, (b) `event_types: null`, (c)
+            elemanları düşürülmüş dizi. Üçüne birden "tüm olaylar" demek, üçünün EN
+            İDDİALI cümlesini basmaktı. Şema bugün alanı zorunlu-dizi tuttuğu için
+            yalnız (a) erişilebilir; sürüklenme gününde ekran yalan söylerdi.
+            `null` dalı ARTIK `Cipler`E DELEGE (K-2): oradaki metin
+            (`${ne} gelmedi`) bununla BAYT-AYNIydı ve iki kopya sessizce ayrışırdı;
+            alan adını taşımak için `Cipler`e `teknik` parametresi eklendi.
+
+            ÜÇÜNCÜ HÂL HÂLÂ BİRLEŞİK — VE BU BİLİNÇLİ (düzeltme turu 2, Y-14): dizi GELDİ ama
+            elemanları `listeye` tarafından düşürüldüyse `olaylar` boş dizi olur, yukarıdaki
+            koşul FALSE'tur ve `Cipler` "boş" (yani "ölçüldü, içi boş") yazar — "içi boş" ile
+            "elemanları okunamadı" aynı görünür. ERİŞİLEBİLİRLİK DÜŞÜK: upstream şeması bu
+            alanı dizi-of-string tutuyor, yani hâle ancak bir şema sürüklenmesi götürür.
+            Çare `Cipler`e "düşürülen eleman sayısı" kanalı açmaktır ve o kanalın okuyucusu
+            ONBEŞ çağıranın hepsinde doğar — bu turun kapsamı değil, kaydı burada. */}
+        {Array.isArray(webhook.event_types) && webhook.event_types.length === 0 ? (
           <span
             className="text-muted-foreground text-xs italic"
             title="Üst yüzey boş listeyi 'All events' diye çiziyor (webhooks-view.tsx). Üst servisin sözleşmesi boş listenin anlamını YAZMIYOR — bu yüzden bir ölçüm değil, üst yüzeyin okuması olarak etiketlendi."
@@ -714,7 +763,12 @@ function WebhookSatiri({ webhook }: { readonly webhook: WebhookKaydi }) {
             tüm olaylar (üst yüzeyin okuması)
           </span>
         ) : (
-          <Cipler degerler={olaylar} ne="Olay türleri" tavan={3} />
+          <Cipler
+            degerler={olaylar}
+            ne="Olay türleri"
+            tavan={3}
+            teknik="`event_types` alanı yok ya da liste olarak okunamayan bir tiple geldi"
+          />
         )}
       </TableCell>
       <TableCell>
@@ -1392,14 +1446,24 @@ export function Yapilandirma({
                                         />
                                       )}
                                     </TableCell>
+                                    {/* DÜĞME, ÇÜNKÜ KLAVYE (nihai inceleme Ö-6,
+                                        2026-09-03): denetim satırı tıklanabilirdi ama
+                                        odaklanamıyordu; çekmeceye tek yol fareydi.
+                                        `Varliklar.tsx` deseni, aynı gerekçeyle. */}
                                     <TableCell className="font-medium text-sm">
-                                      {metin(d.action) ?? (
-                                        <Olculemedi
-                                          neden="Eylem gelmedi"
-                                          teknik="eylem alanı yok ya da dizge değil"
-                                          kisa
-                                        />
-                                      )}
+                                      <button
+                                        type="button"
+                                        className="block w-full truncate text-left hover:underline"
+                                        onClick={() => setAcikDenetim(d)}
+                                      >
+                                        {metin(d.action) ?? (
+                                          <Olculemedi
+                                            neden="Eylem gelmedi"
+                                            teknik="eylem alanı yok ya da dizge değil"
+                                            kisa
+                                          />
+                                        )}
+                                      </button>
                                     </TableCell>
                                     <TableCell>
                                       {metin(d.transport) === null ? (

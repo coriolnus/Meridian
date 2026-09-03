@@ -75,8 +75,13 @@ function KapaliOyunAlani() {
           <span className="text-muted-foreground text-xs">Soru</span>
           <Input disabled placeholder="bankaya sorulacak soru" className="h-9" />
         </label>
+        {/* GEREKÇE ADIN İÇİNDE, YALNIZ `title`DA DEĞİL (nihai inceleme K-6,
+            M-6 deseni — `parcalar.tsx::Faz2Dugme` ve `yazma.tsx::YazmaOnayi`):
+            devre dışı düğme odak ALAMAZ ve `title` ipucu çoğu tarayıcıda
+            bastırılır, yani gerekçe fareye bağlıydı. */}
         <Button type="button" className="h-9" disabled title={`cevabı üretir — ${REFLECT_ROZET}`}>
           Düşün
+          <span className="sr-only"> — cevabı üretir — {REFLECT_ROZET}</span>
         </Button>
       </div>
       <div className="flex flex-wrap items-end gap-3">
@@ -113,6 +118,7 @@ function KapaliOyunAlani() {
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" disabled title={`geri bildirimi yönerge olarak yazar — ${REFLECT_ROZET}`}>
           Geri bildirim yaz
+          <span className="sr-only"> — geri bildirimi yönerge olarak yazar — {REFLECT_ROZET}</span>
         </Button>
         <Badge variant="outline" className="font-normal text-[11px] text-muted-foreground">
           {REFLECT_ROZET}

@@ -89,8 +89,10 @@ def test_every_mutating_endpoint_leaves_a_trace():
         if path == "/api/logout":
             continue
         # /api/hindsight/recall (2026-09-02, Hafıza yüzeyi CP-UI birebirleştirme) — SORGU
-        # SINIFI bir POST'tur: CP `recall` araması gövde ister (types/tags/temporal_window/
-        # min_scores bir GET'e sığmaz), sunucuda HİÇBİR ŞEYİ DEĞİŞTİRMEZ (bkz. rota docstring'i
+        # SINIFI bir POST'tur: CP `recall` araması gövde ister (`types`/`tags` DİZİdir, `query`
+        # serbest metindir — bir GET'e sığmaz; örnek alanlar `api._HAFIZA_RECALL_ALANLARI` beyaz
+        # listesinden seçilir, düşürülen alanlardan DEĞİL — nihai inceleme Ö2, 2026-09-03),
+        # sunucuda HİÇBİR ŞEYİ DEĞİŞTİRMEZ (bkz. rota docstring'i
         # ve `test_recall_state_defterine_yazmaz`). Uç `_auth` kapılı (KİMLİKLİ), ama defterde
         # satır üretmemesi bilinçli: arama bir EYLEM değil, operatörün kanıt defterine kullanıcı-
         # tetikli her sorguyu yazmak gürültü üretirdi. Faz-1 planının (docs/superpowers/plans/

@@ -162,7 +162,7 @@ function kovaBasi(t: number, ayrinti: Ayrinti): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-function kovaEtiketi(bas: Date, ayrinti: Ayrinti): string {
+function cizelgeKovaEtiketi(bas: Date, ayrinti: Ayrinti): string {
   if (ayrinti === "yil") return String(bas.getFullYear());
   if (ayrinti === "ay") return bas.toLocaleDateString("tr-TR", { year: "numeric", month: "long" });
   if (ayrinti === "hafta") {
@@ -304,7 +304,7 @@ function DamgaSatiri({
   );
 }
 
-function Kunye({ govde, simdi }: { readonly govde: VarlikKunyesi; readonly simdi: number }) {
+function VarlikKunyesiPaneli({ govde, simdi }: { readonly govde: VarlikKunyesi; readonly simdi: number }) {
   const ad = metin(govde.canonical_name);
   const anilma = sayi(govde.mention_count);
   const kimlik = metin(govde.id);
@@ -447,7 +447,7 @@ function ZamanCizelgesi({
           {kovalar.map((k) => (
             <div key={k.anahtar} className="flex flex-col gap-1.5">
               <div className="flex items-baseline gap-2 border-b pb-1">
-                <span className="font-semibold text-primary text-xs">{kovaEtiketi(k.bas, ayrinti)}</span>
+                <span className="font-semibold text-primary text-xs">{cizelgeKovaEtiketi(k.bas, ayrinti)}</span>
                 <span className="text-[10px] text-muted-foreground tabular-nums">
                   {k.ogeler.length.toLocaleString("tr-TR")} kayıt
                 </span>
@@ -561,7 +561,7 @@ function VarlikCekmecesi({
           <UcKapisi durum={kunye} yol={UC_VARLIK}>
             {(z) => (
               <ZarfKapisi zarf={z} ne="Varlık künyesi">
-                {(v) => <Kunye govde={v} simdi={simdi} />}
+                {(v) => <VarlikKunyesiPaneli govde={v} simdi={simdi} />}
               </ZarfKapisi>
             )}
           </UcKapisi>

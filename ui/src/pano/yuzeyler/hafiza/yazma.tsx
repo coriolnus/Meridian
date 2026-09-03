@@ -448,13 +448,43 @@ export async function kurtarVeTetikle(bank: string): Promise<YazmaSonucu> {
    --------------------------------------------------------------------------- */
 
 /** Bir çağrının künyesi: adı, tuttu mu, hangi kodla. Kod ölçülemediyse SÖYLENİR. */
+/**
+ * ÜÇÜNCÜ HÂL: "ÇAĞRI GİTTİ, CEVABI OKUNAMADI" (nihai inceleme Ö3, 2026-09-03).
+ *
+ * Vekilin `_hafiza_yaz` sözleşmesi şunu BEYAN ediyor: "`ok:false` yalnız
+ * 'cevabını kullanamadım' demektir" ve "UI bunu 'olmadı' diye çizemez". Bu satır
+ * o yükümlülüğü yerine getirmiyordu: `b.ok ? "tuttu" : "tutmadı"` iki hâl
+ * çiziyordu, ayrı dal YALNIZ `http === null` içindi. Ulaşılabilir üçüncü hâl
+ * şudur — upstream 204/boş gövde döner, `http` 2xx kalır, `ok` False olur:
+ * operatör "tutmadı" okur ve TEKRAR BASAR. `sil`de bu, dalın kendi adlandırdığı
+ * GERİ ALINAMAZ çift-gönderim sınıfıdır.
+ *
+ * BAŞARI RENGİ JETONDAN (K-5, Rol-1 hükmü): burada `emerald-*` vardı — bu dalda
+ * doğan yeni bir palet kaynağı. Gece yeni bir jeton DOĞMAZ; renk `ISLEM_DURUM_RENGI`
+ * hangi rampayı kullanıyorsa oradan okunur (`completed` → `var(--color-seri-9)`).
+ *
+ * BEDEL ÖLÇÜLDÜ VE ÖDENDİ (bedel yasası, düzeltme turu 2 Y-8): `--seri-9` CAMGÖBEĞİdir
+ * (light `cyan-600` / dark `cyan-400`) ve AYNI jeton `takimyildizi.tsx::JETONLAR`da bir
+ * graf KÜMESİNİ boyuyor. Kazanç: yeni bir palet kaynağı doğmadı ve renk tema duyarlı kaldı.
+ * Kayıp: "başarı" ile bir graf kümesi aynı hue'ya oturdu ve YEŞİLİN EVRENSEL OKUMASI gitti —
+ * operatör bu satırı artık renkten değil METİNDEN okuyor ("tuttu"). Kalıcı çare bir palet
+ * kararıdır (rezerve hue bandı: mod/nav/şiddet gibi "başarı" da bant ister); o karar
+ * operatörün palet turuna aittir, gece verilmez.
+ */
 function BacakSatiri({ b }: { readonly b: YazmaBacagi }) {
+  const kodOlculdu = b.http !== null;
+  const cevapsizBasari = !b.ok && kodOlculdu && b.http >= 200 && b.http < 300;
   return (
     <div className="flex items-baseline justify-between gap-3 border-b py-1 last:border-b-0">
       <span className="shrink-0 text-xs">{b.ad}</span>
       <span className="min-w-0 text-right">
-        <span className={cn("text-xs", b.ok ? "text-emerald-600 dark:text-emerald-400" : "text-destructive")}>
-          {b.ok ? "tuttu" : "tutmadı"}
+        <span
+          className={cn(
+            "text-xs",
+            b.ok ? "text-[var(--color-seri-9)]" : cevapsizBasari ? "text-foreground" : "text-destructive",
+          )}
+        >
+          {b.ok ? "tuttu" : cevapsizBasari ? "çağrı gitti, cevabı okunamadı" : "tutmadı"}
         </span>
         <span className="ml-2 text-[11px] text-muted-foreground">
           {b.http === null ? (
@@ -467,6 +497,11 @@ function BacakSatiri({ b }: { readonly b: YazmaBacagi }) {
             `durum kodu ${b.http}`
           )}
         </span>
+        {cevapsizBasari ? (
+          <span className="mt-0.5 block text-[11px] leading-4">
+            TEKRAR BASMA — üst servis {b.http} döndü, yani istek ULAŞTI; okunamayan şey yalnız cevabın gövdesi.
+          </span>
+        ) : null}
         {b.neden !== null ? (
           <span className="mt-0.5 block text-[11px] text-destructive leading-4">{b.neden}</span>
         ) : null}

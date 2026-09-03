@@ -181,6 +181,18 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   // ölü satır olurdu — anahtar tablosu yalnız KAYITLI bölümler için okunuyor
   // (`ARAMA_ANAHTARLARI`), orada kalan satır hiçbir aramayı bulmaz ve okunmadığı
   // için bayatladığı da fark edilmez.
+  //
+  // PALET SEKMEYE DEĞİL GÖRÜNÜME İNER — VE BU BİR ÖLÇÜM SONUCUDUR, tercih değil
+  // (nihai inceleme Ö-1, 2026-09-03). Sekme artık adreste yaşıyor
+  // (`gorunumler.ts::SEKME_SORGU_ADI`) ve iki giriş kapısı — sohbet hattındaki
+  // "… → Meridian dersleri" bağı ve `#hafiza` yer imi — sorguyu TAŞIYOR. Palet
+  // taşımıyor, çünkü paletin maddeleri KENAR ÇUBUĞU AĞACINDAN türetiliyor
+  // (`search-dialog.tsx::searchItems` ← `gezinme.ts`); sekmeye inen bir madde
+  // eklemek, kenar çubuğuna dokuzuncu bir durak ve yüzey kaydına saymadığı bir
+  // kimlik eklemek olurdu (Rol-1 hükmü: `alanlar.ts` sayaçlarına DOKUNULMAZ).
+  // Bedeli ölçüldü ve kabul edildi: "lessons.md" araması Bilgi Tabanı görünümüne
+  // iner ve "Meridian dersleri" sekmesi orada ADIYLA görünür — yani varış yanlış
+  // değil, bir tık uzak. Yanlış varış olan iki bağ düzeltildi; bu, o sınıfta değil.
   "hafiza-bilgi": ["bilgi", "knowledge", "sayfa", "agac", "not", "zihin modeli", "mental model",
                    "cikarim", "tazelik", "cron", "ders", "lesson", "lessons.md", "damitim"],
   "hafiza-recall": ["recall", "sorgu", "arama", "cevap", "getir", "skor", "iz", "trace"],

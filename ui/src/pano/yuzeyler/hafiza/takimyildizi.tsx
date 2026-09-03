@@ -1459,7 +1459,7 @@ export function Takimyildizi({
           className="pointer-events-none absolute z-20 max-w-[22rem] rounded-lg border bg-card p-3 text-xs shadow-lg"
           style={{ display: ustDugum ? "block" : "none" }}
         >
-          {ustDugum ? <Kunye dugum={ustDugum.dugum} bagSayisi={ustDugum.bagSayisi} /> : null}
+          {ustDugum ? <DugumKunyesi dugum={ustDugum.dugum} bagSayisi={ustDugum.bagSayisi} /> : null}
         </div>
       </div>
       {hazir.askidaBag > 0 ? (
@@ -1479,7 +1479,7 @@ export function Takimyildizi({
    metnini — yani dışarıdan gelen içeriği — kaçırmadan sayfaya yazmak olurdu.
    Burada React çiziyor: içerik metin olarak kalır, işaretlemeye dönüşmez.
    --------------------------------------------------------------------------- */
-function Kunye({ dugum, bagSayisi }: { readonly dugum: TakimyildiziDugumu; readonly bagSayisi: number }) {
+function DugumKunyesi({ dugum, bagSayisi }: { readonly dugum: TakimyildiziDugumu; readonly bagSayisi: number }) {
   const k = dugum.kunye ?? null;
   const tur = k === null ? null : metin(k.fact_type);
   const govde = (k === null ? null : metin(k.text)) ?? dugum.etiket;
@@ -1752,6 +1752,11 @@ export function bellekGrafiniCoz(govde: BellekGrafi): BellekGrafiCozumu {
 
   const satirlar = new Map<string, GrafSatiri>();
   for (const s of hamSatirlar) {
+    // ÖĞE KAPISI (nihai inceleme K-1, `parcalar.tsx::KovaSeridi` deseni): dizinin
+    // İÇİ de doğrulanır. `null` bir öğe gelirse (şema sürüklenmesi) `s.id` bir tip
+    // hatası atar ve BÜTÜN graf düşer — oysa bu dosyanın disiplini "tanımadığını
+    // çiz, düşme". Kapı olmayan bir çözücü, sertleştirmenin eşit uygulanmamasıdır.
+    if (sozluk(s) === null) continue;
     const kimlik = metin(s.id);
     if (kimlik !== null) satirlar.set(kimlik, s);
   }
@@ -1761,7 +1766,11 @@ export function bellekGrafiniCoz(govde: BellekGrafi): BellekGrafiCozumu {
   let kimliksiz = 0;
   let tursuz = 0;
   for (const d of hamDugumler) {
-    const kimlik = metin(d.data?.id);
+    // ÖĞE KAPISI (K-1): `d` sözlük değilse `d.data` bir tip hatası atar — `?.`
+    // yalnız `d.data`nın YOKLUĞUNU karşılar, `d`nin kendisinin `null` olmasını
+    // DEĞİL. Sözlük olmayan öğenin okunabilir bir kimliği yoktur; rozetin
+    // cümlesi ("kimliği okunamadı") tam olarak bu hâli de tarif eder.
+    const kimlik = sozluk(d) === null ? null : metin(d.data?.id);
     if (kimlik === null || kimlikler.has(kimlik)) {
       kimliksiz += 1;
       continue;
@@ -1780,6 +1789,7 @@ export function bellekGrafiniCoz(govde: BellekGrafi): BellekGrafiCozumu {
 
   const baglar: TakimyildiziBagi[] = [];
   for (const b of hamBaglar) {
+    if (sozluk(b) === null) continue;              // ÖĞE KAPISI (K-1)
     const kaynak = metin(b.data?.source);
     const hedef = metin(b.data?.target);
     if (kaynak === null || hedef === null) continue;
@@ -1836,7 +1846,11 @@ export function varlikGrafiniCoz(govde: VarlikGrafi, damgaMs: (d: unknown) => nu
   const kimlikler = new Set<string>();
   let kimliksiz = 0;
   for (const d of hamDugumler) {
-    const kimlik = metin(d.data?.id);
+    // ÖĞE KAPISI (K-1): `d` sözlük değilse `d.data` bir tip hatası atar — `?.`
+    // yalnız `d.data`nın YOKLUĞUNU karşılar, `d`nin kendisinin `null` olmasını
+    // DEĞİL. Sözlük olmayan öğenin okunabilir bir kimliği yoktur; rozetin
+    // cümlesi ("kimliği okunamadı") tam olarak bu hâli de tarif eder.
+    const kimlik = sozluk(d) === null ? null : metin(d.data?.id);
     if (kimlik === null || kimlikler.has(kimlik)) {
       kimliksiz += 1;
       continue;
@@ -1856,6 +1870,7 @@ export function varlikGrafiniCoz(govde: VarlikGrafi, damgaMs: (d: unknown) => nu
   let enEski = Number.POSITIVE_INFINITY;
   let enYeni = Number.NEGATIVE_INFINITY;
   for (const b of hamBaglar) {
+    if (sozluk(b) === null) continue;              // ÖĞE KAPISI (K-1)
     const kaynak = metin(b.data?.source);
     const hedef = metin(b.data?.target);
     if (kaynak === null || hedef === null) continue;

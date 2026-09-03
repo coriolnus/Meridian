@@ -329,6 +329,20 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
   const [esleme, setEsleme] = useState<string>("any");
   const [atlanan, setAtlanan] = useState(0);
   const [acikKayit, setAcikKayit] = useState<string | null>(null);
+  /* ÇEKMECE ANAHTARI — KARDEŞ ÜÇ ÇEKMECEDEKİ DESENİN AYNISI (nihai inceleme Ö-3,
+     2026-09-03). `Belgeler`, `Varliklar` ve `ZihinModelleri` bu anahtarı M-5
+     vakasından beri taşıyor ("A'nın gövdesi B'nin başlığı altında çizilebilirdi");
+     bu dosyada YOKTU ve `detay` okuması EBEVEYNDE duruyor — yani kayıt A kapatılıp
+     B açıldığında, B'nin kimliği başlıkta yazarken gövdede bir okuma penceresi
+     boyunca A'nın metni/etiketleri/varlıkları çizilebiliyordu. Dördün üçünde olup
+     birinde olmaması, içerik atfının EN PAHALI olduğu yerde eksik olmasıydı.
+     Kök neden (`veri.ts` yol değişiminde gövdeyi temizlemiyor) TSK-110'da;
+     buradaki azaltıcı o gün dördüyle birlikte kalkar.
+
+     ANAHTAR RENDER SIRASINDA İLERLER, ETKİDE DEĞİL (Varliklar M-1 dersi):
+     etki boyamadan SONRA koşar, yani bayat kare bir kez çizilirdi. */
+  const [cekmeceAnahtari, setCekmeceAnahtari] = useState("bos");
+  if (acikKayit !== null && acikKayit !== cekmeceAnahtari) setCekmeceAnahtari(acikKayit);
   /* AÇILIŞ LİSTE KİPİNDE: bu görünümün üst yüzeydeki karşılığı bir TABLOdur;
      graf bizim eklediğimiz ikinci bir okuma biçimi (dosya başlığı). */
   const [kip, setKip] = useState<"liste" | "graf">("liste");
@@ -427,25 +441,45 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
       {/* SÜZGEÇ ŞERİDİ — sonuç boş kalsa bile ÇİZİLİR, yoksa listeyi boşaltan bir
           süzgeç geri alınamazdı (üst yüzeyin kendi ölçülmüş dersi). */}
       <div className="flex flex-col gap-3">
+        {/* SEÇİM RENKLE DEĞİL, DURUMLA DA BİLDİRİLİR (nihai inceleme Ö-5,
+            2026-09-03): iki şerit de yalnız `variant="secondary"` ile seçiliyi
+            işaretliyordu — ekran okuyucu için renk tek kanaldı. Kardeşleri
+            (kip düğmeleri, `Belgeler` tür süzgeci) `aria-pressed` taşıyordu. */}
         <div className="flex flex-wrap items-center gap-1.5">
-          {TURLER.map((t) => (
-            <Button key={t.deger || "hepsi"} variant={t.deger === tur ? "secondary" : "ghost"} size="xs" onClick={() => setTur(t.deger)}>
-              {t.etiket}
-            </Button>
-          ))}
+          <span className="sr-only" id="bellek-tur-suzgeci">
+            Kayıt türü süzgeci
+          </span>
+          <span className="flex flex-wrap items-center gap-1.5" role="group" aria-labelledby="bellek-tur-suzgeci">
+            {TURLER.map((t) => (
+              <Button
+                key={t.deger || "hepsi"}
+                type="button"
+                variant={t.deger === tur ? "secondary" : "ghost"}
+                size="xs"
+                aria-pressed={t.deger === tur}
+                onClick={() => setTur(t.deger)}
+              >
+                {t.etiket}
+              </Button>
+            ))}
+          </span>
           {kip === "liste" ? (
             <>
               <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-              {DURUMLAR.map((d) => (
-                <Button
-                  key={d.deger}
-                  variant={d.deger === durumSuzgeci ? "secondary" : "ghost"}
-                  size="xs"
-                  onClick={() => setDurumSuzgeci(d.deger)}
-                >
-                  {d.etiket}
-                </Button>
-              ))}
+              <span className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Kayıt durumu süzgeci">
+                {DURUMLAR.map((d) => (
+                  <Button
+                    key={d.deger}
+                    type="button"
+                    variant={d.deger === durumSuzgeci ? "secondary" : "ghost"}
+                    size="xs"
+                    aria-pressed={d.deger === durumSuzgeci}
+                    onClick={() => setDurumSuzgeci(d.deger)}
+                  >
+                    {d.etiket}
+                  </Button>
+                ))}
+              </span>
             </>
           ) : (
             <span className="text-muted-foreground text-[11px]">
@@ -528,7 +562,23 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
                         <TableCell className="max-w-0">
                           {/* SATIR ÖZETİ ORTAK (`parcalar.tsx::KayitOzeti`): aynı çizim
                               varlık künyesinin zaman çizelgesinde de kullanılıyor. */}
-                          <KayitOzeti kayit={o} />
+                          {/* DÜĞME, ÇÜNKÜ KLAVYE (nihai inceleme Ö-6, 2026-09-03):
+                              satırın kendisi tıklanabilirdi ama odaklanamıyordu —
+                              `tabIndex` yok, `onKeyDown` yok, içinde düğme yok. Yani
+                              detay çekmecesine tek yol FAREYDİ. `Varliklar.tsx` bu
+                              sorunu bu dalda ZATEN çözmüştü ve v380 onu çiviliyor;
+                              desen dört tabloya da taşındı. */}
+                          {k === null ? (
+                            <KayitOzeti kayit={o} />
+                          ) : (
+                            <button
+                              type="button"
+                              className="block w-full text-left"
+                              onClick={() => setAcikKayit(k)}
+                            >
+                              <KayitOzeti kayit={o} />
+                            </button>
+                          )}
                           {k === null ? (
                             <span className="mt-1 block text-[11px] text-muted-foreground italic">
                               kimliği gelmediği için bu kaydın tamamı açılamaz
@@ -597,7 +647,7 @@ export function Bellekler({ bank, kayit }: { readonly bank: string | null; reado
           if (!a) setAcikKayit(null);
         }}
       >
-        <SheetContent side="right" className="w-full sm:max-w-xl">
+        <SheetContent key={cekmeceAnahtari} side="right" className="w-full sm:max-w-xl">
           <SheetHeader className="pr-10">
             <SheetTitle className="text-base leading-6">Hafıza kaydı</SheetTitle>
             <SheetDescription className="break-all font-mono text-[11px]">

@@ -945,17 +945,48 @@ def test_detay_eksik_parametre_400_degil_neden(monkeypatch, tmp_path, sandbox_st
 
 # --------------------------------------------------------------- G. YOL ENJEKSİYONU
 
-@pytest.mark.parametrize("kotu", ["../../v1/default/banks", "a/../../etc", "a b", "a?x=1", "a#f"])
-def test_bank_kimligi_yol_enjeksiyonuna_kapali(monkeypatch, tmp_path, sandbox_state, kotu):
+#: (kirli `bank`, duvarın onu REDDEDİP reddetmediği). Duvarın sözlüğü `_HAFIZA_YASAK_PARCA` +
+#: boşluk kuralıdır; `?` ve `#` o sözlükte YOKTUR ve olmaları da gerekmez — sorgu/fragman
+#: ayırıcıları upstream PATH'inde kaçırılınca zararsızdır. AYRIM ÖLÇÜLDÜ, VARSAYILMADI: her iki
+#: sınıf da ayrı ayrı çivilidir, çünkü "hepsi reddedilir" demek duvarın kapsamını, "hepsi
+#: kaçırılır" demek de duvarın varlığını yalanlardı.
+BANK_KIRLI_GIRDILER = (
+    ("../../v1/default/banks", True),     # baştaki `../`
+    ("a/../../etc", True),                # ortadaki `/../`
+    ("a b", True),                        # boşluk
+    ("a?x=1", False),                     # `?` duvarın sözlüğünde YOK → kaçırılır
+    ("a#f", False),                       # `#` aynı
+    # DÜZELTME TURU 3: `/` İÇEREN BANKA DA GEÇER ve bu BEYANLIdır. Kural bank ile kimlikler
+    # için AYNIdır (tek boğaz, tek kural); `/` traversal DEĞİLdir, traversal `..`dır.
+    ("B/x", False),
+)
+
+
+@pytest.mark.parametrize("kotu,reddedilir", BANK_KIRLI_GIRDILER)
+def test_bank_kimligi_yol_enjeksiyonuna_kapali(monkeypatch, tmp_path, sandbox_state,
+                                               kotu, reddedilir):
     """`bank` KULLANICI GİRDİSİDİR ve upstream URL'inin PATH'ine giriyor. Kaçırılmazsa `../../`
     ile Hindsight'ın BAŞKA bir ucuna gidilir (yazan bir uca bile) — salt-okunur sözleşmesi
-    istemcinin insafına kalırdı. `/` `%2F` olarak kaçırılmalı, çıplak kalmamalı."""
+    istemcinin insafına kalırdı.
+
+    İKİ HAT (nihai inceleme Ö1, 2026-09-03): duvar (`_hafiza_bank_yolu` → `_hafiza_yol_parcasi_
+    guvenli`) yol-parçası sözlüğündeki bir şey görürse istek upstream'e HİÇ ÇIKMAZ; duvarın
+    kapsamı dışında kalan kirlilik ise KAÇIRILIR (`%2F`/`%23`). Kaçırmanın tek başına yetmediği
+    ölçüldü: uvicorn ASGI yolunu rotalamadan ÖNCE `unquote` eder ve upstream de uvicorn üstünde
+    koşar — bu yüzden iki hat birlikte durur."""
     casus = _kurulum(monkeypatch, tmp_path, esleme={"/memories/list": b'{"items": []}'})
     # GİRDİ İSTEMCİ TARAFINDA KAÇIRILIR, yoksa test VAKUMDA koşar: ölçüldü (mutasyon turu,
     # 2026-09-02) — `?bank=a#f` içindeki `#` bir FRAGMAN'dır, sunucuya hiç ulaşmaz ve çivi
     # kaçırılmamış `#`i "geçti" sanardı. Sunucunun GERÇEKTEN gördüğü değer `kotu` olmalı.
     import urllib.parse
-    _client().get(f"/api/hindsight/liste?bank={urllib.parse.quote(kotu, safe='')}")
+    r = _client().get(f"/api/hindsight/liste?bank={urllib.parse.quote(kotu, safe='')}")
+    assert r.status_code == 200, f"{kotu!r}: {r.status_code} — pano kararacak bir kod döndü"
+
+    if reddedilir:
+        assert casus.cagrilar == [], (
+            f"{kotu!r}: duvarın reddetmesi gereken girdi upstream'e gitti: {casus.url_ler()}")
+        assert "yol kaçışı" in r.text or "boşluk ya da kontrol karakteri" in r.text, r.text[:200]
+        return
 
     url = casus.cagri("/memories/list")["url"]
     govde = url[len(f"{api.HAFIZA_TABAN_URL}/v1/default/banks/"):]
@@ -965,13 +996,26 @@ def test_bank_kimligi_yol_enjeksiyonuna_kapali(monkeypatch, tmp_path, sandbox_st
 
 
 def test_detay_kimligi_yol_enjeksiyonuna_kapali(monkeypatch, tmp_path, sandbox_state):
-    """Aynı sınıf, `kimlik` parametresinde."""
+    """Aynı sınıf, `kimlik` parametresinde — VE AYNI BEKLENTİ DEĞİŞİMİ (düzeltme turu 2, Y-1):
+    kirli kimlik artık kaçırılıp geçirilmiyor, `_hafiza_bank_yolu`da REDDEDİLİYOR."""
     casus = _kurulum(monkeypatch, tmp_path, esleme={"/memories/": b'{"id": "x"}'})
-    _client().get("/api/hindsight/detay?bank=meridian-arsiv&kimlik=../../../stats")
+    r = _client().get("/api/hindsight/detay?bank=meridian-arsiv&kimlik=../../../stats")
 
-    url = casus.cagrilar[0]["url"]
-    kuyruk = url.split("/memories/", 1)[1]
-    assert "/" not in kuyruk and ".." not in kuyruk, f"kaçırılmamış kimlik: {url}"
+    assert r.status_code == 200, f"{r.status_code} — ret pano kararacak bir kodla döndü"
+    assert casus.cagrilar == [], f"kirli kimlik upstream'e gitti: {casus.url_ler()}"
+    assert "yol kaçışı" in r.text, r.text[:200]
+
+
+def test_kirli_OLMAYAN_ikinci_kimlik_KACIRILARAK_gecer(monkeypatch, tmp_path, sandbox_state):
+    """DUVARIN BEDELİ ÖLÇÜLÜR (bedel yasası, `bank` kardeşinin aynısı): reddeden bir duvar,
+    MEŞRU kimliği de reddederse ikinci-kimlikli altı uç birden ölür. Duvarın sözlüğünde
+    OLMAYAN kirlilik (nokta) hâlâ KAÇIRILARAK geçer — iki hat birlikte çalışır."""
+    casus = _cpui(monkeypatch, tmp_path)
+    r = _client().get("/api/hindsight/zihin-modeli?bank=B&kimlik=z1")
+    assert r.status_code == 200 and r.json()["neden"] is None, r.text
+    assert casus.cagrilar, "temiz kimlik de kesildi — duvar yüzeyi öldürdü"
+    assert api._hafiza_bank_yolu("B", "/memories/{}", ("a.b",)) == (
+        f"{api._HAFIZA_BANK_KOKU}/B/memories/a%2Eb", None)
 
 
 # ------------------------------------------------------------------ H. ZAMAN AŞIMI
@@ -2009,35 +2053,49 @@ def test_recall_govde_sozluk_degilse_neden(monkeypatch, tmp_path, sandbox_state)
 def test_cpui_bank_yol_enjeksiyonuna_kapali(monkeypatch, tmp_path, sandbox_state, yol):
     """`bank` KULLANICI GİRDİSİDİR ve CPUI tablosundaki her uçta upstream PATH'ine giriyor.
     Tek bir uçta unutulan kaçırma, `../../` ile YAZAN bir uca gidilmesine yeter — salt-okunur
-    sözleşmesi istemcinin insafına kalırdı. Kaçırma bu yüzden çağıranın disiplinine değil TEK YARDIMCIYA bağlıdır."""
+    sözleşmesi istemcinin insafına kalırdı.
+
+    BEKLENTİ DEĞİŞTİ: "KAÇIRILIR" DEĞİL "REDDEDİLİR" (nihai inceleme Ö1, Rol-1 hükmü
+    2026-09-03). Bu çivi önce kirli `bank`ın upstream'e ESCAPE'lenerek gitmesini ölçüyordu ve
+    ölçüm doğruydu ama SÖZLEŞME yanlıştı: kaçırma tek başına bir yol-parçası duvarı değildir
+    (uvicorn `path = unquote(raw_path)` — `%2F` rotalamadan ÖNCE `/`ye döner ve upstream de
+    uvicorn üstünde koşar). Duvar `_hafiza_bank_yolu`ya taşındı; artık kirli `bank` upstream'e
+    HİÇ GİTMEZ. İki şey birlikte ölçülür: gerekçe DOLU ve çağrı listesi BOŞ — yalnız "kaçırıldı"
+    diyen bir çivi, duvarın kaldırıldığı günü göremezdi."""
     import urllib.parse
     kotu = "../../../v1/default/banks"
     casus = _cpui(monkeypatch, tmp_path,
                   **{"/v1/default/banks": b'{"banks": []}'})
     bozuk = yol.replace("bank=B", f"bank={urllib.parse.quote(kotu, safe='')}")
-    _client().get(bozuk)
+    r = _client().get(bozuk)
 
-    # KAPAK (düzeltme turu 1, M-4): döngü çağrı listesi üzerinde; HİÇ çağrı yapılmasaydı bu çivi
-    # sessizce yeşil olurdu. Kardeşi (`…ikinci_kimlik…`) bu kapağı taşıyordu, bu taşımıyordu.
-    assert casus.cagrilar, "bank verildiği hâlde upstream'e hiç gidilmedi — çivi vakumda koştu"
-    kok = f"{api.HAFIZA_TABAN_URL}/v1/default/banks/"
-    for url in casus.url_ler():
-        kimlik = url[len(kok):].split("/")[0].split("?")[0]
-        for ham in ("..", " ", "?", "#"):
-            assert ham not in kimlik, f"kaçırılmamış {ham!r} upstream PATH'ine girdi: {url}"
+    assert r.status_code == 200, f"{yol}: {r.status_code} — ret pano kararacak bir kodla döndü"
+    metin = r.text
+    assert casus.cagrilar == [], (
+        f"{yol}: kirli `bank` upstream'e gitti — duvar delindi: {casus.url_ler()}")
+    # KAPAK: ret SESSİZ olamaz. `neden` alanının hangi isimle geldiği uca göre değişir
+    # (`/ozet` iki bacaklı) — bu yüzden gerekçe METNİNDEN ölçülür, alan adından değil.
+    assert "yol kaçışı" in metin, f"{yol}: ret gerekçesiz döndü: {metin[:200]}"
 
 
 @pytest.mark.parametrize("yol,ad", CPUI_IKI_KIMLIKLI)
 def test_cpui_ikinci_kimlik_yol_enjeksiyonuna_kapali(monkeypatch, tmp_path, sandbox_state,
                                                      yol, ad):
+    """BEKLENTİ DEĞİŞTİ: "KAÇIRILIR" DEĞİL "REDDEDİLİR" (düzeltme turu 2, Y-1).
+
+    `bank` duvarı `_hafiza_bank_yolu`ya taşındığında ikinci kimlik yalnız kaçırılmaya devam
+    ediyordu — yani Ö1'in reddettiği "yarım duvar" bir kademe aşağı taşınmıştı ve bu çivi
+    ZAYIF duruşu AKTİF olarak çiviliyordu. Duvarın ölçülmüş gerekçesi (uvicorn `unquote`
+    rotalamadan ÖNCE koşar) hangi segmentte olduğuna bakmaz: ikinci kimlik de upstream
+    PATH'inin bir parçasıdır ve `../../` oradan da banka sınırının dışına çıkar."""
     import urllib.parse
     casus = _cpui(monkeypatch, tmp_path, **{"/v1/default/banks/B/": b"{}"})
     kotu = urllib.parse.quote("../../../stats", safe="")
-    _client().get(f"{yol}&{ad}={kotu}")
-    assert casus.cagrilar, "kimlik verildiği hâlde upstream'e hiç gidilmedi"
-    for url in casus.url_ler():
-        kuyruk = url.split(f"{api.HAFIZA_TABAN_URL}/v1/default/banks/B", 1)[1]
-        assert ".." not in kuyruk, f"kaçırılmamış kimlik upstream PATH'ine girdi: {url}"
+    r = _client().get(f"{yol}&{ad}={kotu}")
+    assert r.status_code == 200, f"{yol}: {r.status_code} — ret pano kararacak bir kodla döndü"
+    assert casus.cagrilar == [], (
+        f"{yol}: kirli kimlik upstream'e gitti — duvar delindi: {casus.url_ler()}")
+    assert "yol kaçışı" in r.text, f"{yol}: ret gerekçesiz döndü: {r.text[:200]}"
 
 
 @pytest.mark.parametrize("yol,parca,ad", [
@@ -2669,7 +2727,7 @@ def test_kurtar_bank_zorunlu(monkeypatch, tmp_path, sandbox_state):
 # ------------------------------------------------------------------------- L-D. YOL GÜVENLİĞİ
 
 @pytest.mark.parametrize("kimlik", ["../../v1/default/banks/other/operations/x",
-                                    "o1/delete", "..", "a/b", "o1\\x"])
+                                    "o1/../delete", "..", "a//b", "/a", "o1\\x"])
 def test_islem_yol_kacisi_reddedilir(monkeypatch, tmp_path, sandbox_state, kimlik):
     """OKUMA UÇLARINDA KAÇIRMA YETERLİYDİ, BURADA DEĞİL. `_hafiza_kacir` `/`yi `%2F`, `.`yı
     `%2E` yapar — ama `%2F`yi ROTALAMADAN ÖNCE çözen bir vekil katmanı (bilinen bypass sınıfı)
@@ -2989,6 +3047,12 @@ def test_okuma_bacaklari_durum_kutusu_istemez():
 #: (alan, değer, beklenen ret sınıfı). TEK yardımcı iki alana da uygulanır (I-2): duvarın
 #: BEYAN EDİLMİŞ gerekçesi ("`%2F`yi rotalamadan ÖNCE çözen ara katman") `bank` için de aynen
 #: geçerli — gerekçe doğruysa duvar yarım olamaz, yanlışsa duvar gereksiz olurdu.
+#: DÜZELTME TURU 3 (Rol-1 hükmü 2026-09-03): `/` ARTIK REDDEDİLMEZ — bu depodaki belge
+#: kimlikleri REPO YOLUdur ve tur 2'nin `/` yasağı bütün belgeleri kırdı (regresyon, ölçüm
+#: `api.py::_hafiza_yol_parcasi_guvenli` docstring'inde). Tablodan `o1/delete` ve
+#: `b/operations/o1/delete` bu yüzden ÇIKARILDI: ikisi de artık MEŞRU kimlik biçimidir ve
+#: onları burada tutmak, düzeltilmiş kuralın tersini çivilemek olurdu. Yerine traversal'ın
+#: GERÇEK yolları ve boş-segment sınıfı geldi.
 YOL_PARCASI_RETLERI = (
     ("id", 123, "alan_tipi"),
     ("id", ["../x"], "alan_tipi"),
@@ -2996,17 +3060,23 @@ YOL_PARCASI_RETLERI = (
     ("id", None, "alan_tipi"),
     ("id", True, "alan_tipi"),
     ("id", "", "alan_bos"),
-    ("id", "../../v1/default/banks/x/operations/y", "yol_kacisi"),
-    ("id", "o1/delete", "yol_kacisi"),
-    ("id", "%2E%2E", "yol_kacisi"),
+    ("id", "../../v1/default/banks/x/operations/y", "yol_kacisi"),   # baştaki `../`
+    ("id", "docs/../../stats", "yol_kacisi"),                        # ortadaki `/../`
+    ("id", "docs/..", "yol_kacisi"),                                 # sondaki `/..`
+    ("id", "..", "yol_kacisi"),                                      # tek başına
+    ("id", "%2E%2E", "yol_kacisi"),                                  # çift kodlama
+    ("id", "docs//x.md", "bos_segment"),                             # boş segment
+    ("id", "/docs/x.md", "bos_segment"),                             # baştaki `/`
+    ("id", "docs/x.md/", "bos_segment"),                             # sondaki `/`
     ("id", "o 1", "alan_boslugu"),
     ("id", "o\t1", "alan_boslugu"),
+    ("id", "o\x00 1", "alan_boslugu"),                                # kontrol karakteri
     ("bank", 123, "alan_tipi"),
     ("bank", {"a": 1}, "alan_tipi"),
     ("bank", None, "alan_tipi"),
     ("bank", "", "alan_bos"),
     ("bank", "..", "yol_kacisi"),
-    ("bank", "b/operations/o1/delete", "yol_kacisi"),
+    ("bank", "../x", "yol_kacisi"),
     ("bank", "b%2Fc", "yol_kacisi"),
     ("bank", "b n", "alan_boslugu"),
 )
@@ -3028,9 +3098,13 @@ def test_yol_parcasi_duvari_iki_alana_da_uygulanir(monkeypatch, tmp_path, sandbo
     assert casus.cagrilar == [], f"{alan}={deger!r} upstream'e gitti: {casus.url_ler()}"
 
 
-@pytest.mark.parametrize("deger", [123, {"a": 1}, "", "..", "b/c", "b n"])
+@pytest.mark.parametrize("deger", [123, {"a": 1}, "", "..", "b/../c", "b//c", "b n"])
 def test_konsolidasyon_bank_duvari_da_ayni(monkeypatch, tmp_path, sandbox_state, deger):
-    """AYNI YARDIMCI, AYNI DUVAR — ikinci rota unutulursa burada öter."""
+    """AYNI YARDIMCI, AYNI DUVAR — ikinci rota unutulursa burada öter.
+
+    DÜZELTME TURU 3: `b/c` listeden ÇIKTI, çünkü artık MEŞRU bir banka biçimidir (kural bank
+    ile kimlikler için AYNI ve `/` traversal değildir). Yerine traversal'ın gerçek yolu
+    (`b/../c`) ve boş segment (`b//c`) geldi."""
     casus = _yazma(monkeypatch, tmp_path)
     r = _client().post(KURTAR, json={"bank": deger})
     assert r.status_code == 400, f"{deger!r} → {r.status_code}: {r.text[:200]}"
@@ -3066,10 +3140,14 @@ def test_iki_rota_da_yol_parcasi_yardimcisini_cagirir(monkeypatch, tmp_path, san
 # --------------------------------------------------------------- L-I. TEK KAYNAK (I-3 a + b)
 
 def test_bank_yolu_TEK_kaynaktan_kurulur(monkeypatch, tmp_path, sandbox_state):
-    """(a) OKUMA ve YAZMA bacakları AYNI URL kurucusunu çağırır. Kopya kalsaydı kaçırma
+    """(a) OKUMA, YAZMA ve RECALL bacakları AYNI URL kurucusunu çağırır. Kopya kalsaydı kaçırma
     politikasındaki bir düzeltme (örn. `~` ya da `%` kuralı) yazan bacakta SESSİZCE eski
     politikada kalırdı — ve bu bacakta "başka bir uca gitmek" `iptal` yerine `sil` demektir.
-    Bu turun KENDİ dersi buydu (`_hafiza_post` kopyası `_kapi_istek`e çıkarılmıştı)."""
+    Bu turun KENDİ dersi buydu (`_hafiza_post` kopyası `_kapi_istek`e çıkarılmıştı).
+
+    ÜÇÜNCÜ BACAK 2026-09-03'te KATILDI (nihai inceleme Ö1): `_hafiza_recall` URL'i kökten ELLE
+    kuruyordu, yani `bank` duvarı okuma+yazmaya taşındığında recall'a GELMEZDİ ve "duvar tek
+    boğazda" cümlesi doğduğu gün yarım olurdu."""
     _yazma(monkeypatch, tmp_path)
     gorulen: list = []
     gercek = api._hafiza_bank_yolu
@@ -3081,13 +3159,19 @@ def test_bank_yolu_TEK_kaynaktan_kurulur(monkeypatch, tmp_path, sandbox_state):
     monkeypatch.setattr(api, "_hafiza_bank_yolu", _casus)
     _client().get("/api/hindsight/islemler?bank=B")           # OKUMA bacağı
     _client().post(_islem("sil"), json={"bank": "B", "id": "o1"})   # YAZMA bacağı
-    assert [g[1] for g in gorulen] == ["/operations", "/operations/{}/delete"], gorulen
+    _client().post(RECALL, json={"bank": "B", "query": "alice"})    # RECALL bacağı
+    assert [g[1] for g in gorulen] == [
+        "/operations", "/operations/{}/delete", "/memories/recall"], gorulen
 
 
 def test_bank_yolu_kacirmayi_kendisi_yapar():
-    """Kurucunun SÖZLEŞMESİ: kök + kaçırılmış bank + kaçırılmış kimliklerle doldurulmuş kuyruk."""
+    """Kurucunun SÖZLEŞMESİ: `(yol, neden)` — kök + kaçırılmış bank + kaçırılmış kimliklerle
+    doldurulmuş kuyruk; ve KİRLİ `bank`ta yol YOK, gerekçe VAR (nihai inceleme Ö1). Yalnız
+    başarı dalını ölçen bir çivi, duvarın sessizce kaldırılmasını göremezdi."""
     assert api._hafiza_bank_yolu("b.n", "/operations/{}", ("o.1",)) == (
-        f"{api._HAFIZA_BANK_KOKU}/b%2En/operations/o%2E1")
+        f"{api._HAFIZA_BANK_KOKU}/b%2En/operations/o%2E1", None)
+    yol, neden = api._hafiza_bank_yolu("../x", "/operations")
+    assert yol is None and _dolu(neden) and "bank" in neden, (yol, neden)
 
 
 def test_istek_govdesi_okuyucusu_TEK_kaynaktan(monkeypatch, tmp_path, sandbox_state):
@@ -3269,3 +3353,292 @@ def test_tetikle_govde_dali_json_baslikli_gider(monkeypatch, tmp_path, sandbox_s
     basliklar = casus.cagri("/banks/B/consolidate")["basliklar"]
     assert basliklar.get("Content-Type") == "application/json", basliklar
     assert basliklar.get("Authorization") == f"Bearer {SAHTE_ANAHTAR}", basliklar
+
+
+# =================================================================================================
+# N. NİHAİ DAL DÜZELTMESİ (2026-09-03) — inceleme Ö1/Ö2/Ö4/Ö5 + K1/K2/K5/K7 + CSRF + A12
+# =================================================================================================
+#
+# BU BÖLÜMÜN ORTAK DERSİ TEKTİR: bir yardımcı/şerh MUTLAK konuşuyor, ikinci çağıran onu
+# daraltıyor, daraltma yalnız İKİNCİ çağıranda yazılı kalıyor. İnceleme beş kalemin beşini de
+# aynı desende buldu. Buradaki çiviler beyanı değil DAVRANIŞI zorlar — beyanın kendisini
+# zorlayanlar (bayat şerh, kapsam listesi) ayrıca ve ADIYLA işaretli.
+
+
+# ---------------------------------------------------------------- A1. BANK DUVARI TEK BOĞAZDA ---
+
+#: Duvarın ısırması gereken bacaklar — ROTA ÜZERİNDEN ölçülebilenler. YAZMA BACAĞI BU
+#: TABLODA YOK VE BU BİR ÖLÇÜM SONUCUDUR (düzeltme turu 2, Y-6): `/api/hindsight/islem/*`
+#: rotasında ret `_hafiza_yazma_girdisi`nin duvarından gelir ve istek `_hafiza_yaz`a HİÇ
+#: ULAŞMAZ — yani `_hafiza_bank_yolu`daki duvar silinse bile o parametre YEŞİL kalırdı
+#: (çivi kendi kapsadığını sanırdı). Yazma bacağı ayrı çivide, yardımcıyı DOĞRUDAN çağırarak
+#: ölçülür (`test_bank_duvari_YAZMA_bacaginda_da_isirir`).
+BANK_DUVARI_BACAKLARI = (
+    ("get", "/api/hindsight/varliklar?bank=..%2F..%2Fstats", None),
+    ("post", "/api/hindsight/recall", {"bank": "../../x", "query": "alice"}),
+)
+
+
+@pytest.mark.parametrize("fiil,yol,govde", BANK_DUVARI_BACAKLARI)
+def test_bank_duvari_UC_BACAKTA_da_isirir(monkeypatch, tmp_path, sandbox_state, fiil, yol, govde):
+    """Ö1 HÜKMÜ (b): duvar YARIM OLAMAZ — `_hafiza_yol_parcasi_guvenli` `bank`a da uygulanır ve
+    uygulama yeri TEK BOĞAZdır (`_hafiza_bank_yolu`), üç bacağın üçünde birden.
+
+    ÖLÇÜLMÜŞ GEREKÇE: uvicorn `scope["path"]`i rotalamadan ÖNCE `unquote` eder (`h11_impl` ve
+    `httptools_impl` aynı satırı taşır: `path = unquote(raw_path)`), ve upstream Hindsight de
+    uvicorn üstünde koşar — yani `%2F` bizim kaçırmamızdan sonra ARA KATMANDA `/`ye döner.
+    Kaçırma TEK BAŞINA bir yol-parçası duvarı DEĞİLDİR. Duvar bu yüzden kaçırmanın YANINDA
+    durur, yerine değil.
+
+    İKİ ŞEY DEĞİŞMEZ: gerekçe DOLU ve upstream'e HİÇ çağrı ÇIKMAZ. Yazma bacağı bu tabloda
+    DEĞİL — gerekçesi tablonun başında yazılı (Y-6) ve kardeş çivide ölçülüyor."""
+    casus = _yazma(monkeypatch, tmp_path)
+    cl = _client()
+    r = cl.get(yol) if fiil == "get" else cl.post(yol, json=govde)
+    assert r.status_code in (200, 400), f"{yol}: {r.status_code} — pano kararacak bir kod döndü"
+    g = r.json()
+    assert g.get("govde") is None, g
+    assert _dolu(g.get("neden")), g
+    assert casus.cagrilar == [], f"{yol}: kirli `bank` ile upstream'e gidildi: {casus.url_ler()}"
+
+
+#: ÖLÇÜLMÜŞ GERÇEK BELGE KİMLİĞİ (A1, 2026-09-03 02:31Z — Rol-1 ölçümü). Hindsight'taki
+#: belge kimlikleri REPO YOLUdur: içe alma betiği `document_id`yi repo yoluna eşitliyor.
+#: Bu sabit bir FIXTURE değil bir KAYITtır: tur 2'nin "`/` reddedilir" kuralı tam olarak bu
+#: biçimi kırdı ve `/belge-parcalari` (Belgeler çekmecesi) her belgede boş döndü.
+GERCEK_BELGE_KIMLIGI = "research/cards/EDG-2026-037-tca-gercek-friksiyon.yaml"
+
+
+def test_SLASH_iceren_MESRU_belge_kimligi_GECER(monkeypatch, tmp_path, sandbox_state):
+    """DÜZELTME TURU 3 — REGRESYON ÇİVİSİ (Rol-1 hükmü 2026-09-03).
+
+    Tur 2 duvarı bütün kimliklere yaydı ve kural o gün `/`yi de reddediyordu. ÖLÇÜM bunun
+    yanlış olduğunu gösterdi: belge kimlikleri repo yoludur ve upstream
+    `documents/{document_id}/chunks` onu HEM `%2F` kaçırılmış (200) HEM ham `/` (200) ile
+    kabul ediyor. Yani yasak, güvenlik kazancı olmadan yüzeyi kırıyordu — traversal `/` ile
+    değil `..` ile yapılır ve o hâlâ reddediliyor (kardeş çiviler).
+
+    İKİ ŞEY BİRLİKTE ÖLÇÜLÜR: (1) çağrı GERÇEKTEN çıkıyor (yoksa çivi vakumda koşardı) ve
+    (2) kimlik upstream PATH'ine KAÇIRILARAK giriyor — yani `/` "izinli" olmak ham geçmek
+    DEĞİLDİR; kaçırma politikası (`_hafiza_kacir`, `safe=""`) aynen duruyor."""
+    import urllib.parse
+    kacirilmis = urllib.parse.quote(GERCEK_BELGE_KIMLIGI, safe="").replace(".", "%2E")
+    casus = _cpui(monkeypatch, tmp_path,
+                  **{f"/documents/{kacirilmis}/chunks": json.dumps(PARCALAR_ORNEK).encode()})
+    r = _client().get(f"/api/hindsight/belge-parcalari?bank=B"
+                      f"&belge={urllib.parse.quote(GERCEK_BELGE_KIMLIGI, safe='')}")
+    assert r.status_code == 200, r.text
+    g = r.json()
+    assert g["neden"] is None and g["govde"] == PARCALAR_ORNEK, g
+    assert casus.cagrilar, "meşru belge kimliği duvarda kesildi — çivi vakumda koşmadı, KIRILDI"
+    url = casus.cagri("/chunks")["url"]
+    assert f"/documents/{kacirilmis}/chunks" in url, url
+    assert "/documents/research/cards/" not in url, f"kimlik HAM `/` ile gitti (kaçırma düştü): {url}"
+
+
+def test_slash_YASAGI_geri_gelirse_YARDIMCI_da_isirir():
+    """Aynı hüküm, yardımcı düzeyinde — rota katmanından BAĞIMSIZ. `bank` ve kimlik AYNI
+    kuraldan geçer (tek boğaz, tek kural): ikisinde de `/` geçer, `..` geçmez."""
+    assert api._hafiza_yol_parcasi_guvenli("belge", GERCEK_BELGE_KIMLIGI) == (None, None)
+    assert api._hafiza_yol_parcasi_guvenli("bank", "B/x") == (None, None)
+    for kotu in ("..", "../x", "x/..", "a/../b", "a//b", "/a", "a/", "a%2Fb", "a b"):
+        neden, sinif = api._hafiza_yol_parcasi_guvenli("belge", kotu)
+        assert _dolu(neden) and sinif in {"yol_kacisi", "bos_segment", "alan_boslugu"}, (kotu, neden, sinif)
+
+
+def test_bank_duvari_YAZMA_bacaginda_da_isirir(monkeypatch, tmp_path, sandbox_state):
+    """YAZMA BACAĞI YARDIMCIYI DOĞRUDAN ÇAĞIRARAK ÖLÇÜLÜR (düzeltme turu 2, Y-6).
+
+    Rota üzerinden ölçmek MÜMKÜN DEĞİL: `_hafiza_yazma_girdisi` kirli `bank`ı daha erken
+    reddediyor ve `_hafiza_yaz` hiç çağrılmıyor — yani rota parametresi `_hafiza_bank_yolu`daki
+    duvarı DEĞİL o erken kapıyı ölçerdi. İkinci hattın anlamı tam olarak "birinci hat
+    atlandığı gün" olduğuna göre, ikinci hat birinciden BAĞIMSIZ ölçülmeli."""
+    casus = _yazma(monkeypatch, tmp_path)
+    sonuc = api._hafiza_yaz("DELETE", "/operations/{}", "../../x", kimlikler=("o1",))
+    assert sonuc == {"ok": False, "http": None, "govde": None, "neden": sonuc["neden"]}, sonuc
+    assert _dolu(sonuc["neden"]) and "bank" in sonuc["neden"], sonuc["neden"]
+    assert casus.cagrilar == [], f"kirli `bank` ile upstream'e gidildi: {casus.url_ler()}"
+
+    # KİMLİK BACAĞI DA AYNI YARDIMCIDAN (Y-1): temiz `bank`, kirli kimlik.
+    sonuc2 = api._hafiza_yaz("DELETE", "/operations/{}", "B", kimlikler=("../x",))
+    assert sonuc2["ok"] is False and _dolu(sonuc2["neden"]), sonuc2
+    assert casus.cagrilar == [], f"kirli kimlik ile upstream'e gidildi: {casus.url_ler()}"
+
+
+def test_bank_duvari_TEMIZ_bankayi_gecirir(monkeypatch, tmp_path, sandbox_state):
+    """DUVARIN BEDELİ ÖLÇÜLÜR (bedel yasası): reddeden bir duvar, meşru bankayı da reddederse
+    yüzeyin tamamı ölür. Bu çivi duvarın YALNIZ kirliyi kestiğini ölçer."""
+    casus = _cpui(monkeypatch, tmp_path)
+    r = _client().get("/api/hindsight/varliklar?bank=B")
+    assert r.status_code == 200 and r.json()["neden"] is None, r.text
+    assert casus.cagrilar, "temiz banka da kesildi — duvar yüzeyi öldürdü"
+
+
+# ------------------------------------------------------- A2. OKUMA TARAFININ RET İZİ (Ö4) -------
+
+def test_varlik_id_reddi_DEFTERE_dusar(monkeypatch, tmp_path, sandbox_state):
+    """Ö4: `/varlik` ret dalı ölçülen sınıfı ATIYORDU ve hiçbir iz bırakmıyordu — yani `..`
+    içeren bir `id` denemesi (bu yüzeyde bir SONDA denemesi) `/api/hindsight*` altında İZSİZ
+    kalabilen tek yerdi. `_hafiza_yazma_reddi`nin kendi gerekçesi ("izin BURADA olması bir
+    tercih değil SÖZLEŞME") okuma ucunda da aynen geçerlidir: sonda denemesi, hangi ucun
+    reddettiğine göre değişmez."""
+    _cpui(monkeypatch, tmp_path)
+    satirlar: list = []
+    monkeypatch.setattr(api.obs, "log", lambda olay, **alan: satirlar.append((olay, alan)))
+    r = _client().get("/api/hindsight/varlik?bank=B&id=..%2F..%2Fstats")
+    assert r.status_code == 400, r.text
+    retler = [a for o, a in satirlar if o == "hafiza_okuma_red"]
+    assert len(retler) == 1, f"okuma reddi {len(retler)} kez deftere düştü: {satirlar}"
+    assert retler[0]["sinif"] == "yol_kacisi", retler[0]
+    assert retler[0]["alan"] == "id", retler[0]
+    assert retler[0]["uzunluk"] == len("../../stats"), retler[0]
+
+
+def test_varlik_ret_izi_HAM_DEGER_tasimaz(monkeypatch, tmp_path, sandbox_state):
+    """Yazma tarafının `test_ret_izi_HAM_DEGER_tasimaz` sözleşmesi okuma tarafında da geçerli:
+    deftere ham dizge yazmak, kapıya erişen bir sondacıya kanıt defterine SINIRSIZ metin
+    yazdırma imkânı verirdi."""
+    _cpui(monkeypatch, tmp_path)
+    satirlar: list = []
+    monkeypatch.setattr(api.obs, "log", lambda olay, **alan: satirlar.append((olay, alan)))
+    zehir = "..%2F..%2Fetc%2Fpasswd-COK-OZEL-DIZGE"
+    _client().get(f"/api/hindsight/varlik?bank=B&id={zehir}")
+    metin = repr([a for o, a in satirlar if o == "hafiza_okuma_red"])
+    assert "COK-OZEL-DIZGE" not in metin, f"okuma ret izi ham değer taşıdı: {metin}"
+    assert "uzunluk" in metin and "sinif" in metin, metin
+
+
+# ----------------------------------------- A3/A4/A5/A10. BEYANIN KENDİSİ (bayat şerh sınıfı) ----
+#
+# BU ÜÇ ÇİVİ METİN TARAR VE BUNU BİLEREK YAPAR (v312 `test_pano_KENDI_UCUNU_yalanlamiyor`
+# emsalinin `api.py` tarafındaki karşılığı). Ölçtükleri şey davranış değil BEYANdır — ve bu
+# dosyanın kurucu dersi tam olarak "bayat bir beyan, bir sonraki okuyucu için ölçümdür".
+
+_API_KAYNAK = pathlib.Path(api.__file__).read_text(encoding="utf-8")
+
+
+def _sabit_serhi(ad: str, satir_sayisi: int = 14) -> str:
+    """Sabitin ÜSTÜNDEKİ şerh bloğu — ölçüm sabitin kendi satırından geriye doğru okunur.
+    KÖRLÜK ALARMI: sabit bulunamazsa boş metin dönmez, bağırılır."""
+    satirlar = _API_KAYNAK.splitlines()
+    for i, s in enumerate(satirlar):
+        if s.startswith(f"{ad} ") or s.startswith(f"{ad}:") or s.startswith(f"{ad} ="):
+            return "\n".join(satirlar[max(0, i - satir_sayisi):i])
+    raise AssertionError(f"sabit kaynakta bulunamadı — çapa bayat: {ad}")
+
+
+def test_recall_serhi_KAPSAM_DISI_alanlari_ADIYLA_yazar():
+    """Ö2: beyaz liste "`RecallRequest` şemasından okundu" diyordu; ölçüm (bu deponun KENDİ
+    kaydı, `docs/INCELEME-HINDSIGHT-DERIN-2026-08-31.md` §1.5) şemada DÖRT alan daha olduğunu
+    söylüyor. Liste kapalı olması DOĞRU; yalan olan "şemadan okundu" cümlesiydi — okuyucu
+    listeyi TAM sanardı. Dört alanın gerekçesi TEK yerde (bu şerhte) yaşar; `Recall.tsx` ona
+    İŞARET eder, kopyalamaz (tek-kaynak yasası)."""
+    serh = _sabit_serhi("_HAFIZA_RECALL_ALANLARI")
+    for alan in ("temporal_window", "tag_groups", "include", "min_scores"):
+        assert alan in serh, f"kapsam dışı alan şerhte adıyla yazılı değil: {alan}"
+    assert "Faz-1" in serh, "kapsam kararı (Faz-1 alt kümesi) şerhte yazılı değil"
+
+
+def test_recall_docstringi_DUSURULEN_alani_gerekce_gostermez():
+    """Ö2'nin en kötü hâli: `api_hindsight_recall` docstring'i POST olma gerekçesi olarak
+    KODUN DÜŞÜRDÜĞÜ iki alanı (`temporal_window`, `min_scores`) örnek gösteriyordu. Örnek
+    listede GERÇEKTEN olan alanlardan seçilir; aynı cümlenin `tests/test_na_revision2_v54.py`
+    muafiyet yorumundaki kopyası da bu çiviyle birlikte düzeltildi."""
+    doc = api.api_hindsight_recall.__doc__ or ""
+    for dusen in ("temporal_window", "min_scores", "tag_groups"):
+        assert dusen not in doc, (
+            f"recall docstring'i düşürülen `{dusen}` alanını POST gerekçesi gösteriyor")
+    assert "types" in doc and "tags" in doc, "örnek alanlar beyaz listeden seçilmemiş"
+
+
+def test_islem_sozlugu_serhinde_BAYAT_yardimci_ADI_yok():
+    """Ö5: sabitin üstünde İKİ `#:` bloğu ardışık duruyordu; eskisi kuyruk konvansiyonunu
+    `_hafiza_bank_json`e bağlıyordu, oysa I-3a o sorumluluğu `_hafiza_bank_yolu`ya taşımıştı.
+    Bayat beyan yalnız eski değil ARTIK YANLIŞtı."""
+    serh = _sabit_serhi("_HAFIZA_ISLEM_EYLEMLERI")
+    assert "_hafiza_bank_json" not in serh, (
+        "bayat şerh geri geldi — kuyruk konvansiyonunun sahibi `_hafiza_bank_yolu`dur")
+    assert "_hafiza_bank_yolu" in serh, "kuyruk konvansiyonunun sahibi şerhte yazılı değil"
+
+
+def test_uc_tavani_serhi_MAKSIMUMSUZ_UCLARI_ADIYLA_yazar():
+    """K1: şerh "yazılı olmayan uçların şemasında `maximum` YOKTUR" diyordu ama üç uç ADIYLA
+    geçmiyordu. İddia yanlışsa `/islemler`in bu turda kapattığı 422 sınıfı aynen geri gelir.
+    ÖLÇÜM 2026-09-03 (openapi.yaml @ ebad4782, `gh api`): `list_entities` limit
+    `default:100 minimum:0`, `get_entity_graph` limit `default:1000 minimum:0`, `list_documents`
+    limit `default:100 minimum:0` — ÜÇÜNDE DE `maximum` YOK."""
+    serh = _sabit_serhi("_HAFIZA_UC_TAVANI", 20)
+    for uc in ("/documents", "/entities", "/entities/graph"):
+        assert uc in serh, f"`maximum`suz uç şerhte adıyla yazılı değil: {uc}"
+
+
+def test_konsolidasyon_serhi_OKUYUCUSUZ_beyaz_listeyi_ITIRAF_eder():
+    """K7: `observation_scopes` beyaz listesinin bugün OKUYUCUSU YOK — v378
+    (`test_tetikleme_UST_YUZEY_GIBI_GOVDESIZ_gider`) UI'ın onu HİÇ göndermemesini AKTİF olarak
+    çiviliyor. Güvenlik sınırı olarak meşru; Yasa 6 karşısında BEYANLA durur, sessizlikle değil."""
+    serh = _sabit_serhi("_HAFIZA_KONSOLIDASYON_EYLEMLERI", 20)
+    assert "okuyucusu" in serh.lower(), (
+        "beyaz listenin bugün okuyucusuz olduğu şerhte yazılı değil (Yasa 6 beyanı)")
+
+
+# ------------------------------------------------------------ A6. BOŞ GÖVDE DALI DA MASKELİ ----
+
+def test_bos_govde_NEDENI_de_maskelenir():
+    """K2: `_hafiza_govde_coz`un kendi docstring'i "MASKELEME TEK BOĞAZDAN GEÇER" diyor ama
+    boş/`null` dalı `_kapi_maskele`den geçmiyordu. Bugün `url` sır taşımıyor (anahtar başlıkta);
+    ikinci savunma hattının BEYAN EDİLMİŞ anlamı ise "birinci hattın delindiği günü karşılamak".
+    Yardımcı DOĞRUDAN çağrılır: dalın tek kapısı budur ve rota üzerinden url'e sır sokmak
+    ölçümü değil kurulumu ölçerdi."""
+    veri, neden = api._hafiza_govde_coz(
+        f"http://x/y?tok={SAHTE_ANAHTAR}", b"", None, SAHTE_ANAHTAR)
+    assert veri is None and _dolu(neden), (veri, neden)
+    assert SAHTE_ANAHTAR not in neden, f"boş gövde gerekçesi anahtarı taşıdı: {neden}"
+
+
+# --------------------------------------------------------- A9. `/bilgi-arama` OFFSET YOKLUĞU ----
+
+def test_bilgi_arama_offset_GONDERMEZ(monkeypatch, tmp_path, sandbox_state):
+    """K5: kardeşleri (`/varlik-graf`, `/bellek-graf`) aynı sapmayı gerekçesiyle yazmıştı;
+    `/bilgi-arama` sessizdi. ÖLÇÜM 2026-09-03 (openapi @ ebad4782): `search_knowledge_base`
+    parametrelerinin TAMAMI yol `bank_id` · sorgu `q` · sorgu `limit` · başlık `authorization`.
+    `offset` YOKTUR — göndermek 422 üretirdi. Çivi davranışı ölçer: istemci `offset` verse bile
+    upstream sorgusunda o ad geçmez."""
+    casus = _cpui(monkeypatch, tmp_path)
+    _client().get("/api/hindsight/bilgi-arama?bank=B&q=alice&offset=25")
+    url = casus.cagri("/knowledge-base/search")["url"]
+    assert "offset" not in url, f"upstream'de olmayan `offset` gönderildi: {url}"
+
+
+# ------------------------------------------------------ A11. YAZAN UÇLARIN CSRF DURUŞU ---------
+
+def test_yazma_uclarinin_CSRF_DURUSU_cerezde():
+    """İNCELEMECİNİN ÖLÇÜMÜ (nihai inceleme, güçlü yan 6): panonun ilk YAZAN yüzeyi çapraz-site
+    bir POST'a açık DEĞİL, çünkü oturum çerezi `httponly=True, samesite="strict"` yazılıyor.
+    O duruş bu yüzeyin `sil` gibi GERİ ALINAMAZ fiilleri için bir önkoşul — ve bugün yalnız
+    v114'te, `/api/login` YANITINDA ölçülüyordu.
+
+    İKİNCİ OKUYUCU BİLEREK (tek-kaynak yasasının istisnası, gerekçeli): v114 "giriş ucu çerezi
+    doğru yazıyor mu" sorusunu sorar; burada sorulan soru "yazan uçların CSRF duruşu hâlâ ayakta
+    mı"dır. İki soru ayrı yüzeylerde ölür. Ölçüm KOPYALANMAZ, ÜRETİLİR: başlık gerçekten
+    kurulur ve okunur."""
+    baslik = api._oturum_cerez_basligi("civi-jetonu", 60, False)
+    assert "httponly" in baslik.lower(), f"oturum çerezi HttpOnly değil: {baslik}"
+    assert "samesite=strict" in baslik.lower().replace(" ", ""), (
+        f"oturum çerezi SameSite=Strict değil — yazan uçlar çapraz-siteye açılır: {baslik}")
+
+
+# ----------------------------------------------- A12. WEBHOOK SÜZGECİ FAIL-CLOSED (Rol-1) -------
+
+def test_webhook_suzgeci_TANIMAYAN_SEKILDE_govdeyi_GECIRMEZ(monkeypatch, tmp_path, sandbox_state):
+    """ROL-1 HÜKMÜ (2026-09-03, TSK-109 düzeltme turu endişesi): süzgeç `items` görmezse gövdeyi
+    AYNEN geçiriyordu — yani upstream şeması kayıp sırrı başka bir alana taşıdığı gün, süzgeç
+    sessizce açılırdı. SIR HİJYENİ > ERİŞİLEBİLİRLİK: tanınmayan şekilde gövde VERİLMEZ, gerekçe
+    verilir. Bu bir sessiz yutma DEĞİL, beyanlı bir fail-closed dalıdır."""
+    ham = json.dumps({"webhooks": [{"id": "w1", "secret": WEBHOOK_SIRRI_SENTETIK}]}).encode()
+    _cpui(monkeypatch, tmp_path, **{"/banks/B/webhooks": ham})
+    r = _client().get("/api/hindsight/webhooklar?bank=B")
+    assert r.status_code == 200, r.text
+    g = r.json()
+    assert g["govde"] is None, f"tanınmayan şekilde gövde geçti: {g}"
+    assert _dolu(g["neden"]) and "süzülemediği" in g["neden"], g["neden"]
+    assert WEBHOOK_SIRRI_SENTETIK not in r.text, "imza sırrı yanıta sızdı"

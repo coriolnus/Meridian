@@ -158,9 +158,31 @@ function ParcaSatiri({ parca }: { readonly parca: BelgeParcasi }) {
         className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-muted/40"
         onClick={() => setAcik((a) => !a)}
       >
-        <span className="w-10 shrink-0 font-mono text-muted-foreground text-xs tabular-nums">
-          {sira === null ? "—" : `#${sira}`}
+        {/* ÇIPLAK "—" YOK (nihai inceleme Ö-4, 2026-09-03): burada gerekçesiz bir
+            tire basılıyordu ve bu, dizin genelinde ölçülen TEK çıplak tireydi —
+            üstelik AYNI SATIRDAKİ metin `Olculemedi` ile dürüstçe çiziliyordu.
+            Kuralı bu dalın kendi iki dosyası yazıyor (`AnaSayfa::seriKovaEtiketi`
+            şerhi: "gerekçesiz bir tire, ölçülmemiş bir boşluğu ölçülmüş gibi
+            gösterir"; `Bellekler.tsx` başlığı: "hücre '—' değil GEREKÇE taşır"). */}
+        {/* HÜCRE `overflow-hidden` VE `neden` KISA (düzeltme turu 2, Y-9): `Olculemedi kisa`
+            varyantı `inline-block … truncate` (yani `white-space: nowrap`) taşıyor ve nowrap'li
+            bir inline-block 2,5rem'lik bir hücreye shrink-to-fit ile İNMEZ — uzun gerekçe komşu
+            sütuna taşardı. Uzun hâl `teknik`te yaşıyor (fareyle ve erişilebilir adla okunur). */}
+        <span className="w-10 shrink-0 overflow-hidden font-mono text-muted-foreground text-xs tabular-nums">
+          {sira === null ? (
+            <Olculemedi
+              neden="sıra gelmedi"
+              teknik="parça sıra alanı gelmedi ya da sayı değil — parçanın belgedeki yeri okunamıyor"
+              kisa
+            />
+          ) : (
+            `#${sira}`
+          )}
         </span>
+        {/* UZUNLUK METİNDEN TÜRETİLİR: metin gelmediyse yazacak bir sayı da yok ve
+            "0 karakter" yazmak ölçülmemiş bir uzunluk uydurmak olurdu. Boş dizge
+            burada gerekçesiz DEĞİL — yanındaki önizleme hücresi aynı yokluğun
+            gerekçesini `Olculemedi` ile zaten taşıyor (iki kez yazmak gürültü). */}
         <span className="w-32 shrink-0 text-[11px] text-muted-foreground tabular-nums">
           {govdeMetni === null ? "" : `${govdeMetni.length.toLocaleString("tr-TR")} karakter`}
         </span>
@@ -717,9 +739,17 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
                               {kimlik === null ? (
                                 <Olculemedi neden="Belgenin kimliği okunamadı" teknik="satırda kimlik alanı yok — kimliksiz belgenin parçaları çağrılamaz" kisa />
                               ) : (
-                                <span className="block truncate font-mono text-sm" title={kimlik}>
+                                /* DÜĞME, ÇÜNKÜ KLAVYE (nihai inceleme Ö-6): satır
+                                   tıklanabilirdi ama odaklanamıyordu — çekmeceye tek
+                                   yol fareydi. `Varliklar.tsx` deseni, aynı gerekçeyle. */
+                                <button
+                                  type="button"
+                                  className="block w-full truncate text-left font-mono text-sm hover:underline"
+                                  title={kimlik}
+                                  onClick={() => setAcikBelge(b)}
+                                >
                                   {kimlik}
-                                </span>
+                                </button>
                               )}
                               <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-muted-foreground text-[11px]">
                                 {/* TÜR ROZETİ YALNIZ EŞLEŞEN SATIRDA ÇIKAR: eşleşmeyene
@@ -802,9 +832,19 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
           const gorulen = new Set(
             z.govde.items.map((b) => dosyaAdi(metin(b.id))).filter((a): a is string => a !== null),
           );
+          /* ADI ÖLÇÜLEMEYEN KAYIT AYRI KOVADA (nihai inceleme Ö-7, 2026-09-03).
+             Önce adsız kayıtlar "eşleşmedi" sayılıyordu ve aynı satırda İKİ ZIT
+             İDDİA çiziliyordu: "adı gelmedi, eşleme anahtarı kurulamadı" ve
+             "bankada yok". Anahtarı OLMAYAN bir kayıt hakkında "yok" hükmü
+             ÖLÇÜLMEMİŞTİR — bu, Recall'daki M-4 düzeltmesinin ("dizi değilse önce
+             0 yazıyordu, altında 'tanınmayan biçim' diyordu") birebir kardeşi.
+             Hüküm artık YALNIZ adı ölçülen kayıtlar için kurulur; adsızlar
+             sayılır ve ayrı bir cümleyle yazılır (uydurma yasağı: sayılan şey
+             "eşleşmeyen" değil "eşleştirilemeyen"dir). */
+          const adsiz = (arsivKayitlari ?? []).filter((k) => dosyaAdi(k.ad) === null);
           const eslesmeyen = (arsivKayitlari ?? []).filter((k) => {
             const ad = dosyaAdi(k.ad);
-            return ad === null || !gorulen.has(ad);
+            return ad !== null && !gorulen.has(ad);
           });
           return (
             <div className="flex flex-col gap-2 rounded-lg border p-3">
@@ -818,8 +858,8 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
               ) : eslesmeyen.length === 0 ? (
                 <p className="text-muted-foreground text-sm">
                   {arsivTam
-                    ? "Depo arşivinin her kaydı bu sayfadaki bir banka belgesiyle eşleşti."
-                    : "Okunabilen arşiv kayıtlarının hepsi eşleşti — ama arşiv EKSİK okundu, yani okunamayanlar bu cümlenin dışında."}
+                    ? "Adı ölçülebilen her arşiv kaydı bu sayfadaki bir banka belgesiyle eşleşti."
+                    : "Adı ölçülebilen arşiv kayıtlarının hepsi eşleşti — ama arşiv EKSİK okundu, yani okunamayanlar bu cümlenin dışında."}
                 </p>
               ) : (
                 <>
@@ -832,19 +872,11 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
                   </p>
                   <ul className="flex flex-col gap-1">
                     {eslesmeyen.map((k, i) => (
-                      <li key={k.ad ?? `adsiz-${i}`} className="flex flex-wrap items-center gap-2 text-xs">
+                      <li key={k.ad ?? `eslesmeyen-${i}`} className="flex flex-wrap items-center gap-2 text-xs">
                         <Badge variant="outline" className="font-normal text-[10px]">
                           {TUR_ETIKET[arsivTuru(k.ad)]}
                         </Badge>
-                        {k.ad === null ? (
-                          <Olculemedi
-                            neden="Dosya adı gelmedi"
-                            teknik={k.neden ?? "arşiv künyesinde ad alanı yok — eşleme anahtarı kurulamadı"}
-                            kisa
-                          />
-                        ) : (
-                          <span className="break-all font-mono">{k.ad}</span>
-                        )}
+                        <span className="break-all font-mono">{k.ad}</span>
                         <span className="text-muted-foreground">
                           {k.baslik ?? "başlık gelmedi"}
                         </span>
@@ -860,6 +892,28 @@ export function Belgeler({ bank, kayit }: { readonly bank: string | null; readon
                   </ul>
                 </>
               )}
+              {/* ADSIZ KOVA — ROZET YOK, ÇÜNKÜ HÜKÜM YOK (Ö-7). Sayı yazılır:
+                  sessizce düşürülen kayıt, olmayan kayıttan ayırt edilemezdi. */}
+              {adsiz.length > 0 ? (
+                <div className="flex flex-col gap-1 border-t pt-2">
+                  <p className="text-muted-foreground text-xs">
+                    Adı gelmediği için eşleştirilemeyen {adsiz.length} kayıt — bunlar hakkında "bankada
+                    var/yok" hükmü KURULMUYOR: eşleme anahtarı dosya adıdır ve o alan ölçülemedi.
+                  </p>
+                  <ul className="flex flex-col gap-1">
+                    {adsiz.map((k, i) => (
+                      <li key={`adsiz-${i}`} className="flex flex-wrap items-center gap-2 text-xs">
+                        <Olculemedi
+                          neden="Dosya adı gelmedi"
+                          teknik={k.neden ?? "arşiv künyesinde ad alanı yok — eşleme anahtarı kurulamadı"}
+                          kisa
+                        />
+                        <span className="text-muted-foreground">{k.baslik ?? "başlık gelmedi"}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <p className="text-muted-foreground text-[11px]">
                 Eşleme anahtarı DOSYA ADIDIR: banka belgesinin kimliği içe aktarımda depo yoludur,
                 arşiv ucu yalnız adı döndürür. Kimliğin gerçek biçimi bu turda ölçülmedi — eşleşmeme

@@ -152,7 +152,7 @@ function utcCipasi(iso: string): string {
   return /[+Z-]$/.test(iso) || /[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`;
 }
 
-function kovaEtiketi(zaman: unknown, trunc: unknown): string {
+function seriKovaEtiketi(zaman: unknown, trunc: unknown): string {
   const s = metin(zaman);
   if (s === null) return "— (kova damgası gelmedi)";
   if (!ISO_BENZERI.test(s)) return s;
@@ -212,7 +212,7 @@ function Seri({
      bu artık eksiklik değil TİP SÜRÜKLENMESİdir ve "hiç kayıt yok" demek
      ölçülmemiş bir boşluğu ölçülmüş ilan etmek olurdu (inceleme bulgusu M-3). */
   const veri = kovalar.map((k) => ({
-    etiket: kovaEtiketi(k.time, seri.trunc),
+    etiket: seriKovaEtiketi(k.time, seri.trunc),
     tam: metin(k.time) ?? "",
     world: sayi(k.world) ?? 0,
     experience: sayi(k.experience) ?? 0,
@@ -570,22 +570,36 @@ export function AnaSayfa({ bank, kayit }: { readonly bank: string | null; readon
           ikon={Activity}
           className="min-w-0 lg:col-span-2"
           aksiyon={
-            <div className="flex flex-wrap items-center gap-1">
+            /* SEÇİM RENKLE DEĞİL, DURUMLA DA BİLDİRİLİR (nihai inceleme Ö-5,
+               2026-09-03): `variant="secondary"` yalnız bir arka plandır ve ekran
+               okuyucu kullanıcısı hangi pencerenin seçili olduğunu okuyamazdı —
+               renk tek kanal kalıyordu. Kardeşleri (`parcalar.tsx::PencereDugmeleri`,
+               `Belgeler` tür süzgeci, `SeriAnahtarlari`) bunu zaten yapıyordu. */
+            <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Zaman penceresi">
               {PENCERELER.map((p) => (
-                <Button key={p} variant={p === pencere ? "secondary" : "ghost"} size="xs" onClick={() => setPencere(p)}>
+                <Button
+                  key={p}
+                  type="button"
+                  variant={p === pencere ? "secondary" : "ghost"}
+                  size="xs"
+                  aria-pressed={p === pencere}
+                  onClick={() => setPencere(p)}
+                >
                   {p}
                 </Button>
               ))}
             </div>
           }
         >
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Zaman alanı">
             {ZAMAN_ALANLARI.map((z) => (
               <Button
                 key={z.deger}
+                type="button"
                 variant={z.deger === zamanAlani ? "secondary" : "ghost"}
                 size="xs"
                 title={z.uzun}
+                aria-pressed={z.deger === zamanAlani}
                 onClick={() => setZamanAlani(z.deger)}
                 className={cn(z.deger === zamanAlani && "font-medium")}
               >

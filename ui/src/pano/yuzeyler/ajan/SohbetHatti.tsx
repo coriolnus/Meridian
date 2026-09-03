@@ -209,7 +209,11 @@ function HafizaMesaji({
       )}
       <p className="mt-2 text-muted-foreground text-xs">
         Tam metin:{" "}
-        <a className="underline underline-offset-2" href="#/dashboard/memory/hafiza-bilgi">
+        {/* BAĞ METNİ NEREYE GİDECEĞİNİ SÖYLÜYOR, ADRES DE ORAYA GİDİYOR (nihai
+            inceleme Ö-1, 2026-09-03): burada önce sorgusuz adres vardı ve bağ
+            "Meridian dersleri" derken sayfa ağacını açıyordu. Sekme adı
+            `gorunumler.ts::HAFIZA_BILGI_SEKMELERI`ndendir. */}
+        <a className="underline underline-offset-2" href="#/dashboard/memory/hafiza-bilgi?sekme=dersler">
           Hafıza → Bilgi Tabanı → Meridian dersleri
         </a>
       </p>

@@ -242,6 +242,7 @@ export function Cipler({
   tavan = 3,
   bicim,
   ne = "Bu alan",
+  teknik,
 }: {
   /** `null` = okunamadı (alan yok ya da tanınmayan tip); boş dizi = ölçüldü, içi boş. */
   readonly degerler: readonly string[] | null;
@@ -249,17 +250,39 @@ export function Cipler({
   readonly bicim?: string;
   /** Gerekçe cümlesinin öznesi — hangi alanın gelmediğini söyler. */
   readonly ne?: string;
+  /**
+   * `null` dalının TEKNİK cümlesi — verilmezse genel olan yazılır.
+   *
+   * NEDEN PARAMETRE (TSK-109 incelemesi K-2, 2026-09-03): çağıranlardan biri
+   * (`Yapilandirma.tsx::WebhookSatiri`) bu dalın BAYT-AYNI bir kopyasını elle
+   * yazıyordu, yalnız alan adını (`event_types`) taşıyabilmek için. İki kopya
+   * sessizce ayrışır — buradaki metin değişse çağıranınki eski kalırdı. Alan adı
+   * artık parametreyle iner; dalın kendisi TEK yerde.
+   */
+  readonly teknik?: string;
 }) {
   if (degerler === null) {
-    return <Olculemedi neden={`${ne} gelmedi`} teknik="alan yanıtta yok ya da liste olarak okunamayan bir tiple geldi" kisa />;
+    return (
+      <Olculemedi
+        neden={`${ne} gelmedi`}
+        teknik={teknik ?? "alan yanıtta yok ya da liste olarak okunamayan bir tiple geldi"}
+        kisa
+      />
+    );
   }
   if (degerler.length === 0) {
     return <span className="text-muted-foreground text-xs italic">boş</span>;
   }
   const gorunen = degerler.slice(0, tavan);
   const kalan = degerler.length - gorunen.length;
+  /* KAP `<span>`, `<div>` DEĞİL — ve bu bir biçim tercihi değil bir SÖZLEŞME
+     (nihai inceleme Ö-6, 2026-09-03): bu çip şeridi tablo satırlarının birincil
+     hücrelerinde de çiziliyor ve o hücreler artık klavyeyle erişilebilir olsun
+     diye `<button>` içine giriyor. `<button>`ın içerik modeli PHRASING content'tir;
+     `<div>` orada geçersiz işaretlemedir (tarayıcı çizer, ama düzen ve erişilebilirlik
+     ağacı sürüklenir). `flex` sınıfı `display`i zaten kuruyor, yani çizim bayt-aynı. */
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <span className="flex flex-wrap items-center gap-1">
       {gorunen.map((d) => (
         <Badge key={d} variant="outline" className={cn("max-w-[12rem] truncate font-normal text-[11px]", bicim)} title={d}>
           {d}
@@ -270,7 +293,7 @@ export function Cipler({
           +{kalan}
         </span>
       ) : null}
-    </div>
+    </span>
   );
 }
 
@@ -306,9 +329,11 @@ export function KayitOzeti({
   const tur = kayitTuru(kayit);
   const govdeMetni = metin(kayit.text);
   const baglam = metin(kayit.context);
+  /* KAPLAR `<span>` (Ö-6 sözleşmesi, `Cipler` şerhindeki gerekçenin aynısı): bu
+     özet tablo satırının birincil hücresinde bir `<button>` içine giriyor. */
   return (
     <>
-      <div className="flex items-center gap-2">
+      <span className="flex items-center gap-2">
         {tur === null ? (
           <Olculemedi neden="Türü bildirilmedi" teknik="tür alanı iki bilinen addan hiçbiriyle gelmedi" kisa />
         ) : (
@@ -321,15 +346,15 @@ export function KayitOzeti({
         ) : (
           <span className="line-clamp-2 min-w-0 text-sm">{govdeMetni}</span>
         )}
-      </div>
+      </span>
       {baglam ? (
         <span className="mt-0.5 block truncate text-muted-foreground text-[11px]">{baglam}</span>
       ) : null}
       {/* ÜST YÜZEYİN ÇİP TAVANI ÜÇ (çizelge kartı, artanı sayıyla yazıyor) — aynı sayı. */}
       {varliklar ? (
-        <div className="mt-1">
+        <span className="mt-1 block">
           <Cipler degerler={listeye(kayit.entities)} tavan={3} ne="Varlık alanı" />
-        </div>
+        </span>
       ) : null}
     </>
   );
@@ -458,7 +483,15 @@ export function SuzgecSeridi({
    --------------------------------------------------------------------------- */
 
 /** Rozetin metni TEK YERDE: on beş düğmenin yanında elle yazılsaydı biri
- *  ötekinden ayrışır ve iki farklı vaat gibi okunurdu (tek-kaynak yasası). */
+ *  ötekinden ayrışır ve iki farklı vaat gibi okunurdu (tek-kaynak yasası).
+ *
+ *  ROZETİN KAPSAMI DA BURADA YAZILI (nihai inceleme, dal-geneli gözlem 3 —
+ *  2026-09-03): rozet YALNIZ üst yüzeyde bir yazma DÜĞMESİ OLAN görünümlerde
+ *  çizilir (Recall · Varlıklar · denetim ve model çağrıları sekmeleri). Bellekler
+ *  graf kipinde, Bilgi Tabanı'nda ve Yapılandırma'nın Sayaçlar sekmesinde YOK —
+ *  çünkü üst yüzeyde de orada bir düğme yok, yani "ertelenmiş" bir yetenek de
+ *  yok. Kapsam yazılmasaydı boş bir şerit "unutuldu" diye okunurdu; bu deponun
+ *  kendi kuralı (`Faz2Grup` şerhi) tam olarak bunu yasaklıyor. */
 export const FAZ2_ROZET = "yazma yolu Faz-2 (operatör kararı bekler)";
 
 /**
@@ -870,12 +903,23 @@ export function KovaSeridi({
         {liste.map((k, i) => {
           const n = deger(k);
           const ham = metin(k.time);
-          const etiket = damga(k.time) ?? ham ?? `kova ${i + 1}`;
+          /* SENTETİK KİMLİK YOK (nihai inceleme K-7, 2026-09-03): burada damgası
+             gelmeyen kovaya `kova ${i + 1}` yazılıyordu — kovanın kimliği
+             ÖLÇÜLMEMİŞKEN bir kimlik üretmek, dizideki SIRAYI kovanın kendi adı
+             gibi göstermekti (ve sıra sunucunun sözleşmesi değildir). Ölçülemeyen
+             etiket artık ADI KONMUŞ bir yoklukla çizilir. */
+          const etiket = damga(k.time) ?? ham;
           const oran = n === null || enBuyuk <= 0 ? 0 : (n / enBuyuk) * 100;
           return (
             <div key={ham ?? `kova-${i}`} className="flex items-center gap-2">
               <span className="w-40 shrink-0 truncate text-[11px] text-muted-foreground" title={ham ?? undefined}>
-                {etiket}
+                {etiket ?? (
+                  <Olculemedi
+                    neden="damgası gelmeyen kova"
+                    teknik="kovanın zaman alanı gelmedi ya da çözülemedi — sıra numarası bir kimlik DEĞİLDİR"
+                    kisa
+                  />
+                )}
               </span>
               <span className="h-3 min-w-0 flex-1 rounded-sm bg-muted">
                 <span

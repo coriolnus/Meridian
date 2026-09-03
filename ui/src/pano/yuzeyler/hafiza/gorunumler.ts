@@ -134,3 +134,56 @@ export interface GorunumOzellikleri {
    */
   readonly toplu: Durum<HafizaGovdesi>;
 }
+
+/* ---------------------------------------------------------------------------
+   SEKME KADEMESİ — GÖRÜNÜMÜN ALTI DA ADRESTEN TÜRER
+   Bilgi Tabanı görünümü üç sekme taşıyor ve hangisinin açık olduğu İLK YAZIMDA
+   yerel bir durumdaydı. Ölçülen sonuç (nihai inceleme Ö-1): "Hafıza → Bilgi
+   Tabanı → Meridian dersleri" diyen bağ da, `#hafiza` yer imi de hep VARSAYILAN
+   sekmeyi açıyordu — yani üçü de çalışıyor ama üçü de yanlış yere gidiyordu.
+   Bu dosyanın kendi kuralı ("görünüm adreste yaşar") sekme için de geçerli.
+
+   ÖLÇÜM ÖNCE YAPILDI (brief kalemi): `rota.tsx::hashiCoz` bölüm olarak yalnız
+   yolun ÜÇÜNCÜ parçasını okuyordu ve dördüncüsünü DÜŞÜRÜYORDU; `gorunumCoz` da
+   tek bir bölüm dizgesi alıyor. Yani mevcut mekanizma ikinci kademeyi TAŞIMIYOR.
+   Bu yüzden kademe SORGUDA taşınır (`?sekme=`), yol parçasında değil: dördüncü
+   bir yol parçası, yüzey kaydının saymadığı bir bölüm kimliği doğururdu
+   (`alanlar.ts` bölüm sayacı · kırıntı · ⌘K anahtarları hepsi o uzaydan okur).
+   --------------------------------------------------------------------------- */
+
+/** Sekme kademesinin sorgu adı — adres yazan da okuyan da BURADAN alır. */
+export const SEKME_SORGU_ADI = "sekme";
+
+/** Bilgi Tabanı sekmeleri; İLKİ VARSAYILANDIR (üst yüzeyin sırası: sayfalar → modeller). */
+export const HAFIZA_BILGI_SEKMELERI = ["sayfalar", "modeller", "dersler"] as const;
+
+export type HafizaBilgiSekmesi = (typeof HAFIZA_BILGI_SEKMELERI)[number];
+
+export const VARSAYILAN_BILGI_SEKMESI: HafizaBilgiSekmesi = "sayfalar";
+
+/**
+ * Adresteki sorgudan sekmeyi çözer. TANINMAYAN DEĞER VARSAYILANA DÜŞER — ve bu,
+ * `gorunumCoz`un `null` sözleşmesinden BİLEREK farklı: bir görünüm kaybı ekranda
+ * yazılması gereken bir şeydir (yüzey kaydında yok), bir sekme kaybı ise yalnız
+ * bayat bir yer imidir ve sekme listesi zaten ekranda görünür duruyor.
+ */
+export function bilgiSekmesiCoz(sorgu: Readonly<Record<string, string>>): HafizaBilgiSekmesi {
+  const ham = sorgu[SEKME_SORGU_ADI];
+  return (HAFIZA_BILGI_SEKMELERI as readonly string[]).includes(ham ?? "")
+    ? (ham as HafizaBilgiSekmesi)
+    : VARSAYILAN_BILGI_SEKMESI;
+}
+
+/**
+ * `/dashboard/memory/hafiza-bilgi` + `?sekme=…` — adres kurma TEK yerde.
+ *
+ * YALNIZ `sekme` TAŞINIR — VE BU BUGÜNKÜ ÖLÇÜMÜN SINIRIDIR (düzeltme turu 2, Y-11).
+ * `rota.sorgu` genel bir sözlük ama bu kurucu tek anahtar biliyor: hash'te ikinci bir sorgu
+ * anahtarı doğduğu gün sekme değiştirmek onu SESSİZCE düşürürdü. Bugün zararsız, çünkü panonun
+ * ürettiği TEK sorgu anahtarı budur (ölçüldü 2026-09-03: `?` yazan başka bir adres kurucusu yok).
+ * İkinci anahtar doğduğu gün burası büyür — mevcut sorguyu koruyup yalnız `sekme`yi değiştirir.
+ * Bugün genelleştirmek, ölçülmemiş bir ihtiyaca kod yazmak olurdu.
+ */
+export function sekmeliYol(yol: string, sekme: HafizaBilgiSekmesi): string {
+  return sekme === VARSAYILAN_BILGI_SEKMESI ? yol : `${yol}?${SEKME_SORGU_ADI}=${sekme}`;
+}

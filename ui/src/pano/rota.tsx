@@ -38,6 +38,47 @@ export interface Rota {
   readonly bolum: string;
   /** Şablon biçimli yol: `/dashboard/finance` ya da `/dashboard/finance/mutabakat`. */
   readonly yol: string;
+  /**
+   * HASH İÇİNDEKİ SORGU — bölümün ALTINDAKİ kademe. Yoksa boş nesne.
+   *
+   * NEDEN VAR (nihai inceleme Ö-1, 2026-09-03): "Bilgi Tabanı → Meridian dersleri"
+   * diyen bir bağ, sekmeyi YEREL DURUMDA tutan bir görünüme gidiyordu ve hep
+   * varsayılan sekmeyi açıyordu — "çalışan ama yanlış yere giden bağ, çalışmayan
+   * bağdan daha sinsidir" (bu deponun kendi kuralı, `komutlar.ts`).
+   *
+   * NEDEN SORGU, NEDEN ÜÇÜNCÜ BİR YOL PARÇASI DEĞİL — ÖLÇÜLDÜ: `yol`un ilk üç
+   * parçası (`dashboard/<yüzey>/<bölüm>`) yüzey KAYDININ (`alanlar.ts`) kimlik
+   * uzayıdır; oraya dördüncü bir parça eklemek, kaydın saymadığı bir bölüm
+   * kimliği doğurur (`alanlar.ts` bölüm sayacı, kırıntı, ⌘K anahtarları hepsi o
+   * uzaydan besleniyor). Sekme bir bölüm DEĞİL, bölümün içindeki bir seçimdir —
+   * sorgu tam olarak bunun için var. `yol` bu yüzden sorguyu TAŞIMAZ: kenar
+   * çubuğu etkinliği (`alanKoku`) ve kırıntı onu okuyor.
+   */
+  readonly sorgu: Readonly<Record<string, string>>;
+}
+
+/** `sekme=dersler&x=1` → `{sekme:"dersler", x:"1"}`. Boş/bozuk girdi boş nesne verir. */
+function sorguCoz(ham: string): Readonly<Record<string, string>> {
+  if (!ham) return {};
+  const out: Record<string, string> = {};
+  for (const parca of ham.split("&")) {
+    if (!parca) continue;
+    const esit = parca.indexOf("=");
+    const ad = esit === -1 ? parca : parca.slice(0, esit);
+    const deger = esit === -1 ? "" : parca.slice(esit + 1);
+    if (!ad) continue;
+    // `decodeURIComponent` bozuk yüzde-dizisinde ATAR; sorgu bir GÖRÜNÜM
+    // seçimidir ve bozuk bir yer imi panoyu karartamaz (Yasa 4: yutma DEĞİL —
+    // ham değer korunur, yani bilgi kaybolmaz, yalnız çözülemediği söylenmez
+    // çünkü söylenecek bir okuyucusu yok: çağıran tanımadığı sekmeyi zaten
+    // varsayılana düşürür).
+    try {
+      out[decodeURIComponent(ad)] = decodeURIComponent(deger);
+    } catch {
+      out[ad] = deger;
+    }
+  }
+  return out;
 }
 
 function hashiCoz(ham: string): Rota {
@@ -45,7 +86,10 @@ function hashiCoz(ham: string): Rota {
   //   · yeni  `#/dashboard/finance/mutabakat`  — panonun kendi ürettiği bağlar
   //   · eski  `#karar` / `#adaylar`            — RUNBOOK bağları, tarayıcı yer imleri
   //   · boş   `#`                              — ilk açılış
-  const temiz = ham.replace(/^#/, "").replace(/^\//, "");
+  const bos = ham.replace(/^#/, "").replace(/^\//, "");
+  const soru = bos.indexOf("?");
+  const temiz = soru === -1 ? bos : bos.slice(0, soru);
+  const sorgu = sorguCoz(soru === -1 ? "" : bos.slice(soru + 1));
   const parca = temiz.split("/").filter(Boolean);
 
   if (parca[0] === "dashboard") {
@@ -53,21 +97,28 @@ function hashiCoz(ham: string): Rota {
     if (aday in YUZEYLER) {
       const yuzey = aday as YuzeyAnahtari;
       const bolum = parca[2] ?? "";
-      return { yuzey, bolum, yol: yuzeyYolu(yuzey, bolum || undefined) };
+      return { yuzey, bolum, yol: yuzeyYolu(yuzey, bolum || undefined), sorgu };
     }
     // TANINMAYAN ALT YOL VARSAYILANA DÜŞER, boş ekrana DEĞİL: bu pano tek dosya
     // olarak sunuluyor, yani yanlış bir hash sunucudan 404 alamaz — düşmezse
     // operatör bomboş bir kabuk görür ve neden boş olduğunu hiçbir yerden okuyamaz.
-    return { yuzey: VARSAYILAN_YUZEY, bolum: "", yol: yuzeyYolu(VARSAYILAN_YUZEY) };
+    return { yuzey: VARSAYILAN_YUZEY, bolum: "", yol: yuzeyYolu(VARSAYILAN_YUZEY), sorgu: {} };
   }
 
   const takma = ROTA_TAKMA_ADLARI[parca[0] ?? ""];
   if (takma) {
     const bolum = takma.bolum ?? parca[1] ?? "";
-    return { yuzey: takma.yuzey, bolum, yol: yuzeyYolu(takma.yuzey, bolum || undefined) };
+    // TAKMA ADIN KENDİ SORGUSU, ADRESTEKİNİ EZMEZ: `#hafiza?sekme=modeller` yazan
+    // bir yer imi kendi seçimini korur. Takma adın sorgusu yalnız BOŞLUĞU doldurur.
+    return {
+      yuzey: takma.yuzey,
+      bolum,
+      yol: yuzeyYolu(takma.yuzey, bolum || undefined),
+      sorgu: Object.keys(sorgu).length > 0 ? sorgu : (takma.sorgu ?? {}),
+    };
   }
 
-  return { yuzey: VARSAYILAN_YUZEY, bolum: "", yol: yuzeyYolu(VARSAYILAN_YUZEY) };
+  return { yuzey: VARSAYILAN_YUZEY, bolum: "", yol: yuzeyYolu(VARSAYILAN_YUZEY), sorgu: {} };
 }
 
 /** Bir yolun YÜZEY kökü: `/dashboard/finance/mutabakat` → `/dashboard/finance`.

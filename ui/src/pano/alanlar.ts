@@ -440,7 +440,9 @@ export function bolumBasligi(anahtar: YuzeyAnahtari, bolum: string): string | nu
      (b) eski BÖLÜM adları — `#adaylar`, `#market`, `#hafiza` … (bölüm çapasıyla birlikte)
    Bir yer imini kırmak sessiz bir kayıptır: operatörün RUNBOOK bağları, çekmece
    çipleri ve tarayıcı yer imleri hep bu adresleri yazıyor. */
-export const ROTA_TAKMA_ADLARI: Readonly<Record<string, { yuzey: YuzeyAnahtari; bolum?: string }>> = {
+export const ROTA_TAKMA_ADLARI: Readonly<
+  Record<string, { yuzey: YuzeyAnahtari; bolum?: string; sorgu?: Readonly<Record<string, string>> }>
+> = {
   // (a) eski yedi yüzey + S2R öncesi beş ad
   bugun: { yuzey: "default" },
   genel: { yuzey: "default" },
@@ -476,7 +478,14 @@ export const ROTA_TAKMA_ADLARI: Readonly<Record<string, { yuzey: YuzeyAnahtari; 
   // `hafiza` ESKİ ADI ARTIK HAFIZA YÜZEYİNİN BİLGİ TABANI GÖRÜNÜMÜNE ÇÖZÜLÜR
   // (2026-09-02): belge rafı yüzeyi kalktı, dersler oraya taşındı. Takma adı
   // silmek `#hafiza` yer imini varsayılan yüzeye düşürürdü — sessiz yanlış varış.
-  hafiza: { yuzey: "memory", bolum: "hafiza-bilgi" },
+  //
+  // SEKME DE TAŞINIR (nihai inceleme Ö-1, 2026-09-03): eski `#hafiza` yer imi raf
+  // yüzeyinde DOĞRUDAN dersleri açıyordu. Yalnız görünüme yönlendirmek, adresi
+  // koruyup VARIŞI kaybetmekti: bağ çalışır, operatör başka bir sekmede uyanır.
+  // Sekme adı `HAFIZA_BILGI_SEKMELERI` ile TEK kaynaktan gelir (`gorunumler.ts`);
+  // burada dizge yazılı çünkü `alanlar.ts` o modülü ithal edemez (döngü) — ayrışma
+  // çivisi `tests/test_hafiza_yazma_akisi_v378.py` tarafında.
+  hafiza: { yuzey: "memory", bolum: "hafiza-bilgi", sorgu: { sekme: "dersler" } },
   mudahale: { yuzey: "infrastructure", bolum: "mudahale" },
   ayarlar: { yuzey: "profile", bolum: "ayarlar" },
 };

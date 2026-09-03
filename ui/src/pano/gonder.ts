@@ -24,6 +24,8 @@
    sözleşme dokümantasyonunu taşıyan bir geçiş yüzeyi olarak kalır.
    ============================================================================ */
 
+import { hataEki } from "./veri";
+
 export interface GonderSonucu {
   readonly ok: boolean;
   /** HTTP durum kodu. `0` = yanıt HİÇ gelmedi (ağ/iptal) — sunucunun sustuğu hâl. */
@@ -47,6 +49,19 @@ export interface GonderSonucu {
   readonly ham: unknown;
 }
 
+/**
+ * Ret gövdesinden okunabilir metin. ÜÇ AD DA OKUNUR — ama üçünü BU DOSYA bilmez.
+ *
+ * ÜÇÜNCÜ AD ÖĞRENİLDİ (nihai inceleme K-4, 2026-09-03): `veri.ts::hataEki` "TEK
+ * KAPI" diye beyanlı ve `detail`/`error`/`neden` üçlüsünü okuyor; buradaki POST
+ * tarafı yalnız `detail`i (ve FastAPI'nin dizi biçimini) biliyordu. Beyan
+ * kapsamdan GENİŞTİ: bir uç `neden` ile reddettiğinde bu kapı susuyordu.
+ *
+ * FastAPI'NİN DİZİ BİÇİMİ BURADA KALIR, `hataEki`ye TAŞINMAZ: o kapı GET
+ * yanıtlarını okuyor ve doğrulama hatası dizisi bir POST gövdesi sınıfıdır —
+ * oraya taşımak, okuma kapısına yazma tarafının şeklini öğretmek olurdu. Sıra da
+ * bilinçli: önce bu dosyanın kendi bildiği biçim, sonra ortak kapı.
+ */
 function detaydanMetin(g: unknown): string | null {
   if (g === null || typeof g !== "object") return null;
   const d = (g as { detail?: unknown }).detail;
@@ -59,7 +74,10 @@ function detaydanMetin(g: unknown): string | null {
       .filter((x): x is string => typeof x === "string");
     if (m.length > 0) return m.join(" · ");
   }
-  return null;
+  // ORTAK KAPIYA DÜŞ: `hataEki` " — <metin>" biçiminde döner, boşsa boş dizge.
+  // Ön eki burada söküyoruz çünkü bu alan (`detay`) ÇIPLAK metin taşır.
+  const ek = hataEki(g);
+  return ek === "" ? null : ek.replace(/^ — /, "");
 }
 
 /** Tek POST. Ne fırlatır ne yutar: her hâl dönüş nesnesinde ADIYLA durur. */

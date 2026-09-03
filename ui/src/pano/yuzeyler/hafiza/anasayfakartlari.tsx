@@ -354,7 +354,10 @@ function IlerlemeSatiri({
         </span>
       </div>
       <span className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <span className="h-full rounded-full bg-emerald-500" style={{ width: `${toplam > 0 ? p : 0}%` }} />
+        {/* BAŞARI RENGİ MEVCUT RAMPADAN, VE BEDELİ YAZILI (Y-8): `--seri-9` camgöbeğidir ve
+            aynı jeton takımyıldız efsanesinde bir KÜMEYİ boyuyor — yeşilin evrensel
+            "tamam" okuması gitti. Gerekçe `yazma.tsx::BacakSatiri` şerhinde, tek yerde. */}
+        <span className="h-full rounded-full bg-[var(--color-seri-9)]" style={{ width: `${toplam > 0 ? p : 0}%` }} />
       </span>
     </div>
   );
@@ -434,7 +437,7 @@ export function KonsolidasyonKarti({
         }
       />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Hucre etiket="Tamamlanan" ikon={CheckCircle2} ikonSinifi="text-emerald-500">
+        <Hucre etiket="Tamamlanan" ikon={CheckCircle2} ikonSinifi="text-[var(--color-seri-9)]">
           <Deger
             deger={biten}
             neden="Tamamlanan sayısı türetilemedi"
@@ -748,7 +751,7 @@ function ZihinOzeti({ govde }: { readonly govde: SayfaliGovde<ZihinModeli> }) {
     <div className="flex flex-col gap-4">
       <IlerlemeSatiri biten={uyumlu} toplam={ogeler.length} teknik="okunan model sayısı ölçülemedi" />
       <div className="grid grid-cols-3 gap-3">
-        <Hucre etiket="Güncel" ikon={CheckCircle2} ikonSinifi="text-emerald-500">
+        <Hucre etiket="Güncel" ikon={CheckCircle2} ikonSinifi="text-[var(--color-seri-9)]">
           {tam(uyumlu)}
         </Hucre>
         <Hucre etiket="Bayat" ikon={AlertCircle} ikonSinifi="text-amber-500">
@@ -990,12 +993,33 @@ function BelgeSatirlari({
 const SAYFA_SAYISI = 8;
 
 /** Ağacı düz listeye açar — yalnız sayfa düğümleri. */
-function sayfalar(dugumler: readonly BilgiDugumu[], cikti: BilgiDugumu[] = []): BilgiDugumu[] {
-  for (const d of dugumler) {
-    if (metin(d.kind) === "page") cikti.push(d);
-    if (Array.isArray(d.children) && d.children.length > 0) sayfalar(d.children, cikti);
-  }
-  return cikti;
+/** Sayfa listesi + DÜŞÜRÜLEN düğüm sayısı (`KovaSeridi` emsali: say + atla). */
+interface SayfaTaramasi {
+  readonly sayfalar: readonly BilgiDugumu[];
+  readonly okunamayan: number;
+}
+
+function sayfalar(dugumler: readonly BilgiDugumu[]): SayfaTaramasi {
+  const cikti: BilgiDugumu[] = [];
+  let okunamayan = 0;
+  const gez = (liste: readonly BilgiDugumu[]) => {
+    for (const d of liste) {
+      // ÖĞE KAPISI (nihai inceleme K-1, `parcalar.tsx::KovaSeridi` deseni): `null`
+      // bir düğüm gelirse `d.kind` bir tip hatası atar ve BÜTÜN kart düşer.
+      //
+      // VE SAYILIR (düzeltme turu 2, Y-4): bu çözücü bir SAYIM üretiyor — sessizce düşen
+      // bir düğüm, kartın "N sayfa" sayısını İŞARETSİZ küçültürdü. Uydurma yasağının
+      // kardeşi: eksik bir sayı, ölçülmüş bir sayı gibi görünemez.
+      if (sozluk(d) === null) {
+        okunamayan += 1;
+        continue;
+      }
+      if (metin(d.kind) === "page") cikti.push(d);
+      if (Array.isArray(d.children) && d.children.length > 0) gez(d.children);
+    }
+  };
+  gez(dugumler);
+  return { sayfalar: cikti, okunamayan };
 }
 
 export function BilgiSayfalari({ bank, simdi, git }: { readonly bank: string; readonly simdi: number; readonly git: () => void }) {
@@ -1028,8 +1052,9 @@ function SayfaSatirlari({
 }) {
   const kokler = govde.roots;
   /** `null` = ağaç geldi ama kök dizisi tanınmayan biçimde. */
-  const liste = useMemo(() => (Array.isArray(kokler) ? sayfalar(kokler) : null), [kokler]);
-  if (liste === null) {
+  const tarama = useMemo(() => (Array.isArray(kokler) ? sayfalar(kokler) : null), [kokler]);
+  const liste = tarama === null ? null : tarama.sayfalar;
+  if (liste === null || tarama === null) {
     return (
       <Olculemedi
         neden="Bilgi ağacı tanınmayan bir biçimde geldi"
@@ -1079,6 +1104,13 @@ function SayfaSatirlari({
       <p className="text-muted-foreground text-[11px] tabular-nums">
         {tam(liste.length)} sayfanın {tam(cizilen.length)} tanesi çizildi · klasör yapısı Bilgi Tabanı görünümünde
       </p>
+      {/* OKUNAMAYAN DÜĞÜM SAYISI EKRANDA (düzeltme turu 2, Y-4 · `KovaSeridi` emsali):
+          yukarıdaki sayı bir SAYIMdır; sessizce atlanan düğüm onu işaretsiz küçültürdü. */}
+      {tarama.okunamayan > 0 ? (
+        <p className="text-muted-foreground text-[11px] tabular-nums">
+          {tam(tarama.okunamayan)} düğüm okunamadı — sözlük olarak çözülemedi, bu sayıma girmedi
+        </p>
+      ) : null}
       <Button variant="ghost" size="xs" className="self-start" onClick={git}>
         Tümü <ArrowRight className="size-3" aria-hidden />
       </Button>
