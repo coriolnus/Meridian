@@ -253,7 +253,7 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 _Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §3 GÜNCEL DURUM'dadır (bayat referans, tarihçe)._
 ### SIRALAMA (güncel — rev. 2026-09-02 akşam, operatör onayı): §2 İCRA SIRASI dört kova —
 **A kapanış dalgası** (TSK-108 → TSK-060 → TSK-089 → TSK-058 → günlük/ROADMAP kapanışı) →
-**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006 · 030 · 020 `2-adım2→3→1→9` · 064 · 071) →
+**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117) →
 **C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035) → **D operatör masası** (§5.0).
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
 (Eski WP-dönemi sıralaması §∞ eşleme tablosunda ve §2 SIRA TARİHÇESİ'nde aynen durur.)
@@ -341,18 +341,21 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 
 - (B-1 **TSK-107** geri-dolum `indir()` boyut doğrulaması — S, bağımsız, hemen sevk edilebilir.)
 - (B-2 **TSK-087** geri-dolum işçi-çökmesi dayanıklılığı + **TSK-008** dagit bakım penceresi `meridian-learn` restart'ı — geri-dolum haftası ailesi, birlikte.)
-- (B-3 **TSK-101** · **TSK-102** · **TSK-006** — defter/alan tutarlılığı üçlüsü, tek ajan tek paket.)
-- (B-4 **TSK-030** çapa göçü adım-3 — günlükte açık kalem.)
+- (B-3/4 **TSK-101** · **TSK-102** · **TSK-006** · **TSK-030** — TEK DİLİM [operatör 2026-09-03 sabah: "o dört kalemi de tek dilimde sıraya al"]: defter/alan tutarlılığı üçlüsü + çapa göçü adım-3; tek ajan, tek paket, tek inceleme. Gece kuyruğunda kova-B'nin YAPILMAYAN yarısı.)
 - (B-5 **TSK-020** backend: sıra `2-adım2 [aylık Parquet] → 3 → 1 → 9` — operatör 2026-09-01; revize notu aşağıda aynen.)
 
 - (D REVİZE sırası, operatör onayı 2026-09-01 gece — bkz. **TSK-020**: sıra `8→4→2→1→3→9`'dan `4→2-adım2→3→1→9`'a revize edildi çünkü [UYGULA-8] artık DONE'dur [yukarıda not edildi]; `2-adım1` [events.jsonl doğrudan DuckDB sorgusu] İLK SIRAYA alındı (operatör 2026-09-01, sıra başındaki araya-kalem bloğu). UYGULA-1 notu: PG artık canlıda ama SQLite→WAL kararı DEĞİŞMEZ [motor izolasyonu gerekçesi ayakta]. UYGULA-9 = Prometheus+Grafana açık adla. Bu revizyon notu TSK-020'nin dondurulu §4 gövdesine Rol-1 tarafından işlenmelidir — FAZ B §4'e dokunmaz.)
 
 - **[TSK-064] Sır-yönetimi kademeli YOL-1** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
-  What: (status notu 2026-09-03 gece: REPO-TARAFI HAZIRLIK YAZILDI — `docs/TASARIM-SIR-YOL1-2026-09-03.md`: envanter [5 dosya, yalnız adlar; 16 sır / 32 ayar], sınıf A/B/C/D, Faz-0..1C; Bulgu: `.env-apisix` mod 640 → 600 [sabah], DASH_TOKEN iki dosyada, vekil TENANT anahtarını dosyadan okuyor. Canlıya dokunulmadı.) kalan sırların LoadCredential/sops'a taşınma hazırlığı (B-DASH-CRED faz-1 emsali, TSK-049); OpenBao/unseal adımı BEKLEMEDE-7'de operatörde.
+  What: (operatör K3 2026-09-03 sabah: Faz-0 [chmod 600 + envanter çivisi] Faz-1A/1B ile TEK DALGA — ayrı sabah adımı YOK.) (status notu 2026-09-03 gece: REPO-TARAFI HAZIRLIK YAZILDI — `docs/TASARIM-SIR-YOL1-2026-09-03.md`: envanter [5 dosya, yalnız adlar; 16 sır / 32 ayar], sınıf A/B/C/D, Faz-0..1C; Bulgu: `.env-apisix` mod 640 → 600 [sabah], DASH_TOKEN iki dosyada, vekil TENANT anahtarını dosyadan okuyor. Canlıya dokunulmadı.) kalan sırların LoadCredential/sops'a taşınma hazırlığı (B-DASH-CRED faz-1 emsali, TSK-049); OpenBao/unseal adımı BEKLEMEDE-7'de operatörde.
   Why: sır-yönetiminin kademeli göçünün ilk basamağı — mimari madde 7, `§4` bloğunun BEKLEMEDE-7 kaydı.
   Ref: TSK-049 emsali; `BEKLEMEDE-7`.
 
 - (B-7 **TSK-071** friksiyon haftalık koşum — takvim: 5 Eylül; H1 tablosunda yaşar.)
+- (B-8 **TSK-115** ingest067 parça küçültme + Hindsight LLM retry ölçümü + boş-saat tetiği — operatör K1 2026-09-03 sabah.)
+- (B-9 **TSK-116** evren emekliliği: S&P 500 dışı 13 sembol → RETIRED_SYMBOLS — operatör K5 2026-09-03 sabah.)
+- (B-10 **TSK-118** ⌘K "Meridian dersleri" → dokuzuncu Hafıza nav durağı — operatör K8 2026-09-03 sabah.)
+- (B-11 **TSK-117** palet turu: rezerve hue bantları + anlam jetonları — H1 tasarım belgesi ÖNCE; operatör K7 2026-09-03 sabah.)
 
 **KOVA C — KART İSTEYENLER (ölçüm dalgası; kart-önce, §5 yasası):**
 
@@ -361,7 +364,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (PARALEL not: ⑥a kartı [bkz. **TSK-066**] geri-dolumun 2.-3. günü erken yazılır — İCRA SIRASI'nın kendi zamanlama notu, ⑥a'nın gövdesinde tekrar edilmez.)
 
 - **[TSK-066] ⑥a — mevcut sinyallerin AN yeniden-kurulumu** — status: QUEUED · born: 2026-08-31 · owner: rol1 · size: M · trigger: —
-  What: (status notu 2026-09-03 gece: KART YAZILDI — EDG-2026-069, §6; operatör onayı bekler, ölçüm kodu onaydan sonra.) sinyal hangi saniyede doğdu, icraya kadar fiyat ne yaptı (EDG-040 friksiyon sorusunun tick bacağı). Kartı geri-dolumun 2.-3. günü erken yazılır (PARALEL not, yukarıda).
+  What: (status notu 2026-09-03 gece: KART YAZILDI — EDG-2026-069, §6; ONAY 2026-09-03 sabah [K2], ölçüm kodu KOVA C sırasında.) sinyal hangi saniyede doğdu, icraya kadar fiyat ne yaptı (EDG-040 friksiyon sorusunun tick bacağı). Kartı geri-dolumun 2.-3. günü erken yazılır (PARALEL not, yukarıda).
   Why: pilot sonrası sinyal zincirinin ilk halkası — mevcut sinyallerin tick-doğruluğunu ölçer.
   Ref: EDG-2026-040.
 
@@ -2417,6 +2420,22 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   What: (status notu 2026-09-03 gece: KOD İNDİ — 12-A vekil f4fcbb3 [/varlik + entity_id süzgeci doğrulandı; açık: kimlik yol-parçası duvarı tutarlılığı] + 12-B UI 345a5cd [künye çekmecesi + zaman çizelgesi, veri.ts hataEki tek kapı, v380]; dağıtım sonraki pencere [tam suite]; DONE = operatör görsel turu.) CP `entities-view.tsx` (v0.9.2 = ebad4782 :232-237, :287, :432-517) düğüme tıklayınca varlık künyesi (ad · anılma sayısı · ilk/son görülme · kimlik) + o varlığa bağlı kayıtların zaman çizelgesini (`memories/list?entity_id=`) açar; bizde takımyıldız düğümleri tıklanamaz (ekranda gerekçesiyle yazılı). Kalem: vekile `GET /api/hindsight/varlik?bank=&id=` (→ `/entities/{id}`) + `/liste`ye `entity_id` süzgeci (upstream `list_memories` parametresi, T1 R1 ölçümü) + panel.
   Why: T6-B incelemesi Q1 — birebirlik defterinde açık kalem; bağ LİSTESİ ise CP'de yok (Meridian icadıydı, kaldırılması kabul edilmiş bedel).
   Ref: TSK-108 T6-B inceleme (task-6b-review.md Q1); `hindsight-clients/go/api/openapi.yaml` @ ebad4782 `get_entity` / `list_memories.entity_id`.
+- **[TSK-115] Hindsight ingest067: parça küçültme + LLM yeniden-deneme ölçümü + boş-saat tetiği** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: S · trigger: —
+  What: gece koşumu (00:10–01:53Z) 476 çağrı / 108 sağlayıcı hatası (%23) / 0 belge — ücretsiz Nvidia havuzu "temporarily overloaded"; Hindsight belgeyi tüm-ya-da-hiç işliyor (`1/1 chunks failed`), sağlayıcı hatasında 1 deneme → N çağrılık parça P≈0,8^N. İş: (a) `/opt/hindsight/ingest067/ingest067.py` parça boyutunu çağrı-başına ölçüp küçült (repo kopyası research/olcumler/edg067 altında tutulmalı — ölçülecek), (b) hindsight-api LLM retry ayarı var mı (`HINDSIGHT_API_LLM_*`) ölç, varsa yükselt, (c) yeniden tetik hafta içi boş saat penceresi (transient timer), günlük ücretsiz tavan (1000/gün) gözetilir; sonuç OK/HATA sayımıyla raporlanır.
+  Why: operatör K1 2026-09-03 sabah: "parça küçült + retry, sonra boş saatte tetikle". "Hindsight ne zaman tamamlanır" cevabı bugünkü kanalla "tamamlanmaz".
+  Ref: günlük 2026-09-03 gece kaydı (ingest durdurma); EDG-2026-067; B-TAVAN-502.
+- **[TSK-116] Evren emekliliği: S&P 500 dışına çıkan 13 sembol RETIRED_SYMBOLS'a** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: S · trigger: —
+  What: `state/universe_drift.json` ölçümü (2026-09-03 gece; kaynak wikipedia, evren 251, üye 503, emekli 8): AVB, BURL, CAG, EA, ENPH, EQR, LNG, MTCH, PINS, ROKU, SNAP, SPOT, VFC endeks dışı; hiçbirinde açık pozisyon yok. İş: RETIRED_SYMBOLS listesine ekle (evren 251→238), çivi, canlıda evren sayısı doğrulanır (evren emekliliği emsali: 8 delist sembol). Yeni üyelerin evrene alınması AYRI karar.
+  Why: operatör K5 2026-09-03 sabah: "13'ünü emekli et, listeye işle".
+  Ref: hafıza kaydı evren-emekliligi; ledger [G18]; `meridian/universe` RETIRED_SYMBOLS.
+- **[TSK-117] Palet turu: rezerve hue bantları + anlam jetonları (`--success` vb.)** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: M · trigger: —
+  What: TSK-108 nihai düzeltmesinde "başarı" rengi yeşilden mevcut seri rampasının bir durağına (camgöbeği, `--color-seri-9`) indi ve aynı jeton takımyıldızında bir kümeyi boyuyor (bedel şerhte). İş: H1 tasarım belgesi ÖNCE — başarı/uyarı/kritik + mod + nav için rezerve hue bantları (hafıza kaydı: palet turunun ilk adımı rezerve bantlar, güvenlik kaydı), anlam jetonları açık/koyu, seri rampası yalnız veri serilerine; sonra uygulama + v286 ailesi çivileri.
+  Why: operatör K7 2026-09-03 sabah: "rezerve hue bantlarıyla palet turu aç".
+  Ref: nihai UI incelemesi K-5 + yeniden-inceleme Y-8 (2026-09-03); `ui/src/pano/tema.css`; hafıza tasarim-dili-tasima-degil-benimseme.
+- **[TSK-118] ⌘K "Meridian dersleri" → dokuzuncu Hafıza nav durağı** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: S · trigger: —
+  What: Bilgi Tabanı sekmesi adresten (`?sekme=`) türüyor ama komut paleti maddeleri kenar çubuğu ağacından üretildiği için "lessons.md/ders/damitim" aramaları sayfalar sekmesine iniyor (PARK-1, gerekçe `komutlar.ts`te çivili). İş: Hafıza altına 9. alt başlık "Meridian dersleri" (bölüm kimliği + `alanlar.ts` sayaçları 16/42→16/43 + ilgili çiviler), palet doğrudan oraya iner; `?sekme=dersler` adresi yeni durağa çözülür (ESKI_GORUNUM_ADRESLERI deseni).
+  Why: operatör K8 2026-09-03 sabah: "dokuzuncu nav durağı aç".
+  Ref: final-fix-report PARK-1 (2026-09-03); `ui/src/pano/komutlar.ts`, `alanlar.ts`, `yuzeyler/hafiza/gorunumler.ts`.
 - **[TSK-113] Pano `Kapi` üç-hâl kapısının yedi kopyası tek kaynağa iner** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: S · trigger: —
   What: `yuzeyler/{sistem,kuyruk,kimlik,yetki}/parcalar.tsx` + `yuzeyler/{ogrenme,ajan,analiz}/ortak.tsx` aynı `Kapi<T>` bileşenini taşıyor (ölçüm 2026-09-03 gece: 7 kopya [ilk sayım 5'ti — desen `export function Kapi<` kimlik/yetki'yi kaçırdı, nihai UI incelemesi 7 saydı, `grep -rn 'function Kapi'` ile doğrulandı]; beş yüzey-altı kopyada 4 ayrı gövde [md5], ogrenme≡analiz). Hepsi `durum.veri === null` üzerinden karar veriyor; TSK-110 bayatlığı `veri.ts`te çözdüğü için kopyalar dokunulmadan düzeliyor, ama kopyalar sessizce ayrışmaya devam eder. Hedef: tek `sistem/parcalar.tsx::Kapi` + dört yüzey ondan import + v-çivisi "ikinci `Kapi` tanımı doğmadı" (hafıza yüzeyi zaten sistem kopyasını `UcKapisi` adıyla kullanıyor — emsal).
   Why: tek-kaynak yasası (§4) — TSK-099'un `apiPost` vakasıyla aynı sınıf; TSK-110 brief'i kopyalara dokunmayı bilerek yasakladı (diff okunabilirliği, tek kalem tek sınıf).
@@ -3250,12 +3269,12 @@ _**[2026-08-31 KONSOLİDASYON — BU LİSTE ENDEKSTİR.]** Satırlar kart duruml
 - **[BASE-2026-001] sistem-karnesi** — status: DONE(2026-08-01·GEÇTİ) · owner: rol1 · size: — · trigger: —
   What: Sistemin uçtan-uca karnesi (huni + getiri) ölçüldü.
   Why: KARNE HÜKMÜ verildi — +%2,5/4,5 yıl, sonuç 2024-bağımlı (getiri bir yıla yoğunlaşmış, kayıtlı caveat); huni üç-darboğaz gösterdi. Ref: research/cards/BASE-2026-001-sistem-karnesi.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
-- **[EDG-2026-069] sinyal-tetik-dolum-tick-bacagi** — status: OPERATOR · owner: rol1 · size: — · trigger: —
-  What: ⑥a (TSK-066) ön-kayıt 2026-09-03 gece: tetik kırılma saniyesi → dolum gecikmesi (≤60 sn) ve kayması (≤15 bps), K=2 (+3×2 tanı), ADIM-0 fizibilite (n≥30, dolum_ts ≤%30 eksik), yol-tutarlı üç PK; kod YOK — operatör onayı bekler.
+- **[EDG-2026-069] sinyal-tetik-dolum-tick-bacagi** — status: ACTIVE · owner: rol1 · size: — · trigger: —
+  What: (ONAY 2026-09-03 sabah, operatör K2 → ACTIVE: ölçüm kodu KOVA C sırasında; eşikler donuk.) ⑥a (TSK-066) ön-kayıt 2026-09-03 gece: tetik kırılma saniyesi → dolum gecikmesi (≤60 sn) ve kayması (≤15 bps), K=2 (+3×2 tanı), ADIM-0 fizibilite (n≥30, dolum_ts ≤%30 eksik), yol-tutarlı üç PK; kod YOK — operatör onayı bekler.
   Why: EDG-040 friksiyon sorusunun tick yarısı; tick arşivi 129 gün + trades.extra_json.dolum_ts ölçüldü.
   Ref: research/cards/EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml; EDG-2026-038/040/066.
-- **[EDG-2026-070] pit-midcap-sagkalan-ust-sinir** — status: OPERATOR · owner: rol1 · size: — · trigger: —
-  What: EDG-018 halefi (askıda kalır), ön-kayıt 2026-09-03 gece: aynı ADIM-0 kapısı (≥40 isim, ≥3 yıl; yeni bar kaynağı Alpaca IEX tarihsel), EDG-016 tasarımı PIT mid-cap sağkalan kohortuna, ÜST-SINIR damgalı, K=2 (+1×2 tanı); kod YOK — operatör onayı bekler.
+- **[EDG-2026-070] pit-midcap-sagkalan-ust-sinir** — status: ACTIVE · owner: rol1 · size: — · trigger: —
+  What: (ONAY 2026-09-03 sabah, operatör K2 → ACTIVE: ölçüm kodu KOVA C sırasında; eşikler donuk.) EDG-018 halefi (askıda kalır), ön-kayıt 2026-09-03 gece: aynı ADIM-0 kapısı (≥40 isim, ≥3 yıl; yeni bar kaynağı Alpaca IEX tarihsel), EDG-016 tasarımı PIT mid-cap sağkalan kohortuna, ÜST-SINIR damgalı, K=2 (+1×2 tanı); kod YOK — operatör onayı bekler.
   Why: TSK-065 (İCRA SIRASI ⑤) — delist-bar kilidi (B-DELIST-KAYNAK) para kararına sayısal girdi.
   Ref: research/cards/EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml; EDG-2026-018/016.
 - **Retro kuyruk (README):** EAP large-cap **archived** (+9,0bps<30 eşik; PK geçti) · Insider CMP **archived** (pozitif-kontrollü 0) · Short-interest FINRA **archived** (12 hücre 0) · çıkış paketi P1/P2/P3 (K=3) **measured→shadow-accrual** · PEAD/rekonstitüsyon/sektör-takvim **archived** (kaynaklı; kill-list altta).

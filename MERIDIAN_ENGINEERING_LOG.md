@@ -1946,3 +1946,20 @@ TSK-029 / TSK-109 / TSK-110 sıradaki.
   mutlak yol · commit-önce-inceleme yalnız ayrılabilir tarih için ve bulgular bir sonraki düzeltmeye katlanır ·
   "çivi yeşili kanıt değil": tur 4'ün bulgusu (kapı bir satır geç) metin-tarayan çivilerin yapısal körlüğü — pano
   için gerçek render testi yok (açık kalem, [TSK-113]/[TSK-114] yanına not).
+
+## 2026-09-03 (sabah kararları) — sekiz karar teker teker; kova-B'nin yapılmayan yarısı tek dilime
+
+**Sayım düzeltmesi:** gece kuyruğunun 18 kaleminden 11 tam kapalı · 6 yapıldı-karar/işlem sabaha · 1 kısmi
+(kova-B: TSK-107/008 DONE, **TSK-101/102/006/030 yapılmadı**). Sabah raporundaki "1–6 kapalı" cümlesi kalem 6 için
+fazla iddialıydı; ROADMAP'te TSK-109/110 da QUEUED kalmıştı (canlıdalar) → ACTIVE (8189130).
+
+**Kararlar (operatör, AskUserQuestion, 06:0x–06:23Z):**
+- K1 ingest → parça küçült + Hindsight LLM retry ölçümü, sonra boş saatte tetik → **[TSK-115]**.
+- K2 kartlar EDG-2026-069/070 → ONAY; ölçüm kodu KOVA C sırasında (§6 QUEUED).
+- K3 TSK-064 Faz-0 → Faz-1A/1B ile TEK DALGA (chmod ayrı adım değil).
+- K4 geri-dolum seans kilidi → OLDUĞU GİBİ (intraday_gap/healthz-stale bedeli kabul).
+- K5 evren → S&P 500 dışı 13 sembol EMEKLİ → **[TSK-116]**.
+- K6 konsolidasyon (258 başarısız) → boş saatte Rol-1 tetikler (kurtar→tetikle), tavan gözetilir, sonuç raporlanır.
+- K7 palet → rezerve hue bantlarıyla PALET TURU (H1 belge önce) → **[TSK-117]**.
+- K8 ⌘K dersler → dokuzuncu Hafıza nav durağı → **[TSK-118]**.
+- Ayrıca: "o dört kalemi de tek dilimde sıraya al" → KOVA B B-3/4 tek dilim (101/102/006/030).
