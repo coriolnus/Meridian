@@ -22,9 +22,11 @@ az bir çiviyi kırmalı.
 DÜZELTME TURU 1 (inceleme `task-110-review.md`, 2026-09-03):
 - Önemli-1: ilk turun ELLE YAZILMIŞ "beş `Kapi` kopyası" listesi EKSİKTİ — `kimlik/parcalar.tsx` ve
   `yetki/parcalar.tsx` (`function Kapi<` tanımı taşıyorlar) taramaya HİÇ girmiyordu. Liste artık ELLE
-  YAZILMAZ: `_kapi_kopyalarini_bul()` `ui/src/pano/yuzeyler/**/*.tsx` içinde `function Kapi<` tanımı
-  taşıyan HER dosyayı tarar; ayrıca sayının ≥7 olduğu AYRI bir testte ölçülür ki tarama kırılıp boş/az
-  dönerse "hiçbiri çare kurmamış" testi anlamsızca YEŞİL kalmasın (körlük alarmı).
+  YAZILMAZ: `_kapi_kopyalarini_bul()` `ui/src/pano/**/*.tsx` içinde `function Kapi<` tanımı
+  taşıyan HER dosyayı tarar; ayrıca sayının == 1 olduğu AYRI bir testte ölçülür ki tarama kırılıp
+  boş/az dönerse "hiçbiri çare kurmamış" testi anlamsızca YEŞİL kalmasın (körlük alarmı).
+  (Kapsam `yuzeyler/**`→`pano/**` ve eşik ≥7→==1 TSK-113'te değişti; gerekçe
+  `_kapi_kopyalarini_bul` ile `test_kapi_kopya_sayisi_TAM_BIR_olculuyor` docstring'lerinde.)
 - Önemli-2: `yukleniyor` artık TÜRETİLİYOR (`yukleniyorDurumu || (yol !== null && guncel === null &&
   hata === null && !oturumDustu)`) — yol değiştiği ANDA, efekt henüz koşmadan, "bu yol için ne okuma
   ne hata var" durumu render sırasında hesaplanır; yalnız efekt-state'e güvenmek bir kare
@@ -56,23 +58,57 @@ _KAPI_TANIM = re.compile(r"function Kapi<")
 
 
 def _kapi_kopyalarini_bul() -> tuple[pathlib.Path, ...]:
-    """`ui/src/pano/yuzeyler/**/*.tsx` içinde `function Kapi<` tanımı taşıyan HER dosya —
+    """`ui/src/pano/**/*.tsx` içinde `function Kapi<` tanımı taşıyan HER dosya —
     ELLE YAZILMIŞ bir liste DEĞİL (düzeltme turu 1, inceleme Önemli-1, 2026-09-03): ilk turun
     elle yazılmış 5'lik listesi `kimlik/parcalar.tsx` ve `yetki/parcalar.tsx`'i kaçırmıştı —
     ikisi de kendi `Kapi<T>` tanımını taşıyor ama listeye HİÇ girmemişti. Bu tarama yeni bir
-    kopya doğduğunda da OTOMATİK yakalar; sayı ayrıca `test_kapi_kopya_sayisi_EN_AZ_YEDI_olculuyor`
+    kopya doğduğunda da OTOMATİK yakalar; sayı ayrıca `test_kapi_kopya_sayisi_TAM_BIR_olculuyor`
     ile ölçülür ki tarama kırılıp boş/az dönmesi "hiçbiri çare kurmamış" testini anlamsızca
-    YEŞİL bırakmasın."""
+    YEŞİL bırakmasın.
+
+    KAPSAM GENİŞLEDİ (TSK-113, 2026-09-03): tarama `yuzeyler/` ile SINIRLIYDI. Tek kaynağa
+    inildiğinde tanım `parcalar/kapi.tsx`e taşındı — dar tarama onu göremez ve "kopya yok"
+    derdi; yani çivi tam işini bitirdiği gün kör olurdu. Kapsam `pano/**`."""
     return tuple(sorted(
-        p for p in (PANO / "yuzeyler").rglob("*.tsx")
+        p for p in PANO.rglob("*.tsx")
         if _KAPI_TANIM.search(soy(p))
     ))
 
 
+#: TSK-113 ÖNCESİ kendi `Kapi<T>` tanımını taşıyan yedi yüzey (PANO-göreli). ELLE YAZILI OLMASI
+#: KASITLI: bu liste "kimin tanımı SÖKÜLDÜ" TARİHİNİ taşır, "bugün kimde tanım var" sorusunu
+#: DEĞİL — ikincisini `_kapi_kopyalarini_bul()` dinamik yanıtlar. Buraya v384'ten TAŞINDI
+#: (düzeltme turu 1, inceleme Ö-4, 2026-09-03): yardımcının evi burasıdır, v384 ithal eder.
+ESKI_KOPYALAR = (
+    "yuzeyler/sistem/parcalar.tsx",
+    "yuzeyler/kuyruk/parcalar.tsx",
+    "yuzeyler/kimlik/parcalar.tsx",
+    "yuzeyler/yetki/parcalar.tsx",
+    "yuzeyler/ogrenme/ortak.tsx",
+    "yuzeyler/ajan/ortak.tsx",
+    "yuzeyler/analiz/ortak.tsx",
+)
+
+
+def _kapi_yuzeyleri() -> tuple[pathlib.Path, ...]:
+    """Bayatlık-çaresi taramasının KAPSAMI: bugünkü tek kaynak + TSK-113 öncesi yedi yüzey.
+
+    BEDEL YASASI (§4; düzeltme turu 1, inceleme Ö-4, 2026-09-03): TSK-113 yedi tanımı bire
+    indirince `_kapi_kopyalarini_bul()` tek dosya döndürmeye başladı ve aşağıdaki çare-taraması
+    SESSİZCE 7 dosyadan 1'e daraldı — yani çivi tam işini bitirdiği gün kapsamının altısını
+    kaybetti. Kayıp ÖLÇÜLDÜ: yedi yüzeyden birine `sonYol` deseni eklemek hiçbir çiviyi
+    ötürtmüyordu (2026-09-03). Yüzeyler artık tanımı taşımıyor ama hâlâ `Kapi`yi bağlıyor ve
+    çizen taraf ONLAR: birinin yarın kendi bayatlık çaresini kurması TSK-110'un tam kapattığı
+    sınıftır. Kapsam bu yüzden İKİ kaynağın birleşimidir (dinamik + tarihsel)."""
+    yollar = list(_kapi_kopyalarini_bul()) + [PANO / y for y in ESKI_KOPYALAR]
+    return tuple(dict.fromkeys(yollar))   # sıra korunur, yinelenen düşer
+
+
 def test_olculen_dosyalar_YERINDE():
     """KÖRLÜK ALARMI: yol bayatlarsa aşağıdaki her `in` kontrolü sessizce boş metin okur ve
-    çivi "temiz" der. Dosya varlığı ayrı ölçülür ki 'sıfır ihlal' bir okuma yokluğu olmasın."""
-    for p in (VERI, *_kapi_kopyalarini_bul()):
+    çivi "temiz" der. Dosya varlığı ayrı ölçülür ki 'sıfır ihlal' bir okuma yokluğu olmasın.
+    Kapsam `_kapi_yuzeyleri()`tir (dinamik tek kaynak + yedi tarihsel yüzey, Ö-4)."""
+    for p in (VERI, *_kapi_yuzeyleri()):
         assert p.is_file(), f"ölçülecek dosya yok: {p}"
         assert len(p.read_text(encoding="utf-8")) > 200, f"dosya beklenmedik biçimde küçük: {p}"
 
@@ -177,24 +213,33 @@ def test_durum_arayuzu_ALTI_ALAN_ne_fazla_ne_eksik():
 _KOPYA_CARE_IMZASI = re.compile(r"\byol\s*===|\bsonYol\b|\boncekiYol\b")
 
 
-def test_kapi_kopya_sayisi_EN_AZ_YEDI_olculuyor():
+def test_kapi_kopya_sayisi_TAM_BIR_olculuyor():
     """KÖRLÜK ALARMI: tarama boş/az dönerse aşağıdaki 'hiçbiri çare kurmamış' testi anlamsızca
     geçer. Sayı ayrıca ölçülür (inceleme Önemli-1, düzeltme turu 1, 2026-09-03: elle yazılmış
-    liste 5 iken gerçek sayı 7'ydi — `kimlik/parcalar.tsx` ve `yetki/parcalar.tsx` kaçmıştı)."""
+    liste 5 iken gerçek sayı 7'ydi — `kimlik/parcalar.tsx` ve `yetki/parcalar.tsx` kaçmıştı).
+
+    SAYI 7'DEN 1'E İNDİ (TSK-113, 2026-09-03) ve eşik "≥7"den "==1"e çevrildi. Neden ≥ değil ==:
+    burada ölçülen şey artık "tarama çalışıyor mu" DEĞİL, "tek kaynak korunuyor mu"dur — sekizinci
+    bir kopya doğduğunda `>=` sessiz kalırdı. Alt sınır (boş dönmüyor) `== 1` içinde zaten var.
+    `function Kapi<` yerine `export const Kapi = kapiKur(...)` bağları KOPYA DEĞİLDİR: karar
+    taşımazlar, yalnız kabuk bağlarlar (çivisi `tests/test_kovab_b12_v384.py`)."""
     kopyalar = _kapi_kopyalarini_bul()
-    assert len(kopyalar) >= 7, (
-        f"Kapi kopya sayısı beklenenin altında (tarama kırık olabilir): "
-        f"{len(kopyalar)} → {[p.relative_to(KOK).as_posix() for p in kopyalar]}"
+    assert [p.relative_to(KOK).as_posix() for p in kopyalar] == ["ui/src/pano/parcalar/kapi.tsx"], (
+        f"`Kapi<T>` tanımı tek kaynakta değil (tarama kırık ya da kopya doğmuş): "
+        f"{[p.relative_to(KOK).as_posix() for p in kopyalar]}"
     )
 
 
 def test_kapi_kopyalari_KENDI_bayatlik_caresini_kurmamis():
+    """KAPSAM `_kapi_yuzeyleri()` (Ö-4, düzeltme turu 1, 2026-09-03): tek kaynak + TSK-113
+    öncesi yedi yüzey. Yalnız dinamik taramaya bağlansaydı kapsam 7 dosyadan 1'e SESSİZCE
+    daralırdı — bedel yasası, kapsam daraltan değişikliğin ne KAYBETTİĞİNİ de ölçmesini ister."""
     kirli = []
-    for p in _kapi_kopyalarini_bul():
+    for p in _kapi_yuzeyleri():
         if _KOPYA_CARE_IMZASI.search(soy(p)):
             kirli.append(p.relative_to(KOK).as_posix())
     assert kirli == [], (
-        f"Kapi kopyaları kendi bayatlık çaresini kurmuş — sözleşme veri.ts dışına sızdı: {kirli}"
+        f"Kapi yüzeyleri kendi bayatlık çaresini kurmuş — sözleşme veri.ts dışına sızdı: {kirli}"
     )
 
 

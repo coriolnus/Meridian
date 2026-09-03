@@ -121,6 +121,24 @@ Bu bir uyarı değil, bir ret. Önceki hal `obs.warn` idi — ve uyarılar okunm
 
 ## 6 · Dağıtım sonrası doğrulama listesi
 
+**Bakım penceresi kuralı — durdurulmuş/disabled birimi pencere sonunda BAŞLATMA.** İstenen durum
+`systemd`'nin KENDİ beyanıdır: `is-enabled` neyin geri açılacağını, `is-active` neyin durdurulacağını
+söyler. `dagit.sh` [4] penceresi bu iki türetimi koşar — pencere öncesi `inactive` olan birime stop
+GÖNDERMEZ, `disabled` olan birimi geri BAŞLATMAZ, atladığını ADIYLA yazar. Bir birimin dağıtımdan
+sonra da kapalı kalmasını istiyorsan `sudo systemctl disable --now <birim>` yeter; sonraki dağıtım
+ona dokunmaz. Kalıcı olarak açık kalması gerekiyorsa `enable` et — elle `start` pencereden sağ
+çıkmaz (beyanlı bedel). Vaka: bilinçli durdurulan `meridian-learn` sabit üçlü `stop/start` paketiyle
+iki gece üst üste geri açıldı (2026-08-31 + 2026-09-01); ikinci gecede ~4 saatte 6h40m CPU yedi
+(ölçüm ROADMAP §7 triyaj kaydı, TSK-092).
+
+**`enabled` ama `inactive` birim varsa dagit DURUR (çıkış 3) — `start` ya da `disable --now`.**
+Aday birimlerin üçü de `Type=simple` + `Restart=always` ve hiçbiri zamanlayıcı tetiklemiyor, yani
+bu hâl normal değil: ya elle durdurulmuştur (niyet beyan edilmemiş) ya da düşmüştür (arıza).
+`dagit.sh` [F10] kapısı bunu rsync'ten de bakım penceresinden de ÖNCE ölçer ve dağıtımı durdurur —
+kuru koşumda da. Çare birim başına birini seçmektir: beklenmeyen düşüşse
+`sudo systemctl start <birim>` (önce `journalctl -u <birim> -n 50`), kalıcı kapalılıksa
+`sudo systemctl disable --now <birim>`; sonra dagit yeniden koşulur. Override bayrağı YOKTUR.
+
 ```bash
 D=https://alan-adin
 curl -s -o /dev/null -w "%{http_code}\n" $D/api/today            # 401

@@ -23,14 +23,13 @@
    Bu yüzden okuyucular DEĞER YOK ile DEĞER null'ı ayırıyor: `deger()` alan hiç
    yoksa `null`, varsa ve null ise `"null"` dizgesini döndürür.
    ============================================================================ */
-import type { ReactNode } from "react";
 
 import { Info, LockKeyhole, TriangleAlert } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-import type { Durum } from "../../veri";
+import { type AdEki, kapiKur } from "../../parcalar/kapi";
 
 /* ---- HAM OKUYUCULAR ------------------------------------------------------ */
 
@@ -271,61 +270,44 @@ function Bildiri({
   );
 }
 
-/** Yükleniyor / okunamadı / oturum düştü / bayat-ama-var — dördü AYRI çare ister. */
-export function Kapi<T>({
-  durum,
-  ad,
-  children,
-  yukseklik = "h-40",
-}: {
-  durum: Durum<T>;
-  ad: string;
-  children: (veri: T) => ReactNode;
-  yukseklik?: string;
-}) {
-  if (durum.oturumDustu) {
-    return (
-      <Bildiri
-        ikon={LockKeyhole}
-        uyari={false}
-        baslik="Oturum düştü"
-        govde={`${ad} 401 döndü. Bu bir veri arızası DEĞİL — pano parola kapısının arkasında, yeniden giriş gerekiyor.`}
-      />
-    );
-  }
-  if (durum.veri === null && durum.yukleniyor) {
-    return (
-      <div className="flex flex-col gap-3">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className={cn("w-full", yukseklik)} />
-      </div>
-    );
-  }
-  if (durum.veri === null) {
-    return (
-      <Bildiri
-        ikon={TriangleAlert}
-        uyari
-        baslik={`${ad} okunamadı`}
-        govde={durum.hata ?? `${ad} ne tamamlandı ne düştü — bu boş bir sonuç DEĞİL.`}
-      />
-    );
-  }
-  return (
-    <>
-      {durum.hata === null ? null : (
-        // BAYAT AMA ÇİZİLİYOR: bir ağ hıçkırığında ekranı boşaltmak da, bayatı taze
-        // diye okutmak da yanlış. Üçüncü yol: çiz + damgala (veri.ts'in sözleşmesi).
-        <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2">
-          <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-          <p className="min-w-0 break-words text-amber-700 text-xs leading-relaxed dark:text-amber-300">
-            Tazeleme düştü — aşağısı{" "}
-            {durum.zaman ? `${durum.zaman.toLocaleTimeString("tr-TR")} okumasından` : "önceki bir okumadan"} kalma,
-            ŞU ANI göstermiyor. {durum.hata}
-          </p>
-        </div>
-      )}
-      {children(durum.veri)}
-    </>
-  );
-}
+/** Yükleniyor / okunamadı / oturum düştü / bayat-ama-var — dördü AYRI çare ister.
+ *  TANIM BURADA DEĞİL (TSK-113, 2026-09-03): yedi yüzey aynı `Kapi<T>` gövdesini kopyalıyordu.
+ *  KARAR tek kaynakta (`parcalar/kapi.tsx`), ÇİZİM burada — bu yüzeyin metinleri ve `Bildiri`
+ *  kabuğu kendisinindir, sıra ortaktır. `bayat` verildiği için hata veriyi EZMEZ: veri varken
+ *  şerit olur (A ailesinin `Alert` kapıları bunun tersini yapar ve bu ayrım kabuktan türetilir). */
+export const Kapi = kapiKur<AdEki>({
+  oturum: ({ ad }) => (
+    <Bildiri
+      ikon={LockKeyhole}
+      uyari={false}
+      baslik="Oturum düştü"
+      govde={`${ad} 401 döndü. Bu bir veri arızası DEĞİL — pano parola kapısının arkasında, yeniden giriş gerekiyor.`}
+    />
+  ),
+  bos: (hata, { ad }) => (
+    <Bildiri
+      ikon={TriangleAlert}
+      uyari
+      baslik={`${ad} okunamadı`}
+      govde={hata ?? `${ad} ne tamamlandı ne düştü — bu boş bir sonuç DEĞİL.`}
+    />
+  ),
+  iskelet: ({ yukseklik = "h-40" }) => (
+    <div className="flex flex-col gap-3">
+      <Skeleton className="h-4 w-40" />
+      <Skeleton className={cn("w-full", yukseklik)} />
+    </div>
+  ),
+  // BAYAT AMA ÇİZİLİYOR: bir ağ hıçkırığında ekranı boşaltmak da, bayatı taze
+  // diye okutmak da yanlış. Üçüncü yol: çiz + damgala (veri.ts'in sözleşmesi).
+  bayat: (hata, zaman) => (
+    <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2">
+      <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+      <p className="min-w-0 break-words text-amber-700 text-xs leading-relaxed dark:text-amber-300">
+        Tazeleme düştü — aşağısı{" "}
+        {zaman ? `${zaman.toLocaleTimeString("tr-TR")} okumasından` : "önceki bir okumadan"} kalma,
+        ŞU ANI göstermiyor. {hata}
+      </p>
+    </div>
+  ),
+});

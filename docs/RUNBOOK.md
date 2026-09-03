@@ -1397,6 +1397,8 @@ dagit.sh — Meridian GENEL dağıtım betiği (WP-H/H2 kapılı). Tek-seferlik 
 hermes config.yaml · tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya
 service+timer · brifing service+timer · @sef profili: distribution.yaml+config.yaml+SOUL.md):
 içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
+[F10] birim istenen-durum ANOMALİSİ: enabled + inactive birim varsa DUR (rc 3; çare `start` ya da
+`disable --now`) — rsync/stop'tan ÖNCE, kuru koşumda da (TSK-092, 2026-09-03; çivi v367)
 [2] rsync (state/backups/.venv/.git HARİÇ)
 [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
 [4] bakım penceresi: durdur → versiyonlu state kopyası ([1b] KOPYALA dediyse) → başlat

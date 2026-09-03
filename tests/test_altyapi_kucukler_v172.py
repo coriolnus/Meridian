@@ -563,10 +563,15 @@ def test_dagit_kopya_DURDURMA_ile_BASLATMA_ARASINDA():
     Önce olsaydı koşan worker'ın `config.goal()` lru_cache'i eski değerle donmuş hâlde dosya
     değişirdi (aynı anda iki gerçek). Sonra olsaydı yeni süreç ESKİ yapılandırmayla açılır ve
     etkisi bir sonraki restart'a kadar GÖRÜNMEZDİ — tam olarak bu adımın kapattığı sessizlik."""
-    dur = _satir_no("systemctl stop meridian")
+    # TSK-092 (a) (2026-09-03): stop satırı da birim adı sabitleyemez (`$_DURDUR` türetimi,
+    # is-active) — çapa sabit üçlüden türetilmiş satıra alındı.
+    dur = _satir_no("systemctl stop $_DURDUR")
     # TSK-092 (2026-09-02): start satırı birim adı sabitleyemez (`$_BASLAT` türetimi) — çıpa
-    # genel `systemctl start`a alındı; pencerede tek start satırı var, v367 bunu ayrıca çiviliyor.
-    bas = _satir_no("systemctl start")
+    # genel `systemctl start`a alınmıştı. ÇAPA DARALTILDI (R-0, düzeltme turu 1, 2026-09-03):
+    # [F10] anomali kapısı operatöre ÇARE METNİ olarak `sudo systemctl start <birim>` BASIYOR ve
+    # o satır pencereden ÖNCE geliyor — genel çapa artık yanlış satırı buluyordu (çapanın kayması
+    # sessiz değil, bu çivi kırmızıya düştü). Çapa türetilmiş değişkenin KENDİSİNE bağlandı.
+    bas = _satir_no("systemctl start $_BASLAT")
     scpler = [i for i, s in enumerate(_dagit_satirlari()) if s.strip().startswith("scp ")]
     # BOŞ LİSTE ÜZERİNDE `all(...)` DAİMA TRUE: bu satır olmadan çivi, `scp` hiç yokken de yeşil
     # kalırdı — yani kopya adımı tümden silinse "yeri doğru" derdi. (Karşıt koşumda yakalandı.)

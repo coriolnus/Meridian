@@ -10,6 +10,8 @@
 #        hermes config.yaml · tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya
 #        service+timer · brifing service+timer · @sef profili: distribution.yaml+config.yaml+SOUL.md):
 #        içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
+#   [F10] birim istenen-durum ANOMALİSİ: enabled + inactive birim varsa DUR (rc 3; çare `start` ya da
+#        `disable --now`) — rsync/stop'tan ÖNCE, kuru koşumda da (TSK-092, 2026-09-03; çivi v367)
 #   [2] rsync (state/backups/.venv/.git HARİÇ)
 #   [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
 #   [4] bakım penceresi: durdur → versiyonlu state kopyası ([1b] KOPYALA dediyse) → başlat
@@ -399,6 +401,41 @@ if [[ -n "${F9_AYRIK// /}" ]]; then
   echo "  ——————————————————————————————————————————————————————————————"
 fi
 
+echo "=== [F10] birim istenen-durum ANOMALİSİ (enabled + inactive) ==="
+# TSK-092 R-0 (2026-09-03). [4] penceresi iki türetim koşuyor — "ne durdurulmalı" (`is-active`)
+# ve "ne başlatılmalı" (`is-enabled`). Bu kapı ÜÇÜNCÜ, AYRI bir soruyu sorar: ölçülen dünya kendi
+# içinde TUTARLI mı? `enabled + inactive` hâli bir SİMPLE birimde tutarsızlıktır.
+# ÖLÇÜLDÜ (A1, 2026-09-03 09:40Z): üç aday birim de `Type=simple` + `Restart=always` ve
+# `TriggeredBy=` BOŞ — hiçbiri bir zamanlayıcının tetiklediği kısa-ömürlü birim değil. Dolayısıyla
+# "enabled ama şu an koşmuyor" iki şeyden biridir: (a) elle `stop` edilmiştir — o zaman kalıcı
+# niyet `disable --now` ile BEYAN edilmeliydi; (b) start-limit'e çarpıp DÜŞMÜŞTÜR — o zaman bir
+# ARIZA vardır. İki hâlde de [4] penceresi birimi `is-enabled`dan türetip sessizce DİRİLTİR:
+# operatörün niyeti ya da arızanın kendisi, "✓ başlatıldı" satırının altında MASKELENİR.
+# KAPININ YERİ BİLİNÇLİ — rsync'ten ve stop'tan ÖNCE, kuru koşum çıkışının da ÖNCESİNDE ("erken
+# gerçek"): rsync'ten sonra düşseydi diskte yeni, süreçte eski kod kalırdı ([5b]'nin sınıfı) ve
+# kuru koşum anomaliyi hiç göremezdi. Kapı yalnız OKUR; hiçbir birimi durdurmaz/başlatmaz.
+# OVERRIDE BAYRAĞI YOK, bilinçli: "bugünlük geç" bayrağı olan kapı ilk haftada sessizleşir —
+# anomali, iki çareden biriyle BİLİNÇLİ bir hâle çevrilerek geçilir. Çivi: v367 [F10] ailesi.
+_ENABLED_INAKTIF="$("${SSH[@]}" 'for u in meridian meridian-barsarchive meridian-learn; do
+  if [ "$(systemctl is-enabled "$u" 2>/dev/null)" = "enabled" ] &&
+     [ "$(systemctl is-active "$u" 2>/dev/null)" = "inactive" ]; then printf "%s " "$u"; fi; done')"
+if [[ -n "${_ENABLED_INAKTIF// /}" ]]; then
+  echo "  !! ENABLED ama INACTIVE:$_ENABLED_INAKTIF"
+  echo "     Bu, Type=simple + Restart=always bir birimin normal hâli DEĞİLDİR (ölçüldü 2026-09-03:"
+  echo "     üç aday birimin üçü de simple/always, TriggeredBy= boş). Ya elle durduruldu (niyet"
+  echo "     beyan edilmemiş) ya da start-limit'e çarpıp düştü (arıza). Dağıtım devam etseydi [4]"
+  echo "     penceresi bu birimi is-enabled'dan türetip SESSİZCE diriltir ve olayı maskelerdi."
+  echo "     Çare (birim başına birini seç, sonra ./dagit.sh'i yeniden koş):"
+  for _anom in $_ENABLED_INAKTIF; do
+    echo "       · beklenmeyen düşüşse : sudo systemctl start $_anom      (önce neden:" \
+         "journalctl -u $_anom -n 50 --no-pager)"
+    echo "       · kalıcı kapalılıksa  : sudo systemctl disable --now $_anom"
+  done
+  echo "     DAĞITIM DURDU (çıkış 3). Override bayrağı YOK — anomali bilinçli hâle çevrilmeden geçilmez."
+  exit 3
+fi
+echo "  ✓ enabled+inactive birim yok (istenen durum ile o anki durum tutarlı)"
+
 if [[ "${1:-}" != "--uygula" ]]; then
   # KURU KOŞUMDA YALNIZ DIFF: yukarıdaki blok hiçbir şey yazmadı (tek yazımı $STATE_TMP'ye okuma).
   # Kopyalama --uygula'ya ve BAKIM PENCERESİNE bağlıdır — koşan bir worker'ın altından yapılandırma
@@ -457,8 +494,36 @@ if [[ " $_BASLAT" != *" meridian "* ]]; then
   echo "     Bilinçliyse önce birimi enable et ya da bu dağıtımı elle yürüt. DAĞITIM DURDU."
   exit 1
 fi
-"${SSH[@]}" 'sudo systemctl stop meridian meridian-barsarchive meridian-learn && echo "  ✓ durdu"'
+# DURDURMA LİSTESİ DE TÜRETİLİR (TSK-092 (a), 2026-09-03). Sabit üçlü `stop` paketi zaten
+# `inactive` olan birime de stop gönderiyordu: gürültü ("Failed to stop"/no-op) ve daha kötüsü
+# YANLIŞ BEYAN — pencere çıktısı "✓ durdu" der, oysa o birim pencereye hiç girmemişti.
+# BU KAPININ VERMEDİĞİ KORUMA, AÇIKÇA (düzeltme turu 1, inceleme Ö-3, 2026-09-03): stop'u
+# atlamak, elle durdurulmuş bir birimi pencereden korumaz — `inactive` ama `enabled` bir birim
+# başlatma listesine `is-enabled`den GİRER ve pencere sonunda YİNE başlatılırdı; kalıcı
+# kapalılığın tek beyanı `disable`dır. Buradaki kazanç yalnız yanlış "✓ durdu" beyanının ve
+# gürültünün kalkmasıdır. O hâlin KENDİSİ artık ayrı bir kapıda DUR sayılıyor ([F10], R-0).
+# Ölçüt `!= inactive`, `= active` DEĞİL:
+# `activating`/`deactivating`/`failed` hâllerinde süreç ya da artık durum vardır ve durdurmak
+# GÜVENLİ yöndür — yalnız temiz `inactive` atlanır. Aday KÜMESİ üçlü kalır (2026-08-24 `learn`
+# unutma vakası); sabitlenemeyen şey stop SATIRIdır.
+# AÇIK `if` — `[ … ] && printf` DEĞİL: son eleman inactive olunca `&&` kalıbı uzak kabuğu 1 ile
+# bitirir ve yerel `set -e` bu atamada betiği sessizce öldürür (v367 vakası, 2026-09-02 sabahı).
+# ssh'ın GERÇEK arızası burada sessiz kalmaz: yukarıdaki çekirdek-birim kapısı `_BASLAT` boşken
+# dağıtımı zaten adıyla durdurdu. Çivi: test_dagit_istenen_durum_v367 (sahte systemctl, iki dünya).
+_DURDUR="$("${SSH[@]}" 'for u in meridian meridian-barsarchive meridian-learn; do
+  if [ "$(systemctl is-active "$u" 2>/dev/null)" != "inactive" ]; then printf "%s " "$u"; fi; done')"
+if [[ -n "${_DURDUR// /}" ]]; then
+  "${SSH[@]}" "sudo systemctl stop $_DURDUR && echo '  ✓ durdu:' $_DURDUR"
+else
+  echo "  · durdurulacak aktif birim YOK (aday üçlünün üçü de inactive) — stop gönderilmedi"
+fi
 for _u in $_BIRIM_ADAYLARI; do
+  # BEDEL YASASI TERSİNDEN (düzeltme turu 1, inceleme K-5, 2026-09-03): üçü de inactive iken
+  # operatör AYNI olguyu dört satırda okuyordu — yukarıdaki `else` dalı zaten "aktif birim YOK"
+  # diyor. Birim-başına satır yalnız KISMİ atlamada bilgi taşır; tam atlamada gürültüdür.
+  if [[ -n "${_DURDUR// /}" ]] && [[ " $_DURDUR" != *" $_u "* ]]; then
+    echo "  · $_u: pencere öncesi inactive — stop gönderilmedi (TSK-092)"
+  fi
   if [[ " $_BASLAT" != *" $_u "* ]] && [[ "$_BASLAT" != "$_u "* ]]; then
     echo "  · $_u: disabled — istenen duruma saygı, pencere sonunda başlatılmadı (TSK-092)"
   fi

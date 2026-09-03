@@ -31,6 +31,10 @@ import pathlib
 import re
 import subprocess
 
+# TEK KAYNAK (düzeltme turu 1, inceleme K-2, 2026-09-03): `_X="$("${SSH[@]}" '…')"` yapısal
+# sözleşmesinin sökücüsü v367'de yaşıyor; buraya KOPYALANMAZ, ithal edilir.
+from tests.test_dagit_istenen_durum_v367 import _snippet
+
 REPO = pathlib.Path(__file__).resolve().parent.parent
 DAGIT = REPO / "dagit.sh"
 ORACLE = REPO / "deploy" / "oracle-a1"
@@ -186,11 +190,18 @@ def test_f9_YERI_kuru_kosumda_da_gorunur():
 
 def test_f9_RAPORLAR_engellemez():
     """[F9] bloğunda `exit` YOK: ayrıklık dağıtımı DURDURMAZ (artefaktlar dagit'in kopyalama
-    kapsamında değil; engel, elle-kurulum akışını dagit'e kilitlerdi). Blok sınırı: kapının
-    kendi `===` satırından `--uygula` kapısına kadar."""
+    kapsamında değil; engel, elle-kurulum akışını dagit'e kilitlerdi).
+
+    BLOK SINIRI DARALDI (R-0, düzeltme turu 1, 2026-09-03): eski sınır "F9 başlığından `--uygula`
+    kapısına kadar" idi ve o aralığa BAŞKA bir kapı ([F10] istenen-durum anomalisi, `exit 3`)
+    girdi — çivi F9'un sözünü bozuldu sandı. Ölçülen şey F9'un KENDİ bloğudur; sınır artık bir
+    sonraki `=== [` başlığıdır. Kapının BLOKLAMASI gereken bir gün gelirse yer değil söz değişir
+    ve bu çivi yine kırmızıya düşer."""
     satirlar = _satirlar()
     bas = _satir_no("[F9] dagit-kapsamı-dışı canlı artefaktlar (içerik kapısı)")
-    son = _satir_no('!= "--uygula" ]]')
+    son = next((i for i, s in enumerate(satirlar)
+                if i > bas and s.startswith('echo "=== [')), None)
+    assert son is not None, "[F9] bloğunu bitiren `=== [` başlığı yok — çivi bayat"
     blok = satirlar[bas:son]
     ihlal = [s for s in blok if re.search(r"\bexit\s+\d", s) and not s.lstrip().startswith("#")]
     assert not ihlal, f"[F9] bloğunda engel var — kapı 'raporlar, engellemez' sözünü bozdu: {ihlal}"
@@ -365,16 +376,23 @@ def test_bakim_penceresi_ogrenme_birimini_KAPSAR():
     başlatma listesi `is-enabled`dan türetilir (çivisi test_dagit_istenen_durum_v367). Bu çivinin
     2026-08-24 ruhu (learn'e dağıtım sessizce etkisiz kalmasın) yeni mekanizmada korunur:
     learn ENABLED iken türetim onu zaten başlatır (bayat bytecode imkânsız); DISABLED iken hiç
-    koşmuyordur (bayatlayacak süreç yok). Burada ölçülen: learn durdurma satırında + türetim
-    döngüsünün aday kümesinde DURUYOR — pencereden tümden düşürülmesi hâlâ ihlaldir."""
-    metin = DAGIT.read_text()
-    stop = next((s for s in _satirlar() if "systemctl stop" in s and "meridian" in s), None)
-    assert stop and "meridian-learn" in stop, f"stop satırı learn taşımıyor: {stop}"
-    turetim = next((s for s in _satirlar() if "is-enabled" in s or
-                    ("for u in" in s and "meridian" in s)), None)
-    assert turetim and "meridian-learn" in metin.split("is-enabled")[0].rsplit("for u in", 1)[-1], \
-        "başlatma-türetiminin aday kümesinde meridian-learn yok"
-    assert metin.count("meridian-learn") >= 2
+    koşmuyordur (bayatlayacak süreç yok).
+
+    SÖZLEŞME İKİNCİ KEZ DEĞİŞTİ (TSK-092 (a), 2026-09-03): stop satırı da birim adı SABİTLEYEMEZ —
+    durdurma listesi `is-active`ten türetilir (çivisi yine v367). Bu çivinin ruhu (learn pencereden
+    tümden DÜŞMESİN) artık İKİ aday kümesinde ölçülür: `_DURDUR` (is-active) ve `_BASLAT`
+    (is-enabled). Learn birinden düşerse pencere ona kör olur — 2026-08-24 unutma sınıfı geri gelir.
+
+    SNIPPET SÖKÜCÜSÜ İTHAL EDİLİR (düzeltme turu 1, inceleme K-2, 2026-09-03): aynı yapısal
+    sözleşmenin regex'i v367'de ve burada AYRI AYRI yazılıydı — üçü ayrışsa hangi çivinin haklı
+    olduğu belirsizleşirdi (tek-kaynak yasası, çivilerin kendisi için de geçerli). v384'ün
+    v381'den ithal etme kalıbının aynısı."""
+    for _ad, _kaynak in (("_DURDUR", "is-active"), ("_BASLAT", "is-enabled")):
+        snippet = _snippet(_ad)
+        assert _kaynak in snippet, f"{_ad} türetimi {_kaynak} okumuyor"
+        assert "meridian-learn" in snippet, \
+            f"{_ad} aday kümesinde meridian-learn yok — pencere learn'e kör"
+    assert DAGIT.read_text().count("meridian-learn") >= 2
 
 
 def test_kod_tazelik_kapisi_VAR_ve_BEYANDAN_ONCE():

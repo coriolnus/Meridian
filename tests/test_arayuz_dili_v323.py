@@ -116,11 +116,22 @@ def test_OLCUM_KAPSAMI_BEYANLI():
 # "DIŞARIDAN GÖZ" DENETİMİNİN BULGUSU (2026-08-26): yedi yüzeyi yedi ayrı el yazdı ve her biri
 # kendi fiilini seçti. Aynı planın aynı boş alanı kuyruk yüzeyinde "kaydedilmemiş", bugün
 # yüzeyinde "yazılmamış" diyordu — kullanıcı arada bir FARK olduğunu sanır. Boşluk hâlinin
-# sözlüğü DÖRT kelimeyle sınırlıdır ve her biri AYRI bir olguyu anlatır:
-#     bildirilmedi   → yanıtta alan hiç gelmedi
-#     kaydedilmemiş  → alan geldi ama kayda yazılmamış
-#     okunamadı / hesaplanamadı → ölçüm denendi ve düştü
-#     "Henüz … yok" → olgu henüz oluşmadı, sonra oluşacak
+# sözlüğü DÖRT kelimeyle sınırlıdır ve her biri AYRI bir olguyu anlatır (aşağıdaki yapı).
+#
+# SÖZLÜK ARTIK PYTHON YAPISI, DÜZ ŞERH DEĞİL (TSK-114, düzeltme turu 1, inceleme Ö-1,
+# 2026-09-03): dört kelime yalnız bu şerhin içinde yazılıydı ve aşağıdaki sınıf-A deseni onları
+# ELLE tekrarlıyordu — iki kopya ŞİMDİDEN ayrışmıştı (`bildirilmedi`/`hesaplanamadı`/
+# `kaydedilmemiş` desende HİÇ yoktu, desendeki `yazılmamış` ise sözlükten çıkarılmıştı).
+# Tek-kaynak yasası: sözcükler BURADA durur, her okuyucu (hata mesajı, sınıf-A deseni) türetir.
+SES_BIRLIGI = {
+    "bildirilmedi": "yanıtta alan hiç gelmedi",
+    "kaydedilmemiş": "alan geldi ama kayda yazılmamış",
+    "okunamadı": "ölçüm denendi ve düştü",
+    "hesaplanamadı": "ölçüm denendi ve düştü (hesap tarafı)",
+}
+# "Henüz … yok" AYRI bir kalıptır ve sözlüğe GİRMEZ: fiil değil cümle iskeleti, ve anlattığı şey
+# bir ölçüm arızası değil — olgu henüz oluşmadı, sonra oluşacak.
+#
 # "yazılmamış" LİSTEDEN ÇIKARILDI: "kaydedilmemiş" ile aynı şeyi anlatıyordu, iki kelime tek
 # olgu için iki ayrı olgu izlenimi veriyordu.
 YASAK_ESANLAMLI = {
@@ -135,6 +146,8 @@ def test_YASAK_ESANLAMLILAR_kullanilmiyor():
         f"{len(ihlal)} `neden` eşanlamlı bir fiil kullanıyor — aynı olgu iki kelimeyle "
         f"anlatılırsa kullanıcı arada fark sanır. Standart: "
         + " · ".join(f"{k} → {v}" for k, v in YASAK_ESANLAMLI.items())
+        + "\nSES BİRLİĞİ dağarcığı (tek kaynak): "
+        + " · ".join(f"{k} = {v}" for k, v in SES_BIRLIGI.items())
         + "\n" + "\n".join(f"  · {x}" for x in ihlal[:12]))
 
 
@@ -199,3 +212,352 @@ def test_SOZLUK_DEGISEN_TERIMLERI_gezinmede_YOK():
         + "\n`docs/ARAYUZ-SOZLUGU.md` tablosundaki karşılığını kullan. "
           "`kimlik:` alanına DOKUNMA — o çapadır (v324)."
     )
+
+
+# ============================================================================
+# ÇAĞRI YERİ KAPSAMASI (TSK-114, 2026-09-03)
+# ----------------------------------------------------------------------------
+# ÖLÇÜLEN BOŞLUK: yukarıdaki `teknik` çivileri yalnız `Olculemedi` BİLEŞENİNİ ölçüyordu
+# (`export function Olculemedi(...teknik`, `title=|{teknik}`). Bir ÇAĞRI YERİNDEN `teknik=`
+# düşürmek sessizce geçiyordu — TSK-109 turunda mutasyon denendi ve 8 çivi yeşil kaldı
+# (2026-09-03 gece; bu dilimde yeniden ölçüldü: `Reflect.tsx`ten `teknik=` silindi, v323
+# "8 passed" dedi). "Çivi yeşili kanıt değildir" (CLAUDE.md §6): bileşenin `teknik` alanını
+# TAŞIMASI, çağrı yerlerinin onu VERMESİ demek değildir.
+#
+# KAPSAM (brief'in kapsamı): hafıza yüzeyi — `ui/src/pano/yuzeyler/hafiza/**.tsx`, ölçüm günü
+# 192 çağrı, 192'si `neden=` VE `teknik=` taşıyor, 0 okunamayan. Pano genelinde de sınıf-A
+# ihlali 0 ölçüldü (2026-09-03) ama zorunlu çivi hafızayla sınırlı tutuldu: bu dilimin kalemi
+# o kapsamdı, geniş çivi başka yüzeylerin kalemlerini bu dosyada kırardı (ayrı kalem).
+# ============================================================================
+
+HAFIZA = PANO / "yuzeyler/hafiza"
+
+#: Çağrı başı: `Olculemedi`, `OlculemediHucre`, `OlculemediBlok` — ama `OlculemediHali` DEĞİL
+#: (ayrı bileşen; `\b` ile sayıldığında ham sayımı şişiriyordu, ölçüldü).
+_CAGRI_BASI = re.compile(r"<Olculemedi(?:Hucre|Blok)?(?![A-Za-z0-9_])")
+
+# `neden`i ÖLÇÜLEN BİR ALANIN yokluğunu bildiren sınıf — teşhis `teknik`e borçludur.
+#
+# FİİLLER TÜRETİLİR, ELLE YAZILMAZ (düzeltme turu 1, inceleme Ö-1, 2026-09-03): ilk yazımda
+# desen `gelmedi|okunamadı|okunmadı|dönmedi|yazılmamış` idi ve dosyanın KENDİ ilan ettiği SES
+# BİRLİĞİ sözlüğüyle ayrışmıştı — `bildirilmedi` (15 çağrı), `hesaplanamadı`, `kaydedilmemiş`
+# kuralın DIŞINDA kalıyordu. Kaynak artık `SES_BIRLIGI`; ona sözlükte olmayan üç YOKLUK fiili
+# eklenir (`gelmedi`/`okunmadı`/`dönmedi`: sözlük yokluğun ADINI standartlaştırır, bunlar
+# yokluğun KENDİSİNİ bildirir).
+#
+# `yazılmamış` DESENDEN DÜŞTÜ ve bu bir kapsam kaybı DEĞİL: `YASAK_ESANLAMLI` onu zaten
+# yasaklıyor — yeşil bir ağaçta hiçbir `neden` o kelimeyi taşıyamaz, yani desendeki dal ÖLÜYDÜ
+# ve kuralın kapsamını olduğundan geniş gösteriyordu. Aşağıdaki filtre aynı zamanda yarın
+# sözlüğe yasaklı bir eşanlamlı girerse onu da eler (ölü dal bir daha doğmaz).
+_EK_YOKLUK_FIILLERI = ("gelmedi", "okunmadı", "dönmedi")
+_SINIF_A_FIILLERI = tuple(
+    f for f in (*SES_BIRLIGI, *_EK_YOKLUK_FIILLERI) if f not in YASAK_ESANLAMLI)
+_SINIF_A = re.compile("|".join(re.escape(f) for f in _SINIF_A_FIILLERI))
+
+
+def _acilis_etiketleri(s: str) -> tuple[list[str], list[str]]:
+    """(okunan açılış etiketleri, okunamayanlar). JSX'i regex'le kesmek YETMEZ: prop değerleri
+    `atlanan > 0` gibi `>` ve İÇ İÇE ŞABLON (`` `…${`…`}…` ``) taşıyor — düz regex ilk `>`de
+    kesiyor ve çağrıyı SESSİZCE kaçırıyordu (ölçüldü: pano genelinde 4 kaçak). Bu yüzden
+    süslü/tırnak/şablon bağlamı YIĞINLA izlenir ve kapanmayan etiket AYRICA sayılır — kaçak,
+    'ihlal yok' diye okunamaz (körlük alarmı)."""
+    tam: list[str] = []
+    kirik: list[str] = []
+    for m in _CAGRI_BASI.finditer(s):
+        i = m.end()
+        yigin: list[str] = []
+        while i < len(s):
+            c = s[i]
+            ust = yigin[-1] if yigin else None
+            if ust in ("'", '"'):
+                if c == "\\":
+                    i += 2
+                    continue
+                if c == ust:
+                    yigin.pop()
+            elif ust == "`":
+                if c == "\\":
+                    i += 2
+                    continue
+                if c == "`":
+                    yigin.pop()
+                elif c == "$" and s[i + 1:i + 2] == "{":
+                    yigin.append("{")
+                    i += 2
+                    continue
+            else:
+                if c in "\"'`":
+                    yigin.append(c)
+                elif c == "{":
+                    yigin.append("{")
+                elif c == "}":
+                    if yigin and yigin[-1] == "{":
+                        yigin.pop()
+                elif c == ">" and not yigin:
+                    tam.append(s[m.start():i + 1])
+                    break
+            i += 1
+        else:
+            kirik.append(s[m.start():m.start() + 200])
+    return tam, kirik
+
+
+def _hafiza_cagrilari() -> list[tuple[str, str]]:
+    out = []
+    for p, s in _tsx():
+        if HAFIZA not in p.parents:
+            continue
+        tam, _ = _acilis_etiketleri(s)
+        out.extend((str(p.relative_to(KOK)), c) for c in tam)
+    return out
+
+
+# ----------------------------------------------------------------------------
+# `neden` DEĞERİNİN STATİK METNİ — düz dize DE şablon DA okunur (Ö-1, 2026-09-03)
+# ----------------------------------------------------------------------------
+# İlk yazımda sınıf-A kuralı YALNIZ `neden="…"` (çift tırnaklı düz dize) üzerinde koşuyordu.
+# Ama hafıza yüzeyinin `neden`lerinin bir kısmı süslü bloktur: `` neden={`${ne} okunamadı`} ``
+# (`parcalar.tsx`, `Yapilandirma.tsx`) ya da `neden={x ? "A gelmedi" : "A ölçülemedi"}`
+# (`Belgeler.tsx`). Bunların STATİK metni ekranda birebir görünür ve sınıf-A anlamını TAŞIR;
+# kural onları görmezse "192/192 taşıyor" cümlesi KURALIN değil TARAYICININ kapsamını anlatır.
+# Etiket okuyucusu zaten süslü/tırnak/şablon bağlamını yığınla izliyor — aynı yürüyüş burada
+# `neden` DEĞERİ için tekrarlanır ve `${…}` içleri ATILIR (orada bir değişken var, sözcük değil).
+_NEDEN_ANAHTARI = re.compile(r"\bneden=")
+
+
+def _susluyu_al(s: str, i: int) -> str:
+    """`s[i] == "{"` iken eşleşen kapanışa kadarki İÇ metin. Tırnak/şablon duyarlı: bir dizenin
+    içindeki `}` bloğu kapatmaz (düz sayaç `neden={x ? "}" : y}` gibi bir değerde kayardı)."""
+    yigin = ["{"]
+    j = i + 1
+    while j < len(s):
+        c = s[j]
+        ust = yigin[-1]
+        if ust in ("'", '"'):
+            if c == "\\":
+                j += 2
+                continue
+            if c == ust:
+                yigin.pop()
+        elif ust == "`":
+            if c == "\\":
+                j += 2
+                continue
+            if c == "`":
+                yigin.pop()
+            elif c == "$" and s[j + 1:j + 2] == "{":
+                yigin.append("{")
+                j += 2
+                continue
+        else:                       # süslü blok içi
+            if c in "\"'`":
+                yigin.append(c)
+            elif c == "{":
+                yigin.append("{")
+            elif c == "}":
+                yigin.pop()
+                if not yigin:
+                    return s[i + 1:j]
+        j += 1
+    return s[i + 1:]                # kapanmadı: etiket tarayıcısı bunu zaten kaçak sayar
+
+
+def _statik_metin(ifade: str) -> str:
+    """Bir JSX ifadesinin EKRANDA GÖRÜNEBİLEN sabit metni: dize/şablon sabitleri toplanır,
+    `${…}` ve ifade düzeyindeki tanımlayıcılar ATILIR. `${…}` İÇİNDEKİ dizeler toplanır —
+    `x ? "A gelmedi" : "B"` üçlüsünde iki dal da ekranda görünebilir."""
+    parcalar: list[str] = []
+    yigin: list[str] = []
+    j = 0
+    while j < len(ifade):
+        c = ifade[j]
+        ust = yigin[-1] if yigin else None
+        if ust in ("'", '"'):
+            if c == "\\":
+                j += 2
+                continue
+            if c == ust:
+                yigin.pop()
+            else:
+                parcalar.append(c)
+        elif ust == "`":
+            if c == "\\":
+                j += 2
+                continue
+            if c == "`":
+                yigin.pop()
+            elif c == "$" and ifade[j + 1:j + 2] == "{":
+                yigin.append("{")
+                j += 2
+                continue
+            else:
+                parcalar.append(c)
+        else:                       # ifade düzeyi ya da `${…}` içi — sabit metin DEĞİL
+            if c in "\"'`":
+                yigin.append(c)
+            elif c == "{":
+                yigin.append("{")
+            elif c == "}" and ust == "{":
+                yigin.pop()
+        j += 1
+    return "".join(parcalar)
+
+
+_HARF = re.compile(r"[^\W\d_]", re.UNICODE)
+
+
+def _neden_statik(cagri: str) -> str | None:
+    """Çağrının `neden` değerinin STATİK metni; `None` = statik olarak SINIFLANDIRILAMAZ
+    (`neden` hiç yok, ya da saf ifade: `neden={zarf.neden}` gibi tek harf sabit taşımıyor).
+    `None` sayısı ayrıca BEYAN EDİLİR — okunamayan bir çağrı 'ihlalsiz' sayılamaz."""
+    m = _NEDEN_ANAHTARI.search(cagri)
+    if m is None:
+        return None
+    i = m.end()
+    if cagri[i:i + 1] == '"':
+        son = cagri.find('"', i + 1)
+        deger = cagri[i + 1:son] if son != -1 else ""
+    elif cagri[i:i + 1] == "{":
+        deger = _statik_metin(_susluyu_al(cagri, i))
+    else:
+        deger = ""
+    return deger if _HARF.search(deger) else None
+
+
+#: SAF-İFADE `neden` TAVANI (düzeltme turu 1, inceleme Ö-1, 2026-09-03). `test_OLCUM_KAPSAMI_
+#: BEYANLI` emsali: kural yalnız STATİK metni okuyabilir; `neden={zarf.neden}` gibi saf ifade
+#: değerleri sınıflandırılamaz ve bu SESSİZ kalamaz.
+#: TAVANI BRIEF DEĞİL ÖLÇÜM SÖYLER — ölçüm (2026-09-03, hafıza yüzeyi): 192 çağrının 191'i
+#: statik olarak okunuyor, 1'i saf ifade (`Varliklar.tsx`, `neden={neden}` — o çağrı `teknik`
+#: taşıyor, elle bakıldı). Tavan 3: ölçüm günü sayısı + küçük pay. Pay TAM SAYI değil çünkü
+#: yeni bir saf-ifade çağrısı meşru olabilir; ama üçü aşarsa kuralın kapsamı sessizce
+#: daralıyordur ve tavan YENİ bir ölçümle güncellenmelidir (sonucu görüp eşiği yükseltmek DEĞİL).
+SAF_IFADE_TAVANI = 3
+
+
+def test_CAGRI_TARAYICISI_HIC_KACAK_BIRAKMIYOR():
+    """KÖRLÜK ALARMI — aşağıdaki üç çivinin hükmü bu satıra dayanır: tarayıcı bir çağrıyı
+    okuyamazsa o çağrı 'ihlalsiz' sayılır ve 'sıfır ihlal' cümlesi bir okuma YOKLUĞU olur.
+    Ham sayım ile okunan sayım EŞİT olmalı (ölçüm günü hafızada 192/192, 0 kaçak).
+
+    `ham == okunan` İDDİASI TOTOLOJİYE YAKINDIR ve öyle okunmasın (inceleme K-4, düzeltme
+    turu 1, 2026-09-03): `kacak == 0` geçtikten sonra her eşleşme ya `tam` ya `kirik` listesine
+    düştüğü için iddia zaten sağlanır. Yine de DURUYOR çünkü aynı sayının İKİ YOLDAN ölçümüdür
+    (`findall` sayımı ↔ yığın yürüyüşünün ürettiği liste); ikisi ayrışırsa yürüyüşte bir eşleşme
+    sessizce yutulmuş demektir. Bir GÜVENCE değil, bir tutarlılık ölçüsü.
+
+    SAF İFADE `neden`ler AYRICA BEYAN EDİLİR (Ö-1): statik metni olmayan değerler sınıf-A
+    kuralının DIŞINDADIR; sayıları burada tavanla ölçülür, yoksa "her çağrı kuralda" cümlesi
+    kapsamı olduğundan geniş gösterir."""
+    ham = okunan = kacak = 0
+    kacaklar: list[str] = []
+    for p, s in _tsx():
+        if HAFIZA not in p.parents:
+            continue
+        ham += len(_CAGRI_BASI.findall(s))
+        tam, kirik = _acilis_etiketleri(s)
+        okunan += len(tam)
+        kacak += len(kirik)
+        kacaklar.extend(f"{p.name}: {' '.join(k.split())[:110]}" for k in kirik)
+    assert kacak == 0, f"{kacak} çağrı etiketi kapanmadan okundu:\n" + "\n".join(kacaklar[:10])
+    assert ham == okunan, f"tarayıcı {ham} çağrının {okunan}'ini okudu — hüküm eksik kapsamda"
+    # TABAN: hafıza yüzeyi 2026-09-03'te 192 çağrı taşıyordu. Taban, tarama kırılıp BOŞ
+    # dönerse "temiz" demesin diye var; tam sayı DEĞİL çünkü çağrı silmek meşru bir iştir.
+    assert okunan >= 150, f"hafıza yüzeyinde yalnız {okunan} çağrı okundu (2026-09-03: 192)"
+
+    cagrilar = _hafiza_cagrilari()
+    saf = [f"{d}: {' '.join(c.split())[:110]}"
+           for d, c in cagrilar if _neden_statik(c) is None]
+    kural_kapsami = len(cagrilar) - len(saf)
+    assert len(saf) <= SAF_IFADE_TAVANI, (
+        f"sınıf-A kuralının DIŞINDA kalan saf-ifade `neden` sayısı {len(saf)} "
+        f"(tavan {SAF_IFADE_TAVANI}; kural kapsamı {kural_kapsami}/{len(cagrilar)}). "
+        f"Kapsam bu kadar düşükken 'her çağrı kuralda' hükmü yanıltıcıdır — ya değeri statik "
+        f"metne çevir ya da tavanı YENİ bir ölçümle güncelle:\n"
+        + "\n".join(f"  · {x}" for x in saf[:12]))
+
+
+def test_HER_CAGRI_NEDEN_tasiyor():
+    """(b) `neden` ZORUNLU: nedensiz bir "ölçülemedi" rozeti, boş hücrenin süslü hâlidir —
+    kullanıcı neyin neden yok olduğunu öğrenemez (dürüst-boşluk idiomunun tam tersi)."""
+    ihlal = [f"{d}: {' '.join(c.split())[:110]}"
+             for d, c in _hafiza_cagrilari() if not re.search(r"\bneden=", c)]
+    assert not ihlal, f"{len(ihlal)} çağrı `neden` taşımıyor:\n" + "\n".join(ihlal[:15])
+
+
+def test_OLCULEN_ALAN_ADINI_ANAN_NEDEN_TEKNIK_tasiyor():
+    """(a) ASIL ÇİVİ (TSK-114): `neden`i "… gelmedi / okunamadı / dönmedi" diyen çağrı, hangi
+    alanın gelmediğini `teknik`te SÖYLEMEK zorundadır. Bu sınıf `teknik`siz kalırsa ekranda
+    "bir şey gelmedi" yazar ve teşhis kaybolur — v323'ün kapattığı sızıntının aynadaki hâli:
+    iç ayrıntıyı birincil metinden çıkarmak, onu ATMAK değildir.
+
+    KAPSAM (düzeltme turu 1, inceleme Ö-1, 2026-09-03): fiiller SES BİRLİĞİ sözlüğünden türer
+    ve kural `neden`in STATİK metnini okur — düz dize DE süslü/şablon değer DE. Sınıflandırılamayan
+    saf ifadelerin sayısı `test_CAGRI_TARAYICISI_HIC_KACAK_BIRAKMIYOR`ta tavanla beyan edilir."""
+    ihlal = []
+    for d, c in _hafiza_cagrilari():
+        statik = _neden_statik(c)
+        if statik is not None and _SINIF_A.search(statik) and not re.search(r"\bteknik=", c):
+            ihlal.append(f"{d}: {' '.join(c.split())[:130]}")
+    assert not ihlal, (
+        f"{len(ihlal)} çağrı ölçülen alanın yokluğunu bildiriyor ama `teknik` vermiyor — "
+        f"teşhis ekranda hiçbir katmanda yok:\n" + "\n".join(ihlal[:15]))
+
+
+def test_TEKNIK_VERILMISKEN_NEDEN_IC_AYRINTI_TASIMIYOR():
+    """(c) İki katmanın SIRASI: `teknik` doldurulmuşken `neden` hâlâ backtick'li alan adı ya da
+    uç yolu taşıyorsa katmanlar ayrılmamış, ÇOĞALTILMIŞ demektir. (Üstteki dosya-geneli çivi
+    aynı kuralı ölçer; buradaki çağrı-yeri hâli ihlali ÇAĞRIYLA birlikte raporlar.)"""
+    ihlal = []
+    for d, c in _hafiza_cagrilari():
+        if not re.search(r"\bteknik=", c):
+            continue
+        m = re.search(r'neden="([^"\\\n]*)"', c)
+        if m is None:
+            continue
+        for desen, ad in IC_AYRINTI:
+            if desen.search(m.group(1)):
+                ihlal.append(f"{d}: [{ad}] {m.group(1)[:90]}")
+                break
+    assert not ihlal, (
+        f"{len(ihlal)} `neden` iç ayrıntı taşıyor (üstelik `teknik` doluyken):\n"
+        + "\n".join(ihlal[:15]))
+
+
+def test_CAGRI_TARAYICISI_sessizce_bos_DEGIL():
+    """POZİTİF KONTROL (v314 disiplini): tarayıcı sentetik ihlalleri YAKALAMALI. Yoksa
+    yukarıdaki üç "ihlal yok" cümlesi, regex'in kırılmasıyla aynı görünürdü."""
+    tam, kirik = _acilis_etiketleri(
+        '<Olculemedi neden="Kapsam sayısı gelmedi" kisa />'
+        '<OlculemediHucre neden={`x${a > 0 ? `${a} satır` : ""}`} teknik="y" />'
+        '<Olculemedi neden="`alan` yok" teknik="z" />')
+    assert kirik == [] and len(tam) == 3, f"tarayıcı üç çağrıyı okuyamadı: {len(tam)}/{len(kirik)}"
+    assert _SINIF_A.search(_neden_statik(tam[0]) or "") and not re.search(r"\bteknik=", tam[0]), \
+        "sınıf-A + `teknik` yok deseni yakalanmıyor"
+    assert re.search(r"\bteknik=", tam[1]), "iç içe şablonlu çağrıda `teknik` kaybediliyor"
+    m = re.search(r'neden="([^"\\\n]*)"', tam[2])
+    assert m and IC_AYRINTI[0][0].search(m.group(1)), "backtick'li `neden` yakalanmıyor"
+    # `OlculemediHali` AYRI bir bileşendir ve bu tarayıcının konusu değildir.
+    assert _acilis_etiketleri('<OlculemediHali a={a} />')[0] == []
+
+
+def test_NEDEN_DEGERI_OKUYUCUSU_sessizce_bos_DEGIL():
+    """POZİTİF KONTROL (Ö-1, 2026-09-03): `neden` değer okuyucusu ÜÇ biçimi de ayırt etmeli.
+    Yoksa "saf ifade sayısı tavanın altında" cümlesi, okuyucunun her şeyi saf ifade sanmasıyla
+    (ya da hiçbir şeyi) aynı görünürdü — ve sınıf-A kuralı sessizce boşalırdı."""
+    duz, = _acilis_etiketleri('<Olculemedi neden="Kapsam sayısı gelmedi" />')[0]
+    sablon, = _acilis_etiketleri('<Olculemedi neden={`${ne} okunamadı`} teknik={z} />')[0]
+    ucluk, = _acilis_etiketleri('<Olculemedi neden={x ? "Başlık gelmedi" : "Başlık yok"} />')[0]
+    saf, = _acilis_etiketleri('<Olculemedi neden={zarf.neden} teknik={z} />')[0]
+    nedensiz, = _acilis_etiketleri('<Olculemedi kisa />')[0]
+
+    assert _neden_statik(duz) == "Kapsam sayısı gelmedi"
+    assert _neden_statik(sablon) == " okunamadı", "şablonun `${…}` dışı sabiti okunmuyor"
+    assert _neden_statik(ucluk) == "Başlık gelmediBaşlık yok", "üçlünün iki dalı da okunmalı"
+    assert _neden_statik(saf) is None, "saf ifade statik sanılıyor — kapsam şişer"
+    assert _neden_statik(nedensiz) is None
+    # Sınıf-A fiilleri SES BİRLİĞİ'nden TÜRER: sözlük fiilleri desende OLMALI, `yazılmamış` OLMAMALI.
+    for fiil in SES_BIRLIGI:
+        assert _SINIF_A.search(f"alan {fiil}"), f"SES BİRLİĞİ fiili sınıf-A desenine girmemiş: {fiil}"
+    assert not _SINIF_A.search("alan yazılmamış"), \
+        "`yazılmamış` desende — YASAK_ESANLAMLI ile ölü dal, kapsamı olduğundan geniş gösterir"

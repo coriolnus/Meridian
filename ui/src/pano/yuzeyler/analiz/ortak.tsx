@@ -13,13 +13,12 @@
    tazeleme düşmüş. O durumda kart boşaltılmaz (bir ağ hıçkırığında ekrandaki her
    sayı kaybolurdu) ama TAZE de sayılmaz — üstüne bayat şeridi çizilir.
    ============================================================================ */
-import type { ReactNode } from "react";
 import { LockKeyhole, TriangleAlert } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-import type { Durum } from "../../veri";
+import { type AdEki, kapiKur } from "../../parcalar/kapi";
 
 /* ---- SAYI BASIMI --------------------------------------------------------- */
 
@@ -168,43 +167,28 @@ function BayatSerit({ hata, zaman }: { hata: string; zaman: Date | null }) {
   );
 }
 
-export function Kapi<T>({
-  durum,
-  ad,
-  children,
-  yukseklik,
-}: {
-  durum: Durum<T>;
-  /** Hangi ucun okunamadığı ekranda ADIYLA yazsın diye. */
-  ad: string;
-  children: (veri: T) => ReactNode;
-  yukseklik?: string;
-}) {
-  if (durum.oturumDustu) {
-    return (
-      <Bildiri
-        ikon={LockKeyhole}
-        tonu="notr"
-        baslik="Oturum düştü"
-        metin={`${ad} okunamıyor: sunucu 401 döndü. Bu bir veri arızası DEĞİL — yeniden giriş gerekiyor.`}
-      />
-    );
-  }
-  if (durum.veri === null && durum.yukleniyor) return <YukleniyorIskeleti yukseklik={yukseklik} />;
-  if (durum.veri === null) {
-    return (
-      <Bildiri
-        ikon={TriangleAlert}
-        tonu="uyari"
-        baslik={`${ad} okunamadı`}
-        metin={durum.hata ?? `${ad} boş gövde döndürdü — çizilecek bir şey yok ve nedeni uçtan gelmedi.`}
-      />
-    );
-  }
-  return (
-    <>
-      {durum.hata === null ? null : <BayatSerit hata={durum.hata} zaman={durum.zaman} />}
-      {children(durum.veri)}
-    </>
-  );
-}
+/** Yükleniyor / okunamadı / oturum düştü / bayat-ama-var — dördü AYRI çare ister.
+ *  TANIM BURADA DEĞİL (TSK-113, 2026-09-03): yedi yüzey aynı `Kapi<T>` gövdesini kopyalıyordu.
+ *  KARAR tek kaynakta (`parcalar/kapi.tsx`), ÇİZİM burada — bu yüzeyin metinleri ve `Bildiri`
+ *  kabuğu kendisinindir, sıra ortaktır. `bayat` verildiği için hata veriyi EZMEZ: veri varken
+ *  şerit olur (A ailesinin `Alert` kapıları bunun tersini yapar ve bu ayrım kabuktan türetilir). */
+export const Kapi = kapiKur<AdEki>({
+  oturum: ({ ad }) => (
+    <Bildiri
+      ikon={LockKeyhole}
+      tonu="notr"
+      baslik="Oturum düştü"
+      metin={`${ad} okunamıyor: sunucu 401 döndü. Bu bir veri arızası DEĞİL — yeniden giriş gerekiyor.`}
+    />
+  ),
+  bos: (hata, { ad }) => (
+    <Bildiri
+      ikon={TriangleAlert}
+      tonu="uyari"
+      baslik={`${ad} okunamadı`}
+      metin={hata ?? `${ad} boş gövde döndürdü — çizilecek bir şey yok ve nedeni uçtan gelmedi.`}
+    />
+  ),
+  iskelet: ({ yukseklik }) => <YukleniyorIskeleti yukseklik={yukseklik} />,
+  bayat: (hata, zaman) => <BayatSerit hata={hata} zaman={zaman} />,
+});

@@ -111,11 +111,14 @@ export async function apiGet<T>(yol: string, signal?: AbortSignal): Promise<T> {
  * (6) `apiGet`/`hataEki`/`OturumHatasi`/`NABIZ_MS` DOKUNULMADI.
  *
  * `Durum<T>` ARAYÜZÜ SABİT: altı alan aynen (veri·yukleniyor·hata·oturumDustu·zaman·tazele) —
- * bu satırın altında hiçbir tüketici ve hiçbir `Kapi` kopyası dokunulmadı. KOPYA SAYISI 7'DİR
- * (inceleme Önemli-1, düzeltme turu 1: ilk turun "5 kopya" sayımı `kimlik/parcalar.tsx` ve
- * `yetki/parcalar.tsx`'i kaçırmıştı — `function Kapi<` tanımı taşıyan yedi dosya: sistem/kuyruk/
- * kimlik/yetki `parcalar.tsx` + ogrenme/ajan/analiz `ortak.tsx`); kopyaların birleştirilmesi AYRI
- * bir ROADMAP kalemi.
+ * bu satırın altında hiçbir tüketici ve hiçbir `Kapi` gövdesi dokunulmadı.
+ * KOPYA SAYISI 1'DİR (TSK-113, 2026-09-03): `function Kapi<` tanımı taşıyan YEDİ dosya
+ * (sistem/kuyruk/kimlik/yetki `parcalar.tsx` + ogrenme/ajan/analiz `ortak.tsx`) TEK tanıma indi —
+ * `parcalar/kapi.tsx`. Yedi yüzey artık yalnız kabuk bağlar ve `Kapi`yi yeniden dışa aktarır.
+ * ÖNCEKİ KAYIT BURADA "KOPYA SAYISI 7'DİR … birleştirilmesi AYRI bir ROADMAP kalemi" diyordu;
+ * o kalem KAPANDI ve cümle bayatladı (tek-kaynak yasası: aynı gerçeğin iki kopyası sessizce
+ * ayrışır — bu satır ayrışmanın kendisiydi). Sayının çivisi `tests/test_kovab_b12_v384.py` +
+ * `tests/test_pano_bayat_govde_v381.py` (dinamik tarama, `== 1`).
  *
  * `yukleniyor` DE TÜRETİLİR, DÜZ EFEKT-STATE DEĞİL (inceleme Önemli-2, düzeltme turu 1): `yol`
  * değiştiği ANDA (aynı render'da) efekt henüz koşmamıştır — efekt render'dan SONRA çalışır — ve

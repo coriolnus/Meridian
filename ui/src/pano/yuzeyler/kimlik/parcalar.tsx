@@ -18,19 +18,20 @@
    "ölçülemedi" ibaresi de TEK yerde ve nedenini taşımadan çizilemiyor — tip
    zorluyor, `Olculemedi` `neden` olmadan derlenmez.
 
-   `sistem/parcalar.tsx` AYNI DESENİ taşıyor ve oradan İTHAL EDİLMEDİ: o dosya
-   paralel bir turun yazma alanında ve iki yüzeyi tek bir dosyanın kaderine bağlamak
-   kırılgan olurdu. Desen ortak, sahiplik ayrık.
+   BU KAYIT 2026-09-03'te DÜZELTİLDİ (TSK-113): eskiden burada "`sistem/parcalar.tsx` aynı
+   deseni taşıyor ve oradan İTHAL EDİLMEDİ — sahiplik ayrık" yazıyordu. O gerekçe ölçümle
+   çürüdü: yedi yüzey aynı `Kapi<T>` gövdesini kopyalamış ve dört ayrı gövdeye ayrışmıştı
+   (tek-kaynak yasası, §4). Kapının KARARI artık `parcalar/kapi.tsx`te — hiçbir yüzeyin
+   yazma alanında değil; ÇİZİM kabukla enjekte edildiği için sahiplik yine ayrık kaldı.
+   Bu yüzeyin tek farkı (401 cümlesindeki "(Giriş yüzeyi)" eki) bir kabuk parametresidir.
    ============================================================================ */
 import type { ComponentType, ReactNode } from "react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-import type { Durum } from "../../veri";
+import { kapiKur, yolKabugu } from "../../parcalar/kapi";
 
 /* --- BÖLÜM KABI --------------------------------------------------------- */
 
@@ -73,43 +74,11 @@ export function BolumKart({
 /**
  * `children` YALNIZ veri varken çağrılır. Dört hâl AYRI çizilir çünkü çareleri
  * ayrı: yeniden giriş / ağa bakmak / beklemek / okumak.
+ *
+ * TANIM BURADA DEĞİL (TSK-113): tek kaynak `parcalar/kapi.tsx`. Bu yüzeyin TEK farkı 401
+ * cümlesinin "(Giriş yüzeyi)" ekiydi — kopya gerekçesi değil, kabuk parametresi.
  */
-export function Kapi<T>({
-  durum,
-  yol,
-  children,
-  iskelet,
-}: {
-  readonly durum: Durum<T>;
-  /** Hangi uç — hata metni operatöre nereye bakacağını söyler. */
-  readonly yol: string;
-  readonly children: (veri: T) => ReactNode;
-  readonly iskelet?: ReactNode;
-}) {
-  if (durum.oturumDustu) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Oturum düştü</AlertTitle>
-        <AlertDescription>
-          {yol} 401 döndü. Bu bir ölçüm hatası değil — panoya yeniden giriş gerekiyor (Giriş yüzeyi).
-        </AlertDescription>
-      </Alert>
-    );
-  }
-  if (durum.hata !== null) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Okunamadı</AlertTitle>
-        <AlertDescription>{durum.hata}</AlertDescription>
-      </Alert>
-    );
-  }
-  if (durum.veri === null) {
-    // YÜKLENİYOR ile BOŞ ayrı: veri henüz yokken iskelet çizilir, "0" değil.
-    return <>{iskelet ?? <Skeleton className="h-24 w-full" />}</>;
-  }
-  return <>{children(durum.veri)}</>;
-}
+export const Kapi = kapiKur(yolKabugu(" (Giriş yüzeyi)"));
 
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ---------------------------------- */
 

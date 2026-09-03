@@ -16,12 +16,8 @@ import type { ComponentType, ReactNode } from "react";
 
 import { Check, Minus, X } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-
-import type { Durum } from "../../veri";
 
 /* --- BÖLÜM KABI ---------------------------------------------------------- */
 
@@ -64,41 +60,9 @@ export function BolumKart({
 /* --- ÜÇ HÂLİN KAPISI ----------------------------------------------------- */
 
 /** Uç okunana kadar / okunamazsa ne çizileceği. `children` YALNIZ veri varken çağrılır.
- *  Oturum düşmesi ayrı bir hâl (veri.ts sözleşmesi): çaresi yeniden giriştir, tazeleme değil. */
-export function Kapi<T>({
-  durum,
-  yol,
-  children,
-  iskelet,
-}: {
-  readonly durum: Durum<T>;
-  readonly yol: string;
-  readonly children: (veri: T) => ReactNode;
-  readonly iskelet?: ReactNode;
-}) {
-  if (durum.oturumDustu) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Oturum düştü</AlertTitle>
-        <AlertDescription>
-          {yol} 401 döndü. Bu bir ölçüm hatası değil — panoya yeniden giriş gerekiyor.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-  if (durum.hata !== null) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Okunamadı</AlertTitle>
-        <AlertDescription>{durum.hata}</AlertDescription>
-      </Alert>
-    );
-  }
-  if (durum.veri === null) {
-    return <>{iskelet ?? <Skeleton className="h-24 w-full" />}</>;
-  }
-  return <>{children(durum.veri)}</>;
-}
+ *  Oturum düşmesi ayrı bir hâl (veri.ts sözleşmesi): çaresi yeniden giriştir, tazeleme değil.
+ *  TANIM BURADA DEĞİL (TSK-113): tek kaynak `parcalar/kapi.tsx`. */
+export { Kapi } from "../../parcalar/kapi";
 
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ----------------------------------- */
 

@@ -16,13 +16,9 @@
    ============================================================================ */
 import type { ComponentType, ReactNode } from "react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-
-import type { Durum } from "../../veri";
 
 /* --- BÖLÜM KABI --------------------------------------------------------- */
 
@@ -55,43 +51,11 @@ export function BolumKart({ kimlik, baslik, soru, ikon: Ikon, aksiyon, children,
 
 /* --- ÜÇ HÂLİN KAPISI ---------------------------------------------------- */
 
-/** Uç okunana kadar / okunamazsa ne çizileceği. `children` YALNIZ veri varken çağrılır. */
-export function Kapi<T>({
-  durum,
-  yol,
-  children,
-  iskelet,
-}: {
-  readonly durum: Durum<T>;
-  /** Hangi uç — hata metninde operatöre nereye bakacağını söyler. */
-  readonly yol: string;
-  readonly children: (veri: T) => ReactNode;
-  readonly iskelet?: ReactNode;
-}) {
-  if (durum.oturumDustu) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Oturum düştü</AlertTitle>
-        <AlertDescription>
-          {yol} 401 döndü. Bu bir ölçüm hatası değil — panoya yeniden giriş gerekiyor.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-  if (durum.hata !== null) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Okunamadı</AlertTitle>
-        <AlertDescription>{durum.hata}</AlertDescription>
-      </Alert>
-    );
-  }
-  if (durum.veri === null) {
-    // YÜKLENİYOR ile BOŞ ayrı: veri henüz yokken iskelet çizilir, "0" değil.
-    return <>{iskelet ?? <Skeleton className="h-24 w-full" />}</>;
-  }
-  return <>{children(durum.veri)}</>;
-}
+/** Uç okunana kadar / okunamazsa ne çizileceği. `children` YALNIZ veri varken çağrılır.
+ *  TANIM BURADA DEĞİL (TSK-113, 2026-09-03): yedi yüzey aynı gövdeyi kopyalıyordu — karar tek
+ *  kaynakta (`parcalar/kapi.tsx`), çizim kabukta. Tüketicilerin import YOLU değişmesin diye
+ *  ad buradan yeniden dışa aktarılır. */
+export { Kapi } from "../../parcalar/kapi";
 
 /* --- UYDURMA YASAĞININ EKRAN KARŞILIĞI ---------------------------------- */
 
