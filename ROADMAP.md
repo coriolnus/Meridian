@@ -253,7 +253,7 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 _Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §3 GÜNCEL DURUM'dadır (bayat referans, tarihçe)._
 ### SIRALAMA (güncel — rev. 2026-09-02 akşam, operatör onayı): §2 İCRA SIRASI dört kova —
 **A kapanış dalgası** (TSK-108 → TSK-060 → TSK-089 → TSK-058 → günlük/ROADMAP kapanışı) →
-**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075) →
+**B hazır küçükler** (TSK-107 · 087+008 · 101/102/006/030 [tek dilim] · 020 `2-adım2→3→1→9` · 064 · 071 · 115 · 116 · 118 · 117 · 092/113/114 [tek dilim] · 014 · 103 · 083/078/073/082 [bakım dilimi] · 075 · 079 [25a/25c/25d]) →
 **C kart isteyenler** (⑥a→⑥b→⑥c · 062 · 065 · 012-B · 104 · 029/035) → **D operatör masası** (§5.0).
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
 (Eski WP-dönemi sıralaması §∞ eşleme tablosunda ve §2 SIRA TARİHÇESİ'nde aynen durur.)
@@ -361,6 +361,7 @@ _**İCRA SIRASI** — sıra icra sırasıdır, kopya değil; her kalem şema kim
 - (B-14 **TSK-103** `full_detail_graded` span_days = dilim takvimi — operatör K6 2026-09-03 sabah; sayılar değişir, ayrışma beyanı + çivi.)
 - (B-15 **TSK-083** · **TSK-078** · **TSK-073** · **TSK-082** — BAKIM DİLİMİ, tek ajan [operatör 2026-09-03 sabah]: ROADMAP satır çapaları → sembol · `26` değer-eşitliği 9 çift envanteri · 24b skill-görüş defteri kalanı · §6 kart indeksi üreticiye [Rol-1 yol kararı bu dilimde]. Gövdeler TAHTA H0'da.)
 - (B-16 **TSK-075** `13` scale-out latent kusuru — AYRI dilim [operatör 2026-09-03 sabah]; motor kodu, tam suite. Gövde TAHTA H0'da.)
+- (B-17 **TSK-079** `25a` kaldır + `25c` dirilt + `25d` ezilme zinciri — TEK DİLİM [operatör 2026-09-03 sabah: "üçünü de sıraya al"]; 25c dirilt canlı davranışı etkilerse KART-ÖNCE (KOVA C'ye taşınır). Gövde TAHTA H0'da.)
 
 **KOVA C — KART İSTEYENLER (ölçüm dalgası; kart-önce, §5 yasası):**
 
@@ -583,10 +584,10 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 | TSK-074 | `propose_virgin_knob` canlı-params süzgeci (WP: WP3) | QUEUED | rol1 | M | — |
 | TSK-069 | (bkz. TSK-069 — EDG-2026-042 K1/K3 bandı; bu satır ACİL C+mb keşfinin kaydı, aynı bant eşiğine bağlı) (WP: WP1) | (bkz. TSK-069) | rol1 | — | — |
 | TSK-075 | `13` scale-out latent kusuru (23e/23f kapandı, kalan tasarım yalnız 13) (WP: WP1) | QUEUED | rol1 | S-M | — |
-| TSK-076 | OPT — parametre-evrim boru hattı (Faz-1 serbest, Faz-2 28d'ye bağımlı) (WP: WP3) | GATED(28d/chop-bütçe kapalılığı operatör kararı) | rol1 | L | 28d tıkanıklığının/chop-bütçe kararının çözülmesi |
+| TSK-076 | OPT — parametre-evrim boru hattı (Faz-1 serbest, Faz-2 28d'ye bağımlı) (WP: WP3) — operatör 2026-09-03 sabah: kapalı kalsın, OPT beklesin | GATED(28d/chop-bütçe kapalılığı operatör kararı) | rol1 | L | 28d tıkanıklığının/chop-bütçe kararının çözülmesi |
 | TSK-077 | WP5 metodoloji/eşik kalıntıları — M2 DSR-yarısı kart-adayı + M11 kova-6 taraması (diğer 12 alt-madde 2026-08-24 elemesinde KAPANDI) (WP: WP5) | QUEUED | rol1 | M | — |
 | TSK-078 | `26` değer-eşitliği — kalan 9 çiftin gerekçe envanteri (ortamlar-arası 3 çift) (WP: WP6) | QUEUED | rol1 | S | — |
-| TSK-079 | `25a` KALDIR(14) / `25c` DİRİLT(3) / `25d` ezilme zinciri (25b 5/6 damgalandı) (WP: WP6) | OPERATOR (operatör 2026-08-16: "beklet") | operator | S | — |
+| TSK-079 | `25a` KALDIR(14) / `25c` DİRİLT(3) / `25d` ezilme zinciri (25b 5/6 damgalandı) (WP: WP6) — operatör 2026-09-03 sabah: "üçünü de sıraya al" (25c dirilt kart-önce şartlı) | QUEUED | rol1 | S-M | — |
 | TSK-080 | `Ö-49` çapa/beyan çürümesi kalanı (WP: WP6) | QUEUED | rol1 | M | — |
 | TSK-081 | ARSENAL POLİTİKASI (15e giriş) · `15d` PIT-temiz faktör seti · `15c` evren genişletme (askı C6 uzlaştırmasıyla kalktı) (WP: WP11) | QUEUED | rol1 | M | — |
 | TSK-082 | §6 kart indeksi ELLE tutuluyor — üretici başka dosyaya yazıyor (WP: WP5) | QUEUED(Rol-1 yol kararı: üreticiye ikinci hedef mi, §6 indeks-atıflı tek blok mu) | rol1 | S | Rol-1 kararı |
@@ -609,7 +610,7 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 | id | name | status | owner | size | trigger |
 |---|---|---|---|---|---|
 | TSK-065 | PIT mid-cap üst-sınır (sağ-kalan üst-sınır ölçümü) (WP: WP4) | GATED(veri kapısı — delist-bar kaynağı kararı, EDG-018 askıda) | rol1 | M | delist-bar kaynağı kararı (TSK-084) + kart-önce ölçüm |
-| TSK-084 | delist-bar kaynağı + FINVIZ erişim bloğu — `dataset.load↔bars_integrity` bağlama (WP: WP4) | OPERATOR | operator | M | — |
+| TSK-084 | delist-bar kaynağı + FINVIZ erişim bloğu — `dataset.load↔bars_integrity` bağlama (WP: WP4) — operatör 2026-09-03 sabah: beklemede (fiyat/kapsam tablosu istenmedi) | OPERATOR | operator | M | — |
 | TSK-051 | (bkz. TSK-051 — QC LEAN CLI `lean login`, kimlik-bloklu; bu satır makine-kurulumu bloğunun DİK DURUM kaydı) (WP: WP9) | (bkz. TSK-051) | operator | — | — |
 | TSK-085 | `23b` çıkış slipajı (örneklem bekliyor — ayrı iş üretmez) (WP: WP1) | QUEUED(TSK-069 [EDG-042 K2/K3] + EDG-045 üzerinden kapanacak) | rol1 | — | — |
 | TSK-063 | (bkz. TSK-063 — Faz-6 BEŞ KİLİT, kanıt-şartlı) (WP: WP3) | (bkz. TSK-063) | rol1 | — | — |
@@ -2612,7 +2613,7 @@ _**[2026-08-31 KONSOLİDASYON — HAVUZ GİRDİSİ ROZET TAŞIMAZ.]** Burası ba
   What: dağıtım akışındaki `systemctl stop/start` satırları sabit birim listesi yerine her birimin dağıtım-öncesi İSTENEN durumunu okuyup korur (bilinçli-durdurulmuş birim start satırına girmez); reçeteye "durdurulmuş birimi başlatma" kalemi + çivi.
   Why: vaka 2026-09-01 — dün gece bilinçli durdurulan meridian-learn, sabah dağıtımının üçlü stop/start paketiyle geri başladı ve ~4 saatte 6h40m CPU yedi; operatör işaretiyle yakalandı (§7 triyaj kaydı). Aynı sınıf hata her dağıtımda tekrarlanabilir.
   Ref: §7 günlük 2026-09-01 canlı-triyaj kaydı · journalctl kanıtı 06:36:11Z (stop) / 06:36:13Z (start).
-- **[TSK-021] `earnings_8k_tarihleri.csv` motorda hiç okunmuyor** — status: GATED(operatörün PIT ihlal düzeltmesi (a)/(b) kararı) · born: 2026-08-31 · owner: rol1 · size: — (boyut seçilecek yola bağlı — ölçülemez, beyanlı) · trigger: operatörün (a)/(b) yol kararı
+- **[TSK-021] `earnings_8k_tarihleri.csv` motorda hiç okunmuyor** — status: DONE(2026-09-02 · EDG-2026-062 d9bad5f: earnings_pit.py csv'yi OKUR — tarihsel kazanç çapası EDGAR 8-K arşivine bağlandı, yol b; ROADMAP durumu 2026-09-03 sabah ölçümle düzeltildi, üçüncü bayat flip) · born: 2026-08-31 · owner: rol1 · size: — (boyut seçilecek yola bağlı — ölçülemez, beyanlı) · trigger: —
   What: PIT-damgalı 8-K arşivi var ama hiçbir yol tüketmiyor; PIT ihlal düzeltmesinin (b) yolu onu okuyucuya kavuşturur.
   Why: PIT çivisi ölçümü, Yasa 6 adayı (üretilen alanın okuyucusu yok).
   Ref: docs/DEVIR-PIT-CIVISI-2026-08-30.md §1.4.

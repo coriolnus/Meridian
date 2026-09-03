@@ -1970,3 +1970,8 @@ fazla iddialıydı; ROADMAP'te TSK-109/110 da QUEUED kalmıştı (canlıdalar) �
 sonra Rol-1 devam. 103 → `span_days` dilim takvimi geçirilir (B-14). 013 tick → beklemede. **011 ölçümle DONE**: b5f9c8d
 (EDG-2026-068 kart-önce) zaten indirmiş, ROADMAP flip'i atlanmıştı — bu sabah ikinci bayat-flip (109/110'dan sonra);
 ders: her commit'in ROADMAP flip'i aynı turda, kapanış partisinde "DONE'lar listesi" ölçülür.
+
+**Sabah kararları — üçüncü tur (06:4x–07:0xZ):** KOVA B'ye **083+078+073+082 bakım dilimi** (B-15) ve **075** ayrı
+(B-16). Dört karar: 076 OPT → **kapalı kalsın**; 079 `25a/25c/25d` → **üçü de sıraya** (B-17, 25c kart-önce şartlı);
+084 delist-bar → **beklemede**; 021 → sorulmadı, **ölçümle DONE** (`earnings_pit.py` csv'yi okuyor; EDG-062 d9bad5f) —
+üçüncü bayat flip (011, 109/110'dan sonra). 074/080/077/081 değerlendirme operatörle (aşağıda, sohbet).
