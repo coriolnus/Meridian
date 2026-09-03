@@ -2108,3 +2108,30 @@ için resmen çağrılmadı (depo brief geleneği); palet göçü dört dilimlik
 **Ders (pgrep):** "pytest sırası dolu" kontrolü kendi kabuğunu yakaladı, üç kez sahte erteleme + bir çivisiz ROADMAP commit'i (çivi sonradan 78/0 yeşil) — hafıza kaydı pytest-sira-kontrolu-kendi-kabugu.
 
 **Operatör onayı 12:41Z (görsel tur, dağıtım #7 sonrası):** TSK-108/109/110/111/112 + TSK-124 DONE. Not: Bellekler ▸ "Tam graf" düğmesi Browser panelinin fare tıklamasıyla durum değiştirmedi (aria-pressed false kaldı), betikle tetiklenince geçti — panel emülasyonu mu, düğmenin olay sınıfı mı ölçülmedi; operatör kendi tarayıcısında sorun bildirmedi. Kayıt: günlükte, kalem açılmadı.
+
+### 2026-09-03 öğleden sonra (Rol-1) — B-15 bakım dilimi · TSK-075 · gece gözlem kurulumu
+
+**Operatör (12:4xZ):** 108…112 + 124 DONE (görsel tur: Genel bakış + Bellekler tam graf). TSK-075 yan kararı: kısmi kâr alma aralığına
+dokunulmaz, yalnız gizli hata düzeltilir, ileride gözden geçirme notu (Masa). Operatörün "daha sade anlat" isteği: teknik terimler
+(scale-out, bounds, mutasyon araması) günlük dille yeniden anlatıldı — kural hafızada (sade-dil-tercihi), ilk soruda uygulanmadı.
+
+**B-15 bakım dilimi (078/082/073/083), tek sonnet ajan:** 156 passed/0/exit0; 078: #2 repo↔canlı-kod KAPANDI (dagit [B] + v266 —
+brief'in verdiği v367 yanlıştı, ajan düzeltti), #4 zaten 2026-08-23'te kapanmış (storage.py `yerel_donmus_defter`, v268 — keşif ve brief
+öncülü BAYATTI), #3 max_drawdown açık (canlı bacağı ölçülmedi); 082: ROADMAP §6 elle tutulan 111 satırlık kart tablosu → README'ye
+atıflı 5 satır (kalem listesi aynen; README kıyası: kayıp kart yok; v279 +6 çivi, "Toplam N kart" mutasyonu ısırdı); 073: EDG-019 için
+`research/olcumler/edg019_skill_gorus_etki/olcum.py` (eşikler karttan, PK sentetik IC, `--kuru`), v389 12 çivi — koşum Rol-1'de (A1'den
+donmuş gözlem defteri çekilecek); 083: üç ROADMAP satır çapası kalem kimliğine çevrildi (watchdog → §8 SB-2 EOD süpürme; config → §5
+B-CHOP-BUTCE; v283 → §3 WP5-F korunum sınıfı) — mutasyon ÖLÇTÜ: v373/v324 bu sınıfı izlemiyor, ROADMAP-çapası bekçisi YOK (beyanlı);
+kapsam dışı dördüncü çürük çapa `tests/test_eod_supurme_kaniti_v265.py` (chip). İnceleme (sonnet): spec/kalite YEŞİL, 2 küçük (ENVANTER satır çapaları → sembol; P_ARAMA_ADIM motordan türetildi + davranışsal ayrışma çivisi); r1 PYTEST_BEKLIYOR döndü (TSK-075'in geniş koşumu) → Rol-1 9 dosya seri 154/0, commit 8da5fb5. **Yabancı el:** v265 düzeltmesi B-15 ajanının değil, operatörün başlattığı chip oturumunun (ai-trading-08) ANA CHECKOUT'a yazısıydı — commit'e fark edilmeden girdi (aynı düzeltme, zarar yok; hafıza kaydı: chip prompt'una worktree şartı, commit öncesi diff-stat ↔ rapor kıyası).
+
+**EDG-2026-019 resmî koşum #1 (TSK-073; Rol-1, 13:33Z; commit 4fdde26):** girdi A1'den donmuş (görüş defteri 6.138 · trades 899 · counterfactuals 7.289) → motorun `_gozlemler()` birleştiricisi kum-havuzu STATE ile (obs sızıntısı yok) → 3.053 gözlem, blob b10ca1c6af70; `olcum.py` (eşikler karttan). aday-siralayici: exhaustion-hammer IC +0,169 CI[+0,038;+0,299] p=0,016 FDR-sağkalan → TERFİ ADAYI; momentum-burst/vcp kalmadı; 3 skill örneklem yetersiz. cikis: vcp katkı +0,144 CI[+0,104;+0,183] → TERFİ ADAYI; exhaustion-hammer −0,428 CI[−0,686;−0,209] → EMEKLİLİK İŞARETİ (1/3 pencere). 08-23 eleme adayları resmî koşumda yeniden üretildi (kill1 şartı). Status measured_partial: PK koşum çıktısında yok (v389 çivisinde var), kill#4 bekçisi ölçülmedi. Hiçbir terfi otomatik değil → operatöre (akşam raporu). **ROADMAP dersi (v337 + v343, üç kırmızı tur):** kapanan TAHTA satırı DONE ile tabloda duramaz (§8.T'ye taşınır) ve §8 şema tablosu taşıyamaz — arşive MADDE biçiminde; python satır-silme betiğinde None tuzağı (iki tur kaybı).
+
+**TSK-075 (B-16), opus:** keşif — kusur `broker.py::PaperBroker.scale_out` bankalama barında `trail_stop`u entry'ye çeker, aynı barda
+`_touch_exit` açılış < entry ise `stop_gap` üretir; canlı `exit.scale_out_frac=0` → latent (893 işlemde scaled_out 0); EDG-029 F1x
+monkeypatch'i düzeltmeyi ölçmüş (+0,0874R CI[+0,034;+0,153], bars_held=0 18→2) ama kavram CI-negatif → dosya kapalı, düzeltme "alet
+açılırsa zorunlu" notu. Brief: F1x'in motor karşılığı, yeni kart yok, frac=0 birebir, v390. Opus implementer uygulamayı yazdı (`Position.pre_scale_stop` — tek atımlık dokunuş tabanı; `trail_stop` yine çekilir, o barın `_touch_exit`i bankalama-öncesi tabanla çalışır; çağıranlar loop/backtest/shadow değişmedi) ama API 500 ile İKİ kez düştü (resume da düştü); yetim zsh sarmalı öldürüldü (python çocuğu yoktu). Taze sonnet bitirici: uygulama tam, 182 passed/0/exit0, mutasyon 2/3 — üçüncüsü (frac<=0 kapısı) YAPISAL NO-OP: `sell_qty=int(qty*frac)<=0` bekçisi sıkı üst-küme, v24'te frac=0 çağrısı yok → brief'in beklentisi yanlıştı (dürüst bulgu; kapı ölü kod, sadeleştirme kapsam dışı). Serileştirme: `asdict`/`Position(**p)` eski kayıt alan olmadan yüklenir (v390 k5b), `shadow_lifecycle._POS_FIELDS` şemadan türetilir (k5c). İnceleme: opus 529 ile düştü → sonnet: spec ONAY / kalite ONAY (2 küçük gözlem; `_save_broker` günde tek kez → taban sızması imkânsız; `manage_position` max()-monotonik → F1x ile davranışsal eşdeğer). Commit d0ed07d.
+
+**Gece gözlem kurulumu:** tek-seferlik hatırlatıcılar (yerel 23:37 → ingest067-tsk115 özeti; 01:13 → 22:00Z brifing `brifing_kural_denetimi.kaynak`).
+Bekleme döngüsü değil, harness zamanlayıcısı.
+
+**Kapanış:** suite #8: 10071 passed / 9 skipped / 0 FAILED-ERROR / exit 0, 11 dk 23 sn (13:53:58→14:05:23Z), HEAD d0ed07d başlangıç=bitiş; push 59573d3..d0ed07d · dağıtım #8: dry-run ✓ (F10 ✓) ama **SEANS SONRASINA ERTELENDİ** (14:07Z = 10:07 ET, piyasa açık; `loop._save_broker` günde tek kez koşuyor → seans içi restart gün-içi broker durumunu riske atar; bugünkü önceki iki dağıtım pre-market'ti). Tek-seferlik hatırlatıcı 20:05Z (yerel 23:05): dry-run tekrar + --uygula + doğrulama. **EDG-019 operatör kararı 14:18Z: 'tasarım kalemi aç' → [TSK-126] skill görüş terfisi tasarım belgesi.**.
