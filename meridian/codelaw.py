@@ -37,8 +37,10 @@ from __future__ import annotations
 
 import ast
 import copy
+import io
 import pathlib
 import re
+import tokenize
 from typing import Any
 
 # ---------------------------------------------------------------------------
@@ -129,6 +131,14 @@ def _py_files(root: str):
 # girdi düşer. Sunucu koşarken kaynak değişmez; değiştiği an ilgili girdi kendiliğinden yenilenir.
 _KAYNAK_MEMO: dict[str, tuple[tuple, str]] = {}
 _AST_MEMO: dict[str, tuple[tuple, ast.Module]] = {}
+#: ÜÇÜNCÜ BESLEME (D3, TSK-120, 2026-09-03) İÇİN AYRI MEMO — BEDEL YASASI ÖLÇÜMÜ: `report()`
+#: 27 çağrıda açık/kapalı karşılaştırıldı (n=5 interleaved), fark ~1,7 s/çağrı — 0,3 s/çağrı
+#: eşiğinin ÇOK üstünde (`_KAYNAK_MEMO`/`_AST_MEMO` yeniden ayrıştırmayı önlüyor ama `tokenize`
+#: adımı HİÇ önbelleklenmiyordu, her `report()` çağrısında ~568 dosya sıfırdan tekrar
+#: tokenize ediliyordu). Aynı `_dosya_damgasi` (mtime_ns, size) sözleşmesiyle, AYRI sözlükte:
+#: bu memo `_dosya_yorum_metni`nin NİHAİ SONUCUNU (yorum+docstring metni) saklar, `_KAYNAK_MEMO`
+#: gibi bir GİRDİ önbelleği değil — kaynak/AST önbellekleriyle KARIŞTIRILMAZ.
+_YORUM_MEMO: dict[str, tuple[tuple, str]] = {}
 
 
 def _dosya_damgasi(path) -> tuple:
@@ -1536,9 +1546,31 @@ _CAPA_UZANTILARI = frozenset((
     "service", "timer", "socket", "png", "svg", "xml", "db", "gz", "zip"))
 
 
+def _atama_adlari(hedef: ast.expr):
+    """Bir atama HEDEFİNDEN ad(lar)ı çıkarır — düz `ad = ...` bir `ast.Name`dir, demet/liste-çöz
+    `AKTIF, ARSIV = "aktif", "arsiv"` ise `ast.Tuple`/`ast.List` İÇİNDEKİ her ad (TSK-120,
+    2026-09-03, D1: eski hâl yalnız `ast.Name` işliyordu, tuple-unpack hedefleri SESSİZCE
+    ATLIYORDU — `skills.ARSIV` bu yüzden hiç toplanmıyordu ve GERÇEK bir sembol sahte-çürük
+    görünüyordu, yasanın en pahalı arızası). İç içe demet de yinelemeli çözülür (`(a, (b, c)) = …`
+    AST'de geçerlidir, nadir olsa da).
+
+    KAPSAM SINIRI (inceleme bulgusu, düzeltme turu 1, 2026-09-03): YILDIZLI hedefler
+    (`a, *b = ...`, `ast.Starred`) TOPLANMAZ — brief D1 yalnız tuple/list-unpack istiyordu,
+    starred İSTENMEDİ. Ölçüldü: repo genelinde (`meridian/*.py`, `tests/*.py`) böyle bir desen
+    yalnız FONKSİYON GÖVDESİ İÇİNDE (yerel değişken) geçiyor — `_modul_adlari` zaten yalnız
+    üst-düzey `tree.body`/sınıf-gövdesi ifadelerini gezdiği için bugün SIFIR gerçek etki; bu bir
+    eksik değil, kapsamın YAZILI bir notu (UYDURMA YASAĞI — ölçülmeyen bir gelecek etkiyi
+    "yok" saymak yerine burada AÇIKÇA sınırlanır)."""
+    if isinstance(hedef, ast.Name):
+        yield hedef.id
+    elif isinstance(hedef, (ast.Tuple, ast.List)):
+        for e in hedef.elts:
+            yield from _atama_adlari(e)
+
+
 def _modul_adlari(tree: ast.AST) -> set[str]:
-    """Bir modülün AST'inden ÇAPALANABİLİR adları toplar: modül-seviyesi `def`/`class`/atama,
-    artı sınıf gövdesindeki üyeler `Sinif.uye` biçiminde.
+    """Bir modülün AST'inden ÇAPALANABİLİR adları toplar: modül-seviyesi `def`/`class`/atama
+    (tuple-unpack DAHİL, `_atama_adlari`), artı sınıf gövdesindeki üyeler `Sinif.uye` biçiminde.
 
     İTHAL EDİLEN ADLAR KASTEN DIŞARIDA: `from x import y` bu modülü `y`nin TANIMI yapmaz ve
     çapa tanımı gösterir. İçeri alsaydık, silinen bir fonksiyon ithal edildiği her modülde
@@ -1554,12 +1586,13 @@ def _modul_adlari(tree: ast.AST) -> set[str]:
                     elif isinstance(u, ast.AnnAssign) and isinstance(u.target, ast.Name):
                         adlar.add(f"{d.name}.{u.target.id}")
                     elif isinstance(u, ast.Assign):
-                        adlar.update(f"{d.name}.{t.id}" for t in u.targets
-                                     if isinstance(t, ast.Name))
+                        for t in u.targets:
+                            adlar.update(f"{d.name}.{n}" for n in _atama_adlari(t))
         elif isinstance(d, ast.AnnAssign) and isinstance(d.target, ast.Name):
             adlar.add(d.target.id)
         elif isinstance(d, ast.Assign):
-            adlar.update(t.id for t in d.targets if isinstance(t, ast.Name))
+            for t in d.targets:
+                adlar.update(_atama_adlari(t))
     return adlar
 
 
@@ -1591,9 +1624,11 @@ def capa_uyusmasi(metinler, py_kokler: tuple[str, ...] | None = None,
 
       1. `modül.sembol` biçimi YALNIZ `modul_bicimi=True` beslemelerinde okunur ve o besleme
          PYTHON TARAFIDIR (`DECLARED_*` beyanları). Panonun `.ts`/`.tsx` düzyazısında aynı desen
-         SEMBOL DEĞİL ALAN ADI anlamına geliyor — ilk canlı ölçümde (2026-09-02) `scheduler.last_tick`
-         `sprint.sebep` `component_ic.verdict` `auth.header.Authorization` gibi JSON ALAN adları
-         yanlış çürüme üretti. Pano tarafının biçimi bu yüzden TEK: `dosya.py::sembol`.
+         SEMBOL DEĞİL ALAN ADI anlamına geliyor — ilk canlı ölçümde (2026-09-02) "scheduler.last_tick" ·
+         "sprint.sebep" · "component_ic.verdict" · "auth.header.Authorization" gibi JSON ALAN adları
+         yanlış çürüme üretti (örnekler burada backtick'SİZ tırnaklı yazılır — TSK-120, 2026-09-03:
+         ÜÇÜNCÜ BESLEME devreye girince bu docstring KENDİ ÖRNEKLERİYLE yakalandı; aynı dersin
+         ikinci kez, yansımalı biçimde öğrenilmesi). Pano tarafının biçimi bu yüzden TEK: `dosya.py::sembol`.
       2. Backtick ZORUNLU ve modül adres defterinde ÇÖZÜLMELİ. Türkçe düzyazı `r.json()` ·
          `self.ALAN` gibi yüzlerce `x.y` belirteci taşır; hepsini çapa saymak `cozulemeyen`
          kovasını gürültüye çevirir ve "kaç çapayı ölçemedim" sorusunu okunamaz yapardı.
@@ -1688,6 +1723,122 @@ def _tsx_metinleri(root: str) -> list[tuple[str, str]]:
         except (OSError, ValueError) as e:  # sessiz-yutma: okunamayan tek dosya bekçiyi çökertmez; körlük UNSCANNED'e yazılır ve report()["ok"]i oradan düşürür
             _note_unscanned(str(f), e, "capa_uyusmasi")
     return ler
+
+
+def _dosya_yorum_metni(path) -> str:
+    """TEK DOSYANIN YORUM+DOCSTRING metni — KOD DİZGESİ DEĞİL (D3, TSK-120, 2026-09-03).
+    `#` yorumları `tokenize` ile, modül/fonksiyon/sınıf docstring'leri `ast.get_docstring` ile
+    çıkarılır. Sıradan bir kod dizgesi (`_TERFI_ASAMA = "shadow_model.terfi"` gibi) BİLEREK
+    DIŞARIDA kalır: o bir VERİDİR, yazarın serbest DÜŞÜNCESİ değil — içine gömülü "mod.sembol"
+    görünümlü bir alt dizge çapa SAYILMAMALI (aksi hâlde her sabit sözleşme metni sahte-çürüme
+    üretirdi, tıpkı "auth.header.Authorization" JSON alan adının ilk canlı ölçümde yaptığı gibi —
+    bkz. yukarıdaki `capa_uyusmasi` docstring'i, kapsam sınırı 1).
+
+    İKİ AYRI AYRIŞTIRMA GEREKİR (tokenize yorumları görmez, ast'ın yorumu YOKTUR — ikisi ayrı
+    veri) — bu yüzden dosya İKİ KEZ taranır; `_KAYNAK_MEMO`/`_AST_MEMO` KAYNAK/AST okumasını
+    ucuzlatır ama `tokenize` adımının KENDİSİ önbelleklenmez; NİHAİ SONUÇ bu yüzden AYRICA
+    `_YORUM_MEMO`da tutulur (bedel yasası ölçümü modül başlığında: fark ~1,7 s/çağrı, 0,3 s/çağrı
+    eşiğinin üstünde — TSK-120, 2026-09-03).
+
+    BAŞARISIZLIKTA HİÇBİR ŞEY ÖNBELLEKLENMEZ — `_KAYNAK_MEMO`/`_AST_MEMO` SÖZLEŞMESİ BİREBİR
+    (düzeltme turu 1, inceleme bulgusu, 2026-09-03): bu fonksiyon `_GRAPH_CACHE`/`_CLAIMS_CACHE`
+    sınıfı bir SONUÇ önbelleğidir ama `_onbellek_oku`/`_onbellege_yaz`in İDEMPOTENT körlük-geri-
+    yazımını KULLANMAZ — dosya-başına çağrıldığı için o gövdenin evre-önekiyle YAKALAMA'sı
+    (`_onbellege_yaz`) bu dosyanın değil, o ANDA `UNSCANNED`de duran BAŞKA dosyaların kaydını da
+    yakalardı (aynı süreçte art arda taranan dosyalar aynı evre önekini paylaşıyor — çapraz-dosya
+    sızıntısı). Daha basit ve güvenli sözleşme seçildi: `tokenize`/`ast` başarısızsa `_note_unscanned`
+    çağrılır AMA sonuç `_YORUM_MEMO`ya YAZILMAZ — ikinci çağrı önbellek ISKAlar, tokenize/ast'ı
+    YENİDEN dener ve `_note_unscanned`i YENİDEN tetikler (idempotent tekilleştirme zaten
+    `_note_unscanned`'in KENDİ işi — "aynı kayıt iki kez düşmez"). Emsal:
+    `tests/test_codelaw_kor_nokta_v214.py::test_onbellek_KORLUGU_YUTMAZ`, çivi:
+    `tests/test_yorum_sembol_capasi_v402.py::test_YORUM_MEMO_KORLUGU_YUTMAZ`."""
+    anahtar = str(path)
+    damga = _dosya_damgasi(path)
+    onbellek = _YORUM_MEMO.get(anahtar)
+    if onbellek is not None and onbellek[0] == damga:
+        return onbellek[1]
+    src = _kaynak_oku(path)
+    parcalar: list[str] = []
+    basarili = True
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(src).readline):
+            if tok.type == tokenize.COMMENT:
+                parcalar.append(tok.string)
+    except (tokenize.TokenError, IndentationError, SyntaxError) as e:  # sessiz-yutma: tokenize edilemeyen kaynakta yorum çıkarımı imkansız; hüküm verilmez, körlük UNSCANNED'e yazılır (UYDURMA YASAĞI)
+        _note_unscanned(str(path), e, "_yorum_metinleri:tokenize")
+        basarili = False
+    try:
+        tree = _ast_oku(path)
+    except SyntaxError as e:  # sessiz-yutma: ayrıştırılamayan kaynakta docstring çıkarımı imkansız; körlük UNSCANNED'e yazılır — `_note_unscanned` aynı kayda ikinci kez düşmez (kendi tekilleştirmesi)
+        _note_unscanned(str(path), e, "_yorum_metinleri:ast")
+        tree = None
+        basarili = False
+    if tree is not None:
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                doc = ast.get_docstring(node, clean=False)
+                if doc:
+                    parcalar.append(doc)
+    sonuc = "\n".join(parcalar)
+    if basarili:                          # başarısızlıkta HİÇBİR ŞEY önbelleklenmez (yukarıdaki gerekçe)
+        _YORUM_MEMO[anahtar] = (damga, sonuc)
+    return sonuc
+
+
+def _yorum_metinleri(kokler: tuple[str, ...] = ("meridian", "tests")) -> list[tuple[str, str]]:
+    """BESLEME (c) — ÜÇÜNCÜ BESLEME (D3, TSK-120, 2026-09-03): `kokler` altındaki `.py`
+    dosyalarının YORUM+DOCSTRING metni, AYNI çekirdekten (`capa_uyusmasi`) geçer. İkinci bir
+    tarayıcı YAZILMADI — tek-kaynak yasası; yeni olan yalnız bu besleme ve `_dosya_yorum_metni`nin
+    kod-dizgesini süzen ayrımıdır. Emsal ve alt küme: `tests/test_kovab_dilim_v382.py` bölüm E
+    (`UCUNCU_BESLEME`) bu fonksiyonun prototipiydi, dilim-kapsamlı sabit bir dosya listesiyle.
+
+    VARSAYILAN `ops` İÇERMİYOR — bilinçli asimetri (inceleme bulgusu, düzeltme turu 1): `report()`
+    bu fonksiyonu SEMBOL ÇÖZÜMLEME kökü `(root, *_EK_CAPA_KOKLERI)` = meridian+tests+`ops` ile
+    çağırır (bir çapanın HEDEFİ `ops/`de olabilir), ama METİN TARAMA köküdür yalnız brief D3'ün
+    talep ettiği `meridian`+`tests` — `ops/` betikleri ayrı bir sözleşme dünyasıdır (CLAUDE.md §1:
+    "Sözleşmeleri KOMUT SATIRIdır, `main()` değil") ve bu turda kapsam DIŞI bırakıldı; genişletmek
+    isteyen çağıran `kokler=("meridian","tests","ops")` geçebilir, varsayılan DEĞİŞMEDİ."""
+    ler: list[tuple[str, str]] = []
+    for kok in kokler:
+        for f in _py_files(kok):
+            try:
+                metin = _dosya_yorum_metni(f)
+            except (OSError, ValueError) as e:  # sessiz-yutma: okunamayan tek dosya bekçiyi çökertmez; körlük UNSCANNED'e yazılır (`_tsx_metinleri` ile aynı disiplin)
+                _note_unscanned(str(f), e, "_yorum_metinleri")
+                continue
+            if metin:
+                ler.append((str(f), metin))
+    return ler
+
+
+_YORUM_SEMBOL_CACHE: dict = {}
+
+
+def _yorum_sembol_capalari(metin_kokler: tuple[str, ...] = ("meridian", "tests"),
+                           py_kokler: tuple[str, ...] | None = None) -> dict:
+    """ÜÇÜNCÜ BESLEMENİN SONUÇ ÖNBELLEĞİ (bedel yasası, TSK-120 2026-09-03). `_dosya_yorum_metni`
+    dosya-başına önbelleklidir (`_YORUM_MEMO`) ama `capa_uyusmasi`nın SEMBOL ÇÖZÜMÜ — her hedef
+    modül için `_modul_adlari` AST YÜRÜYÜŞÜ, ~2200+ çapa üzerinden — çağrı başına YENİDEN
+    hesaplanıyordu. ÖLÇÜLDÜ (`report()`, n=5 interleaved, sıcak `_YORUM_MEMO` ile bile): açık ~2,14 s,
+    kapalı ~1,77 s, fark ~370 ms/çağrı — 0,3 s/çağrı eşiğinin üstünde. Çözüm İKİNCİ bir önbellek
+    MEKANİZMASI icat ETMEDİ: `artifact_graph`/`stale_claims` ile AYNI gövde
+    (`_onbellek_oku`/`_onbellege_yaz`/`_src_stamp`, mtime+dosya-sayısı imzalı, süreç-ömürlü) — tek-
+    kaynak yasası. Körlük (`UNSCANNED`) isabet dalında da İDEMPOTENT geri yazılır (`_onbellek_oku`
+    sözleşmesi); ölçülemeyen şey `report()["ok"]`i sessizce yeşile çevirmez."""
+    if py_kokler is None:
+        py_kokler = metin_kokler
+    _key = (metin_kokler, tuple(_src_stamp(k) for k in metin_kokler), py_kokler)
+    _hit = _onbellek_oku(_YORUM_SEMBOL_CACHE, _key)
+    if _hit is not _YOK:
+        return _hit
+    yorum_met = _yorum_metinleri(metin_kokler)
+    s_yorum = capa_uyusmasi(yorum_met, py_kokler=py_kokler, modul_bicimi=True)
+    sonuc = {
+        "taranan_dosya": len(yorum_met),
+        "capa_n": len(s_yorum["cozulen"]) + len(s_yorum["curuyen"]),
+        "curuyen": s_yorum["curuyen"],
+    }
+    return _onbellege_yaz(_YORUM_SEMBOL_CACHE, _key, sonuc, ("_yorum_metinleri", "capa_uyusmasi"))
 
 
 def stale_line_anchors(root: str = "meridian",
@@ -2052,6 +2203,17 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
         sembol = {k: [*s_beyan[k], *s_tsx[k]] for k in ("cozulen", "curuyen", "cozulemeyen")}
         sembol["besleme"] = {"beyan": len(beyan), "tsx": len(tsx_met)}
         sembol_curume = bool(sembol["curuyen"])
+    # ÜÇÜNCÜ BESLEME — YORUM/DOCSTRING METNİ (D3, TSK-120, 2026-09-03). `meridian/**`+`tests/**`
+    # yorum satırları + docstring'leri AYNI çekirdekten geçer (`capa_uyusmasi`, tek-kaynak yasası
+    # — ikinci bir tarayıcı YAZILMADI). AŞAMA 1: GÖZLEMSEL, `ok`u DÜŞÜRMEZ (canlı taban ÖLÇÜLMEDEN
+    # sıfır toleransa bağlamak henüz keşfedilmemiş borcu sessizce bekçiyi kırmızıya çevirirdi —
+    # `text_anchor_stale`/TSK-080 emsali). Ölçülmediyse None: sentetik kökte "bakmadım" ile
+    # "0 çürük" aynı alandan okunamaz.
+    yorum_sembol: dict | None = None
+    if tsx_hedef is not None:
+        # SONUÇ SÜREÇ-ÖMÜRLÜ ÖNBELLEKLİDİR (bedel yasası — bkz. `_yorum_sembol_capalari`
+        # docstring'i): kaynak değişmeden ikinci çağrı ~370 ms daha ucuzdur.
+        yorum_sembol = _yorum_sembol_capalari(py_kokler=(root, *ek))
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
@@ -2108,6 +2270,11 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
             # ADI OLAN ve düzeltmesi MEKANİK bir kusurdur — kayıtlı borç değil.
             "sembol_capalari": sembol,
             "sembol_capa_curume": sembol_curume,
+            # ÜÇÜNCÜ BESLEME (D3, TSK-120, 2026-09-03) — `meridian/**`+`tests/**` yorum/docstring
+            # metni. AŞAMA 1: `ok`u ETKİLEMEZ (yukarıdaki gerekçe). "capa_n" ve "taranan_dosya"
+            # KÖRLÜK ALARMIdır: ikisi de düşükse tarayıcı yanlış köke bakıyor demektir
+            # (`CANLI_ASGARI_COZULEN`/v373 ile aynı disiplin) — bkz. tests/test_yorum_sembol_capasi_v402.py.
+            "yorum_sembol_capalari": yorum_sembol,
             # `… is not True` AÇIK YAZILDI: `not x` deseydik ölçülmemiş (None) durum sessizce
             # "temiz" sayılırdı — hükmü olmayanı yeşile yazmak UYDURMA olurdu.
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED

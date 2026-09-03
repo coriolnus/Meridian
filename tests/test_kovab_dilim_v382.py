@@ -490,9 +490,16 @@ UCUNCU_BESLEME = (
 
 
 def _ucuncu_besleme_hukmu():
-    """`codelaw.capa_uyusmasi`ı bu dilimin dosyalarıyla besler (çekirdek TEK, besleme üçüncü)."""
+    """`codelaw.capa_uyusmasi`ı bu dilimin dosyalarıyla besler (çekirdek TEK, besleme üçüncü).
+
+    İTHAL EDİLDİ (TSK-120, 2026-09-03): metin artık `.read_text()` ile HAM okunmuyor,
+    `codelaw._dosya_yorum_metni` ile — repo-geneli üçüncü besleme (`codelaw._yorum_metinleri`/
+    `report()["yorum_sembol_capalari"]`) bu turda `codelaw.py`ye girdi ve bu fonksiyon onun
+    PROTOTİPİYDİ; ikinci bir çıkarım YAZILMADI (tek-kaynak yasası). ÖLÇÜLDÜ: ham metinle 56
+    `cozulen` / 0 `curuyen`, yorum+docstring-only ile 54 `cozulen` / 0 `curuyen` — fark (kod
+    dizgelerinin artık süzülmesi) aşağıdaki testlerin eşiklerini (`>= 40`, `== []`) BOZMUYOR."""
     from meridian import codelaw
-    metinler = [(y, (REPO / y).read_text(encoding="utf-8")) for y in UCUNCU_BESLEME]
+    metinler = [(y, codelaw._dosya_yorum_metni(REPO / y)) for y in UCUNCU_BESLEME]
     return codelaw.capa_uyusmasi(metinler, modul_bicimi=True)
 
 

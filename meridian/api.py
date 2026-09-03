@@ -3581,7 +3581,9 @@ def _sessiz_hat(wd: dict, hb: dict) -> dict:
 # BU BLOK ÜÇÜNCÜ BİR GERÇEK ÜRETMEZ, VAR OLANI GÖRÜNÜR KILAR: `training_status()` zaten
 # `son_fit_ts` (fit_ts ya da `_kaynak.generated`), `n_fit`, `brier_train` ve `terfi` demetini
 # taşıyordu; okuyucusu yoktu (YASA 6 borcu). Eklenen tek YENİ şey terfi HÜKMÜNÜN NEDENİdir ve o
-# da uydurulmaz: kuraklığın sınıfı `sieve` defterinin `shadow_model.terfi` aşamasından — yani
+# da uydurulmaz: kuraklığın sınıfı `sieve` defterinin aşama dizgesi `"shadow_model.terfi"`den
+# (aşağıdaki sabitle paylaşılan sözleşme — SEMBOL DEĞİL bir sieve KİMLİĞİ; gerçek yol
+# `shadow_model.py::ShadowTradeOutcomeModel.evaluate_promotion`, TSK-120 2026-09-03) — yani
 # ölçümün kendisinden — okunur.
 _TERFI_ASAMA = "shadow_model.terfi"
 
@@ -3598,7 +3600,8 @@ def _terfi_hukmu(terfi: dict | None, sieve_rep: dict | None) -> dict:
     if t.get("promoted"):
         return {"karar": "EVET", "sinif": "terfi_etti",
                 "neden": f"canlı Brier {live} < taban {taban} ({n_live} taze çiftte)"}
-    # Elenme sınıfı ÖLÇÜMDEN: `shadow_model.terfi` aşaması kaç satır aldı, kaçını neden düşürdü.
+    # Elenme sınıfı ÖLÇÜMDEN: sieve aşama dizgesi `"shadow_model.terfi"` (yukarıdaki
+    # `_TERFI_ASAMA`) kaç satır aldı, kaçını neden düşürdü.
     asama = ((sieve_rep or {}).get("stages") or {}).get(_TERFI_ASAMA) or {}
     drops = asama.get("drops") or {}
     en_cok = max(drops.items(), key=lambda kv: kv[1])[0] if drops else None
@@ -3858,8 +3861,11 @@ def _ogrenme_blogu(ogr: dict, sieve_rep: dict | None) -> dict:
         "beyan": ("`son_fit` MODELİN son fiilen KURULDUĞU andır (`fit_ts`). Yanındaki `son deneme` "
                   "(`fit_attempt_ts`) fit DENENDİĞİ andır ve fit edilmeyen denemeler de "
                   "(veri seti değişmedi · eşik altı) oraya damga bırakır. İkisi AYRI olgudur: "
-                  "deneme ilerlerken fit yerinde kalabilir. Damgayı `shadow_model.refit_and_save` "
-                  "atar — kadans (maybe_refit) da, loop.P5_LEARN de o yoldan geçer."),
+                  "deneme ilerlerken fit yerinde kalabilir. Damgayı "
+                  "`shadow_model.py::ShadowTradeOutcomeModel.refit_and_save` "
+                  "atar (TSK-120, 2026-09-03: classmethod — çıplak "
+                  "\"shadow_model.refit_and_save\" modül-seviyesinde YOKTU) — kadans "
+                  "(maybe_refit) da, loop.P5_LEARN de o yoldan geçer."),
     }
     # ---- SON DENEME --------------------------------------------------------------------
     # Fit ile DENEME panoda ayrı okunmak zorunda: "kadans koştu, veri değişmemişti" ile "kadans
@@ -4205,9 +4211,12 @@ def _near_miss_karne() -> dict:
     satirlar.sort(key=lambda s: -(s["n"] or 0))
     return {"var": True, "resolved_total": doc.get("resolved_total"),
             "kaynak": doc.get("_kaynak") or None, "kovalar": satirlar,
-            # KARŞI-OLGUSAL DEFTERİN BOYU: karnenin paydası burada. `ledgers.cf_resolved` ile AYNI
-            # sayıdır ve iki kez okunmaz — teşhis yükü onu zaten hesaplıyor, burada TEKRARLANMAZ.
-            "cf_defteri": "ledgers.cf_resolved"}
+            # KARŞI-OLGUSAL DEFTERİN BOYU: karnenin paydası burada. `cf_resolved` alanı
+            # (validation_report/selfreview çıktısı) ile AYNI sayıdır ve iki kez okunmaz — teşhis
+            # yükü onu zaten hesaplıyor, burada TEKRARLANMAZ (TSK-120, 2026-09-03: `ledgers`
+            # modül atfı kaldırıldı — `ledgers.py`de bu adda bir sembol yok, bu bir JSON alan
+            # adıdır).
+            "cf_defteri": "cf_resolved alanı (validation_report/selfreview çıktısı)"}
 
 
 def _emir_yasam() -> dict:
@@ -5118,9 +5127,12 @@ def api_diagnostics(request: Request, taze: int = 0):
         "liveness": _wd.liveness_report(),
         # BEKÇİ DURUM YÜZEYLERİ — T2.1-T2.4 YASA-6 kapanışı: dört raporun alarm satırı vardı,
         # durum yüzeyi yoktu. Maliyet/yalıtım/persist şerhleri `_bekci_durumlari`nın kendisinde.
-        # WALRUS BİLEREK: aynı dört rapor hem burada olduğu gibi hem `durum_sozlugu.satirlar`da
-        # normalize servis edilir — ikinci bir `_bekci_durumlari()` çağrısı dört bekçiyi aynı
-        # istekte İKİ kez koşturmak olurdu (45 sn önbelleğin kapattığı maliyeti geri açardı).
+        # WALRUS BİLEREK: aynı dört rapor hem burada olduğu gibi hem `durum_sozlugu.py::normalize_satir`
+        # çıktısındaki `satirlar` anahtarında normalize servis edilir (TSK-120, 2026-09-03: eski
+        # metin "durum_sozlugu.satirlar" yazıyordu — yanlış modül atfıydı, `durum_sozlugu.py`de
+        # böyle bir sembol yok; doğru çapa dosya::sembol biçimine çevrildi) — ikinci bir
+        # `_bekci_durumlari()` çağrısı dört bekçiyi aynı istekte İKİ kez koşturmak olurdu (45 sn
+        # önbelleğin kapattığı maliyeti geri açardı).
         "bekci_durumlari": (_bd := _bekci_durumlari()),
         # F8 KANONİK DURUM SÖZLÜĞÜ (WP8-C) — kanonik ad kümeleri + normalize hükümler +
         # eşanlamlı-okuma sayaçları (eski adların ölüm tarihi ölçümü). Okuyucu: app.js
@@ -7492,7 +7504,9 @@ async def api_birim_istek(ad: str, request: Request):
 #   2. İstisna metni — alt katmanlar kimlik bilgisini hata metnine basabilir (URL'e gömülü
 #      credential klasiği). `_kapi_maskele` ikinci savunma hattıdır: gerekçe SİLİNMEZ (körlük
 #      açardı), yalnız sır maskelenir.
-#   3. Rota gövdesindeki `auth.header.Authorization` — tasarım kararı "sırlar $ENV referansı
+#   3. Rota gövdesindeki HTTP `Authorization` başlığı (TSK-120, 2026-09-03: eski metin
+#      `auth.header.Authorization` yazıyordu — bu bir sembol değil bir HTTP başlığı adıydı, (çapa-mezar-taşı)
+#      `auth.py`de böyle bir üye yok) — tasarım kararı "sırlar $ENV referansı
 #      olarak, değer asla" (TSK-090). `$env://…` bir sır DEĞİL, sırra bir referanstır ve operatör
 #      "hangi env okunuyor" sorusunu panodan cevaplar. Ama `$env://` ile BAŞLAMAYAN bir değer,
 #      etcd'ye kazara yazılmış GERÇEK bir anahtar demektir (tünel-CRUD sapması — TSK-089'un adlı
