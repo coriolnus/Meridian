@@ -568,7 +568,6 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 | TSK-070 | F8 pano durum-sözlüğü (WP: WP8) | QUEUED | rol1 | M | — |
 | TSK-071 | Ö-54 gerçek friksiyon tahmini (n=4'ten çıkış) (WP: WP1) | GATED(K1 örneklem eşiğinin dolması — haftalık otomatik koşum `edg042-friksiyon-haftalik`) | rol1 | M | K1 n≥30 eşiği (takvimli otomatik koşum) |
 | TSK-072 | EXE-2026-003 — gölge kapsam / planlı kol (WP: WP3) | GATED(örneklem penceresinin 2/20'den dolması) | rol1 | S | pencere dolması |
-| TSK-073 | 24b-24d skill görüş defteri — kalan yalnız 24b (WP: WP7) | QUEUED | rol1 | S | — |
 | TSK-059 | EXE-2026-009 P-2 — hakem anahtarı `ts` geçişi (WP: WP1) | GATED(EDG-062(b) inişinden sonra) | rol1 | M | EDG-062(b) inişi |
 
   Not (TSK-069): **BLOKE:** `EDG-2026-042` K1/K3 bandı (türev kalem — bağımsız iş içermez) · **`Ö-55` friksiyon-koşullu limit sınaması** — artefakt: `EDG-2026-043-friksiyon-kosullu-limit` — kapı durumu: 🆕 **KART ÖN-KAYITLI 2026-08-22** (B4 kararının C bacağı; EDG-040 ACİL kaleminin (b) bacağına ilk somut adım). Altı hücre (K=6): slip {15,25,35} × dolum {A,B}, cap=0,01 silahlı; kapalı-kapı hücreleri edg040'ın DONMUŞ kanıtından (yeniden koşmak kill). OKUMA KURALI DONUK: hüküm yalnız EDG-042'nin gerçek-friksiyon bandına düşen hücreden okunur — bant gelmeden (~4 hafta) B4 yeniden açılamaz. Ölçüm ~75 dk, hemen ya da bantla birlikte koşulabilir (operatör tercihi) → **ÖLÇÜLDÜ (aynı gün, K=6 harcandı): altı CI de 0-içi.** A kolu hep negatif (−7,3k/−5,8k/−1,3k) · B kolu hep pozitif NOKTA (+4,0k/+3,8k/+2,3k; slip15_B altı hücrenin tek kârlısı +895) — işaret-dönüşü deseni görünüyor ama HİÇBİRİ ayrışmıyor. HÜKÜM ASKIDA (okuma kuralı): EDG-042 bandı ~4 haftada; muhtemel okuma "ayrışmadı → B4 kapalı kalır"
@@ -596,12 +595,9 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 | TSK-075 | `13` scale-out latent kusuru (23e/23f kapandı, kalan tasarım yalnız 13) (WP: WP1) | QUEUED | rol1 | S-M | — |
 | TSK-076 | OPT — parametre-evrim boru hattı (Faz-1 serbest, Faz-2 28d'ye bağımlı) (WP: WP3) — operatör 2026-09-03 sabah: kapalı kalsın, OPT beklesin | GATED(28d/chop-bütçe kapalılığı operatör kararı) | rol1 | L | 28d tıkanıklığının/chop-bütçe kararının çözülmesi |
 | TSK-077 | WP5 metodoloji/eşik kalıntıları — M2 DSR-yarısı kart-adayı + M11 kova-6 taraması (diğer 12 alt-madde 2026-08-24 elemesinde KAPANDI) (WP: WP5) — operatör 2026-09-03 sabah: Rol-1 şema kararı + kart (C-10); şema kararı 2026-09-03: DAMGA (`ret_seri`), KYS-002 R2 planı yazıldı, damga kodu ONAYLANDI 2026-09-03 | QUEUED | rol1 | M | — |
-| TSK-078 | `26` değer-eşitliği — kalan 9 çiftin gerekçe envanteri (ortamlar-arası 3 çift) (WP: WP6) | QUEUED | rol1 | S | — |
 | TSK-079 | `25a` KALDIR(14) / `25c` DİRİLT(3) / `25d` ezilme zinciri (25b 5/6 damgalandı) (WP: WP6) — operatör 2026-09-03 sabah: "üçünü de sıraya al" (25c dirilt kart-önce şartlı) | QUEUED | rol1 | S-M | — |
 | TSK-080 | `Ö-49` çapa/beyan çürümesi kalanı (WP: WP6) — operatör 2026-09-03 sabah: ikinci bakım dilimi (B-18) | QUEUED | rol1 | M | — |
 | TSK-081 | ARSENAL POLİTİKASI (15e giriş) · `15d` PIT-temiz faktör seti · `15c` evren genişletme (askı C6 uzlaştırmasıyla kalktı) (WP: WP11) — B-19 ölçümü 2026-09-03: ARSENAL politikası VAR (15e yarısı DONE), 15d tasarım belgesi var → kart adayı, 15c 044/084'e bağlı beklemede | QUEUED | rol1 | M | — |
-| TSK-082 | §6 kart indeksi ELLE tutuluyor — üretici başka dosyaya yazıyor (WP: WP5) | QUEUED(Rol-1 yol kararı: üreticiye ikinci hedef mi, §6 indeks-atıflı tek blok mu) | rol1 | S | Rol-1 kararı |
-| TSK-083 | ROADMAP satır çapaları — üçü de çürümüş (SATIR→SEMBOL çevrimi gerekiyor) (WP: WP6) | QUEUED | rol1 | S | — |
 
   Not (TSK-074): **AÇIK** (HAZIR İŞ · kart-önce: tasarım belgesi var, kart YOK kod YOK) · **`propose_virgin_knob` canlı-params süzgeci** — not/kapı durumu: **H0→H1: TASARIM BELGESİ YAZILDI** (`docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md`). Ölçüldü: süzülmemiş liste ÜÇ yüzeyden tüketiliyor (deterministik havuz · LLM istem bölümü · evidence_pack) — tamirat tek fonksiyon işi DEĞİL; hermes→reflect kenarı zaten var, Ö-48 süzgeci yeniden kullanılabilir (döngüsel bağımlılık yok, ölçüldü). Uygulama kart-önce
   Not (TSK-069): **BLOKE:** `EDG-2026-042` K1/K3 bandı (türev — bağımsız yeni ölçüm GEREKMİYOR, reçete kartta yazılı) · 🔴 **ACİL: C+mb paketi +10 bps ek friksiyonda NEGATİF** (`EDG-2026-040` hükmü) — not/kapı durumu: **KARTIN DONUK KURALI BU KALEMİ AÇTI** ("aksi hâlde hüküm … ROADMAP'e ACİL kalem olarak girer"). Taban slip=5 → **+20.685** · slip=15 → **−3.067** · slip=25 → −13.722 · slip=35 → −25.681; ΔP&L CI'ları ÜÇÜNDE DE sıfırın dışında (CI-üst<0). Başabaş bandı **5-15 bps/bacak** (interpolasyon yok). Hasar FİYAT kaynaklı (n 885→862, seçilim değişmedi). BAĞLAM: gerçek friksiyon hâlâ n=4 TAHMİN (EDG-037 kill#1 ayakta) ama EDG-038 kanonik ölçütü giriş bacağında medyan +29 bps demişti — o doğruysa sistem slip25-35 bandındadır. Dokuz replay hükmündeki §E şerhi artık RAKAMLI. SIRADAKİ İŞ: (b) ✅ **KARTI ÖN-KAYITLI: `EDG-2026-046`** (iki-dünya × iki-seçilim, K=4; yaltaklanan-dünya tuzağı kill'de;
@@ -5362,6 +5358,13 @@ bayat status snapshot → §8 ARŞİV, tarihçe-koru, silme yok*). Kronolojik ne
 _(Kapanış: `2701cf4`…`6dd38b5` arası 24 turun neden-kaydı §7'ye yazıldı — girişler commit
 gövdelerinden TÜRETİLDİ ve blok başında köken notuyla işaretli. Zaten kayıtlı iki tur
 (`177a92b`, `6b9c6ad`) tekrarlanmadı.)_
+
+**B-15 bakım dilimi + EDG-019 kapanış kaydı** (taşındı 2026-09-03 13:32Z, `§2` TAHTA H0 satırlarından — v337 kuralı: kapanan kalem tahtada durmaz; hücre metinleri AYNEN, madde biçiminde — §8 şema tablosu taşımaz, v343; durum hücresi DONE):
+
+- `TSK-073` · 24b-24d skill görüş defteri — kalan yalnız 24b (WP: WP7) · **DONE(2026-09-03 EDG-019 resmî koşum 1)** · rol1 · S · —
+- `TSK-078` · `26` değer-eşitliği — kalan 9 çiftin gerekçe envanteri (ortamlar-arası 3 çift) (WP: WP6) · **DONE(2026-09-03 8da5fb5; #3 açık)** · rol1 · S · —
+- `TSK-082` · §6 kart indeksi ELLE tutuluyor — üretici başka dosyaya yazıyor (WP: WP5) · **DONE(2026-09-03 8da5fb5)** · rol1 · S · Rol-1 kararı
+- `TSK-083` · ROADMAP satır çapaları — üçü de çürümüş (SATIR→SEMBOL çevrimi gerekiyor) (WP: WP6) · **DONE(2026-09-03 8da5fb5)** · rol1 · S · —
 
 ### §8.O — OPERATÖR BLOKLARI ARŞİVİ (2026-08-30; `§5`'ten taşınan KAPALI kova gövdeleri)
 

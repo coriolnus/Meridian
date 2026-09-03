@@ -13,11 +13,8 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **85** kart.
 
-### Kayıtlı — ölçüm bekliyor (15)
+### Kayıtlı — ölçüm bekliyor (14)
 
-- **EDG-2026-019** (`registered`) — Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10) aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı…
-  · HÜKÜM: 2026-08-09 Rol-1. (Aşağıya bkz: 2026-08-23 kill#1 kaydı — katman kapatma emri)
-  · kart: `EDG-2026-019-skill-gorus-defteri.yaml`
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
   · kart: `EDG-2026-053-gelir-momentumu.yaml`
@@ -68,7 +65,7 @@ Toplam **85** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (44)
+### Ölçüldü (45)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -82,6 +79,9 @@ Toplam **85** kart.
 - **EDG-2026-016** (`measured`) — EDG-013 tanısı (CI'sız, K korunarak) turnover ANA etkisinin momentum-koşulundan bağımsız ve daha büyük olduğunu gösterdi (q4 @20 +0,651% tanı vs…
   · HÜKÜM: 2026-08-01 ~16:00 — SUCCESS (üç kill de tetiklenmedi; Rol-1 onaylı): üst-%20 dilim evren-fazlası @10 +0,31% CI[+0,15,+0,49], @20 +0,65% CI[+0,34,+1,01]; ARTIK üç…
   · kart: `EDG-2026-016-turnover-ana-etkisi.yaml`
+- **EDG-2026-019** (`measured_partial`) — Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10) aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı…
+  · HÜKÜM: 2026-09-03 Rol-1 — resmî koşum 1 yapıldı (hukum_2026_09_03); PK çıktıda yok (v389 çivisinde), kill#4 bekçisi ölçülmedi → partial
+  · kart: `EDG-2026-019-skill-gorus-defteri.yaml`
 - **EDG-2026-022** (`measured`) — Sistemin kârlılık darboğazı "dar evren → az aday → az işlem → az kanıt" diye okunuyor ve WP-U'nun gerekçesi bu.
   · HÜKÜM: de-risk+tavan BİRLİKTE %65.84 (CI 58.73–72.14, tamamı >%50) BASKIN → success_metric kuralınca FINVIZ token harcaması GEREKÇESİZ.
   · kart: `EDG-2026-022-evren-baglayici-kisit.yaml`

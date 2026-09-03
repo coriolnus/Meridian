@@ -1,0 +1,280 @@
+{
+  "beyan": "HİÇBİR TERFİ OTOMATİK DEĞİL — bu betik yalnız ÖLÇER; hükmü Rol-1 karta + K defterine AYNI turda işler (CLAUDE.md §3/§5).",
+  "esik_ayrisma_kontrolu": [],
+  "esikler": {
+    "ci_seviye": 0.95,
+    "fdr_q": 0.1,
+    "kart_id": "EDG-2026-019",
+    "kart_yolu": "/Users/erdemozturk/AI-Trading/research/cards/EDG-2026-019-skill-gorus-defteri.yaml",
+    "n_min": 30,
+    "rank_ic_esigi": 0.05
+  },
+  "girdi_n": 3053,
+  "kart": "EDG-2026-019",
+  "terfi_adaylari": [
+    {
+      "n": 245,
+      "olcum": {
+        "hi": 0.2986257095141924,
+        "lo": 0.03785181694992293,
+        "n_kume": 151,
+        "rank_ic": 0.1689
+      },
+      "p": 0.0156,
+      "skill": "stockbee-exhaustion-hammer-screener",
+      "yuzey": "aday-siralayici"
+    },
+    {
+      "n": 1337,
+      "olcum": {
+        "hi": 0.18264444008337957,
+        "katki": 0.1443,
+        "lo": 0.10368097919467463,
+        "n_kume": 635
+      },
+      "p": 0.0078,
+      "skill": "vcp-screener",
+      "yuzey": "cikis"
+    }
+  ],
+  "yuzeyler": {
+    "aday-siralayici": {
+      "eslesmeyen_gorus": 0,
+      "fdr": {
+        "kritik_p": 0.0156,
+        "m": 3,
+        "q": 0.1
+      },
+      "metrik": "rank-IC (skor → gerçekleşen R)",
+      "skiller": {
+        "pead-screener": {
+          "fdr": {
+            "esik": null,
+            "neden": "p ÖLÇÜLEMEDİ — aileye girmez",
+            "p": null,
+            "sagkalan": null,
+            "sira": null
+          },
+          "kova": "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ 1/30",
+          "n": 1,
+          "olcum": null,
+          "p": null,
+          "terfi_adayi": false
+        },
+        "pullback-screener": {
+          "fdr": {
+            "esik": null,
+            "neden": "p ÖLÇÜLEMEDİ — aileye girmez",
+            "p": null,
+            "sagkalan": null,
+            "sira": null
+          },
+          "kova": "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ 27/30",
+          "n": 27,
+          "olcum": null,
+          "p": null,
+          "terfi_adayi": false
+        },
+        "stockbee-episodic-pivot-analyzer": {
+          "fdr": {
+            "esik": null,
+            "neden": "p ÖLÇÜLEMEDİ — aileye girmez",
+            "p": null,
+            "sagkalan": null,
+            "sira": null
+          },
+          "kova": "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ 3/30",
+          "n": 3,
+          "olcum": null,
+          "p": null,
+          "terfi_adayi": false
+        },
+        "stockbee-exhaustion-hammer-screener": {
+          "etki_esigi_gecti": true,
+          "fdr": {
+            "esik": 0.033333,
+            "neden": null,
+            "p": 0.0156,
+            "sagkalan": true,
+            "sira": 1
+          },
+          "kova": "OLCULDU",
+          "n": 245,
+          "olcum": {
+            "hi": 0.2986257095141924,
+            "lo": 0.03785181694992293,
+            "n_kume": 151,
+            "rank_ic": 0.1689
+          },
+          "p": 0.0156,
+          "p_neden": null,
+          "terfi_adayi": true,
+          "yon": 1
+        },
+        "stockbee-momentum-burst-screener": {
+          "etki_esigi_gecti": false,
+          "fdr": {
+            "esik": 0.066667,
+            "neden": null,
+            "p": 0.2946,
+            "sagkalan": false,
+            "sira": 2
+          },
+          "kova": "OLCULDU",
+          "n": 1440,
+          "olcum": {
+            "hi": 0.08560491254577549,
+            "lo": -0.025669002771487835,
+            "n_kume": 638,
+            "rank_ic": 0.0297
+          },
+          "p": 0.2946,
+          "p_neden": null,
+          "terfi_adayi": false,
+          "yon": 1
+        },
+        "vcp-screener": {
+          "etki_esigi_gecti": false,
+          "fdr": {
+            "esik": 0.1,
+            "neden": null,
+            "p": 0.969,
+            "sagkalan": false,
+            "sira": 3
+          },
+          "kova": "OLCULDU",
+          "n": 1337,
+          "olcum": {
+            "hi": 0.059960659700003305,
+            "lo": -0.06161080759507928,
+            "n_kume": 635,
+            "rank_ic": -0.0017
+          },
+          "p": 0.969,
+          "p_neden": null,
+          "terfi_adayi": false,
+          "yon": -1
+        }
+      }
+    },
+    "cikis": {
+      "eslesmeyen_gorus": 0,
+      "fdr": {
+        "kritik_p": 0.0078,
+        "m": 3,
+        "q": 0.1
+      },
+      "metrik": "çıkış katkısı = havuz ort. left_r − skill left_r (POZİTİF = daha az ödül bıraktı)",
+      "skiller": {
+        "pead-screener": {
+          "fdr": {
+            "esik": null,
+            "neden": "p ÖLÇÜLEMEDİ — aileye girmez",
+            "p": null,
+            "sagkalan": null,
+            "sira": null
+          },
+          "kova": "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ 1/30",
+          "n": 1,
+          "olcum": null,
+          "p": null,
+          "terfi_adayi": false
+        },
+        "pullback-screener": {
+          "fdr": {
+            "esik": null,
+            "neden": "p ÖLÇÜLEMEDİ — aileye girmez",
+            "p": null,
+            "sagkalan": null,
+            "sira": null
+          },
+          "kova": "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ 27/30",
+          "n": 27,
+          "olcum": null,
+          "p": null,
+          "terfi_adayi": false
+        },
+        "stockbee-episodic-pivot-analyzer": {
+          "fdr": {
+            "esik": null,
+            "neden": "p ÖLÇÜLEMEDİ — aileye girmez",
+            "p": null,
+            "sagkalan": null,
+            "sira": null
+          },
+          "kova": "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ 3/30",
+          "n": 3,
+          "olcum": null,
+          "p": null,
+          "terfi_adayi": false
+        },
+        "stockbee-exhaustion-hammer-screener": {
+          "etki_esigi_gecti": false,
+          "fdr": {
+            "esik": 0.033333,
+            "neden": null,
+            "p": 0.0078,
+            "sagkalan": true,
+            "sira": 1
+          },
+          "kova": "OLCULDU",
+          "n": 245,
+          "olcum": {
+            "hi": -0.2094472482400431,
+            "katki": -0.4281,
+            "lo": -0.685748565381795,
+            "n_kume": 151
+          },
+          "p": 0.0078,
+          "p_neden": null,
+          "terfi_adayi": false,
+          "yon": -1
+        },
+        "stockbee-momentum-burst-screener": {
+          "etki_esigi_gecti": false,
+          "fdr": {
+            "esik": 0.1,
+            "neden": null,
+            "p": 0.2326,
+            "sagkalan": false,
+            "sira": 3
+          },
+          "kova": "OLCULDU",
+          "n": 1440,
+          "olcum": {
+            "hi": 0.025425974960760506,
+            "katki": -0.0606,
+            "lo": -0.1823804289441502,
+            "n_kume": 638
+          },
+          "p": 0.2326,
+          "p_neden": null,
+          "terfi_adayi": false,
+          "yon": 0
+        },
+        "vcp-screener": {
+          "etki_esigi_gecti": true,
+          "fdr": {
+            "esik": 0.066667,
+            "neden": null,
+            "p": 0.0078,
+            "sagkalan": true,
+            "sira": 2
+          },
+          "kova": "OLCULDU",
+          "n": 1337,
+          "olcum": {
+            "hi": 0.18264444008337957,
+            "katki": 0.1443,
+            "lo": 0.10368097919467463,
+            "n_kume": 635
+          },
+          "p": 0.0078,
+          "p_neden": null,
+          "terfi_adayi": true,
+          "yon": 1
+        }
+      }
+    }
+  }
+}
