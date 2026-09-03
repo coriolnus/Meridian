@@ -75,14 +75,14 @@ const FAZ_TON_SINIFI: Readonly<Record<FazTonu, string>> = {
   canli: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   bekliyor: "text-muted-foreground",
   olculemedi: "text-muted-foreground",
-  taninmiyor: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  taninmiyor: "bg-uyari-t text-uyari",
 };
 
 const FAZ_NOKTA_SINIFI: Readonly<Record<FazTonu, string>> = {
   canli: "bg-emerald-500",
   bekliyor: "bg-muted-foreground/40",
   olculemedi: "bg-muted-foreground/60",
-  taninmiyor: "bg-amber-500",
+  taninmiyor: "bg-uyari",
 };
 
 function FazRozeti({ hal }: { readonly hal: string }) {
@@ -247,7 +247,7 @@ function ZincirHalkasi({ halka, sira }: { readonly halka: KapiZincirHalkasi; rea
             anahtar: <code>{halka.auth_referansi}</code> <span className="italic">(referans — değer etcd'de yok)</span>
           </span>
         ) : (
-          <span className="text-amber-700 dark:text-amber-400">{halka.auth_referansi}</span>
+          <span className="text-uyari">{halka.auth_referansi}</span>
         )}
       </div>
     </li>
@@ -320,7 +320,7 @@ function RotaKarti({ rota }: { readonly rota: KapiRotasi }) {
             ) : temizlenen.length === 0 ? (
               /* BOŞ LİSTE BURADA İYİ HABER DEĞİLDİR: istemciden gelen `Authorization`
                  upstream'e GEÇER demektir. Sessiz bir "—" bunu gizlerdi. */
-              <span className="text-amber-700 text-xs dark:text-amber-400">
+              <span className="text-uyari text-xs">
                 hiçbiri — istemci başlıkları upstream'e GEÇER
               </span>
             ) : (
@@ -425,7 +425,7 @@ function AtlananSatir({ n }: { readonly n: number | null | undefined }) {
   }
   return (
     <span
-      className="text-amber-700 text-xs tabular-nums dark:text-amber-400"
+      className="text-uyari text-xs tabular-nums"
       title="`apisix_http_status` diye başlayıp rota/kod/sayı üçlüsünü veremeyen satır. İlgisiz metrikler bu sayaca GİRMEZ."
     >
       {n} satır ayrıştırılamadı
@@ -513,7 +513,7 @@ function Metrikler({ durum }: { readonly durum: Durum<KapiGovdesi> }) {
                                         "font-mono text-[11px] tabular-nums",
                                         kod.startsWith("2") && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
                                         (kod.startsWith("4") || kod.startsWith("5")) &&
-                                          "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+                                          "bg-uyari-t text-uyari",
                                       )}
                                     >
                                       {kod} · {n}

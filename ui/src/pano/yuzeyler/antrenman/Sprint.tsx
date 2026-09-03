@@ -108,10 +108,10 @@ function haliCoz(s: SprintDurumu): Hal {
 
 const HAL_STILI: Readonly<Record<Hal["kod"], { ikon: typeof Activity; sinif: string }>> = {
   kosuyor: { ikon: CircleDot, sinif: "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300" },
-  yarida: { ikon: TriangleAlert, sinif: "border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-300" },
+  yarida: { ikon: TriangleAlert, sinif: "border-uyari-h bg-uyari-t text-uyari" },
   bitti: { ikon: Pause, sinif: "border-border bg-muted/30 text-foreground" },
   hic: { ikon: CircleSlash, sinif: "border-border bg-muted/30 text-muted-foreground" },
-  belirsiz: { ikon: TriangleAlert, sinif: "border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-300" },
+  belirsiz: { ikon: TriangleAlert, sinif: "border-uyari-h bg-uyari-t text-uyari" },
 };
 
 export function Sprint({ hermes }: { hermes: Durum<HermesGovdesi> }) {
@@ -280,7 +280,7 @@ function Govde({ s, kadans }: { s: SprintDurumu; kadans: SprintKadansi | null })
                 variant="outline"
                 className={
                   arama.cleared === 0
-                    ? "border-amber-500/40 text-amber-700 dark:text-amber-300"
+                    ? "border-uyari-h text-uyari"
                     : typeof arama.cleared === "number"
                       ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
                       : ""

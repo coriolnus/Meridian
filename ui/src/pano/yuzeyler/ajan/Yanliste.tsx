@@ -54,7 +54,7 @@ import type { FiloYuku } from "./filoOku";
 const NOKTA: Readonly<Record<Aktiflik, string>> = {
   aktif: "bg-emerald-500",
   sessiz: "bg-muted-foreground",
-  olculemedi: "bg-amber-500",
+  olculemedi: "bg-uyari",
 };
 
 const NOKTA_BASLIK: Readonly<Record<Aktiflik, string>> = {
@@ -141,7 +141,7 @@ function Satir({
         <span
           className={cn(
             "block truncate text-xs",
-            onizleme.uyari ? "text-amber-700 italic dark:text-amber-400" : "text-muted-foreground",
+            onizleme.uyari ? "text-uyari italic" : "text-muted-foreground",
           )}
         >
           {onizleme.metin ?? "önizleme ölçülemedi"}
@@ -270,7 +270,7 @@ export function Yanliste({
             {sayim.olculemedi > 0 ? (
               <p className="mt-1.5 text-[11px] leading-relaxed">
                 <Olculemedi
-                  className="text-amber-700 dark:text-amber-400"
+                  className="text-uyari"
                   neden={`${bicimSayi(sayim.olculemedi)} ajanın defteri okunamadı, bugün konuşmuş olabilirler`}
                   teknik="bu ajanlarda `oturumlar`/`teslimler` liste değil ya da bir damga zamana yerleşmedi — sessizlik iddia edilemez"
                 />

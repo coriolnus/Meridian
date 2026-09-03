@@ -87,11 +87,11 @@ function Merdiven({ hal }: { hal: string | undefined }) {
                 className={cn(
                   "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs tabular-nums",
                   zayifSon
-                    ? "border-amber-500/60 bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                    ? "border-uyari-h bg-uyari-t text-uyari"
                     : tamam
                       ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
                       : takili
-                        ? "border-amber-500/60 bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                        ? "border-uyari-h bg-uyari-t text-uyari"
                         : "border-border bg-muted/40 text-muted-foreground",
                 )}
               >
@@ -120,12 +120,12 @@ function Merdiven({ hal }: { hal: string | undefined }) {
               <p className={cn("font-medium text-sm", !tamam && !takili && "text-muted-foreground")}>{a.baslik}</p>
               <p className="mt-0.5 text-muted-foreground text-xs leading-snug">{a.alt}</p>
               {takili ? (
-                <Badge variant="outline" className="mt-1.5 border-amber-500/40 text-amber-700 dark:text-amber-300">
+                <Badge variant="outline" className="mt-1.5 border-uyari-h text-uyari">
                   burada takılı
                 </Badge>
               ) : null}
               {zayifSon ? (
-                <Badge variant="outline" className="mt-1.5 border-amber-500/40 text-amber-700 dark:text-amber-300">
+                <Badge variant="outline" className="mt-1.5 border-uyari-h text-uyari">
                   kalibrasyon zayıf
                 </Badge>
               ) : null}

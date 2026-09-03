@@ -300,7 +300,7 @@ function KararSeridi({
       </div>
       {/* EKSİK OKUMA UYARISI — hüküm kapısının görünür yüzü (I-1). */}
       {govde !== null && govde.belgeler !== null && !govde.ok ? (
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-amber-700 text-xs leading-relaxed dark:text-amber-300">
+        <p className="rounded-md border border-uyari-h bg-uyari-t px-3 py-2 text-uyari text-xs leading-relaxed">
           Arşiv EKSİK okundu: uç listeyi verdi ama işi tamamlayamadığını bildirdi. Aşağıdaki
           eşleşme sayıları ve &quot;bankada yok&quot; hükmü bu yüzden KURULMUYOR.{" "}
           {govde.hata ?? "Gerekçe yazılmamış."}

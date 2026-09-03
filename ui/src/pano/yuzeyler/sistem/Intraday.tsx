@@ -112,7 +112,7 @@ export function Intraday({ teshis }: { readonly teshis: Durum<TeshisGovdesi> }) 
                   </Satir>
                   <Satir etiket="Ne zamandır kopuk">
                     {hud.stream_down_since ? (
-                      <span className="text-amber-600 dark:text-amber-400">
+                      <span className="text-uyari">
                         {zamanMetni(hud.stream_down_since) ?? hud.stream_down_since}
                       </span>
                     ) : hud.stream_down_since === null ? (

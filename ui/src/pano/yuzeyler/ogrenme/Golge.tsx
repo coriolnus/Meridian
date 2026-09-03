@@ -428,7 +428,7 @@ function GolgeModelKutusu({ ogrenme }: { ogrenme: OgrenmeBlogu | undefined }) {
               terfi?.karar === "EVET"
                 ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
                 : terfi?.karar === "HAYIR"
-                  ? "border-amber-500/40 text-amber-700 dark:text-amber-300"
+                  ? "border-uyari-h text-uyari"
                   : "text-muted-foreground"
             }
           >

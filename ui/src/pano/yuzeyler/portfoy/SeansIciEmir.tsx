@@ -52,7 +52,7 @@ const KORUMA_OLCULEMEDI = "olculemedi";
 function Sayac({ ad, n, not, uyari = false }: { ad: string; n: number | undefined; not: string; uyari?: boolean }) {
   return (
     <div className="rounded-md border p-2" title={not}>
-      <div className={cn("font-semibold text-xl tabular-nums", uyari && (n ?? 0) > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground")}>
+      <div className={cn("font-semibold text-xl tabular-nums", uyari && (n ?? 0) > 0 ? "text-uyari" : "text-foreground")}>
         {n === undefined ? (
           <Olculemedi kisaMetin="—" neden={`${ad} bildirilmedi.`} teknik={`${ad}: teşhis gövdesinde alan yok`} />
         ) : (
@@ -465,7 +465,7 @@ export function SeansIciEmir({
                 <KirpmaSayisi v={kirpma.pencere_donen} alan="pencere_donen" /> emir.
               </p>
               {(kirpma.kirpilan ?? 0) > 0 && (
-                <p className="text-amber-600 dark:text-amber-400">
+                <p className="text-uyari">
                   Tavan aşıldı: <KirpmaSayisi v={kirpma.kirpilan} alan="kirpilan" /> canlı satır gövdeye GİRMEDİ.
                   Aşağıdaki tablo canlı defterin TAMAMI değildir.
                 </p>

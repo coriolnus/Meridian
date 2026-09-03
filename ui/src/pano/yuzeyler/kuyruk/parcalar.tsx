@@ -124,7 +124,7 @@ export function KpiKutu({
   readonly vurgu?: boolean;
 }) {
   return (
-    <div className={cn("min-w-0 rounded-lg border p-3", vurgu && "border-amber-500/40 bg-amber-500/5")}>
+    <div className={cn("min-w-0 rounded-lg border p-3", vurgu && "border-uyari-h bg-uyari-t")}>
       <div className="text-muted-foreground text-xs">{etiket}</div>
       <div className="mt-1 font-semibold text-xl tabular-nums">{children}</div>
       {altMetin ? <div className="mt-1 text-muted-foreground text-[11px] leading-4">{altMetin}</div> : null}
@@ -203,7 +203,7 @@ export type HukumTonu = "iyi" | "uyari" | "kotu" | "notr" | "olculemedi";
 
 const TON_SINIFI: Record<HukumTonu, string> = {
   iyi: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  uyari: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  uyari: "bg-uyari-t text-uyari",
   kotu: "bg-destructive/10 text-destructive",
   notr: "bg-muted text-muted-foreground",
   olculemedi: "bg-muted text-muted-foreground italic",
@@ -211,7 +211,7 @@ const TON_SINIFI: Record<HukumTonu, string> = {
 
 const TON_NOKTASI: Record<HukumTonu, string> = {
   iyi: "bg-emerald-500",
-  uyari: "bg-amber-500",
+  uyari: "bg-uyari",
   kotu: "bg-destructive",
   notr: "bg-muted-foreground/50",
   olculemedi: "bg-muted-foreground/40",

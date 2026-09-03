@@ -58,8 +58,8 @@ export function HukumSeridi({ yuk }: { yuk: FiloYuku }) {
   // "tüm liste okunamadı" diye gösterirdi.
   if (yuk.ok === true) return null;
   return (
-    <div className="flex items-start gap-2 border-amber-500/40 border-b bg-amber-500/5 px-3 py-2">
-      <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+    <div className="flex items-start gap-2 border-uyari-h border-b bg-uyari-t px-3 py-2">
+      <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-uyari" aria-hidden />
       <div className="min-w-0">
         <p className="font-medium text-xs">
           {yuk.ok === null ? "Liste hükmü ölçülemedi" : "Ajan listesi eksik ölçüldü"}
@@ -171,7 +171,7 @@ export function KaynakOzeti({ yuk }: { yuk: FiloYuku }) {
             <strong className="tabular-nums">{bicimSayi(s.limit)}</strong>
           )}
           {kirpildi && s !== null && s.limitIstenen !== null ? (
-            <span className="ml-1 text-amber-700 dark:text-amber-400">
+            <span className="ml-1 text-uyari">
               (istenen {bicimSayi(s.limitIstenen)} TAVANDA kırpıldı)
             </span>
           ) : null}
@@ -225,7 +225,7 @@ export function KaynakOzeti({ yuk }: { yuk: FiloYuku }) {
           bugün kaydı yok
         </span>
         <span className="flex items-center gap-1.5">
-          <i className="size-2 rounded-full bg-amber-500" aria-hidden />
+          <i className="size-2 rounded-full bg-uyari" aria-hidden />
           ölçülemedi
         </span>
       </div>
@@ -243,7 +243,7 @@ function Saat({ ts, tsHam }: { ts: string | null; tsHam: string | null }) {
   if (tsHam !== null) {
     return (
       <span
-        className="font-mono text-amber-700 dark:text-amber-400"
+        className="font-mono text-uyari"
         title="damga ISO-8601'e çevrilemedi — bu, defterde YAZAN ham değerdir (`ts_ham`)"
       >
         ham damga: {tsHam}
@@ -336,7 +336,7 @@ function TeslimAyrintisi({ t }: { t: FiloTeslimi }) {
         <p className="mt-1 text-muted-foreground">ölçülemeyen kaynak: yok (üretici hepsini ölçmüş)</p>
       ) : (
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-amber-700 dark:text-amber-400">ölçülemeyen kaynak:</span>
+          <span className="text-uyari">ölçülemeyen kaynak:</span>
           {t.olculemeyen.map((o, i) => (
             <Badge key={`${o}-${i}`} variant="destructive" className="text-[10px]">
               {o}
@@ -376,7 +376,7 @@ function Oge({ o, isaret }: { o: AkisOgesi; isaret: string }) {
   }
   if (o.tur === "gecis") {
     return (
-      <div className="self-center rounded-full border border-amber-500/40 border-dashed bg-amber-500/10 px-3 py-1 font-mono text-[11px] text-amber-700 dark:text-amber-400">
+      <div className="self-center rounded-full border border-uyari-h border-dashed bg-uyari-t px-3 py-1 font-mono text-[11px] text-uyari">
         model değişti: {o.gecis.onceki} → {o.gecis.yeni}
       </div>
     );
@@ -404,7 +404,7 @@ function Oge({ o, isaret }: { o: AkisOgesi; isaret: string }) {
   }
   if (o.tur === "yersiz") {
     return (
-      <p className="self-center text-[11px] text-amber-700 leading-relaxed dark:text-amber-400">
+      <p className="self-center text-[11px] text-uyari leading-relaxed">
         {bicimSayi(o.n)} teslim olayının damgası çevrilemedi — zaman çizelgesine yerleştirilemedi,
         düşürülmedi
       </p>
@@ -421,7 +421,7 @@ function OlculemediHali({ a, teslimleriAc }: { a: FiloAjani; teslimleriAc: () =>
   const teslimVar = a.teslimler !== null && a.teslimler.length > 0;
   return (
     <div className="m-auto flex max-w-md flex-col items-center gap-3 px-6 py-10 text-center">
-      <div className="grid size-16 place-items-center rounded-full border-2 border-amber-500/50 border-dashed bg-muted font-semibold text-2xl text-muted-foreground">
+      <div className="grid size-16 place-items-center rounded-full border-2 border-uyari-h border-dashed bg-muted font-semibold text-2xl text-muted-foreground">
         {isaretle(a)}
       </div>
       <h2 className="font-semibold text-sm">Konuşma defteri ölçülemedi</h2>
@@ -527,7 +527,7 @@ function TeslimlerPaneli({ a }: { a: FiloAjani }) {
           ) : (
             <>
               {a.teslimKirpildi === true ? (
-                <p className="rounded-md border border-amber-500/40 bg-amber-500/5 px-2 py-1.5 text-amber-700 text-xs leading-relaxed dark:text-amber-400">
+                <p className="rounded-md border border-uyari-h bg-uyari-t px-2 py-1.5 text-uyari text-xs leading-relaxed">
                   KESİLDİ: aşağıdaki son {bicimSayi(teslimler.length)} olay gösteriliyor
                   {a.teslimToplam === null
                     ? " — toplam sayı kaydedilmemiş"
@@ -583,7 +583,7 @@ export function SahipsizPaneli({ yuk }: { yuk: FiloYuku | null }) {
           ) : (
             <>
               {toplam !== null && toplam > liste.length ? (
-                <p className="mb-2 text-amber-700 text-xs dark:text-amber-400">
+                <p className="mb-2 text-uyari text-xs">
                   KESİLDİ: son {bicimSayi(liste.length)} olay gösteriliyor, toplam {bicimSayi(toplam)}.
                 </p>
               ) : null}

@@ -72,7 +72,7 @@ function kolonlariKur(simdi: number): ColumnDef<DataTableFeatures, Adim>[] {
         <div className="flex min-w-0 flex-col gap-0.5">
           <code className="break-all font-mono text-xs">{row.original.ad}</code>
           {row.original.askidaNeden ? (
-            <span className="text-amber-700 text-[11px] dark:text-amber-400">
+            <span className="text-uyari text-[11px]">
               askıya alma nedeni: {row.original.askidaNeden}
             </span>
           ) : null}
@@ -249,7 +249,7 @@ export function AdimTablosu({ adimlar, simdi }: { readonly adimlar: readonly Adi
                   className={cn(
                     (satir.original.hukum === "gecikti" || satir.original.hukum === "hic_kosmadi") &&
                       "bg-destructive/5",
-                    satir.original.hukum === "askida" && "bg-amber-500/5",
+                    satir.original.hukum === "askida" && "bg-uyari-t",
                   )}
                 >
                   {satir.getVisibleCells().map((hucre) => (

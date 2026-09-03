@@ -388,7 +388,7 @@ export function OnayCekmecesi({
 
               {oge.not ? (
                 <Blok baslik="Ucun notu">
-                  <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6">
+                  <p className="rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6">
                     {oge.not}
                   </p>
                 </Blok>

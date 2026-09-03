@@ -300,7 +300,7 @@ export function BirimAnahtari({
             className={cn(
               "text-xs",
               oku.hal === "acik" && "text-emerald-600 dark:text-emerald-400",
-              oku.hal === "karisik" && "text-amber-600 dark:text-amber-400",
+              oku.hal === "karisik" && "text-uyari",
               oku.hal !== "acik" && oku.hal !== "karisik" && "text-muted-foreground",
             )}
           >
@@ -318,7 +318,7 @@ export function BirimAnahtari({
       ) : null}
 
       {oku.hal === "karisik" ? (
-        <span className="flex items-start gap-1 text-amber-600 text-xs dark:text-amber-400" title={oku.teknik ?? undefined}>
+        <span className="flex items-start gap-1 text-uyari text-xs" title={oku.teknik ?? undefined}>
           <TriangleAlert className="mt-0.5 size-3 shrink-0" aria-hidden />
           açılış isteği ile çalışma durumu ayrışmış
         </span>

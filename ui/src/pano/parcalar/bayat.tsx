@@ -26,9 +26,9 @@ export function YukleniyorIskeleti({ yukseklik = "h-40" }: { yukseklik?: string 
 /** Tazeleme düştü ama elde ESKİ veri var — çizilir, "taze" DENMEZ. */
 export function BayatSerit({ hata, zaman }: { hata: string; zaman: Date | null }) {
   return (
-    <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2">
-      <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-      <p className="min-w-0 break-words text-amber-700 text-xs leading-relaxed dark:text-amber-300">
+    <div className="mb-3 flex items-start gap-2 rounded-md border border-uyari-h bg-uyari-t px-3 py-2">
+      <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-uyari" aria-hidden />
+      <p className="min-w-0 break-words text-uyari text-xs leading-relaxed">
         Tazeleme düştü — aşağıdaki sayılar{" "}
         {zaman ? `${zaman.toLocaleTimeString("tr-TR")} okumasından` : "önceki bir okumadan"} kalma, ŞU ANI göstermiyor.{" "}
         {hata}

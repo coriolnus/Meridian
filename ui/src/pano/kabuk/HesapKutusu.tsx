@@ -26,7 +26,7 @@ function Satir({ ad, deger, vurgu }: { ad: string; deger: string; vurgu?: "iyi" 
       <span
         className={
           "font-medium tabular-nums " +
-          (vurgu === "uyari" ? "text-amber-600 dark:text-amber-400" : vurgu === "iyi" ? "text-emerald-600 dark:text-emerald-400" : "")
+          (vurgu === "uyari" ? "text-uyari" : vurgu === "iyi" ? "text-emerald-600 dark:text-emerald-400" : "")
         }
       >
         {deger}
@@ -46,7 +46,7 @@ export function HesapKutusu({ bugun, hata }: { bugun: BugunGovdesi | null; hata:
       <div className="pb-1 font-medium text-[10px] text-muted-foreground uppercase tracking-wider">Hesap</div>
       {hata ? (
         // OKUNAMADI ≠ BOŞ. Kutuyu boş çizmek "hesap yok" derdi; neden yazılıyor.
-        <p className="text-[11px] text-amber-600 leading-snug dark:text-amber-400">Hesap okunamadı — {hata}</p>
+        <p className="text-[11px] text-uyari leading-snug">Hesap okunamadı — {hata}</p>
       ) : (
         <>
           <Satir ad="Broker" deger={bugun?.broker ?? MOD_OLCULEMEDI} />

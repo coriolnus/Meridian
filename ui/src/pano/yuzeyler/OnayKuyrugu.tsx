@@ -221,7 +221,7 @@ export function OnayKuyrugu() {
         </div>
 
         {sayimAyristi ? (
-          <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6">
+          <p className="rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6">
             Panonun sayımı ({ozet.isIsteyen}) ile sunucunun <code className="font-mono text-xs">inbox_count</code>u
             ({sunucuSayisi}) ayrışıyor. İki uç İKİ AYRI ANDA okundu (
             <code className="font-mono text-xs">/api/approvals</code> 15 sn,

@@ -169,7 +169,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, ErisimSatiri>[] = [
       }
       return (
         <Badge variant="outline" className="w-fit gap-1.5">
-          <span className={cn(NOKTA, v ? "bg-emerald-500" : "bg-amber-500")} />
+          <span className={cn(NOKTA, v ? "bg-emerald-500" : "bg-uyari")} />
           {v ? "TLS · çerez Secure" : "TLS yok · çerez Secure değil"}
         </Badge>
       );

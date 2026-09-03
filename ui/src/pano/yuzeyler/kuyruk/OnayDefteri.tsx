@@ -61,7 +61,7 @@ export function OnayDefteri({
       }
     >
       {seviye !== undefined && seviye < 1 ? (
-        <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6">
+        <p className="rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6">
           Sistem <strong>L{seviye}</strong>. Uç bu seviyede defteri HİÇ döndürmüyor
           (<code className="font-mono text-xs">pending: [] if level &lt; 1</code>) — aşağıdaki liste
           bir ölçüm değil, kapalı bir kapıdır. Defterde satır olabilir: kapı-bağlamayan kararlar

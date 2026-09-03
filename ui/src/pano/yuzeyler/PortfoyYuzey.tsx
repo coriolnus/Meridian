@@ -381,7 +381,7 @@ export function PortfoyYuzey() {
             <CardContent>
               <PozisyonTablosu satirlar={defter.satirlar} />
               {defter.anahtarsiz > 0 && (
-                <p className="mt-3 text-amber-600 text-xs dark:text-amber-400">
+                <p className="mt-3 text-uyari text-xs">
                   {defter.anahtarsiz} satır sembolsüz geldi ve birleştirilemedi — tabloda YOK. Kitap tarafında
                   `ticker`, broker tarafında `symbol` alanı okunamadı.
                 </p>

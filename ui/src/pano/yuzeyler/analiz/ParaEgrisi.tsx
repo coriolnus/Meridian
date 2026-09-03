@@ -156,7 +156,7 @@ function EgriBeyaniBlogu({ beyani, atlanan }: { beyani: EgriBeyani | undefined; 
       </dl>
 
       {atlanan > 0 || (beyani.okunamayan_nokta ?? 0) > 0 ? (
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-amber-700 text-xs leading-relaxed dark:text-amber-300">
+        <p className="rounded-md border border-uyari-h bg-uyari-t px-3 py-2 text-uyari text-xs leading-relaxed">
           Çözülemeyen nokta: grafik {atlanan} noktayı atladı, uç kendi taramasında{" "}
           {sayi(beyani.okunamayan_nokta, 0) ?? "ölçülemedi"} tanesini sayamadı olarak işaretledi. Atlanan noktalar seriye SIFIR
           olarak girmedi — çizilmedi.

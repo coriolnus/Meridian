@@ -140,7 +140,7 @@ function KopruKarti({ m }: { m: BrokerMutabakati | undefined }) {
               <span
                 className={cn(
                   "font-semibold text-lg tabular-nums",
-                  kalinti === 0 ? "text-muted-foreground" : "text-amber-600 dark:text-amber-400",
+                  kalinti === 0 ? "text-muted-foreground" : "text-uyari",
                 )}
               >
                 {para(kalinti)}
@@ -242,7 +242,7 @@ function AdetKarti({ m }: { m: PozisyonMutabakati | undefined }) {
                         className="gap-1 tabular-nums"
                         title={`kitap ${r.kitap ?? "?"} · broker ${r.broker ?? "?"}`}
                       >
-                        <AlertTriangle className="size-3 text-amber-600 dark:text-amber-400" />
+                        <AlertTriangle className="size-3 text-uyari" />
                         {r.ticker ?? "sembolsüz"} {r.kitap ?? "?"}/{r.broker ?? "?"}
                       </Badge>
                     ))}
@@ -391,7 +391,7 @@ function AynaKarti({ r, akis }: { r: MutabakatKaydi | undefined; akis: AkisSagli
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {sayaclar.map((s) => (
             <div key={s.ad} className="rounded-md border p-2" title={s.not}>
-              <div className={cn("font-semibold text-xl tabular-nums", s.n > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")}>
+              <div className={cn("font-semibold text-xl tabular-nums", s.n > 0 ? "text-uyari" : "text-muted-foreground")}>
                 {s.n}
               </div>
               <div className="text-[11px] leading-snug">{s.ad}</div>

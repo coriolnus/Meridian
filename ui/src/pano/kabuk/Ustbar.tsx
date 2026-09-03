@@ -73,9 +73,9 @@ function DurumHapi() {
   // DÖRT AYRI HÂL, DÖRT AYRI CÜMLE. Eskiden "okunamadı" ile "sakin" aynı sönük
   // stille çıkabiliyordu; okunamayan bir sistemi sakin sanmak en pahalı yanlış.
   const hal = oturumDustu
-    ? { metin: "oturum düştü", sinif: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400", Ikon: AlertTriangle, yol: null }
+    ? { metin: "oturum düştü", sinif: "border-uyari-h bg-uyari-t text-uyari", Ikon: AlertTriangle, yol: null }
     : hata
-      ? { metin: "durum okunamadı", sinif: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400", Ikon: AlertTriangle, yol: null }
+      ? { metin: "durum okunamadı", sinif: "border-uyari-h bg-uyari-t text-uyari", Ikon: AlertTriangle, yol: null }
       : veri == null || veri.halted === undefined
         // BOŞ GÖVDE "SAKİN" DEĞİLDİR. `{}` dönen bir uçta `veri.halted` undefined olur ve
         // yalancı bir mantık onu "durdurulmamış" diye okurdu — yani ÖLÇÜLMEMİŞ bir sistemi
@@ -84,7 +84,7 @@ function DurumHapi() {
         : veri.halted
           ? { metin: "DURDURULDU", sinif: "border-destructive/50 bg-destructive/10 text-destructive", Ikon: OctagonPause, yol: MUDAHALE_YOLU }
           : veri.heartbeat?.breaker_tripped
-            ? { metin: "kesici tetikli", sinif: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400", Ikon: AlertTriangle, yol: MUDAHALE_YOLU }
+            ? { metin: "kesici tetikli", sinif: "border-uyari-h bg-uyari-t text-uyari", Ikon: AlertTriangle, yol: MUDAHALE_YOLU }
             : { metin: "sakin", sinif: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400", Ikon: CircleDot, yol: null };
 
   /* DAR EKRANDA HAP KISALIR, SİMGEYE İNMEZ (2026-08-31, Rol-1'in 375px ölçümü).

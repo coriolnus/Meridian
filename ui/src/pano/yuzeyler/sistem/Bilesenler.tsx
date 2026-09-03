@@ -119,13 +119,13 @@ const SINIF: Record<InfraDurumSinifi, { etiket: string; ton: RozetTonu; ipucu: s
 const TON_METNI: Record<RozetTonu, string> = {
   iyi: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   notr: "text-muted-foreground",
-  dikkat: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  dikkat: "bg-uyari-t text-uyari",
   kotu: "",
 };
 const TON_NOKTASI: Record<RozetTonu, string> = {
   iyi: "bg-emerald-500",
   notr: "bg-muted-foreground/60",
-  dikkat: "bg-amber-500",
+  dikkat: "bg-uyari",
   kotu: "bg-destructive",
 };
 
@@ -331,7 +331,7 @@ function BeklentiHucresi({ b }: { readonly b: InfraBilesen }) {
         <span className="text-muted-foreground">beklenen: </span>
         <span
           className={cn(
-            bek.hal === "kurulmali" && "text-amber-600 dark:text-amber-400",
+            bek.hal === "kurulmali" && "text-uyari",
             bek.hal === "olculemedi" && "text-muted-foreground italic",
           )}
         >
@@ -343,7 +343,7 @@ function BeklentiHucresi({ b }: { readonly b: InfraBilesen }) {
         {kur.hal === "olculemedi" ? (
           <span className="text-muted-foreground italic">ölçülemedi</span>
         ) : (
-          <span className={cn(kur.hal === "kurulu_degil" && "text-amber-600 dark:text-amber-400")}>
+          <span className={cn(kur.hal === "kurulu_degil" && "text-uyari")}>
             {kur.hal === "kurulu" ? "kurulu" : "kurulu değil"}
           </span>
         )}
@@ -473,7 +473,7 @@ function BeklenmedikBirimler({ g }: { readonly g: InfraGovdesi }) {
   // okuyucuya "bu dalda da bir bedel beyanı var" diye yanlış bir izlenim veriyordu.
   const bedel = beklenmedikBedelOku(g);
   return (
-    <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+    <div className="rounded-lg border border-uyari-h bg-uyari-t p-3">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <Badge
           variant="outline"
@@ -664,7 +664,7 @@ function BilesenGovdesi({
           <Satir etiket="Kurulmalı (eylem) / şablon">
             <span className="tabular-nums">
               <span
-                className={cn(kurulmaliN > 0 && "font-medium text-amber-600 dark:text-amber-400")}
+                className={cn(kurulmaliN > 0 && "font-medium text-uyari")}
                 title="Birim dosyası `deploy/<host>/` altında var ama makineye kurulmamış — sudo ister, operatör işi."
               >
                 {kurulmaliN}
@@ -684,7 +684,7 @@ function BilesenGovdesi({
             </span>
           </Satir>
           <Satir etiket="Dikkat gerektiren">
-            <span className={cn("tabular-nums", dikkatN > 0 && "text-amber-600 dark:text-amber-400")}>
+            <span className={cn("tabular-nums", dikkatN > 0 && "text-uyari")}>
               {dikkatN}
               {dikkatN > 0 ? " (durmuş / arızalı / tetikleyicisi ölçülemeyen)" : ""}
             </span>
@@ -699,7 +699,7 @@ function BilesenGovdesi({
           </Satir>
           <Satir etiket="İddiası kanıtsız kalan">
             <span
-              className={cn("tabular-nums", kanitsizN > 0 && "text-amber-600 dark:text-amber-400")}
+              className={cn("tabular-nums", kanitsizN > 0 && "text-uyari")}
               title="Ucun sınıfı bir sağlık iddiası taşıyor ama dayandığı ölçüm (`Type=oneshot` / `beklenen` / ham `ActiveState`) bu satırda yok — rozet yeşile boyanmadı, `kanıtsız` işaretiyle amber'e düştü."
             >
               {kanitsizN}
@@ -964,7 +964,7 @@ function BilesenGovdesi({
                     ) : (
                       <span
                         className={cn(
-                          b.restart_n > 0 && "font-medium text-amber-600 dark:text-amber-400",
+                          b.restart_n > 0 && "font-medium text-uyari",
                         )}
                       >
                         <Deger deger={b.restart_n} neden="Yeniden başlatma sayacı bildirilmedi" teknik="restart sayacı gelmedi" />

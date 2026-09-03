@@ -470,7 +470,7 @@ function FacetBeyani({
   return (
     <div className="flex flex-col gap-2 border-border/60 border-t pt-4 text-muted-foreground text-xs leading-relaxed">
       {blok?.cok_etiketli === true ? (
-        <p className="text-amber-700 dark:text-amber-300">
+        <p className="text-uyari">
           ÇOK ETİKETLİ FACET: bir kayıt birden çok satıra girebilir, `n` toplamı paydayı AŞAR. Satırları birbirine
           ekleyip yüzde çıkarma.
         </p>

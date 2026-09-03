@@ -188,7 +188,7 @@ function Cizelge({ ajan }: { ajan: AjanGovdesi }) {
                   <TableCell className="py-2.5">
                     <div className="flex flex-wrap gap-1">
                       {s.rolled_back ? (
-                        <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-300">
+                        <Badge variant="outline" className="border-uyari-h text-uyari">
                           geri alındı
                         </Badge>
                       ) : null}

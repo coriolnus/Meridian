@@ -234,7 +234,7 @@ export function KararPaneli({
       </div>
 
       {hedef.cesit === "plan" && halt === true ? (
-        <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6">
+        <p className="rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6">
           HALT çekili görünüyor. Uç bu durumda onayı REDDEDER (409: &quot;HALT aktif — yeni giriş
           silahlanmaz&quot;). Düğme yine de kilitlenmedi: bu bayrak 15 sn&apos;lik bir nabızdan geliyor
           ve kararı UÇ verir — panonun bayat bir okumayla onayı engellemesi, ölçülemeyen bir değere
@@ -413,7 +413,7 @@ export function KararPaneli({
             className={
               gonderimTonu(planSonuc) === "iyi"
                 ? "mt-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3"
-                : "mt-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3"
+                : "mt-2 rounded-md border border-uyari-h bg-uyari-t p-3"
             }
           >
             <div className="text-muted-foreground text-[11px] uppercase">İcra yolu (uç ne yaptı)</div>
@@ -437,7 +437,7 @@ export function KararPaneli({
             ) : null}
           </div>
           {planSonuc.icra_yasasi === false && planSonuc.not ? (
-            <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6">
+            <p className="mt-2 rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6">
               {planSonuc.not}
             </p>
           ) : null}

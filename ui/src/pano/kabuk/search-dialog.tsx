@@ -480,7 +480,7 @@ export function SearchDialog() {
               // `-mx-1`: Command kökünün `p-1` iç boşluğunu taşar, yani ayraç
               // CommandSeparator gibi tam genişlikte durur.
               "-mx-1 mt-1 border-t px-3 py-2 text-xs",
-              durumCumlesi.uyari ? "font-medium text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+              durumCumlesi.uyari ? "font-medium text-uyari" : "text-muted-foreground",
             )}
             role="status"
             aria-live="polite"

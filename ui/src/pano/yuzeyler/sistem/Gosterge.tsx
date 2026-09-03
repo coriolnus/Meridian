@@ -77,7 +77,7 @@ export function Gosterge({
       <span
         className={cn(
           "-mt-8 font-semibold text-2xl tabular-nums",
-          uyarida && "text-amber-600 dark:text-amber-400",
+          uyarida && "text-uyari",
           kritikte && "text-destructive",
         )}
       >

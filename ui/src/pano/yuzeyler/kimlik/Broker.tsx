@@ -316,7 +316,7 @@ function Govde({ v, ticaret }: { readonly v: AlpacaGovdesi; readonly ticaret: Sa
         <h3 className="font-medium text-sm">Açık pozisyonlar</h3>
         {pozisyonlar.length === 0 ? (
           bosListeSupheli ? (
-            <p className="text-amber-700 text-xs dark:text-amber-400">
+            <p className="text-uyari text-xs">
               Liste boş ama bu “pozisyon yok” DEMEK DEĞİL: <code className="text-[11px]">alpaca.positions()</code> API
               ulaşılamadığında da boş liste döndürüyor ve ayrımı{" "}
               <code className="text-[11px]">transport()</code> taşıyor.{" "}

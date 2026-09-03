@@ -265,9 +265,9 @@ export const Kapi = kapiKur<AdEki>({
   // BAYAT AMA ÇİZİLİYOR: bir ağ hıçkırığında ekranı boşaltmak da, bayatı taze
   // diye okutmak da yanlış. Üçüncü yol: çiz + damgala (veri.ts'in sözleşmesi).
   bayat: (hata, zaman) => (
-    <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2">
-      <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-      <p className="min-w-0 break-words text-amber-700 text-xs leading-relaxed dark:text-amber-300">
+    <div className="mb-3 flex items-start gap-2 rounded-md border border-uyari-h bg-uyari-t px-3 py-2">
+      <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-uyari" aria-hidden />
+      <p className="min-w-0 break-words text-uyari text-xs leading-relaxed">
         Tazeleme düştü — aşağısı{" "}
         {zaman ? `${zaman.toLocaleTimeString("tr-TR")} okumasından` : "önceki bir okumadan"} kalma,
         ŞU ANI göstermiyor. {hata}

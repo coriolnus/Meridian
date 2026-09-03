@@ -156,7 +156,7 @@ export function Cizelge() {
               className={
                 ozet.hukumGuvenilir
                   ? "text-muted-foreground text-xs leading-5"
-                  : "rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6"
+                  : "rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6"
               }
             >
               {ozet.hukumBeyani}

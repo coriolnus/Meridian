@@ -194,7 +194,7 @@ export function FlattenKapisi({
         </dl>
 
         {olcum.adet === 0 && olcum.neden !== null ? (
-          <p className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] leading-5 text-amber-700 dark:text-amber-400">
+          <p className="mt-2 rounded-sm border border-uyari-h bg-uyari-t p-2 text-[11px] leading-5 text-uyari">
             SIFIR &quot;POZİSYON YOK&quot; DEMEK DEĞİL: {olcum.neden}. Boş bir listeye bakıp
             &quot;kapatacak bir şey yok&quot; sonucunu çıkarma.
           </p>

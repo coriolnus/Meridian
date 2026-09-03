@@ -539,7 +539,7 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
   return (
     <div className="flex flex-col gap-4">
       {oturumDustu && (
-        <p className="text-amber-600 text-sm dark:text-amber-400">
+        <p className="text-uyari text-sm">
           En az bir bar isteği 401 döndü — OTURUM DÜŞTÜ. Aşağıdaki eksiklik "veri yok" değil, "sorulamadı"
           demektir; yeniden giriş yapılmalı.
         </p>
@@ -665,7 +665,7 @@ export function PozisyonSeyri({ satirlar }: { satirlar: readonly PozisyonSatiri[
       )}
 
       {rampaDondu && (
-        <p className="text-amber-600 text-xs dark:text-amber-400">
+        <p className="text-uyari text-xs">
           {cizim.seriler.length} seri çizildi ama renk rampasında {RAMPA_N} ton var — {RAMPA_N + 1}. seriden
           itibaren RENKLER TEKRARLIYOR ({cizim.seriler.filter((s) => s.rampaTekrari).map((s) => s.ticker).join(", ")}).
           Göstergedeki sıra rampanın sırasıdır; aynı renkli iki çizgiyi ayırmak için tooltip'e bakın.

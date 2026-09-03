@@ -444,7 +444,7 @@ export function KonsolidasyonKarti({
             teknik="türetim üç sayaç ister: toplam kayıt, bekleyen ve düşen birleştirme"
           />
         </Hucre>
-        <Hucre etiket="Bekleyen" ikon={AlertCircle} ikonSinifi="text-amber-500">
+        <Hucre etiket="Bekleyen" ikon={AlertCircle} ikonSinifi="text-uyari">
           <Deger deger={bekleyen} neden="Bekleyen sayacı gelmedi" teknik="bekleyen birleştirme sayacı yanıtta yok ya da sayı değil" />
         </Hucre>
         {/* ODAK GÖRÜNÜR (inceleme Ö-2, WCAG 2.4.7): çıplak `<button>` panonun ortak
@@ -754,7 +754,7 @@ function ZihinOzeti({ govde }: { readonly govde: SayfaliGovde<ZihinModeli> }) {
         <Hucre etiket="Güncel" ikon={CheckCircle2} ikonSinifi="text-[var(--color-seri-9)]">
           {tam(uyumlu)}
         </Hucre>
-        <Hucre etiket="Bayat" ikon={AlertCircle} ikonSinifi="text-amber-500">
+        <Hucre etiket="Bayat" ikon={AlertCircle} ikonSinifi="text-uyari">
           {tam(bayat)}
         </Hucre>
         <Hucre etiket="Okunan" ikon={Brain}>

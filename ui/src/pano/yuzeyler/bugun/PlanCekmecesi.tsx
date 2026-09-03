@@ -676,7 +676,7 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
           ) : null}
 
           {zatenOnayli ? (
-            <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6">
+            <p className="rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6">
               Bu plan ONAYLI (damga:{" "}
               <Metin
                 deger={plan.operator_onayi?.ts}
@@ -857,7 +857,7 @@ function PlanIcerik({ plan, tazele }: { readonly plan: PlanTamGovde; readonly ta
                 </p>
               ) : null}
               {sonuc.not ? (
-                <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm leading-6">
+                <p className="mt-2 rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6">
                   {sonuc.not}
                 </p>
               ) : null}

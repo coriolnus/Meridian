@@ -144,7 +144,7 @@ export function PozisyonTablosu({ satirlar }: { satirlar: readonly PozisyonSatir
                     {s.adetFarki !== null && s.adetFarki !== 0 && s.kitapAdet !== null && s.brokerAdet !== null && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="ml-1 cursor-help text-amber-600 text-xs dark:text-amber-400">≠</span>
+                          <span className="ml-1 cursor-help text-uyari text-xs">≠</span>
                         </TooltipTrigger>
                         <TooltipContent className="max-w-sm">
                           Kitap {adetBicim(s.kitapAdet)} · broker {adetBicim(s.brokerAdet)} — fark{" "}

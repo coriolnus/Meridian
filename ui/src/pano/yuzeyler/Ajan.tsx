@@ -293,13 +293,13 @@ export function Ajan() {
                 ile "listeyi hiç okuyamadım" aynı şey değildir. İkisini tek cümleye
                 indirmek, uç düştüğünde operatöre SAĞLAM bir yer imini sildirirdi. */}
             {secim.bulunamayan === null ? null : secim.listeOlculemedi ? (
-              <p className="shrink-0 border-amber-500/40 border-b bg-amber-500/5 px-4 py-1.5 text-[11px] text-amber-700 sm:px-6 dark:text-amber-400">
+              <p className="shrink-0 border-uyari-h border-b bg-uyari-t px-4 py-1.5 text-[11px] text-uyari sm:px-6">
                 Ajan listesi okunamadı, bu adresin karşılığı ölçülemedi:{" "}
                 <code className="font-mono">{secim.bulunamayan}</code> — adres yanlış OLMAYABİLİR;
                 okunamayan şey listenin kendisi. Yer imini silme, tazelemeyi dene.
               </p>
             ) : (
-              <p className="shrink-0 border-amber-500/40 border-b bg-amber-500/5 px-4 py-1.5 text-[11px] text-amber-700 sm:px-6 dark:text-amber-400">
+              <p className="shrink-0 border-uyari-h border-b bg-uyari-t px-4 py-1.5 text-[11px] text-uyari sm:px-6">
                 Ajan listesi okundu ve istenen muhatap içinde yok:{" "}
                 <code className="font-mono">{secim.bulunamayan}</code> — bunun yerine öneri hattı
                 açıldı. Bağ eski bir ada işaret ediyor olabilir.
@@ -437,7 +437,7 @@ function Baslik({
                 )}
               </span>
               {modelListesi !== null && modelListesi.length > 1 ? (
-                <span className="text-amber-700 dark:text-amber-400">
+                <span className="text-uyari">
                   bu pencerede {bicimSayi(modelListesi.length)} FARKLI model:{" "}
                   {modelListesi.join(" · ")}
                 </span>

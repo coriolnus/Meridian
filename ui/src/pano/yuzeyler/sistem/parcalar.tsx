@@ -158,11 +158,11 @@ export function KolRozet({ cekili, cekiliMetin, serbestMetin }: { readonly cekil
       className={cn(
         "gap-1.5",
         cekili
-          ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+          ? "bg-uyari-t text-uyari"
           : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
       )}
     >
-      <span className={cn("size-1.5 rounded-full", cekili ? "bg-amber-500" : "bg-emerald-500")} />
+      <span className={cn("size-1.5 rounded-full", cekili ? "bg-uyari" : "bg-emerald-500")} />
       {cekili ? cekiliMetin : serbestMetin}
     </Badge>
   );
@@ -213,7 +213,7 @@ export function OlcekCubugu({
         <span
           className={cn(
             "font-medium text-emerald-600 tabular-nums dark:text-emerald-400",
-            uyarida && "text-amber-600 dark:text-amber-400",
+            uyarida && "text-uyari",
             kritikte && "text-destructive",
           )}
         >
@@ -224,7 +224,7 @@ export function OlcekCubugu({
         <span
           className={cn(
             "block h-full rounded-full bg-emerald-500",
-            uyarida && "bg-amber-500",
+            uyarida && "bg-uyari",
             kritikte && "bg-destructive",
           )}
           style={{ width: `${v}%` }}

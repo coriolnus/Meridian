@@ -110,7 +110,7 @@ export function IzinHucresi({ deger, not }: { readonly deger: IzinDegeri; readon
       ? "text-emerald-600 dark:text-emerald-400"
       : deger === "yok"
         ? "text-red-600 dark:text-red-400"
-        : "text-amber-600 dark:text-amber-400";
+        : "text-uyari";
   return (
     <span className={cn("inline-flex items-start gap-1.5 text-left text-xs", renk)} title={not}>
       <Ikon className="mt-px size-3.5 shrink-0" aria-hidden />

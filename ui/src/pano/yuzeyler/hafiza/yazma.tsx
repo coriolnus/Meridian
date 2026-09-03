@@ -672,7 +672,7 @@ export function YazmaOnayi({
             )}
 
             {kunye.butce && !kismi ? (
-              <p className="flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-amber-700 text-xs dark:text-amber-400">
+              <p className="flex items-start gap-1.5 rounded-md border border-uyari-h bg-uyari-t p-2 text-uyari text-xs">
                 <TriangleAlert className="mt-0.5 size-3 shrink-0" aria-hidden />
                 <span>{BUTCE_UYARISI}</span>
               </p>
@@ -682,11 +682,11 @@ export function YazmaOnayi({
               /* KISMİ BAŞARI BLOĞU — kehribar, çünkü ne yeşil ne kırmızı: bir
                  kısmı oldu. Düz cümle önce, bacak künyeleri sonra. */
               <div
-                className="flex flex-col gap-1 rounded-md border border-amber-500/40 bg-amber-500/5 p-2"
+                className="flex flex-col gap-1 rounded-md border border-uyari-h bg-uyari-t p-2"
                 role="status"
                 aria-live="polite"
               >
-                <span className="text-amber-700 text-xs leading-4 dark:text-amber-400">{sonuc.eksik}</span>
+                <span className="text-uyari text-xs leading-4">{sonuc.eksik}</span>
                 <div className="mt-1">
                   {sonuc.bacaklar.map((b) => (
                     <BacakSatiri key={b.ad} b={b} />
