@@ -1,21 +1,31 @@
 "use client";
 
 /* ============================================================================
-   HAFIZA · MERİDİAN DERSLERİ — Bilgi Tabanı görünümünün üçüncü alt sekmesi
+   HAFIZA · MERİDİAN DERSLERİ — dokuzuncu görünümün içeriği
    ----------------------------------------------------------------------------
-   BU SEKME ÜST YÜZEYDE YOKTUR VE ADINDA BUNU SÖYLER. Hindsight Control Plane'in
-   Bilgi Tabanı görünümü iki alt sekme taşır (sayfa ağacı · zihin modelleri);
-   üçüncüsü Meridian'ın kendi eklediğidir ve içeriği Hindsight korpusunun
-   PARÇASI DEĞİLDİR: korpus depo belgelerinden beslenir (docs/, araştırma
-   kartları, üst düzey .md), `state/` dizini dışarıdadır. Buradaki dersler
-   Meridian'ın KENDİ öğrenme döngüsünün çıktısıdır ve o çıktı hafıza bankasına
-   hiç girmemiştir. Etiketsiz bir sekme, iki ayrı korpusu tek korpus sanmaya
-   davet ederdi.
+   BU BİLEŞEN CP PARİTESİNDEN DEĞİLDİR VE ADINDA BUNU SÖYLER. Hindsight Control
+   Plane'in Bilgi Tabanı görünümü iki alt sekme taşır (sayfa ağacı · zihin
+   modelleri); buradaki içerik Meridian'ın kendi eklediğidir ve Hindsight
+   korpusunun PARÇASI DEĞİLDİR: korpus depo belgelerinden beslenir (docs/,
+   araştırma kartları, üst düzey .md), `state/` dizini dışarıdadır. Buradaki
+   dersler Meridian'ın KENDİ öğrenme döngüsünün çıktısıdır ve o çıktı hafıza
+   bankasına hiç girmemiştir. Etiketsiz bir görünüm, iki ayrı korpusu tek
+   korpus sanmaya davet ederdi.
 
-   NEREDEN GELDİ: bu sunum eski "Belgeler" rafı yüzeyindeydi (`Hafiza.tsx`) ve o
-   yüzey 2026-09-02'de tümüyle kalktı — rafın iki bölümü Hafıza yüzeyinin ilgili
-   görünümlerine dağıldı, çift üretim olmadan. Ayrıştırıcı da (`damitim.ts`)
-   kopyalanmadı, taşındı.
+   ÇAĞRILDIĞI YER TSK-118'DE DEĞİŞTİ (2026-09-03, operatör K8: "dokuzuncu nav
+   durağı aç"): 2026-09-02'den TSK-118'e kadar bu bileşen Bilgi Tabanı
+   görünümünün ÜÇÜNCÜ SEKMESİYDİ (`?sekme=dersler`, `BilgiTabani.tsx`); artık
+   kendi görünümü (`hafiza-dersler`, `alanlar.ts::YUZEYLER.memory.bolumler`) ve
+   o görünümün gövdesi `Dersler.tsx`dir. BU DOSYA TAŞINMADI — import yolu aynı
+   kaldı, yalnız ÇAĞRILDIĞI YER değişti (`Dersler.tsx` bu bileşeni `BolumKart`
+   ile sarıp çiziyor, `BilgiTabani.tsx` artık onu HİÇ içe aktarmıyor). Adı hâlâ
+   "Meridian dersleri" — etiketsiz bir görünüm, iki ayrı korpusu tek korpus
+   sanmaya davet ederdi (ilk taşımada da geçerliydi, TAŞI/ÇOĞALTMA aynı kaldı).
+
+   NEREDEN GELDİ (2026-09-02 taşıması, TSK-118'den ÖNCEKİ tarih): bu sunum eski
+   "Belgeler" rafı yüzeyindeydi (`Hafiza.tsx`) ve o yüzey 2026-09-02'de tümüyle
+   kalktı — rafın iki bölümü Hafıza yüzeyinin ilgili görünümlerine dağıldı, çift
+   üretim olmadan. Ayrıştırıcı da (`damitim.ts`) kopyalanmadı, taşındı.
 
    BU DOSYA AJANIN HAFIZASIDIR, bir günlük değil: uç şerhi "Injected into every
    reflection" diyor (api.py::api_memory) — yani buradaki her madde, bir sonraki
@@ -74,7 +84,7 @@ export function MeridianDersleri() {
   return (
     <div className="flex flex-col gap-3">
       <p className="rounded-md border border-dashed p-3 text-muted-foreground text-xs leading-relaxed">
-        <span className="font-medium text-foreground">Bu sekme üst yüzeyde yok. </span>
+        <span className="font-medium text-foreground">Bu görünüm üst yüzeyde yok. </span>
         Buradaki dersler Meridian&apos;ın kendi öğrenme döngüsünün çıktısıdır (çalışma durumundaki
         damıtım dosyası) ve hafıza bankasının korpusunda DEĞİLDİR — korpus depo belgelerinden
         beslenir, çalışma durumu dizini dışarıdadır. İki listeyi aynı korpus sanmamak için not

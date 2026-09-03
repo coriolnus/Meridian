@@ -156,7 +156,9 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   "kapi-rotalar": ["rota", "route", "llm", "openrouter", "model", "fallback", "zincir", "egress"],
   "kapi-metrikler": ["trafik", "istek", "durum kodu", "429", "sayac", "metrik"],
   "kapi-fazlar": ["faz", "tsk-089", "kurulum", "ingress", "filo", "kota"],
-  // HAFIZA YÜZEYİ (TSK-091, bilgi mimarisi TSK-108'de sekiz görünüme genişledi).
+  // HAFIZA YÜZEYİ (TSK-091, bilgi mimarisi TSK-108'de sekiz görünüme genişledi;
+  // TSK-118'de (2026-09-03, operatör K8: "dokuzuncu nav durağı aç") dokuza çıktı
+  // — dokuzuncu CP paritesinden değil, gerekçe `alanlar.ts::YUZEYLER.memory`de).
   // Kapı ile aynı gerekçe: kimlikler `hafiza-` önekli (kayıt sözlüğü bölüm kimliğini
   // KÜRESEL tutuyor ve çıplak `hafiza` Belgeler'de dolu) ama operatör "recall", "bank",
   // "token" diye arar — anahtarlar onun aklındaki kelimeyi taşır, başlıktakini değil.
@@ -183,26 +185,15 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   // sekmesinin ikinci alt sekmesindedir. Anahtar eski yerinde kalsaydı palet
   // operatörü modelleri ÇİZMEYEN bir sayfaya gönderirdi — çalışan ama yanlış
   // yere giden bir bağ, çalışmayan bağdan daha sinsidir.
-  // BELGE RAFI YÜZEYİ KALKTI (2026-09-02) VE ANAHTARLARI BURAYA TAŞINDI, silinmedi:
-  // rafın `hafiza` bölümü ("ders", "lesson", "lessons.md") artık bu görünümün
-  // "Meridian dersleri" alt sekmesidir. Emekli bir bölüm kimliğini tabloda BIRAKMAK
-  // ölü satır olurdu — anahtar tablosu yalnız KAYITLI bölümler için okunuyor
-  // (`ARAMA_ANAHTARLARI`), orada kalan satır hiçbir aramayı bulmaz ve okunmadığı
-  // için bayatladığı da fark edilmez.
   //
-  // PALET SEKMEYE DEĞİL GÖRÜNÜME İNER — VE BU BİR ÖLÇÜM SONUCUDUR, tercih değil
-  // (nihai inceleme Ö-1, 2026-09-03). Sekme artık adreste yaşıyor
-  // (`gorunumler.ts::SEKME_SORGU_ADI`) ve iki giriş kapısı — sohbet hattındaki
-  // "… → Meridian dersleri" bağı ve `#hafiza` yer imi — sorguyu TAŞIYOR. Palet
-  // taşımıyor, çünkü paletin maddeleri KENAR ÇUBUĞU AĞACINDAN türetiliyor
-  // (`search-dialog.tsx::searchItems` ← `gezinme.ts`); sekmeye inen bir madde
-  // eklemek, kenar çubuğuna dokuzuncu bir durak ve yüzey kaydına saymadığı bir
-  // kimlik eklemek olurdu (Rol-1 hükmü: `alanlar.ts` sayaçlarına DOKUNULMAZ).
-  // Bedeli ölçüldü ve kabul edildi: "lessons.md" araması Bilgi Tabanı görünümüne
-  // iner ve "Meridian dersleri" sekmesi orada ADIYLA görünür — yani varış yanlış
-  // değil, bir tık uzak. Yanlış varış olan iki bağ düzeltildi; bu, o sınıfta değil.
+  // "DERS"/"LESSON"/"LESSONS.MD"/"DAMITIM" ARTIK BURADA DEĞİL (TSK-118, 2026-09-03,
+  // operatör K8): 2026-09-02'de buraya taşınmışlardı çünkü Meridian dersleri Bilgi
+  // Tabanı'nın üçüncü SEKMESİYDİ. TSK-118 o sekmeyi kaldırdı — dersler kendi
+  // görünümüne taşındı (`hafiza-dersler`, tablonun sonunda) ve anahtarlar onunla
+  // BİRLİKTE gitti. Burada bırakmak, artık var olmayan bir sekmeye götüren ölü bir
+  // anahtar seti olurdu (bu tablonun kendi kuralı, yukarıda).
   "hafiza-bilgi": ["bilgi", "knowledge", "sayfa", "agac", "not", "zihin modeli", "mental model",
-                   "cikarim", "tazelik", "cron", "ders", "lesson", "lessons.md", "damitim"],
+                   "cikarim", "tazelik", "cron"],
   "hafiza-recall": ["recall", "sorgu", "arama", "cevap", "getir", "skor", "iz", "trace"],
   "hafiza-reflect": ["reflect", "dusun", "think", "gozlem", "observation", "kapsam", "scope",
                      "consolidation"],
@@ -214,6 +205,23 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   "hafiza-yapilandirma": ["config", "ayar", "retain", "denetim", "audit", "hareket", "yazim",
                           "llm", "kota", "token", "cagri", "kullanim", "islem", "operations",
                           "webhook", "bellek savunmasi", "memory defense"],
+  //
+  // MERİDİAN DERSLERİ — DOKUZUNCU KİMLİK, CP PARİTESİNDEN DEĞİL (TSK-118, 2026-09-03,
+  // operatör K8: "dokuzuncu nav durağı aç"). Anahtarlar `hafiza-bilgi`den TAŞINDI
+  // (yukarıdaki not) — eskiden "lessons.md" arayan operatör Bilgi Tabanı'nın üçüncü
+  // sekmesine düşüyordu, artık doğrudan bu görünüme düşüyor.
+  //
+  // PALET SEKMEYE DEĞİL GÖRÜNÜME İNER — VE BU BİR ÖLÇÜM SONUCUDUR, tercih değil
+  // (nihai inceleme Ö-1, 2026-09-03). TSK-118 (2026-09-03, operatör K8): dersler
+  // artık görünüm — palet YİNE görünüme iner, sekmeye değil; PARK-1'in "sekmeye
+  // inmez" ilkesi KORUNUYOR, çözüm dersleri sekme olmaktan çıkarmaktı. Önceki
+  // turda bu ilke bir SINIR olarak belgeleniyordu: "sekmeye inen bir madde eklemek,
+  // kenar çubuğuna dokuzuncu bir durak ve yüzey kaydına saymadığı bir kimlik
+  // eklemek olurdu (Rol-1 hükmü: `alanlar.ts` sayaçlarına DOKUNULMAZ)". TSK-118 o
+  // sınırı madde eklemeden, KAYNAĞI DEĞİŞTİREREK aştı: dersler artık gerçekten
+  // kayıtlı bir görünüm (`alanlar.ts::YUZEYLER.memory.bolumler`, sayaç 42'den
+  // 43'e bilerek çıktı) ve tam da o dokuzuncu durak — ama sayılan, uydurma değil.
+  "hafiza-dersler": ["ders", "lesson", "lessons.md", "damitim"],
 };
 
 const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {

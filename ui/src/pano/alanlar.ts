@@ -8,11 +8,14 @@
    burada BİREBİR eşleşiyordu; eşleşmeyen bölüm YOK ve düşen bölüm YOK.
 
    KAYIT O GÜNDEN BERİ BÜYÜDÜ ve sayı burada DONDURULMAZ (bayat-beyan sınıfı): bugün
-   16 yüzey · 42 bölüm (ölçüldü 2026-09-02, TSK-108 Görev 5 sonrası: Hafıza dörtten
-   sekize çıktı; şablonun "File Manager" karşılığı olan belge rafı yüzeyi İKİ bölümüyle
-   birlikte KALKTI — dersler Hafıza'nın Bilgi Tabanı görünümüne, karar arşivi künyesi
-   Hafıza'nın Belgeler görünümüne taşındı, çünkü o belgeler hafıza bankasına zaten
-   işlenmişti ve pano onları iki ayrı sayfada iki kez gösteriyordu).
+   16 yüzey · 43 bölüm (ölçüldü 2026-09-03, TSK-118 sonrası; önceki ölçüm 2026-09-02
+   TSK-108 Görev 5: Hafıza dörtten sekize çıktı; şablonun "File Manager" karşılığı olan
+   belge rafı yüzeyi İKİ bölümüyle birlikte KALKTI — dersler Hafıza'nın Bilgi Tabanı
+   görünümüne, karar arşivi künyesi Hafıza'nın Belgeler görünümüne taşındı, çünkü o
+   belgeler hafıza bankasına zaten işlenmişti ve pano onları iki ayrı sayfada iki kez
+   gösteriyordu). TSK-118 (2026-09-03, operatör K8: "dokuzuncu nav durağı aç") 42'yi
+   43'e çıkardı: dersler Bilgi Tabanı'nın ÜÇÜNCÜ SEKMESİ olmaktan çıkıp kendi görünümüne
+   (`hafiza-dersler`) taşındı — ikinci bir taşıma, ilk taşımanın devamı değil.
    Şablonda karşılığı OLMAYAN iki yüzey var:
    `gateway` (Kapı, TSK-090) ve `memory` (Hafıza, TSK-091) — yukarıdaki "birebir
    eşleşme" cümlesi göç turunun ölçümüdür, bugünün sözleşmesi değil. İkisi de şablondan
@@ -267,11 +270,21 @@ export const YUZEYLER = {
      söylemek zorunda — yoksa kenar çubuğu ipucu, kırıntı ve ⌘K paleti üç ayrı
      yerde aynı yanlış vaadi tekrarlar.
 
-     SEKİZ BÖLÜM = SEKİZ GEZİNME DURAĞI (v288 paritesi: her kayıtlı bölümün ekranda bir
-     `bolum-hafiza-*` çapası VAR). Tersi zorunlu değil: ekranda kayıtsız alt-çapalar da yaşar
-     (Görev 9'da Ana Sayfa beş alt-çapa doğurdu — bellek deposu/konsolidasyon/etkinlik…);
-     v288 ters yönü 2026-08-25'te bilerek çividen çıkardı ("bir çapa gezinme durağı olmak
-     zorunda değildir").
+     DOKUZ BÖLÜM = DOKUZ GEZİNME DURAĞI (v288 paritesi: her kayıtlı bölümün ekranda bir
+     `bolum-hafiza-*` çapası VAR; TSK-118, 2026-09-03, operatör K8: "dokuzuncu nav durağı
+     aç" — sayı sekizden dokuza ÇIKTI, aşağıdaki paragraf hangi birin yeni olduğunu söylüyor).
+     Tersi zorunlu değil: ekranda kayıtsız alt-çapalar da yaşar (Görev 9'da Ana Sayfa beş
+     alt-çapa doğurdu — bellek deposu/konsolidasyon/etkinlik…); v288 ters yönü 2026-08-25'te
+     bilerek çividen çıkardı ("bir çapa gezinme durağı olmak zorunda değildir").
+
+     DOKUZUNCUSU CP PARİTESİNDEN DEĞİL: ilk sekizin sırası CP `sidebar.tsx`iyle hâlâ birebir
+     (yukarıdaki gerekçe), `hafiza-dersler` ise Meridian'ın kendi eklediği — CP'nin sekiz
+     duraklı listesinde hiç karşılığı yok. TSK-118'e kadar bu içerik Bilgi Tabanı'nın üçüncü
+     SEKMESİYDİ (`?sekme=dersler`, `komutlar.ts`teki PARK-1 kaydı bunu bir ÖLÇÜLMÜŞ SINIR
+     olarak belgeliyordu: palet KENAR ÇUBUĞU AĞACINDAN türer ve bir sekmeye inen madde
+     eklemek kayıt sözlüğünün SAYMADIĞI bir kimlik eklemek olurdu). TSK-118 o sınırı madde
+     EKLEMEDEN, KAYNAĞI DEĞİŞTİREREK çözdü: dersler artık gerçekten kayıtlı bir bölüm ve
+     palet yine bir GÖRÜNÜME iniyor — bir SEKMEYE değil.
 
      ÇİFT NAV ÇÖZÜMÜ TERSİNE DÖNDÜ (operatör kararı 2026-09-02, dağıtım sonrası
      ekran görüntüsü): iki gezinme vardı — küresel sol çubukta sekiz alt madde ve
@@ -303,6 +316,11 @@ export const YUZEYLER = {
       { kimlik: "hafiza-belgeler", baslik: "Belgeler", soru: "Hangi belgeler işlendi, içlerinden kaç kayıt çıktı?", ikon: FileText },
       { kimlik: "hafiza-varliklar", baslik: "Varlıklar", soru: "Kayıtlarda hangi isimler geçiyor?", ikon: Users },
       { kimlik: "hafiza-yapilandirma", baslik: "Yapılandırma", soru: "Bu banka nasıl ayarlanmış, arkada neler koştu?", ikon: Settings2 },
+      /* TSK-118 (2026-09-03, operatör K8: "dokuzuncu nav durağı aç") — gerekçe yukarıda
+         ("DOKUZUNCU BÖLÜM CP PARİTESİNDEN DEĞİL"). TAŞINDI, ÇOĞALTILMADI (TSK-124 dersi):
+         eskiden Bilgi Tabanı'nın üçüncü sekmesiydi, bileşen (`MeridianDersleri.tsx`) aynı
+         dosyada duruyor, yalnız çağrıldığı yer (`Dersler.tsx` görünüm gövdesi) değişti. */
+      { kimlik: "hafiza-dersler", baslik: "Meridian dersleri", soru: "Sistem kendi derslerinden ne damıttı?", ikon: GraduationCap },
     ],
   },
 
@@ -482,17 +500,21 @@ export const ROTA_TAKMA_ADLARI: Readonly<
   ajan: { yuzey: "academy", bolum: "ajan" },
   skiller: { yuzey: "academy", bolum: "skiller" },
   hermes: { yuzey: "productivity", bolum: "hermes" },
-  // `hafiza` ESKİ ADI ARTIK HAFIZA YÜZEYİNİN BİLGİ TABANI GÖRÜNÜMÜNE ÇÖZÜLÜR
-  // (2026-09-02): belge rafı yüzeyi kalktı, dersler oraya taşındı. Takma adı
-  // silmek `#hafiza` yer imini varsayılan yüzeye düşürürdü — sessiz yanlış varış.
+  // `hafiza` ESKİ ADI ARTIK DOĞRUDAN "MERİDİAN DERSLERİ" GÖRÜNÜMÜNE ÇÖZÜLÜR
+  // (TSK-118, 2026-09-03, operatör K8). Takma adı silmek `#hafiza` yer imini
+  // varsayılan yüzeye düşürürdü — sessiz yanlış varış.
   //
-  // SEKME DE TAŞINIR (nihai inceleme Ö-1, 2026-09-03): eski `#hafiza` yer imi raf
-  // yüzeyinde DOĞRUDAN dersleri açıyordu. Yalnız görünüme yönlendirmek, adresi
-  // koruyup VARIŞI kaybetmekti: bağ çalışır, operatör başka bir sekmede uyanır.
-  // Sekme adı `HAFIZA_BILGI_SEKMELERI` ile TEK kaynaktan gelir (`gorunumler.ts`);
-  // burada dizge yazılı çünkü `alanlar.ts` o modülü ithal edemez (döngü) — ayrışma
-  // çivisi `tests/test_hafiza_yazma_akisi_v378.py` tarafında.
-  hafiza: { yuzey: "memory", bolum: "hafiza-bilgi", sorgu: { sekme: "dersler" } },
+  // İKİNCİ TAŞIMA (ilkinin devamı, 2026-09-02'den): raf yüzeyi kalkınca `#hafiza`
+  // Bilgi Tabanı görünümünün üçüncü SEKMESİNİ (`?sekme=dersler`) DOĞRUDAN açacak
+  // biçimde bağlandı (nihai inceleme Ö-1) — o sekme TSK-118'de kalktı, dersler
+  // kendi görünümüne taşındı. Takma ad aynı VARIŞI korumak için buraya taşındı;
+  // sorgu artık GEREKMİYOR, bölüm kimliğinin kendisi hedefi taşıyor.
+  //
+  // ESKİ SEKME ADRESİ (`hafiza-bilgi?sekme=dersler`) hâlâ dolaşıyor olabilir
+  // (sohbet hattının TSK-118 öncesi bağı, operatörün kendi yer imleri) — o adres
+  // AYRI bir köprüyle (`gorunumler.ts::gorunumCoz`) aynı görünüme çözülür; bu
+  // takma ad ondan bağımsız İKİNCİ bir giriş kapısıdır.
+  hafiza: { yuzey: "memory", bolum: "hafiza-dersler" },
   mudahale: { yuzey: "infrastructure", bolum: "mudahale" },
   ayarlar: { yuzey: "profile", bolum: "ayarlar" },
 };

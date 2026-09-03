@@ -211,10 +211,15 @@ function HafizaMesaji({
         Tam metin:{" "}
         {/* BAĞ METNİ NEREYE GİDECEĞİNİ SÖYLÜYOR, ADRES DE ORAYA GİDİYOR (nihai
             inceleme Ö-1, 2026-09-03): burada önce sorgusuz adres vardı ve bağ
-            "Meridian dersleri" derken sayfa ağacını açıyordu. Sekme adı
-            `gorunumler.ts::HAFIZA_BILGI_SEKMELERI`ndendir. */}
-        <a className="underline underline-offset-2" href="#/dashboard/memory/hafiza-bilgi?sekme=dersler">
-          Hafıza → Bilgi Tabanı → Meridian dersleri
+            "Meridian dersleri" derken sayfa ağacını açıyordu.
+            TSK-118'DE GÜNCELLENDİ (2026-09-03, operatör K8): dersler Bilgi
+            Tabanı'nın sekmesi olmaktan çıkıp kendi görünümüne (`hafiza-dersler`,
+            `alanlar.ts`) taşındı; bağ ve kırıntı metni buna göre değişti. Eski
+            sekmeli adres (`hafiza-bilgi?sekme=dersler`) hâlâ çalışır — köprüsü
+            `gorunumler.ts::gorunumCoz`de — ama bu bağ artık DOĞRUDAN yeni
+            görünüme gider, köprüye ihtiyaç duymaz. */}
+        <a className="underline underline-offset-2" href="#/dashboard/memory/hafiza-dersler">
+          Hafıza → Meridian dersleri
         </a>
       </p>
     </div>

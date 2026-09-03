@@ -8,6 +8,13 @@
    kenar çubuğu durağına bölmek daha "düzenli" görünürdü ama o yüzeyi bilen bir
    okuyucu modelleri aradığı yerde bulamazdı.
 
+   ÜÇÜNCÜ SEKME EMEKLİ OLDU (TSK-118, 2026-09-03, operatör K8: "dokuzuncu nav
+   durağı aç"): "Meridian dersleri" bir süre burada ÜÇÜNCÜ (üst yüzeyde karşılığı
+   olmayan) bir sekmeydi. TSK-118 onu TAŞIDI, çoğaltmadı (TSK-124 dersi): içerik
+   artık kendi görünümü (`hafiza-dersler`, `alanlar.ts::YUZEYLER.memory.
+   bolumler`), gövdesi `Dersler.tsx`. Bu dosya `MeridianDersleri`yi ARTIK içe
+   aktarmıyor — iki yerden aynı bileşene erişim tek-kaynak yasasını ihlal ederdi.
+
    ÜST YÜZEYİN KENDİ ŞERHİ BUNU AÇIKLIYOR: bir SAYFA, ağaçta yeri olan bir ZİHİN
    MODELİDİR — sayfanın tazelik satırı ile modelin tazelik satırı aynı şeydir.
    Bu yüzden ikisi de aynı bileşenle çiziliyor (`ZihinModelleri.tsx::TazelikSatiri`);
@@ -46,7 +53,6 @@ import { BolumKart, Kapi as UcKapisi, Olculemedi, Satir } from "../sistem/parcal
 
 import { bilgiSekmesiCoz, sekmeliYol, type HafizaBilgiSekmesi } from "./gorunumler";
 import { Bolme, Cipler, Faz2Dugme, Faz2Grup, HamSatirlar, ZarfKapisi, damga, listeye, metin, sayi, sozluk } from "./parcalar";
-import { MeridianDersleri } from "./MeridianDersleri";
 import { TazelikSatiri, ZihinModelleri } from "./ZihinModelleri";
 import type { BilgiAgaci, BilgiAramaGovdesi, BilgiDugumu, BilgiSayfasi, HafizaZarfi, ZihinModeli } from "./uctipleri";
 
@@ -548,22 +554,9 @@ export function BilgiTabani({ bank, kayit }: { readonly bank: string | null; rea
         <TabsList>
           <TabsTrigger value="sayfalar">Sayfalar</TabsTrigger>
           <TabsTrigger value="modeller">Zihin modelleri</TabsTrigger>
-          {/* ÜÇÜNCÜ SEKME ÜST YÜZEYDE YOK ve adı bunu söylüyor (2026-09-02):
-              buradaki dersler Meridian'ın kendi öğrenme döngüsünden gelir ve
-              hafıza bankasının korpusunda değildir. Adsız bir "Dersler" sekmesi,
-              iki ayrı korpusu tek korpus sanmaya davet ederdi. */}
-          <TabsTrigger value="dersler">Meridian dersleri</TabsTrigger>
         </TabsList>
         <TabsContent value="sayfalar">
           <Sayfalar bank={bank} />
-        </TabsContent>
-        <TabsContent value="dersler">
-          <Bolme
-            baslik="Meridian dersleri"
-            aciklama="Meridian'ın kendi öğrenme döngüsünün damıtımı — hafıza bankasının korpusunda değil, çalışma durumundan okunuyor."
-          >
-            <MeridianDersleri />
-          </Bolme>
         </TabsContent>
         <TabsContent value="modeller">
           <Bolme

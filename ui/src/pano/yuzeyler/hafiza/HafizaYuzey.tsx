@@ -30,11 +30,14 @@
    "yetenek var, bu panodan kullanılamıyor" iki ayrı cümledir.
 
    ---------------------------------------------------------------------------
-   NEDEN SEKİZ GÖRÜNÜM — VE NEDEN BU SIRA
+   NEDEN DOKUZ GÖRÜNÜM — VE NEDEN BU SIRA
    ---------------------------------------------------------------------------
    Bu sayfa DÖRT bölümlü tek bir kaydırma sütunuydu. Yeni hâli, hafıza servisinin
    KENDİ denetim yüzeyinin bilgi mimarisidir: sekiz görünüm ve o yüzeyin
-   `sidebar.tsx` dosyasından okunan SIRA (gerekçe `gorunumler.ts`).
+   `sidebar.tsx` dosyasından okunan SIRA (gerekçe `gorunumler.ts`) — artı TSK-118'in
+   (2026-09-03, operatör K8: "dokuzuncu nav durağı aç") eklediği dokuzuncu, CP
+   paritesinden BAĞIMSIZ görünüm (`hafiza-dersler`; Meridian'ın kendi öğrenme
+   döngüsü, CP'nin `sidebar.tsx`inde karşılığı yok).
 
    AMA GEZİNME KABI PANONUNKİDİR — VE BU BİR OPERATÖR KARARIDIR (2026-09-02,
    dağıtım sonrası ekran görüntüsü). İlk hâlde sekiz durak bu sayfanın İÇİNDE,
@@ -106,6 +109,7 @@ import { AnaSayfa } from "./AnaSayfa";
 import { Bellekler } from "./Bellekler";
 import { Belgeler } from "./Belgeler";
 import { BilgiTabani } from "./BilgiTabani";
+import { Dersler } from "./Dersler";
 import { Recall } from "./Recall";
 import { Reflect } from "./Reflect";
 import { Varliklar } from "./Varliklar";
@@ -122,12 +126,14 @@ import type { HafizaGovdesi } from "./uctipleri";
 
 const UC = "/api/hindsight";
 
-/* GÖVDE TABLOSU AÇIK VE EKSİKSİZ (`Yuzey.tsx` deseni ve aynı gerekçe): sekiz
+/* GÖVDE TABLOSU AÇIK VE EKSİKSİZ (`Yuzey.tsx` deseni ve aynı gerekçe): dokuz
    görünümün hepsi burada adıyla var ve hiçbiri sessiz bir yedeğe düşmüyor.
    `Record<HafizaGorunumu, …>` tipi derleme anında zorluyor — `gorunumler.ts`e
    yeni bir görünüm eklendiğinde burası da yazılmadan derleme GEÇMEZ. Sessiz
    yedek olsaydı UNUTULAN bir görünüm ile BİLEREK ertelenmiş bir görünüm ekranda
-   aynı görünürdü. */
+   aynı görünürdü. `hafiza-dersler` (TSK-118) bu disiplinle eklendi: `Dersler.tsx`
+   `MeridianDersleri.tsx`yi `BolumKart` ile sarıyor — bileşenin kendisi taşınmadı,
+   yalnız çağrıldığı yer değişti (Bilgi Tabanı artık onu içe aktarmıyor). */
 const GOVDELER: Record<HafizaGorunumu, ComponentType<GorunumOzellikleri>> = {
   "hafiza-anasayfa": AnaSayfa,
   "hafiza-bellekler": Bellekler,
@@ -137,6 +143,7 @@ const GOVDELER: Record<HafizaGorunumu, ComponentType<GorunumOzellikleri>> = {
   "hafiza-belgeler": Belgeler,
   "hafiza-varliklar": Varliklar,
   "hafiza-yapilandirma": Yapilandirma,
+  "hafiza-dersler": Dersler,
 };
 
 /** Banka kimliklerini gövdeden çıkarır — kimliksiz satır sayılmaz, uydurulmaz. */
@@ -220,7 +227,10 @@ function BankaSecici({
 /* --------------------------------------------------------------------------- */
 
 export function HafizaYuzey() {
-  const { bolum } = useRota();
+  // SORGU DA OKUNUR (TSK-118, 2026-09-03): eski sekme adresi (`hafiza-bilgi?sekme=
+  // dersler`) bölüm+sorgu bileşimi olduğu için `gorunumCoz`un köprüsü sorguyu da
+  // ister — `gorunumler.ts` başlığındaki gerekçe.
+  const { bolum, sorgu } = useRota();
   // BAŞLIK KAYITTAN OKUNUR (KapiYuzey deseni): `alanlar.ts` bu yüzeyin başlığını ve
   // cevapladığı SORUYU tek yerde tutuyor. İkinci kez yazsaydık kayıt değiştiğinde
   // ekran sessizce eski soruyu sormaya devam ederdi.
@@ -231,7 +241,7 @@ export function HafizaYuzey() {
 
   /* GÖRÜNÜM ADRESTEN TÜRER, KOPYALANMAZ (dosya başlığındaki şerh). Tanınmayan
      bölüm varsayılana düşer — yüzeyin adressiz ilk açılışıyla AYNI hâl. */
-  const gorunum = gorunumCoz(bolum) ?? VARSAYILAN_GORUNUM;
+  const gorunum = gorunumCoz(bolum, sorgu) ?? VARSAYILAN_GORUNUM;
   /* GÖRÜNÜME GİDEN BAĞLARI ARTIK BU SAYFA ÜRETMİYOR: küresel sol gezinme
      üretiyor (`gezinme.ts`, `alanlar.ts` kaydından). Burada ikinci bir üretici
      tutmak, aynı adresin iki yerde kurulması demekti. */

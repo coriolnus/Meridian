@@ -16,7 +16,7 @@
    parite çivisinin ortak kaynağı; ikinci bir başlık listesi tutmak, kenar
    çubuğunun içindeki adla dışındaki adın sessizce ayrışması demekti.
 
-   BU DOSYA KAYITTAN NE İSTER: sekiz kimliğin her birinin `alanlar.ts`te KAYITLI
+   BU DOSYA KAYITTAN NE İSTER: dokuz kimliğin her birinin `alanlar.ts`te KAYITLI
    olmasını. İstemediği tek şey SESSİZLİK — bir kimlik kayıttan düşerse sayfa onu
    gizlemez, "yüzey kaydında bulunamadı" diye ÇİZER (`HafizaYuzey.tsx`).
    Gizleseydi bir görünüm gezinmeden düşer ve kimse fark etmezdi; bu deponun
@@ -26,6 +26,11 @@
    çubuğu kalktı ve sekiz durak küresel sol gezinmeye taşındı. Sıra oradan da
    KAYITTAN okunuyor (`alanlar.ts::YUZEYLER.memory.bolumler` → `gezinme.ts`),
    yani bu dizinin sözleşmesi değişmedi: adres çözümü ve varsayılan görünüm.
+
+   DOKUZUNCU KİMLİK CP SIRASININ PARÇASI DEĞİL (TSK-118, 2026-09-03, operatör K8):
+   `hafiza-dersler` yukarıdaki sekizin SONUNA eklendi, aralarına değil — CP'nin
+   `sidebar.tsx`inde hiç karşılığı olmadığı için "birebir sıra" iddiası ilk sekiz
+   için hâlâ geçerli, dokuzuncu ise Meridian'ın kendi eklediği (gerekçe `alanlar.ts`).
    ============================================================================ */
 import { YUZEYLER, type Bolum } from "../../alanlar";
 import type { Durum } from "../../veri";
@@ -41,6 +46,10 @@ export const HAFIZA_GORUNUMLERI = [
   "hafiza-belgeler",
   "hafiza-varliklar",
   "hafiza-yapilandirma",
+  // DOKUZUNCU DURAK CP PARİTESİNDEN DEĞİL (TSK-118, 2026-09-03, operatör K8):
+  // Meridian'ın kendi eklediği, sırası CP `sidebar.tsx::navItems`ten OKUNMADI —
+  // sekiz durağın SIRASI hâlâ birebir, bu yalnız SONA eklendi (gerekçe `alanlar.ts`).
+  "hafiza-dersler",
 ] as const;
 
 export type HafizaGorunumu = (typeof HAFIZA_GORUNUMLERI)[number];
@@ -73,7 +82,8 @@ export const ESKI_GORUNUM_ADRESLERI: Readonly<Record<string, HafizaGorunumu>> = 
 };
 
 /**
- * Bir bölüm adresini görünüme çevirir. Tanınmayan adreste `null` döner.
+ * Bir bölüm adresini (gerekirse sorgusuyla birlikte) görünüme çevirir. Tanınmayan
+ * adreste `null` döner.
  *
  * ŞERH DÜZELTİLDİ (T2 yeniden-incelemesi): burada önce "çağıran yerel seçimini
  * korur" yazıyordu ve o cümle I-4 düzeltmesinden sonra YANLIŞ. Görünüm artık
@@ -81,9 +91,26 @@ export const ESKI_GORUNUM_ADRESLERI: Readonly<Record<string, HafizaGorunumu>> = 
  * korunacak bir yerel seçim yok: `null` gören çağıran varsayılana — yüzeyin
  * adressiz ilk açılışıyla AYNI hâle — düşer. Bayat bir şerh, olmayan bir
  * şerhten kötüdür: okuyucu davranışı kaynaktan değil yorumdan öğrenir.
+ *
+ * `sorgu` PARAMETRESİ TSK-118'DE EKLENDİ (2026-09-03): tek başına bir bölüm
+ * dizgesi artık yetmiyor, çünkü ESKİ sekme adresi (`hafiza-bilgi?sekme=dersler`)
+ * bölüm+sorgu BİLEŞİMİDİR ve `ESKI_GORUNUM_ADRESLERI` yalnız çıplak bölüm
+ * dizgelerini eşler. Köprü bu yüzden burada, tablodan AYRI bir kontrol.
  */
-export function gorunumCoz(bolum: string | null | undefined): HafizaGorunumu | null {
+export function gorunumCoz(
+  bolum: string | null | undefined,
+  sorgu?: Readonly<Record<string, string>>,
+): HafizaGorunumu | null {
   if (!bolum) return null;
+  // ESKİ SEKME KÖPRÜSÜ (TSK-118, 2026-09-03, operatör K8): "Meridian dersleri"
+  // TSK-118'e kadar Bilgi Tabanı'nın üçüncü sekmesiydi (`?sekme=dersler`); artık
+  // kendi görünümü. Sekme adresi hâlâ dolaşıyor olabilir (sohbet hattının eski
+  // bağı, operatörün kendi yer imleri) — sessizce "sayfalar"a düşürmek bir yer
+  // imini KIRMAK olurdu (bu dosyanın kendi A-sınıfı arıza tanımı, yukarıda).
+  // KÖPRÜ AŞAĞIDAKİ İKİ KONTROLDEN ÖNCE ÇALIŞIR: `hafiza-bilgi` kendisi hâlâ
+  // geçerli bir görünüm kimliği, yani bu satır olmasaydı ikinci `if` onu zaten
+  // "hafiza-bilgi" diye çözer ve sorgudaki `sekme=dersler` sessizce düşerdi.
+  if (bolum === "hafiza-bilgi" && sorgu?.[SEKME_SORGU_ADI] === "dersler") return "hafiza-dersler";
   if ((HAFIZA_GORUNUMLERI as readonly string[]).includes(bolum)) return bolum as HafizaGorunumu;
   return ESKI_GORUNUM_ADRESLERI[bolum] ?? null;
 }
@@ -101,7 +128,7 @@ export function bolumKaydi(kimlik: HafizaGorunumu): Bolum | null {
 }
 
 /**
- * Her görünüm gövdesinin ALDIĞI ŞEY — sekizinde de aynı, bilerek.
+ * Her görünüm gövdesinin ALDIĞI ŞEY — dokuzunda da aynı, bilerek.
  *
  * `bank` kabuktan iner ve HİÇBİR görünüm kendi banka seçicisini açmaz: iki
  * görünüm aynı anda iki farklı bankayı gösterirse operatör hangisine baktığını
@@ -128,7 +155,7 @@ export interface GorunumOzellikleri {
    * ile "alan gelmedi" ekranda ayrı cümlelerdir ve çıplak gövde ikisini tek
    * `undefined`e indirirdi.
    *
-   * Sekiz görünümün sekizi de alır, yalnız biri okur — ve bu bilinçli: özelliği
+   * Dokuz görünümün dokuzu da alır, yalnız biri okur — ve bu bilinçli: özelliği
    * tek görünüme özel yapmak, gövde tablosunu (`HafizaYuzey.tsx::GOVDELER`) tek
    * tipte tutulamaz hâle getirir ve sessiz yedeklere kapı açardı.
    */
@@ -137,25 +164,37 @@ export interface GorunumOzellikleri {
 
 /* ---------------------------------------------------------------------------
    SEKME KADEMESİ — GÖRÜNÜMÜN ALTI DA ADRESTEN TÜRER
-   Bilgi Tabanı görünümü üç sekme taşıyor ve hangisinin açık olduğu İLK YAZIMDA
-   yerel bir durumdaydı. Ölçülen sonuç (nihai inceleme Ö-1): "Hafıza → Bilgi
-   Tabanı → Meridian dersleri" diyen bağ da, `#hafiza` yer imi de hep VARSAYILAN
-   sekmeyi açıyordu — yani üçü de çalışıyor ama üçü de yanlış yere gidiyordu.
-   Bu dosyanın kendi kuralı ("görünüm adreste yaşar") sekme için de geçerli.
+   Bilgi Tabanı görünümü İKİ sekme taşır (sayfalar · modeller) ve hangisinin açık
+   olduğu İLK YAZIMDA yerel bir durumdaydı. Ölçülen sonuç (nihai inceleme Ö-1):
+   "Hafıza → Bilgi Tabanı → Meridian dersleri" diyen bağ da, `#hafiza` yer imi de
+   hep VARSAYILAN sekmeyi açıyordu — yani üçü de çalışıyor ama üçü de yanlış yere
+   gidiyordu (o turda ÜÇÜNCÜ sekme "dersler"di). Bu dosyanın kendi kuralı
+   ("görünüm adreste yaşar") sekme için de geçerli.
+
+   ÜÇÜNCÜ SEKME EMEKLİ OLDU (TSK-118, 2026-09-03, operatör K8): "dersler" artık
+   bir sekme değil, kendi görünümü (`hafiza-dersler`, `alanlar.ts::YUZEYLER.
+   memory.bolumler`). Aşağıdaki liste bu yüzden "dersler" değerini artık
+   TANIMIYOR — `bilgiSekmesiCoz` tanınmayan bir sorgu değerini varsayılana
+   düşürür (kendi sözleşmesi, aşağıda). Eski sekme adresi (`hafiza-bilgi?sekme=
+   dersler`) hâlâ dolaşabilir; o adres bu düşüşten ÖNCE `gorunumCoz` köprüsüyle
+   (yukarıda) doğru görünüme çözülür — bu liste BİLEREK "dersler"i geri almadı.
 
    ÖLÇÜM ÖNCE YAPILDI (brief kalemi): `rota.tsx::hashiCoz` bölüm olarak yalnız
    yolun ÜÇÜNCÜ parçasını okuyordu ve dördüncüsünü DÜŞÜRÜYORDU; `gorunumCoz` da
-   tek bir bölüm dizgesi alıyor. Yani mevcut mekanizma ikinci kademeyi TAŞIMIYOR.
-   Bu yüzden kademe SORGUDA taşınır (`?sekme=`), yol parçasında değil: dördüncü
-   bir yol parçası, yüzey kaydının saymadığı bir bölüm kimliği doğururdu
-   (`alanlar.ts` bölüm sayacı · kırıntı · ⌘K anahtarları hepsi o uzaydan okur).
+   tek bir bölüm dizgesi alıyordu (TSK-118: ikinci parametre olarak sorguyu da
+   alıyor, yalnız köprü için). Bu yüzden kademe SORGUDA taşınır (`?sekme=`), yol
+   parçasında değil: dördüncü bir yol parçası, yüzey kaydının saymadığı bir bölüm
+   kimliği doğururdu (`alanlar.ts` bölüm sayacı · kırıntı · ⌘K anahtarları hepsi o
+   uzaydan okur).
    --------------------------------------------------------------------------- */
 
 /** Sekme kademesinin sorgu adı — adres yazan da okuyan da BURADAN alır. */
 export const SEKME_SORGU_ADI = "sekme";
 
-/** Bilgi Tabanı sekmeleri; İLKİ VARSAYILANDIR (üst yüzeyin sırası: sayfalar → modeller). */
-export const HAFIZA_BILGI_SEKMELERI = ["sayfalar", "modeller", "dersler"] as const;
+/** Bilgi Tabanı sekmeleri; İLKİ VARSAYILANDIR (üst yüzeyin sırası: sayfalar → modeller).
+ *  ÜÇÜNCÜ DEĞER YOK (TSK-118, 2026-09-03): "dersler" kendi görünümüne taşındı — gerekçe
+ *  yukarıdaki dosya-başlığı şerhinde. */
+export const HAFIZA_BILGI_SEKMELERI = ["sayfalar", "modeller"] as const;
 
 export type HafizaBilgiSekmesi = (typeof HAFIZA_BILGI_SEKMELERI)[number];
 

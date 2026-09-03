@@ -420,7 +420,7 @@ def test_EK_olculen_dosyalar_YERINDE():
 #: vurduğu yazılmadan "ölçüldü" denemez (bedel yasası, düzeltme turu 2 Y-2).
 SOKUCUNUN_FAZLA_YEDIGI = {
     "ui/src/pano/yuzeyler/kapi/KapiYuzey.tsx": 2973,
-    "ui/src/pano/komutlar.ts": 2286,
+    "ui/src/pano/komutlar.ts": 2285,  # TSK-118 (2026-09-03) düzenlemesinden sonra yeniden ölçüldü
     "ui/src/pano/yuzeyler/portfoy/MutabakatMasasi.tsx": 1047,
     "ui/src/pano/yuzeyler/bugun/HukumDagilimi.tsx": 157,
     "ui/src/pano/yuzeyler/portfoy/PozisyonSeyri.tsx": 73,
@@ -530,17 +530,22 @@ def test_rota_HASH_ICINDEKI_sorguyu_tasiyor():
     assert 'const soru = bos.indexOf("?");' in s, "sorgu yoldan ayrılmıyor"
 
 
-def test_DERS_baglari_SEKMEYE_gidiyor():
-    """Ö-1'in üç giriş kapısından ikisi: sohbet hattındaki bağ ve `#hafiza` yer imi. Üçüncüsü
-    (⌘K paleti) BEYANLI olarak kapsam dışıdır — gerekçesi `komutlar.ts`te yazılı ve bu
-    çivinin son iddiası onu ölçer."""
-    assert '#/dashboard/memory/hafiza-bilgi?sekme=dersler' in soy(SOHBET), \
-        "sohbet hattındaki ders bağı hâlâ sekmesiz adrese gidiyor"
+def test_DERS_baglari_GORUNUME_gidiyor():
+    """TSK-118 (2026-09-03, operatör K8) GÜNCELLEMESİ: Ö-1'in üç giriş kapısından ikisi —
+    sohbet hattındaki bağ ve `#hafiza` yer imi — artık bir SEKMEYE değil kendi GÖRÜNÜMÜNE
+    gidiyor, çünkü "Meridian dersleri" TSK-118'de sekme olmaktan çıktı (`hafiza-dersler`,
+    `alanlar.ts::YUZEYLER.memory.bolumler`). Üçüncüsü (⌘K paleti) hâlâ "sekmeye değil
+    görünüme iner" ilkesine bağlı — bu ilke TSK-118'de TERSİNE ÇEVRİLMEDİ, dersler artık
+    gerçekten bir görünüm olduğu için aynı ilkeyle çelişmeden gerçek kayda kavuştu; gerekçesi
+    `komutlar.ts`te yazılı ve bu çivinin son iddiası onu ölçer."""
+    assert '#/dashboard/memory/hafiza-dersler' in soy(SOHBET), \
+        "sohbet hattındaki ders bağı hâlâ eski (sekmeli) adrese gidiyor"
     a = soy(ALANLAR)
-    assert 'hafiza: { yuzey: "memory", bolum: "hafiza-bilgi", sorgu: { sekme: "dersler" } }' in a, \
-        "`#hafiza` yer imi sekmeyi taşımıyor"
+    assert 'hafiza: { yuzey: "memory", bolum: "hafiza-dersler" }' in a, \
+        "`#hafiza` yer imi artık görünüme değil eski sekme adresine bağlı"
     assert "sorgu?: Readonly<Record<string, string>>" in a, "takma ad sorgusu tipte yok"
-    # PALETİN KAPSAM DIŞI OLMASI BEYANLI: sessiz bir eksik ile ölçülmüş bir sınır ayrı şeyler.
+    # PALETİN SEKMEYE DEĞİL GÖRÜNÜME İNMESİ HÂLÂ BEYANLI: sessiz bir eksik ile ölçülmüş bir
+    # ilke ayrı şeyler; TSK-118 bu ilkeyi TERSİNE ÇEVİRMEDİ, uyguladı.
     k = KOMUTLAR.read_text(encoding="utf-8")
     assert "PALET SEKMEYE DEĞİL GÖRÜNÜME İNER" in k, \
         "paletin sekmeye inmemesi beyansız — sessiz bir eksik ölçülmüş bir sınır gibi görünür"
