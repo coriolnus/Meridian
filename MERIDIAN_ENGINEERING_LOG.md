@@ -1892,3 +1892,57 @@ saat etiketleri ölçülmeden yazılmaz.
 seans kilidi (intraday_gap bedeli: 0→232/273/242) · evren sapması 13 sembol · konsolidasyon başarısız
 258 (retry düğmesi canlı) · ingest 00:10Z koşumu hükmü · TSK-112 (12-A uçuşta) / TSK-020 2-adım2 /
 TSK-029 / TSK-109 / TSK-110 sıradaki.
+
+**Kapanış dalgası (00:2xZ–03:05Z) — ikinci yarı (dağıtım #4: 0ddd4fb, 03:02:27Z; healthz 200, learn kapalı, kod-tazelik ✓):**
+- TSK-109 (webhook okuması) afada26: `/webhooklar` sorgusuz, `total` yok; CP `webhooks-view` beş sütun; imza sırrı
+  VEKİLDE SÜZÜLÜR — `_hafiza_zarf(donustur=…)` kancası, `secret`→`secret_tanimli`; hüküm: bu panonun webhook yazma
+  yolu yok → sırrın okuyucusu yok (Yasa 6), "CP ile birebirlik" gerekçe değil. No-op kancaya kör "bayt-aynı" çivisi
+  ölçülüp değiştirildi. Görev incelemesi commit SONRASI (ayrılabilir tarih); bulguları nihai düzeltmeye katlandı.
+- Nihai tüm-dal incelemesi iki dilim (vekil K0/Ö5/K8 · UI K0/Ö7/K7) + yeniden-inceleme + iki mini-inceleme → nihai
+  düzeltme c3c3a54, DÖRT tur, tek ajan (tek-yazar ilkesi: aynı dosyalara ikinci ajan açılmadı). Öne çıkanlar:
+  · `bank` VE kimlik yol-parçası duvarı TEK BOĞAZA (`_hafiza_bank_yolu`); ölçüm: uvicorn `scope["path"]`i unquote
+    eder → upstream `%2F`yi rotalamadan önce çözer, kaçırma tek başına duvar değildir. TUR 2'nin "kimlikte `/`
+    reddedilir" kuralı REGRESYONDU — A1 ölçümü (02:31Z): belge kimlikleri repo yolu (`research/cards/….yaml`),
+    upstream `documents/{id}/chunks` `%2F`→200 ve ham→200; kural traversal'a daraltıldı (`..`/`%`/`\`/boşluk/boş
+    segment ret, `/` içeride izinli, kaçırma aynen), meşru slash'lı kimlik kaçırılarak geçer (casus yolu ölçer).
+    Ders: "duvar" hükmü verilirken kimlik UZAYI ölçülmemişti — incelemeci uyarmıştı; ölçüm regresyonu canlıya çıkmadan
+    yakaladı. Ret vakaları 19→25.
+  · `ok:false + 2xx` için "çağrı gitti, cevabı okunamadı — TEKRAR BASMA" (geri-alınamaz çift-gönderim sınıfının kalan
+    yarısı) · webhook süzgeci FAIL-CLOSED · `/varlik` ret izi · CSRF ölçümü (httponly + samesite=strict) çiviye ·
+    Recall alan beyanı "Faz-1 alt kümesi" tek kaynakta · bayat `#:` bloğu silindi + bayat-şerh çivisi.
+  · Bilgi Tabanı sekmesi ADRESTEN (`?sekme=`; ders bağı yanlış yere gidiyordu; ⌘K bacağı PARK: dokuzuncu nav durağı
+    olurdu, gerekçe çivili) · recall POST tek kapıya (`apiPost`; 2xx+çözülemeyen gövde artık hata, boş ekran değil) ·
+    erişilebilirlik: `aria-pressed` ×4, klavye satırları 5 yüzey (Varliklar deseni), ağaç role=tree/treeitem ·
+    Bellekler çekmece `key` · çıplak tire yok · adsız arşiv kaydı ayrı kova · öğe kapısı çözücülerde + BilgiTabani
+    çizim listesi `.filter(sozluk)` (tur 4: kapı gövdedeydi, `key` ifadesi ondan önce çöküyordu) · webhook yenile +
+    MUTLAK "son okuma" damgası (göreli damga yoklamasız uçta "az önce"ye donuyordu).
+  · Renk: emerald KALKTI → mevcut seri rampası; gece yeni jeton DOĞMADI (palet turu operatörün); bedel şerhi: başarı
+    ile bir graf kümesi aynı hue. Ad çakışmaları (kovaEtiketi/Kunye ×3) ayrıldı; `bicimSayi` kopyası silindi.
+  · Çiviler: `soy()`un fazla yediği beş dosya adıyla + yokluk iddiaları HAM metinde (over-stripping'e karşı ikinci
+    hat); Faz2 sayacı eşitlik (7); regex'ler biçime bağımsız; `v378` kapsamı büyüdü (vNNN kimlik, ad kalır).
+- TSK-110 116f3c3: `useApi` yol-bağlı okuma kaydı + dönüşte TÜRETİM (`yukleniyor` dahil, bir-kare iskelet flaşı yok),
+  `Durum<T>` sabit; 7 `Kapi` kopyası dokunulmadı → [TSK-113]; v381 dinamik kopya taraması (ilk brief "beş" demişti —
+  ölçüm 7; yanlış desen `export function Kapi<` kimlik/yetki'yi kaçırdı — sayım komutu raporda yazılmalı).
+- ROADMAP 0ddd4fb: [TSK-113] Kapi 7 kopya → tek kaynak · [TSK-114] v323 `teknik` çağrı-yeri kapsaması · TSK-029 DONE ·
+  TSK-112 ACTIVE notu · B-NOUS-BEYIN KAPALI.
+- Tam suite #4 (116f3c3 + tur 1-3 ağacı, donuk, parmak izli): 9815 passed / 1 failed / 8 skipped, 549 s. Kırmızı v209
+  korpus çivisi — RUNBOOK 9ff093c'te yeniden üretilmişti ("23→24 ops betiği"); ölçüm: tek hane, karakter/satır/
+  başlık birebir → emsal reçete (TAZELEME-2026-08-14 üçüncü kayıt), artefakt tazelendi, `--kontrol` 3/3, harness
+  koşulmadı (gerekçeli) → v209 16 passed. Delta (tur 4) etkilenen küme: UI çivileri 188 passed. Push f80e912..0ddd4fb.
+- İNGEST DURDURULDU 01:53Z (Rol-1 kararı, PID kill): 00:10Z'den beri 476 çağrı / 108 sağlayıcı hatası (%16→%23 ↑) /
+  0 belge — ücretsiz Nvidia havuzu "Service temporarily overloaded"; Hindsight belgeyi tüm-ya-da-hiç işliyor ve
+  sağlayıcı hatasında 1 deneme yapıyor → N çağrılık belge P≈0,8^N; küçük belgeler bile 3/3 düştü. Sürdürmek OpenRouter
+  ücretsiz tavanını (1000/gün, hesap geneli) seans gününde tüketirdi (B-TAVAN-502 sınıfı). İlerleme kaybı yok
+  (ilerleme.jsonl; timer bitti, servis inactive). "Hindsight ne zaman tamamlanır": bu kanalla TAMAMLANMAZ — sabah
+  kararı: (a) betikte parça küçültme · (b) hindsight LLM retry (yapılandırılabilir mi ölçülecek) · (c) başka ücretsiz
+  model · (d) hafta içi boş saat penceresi. Betik dosyaları zaten parçalıyor (`ROADMAP.md#7`) — parça hâlâ çok çağrılık.
+- Dağıtım #4 kapıları: git temiz ✓ · uv audit 0 ✓ · lint-imports 5/5 ✓ · daralt-güvenli ✓ · birim ayrıklığı 14/14 ✓ ·
+  F9 38/38 ✓ · [5c] tazelik TAMAM (mutasyon build'den ÖNCE dersi tuttu) · [5b] kod-tazelik ✓ · beyan bayt-özdeş.
+  Canlı: api.py sha 81dc0152 birebir · bundle pano-vXFfhJL2.js/pano-hpN5RSSj.css 200 · okuma/yazma uçları çerezsiz 401
+  · nabız 12 sn, paper, halted=false. Yerel görsel (stub): nav/yapı ✓; içerik operatörün canlı görsel turuna
+  (TSK-108/109/110/111/112 DONE koşulu).
+- Dersler (gece, ikinci yarı): saat etiketleri `date -u` ile (hafıza kaydı) · kimlik uzayı ölçülmeden duvar hükmü
+  verilmez · sayım komutu raporda yazılır · Bash cwd bir önceki çağrıdaki `cd` ile KALIR — ledger append boşa düştü,
+  mutlak yol · commit-önce-inceleme yalnız ayrılabilir tarih için ve bulgular bir sonraki düzeltmeye katlanır ·
+  "çivi yeşili kanıt değil": tur 4'ün bulgusu (kapı bir satır geç) metin-tarayan çivilerin yapısal körlüğü — pano
+  için gerçek render testi yok (açık kalem, [TSK-113]/[TSK-114] yanına not).
