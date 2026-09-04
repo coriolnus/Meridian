@@ -224,6 +224,12 @@ export interface OgrenmeKarnesi {
   readonly current_version?: number | string | null;
   readonly min_sample?: number;
   readonly besleme?: Besleme;
+  /** TSK-074 r1 (2026-09-04): Ö-48 hayalet süzgeci öneri katmanına kablolandıktan sonraki canlı
+   *  kanıt sayacı — KÜMÜLATİF (kablolama gününden BUGÜNE, kayan pencere DEĞİL),
+   *  `analytics._hayalet_suzulen_n` (events.jsonl, GERÇEKTEN süzülen farklı düğme adlarının
+   *  kümesi; okuma kuyruk-sınırlı, bilinen sınır `analytics.HAYALET_SAYAC_N_SATIR`de). Operatör
+   *  kapısı: 2 hafta sonra bu sayı okunur, sıfırsa kablolama geri alınır. */
+  readonly hayalet_suzulen_n?: number;
   readonly verdict?: string;
 }
 

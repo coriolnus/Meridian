@@ -800,7 +800,80 @@ def learning_scorecard(goal: dict | None = None) -> dict:
             # İkisi de ÖLÇÜM taşır, hüküm değil: ship sayısını değiştirmezler, "0"ın nedenini
             # okunur yaparlar.
             "besleme": _learning_feeds(),
+            # TSK-074 (2026-09-04, r1 revizyonu): "süzülen hayalet öneri" sayacı — Ö-48 süzgecinin
+            # öneri katmanında GERÇEKTEN bir şey yaptığının canlı kanıtı (operatör kapı kararı: 2
+            # hafta sonra bu sayı okunur, sıfırsa kablolama geri alınır). KÜMÜLATİF (kabloladığı
+            # günden BUGÜNE), kayan pencere DEĞİL — geç bakılsa da doğru cevap kalsın diye.
+            # Ölçülemeyen 0 DEĞİL, hiç olay yoksa da 0 döner (uydurma değil): events.jsonl her
+            # zaman okunabilir, boş küme geçerli veri.
+            "hayalet_suzulen_n": _hayalet_suzulen_n(),
             "verdict": verdict}
+
+
+# TSK-074 r1 (2026-09-04, Rol-1 review): sayaç KAYAN pencere DEĞİL, KABLOLAMA TARİHİNDEN beri
+# BİRİKİMLİDİR — operatörün "2 hafta sonra sıfırsa geri al" sorusu geç sorulsa da bu doğru cevabı
+# verir (kayan 14g pencere, geç okunursa erken günleri sessizce unuturdu).
+HAYALET_SUZGEC_KABLOLAMA_TARIHI = "2026-09-04"
+
+# KUYRUK-SINIRLI OKUMA TAVANI (r1). ÖLÇÜLDÜ (store.py::read_jsonl): `limit=N` yalnız DÖNEN LİSTEYİ
+# (`rows[-limit:]`) ve dolayısıyla bu fonksiyonun kendi döngüsünü sınırlar — dosyanın TAMAMI yine
+# okunup satır satır ayrıştırılır (G/Ç ve JSON-parse maliyeti `limit`ten BAĞIMSIZ, ~dosya boyu).
+# Yani bu sabit `learning_scorecard` çağrısının (canlıda ~30 sn'de bir) KENDİ döngüsündeki
+# `adlar.update(...)` iş yükünü ve dönen liste boyutunu sınırlar; `store.read_jsonl`ın kendi G/Ç
+# maliyetini DEĞİL — bu, r1'in "limit=… ölç" isteğinin ölçülmüş, dürüst sonucudur.
+#
+# N ÖLÇÜMÜ (2026-09-04, yerel `state/events.jsonl`): 27.888 satır, ts aralığı 2026-07-14→2026-09-03
+# (52 takvim günü) → günlük ortalama 27888/52 ≈ 536/gün (ham; gün-içi dağılım çok düzensiz, min
+# 1/gün — maks 7256/gün tek bir yoğun günde — bu yüzden ORTALAMA, medyan değil, seçildi: tek bir
+# ölçüm düşük-trafik günlerini yanlış temsil etmesin). N = 14 gün × 536 × 2 güvenlik payı ≈ 15.036
+# → 15.000'e yuvarlandı.
+#
+# BİLİNEN SINIR (bedel yasası — gizlenmedi): sayaç KÜMÜLATİF (kablolama gününden BUGÜNE) ama okuma
+# KUYRUK-SINIRLIDIR — kablolama gününden bugüne toplam (yalnız hayalet değil, HER TÜRDEN) olay
+# `HAYALET_SAYAC_N_SATIR`ı aşarsa en eski hayalet olayı kuyruktan sessizce düşer ve sayaç ONU bir
+# daha SAYMAZ. Bu sınır operatörün 2 haftalık karar penceresini (2026-09-04 → ~2026-09-18) 2×
+# payla GÜVENLE kapsar; sayaç o pencereden SONRA da kalıcı bir gösterge olarak TUTULACAKSA bu sabit
+# YENİDEN ÖLÇÜLMELİ ya da okuma stratejisi (tarih-bölümlü/indeksli) değişmelidir — sessizce
+# doğruluğunu kaybetmeye bırakılmamalı.
+HAYALET_SAYAC_N_SATIR = 15000
+
+
+def _hayalet_suzulen_n(baslangic: str = HAYALET_SUZGEC_KABLOLAMA_TARIHI) -> int:
+    """KÜMÜLATİF "süzülen hayalet öneri" SAYACI (TSK-074 r1, 2026-09-04 — Rol-1 review: kayan 14
+    gün DEĞİL, `baslangic`tan — varsayılan kablolama günü — BUGÜNE birikimli). `hermes.virgin_
+    knobs()` içindeki Ö-48 tek boğazının (`reflect.hayalet_suzgeci(..., kaynak="hermes.virgin_
+    knobs")`) yazdığı `reflect_hayalet_dugme_suzuldu` olaylarını `state/events.jsonl`dan okur —
+    İKİNCİ bir yazım kanalı AÇILMADI (tek-kaynak yasası): süzgeç zaten kendi olayını basıyor, bu
+    fonksiyon yalnız OKUYUCUDUR (YASA 6).
+
+    SAYILAN ŞEY OLAY DEĞİL, ADIN KENDİSİ: `virgin_knobs()` her reflect turunda yeniden çağrılır,
+    yani kalıcı tek bir hayalet düğme günler boyunca AYNI adla tekrar tekrar süzülür — olay
+    SAYISINI toplamak, tek düğmeyi çok düğmeymiş gibi şişirirdi. Bunun yerine `baslangic`tan
+    BUGÜNE olaylardan GERÇEKTEN süzülen FARKLI anahtar adlarının KÜMESİ sayılır (uydurma yasağı:
+    sayaç yalnız gerçekten süzülen adları sayar, tekrarları değil).
+
+    OKUMA KUYRUK-SINIRLIDIR (`HAYALET_SAYAC_N_SATIR`, yukarıda ölçümlü) — bilinen sınır orada
+    beyanlı: kablolama gününden bugüne o tavanı aşan toplam olay birikirse en eski hayalet olayı
+    kuyruktan sessizce düşer."""
+    import datetime as _dt
+    sinir = _dt.datetime.fromisoformat(baslangic).replace(tzinfo=_dt.timezone.utc)
+    adlar: set = set()
+    for e in store.read_jsonl("events.jsonl", limit=HAYALET_SAYAC_N_SATIR):
+        if not isinstance(e, dict):
+            continue   # dict olmayan/bozuk satır — store.read_jsonl kendi jsonl_rows_skipped uyarısını zaten basıyor, burada yalnız TİP süzülüyor
+        if e.get("event") != "reflect_hayalet_dugme_suzuldu" or e.get("kaynak") != "hermes.virgin_knobs":
+            continue
+        ts = e.get("ts")
+        try:
+            zaman = _dt.datetime.fromisoformat(ts) if ts else None
+        except (ValueError, TypeError):
+            # sessiz-yutma: bozuk/eski biçim TEK satırı düşürür, sayacı değil — events.jsonl elle
+            # düzenlenmiş ya da eski şema satırı taşıyabilir; sayaç KÖRLEŞMEZ, o satır atlanır
+            zaman = None
+        if zaman is None or zaman < sinir:
+            continue
+        adlar.update(e.get("hayalet") or [])
+    return len(adlar)
 
 
 def _learning_feeds() -> dict:

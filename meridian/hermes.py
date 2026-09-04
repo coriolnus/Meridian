@@ -1409,6 +1409,21 @@ def virgin_knobs() -> list[dict]:
     if eksik:
         obs.warn("hermes_virgin_knob_not_in_bounds", knobs=eksik,
                  detail="H2 bakir listesindeki ad bounds'ta yok — iki kaynak ayrışmış")
+    # Ö-48 HAYALET SÜZGECİ — TEK BOĞAZ (TSK-074, 2026-09-04; Seçenek A,
+    # docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md). Bakir adaylardan motor zincirinde OKUYUCUSU
+    # OLMAYAN anahtarlar arama bütçesinin İÇİNE HİÇ GİRMEZ — bu fonksiyon (a) deterministik havuzu
+    # (`propose_virgin_knob`) VE (b) istem "NEVER-PROPOSED KNOBS" bölümünü (`_exploration_sections`)
+    # aynı anda besler, yani tek çağrı iki yüzeyi birden temizler. `reflect` bu dosyanın modül-
+    # düzeyi içe aktarımları arasında ZATEN var — sıfır yeni import kenarı. `None` (ölçülemedi) hâlinde
+    # `temiz` GİRDİYLE AYNIDIR (fail-open, mevcut davranış) — kör bir tarayıcının aramayı sessizce
+    # daraltma yetkisi yoktur; süzgecin kendisi `reflect_hayalet_olculemedi`/`reflect_hayalet_
+    # dugme_suzuldu` olaylarını zaten yazıyor (YASA 6 — ikinci bir kayıt kanalı açılmadı).
+    if out:
+        b_gorunumu = {r["knob"]: {"min": r["min"], "max": r["max"], "step": r["step"],
+                                  "type": r["type"]} for r in out}
+        temiz, _hayalet = reflect.hayalet_suzgeci(b_gorunumu, kaynak="hermes.virgin_knobs")
+        temiz_kume = set(temiz)
+        out = [r for r in out if r["knob"] in temiz_kume]
     return out
 
 

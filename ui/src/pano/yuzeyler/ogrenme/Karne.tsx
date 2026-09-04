@@ -416,6 +416,13 @@ function KarneGovdesi({ hermes }: { hermes: Durum<HermesGovdesi> }) {
                         teknik="`learning.overfit_suspects` yükte yok"
                       />
                     </Satir>
+                    <Satir etiket="Hayalet düğme süzüldü (kablolamadan beri)">
+                      <Deger
+                        metin={sayi(l.hayalet_suzulen_n, 0)}
+                        neden="Süzülen hayalet düğme sayısı bildirilmedi"
+                        teknik="`learning.hayalet_suzulen_n` yükte yok"
+                      />
+                    </Satir>
                   </div>
                   {defter?.orneklem_kapsam ? <Beyan>{defter.orneklem_kapsam}</Beyan> : null}
                 </>

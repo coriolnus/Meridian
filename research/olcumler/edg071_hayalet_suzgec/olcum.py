@@ -514,9 +514,18 @@ def _pk_govde_kontrolu() -> None:
 def pk_yol_tutarli() -> dict:
     """Sentetik hayalet düğme süzgeç tarafından YAKALANIR, sentetik kablolu düğme GEÇER — GERÇEK
     `hermes.propose_virgin_knob()` (gövdesi hiç değişmedi) Seçenek A bileşimi üzerinden koşturulur.
-    Bileşim: `hermes.virgin_knobs` adı bu SÜRECİN belleğinde GEÇİCİ olarak gerçek `virgin_knobs()` +
-    gerçek `reflect.hayalet_suzgeci()`nin bileşimiyle değiştirilir, sonda ORİJİNAL isim GERİ TAKILIR
-    — `meridian/hermes.py` dosyası HİÇ DEĞİŞMEZ."""
+
+    TSK-074 NOTU (2026-09-04, aynı gün EDG-071'den SONRA): bu betiğin İLK sürümü `meridian/
+    hermes.py`nin bu ölçüm turunda DEĞİŞTİRİLEMEDİĞİ (kart D5) bir dünya için yazılmıştı — Seçenek A
+    bileşimini `hermes.virgin_knobs` adını GEÇİCİ bir sarmalayıcıyla değiştirip MANUEL kuruyordu.
+    Operatör kararıyla AYNI GÜN Seçenek A GERÇEKTEN kablolandı (`hermes.virgin_knobs()` artık
+    `reflect.hayalet_suzgeci`yi KENDİ İÇİNDE çağırıyor) — sarmalayıcı filtrelemeyi bir daha
+    UYGULAMAZ (tek-kaynak yasası: aynı süzgecin iki bağımsız kopyası sessizce ayrışabilirdi), yalnız
+    GERÇEK, kablolu `virgin_knobs()`ın candidate-loop'a hangi adları GEÇİRDİĞİNİ GÖZLEMLER. Ön koşul
+    de artık `virgin_knobs()` ÇIKTISINDAN değil sandbox `config.bounds()`tan okunur: kablolamadan
+    SONRA `virgin_knobs()` GHOST_KNOB'u ZATEN süzüyor — ön koşulu oradan okumak, ölçülmek istenen
+    davranışın kendisini "eksik fikstür" sanırdı. `meridian/hermes.py` dosyası bu FONKSİYONDA yine
+    HİÇ DEĞİŞMEZ (bellek geri alınır)."""
     from meridian import config, hermes, reflect
 
     _pk_govde_kontrolu()
@@ -529,34 +538,29 @@ def pk_yol_tutarli() -> dict:
         (state_dir / "hypotheses.jsonl").write_text("")   # boş defter — ikisi de H2-bakir
         config.bounds.cache_clear()
 
-        orijinal_kn = hermes.virgin_knobs()   # GERÇEK çağrı — sandbox bounds'unun 2 anahtarını görür
-        adlar = {r["knob"] for r in orijinal_kn}
-        eksik = {GHOST_KNOB, REAL_KNOB} - adlar
+        bounds_full = config.bounds()          # sandbox YAML'ın kendisi — virgin_knobs() ÇIKTISI DEĞİL
+        eksik = {GHOST_KNOB, REAL_KNOB} - set(bounds_full.keys())
         if eksik:
             return {"pk_gecti": False, "on_kosul_dustu": sorted(eksik),
-                    "detay": "virgin_knobs() beklenen iki sentetik anahtarı döndürmedi — PK koşulamadı"}
+                    "detay": "sandbox bounds.yaml beklenen iki sentetik anahtarı taşımıyor — PK koşulamadı"}
 
-        bounds_gorunumu = {r["knob"]: {"min": r["min"], "max": r["max"], "step": r["step"],
-                                       "type": r["type"]} for r in orijinal_kn}
+        bounds_gorunumu = {k: bounds_full[k] for k in (GHOST_KNOB, REAL_KNOB)}
         temiz, hayalet = reflect.hayalet_suzgeci(bounds_gorunumu, kaynak="hermes.virgin_knobs")
         yakalandi_mi = GHOST_KNOB in (hayalet or [])
         gecti_mi = REAL_KNOB in temiz
 
         cagrilan_adlar: list[str] = []
 
-        def _secenek_a_sarmalayici():
-            # aynı süreçte H2'yi İKİNCİ kez okumamak için ilk (GERÇEK) çağrının sonucu yeniden
-            # kullanılır — reflect.hayalet_suzgeci yine GERÇEK, kaynak="hermes.virgin_knobs" (Seçenek A)
-            b = {r["knob"]: {"min": r["min"], "max": r["max"], "step": r["step"], "type": r["type"]}
-                 for r in orijinal_kn}
-            t, _h = reflect.hayalet_suzgeci(b, kaynak="hermes.virgin_knobs")
-            filtreli = [r for r in orijinal_kn if r["knob"] in t]
-            cagrilan_adlar.extend(r["knob"] for r in filtreli)
-            return filtreli
+        def _izlenen_virgin_knobs():
+            # `virgin_knobs()` (TSK-074'ten sonra) Seçenek A bileşiminin TA KENDİSİ — bu sarmalayıcı
+            # yalnız candidate-loop'un GÖRDÜĞÜ adları KAYDEDER, süzgeci YENİDEN UYGULAMAZ.
+            kn = eski_virgin_knobs()   # GERÇEK, kablolu çağrı — TEK H2 okuması
+            cagrilan_adlar.extend(r["knob"] for r in kn)
+            return kn
 
         eski_virgin_knobs = hermes.virgin_knobs
         try:
-            hermes.virgin_knobs = _secenek_a_sarmalayici
+            hermes.virgin_knobs = _izlenen_virgin_knobs
             oneri = hermes.propose_virgin_knob()   # GERÇEK, DEĞİŞMEMİŞ fonksiyon gövdesi
         finally:
             hermes.virgin_knobs = eski_virgin_knobs   # meridian/hermes.py dosyasına dokunulmadı; bellek geri alındı
