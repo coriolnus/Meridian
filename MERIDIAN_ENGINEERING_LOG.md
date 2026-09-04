@@ -2418,3 +2418,12 @@ beklemeden (§8 motor kuralı meridian/ için). Canlı 22:00Z brifingi hâlâ es
 eziyor; v412 yalnız gunduz'u dışlamıştı — değer-bazlı dışlama listesi sözlük büyüdükçe yeniden delinir. Hüküm: `:root:not([data-theme])` —
 OS tercihi yalnız DAMGASIZ köke, damgalı kök temayı kendi yönetir (pano `.dark`; jetonlar bloğu önce, tema.css sonra → tema.css kazanır, v407
 ile tutarlı). Damga sözlüğü ölçüldü: pano/onyuk/eski sayfalar hep gunduz|gece; eski sayfalar jetonlar.css'i yüklemiyor. Sevk 21:06Z (sonnet).
+
+**TSK-134 (fa29e6d) + suite #19:** medya bloğu `:root:not([data-theme])`; v412 yeni anlam (dört damganın hiçbiri eşleşmez, damgasız eşleşir;
+`.dark` import sırası), kırmızı 2 → yeşil 5, mutasyon 2 öttü, seri 170. Rol-1 build (Csnm_HYs/ZBbyIQ5P), stub OS-koyu emülasyonu:
+gece `--card` oklch(20.5%) — tema.css `.dark` artık kazanıyor; gündüz oklch(100%); damgasız kök #262626 (OS'e uyar, istenen). Düşürme
+(kapsam alanı) gerekmedi. **Suite #19 (fa29e6d, -n 4, 11 dk): 10361 passed / 0 failed** → push. Ders (v412 → 134): değer-bazlı dışlama
+listesi (`light`, sonra `gunduz`) her yeni damga değerinde yeniden delinir; nitelik-varlığı dışlaması sözlükten bağımsız.
+
+**Dağıtım #14 planı revize:** "yarın pre-market" yerine BU GECE 22:0xZ şef brifingi bittikten sonra (~22:20Z) — TSK-014 yeniden ölçümü
+(brifing_kural_denetimi.kaynak) eski SOUL şemasıyla tamamlanır, ardından TSK-035/122/134 canlıya; piyasa kapalı, overnight bekleyici gerekmez.
