@@ -552,9 +552,19 @@ def test_ROL_alias_zinciri_TEK_gercek_soyler():
     # TEMA GERÇEKTEN DÖNÜYOR MU: kroma taşıyan her rol jetonunun iki zemindeki ucu farklı
     # olmalı. Aynı olsaydı jeton gece bloğunda YAZILI ama İŞLEVSİZ olurdu — ad kümesi
     # eşitliği testi böyle bir jetonu yakalayamazdı (adı var, değeri dönmüyor).
+    #
+    # TSK-136 İSTİSNASI (2026-09-04, operatör kararı D1): dört anlam jetonunun (basari/uyari/
+    # kritik/bilgi) -h/-t türevleri artık kendi teması içinde DEĞİL, Tailwind ailesinin -500
+    # tonundan türer (family-500 kuralı: swatch NUMARASI temaya göre değişmez) — bu SEKİZ jeton
+    # BİLEREK iki zeminde AYNI rgba'ya çözülür. "transparent" istisnasıyla AYNI sınıf: sabit bir
+    # tasarım kararı, kaçırılmış bir tema-geçişi DEĞİL. Ana jetonların kendisi (basari/uyari/
+    # kritik/bilgi, -h/-t hariç) hâlâ döner (gündüz 600/700 ↔ gece 400).
+    TEMA_BAGIMSIZ_TURETIM = {f"{ad}{ek}" for ad in ("basari", "uyari", "kritik", "bilgi")
+                             for ek in ("-h", "-t")}
     ayni = [ad for ad in ROL_TK_GUNDUZ
             if _cozulen(ROL_TK_GUNDUZ[ad]) == _cozulen(ROL_TK_GECE[ad])
-            and _cozulen(ROL_TK_GUNDUZ[ad]) != "transparent"]
+            and _cozulen(ROL_TK_GUNDUZ[ad]) != "transparent"
+            and ad not in TEMA_BAGIMSIZ_TURETIM]
     assert not ayni, f"rol jetonu iki zeminde AYNI değere çözülüyor (tema dönmüyor): {ayni}"
 
 

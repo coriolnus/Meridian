@@ -2,6 +2,14 @@
 değerlerinden TÜRER (kopya değil); Tailwind palet hex'leri testin içinde çözülür (tema.css
 var(--color-X-N) → tailwind palet dosyası ölçülerek, `_tailwind_renk_hex`). (TSK-117, 2026-09-04)
 
+TSK-136 (2026-09-04, operatör kararı 10:10Z) HEDEFİ DEĞİŞTİRDİ: K-4'ün rezerve-hue seri
+rampası VARSAYILAN `ui/src/tema.css`ten kalktı (orijinale — blue/orange/violet/cyan/pink —
+döndü) ve 'Meridian Palet' preset'ine taşındı (`ui/src/styles/presets/meridian-palet.css`).
+Bu dosyanın "seri bandın dışında" ve "huni seri'den türer" iddiaları artık PRESET dosyasını
+okur, `ui/src/tema.css`i DEĞİL — VARSAYILANIN kendisi bilerek rol bantlarının İÇİNDEDİR
+(operatörün kararı, spec S6) ve `test_VARSAYILAN_seri_ROL_BANTLARINDA` bunu düz bir değer
+ölçümü olarak (hue-gate DEĞİL) ayrıca doğrular.
+
 NUMARA ÇAKIŞMASI TARANDI (2026-09-04): `ls tests | grep v399` BOŞ döndü.
 
 HUNİ YOLU ÖLÇÜLDÜ, BREF'İN TASLAĞI DEĞİL: `grep -n '"huni-1"' meridian/web/tokens.json` iki kayıt
@@ -32,6 +40,7 @@ from tests.test_hafiza_genel_bakis_v388 import ROL_BANTLARI, _bantta, _tailwind_
 
 ROOT = pathlib.Path(config.ROOT)
 TEMA = ROOT / "ui" / "src" / "tema.css"
+PRESET = ROOT / "ui" / "src" / "styles" / "presets" / "meridian-palet.css"
 TOKENS = ROOT / "meridian" / "web" / "tokens.json"
 
 assert ROL_BANTLARI, "v388 ROL_BANTLARI boş — ithalat bayat mı ölçüldü mü?"  # kullanım kanıtı
@@ -49,10 +58,10 @@ def _tailwind_hex(ad: str) -> str:
     return _tailwind_renk_hex(ad)
 
 
-def _seri(tema_blok: str) -> dict[int, str]:
-    css = TEMA.read_text(encoding="utf-8")
+def _seri(kaynak_dosya: pathlib.Path, tema_blok: str) -> dict[int, str]:
+    css = kaynak_dosya.read_text(encoding="utf-8")
     m = re.search(rf"{tema_blok}\s*\{{([^}}]*)\}}", css, re.S)
-    assert m, f"{tema_blok} bloğu tema.css'te bulunamadı — desen bayat"
+    assert m, f"{tema_blok} bloğu {kaynak_dosya.name}'te bulunamadı — desen bayat"
     blok = m.group(1)
     return {
         int(m2.group(1)): m2.group(2)
@@ -60,49 +69,85 @@ def _seri(tema_blok: str) -> dict[int, str]:
     }
 
 
+def _seri_preset(gece: bool) -> dict[int, str]:
+    sec = r'\.dark:root\[data-theme-preset="meridian-palet"\]' if gece \
+        else r':root\[data-theme-preset="meridian-palet"\]'
+    return _seri(PRESET, sec)
+
+
 def test_taranan_dosyalar_YERINDE():
     """KÖRLÜK ALARMI: yol bayatlarsa aşağıdaki `_seri`/tokens okuması sessizce boş/hatalı döner."""
-    for p in (TEMA, TOKENS):
+    for p in (TEMA, TOKENS, PRESET):
         assert p.is_file(), f"ölçülecek dosya yok: {p}"
 
 
-def test_seri_6_10_rol_bantlarinda_DEGIL():
+def test_seri_6_10_PRESETTE_rol_bantlarinda_DEGIL():
+    """TSK-136 (2026-09-04): rezerve-hue rampası artık VARSAYILANDA değil, 'Meridian Palet'
+    preset'inde — bu test preset CSS'ini okur."""
+    for gece, ad in ((False, "gündüz"), (True, "gece")):
+        seri = _seri_preset(gece)
+        assert seri, f"preset {ad} bloğunda hiç --seri-N okunamadı — desen bayat"
+        for k, tw in seri.items():
+            if k < 6:
+                continue
+            h = _hue(_tailwind_hex(tw))
+            assert _bantta(h) is None, f"preset {ad} seri-{k} ({tw}, {h:.1f}°) rol bandında: {_bantta(h)}"
+
+
+def test_VARSAYILAN_seri_ROL_BANTLARINDA():
+    """DEĞER ÖLÇÜMÜ (hue-gate DEĞİL): VARSAYILAN `ui/src/tema.css` orijinale (blue/orange/
+    violet/cyan/pink) döndü — bu eski K-4'ün ÖLÇTÜĞÜ kusurun (rol×veri-kimliği çakışması)
+    varsayılan temada BİLİNÇLİ olarak geri gelmesidir (operatör kararı, TSK-136 2026-09-04);
+    düzeltme preset'te yaşar. ÖLÇÜLEN (bu testin ÖLÇÜMÜ, tahmin DEĞİL): 7/10 (5 seri × 2 tema)
+    bantta — blue (GEZİNME, iki temada), violet (MOD, iki temada), cyan (BİLGİ, iki temada),
+    orange yalnız gündüzde (UYARI+YÖN-EKSİ; gece 400 tonu bandın 1° dışında ölçüldü), pink
+    HİÇBİR temada bantta değil (iki temada da serbest). Sayı DEĞİŞİRSE tema.css sessizce
+    değişmiş olabilir; bu satır o sürüklenmeyi yakalar."""
+    ihlalde = []
     for blok in (":root", r"\.dark"):
-        seri = _seri(blok)
+        seri = _seri(TEMA, blok)
         assert seri, f"{blok} bloğunda hiç --seri-N okunamadı — desen bayat"
         for k, tw in seri.items():
             if k < 6:
                 continue
             h = _hue(_tailwind_hex(tw))
-            assert _bantta(h) is None, f"{blok} seri-{k} ({tw}, {h:.1f}°) rol bandında: {_bantta(h)}"
+            if _bantta(h) is not None:
+                ihlalde.append((blok, k, tw, round(h, 1), _bantta(h)))
+    assert len(ihlalde) == 7, (
+        f"VARSAYILAN seri-bant-içi sayısı {len(ihlalde)} ≠ ölçülen 7 (2026-09-04) — "
+        f"tema.css sessizce değişmiş olabilir: {ihlalde}")
 
 
-def test_huni_jetonlari_seri_degerlerinden_turer():
+def test_huni_jetonlari_PRESETTE_seri_referansi_TASIYOR():
     """Eşleme (1,6),(2,8),(3,9) — `ui/src/pano/yuzeyler/kanban/Huni.tsx::RENK_ILK/ORTA/VARIS`
-    (ÖLÇÜLEN gerçek UI, `grep -n "RENK_ILK\\|RENK_ORTA\\|RENK_VARIS" .../Huni.tsx`) ile BİREBİR;
-    "ilk üç seri" gibi keyfi bir sıra DEĞİL (düzeltme turu 1, TSK-117 G7 r1, 2026-09-04)."""
+    (ÖLÇÜLEN gerçek UI) ile BİREBİR. TSK-136 (2026-09-04): bu türetim artık VARSAYILANDA
+    (tokens.json) değil — preset CSS'i `--huni-N: var(--seri-M)` REFERANSI taşır (statik hex
+    DEĞİL, canlı CSS değişkeni — preset seçiliyken seri değişirse huni de değişir)."""
+    css = PRESET.read_text(encoding="utf-8")
+    for i, k in ((1, 6), (2, 8), (3, 9)):
+        assert re.search(rf"--huni-{i}:\s*var\(--seri-{k}\)", css), (
+            f"preset --huni-{i} → var(--seri-{k}) referansı yok — kopya/türetim ayrışmış olabilir"
+        )
+
+
+def test_huni_jetonlari_VARSAYILANDA_sabit_dub_hex_TASIYOR():
+    """DEĞER ÖLÇÜMÜ: VARSAYILAN tokens.json huni-1/2/3 artık seri'den TÜREMİYOR — orijinal
+    (referans commit 4bfa113) sabit Dub hex'lerine geri döndü (TSK-136, 2026-09-04). Bu BİLEREK
+    seri-6/8/9'un (blue/violet/cyan) hex'inden FARKLI olabilir — huni maketten birebir sabit bir
+    palettir, VARSAYILANDA seri türetimi YOK."""
     d = json.loads(TOKENS.read_text(encoding="utf-8"))
-    seri_gunduz = _seri(":root")
-    seri_gece = _seri(r"\.dark")
-    for tema_adi, seri in (("gunduz", seri_gunduz), ("gece", seri_gece)):
-        huni = d["tema"][tema_adi]["murekkep"]
-        for i, k in ((1, 6), (2, 8), (3, 9)):
-            beklenen = _tailwind_hex(seri[k]).lower()
-            gercek = huni[f"huni-{i}"]["$value"]["hex"].lower()
-            assert gercek == beklenen, (
-                f"{tema_adi} huni-{i} ({gercek}) ≠ seri-{k} ({beklenen}) — kopya ayrıştı"
-            )
-            assert "seri-" in huni[f"huni-{i}"].get("$description", ""), (
-                f"{tema_adi} huni-{i} beyanı 'seri-N' türetimini söylemeli"
-            )
-            # `literal` üretim önceliklidir (`ops/jeton_css_uret.py::uret`): `$value` güncellenip
-            # `literal` bayat kalırsa CSS üretimi ESKİ hex'i basar — ikisi BİRLİKTE ölçülür.
-            literal = (
-                huni[f"huni-{i}"].get("$extensions", {}).get("org.meridian.css", {}).get("literal")
-            )
-            assert literal is not None and literal.lower() == beklenen, (
-                f"{tema_adi} huni-{i} $extensions.literal ({literal}) ≠ $value.hex ({beklenen}) — "
-                "üretici `literal`i önceliklendirir, ikisi ayrışırsa CSS eski değeri basar"
+    beklenen = {
+        "gunduz": {"huni-1": "#2563eb", "huni-2": "#7c3aed", "huni-3": "#16a34a"},
+        "gece": {"huni-1": "#60a5fa", "huni-2": "#a78bfa", "huni-3": "#4ade80"},
+    }
+    for tema_adi, huniler in beklenen.items():
+        murekkep = d["tema"][tema_adi]["murekkep"]
+        for ad, hex_ in huniler.items():
+            gercek = murekkep[ad]["$value"]["hex"].lower()
+            assert gercek == hex_, f"{tema_adi}.{ad} = {gercek} ≠ beklenen sabit {hex_}"
+            literal = murekkep[ad].get("$extensions", {}).get("org.meridian.css", {}).get("literal")
+            assert literal is not None and literal.lower() == hex_, (
+                f"{tema_adi}.{ad} literal ({literal}) ≠ $value.hex ({hex_})"
             )
 
 

@@ -168,3 +168,16 @@ Sorulan hâlleri (kayıt):
 - **S3** 195° ailesi (`sky/blue/sapphire`) hangi rol? `--bilgi` olarak rezerve mi, serbest mi?
 - **S4** Colorblind ölçümü bu turun kapsamına girsin mi (Ö-simülasyon + ışıklılık farkı ≥ eşik), yoksa ayrı kalem?
 - **S5** K-2 göçü tek dilim mi (56 dosya, tek ajan), dört dilim mi (aile başına)?
+
+**S6 → 2026-09-04 ~10:10Z (TSK-136, operatör kararı, bu belgeden BİR TUR sonra):** bu belgenin
+S1–S5 kararlarıyla uygulanan palet turu (rezerve-hue seri rampası, K-0 gece yön-eksi düzeltmesi,
+anlam jetonlarının `sev-N`/`sky`ye alias'lanması) VARSAYILAN temaya değil bir PRESET'e taşındı —
+"renk seçimleri ayrı bir tema olmalıydı; UI'da zaten dört preset var (Default/Brutalist/Soft Pop/
+Tangerine); ana renkleri geri al, yaptığını tema olarak yap." VARSAYILAN tema TSK-117 ÖNCESİNE
+(referans commit 4bfa113) döndü: seri rampası blue/orange/violet/cyan/pink, huni sabit Dub
+hex'leri, gece yön-eksi #f98080 (K-0 çakışması BİLİNÇLİ geri geldi), anlam jetonları (basari/
+uyari/kritik/bilgi) `sev-N`/`sky` alias'ı değil TSK-117 öncesi literal Tailwind hue'su (amber/
+emerald/red/sky). Bu turun TÜM kararı ("Meridian Palet", `value: "meridian-palet"`) preset
+olarak yaşıyor (`ui/src/styles/presets/meridian-palet.css`) — §2'nin rezerve-bant kuralı ve
+§4'ün anlam-jetonu alias kuralı ARTIK yalnız bu preset SEÇİLİYKEN bağlayıcıdır, varsayılan
+temada değil. Uygulama: TSK-136, 2026-09-04 (künye).

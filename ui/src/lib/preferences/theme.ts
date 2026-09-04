@@ -43,6 +43,20 @@ export const THEME_PRESET_OPTIONS = [
       dark: "oklch(0.64 0.17 36.44)",
     },
   },
+  {
+    // TSK-136, 2026-09-04: eski TSK-117 rezerve-hue palet turu preset oldu. Bu preset
+    // shadcn'in --primary'sine DOKUNMAZ (yalnız Meridian'ın kendi rol jetonlarını
+    // değiştirir, bkz. ui/src/styles/presets/meridian-palet.css) — swatch'ta öteki üç
+    // preset gibi "gerçek --primary" göstermek yerine preset'in ölçülebilir en belirgin
+    // kimliği seçildi: rezerve seri rampasının ilk basamağı (--seri-6 = teal), aynı zamanda
+    // huni-1'in kaynağı. Değer Tailwind theme.css'ten ÖLÇÜLDÜ (--color-teal-600/-400 oklch).
+    label: "Meridian Palet",
+    value: "meridian-palet",
+    primary: {
+      light: "oklch(0.60 0.118 184.704)",
+      dark: "oklch(0.777 0.152 181.912)",
+    },
+  },
 ] as const;
 
 export const THEME_PRESET_VALUES = THEME_PRESET_OPTIONS.map((p) => p.value);

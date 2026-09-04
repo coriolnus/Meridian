@@ -1,12 +1,22 @@
 """v400 — TSK-117 S4: rol çiftleri deuteranopi/protanopi simülasyonunda ışıklılıkla ayrılıyor mu.
 Simülasyon: Viénot-Brettel-Mollon (1999) LMS projeksiyonu (RGB→LMS Hunt-Pointer-Estevez, D65).
-Eşik ön-kayıt: kontrast oranı ≥ 1,4:1 (WCAG bağıl ışıklılık). (TSK-117, 2026-09-03)"""
-import json, pathlib
+Eşik ön-kayıt: kontrast oranı ≥ 1,4:1 (WCAG bağıl ışıklılık). (TSK-117, 2026-09-03)
+
+TSK-136 (2026-09-04, operatör kararı 10:10Z) HEDEFİ DEĞİŞTİRDİ: gece `yon-eksi`nin K-0
+düzeltmesi (#f98080→#f6966f) VARSAYILAN tokens.json'dan preset'e taşındı. Bu xfail testin
+ANLAMI hâlâ AYNI soru: düzeltme SONRASI hâlâ eşiğin altında mı — bu yüzden `_jeton` gece
+yon-eksi'yi artık preset CSS'inden okur (`ui/src/styles/presets/meridian-palet.css`), diğer
+jetonlar (sev-1/2/3, yon-arti — palet turundan ETKİLENMEDİ) tokens.json'dan gelmeye devam
+eder. VARSAYILANIN (preset UYGULANMADAN, orijinal #f98080) ölçümü PYTEST ÇİVİSİ DEĞİL — rapora
+elle işlendi (`.superpowers/sdd/2026-09-04-tsk136/report.md`), çünkü aynı renk-körlüğü
+çakışması hem eski hem yeni değerde ölçülüyor ve ikinci bir xfail sessiz gürültü olurdu."""
+import json, pathlib, re
 
 import pytest
 from meridian import config
 
 TOKENS = pathlib.Path(config.ROOT) / "meridian" / "web" / "tokens.json"
+PRESET = pathlib.Path(config.ROOT) / "ui" / "src" / "styles" / "presets" / "meridian-palet.css"
 ESIK = 1.4
 CIFTLER = [("siddet", "sev-2", "siddet", "sev-3"), ("yon", "yon-eksi", "yon", "yon-arti"), ("siddet", "sev-1", "siddet", "sev-2")]
 
@@ -54,6 +64,12 @@ def _jeton(tema, grup, ad):
     # bazı başka gruplar) {"colorSpace":"srgb","components":[...],"alpha":1,"hex":"#..."} sözlüğü
     # (bkz. /tema/gunduz/zemin/bg). Bu ölçüm yalnız rol.*.siddet/yon ana jetonlarını okur (düz
     # dizge) ama yardımcı ikisini de destekler — uydurma yok, ölçülen biçim ne ise o okunur.
+    if tema == "gece" and grup == "yon" and ad == "yon-eksi":
+        # TSK-136, 2026-09-04: K-0 düzeltmesi VARSAYILANDA değil — preset'ten OKU.
+        css = PRESET.read_text(encoding="utf-8")
+        m = re.search(r"--yon-eksi:\s*(#[0-9a-fA-F]{6})", css)
+        assert m, f"preset'te --yon-eksi bulunamadı: {PRESET}"
+        return m.group(1)
     d = json.loads(TOKENS.read_text(encoding="utf-8"))
     v = d["rol"][tema][grup][ad]["$value"]
     return v["hex"] if isinstance(v, dict) else v

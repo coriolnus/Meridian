@@ -1,9 +1,20 @@
 """v396 — TSK-117 K-0: gece rol jetonları arasında hue çakışması yok (yön-eksi 0° ↔ kritik 1° vakası).
-Hue hesabı testin İÇİNDE (colorsys) — sabit tablo yazılmaz. (TSK-117, 2026-09-03)"""
+Hue hesabı testin İÇİNDE (colorsys) — sabit tablo yazılmaz. (TSK-117, 2026-09-03)
+
+TSK-136 (2026-09-04, operatör kararı 10:10Z) HEDEFİ DEĞİŞTİRDİ: K-0 düzeltmesi (#f98080 0° →
+#f6966f 17°) VARSAYILAN tokens.json'dan kalktı — palet turu preset oldu, düzeltme artık yalnız
+'Meridian Palet' preset'i (`ui/src/styles/presets/meridian-palet.css`) seçilince uygulanıyor.
+Bu dosyanın hue-çakışma iddiaları (aşağıdaki üç test) o yüzden PRESET'İN yön-eksi değerini
+ölçer — `_rol_kromatik("gece")` yön-eksi'yi tokens.json'dan DEĞİL preset CSS'ten okur (adı/
+docstring'i taşıyor: 'varsayılan = orijinal, K-0 preset'te'). VARSAYILANIN kendisi (orijinal,
+K-0 ÖNCESİ #f98080) `test_VARSAYILAN_gece_yon_eksi_ORIJINALE_dondu` ile AYRICA, düz bir değer
+ölçümü olarak (hue-gate DEĞİL) doğrulanır — o testin ihlal ETMESİ bilinçlidir (S4/v400 xfail'i
+zaten aynı çakışmayı ölçüyor)."""
 import colorsys, json, pathlib, re
 from meridian import config
 
 TOKENS = pathlib.Path(config.ROOT) / "meridian" / "web" / "tokens.json"
+PRESET = pathlib.Path(config.ROOT) / "ui" / "src" / "styles" / "presets" / "meridian-palet.css"
 MIN_FARK = 8.0   # derece; spec §4 K-0
 
 def _hue(hexstr):
@@ -21,11 +32,28 @@ def _rol_kromatik(tema):
             if isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v):
                 h, s, l = _hue(v)
                 if s >= 0.12: out[f"{grup}/{ad}"] = h
+    if tema == "gece":
+        # TSK-136, 2026-09-04: K-0 düzeltmesi VARSAYILANDA değil artık — preset'ten OKU.
+        css = PRESET.read_text(encoding="utf-8")
+        m = re.search(r"--yon-eksi:\s*(#[0-9a-fA-F]{6})", css)
+        assert m, f"preset'te --yon-eksi bulunamadı: {PRESET}"
+        h, s, l = _hue(m.group(1))
+        assert s >= 0.12, "preset yon-eksi akromatik ölçüldü — desen bayat mı?"
+        out["yon/yon-eksi"] = h
     return out
 
 def _dairesel(a, b):
     d = abs(a - b) % 360
     return min(d, 360 - d)
+
+def test_VARSAYILAN_gece_yon_eksi_ORIJINALE_dondu():
+    """DEĞER ÖLÇÜMÜ (hue-gate DEĞİL): VARSAYILAN tokens.json'un gece yön-eksi'si TSK-136 ile
+    orijinal (K-0 ÖNCESİ, referans commit 4bfa113) #f98080'e döndü — operatörün BİLİNÇLİ
+    kararı. Bu jetonun kritik'le hue çakışması S4/v400'ün xfail(strict) testinde AYRICA
+    ölçülüyor; burada yalnız DEĞERİN doğru olduğu doğrulanır."""
+    d = json.loads(TOKENS.read_text(encoding="utf-8"))
+    assert d["rol"]["gece"]["yon"]["yon-eksi"]["$value"] == "#f98080", \
+        f"gece yön-eksi VARSAYILANI {d['rol']['gece']['yon']['yon-eksi']['$value']!r} ≠ #f98080 (orijinal)"
 
 def test_gece_yon_eksi_ile_kritik_ayri_hue():
     h = _rol_kromatik("gece")

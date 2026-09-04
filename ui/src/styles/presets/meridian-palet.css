@@ -1,0 +1,78 @@
+/*
+label: Meridian Palet
+value: meridian-palet
+*/
+
+/* TSK-136, 2026-09-04 (operatör kararı 10:10Z): eski TSK-117 palet turu (G1-G8, rezerve-hue
+   rol bantları + seri rampası + K-0 gece yön-eksi düzeltmesi) VARSAYILAN temadan buraya
+   taşındı — "renk seçimleri ayrı bir tema olmalıydı; UI'da zaten 4 preset var". Bu preset
+   yalnız Meridian'ın KENDİ rol jetonlarına dokunur (anlam/seri/yön-eksi/huni); shadcn'in
+   temel jetonlarına (--primary, --card, --chart-N, --sidebar-*, gölgeler…) DOKUNMAZ — öteki
+   üç preset (brutalist/soft-pop/tangerine) o katmanı değiştirir, bu preset Meridian'ın kendi
+   renk-rolü katmanını değiştirir; ikisi farklı sorular. */
+
+:root[data-theme-preset="meridian-palet"] {
+  /* ANLAM → ŞİDDET ALIAS'I (eski TSK-117 varsayılanı). --sev-N/--sky kendi zeminine göre
+     döner (ui/src/jetonlar.css), var() zinciri dinamik çözülür; gece bloğu aynı alias
+     satırlarını OKUNABİLİRLİK için tekrar taşır (işlevsel gerek yok — inceleme KÜÇÜK-1,
+     TSK-136, 2026-09-04). Bu preset elle yazılır (diğer üç preset gibi, tokens.json'dan
+     üretilmez) — tek-kaynak dışı, TSK-132 kapsamı. */
+  --uyari: var(--sev-2);
+  --uyari-h: var(--sev-2-h);
+  --uyari-t: var(--sev-2-t);
+  --basari: var(--sev-3);
+  --basari-h: var(--sev-3-h);
+  --basari-t: var(--sev-3-t);
+  --kritik: var(--sev-1);
+  --kritik-h: var(--sev-1-h);
+  --kritik-t: var(--sev-1-t);
+  --bilgi: var(--sky);
+  --bilgi-h: rgba(9, 152, 200, .35);
+  --bilgi-t: rgba(9, 152, 200, .10);
+
+  /* SERİ RAMPASI 6-10 — rol bantlarının DIŞINDA (eski TSK-117 K-4, S1=A′/S2). */
+  --seri-6: var(--color-teal-600);
+  --seri-7: var(--color-lime-600);
+  --seri-8: var(--color-fuchsia-600);
+  --seri-9: var(--color-pink-600);
+  --seri-10: var(--color-yellow-600);
+
+  /* HUNİ — seri-6/8/9'dan TÜRER (kopya değil; kanban/Huni.tsx RENK_ILK/ORTA/VARIS ile
+     birebir, eski TSK-117 G7 r1 kararı). */
+  --huni-1: var(--seri-6);
+  --huni-2: var(--seri-8);
+  --huni-3: var(--seri-9);
+}
+
+.dark:root[data-theme-preset="meridian-palet"] {
+  --uyari: var(--sev-2);
+  --uyari-h: var(--sev-2-h);
+  --uyari-t: var(--sev-2-t);
+  --basari: var(--sev-3);
+  --basari-h: var(--sev-3-h);
+  --basari-t: var(--sev-3-t);
+  --kritik: var(--sev-1);
+  --kritik-h: var(--sev-1-h);
+  --kritik-t: var(--sev-1-t);
+  --bilgi: var(--sky);
+  --bilgi-h: rgba(78, 150, 212, .35);
+  --bilgi-t: rgba(78, 150, 212, .10);
+
+  --seri-6: var(--color-teal-400);
+  --seri-7: var(--color-lime-400);
+  --seri-8: var(--color-fuchsia-400);
+  --seri-9: var(--color-pink-400);
+  --seri-10: var(--color-yellow-400);
+
+  /* K-0 (eski TSK-117 G2, 2026-09-03): gece yön-eksi #f98080 (0°) gece kritik #ff7e7c (1°)
+     ile çakışıyordu; hue gündüz yön-eksi ailesine (17°) alındı. VARSAYILAN TEMADA BU
+     DÜZELTME KALKTI (TSK-136) — burada, preset seçilince yaşamaya devam eder. */
+  --yon-eksi: #f6966f;
+  --yon-eksi-h: rgba(246, 150, 111, .35);
+  --yon-eksi-t: rgba(246, 150, 111, .10);
+  --yon-eksi-zemin: rgba(246, 150, 111, .07);
+
+  --huni-1: var(--seri-6);
+  --huni-2: var(--seri-8);
+  --huni-3: var(--seri-9);
+}

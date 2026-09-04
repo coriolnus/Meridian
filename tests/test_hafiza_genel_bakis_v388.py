@@ -55,6 +55,11 @@ TAKIMYILDIZI = HAFIZA / "takimyildizi.tsx"
 GORUNUMLER = HAFIZA / "gorunumler.ts"
 TEMA = UI / "src/tema.css"
 TW_TEMA = UI / "node_modules/tailwindcss/theme.css"
+# TSK-136, 2026-09-04 (operatör kararı 10:10Z): eski TSK-117 rezerve-hue seri rampası
+# VARSAYILAN tema.css'ten preset'e taşındı. `_jeton_hue` bu yüzden PRESET-FARKINDA: `kaynak`
+# verilirse `--seri-N → --color-X` adımı ORADAN okunur (`--color-seri-N → --seri-N` eşlemesi
+# HER ZAMAN tema.css'te yaşar — preset o katmana dokunmaz, bkz. fonksiyon şerhi).
+PRESET = UI / "src/styles/presets/meridian-palet.css"
 
 _YORUM = re.compile(r"/\*.*?\*/|(?<![:'\"])//[^\n]*", re.S)
 
@@ -337,9 +342,16 @@ def _tailwind_renk_hex(ad: str) -> str:
     return f"#{round(r * 255):02x}{round(g * 255):02x}{round(bl * 255):02x}"
 
 
-def _jeton_hue(jeton: str) -> float | None:
+def _jeton_hue(jeton: str, kaynak: pathlib.Path | None = None) -> float | None:
     """Jeton adı → hue. `None` = AKROMATİK (doygunluk ~0) ya da tema jetonu (gri ailesi);
-    hue'su olmayan bir renk hiçbir hue bandına giremez ve bu bir kaçamak değil, ölçüm."""
+    hue'su olmayan bir renk hiçbir hue bandına giremez ve bu bir kaçamak değil, ölçüm.
+
+    `kaynak` (TSK-136, 2026-09-04): `--seri-N → --color-X` adımı NEREDEN okunur — VARSAYILAN
+    `TEMA` (`ui/src/tema.css`), preset-farkında bir ölçüm için `PRESET` verilebilir. `--color-
+    seri-N → --seri-N` eşlemesi (aşağıdaki `seri = re.search(...)`) HER ZAMAN `TEMA`'dan okunur
+    — preset dosyası o `@theme inline` katmanına hiç dokunmaz, yalnız ham `--seri-N` değerini
+    EZER."""
+    kaynak = kaynak or TEMA
     tak = soy(TAKIMYILDIZI)
     blok = re.search(r"export const JETONLAR\s*=\s*\{(.*?)\n\}", tak, re.S)
     assert blok, "JETONLAR tablosu okunamadı — desen bayat"
@@ -358,10 +370,11 @@ def _jeton_hue(jeton: str) -> float | None:
         return None if float(parc[1]) < 0.02 else _oklch_hsl(
             float(parc[0]), float(parc[1]), float(parc[2]))[0]
 
-    ham = re.search(rf"\n\s*{re.escape(seri.group(1))}:\s*var\((--color-[a-z]+-\d+)\)", tema)
+    ham_metin = kaynak.read_text(encoding="utf-8")
+    ham = re.search(rf"\n\s*{re.escape(seri.group(1))}:\s*var\((--color-[a-z]+-\d+)\)", ham_metin)
     if ham is None:
-        dogrudan = re.search(rf"\n\s*{re.escape(seri.group(1))}:\s*oklch\(([^)]*)\)", tema)
-        assert dogrudan, f"{seri.group(1)} tema.css'te çözülemedi"
+        dogrudan = re.search(rf"\n\s*{re.escape(seri.group(1))}:\s*oklch\(([^)]*)\)", ham_metin)
+        assert dogrudan, f"{seri.group(1)} {kaynak.name}'te çözülemedi"
         parc = dogrudan.group(1).replace("/", " ").split()
         return None if float(parc[1]) < 0.02 else _oklch_hsl(
             float(parc[0]), float(parc[1]), float(parc[2]))[0]
@@ -404,18 +417,39 @@ def test_HUE_HESABI_kendisi_olculuyor():
 def test_DUGUM_RENKLERI_rol_bantlarinda_DEGIL():
     """(b) BULGUSUNUN ÇİVİSİ. Tür renkleri ve ısı rampasının ÜÇ durağı da rol bandı dışında —
     BEYANLI istisnalar hariç. Eski hâl üç ısı durağının ÜÇÜNÜ birden ihlal ediyordu
-    (mavi GEZİNME · mor MOD · turuncu UYARI) ve hiçbiri beyanlı değildi."""
+    (mavi GEZİNME · mor MOD · turuncu UYARI) ve hiçbiri beyanlı değildi.
+
+    TSK-136 (2026-09-04, operatör kararı 10:10Z) HEDEFİ DEĞİŞTİRDİ: K-4'ün rezerve-hue seri
+    rampası VARSAYILAN tema.css'ten preset'e taşındı — `takimyildizi.tsx`in JETONLAR/DUGUM_STILI
+    tabloları G7 hâliyle KALDI (D3 kararı) ama VARSAYILAN temada `teal`/`pembe` artık blue-600/
+    cyan-600'e bağlı (ÖLÇÜLDÜ: rol bandı içi). Bu çivi bu yüzden PRESET seçiliyken ölçer
+    (`kaynak=PRESET`) — orada K-4'ün düzeltmesi hâlâ yaşıyor. VARSAYILANIN kendisi
+    `test_VARSAYILAN_DUGUM_RENKLERI_rol_bandina_DONDU` ile AYRICA, düz bir değer ölçümü olarak
+    (hue-gate DEĞİL) doğrulanır."""
     blok = _dugum_stili()
     jetonlar = set(re.findall(r'"([a-z]+)"', blok))
     assert jetonlar, "DUGUM_STILI hiçbir jeton adı taşımıyor — tablo boş okunuyor"
     for jeton in sorted(jetonlar):
-        h = _jeton_hue(jeton)
+        h = _jeton_hue(jeton, kaynak=PRESET)
         if h is None:
             continue                                # akromatik: hue yok, banda giremez
         bant = _bantta(h)
         if jeton in ISTISNALAR:
             continue                                # beyanlı: gerekçesi ayrı çivide ölçülüyor
-        assert bant is None, f"{jeton} hue={h:.1f}° rol bandında: {bant}"
+        assert bant is None, f"{jeton} hue={h:.1f}° (preset) rol bandında: {bant}"
+
+
+def test_VARSAYILAN_DUGUM_RENKLERI_rol_bandina_DONDU():
+    """DEĞER ÖLÇÜMÜ (hue-gate DEĞİL): VARSAYILAN temada (preset SEÇİLMEDEN) `teal`/`pembe`
+    ÖLÇÜLDÜĞÜ ÜZERE rol bandına geri düştü (TSK-136, 2026-09-04) — operatörün BİLİNÇLİ kararının
+    doğrudan sonucu, eski (b) bulgusunun sınıfı. `soluk`/`yazi` akromatik, banda giremez."""
+    blok = _dugum_stili()
+    jetonlar = sorted(set(re.findall(r'"([a-z]+)"', blok)))
+    bantta = {j: _bantta(h) for j in jetonlar if (h := _jeton_hue(j)) is not None}
+    bantta = {j: b for j, b in bantta.items() if b is not None}
+    assert bantta == {"teal": "GEZİNME", "pembe": "BİLGİ"}, (
+        f"VARSAYILANDA banda-düşen küme değişti: {bantta} — beklenen {{'teal': 'GEZİNME', "
+        "'pembe': 'BİLGİ'}} (2026-09-04 ölçümü); DUGUM_STILI ya da tema.css sessizce değişmiş olabilir")
 
 
 def test_ISTISNALAR_KUNYELI_ve_HALA_GEREKLI():
@@ -451,12 +485,29 @@ def test_ISTISNA_DISINDA_kromatik_ton_TEK():
     JETON ADLARI (düzeltme turu 1): `mavi`/`camgobegi` `JETONLAR`dan SİLİNDİ (ad çürük çapaydı —
     `mavi` artık teal'e, `camgobegi` artık pink'e bağlıydı — VE bir düğüm/bağ RENK ÇAKIŞMASININ
     kaynağıydı, bkz. `test_DUGUM_ve_BAG_RENKLERI_CAKISMIYOR`). Kalan/yeni beş kromatik seri-jeton
-    adı artık seri numarasıyla BİREBİR: `teal`(6) `turuncu`(7) `mor`(8) `pembe`(9) `sari`(10)."""
+    adı artık seri numarasıyla BİREBİR: `teal`(6) `turuncu`(7) `mor`(8) `pembe`(9) `sari`(10).
+
+    TSK-136 (2026-09-04): `kaynak=PRESET` — K-4'ün serbest-bant rampası VARSAYILANDA değil,
+    'Meridian Palet' preset'inde yaşıyor. VARSAYILANIN ölçümü
+    `test_VARSAYILAN_ISTISNA_DISINDA_kromatik_ton_DUSTU`de."""
     serbest = [j for j in ("teal", "turuncu", "mor", "pembe", "sari")
-               if (h := _jeton_hue(j)) is not None and _bantta(h) is None]
+               if (h := _jeton_hue(j, kaynak=PRESET)) is not None and _bantta(h) is None]
     assert serbest == ["teal", "turuncu", "mor", "pembe", "sari"], (
         f"serbest kromatik jeton kümesi değişti: {serbest} — `DUGUM_STILI` ve istisna "
         "listesi bu ölçümle birlikte gözden geçirilmeli")
+
+
+def test_VARSAYILAN_ISTISNA_DISINDA_kromatik_ton_DUSTU():
+    """DEĞER ÖLÇÜMÜ (hue-gate DEĞİL): VARSAYILAN temada (preset YOK) serbest kalan kromatik
+    seri-jeton sayısı 5'ten 1'e DÜŞTÜ — `_jeton_hue` DAİMA `:root` (gündüz) değerini okur ve
+    `teal`(blue-600≈221° GEZİNME), `turuncu`(orange-600≈18° UYARI+YÖN-EKSİ), `mor`(violet-600≈
+    265° MOD), `pembe`(cyan-600≈192° BİLGİ) hepsi bantta; yalnız `sari`(yellow-600) serbest
+    (TSK-136, 2026-09-04 — eski (b) bulgusunun sınıfı, operatörün BİLİNÇLİ kararı)."""
+    serbest = [j for j in ("teal", "turuncu", "mor", "pembe", "sari")
+               if (h := _jeton_hue(j)) is not None and _bantta(h) is None]
+    assert serbest == ["sari"], (
+        f"VARSAYILANDA serbest kromatik jeton kümesi değişti: {serbest} — beklenen "
+        "['sari'] (2026-09-04 ölçümü)")
 
 
 def test_MOR_dugum_rengi_olmaktan_CIKTI():

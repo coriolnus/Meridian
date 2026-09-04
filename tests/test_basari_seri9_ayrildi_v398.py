@@ -26,13 +26,15 @@ TARANAN_TABAN = 100  # ölçüldü 2026-09-03: 195 .tsx dosyası var; tavan kör
 #    yüzdesi" çizgi grafiği, her sembolü `var(--color-seri-N)` ile ayırt ediyor (`RAMPA_N=10`,
 #    onda döner ve ekranda yazar); bu göç kapsamı DIŞINDA, dosyada emerald/green literal YOK.
 #  - SeansTakvimi.tsx: TSK-117 K-4 turunda GENİŞLETİLDİ (ölçüldü, 2026-09-04) — takvim lejantının
-#    `dongu` (gece döngüsü kaydı) işaretleyicisi `emerald-500`den `var(--color-seri-6)`e taşındı
-#    (`tests/test_literal_renk_gocu_v397.py` emerald tavanı 4→0). "kosu" (hat koşusu) kardeş
-#    işaretleyici akromatik `ring-primary` kalıyor — ikisi "başarı/başarısızlık" değil YALNIZ İKİ
-#    KAYIT TÜRÜNÜ ayırt eden kategorik/dekoratif bir lejant (S1 ilkesi, VERİ kimliği — rol değil).
+#    `dongu` (gece döngüsü kaydı) işaretleyicisi `emerald-500`den `var(--color-seri-6)`e taşınmıştı
+#    (`tests/test_literal_renk_gocu_v397.py` emerald tavanı 4→0). TSK-136'DA GERİ ÇIKARILDI
+#    (2026-09-04, operatör kararı 10:10Z): rezerve-hue palet turu VARSAYILAN temadan preset'e
+#    taşınınca `dongu` işaretleyicisi `basari` anlam utility'sine döndü (`bg-basari-t`/
+#    `text-basari`/`bg-basari-h`) — artık `var(--color-seri-N)` YOK, dosya bu istisna listesine
+#    ihtiyaç duymuyor (v397'nin emerald tavanı hâlâ 0: `basari` literal `emerald-*` DEĞİL).
 VERI_BILESENLERI = (
     "takimyildizi.tsx", "Huni.tsx", "grafik", "chart", "anasayfakartlari.tsx",
-    "PozisyonSeyri.tsx", "SeansTakvimi.tsx",
+    "PozisyonSeyri.tsx",
 )
 
 def _tsx_dosyalari():
