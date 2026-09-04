@@ -2374,3 +2374,26 @@ doğal tetiği.
 
 **Suite #16 (7ed0f54): 10288 passed / 1 failed** — v28 hermes denetimi `reflect.*` izin listesi (yeni süzgeç çağrısı) → izin + künye, delta yeşil,
 push 78f2f20. Dağıtım #13 (132/134 + 074 + 133 + 123) seans sonrası ≥20:00Z.
+
+### 2026-09-04 akşam (Rol-1, otonom) — v412 gündüz gri arka plan · TSK-137 tasarım + adım-1 · suite #17
+
+**v412 (cea354d) — operatör vakası 17:47Z:** gündüz modunda Hafıza › Genel bakış kartları siyah. Kök neden: `jetonlar.css` gece MEDYA bloğu
+`:root:not([data-theme='light'])` seçicisiyle üretiliyordu; pano damgası `data-theme="gunduz|gece"` (theme-utils) — 'light' hiç yazılmıyor, OS koyu
+iken gece bloğu gündüz panosunu karartıyordu (iki damga sözlüğü). Üretici seçicisi `:not([data-theme='gunduz'])` eki aldı; v412 üç test (pano damga ön
+koşulu kaynaktan, medya seçicisi, üretici tek kaynak); stub OS-koyu emülasyonunda gündüz --card oklch(100%) ✓. YAN BULGU: gece modunda --card #262626
+(jetonlar `.dark` bloğu tema.css'i eziyor) → TSK-134 yeniden QUEUED. Hafıza: css-medya-blogu-pano-damga-uyumsuzlugu.
+
+**TSK-137 (0dd111d tasarım, 9c71bea adım-1):** events.jsonl 26,5 MB / intraday_decisions 19 MB; `read_jsonl` tam dosyayı okuyup kırpıyordu.
+Tasarım belgesi (okuyucu envanteri, emsaller, üç seçenek, öneri adım-1 kuyruk okuma + alerts önbelleği; 4 operatör sorusu). Adım-1: sondan büyüyen
+blok (taban 256 KB, ×4, ilk yoklamadan tahmin, yarı-dosya eşiği → tam okuma; None → eski yol). İnceleme (sonnet) DÜZELTME: negatif `limit` `if limit:`
+altında truthy → kuyruk yolunda `len(rows) >= limit` ilk blokta trivially true, sonuç bloğa sınırlı (küçük dosyada gizli) → `limit > 0` geçişi +
+fonksiyon içi savunma + 700 KB negatif-limit testi (R1, sonnet); AlarmGovdesi tipine `onbellekten`. A1 bedel ölçümü: 431 ms → 24 ms (18×); yerel 9 MB
+defterde fark ms altı — "yerelde kazanç yok" yanılgısı ölçümle çürüdü, KABUL gerekçesi A1'den. Yasa 6 beyanı: bozuk-satır sayacı kuyruk yolunda yalnız
+taranan blok. Kalan 137b (rotasyon) operatör sorularına bağlı.
+
+**Suite #17 (9c71bea, -n 4, 11 dk): 10338 passed / 2 failed** — v217 p95 zamanlama (-n 4 yükü; seri yeşil, #13 emsali) + v339
+`test_YAZMA_ISTISNALARI_TAM_SAYILIR`: karne_hesap obs-yazım beyanı `store.read_jsonl` diyordu, yazım `_bozuk_satir_uyar` yardımcısına taşınmıştı —
+çağrı-grafiği çivisi taşınmayı aynı gün yakaladı, beyan izledi (531f717; seri 82/82). Ders: yardımcı çıkarma (refactor) obs-yazım beyanlarını kaydırır;
+v339 sınıfı çiviler bunu görür, docstring'ler görmez.
+
+Dağıtım #13 (bab158f…531f717: 132/134 + 074 + 133 + 123 + v412 + 137a) ≥20:00Z. Sonra TSK-035 sevki; TSK-122 dağıtım #14'e (yarın pre-market).
