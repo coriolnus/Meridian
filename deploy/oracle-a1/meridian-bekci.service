@@ -46,6 +46,25 @@ User=ubuntu
 # OpenRouter'a gönderirdi ve `notify.scrub` onu HİÇ GÖRMEZDİ (scrub yalnız bizim kurduğumuz
 # prompt argümanına uygulanır). ÇARE HARNESS'TA: çocuk BOŞ bir geçici dizinde koşturulur.
 WorkingDirectory=/opt/meridian
+# TimeoutStartSec — TSK-123, 2026-09-04 (A1 ölçümü: `systemctl show -p TimeoutStartUSec` bu
+# birimde `infinity` döndü). Asılı bir `hermes -z` çağrısı birimi SONSUZA dek `activating`
+# bırakır ve etkin bir oneshot'ken timer BİR SONRAKİ tetiği ATLAR — sessiz teslimat düşüşü
+# (TSK-014 Ö-5).
+# EN KÖTÜ YOL: bu betik koşum başına hermes'e en çok `KOSUM_CAGRI_TAVANI` kez gider — sıralama
+# (1) + `soul_denetimi.gecir` içindeki denetim/yeniden-üretim/yeniden-denetim (2·3·4). Kaynak:
+# `ops/soul_denetimi.py`, `KOSUM_CAGRI_TAVANI = 4`. HER çağrı bu dosyanın kendi
+# `_profili_cagir`ındaki `p.wait(timeout=PROFIL_TIMEOUT_S)` duvarına çarpar. Kaynak: bu dosya,
+# `MODEL_TIMEOUT_S = 120` + `HARNESS_PAYI_S = 30` → `PROFIL_TIMEOUT_S = 150`.
+# TAVAN = 4 × PROFIL_TIMEOUT_S (150) + 60 s (süreç başlatma + `network-online.target` payı —
+# ÖLÇÜLMEDİ, SEÇİLDİ; `HARNESS_PAYI_S`in yanındaki idiyomun aynısı) = 660 s.
+# `meridian/hermes.py`nin `NOUS_TIMEOUT_S`i (900 s) BU YOLA GİRMEZ — `@sef` biriminde
+# gerekçelendirildiği gibi, buradaki `_profili_cagir` da AYRI bir dış ikiliyi (`hermes` CLI)
+# `subprocess.Popen` ile çağırır ve dış `p.wait` duvarı (150 sn) iç bütçeden HER ZAMAN önce
+# keser.
+# Tavan aşılırsa birim `failed` (Result=timeout) olur. `OnFailure=` bu birimde BİLEREK YOK
+# (yukarıda gerekçeli) — okuyucu yine `/api/infra`dır (Yasa 6), ikinci bir bildirim yolu
+# EKLENMEDİ (kapsam dışı). v409 çivisi: tests/test_birim_timeout_v409.py.
+TimeoutStartSec=660
 # --- PROFİL BAĞLARI — İKİSİ DE ZORUNLU, İKİSİ DE YALNIZ BURADA VERİLEBİLİR --------------------
 # `HERMES_HOME`: `@bekci` profilinin KENDİ evi. Profil = BAĞIMSIZ bir HERMES_HOME dizinidir;
 #   §9.4 duruşunun tamamı — guard kancası · `cron_mode: deny` · deny listesi · kapalı araç

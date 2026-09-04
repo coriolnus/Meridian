@@ -34,6 +34,26 @@ User=ubuntu
 # Depo kökünden koşmalı: betik `sys.path` bootstrap'ini kendi yapar ama `state/` yolları
 # config üzerinden köke bağlıdır.
 WorkingDirectory=/opt/meridian
+# TimeoutStartSec — TSK-123, 2026-09-04 (A1 ölçümü: `systemctl show -p TimeoutStartUSec` bu
+# birimde de `infinity` döndü). Filonun öteki üç oneshot brifing birimiyle AYNI kapı sınıfı
+# (asılı koşum → sonsuz `activating` → timer sıradaki tetiği atlar, TSK-014 Ö-5) ama BAŞKA BİR
+# GEREKÇEYLE: kardeşlerin `4 × PROFIL_TIMEOUT_S` formülü BU BİRİME UYGULANMAZ.
+# ÖLÇÜLDÜ (grep, 2026-09-04): `ops/skill_gorus_uret.py`de `subprocess`/`requests`/`urllib`/
+# `socket`/`_profili_cagir`/`soul_denetimi` HİÇBİRİ yok — bu birimin ExecStart'ı (`--uygula`,
+# `--llm` DEĞİL) YALNIZ DETERMİNİSTİK yolu koşar (betiğin kendi başlığı: "YALNIZ DETERMİNİSTİK
+# YOL"). `PROFIL_TIMEOUT_S` bu dosyada TANIMLI DEĞİLDİR — kardeşlerdeki gibi bir çağrı-tavanı
+# formülü YOK, çünkü sayılacak bir hermes çağrısı yok. `[Unit]` bölümü de bunu doğrular:
+# `network-online.target` bilerek TAŞINMAZ ("deterministik yol ağa çıkmaz").
+# TAVAN SEÇİLDİ, ÖLÇÜLMEDİ: `--tavan` varsayılanı YOKTUR (bu koşumda işlenecek satır sayısı
+# sınırsız), yani büyük bir birikmiş kuyruğun gerçek işlenme süresi ölçülmedi. Kardeşlerin
+# başlangıç/`network-online` payından (60 s) daha cömert bir GÜVENLİK TABANI seçildi; bu birim
+# ağa çıkmadığı için 660 s'lik LLM tavanına gerek yoktur. `--llm` (EDG-2026-063 gölge üretici)
+# BU BİRİMDE KOŞMAZ (kart notu); o yol bir gün buraya bağlanırsa tavan `PROFIL_TIMEOUT_S`
+# formülüyle YENİDEN ölçülmeli.
+# Tavan aşılırsa birim `failed` (Result=timeout) olur. `OnFailure=` bu birimde de YOK (bu
+# dosyada hiç tanımlanmamıştı, TSK-123 kapsamında EKLENMEDİ) — okuyucu `/api/infra`dır
+# (Yasa 6). v409 çivisi: tests/test_birim_timeout_v409.py.
+TimeoutStartSec=300
 ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/skill_gorus_uret.py --uygula
 
 # H3 SERTLEŞTİRME — filo ortak seti (gerekçelerin tam metni meridian.service'te). TEK BEYANLI
