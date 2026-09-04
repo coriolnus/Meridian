@@ -2427,3 +2427,8 @@ listesi (`light`, sonra `gunduz`) her yeni damga değerinde yeniden delinir; nit
 
 **Dağıtım #14 planı revize:** "yarın pre-market" yerine BU GECE 22:0xZ şef brifingi bittikten sonra (~22:20Z) — TSK-014 yeniden ölçümü
 (brifing_kural_denetimi.kaynak) eski SOUL şemasıyla tamamlanır, ardından TSK-035/122/134 canlıya; piyasa kapalı, overnight bekleyici gerekmez.
+
+**TSK-035 D2 canlı ölçüm (21:3xZ, A1 `meridian.db` salt-okunur SQL — `trades.jsonl` artık `.migrated`, defter DB'de):** 901 satır =
+885 replay_seed + 16 live_paper, damgasız/belirsiz 0; tohum en geç ts_close 2026-07-24, canlı 2026-08-07…2026-09-04. Geri-açılış şartı
+sağlanmıyor. 2026-08-14 "887/887" ile bugünkü 885 arasındaki iki satır ölçülmedi (açık kalem, küçük). Ölçüm yolu: A1'de meridian import
+etmeden `sqlite3 ... ?mode=ro` — obs'a dokunmaz, litestream'e zarar vermez.
