@@ -3175,15 +3175,64 @@ def api_selfreview(request: Request):
     return selfreview.build()
 
 
+# ---- /api/alerts KISA SUNUCU ÖNBELLEĞİ (TSK-137a, 2026-09-04) ----------------------------------
+# ÖLÇÜLEN: pano bu ucu 15 sn'de bir çağırıyor (sessiz hat şeridi) ve `notify.inbox()` her çağrıda
+# `events.jsonl`ın EVENT_WINDOW (4000) satırlık kuyruğunu yeniden ayrıştırıyordu — dosya 15 sn
+# içinde çoğu zaman HİÇ değişmez, yani ayrıştırma çoğunlukla boşuna. Desen `_diag_onbellek_oku`/
+# `_diag_onbellege_yaz` ile AYNI (§ yukarıda): ANAHTAR ZAMAN DEĞİL DEFTERİN KENDİSİ (mtime) — süreli
+# bir önbellek testte/sandboxta BAŞKA bir state'in cevabını servis edebilirdi; dosya değişmediyse
+# cevabın değişmesi de imkânsızdır. TTL 10 sn (pano kadansının altında — ard arda İKİ isteği bile
+# tam kurtarmaz ama üç istekten birini keser; `/api/diagnostics`in 45 sn'lik TTL'inden bilinçli
+# KISA: alarm gelen kutusu operatörün "gördüm" tıkladığı andan itibaren TAZE görünmeli, uzun bir
+# önbellek ACK'in etkisini gizlerdi). Bayatlık dürüst taşınır: yanıt `onbellekten` alanını taşır
+# (Yasa 6 okuyucusu: `tests/test_read_jsonl_kuyruk_v410.py`).
+_ALERTS_CACHE: dict = {}
+ALERTS_TTL_S = 10.0
+
+
+def _alerts_onbellek_oku() -> dict | None:
+    """Geçerli (TTL içinde VE `events.jsonl` mtime'ı DEĞİŞMEMİŞ) bir kopya varsa döner, yoksa None.
+    mtime kontrolü TTL'DEN AYRI bir geçersizleştirmedir: dosya TTL dolmadan değişirse (yeni alarm)
+    önbellek yine de bayat sayılır — 10 sn'lik pencere içinde bile yeni bir alarmı gizlemek, gelen
+    kutusunun VAR OLMA nedenini (alarmın kaybolmaması) önbelleğin kendisiyle çelişkiye düşürürdü."""
+    hit = _ALERTS_CACHE.get(str(getattr(config, "STATE", "")))
+    if not hit:
+        return None
+    yuk, mtime_o, at = hit
+    if _time.monotonic() - at >= ALERTS_TTL_S:
+        return None
+    if store.mtime("events.jsonl") != mtime_o:
+        return None
+    return yuk
+
+
+def _alerts_onbellege_yaz(yuk: dict) -> None:
+    """Taze hesabı `events.jsonl`ın GÜNCEL mtime'ıyla damgalar ve kutuya koyar.
+
+    ANAHTAR `config.STATE` İÇERİR (`_diag_onbellege_yaz` ile aynı gerekçe): ölçüm/test yolları
+    kum havuzuna yönlendiriyor ve anahtarsız bir süreç-içi kutu, kum havuzuna CANLI defterin
+    sayılarını servis ederdi. Tek girdi yeter — havuz anahtarları birikip sızıntı yapmasın."""
+    _ALERTS_CACHE.clear()
+    _ALERTS_CACHE[str(getattr(config, "STATE", ""))] = (yuk, store.mtime("events.jsonl"), _time.monotonic())
+
+
 @app.get("/api/alerts")
 def api_alerts(request: Request):
     """YEREL ALARM GELEN KUTUSU. Uzak kanal (Telegram/webhook) yapılandırılmamışsa
     alarmlar bugüne kadar yalnız bir SAYACA yazılıp kayboluyordu. Burada kaybolmuyorlar: kaynak
     yine `events.jsonl` (ikinci defter YOK), bu uç yalnız ACK'lenmemiş olanları imzaya göre
-    gruplayıp gösterir."""
+    gruplayıp gösterir.
+
+    KISA SUNUCU ÖNBELLEĞİ (TSK-137a): 10 sn TTL + `events.jsonl` mtime anahtarı — dosya
+    değişmediyse pano isteği sıfır okumayla karşılanır. Yanıt `onbellekten` alanını taşır."""
     _auth(request)
     from . import notify
-    return notify.inbox()
+    kopya = _alerts_onbellek_oku()
+    if kopya is not None:
+        return {**kopya, "onbellekten": True}
+    yuk = notify.inbox()
+    _alerts_onbellege_yaz(yuk)
+    return {**yuk, "onbellekten": False}
 
 
 @app.post("/api/alerts/ack")

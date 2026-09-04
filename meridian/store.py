@@ -590,15 +590,48 @@ def append_jsonl(name: str, row: dict) -> None:
     _record_io((_time.perf_counter() - t0) * 1000.0)
 
 
-def read_jsonl(name: str, limit: int | None = None) -> list[dict]:
-    """Satır defterini okur; `limit` verilirse SON `limit` satır. Defter yoksa boş liste.
-    Çözümlenemeyen satırlar atlanır ama SESSİZ DEĞİL: dosya başına bir kez `jsonl_rows_skipped`
-    uyarısı (atlanan/kalan sayısıyla) basılır — yarım satır sessiz veri kaybı olmasın diye."""
-    if db_backed(name):
-        return _prov.sar(name, storage.read_rows(name, limit=limit))
-    path = _path(name)
-    if not path.exists():
-        return []
+# ---- SONDAN KUYRUK OKUMA (TSK-137a, 2026-09-04) ------------------------------------------------
+# ÖLÇÜLEN KUSUR: `limit` verildiğinde bile dosyanın TAMAMI okunup ayrıştırılıyor, `limit` en sonda
+# `rows[-limit:]` ile uygulanıyordu — events.jsonl A1'de 26,5 MB ve üç sık okuyucu (`notify.inbox`
+# 15 sn, `analytics._hayalet_suzulen_n` 30 sn, `hermes.bg_on_eleme_karnesi`) her çağrıda tam dosyayı
+# ayrıştırıyordu. Emsal: `api._son_dongu_olaydan` (byte-seek + kademeli büyüyen blok, tek satırlık
+# olay için). Buradaki fark: `_son_dongu_olaydan` TEK bir satır arıyor (ilk eşleşmede durur), bu
+# fonksiyon `limit` KADAR satır TOPLAMALI — o yüzden blok, yeterli geçerli satır toplanana dek
+# büyür; asla YETERSİZ bir sonuçla DÖNMEZ (aşağıdaki `_read_jsonl_kuyruk` None dönerse çağıran TAM
+# OKUMAYA düşer — eşitlik böyle GARANTİ edilir, tahminin yanlış çıkması asla YANLIŞ sonuç üretmez).
+_KUYRUK_TABAN = 256_000            # ilk (yoklama) bloğu, bayt (D1: "256 KB katları")
+_KUYRUK_BUYUME = 4                 # yoklamadan sonra tahmin çıkarılamazsa blok kaç kat büyür
+_KUYRUK_GUVENLI_PAY = 1.3          # ORTALAMA satır boyu tahminine eklenen pay (satır boyu sabit değildir)
+_KUYRUK_TAM_OKUMA_ORANI = 0.5      # blok dosyanın bu ORANINI aşarsa/aşacaksa kuyruk okumadan vazgeçilir
+# (D2 beyanlı eşik — "limit × ortalama satır boyu > dosya/2 → tam oku"): İLK deneme HER ZAMAN ucuz
+# bir YOKLAMADIR (`_KUYRUK_TABAN`, dosya küçükse dosyanın tamamı) — sonucu hem gerçek bir okuma
+# denemesi hem de ORTALAMA SATIR BOYU tahmini olarak kullanılır. Tahmin yetersizse büyüme KÖRÜ
+# KÖRÜNE 4 kat değil, doğrudan İHTİYACA göre TEK sıçramada hedeflenir: kör büyüme (256K→1M→4M→…)
+# `limit` dosyanın çoğunu istediğinde ART ARDA BAŞARISIZ denemelerde toplamda TAM OKUMADAN FAZLA
+# bayt okuyup SONRA yine tam okumaya düşebilirdi — iki kez okumak, bir kez okumaktan pahalıdır. Bu
+# yüzden eşik kontrolü HER denemeden ÖNCE çalışır (aşağıdaki döngü başı) ve tahmin eşiği aşıyorsa
+# TEK bir yoklamadan sonra vazgeçilir.
+
+
+def _bozuk_satir_uyar(name: str, bad: int, kept: int) -> None:
+    """BOZUK SATIR = SESSİZ VERİ KAYBI (turu 34) uyarısı — dosya başına BİR KEZ, hem tam okuma hem
+    kuyruk okuma bu tek kapıdan geçer. KUYRUK OKUMADA `bad`/`kept` yalnız TARANAN BLOĞU yansıtır,
+    dosyanın TAMAMINI DEĞİL: kuyruk okumanın var oluş nedeni tam dosyayı taramamaktır, bu ÖLÇÜLEBİLİR
+    bir bedeldir ve burada BEYAN edilir (Yasa 6) — tam okumaya düşen yollarda (limit=None ya da eşik
+    aşımı) sayaç eskisi gibi dosyanın TAMAMINI yansıtır (`read_jsonl` docstring'inde de yazılı)."""
+    if bad and name not in _CORRUPT_SEEN:
+        _CORRUPT_SEEN.add(name)
+        try:
+            from . import obs
+            obs.warn("jsonl_rows_skipped", file=str(name), skipped=bad, kept=kept)
+        except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez
+            pass
+
+
+def _read_jsonl_govde(path: Path) -> tuple[list[dict], int]:
+    """Dosyanın TAMAMINI satır satır ayrıştırır: (satırlar, bozuk_satır_sayısı). Hem TAM okuma
+    (`limit=None`) hem kuyruk okumanın eşik-aşımı/yarış geri düşüşü BU gövdeyi paylaşır — aynı
+    ayrıştırmanın iki ayrı kopyası, ileride sessizce ayrışan iki davranış demek olurdu."""
     rows, bad = [], 0
     with open(path) as f:
         for line in f:
@@ -609,15 +642,114 @@ def read_jsonl(name: str, limit: int | None = None) -> list[dict]:
                 except json.JSONDecodeError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
                     bad += 1
                     continue
-    if bad and name not in _CORRUPT_SEEN:
-        # BOZUK SATIR = SESSİZ VERİ KAYBI (turu 34): append_jsonl atomik değildir; çökme ya da disk
-        # dolması yarım bir satır bırakır ve o işlem/plan/olay defterden sessizce düşerdi.
-        _CORRUPT_SEEN.add(name)
+    return rows, bad
+
+
+def _read_jsonl_kuyruk(path: Path, name: str, limit: int) -> list[dict] | None:
+    """`limit` verilmiş SONDAN okuma: TAM dosya yerine büyüyen bir kuyruk bloğu okunur.
+
+    None DÖNERSE çağıran TAM OKUMAYA düşer — bu fonksiyon YALNIZ hızlı yol TAM GÜVENLE yeterliyse
+    (blok içinde `limit` kadar GEÇERLİ satır kesin toplandıysa) bir sonuç üretir; aksi hâlde
+    (küçük dosya, eşik aşımı, okuma sırasında yarış) sessizce None döner — eşitlik hiçbir zaman
+    tahmine bırakılmaz, TAM OKUMA yolu her zaman doğru sonucu üretir.
+
+    D1 sözleşme çivisi (`tests/test_read_jsonl_kuyruk_v410.py`): dönen liste, TAM OKUMANIN naif
+    referansıyla BİREBİR eşittir (None dönen durumlarda eşitliği çağıranın tam-okuma dalı sağlar).
+
+    SÖZLEŞME (fix-r1 Bulgu 1, 2026-09-04): `limit` burada HER ZAMAN pozitif olmalıdır — çağıran
+    (`read_jsonl`) zaten süzüyor, ama bu satır sözleşmeyi fonksiyonun KENDİSİNDE tutar: negatif/sıfır
+    `limit` için `len(rows) >= limit` İLK yoklama bloğunda HER ZAMAN doğru olur (`0 >= -5`), yani
+    sonuç yalnız o bloktan hesaplanır ve TAM dosya üzerinden hesaplanan eski `rows[-limit:]`den
+    (`read_jsonl`in tam-okuma dalı) SAPAR — bu yüzden negatif/sıfır burada asla işlenmemeli."""
+    if limit <= 0:
+        return None
+    try:
+        boyut = path.stat().st_size
+    except OSError:  # sessiz-yutma: `exists()` az önce True dedi, aradaki yarışta dosya silindi/taşındı — çağıran tam okumaya düşer, orada da yoksa [] döner
+        return None
+    if boyut == 0:
+        return []
+    blok = min(_KUYRUK_TABAN, boyut)
+    tahmin_kullanildi = False
+    while True:
+        # EŞİK HER DENEMEDEN ÖNCE (D2): blok TÜM dosyayı zaten kapsıyorsa (küçük dosya) eşik
+        # anlamsızdır — o durumda bu deneme zaten TAM OKUMANIN kendisidir, vazgeçilmez.
+        if blok < boyut and blok >= boyut * _KUYRUK_TAM_OKUMA_ORANI:
+            return None
         try:
-            from . import obs
-            obs.warn("jsonl_rows_skipped", file=str(name), skipped=bad, kept=len(rows))
-        except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez
-            pass
+            with open(path, "rb") as f:
+                if blok < boyut:
+                    f.seek(boyut - blok)
+                    f.readline()      # kuyruğun başındaki YARIM satır atılır (emsal: api._son_dongu_olaydan) — blok TÜM dosyayı kapsıyorsa (0'dan başlar) atılacak yarım satır YOKTUR
+                veri = f.read().decode("utf-8", "replace")
+        except OSError:  # sessiz-yutma: okuma sırasında dosya değişti/silindi — tam okumaya düş, yarım/yanlış bir sonuç asla dönülmez
+            return None
+        rows, bad = [], 0
+        for line in veri.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:  # sessiz-yutma: yardımcı G/Ç yolu; kuyruk bloğunun kendi bozuk-satır sayacına düşer, çağıran (`read_jsonl`) None dönerse zaten TAM OKUMAYA düşüp kendi uyarısını basar
+                bad += 1
+                continue
+        if len(rows) >= limit:
+            _bozuk_satir_uyar(name, bad, len(rows))
+            return rows[-limit:]
+        if blok >= boyut:
+            return None   # dosyanın TAMAMI bu blokta zaten okundu ve hâlâ yetersiz — tam okuma da AYNI (yetersiz) sonucu verir
+        if not tahmin_kullanildi:
+            # İLK (yoklama) denemenin sonucundan ORTALAMA satır boyu çıkar, kalan ihtiyacı TEK
+            # sıçramada hedefle — kör 4x büyüme yerine (yukarıdaki blok yorumu: iki kez okumaktan
+            # kaçınma gerekçesi). Yoklamada TEK bir geçerli satır bile yoksa (aşırı uzun tek satır,
+            # ya da hepsi bozuk) güvenilir bir tahmin YOKTUR — kör büyümeye düşülür (aşağıdaki else).
+            tahmin_kullanildi = True
+            if rows:
+                ort_bayt = blok / len(rows)
+                blok = max(int(limit * ort_bayt * _KUYRUK_GUVENLI_PAY), blok * _KUYRUK_BUYUME)
+            else:
+                blok *= _KUYRUK_BUYUME
+        else:
+            blok *= _KUYRUK_BUYUME
+        blok = min(blok, boyut)
+
+
+def read_jsonl(name: str, limit: int | None = None) -> list[dict]:
+    """Satır defterini okur; `limit` verilirse SON `limit` satır. Defter yoksa boş liste.
+    Çözümlenemeyen satırlar atlanır ama SESSİZ DEĞİL: dosya başına bir kez `jsonl_rows_skipped`
+    uyarısı (atlanan/kalan sayısıyla) basılır — yarım satır sessiz veri kaybı olmasın diye.
+
+    `limit` VERİLMİŞSE (TSK-137a, 2026-09-04) dosyanın TAMAMI OKUNMAZ: `_read_jsonl_kuyruk` SONDAN
+    büyüyen bir blok okur (emsal `api._son_dongu_olaydan`), en az `limit` GEÇERLİ satır toplanana
+    dek bloğu 4 kat büyütür; blok dosyanın YARISINI aşarsa (`_KUYRUK_TAM_OKUMA_ORANI`, D2 beyanlı
+    eşik) ya da dosya zaten kuyruk bloğundan küçükse TAM OKUMAYA düşülür. Geri düşüş HER ZAMAN
+    GÜVENLİDİR: kuyruk yolu YALNIZ `limit` kadar geçerli satır KESİN toplandığında bir sonuç üretir
+    (aksi hâlde None döner), yani sonuç hiçbir koşulda eski (tam-okuma) davranışından SAPMAZ (çivi:
+    `tests/test_read_jsonl_kuyruk_v410.py`). `limit=None` dalı DEĞİŞMEDİ.
+
+    NEGATİF/SIFIR `limit` (fix-r1 Bulgu 1, 2026-09-04) kuyruk yoluna HİÇ GİRMEZ: geçiş
+    `if limit and limit > 0:` — negatif `limit` eski `if limit:` altında truthy olduğu için
+    yanlışlıkla kuyruk yoluna giriyordu, oysa `_read_jsonl_kuyruk` içindeki `len(rows) >= limit`
+    negatif `limit` için İLK blokta her zaman doğrudur ve sonucu o bloğa (TÜM dosyaya değil)
+    sınırlardı. Negatif/sıfır `limit` artık doğrudan aşağıdaki tam-okuma dalına düşer, sonuncu
+    satır (`rows[-limit:] if limit else rows`) DEĞİŞMEDİ — eski (doğru) davranış budur.
+
+    BOZUK SATIR SAYACI (`jsonl_rows_skipped`in `skipped`/`kept` alanları) kuyruk yolunda YALNIZ
+    TARANAN BLOĞU yansıtır, dosyanın TAMAMINI DEĞİL: kuyruk okumanın var oluş nedeni tam dosyayı
+    taramamaktır — bu ÖLÇÜLEBİLİR bir bedeldir ve burada BEYAN edilir (Yasa 6); tam okumaya düşen
+    yollarda (limit=None ya da eşik aşımı) sayaç eskisi gibi dosyanın TAMAMINI yansıtır."""
+    if db_backed(name):
+        return _prov.sar(name, storage.read_rows(name, limit=limit))
+    path = _path(name)
+    if not path.exists():
+        return []
+    if limit and limit > 0:
+        kuyruk = _read_jsonl_kuyruk(path, name, limit)
+        if kuyruk is not None:
+            return _prov.sar(name, kuyruk)
+    rows, bad = _read_jsonl_govde(path)
+    _bozuk_satir_uyar(name, bad, len(rows))
     return _prov.sar(name, rows[-limit:] if limit else rows)
 
 

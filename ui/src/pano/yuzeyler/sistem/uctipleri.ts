@@ -24,6 +24,8 @@ export interface AlarmGrubu {
 }
 
 export interface AlarmGovdesi {
+  /** TSK-137a: 10 sn mtime önbelleğinden mi (true) — ACK sonrası ≤10 sn bayat olabilir. */
+  readonly onbellekten?: boolean;
   readonly ack_ts?: string | null;
   /** TÜM grupların toplamı — `groups` 60'ta kırpılır, bu KIRPILMAZ. */
   readonly pending?: number;
