@@ -400,11 +400,40 @@ def betik_govde_atesleme() -> dict[str, list[dict]]:
             for jeton, yollar in ham.items()}
 
 
+# TSK-127 (2026-09-04) — GÜNLÜK EXCERPT'İNDEKİ SATIR ÇAPALARI NÖTRLENİR. NEDEN: günlük
+# (`MERIDIAN_ENGINEERING_LOG.md`) TARİHSEL kayıttır ve DOKUNULMAZ (o gün doğruydu, "(vaka
+# YYYY-AA-GG)" künyesiyle aynı disiplin) — ama bu üretici günlükten alıntıladığı `dosya.py:NNN`
+# biçimindeki satır çapalarını AYNEN `docs/RUNBOOK.md`ye taşıyordu ve RUNBOOK bir `.md` dosyası
+# olarak `codelaw`nın docs-dünyası SIFIR TOLERANSINA (TSK-080) girer — kaynak kod değiştikçe o
+# çapalar (günlüğün YAZILDIĞI GÜNKÜ satır numaraları) kaçınılmaz biçimde BAYATLAR. Ölçüldü
+# (2026-09-04, `codelaw._capalari_olc` ile): 63 çürük satır çapası, TAMAMI bu excerpt'ten
+# (`docs/RUNBOOK.md` şimdiye dek `codelaw._DOCS_URETILMIS` ile TAMAMEN dışlanıyordu — kök nedeni
+# düzeltmek yerine belirtiyi gizliyordu). ÇÖZÜM KÖK NEDENDEDİR: günlüğün KENDİSİ değil, üretilen
+# KOPYADAKİ metin nötrlenir — `dosya.py:NNN` → `dosya.py (satır çapası tarihsel, RUNBOOK'ta
+# kaldırıldı)`. Bu, `codelaw._DOCS_URETILMIS`ten RUNBOOK dışlamasının KALKMASINI (D6, tek istisna
+# sıfırlanır) MÜMKÜN kılar — RUNBOOK artık her `.md` gibi normal taranır.
+_SATIR_CAPASI_NOTRLE = re.compile(r"\b([\w/.-]+\.py):\d+(?:-\d+)?\b")
+
+
+def _capa_notrle(metin: str) -> str:
+    """Günlük excerpt metnindeki `dosya.py:NNN` (opsiyonel `-MMM` aralıklı) satır çapalarını
+    NÖTRLER — TEK ÇAĞRI YERİ `log_maddeleri()`in kendisi (tek-kaynak yasası: hem "Alarmlar/
+    Mekanizmalar/Sessiz hat" bölümlerindeki `cozum` alıntıları hem "Bilinen sınıflar" ham listesi
+    AYNI `metin` alanını okur, ikinci bir nötrleme noktası AÇILMAZ). Kaynak günlükteki METİN
+    DEĞİŞMEZ — yalnız ÜRETİLEN belgedeki KOPYA nötrlenir (bkz. modül-üstü şerh, TSK-127)."""
+    return _SATIR_CAPASI_NOTRLE.sub(
+        r"\1 (satır çapası tarihsel, RUNBOOK'ta kaldırıldı)", metin)
+
+
 def log_maddeleri() -> list[dict]:
     """`MERIDIAN_ENGINEERING_LOG.md`'nin üç bölümündeki madde imli girdiler → [{bolum, metin}].
 
     Madde = `- ` ile başlayan satır + altındaki girintili devam satırları. Bölümün düzyazısı
-    (madde olmayan paragraflar) alınmaz: runbook'un ihtiyacı olan şey SINIF listesidir."""
+    (madde olmayan paragraflar) alınmaz: runbook'un ihtiyacı olan şey SINIF listesidir.
+
+    METİNDEKİ SATIR ÇAPALARI NÖTRLENİR (TSK-127, 2026-09-04) — bkz. `_capa_notrle` şerhi: günlük
+    tarihsel olduğu için bugünün kaynağına göre bayatlamış `dosya.py:NNN` alıntıları taşır; bu
+    üretici onları KOPYADA nötrler, günlüğün kendisine dokunmaz."""
     metin = _oku("MERIDIAN_ENGINEERING_LOG.md")
     out: list[dict] = []
     bolum = None
@@ -412,7 +441,8 @@ def log_maddeleri() -> list[dict]:
 
     def _kapat():
         if bolum and madde:
-            out.append({"bolum": bolum, "metin": " ".join(x.strip() for x in madde).strip()})
+            out.append({"bolum": bolum,
+                       "metin": _capa_notrle(" ".join(x.strip() for x in madde).strip())})
 
     for satir in metin.splitlines():
         if satir.startswith("## "):

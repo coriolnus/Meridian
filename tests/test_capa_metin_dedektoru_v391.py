@@ -16,6 +16,13 @@ WP6-E'nin "GERÇEKTEN AÇIK KALANLAR" listesindeki iki alt-kalemi kapatır:
        DERSLER" excerpt'i) geliyor — o günlük kendisi vaka-künyeli tarihsel kayıt ve depo
        kökünde, `docs/` dışında; TSK-080'in dosya sahipliği onu KAPSAMAZ (rapora açık madde).
 
+       KAPATILDI (TSK-127, 2026-09-04): "rapora açık madde"nin kendisi kapandı — kök neden
+       (`ops/runbook_uret.py::log_maddeleri`nin excerpt metnini AYNEN taşıması) düzeltildi:
+       üretici artık `dosya.py:NNN` satır çapalarını KOPYADA nötrler (günlüğün kendisi
+       DOKUNULMADAN), yeniden üretilen RUNBOOK.md 0 çürük taşır ve `_DOCS_URETILMIS` BOŞALTILDI.
+       "İKİ SINIFI" ifadesi bu yüzden ARTIK BİR sınıfa (tarihli teşhis belgesi) indi — RUNBOOK
+       sınıfı yapısal olarak durur ama bugün BOŞ (bkz. `codelaw._DOCS_URETILMIS` şerhi).
+
   B2 · DÜZ-METİN / ÇAPRAZ-BİÇİM ÇAPASI — üç satır-çapası dünyası da (`.py`, `.tsx`, `docs`) TEK
        sözdizimini tanır: dosya adı BİTİŞİK `:NNN`, hedef DAİMA `.py`. `codelaw.stale_text_anchors`
        iki YENİ kör noktayı kapatır: (a) çapraz-biçim (`goal.yaml:27`, opsiyonel `NNN-MMM` aralık),
@@ -45,13 +52,20 @@ def test_docs_capa_disi_TARIHLI_TESHIS_BELGESINI_DISLAR():
     assert codelaw._docs_capa_disi("ENVANTER-O49-KALAN-2026-08-22.md") is True
 
 
-def test_docs_capa_disi_RUNBOOK_DISLAR():
-    assert codelaw._docs_capa_disi("RUNBOOK.md") is True
+def test_docs_capa_disi_RUNBOOK_ARTIK_DISLAMAZ():
+    """ADI/ANLAMI TERS DÖNDÜ (TSK-127, 2026-09-04; eski ad `test_docs_capa_disi_RUNBOOK_DISLAR`,
+    eski hüküm `is True`). Kök neden düzeltildi: `ops/runbook_uret.py::log_maddeleri` artık
+    excerpt'e giren `dosya.py:NNN` satır çapalarını KOPYADA nötrler (bkz. `_capa_notrle`), yani
+    yeniden üretilen `RUNBOOK.md`nin kendisi ÇÜRÜK satır çapası TAŞIMAZ (ölçüldü: 0, rapor).
+    `_DOCS_URETILMIS` bu yüzden BOŞALTILDI — RUNBOOK artık `_docs_capa_disi`den özel muamele
+    görmez, ARAYUZ-SOZLUGU.md gibi sıradan bir yaşayan belgedir."""
+    assert codelaw._docs_capa_disi("RUNBOOK.md") is False
 
 
 def test_docs_capa_disi_YASAYAN_BELGEYI_DISLAMAZ():
-    """Dışlama ÜÇ sınıfla SINIRLI — dördüncü bir sınıf icat edilmemeli. Sıradan bir yaşayan belge
-    (`docs/ARAYUZ-SOZLUGU.md`, kökte, `superpowers/plans|specs` DIŞINDA) hiçbir sınıfa girmez."""
+    """Dışlama İKİ sınıfla SINIRLI (TSK-127: (b) RUNBOOK sınıfı boşaldı, bkz. yukarıdaki test) —
+    üçüncü/dördüncü bir sınıf icat edilmemeli. Sıradan bir yaşayan belge (`docs/ARAYUZ-SOZLUGU.md`,
+    kökte, `superpowers/plans|specs` DIŞINDA) hiçbir sınıfa girmez."""
     assert codelaw._docs_capa_disi("ARAYUZ-SOZLUGU.md") is False
     assert codelaw._docs_capa_disi("docs/ARAYUZ-SOZLUGU.md") is False
 
@@ -96,8 +110,11 @@ def test_docs_capa_disi_SUPERPOWERS_DIZININDE_ONEKSIZ_AD_DISLANMAZ():
 def _sentetik_docs_agac(kok: pathlib.Path) -> None:
     """`meridian`e benzeyen bir hedef ağacı + `docs`u kurar: bir YAŞAYAN belge (menzil-dışı
     çapa taşır → ÇÜRÜK), bir TARİHLİ TEŞHİS belgesi (AYNI türde çürük çapa taşır → DIŞLANIR — (a)),
-    bir RUNBOOK.md (AYNI türde çürük çapa taşır → DIŞLANIR — (b)), bir SUPERPOWERS PLAN dosyası
-    (AYNI türde çürük çapa taşır → DIŞLANIR — (c), RULING düzeltme turu 1)."""
+    bir RUNBOOK.md (AYNI türde çürük çapa taşır → ARTIK DIŞLANMAZ, TSK-127, 2026-09-04: kök neden
+    — günlük excerpt'inin taşıdığı satır çapaları — üreticide nötrlendi, `_DOCS_URETILMIS` boşaldı;
+    RUNBOOK burada BİLEREK yaşayan.md gibi ÇÜRÜK bekleniyor — bu FIKSTÜR eski (b) sınıfının artık
+    HİÇBİR ŞEYİ dışlamadığının regresyon kanıtıdır), bir SUPERPOWERS PLAN dosyası (AYNI türde
+    çürük çapa taşır → DIŞLANIR — (c), RULING düzeltme turu 1)."""
     (kok / "meridian").mkdir()
     (kok / "meridian" / "hedef.py").write_text("x = 1\n", encoding="utf-8")
     (kok / "docs").mkdir()
@@ -115,33 +132,41 @@ def _sentetik_docs_agac(kok: pathlib.Path) -> None:
 
 def test_docs_capasi_ARTIK_GORULUYOR(tmp_path, monkeypatch):
     """Kör noktanın kendisi: `docs/` içindeki bir menzil-dışı çapa yakalanır — aynı metin bir
-    `.py` dosyasında olsaydı yasa onu bugün de görüyordu (`_EK_CAPA_KOKLERI` `docs` içermiyordu)."""
+    `.py` dosyasında olsaydı yasa onu bugün de görüyordu (`_EK_CAPA_KOKLERI` `docs` içermiyordu).
+
+    GÜNCELLEME (TSK-127, 2026-09-04): RUNBOOK.md ARTIK dışlanmadığı için `_md_files`in sıralı
+    taramasında (`RUNBOOK.md` < `yasayan.md`, ASCII sırası) İKİSİ de çürük çıkar — eski hâl
+    yalnız `yasayan.md`yi bekliyordu."""
     _sentetik_docs_agac(tmp_path)
     monkeypatch.chdir(tmp_path)
     kor: list = []
     disla: list = []
     curuk = codelaw.stale_docs_line_anchors("docs", py_kokler=("meridian",),
                                             cozulemeyen_out=kor, disla_out=disla)
-    assert [(c["kaynak"], c["neden"]) for c in curuk] == [("yasayan.md:1", "menzil_disi")], curuk
+    assert [(c["kaynak"], c["neden"]) for c in curuk] == [
+        ("RUNBOOK.md:1", "menzil_disi"), ("yasayan.md:1", "menzil_disi")], curuk
 
 
-def test_docs_dislama_UC_SINIF_da_ADIYLA_DUSER(tmp_path, monkeypatch):
-    """Dışlanan üç belge SESSİZCE atılmaz — `disla_out`a adıyla yazılır (Yasa 6 disiplini:
-    dışlanan kapsam da görünür kalır). (c) sınıfı (RULING, düzeltme turu 1) da dahil."""
+def test_docs_dislama_IKI_SINIF_da_ADIYLA_DUSER(tmp_path, monkeypatch):
+    """Dışlanan belgeler SESSİZCE atılmaz — `disla_out`a adıyla yazılır (Yasa 6 disiplini:
+    dışlanan kapsam da görünür kalır). ADI/KAPSAMI DEĞİŞTİ (TSK-127, 2026-09-04; eski ad
+    `test_docs_dislama_UC_SINIF_da_ADIYLA_DUSER`, eski liste üç elemanlıydı): RUNBOOK.md
+    dışlaması kalktığı için bugün yalnız İKİ sınıf (a + c) dışlanır."""
     _sentetik_docs_agac(tmp_path)
     monkeypatch.chdir(tmp_path)
     disla: list = []
     codelaw.stale_docs_line_anchors("docs", py_kokler=("meridian",), disla_out=disla)
-    assert sorted(disla) == [
-        "2026-08-17-sentetik-plan.md", "RUNBOOK.md", "TESHIS-2026-08-13.md"], disla
+    assert sorted(disla) == ["2026-08-17-sentetik-plan.md", "TESHIS-2026-08-13.md"], disla
 
 
 def test_docs_dislama_KALDIRILINCA_TARIHLI_BELGE_de_OTER(tmp_path, monkeypatch):
     """MUTASYON KANITI (CLAUDE.md §6: çivi yeşili kanıt değildir): `_docs_capa_disi` filtresi
-    olmadan AYNI ağaç taranırsa tarihli belge/RUNBOOK/plan da ÇÜRÜK sayılır — yani dışlama
-    sessizce hiçbir şey yapmıyor DEĞİL, gerçekten üç sınıfı hükümden çıkarıyor. Bu test
-    `_docs_capa_disi`yi BAYPAS ederek (tarayıcının kendi filtresiz çekirdeğini, `_capalari_olc`u,
-    doğrudan çağırarak) o mutasyonu KALICI bir regresyon testine çevirir."""
+    olmadan AYNI ağaç taranırsa tarihli belge/plan da ÇÜRÜK sayılır (RUNBOOK.md zaten ÇÜRÜK
+    sayılıyordu, bkz. `test_docs_capasi_ARTIK_GORULUYOR`) — yani dışlama sessizce hiçbir şey
+    yapmıyor DEĞİL, gerçekten (a)/(c) sınıflarını hükümden çıkarıyor. Bu test `_docs_capa_disi`yi
+    BAYPAS ederek (tarayıcının kendi filtresiz çekirdeğini, `_capalari_olc`u, doğrudan çağırarak)
+    o mutasyonu KALICI bir regresyon testine çevirir — dörtlü küme (RUNBOOK.md dahil) DEĞİŞMEDİ,
+    çünkü bu test zaten filtresiz çalışır."""
     _sentetik_docs_agac(tmp_path)
     monkeypatch.chdir(tmp_path)
     adres = codelaw._capa_adres_defteri(("meridian",))
@@ -157,9 +182,11 @@ def test_docs_dislama_KALDIRILINCA_TARIHLI_BELGE_de_OTER(tmp_path, monkeypatch):
 
 def test_docs_dislama_SUPERPOWERS_ONEK_KALDIRILINCA_PLAN_da_OTER(tmp_path, monkeypatch):
     """MUTASYON KANITI (RULING, düzeltme turu 1, inceleme sorusu-1): yalnız (c) sınıfı
-    (superpowers plan/spec dizin filtresi) devre dışı bırakılırsa — (a)/(b) DOKUNULMADAN —
-    sentetik plan dosyası da ÇÜRÜK sayılır. Ruling'in istediği tam olarak bu: "ön-ek desenini
-    kaldır → çivi ötmeli"."""
+    (superpowers plan/spec dizin filtresi) devre dışı bırakılırsa — (a) DOKUNULMADAN — sentetik
+    plan dosyası da ÇÜRÜK sayılır. Ruling'in istediği tam olarak bu: "ön-ek desenini kaldır →
+    çivi ötmeli". GÜNCELLEME (TSK-127, 2026-09-04): (b) artık zaten BOŞ (mutasyondan bağımsız her
+    zaman dışlamaz) — RUNBOOK.md bu testte de sıradan bir çürük olarak görünür, "(a)/(b)
+    DOKUNULMADAN" ifadesi eski hâlin kalıntısıydı, düzeltildi."""
     _sentetik_docs_agac(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(codelaw, "_DOCS_SUPERPOWERS_TARIHLI_DIZINLER", ())
@@ -169,9 +196,11 @@ def test_docs_dislama_SUPERPOWERS_ONEK_KALDIRILINCA_PLAN_da_OTER(tmp_path, monke
                                             cozulemeyen_out=kor, disla_out=disla)
     kaynaklar = {c["kaynak"].split(":")[0] for c in curuk}
     assert "2026-08-17-sentetik-plan.md" in kaynaklar, curuk
-    # (a)/(b) HÂLÂ dışlı — yalnız (c) mutasyona uğradı:
-    assert "TESHIS-2026-08-13.md" not in kaynaklar and "RUNBOOK.md" not in kaynaklar
-    assert sorted(disla) == ["RUNBOOK.md", "TESHIS-2026-08-13.md"], disla
+    # (a) HÂLÂ dışlı — (c) mutasyona uğradı, (b) zaten hiçbir zaman dışlamıyordu (RUNBOOK.md bu
+    # yüzden ZATEN kaynaklar içinde, mutasyondan BAĞIMSIZ):
+    assert "TESHIS-2026-08-13.md" not in kaynaklar
+    assert "RUNBOOK.md" in kaynaklar, kaynaklar
+    assert sorted(disla) == ["TESHIS-2026-08-13.md"], disla
 
 
 def test_docs_koku_YOKSA_UNSCANNED(tmp_path, monkeypatch):
@@ -206,13 +235,19 @@ def test_docs_capasi_COZULEMEYENI_SESSIZCE_ATMAZ(tmp_path, monkeypatch):
 
 def test_report_docs_alanlari_canli_agacta_TEMIZ():
     """Bu turun kendi kanıtı: 5 yaşayan-belge çürüğü sembole çevrildi, canlı ağaçta `docs`
-    kapsamı bugün TEMİZ ve tam `report()["ok"]`e katılıyor."""
+    kapsamı bugün TEMİZ ve tam `report()["ok"]`e katılıyor.
+
+    GÜNCELLEME (TSK-127, 2026-09-04): RUNBOOK.md ARTIK `docs_line_anchor_excluded`te GÖRÜNMEZ —
+    dışlanmıyor, NORMAL taranıyor ve TEMİZ çıkıyor (ölçüldü: `docs_line_anchors == []` RUNBOOK.md
+    dahil tüm `docs/` için, kök neden düzeltmesi sayesinde — bkz. `ops/runbook_uret.py::
+    _capa_notrle`)."""
     r = codelaw.report()
     assert r["docs_line_anchors"] == [], r["docs_line_anchors"]
     assert r["docs_line_anchor_var"] is False
     assert isinstance(r["docs_line_anchor_excluded"], list) and len(r["docs_line_anchor_excluded"]) > 50, (
         "dışlanan dosya sayısı beklenenden düşük — tarayıcı gerçekten `docs/`yi mi tarıyor?")
-    assert "RUNBOOK.md" in r["docs_line_anchor_excluded"]
+    assert "RUNBOOK.md" not in r["docs_line_anchor_excluded"], (
+        "RUNBOOK.md hâlâ dışlanıyor — TSK-127'nin `_DOCS_URETILMIS` boşaltması geri mi alındı?")
     assert r["ok"] is True, r
 
 

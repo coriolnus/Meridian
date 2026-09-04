@@ -23,9 +23,11 @@ buldu ve bu modül ikisini de çalışma zamanına hiç dokunmadan, ast ile kayn
   ÜÇ DÜNYASI vardır ve hükümleri AYRIDIR: `.py` kaynağında sıfır tolerans (`stale_line_anchors`),
   panonun `.ts`/`.tsx` kaynağında ÇIRÇIR (`stale_tsx_line_anchors` + `TSX_CAPA_TABANI` — yüzlerce
   çapalık birikmiş borç tek turda temizlenmez, çırçır borcun BÜYÜMESİNİ engeller), `docs/`
-  kaynağında YİNE SIFIR TOLERANS ama üç sınıf (tarihli teşhis belgesi + üretilmiş RUNBOOK + tarih-
-  önekli superpowers plan/spec, TSK-080 düzeltme turu 1) baştan dışlanmış olarak
-  (`stale_docs_line_anchors`, TSK-080). Ölçüm gövdesi ortaktır (`_capalari_olc`),
+  kaynağında YİNE SIFIR TOLERANS ama iki sınıf (tarihli teşhis belgesi + tarih-önekli superpowers
+  plan/spec, TSK-080 düzeltme turu 1) baştan dışlanmış olarak (`stale_docs_line_anchors`, TSK-080)
+  — ÜÇÜNCÜ sınıf (üretilmiş RUNBOOK) TSK-127'de (2026-09-04) KALKTI: kök neden (günlük excerpt'inin
+  taşıdığı satır çapaları) `ops/runbook_uret.py`de nötrlendi, RUNBOOK artık normal `.md` gibi
+  taranır (`_DOCS_URETILMIS` boş — bkz. o sabitin şerhi). Ölçüm gövdesi ortaktır (`_capalari_olc`),
   ayrışan yalnız hükümdür. DÖRDÜNCÜ, AYRI bir sınıf — düz-metin/çapraz-biçim çapası
   (`stale_text_anchors`, TSK-080): `.py` DIŞI hedefler (`goal.yaml:27`) ve dosya adı bitişik
   OLMAYAN Türkçe "satır NNN" biçimi. Bu sınıfın hükmü YAPISAL OLARAK DAR (içerik uyumu ölçülemez)
@@ -1841,7 +1843,21 @@ def _yorum_sembol_capalari(metin_kokler: tuple[str, ...] = ("meridian", "tests")
     MEKANİZMASI icat ETMEDİ: `artifact_graph`/`stale_claims` ile AYNI gövde
     (`_onbellek_oku`/`_onbellege_yaz`/`_src_stamp`, mtime+dosya-sayısı imzalı, süreç-ömürlü) — tek-
     kaynak yasası. Körlük (`UNSCANNED`) isabet dalında da İDEMPOTENT geri yazılır (`_onbellek_oku`
-    sözleşmesi); ölçülemeyen şey `report()["ok"]`i sessizce yeşile çevirmez."""
+    sözleşmesi); ölçülemeyen şey `report()["ok"]`i sessizce yeşile çevirmez.
+
+    `metin_kokler` D1'DEN BERİ (TSK-135, 2026-09-04) `report()`TAN GERÇEKTEN PARAMETRİZE EDİLİR:
+    gerçek ağaçta (`root == "meridian"`) varsayılan `("meridian","tests")` DEĞİŞMEDEN geçirilir;
+    sentetik `root`la çağrılan `report()` artık `root/"meridian"` ve `root/"tests"`ten VAR
+    OLANLARI geçirir — eskiden bu parametre HİÇ geçirilmiyordu ve varsayılana (GERÇEK ağaç)
+    sessizce düşüyordu (bkz. `tests/test_capa_uyusmasi_v373.py::test_CURUME_report_OKUNU_DUSURUR`
+    ve `tests/test_yorum_sembol_capasi_v402.py`).
+
+    BEDEL (TSK-135, D3 — bedel yasası): D1'in `report()` içine eklediği iki `pathlib.Path.exists()`
+    çağrısının maliyeti ÖLÇÜLDÜ. Taban (TSK-129, 2026-09-04, `report()` genelinde): sıcak 1.790 ms
+    (n=3), soğuk 6.632 ms. D1 SONRASI YENİ ÖLÇÜM (aynı yöntem, `report()` genelinde, n=3 —
+    2026-09-04): sıcak 1.775–1.779 ms, TAM soğuk (temiz süreç, ilk çağrı) 6.535 ms — fark
+    GÖZLEMLENEMEYECEK kadar küçük (<20 ms, ölçüm gürültüsü mertebesinde): iki `Path.exists()`
+    çağrısının bedeli AST/regex taramasının yanında SIFIRA yakın."""
     if py_kokler is None:
         py_kokler = metin_kokler
     _key = (metin_kokler, tuple(_src_stamp(k) for k in metin_kokler), py_kokler)
@@ -1925,7 +1941,17 @@ _DOCS_TARIHLI_TESHIS_RE = re.compile(r"-20\d\d-\d\d-\d\d")
 #: ve depo KÖKÜNDE, `docs/` DIŞINDA — TSK-080'in dosya sahipliği (`docs/` altı + `codelaw.py`)
 #: onu KAPSAMAZ. Kök nedeni düzeltmek (log excerpt'lerini sembole çevirmek) AYRI, sahibi Rol-1
 #: olan bir kalemdir — rapora açık madde olarak düşüldü.
-_DOCS_URETILMIS = frozenset({"RUNBOOK.md"})
+#:
+#: TEK İSTİSNA SIFIRLANDI (TSK-127, 2026-09-04): kök neden düzeltildi — `ops/runbook_uret.py`
+#: `log_maddeleri()` artık excerpt'e giren `dosya.py:NNN` satır çapalarını KOPYADA nötrler (günlük
+#: KENDİSİ dokunulmadan; bkz. `_capa_notrle`). ÖLÇÜLDÜ (2026-09-04, `codelaw._capalari_olc` ile
+#: DOĞRUDAN, dışlama BAYPAS edilerek): yeniden üretilen `RUNBOOK.md`de 0 çürük satır çapası kaldı
+#: (63 çürükten 63'ü nötrlemeyle kapandı; ham grep'te kalan 2 eşleşme `deploy/oracle-a1/
+#: tick_watchdog.sh`ın VERBATİM başlık bloğundandır — madde-1, bu kalemin kapsamı DIŞINDA — ve
+#: BUGÜN GEÇERLİ/menzil-içi olduğu için zaten çürük SAYILMIYORDU). Bu yüzden RUNBOOK.md ARTIK
+#: dışlanmaz — set BOŞ: bir sonraki excerpt-kaynaklı çürüme (nötrleme mekanizması bozulursa) bu
+#: yasa tarafından NORMAL bir `.md` gibi YAKALANIR, ikinci bir sessiz muafiyet katmanı YOKTUR.
+_DOCS_URETILMIS: frozenset[str] = frozenset()
 
 #: (c) TARİH-ÖNEKLİ SUPERPOWERS PLAN/SPEC — RULING (TSK-080 düzeltme turu 1, inceleme sorusu-1,
 #: 2026-09-03, Rol-1 onayı). YALNIZ bu iki dizinin İÇİNDE, dosya adı `YYYY-AA-GG-` ÖNEKİYLE
@@ -1951,11 +1977,14 @@ def _docs_capa_disi(yol) -> bool:
     (`stale_docs_line_anchors`, `stale_text_anchors`) hem mutasyon testleri AYNI fonksiyonu
     çağırır (tek-kaynak yasası: dışlama listesi birden çok yerde ayrı ayrı yaşamaz).
 
-    ÜÇ SINIF: (a) tarihli teşhis belgesi (dosya adında KUYRUK `-YYYY-AA-GG`), (b) üretilmiş
-    RUNBOOK, (c) `docs/superpowers/plans|specs` İÇİNDE ÖNEK-tarihli plan/spec (RULING,
-    2026-09-03 — bkz. `_DOCS_SUPERPOWERS_TARIHLI_DIZINLER`). `yol` basename (geriye-dönük
-    uyum: (a)/(b) yalnız ada bakar) ya da tam/relatif yol OLABİLİR — (c) İÇİN dizin bilgisi
-    gerekir, bu yüzden `str`/`pathlib.Path` kabul edilir."""
+    ÜÇ SINIFLIK MEKANİZMA, BUGÜN İKİSİ DOLU: (a) tarihli teşhis belgesi (dosya adında KUYRUK
+    `-YYYY-AA-GG`), (b) üretilmiş RUNBOOK — `_DOCS_URETILMIS` TSK-127'de (2026-09-04) BOŞALTILDI
+    (kök neden düzeltildi, bkz. o sabitin şerhi), yani (b) bugün HİÇBİR ŞEYİ dışlamaz — mekanizma
+    kalır (gelecekte başka üretilmiş bir belge gerekirse tek satırlık bir isim eklemek yeter), (c)
+    `docs/superpowers/plans|specs` İÇİNDE ÖNEK-tarihli plan/spec (RULING, 2026-09-03 — bkz.
+    `_DOCS_SUPERPOWERS_TARIHLI_DIZINLER`). `yol` basename (geriye-dönük uyum: (a)/(b) yalnız ada
+    bakar) ya da tam/relatif yol OLABİLİR — (c) İÇİN dizin bilgisi gerekir, bu yüzden
+    `str`/`pathlib.Path` kabul edilir."""
     yol = pathlib.Path(yol)
     dosya_adi = yol.name
     if dosya_adi in _DOCS_URETILMIS or bool(_DOCS_TARIHLI_TESHIS_RE.search(dosya_adi)):
@@ -1983,9 +2012,10 @@ def stale_docs_line_anchors(root: str = DOCS_CAPA_KOKU,
     """SATIR ÇAPASI YASASI, ÜÇÜNCÜ DÜNYA: `docs/` altındaki `.md` kaynağındaki `dosya.py:NNN`
     çapalarını ölçer. Çürüme sınıfları ve muafiyet `.py`/`.tsx` dünyasıyla BİREBİR AYNIDIR
     (`_capalari_olc`); hüküm de `.py` gibi SIFIR TOLERANSTIR (tsx'in çırçırı burada YOK) — ama
-    kapsam `_docs_capa_disi` ile ÜÇ SINIFI (tarihli teşhis belgeleri + üretilmiş RUNBOOK +
-    tarih-önekli superpowers plan/spec, TSK-080 düzeltme turu 1) BAŞTAN dışlar: onlar hakkında
-    hüküm KURULMAZ. SESSİZCE değil — dışlanan her dosya adı
+    kapsam `_docs_capa_disi` ile İKİ SINIFI (tarihli teşhis belgeleri + tarih-önekli superpowers
+    plan/spec, TSK-080 düzeltme turu 1) BAŞTAN dışlar: onlar hakkında hüküm KURULMAZ (üçüncü sınıf
+    — üretilmiş RUNBOOK — TSK-127'de, 2026-09-04 kalktı: `_DOCS_URETILMIS` artık boş, RUNBOOK
+    normal taranır). SESSİZCE değil — dışlanan her dosya adı
     `disla_out`a yazılır (verilirse) ve `report()`te `docs_line_anchor_excluded` olarak GÖRÜNÜR
     (Yasa 6 disiplini: dışlanan kapsam da adıyla sayılır, sessizce yutulmaz).
 
@@ -2233,7 +2263,20 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
     if tsx_hedef is not None:
         # SONUÇ SÜREÇ-ÖMÜRLÜ ÖNBELLEKLİDİR (bedel yasası — bkz. `_yorum_sembol_capalari`
         # docstring'i): kaynak değişmeden ikinci çağrı ~370 ms daha ucuzdur.
-        yorum_sembol = _yorum_sembol_capalari(py_kokler=(root, *ek))
+        # METİN KÖKÜ root'TAN TÜRER (D1, TSK-135, 2026-09-04): eskiden `metin_kokler`
+        # GEÇİRİLMİYORDU, `_yorum_sembol_capalari` varsayılanı HER ZAMAN gerçek
+        # `("meridian","tests")`e sabitti — py_kokler sentetik `root`u alırken metin taraması
+        # sessizce GERÇEK ağaca kaçıyordu (v373 `test_CURUME_report_OKUNU_DUSURUR` bu yüzden
+        # monkeypatch ile yalıtılmıştı, kardeş beslemeler tsx/docs/text/sembol'ün "sentetik kökle
+        # çağıran test kendi ağacını ölçer" disipliniyle ÇELİŞEREK). GERÇEK ağaçta (root ==
+        # "meridian") davranış AYNI kalır — varsayılan hâlâ ("meridian","tests"). Sentetik kökte
+        # metin taraması SENTETİK köke iner: `root/"meridian"` ve `root/"tests"`ten VAR OLANLAR
+        # taranır, yoksa () → 0 dosya (UYDURMA YASAĞI: sentetik ağaçta gerçek repo metni karışmaz).
+        metin_kokler = (("meridian", "tests") if root == "meridian" else
+                        tuple(str(p) for p in
+                              (pathlib.Path(root) / "meridian", pathlib.Path(root) / "tests")
+                              if p.exists()))
+        yorum_sembol = _yorum_sembol_capalari(metin_kokler=metin_kokler, py_kokler=(root, *ek))
         yorum_sembol_curume = bool(yorum_sembol["curuyen"])
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
@@ -2272,10 +2315,11 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
             "tsx_line_anchor_nuks": tsx_nuks,
             "tsx_line_anchor_unresolved": tsx_kor,
             # DOCS ÇAPALARI — ÜÇÜNCÜ DÜNYA (TSK-080). `.py` gibi SIFIR TOLERANS (tsx'in çırçırı
-            # burada YOK), ama üç sınıf (tarihli teşhis belgesi + üretilmiş RUNBOOK + tarih-önekli
-            # superpowers plan/spec) baştan dışlanır — dışlanan dosya adları
-            # `docs_line_anchor_excluded`te GÖRÜNÜR kalır,
-            # sessizce yutulmaz. `docs_line_anchor_var` `ok`u ETKİLER (tsx_nuks ile aynı disiplin).
+            # burada YOK), iki sınıf (tarihli teşhis belgesi + tarih-önekli superpowers plan/spec)
+            # baştan dışlanır — dışlanan dosya adları `docs_line_anchor_excluded`te GÖRÜNÜR kalır,
+            # sessizce yutulmaz. Üçüncü sınıf (üretilmiş RUNBOOK) TSK-127'de (2026-09-04) kalktı:
+            # kök neden düzeltildi, RUNBOOK artık normal taranır. `docs_line_anchor_var` `ok`u
+            # ETKİLER (tsx_nuks ile aynı disiplin).
             "docs_line_anchors": docs_capalar,
             "docs_line_anchor_unresolved": docs_kor,
             "docs_line_anchor_excluded": docs_disla,

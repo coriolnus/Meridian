@@ -259,15 +259,17 @@ def test_CURUME_report_OKUNU_DUSURUR(tmp_path, monkeypatch):
     beyanlar boş ağaçta doğrulanamaz), yalıtılmasaydı `ok` ikisinde de False çıkar ve deney
     sembol çapası hakkında hiçbir şey ölçmezdi (v314'ün aynı gerekçesi).
 
-    `yorum_sembol_capalari` (üçüncü besleme, AŞAMA 2 — TSK-129, 2026-09-04) AYNI GEREKÇEYLE
-    YALITILIR: `_yorum_sembol_capalari` metin köklerini HER ZAMAN gerçek `("meridian","tests")`e
-    sabitler (`report()`'a bu sentetik `root` geçirilmez — yapısal sınır, fonksiyonun kendi
-    docstring'inde yazılı); yalıtılmasaydı gerçek repo metni sentetik `hedef.py` adres defterine
-    karşı çözülür, spurious curuyen üretir ve deney yine sembol çapası DIŞINDA bir şey ölçerdi."""
+    `yorum_sembol_capalari` (üçüncü besleme) İÇİN ARTIK YALITIM YOK (TSK-135, D1/D2, 2026-09-04):
+    eskiden `_yorum_sembol_capalari` metin köklerini HER ZAMAN gerçek `("meridian","tests")`e
+    sabitliyordu (`report()` bu sentetik `root`u ona hiç geçirmiyordu) — yalıtım OLMADAN gerçek
+    repo metni sentetik `hedef.py` adres defterine karşı çözülür, spurious curuyen üretir ve
+    deney sembol çapası DIŞINDA bir şey ölçerdi. D1 `report()`a `metin_kokler`i `root`tan türeterek
+    geçirir: bu sentetik `tmp_path` kökünde `tmp_path/"meridian"` ve `tmp_path/"tests"` YOK (bu
+    ağaç dosyaları doğrudan `tmp_path`e yazar — bkz. `_agac`), yani metin taraması KENDİLİĞİNDEN
+    boş köke düşer (`_yorum_metinleri(())` → 0 dosya) — gerçek ağaç ARTIK KARIŞMIYOR, yalıtım
+    GEREKSİZ hâle geldi (kaldırıldıktan sonra hâlâ yeşil — ölçüldü)."""
     codelaw.UNSCANNED.clear()
     monkeypatch.setattr(codelaw, "stale_claims", lambda *a, **k: [])
-    monkeypatch.setattr(codelaw, "_yorum_sembol_capalari",
-                        lambda **kw: {"taranan_dosya": 0, "capa_n": 0, "curuyen": []})
     _agac(tmp_path, _HEDEF)
     (tmp_path / "Saglam.tsx").write_text("// hedef.py::var_olan\n", encoding="utf-8")
     r = codelaw.report(str(tmp_path), tsx_kok=str(tmp_path))

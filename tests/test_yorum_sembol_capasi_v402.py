@@ -225,6 +225,69 @@ def test_report_ALANI_SENTETIK_KOKTE_UYDURMAZ(tmp_path):
     assert r["yorum_sembol_capalari"] is None, r["yorum_sembol_capalari"]
 
 
+# ---------------------------------------------------------------------------
+# (g2) D1 — METİN KÖKÜ root'TAN TÜRER (TSK-135, 2026-09-04)
+# ---------------------------------------------------------------------------
+#: BOŞLUK (TSK-129 incelemesi, 2026-09-04 → TSK-135): `report()` `_yorum_sembol_capalari`ya
+#: `metin_kokler`i HİÇ GEÇİRMİYORDU — varsayılan HER ZAMAN gerçek `("meridian","tests")`e
+#: sabitti, `py_kokler` sentetik `root`u alsa bile METİN taraması sessizce GERÇEK ağaca
+#: kaçıyordu (kardeş beslemeler tsx/docs/text/sembol'ün "sentetik kökle çağıran test kendi
+#: ağacını ölçer" disipliniyle ÇELİŞEREK — v373 `test_CURUME_report_OKUNU_DUSURUR` bu yüzden
+#: monkeypatch ile yalıtılmıştı). D1 düzeltmesi: `root == "meridian"`ken davranış AYNI kalır;
+#: aksi hâlde `root/"meridian"` ve `root/"tests"`ten VAR OLANLAR taranır.
+
+def test_report_SENTETIK_KOKTE_METIN_TARAMASI_SENTETIK_AGACA_INER(tmp_path):
+    """ÇİVİNİN ASIL ÖLÇÜMÜ (D1, D2): sentetik kökte `taranan_dosya` SENTETİK dosya SAYISINA eşit
+    olmalı — gerçek ağaç (bugün 500+ dosya, bkz. `CANLI_ASGARI_TARANAN_DOSYA`) KARIŞMAMALI.
+    MUTASYON KANITI: `report()`teki `metin_kokler=metin_kokler` argümanı eski hâline (parametre
+    hiç geçirilmez, varsayılana düşer) döndürülürse bu test ÖTER — `taranan_dosya` sentetik 2
+    yerine gerçek ağaçtaki yüzlerce dosyaya çıkar (elle ölçüldü, rapora yazılı)."""
+    (tmp_path / "meridian").mkdir()
+    (tmp_path / "meridian" / "a.py").write_text(
+        '"""d."""\n# yorum: hedef.py::var_olan\n', encoding="utf-8")
+    (tmp_path / "meridian" / "b.py").write_text("# yorum ikinci dosya\n", encoding="utf-8")
+    r = codelaw.report(str(tmp_path), tsx_kok=str(tmp_path))
+    y = r["yorum_sembol_capalari"]
+    assert y is not None, "sentetik kökte yorum_sembol_capalari ÖLÇÜLMEDİ (None)"
+    assert y["taranan_dosya"] == 2, (
+        f"sentetik kökte {y['taranan_dosya']} dosya tarandı (beklenen 2) — gerçek ağaç (500+) "
+        "karışmış olabilir (D1 regresyonu)")
+
+
+def test_report_SENTETIK_KOKTE_TESTS_ALT_DIZINI_de_TARANIR(tmp_path):
+    """`root/"meridian"` VE `root/"tests"`TEN VAR OLANLARIN İKİSİ de taranır — yalnız biri değil.
+    Burada yalnız `tests/` var (`meridian/` YOK): `taranan_dosya` yine tek kökten (1 dosya) doğru
+    sayılmalı, `meridian/` yokluğu 0'a düşürmemeli (`var olanlar` disiplini, D1)."""
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "c.py").write_text("# yorum: hedef.py::var_olan\n", encoding="utf-8")
+    r = codelaw.report(str(tmp_path), tsx_kok=str(tmp_path))
+    y = r["yorum_sembol_capalari"]
+    assert y is not None, r
+    assert y["taranan_dosya"] == 1, y
+
+
+def test_report_SENTETIK_KOKTE_HICBIRI_YOKSA_SIFIR(tmp_path):
+    """Sentetik kökte NE `meridian/` NE `tests/` altdizini varsa (bu dosyanın ağaçları gibi —
+    fikstürler doğrudan `tmp_path`e yazılır) metin taraması 0 dosyaya düşer, hataya değil
+    (`_yorum_metinleri(())` boş liste döner)."""
+    (tmp_path / "hedef.py").write_text("x = 1\n", encoding="utf-8")
+    r = codelaw.report(str(tmp_path), tsx_kok=str(tmp_path))
+    y = r["yorum_sembol_capalari"]
+    assert y is not None, r
+    assert y == {"taranan_dosya": 0, "capa_n": 0, "curuyen": []}, y
+
+
+def test_report_GERCEK_KOKTE_METIN_KOKU_DEGISMEDI():
+    """VARSAYILAN DAVRANIŞ (gerçek ağaç) AYNI KALIR: `root == "meridian"`ken `metin_kokler`
+    `("meridian","tests")`e sabit kalmalı — D1 yalnız SENTETİK kökte davranışı DEĞİŞTİRİR.
+    Dolaylı ölçüm: `test_KORLUK_ALARMI_taranan_dosya_ve_capa_n_TABANI_asiyor` zaten gerçek
+    ağaçta taranan_dosya ≥ 500 olduğunu doğruluyor; burada kaynak satırıyla DOĞRUDAN ölçülür."""
+    import inspect
+    kaynak = inspect.getsource(codelaw.report)
+    blok = kaynak[kaynak.index("metin_kokler = ("):kaynak.index("yorum_sembol = _yorum_sembol_capalari")]
+    assert '"meridian"' in blok and '"tests"' in blok, blok
+
+
 def test_report_ALANI_AŞAMA2_OKu_DUSURUR():
     """ADI/ANLAMI DEĞİŞTİ (TSK-129, 2026-09-04; eski ad `test_report_ALANI_AŞAMA1_OKu_DUSURMEZ`):
     TSK-120 (2026-09-03) bu alanı GÖZLEMSEL bıraktı çünkü canlı taban ölçülmemişti (102 çürük/71
@@ -258,9 +321,12 @@ def test_report_OK_yorum_sembol_curume_SENTETIK_CURUKTE_DUSER(monkeypatch):
     `report()["ok"]` False olmalı — bağın KENDİSİ (yukarıdaki grep testinden AYRI, DAVRANIŞLA
     ölçülür). Canlı taban 0 olduğu için CANLI ağaçta bu durumu doğal olarak üretemeyiz; tek temiz
     yol `_yorum_sembol_capalari`yı sentetik bir sonuçla YAMAMAK — "sentetik kökte 1 çürük" burada
-    monkeypatch ile sağlanır (gerçek bir tmp_path kökü kullanılmaz çünkü `_yorum_sembol_capalari`
-    metin köklerini HER ZAMAN `("meridian","tests")`e sabitler, `report()` onu geçirmez — bu
-    yapısal sınır `_yorum_sembol_capalari` docstring'inde yazılı)."""
+    monkeypatch ile sağlanır. GÜNCELLEME (TSK-135, D1, 2026-09-04): eski gerekçe ("gerçek bir
+    tmp_path kökü kullanılamaz çünkü `_yorum_sembol_capalari` metin köklerini HER ZAMAN
+    `("meridian","tests")`e sabitler") ARTIK YANLIŞ — D1 bu yapısal sınırı KALDIRDI (bkz.
+    `test_report_SENTETIK_KOKTE_METIN_TARAMASI_SENTETIK_AGACA_INER`). Monkeypatch YİNE DE
+    korunur: bu testin amacı `ok`un `yorum_sembol_curume`ye BAĞINI ölçmek, sentetik bir kökte
+    gerçek dosya-tabanlı bir çürük ÜRETMEK değil — en dar/en hızlı yol budur, D1'le İLGİSİZ."""
     sentetik = {"taranan_dosya": 999, "capa_n": 9999,
                "curuyen": [{"kaynak": "sentetik.py", "capa": "hedef.py::yok",
                             "hedef": "hedef.py", "sembol": "yok", "neden": "sembol_yok"}]}
