@@ -165,7 +165,11 @@ GECE_HEPSI = {**GECE, **ROL_GECE}
 # yazılır çünkü rolün kendi adı `--nav`dır; `--nav-2/-t/-h/-bg` onun ailesidir.
 # `--nav-bg` (üst bar perdesi) BU TURDA `tema.*.perde`den `rol.*.nav`a TAŞINDI: bir gezinme
 # yüzeyidir ve önek kuralı onu değer katmanında bırakırsa iki katman ADIYLA karışırdı.
-ROL_ONEK = ("sev-", "yon-", "mod-", "olcek-", "nav")
+# anlam katmanı rol jetonudur, öneki İŞ adıdır (TSK-117, 2026-09-04). "basari"/"uyari"/
+# "kritik"/"bilgi" `nav` ile AYNI şekilde TİRESİZ: rolün kendi adı bu dört kelimedir,
+# `-h`/`-t` ailesi ondan türer (`--basari-h`.startswith("basari")). Dördü de sev-3/2/1/sky
+# alias'ı — İŞ adı hue adı DEĞİL, bu yüzden ayrı bir hue-öneki gerekmiyor.
+ROL_ONEK = ("sev-", "yon-", "mod-", "olcek-", "nav", "basari", "uyari", "kritik", "bilgi")
 
 
 # =============================== Ç1 · EŞ-KAYIT ===============================
@@ -298,8 +302,18 @@ def test_gece_TAM_palet_hicbir_renk_jetonu_YARIM_KALMAZ():
     # Yeni adlar rolü söylüyor; eskiler "tarihsel ad, farklı değer" ikilemini taşıyordu.
     # ~~--lavender / --blue-wash da eklenmişti~~ GERİ ALINDI: lavanta `--mod-canli` ile
     # BİREBİR aynı hex (#7c3aed) — "canlı para" çipiyle bir grafik serisi aynı renk olamaz.
-    assert (len(TEMEL) == 33 and len(GUNDUZ) == 48 and len(ROL_GUNDUZ) == 36
-            and len(ROOT) == 117 and len(GECE_OV) == 84), \
+    # TSK-117 G1 r3 (2026-09-04) · ANLAM GRUBU ESKİ PANOYA EŞ-KAYITLANDI. rol 36 → 48:
+    #   +12  --basari/-h/-t · --uyari/-h/-t · --kritik/-h/-t · --bilgi/-h/-t — G1'in
+    #        `tokens.json`a eklediği İŞ-adlı alias grubu (sev-3/2/1 + sky), zemin başına.
+    #        SAYI BÖYLE ÖLÇÜLDÜ: G1 bu 12 jetonu yalnız `ui/`ün yeni Vite panosuna
+    #        (`ops/jeton_css_uret.py` → `ui/src/jetonlar.css`) bağlamıştı; eski pano
+    #        (`index.html`, bu dosyanın ölçtüğü yüzey) hiç güncellenmemişti — v153 koleksiyon
+    #        hatası (`KeyError: 'literal'`) bu 4 testi hiç çalıştırmadan gizliyordu. r2 KeyError'ı
+    #        giderdi, r3 eş-kaydı KAPATTI: `index.html`in iki `:root` bloğuna aynı 12 jeton AYNI
+    #        biçimde (tek satır, aile başına) eklendi. `ROOT` 117 → 129, `GECE_OV` 84 → 96
+    #        (12'şer, iki blokta da AYNI ad kümesi — Ç2'nin kendi kuralı).
+    assert (len(TEMEL) == 33 and len(GUNDUZ) == 48 and len(ROL_GUNDUZ) == 48
+            and len(ROOT) == 129 and len(GECE_OV) == 96), \
         (f"jeton sayımı değişmiş: temel {len(TEMEL)} · değer {len(GUNDUZ)} · rol "
          f"{len(ROL_GUNDUZ)} · :root {len(ROOT)} · gece {len(GECE_OV)}")
 
@@ -389,8 +403,13 @@ def test_DTCG_semasi_gecerli():
     # gerekçelendirildi: 23 temel (tema-bağımsız) + 2×43 değer (tema, zemin başına) +
     # 2×31 rol (D1'in üçüncü katmanı, zemin başına). Sayı bir BÜTÇE değil bir MUHASEBEdir:
     # burada tutmayan bir toplam, DTCG ağacına eş-kayıtsız bir dal eklendiğini söyler.
-    assert sayac == 33 + 2 * 48 + 2 * 36, \
-        f"jeton sayımı {sayac} (beklenen 201 = 33 temel + 2×47 değer + 2×36 rol)"
+    # 201 → 225 (TSK-117 G1 r3, 2026-09-04): rol katmanı 2×36 → 2×48, yukarıdaki
+    # test_gece_TAM_palet_hicbir_renk_jetonu_YARIM_KALMAZ'daki ANLAM GRUBU şerhiyle AYNI
+    # ölçüm (+12 jeton × 2 zemin = +24). İki testin sayısı KASITLI olarak aynı yerden
+    # türemiyor (biri `TOKEN_LISTESI`'nin yürüyüşünden, öteki `_gez`in kendi yürüyüşünden) —
+    # ayrışırlarsa iki yürüyüş birbirini görmüyor demektir ve o da ayrı bir arıza sınıfıdır.
+    assert sayac == 33 + 2 * 48 + 2 * 48, \
+        f"jeton sayımı {sayac} (beklenen 225 = 33 temel + 2×48 değer + 2×48 rol)"
 
 
 def test_takma_adlar_COZULUYOR():

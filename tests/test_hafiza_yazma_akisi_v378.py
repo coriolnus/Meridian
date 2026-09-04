@@ -596,11 +596,16 @@ def test_CEVAPSIZ_BASARI_ayri_cumle():
 
 def test_BASARI_RENGI_jetondan():
     """K-5 (Rol-1 hükmü: gece yeni jeton DOĞMAZ): `emerald-*` bu dalda doğan yeni bir palet
-    kaynağıydı. Başarı rengi `ISLEM_DURUM_RENGI`nin kullandığı rampadan okunur."""
+    kaynağıydı. 2026-09-03'te başarı rengi geçici olarak seri-9'dan (camgöbeği) okunuyordu;
+    TSK-117 K-3 (2026-09-03, commit 01032e8) seri-9'un anlam yükünü kaldırdı: başarı artık
+    ANLAM jetonundan (`basari` = sev-3 alias, BAŞARI bandı 132°–155°) okunur, seri jetonları
+    yalnız veri serilerinde (v398 çivisi). Bu test o hükmü izler: emerald yok, seri-9 "başarı"
+    olarak yok, `basari` utility'si VAR."""
     for p in (YAZMA, ANASAYFA):
         _yokluk(p, "emerald")            # İKİ HATLI (Y-2): soyulmuş + ham
-    assert "var(--color-seri-9)" in soy(ANASAYFA), "başarı rengi mevcut rampadan gelmiyor"
-    assert "text-[var(--color-seri-9)]" in soy(YAZMA), "başarı rengi mevcut rampadan gelmiyor"
+    assert "var(--color-seri-9)" not in soy(ANASAYFA), "başarı rengi hâlâ seri-9'dan (K-3 geri mi alındı?)"
+    assert "text-[var(--color-seri-9)]" not in soy(YAZMA), "başarı rengi hâlâ seri-9'dan (K-3 geri mi alındı?)"
+    assert "basari" in soy(ANASAYFA) and "basari" in soy(YAZMA), "başarı rengi anlam jetonundan (basari) gelmiyor"
 
 
 # ---- (9e) KLAVYE ERİŞİMİ — BEŞ YÜZEY (Ö-6) ---------------------------------

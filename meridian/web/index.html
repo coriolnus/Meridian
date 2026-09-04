@@ -283,7 +283,10 @@
        · dört zeminde (bg·bg2·card·card-2) kontrast ≥ 3
      ÖLÇÜLDÜ (gündüz): hue 154→209→245 (dengeli adım 55°/36°) · L* 23,7→42,2→57,9 ·
      ΔL* 18,5/15,7 · ΔE2000-min 23,8 · kroma 0,083→0,159 (eski tavan 0,125 — kazanılan canlılık). */
-  --huni-1:#2563eb; --huni-2:#7c3aed; --huni-3:#16a34a;
+  /* r3 (TSK-117 G1 r3, 2026-09-04): hex TSK-117 G7'nin seri-6/8/9'una ÇEKİLDİ (tokens.json
+     ile eş-kayıt, ölçüldü — index.html hâlâ eski #2563eb/#7c3aed/#16a34a taşıyordu).
+     YUKARIDAKİ hue/L*/ΔE ölçümü ESKİ paletin kaydıdır, TARİHÎ kalır — yeniden ölçülmedi. */
+  --huni-1:#009689; --huni-2:#c800de; --huni-3:#e60076;
   --green-t:rgba(0,150,62,.10); --amber-t:rgba(199,67,0,.10); --red-t:rgba(195,0,45,.10);
   /* SAKİNLİK YÜZEYİ — Dub'ın KENDİ `surface.tinted-accent` jetonu (soft-mint), AYNEN.
      Bir DURUM rengi değil bir ZEMİN tintidir ve şiddet kanalıyla ilgisi yoktur (karar §10.5).
@@ -516,6 +519,11 @@
      rampasından SEÇİLDİ: her gerçek yüzeyde ≥3:1 tutan İLK basamak = `fog #737373`
      (ölçüldü: 4.54 en kötü gündüz zemininde). ~~Eski değer #86817d, 3.14.~~ */
   --field:#737373;
+  /* ANLAM JETONLARI (TSK-117 G1 r3, 2026-09-04): eski pano eş-kayıt kopyası, kaynak tokens.json */
+  --basari:var(--sev-3); --basari-h:var(--sev-3-h); --basari-t:var(--sev-3-t);
+  --uyari:var(--sev-2); --uyari-h:var(--sev-2-h); --uyari-t:var(--sev-2-t);
+  --kritik:var(--sev-1); --kritik-h:var(--sev-1-h); --kritik-t:var(--sev-1-t);
+  --bilgi:var(--sky); --bilgi-h:rgba(9,152,200,.35); --bilgi-t:rgba(9,152,200,.10);
   color-scheme:light;
 }
 
@@ -634,7 +642,10 @@
   /* Huni, gece. Aynı yolculuk ters yönde (koyu zeminde en belirgin olan en AÇIK basamaktır).
      ÖLÇÜLDÜ: hue 162→206→247 · L* 91,7→75,5→60,1 · ΔL* 16,2/15,4 · ΔE2000-min 24,8 ·
      kroma 0,122→0,171 (eski tavan 0,118). */
-  --huni-1:#60a5fa; --huni-2:#a78bfa; --huni-3:#4ade80;
+  /* r3 (TSK-117 G1 r3, 2026-09-04): hex TSK-117 G7'nin seri-6/8/9'una ÇEKİLDİ (tokens.json
+     ile eş-kayıt, ölçüldü — index.html hâlâ eski #60a5fa/#a78bfa/#4ade80 taşıyordu).
+     YUKARIDAKİ hue/L*/ΔE ölçümü ESKİ paletin kaydıdır, TARİHÎ kalır — yeniden ölçülmedi. */
+  --huni-1:#00d5be; --huni-2:#ed6aff; --huni-3:#fb64b6;
   --green-t:rgba(0,149,61,.10); --amber-t:rgba(255,90,0,.10); --red-t:rgba(255,126,124,.10);
   /* SAKİNLİK YÜZEYİ · gece — TÜRETİLDİ (Dub'da karanlık tema YOK, §1.2 damgası geçerli).
      Yöntem ters çevirme DEĞİL: soft-mint'in OKLCh hue'su (156,7°) korundu, L gece yüzey
@@ -687,10 +698,14 @@
      ÖLÇÜLDÜ: --yon-arti #4ade80 C 0,1821 (en kötü gerçek zemin 6,32) · --yon-eksi #f98080
      C 0,1482 (4,63). --yon-arti, --huni-3 ile BİLEREK aynı hex: aynı yeşil iki yerde iki
      türlü olamaz. Tavan artık şiddet değil ONAYLI PALET AZAMİSİ (0,1821) — çivi §5. */
-  --yon-arti:#4ade80; --yon-eksi:#f98080;
-  --yon-arti-t:rgba(74,222,128,.10); --yon-eksi-t:rgba(249,128,128,.10);
-  --yon-arti-h:rgba(74,222,128,.35); --yon-eksi-h:rgba(249,128,128,.35);
-  --yon-arti-zemin:rgba(74,222,128,.08); --yon-eksi-zemin:rgba(249,128,128,.07);
+  /* r3 (TSK-117 G1 r3, 2026-09-04): --yon-eksi TSK-117 G2'de #f98080'den #f6966f'e çekildi
+     (gece kritik #ff7e7c ile 0° çakışıyordu) ama index.html'in eş-kaydı hiç güncellenmemişti
+     (ölçüldü — v153::test_gece_blogu_BIRE_BIR). YUKARIDAKİ ÖLÇÜLDÜ satırı ESKİ hex'e (#f98080)
+     aittir, TARİHÎ kalır. */
+  --yon-arti:#4ade80; --yon-eksi:#f6966f;
+  --yon-arti-t:rgba(74,222,128,.10); --yon-eksi-t:rgba(246,150,111,.10);
+  --yon-arti-h:rgba(74,222,128,.35); --yon-eksi-h:rgba(246,150,111,.35);
+  --yon-arti-zemin:rgba(74,222,128,.08); --yon-eksi-zemin:rgba(246,150,111,.07);
   /* MOD · gece — aynı ayrılmış hue bandı (lavender ailesi), gece mürekkep bandında.
      --mod-canli #ab91ff C 0,1570 · --mod-kesif #a79fcb C 0,0637. */
   --mod-kagit:var(--tx2); --mod-canli:#ab91ff; --mod-kesif:#a79fcb;
@@ -709,6 +724,11 @@
      ÖLÇÜLDÜ: --nav washın üstünde 5.78 · --nav-2 8.87 (ikisi de AA, gecede Ö5 TUTAR). */
   --nav:#72a2ff; --nav-2:#b2caff; --nav-t:#1a274d; --nav-h:rgba(114,162,255,.35);
   --nav-bg:rgba(23,23,23,.82);
+  /* ANLAM JETONLARI (TSK-117 G1 r3, 2026-09-04): eski pano eş-kayıt kopyası, kaynak tokens.json */
+  --basari:var(--sev-3); --basari-h:var(--sev-3-h); --basari-t:var(--sev-3-t);
+  --uyari:var(--sev-2); --uyari-h:var(--sev-2-h); --uyari-t:var(--sev-2-t);
+  --kritik:var(--sev-1); --kritik-h:var(--sev-1-h); --kritik-t:var(--sev-1-t);
+  --bilgi:var(--sky); --bilgi-h:rgba(78,150,212,.35); --bilgi-t:rgba(78,150,212,.10);
   color-scheme:dark;
 }
 /* SENTETİK YÜZ ÜRETİMİ KAPALI (2026-08-24). İtalik ya da kalın bir kesit HİÇBİR yerde
