@@ -2256,3 +2256,18 @@ gün; /opt/veri 35 G / 147 G, gün başına ~95 MiB → ~140 G gerekli, 105 G bo
 Üç/üç. Hafıza `oturum-cron-guvenilmez`: saatli kritik iş A1 timer'ında; uyanışta CronList+date.
 
 **Dağıtım #9:** suite #12 ve dağıtım aşağıda ayrı kayıtta (bu bölüm suite başlamadan yazıldı — donmuş ağaç).
+
+**Suite #12 (d9a273e, 00:37→00:48Z, `-n 4`): 10183 passed / 1 failed / 4 error / 1 xfailed.** İkisi de palet turunun kapsam koşumlarının
+görmediği sınıf: v378 `test_BASARI_RENGI_jetondan` K-5'in "başarı seri-9'dan okunur" varsayımını taşıyordu (K-3 ile eskidi → hükmü izleyen
+test); v153 `KeyError: 'literal'` — G1 anlam jetonlarını DTCG alias gramerinde yazmıştı, rol katmanı SÖZLEŞMESİ (literal + cozulen-deger)
+başka; yedi kapsam koşumu geçti çünkü brief v153'ü bilmiyordu (hafıza `tokens-json-dokunan-dilim-v153`). r2 sözleşmeye çevirdi
+(jetonlar.css/bundle bayt-birebir aynı), r3 v153'ün açığa çıkan 6 kırmızısını kapadı: eski yüzeyler (index/landing/runbook/workflow.html)
+tokens.json ile EŞ-KAYIT — 24 anlam değişkeni, huni-1/2/3 yeni hex, G2'den kalma gece yon-eksi sürüklenmesi (index.html'de eski #f98080
+duruyordu — bir gece boyunca eski pano yanlış kırmızıyı taşıdı, kimse görmedi); 15 eksik `$description`; ROL_ONEK += anlam kökleri; sayım
+sabitleri ölçülerek. Delta 244 passed / 1 xfailed; commit 26d48b8. Dal-sonu geniş inceleme: DAĞITIMA HAZIR, 3 ÖNEMLİ → [TSK-132] kapsam
+(yön jetonu utility köprüsü) + [TSK-134] (jetonlar.css `--card/--accent` shadcn ile aynı ad, shadcn kazanıyor).
+
+**Dağıtım #9 (fd871e4, 01:15→01:16Z, seans dışı):** kuru koşum 17 girdi (codelaw.py [TSK-119] · 5 eski yüzey + tokens.json · pano bundle
+CwkWUy4f/HgpfoZb- · docs/ROADMAP/günlük), silinen yalnız eski bundle çifti; [F10] ✓ [5c] ✓ [5b] ✓; healthz 200; meridian/barsarchive
+active, learn inactive (TSK-092); canlı evren 238; pano yeni bundle'ı sunuyor. Canlıda: TSK-119 + TSK-117 G1–G8 (+ r2/r3). SABAH: görsel
+tur canlı panoda (118/121/117 DONE damgaları), TSK-131 disk kararı, TSK-133 ışıklılık kararı, TSK-130 kota, TSK-014 22:00Z yeniden ölçüm.
