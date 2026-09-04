@@ -2453,3 +2453,11 @@ AMA [5b] kod-tazelik değişmezi `meridian-sprint@20260904-220829`i (Cuma 22Z ha
 eski kodla koşar buldu → beyan YAZILMADI (`dagitim.json` f8d7d6d). Karar: antrenmanı öldürmek yerine sprint bitince (~06:07Z) `--uygula`
 tekrar (rsync idempotent) → [TSK-140] (kum-havuzu istisnası, beyanlı). Yan: MECHANISM_STALE "14,2 gündür yeni hipotez yok" alarmı — bilinen
 (learn disabled, TSK-092). ingest067-r2 22:30:00Z başladı (429 sayımı sabah).
+
+**TSK-140 (c37ad06) + DAĞITIM #15 TAMAM (22:43:01Z):** dagit [5b] kum-havuzu birimi (Description "kum havuzunda" — birimin kendi beyanı,
+ad listesi yok) BEKLENEN sayılır, kapı düşmez, beyan `sandbox_eski_kod: ["meridian-sprint@20260904-220829.service"]` dipnotu taşır; IHLAL
+dalı ve exit 1 aynen. v266 beyan şablonu beş yuvaya (dizi yuvası tırnaksız) + türetme çivisi. Canlı test: sprint koşarken `--uygula` —
+ilk deneme kirli-ağaç kapısına takıldı (dagit.sh uncommitted; kapı doğru çalıştı), commit sonrası TAMAM, beyan bayt-özdeş. 06:07Z
+yeniden koşum gereksizleşti (gece Monitor zinciri iptal). Bu gece canlıya giden: 035 · 122 · 134 · 139 · 140 (+137a/074/123/132-1/133/v412
+dağıtım #13'te). Açık kalanlar: TSK-137b (operatör soruları), TSK-138 (09-05 22Z brifingi sonrası ölçüm), TSK-132 dilim-2 (düşük), TSK-128
+(düşük), TSK-125 (ingest sonrası), TSK-131 (120 G kapısı), 117/118/121 görsel damgaları + Meridian Palet preset onayı (operatör).
