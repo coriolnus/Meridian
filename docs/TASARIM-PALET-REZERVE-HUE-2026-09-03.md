@@ -122,8 +122,39 @@ beyanı yapılır (o zaman huni bir rol jetonudur, seri değil). Öneri: seri'ye
 
 Renk kimliği (grafikler) A′ ile biraz zayıflar (iki zayıf hue); 56 dosyada literal→jeton göçü büyük diff, görsel
 regresyon riski (ekran değişmez iddiası jeton eşitliğiyle çivilenir: `emerald-500`≠`sev-3` hex'i — göç bir
-renk DEĞİŞİKLİĞİDİR, "aynı" değil; 160°→145°). Ölçülmeyen: colorblind-safe ayrım (deuteranopi'de 145° ↔ 20°
-ayrımı ışıklılıkla taşınıyor mu) — palet turunda ölçülür, S4.
+renk DEĞİŞİKLİĞİDİR, "aynı" değil; 160°→145°).
+
+Seri rampası A′'nin ölçülmüş payı (G7): pink-600 KRİTİK bandına 6,8°, yellow-600 UYARI bandına 8,9° — ikisi de
+spec §2'nin ±10° konvansiyonunun altında ama sıfır pay değil (Tailwind paleti kayarsa `test_rol_hue_bantlari`
+v399 öter — bilerek kabul edilmiş risk); yeni rampada en sıkı komşu hue farkı fuchsia→pink ~35° (eski rampada
+~73°, yarıya yakın daralma). Huni jetonu (`--huni-*`) pano tarafından OKUNMUYOR — `kanban/Huni.tsx` seri-6/8/9'u
+doğrudan okuyor, eski sayfalar elle kopya kalıyor (TSK-132 adayı olarak öneri havuzuna işlendi).
+
+**S4 ölçüldü (TSK-117 G8, 2026-09-03):** üç rol çifti (sev-2↔sev-3, yon-eksi↔yon-arti, sev-1↔sev-2) × iki tema
+× Viénot-Brettel-Mollon (1999) deuteranopi/protanopi simülasyonu (RGB→LMS Hunt-Pointer-Estevez, D65) = 12
+kontrast oranı (WCAG bağıl ışıklılık; çivi `tests/test_renk_korlugu_v400.py`):
+
+| Tema   | Çift                 | Simülasyon | Kontrast | ≥1,4 eşiği |
+|--------|----------------------|------------|---------:|:----------:|
+| gündüz | sev-2 ↔ sev-3        | deutan     | 1,07     | ✗ |
+| gündüz | sev-2 ↔ sev-3        | protan     | 1,57     | ✓ |
+| gündüz | yon-eksi ↔ yon-arti  | deutan     | 1,31     | ✗ |
+| gündüz | yon-eksi ↔ yon-arti  | protan     | 1,23     | ✗ |
+| gündüz | sev-1 ↔ sev-2        | deutan     | 1,19     | ✗ |
+| gündüz | sev-1 ↔ sev-2        | protan     | 1,33     | ✗ |
+| gece   | sev-2 ↔ sev-3        | deutan     | 1,75     | ✓ |
+| gece   | sev-2 ↔ sev-3        | protan     | 1,01     | ✗ |
+| gece   | yon-eksi ↔ yon-arti  | deutan     | 1,02     | ✗ |
+| gece   | yon-eksi ↔ yon-arti  | protan     | 1,45     | ✓ |
+| gece   | sev-1 ↔ sev-2        | deutan     | 1,19     | ✗ |
+| gece   | sev-1 ↔ sev-2        | protan     | 1,34     | ✗ |
+
+Gerçek minimum: **1,01** (gece sev-2↔sev-3, protan simülasyonu). 9/12 çift eşiğin altında — çivi KIRMIZI:
+bugünkü rol jetonları renk körlüğü simülasyonunda ışıklılıkla yeterince ayrışmıyor. Eşik ön-kayıtlı (1,4:1),
+sonucu gördükten sonra değişmedi (mutasyon: ESIK=1,0 → 0 ihlal yakalar, çünkü gerçek minimum 1,0076 tabanın
+üstünde; ESIK=3,0 → 12/12 ihlal yakalar — dönüşümün gerçekten ölçtüğünün kanıtı). Düzeltme (jeton IŞIKLILIĞI,
+hue sabit) tokens.json + jetonlar.css yeniden üretimi + build gerektirir — bu turun kapsamı DIŞINDA bırakıldı.
+Rol-1 ruling (2026-09-04 gece): çivi suite'te `xfail(strict=True)` ile ÖLÇÜM KAYDI olarak durur (jetonlar düzelince "beklenmedik geçti" ile kırmızı olur, xfail o gün kalkar — sessiz yeşil yok); ışıklılık düzeltmesi altı çekirdek jetonun ekrandaki hâlini değiştirdiği için operatörün görsel kararına bağlandı → [TSK-133].
 
 ## 7. Operatör soruları — KARARLAR (2026-09-03 ~10:45–10:50Z)
 
