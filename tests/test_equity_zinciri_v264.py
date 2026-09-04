@@ -136,16 +136,31 @@ def test_B_sinir_OLCULEMEDIYSE_konum_uydurulmaz():
     assert "ölçülemedi" in (t["konum_neden"] or "")
 
 
-def test_B_sinir_tarihi_SERIDE_YOKSA_listelenir_konumlanmaz():
-    """YOL-2 (damga) vakası — canlıda ÖLÇÜLEN hâl: damga 2026-07-24 diyor ama eğride o tarihli
-    nokta yok. Sınır LİSTELENİR (gizlemek beyanı yutmak olurdu), grafiğe KONMAZ (yer uydurulmaz)
-    — reset işaretlerinin `konum_neden` sözleşmesinin aynısı."""
+def test_B_sinir_tarihi_SERIDE_YOKSA_YAKLASIK_konumlanir():
+    """YOL-2 (damga) vakası — canlıda ÖLÇÜLEN hâl (dağıtım #14, 2026-09-04): damga 2026-07-24
+    diyor ama eğride o tarihli nokta yok, 07-20'den sonraki ilk nokta Ağustos'a atlıyor. ESKİ
+    hüküm burada i None üretiyordu (grafiğe KONMAZ) ve pano sınır çizgisi kayboluyordu. ARTIK
+    (TSK-139, 2026-09-04): 0. noktaya çivilemek yerine tarihi ≤ sınır olan EN YAKIN ÖNCEKİ noktaya
+    (2026-07-20, i=1) BEYANLI yaklaşık konumlanır — BEYANLI yaklaşıklık uydurma DEĞİLDİR."""
     zarf = _zarf([["2026-07-17", 1.0], ["2026-07-20", 2.0], ["2026-08-14", 3.0]])
     sinir = ledgerstamp.seed_boundary([_tohum_satiri("2026-07-24")], eq=zarf)
     assert sinir["kaynak"] == ledgerstamp.KAYNAK_DAMGA    # ön koşul: yedek yol konuştu
     t = api._egri_beyani(zarf, {}, sinir=sinir)["tohum_siniri"]
-    assert t["replay_end"] == "2026-07-24" and t["i"] is None
-    assert "seride" in (t["konum_neden"] or "")
+    assert t["replay_end"] == "2026-07-24" and t["i"] == 1
+    assert (t["konum_neden"] or "").startswith("yaklaşık:")
+    assert "2026-07-24" in t["konum_neden"] and "2026-07-20" in t["konum_neden"]
+
+
+def test_B_sinir_tarihi_ILK_NOKTADAN_ONCEYSE_konumlanamaz():
+    """TSK-139 üçüncü hâl: sınır eğrinin BAŞINDAN bile önceyse (≤ sınır tarihli hiç nokta yok)
+    aranacak "en yakın önceki" nokta yoktur — 0. noktaya çivilemek yer uydurmak olurdu, i None
+    kalır ve neden BEYAN edilir (yaklaşıklık değil, tam konumsuzluk)."""
+    zarf = _zarf([["2026-07-20", 1.0], ["2026-08-14", 2.0]])
+    sinir = ledgerstamp.seed_boundary([_tohum_satiri("2026-07-01")], eq=zarf)
+    assert sinir["kaynak"] == ledgerstamp.KAYNAK_DAMGA    # ön koşul: yedek yol konuştu
+    t = api._egri_beyani(zarf, {}, sinir=sinir)["tohum_siniri"]
+    assert t["replay_end"] == "2026-07-01" and t["i"] is None
+    assert t["konum_neden"] == "sınır tarihi eğrinin ilk noktasından önce — konumlanamaz"
 
 
 def test_B_yollar_AYRISIRSA_bayrak_ve_iki_deger_beyanda():
@@ -172,9 +187,11 @@ def test_B_yollar_AYRISIRSA_bayrak_ve_iki_deger_beyanda():
 def test_C_api_performance_TOHUM_SINIRINI_servis_eder(sandbox_state):
     """TSK-035 (2026-09-04) SONRASI: fikstürün damgalı satırı (`2026-07-18`) BİLEREK equity
     serisinde YOK (aynı hâl v245/v264 fikstürlerinde hep böyleydi — o zaman önemsizdi çünkü RESET
-    kazanıyordu). Artık DOĞRUDAN yol (damga) kazandığı için bu tarih seride yoksa `i` KONUMLANAMAZ
-    — `test_B_sinir_tarihi_SERIDE_YOKSA_listelenir_konumlanmaz`nın AYNI sözleşmesi burada da geçer:
-    sınır yine LİSTELENİR (gizlenmez), grafiğe KONMAZ (yer uydurulmaz)."""
+    kazanıyordu). O turda DOĞRUDAN yol (damga) kazandığı için bu tarih seride yoksa `i` None
+    üretiyordu (grafiğe KONMAZ). ARTIK (TSK-139, 2026-09-04): 0. noktaya çivilemek yerine tarihi ≤
+    sınır olan EN YAKIN ÖNCEKİ noktaya (bu fikstürde `2023-01-12`, i=0) BEYANLI yaklaşık
+    konumlanır — servis katmanı (`/api/performance`) da aynı hükmü taşır, `_egri_beyani` çağıranı
+    değildir."""
     store.write_json("equity_curve.json",
                      _zarf([["2023-01-12", 100000.0], ["2026-07-20", 94457.91],
                             ["2026-08-14", 100100.0]], [_isaret("2026-07-20")]))
@@ -187,7 +204,9 @@ def test_C_api_performance_TOHUM_SINIRINI_servis_eder(sandbox_state):
     b = r.json()["equity_curve_beyani"]
     t = b["tohum_siniri"]
     assert t and t["replay_end"] == "2026-07-18" and t["kaynak"] == ledgerstamp.KAYNAK_DAMGA
-    assert t["i"] is None and "seride" in (t["konum_neden"] or "")
+    assert t["i"] == 0
+    assert (t["konum_neden"] or "").startswith("yaklaşık:")
+    assert "2026-07-18" in t["konum_neden"] and "2023-01-12" in t["konum_neden"]
     # ESKİ BEYAN ALANLARI AYNEN DURUYOR: yeni pencere eskilerin YERİNE geçmez, YANINA gelir.
     assert b["n_isaret"] == 1 and b["gecikme_gun"] == 0
 

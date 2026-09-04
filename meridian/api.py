@@ -2799,8 +2799,12 @@ def _egri_beyani(ec: dict | None, pf: dict | None, sinir: dict | None = None) ->
     # söylemiyordu — 882 tohum noktası ile canlı kuyruk TEK çizgide, sınır beyansızdı. Sınırın
     # yasası `ledgerstamp.seed_boundary`de kalır (TEK hesap; ikincisini kurmak `sermaye.koken`
     # docstring'indeki "iki hesap" kusurunun aynısı olurdu); burada yalnız GRAFİK İNDİSİ eklenir —
-    # reset işaretleriyle aynı mekanik: indis sunucudan gider, bulunamazsa None + neden (yer
-    # uydurulmaz; damga yolunun tarihi eğri noktasına denk gelmeyebilir ve bu NORMALDİR).
+    # reset işaretleriyle aynı mekanik başlar: indis sunucudan gider. TAM eşleşme yoksa (damga
+    # yolunun tarihi eğri noktasına denk gelmeyebilir ve bu NORMALDİR) ARTIK (TSK-139, 2026-09-04)
+    # 0. noktaya çivilemek yerine tarihi ≤ sınır olan EN YAKIN ÖNCEKİ noktaya konumlanır —
+    # `konum_neden` yaklaşıklığı BEYAN eder; BEYANLI yaklaşıklık yer uydurmak DEĞİLDİR. Sınırdan
+    # önce hiç nokta yoksa (sınır eğrinin başından önce) konumlanacak nokta olmadığından i None
+    # kalır.
     # `yollar_ayrisik` OLDUĞU GİBİ taşınır: ROADMAP §2-37'nin ölçtüğü ayrışmanın (reset işareti ↔
     # damga) panodaki tek görünürlüğü budur; hangi yolun otorite olduğu Rol-1 kararıdır ve bu
     # blok o kararı VERMEZ — donmuş yolun seçili kaldığını beyan eder.
@@ -2808,22 +2812,37 @@ def _egri_beyani(ec: dict | None, pf: dict | None, sinir: dict | None = None) ->
         tohum = None
     else:
         _rd = sinir.get("replay_end")
-        _idx = None
-        if _rd is not None:
+        _idx, _neden = None, None
+        if _rd is None:
+            _neden = "tohum sınırı ölçülemedi — grafiğe konum konmaz"
+        else:
             try:
                 _rdt = _dt.date.fromisoformat(str(_rd)[:10])
-                _idx = next((i for i, t, _v in tarihli if t == _rdt), None)
             except (TypeError, ValueError):  # sessiz-yutma: biçimsiz sınır tarihi konumlanamaz — sınır yine LİSTELENİR, `konum_neden` durumu adıyla taşır; 0. noktaya çivilemek yer uydurmak olurdu
-                _idx = None
+                _rdt = None
+            if _rdt is None:
+                _neden = ("sınır tarihi seride bulunamadı (damga yolu eğri noktasına denk "
+                          "gelmeyebilir) — sınır LİSTELENİR ama grafiğe konumlandırılamaz")
+            else:
+                # TSK-139 (2026-09-04): TAM eşleşme, tarihi ≤ sınır olan noktalar içinde tarihi
+                # EN BÜYÜK olanın da özel hâlidir (eşitlik `<=`ye dahil) — tek arama iki senaryoyu
+                # birden kapsar. Aday YOKSA sınır eğrinin ilk noktasından bile öncedir; 0. noktaya
+                # çivilemek yer uydurmak olurdu, i None kalır.
+                _onceki = [(i, t) for i, t, _v in tarihli if t <= _rdt]
+                if not _onceki:
+                    _neden = "sınır tarihi eğrinin ilk noktasından önce — konumlanamaz"
+                else:
+                    _yakin_t = max(t for _i, t in _onceki)
+                    _idx = min(i for i, t in _onceki if t == _yakin_t)
+                    if _yakin_t != _rdt:
+                        _neden = (f"yaklaşık: sınır {_rdt.isoformat()} seride yok, en yakın "
+                                  f"önceki nokta {_yakin_t.isoformat()} (i={_idx})")
         tohum = {
             "replay_end": _rd, "kaynak": sinir.get("kaynak"), "guven": sinir.get("guven"),
             "yollar": sinir.get("yollar"),
             "yollar_ayrisik": bool(sinir.get("yollar_ayrisik")),
             "i": _idx,
-            "konum_neden": (None if _idx is not None else
-                            ("tohum sınırı ölçülemedi — grafiğe konum konmaz" if _rd is None else
-                             "sınır tarihi seride bulunamadı (damga yolu eğri noktasına denk "
-                             "gelmeyebilir) — sınır LİSTELENİR ama grafiğe konumlandırılamaz")),
+            "konum_neden": _neden,
         }
 
     # SON YAZIM MAKBUZU — kadanslı yazarın kendi hükmü (`loop._persist_equity_point`), olay
