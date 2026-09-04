@@ -2290,3 +2290,16 @@ kart_tavanini_ASMIYOR` (zamanlama tavanı) `-n 4` yükünde kırmızı, seri yen
 kaynaklı flake. Not: v217 p95 tavanı yük-bağımsız değil, ilk kez görüldü (suite #6–#12 temiz) — tekrarlarsa kalem açılır. Push 11aa356.
 
 **Dağıtım #10 (6f880c0, 02:48Z, seans dışı):** TSK-129 (codelaw aşama-2 + 71 dosya şerh) canlıya; kuru koşum 31 girdi/silme yok, healthz 200, birimler aktif (learn inactive TSK-092), evren 238, hata 0. Gece toplamı: dağıtım #8 (cbdac82, 21:22Z) · #9 (fd871e4, 01:16Z) · #10 (6f880c0, 02:48Z); commit zinciri ec4616d → 6f880c0 (24 commit).
+
+### 2026-09-04 gece-4 (Rol-1, otonom) — TSK-135 + TSK-127 · suite #14 · dağıtım #11
+
+**TSK-135 + TSK-127 tek sonnet ajan (32 dk) + sonnet inceleme KABUL, commit 1ffc521:** codelaw `report()` üçüncü besleme metin köklerini
+root'tan türetiyor (gerçek kök birebir; sentetik kök kendi ağacı — TSK-129'un v373 monkeypatch yalıtımı gereksizleşti ve kalktı; v402 +4
+çivi; bedel değişmedi, sıcak ~1,78 s). RUNBOOK'taki 66 satır çapası: günlük tarihsel, DOKUNULMADI — üretici `_capa_notrle` excerpt'teki
+`dosya.py:NNN`i "(satır çapası tarihsel, RUNBOOK'ta kaldırıldı)" ile nötrler (tek çağrı noktası); RUNBOOK ham eşleşme 66 → 2 (kalan ikisi
+`deploy/oracle-a1/tick_watchdog.sh` başlık bloğu, geçerli satırlar, codelaw çürük sayacı 0); `_DOCS_URETILMIS` BOŞ — docs dünyasının tek
+dışlaması sıfırlandı; v391 çivileri hükmü izler; v209 korpus tazelendi. İncelemenin iki KÜÇÜK'ü kozmetik (backtick içinde nötrleme cümlesi;
+aralık çapalarında aralık bilgisi kaybı — bedel, beyanlı).
+
+**Suite #14 (1ffc521, 03:29→03:41Z, `-n 4`): 10207 passed / 0 failed / 1 xfailed, PYTEST_EXIT=0** — gecenin ilk tamamen temiz tam suite'i
+(#11 temiz; #12 iki gizli sınıf; #13 v217 yük flake'i). Push 1ffc521.
