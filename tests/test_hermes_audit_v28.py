@@ -63,8 +63,12 @@ def test_h1b_only_gate_backed_ship_paths_exist():
     """Gemiye çıkış YALNIZ reflect.submit / reflect.search_and_submit üzerinden — ikisi de kapıyı içerir."""
     ship_calls = set(re.findall(r"reflect\.(\w+)\(", HSRC))
     allowed = {"submit", "search_and_submit"}
-    assert ship_calls <= allowed | {"_default_windows", "_wf_cached", "_gate_eval", "backtest"}, \
-        f"reflect üzerinden beklenmedik çağrı: {ship_calls - allowed}"
+    # TSK-074 (2026-09-04): `reflect.hayalet_suzgeci` gemiye çıkış DEĞİL — `virgin_knobs()` aday listesini
+    # okuyucusuz bounds anahtarlarından süzen salt-okunur süzgeç (operatör kararı: kabloya al); ship yolu
+    # yine yalnız submit / search_and_submit. İzin listesine bilerek eklendi, gevşetme değil.
+    okuyan = {"_default_windows", "_wf_cached", "_gate_eval", "backtest", "hayalet_suzgeci"}
+    assert ship_calls <= allowed | okuyan, \
+        f"reflect üzerinden beklenmedik çağrı: {ship_calls - allowed - okuyan}"
     assert "submit" in ship_calls and "search_and_submit" in ship_calls
 
 
