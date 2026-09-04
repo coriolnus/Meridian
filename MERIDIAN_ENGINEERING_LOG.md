@@ -2324,3 +2324,23 @@ sembol çapasından (takimyildizi.tsx şerhi v399'un eski test adını taşıyor
 yeşil. Not: scratchpad 10:xxZ'de boşalmıştı (pano_stub.py yeniden yazıldı; gece suite logları kayboldu — hükümler günlük/ledger'da).
 
 **Dağıtım #12 (0d2c5a2, 11:15Z, seans öncesi):** TSK-136 canlıya — varsayılan tema orijinal renklerde, "Meridian Palet" preset seçilebilir; healthz 200, birimler aktif.
+
+### 2026-09-04 öğle (Rol-1) — KOVA C: EDG-071 · EDG-072 → EDG-073 hükümleri
+
+**EDG-072 → EDG-073 (rejim-koşullu çıkış override'ı):** ölçüm kodu (sonnet, EDG-033 ikizi) ADIM-0'ı geçti, PK yol-tutarlı geçti (chop
+time_stop=1 → bars_held medyan 2→1) ama kill-1 "kontrol EDG-026 C defteriyle bit-özdeş" smoke düzeyinde DÜŞTÜ: C-şasisi 2026-08-12'de
+dondu, o günden bu yana meridian/ 178 commit + bar önbelleği 24/260 dosya yenilendi (incelemede bağımsız sayıldı) — kartın öngördüğü
+"resolve_params yan-etkili" DEĞİL (öz-sınama eff==params 4/4 rejim). §5: kriter yerinde düzeltilmez → EDG-072 KALDI, R2 kartı EDG-073
+(taze kontrol tabanı; kill: şasi sınaması + koşumlar arası motor/bar özdeşliği) üç tam koşum SÜRERKEN, H1/H2 okunmadan yazıldı.
+Sonuç (üç replay 2022-01→2026-07, 251 sembol, ~30 dk/koşum, 8 çekirdek paralel): H1 ΔP&L CI95 [−6.759, +21.567] orta +6.530, dd 0,904;
+H2 [−10.425, +19.003] orta +3.638, dd 0,903 → iki hücre de CI-alt>0 KARŞILAMIYOR → EDG-073 KALDI; sevk kapısı kapalı, TSK-079 25c-1
+"kanıtla kapalı". Ölçüm incelemesi GÜVENİLİR (bootstrap EDG-033 ile matematiksel özdeş, dd/ΔP&L yönleri, (date,ticker) tekilliği
+ampirik). Ders (genel, karta yazıldı): "C-şasi AYNEN bit-özdeş" maddesi donmuş defterin yaşı kadar geçerli — sonraki şasi kartları
+taze kontrolü taban alır.
+
+**EDG-071 (hayalet düğme süzgeci): KISMİ.** K2 geçti (32/32 kablolu düğmede yanlış-pozitif 0; fail-open sessizleşmiyor; propose_virgin_knob
+deterministik, LLM yok), PK geçti (Seçenek A: hayalet anahtar aday döngüsüne hiç girmiyor — kart metninin ':hayalet' etiketi
+mekanizmasından ayrışır, beyanlı). K1 ÖLÇÜLEMEDİ: A1 hypotheses.jsonl donmuş çekimi 60 satır (07-14→08-21), 42'si repo git tarihinden
+(2026-07-31) önce → o günkü motor blob'u yok; ölçülen 18'de hayalet 0/18; tasarım belgesinin flagship vakası (47 öneri / 29 hayalet)
+defterde YOK — defter o dönemi taşımıyor. Süzgeç zararsız, faydası tarihsel olarak kanıtlanamadı → uygulama kararı operatörde (TSK-074).
+Ölçüm incelemesi GÜVENİLİR (git tz semantiği boşluk testiyle, aile eşlemesi analytics._knob_family ile birebir). Commit ec701b3.
