@@ -102,9 +102,11 @@ karşılaştırdığı için eksiği yapısal olarak göremiyordu. Bugün `test_
     `obs.warn("span_days_fallback")` basar;
   · `adapters.data._bar_warn` (`data._sessions`) — XNYS takvimi yüklenemezse `obs`a uyarı basar
     (olay adı ÇAĞRI ARGÜMANIDIR, sabit değil — tarama onu `None` diye sayar, uydurmaz);
-  · `store.read_jsonl` — defterde ÇÖZÜLEMEYEN satır varsa `obs.warn("jsonl_rows_skipped")` basar
-    (dosya başına bir kez). İlk iki kalemle AYNI SINIF; ilk sayımda ATLANMIŞTI (denetim MEDIUM-5)
-    ve eksik bir muhasebe, kendi kuralınca olmayan bir güvencedir;
+  · `store._bozuk_satir_uyar` (`store.read_jsonl` ve `store._read_jsonl_kuyruk`; TSK-137a
+    2026-09-04'te `read_jsonl`in gövdesinden bu yardımcıya taşındı — çivi taşınmayı AYNI GÜN
+    yakaladı, beyan izledi) — defterde ÇÖZÜLEMEYEN satır varsa `obs.warn("jsonl_rows_skipped")`
+    basar (dosya başına bir kez). İlk iki kalemle AYNI SINIF; ilk sayımda ATLANMIŞTI (denetim
+    MEDIUM-5) ve eksik bir muhasebe, kendi kuralınca olmayan bir güvencedir;
   · `store._bayat_defter_suzgeci` (`store.db_backed`) — DB devredeyken ilk `db_backed` temasında,
     göçmüş bir varlığın kanonik düz dosyası hâlâ duruyorsa onu `.migrated`a TAŞIR (hiçbir şey
     silinmez/üzerine yazılmaz, idempotenttir) VE bunu İKİ ayrı olayla duyurur
