@@ -2344,3 +2344,33 @@ mekanizmasından ayrışır, beyanlı). K1 ÖLÇÜLEMEDİ: A1 hypotheses.jsonl d
 (2026-07-31) önce → o günkü motor blob'u yok; ölçülen 18'de hayalet 0/18; tasarım belgesinin flagship vakası (47 öneri / 29 hayalet)
 defterde YOK — defter o dönemi taşımıyor. Süzgeç zararsız, faydası tarihsel olarak kanıtlanamadı → uygulama kararı operatörde (TSK-074).
 Ölçüm incelemesi GÜVENİLİR (git tz semantiği boşluk testiyle, aile eşlemesi analytics._knob_family ile birebir). Commit ec701b3.
+
+### 2026-09-04 öğleden sonra (Rol-1) — operatör kararları · TSK-132/134 · TSK-074 · TSK-133 · TSK-123 · suite #16
+
+**Operatör kararları (13:0xZ, tek tek soruldu):** TSK-074 KABLOYA AL (+ canlı sayaç, 2 hafta sonra oku) · TSK-131 geri dolum DEVAM, müdahale eşiği
+/opt/veri ≥ 120 G (GATED) · TSK-133 PRESET'TE DÜZELT · TSK-130 kota "ingest bitince rahatlar, böyle kalsın" (DROPPED; ingest r2 A1 transient timer
+22:30Z, brifing 22:00Z sonrası).
+
+**TSK-132 dilim-1 + TSK-134 (bab158f):** takımyıldızı JETONLAR anahtarları hue adından ROL adına (dugum-*/bag-*/isi-*; değerler aynen; görünüm
+kanıtı: derlenmiş CSS 357 custom property 0 fark), v388 regex+iddialar rol adlarıyla; huni jetonu "okuyucusuz" DEĞİL — eski pano app.js segRenk okuyor
+(kod yok, beyan); yön utility köprüsü (26 bracket → utility, v406); jetonlar.css ↔ tema.css gerçek çakışma 2 (--card, --accent; ROADMAP 8 demişti) →
+BASLIK beyanı + v407. İncelemenin "olcum.tsx tema.css:75-79" çapası bu diffle KAYMIŞTI (hiçbir çivi görmüyor — .css hedefli çapa) → bölüm adına.
+Keşif dersi: eski sayfalara üretici bağlamak emsalsiz (kısmi-blok üretimi yok) — dilim-2 düşük öncelik.
+
+**TSK-074 (7ed0f54):** süzgeç hermes.virgin_knobs tek boğazında (fail-open; payda dead_families dokunulmadı); sayaç kablolama tarihinden beri birikimli
+(kayan 14 gün geç okumada yanıltırdı — inceleme), kuyruk-sınırlı 15.000 satır (536 olay/gün × 14 × 2; read_jsonl limit'i tam dosyayı okuyup kırpar —
+beyanlı bedel), /api/diagnostics → Karne "Hayalet düğme süzüldü (kablolamadan beri)"; v408 11; EDG-071 PK kablolu dünyaya uyarlandı; v28 hermes
+denetimi izin listesi (hayalet_suzgeci ship yolu değil). Ajan iki kez "arka plan koşum + bildirim bekleme"ye düştü (SendMessage ile sürdürüldü) ve
+TSK-133'ün paralel build çıktısını "kirlilik" sanıp sildi — paralel implementer'ların aynı bundle'ı ürettiği durumda nihai build Rol-1'de (yapıldı).
+Sayaç okuma ~2026-09-18.
+
+**TSK-133 (17b723b):** preset ışıklılık — ilk tur OKLCH hue sabit tutmuştu, depo ölçütü HSL: sev-3 10–12° kaymış (gece bant marjı 0,41°) ve mutasyon
+iddiası yanlıştı (sev-2 eski → 1,657 yeşil; ısıran sev-3 eski → 1,262) — incelemeci ikisini de yakaladı → r1: HSL ±3° kısıtıyla yeniden türetme, gerçek
+mutasyon, preset hue bant/sapma çivisi, h2/damga türevleri. 12/12 ≥1,4 (min 1,4046). Görsel onay operatörde (preset seçilince).
+
+**TSK-123 (e1beb13):** dört oneshot brifing birimi TimeoutStartSec=infinity idi (asılı çağrı timer'ı sessizce atlatır) → 660/660/660/300 s (sabitler
+kaynaktan; skill-gorus deterministik, dış çağrı yok — seçildi, beyanlı); v409; A1'e elle kuruldu (F9), 11min/5min doğrulandı; test-ateşleme 22:00Z
+doğal tetiği.
+
+**Suite #16 (7ed0f54): 10288 passed / 1 failed** — v28 hermes denetimi `reflect.*` izin listesi (yeni süzgeç çağrısı) → izin + künye, delta yeşil,
+push 78f2f20. Dağıtım #13 (132/134 + 074 + 133 + 123) seans sonrası ≥20:00Z.
