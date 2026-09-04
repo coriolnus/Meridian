@@ -2432,3 +2432,14 @@ listesi (`light`, sonra `gunduz`) her yeni damga değerinde yeniden delinir; nit
 885 replay_seed + 16 live_paper, damgasız/belirsiz 0; tohum en geç ts_close 2026-07-24, canlı 2026-08-07…2026-09-04. Geri-açılış şartı
 sağlanmıyor. 2026-08-14 "887/887" ile bugünkü 885 arasındaki iki satır ölçülmedi (açık kalem, küçük). Ölçüm yolu: A1'de meridian import
 etmeden `sqlite3 ... ?mode=ro` — obs'a dokunmaz, litestream'e zarar vermez.
+
+**22:04:55Z şef brifingi (TSK-014 yeniden ölçüm + TSK-123 canlı ateşleme):** Result=success, 22:02:22–22:04:55Z (2 dk 33 s < 660 s tavanı);
+brifing_kural_denetimi kaynak=**llm** (dün llm_dustu — kök neden kota, 429 bugün sıfır), 4 çağrı, yeniden-üretim; ama 4 ihlalin 3'ü alan-adı
+yanlış-pozitifi ('bekçi', "stop_gap'i", 'iyileştirme önerisi') → 2/2 ihlal, HAM teslim (sıralama katmanı devre dışı) → [TSK-138].
+
+**DAĞITIM #14 (f8d7d6d, 22:08:28Z, healthz 200):** TSK-035 + 122 + 134 + docs. Canlı doğrulama 22:09Z: bundle Csnm_HYs (medya seçicisi
+`:root:not([data-theme])`), SEMA_ALANLARI üç alan, journal temiz. **Canlı sürpriz:** `/api/performance` tohum_siniri replay_end 2026-07-24
+(damga), guven ORTA, yollar_ayrisik TRUE — reset işareti 07-20 ≠ damga 07-24; R1 hükmünün "iki yol aynı tarih (887/887)" varsayımı yanlıştı
+(887/887 damgalı olmak ≠ iki yol aynı tarihi vermek). Sonuç dürüst (ayrışma panoda beyanlı, TSK-035'in tam da düzelttiği şey) ama sınır tarihi
+eğri serisinde yok → i None, grafikte sınır çizgisi kayboldu (kod şerhi 'normal' diyor) → [TSK-139] (öneri: en yakın önceki noktaya beyanlı
+yaklaşık konum). Ders: "yollar ayrışık mı" sorusu damga SAYIMIYLA değil iki yolun TARİHİYLE ölçülür — ölçmeden hüküm verildi.
