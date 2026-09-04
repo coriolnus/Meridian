@@ -2322,3 +2322,5 @@ doğrulandı); rezerve-bant paleti `ui/src/styles/presets/meridian-palet.css` = 
 spec §7 S6. Stub: preset → sev-2/teal, varsayılan → amber-600/blue/huni #2563eb. Suite #15 (3eef304): 10206/8 — sekiz kırmızı TEK çürük
 sembol çapasından (takimyildizi.tsx şerhi v399'un eski test adını taşıyordu → codelaw ok=False kaskadı) → r1 tek satır + build, delta 8 dosya
 yeşil. Not: scratchpad 10:xxZ'de boşalmıştı (pano_stub.py yeniden yazıldı; gece suite logları kayboldu — hükümler günlük/ledger'da).
+
+**Dağıtım #12 (0d2c5a2, 11:15Z, seans öncesi):** TSK-136 canlıya — varsayılan tema orijinal renklerde, "Meridian Palet" preset seçilebilir; healthz 200, birimler aktif.
