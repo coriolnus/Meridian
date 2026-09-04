@@ -170,7 +170,7 @@ type JetonAdi = keyof typeof JETONLAR;
    `experience` jetonu `pembe` KALDI ama sözlükteki karşılığı `--color-seri-9`ya taşındı
    (eski seri-10 idi; rampaj sonrası seri-10 artık yellow, `pembe` adı ancak pembenin
    GERÇEKTEN yaşadığı slotta doğru kalır — bkz. `JETONLAR` yorumu). İkisi de serbest
-   (`test_seri_rampasi_serbest_bant_v399.py::test_seri_6_10_rol_bantlarinda_DEGIL`).
+   (`test_seri_rampasi_serbest_bant_v399.py::test_seri_6_10_PRESETTE_rol_bantlarinda_DEGIL`).
    --------------------------------------------------------------------------- */
 export const DUGUM_STILI = {
   /** Yarıçap px @1x: derecesi sıfır olan düğüm tabanda, en ağır düğüm tavanda. */
