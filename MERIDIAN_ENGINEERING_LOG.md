@@ -2305,3 +2305,20 @@ aralık çapalarında aralık bilgisi kaybı — bedel, beyanlı).
 (#11 temiz; #12 iki gizli sınıf; #13 v217 yük flake'i). Push 1ffc521.
 
 **Dağıtım #11 (8c49900, 03:44Z, pre-market):** TSK-135 + TSK-127 (codelaw + runbook_uret + RUNBOOK) canlıya; kuru koşum temiz, healthz 200, birimler aktif, evren 238. Gece toplamı: #8 cbdac82 · #9 fd871e4 · #10 6f880c0 · #11 8c49900.
+
+### 2026-09-04 sabah (Rol-1) — operatör: palet VARSAYILAN DEĞİL, TEMA → TSK-136 · dağıtım #12
+
+**Operatör 10:10Z:** "renk seçimleri ayrı bir tema olmalıydı, UI'da 4 renk seçeneği zaten var; ana renkleri geri al, yaptığını tema olarak
+yap; orijinal renkleri kopyaladığımız UI'dan geri al, huni vs. değiştirdiğin kalemleri de bu temaya eski haliyle taşı." Ders: palet turu
+(TSK-117) rezerve-bant kararlarını VARSAYILAN temaya işledi ve gece dağıtım #9 ile canlıya gitti — tema/preset mekanizması (Default/Brutalist/
+Soft Pop/Tangerine) varken renk kararı operatör onayı olmadan görünümü değiştirmemeliydi ("ekran değişir, operatör hükmü" kuralı gece modunda
+"sabaha ertelendi" — yanlış ruling: görünür değişiklik ertelenmez, preset'e alınır).
+
+**TSK-136 (tek sonnet ajan 33 dk + sonnet inceleme KABUL, commit 3eef304 + r1):** varsayılan tema commit 4bfa113'ün orijinal değerlerine
+(seri 6–10 blue/orange/violet/cyan/pink; huni #2563eb/#7c3aed/#16a34a; gece yön-eksi #f98080; anlam jetonları TSK-117 öncesi literal Tailwind
+hue'ları amber-600/400 · emerald-600/400 · red-600/400 · sky-700/400, hepsi oklch→sRGB ölçülerek, incelemede 8/8 hex + 8/8 rgba bağımsız
+doğrulandı); rezerve-bant paleti `ui/src/styles/presets/meridian-palet.css` = "Meridian Palet" (5. preset); tsx göçü (anlam utility'leri) kaldı
+— tema mekanizmasının ön koşulu; SeansTakvimi → basari; v395/v396/v399/v400 preset'i okur; v153 dar istisna (-h/-t iki temada aynı, RATIFIED);
+spec §7 S6. Stub: preset → sev-2/teal, varsayılan → amber-600/blue/huni #2563eb. Suite #15 (3eef304): 10206/8 — sekiz kırmızı TEK çürük
+sembol çapasından (takimyildizi.tsx şerhi v399'un eski test adını taşıyordu → codelaw ok=False kaskadı) → r1 tek satır + build, delta 8 dosya
+yeşil. Not: scratchpad 10:xxZ'de boşalmıştı (pano_stub.py yeniden yazıldı; gece suite logları kayboldu — hükümler günlük/ledger'da).
