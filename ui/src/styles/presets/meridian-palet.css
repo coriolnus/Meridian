@@ -30,6 +30,35 @@ value: meridian-palet
   --bilgi-h: rgba(9, 152, 200, .35);
   --bilgi-t: rgba(9, 152, 200, .10);
 
+  /* S4 RENK KÖRLÜĞÜ IŞIKLILIK DÜZELTMESİ (TSK-133, 2026-09-04; r1 DÜZELTMESİ aynı gün): sev-1/2/3,
+     yon-arti/yon-eksi — kroma SABİT (OKLCH C), L ikili aramayla ayarlandı; sev-3 AYRICA OKLCH H'de
+     küçük bir ofsetle düzeltildi (r1: yalnız L ile hue SABİT tutmak HSL hue'yu 10,3° kaydırıyordu —
+     bu depodaki hue ölçütü HSL/colorsys'tir, v396/v399/v388/spec §1.3 — OKLCH hue DEĞİL; iki kısıtlı
+     arama: HSL Δhue ≤3° VE deutan+protan kontrastı ≥1,4, EN KÜÇÜK toplam sapmayla). sev-1 ve yon-arti
+     PİVOT: değeri jetonlar.css'teki gündüz varsayılanıyla AYNI (sev-1 gamut sınırında koyulaşamıyor
+     — ölçüldü, bu yüzden sev-2 sev-1'e göre açıldı). -h/-t/-zemin/-h2/-damga türevleri AYNI hex'in
+     kanallarından (D2, tek-kaynak; -h2/-damga tüketicisi YOK, yalnız tutarlılık — r1 KÜÇÜK-3).
+     Hesap + önce/sonra tablo: .superpowers/sdd/2026-09-04-tsk133/report.md. */
+  --sev-1: #c3002d;
+  --sev-1-h: rgba(195, 0, 45, .35);
+  --sev-1-t: rgba(195, 0, 45, .10);
+  --sev-2: #d6511a;
+  --sev-2-h: rgba(214, 81, 26, .35);
+  --sev-2-h2: rgba(214, 81, 26, .40);
+  --sev-2-t: rgba(214, 81, 26, .10);
+  --sev-3: #3bc774;
+  --sev-3-h: rgba(59, 199, 116, .35);
+  --sev-3-t: rgba(59, 199, 116, .10);
+  --sev-3-damga: rgba(59, 199, 116, .55);
+  --yon-arti: #107636;
+  --yon-arti-h: rgba(16, 118, 54, .35);
+  --yon-arti-t: rgba(16, 118, 54, .10);
+  --yon-arti-zemin: rgba(16, 118, 54, .08);
+  --yon-eksi: #e0653c;
+  --yon-eksi-h: rgba(224, 101, 60, .35);
+  --yon-eksi-t: rgba(224, 101, 60, .10);
+  --yon-eksi-zemin: rgba(224, 101, 60, .07);
+
   /* SERİ RAMPASI 6-10 — rol bantlarının DIŞINDA (eski TSK-117 K-4, S1=A′/S2). */
   --seri-6: var(--color-teal-600);
   --seri-7: var(--color-lime-600);
@@ -58,6 +87,28 @@ value: meridian-palet
   --bilgi-h: rgba(78, 150, 212, .35);
   --bilgi-t: rgba(78, 150, 212, .10);
 
+  /* S4 RENK KÖRLÜĞÜ IŞIKLILIK DÜZELTMESİ (TSK-133, 2026-09-04; r1 DÜZELTMESİ aynı gün) — gece
+     bloğu, aynı yöntem (gündüz bloğundaki şerh) — pivot burada sev-2 ve yon-arti (jetonlar.css
+     gece varsayılanıyla AYNI; sev-2 gamut sınırında ışıklılık ayrımına kapalı — ölçüldü, sev-1
+     sev-2'ye göre koyulaştırıldı, "sev-1 sev-2'den belirgin koyu" korunuyor). sev-3 r1'de HSL
+     hue'yu (colorsys) ≤3° tutacak OKLCH H ofsetiyle yeniden türetildi (aynı gündüz gerekçesi —
+     yalnız L ile 12,2° kayıyordu). -h2/-damga türevleri de eklendi (r1 KÜÇÜK-3, tutarlılık). */
+  --sev-1: #c84d4f;
+  --sev-1-h: rgba(200, 77, 79, .35);
+  --sev-1-t: rgba(200, 77, 79, .10);
+  --sev-2: #ff5a00;
+  --sev-2-h: rgba(255, 90, 0, .35);
+  --sev-2-h2: rgba(255, 90, 0, .40);
+  --sev-2-t: rgba(255, 90, 0, .10);
+  --sev-3: #5ae593;
+  --sev-3-h: rgba(90, 229, 147, .35);
+  --sev-3-t: rgba(90, 229, 147, .10);
+  --sev-3-damga: rgba(90, 229, 147, .55);
+  --yon-arti: #4ade80;
+  --yon-arti-h: rgba(74, 222, 128, .35);
+  --yon-arti-t: rgba(74, 222, 128, .10);
+  --yon-arti-zemin: rgba(74, 222, 128, .08);
+
   --seri-6: var(--color-teal-400);
   --seri-7: var(--color-lime-400);
   --seri-8: var(--color-fuchsia-400);
@@ -66,11 +117,14 @@ value: meridian-palet
 
   /* K-0 (eski TSK-117 G2, 2026-09-03): gece yön-eksi #f98080 (0°) gece kritik #ff7e7c (1°)
      ile çakışıyordu; hue gündüz yön-eksi ailesine (17°) alındı. VARSAYILAN TEMADA BU
-     DÜZELTME KALKTI (TSK-136) — burada, preset seçilince yaşamaya devam eder. */
-  --yon-eksi: #f6966f;
-  --yon-eksi-h: rgba(246, 150, 111, .35);
-  --yon-eksi-t: rgba(246, 150, 111, .10);
-  --yon-eksi-zemin: rgba(246, 150, 111, .07);
+     DÜZELTME KALKTI (TSK-136) — burada, preset seçilince yaşamaya devam eder.
+     TSK-133 (2026-09-04, S4): K-0'ın #f6966f'i (L=0,764) renk körlüğünde yon-arti ile
+     yeterince ayrışmıyordu (deutan 1,02 < 1,4) — hue/kroma AYNI (17°), L yon-arti'ye göre
+     ikili aramayla koyulaştırıldı (#d77a54, L=0,674) — hue ailesi korunuyor (v396 yeşil). */
+  --yon-eksi: #d77a54;
+  --yon-eksi-h: rgba(215, 122, 84, .35);
+  --yon-eksi-t: rgba(215, 122, 84, .10);
+  --yon-eksi-zemin: rgba(215, 122, 84, .07);
 
   --huni-1: var(--seri-6);
   --huni-2: var(--seri-8);

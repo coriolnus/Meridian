@@ -134,27 +134,55 @@ doğrudan okuyor, eski sayfalar elle kopya kalıyor (TSK-132 adayı olarak öner
 × Viénot-Brettel-Mollon (1999) deuteranopi/protanopi simülasyonu (RGB→LMS Hunt-Pointer-Estevez, D65) = 12
 kontrast oranı (WCAG bağıl ışıklılık; çivi `tests/test_renk_korlugu_v400.py`):
 
-| Tema   | Çift                 | Simülasyon | Kontrast | ≥1,4 eşiği |
-|--------|----------------------|------------|---------:|:----------:|
-| gündüz | sev-2 ↔ sev-3        | deutan     | 1,07     | ✗ |
-| gündüz | sev-2 ↔ sev-3        | protan     | 1,57     | ✓ |
-| gündüz | yon-eksi ↔ yon-arti  | deutan     | 1,31     | ✗ |
-| gündüz | yon-eksi ↔ yon-arti  | protan     | 1,23     | ✗ |
-| gündüz | sev-1 ↔ sev-2        | deutan     | 1,19     | ✗ |
-| gündüz | sev-1 ↔ sev-2        | protan     | 1,33     | ✗ |
-| gece   | sev-2 ↔ sev-3        | deutan     | 1,75     | ✓ |
-| gece   | sev-2 ↔ sev-3        | protan     | 1,01     | ✗ |
-| gece   | yon-eksi ↔ yon-arti  | deutan     | 1,02     | ✗ |
-| gece   | yon-eksi ↔ yon-arti  | protan     | 1,45     | ✓ |
-| gece   | sev-1 ↔ sev-2        | deutan     | 1,19     | ✗ |
-| gece   | sev-1 ↔ sev-2        | protan     | 1,34     | ✗ |
+| Tema   | Çift                 | Simülasyon | Kontrast | ≥1,4 eşiği | Düzeltme sonrası (preset) | ≥1,4 eşiği |
+|--------|----------------------|------------|---------:|:----------:|--------------------------:|:----------:|
+| gündüz | sev-2 ↔ sev-3        | deutan     | 1,07     | ✗ | 1,40 | ✓ |
+| gündüz | sev-2 ↔ sev-3        | protan     | 1,57     | ✓ | 2,31 | ✓ |
+| gündüz | yon-eksi ↔ yon-arti  | deutan     | 1,31     | ✗ | 2,16 | ✓ |
+| gündüz | yon-eksi ↔ yon-arti  | protan     | 1,23     | ✗ | 1,41 | ✓ |
+| gündüz | sev-1 ↔ sev-2        | deutan     | 1,19     | ✗ | 1,41 | ✓ |
+| gündüz | sev-1 ↔ sev-2        | protan     | 1,33     | ✗ | 1,60 | ✓ |
+| gece   | sev-2 ↔ sev-3        | deutan     | 1,75     | ✓ | 1,40 | ✓ |
+| gece   | sev-2 ↔ sev-3        | protan     | 1,01     | ✗ | 2,41 | ✓ |
+| gece   | yon-eksi ↔ yon-arti  | deutan     | 1,02     | ✗ | 1,41 | ✓ |
+| gece   | yon-eksi ↔ yon-arti  | protan     | 1,45     | ✓ | 2,04 | ✓ |
+| gece   | sev-1 ↔ sev-2        | deutan     | 1,19     | ✗ | 1,51 | ✓ |
+| gece   | sev-1 ↔ sev-2        | protan     | 1,34     | ✗ | 1,41 | ✓ |
 
-Gerçek minimum: **1,01** (gece sev-2↔sev-3, protan simülasyonu). 9/12 çift eşiğin altında — çivi KIRMIZI:
-bugünkü rol jetonları renk körlüğü simülasyonunda ışıklılıkla yeterince ayrışmıyor. Eşik ön-kayıtlı (1,4:1),
-sonucu gördükten sonra değişmedi (mutasyon: ESIK=1,0 → 0 ihlal yakalar, çünkü gerçek minimum 1,0076 tabanın
-üstünde; ESIK=3,0 → 12/12 ihlal yakalar — dönüşümün gerçekten ölçtüğünün kanıtı). Düzeltme (jeton IŞIKLILIĞI,
-hue sabit) tokens.json + jetonlar.css yeniden üretimi + build gerektirir — bu turun kapsamı DIŞINDA bırakıldı.
-Rol-1 ruling (2026-09-04 gece): çivi suite'te `xfail(strict=True)` ile ÖLÇÜM KAYDI olarak durur (jetonlar düzelince "beklenmedik geçti" ile kırmızı olur, xfail o gün kalkar — sessiz yeşil yok); ışıklılık düzeltmesi altı çekirdek jetonun ekrandaki hâlini değiştirdiği için operatörün görsel kararına bağlandı → [TSK-133].
+(sev-2↔sev-3 sütunu r1'de GÜNCELLENDİ — ilk turun sev-3 hex'i yalnız OKLCH L ile taşınmıştı ve HSL
+hue'sunu bozuyordu, aşağıdaki r1 notu.)
+
+Gerçek minimum (düzeltme ÖNCESİ): **1,01** (gece sev-2↔sev-3, protan simülasyonu). 9/12 çift eşiğin altında —
+çivi KIRMIZI: bugünkü rol jetonları renk körlüğü simülasyonunda ışıklılıkla yeterince ayrışmıyor. Eşik
+ön-kayıtlı (1,4:1), sonucu gördükten sonra değişmedi (mutasyon: ESIK=1,0 → 0 ihlal yakalar, çünkü gerçek
+minimum 1,0076 tabanın üstünde; ESIK=3,0 → 12/12 ihlal yakalar — dönüşümün gerçekten ölçtüğünün kanıtı).
+Rol-1 ruling (2026-09-04 gece): çivi suite'te `xfail(strict=True)` ile ÖLÇÜM KAYDI olarak durur (jetonlar
+düzelince "beklenmedik geçti" ile kırmızı olur, xfail o gün kalkar — sessiz yeşil yok); ışıklılık düzeltmesi
+altı çekirdek jetonun ekrandaki hâlini değiştirdiği için operatörün görsel kararına bağlandı → [TSK-133].
+
+**TSK-133 (2026-09-04) DÜZELTTİ — operatör kararı: PRESET'TE, VARSAYILAN temaya dokunulmadı.**
+`ui/src/styles/presets/meridian-palet.css` artık sev-1/2/3 + yon-arti/yon-eksi'nin beşinin de
+ışıklılığını (OKLCH L; kroma SABİT, gamut içinde ikili arama) override ediyor. Yöntem: her çiftte bir
+jeton PİVOT (değeri değişmedi — gündüzde sev-1/yon-arti, gecede sev-2/yon-arti — gamutta ölçülen tek uygun
+pivot bu ikisiydi, öteki uçta ışıklılık ayrımı gamut dışına taşıyordu), öteki jeton EN KÜÇÜK L farkıyla
+pivotuna göre kontrast ≥1,4'ü sağlayacak L'ye taşındı (ikili arama). "Düzeltme sonrası" sütunu (yukarı)
+12/12 ≥1,4 — `xfail(strict=True)` kalktı, `tests/test_renk_korlugu_v400.py` artık ÖLÇÜLEN geçen bir çivi.
+
+**r1 inceleme düzeltmesi (2026-09-04, aynı gün).** İlk tur sev-3'ü OKLCH'de hue SABİT tutarak (yalnız L
+ile) taşımıştı; inceleme bu depodaki hue ÖLÇÜTÜNÜN HSL/colorsys olduğunu (v396/v399/v388, §1.3) ve
+sev-3'ün HSL hue'sunun gündüzde 144,8°→134,5° (Δ10,3°), gecede 144,6°→132,4° (Δ12,2°) kaydığını,
+hiçbir çivinin bunu yakalamadığını gösterdi. Düzeltme: sev-3 artık OKLCH L VE küçük bir OKLCH H
+ofsetiyle birlikte, iki kısıtlı ikili aramayla türetiliyor (HSL Δhue ≤3° VE deutan+protan kontrastı
+≥1,4) — gündüz `#4dc56a`→`#3bc774` (HSL hue 144,43°, Δ0,37°), gece `#6ee286`→`#5ae593` (HSL hue
+144,60°, Δ0,04°); kroma (OKLCH C) DEĞİŞMEDİ. Yeni çivi `test_preset_hue_bantlarda_ve_varsayilandan_sapmiyor`
+(v400) beş jetonun HEPSİNİ, iki temada, hem spec §2 bandında hem varsayılandan ≤3° sapıp sapmadığını
+ölçer (v388'in `ROL_BANTLARI`sından ithal, kendi kopyası yok); gece `yon-eksi` istisna (K-0'ın bilinçli
+17°'lik ailesi, zaten v396 ile ölçülü). Ayrıca `--sev-2-h2`/`--sev-3-damga` da (tüketicisi yok, yalnız
+tutarlılık) yeni kanallardan override edildi. `v396`/`v399` etkilenmedi. Mutasyon KANITI DÜZELTİLDİ: ilk
+turda preset'te YANLIŞ jeton mutasyonu (sev-2) YANLIŞ bir sayıyla (1,07) belgelenmişti — GERÇEK mutasyon
+(preset'te gündüz `--sev-3` eski değerine `#00963e` geri alınırsa) ÖLÇÜLDÜ: deutan=1,26, protan=1,31
+(ikisi de <1,4, kırmızı) — çivi gerçekten preset'i ısırıyor. Hesap + tam önce/sonra tablo:
+`.superpowers/sdd/2026-09-04-tsk133/report.md`.
 
 ## 7. Operatör soruları — KARARLAR (2026-09-03 ~10:45–10:50Z)
 
