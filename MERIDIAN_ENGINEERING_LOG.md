@@ -2288,3 +2288,5 @@ bildirimi almaz) — SendMessage ile sürdürüldü; bir kez daha: alt ajanlara 
 **Suite #13 (11aa356, 02:33→02:44Z, `-n 4`): 10203 passed / 1 failed / 1 xfailed** — `test_golge_planli_kol_v217::test_p95_dongu_suresi_
 kart_tavanini_ASMIYOR` (zamanlama tavanı) `-n 4` yükünde kırmızı, seri yeniden koşumda 24/0 yeşil; dosya TSK-129'da dokunulmadı → yük
 kaynaklı flake. Not: v217 p95 tavanı yük-bağımsız değil, ilk kez görüldü (suite #6–#12 temiz) — tekrarlarsa kalem açılır. Push 11aa356.
+
+**Dağıtım #10 (6f880c0, 02:48Z, seans dışı):** TSK-129 (codelaw aşama-2 + 71 dosya şerh) canlıya; kuru koşum 31 girdi/silme yok, healthz 200, birimler aktif (learn inactive TSK-092), evren 238, hata 0. Gece toplamı: dağıtım #8 (cbdac82, 21:22Z) · #9 (fd871e4, 01:16Z) · #10 (6f880c0, 02:48Z); commit zinciri ec4616d → 6f880c0 (24 commit).
