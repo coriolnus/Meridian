@@ -244,10 +244,19 @@ def test_beyan_JSON_bicimi_GECERLI():
     sablon = satir.split("printf ")[1].split("' ")[0].strip("'")
     if sablon.endswith("\\n"):
         sablon = sablon[:-2]                                     # printf kaçışı JSON'un parçası değil
-    ornek = sablon.replace("%s", "X", 3).replace("%s", "false")   # son %s bool yuvası
+    # TSK-140 (2026-09-04): beşinci yuva `sandbox_eski_kod` JSON DİZİSİDİR (tırnaksız) — kum-havuzu
+    # birimleri başlangıç kodunu taşırken beyan "bu sha canlıda" cümlesine dürüst dipnot düşer.
+    ornek = (sablon.replace("%s", "X", 3).replace("%s", "false", 1)   # dördüncü %s bool yuvası
+             .replace("%s", '["meridian-sprint@x.service"]'))         # beşinci %s dizi yuvası
     veri = json.loads(ornek)
-    assert set(veri) == {"deployed_sha", "dagitildi_utc", "dagitan_host", "kirli_gec_kullanildi"}
+    assert set(veri) == {"deployed_sha", "dagitildi_utc", "dagitan_host", "kirli_gec_kullanildi",
+                         "sandbox_eski_kod"}
     assert veri["kirli_gec_kullanildi"] is False, "bool yuvası tırnaklı — beyan tipi bozuk"
+    assert veri["sandbox_eski_kod"] == ["meridian-sprint@x.service"], "dizi yuvası tırnaklı/bozuk"
+    metin = DAGIT.read_text()
+    assert 'BEKLENEN' in metin and '"kum havuzunda"' in metin, \
+        "[5b] kum-havuzu ayrımı birimin KENDİ beyanından (Description) türemiyor (TSK-140)"
+    assert "_sandbox_json" in metin and "sandbox_eski_kod" in metin
 
 
 def test_beyan_YERI_basarili_dagitimin_sonunda():

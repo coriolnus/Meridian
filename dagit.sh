@@ -681,7 +681,15 @@ _tazelik="$("${SSH[@]}" '
     [ -z "$bas_epoch" ] && { echo "OLCULEMEDI $u sureç-baslangici-okunamadi"; continue; }
     if [ "${bas_epoch%.*}" -lt "${yeni%.*}" ]; then
       yas=$(( ${yeni%.*} - ${bas_epoch%.*} ))
-      echo "IHLAL $u $yas $yeni_ad"
+      # TSK-140 (2026-09-04): KUM-HAVUZU birimi (birim dosyasının KENDİ beyanı: Description
+      # "kum havuzunda") başlangıç kodunu taşır ve bitince yeni kodla açılır — bu IHLAL değil
+      # BEKLENEN durumdur; beyana ([B] sandbox_eski_kod) yazılır, kapı düşmez. Ad listesi YOK:
+      # işaret birimden türer, yarın eklenen kum-havuzu birimi de aynı yoldan geçer.
+      acik=$(systemctl show "$u" -p Description --value 2>/dev/null)
+      case "$acik" in
+        *"kum havuzunda"*) echo "BEKLENEN $u $yas $yeni_ad" ;;
+        *)                 echo "IHLAL $u $yas $yeni_ad" ;;
+      esac
     fi
   done')"
 if [ -z "$_tazelik" ]; then
@@ -690,6 +698,8 @@ else
   echo "$_tazelik" | while read -r _d _u _y _f; do
     if [ "$_d" = "IHLAL" ]; then
       echo "  ✗ $_u — süreç kaynaktan $(( _y / 60 )) dk ESKİ (en yeni: $_f)"
+    elif [ "$_d" = "BEKLENEN" ]; then
+      echo "  ⚠ beklenen: $_u — kum-havuzu süreci başlangıç kodunu taşır ($(( _y / 60 )) dk eski; bitince yeni kodla açılır) — beyana yazılır (TSK-140)"
     else
       echo "  ⚠ ölçülemedi: $_u $_y"
     fi
@@ -713,12 +723,16 @@ fi
 # `dagitim.json`u hiçbir canlı süreç okumaz/yazmaz (salt dağıtım kaydı — okuyucusu yukarıda).
 # Yazım yine de ATOMİKTİR (tmp + mv): yarım JSON, ortamlar-arası kapıyı "ölçülemedi"ye değil
 # YANLIŞ hükme götürürdü. Yazıldığı bayt-özdeş DOĞRULANIR ([1b] kopya disiplini, satır ~298).
+# TSK-140 (2026-09-04): [5b]'nin BEKLENEN saydığı kum-havuzu birimleri beyana girer — "bu sha
+# canlıda" cümlesinin dürüst dipnotu: şu süreçler hâlâ başlangıç kodunu taşıyor. Okuyucu: bir
+# sonraki dağıtımın [5b] çıktısı ve günlük (Yasa 6). Boşsa [] — "yok" ile "ölçülmedi" ayrılır.
+_sandbox_json="[$(printf '%s\n' "${_tazelik:-}" | awk '$1=="BEKLENEN"{printf "%s\"%s\"", (n++?",":""), $2}')]"
 echo "=== [B] dağıtım-beyanı (state/dagitim.json → canlı) ==="
 _beyan_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 _beyan_host="$(hostname)"
 _beyan_tmp="$(mktemp)"
-printf '{"deployed_sha": "%s", "dagitildi_utc": "%s", "dagitan_host": "%s", "kirli_gec_kullanildi": %s}\n' \
-  "$DAGIT_SHA" "$_beyan_utc" "$_beyan_host" "$KIRLI_GEC" > "$_beyan_tmp"
+printf '{"deployed_sha": "%s", "dagitildi_utc": "%s", "dagitan_host": "%s", "kirli_gec_kullanildi": %s, "sandbox_eski_kod": %s}\n' \
+  "$DAGIT_SHA" "$_beyan_utc" "$_beyan_host" "$KIRLI_GEC" "$_sandbox_json" > "$_beyan_tmp"
 sed 's/^/  /' "$_beyan_tmp"   # aynı beyan dağıtım çıktısına da basılır (yerel kopya dosyaya YAZILMAZ:
                               # repoda state dosyası biriktirmek [1b]'nin kapattığı ayrışmayı geri açar)
 if "${SSH[@]}" "cat > /opt/meridian/state/.dagitim.json.tmp && mv /opt/meridian/state/.dagitim.json.tmp /opt/meridian/state/dagitim.json" < "$_beyan_tmp" \
