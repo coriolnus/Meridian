@@ -2443,3 +2443,13 @@ yanlış-pozitifi ('bekçi', "stop_gap'i", 'iyileştirme önerisi') → 2/2 ihla
 (887/887 damgalı olmak ≠ iki yol aynı tarihi vermek). Sonuç dürüst (ayrışma panoda beyanlı, TSK-035'in tam da düzelttiği şey) ama sınır tarihi
 eğri serisinde yok → i None, grafikte sınır çizgisi kayboldu (kod şerhi 'normal' diyor) → [TSK-139] (öneri: en yakın önceki noktaya beyanlı
 yaklaşık konum). Ders: "yollar ayrışık mı" sorusu damga SAYIMIYLA değil iki yolun TARİHİYLE ölçülür — ölçmeden hüküm verildi.
+
+**TSK-139 (c90b630) + suite #20 + DAĞITIM #15 (22:36Z, YARI-ETKİLİ):** `_egri_beyani` tam eşleşme yoksa en yakın önceki noktaya beyanlı
+yaklaşık konum; v264 (seride-yok → yaklaşık, ilk-noktadan-önce → None, servis katmanı), mutasyon 3 öttü, 124 seri; ajan sırayı "önce kod
+sonra test" işledi (eski testin yeni koda karşı kırmızısı kanıt sayıldı — TDD sapması, ledger'da). **Suite #20 (c90b630): 10361 passed / 0**
+→ push. Dağıtım #15: rsync + restart + healthz 200; canlı `/api/performance` tohum_siniri i=881 → ['2026-07-20', 94457.91], konum_neden
+"yaklaşık: sınır 2026-07-24 seride yok, en yakın önceki nokta 2026-07-20 (i=881)" — sınır çizgisi eski yerine döndü, tarih 07-24 listeleniyor.
+AMA [5b] kod-tazelik değişmezi `meridian-sprint@20260904-220829`i (Cuma 22Z haftalık antrenman, ~8 s; 08-14/21/28 örnekleri 470–479 dk)
+eski kodla koşar buldu → beyan YAZILMADI (`dagitim.json` f8d7d6d). Karar: antrenmanı öldürmek yerine sprint bitince (~06:07Z) `--uygula`
+tekrar (rsync idempotent) → [TSK-140] (kum-havuzu istisnası, beyanlı). Yan: MECHANISM_STALE "14,2 gündür yeni hipotez yok" alarmı — bilinen
+(learn disabled, TSK-092). ingest067-r2 22:30:00Z başladı (429 sayımı sabah).
