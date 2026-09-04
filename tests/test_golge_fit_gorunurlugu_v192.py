@@ -12,7 +12,7 @@ yazmıyordu. İki gerçek tek cümleye sıkışınca operatör "öğrenme ölmü
 
 BU TUR ÜÇÜNCÜ BİR GERÇEK ÜRETMEZ. `training_status()` `son_fit_ts` / `n_fit` / `brier_train`
 alanlarını ZATEN taşıyordu ve okuyucusu yoktu (YASA 6 borcu). Eklenen tek yeni şey terfi hükmünün
-NEDENİdir; o da uydurulmaz — eleme defterinden (`sieve`, `shadow_model.terfi` aşaması) okunur.
+NEDENİdir; o da uydurulmaz — eleme defterinden (`sieve`, "shadow_model.terfi" aşama dizgesi) okunur.
 
 HÜKÜM ÜÇ DEĞERLİDİR: EVET / HAYIR / ÖLÇÜLEMEDİ. "Hayır" modelin tabanı yenemediğidir (bilgi),
 "ölçülemedi" kıyas verisinin hiç birikmediğidir (kuraklık) — operatörün eylemi ikisinde farklıdır.

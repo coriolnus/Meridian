@@ -273,7 +273,7 @@ def test_watchdog_CAPALARI_SEMBOLE_CEVRILDI():
     kaynak = (KOK / "meridian" / "watchdog.py").read_text(encoding="utf-8")
     bulunan = re.findall(r"[A-Za-z_][A-Za-z0-9_]*\.(?:py|ts|tsx|sh|yaml):\d+", kaynak)
     assert bulunan == [], f"watchdog.py: satır çapası kaldı → {bulunan}"
-    # Sembol çapaları GERÇEKTEN VAR OLMALI: `api.py::yok_boyle_bir_sey` yazmak, bayat satır
+    # Sembol çapaları GERÇEKTEN VAR OLMALI: api.py'de olmayan uydurma bir sembol adı yazmak, bayat satır
     # numarasından daha iyi değildir (ikisi de okuyucuyu boşluğa gönderir).
     for dosya, sembol in (("api.py", "_sessiz_hat"), ("selfreview.py", "build"),
                           ("loop.py", "daily_cycle"), ("cf_backfill.py", "_plans_for_session")):

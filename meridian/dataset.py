@@ -294,7 +294,7 @@ def load_live(use_cache: bool = True, session: str | None = None) -> tuple[dict,
       1. LOOK-AHEAD KARANTİNASI: Finviz'in bugünkü listesi geçmişe uygulanamaz. Bu yüzden genişletme
          `load()`'a DEĞİL buraya konur ve `_cache`'i KİRLETMEZ — `{**bars, ...}` yeni bir sözlüktür,
          `_cache["bars"]` dokunulmadan kalır. Aksi hâlde canlı tur cache'i genişletir, sonraki
-         `reflect.load()` aynı genişletilmiş cache'i okur ve gelecek bilgisi 2023 replay'ine sızardı.
+         reflect'in çağırdığı sonraki `load()` aynı genişletilmiş cache'i okur ve gelecek bilgisi 2023 replay'ine sızardı.
       2. DÜRÜST BOZUNMA: Finviz düşükse `discover_universe()` boş döner (olayı kendi yazar) ve evren
          sessizce REPLAY_UNIVERSE'e iner. Finviz ekstra ticker'ların barı FMP zincirinden gelir;
          barı çekilemeyen ticker zaten `load_many` içinde düşer (tarama onu görmez).
@@ -320,7 +320,7 @@ def _canli_korunan_evren() -> list[str]:
     sembol aday havuzunda hiç görünmez).
 
     ÖLÇÜM: `portfolio.json` İKİ kümeyi de taşır — `positions` (açık pozisyonlar, dict) ve `armed`
-    (onaylanmış/silahlı plan listesi, her biri kendi `ticker` alanıyla — bkz. `loop.py::_arm_yama`).
+    (onaylanmış/silahlı plan listesi, her biri kendi `ticker` alanıyla — bkz. loop.py'deki `_arm_yama` iç fonksiyonu).
     İkisi de dataset katmanından ERİŞİLEBİLİR: `store.read_json` aynı yol, `marketstream.
     subscribed_symbols`ın pozisyonlar için kullandığı YOLUN BİREBİR aynısı — o yüzden ek bir
     parametre (`load_live(..., ek_semboller=...)`) AÇILMADI, dataset katmanı zaten yeterli."""

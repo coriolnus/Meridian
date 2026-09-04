@@ -88,7 +88,7 @@ def test_silahli_plan_ERTESI_ACILISTA_dolar(sandbox_state):
 
 
 def test_BOSLUK_korumalari_URETIMIN_yasasindan_gelir(sandbox_state):
-    """`broker.fill_entry`in iki koruması: tetiğin ÇOK üstünde açılışı kovalama, stop'un ALTINDA
+    """`broker.py::PaperBroker.fill_entry`in iki koruması: tetiğin ÇOK üstünde açılışı kovalama, stop'un ALTINDA
     açılana hiç girme. Gölge kendi eşiğini yazsaydı iki motor sessizce ayrışırdı."""
     from meridian.broker import MAX_ENTRY_GAP_PCT
     yukari = 100.0 * (1.0 + MAX_ENTRY_GAP_PCT) + 1.0

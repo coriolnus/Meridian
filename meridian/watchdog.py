@@ -3394,7 +3394,7 @@ def check_kitap_damga_and_alarm() -> dict:
 #       (`loop.reconcile_broker_state`) —
 #       `_skip` ve `api_ok=False` dalları kaydı yazar ama nabzı ATMAZ.
 #   (2) `coherence_report` bunu `portfolio.json`a GÖRE ölçer. Kitabın BEŞ yazarı vardır (hermes
-#       görüş damgası, api gönderim ucu, `loop._arm_yama`, `_save_broker`, ops betikleri) ve
+#       görüş damgası, api gönderim ucu, loop.py'deki `_arm_yama` iç fonksiyonu, `_save_broker`, ops betikleri) ve
 #       çoğu mutabakatla ilgisizdir: kitabın mtime'ı mutabakatsız bir sebeple ilerlediğinde satır
 #       BAYAT bağırır, İKİSİ BİRDEN dururken ise SUSAR. Göreli ölçü burada gürültülüdür.
 #   (3) Kayıt kendi `updated`/`date` damgasını TAŞIR ve bugüne kadar hiçbir dedektör onu OKUMADI.

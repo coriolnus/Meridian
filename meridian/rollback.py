@@ -111,7 +111,7 @@ def _karar_girdisi(cur_score: float, par_score: float, wh: Optional[dict]) -> di
 #   (3) `money_score` None döndüyse: bilinmeyen skor, sıfır skor gibi okunamaz.
 #
 # TEK PAYDA, İKİ TARAF: `hedef_pencere` span'e bağlıdır; her tarafı KENDİ span'iyle normalize etmek
-# iki FARKLI paydayla bölmek olurdu — `probgate._score_pair`in "payda dilimin uzunluğuyla
+# iki FARKLI paydayla bölmek olurdu — `probgate.py::PairedProbabilisticGate._score_pair`in "payda dilimin uzunluğuyla
 # sabitlenir" kuralının aynısı. Span iki listenin BİRLEŞİMİNDEN türer ve kayda yazılır.
 def _para_ikizi(cur_trades: list, par_trades: list, goal: dict, karar: dict,
                 par_yedekten: bool) -> dict:

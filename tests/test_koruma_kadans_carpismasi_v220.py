@@ -29,7 +29,7 @@ BU DOSYA NEYİ ÇİVİLER:
   Y1 TEK KAYNAK   · `koruma_coid` öneki sabitten türer; kemerler ADAPTÖRDE, çağıranda değil
 
 YÖNTEM: hiçbir test ağa çıkmaz. Okuma ucu (`orders`/`positions`) ve iptal ucu (`cancel_order`)
-saplanır ya da `alpaca.httpx` bir kayıt ediciyle değiştirilir; `cancel_open_entries`in GERÇEK
+saplanır ya da `alpaca.py`'nin `httpx` istemcisi bir kayıt ediciyle değiştirilir; `cancel_open_entries`in GERÇEK
 gövdesi koşar. Her iddianın yanında POZİTİF KONTROL vardır — düşmeyen bir iddia koruma değil
 dekordur.
 """
@@ -157,7 +157,7 @@ def _olaylar(ad=None) -> list:
 
 
 class HttpKayitci:
-    """`alpaca.httpx` yerine geçer. HİÇBİR ağ çağrısı yapmaz; yalnız fiil/URL/gövde kaydeder."""
+    """`alpaca.py`'nin `httpx` istemcisi yerine geçer. HİÇBİR ağ çağrısı yapmaz; yalnız fiil/URL/gövde kaydeder."""
 
     def __init__(self, status=200, payload=None):
         self.calls = []

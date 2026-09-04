@@ -3,7 +3,7 @@
 VAKA (2026-08-02, canlı-bekçi avında bulunan açık #1). `test_regime_patch::
 test_scheduler_flag_survives_publish_lag` GERÇEK kadans makinesini koşturuyor ve
 `scheduler.advance_once → earnings.refresh → adapters.data.nasdaq_earnings_window` yolu
-`api.nasdaq.com`a GÜN BAŞINA bir HTTP isteği atıyordu. Yol yamalanmamıştı, kimse fark etmemişti,
+api.nasdaq.com'a GÜN BAŞINA bir HTTP isteği atıyordu. Yol yamalanmamıştı, kimse fark etmemişti,
 çünkü test YEŞİLDİ — ve yeşilliği tam da sorunun kendisiydi: ölçtüğü şey kod değil, o günün
 interneti. `earnings.refresh` gün kapsaması 0,90 eşiğinin altına düşünce FMP YEDEĞİNE indiği için
 aynı yol GERÇEK anahtarla 250/gün kotayı da yakabiliyordu.

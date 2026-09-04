@@ -598,7 +598,7 @@ def test_10_ayna_kapaliysa_KAPSAM_DISI_alarm_YOK(sandbox_state, monkeypatch):
 
 
 def test_10_TAZE_ama_checked_False_bir_ayna_gorunumu_DEGILDIR(sandbox_state, ayna_acik):
-    """`loop._skip` dalı kaydı TAZE yazar ama içinde mutabakat YOKTUR. Rapor `checked`/`api_ok`/
+    """loop.py'deki `_skip` dalı kaydı TAZE yazar ama içinde mutabakat YOKTUR. Rapor `checked`/`api_ok`/
     `skip_reason`ı her hâlde taşır ki okuyucu ikisini karıştırmasın."""
     import datetime as dt
     store.write_json("broker_reconcile.json", {

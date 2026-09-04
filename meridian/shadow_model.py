@@ -341,7 +341,7 @@ class ShadowTradeOutcomeModel:
         """FİT DENEMESİNİN TA KENDİSİ — ve bu yüzden DAMGAYI ATAN YER BURASI.
 
         Damga eskiden yalnız `maybe_refit`te yazılıyordu; oysa canlıda fit'i atan iki yol var
-        (kadans + `loop.P5_LEARN`) ve ikincisi damgasızdı. Damgayı çağıranın değil FİİLİN yanına
+        (kadans + loop.py'deki "P5_LEARN" aşaması) ve ikincisi damgasızdı. Damgayı çağıranın değil FİİLİN yanına
         koymak, üçüncü bir çağıran doğduğunda da damgayı garanti eder — bu tur zaten "damga
         çağırana asılıydı" kusurunun ikinci nüksüdür.
 
@@ -492,7 +492,7 @@ def maybe_refit(*, force: bool = False) -> dict:
     # DAMGALARI ARTIK `refit_and_save` ATAR: fit'i o yapıyor, deneme onun denemesi. Burada
     # ikinci kez yazmak iki `now` arasında sahte bir fark üretir ve — daha kötüsü — damganın
     # KADANSA ait olduğu izlenimini sürdürürdü; oysa canlıdaki kusur tam olarak buydu (fit'i atan
-    # ikinci çağıran, `loop.P5_LEARN`, damgasızdı ve `save()` kadansınkini siliyordu).
+    # ikinci çağıran, loop.py'deki "P5_LEARN" aşaması, damgasızdı ve `save()` kadansınkini siliyordu).
     m = ShadowTradeOutcomeModel.refit_and_save()
     if m.w is None:
         obs.log("shadow_fit_cadence", fitted=False, reason="esik_alti", min_n=MIN_FIT_N)

@@ -1,7 +1,7 @@
 """test_canslim_v94 — O'Neil CANSLIM büyüme-lideri (FMP-kapılı, Faz C: helper'ın arkasında DORMANT).
 
 canslim'in ayrımı: N/S/L teknik bileşenleri OHLCV'den deterministik, ama C/A/I çekirdeği TEMELE (FMP)
-dayanır. `earnings.canslim_fundamentals` + FMP nokta-zamanlı önbelleği HENÜZ inşa edilmedi → evaluate_canslim
+dayanır. earnings.py'de HENÜZ YAZILMAMIŞ "canslim_fundamentals" yardımcısı + FMP nokta-zamanlı önbelleği HENÜZ inşa edilmedi → evaluate_canslim
 bugün DAİMA None (güvenli no-op). Bu yüzden scan_all'a KOŞAR ama 'canslim-screener' ENGINE_IMPLEMENTED'a
 EKLENMEZ (pipeline_run 'invoked' yalanı kurmasın). Helper eklenince setup GERÇEKTEN ateşler — bunu
 monkeypatch'le kanıtlıyoruz: kör kod değil, veri-kapılı gerçek bir setup.

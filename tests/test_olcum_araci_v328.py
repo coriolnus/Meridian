@@ -63,7 +63,7 @@ def test_SKILL_ARACA_YONLENDIRIYOR():
 
 def test_SKILL_DIZINI_HERMESE_KAYITLI():
     """SKILL.md'nin bir OKUYUCUSU olmalı (YASA 6): hermes yalnız `~/.hermes/skills/`i ve
-    config.yaml'daki `skills.external_dirs`i tarar. Depodaki skill dizini oraya kayıtlı
+    config.yaml'daki "skills.external_dirs" alanını tarar. Depodaki skill dizini oraya kayıtlı
     değilse dosya var ama hiç yüklenmez — o zaman görev 3 tamamen dekoratiftir.
 
     Bu çivi STRING ARAMASI yapmaz: SKILL.md'nin GERÇEKTEN durduğu dizini diskten türetir

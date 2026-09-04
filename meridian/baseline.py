@@ -67,7 +67,7 @@ def _frekans(n: int, span_days) -> float | None:
 # `score_mod.score` ile o kümenin KENDİ süresine göre yıllıklandırılmış) ile ebeveynin BACKTEST OOS
 # skoru (2,5 yıllık pencere, replay motoru, `span_days=903` ile yıllıklandırılmış) karşılaştırılıyordu.
 # İki sayı üç ayrı eksende ayrışıyor: DÖNEM (farklı piyasa), MOTOR (canlı vs replay) ve
-# YILLIKLANDIRMA (farklı span). `tests/test_gate_statistics_v74.py::test_def8` bu sapmayı canlı
+# YILLIKLANDIRMA (farklı span). `tests/test_gate_statistics_v74.py::test_def8_rollback_compares_scores_with_incompatible_annualization` bu sapmayı canlı
 # defterde 0.21 olarak ÖLÇTÜ — geri-alma eşiği ise 0.10. Yani karar, ölçüm hatasının yarısı kadar
 # bir eşikle veriliyordu; hangi yöne düşeceği becerinin değil takvimin işiydi.
 #

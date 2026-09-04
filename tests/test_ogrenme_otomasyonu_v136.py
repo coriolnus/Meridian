@@ -38,7 +38,7 @@ def _reset_scheduler_state():
 
 
 def _seed_shadow_dataset(n_trade: int = 60):
-    """`shadow_model._dataset`in GERÇEK katmanını besler: plan + kapanmış işlem çiftleri."""
+    """`shadow_model.py::ShadowTradeOutcomeModel._dataset`in GERÇEK katmanını besler: plan + kapanmış işlem çiftleri."""
     plans, trades = [], []
     for i in range(n_trade):
         pid = f"P-TEST-{i:03d}"

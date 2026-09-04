@@ -2220,17 +2220,21 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
         sembol = {k: [*s_beyan[k], *s_tsx[k]] for k in ("cozulen", "curuyen", "cozulemeyen")}
         sembol["besleme"] = {"beyan": len(beyan), "tsx": len(tsx_met)}
         sembol_curume = bool(sembol["curuyen"])
-    # ÜÇÜNCÜ BESLEME — YORUM/DOCSTRING METNİ (D3, TSK-120, 2026-09-03). `meridian/**`+`tests/**`
-    # yorum satırları + docstring'leri AYNI çekirdekten geçer (`capa_uyusmasi`, tek-kaynak yasası
-    # — ikinci bir tarayıcı YAZILMADI). AŞAMA 1: GÖZLEMSEL, `ok`u DÜŞÜRMEZ (canlı taban ÖLÇÜLMEDEN
-    # sıfır toleransa bağlamak henüz keşfedilmemiş borcu sessizce bekçiyi kırmızıya çevirirdi —
-    # `text_anchor_stale`/TSK-080 emsali). Ölçülmediyse None: sentetik kökte "bakmadım" ile
+    # ÜÇÜNCÜ BESLEME — YORUM/DOCSTRING METNİ (D3, TSK-120, 2026-09-03 → AŞAMA 2, TSK-129,
+    # 2026-09-04). `meridian/**`+`tests/**` yorum satırları + docstring'leri AYNI çekirdekten geçer
+    # (`capa_uyusmasi`, tek-kaynak yasası — ikinci bir tarayıcı YAZILMADI). AŞAMA 1 (TSK-120)
+    # GÖZLEMSELDİ: canlı taban ölçülmeden sıfır toleransa bağlamak henüz keşfedilmemiş borcu
+    # sessizce bekçiyi kırmızıya çevirirdi. TSK-129 tabanı ÖLÇTÜ (102 çürük/71 dosya, 2026-09-03
+    # 18:17Z) ve TAMAMEN DÜZELTTİ (0 çürük, 2026-09-04) — AŞAMA 2 artık `yorum_sembol_curume`
+    # ÜZERİNDEN `ok`a BAĞLIDIR (aşağıda). Ölçülmediyse None: sentetik kökte "bakmadım" ile
     # "0 çürük" aynı alandan okunamaz.
     yorum_sembol: dict | None = None
+    yorum_sembol_curume: bool | None = None
     if tsx_hedef is not None:
         # SONUÇ SÜREÇ-ÖMÜRLÜ ÖNBELLEKLİDİR (bedel yasası — bkz. `_yorum_sembol_capalari`
         # docstring'i): kaynak değişmeden ikinci çağrı ~370 ms daha ucuzdur.
         yorum_sembol = _yorum_sembol_capalari(py_kokler=(root, *ek))
+        yorum_sembol_curume = bool(yorum_sembol["curuyen"])
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
@@ -2288,12 +2292,15 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
             "sembol_capalari": sembol,
             "sembol_capa_curume": sembol_curume,
             # ÜÇÜNCÜ BESLEME (D3, TSK-120, 2026-09-03) — `meridian/**`+`tests/**` yorum/docstring
-            # metni. AŞAMA 1: `ok`u ETKİLEMEZ (yukarıdaki gerekçe). "capa_n" ve "taranan_dosya"
-            # KÖRLÜK ALARMIdır: ikisi de düşükse tarayıcı yanlış köke bakıyor demektir
-            # (`CANLI_ASGARI_COZULEN`/v373 ile aynı disiplin) — bkz. tests/test_yorum_sembol_capasi_v402.py.
+            # metni. AŞAMA 2 (TSK-129, 2026-09-04): `yorum_sembol_curume` `ok`u ETKİLER (aşağıda,
+            # v373'ün `sembol_capa_curume` deseniyle BİREBİR — sıfır tolerans, taban YOK). "capa_n"
+            # ve "taranan_dosya" KÖRLÜK ALARMIdır: ikisi de düşükse tarayıcı yanlış köke bakıyor
+            # demektir (`CANLI_ASGARI_COZULEN`/v373 ile aynı disiplin) — bkz.
+            # tests/test_yorum_sembol_capasi_v402.py.
             "yorum_sembol_capalari": yorum_sembol,
+            "yorum_sembol_curume": yorum_sembol_curume,
             # `… is not True` AÇIK YAZILDI: `not x` deseydik ölçülmemiş (None) durum sessizce
             # "temiz" sayılırdı — hükmü olmayanı yeşile yazmak UYDURMA olurdu.
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED
                   and not capalar and tsx_nuks is not True and docs_curuk_var is not True
-                  and sembol_curume is not True}
+                  and sembol_curume is not True and yorum_sembol_curume is not True}

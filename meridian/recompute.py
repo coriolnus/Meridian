@@ -625,7 +625,7 @@ def _orphan_state_files() -> dict:
             orphans.append(nm)
 
         # ---- KÖR KESİT KAPATILDI: KÖK + .json* OLMAYAN ARTEFAKTLAR ----------
-        # Tarama `config.STATE.glob("*.json*")` idi; yani üç şeyi HİÇ göremiyordu: (1) depo
+        # Tarama `config.py::STATE`'in `glob("*.json*")` çağrısıydı; yani üç şeyi HİÇ göremiyordu: (1) depo
         # KÖKÜNDEKİ artefaktlar, (2) `.log`/`.csv` gibi başka uzantılar, (3) DİZİNLER. Canlı
         # kanıt: kökteki `provenance_report.json` 8 gün bayat + sıfır referanslı duruyordu,
         # `state/server.log` 14 Temmuz'dan donuktu (aktif ikizi dashboard.log) ve

@@ -6,7 +6,7 @@ boşluğu her koşuda yeniden fişliyor. İki kök, aynı çatı:
 KÖK A — `backtest_full.avg_r` (fiş 1, 4, 9): `analytics.live_expectancy_ceiling`ın backtest tarafı
 BUGÜNE KADAR TEK bir alandan okuyordu (`versions[<sürüm>].backtest_full.avg_r`) ve o alanı karneye
 YALNIZ tam re-seed yolu (`run.replay_seed`) yazıyor. Sürümü doğuran diğer iki yol — öğrenme
-döngüsünün ship yolu (`reflect._ship` → `versioning.update_scoreboard`) ve operatör kalemi —
+döngüsünün ship yolu (`reflect.py::_submit_locked` → `versioning.update_scoreboard`) ve operatör kalemi —
 onu HİÇ yazmaz. Yani kapı ölçtüğü şeyi diskte YAZILI olduğu hâlde (ship yolu `backtest_folds`
 yazıyor ve her fold ÖLÇÜLMÜŞ bir `avg_r` taşıyor) göremiyordu. ÖLÇÜLDÜ (canlı karne kopyası,
 2026-08-25): `current_version = 5`, v5 satırı = {params, parent, source, live_since, note} —
@@ -239,7 +239,7 @@ def _karne_yazim_anahtarlari(modul: str) -> set:
 def test_A_a_full_detail_URETICIDE_VAR_ship_yolunun_okudugu_alan():
     """SHIP YOLUNUN KAYNAĞI ÜRETİCİDE ÇİVİLENİR. Ship yolu `backtest_full`ı yeni bir replay
     koşarak DEĞİL, `walk_forward`ın zaten döndürdüğü `full_detail`den yazar. Üretici o anahtarı
-    düşürürse ship yolu sessizce yazmayı bırakır (alan `.get` ile okunur — bkz. `reflect._ship`
+    düşürürse ship yolu sessizce yazmayı bırakır (alan `.get` ile okunur — bkz. `reflect.py::_submit_locked`
     yorumu) ve fiş 1/4/9 geri gelirdi. Kaynak burada, ADIYLA, statik olarak kilitlenir."""
     tree = ast.parse((SRC / "backtest.py").read_text())
     fn = next(n for n in ast.walk(tree)
@@ -253,7 +253,7 @@ def test_A_a_full_detail_URETICIDE_VAR_ship_yolunun_okudugu_alan():
 def test_A_ship_yolu_backtest_full_YAZIYOR_folds_da_YAZIYOR():
     """BU ÇİVİ İKİ BACAĞIN DA KAYNAĞINI ÖLÇER, biçim değil.
 
-    2026-08-25'te bu çivi YOKLUĞU ölçüyordu: `reflect._ship`in `update_scoreboard(...)` çağrıları
+    2026-08-25'te bu çivi YOKLUĞU ölçüyordu: `reflect.py::_submit_locked`in `update_scoreboard(...)` çağrıları
     `backtest_folds` yazıyor, `backtest_full` YAZMIYORDU — yani ship edilen bir sürümün tavan
     hükmü ÖNCELİKLİ bacakla asla ölçülemiyordu. 2026-09-01'de kök yukarıdan kapandı (N00017) ve
     testin kendi docstring'i bu güncellemeye izin veriyordu: artık İKİSİ de yazılıyor.

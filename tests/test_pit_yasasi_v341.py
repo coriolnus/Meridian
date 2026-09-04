@@ -601,7 +601,7 @@ def test_KORUMALI_zincir_ihlal_sayilmaz_ama_RAPORDA_durur(canli):
 
     Bugün ÜÇ kayıt, İKİ ayrı koruma biçimi:
       · `shadow_lifecycle → shadow_variants._judge` — `in_blackout` `if pit:` ile korunur.
-      · `backtest` / `cf_backfill` → `strategy` — çapa `earnings.pit_arsiv` paramıyla PIT
+      · `backtest` / `cf_backfill` → `strategy` — çapa "earnings.pit_arsiv" param anahtarıyla PIT
         arşivine SEVK EDİLİR (EDG-2026-062). Sevkin varlığı ayrıca ve MEKANİK çivilidir
         (`test_PIT_SEVKI_capa_blogunda_DURUYOR`): kayıt "koruma kalkarsa çürür" diyor, o cümlenin
         karşılığı bu iki çividir.

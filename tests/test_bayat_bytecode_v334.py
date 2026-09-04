@@ -18,8 +18,8 @@ yükleme sonrası `diff` "özdeş" dedi, ama çivi MUTASYONLU modülü ölçmeye
 yeşil derken kaynağı değil ÖNBELLEĞİ ölçüyordu — bu bir ÖLÇÜM ARACI arızasıdır, ürün arızası
 değil, ve bu dosyadaki hiçbir çivi üretim davranışına dokunmaz.
 
-TEK YARDIMCI, ON YEDİ ÇAĞRI YERİ DEĞİL: düzeltme `tests/conftest.py::betikten_modul_yukle`
-içinde tek yerde yaşar. On yedi kopya on yedi sürüklenme yüzeyidir; §B çivisi kalıbın geri
+TEK YARDIMCI, ON YEDİ ÇAĞRI YERİ DEĞİL: düzeltme `ops/sasi_yukleyici.py::kaynaktan_yukle`
+içinde tek yerde yaşar (`tests/conftest.py`ye `betikten_modul_yukle` adıyla İÇE AKTARILIR). On yedi kopya on yedi sürüklenme yüzeyidir; §B çivisi kalıbın geri
 sızmasını yasaklar.
 """
 from __future__ import annotations

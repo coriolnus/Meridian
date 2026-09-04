@@ -981,7 +981,7 @@ def rapor(root: str = VARSAYILAN_KOK, bilinen: dict | None = None,
             beyanli.append(k)
         else:
             beyansiz.append(k)
-    # ÖLÜ BEYAN: kayıtta duran ama kodda karşılığı kalmayan beyan. `codelaw.stale_sinks` ile aynı
+    # ÖLÜ BEYAN: kayıtta duran ama kodda karşılığı kalmayan beyan. `codelaw.py::stale_claims` ile aynı
     # disiplin — beyan, işi bitince kalmaz. İki defter de denetlenir: düzeltilen bir borç kaydı da,
     # kaldırılan bir koruma kaydı da çürüktür.
     gorulen = {_kayitta(k, bil) for k in beyanli} | {_kayitta(k, kor_kayit)

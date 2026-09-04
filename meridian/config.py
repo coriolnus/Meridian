@@ -300,7 +300,7 @@ URETIMI_DURAKLATILAN_REJIMLER: tuple[str, ...] = ("chop",)
 # Flat params'ta BULUNAN bir anahtarın override'ı da eskisi gibi uygulanır. Değişen TEK hâl: flat
 # params'ta olmayan bir ÇIKIŞ anahtarı için yazılmış override artık sessizce düşmez.
 #
-# KALAN DİKİŞ (3b'ye devir): `guard.classify_proposal` hâlâ `base not in current_params` diye
+# KALAN DİKİŞ (3b'ye devir): `guard.py::validate_change` hâlâ `base not in current_params` diye
 # reddediyor — yani Hermes bu türden bir hipotezi ÖNEREMEZ (ve reddi DÜRÜSTTÜR: bugüne kadar override
 # gerçekten düşüyordu). Sevk yetkisini açmak ayrı bir karardır; bu tur yalnız ALTYAPIyı kurar, öyle ki
 # ölçüm yolu (walk_forward'a doğrudan params_by_regime geçen kum havuzu scripti) rejim-koşullu bir
@@ -355,7 +355,7 @@ def default_strategy() -> dict:
       * `heat_hard_r / max_open_positions` = 5,0/20 = 0,25 — bambaşka bir sayı; üstelik operatör
         iki limitten birine dokunduğu gün yedek sessizce yeniden ayarlanırdı (ölçülmemiş bir boyut).
     Değer bu yüzden operatörün ÖLÇÜLMÜŞ kararından (2026-08-12 karar penceresi, C kolu) gelir ve canlı yüzeyle (`state/strategy.yaml` v5 · `position_size_r: 0.5`)
-    HİZALIDIR. Çivisi: `tests/test_wp2d_pano_beyani_v246.py::KALEM-2` — üç arıza hâlinde de
+    HİZALIDIR. Çivisi: `tests/test_wp2d_pano_beyani_v246.py`'deki `test_KALEM2_*` ailesi — üç arıza hâlinde de
     (yok/boş/bozuk) yedeğin değeri ölçülür, ve depoda `state/strategy.yaml` varsa CANLI değerle
     birebir kıyaslanır (sürüklenme dedektörü).
 

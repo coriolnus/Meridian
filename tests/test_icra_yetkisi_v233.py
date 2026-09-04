@@ -24,7 +24,7 @@ BU DOSYA NEYİ ÇİVİLER:
   D1-D4 İŞ-3b BEKÇİ   · onaylı+iç-dolmuş+broker'da-yok → ONAYLI_PLAN_GONDERILMEDI (mandallı);
                         ölçülemeyen fotoğraf alarmsız (#10'un alanı); jeton bildirim kapsamında
 
-YÖNTEM (v220 yasası): hiçbir test ağa çıkmaz. `alpaca.httpx` bir KAYIT EDİCİYLE değiştirilir —
+YÖNTEM (v220 yasası): hiçbir test ağa çıkmaz. `alpaca.py`'nin içe aktardığı `httpx` istemcisi bir KAYIT EDİCİYLE değiştirilir —
 adaptörün GERÇEK gövdeleri (`account/orders/positions/submit_plan/submit_bracket/cancel_open_
 entries`) koşar (v215 dersi: patch'siz gerçek broker çağrısı test-zehirler; `_TRANSPORT` sızıntısı
 conftest'te kaynağa bağlı). Her iddianın yanında pozitif kontrol vardır.

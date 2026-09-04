@@ -187,7 +187,7 @@ def close_connections() -> None:
 
     ADI BİLEREK `close_all` DEĞİL: `alpaca.close_all` TÜM POZİSYONLARI DÜZLEŞTİREN
     yetki-yasası çağrısıdır ve dedektörü (`test_authority_boundaries_v77`) AST'de ATTRIBUTE ADINA
-    bakar — `storage.close_all()` masum bir bağlantı kapatması olduğu hâlde ihlal olarak yakalanırdı.
+    bakar — bu modülde hipotetik bir `close_all()` masum bir bağlantı kapatması olduğu hâlde ihlal olarak yakalanırdı.
     Dedektör daraltılmaz (paranoyak kalır); isim uzayı ayrık tutulur."""
     with _GUARD:
         for c in _CONNS.values():

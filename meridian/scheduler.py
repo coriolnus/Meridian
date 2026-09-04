@@ -423,7 +423,7 @@ def _repair_once_per_session(session: str) -> None:
 # ÖĞRENME KADANSI — SEANS BAŞINA BİR KEZ, BAR VARIŞINDAN BAĞIMSIZ
 # ==================================================================================================
 # ÖLÇÜLMÜŞ KUSUR. Üç öğrenme mekanizması da KOD OLARAK vardı ve üçü de AYNI yere asılıydı:
-# `loop.daily_cycle`ın P5_LEARN bloğu (`shadow_model.refit_and_save` +
+# `loop.daily_cycle`ın "P5_LEARN" bloğu (`shadow_model.py::ShadowTradeOutcomeModel.refit_and_save` +
 # `skills.auto_shadow_from_evidence` çağrıları). O blok yalnız YENİ BİR SEANSIN BARI GELDİĞİNDE
 # koşar. Canlı kanıt (2026-07-30): scheduler last_summary="noop", kapsama 0,172,
 # portfolio.last_date=2026-07-28 — yani veri hattı takılı ve öğrenme onunla birlikte durmuş.
@@ -435,7 +435,7 @@ def _repair_once_per_session(session: str) -> None:
 # damgasıyla tekilleşir (`learn_session`), o damga KALICIDIR (bkz. `_DURABLE`) ve `fresh` bar
 # gelmese de yanar (sık/seyrek fazın her denemesinde) — yani kadans bar varışına bağlı DEĞİLDİR.
 #
-# NE YAPMAZ. Yeni bir yetki İCAT ETMEZ. Antrenmanın sonucu `shadow_model.evaluate_promotion`ın
+# NE YAPMAZ. Yeni bir yetki İCAT ETMEZ. Antrenmanın sonucu `shadow_model.py::ShadowTradeOutcomeModel.evaluate_promotion`ın
 # yazılı kuralı ve tek etkisi `shadow_veto`dur; dolgu geçmişe görüş damgalar (look-ahead yok);
 # Eksen-2 kadansı `skills`in KENDİ eşiklerini kullanır. Üçü de bugünkü karar sınırlarının içinde.
 LEARN_STEPS = ("antrenman", "eksen2", "gorus", "dolgu")

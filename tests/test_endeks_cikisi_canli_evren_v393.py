@@ -326,7 +326,7 @@ def test_load_live_acik_pozisyonda_endeks_disi_sembolun_bari_YUKLENIR(sandbox_st
 
 def test_load_live_silahli_planda_endeks_disi_sembolun_bari_YUKLENIR(sandbox_state, monkeypatch):
     """Aynı koruma SİLAHLI (onaylanmış, henüz dolmamış) plana da uygulanır — bekleyen bir emrin
-    barsız kalması açık pozisyon kadar gerçek bir kördür (bkz. loop.py::_arm_yama,
+    barsız kalması açık pozisyon kadar gerçek bir kördür (bkz. loop.py'deki `_arm_yama` iç fonksiyonu,
     portfolio.json['armed'])."""
     dataset._cache.clear()
     store.write_json("portfolio.json", {"armed": [{"ticker": "SNAP", "id": "p1"}]})

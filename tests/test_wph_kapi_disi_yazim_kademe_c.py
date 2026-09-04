@@ -50,7 +50,7 @@ def _capture(monkeypatch, attr: str) -> dict:
 
 def _patlat_replace(monkeypatch):
     """Kapının ATOMİK son adımını (os.replace) düşür — yarım-yazım simülasyonu (tüm gate yazarları
-    tek `store._atomic_write` boğazından geçer, o da `store.os.replace` çağırır)."""
+    tek `store._atomic_write` boğazından geçer, o da store.py'nin içe aktardığı stdlib `os.replace`i çağırır)."""
     def patlat(src, dst):
         raise OSError("simüle: replace düştü")
     monkeypatch.setattr(store.os, "replace", patlat)

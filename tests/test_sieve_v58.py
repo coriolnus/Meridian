@@ -101,7 +101,7 @@ def test_eski_sema_defteri_golge_model_egitiminde_gercek_0_uretir(seeded):
     """'gerçek 0 / simüle 241'in doğduğu yer: `_features_of` → `return None`.
 
     Gölge model eski şemalı işlemlerin hiçbirini göremez. Model yine cf ile eğitilir (davranış
-    korunur) ama artık payda YAZILI: n_real=0 ve `shadow_model.gercek` aşaması ihlal veriyor."""
+    korunur) ama artık payda YAZILI: n_real=0 ve "shadow_model.gercek" aşama dizgesi ihlal veriyor."""
     store.write_jsonl("trades.jsonl", _eski_sema_trades(40))
     store.write_jsonl("counterfactuals.jsonl", _cf_rows(60))
 

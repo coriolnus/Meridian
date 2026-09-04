@@ -271,7 +271,7 @@ def test_bos_intraday_defteri_IHLAL_DEGIL(sandbox_state):
 
 
 def test_events_sozlesmesi_GERCEK_tuketicileri_sayar():
-    """Sözleşmenin tek işi TAM olmaktır: `notify.inbox` ve `analytics.autonomy` da bu defteri
+    """Sözleşmenin tek işi TAM olmaktır: `notify.inbox` ve `analytics.py::autonomy_ladder` da bu defteri
     okuyor ve ikisi de PENCERELİ okur — budama/şema kararı bu listeye bakılarak verilir."""
     from meridian import ledgers as lg
     tuketiciler = set(lg.CONTRACTS["events.jsonl"].consumers)
@@ -306,7 +306,7 @@ def test_takma_ad_kanonik_adin_YERINI_ALAMAZ(sandbox_state):
 # E) DEDEKTÖRÜN KÖR KESİTİ — kök + dizin + .json OLMAYAN artefaktlar
 # =================================================================================================
 def test_orphan_taramasi_KOK_ve_DIZIN_artefaktlarini_gorur(sandbox_state):
-    """Tarama `config.STATE.glob("*.json*")` idi; üç şeyi HİÇ göremiyordu: kök artefaktlar, başka
+    """Tarama `config.py::STATE`'in `glob("*.json*")` çağrısıydı; üç şeyi HİÇ göremiyordu: kök artefaktlar, başka
     uzantılar ve DİZİNLER. Canlı kanıt: `state/bars_cboe_backup/` 11 MB / 56 dosya, sıfır referans,
     hiçbir dedektör görmüyordu; `state/server.log` 14 Temmuz'dan donuktu."""
     from meridian import recompute, config

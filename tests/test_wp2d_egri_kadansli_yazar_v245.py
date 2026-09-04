@@ -19,7 +19,7 @@ DONMUŞ reset işaretinden okunur — kaynak beyanı `kaynak` alanında) bacak-2
 KAYDIRMAZ" — ve pozitif kontrolü yanındadır ("reset işareti değişirse sınır DEĞİŞİR"), yoksa test
 ölü bir sabiti doğrulamış olurdu.
 
-Bacak-1'in kendi ayrıntılı sözleşmesi `test_defter_kaynak_damgasi_v140.py::B` bloğundadır; burada
+Bacak-1'in kendi ayrıntılı sözleşmesi `test_defter_kaynak_damgasi_v140.py`'nin BT-1 bölümündedir; burada
 yalnız YAZARLA KESİŞEN yüzeyi ölçülür.
 
 HİÇBİR TEST CANLI STATE'E YAZMAZ: hepsi `sandbox_state` üzerinden koşar.
@@ -185,7 +185,7 @@ def _ayrisik_dunya() -> dict:
 
 def test_A2_nokta_BEYANLI_OFSET_dusulerek_yazilir(sandbox_state):
     """Eğri, kitabın tabanında DEĞİL KENDİ tabanında yaşar (reset `points`i silmez, kırılmayı
-    `ofset` olarak BEYAN eder). Ham `eq_now` yazmak iki şeyi bozardı: `recompute.equity_curve_tail`
+    `ofset` olarak BEYAN eder). Ham `eq_now` yazmak iki şeyi bozardı: recompute'un fark raporundaki "equity_curve_tail" satırı
     ofseti iki kez sayar (kalıcı kırmızı) ve eğri reset gününde ofset kadar SIÇRAR — hiç
     kazanılmamış bir günlük kâr çizilir."""
     pf = _ayrisik_dunya()

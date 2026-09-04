@@ -206,7 +206,7 @@ def test_s5_exposure_budget_bir_iken_gecer_esik_sifirdir():
 
 
 def test_s5_exposure_budget_anahtari_yokken_varsayilan_sifirdir_yani_no_go():
-    """Rejim ölçülemediyse kapı AÇIK varsayılmaz: `regime.get(..., 0)` varsayılanı vetodur."""
+    """Rejim ölçülemediyse kapı AÇIK varsayılmaz: `regime` sözlüğünün `.get(..., 0)` varsayılanı vetodur."""
     v, r, detail = _run(reg={})
     assert v == "NO_GO" and r == ["exposure_budget %0 — bugün yeni risk yok"]
     d = _by(detail, "exposure_budget")

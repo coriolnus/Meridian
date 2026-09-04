@@ -24,7 +24,7 @@ NE ÇİVİLENİR:
   D2 DÜRÜST BOŞLUK  · defter boşken None (0 DEĞİL) — "ölçmedim" ile "sıfır" ayrı şeylerdir
   D3 TEK KAYNAK     · okuyucu sınıf sözlüğünü loop'tan TÜRETİR, kendi kopyasını tutmaz
 
-YÖNTEM: hiçbir test ağa çıkmaz; `alpaca.httpx` kayıt ediciyle değiştirilir (v233 deseni), adaptör
+YÖNTEM: hiçbir test ağa çıkmaz; `alpaca.py`'nin `httpx` istemcisi kayıt ediciyle değiştirilir (v233 deseni), adaptör
 gövdeleri gerçek koşar. Kararların hepsi FİKSTÜRle ölçülür — canlı/yerel `state/` okunmaz.
 """
 from __future__ import annotations

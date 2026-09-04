@@ -277,9 +277,9 @@ class _CanliYazimKaydi:
 
 
 # ---- ÜRETİM GLOBALLERİ SIZINTI BEKÇİSİ (2026-07-22) ---------------------------------------------
-# Bulgu: `tests/test_cf_backfill_v14.py` `backtest.SECTORS.setdefault(...)` ile ÜRETİM sözlüğüne
-# yazıyor ve geri almıyordu. SECTORS modül düzeyinde, değiştirilebilir ve `loop.SECTORS` ile AYNI
-# nesne — yani sektör-tavanı kapısının okuduğu harita. Alfabetik sırada zehirleme SONRA geldiği için
+# Bulgu: `tests/test_cf_backfill_v14.py` `backtest.py::SECTORS`'un `setdefault(...)` çağrısıyla ÜRETİM sözlüğüne
+# yazıyor ve geri almıyordu. SECTORS modül düzeyinde, değiştirilebilir ve loop.py'ye `from .backtest import
+# SECTORS` ile aktarılan AYNI nesne — yani sektör-tavanı kapısının okuduğu harita. Alfabetik sırada zehirleme SONRA geldiği için
 # hiç görünmedi; suite ters sırada koşturulunca `test_b3_sector_map_covers_the_universe_exactly`
 # düştü. Sıra bağımlı bir suite, geçtiğinde bile bir şey KANITLAMAZ: yarın bir dosya adı değişince
 # yeşil kalır ya da kırmızıya döner, ikisi de aynı koda karşılık gelir.
@@ -598,7 +598,7 @@ def hermes_bin_cozumleyici_asil(_yerel_ajan_ikilisi_kapali):
 #
 # ÖLÇÜLEN VAKA (2026-08-02): `test_regime_patch::test_scheduler_flag_survives_publish_lag` GERÇEK
 # kadans makinesini koşturuyor; `scheduler.advance_once → earnings.refresh →
-# data.nasdaq_earnings_window` yolu `api.nasdaq.com`a GÜN BAŞINA bir istek atıyordu. Sayılar (kapı
+# data.nasdaq_earnings_window` yolu api.nasdaq.com'a GÜN BAŞINA bir HTTP isteği atıyordu. Sayılar (kapı
 # YOKKEN, geçici bir sayaç eklentisiyle ölçüldü): o TEK test 23 dış TCP bağlantısı; 13 dosyalık
 # süpürme 4 ayrı dış IP'ye toplam 37 bağlantı. Bedel üç katmanlı ve üçü de ölçüldü:
 #   (1) NONDETERMİNİZM — testin sonucu Nasdaq'ın o ANKİ cevabına bağlanır. Ağ yokken ya da uç 5xx

@@ -51,7 +51,7 @@ TAKVIM = ["2026-08-18", "2026-08-19", "2026-08-20", "2026-08-21", "2026-08-24", 
 
 @pytest.fixture(autouse=True)
 def _temiz(monkeypatch, sandbox_state):
-    """`sandbox_state` ZORUNLU — ilk yazımda `store.STATE_DIR`i elle saplamıştım ve depo
+    """`sandbox_state` ZORUNLU — ilk yazımda `config.py::STATE`'i elle saplamıştım ve depo
     bekçisi haklı olarak reddetti: "CANLI state'e YAZILDI". Çivi kendi kanıt defterini
     kirletemez; operatöre sunulan deftere düşen bir test artefaktı üretim arızası gibi okunur."""
     monkeypatch.setattr(config, "BROKER", "alpaca_paper", raising=False)

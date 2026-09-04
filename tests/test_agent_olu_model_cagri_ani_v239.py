@@ -115,7 +115,7 @@ def test_3b2_rapor_yuzeyi_deftere_YAZMAZ(sandbox_state, monkeypatch):
     """2026-08-13 (otoriter suite bulgusu): ilk hâlde `canonical_model` HER çağrı yerinde olay
     basıyordu ve `hermes_runtime.status()` (pano `/api/hermes`) `active_model()` + `_model_id()`
     üzerinden CANLI `events.jsonl`e iki satır düşürüyordu — conftest sızıntı bekçisi
-    `test_api_contract.py::test_hermes_status_..._mid_search` teardown'unda yakaladı.
+    `test_api_contract.py::test_hermes_status_payload_is_json_serializable_mid_search` teardown'unda yakaladı.
     KUSUR TEST DEĞİL YAYIN YERİYDİ: bir okuma isteği üretim defterine "göç oldu" yazamaz.
     ÇEVİRİ korunur (test_3b), OLAY yalnız gerçek çağrı yolundan basılır."""
     _sirlar(monkeypatch, NOUS_MODEL="gemini-3.5-flash", GEMINI_MODEL="gemini-3.5-flash",

@@ -99,7 +99,7 @@ REPLAY_WARMUP_KEYS = {"no_trade_before_bars"}
 # `exit.early_kill_pivot` tam bu deliğe oturmuştu.
 #
 # LİSTE BUGÜN BOŞ VE BOŞ OLMASI DOĞRUDUR: pivot kablosu canlıya bağlandı
-# (`loop.fill_entry(pivot=…)` + `manage_position` sözlüğünde `pivot`). Bu dal İKİNCİ savunma
+# (loop.py'nin `broker.py::PaperBroker.fill_entry`i `pivot=…` ile çağırması + `manage_position` sözlüğünde `pivot`). Bu dal İKİNCİ savunma
 # hattıdır; BİRİNCİ hat motor-eşitliği çivisidir (tests/test_kovab_ikimotor_v164: üç motorun
 # yönetim-sözlüğü alan kümesi EŞİT, yani yeni bir ayrışma adsız yakalanır). Birinci hat kırmızı
 # yandığında knob buraya ADIYLA + GEREKÇEYLE yazılır ve terfi yolu aynı turda kapanır.
@@ -182,7 +182,7 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
     # ve `test_gate_statistics_v74` haklı olarak kırmızıya döndü: guard'ın SERT ZARF yasası, bu
     # modülün SAF olmasını (verdict yalnız argümanlarının fonksiyonu, hiçbir defter/LLM/ağ kanalı
     # yok) çiviliyor. Bir defter yazımı tam olarak o kanaldır. Bu yüzden guard yalnız ŞEKİL hükmü
-    # verir; kuyruğa yazma işini ÇAĞIRAN yapar (`memory.record_hypothesis` yolu). Ship yolu
+    # verir; kuyruğa yazma işini ÇAĞIRAN yapar (`memory.py::record` yolu). Ship yolu
     # değişmedi: prescreen ölçer → kapı karar verir → operatör onaylar.
     comp = proposal.get("composite")
     if isinstance(comp, dict) and comp:

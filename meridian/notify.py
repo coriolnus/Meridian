@@ -215,7 +215,7 @@ def new_plan(ticker: str, verdict: str, rr, n: int = 1, date: str | None = None)
 # ÇIKARILDI 2026-07-30: `data_quality(detail)` — veri kalitesi bildirim
 # sarmalayıcısı. K1 turunda (aynı gün) kendi docstring'i zaten "EMEKLİ — bağlanması ÇİFT bildirim
 # üretirdi; çağıran eklenmez" diyordu; bu tur beyanı fiiliyata geçirdi.
-# ÇAĞIRAN TARAMASI (meridian/ + tests/): `notify.data_quality` için tek eşleşme tanımın kendisiydi.
+# ÇAĞIRAN TARAMASI (meridian/ + tests/): "notify.data_quality" [çapa-mezar-taşı] için tek eşleşme tanımın kendisiydi.
 # (`data_quality.json` eşleşmeleri AYRI bir artefakttır — loop.py yazar, api/intraday_shadow okur;
 # bu fonksiyonla ilgisi yoktur.)
 # YERİNE GEÇEN TEK KAPI: `obs.alarm(obs.ALARM_DATA_QUALITY, …)`. O çağrı `obs._maybe_notify`

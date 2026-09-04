@@ -196,8 +196,8 @@ def test_secrets_reads_are_deterministic(sandbox_state, monkeypatch):
 
 
 def test_fmp_status_is_deterministic(monkeypatch):
-    """DEVİR (2026-07-30 temizlik turu): özne `news.status` EMEKLİ edildi (mezar taşı:
-    meridian/adapters/news.py). Saflık sorusu ölmedi — `news.status` zaten `fmp.health()`i
+    """DEVİR (2026-07-30 temizlik turu): özne "news.status" [çapa-mezar-taşı] EMEKLİ edildi (mezar taşı:
+    meridian/adapters/news.py). Saflık sorusu ölmedi — "news.status" [çapa-mezar-taşı] zaten `fmp.health()`i
     sarmalıyordu, yani ölçülen saflık ASIL olarak FMP künyesinindi. Çivi kaynağa taşındı."""
     from meridian.adapters import fmp
     monkeypatch.setattr(fmp.secrets, "present", lambda n: True)

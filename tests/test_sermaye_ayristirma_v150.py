@@ -5,7 +5,7 @@
 işlem sayısı SIFIR (ledgerstamp 95/95 replay_seed). İki ayrı zarar:
 
   GÖSTERİM — pano "Sermaye" diye bir antrenman artefaktı gösteriyordu.
-  DAVRANIŞ — `broker.equity()` = start_equity + realized_pnl (`PaperBroker.equity`) ve
+  DAVRANIŞ — `broker.py::PaperBroker.equity`() = start_equity + realized_pnl ve
              `loop._load_broker` start_equity'yi her turda START_EQUITY'ye sabitler; yani tohum
              zararı GERÇEK-CANLI çağın pozisyon boyutlarını kısıyordu. `peak_equity` = 102.520,45$
              ise simülasyonun tepesi ve de-risk rampası düşüşü ORADAN ölçüyordu.
@@ -166,7 +166,7 @@ def test_B1_uygula_kitabin_DORT_alanini_tasir(sandbox_state):
     assert r["ok"] is True and r["yazildi"] is True
     pf = store.read_json(sermaye.PORTFOLIO, {})
     assert pf["cash"] == 100000.0
-    # ASIL DAVRANIŞ ALANI: `broker.equity()` cash'i DEĞİL bunu okur.
+    # ASIL DAVRANIŞ ALANI: `broker.py::PaperBroker.equity`() cash'i DEĞİL bunu okur.
     assert pf["realized_pnl"] == 0.0
     assert pf["day_start_equity"] == 100000.0     # yoksa pano uydurma bir günlük kâr gösterirdi
     assert pf["peak_equity"] == 100000.0          # yoksa de-risk rampası hayali bir düşüş ölçerdi
@@ -381,7 +381,7 @@ def test_F1_reset_ONCESI_SONRASI_qty_farki_GOSTERILIR(sandbox_state):
     """BU TURUN AMACI TAM OLARAK BUDUR — kozmetik değil davranışsal.
 
     `loop._load_broker` her turda `PaperBroker(START_EQUITY, …)` kurup üstüne diskten
-    `realized_pnl`i basar; `broker.equity()` = start_equity + realized_pnl. Yani boyutlandırma
+    `realized_pnl`i basar; `broker.py::PaperBroker.equity`() = start_equity + realized_pnl. Yani boyutlandırma
     tabanı `cash` DEĞİL `realized_pnl`dir — ve reset onu sıfırlar. Fark burada SENTETİK olarak
     ölçülür, iddia edilmez."""
     _tohumlanmis_dunya(n=3, pnl_her=-1000.0)

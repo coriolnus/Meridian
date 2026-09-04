@@ -4,7 +4,7 @@ docs/TASARIM-YONU-2026-08-07 §7'nin kalan on beş FIRSAT satırından bir tanes
 indi (F1/F2/F14 v229'da inmişti):
 
   F5 — Yinelenen arızaları taksonomiye kümeleme (③ saglik#operasyon · "alarm gürültüsünün kökü").
-    `watchdog.alarm_gunluk` v192'den beri mekanizma başına GÜNLÜK {alarm · bastırılan · askıda}
+    `watchdog.py::ALARM_GUNLUK_FILE` v192'den beri mekanizma başına GÜNLÜK {alarm · bastırılan · askıda}
     sayacını yazıyordu; `test_alarm_hijyeni_v192::test_bastirma_sayaci_PANOYA_cikar` "sayacın DIŞ
     okuyucusu api.py'dir" der — yani sayı UCA çıkıyordu ama HİÇBİR PANO YÜZEYİ onu çizmiyordu
     (YASA 6 boşluğu; "üretiliyor ama görünmüyor" kovası). `firsatAlarmTaksonomi` o defterin İLK

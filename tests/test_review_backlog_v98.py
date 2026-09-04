@@ -12,7 +12,7 @@ okunmuyor, ya da arızalandığında sessizlikten ayırt edilemiyor.
   5. beyin zinciri — ölçüm ARIZASI ile "hermes hiç koşmamış" ayırt edilemiyordu; ilki artık konuşur,
      ikincisi hâlâ SESSİZ kalır (taze sandbox'ta yeni kırmızı üretmek mutasyon tabanını kirletirdi).
   6. `_fmp._HEALTH` — testler arası sızıyor, sonraki testi kendi kurmadığı bir bulguyla karşılaştırıyordu.
-  7. `news.stock_news` — `[]` dönmek doğru davranış; yutmanın SESSİZ olması değil.
+  7. "news.stock_news" [çapa-mezar-taşı] — `[]` dönmek doğru davranış; yutmanın SESSİZ olması değil.
 """
 from __future__ import annotations
 
@@ -300,7 +300,7 @@ def test_the_reset_literal_matches_production():
 # 7) news — yutma artık kayıtlı
 # ---------------------------------------------------------------------------------------------
 def test_news_sessiz_yutma_dersi_emeklilikte_de_korunuyor():
-    """DEVİR (2026-07-30 temizlik turu): #7'nin öznesi `news.stock_news` EMEKLİ edildi — modülün
+    """DEVİR (2026-07-30 temizlik turu): #7'nin öznesi "news.stock_news" [çapa-mezar-taşı] EMEKLİ edildi — modülün
     ÜRETİM tüketicisi 2026-07-21'den beri yoktu ve dokuz gün sonra da yoktu (hedef sözleşmesi md.1).
 
     #7'nin BULGUSU emekli EDİLMEDİ. Bulgu şuydu: `[]` dönmek DOĞRU davranıştır (çağıran boş akışla

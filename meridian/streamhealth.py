@@ -2,7 +2,7 @@
 
 NE YAPAR: bir WebSocket akışının sağlık disiplini burada TEK yerde yaşar ve hem `mirror_stream`
 (yürütme: trade_updates) hem `marketstream` (piyasa verisi: dakikalık bar) onu İÇE AKTARARAK
-kullanır — `mirror_stream.next_backoff IS streamhealth.next_backoff` (aynı nesne). Neden ayrı modül
+kullanır — aynı `next_backoff` nesnesi bu dosyada TANIMLIDIR ve `mirror_stream.py`ye İÇE AKTARILIR (aynı nesne). Neden ayrı modül
 (operatör kararı — ERADİKASYON, hafifletme değil): bu kod tabanının baskın kusuru "aynı yasanın iki
 uygulaması, sessizce ayrışmış"tır; mirror'ın 54→2 `down` kusuru (kopuş saati her turda sıfırlanıyor,
 "ne kadardır kopuk" yalnız son uykuyu ölçüyordu) tam da bu durumsal yasada yaşadı. İkinci akış onu

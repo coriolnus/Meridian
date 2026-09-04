@@ -307,7 +307,7 @@ def test_C_acik_pozisyon_yokken_isi_SIFIR_degil_None(sandbox_state):
 
 
 def test_C_yururlukteki_stop_okunur_ve_ilk_stop_KIYAS_olarak_yaninda(sandbox_state):
-    """`analytics.today.current_exposure_pct` GİRİŞTEKİ riski toplar — stop yukarı taşındıkça
+    """`analytics.py::today`'nin döndürdüğü `current_exposure_pct` alanı GİRİŞTEKİ riski toplar — stop yukarı taşındıkça
     gerçek risk düşer ve pano olduğundan SICAK görünür. Isı yürürlükteki stopu okur; giriş stopuna
     göre hesap kıyas olarak yanında durur (ikisi bir kazananda ciddi biçimde ayrışır)."""
     store.write_json("portfolio.json", {"cash": 100000.0, "positions": {

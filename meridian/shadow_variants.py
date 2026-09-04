@@ -112,7 +112,7 @@ GATES_SKIPPED = {
 #       kendisidir (kardeşi `cf_backfill.py`de aynı gün kapatıldı).
 # ÇAPA: turu açan tarih `record_cycle`ta damgalanır; `_judge` yalnız O tarihte takvimi konuşturur.
 # NEDEN TARİH KARŞILAŞTIRMASI DEĞİL DE ÇAPA: canlı EOD turu "bugün"ü değil SON KAPANMIŞ SEANSI
-# işler ve evren-kapsaması ertelemesi onu birkaç gün geriye alabilir (`loop._deferred_for_coverage`).
+# işler ve evren-kapsaması ertelemesi onu birkaç gün geriye alabilir (loop.py'deki `_deferred_for_coverage` yerel değişkeni).
 # `date < bugün` kuralı o turları da tarihsel sayar ve CANLI davranışı değiştirirdi — düzeltmenin
 # tek sözü "canlı bit-bit korunur"ken bunu yapmak, kapatmaya çalıştığımız sınıfın aynısı olurdu.
 # ÇAPA YOKSA (`None`) DAVRANIŞ ESKİSİ: tur açılmamışsa (doğrudan `_judge` çağrısı) kimse "bu karar
@@ -231,7 +231,7 @@ def _judge(sigs: list, date: str, *, sector_of, max_corr_of, params: dict, regim
 
     Üçüncü dönüş değeri (`armed_plans`) `[{"plan": {...}, "pivot": float}]` biçimindedir: pivot
     plan SÖZLÜĞÜNE konmaz, YAN haritada taşınır (`backtest.replay`in `armed_pivots` deseni ve aynı
-    gerekçe — pivot bir defter alanı değil `broker.fill_entry`e giden bir İCRA girdisidir).
+    gerekçe — pivot bir defter alanı değil `broker.py::PaperBroker.fill_entry`e giden bir İCRA girdisidir).
 
     `eg`: KAZANÇ-KAPISI SAYACI (kardeş-PIT). Verilirse yerinde doldurulur; dönüş
     ÜÇLÜSÜ DEĞİŞMEZ — `shadow_lifecycle` bu üçlüyü açıyor ve arity değişikliği ölçümle ilgisiz bir

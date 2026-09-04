@@ -2998,7 +2998,7 @@ def portfolio_heat() -> dict:
 #
 # K-CEZASI KALİBRASYONU — DENGELEME REFERANSI (GEVŞETME DEĞİL). Bu dosyanın
 # K-cezası okumaları (`validation_trio`nun DSR n_trials'ı; `dead_families`in "K büyür → p_required
-# yükselir" beyanı; cezanın kendisi `probgate.p_required_for`) bilinçli olarak SIKI gelenektedir
+# yükselir" beyanı; cezanın kendisi `probgate.py::PairedProbabilisticGate.p_required_for`) bilinçli olarak SIKI gelenektedir
 # (Harvey-Liu-Zhu 2016 "kesitte t>3" ailesi; DSR da [Bailey & López de Prado] aynı damar).
 # Literatürün DENGELEME bacağı da adresli dursun: Andrew Y. Chen (2022), "Do t-Statistic Hurdles
 # Need to Be Raised?" — yayımlanmış kesit-öngörücü popülasyonunda yanlış-keşif oranının sanılandan

@@ -253,7 +253,7 @@ def test_d4_regime_onekli_dugmenin_override_u_YAPISAL_olarak_reddedilir():
 
 
 def test_d5_regime_oneki_DUZ_dugmede_engel_degildir():
-    """89/90'ın (dizge kayması) ters yönü: `regime.adx_min` düz hâliyle ayarlanabilir bir düğmedir.
+    """89/90'ın (dizge kayması) ters yönü: "regime.adx_min" override anahtarı düz hâliyle ayarlanabilir bir düğmedir.
     Dizge mutantı bu yolu da bozmasın diye olumlu kontrol."""
     v = _vc({"variable": "regime.adx_min", "new": 25})
     assert v.ok is True and v.reasons == []

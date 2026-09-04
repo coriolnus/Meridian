@@ -39,7 +39,8 @@ def test_plans_for_session_shape_and_gate(sandbox_state, monkeypatch):
     from meridian.adapters import data as _data
     monkeypatch.setattr(_data, "REPLAY_UNIVERSE", ["SPY", "AAA", "BBB", "CCC"])
     monkeypatch.setattr(_data, "validate_bars", lambda df, t: (True, []))   # veri kapısı başka yerde test edilir
-    # monkeypatch.setitem: SECTORS ÜRETİM sözlüğüdür ve `loop.SECTORS` ile AYNI nesnedir.
+    # monkeypatch.setitem: SECTORS ÜRETİM sözlüğüdür (`backtest.py::SECTORS`) ve loop.py'ye
+    # `from .backtest import SECTORS` ile aktarılan AYNI nesnedir.
     # `setdefault` ile yazmak onu oturum boyunca kalıcı olarak kirletiyordu (2026-07-22, suite'i
     # ters sırada koşturunca yakalandı: test_b3_sector_map_covers_the_universe_exactly "evrende
     # olmayan sembol haritada: AAA, BBB, CCC" diye düştü). Alfabetik sırada zehirleme SONRA geldiği

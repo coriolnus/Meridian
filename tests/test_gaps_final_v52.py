@@ -65,7 +65,7 @@ def test_constituents_as_of_is_deterministic(sandbox_state):
 
 
 def test_macro_snapshot_determinizmi_kaynagina_tasindi():
-    """DEVİR (2026-07-30 temizlik turu): `macro.snapshot` EMEKLİ edildi (üretim tüketicisi yoktu;
+    """DEVİR (2026-07-30 temizlik turu): "macro.snapshot" [çapa-mezar-taşı] EMEKLİ edildi (üretim tüketicisi yoktu;
     çağıran taraması + geri-al notu `meridian/adapters/macro.py` mezar taşında).
 
     Determinizm SORUSU ölmedi, SAHİBİ değişti: `snapshot` zaten `regime.classify`ı sarmalıyordu ve

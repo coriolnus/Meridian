@@ -7,7 +7,7 @@
 SEBEBİNİ adlandırmadı.
 
 KÖK, ayna kodunda değil KİTABIN TABANINDA: gönderim anında `portfolio.realized_pnl`
-−5.542,09$ idi (1 Ağustos'ta 0,0'a taşınmıştı), yani `broker.equity()` = 94.457,91$ ve
+−5.542,09$ idi (1 Ağustos'ta 0,0'a taşınmıştı), yani `broker.py::PaperBroker.equity`() = 94.457,91$ ve
 `derisk_mult(94457.91, 100000)` = **0,4916**. Ertesi gün taban geri getirildi (100.000/0,0) ve
 iç motor ÇARPAN 1,0 ile doldurdu. Aynı plan, iki farklı sermaye tabanı, 22 saat arayla.
 

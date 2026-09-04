@@ -60,7 +60,7 @@ BOOK_SCHEMA = 1
 # Bunlar `shadow_variants.VARIANTS`e EKLENMEZ (yukarıdaki iki-payda gerekçesi): v1 defteri KARAR
 # ölçer ve orada karar-özdeşler. Kitapta ise gerçekten ayrışırlar, çünkü bu katman fill ömrünü ve
 # yönetim barlarını izler — `exit.early_kill_pivot` `strategy.manage_position` içinde, `scale_out`
-# `broker.scale_out` içinde OKUNUR ve ikisi de burada koşar.
+# `broker.py::PaperBroker.scale_out` içinde OKUNUR ve ikisi de burada koşar.
 #   V3 — G3b erken itlaf. `exit.early_kill_bars` VARSAYILANDA (1) bırakıldı: ikinci düğmeyi de
 #        oynatmak iki değişkenli bir kol yapardı ve "hangisi etkiledi" sorusu ölçülemez hâle gelirdi.
 #        Pivot GEREKLİDİR ve bu motor onu taşır (armed yan haritası → fill_entry(pivot=...) →
@@ -272,7 +272,7 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
 
     # ---- 2. INTRADAY(D): kısmi satış + dokunuş çıkışları ----
     # `prev_scale`: replay CLOSE(D)'de `prev_eff = eff` der ve ERTESİ günün scale_out'unu onunla
-    # koşar (D'nin gün-içi anında bilinen rejim D-1'inkidir). `broker.scale_out` params'tan YALNIZ
+    # koşar (D'nin gün-içi anında bilinen rejim D-1'inkidir). `broker.py::PaperBroker.scale_out` params'tan YALNIZ
     # iki anahtar okur, o yüzden defterde tam olarak o iki anahtar taşınır — bugünün rejimiyle
     # çözülmüş `params`ı kullanmak sessiz bir ileri-dönüklük olurdu.
     intraday_params = bk.get("prev_scale") or params

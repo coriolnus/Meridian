@@ -600,7 +600,7 @@ GEMINI_DEAD_MODEL_MAP = {
 # --------------------------------------------------------------------------------------------------
 # ÖLÇÜLEN KUSUR: ilk hâlde `canonical_model` HER çağrı yerinde olay basıyordu — RAPORLAMA yüzeyleri
 # dahil. `hermes_runtime.status()` (yani `/api/hermes`) `active_model()` + `_model_id()` üzerinden
-# iki `obs.warn` doğuruyordu; `tests/test_api_contract.py::test_hermes_status_..._mid_search`
+# iki `obs.warn` doğuruyordu; `tests/test_api_contract.py::test_hermes_status_payload_is_json_serializable_mid_search`
 # teardown'unda CANLI `state/events.jsonl`e iki satır DÜŞTÜ ("CANLI state'e YAZILDI"). Aynı sınıf
 # Ajanın kendi raporunda da beyan edilmişti ("sandbox'sız smoke sondasının yan etkisi").
 # KUSUR TEST DEĞİL YAYIN YERİYDİ: bir pano isteği, bir import ya da bir bağlantı sondası
@@ -2287,7 +2287,7 @@ def _quiet_flag_unsupported_warn(out) -> None:
 #
 # NEDEN YAN KANAL, DÖNÜŞ TÜRÜ DEĞİL: `_agent_call`in bugünkü dönüşü `str | None` ve altı üretim
 # çağıranı var (`_propose_nous_local`, `review_candidates`, `rank_explore`, `_review_plans_batch`,
-# `chain_text`, `skill_evolve.propose_skill_revision`) + ~30 test iddiası; hepsi metni doğrudan
+# `chain_text`, `skill_evolve.py::draft_revision`) + ~30 test iddiası; hepsi metni doğrudan
 # kullanıyor. Dönüşü tuple'a çevirmek altısını birden kırardı; bu turun kapsamı KÜNYE, taşıma
 # sözleşmesi değil.
 #

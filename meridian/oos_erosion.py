@@ -33,7 +33,7 @@ from . import config, store, obs
 EROSION_FILE = "oos_erosion.json"
 
 # EŞİK: aynı parmak izine 20 sorgudan fazlası. Gerekçe: kapı zaten oturum içi K aday için
-# `probgate.p_required_for(k_probes)` ile ceza kesiyor; bu sayaç OTURUMLAR ARASI, yani aynı pencereye
+# `probgate.py::PairedProbabilisticGate.p_required_for(k_probes)` ile ceza kesiyor; bu sayaç OTURUMLAR ARASI, yani aynı pencereye
 # aylar boyunca dönmenin yükünü ölçer. 20, canlı defterin bugüne kadarki ~38 sorgusunun yarısı
 # civarı — yani "birkaç hipotez normaldir, düzinelercesi pencereyi yakar" ayrımının çizildiği yer.
 EROSION_QUERY_LIMIT = 20

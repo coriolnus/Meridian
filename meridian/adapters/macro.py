@@ -7,7 +7,7 @@ iskelesi" diye YAZILI olarak işaretlenmişti; bu tur o teşhisi kapattı.
 ÇAĞIRAN TARAMASI (2026-07-30, meridian/ + tests/ + ops/ + deploy/ + skills/): `meridian` paketinde
 bu modülü içe aktaran TEK bir satır yok (`from . import macro` / `import macro` → 0 eşleşme).
 Tek tüketici `tests/test_macro_news_audit_v20.py` ve `tests/test_gaps_final_v52.py`'nin
-determinizm satırıydı — ikisi de bu turda güncellendi. `skills/` altındaki `macro.get(...)`
+determinizm satırıydı — ikisi de bu turda güncellendi. `skills/` altındaki "macro.get(...)" biçimli
 eşleşmeleri BAŞKA betiklerin kendi yerel sözlükleridir, bu modül değil.
 
 NEDEN SARMALAYICI DEĞİL DE ÖLÜ: canlı rejim sınıflaması `regime.classify` ile DOĞRUDAN döngüde

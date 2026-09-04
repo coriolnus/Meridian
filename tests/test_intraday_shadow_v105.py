@@ -4,7 +4,7 @@ Faz 4a "tetik kesildi mi?"yi ölçüyordu; cevaplayamadığı soru "kesildiğind
 geçişi tek başına karar DEĞİLDİR — kapılar, boyutlandırma, likidite tavanı ve gap korumaları emri
 tümüyle iptal edebilir. Bu testler gölge katmanının iki sözünü kilitler:
 
-  (1) KARAR EOD İLE AYNI KODDAN ÇIKAR. qty/risk ikinci bir kopyayla değil `broker.fill_entry` ile
+  (1) KARAR EOD İLE AYNI KODDAN ÇIKAR. qty/risk ikinci bir kopyayla değil `broker.py::PaperBroker.fill_entry` ile
       hesaplanır; ADV penceresi EOD'nin kullanacağı 20 barın AYNISIDIR. Ayrışan bir kopya, gölge
       defterini EOD'yi değil KENDİNİ ölçer hâle getirirdi ve bu hiçbir yerde görünmezdi.
   (2) HİÇBİR YETKİ YOK. Tek yazılan dosya gölge defteridir: portfolio.json'a, INTRADAY_ARM'a,

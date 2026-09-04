@@ -140,7 +140,7 @@ ENGINE_IMPLEMENTED = {
     # (veri yoksa dürüstçe None).
     "stockbee-exhaustion-hammer-screener", "pead-screener",
     # NOT eklendi: "canslim-screener" — evaluate_canslim scan_all'da güvenli no-op olarak KOŞAR ama
-    # `earnings.canslim_fundamentals` + FMP nokta-zamanlı temel önbelleği (Faz C) inşa edilene kadar DAİMA
+    # earnings.py'de HENÜZ YAZILMAMIŞ bir "canslim_fundamentals" yardımcısı + FMP nokta-zamanlı temel önbelleği (Faz C) inşa edilene kadar DAİMA
     # None döner. ENGINE_IMPLEMENTED'a erken eklemek pipeline_run'ı "invoked" yalanına sürükler (skills.py'nin
     # tam olarak önlediği dürüstlük ihlali) — helper landıktan SONRA eklenecek; o zamana dek declared-only.
     # Artık gerçekten koşuyor — adapters/finviz.discover EVRENİ genişletir (REPLAY_UNIVERSE'e

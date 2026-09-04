@@ -104,7 +104,7 @@ def _olcum_modulu():
 # v230'DA BEYANLI GÜNCELLENDİ (2026-08-09, dalga W-UX D3-b devamı) — TEK yeni FIRSAT kartı (docs/
 # TASARIM-YONU-2026-08-07 §7'nin F5'i); kapak altında, "üretiliyor ama görünmüyor" kovasından bir
 # kalem kapatır ve UÇTAN okur (uydurma rakam yasağı):
-#   saglik  17 → 18  (+1: operasyon:alarmkok [F5 · yinelenen arıza taksonomisi — `watchdog.alarm_gunluk`ın
+#   saglik  17 → 18  (+1: operasyon:alarmkok [F5 · yinelenen arıza taksonomisi — `watchdog.py::ALARM_GUNLUK_FILE`ın
 #                     İLK pano okuyucusu; v192 sayacı UCA çıkıyordu ama `test_bastirma_sayaci_PANOYA_cikar`
 #                     "dış okuyucusu api.py'dir" der → pano çizmiyordu, YASA 6 boşluğu])
 #   karar 27 · ogrenme 45 · kilitler 5 (değişmedi — F5 ③'e düştü)

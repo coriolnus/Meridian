@@ -32,7 +32,7 @@ import os
 
 from . import streamhealth, hotstate, obs, secrets
 from .adapters import alpaca
-from .streamhealth import _pause, _now_iso   # ad = aynı nesne (test `marketstream._pause` monkeypatch'i)
+from .streamhealth import _pause, _now_iso   # ad = aynı nesne (test `streamhealth.py::_pause` monkeypatch'i)
 
 FEED = os.environ.get("MERIDIAN_DATA_FEED", "iex")
 # 0/unset = efektif sınırsız. iex bars kanalı sembol-SINIRSIZ (30-tavan yalnız t/q kanallarına ait) →

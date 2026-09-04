@@ -5,7 +5,7 @@ duvardır. Tarayıcı 9180'e (Admin API) ve 9091'e (prometheus) ASLA gitmez; iki
 okur ve süzülmüş bir gövde döner. Bu duvarın iki tarafında iki ayrı yalan sınıfı yaşar:
 
   (1) SIR SINIFI — Admin API'ye giden istek `X-API-KEY` taşır ve rota gövdelerinin içinde
-      `auth.header.Authorization` alanları vardır. Bir gün biri "ne var ki, gövdeyi olduğu gibi
+      HTTP `Authorization` başlığı alanları vardır. Bir gün biri "ne var ki, gövdeyi olduğu gibi
       döndüreyim" derse, admin anahtarı ya da (etcd'ye kazara literal yazılmışsa) OpenRouter
       anahtarı panonun HTML'ine iner. Bu dosyanın en sert çivisi budur ve VAKUM DEĞİLDİR:
       anahtarın GERÇEKTEN gönderildiğini de ölçer (gönderilmemiş bir sırrın yokluğunu kanıtlamak
@@ -35,7 +35,7 @@ C. ROTA ŞEMASI BİREBİR — `deploy/apisix/routes.yaml`ın GERÇEK şekli Admi
 
 D. SIR DUVARI — üç ayrı yönden: (d1) admin anahtarı yanıtın hiçbir yerinde geçmez, ama İSTEKTE
    gerçekten gönderilmiştir; (d2) istisna METNİ anahtarı taşısa bile maskelenir (ikinci savunma
-   hattı); (d3) rota gövdesindeki `auth.header.Authorization` alanı `$env://…` referansıysa
+   hattı); (d3) rota gövdesindeki HTTP `Authorization` başlığı alanı `$env://…` referansıysa
    AYNEN geçer (tasarım: "sırlar $ENV referansı olarak"), referans DEĞİLSE — yani etcd'ye
    kazara gerçek bir anahtar yazılmışsa — panoya ÇIKMAZ.
 

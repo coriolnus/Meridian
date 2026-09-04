@@ -220,13 +220,13 @@ def structural_stop(entry_ref: float, pivot: float, atr: float, params: dict) ->
     gürültü dokunuşlarının stopu tetiklemesini engeller ve ATR birimindedir ki eşik sembol-bağımsız
     kalsın (yüzde tampon, düşük volatiliteli bir isimde çok geniş / yüksek volatilitede çok sıkı olurdu).
 
-    R-NÖTRLÜK KORUNUR — YAZILI OLSUN: boyutlandırma DEĞİŞMEZ. `broker.size_position` aynen
+    R-NÖTRLÜK KORUNUR — YAZILI OLSUN: boyutlandırma DEĞİŞMEZ. `broker.py::PaperBroker.size_position` aynen
     `risk_dolar / (giriş_fill − stop)` hesaplar, yani stop nereye konursa konsun pozisyonun taşıdığı
     RİSK 1R'dir; değişen tek şey o 1R'nin FİYAT cinsinden genişliği (ve dolayısıyla hisse adedi).
     Bu yüzden `stop_mode=1` "daha az riskli" bir mod DEĞİL, riski BAŞKA BİR YERE demirleyen bir moddur.
 
     AMA BİR KARIŞTIRICI VAR VE ÖLÇÜLDÜ — YAZILI OLSUN: R-nötrlük FORMÜL düzeyinde
-    korunur, İCRA düzeyinde korunmaz. `broker.fill_entry`ın `MAX_NOTIONAL_PCT` (=%25 sermaye) tavanı
+    korunur, İCRA düzeyinde korunmaz. `broker.py::PaperBroker.fill_entry`ın `MAX_NOTIONAL_PCT` (=%25 sermaye) tavanı
     adet üzerinden bağladığı için, stop yakınlaştıkça tavan devreye girer ve `risk_dollars` AŞAĞI
     yeniden türetilir. Cebir: tavan, stop mesafesi fiyatın `RISK_PCT_PER_R/MAX_NOTIONAL_PCT` = %4'ünden
     YAKIN olduğunda bağlar. Ölçüldü (sermaye 100k, fiyat 100): stop 96 → 1.00R · stop 98 → 0.50R ·
@@ -958,7 +958,7 @@ def evaluate_canslim(bars: pd.DataFrame, params: dict, rs_rating_value: int,
     deterministik hesaplanır; M pazar yönü motorun REJİM katmanının işi (per-name uptrend burada
     trend_template+haftalık trendle teyit edilir). LONG-only, kapalı barlar, ileri-dönük yok. DORMANT.
 
-    Faz C KAPISI: `earnings.canslim_fundamentals` yardımcısı + FMP nokta-zamanlı temel önbelleği HENÜZ
+    Faz C KAPISI: earnings.py'de HENÜZ YAZILMAMIŞ "canslim_fundamentals" yardımcısı + FMP nokta-zamanlı temel önbelleği HENÜZ
     YOK → bugün DAİMA None (güvenli no-op). Bu yüzden 'canslim-screener' ENGINE_IMPLEMENTED'a EKLENMEZ
     (pipeline_run onu yanlış 'invoked' saymasın); helper landıktan SONRA eklenir — pead/episodic'ten farkı
     tam olarak budur: onların earnings.csv'si mevcut anahtarsız kodla dolar, canslim'inki yeni kod ister."""

@@ -156,8 +156,8 @@ def test_MODUL_SEMBOL_bicimi_CURUMEYI_de_gorur(tmp_path):
 
 def test_MODUL_BICIMI_PANO_TARAFINDA_KAPALI(tmp_path):
     """KAPSAM SINIRI (1) — VE NEDEN: pano düzyazısında `modül.alan` bir SEMBOL değil bir JSON
-    ALAN adıdır. İlk canlı ölçümde (2026-09-02) `scheduler.last_tick` · `sprint.sebep` ·
-    `component_ic.verdict` · `auth.header.Authorization` bu yüzden YANLIŞ ÇÜRÜME üretti; yanlış
+    ALAN adıdır. İlk canlı ölçümde (2026-09-02) "scheduler.last_tick" · "sprint.sebep" ·
+    "component_ic.verdict" · "auth.header.Authorization" bu yüzden YANLIŞ ÇÜRÜME üretti; yanlış
     alarm bu yasanın en pahalı arızasıdır (susturulan bekçi, olmayan bekçiden beterdir).
     Pano tarafının biçimi bu yüzden TEKTİR: `dosya.py::sembol`."""
     _agac(tmp_path, _HEDEF)
@@ -257,9 +257,17 @@ def test_CURUME_report_OKUNU_DUSURUR(tmp_path, monkeypatch):
 
     `stale_claims` YALITILIR: o terim sentetik ağaçta HER ZAMAN doludur (depo sabitlerindeki
     beyanlar boş ağaçta doğrulanamaz), yalıtılmasaydı `ok` ikisinde de False çıkar ve deney
-    sembol çapası hakkında hiçbir şey ölçmezdi (v314'ün aynı gerekçesi)."""
+    sembol çapası hakkında hiçbir şey ölçmezdi (v314'ün aynı gerekçesi).
+
+    `yorum_sembol_capalari` (üçüncü besleme, AŞAMA 2 — TSK-129, 2026-09-04) AYNI GEREKÇEYLE
+    YALITILIR: `_yorum_sembol_capalari` metin köklerini HER ZAMAN gerçek `("meridian","tests")`e
+    sabitler (`report()`'a bu sentetik `root` geçirilmez — yapısal sınır, fonksiyonun kendi
+    docstring'inde yazılı); yalıtılmasaydı gerçek repo metni sentetik `hedef.py` adres defterine
+    karşı çözülür, spurious curuyen üretir ve deney yine sembol çapası DIŞINDA bir şey ölçerdi."""
     codelaw.UNSCANNED.clear()
     monkeypatch.setattr(codelaw, "stale_claims", lambda *a, **k: [])
+    monkeypatch.setattr(codelaw, "_yorum_sembol_capalari",
+                        lambda **kw: {"taranan_dosya": 0, "capa_n": 0, "curuyen": []})
     _agac(tmp_path, _HEDEF)
     (tmp_path / "Saglam.tsx").write_text("// hedef.py::var_olan\n", encoding="utf-8")
     r = codelaw.report(str(tmp_path), tsx_kok=str(tmp_path))

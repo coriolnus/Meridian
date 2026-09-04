@@ -711,7 +711,7 @@ class PaperBroker:
         # KALDIRMA YOK: alan iki motorun plan ŞEMA EŞİTLİĞİ (`tests/test_differential_v60.py`)
         # yüzünden durur ve gelecekteki SHORT desteğine ayrılmıştır. Asıl damga üreticinin
         # yanındadır (`loop.py`, aynı öneri numarası).
-        # BAYATLAMA KAPISI: `tests/test_pano_durustluk_v280.py::test_f2_*` — bu sabit `plan`dan
+        # BAYATLAMA KAPISI: `tests/test_pano_durustluk_v280.py::test_f2_side_sabiti_hala_plani_okumuyor` — bu sabit `plan`dan
         # okunmaya başlarsa (ya da kalkarsa) damga BAYATLAR ve test kırmızıya döner.
         pos = Position(
             plan_id=plan["id"], ticker=plan["ticker"], side="long", entry=fill, stop=stop,

@@ -16,6 +16,12 @@ D3 — ÜÇÜNCÜ BESLEME: `codelaw._yorum_metinleri`/`_dosya_yorum_metni` KOD D
 YORUM (`tokenize.COMMENT`) ve DOCSTRING (`ast.get_docstring`) metnini çeker — `_TERFI_ASAMA =
 "shadow_model.terfi"` gibi bir kod sabiti çapa SAYILMAMALI, çünkü o bir VERİDİR, yazarın serbest
 düşüncesi değil. Bu ayrım sentetik olarak burada ölçülür.
+
+AŞAMA 2 (TSK-129, 2026-09-04): TSK-120 üçüncü beslemeyi GÖZLEMSEL bırakmıştı (canlı taban 102
+çürük/71 dosya, D2'nin `api.py`-dar kapsamı DIŞINDA, ölçüldü ama düzeltilmedi). TSK-129 tabanı
+ÖLÇTÜ, TAMAMEN DÜZELTTİ (0 çürük) ve `report()["ok"]`i `yorum_sembol_curume`ye BAĞLADI — bkz.
+`test_report_ALANI_AŞAMA2_OKu_DUSURUR` (eski adı `test_report_ALANI_AŞAMA1_OKu_DUSURMEZ`) ve
+`test_report_OK_yorum_sembol_curume_SENTETIK_CURUKTE_DUSER`.
 """
 from __future__ import annotations
 
@@ -177,8 +183,9 @@ def test_CANLI_CALISMA_AGACINDA_D2_CAPALARI_api_py_KAYNAKLI_DEGIL():
     OLAN hiçbir curuyen kaydında görünmemeli. ÖLÇÜLDÜ (2026-09-03): aynı METİN başka dosyalarda
     (`tests/test_golge_fit_gorunurlugu_v192.py`, `tests/test_capa_uyusmasi_v373.py`,
     `tests/test_kapi_yuzeyi_v361.py` — hepsi TSK-120'nin dosya sahipliği DIŞINDA) BAĞIMSIZ olarak
-    da tekrarlanıyor; bunları düzeltmek bu görevin kapsamı DIŞINDA (raporda listelenir, Rol-1
-    karar verir) — bu test o genişlemeyi İDDİA ETMEZ."""
+    da tekrarlanıyordu; TSK-129 (2026-09-04) repo-genelinde 102/71'i (bu üçü DAHİL) düzeltti —
+    bu test HÂLÂ DAR kalır (UYDURMA YASAĞI: genişletilmiş bir iddia canlı ölçülmeden yazılmaz),
+    genel taban `test_report_ALANI_AŞAMA2_OKu_DUSURUR`de (`curuyen == []`) ayrıca ölçülür."""
     r = codelaw.report()
     api_capalar = {c["capa"] for c in r["yorum_sembol_capalari"]["curuyen"]
                    if c["kaynak"] == "meridian/api.py"}
@@ -190,13 +197,16 @@ def test_CANLI_CALISMA_AGACINDA_D2_CAPALARI_api_py_KAYNAKLI_DEGIL():
 # (f) KÖRLÜK ALARMI — taranan dosya ≥ 200 ve capa_n ölçülen tabanın altına düşmez
 # ---------------------------------------------------------------------------
 
-#: ÖLÇÜLDÜ 2026-09-03: 567 taranan dosya, capa_n ~2200+. Eşik ÖLÇÜMÜN KENDİSİ DEĞİL — düşük
+#: ÖLÇÜLDÜ 2026-09-03: 567 taranan dosya, capa_n ~2200+. TAZELENDİ 2026-09-04 (TSK-129, D2 dönüşümü
+#: sonrası): 576 taranan dosya, capa_n 2221. Eşik ÖLÇÜMÜN KENDİSİ DEĞİL — düşük
 #: tutulan bir KÖRLÜK ALARMIdır (v373 `CANLI_ASGARI_COZULEN` deseni): tarayıcı yanlış köke ya da
 #: yanlış dosya uzantısına bakarsa `taranan_dosya`/`capa_n` çöker ve "0 çürük" hükmü sahte-yeşile
-#: döner. 200/500 böyle bir çöküşü kaçırmayacak kadar yüksek, meşru bir temizliği kırmızıya
-#: çevirmeyecek kadar düşüktür.
-CANLI_ASGARI_TARANAN_DOSYA = 200
-CANLI_ASGARI_CAPA_N = 500
+#: döner. 500/1500 (ölçülen 576/2221'in ALTINDA) böyle bir çöküşü kaçırmayacak kadar yüksek, meşru
+#: bir temizliği kırmızıya çevirmeyecek kadar düşüktür. AŞAMA 2'de (TSK-129) bu alarm ÖZELLİKLE
+#: önemlidir: `ok` artık `yorum_sembol_curume`ye bağlı — tarayıcı körleşip capa_n'i düşürürse "0
+#: çürük" hükmü hem YANLIŞ hem YEŞİL olur, körlük alarmı olmasa bu sessizce geçerdi.
+CANLI_ASGARI_TARANAN_DOSYA = 500
+CANLI_ASGARI_CAPA_N = 1500
 
 
 def test_KORLUK_ALARMI_taranan_dosya_ve_capa_n_TABANI_asiyor():
@@ -215,25 +225,51 @@ def test_report_ALANI_SENTETIK_KOKTE_UYDURMAZ(tmp_path):
     assert r["yorum_sembol_capalari"] is None, r["yorum_sembol_capalari"]
 
 
-def test_report_ALANI_AŞAMA1_OKu_DUSURMEZ():
-    """AŞAMA 1 — GÖZLEMSEL: canlı ağaçta bugün `curuyen` boş DEĞİL (102 ölçüldü, D2'nin dışındaki
-    ~40 dosyada, TSK-120'nin dosya sahipliği DIŞINDA) — buna rağmen `report()["ok"]` bu alandan
-    ETKİLENMEMELİ. Aşama 2'ye bağlanmadığının doğrudan kanıtı budur."""
+def test_report_ALANI_AŞAMA2_OKu_DUSURUR():
+    """ADI/ANLAMI DEĞİŞTİ (TSK-129, 2026-09-04; eski ad `test_report_ALANI_AŞAMA1_OKu_DUSURMEZ`):
+    TSK-120 (2026-09-03) bu alanı GÖZLEMSEL bıraktı çünkü canlı taban ölçülmemişti (102 çürük/71
+    dosya, D2'nin `api.py`-dar kapsamı DIŞINDA). TSK-129 tabanı ÖLÇTÜ ve TAMAMEN DÜZELTTİ (0 çürük,
+    2026-09-04 — bkz. `tests/.superpowers/sdd/2026-09-04-tsk129/report.md`) — AŞAMA 2 artık CANLI:
+    `yorum_sembol_curume` `report()["ok"]`i DÜŞÜRÜR (v373'ün `sembol_capa_curume` deseniyle
+    BİREBİR). Eski testin tersini ölçer: önce `ok`u DÜŞÜRMEDİĞİni doğruluyordu, şimdi DÜŞÜRDÜĞÜnü
+    doğrular — isim de anlam da tersine döndüğü için YENİDEN ADLANDIRILDI, üstüne yazılmadı."""
     r = codelaw.report()
     y = r["yorum_sembol_capalari"]
-    if y["curuyen"]:
-        assert r["ok"] is True or "ok" in r, (
-            "yorum_sembol_capalari dolu ama report() başka bir nedenle zaten kırmızıysa bu test "
-            "o kırmızılığı gizlemez; yalnız BU ALANIN ok'u düşürmediğini ölçer")
-    # DOĞRUDAN ÖLÇÜM: alan `ok` hesaplamasında KULLANILMAMALI — silent_handlers/graph/curuk/UNSCANNED/
-    # capalar/tsx_nuks/docs_curuk_var/sembol_curume DIŞINDA hiçbir bileşen `ok`u etkilemez; bu ürün
-    # kodundaki (`codelaw.report`) satırın kendisiyle doğrulanır: aşağıdaki grep sözleşmesi bekçidir.
+    # CANLI TABAN 0: TSK-129'un D2 dönüşümünün nihai hükmü — repo-genelinde (yalnız api.py değil)
+    # TEK BİR çürük dahi kalmamalı. Bu satır aynı zamanda TSK-119'un 37 `dosya.py::sembol` çapasının
+    # (tests/ içinde) da KORUNDUĞUNUN dolaylı kanıtıdır: onlardan biri bayatlarsa curuyen dolar ve
+    # bu assert (dolayısıyla `ok`) kırmızıya döner — mutasyonla ölçüldü (rapor, mutasyon 3).
+    assert y["curuyen"] == [], f"canlı taban 0 değil: {y['curuyen']}"
+    assert r["ok"] is True, (
+        f"canlı ağaçta yorum_sembol_capalari.curuyen boş ama report()['ok'] False — "
+        f"BAŞKA bir bileşen kırmızı olabilir (bu test onu GİZLEMEZ, sadece bağı ölçer): {r}")
+    # DOĞRUDAN ÖLÇÜM: `ok` hesaplaması artık `yorum_sembol_curume`YE BAĞLI olmalı; bu ürün
+    # kodundaki (`codelaw.report`) satırın kendisiyle doğrulanır — aşağıdaki grep sözleşmesi bekçidir.
     import inspect
     kaynak = inspect.getsource(codelaw.report)
     ok_satiri = kaynak[kaynak.index('"ok":'):]
-    assert "yorum_sembol" not in ok_satiri, (
-        "AŞAMA 2 (henüz erken): `ok` ifadesi yorum_sembol alanına bağlanmış görünüyor ama canlı "
-        f"curuyen boş değil ({len(y['curuyen'])}) — bağlamak sahte-kırmızı üretir")
+    assert "yorum_sembol_curume" in ok_satiri, (
+        "AŞAMA 2 BAĞI KAYIP: `ok` ifadesi `yorum_sembol_curume`ye bağlı görünmüyor — canlı taban 0 "
+        "olduğu için bu olmadan da yeşil kalırdı (sessiz-yeşil, mutasyon 1)")
+
+
+def test_report_OK_yorum_sembol_curume_SENTETIK_CURUKTE_DUSER(monkeypatch):
+    """MUTASYON 2 (rapor): `_yorum_sembol_capalari` sentetik bir çürük döndürdüğünde
+    `report()["ok"]` False olmalı — bağın KENDİSİ (yukarıdaki grep testinden AYRI, DAVRANIŞLA
+    ölçülür). Canlı taban 0 olduğu için CANLI ağaçta bu durumu doğal olarak üretemeyiz; tek temiz
+    yol `_yorum_sembol_capalari`yı sentetik bir sonuçla YAMAMAK — "sentetik kökte 1 çürük" burada
+    monkeypatch ile sağlanır (gerçek bir tmp_path kökü kullanılmaz çünkü `_yorum_sembol_capalari`
+    metin köklerini HER ZAMAN `("meridian","tests")`e sabitler, `report()` onu geçirmez — bu
+    yapısal sınır `_yorum_sembol_capalari` docstring'inde yazılı)."""
+    sentetik = {"taranan_dosya": 999, "capa_n": 9999,
+               "curuyen": [{"kaynak": "sentetik.py", "capa": "hedef.py::yok",
+                            "hedef": "hedef.py", "sembol": "yok", "neden": "sembol_yok"}]}
+    monkeypatch.setattr(codelaw, "_yorum_sembol_capalari", lambda **kw: sentetik)
+    r = codelaw.report()
+    assert r["yorum_sembol_capalari"] is sentetik, r["yorum_sembol_capalari"]
+    assert r["yorum_sembol_curume"] is True, r["yorum_sembol_curume"]
+    assert r["ok"] is False, (
+        "sentetik çürük varken report()['ok'] True kaldı — AŞAMA 2 bağı YOK ya da BOZUK")
 
 
 def test_report_ALAN_SEKLI_taranan_dosya_capa_n_curuyen():

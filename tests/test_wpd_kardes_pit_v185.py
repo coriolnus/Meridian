@@ -11,7 +11,7 @@ uyguluyordu:
     satırına kaydı — `codelaw.stale_line_anchors` ötünce görüldü. (Eski çapayı bu şerhe AYNEN
     yazmak da olmazdı: tarayıcı onu yeni bir çapa sanar ve aynı kırmızıyı bir satır aşağıda
     yeniden üretirdi — ölçüldü, aynı turda.) Satır çapası kayar; sembol kaymaz,
-  · `shadow_variants.in_blackout` — `in_blackout(ticker, date)`, `date` `shadow_lifecycle._seed`
+  · `earnings.py::in_blackout` — `in_blackout(ticker, date)`, `date` `shadow_lifecycle._seed`
     bacağında GEÇMİŞ seans.
 Sonuç replay'dekiyle aynı sınıftı: kapı bu motorlarda ÖLÜ (ölçüldü: replay tarafında 390 planın
 380'i, %97,4, yapısal olarak False dönüyordu) ama defter onu UYGULANMIŞ gibi taşıyordu.

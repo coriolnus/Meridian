@@ -170,7 +170,7 @@ def replay_seed(start: str, end: str) -> dict:
         _stamp = memory.now_iso().replace(":", "").replace("-", "")
         # H9 (kapı-dışı taşıma): düz `Path.write_text` KIRPMA sınıfıydı (yarı-yazımı okuyucu boş
         # arşiv sanardı). TEK KAPIdan geç — atomik+fsync+flock; kapı `history/` dizinini kendi kurar
-        # (eski açık `config.HISTORY.mkdir` artık gereksiz). `ensure_ascii=False` biçimi KORUNUR: bu
+        # (eski açık `config.py::HISTORY`'nin `mkdir()` çağrısı artık gereksiz). `ensure_ascii=False` biçimi KORUNUR: bu
         # bir KURTARMA arşividir (okuyucu = operatör; alttaki console satırı yolunu verir), baytları
         # aynen kalmalı — `write_json` ensure_ascii=True yazıp arşivi sessizce değiştirirdi.
         store.write_text(f"history/scoreboard-{_stamp}.json",

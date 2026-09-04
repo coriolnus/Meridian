@@ -23,7 +23,7 @@ artı: KISMİ BAŞARI DÜRÜST ("2/4 gönderildi + 2 neden", "tamam" DEĞİL) ve
 görünür, satır içi betik yok — CSP `script-src 'self'`).
 
 YÖNTEM — HİÇBİR TEST AĞA ÇIKMAZ. İki katman ayrı ayrı sınanır:
-  * ADAPTÖR katmanı: `alpaca.httpx` bir KAYIT EDİCİYLE değiştirilir; gerçek istemciye tek bir
+  * ADAPTÖR katmanı: `alpaca.py`'nin `httpx` istemcisi bir KAYIT EDİCİYLE değiştirilir; gerçek istemciye tek bir
     çağrı gitmez ve gönderilen GÖVDENİN ŞEKLİ (order_class/tif/side/coid) ölçülür.
   * API katmanı: `alpaca.submit_protective_oco` sahte bir adaptörle değiştirilir; kaç emrin,
     hangi argümanlarla çağrıldığı sayılır. Emir yüzeyine hiç girilmeyen dallarda ise SAHTE ADAPTÖR
@@ -157,7 +157,7 @@ def sahte_oco(monkeypatch):
 
 
 class HttpKayitci:
-    """`alpaca.httpx` yerine geçer. HİÇBİR ağ çağrısı yapmaz; yalnız fiil/URL/gövde kaydeder."""
+    """`alpaca.py`'nin `httpx` istemcisi yerine geçer. HİÇBİR ağ çağrısı yapmaz; yalnız fiil/URL/gövde kaydeder."""
 
     def __init__(self, status=200, payload=None):
         self.calls = []

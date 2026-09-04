@@ -428,7 +428,7 @@ def test_SH_TR_broker_kuralini_ceviriyor():
 
 
 def test_RED_TR_brokerin_URETTIGI_JETON_KUMESINI_tam_kapsar():
-    """ÜRETİCİ/TÜKETİCİ PARİTESİ. `red_nedeni` alanının değerleri `broker.fill_entry`in
+    """ÜRETİCİ/TÜKETİCİ PARİTESİ. `red_nedeni` alanının değerleri `broker.py::PaperBroker.fill_entry`in
     `_red(...)` çağrılarıdır. Üretici yeni bir ret sebebi eklerse pano onu HAM basardı ve
     kimse fark etmezdi — o yüzden küme burada karşılaştırılır, beyan edilmez."""
     uretilen = set(re.findall(r'_red\("([a-z_]+)"', BROKER))

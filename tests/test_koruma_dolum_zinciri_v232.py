@@ -20,7 +20,7 @@ VAKA SINIFI (08-07 süpürücü çarpışmasının iki kardeşi — koruma, kend
 
 YÖNTEM: hiçbir test ağa çıkmaz — okuma uçları (`orders`/`positions`) saplanır, iptal ucu kayıt
 tutar ve emir durumunu GERÇEKÇİ biçimde günceller (başarılı iptal `canceled` yazar; böylece
-iptal→kapat kapısının açık-emir doğrulaması gerçek listeyi okur), `alpaca.httpx` kayıt edicidir.
+iptal→kapat kapısının açık-emir doğrulaması gerçek listeyi okur), `alpaca.py`'nin `httpx` istemcisi kayıt edicidir.
 Her iddianın yanında POZİTİF KONTROL vardır — düşmeyen bir iddia koruma değil dekordur.
 """
 from __future__ import annotations

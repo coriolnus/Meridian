@@ -2253,7 +2253,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 #   zorundadır (`tests/test_differential_v60.py` şema eşitliği); alanı kaldırmak
                 #   davranışı değil ŞEMAYI kırar. İkinci gerekçe: alan gelecekteki SHORT desteği
                 #   için ayrılmıştır — yön bir gün değişkense onu okuyacak taraf burayı bulmalı.
-                # BAYATLAMA KAPISI: `tests/test_pano_durustluk_v280.py::test_f2_*` — plan-adlı bir
+                # BAYATLAMA KAPISI: `tests/test_pano_durustluk_v280.py::test_f2_side_sabiti_hala_plani_okumuyor` — plan-adlı bir
                 #   sözlük `side` okumaya başlarsa damga BAYATLAR ve test kırmızıya döner.
                 # ── ALAN DAMGASI[M11·Ö-6] · plan["targets"] — `profit_target`IN YEDEKLİ İKİZİ ──
                 # ÖLÇÜM (tarama §2.4 + §3/8. satır, 2026-08-24): liste HER ZAMAN tek elemanlıdır

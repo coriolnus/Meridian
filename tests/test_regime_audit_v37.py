@@ -88,7 +88,7 @@ def test_rg3b_every_emitted_label_is_a_valid_regime():
 
 # ---------- RG4: SMA/VIX bacakları GÖSTERGE, KAPI DEĞİL (EDG-005 hükmü, 2026-08-01) ----------
 # TARİHÇE (iki turda iki farklı kusur, ikisi de aynı ölü-uç):
-#   2026-07-31: `guard._y3_entry_gates` hükmü `regime["entry_gates"]`ten OKUYOR ama anahtarı yalnız
+#   2026-07-31: `regime.py::entry_gates` hükmü `regime["entry_gates"]`ten OKUYOR ama anahtarı yalnız
 #     api.py'nin PANO yolu üretiyordu → kapı panoda vardı, KARARDA yoktu. Parite kuruldu (üretici
 #     `build_regime_json`a eklendi).
 #   2026-07-31 (aynı gün, ölçüm): kart EDG-2026-005 ARŞİVE düştü — "KAPI AÇILMAZ, pano göstergesi

@@ -18,13 +18,13 @@ sayıya "Sermaye" diyordu ve iki ayrı yalan söylüyordu:
 
   1. GÖSTERİM: operatör "sistem 5.542$ kaybetti" diye okuyor; gerçekte canlı-kâğıt çağ hiç işlem
      yapmadı. Kaybın kendisi bir antrenman artefaktıdır.
-  2. DAVRANIŞ (asıl zararlı olan): boyutlandırma tabanı `broker.equity()` = start_equity +
+  2. DAVRANIŞ (asıl zararlı olan): boyutlandırma tabanı `broker.py::PaperBroker.equity`() = start_equity +
      realized_pnl'dir. `loop._load_broker` her turda `PaperBroker(START_EQUITY, …)` kurar ve
      üstüne diskten `realized_pnl`i basar — yani antrenman zararı, GERÇEK-CANLI çağın pozisyon
      boyutlarını her gün kısıyordu. `peak_equity` = 102.520,45$ ise aynı simülasyonun tepesidir ve
      de-risk rampası düşüşü ORADAN ölçer: canlı çağ, hiç yaşamadığı bir düşüşün cezasıyla başlardı.
 
-ÖLÇÜLEN İNCE NOKTA — NAKDİ RESETLEMEK TEK BAŞINA HİÇBİR ŞEY YAPMAZDI. `broker.equity()` `cash`i
+ÖLÇÜLEN İNCE NOKTA — NAKDİ RESETLEMEK TEK BAŞINA HİÇBİR ŞEY YAPMAZDI. `broker.py::PaperBroker.equity`() `cash`i
 OKUMAZ (`PaperBroker.equity`: `eq = self.start_equity + self.realized_pnl` — ÇAPA SEMBOLDÜR;
 burada "broker.py:263" yazıyordu [çapa-mezar-taşı], o satır bugün de-risk rampasına ait —
 satır-numarası çürümesi sınıfı, ölçümle düzeltildi ve çapa sembole bağlandı). Yalnız `cash`i 100.000'e
@@ -456,7 +456,7 @@ def _yeni_kitap(pf: dict, hedef: float) -> dict:
     """RESET EDİLEN DÖRT ALAN + HER BİRİNİN AYRI GEREKÇESİ.
 
       cash             → hedef : kitabın anlattığı sermaye; panonun okuduğu sayı.
-      realized_pnl     → 0.0   : ASIL DAVRANIŞ ALANI. `broker.equity()` = start_equity +
+      realized_pnl     → 0.0   : ASIL DAVRANIŞ ALANI. `broker.py::PaperBroker.equity`() = start_equity +
                                  realized_pnl (`PaperBroker.equity`) ve `loop._load_broker` start_equity'yi
                                  her turda START_EQUITY'ye sabitler — yani boyutlandırma tabanını
                                  belirleyen tek disk alanı budur. Sıfırlanmazsa reset KOZMETİK kalır.

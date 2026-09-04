@@ -68,7 +68,7 @@ CANLI_OLCULEN = 2
 
 
 def _seed(n_trade: int = 60):
-    """`shadow_model._dataset`in GERÇEK katmanını besler (v136'daki tohumun aynısı)."""
+    """`shadow_model.py::ShadowTradeOutcomeModel._dataset`in GERÇEK katmanını besler (v136'daki tohumun aynısı)."""
     plans, trades = [], []
     for i in range(n_trade):
         pid = f"P-V207-{i:03d}"
@@ -117,7 +117,7 @@ def test_save_KADANS_DAMGASINI_SILMIYOR(sandbox_state):
 def test_CANLI_SIRA_kadans_sonra_P5LEARN_damgayi_YASATIYOR(sandbox_state):
     """CANLI VAKANIN BİREBİR YENİDEN OYNATIMI (2026-08-06 gecesi).
 
-    Kadans koşar ve damgalar; ardından iki satır daha düşer ve `loop.P5_LEARN` doğrudan
+    Kadans koşar ve damgalar; ardından iki satır daha düşer ve loop.py'deki "P5_LEARN" aşaması doğrudan
     `refit_and_save()` çağırır. Eskiden bu ikinci çağrı damgaları siliyordu ve pano
     "HİÇ KOŞMADI" diyordu — n_fit'in kadanstakinden (2217) büyük olması (2219) o silinmenin
     kanıtıydı. Artık ikinci çağrı damgayı SİLMEZ, İLERLETİR."""

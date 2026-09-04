@@ -660,7 +660,7 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
 
     NEDEN VAR: time_stop / regime_flip / giveback / erken-itlaf çıkışları
     iç defteri kapatıyor ama aynadaki bracket AÇIK kalıyordu. Sonuç mutabakatta "motor yetimi"
-    olarak HER TURDA alarm basıyor ve sembol `loop._mirror_busy` üzerinden kalıcı olarak karar
+    olarak HER TURDA alarm basıyor ve sembol `_mirror_busy` (loop.py, P3 karar kilidi) üzerinden kalıcı olarak karar
     dışında kalıyordu (huninin kendi kendini aç bırakması). Bu depoda pozisyon kapatan tek yol
     `close_all` idi — operatör jetonlu ve SAHİPSİZ (herkesin pozisyonunu düzleştirir), yani iç
     motorun dar çıkış kararı için kullanılamazdı.
@@ -1017,7 +1017,7 @@ def replace_order_stop(order_id: str, new_stop: float, cur_stop: float | None = 
 # iki bacağı ayrı ayrı gönderen bir yol BİLEREK yoktur.
 #
 # TIF `gtc` (E1-v2 yasası): `day` tam da bu vakanın kök nedeniydi. Sabit burada TEKRAR yazılmaz —
-# `broker.PROTECTIVE_TIF` yok, ama `ENTRY_TIF`ten de TÜRETİLMEZ: giriş bacağının TIF'i bilinçli
+# koruma bacağının kendi TIF sabiti YOK, ama `ENTRY_TIF`ten de TÜRETİLMEZ: giriş bacağının TIF'i bilinçli
 # olarak `day` olabilir (bayat tetik yasası) ve koruma onu MİRAS ALMAMALIDIR.
 # İki ayrı gerçek, iki ayrı sabit.
 KORUMA_TIF = "gtc"

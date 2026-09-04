@@ -35,8 +35,8 @@ SAHTE = "test-kapi-anahtari"           # sahte değer — gerçek sır hiçbir y
 
 def _sirlar(monkeypatch, **kv):
     """`secrets.get`i YALNIZ bu testin sözlüğüyle besle — gerçek `.env`/`state/secrets.json`
-    OKUNMAZ. `hermes.secrets` ile `secrets` aynı modül nesnesidir; ikisini de yamalamak gerekmez
-    ama `ping_brain` da `hermes.secrets` üzerinden okur, yama oradan uygulanır (v239 deseni)."""
+    OKUNMAZ. hermes.py'nin içe aktardığı `secrets` modülü ile `secrets` aynı nesnedir; ikisini de yamalamak gerekmez
+    ama `ping_brain` da o içe aktarılan `secrets` üzerinden okur, yama oradan uygulanır (v239 deseni)."""
     monkeypatch.setattr(hermes.secrets, "get", lambda k, *a, **kw: kv.get(k), raising=False)
 
 

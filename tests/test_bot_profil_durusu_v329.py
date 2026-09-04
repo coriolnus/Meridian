@@ -539,7 +539,8 @@ def test_SOUL_RAPOR_SINIFINDA_JETON_YASAKTIR(profil):
 @pytest.mark.parametrize("profil", _profiller(), ids=lambda p: p.name)
 def test_SOUL_MEKANIZMANIN_VERMEDIGI_YETENEGI_VAAT_ETMEZ(profil):
     """ÖLÇÜLDÜ (`agent/agent_init.py`): hafıza VARSAYILAN OLARAK KAPALI
-    (`_memory_enabled = False`, ancak `memory.memory_enabled` ile açılır) ve deposu
+    (`_memory_enabled = False`, ancak `memory_enabled` bayrağıyla açılır — bu ajan-aracı hafızası
+    meridian'ın kendi `memory.py` hipotez defteriyle AYNI ad ama AYRI sistemdir) ve deposu
     `HERMES_HOME/memories/` altına yazar (`tools/memory_tool.py`) — yani safe-root'un
     DIŞINA. Ajana "hafızan var" demek, dünü göremeyen bir modele dünü UYDURMA daveti
     çıkarır; iki satır yukarıdaki "Sayı uydurma" kuralıyla doğrudan çelişir.
