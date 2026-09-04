@@ -11,16 +11,16 @@ zarf paketlemesi var — ikisi de BİÇİM denetler, İÇERİK denetlemez. SOUL.
 arıza ÖLÇÜLDÜ ve kural yalnız modele yazılı olduğu için yeniden olabilirdi ("0 ship" Türkçeye
 çevrildi; "tetti" sınıfı bozuk çekim).
 
-NE KAPANMADI — ADIYLA (inceleme Ö-2, 2026-09-03; bedel yasası: kaybedilen de ölçülür). Yukarıdaki
-İKİ arızadan YALNIZ İKİNCİSİ bu kabloyla kapanıyor. "0 ship"in çevrilmesi sınıfı bugün NE mekanik
-NE LLM tarafından yakalanır: (a) mekanik yarım yalnız ÇAĞIRANIN geçirdiği `veri_terimleri` üstünde
-çalışır ve üç bot da o listeyi "promptun zaten susturamazsın dediği" ADLARLA sınırlı tutar — kaynak
-mesajının GÖVDESİNDEKİ bir jeton o listede yoktur; (b) denetçiye terim korunumu HİÇ SORULMAZ
-(`SEMA_ALANLARI` yalnız `sade_ozet` + `uydurma`). Yani bu modül bugün "sade özet" ve "uydurma
-sözcük" kurallarını kapatır, "terimi çevirme" kuralını KAPATMAZ. Kapatmanın iki yolu ölçüldü ve
-ikisi de ayrı bir ROADMAP kalemi büyüklüğündedir (Rol-1 işler): şemaya üçüncü bir `cevrilen` alanı
-eklemek, ya da `veri_terimleri`ni ilk istemin VERİ bloklarından türetilen DAR bir jeton kümesiyle
-beslemek. Buradaki eksik GİZLENMİYOR — beyan ediliyor.
+NE KAPANDI, NE KAPANMADI — ADIYLA (inceleme Ö-2, 2026-09-03; bedel yasası: kaybedilen de ölçülür).
+"0 ship"in çevrilmesi sınıfı İKİ mekanizmayla YAKALANABİLİRDİ: (a) mekanik yarımın çağrıldığı
+`veri_terimleri`yi ilk istemin VERİ bloklarından türetilen DAR bir jeton kümesiyle beslemek, ya da
+(b) denetçiye terim korunumunu ÜÇÜNCÜ bir soru olarak sormak. (a) ELENDİ (TSK-122 keşfi,
+2026-09-04): yanlış-pozitif adayları somut (TAKILI/DURAN/BAYAT/YOK/VAR şablon sözcükleri; Türkçe
+büyük harf ASCII sınıfına girmiyor) ve SOUL kapsamını aşıyordu. Bu modül (b)yi taşır: `cevrilen`
+alanı (D1, TSK-122) — kaynak metnin GÖVDESİNDEKİ bir jetonun ÇEVRİLİP ÇEVRİLMEDİĞİ mekanikleştiri-
+lemez (harici bir liste olmadan "hangi jeton terim sayılır" bilinemez), o yüzden bu SORU modele
+sorulur; mekanik yarımın kendisi (dar `veri_terimleri`, çağıranın "susturamazsın" dediği adlarla
+sınırlı) DEĞİŞMEDİ ve hâlâ ayrı bir sınıf ölçer (aşağıdaki `terim_ihlali` bölümü).
 
 TESLİMAT > MÜKEMMELLİK — FAIL-OPEN, BEYANLI (D5). Bu modülün HİÇBİR dalı teslimatı düşüremez.
 Denetçi çağrısı patlarsa, SOUL okunamazsa, cevap şemayı tutmazsa ya da koşum çağrı tavanı
@@ -28,10 +28,12 @@ aşılırsa hüküm `llm_dustu`dur: İLK çıktı GİDER ve gövdenin sonuna tek
 Fail-closed bir denetim, kardeş dosyaların en önemli sözleşmesini ("Model SIRALAMA katmanıdır,
 TESLİMAT katmanı değil") ikinci bir kapıdan delerdi.
 
-MEKANİK ÖNCE, LLM SONRA (D2). Terim korunumu DETERMİNİSTİKTİR ve model gerektirmez; mekanik bir
-ihlal bulunduğu an LLM HİÇ ÇAĞRILMAZ (çağrı tasarrufu — kotasız bir yüzeyde her çağrı operatörün
-dikkat/para bütçesinden düşer). LLM'e yalnız mekanikleştirilemeyen iki soru kalır: ilk satır sade
-tek cümle mi, ve uydurma sözcük var mı.
+MEKANİK ÖNCE, LLM SONRA (D2). Terim korunumu (dar `veri_terimleri` listesi) DETERMİNİSTİKTİR ve
+model gerektirmez; mekanik bir ihlal bulunduğu an LLM HİÇ ÇAĞRILMAZ (çağrı tasarrufu — kotasız bir
+yüzeyde her çağrı operatörün dikkat/para bütçesinden düşer). LLM'e mekanikleştirilemeyen ÜÇ soru
+kalır (TSK-122, 2026-09-04): ilk satır sade tek cümle mi, uydurma sözcük var mı, ve kaynak
+metindeki bir terim ÇEVRİLMİŞ mi (`cevrilen`) — sonuncusu harici bir liste olmadan hangi jetonun
+"terim" sayılacağı bilinemediği için mekanikleştirilemez; ilk ikisi zaten öyleydi.
 
 KURAL METNİ BU DOSYADA DEĞİL (D3, tek-kaynak yasası). Denetçi istemi kuralları profilin KENDİ
 `SOUL.md`sinden KOŞUM ANINDA okur (`## Üslup` başlıklı blok). Kodda kural kopyası olsaydı,
@@ -73,7 +75,12 @@ KOSUM_CAGRI_TAVANI = 4
 
 # Denetçinin çıktı sözleşmesi — KATI. Fazla/eksik alan ONARILMAZ, `llm_dustu` sayılır: onarılan
 # bir şema, modelin söylemediği bir hükmü söylenmiş saymaktır (`skill_gorus_llm.ayristir` emsali).
-SEMA_ALANLARI = frozenset({"sade_ozet", "uydurma"})
+#
+# `cevrilen` (TSK-122, 2026-09-04, D1): ilk metinde ÇEVRİLMİŞ/yeniden adlandırılmış olay-kurulum-
+# alan adı ya da İngilizce teknik terim — ORİJİNAL biçimiyle. Terim korunumunun ÜÇÜNCÜ (LLM'e
+# sorulan) sorusu; mekanik yarımdaki `veri_terimleri` DAR listesinin ölçemediği sınıfı kapatır
+# (modül başlığı "NE KAPANDI, NE KAPANMADI").
+SEMA_ALANLARI = frozenset({"sade_ozet", "uydurma", "cevrilen"})
 
 # İHLAL LİSTESİ KIRPMA TAVANI — TEK SABİT, İKİ OKUYUCU (`Gecis.kayit` ve `_ihlal_eki`).
 # NEDEN TEK (inceleme Ö-1/k-3, 2026-09-03): iki yerde iki farklı sınır vardı — kayıt 5'te
@@ -113,6 +120,7 @@ class Hukum:
     sade_ozet: bool | None
     terim_ihlal: list[str] = field(default_factory=list)
     uydurma: list[str] = field(default_factory=list)
+    cevrilen: list[str] = field(default_factory=list)   # TSK-122, 2026-09-04 (D1)
     kaynak: str = "llm"          # "mekanik" | "llm" | "llm_dustu"
     gerekce: str = ""
 
@@ -124,7 +132,8 @@ class Hukum:
     @property
     def ihlaller(self) -> list[str]:
         """İhlallerin operatöre ve modele gösterilebilir tek listesi."""
-        ler = list(self.terim_ihlal) + [f"uydurma sözcük: {u}" for u in self.uydurma]
+        ler = (list(self.terim_ihlal) + [f"uydurma sözcük: {u}" for u in self.uydurma]
+               + [f"çevrilen terim: {c}" for c in self.cevrilen])
         if self.sade_ozet is False:
             ler.insert(0, "ilk satır sade tek cümle DEĞİL")
         return ler
@@ -137,7 +146,7 @@ class Hukum:
 def _dustu(gerekce: str) -> Hukum:
     """Ölçülemeyen denetim. İhlal listesi BOŞTUR ve bu bilinçlidir: ölçemediğimiz bir kuralı
     ihlal saymak, teslimatı bir arızaya bağlamak olurdu (fail-open sözleşmesi)."""
-    return Hukum(sade_ozet=None, terim_ihlal=[], uydurma=[], kaynak="llm_dustu",
+    return Hukum(sade_ozet=None, terim_ihlal=[], uydurma=[], cevrilen=[], kaynak="llm_dustu",
                  gerekce=gerekce)
 
 
@@ -235,9 +244,12 @@ def istem(uslup: str, metin: str) -> str:
     """Denetçiye giden TEK ATIŞLIK istem. Kural metni `uslup` PARAMETRESİNDEN gelir — bu dosyada
     hiçbir kural cümlesi YAZILI DEĞİLDİR (D3).
 
-    DENETÇİYE İKİ SORU SORULUR, ÜÇ DEĞİL: terim korunumu zaten mekanik ölçüldü ve buraya hiç
-    gelmedi (D2). Modele mekanikleştirilebilir bir soruyu sormak, cevabını modelin hükmüne
-    bağlamak olurdu."""
+    DENETÇİYE ÜÇ SORU SORULUR (TSK-122, 2026-09-04, D1). "İKİ SORU, ÜÇ DEĞİL" sözleşmesi
+    MEKANİKLEŞTİRİLEBİLEN bir soruyu modele sormama kararıydı — terim korunumu (dar
+    `veri_terimleri` listesi) zaten mekanik ölçülür ve buraya hiç gelmez (D2), bu HÂLÂ GEÇERLİ.
+    `cevrilen` BAŞKA BİR SINIFTIR: kaynak metnin GÖVDESİNDEKİ bir jetonun ÇEVRİLİP ÇEVRİLMEDİĞİ
+    harici bir liste olmadan mekanikleştirilemez, o yüzden üçüncü soru D2'yi DELMEZ — sözleşme
+    "mekanikleştirilemeyeni sor" ilkesine hâlâ uyuyor."""
     return "\n\n".join([
         BICIM_USTUNLUGU,
         "# GÖREV — bir brifing metnini ÜSLUP KURALLARINA karşı denetle",
@@ -252,12 +264,16 @@ def istem(uslup: str, metin: str) -> str:
         _veri_bloku("brifing", metin),
         "## ÇIKTI SÖZLEŞMESİ — YALNIZ JSON, başka hiçbir metin yazma",
         json.dumps({"sade_ozet": True,
-                    "uydurma": ["<kural metninde ve brifingde OLMAYAN uydurma sözcük>"]},
+                    "uydurma": ["<kural metninde ve brifingde OLMAYAN uydurma sözcük>"],
+                    "cevrilen": ["<ilk metinde ÇEVRİLMİŞ/yeniden adlandırılmış olay-kurulum-alan "
+                                 "adı ya da İngilizce teknik terim — ORİJİNAL biçimiyle>"]},
                    ensure_ascii=False),
         "`sade_ozet`: brifingin İLK SATIRI kural metnindeki sade-özet şartını karşılıyorsa "
         "`true`, karşılamıyorsa `false`. `uydurma`: kural metnindeki uydurma yasağını ihlal eden "
-        "sözcüklerin listesi; yoksa BOŞ liste. Şemaya uymayan cevap ÖLÇÜLEMEDİ sayılır ve "
-        "ONARILMAZ.",
+        "sözcüklerin listesi; yoksa BOŞ liste. `cevrilen`: kural metnindeki terim-korunumu "
+        "şartını ihlal eden, brifingde ÇEVRİLMİŞ ya da yeniden adlandırılmış özgün terimlerin "
+        "listesi (orijinal biçimiyle); yoksa BOŞ liste. Şemaya uymayan cevap ÖLÇÜLEMEDİ sayılır "
+        "ve ONARILMAZ.",
     ])
 
 
@@ -292,11 +308,14 @@ def ayristir(text: str) -> Hukum:
         return _dustu(f"denetçi cevabının alanları şemayı tutmuyor: {sorted(govde)!r}")
     sade = govde.get("sade_ozet")
     uyd = govde.get("uydurma")
-    if not isinstance(sade, bool) or not isinstance(uyd, list):
-        return _dustu("denetçi cevabında `sade_ozet` bool ya da `uydurma` liste değil")
+    cev = govde.get("cevrilen")
+    if not isinstance(sade, bool) or not isinstance(uyd, list) or not isinstance(cev, list):
+        return _dustu(
+            "denetçi cevabında `sade_ozet` bool ya da `uydurma`/`cevrilen` liste değil")
     kelimeler = [str(x)[:120] for x in uyd if str(x).strip()]
-    return Hukum(sade_ozet=sade, terim_ihlal=[], uydurma=kelimeler, kaynak="llm",
-                 gerekce="denetçi hükmü")
+    cevrilenler = [str(x)[:120] for x in cev if str(x).strip()]
+    return Hukum(sade_ozet=sade, terim_ihlal=[], uydurma=kelimeler, cevrilen=cevrilenler,
+                 kaynak="llm", gerekce="denetçi hükmü")
 
 
 # ------------------------------------------------------------------------------------------------
@@ -310,7 +329,7 @@ def mekanik_hukum(metin, veri_terimleri) -> Hukum | None:
     mek = terim_ihlali(metin, veri_terimleri)
     if not mek:
         return None
-    return Hukum(sade_ozet=None, terim_ihlal=mek, uydurma=[], kaynak="mekanik",
+    return Hukum(sade_ozet=None, terim_ihlal=mek, uydurma=[], cevrilen=[], kaynak="mekanik",
                  gerekce="terim korunumu MEKANİK olarak ihlal edildi — denetçi çağrılmadı")
 
 
@@ -429,7 +448,12 @@ def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
         gecis = _yeniden(profil_evi=profil_evi, ilk_metin=ilk_metin, ilk_istem=ilk_istem,
                          hukum=hukum, cagir=cagir, dogrula=dogrula, sayac=n, denetci=_denetle)
 
-    obs.log(OLAY, **gecis.kayit(bot),
+    # BEDEL BEYANI (D2, TSK-122, 2026-09-04): `sema_alanlari` YALNIZ OLAYA gider, `Gecis.kayit()`
+    # İÇİNE DEĞİL — `kayit()` aynı zamanda damgaya (`_kural_denetimini_yaz`) da akar ve o dosyanın
+    # okuyucusu bu alanı bilmez (Yasa 6, `test_O4_DAMGAYA_OKUNMAYACAK_ALAN_YAZILMAZ`). Değer
+    # `SEMA_ALANLARI`DEN TÜRETİLİR, literal tekrarlanmaz — 22:00Z ölçümlerinde iki-alan → üç-alan
+    # geçişinin `llm_dustu` oranına etkisi bu künyeyle okunur.
+    obs.log(OLAY, **gecis.kayit(bot), sema_alanlari=len(SEMA_ALANLARI),
             detail="teslim öncesi SOUL kural denetimi — hiçbir dalda teslimat düşmez "
                    "(fail-open, beyanlı)")
     return gecis

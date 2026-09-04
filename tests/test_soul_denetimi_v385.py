@@ -59,11 +59,14 @@ def _profil_evi(tmp_path, ad="sef", uslup=SAHTE_USLUP):
 
 
 def _temiz_cevap():
-    return json.dumps({"sade_ozet": True, "uydurma": []}, ensure_ascii=False)
+    return json.dumps({"sade_ozet": True, "uydurma": [], "cevrilen": []}, ensure_ascii=False)
 
 
-def _ihlalli_cevap(uydurma=("tetti",)):
-    return json.dumps({"sade_ozet": False, "uydurma": list(uydurma)}, ensure_ascii=False)
+def _ihlalli_cevap(uydurma=("tetti",), cevrilen=()):
+    # TSK-122 (2026-09-04): merkezi cevap yardımcıları ÜÇ alanlı — şema `cevrilen`i de ister,
+    # bu iki fonksiyonun çağırdığı HER akış testi otomatik olarak yeni şemaya uyar.
+    return json.dumps({"sade_ozet": False, "uydurma": list(uydurma),
+                       "cevrilen": list(cevrilen)}, ensure_ascii=False)
 
 
 class _Kuyruk:
@@ -194,9 +197,11 @@ def test_SOUL_DOSYASI_YOKSA_LLM_DUSTU(sd, tmp_path, sandbox_state):
     ("", "boş"),
     ("düz metin, JSON değil", "json_degil"),
     ('{"sade_ozet": true}', "eksik_alan"),
-    ('{"sade_ozet": true, "uydurma": [], "fazla": 1}', "fazla_alan"),
-    ('{"sade_ozet": "evet", "uydurma": []}', "tip_yanlis"),
-    ('{"sade_ozet": true, "uydurma": "tetti"}', "liste_degil"),
+    ('{"sade_ozet": true, "uydurma": []}', "cevrilen_eksik"),   # TSK-122 — eski İKİ-alanlı cevap
+    ('{"sade_ozet": true, "uydurma": [], "cevrilen": [], "fazla": 1}', "fazla_alan"),
+    ('{"sade_ozet": "evet", "uydurma": [], "cevrilen": []}', "tip_yanlis"),
+    ('{"sade_ozet": true, "uydurma": "tetti", "cevrilen": []}', "liste_degil"),
+    ('{"sade_ozet": true, "uydurma": [], "cevrilen": "tetti"}', "cevrilen_liste_degil"),
 ])
 def test_SEMA_DISI_CEVAP_LLM_DUSTU(sd, cevap, ad):
     """Gevşek bir ayrıştırıcı, denetlenen metnin içindeki bir enjeksiyonun ürettiği fazladan
@@ -207,7 +212,8 @@ def test_SEMA_DISI_CEVAP_LLM_DUSTU(sd, cevap, ad):
 
 
 def test_GECERLI_JSON_HUKUM_OLUR(sd):
-    h = sd.ayristir('```json\n{"sade_ozet": false, "uydurma": ["tetti"]}\n```')
+    h = sd.ayristir(
+        '```json\n{"sade_ozet": false, "uydurma": ["tetti"], "cevrilen": []}\n```')
     assert h.kaynak == "llm" and h.sade_ozet is False and h.uydurma == ["tetti"]
     assert h.ihlal_var and "ilk satır" in h.ihlaller[0], f"ihlal listesi: {h.ihlaller!r}"
 
@@ -818,3 +824,102 @@ def test_K1B_PROMPT_KURULAMAZSA_DA_TESLIMAT_DUSMEZ(bot, fn, tmp_path, monkeypatc
     olaylar = [str(e.get("event")) for e in store.read_jsonl("events.jsonl")]
     assert any("llm_dustu" in e for e in olaylar), (
         f"prompt düşüşü deftere ADIYLA yazılmadı — sessiz yutma: {olaylar}")
+
+
+# ================================================================================================
+# 9) TSK-122 (2026-09-04) — `cevrilen` alanı: terim korunumunun ÜÇÜNCÜ (LLM) sorusu
+# ================================================================================================
+# Modül başlığının "NE KAPANMADI" bölümünün ölçtüğü boşluk: mekanik yarım yalnız ÇAĞIRANIN dar
+# `veri_terimleri` listesini ölçer, kaynak metnin GÖVDESİNDEKİ bir jetonun ÇEVRİLİP ÇEVRİLMEDİĞİ
+# mekanikleştirilemez (harici bir liste olmadan "hangi jeton terim sayılır" bilinemez) — o yüzden
+# seçenek (a): şemaya üçüncü, LLM'e sorulan bir `cevrilen` alanı (D1).
+
+def test_CEVRILEN_BOS_LISTEYSE_IHLAL_YOK(sd):
+    """`cevrilen` BOŞ liste ihlal ÜRETMEZ — üretseydi her temiz brifing ihlalli sayılırdı."""
+    h = sd.ayristir('{"sade_ozet": true, "uydurma": [], "cevrilen": []}')
+    assert h.kaynak == "llm" and h.ihlal_var is False, f"{h!r}"
+
+
+def test_CEVRILEN_DOLUYSA_IHLAL_URETIR_VE_ADIYLA_TASIR(sd):
+    """D1 — `cevrilen` doluysa `ihlaller()`e "çevrilen terim: X" satırı olarak girer; `uydurma`
+    ile AYNI biçimde ADLANDIRILIR ki operatör hangi sınıfın ihlal ettiğini karıştırmasın."""
+    h = sd.ayristir('{"sade_ozet": true, "uydurma": [], "cevrilen": ["MECHANISM_STALE"]}')
+    assert h.kaynak == "llm" and h.ihlal_var, f"{h!r}"
+    assert "çevrilen terim: MECHANISM_STALE" in h.ihlaller, (
+        f"çevrilen ihlali ihlaller() listesine ADIYLA girmedi: {h.ihlaller!r}")
+
+
+def test_CEVRILEN_TERIM_TEK_BASINA_YENIDEN_URETIM_TETIKLER(sd, tmp_path, sandbox_state):
+    """D2 — `cevrilen` boş değilse mevcut D5 yeniden-üretim döngüsüne BEŞİNCİ ihlal türü olarak
+    girer, `uydurma` ile AYNI yoldan: `sade_ozet` True ve `uydurma` boş olsa bile ihlal sayılır.
+
+    MUTASYON HEDEFİ: `Hukum.ihlaller`den `cevrilen` satırı çıkarılırsa bu çivi öter (ilk cevap
+    "temiz" sayılır, yeniden-üretim hiç tetiklenmez)."""
+    ilk_cevap = json.dumps({"sade_ozet": True, "uydurma": [], "cevrilen": ["MECHANISM_STALE"]},
+                           ensure_ascii=False)
+    kuyruk = _Kuyruk(ilk_cevap, "düzeltilmiş metin ve gerekçesi", _temiz_cevap())
+    g = _gecir(sd, tmp_path, kuyruk)
+    assert g.metin == "düzeltilmiş metin ve gerekçesi", f"cevrilen tek başına tetiklemedi: {g!r}"
+    assert g.yeniden_uretim is True, f"{g!r}"
+
+
+def test_CEVRILEN_ALANI_EKSIKSE_LLM_DUSTU(sd):
+    """Katı şema ÜÇ alan ister (D1): eski İKİ-alanlı bir cevap artık `llm_dustu`dur — onarılmaz.
+
+    MUTASYON HEDEFİ (birincil): `SEMA_ALANLARI`ndan `cevrilen` çıkarılırsa bu çivi öter, eski
+    2-alanlı cevap yine "llm" hükmü sayılır."""
+    h = sd.ayristir('{"sade_ozet": true, "uydurma": []}')
+    assert h.kaynak == "llm_dustu", f"eksik `cevrilen` alanı hüküm sayıldı: {h!r}"
+    assert h.ihlal_var is False, "ölçülemeyen cevap İHLAL sayıldı — fail-closed"
+
+
+def test_ISTEM_UC_ALANLI_SOZLESME_ISTER(sd, tmp_path):
+    """`istem()`in ÇIKTI SÖZLEŞMESİ artık üç alanlı — model üçüncü soruyu bilmeden cevap verirse
+    şema her koşumda `llm_dustu` döner."""
+    kuyruk = _Kuyruk(_temiz_cevap())
+    sd.denetle(_profil_evi(tmp_path), "bir brifing metni", [], cagir=kuyruk)
+    istem = kuyruk.istemler[0]
+    assert '"cevrilen"' in istem, f"istem üç alanlı sözleşmeyi taşımıyor: {istem[-500:]!r}"
+
+
+def test_ISTEM_CEVRILEN_ACIKLAMASI_KURAL_CUMLESINI_KOPYALAMAZ(sd, tmp_path):
+    """D3'ün net hâli: `cevrilen` alanının istemdeki açıklaması SOUL'un KENDİ cümlesini
+    ("terimi çevirme" vb.) metne KOPYALAMAZ — kural metninin TEK kaynağı hâlâ `uslup`
+    parametresidir (SAHTE_USLUP bloğu KUKUMAV KURALI'nı taşır, açıklama onu TEKRARLAMAZ)."""
+    kuyruk = _Kuyruk(_temiz_cevap())
+    sd.denetle(_profil_evi(tmp_path), "bir brifing metni", [], cagir=kuyruk)
+    istem = kuyruk.istemler[0]
+    aciklama = istem.rsplit("## ÇIKTI SÖZLEŞMESİ", 1)[-1]
+    assert "KUKUMAV KURALI" not in aciklama, (
+        f"cevrilen açıklaması SOUL kural cümlesini kopyalamış — D3 delindi: {aciklama[:400]!r}")
+    assert "cevrilen" in aciklama.lower(), "cevrilen alanı hiç açıklanmıyor"
+
+
+def test_BEDEL_BEYANI_OLAYA_SEMA_ALANLARI_UC_YAZILIR(sd, tmp_path, sandbox_state):
+    """D2 — bedel beyanı: `brifing_kural_denetimi` olayına `sema_alanlari=3` künyesi eklenir ki
+    22:00Z ölçümlerinde iki-alan → üç-alan geçişinin `llm_dustu` oranına etkisi okunabilsin.
+
+    DEĞER `len(sd.SEMA_ALANLARI)`DEN TÜRETİLİR, LİTERAL TEKRARLANMAZ — tek-kaynak yasası: şema
+    dördüncü bir alan alırsa bu çivi kendini günceller, sabit bir "3" ayrışırdı."""
+    kuyruk = _Kuyruk(_temiz_cevap())
+    _gecir(sd, tmp_path, kuyruk)
+    olay = _olaylar()
+    assert olay and olay[0].get("sema_alanlari") == len(sd.SEMA_ALANLARI) == 3, (
+        f"bedel künyesi yok/yanlış: {olay!r}")
+
+
+def test_DAMGA_SEMASI_SEMA_ALANLARI_KUNYESIYLE_KIRLENMEZ(tmp_path, monkeypatch, sandbox_state,
+                                                          request):
+    """Bedel künyesi OLAYA gider, DAMGAYA değil — `_kural_denetimini_yaz` `bot` DIŞINDA her alanı
+    kopyalar (ops/sef_brifingi.py::_kural_denetimini_yaz), o yüzden künye `Gecis.kayit()`in
+    İÇİNE değil `obs.log`un EK kwarg'ına konur. Karışsaydı `test_O4_DAMGAYA_OKUNMAYACAK_ALAN_
+    YAZILMAZ` (bu dosyada) kırmızı olurdu — bu çivi aynı sözleşmeyi `cevrilen` bağlamında ölçer."""
+    m, _ = _sef_kur(tmp_path, monkeypatch, request)
+    gercek = "- MECHANISM_STALE 5 kez: danışma katmanı ölü, bugün bak"
+    monkeypatch.setattr(m, "_profili_cagir", _Kuyruk(gercek, _temiz_cevap()))
+    monkeypatch.setattr(m.notify, "configured", lambda: True)
+    monkeypatch.setattr(m.notify, "send", lambda t: True)
+    assert m.main(["--uygula"]) == 0
+    kayit = m._son_kural_denetimi()
+    assert "sema_alanlari" not in kayit, (
+        f"bedel künyesi damgaya sızdı — okuyucusu yok, Yasa 6 ihlali: {sorted(kayit)}")
