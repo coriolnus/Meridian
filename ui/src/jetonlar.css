@@ -242,7 +242,7 @@
   --yon-eksi-zemin: rgba(249,128,128,.07);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root:not([data-theme='light']):not([data-theme='gunduz']) {
     --accent: #e5e5e5;
     --accent-2: #f5f5f5;
     --accent-tint: #2e2e2e;

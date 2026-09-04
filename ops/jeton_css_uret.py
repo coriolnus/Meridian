@@ -120,7 +120,12 @@ def uret() -> tuple[str, list[str]]:
     # TSK-117 (2026-09-03): pano (ui/src) temayı `.dark` sınıfıyla anahtarlar (shadcn); eski yüzeyler
     # `[data-theme="dark"]` ile. İki seçici, TEK blok — değer takımı ayrışamaz (v208 ruhu).
     css += blok('[data-theme="dark"], .dark', kova["gece"])
-    gece = blok(":root:not([data-theme='light'])", kova["gece"])
+    # MEDYA BLOĞU PANOYU EZMESİN (v412, 2026-09-04 — operatör vakası: Mac koyu modda gündüz panosunda kartlar
+    # siyah). Pano temayı `data-theme="gunduz|gece"` + `.dark` ile damgalar (theme-utils); yalnız `light`i
+    # dışlayan seçici `gunduz` kökünde OS koyuyken uygulanıyor ve (0,2,0) özgüllüğüyle tema.css'in `:root`
+    # bloğunu eziyordu. `:not([data-theme='gunduz'])` eklenince pano kökü (her zaman damgalı) bloğun dışında
+    # kalır — pano geceyi `.dark` ile kendi yönetir; eski sayfalar (damgasız) eskisi gibi OS'e uyar.
+    gece = blok(":root:not([data-theme='light']):not([data-theme='gunduz'])", kova["gece"])
     if gece:
         css += "@media (prefers-color-scheme: dark) {\n" + "\n".join(
             "  " + s for s in gece.splitlines()) + "\n}\n"
