@@ -5,7 +5,7 @@
 # ÖNERMESİNİ reddediyor (dürüst ret). Bu kart: kapıyı açmaya değer mi — ölçülmüş bir kazanç var mı?
 
 card_id: EDG-2026-072
-status: registered
+status: measured
 family: rejim_kosullu_cikis
 on_kayit: 2026-09-03
 ref: [TSK-079, EDG-2026-030, EDG-2026-033, EDG-2026-026, docs/DENETIM-OLU-BILESEN-ENVANTERI-2026-08-13.md]
@@ -59,3 +59,14 @@ basari_tanimi: >
 notlar: >
   Kod yalnız operatör onayından sonra research/olcumler/edg072_rejim_cikis/ altında, sandbox_state'li, canlı
   state'e dokunmadan. Bounds'a dokunulmaz. Ölçüm ajanı karta dokunmaz; hüküm Rol-1'de aynı turda.
+
+hukum_2026_09_04: >
+  KALDI — kill-list madde-1 tetiklendi (Rol-1, 2026-09-04 12:0xZ, .superpowers/sdd/2026-09-04-edg072): kontrol koşumu (boş
+  params_by_regime) EDG-026 C defteriyle bit-özdeş ÇIKMADI — smoke 2022-01→06: kontrol 8 işlem / C 3 işlem. Kök neden kartın
+  öngördüğü "resolve_params yan-etkili" DEĞİL: C-şasisi 2026-08-12'de dondu, o günden bu yana meridian/ üzerinde 178 commit ve bar
+  önbelleğinin 24/260 dosyası yenilendi (ikisi de incelemede bağımsız yeniden sayıldı). resolve_params'ın yan-etkisizliği ayrıca
+  kanıtlı: öz-sınama (eff==params, 4/4 gözlenen rejim) + PK (chop time_stop=1 → bars_held medyan 2→1). §5 kuralı: kriter yerinde
+  düzeltilmez → R2 kartı EDG-2026-073 (taze kontrol tabanı) sonuçlar okunmadan açıldı, hüküm orada. Kod:
+  research/olcumler/edg072_rejim_cikis/olcum.py (kiyasla --kart EDG-2026-072 → sonuc_edg072_2026-09-04.json, kill_d3 tetiklendi,
+  hücreler hesaplanmadı). Ders (genel): "C-şasi AYNEN bit-özdeş" maddesi donmuş defterin yaşı kadar geçerlidir — sonraki
+  şasi-kıyaslı kartlar taze kontrol koşumunu taban alır (EDG-073 deseni).

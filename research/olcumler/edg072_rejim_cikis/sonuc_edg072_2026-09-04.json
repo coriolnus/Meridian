@@ -1,0 +1,11 @@
+{
+ "derleme_tarihi": "2026-09-04",
+ "edg072": {
+  "kart": "EDG-2026-072",
+  "olculemedi": "TAM koşum çıktıları eksik (nohup henüz bitmemiş olabilir) — eksik: ['sonuc_kontrol.json', 'seanslar_kontrol.json', 'islemler_kontrol.json', 'sonuc_h1.json', 'seanslar_h1.json', 'islemler_h1.json', 'sonuc_h2.json', 'seanslar_h2.json', 'islemler_h2.json']"
+ },
+ "kart_istegi": "EDG-2026-072",
+ "kok": "tam",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg072_rejim_cikis/olcum.py",
+ "olcum_zamani": "2026-09-04T12:05:03+00:00"
+}

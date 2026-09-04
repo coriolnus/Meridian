@@ -1,0 +1,46 @@
+{
+ "adim": "duman",
+ "kart": "EDG-2026-072",
+ "mekanizma_kontrol_vs_h1": {
+  "farkli_defter": true,
+  "h1_islem_n": 85,
+  "h1_net_pnl": -2016.84,
+  "kontrol_islem_n": 77,
+  "kontrol_net_pnl": -3399.93,
+  "manage_ihlal_h1": 0,
+  "manage_ihlal_kontrol": 0
+ },
+ "not": "D7: kısa-pencereli mekanizma sanity (kontrol vs h1) + kart pozitif_kontrol (sentetik chop time_stop_days=1, kontrol vs pk) — HÜKÜM DEĞİL, yalnız mekanizma. Resmî hüküm TAM pencere üç koşumdan (nohup) sonra `kiyasla()`.",
+ "olcum_zamani": "2026-09-04T11:43:55+00:00",
+ "pencere": [
+  "2022-01-01",
+  "2023-03-01"
+ ],
+ "pk_gecti": true,
+ "pozitif_kontrol_chop_time_stop_1": {
+  "beyan": "chop{exit.time_stop_days=1} altında time_stop ateşleyen HER chop işlemi bars_held>=1 eşiğini karşılamalı (esigi_karsilamayan_n==0 beklenir) VE chop bars_held medyanı kontrole göre AÇIKÇA düşmeli — override'ın resolve_params→manage_position zincirine GERÇEKTEN ulaştığının kanıtı (config.py şerhi: 'sessizce düşen override' sınıfı bu PK ile dışlanır)",
+  "chop_bars_held_kontrol": {
+   "max": 15,
+   "medyan": 2,
+   "min": 0,
+   "n": 69,
+   "ort": 4.739
+  },
+  "chop_bars_held_pk": {
+   "max": 1,
+   "medyan": 1,
+   "min": 0,
+   "n": 95,
+   "ort": 0.905
+  },
+  "manage_ihlal_pk": 0,
+  "olculebilir_dustu": true,
+  "zaman_stop_kanit_chop_pk": {
+   "bars_held_max": 2,
+   "bars_held_min": 1,
+   "bars_held_ort": 1.032,
+   "esigi_karsilamayan_n": 0,
+   "n": 93
+  }
+ }
+}

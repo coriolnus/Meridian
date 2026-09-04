@@ -1,0 +1,66 @@
+{
+ "a_edg026_sha_eslesme": {
+  "dosya_kiyas": {
+   "islemler_c.json": {
+    "beklenen": "fdb428551ceab4de69ca053a6ef4f16d8caad136306cd2946fb1a6edc6d5acda",
+    "esit": true,
+    "simdi": "fdb428551ceab4de69ca053a6ef4f16d8caad136306cd2946fb1a6edc6d5acda"
+   },
+   "olcum.py": {
+    "beklenen": "fd8b39c8e981a2f9a0eedf2f5f2d63804f2dbe299a6cbe6dac2ec12ff16cff2d",
+    "esit": true,
+    "simdi": "fd8b39c8e981a2f9a0eedf2f5f2d63804f2dbe299a6cbe6dac2ec12ff16cff2d"
+   },
+   "seanslar_c.json": {
+    "beklenen": "6a8aceaea7b453182c1179086fdc3be63e56d4cb81f5218a7551672f562c178b",
+    "esit": true,
+    "simdi": "6a8aceaea7b453182c1179086fdc3be63e56d4cb81f5218a7551672f562c178b"
+   },
+   "sonuc_c.json": {
+    "beklenen": "c18e3b4497dc1e618d8d3d543ad444060cc28a1fe2561b531d5a86adea5672ff",
+    "esit": true,
+    "simdi": "c18e3b4497dc1e618d8d3d543ad444060cc28a1fe2561b531d5a86adea5672ff"
+   }
+  },
+  "hepsi_esit": true,
+  "not": "git rev-parse DEĞİL — içerik sha256 (GİT SAPMASI beyanı, modül başlığı); EDG026_SHA256 bu turda shasum ile donduruldu"
+ },
+ "adim": "0",
+ "b_params_by_regime_bos": {
+  "hepsi_bos": true,
+  "icerik": {
+   "chop": {},
+   "high_vol": {},
+   "trend_down": {},
+   "trend_up": {}
+  },
+  "kaynak": "/Users/erdemozturk/AI-Trading/research/olcumler/edg022_evren_kisit_2026-08-09/state/strategy.yaml",
+  "sema_dogru": true
+ },
+ "c_rejim_basina_taban_n": {
+  "chop": {
+   "esik": 30,
+   "n": 84,
+   "olculebilir": true
+  },
+  "high_vol": {
+   "esik": 30,
+   "n": 0,
+   "olculebilir": false
+  },
+  "trend_down": {
+   "esik": 30,
+   "n": 0,
+   "olculebilir": false
+  },
+  "trend_up": {
+   "esik": 30,
+   "n": 688,
+   "olculebilir": true
+  }
+ },
+ "gecerli": true,
+ "kart": "EDG-2026-072",
+ "not": "kill-list (kart): (a) veya (b) düşerse ölçüm GEÇERSİZ. (c) yalnız KAYIT — trend_down/high_vol taban-defterde 0 işlem taşıyor (K registry zaten yalnız trend_up+chop dokunuyor, bu iki rejim eşiği geçiyor); hücre yine koşar.",
+ "olcum_zamani": "2026-09-04T11:37:29+00:00"
+}

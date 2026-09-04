@@ -1,0 +1,998 @@
+{
+  "beyan": "Bu betik yalnız ÖLÇER; hüküm Rol-1'de, AYNI turda karta + K defterine işlenir (CLAUDE.md §3/§5). meridian/*.py bu turda DEĞİŞTİRİLMEDİ.",
+  "esikler": {
+    "hayalet_payi_alt_anlamli": 0.1,
+    "kart_id": "EDG-2026-071",
+    "kart_yolu": "/Users/erdemozturk/AI-Trading/research/cards/EDG-2026-071-hayalet-dugme-oneri-suzgeci.yaml",
+    "yanlis_pozitif_ust": 0
+  },
+  "k1_tarihsel": {
+    "beyan": "hayalet payı yalnız GİT TARİHİYLE ÇÖZÜLEBİLEN satırlar üzerinden hesaplanır (18/60); 42 satır repo git tarihinden ÖNCEYE damgalı (main 2026-07-31T10:08:23+03:00'te başlıyor) ve UYDURULMADI — ayrı sayılır (bkz. girdi/KAYNAK.md).",
+    "commit_cozumleme_sayisi": 60,
+    "esik_karsilastirma": {
+      "esigi_gecti_mi": false,
+      "esik": 0.1
+    },
+    "gun_cozumlemesi": {
+      "2026-07-14": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 26
+        },
+        "n_benzersiz_ts": 26,
+        "n_satir": 26
+      },
+      "2026-07-19": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 1
+        },
+        "n_benzersiz_ts": 1,
+        "n_satir": 1
+      },
+      "2026-07-20": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 2
+        },
+        "n_benzersiz_ts": 2,
+        "n_satir": 2
+      },
+      "2026-07-21": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 3
+        },
+        "n_benzersiz_ts": 3,
+        "n_satir": 3
+      },
+      "2026-07-22": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 2
+        },
+        "n_benzersiz_ts": 2,
+        "n_satir": 2
+      },
+      "2026-07-23": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 1
+        },
+        "n_benzersiz_ts": 1,
+        "n_satir": 1
+      },
+      "2026-07-27": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 1
+        },
+        "n_benzersiz_ts": 1,
+        "n_satir": 1
+      },
+      "2026-07-28": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 4
+        },
+        "n_benzersiz_ts": 4,
+        "n_satir": 4
+      },
+      "2026-07-29": {
+        "commitler": [],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 1
+        },
+        "n_benzersiz_ts": 1,
+        "n_satir": 1
+      },
+      "2026-07-31": {
+        "commitler": [
+          "03ac49b5f7a7b228902cc3eb3369062764425723"
+        ],
+        "durum_dagilimi": {
+          "OLCULEMEDI": 1,
+          "TEMIZ": 1
+        },
+        "n_benzersiz_ts": 2,
+        "n_satir": 2
+      },
+      "2026-08-01": {
+        "commitler": [
+          "05e3e7933db89c99514d9da3f71bb4f1217646e2",
+          "120aa74dc7ea061cc573767f19a260fbbf9589b2",
+          "623608d5640f30185d06e2e07d677af6437237aa",
+          "883dafbf0a89c2545f675befd1893f1547105ea1",
+          "8aaf05e2aaab49f9b6658d64e3d83ae81f9e391f",
+          "b53a539d8ec70e38de5086421e58bae351de25b8",
+          "fb65b0a58f1b68e9eba599847eee55b3e1130080"
+        ],
+        "durum_dagilimi": {
+          "TEMIZ": 7
+        },
+        "n_benzersiz_ts": 7,
+        "n_satir": 7
+      },
+      "2026-08-02": {
+        "commitler": [
+          "84fcf6983343c50a2b9c1302803dcb18ebbad431"
+        ],
+        "durum_dagilimi": {
+          "TEMIZ": 1
+        },
+        "n_benzersiz_ts": 1,
+        "n_satir": 1
+      },
+      "2026-08-12": {
+        "commitler": [
+          "b6e75b5afc284f83bea5a4f6f8955d35ab6aa3db"
+        ],
+        "durum_dagilimi": {
+          "TEMIZ": 1
+        },
+        "n_benzersiz_ts": 1,
+        "n_satir": 1
+      },
+      "2026-08-13": {
+        "commitler": [
+          "8efd973102112c35d7048f0563987e22bc396d60",
+          "cafcf0bd078662470009aa23b89cedbb0524f990"
+        ],
+        "durum_dagilimi": {
+          "TEMIZ": 2
+        },
+        "n_benzersiz_ts": 2,
+        "n_satir": 2
+      },
+      "2026-08-14": {
+        "commitler": [
+          "4ad76843bc3cf67260dd28d5e5fe86ba20288bfe",
+          "524ac82d12e0167f83e0a93b4116a7ee15e54482",
+          "a85f02d6d42ede769ff91acde3dfb0fe8b3ab0ff"
+        ],
+        "durum_dagilimi": {
+          "TEMIZ": 3
+        },
+        "n_benzersiz_ts": 3,
+        "n_satir": 3
+      },
+      "2026-08-16": {
+        "commitler": [
+          "22806b539a79755ba7b0813a0d658184ac734ed9",
+          "5f6d3ebbd56d1107f97401489d3af008e0ca2f4b"
+        ],
+        "durum_dagilimi": {
+          "TEMIZ": 2
+        },
+        "n_benzersiz_ts": 2,
+        "n_satir": 2
+      },
+      "2026-08-21": {
+        "commitler": [
+          "08235fb8fd333b007c940dd08eb24fd85aa1d8af"
+        ],
+        "durum_dagilimi": {
+          "TEMIZ": 1
+        },
+        "n_benzersiz_ts": 1,
+        "n_satir": 1
+      }
+    },
+    "hayalet_oneri": 0,
+    "hayalet_orani_olculenden": 0.0,
+    "olculemedi_oneri": 42,
+    "olculen_oneri": 18,
+    "pencere": {
+      "benzersiz_gun": 17,
+      "benzersiz_ts": 60,
+      "ilk_ts": "2026-07-14T10:12:40+00:00",
+      "repo_git_tarihi_baslangici": "2026-07-31T10:08:23+03:00",
+      "son_ts": "2026-08-21T18:02:05+00:00",
+      "toplam_satir": 60
+    },
+    "satirlar": [
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00001",
+        "source": "deterministic",
+        "ts": "2026-07-14T10:12:40+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "entry.min_score",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00002",
+        "source": "deterministic",
+        "ts": "2026-07-14T10:15:54+00:00",
+        "variable": "entry.min_score"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00003",
+        "source": "deterministic",
+        "ts": "2026-07-14T11:15:53+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00004",
+        "source": "deterministic",
+        "ts": "2026-07-14T11:19:57+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00005",
+        "source": "deterministic",
+        "ts": "2026-07-14T11:23:46+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00006",
+        "source": "deterministic",
+        "ts": "2026-07-14T11:27:27+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00007",
+        "source": "deterministic",
+        "ts": "2026-07-14T11:28:48+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "entry.rs_rating_min",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00008",
+        "source": "deterministic",
+        "ts": "2026-07-14T13:19:32+00:00",
+        "variable": "entry.rs_rating_min"
+      },
+      {
+        "aile": "entry.rs_rating_min",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00009",
+        "source": "deterministic",
+        "ts": "2026-07-14T14:46:46+00:00",
+        "variable": "entry.rs_rating_min"
+      },
+      {
+        "aile": "entry.rs_rating_min",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00010",
+        "source": "deterministic",
+        "ts": "2026-07-14T15:02:16+00:00",
+        "variable": "entry.rs_rating_min"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00011",
+        "source": "deterministic",
+        "ts": "2026-07-14T15:07:14+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00012",
+        "source": "deterministic",
+        "ts": "2026-07-14T15:10:34+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00013",
+        "source": "deterministic",
+        "ts": "2026-07-14T15:31:55+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00014",
+        "source": "deterministic",
+        "ts": "2026-07-14T15:32:05+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00015",
+        "source": "deterministic",
+        "ts": "2026-07-14T15:38:40+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00016",
+        "source": "deterministic",
+        "ts": "2026-07-14T15:59:02+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00017",
+        "source": "deterministic",
+        "ts": "2026-07-14T16:10:10+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00018",
+        "source": "deterministic",
+        "ts": "2026-07-14T16:10:24+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00019",
+        "source": "deterministic",
+        "ts": "2026-07-14T16:13:30+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00020",
+        "source": "deterministic",
+        "ts": "2026-07-14T16:14:49+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00021",
+        "source": "deterministic",
+        "ts": "2026-07-14T17:58:34+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00022",
+        "source": "deterministic",
+        "ts": "2026-07-14T18:11:54+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00023",
+        "source": "deterministic",
+        "ts": "2026-07-14T18:11:55+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00024",
+        "source": "deterministic",
+        "ts": "2026-07-14T18:11:57+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "stop_loss_atr_mult",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00025",
+        "source": "deterministic",
+        "ts": "2026-07-14T18:19:10+00:00",
+        "variable": "stop_loss_atr_mult"
+      },
+      {
+        "aile": "entry.pivot_proximity_pct",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-14",
+        "hayalet": null,
+        "id": "H00026",
+        "source": "sprint_search",
+        "ts": "2026-07-14T18:44:39+00:00",
+        "variable": "entry.pivot_proximity_pct"
+      },
+      {
+        "aile": "entry.pivot_proximity_pct",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-19",
+        "hayalet": null,
+        "id": "H00027",
+        "source": "hermes:nous",
+        "ts": "2026-07-19T14:01:25+00:00",
+        "variable": "entry.pivot_proximity_pct"
+      },
+      {
+        "aile": "exit.scale_out_frac",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-20",
+        "hayalet": null,
+        "id": "H00028",
+        "source": "hermes:nous",
+        "ts": "2026-07-20T07:07:08+00:00",
+        "variable": "exit.scale_out_frac"
+      },
+      {
+        "aile": "entry.w_prox",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-20",
+        "hayalet": null,
+        "id": "H00029",
+        "source": "coordinate_search",
+        "ts": "2026-07-20T14:13:54+00:00",
+        "variable": "entry.w_prox"
+      },
+      {
+        "aile": "regime.min_exposure_score",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-21",
+        "hayalet": null,
+        "id": "H00030",
+        "source": "cf_evidence",
+        "ts": "2026-07-21T06:29:33+00:00",
+        "variable": "regime.min_exposure_score"
+      },
+      {
+        "aile": "entry.rs_rating_min",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-21",
+        "hayalet": null,
+        "id": "H00031",
+        "source": "cf_evidence",
+        "ts": "2026-07-21T07:00:33+00:00",
+        "variable": "entry.rs_rating_min"
+      },
+      {
+        "aile": "exit.breakeven_r",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-21",
+        "hayalet": null,
+        "id": "H00032",
+        "source": "coordinate_search",
+        "ts": "2026-07-21T09:17:56+00:00",
+        "variable": "exit.breakeven_r"
+      },
+      {
+        "aile": "entry.w_rs",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-22",
+        "hayalet": null,
+        "id": "H00033",
+        "source": "hermes:nous",
+        "ts": "2026-07-22T10:17:00+00:00",
+        "variable": "entry.w_rs"
+      },
+      {
+        "aile": "entry.w_rs",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-22",
+        "hayalet": null,
+        "id": "H00034",
+        "source": "hermes:gemini",
+        "ts": "2026-07-22T15:09:34+00:00",
+        "variable": "entry.w_rs"
+      },
+      {
+        "aile": "entry.max_ext_atr",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-23",
+        "hayalet": null,
+        "id": "H00035",
+        "source": "hermes:nous",
+        "ts": "2026-07-23T22:14:43+00:00",
+        "variable": "entry.max_ext_atr"
+      },
+      {
+        "aile": "exit.profit_target_r",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-27",
+        "hayalet": null,
+        "id": "H00036",
+        "source": "hermes:gemini",
+        "ts": "2026-07-27T09:00:35+00:00",
+        "variable": "exit.profit_target_r"
+      },
+      {
+        "aile": "exit.giveback_pct",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-28",
+        "hayalet": null,
+        "id": "H00037",
+        "source": "hermes:nous",
+        "ts": "2026-07-28T07:49:42+00:00",
+        "variable": "exit.giveback_pct"
+      },
+      {
+        "aile": "exit.profit_target_r",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-28",
+        "hayalet": null,
+        "id": "H00038",
+        "source": "hermes:gemini",
+        "ts": "2026-07-28T14:16:27+00:00",
+        "variable": "exit.profit_target_r"
+      },
+      {
+        "aile": "entry.rs_rating_min",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-28",
+        "hayalet": null,
+        "id": "H00039",
+        "source": "hermes:nous",
+        "ts": "2026-07-28T17:50:33+00:00",
+        "variable": "entry.rs_rating_min@trend_up"
+      },
+      {
+        "aile": "exit.time_stop_days",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-28",
+        "hayalet": null,
+        "id": "H00040",
+        "source": "hermes:gemini",
+        "ts": "2026-07-28T21:34:03+00:00",
+        "variable": "exit.time_stop_days"
+      },
+      {
+        "aile": "entry.min_volume_ratio",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-29",
+        "hayalet": null,
+        "id": "H00041",
+        "source": "hermes:gemini",
+        "ts": "2026-07-29T08:02:29+00:00",
+        "variable": "entry.min_volume_ratio"
+      },
+      {
+        "aile": "entry.min_rvol",
+        "commit": null,
+        "durum": "OLCULEMEDI",
+        "gun": "2026-07-31",
+        "hayalet": null,
+        "id": "H00042",
+        "source": "hermes:gemini",
+        "ts": "2026-07-31T02:52:50+00:00",
+        "variable": "entry.min_rvol"
+      },
+      {
+        "aile": "entry.rs_dual_horizon",
+        "commit": "03ac49b5f7a7b228902cc3eb3369062764425723",
+        "durum": "TEMIZ",
+        "gun": "2026-07-31",
+        "hayalet": false,
+        "id": "H00043",
+        "source": "deterministic:virgin",
+        "ts": "2026-07-31T11:34:43+00:00",
+        "variable": "entry.rs_dual_horizon"
+      },
+      {
+        "aile": "entry.w_mom",
+        "commit": "8aaf05e2aaab49f9b6658d64e3d83ae81f9e391f",
+        "durum": "TEMIZ",
+        "gun": "2026-08-01",
+        "hayalet": false,
+        "id": "H00044",
+        "source": "deterministic:virgin",
+        "ts": "2026-08-01T01:28:16+00:00",
+        "variable": "entry.w_mom"
+      },
+      {
+        "aile": "entry.w_rvolband",
+        "commit": "120aa74dc7ea061cc573767f19a260fbbf9589b2",
+        "durum": "TEMIZ",
+        "gun": "2026-08-01",
+        "hayalet": false,
+        "id": "H00045",
+        "source": "deterministic:virgin",
+        "ts": "2026-08-01T10:26:47+00:00",
+        "variable": "entry.w_rvolband"
+      },
+      {
+        "aile": "entry.w_tight",
+        "commit": "b53a539d8ec70e38de5086421e58bae351de25b8",
+        "durum": "TEMIZ",
+        "gun": "2026-08-01",
+        "hayalet": false,
+        "id": "H00046",
+        "source": "deterministic:virgin",
+        "ts": "2026-08-01T12:07:49+00:00",
+        "variable": "entry.w_tight"
+      },
+      {
+        "aile": "entry.w_vol",
+        "commit": "05e3e7933db89c99514d9da3f71bb4f1217646e2",
+        "durum": "TEMIZ",
+        "gun": "2026-08-01",
+        "hayalet": false,
+        "id": "H00047",
+        "source": "deterministic:virgin",
+        "ts": "2026-08-01T15:05:12+00:00",
+        "variable": "entry.w_vol"
+      },
+      {
+        "aile": "exit.chandelier_lookback",
+        "commit": "623608d5640f30185d06e2e07d677af6437237aa",
+        "durum": "TEMIZ",
+        "gun": "2026-08-01",
+        "hayalet": false,
+        "id": "H00048",
+        "source": "deterministic:virgin",
+        "ts": "2026-08-01T16:08:12+00:00",
+        "variable": "exit.chandelier_lookback"
+      },
+      {
+        "aile": "exit.early_kill_bars",
+        "commit": "883dafbf0a89c2545f675befd1893f1547105ea1",
+        "durum": "TEMIZ",
+        "gun": "2026-08-01",
+        "hayalet": false,
+        "id": "H00049",
+        "source": "deterministic:virgin",
+        "ts": "2026-08-01T17:13:05+00:00",
+        "variable": "exit.early_kill_bars"
+      },
+      {
+        "aile": "exit.early_kill_pivot",
+        "commit": "fb65b0a58f1b68e9eba599847eee55b3e1130080",
+        "durum": "TEMIZ",
+        "gun": "2026-08-01",
+        "hayalet": false,
+        "id": "H00050",
+        "source": "deterministic:virgin",
+        "ts": "2026-08-01T18:47:13+00:00",
+        "variable": "exit.early_kill_pivot"
+      },
+      {
+        "aile": "exit.scale_out_r",
+        "commit": "84fcf6983343c50a2b9c1302803dcb18ebbad431",
+        "durum": "TEMIZ",
+        "gun": "2026-08-02",
+        "hayalet": false,
+        "id": "H00051",
+        "source": "hermes:gemini",
+        "ts": "2026-08-02T10:36:19+00:00",
+        "variable": "exit.scale_out_r"
+      },
+      {
+        "aile": "exit.trail_atr_mult",
+        "commit": "b6e75b5afc284f83bea5a4f6f8955d35ab6aa3db",
+        "durum": "TEMIZ",
+        "gun": "2026-08-12",
+        "hayalet": false,
+        "id": "H00052",
+        "source": "hermes:nous",
+        "ts": "2026-08-12T11:10:56+00:00",
+        "variable": "exit.trail_atr_mult@chop"
+      },
+      {
+        "aile": "entry.w_turnover",
+        "commit": "8efd973102112c35d7048f0563987e22bc396d60",
+        "durum": "TEMIZ",
+        "gun": "2026-08-13",
+        "hayalet": false,
+        "id": "H00053",
+        "source": "hermes:nous",
+        "ts": "2026-08-13T21:26:40+00:00",
+        "variable": "entry.w_turnover@trend_up"
+      },
+      {
+        "aile": "regime.vix_backwardation_gate",
+        "commit": "cafcf0bd078662470009aa23b89cedbb0524f990",
+        "durum": "TEMIZ",
+        "gun": "2026-08-13",
+        "hayalet": false,
+        "id": "H00054",
+        "source": "hermes:gemini",
+        "ts": "2026-08-13T23:23:00+00:00",
+        "variable": "regime.vix_backwardation_gate"
+      },
+      {
+        "aile": "portfolio.sector_cap",
+        "commit": "524ac82d12e0167f83e0a93b4116a7ee15e54482",
+        "durum": "TEMIZ",
+        "gun": "2026-08-14",
+        "hayalet": false,
+        "id": "H00055",
+        "source": "hermes:gemini",
+        "ts": "2026-08-14T02:12:01+00:00",
+        "variable": "portfolio.sector_cap"
+      },
+      {
+        "aile": "portfolio.heat_cap",
+        "commit": "a85f02d6d42ede769ff91acde3dfb0fe8b3ab0ff",
+        "durum": "TEMIZ",
+        "gun": "2026-08-14",
+        "hayalet": false,
+        "id": "H00056",
+        "source": "hermes:gemini",
+        "ts": "2026-08-14T04:26:55+00:00",
+        "variable": "portfolio.heat_cap"
+      },
+      {
+        "aile": "position_size_r",
+        "commit": "4ad76843bc3cf67260dd28d5e5fe86ba20288bfe",
+        "durum": "TEMIZ",
+        "gun": "2026-08-14",
+        "hayalet": false,
+        "id": "H00057",
+        "source": "hermes:nous",
+        "ts": "2026-08-14T08:40:11+00:00",
+        "variable": "position_size_r@chop"
+      },
+      {
+        "aile": "entry.min_rvol",
+        "commit": "22806b539a79755ba7b0813a0d658184ac734ed9",
+        "durum": "TEMIZ",
+        "gun": "2026-08-16",
+        "hayalet": false,
+        "id": "H00058",
+        "source": "hermes:gemini",
+        "ts": "2026-08-16T21:03:48+00:00",
+        "variable": "entry.min_rvol@chop"
+      },
+      {
+        "aile": "entry.min_rvol",
+        "commit": "5f6d3ebbd56d1107f97401489d3af008e0ca2f4b",
+        "durum": "TEMIZ",
+        "gun": "2026-08-16",
+        "hayalet": false,
+        "id": "H00059",
+        "source": "hermes:gemini",
+        "ts": "2026-08-16T23:27:53+00:00",
+        "variable": "entry.min_rvol@chop"
+      },
+      {
+        "aile": "entry.w_prox",
+        "commit": "08235fb8fd333b007c940dd08eb24fd85aa1d8af",
+        "durum": "TEMIZ",
+        "gun": "2026-08-21",
+        "hayalet": false,
+        "id": "H00060",
+        "source": "hermes:nous",
+        "ts": "2026-08-21T18:02:05+00:00",
+        "variable": "entry.w_prox@trend_up"
+      }
+    ],
+    "toplam_oneri": 60,
+    "uretici_kirilimi": {
+      "cf_evidence": {
+        "hayalet": 0,
+        "hayalet_orani_olculenden": null,
+        "olculemedi": 2,
+        "olculen": 0,
+        "toplam": 2
+      },
+      "coordinate_search": {
+        "hayalet": 0,
+        "hayalet_orani_olculenden": null,
+        "olculemedi": 2,
+        "olculen": 0,
+        "toplam": 2
+      },
+      "deterministic": {
+        "hayalet": 0,
+        "hayalet_orani_olculenden": null,
+        "olculemedi": 25,
+        "olculen": 0,
+        "toplam": 25
+      },
+      "deterministic:virgin": {
+        "hayalet": 0,
+        "hayalet_orani_olculenden": 0.0,
+        "olculemedi": 0,
+        "olculen": 8,
+        "toplam": 8
+      },
+      "hermes:gemini": {
+        "hayalet": 0,
+        "hayalet_orani_olculenden": 0.0,
+        "olculemedi": 6,
+        "olculen": 6,
+        "toplam": 12
+      },
+      "hermes:nous": {
+        "hayalet": 0,
+        "hayalet_orani_olculenden": 0.0,
+        "olculemedi": 6,
+        "olculen": 4,
+        "toplam": 10
+      },
+      "sprint_search": {
+        "hayalet": 0,
+        "hayalet_orani_olculenden": null,
+        "olculemedi": 1,
+        "olculen": 0,
+        "toplam": 1
+      }
+    }
+  },
+  "k2_esik_karsilastirma": {
+    "esik": 0,
+    "yanlis_pozitif_esigi_gecti_mi": false
+  },
+  "k2_sandbox": {
+    "fail_open": {
+      "hayalet_none_mu": true,
+      "olay_yazildi_mi": true,
+      "sessizlesmedi_mi": true,
+      "son_olay": {
+        "detail": "motor okuyucu kümesi ÖLÇÜLEMEDİ (kaynak okunamadı/parse edilemedi) — süzgeç FAIL-OPEN: hiçbir anahtar süzülmedi, hayalet=None (ölçülemedi, sıfır DEĞİL). Arama tam uzayda sürüyor.",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory: '/Users/erdemozturk/AI-Trading/meridian/boyle_bir_motor_modulu_yok_edg071.py'",
+        "event": "reflect_hayalet_olculemedi",
+        "kaynak": "hermes.virgin_knobs",
+        "level": "warn",
+        "n_bounds": 32,
+        "ts": "2026-09-04T12:07:37+00:00"
+      },
+      "temiz_tum_anahtarlari_kapsadi_mi": true
+    },
+    "n_bounds": 32,
+    "propose_virgin_knob_gercek_cagri": {
+      "beyan": "bugünkü PROD davranışı — süzgeç henüz virgin_knobs() içine KABLOLANMADI, bu tur yalnız ÖLÇÜM (meridian/*.py DEĞİŞTİRİLMEDİ)",
+      "hata": null,
+      "oneri": {
+        "confidence": 0.35,
+        "new": 6.0,
+        "old": 0.0,
+        "predicted_delta": 0.02,
+        "predicted_direction": "improve_oos_score",
+        "rationale": "keşif: `entry.max_ext_atr` bounds.yaml'da var ama defterde HİÇ hipotez taşımamış (H2 bakir listesi, 32 düğme); aralığın orta noktası ölçülüyor",
+        "regime": "any",
+        "skill_recommendation": null,
+        "source": "deterministic:virgin",
+        "variable": "entry.max_ext_atr"
+      }
+    },
+    "temiz_sayisi": 32,
+    "yanlis_pozitif_liste": [],
+    "yanlis_pozitif_sayisi": 0
+  },
+  "kart": "EDG-2026-071",
+  "oz_sinama_head": {
+    "fark_gercek_fazla": [],
+    "fark_turetilen_fazla": [],
+    "gecti": true,
+    "head": "5e07fb99af3d527b1fb8266edae1c74833f2d0e0",
+    "n_gercek": 1770,
+    "n_turetilen": 1770
+  },
+  "pozitif_kontrol": {
+    "izole_suzgec": {
+      "hayalet_listesi": [
+        "sentetik.hayalet_x"
+      ],
+      "hayalet_yakalandi": true,
+      "kablolu_gecti": true
+    },
+    "on_kosul": {
+      "virgin_knobs_iki_dugmeyi_de_dondurdu": true
+    },
+    "oneri": {
+      "confidence": 0.35,
+      "new": 0.2,
+      "old": null,
+      "predicted_delta": 0.02,
+      "predicted_direction": "improve_oos_score",
+      "rationale": "keşif: `entry.w_turnover` bounds.yaml'da var ama defterde HİÇ hipotez taşımamış (H2 bakir listesi, 1 düğme); aralığın orta noktası ölçülüyor",
+      "regime": "any",
+      "skill_recommendation": null,
+      "source": "deterministic:virgin",
+      "variable": "entry.w_turnover"
+    },
+    "oneri_hayalet_mi": false,
+    "pk_gecti": true,
+    "secenek_a_bilesimi": {
+      "candidate_loop_gordugu_adlar": [
+        "entry.w_turnover"
+      ],
+      "ghost_candidate_loopta_gorundu_mu": false,
+      "real_candidate_loopta_gorundu_mu": true
+    }
+  },
+  "sandbox_kaniti": {
+    "beyan": "canlı state/*.jsonl mtime_ns+satır izi ölçüm ÖNCESİ/SONRASI karşılaştırıldı",
+    "degisen": {},
+    "dosya_sayisi": 12,
+    "temiz_mi": true
+  },
+  "sure_saniye": 5.596
+}

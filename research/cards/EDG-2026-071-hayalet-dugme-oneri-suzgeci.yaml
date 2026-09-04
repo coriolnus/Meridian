@@ -6,7 +6,7 @@
 # onayından sonra, bu kartın kill-listesi altında).
 
 card_id: EDG-2026-071
-status: registered
+status: measured_partial
 family: hayalet_dugme_oneri_suzgeci
 on_kayit: 2026-09-03
 ref: [TSK-074, Ö-48, TSK-062, docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md, tests/test_hayalet_dugme_v263.py]
@@ -69,3 +69,18 @@ notlar: >
   uygulama (süzgecin canlıya girmesi) ayrı tur — bu kartın hükmü ve kill-listesi altında, ARSENAL çıtası
   gerekmez (cephanelik değil öneri katmanı). Learn birimi bugün kapalı (TSK-092 saygısı) — kurulup ölçülmesi
   canlıyı etkilemez.
+
+hukum_2026_09_04: >
+  KISMİ (Rol-1, 2026-09-04 12:2xZ; ölçüm incelemesi "GÜVENİLİR"): K2 GEÇTİ — bugünkü bounds 32/32 kablolu düğmede
+  hayalet_suzgeci(kaynak="hermes.virgin_knobs") yanlış-pozitif 0; fail-open (MOTOR_ZINCIRI bozuk) hayalet=None + 32 anahtar
+  korunur + reflect_hayalet_olculemedi olayı — sessizleşmiyor; propose_virgin_knob gerçek çağrı deterministik (LLM yok).
+  PK GEÇTİ (yol-tutarlı, Seçenek A: hayalet anahtar virgin_knobs düzeyinde süzülür, aday döngüsüne HİÇ girmez — kart metnindeki
+  ":hayalet etiketiyle atlanan'a düşme" mekanizmasından AYRIŞIR, davranışsal hedef aynı; negatif kontrol çivide).
+  K1 ÖLÇÜLEMEDİ (girdi sınırı, uydurulmadı): A1 hypotheses.jsonl donmuş çekimi 60 satır / 2026-07-14→08-21; 42'si repo git
+  tarihinden (ilk commit 2026-07-31) önce → o günkü motor blob'u yok; ölçülebilen 18 satırda (08-01 sonrası) hayalet 0/18 (oran
+  0,0 < 0,10). Tasarım belgesinin flagship vakası (47 öneri, 21× entry.w_turnover + 8× regime.vix_backwardation_gate) bu defterde
+  YOK — iki düğme 1'er kez, ikisi de kablolama sonrası tarihli; K1 bu vakayı ne doğruluyor ne çürütüyor (defter 07-14 öncesini
+  taşımıyor; vaka defteri rotasyona uğramış olabilir — ayrı soru). Hüküm: süzgeç ZARARSIZ (bedel ölçüldü: 0 yanlış-pozitif),
+  faydası tarihsel olarak ölçülemedi. Uygulama kararı (TSK-074: Seçenek A kablolaması, küçük motor dilimi + canlı "hayalet öneri"
+  sayacı) operatörde. K defteri: k_registry.trial_ids yazıldı. Kod: research/olcumler/edg071_hayalet_suzgec/{olcum.py,
+  sonuc_2026-09-04.json, girdi/}; çivi tests/test_edg071_olcum_v405.py (22).

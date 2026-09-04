@@ -94,3 +94,5 @@ ui/tsconfig.tsbuildinfo
 # Bot kum havuzu (spec §9.3 safe-root): canlıda botların TEK yazılabilir dizini.
 # Depoda durmaz — `state/` ve `backups/` ile aynı sınıf: canlı-sahipli, repo-sahipli değil.
 /var/
+research/olcumler/*/smoke/
+research/olcumler/*/duman/

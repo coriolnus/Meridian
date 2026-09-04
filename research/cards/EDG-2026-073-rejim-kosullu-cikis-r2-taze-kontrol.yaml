@@ -1,0 +1,76 @@
+# EDG-2026-073 — Rejim-koşullu ÇIKIŞ override'ı R2: TAZE KONTROL tabanlı kıyas (EDG-072'nin şasi-bayatlığı kill'i sonrası) — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-04 11:58Z (Rol-1) — EDG-072'nin üç tam koşumu (kontrol/h1/h2, nohup, 11:47Z) SÜRERKEN ve H1/H2 sonuçları
+# OKUNMADAN yazıldı (eşik/K/kill-list sonradan değişmez; EDG-072'nin kendisi "kaldı" olarak kapanır — kriter YERİNDE düzeltilmez).
+# Neden R2: EDG-072 kill-list madde-1 "kontrol bit-özdeş C" bugün yapısal olarak SAĞLANAMAZ — EDG-026 C-şasisi 2026-08-12'de dondu,
+# o günden bu yana meridian/ üzerinde 178 commit (ör. TSK-075 scale-out düzeltmesi) ve bar önbelleğinin 24/260 dosyası yenilendi;
+# smoke (2022-01→06) kontrol 8 işlem / C 3 işlem. resolve_params'ın yan-etkisiz olduğu ayrı öz-sınama + PK ile kanıtlı
+# (EDG-072 duman: sentetik chop time_stop=1 → bars_held medyan 2→1). Yani kill'in NEDENİ kartın öngördüğü değil.
+
+card_id: EDG-2026-073
+status: measured
+family: rejim_kosullu_cikis
+on_kayit: 2026-09-04
+ref: [EDG-2026-072, TSK-079, EDG-2026-030, EDG-2026-033, EDG-2026-026]
+
+hipotez: >
+  EDG-072 ile AYNI: çıkış parametrelerini rejim sınıfına göre ayrıştırmak (trend_up'ta daha geniş trail/daha uzun
+  zaman-stop, chop'ta daha kısa zaman-stop/daha erken breakeven) düz tek-set çıkışa göre ölçülebilir kazanç verir.
+  Fark yalnız KIYAS TABANI: dondurulmuş C defteri yerine AYNI motor (HEAD) + AYNI bar önbelleğiyle koşulan TAZE
+  kontrol (boş params_by_regime). Üç hücre aynı ortamda koşar; drift üçüne eşit etki eder, fark yalnız override'dır.
+
+k_registry: {registered_at: "2026-09-04", trial_ids: [EDG-073-h1-trend-genis-chop-kisa, EDG-073-h2-h1-arti-erken-breakeven]}
+# K=2 (EDG-072'den AYNEN): H1 = trend_up {exit.trail_atr_mult ×1,5, exit.time_stop_days ×1,5} + chop {exit.time_stop_days ×0,5};
+#      H2 = H1 + chop {exit.breakeven_r ×0,5}. Çarpanlar EDG-072'nin ön-kaydından; yuvarlama round-half-even (15×1,5=22,5→22; 15×0,5=7,5→8) beyanlı.
+# KONTROL (hücre sayılmaz): boş params_by_regime, aynı motor/bar; ŞASİ SINAMASI = koşum içinde her seans için eff == params (aşağıda).
+
+adim_0_fizibilite: >
+  (a) EDG-026 taban defterinin sha256'sı hâlâ eşleşiyor (girdi kimliği; kıyas tabanı DEĞİL); (b) params_by_regime dört rejimde
+  BOŞ (EDG-022 donmuş strategy.yaml); (c) TAZE kontrol defterinde rejim başına işlem: trend_up ≥30 ve chop ≥30, yoksa o rejim
+  "olculemedi"; (d) motor sha (HEAD) ve bar önbelleği içerik özeti (260 dosya sha256 birleşik) sonuç dosyasına yazılır — girdi
+  kimliği içerik-adreslidir (bars git-izli değil).
+
+olcum_plani:
+  - "EDG-026 şasisi (rampa/slot/0,5R/zarf) EDG-072'nin olcum.py'ındaki gibi; rejim sınıfı motorun KENDİ sınıflayıcısından, yeniden etiketleme YOK"
+  - "Üç koşum AYNI motor + AYNI bar önbelleği: kontrol (boş override), H1, H2 — replay 2022-01-01→2026-07-30, 251 sembol"
+  - "H1, H2 hücreleri TAZE kontrol ile eşlenik ay-kümeli bootstrap (5000, seed 20260903): ΔP&L CI, max-dd oranı, sharpe, rejim-kırılımlı karne; eşleşen (date,ticker) işlemlerde saf-çıkış-etkisi ayrışımı (ORTAK/EKLENEN/ÇIKAN)"
+  - "tanı: rejim başına kazanç/kayıp (trend_up vs chop), bars_held dağılımı, giveback"
+
+esikler:
+  benimseme_adayi: "ΔP&L CI-alt > 0 VE max-dd ≤ TAZE-kontrol×1,3 — her iki hücre için ayrı (EDG-072/033 emsali)"
+  # eşikler donuk; sonradan değişmez (yeni eşik = yeni kart)
+
+kill_list:
+  - "ŞASİ SINAMASI: kontrol koşumunda resolve_params(params, {}, rejim) her seans/rejim için params ile birebir eşit DEĞİLSE ölçüm GEÇERSİZ (yol yan-etkili) — EDG-072'nin 'C ile bit-özdeş' maddesinin ÖLÇÜLEBİLİR karşılığı"
+  - "üç koşum aynı motor sha + aynı bar özeti taşımıyorsa GEÇERSİZ (koşumlar arası drift)"
+  - "trend_up ya da chop işlem sayısı TAZE kontrol defterinde <30 → olculemedi (sayı uydurulmaz)"
+  - "pozitif kontrol tutmazsa hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI (EDG-072'den devralındı, ölçüldü 2026-09-04 duman: chop bars_held medyan 2 → 1, esigi_karsilamayan 0):
+  sentetik override — chop'ta exit.time_stop_days=1 — chop işlemlerinin bars_held'ini ÖLÇÜLEBİLİR biçimde düşürmeli
+  (override'ın resolve_params'tan manage_position'a ulaştığının kanıtı); PK hücresi K'ya sayılmaz.
+
+veri_penceresi: "replay 2022-01-01→2026-07-30, 251 sembol, HEAD motoru + bugünkü bar önbelleği (içerik özeti sonuçta); canlı DEĞİL"
+
+basari_tanimi: >
+  ADIM-0 geçmiş + şasi sınaması yeşil + PK yeşil + iki hücre CI'lı raporlanmış + K defterine 2 yazılmış. Hüküm Rol-1'de:
+  bir hücre benimseme adayı → guard.validate_change sevk kapısını AÇMA kalemi (yeni KOVA B dilimi; motor-içi bayrak yazımı
+  yasak — Hermes önerir, operatör onaylar); iki hücre de CI-0-içi/negatif → kapı KAPALI kalır, TSK-079 25c-1 "kanıtla kapalı".
+
+notlar: >
+  Kod: research/olcumler/edg072_rejim_cikis/olcum.py (EDG-072 için yazıldı; `kiyasla --kart EDG-2026-073` taze-kontrol tabanı
+  + şasi sınaması eklenerek bu karta bağlanır; EDG-072'nin C-kıyası ayrıca raporlanır, hükme girmez). EDG-072 kartı bu kartla
+  "kaldı — şasi bayatlığı, kriter yerinde düzeltilmedi" olarak kapanır (§5). Ölçüm ajanı karta dokunmaz; hüküm Rol-1'de.
+
+hukum_2026_09_04: >
+  KALDI — iki hücre de benimseme eşiğini KARŞILAMIYOR (Rol-1, 2026-09-04 12:4xZ; ölçüm incelemesi "GÜVENİLİR": yol-tutarlılık,
+  eşlenik ay-kümeli bootstrap EDG-033 ile matematiksel özdeş, dd/ΔP&L yönleri, kill kapıları bağımsız doğrulandı).
+  ADIM-0: EDG-026 sha 4/4 eşleşti; params_by_regime 4 rejimde boş; taze kontrol trend_up n=789, chop n=96 (≥30).
+  Kill-1 şasi sınaması GEÇTİ (eff==params, 4/4 rejim; girdi bozulmadı); kill-2 GEÇTİ (üç koşum motor sha birebir; bar önbelleği
+  post-hoc ölçüm — kesin kanıt değil, beyanlı); PK GEÇTİ. Üç tam koşum 2022-01-01→2026-07-30, 251 sembol, HEAD 5e07fb9, ~30 dk/koşum.
+  H1 (trend_up trail×1,5 time_stop×1,5 + chop time_stop×0,5): işlem 885→839, ΔP&L CI95 [−6.759, +21.567] orta +6.530, max-dd oranı
+  0,904 (≤1,3 ✓), CI-alt>0 ✗. H2 (H1 + chop breakeven×0,5): 885→842, CI95 [−10.425, +19.003] orta +3.638, dd 0,903 ✓, CI-alt>0 ✗.
+  Saf-çıkış ayrışımı iki hücrede de sente kapandı. Hüküm: sevk kapısı (guard.validate_change "base not in current_params") KAPALI
+  kalır; TSK-079 25c-1 "kanıtla kapalı" (EDG-033 emsali). Not (hüküm değil): yön pozitif, CI geniş — yeniden ölçüm ancak yeni kartla
+  (daha uzun pencere ya da holdout; eşik değişmez). K defteri: k_registry.trial_ids 2/2 yazıldı. Kod ve sonuç:
+  research/olcumler/edg072_rejim_cikis/{olcum.py, sonuc_2026-09-04.json}; çivi tests/test_edg072_olcum_v404.py (28).

@@ -1,0 +1,144 @@
+{
+ "adim": "oz_sinama_1",
+ "hepsi_gecti": true,
+ "kart": "EDG-2026-072",
+ "olcum_zamani": "2026-09-04T11:37:34+00:00",
+ "sonuclar": {
+  "h1": {
+   "bilinmeyen_rejim_taban": true,
+   "bounds_ihlal": [],
+   "gecti": true,
+   "harita_mutlak": {
+    "chop": {
+     "exit.time_stop_days": 8
+    },
+    "high_vol": {},
+    "trend_down": {},
+    "trend_up": {
+     "exit.time_stop_days": 22,
+     "exit.trail_atr_mult": 3.75
+    }
+   },
+   "hucre": "h1",
+   "kayit": [
+    {
+     "dokunulan": {
+      "exit.time_stop_days": 22,
+      "exit.trail_atr_mult": 3.75
+     },
+     "rejim": "trend_up"
+    },
+    {
+     "dokunulan": {},
+     "rejim": "trend_down"
+    },
+    {
+     "dokunulan": {
+      "exit.time_stop_days": 8
+     },
+     "rejim": "chop"
+    },
+    {
+     "dokunulan": {},
+     "rejim": "high_vol"
+    }
+   ],
+   "yuvarlama_beyani": "int anahtar (exit.time_stop_days): Python round() — round-half-to-even; float anahtarlar: round(x, 6)"
+  },
+  "h2": {
+   "bilinmeyen_rejim_taban": true,
+   "bounds_ihlal": [],
+   "gecti": true,
+   "harita_mutlak": {
+    "chop": {
+     "exit.breakeven_r": 0.5,
+     "exit.time_stop_days": 8
+    },
+    "high_vol": {},
+    "trend_down": {},
+    "trend_up": {
+     "exit.time_stop_days": 22,
+     "exit.trail_atr_mult": 3.75
+    }
+   },
+   "hucre": "h2",
+   "kayit": [
+    {
+     "dokunulan": {
+      "exit.time_stop_days": 22,
+      "exit.trail_atr_mult": 3.75
+     },
+     "rejim": "trend_up"
+    },
+    {
+     "dokunulan": {},
+     "rejim": "trend_down"
+    },
+    {
+     "dokunulan": {
+      "exit.breakeven_r": 0.5,
+      "exit.time_stop_days": 8
+     },
+     "rejim": "chop"
+    },
+    {
+     "dokunulan": {},
+     "rejim": "high_vol"
+    }
+   ],
+   "yuvarlama_beyani": "int anahtar (exit.time_stop_days): Python round() — round-half-to-even; float anahtarlar: round(x, 6)"
+  },
+  "pk": {
+   "bilinmeyen_rejim_taban": true,
+   "bounds_ihlal": [
+    {
+     "anahtar": "exit.time_stop_days",
+     "bounds": {
+      "max": 40,
+      "min": 3,
+      "step": 1,
+      "type": "int"
+     },
+     "deger": 1,
+     "rejim": "chop"
+    }
+   ],
+   "gecti": true,
+   "harita_mutlak": {
+    "chop": {
+     "exit.time_stop_days": 1
+    },
+    "high_vol": {},
+    "trend_down": {},
+    "trend_up": {}
+   },
+   "hucre": "pk",
+   "kayit": [
+    {
+     "dokunulan": {},
+     "rejim": "trend_up"
+    },
+    {
+     "dokunulan": {},
+     "rejim": "trend_down"
+    },
+    {
+     "dokunulan": {
+      "exit.time_stop_days": 1
+     },
+     "rejim": "chop"
+    },
+    {
+     "dokunulan": {},
+     "rejim": "high_vol"
+    }
+   ],
+   "yuvarlama_beyani": "int anahtar (exit.time_stop_days): Python round() — round-half-to-even; float anahtarlar: round(x, 6)"
+  }
+ },
+ "taban_params": {
+  "exit.breakeven_r": 1.0,
+  "exit.time_stop_days": 15,
+  "exit.trail_atr_mult": 2.5
+ }
+}

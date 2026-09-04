@@ -1,0 +1,446 @@
+{
+ "derleme_tarihi": "2026-09-04",
+ "edg072": {
+  "hucreler": {
+   "not": "kontrol bit-özdeş DEĞİL — h1/h2 hesaplanmadı (kill-list: hiçbir sayı yayılmaz)"
+  },
+  "hukum": null,
+  "kart": "EDG-2026-072",
+  "kart_durumu": "KALDI — şasi bayatlığı (§5, kriter yerinde düzeltilmedi); EDG-2026-073 R2 devraldı (Rol-1, 2026-09-04)",
+  "kill_d3_kontrol_bit_ozdesligi": {
+   "bit_ozdes": false,
+   "esik": "TAM kontrol koşumu C ile bit-özdeş DEĞİLSE ölçüm GEÇERSİZ (EDG-072 kill-list) — R1 KÖK NEDEN TEŞHİSİ (2026-09-04, rapor §3): resolve_params YAN ETKİLİ DEĞİL; EDG-026 C-şasisi 2026-08-12'de dondu, o günden bu yana meridian/ üzerinde 178 commit + bar önbelleğinin 24/260 dosyası yenilendi (şasi bayatlığı). §5 gereği kriter YERİNDE düzeltilmedi — EDG-072 bu bulguyla 'kaldı' kapandı, EDG-073 R2 TAZE-kontrol tabanıyla devraldı (bkz. kiyasla_073).",
+   "islem_sha_esit": false,
+   "seans_sha_esit": false,
+   "sonuc_bolum_esitligi": {
+    "betim": true,
+    "birincil": false,
+    "butunluk": true,
+    "ci95_ay_kumeli": false,
+    "doluluk": false,
+    "islem": false,
+    "performans": false,
+    "replay": false,
+    "tasnif_tum_seans": false,
+    "tepe_isi": false
+   },
+   "tetiklendi": true
+  },
+  "kiyas_taban": {
+   "kaynak": "EDG-026 C (slot20+0.5R+rampa15/36) HAZIR çıktıları — salt-okundu",
+   "sha256": {
+    "islemler_c.json": "fdb428551ceab4de69ca053a6ef4f16d8caad136306cd2946fb1a6edc6d5acda",
+    "olcum.py": "fd8b39c8e981a2f9a0eedf2f5f2d63804f2dbe299a6cbe6dac2ec12ff16cff2d",
+    "seanslar_c.json": "6a8aceaea7b453182c1179086fdc3be63e56d4cb81f5218a7551672f562c178b",
+    "sonuc_c.json": "c18e3b4497dc1e618d8d3d543ad444060cc28a1fe2561b531d5a86adea5672ff"
+   }
+  }
+ },
+ "edg073": {
+  "adim0c_taze_rejim_n": {
+   "chop": {
+    "esik": 30,
+    "n": 96,
+    "olculebilir": true
+   },
+   "high_vol": {
+    "esik": 30,
+    "n": 0,
+    "olculebilir": false
+   },
+   "trend_down": {
+    "esik": 30,
+    "n": 0,
+    "olculebilir": false
+   },
+   "trend_up": {
+    "esik": 30,
+    "n": 789,
+    "olculebilir": true
+   }
+  },
+  "genel_gecerli": true,
+  "hucreler": {
+   "h1": {
+    "basari_kosulu_kaydi": {
+     "d_pnl_ci_alt": -6759.3842,
+     "d_pnl_ci_alt_pozitif": false,
+     "dd_kontrol_x1p3_icinde": true,
+     "dd_oran": 0.904,
+     "maxdd_hucre": 0.1142,
+     "maxdd_kontrol": 0.1263,
+     "not": "HÜKÜM GİRDİSİ (kart success_metric) — kill değil; hüküm Rol-1'in"
+    },
+    "boot_seed": 20260903,
+    "harita_mutlak": {
+     "chop": {
+      "exit.time_stop_days": 8
+     },
+     "high_vol": {},
+     "trend_down": {},
+     "trend_up": {
+      "exit.time_stop_days": 22,
+      "exit.trail_atr_mult": 3.75
+     }
+    },
+    "hucre": "h1",
+    "rejim_karne": {
+     "delta": {
+      "chop": {
+       "d_n": 8,
+       "d_pnl": 1109.07
+      },
+      "trend_up": {
+       "d_n": -54,
+       "d_pnl": 5905.0
+      }
+     },
+     "h1": {
+      "chop": {
+       "kazanma_orani": 0.385,
+       "medyan_r": -0.185,
+       "n": 104,
+       "ort_r": 0.028,
+       "pnl": 1355.81
+      },
+      "trend_up": {
+       "kazanma_orani": 0.351,
+       "medyan_r": -0.117,
+       "n": 735,
+       "ort_r": 0.118,
+       "pnl": 29464.39
+      }
+     },
+     "kontrol": {
+      "chop": {
+       "kazanma_orani": 0.365,
+       "medyan_r": -0.241,
+       "n": 96,
+       "ort_r": 0.004,
+       "pnl": 246.74
+      },
+      "trend_up": {
+       "kazanma_orani": 0.365,
+       "medyan_r": -0.162,
+       "n": 789,
+       "ort_r": 0.092,
+       "pnl": 23559.39
+      }
+     }
+    },
+    "saf_cikis_ayrisimi": {
+     "cikan_n": 105,
+     "cikan_pnl": -1227.63,
+     "eklenen_n": 59,
+     "eklenen_pnl": 502.26,
+     "kimlik": "(ts_open[:10], ticker); yol-aynı = ts_close+exit_reason aynı ∧ |Δr|≤1e-9",
+     "kovalar": {
+      "ayni_chop": {
+       "d_pnl": 26.82,
+       "n": 35
+      },
+      "ayni_diger": {
+       "d_pnl": 0.0,
+       "n": 0
+      },
+      "ayni_trend_up": {
+       "d_pnl": 13.52,
+       "n": 165
+      },
+      "kayan": {
+       "d_pnl": 5243.84,
+       "n": 580
+      }
+     },
+     "ortak_n": 780,
+     "pnl_kimligi": {
+      "delta_net_pnl_trades": 7014.07,
+      "kalinti": -0.0,
+      "ortak_delta_pnl": 5284.18,
+      "sente_kapandi": true
+     }
+    },
+    "tablo": {
+     "islem_fark_ci95": {
+      "hi": -17.0,
+      "lo": -75.0,
+      "orta": -46.0
+     },
+     "islem_n": {
+      "fark": -46,
+      "fark_pct": -5.2,
+      "h1": 839,
+      "kontrol": 885
+     },
+     "maxdd_ci_atlanan_iter": 0,
+     "maxdd_fark_ci95_kapali_islem_egrisi": {
+      "hi": 0.0284,
+      "lo": -0.0828,
+      "orta": -0.0152
+     },
+     "maxdd_kanonik": {
+      "h1": 0.1142,
+      "kontrol": 0.1263
+     },
+     "net_pnl_fark_ci95": {
+      "hi": 21566.563,
+      "lo": -6759.3842,
+      "orta": 6529.9
+     },
+     "net_pnl_trades": {
+      "h1": 30820.2,
+      "kontrol": 23806.13
+     },
+     "sharpe": {
+      "h1": 0.75,
+      "kontrol": 0.594
+     },
+     "sharpe_ci_atlanan_iter": 0,
+     "sharpe_fark_ci95": {
+      "hi": 0.5124,
+      "lo": -0.1944,
+      "orta": 0.1471
+     }
+    }
+   },
+   "h2": {
+    "basari_kosulu_kaydi": {
+     "d_pnl_ci_alt": -10424.99,
+     "d_pnl_ci_alt_pozitif": false,
+     "dd_kontrol_x1p3_icinde": true,
+     "dd_oran": 0.903,
+     "maxdd_hucre": 0.1141,
+     "maxdd_kontrol": 0.1263,
+     "not": "HÜKÜM GİRDİSİ (kart success_metric) — kill değil; hüküm Rol-1'in"
+    },
+    "boot_seed": 20260903,
+    "harita_mutlak": {
+     "chop": {
+      "exit.breakeven_r": 0.5,
+      "exit.time_stop_days": 8
+     },
+     "high_vol": {},
+     "trend_down": {},
+     "trend_up": {
+      "exit.time_stop_days": 22,
+      "exit.trail_atr_mult": 3.75
+     }
+    },
+    "hucre": "h2",
+    "rejim_karne": {
+     "delta": {
+      "chop": {
+       "d_n": 11,
+       "d_pnl": -1157.92
+      },
+      "trend_up": {
+       "d_n": -54,
+       "d_pnl": 5231.35
+      }
+     },
+     "h2": {
+      "chop": {
+       "kazanma_orani": 0.299,
+       "medyan_r": -0.169,
+       "n": 107,
+       "ort_r": -0.029,
+       "pnl": -911.18
+      },
+      "trend_up": {
+       "kazanma_orani": 0.351,
+       "medyan_r": -0.117,
+       "n": 735,
+       "ort_r": 0.118,
+       "pnl": 28790.74
+      }
+     },
+     "kontrol": {
+      "chop": {
+       "kazanma_orani": 0.365,
+       "medyan_r": -0.241,
+       "n": 96,
+       "ort_r": 0.004,
+       "pnl": 246.74
+      },
+      "trend_up": {
+       "kazanma_orani": 0.365,
+       "medyan_r": -0.162,
+       "n": 789,
+       "ort_r": 0.092,
+       "pnl": 23559.39
+      }
+     }
+    },
+    "saf_cikis_ayrisimi": {
+     "cikan_n": 105,
+     "cikan_pnl": -1227.63,
+     "eklenen_n": 62,
+     "eklenen_pnl": -783.98,
+     "kimlik": "(ts_open[:10], ticker); yol-aynı = ts_close+exit_reason aynı ∧ |Δr|≤1e-9",
+     "kovalar": {
+      "ayni_chop": {
+       "d_pnl": 7.41,
+       "n": 34
+      },
+      "ayni_diger": {
+       "d_pnl": 0.0,
+       "n": 0
+      },
+      "ayni_trend_up": {
+       "d_pnl": 129.13,
+       "n": 182
+      },
+      "kayan": {
+       "d_pnl": 3493.24,
+       "n": 564
+      }
+     },
+     "ortak_n": 780,
+     "pnl_kimligi": {
+      "delta_net_pnl_trades": 4073.43,
+      "kalinti": -0.0,
+      "ortak_delta_pnl": 3629.78,
+      "sente_kapandi": true
+     }
+    },
+    "tablo": {
+     "islem_fark_ci95": {
+      "hi": -11.0,
+      "lo": -74.0,
+      "orta": -43.0
+     },
+     "islem_n": {
+      "fark": -43,
+      "fark_pct": -4.9,
+      "h2": 842,
+      "kontrol": 885
+     },
+     "maxdd_ci_atlanan_iter": 0,
+     "maxdd_fark_ci95_kapali_islem_egrisi": {
+      "hi": 0.0429,
+      "lo": -0.0798,
+      "orta": -0.0129
+     },
+     "maxdd_kanonik": {
+      "h2": 0.1141,
+      "kontrol": 0.1263
+     },
+     "net_pnl_fark_ci95": {
+      "hi": 19003.1177,
+      "lo": -10424.99,
+      "orta": 3637.535
+     },
+     "net_pnl_trades": {
+      "h2": 27879.56,
+      "kontrol": 23806.13
+     },
+     "sharpe": {
+      "h2": 0.694,
+      "kontrol": 0.594
+     },
+     "sharpe_ci_atlanan_iter": 0,
+     "sharpe_fark_ci95": {
+      "hi": 0.4683,
+      "lo": -0.2734,
+      "orta": 0.0891
+     }
+    }
+   }
+  },
+  "hukum": null,
+  "kart": "EDG-2026-073",
+  "kill1_sasi_sinamasi": {
+   "esik": "kart EDG-2026-073 kill-list madde-1: resolve_params(params,{},rejim) HER gözlenen rejim için params ile birebir eşit DEĞİLSE ölçüm GEÇERSİZ (yol yan-etkili)",
+   "gecti": true,
+   "gozlenen_rejimler": [
+    "chop",
+    "high_vol",
+    "trend_down",
+    "trend_up"
+   ],
+   "kayit": [
+    {
+     "eff_params_esit": true,
+     "girdi_mutasyona_ugramadi": true,
+     "rejim": "chop"
+    },
+    {
+     "eff_params_esit": true,
+     "girdi_mutasyona_ugramadi": true,
+     "rejim": "high_vol"
+    },
+    {
+     "eff_params_esit": true,
+     "girdi_mutasyona_ugramadi": true,
+     "rejim": "trend_down"
+    },
+    {
+     "eff_params_esit": true,
+     "girdi_mutasyona_ugramadi": true,
+     "rejim": "trend_up"
+    }
+   ],
+   "tetiklendi": false
+  },
+  "kill2_motor_bar_ayniligi": {
+   "bar_onbellek": {
+    "ayni_varsayilan": true,
+    "en_yeni_bar_dosyasi_kosumdan_once_mi": true,
+    "kayitlar": null,
+    "kosum_baslangic_ts_utc": "2026-09-04T11:47:17+00:00",
+    "olcum_yontemi": "POST-HOC (tek ölçüm, koşumlar bittikten SONRA) — bu üç koşumun kodu bar-özet alanı taşımıyordu (yeni alan, bu turda kosum()'a eklendi); 'koşum sırasında değişmedi' VARSAYIMI, kesin kanıt DEĞİL",
+    "post_hoc_ozet": {
+     "birlesik_sha256": "24662b773e4261ccd9ab74cf7f9384e8779a22e5acf6b45033a2fb1ea3b6eee0",
+     "en_yeni_mtime_utc": "2026-08-25T22:23:01+00:00",
+     "n_dosya": 260
+    }
+   },
+   "esik": "üç koşum aynı motor sha + aynı bar özeti taşımıyorsa GEÇERSİZ (kart kill-list madde-2)",
+   "gecti": true,
+   "motor": {
+    "ayni": true,
+    "her_kosum_KENDI_calisma_aninda_kaydetti": true,
+    "kayitlar": {
+     "h1": {
+      "backtest.py": "06f3d84d2faeb672",
+      "broker.py": "03dd085e46359bb7",
+      "config.py": "c2873c4c332132e8",
+      "guard.py": "d4c7019f61c29bb3",
+      "regime.py": "b057ee60f647c4d3",
+      "score.py": "53dcaec8a23a4a4a",
+      "strategy.py": "0823ecc6272d0468"
+     },
+     "h2": {
+      "backtest.py": "06f3d84d2faeb672",
+      "broker.py": "03dd085e46359bb7",
+      "config.py": "c2873c4c332132e8",
+      "guard.py": "d4c7019f61c29bb3",
+      "regime.py": "b057ee60f647c4d3",
+      "score.py": "53dcaec8a23a4a4a",
+      "strategy.py": "0823ecc6272d0468"
+     },
+     "kontrol": {
+      "backtest.py": "06f3d84d2faeb672",
+      "broker.py": "03dd085e46359bb7",
+      "config.py": "c2873c4c332132e8",
+      "guard.py": "d4c7019f61c29bb3",
+      "regime.py": "b057ee60f647c4d3",
+      "score.py": "53dcaec8a23a4a4a",
+      "strategy.py": "0823ecc6272d0468"
+     }
+    }
+   },
+   "tetiklendi": false
+  },
+  "kiyas_taban": {
+   "boot_seed": 20260903,
+   "kaynak": "TAZE kontrol koşumu (/Users/erdemozturk/AI-Trading/research/olcumler/edg072_rejim_cikis, kok=tam) — AYNI motor+bar, eski C'ye HİÇ DOKUNMAZ"
+  },
+  "kok": "tam",
+  "kuru_deneme": false
+ },
+ "kart_istegi": "EDG-2026-073",
+ "kok": "tam",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg072_rejim_cikis/olcum.py",
+ "olcum_zamani": "2026-09-04T12:08:27+00:00"
+}
