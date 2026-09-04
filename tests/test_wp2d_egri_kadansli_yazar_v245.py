@@ -22,6 +22,12 @@ KAYDIRMAZ" — ve pozitif kontrolü yanındadır ("reset işareti değişirse s�
 Bacak-1'in kendi ayrıntılı sözleşmesi `test_defter_kaynak_damgasi_v140.py`'nin BT-1 bölümündedir; burada
 yalnız YAZARLA KESİŞEN yüzeyi ölçülür.
 
+SIRA YENİDEN ÇEVRİLDİ (TSK-035, 2026-09-04 — tarihçe için üstteki paragraf SİLİNMEDİ): bacak-1'in
+"reset işareti ÖNCE" kararı YOL-2'nin (`trades.kaynak` damgası) AYNI donmuşluğu DOĞRUDAN ölçtüğü
+gerekçesiyle tersine çevrildi. B bölümündeki ANA TEZ ("nokta eklemek sınırı kaydırmaz") aynen
+geçerli — hangi yolun kazandığı ve pozitif kontrolün hangi taraftan geldiği değişti. Ayrıntı ve
+mutasyon kanıtı `tests/test_seed_boundary_sira_v411.py`dedir.
+
 HİÇBİR TEST CANLI STATE'E YAZMAZ: hepsi `sandbox_state` üzerinden koşar.
 """
 from __future__ import annotations
@@ -227,21 +233,34 @@ def test_B_CIVI_kadansli_yazar_TOHUM_SINIRINI_kaydirmaz(sandbox_state):
     30 seanslık nokta eklenir, tohum sınırı kıpırdamaz.
 
     POZİTİF KONTROL yanında: yeni bir reset İŞARETİ yazıldığında sınır DEĞİŞİR — yani ölçüm
-    'her zaman aynı sabiti dönen' ölü bir fonksiyon değildir."""
+    'her zaman aynı sabiti dönen' ölü bir fonksiyon değildir.
+
+    TSK-035 (2026-09-04) SONRASI: sınır artık YOL-2'den (damga, DOĞRUDAN ölçüm) okunuyor. Bu
+    dosyanın satırları zaten `kaynak=REPLAY_SEED` damgalı doğduğu için (`_islem` varsayılanı)
+    KAZANAN yol RESET DEĞİL DAMGA'dır (eski değer 2026-07-20 idi, şimdi 2023-02-03) — ANA TEZ
+    (nokta eklemek sınırı kaydırmaz) DEĞİŞMEDİ, hangi yolun kazandığı değişti. POZİTİF KONTROL de
+    buna göre TAŞINDI: damgalı bir defterde reset işaretini değiştirmek ARTIK sınırı KIPIRDATMAZ
+    (çapraz-sağlama konumunda, yalnız damga hiç konuşamazsa devreye girer) — "ölü sabit değil"
+    kanıtı artık YENİ bir damgalı satır eklemekle gösteriliyor: tam olarak sözleşmenin şimdi
+    sorduğu şey (`trades.kaynak` DOĞRUDAN değişince sınır DEĞİŞİR)."""
     store.write_jsonl(ledgerstamp.LEDGER, [_islem(i, f"2023-02-0{i+1}", -1000.0) for i in range(3)])
     _egri()
     once = ledgerstamp.seed_boundary()
-    assert once["replay_end"] == "2026-07-20" and once["kaynak"] == ledgerstamp.KAYNAK_RESET
+    assert once["replay_end"] == "2023-02-03" and once["kaynak"] == ledgerstamp.KAYNAK_DAMGA
     for i in range(1, 31):
         assert loop._persist_equity_point(f"2026-09-{i:02d}", 100000.0 + i, {})["yazildi"] is True
     b = ledgerstamp.seed_boundary()
     assert b["replay_end"] == once["replay_end"], "30 nokta sonrası tohum sınırı KAYDI"
-    assert b["kaynak"] == ledgerstamp.KAYNAK_RESET and b["n_equity_points"] == 32
+    assert b["kaynak"] == ledgerstamp.KAYNAK_DAMGA and b["n_equity_points"] == 32
     assert b["egri_son_nokta"] == "2026-09-30", "eski yolun değeri görünür (ama sınır DEĞİL)"
-    # POZİTİF KONTROL
+    # POZİTİF KONTROL (TSK-035: lever artık damga) — YENİ reset işareti sınırı KIPIRDATMAZ
     eq = store.read_json(EQ, {})
     eq[sermaye.CURVE_MARK_KEY].append(_isaret("2026-09-30", id_="SR-20260930T000000"))
     store.write_json(EQ, eq)
+    assert ledgerstamp.seed_boundary()["replay_end"] == once["replay_end"], \
+        "reset işareti damgalı bir defterde sınırı taşıdı — çapraz-sağlama yolu BİRİNCİL oldu"
+    # ama YENİ bir tohum satırı (DOĞRUDAN yol) sınırı GERÇEKTEN taşır
+    store.append_jsonl(ledgerstamp.LEDGER, _islem(9, "2026-09-30", -1000.0))
     assert ledgerstamp.seed_boundary()["replay_end"] == "2026-09-30"
 
 
@@ -250,13 +269,15 @@ def test_B_IKI_YOL_AYRISIRSA_beyan_edilir(sandbox_state):
     o anki son noktasını (2026-07-20) taşıyor; 2026-08-13 tohum YENİLEMESİ ise deftere en geç
     2026-07-24 kapanışlı satırlar yazdı. Donmuş sınır, tohumun gerçek penceresinden 4 gün geride.
 
-    SIRA DEĞİŞMEZ (donma > tazelik — sınırın kaymaması köken defterinin ta kendisidir) AMA FARK
-    SESSİZ KALAMAZ: tek bir tarihe bakan okuyucu iki kanıtın anlaştığını sanardı."""
+    SIRA ÇEVRİLDİ (TSK-035, 2026-09-04 — bu satır o zaman "SIRA DEĞİŞMEZ, donma > tazelik" diyordu,
+    tarihçe için üstte durur): sözleşmenin sorduğu şey "tohum defteri nerede biter" ise bunun
+    DOĞRUDAN ölçümü damgadır, donmuş reset işareti değil — sınır artık DOĞRUDAN ölçümü (2026-07-24)
+    alır. FARK yine SESSİZ KALAMAZ: tek bir tarihe bakan okuyucu iki kanıtın anlaştığını sanardı."""
     store.write_jsonl(ledgerstamp.LEDGER,
                       [_islem(0, "2023-02-01", -1000.0), _islem(1, "2026-07-24", -50.0)])
     _egri()                                    # işaret 2026-07-20'de donmuş
     b = ledgerstamp.seed_boundary()
-    assert b["replay_end"] == "2026-07-20" and b["kaynak"] == ledgerstamp.KAYNAK_RESET
+    assert b["replay_end"] == "2026-07-24" and b["kaynak"] == ledgerstamp.KAYNAK_DAMGA
     assert b["yollar"] == {ledgerstamp.KAYNAK_RESET: "2026-07-20",
                            ledgerstamp.KAYNAK_DAMGA: "2026-07-24"}
     assert b["yollar_ayrisik"] is True and "AYRIŞMA" in b["neden"]
@@ -369,7 +390,10 @@ def test_C_CIVI_yazar_daily_cycle_ICINDE_cagriliyor():
 # =================================================================================================
 def test_D_karne_sinirin_KAYNAGINI_tasir(sandbox_state):
     """`analytics.learning_scorecard` sınırı `defter["sinir"]`de servis ediyor (analytics.py::learning_scorecard) —
-    sözleşme genişledi (yeni alanlar), daralmadı: eski anahtarlar yerinde."""
+    sözleşme genişledi (yeni alanlar), daralmadı: eski anahtarlar yerinde.
+
+    DEĞER GÜNCELLENDİ (TSK-035, 2026-09-04): bu fikstürde damgalı satırlar (2023-02-0X) ile reset
+    işareti (2026-07-20) AYRIŞIR; sıra çevrildiği için kazanan artık DOĞRUDAN yol (damga)."""
     from meridian import analytics
     store.write_jsonl(ledgerstamp.LEDGER, [_islem(i, f"2023-02-0{i+1}", -1000.0) for i in range(3)])
     _egri()
@@ -377,7 +401,7 @@ def test_D_karne_sinirin_KAYNAGINI_tasir(sandbox_state):
     for k in ("replay_end", "toplu_yazim", "mtime_delta_s", "n_equity_points", "guven", "neden",
               "kanit", "equity_ilk_nokta"):
         assert k in sinir, f"eski sözleşme alanı düştü: {k}"
-    assert sinir["kaynak"] == ledgerstamp.KAYNAK_RESET and sinir["replay_end"] == "2026-07-20"
+    assert sinir["kaynak"] == ledgerstamp.KAYNAK_DAMGA and sinir["replay_end"] == "2023-02-03"
 
 
 def test_D_seed_boundary_ROWS_ile_de_olculur(sandbox_state):

@@ -17,6 +17,8 @@ pano reset-penceresi dahil" kaleminin v245/v246 SONRASI kalan gövdesi):
   3. ROADMAP §2-37'nin ölçtüğü ayrışma (`yollar_ayrisik`: reset işareti 2026-07-20 ↔ damga
      2026-07-24) yalnız veri/CLI'da görünürdü; panoda hiçbir yüzeye çıkmıyordu. Otorite kararı
      Rol-1'de BEKLİYOR — bu tur karar VERMEZ, ayrışmayı GÖRÜNÜR kılar.
+     KARAR VERİLDİ (TSK-035, 2026-09-04): sıra YOL-2 (damga, DOĞRUDAN ölçüm) > YOL-1 (reset
+     işareti, çapraz-sağlama) — `tests/test_seed_boundary_sira_v411.py`.
 
 BU TURUN ÇÖZÜMÜ (v246 ile aynı mimari yasa): hesap SUNUCUDA, pano yalnız ÇİZER.
   · `ledgerstamp.seed_boundary(rows, eq=…)` — çağıran elindeki zarfı verebilir (ikinci okuma yok);
@@ -148,7 +150,12 @@ def test_B_sinir_tarihi_SERIDE_YOKSA_listelenir_konumlanmaz():
 
 def test_B_yollar_AYRISIRSA_bayrak_ve_iki_deger_beyanda():
     """ROADMAP §2-37'nin ölçtüğü ayrışma panoya makine-okunur çıkar: bayrak + İKİ yolun değeri.
-    Tek tarih basmak, iki kanıtın anlaştığı yanılsamasını üretirdi. Karar VERİLMEZ (Rol-1'de)."""
+    Tek tarih basmak, iki kanıtın anlaştığı yanılsamasını üretirdi.
+
+    KARAR VERİLDİ (TSK-035, 2026-09-04 — bu satır o zaman "Karar VERİLMEZ (Rol-1'de)" diyordu,
+    tarihçe için üstte durur): sıra YOL-2 (`trades.kaynak`, DOĞRUDAN ölçüm) > YOL-1 (donmuş reset
+    işareti, çapraz-sağlama). Bayrak ve İKİ yolun değeri AYNEN duruyor — değişen HANGİSİNİN
+    `replay_end`i KAZANDIĞI (`tests/test_seed_boundary_sira_v411.py::test_B_ayrisik_YENI_SIRA_YOL2yi_secer`)."""
     zarf = _zarf([["2026-07-17", 1.0], ["2026-07-20", 2.0], ["2026-08-14", 3.0]],
                  [_isaret("2026-07-20")])
     sinir = ledgerstamp.seed_boundary([_tohum_satiri("2026-07-24")], eq=zarf)
@@ -156,13 +163,18 @@ def test_B_yollar_AYRISIRSA_bayrak_ve_iki_deger_beyanda():
     assert t["yollar_ayrisik"] is True
     assert t["yollar"][ledgerstamp.KAYNAK_RESET] == "2026-07-20"
     assert t["yollar"][ledgerstamp.KAYNAK_DAMGA] == "2026-07-24"
-    assert t["replay_end"] == "2026-07-20", "donmuş yol esas kalmalı (sıra kararı Rol-1'de)"
+    assert t["replay_end"] == "2026-07-24", "DOĞRUDAN ölçüm esas kalmalı (TSK-035: YOL-2 > YOL-1)"
 
 
 # =================================================================================================
 # §C — /api/performance SERVİSİ: tek hesap, elden zarf
 # =================================================================================================
 def test_C_api_performance_TOHUM_SINIRINI_servis_eder(sandbox_state):
+    """TSK-035 (2026-09-04) SONRASI: fikstürün damgalı satırı (`2026-07-18`) BİLEREK equity
+    serisinde YOK (aynı hâl v245/v264 fikstürlerinde hep böyleydi — o zaman önemsizdi çünkü RESET
+    kazanıyordu). Artık DOĞRUDAN yol (damga) kazandığı için bu tarih seride yoksa `i` KONUMLANAMAZ
+    — `test_B_sinir_tarihi_SERIDE_YOKSA_listelenir_konumlanmaz`nın AYNI sözleşmesi burada da geçer:
+    sınır yine LİSTELENİR (gizlenmez), grafiğe KONMAZ (yer uydurulmaz)."""
     store.write_json("equity_curve.json",
                      _zarf([["2023-01-12", 100000.0], ["2026-07-20", 94457.91],
                             ["2026-08-14", 100100.0]], [_isaret("2026-07-20")]))
@@ -174,8 +186,8 @@ def test_C_api_performance_TOHUM_SINIRINI_servis_eder(sandbox_state):
     assert r.status_code == 200
     b = r.json()["equity_curve_beyani"]
     t = b["tohum_siniri"]
-    assert t and t["replay_end"] == "2026-07-20" and t["kaynak"] == ledgerstamp.KAYNAK_RESET
-    assert t["i"] == 1
+    assert t and t["replay_end"] == "2026-07-18" and t["kaynak"] == ledgerstamp.KAYNAK_DAMGA
+    assert t["i"] is None and "seride" in (t["konum_neden"] or "")
     # ESKİ BEYAN ALANLARI AYNEN DURUYOR: yeni pencere eskilerin YERİNE geçmez, YANINA gelir.
     assert b["n_isaret"] == 1 and b["gecikme_gun"] == 0
 

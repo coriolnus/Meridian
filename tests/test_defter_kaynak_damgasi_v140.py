@@ -208,7 +208,13 @@ def test_B_CIVI_EGRIYE_NOKTA_EKLENINCE_SINIR_DEGISMEZ(sandbox_state):
 def test_B_ISARET_YOKSA_YEDEK_YOL_trades_damgasindan_okur(sandbox_state):
     """Kartın YAZILI geçici çaresi (EDG-2026-036:178): işaret yoksa sınır `trades.kaynak`
     damgasından okunur. Beyan zorunlu — `kaynak` alanı hangi yolun konuştuğunu söyler, yoksa iki
-    farklı kanıttan gelen aynı sayı okur için ayırt edilemez olurdu."""
+    farklı kanıttan gelen aynı sayı okur için ayırt edilemez olurdu.
+
+    METİN GÜNCELLENDİ (TSK-035, 2026-09-04): bu senaryonun DEĞERLERİ değişmedi (işaret zaten yok,
+    tek konuşan yol damga) ama `neden` metni artık "YEDEK YOL" demiyor — TSK-035 sırayı çevirdiği
+    için `trades.kaynak` artık YEDEK değil BİRİNCİL/DOĞRUDAN yol (bkz. `tests/test_seed_boundary_
+    sira_v411.py::test_A_tam_damgali_dunyada_SINIR_DEGISMEZ_ama_kaynak_YOL2ye_doner`); metin çivisi
+    o yeni sözcüğe taşındı, DEĞER çiviler aynen kaldı (aşağıdaki `assert`ler)."""
     rows = [dict(_islem(i, "2023-01-31", f"2023-02-0{i+1}", -0.01),
                  kaynak=ledgerstamp.REPLAY_SEED) for i in range(3)]
     _tohum_yazimi(rows, "2026-07-20", isaret=False)
@@ -217,7 +223,7 @@ def test_B_ISARET_YOKSA_YEDEK_YOL_trades_damgasindan_okur(sandbox_state):
     assert b["kaynak"] == ledgerstamp.KAYNAK_DAMGA and b["guven"] == "orta"
     assert b["yollar"] == {ledgerstamp.KAYNAK_RESET: None, ledgerstamp.KAYNAK_DAMGA: "2023-02-03"}
     assert b["damga_olcumu"]["damgali_n"] == 3
-    assert "YEDEK YOL" in b["neden"]
+    assert "DOĞRUDAN" in b["neden"]
     # ve eğrinin son noktası (2026-07-20) SINIR OLARAK KULLANILMADI
     assert b["egri_son_nokta"] == "2026-07-20" and b["replay_end"] != b["egri_son_nokta"]
 

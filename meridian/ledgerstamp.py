@@ -9,15 +9,26 @@ alfa/beta ölçümü tüm defteri "canlı" sanır. Modül üç şey yapar: (1) i
 geriye dönük damgalar (`migrate` — kuru koşu varsayılan, tek atomik yazım, süreçler-arası kilit),
 (3) okuyucuların payda ayırdığı tek sayaç yüzeyini verir (`counts`/`split`/`kaynak_of`).
 
-TOHUM SINIRI UYDURULMAZ, DONMUŞ KANITTAN OKUNUR (`seed_boundary`), sırayla: eğri zarfındaki SON
-reset işaretinin `egri_son_nokta` alanı (bir kez yazılır; eğriye nokta eklemek onu kıpırdatmaz) →
-yedek yol `trades.kaynak`: `replay_seed` damgalı satırların en geç `ts_close`u → hiçbiri
-ölçülemezse `replay_end` None'dır ve TÜM satırlar `belirsiz` kalır ("sınır 0" ya da "bugün"
-uydurulmaz); hangi yolun konuştuğu `kaynak`/`yollar` alanlarında beyanlıdır. Eğrinin SON
-NOKTASINDAN okuma YANLIŞLANDI: eğrinin kadanslı bir yazarı var, oradan okunan sınır her seans
-bugüne kayar ve her canlı satırı tohum diye damgalardı. Toplu-yazım mtime imzası da aynı nedenle
-İKİNCİL ve ZAYIFTIR: sınırı belirlemez, yalnız `classify`ın çelişki kuralını besler; çelişki
+TOHUM SINIRI UYDURULMAZ, DONMUŞ KANITTAN OKUNUR (`seed_boundary`), sırayla: `trades.kaynak`:
+`replay_seed` damgalı satırların en geç `ts_close`u (DOĞRUDAN ölçüm — sözleşmedeki "tohum defteri
+NEREDE BİTER" sorusunun birebir cevabı ve donmuşluk şartını da kendiliğinden sağlar: damgalı bir
+satır migrasyonda bir daha yazılmaz) → çapraz-sağlama yolu: eğri zarfındaki SON reset işaretinin
+`egri_son_nokta` alanı (bir kez yazılır; eğriye nokta eklemek onu kıpırdatmaz; yalnız DOĞRUDAN yol
+hiç konuşamazsa devreye girer) → hiçbiri ölçülemezse `replay_end` None'dır ve TÜM satırlar
+`belirsiz` kalır ("sınır 0" ya da "bugün" uydurulmaz); hangi yolun konuştuğu `kaynak`/`yollar`
+alanlarında beyanlıdır.
+ARTIK BÖYLE (TSK-035, 2026-09-04): ESKİ SIRA (WP2-D bacak-1, 2026-08-14) reset işaretini ÖNCE
+deniyordu — donmuşluk şartını reset işaretinden ödünç alıyordu ("eğriye nokta eklemek sınırı
+kaydırmasın"); oysa damgalı satırlar AYNI donmuşluğu taşır ve sözleşmenin sorduğu şeyi DOLAYLI
+değil DOĞRUDAN ölçer, o yüzden sıra ÇEVRİLDİ (YOL-2 > YOL-1). Eğrinin SON NOKTASINDAN (reset
+işaretinin KENDİSİ değil, `points`in en sonu) okuma hâlâ YANLIŞLANMIŞ durumda: eğrinin kadanslı bir
+yazarı var, oradan okunan sınır her seans bugüne kayar ve her canlı satırı tohum diye damgalardı —
+`egri_son_nokta` bilgi alanı bu yüzden hâlâ sınır SAYILMAZ. Toplu-yazım mtime imzası da aynı
+nedenle İKİNCİL ve ZAYIFTIR: sınırı belirlemez, yalnız `classify`ın çelişki kuralını besler; çelişki
 `live_paper`a değil `belirsiz`e çözülür — sınıflandırıcı kendi kanıtını yalanlayamaz.
+GERİ-AÇILIŞ ŞARTI: bu sıranın dayanağı canlı defterde damgasız satır sayısının 0 olmasıdır (887/887,
+2026-08-14 ölçümü — TSK-035 brief D2) yani DOĞRUDAN yolun defterin TAMAMINI görebilmesidir; bu sayı
+> 0 çıkarsa (DOĞRUDAN yol defterin bir kısmını göremiyorsa) bu kalem YENİDEN AÇILIR.
 
 CANLI WORKER KOŞARKEN YAZMAZ: CLI canlı süreç görürse `--uygula`yı reddeder (`--zorla` ile
 ezilir) — kilit yarışı önler ama defteri iki farklı NİYETLE yeniden yazmayı önlemez. Kullanım:
@@ -211,7 +222,9 @@ def _tarih(v) -> str | None:
 
 
 def _sinir_reset_isaretinden(eq: dict | None) -> tuple[str | None, dict]:
-    """YOL-1 — SON reset işaretinin `egri_son_nokta` alanı. ONARIMIN TA KENDİSİ.
+    """YOL-1 — SON reset işaretinin `egri_son_nokta` alanı. WP2-D onarımının kendisiydi (2026-08-14);
+    TSK-035'ten (2026-09-04) beri ÇAPRAZ-SAĞLAMA yolu — `seed_boundary` bunu YOL-2 (damga) hiç
+    konuşamazsa çağırır (modül başlığında sıra tarihçesi durur).
 
     İşaret DONMUŞ bir kanıttır: `sermaye.uygula` onu bir kez yazar, bir daha
     yeniden yazmaz ve `points`e dokunmaz. Eğriye kaç nokta eklenirse eklensin bu alan kıpırdamaz —
@@ -224,7 +237,7 @@ def _sinir_reset_isaretinden(eq: dict | None) -> tuple[str | None, dict]:
 
     SONDAN GERİYE taranır: reset ANINDA eğri boşsa `sermaye.uygula` alana None yazar,
     yani son işaret konuşamayabilir. Konuşabilen EN SON işaret alınır; hiçbiri konuşamazsa None
-    döner ve YOL-2 devreye girer."""
+    döner ve çağıran `kaynak: yok`a düşer (YOL-2 de konuşamıyorsa)."""
     from .sermaye import _egri_isaretleri          # TEK KAYNAK: işareti YAZAN modülün okuyucusu
     isaretler = _egri_isaretleri(eq or {})
     for m in reversed(isaretler):
@@ -236,7 +249,9 @@ def _sinir_reset_isaretinden(eq: dict | None) -> tuple[str | None, dict]:
 
 
 def _sinir_damgadan(rows: list[dict]) -> tuple[str | None, dict]:
-    """YOL-2 (YEDEK) — `replay_seed` damgalı satırların EN GEÇ `ts_close`u.
+    """YOL-2 — `replay_seed` damgalı satırların EN GEÇ `ts_close`u. TSK-035'ten (2026-09-04) beri
+    `seed_boundary`nin BİRİNCİL yolu (ESKİDEN "YEDEK" idi — WP2-D, 2026-08-14 — modül başlığında
+    sıra tarihçesi durur): sözleşmedeki "tohum defteri nerede biter" sorusunun DOĞRUDAN ölçümü.
 
     Kartın KENDİ yazılı çaresi ("o güne dek tohum sınırı `trades.kaynak`
     damgasından okunur"). Reset işareti hiç yazılmamış bir depoda (ör. tohumlanmış ama sermaye
@@ -269,14 +284,20 @@ def _sinir_damgadan(rows: list[dict]) -> tuple[str | None, dict]:
 def seed_boundary(rows: list[dict] | None = None, eq: dict | None = None) -> dict:
     """TOHUM PENCERESİNİN SINIRI — DONMUŞ kanıttan, tahminsiz.
 
-    ÜÇ YOL, SIRAYLA (modül başlığındaki onarım gerekçesi):
-      1. `reset_isareti` — eğri zarfındaki son reset işaretinin `egri_son_nokta`sı (güven: yuksek).
-      2. `trades.kaynak` — `replay_seed` damgalı satırların en geç `ts_close`u (güven: orta).
+    ÜÇ YOL, SIRAYLA (TSK-035, 2026-09-04 — sıra ÇEVRİLDİ; ESKİ sıra WP2-D bacak-1'deydi, modül
+    başlığında tarihçesi durur):
+      1. `trades.kaynak` — `replay_seed` damgalı satırların en geç `ts_close`u (güven: TSK-035 r1,
+         2026-09-04 — YOL-1 AYNI tarihi doğrularsa "yuksek", YOL-1 sessiz ya da AYRIŞIKsa "orta").
+         DOĞRUDAN ölçüm: sözleşmedeki "tohum defteri nerede biter" sorusunun birebir cevabı.
+      2. `reset_isareti` — ÇAPRAZ-SAĞLAMA: eğri zarfındaki son reset işaretinin `egri_son_nokta`sı
+         (güven: yuksek). Yalnız (1) hiç konuşamazsa devreye girer.
       3. `yok`           — hiçbiri ölçülemedi: `replay_end` None, her satır `belirsiz` (güven: yok).
 
     HANGİ YOLUN KONUŞTUĞU `kaynak` ALANINDA YAZAR ve `yollar` ikisinin değerini yan yana taşır:
     iki yol aynı sayıyı verse bile okuyucu hangisine baktığını görmek zorundadır (aynı sayıya iki
-    ayrı kanıttan varmak ile tek kanıta mahkûm olmak farklı şeylerdir).
+    ayrı kanıttan varmak ile tek kanıta mahkûm olmak farklı şeylerdir). GERİ-AÇILIŞ ŞARTI: canlı
+    defterde damgasız satır sayısı > 0 çıkarsa (DOĞRUDAN yol defterin bir kısmını göremiyorsa) bu
+    sıra kalemi YENİDEN AÇILIR (TSK-035 brief D2 — ölçüldüğü gün 887/887 damgalıydı).
 
     `egri_son_nokta` alanı BİLGİ OLARAK taşınır ama SINIRI BELİRLEMEZ — eski yolun bugün ne
     diyeceği görünsün diye (canlıda 2026-08-13'te ikisi ayrışmıştı; eski yol sınırı 2026-07-20'de
@@ -305,27 +326,41 @@ def seed_boundary(rows: list[dict] | None = None, eq: dict | None = None) -> dic
 
     # İKİ YOL AYRIŞIRSA BU SESSİZ KALAMAZ. Canlıda ÖLÇÜLEN hâl: işaret 2026-08-01'de
     # donmuş ve eğrinin O ANDAKİ son noktasını (2026-07-20) taşıyor; oysa 2026-08-13 tohum
-    # yenilemesi defterine en geç 2026-07-24 kapanışlı satırlar girdi. Yani DONMUŞ sınır, tohumun
-    # GERÇEK penceresinden 4 gün geride. Sıra bilinçlidir (donma > tazelik: sınırın kaymaması
-    # köken defterinin ta kendisidir) ama fark ADIYLA görünmeli — yoksa okuyucu tek bir tarihe
-    # bakıp iki kanıtın anlaştığını sanar.
+    # yenilemesi defterine en geç 2026-07-24 kapanışlı satırlar girdi. Yani DONMUŞ çapraz-sağlama
+    # yolu, tohumun GERÇEK penceresinden 4 gün geride. TSK-035 (2026-09-04) SIRAYI ÇEVİRDİ: sınır
+    # artık bilerek DOĞRUDAN ÖLÇÜMÜ (damga) alır — ESKİ kararın tersi (o da bilinçliydi, "donma >
+    # tazelik" gerekçesiyle; modül başlığında tarihçesi durur) — ama fark yine ADIYLA görünmeli,
+    # yoksa okuyucu tek bir tarihe bakıp iki kanıtın anlaştığını sanar.
     _ayrisma = ("" if not (d_reset and d_damga) or d_reset == d_damga else
-                (f" · AYRIŞMA: yedek yol (`{KAYNAK_DAMGA}`) {d_damga} diyor — tohum defteri "
-                 f"işaretin donduğu tarihten SONRAsına uzanıyor; sınır bilerek DONMUŞ olanı "
-                 f"alır, fark burada beyanlıdır"))
-    if d_reset:
+                (f" · AYRIŞMA: çapraz-sağlama yolu (`{KAYNAK_RESET}`) {d_reset} diyor — donmuş "
+                 f"reset işareti tohum defterinin GERÇEK ucundan farklı bir tarihte kalmış; sınır "
+                 f"bilerek DOĞRUDAN ÖLÇÜMÜ (`{KAYNAK_DAMGA}`) alır, fark burada beyanlıdır"))
+    if d_damga:
+        replay_end, kaynak = d_damga, KAYNAK_DAMGA
+        # TSK-035 r1 (Rol-1 hükmü, 2026-09-04 ~20:35Z): `guven` ÇAPRAZ-SAĞLAMAYI yansıtır. YOL-2
+        # (damga) DOĞRUDAN ölçüm olsa da YEDEK yol (YOL-1/reset) AYNI tarihi doğrularsa iki
+        # BAĞIMSIZ kanıt anlaşmış demektir — "yuksek". YOL-1 sessizse (hiç konuşamıyorsa) ya da
+        # AYRIŞIKsa (farklı tarih diyorsa) tek kanıta mahkûmuz — "orta" kalır.
+        _dogrulandi = bool(d_reset) and d_reset == d_damga
+        guven = "yuksek" if _dogrulandi else "orta"
+        _capraz = ("çapraz-sağlama: reset işareti AYNI tarihi doğruladı" if _dogrulandi else
+                   "çapraz-sağlama: reset işareti AYRIŞIK" if d_reset else
+                   "çapraz-sağlama: reset işareti sessiz")
+        neden = (f"sınır `trades.kaynak` damgalı satırların en geç ts_close'undan DOĞRUDAN "
+                 f"ölçüldü (TSK-035): {m_damga['damgali_n']} replay_seed satırının en geç "
+                 f"ts_close'u {replay_end} ({m_damga['ts_olculemeyen']} satırın ts_close'u "
+                 f"ayrıştırılamadı). Bu, sözleşmedeki 'tohum defteri nerede biter' sorusunun "
+                 f"DOĞRUDAN ölçümüdür — damgalı satır migrasyonda bir daha yazılmaz, yani "
+                 f"donmuşluk şartı da kendiliğinden sağlanır. {_capraz} (guven: {guven}, "
+                 f"TSK-035 r1).{_ayrisma} [{_imza}]")
+    elif d_reset:
         replay_end, kaynak, guven = d_reset, KAYNAK_RESET, "yuksek"
-        neden = (f"sınır SON reset işaretinin `egri_son_nokta` alanından okundu "
+        neden = (f"defterde ölçülebilir replay_seed damgası yok ({m_damga['damgali_n']} damgalı "
+                 f"satır görüldü, {m_damga['ts_olculemeyen']} biçimsiz ts_close) — ÇAPRAZ-SAĞLAMA "
+                 f"YOLU: sınır SON reset işaretinin `egri_son_nokta` alanından okundu "
                  f"({m_reset['isaret_id']}, işaret tarihi {m_reset['isaret_tarihi']}): "
                  f"{replay_end}. Bu alan DONMUŞTUR — eğriye yeni nokta eklenmesi sınırı "
-                 f"kaydırmaz.{_ayrisma} [{_imza}; imza sınırı BELİRLEMEZ]")
-    elif d_damga:
-        replay_end, kaynak, guven = d_damga, KAYNAK_DAMGA, "orta"
-        neden = (f"eğride reset işareti yok ya da `egri_son_nokta` okunamadı "
-                 f"({m_reset['n_isaret']} işaret görüldü) — YEDEK YOL: sınır `trades.kaynak` "
-                 f"damgasından okundu; {m_damga['damgali_n']} replay_seed satırının en geç "
-                 f"ts_close'u {replay_end} "
-                 f"({m_damga['ts_olculemeyen']} satırın ts_close'u ayrıştırılamadı). [{_imza}]")
+                 f"kaydırmaz. [{_imza}; imza sınırı BELİRLEMEZ]")
     else:
         replay_end, kaynak, guven = None, KAYNAK_YOK, "yok"
         neden = (f"tohum penceresinin sınırı ÖLÇÜLEMEDİ: eğride konuşabilen reset işareti yok "
@@ -340,11 +375,12 @@ def seed_boundary(rows: list[dict] | None = None, eq: dict | None = None) -> dic
             "reset_isareti": m_reset, "damga_olcumu": m_damga,
             "toplu_yazim": toplu, "mtime_delta_s": delta,
             "n_equity_points": len(pts), "guven": guven, "neden": neden,
-            "kanit": ((f"eğri zarfındaki son reset işaretinin `egri_son_nokta` alanı "
-                       f"(yazar: sermaye.uygula) — DONMUŞ") if kaynak == KAYNAK_RESET else
-                      (f"`{LEDGER}` içindeki replay_seed damgalarının en geç ts_close'u "
-                       f"(yazar: run.replay_seed → stamp_rows) — YEDEK YOL"
-                       if kaynak == KAYNAK_DAMGA else "kanıt YOK — sınır ölçülemedi")),
+            "kanit": ((f"`{LEDGER}` içindeki replay_seed damgalarının en geç ts_close'u "
+                       f"(yazar: run.replay_seed → stamp_rows) — DOĞRUDAN ÖLÇÜM"
+                       ) if kaynak == KAYNAK_DAMGA else
+                      (f"eğri zarfındaki son reset işaretinin `egri_son_nokta` alanı "
+                       f"(yazar: sermaye.uygula) — ÇAPRAZ-SAĞLAMA (DONMUŞ)"
+                       if kaynak == KAYNAK_RESET else "kanıt YOK — sınır ölçülemedi")),
             # ESKİ YOLUN BUGÜNKÜ DEĞERİ — bilgi; sınırı BELİRLEMEZ (bkz. modül başlığı).
             "egri_son_nokta": egri_son,
             "equity_ilk_nokta": (_tarih(pts[0]) if pts else None)}
