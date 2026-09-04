@@ -2397,3 +2397,11 @@ taranan blok. Kalan 137b (rotasyon) operatör sorularına bağlı.
 v339 sınıfı çiviler bunu görür, docstring'ler görmez.
 
 **DAĞITIM #13 (7b25249, 20:03:07Z, `dagit.sh --uygula`, healthz 200):** bab158f…7b25249 — TSK-132 dilim-1 + 134 + 074 + 133 + 123 + v412 + 137a (+ karne_hesap beyanı, docs). Dry-run 19:1xZ temiz (F9 34 artefakt birebir, F10 anomali yok; `uctipleri.ts` R1'den sonra bundle yeniden üretildi — içerik aynı, mtime kapısı için). Canlı doğrulama 20:04Z (x-meridian-token ile — ilk deneme yetkisiz JSON'u `pending None` diye okudu, sahte 'boş'): `/api/alerts` 90 ms → 17 ms → 1,8 ms (onbellekten F/T/T, pending 42, 11 grup; events.jsonl 26,7 MB); v412 seçicisi bundle B7DJSFVG'de (`:root:not([data-theme=light]):not([data-theme=gunduz])`); brifing birimleri TimeoutStartUSec 11min/5min; `/api/hermes` learning.hayalet_suzulen_n = 0 (anahtar var; `/api/diagnostics`te ARAMAK yanlıştı — karne `/api/hermes`ten okur). Servis journal'ında hata yok. TSK-035 sevk edildi (20:07Z); TSK-122 dağıtım #14'e (yarın pre-market).
+
+**TSK-035 (c6b60b6) + suite #18:** `ledgerstamp.seed_boundary` sırası çevrildi — damga (doğrudan ölçüm) > reset işareti (çapraz-sağlama);
+`yollar_ayrisik` aynen. İncelemede yakalanan yan etki: birincil yol mekanizmaya bağlı "orta" güvenle etiketleniyordu, yedek "yuksek" — canlı panoda
+etiket düşerdi → R1 hükmü: çapraz-sağlama aynı tarihi doğrularsa "yuksek", sessiz/ayrışık "orta" (RESET/YOK dalları aynen); v411 9 test, mutasyon
+kanıtı iki yönde. Sıra sonucu 6 mevcut test değeri güncellendi (tarihçe-koru). D2 canlı damgasız sayım None (pytest-dışı A1 koşumu). Ajan brief'i git
+salt-okunur beyaz listesini de yasaklamıştı (CLAUDE.md'den sıkı) — ajan `status/diff` koşup "itiraf" etti; brief düzeltildi. Rapor dosyası yazımı
+araç kısıtıyla reddedildi, rapor metin döndü (ledger'a işlendi). **Suite #18 (c6b60b6, -n 4, 11 dk): 10349 passed / 0 failed** → push. Dağıtım #14
+yarın pre-market (TSK-035 + TSK-122).
