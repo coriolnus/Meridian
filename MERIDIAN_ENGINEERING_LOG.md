@@ -2271,3 +2271,20 @@ sabitleri ölçülerek. Delta 244 passed / 1 xfailed; commit 26d48b8. Dal-sonu g
 CwkWUy4f/HgpfoZb- · docs/ROADMAP/günlük), silinen yalnız eski bundle çifti; [F10] ✓ [5c] ✓ [5b] ✓; healthz 200; meridian/barsarchive
 active, learn inactive (TSK-092); canlı evren 238; pano yeni bundle'ı sunuyor. Canlıda: TSK-119 + TSK-117 G1–G8 (+ r2/r3). SABAH: görsel
 tur canlı panoda (118/121/117 DONE damgaları), TSK-131 disk kararı, TSK-133 ışıklılık kararı, TSK-130 kota, TSK-014 22:00Z yeniden ölçüm.
+
+### 2026-09-04 gece-3 (Rol-1, otonom) — TSK-129 (sembol çapaları 102 → 0, codelaw aşama-2) · suite #13 · dağıtım #10
+
+**TSK-129, tek sonnet ajan (64 dk, 347 araç) + sonnet inceleme, commit 11aa356:** ölçüm pytest içinden (pytest-dışı koşum obs'a yazar — D1);
+102 çürük / 71 dosya elle sınıflandı: 48 gerçek sembol → `dosya.py::sembol` (hepsi def/class ölçülerek; bir GERÇEK düzeltme:
+`shadow_variants.in_blackout` diye anılan şey `earnings.py::in_blackout`muş), 27 JSON-alan/attribute düzyazı, 20 yerel değişken/URL/
+illüstratif düzyazı, 7 sieve aşama dizgesi düzyazı, 5 emekli fonksiyon `çapa-mezar-taşı`. AŞAMA-2 canlı: `codelaw.report()["ok"]` artık
+`yorum_sembol_curume`ye bağlı (v373 deseni), körlük 500 dosya / 1.500 çapa (ölçülen 576 / 2.221). TSK-119'un 37 sembol çapası artık
+korunuyor (uydurma sembol mutasyonu ÖTTÜ — 119'da ötmemişti). Davranış değişmedi: 28 motor dosyasının AST'si (docstring hariç) Rol-1 ve
+incelemeci tarafından ayrı ayrı BİREBİR ölçüldü. Bedel: `report()` sıcak 1.790 ms (TSK-120 bandı). İnceleme 20+ sembolü grep'le doğruladı;
+ÖNEMLİ: `_yorum_sembol_capalari` metin kökleri `report()`'tan parametrize edilmiyor — sentetik kökle çağıran testler gerçek ağacı tarıyor
+(v373 yalıtıldı, v314 aynı tuzakta ama bugün zararsız) → [TSK-135]. Ajan bir kez "bildirim bekliyorum" diye durdu (alt ajan arka plan
+bildirimi almaz) — SendMessage ile sürdürüldü; bir kez daha: alt ajanlara "arka plan koşum + bekle" değil "koş, dosyayı oku" denir.
+
+**Suite #13 (11aa356, 02:33→02:44Z, `-n 4`): 10203 passed / 1 failed / 1 xfailed** — `test_golge_planli_kol_v217::test_p95_dongu_suresi_
+kart_tavanini_ASMIYOR` (zamanlama tavanı) `-n 4` yükünde kırmızı, seri yeniden koşumda 24/0 yeşil; dosya TSK-129'da dokunulmadı → yük
+kaynaklı flake. Not: v217 p95 tavanı yük-bağımsız değil, ilk kez görüldü (suite #6–#12 temiz) — tekrarlarsa kalem açılır. Push 11aa356.
