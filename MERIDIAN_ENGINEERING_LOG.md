@@ -2303,3 +2303,5 @@ aralık çapalarında aralık bilgisi kaybı — bedel, beyanlı).
 
 **Suite #14 (1ffc521, 03:29→03:41Z, `-n 4`): 10207 passed / 0 failed / 1 xfailed, PYTEST_EXIT=0** — gecenin ilk tamamen temiz tam suite'i
 (#11 temiz; #12 iki gizli sınıf; #13 v217 yük flake'i). Push 1ffc521.
+
+**Dağıtım #11 (8c49900, 03:44Z, pre-market):** TSK-135 + TSK-127 (codelaw + runbook_uret + RUNBOOK) canlıya; kuru koşum temiz, healthz 200, birimler aktif, evren 238. Gece toplamı: #8 cbdac82 · #9 fd871e4 · #10 6f880c0 · #11 8c49900.
