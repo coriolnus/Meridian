@@ -2405,3 +2405,16 @@ kanıtı iki yönde. Sıra sonucu 6 mevcut test değeri güncellendi (tarihçe-k
 salt-okunur beyaz listesini de yasaklamıştı (CLAUDE.md'den sıkı) — ajan `status/diff` koşup "itiraf" etti; brief düzeltildi. Rapor dosyası yazımı
 araç kısıtıyla reddedildi, rapor metin döndü (ledger'a işlendi). **Suite #18 (c6b60b6, -n 4, 11 dk): 10349 passed / 0 failed** → push. Dağıtım #14
 yarın pre-market (TSK-035 + TSK-122).
+
+**TSK-122 (6e35ba1, seçenek a):** SOUL denetimi şeması {sade_ozet, uydurma, cevrilen} — "0 ship Türkçeye çevrildi" sınıfını ne mekanik ne LLM
+yakalıyordu; (b) mekanik jeton koruması elendi (TAKILI/DURAN/BAYAT şablon sözcükleri yanlış-pozitif, Türkçe büyük harf ASCII sınıfına girmiyor).
+`cevrilen` dolu → D5 yeniden-üretim (uydurma yolu, tavan/fail-open aynen); bedel beyanı yalnız obs.log kwarg'ı, damgaya girmez (okuyucusu yok —
+ajan Yasa 6'yı kendi buldu ve çivisini yazdı). v385 genişletildi (23 kırmızı → 65 yeşil; mutasyon 19 öttü), v385+v409 76/0. `soul_denetimi.py`
+kütüphane (CLI yok) — "operatörün koşacağı biçimde koş" adımı uygulanamadı, tam suite #19'a bırakıldı. Ops-only → push (6607770) tam suite
+beklemeden (§8 motor kuralı meridian/ için). Canlı 22:00Z brifingi hâlâ eski şema; dağıtım #14 yarın pre-market.
+
+**TSK-134 kök neden (21:0xZ):** gece + OS-koyu'da `--card` #262626'nın kaynağı `.dark` bloğu DEĞİL, jetonlar.css OS-medya bloğu: seçici
+`:root:not([data-theme='light']):not([data-theme='gunduz'])` (0,3,0) pano `data-theme=gece` kökünde uygulanıp tema.css `.dark` (0,1,0) bloğunu
+eziyor; v412 yalnız gunduz'u dışlamıştı — değer-bazlı dışlama listesi sözlük büyüdükçe yeniden delinir. Hüküm: `:root:not([data-theme])` —
+OS tercihi yalnız DAMGASIZ köke, damgalı kök temayı kendi yönetir (pano `.dark`; jetonlar bloğu önce, tema.css sonra → tema.css kazanır, v407
+ile tutarlı). Damga sözlüğü ölçüldü: pano/onyuk/eski sayfalar hep gunduz|gece; eski sayfalar jetonlar.css'i yüklemiyor. Sevk 21:06Z (sonnet).
