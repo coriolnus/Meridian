@@ -355,7 +355,10 @@ def _jeton_hue(jeton: str, kaynak: pathlib.Path | None = None) -> float | None:
     tak = soy(TAKIMYILDIZI)
     blok = re.search(r"export const JETONLAR\s*=\s*\{(.*?)\n\}", tak, re.S)
     assert blok, "JETONLAR tablosu okunamadı — desen bayat"
-    m = re.search(rf'{re.escape(jeton)}:\s*"(--[a-z0-9-]+)"', blok.group(1))
+    # `"?` (TSK-132, 2026-09-04): JETONLAR artık İKİ anahtar biçimi karıştırıyor — kısa/tirsiz
+    # adlar (`zemin`) çıplak JS tanımlayıcı, tireli rol adları (`dugum-world`) ZORUNLU tırnaklı
+    # (TS geçerli tanımlayıcı değilse tırnaklar) — tırnaksız bir desen ikincisini kaçırırdı.
+    m = re.search(rf'"?{re.escape(jeton)}"?:\s*"(--[a-z0-9-]+)"', blok.group(1))
     assert m, f"jeton tabloda yok: {jeton}"
     degisken = m.group(1)
 
@@ -427,7 +430,7 @@ def test_DUGUM_RENKLERI_rol_bantlarinda_DEGIL():
     `test_VARSAYILAN_DUGUM_RENKLERI_rol_bandina_DONDU` ile AYRICA, düz bir değer ölçümü olarak
     (hue-gate DEĞİL) doğrulanır."""
     blok = _dugum_stili()
-    jetonlar = set(re.findall(r'"([a-z]+)"', blok))
+    jetonlar = set(re.findall(r'"([a-z0-9-]+)"', blok))
     assert jetonlar, "DUGUM_STILI hiçbir jeton adı taşımıyor — tablo boş okunuyor"
     for jeton in sorted(jetonlar):
         h = _jeton_hue(jeton, kaynak=PRESET)
@@ -444,12 +447,21 @@ def test_VARSAYILAN_DUGUM_RENKLERI_rol_bandina_DONDU():
     ÖLÇÜLDÜĞÜ ÜZERE rol bandına geri düştü (TSK-136, 2026-09-04) — operatörün BİLİNÇLİ kararının
     doğrudan sonucu, eski (b) bulgusunun sınıfı. `soluk`/`yazi` akromatik, banda giremez."""
     blok = _dugum_stili()
-    jetonlar = sorted(set(re.findall(r'"([a-z]+)"', blok)))
+    jetonlar = sorted(set(re.findall(r'"([a-z0-9-]+)"', blok)))
     bantta = {j: _bantta(h) for j in jetonlar if (h := _jeton_hue(j)) is not None}
     bantta = {j: b for j, b in bantta.items() if b is not None}
-    assert bantta == {"teal": "GEZİNME", "pembe": "BİLGİ"}, (
-        f"VARSAYILANDA banda-düşen küme değişti: {bantta} — beklenen {{'teal': 'GEZİNME', "
-        "'pembe': 'BİLGİ'}} (2026-09-04 ölçümü); DUGUM_STILI ya da tema.css sessizce değişmiş olabilir")
+    # `isi-2`/`isi-3` (TSK-132, 2026-09-04) `isiDuraklari`den — AYNI değişkenleri `dugum-world`/
+    # `dugum-experience` ile paylaşıyorlar (ısı rampası ile küme rengi TEK tablodan doğuyor,
+    # `test_KUME_ve_ISI_renkleri_TABLODAN_turetiliyor`) — bu yüzden AYNI bantlara düşmeleri
+    # BEKLENEN: ısı rampasının orta/sıcak durağı küme rengiyle görsel olarak ÇAKIŞMAMASI gerçeği
+    # tam da bu testin ölçtüğü şey (TSK-124 "mor noktalar" ile aynı sınıf).
+    assert bantta == {
+        "dugum-world": "GEZİNME", "dugum-experience": "BİLGİ",
+        "isi-2": "GEZİNME", "isi-3": "BİLGİ",
+    }, (
+        f"VARSAYILANDA banda-düşen küme değişti: {bantta} — beklenen dugum-world/isi-2→GEZİNME, "
+        "dugum-experience/isi-3→BİLGİ (2026-09-04 ölçümü, ad TSK-132'de teal/pembe'den taşındı); "
+        "DUGUM_STILI ya da tema.css sessizce değişmiş olabilir")
 
 
 def test_ISTISNALAR_KUNYELI_ve_HALA_GEREKLI():
@@ -475,24 +487,27 @@ def test_ISTISNALAR_KUNYELI_ve_HALA_GEREKLI():
 
 def test_ISTISNA_DISINDA_kromatik_ton_TEK():
     """S3'ÜN ÖLÇÜLEN BEDELİ, ADIYLA (bedel yasası) — GÜNCELLENDİ (TSK-117 K-4, 2026-09-04; jeton
-    adları düzeltme turu 1'de TEKRAR değişti, TSK-117 G7 r1, 2026-09-04):
+    adları düzeltme turu 1'de TEKRAR değişti, TSK-117 G7 r1, 2026-09-04; TSK-132, 2026-09-04'te
+    hue adları ROL adına taşındı — `teal`→`dugum-world`, `turuncu`→`bag-entity`, `mor`→
+    `bag-causal`, `pembe`→`dugum-experience`, `sari`→`bag-semantic`, DEĞERLER AYNEN):
     S3 kararından hemen sonra (palet turu K-4'ten ÖNCE) rol bantlarının dışında kalan kromatik
-    seri jetonu SAYISI birdi (`pembe`, o gün seri-10=`--color-pink-600`). K-4 seri rampasını
+    seri jetonu SAYISI birdi (eski `pembe`, o gün seri-10=`--color-pink-600`). K-4 seri rampasını
     TAMAMEN serbest bantlara taşıdı (`--seri-6..10` artık teal/lime/fuchsia/pink/yellow) — bu
     testin adı ("TEK") artık ÖLÇÜLEN durumu anlatmıyor ama fonksiyon adı KİMLİKTİR (bu depoda
     numaralı/adlı test dosyaları yeniden adlandırılmaz, künye kayar); ÖLÇÜLEN sayı BEŞTİR.
 
-    JETON ADLARI (düzeltme turu 1): `mavi`/`camgobegi` `JETONLAR`dan SİLİNDİ (ad çürük çapaydı —
-    `mavi` artık teal'e, `camgobegi` artık pink'e bağlıydı — VE bir düğüm/bağ RENK ÇAKIŞMASININ
-    kaynağıydı, bkz. `test_DUGUM_ve_BAG_RENKLERI_CAKISMIYOR`). Kalan/yeni beş kromatik seri-jeton
-    adı artık seri numarasıyla BİREBİR: `teal`(6) `turuncu`(7) `mor`(8) `pembe`(9) `sari`(10).
+    JETON ADLARI (düzeltme turu 1, TSK-117 G7 r1): `mavi`/`camgobegi` `JETONLAR`dan SİLİNDİ (ad
+    çürük çapaydı — `mavi` artık teal'e, `camgobegi` artık pink'e bağlıydı — VE bir düğüm/bağ
+    RENK ÇAKIŞMASININ kaynağıydı, bkz. `test_DUGUM_ve_BAG_RENKLERI_CAKISMIYOR`). Kalan beş
+    kromatik seri-jeton, TSK-132'den beri seri numarasıyla değil ROLÜYLE adlı: `dugum-world`(6)
+    `bag-entity`(7) `bag-causal`(8) `dugum-experience`(9) `bag-semantic`(10).
 
     TSK-136 (2026-09-04): `kaynak=PRESET` — K-4'ün serbest-bant rampası VARSAYILANDA değil,
     'Meridian Palet' preset'inde yaşıyor. VARSAYILANIN ölçümü
     `test_VARSAYILAN_ISTISNA_DISINDA_kromatik_ton_DUSTU`de."""
-    serbest = [j for j in ("teal", "turuncu", "mor", "pembe", "sari")
+    serbest = [j for j in ("dugum-world", "bag-entity", "bag-causal", "dugum-experience", "bag-semantic")
                if (h := _jeton_hue(j, kaynak=PRESET)) is not None and _bantta(h) is None]
-    assert serbest == ["teal", "turuncu", "mor", "pembe", "sari"], (
+    assert serbest == ["dugum-world", "bag-entity", "bag-causal", "dugum-experience", "bag-semantic"], (
         f"serbest kromatik jeton kümesi değişti: {serbest} — `DUGUM_STILI` ve istisna "
         "listesi bu ölçümle birlikte gözden geçirilmeli")
 
@@ -500,21 +515,27 @@ def test_ISTISNA_DISINDA_kromatik_ton_TEK():
 def test_VARSAYILAN_ISTISNA_DISINDA_kromatik_ton_DUSTU():
     """DEĞER ÖLÇÜMÜ (hue-gate DEĞİL): VARSAYILAN temada (preset YOK) serbest kalan kromatik
     seri-jeton sayısı 5'ten 1'e DÜŞTÜ — `_jeton_hue` DAİMA `:root` (gündüz) değerini okur ve
-    `teal`(blue-600≈221° GEZİNME), `turuncu`(orange-600≈18° UYARI+YÖN-EKSİ), `mor`(violet-600≈
-    265° MOD), `pembe`(cyan-600≈192° BİLGİ) hepsi bantta; yalnız `sari`(yellow-600) serbest
-    (TSK-136, 2026-09-04 — eski (b) bulgusunun sınıfı, operatörün BİLİNÇLİ kararı)."""
-    serbest = [j for j in ("teal", "turuncu", "mor", "pembe", "sari")
+    `dugum-world`(blue-600≈221° GEZİNME), `bag-entity`(orange-600≈18° UYARI+YÖN-EKSİ),
+    `bag-causal`(violet-600≈265° MOD), `dugum-experience`(cyan-600≈192° BİLGİ) hepsi bantta;
+    yalnız `bag-semantic`(yellow-600) serbest (TSK-136, 2026-09-04 — eski (b) bulgusunun sınıfı,
+    operatörün BİLİNÇLİ kararı; adlar TSK-132'de role taşındı, DEĞERLER değişmedi)."""
+    serbest = [j for j in ("dugum-world", "bag-entity", "bag-causal", "dugum-experience", "bag-semantic")
                if (h := _jeton_hue(j)) is not None and _bantta(h) is None]
-    assert serbest == ["sari"], (
+    assert serbest == ["bag-semantic"], (
         f"VARSAYILANDA serbest kromatik jeton kümesi değişti: {serbest} — beklenen "
-        "['sari'] (2026-09-04 ölçümü)")
+        "['bag-semantic'] (2026-09-04 ölçümü)")
 
 
 def test_MOR_dugum_rengi_olmaktan_CIKTI():
-    """Operatörün gördüğü tam kusur: `mor` (`--color-seri-8` = `--mod-canli` hex'i) hem küme
-    hem ısı rampasının ORTA durağıydı, yani düğümlerin çoğunun rengiydi."""
+    """Operatörün gördüğü tam kusur: eski `mor` (`--color-seri-8` = `--mod-canli` hex'i) hem
+    küme hem ısı rampasının ORTA durağıydı, yani düğümlerin çoğunun rengiydi.
+
+    İSİM-ÖZGÜ İDDİA ROL CÜMLESİNE TAŞINDI (TSK-132, 2026-09-04): `JETONLAR` artık hue adı
+    taşımıyor (`mor`/`turuncu`/`pembe`/`teal`/`sari` silindi, DEĞERLER aynı) — bu yüzden iddia
+    ARTIK "mor" sözcüğünü değil, hiçbir düğüm kümesinin eski hue vokabülerini TAŞIMADIĞINI ölçer."""
     blok = _dugum_stili()
-    assert '"mor"' not in blok, "mor hâlâ düğüm renk tablosunda"
+    for eski_hue in ("mor", "turuncu", "pembe", "teal", "sari"):
+        assert f'"{eski_hue}"' not in blok, f"{eski_hue} hâlâ düğüm renk tablosunda (rol adına geçilmedi)"
 
 
 # ============================================================================
@@ -535,7 +556,7 @@ def _kume_jetonu() -> dict[str, str]:
     blok = _dugum_stili()
     m = re.search(r"tur:\s*\{(.*?)\n\s*\},", blok, re.S)
     assert m, "DUGUM_STILI.tur alt tablosu okunamadı — desen bayat"
-    return dict(re.findall(r'(\w+):\s*"([a-z]+)"', m.group(1)))
+    return dict(re.findall(r'(\w+):\s*"([a-z0-9-]+)"', m.group(1)))
 
 
 def _bag_turu_jetonu() -> dict[str, str]:
@@ -543,7 +564,7 @@ def _bag_turu_jetonu() -> dict[str, str]:
     s = soy(TAKIMYILDIZI)
     m = re.search(r"export const BAG_TURU_JETONU[^=]*=\s*\{(.*?)\n\};", s, re.S)
     assert m, "BAG_TURU_JETONU tablosu okunamadı — desen bayat"
-    return dict(re.findall(r'(\w+):\s*"([a-z]+)"', m.group(1)))
+    return dict(re.findall(r'(\w+):\s*"([a-z0-9-]+)"', m.group(1)))
 
 
 def _jeton_degisken(ad: str) -> str:
@@ -556,7 +577,7 @@ def _jeton_degisken(ad: str) -> str:
     tak = soy(TAKIMYILDIZI)
     blok = re.search(r"export const JETONLAR\s*=\s*\{(.*?)\n\}", tak, re.S)
     assert blok, "JETONLAR tablosu okunamadı — desen bayat"
-    m = re.search(rf'{re.escape(ad)}:\s*"(--[a-z0-9-]+)"', blok.group(1))
+    m = re.search(rf'"?{re.escape(ad)}"?:\s*"(--[a-z0-9-]+)"', blok.group(1))
     assert m, f"jeton tabloda yok: {ad}"
     return m.group(1)
 

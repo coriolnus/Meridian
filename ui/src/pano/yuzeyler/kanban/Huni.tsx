@@ -51,6 +51,11 @@
    güncellenmeyi UNUTURSA sessizce ayrışır); `--color-seri-N`yi doğrudan okumak (aynı dosyada
    tanımlı, `portfoy/PozisyonSeyri.tsx` zaten aynı yoldan okuyor) TEK kaynağa bağlanmaktır. Yolculuk
    yapısı app.js'ten aynen korundu: ilk basamaklar bir renk, VARIŞ ayrı bir renk.
+
+   OKUYUCU BEYANI (TSK-132, 2026-09-04): `--huni-1/2/3` OKUYUCUSUZ DEĞİL — gerçek okuyucusu
+   `meridian/web/app.js::segRenk` (eski pano, index.html huni şeridi), BU bileşen değil. İKİ
+   huni, İKİ kaynak: bilerek (yukarıdaki paragraflar neden). tokens.json `huni-1` şerhi aynı
+   beyanı taşır.
    ============================================================================ */
 import { type CSSProperties, useMemo } from "react";
 

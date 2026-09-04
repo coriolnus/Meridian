@@ -71,12 +71,12 @@ export function adet(v: number): string {
 }
 
 /** İŞARET → renk sınıfı. Ölçülemeyenin (null) rengi YOKTUR: nötr döner.
- *  Tema jetonları gri (tema.css:75-79) olduğu için K/Z rengi sözleşmede AÇIKÇA
+ *  Tema jetonları gri (tema.css "ÇOK SERİLİ GRAFİK RAMPASI" bölümü; satır çapası kaldırıldı, TSK-132 incelemesi) olduğu için K/Z rengi sözleşmede AÇIKÇA
  *  izin verilen emerald/red çiftinden gelir (brief: "Kâr/zarar için … kabul"). */
 export function kzSinifi(v: number | null): string {
   if (v === null) return "text-muted-foreground";
-  if (v > 0) return "text-[var(--yon-arti)]";
-  if (v < 0) return "text-[var(--yon-eksi)]";
+  if (v > 0) return "text-yon-arti";
+  if (v < 0) return "text-yon-eksi";
   return "text-muted-foreground";
 }
 
@@ -100,8 +100,8 @@ export function kzDolgusu(v: number | null): string {
      ÖLÇÜLEMEYEN HÂL BİLEREK SOLUK KALDI (%20): "K/Z ölçülemedi" bir değer değil bir
      boşluktur ve kârla aynı görsel ağırlığı taşımamalı. */
   if (v === null) return "fill-muted-foreground/20 stroke-muted-foreground/60";
-  if (v > 0) return "fill-[var(--yon-arti)]/85 stroke-[var(--yon-arti)]";
-  if (v < 0) return "fill-[var(--yon-eksi)]/85 stroke-[var(--yon-eksi)]";
+  if (v > 0) return "fill-yon-arti/85 stroke-yon-arti";
+  if (v < 0) return "fill-yon-eksi/85 stroke-yon-eksi";
   return "fill-muted-foreground/20 stroke-muted-foreground/60";
 }
 
@@ -110,8 +110,8 @@ export function kzDolgusu(v: number | null): string {
  *  söylemediği bir şey söyler. */
 export function kzOrnegi(v: number | null): string {
   if (v === null) return "bg-muted-foreground/20 ring-1 ring-muted-foreground/60";
-  if (v > 0) return "bg-[var(--yon-arti)]/85 ring-1 ring-[var(--yon-arti)]";
-  if (v < 0) return "bg-[var(--yon-eksi)]/85 ring-1 ring-[var(--yon-eksi)]";
+  if (v > 0) return "bg-yon-arti/85 ring-1 ring-yon-arti";
+  if (v < 0) return "bg-yon-eksi/85 ring-1 ring-yon-eksi";
   return "bg-muted-foreground/20 ring-1 ring-muted-foreground/60";
 }
 

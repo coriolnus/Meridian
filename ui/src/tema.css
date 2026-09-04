@@ -62,6 +62,18 @@
   --color-uyari: var(--uyari);     --color-uyari-h: var(--uyari-h);     --color-uyari-t: var(--uyari-t);
   --color-kritik: var(--kritik);   --color-kritik-h: var(--kritik-h);   --color-kritik-t: var(--kritik-t);
   --color-bilgi: var(--bilgi);     --color-bilgi-h: var(--bilgi-h);     --color-bilgi-t: var(--bilgi-t);
+
+  /* YÖN UTILITY KÖPRÜSÜ (TSK-132, 2026-09-04): 9 dosyada 26 `[var(--yon-arti|eksi)]` bracket
+     kullanımı (Tailwind arbitrary-value, utility katmanı YOKTU) buraya taşındı — text-yon-arti,
+     fill-yon-arti/85, bg-yon-eksi-t … basari ailesiyle AYNI desen. */
+  --color-yon-arti: var(--yon-arti);
+  --color-yon-arti-h: var(--yon-arti-h);
+  --color-yon-arti-t: var(--yon-arti-t);
+  --color-yon-arti-zemin: var(--yon-arti-zemin);
+  --color-yon-eksi: var(--yon-eksi);
+  --color-yon-eksi-h: var(--yon-eksi-h);
+  --color-yon-eksi-t: var(--yon-eksi-t);
+  --color-yon-eksi-zemin: var(--yon-eksi-zemin);
 }
 
 /* ============================================================================

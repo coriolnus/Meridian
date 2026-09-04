@@ -81,7 +81,7 @@ export function para(v: unknown, basamak = 2): string | null {
 /** Kâr/zarar (ve delta) rengi. `null`/0 için NÖTR: sıfırı yeşile boyamak "kazandık" der. */
 export function pnlRengi(v: unknown): string {
   if (typeof v !== "number" || !Number.isFinite(v) || v === 0) return "text-foreground";
-  return v > 0 ? "text-[var(--yon-arti)]" : "text-[var(--yon-eksi)]";
+  return v > 0 ? "text-yon-arti" : "text-yon-eksi";
 }
 
 /** Metin alanı gerçekten dolu mu? Boş dizge de "yok" sayılır — `""` basmak boş

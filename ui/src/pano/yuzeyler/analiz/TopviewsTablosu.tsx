@@ -200,7 +200,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, TopSatir>[] = [
       <Deger
         metin={rKati(row.original.gross_win)}
         neden={rYokNedeni(row.original, "brüt kâr")}
-        className="text-[var(--yon-arti)] tabular-nums"
+        className="text-yon-arti tabular-nums"
       />
     ),
   },
@@ -212,7 +212,7 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, TopSatir>[] = [
       <Deger
         metin={rKati(row.original.gross_loss)}
         neden={rYokNedeni(row.original, "brüt zarar")}
-        className="text-[var(--yon-eksi)] tabular-nums"
+        className="text-yon-eksi tabular-nums"
       />
     ),
   },

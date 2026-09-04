@@ -42,7 +42,7 @@ export function bicimOran(n: number): string {
 /** Kâr/zarar rengi. Sıfır NÖTRDÜR — 0'ı yeşile boyamak "kazandık" demek olurdu. */
 export function pnlRengi(n: number | null | undefined): string {
   if (n === null || n === undefined || n === 0) return "text-foreground";
-  return n > 0 ? "text-[var(--yon-arti)]" : "text-[var(--yon-eksi)]";
+  return n > 0 ? "text-yon-arti" : "text-yon-eksi";
 }
 
 /* ---- ÖLÇÜLEMEDİ ------------------------------------------------------------ */

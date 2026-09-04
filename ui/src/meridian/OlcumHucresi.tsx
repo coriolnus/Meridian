@@ -30,8 +30,8 @@ export interface OlcumHucresiProps {
 }
 
 const YON_MUREKKEBI: Record<YonSinifi, string> = {
-  arti: "text-[var(--yon-arti)]",
-  eksi: "text-[var(--yon-eksi)]",
+  arti: "text-yon-arti",
+  eksi: "text-yon-eksi",
   notr: "text-[var(--tx)]",
 };
 

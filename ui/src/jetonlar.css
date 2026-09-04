@@ -1,7 +1,17 @@
 /* ÜRETİLDİ — ELLE DÜZENLEME. Kaynak: meridian/web/tokens.json
    Üreten: ops/jeton_css_uret.py · deterministik, damgasız (her koşu aynı bayt).
    Bu dosyayı düzenlersen bir sonraki üretim değişikliği siler; jetonu tokens.json'da değiştir.
-   Tazelik kapısı: `python ops/jeton_css_uret.py --kontrol` (çıkış 1 = bayat). */
+   Tazelik kapısı: `python ops/jeton_css_uret.py --kontrol` (çıkış 1 = bayat).
+
+   AD ÇAKIŞMASI, BEYANLI (TSK-134, 2026-09-04): bu dosyanın `:root`u ile `ui/src/tema.css`in
+   shadcn `:root`u İKİ adı PAYLAŞIYOR — `--card`, `--accent`. `ui/src/tema.css` KAZANIR: bu
+   dosya `@import "./jetonlar.css"` ile tema.css'in EN BAŞINDA yüklenir, tema.css'in KENDİ
+   shadcn `:root` gövdesi metinde importtan SONRA gelir ve aynı özgüllükte SON bildirim kazanır
+   (ölçüldü, `tests/test_jeton_shadcn_cakisma_v407.py`). Bu iki ad eski sayfalar (index/landing/
+   runbook/workflow.html) İÇİNDİR — pano (`ui/src`) `bg-card`/`bg-accent` utility'sini
+   `tema.css`in KENDİ `--color-card`/`--color-accent` eşlemesinden okur, bu dosyanın
+   `--card`/`--accent`ından DEĞİL (pano kaynağında bracket okuması yok, ölçüldü). Düşürme
+   (bu iki adı jetonlar.css sözlüğünden çıkarmak) AYRI bir kalem, kapsam DIŞINDA. */
 :root {
   --accent: #0a0a0a;
   --accent-2: #171717;

@@ -102,26 +102,26 @@ import type {
 /* İHRAÇ EDİLDİ (Görev 9): ana sayfanın "bağ türleri" çubuğu AYNI hue eşlemesini
    ve AYNI kelimeleri kullanır. İkinci bir eşleme yazmak, aynı sayfada aynı bağ
    türünü iki renkte ve iki adla göstermek olurdu (tek-kaynak yasası). */
-/* TSK-117 K-4 (2026-09-04): seri rampası A′'ye geçti (`ui/src/tema.css` `--seri-6..10`
-   teal/lime/fuchsia/pink/yellow, spec §2 serbest bantlar). `teal` EKLENDİ (`DUGUM_STILI.tur.world`,
-   doğru adla, `--color-seri-6`) ve `pembe`nin karşılığı seri-9'a TAŞINDI (eski seri-10 artık
-   yellow, `pembe` adı ancak seri-9'da doğru kalır — seri-9 artık pink-600).
-
-   DÜZELTME TURU 1 (TSK-117 G7 r1, 2026-09-04) — `mavi`/`camgobegi` SİLİNDİ: K-4'ün ilk hâli bu
-   iki adı "bilerek korudu" diyordu ama İKİ AYRI KUSUR taşıyordu — (a) AD ÇÜRÜK ÇAPAYDI (`mavi`
-   artık teal'e, `camgobegi` artık pink'e bağlıydı — ad hue'yu yalanlıyordu) VE (b) tam o iki adın
-   taşıdığı `--color-seri-6`/`--color-seri-9`, `DUGUM_STILI.tur.world`/`.experience`in (`teal`/
-   `pembe`) AYNI değişkenleriydi — yani `BAG_TURU_JETONU.semantic`/`.temporal` (aşağıda `mavi`/
-   `camgobegi` okuyordu) DÜĞÜM kümeleriyle AYNI RGB'ye çiziliyordu (TSK-124 "mor noktalar" ile
-   AYNI çakışma sınıfı, ölçüldü `test_DUGUM_ve_BAG_RENKLERI_CAKISMIYOR`). `sari` (`--color-seri-10`)
-   bu turda YENİ EKLENDİ — çakışmayı çözmek için `BAG_TURU_JETONU.semantic`e taşındı (bkz. o
-   sözleşmenin kendi yorumu). */
+/* AD = ROL, HUE PRESET'E GÖRE DEĞİŞİR (TSK-132, 2026-09-04). Anahtarlar artık hue adı
+   (`turuncu`/`mor`/`pembe`/`teal`/`sari`) TAŞIMAZ: preset değiştiğinde hangi hue'nun hangi role
+   bağlı olduğu da değişir (`ui/src/styles/presets/meridian-palet.css`) ve hue-adlı bir anahtar
+   preset değiştiği gün YALAN söylerdi — TSK-117/124 turlarında tam bu sınıftan iki kusur ölçüldü
+   (`mavi`/`camgobegi` çürük çapaydı; `mor` hem küme hem ısı rampasının ortak durağıydı).
+   DEĞERLER (hangi `--color-seri-N`) AYNEN KALDI — yalnız anahtar adı değişti, ekran değişmedi.
+   Tarihçe (hue eşleme geçişleri, çakışma düzeltmeleri) `MERIDIAN_ENGINEERING_LOG.md`'de; bu tablo
+   yalnız BUGÜNKÜ sözleşmeyi taşır: düğüm kümeleri `dugum-*`, bağ türleri `bag-*`, ısı durakları
+   `isi-1/2/3`, nötrler (adı zaten rol) `zemin/yazi/soluk/cerceve/kart` DEĞİŞMEDİ. */
 export const JETONLAR = {
-  turuncu: "--color-seri-7",
-  mor: "--color-seri-8",
-  pembe: "--color-seri-9",
-  teal: "--color-seri-6",
-  sari: "--color-seri-10",
+  "dugum-world": "--color-seri-6",
+  "dugum-experience": "--color-seri-9",
+  "dugum-observation": "--muted-foreground",
+  "dugum-entity": "--foreground",
+  "bag-semantic": "--color-seri-10",
+  "bag-entity": "--color-seri-7",
+  "bag-causal": "--color-seri-8",
+  "isi-1": "--muted-foreground",
+  "isi-2": "--color-seri-6",
+  "isi-3": "--color-seri-9",
   zemin: "--background",
   yazi: "--foreground",
   soluk: "--muted-foreground",
@@ -171,6 +171,12 @@ type JetonAdi = keyof typeof JETONLAR;
    (eski seri-10 idi; rampaj sonrası seri-10 artık yellow, `pembe` adı ancak pembenin
    GERÇEKTEN yaşadığı slotta doğru kalır — bkz. `JETONLAR` yorumu). İkisi de serbest
    (`test_seri_rampasi_serbest_bant_v399.py::test_seri_6_10_PRESETTE_rol_bantlarinda_DEGIL`).
+
+   AD → ROL (TSK-132, 2026-09-04): yukarıdaki paragraflardaki `teal`/`pembe`/`mor`/`turuncu`/
+   `sari` adları artık TARİHÇEDİR — DEĞERLER (hangi `--color-seri-N`) AYNEN KALDI, yalnız
+   `JETONLAR` anahtarı ROLE taşındı: `teal`→`dugum-world`, `pembe`→`dugum-experience`,
+   `mor`→`bag-causal`, `turuncu`→`bag-entity`, `sari`→`bag-semantic`. Aşağıdaki tablo GÜNCEL
+   adları kullanır.
    --------------------------------------------------------------------------- */
 export const DUGUM_STILI = {
   /** Yarıçap px @1x: derecesi sıfır olan düğüm tabanda, en ağır düğüm tavanda. */
@@ -179,14 +185,14 @@ export const DUGUM_STILI = {
   /** Kayıt türü → jeton. Tanınmayan tür `soluk`a düşer (aşağıda) — renk bir ÖLÇÜM
    *  değil bir kimlik kanalıdır, bilinmeyen bir tür de çizilir. */
   tur: {
-    world: "teal",
-    experience: "pembe",
-    observation: "soluk",
-    entity: "yazi",
+    world: "dugum-world",
+    experience: "dugum-experience",
+    observation: "dugum-observation",
+    entity: "dugum-entity",
   },
   /** Isı rampası: soğuk → köprü → sıcak. Sıra KROMA ile de tek yönlü (akromatik →
-   *  teal → pembe), yani okuyucu çubuğa bakmadan da sıralayabilir. */
-  isiDuraklari: ["soluk", "teal", "pembe"],
+   *  dugum-world → dugum-experience), yani okuyucu çubuğa bakmadan da sıralayabilir. */
+  isiDuraklari: ["isi-1", "isi-2", "isi-3"],
 } as const;
 
 type Rgb = readonly [number, number, number];
@@ -330,12 +336,15 @@ function isiRengi(palet: Palet, t: number): Rgb {
    canvas zemininden [`--background`] görünür ayrışıyor, bkz. tema.css oklch ışıklılık farkı).
    Dört bağ türü şimdi HEM düğüm kümelerinden HEM birbirinden ayrı: sari(10) · cerceve(akromatik,
    border) · turuncu(7) · mor(8). `mavi`/`camgobegi` adları da SİLİNDİ (`JETONLAR` yorumu) — ad
-   artık gerçek hue'yu yalanlıyordu. */
+   artık gerçek hue'yu yalanlıyordu.
+
+   AD → ROL (TSK-132, 2026-09-04): `sari`→`bag-semantic`, `cerceve` (nötr, DEĞİŞMEDİ),
+   `turuncu`→`bag-entity`, `mor`→`bag-causal` — DEĞERLER aynı, anahtar rolle adlandı. */
 export const BAG_TURU_JETONU: Readonly<Record<string, JetonAdi>> = {
-  semantic: "sari",
+  semantic: "bag-semantic",
   temporal: "cerceve",
-  entity: "turuncu",
-  causal: "mor",
+  entity: "bag-entity",
+  causal: "bag-causal",
 };
 
 export const BAG_TURU_ETIKETI: Readonly<Record<string, string>> = {
@@ -482,8 +491,9 @@ function kumeRgb(palet: Palet, anahtar: string): Rgb {
   /* YEDEK AKROMATİK (`soluk`), KROMATİK DEĞİL (TSK-124; gerekçe güncellendi düzeltme turu 1,
      TSK-117 G7 r1, 2026-09-04 — eski metin `mavi` adına dayanıyordu, o jeton SİLİNDİ). Kural
      DEĞİŞMEDİ: tanınmayan bir küme anahtarını panonun kullandığı kromatik jetonlardan
-     (teal/pembe/turuncu/mor/sari) biriyle boyamak, o türe YANLIŞ bir kimlik ödünç vermek olurdu
-     — akromatik `soluk` "bu tür tanınmadı" der, "bu tür X'tir" demez. */
+     (dugum-world/dugum-experience/bag-entity/bag-causal/bag-semantic, TSK-132 ad değişimi)
+     biriyle boyamak, o türe YANLIŞ bir kimlik ödünç vermek olurdu — akromatik `soluk` "bu tür
+     tanınmadı" der, "bu tür X'tir" demez. */
   return palet.rgb[KUME_JETONU[anahtar] ?? "soluk"];
 }
 
@@ -606,7 +616,7 @@ function hazirla(
     }
     const tur = bag.tur ?? "semantic";
     turler.add(tur);
-    const renk = palet.renk[BAG_TURU_JETONU[tur] ?? "sari"];
+    const renk = palet.renk[BAG_TURU_JETONU[tur] ?? "bag-semantic"];
     const i = baglar.length;
     baglar.push({ a, b, renk, tur });
     const listeA = bagIndeksi.get(a);
@@ -1272,7 +1282,7 @@ export function Takimyildizi({
       ctx.fillStyle = p.renk.soluk;
       ctx.fillText(etiket, efsaneX, Y - 12);
       efsaneX -= genislik + 4;
-      ctx.fillStyle = p.renk[BAG_TURU_JETONU[tur] ?? "sari"];
+      ctx.fillStyle = p.renk[BAG_TURU_JETONU[tur] ?? "bag-semantic"];
       ctx.beginPath();
       ctx.arc(efsaneX, Y - 15, 3, 0, Math.PI * 2);
       ctx.fill();
