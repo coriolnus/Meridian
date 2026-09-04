@@ -123,9 +123,14 @@ def uret() -> tuple[str, list[str]]:
     # MEDYA BLOĞU PANOYU EZMESİN (v412, 2026-09-04 — operatör vakası: Mac koyu modda gündüz panosunda kartlar
     # siyah). Pano temayı `data-theme="gunduz|gece"` + `.dark` ile damgalar (theme-utils); yalnız `light`i
     # dışlayan seçici `gunduz` kökünde OS koyuyken uygulanıyor ve (0,2,0) özgüllüğüyle tema.css'in `:root`
-    # bloğunu eziyordu. `:not([data-theme='gunduz'])` eklenince pano kökü (her zaman damgalı) bloğun dışında
-    # kalır — pano geceyi `.dark` ile kendi yönetir; eski sayfalar (damgasız) eskisi gibi OS'e uyar.
-    gece = blok(":root:not([data-theme='light']):not([data-theme='gunduz'])", kova["gece"])
+    # bloğunu eziyordu. İlk düzeltme `:not([data-theme='gunduz'])` de ekledi — ama değer-bazlı dışlama listesi
+    # sözlük büyüdükçe yeniden delinir: 2026-09-04 21:0xZ ikinci ölçüm `gece` kökünün AÇIKTA kaldığını
+    # gösterdi (gece + OS-koyu'da pano kartı jetonlar #262626 çıkıyor, tema.css `.dark` oklch(0.205) DEĞİL).
+    # ARTIK (D1, Rol-1 2026-09-04): seçici NİTELİK-varlığı dışlar. OS tercihi YALNIZ damgasız köke uygulanır;
+    # damgalı her kök (gunduz|gece|light|dark|…) temayı KENDİ yönetir — pano geceyi `.dark` sınıfıyla (jetonlar
+    # `[data-theme='dark'], .dark` bloğu ÖNCE, tema.css'in KENDİ `.dark` bloğu SONRA yüklenir → tema.css kazanır,
+    # v407 hükmüyle tutarlı); eski sayfalar (damgasız) eskisi gibi OS'e uyar.
+    gece = blok(":root:not([data-theme])", kova["gece"])
     if gece:
         css += "@media (prefers-color-scheme: dark) {\n" + "\n".join(
             "  " + s for s in gece.splitlines()) + "\n}\n"
