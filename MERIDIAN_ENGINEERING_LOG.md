@@ -2224,3 +2224,35 @@ DEĞİL, metnin anlattığı davranışın sembolü bağlanır; mekanik çivi bu
 155 satır = 146 eski şema (`durum` yok) + 9 yeni: LOG.md 9 dilimin **7 ok / 2 başarısız** (#2/9, #3/9: Hindsight HTTP 500 — openrouter
 `ProviderResponseError`, deneme-2 de başarısız); dilim süreleri 62–667 s, tok 6–33k. Hüküm sabah (tavan 300 çağrı; 429 → temiz durur).
 Brifing 22:00Z SOUL denetimi: cron 22:13Z (tek kalan oturum cron'u — ateşlenmezse sabah A1'den okunur).
+
+### 2026-09-04 gece-2 (Rol-1, otonom "sabaha kadar") — TSK-117 G1–G8 · ücretsiz kota tükenmesi (TSK-014 kök neden) · ingest durdurma · geri dolum disk notu · dağıtım #9
+
+**TSK-117 palet turu, SDD tek şerit, sekiz görev / sekiz inceleme (sonnet), 22:0xZ→0x:xxZ:** G1 köprü a797155 (brief'in iki varsayımı ölçümle
+yanlış: `sky` yolu `tema.*.murekkep.sky`, `@import "../jetonlar.css"` build'i KIRIYORDU → `./`; pytest bunu yakalamazdı) · G2 K-0 2fbcc8d
+(gece yön-eksi 0°→17°, l=0,70, incelemede elle yeniden hesaplandı; r1 zemin) · G3 K-2a c09c727 (231 amber / 44 dosya → 159 uyari utility, 72
+`dark:` çifti tek utility'ye; "amber ama uyarı değil" boş) · G4 K-2b+K-3 01032e8 (130 emerald + 5 green → 82 basari; 13 pozitif-K/Z
+`text-[var(--yon-arti)]` — yön ≠ başarı; seri-9 anlam yükü 5 yerde; SeansTakvimi 4 kategorik) · G5+G6 tek parti c1b0254 (31 red → 5 kritik +
+10 yön-eksi, G4 simetrisi birebir; 12 sky → bilgi) · G7 K-4 8ba91dc (seri 6–10 teal/lime/fuchsia/pink/yellow; huni tokens = seri-6/8/9;
+takımyıldızı istisnası kapandı; r1: iki YENİ düğüm↔bağ çakışması incelemeci yakaladı) · G8 S4 109c02f (renk körlüğü çivisi v400, 12 kontrastın 9'u 1,4 altı, min 1,01 → xfail strict, TSK-133).
+Literal Tailwind renk sınıfı 416 → 0 (v397 tavanları amber/emerald/green/red/sky = 0). Dersler: (a) brief'teki yol/varsayımlar ÖLÇÜLMEDEN
+kod olmaz — üç görevde brief varsayımı yanlıştı (sky yolu, import yolu, huni yolu), hepsini implementer ölçüp düzeltti; (b) incelemecinin
+"bağlamıyla oku + kendin sınıfla" merceği her dilimde en az bir gerçek bulgu verdi (G4 körlük alarmı, G7 iki çakışma); (c) mutasyon geri
+alımında AYNI SANİYE + EŞİT BOYUT → bayat `.pyc` (hafıza `pyc-ayni-saniye-mutasyon-tuzagi`, 3 tur teşhis). Görsel tur: stub verisiz
+(bütün kartlar "ölçülemedi"), renk göçü ekranda SINANAMADI → canlı panoda sabah operatörle (DONE damgaları 118/121/117 masada).
+
+**Ücretsiz kota tükenmesi — TSK-014'ün kök nedeni, TSK-115'in darboğazı:** 22:04Z şef brifingi SOUL kural denetimi KOŞTU (event var; kaynak
+`llm_dustu`, cagri_n 2, "denetçi cevabı JSON değil"). A1 journal: openrouter `free-models-per-day-high-balance` 429 — saat dağılımı 01–20Z: 0,
+21Z: 2.064, 22Z: 1.032; scope `retain_extract_facts` 1.108 (ingest çıkarımı) + `consolidation` 1.424 (Hindsight arka plan). Yani ingest067
+gece koşumu (20:20Z→) kotayı tüketti, brifing denetçisi (aynı ücretsiz kota) boş cevap aldı. Ruling: ingest 22:17Z'de DURDURULDU (7 ok / 18
+başarısız; 00:00Z yenilenince gündüz tüketicilerini yine aç bırakırdı). TSK-115 DONE (dilimleme + hata sınıfı + tavan çalıştı; darboğaz kota),
+TSK-014 DONE değil (yeniden ölçüm 09-04 22:00Z, ingest akşam koşmayacak), [TSK-130] kota muhasebesi açıldı (tavanlar POST sayar, Hindsight'ın
+belge başına LLM çağrısını saymaz).
+
+**Geri dolum (EDG-066 tick arşivi) — operatör sorusu:** önce CF dolgusuyla karıştırıldı (bağlam sıkıştırması EDG-066'yı düşürmüştü; hafıza
+kaydı yazıldı `edg066-tick-geri-dolumu`). Ölçüm: 2 Eylül 12:16Z'den beri 98 gün (2026-04-02 → 2025-11-10), ~69 gün/gün, kalan ~1.500 gün ≈ 22
+gün; /opt/veri 35 G / 147 G, gün başına ~95 MiB → ~140 G gerekli, 105 G boş → 2021 ortasında dolar. [TSK-131] OPERATOR.
+
+**Oturum cron'u:** 20:07Z dağıtım #8 ve 20:37Z ingest özeti tetikleri boşta ateşlenmedi; 22:13Z brifing tetiği de ateşlenmedi (elle koşuldu).
+Üç/üç. Hafıza `oturum-cron-guvenilmez`: saatli kritik iş A1 timer'ında; uyanışta CronList+date.
+
+**Dağıtım #9:** suite #12 ve dağıtım aşağıda ayrı kayıtta (bu bölüm suite başlamadan yazıldı — donmuş ağaç).
