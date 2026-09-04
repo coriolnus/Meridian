@@ -92,20 +92,38 @@
 
    GECEDE 400, GÜNDÜZDE 600: aynı hue, farklı ışıklılık. Koyu zeminde 600 tonu boğuluyor,
    açık zeminde 400 tonu soluyor — kimlik (hue) korunur, okunabilirlik temayla değişir. */
+/* A′ — SERİ 6-10 ROL BANTLARININ DIŞINA TAŞINDI (TSK-117 K-4, 2026-09-04).
+   ÖLÇÜLEN KUSUR (`docs/TASARIM-PALET-REZERVE-HUE-2026-09-03.md` §1.2/§3): eski beşli
+   (blue/orange/violet/cyan/pink) rol bantlarının BEŞİNİ de doldurmuştu —
+   `--seri-6`=blue-600 `--nav` ile, `--seri-8`=violet-600 `--mod-canli` ile AYNI hex'ti
+   (rol × veri-kimliği çakışması; huni bu iki hex'i taşıdığı için "başarı" rengi bir
+   ara seri-9'a bağlanmıştı, K-5/Y-8 vakası). Seçenek A (hue-rezervi) B'ye (kroma
+   düşürme) ve C'ye (yalnız desen) tercih edildi: ikisi de göstergenin kendi gerekçesiyle
+   çelişiyordu (yukarıdaki blok: "iki seri karışırsa gösterge susar").
+   YENİ BEŞLİ, spec §2'nin SERBEST bantlarından (32°-130° · 156°-184° · 234°-244° ·
+   272°-334°): teal ~175° · lime ~86° · fuchsia ~294° · pink ~329° · yellow ~39°
+   (Tailwind v4 oklch paletinden ÖLÇÜLDÜ, `tests/test_seri_rampasi_serbest_bant_v399.py`
+   `_tailwind_renk_hex` — tahmini "≈" değerler ön-kayıt, çivi gerçek hex'i hesaplar).
+   "ARDIŞIK İKİ TON KOMŞU DEĞİL" KURALI KORUNUR: sıradaki en küçük fark (fuchsia→pink,
+   ~35°) hâlâ önceki beşlinin ayırt edilebilirliğine yakın; iki serbest hue (sarı,
+   zeytin/lime) beyaz zeminde daha zayıf ölçülüyor — BEDEL, spec §6'da yazılı.
+   BEDEL (S2, huni): `--huni-1/2/3` bu turdan sonra seri-6/7/8'e (teal/lime/fuchsia)
+   bağlanıyor (`meridian/web/tokens.json`, ops/jeton_css_uret.py ile üretiliyor) — huni
+   ARTIK rol hex'inin kopyası değil, VERİ görselidir. */
 :root {
-  --seri-6: var(--color-blue-600);
-  --seri-7: var(--color-orange-600);
-  --seri-8: var(--color-violet-600);
-  --seri-9: var(--color-cyan-600);
-  --seri-10: var(--color-pink-600);
+  --seri-6: var(--color-teal-600);
+  --seri-7: var(--color-lime-600);
+  --seri-8: var(--color-fuchsia-600);
+  --seri-9: var(--color-pink-600);
+  --seri-10: var(--color-yellow-600);
 }
 
 .dark {
-  --seri-6: var(--color-blue-400);
-  --seri-7: var(--color-orange-400);
-  --seri-8: var(--color-violet-400);
-  --seri-9: var(--color-cyan-400);
-  --seri-10: var(--color-pink-400);
+  --seri-6: var(--color-teal-400);
+  --seri-7: var(--color-lime-400);
+  --seri-8: var(--color-fuchsia-400);
+  --seri-9: var(--color-pink-400);
+  --seri-10: var(--color-yellow-400);
 }
 
 @theme inline {

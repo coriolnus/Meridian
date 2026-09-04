@@ -37,9 +37,11 @@
    BİLEREK TAŞINMAYANLAR — "eksik" ile "kapsam dışı" ayrı yazılır
    ---------------------------------------------------------------------------
    · Üst yüzeyin renkleri (sabit altıgen kodlar) taşınmadı: pano kendi çok-serili
-     rampasını kullanır ve rampa TEMAYLA döner. Hue eşlemesi birebir yapıldı
-     (mavi→mavi, mor→mor, turuncu→turuncu, camgöbeği→camgöbeği, pembe→pembe),
-     yani renk KİMLİK kanalı olarak aynı yerde durur, jeton bizimdir.
+     rampasını kullanır ve rampa TEMAYLA döner. Hue eşlemesi BAŞLANGIÇTA birebir yapılmıştı
+     (mavi→mavi, mor→mor, turuncu→turuncu, camgöbeği→camgöbeği, pembe→pembe) — palet turu
+     (TSK-117 K-4) ve onun düzeltme turu 1 (2026-09-04, çakışma düzeltmesi) bu birebirliği
+     BOZDU: `mavi`/`camgobegi` adları silindi, kalanların hue'ları da rampajla değişti.
+     Güncel eşleme `JETONLAR`/`BAG_TURU_JETONU` yorumlarında.
    · "Poster olarak dışa aktar" düğmesi: üst yüzeyin markalı paylaşım çıktısıdır
      (kendi logosunu gömer), panonun işi değil.
    · Tam ekran düğmesi: kapsam listesinde yok, eklenmedi.
@@ -100,12 +102,26 @@ import type {
 /* İHRAÇ EDİLDİ (Görev 9): ana sayfanın "bağ türleri" çubuğu AYNI hue eşlemesini
    ve AYNI kelimeleri kullanır. İkinci bir eşleme yazmak, aynı sayfada aynı bağ
    türünü iki renkte ve iki adla göstermek olurdu (tek-kaynak yasası). */
+/* TSK-117 K-4 (2026-09-04): seri rampası A′'ye geçti (`ui/src/tema.css` `--seri-6..10`
+   teal/lime/fuchsia/pink/yellow, spec §2 serbest bantlar). `teal` EKLENDİ (`DUGUM_STILI.tur.world`,
+   doğru adla, `--color-seri-6`) ve `pembe`nin karşılığı seri-9'a TAŞINDI (eski seri-10 artık
+   yellow, `pembe` adı ancak seri-9'da doğru kalır — seri-9 artık pink-600).
+
+   DÜZELTME TURU 1 (TSK-117 G7 r1, 2026-09-04) — `mavi`/`camgobegi` SİLİNDİ: K-4'ün ilk hâli bu
+   iki adı "bilerek korudu" diyordu ama İKİ AYRI KUSUR taşıyordu — (a) AD ÇÜRÜK ÇAPAYDI (`mavi`
+   artık teal'e, `camgobegi` artık pink'e bağlıydı — ad hue'yu yalanlıyordu) VE (b) tam o iki adın
+   taşıdığı `--color-seri-6`/`--color-seri-9`, `DUGUM_STILI.tur.world`/`.experience`in (`teal`/
+   `pembe`) AYNI değişkenleriydi — yani `BAG_TURU_JETONU.semantic`/`.temporal` (aşağıda `mavi`/
+   `camgobegi` okuyordu) DÜĞÜM kümeleriyle AYNI RGB'ye çiziliyordu (TSK-124 "mor noktalar" ile
+   AYNI çakışma sınıfı, ölçüldü `test_DUGUM_ve_BAG_RENKLERI_CAKISMIYOR`). `sari` (`--color-seri-10`)
+   bu turda YENİ EKLENDİ — çakışmayı çözmek için `BAG_TURU_JETONU.semantic`e taşındı (bkz. o
+   sözleşmenin kendi yorumu). */
 export const JETONLAR = {
-  mavi: "--color-seri-6",
   turuncu: "--color-seri-7",
   mor: "--color-seri-8",
-  camgobegi: "--color-seri-9",
-  pembe: "--color-seri-10",
+  pembe: "--color-seri-9",
+  teal: "--color-seri-6",
+  sari: "--color-seri-10",
   zemin: "--background",
   yazi: "--foreground",
   soluk: "--muted-foreground",
@@ -139,27 +155,22 @@ type JetonAdi = keyof typeof JETONLAR;
    (`docs/TASARIM-PALET-REZERVE-HUE-2026-09-03.md` §2 — gezinme 210–232° · mod
    245–270° · şiddet 336–6°/8–30°/132–155°).
 
-   NEDEN YALNIZ İKİ KROMATİK TON (bedel yasası): bugünkü jeton kümesinde rol
-   bantlarının DIŞINDA kalan seri jetonu İKİ tanedir — `camgobegi` (192,3°) ve
-   `pembe` (329,2°); `mavi` 221,3° GEZİNME, `mor` 265,5° MOD, `turuncu` 18,0°
-   UYARI bandında (ölçüldü 2026-09-03, çivi hue'yu jetondan HESAPLAR). Üçüncü tür
-   ve tür gelmeyen düğüm bu yüzden AKROMATİK jetonlara bağlandı. Serbest bantlara
-   yeni kromatik hue TSK-117 K-4 (palet turu, operatör kararı S1) ile gelir ve o gün
-   DEĞİŞECEK TEK YER burasıdır — yeni jeton yaratmak bu turun işi değil.
+   NEDEN İKİ KROMATİK TON (bedel yasası) — ESKİ ÖLÇÜM (2026-09-03, palet turundan ÖNCE):
+   bugünkü jeton kümesinde rol bantlarının DIŞINDA kalan seri jetonu İKİ tanedir —
+   `camgobegi` (192,3°) ve `pembe` (329,2°); `mavi` 221,3° GEZİNME, `mor` 265,5° MOD,
+   `turuncu` 18,0° UYARI bandındaydı. Üçüncü tür ve tür gelmeyen düğüm bu yüzden
+   AKROMATİK jetonlara bağlanmıştı.
 
-   GEÇİCİ BEYANLI İSTİSNA — CAMGÖBEĞİ (TSK-124, 2026-09-03):
-   camgöbeği 192° BİLGİ bandında (S3, 2026-09-03); geçici istisna, TSK-117 K-4 palet
-   turu serbest tonu verince değişir — o gün tek yer burası.
-
-   AÇIK HÂLİ: operatör kararı S3 (2026-09-03 ~10:50Z, ROADMAP TSK-117 notu) 195°
-   ailesini (185–210°) BİLGİ rolüne REZERVE etti; belge §2'de o bant "rolü beyan
-   edilecek" diye duruyordu ve bu tur onu "serbest" sayarak `world`ü camgöbeğine
-   bağlamıştı. Beyandan sonra rol bandı dışında kalan TEK kromatik seri jetonu
-   `pembe`dir — üç türü tek kromatik tona sıkıştırmak, renk kimlik kanalını
-   tümüyle kaybetmek olurdu. Bu yüzden ihlal SİLİNMEDİ, BEYAN EDİLDİ: v388'in
-   istisna listesi (`ISTISNALAR`) tek kaynaktır ve her istisnanın gerekçesi bir
-   `TSK-` künyesi taşımak zorundadır — künyesiz bir istisna, süresi olmayan bir
-   istisnadır ve sessizce kalıcılaşır.
+   İSTİSNA KAPANDI — TSK-117 K-4 (2026-09-04): seri rampası A′'ye taşındı (`ui/src/tema.css`
+   `--seri-6..10` artık teal/lime/fuchsia/pink/yellow, spec §2 serbest bantlar). `world`
+   artık `camgobegi` (eski `--color-seri-9`, S3 beyanıyla BİLGİ bandında kalmıştı, GEÇİCİ
+   BEYANLI İSTİSNA idi) DEĞİL, YENİ jeton `teal` (`--color-seri-6`, serbest bant) okuyor —
+   istisnanın nedeni ortadan kalktı ve v388'in `ISTISNALAR` sözlüğü BOŞALTILDI
+   (`test_ISTISNALAR_KUNYELI_ve_HALA_GEREKLI` artık boş sözlüğü BEKLER, tersi değil).
+   `experience` jetonu `pembe` KALDI ama sözlükteki karşılığı `--color-seri-9`ya taşındı
+   (eski seri-10 idi; rampaj sonrası seri-10 artık yellow, `pembe` adı ancak pembenin
+   GERÇEKTEN yaşadığı slotta doğru kalır — bkz. `JETONLAR` yorumu). İkisi de serbest
+   (`test_seri_rampasi_serbest_bant_v399.py::test_seri_6_10_rol_bantlarinda_DEGIL`).
    --------------------------------------------------------------------------- */
 export const DUGUM_STILI = {
   /** Yarıçap px @1x: derecesi sıfır olan düğüm tabanda, en ağır düğüm tavanda. */
@@ -168,14 +179,14 @@ export const DUGUM_STILI = {
   /** Kayıt türü → jeton. Tanınmayan tür `soluk`a düşer (aşağıda) — renk bir ÖLÇÜM
    *  değil bir kimlik kanalıdır, bilinmeyen bir tür de çizilir. */
   tur: {
-    world: "camgobegi",
+    world: "teal",
     experience: "pembe",
     observation: "soluk",
     entity: "yazi",
   },
   /** Isı rampası: soğuk → köprü → sıcak. Sıra KROMA ile de tek yönlü (akromatik →
-   *  camgöbeği → pembe), yani okuyucu çubuğa bakmadan da sıralayabilir. */
-  isiDuraklari: ["soluk", "camgobegi", "pembe"],
+   *  teal → pembe), yani okuyucu çubuğa bakmadan da sıralayabilir. */
+  isiDuraklari: ["soluk", "teal", "pembe"],
 } as const;
 
 type Rgb = readonly [number, number, number];
@@ -301,12 +312,28 @@ function isiRengi(palet: Palet, t: number): Rgb {
   ];
 }
 
-/* BAĞ TÜRÜ RENKLERİ — üst yüzeyin dört türü, hue eşlemesiyle bizim jetonlarımıza.
-   Üst yüzey: anlamsal mavi · zamansal camgöbeği-yeşil · varlık kehribar · nedensel
-   mor. Aşağıdaki eşleme aynı hue sırasını korur. */
+/* BAĞ TÜRÜ RENKLERİ — üst yüzeyin dört türü, hue eşlemesiyle bizim jetonlarımıza (TARİHÇE: üst
+   yüzey anlamsal mavi · zamansal camgöbeği-yeşil · varlık kehribar · nedensel mor kullanıyordu;
+   eşleme BAŞLANGIÇTA aynı hue sırasını koruyordu — `semantic: "mavi"`, `temporal: "camgobegi"`).
+
+   ÇAKIŞMA DÜZELTMESİ (düzeltme turu 1, TSK-117 G7 r1, 2026-09-04) — YENİ SINIF, TSK-124 "mor
+   noktalar" ile AYNI aile: `semantic`in eski jetonu `mavi` (`--color-seri-6`) `DUGUM_STILI.
+   tur.world`ün jetonuyla (`teal`, AYNI değişken) çakışıyordu; `temporal`in eski jetonu `camgobegi`
+   (`--color-seri-9`) `DUGUM_STILI.tur.experience`in jetonuyla (`pembe`, AYNI değişken)
+   çakışıyordu — bir DÜĞÜM kümesi ile bir BAĞ türü ekranda AYNI RGB'ye boyanıyordu (ölçüldü,
+   `tests/test_hafiza_genel_bakis_v388.py::test_DUGUM_ve_BAG_RENKLERI_CAKISMIYOR`).
+
+   ÇÖZÜM — düğümler seri-6/9'u (`teal`/`pembe`), `entity`/`causal` ZATEN seri-7/8'i (`turuncu`/
+   `mor`) tutuyor; dördüncü/beşinci serbest kromatik seri kalmadı. `semantic` → `sari`
+   (`--color-seri-10`, KALAN serbest seri). `temporal` → `cerceve` (`--border`, nötr/ince jeton —
+   kromatik seri tükendi, `border` düğümlerin/diğer bağların hiçbirinin değişkeniyle çakışmıyor ve
+   canvas zemininden [`--background`] görünür ayrışıyor, bkz. tema.css oklch ışıklılık farkı).
+   Dört bağ türü şimdi HEM düğüm kümelerinden HEM birbirinden ayrı: sari(10) · cerceve(akromatik,
+   border) · turuncu(7) · mor(8). `mavi`/`camgobegi` adları da SİLİNDİ (`JETONLAR` yorumu) — ad
+   artık gerçek hue'yu yalanlıyordu. */
 export const BAG_TURU_JETONU: Readonly<Record<string, JetonAdi>> = {
-  semantic: "mavi",
-  temporal: "camgobegi",
+  semantic: "sari",
+  temporal: "cerceve",
   entity: "turuncu",
   causal: "mor",
 };
@@ -452,9 +479,11 @@ function disbukeyZarf(noktalar: readonly Nokta[]): Nokta[] {
  *  düşer — renk bir ÖLÇÜM değil bir kimlik kanalıdır, bilinmeyen bir tür de
  *  çizilir. */
 function kumeRgb(palet: Palet, anahtar: string): Rgb {
-  /* YEDEK `mavi` DEĞİL `soluk` (TSK-124): `mavi` gezinme bandının jetonudur
-     (`--color-seri-6` = `--nav` ile aynı hex) ve tanınmayan bir türü panonun
-     "seçili/gezinme" rengiyle boyamak, renge yanlış bir anlam yüklemekti. */
+  /* YEDEK AKROMATİK (`soluk`), KROMATİK DEĞİL (TSK-124; gerekçe güncellendi düzeltme turu 1,
+     TSK-117 G7 r1, 2026-09-04 — eski metin `mavi` adına dayanıyordu, o jeton SİLİNDİ). Kural
+     DEĞİŞMEDİ: tanınmayan bir küme anahtarını panonun kullandığı kromatik jetonlardan
+     (teal/pembe/turuncu/mor/sari) biriyle boyamak, o türe YANLIŞ bir kimlik ödünç vermek olurdu
+     — akromatik `soluk` "bu tür tanınmadı" der, "bu tür X'tir" demez. */
   return palet.rgb[KUME_JETONU[anahtar] ?? "soluk"];
 }
 
@@ -577,7 +606,7 @@ function hazirla(
     }
     const tur = bag.tur ?? "semantic";
     turler.add(tur);
-    const renk = palet.renk[BAG_TURU_JETONU[tur] ?? "mavi"];
+    const renk = palet.renk[BAG_TURU_JETONU[tur] ?? "sari"];
     const i = baglar.length;
     baglar.push({ a, b, renk, tur });
     const listeA = bagIndeksi.get(a);
@@ -1243,7 +1272,7 @@ export function Takimyildizi({
       ctx.fillStyle = p.renk.soluk;
       ctx.fillText(etiket, efsaneX, Y - 12);
       efsaneX -= genislik + 4;
-      ctx.fillStyle = p.renk[BAG_TURU_JETONU[tur] ?? "mavi"];
+      ctx.fillStyle = p.renk[BAG_TURU_JETONU[tur] ?? "sari"];
       ctx.beginPath();
       ctx.arc(efsaneX, Y - 15, 3, 0, Math.PI * 2);
       ctx.fill();

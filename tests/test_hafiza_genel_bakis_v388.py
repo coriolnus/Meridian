@@ -264,16 +264,16 @@ ROL_BANTLARI = {
 
 #: GEÇİCİ BEYANLI İSTİSNALAR — TEK KAYNAK (Rol-1 ruling, TSK-124 düzeltme turu 1).
 #:
-#: NEDEN VAR: S3 beyanından sonra rol bantlarının DIŞINDA kalan tek kromatik seri jetonu
-#: `pembe`dir. Üç kayıt türünü tek kromatik tona sıkıştırmak, renk kimlik kanalını tümüyle
-#: kaybetmek olurdu — bu turda yeni palet jetonu yaratmak ise palet turunun (TSK-117 K-4) işi.
-#: Bu yüzden ihlal SİLİNMEDİ, BEYAN EDİLDİ.
+#: KAPANDI (TSK-117 K-4, 2026-09-04): palet turu seri rampasını (`ui/src/tema.css` `--seri-6..10`)
+#: rol bantlarının DIŞINA taşıdı (`tests/test_seri_rampasi_serbest_bant_v399.py`) ve
+#: `DUGUM_STILI.tur.world` artık `camgobegi` (eski `--color-seri-9`, BİLGİ bandındaydı) DEĞİL
+#: `teal` (`--color-seri-6`, serbest bant) okuyor — istisnanın nedeni ortadan kalktı, satır
+#: SİLİNDİ (ölü muafiyet bir sonraki ihlali sessizce örter, dosyanın kendi kuralı).
 #:
-#: KÜNYE ZORUNLU (aşağıdaki çivi ölçer): süresi olmayan bir istisna sessizce kalıcılaşır.
-#: Gerekçe bir `TSK-` künyesi taşımak zorunda, yani istisnanın NE ZAMAN kapanacağı yazılı.
-ISTISNALAR = {
-    "camgobegi": "TSK-117 K-4'e kadar (S3 beyanı 2026-09-03)",
-}
+#: KÜNYE ZORUNLU (aşağıdaki çivi ölçer, sözlük boşken de): süresi olmayan bir istisna sessizce
+#: kalıcılaşır. Yeni bir istisna açılırsa gerekçesi bir `TSK-` künyesi taşımak ZORUNDA, yani
+#: istisnanın NE ZAMAN kapanacağı yazılı olmalı.
+ISTISNALAR: dict[str, str] = {}
 
 
 def _bantta(hue: float) -> str | None:
@@ -286,10 +286,13 @@ def _bantta(hue: float) -> str | None:
     return None
 
 
-def _oklch_hsl(l: float, c: float, h: float) -> tuple[float, float]:
-    """oklch → sRGB → HSL. (hue derecesi, doygunluk). Dönüşüm BURADA yapılır çünkü tasarım
-    belgesinin bantları HSL derecesinde ölçüldü (§1.1 `colorsys.rgb_to_hls`), jetonlar ise
-    Tailwind'de oklch yazılı — sabit bir hex tablosu yazsaydık çivi kendi kopyasını doğrulardı."""
+def _oklch_srgb(l: float, c: float, h: float) -> tuple[float, float, float]:
+    """oklch → gama-düzeltilmiş sRGB (0..1, KIRPILMAMIŞ — çağıran ihtiyacına göre kırpar).
+    Matris ve gama eğrisi Björn Ottosson'un OKLab tanımı + sRGB aktarım fonksiyonu (CSS Color 4
+    §10.2 ile aynı sabitler). TEK KAYNAK (TSK-117 K-4, 2026-09-04): hem hue/doygunluk (`_oklch_hsl`,
+    v399'un rol-bandı ölçümü) hem hex (`_tailwind_renk_hex`, huni=seri türetim ölçümü) BURADAN
+    türer — iki ayrı dönüşüm formülü sessizce ayrışmasın diye (bedel yasası: bu depoda bir kez
+    yaşanmış bir kusur sınıfı, ayrı-kopya-formül)."""
     a = c * math.cos(math.radians(h))
     b = c * math.sin(math.radians(h))
     l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
@@ -305,9 +308,33 @@ def _oklch_hsl(l: float, c: float, h: float) -> tuple[float, float]:
         x = min(max(x, 0.0), 1.0)
         return 12.92 * x if x <= 0.0031308 else 1.055 * (x ** (1 / 2.4)) - 0.055
 
-    r, g, bl = (gama(v) for v in lin)
+    return tuple(gama(v) for v in lin)  # type: ignore[return-value]
+
+
+def _oklch_hsl(l: float, c: float, h: float) -> tuple[float, float]:
+    """oklch → sRGB → HSL. (hue derecesi, doygunluk). Dönüşüm BURADA yapılır çünkü tasarım
+    belgesinin bantları HSL derecesinde ölçüldü (§1.1 `colorsys.rgb_to_hls`), jetonlar ise
+    Tailwind'de oklch yazılı — sabit bir hex tablosu yazsaydık çivi kendi kopyasını doğrulardı."""
+    r, g, bl = _oklch_srgb(l, c, h)
     ton, _isik, doygunluk = colorsys.rgb_to_hls(r, g, bl)
     return ton * 360.0, doygunluk
+
+
+def _tailwind_renk_hex(ad: str) -> str:
+    """Tailwind CSS değişken adı (`--color-teal-600`) → hex, `node_modules/tailwindcss/theme.css`
+    İÇİNDEN ÖLÇÜLEREK (oklch → sRGB → hex, `_oklch_srgb`). SABİT BİR HEX TABLOSU YAZILMADI
+    (uydurma yasağı, v399'un kendi ihtiyacı — `test_seri_rampasi_serbest_bant_v399.py`):
+    Tailwind paleti bir gün değişirse bu fonksiyon o günkü değeri okur, donmuş bir kopyayı değil.
+    v388'de yaşıyor çünkü `_oklch_srgb`/oklch regex deseni zaten burada tanımlıydı (`_jeton_hue`);
+    v399 bunu İTHAL EDER, ikinci bir kopyasını yazmaz (TSK-117 K-4, 2026-09-04)."""
+    if not TW_TEMA.is_file():                       # kurulum yoksa ÖLÇÜM YOK, sessizlik de yok
+        raise AssertionError(
+            f"{TW_TEMA} yok — hex ÖLÇÜLEMEDİ. `npm ci` koşulmadan bu çivi bir şey kanıtlamaz.")
+    tw = TW_TEMA.read_text(encoding="utf-8")
+    d = re.search(rf"{re.escape(ad)}:\s*oklch\(([\d.]+)%\s+([\d.]+)\s+([\d.]+)\)", tw)
+    assert d, f"{ad} Tailwind theme.css'te bulunamadı"
+    r, g, bl = _oklch_srgb(float(d.group(1)) / 100, float(d.group(2)), float(d.group(3)))
+    return f"#{round(r * 255):02x}{round(g * 255):02x}{round(bl * 255):02x}"
 
 
 def _jeton_hue(jeton: str) -> float | None:
@@ -351,13 +378,27 @@ def _jeton_hue(jeton: str) -> float | None:
 
 
 def test_HUE_HESABI_kendisi_olculuyor():
-    """POZİTİF KONTROL: dönüşüm bozuksa aşağıdaki bant iddiası her rengi "temiz" okur.
-    Bilinen iki ölçüm belgeden (§1.2): `--color-seri-6` 221° (GEZİNME) · `--color-seri-8` 262°
-    (MOD). İkisi de BANTTA çıkmalı — yani çivi ısırabildiğini önce kendi üstünde gösterir."""
-    for jeton, bant in (("mavi", "GEZİNME"), ("mor", "MOD"), ("turuncu", "UYARI+YÖN-EKSİ")):
-        h = _jeton_hue(jeton)
-        assert h is not None, f"{jeton} akromatik ölçüldü — dönüşüm bozuk"
-        assert _bantta(h) == bant, f"{jeton} hue={h:.1f}° → {_bantta(h)}, beklenen {bant}"
+    """POZİTİF KONTROL — REVİZE (TSK-117 K-4, 2026-09-04): dönüşüm bozuksa aşağıdaki bant
+    iddiası her rengi "temiz" okur. ESKİ HEDEF ARTIK GEÇERSİZ: bu kontrol seri jetonlarından
+    üçünün (mavi/mor/turuncu) BİLEREK rol bandında olmasını kullanıyordu, ama K-4'ün TAM AMACI
+    o üçünü bandın DIŞINA taşımaktı (`tests/test_seri_rampasi_serbest_bant_v399.py`) — ölçülen
+    sonuç artık üçü de DIŞARIDA (`test_ISTISNA_DISINDA_kromatik_ton_TEK` bunu ayrıca doğrular).
+    Eski hedefi burada tutmak POZİTİF kontrolü NEGATİF bir iddiaya çevirirdi (kendi kendini
+    yalanlayan bir çivi).
+
+    Yeni hedef JETONLAR/seri tablosunun DIŞINDA: shadcn tabanının `--destructive` jetonu
+    (tema.css `:root`, oklch) — seri rampasından bağımsız, palet turundan ETKİLENMEDİ ve HÂLÂ
+    KRİTİK bandında (kırmızı/hata rengi, ölçüldü ~357°). `_oklch_hsl` DOĞRUDAN çağrılır (jeton
+    adı üzerinden değil — `_jeton_hue` yalnız `JETONLAR` tablosundaki adları çözer ve
+    `--destructive` o tabloda yok); DEĞER SABİT YAZILMADI, tema.css'ten regex'le ÖLÇÜLÜR."""
+    tema = TEMA.read_text(encoding="utf-8")
+    m = re.search(r"\n\s*--destructive:\s*oklch\(([^)]*)\)", tema)
+    assert m, "--destructive tema.css'te oklch olarak bulunamadı — pozitif kontrol hedefi bayat"
+    l, c, h = (float(x) for x in m.group(1).replace("/", " ").split())
+    hue, doygunluk = _oklch_hsl(l, c, h)
+    assert doygunluk >= 0.02, "--destructive akromatik ölçüldü — dönüşüm bozuk"
+    assert _bantta(hue) == "KRİTİK", (
+        f"--destructive hue={hue:.1f}° → {_bantta(hue)}, beklenen KRİTİK (dönüşüm bozuk mu?)")
 
 
 def test_DUGUM_RENKLERI_rol_bantlarinda_DEGIL():
@@ -378,32 +419,42 @@ def test_DUGUM_RENKLERI_rol_bantlarinda_DEGIL():
 
 
 def test_ISTISNALAR_KUNYELI_ve_HALA_GEREKLI():
-    """İSTİSNA LİSTESİ KENDİ KENDİNİ DENETLER — iki yönde birden.
+    """İSTİSNA LİSTESİ KENDİ KENDİNİ DENETLER — TERS YÖN (TSK-117 K-4, 2026-09-04).
 
-    (a) KÜNYE: her gerekçe bir `TSK-` künyesi taşır. Künyesiz bir istisna, süresi olmayan bir
-        istisnadır ve sessizce kalıcılaşır — "geçici" kelimesi tek başına bir taahhüt değildir.
-    (b) HÂLÂ GEREKLİ Mİ: listedeki jeton BUGÜN gerçekten bir rol bandında olmalı. Palet turu
-        (TSK-117 K-4) serbest tonu verip `DUGUM_STILI` güncellendiğinde bu istisna ÖLÜ satır
-        olurdu ve ölü bir muafiyet, bir sonraki ihlali sessizce örterdi. Çivi o gün öter ve
-        satırın silinmesini ister — muafiyetin kapanışını da mekaniğe bağlayan yarı budur.
+    ESKİ HÜKÜM (K-4'TEN ÖNCE): liste BOŞ OLMAMALI — künyesiz/ölü istisna aranırdı.
+    YENİ HÜKÜM (K-4 KAPANDIKTAN SONRA): liste BUGÜN BOŞ OLMALI. Palet turu serbest hue verdi ve
+    `DUGUM_STILI` o değerlere taşındı (`tests/test_seri_rampasi_serbest_bant_v399.py`); istisnanın
+    tek nedeni (S3 beyanından sonra `camgobegi`nin BİLGİ bandında kalması) ortadan kalktı. Boş
+    olmayan bir liste bu noktadan sonra ÖLÜ MUAFİYET demektir — bir sonraki gerçek ihlali sessizce
+    örter (dosyanın kendi kuralı, aşağıdaki döngüde hâlâ zorlanıyor).
+
+    (a) KÜNYE (kalıcı kural, sözlük boşken de yaşar): her gerekçe bir `TSK-` künyesi taşır.
+        Künyesiz bir istisna, süresi olmayan bir istisnadır ve sessizce kalıcılaşır.
     """
-    assert ISTISNALAR, "istisna listesi boş — o hâlde ana çividen `ISTISNALAR` dalı da ölü"
+    assert ISTISNALAR == {}, (
+        "istisna listesi BOŞ OLMALIYDI — palet turu (TSK-117 K-4) serbest hue verdi, "
+        f"kalan kayıt(lar) ölü muafiyet: {ISTISNALAR!r}")
     for jeton, gerekce in ISTISNALAR.items():
         assert re.search(r"TSK-\d+", gerekce), \
             f"{jeton} istisnasının gerekçesi künyesiz: {gerekce!r} — kapanış tarihi yazılı değil"
-        h = _jeton_hue(jeton)
-        assert h is not None and _bantta(h) is not None, (
-            f"{jeton} artık hiçbir rol bandında değil (hue={h}) — istisna ÖLÜ, "
-            "satır silinmeli yoksa bir sonraki ihlali sessizce örter")
 
 
 def test_ISTISNA_DISINDA_kromatik_ton_TEK():
-    """S3'ÜN ÖLÇÜLEN BEDELİ, ADIYLA (bedel yasası): beyandan sonra rol bantlarının dışında
-    kalan kromatik seri jetonu SAYISI. Bugün bir tane (`pembe`) ve istisnanın gerekçesi tam
-    olarak bu. Sayı arttığı gün (palet turu) istisna gereksizleşir ve kardeş çivi öter."""
-    serbest = [j for j in ("mavi", "turuncu", "mor", "camgobegi", "pembe")
+    """S3'ÜN ÖLÇÜLEN BEDELİ, ADIYLA (bedel yasası) — GÜNCELLENDİ (TSK-117 K-4, 2026-09-04; jeton
+    adları düzeltme turu 1'de TEKRAR değişti, TSK-117 G7 r1, 2026-09-04):
+    S3 kararından hemen sonra (palet turu K-4'ten ÖNCE) rol bantlarının dışında kalan kromatik
+    seri jetonu SAYISI birdi (`pembe`, o gün seri-10=`--color-pink-600`). K-4 seri rampasını
+    TAMAMEN serbest bantlara taşıdı (`--seri-6..10` artık teal/lime/fuchsia/pink/yellow) — bu
+    testin adı ("TEK") artık ÖLÇÜLEN durumu anlatmıyor ama fonksiyon adı KİMLİKTİR (bu depoda
+    numaralı/adlı test dosyaları yeniden adlandırılmaz, künye kayar); ÖLÇÜLEN sayı BEŞTİR.
+
+    JETON ADLARI (düzeltme turu 1): `mavi`/`camgobegi` `JETONLAR`dan SİLİNDİ (ad çürük çapaydı —
+    `mavi` artık teal'e, `camgobegi` artık pink'e bağlıydı — VE bir düğüm/bağ RENK ÇAKIŞMASININ
+    kaynağıydı, bkz. `test_DUGUM_ve_BAG_RENKLERI_CAKISMIYOR`). Kalan/yeni beş kromatik seri-jeton
+    adı artık seri numarasıyla BİREBİR: `teal`(6) `turuncu`(7) `mor`(8) `pembe`(9) `sari`(10)."""
+    serbest = [j for j in ("teal", "turuncu", "mor", "pembe", "sari")
                if (h := _jeton_hue(j)) is not None and _bantta(h) is None]
-    assert serbest == ["pembe"], (
+    assert serbest == ["teal", "turuncu", "mor", "pembe", "sari"], (
         f"serbest kromatik jeton kümesi değişti: {serbest} — `DUGUM_STILI` ve istisna "
         "listesi bu ölçümle birlikte gözden geçirilmeli")
 
@@ -413,3 +464,68 @@ def test_MOR_dugum_rengi_olmaktan_CIKTI():
     hem ısı rampasının ORTA durağıydı, yani düğümlerin çoğunun rengiydi."""
     blok = _dugum_stili()
     assert '"mor"' not in blok, "mor hâlâ düğüm renk tablosunda"
+
+
+# ============================================================================
+# (D5) DÜĞÜM × BAĞ RENK ÇAKIŞMASI — YENİ SINIF (düzeltme turu 1, TSK-117 G7 r1, 2026-09-04)
+# ============================================================================
+#
+# TETİK: incelemenin bulgusu — TSK-124 "mor noktalar" (D3) bir DÜĞÜM kümesinin ısı rampasıyla
+# çakışmasıydı; bu YENİ sınıf bir DÜĞÜM kümesi ile bir BAĞ TÜRÜNÜN çakışması. K-4'ün ilk hâlinde
+# `BAG_TURU_JETONU.semantic` (`mavi`→`--color-seri-6`) `DUGUM_STILI.tur.world`ün (`teal`→AYNI
+# değişken) rengiyle, `.temporal` (`camgobegi`→`--color-seri-9`) `.experience`in (`pembe`→AYNI
+# değişken) rengiyle birebir aynıydı — takımyıldızında bir DÜNYA-BİLGİSİ düğümü ile bir ANLAMSAL
+# bağ ekranda AYNI RENK, ayırt edilemez.
+
+def _kume_jetonu() -> dict[str, str]:
+    """`DUGUM_STILI.tur` alt tablosu → {kayıt türü: jeton adı}. `_dugum_stili()` DUGUM_STILI'nin
+    TÜM gövdesini döner (`yaricapTabani`, `isiDuraklari` dahil) — bu yardımcı yalnız `tur: {...}`
+    alt-nesnesini keser."""
+    blok = _dugum_stili()
+    m = re.search(r"tur:\s*\{(.*?)\n\s*\},", blok, re.S)
+    assert m, "DUGUM_STILI.tur alt tablosu okunamadı — desen bayat"
+    return dict(re.findall(r'(\w+):\s*"([a-z]+)"', m.group(1)))
+
+
+def _bag_turu_jetonu() -> dict[str, str]:
+    """`BAG_TURU_JETONU` tablosu → {bağ türü: jeton adı}."""
+    s = soy(TAKIMYILDIZI)
+    m = re.search(r"export const BAG_TURU_JETONU[^=]*=\s*\{(.*?)\n\};", s, re.S)
+    assert m, "BAG_TURU_JETONU tablosu okunamadı — desen bayat"
+    return dict(re.findall(r'(\w+):\s*"([a-z]+)"', m.group(1)))
+
+
+def _jeton_degisken(ad: str) -> str:
+    """Jeton adı → HAM CSS değişkeni (`--color-seri-6`, `--border`…), hue'ya İNMEDEN. Çakışma
+    ölçümü (aşağıdaki çivi) hue EŞİTLİĞİNE değil DEĞİŞKEN eşitliğine bakar — iki sebeple: (1) iki
+    farklı jeton adı aynı değişkene bağlıysa renk zaten AYNIDIR, hue hesabına gerek yok; (2) hue
+    eşitliği YANLIŞ POZİTİF üretirdi — `_jeton_hue` iki FARKLI akromatik jetonda da (`soluk`=
+    `--muted-foreground`, `yazi`=`--foreground`) `None` döner, hue'yla karşılaştırsaydık bu ikisi
+    'çakışıyor' sayılırdı; DEĞİŞKEN adı bu körlüğe düşmez."""
+    tak = soy(TAKIMYILDIZI)
+    blok = re.search(r"export const JETONLAR\s*=\s*\{(.*?)\n\}", tak, re.S)
+    assert blok, "JETONLAR tablosu okunamadı — desen bayat"
+    m = re.search(rf'{re.escape(ad)}:\s*"(--[a-z0-9-]+)"', blok.group(1))
+    assert m, f"jeton tabloda yok: {ad}"
+    return m.group(1)
+
+
+def test_DUGUM_ve_BAG_RENKLERI_CAKISMIYOR():
+    """YENİ ÇAKIŞMA SINIFI (düzeltme turu 1, TSK-117 G7 r1, 2026-09-04) — TSK-124 "mor noktalar"
+    (D3) ile AYNI aile ama farklı eksen: orada bir DÜĞÜM kümesi kendi ısı rampasıyla çakışıyordu,
+    burada bir DÜĞÜM kümesi bir BAĞ TÜRÜYLE çakışıyordu (ölçüldü, düzeltme öncesi: `semantic`/
+    `world` ve `temporal`/`experience` ikişer ikişer AYNI `--color-seri-N`). Bu çivi
+    `KUME_JETONU` (`DUGUM_STILI.tur`) ∪ `BAG_TURU_JETONU` birleşiminin çözdüğü SEKİZ CSS
+    değişkeninin (hue değil, `_jeton_degisken`) TEKİL olduğunu ölçer; gelecekte biri diğerinin
+    rengine taşınırsa bu çivi öter. MUTASYONLA sınandı (rapor: `semantic`i `world`ün jetonuna
+    geri çevirmek çiviyi ötürdü, geri alındı)."""
+    kume = _kume_jetonu()
+    bag = _bag_turu_jetonu()
+    assert kume and bag, "DUGUM_STILI.tur ya da BAG_TURU_JETONU boş okundu — desen bayat"
+    etiketli = [(f"dugum.{k}", v) for k, v in kume.items()] + [(f"bag.{k}", v) for k, v in bag.items()]
+    gruplu: dict[str, list[str]] = {}
+    for etiket, jeton in etiketli:
+        degisken = _jeton_degisken(jeton)
+        gruplu.setdefault(degisken, []).append(f"{etiket}({jeton})")
+    cakisan = {d: e for d, e in gruplu.items() if len(e) > 1}
+    assert not cakisan, f"düğüm ve bağ renkleri aynı CSS değişkeninde çakışıyor: {cakisan}"

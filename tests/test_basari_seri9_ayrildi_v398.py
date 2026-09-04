@@ -25,7 +25,15 @@ TARANAN_TABAN = 100  # ölçüldü 2026-09-03: 195 .tsx dosyası var; tavan kör
 #  - PozisyonSeyri.tsx: TSK-117 K-3 turunda GENİŞLETİLDİ (ölçüldü) — açık pozisyonların "giriş
 #    yüzdesi" çizgi grafiği, her sembolü `var(--color-seri-N)` ile ayırt ediyor (`RAMPA_N=10`,
 #    onda döner ve ekranda yazar); bu göç kapsamı DIŞINDA, dosyada emerald/green literal YOK.
-VERI_BILESENLERI = ("takimyildizi.tsx", "Huni.tsx", "grafik", "chart", "anasayfakartlari.tsx", "PozisyonSeyri.tsx")
+#  - SeansTakvimi.tsx: TSK-117 K-4 turunda GENİŞLETİLDİ (ölçüldü, 2026-09-04) — takvim lejantının
+#    `dongu` (gece döngüsü kaydı) işaretleyicisi `emerald-500`den `var(--color-seri-6)`e taşındı
+#    (`tests/test_literal_renk_gocu_v397.py` emerald tavanı 4→0). "kosu" (hat koşusu) kardeş
+#    işaretleyici akromatik `ring-primary` kalıyor — ikisi "başarı/başarısızlık" değil YALNIZ İKİ
+#    KAYIT TÜRÜNÜ ayırt eden kategorik/dekoratif bir lejant (S1 ilkesi, VERİ kimliği — rol değil).
+VERI_BILESENLERI = (
+    "takimyildizi.tsx", "Huni.tsx", "grafik", "chart", "anasayfakartlari.tsx",
+    "PozisyonSeyri.tsx", "SeansTakvimi.tsx",
+)
 
 def _tsx_dosyalari():
     return list(UI.rglob("*.tsx"))

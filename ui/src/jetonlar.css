@@ -34,9 +34,9 @@
   --green-h: rgba(0,150,62,.35);
   --green-stamp: rgba(0,150,62,.55);
   --green-t: rgba(0,150,62,.10);
-  --huni-1: #2563eb;
-  --huni-2: #7c3aed;
-  --huni-3: #16a34a;
+  --huni-1: #009689;
+  --huni-2: #c800de;
+  --huni-3: #e60076;
   --ink-h: rgba(10,10,10,.30);
   --ink-h-soft: rgba(10,10,10,.18);
   --kap-1: rgba(10,10,10,.06);
@@ -162,9 +162,9 @@
   --green-h: rgba(0,149,61,.35);
   --green-stamp: rgba(0,149,61,.55);
   --green-t: rgba(0,149,61,.10);
-  --huni-1: #60a5fa;
-  --huni-2: #a78bfa;
-  --huni-3: #4ade80;
+  --huni-1: #00d5be;
+  --huni-2: #ed6aff;
+  --huni-3: #fb64b6;
   --ink-h: rgba(229,229,229,.30);
   --ink-h-soft: rgba(229,229,229,.18);
   --kap-1: rgba(229,229,229,.06);
@@ -261,9 +261,9 @@
     --green-h: rgba(0,149,61,.35);
     --green-stamp: rgba(0,149,61,.55);
     --green-t: rgba(0,149,61,.10);
-    --huni-1: #60a5fa;
-    --huni-2: #a78bfa;
-    --huni-3: #4ade80;
+    --huni-1: #00d5be;
+    --huni-2: #ed6aff;
+    --huni-3: #fb64b6;
     --ink-h: rgba(229,229,229,.30);
     --ink-h-soft: rgba(229,229,229,.18);
     --kap-1: rgba(229,229,229,.06);

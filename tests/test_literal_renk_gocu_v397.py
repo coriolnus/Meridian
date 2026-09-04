@@ -21,15 +21,19 @@ DESEN = re.compile(r"\b(?:bg|text|border|ring|from|to|fill|stroke)-(amber|emeral
 # ders kartı) bilgi çağrı-kutusu; "gezinme/aktif sekme" ya da veri serisi ANLAMI TAŞIYAN kullanım
 # YOK (spec §2 S3 kararıyla 195° ailesi zaten BİLGİ rezervinde, gezinme 210°-232° ayrı bant).
 #
-# emerald TAVANI 0 DEĞİL (Görev 4, TSK-117 K-2b, ölçüldü 2026-09-04): `SeansTakvimi.tsx`
-# takvim lejantında `dongu` (gece döngüsü kaydı) işaretleyicisi `emerald-500` kullanıyor —
-# "kosu" (hat koşusu) kardeş işaretleyici `ring-primary` (nötr marka rengi) taşıyor, yani
-# ikisi de "başarı/başarısızlık" değil YALNIZ İKİ KAYIT TÜRÜNÜ ayırt eden bir takvim
-# lejantı (kategorik/dekoratif, S1 ilkesi). `basari`ye taşımak "gece döngüsü kaydı VAR" ile
-# "iyi sonuçlandı" anlamlarını karıştırırdı — böyle bir ayrım burada YOK. Kalan 4 kullanım
-# bilerek dokunulmadı (task-4-report.md §"seri/dekoratif, dokunulmadı"); tavan bunu ÖLÇÜLMÜŞ
-# hâliyle 4'e beyan eder (0'a zorlamak sahte bir yeşil üretirdi — uydurma yasağı).
-LITERAL_TAVAN = {"amber": 0, "emerald": 4, "green": 0, "red": 0, "sky": 0}
+# emerald KAPANDI (Görev 4 → K-4 tamamlama, TSK-117, ölçüldü 2026-09-04): Görev 4'te
+# `SeansTakvimi.tsx` takvim lejantındaki `dongu` (gece döngüsü kaydı) işaretleyicisi BİLEREK
+# `emerald-500`de bırakılmıştı — "kosu" (hat koşusu) kardeş işaretleyici `ring-primary` (nötr
+# marka rengi) taşıyor, yani ikisi de "başarı/başarısızlık" değil YALNIZ İKİ KAYIT TÜRÜNÜ
+# ayırt eden bir takvim lejantıydı (kategorik/dekoratif, S1 ilkesi) ve `basari`ye taşımak
+# "gece döngüsü kaydı VAR" ile "iyi sonuçlandı" anlamlarını karıştırırdı. K-4 (palet turu,
+# 2026-09-04) bu ayrımı `basari`ya değil VERİ jetonuna taşıyarak çözdü: `dongu` artık
+# `var(--color-seri-6)` (teal, `ui/src/tema.css`in çok-serili rampası) kullanıyor — "kosu"nun
+# akromatik `ring-primary`sinden ayırt edilebilir ama hiçbir rol anlamı (başarı/uyarı/kritik)
+# taşımıyor; `tests/test_basari_seri9_ayrildi_v398.py::VERI_BILESENLERI` bu yüzden
+# `SeansTakvimi.tsx`i de kapsar (seri jetonu artık orada da yaşıyor). Tavan bu yüzden 0'a
+# çekildi — göç UYDURULMADI, kalan 4 kullanım GERÇEKTEN taşındı (ölçüldü, yukarıdaki `_sayim`).
+LITERAL_TAVAN = {"amber": 0, "emerald": 0, "green": 0, "red": 0, "sky": 0}
 ESLEME = {"amber": "uyari", "emerald": "basari", "green": "basari", "red": "kritik", "sky": "bilgi"}
 
 def _sayim():

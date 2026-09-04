@@ -36,13 +36,20 @@
    sabitleniyor: 15/60 sn'lik yoklama her turda yeni dizi doğurursa alt bileşenler
    boşuna yeniden çizilir.
 
-   RENK — `--huni-1..3` KULLANILMADI ve nedeni ölçüldü: o üç rol jetonu
-   `src/jetonlar.css`te tanımlı ama O DOSYA BU UYGULAMAYA BAĞLI DEĞİL
-   (`src/stil.css` yalnız `yazitipi.css` + `tema.css` import ediyor, ölçüldü
-   2026-08-25). Tanımsız bir `var()` SVG `fill`inde siyaha düşer — yani jetonu
-   "doğru olduğu için" yazmak şeridi sessizce simsiyah boyardı. Bu yüzden renk
-   `tema.css`in ÇOK SERİLİ RAMPASINDAN okunuyor (`--color-seri-*`, aynı dosyada
-   tanımlı ve `portfoy/PozisyonSeyri.tsx` zaten aynı yoldan okuyor). Yolculuk
+   RENK — `--huni-1..3` KULLANILMIYOR, ama gerekçe DEĞİŞTİ (düzeltme turu, TSK-117 G7 r1,
+   2026-09-04 — eski metin çürümüştü, yeniden ölçüldü). ESKİ İDDİA (2026-08-25): "o üç rol jetonu
+   `jetonlar.css`te tanımlı ama O DOSYA BU UYGULAMAYA BAĞLI DEĞİL" — bu artık YANLIŞ: TSK-117 G1
+   (2026-09-03) `ui/src/tema.css`ye `@import "./jetonlar.css";` ekledi ve `stil.css` da
+   `tema.css`yi import ediyor (`yazitipi.css` + `tema.css`, ölçüldü) — yani `--huni-1/2/3`
+   BAĞLI ve TANIMLI, siyaha düşme riski artık YOK.
+
+   GÜNCEL GEREKÇE — hâlâ `--color-seri-*` OKUNUYOR, `--huni-*` DEĞİL: `meridian/web/tokens.json`
+   `huni-1/2/3` bu turdan beri TAM OLARAK `--color-seri-6/8/9`nin (bu bileşenin kendi
+   `RENK_ILK/ORTA/VARIS`i ile AYNI basamaklar) değer KOPYASI — S2 kararı gereği (spec
+   `docs/TASARIM-PALET-REZERVE-HUE-2026-09-03.md` §3 A′) huni bir VERİ görselidir, rol değil, ve
+   TEK KAYNAK seri rampasıdır. `--huni-N`yi okumak bu bileşeni bir KOPYAYA bağlardı (tokens.json
+   güncellenmeyi UNUTURSA sessizce ayrışır); `--color-seri-N`yi doğrudan okumak (aynı dosyada
+   tanımlı, `portfoy/PozisyonSeyri.tsx` zaten aynı yoldan okuyor) TEK kaynağa bağlanmaktır. Yolculuk
    yapısı app.js'ten aynen korundu: ilk basamaklar bir renk, VARIŞ ayrı bir renk.
    ============================================================================ */
 import { type CSSProperties, useMemo } from "react";

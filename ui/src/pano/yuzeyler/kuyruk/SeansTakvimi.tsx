@@ -109,15 +109,22 @@ export function SeansTakvimi({
               // (`CalendarDayButton`) var ve o düğme kendi zeminini çizebiliyor. Nokta
               // biçimli bir işaret düğmenin ARKASINDA kalabilirdi; halka ve hücre zemini
               // yığılma sırasından bağımsız görünür.
+              /* TSK-117 K-2b/K-4 (2026-09-04): `dongu` işareti seri jetonuna taşındı
+                 (`var(--color-seri-6)`, teal — `ui/src/tema.css`). Bu "başarı/hata" DEĞİL,
+                 yalnız İKİ KAYIT TÜRÜNÜ (gece döngüsü ↔ hat koşusu) ayırt eden bir takvim
+                 lejantıdır (kategorik/dekoratif, task-4-report.md §"seri/dekoratif" S1 ilkesi;
+                 `tests/test_literal_renk_gocu_v397.py` emerald tavanı bu göçle 4→0). `dark:`
+                 varyantı GEREKMEZ: `--color-seri-6` zaten temayla döner (`.dark` 400 tonu,
+                 `:root` 600 tonu — tema.css'in kendi ışıklılık kuralı). */
               modifiersClassNames={{
                 kosu: "rounded-(--cell-radius) ring-1 ring-primary/60 ring-inset",
-                dongu: "rounded-(--cell-radius) bg-emerald-500/15 font-medium text-emerald-700 dark:text-emerald-300",
+                dongu: "rounded-(--cell-radius) bg-[var(--color-seri-6)]/15 font-medium text-[var(--color-seri-6)]",
               }}
               className="rounded-lg border"
             />
             <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-sm bg-emerald-500/40" /> gece döngüsü kaydı var
+                <span className="size-2.5 rounded-sm bg-[var(--color-seri-6)]/40" /> gece döngüsü kaydı var
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="size-2.5 rounded-sm ring-1 ring-primary/60 ring-inset" /> hat koşusu kaydı var
