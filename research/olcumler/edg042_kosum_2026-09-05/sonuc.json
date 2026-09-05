@@ -1,0 +1,347 @@
+{
+  "kart": "EDG-2026-042",
+  "kosum": "betimleyici_ara_kosum",
+  "kosum_izni": "kart status notu: 'operatör isterse BETİMLEYİCİ ara-koşum her zaman yapılabilir (hüküm taşımaz, damgası açık)'",
+  "cekim_kunyesi": {
+    "dosya": "canli_ham.json",
+    "sha256": "5b015842d006f3f9d7d927049832c86190a6c73894500c12946a7a23b4bba442",
+    "cekim_zamani": "2026-09-05T18:39:20+00:00",
+    "makine": "A1 (canli)"
+  },
+  "model_varsayimi_bps": 5.0,
+  "model_varsayimi_kaynak": "goal.slippage_bps (koşum günü, canlı snapshot)",
+  "giris_once": {
+    "n": 15,
+    "seans_sayisi": 5,
+    "damga": "ÖLÇÜLEMEDİ (n=15 < 30) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 30,
+      "seans": 10
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": 16.131,
+    "p25_bps": -26.397,
+    "p75_bps": 67.659,
+    "min_bps": -130.739,
+    "maks_bps": 327.46,
+    "en_buyuk_seans_payi_pct": 33.3,
+    "tek_seans_serhi_gerekli": false,
+    "medyan_model_farki_bps": 11.131,
+    "satir_dokumu": [
+      {
+        "ticker": "AMGN",
+        "tarih": "2026-08-05",
+        "bps": 15.017,
+        "model_farki_bps": 10.017
+      },
+      {
+        "ticker": "BKNG",
+        "tarih": "2026-08-05",
+        "bps": 134.49,
+        "model_farki_bps": 129.49
+      },
+      {
+        "ticker": "EMR",
+        "tarih": "2026-08-05",
+        "bps": 54.618,
+        "model_farki_bps": 49.618
+      },
+      {
+        "ticker": "NUE",
+        "tarih": "2026-08-05",
+        "bps": 16.131,
+        "model_farki_bps": 11.131
+      },
+      {
+        "ticker": "CRM",
+        "tarih": "2026-08-13",
+        "bps": -81.978,
+        "model_farki_bps": -86.978
+      },
+      {
+        "ticker": "MRK",
+        "tarih": "2026-08-13",
+        "bps": 40.839,
+        "model_farki_bps": 35.839
+      },
+      {
+        "ticker": "HUM",
+        "tarih": "2026-08-14",
+        "bps": -43.038,
+        "model_farki_bps": -48.038
+      },
+      {
+        "ticker": "MRNA",
+        "tarih": "2026-08-14",
+        "bps": -130.739,
+        "model_farki_bps": -135.739
+      },
+      {
+        "ticker": "BDX",
+        "tarih": "2026-08-19",
+        "bps": 13.175,
+        "model_farki_bps": 8.175
+      },
+      {
+        "ticker": "LLY",
+        "tarih": "2026-08-19",
+        "bps": 29.786,
+        "model_farki_bps": 24.786
+      },
+      {
+        "ticker": "MRK",
+        "tarih": "2026-08-19",
+        "bps": -9.756,
+        "model_farki_bps": -14.756
+      },
+      {
+        "ticker": "MRNA",
+        "tarih": "2026-08-19",
+        "bps": -122.075,
+        "model_farki_bps": -127.075
+      },
+      {
+        "ticker": "MRVL",
+        "tarih": "2026-08-19",
+        "bps": 327.46,
+        "model_farki_bps": 322.46
+      },
+      {
+        "ticker": "DE",
+        "tarih": "2026-08-21",
+        "bps": 80.699,
+        "model_farki_bps": 75.699
+      },
+      {
+        "ticker": "PANW",
+        "tarih": "2026-08-21",
+        "bps": 87.148,
+        "model_farki_bps": 82.148
+      }
+    ],
+    "kalici_taban": true,
+    "kalici_taban_beyan": "kol DONUK — bu kolun icra yolu (EOD GTC → açılış dolumu) 2026-08-23T14:53:43+00:00'de emekli oldu ve bir daha satır ÜRETMEYECEK. Kol eşik BEKLEMEZ ve hüküm üretemez: kalıcı betimleyici tabandır, 'yakında dolacak' diye sunulmaz. Damga biçimi EDG-037 mirasıdır ve korunmuştur; oradaki '< eşik' ifadesi bir bekleyişi DEĞİL, biçim yasasını gösterir."
+  },
+  "giris_1345": {
+    "n": 8,
+    "seans_sayisi": 5,
+    "damga": "ÖLÇÜLEMEDİ (n=8 < 30) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 30,
+      "seans": 10
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": 12.476,
+    "p25_bps": -38.455,
+    "p75_bps": 192.589,
+    "min_bps": -65.214,
+    "maks_bps": 286.115,
+    "en_buyuk_seans_payi_pct": 37.5,
+    "tek_seans_serhi_gerekli": false,
+    "medyan_model_farki_bps": 7.476,
+    "satir_dokumu": [
+      {
+        "ticker": "ECL",
+        "tarih": "2026-08-25",
+        "bps": 175.107,
+        "model_farki_bps": 170.107
+      },
+      {
+        "ticker": "CRM",
+        "tarih": "2026-08-27",
+        "bps": 245.034,
+        "model_farki_bps": 240.034
+      },
+      {
+        "ticker": "NOW",
+        "tarih": "2026-08-28",
+        "bps": 286.115,
+        "model_farki_bps": 281.115
+      },
+      {
+        "ticker": "CF",
+        "tarih": "2026-09-01",
+        "bps": 6.02,
+        "model_farki_bps": 1.02
+      },
+      {
+        "ticker": "MPC",
+        "tarih": "2026-09-01",
+        "bps": 18.932,
+        "model_farki_bps": 13.932
+      },
+      {
+        "ticker": "REGN",
+        "tarih": "2026-09-02",
+        "bps": -65.214,
+        "model_farki_bps": -70.214
+      },
+      {
+        "ticker": "VRTX",
+        "tarih": "2026-09-02",
+        "bps": -38.455,
+        "model_farki_bps": -43.455
+      },
+      {
+        "ticker": "VRTX",
+        "tarih": "2026-09-02",
+        "bps": -38.455,
+        "model_farki_bps": -43.455
+      }
+    ],
+    "kalici_taban": false
+  },
+  "giris_ortak": {
+    "e2_toplam": 48,
+    "ayna_submitted": 23,
+    "ayna_submitted_fill_bos": 0,
+    "olculemedi": {
+      "n": 0,
+      "satirlar": []
+    },
+    "pencere_siniri": "2026-08-23T14:53:43+00:00",
+    "bolme_anahtari": "ts (gönderim anı) — `pencere` damgası DEĞİL",
+    "k_disiplini": "K TOPLAM = 3 korundu: giris_1345 `pending-042-giris` halefi, giris_once grid'de sayılmaz (hüküm üretemez)",
+    "not": "fill boş satır kovaya girmez (kart filtresi: fill dolu); dolmama oranı bu kartın konusu değil. Havuzlanmış `giris` anahtarı P-3/AYRIK ile KALDIRILDI — operatörün reddettiği karışık sayıyı üretmeye devam etmemesi için."
+  },
+  "cikis_hedef": {
+    "n": 6,
+    "seans_sayisi": 2,
+    "damga": "ÖLÇÜLEMEDİ (n=6 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 15,
+      "seans": 6
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": -4.21,
+    "p25_bps": -4.99,
+    "p75_bps": 10.496,
+    "min_bps": -46.622,
+    "maks_bps": 125.386,
+    "en_buyuk_seans_payi_pct": 66.7,
+    "tek_seans_serhi_gerekli": true,
+    "medyan_model_farki_bps": -9.21,
+    "satir_dokumu": [
+      {
+        "ticker": "MRK",
+        "tarih": "2026-08-19",
+        "bps": -4.728,
+        "model_farki_bps": -9.728
+      },
+      {
+        "ticker": "MRNA",
+        "tarih": "2026-08-19",
+        "bps": 15.225,
+        "model_farki_bps": 10.225
+      },
+      {
+        "ticker": "AMGN",
+        "tarih": "2026-08-27",
+        "bps": -46.622,
+        "model_farki_bps": -51.622
+      },
+      {
+        "ticker": "BKNG",
+        "tarih": "2026-08-27",
+        "bps": 125.386,
+        "model_farki_bps": 120.386
+      },
+      {
+        "ticker": "CRM",
+        "tarih": "2026-08-27",
+        "bps": -5.077,
+        "model_farki_bps": -10.077
+      },
+      {
+        "ticker": "EMR",
+        "tarih": "2026-08-27",
+        "bps": -3.691,
+        "model_farki_bps": -8.691
+      }
+    ],
+    "olculemedi": {
+      "n": 0,
+      "satirlar": []
+    }
+  },
+  "cikis_stop": {
+    "n": 7,
+    "seans_sayisi": 6,
+    "damga": "ÖLÇÜLEMEDİ (n=7 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 15,
+      "seans": 6
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": 2.496,
+    "p25_bps": -2.223,
+    "p75_bps": 3.803,
+    "min_bps": -120.812,
+    "maks_bps": 21.892,
+    "en_buyuk_seans_payi_pct": 28.6,
+    "tek_seans_serhi_gerekli": false,
+    "medyan_model_farki_bps": -2.504,
+    "satir_dokumu": [
+      {
+        "ticker": "HUM",
+        "tarih": "2026-08-19",
+        "bps": 2.61,
+        "model_farki_bps": -2.39
+      },
+      {
+        "ticker": "LLY",
+        "tarih": "2026-08-21",
+        "bps": -120.812,
+        "model_farki_bps": -125.812
+      },
+      {
+        "ticker": "MRVL",
+        "tarih": "2026-08-21",
+        "bps": 2.496,
+        "model_farki_bps": -2.504
+      },
+      {
+        "ticker": "PANW",
+        "tarih": "2026-08-25",
+        "bps": -0.718,
+        "model_farki_bps": -5.718
+      },
+      {
+        "ticker": "NOW",
+        "tarih": "2026-09-01",
+        "bps": -3.728,
+        "model_farki_bps": -8.728
+      },
+      {
+        "ticker": "ECL",
+        "tarih": "2026-09-03",
+        "bps": 4.996,
+        "model_farki_bps": -0.004
+      },
+      {
+        "ticker": "CF",
+        "tarih": "2026-09-04",
+        "bps": 21.892,
+        "model_farki_bps": 16.892
+      }
+    ],
+    "olculemedi": {
+      "n": 0,
+      "satirlar": []
+    }
+  },
+  "cikis_ortak": {
+    "trades_toplam": 901,
+    "kaynak_disi_replay_seed": 885,
+    "kaynak_disi_diger": 0,
+    "live_paper": 16,
+    "live_paper_afp_bos": 3,
+    "alpaca_fill_beyan_dolu": 1,
+    "siniflanamayan_exit_reason": [],
+    "not": "kill #4: replay_seed kıyasa girmedi · kill #6: alpaca_fill_beyan ölçüm değil, yalnız sayıldı · afp boş live_paper satırı kovaya girmez (kart filtresi)"
+  }
+}

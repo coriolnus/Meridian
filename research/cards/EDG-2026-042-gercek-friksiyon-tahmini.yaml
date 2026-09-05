@@ -438,3 +438,36 @@ hafta_kosum_3_2026_08_31: >
   değil. EK hakem (eski pencere-anahtarı): n_1330=2 · n_1345=2 · damgasız=13 · oneri_tetigi
   orneklem_birikimde; geri_al_onerisi YOK. Not: EXE-2026-010 (ts-anahtarı) uygulanınca hakem
   kontrol kolu n=15 okuyacak — o revizyon bu kartın eşiklerine dokunmaz.
+
+hafta_kosum_4_2026_09_05: >
+  HAFTALIK KOŞUM #4 (zamanlanmış görev `edg042-friksiyon-haftalik`, ölçüm oturumu; Rol-1 işledi).
+  Artefakt: research/olcumler/edg042_kosum_2026-09-05/ (snapshot sha 5b015842…, çekim
+  2026-09-05T18:39:20Z, goal.slippage_bps=5 künyeli). Reçete R3/AYRIK (kart işaretçisi),
+  betikler bayt-özdeş (a846449e… / 1787a9ff…). Salt-okunur; canlıya ve state/'e tek bayt
+  yazılmadı. SONUÇ — DÖRT KOVA DA EŞİK ALTINDA, BETİMLEYİCİ, CI yok, karar kuralı uygulanmadı,
+  status measuring:
+    giris_once  n=15 / 5 seans · medyan +16,131 · p25/p75 −26,397/+67,659 · seans payı %33,3
+                (KALICI TABAN — koşum #3'e göre BİREBİR sabit; kol 08-23'te emekli oldu)
+    giris_1345  n=8  / 5 seans · medyan +12,476 · p25/p75 −38,455/+192,589 · seans payı %37,5
+    cikis_hedef n=6  / 2 seans · medyan −4,21   · seans payı %66,7 → kill #7 ŞERHİ ZORUNLU
+    cikis_stop  n=7  / 6 seans · medyan +2,496  · seans payı %28,6 · SEANS EŞİĞİ DOLDU (n bağlayıcı)
+    olculemedi 0 (üç kovada da) · kill denetimi sekizde sekiz temiz (KOMUT.txt [4]).
+  KOŞUM #3'E GÖRE DEĞİŞİM: giris_1345 n 2→8 (+6, 3 yeni plan-günü: 08-28 NOW · 09-01 CF/MPC ·
+  09-02 REGN/VRTX×2) ve medyan +210,07→+12,476 — DÜŞÜŞ HÜKÜM DEĞİLDİR: önceki değer n=2
+  üzerineydi, yeni altı satırın dördü modelin altında/yakınında, biri (NOW +286,1) yine büyük
+  pozitif; dağılım vahşi kalıyor. cikis_stop n 4→7, seans 3→6 (eşik doldu). cikis_hedef İKİ
+  HAFTADIR SABİT (n=6/2 seans) — hedef çıkışı üretilmiyor, izdüşüm verilemez (hız sıfır).
+  EŞİĞE KABA MESAFE (izdüşüm, ölçüm DEĞİL): giris_1345 22 dolum eksik — bu haftanın hızıyla
+  (1,2 dolum/seans) ~3,7 hafta, kartın 08-31'de ölçtüğü hızla (0,40) ~11 hafta; bant bu yüzden
+  iki uçlu. cikis_stop 8 dolum eksik → ~2,7 hafta. cikis_hedef: İZDÜŞÜM YOK (hız 0).
+  EK hakem (EXE-2026-009, H2/ts): giris_once n=15 CI [−43,038 ; +80,699] · giris_1345 n=8 < 10
+  → kıyas yapılmadı · damga↔ts ayrışan 0 · damga_bilinmeyen 0 · oneri_tetigi
+  orneklem_birikimde · geri_al_onerisi YOK.
+  YENİ AÇIK KALEM (P-3'ün kardeşi, kart bunu KONUŞMUYOR): giris_1345'te 2026-09-02 VRTX İKİ
+  satırla temsil ediliyor — P-2026-09-02-VRTX ve P-2026-09-02-VRTX-pead, aynı fill (556,94) ve
+  aynı bps (−38,455); ertesi gün ikincisi armed_dropped_already_open ile düşüyor, yani pozisyon
+  TEKİL gönderim izi ÇİFT. Kartın kill#5'i yalnız kovalar ARASI birleştirmeyi yasaklar, kova İÇİ
+  bağımlı gözlemin kuralı YOKTUR. Reçete AYNEN koşuldu, sayı DÜZELTİLMEDİ (ölçüm oturumu kural
+  seçmez). Etki beyanı: tekilleştirilseydi n=8→7, eşik hükmü değişmezdi. Kural EŞİK DOLMADAN
+  konmalıdır ya da hiç konmamalıdır — P-3'ün aynı gerekçesi. OPERATÖR KALEMİ.
+  (Rol-1 işledi 18:48Z; DEVIR.md ölçüm oturumundan aynen; status measuring KALIR; sıradaki koşum 2026-09-12.)

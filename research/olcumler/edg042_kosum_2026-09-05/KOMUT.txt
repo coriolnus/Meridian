@@ -1,0 +1,73 @@
+EDG-2026-042 — OTOMATİK HAFTALIK KOŞUM #4 (2026-09-05, zamanlanmış görev `edg042-friksiyon-haftalik`)
+Oturum: ÖLÇÜM OTURUMU (Rol-1 DEĞİL). Git yok, karta/ROADMAP'e yazım yok, dağıtım yok.
+Hüküm işleme ve commit Rol-1'e devredilir → DEVIR.md.
+
+[0] BİTİŞ KONTROLÜ (görev [1], revize 2026-08-31)
+    Eşiğe ULAŞABİLEN üç kova (giris_1345 · cikis_hedef · cikis_stop) hükümlü verdict taşıyor mu?
+    HAYIR — üçü de eşik altında. Görev KAPANMAZ, koşum yapıldı.
+
+[1] REÇETE İŞARETÇİSİ — KARTTAN OKUNDU (görev metni işaretçi TAŞIMAZ)
+    Kart bloğu: `p3_karar_ayrik_ts_2026_08_31` → GÜNCEL DONUK REÇETE =
+    research/olcumler/edg042_recete_ayrik_2026-08-31/  (R3 / P-3 AYRIK, anahtar `ts`)
+    Bayt-özdeş kopya bu dizinde; sha256 kartın künyesiyle BİREBİR:
+      canli_cek.py  a846449eaa7fdfa8a4e47db648e5c27703be8f59747e0a1a649a74fd77e6cfa2  (kart: a846449e…) ✓
+      olcum.py      1787a9ffe6b477484fba096ebcaf553899cf560f3b700057d985318204a1f317  (kart: 1787a9ff…) ✓
+
+[2] KOŞUM (salt-okunur; canlıya ve state/'e TEK BAYT yazılmadı)
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && ./.venv/bin/python -' \
+        < canli_cek.py > canli_ham.json          → RC=0
+    PYTHONDONTWRITEBYTECODE=1 python3 olcum.py   → sonuc.json, RC=0
+    canli_ham.json sha256 = 5b015842d006f3f9d7d927049832c86190a6c73894500c12946a7a23b4bba442
+    cekim_zamani = 2026-09-05T18:39:20+00:00 · makine A1 (canlı) · goal.slippage_bps = 5
+    (olcum.py meridian.obs'a HİÇ uzanmaz: import listesi datetime/hashlib/json/random/statistics/pathlib)
+
+[3] EŞİK KONTROLÜ — DÖRT KOVA DA EŞİK ALTINDA
+    HÜKÜMLÜ KOŞUM TETİKLENMEDİ · CI HESAPLANMADI · KARAR KURALI UYGULANMADI · status `measuring` kalır.
+      giris_once  n=15 / 5 seans   (eşik 30/10) — KALICI TABAN, eşik BEKLEMEZ (P-3 hükmü)
+      giris_1345  n=8  / 5 seans   (eşik 30/10)
+      cikis_hedef n=6  / 2 seans   (eşik 15/6)
+      cikis_stop  n=7  / 6 seans   (eşik 15/6) — seans eşiği DOLDU, n bağlayıcı
+      olculemedi  0 (her üç kovada)
+
+[4] KİLL DENETİMİ (kartın sekizi, tek tek)
+    #1 kanonik ölçüt: E2'de KAYITLI `fill_vs_resmi_acilis_bps` kullanıldı; koşum günü tarihçe
+       YENİDEN ÇEKİLMEDİ, payda türetilmedi. ✓
+    #2 boş alan tahminle doldurulmadı: ayna_submitted_fill_bos = 0, olculemedi = 0. ✓
+    #3 teyitsiz live_paper çıkışı kovaya girmedi: live_paper 16 → afp boş 3 kart filtresiyle
+       dışarıda; ölçülen 13 (6+7) satırın 13'ü broker_teyit=teyitli; olculemedi 0. ✓
+    #4 replay_seed 885 satır kıyas dışı. ✓
+    #5 kovalar birleştirilmedi; havuzlanmış `giris` anahtarı R3'te zaten üretilmiyor. ✓
+    #6 alpaca_fill_beyan (n=1) ölçüm yerine geçmedi, yalnız sayıldı. ✓
+    #7 tek seans > %40: cikis_hedef %66,7 → ŞERH ZORUNLU, beyan edildi (CI zaten hesaplanmadı).
+       giris_once %33,3 · giris_1345 %37,5 · cikis_stop %28,6 → şerh gerekmiyor. ✓
+    #8 salt-okunur: canlıya ve ana checkout state/'ine yazım YOK; çıktı yalnız bu dizine. ✓
+
+[5] EK — PENCERE HAKEM KATMANI (EXE-2026-009)
+    İşaretçi KARTTAN okundu (`GÜNCEL DONUK HAKEM İŞARETÇİSİ`, EXE-009 satır ~142):
+      research/olcumler/edg042_hakem_2026-09-01/ (H2, ts anahtarlı)
+    Diskteki betikler işaretçi sha256'larıyla KIYASLANDI — AYRIŞMA YOK, koşuldu:
+      pencere_altbant.py 3d8eda316d15dd3b7fb14154f2dc9bd2fe213d63414b9972d9f5861b1b72cf02 ✓
+      pencere_cek.py     9ad462a56e40ae585ce8268b94fca4488fb7751a24666cf728f74632b360690b ✓
+    Bayt-özdeş kopyayla bu dizinde koşuldu (donuk hakem dizinine yazılmadı; 2026-08-29 emsali).
+    pencere_ham.json cekim_zamani = 2026-09-05T18:41:16+00:00 · RC=0
+    SONUÇ: giris_once n=15 (CI −43,038 / +80,699) · giris_1345 n=8 (n<10 → kıyas YAPILMADI) ·
+    damgasız 13 · damga↔ts ayrışan 0 · damga_bilinmeyen 0 · olculemedi 0 ·
+    oneri_tetigi = "orneklem_birikimde" · `geri_al_onerisi` beyanı YOKTUR.
+
+[6] DOĞRULAMA
+    Kapsam testleri (.venv/bin/python -m pytest — CLAUDE.md §6; TAM SUITE KOŞULMADI):
+      tests/test_kart_kimlik_v219.py · tests/test_kart_hukum_damgasi_v251.py ·
+      tests/test_nous_eval_v131.py · tests/test_wpm_sasi_v173.py       → sonuç DOGRULAMA.txt'te
+    codelaw: .venv/bin/python -c "from meridian import codelaw; print(codelaw.report()['ok'])"
+      → sonuç DOGRULAMA.txt'te
+
+[7] AÇIK KALEM — BU KOŞUMDA DOĞDU (kart bunu KONUŞMUYOR; ölçüm oturumu KARAR VERMEZ)
+    giris_1345 kovasında 2026-09-02 VRTX İKİ satırla temsil ediliyor:
+      P-2026-09-02-VRTX      ts=2026-09-03T13:45:01Z  fill=556,94  bps=−38,455
+      P-2026-09-02-VRTX-pead ts=2026-09-03T13:45:02Z  fill=556,94  bps=−38,455
+    İki AYRI plan (aile: temel + pead), AYNI ticker, AYNI dolum fiyatı; ertesi gün ikincisi
+    `armed_dropped_already_open` ile düşüyor — yani pozisyon TEKİL, gönderim izi ÇİFT.
+    Kartın kill listesi bu sınıfı (kova İÇİ bağımlı gözlem) YASAKLAMIYOR; reçete AYNEN koşuldu
+    ve sayı DÜZELTİLMEDİ — sayıya bakarak kural seçmek ön-kayıt disiplinini deler.
+    ETKİ (beyan, hüküm değil): tekilleştirilseydi giris_1345 n=8→7; medyan ve eşik hükmü
+    DEĞİŞMEZDİ (7 de 30'un altında). Kalem P-3'ün kardeşidir ve operatör kararı ister.

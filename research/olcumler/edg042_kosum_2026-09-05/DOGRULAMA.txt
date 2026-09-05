@@ -1,0 +1,33 @@
+........................................................................ [ 79%]
+...................                                                      [100%]
+[kilit-budama] 1 eski serbest kilit silindi (tutulan 0, genç 20, hata 0) — /Users/erdemozturk/AI-Trading/state/.locks
+
+============================= slowest 25 durations =============================
+0.89s call     tests/test_wpm_sasi_v173.py::test_A_AR1_kapsamasi_blok_ile_YUKSEK_IID_ile_COKUYOR
+0.78s call     tests/test_nous_eval_v131.py::test_E2_yazar_beyani_statik_taramayla_ORTUSUR
+0.26s call     tests/test_wpm_sasi_v173.py::test_A_bagimsiz_seride_iki_yontem_de_dogru_kapsar
+0.11s call     tests/test_nous_eval_v131.py::test_A1_paket_12_bolumu_sabitle_birebir_tasir
+0.06s call     tests/test_wpm_sasi_v173.py::test_D_depoda_git_HEAD_okunuyor
+0.04s call     tests/test_wpm_sasi_v173.py::test_D_arac_surum_listesi_GERCEK_araclari_sayiyor
+0.04s call     tests/test_nous_eval_v131.py::test_F1_SYSTEM_statik_kalir_gorev_TASK_ta_durur_AST
+0.04s call     tests/test_wpm_sasi_v173.py::test_B_analytics_EB_uygulamasi_DEVREDILMEDI
+0.04s call     tests/test_wpm_sasi_v173.py::test_A_analytics_KENDI_bootstrapini_DEVRETMEDI
+0.03s call     tests/test_kart_hukum_damgasi_v251.py::test_hukum_belgesi_TARANABILIYOR_ve_en_az_biri_karta_baglaniyor
+0.03s call     tests/test_kart_kimlik_v219.py::test_kart_dizini_okunabiliyor_ve_bos_degil
+0.02s call     tests/test_nous_eval_v131.py::test_F2_chain_text_SYSTEM_i_degistirmeden_gonderir
+0.02s call     tests/test_kart_hukum_damgasi_v251.py::test_yazili_hukum_kartin_durumunu_ON_KAYITTAN_cikarmis_olmali
+0.02s call     tests/test_wpm_sasi_v173.py::test_A_blok_uzunlugu_KURALI_adiyla_raporlanir
+0.01s call     tests/test_wpm_sasi_v173.py::test_D_git_YOKSA_None_ve_NEDEN
+0.01s call     tests/test_nous_eval_v131.py::test_A5_bolum_hatasi_paketi_dusurmez_ama_SESSIZ_de_kalmaz
+0.01s call     tests/test_nous_eval_v131.py::test_A2_bos_state_SAYI_UYDURMAZ
+0.01s call     tests/test_nous_eval_v131.py::test_A4_paket_bounds_dugmelerini_SALT_OKUR
+0.01s call     tests/test_nous_eval_v131.py::test_D4_kuyruga_TEK_yazma_yolu_var_AST
+0.01s call     tests/test_wpm_sasi_v173.py::test_B_kalibrasyon_KUCULTME_MSEyi_DUSURUR
+0.01s call     tests/test_wpm_sasi_v173.py::test_B_KAZANANIN_LANETI_kuculterek_geri_alinir
+0.01s call     tests/test_nous_eval_v131.py::test_E7_onceki_onerilerin_AKIBETI_sonraki_prompta_geri_beslenir
+0.01s setup    tests/test_kart_kimlik_v219.py::test_kart_dizini_okunabiliyor_ve_bos_degil
+0.01s call     tests/test_nous_eval_v131.py::test_C2_AYRI_BUTCE_ACILMAZ_tasan_oneri_GORUNUR_bicimde_devreder
+0.01s call     tests/test_nous_eval_v131.py::test_C3_bekleyen_satirlar_butceyi_ONCE_talep_eder
+91 passed in 3.15s
+PYTEST_EXIT=0
+codelaw.ok = True
