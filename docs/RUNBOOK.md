@@ -36,7 +36,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 
 ## Envanter özeti {#envanter}
 
-- **15 alarm jetonu** (`meridian/obs.py`) — hepsi bildirim beyaz-listesinde
+- **16 alarm jetonu** (`meridian/obs.py`) — hepsi bildirim beyaz-listesinde
   (`NOTIFY_TOKENS` ALARM_ sabitlerinden TÜRETİLİR, elle liste değil)
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
@@ -343,6 +343,24 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Çözüm / betik
 
 - **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `ARAMA_HAVUZU_OLU` adı literal olarak geçmiyor.
+- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+
+## DISK_ESIK {#disk_esik}
+
+### Belirti
+
+- /opt/veri kullanımı operatör tavanına yaklaşıyor (erken uyarı) *(kaynak: `meridian/obs.py` — `ALARM_DISK_ESIK`)*
+- Neden ayrı bir sınıf: TSK-131 ALT-İŞ (2026-09-05): A1 /opt/veri (EDG-066 tick geri dolumu) hiçbir sensörle izlenmiyordu. Operatörün 120 G tavanı (ROADMAP TSK-131, `deploy/oracle-a1/geridolum.py:: TAVAN_BAYT` — TEK KAYNAK) o kararın 10 G ÖNCESİNDE haber verir; jeton bu yüzden kendi adını hak ediyor (DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu DEĞİL — "disk operatör tavanına yaklaşıyor" bir KAPASİTE uyarısıdır). Üretici: `watchdog.check_veri_disk_and_alarm`. *(kaynak: `meridian/obs.py`)*
+
+### Teşhis adımları
+
+- Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+  - `meridian/watchdog.py::check_veri_disk_and_alarm` → mesaj şablonu: `f"/opt/veri kullanımı eşiği aştı: {rep['kullanilan_g']} G / {rep['toplam_g']} G " f"(eşik {rep['esik_g']} G, boş {rep['bos_g']} G) — EDG-066 geri dolumu operatörün " "120 G tavanına yaklaşıyor"`
+- Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
+
+### Çözüm / betik
+
+- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `DISK_ESIK` adı literal olarak geçmiyor.
 - Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
 
 ---

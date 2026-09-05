@@ -89,6 +89,12 @@ ALARM_ONAYLI_PLAN_GONDERILMEDI = "ONAYLI_PLAN_GONDERILMEDI"
 # değil, YANLIŞ sinyali DOĞRUSUYLA değiştirmektir: "iplik canlı" (v302) + "havuz iş bitirmiyor"
 # (bu jeton). İkisi ayrı olgudur; biri ötekinin yerine geçemez.
 ALARM_ARAMA_HAVUZU_OLU = "ARAMA_HAVUZU_OLU"  # işçi havuzu tavan boyunca TEK İŞ bitirmedi — teslimat arızası, canlılık değil
+# TSK-131 ALT-İŞ (2026-09-05): A1 /opt/veri (EDG-066 tick geri dolumu) hiçbir sensörle
+# izlenmiyordu. Operatörün 120 G tavanı (ROADMAP TSK-131, `deploy/oracle-a1/geridolum.py::
+# TAVAN_BAYT` — TEK KAYNAK) o kararın 10 G ÖNCESİNDE haber verir; jeton bu yüzden kendi adını
+# hak ediyor (DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu DEĞİL — "disk operatör tavanına
+# yaklaşıyor" bir KAPASİTE uyarısıdır). Üretici: `watchdog.check_veri_disk_and_alarm`.
+ALARM_DISK_ESIK = "DISK_ESIK"  # /opt/veri kullanımı operatör tavanına yaklaşıyor (erken uyarı)
 
 # also mirror events to state/events.jsonl so the dashboard/tests can read them without a log scraper
 _EVENTS = "events.jsonl"

@@ -4785,6 +4785,38 @@ const OLAY_YUZEYLERI = {
     eylemler: [["Düşünen beyin · sprint →", "ogrenme#hermes"],
                ["Ajan telemetrisi →", "ogrenme#ajan"]],
   },
+  kapasite: {
+    // TSK-131 ALT-İŞ (2026-09-05): DISK_ESIK hiçbir mevcut sınıfa uymuyor — `butunluk` bir
+    // SÖZLEŞME ihlali anlatır (veri/defter kendi kuralını çiğnedi), bu ise sözleşme İHLAL
+    // ETMEDEN önce gelen bir KAPASİTE erken uyarısıdır (ARAMA_HAVUZU_OLU'nun `teslimat`
+    // sınıfını doğurduğu gerekçenin ikizi: olgu mevcut sınıflardan HİÇBİRİ değil).
+    ad: "Kapasite eşiği (disk)",
+    ozet: "Bir kaynak (A1 /opt/veri diski) operatörün kendi koyduğu tavana yaklaşıyor — ARIZA " +
+          "değil, sözleşme ihlalinden ÖNCE gelen bir erken uyarıdır.",
+    jetonlar: ["DISK_ESIK"],
+    neOldu: "A1 /opt/veri (EDG-066 tick geri dolumunun kalıcı+geçici alanı) operatörün kendi " +
+            "koyduğu 120 G tavanına yaklaşıyor (ROADMAP TSK-131, " +
+            "<code>deploy/oracle-a1/geridolum.py::TAVAN_BAYT</code> — tek kaynak). " +
+            "<code>watchdog.check_veri_disk_and_alarm</code> bu jetonu o tavandan 10 G ÖNCE " +
+            "(110 G kullanım) basar. DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu " +
+            "DEĞİLDİR: veri bozulmadı, mekanizma durmadı — disk doluyor.",
+    kaynak: "meridian/obs.py::ALARM_DISK_ESIK · meridian/watchdog.py::check_veri_disk_and_alarm",
+    degerler: () => [
+      // Bu turda /api/diagnostics'e disk raporu BAĞLANMADI (TSK-131 alt-iş kapsamı sensör +
+      // alarm zinciriydi) — alan gelmeyince UYDURMA YASAĞI gereği null basılır ("—"), sahte
+      // bir sayı YAZILMAZ. Değer zaten alarm gövdesinde taşınır (aşağıdaki adım).
+      ["/opt/veri kullanımı", null],
+    ],
+    adimlar: [
+      "Alarm gövdesi kullanılan/toplam/boş G ile eşik G'sini taşır (<code>kullanilan_g</code>, " +
+      "<code>toplam_g</code>, <code>bos_g</code>, <code>esik_g</code>) — olay kaydı kendi kanıtını taşır.",
+      "Günde en fazla BİR kez ateşlenir (mandal, <code>state/watchdog_alarm_gunluk.json</code>); " +
+      "eşik aşımı sürerken bastırılan tekrarlar orada SAYILIDIR, sessiz değildir.",
+      "Yol yerelde/CI'da yoktur (A1 gerçeği) — bu sınıf yalnız A1'de canlı ateşlenir.",
+    ],
+    cozum: null,
+    eylemler: [["Alarm gelen kutusu →", "saglik#operasyon"]],
+  },
 };
 // JETON → SINIF: TÜRETİLİR, elle yazılmaz. İkinci bir liste ilk düzenlemede ayrışırdı ve bir
 // alarm jetonu iki yüzeye birden düşerdi (ya da hiçbirine — sessiz kayıp).

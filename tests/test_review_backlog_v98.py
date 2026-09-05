@@ -100,7 +100,15 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
     kitabın söylediği adette değil" bir MUHASEBE sapması, "pozisyonun broker'da canlı stop'u yok"
     bir SERMAYE riskidir; birincisi ikincisini susturamaz. Kapsam BÜYÜDÜ (yeni bir alarm sınıfı
     operatöre ulaşıyor), daralmadı; teslim zinciri değişmedi — `NOTIFY_TOKENS` türetmesi jetonu
-    `obs.py`ye eklendiği an kendiliğinden kapsıyor. Bu literalin güncellenmesi o kararın kaydıdır."""
+    `obs.py`ye eklendiği an kendiliğinden kapsıyor. Bu literalin güncellenmesi o kararın kaydıdır.
+
+    DISK_ESIK 2026-09-05 kasıtlı kapsam kararı (15 → 16, TSK-131 alt-iş): A1 /opt/veri (EDG-066
+    tick geri dolumu) hiçbir sensörle izlenmiyordu. Operatörün 120 G tavanı (ROADMAP TSK-131,
+    `deploy/oracle-a1/geridolum.py::TAVAN_BAYT` — tek kaynak) dolmadan 10 G ÖNCE haber veren
+    `watchdog.check_veri_disk_and_alarm` bu jetonu basar. Kendi sınıfıdır: DATA_QUALITY "veri
+    bozuk", MECHANISM_STALE "mekanizma üretmiyor" der; ikisi de "disk operatör tavanına
+    yaklaşıyor" demez — bu bir KAPASİTE uyarısıdır. Kapsam BÜYÜDÜ, daralmadı; bu literal
+    güncellemesi o kararın kaydıdır."""
     assert obs.NOTIFY_TOKENS == {
         "ARMING_READY", "TRAIL_DESYNC", "DATA_QUALITY", "CIRCUIT_BREAKER", "MIRROR_DRIFT",
         "BROKER_REJECT", "MECHANISM_STALE", "HALT_ACTIVE", "ROLLBACK", "HEARTBEAT_STALE",
@@ -124,7 +132,10 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
         # sesi kısmak değil, YANLIŞ sinyali DOĞRUSUYLA değiştirmektir: "iplik canlı" (MECHANISM_STALE,
         # doğru) + "havuz iş bitirmiyor" (bu jeton, doğru). İkisi AYRI olgudur; biri ötekinin
         # yerine geçemez. Kapsam BÜYÜDÜ, daralmadı. Bu literal güncellemesi o kararın kaydıdır.
-        "ARAMA_HAVUZU_OLU"}
+        "ARAMA_HAVUZU_OLU",
+        # KAPASİTE SINIFI (2026-09-05, TSK-131 alt-iş): `DISK_ESIK` kasıtlı kapsam kararıdır
+        # (15 → 16) — gerekçe yukarıda, üretici `watchdog.check_veri_disk_and_alarm`.
+        "DISK_ESIK"}
 
 
 def test_every_alarm_constant_reaches_the_operator_by_construction():

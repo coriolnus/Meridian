@@ -68,7 +68,13 @@ ESKI_DERIN_ADRESLER = ["kosu#adaylar", "kosu#kapilar", "portfoy#brifing", "portf
 # SIRA app.js İLE BİREBİRDİR (`besleme` hemen ardından `teslimat`): ikisi komşu okunmalı, çünkü
 # operatörün ilk sorusu "hat mı öldü, yoksa hat canlı da ürün mü gelmiyor?" ayrımıdır.
 # ~~["besleme", "mutabakat", "kill", "butunluk", "yetki", "kota"]~~
-OLAY_SINIFLARI = ["besleme", "teslimat", "mutabakat", "kill", "butunluk", "yetki", "kota"]
+# 2026-09-05 (TSK-131 alt-iş): YEDİ sınıf SEKİZ oldu — `kapasite` eklendi (DISK_ESIK). GEREKÇE
+# `teslimat`inkiyle AYNI KALIP: yeni jeton `butunluk`e (sözleşme İHLALİ anlatır — veri/defter
+# kendi kuralını çiğnedi) uymuyor, `besleme`ye de uymuyor (mekanizma ölmedi, disk doluyor). Bu
+# sözleşme ihlalinden ÖNCE gelen bir KAPASİTE erken uyarısıdır; evsiz kalırsa alarm üretilir ama
+# panoda kartı olmaz. Son sırada: app.js'te `kota`dan SONRA eklendi.
+OLAY_SINIFLARI = ["besleme", "teslimat", "mutabakat", "kill", "butunluk", "yetki", "kota",
+                  "kapasite"]
 
 
 def _sozluk(ad: str) -> dict[str, str]:

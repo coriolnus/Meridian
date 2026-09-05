@@ -20,7 +20,8 @@ teslimi/kapsama dahil), `integrity_report`, `alarm_budget`, `intraday_stamp_repo
 pozisyon → NAKED_POSITION), `kitap_damga_report`, `mutabakat_tazelik_report`,
 `onayli_gonderim_report` (onaylı plan gönderilmedi bekçisi), `liveness_report`,
 `universe_audit_report`, `eod_supurme_report`/`check_eod_supurme_and_alarm` (EOD süpürme
-kanıtı — A4), `uyuyan_iddia_tara`.
+kanıtı — A4), `uyuyan_iddia_tara`, `veri_disk_report`/`check_veri_disk_and_alarm` (A1 /opt/veri
+kapasite eşiği — TSK-131 alt-iş).
 
 DEĞİŞMEZLER. Bekçi YALNIZ GÖZLEMdir: hiçbir mekanizmayı yeniden başlatmaz, hiçbir kararı
 etkilemez — amber satır üretir, teşhisi operatöre bırakır. Nabız yazılamazsa sessiz kalınmaz
@@ -28,6 +29,8 @@ etkilemez — amber satır üretir, teşhisi operatöre bırakır. Nabız yazıl
 damga/sayaç dosyası + defterlerin geniş salt-okunur kesiti; alarmlar obs üzerinden."""
 from __future__ import annotations
 import datetime as dt
+import pathlib
+import shutil
 
 import threading
 
@@ -445,6 +448,15 @@ def check_and_alarm() -> None:
         obs.warn("eod_supurme_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
                  detail="EOD süpürme kanıt bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
                         "'süpürme koştu' sayılmaz")
+    # TSK-131 ALT-İŞ: A1 /opt/veri kapasite eşiği (EDG-066 geri dolumu operatörün 120 G
+    # tavanına yaklaşıyor mu) — bu poll'un kadansında ve KENDİ try'ında, akranlarıyla aynı
+    # yalıtım disiplini. Yerelde/CI'da yol yok: dedektör None döner, alarm YOK, düşüş de yok.
+    try:
+        check_veri_disk_and_alarm()
+    except Exception as e:
+        obs.warn("veri_disk_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
+                 detail="/opt/veri disk eşiği bekçisi bu poll'da hüküm veremedi — ölçülemeyen "
+                        "hüküm 'disk eşik altında' sayılmaz")
 
 
 # =============================================================================================
@@ -3980,4 +3992,115 @@ def check_eod_supurme_and_alarm() -> dict:
                       dokum_koruma=dokum.get("koruma"), dokum_ts=dokum.get("ts"))
     _EOD_SUPURME_ALARMED.clear()
     _EOD_SUPURME_ALARMED.update(simdi)
+    return rep
+
+
+# =============================================================================================
+# A1 /opt/veri DİSK EŞİĞİ BEKÇİSİ (TSK-131 alt-iş, 2026-09-05)
+#
+# NE: EDG-066 tick geri dolumu /opt/veri'yi (A1'de ayrı disk `sdb`) dolduruyor. Operatör kararı
+# (ROADMAP.md TSK-131, 2026-09-05): geri dolum DEVAM, ama "kendimize koyduğumuz 120 G dolarsa ele
+# alırız" — o tavan `deploy/oracle-a1/geridolum.py::TAVAN_BAYT` (`120 * 1000**3`) sabitinde durur
+# ve TEK KAYNAKTIR, burada KOPYALANMAZ. Bu bekçinin işi o karardan ÖNCE haber vermek: eşiği
+# `VERI_DISK_ESIK_G` operatörün 120 G kararının 10 G ERKEN uyarısıdır (120-10=110) — bağımsız
+# uydurulmuş bir sayı değil, aynı kararın önündeki bir nokta.
+#
+# ÖLÇÜM (2026-09-05, bu turun D1'i): `grep -rn "disk_usage|statvfs|/opt/veri|df " meridian/
+# watchdog.py meridian/*.py ops/bekci_tarama.py ops/bekci_brifingi.py deploy/oracle-a1/
+# geridolum.py` tek isabeti `geridolum.py::_bos_disk_bayt` idi (kendi `DISK_PAYI_BAYT` ile
+# ham-geçici alanı için İŞ AÇILMADAN ÖNCE bir bekçi kapısı) — hiçbir sensör /opt/veri'nin TOPLAM
+# kullanımını izleyip OPERATÖRE önceden haber vermiyordu; bu sensör o boşluğu kapatır, geridolum'un
+# kendi iç kapısını ÇOĞALTMAZ (ayrı olgu: biri "iş açma", öteki "operatöre erken haber").
+#
+# YOL YEREL MAKİNEDE/CI'DA YOK: `/opt/veri` A1 gerçeğidir (ayrı disk). Yol yoksa (yerel/CI)
+# `var=False` + `olculemedi_neden` döner, ALARM ÜRETİLMEZ (UYDURMA YASAĞI — ölçülemeyen bir
+# diski "dolu" ya da "boş" saymak uydurma sayı üretirdi; yerelde bu yol zaten YOKTUR).
+#
+# KADANS: günlük tavan MEVCUT `GUNLUK_ALARM_TAVANI`/`ALARM_GUNLUK_FILE` makinesini PAYLAŞIR (TEK
+# KAYNAK — yeni bir günlük-sayaç dosyası AÇILMADI). `_gunluk_oku()`/`_bugun()` module-level
+# yardımcılardır ve buradan çağrılabilir; `_satir()` ise `check_and_alarm()`in İÇİNDE tanımlı bir
+# closure (mek'i kapatıyor) ve dışarıdan çağrılamaz — bu yüzden aynı "satırı bul/aç" mekaniği
+# (4 satır, bir İŞ KURALI DEĞİL, salt sözlük erişimi) burada küçük ölçüde tekrarlanır; dosya/sabit
+# tekrarlanmaz. Ad `veri_disk_esigi` `EXPECTED` sözlüğünde YOKTUR (bu bir nabız/beat mekanizması
+# değil bir EŞİK sensörüdür, `report()` onu aramaz) ama aynı deftere yazar.
+#
+# OKUYUCU (YASA 6): (1) günlük sayaç — `api._alarm_gunluk()` `mekanizmalar` sözlüğünün HERHANGİ
+# bir anahtarını genel biçimde okur (yeni okuyucu YAZILMADI, var olan genişledi); (2) alarm satırı
+# — mevcut `obs.alarm` zinciri: `notify.inbox` + `/api/alerts` (pano) + bekçi brifingi
+# (`ops/bekci_brifingi.py` inbox'ı okur). Jeton `obs.ALARM_DISK_ESIK` NOTIFY_TOKENS'a
+# kendiliğinden girer (obs.py'deki ALARM_ türetmesi).
+#
+# İLK GERÇEK ATEŞLEME BEKLENEN TARİH: ~14 Eylül 2026 (2026-09-05 09:02Z ölçümü: 67 G kullanımda,
+# günde ~17-19 G büyüme — 110 G'ye ~2-3 gün kalır; bu tahmin operatörün büyüme hızı ölçümünden
+# TÜRETİLİR, uydurulmaz — büyüme hızı değişirse tarih de değişir).
+# =============================================================================================
+
+VERI_DISK_YOLU = "/opt/veri"             # A1 gerçeği (ayrı disk sdb) — yerelde/CI'da YOK
+VERI_DISK_ESIK_G = 110                    # operatör 120 G kararının (ROADMAP TSK-131,
+                                          # geridolum.py::TAVAN_BAYT — TEK KAYNAK) 10 G ERKEN
+                                          # uyarısı; 120 DEĞİŞİRSE bu sabit ELLE yeniden ölçülür
+
+
+def veri_disk_report() -> dict:
+    """/opt/veri kullanım ölçümü — bekçi YALNIZ GÖZLEMdir: tavanı UYGULAMAZ, geri dolumu
+    durdurmaz (`geridolum.py` kendi 120 G tavanını kendi içinde uygular; bu fonksiyon ondan
+    BAĞIMSIZ, salt-okunur bir gözlemdir).
+
+    Dönen sözlük: {yol, var, kullanilan_g, toplam_g, bos_g, esik_g, esik_asildi,
+    olculemedi_neden}. Yol yoksa (yerel makine/CI — A1 dışında gerçek bir yokluk) ya da
+    `shutil.disk_usage` düşerse `var=False` + `olculemedi_neden` döner ve `esik_asildi` HER ZAMAN
+    False'tur — ölçülemeyen bir eşik aşılmış SAYILMAZ (UYDURMA YASAĞI)."""
+    yol = pathlib.Path(VERI_DISK_YOLU)
+    out = {"yol": str(yol), "var": False, "kullanilan_g": None, "toplam_g": None,
+           "bos_g": None, "esik_g": VERI_DISK_ESIK_G, "esik_asildi": False,
+           "olculemedi_neden": None}
+    if not yol.exists():
+        return {**out, "olculemedi_neden": f"{yol} yolu yok (yerel makine/CI — A1 dışında "
+                                            "gerçek bir yokluk; ALARM ÜRETİLMEZ)"}
+    try:
+        u = shutil.disk_usage(yol)
+    except OSError as e:
+        return {**out,
+                "olculemedi_neden": f"shutil.disk_usage başarısız — {type(e).__name__}: {e}"}
+    kullanilan_g = (u.total - u.free) / 1_000_000_000   # G = GB (geridolum.py::TAVAN_BAYT ile
+                                                          # AYNI birim sözleşmesi — GiB değil)
+    toplam_g = u.total / 1_000_000_000
+    bos_g = u.free / 1_000_000_000
+    return {**out, "var": True, "kullanilan_g": round(kullanilan_g, 1),
+            "toplam_g": round(toplam_g, 1), "bos_g": round(bos_g, 1),
+            "esik_asildi": kullanilan_g >= VERI_DISK_ESIK_G}
+
+
+_VERI_DISK_MEK_ADI = "veri_disk_esigi"
+
+
+def check_veri_disk_and_alarm() -> dict:
+    """Eşik aşımı başına günde EN ÇOK `GUNLUK_ALARM_TAVANI` kez `DISK_ESIK` alarmı — günlük tavan
+    MECHANISM_STALE ile AYNI defteri (`ALARM_GUNLUK_FILE`) paylaşır (tek kaynak). Yol yok/
+    ölçülemedi ya da eşik altı → alarm YOK (uydurma yasağı / normal hâl)."""
+    from . import obs
+    rep = veri_disk_report()
+    if not rep["var"] or not rep["esik_asildi"]:
+        return rep
+    # `_satir()` `check_and_alarm()`in içinde tanımlı bir closure'dır, buradan çağrılamaz —
+    # AYNI defter/sabitle eşdeğer "satırı bul/aç" mekaniği (iş kuralı DEĞİL, sözlük erişimi).
+    doc = _gunluk_oku()
+    mek = doc["mekanizmalar"]
+    satir = mek.get(_VERI_DISK_MEK_ADI)
+    if not isinstance(satir, dict):
+        satir = {}
+        mek[_VERI_DISK_MEK_ADI] = satir
+    if int(satir.get("alarm") or 0) >= GUNLUK_ALARM_TAVANI:
+        satir["bastirilan"] = int(satir.get("bastirilan") or 0) + 1
+        store.write_json(ALARM_GUNLUK_FILE, doc)
+        return rep
+    satir["alarm"] = int(satir.get("alarm") or 0) + 1
+    satir["son_kullanilan_g"] = rep["kullanilan_g"]
+    store.write_json(ALARM_GUNLUK_FILE, doc)
+    obs.alarm("DISK_ESIK",
+              f"/opt/veri kullanımı eşiği aştı: {rep['kullanilan_g']} G / {rep['toplam_g']} G "
+              f"(eşik {rep['esik_g']} G, boş {rep['bos_g']} G) — EDG-066 geri dolumu operatörün "
+              "120 G tavanına yaklaşıyor",
+              yol=rep["yol"], kullanilan_g=rep["kullanilan_g"], toplam_g=rep["toplam_g"],
+              bos_g=rep["bos_g"], esik_g=rep["esik_g"])
     return rep
