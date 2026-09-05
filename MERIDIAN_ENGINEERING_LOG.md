@@ -2578,3 +2578,8 @@ ozet=False satırı sonra sessiz (141 çalışıyor), alerts pending 1 = bilinen
 1 adet (motor-dışı, bilinen sınıf). Canlıya giden: 138 · 141 · 148 · 131 · 143 · 151 · 137b · 152 · 153 · 150 + D6 tazeleme + 149.
 Gece: 22:04Z şef (kotasız), 00:02Z kanary (EDG-074 K1), 00:03Z free-router sondası, 00:05Z r3, 05:00Z kurtar; K2 pilot POST'u K1 yeşilse
 05:30Z sonrası (kart notu).
+
+**TSK-137b canlı ilk kırpma (14:10Z, Cumartesi bakım penceresi):** yedek alındı; sıkıştır (worker koşarken, salt okuma) 2026-07/08 parquet
+(28.404 / 55.779 satır; 221 KB / 510 KB — ~50× sıkışma); worker durdur → `--kirp` 2026-07 düşürüldü: 26,9 MB → 17,6 MB; manifest damgalı;
+worker 8 sn'de aktif, healthz 200; birleşik görünüm Temmuz'u parquet'ten veriyor (28.404). jsonl'de kalan 36 "2026-07" grep eşleşmesi iç içe
+alanlardan (`last_learn.ts`) — sahte pozitif. TSK-060: soru kümesi 09-01'de zaten donuk (blob 89cd1e0); sıradaki arşiv ingest r3 → kıyas.
