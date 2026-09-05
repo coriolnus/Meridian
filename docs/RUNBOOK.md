@@ -1472,12 +1472,15 @@ Koşum: .venv/bin/python ops/olay_sorgu.py — meridian İTHAL ETMEZ (obs'a ula�
 
 ```
 olay_sikistir.py — state/events.jsonl olay defterinin GEÇMİŞ AYLARINI parquet'e sıkıştırır
-(state/olaylar/AAAA-AA.parquet). Cari ay YAZILMAZ, defter KIRPILMAZ (yalnız sıkıştırır).
-Idempotent: ay dosyası varsa satır sayısı + içerik damgası kıyaslanır — aynıysa atlanır,
-FARKLIYSA `.yeni` yazılır ve rc=3 döner (sessiz üzerine yazma YOK). Bozuk JSON satırı ve
-AY'a atanamayan satır SAYILIP stderr'e raporlanır (Yasa 4). Arşivin OKUYUCUSU
-ops/olay_sorgu.py'dır (Yasa 6) — birleşik okur, parquet'lenen ay defterden süzülür.
-Koşum: .venv/bin/python ops/olay_sikistir.py --kuru — meridian İTHAL ETMEZ (obs'a ulaşamaz).
+(state/olaylar/AAAA-AA.parquet). Cari ay YAZILMAZ. Varsayılan KIRPMAZ (yalnız sıkıştırır);
+`--kirp` ile İSTENİRSE parquet'e alınmış VE doğrulanmış eski aylar (cari+önceki ay HARİÇ)
+jsonl'den ATOMİK düşürülür (adım 3, TSK-137b, 2026-09-05) — worker aktifken `--zorla` olmadan
+REDDEDİLİR. Idempotent: ay dosyası varsa satır sayısı + içerik damgası kıyaslanır — aynıysa
+atlanır, FARKLIYSA `.yeni` yazılır ve rc=3 döner (sessiz üzerine yazma YOK). Bozuk JSON satırı
+ve AY'a atanamayan satır SAYILIP stderr'e raporlanır (Yasa 4). Arşivin OKUYUCUSU
+ops/olay_sorgu.py + meridian/olaylar.py'dır (Yasa 6) — birleşik okur, parquet'lenen ay
+defterden süzülür. Koşum: .venv/bin/python ops/olay_sikistir.py --kuru — meridian İTHAL
+ETMEZ (obs'a ulaşamaz).
 ```
 
 ## `meridian/auth_cli.py` {#meridian-auth-cli-py}
