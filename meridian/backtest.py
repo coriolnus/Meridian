@@ -84,7 +84,7 @@ SECTORS = {
     "HON": "industrials", "XOM": "energy", "CVX": "energy", "LIN": "materials",
     "PG": "staples", "KO": "staples", "WMT": "staples", "PEP": "staples",
     # laggards / dispersers (survivorship fix)
-    "INTC": "tech", "PYPL": "financials", "DIS": "comms", "T": "comms", "EA": "comms",
+    "INTC": "tech", "PYPL": "financials", "DIS": "comms", "T": "comms",
     "PFE": "health", "ENPH": "tech", "MRNA": "health", "MMM": "industrials", "HRL": "staples",
     "VFC": "consumer", "F": "consumer",
     # genişleme · comms
@@ -118,7 +118,7 @@ SECTORS = {
     "CF": "materials", "IP": "materials", "PKG": "materials",
     # genişleme · reits
     "PLD": "reits", "AMT": "reits", "CCI": "reits", "EQIX": "reits", "SPG": "reits", "O": "reits", "PSA": "reits",
-    "DLR": "reits", "WELL": "reits", "AVB": "reits", "EQR": "reits", "VTR": "reits", "IRM": "reits", "CBRE": "reits",
+    "DLR": "reits", "WELL": "reits", "VTR": "reits", "IRM": "reits", "CBRE": "reits",
     # genişleme · staples
     "PM": "staples", "MO": "staples", "KMB": "staples", "CL": "staples", "GIS": "staples", "KVUE": "staples", "KHC": "staples",
     "HSY": "staples", "STZ": "staples", "MDLZ": "staples", "MKC": "staples", "CHD": "staples", "CLX": "staples", "SYY": "staples",
