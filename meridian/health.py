@@ -152,7 +152,7 @@ def _kilit(gecer: bool | None, durum: str, olcum, esik: str, neden: str | None =
 
 
 def faz6_kilitleri(edge: dict | None = None, sonuc: dict | None = None,
-                   trio: dict | None = None) -> dict:
+                   trio: dict | None = None, intraday_decisions_n: int | None = None) -> dict:
     """FAZ-6 (otonom intraday emir / gerçek-para silahlanma) ÖN-KOŞULU: BEŞ KİLİT.
 
     Kilitlerin adları ve gerekçeleri `FAZ6_KILITLERI` bloğunda yazılıdır. Dönüş SAF okumadır —
@@ -162,6 +162,18 @@ def faz6_kilitleri(edge: dict | None = None, sonuc: dict | None = None,
     ZATEN hesaplıyor ve aynı istekte ikinci kez hesaplamak, blok-bootstrap CI'larını iki kez
     koşturmak demek olurdu. Enjeksiyon bir gevşeklik değil: verilmezse fonksiyon kendi okur, yani
     hüküm her iki yolda AYNI kaynaktan gelir.
+
+    DÖRDÜNCÜ ENJEKSİYON — `intraday_decisions_n` (TSK-155, 2026-09-05, ÖLÇÜLDÜ). `/api/diagnostics`
+    `intraday_decisions.jsonl`i KENDİ `decisions` özetinde (`total`/`fired`/`today`/`recent`)
+    ZATEN TAM okuyor; bu fonksiyon `n_4a`yı (SAF bir SAYIM — pas/kal HÜKMÜNE GİRMEZ, o
+    `_f5.cikis_olcumu(rows=_golge)`den gelir; `n_4a` yalnız dönüşün faz5-çıkışı ölçüm alt
+    sözlüğündeki bir TEŞHİS SAYISI alanını doldurur) kendi başına yeniden okuyunca AYNI dosya
+    aynı istekte İKİNCİ kez baştan sona taranıyordu. ÖLÇÜM (sandbox, 51.000 satır — canlı ölçekte,
+    A1 2026-09-05: 51.088 satır/18,9 MB): tek tam okuma ~50 ms, İKİNCİ okuma ~44 ms — 45
+    saniyelik teşhis önbelleğinin ARKASINDA her istekte ~44 ms'lik SAF tekrar. Diğer üç
+    enjeksiyonla AYNI DESEN: `intraday_decisions_n` verilmezse (`None`) fonksiyon kendisi okur —
+    bağımsız çağıranlar (testler, gelecekteki tüketiciler) İMZA DEĞİŞMEDEN eskisi gibi çalışır;
+    verilirse api'nin ZATEN okuduğu listenin uzunluğu KULLANILIR ve ikinci okuma HİÇ olmaz.
 
     FAIL-CLOSED: ölçülemeyen kilit KAPALIdır. `hepsi_acik` ancak BEŞİ de açıkken True olur."""
     from . import analytics as _an, validation as _val, dataset as _ds
@@ -192,7 +204,11 @@ def faz6_kilitleri(edge: dict | None = None, sonuc: dict | None = None,
     # (`faz5_cikis`) yaşar; ikinci bir eşik kopyası, iki hükmün sessizce ayrışması demekti.
     # GEÇ IMPORT — `edge`/`sonuc`/`trio` üçlüsüyle AYNI desen (bkz. fonksiyon başı).
     from . import faz5_cikis as _f5
-    n_4a = len(store.read_jsonl("intraday_decisions.jsonl"))
+    # ENJEKTE EDİLMİŞSE (api'nin ZATEN okuduğu liste uzunluğu) DOSYA İKİNCİ KEZ AÇILMAZ —
+    # gerekçe ve ölçüm fonksiyon docstring'inde. `is None` KONTROLÜ: `0` MEŞRU bir sayımdır
+    # (defter boş) ve yeniden okumayı TETİKLEMEMELİDİR.
+    n_4a = (len(store.read_jsonl("intraday_decisions.jsonl")) if intraday_decisions_n is None
+            else int(intraday_decisions_n))
     _golge = store.read_jsonl("intraday_shadow_orders.jsonl")
     # ÖLÇÜM ÇAĞRISI SARILI — gerekçe: `/api/diagnostics`
     # bu zinciri TEK `return {...}` içinde korumasız çağırıyor ve buradan sızan bir istisna

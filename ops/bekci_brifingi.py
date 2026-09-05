@@ -131,8 +131,15 @@ KALEM_DEFTERI = "kalemler"
 
 # Sınıflar Görev 1'in arayüzünden gelir; SIRA da anlamlıdır: TAKILI en üstte, ÖLÇÜLEMEDİ en
 # altta — ölçülemeyen şey susturulamaz ama sıralamada da başı çekmez.
-SINIFLAR = ("takili", "duran", "olculemedi")
-SINIF_ADLARI = {"takili": "TAKILI", "duran": "DURAN", "olculemedi": "ÖLÇÜLEMEDİ"}
+#
+# `bayat` (TSK-155, 2026-09-05) `ops/bekci_tarama.py::manifest_tara`den gelir — ÖLÇÜLDÜ:
+# `topla()`nın `for sinif in SINIFLAR` döngüsü SINIF-BAĞIMSIZDIR (herhangi bir listeyi aynı
+# şekilde bastırma/damgalama hattından geçirir), yani yeni bir sınıf OTOMATİK girmiyor yalnız
+# ÇÜNKÜ bu sabit tuple sabit üç adı SAYIYOR. Asgari ekleme: dördüncü adı buraya + görüntü adını
+# `SINIF_ADLARI`ya eklemek. `olculemedi`den ÖNCE durur — bir "arıza yok" bulgusu değil ama
+# `takili`/`duran` kadar da acil değil (kırpmanın kendisi ayrı bir bakım penceresinde koşar).
+SINIFLAR = ("takili", "duran", "bayat", "olculemedi")
+SINIF_ADLARI = {"takili": "TAKILI", "duran": "DURAN", "bayat": "BAYAT", "olculemedi": "ÖLÇÜLEMEDİ"}
 
 # ---- TEKRAR BASTIRMA -----------------------------------------------------------------------
 # YENİDEN-ANMA ARALIĞI — BEYAN EDİLMİŞ BİR KESİM, ÖLÇÜM DEĞİL; ama SAYISI VERİDEN TÜRETİLDİ.
@@ -324,8 +331,27 @@ def _tarama(bilinen=frozenset()) -> dict:
     önce ADIYLA bildirilmiş bir ölçülemedi kalemi toplu yığına karışmaz (gerekçe ve ölçüm
     `bekci_tarama._hukumsuzleri_topla`da). BU İKİNCİ BİR HESAP KATMANI DEĞİLDİR — harness kendi
     geçmişini veriyor, hüküm yine tarayıcınındır; `takili`/`duran`/sayılar `bilinen`den
-    ETKİLENMEZ."""
-    return _tarama_kaynak.tara(TARAMA_GUN, bilinen=bilinen)
+    ETKİLENMEZ.
+
+    İKİNCİ, BAĞIMSIZ BİR TARAMA BURADA BİRLEŞTİRİLİR (TSK-155, 2026-09-05):
+    `bekci_tarama.manifest_tara()` `state/olaylar/manifest.json`ı (arşiv kırpma AUDIT İZİ)
+    tarar ve `tara()`nın events-defteri hattından TAMAMEN AYRIDIR (gerekçe `bekci_tarama.py`daki
+    bölüm başlığında — `tara()`nın "yalnız events.jsonl okunur" sözü bu yüzden BOZULMADI). Bu
+    fonksiyon TESLİMAT KATMANIDIR ve İKİ sonucu TEK sözleşmeye ("bayat" sınıfı + `olculemedi`
+    listesine ek kalemler + `kapsam.manifest`) BİRLEŞTİRMEK onun işidir — `SINIFLAR`ın
+    `topla()`daki döngüsü sınıf-bağımsız olduğu için (ÖLÇÜLDÜ) tek eksik parça BURADAKİ
+    birleştirme ve `SINIFLAR`/`SINIF_ADLARI`ya `"bayat"`ın eklenmesiydi; ikisi de yapıldı.
+    `manifest_tara()` KENDİ saatini (`_simdi()`) kullanır ki çiviler `_zaman_kur` ile TEK bir
+    saati ilerleterek hem tekrar-bastırmayı hem manifest bayatlığını birlikte sınayabilsin."""
+    sonuc = dict(_tarama_kaynak.tara(TARAMA_GUN, bilinen=bilinen))
+    manifest_sonuc = _tarama_kaynak.manifest_tara(simdi=_simdi())
+    sonuc["bayat"] = manifest_sonuc.get("bayat") or []
+    sonuc["olculemedi"] = list(sonuc.get("olculemedi") or []) + \
+        (manifest_sonuc.get("olculemedi") or [])
+    kapsam = dict(sonuc.get("kapsam") or {})
+    kapsam["manifest"] = manifest_sonuc.get("kapsam") or {}
+    sonuc["kapsam"] = kapsam
+    return sonuc
 
 
 # ================================================================================================
@@ -611,6 +637,14 @@ def _kanit_ozeti(sinif: str, kanit: dict) -> str:
         if kanit.get("sessizlik_saat") is not None:
             return (f"{kanit['sessizlik_saat']} saattir gelmiyor "
                     f"(olağan aralık {kanit.get('medyan_aralik_saat', '?')} sa)")
+    elif sinif == "bayat":
+        # TSK-155: `bekci_tarama.manifest_tara`nın "bayat" kalemi `adet` TAŞIMAZ (bir sayaç
+        # değil, bir AY KARŞILAŞTIRMASIdır) — generic `adet` dalına düşseydi "None kayıt · neden:
+        # arsiv_manifesti_bayat" gibi YANLIŞ bir "ölçülemedi" izlenimi verirdi; bu ÖLÇÜLMÜŞ bir
+        # uyarıdır, ölçülemeyen değil.
+        if kanit.get("son_calisma_ayi") is not None:
+            return (f"son başarılı kırpma {kanit['son_calisma_ayi']} ayında "
+                    f"(eşik: {kanit.get('esik_ay', '?')})")
     elif kanit.get("adet") is not None:
         return f"{kanit['adet']} kayıt · neden: {kanit.get('neden', '?')}"
     return "kanıt alanı YOK — ölçülemedi"

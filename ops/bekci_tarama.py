@@ -496,9 +496,10 @@ def _kalem(ad, deger, ilk, son, kanit, kimlik=None):
     günde DURAN'dan düşen 7 olayın 7'si de `kadans_olculemedi`ye göçtü — yani göç bir uç durum
     değil, DURMUŞ bir işin bu defterdeki NORMAL son durağıdır. Anahtar `ad`dan kurulunca aynı
     olgu göçte ikinci kez "YENİ" diye duyuruluyordu. `kimlik` TARAMA AİLESİNİ taşır
-    (`durum:` = takılı tarayıcısı · `kadans:` = duran tarayıcısı · `kusur:` · `toplu:`), sınıf
-    adını DEĞİL: aynı olay adının aynı taramada hem `takili` hem `duran` görünebilmesi ÖLÇÜLMÜŞ
-    bir vakadır ve iki aileyi ayıran şey o ön ektir."""
+    (`durum:` = takılı tarayıcısı · `kadans:` = duran tarayıcısı · `kusur:` · `toplu:` ·
+    `arsiv:` = manifest tarayıcısı, TSK-155), sınıf adını DEĞİL: aynı olay adının aynı taramada
+    hem `takili` hem `duran` görünebilmesi ÖLÇÜLMÜŞ bir vakadır ve iki aileyi ayıran şey o ön
+    ektir."""
     return {"ad": ad, "deger": deger, "ilk_gorulme": ilk, "son_gorulme": son, "kanit": kanit,
             "kimlik": ad if kimlik is None else kimlik}
 
@@ -994,6 +995,152 @@ def esikler():
             "duran_min_ornek": DURAN_MIN_ORNEK, "duran_kat": DURAN_KAT,
             "duran_duzenlilik_tavani": DURAN_DUZENLILIK_TAVANI,
             "duran_gozlem_kat": DURAN_GOZLEM_KAT}
+
+
+# ---- ARŞİV MANİFESTİ SENSÖRÜ (TSK-155, 2026-09-05) ----------------------------------------------
+# `ops/olay_sikistir.py --kirp`, kırptığı her ayı `state/olaylar/manifest.json`a YAZAR
+# (`kirpilan_aylar` + kaydın kendisini damgalayan `guncellendi`) — o dosyanın "MANİFEST" bölümü
+# bunu birebir "gelecekteki bekçi sensörü" diye NOT DÜŞMÜŞTÜ (TSK-137b, 2026-09-05). Bu bölüm o
+# notun karşılığıdır.
+#
+# BAĞIMSIZ BİR GİRİŞ NOKTASIDIR, `tara()`NIN PARÇASI DEĞİL — BİLEREK. Dosya başlığındaki "BU
+# ARAÇ YAZMAZ... Yalnız `state/events.jsonl` OKUNUR" sözü `tara()`nın events-defteri hattı için
+# birebir doğru KALSIN diye `manifest_tara()` `tara()`nın imzasına, dönüş sözleşmesine ya da
+# mevcut çivilerine HİÇ dokunmaz — `tara()`yı çağıran hiçbir yer (testler dahil)
+# `manifest.json`ın varlığından/yokluğundan ETKİLENMEZ. İki sonucu birleştirmek teslimat
+# katmanının (`ops/bekci_brifingi.py::_tarama`) işidir.
+#
+# ÖLÇÜLEN / ÇIKARILAN / DOĞRULANAMAYAN (dosya başlığındaki aynı disiplin):
+#   · ÇIKARILAN (`ops/olay_sikistir.py` KAYNAK KODU okunarak): manifest şeması
+#     `{"kirpilan_aylar": {"YYYY-AA": {...}}, "guncellendi": "<ISO-8601>"}`; `guncellendi`
+#     YALNIZ en az bir ay GERÇEKTEN kırpıldığında güncellenir (`manifest_guncelle`, hedef
+#     kümesi boşsa hiç çağrılmaz) — yani dosyanın kendisi VARSA en az bir başarılı kırpma
+#     GEÇMİŞTE OLMUŞTUR.
+#   · DOĞRULANAMAYAN: canlı DAVRANIŞ. Kırpma bu makinede/canlıda HENÜZ HİÇ KOŞMADI — aşağıdaki
+#     eşik gerçek bir manifest.json'a karşı hiç sınanmadı, yalnız KAYNAK KODUNDAN çıkarılan
+#     şemaya karşı sentetik fikstürlerle çivilendi.
+#
+# "SON ÇALIŞMA AYI" NEDEN `kirpilan_aylar`IN EN BÜYÜK ANAHTARI DEĞİL, `guncellendi`NİN AYI —
+# BU BİR TASARIM KARARIDIR, ÖLÇÜM DEĞİL (canlı veri yokken açıkça işaretlenir). `--kirp` KENDİ
+# TASARIMI GEREĞİ cari ay + önceki ayı ASLA kırpmaz (`onceki_ay`), yani SAĞLIKLI aylık kadansta
+# `kirpilan_aylar`ın EN BÜYÜK anahtarı her zaman (bugünkü ay − 2) civarında TAKILI KALIR — o
+# alanı "bayat" eşiğiyle (bugünkü ay − 1) kıyaslamak SAĞLIKLI sistemde bile HER ay ateşlenirdi
+# (yapısal yanlış pozitif, sensörü kullanılamaz kılardı). `guncellendi` İSE her başarılı
+# `--kirp` koşumunda dokunulur ve KOŞUMUN KENDİSİNİN kadansını taşır — bu yüzden "bayat" burada
+# "kırpma yakın zamanda BAŞARIYLA koşmadı" demektir, "arşiv veri olarak eski" demek DEĞİLDİR.
+MANIFEST_VARSAYILAN = KOK / "state" / "olaylar" / "manifest.json"
+
+
+def _ay_anahtari(an: dt.datetime) -> str:
+    """`an`in `YYYY-AA` ay anahtarı — `ops/olay_sikistir.py`nin kendi biçimiyle (ÇIKARILAN,
+    KAYNAK KODU okunarak: `onceki_ay`, `f"{yil:04d}-{ay:02d}"`)."""
+    return f"{an.year:04d}-{an.month:02d}"
+
+
+def _ay_once(ay: str, kac: int = 1) -> str:
+    """`ay` (`YYYY-AA`) değerinden `kac` ay ÖNCESİ, yine `YYYY-AA`. Yıl sınırını (Ocak → bir
+    önceki yılın Aralığı) doğru geçer — `ops/olay_sikistir.py::onceki_ay`nin (`kac=1`) AYNI
+    aritmetiği, burada `kac` genelleştirilmiş: iki tarafın da import ETMEDEN aynı formülü
+    taşıması bir ÇIKARIMDIR, gerekçe bölüm başlığında."""
+    yil, ay_no = (int(p) for p in ay.split("-"))
+    toplam = (yil * 12 + (ay_no - 1)) - kac
+    return f"{toplam // 12:04d}-{toplam % 12 + 1:02d}"
+
+
+def manifest_tara(simdi=None, *, manifest=None) -> dict:
+    """`state/olaylar/manifest.json`ı tarar — `ops/olay_sikistir.py --kirp`in AUDIT İZİ.
+
+    Döner: `{"bayat": [...], "olculemedi": [...], "kapsam": {...}}`. `bayat` ve `olculemedi`
+    Görev 1 sözleşmesindeki ALTI alanlı kalemleri taşır (`_kalem`).
+
+    DÖRT UĞRAK (TSK-155 ruling'inin sıralamasıyla):
+      1. Dosya YOK           → `olculemedi`, neden `kirpma_hic_kosmadi` (ALARM DEĞİL — beyan:
+         kırpma bu makinede/canlıda henüz hiç koşmamış olabilir, bu BİR BAŞLANGIÇ DURUMUDUR).
+      2. Dosya var, OKUNAMIYOR (OSError / bozuk JSON / sözlük değil) → `olculemedi`, neden
+         `manifest_okunamadi` ya da `manifest_bicimsiz` — audit izi güvenilmiyorsa/eksikse
+         hüküm kurulamaz.
+      3. Dosya var, JSON ama BEKLENEN ALANLARI taşımıyor (`kirpilan_aylar` dolu bir sözlük
+         DEĞİL ya da `guncellendi` çözülemiyor) → `olculemedi`, neden `manifest_bicimsiz`.
+      4. Dosya var VE OKUNABİLİR: `guncellendi`nin ayı < (bugünkü ay − 1) ise `bayat` (uyarı
+         kalemi); aksi hâlde HİÇBİR kalem üretilmez (sağlıklı — sessiz kalır).
+
+    `simdi` — ISO dizge ya da `datetime`; verilmezse GERÇEK duvar saati (`datetime.now`).
+    `tara()`nın `simdi`sinden BİLEREK BAĞIMSIZDIR: events.jsonl bozuksa/yoksa bile bu sensör
+    yine GERÇEK "şu an"a göre çalışabilmeli — olay defterinin sağlığı manifestin sağlığına
+    BAĞLI DEĞİLDİR (bölüm başlığı: "bağımsız bir giriş noktası")."""
+    yol = pathlib.Path(manifest) if manifest is not None else MANIFEST_VARSAYILAN
+    an_simdi = (_an_coz(simdi) if isinstance(simdi, str) else simdi) if simdi is not None \
+        else dt.datetime.now(dt.timezone.utc)
+    kapsam = {"manifest": str(yol), "manifest_var": yol.is_file()}
+
+    if not yol.is_file():
+        return {"bayat": [], "olculemedi": [_kalem(
+            "olay_arsivi_kirpma (hic_kosmadi)", None, None, None,
+            {"neden": "kirpma_hic_kosmadi", "manifest": str(yol),
+             "aciklama": ("manifest dosyası YOK — `ops/olay_sikistir.py --kirp` bu "
+                          "makinede/canlıda HENÜZ HİÇ koşmadı; bu bir ARIZA DEĞİL, bir "
+                          "BAŞLANGIÇ DURUMU beyanıdır")},
+            kimlik="arsiv:hic_kosmadi")], "kapsam": kapsam}
+
+    try:
+        ham = yol.read_text(encoding="utf-8")
+    except OSError as e:  # sessiz-yutma: okunamayan dosya `manifest_okunamadi` NEDENİYLE kayda geçer — None dönmek bilgiyi kaybetmez, sınıflandırmaya yollar
+        kapsam["manifest_okunabilir"] = False
+        return {"bayat": [], "olculemedi": [_kalem(
+            "olay_arsivi_manifesti (okunamadi)", None, None, None,
+            {"neden": "manifest_okunamadi", "manifest": str(yol), "hata": type(e).__name__,
+             "aciklama": (f"manifest dosyası VAR ama OKUNAMADI ({type(e).__name__}) — "
+                          "kırpmanın audit izi güvenilmiyorsa hüküm kurulamaz")},
+            kimlik="arsiv:okunamadi")], "kapsam": kapsam}
+
+    try:
+        icerik = json.loads(ham)
+    except (json.JSONDecodeError, ValueError):  # sessiz-yutma: bozuk JSON `manifest_bicimsiz` NEDENİYLE kayda geçer — None dönmek sıfır saymaz, sınıflandırmaya yollar
+        icerik = None
+    if not isinstance(icerik, dict):
+        kapsam["manifest_okunabilir"] = False
+        return {"bayat": [], "olculemedi": [_kalem(
+            "olay_arsivi_manifesti (bozuk)", None, None, None,
+            {"neden": "manifest_bicimsiz", "manifest": str(yol),
+             "aciklama": "manifest JSON olarak ÇÖZÜLEMEDİ ya da bir SÖZLÜK değil — hüküm kurulamaz"},
+            kimlik="arsiv:bicimsiz")], "kapsam": kapsam}
+
+    kirpilan = icerik.get("kirpilan_aylar")
+    guncellendi_ham = icerik.get("guncellendi")
+    guncellendi_an = _an_coz(guncellendi_ham) if isinstance(guncellendi_ham, str) else None
+    kapsam["manifest_okunabilir"] = True
+
+    if not isinstance(kirpilan, dict) or not kirpilan or guncellendi_an is None:
+        kapsam.update(kirpilan_ay_sayisi=(len(kirpilan) if isinstance(kirpilan, dict) else None),
+                      guncellendi_ham=guncellendi_ham)
+        return {"bayat": [], "olculemedi": [_kalem(
+            "olay_arsivi_manifesti (bicimsiz)", None, None, None,
+            {"neden": "manifest_bicimsiz", "manifest": str(yol),
+             "kirpilan_aylar_tipi": type(kirpilan).__name__, "guncellendi_ham": guncellendi_ham,
+             "aciklama": ("manifest VAR ve JSON olarak ÇÖZÜLDÜ ama beklenen alanları "
+                          "(`kirpilan_aylar` dolu sözlük + çözülebilir `guncellendi`) "
+                          "TAŞIMIYOR — hüküm kurulamaz")},
+            kimlik="arsiv:bicimsiz")], "kapsam": kapsam}
+
+    son_calisma_ayi = _ay_anahtari(guncellendi_an)
+    bugunku_ay = _ay_anahtari(an_simdi)
+    esik_ay = _ay_once(bugunku_ay, 1)
+    kapsam.update(kirpilan_ay_sayisi=len(kirpilan), son_calisma_ayi=son_calisma_ayi,
+                  esik_ay=esik_ay, bugunku_ay=bugunku_ay)
+
+    if son_calisma_ayi < esik_ay:
+        return {"bayat": [_kalem(
+            "olay_arsivi_manifesti (bayat)", {"son_calisma_ayi": son_calisma_ayi},
+            guncellendi_ham, guncellendi_ham,
+            {"neden": "arsiv_manifesti_bayat", "son_calisma_ayi": son_calisma_ayi,
+             "esik_ay": esik_ay, "bugunku_ay": bugunku_ay, "kirpilan_ay_sayisi": len(kirpilan),
+             "manifest": str(yol),
+             "aciklama": (f"kırpma en son {son_calisma_ayi} ayında BAŞARIYLA koştu, eşik "
+                          f"{esik_ay} (bugünkü ay − 1) — arşiv manifesti BAYATLADI: "
+                          "`ops/olay_sikistir.py --kirp` bakım penceresinde koşmuyor olabilir")},
+            kimlik="arsiv:bayat")], "olculemedi": [], "kapsam": kapsam}
+
+    return {"bayat": [], "olculemedi": [], "kapsam": kapsam}
 
 
 def tara(gun: int = 3, *, duran_gun=None, defter=None, simdi=None, bilinen=None) -> dict:
