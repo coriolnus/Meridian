@@ -1,4 +1,4 @@
-"""test_timer_fixed_random_delay_v415.py — RandomizedDelaySec taşıyan HER filo timer'ı
+"""test_timer_fixed_random_delay_v418.py — RandomizedDelaySec taşıyan HER filo timer'ı
 FixedRandomDelay=true da taşır (TSK-152, 2026-09-05).
 
 VAKA: brief `dagit.sh`'nin [4] adımındaki `sudo systemctl daemon-reload`ın "RandomizedDelaySec
