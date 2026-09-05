@@ -923,3 +923,126 @@ def test_DAMGA_SEMASI_SEMA_ALANLARI_KUNYESIYLE_KIRLENMEZ(tmp_path, monkeypatch, 
     kayit = m._son_kural_denetimi()
     assert "sema_alanlari" not in kayit, (
         f"bedel künyesi damgaya sızdı — okuyucusu yok, Yasa 6 ihlali: {sorted(kayit)}")
+
+
+# ================================================================================================
+# 10) TSK-138 (2026-09-05) — denetçi VERİ'yi görsün (D1) + mekanik izinli-sözlük süzgeci (D2) +
+#     ilk-tur kaydı (D3)
+# ================================================================================================
+# KÖK NEDEN (22:04:55Z şef brifingi, canlı): denetçi istemi yalnız SOUL Üslup bloğu + brifing
+# metnini görüyordu; SOUL kuralı "her teknik sözcük ya VERİDEN ya bu dosyadan" der ama VERİ hiç
+# isteme girmiyordu. Canlı 4 ihlalin HEPSİ VERİ'de LİTERAL geçen jetonlardı ('yazim' =
+# `"mode": "yazim"`, 'bekçi' = selfreview attention, "stop_gap'i", 'iyileştirme önerisi' =
+# KAYNAK_ADLARI başlığı) → yanlış-pozitif, 2/2 ihlal, HAM teslim (sıralama katmanı devre dışı
+# kaldı). D1 VERİ'yi üçüncü çitli blok olarak isteme sokar; D2 LLM'den SONRA, teslimden ÖNCE
+# mekanik bir izinli-sözlük süzgeci çalıştırır (VERİ/SOUL'da GEÇEN jetonu düşürür); D3 ilk turun
+# ihlallerini ve süzülenleri OLAYA (damgaya değil) taşır.
+
+
+def test_D1_ISTEM_VERI_ILE_UCUNCU_CITLI_BLOK_TASIR_VE_ESKI_CUMLE_YOK(sd):
+    """D1(3) — `istem(uslup, metin, veri=...)` ÜÇÜNCÜ bir çitli blok taşımalı ve eski, YANLIŞ
+    sözleşme cümlesi ("kural metninde ve brifingde OLMAYAN" — VERİ'yi hiç anmıyordu, kök nedenin
+    ta kendisi) artık İSTEMDE YOK olmalı; yeni cümle "VERİ"yi anmalı."""
+    istem = sd.istem(SAHTE_USLUP, "bir brifing metni", veri="ZORAKI kaynak veri gövdesi")
+    assert sd.VERI_ACILIS.format(ad="kaynak_veri") in istem, "üçüncü çitli blok isteme girmedi"
+    assert "ZORAKI kaynak veri gövdesi" in istem, "veri içeriği isteme girmedi"
+    assert "kural metninde ve brifingde OLMAYAN" not in istem, (
+        "eski yanlış sözleşme cümlesi hâlâ duruyor — VERİ'yi hiç anmayan kök-neden cümlesi")
+    aciklama = istem.rsplit("## ÇIKTI SÖZLEŞMESİ", 1)[-1]
+    assert "VERİ" in aciklama, "yeni sözleşme cümlesi VERİ'yi anmıyor"
+
+
+def test_D1_ISTEM_VERI_YOKSA_ESKI_IKI_BLOKLU_BICIM_GERIYE_UYUM(sd):
+    """D1(4) — GERİYE UYUM. `veri=None` (ya da boş) iken üçüncü blok EKLENMEMELİ: `denetle()`nin
+    eski çağıranları (bu dosyadaki çoğu test) `veri` hiç geçmiyor ve eski iki-bloklu istem
+    biçimini bekliyor."""
+    istem_yok = sd.istem(SAHTE_USLUP, "bir brifing metni")
+    istem_bos = sd.istem(SAHTE_USLUP, "bir brifing metni", veri="")
+    for istem in (istem_yok, istem_bos):
+        assert sd.VERI_ACILIS.format(ad="kaynak_veri") not in istem, (
+            f"veri boş/None iken üçüncü blok yine de eklendi: {istem[:400]!r}")
+
+
+def test_D2_GERCEK_VAKA_DORT_YANLIS_POZITIF_SUZULUR_HUKUM_TEMIZ_YENIDEN_URETIM_YOK(
+        sd, tmp_path, sandbox_state):
+    """D2 — GERÇEK CANLI VAKA (22:04:55Z şef brifingi, TSK-138 kök neden, ADIYLA). Denetçi
+    ['bekçi', "stop_gap'i", 'iyileştirme önerisi', 'yazim'] uydurma döndürüyor ama DÖRDÜ de
+    üreticinin `ilk_istem`indeki VERİ bölgelerinde/başlıklarında LİTERAL duruyor. Süzgeç dördünü
+    de düşürmeli: hüküm TEMİZ kalmalı, yeniden-üretim TETİKLENMEMELİ (canlıda tam tersi olmuştu
+    — 2/2 ihlal sayılıp HAM teslim edilmişti).
+
+    MUTASYON HEDEFİ: süzgeç by-pass edilirse (LLM'den sonra hiç çalışmazsa) bu çivi öter — hüküm
+    ihlalli kalır ve yeniden-üretim tetiklenir."""
+    ilk_istem = "\n\n".join([
+        "## Bugünün kaynakları — HAZIR HESAPLANMIŞ VERİ",
+        "### iyileştirme önerisi\n" + sd._veri_bloku(
+            "oneri_ozeti", "iyileştirme önerileri bekleniyor, henüz ship yok"),
+        "### self_review\n" + sd._veri_bloku("self_review", "dikkat: bekçi 93 turdur sınanmıyor"),
+        "### alarm\n" + sd._veri_bloku("alarm", 'stop_gap tetiklendi, "mode": "yazim"'),
+    ])
+    ilk_cevap = json.dumps({"sade_ozet": True,
+                            "uydurma": ["bekçi", "stop_gap'i", "iyileştirme önerisi", "yazim"],
+                            "cevrilen": []}, ensure_ascii=False)
+    kuyruk = _Kuyruk(ilk_cevap)
+    g = sd.gecir(profil_evi=_profil_evi(tmp_path), ilk_metin="ilk metin", ilk_istem=ilk_istem,
+                veri_terimleri=[], cagir=kuyruk, bot="sef")
+    assert g.metin == "ilk metin" and g.yeniden_uretim is False, (
+        f"süzgeç çalışmadı, yanlış-pozitifler yeniden-üretim tetikledi: {g!r}")
+    assert g.hukum.ihlal_var is False, f"süzülmesi gereken ihlaller kaldı: {g.hukum.ihlaller!r}"
+    assert set(g.hukum.suzulen) == {"bekçi", "stop_gap'i", "iyileştirme önerisi", "yazim"}, (
+        f"suzulen listesi eksik/yanlış: {g.hukum.suzulen!r}")
+    assert kuyruk.n == 1, f"tek denetim çağrısı yeterliydi, fazladan çağrı: {kuyruk.n}"
+
+
+def test_D2_HICBIR_KAYNAKTA_YOKKEN_SUZULMEZ_GERCEK_IHLAL_KALIR(sd, tmp_path, sandbox_state):
+    """D2 — SIFIR EK YANLIŞ-NEGATİF. 'tetti'/'kritikisi' (modül başlığının bozuk-çekim sınıfı)
+    HİÇBİR kaynakta (VERİ, SOUL) yoksa süzgeç onları DÜŞÜRMEMELİ — gerçek bir ihlal süzgeçten SAĞ
+    ÇIKMalı ve yeniden-üretimi tetiklemeye devam etmeli."""
+    ilk_istem = "### kaynak\n" + sd._veri_bloku("kaynak", "her şey yolunda, sayı 5")
+    ilk_cevap = json.dumps({"sade_ozet": True, "uydurma": ["tetti", "kritikisi"], "cevrilen": []},
+                           ensure_ascii=False)
+    kuyruk = _Kuyruk(ilk_cevap, "düzeltilmiş metin ve gerekçesi", _temiz_cevap())
+    g = sd.gecir(profil_evi=_profil_evi(tmp_path), ilk_metin="ilk metin", ilk_istem=ilk_istem,
+                veri_terimleri=[], cagir=kuyruk, bot="sef")
+    assert g.yeniden_uretim is True and g.metin == "düzeltilmiş metin ve gerekçesi", (
+        f"gerçek ihlal süzgeç tarafından yanlışlıkla yutuldu: {g!r}")
+
+
+def test_D2_CEVRILEN_DE_SUZULUR_VERIDE_GECEN_TERIM_CEVRILMIS_SAYILMAZ(sd, tmp_path,
+                                                                      sandbox_state):
+    """D2(6) — `cevrilen` de AYNI süzgeçten geçer: `cevrilen` öğesi TANIM GEREĞİ VERİ'deki özgün
+    terimin ta kendisidir (D1); o terim VERİ'de LİTERAL duruyorsa "çevrilmiş" iddiası
+    YANLIŞ-POZİTİFTİR.
+
+    MUTASYON HEDEFİ: süzgeç `cevrilen`e uygulanmazsa (yalnız `uydurma`ya uygulanırsa) bu çivi
+    öter — ihlal kalır, yeniden-üretim tetiklenir."""
+    ilk_istem = "### kaynak\n" + sd._veri_bloku("kaynak", "MECHANISM_STALE 5 kez")
+    ilk_cevap = json.dumps({"sade_ozet": True, "uydurma": [], "cevrilen": ["MECHANISM_STALE"]},
+                           ensure_ascii=False)
+    kuyruk = _Kuyruk(ilk_cevap)
+    g = sd.gecir(profil_evi=_profil_evi(tmp_path), ilk_metin="ilk metin", ilk_istem=ilk_istem,
+                veri_terimleri=[], cagir=kuyruk, bot="sef")
+    assert g.yeniden_uretim is False and g.metin == "ilk metin", (
+        f"VERİ'de literal geçen 'cevrilen' terimi süzülmedi: {g!r}")
+    assert g.hukum.suzulen == ["MECHANISM_STALE"], f"suzulen alanı yanlış: {g.hukum.suzulen!r}"
+
+
+def test_D3_OLAY_ILK_IHLAL_VE_SUZULEN_TASIR_DAMGA_TASIMAZ(sd, tmp_path, sandbox_state):
+    """D3(5) — ilk turun ihlalleri (`ilk_ihlal`) ve süzülenler (`suzulen`) OLAYA gider, DAMGAYA
+    (`Gecis.kayit()`) DEĞİL — O4 sözleşmesi: okunmayacak alan damgaya yazılmaz. OKUYUCU:
+    `ops/olay_sorgu.py --sql` ile haftalık sınıflama (TSK-138) — "kaç turda ilk-tur yanlış-pozitifi
+    süzgeçle temizlendi" sorusu bu iki alandan cevaplanır."""
+    ilk_istem = "### kaynak\n" + sd._veri_bloku("kaynak", "bekçi ölçüldü")
+    ilk_cevap = json.dumps({"sade_ozet": True, "uydurma": ["bekçi"], "cevrilen": []},
+                           ensure_ascii=False)
+    kuyruk = _Kuyruk(ilk_cevap)
+    g = sd.gecir(profil_evi=_profil_evi(tmp_path), ilk_metin="ilk metin", ilk_istem=ilk_istem,
+                veri_terimleri=[], cagir=kuyruk, bot="sef")
+    olay = _olaylar()
+    assert olay, "kural denetimi olayı yazılmadı"
+    assert olay[0].get("ilk_ihlal") == [], (
+        f"ilk_ihlal alanı yok/yanlış (tek ihlal süzülmüş olmalıydı): {olay[0]!r}")
+    assert olay[0].get("suzulen") == ["bekçi"], f"suzulen alanı yok/yanlış: {olay[0]!r}"
+    kayit = g.kayit("sef")
+    assert "ilk_ihlal" not in kayit and "suzulen" not in kayit, (
+        f"damgaya (kayit sözlüğüne) OKUNMAYACAK alan sızdı: {sorted(kayit)}")
