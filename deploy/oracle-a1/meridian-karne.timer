@@ -92,6 +92,10 @@ OnCalendar=Sat *-*-* 16:00:00 UTC
 # eksik ölçüm, kayıp bir haftadan iyidir — takas bu yönde yapıldı ve tersi de savunulabilirdi.
 Persistent=true
 RandomizedDelaySec=300
+# FixedRandomDelay (TSK-152, 2026-09-05): dagit'in [4] adımının sistem-geneli `daemon-reload`u
+# reload'da rastgele payı yeniden çekip tetiği erkene çekebilir — gerekçenin TAMAMI ve A1 ölçümü
+# meridian-backup.timer başlığındadır (tek kaynak; öncül bu ölçümde DOĞRULANMADI, yine de eklendi).
+FixedRandomDelay=true
 
 [Install]
 WantedBy=timers.target

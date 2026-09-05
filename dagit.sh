@@ -580,6 +580,16 @@ else
 fi
 
 # Başlatma listesi YUKARIDA is-enabled'dan türetildi (TSK-092) — bu satırda birim adı sabitlenemez.
+#
+# BU `daemon-reload` SİSTEM-GENELİDİR (TSK-152, 2026-09-05) — yalnız $_BASLAT'ı değil, A1'de
+# YÜKLÜ HER timer'ı yeniden hesaplatır. `RandomizedDelaySec` taşıyan filo timer'ları (bekci/
+# brifing/karne/backup/aylik-bucket-kopya/skill-gorus) bu yüzden `FixedRandomDelay=true` taşır —
+# belgeli systemd riski, reload'da rastgele payın YENİDEN ÇEKİLİP tetiği erkene çekmesidir.
+# ÖLÇÜLDÜ (A1, dağıtım #13/#14/#15 reload anları 2026-09-04 20:02:55Z/22:08:16Z/22:36:11Z/
+# 22:42:49Z): o dört anın hiçbirinde bir RandomizedDelaySec timer'ı beklenmedik ateşlemedi —
+# "her daemon-reload 3/3 ateşliyor" öncülü bu ölçümde DOĞRULANMADI (gerekçenin tamamı
+# deploy/oracle-a1/meridian-backup.timer başlığında); `FixedRandomDelay=true` yine de eklendi
+# çünkü zararsız ve belgelenmiş riski ölçülemeden kapatıyor.
 "${SSH[@]}" "sudo systemctl daemon-reload && sudo systemctl start $_BASLAT && sleep 8 && systemctl is-active $_BASLAT | tr '\n' ' '; echo"
 
 echo "=== [5/5] doğrulama ==="

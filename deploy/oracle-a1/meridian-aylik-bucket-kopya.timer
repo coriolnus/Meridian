@@ -16,6 +16,10 @@ OnCalendar=*-*-03 04:00:00 UTC
 Persistent=true
 # Aynı dakikada başka işlerle çakışmasın; tar iki dizini okurken I/O'yu tek başına almasın.
 RandomizedDelaySec=600
+# FixedRandomDelay (TSK-152, 2026-09-05): dagit'in [4] adımının sistem-geneli `daemon-reload`u
+# reload'da rastgele payı yeniden çekip tetiği erkene çekebilir — gerekçenin TAMAMI ve A1 ölçümü
+# meridian-backup.timer başlığındadır (tek kaynak; öncül bu ölçümde DOĞRULANMADI, yine de eklendi).
+FixedRandomDelay=true
 
 [Install]
 WantedBy=timers.target
