@@ -2585,3 +2585,5 @@ worker 8 sn'de aktif, healthz 200; birleşik görünüm Temmuz'u parquet'ten ver
 alanlardan (`last_learn.ts`) — sahte pozitif. TSK-060: soru kümesi 09-01'de zaten donuk (blob 89cd1e0); sıradaki arşiv ingest r3 → kıyas.
 
 **DAĞITIM #17 (7160154, 14:47:05Z):** TSK-155 + docs; ilk dry-run [0b] uv audit ağ zaman aşımı (api.osv.dev — bugün GitHub ssh'ta da), tekrar temiz; [5a] 3/3 ✓. ROADMAP'te TSK-155 girdisi hiç doğmamıştı ('[TSK-155]' atfı 137 notunda geçince ekleme kapısı sessiz atladı — TSK-138'deki aynı hata; hafıza notu, başlık regex'iyle kontrol) → 7160154'te eklendi.
+
+**TSK-154 (95d5be5) + suite #26 (10438/1 — v217 p95 flake, seri yeşil) → push → DAĞITIM #18.** Hayalet boş satır kök nedeni `row.get(None)`; warn + changes_kaynak + as_of PIT beyanı; alternatif kaynak Wikipedia 'Historical components' → TSK-156 (kart-önce).
