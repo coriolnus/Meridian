@@ -2642,3 +2642,8 @@ emsali), seri 24/24 yeşil → hüküm yeşil, push. **DAĞITIM #19 (acaf974, 17
 F10 anomali yok), healthz 200, [5b/5] kod-tazelik ✓, beyan bayt-özdeş. Canlıya giden: TSK-156 dilim-1 (tarihsel tablo kaynağı + rename eşleme +
 oldid/sha meta), EDG-075/076 ölçüm kodu (research), v420–v422. Önbellek tazelenmesi (changes_kaynak → wikipedia_historical_components,
 changes_meta.oldid) ilk günlük evren denetiminde (`loop._universe_drift_check`) okunacak; bugün canlı önbellek hâlâ 09-04 damgalı, 11 eski satır.
+
+**17:18Z — TSK-132 dilim-2 ölçümü (kod yok):** index.html 0 ayrışma (v153); runbook/landing/workflow 13–15 `--değişken` hex değeri tokens.json'da yok VE üç kopya
+birbirinden farklı (sha ayrı) — tek-kaynak yasasının canlı örneği, ama yalnız eski sayfalarda. İş tarifi ROADMAP'te; öncelik düşük. Dağıtım #19
+sonrası önbellek doğrulaması Pazartesi akşamı P5 bloğunda (ledger'a yazıldı). Bugünkü otonom kuyruk bitti: kalanlar zamana bağlı (gece zinciri,
+09-06/09-07 doğrulamaları) ve operatör kararları.
