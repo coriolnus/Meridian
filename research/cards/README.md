@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **93** kart.
 
-### Kayıtlı — ölçüm bekliyor (16)
+### Kayıtlı — ölçüm bekliyor (15)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -47,9 +47,6 @@ Toplam **93** kart.
 - **EDG-2026-077** (`registered`) — 
   · HÜKÜM: 2026-09-05 Rol-1 — ön-kayıt; ayar değişikliği bu karttan SONRA (kart-önce), ilk ölçüm 05:00Z kurtar turu + 7 gün
   · kart: `EDG-2026-077-hindsight-konsolidasyon-llm-minimax-kova-disi.yaml`
-- **EDG-2026-078** (`registered`) — 
-  · HÜKÜM: 2026-09-05 Rol-1 — ön-kayıt; kod (loop kancası + defter + çözücü + rapor + pano + pencere sayacı) bu karttan SONRA
-  · kart: `EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -57,7 +54,7 @@ Toplam **93** kart.
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
-### Ölçümde (4)
+### Ölçümde (5)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -68,6 +65,9 @@ Toplam **93** kart.
 - **EDG-2026-055** (`measuring`) — WP4 eleme bulgusu (2026-08-24): earnings takvimi kapsamı bugün 216/251 (%86,1) — 35 sembolde fail-open (kazanç-penceresi bilinmediğinde kapı…
   · HÜKÜM: HÜKÜM (Rol-1, 2026-08-24): **HÜKÜM YOK — ve bu, R1 şerhi olmasaydı YANLIŞ bir kapanış olurdu.** ÖN-SAYIM: `N_giris = 10` (6 kapanmış live_paper + 4 açık pozisyon, giriş…
   · kart: `EDG-2026-055-earnings-fail-open.yaml`
+- **EDG-2026-078** (`measuring`) — 
+  · HÜKÜM: 2026-09-05 Rol-1 — kod canlı (#21, 19:55Z); ilk seans 2026-09-08; 40 seans (~2026-11-03) sonra hüküm
+  · kart: `EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml`
 - **EXE-2026-003** (`measuring`) — 4b gölge katmanı yalnız SİLAHLANMIŞ planların dakika-hassas dolumunu yazıyor (6 seansta 4 satır).
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`

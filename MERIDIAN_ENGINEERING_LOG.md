@@ -2701,3 +2701,8 @@ replay hükümleri survivorship şerhiyle ASKIDA. Ayrışım: 39 hiç-üye (bug�
 2026-06-22), 14 çıkış-sonrası (VFC 11, ENPH 3). Hiç-üye hariç p=0,063. Sızan işlemler daha KÖTÜ (medyan R −0,88 vs −0,17) — şişirme yok ama
 kurulum PIT değil. K2 q=0,085 geçti; PK 3/3. TSK-066 as_of ZORUNLU; yeniden tohumlama yeni kart. EDG-078 merge 84c7156 (313 hedefli, tsc 0
 hata), TSK-143 merge 0bff82e → tam suite #28 → dağıtım #21.
+
+**Suite #28 (3b53bb7, -n 4, 11,2 dk): 10577 passed / 0 failed / exit 0, HEAD sabit → push. UI build (tsc 0 hata) 01cf2a8. DAĞITIM #21 (01cf2a8,
+19:55:49Z, Cumartesi):** TSK-143 (LIVE 244, 6 hiç-üye canlıda), EDG-078 Aşama A (gölge sıralama kolu + pencere sayacı; canlı ilk okuma dürüst
+'ölçülemedi — seans yok'), EDG-079 ölçüm kodu. healthz 200, journal temiz. Günün dağıtımları: #16 #17 #18 #19 #20 #21 (altı); tam suite 12 (#17–#28).
+Masa kararlarının dördü de aynı gün uygulandı: 126 (Aşama A canlı), 143 (canlı), 150 (b) (A1'de uygulandı), 047 (kapı kova-dışı son çare canlı).

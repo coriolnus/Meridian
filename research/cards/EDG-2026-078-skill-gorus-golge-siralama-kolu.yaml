@@ -7,7 +7,7 @@
 # ölçülmüş bilgi değeriyle ağırlıklandırılmış ikinci sıralama YAN YANA kaydedilir; emir MEVCUT sıralamadan çıkar.
 
 card_id: EDG-2026-078
-status: registered   # 2026-09-05 Rol-1 — ön-kayıt; kod (loop kancası + defter + çözücü + rapor + pano + pencere sayacı) bu karttan SONRA
+status: measuring   # 2026-09-05 Rol-1 — kod canlı (#21, 19:55Z); ilk seans 2026-09-08; 40 seans (~2026-11-03) sonra hüküm
 family: skill_gorus_defteri_aktif_kume
 on_kayit: 2026-09-05
 ref: [TSK-126, TSK-058, EDG-2026-019, EDG-2026-063, TSK-073]
@@ -61,3 +61,13 @@ basari_tanimi: >
 notlar: >
   Formül: z_skill = (score − ort_skill_kesit) / sd_skill_kesit (kesitte skill'in ≥3 adayı yoksa z=0); sd_kesit = tüm adayların score sd'si;
   score_golge = score + w_skill · z_skill · sd_kesit. w=0 olan skill'lerde score_golge = score (bugünkü davranış birebir). Kanca P3'te aday sıralamasının (candidates.sort) hemen sonrasında, in-memory, tek append. Pencere sayacı EDG-019 kill#3'ün ölçülemeyen 'ardışık pencere' borcunu kapatır.
+
+kod_canli_2026_09_05: >
+  (19:57Z Rol-1) Ajan dilimi (6bd307f → merge 84c7156): loop P3 kancası (gölge, emir yolu birebir — mutasyon çivisi), state/golge_siralama.jsonl,
+  skill_gorus.golge_kol_raporu + rapor().golge_kol, pencere sayacı (ops/skill_gorus_uret.py → state/skill_gorus_pencereler.jsonl,
+  terfi/emeklilik satırlarında ardisik_pencere), api._eksen2_gorus.golge_kol, pano Eksen-2 satırı (tsc 0 hata, build 01cf2a8), codelaw
+  DECLARED_SINKS iki defter, v425 23 + v218/v214 tabanları. Suite #28 10577/0 → DAĞITIM #21 (01cf2a8, 19:55:49Z). Canlı ilk okuma:
+  golge_kol.durum "ÖLÇÜLEMEDİ — defter boş, kanca hiç yazmadı" (doğru: seans yok), ardisik_pencere 0 (sayaç ilk üretim koşumunda dolar).
+  Ajan beyanı: çözücü yalnız CF hedefiyle eşleşir (aday silahlanmadan önce tek biçim) — sınır kartın olcum_plani'na uygun, hükümde anılır.
+  Kill#1 (kadans p95 payı) için aktif kill yolu yok; sure_p95_ms raporlanır, 40 seans sonunda elle değerlendirilir (açık kalem).
+
