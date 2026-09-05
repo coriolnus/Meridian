@@ -21,13 +21,15 @@ pozisyon → NAKED_POSITION), `kitap_damga_report`, `mutabakat_tazelik_report`,
 `onayli_gonderim_report` (onaylı plan gönderilmedi bekçisi), `liveness_report`,
 `universe_audit_report`, `eod_supurme_report`/`check_eod_supurme_and_alarm` (EOD süpürme
 kanıtı — A4), `uyuyan_iddia_tara`, `veri_disk_report`/`check_veri_disk_and_alarm` (A1 /opt/veri
-kapasite eşiği — TSK-131 alt-iş).
+kapasite eşiği — TSK-131 alt-iş), `olu_isim_adaylari`/`check_olu_isim_and_alarm` (son bar yaşı ile
+ölü-isim/delist adayı sensörü, alarm DEĞİL warn — TSK-153).
 
 DEĞİŞMEZLER. Bekçi YALNIZ GÖZLEMdir: hiçbir mekanizmayı yeniden başlatmaz, hiçbir kararı
 etkilemez — amber satır üretir, teşhisi operatöre bırakır. Nabız yazılamazsa sessiz kalınmaz
 (`watchdog_beat_write_failed`): bekçi kendi körlüğünü üretkenlik sanamaz. Okur/yazar: kendi iki
 damga/sayaç dosyası + defterlerin geniş salt-okunur kesiti; alarmlar obs üzerinden."""
 from __future__ import annotations
+import bisect
 import datetime as dt
 import pathlib
 import shutil
@@ -464,6 +466,15 @@ def check_and_alarm() -> None:
         obs.warn("veri_disk_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
                  detail="/opt/veri disk eşiği bekçisi bu poll'da hüküm veremedi — ölçülemeyen "
                         "hüküm 'disk eşik altında' sayılmaz")
+    # TSK-153: ÖLÜ-İSİM (delist) ADAY SENSÖRÜ — son bar yaşı. Bu poll'un kadansında ve KENDİ
+    # try'ında, akranlarıyla aynı yalıtım disiplini. Kendisi ALARM değil WARN üretir (emeklilik
+    # kararı operatörün — bkz. bölüm başlığı); bu try yalnız SENSÖRÜN KENDİSİNİN düşmesini yakalar.
+    try:
+        check_olu_isim_and_alarm()
+    except Exception as e:
+        obs.warn("olu_isim_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
+                 detail="ölü-isim aday sensörü bu poll'da hüküm veremedi — ölçülemeyen hüküm "
+                        "'yeni ölü isim yok' sayılmaz")
 
 
 # =============================================================================================
@@ -4122,4 +4133,195 @@ def check_veri_disk_and_alarm() -> dict:
               "120 G tavanına yaklaşıyor",
               yol=rep["yol"], kullanilan_g=rep["kullanilan_g"], toplam_g=rep["toplam_g"],
               bos_g=rep["bos_g"], esik_g=rep["esik_g"])
+    return rep
+
+
+# =============================================================================================
+# ÖLÜ-İSİM (DELİST) ADAY SENSÖRÜ — SON BAR YAŞI (TSK-153, 2026-09-05)
+#
+# KÖK (TSK-143 keşfi): `adapters.data._record_no_data` streak'i YALNIZ verdict=='symbol_unknown'
+# (her kaynak SIFIR satır) artırır; sağlayıcı TARİHSEL satır döndürünce ('rows:N') streak SIFIRLANIR.
+# EA 2026-08-04'te delist oldu ama sağlayıcı geçmiş satır döndürmeye devam ettiği (ya da başka bir
+# verdict'e düştüğü) için streak hiç `NO_DATA_CONFIRM_STREAK`e ulaşmadı — 4 hafta LIVE fetch'inde
+# kaldı, `symbol_no_data.json` boştu. Delist tespiti o turda YALNIZ endeks-sapması alarmının
+# (`constituents.universe_drift`) YAN ETKİSİYDİ ve TSK-143 hükmü (EVREN_DISI_BEYANLI beyanlı kümesi)
+# o yan etkiyi tam da EA'nın YENİ komşuları için (10 sembol) KAPATTI — kendi bedel beyanı bunu
+# açıkça söylüyor ("bu 10 sembolden biri delist olursa universe_drift onu GÖRMEZ").
+#
+# BU SENSÖR NE YAPAR (`_record_no_data`in YERİNE DEĞİL, ONDAN BAĞIMSIZ İKİNCİ bir sinyal): her
+# sembolün YEREL bar arşivindeki (`state/bars/<ticker>.csv`, `adapters.data._cache_path`) EN SON
+# tarihi okur ve bugüne kadar KAÇ GEÇERLİ (XNYS) seans geçtiğini sayar — hafta sonu/tatil bir
+# "eksik gün" SAYILMAZ (`adapters.data._sessions()`, aynı takvim önbelleği `_calendar_scan`ın
+# kullandığı — tek kaynak). Eşiği aşan sembol bir ÖLÜ-İSİM ADAYIDIR; hüküm vermez, yalnız haber
+# verir (RETIRED_SYMBOLS emsali: emeklilik kararı hep ELLE, operatörün).
+#
+# AĞA ÇIKMAZ: yalnız diskteki CSV okunur (`load_bars` gibi ağa düşmez — o fonksiyon stale cache'i
+# YENİDEN ÇEKER, bu sensör salt-okunur bir gözlemdir ve bunu YAPAMAZ/YAPMAZ).
+#
+# KAPSAM — NEDEN DÖRT KÜMENİN BİLEŞİMİ: `LIVE_UNIVERSE` ⊆ `REPLAY_UNIVERSE` ve
+# `EVREN_DISI_BEYANLI`nin 10 sembolü BUGÜN zaten `REPLAY_UNIVERSE` içinde duruyor (ölçüldü:
+# `grep -c '"TICKER"' data.py` her biri için tam 2 — bir REPLAY_UNIVERSE listesinde, bir de kendi
+# defterinde) — yani dördünün bileşimi bugün fiilen `REPLAY_UNIVERSE ∪ RETIRED_SYMBOLS`e eşittir.
+# Dördü YİNE DE AYRI AYRI birleştirilir (tek-kaynak yasası: bu eşitlik BUGÜNÜN bir GÖZLEMİdir, bir
+# SÖZLEŞME değil — `REPLAY_UNIVERSE`in "her EVREN_DISI_BEYANLI sembolü içerir" garantisi hiçbir
+# yerde ZORLANMIYOR). `RETIRED_SYMBOLS` `REPLAY_UNIVERSE`den YAPISAL OLARAK ÇIKARILMIŞTIR
+# (`test_evren_emekliligi_v134.py::kesisim` boş kümedir) — onu ayrıca eklemek TEK gerçek katkı;
+# `EVREN_DISI_BEYANLI`yi ayrıca eklemek bugün redundant ama BEDEL BEYANININ TAM KAPATTIĞI kör
+# noktayı (yarın biri REPLAY_UNIVERSE'den çıkarılıp beyanlı listede YALNIZ kalırsa bile taranmaya
+# devam etmesi) yapısal olarak garantiler.
+#
+# İKİ AYRI SINIF, İKİ AYRI MUAMELE (`no_data_report`ın `retired` ayrımıyla AYNI disiplin):
+#   `adaylar`   — YENİ bulgu, operatörün BAKMASI gerekir (RETIRED_SYMBOLS'ta OLMAYAN, eşiği aşan
+#                 her sembol — LIVE/REPLAY/EVREN_DISI_BEYANLI farketmez, hepsi bu sınıfa girebilir;
+#                 kör nokta tam burada kapanıyor).
+#   `zaten_emekli` — RETIRED_SYMBOLS'ta ZATEN hüküm görmüş sembol; eşiği aşması BEKLENEN sonuçtur
+#                 (CSV'ler bilerek silinmez, son bar donuk kalır) — `no_data_report.retired` gibi
+#                 SESSİZCE ATILMAZ (taranmadığı sanılmasın) ama `adaylar`a da KARIŞMAZ (aksi hâlde
+#                 aynı 11 sembol HER GÜN "yeni bulgu" gibi tekrar ederdi — MECHANISM_STALE'in
+#                 çırpınma dersiyle AYNI sınıf gürültü).
+# `zaten_emekli` WARN'I TETİKLEMEZ (`check_olu_isim_and_alarm` yalnız `adaylar`a bakar) — yalnız
+# `olu_isim_adaylari()` çıktısında GÖRÜNÜR kalır (YASA 6: taranan hiçbir sembol sessizce kaybolmaz).
+#
+# ÖLÇÜLEMEYEN SEMBOL UYARI ÜRETMEZ (UYDURMA YASAĞI): arşiv yok/boş/okunamaz ya da takvim
+# okunamazsa (`_sessions()` boş frozenset) o sembol `olculemedi` listesine `neden` ile düşer —
+# `adaylar`a GİRMEZ (ölçülemeyen bir eşik aşılmış SAYILMAZ, `veri_disk_report` ile AYNI disiplin).
+#
+# KADANS: günlük tavan MEVCUT `GUNLUK_ALARM_TAVANI`/`ALARM_GUNLUK_FILE` makinesini PAYLAŞIR
+# (TSK-131 alt-işiyle TEK KAYNAK — yeni bir günlük-sayaç dosyası AÇILMADI); `_gunluk_oku()` burada
+# da module-level yardımcı olarak çağrılabilir, `_satir()`in kendisi `check_and_alarm()`in içindeki
+# closure'dır ve dışarıdan çağrılamaz (aynı "satırı bul/aç" mekaniği tekrarlanır — bu bir İŞ KURALI
+# DEĞİL, salt sözlük erişimidir; dosya/sabit tekrarlanmaz).
+#
+# JETON ALARM DEĞİL: `obs.warn("SEMBOL_OLU_ADAY", ...)` — `NOTIFY_TOKENS`e girmez, operatörün
+# telefonuna düşmez (bildirim zinciri yalnız `obs.alarm`ı tetikler). Bilinçli: emeklilik kararı
+# operatörün olduğu gibi, "bak" demenin kendisi de bir alarm SEVİYESİNDE aciliyet taşımaz —
+# `RETIRED_SYMBOLS`a insan taşımadan önce sembol zaten haftalarca "aday" olarak durabilir.
+#
+# OKUYUCU (YASA 6): (1) günlük sayaç — `api._alarm_gunluk()` `mekanizmalar` sözlüğünün HERHANGİ
+# bir anahtarını genel biçimde okur (yeni okuyucu YAZILMADI, TSK-131 ile PAYLAŞILAN aynı defter);
+# (2) olay defteri — `ops/bekci_tarama.py::tara()` `state/events.jsonl`ı OLAY ADINA göre genel
+# biçimde gruplar (ÖLÇÜLDÜ: `level`/jeton süzgeci YOK, `_kanonik()` liste/sözlük alanları sıralı
+# JSON'a çevirip hash'ler) — yeni bir olay adı (`SEMBOL_OLU_ADAY`) taramaya OTOMATİK girer, ekstra
+# iş YOK. Kalıcı-değişmeyen bir ölü-isim listesi günlük mandaldan sonra bile AYNI imzayla tekrar
+# ederse (≥5 gün) `_takili_tara` bunu "takılı" sınıfına koyar — bu bir HATA DEĞİL, tam da istenen:
+# operatör kararı vermeden aynı bulgu sessizce KAYBOLMAZ.
+# RUNBOOK'A GİRMEZ (ÖLÇÜLDÜ): `ops/runbook_uret.py::alarm_envanteri()` YALNIZ `meridian/obs.py`
+# içindeki `ALARM_*` sabitlerini regex'le tarar (`^(ALARM_[A-Z_0-9]+)\s*=\s*"..."`); bu jeton bir
+# ALARM_ sabiti DEĞİL (bilinçli — yukarı bkz.), yani RUNBOOK üreticisinin kapsamı DIŞINDA kalır ve
+# bu DOĞRU sonuçtur (RUNBOOK bir "alarm çözümü" defteridir, warn defteri değil).
+# =============================================================================================
+
+OLU_ISIM_SEANS_ESIGI = 5   # 5 geçerli (XNYS) seans ard arda YENİ bar yok → aday. Bir haftalık
+                           # seans sayısına yakın (~5) seçildi: normal fetch gecikmesi (hafta sonu,
+                           # tek-günlük sağlayıcı arızası) 1-2 seansı aşmaz — TSK-143 ölçümünde
+                           # canlı semboller "1 seans geride, normal" durumundaydı (2026-09-05).
+                           # EA/AVB/EQR'nin delist gününden BUGÜNE seans farkı bu eşiğin KAT KAT
+                           # üstünde (haftalar) — eşik ilk gerçek delist'i günler içinde yakalar,
+                           # tek bir uzun hafta sonu/tatilde YANLIŞ POZİTİF üretmez.
+
+_OLU_ISIM_MEK_ADI = "olu_isim_adayi"
+
+
+def _son_bar_tarihi(ticker: str) -> tuple[str | None, str | None]:
+    """Sembolün YEREL bar arşivindeki (`data._cache_path`) EN SON tarih (`YYYY-MM-DD`) + varsa
+    ÖLÇÜLEMEDİ nedeni. AĞA ÇIKMAZ — yalnız disk CSV'sini okur; `load_bars`in aksine bayat/eksik
+    arşivi YENİDEN ÇEKMEYE ÇALIŞMAZ (bu sensör salt-okunur bir gözlemdir).
+
+    Dönen: `(tarih, None)` ya da `(None, neden)` — UYDURMA YASAĞI: arşiv yoksa/boşsa/okunamazsa
+    tarih UYDURULMAZ, nedeni taşıyan `None` döner."""
+    from .adapters import data as _data
+    cp = _data._cache_path(ticker)
+    if not cp.exists():
+        return None, f"{ticker}: yerel bar arşivi yok ({cp.name})"
+    try:
+        import pandas as _pd
+        df = _pd.read_csv(cp, usecols=["date"], parse_dates=["date"])
+    except Exception as e:  # sessiz-yutma: bu sembolün YALNIZ kendi ölçümü düşer — çağıran `olculemedi` listesine nedeniyle yazar, döngünün kalanını ASLA düşüremez
+        return None, f"{ticker}: arşiv okunamadı — {type(e).__name__}: {e}"
+    if df.empty:
+        return None, f"{ticker}: arşiv boş ({cp.name})"
+    return str(df["date"].max().date()), None
+
+
+def _seans_farki(sirali_seanslar: list[str], son_bar: str, bugun: str) -> int:
+    """`(son_bar, bugun]` aralığındaki GEÇERLİ (XNYS) seans sayısı — ikili aramayla (`bisect`).
+    Hafta sonu/tam tatil bu aralıkta HİÇ elemanı olmayan bir takvim günüdür, yani kendiliğinden
+    SAYILMAZ (naif takvim-günü farkının aksine — bkz. bölüm başlığı örneği: Cuma→Pazartesi = 1
+    seans, 3 takvim günü DEĞİL). `sirali_seanslar` ÇAĞIRAN tarafından SIRALANMIŞ verilir: aynı
+    listeyi evrendeki HER sembol için yeniden sıralamak (~260× `sorted()`) gereksiz iştir."""
+    lo = bisect.bisect_right(sirali_seanslar, son_bar)
+    hi = bisect.bisect_right(sirali_seanslar, bugun)
+    return max(0, hi - lo)
+
+
+def olu_isim_adaylari() -> dict:
+    """`{adaylar, zaten_emekli, olculemedi, esik, n_tarandi, bugun, takvim_var}` — bölüm başlığının
+    tam sözleşmesi. `adaylar`/`zaten_emekli` elemanı: `{ticker, son_bar, seans_farki}`;
+    `olculemedi` elemanı: `{ticker, neden}` (UYDURMA YASAĞI — ölçülemeyen sembol hakkında hüküm
+    YOK, ne aday ne temiz).
+
+    TAKVİM OKUNAMAZSA (`_sessions()` boş frozenset — `_CAL_FAILED`, bkz. `data.py` fail-open
+    şerhi): HİÇBİR sembol için seans farkı hesaplanamaz, hepsi `olculemedi`ye düşer ve
+    `takvim_var=False` döner — bu bir DARALMA değil dürüst bir hükümsüzlüktür (veri arşivi VAR ama
+    'kaç seans geçti' sorusu cevapsızdır)."""
+    from .adapters import data as _data
+    bugun = _bugun()
+    evren = sorted(set(_data.LIVE_UNIVERSE) | set(_data.REPLAY_UNIVERSE)
+                   | set(_data.RETIRED_SYMBOLS) | set(_data.EVREN_DISI_BEYANLI))
+    ses = _data._sessions()
+    sirali_seanslar = sorted(ses) if ses else []
+    adaylar, zaten_emekli, olculemedi = [], [], []
+    for t in evren:
+        son, neden = _son_bar_tarihi(t)
+        if son is None:
+            olculemedi.append({"ticker": t, "neden": neden})
+            continue
+        if not sirali_seanslar:
+            olculemedi.append({"ticker": t,
+                                "neden": "XNYS takvimi okunamadı — seans farkı ölçülemez "
+                                         "(bkz. data.py::_sessions fail-open şerhi)"})
+            continue
+        gap = _seans_farki(sirali_seanslar, son, bugun)
+        if gap < OLU_ISIM_SEANS_ESIGI:
+            continue
+        satir = {"ticker": t, "son_bar": son, "seans_farki": gap}
+        (zaten_emekli if t in _data.RETIRED_SYMBOLS else adaylar).append(satir)
+    adaylar.sort(key=lambda x: -x["seans_farki"])
+    zaten_emekli.sort(key=lambda x: -x["seans_farki"])
+    return {"adaylar": adaylar, "zaten_emekli": zaten_emekli, "olculemedi": olculemedi,
+            "esik": OLU_ISIM_SEANS_ESIGI, "n_tarandi": len(evren), "bugun": bugun,
+            "takvim_var": bool(sirali_seanslar)}
+
+
+def check_olu_isim_and_alarm() -> dict:
+    """Günde EN ÇOK `GUNLUK_ALARM_TAVANI` (=1) kez `SEMBOL_OLU_ADAY` WARN'ı (ALARM DEĞİL —
+    emeklilik kararı operatörün, `RETIRED_SYMBOLS` emsali). `ALARM_GUNLUK_FILE`ı `veri_disk_esigi`
+    ile PAYLAŞIR (tek kaynak — yeni dosya açılmadı). `adaylar` boşsa (yeni bulgu yok — hepsi
+    ölçülemedi/zaten emekli/eşik altı) warn YOK."""
+    from . import obs
+    rep = olu_isim_adaylari()
+    if not rep["adaylar"]:
+        return rep
+    doc = _gunluk_oku()
+    mek = doc["mekanizmalar"]
+    satir = mek.get(_OLU_ISIM_MEK_ADI)
+    if not isinstance(satir, dict):
+        satir = {}
+        mek[_OLU_ISIM_MEK_ADI] = satir
+    if int(satir.get("alarm") or 0) >= GUNLUK_ALARM_TAVANI:
+        satir["bastirilan"] = int(satir.get("bastirilan") or 0) + 1
+        store.write_json(ALARM_GUNLUK_FILE, doc)
+        return rep
+    satir["alarm"] = int(satir.get("alarm") or 0) + 1
+    satir["son_semboller"] = [a["ticker"] for a in rep["adaylar"]]
+    store.write_json(ALARM_GUNLUK_FILE, doc)
+    en_eski = rep["adaylar"][0]     # `adaylar` seans_farki'na göre AZALAN sıralı — ilk eleman EN UZUN süredir bar almayan (dolayısıyla EN ESKİ/en olgun) aday
+    obs.warn("SEMBOL_OLU_ADAY",
+             semboller=[a["ticker"] for a in rep["adaylar"]],
+             en_eski={"ticker": en_eski["ticker"], "son_bar": en_eski["son_bar"],
+                      "seans_farki": en_eski["seans_farki"]},
+             esik=OLU_ISIM_SEANS_ESIGI, n=len(rep["adaylar"]),
+             detail=f"{len(rep['adaylar'])} sembol ≥{OLU_ISIM_SEANS_ESIGI} geçerli seans boyunca "
+                    "yeni bar almadı — delist adayı olabilir; emeklilik hükmü (RETIRED_SYMBOLS) "
+                    "operatörün ELLE bakımı gerektirir, bu satır yalnız haber verir")
     return rep
