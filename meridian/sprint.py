@@ -937,11 +937,89 @@ def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> 
                       else "haftalik_taban" if gun >= SPRINT_STALE_DAYS else "taze_aday_birikimi")}
 
 
+# ==================================================================================================
+# `sprint_cadence_skip` DEFTER KESİMİ (TSK-141, 2026-09-05) — GÜNLÜK ÖZET + DEĞİŞİNCE-YAZ.
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN ARIZA (A1): kadans ~300 sn'de bir `maybe_start` çağırır ve HER `kos=False` kararında bu
+# olayı KOŞULSUZ yazıyordu — 280-284 satır/gün, ardışık çiftlerin %98,2'si `ts` hariç birebir aynı;
+# tek başına canlı defterin ~%40'ı (TSK-006 ölçümü). TEK okuyucu `ops/bekci_tarama.py` (`_takili_tara`
+# + `_duran_tara`) "her pollde bir satır" kadansına bağımlıydı — mandal TEK BAŞINA onları kırardı,
+# o yüzden okuyucu ÖNCE (bu turda) mandalın yeni şeklini öğrendi (bkz. o dosyanın başlığı).
+#
+# DESEN `api._session_refresh_ornekle` (GÜNLÜK ÖZET) ile BİRLEŞİK, iki yapısal farkla:
+#   1) ANAHTAR `sebep`DİR, IP DEĞİL — süreç TEK akışlıdır (`maybe_start` seri çağrılır, eşzamanlı
+#      sebep yoktur), yani `_SKIP_SON` pratikte tek-girişli bir sözlüktür — sözlük olması yalnız
+#      "şu an hangi sebep birikiyor" sorusunu anahtarın KENDİSİYLE (`sebep in _SKIP_SON`) cevaplar.
+#   2) DEĞİŞİNCE-YAZ EKLENDİ — session_refresh'in IP'si NADİREN değişir (aynı yoklayıcı), ama
+#      `sebep` HER pollde değişebilir (gece/gündüz, meşgul/serbest, `tetik_yok(gun=N…)` içindeki N
+#      günlük artar). "Yalnız gün dönümünde özetle" TEK BAŞINA yetmezdi: `sebep` A→B→A gibi
+#      salınırsa A'nın günlük özeti B'ye geçişte flush edilmeden asla yazılmaz, B'nin altında
+#      sessizce kaybolurdu. O yüzden sebep DEĞİŞİNCE de flush edilir, gün dönümünde de.
+#
+# SÖZLEŞME — `_skip_ozetle` üç durumdan birini döner (çağıran HER öğeyi AYRI bir `obs.log` satırı
+# yapar, OLAY ADI DEĞİŞMEZ — `sprint_cadence_skip`): (a) sebep ilk görüldü YA DA bir önceki
+# YAZIMDAN farklı → `[{"ozet": False}]` (ANINDA, mevcut tüm alanlar aynen); (b) aynı sebep aynı UTC
+# günü → `[]` (sessiz birikim, yalnız bellekte); (c) UTC günü döndü (sebep AYNI kalarak) → biriken
+# için TEK özet `[{"ozet": True, gun, sebep, toplam_n, ilk_ts, son_ts}]`; (d) sebep DEĞİŞTİ → aynı
+# özet ARTI yeninin anında satırı, İKİ öğeli liste (önce eskinin özeti, sonra yeninin açılışı).
+#
+# BEDEL BEYANI (Bedel yasası — kazanç ölçülüp bedel ölçülmezse körlüğün belirtisi hiçbir şeydir):
+#   KAZANÇ: ~280 satır/gün → EN ÇOK (farklı sebep sayısı × 2) satır/gün (her sebep "koşusu" bir
+#     anında + bir özet satırı doğurur; sebep hiç değişmezse yalnız günlük 1 özet).
+#   KAYIP 1 — GÜN-İÇİ KADANS ÇÖZÜNÜRLÜĞÜ. "Hangi pollde atlandı" artık defterden OKUNMAZ, yalnız
+#     gün toplamı (`toplam_n`) ve ilk/son damga kalır — session_refresh ile AYNI sınıf bedel.
+#   KAYIP 2 — RESTART SIFIRLAMASI. `_SKIP_SON` süreç-içidir; worker yeniden başlarsa BİRİKEN günün
+#     sayacı kaybolur (≤1 gün'lük veri) — ilk poll yine ANINDA görünür, "hiç görünmüyor" hâline
+#     düşülmez, kaybolan yalnız SAYIdır (session_refresh restart bedeliyle AYNI sınıf).
+#   KAYIP-OLMAYAN (bilerek belirtilir): İLK-GÖRÜLME GECİKMESİ YOKTUR — sebep değişince satır ANINDA
+#     düşer; session_refresh'in "yalnız günün İLK olayı ozet=False" davranışından BİLİNÇLİ bir
+#     genişleme (D1 kararı): bu olayın okuyucusu (`ops/bekci_tarama.py`) "hangi sebep ne zaman
+#     BAŞLADI/BİTTİ" sorusuna anında cevap ister, günün sonunu beklemez.
+# ==================================================================================================
+_SKIP_SON: dict[str, list] = {}
+
+
+def _skip_ozetle(sebep: str, now: float | None = None) -> list[dict]:
+    """`sprint_cadence_skip` mandalı (TSK-141) — döner: `[]` | `[{"ozet": False}]` |
+    `[{"ozet": True, "gun", "sebep", "toplam_n", "ilk_ts", "son_ts"}]` |
+    `[<özet>, {"ozet": False}]`. Gerekçe, sözleşme ve bedel beyanı ÜSTTEKİ blokta.
+
+    `now` UTC EPOCH SANİYEdir (`time.time()`) — `_session_refresh_ornekle` ile AYNI saat
+    sözleşmesi (monotonic DEĞİL, takvim günü duvar saatinden okunur). `_SKIP_SON[sebep]` kaydı:
+    `[gun, toplam_n, ilk_ts, son_ts]`; `toplam_n` ANINDA yazılan tetikleyici olayı SAYMAZ —
+    session_refresh ile AYNI korunum: o olay zaten `ozet=False` satırında görünür durumdadır."""
+    an = dt.datetime.fromtimestamp(time.time() if now is None else now,
+                                   dt.timezone.utc).isoformat(timespec="seconds")
+    gun = an[:10]
+    mevcut = next(iter(_SKIP_SON.items()), None)
+    if mevcut is None:
+        _SKIP_SON[sebep] = [gun, 0, an, an]
+        return [{"ozet": False}]
+    eski_sebep, rec = mevcut
+    if eski_sebep == sebep:
+        if rec[0] == gun:
+            rec[1] += 1
+            rec[3] = an
+            return []
+        ozet = {"ozet": True, "gun": rec[0], "sebep": eski_sebep, "toplam_n": rec[1],
+                "ilk_ts": rec[2], "son_ts": rec[3]}
+        _SKIP_SON[sebep] = [gun, 1, an, an]
+        return [ozet]
+    ozet = {"ozet": True, "gun": rec[0], "sebep": eski_sebep, "toplam_n": rec[1],
+            "ilk_ts": rec[2], "son_ts": rec[3]}
+    del _SKIP_SON[eski_sebep]
+    _SKIP_SON[sebep] = [gun, 0, an, an]
+    return [ozet, {"ozet": False}]
+
+
 def maybe_start(*, mesgul: str | None = None) -> dict:
     """OTOMATİK TETİK. Koşullar oluşmuşsa `start(auto_config())`; oluşmamışsa NEDENİ döner.
 
     Kapılardan geçemeyen bir tur SESSİZ DEĞİLDİR ama ALARM da değildir: karar defterine `info`
-    düşer, çünkü "gece değil" ile "sprint çöktü" aynı seviyede raporlanırsa ikincisi kaybolur."""
+    düşer, çünkü "gece değil" ile "sprint çöktü" aynı seviyede raporlanırsa ikincisi kaybolur.
+
+    SKIP SATIRI ARTIK MANDALLI (TSK-141): her `kos=False` kararı deftere DÜŞMEZ, `_skip_ozetle`
+    kararını verir — gerekçe/bedel `_SKIP_SON` üstündeki blokta."""
     from . import obs
     karar = should_run(mesgul=mesgul)
     # YETİM TESPİTİ OLAYLIDIR — skip'ten ÖNCE, çünkü yetim bir sprint kapılara takılıp
@@ -959,14 +1037,20 @@ def maybe_start(*, mesgul: str | None = None) -> dict:
         _YETIM_OLAYLI.add(karar["sid"])
     if not karar["kos"]:
         _ab = karar.get("arama_bayragi") or {}
-        obs.log("sprint_cadence_skip", sebep=karar["sebep"], gecen_gun=karar["gecen_gun"],
-                taze_hipotez=karar["taze_hipotez"],
-                arama_bayrak_yasi_sa=_ab.get("yas_sa"), arama_bayat=_ab.get("bayat"),
-                # `yetim` ile `yetim_tetik` AYRI alanlar: birincisi "yarıda kalmış sprint var",
-                # ikincisi "ve 12 sa fren aşıldı". Skip satırında ikisi de olmazsa "yetim=true ama
-                # neden hâlâ başlamadı?" sorusu defterden cevaplanamaz (canlı teşhis 2026-08-13).
-                yetim=karar.get("yetim") or False,
-                yetim_tetik=karar.get("yetim_tetik") or False)
+        for _yazim in _skip_ozetle(karar["sebep"]):
+            if _yazim.get("ozet"):
+                # ÖZET SATIRI — yalnız `_skip_ozetle`in döndürdüğü beş alan (D1 sözleşmesi).
+                obs.log("sprint_cadence_skip", **_yazim)
+                continue
+            obs.log("sprint_cadence_skip", sebep=karar["sebep"], gecen_gun=karar["gecen_gun"],
+                    taze_hipotez=karar["taze_hipotez"],
+                    arama_bayrak_yasi_sa=_ab.get("yas_sa"), arama_bayat=_ab.get("bayat"),
+                    # `yetim` ile `yetim_tetik` AYRI alanlar: birincisi "yarıda kalmış sprint var",
+                    # ikincisi "ve 12 sa fren aşıldı". Skip satırında ikisi de olmazsa "yetim=true ama
+                    # neden hâlâ başlamadı?" sorusu defterden cevaplanamaz (canlı teşhis 2026-08-13).
+                    yetim=karar.get("yetim") or False,
+                    yetim_tetik=karar.get("yetim_tetik") or False,
+                    ozet=False)
         return {"started": False, **karar}
     cfg = karar["cfg"]
     res = start({"budget": cfg["budget"], "k_max": cfg["k_max"]})

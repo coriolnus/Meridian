@@ -63,6 +63,14 @@ import meridian.api as _api_mod
 # kendiliğinden düşer. Bayat memo okunabilmesi için iki AYRI arşivin aynı yolda aynı mtime'ı
 # taşıması gerekirdi. Sızan tek durum sayaçtır ve kayıt onu kapatır.
 import meridian.earnings_pit as _epit_mod
+# sprint._SKIP_SON — `sprint_cadence_skip` GÜNLÜK ÖZET + DEĞİŞİNCE-YAZ mandalı (TSK-141,
+# 2026-09-05). ANAHTAR `sebep`dir (`api._REFRESH_SON`in IP anahtarından farklı) ve sözlük
+# pratikte tek-girişlidir (aynı anda en çok bir sebep birikir) — ama SINIF birebir aynı: `sebep`
+# başına aynı gün içinde İKİNCİ bir `sprint_cadence_skip` satırı YAZILMAZ, yani bu sözlüğü
+# temizlemeyen bir test SONRAKİ testin ilk skip olayını sessizce yutar (`_REFRESH_SON` dersinin
+# birebir tekrarı). İthal maliyeti: `sprint` zaten `config`/`store` dışında hafif, modül düzeyinde
+# G/Ç yapmaz.
+import meridian.sprint as _sprint_mod
 
 # (modül, öznitelik) — hepsi SÖZLÜK ve hepsi YERİNDE sıfırlanır (clear+update): yeni bir dict
 # atamak, o sözlüğe başka modüllerden tutulan referansları koparır ve sıfırlama hiçbir şeye
@@ -125,6 +133,8 @@ _MODUL_DURUMLARI = (
     # `sayac_sifirla` da YERİNDE günceller (yeni sözlük atamaz), yani bu mekanizmayla aynı
     # sözleşmededir: dışarıda tutulan referanslar kopmaz.
     (_epit_mod, "_SAYAC"),
+    # sprint._SKIP_SON — gerekçe ithal bloğunda (TSK-141, 2026-09-05).
+    (_sprint_mod, "_SKIP_SON"),
 )
 _MODUL_DURUMU0 = {f"{m.__name__}.{a}": dict(getattr(m, a)) for m, a in _MODUL_DURUMLARI}
 

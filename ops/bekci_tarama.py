@@ -138,6 +138,31 @@ DURAN_KAT = 3.0             # sessizlik, olağan aralığın bu katını AŞMALI
 DURAN_DUZENLILIK_TAVANI = 10.0   # en uzun/medyan; aşan seri RİTİM değil, serpintidir
 DURAN_GOZLEM_KAT = 3.0      # sessizlik, olayın gözlenmiş ömrünün bu katını aşarsa hüküm YOK
 
+# ---- MANDAL (TSK-141, 2026-09-05) ---------------------------------------------------------------
+# NEDEN VAR. `meridian/sprint.py::_skip_ozetle` `sprint_cadence_skip`i GÜNLÜK ÖZET +
+# DEĞİŞİNCE-YAZ mandalına aldı: yazım sıklığı ~280/gün'den EN ÇOK (farklı sebep × 2)/gün'e düştü.
+# Bu dosyanın HAM medyan-aralık yöntemi (aşağıdaki `araliklar`/`medyan`) o sıklığa göre
+# kalibrelidir — mandal sonrası aynı olay GÜNLÜK kadansa iner ve İKİ yer sessizce yanlış hüküm
+# verirdi: (1) `_takili_tara`nın `n = len(grup)` eşiği artık HAM satır değil GÜNLÜK satır sayar,
+# yani 3 günlük bir pencerede en çok birkaç kayıt olur — `_imza`nın per-alan donuk/oynak taraması
+# da anlamsızlaşır, çünkü `ozet=False` (anında) ve `ozet=True` (özet) satırları TAMAMEN FARKLI
+# alan kümeleri taşır (biri `gecen_gun`/`taze_hipotez`/…, öbürü `gun`/`toplam_n`/…) ve karışık bir
+# grup her alanı "oynak" sayıp TAKILI olması gereken durumu sessizce elerdi. (2) `_duran_tara`nın
+# medyan-aralık yöntemi eski yüksek-frekans tabanına göre kalibreli kalırsa, mandal sonrası HER
+# kayıt "kesildi" görünür (yeni medyan saatler/günlerdir, eski taban dakikalar mertebesindeydi).
+# ÇÖZÜM İKİSİNDE DE AYNI FİKİRDİR: `ozet` alanı taşıyan (mandal desenindeki) bir grup için ham
+# satır/aralık sayımı yerine GÜN VARLIĞI ölçülür — bir gün "görüldü" sayılır o gün en az bir kayıt
+# (ham/anında/özet, hepsi eşit ağırlıkta) varsa. Alan YOKLUĞU (eski, mandalsız yayım) hâlâ
+# "görüldü" sayılır — GERİYE UYUM: mandal öncesi/sonrası KARIŞIK bir pencere kırılmaz.
+# `ozet` ALANI TAŞIMAYAN gruplar (bu dosyanın BÜTÜN sentetik fikstürleri dahil) bu bloktan hiç
+# geçmez — eski davranış BİREBİR korunur, sıfır regresyon riski.
+DURAN_GUN_MIN_ORNEK = 3     # 3 farklı gün = 2 gün-aralığı; DURAN_MIN_ORNEK'in (5 ham kayıt = 4
+                            # aralık) GÜN çözünürlüğündeki en yakın karşılığı — daha azından
+                            # "günlük ritim" ÇIKARILAMAZ
+DURAN_GUN_PENCERE = 2       # "kesildi mi" sorusu SON BU KADAR GÜNE bakar: ikisi de sessizse
+                            # kesildi. 1 değil 2 — tek günlük bir sessizlik (bakım/hafta sonu)
+                            # TEK BAŞINA yanlış pozitif üretmesin diye muhafazakâr seçildi
+
 # Elenen grupların KAÇ TANESİNİN ADI kapsama yazılacağı. Sayı görünürdür ama denetlenebilir
 # olan ADdır (denetim bulgusu 10): "37 grup elendi" cümlesi, yanlış eleneni gizler.
 ELENEN_ORNEK_TAVANI = 8
@@ -478,6 +503,15 @@ def _kalem(ad, deger, ilk, son, kanit, kimlik=None):
             "kimlik": ad if kimlik is None else kimlik}
 
 
+def _ozet_mandalli_mi(grup):
+    """Bu grup TSK-141 mandalının (`sprint._skip_ozetle`) imzasını taşıyan EN AZ BİR kayıt
+    içeriyor mu? `ozet` alanı (`True` ya da `False`) yalnız mandal yayınının imzasıdır — YOKLUĞU
+    eski (mandalsız) yayım biçimidir. Karışık bir pencerede (mandal öncesi ham + sonrası özet)
+    TEK kayıt bile yeterlidir: `_takili_tara`/`_duran_tara` o gruba GÜN-bazlı yöntemi uygular ve
+    eski ham kayıtlar da (alan yokluğu nedeniyle) o yöntemde "görüldü" sayılır — geriye uyum."""
+    return any("ozet" in k.yuk for k in grup)
+
+
 def _grup_adi(olay, sebep):
     """Kalem adı sebebi TAŞIMAK ZORUNDA: aynı olayın iki sebebi iki AYRI durumdur ve tekrar
     bastırma ada göre anahtarlanır. Sebep burada zaten `_kalip`ten geçmiş KİMLİKTİR."""
@@ -487,11 +521,20 @@ def _grup_adi(olay, sebep):
 def _takili_tara(pencere, sifirlanan):
     """TAKILI sınıfı + hükmü kurulamayan gruplar + ADIYLA sayılan elemeler.
 
-    İKİ YOL, biri ötekini ezer:
+    ÜÇ YOL, biri ötekini ezer (sıradaki üçüncü, TSK-141):
       (a) SAYAÇ YOLU — grup `ardisik` taşıyorsa YAYIMCININ hükmü üstündür: o sayaç kilit
           dışındaki her dalda sıfırlandığı için "kesintisiz" bilgisi zaten kaynakta verilmiştir
           ve pencere sınırından da SAĞ ÇIKAR (bizim tekrar sayımız yalnız bir alt sınırdır).
       (b) TÜRETİLMİŞ YOL — sayaç yoksa tekrar, süre ve durağanlık defterden çıkarılır.
+      (c) MANDAL-GÜN YOLU — grup `_ozet_mandalli_mi` ile TSK-141 mandalının (`ozet` alanı)
+          imzasını taşıyorsa: `ozet=False` (anında) ve `ozet=True` (özet) satırları TAMAMEN
+          FARKLI alan kümeleri taşır (biri `gecen_gun`/`taze_hipotez`/…, öbürü
+          `gun`/`toplam_n`/…), yani (b) yolunun `_imza`ya dayalı donuk/oynak taraması bu grupta
+          HER alanı "oynak" sayıp durumu sessizce elerdi (alanların VARLIĞI bile satır tipine göre
+          değişir). Bu yol `_imza`yı hükme KARIŞTIRMAZ: "tekrar" HAM satır değil GÜN VARLIĞIdır —
+          bir gün "görüldü" sayılır o gün en az bir kayıt (ham/anında/özet) varsa (eski ham
+          satırlar `ozet` alanı taşımadığı için de "görüldü" sayılır — geriye uyum, mandal
+          öncesi/sonrası KARIŞIK pencere kırılmaz). Gerekçe modül başlığındaki TSK-141 bloğunda.
 
     HÜKMÜ KURULAMAYAN GRUP SESSİZCE DÜŞMEZ: eşikleri geçmiş ama tek bir durağan alanı olmayan
     grup için "değeri değişmiyor" BOŞ BİR DOĞRUdur. Takılı saymak durağanlığı UYDURMAK, sessizce
@@ -524,6 +567,11 @@ def _takili_tara(pencere, sifirlanan):
         grup.sort(key=lambda k: (k.an, k.satir))
         n = len(grup)
         sure_saat = (grup[-1].an - grup[0].an).total_seconds() / 3600.0
+        mandalli = _ozet_mandalli_mi(grup)
+        # GÜN SAYISI — TSK-141 MANDAL-GÜN YOLUNUN "tekrar"I. Mandalsız gruplarda `n`ye EŞİTTİR
+        # (her kayıt zaten ayrı bir "ham tekrar"dır), yani eşik karşılaştırması aşağıda TEK
+        # değişkenle (`gun_sayisi`) yapılabilir ve mandalsız yol BİREBİR eskisi gibi davranır.
+        gun_sayisi = len({k.an.date() for k in grup}) if mandalli else n
         donuk, gecis, kertik, serbest, oynak = _imza(grup, sifirlanan)
         sayac = _sayac(grup)
         ad = _grup_adi(olay, sebep)
@@ -537,6 +585,11 @@ def _takili_tara(pencere, sifirlanan):
             "kertik_alanlar": kertik, "mandal_alanlar": gecis,
             "ilk_satir": grup[0].satir, "son_satir": grup[-1].satir,
         }
+        if mandalli:
+            # `_imza`nın "mandal_alanlar" (GEÇİŞ sınıfı — bir alanın BİR KEZ dönüp donması)
+            # BAŞKA bir kavramdır; burada "mandal" TSK-141'in yazım kısıtlayıcısıdır. İkisi
+            # `ortak["gun_sayisi"]` ile ayrışır: bu alan yalnız BU yolda görünür.
+            ortak["gun_sayisi"] = gun_sayisi
         # `deger` YALNIZ DONUK ALANLARDAN (dal denetimi M4 — gerekçe ve ölçüm `_imza`da):
         # pencere içinde kıpırdamış bir alan durağanlığın kimliği olamaz. Mandal `kanit`te.
         kimlik = f"durum:{ad}"
@@ -558,6 +611,18 @@ def _takili_tara(pencere, sifirlanan):
                                   "not": ("kesintisizlik hükmü YAYIMCININ sayacından gelir; "
                                           "sayaç kilit dışındaki her dalda sıfırlanır")},
                                  kimlik=kimlik))
+            continue
+
+        if mandalli:
+            # MANDAL-GÜN YOLU (c): `_imza`nın oynak/donuk taramasına HİÇ BAKMAZ — sebep zaten
+            # GRUPLAMA ANAHTARIdır (aynı sebep = aynı durum kimliği), `_imza`nın kanıtladığı şey
+            # burada gruplamanın KENDİSİNDE zaten var. Hüküm yalnız GÜN SAYISI + SÜREdir.
+            if gun_sayisi < TAKILI_MIN_TEKRAR or sure_saat < TAKILI_MIN_SURE_SAAT:
+                esik_alti.append(ad)
+                continue
+            takili.append(_kalem(
+                ad, {"gun_sayisi": gun_sayisi}, grup[0].ham_ts, grup[-1].ham_ts,
+                {**ortak, "kaynak": "ozet_mandali", "oynak_alanlar": oynak}, kimlik=kimlik))
             continue
 
         if n < TAKILI_MIN_TEKRAR or sure_saat < TAKILI_MIN_SURE_SAAT:
@@ -595,8 +660,36 @@ def _takili_tara(pencere, sifirlanan):
         "oynak_deger_ornek": sorted(oynak_deger)[:ELENEN_ORNEK_TAVANI]}
 
 
+def _gun_bazli_durus(grup, simdi):
+    """TSK-141 MANDALI yayan bir olay akışı için 'kesildi mi' hükmü — `_duran_tara`nın HAM
+    medyan-aralık yönteminin YERİNE geçer (gerekçe modül başlığındaki TSK-141 bloğu ve
+    `_duran_tara` docstring'i): mandal sonrası günlük kadansa inen bir olayın medyanı eski
+    yüksek-frekans tabanına göre kalibreli kalırsa HER kayıt 'kesildi' görünürdü.
+
+    Üç sonuçtan biri döner — `(hüküm, ayrıntı)`:
+      * `("olculemedi", …)`  — ritmi KURACAK kadar farklı gün yok (< `DURAN_GUN_MIN_ORNEK`).
+      * `("akiyor", …)`      — son `DURAN_GUN_PENCERE` günün HEPSİNDE en az bir kayıt var.
+      * `("kesildi", …)`     — o pencerede EN AZ BİR gün hiç kayıt görmedi."""
+    gunler = sorted({k.an.date() for k in grup})
+    if len(gunler) < DURAN_GUN_MIN_ORNEK:
+        return "olculemedi", {"gun_sayisi": len(gunler), "gerekli_gun": DURAN_GUN_MIN_ORNEK}
+    gorulen = set(gunler)
+    pencere_gunleri = [simdi.date() - dt.timedelta(days=i) for i in range(DURAN_GUN_PENCERE)]
+    eksik = sorted(g.isoformat() for g in pencere_gunleri if g not in gorulen)
+    if eksik:
+        return "kesildi", {"eksik_gunler": eksik, "pencere_gun": DURAN_GUN_PENCERE,
+                            "gun_sayisi": len(gunler)}
+    return "akiyor", {"pencere_gun": DURAN_GUN_PENCERE, "gun_sayisi": len(gunler)}
+
+
 def _duran_tara(pencere, simdi):
     """DURAN sınıfı: geçmişte DÜZENLİ tekrarlayan bir olay ARTIK GELMİYOR.
+
+    TSK-141 EKİ (2026-09-05): `ozet` alanı taşıyan (mandal desenindeki) bir olay grubu bu HAM
+    medyan-aralık yöntemine hiç GİRMEZ — `_gun_bazli_durus`e yönlenir. Gerekçe: mandal yazım
+    sıklığını günlük kadansa indirir; eski yüksek-frekans medyanına göre kalibreli bir yöntem bu
+    geçişte HER kaydı 'kesildi' görürdü (yanlış pozitif). `ozet` taşımayan gruplar (bu dosyanın
+    kalan BÜTÜN yolları) BİREBİR aşağıdaki algoritmayı kullanmaya devam eder.
 
     KURAL, DEFTERİN KENDİ ŞEKLİNDEN — beklenen olayların elle yazılmış bir listesinden DEĞİL
     (öyle bir liste, tam da yokluğu görülmesi gereken yeni olayı içermezdi):
@@ -653,6 +746,29 @@ def _duran_tara(pencere, simdi):
         grup.sort(key=lambda k: (k.an, k.satir))
         if len(grup) < DURAN_MIN_ORNEK:
             ornek_kitligi.append(olay)
+            continue
+        if _ozet_mandalli_mi(grup):
+            hukum, ayrinti = _gun_bazli_durus(grup, simdi)
+            if hukum == "olculemedi":
+                olculemez.append(_kalem(
+                    f"{olay} (kadans_olculemedi)", None, grup[0].ham_ts, grup[-1].ham_ts,
+                    kimlik=f"kadans:{olay}", kanit={
+                        "neden": "kadans_olculemedi", "adet": len(grup), "olay": olay,
+                        "alt_neden": "gun_ornegi_yetersiz", **ayrinti,
+                        "aciklama": ("TSK-141 mandalı yayınlayan olay — GÜN bazlı ritmi kuracak "
+                                     "kadar farklı gün yok; ham medyan-aralık yöntemi mandal "
+                                     "geçişinde yanlış pozitif ürettiği için burada KULLANILMAZ")}))
+                continue
+            if hukum == "akiyor":
+                continue
+            sessizlik = (simdi - grup[-1].an).total_seconds() / 3600.0
+            duran.append(_kalem(
+                olay, {"durum": "sessiz"}, grup[0].ham_ts, grup[-1].ham_ts,
+                {"olay": olay, "neden": "duran", "ornek": len(grup), "kaynak": "gun_bazli",
+                 "sessizlik_saat": round(sessizlik, 3), **ayrinti, "son_satir": grup[-1].satir,
+                 "not": ("TSK-141 mandalı yayınlayan olay: son pencere GÜNLERİNİN en az biri hiç "
+                         "satır görmedi — ham medyan-aralık yerine GÜN varlığıyla ölçüldü")},
+                kimlik=f"kadans:{olay}"))
             continue
         araliklar = [(b.an - a.an).total_seconds() / 3600.0 for a, b in zip(grup, grup[1:])]
         medyan = statistics.median(araliklar)
