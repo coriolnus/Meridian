@@ -2589,3 +2589,11 @@ alanlardan (`last_learn.ts`) — sahte pozitif. TSK-060: soru kümesi 09-01'de z
 **TSK-154 (95d5be5) + suite #26 (10438/1 — v217 p95 flake, seri yeşil) → push → DAĞITIM #18.** Hayalet boş satır kök nedeni `row.get(None)`; warn + changes_kaynak + as_of PIT beyanı; alternatif kaynak Wikipedia 'Historical components' → TSK-156 (kart-önce).
 
 **DAĞITIM #18 (222bb18, 15:25:11Z):** TSK-154 canlı (hayalet satır yazımı durur, warn). EDG-2026-075 ön-kayıt (TSK-156: Historical components PIT kaynağı; K1 10 bilinen olay, K2 as_of yeniden kurulum, PK sentetik satır). Bugün 3 dağıtım (#16/#17/#18), 14 kalem kapandı.
+
+**15:46Z — zamanlayıcı sorusu · K2 sunucuya · ücretsiz hat:** operatör "neden hâlâ zamanlayıcılar, hafta sonu gerekli mi" → ölçüm:
+OpenRouter `X-RateLimit-Remaining: 0`, reset 2026-09-06 00:00:00Z (hesap 4,80 $ kullanımlı, ama ücretsiz-model RPD 1000 hesap-geneli);
+zamanlayıcıların gerekçesi hafta sonu değil kota — kanary/sonda/r3 kota taze olmadan anlamsız. Saatlik Monitor uyanışı iptal; K1→K2 karar
+kuralı A1'e gömüldü (`k2_pilot.sh`, gece-k2-pilot 05:35Z; K1_YESIL/OLCULEMEDI_429/K1_KALDI üç hüküm, yalnız yeşilde POST /mental-models;
+alan adları openapi'den doğrulandı). Zincir tamamen sunucuda: 00:02 kanary → 00:03 sonda → 00:05 r3 → 05:00 kurtar → 05:35 k2. Operatör
+"ücretsiz devam et": hindsight `nemotron-3-ultra-550b-a55b:free`, sonda `openrouter/free` — ücretli model yok. Açık: EDG-075 ölçüm kodu
+ajanı (worktree) uçuşta; sabah okuma: kanary/sonda/r3/kurtar/k2 çıktıları → EDG-074 K1 hükmü, TSK-144/145/095(b).

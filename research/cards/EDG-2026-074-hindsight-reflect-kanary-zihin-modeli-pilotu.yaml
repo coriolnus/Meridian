@@ -69,3 +69,13 @@ notlar: >
   kurtar timer'ı 05:00Z aynı saniyede — pilot POST'u 05:00Z'den ÖNCE atılırsa ilk refresh kurtar dalgasıyla
   çakışır; Rol-1 K2'yi 05:30Z sonrası ya da cron'u 04:30Z alarak açar (kartta cron sabit: "0 5 * * *"; ilk tetik
   gecikmeli ölçülür, sayılır). Okuyucu sorusu (Hafıza sayfası mı bot recall mı) kartın başarı tanımına girdi.
+  YÜRÜTME 15:46Z (Rol-1, 2026-09-05): K1→K2 karar kuralı A1 betiğine gömüldü — /home/ubuntu/gece-20260906/k2_pilot.sh,
+  transient timer gece-k2-pilot 2026-09-06 05:35Z (kurtar 05:00Z'den SONRA, cron "0 5 * * *" ilk tetiği 09-07'de).
+  Betik: kanary_reflect_1..3.code == 200 ∧ trace.tool_calls ≥ 1 ∧ text ≠ boş → K1_YESIL (k1_hukum.json); herhangi
+  bir denemede 429 → OLCULEMEDI_429 (POST yok, K harcanmaz); aksi K1_KALDI (POST yok). K1_YESIL'de tek POST
+  /mental-models {name: meridian-tekrarlanan-dersler, trigger delta / "0 5 * * *" / 82800 s / keep_trace} →
+  k2_pilot.code + k2_pilot_cevap.json (mental_model_id, operation_id). Rol-1 sabah okur; hüküm bu karta o turda işlenir.
+  Alan adları /openapi.json'dan doğrulandı (ReflectResponse.text, ReflectTrace.tool_calls; CreateMentalModelResponse).
+  Operatör sorusu (15:3xZ) "zamanlayıcı hafta sonu gerekli mi": gerekçe piyasa değil KOTA — X-RateLimit-Remaining 0,
+  reset 1788652800 = 2026-09-06 00:00:00Z ölçüldü; kanary kota tazeyken koşmak zorunda. Ücretsiz hat sabit
+  (operatör 15:4xZ: "ücretsiz devam et"): hindsight modeli :free, sonda openrouter/free.
