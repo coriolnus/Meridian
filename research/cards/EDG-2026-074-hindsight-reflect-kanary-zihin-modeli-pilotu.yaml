@@ -79,3 +79,9 @@ notlar: >
   Operatör sorusu (15:3xZ) "zamanlayıcı hafta sonu gerekli mi": gerekçe piyasa değil KOTA — X-RateLimit-Remaining 0,
   reset 1788652800 = 2026-09-06 00:00:00Z ölçüldü; kanary kota tazeyken koşmak zorunda. Ücretsiz hat sabit
   (operatör 15:4xZ: "ücretsiz devam et"): hindsight modeli :free, sonda openrouter/free.
+  DÜZELTME 15:49Z (ölçüm, 4 çağrı): 1000 RPD kovası ("free-models-per-day-high-balance") HESAP-GENELİ DEĞİL —
+  nemotron-3-ultra:free 429 (limit 1000 / remaining 0 / reset 2026-09-06 00:00Z) iken minimax/minimax-m3:free doğrudan
+  ve openrouter/free router'ı (→ minimax) 200, ratelimit başlığı yok; llama-3.3-70b:free 404 (ücretsiz sürümü yok).
+  Sonuç: kanary/r3 (Hindsight = nemotron) 00:00Z'yi beklemek ZORUNDA; sonda (router) beklemek zorunda değildi →
+  erken koşum 15:5xZ'de atıldı (sonda_free_erken*), 00:03Z timer ikinci örnek olarak kalır. Model değişikliği bu
+  kartta yok (EDG-067 künye şartı: yeni kart).

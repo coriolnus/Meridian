@@ -5,7 +5,7 @@
 # (Effective Date / Added / Removed / Reason sütunları; 2026-09-05 keşfinde Ağustos 2026'ya kadar güncel görüldü).
 
 card_id: EDG-2026-075
-status: registered   # 2026-09-05 Rol-1 — ön-kayıt; ölçüm kodu KOVA B dilimi olarak sonra (TSK-156)
+status: measured_partial   # 2026-09-05 Rol-1 — K1 KALDI (kart-veri hatası sınıfı, 7/14), K2 GEÇTİ, PK tuttu; yeni kart (EDG-076) doğrulanmış olay kümesiyle
 family: evren_pit
 on_kayit: 2026-09-05
 ref: [TSK-156, TSK-154, TSK-143, TSK-066, EDG-2026-062]
@@ -60,3 +60,28 @@ notlar: >
   Girdi kimliği: oldid + sayfa HTML'inin sha256'sı sonuç dosyasına yazılır (çalışma ağacına değil içerik-adresli).
   Wikipedia'nın kendi 'Reason' sütunu emeklilik sınıfı (birleşme/take-private/endeksten çıkış) için TSK-143'ün
   EVREN_DISI_BEYANLI nedenlerine kaynak olabilir — ayrı iş.
+
+hukum_2026_09_05: >
+  (15:59Z Rol-1) GİRDİ: Wikipedia oldid 1370891103, html sha256 9909032c1f815a01…dcd2871 (research/olcumler/edg075_sp500_tarihsel/
+  ham/, .gitignore; sonuc_2026-09-05.json depoda). Betiğin `--cek` yolu bu ağda KAPALI: httpx → HTTP 403 "Please respect our
+  robot policy" (aynı User-Agent ile curl 200 — UA değil istemci parmak izi); ham HTML curl ile çekilip `--girdi` ile verildi,
+  oldid gövdedeki wgRevisionId ile doğrulandı. Güncel liste: A1 state/sp500_constituents.json (as_of 2026-09-04, wikipedia, 503).
+  ADIM-0 geçerli: 2 tablo, hedef tablo 7 sütun eşleşti (Effective Date/Added/Removed/Reason/Refs, MultiIndex düzleştirildi),
+  407 satır / 0 hayalet / 0 tarih ayrıştırılamadı; pencere 2020-01-01→ 136 satır.
+  K1 KALDI — 7/14 tam (kart 'olcum_plani' 10 olay demişti; prose 14 ayrık olgu — sayım hatası). Ayrışım: 7 tam (EA↓ FERG↑
+  2026-08-05 · AVB↓ RDDT↑ 2026-08-18 · CAG↓ 2026-06-30 · ENPH↓ 2025-09-22 · SOLV↑ 2024-04-01); 2 yeniden-adlandırma
+  (EQR→VMRK 2026-08-18: tabloda satır DEĞİL — Reason "Equity Residential (now Vivmark Residential) acquired AvalonBay";
+  güncel listede EQR yok/VMRK var → kart bunu çıkış/giriş saymıştı, KART HATASI; ama KAYNAK SINIRI da: ticker rename'ler
+  tabloda yok → PIT sembol-eşleme katmanı gerekir, aksi as_of(2026-06-01) 'VMRK' der, barlar 'EQR' altındadır); 2 tarih dışı
+  (MTCH: kart 2026-03-09, tablo 2026-03-23 [VRT↔MTCH] · VFC: kart 2024-04-01, tablo 2024-04-03 — kartın tarihleri duyuru/
+  çift-olay birleştirme hatası, kaynak iç-tutarlı); 3 gelecek (BE/P/ILMN "2026-09-04" = rebalance DUYURU tarihi, yürürlük
+  sonrası; tabloda henüz yok, güncel listede de yok → tutarlı; ILMN'nin bulunan satırı 2024-06-24 çıkışı). Eşik değişmez:
+  literal 7/14 < 9/10 → KALDI; ölçümle çürüyen ölçüt yerinde düzeltilmez → EDG-076 (S&P DJI EFFECTIVE tarihli, rename'siz
+  doğrulanmış küme; AYNI oldid+sha ile, ağsız yeniden ölçüm).
+  K2 GEÇTİ — as_of(2026-09-05) == güncel liste (503, fark 0); as_of(2026-06-01) 504 → simetrik fark 11 sembol tabloyla
+  BİREBİR (AVB CAG CPB EA EPAM FERG FLEX HONA MRVL POOL RDDT).
+  PK TUTTU — sentetik ZZQ1 (2026-07-01) enjekte: K1 7→7 değişmedi, as_of(06-30) içermez / as_of(07-02) içerir (parser tabloyu
+  okuyor). SONUÇ: kaynak PIT yeniden kurulum için ELVERİŞLİ (K2+PK); TSK-156 tasarımına iki girdi: (1) constituents'e ikinci
+  kaynak olarak Historical components tablosu (oldid/sha damgalı), (2) rename eşleme katmanı. Mutasyon: tolerans 1→0 ve
+  düzleştirme kaldırma ısırdı (v420, 23). Kod: meridian/ dokunulmadı; ajan worktree ff9232e → merge 56d54e8.
+

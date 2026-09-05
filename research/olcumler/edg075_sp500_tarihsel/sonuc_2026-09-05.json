@@ -1,0 +1,294 @@
+{
+  "adim_0_fizibilite": {
+    "a_meta": {
+      "eslenen": {
+        "cikan_ad": "Removed_Security",
+        "cikan_ticker": "Removed_Ticker",
+        "eklenen_ad": "Added_Security",
+        "eklenen_ticker": "Added_Ticker",
+        "neden": "Reason_Reason",
+        "tarih": "Effective Date_Effective Date"
+      },
+      "kolonlar_ham": [
+        "Effective Date_Effective Date",
+        "Added_Ticker",
+        "Added_Security",
+        "Removed_Ticker",
+        "Removed_Security",
+        "Reason_Reason",
+        "Refs_Refs"
+      ],
+      "n_tablo": 2,
+      "tablo_index": 0
+    },
+    "a_tablo_okunuyor": true,
+    "b_oldid_ile_sabit": true,
+    "c_pencere_n": 136,
+    "c_yeterli_100_ustu": true,
+    "d_ayristirilamadi_n": 0,
+    "d_tum_tarihler_ayristi": true,
+    "gecerli": true
+  },
+  "beyan": "Bu betik yalnız ÖLÇER; hüküm Rol-1'de, AYNI turda karta + K defterine işlenir (CLAUDE.md §3/§5). meridian/*.py bu turda DEĞİŞTİRİLMEDİ, `--cek` bu ajan turunda hiç çağrılmadı (ağa çıkmadı).",
+  "degisiklikler_n_pencere": 136,
+  "esikler": {
+    "k1_gecti": "10/10 bilinen olay satırda VE tarih ±1 iş günü VE yön doğru (9/10 ise 'kısmi', <9 kaldı)",
+    "k2_gecti": "as_of(bugün) == güncel liste (fark 0) VE T1→T2 farkı tabloyla birebir (fark 0)",
+    "kart_id": "EDG-2026-075",
+    "kart_yolu": "/Users/erdemozturk/AI-Trading/research/cards/EDG-2026-075-sp500-tarihsel-bilesenler-pit-kaynagi.yaml"
+  },
+  "girdi_kimligi": {
+    "ham_yol": "research/olcumler/edg075_sp500_tarihsel/ham/1370891103_9909032c1f815a01.html",
+    "html_sha256_prefix16": "9909032c1f815a01",
+    "html_sha256_tam": "9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871",
+    "oldid": 1370891103
+  },
+  "k1_bilinen_olaylar": {
+    "detay": [
+      {
+        "beklenen_tarih": "2026-08-05",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-08-05",
+        "satir_var": true,
+        "sembol": "EA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "kart: 'EA ... çıkış'"
+      },
+      {
+        "beklenen_tarih": "2026-08-05",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-08-05",
+        "satir_var": true,
+        "sembol": "FERG",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "kart: 'FERG giriş'"
+      },
+      {
+        "beklenen_tarih": "2026-08-18",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-08-18",
+        "satir_var": true,
+        "sembol": "AVB",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "kart: 'AVB+EQR ... çıkış'"
+      },
+      {
+        "beklenen_tarih": "2026-08-18",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": null,
+        "satir_var": false,
+        "sembol": "EQR",
+        "tarih_tolerans_icinde": false,
+        "yon_dogru": false,
+        "yon_kaynak": "kart: 'AVB+EQR ... çıkış'"
+      },
+      {
+        "beklenen_tarih": "2026-08-18",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-08-18",
+        "satir_var": true,
+        "sembol": "RDDT",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "kart: '.../RDDT+VMRK' (giriş, çıkış/giriş çiftinin ikinci yarısı)"
+      },
+      {
+        "beklenen_tarih": "2026-08-18",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": null,
+        "satir_var": false,
+        "sembol": "VMRK",
+        "tarih_tolerans_icinde": false,
+        "yon_dogru": false,
+        "yon_kaynak": "kart: '.../RDDT+VMRK' (giriş, aynen)"
+      },
+      {
+        "beklenen_tarih": "2026-06-30",
+        "beklenen_yon": null,
+        "bulunan_tarih": "2026-06-30",
+        "satir_var": true,
+        "sembol": "CAG",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": null,
+        "yon_kaynak": "kartta belirtilmedi (tek başına anılmış)"
+      },
+      {
+        "beklenen_tarih": "2026-03-09",
+        "beklenen_yon": null,
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "MTCH",
+        "tarih_tolerans_icinde": false,
+        "yon_dogru": null,
+        "yon_kaynak": "kartta belirtilmedi (tek başına anılmış)"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": null,
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "ENPH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": null,
+        "yon_kaynak": "kartta belirtilmedi (tek başına anılmış)"
+      },
+      {
+        "beklenen_tarih": "2024-04-01",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-04-03",
+        "satir_var": true,
+        "sembol": "VFC",
+        "tarih_tolerans_icinde": false,
+        "yon_dogru": true,
+        "yon_kaynak": "kart: 'VFC .../SOLV' (çıkış/giriş çiftinin ilk yarısı)"
+      },
+      {
+        "beklenen_tarih": "2024-04-01",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-04-01",
+        "satir_var": true,
+        "sembol": "SOLV",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "kart: 'VFC .../SOLV' (giriş, aynen)"
+      },
+      {
+        "beklenen_tarih": "2026-09-04",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": null,
+        "satir_var": false,
+        "sembol": "BE",
+        "tarih_tolerans_icinde": false,
+        "yon_dogru": false,
+        "yon_kaynak": "kart: 'BE/P/ILMN girişleri'"
+      },
+      {
+        "beklenen_tarih": "2026-09-04",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": null,
+        "satir_var": false,
+        "sembol": "P",
+        "tarih_tolerans_icinde": false,
+        "yon_dogru": false,
+        "yon_kaynak": "kart: 'BE/P/ILMN girişleri'"
+      },
+      {
+        "beklenen_tarih": "2026-09-04",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "ILMN",
+        "tarih_tolerans_icinde": false,
+        "yon_dogru": false,
+        "yon_kaynak": "kart: 'BE/P/ILMN girişleri'"
+      }
+    ],
+    "kart_beyan_n": 10,
+    "n_tam_gecti": 7,
+    "olculen_n": 14,
+    "sayim_notu": "kart 'olcum_plani' 10 olay der; bu betik kart prose'undan 14 ayrık (sembol,yön,tarih) olgusu türetti (modül başlığı K1 bölümü) — SAYI UYUŞMAZLIĞI Rol-1'e açık kalem, betik 10'a ZORLAMADI",
+    "tolerans_gun": 1
+  },
+  "k2_as_of_yeniden_kurulum": {
+    "as_of_bugun_esit_mi": true,
+    "as_of_bugun_n": 503,
+    "as_of_t1_n": 504,
+    "as_of_t2_n": 503,
+    "beklenen_fark": [
+      "AVB",
+      "CAG",
+      "CPB",
+      "EA",
+      "EPAM",
+      "FERG",
+      "FLEX",
+      "HONA",
+      "MRVL",
+      "POOL",
+      "RDDT"
+    ],
+    "calisti": true,
+    "guncel_liste_n": 503,
+    "simetrik_fark": [
+      "AVB",
+      "CAG",
+      "CPB",
+      "EA",
+      "EPAM",
+      "FERG",
+      "FLEX",
+      "HONA",
+      "MRVL",
+      "POOL",
+      "RDDT"
+    ],
+    "simetrik_fark_birebir_mi": true,
+    "t1": "2026-06-01",
+    "t2": "2026-09-05"
+  },
+  "kart": "EDG-2026-075",
+  "olcum_zamani": "2026-09-05T15:56:00+00:00",
+  "pozitif_kontrol": {
+    "as_of_once_tarih": "2026-06-30",
+    "as_of_sonra_tarih": "2026-07-02",
+    "enjekte_meta": {
+      "eslenen": {
+        "cikan_ad": "Removed_Security",
+        "cikan_ticker": "Removed_Ticker",
+        "eklenen_ad": "Added_Security",
+        "eklenen_ticker": "Added_Ticker",
+        "neden": "Reason_Reason",
+        "tarih": "Effective Date_Effective Date"
+      },
+      "kolonlar_ham": [
+        "Effective Date_Effective Date",
+        "Added_Ticker",
+        "Added_Security",
+        "Removed_Ticker",
+        "Removed_Security",
+        "Reason_Reason",
+        "Refs_Refs"
+      ],
+      "n_hayalet_atlanan": 0,
+      "n_satir_gecerli": 408,
+      "n_satir_ham": 408,
+      "n_tablo": 2,
+      "n_tarih_ayristirilamadi": 0,
+      "tablo_index": 0
+    },
+    "k1_degismedi": true,
+    "k1_n_tam_gecti_once": 7,
+    "k1_n_tam_gecti_sonra": 7,
+    "pk_sembol_as_of_once_icermez_mi": true,
+    "pk_sembol_as_of_sonra_icerir_mi": true,
+    "tuttu": true
+  },
+  "tablo_meta": {
+    "eslenen": {
+      "cikan_ad": "Removed_Security",
+      "cikan_ticker": "Removed_Ticker",
+      "eklenen_ad": "Added_Security",
+      "eklenen_ticker": "Added_Ticker",
+      "neden": "Reason_Reason",
+      "tarih": "Effective Date_Effective Date"
+    },
+    "kolonlar_ham": [
+      "Effective Date_Effective Date",
+      "Added_Ticker",
+      "Added_Security",
+      "Removed_Ticker",
+      "Removed_Security",
+      "Reason_Reason",
+      "Refs_Refs"
+    ],
+    "n_hayalet_atlanan": 0,
+    "n_satir_gecerli": 407,
+    "n_satir_ham": 407,
+    "n_tablo": 2,
+    "n_tarih_ayristirilamadi": 0,
+    "tablo_index": 0
+  }
+}

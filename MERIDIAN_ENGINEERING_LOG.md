@@ -2597,3 +2597,19 @@ kuralı A1'e gömüldü (`k2_pilot.sh`, gece-k2-pilot 05:35Z; K1_YESIL/OLCULEMED
 alan adları openapi'den doğrulandı). Zincir tamamen sunucuda: 00:02 kanary → 00:03 sonda → 00:05 r3 → 05:00 kurtar → 05:35 k2. Operatör
 "ücretsiz devam et": hindsight `nemotron-3-ultra-550b-a55b:free`, sonda `openrouter/free` — ücretli model yok. Açık: EDG-075 ölçüm kodu
 ajanı (worktree) uçuşta; sabah okuma: kanary/sonda/r3/kurtar/k2 çıktıları → EDG-074 K1 hükmü, TSK-144/145/095(b).
+
+**15:49Z — operatör: "kotanın dolduğunu gerçekten ölçtün mü, 1000 varsayımı mı?" → ölçüm (4 küçük çağrı, anahtar basılmadı):**
+nemotron-3-ultra:free 429 `x-ratelimit-limit 1000 · remaining 0 · reset 2026-09-06 00:00:00Z` (ÖLÇÜLDÜ); ama minimax-m3:free ve
+`openrouter/free` router'ı 200 (ratelimit başlığı yok), llama-3.3-70b:free 404. DÜZELTME: yukarıdaki "hesap-geneli 1000 RPD" ifadesi
+YANLIŞ — kova model(sınıf)-bazlı; hesap ücretsiz katman değil (`is_free_tier False`, usage 4,80 $, usage_daily 0). Sonuç: Hindsight
+(nemotron) zinciri 00:00Z'yi beklemek zorunda, router sondası değil → sonda erken koşuldu (`sonda_free_erken*`), 00:03Z ikinci örnek.
+Hafıza `llm-cagri-kotasi` düzeltildi. TSK-020 UYGULA-4 (kalıcı-önbellek envanteri) A1'de ölçüldü: `*_cache.json` sınıfı fiilen BOŞ —
+yalnız `wf_cache_rev.json` (23 B, bar-revizyon damgası; yoksa `rev 0` varsayılanı zararsız), `inc_cache`/`probe_cache` 2026-08-03'ten beri
+yok (yalnız kilit dosyaları; codelaw DECLARED_SINKS beyanlı) → restart-sonrası gerekli kalıcı önbellek YOK, kalem ölçümle kapanır.
+
+**15:59Z — EDG-2026-075 ölçüldü (TSK-156):** ajan worktree (ff9232e, 23 çivi + 2 mutasyon) → merge 56d54e8; v420/v279/v382 82 yeşil, codelaw çürük
+çapa 0. `--cek` httpx → Wikimedia 403 robot-policy (aynı UA curl 200 → istemci parmak izi; constituents.py başlığındaki "bu kurulumda kapalı"
+notunun kök nedeni bu) → ham HTML curl ile oldid 1370891103 sabitlenerek içerik-adresli kaydedildi, `--olc --girdi`. HÜKÜM: K2 GEÇTİ (as_of
+fark 0; 06-01→09-05 simetrik fark 11 sembol birebir), PK tuttu, K1 KALDI 7/14 — kartın olay kümesi hatalıydı (EQR→VMRK rename giriş/çıkış
+sayılmış; MTCH/VFC duyuru≠yürürlük; BE/P/ILMN 09-04 duyuru) + gerçek kaynak sınırı: rename satırı yok → sembol-eşleme katmanı. Eşik yerinde
+düzeltilmedi → EDG-076 (doğrulanmış küme, aynı oldid). Kart measured_partial, README, TSK-156 ACTIVE. TSK-095: kova model-bazlı düzeltmesi.
