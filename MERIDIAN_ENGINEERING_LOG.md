@@ -2485,3 +2485,16 @@ kalabalık `sprint_cadence_skip` %40 + `intraday_gap_detected` %32 → TSK-141. 
 **TSK-125 beyanla kapandı:** Hindsight konsolidasyonu zihin modeli üretmez, tanımlı modeli tazeler; tanım 0 → sayfa 0 beklenen. 09-03 "404"
 yol hatasıydı (/knowledge-base/* 200). Konsolidasyon çalışıyor (71 op, 1026 olgu bekliyor, 15×429/24 sa, bir op 1564 s STUCK? — kota mı takılma
 mı ölçülmedi). Kodsuz pilot (1 model, delta, gece cron, 7 gün sayım) → TSK-142 operatör masasına; ön şart reflect canary kaydı yok.
+
+**TSK-138 (c23a6a7) + TSK-141 (36e5c87) + suite #21:** 138 — denetçi istemine VERİ bölgeleri (ilk_istem'den regex, +%25 karakter), mekanik
+izinli-sözlük süzgeci (sözlük = VERİ + Üslup; aday brifing metni sözlüğe GİRMEZ — ajan brief'imdeki üçüncü kalemi reddetti: girseydi her uydurma
+iddiası kendini süzerdi, kabul), `ilk_ihlal`/`suzulen` yalnız olaya (damgaya değil, O4); v385 +6, mutasyon 2 öttü, 82/82. 141 — keşif ajanı
+(A1): `intraday_gap_detected` imza-mandallı, ardışık %0 tekrar → dokunulmadı; `sprint_cadence_skip` %98,2 aynı içerik ama tek okuyucu
+`bekci_tarama` ham kadansa bağlı → SIRA: önce okuyucu gün-bazlı, sonra yazan günlük özet + değişince-yaz; v413 5, mutasyon öttü, dört mevcut
+dosya yeşil; yan bulgu: ops betiklerini compile()+exec ile yükleyen testler `from __future__ import annotations` ile 3.12'de patlıyor (~15
+çağrı yeri, chip'e ayrıştırıldı). **Suite #21 (36e5c87, -n 4, 11 dk): 10373 passed / 0** → push.
+
+**Gün devri (03:4xZ):** DAĞITIM #16 (c23a6a7 + 36e5c87 + docs) piyasa kapanınca 20:00–22:00Z penceresinde, 22:04Z şef brifingi 138'in canlı
+doğrulaması (ihlal listesi + `suzulen`); 10:07Z bekçi brifingi `cevrilen`in İLK canlı ölçümü (dağıtım #14 kodu, süzgeçsiz — yanlış-pozitif
+beklenir, kayıt TSK-138 hükmüne kanıt). 06:07Z sprint bitişi. Ingest r2 sonucu + 429 sabah. TSK-141 DONE damgası ertesi gün events.jsonl
+sayımıyla. Operatörde: TSK-137 4 soru, TSK-142 pilot kararı, preset görsel onayı, 117/118/121 damgaları, alerts 41 ACK.
