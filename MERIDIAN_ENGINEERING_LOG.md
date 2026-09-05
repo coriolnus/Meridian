@@ -2570,3 +2570,11 @@ Push suite #24 ile (150 merge sonrası); dağıtım #16 20:00Z (+ A1'de 6 timer 
 **Suite #24 (cf10fdc, -n 4, 11,5 dk): 10425 passed / 0** → push. TSK-150 (a) merge (40e642e) + iki çapa düzeltmesi (ajan şerhleri
 `broker._id` / `topviews.plan_by_id` — def/class olmayan adlar; hafıza notu). Dağıtım #16 malzemesi: 138 · 141 · 148 · 131 · 143 · 151 ·
 137b · 152 · 153 · 150 + D6 tazeleme; A1 ek kurulum: 6 timer FixedRandomDelay (install + daemon-reload) — 20:00–22:00Z penceresi.
+
+**DAĞITIM #16 (e8e9bf7, 14:05:23Z, Cumartesi — operatör: "hafta sonundayız", piyasa kapısı yoktu; 6 saat boşuna ertelenmişti, hafıza notu):**
+dry-run temiz; [5a] üç uç ✓ (TSK-148 canlı test); F9 beş timer AYRIK uyarısı → 6 timer install + daemon-reload 14:06Z, FixedRandomDelay=yes
+×6, F9 birebir; beyan sandbox_eski_kod [] . Canlı: DISK_ESIK/SEMBOL_OLU_ADAY sessiz (beklenen), sprint_cadence_skip restart sonrası tek
+ozet=False satırı sonra sessiz (141 çalışıyor), alerts pending 1 = bilinen "öğrenme durdu" (TSK-092), `korumasiz_motor_disi_pozisyon` NVDA
+1 adet (motor-dışı, bilinen sınıf). Canlıya giden: 138 · 141 · 148 · 131 · 143 · 151 · 137b · 152 · 153 · 150 + D6 tazeleme + 149.
+Gece: 22:04Z şef (kotasız), 00:02Z kanary (EDG-074 K1), 00:03Z free-router sondası, 00:05Z r3, 05:00Z kurtar; K2 pilot POST'u K1 yeşilse
+05:30Z sonrası (kart notu).
