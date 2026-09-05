@@ -14,6 +14,19 @@ OnCalendar=*-*-* 23:30:00 UTC
 Persistent=true
 # Aynı dakikada başka işlerle çakışmasın; tar 181MB'ı okurken I/O'yu tek başına almasın.
 RandomizedDelaySec=300
+# FixedRandomDelay (TSK-152, 2026-09-05). dagit.sh'nin [4] adımı HER dağıtımda SİSTEM-GENELİ
+# `sudo systemctl daemon-reload` çalıştırır (dagit.sh satırı: `daemon-reload && start $_BASLAT`)
+# — yalnız $_BASLAT'ı değil, A1'de yüklü HER timer'ı yeniden hesaplatır. Belgeli systemd riski:
+# `RandomizedDelaySec` varsayılanı reload'da rastgele payı YENİDEN ÇEKER; yeni pay eskisinden
+# küçükse tetik ERKENE ÇEKİLİR. `true` payı sabitler (birim kimliğinden türer), reload etkisiz.
+# ÖLÇÜLDÜ, A1 (2026-09-04 dağıtım #13/#14/#15 reload anları: 20:02:55Z, 22:08:16Z, 22:36:11Z,
+# 22:42:49Z): o dört anın HİÇBİRİNDE bu filodaki RandomizedDelaySec'li bir timer beklenmedik
+# ateşlemedi — günün TEK ateşleri (07:33/10:03/22:02/23:30) kendi OnCalendar'ındaydı. Yani
+# "her daemon-reload 3/3 ateşliyor" öncülü bu ölçümde DOĞRULANMADI; `FixedRandomDelay=true`
+# yine de eklendi — zararsız ve belgelenmiş riski ölçülemeden kapatıyor. Aynı gerekçe
+# meridian-bekci/brifing/karne/skill-gorus/aylik-bucket-kopya.timer'da kısaltılmış hâliyle
+# tekrarlanır (tek kaynak burası); dagit.sh [4] başlığında da kısa şerh var.
+FixedRandomDelay=true
 
 [Install]
 WantedBy=timers.target

@@ -25,6 +25,10 @@ OnCalendar=*-*-* 07:30:00 UTC
 Persistent=true
 # Izgara çakışmasına karşı küçük pay; 5 dk, 2,5 saatlik en yakın komşulukta ihmal edilebilir.
 RandomizedDelaySec=300
+# FixedRandomDelay (TSK-152, 2026-09-05): dagit'in [4] adımının sistem-geneli `daemon-reload`u
+# reload'da rastgele payı yeniden çekip tetiği erkene çekebilir — gerekçenin TAMAMI ve A1 ölçümü
+# meridian-backup.timer başlığındadır (tek kaynak; öncül bu ölçümde DOĞRULANMADI, yine de eklendi).
+FixedRandomDelay=true
 
 [Install]
 WantedBy=timers.target

@@ -50,6 +50,10 @@ OnCalendar=*-*-* 10:00:00 UTC
 # BU DAHA DA ÖNEMLİ: kaçan bir gün, "bu N turdur aynı" sayacının en çok arttığı gün olabilir.
 Persistent=true
 RandomizedDelaySec=300
+# FixedRandomDelay (TSK-152, 2026-09-05): dagit'in [4] adımının sistem-geneli `daemon-reload`u
+# reload'da rastgele payı yeniden çekip tetiği erkene çekebilir — gerekçenin TAMAMI ve A1 ölçümü
+# meridian-backup.timer başlığındadır (tek kaynak; öncül bu ölçümde DOĞRULANMADI, yine de eklendi).
+FixedRandomDelay=true
 
 [Install]
 WantedBy=timers.target
