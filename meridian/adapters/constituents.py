@@ -8,8 +8,8 @@ yeniden kurar. Gerçek üretim tüketicisi `universe_drift()`tir: elle bakımlı
 güncel üyelik + verisiz-sembol defteri + emeklilik defteriyle karşılaştırıp ölü/geri-sızmış
 isimleri söyler. Wikipedia yolu bu kurulumda fiilen kapalıdır: sayfa bu User-Agent'a HTTP 403
 döner; health() nedeni ADIYLA yazar (UA/kaynak değişirse yol kendiliğinden çalışır).
-(b) Kilit girişler: current(use_cache=...), as_of(date), universe_drift(), health(); MIN_MEMBERS
-makullük tabanı, CACHE (sp500_constituents.json).
+(b) Kilit girişler: current(use_cache=...), as_of(date), as_of_pit_durumu(date), universe_drift(),
+health(); MIN_MEMBERS makullük tabanı, CACHE (sp500_constituents.json).
 (c) Değişmezler — MAKULLUK KAPISI: 400'den az sembol S&P 500 DEĞİLDİR; hem çekim hem önbellek
 okuma bu kapıdan geçer (canlı önbelleğe bir test fikstürünün — 3 sembol, gelecek tarihli damga —
 sızdığı yaşandı; kapı tam onu reddeder, gelecek tarihli `as_of` da bozuk sayılır). Başarısızlık
@@ -23,7 +23,17 @@ sözlüksel değil ISO'ya çevrilerek karşılaştırılır (aksi PIT kurulumunu
 (d) Okur/yazar, önbellek: state/sp500_constituents.json — günlük önbellek (as_of=bugün ise ağa
 gidilmez); yazım yalnız makul listeyle olur, kaynak etiketi (fmp|wikipedia) birlikte saklanır.
 DÜRÜST SINIR: bu modül üyelik survivorship'ini düzeltir; yanlılıksız backtest delisted isimlerin
-BARLARINI da ister ve ücretsiz kaynaklar onu taşımaz — PIT iskelesi, bias-free evren değil."""
+BARLARINI da ister ve ücretsiz kaynaklar onu taşımaz — PIT iskelesi, bias-free evren değil.
+(e) TSK-154 (2026-09-05): Wikipedia sayfasındaki 'Selected changes' tablosu (eskiden `tables[1]`)
+KALKTI — canlı önbellek 11 hayalet satır ({date:'',added:'',removed:''}) yazmıştı, uyarısız.
+İki düzeltme: (1) `_fetch_tables` artık ÜÇ değer döner (`cur, changes, changes_kaynak`); tablo
+gerçekten değişiklik sütunlarını taşımıyorsa (sütun eşleşmesi yok / IndexError) `changes=[]` +
+`changes_kaynak=None` + `obs.warn("sp500_degisiklik_tablosu_yok", ...)` — Yasa 4: sessiz değil.
+Üç alanı da boş olan satır (hayalet) hiçbir zaman `changes`e yazılmaz. (2) `as_of_pit_durumu(date)`
+değişiklik günlüğü boşken `as_of()`un GERÇEK tarihsel yeniden kurulum değil bugünkü listeye eşit
+survivorship döndüğünü BEYAN eder (`{"pit": False, "neden": "..."}`); `as_of()`un kendi dönüş
+biçimi (`list[str]`) DEĞİŞMEDİ — üretim çağıranı bugün yok (test_constituents_audit_v18.py'nin
+iki PIT testi + gerçek tüketici yok), pitlaw sınıfı `PIT_SOZLESMELI_BESLEYENI_KAPALI` AYNEN kalır."""
 from __future__ import annotations
 import datetime as dt
 
@@ -78,9 +88,16 @@ def _cached() -> dict:
 
 
 def _fetch_tables():
-    """(current_symbols, changes) — Wikipedia'dan. Başarısızlıkta (None, None) AMA sebebi kaydederek.
-    NOT: Wikipedia botlara 403 dönebilir (2026-08-13'te bu UA ile hâlâ dönüyor) ve ayrıştırıcı
-    eksikliği de olabilir; ikisi de `health()`te AYRI nedenlerle görünür."""
+    """(current_symbols, changes, changes_kaynak) — Wikipedia'dan. Başarısızlıkta (None, None, None)
+    AMA sebebi kaydederek. NOT: Wikipedia botlara 403 dönebilir (2026-08-13'te bu UA ile hâlâ
+    dönüyor) ve ayrıştırıcı eksikliği de olabilir; ikisi de `health()`te AYRI nedenlerle görünür.
+
+    TSK-154 (2026-09-05): `tables[1]` eskiden 'Selected changes' değişiklik günlüğüydü; sayfa bu
+    tabloyu KALDIRDI (bugün section 1 tek tablo taşıyor, section 2 'See also'). Eski kod sütun
+    eşleşmesi olmasa da BOŞ satırlar üretip yazıyordu (`{date:'',added:'',removed:''}` × 11, canlı
+    önbellekte bulundu) — hiç uyarı yok. Artık: (a) sütunlardan biri (tarih/eklenen/çıkan) hiç
+    eşleşmezse tablo 'değişiklik günlüğü DEĞİL' sayılır → `changes=[]`, `changes_kaynak=None`,
+    `obs.warn` (Yasa 4); (b) üç alanı da boş olan satır (hayalet) hiç `changes`e yazılmaz."""
     try:
         import io
         import pandas as pd
@@ -89,7 +106,7 @@ def _fetch_tables():
                       follow_redirects=True)
         if r.status_code >= 400:
             _note(False, "wikipedia", 0, f"HTTP {r.status_code}")
-            return None, None
+            return None, None, None
         # `pd.read_html(r.text)` — HAM DİZGE — pandas 3'te DOSYA YOLU sanılıyor.
         # Canlı kanıt: universe_drift.json `reason: "FileNotFoundError: ... <!DOCTYPE html>..."`;
         # yani evren denetimi survivorship kanıtı üretmiyordu ve neden diye YANLIŞ bir sınıf
@@ -105,18 +122,24 @@ def _fetch_tables():
         tables = pd.read_html(io.StringIO(r.text), flavor="lxml")
     except Exception as e:
         _note(False, "wikipedia", 0, f"{type(e).__name__}: {e}")
-        return None, None
-    cur, changes = None, []
+        return None, None, None
+    cur = None
     try:
         cur = [str(s).strip().upper().replace(".", "-") for s in tables[0]["Symbol"].tolist()]
     except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
         cur = None
+    changes, changes_kaynak = [], None
     try:
         ch = tables[1]
         ch.columns = ["_".join(str(x) for x in c) if isinstance(c, tuple) else str(c) for c in ch.columns]
         dcol = next((c for c in ch.columns if "Date" in c), None)
         acol = next((c for c in ch.columns if "Added" in c and "Ticker" in c), None)
         rcol = next((c for c in ch.columns if "Removed" in c and "Ticker" in c), None)
+        if dcol is None or acol is None or rcol is None:
+            # TSK-154: tablo VAR ama değişiklik günlüğü SÜTUNLARI yok — Wikipedia'nın
+            # kaldırdığı 'Selected changes' tablosu değil, başka bir tablo (`tables[1]` artık
+            # 'See also' ya da benzeri). Sessizce boş `changes` yazmak yerine adıyla uyarılır.
+            raise ValueError(f"değişiklik günlüğü sütunları eşleşmedi: {list(ch.columns)[:6]}")
         # NaN-safe cell read (L3): pandas reads an empty change-log cell as float('nan'), and bool(nan) is
         # True, so `nan or ""` returned nan and str(nan)=='nan' — as_of() then added a fabricated 'NAN'
         # ticker to point-in-time membership. Coalesce NaN/None to "" explicitly.
@@ -124,12 +147,23 @@ def _fetch_tables():
             """Wikipedia değişiklik-günlüğü hücresini NaN-güvenli dizgeye çevirir: None/NaN → ""
             (aksi hâlde str(nan)=='nan' PIT üyeliğine uydurma 'NAN' sembolü sokuyordu), yoksa kırpılmış str."""
             return "" if v is None or (isinstance(v, float) and pd.isna(v)) else str(v).strip()
+        rows = []
         for _, row in ch.iterrows():
-            changes.append({"date": _cell(row.get(dcol)), "added": _cell(row.get(acol)),
-                            "removed": _cell(row.get(rcol))})
-    except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
-        changes = []
-    return cur, changes
+            d, a, rm = _cell(row.get(dcol)), _cell(row.get(acol)), _cell(row.get(rcol))
+            if not (d or a or rm):
+                continue  # TSK-154: hayalet boş satır (üç alan da "") — asla yazılmaz
+            rows.append({"date": d, "added": a, "removed": rm})
+        changes, changes_kaynak = rows, "wikipedia_selected_changes"
+    except Exception as e:
+        changes, changes_kaynak = [], None
+        try:
+            from .. import obs
+            obs.warn("sp500_degisiklik_tablosu_yok", url=WIKI_URL,
+                     tablo_n=len(tables) if isinstance(tables, list) else 0,
+                     neden=f"{type(e).__name__}: {e}"[:200])
+        except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez
+            pass
+    return cur, changes, changes_kaynak
 
 
 def current(use_cache: bool = True) -> list[str]:
@@ -149,15 +183,17 @@ def current(use_cache: bool = True) -> list[str]:
         syms = [str(s).strip().upper().replace(".", "-") for s in (fmp.sp500_constituents() or [])]
         if _plausible(syms):
             store.write_json(CACHE, {"as_of": today, "current": syms,
-                                     "changes": cached.get("changes", []), "source": "fmp"})
+                                     "changes": cached.get("changes", []),
+                                     "changes_kaynak": cached.get("changes_kaynak"),
+                                     "source": "fmp"})
             _note(True, "fmp", len(syms))
             return syms
         _note(False, "fmp", len(syms), "makul olmayan/boş liste (kota?)")
 
-    cur, changes = _fetch_tables()
+    cur, changes, changes_kaynak = _fetch_tables()
     if _plausible(cur):
         store.write_json(CACHE, {"as_of": today, "current": cur, "changes": changes,
-                                 "source": "wikipedia"})
+                                 "changes_kaynak": changes_kaynak, "source": "wikipedia"})
         _note(True, "wikipedia", len(cur))
         return cur
     if not _HEALTH.get("error"):
@@ -215,6 +251,37 @@ def as_of(date: str) -> list[str]:
             if rem:
                 members.add(rem)                          # it was removed after `date` → was a member then
     return sorted(m for m in members if _tick(m))
+
+
+def as_of_pit_durumu(date: str) -> dict:
+    """BEYAN (TSK-154, D2): `as_of(date)`in dönüşü GERÇEK tarihsel yeniden kurulum mu, yoksa
+    değişiklik günlüğü boş/kapsam-dışı olduğu için bugünkü listeye eşit survivorship mi? `as_of()`
+    kendisi bunu TAŞIMAZ — dönüş biçimi (`list[str]`) DEĞİŞMEDİ, çünkü üretim çağıranı bugün yok
+    (modül başlığı (e); iki kalıcı test `as_of()`u düz liste olarak okuyor). Okuyucu eklenirse
+    (`universe_drift`/`loop`/`pitlaw`) bu fonksiyon gerçek karara bağlanır; o güne kadar
+    `pitlaw.PIT_SOZLESMELI_BESLEYENI_KAPALI` sınıfı AYNEN kalır — bu fonksiyonun var oluşu o
+    sınıflandırmayı değiştirmez, yalnız beyanı koda taşır.
+
+    Döner: {"pit": bool, "neden": str|None, "changes_kaynak": str|None}. `changes_kaynak` cache
+    dosyasından AYNEN okunur (D1'de yazılan alan — `_fetch_tables` tablo bulamazsa None yazar; bu
+    fonksiyon o alanın OKUYUCUSUdur). `pit=False` iki durumda: (a) önbellekte `changes` yok/boş
+    (tablo kaldırılmış — TSK-154 kök neden); (b) günlük var ama `date`ten SONRAKİ geçerli (tarih
+    ayrıştırılabilir VE eklenen/çıkan dolu) hiçbir satır yok — geriye doğru hiçbir değişiklik
+    uygulanmaz, yine survivorship. `pit=True` yalnız `date`ten sonraki en az bir geçerli satır
+    varsa, yani `as_of()` gerçekten bir üyeyi ekleyip/çıkarmıştır."""
+    data = _cached()
+    changes = data.get("changes") or []
+    changes_kaynak = data.get("changes_kaynak")
+    if not changes:
+        return {"pit": False, "neden": "değişiklik tablosu yok — as_of bugünkü listeye eşit",
+                "changes_kaynak": changes_kaynak}
+    for ch in changes:
+        d = _iso(ch.get("date"))
+        if d and d > date and (_tick(ch.get("added")) or _tick(ch.get("removed"))):
+            return {"pit": True, "neden": None, "changes_kaynak": changes_kaynak}
+    return {"pit": False,
+            "neden": "değişiklik günlüğü `date` kapsamının dışında — as_of bugünkü listeye eşit",
+            "changes_kaynak": changes_kaynak}
 
 
 def universe_drift() -> dict:

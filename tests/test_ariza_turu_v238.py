@@ -92,13 +92,16 @@ def _pandas3_semantigi(monkeypatch) -> None:
 
 def test_A_fikstur_HTML_pandas3te_AYRISTIRILIYOR(sandbox_state, monkeypatch):
     """ARIZANIN DOĞRUDAN ÇİVİSİ: pandas-3 semantiği dayatılmışken `_fetch_tables` YİNE DE
-    ayrıştırmalı. Düzeltme öncesi bu test `(None, None)` + FileNotFoundError ile kırmızıydı."""
+    ayrıştırmalı. Düzeltme öncesi bu test `(None, None)` + FileNotFoundError ile kırmızıydı.
+    TSK-154 (2026-09-05): `_fetch_tables` artık ÜÇÜNCÜ değeri (`changes_kaynak`) de döner —
+    geçerli bir değişiklik tablosu ayrıştırıldığı için `"wikipedia_selected_changes"` olmalı."""
     _pandas3_semantigi(monkeypatch)
     _httpx_ver(monkeypatch, _wiki_fikstur(3))
-    cur, changes = con._fetch_tables()
+    cur, changes, changes_kaynak = con._fetch_tables()
     assert cur == ["SYM000", "SYM001", "SYM002"], f"semboller ayrıştırılamadı: {cur}"
     assert [c["added"] for c in changes] == ["AMTM", "PLTR"], changes
     assert changes[1]["removed"] == "AAL" and changes[0]["removed"] == "", changes
+    assert changes_kaynak == "wikipedia_selected_changes", changes_kaynak
     assert "FileNotFoundError" not in con.health()["error"], con.health()
 
 

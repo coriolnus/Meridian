@@ -44,7 +44,7 @@ def test_c2_fixture_cache_is_rejected(sandbox_state, monkeypatch):
     store.write_json(con.CACHE, {"as_of": "2099-01-01", "current": ["AAPL", "MSFT", "NVDA"],
                                  "changes": [{"date": "2026-03-01", "added": "NVDA", "removed": "nan"}]})
     assert con._cached() == {}                                   # kapıdan geçemez
-    monkeypatch.setattr(con, "_fetch_tables", lambda: (None, None))
+    monkeypatch.setattr(con, "_fetch_tables", lambda: (None, None, None))  # TSK-154: üç değer
     from meridian.adapters import fmp
     monkeypatch.setattr(fmp, "available", lambda: False)
     assert con.current() == []                                   # sahte liste ASLA servis edilmez
@@ -119,7 +119,7 @@ def test_quota_blocked_fmp_is_skipped(sandbox_state, monkeypatch):
     monkeypatch.setattr(fmp, "available", lambda: True)
     monkeypatch.setattr(fmp, "quota_blocked", lambda: True)
     monkeypatch.setattr(fmp, "sp500_constituents", lambda: (_ for _ in ()).throw(AssertionError("çağrılmamalı")))
-    monkeypatch.setattr(con, "_fetch_tables", lambda: (None, None))
+    monkeypatch.setattr(con, "_fetch_tables", lambda: (None, None, None))  # TSK-154: üç değer
     assert con.current() == []
 
 
