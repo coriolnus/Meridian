@@ -2663,3 +2663,9 @@ HINDSIGHT_API_CONSOLIDATION_LLM_MODEL (Hindsight işlem-bazlı model ayarı; pro
 429 (beklenen), consolidation 'Connection verified: minimax'. 18:08–18:09Z ilk parti 8/8, memories_failed 0, observations_created 8, pending 2884→2868;
 retain yolu nemotron. TSK-157 ACTIVE öncelikli; TSK-095 DONE (router Hindsight'a değil); TSK-145 hüküm B; TSK-158 OPERATOR (Postgres parolası terminale
 düştü — 17:5xZ süzgeç hatası: 'BASE_URL' deseni DATABASE_URL'i yakaladı; döndürme operatörde). §6 endeksine 074–077 eklendi (v351 r06/r12: DONE parantezli).
+
+**18:23Z — TSK-158 parola döndürme (operatör: "parolayı döndür"):** keşif değer basmadan (uzunluk/yol/sayım): yerel Postgres 17, `log_statement=none`,
+rol hindsight, tek taşıyıcı /opt/hindsight/.env (+ bugünkü yedek), konteynerlerde yok. Yeni parola sunucuda üretildi (48 hex), ALTER ROLE stdin'den
+(argv/log yok), .env python ile yeniden yazıldı (URL-encode), restart; ilk kontrol 75 s'de erken (açılış ~95 s), 18:21Z openapi 200 + stats 200 (DB
+yolu), eski parola psql ile reddedildi, yedek dosyasındaki eski değer 'ROTATED' ile silindi, kalan eşleşme 0. Konsolidasyon restart'ta kaldığı yerden
+(failed 166 → 0 yeniden kuyruğa; pending 2934, obs 3755). Hafıza: sır süzgeci kuralı sertleşti (adlar `cut -d= -f1`, değer yalnız tam-ad beyaz liste).
