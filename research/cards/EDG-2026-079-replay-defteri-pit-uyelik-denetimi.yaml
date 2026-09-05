@@ -6,7 +6,7 @@
 # liste (A1 sp500_constituents.json as_of 2026-09-04, 503; girdi/ altında sha). REPLAY_UNIVERSE 248 · LIVE 238 · RETIRED 11 (2026-09-05).
 
 card_id: EDG-2026-079
-status: registered   # 2026-09-05 Rol-1 — ön-kayıt; ölçüm kodu (research, ağsız; edg075 olcum.py as_of'u yeniden kullanır) bu karttan SONRA
+status: measured   # 2026-09-05 Rol-1 — K1 KALDI (bant 3: p=0,107 > 0,10) · K2 GEÇTİ (q=0,085) · PK 3/3 tuttu; replay hükümleri survivorship şerhiyle ASKIDA, TSK-066 as_of ZORUNLU
 family: evren_pit
 on_kayit: 2026-09-05
 ref: [TSK-156, TSK-066, TSK-143, EDG-2026-076, EDG-2026-075, EDG-2026-062]
@@ -62,3 +62,21 @@ notlar: >
   Ölçüm kodu research/olcumler/edg079_replay_pit_denetimi/olcum.py; edg075 olcum.py'nin tabloyu_ayristir/as_of fonksiyonlarını
   İÇE AKTARIR (kopya değil). Ticker normalizasyonu: '.'→'-'; rename eşlemesi işlem tarihine göre (tarih < rename tarihi ise eski ad
   geçerli). Sızan işlemlerin R dağılımı betimleyicidir, hüküm değildir (n küçük olabilir).
+
+hukum_2026_09_05: >
+  (19:40Z Rol-1) GİRDİ: üç sha mekanik ✓ (trades e2ab0340…, güncel liste a0cfccca…, HTML 9909032c…); as_of kuramama 0/885; ölçülemedi 0.
+  Sonuç dosyası research/olcumler/edg079_replay_pit_denetimi/sonuc_2026-09-05.json (v426 34 çivi, iki mutasyon ısırdı; merge 9a64cc3).
+  K1 TOHUM: n=885, sızıntı 95 → p = 0,1073 > 0,10 → BANT 3: "tohum defteri survivorship taşıyor: replay hükümleri askıda, yeniden
+  kurulum kartı". AYRIŞIM (bilgi, eşik değişmez): 39 işlem hiç-üye sembollerde (SPOT 10, ROKU 11, SNAP 8, BURL 5, PINS 4, LNG 1 —
+  operatörün bugün canlı evrene geri aldığı 6 sembol; replay'de de tasarım tercihi, S&P dışı) · 42 işlem GEÇ KATILAN sembollerde (o
+  tarihte üye değil, bugün üye: MRVL 24 [giriş 2026-06-22], APO 8, KKR 5, BX 3, DECK 1, PANW 1 — gerçek survivorship: evren bugünkü
+  üyelikten kurulmuş) · 14 işlem ÇIKIŞ SONRASI (VFC 11 [çıkış 2024-04-03], ENPH 3 [çıkış 2025-09-22] — evren çıkanı düşürmemiş).
+  Hiç-üye hariç p = 0,063 (bant 2 olurdu) — ama eşik donuk, hüküm bant 3. Sızan işlemlerin medyan R'si −0,884, kalanların −0,168:
+  sızıntı getiriyi ŞİŞİRMİYOR, tersine daha kötü işlemler (betimleyici, n=95). Yıl dağılımı 2022:3 · 2023:28 · 2024:34 · 2025:17 · 2026:13.
+  K1 CANLI: 16/16 üye, p=0 (canlı evren süzgeci çalışıyor). K2: as_of(2022-01-01) → REPLAY_UNIVERSE 248'in 21'i üye değildi, q=0,085 ≤ 0,10
+  GEÇTİ (2024-01-01 kesiti: 10, q=0,040). PK 3/3 (FERG giriş-öncesi sızıntı ✓, giriş-sonrası üye ✓, EQR rename ile üye ✓).
+  SONUÇ: replay/tohum defteri PIT üyelikle kurulmamış — hükümleri (OOS/DSR/PBO kapılarını besleyen tohum kanıtı dahil) survivorship
+  ŞERHİ ile ASKIDA sayılır; TSK-066 AN yeniden kurulumu as_of(t)'yi ZORUNLU tüketici yapar (pitlaw sınıfı 'besleyeni açık + tüketici
+  var'a ancak o zaman geçer); yeniden tohumlama (PIT evrenle replay) YENİ KART — bu kartta eşik oynatılmaz. Operatöre: 6 hiç-üye
+  sembol canlıda kalırken replay'de ne olacağı (dahil/hariç) tasarım kararı, yeniden kurulum kartına girer.
+

@@ -1,0 +1,822 @@
+{
+  "adim_0": {
+    "gecerli": true,
+    "guncel_liste_sha256": "a0cfcccab994a6b9f427a0b7fffc8dee4f1dea1083e4b1da2b255bf37156d335",
+    "guncel_liste_sha256_beklenen": "a0cfcccab994a6b9f427a0b7fffc8dee4f1dea1083e4b1da2b255bf37156d335",
+    "guncel_liste_sha_esit_mi": true,
+    "html_sha256": "9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871",
+    "html_sha256_beklenen": "9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871",
+    "html_sha_esit_mi": true,
+    "neden": null,
+    "trades_sha256": "e2ab03404494d28b00b6f17770c81d386fc8215f1cb5ab64b06e9349285002b7",
+    "trades_sha256_beklenen": "e2ab03404494d28b00b6f17770c81d386fc8215f1cb5ab64b06e9349285002b7",
+    "trades_sha_esit_mi": true
+  },
+  "beyan": "Bu betik yalnız ÖLÇER; hüküm Rol-1'de, AYNI turda karta + K defterine işlenir (CLAUDE.md §3/§5). meridian/*.py bu turda DEĞİŞTİRİLMEDİ, ağa ÇIKILMADI (yalnız --girdi-html'den okundu).",
+  "esikler": {
+    "k1_gecti": "tohum sızıntı payı p ≤ 0,02 → 'ihmal edilebilir, beyanla'; 0,02 < p ≤ 0,10 → 'PIT evren ZORUNLU (TSK-066), replay hükümleri şerhli'; p > 0,10 → 'tohum defteri survivorship taşıyor: replay hükümleri askıda, yeniden kurulum kartı'",
+    "k2_gecti": "q ≤ 0,10 → evren kurulumu kabul; q > 0,10 → REPLAY_UNIVERSE geç-katılan ağırlıklı, TSK-066 as_of ile yeniden kurulum"
+  },
+  "girdi_kimligi": {
+    "guncel_liste_sha256": "a0cfcccab994a6b9f427a0b7fffc8dee4f1dea1083e4b1da2b255bf37156d335",
+    "guncel_liste_yolu": "research/olcumler/edg079_replay_pit_denetimi/girdi/guncel_uyeler_2026-09-04.json",
+    "html_sha256": "9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871",
+    "html_yolu": "research/olcumler/edg075_sp500_tarihsel/ham/1370891103_9909032c1f815a01.html",
+    "trades_sha256": "e2ab03404494d28b00b6f17770c81d386fc8215f1cb5ab64b06e9349285002b7",
+    "trades_yolu": "research/olcumler/edg079_replay_pit_denetimi/girdi/trades_2026-09-05.json"
+  },
+  "k1_canli": {
+    "hukum_sinifi": "ihmal edilebilir, beyanla",
+    "n": 16,
+    "n_sizinti": 0,
+    "n_uye": 16,
+    "olculemedi_n": 0,
+    "p": 0.0,
+    "r_medyan_kalan": -0.009,
+    "r_medyan_sizan": null,
+    "sizanlar": []
+  },
+  "k1_tohum": {
+    "hukum_sinifi": "tohum defteri survivorship taşıyor: replay hükümleri askıda, yeniden kurulum kartı",
+    "n": 885,
+    "n_sizinti": 95,
+    "n_uye": 790,
+    "olculemedi_n": 0,
+    "p": 0.10734463276836158,
+    "r_medyan_kalan": -0.168,
+    "r_medyan_sizan": -0.884,
+    "sizanlar": [
+      {
+        "id": "T00003",
+        "r_multiple": -1.0,
+        "seq": 3,
+        "ticker": "MRVL",
+        "ts_open": "2022-01-12"
+      },
+      {
+        "id": "T00009",
+        "r_multiple": -1.05,
+        "seq": 10,
+        "ticker": "SPOT",
+        "ts_open": "2022-08-19"
+      },
+      {
+        "id": "T00029",
+        "r_multiple": 0.443,
+        "seq": 19,
+        "ticker": "DECK",
+        "ts_open": "2022-11-21"
+      },
+      {
+        "id": "T00046",
+        "r_multiple": -0.261,
+        "seq": 46,
+        "ticker": "APO",
+        "ts_open": "2023-01-27"
+      },
+      {
+        "id": "T00047",
+        "r_multiple": -1.028,
+        "seq": 57,
+        "ticker": "PINS",
+        "ts_open": "2023-02-03"
+      },
+      {
+        "id": "T00052",
+        "r_multiple": 1.585,
+        "seq": 63,
+        "ticker": "MRVL",
+        "ts_open": "2023-02-13"
+      },
+      {
+        "id": "T00074",
+        "r_multiple": 0.358,
+        "seq": 74,
+        "ticker": "MRVL",
+        "ts_open": "2023-02-24"
+      },
+      {
+        "id": "T00080",
+        "r_multiple": -0.999,
+        "seq": 87,
+        "ticker": "SPOT",
+        "ts_open": "2023-04-26"
+      },
+      {
+        "id": "T00114",
+        "r_multiple": 1.805,
+        "seq": 109,
+        "ticker": "PANW",
+        "ts_open": "2023-05-25"
+      },
+      {
+        "id": "T00108",
+        "r_multiple": -0.983,
+        "seq": 112,
+        "ticker": "MRVL",
+        "ts_open": "2023-05-30"
+      },
+      {
+        "id": "T00109",
+        "r_multiple": -1.009,
+        "seq": 116,
+        "ticker": "BX",
+        "ts_open": "2023-06-02"
+      },
+      {
+        "id": "T00115",
+        "r_multiple": 0.923,
+        "seq": 118,
+        "ticker": "MRVL",
+        "ts_open": "2023-06-09"
+      },
+      {
+        "id": "T00116",
+        "r_multiple": -1.029,
+        "seq": 123,
+        "ticker": "MRVL",
+        "ts_open": "2023-06-14"
+      },
+      {
+        "id": "T00117",
+        "r_multiple": -1.021,
+        "seq": 124,
+        "ticker": "MRVL",
+        "ts_open": "2023-06-15"
+      },
+      {
+        "id": "T00125",
+        "r_multiple": 1.838,
+        "seq": 129,
+        "ticker": "MRVL",
+        "ts_open": "2023-06-26"
+      },
+      {
+        "id": "T00133",
+        "r_multiple": 1.222,
+        "seq": 138,
+        "ticker": "MRVL",
+        "ts_open": "2023-07-07"
+      },
+      {
+        "id": "T00152",
+        "r_multiple": 1.61,
+        "seq": 140,
+        "ticker": "ROKU",
+        "ts_open": "2023-07-12"
+      },
+      {
+        "id": "T00156",
+        "r_multiple": 0.601,
+        "seq": 142,
+        "ticker": "BX",
+        "ts_open": "2023-07-12"
+      },
+      {
+        "id": "T00146",
+        "r_multiple": -2.585,
+        "seq": 144,
+        "ticker": "SNAP",
+        "ts_open": "2023-07-13"
+      },
+      {
+        "id": "T00144",
+        "r_multiple": -1.003,
+        "seq": 146,
+        "ticker": "SPOT",
+        "ts_open": "2023-07-18"
+      },
+      {
+        "id": "T00161",
+        "r_multiple": -1.138,
+        "seq": 163,
+        "ticker": "ROKU",
+        "ts_open": "2023-08-01"
+      },
+      {
+        "id": "T00163",
+        "r_multiple": -0.995,
+        "seq": 167,
+        "ticker": "APO",
+        "ts_open": "2023-08-04"
+      },
+      {
+        "id": "T00177",
+        "r_multiple": 4.21,
+        "seq": 177,
+        "ticker": "ROKU",
+        "ts_open": "2023-09-05"
+      },
+      {
+        "id": "T00179",
+        "r_multiple": -0.602,
+        "seq": 179,
+        "ticker": "APO",
+        "ts_open": "2023-09-06"
+      },
+      {
+        "id": "T00182",
+        "r_multiple": -0.117,
+        "seq": 182,
+        "ticker": "BX",
+        "ts_open": "2023-09-12"
+      },
+      {
+        "id": "T00196",
+        "r_multiple": 2.342,
+        "seq": 194,
+        "ticker": "KKR",
+        "ts_open": "2023-11-08"
+      },
+      {
+        "id": "T00208",
+        "r_multiple": -1.147,
+        "seq": 205,
+        "ticker": "ROKU",
+        "ts_open": "2023-11-28"
+      },
+      {
+        "id": "T00199",
+        "r_multiple": -0.019,
+        "seq": 206,
+        "ticker": "APO",
+        "ts_open": "2023-11-30"
+      },
+      {
+        "id": "T00207",
+        "r_multiple": 2.432,
+        "seq": 207,
+        "ticker": "KKR",
+        "ts_open": "2023-11-30"
+      },
+      {
+        "id": "T00204",
+        "r_multiple": -0.884,
+        "seq": 209,
+        "ticker": "SPOT",
+        "ts_open": "2023-12-05"
+      },
+      {
+        "id": "T00209",
+        "r_multiple": -1.008,
+        "seq": 219,
+        "ticker": "KKR",
+        "ts_open": "2023-12-18"
+      },
+      {
+        "id": "T00236",
+        "r_multiple": 1.133,
+        "seq": 227,
+        "ticker": "MRVL",
+        "ts_open": "2024-01-09"
+      },
+      {
+        "id": "T00228",
+        "r_multiple": 1.54,
+        "seq": 235,
+        "ticker": "SNAP",
+        "ts_open": "2024-01-18"
+      },
+      {
+        "id": "T00242",
+        "r_multiple": 2.832,
+        "seq": 239,
+        "ticker": "SPOT",
+        "ts_open": "2024-01-19"
+      },
+      {
+        "id": "T00239",
+        "r_multiple": -1.009,
+        "seq": 246,
+        "ticker": "PINS",
+        "ts_open": "2024-01-30"
+      },
+      {
+        "id": "T00249",
+        "r_multiple": -0.011,
+        "seq": 253,
+        "ticker": "KKR",
+        "ts_open": "2024-02-07"
+      },
+      {
+        "id": "T00262",
+        "r_multiple": -0.997,
+        "seq": 269,
+        "ticker": "BURL",
+        "ts_open": "2024-03-08"
+      },
+      {
+        "id": "T00289",
+        "r_multiple": -0.009,
+        "seq": 290,
+        "ticker": "SPOT",
+        "ts_open": "2024-04-04"
+      },
+      {
+        "id": "T00287",
+        "r_multiple": -1.071,
+        "seq": 292,
+        "ticker": "MRVL",
+        "ts_open": "2024-04-10"
+      },
+      {
+        "id": "T00304",
+        "r_multiple": -1.015,
+        "seq": 308,
+        "ticker": "SNAP",
+        "ts_open": "2024-05-31"
+      },
+      {
+        "id": "T00310",
+        "r_multiple": -1.129,
+        "seq": 309,
+        "ticker": "BURL",
+        "ts_open": "2024-05-31"
+      },
+      {
+        "id": "T00309",
+        "r_multiple": -0.977,
+        "seq": 315,
+        "ticker": "SPOT",
+        "ts_open": "2024-06-05"
+      },
+      {
+        "id": "T00325",
+        "r_multiple": -0.269,
+        "seq": 319,
+        "ticker": "KKR",
+        "ts_open": "2024-06-11"
+      },
+      {
+        "id": "T00326",
+        "r_multiple": 0.243,
+        "seq": 320,
+        "ticker": "APO",
+        "ts_open": "2024-06-11"
+      },
+      {
+        "id": "T00351",
+        "r_multiple": 0.435,
+        "seq": 351,
+        "ticker": "SPOT",
+        "ts_open": "2024-07-24"
+      },
+      {
+        "id": "T00359",
+        "r_multiple": -1.155,
+        "seq": 359,
+        "ticker": "APO",
+        "ts_open": "2024-08-01"
+      },
+      {
+        "id": "T00370",
+        "r_multiple": -1.021,
+        "seq": 372,
+        "ticker": "VFC",
+        "ts_open": "2024-08-22"
+      },
+      {
+        "id": "T00376",
+        "r_multiple": -0.978,
+        "seq": 375,
+        "ticker": "BURL",
+        "ts_open": "2024-08-26"
+      },
+      {
+        "id": "T00390",
+        "r_multiple": 0.366,
+        "seq": 390,
+        "ticker": "ROKU",
+        "ts_open": "2024-09-11"
+      },
+      {
+        "id": "T00393",
+        "r_multiple": -1.024,
+        "seq": 393,
+        "ticker": "VFC",
+        "ts_open": "2024-09-11"
+      },
+      {
+        "id": "T00414",
+        "r_multiple": 0.231,
+        "seq": 408,
+        "ticker": "VFC",
+        "ts_open": "2024-09-19"
+      },
+      {
+        "id": "T00415",
+        "r_multiple": -0.258,
+        "seq": 409,
+        "ticker": "ROKU",
+        "ts_open": "2024-09-19"
+      },
+      {
+        "id": "T00411",
+        "r_multiple": -0.007,
+        "seq": 411,
+        "ticker": "SPOT",
+        "ts_open": "2024-09-20"
+      },
+      {
+        "id": "T00434",
+        "r_multiple": 1.652,
+        "seq": 427,
+        "ticker": "MRVL",
+        "ts_open": "2024-10-16"
+      },
+      {
+        "id": "T00445",
+        "r_multiple": -1.055,
+        "seq": 438,
+        "ticker": "VFC",
+        "ts_open": "2024-10-30"
+      },
+      {
+        "id": "T00437",
+        "r_multiple": -1.448,
+        "seq": 444,
+        "ticker": "APO",
+        "ts_open": "2024-11-07"
+      },
+      {
+        "id": "T00453",
+        "r_multiple": 1.015,
+        "seq": 450,
+        "ticker": "APO",
+        "ts_open": "2024-11-12"
+      },
+      {
+        "id": "T00456",
+        "r_multiple": 0.764,
+        "seq": 452,
+        "ticker": "SPOT",
+        "ts_open": "2024-11-14"
+      },
+      {
+        "id": "T00454",
+        "r_multiple": 2.039,
+        "seq": 460,
+        "ticker": "MRVL",
+        "ts_open": "2024-12-03"
+      },
+      {
+        "id": "T00470",
+        "r_multiple": 0.479,
+        "seq": 462,
+        "ticker": "ROKU",
+        "ts_open": "2024-12-03"
+      },
+      {
+        "id": "T00460",
+        "r_multiple": -0.997,
+        "seq": 463,
+        "ticker": "MRVL",
+        "ts_open": "2024-12-05"
+      },
+      {
+        "id": "T00469",
+        "r_multiple": -0.994,
+        "seq": 474,
+        "ticker": "MRVL",
+        "ts_open": "2024-12-16"
+      },
+      {
+        "id": "T00476",
+        "r_multiple": -0.347,
+        "seq": 476,
+        "ticker": "VFC",
+        "ts_open": "2024-12-18"
+      },
+      {
+        "id": "T00477",
+        "r_multiple": -1.023,
+        "seq": 477,
+        "ticker": "VFC",
+        "ts_open": "2024-12-24"
+      },
+      {
+        "id": "T00481",
+        "r_multiple": -1.028,
+        "seq": 481,
+        "ticker": "MRVL",
+        "ts_open": "2024-12-26"
+      },
+      {
+        "id": "T00490",
+        "r_multiple": -1.0,
+        "seq": 500,
+        "ticker": "LNG",
+        "ts_open": "2025-01-31"
+      },
+      {
+        "id": "T00500",
+        "r_multiple": -1.005,
+        "seq": 507,
+        "ticker": "ROKU",
+        "ts_open": "2025-02-18"
+      },
+      {
+        "id": "T00503",
+        "r_multiple": -0.019,
+        "seq": 508,
+        "ticker": "VFC",
+        "ts_open": "2025-02-18"
+      },
+      {
+        "id": "T00508",
+        "r_multiple": -1.011,
+        "seq": 513,
+        "ticker": "VFC",
+        "ts_open": "2025-02-21"
+      },
+      {
+        "id": "T00526",
+        "r_multiple": -1.004,
+        "seq": 531,
+        "ticker": "BURL",
+        "ts_open": "2025-06-09"
+      },
+      {
+        "id": "T00538",
+        "r_multiple": -1.09,
+        "seq": 544,
+        "ticker": "MRVL",
+        "ts_open": "2025-07-15"
+      },
+      {
+        "id": "T00541",
+        "r_multiple": -0.011,
+        "seq": 548,
+        "ticker": "MRVL",
+        "ts_open": "2025-07-17"
+      },
+      {
+        "id": "T00551",
+        "r_multiple": 2.482,
+        "seq": 557,
+        "ticker": "MRVL",
+        "ts_open": "2025-07-25"
+      },
+      {
+        "id": "T00552",
+        "r_multiple": -1.014,
+        "seq": 559,
+        "ticker": "SNAP",
+        "ts_open": "2025-07-28"
+      },
+      {
+        "id": "T00559",
+        "r_multiple": -0.987,
+        "seq": 565,
+        "ticker": "MRVL",
+        "ts_open": "2025-07-31"
+      },
+      {
+        "id": "T00579",
+        "r_multiple": 3.044,
+        "seq": 586,
+        "ticker": "ROKU",
+        "ts_open": "2025-08-21"
+      },
+      {
+        "id": "T00583",
+        "r_multiple": -1.041,
+        "seq": 592,
+        "ticker": "BURL",
+        "ts_open": "2025-08-29"
+      },
+      {
+        "id": "T00618",
+        "r_multiple": 1.936,
+        "seq": 625,
+        "ticker": "VFC",
+        "ts_open": "2025-10-01"
+      },
+      {
+        "id": "T00674",
+        "r_multiple": -0.993,
+        "seq": 680,
+        "ticker": "MRVL",
+        "ts_open": "2025-12-04"
+      },
+      {
+        "id": "T00678",
+        "r_multiple": -1.022,
+        "seq": 686,
+        "ticker": "SNAP",
+        "ts_open": "2025-12-11"
+      },
+      {
+        "id": "T00679",
+        "r_multiple": 0.385,
+        "seq": 687,
+        "ticker": "ROKU",
+        "ts_open": "2025-12-11"
+      },
+      {
+        "id": "T00691",
+        "r_multiple": -1.035,
+        "seq": 697,
+        "ticker": "VFC",
+        "ts_open": "2025-12-29"
+      },
+      {
+        "id": "T00719",
+        "r_multiple": -1.021,
+        "seq": 725,
+        "ticker": "ROKU",
+        "ts_open": "2026-01-26"
+      },
+      {
+        "id": "T00728",
+        "r_multiple": 12.305,
+        "seq": 736,
+        "ticker": "ENPH",
+        "ts_open": "2026-02-03"
+      },
+      {
+        "id": "T00778",
+        "r_multiple": 1.731,
+        "seq": 773,
+        "ticker": "MRVL",
+        "ts_open": "2026-04-09"
+      },
+      {
+        "id": "T00783",
+        "r_multiple": -0.024,
+        "seq": 785,
+        "ticker": "VFC",
+        "ts_open": "2026-04-20"
+      },
+      {
+        "id": "T00802",
+        "r_multiple": -1.017,
+        "seq": 810,
+        "ticker": "SNAP",
+        "ts_open": "2026-05-14"
+      },
+      {
+        "id": "T00811",
+        "r_multiple": -0.003,
+        "seq": 812,
+        "ticker": "ENPH",
+        "ts_open": "2026-05-15"
+      },
+      {
+        "id": "T00819",
+        "r_multiple": -0.003,
+        "seq": 819,
+        "ticker": "ENPH",
+        "ts_open": "2026-05-22"
+      },
+      {
+        "id": "T00818",
+        "r_multiple": -1.015,
+        "seq": 827,
+        "ticker": "SNAP",
+        "ts_open": "2026-05-29"
+      },
+      {
+        "id": "T00828",
+        "r_multiple": 1.478,
+        "seq": 834,
+        "ticker": "SNAP",
+        "ts_open": "2026-06-04"
+      },
+      {
+        "id": "T00833",
+        "r_multiple": -0.013,
+        "seq": 836,
+        "ticker": "PINS",
+        "ts_open": "2026-06-04"
+      },
+      {
+        "id": "T00835",
+        "r_multiple": -0.975,
+        "seq": 838,
+        "ticker": "MRVL",
+        "ts_open": "2026-06-05"
+      },
+      {
+        "id": "T00838",
+        "r_multiple": -0.998,
+        "seq": 841,
+        "ticker": "MRVL",
+        "ts_open": "2026-06-09"
+      },
+      {
+        "id": "T00841",
+        "r_multiple": -1.021,
+        "seq": 844,
+        "ticker": "PINS",
+        "ts_open": "2026-06-10"
+      }
+    ]
+  },
+  "k2": {
+    "hukum_sinifi": "evren kurulumu kabul",
+    "ikinci_kesit": {
+      "n_uye_olmayan": 10,
+      "q": 0.04032258064516129,
+      "tarih": "2024-01-01",
+      "uye_olmayanlar": [
+        "APO",
+        "BURL",
+        "DECK",
+        "KKR",
+        "LNG",
+        "MRVL",
+        "PINS",
+        "ROKU",
+        "SNAP",
+        "SPOT"
+      ]
+    },
+    "n_evren": 248,
+    "n_uye_olmayan": 21,
+    "q": 0.0846774193548387,
+    "t_evren": "2022-01-01",
+    "uye_olmayanlar": [
+      "APO",
+      "BURL",
+      "BX",
+      "CEG",
+      "DECK",
+      "EQT",
+      "KDP",
+      "KKR",
+      "KVUE",
+      "LNG",
+      "LULU",
+      "MRVL",
+      "ON",
+      "PANW",
+      "PINS",
+      "ROKU",
+      "SNAP",
+      "SPOT",
+      "STLD",
+      "TRGP",
+      "WBD"
+    ]
+  },
+  "kart": "EDG-2026-079",
+  "olcum_zamani": "2026-09-05T19:38:59+00:00",
+  "pozitif_kontrol": {
+    "detay": [
+      {
+        "ad": "FERG_giris_oncesi_sizinti",
+        "beklenen": false,
+        "neden": null,
+        "olculen": false,
+        "ticker": "FERG",
+        "ts_open": "2026-07-01",
+        "tuttu": true
+      },
+      {
+        "ad": "FERG_giris_sonrasi_uye",
+        "beklenen": true,
+        "neden": null,
+        "olculen": true,
+        "ticker": "FERG",
+        "ts_open": "2026-08-10",
+        "tuttu": true
+      },
+      {
+        "ad": "EQR_rename_ile_uye",
+        "beklenen": true,
+        "neden": null,
+        "olculen": true,
+        "ticker": "EQR",
+        "ts_open": "2026-06-01",
+        "tuttu": true
+      }
+    ],
+    "tuttu": true
+  },
+  "tablo_meta": {
+    "eslenen": {
+      "cikan_ad": "Removed_Security",
+      "cikan_ticker": "Removed_Ticker",
+      "eklenen_ad": "Added_Security",
+      "eklenen_ticker": "Added_Ticker",
+      "neden": "Reason_Reason",
+      "tarih": "Effective Date_Effective Date"
+    },
+    "kolonlar_ham": [
+      "Effective Date_Effective Date",
+      "Added_Ticker",
+      "Added_Security",
+      "Removed_Ticker",
+      "Removed_Security",
+      "Reason_Reason",
+      "Refs_Refs"
+    ],
+    "n_hayalet_atlanan": 0,
+    "n_satir_gecerli": 407,
+    "n_satir_ham": 407,
+    "n_tablo": 2,
+    "n_tarih_ayristirilamadi": 0,
+    "tablo_index": 0
+  }
+}

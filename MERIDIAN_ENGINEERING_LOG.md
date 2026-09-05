@@ -2695,3 +2695,9 @@ defterin maksimumundan).
 9 assert'i eski hükmü çiviliyordu (SNAP/ROKU örnekleri hiç-üye sınıfında) → operatör kararına göre güncellendi, örnekler gerçek çıkışlara taşındı;
 mutasyon-2'de fixture üretim koduna bağımlıyken mutasyon gizleniyordu → sabit literal (iyi ders). TSK-150 (b) canlıda uygulandı (19:07Z).
 Uçuşta: EDG-078 (motor) ve EDG-079 (research) ajanları.
+
+**19:40Z — EDG-2026-079 ÖLÇÜLDÜ (ajan kodu c4c6fba → merge 9a64cc3; gerçek girdi):** tohum defterinde sızıntı p=0,107 > 0,10 → BANT 3 (eşik donuk):
+replay hükümleri survivorship şerhiyle ASKIDA. Ayrışım: 39 hiç-üye (bugün canlıya dönen 6 sembol), 42 geç-katılan (MRVL 24 — girişi
+2026-06-22), 14 çıkış-sonrası (VFC 11, ENPH 3). Hiç-üye hariç p=0,063. Sızan işlemler daha KÖTÜ (medyan R −0,88 vs −0,17) — şişirme yok ama
+kurulum PIT değil. K2 q=0,085 geçti; PK 3/3. TSK-066 as_of ZORUNLU; yeniden tohumlama yeni kart. EDG-078 merge 84c7156 (313 hedefli, tsc 0
+hata), TSK-143 merge 0bff82e → tam suite #28 → dağıtım #21.
