@@ -2532,3 +2532,20 @@ anlık ps yanılgısı); 310 teslim edilememiş bildirim 23 Ağustos'ta dondurul
 Rol-1 boş saatinde (S), 145 ingest sonrası 3 gün gözlem, 149 sabah bakım penceresinde.
 
 **Rol-1 devri (11:3xZ):** operatör "bütün yetkilerin var, full otonom" — ana checkout HEAD 7ca9048, eş oturum ai-trading-d5 dört saattir git yapmamış (.git/logs), pytest kuyruğu boş → bu oturum (ai-trading-b8) Rol-1 olarak devam eder; d5 uyanırsa yan oturumdur.
+
+### 2026-09-05 öğle (Rol-1 = ai-trading-b8, operatör devri; ultracode) — 9 paralel keşif · hükümler · gece zinciri
+
+Operatör: "konsolide plandan full otonom devam et, bütün yetkilerin var, ultracode paralel" (11:2xZ). Devir paketi commit (5d8a3bc); TSK-148
+worktree'de paralel (ae5f647); TSK-131 disk sensörü ana ağaçta (ajan arka-plan pytest bildirimi bekleyip durdu — ikinci vaka, Monitor ile
+bitişi yakalandı: 5 kırmızı + v61 12 hata → r1 ajanı); 9 ajanlık keşif workflow'u (wf_f94c01e3, 24 dk, 1,55M token).
+
+**Hükümler:** TSK-143 — alarm 24 gündür ötüyor; 13'ün 3'ü delist (EA/AVB/EQR → RETIRED), 10'u evren tanımıyla tutarlı (beyanlı küme, alarm
+yalnız beyansız sapmada; bedel: delist körlüğü → TSK-153); implementer worktree'de. TSK-144 — '%23' teşhisi yanlıştı; r2 bitti 81/36 (kota
+10:33Z'de doldu); r3 geniş 09-06 00:05Z timer; TSK-151 (sarılı-429 → dur). TSK-145 — STUCK etiketi yaş işareti; gerçek sınıf hesap kotası;
+kurtar 05:00Z timer; upstream ayrı. TSK-146 — öncül YANLIŞ (A1 08-27/28 dolu) → kapandı, artefakt. TSK-147 — 887 yanlış okundu (885+2) →
+kapandı; 16 çift id → TSK-150. TSK-149 — A (yamalar kalsın, reboot kapalı beyanı) + TSK-152 (daemon-reload timer ateşlemesi). TSK-142 —
+reflect hiç koşmadı, model tools destekliyor → kanary 00:02Z timer. TSK-095 — yüzey (b) SOUL denetçisi; free router kota çözmez; sonda 00:03Z
+timer. Bekçi bugün sessiz → `cevrilen` ölçümü yok; 22:00Z şef kotasız → llm_dustu beklenir; 138 doğrulaması 09-06'ya.
+
+**Gece zinciri (A1 transient timer, çıktılar /home/ubuntu/gece-20260906/):** 00:02Z reflect kanary ×3 · 00:03Z openrouter/free sonda ×2 ·
+00:05Z ingest067-r3 (36 dilim) · 05:00Z konsolidasyon kurtar (önce/sonra stats). Sabah okunur.
