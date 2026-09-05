@@ -61,25 +61,47 @@ dilim_sup = _kaynaktan_yukle(_BURASI / "dilim_sup.py", "edg067_dilim_sup_ic")
 # ---- D2: hata siniflandirma (saf fonksiyon, civilenir) -------------------------------------------
 
 def hata_sinifi(status, govde):
-    """429 -> dur (gunluk ucretsiz tavan, retry YOK). 502/503/504 ve ag-hatasi/timeout
-    (status=None) -> gecici. 500 govdesinde ProviderResponseError/overloaded/rate isareti varsa
-    gecici, yoksa kalici. Diger 4xx/5xx -> kalici (TSK-115, 2026-09-03).
+    """429 -> dur (gunluk ucretsiz tavan, retry YOK) — govdede per-min/per-minute isareti varsa
+    ISTISNA: gecici (bekle-dene, TSK-151). 500 govdesinde gunluk-kota isareti ('free-models-per-day'
+    ya da 'per-day'+'RateLimit' ikilisi) -> dur (retry YOK, TSK-151); yoksa 500 govdesinde
+    ProviderResponseError/overloaded/per-min/rate isareti -> gecici. 502/503/504 ve ag-hatasi/timeout
+    (status=None) -> gecici. Diger 4xx/5xx -> kalici (TSK-115, 2026-09-03).
 
     DUZELTME TURU 1 (ruling ONEMLI-1, 2026-09-03): "rate" salt alt-dizge araniyordu — "accurate",
     "separate", "generate", "moderate" gibi YAYGIN kelimeler kalici bir 500 govdesini yanlislikla
     gecici saydirirdi (3 deneme + 420 sn bosa harcanir, tavan sayacindan 2 fazla cagri gider).
     `\\brate\\b` KELIME siniriyla arar: "rate limit asildi" / "rate-limited" gibi "rate" kelimesi
     bir baska kelimenin GOVDESI olmadan gecen govdeler yakalanir, "accurate"/"separate" gibi
-    "rate" bitisik-govde iceren kelimeler yakalanmaz."""
+    "rate" bitisik-govde iceren kelimeler yakalanmaz.
+
+    DUZELTME TURU 2 (ruling Rol-1, TSK-151, 2026-09-05 — TSK-144 kesfi): EDG-067 r2 olcumunde
+    OpenRouter hesap-geneli GUNLUK kota asimi — Hindsight'in sardigi 500 govdesinde
+    'RateLimitError' / 'free-models-per-day' metni, bazen 'Rate limit exceeded:
+    free-models-per-day...' — `gecici` sayiliyordu: dilim basina 3 deneme x ~200s bosa gidiyordu
+    (r2: 14 dilim, 42 cagri, 47 dk). Gunluk kota hesap-geneli VE dakikalik DEGILDIR — bekleyip
+    yeniden denemekle GECMEZ, bu yuzden artik `dur`. Per-minute/per-min varyanti (govdede
+    'per-min' alt-dizgesi — 'per-minute' de bunu icerir) r2'de GORULMEDI ama mimariye ONDEN
+    konur: o VARYANT gercekten bekle-dene sinifidir, `gecici` KALIR (429'da da 500'de de) —
+    gunluk-kota isaretiyle CAKISMADIGI surece retry hakkini korur. Nvidia 'Service temporarily
+    overloaded' zaten 'overloaded' isaretiyle `gecici` idi, DEGISMEDI."""
+    govde_kucuk = (govde or "").casefold()
+    gunluk_kota = ("free-models-per-day" in govde_kucuk
+                   or ("per-day" in govde_kucuk and "ratelimit" in govde_kucuk))
+    dakika_kotasi = "per-min" in govde_kucuk  # "per-minute" bu alt-dizgeyi de icerir
     if status == 429:
+        if dakika_kotasi and not gunluk_kota:
+            return "gecici"
         return "dur"
     if status is None:
         return "gecici"
     if status in (502, 503, 504):
         return "gecici"
     if status == 500:
-        govde_kucuk = (govde or "").casefold()
+        if gunluk_kota and not dakika_kotasi:
+            return "dur"
         if "providerresponseerror" in govde_kucuk or "overloaded" in govde_kucuk:
+            return "gecici"
+        if dakika_kotasi:
             return "gecici"
         if re.search(r"\brate\b", govde_kucuk):
             return "gecici"
