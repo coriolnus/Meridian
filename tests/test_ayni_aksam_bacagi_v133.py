@@ -597,8 +597,9 @@ def _sched_env(monkeypatch, coverage: dict, index: pd.DataFrame, session="2026-0
     # (çapa SEMBOLE çevrildi 2026-09-01 — buradaki eski SATIR çapası, TSK-058'in öğrenme-kadansı
     # düzenlemesi scheduler'da satır kaydırınca bir YORUM satırını göstermeye başladı ve
     # `codelaw.stale_line_anchors` onu ÇÜRÜK yakaladı; satır kayar, sembol kaymaz):
-    # `scheduler.advance_once::earnings.refresh(list(LIVE_UNIVERSE))` → 238 (TSK-116 düzeltme
-    # turu 1, 2026-09-03: REPLAY_UNIVERSE→LIVE_UNIVERSE, 251→238 — bu satırın tek işi kaynağı
+    # `scheduler.advance_once::earnings.refresh(list(LIVE_UNIVERSE))` → 244 (TSK-116 düzeltme
+    # turu 1, 2026-09-03: REPLAY_UNIVERSE→LIVE_UNIVERSE, 251→238; TSK-143 İKİNCİ revizyonu,
+    # 2026-09-05: 238→244, hiç üye olmamış 6 sembol geri döndü — bu satırın tek işi kaynağı
     # DOĞRU alıntılamak)
     # sembol, `nasdaq_earnings_window`
     # üzerinden api.nasdaq.com'a GÜN BAŞINA bir istek (-7/+21 gün ≈ 20 iş günü), Nasdaq boş dönerse

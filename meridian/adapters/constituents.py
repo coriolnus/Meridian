@@ -62,7 +62,15 @@ PIT SINIFI DOKUNULMADI: `("constituents", "as_of")` bu turda da `PIT_SOZLESMELI_
 sınıfında KALDI. `pitlaw.sinif_turet` yalnız `PIT_DISI_KAYNAKLAR` kaydını ve YALNIZ karar/tarihsel
 modüllerdeki GERÇEK çağrı yerlerini kaynaktan tarar; `as_of`in üretimde HİÇBİR çağıranı yok (bu
 paragrafın (e) bendi hâlâ doğru), yani türetim mekanik olarak `None` (ölçülemedi) döner — beyaz
-listeye taşımayı DOĞRULAYACAK bir mekanik onay bu turda YOK, taşıma yapılmadı (rapor: Rol-1)."""
+listeye taşımayı DOĞRULAYACAK bir mekanik onay bu turda YOK, taşıma yapılmadı (rapor: Rol-1).
+(g) TSK-143 İKİNCİ revizyonu (2026-09-05, AYNI GÜN, operatör kararı — "hiç S&P 500 üyesi olmamış
+6 sembol canlı evrene geri döner"): `universe_drift()`ün `beyanli_disi` alanı artık
+`is_index_exited` DEĞİL `is_evren_disi_beyanli` (birleşim) üzerinden hesaplanır — ilki bu turda
+YALNIZ gerçek S&P 500 çıkışlarına (4 kayıt) daraldığı için eski hâliyle bırakılsaydı hiç-üye
+altısı sessizce "beyansız" görünürdü. YENİ alan `hic_uye_canlida` (LIVE_UNIVERSE kesişim
+HIC_UYE_BEYANLI, 6 beklenir): bu altı sembol artık canlı taranıyor ama S&P 500 üyesi değil —
+BEYANLI, alarm ÜRETMEZ. `stale` formülü DEĞİŞMEDİ (hâlâ EVREN_DISI_BEYANLI birleşimi ∪
+RETIRED_SYMBOLS dışını sayar; EVREN_DISI_BEYANLI hâlâ 10 kayıtlık BİRLEŞİM)."""
 from __future__ import annotations
 import datetime as dt
 
@@ -520,6 +528,17 @@ def universe_drift() -> dict:
     500 ∪ EVREN_DISI_BEYANLI ∪ RETIRED_SYMBOLS) — yani BEYANSIZ sapma. Beyanlı sapma ayrı alanda
     (`beyanli_disi`) GÖRÜNÜR kalır, sessizce yutulmaz.
 
+    TSK-143 İKİNCİ REVİZYONU (AYNI GÜN, bu turun konusu — operatör: "hiç S&P 500 üyesi olmamış 6
+    sembol canlı evrene geri döner"): `data.EVREN_DISI_BEYANLI` (10) artık İKİ alt-sözlüğün
+    (`ENDEKS_CIKISI_BEYANLI` 4, `HIC_UYE_BEYANLI` 6) BİRLEŞİMİ ve `data.is_index_exited` yalnız
+    ilkine bağlı — `LIVE_UNIVERSE` bu yüzden 6 hiç-üye sembolü GERİ ALDI. `beyanli_disi` alanı bu
+    yüzden ARTIK `is_index_exited` DEĞİL `data.is_evren_disi_beyanli` (birleşim) ÜZERİNDEN
+    hesaplanır — aksi hâlde alan sessizce 10'dan 4'e düşer ve hiç-üye altısı "beyansız" görünürdü
+    (Yasa 6 ihlali). YENİ alan `hic_uye_canlida` (LIVE_UNIVERSE ∩ HIC_UYE_BEYANLI, 6 beklenir):
+    bu altı sembol artık canlı taranıyor ama S&P 500 üyesi DEĞİL — okuyucu (pano/alarm metni) bu
+    ayrımı `index_exited_in_live`den AYRI listelemeli; `hic_uye_canlida` DOLU olması bir İHLAL
+    DEĞİLDİR (BEYANLI, operatör kararı), alarm ÜRETMEZ.
+
     BEDEL BEYANI (Yasa 6 / bedel yasası): `beyanli_disi`deki 10 sembolden biri gelecekte GERÇEKTEN
     delist olursa bu fonksiyon onu `stale`de GÖSTERMEZ — beyanlı olmak bu alarmı kalıcı olarak
     susturur. Bu kör nokta bilerek kabul edildi (aksi hâlde alarm eskisi gibi her gün geri gelir);
@@ -542,39 +561,57 @@ def universe_drift() -> dict:
     # (elle düzenleme, birleşme sonrası kopyala-yapıştır) delist olmuş bir sembolü tarama evrenine
     # geri koymuş demektir — sessiz kalırsa motor günlerce ölü bir isim hakkında karar üretirdi.
     retired_in_universe = sorted(t for t in REPLAY_UNIVERSE if _data.is_retired(t))
-    # DÖRDÜNCÜ KANIT — EVREN-DIŞI BEYAN BEKÇİSİ (TSK-116, 2026-09-03; TSK-143, 2026-09-05 revizyonu
-    # — ad ve sayı değişti: INDEX_EXITED→EVREN_DISI_BEYANLI, 13→10, üçü RETIRED_SYMBOLS'a taşındı).
-    # `retired_in_universe`nin kardeşi ama FARKLI evrende ölçülür: 10 beyanlı sembol BİLEREK
-    # REPLAY_UNIVERSE'de KALIR (sağkalan yanlılığı artırmamak için — bkz. data.py EVREN_DISI_BEYANLI
-    # şerhi), o yüzden onu REPLAY_UNIVERSE'e karşı ölçmek HER ZAMAN doğru-pozitif üretirdi. Bekçi
-    # LIVE_UNIVERSE'e karşı ölçer: LIVE_UNIVERSE'in KENDİ TANIMI bu 10'u zaten süzdüğü için normalde
-    # BOŞ döner; boş DEĞİLSE biri LIVE_UNIVERSE türetmesini (elle düzenleme, monkeypatch) bozmuş
-    # demektir. Alan adları (`index_exited_n`/`index_exited_in_live`) KORUNDU — okuyucular (pano,
-    # testler) değişmedi; `data.INDEX_EXITED` artık `EVREN_DISI_BEYANLI`nin AYNI nesnesi (tek kaynak).
+    # DÖRDÜNCÜ KANIT — ENDEKS-ÇIKIŞI BEKÇİSİ (TSK-116, 2026-09-03; TSK-143, 2026-09-05 İKİ
+    # revizyon — önce ad/sayı değişti: INDEX_EXITED'den EVREN_DISI_BEYANLI'ye, 13'ten 10'a, üçü
+    # RETIRED_SYMBOLS'a taşındı; SONRA (aynı gün) INDEX_EXITED, ENDEKS_CIKISI_BEYANLI'ye (4, yalnız
+    # gerçek çıkışlar) DARALTILDI — hiç-üye altısı artık bu bekçinin KAPSAMI DIŞINDA, ayrı alanda
+    # (`hic_uye_canlida`, aşağıda) görünür). `retired_in_universe`nin kardeşi ama FARKLI evrende
+    # ölçülür: 4 beyanlı-çıkış sembol BİLEREK REPLAY_UNIVERSE'de KALIR (sağkalan yanlılığı
+    # artırmamak için — bkz. data.py ENDEKS_CIKISI_BEYANLI şerhi), o yüzden onu REPLAY_UNIVERSE'e
+    # karşı ölçmek HER ZAMAN doğru-pozitif üretirdi. Bekçi LIVE_UNIVERSE'e karşı ölçer: LIVE_
+    # UNIVERSE'in KENDİ TANIMI bu 4'ü zaten süzdüğü için normalde BOŞ döner; boş DEĞİLSE biri
+    # LIVE_UNIVERSE türetmesini (elle düzenleme, monkeypatch) bozmuş demektir. Alan adları
+    # (`index_exited_n`, `index_exited_in_live`) KORUNDU — okuyucular (pano, testler) değişmedi;
+    # INDEX_EXITED artık ENDEKS_CIKISI_BEYANLI'nin AYNI nesnesi (tek kaynak, 4 kayıt).
     index_exited_in_live = sorted(t for t in _data.LIVE_UNIVERSE if _data.is_index_exited(t))
-    # BEŞİNCİ KANIT — BEYANLI SAPMA, AYRI ALANDA GÖRÜNÜR (TSK-143, K3). REPLAY_UNIVERSE içindeki 10
-    # EVREN_DISI_BEYANLI sembolü `stale`den SESSİZCE çıkarmak yetmez — nereye gittiklerini görmek
-    # (Yasa 6) için ayrı taşınırlar. Üyelik kaynağı olmasa da (aşağıdaki 'unknown' dalı) bu liste
-    # REPLAY_UNIVERSE'e karşı statik ölçülür, üyelik gerektirmez.
-    beyanli_disi = sorted(t for t in REPLAY_UNIVERSE if _data.is_index_exited(t))
+    # BEŞİNCİ KANIT — BEYANLI SAPMA, AYRI ALANDA GÖRÜNÜR (TSK-143, K3; İKİNCİ revizyon aynı gün).
+    # REPLAY_UNIVERSE içindeki 10 EVREN_DISI_BEYANLI (BİRLEŞİM) sembolü `stale`den SESSİZCE
+    # çıkarmak yetmez — nereye gittiklerini görmek (Yasa 6) için ayrı taşınırlar. BİLEREK
+    # `is_index_exited` DEĞİL `is_evren_disi_beyanli` kullanılır: ilki artık yalnız 4 gerçek çıkışı
+    # kapsıyor (bkz. dördüncü kanıt) — bu alan hâlâ TAM 10'u (çıkış+hiç-üye BİRLİKTE) görünür
+    # tutmalı, aksi hâlde hiç-üye altısı burada da "beyansız" gibi kaybolurdu. Üyelik kaynağı
+    # olmasa da (aşağıdaki 'unknown' dalı) bu liste REPLAY_UNIVERSE'e karşı statik ölçülür, üyelik
+    # gerektirmez.
+    beyanli_disi = sorted(t for t in REPLAY_UNIVERSE if _data.is_evren_disi_beyanli(t))
+    # ALTINCI KANIT — HİÇ-ÜYE CANLIDA (TSK-143 İKİNCİ revizyonu, 2026-09-05, bu turun konusu).
+    # `HIC_UYE_BEYANLI`nin 6 sembolü artık LIVE_UNIVERSE'in KENDİ TANIMI gereği CANLI taranıyor
+    # (`is_index_exited` onları süzmüyor) — bu alan operatöre "canlıda ama S&P 500 üyesi değil"
+    # görünürlüğünü verir. DOLU olması (6 beklenir) bir sapma/İHLAL DEĞİLDİR — beyanlı, alarm
+    # ÜRETMEZ; `loop._universe_drift_check` bu alana bakmaz (yalnız `stale`e bakar). Okuyucu
+    # (pano/alarm metni) bu altıyı `index_exited_in_live`den AYRI listelemelidir — ikisi farklı
+    # hükümler taşır (biri "kaçtı", öteki "hiç girmedi ama beyanlı").
+    hic_uye_canlida = sorted(t for t in _data.LIVE_UNIVERSE if t.upper() in _data.HIC_UYE_BEYANLI)
     members = current()
     if not _plausible(members):
         return {"status": "unknown", "reason": _HEALTH.get("error") or "üyelik kaynağı yok",
                 "universe": len(REPLAY_UNIVERSE), "stale": [], "n_stale": 0,
                 "beyanli_disi": beyanli_disi, "n_beyanli_disi": len(beyanli_disi),
+                "hic_uye_canlida": hic_uye_canlida, "n_hic_uye_canlida": len(hic_uye_canlida),
                 "no_data": no_data, "n_no_data": len(no_data),
                 "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe,
                 "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live}
     mset = {m.upper() for m in members}
     # BEYANSIZ sapma: güncel S&P 500'de YOK ve EVREN_DISI_BEYANLI/RETIRED'da da beyan edilmemiş.
     # RETIRED_SYMBOLS yapısal olarak REPLAY_UNIVERSE'de bulunmaz (yukarıdaki kesişmezlik hükmü),
-    # ama formül tek-kaynak yasasına uysun diye üç kümenin BİRLEŞİMİ açıkça yazılır.
+    # ama formül tek-kaynak yasasına uysun diye üç kümenin BİRLEŞİMİ açıkça yazılır. EVREN_DISI_
+    # BEYANLI hâlâ BİRLEŞİM (10) olduğu için bu formül İKİNCİ revizyondan ETKİLENMEDİ.
     _beyanli_ve_emekli = set(_data.EVREN_DISI_BEYANLI) | set(_data.RETIRED_SYMBOLS)
     stale = sorted(t for t in REPLAY_UNIVERSE
                    if t.upper() not in mset and t.upper() not in _beyanli_ve_emekli)
     return {"status": "ok", "source": _HEALTH.get("source"), "universe": len(REPLAY_UNIVERSE),
             "members": len(mset), "stale": stale, "n_stale": len(stale),
             "beyanli_disi": beyanli_disi, "n_beyanli_disi": len(beyanli_disi),
+            "hic_uye_canlida": hic_uye_canlida, "n_hic_uye_canlida": len(hic_uye_canlida),
             "no_data": no_data, "n_no_data": len(no_data),
             "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe,
             "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live}
