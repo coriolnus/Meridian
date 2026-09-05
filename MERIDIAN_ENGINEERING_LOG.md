@@ -2678,3 +2678,10 @@ başladı: iki implementer brief (143, 150b) yazıldı, sevk ediliyor; EDG-078 i
 **18:48Z — EDG-042 haftalık koşum #4 (zamanlanmış görev, 18:39Z, ölçüm oturumu → Rol-1 işledi):** dört kova eşik altı, measuring sürüyor; cikis_stop seans
 eşiği doldu; giris_1345 n 2→8; yeni açık kalem: aynı seansın aynı dolumu iki plan (VRTX + VRTX-pead) — kova içi bağımlı gözlem kuralı kartta yok
 (operatör). Artefakt dizini commit'lendi; dizin ana checkout'ta kirli ağaç olarak dağıtım #20 kapısını durdurmuştu (0a temiz-ağaç kapısı doğru çalıştı).
+
+**18:54Z — TSK-047 kök neden ve çözüm (kapı):** PORTAL kanaryası minimax ile de 429 verince ölçüm derinleşti: kapı (APISIX ai-proxy-multi) istemci model
+alanını eziyor, instance'lar nemotron(10)→gemma(1), ikisi de ortak kovada; Hindsight anahtarıyla AYNI hesap (sha kıyası) → sorun hesap değil model
+seçimi. Bugün 10:33Z'den beri botlar/review/backfill/nous'un tamamı 502 idi. routes.yaml'a `yedek-minimax`/`hizli-minimax` (:free, öncelik en
+düşük — v361 'hepsi ücretsiz' korunur), v361 zincir beklentisi güncellendi (aae8c5e), DAĞITIM #20 (ebe5c8b 18:52Z; EDG-042 #4 artefaktı ve docs
+dahil), A1 `apisix_uygula --uygula` 8 PUT 200 + `--denetle` drift 0; kanarya 200 minimax 'MiniMax-M3 (Hermes); 17*3=51'. Hafta sonu kapı trafiği
+artık kotaya takılmaz; nemotron kova yenilenince yine birincil.
