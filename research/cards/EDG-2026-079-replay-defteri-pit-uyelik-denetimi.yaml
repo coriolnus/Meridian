@@ -1,0 +1,64 @@
+# EDG-2026-079 — Replay/tohum defterinin PIT ÜYELİK DENETİMİ: survivorship maruziyeti (TSK-156 dilim-2 (a), TSK-066 girdisi) — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-05 19:10Z (Rol-1; D kuyruğu, operatör "D'ye başla"). Zemin: EDG-076 kaynağı PIT'e uygun buldu (as_of fark 0), TSK-156
+# dilim-1 canlı (#19) ama as_of'un ÜRETİM TÜKETİCİSİ yok (ajan ölçümü). Tüketici bağlamadan önce sorulacak soru: bugünkü tohum/replay
+# defteri survivorship taşıyor mu, ne kadar? Girdi DONUK: A1 meridian.db trades snapshot (901 satır: 885 replay_seed 2022–2026 + 16
+# live_paper; 211 sembol; sha256 e2ab0340…) + EDG-076'nın içerik-adresli Wikipedia HTML'i (oldid 1370891103, sha 9909032c…) + güncel
+# liste (A1 sp500_constituents.json as_of 2026-09-04, 503; girdi/ altında sha). REPLAY_UNIVERSE 248 · LIVE 238 · RETIRED 11 (2026-09-05).
+
+card_id: EDG-2026-079
+status: registered   # 2026-09-05 Rol-1 — ön-kayıt; ölçüm kodu (research, ağsız; edg075 olcum.py as_of'u yeniden kullanır) bu karttan SONRA
+family: evren_pit
+on_kayit: 2026-09-05
+ref: [TSK-156, TSK-066, TSK-143, EDG-2026-076, EDG-2026-075, EDG-2026-062]
+
+hipotez: >
+  Tohum/replay defterindeki işlemlerin küçük bir payı (≤ %2) işlem açılış tarihinde S&P 500 üyesi OLMAYAN sembollerde gerçekleşti
+  (sızıntı) ve REPLAY_UNIVERSE'in küçük bir payı (≤ %10) 2022-01-01'de üye değildi (geç katılan). Paylar eşiği aşıyorsa replay
+  hükümleri survivorship şerhi ister ve TSK-066 evren yeniden kurulumu as_of(t)'yi ZORUNLU tüketici yapar.
+
+k_registry: {registered_at: "2026-09-05", trial_ids: [EDG-079-k1-islem-sizintisi, EDG-079-k2-gec-katilan-payi]}
+# K=2. K1 = işlem düzeyi (885 tohum + 16 canlı AYRI raporlanır, hüküm tohum üstünden). K2 = evren düzeyi. PK K'ya sayılmaz.
+
+girdi_kimligi:
+  trades: "research/olcumler/edg079_replay_pit_denetimi/girdi/trades_2026-09-05.json (sha256 girdi/SHA256.txt; A1 meridian.db salt okuma, 2026-09-05 19:1xZ)"
+  degisiklik_tablosu: "research/olcumler/edg075_sp500_tarihsel/ham/1370891103_9909032c1f815a01.html (oldid 1370891103, sha256 9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871)"
+  guncel_liste: "research/olcumler/edg079_replay_pit_denetimi/girdi/guncel_uyeler_2026-09-04.json (503; sha girdi/SHA256.txt)"
+  rename_defteri: "meridian/adapters/data.py SEMBOL_YENIDEN_ADLANDIRMA (EQR→VMRK 2026-08-18) — eşleme işlem tarihine göre uygulanır"
+
+adim_0_fizibilite: >
+  (a) üç girdi sha'sı SHA256.txt ile eşit; (b) as_of(ts_open) her işlem için kurulabiliyor (tablo işlemin tarihinden sonraki tüm
+  değişiklikleri taşıyor — en eski işlem 2022; tablo 2007'ye kadar); (c) işlem sembolleri normalize (BRK.B→BRK-B gibi nokta/tire) ve
+  rename eşlemesinden geçirilmiş; (d) ts_open ISO ayrışıyor (ayrışmayan sayılır, None + neden).
+
+olcum_plani:
+  - "K1: her işlem için uye_mi = ticker ∈ as_of(ts_open); sızıntı payı p = (uye_mi False) / n, tohum (885) ve canlı (16) AYRI; sızan işlemlerin listesi (ticker, ts_open, hangi tarihte üye oldu/çıktı) ve R dağılımı (sızan vs kalan medyan R — betimleyici)"
+  - "K1 kapsam: as_of'un kuramadığı işlem (tarih/ sembol yok) 'ölçülemedi' kovasında, paya girmez"
+  - "K2: REPLAY_UNIVERSE (248) için as_of(2022-01-01) — üye olmayan sembol sayısı ve payı q; ayrıca as_of(2024-01-01) ile ikinci kesit (bilgi)"
+  - "PK (yol-tutarlı): (a) sentetik işlem: FERG 2026-07-01 (girişi 2026-08-05) → sızıntı SAYILMALI; (b) sentetik işlem: FERG 2026-08-10 → SAYILMAMALI; (c) sentetik: EQR 2026-06-01 (rename öncesi) → rename eşlemesiyle üye SAYILMALI. Üçü ayrışmıyorsa harness kör"
+  - "okuyucu: hüküm bu karta + TSK-066 tasarımına; sonuc.json depoda"
+
+esikler:
+  k1_gecti: "tohum sızıntı payı p ≤ 0,02 → 'ihmal edilebilir, beyanla'; 0,02 < p ≤ 0,10 → 'PIT evren ZORUNLU (TSK-066), replay hükümleri şerhli'; p > 0,10 → 'tohum defteri survivorship taşıyor: replay hükümleri askıda, yeniden kurulum kartı'"
+  k2_gecti: "q ≤ 0,10 → evren kurulumu kabul; q > 0,10 → REPLAY_UNIVERSE geç-katılan ağırlıklı, TSK-066 as_of ile yeniden kurulum"
+  # eşikler donuk; sonradan değişmez (yeni eşik = yeni kart)
+
+kill_list:
+  - "girdi sha'larından biri eşleşmiyorsa ölçüm GEÇERSİZ"
+  - "as_of kuramama oranı > %5 → tablo kapsamı yetersiz, hüküm yok"
+  - "PK üçlüsü ayrışmıyorsa hiçbir sayı yayılmaz"
+  - "K1 hükmü yalnız tohum satırları üstünden; canlı 16 satır bilgi"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: aynı as_of + aynı eşleme yoluna üç sentetik işlem (FERG giriş-öncesi → sızıntı; FERG giriş-sonrası → üye; EQR
+  rename-öncesi → üye). Gerçek defterle aynı fonksiyonlar; ayrı fonksiyon yazılmaz.
+
+veri_penceresi: "işlemler 2022-01-01→2026-09-05 (donuk snapshot); as_of tablo oldid 1370891103; canlı DEĞİL; ağsız"
+
+basari_tanimi: >
+  K1 p ≤ 0,02 ∧ K2 q ≤ 0,10 → replay evreni PIT'siz kabul (beyan ROADMAP TSK-066'ya; as_of tüketicisi 'isteğe bağlı' sınıfı).
+  Aksi → TSK-066 tasarımı as_of(t) ile yeniden kurulum ZORUNLU, EDG-062 PIT (b) hattına girdi; pitlaw sınıf kararı bu hükme bağlanır.
+
+notlar: >
+  Ölçüm kodu research/olcumler/edg079_replay_pit_denetimi/olcum.py; edg075 olcum.py'nin tabloyu_ayristir/as_of fonksiyonlarını
+  İÇE AKTARIR (kopya değil). Ticker normalizasyonu: '.'→'-'; rename eşlemesi işlem tarihine göre (tarih < rename tarihi ise eski ad
+  geçerli). Sızan işlemlerin R dağılımı betimleyicidir, hüküm değildir (n küçük olabilir).
