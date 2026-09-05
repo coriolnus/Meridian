@@ -2461,3 +2461,27 @@ ilk deneme kirli-ağaç kapısına takıldı (dagit.sh uncommitted; kapı doğru
 yeniden koşum gereksizleşti (gece Monitor zinciri iptal). Bu gece canlıya giden: 035 · 122 · 134 · 139 · 140 (+137a/074/123/132-1/133/v412
 dağıtım #13'te). Açık kalanlar: TSK-137b (operatör soruları), TSK-138 (09-05 22Z brifingi sonrası ölçüm), TSK-132 dilim-2 (düşük), TSK-128
 (düşük), TSK-125 (ingest sonrası), TSK-131 (120 G kapısı), 117/118/121 görsel damgaları + Meridian Palet preset onayı (operatör).
+
+### 2026-09-05 gece (Rol-1, otonom) — keşif fan-out: TSK-138 kök neden · TSK-006 bayat · TSK-125 beyanla kapandı
+
+Oturum başı: HEAD 370000e, canlı c37ad06; alarm yok, alerts 41 bekliyor (son ACK 25 Ağustos), bayat failed transient (edg067-ingest 09-02)
+reset-failed ile temizlendi. Ingest r2 32 dilim (23 ok / 9 sağlayıcı 500), sprint baseline, geri dolum 2025-05-20, disk 45 G (ham 15 G geçici).
+Operatör: "konsolide plandan full otonom devam et" → üç açık kalem için üç salt-okunur keşif ajanı (workflow wf_e627d753, 9,7 dk, 468k token;
+gerekçe: üç ayrı kod/log bölgesi, bağlamda yok).
+
+**TSK-138 kök neden:** denetçi istemi VERİ'yi görmüyor — SOUL kuralı "ya VERİDEN ya bu dosyadan" der, `istem()` yalnız Üslup bloğu + brifing
+verir; çıktı sözleşmesi "kural metninde ve brifingde OLMAYAN" diye yanlış tanım taşır. Canlı olay tüm tarihte 3 (ROADMAP'teki "14" beklentiydi);
+6 ihlal kaydının 4 uydurması VERİ'de literal ('yazim' = `"mode": "yazim"`, 'bekçi' = selfreview attention, "stop_gap'i", 'iyileştirme önerisi'
+= KAYNAK_ADLARI başlığı) → yanlış-pozitif; gerçek 0; denetçinin kaçırdığı 1 gerçek bozuk çekim ('kritikisi'). `veri_terimleri` "susturulamaz"
+listesi — ROADMAP'in "bot adlarını ekle" maddesi ters (sef bekçi'yi anmayınca mekanik ihlal olurdu), uygulanmadı. `cevrilen` canlıda hiç koşmadı
+(22:04Z eski şema; dağıtım #14 22:08Z). Hüküm D: VERİ bölgeleri üçüncü çitli blok + mekanik izinli-sözlük süzgeci (`suzulen` beyanı) + ilk-tur
+ihlali olaya (damgaya değil, O4). Sevk 02:5xZ; dağıtım #16 20:00–22:00Z; 22:04Z brifingi canlı doğrulama.
+
+**TSK-006 bayat:** kesim 09-02/03'te (TSK-106 günlük özet, KOVA B IP anahtarı) yapılmış ve canlıda — 09-04 704 olayın 6'sı; gerçek tazeleme
+1341/gün sürerken kayıt 1 satır/gün; okuyan kod yok. DONE'a çekildi (§5 işlenmemiş hüküm). Tarihsel 22.100 satır (%25) TSK-137b'nin; yeni
+kalabalık `sprint_cadence_skip` %40 + `intraday_gap_detected` %32 → TSK-141. Why'daki %87 sayısı yeniden üretilemedi (journal olabilir);
+08-27/28 defterde boş (açık soru).
+
+**TSK-125 beyanla kapandı:** Hindsight konsolidasyonu zihin modeli üretmez, tanımlı modeli tazeler; tanım 0 → sayfa 0 beklenen. 09-03 "404"
+yol hatasıydı (/knowledge-base/* 200). Konsolidasyon çalışıyor (71 op, 1026 olgu bekliyor, 15×429/24 sa, bir op 1564 s STUCK? — kota mı takılma
+mı ölçülmedi). Kodsuz pilot (1 model, delta, gece cron, 7 gün sayım) → TSK-142 operatör masasına; ön şart reflect canary kaydı yok.
