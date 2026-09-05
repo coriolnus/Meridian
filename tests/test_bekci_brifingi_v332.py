@@ -354,8 +354,14 @@ def test_UPSTREAM_DEGER_PENCERE_KAYDIKCA_KIMLIGINI_KORUR(bekci, sandbox_state, t
     for kaydirma in range(4):
         sonuc = bt.tara(3, defter=str(defter),
                         simdi=t0 + dt.timedelta(hours=399) + dt.timedelta(days=kaydirma))
+        # `bekci.SINIFLAR` artık DÖRT ad taşır (TSK-155, "bayat") ama HAM `bt.tara()` yalnız
+        # events-defteri sınıflarını üretir — "bayat" `bekci_tarama.manifest_tara()`den gelir
+        # ve `ops/bekci_brifingi.py::_tarama` tarafında AYRICA birleştirilir (gerekçe orada).
+        # `.get(sinif, [])` bu yapısal ayrımı KABUL EDER; `sonuc[sinif]` üç sınıfı ARAMASINDAN
+        # bağımsız bir çivinin dördüncü, buraya AİT OLMAYAN bir sınıf yüzünden KeyError'la
+        # kırılmasını önler.
         for sinif in bekci.SINIFLAR:
-            for k in sonuc[sinif]:
+            for k in sonuc.get(sinif, []):
                 anahtar = bekci._anahtar(sinif, k["ad"])
                 ozet = bekci._deger_ozeti(k)
                 if ozet is not None:

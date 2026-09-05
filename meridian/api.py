@@ -4871,6 +4871,11 @@ def api_diagnostics(request: Request, taze: int = 0):
     _wd_rep = _wd.report()
     _alarm_rep, _alarm_age = _wd.alarm_budget_cached()
     _intra = __import__("meridian.intraday_cycle", fromlist=["health"]).health()
+    # TEK OKUMA (TSK-155, 2026-09-05, ÖLÇÜLDÜ): bu liste aşağıda `faz6_kilitleri`ye
+    # `intraday_decisions_n=len(_idec)` olarak ENJEKTE EDİLİR — health.py'nin kendi başına
+    # AYNI dosyayı ikinci kez baştan sona okuması (sandbox ölçümü: 51k satırda ~44 ms fazladan,
+    # 45 saniyelik teşhis önbelleğinin ARKASINDA her istekte) böylece HİÇ olmaz. Gerekçe ve
+    # ölçüm `health.faz6_kilitleri` docstring'inde.
     _idec = store.read_jsonl("intraday_decisions.jsonl")
     _intra["decisions"] = {"total": len(_idec), "fired": sum(1 for r in _idec if r.get("fired")),
                            # BUGÜNÜN sayısı ayrı: toplam ömür boyu birikir ve "bugün akış çalıştı mı?"
@@ -5094,8 +5099,12 @@ def api_diagnostics(request: Request, taze: int = 0):
                   # değildi — yani denetçisi yoktu. Beşinci kilit (yürürlükteki pencerede DSR > 0.95
                   # ölçülü ve geçer) bu turda eklendi ve zincir `health.faz6_kilitleri`de yazılı.
                   # SAF OKUMA: hiçbir şey silahlamaz. Eşik ship yoluyla AYNI sabitten gelir.
+                  # `intraday_decisions_n=len(_idec)`: yukarıda ZATEN okunan listenin uzunluğu —
+                  # `intraday_decisions.jsonl`in bu istekte İKİNCİ kez tam okunmasını önler
+                  # (TSK-155, gerekçe `_idec` atamasının yanında ve `faz6_kilitleri`de).
                   "faz6_kilitleri": health.faz6_kilitleri(edge=_edge_v, sonuc=_sonuc_v,
-                                                          trio=_trio_v),
+                                                          trio=_trio_v,
+                                                          intraday_decisions_n=len(_idec)),
                   # BÜYÜKLÜK YASASI SATIRI — **TERS GÖLGELEME** (PARA-v3). DİKKAT: bu
                   # alanın anlamı önceki düzene göre TERSİNE döndü ve adı (`shadow_law`) tarihsel sebeple
                   # KORUNDU (tüketicisi app.js'te `ml.shadow_law`; anahtar yeniden adlandırılsa

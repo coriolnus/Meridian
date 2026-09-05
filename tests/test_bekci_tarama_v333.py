@@ -1213,3 +1213,105 @@ def test_YAZMA_YASAGININ_KACAKLARI_BEYAN_EDILMIS(mod):
             f"beyan edilmiş kaçak KAPANMIŞ: {k!r} — beyanı güncelle, çiviyi sessizce silme")
     for tutmali in ('open(p, "w")', 'yol.open("wb")', 'open(p, mode="a")'):
         assert re.search(desen, tutmali), f"desen gerilemiş: {tutmali!r}"
+
+
+# ---- ARŞİV MANİFESTİ SENSÖRÜ (TSK-155, 2026-09-05) ----------------------------------------------
+# `ops/olay_sikistir.py --kirp`in yazdığı `state/olaylar/manifest.json`ı tarayan AYRI bir giriş
+# noktası (`manifest_tara`, `tara()`NIN PARÇASI DEĞİL — gerekçe `ops/bekci_tarama.py`daki bölüm
+# başlığında). Kırpma bu makinede/canlıda HENÜZ HİÇ KOŞMADI (TSK-137b) — burada da (dosya
+# başlığındaki disiplinin AYNISI) çiviler yalnız KAYNAK KODUNDAN ÇIKARILAN şemayı (`ops/
+# olay_sikistir.py::manifest_guncelle`) sınar, canlı davranışı DEĞİL.
+
+def _manifest_yaz(tmp_path, icerik, ad="manifest.json") -> pathlib.Path:
+    yol = tmp_path / ad
+    yol.write_text(json.dumps(icerik, ensure_ascii=False), encoding="utf-8")
+    return yol
+
+
+def test_MANIFEST_YOKSA_KIRPMA_HIC_KOSMADI_BEYANI(tmp_path, mod):
+    """RULING UĞRAK 1: dosya YOK → bu bir ARIZA DEĞİL, kırpmanın bu makinede/canlıda HENÜZ HİÇ
+    koşmamış olabileceğinin BEYANIDIR — `olculemedi` sınıfına düşer, alarm ÜRETMEZ."""
+    yol = tmp_path / "olmayan_manifest.json"
+    r = mod.manifest_tara(manifest=yol)
+    assert r["bayat"] == [], r["bayat"]
+    assert len(r["olculemedi"]) == 1, r["olculemedi"]
+    kalem = r["olculemedi"][0]
+    assert kalem["kanit"]["neden"] == "kirpma_hic_kosmadi", kalem
+    assert kalem["deger"] is None, "uydurma yasağı: ölçülemeyen None'dır, sıfır DEĞİL"
+    assert kalem["kimlik"] == "arsiv:hic_kosmadi"
+    assert r["kapsam"]["manifest_var"] is False
+
+
+def test_MANIFEST_BAYAT_UYARI_URETIR(tmp_path, mod):
+    """RULING UĞRAK 4: `guncellendi`nin ayı (bugünkü ay − 1) eşiğinin ALTINDA — kırpma en az iki
+    aydır BAŞARIYLA koşmadı. YENİ BİR SINIFTIR (`bayat`) — `takili`/`duran`/`olculemedi`
+    hiçbirine ait DEĞİL: bu bir "hüküm kurulamadı" durumu değil, GERÇEKTEN ÖLÇÜLMÜŞ bir uyarıdır
+    (`son_calisma_ayi` KESİN biliniyor, tahmin edilmiyor)."""
+    yol = _manifest_yaz(tmp_path, {"kirpilan_aylar": {"2026-06": {"satir": 10}},
+                                   "guncellendi": "2026-07-15T10:00:00+00:00"})
+    simdi = dt.datetime(2026, 9, 5, tzinfo=UTC)
+    r = mod.manifest_tara(simdi=simdi, manifest=yol)
+    assert r["olculemedi"] == [], r["olculemedi"]
+    assert len(r["bayat"]) == 1, r["bayat"]
+    kalem = r["bayat"][0]
+    assert kalem["kanit"]["neden"] == "arsiv_manifesti_bayat", kalem
+    assert kalem["kanit"]["son_calisma_ayi"] == "2026-07"
+    assert kalem["kanit"]["esik_ay"] == "2026-08"
+    assert kalem["kimlik"] == "arsiv:bayat"
+    assert kalem["deger"] == {"son_calisma_ayi": "2026-07"}
+
+
+def test_MANIFEST_GECEN_AY_KOSTUYSA_SESSIZ_KALIR(tmp_path, mod):
+    """RULING UĞRAK 4, SAĞLIKLI YÖN — VE ASIL TASARIM GEREKÇESİ: `--kirp` kendi tasarımı gereği
+    cari + önceki ayı ASLA kırpmaz, yani "kırpma GEÇEN AY (eşiğin kendisi) koştu" SAĞLIKLI aylık
+    kadansın ta kendisidir ve BAYAT SAYILMAMALI (eşit, küçük DEĞİL) — aksi hâlde sensör sağlıklı
+    sistemde bile HER ay ateşler ve kullanılamaz olurdu (gerekçe modül başlığında)."""
+    yol = _manifest_yaz(tmp_path, {"kirpilan_aylar": {"2026-06": {"satir": 10}},
+                                   "guncellendi": "2026-08-20T10:00:00+00:00"})
+    simdi = dt.datetime(2026, 9, 5, tzinfo=UTC)
+    r = mod.manifest_tara(simdi=simdi, manifest=yol)
+    assert r["bayat"] == [], r["bayat"]
+    assert r["olculemedi"] == [], r["olculemedi"]
+    assert r["kapsam"]["son_calisma_ayi"] == "2026-08"
+    assert r["kapsam"]["esik_ay"] == "2026-08"
+
+
+def test_MANIFEST_BOZUK_JSON_OLCULEMEDI(tmp_path, mod):
+    """RULING UĞRAK 2/3: manifest OKUNAMIYOR (bozuk JSON) — hüküm kurulamaz VE sessizce
+    'sağlıklı' de sayılmaz; UYDURMA YASAĞI gereği `deger` None + neden."""
+    yol = tmp_path / "manifest.json"
+    yol.write_text("{bu gecerli json degil", encoding="utf-8")
+    r = mod.manifest_tara(manifest=yol)
+    assert r["bayat"] == [], r["bayat"]
+    assert len(r["olculemedi"]) == 1, r["olculemedi"]
+    kalem = r["olculemedi"][0]
+    assert kalem["kanit"]["neden"] == "manifest_bicimsiz", kalem
+    assert kalem["deger"] is None
+
+
+def test_MANIFEST_BICIMSIZ_ALANLAR_OLCULEMEDI(tmp_path, mod):
+    """Manifest JSON olarak GEÇERLİ ama beklenen alanları taşımıyor (`kirpilan_aylar` boş,
+    `guncellendi` çözülemiyor) — sessizce 'temiz' SAYILMAZ, hüküm kurulamaz."""
+    yol = _manifest_yaz(tmp_path, {"kirpilan_aylar": {}, "guncellendi": "yanlis-bicim"})
+    r = mod.manifest_tara(manifest=yol)
+    assert r["bayat"] == [], r["bayat"]
+    assert _neden(r["olculemedi"], "manifest_bicimsiz"), r["olculemedi"]
+
+
+def test_MANIFEST_TARA_TARADAN_BAGIMSIZDIR(tmp_path, mod):
+    """`tara()`nın imzasına/dönüş sözleşmesine/mevcut çivilerine DOKUNULMADI — dosya başlığındaki
+    "Yalnız `state/events.jsonl` OKUNUR" sözü `tara()` için birebir DOĞRU kalır.
+    `manifest_tara` AYRI bir giriş noktasıdır ve `tara()`nın dönüşünde HİÇ görünmez; birleştirme
+    `ops/bekci_brifingi.py::_tarama`nın işidir."""
+    sonuc = mod.tara(gun=3, defter=_defter_kur(tmp_path))
+    assert "bayat" not in sonuc, (
+        "`tara()` manifest sınıfını KENDİSİ üretmemeli — bu, mevcut çivileri "
+        "(varsayılan manifest yolu üzerinden) sessizce kırardı")
+
+
+def test_MANIFEST_KIMLIK_ARSIV_AILESINI_TASIR(tmp_path, mod):
+    """Bastırmanın anahtarı `kimlik`tir (bkz. `_kalem` docstring) — manifest ailesi `arsiv:` ön
+    ekini taşımalı, aksi hâlde `ops/bekci_brifingi.py`nin sınıf-göçü korumasından (M6)
+    YARARLANAMAZ ve aynı olgu iki kez "YENİ" diye duyurulabilir."""
+    r = mod.manifest_tara(manifest=tmp_path / "yok.json")
+    assert r["olculemedi"][0]["kimlik"].startswith("arsiv:"), r["olculemedi"]

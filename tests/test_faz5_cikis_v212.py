@@ -428,6 +428,41 @@ def test_C_DIGER_DORT_kilit_bu_turdan_HABERSIZ(sandbox_state):
     assert bos["n_kilit"] == dolu["n_kilit"] == 5
 
 
+def test_C_intraday_decisions_n_ENJEKTE_EDILINCE_IKINCI_OKUMA_OLMAZ(sandbox_state, monkeypatch):
+    """TSK-155 D2 — ÇİFT OKUMA ÖLÇÜLDÜ ve KAPATILDI. `/api/diagnostics`
+    `intraday_decisions.jsonl`i kendi `decisions` özetinde (`total`/`fired`/`today`/`recent`)
+    ZATEN TAM okuyor; bu kilit AYNI dosyayı KENDİ BAŞINA yeniden okuyunca aynı istekte İKİNCİ bir
+    tam okuma oluyordu (ölçüm: sandbox'ta 51k satır/canlı ölçek — tek okuma ~50 ms, ikinci ~44 ms
+    fazladan, `health.faz6_kilitleri` docstring'inde). `intraday_decisions_n` ENJEKTE EDİLİNCE
+    `store.read_jsonl("intraday_decisions.jsonl")` HİÇ ÇAĞRILMAMALI — dosya HİÇ yazılmasa bile
+    kilit çalışmalı, çünkü artık ona bakmıyor. Diğer okuma (gölge defteri) DOKUNULMAMIŞ kalmalı."""
+    cagrilar = []
+    orijinal = store.read_jsonl
+
+    def _sayan(name, *a, **kw):
+        cagrilar.append(name)
+        return orijinal(name, *a, **kw)
+
+    monkeypatch.setattr(store, "read_jsonl", _sayan)
+    f = health.faz6_kilitleri(edge=_hukum(5, 5), sonuc=_hukum(4, 4), trio=_trio(),
+                              intraday_decisions_n=7)
+    assert "intraday_decisions.jsonl" not in cagrilar, (
+        f"enjeksiyon verilmesine RAĞMEN dosya yine okundu — ikinci okuma KAPANMADI: {cagrilar}")
+    assert "intraday_shadow_orders.jsonl" in cagrilar, (
+        "enjeksiyon YALNIZ intraday_decisions.jsonl'i atlamalı, gölge defterine DOKUNMAMALI")
+    assert f["kilitler"]["faz5_cikisi"]["olcum"]["intraday_decisions_n"] == 7, (
+        "enjekte edilen sayı `olcum` teşhis alanına GEÇMEMİŞ")
+
+
+def test_C_intraday_decisions_n_VERILMEZSE_ESKISI_GIBI_KENDI_OKUR(sandbox_state):
+    """GERİYE UYUM (RULING'in aradığı biçim: "imza değişmeden varsayılan None → kendi okur").
+    Dördüncü parametre EKLENDİ ama VARSAYILANI `None` — bu dosyadaki DİĞER testler dahil,
+    bağımsız çağıranlar parametreyi HİÇ vermeden ESKİSİ GİBİ çalışmaya devam eder."""
+    f = health.faz6_kilitleri(edge=_hukum(5, 5), sonuc=_hukum(4, 4), trio=_trio())
+    assert f["kilitler"]["faz5_cikisi"]["olcum"]["intraday_decisions_n"] == 0, (
+        "sandbox'ta defter YOK — enjeksiyon verilmeyince kendi okuyup 0 bulmalı")
+
+
 def test_C_olcum_COKERSE_kilit_FAIL_CLOSED_ve_ISTISNA_gorunur(sandbox_state, monkeypatch):
     """`/api/diagnostics` bu zinciri TEK `return {...}` içinde KORUMASIZ çağırıyor
     (SISTEM-DENETIMI-2026-08-02 §891): buradan sızan bir istisna Operasyon sayfasının TAMAMINI
