@@ -2630,3 +2630,9 @@ ağırlık (bayrak + ship kapısı + 2 pencere). Kod yok; 4 karar Masa'da. EDG-0
 karttan okuma + K1n + `--beklenen-sha` + kart iç tutarlılığı ekledi. Aynı girdi (sha mekanik ✓): K1 28/28, K1n 6/6 (09-21 olayları tabloda
 yürürlük satırı değil, as_of doğru), K2 fark 0, PK tuttu. Rename sınırı: as_of(06-01) 'VMRK' diyor (EQR değil) → sembol-eşleme katmanı
 TSK-156 tasarım girdisi. EDG-075'in "kaldı"sı kart-veri hatasıydı; kaynak tam not. Kart measured; TSK-156 sıradaki adım tasarım+KOVA B.
+
+**16:59Z — TSK-156 dilim-1 (motor) merge 13b88dc:** ajan (b77d62c; 208 hedefli yeşil, iki mutasyon ısırdı: tables[0] seçimi ve rename döngüsü)
+constituents'e tarihsel tablo kaynağını, oldid/sha meta damgasını, EQR→VMRK rename eşlemesini ve "(now X)" rename-adayı uyarısını ekledi; Rol-1
+250 hedefli + codelaw çürük 0. Ajan brief'teki iki iddiayı ÇÜRÜTTÜ ve dürüst yazdı: `as_of_pit_durumu`'nun api okuyucusu yok; pitlaw türetme
+kuralı bu kayıt üzerinde işlemiyor (as_of'un üretim çağıranı yok) → sınıf dokunulmadı, dilim-2'ye. Dilim-2: as_of tüketicisi (replay evreni)
++ pitlaw kararı + okuyucu. Sırada: tam suite (ağaç donuk), push, hafta sonu dağıtımı #19.
