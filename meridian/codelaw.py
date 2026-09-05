@@ -370,6 +370,18 @@ DECLARED_SINKS: dict[str, str] = {
     "hypothesis_id_hwm.json": "memory.record yazar, memory.next_id okur (aynı modül → statik graf "
                               "göremez). Kimlik yüksek-su işareti: defter TAMAMEN silinse bile "
                               "numaralar geri sarmasın, arşivlenmiş satırlarla çakışmasın",
+    "golge_siralama.jsonl": "skill_gorus.golge_siralama_kancasi (loop.py'nin P3 aday kesiti "
+                            "kancası) yazar, skill_gorus.golge_kol_raporu okur (aynı modül → "
+                            "statik graf göremez, EDG-2026-078 Aşama A). Gerçek tüketici zinciri: "
+                            "rapor()'un 'golge_kol' alanı → api._eksen2_gorus → /api/skills "
+                            "'gorus_defteri.golge_kol' → pano Araçlar sekmesinin 'Gölge sıralama' "
+                            "tek satırı. Canlı sıralamaya DOKUNMAZ — yalnız YAN ölçüm",
+    "skill_gorus_pencereler.jsonl": "ops/skill_gorus_uret.py'nin çağırdığı skill_gorus.pencere_yaz "
+                                    "yazar, skill_gorus._pencere_ozeti okur (aynı modül → statik "
+                                    "graf göremez, EDG-2026-078 dilimi / EDG-2026-019 kill#3 "
+                                    "borcu). Gerçek tüketici: rapor()'un terfi_adaylari/"
+                                    "emeklilik_isaretleri satırlarındaki ardisik_pencere/pencere_n "
+                                    "alanları → api._eksen2_gorus → pano",
     "skill_revisions.json": "skill_evolve.revisions() okur (tip-güvenli tek okuyucu); api /api/skills "
                             "ve selfreview.build() oradan geçer → pano 'Revizyon taslakları' kartı. "
                             "HAM okuma bilinçli olarak kaldırıldı (2026-07-22): defter sözlük şeklinde "

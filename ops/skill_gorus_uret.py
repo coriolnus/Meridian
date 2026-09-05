@@ -19,6 +19,12 @@ KOŞUM SÖZLEŞMESİ KOMUT SATIRIDIR. Varsayılan KURU: hiçbir şey yazılmaz, 
 Yazım YALNIZ `--uygula` ile olur ve o da `config.SKILL_GORUS_URETIM_ACIK` bayrağının arkasındadır
 (bayrak Rol-1'in kararıdır; bu betik onu AÇMAZ).
 
+PENCERE SAYACI (EDG-2026-078 dilimi, EDG-2026-019 kill#3 borcu). Her `--uygula` koşumu ayrıca
+`skill_gorus.rapor()`ı çağırıp skill×yüzey başına bir PENCERE satırını `state/skill_gorus_
+pencereler.jsonl`e yazar (`skill_gorus.pencere_yaz`) — gün başına İDEMPOTENT (aynı gün ikinci kez
+koşulursa yazmaz). `rapor()` bu defterden `ardisik_pencere` türetir; terfinin "2 ardışık pencere"
+(Aşama B ön şartı) ve emekliliğin "3 ardışık pencere" (kart kill#3) şartları BUNSUZ ölçülemezdi.
+
 KULLANIM:
     python ops/skill_gorus_uret.py                 # KURU koşu — ne üretilecek?
     python ops/skill_gorus_uret.py --uygula        # deftere yaz + kesitleri işaretle
@@ -107,6 +113,14 @@ def main(argv: list[str] | None = None) -> int:
         sonuc = sg.kuyruktan_uret(apply=a.uygula, tavan=a.tavan)
         _bas("uretim (EDG-2026-019)", sonuc)
     _bas("kuyruk (koşum sonrası)", _kuyruk_ozeti())
+
+    # PENCERE SAYACI (EDG-2026-078 dilimi, EDG-2026-019 kill#3 borcu) — YALNIZ `--uygula`da: kuru
+    # koşu bir HÜKÜM üretmez, pencereye yazacak bir şey yoktur. `rapor()` burada BİR KEZ hesaplanır
+    # ve pencere yazımına AYNEN geçilir — ikinci bir `rapor()` çağrısı aynı işi tekrarlamaz.
+    if a.uygula:
+        rapor_sonucu = sg.rapor()
+        pencere_ozet = sg.pencere_yaz(rapor_sonucu)
+        _bas("pencere-sayaci (EDG-2026-078)", pencere_ozet)
     return 0
 
 

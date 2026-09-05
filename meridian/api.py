@@ -3827,9 +3827,11 @@ def _eksen2_gorus() -> dict:
     0 işlem) inşa edilmez. Görüş defteri yazılmaya başlar başlamaz okuyucusu da olmalı, yoksa
     kanıt birikir ve hiçbir karara girmez — bu deponun en sık ölçülen arıza sınıfı.
 
-    NE TAŞIR: kova sayımı, yüzey-başına FDR künyesi, terfi/emeklilik ADAY listeleri ve kill#1'in
-    p95 ölçümü. NE TAŞIMAZ: ham görüş satırları (defter süresiz büyür) ve HİÇBİR eylem düğmesi —
-    terfi otomatik değildir, bu alan da bir onay yüzeyi DEĞİLDİR.
+    NE TAŞIR: kova sayımı, yüzey-başına FDR künyesi, terfi/emeklilik ADAY listeleri, kill#1'in
+    p95 ölçümü ve (EDG-2026-078 Aşama A) `golge_kol` — gölge sıralama kolunun Δrank-IC/üst-N
+    kesişimi hükmü (kendisi de canlı karara dokunmaz, yalnız YAN ölçümdür). NE TAŞIMAZ: ham görüş
+    satırları (defter süresiz büyür) ve HİÇBİR eylem düğmesi — terfi otomatik değildir, bu alan da
+    bir onay yüzeyi DEĞİLDİR.
 
     Defter okunamazsa `durum="ÖLÇÜLEMEDİ"` (boş rapor DEĞİL): "hiç görüş yok" ile "bakamadık"
     aynı ekranda aynı şeye benzeyemez."""
@@ -3845,7 +3847,10 @@ def _eksen2_gorus() -> dict:
                 "hacim": _gorus_defter_hacmi(), "kuyruk": _gorus_kuyrugu(),
                 # HÜKÜM KURULAMADI ≠ SAYAÇ YOK: kırılım ve gölge sayaçları None kalır (uydurma
                 # yasağı — boş sözlük "ölçtüm, hiç yok" diye okunurdu).
-                "uretici_kirilimi": None, "llm_uretim": None}
+                "uretici_kirilimi": None, "llm_uretim": None,
+                # GÖLGE SIRALAMA KOLU (EDG-2026-078): `rapor()`ın kendisi düşerse bu alan da
+                # ÖLÇÜLEMEDİ — None + neden, 0 ya da boş sözlük UYDURULMAZ.
+                "golge_kol": None}
     d = store.read_json(_GORUS_DURUM, None)
     return {
         "durum": "dolu", "kart": r.get("kart"), "neden": None,
@@ -3865,6 +3870,10 @@ def _eksen2_gorus() -> dict:
                          if k in v} for y, v in (r.get("yuzeyler") or {}).items()},
         "terfi_adaylari": r.get("terfi_adaylari"), "emeklilik_isaretleri": r.get("emeklilik_isaretleri"),
         "esikler": r.get("esikler"),
+        # GÖLGE SIRALAMA KOLU (EDG-2026-078 Aşama A) — TASARIM Z6: kanalın okuyucusu (bu alan +
+        # pano tek satırı) kanalla AYNI GÜN doğar. `rapor()` kendi try/except'iyle (`_golge_kol_
+        # guvenli`) her zaman bir sözlük döner — burada AYRICA None kontrolü gerekmez.
+        "golge_kol": r.get("golge_kol"),
         # KILL#1 ÖLÇÜMÜ AYRI DEFTERDEN: `rapor()` saf okumadır ve süre ölçmez; süre kadansın
         # kendi damgasıdır. İkisini tek çağrıya katlamak, panonun her açılışında ölçüm koşturmak
         # ve o ölçümü "canlı kadans süresi" diye raporlamak olurdu.
