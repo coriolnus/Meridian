@@ -2559,3 +2559,10 @@ harness'lar gerçekten yeniden koştu (tarayıcı, Recursive yerel font bağlant
 TAZELEME-2026-09-05.md + olcum_sonucu.json ek bölüm + DESIGN.md not (91ebe8d). TSK-143 worktree → 82848bf (Rol-1: QC sondası kapsam
 dondurma, v383+v134 42); suite #23 10396/1: backtest.SECTORS'ta 3 delist → 1befc76 (delta 42/42, push). Canlıya gidecek: 131 · 143 · 148 ·
 151 (+138/141) dağıtım #16.
+
+**14:0xZ — worktree dalgası:** TSK-137b (ea8ac3f merge: olaylar.tum_olaylar + --kirp, 703 passed; ilk yazımda işaretsiz except codelaw'a
+takıldı), TSK-149 (21b3081 + A1 kuruldu), TSK-152 (44486ee — ölçüm keşif iddiasını ÇÜRÜTTÜ: 4 daemon-reload anında 0 beklenmedik ateşleme;
+FixedRandomDelay savunma; v415 numara çakışması → v418), TSK-153 (02c754f — SEMBOL_OLU_ADAY sensörü; şerhteki `::kesisim` çürük çapası
+codelaw aşama-2'de yakalandı → 5f12db0), TSK-150 keşif (16 çift = tohum×canlı id çarpışması, last_id sayacı; ileri koruma dilimi uçuşta).
+Worktree merge yolu: ajan dalı Rol-1 commit'i → `git merge --no-ff` (dosya kopyalama değil — watchdog.py'ye üç dilim dokundu).
+Push suite #24 ile (150 merge sonrası); dağıtım #16 20:00Z (+ A1'de 6 timer install + daemon-reload).
