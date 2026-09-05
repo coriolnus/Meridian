@@ -2498,3 +2498,37 @@ dosya yeşil; yan bulgu: ops betiklerini compile()+exec ile yükleyen testler `f
 doğrulaması (ihlal listesi + `suzulen`); 10:07Z bekçi brifingi `cevrilen`in İLK canlı ölçümü (dağıtım #14 kodu, süzgeçsiz — yanlış-pozitif
 beklenir, kayıt TSK-138 hükmüne kanıt). 06:07Z sprint bitişi. Ingest r2 sonucu + 429 sabah. TSK-141 DONE damgası ertesi gün events.jsonl
 sayımıyla. Operatörde: TSK-137 4 soru, TSK-142 pilot kararı, preset görsel onayı, 117/118/121 damgaları, alerts 41 ACK.
+
+### 2026-09-05 sabah (YAN oturum ai-trading-b8 — eş oturum ai-trading-d5 açık; git/dağıtım Rol-1'de) — v334 §B3 dilimi · operatör kararları · alarm triyajı
+
+**v334 §B3/§B4 (chip görevi, TSK-141 yan bulgusu):** paylaşımlı yükleyici `ops/sasi_yukleyici.py::_derle` zaten `dont_inherit=True` (v334 §A5);
+maruz kalanlar yardımcıyı atlayan yerel kopyalardı (v333, v413) + v383'ün üç ham dizge derlemesi. ÖLÇÜLDÜ (mutasyon): bayrak çağıran çerçeveden
+değil `compile`i çağıran kod nesnesinin modülünden miras alınır — yardımcı iki katmanla bağışık (modül sınırı + bayrak); yalnız bayrak çevrilince
+a5 öter, b4 ötmez; yardımcıya future import + bayrak birlikte bozulunca ikisi öter. Fix: v333/v413 → `betikten_modul_yukle`, v383 bayraklı,
+v334 +3 çivi (§B3 AST tarayıcı: tests/ altında exec modlu her compile bayrak taşır; pozitif kontroller). Seri 15/67/5/29. Uncommitted — devir
+`.superpowers/sdd/2026-09-05-v334-b3/devir.md`.
+
+**Operatör kararları (09:1xZ, tek tek soruldu):** TSK-131 şimdilik devam (+ bekçi disk eşiği 110 G alt-işi) · TSK-142 pilot AÇ (kart + A1 POST
+Rol-1) · TSK-044/045/047 beklemede · TSK-137: tek kalem (020 adım-3 devredildi), tam okuyucular BİRLEŞİK GÖRÜNÜM, intraday önce ölç · TSK-095:
+`openrouter/free` router'ı künyesiz yüzeyde TEST (auto değil) · görsel onay: 117/118/121 DONE, Meridian Palet preset onaylı.
+
+**Alarm triyajı + ACK (41 → 0, 09:16Z, operatör talimatı 'çözülenleri kontrol et, ack'le'):** MECHANISM_STALE 'öğrenme durdu' ×26 bilinen
+(learn kapalı, TSK-092); BAYAT TÜREV equity_curve/self_review/arming_report, hermes_poll 26 sa, warmup_sprint, session_refresh dominasyonu —
+hepsi 09-01/03'te bitmiş, tekrar yok (TSK-006/123/141 etkisi); MIRROR_DRIFT imzaları (AMGN/BKNG/EMR/NOW/CF/VRTX) mandalda n=1 bastırılan 0 →
+tek seferlik, yeniden ötmedi; DATA_QUALITY 'evren sapması 13 sembol S&P 500 dışı' ×4 GÜNLÜK TEKRAR ediyor ve ROADMAP'te kalemi yoktu → [TSK-143]
+açıldı (ACK sessizleştirir, çözmez). ack_ts 2026-09-04T22:42:52Z, absorbed 310.
+
+**Konsolide plan genişletme (operatör: 'roadmapteki açık kalemlerden ekleyelim') — önerilen sıra:** (1) dağıtım #16 (138+141+v334) 20:00–22:00Z;
+(2) TSK-137 adım-2 (kararlar alındı: tek kalem, birleşik görünüm, intraday ölçümü) — M, Rol-1 brief; (3) TSK-143 evren sapması ölçümü — S;
+(4) TSK-142 pilot kartı + A1 tanım — S; (5) TSK-095 free-router keşfi + künyesiz yüzey testi — S-M; (6) TSK-131 bekçi disk eşiği — S;
+(7) TSK-060 soru kümesi dondurma → arşiv ingest taban kıyası (ingest r2 bitince); (8) TSK-064 sır YOL-1 Faz-0/1 tek dalga (canlı dokunuş Rol-1);
+(9) TSK-128, TSK-132 dilim-2 (düşük). Kart-önce/operatör-kapılı: 013, 066/067/068 (KOVA C), 020 kalanlar (4→3→1→9), 126.
+
+**Operatör: 'ekleyebileceğin kalemler var mı' → altı yeni QUEUED (öneri-akışı):** TSK-144 ingest r2 kapanış ölçümü (yol kodlaması, 19 gecici_hata) ·
+145 Hindsight konsolidasyon kuyruğu (1026 bekleyen, STUCK op) · 146 events.jsonl 08-27/28 boşluğu · 147 tohum defteri 887→885 · 148 dagit [5]
+token'lı anahtar kontrolü · 149 apt-daily-upgrade politikası. Kalem OLMAYANLAR (ölçüldü): A1 `ruby` süreçleri Oracle izleme ajanı (%0 CPU,
+anlık ps yanılgısı); 310 teslim edilememiş bildirim 23 Ağustos'ta dondurulmuş tarihsel sayaç, son 3 günde yalnız notify_suppressed (kanal sağlam).
+Önerilen yerleşim: 144 ingest bitince hemen (TSK-115 kapanışı), 148 dağıtım #16 öncesi değil sonrası (dagit değişikliği ayrı dilim), 146/147
+Rol-1 boş saatinde (S), 145 ingest sonrası 3 gün gözlem, 149 sabah bakım penceresinde.
+
+**Rol-1 devri (11:3xZ):** operatör "bütün yetkilerin var, full otonom" — ana checkout HEAD 7ca9048, eş oturum ai-trading-d5 dört saattir git yapmamış (.git/logs), pytest kuyruğu boş → bu oturum (ai-trading-b8) Rol-1 olarak devam eder; d5 uyanırsa yan oturumdur.
