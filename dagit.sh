@@ -577,6 +577,83 @@ echo "=== [5/5] doğrulama ==="
 "${SSH[@]}" 'curl -s -o /dev/null -w "healthz: %{http_code}\n" http://127.0.0.1:8080/healthz;
   tail -1 /opt/meridian/state/events.jsonl | head -c 200; echo'
 
+# =================================================================================================
+# [5a] DOĞRULAMA-TOKEN ANAHTAR KONTROLÜ (TSK-148, 2026-09-05 — dağıtım #13 vakası, 2026-09-04 20:04Z)
+# =================================================================================================
+# healthz YALNIZ "200 döndü" der, GÖVDEYİ doğrulamaz: token'sız istek de çoğu zaman 200 döner,
+# gövdesi `{"detail": ...}` (yetkisiz cevap) olur. Rol-1 elle doğrularken tam bunu yaşadı: token'sız
+# `/api/alerts` çağrısı "pending None" diye okundu (sahte "boş"), hayalet sayacı yanlış uçta arandı
+# (/api/diagnostics; doğrusu /api/hermes.learning). Sınıf [5b]'nin "active ≠ yeni kod"unun
+# uç-katmanı eşi: "200 döndü ≠ doğru gövde döndü".
+#
+# ÜÇ UÇ BİLEREK SEÇİLDİ (D2, brief 2026-09-05): alarm/öğrenme/performans üçlüsü. `DOGRULAMA_UCLARI`
+# TEK yerde durur (aşağıdaki ssh gövdesinde; biçim `<yol>|<nokta-ayraçlı-anahtar-yolu>|<beklenen-
+# tip>`, tip boşsa yalnız anahtarın VARLIĞI ölçülür — `equity_curve_beyani.tohum_siniri` ölçülü
+# İSTİSNA: değeri canlıda GERÇEKTEN `None` olabilir (sınır henüz kurulmamışsa), tip zorlanmaz).
+# Kontrol TAMAMEN ssh İÇİNDE koşar — curl 127.0.0.1:8080 yalnız A1'in kendisinden erişilir (healthz
+# ile AYNI kısıt). Token DEĞERİ hiçbir echo/printf/tee argümanına GİRMEZ (dagit çıktısı günlüğe
+# kopyalanıyor; sır süzgeci yalnız beyaz-liste adlar basar) — yalnız VAR/YOK hükmü döner. Uç
+# gövdeleri de dışarı SIZMAZ: python3 -c ssh oturumunun İÇİNDE koşar, yalnız VAR/YOK basar.
+# /api/hermes ağır olabilir: curl -m 90.
+#
+# FAIL-CLOSED / FAIL-OPEN AYRIMI BİLİNÇLİ: anahtar eksikse (yetkisiz/eski gövde) [5b] gibi DÜŞER —
+# beyan ([B]) yazılmaz, çünkü "dağıtıldı" cümlesi doğrulanamamış bir gövdeye dayanırdı. Token
+# DOSYASI okunamazsa DÜŞMEZ (⚠ ölçülemedi) — token yerel geliştirme makinesinde de olmayabilir ve
+# bu durumda ölçüm YOKTUR, "ihlal" DEĞİLDİR (uydurma yasağı: ölçülemeyen None + neden).
+echo "=== [5a/5] doğrulama-token anahtar kontrolü ==="
+_DOGRULAMA_CIKTI="$("${SSH[@]}" bash -s <<'REMOTE'
+set -u
+T=$(grep -E "^MERIDIAN_DASH_TOKEN=" /opt/meridian/.dash.env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+if [ -z "$T" ]; then
+  echo "OLCULEMEDI token yok"
+  exit 0
+fi
+DOGRULAMA_UCLARI="/api/alerts|pending|int
+/api/hermes|learning.hayalet_suzulen_n|
+/api/performance|equity_curve_beyani.tohum_siniri|"
+echo "$DOGRULAMA_UCLARI" | while IFS='|' read -r yol anahtar tip; do
+  [ -z "$yol" ] && continue
+  govde=$(curl -s -m 90 -H "x-meridian-token: $T" "http://127.0.0.1:8080$yol")
+  sonuc=$(printf '%s' "$govde" | python3 -c "
+import json, sys
+yol = '$anahtar'.split('.')
+tip = '$tip'
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    print('YOK'); sys.exit(0)
+cur = d
+ok = True
+for k in yol:
+    if not isinstance(cur, dict) or k not in cur:
+        ok = False
+        break
+    cur = cur[k]
+if ok and tip == 'int' and not isinstance(cur, int):
+    ok = False
+print('VAR' if ok else 'YOK')
+")
+  echo "$sonuc|$yol|$anahtar"
+done
+REMOTE
+)"
+if [ "$_DOGRULAMA_CIKTI" = "OLCULEMEDI token yok" ]; then
+  echo "  ⚠ ölçülemedi: token yok (yerel geliştirme makinesinde de olabilir — fail-open)"
+else
+  echo "$_DOGRULAMA_CIKTI" | while IFS='|' read -r _durum _yol _anahtar; do
+    [ -z "$_durum" ] && continue
+    if [ "$_durum" = "VAR" ]; then
+      echo "  ✓ $_yol — $_anahtar var"
+    else
+      echo "  ✗ $_yol — $_anahtar yok (yetkisiz/eski gövde?)"
+    fi
+  done
+  if echo "$_DOGRULAMA_CIKTI" | grep -q "^YOK"; then
+    echo "  DAĞITIM DURDU: doğrulama-token anahtar kontrolü ihlalde — beyan ([B]) yazılmaz."
+    exit 1
+  fi
+fi
+
 # ARTIK BEKÇİSİ (2026-08-07). Bu betiğin yedeği artık `state/` dışına düşüyor — ama `state/`e
 # yedek bırakan TEK yol bu değildi: canlıda `earnings.csv.sedbak` ve `earnings.csv.<damga>.bak`
 # bir bakım penceresindeki elle `sed`den kalmıştı. Onların kaynağı bir betik değil bir ALIŞKANLIK,

@@ -429,6 +429,65 @@ def test_kod_tazelik_kapisi_VAR_ve_BEYANDAN_ONCE():
 
 
 # =================================================================================================
+# §5d [5a] DOĞRULAMA-TOKEN ANAHTAR KONTROLÜ (TSK-148, 2026-09-05 — dağıtım #13 vakası)
+# =================================================================================================
+# VAKA (dağıtım #13, 2026-09-04 20:04Z): `--uygula` [5] yalnız `healthz: 200` okuyor. Rol-1 elle
+# doğrularken token'sız `/api/alerts` çağırdı, `{"detail": …}` yetkisiz cevabı "pending None" diye
+# okundu (sahte "boş"), hayalet sayacı yanlış uçta arandı. Sınıf: [5b]'nin "active ≠ yeni kod"unun
+# uç-katmanı eşi — "200 döndü ≠ doğru gövde döndü". Üç çivi (brief D3): (1) `DOGRULAMA_UCLARI`
+# sabiti TEK yerde + üç uç + sıra [5]→[5b]→[B] korunur, (2) token okuma `.dash.env`den ve `$T`
+# hiçbir echo/printf/tee argümanında geçmez, (3) fail-open ("ölçülemedi") + fail-closed ("✗")
+# dalları ikisi de metinde.
+def test_dogrulama_uclari_UC_GIRDI_ve_SIRA_korunur():
+    """(1) `DOGRULAMA_UCLARI` üç uç taşır (alarm/öğrenme/performans — D2: elle sayılmasın diye
+    TEK sabitte durur) ve yeni blok healthz'in hemen ardına, [5b]/[B]'den ÖNCE girmiş — sıra
+    [5] → [5b] → [B] bozulmamış."""
+    metin = DAGIT.read_text()
+    assert "DOGRULAMA_UCLARI" in metin, "token'lı anahtar kontrolü sabiti yok — [5a] eklenmemiş"
+    govde = metin.split('DOGRULAMA_UCLARI="', 1)[1].split('"', 1)[0]
+    uclar = [ln for ln in govde.strip().splitlines() if "|" in ln]
+    assert len(uclar) == 3, f"DOGRULAMA_UCLARI üç uç taşımalı (bulunan: {len(uclar)}): {uclar}"
+    assert "x-meridian-token" in metin, "kontrol x-meridian-token başlığını taşımıyor"
+
+    dogrulama = _satir_no("[5/5] doğrulama")
+    kod_tazelik = _satir_no("[5b/")
+    beyan = _satir_no('echo "=== [B] dağıtım-beyanı')
+    assert dogrulama < kod_tazelik < beyan, (
+        f"sıra bozuk: [5]={dogrulama}, [5b]={kod_tazelik}, [B]={beyan} — [5a] yanlış yere girmiş")
+
+
+def test_dogrulama_token_degeri_ciktiya_BASILMAZ():
+    """(2) Token okuma satırı `.dash.env`den okur; `$T` hiçbir echo/printf/tee argümanında GEÇMEZ.
+
+    AST DEĞİL — SHELL METİN REGEX'İ (v266 ailesinin yöntemi): dagit çıktısı günlüğe kopyalanıyor
+    ve sır süzgeci yalnız BEYAZ-LİSTE adlar basar — token değeri o listede DEĞİL, yani hiçbir
+    çıktı satırına girmemesi gerekir (D1: "değer HİÇBİR ÇIKTIYA basılmaz")."""
+    metin = DAGIT.read_text()
+    assert ".dash.env" in metin and "MERIDIAN_DASH_TOKEN" in metin, \
+        "token okuma satırı .dash.env'den MERIDIAN_DASH_TOKEN okumuyor"
+    ihlal = [s for s in _satirlar() if re.search(r"\b(echo|printf|tee)\b.*\$T\b", s)]
+    assert not ihlal, f"token değeri ($T) bir echo/printf/tee argümanında basılıyor: {ihlal}"
+
+
+def test_dogrulama_FAIL_OPEN_ve_FAIL_CLOSED_dallari_VAR():
+    """(3) Token dosyası okunamazsa FAIL-OPEN (⚠ ölçülemedi, dağıtım DÜŞMEZ — token yerel
+    geliştirme makinesinde de olmayabilir, uydurma yasağı: ölçülemeyen None + neden); anahtar
+    eksikse FAIL-CLOSED (✗, [5b] gibi düşer — beyan yazılmaz). İkisi de metinde olmalı, aksi
+    hâlde biri sessizce kaybolmuş demektir.
+
+    ÖLÇÜM [5a] BLOĞUYLA SINIRLI (mutasyonla ölçüldü, TSK-148): dosya genelinde "ölçülemedi" ve
+    "✗" ARAMAK yanlış-yeşil verir — [5b]/[5c] kendi "ölçülemedi"/"IHLAL" dallarını ZATEN taşıyor,
+    onlardan biri kırılmasa bile bu çivi hedefine kör kalır ve yeşil kalırdı."""
+    bas = _satir_no("[5a/5] doğrulama-token anahtar kontrolü")
+    son = _satir_no("ARTIK BEKÇİSİ")   # [5a] bloğunu bitiren, ÖNCEDEN var olan bir sonraki başlık
+    blok = "\n".join(_satirlar()[bas:son])
+    assert "ölçülemedi" in blok and "token yok" in blok, "[5a] fail-open dalı (ölçülemedi) yok"
+    assert "✗" in blok, "[5a] fail-closed dalı (✗) yok"
+    assert "exit 1" in blok, "[5a] anahtar eksikken exit 1 vermiyor — kapı değil rapor olur"
+    assert "exit 0" in blok, "[5a] token okunamazken exit 0 (fail-open) vermiyor"
+
+
+# =================================================================================================
 # SOUL.md — AJANIN KALICI BRİFİNGİNDE MAKİNEYE ÖZGÜ YOL OLAMAZ (2026-08-26 vakası)
 # =================================================================================================
 def _enjekte_edilen_soullar() -> list[pathlib.Path]:
