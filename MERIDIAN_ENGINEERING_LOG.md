@@ -2669,3 +2669,8 @@ rol hindsight, tek taşıyıcı /opt/hindsight/.env (+ bugünkü yedek), konteyn
 (argv/log yok), .env python ile yeniden yazıldı (URL-encode), restart; ilk kontrol 75 s'de erken (açılış ~95 s), 18:21Z openapi 200 + stats 200 (DB
 yolu), eski parola psql ile reddedildi, yedek dosyasındaki eski değer 'ROTATED' ile silindi, kalan eşleşme 0. Konsolidasyon restart'ta kaldığı yerden
 (failed 166 → 0 yeniden kuyruğa; pending 2934, obs 3755). Hafıza: sır süzgeci kuralı sertleşti (adlar `cut -d= -f1`, değer yalnız tam-ad beyaz liste).
+
+**18:38Z — MASA KARARLARI (operatör):** TSK-126 "aç, önerilen paketle" → EDG-2026-078 ön-kayıt (gölge sıralama kolu: score_golge = score +
+w·z_skill·sd; w yalnız exhaustion-hammer 0,169; pencere sayacı aynı dilim) · TSK-143 hiç-üye 6 sembol canlı evrene geri (beyan ikiye ayrılır) ·
+TSK-150 (b) yeniden numaralama (ölçüm: DB 16 çift, atıf 0) · TSK-047 aç (nous PORTAL kanaryası minimax ile) · 044/045/064 beklemede. D kuyruğu
+başladı: iki implementer brief (143, 150b) yazıldı, sevk ediliyor; EDG-078 implementer brief sırada; 047 kanaryası Rol-1.

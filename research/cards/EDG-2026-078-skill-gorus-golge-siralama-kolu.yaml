@@ -1,0 +1,63 @@
+# EDG-2026-078 — Skill görüşü TERFİSİ Aşama A: GÖLGE SIRALAMA KOLU (canlı karar değişmez) + pencere sayacı — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-05 18:38Z (Rol-1) — operatör kararı 18:38Z: "Aç, önerilen paketle" (TSK-126 tasarım belgesi
+# docs/TASARIM-SKILL-GORUS-TERFISI-2026-09-05.md §4 Aşama A; çıkış gölgesi AYRI kart; Aşama B ayrı kart + DSR/PBO ship kapısı).
+# Zemin (EDG-2026-019 hukum_2026_09_03): aday-siralayici yüzeyinde görüş = skill'in plan anındaki SKOR'u; rank-IC (gerçekleşen R):
+# stockbee-exhaustion-hammer-screener +0,169 CI[+0,038;+0,299] n=245 FDR-sağkalan (TERFİ ADAYI) · momentum-burst +0,030 kalmadı ·
+# vcp −0,002 kalmadı. Canlı sıralama (loop P3): tüm adaylar TEK 'score' ile sıralanır, skill farkı gözetilmez. Gölge kol: skill'in
+# ölçülmüş bilgi değeriyle ağırlıklandırılmış ikinci sıralama YAN YANA kaydedilir; emir MEVCUT sıralamadan çıkar.
+
+card_id: EDG-2026-078
+status: registered   # 2026-09-05 Rol-1 — ön-kayıt; kod (loop kancası + defter + çözücü + rapor + pano + pencere sayacı) bu karttan SONRA
+family: skill_gorus_defteri_aktif_kume
+on_kayit: 2026-09-05
+ref: [TSK-126, TSK-058, EDG-2026-019, EDG-2026-063, TSK-073]
+
+hipotez: >
+  Görüş katmanının FDR-sağkalan sıralayıcı kanıtı (exhaustion-hammer skorunun kendi adayları içinde bilgi taşıması) canlı sıralamaya
+  SINIRLI bir ağırlıkla eklenince (score_golge = score + w_skill · z_skill(score) · sd_kesit; w yalnız FDR-sağkalan skill için,
+  karttaki donuk değer), üst-N adayların gerçekleşen R rank-IC'si mevcut sıralamaya göre artar (Δrank-IC > 0) ve üst-N kesişimi
+  yüksek kalır (kol "başka bir strateji" olmaz). Canlı karar DEĞİŞMEZ; kol yalnız gölge defterde yaşar.
+
+k_registry: {registered_at: "2026-09-05", trial_ids: [EDG-078-k1-golge-siralama-delta-rank-ic]}
+# K=1: tek w kümesi (grid yok). w_skill: {stockbee-exhaustion-hammer-screener: 0.169 (EDG-019 rank-IC), diğer tüm skill'ler: 0.0}
+# — DONUK; yeni resmî koşum yeni w = YENİ kart. PK hücresi K'ya sayılmaz. Pencere sayacı K değil (altyapı borcu, aynı dilim).
+
+agirliklar: {stockbee-exhaustion-hammer-screener: 0.169}   # diğerleri 0 — kartta donuk, koddan okunur (KART sabiti)
+
+adim_0_fizibilite: >
+  (a) loop P3 aday kesitinde skill kimliği (source_skill) ve score her satırda var (2026-09-05 kod okuması: candidates satırı
+  {date, source_skill, sector, ...as_row()}); (b) gerçekleşen R ile eşleme skill_gorus._gozlemler ile AYNI anahtar (cf + trades) —
+  eşleşmeyen sayılır; (c) kanca kadans süresini +%10'dan fazla artırmaz (satır başına sure_ms yazılır; ilk 5 seansta ölçülür);
+  (d) N = P3'ün seçtiği plan sayısı (koddan okunur, kartta uydurulmaz), defter satırı üst max(2N, 20) ile sınırlı.
+
+olcum_plani:
+  - "Her seans: state/golge_siralama.jsonl → {date, ticker, skill, score, z_skill, score_golge, sira_mevcut, sira_golge, ustN_mevcut, ustN_golge, sure_ms}"
+  - "Çözücü (seans-dışı, rapor): (date,ticker) → gerçekleşen R (cf+gerçek, _gozlemler); rank-IC(mevcut) ve rank-IC(gölge) seans başına; Δ = gölge − mevcut; tarih-kümeli bootstrap %95 CI; n_min 30 seans; pencere 40 seans (2026-09-08…~11-03)"
+  - "Bedel: üst-N kesişimi (|ustN_mevcut ∩ ustN_golge| / N) seans ortalaması; kanca sure_ms p95"
+  - "Pencere sayacı: ops/skill_gorus_uret.py her koşumda skill×yüzey başına {kosum_tarihi, yon, sagkalan} → state/skill_gorus_pencereler.jsonl (gün başına idempotent); rapor() ardışık pencere sayısını buradan türetir (terfi ≥2, emeklilik ≥3 — kart EDG-019 kill#3)"
+  - "Okuyucu (Yasa 6, ilk günden): rapor().golge_kol + api._eksen2_gorus + pano Eksen-2 satırı; bekçi 'yazılıp okunmayan defter' taraması"
+
+esikler:
+  k1_gecti: "Δrank-IC CI-altı > 0 ∧ n_seans ≥ 30 ∧ üst-N kesişimi ort ≥ 0,50 (kısmi: Δ CI sıfırı içeriyor ama ortalama > 0 ∧ kesişim ≥ 0,50; kaldı: aksi)"
+  # eşikler donuk; sonradan değişmez (yeni eşik = yeni kart)
+
+kill_list:
+  - "kanca kadans p95 payı > 0,10 (kill#1 aynen) → kol kapanır"
+  - "üst-N kesişimi ort < 0,50 → kol bir ağırlık değil yeni stratejidir; kart 'kaldı'"
+  - "Δrank-IC CI-üstü < 0 → görüş zararlı; exhaustion-hammer için emeklilik sayacına negatif pencere"
+  - "girdi bekçisi (cf/exit_efficiency) bayat → hüküm yok"
+  - "PK tutmazsa hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI, aynı çözücü: (a) RASTGELE görüş ağırlığı (w yerine seans-içi karıştırılmış z) → Δrank-IC CI sıfırı içermeli;
+  (b) sonucu BİLEN sentetik ağırlık (gerçekleşen R ile sıralama — yalnız test, deftere yazılmaz) → Δ > 0 belirgin. Ayrışmıyorsa çözücü kör.
+
+veri_penceresi: "2026-09-08 (ilk seans, dağıtım sonrası) → 40 seans; canlı motor P3 kancası (gölge, emir değişmez); çözücü seans dışı"
+
+basari_tanimi: >
+  K1 geçti + PK ayrışık + kesişim ≥ 0,50 → Aşama B kartı (canlı ağırlık: varsayılan-kapalı bayrak, kart açılış kaydı, DSR/PBO ship
+  kapısı, ≥2 ardışık pencere şartı). Kısmi → 40 seans daha (yeni kart, aynı w). Kaldı → gölge kol kapatılır, defter kalır.
+
+notlar: >
+  Formül: z_skill = (score − ort_skill_kesit) / sd_skill_kesit (kesitte skill'in ≥3 adayı yoksa z=0); sd_kesit = tüm adayların score sd'si;
+  score_golge = score + w_skill · z_skill · sd_kesit. w=0 olan skill'lerde score_golge = score (bugünkü davranış birebir). Kanca P3'te aday sıralamasının (candidates.sort) hemen sonrasında, in-memory, tek append. Pencere sayacı EDG-019 kill#3'ün ölçülemeyen 'ardışık pencere' borcunu kapatır.
