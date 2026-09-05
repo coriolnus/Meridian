@@ -38,6 +38,13 @@ research/olcumler/*/seanslar.json
 research/olcumler/*/*.stderr.log
 research/olcumler/*/state/
 
+# EDG-2026-075 (TSK-156, 2026-09-05) — `--cek`in çektiği HAM Wikipedia HTML'i (oldid+sha256
+# içerik-adresli dosya adı). YENİDEN ÜRETİLEBİLİR (`olcum.py --cek --oldid <N>` aynı oldid'i AYNEN
+# geri verir — MediaWiki revizyonları donuk); büyük ve tekil bir HTML sayfası olduğu için
+# `research/olcumler/*/state/` gibi yalnız BU ölçümün dizini dışlanır (emsal:
+# `research/olcumler/yazi_tipi_2026-08-24/satoshi/fonts/` — tek ölçüme özgü, glob DEĞİL).
+research/olcumler/edg075_sp500_tarihsel/ham/
+
 # os
 .DS_Store
 
