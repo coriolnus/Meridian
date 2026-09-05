@@ -1,0 +1,62 @@
+# EDG-2026-075 — S&P 500 değişiklik günlüğü PIT kaynağı: Wikipedia "Historical components of the S&P 500" — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-05 15:3xZ (Rol-1) — TSK-156 (TSK-154 D3 ölçümünün devri). Ölçüm kodu bu karttan SONRA (kart-önce).
+# Bağlam: ana sayfanın 'Selected changes' tablosu kalktı (TSK-154: `_fetch_tables` hayalet boş satır → düzeltildi, `as_of`
+# PIT iskelesi 'besleyeni kapalı' beyanlı). Aday kaynak: ayrı madde `Historical_components_of_the_S%26P_500`
+# (Effective Date / Added / Removed / Reason sütunları; 2026-09-05 keşfinde Ağustos 2026'ya kadar güncel görüldü).
+
+card_id: EDG-2026-075
+status: registered   # 2026-09-05 Rol-1 — ön-kayıt; ölçüm kodu KOVA B dilimi olarak sonra (TSK-156)
+family: evren_pit
+on_kayit: 2026-09-05
+ref: [TSK-156, TSK-154, TSK-143, TSK-066, EDG-2026-062]
+
+hipotez: >
+  Wikipedia 'Historical components of the S&P 500' maddesi, S&P 500 üyelik değişikliklerini (eklenen/çıkarılan sembol +
+  yürürlük tarihi) 2020-01-01'den bugüne EKSİKSİZ ve TARİHLİ verir; bu tabloyla `constituents.as_of(date)` PIT
+  (point-in-time) üyelik listesi üretebilir — tarihsel evren yeniden kurulumu (TSK-066/143) survivorship'siz olur.
+
+k_registry: {registered_at: "2026-09-05", trial_ids: [EDG-075-k1-kapsam-dogruluk, EDG-075-k2-as-of-yeniden-kurulum]}
+# K=2. K1: sayfa çekimi (oldid ile SABİTLENİR — içerik-adresli girdi, EDG-059 dersi) + ayrıştırma → 2020-01-01'den
+#      bugüne değişiklik satırları; BİLİNEN 10 olayla çapraz-doğrulama (bugün ölçülmüş, S&P DJI bültenli: EA 2026-08-05
+#      çıkış/FERG giriş; AVB+EQR 2026-08-18 çıkış/RDDT+VMRK; CAG 2026-06-30; MTCH 2026-03-09; ENPH 2025-09-22; VFC 2024-04-01/
+#      SOLV; 2026-09-04 rebalance BE/P/ILMN girişleri). K2: as_of(2026-06-01) ∖ as_of(2026-09-05) simetrik farkı = tabloda
+#      o aralıkta yazan değişiklikler birebir; ayrıca güncel liste (Wikipedia ana tablo 503 üye) ile as_of(bugün) eşit.
+
+adim_0_fizibilite: >
+  (a) madde erişilebilir ve tablo `pandas.read_html` ile okunuyor (sütun adları ölçülür: 'Effective Date' vs 'Date');
+  (b) oldid ile sabit URL çekilebiliyor (tekrarlanabilirlik); (c) satır sayısı 2020→bugün ≥ 100 (S&P yılda ~20–30
+  değişiklik; <100 ise kapsam şüpheli); (d) tarihler ISO'ya tek anlamlı ayrışıyor (belirsiz biçim → ölçülemedi).
+
+olcum_plani:
+  - "K1: 10 bilinen olayın her biri için tabloda satır var mı, tarih ±1 iş günü içinde mi, yön (giriş/çıkış) doğru mu — 10×3 kontrol; eksik/yanlış sayılır"
+  - "K1 kapsam: 2020-01-01→bugün satır sayısı, yıl bazında dağılım; boş/çift satır oranı"
+  - "K2: as_of yeniden kurulum — as_of(T1) ile as_of(T2) farkı tabloyla birebir; as_of(bugün) = güncel liste (503)"
+  - "PK (yol-tutarlı): tabloya sentetik yanlış satır (uydurma sembol, 2026-07-01) enjekte edilmiş kopya → K1 eşleşme sayısı DEĞİŞMEMELİ, K2 farkı o sembolü GÖSTERMELİ (parser gerçekten tabloyu okuyor)"
+
+esikler:
+  k1_gecti: "10/10 bilinen olay satırda VE tarih ±1 iş günü VE yön doğru (9/10 ise 'kısmi', <9 kaldı)"
+  k2_gecti: "as_of(bugün) == güncel liste (fark 0) VE T1→T2 farkı tabloyla birebir (fark 0)"
+  # eşikler donuk; sonradan değişmez (yeni eşik = yeni kart)
+
+kill_list:
+  - "oldid ile sabitlenemiyorsa (sayfa sürümü tekrar-üretilemez) → ölçüm GEÇERSİZ, kaynak PIT sayılmaz"
+  - "K1 < 9/10 → kaynak yetersiz; kart 'kaldı', alternatif (S&P DJI bülten kazıma / FMP historical) yeni kart"
+  - "tarih sütunu belirsiz (yıl-ay yalnız, ya da 'expected' ifadeleri) → PIT sınıfı 'yaklaşık' beyanı, eşik gevşetilmez"
+  - "PK tutmazsa (sentetik satır görünmüyorsa) hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: aynı ayrıştırıcıya, tabloya eklenmiş sentetik bir değişiklik satırı (uydurma sembol ZZQ1, 2026-07-01,
+  eklenen) verilir; as_of(2026-07-02) ZZQ1'i içermeli, as_of(2026-06-30) içermemeli. Görmüyorsa parser tabloyu değil
+  başka bir şeyi okuyor.
+
+veri_penceresi: "Wikipedia oldid (çekim anında sabitlenir) — 2020-01-01→2026-09-05; kıyas: bugünkü ana liste (503) + 10 bilinen olay (S&P DJI bültenleri); canlı DEĞİL"
+
+basari_tanimi: >
+  ADIM-0 geçmiş + PK yeşil + K1 10/10 + K2 fark 0 → `_fetch_tables` ikinci kaynağı bağlanır (KOVA B dilimi),
+  `as_of` PIT iskelesi canlanır, pitlaw kaydı ('constituents','as_of') 'besleyeni açık'a güncellenir (v341/v342).
+  K1 9/10 → 'kısmi' beyanla bağlanır, eksik olay şerhli. Kaldıysa TSK-156 alternatif kaynağa döner.
+
+notlar: >
+  Girdi kimliği: oldid + sayfa HTML'inin sha256'sı sonuç dosyasına yazılır (çalışma ağacına değil içerik-adresli).
+  Wikipedia'nın kendi 'Reason' sütunu emeklilik sınıfı (birleşme/take-private/endeksten çıkış) için TSK-143'ün
+  EVREN_DISI_BEYANLI nedenlerine kaynak olabilir — ayrı iş.

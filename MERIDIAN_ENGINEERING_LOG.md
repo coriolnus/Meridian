@@ -2587,3 +2587,5 @@ alanlardan (`last_learn.ts`) — sahte pozitif. TSK-060: soru kümesi 09-01'de z
 **DAĞITIM #17 (7160154, 14:47:05Z):** TSK-155 + docs; ilk dry-run [0b] uv audit ağ zaman aşımı (api.osv.dev — bugün GitHub ssh'ta da), tekrar temiz; [5a] 3/3 ✓. ROADMAP'te TSK-155 girdisi hiç doğmamıştı ('[TSK-155]' atfı 137 notunda geçince ekleme kapısı sessiz atladı — TSK-138'deki aynı hata; hafıza notu, başlık regex'iyle kontrol) → 7160154'te eklendi.
 
 **TSK-154 (95d5be5) + suite #26 (10438/1 — v217 p95 flake, seri yeşil) → push → DAĞITIM #18.** Hayalet boş satır kök nedeni `row.get(None)`; warn + changes_kaynak + as_of PIT beyanı; alternatif kaynak Wikipedia 'Historical components' → TSK-156 (kart-önce).
+
+**DAĞITIM #18 (222bb18, 15:25:11Z):** TSK-154 canlı (hayalet satır yazımı durur, warn). EDG-2026-075 ön-kayıt (TSK-156: Historical components PIT kaynağı; K1 10 bilinen olay, K2 as_of yeniden kurulum, PK sentetik satır). Bugün 3 dağıtım (#16/#17/#18), 14 kalem kapandı.
