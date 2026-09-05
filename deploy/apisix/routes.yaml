@@ -81,6 +81,24 @@ rotalar:
               model: google/gemma-4-26b-a4b-it:free
             override:
               endpoint: https://openrouter.ai/api/v1/chat/completions
+          # KOVA-DIŞI SON-ÇARE (TSK-047, 2026-09-05 ölçümü): OpenRouter 'free-models-per-day-high-balance'
+          # 1000/gün kovası minimax DIŞINDAKİ ücretsiz modellerin ORTAK kovası — nemotron ve gemma aynı
+          # anda 429 verir (bugün 10:33Z'den itibaren tüm kapı LLM trafiği 502'ydi); minimax m3/m2.7 kova
+          # dışı (8/8 + 3 replay 200, aynı hesap anahtarıyla). :free — v361 'hepsi ücretsiz' çivisi aynen.
+          # Öncelik 0: yalnız iki kovalı instance 429/5xx verince devreye girer; künye (nemotron birincil)
+          # değişmez. Bedel: minimax'in kova dışılığı sponsorluğa bağlı, kalıcılığı garanti değil —
+          # o da 429 verirse zincir yine 502 (bilinçli, ücretli son-çare yok).
+          - name: yedek-minimax
+            provider: openai-compatible
+            priority: 0
+            weight: 1
+            auth:
+              header:
+                Authorization: "$env://OPENROUTER_AUTH"
+            options:
+              model: minimax/minimax-m3:free
+            override:
+              endpoint: https://openrouter.ai/api/v1/chat/completions
           # ÜCRETLİ SON-ÇARE KALDIRILDI (operatör kararı 2026-09-02 ~14:50 UTC "onlar da gitsin, hepsi
           # ücretsiz olsun"): sabahki tavan-açma instance'ı (öncelik 0, :free'siz aynı model) 1 gün
           # yaşadı — ölçülen bedel ~$3/saat sınıfı (Hindsight+konsolidasyon+bot son-çare toplamı).
@@ -204,6 +222,18 @@ rotalar:
                 Authorization: "$env://OPENROUTER_AUTH"
             options:
               model: google/gemma-4-26b-a4b-it:free
+            override:
+              endpoint: https://openrouter.ai/api/v1/chat/completions
+          # KOVA-DIŞI SON-ÇARE (TSK-047, 2026-09-05) — llm-danisma'daki yedek-minimax'in eşi; :free.
+          - name: hizli-minimax
+            provider: openai-compatible
+            priority: 1
+            weight: 1
+            auth:
+              header:
+                Authorization: "$env://OPENROUTER_AUTH"
+            options:
+              model: minimax/minimax-m3:free
             override:
               endpoint: https://openrouter.ai/api/v1/chat/completions
           # ÜCRETLİ SON-ÇARE KALDIRILDI (operatör kararı 2026-09-02 ~14:50 UTC "onlar da gitsin, hepsi
