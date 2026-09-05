@@ -36,13 +36,13 @@ arar; modül `sys.modules`e KAYIT OLMADAN yüklendiği için `None` döner ve `A
 girmiyordu, tesadüfen değil YAPISAL olarak bağışıktı."""
 
 import datetime as dt
-import importlib.util
 import json
 import pathlib
 
 import pytest
 
 from meridian import sprint
+from tests.conftest import betikten_modul_yukle
 
 KOK = pathlib.Path(__file__).resolve().parent.parent
 BETIK = KOK / "ops/bekci_tarama.py"
@@ -54,12 +54,13 @@ def _yukle():
 
     KAYNAKTAN COMPILE EDİLİR, `exec_module` İLE DEĞİL (v333'ün gerekçesi aynen geçerli: depo
     kalıbı `.pyc`nin mtime-SANİYE geçerlilik kontrolüne düşer ve hızlı bir düzenle-geri-yükle
-    turunda bayat bayt-kodu ölçebilir)."""
+    turunda bayat bayt-kodu ölçebilir).
+
+    ARTIK (2026-09-05, aynı gün — v334 §B3): gövde `tests.conftest.betikten_modul_yukle`
+    (`dont_inherit=True`); başlıktaki sızıntı anlatısı tarihçedir, artık bu dosyanın future'sız
+    kalmasına YASLANMAZ — koruma yardımcıdadır ve v334 §B4 onu davranışla çiviler."""
     assert BETIK.exists(), f"{BETIK} YOK"
-    spec = importlib.util.spec_from_file_location("bekci_tarama_v413", BETIK)
-    mod = importlib.util.module_from_spec(spec)
-    exec(compile(BETIK.read_text(encoding="utf-8"), str(BETIK), "exec"), mod.__dict__)
-    return mod
+    return betikten_modul_yukle(BETIK, "bekci_tarama_v413")
 
 
 @pytest.fixture(autouse=True)

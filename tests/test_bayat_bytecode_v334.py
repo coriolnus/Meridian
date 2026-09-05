@@ -386,3 +386,102 @@ def test_b2_SURUKLENME_KAPISI_calisiyor_pozitif_kontrol():
     duzyazi = '"""`spec.loader.exec_module` KULLANMAZ."""\n# spec.loader.exec_module(mod)\n'
     assert _exec_module_cagrilari(duzyazi) == [], (
         "tarayıcı düzyazıyı çağrı sandı — yasağı anlatan cümle yasağın kurbanı olur")
+
+
+# =================================================================================================
+# §B3/§B4 — ÇERÇEVE BAYRAĞI SIZINTISI: ham `compile(..., "exec")` de yardımcı kadar bağışık olmalı
+# (TSK-141 yan bulgusu, 2026-09-05)
+# =================================================================================================
+# ÖLÇÜLEN VAKA. v413 yazılırken çağıran test dosyasında `from __future__ import annotations` vardı
+# ve `ops/bekci_tarama.py` yerel bir `compile(kaynak, yol, "exec")` kopyasıyla (yardımcı DEĞİL)
+# yükleniyordu. `compile()` varsayılanı `dont_inherit=False`: çağıran ÇERÇEVENİN future bayrağı
+# (CO_FUTURE_ANNOTATIONS) exec edilen kaynağa SIZAR — o dosya bu future'ı hiç taşımasa bile
+# `Kayit` dataclass'ının alan tipleri string'e döner; modül `sys.modules`e kayıtlı olmadığından
+# (bilerek, §A) Python 3.12 `dataclasses._is_type` `sys.modules.get(cls.__module__)`den None alır
+# ve `AttributeError: 'NoneType' object has no attribute '__dict__'` ile patlar — hatanın adı
+# yapılan değişikliği (bir future import) hiç anmaz. Paylaşımlı yardımcı `_derle` §A5 ile
+# `dont_inherit=True` taşıdığı için bağışıktı; kusur yalnız yardımcıyı ATLAYAN yerel kopyalarda
+# (v333, v413) ve ham dizge derlemelerinde (v383) yaşıyordu; hepsi çağıran dosyanın "tesadüfen"
+# future'sız olmasına yaslanıyordu. §B3 bunu yapısal yasağa çevirir: tests/ altında `exec` modlu
+# HER `compile` çağrısı `dont_inherit=True` taşır (ya da hiç yazılmaz — yardımcı kullanılır).
+def _ham_compile_exec_cagrilari(kaynak: str) -> list[int]:
+    """`compile(<kaynak>, <ad>, "exec", ...)` çağrılarından `dont_inherit=True` TAŞIMAYANLARIN
+    satır numaraları. AST ile (§B'nin gerekçesi aynen: çağrı ile çağrıdan söz etmek ayrı).
+    `re.compile`/`py_compile.compile` (Attribute) kapsam dışı; `mode` konumsal ya da anahtarlı."""
+    bulgular = []
+    for dugum in ast.walk(ast.parse(kaynak)):
+        if not (isinstance(dugum, ast.Call) and isinstance(dugum.func, ast.Name)
+                and dugum.func.id == "compile"):
+            continue
+        anahtar = {k.arg: k.value for k in dugum.keywords}
+        mod = dugum.args[2] if len(dugum.args) >= 3 else anahtar.get("mode")
+        if not (isinstance(mod, ast.Constant) and mod.value == "exec"):
+            continue
+        di = anahtar.get("dont_inherit")
+        if not (isinstance(di, ast.Constant) and di.value is True):
+            bulgular.append(dugum.lineno)
+    return bulgular
+
+
+def test_b3_test_dosyalari_HAM_COMPILE_EXEC_dont_inherit_tasiyor():
+    """tests/ altında `exec` modlu her `compile` çağrısı `dont_inherit=True` taşır — yardımcı
+    zaten taşıyor (§A5), yerel kopya onu ATLAYAMAZ. Yerel kopya yazmak yerine
+    `tests.conftest.betikten_modul_yukle` kullanılmalıdır (§B ile aynı yön)."""
+    suclu = []
+    for yol in sorted(TESTLER.rglob("*.py")):
+        for no in _ham_compile_exec_cagrilari(yol.read_text(encoding="utf-8")):
+            suclu.append(f"{yol.relative_to(TESTLER.parent)}:{no}")
+    assert not suclu, (
+        f"`dont_inherit=True` taşımayan `compile(..., \"exec\")` çağrısı: {suclu} — çağıran "
+        f"dosyaya bir gün `from __future__ import annotations` gelirse exec edilen betiğin "
+        f"dataclass'ları `AttributeError` ile patlar (bkz. §B3 başlığı). Yardımcıyı kullan.")
+
+
+def test_b3b_ham_compile_tarayicisi_POZITIF_KONTROL():
+    """§B3'ün tarayıcısı gerçek çağrıyı görüyor, düzyazıyı ve `re.compile`i görmüyor."""
+    ornek = (
+        'x = compile(src, "a.py", "exec")\n'                     # 1: suçlu (bayrak yok)
+        'y = compile(src, "b.py", "exec", dont_inherit=True)\n'  # 2: temiz
+        'z = compile(src, "c.py", mode="exec", dont_inherit=False)\n'  # 3: suçlu (False)
+        'w = re.compile("compile(x, y, \\"exec\\")")\n'        # 4: Attribute — kapsam dışı
+        'v = compile(src, "d.py", "eval")\n'                     # 5: exec değil — kapsam dışı
+        '"""compile(src, "e.py", "exec")"""\n'                    # 6: düzyazı
+    )
+    assert _ham_compile_exec_cagrilari(ornek) == [1, 3], _ham_compile_exec_cagrilari(ornek)
+
+
+def test_b4_FUTURE_bayragi_cerceveden_sizmiyor_dataclass_POZITIF_KONTROL(tmp_path):
+    """DAVRANIŞ ÇİVİSİ — yardımcıyla yüklenen future'sız bir betiğin dataclass alan tipi `int`
+    KALIR (string'e dönmez) ve sınıf kurulur.
+
+    ÖLÇÜLDÜ (2026-09-05, mutasyonla): `compile()` bayrağı ÇAĞIRAN ÇERÇEVEDEN değil, `compile`i
+    çağıran KOD NESNESİNİN modülünden miras alınır. Yardımcının `compile`i `ops/sasi_yukleyici.py`
+    içinde yaşadığından bu test dosyasının `from __future__ import annotations` satırı ona
+    ULAŞMAZ — yerel kopyalarda (v333/v413'ün eski hâli) ulaşıyordu, §B3 o yolu yapısal olarak
+    kapattı. Yardımcının bağışıklığı bu yüzden İKİ katmanlıdır: (1) modül sınırı, (2) `dont_inherit=
+    True` (§A5) — biri `ops/sasi_yukleyici.py`ye bir gün future import gelirse öbürü tutar. Bu
+    çiviyi ısıran mutasyon TEK bayrak değil, İKİSİ birden: yardımcı dosyasına future import +
+    `dont_inherit=False` (ölçüldü: yalnız bayrak çevrilince a5 öter, bu çivi ötmez — dürüstçe
+    beyanlı).
+
+    POZİTİF KONTROL yol-tutarlıdır: aynı kaynak, aynı kayıtsız modül, ama bayrak AÇIKÇA verilmiş
+    (`flags=annotations.compiler_flag`, `dont_inherit=True` — çağıran çerçeveye bağlı kalmadan
+    sızıntının kendisi kurulur) → Python 3.12'de tam da ölçülen `AttributeError` doğar. Böylece
+    yeşil "yardımcı korudu" demektir, "tuzak yok" değil."""
+    import __future__ as _f
+    import dataclasses
+    betik = tmp_path / "sizinti_v334.py"
+    betik.write_text("import dataclasses\n\n@dataclasses.dataclass(frozen=True)\nclass K:\n"
+                     "    a: int\n    b: str = 'x'\n", encoding="utf-8")
+    mod = betikten_modul_yukle(betik, "sizinti_v334")
+    assert mod.K(1).a == 1
+    assert dataclasses.fields(mod.K)[0].type is int, (
+        f"alan tipi {dataclasses.fields(mod.K)[0].type!r} — çerçevenin future bayrağı sızdı")
+    # pozitif kontrol: sızıntı BİLEREK kurulunca ölçülen arıza doğar
+    spec = importlib.util.spec_from_file_location("sizinti_kontrol_v334", betik)
+    kayitsiz = importlib.util.module_from_spec(spec)
+    assert "sizinti_kontrol_v334" not in sys.modules
+    kod = compile(betik.read_text(encoding="utf-8"), str(betik), "exec",
+                  flags=_f.annotations.compiler_flag, dont_inherit=True)
+    with pytest.raises(AttributeError, match="__dict__"):
+        exec(kod, kayitsiz.__dict__)

@@ -35,12 +35,13 @@ buna yalnız plan belgesi (bir). Numara sessizce kaymaz, kaydı burada durur.
 """
 
 import datetime as dt
-import importlib.util
 import json
 import pathlib
 import re
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 KOK = pathlib.Path(__file__).resolve().parent.parent
 BETIK = KOK / "ops/bekci_tarama.py"
@@ -64,12 +65,16 @@ def _yukle():
     Bu, deponun en pahalı sınıfıdır: ölçüm aracı SESSİZCE YANLIŞ ŞEYİ ölçer ve sonuç doğru
     görünür. Kaynağı okuyup `compile` etmek bayt-kodu yolunu tamamen devre dışı bırakır.
     (Aynı `exec_module` kalıbı depodaki ~15 test dosyasında daha var — o genel kırılganlık
-    BİLEREK bu görevin kapsamı dışında, ayrı bir kalem olarak devredildi.)"""
+    BİLEREK bu görevin kapsamı dışında, ayrı bir kalem olarak devredildi. TARİHÇE: 2026-08-30'da
+    v334 §B ile hepsi paylaşımlı yardımcıya taşındı; bu cümle o günün kaydıdır.)
+
+    ARTIK (2026-09-05, TSK-141 yan bulgusu — v334 §B3): gövde `tests.conftest.betikten_modul_yukle`
+    (`ops/sasi_yukleyici.py::_derle`, `dont_inherit=True`). Buradaki yerel `compile(...)` kopyası
+    çağıran çerçevenin `__future__` bayrağını exec edilen betiğe SIZDIRIYORDU; bu dosya o future'ı
+    taşımadığı için tesadüfen değil yapısal olarak bağışıktı — ama bağışıklık çağıranın bir
+    satırına bağlıydı. Kaynaktan derleme + `sys.modules`e kayıtsızlık AYNEN korunur."""
     assert BETIK.exists(), f"{BETIK} YOK — Görev 1 teslim edilmemiş"
-    spec = importlib.util.spec_from_file_location("bekci_tarama", BETIK)
-    mod = importlib.util.module_from_spec(spec)
-    exec(compile(BETIK.read_text(encoding="utf-8"), str(BETIK), "exec"), mod.__dict__)
-    return mod
+    return betikten_modul_yukle(BETIK, "bekci_tarama")
 
 
 def _ts(saat: float) -> str:

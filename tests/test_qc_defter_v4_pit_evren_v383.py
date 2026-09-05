@@ -248,16 +248,16 @@ def test_cok_parcali_bolunme_yolu_gercekten_kosuyor():
     alan: dict = {}
     for ad in sorted(dosyalar):                       # d → e → f → … (alfabetik = yükleme sırası)
         assert len(dosyalar[ad]) < 12_000, f"{ad} tavanı aştı"
-        exec(compile(dosyalar[ad], ad, "exec"), alan)
+        exec(compile(dosyalar[ad], ad, "exec", dont_inherit=True), alan)
     assert alan["pit_butunluk"]()["tam"] is True
     assert len(alan["PIT_ARALIKLARI"]) == len(araliklar)
     # zincirin ORTASINDA durmak bağırmalı: son parça olmadan bekçi ötmeli
     yarim: dict = {}
     for ad in sorted(dosyalar)[:-1]:
-        exec(compile(dosyalar[ad], ad, "exec"), yarim)
+        exec(compile(dosyalar[ad], ad, "exec", dont_inherit=True), yarim)
     assert yarim["pit_butunluk"]()["tam"] is False
     with pytest.raises(RuntimeError):        # zincirin sonundaki bekçi YARIM tabloda ötmeli
-        exec(compile(u.BEKCI, "bekci", "exec"), yarim)
+        exec(compile(u.BEKCI, "bekci", "exec", dont_inherit=True), yarim)
     assert u.BEKCI in dosyalar[sorted(dosyalar)[-1]], "bekçi SON parçada değil"
     assert u.BEKCI not in dosyalar[sorted(dosyalar)[0]], (
         "bekçi hâlâ ilk parçada — iki+ parçada d.py tek başına yüklenirken patlar (K-1)")
