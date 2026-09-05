@@ -304,10 +304,12 @@ def load_live(use_cache: bool = True, session: str | None = None) -> tuple[dict,
     dahil ediyordu — yalnız Finviz'in yeniden-keşfi engelleniyordu, ki `extra`nın zaten `bars`'ta
     olan bir ismi hiç içermemesi yüzünden bu süzgeç fiilen no-op'tu. Artık `_load_live_inner`
     `load(universe=...)`u AÇIKÇA `LIVE_UNIVERSE + korunan ticker'lar` ile çağırıyor (bkz.
-    `_canli_korunan_evren`): `loop.daily_cycle`ın gördüğü aday havuzu GERÇEKTEN 238 sembole
-    daralır (+ açık pozisyon/silahlı planı olan endeks-çıkışı ticker'lar, YALNIZ çıkış yönetimi
-    için — yeni giriş üretmezler, çünkü kapı/arming katmanı skor/sinyal üretimini bu `bars`
-    kümesinden türetir)."""
+    `_canli_korunan_evren`): `loop.daily_cycle`ın gördüğü aday havuzu GERÇEKTEN 244 sembole daralır
+    (TSK-143 2026-09-05 İKİNCİ revizyonu — sayı ÖNCEKİ turda 238'di, hiç S&P 500 üyesi olmamış 6
+    sembol operatör kararıyla LIVE_UNIVERSE'e geri döndüğü için 244'e YÜKSELDİ; bkz. data.py
+    ENDEKS_CIKISI_BEYANLI/HIC_UYE_BEYANLI şerhi) (+ açık pozisyon/silahlı planı olan endeks-çıkışı
+    ticker'lar, YALNIZ çıkış yönetimi için — yeni giriş üretmezler, çünkü kapı/arming katmanı
+    skor/sinyal üretimini bu `bars` kümesinden türetir)."""
     with data.live_session_leg(session):
         return _load_live_inner(use_cache=use_cache)
 

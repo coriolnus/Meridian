@@ -11,7 +11,10 @@ gerisinde kalan kaynak zinciri KESMEZ, en taze sonuç kazanır. HATA ≠ BOŞ: h
 (b) Kilit girişler: fetch(), load_bars(), load_many(), sanitize_bars(), validate_bars(),
 measurement_bars(), bars_integrity()/safe_start(), ghost_report()/integrity_report(),
 crosscheck_report(), seam_report(), no_data_report(), nasdaq_earnings_window(), REPLAY_UNIVERSE,
-LIVE_UNIVERSE (TSK-116, 2026-09-03 — REPLAY_UNIVERSE'in endeks-çıkışı süzülmüş canlı-evren hâli).
+LIVE_UNIVERSE (TSK-116, 2026-09-03 — REPLAY_UNIVERSE'in ENDEKS_CIKISI_BEYANLI [yalnız gerçek S&P
+500 çıkışları, 4 kayıt] süzülmüş canlı-evren hâli; TSK-143 2026-09-05 ikinci revizyonu hiç-üye
+altı sembolü [HIC_UYE_BEYANLI] canlı evrene geri aldı — süzgeç artık 10 değil 4 sembole bağlı),
+is_index_exited()/is_evren_disi_beyanli() (çıkış vs. birleşim beyan kapıları).
 (c) Değişmezler: takvim kapısı (geçerli XNYS seansı olmayan tarihin satırı düşer; KİTLESEL uyuşmazlık
 silinmez, adjudikasyon REDDEDİLİR ve duyurulur) ile düzeltilmemiş-satır karantinası sanitize_bars'ın
 tek boğazından her kaynak/okuma yoluna uygulanır; kaynak sabitleme + dikiş koruması aynı sembole iki
@@ -2723,76 +2726,106 @@ def is_retired(ticker: str) -> bool:
     return str(ticker or "").upper() in RETIRED_SYMBOLS
 
 
-# EVREN-DIŞI BEYAN DEFTERİ (eski adı INDEX_EXITED; TSK-143, 2026-09-05 revize kararı) — "S&P 500
-# GÜNCEL üyesi değil ama şirket YAŞIYOR ve tarama evreninde KALMASI meşru" hükmü TEK YERDE.
+# EVREN-DIŞI BEYAN DEFTERİ (TSK-143, 2026-09-05 İKİNCİ revize kararı — operatör: "hiç S&P 500 üyesi
+# olmamış 6 sembol canlı evrene geri döner") — "S&P 500 GÜNCEL üyesi değil ama şirket YAŞIYOR ve
+# tarama evreninde KALMASI meşru" hükmü TEK YERDE, ama artık İKİ AYRI NEDEN sınıfına bölünmüş.
 #
-# NEDEN REVİZE: 2026-09-03'te açılan INDEX_EXITED defterinin 13 girdisinin HEPSİNE tek bir metin
-# ("S&P 500 çıkışı; şirket aktif") yazılmıştı. TSK-143 triyajı (2026-09-05, günde 1 kez 24 gündür
-# aynı 13 sembolle öten DATA_QUALITY alarmı) üçünün GERÇEKTEN delist olduğunu buldu — onlar artık
-# RETIRED_SYMBOLS'ta (yukarı bkz). Kalan 10'un hükmü TEKTİ ama YANLIŞTI: yalnız dördü (ENPH, MTCH,
-# CAG, VFC) gerçekten S&P 500'den ÇIKTI; altısı (BURL, ROKU, SPOT, LNG, PINS, SNAP) HİÇ ÜYE
-# OLMADI — BURL ve ROKU hâlâ S&P 400 üyesi, SPOT yabancı (İsveç) şirket. `REPLAY_UNIVERSE` şerhinin
-# kendi tanımı ("S&P büyük/orta boy likit isimler + laggards", S&P 400 dahil) bu altısıyla zaten
-# TUTARLIYDI — çelişen taraf eski INDEX_EXITED metniydi, evrenin kendi tanımı değil.
+# NEDEN İKİNCİ REVİZE: ilk revizyon (aynı gün, önceki commit) 10 sembolün hepsini TEK sözlükte
+# (`EVREN_DISI_BEYANLI`) topladı ve `is_index_exited`/`LIVE_UNIVERSE` bu 10'un HEPSİNİ canlı
+# evrenden düşürdü. Ama sözlüğün kendi şerhi zaten dördünü (ENPH, MTCH, CAG, VFC) "S&P 500 çıkışı"
+# diye, altısını (BURL, LNG, PINS, ROKU, SNAP, SPOT) "hiç üye olmadı" diye ayırıyordu — iki FARKLI
+# hüküm aynı süzgeçte eritilmişti. Operatör kararı: hiç üye olmamış altısının canlı taramadan
+# düşmesi için gerekçe YOK (S&P 500'den ÇIKMADILAR — zaten hiç girmediler); yalnız gerçek endeks
+# ÇIKIŞLARI (dördü) canlı evrenden süzülmeli. Bu yüzden defter artık İKİ alt-sözlüğe ayrılır ve
+# `is_index_exited` (LIVE süzgeci) yalnız çıkış alt-kümesine bağlanır.
 #
-# RETIRED_SYMBOLS'TAN FARKI: o defter DELİST (şirket artık işlem görmüyor) ve sembolü
-# REPLAY_UNIVERSE'DEN de çıkarır (bar hattı gerçekten bitti). Bu defter ÇIKARMAZ: şirket hâlâ
-# aktif işlem görüyor (ya da S&P 500'e hiç girmemiş likit bir isim), yalnız S&P 500'ün GÜNCEL
-# üyesi değil. REPLAY_UNIVERSE tarihe duyarsız TEK bir listedir (`meridian/pitlaw.py` ruhu — PIT
-# değildir); tam emeklilik (RETIRED_SYMBOLS'a taşımak) geçmiş replay/backtest'ten de bu sembolleri
-# silerdi ve sağkalan yanlılığını ARTIRIRDI — o yüzden yalnız CANLI evrenden çıkarılırlar.
-#
-# ÖLÇÜM: ilk 13 `state/universe_drift.json`, 2026-09-03 gece (kaynak wikipedia S&P 500 listesi).
-# Sınıflama revizyonu 2026-09-05, TSK-143 (kaynak: Massive `/v3/reference/tickers` + S&P basın
-# bültenleri).
-#
-# KAPSAM: `LIVE_UNIVERSE` (aşağıda türetilir) bu defterden süzülür ve YALNIZ canlı yüzeyleri besler
-# (Finviz keşif filtresi, marketstream aboneliği, scheduler canlı taramaları, api.py evren sayısı
-# yüzeyleri, shortinterest/insider canlı çekimleri). REPLAY_UNIVERSE DEĞİŞMEZ — backtest/recompute/
-# cf_backfill/trend_shadow/component_ic bu 10 sembolü geçmişte likit birer isim oldukları için
-# GÖRMEYE devam eder.
-#
-# BEDEL BEYANI (Yasa 6 / bedel yasası, TSK-143): bu defterdeki 10 sembolden biri gelecekte delist
-# olursa `constituents.universe_drift()`in `stale` alanı onu GÖRMEZ — beyanlı liste alarmın kör
-# noktasıdır ve bu kör nokta BİLEREKTİR (aksi hâlde her gün aynı 10 sembol için yanlış alarm
-# geri gelir). Delist tespiti TSK-153'e devredildi (`data._record_no_data` şu an delist'i
-# görmüyor); o gelene kadar bu 10 sembolün gerçek durumu yalnız ELLE (bu defterin bakımıyla)
-# güncellenir.
-EVREN_DISI_BEYANLI: dict[str, str] = {
-    "BURL": "S&P 400 üyesi; S&P 500'e hiç girmedi",
+# ENDEKS_CIKISI_BEYANLI (4) — GERÇEKTEN S&P 500'den ÇIKMIŞ, hâlâ aktif şirketler. Yürürlük
+# tarihleri EDG-2026-075/076 ölçümüyle (S&P DJI basın bültenleri, TSK-156 kartları) DÜZELTİLDİ:
+# MTCH eskiden '2026-03-09' yazıyordu, yürürlük GERÇEKTE 2026-03-23; VFC eskiden '2024-04-01'
+# yazıyordu, yürürlük GERÇEKTE 2024-04-03. İkisi de duyuru tarihiyle yürürlük tarihinin
+# karıştırılmasıydı (EDG-075'in K1 ölçümünün tam bulduğu hata sınıfı).
+ENDEKS_CIKISI_BEYANLI: dict[str, str] = {
     "CAG": "S&P 500 çıkışı 2026-06-30, aktif — SmallCap 600'e indi",
     "ENPH": "S&P 500 çıkışı 2025-09-22, aktif",
+    "MTCH": "S&P 500 çıkışı 2026-03-23, aktif — SmallCap 600'e indi (EDG-076: eski '03-09' "
+            "duyuru tarihiydi, yürürlük S&P DJI bültenine göre 03-23)",
+    "VFC": "S&P 500 çıkışı 2024-04-03, aktif (evren kurulmadan önce; EDG-075/076: eski '04-01' "
+           "yanlıştı, yürürlük S&P DJI bültenine göre 04-03)",
+}
+
+# HIC_UYE_BEYANLI (6) — S&P 500'e HİÇ GİRMEMİŞ, likit ve aktif şirketler (S&P 400 üyeliği ya da
+# yabancı kimlik dahil). TSK-143 (2026-09-05, operatör kararı) BUNLARI canlı evrene GERİ ALIR:
+# "endeks çıkışı" hükmü bunlara hiç uymadı (çıkmadılar, hiç girmediler) ve `REPLAY_UNIVERSE`
+# şerhinin kendi tanımı ("S&P büyük/orta boy likit isimler + laggards", S&P 400 dahil) bu altısıyla
+# zaten TUTARLIYDI. Gerekçe metinleri ilk revizyondan AYNEN taşındı (metin değişmedi, yalnız hangi
+# sözlükte yaşadıkları değişti).
+HIC_UYE_BEYANLI: dict[str, str] = {
+    "BURL": "S&P 400 üyesi; S&P 500'e hiç girmedi",
     "LNG": "S&P 500'e hiç girmedi",
-    "MTCH": "S&P 500 çıkışı 2026-03-09, aktif — SmallCap 600'e indi",
     "PINS": "S&P 500'e hiç girmedi",
     "ROKU": "S&P 400 üyesi; S&P 500'e hiç girmedi",
     "SNAP": "S&P 500'e hiç girmedi",
     "SPOT": "yabancı şirket; S&P 500'e hiç girmedi",
-    "VFC": "S&P 500 çıkışı 2024-04-01, aktif (evren kurulmadan önce)",
 }
 
+# RETIRED_SYMBOLS'TAN FARKI (her iki alt-sözlük için de geçerli): o defter DELİST (şirket artık
+# işlem görmüyor) ve sembolü REPLAY_UNIVERSE'DEN de çıkarır (bar hattı gerçekten bitti). Bu defter
+# ÇIKARMAZ: şirket hâlâ aktif işlem görüyor (ya da S&P 500'e hiç girmemiş likit bir isim), yalnız
+# S&P 500'ün GÜNCEL üyesi değil. REPLAY_UNIVERSE tarihe duyarsız TEK bir listedir
+# (`meridian/pitlaw.py` ruhu — PIT değildir); tam emeklilik (RETIRED_SYMBOLS'a taşımak) geçmiş
+# replay/backtest'ten de bu sembolleri silerdi ve sağkalan yanlılığını ARTIRIRDI.
+#
+# ÖLÇÜM: ilk 13 `state/universe_drift.json`, 2026-09-03 gece (kaynak wikipedia S&P 500 listesi).
+# Sınıflama revizyonu 2026-09-05, TSK-143 (kaynak: Massive `/v3/reference/tickers` + S&P basın
+# bültenleri). İkinci revizyon (bu blok) AYNI GÜN, operatör kararıyla: alt-sözlük ayrımı + tarih
+# düzeltmesi (EDG-075/076).
+#
+# EVREN_DISI_BEYANLI — İKİ alt-sözlüğün BİRLEŞİMİ (tek-kaynak yasası: kopya DEĞİL, türetilmiş
+# üçüncü ad). `constituents.universe_drift()`in `beyanli_disi` alanı (evren-sapması BEYAN edilmiş
+# görünürlüğü) bu birleşimden okumaya DEVAM eder — hiç-üye altısı da "S&P dışı ama BEYANLI" olarak
+# görünür kalır, `stale`e (beyansız sapma) sızmaz. Ayrım: `is_index_exited` (yalnız çıkışlar,
+# LIVE süzgeci) ile `is_evren_disi_beyanli` (birleşim, drift beyanı) ARTIK FARKLI kapılardır.
+EVREN_DISI_BEYANLI: dict[str, str] = {**ENDEKS_CIKISI_BEYANLI, **HIC_UYE_BEYANLI}
+
 # GERİYE UYUMLULUK: `INDEX_EXITED` adı `dataset.py`/`insider.py`/`shortinterest.py`/testlerde hâlâ
-# okunuyor. Tek-kaynak yasası "iki liste tutma" der — iki AD değil; bu satır ikinci bir kopya
-# AÇMAZ, AYNI sözlüğe ikinci bir isim bağlar. Ad göçü (tüm okuyucuları EVREN_DISI_BEYANLI'ya
-# taşımak) bu turun kapsamı DIŞINDA — TSK-143 yalnız yanlış hükmü düzeltti, adlandırmayı değil.
-INDEX_EXITED = EVREN_DISI_BEYANLI
+# okunuyor. TSK-143 İKİNCİ revizyonundan ÖNCE `EVREN_DISI_BEYANLI`nin (10 kayıt) AYNI nesnesiydi;
+# artık YALNIZ `ENDEKS_CIKISI_BEYANLI`nin (4 kayıt) AYNI nesnesi — ad KORUNDU ama hükmü DARALDI
+# (yalnız gerçek çıkışlar). Ad göçü (tüm okuyucuları ENDEKS_CIKISI_BEYANLI'ya taşımak) bu turun
+# kapsamı DIŞINDA.
+INDEX_EXITED = ENDEKS_CIKISI_BEYANLI
 
 
 def is_index_exited(ticker: str) -> bool:
-    """Sembol S&P 500'ün GÜNCEL üyesi değil mi (beyanlı — çıkış/hiç-üye-olmama/S&P 400/yabancı)?
+    """Sembol S&P 500'den GERÇEKTEN ÇIKMIŞ mı (beyanlı — yalnız `ENDEKS_CIKISI_BEYANLI`, 4 kayıt)?
     Tek kapı: `is_retired` ile AYNI desen — normalize edilmemiş sorgu aynı sembol için iki farklı
-    cevap üretmesin. TSK-116'da (2026-09-03) yalnız 'endeks çıkışı' anlamına geliyordu; TSK-143
-    (2026-09-05) EVREN_DISI_BEYANLI'nin dört nedeninden HERHANGİ birini kapsayacak şekilde
-    genişletti (bkz. yukarıdaki defter şerhi) — fonksiyon adı KORUNDU, hükmü genişledi."""
+    cevap üretmesin. TSK-116'da (2026-09-03) yalnız 'endeks çıkışı' anlamına geliyordu; TSK-143'ün
+    İLK revizyonu (2026-09-05) bunu EVREN_DISI_BEYANLI'nin dört nedeninin TAMAMINA (10 kayıt)
+    genişletmişti — bu YANLIŞTI (operatör: hiç üye olmamış altı sembolün S&P'den 'çıkması' mümkün
+    değil). İKİNCİ revizyon (aynı gün, bu turun konusu) hükmü GERİ DARALTTI: yalnız gerçek çıkışlar
+    (bkz. yukarıdaki `ENDEKS_CIKISI_BEYANLI` şerhi) — `LIVE_UNIVERSE` süzgeci budur, hiç-üye altısı
+    artık BURADAN SÜZÜLMEZ (bkz. `is_evren_disi_beyanli`, drift-beyanı için AYRI kapı)."""
+    return str(ticker or "").upper() in ENDEKS_CIKISI_BEYANLI
+
+
+def is_evren_disi_beyanli(ticker: str) -> bool:
+    """Sembol S&P 500'ün GÜNCEL üyesi değil mi — beyanlı NEDENLERİN BİRLEŞİMİ (çıkış + hiç-üye,
+    `EVREN_DISI_BEYANLI`, 10 kayıt)? `is_index_exited`'in TERSİNE bu kapı LIVE_UNIVERSE'i SÜZMEZ
+    (TSK-143 2026-09-05 ikinci kararı: hiç-üye altısı canlı evrende KALIR) — yalnız evren-sapması
+    BEYAN görünürlüğü içindir (`constituents.universe_drift()`in `beyanli_disi` alanı, Yasa 6/bedel
+    yasası: beyanlı sapma sessizce yutulmaz, ayrı alanda GÖRÜNÜR kalır)."""
     return str(ticker or "").upper() in EVREN_DISI_BEYANLI
 
 
-# CANLI evren: REPLAY_UNIVERSE'in evren-dışı beyanlı 10 sembol süzülmüş hâli (TSK-116 2026-09-03,
-# TSK-143 2026-09-05 revizyonu — sayı 13'ten 10'a düştü, üçü RETIRED_SYMBOLS'a taşındığı için).
-# TEK yerde türetilir (tek-kaynak yasası) — canlı tüketiciler (Finviz keşif filtresi, marketstream
-# aboneliği, scheduler canlı taramaları, api.py evren sayısı yüzeyleri, shortinterest/insider canlı
-# çekimleri) buradan okur. REPLAY tüketicileri (backtest/recompute/cf_backfill/trend_shadow/
-# component_ic) REPLAY_UNIVERSE'i kullanmaya DEVAM eder — bu listeye DOKUNMAZLAR.
+# CANLI evren: REPLAY_UNIVERSE'in ENDEKS_CIKISI_BEYANLI (4 gerçek çıkış) süzülmüş hâli (TSK-116
+# 2026-09-03; TSK-143 2026-09-05 İKİNCİ revizyonu — süzgeç artık YALNIZ gerçek çıkışlara bağlı,
+# hiç-üye altısı (HIC_UYE_BEYANLI) geri döndüğü için sayı 238'den 244'e YÜKSELDİ: 248 [REPLAY_
+# UNIVERSE] eksi 4. Hiç-üye altısı hâlâ S&P 500 DIŞI ama canlı taramada YAŞIYOR — evren sapması
+# alarmı için BEYANLI kalmaya devam ediyor (`is_evren_disi_beyanli`, `constituents.universe_drift`
+# `hic_uye_canlida` alanı). TEK yerde türetilir (tek-kaynak yasası) — canlı tüketiciler (Finviz
+# keşif filtresi, marketstream aboneliği, scheduler canlı taramaları, api.py evren sayısı
+# yüzeyleri, shortinterest/insider canlı çekimleri) buradan okur. REPLAY tüketicileri
+# (backtest/recompute/cf_backfill/trend_shadow/component_ic) REPLAY_UNIVERSE'i kullanmaya DEVAM
+# eder — bu listeye DOKUNMAZLAR.
 LIVE_UNIVERSE = [t for t in REPLAY_UNIVERSE if not is_index_exited(t)]
 
 
