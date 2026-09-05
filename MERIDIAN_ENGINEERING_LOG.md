@@ -2566,3 +2566,7 @@ FixedRandomDelay savunma; v415 numara çakışması → v418), TSK-153 (02c754f 
 codelaw aşama-2'de yakalandı → 5f12db0), TSK-150 keşif (16 çift = tohum×canlı id çarpışması, last_id sayacı; ileri koruma dilimi uçuşta).
 Worktree merge yolu: ajan dalı Rol-1 commit'i → `git merge --no-ff` (dosya kopyalama değil — watchdog.py'ye üç dilim dokundu).
 Push suite #24 ile (150 merge sonrası); dağıtım #16 20:00Z (+ A1'de 6 timer install + daemon-reload).
+
+**Suite #24 (cf10fdc, -n 4, 11,5 dk): 10425 passed / 0** → push. TSK-150 (a) merge (40e642e) + iki çapa düzeltmesi (ajan şerhleri
+`broker._id` / `topviews.plan_by_id` — def/class olmayan adlar; hafıza notu). Dağıtım #16 malzemesi: 138 · 141 · 148 · 131 · 143 · 151 ·
+137b · 152 · 153 · 150 + D6 tazeleme; A1 ek kurulum: 6 timer FixedRandomDelay (install + daemon-reload) — 20:00–22:00Z penceresi.
