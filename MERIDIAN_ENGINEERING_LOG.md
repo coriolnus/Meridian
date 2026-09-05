@@ -2647,3 +2647,12 @@ changes_meta.oldid) ilk günlük evren denetiminde (`loop._universe_drift_check`
 birbirinden farklı (sha ayrı) — tek-kaynak yasasının canlı örneği, ama yalnız eski sayfalarda. İş tarifi ROADMAP'te; öncelik düşük. Dağıtım #19
 sonrası önbellek doğrulaması Pazartesi akşamı P5 bloğunda (ledger'a yazıldı). Bugünkü otonom kuyruk bitti: kalanlar zamana bağlı (gece zinciri,
 09-06/09-07 doğrulamaları) ve operatör kararları.
+
+**17:33Z — operatör: "nemotron free router'dan istenebilir mi, bilinen sonuçlu bir isteği router'a gönder, illa nemotron mu?" (A1 ölçümü, anahtar basılmadı):**
+router rastgele seçer, nemotron pinlenemez (8/8 minimax); `models[]` yedek listesi günlük kovayı aşmıyor. DÜZELTME: 1000/gün kovası "minimax dışındaki
+ücretsiz modellerin ORTAK kovası" (nemotron-ultra/super, glm-5.2, gemma-4-31b hepsi 429; minimax m3/m2.7 kova dışı) — 15:49Z'deki "model-bazlı" ifadesi
+eksikti. Araç çağırma minimax-m3'te çalışıyor (tool_calls 2). Bilinen-sonuç testi: Hindsight'ın llm-requests defterinden 3 başarılı nemotron retain
+isteği (girdi+çıktı saklı) aynen minimax'e ve router'a → aynı 11-alanlı JSON şeması, Türkçe, 2–8× hızlı; ama olgu sayısı ve kapsama düşük (nemotron
+7/4/1 olgu; m3 4/1/2, m2.7 6/1/1; kapsanan 2/7·1/4·1/1 ve 6/7·1/4·0/1) — minimax daha seçici, bazı olguları atlıyor. Hüküm: nemotron teknik olarak
+zorunlu değil; kalite farkı var; geçiş EDG-067 künyesi gereği yeni kartla (30 belge, kapsama eşiği, kova-dışı kalma kill'i) — Masa'da. Yan bulgu:
+Hindsight konsolidasyonu 16:18Z'den beri nemotron 429'a karşı 74/74 hata üretiyor (bugün 4139 LLM isteği, 3143 hata) → TSK-145'e girdi.
