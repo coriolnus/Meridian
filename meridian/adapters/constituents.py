@@ -6,8 +6,11 @@ anahtarlı ve zaten kullanımda olduğu için BİRİNCİL; Wikipedia List_of_S%2
 en iyi-çaba İKİNCİL) ve değişiklik günlüğünü geriye sararak `as_of(date)` ile tarihsel üyeliği
 yeniden kurar. Gerçek üretim tüketicisi `universe_drift()`tir: elle bakımlı REPLAY_UNIVERSE'ü
 güncel üyelik + verisiz-sembol defteri + emeklilik defteriyle karşılaştırıp ölü/geri-sızmış
-isimleri söyler. Wikipedia yolu bu kurulumda fiilen kapalıdır: sayfa bu User-Agent'a HTTP 403
-döner; health() nedeni ADIYLA yazar (UA/kaynak değişirse yol kendiliğinden çalışır).
+isimleri söyler. ESKİ NOT BAYATTI, ÖLÇÜMLE DÜZELTİLDİ (TSK-156, 2026-09-05, EDG-2026-075/076):
+"Wikipedia yolu bu kurulumda fiilen kapalıdır" iddiası A1'den (canlı sunucu) httpx ile bu
+User-Agent'a HER İKİ sayfaya (üyelik + tarihsel değişiklik) 200 döndüğü ölçülünce yanlışlandı;
+yalnız BU geliştirme makinesinden (istemci parmak izi farkı) 403 alınabiliyor. health() nedeni
+yine de ADIYLA yazılır — kaynak/UA/ağ tekrar bozulursa bu not bir daha sessizce bayatlamaz.
 (b) Kilit girişler: current(use_cache=...), as_of(date), as_of_pit_durumu(date), universe_drift(),
 health(); MIN_MEMBERS makullük tabanı, CACHE (sp500_constituents.json).
 (c) Değişmezler — MAKULLUK KAPISI: 400'den az sembol S&P 500 DEĞİLDİR; hem çekim hem önbellek
@@ -33,16 +36,64 @@ gerçekten değişiklik sütunlarını taşımıyorsa (sütun eşleşmesi yok / 
 değişiklik günlüğü boşken `as_of()`un GERÇEK tarihsel yeniden kurulum değil bugünkü listeye eşit
 survivorship döndüğünü BEYAN eder (`{"pit": False, "neden": "..."}`); `as_of()`un kendi dönüş
 biçimi (`list[str]`) DEĞİŞMEDİ — üretim çağıranı bugün yok (test_constituents_audit_v18.py'nin
-iki PIT testi + gerçek tüketici yok), pitlaw sınıfı `PIT_SOZLESMELI_BESLEYENI_KAPALI` AYNEN kalır."""
+iki PIT testi + gerçek tüketici yok), pitlaw sınıfı `PIT_SOZLESMELI_BESLEYENI_KAPALI` AYNEN kalır.
+(f) TSK-156 dilim-1 (2026-09-05, kart EDG-2026-075/076,
+research/olcumler/edg075_sp500_tarihsel/sonuc_edg076_2026-09-05.json): `changes`in BİRİNCİL
+kaynağı artık AYRI bir sayfa, `HIST_URL` ("Historical_components_of_the_S%26P_500") —
+`_fetch_hist_changes()` bu sayfadaki değişiklik tablosunu İNDEKSTEN değil SÜTUNLARDAN
+(`Effective Date`/`Added Ticker`/`Removed Ticker`) seçer. Ölçüm: 407 satır, 2020→bugün 136
+değişiklik, 0 hayalet, 0 tarih hatası, 28/28 S&P DJI bülten olgusu tarih+yön doğru; as_of yeniden
+kurulumu güncel listeyle fark 0. Her çekim `oldid`/`sha256`/`n_satir`/`n_tarih_yok`/`cekim_ts`
+damgası taşır (modül-düzeyi `_SON_HIST_META`, önbelleğe `changes_meta` olarak yazılır —
+`as_of_pit_durumu` bunu AYNEN okur, alanların okuyucusu odur). Bu sayfa başarısızsa (403/
+ayrıştırma hatası) eski `tables[1]` yolu (TSK-154) AYNEN çalışmaya devam eder
+(`changes_kaynak="wikipedia_selected_changes"`); ikisi de boşsa FMP/Wikipedia dalları
+önbellekteki `changes`i KORUR, boşla EZMEZ.
+TEK KAYNAK SINIRI (aynı kart, ölçüldü): bu tablo ÜYELİK olaylarını (ekleme/çıkarma) taşır, saf
+ticker yeniden-adlandırmasını (şirket S&P 500'de KALIRKEN sembol değiştirmesi) satır olarak
+TAŞIMAZ — o olay yalnız BAŞKA bir satırın `reason` metninde iz bırakır (EQR→VMRK 2026-08-18:
+AvalonBay'in kaldırılma satırının reason'ı "now Vivmark Residential" der; EQR/VMRK'nin KENDİ
+satırı yoktur). `as_of()` bu yüzden AYRICA modül-düzeyi donuk `SEMBOL_YENIDEN_ADLANDIRMA`
+defterini geriye uygular (`tarih > date` ise `yeni`→`eski`). Defter ELLE bakımlıdır: kod şirket
+adından ticker UYDURMAZ — `rename_adaylari()` `reason`de "(now X)" kalıbı taşıyan ama kayıtlı
+`tarih`iyle eşleşmeyen bir aday bulursa `obs.warn("sp500_rename_adayi", ...)` yazar, kayıt
+operatör tarafından ELLE açılır.
+PIT SINIFI DOKUNULMADI: `("constituents", "as_of")` bu turda da `PIT_SOZLESMELI_BESLEYENI_KAPALI`
+sınıfında KALDI. `pitlaw.sinif_turet` yalnız `PIT_DISI_KAYNAKLAR` kaydını ve YALNIZ karar/tarihsel
+modüllerdeki GERÇEK çağrı yerlerini kaynaktan tarar; `as_of`in üretimde HİÇBİR çağıranı yok (bu
+paragrafın (e) bendi hâlâ doğru), yani türetim mekanik olarak `None` (ölçülemedi) döner — beyaz
+listeye taşımayı DOĞRULAYACAK bir mekanik onay bu turda YOK, taşıma yapılmadı (rapor: Rol-1)."""
 from __future__ import annotations
 import datetime as dt
 
 from .. import store
 
 WIKI_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+#: TSK-156 (2026-09-05): AYRI bir sayfa — üyelik listesi DEĞİL, değişiklik (`changes`) günlüğünün
+#: BİRİNCİL kaynağı. Bkz. modül başlığı (f).
+HIST_URL = "https://en.wikipedia.org/wiki/Historical_components_of_the_S%26P_500"
 CACHE = "sp500_constituents.json"
 MIN_MEMBERS = 400          # S&P 500 ~503 isim; bunun altı "üyelik listesi" DEĞİLDİR (fixture/kırpık)
 _HEALTH = {"ok": None, "source": None, "n": 0, "at": None, "error": ""}
+#: SON `_fetch_hist_changes()` DENEMESİNİN META'SI (oldid/sha256/n_satir/n_tarih_yok/cekim_ts) —
+#: `_HEALTH` ile AYNI desen. `_fetch_tables`in kendi imzası (üç değer) bu alanı TAŞIMAZ; `current()`
+#: bu modül-düzeyi değişkenden okuyup önbelleğe `changes_meta` olarak yazar (modül başlığı (f)).
+_SON_HIST_META: dict | None = None
+
+# SEMBOL YENİDEN ADLANDIRMA DEFTERİ — TEK KAYNAK SINIRININ ELLE bakımlı düzeltmesi (TSK-156,
+# 2026-09-05, kart EDG-2026-075/076). `HIST_URL` tablosu ÜYELİK olaylarını taşır, saf ticker
+# yeniden-adlandırmasını (şirket S&P 500'de KALIRKEN sembol değiştirmesi) satır olarak TAŞIMAZ.
+# ÖLÇÜLEN TEK VAKA: Equity Residential 2026-08-18'de Vivmark Residential'a yeniden adlandı (ticker
+# EQR→VMRK) ve S&P 500 ÜYELİĞİ HİÇ KESİLMEDİ — tablo bu olayı bir satır olarak YAZMAZ; olay yalnız
+# AvalonBay'in (AVB) kaldırılma satırının `reason` metninde "(now Vivmark Residential)" olarak
+# görünür. Kod şirket adından ticker UYDURMAZ (`rename_adaylari()`), bu defter ELLE açılır.
+# `as_of(date)` her kayıt için `tarih > date` ise `yeni`yi çıkarıp `eski`yi ekler (o tarihte GEÇERLİ
+# ticker) — `list[str]` dönüş biçimi DEĞİŞMEZ.
+SEMBOL_YENIDEN_ADLANDIRMA: tuple[dict, ...] = (
+    {"eski": "EQR", "yeni": "VMRK", "tarih": "2026-08-18",
+     "kaynak": "SEC 8-K Vivmark Residential 2026-08-18; S&P DJI 2026-08-13 "
+               "'will remain in the S&P 500'"},
+)
 
 
 def health() -> dict:
@@ -87,17 +138,152 @@ def _cached() -> dict:
     return d
 
 
+def _duz_sutunlar(cols) -> list[str]:
+    """Pandas MultiIndex/Index sütunlarını tek dizgeye düzleştirir: tuple ise `"_".join`, değilse
+    `str`. TEK KAYNAK YASASI: hem TSK-154'ün eski `tables[1]` yolu hem TSK-156'nın yeni
+    `_fetch_hist_changes` tablo seçimi AYNI düzleştirmeyi kullanır — iki kopya sessizce ayrışmasın."""
+    return ["_".join(str(x) for x in c) if isinstance(c, tuple) else str(c) for c in cols]
+
+
+def _cell(v) -> str:
+    """Wikipedia değişiklik-günlüğü hücresini NaN-güvenli dizgeye çevirir: None/NaN → "" (aksi
+    hâlde `str(nan)=='nan'` PIT üyeliğine uydurma 'NAN' sembolü sokuyordu), yoksa kırpılmış str.
+    MODÜL DÜZEYİNE TAŞINDI (TSK-156): eskiden yalnız `_fetch_tables` içinde nested tanımlıydı;
+    `_fetch_hist_changes` da AYNI okuyucuyu ister — iki kopya tek-kaynak yasasını çiğnerdi."""
+    if v is None:
+        return ""
+    if isinstance(v, float):
+        import pandas as pd
+        if pd.isna(v):
+            return ""
+    return str(v).strip()
+
+
+def rename_adaylari(changes: list[dict]) -> list[dict]:
+    """`changes` satırlarının `reason` alanında "(now X)" kalıbı taşıyanlar — MUHTEMEL ticker/şirket
+    adı yeniden-adlandırma olayları (`{"date", "added", "removed", "reason_ad"}`).
+
+    KOD KENDİ KENDİNE `SEMBOL_YENIDEN_ADLANDIRMA`YA EKLEMEZ: şirket adı ("Vivmark Residential")
+    TICKER DEĞİLDİR — "VMRK" metinden UYDURULAMAZ (uydurma yasağı). Bu yalnız OPERATÖRE gösterilecek
+    aday listesidir; `_fetch_hist_changes` bunu sayar ve kayıtlı deftere GÖRE eşleşmeyen bir aday
+    varsa `obs.warn("sp500_rename_adayi", ...)` yazar."""
+    import re
+    desen = re.compile(r"\(now ([^)]+)\)")
+    out: list[dict] = []
+    for ch in changes:
+        m = desen.search(ch.get("reason") or "")
+        if m:
+            out.append({"date": ch.get("date"), "added": ch.get("added"),
+                       "removed": ch.get("removed"), "reason_ad": m.group(1).strip()})
+    return out
+
+
+def _fetch_hist_changes() -> tuple[list[dict], dict | None]:
+    """`(satırlar, meta)` — `HIST_URL` ("Historical components of the S&P 500") sayfasından
+    `changes`in BİRİNCİL kaynağı (TSK-156, 2026-09-05, kart EDG-2026-075/076). Modül başlığı (f).
+
+    Tablo İNDEKSTEN değil SÜTUNLARDAN seçilir (`Effective Date` + `Added`∧`Ticker` +
+    `Removed`∧`Ticker` içeren İLK tablo) — sayfa düzeni değişirse sabit bir indeks sessizce YANLIŞ
+    tabloyu seçerdi (TSK-154'ün kök nedeniyle AYNI sınıf risk). Başarısızlık (HTTP≥400, hiç tablo
+    yok, eşleşen sütun yok, herhangi bir istisna) → `([], None)` + `obs.warn(
+    "sp500_tarihsel_tablo_yok", url=HIST_URL, neden=...)` (Yasa 4 — sessiz değil).
+
+    Üç alanı (`date`/`added`/`removed`) da boş satır (hayalet) hiçbir zaman yazılmaz; `_iso` ile
+    ayrıştırılamayan tarihli satır da yazılmaz ama `meta["n_tarih_yok"]`de SAYILIR (uydurma yasağı:
+    "yoktu" ile "ayrıştıramadım" karışmasın). `reason` `rename_adaylari()`e geçirilir — kayıtlı
+    `SEMBOL_YENIDEN_ADLANDIRMA` tarihiyle eşleşmeyen bir aday varsa TEK
+    `obs.warn("sp500_rename_adayi", ...)` yazılır (operatör defteri elle genişler).
+
+    Meta modül-düzeyi `_SON_HIST_META`ya yazılır (yan etki) — `_fetch_tables`in kendisi ÜÇLÜ
+    imzasını korur, `current()` meta'yı bu değişkenden okur."""
+    global _SON_HIST_META
+    try:
+        import hashlib
+        import io
+        import re as _re
+        import pandas as pd
+        import httpx
+        r = httpx.get(HIST_URL, timeout=20, headers={"User-Agent": "Meridian/1.0"},
+                      follow_redirects=True)
+        if r.status_code >= 400:
+            raise ValueError(f"HTTP {r.status_code}")
+        text = r.text
+        tables = pd.read_html(io.StringIO(text), flavor="lxml")
+        secili = None
+        for t in tables:
+            cols = _duz_sutunlar(t.columns)
+            if (any("Effective Date" in c for c in cols)
+                    and any("Added" in c and "Ticker" in c for c in cols)
+                    and any("Removed" in c and "Ticker" in c for c in cols)):
+                secili = t.copy()
+                secili.columns = cols
+                break
+        if secili is None:
+            raise ValueError(f"tarihsel değişiklik tablosu sütunları eşleşmedi (tablo n={len(tables)})")
+        dcol = next(c for c in secili.columns if "Effective Date" in c)
+        acol = next(c for c in secili.columns if "Added" in c and "Ticker" in c)
+        rcol = next(c for c in secili.columns if "Removed" in c and "Ticker" in c)
+        rcol_reason = next((c for c in secili.columns if "Reason" in c), None)
+        rows: list[dict] = []
+        n_tarih_yok = 0
+        for _, satir in secili.iterrows():
+            d_raw = _cell(satir.get(dcol))
+            a_raw = _cell(satir.get(acol))
+            rm_raw = _cell(satir.get(rcol))
+            reason_raw = _cell(satir.get(rcol_reason)) if rcol_reason else ""
+            if not (d_raw or a_raw or rm_raw):
+                continue                            # hayalet satır: hiçbir zaman yazılmaz
+            iso = _iso(d_raw)
+            if iso is None:
+                n_tarih_yok += 1
+                continue                            # tarih ayrışmadı: yazılmaz ama SAYILIR
+            rows.append({"date": iso, "added": _tick(a_raw), "removed": _tick(rm_raw),
+                        "reason": reason_raw})
+        adaylar = rename_adaylari(rows)
+        if adaylar:
+            kayitli_tarihler = {rn["tarih"] for rn in SEMBOL_YENIDEN_ADLANDIRMA}
+            eslesmeyen = [a for a in adaylar if a["date"] not in kayitli_tarihler]
+            if eslesmeyen:
+                en_yeni = sorted(eslesmeyen, key=lambda a: a["date"] or "", reverse=True)[:3]
+                try:
+                    from .. import obs
+                    obs.warn("sp500_rename_adayi", n=len(eslesmeyen), ornek=en_yeni)
+                except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez
+                    pass
+        m = _re.search(r'"wgRevisionId":(\d+)', text)
+        meta = {"oldid": int(m.group(1)) if m else None,
+                "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                "n_satir": len(rows), "n_tarih_yok": n_tarih_yok,
+                "cekim_ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")}
+        _SON_HIST_META = meta
+        return rows, meta
+    except Exception as e:
+        _SON_HIST_META = None
+        try:
+            from .. import obs
+            obs.warn("sp500_tarihsel_tablo_yok", url=HIST_URL,
+                     neden=f"{type(e).__name__}: {e}"[:200])
+        except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez
+            pass
+        return [], None
+
+
 def _fetch_tables():
     """(current_symbols, changes, changes_kaynak) — Wikipedia'dan. Başarısızlıkta (None, None, None)
-    AMA sebebi kaydederek. NOT: Wikipedia botlara 403 dönebilir (2026-08-13'te bu UA ile hâlâ
-    dönüyor) ve ayrıştırıcı eksikliği de olabilir; ikisi de `health()`te AYRI nedenlerle görünür.
+    AMA sebebi kaydederek. NOT: Wikipedia botlara 403 dönebilir ve ayrıştırıcı eksikliği de olabilir;
+    ikisi de `health()`te AYRI nedenlerle görünür.
 
     TSK-154 (2026-09-05): `tables[1]` eskiden 'Selected changes' değişiklik günlüğüydü; sayfa bu
     tabloyu KALDIRDI (bugün section 1 tek tablo taşıyor, section 2 'See also'). Eski kod sütun
     eşleşmesi olmasa da BOŞ satırlar üretip yazıyordu (`{date:'',added:'',removed:''}` × 11, canlı
     önbellekte bulundu) — hiç uyarı yok. Artık: (a) sütunlardan biri (tarih/eklenen/çıkan) hiç
     eşleşmezse tablo 'değişiklik günlüğü DEĞİL' sayılır → `changes=[]`, `changes_kaynak=None`,
-    `obs.warn` (Yasa 4); (b) üç alanı da boş olan satır (hayalet) hiç `changes`e yazılmaz."""
+    `obs.warn` (Yasa 4); (b) üç alanı da boş olan satır (hayalet) hiç `changes`e yazılmaz.
+
+    TSK-156 (2026-09-05): `changes` artık ÖNCE `_fetch_hist_changes()`ten (AYRI sayfa, `HIST_URL`)
+    denenir; doluysa `changes_kaynak="wikipedia_historical_components"` ve YUKARIDAKİ eski
+    `tables[1]` yolu HİÇ ÇALIŞTIRILMAZ. `_fetch_hist_changes` boş dönerse (403/ayrıştırma hatası)
+    eski yol AYNEN devam eder — üçlü imza (`cur, changes, changes_kaynak`) DEĞİŞMEDİ."""
     try:
         import io
         import pandas as pd
@@ -128,10 +314,15 @@ def _fetch_tables():
         cur = [str(s).strip().upper().replace(".", "-") for s in tables[0]["Symbol"].tolist()]
     except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
         cur = None
+
+    hist_rows, _hist_meta = _fetch_hist_changes()
+    if hist_rows:
+        return cur, hist_rows, "wikipedia_historical_components"
+
     changes, changes_kaynak = [], None
     try:
         ch = tables[1]
-        ch.columns = ["_".join(str(x) for x in c) if isinstance(c, tuple) else str(c) for c in ch.columns]
+        ch.columns = _duz_sutunlar(ch.columns)
         dcol = next((c for c in ch.columns if "Date" in c), None)
         acol = next((c for c in ch.columns if "Added" in c and "Ticker" in c), None)
         rcol = next((c for c in ch.columns if "Removed" in c and "Ticker" in c), None)
@@ -140,13 +331,6 @@ def _fetch_tables():
             # kaldırdığı 'Selected changes' tablosu değil, başka bir tablo (`tables[1]` artık
             # 'See also' ya da benzeri). Sessizce boş `changes` yazmak yerine adıyla uyarılır.
             raise ValueError(f"değişiklik günlüğü sütunları eşleşmedi: {list(ch.columns)[:6]}")
-        # NaN-safe cell read (L3): pandas reads an empty change-log cell as float('nan'), and bool(nan) is
-        # True, so `nan or ""` returned nan and str(nan)=='nan' — as_of() then added a fabricated 'NAN'
-        # ticker to point-in-time membership. Coalesce NaN/None to "" explicitly.
-        def _cell(v):
-            """Wikipedia değişiklik-günlüğü hücresini NaN-güvenli dizgeye çevirir: None/NaN → ""
-            (aksi hâlde str(nan)=='nan' PIT üyeliğine uydurma 'NAN' sembolü sokuyordu), yoksa kırpılmış str."""
-            return "" if v is None or (isinstance(v, float) and pd.isna(v)) else str(v).strip()
         rows = []
         for _, row in ch.iterrows():
             d, a, rm = _cell(row.get(dcol)), _cell(row.get(acol)), _cell(row.get(rcol))
@@ -171,7 +355,12 @@ def current(use_cache: bool = True) -> list[str]:
     Günlük önbellek; hiçbir kaynak MAKUL liste veremezse [] — çağıran elle bakımlı evrene düşer.
 
     ÖNEMLİ: eskiden başarısızlıkta 'dünün listesi'ni döndürüyordu; o liste sahte olduğunda (canlıda
-    öyleydi) sahtelik sonsuza kadar servis ediliyordu. Artık önbellek de makullük kapısından geçer."""
+    öyleydi) sahtelik sonsuza kadar servis ediliyordu. Artık önbellek de makullük kapısından geçer.
+
+    TSK-156 (2026-09-05): FMP dalında `cur` FMP'den gelse bile `changes` AYRICA `HIST_URL`den
+    tazelenir (FMP hiç değişiklik günlüğü ÜRETMEZ) — hist başarısızsa önbellekteki
+    `changes`/`changes_kaynak`/`changes_meta` KORUNUR, boşla EZİLMEZ (eski davranışla AYNI:
+    FMP dalı zaten hep önbellekten devralıyordu, tek fark artık ÖNCE tazeleme DENENİYOR)."""
     today = dt.date.today().isoformat()
     cached = _cached()
     if use_cache and cached.get("as_of") == today and cached.get("current"):
@@ -182,9 +371,19 @@ def current(use_cache: bool = True) -> list[str]:
     if fmp.available() and not fmp.quota_blocked():
         syms = [str(s).strip().upper().replace(".", "-") for s in (fmp.sp500_constituents() or [])]
         if _plausible(syms):
+            hist_rows, hist_meta = _fetch_hist_changes()
+            if hist_rows:
+                changes, changes_kaynak, changes_meta = (hist_rows,
+                                                          "wikipedia_historical_components",
+                                                          hist_meta)
+            else:
+                changes = cached.get("changes", [])
+                changes_kaynak = cached.get("changes_kaynak")
+                changes_meta = cached.get("changes_meta")
             store.write_json(CACHE, {"as_of": today, "current": syms,
-                                     "changes": cached.get("changes", []),
-                                     "changes_kaynak": cached.get("changes_kaynak"),
+                                     "changes": changes,
+                                     "changes_kaynak": changes_kaynak,
+                                     "changes_meta": changes_meta,
                                      "source": "fmp"})
             _note(True, "fmp", len(syms))
             return syms
@@ -193,7 +392,8 @@ def current(use_cache: bool = True) -> list[str]:
     cur, changes, changes_kaynak = _fetch_tables()
     if _plausible(cur):
         store.write_json(CACHE, {"as_of": today, "current": cur, "changes": changes,
-                                 "changes_kaynak": changes_kaynak, "source": "wikipedia"})
+                                 "changes_kaynak": changes_kaynak, "changes_meta": _SON_HIST_META,
+                                 "source": "wikipedia"})
         _note(True, "wikipedia", len(cur))
         return cur
     if not _HEALTH.get("error"):
@@ -233,7 +433,12 @@ def as_of(date: str) -> list[str]:
     (Wikipedia's change table only spans recent years); [] if unavailable. Honest scaffold for PIT.
 
     [] dönmesi 'o tarihte kimse yoktu' DEĞİL 'BİLMİYORUZ' demektir — çağıran bunu üyelik gibi
-    kullanmamalı (denetim turu 3: sessiz boş liste, survivorship'i 'düzeltildi' sanmaya yol açar)."""
+    kullanmamalı (denetim turu 3: sessiz boş liste, survivorship'i 'düzeltildi' sanmaya yol açar).
+
+    TSK-156 (2026-09-05): değişiklik günlüğü geri-sarıldıktan SONRA modül-düzeyi donuk
+    `SEMBOL_YENIDEN_ADLANDIRMA` defteri AYRICA uygulanır — `changes` tablosu saf ticker
+    yeniden-adlandırmasını (şirket üyelikte KALIRKEN sembol değiştirmesi) satır olarak TAŞIMAZ
+    (tek kaynak sınırı, modül başlığı (f))."""
     data = _cached()
     members = set(data.get("current", []))
     if not members:
@@ -250,6 +455,12 @@ def as_of(date: str) -> list[str]:
                 members.discard(add)                      # it was added after `date` → not a member then
             if rem:
                 members.add(rem)                          # it was removed after `date` → was a member then
+    for rn in SEMBOL_YENIDEN_ADLANDIRMA:
+        # rename `tarih`inden SONRAKİ bir `date` sorgusu için `yeni` doğru — geri alınmaz.
+        # `tarih`ten ÖNCEKİ bir sorgu için o tarihte GEÇERLİ olan `eski` ile değiştirilir.
+        if rn["tarih"] > date and rn["yeni"] in members:
+            members.discard(rn["yeni"])
+            members.add(rn["eski"])
     return sorted(m for m in members if _tick(m))
 
 
@@ -262,26 +473,39 @@ def as_of_pit_durumu(date: str) -> dict:
     `pitlaw.PIT_SOZLESMELI_BESLEYENI_KAPALI` sınıfı AYNEN kalır — bu fonksiyonun var oluşu o
     sınıflandırmayı değiştirmez, yalnız beyanı koda taşır.
 
-    Döner: {"pit": bool, "neden": str|None, "changes_kaynak": str|None}. `changes_kaynak` cache
-    dosyasından AYNEN okunur (D1'de yazılan alan — `_fetch_tables` tablo bulamazsa None yazar; bu
-    fonksiyon o alanın OKUYUCUSUdur). `pit=False` iki durumda: (a) önbellekte `changes` yok/boş
-    (tablo kaldırılmış — TSK-154 kök neden); (b) günlük var ama `date`ten SONRAKİ geçerli (tarih
-    ayrıştırılabilir VE eklenen/çıkan dolu) hiçbir satır yok — geriye doğru hiçbir değişiklik
-    uygulanmaz, yine survivorship. `pit=True` yalnız `date`ten sonraki en az bir geçerli satır
-    varsa, yani `as_of()` gerçekten bir üyeyi ekleyip/çıkarmıştır."""
+    Döner: {"pit": bool, "neden": str|None, "changes_kaynak": str|None, "kaynak_sinifi": str|None,
+    "changes_meta": dict|None}. `changes_kaynak` cache dosyasından AYNEN okunur (D1'de yazılan alan
+    — `_fetch_tables` tablo bulamazsa None yazar; bu fonksiyon o alanın OKUYUCUSUdur). `pit=False`
+    iki durumda: (a) önbellekte `changes` yok/boş (tablo kaldırılmış — TSK-154 kök neden); (b)
+    günlük var ama `date`ten SONRAKİ geçerli (tarih ayrıştırılabilir VE eklenen/çıkan dolu) hiçbir
+    satır yok — geriye doğru hiçbir değişiklik uygulanmaz, yine survivorship. `pit=True` yalnız
+    `date`ten sonraki en az bir geçerli satır varsa, yani `as_of()` gerçekten bir üyeyi
+    ekleyip/çıkarmıştır.
+
+    TSK-156 (2026-09-05) İKİ YENİ ALAN: `kaynak_sinifi` — `changes_kaynak` DEĞERİNDEN türetilen
+    okunabilir etiket (`"tarihsel_tablo"` ↔ `HIST_URL`, `"secilmis_degisiklikler"` ↔ eski TSK-154
+    `tables[1]` yolu, `None` kaynak yoksa) — iki KAYNAK KALİTESİ birbirine karışmasın diye. VE
+    `changes_meta` — cache'teki `changes_meta` alanı AYNEN (bu fonksiyon o alanın OKUYUCUSUdur,
+    modül başlığı (f))."""
     data = _cached()
     changes = data.get("changes") or []
     changes_kaynak = data.get("changes_kaynak")
+    kaynak_sinifi = ("tarihsel_tablo" if changes_kaynak == "wikipedia_historical_components"
+                     else "secilmis_degisiklikler" if changes_kaynak else None)
+    changes_meta = data.get("changes_meta")
     if not changes:
         return {"pit": False, "neden": "değişiklik tablosu yok — as_of bugünkü listeye eşit",
-                "changes_kaynak": changes_kaynak}
+                "changes_kaynak": changes_kaynak, "kaynak_sinifi": kaynak_sinifi,
+                "changes_meta": changes_meta}
     for ch in changes:
         d = _iso(ch.get("date"))
         if d and d > date and (_tick(ch.get("added")) or _tick(ch.get("removed"))):
-            return {"pit": True, "neden": None, "changes_kaynak": changes_kaynak}
+            return {"pit": True, "neden": None, "changes_kaynak": changes_kaynak,
+                    "kaynak_sinifi": kaynak_sinifi, "changes_meta": changes_meta}
     return {"pit": False,
             "neden": "değişiklik günlüğü `date` kapsamının dışında — as_of bugünkü listeye eşit",
-            "changes_kaynak": changes_kaynak}
+            "changes_kaynak": changes_kaynak, "kaynak_sinifi": kaynak_sinifi,
+            "changes_meta": changes_meta}
 
 
 def universe_drift() -> dict:
