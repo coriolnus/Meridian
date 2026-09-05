@@ -8,7 +8,7 @@
 # içerik-adresli HTML (oldid 1370891103, sha256 9909032c1f815a01…dcd2871) — ağsız yeniden ölçüm. Eşikler ölçümden ÖNCE donuk.
 
 card_id: EDG-2026-076
-status: registered   # 2026-09-05 Rol-1 — ön-kayıt; ölçüm betiği karttan olay kümesi okuyacak (ajan dilimi), sonra Rol-1 --olc
+status: measured   # 2026-09-05 Rol-1 — K1 28/28 GEÇTİ · K1n 6/6 GEÇTİ · K2 GEÇTİ · PK tuttu; rename sınırı ölçüldü (as_of(06-01) VMRK taşıyor, EQR değil)
 family: evren_pit
 on_kayit: 2026-09-05
 ref: [TSK-156, EDG-2026-075, TSK-154, TSK-143, TSK-066]
@@ -110,3 +110,24 @@ notlar: >
   filtresine takılıyor (httpx 403, curl 200) — girdi zaten diskte, `--girdi` ile verilir. Bülten URL'leri: press.spglobal.com
   2024-06-07 / 2025-09-05 / 2026-03-06 / 2026-06-23 / 2026-07-31 / 2026-08-13; prnewswire 302101773 (2024-03-27), 302870517
   (2026-09-04).
+
+hukum_2026_09_05: >
+  (16:27Z Rol-1) GİRDİ: aynı ham HTML (oldid 1370891103; sha256 9909032c…dcd2871 — `--beklenen-sha` ile mekanik eşitlik ✓);
+  betik olay kümesini KARTTAN okudu (kart_beyan_n = olculen_n = 28; kart iç tutarlılığı ✓ ihlal 0); güncel liste A1
+  sp500_constituents.json (as_of 2026-09-04, 503). Sonuç dosyası research/olcumler/edg075_sp500_tarihsel/sonuc_edg076_2026-09-05.json.
+  ADIM-0 geçerli (2 tablo, 7 sütun, 407 satır, 0 hayalet, 0 tarih hatası, pencere 136).
+  K1 GEÇTİ — 28/28: 2024-04-01 SOLV↑ · 2024-04-03 VFC↓ · 2024-06-24 KKR↑ RHI↓ CRWD↑ CMA↓ GDDY↑ ILMN↓ · 2025-09-22 APP↑ MKTX↓
+  HOOD↑ CZR↓ EME↑ ENPH↓ · 2026-03-23 VRT↑ MTCH↓ LITE↑ MOH↓ COHR↑ LW↓ SATS↑ PAYC↓ · 2026-06-29 HONA↑ · 2026-06-30 CAG↓ ·
+  2026-08-05 FERG↑ EA↓ · 2026-08-18 RDDT↑ AVB↓ — hepsi satırda, tarih ±1 iş günü içinde (fiilen tam gün), yön doğru.
+  K1n GEÇTİ — 6/6: BE/TAP/P/TTD/ILMN/BLDR (yürürlük 2026-09-21) tabloda yürürlük satırı YOK; as_of(2026-09-05) TAP/TTD/BLDR
+  içeriyor, BE/P/ILMN içermiyor → tablo duyuru ile yürürlüğü KARIŞTIRMIYOR (PIT sınıfı 'yaklaşık' değil).
+  K2 GEÇTİ — EDG-075 ile aynı: as_of(2026-09-05) == güncel liste (503, fark 0); 06-01→09-05 simetrik fark 11 sembol birebir.
+  PK TUTTU — ZZQ1 enjekte: K1 28→28, as_of(06-30) içermez / as_of(07-02) içerir.
+  RENAME SINIRI (rapor, K değil): as_of(2026-06-01) 'VMRK' taşıyor, 'EQR' taşımıyor (as_of bugünkü listeden geriye sarar; rename
+  tabloda satır değil) → Haziran barları 'EQR' altında, PIT listesi 'VMRK' der: constituents entegrasyonu SEMBOL-EŞLEME katmanı
+  ister (ticker değişiklikleri için ayrı kaynak/defter: SEC 8-K ya da Wikipedia Reason sütunundan 'now X' kalıbı — kart-sonrası).
+  SONUÇ: EDG-075'in K1 kalışı KART-VERİ hatasıydı, kaynak tam not aldı. TSK-156 tasarımına: (1) Historical components tablosu
+  `constituents` ikinci kaynağı (oldid/sha damgalı çekim; httpx yolu Wikimedia parmak izi 403 — çekim yolu ölçülecek: A1'den
+  httpx/curl); (2) rename eşleme katmanı; (3) pitlaw ('constituents','as_of') 'besleyeni açık'. Kod kart-sonrası, KOVA B.
+  Betik: k1_olaylari_ve_beyan / kart_yukle / k1n_gelecek_olaylar / rename_siniri_raporu (merge 2f26b3d; v420 23 + v421 21).
+

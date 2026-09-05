@@ -2625,3 +2625,8 @@ terfi bugün yalnız `rapor().terfi_adaylari` listesi (okuyucu pano Eksen-2); ca
 kuralları; emsaller LLM terfi kuralı (yetki uykuda), SKILL_GORUS_URETIM_ACIK bayrak+kart kaydı (v278), faz5_cikis gölge sınırı, dormant_setup
 dersi. Tasarım: yedi şart (Z1–Z7), Aşama A gölge sıralama kolu (Δrank-IC, üst-N kesişimi bedeli, pencere sayacı borcu) → Aşama B sınırlı
 ağırlık (bayrak + ship kapısı + 2 pencere). Kod yok; 4 karar Masa'da. EDG-076 ajanı uçuşta (worktree).
+
+**16:27Z — EDG-2026-076 ÖLÇÜLDÜ:** ajan dilimi (1ac5cd3 → merge 2f26b3d; v420 23 + v421 21, iki mutasyon ısırdı; codelaw çürük 0) betiğe
+karttan okuma + K1n + `--beklenen-sha` + kart iç tutarlılığı ekledi. Aynı girdi (sha mekanik ✓): K1 28/28, K1n 6/6 (09-21 olayları tabloda
+yürürlük satırı değil, as_of doğru), K2 fark 0, PK tuttu. Rename sınırı: as_of(06-01) 'VMRK' diyor (EQR değil) → sembol-eşleme katmanı
+TSK-156 tasarım girdisi. EDG-075'in "kaldı"sı kart-veri hatasıydı; kaynak tam not. Kart measured; TSK-156 sıradaki adım tasarım+KOVA B.

@@ -1,0 +1,510 @@
+{
+  "adim_0_fizibilite": {
+    "a_meta": {
+      "eslenen": {
+        "cikan_ad": "Removed_Security",
+        "cikan_ticker": "Removed_Ticker",
+        "eklenen_ad": "Added_Security",
+        "eklenen_ticker": "Added_Ticker",
+        "neden": "Reason_Reason",
+        "tarih": "Effective Date_Effective Date"
+      },
+      "kolonlar_ham": [
+        "Effective Date_Effective Date",
+        "Added_Ticker",
+        "Added_Security",
+        "Removed_Ticker",
+        "Removed_Security",
+        "Reason_Reason",
+        "Refs_Refs"
+      ],
+      "n_tablo": 2,
+      "tablo_index": 0
+    },
+    "a_tablo_okunuyor": true,
+    "b_oldid_ile_sabit": true,
+    "c_pencere_n": 136,
+    "c_yeterli_100_ustu": true,
+    "d_ayristirilamadi_n": 0,
+    "d_tum_tarihler_ayristi": true,
+    "e_sha_beklenen": "9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871",
+    "e_sha_esit_mi": true,
+    "e_sha_hesaplanan": "9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871",
+    "f_kart_ic_tutarli": true,
+    "f_kart_ic_tutarli_ihlaller": [],
+    "gecerli": true,
+    "neden": null
+  },
+  "beyan": "Bu betik yalnız ÖLÇER; hüküm Rol-1'de, AYNI turda karta + K defterine işlenir (CLAUDE.md §3/§5). meridian/*.py bu turda DEĞİŞTİRİLMEDİ, `--cek` bu ajan turunda hiç çağrılmadı (ağa çıkmadı).",
+  "degisiklikler_n_pencere": 136,
+  "esikler": {
+    "k1_gecti": "28/28 olgu satırda VE tarih ±1 iş günü VE yön doğru (26–27/28 'kısmi', <26 kaldı)",
+    "k1n_gecti": "6/6: tabloda yürürlük satırı YOK ∧ as_of(2026-09-05) TAP/TTD/BLDR içerir ∧ BE/P/ILMN içermez",
+    "k2_gecti": "as_of(2026-09-05) == güncel liste (fark 0) VE T1→T2 farkı tabloyla birebir (fark 0)",
+    "kart_id": "EDG-2026-076",
+    "kart_yolu": "research/cards/EDG-2026-076-sp500-tarihsel-bilesenler-dogrulanmis-olay-kumesi.yaml"
+  },
+  "girdi_kimligi": {
+    "ham_yol": "research/olcumler/edg075_sp500_tarihsel/ham/1370891103_9909032c1f815a01.html",
+    "html_sha256_prefix16": "9909032c1f815a01",
+    "html_sha256_tam": "9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871",
+    "oldid": 1370891103
+  },
+  "k1_bilinen_olaylar": {
+    "detay": [
+      {
+        "beklenen_tarih": "2024-04-01",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-04-01",
+        "satir_var": true,
+        "sembol": "SOLV",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-03-27 prnewswire 302101773 (3M spin-off; SOLV in Apr 1)"
+      },
+      {
+        "beklenen_tarih": "2024-04-03",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-04-03",
+        "satir_var": true,
+        "sembol": "VFC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-03-27 prnewswire 302101773 (VFC → SmallCap 600 Apr 3)"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "KKR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com (replaces RHI)"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "RHI",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "CRWD",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com (replaces CMA)"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "CMA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "GDDY",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com (replaces ILMN)"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "ILMN",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "APP",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com (replaces MKTX)"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "MKTX",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "HOOD",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com (replaces CZR)"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "CZR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "EME",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com (replaces ENPH)"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "ENPH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "VRT",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com (replaces MTCH)"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "MTCH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "LITE",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com (replaces MOH)"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "MOH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "COHR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com (replaces LW)"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "LW",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "SATS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com (replaces PAYC)"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "PAYC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-06-29",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-06-29",
+        "satir_var": true,
+        "sembol": "HONA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-06-23 press.spglobal.com (HONA added Mon Jun 29)"
+      },
+      {
+        "beklenen_tarih": "2026-06-30",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-06-30",
+        "satir_var": true,
+        "sembol": "CAG",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-06-23 press.spglobal.com (CAG → SmallCap 600 Tue Jun 30)"
+      },
+      {
+        "beklenen_tarih": "2026-08-05",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-08-05",
+        "satir_var": true,
+        "sembol": "FERG",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-07-31 press.spglobal.com (replaces EA)"
+      },
+      {
+        "beklenen_tarih": "2026-08-05",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-08-05",
+        "satir_var": true,
+        "sembol": "EA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-07-31 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-08-18",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-08-18",
+        "satir_var": true,
+        "sembol": "RDDT",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-08-13 press.spglobal.com (replaces AVB)"
+      },
+      {
+        "beklenen_tarih": "2026-08-18",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-08-18",
+        "satir_var": true,
+        "sembol": "AVB",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-08-13 press.spglobal.com"
+      }
+    ],
+    "kart_beyan_n": 28,
+    "n_tam_gecti": 28,
+    "olculen_n": 28,
+    "sayim_notu": "kart 'kart_beyan_n' 28 olay der; bu betik 28 ayrık (sembol,yön,tarih) olgusu ÖLÇTÜ (`k1_olaylari_ve_beyan`: kart 'bilinen_olaylar' varsa ORADAN, yoksa modül başlığı K1 türetme beyanından) — SAYI UYUŞMAZLIĞI varsa Rol-1'e açık kalem, betik ZORLAMADI",
+    "tolerans_gun": 1
+  },
+  "k1n_gelecek_olaylar": {
+    "calisti": true,
+    "detay": [
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "BE",
+        "tarih": "2026-09-21",
+        "yon": "giris",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "TAP",
+        "tarih": "2026-09-21",
+        "yon": "cikis",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "P",
+        "tarih": "2026-09-21",
+        "yon": "giris",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "TTD",
+        "tarih": "2026-09-21",
+        "yon": "cikis",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "ILMN",
+        "tarih": "2026-09-21",
+        "yon": "giris",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "BLDR",
+        "tarih": "2026-09-21",
+        "yon": "cikis",
+        "yururluk_satiri_var": false
+      }
+    ],
+    "n": 6,
+    "n_gecti": 6
+  },
+  "k2_as_of_yeniden_kurulum": {
+    "as_of_bugun_esit_mi": true,
+    "as_of_bugun_n": 503,
+    "as_of_t1_n": 504,
+    "as_of_t2_n": 503,
+    "beklenen_fark": [
+      "AVB",
+      "CAG",
+      "CPB",
+      "EA",
+      "EPAM",
+      "FERG",
+      "FLEX",
+      "HONA",
+      "MRVL",
+      "POOL",
+      "RDDT"
+    ],
+    "calisti": true,
+    "guncel_liste_n": 503,
+    "simetrik_fark": [
+      "AVB",
+      "CAG",
+      "CPB",
+      "EA",
+      "EPAM",
+      "FERG",
+      "FLEX",
+      "HONA",
+      "MRVL",
+      "POOL",
+      "RDDT"
+    ],
+    "simetrik_fark_birebir_mi": true,
+    "t1": "2026-06-01",
+    "t2": "2026-09-05"
+  },
+  "kart": "EDG-2026-076",
+  "olcum_zamani": "2026-09-05T16:26:28+00:00",
+  "pozitif_kontrol": {
+    "as_of_once_tarih": "2026-06-30",
+    "as_of_sonra_tarih": "2026-07-02",
+    "enjekte_meta": {
+      "eslenen": {
+        "cikan_ad": "Removed_Security",
+        "cikan_ticker": "Removed_Ticker",
+        "eklenen_ad": "Added_Security",
+        "eklenen_ticker": "Added_Ticker",
+        "neden": "Reason_Reason",
+        "tarih": "Effective Date_Effective Date"
+      },
+      "kolonlar_ham": [
+        "Effective Date_Effective Date",
+        "Added_Ticker",
+        "Added_Security",
+        "Removed_Ticker",
+        "Removed_Security",
+        "Reason_Reason",
+        "Refs_Refs"
+      ],
+      "n_hayalet_atlanan": 0,
+      "n_satir_gecerli": 408,
+      "n_satir_ham": 408,
+      "n_tablo": 2,
+      "n_tarih_ayristirilamadi": 0,
+      "tablo_index": 0
+    },
+    "k1_degismedi": true,
+    "k1_n_tam_gecti_once": 28,
+    "k1_n_tam_gecti_sonra": 28,
+    "pk_sembol_as_of_once_icermez_mi": true,
+    "pk_sembol_as_of_sonra_icerir_mi": true,
+    "tuttu": true
+  },
+  "rename_siniri_raporu": {
+    "calisti": true,
+    "detay": [
+      {
+        "as_of_bugun_eski_var": false,
+        "as_of_bugun_yeni_var": true,
+        "as_of_t1_eski_var": false,
+        "as_of_t1_yeni_var": true,
+        "eski": "EQR",
+        "tarih": "2026-08-18",
+        "yeni": "VMRK"
+      }
+    ]
+  },
+  "tablo_meta": {
+    "eslenen": {
+      "cikan_ad": "Removed_Security",
+      "cikan_ticker": "Removed_Ticker",
+      "eklenen_ad": "Added_Security",
+      "eklenen_ticker": "Added_Ticker",
+      "neden": "Reason_Reason",
+      "tarih": "Effective Date_Effective Date"
+    },
+    "kolonlar_ham": [
+      "Effective Date_Effective Date",
+      "Added_Ticker",
+      "Added_Security",
+      "Removed_Ticker",
+      "Removed_Security",
+      "Reason_Reason",
+      "Refs_Refs"
+    ],
+    "n_hayalet_atlanan": 0,
+    "n_satir_gecerli": 407,
+    "n_satir_ham": 407,
+    "n_tablo": 2,
+    "n_tarih_ayristirilamadi": 0,
+    "tablo_index": 0
+  }
+}
