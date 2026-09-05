@@ -109,7 +109,8 @@ def test_earnings_refresh_nasdaq_primary_and_merge(seeded_sandbox, monkeypatch):
 def test_universe_is_unique_with_sectors():
     from meridian.adapters.data import REPLAY_UNIVERSE
     from meridian.backtest import SECTORS
-    # 250 → 251 (2026-07-30, operatör kararı: FISV — emekli FI'nin Nasdaq'taki halefi).
-    assert len(REPLAY_UNIVERSE) == 251 and len(set(REPLAY_UNIVERSE)) == 251
+    # 250 → 251 (2026-07-30, FISV). 251 → 248 (TSK-143, 2026-09-05: EA/AVB/EQR gerçek delist
+    # çıktı, RETIRED_SYMBOLS'a taşındı — bkz. tests/test_evren_emekliligi_v134.py).
+    assert len(REPLAY_UNIVERSE) == 248 and len(set(REPLAY_UNIVERSE)) == 248
     missing = [t for t in REPLAY_UNIVERSE if t not in SECTORS]
     assert not missing, f"sektörsüz: {missing[:8]}"

@@ -220,7 +220,20 @@ def as_of(date: str) -> list[str]:
 def universe_drift() -> dict:
     """GERÇEK TÜKETİCİ (denetim turu 3): elle bakımlı REPLAY_UNIVERSE ile güncel endeks üyeliğini
     karşılaştır. 2026-07-21'de 7 ölü sembol (DFS, FI, HES, IPG, PARA, K, WBA) ELLE bulunmuştu —
-    tam da bu modülün söylemesi gereken şey. Kaynak yoksa 'unknown' döner: 'sapma yok' DEMEZ."""
+    tam da bu modülün söylemesi gereken şey. Kaynak yoksa 'unknown' döner: 'sapma yok' DEMEZ.
+
+    `stale` SEMANTİĞİ TSK-143'te (2026-09-05) DEĞİŞTİ: eskiden "REPLAY_UNIVERSE'de olup güncel
+    S&P 500'de olmayan" idi ve bu, EVREN_DISI_BEYANLI'daki 10 sembolü (hiç üye olmadı/S&P 400/
+    yabancı/geçmiş çıkış — bkz. data.py şerhi) her gün "sapma" diye işaretleyip 24 gündür aynı
+    yanlış-pozitif DATA_QUALITY alarmını üretiyordu. Artık `stale` = REPLAY_UNIVERSE ∖ (güncel S&P
+    500 ∪ EVREN_DISI_BEYANLI ∪ RETIRED_SYMBOLS) — yani BEYANSIZ sapma. Beyanlı sapma ayrı alanda
+    (`beyanli_disi`) GÖRÜNÜR kalır, sessizce yutulmaz.
+
+    BEDEL BEYANI (Yasa 6 / bedel yasası): `beyanli_disi`deki 10 sembolden biri gelecekte GERÇEKTEN
+    delist olursa bu fonksiyon onu `stale`de GÖSTERMEZ — beyanlı olmak bu alarmı kalıcı olarak
+    susturur. Bu kör nokta bilerek kabul edildi (aksi hâlde alarm eskisi gibi her gün geri gelir);
+    delist tespiti `data._record_no_data`e (TSK-153, bu turun kapsamı DIŞINDA) devredildi. O
+    gelene kadar EVREN_DISI_BEYANLI'nin doğruluğu yalnız ELLE (bu defterin bakımıyla) korunur."""
     from . import data as _data
     REPLAY_UNIVERSE = _data.REPLAY_UNIVERSE
     # İKİNCİ, BAĞIMSIZ KANIT: üyelik kaynağı bu kurulumda ÇALIŞMIYOR (Wikipedia 403,
@@ -238,24 +251,39 @@ def universe_drift() -> dict:
     # (elle düzenleme, birleşme sonrası kopyala-yapıştır) delist olmuş bir sembolü tarama evrenine
     # geri koymuş demektir — sessiz kalırsa motor günlerce ölü bir isim hakkında karar üretirdi.
     retired_in_universe = sorted(t for t in REPLAY_UNIVERSE if _data.is_retired(t))
-    # DÖRDÜNCÜ KANIT — ENDEKS-ÇIKIŞI BEKÇİSİ (TSK-116, 2026-09-03). `retired_in_universe`nin
-    # kardeşi ama FARKLI evrende ölçülür: 13 endeks-çıkışı sembol BİLEREK REPLAY_UNIVERSE'de KALIR
-    # (sağkalan yanlılığı artırmamak için — bkz. data.py INDEX_EXITED şerhi), o yüzden onu
-    # REPLAY_UNIVERSE'e karşı ölçmek HER ZAMAN doğru-pozitif üretirdi. Bekçi LIVE_UNIVERSE'e karşı
-    # ölçer: LIVE_UNIVERSE'in KENDİ TANIMI bu 13'ü zaten süzdüğü için normalde BOŞ döner; boş
-    # DEĞİLSE biri LIVE_UNIVERSE türetmesini (elle düzenleme, monkeypatch) bozmuş demektir.
+    # DÖRDÜNCÜ KANIT — EVREN-DIŞI BEYAN BEKÇİSİ (TSK-116, 2026-09-03; TSK-143, 2026-09-05 revizyonu
+    # — ad ve sayı değişti: INDEX_EXITED→EVREN_DISI_BEYANLI, 13→10, üçü RETIRED_SYMBOLS'a taşındı).
+    # `retired_in_universe`nin kardeşi ama FARKLI evrende ölçülür: 10 beyanlı sembol BİLEREK
+    # REPLAY_UNIVERSE'de KALIR (sağkalan yanlılığı artırmamak için — bkz. data.py EVREN_DISI_BEYANLI
+    # şerhi), o yüzden onu REPLAY_UNIVERSE'e karşı ölçmek HER ZAMAN doğru-pozitif üretirdi. Bekçi
+    # LIVE_UNIVERSE'e karşı ölçer: LIVE_UNIVERSE'in KENDİ TANIMI bu 10'u zaten süzdüğü için normalde
+    # BOŞ döner; boş DEĞİLSE biri LIVE_UNIVERSE türetmesini (elle düzenleme, monkeypatch) bozmuş
+    # demektir. Alan adları (`index_exited_n`/`index_exited_in_live`) KORUNDU — okuyucular (pano,
+    # testler) değişmedi; `data.INDEX_EXITED` artık `EVREN_DISI_BEYANLI`nin AYNI nesnesi (tek kaynak).
     index_exited_in_live = sorted(t for t in _data.LIVE_UNIVERSE if _data.is_index_exited(t))
+    # BEŞİNCİ KANIT — BEYANLI SAPMA, AYRI ALANDA GÖRÜNÜR (TSK-143, K3). REPLAY_UNIVERSE içindeki 10
+    # EVREN_DISI_BEYANLI sembolü `stale`den SESSİZCE çıkarmak yetmez — nereye gittiklerini görmek
+    # (Yasa 6) için ayrı taşınırlar. Üyelik kaynağı olmasa da (aşağıdaki 'unknown' dalı) bu liste
+    # REPLAY_UNIVERSE'e karşı statik ölçülür, üyelik gerektirmez.
+    beyanli_disi = sorted(t for t in REPLAY_UNIVERSE if _data.is_index_exited(t))
     members = current()
     if not _plausible(members):
         return {"status": "unknown", "reason": _HEALTH.get("error") or "üyelik kaynağı yok",
                 "universe": len(REPLAY_UNIVERSE), "stale": [], "n_stale": 0,
+                "beyanli_disi": beyanli_disi, "n_beyanli_disi": len(beyanli_disi),
                 "no_data": no_data, "n_no_data": len(no_data),
                 "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe,
                 "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live}
     mset = {m.upper() for m in members}
-    stale = sorted(t for t in REPLAY_UNIVERSE if t.upper() not in mset)
+    # BEYANSIZ sapma: güncel S&P 500'de YOK ve EVREN_DISI_BEYANLI/RETIRED'da da beyan edilmemiş.
+    # RETIRED_SYMBOLS yapısal olarak REPLAY_UNIVERSE'de bulunmaz (yukarıdaki kesişmezlik hükmü),
+    # ama formül tek-kaynak yasasına uysun diye üç kümenin BİRLEŞİMİ açıkça yazılır.
+    _beyanli_ve_emekli = set(_data.EVREN_DISI_BEYANLI) | set(_data.RETIRED_SYMBOLS)
+    stale = sorted(t for t in REPLAY_UNIVERSE
+                   if t.upper() not in mset and t.upper() not in _beyanli_ve_emekli)
     return {"status": "ok", "source": _HEALTH.get("source"), "universe": len(REPLAY_UNIVERSE),
             "members": len(mset), "stale": stale, "n_stale": len(stale),
+            "beyanli_disi": beyanli_disi, "n_beyanli_disi": len(beyanli_disi),
             "no_data": no_data, "n_no_data": len(no_data),
             "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe,
             "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live}

@@ -36,6 +36,12 @@ from pathlib import Path
 KOK = Path(__file__).resolve().parents[2]
 DATA_PY = KOK / "meridian" / "adapters" / "data.py"
 WP5_MD = KOK / "research" / "qc_dogrulama" / "wp-qc-5-retired-caprazdogrulama-2026-08-09.md"
+# wp-qc-5 ölçümünün KAPSAM TARİHİ dosya adından türer (tek kaynak): o tarihten SONRA emekli edilen
+# semboller (TSK-143, 2026-09-05: EA/AVB/EQR — kanıtları `data.py::RETIRED_SYMBOLS` şerhinde, Massive
+# doğrulaması aynı gün) bu çapraz-doğrulamanın KAPSAMINDA DEĞİLDİR; kart EDG-2026-021 o günün 8'ini
+# ölçtü. Kapsam dışı olanlar sessizce düşmez: `yerel_tablo()` onları `KAPSAM_DISI`na yazar.
+WP5_OLCUM_TARIHI = re.search(r"(\d{4}-\d{2}-\d{2})", WP5_MD.name).group(1)
+KAPSAM_DISI: dict[str, str] = {}
 
 _TARIH = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 
@@ -72,14 +78,25 @@ def wp5_mutabakat() -> dict[str, dict]:
 
 
 def yerel_tablo() -> dict[str, dict]:
-    """8 sembolün yerel gerçeği — İKİ kaynaktan, çelişki BEYANLI."""
+    """wp-qc-5 KAPSAMINDAKİ sembollerin yerel gerçeği — İKİ kaynaktan, çelişki BEYANLI.
+
+    ARTIK (TSK-143, 2026-09-05): `RETIRED_SYMBOLS` ölçüm gününden (WP5_OLCUM_TARIHI) SONRA emekli
+    edilen sembolleri de taşır; onlar bu tabloya GİRMEZ, `KAPSAM_DISI[tic] = neden` olarak beyan
+    edilir (o günkü ölçüm onları ölçmedi — 'satır okunamadı' diye düşmek ölçümü yanlış anlatırdı)."""
     reg = retired_symbols()
     wp5 = wp5_mutabakat()
     tablo: dict[str, dict] = {}
+    KAPSAM_DISI.clear()
     for tic, aciklama in reg.items():
         m = _TARIH.search(aciklama)
         if not m:
             raise SystemExit(f"RETIRED_SYMBOLS[{tic}] tarih taşımıyor: {aciklama!r}")
+        if tic not in wp5:
+            # wp-qc-5 tablosu o ölçümün DONMUŞ kadrosudur: tabloda olmayan sembol (ölçümden sonra
+            # emekli edilen — EA 08-05 emekli oldu ama 08-09 ölçümü onu ölçmedi) kapsam dışıdır.
+            KAPSAM_DISI[tic] = (f"emeklilik {m.group(1)}; wp-qc-5 ({WP5_OLCUM_TARIHI}) kadrosunda "
+                                f"yok — o ölçümün kapsamında değil (kanıt: data.py RETIRED şerhi)")
+            continue
         w = wp5.get(tic, {})
         celiski = (w.get("beyan") is not None and w["beyan"] != m.group(1))
         tablo[tic] = {

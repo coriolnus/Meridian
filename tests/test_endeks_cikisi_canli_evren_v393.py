@@ -14,6 +14,16 @@ Bu turun sözü: `LIVE_UNIVERSE = REPLAY_UNIVERSE eksi INDEX_EXITED` TEK yerde t
 tüketiciler (Finviz keşif filtresi, marketstream aboneliği, scheduler canlı taramaları, api.py
 evren sayısı yüzeyleri, shortinterest/insider canlı çekimleri) buna geçer; replay tüketicileri
 (backtest/recompute/cf_backfill/trend_shadow/component_ic) REPLAY_UNIVERSE'de KALIR.
+
+TSK-143 EKİ (2026-09-05, bu turun ruling'i K1/K2): yukarıdaki "hiçbiri delist değil" hükmü YANLIŞ
+ÇIKTI — Massive `/v3/reference/tickers` + S&P basın bültenleri üçünün (EA, AVB, EQR) GERÇEKTEN
+delist olduğunu doğruladı; onlar artık `RETIRED_SYMBOLS`ta ve REPLAY_UNIVERSE'den de çıkarıldı
+(251→248). Kalan 10'un "S&P 500 çıkışı; aktif" hükmü de tekti ama yalnız 4'ü (ENPH, MTCH, CAG,
+VFC) için doğruydu; altısı (BURL, ROKU, SPOT, LNG, PINS, SNAP) S&P 500'e HİÇ ÜYE OLMAMIŞ (bkz.
+`data.py::EVREN_DISI_BEYANLI` şerhi). `INDEX_EXITED` adı KORUNDU (`EVREN_DISI_BEYANLI`nin AYNI
+nesnesi, tek kaynak) ama artık 10 kayıt taşıyor — bu dosyadaki `BEKLENEN_13`/13 sayılı çiviler
+`BEKLENEN_10`/10'a indirildi; testler tests/test_evren_emekliligi_v134.py'deki TSK-143 bölümüyle
+BİRLİKTE okunmalı (RETIRED_SYMBOLS tarafı orada çivilenir).
 """
 from __future__ import annotations
 
@@ -26,8 +36,8 @@ from meridian import dataset, store
 from meridian.adapters import constituents, data, finviz
 from tests.conftest import make_bars
 
-BEKLENEN_13 = {"AVB", "BURL", "CAG", "EA", "ENPH", "EQR", "LNG", "MTCH", "PINS", "ROKU", "SNAP",
-               "SPOT", "VFC"}
+# TSK-143 (2026-09-05): EA, AVB, EQR çıkarıldı — gerçek delist, RETIRED_SYMBOLS'a taşındı.
+BEKLENEN_10 = {"BURL", "CAG", "ENPH", "LNG", "MTCH", "PINS", "ROKU", "SNAP", "SPOT", "VFC"}
 
 
 def _events(name: str) -> list[dict]:
@@ -39,13 +49,21 @@ def _events(name: str) -> list[dict]:
 # a) Defterin KENDİSİ — INDEX_EXITED, LIVE_UNIVERSE, REPLAY_UNIVERSE/RETIRED_SYMBOLS DEĞİŞMEDİ
 # =================================================================================================
 def test_index_exited_defteri_ve_gerekce():
-    """13 sembol set eşitliği; her kayıt gerekçelidir ve "S&P 500 çıkışı" ibaresi taşır (delist
-    metniyle KARIŞTIRILMASIN diye emsal RETIRED_SYMBOLS'tan farklı bir ibare)."""
-    assert len(data.INDEX_EXITED) == 13, "defter elle bakımlıdır; sayı değiştiyse gerekçesi de yazılmalı"
-    assert set(data.INDEX_EXITED) == BEKLENEN_13
+    """TSK-143 (2026-09-05) revizyonu: 10 sembol set eşitliği; her kayıt gerekçelidir ve gerekçe
+    dört bilinen kategoriden birine düşer (S&P 500 çıkışı [tarihli] / S&P 400 üyesi / yabancı
+    şirket / hiç üye olmadı) — eski turun HEPSİNE tek metin yazan hükmünün YANLIŞ olduğu tam bu
+    testte ölçülmüştü (bkz. dosya başlığı TSK-143 eki)."""
+    assert len(data.INDEX_EXITED) == 10, "defter elle bakımlıdır; sayı değiştiyse gerekçesi de yazılmalı"
+    assert set(data.INDEX_EXITED) == BEKLENEN_10
+    assert data.INDEX_EXITED is data.EVREN_DISI_BEYANLI, "tek kaynak: iki isim AYNI sözlüğe bağlı olmalı"
     for t, gerekce in data.INDEX_EXITED.items():
         assert gerekce.strip(), f"{t} gerekçesiz endeks-çıkışı edilmiş — hüküm gerekçesiz yazılmaz"
-        assert "S&P 500 çıkışı" in gerekce, f"{t}: gerekçe metni endeks-çıkışı ibaresini taşımıyor"
+        assert ("S&P 500 çıkışı" in gerekce or "S&P 400 üyesi" in gerekce
+                or "yabancı şirket" in gerekce or "hiç girmedi" in gerekce), \
+            f"{t}: gerekçe metni bilinen dört kategoriden hiçbirine düşmüyor"
+    # Yalnız gerçekten S&P 500'den ÇIKMIŞ (hiç üye olmamış değil) dördü tarihli "çıkışı" taşır.
+    cikis_tasiyanlar = {t for t, g in data.INDEX_EXITED.items() if "S&P 500 çıkışı" in g}
+    assert cikis_tasiyanlar == {"ENPH", "MTCH", "CAG", "VFC"}
 
     # Tek kapı büyük/küçük harf ayırt etmez.
     assert data.is_index_exited("roku") and data.is_index_exited("ROKU")
@@ -60,21 +78,26 @@ def test_retired_ve_index_exited_ayrik_kumeler():
 
 
 def test_replay_universe_degismedi():
-    """REPLAY_UNIVERSE ve RETIRED_SYMBOLS bu turun KONUSU DEĞİL — mevcut 251/8 çivileri (v134, v12,
-    v7, v301, v291) bu tur SONRASI da yeşil kalmalı."""
-    assert len(data.REPLAY_UNIVERSE) == 251, "REPLAY_UNIVERSE değişti — bu turun sözleşmesi bozuldu"
-    assert len(data.RETIRED_SYMBOLS) == 8, "RETIRED_SYMBOLS değişti — bu turun sözleşmesi bozuldu"
-    # 13'ü REPLAY_UNIVERSE'de KALMALI (silinmedi — yalnız canlı evrenden düşüyorlar).
-    assert BEKLENEN_13 <= set(data.REPLAY_UNIVERSE), \
-        "endeks-çıkışı sembollerden biri REPLAY_UNIVERSE'den silinmiş — geçmiş replay'i bozar"
+    """TSK-143 (2026-09-05) günceli: REPLAY_UNIVERSE 251→248, RETIRED_SYMBOLS 8→11 — bu turun
+    KENDİ KONUSU (EA/AVB/EQR gerçek delist çıktı, RETIRED_SYMBOLS'a taşındı; tests/test_evren_
+    emekliligi_v134.py'de çivilenir). Kalan 10 (BEKLENEN_10) hâlâ endeks-çıkışı DEĞİL — hükmü
+    beyanlı-aktif; onlar REPLAY_UNIVERSE'de KALMALI (silinmedi — yalnız canlı evrenden düşüyorlar)."""
+    assert len(data.REPLAY_UNIVERSE) == 248, "REPLAY_UNIVERSE değişti — bu turun sözleşmesi bozuldu"
+    assert len(data.RETIRED_SYMBOLS) == 11, "RETIRED_SYMBOLS değişti — bu turun sözleşmesi bozuldu"
+    assert BEKLENEN_10 <= set(data.REPLAY_UNIVERSE), \
+        "beyanlı-aktif sembollerden biri REPLAY_UNIVERSE'den silinmiş — geçmiş replay'i bozar"
+    assert not ({"EA", "AVB", "EQR"} & set(data.REPLAY_UNIVERSE)), \
+        "gerçek delist sembolü REPLAY_UNIVERSE'de kalmış — TSK-143 K1 geri alınmış"
 
 
 def test_live_universe_turetilir():
     """LIVE_UNIVERSE TEK yerde türetilir (tek-kaynak yasası): REPLAY_UNIVERSE eksi INDEX_EXITED,
-    238 sembol. Mutasyon: LIVE_UNIVERSE REPLAY_UNIVERSE'e eşitlenirse bu çivi ötmeli."""
+    238 sembol. TSK-143 SONRASI da 238 KALIR — 248 (REPLAY_UNIVERSE) eksi 10 (INDEX_EXITED), aynı
+    3 sembolün her iki kümeden BİRLİKTE çıkmasının doğal sonucu (251-13 de 238'di). Mutasyon:
+    LIVE_UNIVERSE REPLAY_UNIVERSE'e eşitlenirse bu çivi ötmeli."""
     assert len(data.LIVE_UNIVERSE) == 238
     assert set(data.LIVE_UNIVERSE) == set(data.REPLAY_UNIVERSE) - set(data.INDEX_EXITED)
-    for t in BEKLENEN_13:
+    for t in BEKLENEN_10:
         assert t not in data.LIVE_UNIVERSE, f"{t} endeks-çıkışı ama LIVE_UNIVERSE'de kalmış"
     # RETIRED_SYMBOLS zaten REPLAY_UNIVERSE'de yok — LIVE_UNIVERSE de yapısal olarak onları taşımaz.
     assert not (set(data.RETIRED_SYMBOLS) & set(data.LIVE_UNIVERSE))
@@ -138,22 +161,23 @@ def test_finviz_iki_sinif_birlikte_dusebilir(sandbox_state, monkeypatch):
 # c) Bekçi — universe_drift() endeks-çıkışının geri girip girmediğini de sorar
 # =================================================================================================
 def test_universe_drift_index_exited_alanlari(sandbox_state, monkeypatch):
-    """`retired_n`/`retired_in_universe` kardeşi: `index_exited_n` sabit 13, `index_exited_in_live`
-    normalde BOŞ (LIVE_UNIVERSE'in kendi tanımı zaten süzer). İki hükmün AYNI ANDA doğru olduğu
-    ölçülür — biri diğerini sessizce değiştirmemeli."""
+    """`retired_n`/`retired_in_universe` kardeşi: `index_exited_n` sabit 10 (TSK-143, 2026-09-05 —
+    eskiden 13'tü, üçü RETIRED_SYMBOLS'a taşındı), `index_exited_in_live` normalde BOŞ (LIVE_
+    UNIVERSE'in kendi tanımı zaten süzer). İki hükmün AYNI ANDA doğru olduğu ölçülür — biri
+    diğerini sessizce değiştirmemeli."""
     monkeypatch.setattr(constituents, "current", lambda *a, **k: [])
     d = constituents.universe_drift()
     assert d["status"] == "unknown"
-    assert d["index_exited_n"] == 13
+    assert d["index_exited_n"] == 10
     assert d["index_exited_in_live"] == []
-    assert d["retired_n"] == 8, "endeks-çıkışı eklemesi delist sayacını bozmuş"
+    assert d["retired_n"] == 11, "endeks-çıkışı eklemesi delist sayacını bozmuş"
 
     uyeler = [t for t in data.REPLAY_UNIVERSE] + [f"X{i}" for i in range(300)]
     monkeypatch.setattr(constituents, "current", lambda *a, **k: uyeler)
     d = constituents.universe_drift()
     assert d["status"] == "ok"
-    assert d["index_exited_n"] == 13 and d["index_exited_in_live"] == []
-    assert d["retired_n"] == 8
+    assert d["index_exited_n"] == 10 and d["index_exited_in_live"] == []
+    assert d["retired_n"] == 11
 
 
 def test_universe_drift_geri_giren_endeks_disi_ismi_GORUNUR_kilar(sandbox_state, monkeypatch):
@@ -288,7 +312,7 @@ def test_load_live_taban_index_exited_disar_da_pozisyon_yokken(sandbox_state, mo
     bars, _ = dataset.load_live()
 
     assert set(istenen) == set(data.LIVE_UNIVERSE), "canlı taban artık LIVE_UNIVERSE değil"
-    assert not (set(bars) & BEKLENEN_13), "endeks-çıkışı sembol pozisyonsuzken hâlâ bar hattında"
+    assert not (set(bars) & BEKLENEN_10), "endeks-çıkışı sembol pozisyonsuzken hâlâ bar hattında"
     dataset._cache.clear()
 
 
@@ -315,8 +339,8 @@ def test_load_live_acik_pozisyonda_endeks_disi_sembolun_bari_YUKLENIR(sandbox_st
 
     assert "ROKU" in istenen and "ROKU" in bars, \
         "açık pozisyonlu endeks-çıkışı sembolün barı YÜKLENMEDİ — manage_position körleşir"
-    diger_12 = BEKLENEN_13 - {"ROKU"}
-    assert not (set(istenen) & diger_12), "pozisyonsuz endeks-çıkışı semboller de sızmış"
+    diger_9 = BEKLENEN_10 - {"ROKU"}
+    assert not (set(istenen) & diger_9), "pozisyonsuz endeks-çıkışı semboller de sızmış"
 
     ev = _events("index_exited_position_bars_kept")
     assert ev, "koruma sessizce uygulandı — hangi sembolün neden hâlâ tarandığı görünmüyor"
@@ -480,8 +504,8 @@ def test_marketstream_armed_plani_da_korur(sandbox_state, monkeypatch):
     out = marketstream.subscribed_symbols()
 
     assert "SNAP" in out, "armed plandaki endeks-çıkışı sembol WS aboneliğinden düşmüş"
-    diger_12 = BEKLENEN_13 - {"SNAP"}
-    assert not (set(out) & diger_12), "pozisyonsuz/armed-dışı endeks-çıkışı semboller de sızmış"
+    diger_9 = BEKLENEN_10 - {"SNAP"}
+    assert not (set(out) & diger_9), "pozisyonsuz/armed-dışı endeks-çıkışı semboller de sızmış"
 
 
 def test_marketstream_pozisyonlar_hala_en_basta(sandbox_state, monkeypatch):

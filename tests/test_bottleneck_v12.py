@@ -199,10 +199,13 @@ def test_reseed_refuses_with_armed_plans(sandbox_state, monkeypatch):
 def test_universe_swap_clean(sandbox_state):
     from meridian.adapters.data import REPLAY_UNIVERSE
     from meridian.backtest import SECTORS
+    # EA (2026-08-05 delist, TSK-143) RETIRED_SYMBOLS'a taşındığı için "fresh"ten çıkarıldı —
+    # MTCH (genişleme, hâlâ REPLAY_UNIVERSE'de — beyanlı-aktif, delist DEĞİL) yerini aldı.
     dead = {"DFS", "FI", "HES", "IPG", "K", "PARA", "WBA"}
-    fresh = {"PNC", "USB", "EQT", "TTWO", "EA", "KVUE", "HRL"}
-    # 250 → 251 (2026-07-30, operatör kararı: FISV — emekli FI'nin Nasdaq'taki halefi).
-    assert len(REPLAY_UNIVERSE) == 251 == len(set(REPLAY_UNIVERSE))
+    fresh = {"PNC", "USB", "EQT", "TTWO", "MTCH", "KVUE", "HRL"}
+    # 250 → 251 (2026-07-30, FISV). 251 → 248 (TSK-143, 2026-09-05: EA/AVB/EQR gerçek delist
+    # çıktı, RETIRED_SYMBOLS'a taşındı — bkz. tests/test_evren_emekliligi_v134.py).
+    assert len(REPLAY_UNIVERSE) == 248 == len(set(REPLAY_UNIVERSE))
     assert not (dead & set(REPLAY_UNIVERSE)) and fresh <= set(REPLAY_UNIVERSE)
     assert all(t in SECTORS for t in REPLAY_UNIVERSE)             # sektör haritası deliksiz
 

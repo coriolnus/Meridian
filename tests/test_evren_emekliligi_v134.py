@@ -22,7 +22,7 @@ import pathlib
 
 import pandas as pd
 
-from meridian import dataset, marketview, store
+from meridian import dataset, loop, marketview, obs, store
 from meridian.adapters import constituents, data, finviz
 from tests.conftest import make_bars
 
@@ -57,8 +57,11 @@ def test_emekli_evrenle_kesismez():
     # damgalanmış bir endeks, panonun bayatlık ölçümünü sessizce kör ederdi.
     assert not data.is_retired(data.INDEX_SYMBOL)
 
-    assert len(data.RETIRED_SYMBOLS) == 8, "defter elle bakımlıdır; sayı değiştiyse gerekçesi de yazılmalı"
-    assert set(data.RETIRED_SYMBOLS) == {"ANSS", "DFS", "FI", "HES", "IPG", "K", "PARA", "WBA"}
+    # TSK-143 (2026-09-05): AVB, EA, EQR eklendi (gerçek delist — Massive doğrulaması; daha önce
+    # yanlışlıkla INDEX_EXITED'de "S&P 500 çıkışı; şirket aktif" diye işaretliydi). 8 → 11.
+    assert len(data.RETIRED_SYMBOLS) == 11, "defter elle bakımlıdır; sayı değiştiyse gerekçesi de yazılmalı"
+    assert set(data.RETIRED_SYMBOLS) == {"ANSS", "AVB", "DFS", "EA", "EQR", "FI", "HES", "IPG",
+                                          "K", "PARA", "WBA"}
     for t, gerekce in data.RETIRED_SYMBOLS.items():
         assert gerekce.strip(), f"{t} gerekçesiz emekli edilmiş — hüküm gerekçesiz yazılmaz"
 
@@ -186,14 +189,14 @@ def test_sapma_raporu_emeklilik_bekcisi_tasir(sandbox_state, monkeypatch):
     monkeypatch.setattr(constituents, "current", lambda *a, **k: [])
     d = constituents.universe_drift()
     assert d["status"] == "unknown"
-    assert d["retired_n"] == len(data.RETIRED_SYMBOLS) == 8
+    assert d["retired_n"] == len(data.RETIRED_SYMBOLS) == 11
     assert d["retired_in_universe"] == [], "evrende emekli sembol var — biri ölü ismi geri koymuş"
 
     uyeler = [t for t in data.REPLAY_UNIVERSE] + [f"X{i}" for i in range(300)]
     monkeypatch.setattr(constituents, "current", lambda *a, **k: uyeler)
     d = constituents.universe_drift()
     assert d["status"] == "ok"
-    assert d["retired_n"] == 8 and d["retired_in_universe"] == []
+    assert d["retired_n"] == 11 and d["retired_in_universe"] == []
 
 
 def test_sapma_raporu_geri_giren_olu_ismi_GORUNUR_kilar(sandbox_state, monkeypatch):
@@ -222,3 +225,83 @@ def test_no_data_raporu_emekliyi_bakim_adayi_saymaz(sandbox_state, monkeypatch):
     assert rep["suspect"] == ["YYYY"]
     assert rep["retired"] == ["ANSS", "PARA"], "emekli kayıt defterden silinmemeli, ayrı durmalı"
     assert rep["tracked"] == 4, "izlenen kayıt sayısı DÜRÜST kalır — eleme sayımı değiştirmez"
+
+
+# =================================================================================================
+# g) TSK-143 (2026-09-05) — DATA_QUALITY yanlış-pozitifi: 24 gündür aynı 13 sembol her gün alarm
+# basıyordu. Üçü (EA, AVB, EQR) GERÇEKTEN delist — RETIRED_SYMBOLS'a taşındı. Kalan 10 hiç delist
+# değil (S&P 400 üyesi / yabancı / hiç üye olmamış / geçmiş çıkış) — EVREN_DISI_BEYANLI'de kalır ve
+# `universe_drift()`ün `stale` alanından (dolayısıyla `_universe_drift_check` alarmından) SÜZÜLÜR.
+# =================================================================================================
+def test_ea_avb_eqr_retired_evren_disinda_degil():
+    """K1/K4(1): EA, AVB, EQR GERÇEKTEN delist (Massive `/v3/reference/tickers` doğrulaması,
+    2026-09-05) — RETIRED_SYMBOLS'ta hüküm görür, EVREN_DISI_BEYANLI/INDEX_EXITED'de İKİNCİ bir
+    hükümle GÖRÜNMEZ (bir sembol ya delist ya beyanlı-aktif — ikisi birden olamaz) ve delist
+    geçmiş replay'i de etkilediği için REPLAY_UNIVERSE'den TAMAMEN çıkarılmıştır (INDEX_EXITED'in
+    tersine, o yalnız CANLI evrenden çıkarır)."""
+    for t in ("EA", "AVB", "EQR"):
+        assert t in data.RETIRED_SYMBOLS, f"{t} RETIRED_SYMBOLS'a taşınmamış"
+        assert t not in data.EVREN_DISI_BEYANLI, f"{t} hâlâ EVREN_DISI_BEYANLI'de — çift hüküm"
+        assert t not in data.INDEX_EXITED, f"{t} hâlâ INDEX_EXITED'de — çift hüküm"
+        assert t not in data.REPLAY_UNIVERSE, f"{t} REPLAY_UNIVERSE'den çıkarılmamış"
+        assert data.is_retired(t) and not data.is_index_exited(t)
+    # Sayı çivisi: 8 orijinal + 3 yeni = 11; 13 - 3 = 10 kalan beyanlı.
+    assert len(data.RETIRED_SYMBOLS) == 11 and len(data.EVREN_DISI_BEYANLI) == 10
+
+
+def test_universe_drift_beyanli_disi_ve_beyansiz_sapma_ayrisir(sandbox_state, monkeypatch):
+    """K4(2): REPLAY_UNIVERSE'de EVREN_DISI_BEYANLI'nin 10 sembolü + 1 BEYANSIZ (hiçbir deftere
+    kayıtlı olmayan) sembol varken güncel S&P 500 listesi hiçbirini içermiyor. `stale` YALNIZ
+    beyansızı taşımalı — beyanlı 10 sessizce `stale`e sızmamalı ama GÖRÜNMEZ de olmamalı, ayrı
+    `beyanli_disi` alanında tam 10'u taşımalı."""
+    beyansiz = "ZZFAKE"
+    sentetik_evren = list(data.EVREN_DISI_BEYANLI) + [beyansiz]
+    monkeypatch.setattr(data, "REPLAY_UNIVERSE", sentetik_evren)
+    # MAKULLUK KAPISI (>=400 sembol) geçen ama sentetik evrenin HİÇBİR üyesini taşımayan liste.
+    sp500_sentetik = [f"PAD{i}" for i in range(450)]
+    monkeypatch.setattr(constituents, "current", lambda *a, **k: sp500_sentetik)
+
+    d = constituents.universe_drift()
+    assert d["status"] == "ok"
+    assert d["stale"] == [beyansiz], "beyanlı sembol stale'e SIZMIŞ ya da beyansız GÖRÜNMEZ olmuş"
+    assert sorted(d["beyanli_disi"]) == sorted(data.EVREN_DISI_BEYANLI)
+    assert d["n_beyanli_disi"] == 10
+
+
+def test_mutasyon_evren_disi_beyanli_bosalinca_stale_geri_doner(sandbox_state, monkeypatch):
+    """K4(4) MUTASYON: bir önceki testin ayrımı EVREN_DISI_BEYANLI defterinin GERÇEK içeriğine mi
+    dayanıyor, yoksa hardcoded bir listeye mi? Defter BOŞALTILIRSA önceden beyanlı 10 sembol
+    `stale`e GERİ DÖNMELİ — dönmezse ayrım deftere bağlı değildir, çivi hiçbir şeyi test etmiyordur."""
+    beyansiz = "ZZFAKE"
+    sentetik_evren = list(data.EVREN_DISI_BEYANLI) + [beyansiz]
+    monkeypatch.setattr(data, "REPLAY_UNIVERSE", sentetik_evren)
+    monkeypatch.setattr(data, "EVREN_DISI_BEYANLI", {})
+    sp500_sentetik = [f"PAD{i}" for i in range(450)]
+    monkeypatch.setattr(constituents, "current", lambda *a, **k: sp500_sentetik)
+
+    d = constituents.universe_drift()
+    assert set(d["stale"]) == set(sentetik_evren), \
+        "defter boşaltıldığında eski beyanlı semboller stale'e dönmedi — ayrım deftere BAĞLI DEĞİL"
+    assert d["beyanli_disi"] == []
+
+
+def test_universe_drift_check_alarm_yalniz_beyansiz_sapmada_basar(sandbox_state, monkeypatch):
+    """K4(3): `loop._universe_drift_check` yalnız `stale` DOLUYKEN DATA_QUALITY alarmı basar.
+    `stale` boşken (yalnız beyanlı sapma VARSA bile) alarm SUSAR — 24 günlük yanlış-pozitifin
+    kökü tam buydu."""
+    kayit: list[dict] = []
+    monkeypatch.setattr(obs, "alarm", lambda tok, msg, **kw: kayit.append({"tok": tok, "msg": msg, **kw}))
+
+    monkeypatch.setattr(constituents, "universe_drift", lambda: {
+        "status": "ok", "stale": [], "n_stale": 0,
+        "beyanli_disi": sorted(data.EVREN_DISI_BEYANLI), "n_beyanli_disi": 10,
+    })
+    loop._universe_drift_check()
+    assert not kayit, "yalnız beyanlı sapma varken (stale boş) alarm bastı — K3 ihlali"
+
+    monkeypatch.setattr(constituents, "universe_drift", lambda: {
+        "status": "ok", "stale": ["ZZFAKE"], "n_stale": 1,
+        "beyanli_disi": sorted(data.EVREN_DISI_BEYANLI), "n_beyanli_disi": 10,
+    })
+    loop._universe_drift_check()
+    assert kayit and kayit[-1]["tok"] == "DATA_QUALITY", "beyansız sapma varken alarm basmadı"
