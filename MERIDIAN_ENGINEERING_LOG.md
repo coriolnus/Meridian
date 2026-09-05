@@ -2549,3 +2549,13 @@ timer. Bekçi bugün sessiz → `cevrilen` ölçümü yok; 22:00Z şef kotasız 
 
 **Gece zinciri (A1 transient timer, çıktılar /home/ubuntu/gece-20260906/):** 00:02Z reflect kanary ×3 · 00:03Z openrouter/free sonda ×2 ·
 00:05Z ingest067-r3 (36 dilim) · 05:00Z konsolidasyon kurtar (önce/sonra stats). Sabah okunur.
+
+**Öğleden sonra (12:0x–13:0xZ):** TSK-148 worktree → ae5f647 (üç mutasyondan biri sahte-yeşili yakaladı: 'ölçülemedi' araması [5b]/[5c]
+satırlarını buluyordu). TSK-151 worktree → c291c29, A1 kopyası sha eşit (r3 bu kodla). TSK-131: iki ajan çakışması (orijinal ~30 dk sonra
+kendiliğinden uyandı, r1 aynı dosyalardaydı → ikisi de durduruldu; hafıza güncellendi), Rol-1 seri doğrulama (v414 6 · v98 19 · v154 40 ·
+v239 27 · v61 19 · v199 25) → 6eb114f. Suite #22 10392/1: v209 korpus çivisi — RUNBOOK gövde metni değişti (DISK_ESIK) → 08-14 kaydının şartı:
+harness'lar gerçekten yeniden koştu (tarayıcı, Recursive yerel font bağlantısı; viewport-0 tuzağı: normal-akış kabı 8030 px ölçtü, abspos
++ sabit genişlikle 1214 px): ADAY 91,0 CPL / OLCUT 80,6 / x-yük. Δ −0,079 aynen, merdiven birebir, 28px kuralı sağlanıyor → hüküm ayakta,
+TAZELEME-2026-09-05.md + olcum_sonucu.json ek bölüm + DESIGN.md not (91ebe8d). TSK-143 worktree → 82848bf (Rol-1: QC sondası kapsam
+dondurma, v383+v134 42); suite #23 10396/1: backtest.SECTORS'ta 3 delist → 1befc76 (delta 42/42, push). Canlıya gidecek: 131 · 143 · 148 ·
+151 (+138/141) dağıtım #16.
