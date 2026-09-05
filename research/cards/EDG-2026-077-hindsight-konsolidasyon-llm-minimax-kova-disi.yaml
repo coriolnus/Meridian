@@ -1,0 +1,71 @@
+# EDG-2026-077 — Hindsight KONSOLİDASYON LLM'i minimax-m3:free (günlük kova DIŞI) — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-05 18:06Z (Rol-1; operatör kararı 18:06Z: "konsolidasyonu minimax'e al, kartı aç, öncelikli"). Kanıt zemini (bugün,
+# A1, anahtar basılmadan): OpenRouter "free-models-per-day-high-balance" 1000/gün kovası minimax DIŞINDAKİ ücretsiz modellerin ORTAK
+# kovası (nemotron-ultra/super, glm-5.2, gemma-4-31b hepsi 429; minimax m3/m2.7 kova dışı, 8/8 + 3 replay 200). Konsolidasyon nemotron
+# kovasıyla HİÇ bitmiyor: 14:53Z/16:18Z/17:45Z operasyonları 100/100, 100/100, 16/16 memories_failed; pending_consolidation 2884,
+# failed_consolidation 158, bugün 4139 LLM isteğinin 3143'ü hata. Aynı gerçek retain mesajları minimax-m3'te AYNI 11-alanlı JSON
+# şemasıyla (Türkçe) döndü, 2–8× hızlı; olgu kapsaması daha düşük (nemotron 7/4/1 vs m3 4/1/2) → RETAIN nemotron'da KALIR (EDG-067
+# künyesi), yalnız KONSOLİDASYON (olgu → gözlem birleştirme; yanlış birleşme sonraki turda düzelir, kaçırılan olgu düzelmez) minimax'e.
+# Hindsight işlem-bazlı model ayarı destekliyor: HINDSIGHT_API_CONSOLIDATION_LLM_MODEL (provider/anahtar ana ayardan devralınır,
+# config.py "consolidation_llm_model or llm_model"). Router DEĞİL doğrudan model adı: router rastgele seçer, künye tutmaz.
+
+card_id: EDG-2026-077
+status: registered   # 2026-09-05 Rol-1 — ön-kayıt; ayar değişikliği bu karttan SONRA (kart-önce), ilk ölçüm 05:00Z kurtar turu + 7 gün
+family: hindsight_hafiza
+on_kayit: 2026-09-05
+ref: [TSK-157, TSK-145, TSK-142, TSK-095, TSK-060, EDG-2026-067, EDG-2026-074]
+
+hipotez: >
+  Konsolidasyon LLM'i minimax/minimax-m3:free'ye alınınca (retain ve reflect nemotron'da kalır) konsolidasyon kuyruğu günlük
+  kovadan bağımsız olarak İLERLER: pending_consolidation 7 günde taban değerin %10'unun altına iner, 429-dışı hata oranı düşük
+  kalır ve üretilen gözlemler (observations_created+merged) sıfırdan çıkar. Retain yolu değişmediği için olgu çıkarım kalitesi
+  (EDG-067 künyesi) etkilenmez.
+
+k_registry: {registered_at: "2026-09-05", trial_ids: [EDG-077-k1-kuyruk-ilerleme, EDG-077-k2-hata-ve-gozlem-orani]}
+# K=2. K1: 7 gün pending_consolidation eğrisi (gece_ozet + /stats). K2: llm-requests operation=consolidation status/hata sınıfı +
+#      operations progress.detail (observations_created/merged/updated, memories_failed). PK hücresi K'ya sayılmaz.
+
+taban_2026_09_05: {pending_consolidation: 2884, failed_consolidation: 158, total_observations: 3693, total_nodes: 13527, total_documents: 271, llm_istek_bugun: 4139, llm_hata_bugun: 3143}
+
+adim_0_fizibilite: >
+  (a) HINDSIGHT_API_CONSOLIDATION_LLM_MODEL ayarı yazıldıktan ve servis yeniden başladıktan sonra journal'da konsolidasyon LLM
+  doğrulaması (configs_to_verify) hatasız; (b) llm-requests'te operation=consolidation satırları model=minimax/minimax-m3:free ile
+  status=success ÜRETİYOR (ilk 30 dk içinde ≥1); (c) operation=retain satırları model=nemotron-3-ultra:free olarak KALIYOR (yol
+  ayrışması gerçekten oldu — PK'nın çekirdeği); (d) minimax kova dışı: aynı anda nemotron 429 iken minimax 200.
+
+olcum_plani:
+  - "K1: her sabah gece_ozet.sh /stats: pending_consolidation, failed_consolidation, total_observations — 7 gün (2026-09-06…09-12)"
+  - "K2: llm-requests?operation=consolidation günlük sayım: success / error (429 AYRI sütun: 'free-models-per-day' imzası) ; operations progress.detail toplamları (created/merged/updated/failed)"
+  - "kota: konsolidasyonun nemotron kovasına ETKİSİ sıfır olmalı — nemotron X-RateLimit-Remaining sabah ölçümü (gece_ozet) ile ingest/reflect'e kalan pay"
+  - "PK (yol-tutarlı): aynı saatte llm-requests'te retain=nemotron ∧ consolidation=minimax (iki farklı model, aynı defter) — tek modelde birleşmişse ayar uygulanmamış demektir; ayrıca ilk 100 işlemlik partide memories_failed önce/sonra kıyası (100/100 → ?)"
+  - "okuyucu (Yasa 6): pano Hafıza istatistikleri (pending/failed) + gece_ozet.sh; hüküm bu karta"
+
+esikler:
+  k1_gecti: "7. gün pending_consolidation ≤ 288 (tabanın %10'u) ∧ eğri monoton düşüş (günlük artış yok)"
+  k2_gecti: "429-dışı hata oranı ≤ %5 (consolidation llm-requests) ∧ 7 günde observations_created+merged ≥ 500 ∧ memories_failed/işlenen ≤ %5"
+  # eşikler donuk; sonradan değişmez (yeni eşik = yeni kart)
+
+kill_list:
+  - "minimax kovaya girerse (consolidation isteğinde 'free-models-per-day' 429) → ayar geri alınır (satır silinir, servis restart), kart 'kaldı: kova dışılık geçici'"
+  - "adım-0 (c) tutmazsa (retain modeli değişmişse) → hiçbir sayı yayılmaz, ayar düzeltilir, ölçüm baştan"
+  - "429-dışı hata oranı > %20 (şema/parse hataları) → minimax konsolidasyon şemasını taşımıyor, geri al"
+  - "gözlem kalitesi: 7 günde observations_deleted > created (ağ küçülüyor) → geri al, inceleme"
+  - "PK tutmazsa hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: aynı llm-requests defterinde, aynı saat diliminde, operation=retain satırı nemotron, operation=consolidation satırı
+  minimax olmalı (ayrışma görünür). İkinci kontrol: ayar öncesi son konsolidasyon partisi 100/100 memories_failed (nemotron 429),
+  ayar sonrası ilk parti memories_failed ≪ işlenen. Ayrışma görünmüyorsa harness ayarı değil önbelleği ölçüyordur.
+
+veri_penceresi: "2026-09-05 18:06Z (ayar) → 2026-09-12 sabah; banka meridian-arsiv; canlı motor DEĞİL (Hindsight yan servisi); retain/reflect modeli DEĞİŞMEZ"
+
+basari_tanimi: >
+  K1 + K2 geçti ∧ PK ayrışık ∧ minimax kova dışı kaldı → konsolidasyon minimax'te KALICI; TSK-145 kapanır; TSK-060 bot-hafızası
+  taban kıyası konsolide bankayla yapılabilir. Kaldıysa ayar geri alınır, TSK-145 'kota bekle-ölç' hükmüne döner; alternatif
+  (ücretli model / ayrı anahtar) operatör kararı.
+
+notlar: >
+  Ayar: /opt/hindsight/.env'e tek satır HINDSIGHT_API_CONSOLIDATION_LLM_MODEL=minimax/minimax-m3:free (provider ve anahtar ana
+  ayardan devralınır; anahtar değeri hiçbir yerde basılmaz); systemctl restart hindsight-api. Router bilerek KULLANILMADI: rastgele
+  model = künyesiz çıktı. m2.7 replay testinde m3'ten daha iyi kapsadı ama konsolidasyon için hız/kova dışılık yeter; m2.7 ayrı kart.
+  Yan kayıt: 2026-09-05 17:5xZ Rol-1 komutu Postgres parolasını terminale düşürdü (süzgeç hatası) → TSK-158 parola döndürme (operatör).

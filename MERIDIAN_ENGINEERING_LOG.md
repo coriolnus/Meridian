@@ -2656,3 +2656,10 @@ isteği (girdi+çıktı saklı) aynen minimax'e ve router'a → aynı 11-alanlı
 7/4/1 olgu; m3 4/1/2, m2.7 6/1/1; kapsanan 2/7·1/4·1/1 ve 6/7·1/4·0/1) — minimax daha seçici, bazı olguları atlıyor. Hüküm: nemotron teknik olarak
 zorunlu değil; kalite farkı var; geçiş EDG-067 künyesi gereği yeni kartla (30 belge, kapsama eşiği, kova-dışı kalma kill'i) — Masa'da. Yan bulgu:
 Hindsight konsolidasyonu 16:18Z'den beri nemotron 429'a karşı 74/74 hata üretiyor (bugün 4139 LLM isteği, 3143 hata) → TSK-145'e girdi.
+
+**18:11Z — OPERATÖR KARARI: konsolidasyon minimax'e (öncelikli), kart, bağlı işler, seri otonom.** EDG-2026-077 ön-kayıt (K1 pending eğrisi ≤288/7 gün,
+K2 hata+gözlem oranı, kill: minimax kovaya girerse geri al; PK: aynı defterde retain=nemotron ∧ consolidation=minimax). A1: .env yedeklendi, tek satır
+HINDSIGHT_API_CONSOLIDATION_LLM_MODEL (Hindsight işlem-bazlı model ayarı; provider/anahtar devralınır), restart 18:07Z; journal: default (nemotron) doğrulaması
+429 (beklenen), consolidation 'Connection verified: minimax'. 18:08–18:09Z ilk parti 8/8, memories_failed 0, observations_created 8, pending 2884→2868;
+retain yolu nemotron. TSK-157 ACTIVE öncelikli; TSK-095 DONE (router Hindsight'a değil); TSK-145 hüküm B; TSK-158 OPERATOR (Postgres parolası terminale
+düştü — 17:5xZ süzgeç hatası: 'BASE_URL' deseni DATABASE_URL'i yakaladı; döndürme operatörde). §6 endeksine 074–077 eklendi (v351 r06/r12: DONE parantezli).
