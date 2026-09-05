@@ -41,6 +41,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from meridian import memory, notify, obs, store  # noqa: E402
+from meridian.olaylar import tum_olaylar as _tum_olaylar_birlesik  # noqa: E402
 
 UNDELIVERED = "notify_undelivered.json"
 DAMGA = "_digest"
@@ -82,7 +83,11 @@ def ozet_kur() -> dict:
         return {"toplam": toplam, "kapsanan": kapsanan, "yeni": 0, "mesaj": None,
                 "not": "damgadan beri yeni birikme yok — gönderilecek şey yok (idempotent)"}
 
-    olaylar = store.read_jsonl("events.jsonl")
+    # TSK-137b (2026-09-05): `store.read_jsonl` DEĞİL `meridian.olaylar.tum_olaylar()` — bu betik
+    # jetonun İLK/SON görülme zamanını TÜM defterde arar (`_ilk_son`); kırpma
+    # (`ops/olay_sikistir.py --kirp`) sonrası jsonl yalnız cari+önceki ayı taşırsa, birleşik görünüm
+    # olmadan eski bir jetonun ilk görülmesi "ölçülemedi" diye YANLIŞ raporlanırdı.
+    olaylar = _tum_olaylar_birlesik()
     satirlar = []
     for tok, n in sorted(jetonlar.items(), key=lambda kv: -kv[1]):
         ilk, son = _ilk_son(tok, olaylar)

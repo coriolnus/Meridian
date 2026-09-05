@@ -28,6 +28,7 @@ from __future__ import annotations
 import datetime as dt
 
 from . import config, store, obs
+from .olaylar import tum_olaylar as _tum_olaylar_birlesik
 
 REVIEW_FILE = "self_review.json"
 
@@ -459,7 +460,12 @@ def build() -> dict:
     # Ayrıca `notify.inbox`ın ölçtüğü şey burada da ÖLÇÜLÜR: pencere kesildi mi? notify bunu
     # `window_truncated` ile raporluyordu, selfreview hiç ölçmüyordu — ve ölçmeyen rapor,
     # eksikliğini "olay yok" diye okutur.
-    _all_events = store.read_jsonl("events.jsonl")
+    #
+    # TSK-137b (2026-09-05): `store.read_jsonl` DEĞİL `olaylar.tum_olaylar()` — kırpma sonrası
+    # jsonl yalnız cari+önceki ayı taşır; bu rapor HAFTALIK ve "tüm tarih" hükmü (`window_oldest_ts`,
+    # `_truncated` hesabı) verir, birleşik görünüm olmadan kırpılmış bir defteri "haftanın hepsi bu"
+    # sanır. İmza/çıktı şeması DEĞİŞMEDİ (liste-of-dict, aynen `store.read_jsonl` gibi).
+    _all_events = _tum_olaylar_birlesik()
     stale_events = [e for e in _all_events
                     if e.get("alarm") == "MECHANISM_STALE" and str(e.get("ts") or "") >= since]
     _oldest_ts = str((_all_events[0].get("ts") if _all_events else "") or "")
