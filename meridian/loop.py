@@ -2814,7 +2814,7 @@ def _persist_trade(trade: dict, *, broker: PaperBroker | None = None) -> None:
     yükleme-anı düzeltmesinin TAMAMLAYICISI, aynı süreç içinde defter sayaçtan bağımsız
     genişlerse D2 onu YAKALAYAMAZ çünkü zaten yüklenmiştir). `trade["id"]` defterde ZATEN
     varsa (aynı süreç içindeki başka bir satır ya da tohum çarpışması) sayaç defterin GERÇEK
-    maksimumunun bir üstüne sıçrar, id yeniden yazılır ve `broker._id` (verilmişse) BUNDAN
+    maksimumunun bir üstüne sıçrar, id yeniden yazılır ve `PaperBroker` örneğinin `_id` sayacı (verilmişse) BUNDAN
     SONRAKİ kapanışların tekrar çarpışmaması için ileri alınır — sessiz değil (Yasa 4).
     ÖLÇÜM (ucuz yol seçimi): varlık kontrolü (`any(...)`) mevcut okumayı (`mevcut`, zaten
     dedup için tam okunuyor) TEKRAR OKUMADAN paylaşır ve ilk eşleşmede kısa-devre yapar — pahalı

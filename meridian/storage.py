@@ -68,7 +68,7 @@ SHADOW_BOOKS = "shadow_books.json"
 _COLS: dict[str, tuple[tuple[str, str], ...]] = {
     # TSK-150(a) (2026-09-05): `trades.id` (`T%05d`) GERÇEK ANAHTAR DEĞİLDİR — gerçek anahtar
     # `seq` (yukarıdaki DDL: `seq INTEGER PRIMARY KEY`, aşağıda `id TEXT` UNIQUE KISITI YOK).
-    # `id` bir İNSAN ETİKETİDİR ve İLERİ YÖNLÜ TEKİLDİR: `broker.PaperBroker._id` sayacı ile
+    # `id` bir İNSAN ETİKETİDİR ve İLERİ YÖNLÜ TEKİLDİR: `broker.PaperBroker` sınıfının `_id` sayacı sayacı ile
     # `loop._load_broker`/`loop._persist_trade`teki çarpışma reddi (TSK-150(a) D1/D2) bundan sonra
     # üretilen id'lerin tekilliğini korur, ama GEÇMİŞTE (tohum genişletme, last_id gerisi) yazılmış
     # 16 çift zaten mevcuttur ve bu dilim onları YENİDEN NUMARALAMAZ — operatör kararı bekler.

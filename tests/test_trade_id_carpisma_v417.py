@@ -3,7 +3,7 @@ YÖNLÜ koruma.
 
 KEŞİF (A1 salt-okunur, 2026-09-05): canlı `state/trades.jsonl` 901 satırda 16 çift ÇARPIŞAN
 `id` taşıyor — tohum (seq 92–117, 2023 tarihli) ile canlı (seq 886–901, 2026-08-07…09-02)
-aynı `T%05d` etiketini paylaşıyor. KÖK: `broker.PaperBroker._id` sayacı kapanışta
+aynı `T%05d` etiketini paylaşıyor. KÖK: `broker.PaperBroker` sınıfının `_id` sayacı sayacı kapanışta
 `f"T{self._id:05d}"` üretir; `loop._load_broker` bunu `portfolio.json["last_id"]`den yükler;
 tohum 95→885 işleme GENİŞLETİLİRKEN (tam `run.replay_seed()` yoluyla DEĞİL) `last_id` 95'te
 KALDI — canlı döngü T00096'dan devam edip zaten yazılmış seed id'leriyle çarpıştı.
@@ -15,7 +15,7 @@ DOKUNMAZ, yalnız BUNDAN SONRAKİ çarpışmaları engeller.
 
 RULING (Rol-1, TSK-150 brief) İKİ KAPI, TEK KAYNAK (`loop._max_trade_num`):
   D1 — `loop._persist_trade`: YAZIM ANI çarpışma reddi. Üretilen `trade["id"]` defterde ZATEN
-       varsa sayaç defterin GERÇEK maksimumunun bir üstüne sıçrar, `broker._id` (verilmişse)
+       varsa sayaç defterin GERÇEK maksimumunun bir üstüne sıçrar, `PaperBroker` örneğinin `_id` sayacı (verilmişse)
        aynı değere yükseltilir (sonraki kapanışlar tekrar çarpışmasın) ve `obs.warn(
        "trade_id_carpismasi", eski=..., yeni=..., sebep="last_id sayacı defterin gerisinde")`
        basılır — sessiz değil (Yasa 4).
@@ -31,7 +31,7 @@ BU DOSYA DÖRT DURUMU ÇİVİLER + BİR AST TARİPWIRE:
       — hem yazım hem yükleme yolunda.
   (4) AST TRİPWIRE: `meridian/` içinde trades'i (ya da başka bir satır listesini) bracket-
       subscript `{t["id"]: t for t in ...}` biçiminde anahtarlayan kod YOK (bugün 0 — bu test
-      0'ı KORUR; `topviews.plan_by_id` `.get("id")` kullanır, bu ŞEKİL DEĞİL, dokunulmaz).
+      0'ı KORUR; `meridian.topviews` içindeki yerel `plan_by_id` sözlüğü `.get("id")` kullanır, bu ŞEKİL DEĞİL, dokunulmaz).
 
 MUTASYON (bu oturumda ELLE doğrulandı, kalıcı test DEĞİL — CLAUDE.md §6 "çivi yeşili kanıt
 değildir"): `loop._persist_trade` içindeki `if any(r.get("id") == trade.get("id") ...)` bloğu
@@ -168,7 +168,7 @@ def _id_ile_anahtarlanan_dictcomp(tree: ast.AST) -> list[ast.DictComp]:
     """`{X["id"]: X for X in ...}` ŞEKLİNDEKİ dict-comprehension'ları bulur — bir satır
     listesini id ile anahtarlamanın TEHLİKELİ biçimi budur: `id` gerçek anahtar DEĞİLDİR
     (`storage.py::_COLS[TRADES]` beyanı, gerçek anahtar `seq`) ve bugünkü 16 çarpışan çiftten
-    biri bu şekilde okunursa dict aynı anahtarı SESSİZCE üzerine yazar. `topviews.plan_by_id`
+    biri bu şekilde okunursa dict aynı anahtarı SESSİZCE üzerine yazar. `meridian.topviews` içindeki yerel `plan_by_id` sözlüğü
     gibi meşru kullanımlar `.get("id")` ÇAĞRISI kullanır — bu ayrı bir AST şeklidir (`ast.Call`,
     `ast.Subscript` DEĞİL) ve burada KASITLI olarak eşleşmez."""
     hits = []
