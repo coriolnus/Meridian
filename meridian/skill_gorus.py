@@ -41,10 +41,18 @@ kod onları değiştiremez). Görüş üretimi kadans süresini tavanın üstün
 
 OKUR: skills.catalog/ENGINE_IMPLEMENTED (evren), counterfactuals + trades sonuç defterleri,
 exit_efficiency.json (girdi bekçisi), kendi snapshot kuyruğu.
-YAZAR: yalnız kendi ÜÇ defteri `state/skill_gorusleri.jsonl` + `state/skill_gorus_durum.json` +
+YAZAR: kendi ÜÇ defteri `state/skill_gorusleri.jsonl` + `state/skill_gorus_durum.json` +
 `state/skill_gorus_kuyruk.jsonl`. Kuyruğun DIŞ okuyucuları: `api._gorus_kuyrugu` (pano derinliği)
 ve `ops/skill_gorus_uret.py` (üretici) — YASA 6 karşılığı beyanla değil OKUYUCUYLA kapanır.
-"""
+
+GÖLGE SIRALAMA KOLU + PENCERE SAYACI (EDG-2026-078 Aşama A, TSK-126, 2026-09-05) — AYRI KART,
+CANLI KARAR YİNE DEĞİŞMEZ. `golge_siralama_kancasi` `loop.py`nin P3 aday kesitine bir YAN defter
+(`state/golge_siralama.jsonl`) ekler: MEVCUT (`score`) sıralamasının YANINDA, skill'in ölçülmüş
+bilgi değeriyle ağırlıklandırılmış İKİNCİ bir sıralama — gerçek emir hâlâ yalnız MEVCUT'tan çıkar.
+`golge_kol_raporu` bu defteri saf okur ve `rapor()["golge_kol"]`e düşer (Z6: okuyucu ilk günden).
+`pencere_yaz`/`_pencere_ozeti` EDG-2026-019 kill#3'ün "3 ARDIŞIK pencere" borcunu kapatır: yazan
+`ops/skill_gorus_uret.py` (her `--uygula` koşumunda BİR kez, `state/skill_gorus_pencereler.jsonl`e),
+okuyan `rapor()` (`terfi_adaylari`/`emeklilik_isaretleri`nin `ardisik_pencere` alanı)."""
 from __future__ import annotations
 
 import datetime as dt
@@ -691,6 +699,9 @@ def rapor() -> dict:
     gz = _gozlemler()
     sonuclar = {g["hedef"]: g for g in gz["satirlar"]}
     bekci = _girdi_bekcisi()
+    # PENCERE SAYACI (EDG-2026-078, kill#3 borcunun kapanışı): saf okuma — `rapor()` deftere
+    # YAZMAZ, yalnız `ops/skill_gorus_uret.py`nin yazdığı `PENCERE_DEFTERI`yi okur.
+    pencere = _pencere_ozeti()
     yuzeyler: dict[str, dict] = {}
     terfi, emeklilik = [], []
     for yuzey, cozucu in (("aday-siralayici", cozucu_siralayici), ("cikis", cozucu_cikis)):
@@ -738,15 +749,22 @@ def rapor() -> dict:
             v["emeklilik_isareti"] = bool(yeterli and (v.get("yon") or 0) < 0
                                           and (abs(etki) >= KART_ETKI_RANK_IC
                                                if yuzey == "aday-siralayici" else True))
+            # PENCERE SAYACI (EDG-2026-078): (skill, yüzey) için ölçülmüş ARDIŞIK pencere sayısı +
+            # toplam pencere sayısı. Sayaç YOKSA (henüz hiç `pencere_yaz()` koşmadıysa) ikisi de 0 —
+            # 0 "ölçüldü, hiç yok" değil "henüz sayaç yok" demektir; `pencere_n=0` bunu açıkça taşır.
+            pb = pencere.get((sk, yuzey)) or {"ardisik_pencere": 0, "pencere_n": 0}
             if v["terfi_adayi"]:
                 terfi.append({"skill": sk, "yuzey": yuzey, "n": v["n"], "etki": etki,
-                              "p": v.get("p"), "uretici": sinif})
+                              "p": v.get("p"), "uretici": sinif,
+                              "ardisik_pencere": pb["ardisik_pencere"], "pencere_n": pb["pencere_n"]})
             elif v["emeklilik_isareti"]:
                 emeklilik.append({"skill": sk, "yuzey": yuzey, "n": v["n"], "etki": etki,
                                   "p": v.get("p"), "uretici": sinif,
-                                  "beyan": ("FDR-sağkalan NEGATİF — kart 3 ARDIŞIK pencere ister; "
-                                            "pencere sayacı bu turda YOK, bu satır bir İŞARETTİR, "
-                                            "emeklilik ÖNERİSİ değildir")})
+                                  "ardisik_pencere": pb["ardisik_pencere"], "pencere_n": pb["pencere_n"],
+                                  "beyan": (f"FDR-sağkalan NEGATİF — kart 3 ARDIŞIK pencere ister; "
+                                            f"ölçülen ardışık pencere {pb['ardisik_pencere']}/3 "
+                                            f"(toplam {pb['pencere_n']} pencere) — bu satır bir "
+                                            f"İŞARETTİR, emeklilik ÖNERİSİ değildir")})
         yuzeyler[yuzey] = {"durum": "ölçüldü", "neden": None, "skiller": c["skiller"],
                            # KÜNYE ÜRETİCİ BAŞINA: tek bir `m`/`kritik_p` basmak, iki ailenin
                            # hükmünü tek sayıya katlayıp hangisinin geçerli olduğunu ölçülemez
@@ -778,6 +796,11 @@ def rapor() -> dict:
         "terfi_adaylari": terfi, "emeklilik_isaretleri": emeklilik,
         "esikler": {"fdr_q": KART_FDR_Q, "rank_ic": KART_ETKI_RANK_IC, "n_min": KART_N_MIN,
                     "ci": KART_CI, "p95_tavan": KART_P95_TAVAN},
+        # GÖLGE SIRALAMA KOLU (EDG-2026-078 Aşama A) — AYRI KART, AYRI HÜKÜM: aynı raporun
+        # yanında durur ki "skill görüşü canlı sıralamayı etkileseydi ne olurdu?" sorusunun
+        # ölçümü, "bugün ne söylüyor" sorusunun yanında okunabilsin (Z6: okuyucu ilk günden).
+        # Düşerse TÜM raporu düşürmez — kendi try/except'i içinde, "ÖLÇÜLEMEDİ" ile devam eder.
+        "golge_kol": _golge_kol_guvenli(),
         "beyan": ("HİÇBİR TERFİ/EMEKLİLİK OTOMATİK DEĞİL: bu rapor kayıt defterine, bayrağa, "
                   "eşiğe ya da plana DOKUNMAZ. FDR-sağkalanlar Eksen-2 teşhisine ve operatöre "
                   "KANITLA gider (2026-08-06 kararının devamı)."),
@@ -1090,3 +1113,291 @@ def kuyruktan_uret(apply: bool = True, tavan: int | None = None) -> dict:
             "islenen_snapshot": (len(islenen) if apply else 0), "aday_snapshot": len(islenen),
             "bekleyen": bekleyen, "kirpildi": kirpildi, "tavan": tavan,
             "atlanan": toplam, "uygulandi_mi": bool(apply), "defter_toplam": len(var)}
+
+
+# ==================================================================================================
+# GÖLGE SIRALAMA KOLU (EDG-2026-078 Aşama A, TSK-126) — CANLI KARAR DEĞİŞMEZ
+# ==================================================================================================
+# ÖN-KAYIT: `research/cards/EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml`. NE YAPAR: P3'ün
+# ZATEN sıraladığı (`candidates.sort(key=score)`) aynı aday kesitine in-memory İKİNCİ, GÖLGE bir
+# sıralama üretilir — `score_golge = score + w_skill · z_skill(score) · sd_kesit`. `w_skill` KART
+# SABİTİDİR (kod değiştiremez) ve yalnız EDG-2026-019'un FDR-sağkalan bulduğu tek skill için
+# sıfırdan farklıdır; diğer HER skill için `w=0`, yani `score_golge == score` — bugünkü davranış
+# BİREBİR (MUTASYON 1 çivisi bunu ölçer). Gerçek emir HÂLÂ MEVCUT (`score`) sıralamasından çıkar;
+# bu kol yalnız YAN deftere (`GOLGE_SIRALAMA_DEFTERI`) yazar, `candidates`/`plans` listesini asla
+# mutasyona uğratmaz.
+#
+# HEDEF EŞLEŞTİRME — CF HEDEFİ SEÇİLDİ, GERÇEK DEĞİL (beyanlı sınır). Bir adayın gerçekleşen R'si
+# iki farklı biçimde var olabilir: karşı-olgusal simülasyon (`CF-{tarih}-{ticker}-{setup}`, HER
+# adayda vardır — bu id biçimini üreten yerel yardımcı `counterfactual.collect`in İÇİNDEDİR) ve,
+# silahlanmışsa, gerçek işlem (`P-{tarih}-{ticker}[-{setup}]`, yalnız ARMED adaylarda vardır). Bu
+# satır YAZILDIĞI ANDA (P2 tarama bitişinde) aday henüz silahlanıp silahlanmayacağını bilmiyor —
+# o yüzden HER zaman var olan TEK biçim (CF) seçilmiştir. Payda tutarlılığı (her aday ölçülebilir) gerçek P&L'in
+# inceliğine (yalnız birkaç adayda var) BİLEREK tercih edilmiştir; `golge_kol_raporu`nun kendi
+# çıktısındaki `beyan` alanı bunu TEKRARLAR (gizlenmez).
+GOLGE_SIRALAMA_DEFTERI = "golge_siralama.jsonl"    # LİTERAL ad (codelaw.artifact_graph çözebilsin)
+PENCERE_DEFTERI = "skill_gorus_pencereler.jsonl"   # EDG-2026-019 kill#3'ün "ardışık pencere" borcu
+
+KART_GOLGE_ID = "EDG-2026-078"
+# KART SABİTLERİ — ÖLÇÜMDEN ÖNCE DONDURULDU (kart `agirliklar`/`esikler`); kod bunları
+# DEĞİŞTİREMEZ. Kart eşitliği çivisi (`tests/test_golge_siralama_kolu_v425.py`) bu sabitleri kart
+# YAML'ının METNİYLE karşılaştırır.
+KART_GOLGE_AGIRLIKLARI = {"stockbee-exhaustion-hammer-screener": 0.169}   # diğer HER skill 0.0
+KART_N_MIN_SEANS = 30              # n_seans < bu → "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ" (hüküm YOK)
+KART_GOLGE_USTN_KESISIM_MIN = 0.50   # kart eşiği: üst-N kesişimi ort ≥ bu (kol "yeni strateji" olmasın)
+
+
+def golge_siralama_kancasi(candidates: list[dict], N: int, dstr: str) -> dict:
+    """P3 aday kesitine gölge (görüşlü) ikinci sıralama yazar — CANLI SIRALAMAYI DEĞİŞTİRMEZ.
+
+    `candidates` YALNIZ OKUNUR: ne yeniden sıralanır ne satırları değiştirilir. `sira_mevcut`,
+    listenin KENDİ indeksinden çıkar (`candidates` çağrıya girdiğinde ZATEN `score` azalan sırada
+    — P3'ün az önce yaptığı sort) — burada AYRICA sıralanmaz; bu, MUTASYON 1 çivisinin dayanağıdır
+    (bu fonksiyon kaldırılsa/`KART_GOLGE_AGIRLIKLARI` sıfırlansa `candidates`in KENDİSİ hiç
+    değişmemiş olur, çünkü zaten değiştirilmiyordu).
+
+    `N` çağıranın ölçtüğü o seansın açık slot sayısıdır (`limits["max_open_positions"] -
+    len(b.positions)`) — burada YENİDEN hesaplanmaz (tek-kaynak yasası). N ≤ 0 ise 0'a ÇEKİLİR ve
+    defter satırı YİNE yazılır (kart adım_0: "N=0 ve satır yine yazılır" — o seansta yeni aday için
+    yer yoktur ama gölge ölçümü kesintiye uğramaz).
+
+    Defter yalnız `sira_mevcut ≤ max(2N,20) VEYA sira_golge ≤ max(2N,20)` olan adayları taşır
+    (kart adım_0: "defter satırı üst max(2N,20) ile sınırlı") — süresiz büyümesin diye.
+
+    `sure_ms` YALNIZ hesaplama bloğunu (z/score_golge/sıra/eşik) ölçer, YAZIMI DEĞİL — aynı
+    gerekçeyle bu modülün `kuyruk_kadansi`sindeki `gozetim_ms` ayrımı: yazım maliyeti (küçük,
+    aday sayısından bağımsız satır başına sabit `append_jsonl`) DEĞİŞKEN olan hesaplama
+    maliyetinden AYRI tutulur — ikisini karıştırmak kill#1 tarzı bir pay ölçümünü bulandırırdı."""
+    t0 = time.perf_counter()
+    n_gun = max(0, int(N))
+    n = len(candidates)
+    if n == 0:
+        return {"yazilan": 0, "n_aday": 0, "N": n_gun,
+                "sure_ms": round((time.perf_counter() - t0) * 1000.0, 2)}
+    import numpy as np
+    skorlar = np.asarray([float(c["score"]) for c in candidates], dtype=float)
+    sd_kesit = float(skorlar.std())
+    per_skill: dict[str, list[float]] = {}
+    for c in candidates:
+        per_skill.setdefault(c.get("source_skill"), []).append(float(c["score"]))
+    # KESİT İSTATİSTİĞİ YOKSA z=0 (kart formülü): <3 aday ya da sd==0 — bölme sıfıra DÜŞMEZ,
+    # görüş basitçe SESSİZDİR (skoru değiştirmez), UYDURULMAZ (None ya da hata değil, tanımlı 0).
+    skill_istat: dict[str | None, tuple[float, float] | None] = {}
+    for sk, degerler in per_skill.items():
+        arr = np.asarray(degerler, dtype=float)
+        sd = float(arr.std())
+        skill_istat[sk] = (float(arr.mean()), sd) if len(arr) >= 3 and sd > 0 else None
+
+    z_ler: list[float] = []
+    golge_skorlar: list[float] = []
+    for c in candidates:
+        istat = skill_istat.get(c.get("source_skill"))
+        skor = float(c["score"])
+        z = 0.0 if istat is None else (skor - istat[0]) / istat[1]
+        w = KART_GOLGE_AGIRLIKLARI.get(c.get("source_skill"), 0.0)
+        z_ler.append(z)
+        golge_skorlar.append(skor + w * z * sd_kesit)
+
+    sira_mevcut = list(range(1, n + 1))                          # candidates ZATEN score-desc
+    golge_index = sorted(range(n), key=lambda i: golge_skorlar[i], reverse=True)
+    sira_golge = [0] * n
+    for rank, idx in enumerate(golge_index, start=1):
+        sira_golge[idx] = rank
+
+    esik = max(2 * n_gun, 20)
+    yazilacak: list[dict] = []
+    for i, c in enumerate(candidates):
+        sm, sg = sira_mevcut[i], sira_golge[i]
+        if sm > esik and sg > esik:
+            continue
+        setup = c.get("setup") or "?"
+        yazilacak.append({
+            "date": dstr, "ticker": c.get("ticker"), "source_skill": c.get("source_skill"),
+            # HEDEF: cf'nin kendi id biçimiyle BİREBİR (modül başlığındaki BEYAN) — okuyucu
+            # (`golge_kol_raporu`) `_gozlemler()`in cf-kaynaklı satırlarıyla bunu STRING eşitliğiyle
+            # eşler, geri-ayrıştırma (parse) YOKTUR.
+            "hedef": f"CF-{dstr}-{c.get('ticker')}-{setup}",
+            "score": float(c["score"]), "z_skill": round(z_ler[i], 6),
+            "score_golge": round(golge_skorlar[i], 6),
+            "sira_mevcut": sm, "sira_golge": sg, "N": n_gun,
+            "ustN_mevcut": bool(n_gun > 0 and sm <= n_gun),
+            "ustN_golge": bool(n_gun > 0 and sg <= n_gun),
+        })
+    sure_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+    for row in yazilacak:
+        row["sure_ms"] = sure_ms
+        store.append_jsonl(GOLGE_SIRALAMA_DEFTERI, row)
+    return {"yazilan": len(yazilacak), "n_aday": n, "N": n_gun, "sure_ms": sure_ms}
+
+
+def golge_kol_raporu() -> dict:
+    """GÖLGE SIRALAMA KOLUNUN HÜKMÜ (EDG-2026-078 Aşama A) — SAF OKUMA, CANLI KARARA DOKUNMAZ.
+
+    `GOLGE_SIRALAMA_DEFTERI`ni okur, seans başına (date) gerçekleşen R'yi `_gozlemler()` ile eşler
+    (anahtar: (tarih, hedef); `_gozlemler`in hedef alanı NE İSE O kullanılır — bkz. modül başlığı
+    BEYANI: yalnız CF-kaynaklı gözlemler eşleşir). Eşleşmeyen `eslesmeyen_n`de sayılır, sessizce
+    düşmez.
+
+    Seans başına rank-IC(mevcut) = spearman(−sira_mevcut, R), rank-IC(gölge) = spearman(−sira_golge,
+    R); Δ = gölge − mevcut. `_ci` (`faz5_cikis.tarih_kumeli_bootstrap` — YENİDEN KULLANILIR, ikinci
+    bir bootstrap İCAT edilmez) Δ listesini seans tarihleriyle kümeler — burada küme birimi zaten
+    SEANSTIR ve her seansın TEK bir Δ'sı vardır, yani kümeleme kümeler-arası dağılıma düşer (aynı
+    yöntem, aynı dürüstlük: `n_kume < 2` ise aralık kurulmaz).
+
+    `n_seans < KART_N_MIN_SEANS` → durum "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ" (sayı YİNE basılır, HÜKÜM
+    YOK — kartın eşiğini işlemek Rol-1'e aittir, bu fonksiyon bir GEÇTİ/KALDI döndürmez)."""
+    satirlar = store.read_jsonl(GOLGE_SIRALAMA_DEFTERI)
+    if not satirlar:
+        return {"durum": "ÖLÇÜLEMEDİ", "kart": KART_GOLGE_ID,
+                "neden": f"`{GOLGE_SIRALAMA_DEFTERI}` boş — gölge sıralama kancası hiç yazmadı",
+                "n_seans": 0, "n_min_seans": KART_N_MIN_SEANS, "delta_rank_ic": None,
+                "ustN_kesisim_ort": None, "sure_p95_ms": None, "eslesmeyen_n": None}
+    gz = _gozlemler()
+    sonuclar = {(str(g.get("tarih")), str(g.get("hedef"))): g for g in gz["satirlar"]}
+    seanslar: dict[str, list[dict]] = {}
+    for r in satirlar:
+        seanslar.setdefault(str(r.get("date")), []).append(r)
+    from . import analytics
+    eslesmeyen_n = 0
+    delta_list: list[float] = []
+    tarih_list: list[str] = []
+    kesisim_list: list[float] = []
+    sure_list: list[float] = []
+    for tarih, rows in sorted(seanslar.items()):
+        ciftler_mevcut, ciftler_golge = [], []
+        ustN_mevcut_kume: set = set()
+        ustN_golge_kume: set = set()
+        n_gun = None
+        for r in rows:
+            if r.get("sure_ms") is not None:
+                sure_list.append(float(r["sure_ms"]))
+            s = sonuclar.get((tarih, r.get("hedef")))
+            if s is None or s.get("r") is None:
+                eslesmeyen_n += 1
+                continue
+            R = float(s["r"])
+            ciftler_mevcut.append((-float(r["sira_mevcut"]), R))
+            ciftler_golge.append((-float(r["sira_golge"]), R))
+            if r.get("ustN_mevcut"):
+                ustN_mevcut_kume.add(r.get("ticker"))
+            if r.get("ustN_golge"):
+                ustN_golge_kume.add(r.get("ticker"))
+            n_gun = r.get("N")
+        if len(ciftler_mevcut) < 2:
+            continue                      # rank-IC en az 2 gözlem ister (tekli rütbe tanımsız)
+        ic_mevcut = analytics.spearman_ic(ciftler_mevcut)
+        ic_golge = analytics.spearman_ic(ciftler_golge)
+        if ic_mevcut is None or ic_golge is None:
+            continue                      # o seansın rank-IC'i tanımsız (sabit sıra/R) — SAYILMAZ
+        delta_list.append(ic_golge - ic_mevcut)
+        tarih_list.append(tarih)
+        if n_gun and n_gun > 0:
+            kesisim_list.append(len(ustN_mevcut_kume & ustN_golge_kume) / n_gun)
+    n_seans = len(delta_list)
+    sure_p95 = _yuzdelik(sure_list, 0.95)
+    if n_seans == 0:
+        return {"durum": "ÖLÇÜLEMEDİ", "kart": KART_GOLGE_ID,
+                "neden": "hiçbir seansta ≥2 eşleşen (sıra, R) çifti kurulamadı — rank-IC tanımsız",
+                "n_seans": 0, "n_min_seans": KART_N_MIN_SEANS, "delta_rank_ic": None,
+                "ustN_kesisim_ort": None, "sure_p95_ms": sure_p95, "eslesmeyen_n": eslesmeyen_n}
+    ci = _ci(delta_list, tarih_list)
+    ustN_kesisim_ort = (sum(kesisim_list) / len(kesisim_list)) if kesisim_list else None
+    return {
+        "durum": ("ölçüldü" if n_seans >= KART_N_MIN_SEANS else "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ"),
+        "kart": KART_GOLGE_ID, "neden": None,
+        "n_seans": n_seans, "n_min_seans": KART_N_MIN_SEANS,
+        "delta_rank_ic": {"ort": ci.get("ort"), "lo": ci.get("lo"), "hi": ci.get("hi"),
+                          "n_kume": ci.get("n_kume"), "yontem": ci.get("yontem")},
+        "ustN_kesisim_ort": ustN_kesisim_ort, "n_kesisim_seans": len(kesisim_list),
+        "ustN_kesisim_esik": KART_GOLGE_USTN_KESISIM_MIN,
+        "ustN_kesisim_esigi_gecti": (None if ustN_kesisim_ort is None
+                                     else bool(ustN_kesisim_ort >= KART_GOLGE_USTN_KESISIM_MIN)),
+        "sure_p95_ms": sure_p95, "eslesmeyen_n": eslesmeyen_n,
+        "beyan": ("Gerçekleşen R KAYNAĞI yalnız CF simülasyonudur (adayın silahlanıp "
+                  "silahlanmadığından BAĞIMSIZ, her adayda var); gerçek işlem sonucu bu ölçümde "
+                  "KULLANILMAZ (modül başlığı BEYANI). Δrank-IC CI-altı > 0 ∧ üst-N kesişimi ≥ "
+                  f"{KART_GOLGE_USTN_KESISIM_MIN} HÜKMÜNÜ bu fonksiyon VERMEZ — kartın eşiğini "
+                  "işlemek Rol-1'e aittir (CLAUDE.md §5)."),
+    }
+
+
+def _golge_kol_guvenli() -> dict:
+    """`golge_kol_raporu()`yu `rapor()`ın GERİSİNE düşürmeden çağırır.
+
+    YASA 4: bu ÖLÇÜM yeni (2026-09-05) ve düşerse `rapor()`ın — EDG-2026-019'un ÜÇ AYLIK kararlı
+    yüzeyinin — TAMAMINI 'ÖLÇÜLEMEDİ'ye çekmemeli. Kendi try/except'i, kendi olayı."""
+    try:
+        return golge_kol_raporu()
+    except Exception as e:
+        from . import obs
+        obs.warn("golge_kol_raporu_failed", error=f"{type(e).__name__}: {e}",
+                 detail="EDG-2026-078 gölge kol hükmü bu turda ÖLÇÜLEMEDİ — skill_gorus.rapor()ın "
+                        "kalanı ETKİLENMEDİ")
+        return {"durum": "ÖLÇÜLEMEDİ", "kart": KART_GOLGE_ID, "neden": f"{type(e).__name__}: {e}",
+                "n_seans": None, "n_min_seans": KART_N_MIN_SEANS, "delta_rank_ic": None,
+                "ustN_kesisim_ort": None, "sure_p95_ms": None, "eslesmeyen_n": None}
+
+
+# ==================================================================================================
+# PENCERE SAYACI (EDG-2026-019 kill#3 borcu, EDG-2026-078 dilimiyle kapatıldı)
+# ==================================================================================================
+# NEDEN VAR. Kart kill#3 "3 ARDIŞIK pencere" ister ama `rapor()` bugüne dek "pencere sayacı bu
+# turda YOK" diyordu — ne terfinin "2 pencere" (Aşama B ön şartı) ne emekliliğin "3 pencere"si
+# ÖLÇÜLEBİLİYORDU. Yazan TEK yer `pencere_yaz()` (çağıran: `ops/skill_gorus_uret.py`, her
+# `--uygula` koşumunda BİR kez); `rapor()` yalnız OKUR (`_pencere_ozeti`, saf okuma) — saf okuma
+# sözleşmesi bozulmaz.
+def pencere_yaz(rapor_sonucu: dict | None = None, *, kosum_tarihi: str | None = None) -> dict:
+    """`rapor()`ın O ANKİ hükmünden skill×yüzey başına bir PENCERE satırı türetir ve deftere ekler.
+
+    İDEMPOTENT — GÜN ANAHTARI: bu güne ait ZATEN bir satır varsa (herhangi bir skill/yüzey için)
+    HİÇBİR ŞEY YAZILMAZ; aynı günün ikinci koşumu sayacı ÇİFTLEMEZ. `rapor_sonucu` verilmezse
+    `rapor()` burada çağrılır (ops betiği zaten kendi `rapor()`ını hesapladıysa TEKRAR
+    hesaplatmadan geçebilir).
+
+    HER ÖLÇÜLEN SKİLL YAZILIR — `yon` SIFIR OLSA BİLE: bir günü ATLAMAK, o günün "sağkalmadı"
+    bilgisini SESSİZCE KAYBEDER ve `_pencere_ozeti`nin ardışıklık sayımını YANLIŞ UZATIR (aradaki
+    boşluk hiç olmamış gibi görünür). "ölçüldü" OLMAYAN yüzeyler (`durum != "ölçüldü"`) o gün için
+    hiç yazılmaz — orada bir yön HÜKMÜ yoktur, uydurulmaz."""
+    gun = str(kosum_tarihi or _now())[:10]
+    mevcut = store.read_jsonl(PENCERE_DEFTERI)
+    if any(r.get("kosum_tarihi") == gun for r in mevcut):
+        return {"yazilan": 0, "kosum_tarihi": gun, "atlandi": True,
+                "neden": "bu gün için zaten yazılmış (idempotent, gün anahtarı)"}
+    r = rapor_sonucu if rapor_sonucu is not None else rapor()
+    yazilan = 0
+    for yuzey, y in (r.get("yuzeyler") or {}).items():
+        if y.get("durum") != "ölçüldü":
+            continue
+        for sk, v in (y.get("skiller") or {}).items():
+            store.append_jsonl(PENCERE_DEFTERI, {
+                "kosum_tarihi": gun, "skill": sk, "yuzey": yuzey,
+                "yon": v.get("yon") or 0,
+                "sagkalan": bool((v.get("fdr") or {}).get("sagkalan")),
+                "n": v.get("n"),
+            })
+            yazilan += 1
+    return {"yazilan": yazilan, "kosum_tarihi": gun, "atlandi": False}
+
+
+def _pencere_ozeti() -> dict[tuple, dict]:
+    """(skill, yüzey) → {"ardisik_pencere": int, "pencere_n": int} — saf okuma.
+
+    `ardisik_pencere`: EN SON pencereden GERİYE, `sagkalan=True` ∧ `yon` en son pencereninkiyle AYNI
+    olduğu sürece sayılır; ilk uyumsuzlukta (yön değişti YA DA sağkalmadı) durur. Yön DEĞİŞTİĞİNDE
+    eski seri TAŞINMAZ — sayaç yeni yönle YENİDEN başlar (bugünkü tek pencere zaten sağkalmışsa 1'den)."""
+    per: dict[tuple, list[dict]] = {}
+    for row in store.read_jsonl(PENCERE_DEFTERI):
+        per.setdefault((row.get("skill"), row.get("yuzey")), []).append(row)
+    out: dict[tuple, dict] = {}
+    for anahtar, satirlar in per.items():
+        satirlar = sorted(satirlar, key=lambda r: str(r.get("kosum_tarihi") or ""))
+        ardisik = 0
+        if satirlar:
+            son_yon = satirlar[-1].get("yon")
+            for row in reversed(satirlar):
+                if row.get("sagkalan") and row.get("yon") == son_yon:
+                    ardisik += 1
+                else:
+                    break
+        out[anahtar] = {"ardisik_pencere": ardisik, "pencere_n": len(satirlar)}
+    return out

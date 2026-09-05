@@ -24,7 +24,11 @@ kararı ASLA bloklamaz ama düşerse sessiz de kalmaz; keşif sondaları sert R 
 Okur/yazar: portfolio.json (kalıcı defter — öğrenme yeniden başlatmayı atlatır), trade_plans.jsonl,
 trades.jsonl, entry_execution.jsonl (okuyan: analytics → tanılama → pano), equity_curve.json,
 kalp atışı (health.write_heartbeat). Komşular: strategy, broker, regime, guard, dataset, skills,
-adapters.data, adapters.alpaca, obs."""
+adapters.data, adapters.alpaca, obs.
+
+GÖLGE SIRALAMA KOLU (EDG-2026-078 Aşama A, TSK-126): `candidates.sort`in hemen ardından
+`skill_gorus.golge_siralama_kancasi` çağrılır — CANLI SIRALAMAYA DOKUNMAZ, yalnız YAN deftere
+(`state/golge_siralama.jsonl`) ikinci (görüşlü) bir sıra yazar; kanca düşerse P3 AYNEN sürer."""
 from __future__ import annotations
 import datetime as dt
 import pandas as pd
@@ -2203,6 +2207,25 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     candidates.append(row)
             candidates.sort(key=lambda c: c["score"], reverse=True)
             store.merge_dated_jsonl("candidates.jsonl", dstr, candidates)
+
+        # GÖLGE SIRALAMA KOLU (EDG-2026-078 Aşama A, TSK-126) — CANLI KARAR DEĞİŞMEZ. Az önce
+        # yazılan `candidates` kesitine in-memory İKİNCİ (görüşlü) bir sıralama üretilip YAN
+        # deftere (`state/golge_siralama.jsonl`) kaydedilir; gerçek emir yolu MEVCUT sıralamadan
+        # (yukarıdaki `candidates.sort`) çıkmaya devam eder — bu blok `candidates`i ASLA
+        # mutasyona uğratmaz (MUTASYON 1 çivisi: kanca kaldırılsa/w=0 olsa P3 çıktısı BAYT-EŞİT).
+        # BİLEREK P2_SCREEN'in `with` bloğu DIŞINDA: pipeline_run'ın kendi süre/durum kaydını
+        # (`pipeline_runs.jsonl`) bu YAN ölçümle karıştırmamak için — kancanın kendi süresi
+        # (`sure_ms`) kendi try/except'i içinde AYRI ölçülür (aşağıdaki `obs.warn` kendi
+        # kadansıdır, P2'ninkini etkilemez).
+        try:
+            from . import skill_gorus as _sg
+            _sg.golge_siralama_kancasi(candidates, limits["max_open_positions"] - len(b.positions), dstr)
+        except Exception as e:
+            # YASA 4: kanca düşerse P3 AYNEN sürer — emir yolu bu YAN ölçüme hiçbir zaman bağlı
+            # değildir. Sessiz değil: olay adıyla görünür, yalnız yazım atlanır.
+            obs.warn("golge_siralama_failed", error=f"{type(e).__name__}: {e}",
+                     detail="gölge sıralama kolu bu turda YAZILAMADI — emir yolu ETKİLENMEDİ, "
+                            "P3 AYNEN sürdü (EDG-2026-078)")
 
         from .shadow_model import ShadowTradeOutcomeModel
         try:

@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils";
 
 import type { Durum } from "../../veri";
 import { anMetni, Beyan, BolumKarti, Deger, Kapi, Olculemedi, OlculemediHucre, rKati, sayi, yuzde } from "./ortak";
-import type { KatalogSatiri, SkillGovdesi } from "./tipler";
+import type { GolgeKolRaporu, KatalogSatiri, SkillGovdesi } from "./tipler";
 
 /* ---- SATIR --------------------------------------------------------------- */
 
@@ -284,6 +284,41 @@ const SUTUNLAR: ColumnDef<DataTableFeatures, AracSatir>[] = [
   },
 ];
 
+/* ---- GÖLGE SIRALAMA KOLU (EDG-2026-078 Aşama A, TSK-126) ------------------
+   TEK SATIR — Z6 (tasarım belgesi §4 Aşama A): kanalın okuyucusu kanalla AYNI GÜN doğar.
+   Canlı karara DOKUNMAZ (skill_gorus.golge_siralama_kancasi'nin kendi başlığındaki beyan) —
+   burada yalnız Δrank-IC/üst-N kesişimi hükmü GÖRÜNÜR olur. */
+function GolgeSiralamaSatiri({ golgeKol }: { golgeKol: GolgeKolRaporu | null | undefined }) {
+  if (!golgeKol || golgeKol.durum === "ÖLÇÜLEMEDİ" || !golgeKol.durum) {
+    return (
+      <div className="flex flex-wrap items-baseline gap-x-1.5 text-xs">
+        <span className="text-muted-foreground">Gölge sıralama (EDG-2026-078):</span>
+        <OlculemediHucre
+          neden={golgeKol?.neden ?? "Gölge sıralama kolu bu turda hiç ölçülmedi"}
+          teknik="`/api/skills` `gorus_defteri.golge_kol` yok ya da `durum` ÖLÇÜLEMEDİ"
+        />
+      </div>
+    );
+  }
+  const d = golgeKol.delta_rank_ic;
+  const deltaMetin = sayi(d?.ort, 3, true);
+  const ciMetin =
+    typeof d?.lo === "number" && typeof d?.hi === "number"
+      ? `[${sayi(d.lo, 3, true) ?? "?"};${sayi(d.hi, 3, true) ?? "?"}]`
+      : null;
+  const nSeansMetin = sayi(golgeKol.n_seans, 0);
+  const kesisimMetin = yuzde(golgeKol.ustN_kesisim_ort, 0);
+  const yetersiz = golgeKol.durum !== "ölçüldü";
+  return (
+    <p className="text-muted-foreground text-xs leading-relaxed">
+      Gölge sıralama: Δrank-IC{" "}
+      <span className="tabular-nums text-foreground">{deltaMetin ?? "ölçülemedi"}</span>
+      {ciMetin ? ` · CI ${ciMetin}` : ""} · {nSeansMetin ?? "?"} seans · üst-N kesişimi{" "}
+      {kesisimMetin ?? "ölçülemedi"} · {yetersiz ? `örneklem yetersiz (n_min ${golgeKol.n_min_seans ?? "?"})` : "ölçüldü"}
+    </p>
+  );
+}
+
 /* ---- BÖLÜM --------------------------------------------------------------- */
 
 export function Araclar({ skills }: { skills: Durum<SkillGovdesi> }) {
@@ -484,6 +519,7 @@ function Govde({ veri }: { veri: SkillGovdesi }) {
           </Beyan>
         ) : null}
         {veri.golge_beyani ? <Beyan>{veri.golge_beyani}</Beyan> : null}
+        <GolgeSiralamaSatiri golgeKol={veri.gorus_defteri?.golge_kol} />
       </div>
     </div>
   );

@@ -562,6 +562,12 @@ SINK_TABANI = frozenset({
     "short_interest.json", "short_interest_float.json", "sieve.json",
     "skill_recommendations.jsonl", "skill_revisions.json", "sp500_constituents.json",
     "sprint_status.json", "warmup_scale.json", "watchdog_alarmed.json",
+    # 2026-09-05 EKLENDİ (EDG-2026-078 Aşama A, TSK-126): skill_gorus.golge_siralama_kancasi
+    # yazar/skill_gorus.golge_kol_raporu okur ve skill_gorus.pencere_yaz yazar/skill_gorus.
+    # _pencere_ozeti okur — DÖRDÜ DE AYNI modülde (statik graf dış okuyucu göremiyor). Gerçek
+    # tüketici zinciri codelaw.DECLARED_SINKS gerekçesinde yazılı: rapor() → api._eksen2_gorus →
+    # /api/skills → pano Araçlar sekmesi.
+    "golge_siralama.jsonl", "skill_gorus_pencereler.jsonl",
 })
 
 

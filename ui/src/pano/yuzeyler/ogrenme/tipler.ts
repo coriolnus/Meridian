@@ -557,6 +557,30 @@ export interface KatalogSatiri {
   readonly ajan_kullanim_kaynak?: string | null;
 }
 
+/* ---- GÖLGE SIRALAMA KOLU (EDG-2026-078 Aşama A) — `gorus_defteri.golge_kol` ---------------- */
+
+export interface GolgeKolRaporu {
+  readonly durum?: "ölçüldü" | "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ" | "ÖLÇÜLEMEDİ" | string;
+  readonly kart?: string;
+  readonly neden?: string | null;
+  readonly n_seans?: number | null;
+  readonly n_min_seans?: number;
+  readonly delta_rank_ic?: {
+    readonly ort?: number | null;
+    readonly lo?: number | null;
+    readonly hi?: number | null;
+    readonly n_kume?: number | null;
+    readonly yontem?: string;
+  } | null;
+  readonly ustN_kesisim_ort?: number | null;
+  readonly n_kesisim_seans?: number;
+  readonly ustN_kesisim_esik?: number;
+  readonly ustN_kesisim_esigi_gecti?: boolean | null;
+  readonly sure_p95_ms?: number | null;
+  readonly eslesmeyen_n?: number | null;
+  readonly beyan?: string;
+}
+
 export interface SkillGovdesi {
   readonly counts?: {
     readonly total?: number;
@@ -575,4 +599,10 @@ export interface SkillGovdesi {
     readonly hukum?: string;
   };
   readonly golge_beyani?: string;
+  // `api._eksen2_gorus()`ın TAM gövdesi burada modellenmez (okunmayan alanı tiplemek tembelliktir);
+  // yalnız Araçlar sekmesinin fiilen okuduğu `golge_kol` (EDG-2026-078 Aşama A) taşınır.
+  readonly gorus_defteri?: {
+    readonly durum?: string;
+    readonly golge_kol?: GolgeKolRaporu | null;
+  } | null;
 }
