@@ -953,6 +953,8 @@ any surface:
 
 #### `runbook.html` on the ramp, and why the body did *not* get a deviation (2026-08-07, D6)
 
+> **2026-09-05 refresh (TSK-131 changed the RUNBOOK body):** corpus 243 blocks; candidate 91 CPL, benchmark 80.6 CPL in the shipping face; x-height Δ −0.079px unchanged; narrowest h1→h1 gap 1214px > 1112px. Verdict unchanged — see `research/olcumler/tipografi_rampa_2026-08-07/TAZELEME-2026-09-05.md`.
+
 The runbook is the one genuine long-form reading surface in the product — 1148 source lines of
 Turkish operational prose, read at the worst possible moment. It ran at `15px/1.65/78ch` with a
 `26/18` heading ladder, none of it on the ramp and none of it explained. The obvious defence was

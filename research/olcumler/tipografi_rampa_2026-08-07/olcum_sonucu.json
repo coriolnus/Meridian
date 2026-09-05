@@ -150,5 +150,60 @@
     },
     "sonuc": "SIRALAMA DEĞİŞMEDİ — C (28/20/14) yine tek baskın aday; system-ui koşumuyla fark her hücrede <=0,05px. Merdiven kararı yüze duyarlı değilmiş.",
     "cpl_hukmu": "Yürürlükteki satır uzunluğu artık koşumun OLCUT satırıdır: 78 CPL (14px/1.8/72ch, Recursive) — 92 değil. Yeni ölçüm gerekmedi; sevk edilen bileşim zaten ölçülmüş dört spesifikasyondan biriydi."
+  },
+  "tazeleme_2026_09_05": {
+    "neden": "TSK-131 alt-işi RUNBOOK'a DISK_ESIK bölümü ekledi — gövde metni değişti (240→243 blok), 2026-08-14 kaydının 'harness'lar yeniden koşulur' şartı devreye girdi",
+    "kosum": "2026-09-05 12:5xZ, Chrome (Browser pane), Recursive Sans yerel fonts/ bağlantısı, 243 blok / 167.933 karakter",
+    "govde": {
+      "MEVCUT": {
+        "x_yuksekligi_px": 7.896,
+        "cpl_medyan": 100.8,
+        "cpl_ortalama": 100.2,
+        "toplam_satir": 1788
+      },
+      "SADECE_BOYUT": {
+        "x_yuksekligi_px": 7.369,
+        "cpl_medyan": 99.0,
+        "cpl_ortalama": 98.8,
+        "toplam_satir": 1804
+      },
+      "ADAY": {
+        "x_yuksekligi_px": 7.369,
+        "cpl_medyan": 91.0,
+        "cpl_ortalama": 90.5,
+        "toplam_satir": 1944
+      },
+      "OLCUT": {
+        "x_yuksekligi_px": 7.448,
+        "cpl_medyan": 80.6,
+        "cpl_ortalama": 79.5,
+        "toplam_satir": 2176
+      }
+    },
+    "hukum_olcutleri": {
+      "K2a_ithal_band_45_75": {
+        "sonuc": "DÜŞTÜ",
+        "olculen": 91.0
+      },
+      "K2b_urune_goreli": {
+        "sonuc": "GEÇTİ",
+        "olculen": 91.0,
+        "esik": 75.6
+      },
+      "K3_x_yuksekligi": {
+        "sonuc": "GEÇTİ",
+        "fark_px": -0.079,
+        "tolerans_px": 0.5
+      }
+    },
+    "baslik_merdiveni": "birebir 2026-08-07 (yüz metriği, korpustan bağımsız)",
+    "display_28px_mesruiyeti": {
+      "en_dar_h1_h1_kaynak_satir_araligi": 30,
+      "en_dar_h1_h1_render_px_ADAY": 1214,
+      "en_dar_h1_h1_render_px_MEVCUT": 1174,
+      "yaklasiklik": "sarmalayıcı CSS ±30 px, orijinal harness değil",
+      "hukum": "1214 > 1112 — kural sağlanıyor; sınır vakası aynen"
+    },
+    "hukum": "D6 hükmü DEĞİŞMEDİ — sayılar yenilendi (bkz. TAZELEME-2026-09-05.md)"
   }
 }
