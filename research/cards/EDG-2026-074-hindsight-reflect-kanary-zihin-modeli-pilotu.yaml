@@ -1,0 +1,71 @@
+# EDG-2026-074 — Hindsight reflect tool-calling KANARY (K1) + 1 zihin modeli kodsuz PİLOT (K2) — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-05 14:0xZ (Rol-1) — TSK-142 (operatör 2026-09-05: "pilotu aç"). Kanary A1 transient timer'ı
+# 2026-09-06 00:02Z'de (ücretsiz gün kotası 00:00Z'de yenilenir) KOŞMADAN ÖNCE yazıldı; eşik/K/kill-list sonradan
+# değişmez. Keşif (2026-09-05, wf_f94c01e3): Hindsight 0.9.2'de reflect A1'de HİÇ koşmadı (14 gün journal + llm-requests
+# 0); model nvidia/nemotron-3-ultra-550b-a55b:free OpenRouter'da tools/tool_choice DESTEKLİYOR (response_format yok);
+# 2026-09-01 karar ⑤ ("reflect tool-calling canary") metni var, ölçüm kaydı hiçbir belgede yok → ön şart 'ÖLÇÜLMELİ'.
+# Konsolidasyon zihin modeli ÜRETMEZ, yalnız tanımlı modeli tazeler (consolidator: refresh_after_consolidation/refresh_cron);
+# tanım 0 → sayfa 0 (TSK-125 beyanla kapandı). Tasarım belgesi: reflect KAPALI doğar → ayrı kart + operatör kararı (bu kart).
+
+card_id: EDG-2026-074
+status: registered   # 2026-09-05 Rol-1 — ön-kayıt; K1 kanary 2026-09-06 00:02Z timer, K2 pilot yalnız K1 yeşilse
+family: hindsight_hafiza
+on_kayit: 2026-09-05
+ref: [TSK-142, TSK-125, TSK-060, EDG-2026-067, TSK-145, TSK-095]
+
+hipotez: >
+  (K1) Ücretsiz nemotron-3-ultra-550b:free modeli Hindsight'ın reflect tool döngüsünü (search_observations/recall
+  araç çağrıları + metin) tamamlar. (K2) K1 yeşilse: bir zihin modeli (delta modu, gece refresh_cron, ingest kotayı
+  bitirmeden ÖNCE) 7 gün boyunca kota-nötr (günde ≈1 tazeleme grubu) tazelenir ve okunabilir içerik üretir —
+  Hindsight'ın "sabit cevap, LLM'siz okuma" faydası pano Hafıza yüzeyinde ölçülebilir hâle gelir.
+
+k_registry: {registered_at: "2026-09-05", trial_ids: [EDG-074-k1-reflect-kanary, EDG-074-k2-zihin-modeli-pilot]}
+# K=2. K1 = 3 × POST /v1/default/banks/meridian-arsiv/reflect {query: kiyas067/sorular.yaml[0], budget: low,
+#      include: {tool_calls: {}, facts: {}}} — 00:02Z timer, 60 s aralıkla (gece-20260906/kanary_reflect_*.json).
+#      K2 = POST /mental-models {name, source_query, trigger: {mode: delta, refresh_cron: "0 5 * * *",
+#      min_refresh_interval_seconds: 82800, keep_trace: true}, tags: []} — yalnız K1 yeşilse, Rol-1 A1'de tek curl.
+# PK hücresi K'ya sayılmaz.
+
+adim_0_fizibilite: >
+  (a) hindsight-api 0.9.2 aktif ve /openapi.json'da reflect + mental-models yolları var (2026-09-05 ölçüldü: 69 yol);
+  (b) kanary anında OpenRouter günlük kotası TAZE (00:00Z reset; 429 içeren deneme SAYILMAZ, yeniden koşulur —
+  ingest r3 00:05Z'de başlar, kanary ondan ÖNCE); (c) kaynak soru dosyası /opt/hindsight/kiyas067/sorular.yaml mevcut;
+  (d) banka meridian-arsiv'de olgu var (271 belge / 9.834 birim, 2026-09-05).
+
+olcum_plani:
+  - "K1: 3 deneme; her cevap için HTTP kodu, trace.tool_calls sayısı, text boş mu, hata detayı ('Reflect requires a tool-calling model' imzası) kaydedilir"
+  - "K1 PK (yol-tutarlı): aynı uç, aynı banka, kasıtlı ARAÇSIZ istem (include boş, budget low, sorusu bankada olmayan bir konu) → text boş ya da 'bilmiyorum' sınıfı BEKLENİR; tool_calls≥1'li gerçek cevap ile ayrım görülmezse harness kör sayılır"
+  - "K2: GET /operations operation_type=refresh_mental_model (günlük sayım, details.outcome, effective_mode, llm_calls/refresh, usage token); GET /mental-models/{id}/history; 7 gün (2026-09-06…09-12); 429 kaynaklı hatalar AYRI sütun"
+  - "kota: /api/v1/key usage_daily (OpenRouter) ve hindsight llm-requests operation=refresh_mental_model — pilotun günlük çağrı payı"
+  - "okuyucu (Yasa 6): pano Hafıza › Bilgi tabanı (BilgiTabani.tsx, GET vekili) modeli LİSTELİYOR mu — ölçülür; listelemiyorsa okuyucu bağlanmadan pilot 'başarılı' sayılmaz"
+
+esikler:
+  k1_gecti: "3/3 deneme: HTTP 200 ∧ trace.tool_calls ≥ 1 ∧ text ≠ boş (429'lu deneme sayılmaz, yeniden koşulur)"
+  k2_gecti: "7 günde refresh op sayısı 5–8 (≈1/gün; ≥14 → çift tetik) ∧ failed (429-dışı) ≤ 1/7 ∧ ort. LLM çağrısı/refresh ≤ 12 ∧ content_written+unchanged+preserved ≥ 5/7 ∧ effective_mode=delta ≥ 5/7 (ilk full beklenir) ∧ pano listeliyor"
+  # eşikler donuk; sonradan değişmez (yeni eşik = yeni kart)
+
+kill_list:
+  - "K1: 429'suz herhangi bir denemede ReflectToolCallError / 'Reflect requires a tool-calling model' → KALDI; model değişikliği YENİ kart (EDG-067 künye şartı)"
+  - "K1: 3 denemenin 3'ü de 429 → ÖLÇÜLEMEDİ (kota); kanary bir sonraki 00:0xZ'ye ertelenir, K harcanmaz"
+  - "K2: 7 günde refresh op > 14 → pilot DURUR (çift tetik: tick + cron)"
+  - "K2: 3 ardışık delta_ops_failed / delta_not_applied → delta modu KALDI"
+  - "K2: pilotun günlük çağrı payı > 100 (1000 RPD'nin %10'u) → pilot DURUR (kota-nötr değil)"
+  - "PK tutmazsa (araçsız istem de 'dolu' cevap veriyorsa) hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: kanary ile AYNI uç ve AYNI banka üzerinde araç çağrısı beklenmeyen bir istem (include boş, bankada
+  olmayan konu) — cevap 'boş/bilmiyorum' sınıfında olmalı; gerçek kanary cevabı ise tool_calls≥1 + olgu içerikli.
+  İkisi ayrışmıyorsa (her istem aynı dolu cevabı veriyorsa) harness reflect'i değil sabit-metin yolunu ölçüyordur.
+
+veri_penceresi: "K1: 2026-09-06 00:02Z (A1 timer, kota taze); K2: 2026-09-06…2026-09-12 (7 gece, 05:00Z cron); banka meridian-arsiv; canlı motor DEĞİL (Hindsight yan servisi)"
+
+basari_tanimi: >
+  K1 3/3 + PK ayrışık → K2 açılır (Rol-1 tek POST). K2 eşikleri 7. gün sonunda geçmiş + pano listeliyor → TSK-142
+  hükmü 'Faz-2 yazma yolu KOVA B'ye' (operatör kararı: sayfa/model oluşturma UI'ı). K1 kaldıysa: ücretsiz model
+  reflect'e uygun değil → kart 'kaldı', model kararı operatörde (ücretli/ayrı anahtar — EDG-067 künyesi değişir).
+
+notlar: >
+  Kota çakışması (TSK-145): konsolidasyon aynı 1000 RPD'yi 10:33Z'de bitirdi (2026-09-05); K2 cron 05:00Z ve
+  kurtar timer'ı 05:00Z aynı saniyede — pilot POST'u 05:00Z'den ÖNCE atılırsa ilk refresh kurtar dalgasıyla
+  çakışır; Rol-1 K2'yi 05:30Z sonrası ya da cron'u 04:30Z alarak açar (kartta cron sabit: "0 5 * * *"; ilk tetik
+  gecikmeli ölçülür, sayılır). Okuyucu sorusu (Hafıza sayfası mı bot recall mı) kartın başarı tanımına girdi.
