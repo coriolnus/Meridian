@@ -73,6 +73,44 @@ okuduğunun kanıtı budur (yol-tutarlı, edg072/edg071 PK felsefesiyle aynı).
 DİSİPLİN: UYDURMA YASAĞI (ölçülemeyen `None` + neden — yön bilinmeyen 3 olay, K2 güncel-listesiz).
 YASA 4 (sessiz-yutma işaretli + gerekçe — `_tarihi_isoya_cevir`, `_kolon_bul`). YASA 6 (okuyucu:
 `sonuc.json` → Rol-1 karta+K defterine işler; RAPOR.md bu betik tarafından YAZILMAZ).
+
+======================================================================================
+EDG-2026-076 EKLERİ (ajan dilimi, 2026-09-05) — AYNI betik, kartı DEĞİŞTİRİLDİ.
+======================================================================================
+Kart `EDG-2026-076-sp500-tarihsel-bilesenler-dogrulanmis-olay-kumesi.yaml`nin önsözü: EDG-075'in
+K1 kalışları (7/14) KART-VERİ hatasıydı (rename ticker'ı giriş/çıkış sayılmış, duyuru/yürürlük
+tarihi karıştırılmış) — §5 "ölçümle çürüyen kriter YERİNDE düzeltilmez" gereği bu betik
+DEĞİŞTİRİLMEDİ, YENİ bir kart + betiğin dört yeni yüzeyi eklendi:
+
+  (a) K1 OLAY KÜMESİ KARTTAN (`k1_olaylari_ve_beyan`): `--kart` kartı `bilinen_olaylar` YAML
+      listesi taşıyorsa K1 olayları ORADAN kurulur (kart alanı `kaynak` → betiğin iç şeması
+      `yon_kaynak`a YENİDEN ADLANDIRILIR, kopyalanmaz — tek-kaynak yasası). Kart bu alanı
+      TAŞIMIYORSA (EDG-075 kartı) modülün sabit `BILINEN_OLAYLAR`/`KART_BEYAN_N`si AYNEN döner —
+      EDG-075 ölçümü GERİYE DÖNÜK bozulmadı. `k1_bilinen_olaylar` artık `kart_beyan_n`i PARAMETRE
+      olarak alır (önceden modül sabiti `KART_BEYAN_N`e SABİTLENMİŞTİ).
+
+  (b) K1n GELECEK OLAYLAR (`k1n_gelecek_olaylar`): kartın `gelecek_olaylar` listesindeki, henüz
+      YÜRÜRLÜĞE GİRMEMİŞ olguları sınar — iki koşulun VE'si: (i) tabloda yürürlük satırı YOK
+      (±1 iş günü, BEKLENEN False — henüz gerçekleşmedi), (ii) `as_of(bugün)` yönle TUTARLI
+      (yön=çıkış ise sembol HÂLÂ üye, yön=giriş ise HENÜZ üye DEĞİL). Yön belirtilmemiş olguda
+      (ii) `None` kalır — UYDURULMAZ, 'geçti' otomatik False'a düşer (bilinmeyeni doğru SAYMAZ).
+
+  (c) rename_siniri RAPORU (`rename_siniri_raporu`): K DEĞİL, eşik YOK — kartın `rename_siniri`
+      kaydı için `as_of(t1)`/`as_of(bugün)`de eski/yeni sembol üyeliğini yalnız RAPORLAR (kaynak
+      sınırı ölçümü, TSK-156 tasarımına girdi — kart notu).
+
+  (d) KART İÇ TUTARLILIĞI + `--beklenen-sha` (`kart_ic_tutarliligi`, `adim0` genişlemesi):
+      `bilinen_olaylar`daki HER tarih `--bugun`e eşit ya da öncesi, `gelecek_olaylar`daki HER
+      tarih `--bugun`den SONRA olmalı — değilse (ya da verilen `--beklenen-sha` ham dosyanın
+      GERÇEK sha256'sıyla eşleşmiyorsa) `adim_0_fizibilite.gecerli=False` + `neden`, ve
+      K1/K1n/K2/pozitif_kontrol o turda KOŞMAZ — ilgili dört alan `None` yazılır (sonuç YİNE
+      üretilir, Yasa 6; "hüküm koşulamaz" DEMEZ, yalnız "burada koşulmadı + nedeni budur" der).
+      `rename_siniri_raporu` bu kapının DIŞINDA kalır (K değil — kartın kendi tasarımı, brief).
+      NOT: `adim0`nun ESKİ `a`-`d` kriterleri (tablo okunuyor mu / oldid sabit mi / pencere ≥100
+      satır mı / tüm tarihler ayrıştı mı) hâlâ RAPORLANIR ama artık genel `gecerli`ye KATILMAZ
+      (o kriterler EDG-075'in GERÇEK tam sayfası için bir zenginlik ölçütüydü, hiçbir sürümde
+      K1/K2/PK'yi KAPATMADI — EDG-076'nın yeni `gecerli` alanı yalnız sha+kart-tutarlılığını
+      kapı yapar, `tests/test_edg075_olcum_v420.py`nin küçük sentetik fikstürü hâlâ AYNEN geçer).
 """
 from __future__ import annotations
 
@@ -138,10 +176,24 @@ def esikleri_karttan_oku(kart_yolu: pathlib.Path = KART_YOLU) -> dict:
     for anahtar in ("k1_gecti", "k2_gecti"):
         if anahtar not in esikler:
             raise ValueError(f"kart eşiği '{anahtar}' bulunamadı ({kart_yolu}) — betik eşiği UYDURAMAZ")
-    return {
+    sonuc = {
         "k1_gecti": str(esikler["k1_gecti"]), "k2_gecti": str(esikler["k2_gecti"]),
         "kart_id": kart.get("card_id"), "kart_yolu": str(kart_yolu),
     }
+    if "k1n_gecti" in esikler:               # EDG-076: yeni anahtar VARSA geçirilir — ZORUNLU
+        sonuc["k1n_gecti"] = str(esikler["k1n_gecti"])   # DEĞİL (EDG-075 kartı bunu taşımaz, geriye dönük kırılmaz)
+    return sonuc
+
+
+def kart_yukle(kart_yolu: pathlib.Path) -> dict:
+    """Kart YAML'ının TAMAMINI okur (`esikleri_karttan_oku` yalnız `esikler:` alanını döner). K1
+    (`bilinen_olaylar`), K1n (`gelecek_olaylar`), rename raporu (`rename_siniri`) ve kart-iç-
+    tutarlılığı buradan okunur. Sözlük değilse ValueError (UYDURMA YOK — `esikleri_karttan_oku`
+    ile AYNI disiplin)."""
+    kart = yaml.safe_load(pathlib.Path(kart_yolu).read_text(encoding="utf-8"))
+    if not isinstance(kart, dict):
+        raise ValueError(f"kart sözlük değil: {kart_yolu}")
+    return kart
 
 
 # ======================================================================================
@@ -334,12 +386,31 @@ def _is_gunu_farki_icinde(a: str, b: str, tolerans_gun: int) -> bool:
     return gun <= tolerans_gun
 
 
+def k1_olaylari_ve_beyan(kart: dict | None) -> tuple[list[dict], int]:
+    """K1 olay kümesi KARTTAN okunur (EDG-076): kart `bilinen_olaylar` YAML listesi taşıyorsa K1
+    olayları ORADAN kurulur (kart alanı `kaynak` → betiğin iç şeması `yon_kaynak`a YENİDEN
+    ADLANDIRILIR, kopyalanmaz — tek-kaynak yasası), `kart_beyan_n = len(bilinen_olaylar)`. Kart bu
+    alanı TAŞIMIYORSA ya da liste BOŞSA (ör. EDG-075 kartı) modülün sabit `BILINEN_OLAYLAR` +
+    `KART_BEYAN_N`si AYNEN döner — EDG-075 ölçümü GERİYE DÖNÜK bozulmaz (modül başlığı EDG-2026-076
+    EKLERİ (a))."""
+    bilinen = kart.get("bilinen_olaylar") if isinstance(kart, dict) else None
+    if not isinstance(bilinen, list) or not bilinen:
+        return list(BILINEN_OLAYLAR), KART_BEYAN_N
+    olaylar = [
+        {"sembol": o["sembol"], "yon": o.get("yon"), "tarih": o["tarih"], "yon_kaynak": o.get("kaynak")}
+        for o in bilinen
+    ]
+    return olaylar, len(bilinen)
+
+
 def k1_bilinen_olaylar(degisiklikler: list[dict], olaylar: list[dict] = BILINEN_OLAYLAR,
-                       tolerans_gun: int = 1) -> dict:
+                       tolerans_gun: int = 1, kart_beyan_n: int = KART_BEYAN_N) -> dict:
     """Her bilinen olay için: satır var mı (sembol eklenen/çıkan sütununda VE tarih ±tolerans_gun
     içinde bir satırda geçiyor mu), tarih toleransı, yön doğru mu (yön=None ise UYDURULMAZ —
     `yon_dogru=None`). `tolerans_gun=0` VERİLİRSE mutasyon sınaması: tam ±1 gün sapan bir olay
-    artık 'satır yok' sayılır (tests/test_edg075_olcum_v420.py bunu doğrudan çağırarak sınar)."""
+    artık 'satır yok' sayılır (tests/test_edg075_olcum_v420.py bunu doğrudan çağırarak sınar).
+    `kart_beyan_n` EDG-076'da `k1_olaylari_ve_beyan`den gelir (önceden modül sabiti `KART_BEYAN_N`e
+    SABİTLENMİŞTİ) — varsayılan hâlâ `KART_BEYAN_N`, EDG-075 çağrı yeri DEĞİŞMEDEN çalışır."""
     detay = []
     for olay in olaylar:
         adaylar = [r for r in degisiklikler if r["tarih"] and olay["sembol"] in (r["eklenen"], r["cikan"])]
@@ -364,11 +435,12 @@ def k1_bilinen_olaylar(degisiklikler: list[dict], olaylar: list[dict] = BILINEN_
     # `yon_dogru is not False` — yani None (yön kartta belirtilmedi) DİSKALİFİYE ETMEZ, yalnız
     # AÇIKÇA YANLIŞ ölçülen yön diskalifiye eder. Rol-1 `detay`deki None'ları AYRICA görür (Yasa 6).
     n_tam_gecti = sum(1 for d in detay if d["satir_var"] and d["tarih_tolerans_icinde"] and d["yon_dogru"] is not False)
-    return {"tolerans_gun": tolerans_gun, "kart_beyan_n": KART_BEYAN_N, "olculen_n": n,
+    return {"tolerans_gun": tolerans_gun, "kart_beyan_n": kart_beyan_n, "olculen_n": n,
             "n_tam_gecti": n_tam_gecti, "detay": detay,
-            "sayim_notu": (f"kart 'olcum_plani' {KART_BEYAN_N} olay der; bu betik kart prose'undan "
-                          f"{n} ayrık (sembol,yön,tarih) olgusu türetti (modül başlığı K1 bölümü) — "
-                          "SAYI UYUŞMAZLIĞI Rol-1'e açık kalem, betik 10'a ZORLAMADI")}
+            "sayim_notu": (f"kart 'kart_beyan_n' {kart_beyan_n} olay der; bu betik {n} ayrık "
+                          "(sembol,yön,tarih) olgusu ÖLÇTÜ (`k1_olaylari_ve_beyan`: kart "
+                          "'bilinen_olaylar' varsa ORADAN, yoksa modül başlığı K1 türetme "
+                          "beyanından) — SAYI UYUŞMAZLIĞI varsa Rol-1'e açık kalem, betik ZORLAMADI")}
 
 
 # ======================================================================================
@@ -412,6 +484,100 @@ def k2_as_of_yeniden_kurulum(degisiklikler: list[dict], guncel_uyeler: list[str]
             "simetrik_fark_birebir_mi": simetrik_fark == beklenen_fark,
             "as_of_bugun_n": len(a_bugun), "guncel_liste_n": len(gu),
             "as_of_bugun_esit_mi": a_bugun == gu}
+
+
+# ======================================================================================
+# K1n — GELECEK OLAYLAR (EDG-076): tabloda HENÜZ görünmemeli + as_of(bugün) yönle tutarlı olmalı
+# ======================================================================================
+
+def k1n_gelecek_olaylar(degisiklikler: list[dict], kart: dict, guncel_uyeler: list[str] | None,
+                        bugun: str, tolerans_gun: int = 1) -> dict:
+    """Kartın `gelecek_olaylar` listesindeki, henüz YÜRÜRLÜĞE GİRMEMİŞ olguları sınar: olgu 'geçti'
+    = (a) tabloda yürürlük satırı YOK (`yururluk_satiri_var`, ±`tolerans_gun` — BEKLENEN False) VE
+    (b) `as_of(bugün)` yönle TUTARLI (`as_of_beklenen_gibi`: yön=cikis ise sembol HÂLÂ üye, yön=
+    giris ise HENÜZ üye DEĞİL). Yön belirtilmemiş olguda (b) `None` kalır — UYDURULMAZ, 'geçti'
+    otomatik False'a düşer (modül başlığı EDG-2026-076 EKLERİ (b)). Kartta `gelecek_olaylar` yoksa
+    ya da `guncel_uyeler` verilmemişse 'çalışmadı + neden' (UYDURMA YOK — `k2_as_of_yeniden_kurulum`
+    ile AYNI disiplin)."""
+    olaylar = kart.get("gelecek_olaylar") if isinstance(kart, dict) else None
+    if not isinstance(olaylar, list) or not olaylar:
+        return {"calisti": False, "neden": "kartta gelecek_olaylar yok"}
+    if guncel_uyeler is None:
+        return {"calisti": False, "neden": "güncel liste sağlanmadı (--guncel-liste) — as_of(bugün) hesaplanamaz"}
+    gu = {_tick(s) for s in guncel_uyeler if _tick(s)}
+    a_bugun = as_of(degisiklikler, gu, bugun)
+    detay = []
+    for olay in olaylar:
+        sembol, yon, tarih = olay["sembol"], olay.get("yon"), olay["tarih"]
+        yururluk_satiri_var = any(
+            r["tarih"] and sembol in (r["eklenen"], r["cikan"]) and _is_gunu_farki_icinde(r["tarih"], tarih, tolerans_gun)
+            for r in degisiklikler
+        )
+        if yon == "cikis":
+            as_of_beklenen_gibi = sembol in a_bugun
+        elif yon == "giris":
+            as_of_beklenen_gibi = sembol not in a_bugun
+        else:
+            as_of_beklenen_gibi = None            # UYDURMA YASAĞI — kart bu olgu için yön vermedi
+        gecti = (yururluk_satiri_var is False) and (as_of_beklenen_gibi is True)
+        detay.append({"sembol": sembol, "yon": yon, "tarih": tarih,
+                     "yururluk_satiri_var": yururluk_satiri_var,
+                     "as_of_beklenen_gibi": as_of_beklenen_gibi, "gecti": gecti})
+    n = len(detay)
+    n_gecti = sum(1 for d in detay if d["gecti"])
+    return {"calisti": True, "n": n, "n_gecti": n_gecti, "detay": detay}
+
+
+# ======================================================================================
+# rename_siniri RAPORU (EDG-076) — K DEĞİL, eşik YOK, yalnız as_of(t1)/as_of(bugün) RAPORU
+# ======================================================================================
+
+def rename_siniri_raporu(degisiklikler: list[dict], kart: dict, guncel_uyeler: list[str] | None,
+                         t1: str, bugun: str) -> dict:
+    """Kartın `rename_siniri` kaydı (eski/yeni ticker, ör. EQR→VMRK) için `as_of(t1)` ve
+    `as_of(bugün)`de eski/yeni sembolün üye olup olmadığını yalnız RAPORLAR — eşik YOK, K'ya
+    SAYILMAZ (kart notu: 'kaynak sınırı ölçümü, TSK-156 tasarımına girdi'). Kartta yoksa/güncel
+    liste verilmemişse 'çalışmadı + neden' (UYDURMA YOK)."""
+    kayitlar = kart.get("rename_siniri") if isinstance(kart, dict) else None
+    if not isinstance(kayitlar, list) or not kayitlar:
+        return {"calisti": False, "neden": "kartta rename_siniri yok"}
+    if guncel_uyeler is None:
+        return {"calisti": False, "neden": "güncel liste sağlanmadı (--guncel-liste) — as_of hesaplanamaz"}
+    gu = {_tick(s) for s in guncel_uyeler if _tick(s)}
+    a_t1 = as_of(degisiklikler, gu, t1)
+    a_bugun = as_of(degisiklikler, gu, bugun)
+    detay = [
+        {"eski": r["eski"], "yeni": r["yeni"], "tarih": r.get("tarih"),
+         "as_of_t1_eski_var": r["eski"] in a_t1, "as_of_t1_yeni_var": r["yeni"] in a_t1,
+         "as_of_bugun_eski_var": r["eski"] in a_bugun, "as_of_bugun_yeni_var": r["yeni"] in a_bugun}
+        for r in kayitlar
+    ]
+    return {"calisti": True, "detay": detay}
+
+
+# ======================================================================================
+# KART İÇ TUTARLILIĞI (EDG-076, adım-0 (b)) — bilinen ≤ bugün, gelecek > bugün
+# ======================================================================================
+
+def kart_ic_tutarliligi(kart: dict | None, bugun: str) -> dict:
+    """Kart adım-0(b): `bilinen_olaylar`daki HER tarih `bugun`e eşit ya da öncesi, `gelecek_olaylar`
+    daki HER tarih `bugun`den KESİNLİKLE SONRA olmalı — değilse kart-veri hatası (EDG-076 önsözü:
+    EDG-075'in K1 kalışları TAM DA böyle bir kart hatasıydı; bu betik BOZUK KARTI ÇALIŞTIRMADAN
+    yakalar, §5 'kart bir artefaktı donduruyorsa... ağaç değişir kart sessizce ölmez' ruhu)."""
+    ihlaller: list[str] = []
+    bilinen = kart.get("bilinen_olaylar") if isinstance(kart, dict) else None
+    if isinstance(bilinen, list):
+        for o in bilinen:
+            t = o.get("tarih")
+            if t and t > bugun:
+                ihlaller.append(f"bilinen_olaylar: {o.get('sembol')} tarihi {t} > bugün {bugun}")
+    gelecek = kart.get("gelecek_olaylar") if isinstance(kart, dict) else None
+    if isinstance(gelecek, list):
+        for o in gelecek:
+            t = o.get("tarih")
+            if t and t <= bugun:
+                ihlaller.append(f"gelecek_olaylar: {o.get('sembol')} tarihi {t} <= bugün {bugun}")
+    return {"gecerli": len(ihlaller) == 0, "ihlaller": ihlaller}
 
 
 # ======================================================================================
@@ -478,7 +644,15 @@ def pozitif_kontrol(html: str, bugun: str, olaylar: list[dict] = BILINEN_OLAYLAR
 # ADIM-0 FİZİBİLİTE (kart `adim_0_fizibilite`)
 # ======================================================================================
 
-def adim0(html: str, girdi_kimligi: dict, bugun: str | None = None) -> dict:
+def adim0(html: str, girdi_kimligi: dict, bugun: str | None = None,
+         beklenen_sha: str | None = None, kart: dict | None = None) -> dict:
+    """`a`-`d`: EDG-075'in ORİJİNAL kriterleri (tablo okunuyor mu / oldid sabit mi / pencere ≥100
+    satır mı / tüm tarihler ayrıştı mı) — hâlâ RAPORLANIR, hiçbir sürümde tek başına K1/K2/PK'yi
+    KAPATMADI (bu tiny sentetik test fikstüründe `c_yeterli_100_ustu` zaten False'tur — GERÇEK
+    tam sayfada değil). `e`/`f`: EDG-076 EKLERİ — `--beklenen-sha` verilip ham dosyanın GERÇEK
+    sha256'sıyla eşleşmiyorsa YA DA kart iç tutarsızsa (`kart_ic_tutarliligi`) genel `gecerli`
+    FALSE'a düşer + `neden` yazılır (yalnız BU İKİ yeni kriter `gecerli`ye KATILIR — modül başlığı
+    EDG-2026-076 EKLERİ (d))."""
     bugun = bugun or dt.date.today().isoformat()
     idx, df, meta = hedef_tablo_bul(html)
     a_okunuyor = idx is not None
@@ -486,12 +660,30 @@ def adim0(html: str, girdi_kimligi: dict, bugun: str | None = None) -> dict:
     pencere = pencereye_kirp(degisiklikler, bitis=bugun)
     c_yeterli = len(pencere) >= 100
     d_hepsi_ayristi = bool(degisiklikler) and all(r["tarih"] for r in degisiklikler)
+
+    sha_hesaplanan = hashlib.sha256(html.encode("utf-8")).hexdigest()
+    sha_esit_mi = None if beklenen_sha is None else (sha_hesaplanan == beklenen_sha)
+    tutarlilik = kart_ic_tutarliligi(kart, bugun) if isinstance(kart, dict) else {"gecerli": True, "ihlaller": []}
+
+    nedenler: list[str] = []
+    if not a_okunuyor:
+        nedenler.append("hedef değişiklik tablosu bulunamadı")
+    if not girdi_kimligi.get("oldid"):
+        nedenler.append("girdi oldid ile sabitlenmemiş")
+    if sha_esit_mi is False:
+        nedenler.append(f"--beklenen-sha uyuşmuyor: beklenen={beklenen_sha} hesaplanan={sha_hesaplanan}")
+    if not tutarlilik["gecerli"]:
+        nedenler.extend(tutarlilik["ihlaller"])
+
+    gecerli = bool(a_okunuyor and girdi_kimligi.get("oldid") and sha_esit_mi is not False and tutarlilik["gecerli"])
     return {"a_tablo_okunuyor": a_okunuyor, "a_meta": meta,
             "b_oldid_ile_sabit": bool(girdi_kimligi.get("oldid")),
             "c_pencere_n": len(pencere), "c_yeterli_100_ustu": c_yeterli,
             "d_tum_tarihler_ayristi": d_hepsi_ayristi,
             "d_ayristirilamadi_n": sum(1 for r in degisiklikler if not r["tarih"]),
-            "gecerli": bool(a_okunuyor and girdi_kimligi.get("oldid") and c_yeterli)}
+            "e_sha_beklenen": beklenen_sha, "e_sha_hesaplanan": sha_hesaplanan, "e_sha_esit_mi": sha_esit_mi,
+            "f_kart_ic_tutarli": tutarlilik["gecerli"], "f_kart_ic_tutarli_ihlaller": tutarlilik["ihlaller"],
+            "gecerli": gecerli, "neden": None if gecerli else "; ".join(nedenler)}
 
 
 # ======================================================================================
@@ -499,14 +691,30 @@ def adim0(html: str, girdi_kimligi: dict, bugun: str | None = None) -> dict:
 # ======================================================================================
 
 def olc(html: str, esikler: dict, girdi_kimligi: dict, guncel_uyeler: list[str] | None,
-       bugun: str | None = None, t1: str = "2026-06-01") -> dict:
+       kart: dict | None = None, bugun: str | None = None, t1: str = "2026-06-01",
+       beklenen_sha: str | None = None) -> dict:
+    """`kart` EDG-076 EKLERİ: `kart_yukle` ile okunmuş TAM kart sözlüğü (`None`/kart taşımıyorsa
+    boş sözlük sayılır — `k1_olaylari_ve_beyan` EDG-075 fallback'ine düşer). `adim_0_fizibilite.
+    gecerli` False İSE (sha uyuşmazlığı ya da kart iç tutarsızlığı) K1/K1n/K2/pozitif_kontrol
+    KOŞMAZ, dört alan `None` yazılır — `rename_siniri_raporu` bu kapının DIŞINDA (K değil, kart
+    notu). Sonuç HER durumda üretilir (Yasa 6 — modül başlığı EDG-2026-076 EKLERİ (d))."""
     bugun = bugun or dt.date.today().isoformat()
+    kart = kart if isinstance(kart, dict) else {}
     degisiklikler, meta = tabloyu_ayristir(html)
     pencere = pencereye_kirp(degisiklikler, bitis=bugun)
-    a0 = adim0(html, girdi_kimligi, bugun=bugun)
-    k1 = k1_bilinen_olaylar(pencere)
-    k2 = k2_as_of_yeniden_kurulum(degisiklikler, guncel_uyeler, t1, bugun, bugun)
-    pk = pozitif_kontrol(html, bugun)
+    a0 = adim0(html, girdi_kimligi, bugun=bugun, beklenen_sha=beklenen_sha, kart=kart)
+    olaylar, kart_beyan_n = k1_olaylari_ve_beyan(kart)
+
+    if a0["gecerli"]:
+        k1 = k1_bilinen_olaylar(pencere, olaylar, kart_beyan_n=kart_beyan_n)
+        k1n = k1n_gelecek_olaylar(degisiklikler, kart, guncel_uyeler, bugun)
+        k2 = k2_as_of_yeniden_kurulum(degisiklikler, guncel_uyeler, t1, bugun, bugun)
+        pk = pozitif_kontrol(html, bugun, olaylar)
+    else:
+        k1 = k1n = k2 = pk = None       # adim_0_fizibilite.neden'de GEREKÇE var (Yasa 6, uydurma yok)
+
+    rename_raporu = rename_siniri_raporu(degisiklikler, kart, guncel_uyeler, t1, bugun)
+
     return {
         "kart": esikler.get("kart_id"), "olcum_zamani": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "girdi_kimligi": girdi_kimligi,
@@ -514,7 +722,9 @@ def olc(html: str, esikler: dict, girdi_kimligi: dict, guncel_uyeler: list[str] 
         "adim_0_fizibilite": a0,
         "degisiklikler_n_pencere": len(pencere),
         "k1_bilinen_olaylar": k1,
+        "k1n_gelecek_olaylar": k1n,
         "k2_as_of_yeniden_kurulum": k2,
+        "rename_siniri_raporu": rename_raporu,
         "pozitif_kontrol": pk,
         "esikler": esikler,
         "beyan": ("Bu betik yalnız ÖLÇER; hüküm Rol-1'de, AYNI turda karta + K defterine işlenir "
@@ -528,15 +738,17 @@ def olc(html: str, esikler: dict, girdi_kimligi: dict, guncel_uyeler: list[str] 
 # ======================================================================================
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="EDG-2026-075 S&P 500 tarihsel bileşenler PIT kaynağı ölçümü")
+    ap = argparse.ArgumentParser(description="EDG-2026-075/076 S&P 500 tarihsel bileşenler PIT kaynağı ölçümü "
+                                              "(EDG-076: karttan K1 olay kümesi + K1n gelecek-olay + rename raporu + --beklenen-sha)")
     ap.add_argument("--cek", action="store_true", help="Wikipedia'yı oldid ile sabitleyerek çeker (AĞ — Rol-1)")
-    ap.add_argument("--olc", action="store_true", help="ham HTML'i ayrıştırır + K1/K2/PK ölçer (AĞ YOK)")
+    ap.add_argument("--olc", action="store_true", help="ham HTML'i ayrıştırır + K1/K1n/K2/PK ölçer (AĞ YOK)")
     ap.add_argument("--oldid", type=int, default=None, help="--cek: belirli bir revizyonu çek (varsayılan: güncel)")
     ap.add_argument("--girdi", default=None, help="--olc: ham HTML yolu (varsayılan: ham/ altında en yeni dosya)")
-    ap.add_argument("--kart", default=str(KART_YOLU), help="kart yolu (varsayılan EDG-2026-075)")
-    ap.add_argument("--guncel-liste", default=None, help="K2 için güncel üyelik JSON'u (liste[str])")
-    ap.add_argument("--bugun", default=None, help="K2/pencere referans tarihi (ISO) — varsayılan bugün")
+    ap.add_argument("--kart", default=str(KART_YOLU), help="kart yolu (varsayılan EDG-2026-075; EDG-076 için --kart ile verilir)")
+    ap.add_argument("--guncel-liste", default=None, help="K2/K1n/rename-raporu için güncel üyelik JSON'u (liste[str])")
+    ap.add_argument("--bugun", default=None, help="K2/pencere/K1n/kart-tutarlılığı referans tarihi (ISO) — varsayılan bugün")
     ap.add_argument("--t1", default="2026-06-01", help="K2 simetrik-fark başlangıcı (kart örneği: 2026-06-01)")
+    ap.add_argument("--beklenen-sha", default=None, help="EDG-076: ham dosyanın beklenen sha256'sı — eşleşmezse ölçüm geçersiz, K1/K1n/K2/PK koşmaz")
     ap.add_argument("--cikti", default=str(SANDBOX / "sonuc.json"), help="sonuc.json çıktı yolu")
     a = ap.parse_args(argv)
 
@@ -566,8 +778,10 @@ def main(argv: list[str] | None = None) -> int:
 
     html = girdi_yolu.read_text(encoding="utf-8")
     esikler = esikleri_karttan_oku(pathlib.Path(a.kart))
+    kart = kart_yukle(pathlib.Path(a.kart))
     guncel_uyeler = json.loads(pathlib.Path(a.guncel_liste).read_text()) if a.guncel_liste else None
-    sonuc = olc(html, esikler, girdi_kimligi, guncel_uyeler, bugun=a.bugun, t1=a.t1)
+    sonuc = olc(html, esikler, girdi_kimligi, guncel_uyeler, kart, bugun=a.bugun, t1=a.t1,
+               beklenen_sha=a.beklenen_sha)
     cikti = json.dumps(sonuc, ensure_ascii=False, indent=2, sort_keys=True, default=str)
     pathlib.Path(a.cikti).write_text(cikti + "\n", encoding="utf-8")
     print(f"yazıldı: {a.cikti}")
