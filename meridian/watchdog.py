@@ -32,6 +32,13 @@ import datetime as dt
 import threading
 
 from . import store
+# ADLANDIRMA: `olaylar` KELİMESİ bu dosyada ONLARCA fonksiyonun PARAMETRE adıdır (ham olay
+# listesini taşıyan yerel değişken/parametre — `conservation_report(olaylar=...)`,
+# `parity_report(olaylar=...)`, `_olay_satirlari(olaylar=...)` vb.). `meridian.olaylar` modülünü
+# düz adıyla import etmek bu fonksiyonların İÇİNDE modülü SESSİZCE gölgelerdi (AttributeError ile
+# gürültülü düşerdi, ama yine de KAFA KARIŞTIRICI olurdu) — TEK çağıran (`integrity_report`nin
+# paylaşılan okuması) için fonksiyon doğrudan takma adla alınır.
+from .olaylar import tum_olaylar as _tum_olaylar_birlesik
 
 BEATS_FILE = "mechanism_beats.json"
 _BEAT_LOCK = threading.Lock()   # canlıda görüldü: scheduler + hermes iş parçacıkları aynı dosyayı
@@ -1689,16 +1696,28 @@ def integrity_report(persist: bool = False) -> dict:
                     "olculemedi": True, "error": f"{type(e).__name__}: {e}"}
 
     try:
-        _ham = store.read_jsonl("events.jsonl")
+        # TSK-137b (2026-09-05): `store.read_jsonl` DEĞİL `olaylar.tum_olaylar()` — kırpma
+        # (`ops/olay_sikistir.py --kirp`) sonrası jsonl yalnız cari+önceki ayı taşır; bu okuma
+        # dedektörlerin PAYLAŞTIĞI TEK kaynaktır (bkz. altındaki gerekçe) ve "tüm tarih" hükmü
+        # veren dedektörler (`monotonicity` uzunluk sayacı, `events_since` çağıranları) kırpma
+        # sonrası da AYNI SONUCU almalı — imza/çıktı şeması DEĞİŞMEDİ (liste-of-dict, aynen).
+        _ham = _tum_olaylar_birlesik()
     except Exception as e:
         # PAYLAŞILAN OKUMANIN ARIZASI YEDİ DEDEKTÖRÜ BİRDEN DÜŞÜREMEZ (yalıtım ilkesi burada da
         # geçerli): okuma düşerse `None` bırakılır ve her dedektör bugüne kadarki gibi KENDİ
         # okumasını yapar — o zaman düşen dedektör tek başına düşer. Hız kaybı, yalıtım kaybından
         # ucuzdur. Sessiz de kalmaz: "yavaş yola düşüldü" ölçülebilir bir olgudur.
+        #
+        # BEDEL (TSK-137b): bu geri düşüş yolu `_olay_satirlari`nin KENDİ `store.read_jsonl`
+        # çağrısına gider (aşağıdaki fonksiyon) — birleşik görünüme DEĞİL. Yani paylaşılan okuma
+        # düşerse dedektörler kırpılmış jsonl'i TEK BAŞINA görür (arşivsiz); bu, ölçülmüş ama
+        # kabul edilmiş ikinci bir bedeldir — "hız kaybı" ile birlikte "kapsam kaybı" da olur,
+        # ancak bu yalnız PAYLAŞILAN OKUMANIN KENDİSİ düştüğünde (nadir, uyarılı) devreye girer.
         _ham = None
         from . import obs
         obs.warn("integrity_shared_events_read_failed", error=f"{type(e).__name__}: {e}",
-                 detail="dedektörler kendi okumasına düştü — hüküm aynı, tur yalnızca yavaş")
+                 detail="dedektörler kendi okumasına düştü — hüküm aynı, tur yalnızca yavaş "
+                        "(ve kırpılmışsa arşivsiz — bkz. kod yorumu)")
     _PAYLASIM.olaylar = _ham
     try:
         _par = _tut("parity", parity_report)  # ÖNCE — persist'li üçlü tabanı yazmadan ÖNCE düşsün

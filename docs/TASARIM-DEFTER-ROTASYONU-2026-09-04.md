@@ -7,12 +7,32 @@ Durum: H1 TASLAK (Rol-1; keşif Explore ajanı 2026-09-04 15:0xZ, bütün sayıl
 | Defter (A1, 2026-09-04) | Boyut | Yazar | Günlük hacim |
 |---|---|---|---|
 | `state/events.jsonl` | 26,5 MB (~31 k satır) | `obs._emit` (worker 12 sn'de bir) | ~536 satır/gün ort., pik 7.256 (tek `hotstate_down` seli) — yerel ölçüm |
-| `state/intraday_decisions.jsonl` | 19 MB | `intraday_cycle.IntradayConsumer._handle_symbol` (kapanan 1-dk bar × sembol) | ölçülmedi (bu belgede açık kalem) |
+| `state/intraday_decisions.jsonl` | 18,9 MB (51.088 satır) | `intraday_cycle.IntradayConsumer._handle_symbol` (kapanan 1-dk bar × sembol) | 887–3.679 satır/gün, trading günü (son 30 gün, A1 ölçümü 2026-09-05; hafta sonu ~0) — bkz. §1a |
 | `state/validation_ledger.jsonl` | 1,08 MB / 398 satır | `validation.record_candidate` (learn kapalı — son yazım 2026-08-21) | 1–5 satır/gün → TSK-128, aciliyet düşük |
 
 `store.read_jsonl(name, limit=N)` dosya-yolu dalında dosyanın TAMAMINI okuyup ayrıştırır, `limit`i sonda `rows[-limit:]` ile uygular
-(seek-from-end YOK). SQLite yolu (`storage.read_rows`, 6 varlık: trades/trade_plans/scoreboard/portfolio/equity_curve/shadow_books)
+(seek-from-end YOK — TSK-137a bu satırı `events.jsonl`/`limit` verilen okuyucular için kuyruk-okumaya çevirdi, 2026-09-04; `limit=None`
+dalı DEĞİŞMEDİ). SQLite yolu (`storage.read_rows`, 6 varlık: trades/trade_plans/scoreboard/portfolio/equity_curve/shadow_books)
 gerçek kuyruk okur (`ORDER BY seq DESC LIMIT`) — events/intraday_decisions o yolda DEĞİL.
+
+### 1a. K3 ölçümü — `intraday_decisions.jsonl` + `intraday_shadow_orders.jsonl` (A1, 2026-09-05, salt-okunur ssh)
+
+TSK-137b K3 kararı: bu dilimde YALNIZ ÖLÇÜM — kırpma kararı SONRA (ayrı kart/onay gerektirir).
+
+| Defter | Satır | Bayt | İlk/son ts (A1) | Gün başına satır (son 30 gün, trading günü) |
+|---|---|---|---|---|
+| `intraday_decisions.jsonl` | 51.088 | 19.811.977 (~18,9 MB) | 2026-07-30T13:31 → 2026-09-04T19:59 | min 887 (2026-08-13) · maks 3.679 (2026-08-20) · ort. ~2.070 — hafta sonu günleri 0 satır (defterde hiç yok) |
+| `intraday_shadow_orders.jsonl` | 18 | 24.193 (~24 KB) | — (satır şeması `decision_as_of`/`bar_t`/`close_ts` taşır, üst-seviye `ts` YOK — Faz 4b saha açlığı, bilinen durum) | ölçülemez (18 satır toplam, günlük dağılım anlamsız) |
+
+**Okuyucu envanteri (grep, `meridian/` + `ops/`):**
+
+| Okuyucu | Defter | `limit` | Kadans/kullanım |
+|---|---|---|---|
+| `health.faz6_kilitleri` | `intraday_decisions.jsonl` + `intraday_shadow_orders.jsonl` | YOK (tam okuma) | `/api/diagnostics` gövdesi (Faz 6 kilit sayaçları) |
+| `api.py` (`_idec`/`_ishadow`, Faz 4 özeti) | aynı iki defter | YOK (tam okuma) | AYNI `/api/diagnostics` gövdesinde, `health.faz6_kilitleri`DEN BAĞIMSIZ İKİNCİ bir tam okuma — aynı dosya istek başına İKİ KEZ baştan sona ayrıştırılıyor |
+| `watchdog.intraday_stamp_report` | `intraday_decisions.jsonl` + `intraday_shadow_orders.jsonl` + `intraday_shadow_planli_orders.jsonl` | `sample=500` (SINIRLI) | look-ahead damga denetimi — bu ZATEN `limit=None` DEĞİL, kapsam dışı |
+
+BEDEL BUGÜN: `intraday_decisions.jsonl` her `/api/diagnostics` çağrısında (45 sn önbellek arkasında, cache-miss'te) EN AZ iki kez tam ayrıştırılıyor — 51k satır × 2. Büyüme oranı (887–3.679 satır/gün) `events.jsonl`in ölçülen ort. 536 satır/gününden 2-7× daha hızlı; kırpma kararı ertelenirse bu defter `events.jsonl`den ÖNCE tekrar büyük-dosya sorununa döner. K3 kapsamı bu ölçümle KAPANDI; kırpma mekanizması (aynı `olay_sikistir`/`tum_olaylar` deseni, defter-parametrik hâle getirilmiş) ayrı bir karar/kart gerektirir (bkz. §4).
 
 ## 2. Okuyucu envanteri (events.jsonl) — bedel = tam dosya × sıklık
 
