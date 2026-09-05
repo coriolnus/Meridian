@@ -2636,3 +2636,9 @@ constituents'e tarihsel tablo kaynağını, oldid/sha meta damgasını, EQR→VM
 250 hedefli + codelaw çürük 0. Ajan brief'teki iki iddiayı ÇÜRÜTTÜ ve dürüst yazdı: `as_of_pit_durumu`'nun api okuyucusu yok; pitlaw türetme
 kuralı bu kayıt üzerinde işlemiyor (as_of'un üretim çağıranı yok) → sınıf dokunulmadı, dilim-2'ye. Dilim-2: as_of tüketicisi (replay evreni)
 + pitlaw kararı + okuyucu. Sırada: tam suite (ağaç donuk), push, hafta sonu dağıtımı #19.
+
+**Suite #27 (acaf974, -n 4, 11,3 dk): 10495 passed / 1 failed** — v217 `test_p95_dongu_suresi_kart_tavanini_ASMIYOR` (bilinen p95 flake, #17/#26
+emsali), seri 24/24 yeşil → hüküm yeşil, push. **DAĞITIM #19 (acaf974, 17:15:07Z, Cumartesi — piyasa kapısı yok):** dry-run temiz (F9 birebir,
+F10 anomali yok), healthz 200, [5b/5] kod-tazelik ✓, beyan bayt-özdeş. Canlıya giden: TSK-156 dilim-1 (tarihsel tablo kaynağı + rename eşleme +
+oldid/sha meta), EDG-075/076 ölçüm kodu (research), v420–v422. Önbellek tazelenmesi (changes_kaynak → wikipedia_historical_components,
+changes_meta.oldid) ilk günlük evren denetiminde (`loop._universe_drift_check`) okunacak; bugün canlı önbellek hâlâ 09-04 damgalı, 11 eski satır.
