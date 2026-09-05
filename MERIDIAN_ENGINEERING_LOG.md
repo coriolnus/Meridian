@@ -2685,3 +2685,8 @@ seçimi. Bugün 10:33Z'den beri botlar/review/backfill/nous'un tamamı 502 idi. 
 düşük — v361 'hepsi ücretsiz' korunur), v361 zincir beklentisi güncellendi (aae8c5e), DAĞITIM #20 (ebe5c8b 18:52Z; EDG-042 #4 artefaktı ve docs
 dahil), A1 `apisix_uygula --uygula` 8 PUT 200 + `--denetle` drift 0; kanarya 200 minimax 'MiniMax-M3 (Hermes); 17*3=51'. Hafta sonu kapı trafiği
 artık kotaya takılmaz; nemotron kova yenilenince yine birincil.
+
+**19:08Z — TSK-150 (b) UYGULANDI (A1 bakım penceresi, Cumartesi):** ajan betiği (d50c6fc → merge 5c913c4; v424 18, iki mutasyon ısırdı; ledgerstamp
+id'yi kapsamıyor — ölçüldü) A1'e kopyalandı; worker 19:07:55Z durduruldu; kuru → uygula (yedek backups/) → kontrol rc 0 → worker aktif, healthz 200.
+901/901 tekil id; canlı 16 satır T00886…T00901 (seq ile hizalı), tohum byte-eşit; eşleme defteri 16 satır. Sıradaki kimlik T00902 (loop sayacı
+defterin maksimumundan).
