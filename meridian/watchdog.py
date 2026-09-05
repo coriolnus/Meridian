@@ -4165,7 +4165,7 @@ def check_veri_disk_and_alarm() -> dict:
 # Dördü YİNE DE AYRI AYRI birleştirilir (tek-kaynak yasası: bu eşitlik BUGÜNÜN bir GÖZLEMİdir, bir
 # SÖZLEŞME değil — `REPLAY_UNIVERSE`in "her EVREN_DISI_BEYANLI sembolü içerir" garantisi hiçbir
 # yerde ZORLANMIYOR). `RETIRED_SYMBOLS` `REPLAY_UNIVERSE`den YAPISAL OLARAK ÇIKARILMIŞTIR
-# (`test_evren_emekliligi_v134.py::kesisim` boş kümedir) — onu ayrıca eklemek TEK gerçek katkı;
+# (`test_evren_emekliligi_v134.py::test_emekli_evrenle_kesismez` kesişimi boş tutar) — onu ayrıca eklemek TEK gerçek katkı;
 # `EVREN_DISI_BEYANLI`yi ayrıca eklemek bugün redundant ama BEDEL BEYANININ TAM KAPATTIĞI kör
 # noktayı (yarın biri REPLAY_UNIVERSE'den çıkarılıp beyanlı listede YALNIZ kalırsa bile taranmaya
 # devam etmesi) yapısal olarak garantiler.
