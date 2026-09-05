@@ -2583,3 +2583,5 @@ Gece: 22:04Z şef (kotasız), 00:02Z kanary (EDG-074 K1), 00:03Z free-router son
 (28.404 / 55.779 satır; 221 KB / 510 KB — ~50× sıkışma); worker durdur → `--kirp` 2026-07 düşürüldü: 26,9 MB → 17,6 MB; manifest damgalı;
 worker 8 sn'de aktif, healthz 200; birleşik görünüm Temmuz'u parquet'ten veriyor (28.404). jsonl'de kalan 36 "2026-07" grep eşleşmesi iç içe
 alanlardan (`last_learn.ts`) — sahte pozitif. TSK-060: soru kümesi 09-01'de zaten donuk (blob 89cd1e0); sıradaki arşiv ingest r3 → kıyas.
+
+**DAĞITIM #17 (7160154, 14:47:05Z):** TSK-155 + docs; ilk dry-run [0b] uv audit ağ zaman aşımı (api.osv.dev — bugün GitHub ssh'ta da), tekrar temiz; [5a] 3/3 ✓. ROADMAP'te TSK-155 girdisi hiç doğmamıştı ('[TSK-155]' atfı 137 notunda geçince ekleme kapısı sessiz atladı — TSK-138'deki aynı hata; hafıza notu, başlık regex'iyle kontrol) → 7160154'te eklendi.
