@@ -2619,3 +2619,9 @@ yürürlük tarihli (SOLV 04-01/VFC 04-03 2024 · KKR/RHI CRWD/CMA GDDY/ILMN 202
 LITE/MOH COHR/LW SATS/PAYC 2026-03-23 · HONA 06-29 / CAG 06-30 · FERG/EA 08-05 · RDDT/AVB 08-18) + 6 gelecek olgu (09-21, K1n: tabloda
 yürürlük satırı OLMAMALI) + rename EQR→VMRK yalnız rapor. Everpure'un tickerı gerçekten 'P'. Girdi aynı sha (ağsız). Betik olay
 kümesini karttan okuyacak (ajan).
+
+**16:12Z — TSK-126 tasarım belgesi (operatör 09-03: "tasarım kalemi aç"):** docs/TASARIM-SKILL-GORUS-TERFISI-2026-09-05.md. Ölçülen zemin:
+terfi bugün yalnız `rapor().terfi_adaylari` listesi (okuyucu pano Eksen-2); canlı karar noktaları `candidates.sort(score)` ve strategy çıkış
+kuralları; emsaller LLM terfi kuralı (yetki uykuda), SKILL_GORUS_URETIM_ACIK bayrak+kart kaydı (v278), faz5_cikis gölge sınırı, dormant_setup
+dersi. Tasarım: yedi şart (Z1–Z7), Aşama A gölge sıralama kolu (Δrank-IC, üst-N kesişimi bedeli, pencere sayacı borcu) → Aşama B sınırlı
+ağırlık (bayrak + ship kapısı + 2 pencere). Kod yok; 4 karar Masa'da. EDG-076 ajanı uçuşta (worktree).
