@@ -2690,3 +2690,8 @@ artık kotaya takılmaz; nemotron kova yenilenince yine birincil.
 id'yi kapsamıyor — ölçüldü) A1'e kopyalandı; worker 19:07:55Z durduruldu; kuru → uygula (yedek backups/) → kontrol rc 0 → worker aktif, healthz 200.
 901/901 tekil id; canlı 16 satır T00886…T00901 (seq ile hizalı), tohum byte-eşit; eşleme defteri 16 satır. Sıradaki kimlik T00902 (loop sayacı
 defterin maksimumundan).
+
+**19:14Z — TSK-143 kod tamam (merge 0bff82e, henüz push'suz — tam suite bekliyor):** ajan beyanı ikiye ayırdı (4 çıkış / 6 hiç-üye), LIVE 244; v393'ün
+9 assert'i eski hükmü çiviliyordu (SNAP/ROKU örnekleri hiç-üye sınıfında) → operatör kararına göre güncellendi, örnekler gerçek çıkışlara taşındı;
+mutasyon-2'de fixture üretim koduna bağımlıyken mutasyon gizleniyordu → sabit literal (iyi ders). TSK-150 (b) canlıda uygulandı (19:07Z).
+Uçuşta: EDG-078 (motor) ve EDG-079 (research) ajanları.
