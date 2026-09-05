@@ -1,0 +1,112 @@
+# EDG-2026-076 — S&P 500 tarihsel bileşenler PIT kaynağı, DOĞRULANMIŞ olay kümesiyle yeniden ölçüm — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-05 16:06Z (Rol-1) — EDG-2026-075'in K1'i KALDI (7/14) ama kalış sınıfı KART-VERİ HATASIYDI: (1) EQR→VMRK
+# ticker yeniden-adlandırması giriş/çıkış sayılmıştı (S&P DJI 2026-08-13: "post merger ... renamed Vivmark Residential (VMRK)
+# and will remain in the S&P 500"); (2) MTCH (03-09) ve VFC (04-01) tarihleri duyuru/çift-olay birleştirme hatasıydı (yürürlük
+# 03-23 ve 04-03); (3) BE/P/ILMN "2026-09-04" DUYURU tarihiydi (yürürlük 2026-09-21). §5: ölçümle çürüyen ölçüt yerinde
+# düzeltilmez → bu kart. Olay kümesi bu kez Wikipedia'dan BAĞIMSIZ kaynaktan — S&P DJI basın bültenleri (press.spglobal.com /
+# prnewswire) — YÜRÜRLÜK ("effective prior to the open") tarihleriyle yazıldı; her satırın bülten URL'si aşağıda. Girdi AYNI
+# içerik-adresli HTML (oldid 1370891103, sha256 9909032c1f815a01…dcd2871) — ağsız yeniden ölçüm. Eşikler ölçümden ÖNCE donuk.
+
+card_id: EDG-2026-076
+status: registered   # 2026-09-05 Rol-1 — ön-kayıt; ölçüm betiği karttan olay kümesi okuyacak (ajan dilimi), sonra Rol-1 --olc
+family: evren_pit
+on_kayit: 2026-09-05
+ref: [TSK-156, EDG-2026-075, TSK-154, TSK-143, TSK-066]
+
+hipotez: >
+  EDG-075 ile aynı: Wikipedia 'Historical components of the S&P 500' tablosu S&P 500 üyelik değişikliklerini yürürlük
+  tarihiyle EKSİKSİZ verir. Ek iddia: EDG-075'teki 7 K1 kalışının hepsi kartın olay kümesinden kaynaklanıyordu — S&P DJI
+  bültenlerinden yürürlük tarihiyle kurulan 28 olgunun tamamı tabloda ±1 iş günü ve doğru yönle bulunur; henüz yürürlüğe
+  girmemiş 6 olgu (2026-09-21) tabloda yürürlük satırı olarak GÖRÜNMEZ ve as_of(2026-09-05) onları taşımaz.
+
+k_registry: {registered_at: "2026-09-05", trial_ids: [EDG-076-k1-dogrulanmis-olaylar, EDG-076-k1n-gelecek-olaylar, EDG-076-k2-as-of-yeniden-kurulum]}
+# K=3. K1: 28 doğrulanmış olgu (aşağıdaki bilinen_olaylar). K1n: 6 gelecek olgu (gelecek_olaylar) — tabloda yürürlük satırı
+#      YOK + as_of(bugün) çıkanları İÇERİR, girenleri İÇERMEZ. K2: EDG-075 K2'nin aynısı (aynı girdi; kayıt için yinelenir).
+# PK hücresi K'ya sayılmaz. Rename (EQR→VMRK 2026-08-18, SEC 8-K) K DEĞİL: 'rename_siniri' alanı olarak yalnız RAPORLANIR
+# (as_of(2026-06-01) 'EQR' mi 'VMRK' mi diyor — kaynak sınırı ölçümü, eşik yok).
+
+bilinen_olaylar:   # sembol · yon (giris|cikis) · tarih = S&P DJI YÜRÜRLÜK tarihi · kaynak = bülten (Wikipedia DEĞİL)
+  - {sembol: SOLV, yon: giris, tarih: "2024-04-01", kaynak: "S&P DJI 2024-03-27 prnewswire 302101773 (3M spin-off; SOLV in Apr 1)"}
+  - {sembol: VFC,  yon: cikis, tarih: "2024-04-03", kaynak: "S&P DJI 2024-03-27 prnewswire 302101773 (VFC → SmallCap 600 Apr 3)"}
+  - {sembol: KKR,  yon: giris, tarih: "2024-06-24", kaynak: "S&P DJI 2024-06-07 press.spglobal.com (replaces RHI)"}
+  - {sembol: RHI,  yon: cikis, tarih: "2024-06-24", kaynak: "S&P DJI 2024-06-07 press.spglobal.com"}
+  - {sembol: CRWD, yon: giris, tarih: "2024-06-24", kaynak: "S&P DJI 2024-06-07 press.spglobal.com (replaces CMA)"}
+  - {sembol: CMA,  yon: cikis, tarih: "2024-06-24", kaynak: "S&P DJI 2024-06-07 press.spglobal.com"}
+  - {sembol: GDDY, yon: giris, tarih: "2024-06-24", kaynak: "S&P DJI 2024-06-07 press.spglobal.com (replaces ILMN)"}
+  - {sembol: ILMN, yon: cikis, tarih: "2024-06-24", kaynak: "S&P DJI 2024-06-07 press.spglobal.com"}
+  - {sembol: APP,  yon: giris, tarih: "2025-09-22", kaynak: "S&P DJI 2025-09-05 press.spglobal.com (replaces MKTX)"}
+  - {sembol: MKTX, yon: cikis, tarih: "2025-09-22", kaynak: "S&P DJI 2025-09-05 press.spglobal.com"}
+  - {sembol: HOOD, yon: giris, tarih: "2025-09-22", kaynak: "S&P DJI 2025-09-05 press.spglobal.com (replaces CZR)"}
+  - {sembol: CZR,  yon: cikis, tarih: "2025-09-22", kaynak: "S&P DJI 2025-09-05 press.spglobal.com"}
+  - {sembol: EME,  yon: giris, tarih: "2025-09-22", kaynak: "S&P DJI 2025-09-05 press.spglobal.com (replaces ENPH)"}
+  - {sembol: ENPH, yon: cikis, tarih: "2025-09-22", kaynak: "S&P DJI 2025-09-05 press.spglobal.com"}
+  - {sembol: VRT,  yon: giris, tarih: "2026-03-23", kaynak: "S&P DJI 2026-03-06 press.spglobal.com (replaces MTCH)"}
+  - {sembol: MTCH, yon: cikis, tarih: "2026-03-23", kaynak: "S&P DJI 2026-03-06 press.spglobal.com"}
+  - {sembol: LITE, yon: giris, tarih: "2026-03-23", kaynak: "S&P DJI 2026-03-06 press.spglobal.com (replaces MOH)"}
+  - {sembol: MOH,  yon: cikis, tarih: "2026-03-23", kaynak: "S&P DJI 2026-03-06 press.spglobal.com"}
+  - {sembol: COHR, yon: giris, tarih: "2026-03-23", kaynak: "S&P DJI 2026-03-06 press.spglobal.com (replaces LW)"}
+  - {sembol: LW,   yon: cikis, tarih: "2026-03-23", kaynak: "S&P DJI 2026-03-06 press.spglobal.com"}
+  - {sembol: SATS, yon: giris, tarih: "2026-03-23", kaynak: "S&P DJI 2026-03-06 press.spglobal.com (replaces PAYC)"}
+  - {sembol: PAYC, yon: cikis, tarih: "2026-03-23", kaynak: "S&P DJI 2026-03-06 press.spglobal.com"}
+  - {sembol: HONA, yon: giris, tarih: "2026-06-29", kaynak: "S&P DJI 2026-06-23 press.spglobal.com (HONA added Mon Jun 29)"}
+  - {sembol: CAG,  yon: cikis, tarih: "2026-06-30", kaynak: "S&P DJI 2026-06-23 press.spglobal.com (CAG → SmallCap 600 Tue Jun 30)"}
+  - {sembol: FERG, yon: giris, tarih: "2026-08-05", kaynak: "S&P DJI 2026-07-31 press.spglobal.com (replaces EA)"}
+  - {sembol: EA,   yon: cikis, tarih: "2026-08-05", kaynak: "S&P DJI 2026-07-31 press.spglobal.com"}
+  - {sembol: RDDT, yon: giris, tarih: "2026-08-18", kaynak: "S&P DJI 2026-08-13 press.spglobal.com (replaces AVB)"}
+  - {sembol: AVB,  yon: cikis, tarih: "2026-08-18", kaynak: "S&P DJI 2026-08-13 press.spglobal.com"}
+
+gelecek_olaylar:   # duyuru 2026-09-04, YÜRÜRLÜK 2026-09-21 — girdi (2026-09-05 snapshot) bunları yürürlük satırı olarak TAŞIMAMALI
+  - {sembol: BE,   yon: giris, tarih: "2026-09-21", kaynak: "S&P DJI 2026-09-04 prnewswire 302870517 (replaces TAP)"}
+  - {sembol: TAP,  yon: cikis, tarih: "2026-09-21", kaynak: "S&P DJI 2026-09-04 prnewswire 302870517"}
+  - {sembol: P,    yon: giris, tarih: "2026-09-21", kaynak: "S&P DJI 2026-09-04 prnewswire 302870517 (Everpure; replaces TTD)"}
+  - {sembol: TTD,  yon: cikis, tarih: "2026-09-21", kaynak: "S&P DJI 2026-09-04 prnewswire 302870517"}
+  - {sembol: ILMN, yon: giris, tarih: "2026-09-21", kaynak: "S&P DJI 2026-09-04 prnewswire 302870517 (replaces BLDR)"}
+  - {sembol: BLDR, yon: cikis, tarih: "2026-09-21", kaynak: "S&P DJI 2026-09-04 prnewswire 302870517"}
+
+rename_siniri:     # K DEĞİL — yalnız rapor
+  - {eski: EQR, yeni: VMRK, tarih: "2026-08-18", kaynak: "SEC 8-K Vivmark Residential 2026-08-18; S&P DJI 2026-08-13 'will remain in the S&P 500'"}
+
+adim_0_fizibilite: >
+  EDG-075 ADIM-0 aynı girdi üzerinde geçti (2 tablo, 7 sütun eşleşti, 407 satır, 0 hayalet, 0 tarih ayrıştırılamadı, pencere
+  136 satır) — bu kart aynı ham dosyayı kullanır: (a) ham dosya sha256'sı kart başlığındaki değerle EŞİT değilse ölçüm
+  GEÇERSİZ; (b) bilinen_olaylar'daki her tarih ≤ 2026-09-05, gelecek_olaylar'daki her tarih > 2026-09-05 (kart iç tutarlılığı,
+  betik doğrular).
+
+olcum_plani:
+  - "K1: 28 olgunun her biri için tabloda satır var mı, tarih ±1 iş günü içinde mi, yön doğru mu — 28×3 kontrol; eksik/yanlış sayılır"
+  - "K1n: 6 gelecek olgu için tabloda yürürlük satırı VAR MI (olmamalı) + as_of(2026-09-05) çıkanları (TAP/TTD/BLDR) İÇERİYOR, girenleri (BE/P) İÇERMİYOR mu (ILMN: 2024 çıkışı sonrası içermiyor olmalı)"
+  - "K2: as_of(2026-09-05) == güncel liste (A1 sp500_constituents.json 503) VE as_of(2026-06-01)→as_of(2026-09-05) simetrik farkı tabloyla birebir"
+  - "rename_siniri (rapor): as_of(2026-06-01) EQR mi VMRK mi taşıyor; hangisi olursa olsun eşik yok — TSK-156 tasarımına girdi"
+  - "PK (yol-tutarlı): EDG-075 ile aynı — sentetik ZZQ1 (2026-07-01) enjekte: K1 sayısı değişmez, as_of(07-02) içerir / as_of(06-30) içermez"
+
+esikler:
+  k1_gecti: "28/28 olgu satırda VE tarih ±1 iş günü VE yön doğru (26–27/28 'kısmi', <26 kaldı)"
+  k1n_gecti: "6/6: tabloda yürürlük satırı YOK ∧ as_of(2026-09-05) TAP/TTD/BLDR içerir ∧ BE/P/ILMN içermez"
+  k2_gecti: "as_of(2026-09-05) == güncel liste (fark 0) VE T1→T2 farkı tabloyla birebir (fark 0)"
+  # eşikler donuk; sonradan değişmez (yeni eşik = yeni kart)
+
+kill_list:
+  - "ham dosya sha256 ≠ 9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871 → ölçüm GEÇERSİZ (girdi değişti)"
+  - "kart iç tutarlılığı bozuksa (bilinen tarih > 2026-09-05 ya da gelecek tarih ≤ 2026-09-05) → ölçüm koşmaz, kart düzeltilir (yeni kart)"
+  - "K1 < 26/28 → kaynak yetersiz; TSK-156 alternatif kaynağa (S&P DJI bülten kazıma) döner"
+  - "K1n kalırsa (gelecek olay yürürlük satırı olarak görünüyorsa) → tablo duyuru/yürürlük karıştırıyor: PIT sınıfı 'yaklaşık', bağlanmaz"
+  - "PK tutmazsa hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI, EDG-075 ile aynı: aynı ayrıştırıcıya sentetik ZZQ1 (2026-07-01, eklenen) satırı enjekte edilmiş kopya verilir;
+  as_of(2026-07-02) ZZQ1'i içermeli, as_of(2026-06-30) içermemeli; K1 sayımı değişmemeli.
+
+veri_penceresi: "AYNI girdi: Wikipedia oldid 1370891103 (2026-09-05 çekimi, sha256 9909032c…dcd2871, research/olcumler/edg075_sp500_tarihsel/ham/) — 2020-01-01→2026-09-05; kıyas: A1 güncel liste (as_of 2026-09-04, 503) + 28 bülten olgusu + 6 gelecek olgu; ağsız; canlı DEĞİL"
+
+basari_tanimi: >
+  K1 28/28 + K1n 6/6 + K2 fark 0 + PK yeşil → TSK-156 tasarımı: constituents'e ikinci kaynak (oldid/sha damgalı çekim,
+  'Historical components' tablosu) + rename eşleme katmanı (rename_siniri raporuna göre); pitlaw kaydı ('constituents','as_of')
+  'besleyeni açık'a (v341/v342) KOVA B dilimi olarak, kod kart-sonrası. K1 kısmi → eksik olgular şerhli bağlanır. Kaldıysa
+  alternatif kaynak yeni kart.
+
+notlar: >
+  Ölçüm betiği research/olcumler/edg075_sp500_tarihsel/olcum.py — bu kart için olay kümesini KARTTAN okuyacak (bilinen_olaylar /
+  gelecek_olaylar YAML listeleri; EDG-075'in sabit listesi geriye dönük korunur). `--cek` yolu bu ağda Wikimedia robot
+  filtresine takılıyor (httpx 403, curl 200) — girdi zaten diskte, `--girdi` ile verilir. Bülten URL'leri: press.spglobal.com
+  2024-06-07 / 2025-09-05 / 2026-03-06 / 2026-06-23 / 2026-07-31 / 2026-08-13; prnewswire 302101773 (2024-03-27), 302870517
+  (2026-09-04).

@@ -2613,3 +2613,9 @@ notunun kök nedeni bu) → ham HTML curl ile oldid 1370891103 sabitlenerek içe
 fark 0; 06-01→09-05 simetrik fark 11 sembol birebir), PK tuttu, K1 KALDI 7/14 — kartın olay kümesi hatalıydı (EQR→VMRK rename giriş/çıkış
 sayılmış; MTCH/VFC duyuru≠yürürlük; BE/P/ILMN 09-04 duyuru) + gerçek kaynak sınırı: rename satırı yok → sembol-eşleme katmanı. Eşik yerinde
 düzeltilmedi → EDG-076 (doğrulanmış küme, aynı oldid). Kart measured_partial, README, TSK-156 ACTIVE. TSK-095: kova model-bazlı düzeltmesi.
+
+**16:06Z — EDG-2026-076 ön-kayıt:** olay kümesi bu kez Wikipedia'dan BAĞIMSIZ (S&P DJI bültenleri, web araması + bülten okuma): 28 olgu
+yürürlük tarihli (SOLV 04-01/VFC 04-03 2024 · KKR/RHI CRWD/CMA GDDY/ILMN 2024-06-24 · APP/MKTX HOOD/CZR EME/ENPH 2025-09-22 · VRT/MTCH
+LITE/MOH COHR/LW SATS/PAYC 2026-03-23 · HONA 06-29 / CAG 06-30 · FERG/EA 08-05 · RDDT/AVB 08-18) + 6 gelecek olgu (09-21, K1n: tabloda
+yürürlük satırı OLMAMALI) + rename EQR→VMRK yalnız rapor. Everpure'un tickerı gerçekten 'P'. Girdi aynı sha (ağsız). Betik olay
+kümesini karttan okuyacak (ajan).
