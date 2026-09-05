@@ -66,6 +66,12 @@ SHADOW_BOOKS = "shadow_books.json"
 # kalan alanlar (skill_chain, targets, gate_checks, …) extra_json'da yaşar: sözleşme (ledgers.py)
 # onları serbest bırakır ve tipli bir kolona zorlamak şemayı defterin kendisinden daha katı yapardı.
 _COLS: dict[str, tuple[tuple[str, str], ...]] = {
+    # TSK-150(a) (2026-09-05): `trades.id` (`T%05d`) GERÇEK ANAHTAR DEĞİLDİR — gerçek anahtar
+    # `seq` (yukarıdaki DDL: `seq INTEGER PRIMARY KEY`, aşağıda `id TEXT` UNIQUE KISITI YOK).
+    # `id` bir İNSAN ETİKETİDİR ve İLERİ YÖNLÜ TEKİLDİR: `broker.PaperBroker._id` sayacı ile
+    # `loop._load_broker`/`loop._persist_trade`teki çarpışma reddi (TSK-150(a) D1/D2) bundan sonra
+    # üretilen id'lerin tekilliğini korur, ama GEÇMİŞTE (tohum genişletme, last_id gerisi) yazılmış
+    # 16 çift zaten mevcuttur ve bu dilim onları YENİDEN NUMARALAMAZ — operatör kararı bekler.
     TRADES: (
         ("id", "TEXT"), ("plan_id", "TEXT"), ("ticker", "TEXT"), ("side", "TEXT"),
         ("ts_open", "TEXT"), ("ts_close", "TEXT"),

@@ -1247,19 +1247,55 @@ def _universe_drift_check() -> None:
         obs.warn("universe_drift_failed", error=f"{type(e).__name__}: {e}")
 
 
+def _max_trade_num(rows: list[dict]) -> int:
+    """Defterdeki en büyük `T00042` biçimli id NUMARASI (rakam kısmı, `T` HARİÇ); satır yoksa ya
+    da hiçbir id bu biçime uymuyorsa 0.
+
+    TEK KAYNAK (TSK-150(a), 2026-09-05, tek-kaynak yasası): `_load_broker` (D2 — yükleme anında
+    sayaç defterin gerisindeyse yükseltir) VE `_persist_trade` (D1 — yazım anında çarpışma
+    reddeder) AYNI hesaplamayı BURADAN okur; iki kopya olsaydı biri değişince öbürü sessizce
+    ayrışırdı (vaka ×3, CLAUDE.md §4). `id` gerçek anahtar DEĞİLDİR (`storage.py::_COLS[TRADES]`
+    beyanı — gerçek anahtar `seq`), yani burada yalnız İNSAN ETİKETİNİN sayısal kısmı okunur."""
+    maks = 0
+    for r in rows:
+        rid = r.get("id")
+        # UZUNLUK SABİTLENMEZ (yalnız "T" öneki + tamamı rakam): `f"T{n:05d}"` biçimi 100.000.
+        # işlemden sonra 6 karakteri AŞAR — sabit uzunluk kontrolü o günden sonra sessizce 0
+        # katkı verirdi (uydurma değil ama SESSİZ kör nokta olurdu).
+        if isinstance(rid, str) and len(rid) > 1 and rid[0] == "T" and rid[1:].isdigit():
+            n = int(rid[1:])
+            if n > maks:
+                maks = n
+    return maks
+
+
 def _load_broker() -> tuple[PaperBroker, dict]:
     """Kitabı diskten yükler: `(PaperBroker, meta)`.
 
     Nakit, gerçekleşmiş K/Z, son emir kimliği ve açık pozisyonlar `portfolio.json`dan geri kurulur;
     kayma/komisyon hedef sözleşmesinden okunur. Defter yoksa boş bir meta (silahlı küme, bekleyen
-    çıkışlar, gün-başı sermaye) döner — uydurma durum üretilmez."""
+    çıkışlar, gün-başı sermaye) döner — uydurma durum üretilmez.
+
+    TSK-150(a) D2 (2026-09-05): `last_id` yüklendiğinde defterdeki (`trades.jsonl`) GERÇEK en
+    büyük T-numarasıyla kıyaslanır — KEŞİF: tohum 95→885'e genişletilirken `last_id` 95'te
+    kaldı, canlı sayaç T00096'dan devam edip zaten var olan seed id'leriyle çarpıştı (16 çift).
+    Sayaç defterin gerisindeyse (yükleneni AŞAN bir id zaten yazılmışsa) BURADA yükseltilir ve
+    sessiz değil — `obs.warn("trade_id_carpismasi", ...)` (Yasa 4). Sayaç defterden İLERİDEYSE
+    (normal durum) dokunulmaz."""
     goal = config.goal()
     slip = float(goal.get("slippage_bps", 5))
     comm = float(goal.get("commission_per_share", 0.0))
     st = store.read_json(PORTFOLIO, None)
     b = PaperBroker(START_EQUITY, slip, comm)
     if st:
-        b.cash = st["cash"]; b.realized_pnl = st["realized_pnl"]; b._id = st.get("last_id", 0)
+        b.cash = st["cash"]; b.realized_pnl = st["realized_pnl"]
+        last_id = int(st.get("last_id", 0))
+        defter_maks = _max_trade_num(store.read_jsonl("trades.jsonl"))
+        if defter_maks > last_id:
+            obs.warn("trade_id_carpismasi", eski=f"T{last_id:05d}", yeni=f"T{defter_maks:05d}",
+                     sebep="last_id sayacı defterin gerisinde")
+            last_id = defter_maks
+        b._id = last_id
         from .broker import Position
         for t, p in st.get("positions", {}).items():
             b.positions[t] = Position(**p)
@@ -1786,7 +1822,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             # yoktur ve aynadaki bracket'ı hangi emre bağlayacağımızı söyleyen TEK anahtar odur.
             _pid = getattr(b.positions[t], "plan_id", None)
             b.close_position(t, per[t].loc[d, "open"], reason, dstr)
-            _persist_trade(b.closed[-1])
+            _persist_trade(b.closed[-1], broker=b)
             _mirror_exit_enqueue(meta, t, _pid, reason, dstr)
     meta["pending_exits"] = {}
     _mirror_exit_sync(meta, dstr)     # kuyruk + önceki turlardan kalan yeniden denemeler
@@ -2010,7 +2046,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                         eff_intraday)   # bank partial before full exit (stop-first conservatism inside)
             ex = b._touch_exit(b.positions[t], {"open": bar["open"], "high": bar["high"], "low": bar["low"]})
             if ex:
-                b.close_position(t, ex[0], ex[1], dstr); _persist_trade(b.closed[-1])
+                b.close_position(t, ex[0], ex[1], dstr); _persist_trade(b.closed[-1], broker=b)
             else:
                 b.positions[t].bars_held += 1
 
@@ -2762,7 +2798,7 @@ def _marks(per, d):
     return {t: per[t].loc[d, "close"] for t in per if d in per[t].index}
 
 
-def _persist_trade(trade: dict) -> None:
+def _persist_trade(trade: dict, *, broker: PaperBroker | None = None) -> None:
     """Append a closed trade — DEDUPED against recent rows. Trades are appended mid-cycle but broker
     state (the position's existence + last_date) is saved only at cycle end; if the cycle dies in
     between, every 300s retry reloads the old state, re-closes the same position, and would append the
@@ -2772,15 +2808,35 @@ def _persist_trade(trade: dict) -> None:
     KAYNAK DAMGASI: BURASI defterin İLERİ yoludur — bu fonksiyondan geçen her
     satır canlı kâğıt döngünün GERÇEKTEN kapattığı bir işlemdir. Tohum yolu (`run.replay_seed`)
     defterin tamamını tek seferde yazar ve kendi damgasını basar. Damga satır diske DÜŞMEDEN
-    basılır: sonradan damgalamak, damgasız bir aralık doğurur ve bulgu tam olarak o aralıktı."""
+    basılır: sonradan damgalamak, damgasız bir aralık doğurur ve bulgu tam olarak o aralıktı.
+
+    TSK-150(a) D1 (2026-09-05): id ÇARPIŞMA REDDİ — YAZIM ANI ikinci kat (`_load_broker`teki D2
+    yükleme-anı düzeltmesinin TAMAMLAYICISI, aynı süreç içinde defter sayaçtan bağımsız
+    genişlerse D2 onu YAKALAYAMAZ çünkü zaten yüklenmiştir). `trade["id"]` defterde ZATEN
+    varsa (aynı süreç içindeki başka bir satır ya da tohum çarpışması) sayaç defterin GERÇEK
+    maksimumunun bir üstüne sıçrar, id yeniden yazılır ve `broker._id` (verilmişse) BUNDAN
+    SONRAKİ kapanışların tekrar çarpışmaması için ileri alınır — sessiz değil (Yasa 4).
+    ÖLÇÜM (ucuz yol seçimi): varlık kontrolü (`any(...)`) mevcut okumayı (`mevcut`, zaten
+    dedup için tam okunuyor) TEKRAR OKUMADAN paylaşır ve ilk eşleşmede kısa-devre yapar — pahalı
+    tam-maksimum taraması (`_max_trade_num`) YALNIZ çarpışma GERÇEKTEN doğrulanınca çalışır."""
     ledgerstamp.stamp(trade, ledgerstamp.LIVE_PAPER)
+    mevcut = store.read_jsonl("trades.jsonl")
     key = (trade.get("plan_id") or trade.get("ticker"), str(trade.get("ts_close")),
            str(trade.get("exit_reason")), round(float(trade.get("exit") or 0.0), 6))
-    for r in store.read_jsonl("trades.jsonl")[-30:]:
+    for r in mevcut[-30:]:
         if (r.get("plan_id") or r.get("ticker"), str(r.get("ts_close")),
                 str(r.get("exit_reason")), round(float(r.get("exit") or 0.0), 6)) == key:
             obs.warn("duplicate_trade_suppressed", ticker=trade.get("ticker"), ts_close=trade.get("ts_close"))
             return
+    if any(r.get("id") == trade.get("id") for r in mevcut):
+        eski = trade.get("id")
+        yeni_num = _max_trade_num(mevcut) + 1
+        yeni = f"T{yeni_num:05d}"
+        trade["id"] = yeni
+        if broker is not None:
+            broker._id = yeni_num
+        obs.warn("trade_id_carpismasi", eski=eski, yeni=yeni,
+                 sebep="last_id sayacı defterin gerisinde")
     store.append_jsonl("trades.jsonl", trade)
 
 
@@ -3690,7 +3746,7 @@ def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> Non
         sim = float(row.get("exit") or 0.0)
         row["alpaca_fill_price"] = round(float(fiyat), 4)          # GERÇEK dolum — telemetri (1.3 simetriği)
         row["mirror_divergence"] = round(abs(float(fiyat) - sim) / sim, 5) if sim else 0.0
-        _persist_trade(row)
+        _persist_trade(row, broker=broker)
         islendi = True
         # AYNA-KAPATMA KUYRUĞUNA BİLEREK YAZILMAZ (`_mirror_exit_enqueue` yok): pozisyonu aynada
         # kapatan ZATEN koruma dolumu — kuyruğa yazmak var olmayan pozisyonu kapatmaya çalışıp
