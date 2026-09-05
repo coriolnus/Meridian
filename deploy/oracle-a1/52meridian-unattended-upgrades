@@ -1,0 +1,33 @@
+// 52meridian-unattended-upgrades — A1 unattended-upgrades duruşunu BEYANLI dosyaya alır
+// (TSK-149, 2026-09-05). Öncesinde bu duruş hiçbir yerde YAZILI değildi — Ubuntu'nun sessiz
+// varsayılanına yaslanıyordu ve varsayılan yarın değişirse kimse fark etmezdi.
+//
+// ÖLÇÜLDÜ (A1, 2026-09-05 11:3xZ, keşif ajanı): Ubuntu 24.04, unattended-upgrades aktif;
+// Unattended-Upgrade::Automatic-Reboot TANIMSIZ (varsayılan false), Automatic-Reboot-Time
+// tanımsız, Allowed-Origins: noble, noble-security, ESMApps, ESM-infra (-updates YOK),
+// Package-Blacklist BOŞ; 30 günde apt-daily-upgrade 30 koşum hepsi 06:01-06:58Z, 10 kurulum
+// (systemd* 08-11, kernel 08-19, openssl 08-27, openssh 09-04; python3*/docker* HİÇ), meridian
+// birimleri bu kurulumlardan yeniden başlamadı; apt-daily indirmelerinin 15'i piyasa saatinde
+// (CPU 3-7 sn, zararsız).
+//
+// HÜKÜM (Rol-1, TSK-149): Seçenek A — güvenlik yamaları KALSIN, reboot KAPALI; varsayılana
+// yaslanan durum açık beyana çıkar. Seçenek B (kara liste) ve C (tamamen kapat) REDDEDİLDİ.
+//
+// Aşağıdaki iki alan BUGÜNKÜ VARSAYILANI AÇIKÇA YAZAR — davranış DEĞİŞMİYOR, yalnız
+// "varsayılana yaslanma" durumu beyana dönüşüyor:
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Automatic-Reboot-WithUsers "false";
+
+// Allowed-Origins BURADA TEKRARLANMAZ / DEĞİŞTİRİLMEZ — SSoT hâlâ mevcut
+// /etc/apt/apt.conf.d/50unattended-upgrades (noble, noble-security, ESMApps, ESM-infra;
+// -updates YOK, ölçüldü 2026-09-05). Aynı alanı iki dosyada tutmak tek-kaynak yasasını
+// (CLAUDE.md §4) ihlal ederdi; bu dosyanın işi yalnız reboot + kara-liste duruşunu beyan etmek.
+
+// Kara liste BİLİNÇLİ BOŞ (Seçenek B reddedildi, TSK-149): hangi paketin ne zaman kritik bir
+// güvenlik yaması taşıyacağı ÖLÇÜLEMEZ — bugün kara listeye alınan bir paket yarının CVE'sini
+// kaçırır. Kara liste ölçülmemiş risk için ölçülmüş bir bedeldir. Boş küme burada BEYANLA
+// durur, sessiz yoklukla değil.
+Unattended-Upgrade::Package-Blacklist {
+};
+
+// Bakım penceresi: apt-daily-upgrade.timer 06:00Z (systemd varsayılanı; değiştirilmedi)

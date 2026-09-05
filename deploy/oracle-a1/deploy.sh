@@ -92,6 +92,15 @@
 #     UYDURMAK, bakım penceresinde koşan bir betikte ölçülmemiş bir çıkarım olurdu. Sürüklenmeyi
 #     kopya DEĞİL ÇİVİ engelliyor: kapsam `deploy/hermes/profiles/` dizininden TÜRETİLİYOR
 #     (tests/test_bot_profil_durusu_v329.py), yani üçüncü profil bu blokları YAZMADAN eklenemez.
+#   * deploy/oracle-a1/52meridian-unattended-upgrades → /etc/apt/apt.conf.d/52meridian-unattended-upgrades
+#     (TSK-149, 2026-09-05 — Sistem yamaları/unattended-upgrades: A1'in unattended-upgrades
+#     duruşu varsayılana yaslanmaktan BEYANLI dosyaya çıkarılır. Ölçüldü: reboot ayarları
+#     TANIMSIZ [varsayılan false], Allowed-Origins noble/-security/ESMApps/ESM-infra [-updates
+#     YOK], Package-Blacklist BOŞ, 30 günlük pencerede 10 kurulum meridian birimini yeniden
+#     başlatmadı. Hüküm A: güvenlik yamaları KALIR, reboot KAPALI, kara-liste REDDEDİLDİ [B].
+#     Allowed-Origins'e DOKUNULMAZ — SSoT 50unattended-upgrades'te kalır. KURULUM BU BETİKTE
+#     DEĞİL: `sudo install -m 0644 deploy/oracle-a1/52meridian-unattended-upgrades
+#     /etc/apt/apt.conf.d/52meridian-unattended-upgrades`, restart istemez)
 # KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 # listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 set -euo pipefail

@@ -299,6 +299,14 @@ fi
 #     /opt/apisix/.env-apisix F9-DIŞI sırdır [admin anahtarı + OPENROUTER_AUTH]; rotaların
 #     SSoT'u deploy/apisix/routes.yaml — dagit rsync alanında, F9 çifti değil; uygulama
 #     ops/apisix_uygula.py [--uygula|--denetle drift])
+#   * deploy/oracle-a1/52meridian-unattended-upgrades → /etc/apt/apt.conf.d/52meridian-unattended-upgrades
+#     (TSK-149, 2026-09-05 — A1 unattended-upgrades duruşunu varsayılana yaslanmaktan BEYANLI
+#     dosyaya çıkarır: Automatic-Reboot + Automatic-Reboot-WithUsers "false" AÇIKÇA yazılı,
+#     Allowed-Origins'e dokunmaz [SSoT 50unattended-upgrades kalır], Package-Blacklist BİLİNÇLİ
+#     BOŞ [Seçenek B reddedildi]. Kurulum ELLE, Rol-1: `sudo install -m 0644
+#     deploy/oracle-a1/52meridian-unattended-upgrades
+#     /etc/apt/apt.conf.d/52meridian-unattended-upgrades`; sonrası restart istemez — apt.conf.d
+#     her apt-daily-upgrade koşumunda yeniden okunur)
 #     BURADA BİR İNCELİK VAR: rsync depo tarafını (`deploy/hermes/profiles/<ad>/`) canlıya
 #     TAŞIR, ama F9'un kıyasladığı şey o değil KURULU KOPYAdır — profil canlıya `hermes profile
 #     install` ile varır ve o komut operatörün kararıdır (yeni bir ajan kimliği doğurur). Yani
@@ -357,7 +365,8 @@ deploy/oracle-a1/meridian-skill-gorus.service|/etc/systemd/system/meridian-skill
 deploy/oracle-a1/meridian-skill-gorus.timer|/etc/systemd/system/meridian-skill-gorus.timer
 deploy/apisix/config.yaml|/opt/apisix/config.yaml
 deploy/apisix/apisix.service|/etc/systemd/system/apisix.service
-deploy/apisix/apisix-etcd.service|/etc/systemd/system/apisix-etcd.service"
+deploy/apisix/apisix-etcd.service|/etc/systemd/system/apisix-etcd.service
+deploy/oracle-a1/52meridian-unattended-upgrades|/etc/apt/apt.conf.d/52meridian-unattended-upgrades"
 for _cift in $F9_LISTE; do
   # ETİKET TAM REPO YOLUDUR, BASENAME DEĞİL (denetim, Faz 3 dal turu 2026-08-30). İki profille
   # `config.yaml` üç kez, `SOUL.md` üç kez, `distribution.yaml` iki kez listede: "⚠ config.yaml:

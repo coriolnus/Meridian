@@ -488,6 +488,52 @@ def test_dogrulama_FAIL_OPEN_ve_FAIL_CLOSED_dallari_VAR():
 
 
 # =================================================================================================
+# §5e [F9] YENİ ARTEFAKT — unattended-upgrades BEYANI (TSK-149, 2026-09-05)
+# =================================================================================================
+# ÖLÇÜLDÜ (A1, 2026-09-05 11:3xZ, keşif ajanı): unattended-upgrades reboot ayarları TANIMSIZ
+# (varsayılan false) — A1'in duruşu Ubuntu'nun sessiz varsayılanına yaslanıyordu ve varsayılan
+# yarın değişirse kimse fark etmezdi. HÜKÜM (Rol-1): Seçenek A — güvenlik yamaları KALSIN, reboot
+# KAPALI; varsayılan BEYANLI dosyaya çıkar. Seçenek B (kara liste) ve C (kapat) REDDEDİLDİ.
+#
+# İKİ ÇİVİ, İKİ AYRI KATMAN: (1) yeni çift F9_LISTE'de + repo tarafı GERÇEKTEN var mı — genel
+# desen zaten test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR ve
+# test_f9_CIKTISI_ARTEFAKTI_TEKIL_ADLANDIRIR ile KOŞULSUZ (tüm F9_LISTE üzerinden) ölçülüyor —
+# burada yalnız BU çiftin GERÇEKTEN eklendiği doğrulanır (ekleme unutulursa genel desenler bunu
+# yakalayamaz, çünkü onlar F9_LISTE'nin KENDİSİNDEN türer, listeye hiç girmemiş bir artefaktı
+# göremezler). (2) BEYAN DOSYASININ İÇERİĞİ — genel F9 çivileri yalnız EŞLEŞME/İSİMLENDİRME
+# ölçer, dosya boş ya da yanlış anahtar taşısa bile yeşil kalırlardı.
+def test_f9_unattended_upgrades_LISTEDE():
+    """Yeni artefakt F9_LISTE'de doğru çiftle var; repo tarafı GERÇEKTEN dosya (uydurma yasağı:
+    listeye var olmayan bir yol girerse kapı her dağıtımda 'ölçülemedi' gürültüsü üretir)."""
+    metin = DAGIT.read_text()
+    cift = ("deploy/oracle-a1/52meridian-unattended-upgrades"
+            "|/etc/apt/apt.conf.d/52meridian-unattended-upgrades")
+    assert cift in metin, "[F9] listesinde unattended-upgrades beyanı eksik"
+    assert (ORACLE / "52meridian-unattended-upgrades").is_file(), \
+        "F9 repo tarafı yok: deploy/oracle-a1/52meridian-unattended-upgrades"
+
+
+def test_unattended_upgrades_BEYAN_IKI_ANAHTARI_TASIYOR():
+    """Beyan dosyası varsayılanı AÇIKÇA yazar: `Automatic-Reboot` ve
+    `Automatic-Reboot-WithUsers` ikisi de "false" — brief'in çivilediği iki alan (davranış
+    DEĞİŞMİYOR, yalnız varsayılana-yaslanma durumu beyana dönüşüyor).
+
+    Dosya ölçüm özetinde `Allowed-Origins` sözcüğünden şerh olarak SÖZ EDEBİLİR (neden
+    dokunulmadığını anlatmak için) ama bir YÖNERGE olarak set ETMEZ — SSoT `50unattended-
+    upgrades`te kalır (tek-kaynak yasası, CLAUDE.md §4); aynı alanın iki dosyada YÖNERGE olarak
+    tutulması sessizce ayrışabilirdi. Ölçü bu yüzden YÖNERGE SATIRI (`Unattended-Upgrade::
+    Allowed-Origins ... ;`), düz metin geçişi değil."""
+    beyan = (ORACLE / "52meridian-unattended-upgrades").read_text()
+    assert re.search(r'^Unattended-Upgrade::Automatic-Reboot\s+"false";', beyan, re.M), \
+        'Automatic-Reboot "false" AÇIKÇA yazılı değil'
+    assert re.search(r'^Unattended-Upgrade::Automatic-Reboot-WithUsers\s+"false";', beyan, re.M), \
+        'Automatic-Reboot-WithUsers "false" AÇIKÇA yazılı değil'
+    assert not re.search(r'^\s*Unattended-Upgrade::Allowed-Origins\b', beyan, re.M), (
+        "Allowed-Origins bu dosyada YÖNERGE olarak set edilmiş — SSoT 50unattended-upgrades'te "
+        "kalmalıydı (tek-kaynak yasası)")
+
+
+# =================================================================================================
 # SOUL.md — AJANIN KALICI BRİFİNGİNDE MAKİNEYE ÖZGÜ YOL OLAMAZ (2026-08-26 vakası)
 # =================================================================================================
 def _enjekte_edilen_soullar() -> list[pathlib.Path]:
