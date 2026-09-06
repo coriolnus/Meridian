@@ -8,7 +8,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 
 | Kalem | Durum | Kapı / sonraki adım |
 |---|---|---|
-| EDG-067 kıyas → TSK-060 hükmü | taban indeksi kuruluyor (3+ sa), sonra 2 koşum | zincir bitişi → hüküm karta + K defteri; GEÇTİ ise Türkçe recall kartı + TSK-163 yolu |
+| EDG-067 kıyas → TSK-060 hükmü | ✅ HÜKÜM 22:4xZ: KALDI (bölüm@3 %0 vs %27,8; dosya@3 %13,9 vs %55,6; p50 44 s vs 0,6 s) | TSK-060 OPERATOR: sökme kararı 083/084 hükümleriyle (09-13/14); TSK-163 recall temelinde açılmaz; TSK-167 sqlite-vec |
 | TSK-172 + TSK-173(a) | ✅ CANLIDA — dağıtım #23 471c8bf 20:57Z (suite #31 10686/1 → RUNBOOK+korpus yeniden üretildi) | kapandı |
 | 22:04Z akşam brifingi | zamanlı | TSK-138 + TSK-014 doğrulaması (events.jsonl kayıtları) |
 | 00:05Z araç sondası | zamanlı | tool_calls üreten ücretsiz model → reflect yedek zinciri (sabah) |
@@ -55,6 +55,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Kalem | Karar |
 |---|---|
 | TSK-159 S5 | tohum değişimi (A varyantı önerilen), bakım penceresi |
+| TSK-060 Hindsight kurulumu | EDG-067 KALDI → sök / yalnız sayfalar için tut / recall'ı taban yaklaşımıyla değiştir — 083/084 hükümleriyle birlikte |
 | TSK-044 / TSK-045 | FINVIZ Elite / FMP plan — para kararı |
 | TSK-063 | INTRADAY_ARM onayı (kanıt dolunca) |
 | TSK-131 | disk 120 G eşiği yaklaşınca |
