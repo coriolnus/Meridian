@@ -2747,3 +2747,9 @@ ve ~115 G daha → disk 2021 başında dolar; kapsam 662 sembol (PIT-S&P 2020→
 **03:02Z — TSK-159 S2 merge (9fc3e80) + çapa dersi:** ajan çivisinde `` `backtest.strat.scan_entry` `` çapası codelaw'da çürük çıktı (`strat` içe-aktarım
 takma adı, sembol değil) → `strategy.scan_entry` (17dd220); brief'lere 'takma ad çapa olamaz' cümlesi eklendi. S3 (EDG-082 ölçüm kodu) ve
 TSK-156 dilim-2 (b) ajanları paralel worktree'lerde; suite #29 ikisi birleşince.
+
+**03:32Z — suite #29 hükmü ve dilim-2 (b):** suite #29 (e856ae0) 10580/3 — üçü de çivi beklentisi: v425 kart durumu (registered→measuring
+yaşam döngüsü), v145 walk_forward imzası (+uyelik bilinçli), v125 takvim-kırılgan sayım (yerel defterin son 30 günü 400'ün altına düştü →
+tarama tavanı sabitine çevrildi); etkilenen küme 134 yeşil → push 1812cc4. EDG-082 ajanı ilk sevkte NEEDS_CONTEXT ile durdu (worktree tabanı
+origin/main; S2 push'suzdu) — doğru davranış, hafızaya kural. TSK-156 dilim-2 (b) merge 4befcfe (pitlaw beyaz liste + as_of_pit okuyucu).
+EDG-082 ölçüm ajanı ikinci sevk (taban 1812cc4).
