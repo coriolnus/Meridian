@@ -9,7 +9,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Kalem | Durum | Kapı / sonraki adım |
 |---|---|---|
 | EDG-067 kıyas → TSK-060 hükmü | taban indeksi kuruluyor (3+ sa), sonra 2 koşum | zincir bitişi → hüküm karta + K defteri; GEÇTİ ise Türkçe recall kartı + TSK-163 yolu |
-| TSK-172 + TSK-173(a) | implementer bitti, fix turu 1 bitti (v432 9/9) | merge → codelaw + etkilenen küme → TAM SUITE → push → dağıtım |
+| TSK-172 + TSK-173(a) | ✅ CANLIDA — dağıtım #23 471c8bf 20:57Z (suite #31 10686/1 → RUNBOOK+korpus yeniden üretildi) | kapandı |
 | 22:04Z akşam brifingi | zamanlı | TSK-138 + TSK-014 doğrulaması (events.jsonl kayıtları) |
 | 00:05Z araç sondası | zamanlı | tool_calls üreten ücretsiz model → reflect yedek zinciri (sabah) |
 | 00:10Z S3/PK/NK · 00:45Z S4–S8 | zamanlı, sıralı | sabah: dokuz sayfa uydurma tablosu + PK/NK + bayatlık sütunu |
@@ -63,7 +63,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 
 ## 6. Bugün kapananlar (kanıtlı)
 
-TSK-151, TSK-153, TSK-154, TSK-058, TSK-126, TSK-047, TSK-174 (zaten uygulanmış); §6 EDG-071 (KISMİ→GEÇTİ notlu), EDG-072 (KALDI), EDG-079 (KALDI, icrası TSK-159);
+TSK-151, TSK-153, TSK-154, TSK-058, TSK-126, TSK-047, TSK-174 (zaten uygulanmış), TSK-172, TSK-173 (dağıtım #23); §6 EDG-071 (KISMİ→GEÇTİ notlu), EDG-072 (KALDI), EDG-079 (KALDI, icrası TSK-159);
 §5 B-QC-LOGIN, B-AJAN-GIT ✅; cepheler PRG-06 🟢, PRG-07/09 🔶; PRG-05 gövdesinde 13, PRG-02'de 3, PRG-08'de 2, PRG-09'da 3 madde tarihçe.
 
 ## 7. Düşürme önerileri (karar operatörün — DROPPED yazılmadı)
