@@ -2768,3 +2768,5 @@ dilim-2 (b) (pitlaw beyaz liste, as_of_pit okuyucu), EDG-082 ölçüm kodu; heal
 aday tavanı, sabit bütçe, reranker sağlayıcı) → TSK-142 gündüz deneyi tasarımı. Gece bilançosu: EDG-074 K1 kaldı (model), EDG-080 K1 iki set
 ölçülemedi (altyapı: CPU rerank), EDG-077 kaldı (100/gün tavan) → EDG-081 zinciri canlı ve temiz (pending 2884→1349, failed 0), r3 21/36,
 EDG-082 geçti (kısmi payda), TSK-159 S5 ve TSK-065 disk/delist kararları operatörde.
+
+**05:53Z — r4 başlatıldı (ingest067-r4, Pazar sabahı, nemotron kovası taze; r3'ün 14 geçicisi + kalanlar).** Dağıtım #22 A1'de doğrulandı (pitlaw ok, kova sozlesmeli_kapali 0, replay uyelik var). EDG-081 gün-1: m2.7 211 başarı/0 hata, 100/gün tavanı m2.7'de görülmedi. Otonom gece bloğu kapandı; kalan kararlar Masa'da.
