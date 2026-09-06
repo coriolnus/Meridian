@@ -2866,3 +2866,9 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   Rol-1). İKİ HATAM: (1) 19:06Z 'kanal yok' ölçümüm .env'e baktı, kimlikler secrets.json'daydı (kimlik-uzayi-olculmeden-duvar-yok
   dersi); (2) recall doğru cevabı vermişti (gözlem: kanal 08-22 canlı) ama ilk okumada karara sokmadım — karar-öncesi hafıza
   kontrolünün ikinci yarısı. S2 sayfası da bayattı (08-22 öncesi durum). Operatöre verilen 'en ağır çelişki' hükmü GERİ ALINDI.
+- **19:4x–19:5xZ — TSK-174 KAPANDI: uygulanacak bir şey yok.** Operatör "teslim hatası sayacını ekle" dedi; kod okuması: sayaç
+  2026-08-02'de eklenmiş (8a38248, denetim C7) — obs._maybe_notify send False dalında `_bump_fail` (`_teslim_hatasi`), okuyucu
+  watchdog.parity_report, çiviler test_denetim_gozetim_v158 C7 ×2 + v274 (3/3 yeşil, FAILED/ERROR 0), canlı obs.py/watchdog.py aynı;
+  canlı sayaçta anahtar yok = teslim hatası 0. ÜÇÜNCÜ HATAM (aynı konuda): 'DÖRDÜNCÜ SESSİZ DELİK' yorumunu okuyup altındaki düzeltme
+  kodunu okumadan 'kalan boşluk' yazdım. Kural: yorum tarihçedir, hüküm koddur — 'boşluk/kalan iş' iddiası kodun devamı + test + canlı
+  grep üçlüsü olmadan yazılmaz (hafıza notu yorum-tarihce-kod-hukum).
