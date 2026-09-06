@@ -1032,11 +1032,29 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
             # sermaye üzerinden boyutlandırmak demekti; üstelik gönderimler de ağ hatasıyla
             # düşüp geçerli planları 'broker reddi' diye siliyordu. Aynayı ATLA, planlar
             # SİLAHLI kalsın — iç defter zaten tek gerçek (denetim 2026-07-21).
+            # (TSK-173a, 2026-09-06: aynı ilkenin ikinci dalı hemen aşağıda — yanıt GELDİ
+            # ama `equity` okunamıyor.)
             obs.alarm(obs.ALARM_BROKER_REJECT,
                       f"Alpaca ulaşılamıyor — ayna atlandı, {len(meta['armed'])} plan silahlı kaldı",
                       detail=alpaca.transport().get("error", "")[:160])
             raise _MirrorUnreachable()
-        eq = float(acct["equity"]) if acct and "equity" in acct else START_EQUITY
+        # TSK-173a, 2026-09-06: ULAŞILAMADI ≠ 100k ilkesinin İKİNCİ dalı — acct bir SÖZLÜK
+        # (yanıt geldi) ama `equity` alanı yok ya da float'a çevrilemiyor. Eski kod burada
+        # SESSİZCE START_EQUITY sabitine (100k) düşüyordu; hesap gerçekten 5000$'a inmiş
+        # olsaydı bile bozuk bir yanıt bunu 100k gibi gösterip planları o hayali sermaye
+        # üzerinden boyutlandırırdı. Aynı muamele: alarm + ayna atla, planlar SİLAHLI kalsın.
+        eq = None
+        if isinstance(acct, dict) and "equity" in acct:
+            try:
+                eq = float(acct["equity"])
+            except (TypeError, ValueError):  # sessiz-yutma: biçimsiz equity alanı (sayıya çevrilemiyor) — hemen aşağıdaki `eq is None` dalı bunu ALARM_BROKER_REJECT + _MirrorUnreachable ile açıkça işler, sessizce yutulmaz
+                eq = None
+        if eq is None:
+            obs.alarm(obs.ALARM_BROKER_REJECT,
+                      "Alpaca hesap yanıtında equity yok/okunamadı — 100k'ye DÜŞÜLMEDİ, "
+                      "planlar silahlı bırakıldı",
+                      keys=sorted(acct)[:8] if isinstance(acct, dict) else [])
+            raise _MirrorUnreachable()
         out["equity"] = eq
         submitted, sent, rejected, kept = set(meta.get("alpaca_submitted", [])), 0, [], []
         vetoed: list = []              # E1 gap-risk vetosu — ret DEĞİL, kendi kararımız

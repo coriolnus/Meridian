@@ -4710,7 +4710,8 @@ const OLAY_YUZEYLERI = {
       return [
         ["Karantina", kar.length ? kar.join(", ") : "boş"],
         ["Son başarılı tazeleme", pl.last_refetch_session || null],
-        ["Tazeleme sabrı", pl.refetch_attempts == null ? null : `${pl.refetch_attempts}/${pl.refetch_max ?? 8} deneme`],
+        ["Tazeleme sabrı", pl.refetch_attempts == null ? null : `${pl.refetch_attempts}/${
+            pl.refetch_max != null && Number.isFinite(Number(pl.refetch_max)) ? Number(pl.refetch_max) : "—"} deneme`],
         ["cf sadakati (sim↔gerçek)", pl.cf_fidelity ? `r=${pl.cf_fidelity.corr ?? "—"} · n=${pl.cf_fidelity.n ?? "—"}` : null],
         // PAYDA BURADA DA GÖRÜNÜR (YASA 6): "açıklanamayan N" tek başına, kaç planın
         // uyuyan-kurulum diye terminal SAYILDIĞINI ve kaçının silahlanma tarihçesinin
@@ -7480,17 +7481,21 @@ async function opParcalar() {
   const quar = (pl.quarantine || []).map(t => _chip(t, "t-no")).join(" ");
   // KAPALI ÖZET (v198): bölümün kendi sorusu "hat sağlam mı?" — özet KARANTİNAdaki sembol
   // sayısını ve sabır sayacını taşır. `?? 0` YOK: sabır sayacı ölçülemediyse çubuk çizilmez
-  // (payda var ama pay yok) ve meta nedenini yazar.
-  const _sabirMax = pl.refetch_max || 8;
+  // (payda var ama pay yok) ve meta nedenini yazar. TSK-172: tavan (`refetch_max`) da aynı
+  // ilkeyle — API'den gelmezse `|| 8` ile UYDURULMAZ, null kalır (9090 deseniyle aynı).
+  const _sabirMax = pl.refetch_max != null && Number.isFinite(Number(pl.refetch_max)) ? Number(pl.refetch_max) : null;
   const _sabirN = Number.isFinite(Number(pl.refetch_attempts)) ? Number(pl.refetch_attempts) : null;
   const _karantinaN = (pl.quarantine || []).length;
   const s4 = `<div class="card rise"${katKart("veriboru:karantina")}><h2 class="t">Bölüm 4 · Veri hattı & karantina</h2>
     ${kartOzeti({
       deger: _karantinaN, degerSinif: _karantinaN ? "warn" : "",
-      oran: _sabirN == null ? null : _sabirN / _sabirMax, payda: `EOD sabır adımı (${_sabirMax})`,
+      oran: (_sabirN == null || _sabirMax == null) ? null : _sabirN / _sabirMax,
+      payda: _sabirMax == null ? null : `EOD sabır adımı (${_sabirMax})`,
       meta: _sabirN == null
         ? `karantinada ${_karantinaN} sembol · EOD sabır sayacı ölçülemedi (0 deneme DEĞİL) · SPY çapraz-doğrulama ${esc(xc.status || "—")}`
-        : `karantinada ${_karantinaN} sembol · EOD sabır ${_sabirN}/${_sabirMax} · SPY çapraz-doğrulama ${esc(xc.status || "—")}`,
+        : (_sabirMax == null
+            ? `karantinada ${_karantinaN} sembol · EOD sabır ${_sabirN} deneme (tavan ölçülemedi) · SPY çapraz-doğrulama ${esc(xc.status || "—")}`
+            : `karantinada ${_karantinaN} sembol · EOD sabır ${_sabirN}/${_sabirMax} · SPY çapraz-doğrulama ${esc(xc.status || "—")}`),
       rozet: _karantinaN ? "KARANTİNA" : (xc.status === "diverged" ? "SPY SAPMASI" : "") })}
     <div class="gaugewrap">
       ${(() => {
@@ -7499,16 +7504,17 @@ async function opParcalar() {
         // yalnız "3/8" metninden çıkarılabiliyordu.
         // `|| 0` KULLANILMIYOR: alan hiç gelmediğinde "0/8" yazmak "sıfır deneme yapıldı"
         // demektir, oysa bilinen tek şey ölçümün ELDE OLMADIĞIDIR. Sıfır bir ölçümdür,
-        // yokluk değil. Eski halka bu ikisini birbirine karıştırıyordu.
-        const mx = pl.refetch_max || 8;
+        // yokluk değil. Eski halka bu ikisini birbirine karıştırıyordu. TSK-172: tavan
+        // (`_sabirMax`) da aynı ilkeyle — API'den gelmezse UYDURULMAZ, null kalır.
+        const mx = _sabirMax;
         const n = Number.isFinite(Number(pl.refetch_attempts)) ? Number(pl.refetch_attempts) : null;
         return _bullet({
           deger: n, max: mx, hedef: mx, etiket: "EOD sabır",
-          metin: n == null ? null : `${n}/${mx}`,
-          renk: n == null ? "accent" : (n >= mx ? "sev-1" : (n / mx > 0.6 ? "sev-2" : "accent")),
+          metin: n == null ? null : (mx == null ? `${n} (tavan ölçülemedi)` : `${n}/${mx}`),
+          renk: (n == null || mx == null) ? "accent" : (n >= mx ? "sev-1" : (n / mx > 0.6 ? "sev-2" : "accent")),
           bantlar: [0.6, 1]});
       })()}
-      <span class="cap"><b>8 adımlı sabır sayacı</b><br>EOD yayını gecikirse tazeleme bayrağı sıcak tutulur; ${pl.refetch_max || 8}. denemede pes edilir ve LOGLANIR.<br>son başarılı tazeleme: <b>${esc(pl.last_refetch_session || "—")}</b> · kazanç takvimi ${pl.earnings_attempts || 0}/5 deneme</span></div>
+      <span class="cap"><b>${_sabirMax == null ? "sabır sayacı (tavan ölçülemedi)" : `${_sabirMax} adımlı sabır sayacı`}</b><br>EOD yayını gecikirse tazeleme bayrağı sıcak tutulur; ${_sabirMax == null ? "bilinmeyen sayıda" : `${_sabirMax}.`} denemede pes edilir ve LOGLANIR.<br>son başarılı tazeleme: <b>${esc(pl.last_refetch_session || "—")}</b> · kazanç takvimi ${pl.earnings_attempts || 0}/5 deneme</span></div>
     <div class="srow" style="margin-top:12px"><span>SPY çapraz-doğrulama</span><b class="${xcCls}">${esc(xc.status || "—")}${xc.divergence != null ? ` · sapma ${xc.divergence}` : ""}${xc.status === "cache_stale" ? " (önbellek bayat — karşılaştırma yapılmadı)" : ""}</b></div>
     <div class="srow"><span>Atomik yazım (IO)</span><b>${io.p95_ms != null ? `p50 ${trn(io.p50_ms, 1)} · p95 ${trn(io.p95_ms, 1)} ms` : (io.writes ? io.writes + " yazım (p95 için ≥20)" : "—")}${io.p95_ms > 50 ? ' · <span class="neg">DARBOĞAZ</span>' : ""}</b></div>
     ${(() => { const cfd = pl.cf_fidelity; return `<div class="srow"><span>cf sadakati (sim↔gerçek)</span><b class="${cfd ? (cfd.fidelity_ok ? "pos" : "warn") : ""}">${cfd ? `r=${cfd.corr ?? "—"} · sapma ${cfd.mean_diff_r > 0 ? "+" : ""}${cfd.mean_diff_r}R · n=${cfd.n}${cfd.fidelity_ok ? "" : " · İSKONTOLU OKU"}` : "kesişim <5 — alınan planlar birikiyor"}</b></div>`; })()}
