@@ -93,3 +93,13 @@ hukum_k1_2026_09_06: >
   Pencere 2026-09-07…09-13 (7 gece 05:00Z). BEDEL: her deneme ~9 dk ve ~145k giriş token'ı (ücretsiz model, ama 20/dk tavanı içinde);
   reflect kalitesi flashrank reranker'a bağlı (v2-m3 bu kutuda ölçülemez). Kanıt: /home/ubuntu/gece-20260906/kanary_reflect_{1,2,3}.json,
   k1_hukum.json, k2_pilot.log, k2_pilot_cevap.json; 04:30Z seti kanary080_0430_*.
+
+kosum_notu_k2_gun0_2026_09_06: >
+  (16:3xZ Rol-1) K2 İLK TAZELEME (create=ilk refresh op 9b76dd9b…, 16:11:10→16:20:57Z): reflect 578,4 s, 5 iterasyon, 9 tool_calls,
+  'forced' (600 s duvarına yakın), içerik 10.081 kr, pano /api/hindsight/zihin-modelleri listeliyor (200, items[0]=mm-0fb27056…),
+  A1 ~/bin/sayfa_oku.sh ile LLM'siz okunuyor. İçerik sınıfları: "hayalet yapılandırma / ölü sabit" (MERIDIAN_BIND_HOST, refetch_max 8,
+  sektör/ısı tavanı dört kaynak, goal.yaml ölü düğmeler) — gerçek vakalar. UYDURMA SAYIMI (EDG-083 aracı uydurma_say.py, basename kuralı
+  b6cf542): 16 atıf / 12 doğrulanan (%75); doğrulanamayan tek: notify_undelivered.json (state/ dosyası, depoda yok — uydurma değil,
+  depo-dışı). Yalnız dizinsiz ad kuralı ÖNCESİ %25'ti — kural ölçümden ÖNCE, Rol-1 ruling (brief-uydurma-say-2.md). Bu sayı EDG-083'ün
+  değil bu kartın gün-0 kanıtıdır; K2 eşiği 7. günde okunur. Gece cron 05:00Z (delta) 09-07'den itibaren.
+

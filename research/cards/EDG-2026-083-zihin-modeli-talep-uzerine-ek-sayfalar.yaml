@@ -73,3 +73,14 @@ notlar: >
   bankada YOK — sayfadan gelen her sayı defterden doğrulanır ("hatırlanan değil ölçülen"). A1'e Claude CLI kurulumu bu kartın dışında:
   sayfalar bir hafta gerçekten karar değiştirirse gece başsız 'analist' koşumu ayrı kart olur. Reranker değişimi (local→flashrank)
   EDG-067 kurulum_kayitlari'na işlendi; taban kıyası o ayarla koşar.
+
+adim_1_kurulum_2026_09_06: >
+  (16:24–16:36Z Rol-1) Ön koşul (a) SAĞLANDI: EDG-080 K1 3/3 + K2 POST 16:11Z. Sayfa tanımları /opt/hindsight/edg083/sayfalar.json
+  (S1/S2/S3/PK/NK, trigger delta + refresh_cron yok + refresh_after_consolidation false, max_tokens 4096/1024). Uydurma sayacı
+  research/olcumler/edg083_zihin_modeli_ek_sayfalar/uydurma_say.py + v430 (1037ff8, basename kuralı b6cf542 — ruling ölçümden ÖNCE:
+  dizinsiz dosya adı depoda basename eşleşirse doğrulanmış sayılır, ad_eslesmeleri raporda ayrı). VAKA: kur_sayfalar.sh "içerik var"
+  kontrolü 'Generating content...' yer tutucusuna kandı → 5 sayfa 2 dk'da açıldı, 5 reflect PARALEL (slots 5/10, yük 9), 5/5 600 s
+  zaman aşımı + işçi retry (max 3) → 5 sayfa DELETE (pilot korundu), betik düzeltildi (yer tutucu + last_refreshed_at şartı), sıralı
+  yeniden kurulum yük düşünce. Bu paralel set kill#5 sayımına GİRMEZ (beyan: çakışma benim betiğimin hatası, altyapı değil) — sıralı
+  set ilk gerçek tazeleme sayılır. Pilot sayfa (EDG-080) aynı araçla 16/12 (%75): aracın gerçek sayfada çalıştığının kanıtı.
+

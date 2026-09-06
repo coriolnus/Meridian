@@ -2810,3 +2810,11 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
 - **16:1xZ — EDG-083 uydurma sayacı canlıda** (ajan worktree → merge 1037ff8, v430 20/0; deneme sayfasında 8 atıf/5 doğrulanan, üç uydurma
   (olmayan yol, EDG-2026-999, v999) yakalandı). Ders: worktree içinden `git merge` kendi dalına birleştirir ("Already up to date") — merge
   ANA checkout'tan atılır; `git worktree remove` cwd'yi silince kabuk kilitlenir, sonraki komut mutlak `cd` ile başlar.
+- **16:20–16:36Z — K2 ilk tazeleme tamam; EDG-083 sayfaları paralel-çakışma vakası.** Pilot sayfa (meridian-tekrarlanan-dersler)
+  578 s / 9 araç çağrısı / 10.081 kr; pano zihin-modelleri ucu listeliyor. Uydurma sayacı (uydurma_say.py; ajan-1 1037ff8, ajan-2
+  basename kuralı b6cf542 — Rol-1 ruling ölçümden önce: dizinsiz gerçek dosya adı doğrulanmış sayılır) pilotta 16 atıf / 12 doğrulanan
+  (%75; kural öncesi %25 — 8 çıplak dosya adı); tek doğrulanamayan notify_undelivered.json (state/, depo dışı). VAKA: kur_sayfalar.sh
+  "içerik var"ı 'Generating content...' yer tutucusuna kandı → 5 sayfa 2 dk'da, 5 reflect paralel, yük 9, 5/5 600 s zaman aşımı, işçi
+  retry (max 3, +60 s) fırtınası → 5 sayfa DELETE (pilot duruyor), betik düzeltildi; sıralı yeniden kurulum yük düşünce. Ders (EDG-080
+  00:45Z dersinin tekrarı, bu kez kendi betiğimle): 4 OCPU'da reflect'ler ASLA paralel; "içerik var" = yer tutucu değil + last_refreshed_at.
+  Ders 2: worktree'de `git merge` → ana checkout'tan; `git worktree remove` cwd'yi siler.
