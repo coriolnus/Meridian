@@ -2756,3 +2756,9 @@ EDG-082 ölçüm ajanı ikinci sevk (taban 1812cc4).
 
 **04:08Z — r3 kapanışı (TSK-144) + EDG-082 kodu:** r3 36 dilim: 21 ok / 14 geçici (12 Nvidia aşırı yük, 2 benim restart'larım) / 1 kalıcı; 78 çağrı,
 3,3 saat; belge 285; 429 yok. EDG-082 ölçüm ajanı (ikinci sevk) 30 çivi ile teslim, merge ca392df; gerçek koşum yerel barlarla başladı.
+
+**05:38Z — EDG-082 ÖLÇÜLDÜ (5 replay, 88 dk, yerel barlar):** TABAN 871 (eski tohum 885, sapma %1,6), A 829 (−42; EDG-079 sızıntısı A'da 0), B 849
+(−22; 38 hiç-üye kaldı); avg_r 0,087 → 0,080 (A) / 0,069 (B); OOS composite sınıfı aynı; DSR/PBO yapısal ölçülemedi (payda beyanlı 1/1).
+Hüküm: survivorship kapı düzeyinde ikinci dereceden; tohum PIT-süzgeçliyle değiştirilebilir (S5 OPERATÖR); replay için A önerilir.
+EDG-080 kanary 04:30Z seti 3/3 600 s zaman aşımı (yük 1,9→12, reflect araç yürütmesi CPU'ya sığmıyor) → K2 atlandı; altyapı teşhisi sırada.
+Kurtar 05:00Z 200; konsolidasyon pending 1349, failed 0, gözlem 5117; belge 285.

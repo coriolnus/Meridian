@@ -69,3 +69,12 @@ kosum_notu_2026_09_06_0045: >
   k2_pilot 05:35Z aynı dosyaları okur. r3 hâlâ koşuyorsa 04:30Z'de de ölçülemeyebilir → gündüz tekrar. Ölçüm dersi: reflect kanaryası
   ağır işlerle aynı saate KONMAZ; kart adım-0'a 'yük < 4' şartı eklenmeli (bu kartta eşik değil, ön şart — sonraki kartta).
 
+kosum_notu_2026_09_06_0430: >
+  (05:38Z Rol-1) İKİNCİ SET (04:30Z, kutu sessizken başladı: yük 1,85; r3 bitmiş) — 3/3 HTTP 504 'Reflect operation timed out after 600
+  seconds'; yük kanary SIRASINDA 8,2 → 12,2'ye çıktı (kanary080.sh yük logu). Model değil altyapı: reflect'in araç yürütmesi (arama +
+  ONNX rerank, 5.117 gözlem, 4 OCPU) 600 s'ye sığmıyor; konsolidasyon zinciri eşzamanlı. K1 ÖLÇÜLEMEDİ (kill listesinde 'zaman aşımı'
+  sınıfı yok — 429 değil, tool-calling hatası değil); k2_pilot 05:35Z K1_KALDI okuyup K2'yi ATLADI (doğru). Kanıt:
+  /home/ubuntu/gece-20260906/kanary_reflect_*.json, k1_hukum.json. Sıradaki: reflect araç yürütmesi teşhisi (journal adımları, rerank
+  aday sayısı/ayarları) → kart notu; kanary gündüz, konsolidasyon durdurulmuş/kısılmış ve rerank sınırlanmışken tekrar (yeni kart gerekmez:
+  eşik/K değişmedi, ölçülemedi tekrarı).
+

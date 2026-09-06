@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **96** kart.
 
-### Kayıtlı — ölçüm bekliyor (16)
+### Kayıtlı — ölçüm bekliyor (15)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -47,9 +47,6 @@ Toplam **96** kart.
 - **EDG-2026-081** (`registered`) — 
   · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim ölçümünden sonra
   · kart: `EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml`
-- **EDG-2026-082** (`registered`) — 
-  · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; motor süzgeci (backtest.replay uyelik) + ölçüm kodu bu karttan SONRA
-  · kart: `EDG-2026-082-tohum-pit-uyelik-suzgeci-kiyasi.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -75,7 +72,7 @@ Toplam **96** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (53)
+### Ölçüldü (54)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -206,6 +203,9 @@ Toplam **96** kart.
 - **EDG-2026-079** (`measured`) — 
   · HÜKÜM: 2026-09-05 Rol-1 — K1 KALDI (bant 3: p=0,107 > 0,10) · K2 GEÇTİ (q=0,085) · PK 3/3 tuttu; replay hükümleri survivorship şerhiyle ASKIDA, TSK-066 as_of ZORUNLU
   · kart: `EDG-2026-079-replay-defteri-pit-uyelik-denetimi.yaml`
+- **EDG-2026-082** (`measured`) — 
+  · HÜKÜM: 2026-09-06 Rol-1 — A: ölçülebilen kapı 1/1 aynı (DSR/PBO yapısal ölçülemedi), sızıntı A'da 0; B raporlu; S5 tohum değişimi OPERATÖR
+  · kart: `EDG-2026-082-tohum-pit-uyelik-suzgeci-kiyasi.yaml`
 - **EXE-2026-001** (`measured`) — İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra modelleri koşuyor ve ayna gap durumunda reddediliyor…
   · HÜKÜM: 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
   · kart: `EXE-2026-001-entry-execution.yaml`

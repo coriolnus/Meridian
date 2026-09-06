@@ -5,7 +5,7 @@
 # barı yok — TSK-065) isimleri ekleyemez → PIT-süzülmüş tohum hâlâ ÜST SINIR; negatif/bilgisiz sonuç güçlü, pozitif "en iyi ihtimalle".
 
 card_id: EDG-2026-082
-status: registered   # 2026-09-06 Rol-1 — ön-kayıt; motor süzgeci (backtest.replay uyelik) + ölçüm kodu bu karttan SONRA
+status: measured   # 2026-09-06 Rol-1 — A: ölçülebilen kapı 1/1 aynı (DSR/PBO yapısal ölçülemedi), sızıntı A'da 0; B raporlu; S5 tohum değişimi OPERATÖR
 family: evren_pit
 on_kayit: 2026-09-06
 ref: [TSK-159, EDG-2026-079, EDG-2026-076, TSK-156, TSK-143, TSK-065, EDG-2026-062, EDG-2026-070]
@@ -62,3 +62,22 @@ notlar: >
   birebir; çivi). Ölçüm: research/olcumler/edg082_pit_tohum/olcum.py — barları state/bars csv'lerinden DOĞRUDAN okur (ağ yok, obs yok),
   as_of'u edg075 olcum.py'den (araştırma) ya da constituents.as_of'tan kurar — ikisi fark 0 (EDG-076 K2). Replay saf hesaptır; koşum Rol-1'de,
   ana checkout'ta. Not: kart yazımında tırnaksız heredoc backtick'li satırı bir kez bozdu, düzeltildi (hafıza: heredoc her zaman tırnaklı).
+
+hukum_2026_09_06: >
+  (05:38Z Rol-1) GİRDİ: bar manifesti 248+SPY sha'lı (yerel state/bars; barlar 2026-08-24'e kadar → fiilî bitiş 08-24), HTML 9909032c… ✓,
+  güncel liste a0cfccca… ✓, params sha 795fd204…, strateji sürümü 5; as_of kuramama 0/5696 seans-sorgusu; süre TABAN 754 s / A 732 s /
+  B 750 s (tavan aşılmadı). Sonuç: research/olcumler/edg082_pit_tohum/sonuc_2026-09-06.json (v428 30; merge ca392df).
+  TABAN: 871 işlem (eski tohum 885, sapma %1,6 — çapa geçerli), avg_r 0,0867, medyan −0,173, kazanma %36,7.
+  A (as_of, saf S&P PIT): 829 işlem (−42), avg_r 0,0801 (−0,0066), medyan −0,169, kazanma %36,1; OOS composite Δ +0,0725 (aynı sınıf).
+  B (as_of ∪ hiç-üye): 849 işlem (−22), avg_r 0,0687 (−0,018), medyan −0,173; OOS Δ +0,0235 (aynı sınıf).
+  SIZINTI: EDG-079'un 95 çiftinin 92'si tabanda eşleşti (%96,8; 3'ü sürüm farkından yok); A'da KALAN 0 ✓, B'de kalan 38 = hiç-üye ✓
+  (diğer 54: 42 geç-katılan + 12 çıkış-sonrası düştü). PK: süzgeç tam açık = taban byte-eşit ✓, tam kapalı = 0 işlem ✓.
+  KAPI HÜKÜM SINIFI — PAYDA BEYANI: DSR ve PBO bu izole kıyasta YAPISAL olarak ölçülemez (n_trials arama-tanımlı; PBO_MIN_ADAY 8 > 3 koşum)
+  → ölçülebilen kapı 1 (OOS composite): A 1/1 aynı, B 1/1 aynı. Kartın "3/3" eşiği 3 ölçülebilir kapı varsayıyordu — eşik OYNATILMADI;
+  hüküm "ölçülebilen kapılarda 1/1 aynı, DSR/PBO ölçülemedi (None+neden)" biçiminde, kısmi-GEÇTİ olarak yazılır. Anlamı: PIT süzgeci
+  işlem sayısını %4,8 düşürüyor, ortalama R'yi hafif düşürüyor (sızan işlemler zaten daha kötüydü — EDG-079), OOS composite sınıfını
+  değiştirmiyor → survivorship kapı hükmü düzeyinde ikinci dereceden; ama tohum PIT-süzgeçliyle değiştirilebilir (S5) — asimetri beyanı
+  aynen (delist barları yok, üst sınır). A ile B farkı: hiç-üye 6 sembol 38 işlem, avg_r'yi düşürüyor (0,0801→0,0687) → replay için A önerilir.
+  S5 (tohum değişimi, bakım penceresi, ledgerstamp 'replay_seed_pit') OPERATÖR onayına hazır; DSR/PBO yeniden tohumlama sonrası reflect'in
+  kendi arama defteriyle doğal olarak yeniden ölçülür.
+
