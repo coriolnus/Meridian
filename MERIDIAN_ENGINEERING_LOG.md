@@ -2825,3 +2825,11 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   pilot 12/12 · S1 45/46 (%98; tek açık: pilotun zihin-modeli kimliği — memory listesi mental model id taşımıyor, 7. günde eklenir)
   · S2 30/30 · toplam 87/88 (%99; sonuc_gun0 dosyası esas — ara sayımda kendi rapor dosyalarım sayfa diye sayılmıştı). İlk sayımdaki %36–59 "uydurma" görünümü tamamen sınıflandırma eksiğiydi (bellek kimlikleri,
   çıplak dosya adları, .jsonl kesmesi, tablo biçimli TSK); üç ruling ölçümden ÖNCE yazıldı. S3/PK/NK 00:10Z.
+- **17:4xZ — KOTA BİLANÇOSU (llm_requests, bugün): 1.345 çağrı.** Ortak 1000 kovası: retain nemotron-ultra 592 başarı + 189 hata
+  (r4 ingest çok-chunk belgeler) + reflect nemotron 3 → 17:39Z'de 429 (free-models-per-day-high-balance). minimax-m2.7 (kendi tavanı):
+  konsolidasyon 435 + dedup 1. minimax-m3 (100/gün): refresh 42 başarı + 34 hata, KONSOLİDASYON 27 (m2.7 yerine m3'ü de yemiş —
+  EDG-081 kill#5 sınıfı, TSK-157 notu), reflect 21, dedup 1 → 17:15Z'de tavan. Operatör: "birleştirme bittiğine göre nemotron da
+  kullanılabilir" → doğru yön ama nemotron-ultra reflect'te araç çağrısını metin üretir (EDG-074 kill#1); nemotron-super ve gemma-26b
+  sınanmadı (bugün kova boş: 4/4 429 ya da geçersiz kimlik — kimlikler .env'den alınmalı: nemotron-3-super-120b-a12b / ultra-550b-a55b /
+  gemma-4-26b-a4b-it). 00:05Z tek-atım sonda (sonda_tool.sh) → sabah REFLECT failover zinciri kararı. Bugün için: reflect/sayfa YOK,
+  recall (LLM'siz) serbest; kıyas zinciri etkilenmez.
