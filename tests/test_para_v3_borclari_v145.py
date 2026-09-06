@@ -328,7 +328,10 @@ def test_walk_forward_IMZASI_DEGISMEDI():
     p = list(inspect.signature(backtest.walk_forward).parameters)
     assert p == ["params", "bars", "index_bars", "goal", "is_start", "oos_start", "oos_end",
                  "holdout_end", "strategy_version", "oos_folds", "embargo_days",
-                 "params_by_regime", "eval_regime"]
+                 "params_by_regime", "eval_regime",
+                 # TSK-159 S2 (2026-09-06, EDG-2026-082): opsiyonel PIT üyelik süzgeci — sona eklendi,
+                 # varsayılan None (bugünkü çağıranlar için davranış BİREBİR; v427 çivisi).
+                 "uyelik"]
 
 
 def test_walk_forward_mtm_dd_bloguNU_URETIR_ve_kapi_alanlarina_DOKUNMAZ():

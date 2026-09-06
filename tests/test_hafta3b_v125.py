@@ -595,8 +595,13 @@ def test_otonomi_sayimi_TS_TABANLI_satir_penceresi_DEGIL():
     assert "_breaker_trips_since" in blok
     n, pencere = analytics._breaker_trips_since(30)
     assert pencere["days"] == 30 and "kapsam" in pencere
-    # pencere satır penceresinden ÇOK daha geniş olmalı (K1'in ölçtüğü sel yüzünden)
-    assert pencere["n_scanned"] > 400 or pencere["oldest"] is None
+    # pencere satır penceresinden ÇOK daha geniş olmalı (K1'in ölçtüğü sel yüzünden).
+    # 2026-09-06 DÜZELTME (takvim kırılganlığı): eski assert `n_scanned > 400` CANLI/yerel defterin son 30
+    # gününde kaç satır olduğuna bağlıydı — yerel defter test artefaktlarıyla dolduğu için 09-05'te yeşil,
+    # 09-06'da (08-06 satırları pencereden düşünce) 297 ile kırmızı verdi. Çivinin iddiası TARAMA TAVANIDIR
+    # (satır penceresi 400'den geniş), günün defter yoğunluğu değil: sabit ölçülür.
+    assert analytics.LADDER_BREAKER_SCAN_CAP > 400, "tarama tavanı eski satır penceresinden (400) geniş değil"
+    assert pencere["n_scanned"] <= analytics.LADDER_BREAKER_SCAN_CAP
 
 
 def test_hotstate_DOWN_REASSERT_throttle_seli_keser(monkeypatch):

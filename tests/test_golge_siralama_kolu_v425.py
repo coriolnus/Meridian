@@ -407,7 +407,9 @@ def test_kart_sabitleri_YAML_ile_AYRISMAZ():
 
 def test_kart_dosyasi_registered_ve_agirliklar_alani_kodla_TEK_KAYNAK():
     kart = KART_YOLU.read_text(encoding="utf-8")
-    assert "status: registered" in kart
+    # Kart yaşam döngüsü: ön-kayıt (registered) → kod canlı, ölçüm sürüyor (measuring) → hüküm (measured…). Bu çivi
+    # AĞIRLIKLARIN tek kaynağını korur; status hüküm ÖNCESİ iki durumdan biri olabilir (2026-09-05 dağıtım #21 sonrası measuring).
+    assert ("status: registered" in kart) or ("status: measuring" in kart), "kart hüküm öncesi durumda değil"
     # `agirliklar:` satırı kartta TEK yerdedir; kodun okuduğu değer o satırdan TÜRER (uydurulmaz).
     satir = next(s for s in kart.splitlines() if s.strip().startswith("agirliklar:"))
     assert "0.169" in satir
