@@ -2842,3 +2842,7 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   karar gerekçeleri · dağıtım tarihçesi · ajan süreç hataları), 083 tasarımı + "mekanik aday" eşiği; tanımlar sayfalar84.json,
   kur_sayfalar84.sh (yol-değişimli kopya), gece 00:45Z tek-atım (edg084-gece-kur) — sıra: 00:05Z araç sondası → 00:10Z 083 S3/PK/NK →
   00:45Z 084 S4–S8 → 03:00Z r5 ingest → 03:30Z yedek → 05:00Z pilot cron. Günlük minimax bütçesi üç kart için ≤55 (kill).
+- **18:4xZ — OPERATÖR DİREKTİFİ (kalıcı): "bundan sonra verdiğin bütün kararları kalıcı hafızadan kontrol ederek vermen lazım."**
+  Uygulama: CLAUDE.md §2'ye "karar/ruling/ayar" kapı satırı (recall + sayfa + memory + kart_benzer, kaynak atfı zorunlu; atıfsız
+  karar kontrol edilmemiş sayılır); hafıza notu karar-oncesi-hafiza-kontrolu. Gerekçe: bugün iki süreç hatası ve bir ölçüm hatası
+  daha önce yaşanmış sınıflardı — hafıza vardı, bakılmadı.

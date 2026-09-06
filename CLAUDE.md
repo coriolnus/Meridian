@@ -59,6 +59,7 @@ Kurallar burada tetiklenir. Sol sütundaki şeyi yapmak üzereysen sağ sütunu 
 | `dagit.sh` (dry-run dahil) | Rol-1 miyim? `git status --porcelain` boş mu? Worker durdu mu? |
 | "Dağıtıma hazır" cümlesi | Rol-1 değilsem yazmam. |
 | `research/` altına ölçüm kodu | `research/cards/` altında kart var mı? Yoksa kod yok. |
+| Bir karar / ruling / ayar değişikliği yazmak | Kalıcı hafızayı kontrol ettin mi (A1 `~/bin/hafiza_sor.sh` recall + ilgili zihin modeli sayfası + memory/ + `ops/kart_benzer.py`) ve kaynağı karara yazdın mı ("kaynak: recall/sayfa/memory" ya da "hafıza: benzer kayıt yok")? Atıfsız karar kontrol edilmemiş sayılır (operatör direktifi 2026-09-06). |
 | Yeni kart açmak | `ops/kart_benzer.py --hipotez "…"` koştun mu? Listedeki KALDI/NO-GO benzerleri `selef`/`ref`'e yazdın mı, ya da 'benzer yok' beyanı düştün mü? (TSK-170, 2026-09-06: 19 KALDI + 2 NO-GO kart var; başarısız yaklaşım bilmeden yeniden denenmez.) |
 | Kart dosyasına yazmak | Rol-1 miyim? Değilsem dokunmam. |
 | ROADMAP.md'ye madde yazmak | Şemaya uyuyor mu? (`docs/TASARIM-ROADMAP-STANDART-2026-09-01.md`: `[TSK-###]` başlık + status/born/owner/size/trigger donuk sözlükten + What/Why/Ref; cepheler PRG-##; §6 endeksi kart kimliğiyle; dış kimlikler Ref'e). Uymayanı v351 çivisi kırar. |
