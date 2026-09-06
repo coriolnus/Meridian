@@ -2762,3 +2762,9 @@ EDG-082 ölçüm ajanı ikinci sevk (taban 1812cc4).
 Hüküm: survivorship kapı düzeyinde ikinci dereceden; tohum PIT-süzgeçliyle değiştirilebilir (S5 OPERATÖR); replay için A önerilir.
 EDG-080 kanary 04:30Z seti 3/3 600 s zaman aşımı (yük 1,9→12, reflect araç yürütmesi CPU'ya sığmıyor) → K2 atlandı; altyapı teşhisi sırada.
 Kurtar 05:00Z 200; konsolidasyon pending 1349, failed 0, gözlem 5117; belge 285.
+
+**Suite #30 (3d75d8e, -n 4, 8,6 dk): 10621 passed / 0** → push → **DAĞITIM #22 (3d75d8e, 05:50:18Z, Pazar):** TSK-159 S2 (replay `uyelik`), TSK-156
+dilim-2 (b) (pitlaw beyaz liste, as_of_pit okuyucu), EDG-082 ölçüm kodu; healthz 200, [5a] 3/3. Reflect zaman aşımı düğmeleri ölçüldü (recall
+aday tavanı, sabit bütçe, reranker sağlayıcı) → TSK-142 gündüz deneyi tasarımı. Gece bilançosu: EDG-074 K1 kaldı (model), EDG-080 K1 iki set
+ölçülemedi (altyapı: CPU rerank), EDG-077 kaldı (100/gün tavan) → EDG-081 zinciri canlı ve temiz (pending 2884→1349, failed 0), r3 21/36,
+EDG-082 geçti (kısmi payda), TSK-159 S5 ve TSK-065 disk/delist kararları operatörde.
