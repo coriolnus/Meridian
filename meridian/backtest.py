@@ -218,7 +218,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     PIT takvimi olmadığı için susan karartma kapısı `earnings_gate`te sayılır.
 
     `uyelik` (TSK-159/EDG-2026-082) — opsiyonel, tarih → sembol kümesi. Verilirse CLOSE(D)
-    fazındaki ADAY TARAMASINDA (`strat.scan_entry` döngüsü) `uyelik(str(d.date()))` kümesinde
+    fazındaki ADAY TARAMASINDA (`strategy.scan_entry` döngüsü) `uyelik(str(d.date()))` kümesinde
     olmayan semboller o seans için ATLANIR: taranmaz, silahlanmaz. `uyelik(d)` seans başına
     (tarama gerçekten çalıştığında) BİR KEZ çağrılır, sembol başına DEĞİL. AÇIK POZİSYON
     YÖNETİMİ (OPEN/INTRADAY fazları, trail, scale_out, `_touch_exit`, zaman-durağı) BU SÜZGEÇTEN
@@ -409,7 +409,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
         regime_ok = rj["regime"] in ("trend_up", "chop") and rj["exposure_budget_pct"] > 0
         # regime-conditional params: base params overlaid with this regime's overrides (no-op if none)
         eff = config.resolve_params(params, params_by_regime, rj["regime"])
-        # PIT DİKİŞİNİN SEVKİ (EDG-2026-062). Replay TAMAMEN tarihseldir: `strat.scan_entry` →
+        # PIT DİKİŞİNİN SEVKİ (EDG-2026-062). Replay TAMAMEN tarihseldir: `strategy.scan_entry` →
         # `scan_all` → `evaluate_episodic_pivot`/`evaluate_pead` zinciri kazanç çapasını bu param
         # olmadan `state/earnings.csv`ten sorardı — bugünün ileri-pencere önbelleğini 2022 seansına
         # uygulayan yol (pitlaw kaydı; 2026-08-31'den beri `PIT_KORUMALI_ZINCIRLER` — beyan TAM

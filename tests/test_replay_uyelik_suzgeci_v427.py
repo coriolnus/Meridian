@@ -87,7 +87,7 @@ def _mem_sinyali(bars_df, params, rs_rating_value, ticker="?"):
 def sahne(sandbox_state, monkeypatch):
     """`sandbox_state`: goal/bounds sandbox'tan okunur, canlı `state/`e dokunulmaz. `scan_entry`
     saplaması `meridian.strategy` MODÜL NESNESİNE yazılır — `backtest.py`nin `from . import
-    strategy as strat` içe aktarımı AYNI modül nesnesine bakar, yani `backtest.strat.scan_entry`
+    strategy as strat` içe aktarımı AYNI modül nesnesine bakar, yani `strategy.scan_entry`
     çağrısı da bu saplamayı görür (iki ad, tek nesne)."""
     monkeypatch.setattr(strategy_mod, "scan_entry", _mem_sinyali)
     bars, idx = _sahne()
