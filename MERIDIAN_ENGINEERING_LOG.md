@@ -2730,3 +2730,8 @@ timer'lar artık 'HENÜZ KOŞMADI' (Result=success yanılgısı giderildi), kana
 **01:06Z — EDG-081 adım-2 zincir canlı, bir kesintiyle:** üyeler ana anahtarı devralmıyor (`_n_API_KEY` zorunlu) → 01:00Z restart ValueError,
 19 yeniden başlatma, ~4 dk Hindsight kapalı (r3 birkaç gecici_hata); anahtarlar sunucu içinde kopyalandı, 01:04Z'de beş model doğrulandı.
 Ders hafızaya: zincir üyesi = ayrı anahtar satırı. Kanary 3. denemesi restart'la kesildi; geçerli set 04:30Z.
+
+**01:10Z — TSK-159 açıldı + tasarım belgesi:** EDG-079 notu yanlışlıkla TSK-066'ya (tick AN yeniden kurulumu) yazılmıştı → düzeltildi; yeni
+kalem TSK-159 (PIT üyelikle yeniden tohumlama) ve docs/TASARIM-PIT-EVREN-YENIDEN-TOHUMLAMA-2026-09-06.md (üyelik süzgeci `uyelik(d)`,
+asimetri beyanı: delist barları olmadan hâlâ üst sınır; EDG-082 taslağı K=2 varyant A/B; 3 operatör kararı). Gece: kanary080 04:30Z,
+kurtar 05:00Z, K2 05:35Z; sabah okuma.
