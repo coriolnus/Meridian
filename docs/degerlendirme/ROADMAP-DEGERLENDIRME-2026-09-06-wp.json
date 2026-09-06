@@ -1,0 +1,1800 @@
+{
+ "cepheler": [
+  {
+   "alt_kalemler": [
+    {
+     "baslik": "✅ KAPANDI — koruma×süpürücü çarpışması KÖK DÜZELTME (v220",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "kapanmış madde — kanıt zaten dosyada (v220/v221, canlı md5 birebir)",
+     "gerekce": "Madde zaten ✅ işaretli ve tarihçe olarak duruyor; bugün yeniden açacak kanıt yok, yalnız sayıma dahil.",
+     "kanit": [
+      {
+       "dosya": "PRG-02.md",
+       "sembol_veya_alinti": "KANIT: alpaca.py yerel↔canlı md5 BİREBİR"
+      }
+     ]
+    },
+    {
+     "baslik": "~~⟳ YENİDEN AÇILDI (2026-08-09",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "yeniden açılan sonra kalıcı kapanmış — tarihçe",
+     "gerekce": "Madde 'yukarıda ✅' diye zaten üstteki kapanışa bağlanmış tarihçe kaydı; bugün için ek işlem yok.",
+     "kanit": [
+      {
+       "dosya": "PRG-02.md",
+       "sembol_veya_alinti": "→ yukarıda ✅ (tarihçe)"
+      }
+     ]
+    },
+    {
+     "baslik": "✅ KAPALI (WP2 cephesi 2026-08-22'de kapandı",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "koruma ölmüyor — v209-v211 canlıda doğrulandı",
+     "gerekce": "Zaten ✅ işaretli, ölçümle doğrulanmış tarihçe.",
+     "kanit": [
+      {
+       "dosya": "PRG-02.md",
+       "sembol_veya_alinti": "TIF gtc, day beyaz-listeden ÇIKARILDI"
+      }
+     ]
+    },
+    {
+     "baslik": "✅ SB-4 — DAMGASIZ YAZIM BEKÇİSİ (KAPANDI v216",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "entity_stamp kıyası kuruldu, v216 dağıtım #2",
+     "gerekce": "Zaten ✅ işaretli, denetim kalemi olarak kapalı.",
+     "kanit": [
+      {
+       "dosya": "PRG-02.md",
+       "sembol_veya_alinti": "entity_stamp kıyası → 'kitap bu tur DIŞARIDAN değişti' alarmı"
+      }
+     ]
+    },
+    {
+     "baslik": "✅ SB-3 — taban_kaymasi satırı (KAPANDI v216",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "recompute'a dördüncü satır eklendi, v216",
+     "gerekce": "Zaten ✅ işaretli.",
+     "kanit": [
+      {
+       "dosya": "PRG-02.md",
+       "sembol_veya_alinti": "realized_pnl − (Σ trades + ofset)"
+      }
+     ]
+    },
+    {
+     "baslik": "✅ SB-1 — plan başına BOYUT MAKBUZU (KAPANDI v222",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "_save_broker 14. anahtar + v226 pano-bacağı kalıcılık",
+     "gerekce": "Zaten ✅ işaretli, dağıtım #4'te doğrulanmış.",
+     "kanit": [
+      {
+       "dosya": "PRG-02.md",
+       "sembol_veya_alinti": "size_law · eq_kaynak · eq_now · peak · size_mult"
+      }
+     ]
+    },
+    {
+     "baslik": "📋 SB-2 — MIRROR_DRIFT'e drift_sinifi alanı",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "kod kanıtı: ayna_taban sınıfı loop.py'de yaşıyor",
+     "gerekce": "İnline not '✅ v257 damgası — ayna_taban sınıfıyla İNDİ' diyor; repo grep'i bunu doğruluyor — meridian/loop.py içinde ayna_taban sınıfı (Ö-53, 2026-08-22) fiilen var ve ROADMAP §7 H6 satırı (Ö-53) bunu 'drift_sinifi zaten v257'de (ayna_taban)' diye teyit ediyor. Orijinal 📋 işareti bugün YANLIŞ (bayat); kapanmış.",
+     "kanit": [
+      {
+       "dosya": "meridian/loop.py",
+       "sembol_veya_alinti": "# ayna_taban (2026-08-22, Ö-53): buraya gelindiyse..."
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "~SB-2 drift_sinifi · davranışsal EOD süpürme kanıtı~ H6 ✅ KAPANDI 2026-08-22 (v265) ... drift_sinifi zaten v257'de (ayna_taban)"
+      }
+     ]
+    },
+    {
+     "baslik": "ÖLÇÜLEMEDİ (kapanmadı, beyanlı): 08-04 kitap yazımı",
+     "hukum": "DUSUR-ONER",
+     "oncelik": "belirsiz",
+     "kapi": "geçmiş vaka kanıtsız, uydurma yasağı gereği kapanamaz; ileri akış SB-4 ile korunuyor",
+     "gerekce": "Madde zaten kendi içinde 'kapanmadı, beyanlı' ve 'uydurulmayacak' diyerek kalıcı biçimde çözümsüz kalacağını kabul ediyor; SB-4 (kapanmış) geleceği koruduğuna göre bu geçmişe dönük soruyu daha fazla açık tutmanın bugün için bir eylem değeri yok — kayıt olarak §8 arşive taşınabilir, aktif iş kalemi değil.",
+     "kanit": [
+      {
+       "dosya": "PRG-02.md",
+       "sembol_veya_alinti": "Dışlananlar: replay_seed · iade betiği · ikinci sermaye --uygula ... SB-4 bu soruyu GELECEKTE cevaplanabilir kılar; geçmiş vaka için kanıt yok ve uydurulmayacak"
+      }
+     ]
+    },
+    {
+     "baslik": "🟡 DOĞRULANMADI — melez pozisyonlar (iç defter 54/64/43/33",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "ROADMAP §7 H6 (Ö-53) satırı bu tam kalemi (54/64/43/33 ↔ 25/37/22/22, ayna_taban+_adet_benimse) ayrıntılı kanıtla kapatıyor",
+     "gerekce": "2026-08-31 denetiminin 'bu kalemin cephe kapanışına dahil olduğu ölçülemedi' şüphesi bugün YANLIŞ (bayat): ROADMAP.md §7 arşiv satırı (Ö-53 kitap↔broker ADET AYRIŞMASI, H6 ✅ KAPANDI 2026-08-22) tam bu 'melez pozisyon' senaryosunu — iki taban (kitap/ayna) farkını, B(ayna kitabın tabanıyla boyutlanır)+D(_adet_benimse) kararını, v258/10 çivi/suite 6281/0 kanıtını — ayrıntılı anlatıyor. Şüphe kanıt eksikliğinden değil, denetimin bu satırı henüz görmemiş olmasından kaynaklanıyor görünüyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "Ö-53 kitap↔broker ADET AYRIŞMASI ... H6 ✅ KAPANDI 2026-08-22 (OPERATÖR KARARI + B/D UYGULANDI) ... v258 10 çivi + K5 7-alan sözleşmesi; suite 6281/0"
+      }
+     ]
+    },
+    {
+     "baslik": "🟡 DOĞRULANMADI — uyuyan kurulum yolu (dormant_setup 31 plan",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "operator",
+     "kapi": "operatör karar vermeden kapanmaz: (a) icraya bağla (b) tavsiye kalsın-GO vermesin (c) geri al",
+     "gerekce": "Kullanıcı belleği (uyuyan-kurulum-yolu.md) bu maddeyi bugün de 'OPERATÖR KARARI BEKLİYOR' olarak taşıyor; ROADMAP'te 2026-09-06'ya kadar konuyu kapatan yeni bir karar/kanıt bulunamadı (grep dormant_setup/uyuyan kurulum son iz 2026-08-30 civarı, çözüm yok). İcraya bağlamak sistemin ne alıp sattığını değiştireceği için otonom kapatılamaz — bu doğası gereği operatöre kalan bir kalem.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "melez pozisyonlar, uyuyan-kurulum icra bağı — aşağıdaki numaralı envanterde AYNEN duruyor"
+      }
+     ]
+    },
+    {
+     "baslik": "🆕 AÇIK — DAVRANIŞSAL EOD KANITI HÂLÂ KAYITSIZ",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "eod_supurme_report bekçisi + 10/10 seans davranışsal ölçüm",
+     "gerekce": "İnline not '[2026-08-23 KAPANDI: v265]' ROADMAP §7 H6 satırıyla teyitli: 'EOD kanıtı: davranış 10/10 seansta ölçüldü ... eod_supurme_report bekçisiyle KAYITLI'. Ayrıca kod deposunda tests/test_eod_supurme_kaniti_v265.py mevcudiyeti (engineering log referansı) kanıtı destekliyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "EOD kanıtı: davranış 10/10 seansta ölçüldü (koruma dokunulmamış, v220 sonrası akşam iptali 0) ve eod_supurme_report bekçisiyle KAYITLI"
+      },
+      {
+       "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+       "sembol_veya_alinti": "tests/test_eod_supurme_kaniti_v265.py"
+      }
+     ]
+    }
+   ],
+   "cephe": "PRG-02 — Sermaye ve Koruma",
+   "cephe_durum_dogru": true,
+   "cephe_ozet": "Cephe 9 üst-düzey madde içeriyor; 6'sı zaten ✅ işaretli tarihçe (koruma×süpürücü çarpışması v220/v221, koruma-ölmüyor v209-v211, SB-4 damgasız-yazım v216, SB-3 taban_kaymasi v216, SB-1 boyut-makbuzu v222/v226). Kalan 3 tanesi (SB-2 drift_sinifi, melez pozisyonlar) ROADMAP §7 H6 arşiv satırlarıyla (Ö-53 v258, v265) fiilen kapanmış görünüyor ama denetim etiketleri bunu henüz yansıtmıyor (bayat 🟡 DOĞRULANMADI / 📋 etiketleri). 1 madde (08-04 kitap-yazımı kim yaptı) kalıcı olarak ölçülemez beyan edilmiş, düşürülmesi öneriliyor. 1 madde (dormant_setup / uyuyan kurulum yolu) bugün de gerçekten açık ve operatör kararı bekliyor. Başlıktaki 'KAPANMIŞ CEPHE' damgası (2026-08-23) genel olarak doğru; yalnız SB-2/melez-pozisyon satırlarındaki DOĞRULANMADI etiketleri güncellenmeli ve dormant_setup ayrı bir operatör-kalemi olarak PRG dışına/§5 KOVA'ya net taşınmalı.",
+   "onerilen_cephe_durumu": "Başlık işareti (🔴 + KAPANMIŞ CEPHE notu) korunabilir — cephe fiilen 2026-08-22/23'te kapandı ve o tarihten bugüne (2026-09-06) yeniden açan hiçbir TSK/EDG kaydı yok (ROADMAP'te PRG-02 son geçtiği yer 2026-08-23). Öneri: (1) SB-2 ve melez-pozisyonlar satırlarındaki '🟡 DOĞRULANMADI (2026-08-31 denetimi)' etiketleri kaldırılıp ROADMAP §7 H6 (Ö-53, v257/v258, v265) satırlarına çapraz-referans eklenerek KAPANDI olarak güncellenmeli; (2) 08-04 kitap-yazımı sorusu §8 arşive 'kalıcı-ölçülemez' kaydıyla taşınmalı; (3) dormant_setup/uyuyan-kurulum-yolu maddesi PRG-02'den çıkarılıp §5 operatör-kalemleri kovasında (zaten ROADMAP:3148'de öyle listeleniyor) tek kayıt olarak tutulmalı — bugün gerçek açık kalem BUDUR, cepheyi 'kapanmamış' göstermemesi için PRG dışına net biçimde bağlanmalı."
+  },
+  {
+   "alt_kalemler": [
+    {
+     "baslik": "E1 iki-motor mutabakatı + E2/E4/E5 kuyruğu (marketable stop-limit, gap-risk",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "EDG-2026-042 haftalık ölçümün eşiği doldurması (K1/K2/K3 kovaları) — 2026-09-05 koşum #4'te dördü de eşik altında, sıradaki koşum 2026-09-12",
+     "gerekce": "Madde E1 mutabakatını + marketable stop-limit gridini hâlâ açık iş olarak listeliyor, ama B4 kararı (2026-08-22, operatör: A+C) E1 limit bacağının kapalı kalmasına karar verdi ve tek açık argümanı EDG-2026-043/Ö-55'e devretti; o da EDG-042'nin gerçek-friksiyon bandı dolmadan okunamıyor. Yani madde 'iş' değil, gated bir bekleyiş — bugün de aynı şekilde blokede, aşılmış değil. E4/E5 için de son çalıştırılan ölçüm/karar kaydı görülmedi.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "`B4` KARAR (operatör): A+C — E1 limit bacağı KAPALI KALIR ... bant gelmeden B4 yeniden açılamaz (kill kriteri). `D5` tavan kararı park."
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "2026-09-05 `EDG-2026-042` HAFTALIK KOŞUM #4 ... dört kova da eşik altında → hükümlü koşum TETİKLENMEDİ ... `status: measuring` sürüyor."
+      }
+     ]
+    },
+    {
+     "baslik": "WP1-B 23 İcra/friksiyon hattı (23a-23g alt kalemleri)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "23b: EDG-2026-042 K2/K3 (gerçek-dolum) + EDG-2026-045 (replay-varsayım) — ikisiyle birlikte kapanacak; ayrı iş üretmiyor",
+     "gerekce": "23a/23c/23d/23f/23g zaten kapalı (kart+commit kanıtlı), tek kalan gerçek açık ölçüm kalemi 23b — 'çıkış slipajı, örneklem bekliyor' hükmü bugün de geçerli (EDG-042 K2/K3 son koşumda hâlâ eşik altında, TSK-085 hâlâ QUEUED). Madde bu haliyle güncel; ayrıca 23e'nin metin içi 'karar+kart operatörde' notu BAYAT (ayrı maddede işaretlendi).",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-085 | `23b` çıkış slipajı (örneklem bekliyor — ayrı iş üretmez) ... QUEUED(TSK-069 [EDG-042 K2/K3] + EDG-045 üzerinden kapanacak)"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "2026-09-05 `EDG-2026-042` HAFTALIK KOŞUM #4 ... `cikis_hedef` iki haftadır sabit (hız 0) ... `cikis_stop` n=4→7 ve seans eşiği doldu"
+      }
+     ]
+    },
+    {
+     "baslik": "23e gün-içi pencere kaydırma — 'karar+kart operatörde'",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "bu-hafta",
+     "kapi": "PRG-01.md / ROADMAP WP1-B satırının Rol-1 tarafından güncellenmesi (dosya düzenlemesi, karar verme değil)",
+     "gerekce": "Metin 'pencere-kaydırma artık §5 kalemi [B-PENCERE-KAYDIR]; karar+kart operatörde' diyor, ama bu karar ÇOKTAN verildi ve uygulandı: §5 tablosu B-PENCERE-KAYDIR'ı ✅ KAPALI işaretliyor, kimlik denetimi (2026-08-30) `barclock.py`'de `ENTRY_WINDOW_ET_MIN = 9*60+45` kanıtını gösteriyor. Bu bir açık karar değil, güncellenmemiş bir cephe notu.",
+     "bayat_iddia": "\"Pencere-kaydırma artık §5 kalemi [B-PENCERE-KAYDIR]; karar+kart operatörde\" — karar zaten verilip uygulandı, operatörde bekleyen bir şey yok.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "✅ KAPALI · `B-PENCERE-KAYDIR` | canlı tarama/emir penceresinin ~13:45 UTC'ye kaydırılması (23e; `EDG-2026-047` Ö1 ateşledi ...)"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "✅ `B-PENCERE-KAYDIR` | `meridian/barclock.py` `ENTRY_WINDOW_ET_MIN = 9*60+45` — yorumu \"EXE-2026-009 + K2\" diyor"
+      }
+     ]
+    },
+    {
+     "baslik": "13 Scale-out latent kusuru (bankalama-barı trail=entry_fill)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "scale_out_frac>0 açılmadan önce trail düzeltmesi zorunlu; şu an frac bounds'ta dokunulmuyor (operatör kararı) — kill koşulu değişmedi",
+     "gerekce": "ROADMAP §5/§7 kaydı hâlâ '13 scale-out' kalemini AÇIK listeliyor; operatör 2026-09-03'te scale_out_frac aralığına (0-0,75) dokunulmayacağına, yalnız gizli hatanın düzeltileceğine karar verdi ve ileride 'frac>0 önerilirse ship öncesi yeni kart' şartını çivisiz not olarak bıraktı. Düşük öncelik doğru (CI-negatif, alet zaten kapalı) ve bu hâlâ geçerli.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "**AÇIK** (yalnız `13`: ... `13` scale-out"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "OPERATÖR KARARI 13:13Z: kısmi kâr alma aralığına (bounds `exit.scale_out_frac` 0–0,75) DOKUNULMAZ, yalnız gizli hata düzeltilir"
+      }
+     ]
+    }
+   ],
+   "cephe": "PRG-01",
+   "cephe_durum_dogru": true,
+   "onerilen_cephe_durumu": "🔴 aktif (değişmez) — cephe başlığı bugün de doğru: WP1-B 23b (örneklem bekliyor, EDG-042 haftalık takvimde hâlâ eşik altında) tek gerçek açık ölçüm kalemi; WP1-A E1/E2/E4/E5 kuyruğu B4 kararıyla EDG-042 bandına gated bekliyor; WP1-C 13 (scale-out) düşük öncelikli açık tasarım kalemi olarak duruyor.",
+   "cephe_ozet": "PRG-01.md'de 6 üst-düzey madde var: 2'si zaten ✅ işaretli tarihçe (2026-08-03 BULGU/E1-grid kararı ve 2026-08-13 K1 şerhi işlenmesi — atlandı), 4'ü aktif değerlendirildi. Sonuç: cephe başlığındaki 🔴 aktif işareti bugün de doğru — WP1-B'nin 23b alt kalemi (çıkış slipajı, örneklem bekliyor) hâlâ tek gerçek açık ölçüm sorusu ve 2026-09-05 EDG-042 koşum #4'te hâlâ eşik altında; WP1-A'nın E1/E2/E4/E5 kuyruğu B4 kararıyla (2026-08-22, E1 kapalı kalır) aynı EDG-042 bandına gated; WP1-C'nin 13 (scale-out latent kusuru) düşük öncelikli açık tasarım kalemi olarak duruyor. Tek bayat iddia: WP1-B içindeki 23e (gün-içi pencere) notu hâlâ 'karar+kart operatörde' diyor, ama bu karar zaten verilip (B-PENCERE-KAYDIR ✅ KAPALI) `barclock.py`'de uygulanmış — bu yalnızca metnin güncellenmemiş olması, cephenin genel açık/kapalı durumunu değiştirmiyor."
+  },
+  {
+   "cephe": "PRG-04",
+   "cephe_durum_dogru": true,
+   "onerilen_cephe_durumu": "🔶 aktif (stratejik ana cephe) — ROADMAP §6 satırı (702) ile birebir aynı ve bugün de doğru: TSK-084 (delist-bar, OPERATOR beklemede), TSK-156 (PIT değişiklik-günlüğü kaynağı, ACTIVE), TSK-159 (EDG-079 survivorship icrası, ACTIVE, born 2026-09-06) hâlâ açık/canlı. Değişiklik önerilmiyor.",
+   "cephe_ozet": "PRG-04 dosyasında 9 üst-düzey madde var; 2'si açıkça ✅ ile işaretli tarihçe (BULGU-1 karantina teyidi, bars_integrity sevki) ve atlandı. WP4-B'deki 3. madde \"✅ KAPALI\" başlığı taşısa da içine BMO/AMC ileri-birikim (kapanmamış, düşük öncelik) ve earnings kapsaması+fail-open (hâlâ measuring, EDG-2026-055) gibi kapanmamış alt-kalemler gömülü — bu yüzden ayrı değerlendirildi. Kalan 6 madde (üyelik/S&P400-600, delist-bar sert kısıt, Massive plan doğrulanmadı, PIT-evrenli mid-cap ölçümü, EDG-022 keşfi, MNST split) tek tek incelendi. Depoda en önemli YENİ gelişme: TSK-156 (S&P PIT değişiklik-günlüğü kaynağı, dilim-1 canlı dağıtım #19) ve TSK-159/EDG-079/EDG-082 (replay defterinin PIT üyelikle yeniden kurulumu, bugün 2026-09-06 ACTIVE, S3 ölçüldü) — bunlar PRG-04.md'de HİÇ yok; dosya bu ilerlemeyi yakalamıyor (eksik güncelleme, ama \"bayat iddia\" değil — sadece PRG-04.md güncellenmemiş).",
+   "alt_kalemler": [
+    {
+     "baslik": "ÜYELİK ÇÖZÜLDÜ (ücretsiz): S&P500 tarihî üyelik repo",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-ay",
+     "kapi": "S&P400/600 için ücretsiz kaynak yok; alternatif SEC 13(f) resmî listesi (CUSIP→ticker emeği) hâlâ çalışılmadı",
+     "gerekce": "S&P500 kısmı doğrulandı (research/pit_universe/sp500_uyelik_tarihi.csv, 2.719 satır, dosya repoda mevcut) ama madde S&P400/600 boşluğunu açık bırakıyor; bugün de aynı durumda, yeni kaynak eklenmemiş.",
+     "kanit": [
+      {
+       "dosya": "research/pit_universe/sp500_uyelik_tarihi.csv",
+       "sembol_veya_alinti": "2719 satır (wc -l ile doğrulandı)"
+      },
+      {
+       "dosya": "research/pit_universe/LICENSE-fja05680",
+       "sembol_veya_alinti": "fja05680 MIT lisans dosyası"
+      }
+     ]
+    },
+    {
+     "baslik": "SERT KISIT: delist-bar boşluğu (%1,71 arşiv)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "operator",
+     "kapi": "TSK-084 (delist-bar kaynağı + FINVIZ bloğu) operatör kararı bekliyor",
+     "gerekce": "ROADMAP §6/§7 satırlarında (702, 611-618, 3062, 3210) TSK-065/TSK-084/B-DELIST-KAYNAK hâlâ 'OPERATOR'/'GATED(veri kapısı)'/'🔴 AÇIK' — bugün de karar verilmemiş; sayılar (703 çıkıştan 12'si barlı) değişmedi.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-065 | ... GATED(veri kapısı — delist-bar kaynağı kararı, EDG-018 askıda)"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-084 | delist-bar kaynağı + FINVIZ erişim bloğu ... | OPERATOR"
+      },
+      {
+       "dosya": "research/cards/EDG-2026-018-pit-midcap-ust-sinir.yaml",
+       "sembol_veya_alinti": "status: askiya_veri_kapisi"
+      }
+     ]
+    },
+    {
+     "baslik": "🟡 DOĞRULANMADI: Massive planı ~son 2 ay",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "operator",
+     "kapi": "B-DELIST-KAYNAK kararı (QC platform-içi vs Massive yükseltme) operatörde; canlı sondaj tekrarı yapılmadı",
+     "gerekce": "ROADMAP.md satır 1114 metniyle PRG-04.md birebir aynı — güncelleme yok; henüz doğrulama/kesin çözüm yok, aynı operasyonel bulgu geçerli.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "🟡 DOĞRULANMADI (2026-08-31 denetimi — Massive planının bugünkü kapsamı canlı sondaj ister)"
+      }
+     ]
+    },
+    {
+     "baslik": "Sonrası: PIT-evrenli G1 mid-cap ölçümü → B-9",
+     "hukum": "BIRLESTIR",
+     "oncelik": "bu-hafta",
+     "kapi": "EDG-070 (mid-cap sağkalan üst-sınır) hâlâ status: registered — koşulmadı; TSK-159/EDG-079/082 bugün (2026-09-06) canlı ölçüldü, farklı ama örtüşen kapsam (replay defteri PIT üyelik süzgeci)",
+     "gerekce": "PRG-04.md bu maddeyi 'Sonrası' (gelecek) diye çerçeveliyor ama TSK-159 bugün ACTIVE ve EDG-079/082 zaten koşuldu (K1 kaldı bant 3, K2 geçti; S3 EDG-082 ölçüldü: TABAN 871/A 829/B 849). Bu maddenin PIT-evren teması artık TSK-156+TSK-159 altında ilerliyor; PRG-04.md bunu yakalamıyor — TSK-159 ile birleştirilip güncellenmeli. EDG-070 (mid-cap turnover üst-sınır) ayrı ve hâlâ koşulmamış kart olarak kalabilir.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "[TSK-159] Tohum/replay defterinin PIT ÜYELİKLE yeniden kurulumu ... status: ACTIVE · born: 2026-09-06"
+      },
+      {
+       "dosya": "research/cards/EDG-2026-079-replay-defteri-pit-uyelik-denetimi.yaml",
+       "sembol_veya_alinti": "status: measured ... K1 KALDI (bant 3: p=0,107 > 0,10) · K2 GEÇTİ (q=0,085)"
+      },
+      {
+       "dosya": "research/cards/EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml",
+       "sembol_veya_alinti": "status: registered"
+      }
+     ]
+    },
+    {
+     "baslik": "KEŞİF 2026-08-09: evren 251=REPLAY, FINVIZ %100 ölü",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Madde içinde zaten '[2026-08-23: kart 08-09'da ÖLÇÜLDÜ — status: measured; öneri metni tarihçedir]' notu var; EDG-2026-022 kartı status:measured ve verdict alanı dolu, hüküm işlenmiş. Bugün yeniden açılmasını gerektiren kanıt yok.",
+     "kanit": [
+      {
+       "dosya": "research/cards/EDG-2026-022-evren-baglayici-kisit.yaml",
+       "sembol_veya_alinti": "status: measured   # 2026-08-09 Rol-1 — ölçüm KOŞULDU + hüküm işlendi"
+      }
+     ]
+    },
+    {
+     "baslik": "✅ KAPALI bundle: türetilmiş artefakt + BMO/AMC + earnings",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-ay",
+     "kapi": "EDG-2026-055 kartı R1 dal-2 ateşledi, HÜKÜM YOK — pencerede fail-open hiç tetiklenmedi, kart 'measuring' kalmaya devam ediyor; ayrıca ekseni dışı ağır bulgu (known≠korunuyor) için yeni kart ön-kaydı gerekiyor",
+     "gerekce": "Başlıktaki '✅ KAPALI' yalnız türetilmiş-artefakt yeniden üretimi ve 5.3 seans-içi tespiti kapsıyor (ikisi de gerçekten kapalı, kanıtlı). Ama aynı bileşik maddenin içindeki 'earnings kapsaması + fail-open daraltma' kalemi KAPANMADI: EDG-2026-055 kartı bugün hâlâ status: measuring, verdict='HÜKÜM YOK' (R1 dal-2, N_failopen_kapsam=0, örneklem kuraklığı). Ayrıca kartın kendi bulduğu daha ağır ekseni-dışı sorun (10 girişin 9'unda 'known' kapsamlı ama ileri-çapası yok, davranışça fail-open'dan ayırt edilemez) hiç ön-kayıt açılmadan tasarıma giremez — açık kalem. BMO/AMC ileri-birikimi de strikethrough değil, DÜŞÜK öncelikli açık not olarak duruyor.",
+     "kanit": [
+      {
+       "dosya": "research/cards/EDG-2026-055-earnings-fail-open.yaml",
+       "sembol_veya_alinti": "status: measuring    # 2026-08-24 ölçüldü — R1'in DAL-2'si ateşledi, hüküm YOK"
+      },
+      {
+       "dosya": "research/cards/EDG-2026-055-earnings-fail-open.yaml",
+       "sembol_veya_alinti": "EKSEN DIŞI AMA DAHA AĞIR BULGU (eşiksiz, hükümsüz — ama kayda geçiyor)"
+      }
+     ]
+    },
+    {
+     "baslik": "MNST split sınıfı — TEŞHİS ✅, düzeltme KART-önce açık",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-ay",
+     "kapi": "EDG-2026-056 kartı status: registered — henüz koşulmadı (ölçüm ajanı bekliyor)",
+     "gerekce": "Madde başlığı zaten teşhisin tam, düzeltmenin açık olduğunu söylüyor; kanıt bunu doğruluyor — EDG-056 kartı 2026-08-24'te ön-kaydedildi ama status hâlâ 'registered', ölçüm koşulmamış. Bugün de aynı durumda, kapatılacak yeni kanıt yok.",
+     "kanit": [
+      {
+       "dosya": "research/cards/EDG-2026-056-split-oran-imzasi.yaml",
+       "sembol_veya_alinti": "status: registered   # 2026-08-24 Rol-1 — ön-kayıt (WP4 eleme ÖLÇ sınıfı)"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "cephe": "PRG-07",
+   "cephe_durum_dogru": false,
+   "onerilen_cephe_durumu": "🔶 kısmen aktif — gövde metni 2026-08-24 eleme turunda donmuş; 2026-09-03 EDG-2026-019 resmî ölçümü ve onu izleyen TSK-126 (tasarım, DONE 2026-09-06) + EDG-2026-078 (Aşama A, canlı dağıtım #21) cephe gövdesine hiç işlenmemiş. Başlıktaki 🆕 etiketi de artık yanıltıcı (cephe 3 haftadır aynı, aktif iş başka künyeye taşınmış).",
+   "cephe_ozet": "Cephede 9 üst-düzey madde var (24a-24h + §4-boşaltması 2 kalem = toplam liste 8 skill-katmanı maddesi + 2 taşınmış madde). Durum: 24a KAPANDI (arşiv), 24b tek gerçekten açık kalem (SOUL kilidi açıldı ama etki hiç ölçülmedi), 24c/24d/24e KAPANDI-BAYAT (2026-08-24 eleme), 24f BİRLEŞTİR→24h, 24g KAPANDI-BAYAT, 24h KAPALI (BAYAT-KAPALI, 2026-08-24 doğrulama). §4'ten taşınan 31 ve 40 kalemleri zaten TAŞINDI etiketli, izleri §4'te. Cephenin gerçek açık ucu (24b'nin gerekçesi olan EDG-2026-019) 2026-09-03'te resmî ölçüldü (TSK-073, iki terfi adayı: exhaustion-hammer, vcp) ve bu ölçüm operatör kararıyla TSK-126 tasarım belgesine (DONE 2026-09-06) ve şimdi canlı EDG-2026-078 gölge-sıralama koluna (dağıtım #21) evrildi — bunların hiçbiri PRG-07 §3 gövdesinde yok.",
+   "alt_kalemler": [
+    {
+     "baslik": "24a ÇAĞRI İZİ GERİLEMESİ",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Cephe metninde zaten ✅ KAPANDI (v242, 2026-08-13) olarak işaretli, §8 arşive taşınmış; başka kanıt aranmadı.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "24a ÇAĞRI İZİ GERİLEMESİ — ✅ KAPANDI (v242 turu; 2026-08-13, denetim B7)"
+      }
+     ]
+    },
+    {
+     "baslik": "24b SOUL.md KİLİDİ açıldı ama HİÇ SINANMADI",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "EDG-2026-019 kart hükmü / operatör",
+     "gerekce": "Kilit canlıda doğrulandı (2026-08-22 sha eşleşmesi) ama ETKİ ölçümü hâlâ yapılmamış; ROADMAP.md kart satırı bunu 'kısmen bayat: kilit doğrulandı, etki ölçümü yok, kart registered' diye teyit ediyor — bugün de gerçek durum bu.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "24b SOUL kilidi açıldı ama **HİÇ SINANMADI** ... ETKİ ölçümü hâlâ yok — kart `registered`"
+      },
+      {
+       "dosya": "research/cards/EDG-2026-019-skill-gorus-defteri.yaml",
+       "sembol_veya_alinti": "hukum_2026_09_03 (Ref olarak TSK-126 kaydında anılıyor)"
+      }
+     ]
+    },
+    {
+     "baslik": "24c ANA DANIŞMA YOLU ÖLÜ",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "docs/ELEME-WP7-2026-08-23.md §1",
+     "gerekce": "2026-08-24 eleme turunda KAPANDI-BAYAT hükmü verilmiş, kanıt (danışmanın aynı yol üzerinden 2026-08-14 terfi etmesi) somut ve tarihli; yeniden açan bir olay bulunamadı.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "KAPANDI-BAYAT: ... danışman 2026-08-14T21:03:34'te TERFİ ETTİ"
+      }
+     ]
+    },
+    {
+     "baslik": "24d PİLOT-S1 A/B tasarımı",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "docs/ELEME-WP7-2026-08-23.md §2",
+     "gerekce": "2026-08-24'te tasarımın üç öncülünün de geçersiz olduğu ölçüldü (n_pairs pilotsuz aşıldı, veto yüzeyi hiç ateşlenmedi); sonraki günlükte yeniden açılış talebi yok.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "KAPANDI-BAYAT: tasarımın ÜÇ ÖNCÜLÜ de bugün yanlış"
+      }
+     ]
+    },
+    {
+     "baslik": "24e ÇEKİMSER TEŞVİKİ (terfinin ASIL duvarı)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "docs/ELEME-WP7-2026-08-23.md §3",
+     "gerekce": "İddia yazıldıktan bir gün sonra r_gap null→0.857, promoted=true olarak çürütüldü; kayıtlı KAPAT hükmü var, sonrasında geri açılmamış.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "Varsayılan hüküm: KAPAT. Belge: docs/ELEME-WP7-2026-08-23.md §3"
+      }
+     ]
+    },
+    {
+     "baslik": "24f SKILL.md ↔ KOD BAĞI YOK",
+     "hukum": "BIRLESTIR",
+     "oncelik": "belirsiz",
+     "kapi": "24h ile aynı yapısal boşluk",
+     "gerekce": "Metin kendisi 24f'nin 24h ailesine devredildiğini söylüyor; ayrı kalem olarak saymak aynı işi iki kez saymak olur.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "BİRLEŞTİR: 24h rozet-damgası ailesine devredildi"
+      }
+     ]
+    },
+    {
+     "baslik": "24g SPRINT SIZINTISI",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "docs/ELEME-WP7-2026-08-23.md §5",
+     "gerekce": "v242 kapısı canlı kodda doğrulanmış ve üç ayrı kum-havuzu koşumunda gerçek-koşul kanıtıyla tutmuş; iddiayı çürütecek yeni olay bulunamadı.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "bu bayrak testi değil GERÇEK-KOŞUL kanıtıdır"
+      }
+     ]
+    },
+    {
+     "baslik": "24h SKİLL ROZETİ DAMGASI (93 bayrak registry'siz)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "operatör (yeni ölçüm/karar ister)",
+     "gerekce": "Cephede ✅ KAPALI (BAYAT-KAPALI, 2026-08-24) yazıyor ama gövde metni bunun yalnızca 08-24 eleme turunda 'sayısal kanıt bayatladı, kalan çekirdek AYNI yapısal boşluk (24h ile aynı)' dediğini gösteriyor — yani asıl teknik boşluk (93 bayrağın motor registry'sine bağlı olmaması, SKILL.md-motor davranış sözleşmesi eksikliği) hâlâ giderilmemiş; kod tarafında skills.py:120 ENGINE_IMPLEMENTED sembolü bugün de mevcut ve durum değişmemiş görünüyor. 'BAYAT-KAPALI' etiketi konunun teknik varlığını değil, o turdaki SAYISAL iddianın güncelliğini kapatmış; başlıktaki 🆕 ile ✅ KAPALI çelişkisi kafa karıştırıcı.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "✅ KAPALI (`24h` 2026-08-24 doğrulama turunda BAYAT-KAPALI çıktı) ... 93 skill bayrağı motor registry'sine bağlı değil"
+      },
+      {
+       "dosya": "meridian/skills.py",
+       "sembol_veya_alinti": "ENGINE_IMPLEMENTED"
+      }
+     ]
+    },
+    {
+     "baslik": "EDG-2026-019 çapraz atıf (katman KAPATILIR, yeniden-açılış yalnız resmî ölçümle)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "bu-hafta",
+     "kapi": "—",
+     "gerekce": "Bu not kartın 2026-08-24 durumunu anlatıyor ('resmî ölçüm bekleniyor'); resmî ölçüm 2026-09-03'te TSK-073 ile YAPILDI (exhaustion-hammer + vcp terfi adayı bulundu), operatör 'tasarım kalemi aç' dedi, TSK-126 tasarım belgesi DONE (2026-09-06) oldu ve şu an EDG-2026-078 (Aşama A, gölge sıralama kolu) canlıda dağıtım #21 ile ölçülüyor. Bu ilerleme PRG-07 §3 gövdesinde hiç görünmüyor — bayat_iddia budur.",
+     "kanit": [
+      {
+       "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+       "sembol_veya_alinti": "EDG-2026-019 resmî koşum #1 (TSK-073; Rol-1, 13:33Z; commit 4fdde26)"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "[TSK-126] Skill görüş TERFİSİ tasarım belgesi ... status: DONE(2026-09-06"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "AŞAMA A CANLI 19:57Z, dağıtım #21: EDG-078 measuring"
+      },
+      {
+       "dosya": "research/cards/EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml",
+       "sembol_veya_alinti": "TSK-126; EDG-2026-019 (Ref alanı, ROADMAP.md satırından)"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "cephe": "PRG-08",
+   "cephe_durum_dogru": true,
+   "onerilen_cephe_durumu": "🟡 AÇIK — frontend esasen bitti (mevcut işaretle aynı; ROADMAP.md:706 \"AÇIK · 🟡 frontend esasen bitti\" ile tutarlı)",
+   "cephe_ozet": "PRG-08.md dosyasında WP8-A/B/C/D alt-cepheleri altında ~19 üst-düzey madde var; bunların 13'ü ✅ ile işaretli ve tarihçe (D0,D1,D2,D4,D5,D6,D3-b-F5,P1,P2,P3,P5,P6,P7,P9,P10,P-A borcu,entry_law-M11 — bazıları çoklu ✅ içeriyor). Kalan ~6 madde bu turda değerlendirildi: 1) D3-b F3-F13/F15 + D3-c hâlâ açık (ROADMAP:706 canonical durumla teyitli) — ACIK-KALSIN. 2) broker_status pano yanlış-güveni (M11) — kod (app.js aynaDurumu, v280) + test (tests/test_pano_durustluk_v280.py §A-D) kanıtıyla fiilen KAPANMIŞ, dosyadaki \"DOĞRULANMADI/AÇIK\" etiketi bayat. 3) entry_law ölü-alan — dosyanın kendi ✅ KAPALI notu doğrulandı (test dosyası mevcut). 4) WP8-B'nin \"F8 ailesi WP-P kolu (15 bekçi+halt_learning)\" ve WP8-C'nin \"F8 durum-sözlüğü ÖN ŞART\" maddeleri artık TSK-070 (QUEUED, rol1, M) ile aynı kalemdir — ROADMAP:5553 zaten 2026-08-22'de birleştirmiş; PRG-08.md'de hâlâ ayrı ayrı yazılıyor → BIRLESTIR önerisi. 5) WP8-D renk rol-sızıntısı (app.js'te 33 ham hue jetonu) grep ile hâlâ doğrulandı (31 adet var(--amber|green|red), test_renk_rolleri_v197.py'nin KURALLAR'ı yalnız index.html'i tarıyor) — gerçekten ACIK-KALSIN. 6) F3/F4/F11/F12 (backend) ve F6/F7 (viz) kalemlerinin \"2026-08-31 DOĞRULANMADI\" etiketleri bu turda da ölçülemedi (salt-okunur, yeni kanıt yok) — ACIK-KALSIN. 7) P4 altında gömülü \"yazı-tipi değişimi AÇIK kalem\" notu ayrı bir açık karardır.",
+   "alt_kalemler": [
+    {
+     "baslik": "D3-b F3-F13/F15 yüzeyleri + D3-c altı modül",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "F3/F4/F11/F12 backend WP + F6/F7 viz + C2-4 LEAN (makine kurulumu bloklu) + C2-5 delist-arşiv (Massive kararı + kart zorunlu)",
+     "gerekce": "ROADMAP.md §7 satırı (PRG-08 kanonik özet, satır 706) bugün de aynı kalemleri açık listeliyor: 'D3-b F3-F13/F15 · D3-c C2-4/C2-5/6.çalışma'. Bu turda repo içinde bu kalemleri kapatan yeni kod/test bulunamadı.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "D3-b F3-F13/F15 · D3-c C2-4/C2-5/6. çalışma"
+      },
+      {
+       "dosya": "research/roadmap_bloklar/PRG-08.md",
+       "sembol_veya_alinti": "AÇIK: D3-b F3-F13/F15 yüzeyleri + D3-c ALTI MODÜL"
+      }
+     ]
+    },
+    {
+     "baslik": "broker_status PANO YANLIŞ-GÜVENİ (M11 bulgusu)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "canlı panoda gözle bir kez teyit (opsiyonel doğrulama, kapatmayı engellemez)",
+     "gerekce": "Dosya bu maddeyi hâlâ '🟡 DOĞRULANMADI / 🆕 M11 TARAMASI BULGUSU' olarak açık gösteriyor, ama kod fiilen düzeltilmiş: app.js'teki aynaDurumu(bs, gonderildi) fonksiyonu artık gap_veto ve armed_dropped_<kapı> değerlerini ayrı 'dusen' kovasına yazıyor (else dalına düşmüyor, bekleyen sayacına girmiyor) ve tests/test_pano_durustluk_v280.py §A-D bunu Node'da gerçekten koşturarak doğruluyor (test_a2, test_b1/b2, test_c1/c2, test_d1/d2).",
+     "kanit": [
+      {
+       "dosya": "meridian/web/app.js",
+       "sembol_veya_alinti": "function aynaDurumu(bs, gonderildi) { ... if (bs === \"gap_veto\") ... if (bs.indexOf(\"armed_dropped_\") === 0) ..."
+      },
+      {
+       "dosya": "tests/test_pano_durustluk_v280.py",
+       "sembol_veya_alinti": "test_b2_hicbir_damgali_plan_gonderilecek_demiyor"
+      }
+     ]
+    },
+    {
+     "baslik": "entry_law yan tablosunda 4 ölü alt-alan + çürük beyan",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "Dosyanın kendi metni zaten '✅ KAPALI' diyor; bu değerlendirmede test dosyasının varlığı doğrulandı (tests/test_pano_durustluk_v280.py mevcut ve entry_law/e2 testleri (test_e1..e4) içeriyor). Maddenin kendisi zaten kapanmış görünüyor, PRG-08.md'de doğru işaretlenmiş.",
+     "kanit": [
+      {
+       "dosya": "tests/test_pano_durustluk_v280.py",
+       "sembol_veya_alinti": "test_e1_curuk_beyan_mezar_tasi / test_e2_dort_alan_olu_damgasi_tasiyor"
+      },
+      {
+       "dosya": "research/roadmap_bloklar/PRG-08.md",
+       "sembol_veya_alinti": "✅ KAPALI (`broker.py` ÖLÜ-ALAN DAMGASI[M11] bloğu indi, çivisi `tests/test_pano_durustluk_v280.py`)"
+      }
+     ]
+    },
+    {
+     "baslik": "WP8-B: F8 ailesi WP-P kolu — 15 bekçi + halt_learning",
+     "hukum": "BIRLESTIR",
+     "oncelik": "bu-ay",
+     "kapi": "TSK-070 uygulaması (kanonik sözlük pano bacağı + A1-A8 sorularının yanıtı)",
+     "gerekce": "ROADMAP.md:5553 bu kalemi zaten 2026-08-22'de 'H1'e TAŞINDI' diye işaretlemiş ve TSK-070 satırına yönlendiriyor; PRG-08.md hâlâ bunu ayrı bir 'AÇIK' kalem olarak taşıyor — aynı işin iki yerde ayrı yaşaması Tek-kaynak yasasını ihlal ediyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "H1'e TAŞINDI (2026-08-22) | WP8 | yukarıdaki H1 satırına bakın"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-070 | F8 pano durum-sözlüğü (WP: WP8) | QUEUED"
+      }
+     ]
+    },
+    {
+     "baslik": "WP8-C: F8 pano durum-sözlüğü (kanonik okuyucu ön-şartı)",
+     "hukum": "BIRLESTIR",
+     "oncelik": "bu-ay",
+     "kapi": "TSK-070 — kalan iş: A1-A8 soruları + pano bacağı (web/** + api.py)",
+     "gerekce": "PRG-08.md'deki 'ÖN ŞART: kanonik bir durum-okuyucu — yoksa uydurma riski (önce okuyucu tanımı)' cümlesi bayat: kanonik okuyucu `meridian/durum_sozlugu.py` zaten indi ve üç yüzeye kablolu (watchdog.py, api.py, hermes_runtime.py) — ROADMAP.md satır 5501 bunu doğruluyor. Kalan iş zaten TSK-070 altında takip ediliyor; WP8-C ayrı bir madde olarak durmamalı.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "F8 kanonik durum sözlüğü uygulaması → `meridian/durum_sozlugu.py` mevcut ve üç yüzeye kablolu"
+      },
+      {
+       "dosya": "research/roadmap_bloklar/PRG-08.md",
+       "sembol_veya_alinti": "ÖN ŞART: kanonik bir durum-okuyucu — yoksa dağınık alan sentezi UYDURMA riski"
+      }
+     ]
+    },
+    {
+     "baslik": "WP8-D: Renk rol-sızıntısının ikinci evi (app.js 33 ham hue)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-ay",
+     "kapi": "test_bilesen_kurallari_ham_hue_okumaz çivisinin menzilini app.js çalışma-zamanı stillerine genişletmek + jetonları sınıflamak",
+     "gerekce": "Grep ile doğrulandı: meridian/web/app.js hâlâ 31 adet var(--amber|--green|--red) ham değer-jetonu içeriyor (iddia edilen 33'e yakın, drift olağan) ve tests/test_renk_rolleri_v197.py::test_bilesen_kurallari_ham_hue_okumaz'daki KURALLAR yalnız index.html'in <style> bloğunu tarıyor (app.js'e dokunmuyor) — madde bugün de gerçek ve açık.",
+     "kanit": [
+      {
+       "dosya": "meridian/web/app.js",
+       "sembol_veya_alinti": "var(--amber|--green|--red) — 31 eşleşme (grep -c)"
+      },
+      {
+       "dosya": "tests/test_renk_rolleri_v197.py",
+       "sembol_veya_alinti": "def _kurallar(): stil = INDEX[INDEX.index(\"<style>\"): INDEX.rindex(\"</style>\")]"
+      }
+     ]
+    },
+    {
+     "baslik": "F3/F4/F11/F12 backend + F6/F7 viz — 'DOĞRULANMADI 2026-08-31' etiketleri",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "akıbeti ölçen bir tur (bu değerlendirme salt-okunur olduğu için yeni ölçüm üretemedi)",
+     "gerekce": "Bu iki grup için ROADMAP.md veya kod tabanında F3/F4/F6/F7'yi kapatan yeni bir TSK, kart veya kod bulunamadı; 2026-08-31 tarihli 'bu turda ölçülmedi' notu hâlâ güncel bilgi durumu — dolayısıyla belirsizlik açık kalmalı, kapatılmamalı.",
+     "kanit": [
+      {
+       "dosya": "research/roadmap_bloklar/PRG-08.md",
+       "sembol_veya_alinti": "🟡 DOĞRULANMADI (2026-08-31 denetimi — F3/F4 backend kalemlerinin akıbeti bu turda ölçülmedi)"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "F3/F4/F11/F12 backend, F9/F10/F13 zaten yüzeyde, F6/F7 viz"
+      }
+     ]
+    },
+    {
+     "baslik": "P4 içinde gömülü: yazı-tipi değişimi AÇIK kalem",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "gelecek-hafta",
+     "kapi": "ayrı `typeset` turu",
+     "gerekce": "P4 maddesinin ✅ işareti yalnız slashed-zero ölçümünün kapandığını gösteriyor; aynı madde içinde 'Yazı-tipi değişimi AÇIK kalem (ayrı typeset turu)' notu hâlâ çözümsüz bir karar olarak duruyor ve başka hiçbir TSK'da izlenmiyor.",
+     "kanit": [
+      {
+       "dosya": "research/roadmap_bloklar/PRG-08.md",
+       "sembol_veya_alinti": "Yazı-tipi değişimi AÇIK kalem (ayrı `typeset` turu)"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "cephe": "PRG-06",
+   "cephe_durum_dogru": false,
+   "onerilen_cephe_durumu": "🟢 (neredeyse kapandı) — WP6-A/B/C'nin görünürdeki tüm açık gövdeleri (H9 kuyruk, F9, H10, A17, 25 ölü-bileşen, 26 değer-eşitliği, 49 çapa/beyan) ROADMAP §6'da TSK-078/TSK-079/TSK-080 üzerinden 2026-09-03'te DONE olarak kapanmış; PRG-06.md dosyasının kendisi 2026-08-23 seviyesinde donmuş kaldığı için başlıktaki 🟡 artık bayat. Kalan gerçek açık uçlar: (a) H11 canlıya alma kararı (operatör), (b) TSK-078 #3 max_drawdown ortamlar-arası ölçümü (küçük takip, kart açılmadı), (c) 25b'nin 1/6'sı ve 25c-2 debi notu (küçük takip), (d) TSK-080'in docs sembol-göçü devamı artık TSK-119/120/127/129 kimlikleriyle ayrı izleniyor.",
+   "cephe_ozet": "Dosyada 25 üst-düzey madde var; 18'i zaten ✅ ile işaretli tarihçe (H1,H2,H3,H4,H5,H6,H7,H8,H9-çekirdek,H9-Kademe-B,H10,DASH-TOKEN,DEV-GRUBU-DARALTMA,F9,H11[✅ KOD-HAZIR ama \"canlıya sonraki pencerede\" notu taşıyor — kural gereği atlandı, ayrı hüküm yazılmadı],WP6-D arşiv,Ö-38,Ö-34) — bunlar değerlendirilmedi. Değerlendirilen 8 madde: hepsi ya zaten depo/ROADMAP kanıtıyla kapanmış (ZATEN VAR envanteri, KEŞİF 2026-08-09, REDDEDİLDİ kararı, A17 — başlık \"AÇIK\" ama gövde ✅ v268 ile kapanmış, 25 ölü-bileşen → TSK-079 DONE 2026-09-03, 26 değer-eşitliği → TSK-078 DONE 2026-09-03) ya da başka bir kalemle birleşiyor (H5-eski kayıt → H5'e, 49 çapa/beyan → TSK-080/TSK-119/120/127/129'a). Cephenin gövdesi ölçüm tarihi itibarıyla (2026-08-23 civarı) donmuş; 2026-09-03 TSK kapanışları dosyaya işlenmemiş.",
+   "alt_kalemler": [
+    {
+     "baslik": "ZATEN VAR (el kitabı↔Meridian karşılık envanteri)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Bu madde bir aksiyon kalemi değil, mevcut karşılıkların listesidir (wide-event, canary/shadow, DST-lite, snapshot testleri, yedek zinciri, dead-man); hepsi başka maddelerde (H1,H5,H7,17 bekçi) ayrıca kapanmış olarak izleniyor.",
+     "kanit": [
+      {
+       "dosya": "PRG-06.md",
+       "sembol_veya_alinti": "ZATEN VAR (el kitabı istiyor, bizde karşılığı)"
+      }
+     ]
+    },
+    {
+     "baslik": "KEŞİF 2026-08-09 (WP-H+WP-D bulgu envanteri)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Metnin işaret ettiği tek otonom iş kalemi olan H9 Kademe-B çağrı-noktası taşıması aynı dosyanın devamında '✅ KAPANDI' (v267 damgası, 2026-08-23) olarak zaten kayıtlı; WP-D'nin operatör-bloklu iki kalemi ayrı takip ediliyor, bu satırda yeni aksiyon yok.",
+     "kanit": [
+      {
+       "dosya": "PRG-06.md",
+       "sembol_veya_alinti": "AÇIK KUYRUK (çağrı-noktası taşıma) ✅ KAPANDI — VE SATIR BAYATTI"
+      }
+     ]
+    },
+    {
+     "baslik": "H5-eski kayıt (haftalık mutasyon ritüeli hazırlığı)",
+     "hukum": "BIRLESTIR",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Üstteki H5 maddesi zaten %86,8 skorla (hedef %80 aşıldı) KAPANDI olarak işaretli; bu satır H5'in eski/öncül durumunu anlatan artık gereksiz bir kayıt, ayrı bir açık kalem değil.",
+     "kanit": [
+      {
+       "dosya": "PRG-06.md",
+       "sembol_veya_alinti": "H5-eski kayıt: yapılandırma + ops/haftalik_mutasyon.sh hazır"
+      }
+     ]
+    },
+    {
+     "baslik": "REDDEDİLDİ (Litestream/PRAGMA/DuckLake/GE/K8s vb.)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Bu bir ret kararı kaydıdır; H10 maddesi aynı dosyada '✅ KAPALI (hüküm yazılı — yeniden değerlendirildi ve karara bağlandı)' olarak bu kararı teyit ediyor, aksiyon gerekmiyor.",
+     "kanit": [
+      {
+       "dosya": "PRG-06.md",
+       "sembol_veya_alinti": "REDDEDİLDİ (bizim gerçekte): Litestream/SQLite-PRAGMA/DuckLake"
+      }
+     ]
+    },
+    {
+     "baslik": "A17 — Kaynak-içi çapa bayatlığı",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "repo (state/goal.yaml, meridian/api.py)",
+     "gerekce": "Madde başlığı 'AÇIK' diyor ama gövdenin sonundaki '[2026-08-23: ✅ v268 damgası (375abd5) — state/goal.yaml:130 ve api.py:2170 çapaları düzeltildi]' notu maddeyi zaten kapatmış; başlık etiketi güncellenmemiş.",
+     "kanit": [
+      {
+       "dosya": "PRG-06.md",
+       "sembol_veya_alinti": "[2026-08-23: ✅ v268 damgası (375abd5) — `state/goal.yaml:130` ve `api.py:2170` çapaları düzeltildi]"
+      }
+     ],
+     "bayat_iddia": "Başlıktaki 'AÇIK' etiketi bugün doğru değil; madde 2026-08-23'te zaten kapanmış."
+    },
+    {
+     "baslik": "25. Ölü/Ezilen Bileşen Budaması (25a-25e)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "ROADMAP.md §6 TSK-079 kaydı",
+     "gerekce": "ROADMAP §6'da TSK-079 2026-09-03'te DONE: 25a 14/14 kaldırıldı (son kalem A1 .env bayat token'ı silindi), 25b 5/6 damgalandı, 25c-1 EDG-072→EDG-073 R2 ile KOVA C hükmüyle sevk kapısı KAPALI olarak karara bağlandı, 25c-2 yalnız küçük bir 'debi' takip notu, 25d zaten tamam; 25e zaten WP3'e bağlanmış (dosyanın kendisi de bunu not ediyor). Bu dosyadaki gövde 2026-08-23 seviyesinde donmuş, 2026-09-03 kapanışını yansıtmıyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-079 · 25a KALDIR(14) / 25c DİRİLT(3) / 25d ezilme zinciri (25b 5/6 damgalandı) ... DONE(2026-09-03 25a/25d kapalı; 25c-1 → EDG-072 KOVA C; 25c-2 debi)"
+      }
+     ]
+    },
+    {
+     "baslik": "26. Değer-Eşitliği Kapısının Genişletilmesi",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "ROADMAP.md §6 TSK-078 kaydı",
+     "gerekce": "Dosyanın kendi 2026-08-23 notu '26 KAPISIZ çift' iddiasını zaten bayat sayıp EQUIVALENT_TRUTHS'ün 9 olguya indiğini, kalan yalnız ortamlar-arası 3 çift olduğunu söylüyor; ROADMAP §6 TSK-078 2026-09-03'te bunu DONE olarak kapatıyor (#2 ve #4 kapandı, yalnız #3 max_drawdown ortamlar-arası küçük bir takip olarak açık, yeni kalem yazılmamış).",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-078 · 26 değer-eşitliği — kalan 9 çiftin gerekçe envanteri (ortamlar-arası 3 çift) ... DONE(2026-09-03 8da5fb5; #3 açık)"
+      }
+     ]
+    },
+    {
+     "baslik": "49. Çapa/Beyan Çürümesi — WP6-E gövdesi",
+     "hukum": "BIRLESTIR",
+     "oncelik": "belirsiz",
+     "kapi": "ROADMAP.md §6 TSK-080/TSK-119/TSK-120/TSK-127/TSK-129",
+     "gerekce": "Bu gövde Ö-49'un WP6-E'ye taşınmış hâlidir; kalan 'docs/ yasa kapsamı dışı' sorunu ROADMAP'te ayrı TSK-080 kartı olarak açılmış ve 2026-09-03'te DONE olmuştur (3a493a4, dağıtım #8); docs dünyasının kalıcı sembol-göçü işi artık TSK-119/TSK-120/TSK-127/TSK-129 dilimlerine devredilmiş (ADIM-3 sürüyor). Bu metin artık PRG-06 altında ayrı bir açık kalem değil, TSK kimlikleriyle izleniyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-080 · Ö-49 çapa/beyan çürümesi kalanı ... DONE(2026-09-03 3a493a4 dağıtım #8 cbdac82)"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "cephe": "PRG-05",
+   "cephe_durum_dogru": true,
+   "onerilen_cephe_durumu": "📋 (doğru — aktif kriz/akış yok) ama dosya AĞIR BAYAT: 23 üst-düzey maddeden 8'i zaten ✅ işaretli tarihçe, kalan 15'in en az 9'u bugünkü kod/kart taramasında GERÇEKTEN kapanmış çıktı (TSK-050 ajan-git shim, guard.cift_bag_hukmu, watchdog.uyuyan_kurulum, hermes telemetri kartı, kart-lint v279, M8 U2/U3, 20b/20d kayıt-kapanışları, KYS-2026-001 M1 ölçümü) ama metin hâlâ \"açık/planlanan iş\" diliyle duruyor. Öneri: konsolide bir Rol-1 turu bu 9 kalemi §8 arşive taşısın; gerçekten açık kalan 5-6 kalem (Faz-5 örneklem, WP5-C DSR aracı, WP5-D U6 mimari kararı, skill-görüş canlı-kanıt, cf çıkış-yasası borcu) tek satırlık aktif WP5 gövdesine indirilsin.",
+   "cephe_ozet": "PRG-05 = eski WP5 (Ölçüm Altyapısı), 23 üst-düzey madde (19 \"- **\" + 4 numaralı: 4/14/16/20). 8 madde zaten dosyada ✅ işaretli tarihçe (para-v3, k.olcum, app.js 409, EV_TR çevirileri, sistematik tur/dördüncü kova, beşinci kova, 2×TAŞINDI-havuz-pointer). Kalan 15 madde bu turda kanıtla yeniden ölçüldü: 9'u kod/git kanıtıyla FİİLEN kapanmış (dokümanda hâlâ açık/planlı görünüyor — bayat), 6'sı gerçekten hâlâ açık (Faz-5 örneklem n=4/20 bir ay sonra bile aynı, WP5-C DSR donmuş-çekim aracı hiç yok, WP5-D'nin yalnız U6 mimari kararı, skill-görüş canlı-kanıt yerelde doğrulanamadı [A1 sorulmalı], cf çıkış-yasası sapması bilinçli-beyanlı borç, M2/KYS-002 DSR yarısı WP5-C'ye bağlı bekliyor).",
+   "alt_kalemler": [
+    {
+     "baslik": "YENİ ders: ölçütler HAM getiri okuyamaz (taban-fazlası)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "Kalıcı metodoloji kuralı, iş kalemi üretmiyor; ROADMAP'e ders olarak kaydı yeterli, ayrıca ölçüm/uygulama gerektirmiyor.",
+     "kanit": [
+      {
+       "dosya": "PRG-05.md",
+       "sembol_veya_alinti": "EDG-010'dan, ders #3"
+      }
+     ]
+    },
+    {
+     "baslik": "YENİ ders: kart eşik-DİLBİLGİSİ standardı",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "Standart zaten kart yazım kuralı olarak yerleşti (EDG-009), yeni iş üretmiyor.",
+     "kanit": [
+      {
+       "dosya": "PRG-05.md",
+       "sembol_veya_alinti": "EDG-009'dan"
+      }
+     ]
+    },
+    {
+     "baslik": "YENİ ders: oosonly kolu STANDART (walk_forward)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "WP-G tanısından kalıcı standart; iş kalemi değil, uygulanan kural.",
+     "kanit": [
+      {
+       "dosya": "PRG-05.md",
+       "sembol_veya_alinti": "WP-G tanısından, SINIF bulgusu"
+      }
+     ]
+    },
+    {
+     "baslik": "Kart biçim/lint kalemi (EDG-038 çift verdict + dedektör)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "EDG-2026-038.yaml'daki boş placeholder verdict SİLİNMİŞ (yorum: '2026-08-24 KART-LİNT... KALDIRILDI'), dup-anahtar çivisi tests/test_kart_hijyeni_v279.py olarak koda girmiş — dosyanın kendi '🟡 DOĞRULANMADI' notu artık bayat.",
+     "kanit": [
+      {
+       "dosya": "research/cards/EDG-2026-038*.yaml",
+       "sembol_veya_alinti": "2026-08-24 KART-LİNT ... BOŞ verdict: placeholder'ı KALDIRILDI"
+      },
+      {
+       "dosya": "tests/test_kart_hijyeni_v279.py",
+       "sembol_veya_alinti": "dosya adı v279"
+      }
+     ]
+    },
+    {
+     "baslik": "Faz-5 örneklem kendiliğinden dolar (11/20)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-ay",
+     "kapi": "n_defter >= 20 olduğunda Rol-1 CI hükmü",
+     "gerekce": "EXE-2026-002 kartı hâlâ n_defter=4, n_kume=1, ci=None; kart 2026-08-07'den beri değişmemiş — bir ay geçmesine rağmen doğal doluluk gerçekleşmedi.",
+     "bayat_iddia": "\"örneklem kendiliğinden dolar\" varsayımı bir aydır doğrulanmadı; pasif beklemek yerine dolum kaynağının neden durduğu sorgulanmalı.",
+     "kanit": [
+      {
+       "dosya": "research/cards/EXE-2026-002-faz5-cikis-olcumu.yaml",
+       "sembol_veya_alinti": "n_defter 4 · n_evren 4 · n_eslesen 4 ... n_kume=1"
+      }
+     ]
+    },
+    {
+     "baslik": "hermes çağrı telemetrisi pano kartı yok (② bulgu)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "Pano kartı fiilen var: hermesTelemetriKarti fonksiyonu v219 W4-N5'te eklenmiş, d.integrations üzerinden çiziliyor.",
+     "bayat_iddia": "Metin hâlâ 'veri akıyor, pano kartı YOK' diyor; bu artık doğru değil.",
+     "kanit": [
+      {
+       "dosya": "meridian/web/app.js",
+       "sembol_veya_alinti": "hermesTelemetriKarti"
+      }
+     ]
+    },
+    {
+     "baslik": "cf çıkış-yasası sapması (③ bulgu, +0,039R iyimserlik)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Kod hâlâ 'NEDEN DÜZELTİLMİYOR (bilinçli, beyanlı)' notuyla açık bırakılmış; çözülmemiş ama beyanlı borç, acil değil.",
+     "kanit": [
+      {
+       "dosya": "meridian/analytics.py",
+       "sembol_veya_alinti": "NEDEN DÜZELTİLMİYOR (bilinçli, beyanlı): cf.advance'i canlı çıkış yasasına taşımak"
+      }
+     ]
+    },
+    {
+     "baslik": "M1 KIYAS-KİRLENMESİ (olay-penceresi-dışı kıyas, EN YÜKSEK KALDIRAÇ)",
+     "hukum": "DUSUR-ONER",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "KYS-2026-001 kartı zaten ÖLÇÜLDÜ ve ARŞİVLENDİ (kill#1 tetiklendi): fark CI-0-içi ve |fark|<10bps iki yüzeyde de; 'yanlılık pratik-önemsiz, temiz-kıyas aracı OPSİYONEL kalır'. Dosyanın 'EN YÜKSEK KALDIRAÇ' etiketi bu ölçümden ÖNCEki (2026-08-09 KEŞİF) döneme ait ve bayat.",
+     "bayat_iddia": "M1'in hâlâ en yüksek kaldıraçlı açık kalem olduğu iddiası; kart zaten kill#1 ile kapanmış ve aracı zorunlu olmaktan çıkarmış.",
+     "kanit": [
+      {
+       "dosya": "research/cards/KYS-2026-001-kiyas-kirlenmesi.yaml",
+       "sembol_veya_alinti": "status: archived ... kill#1 tetiklendi ... temiz-kıyas aracı OPSİYONEL kalır"
+      }
+     ]
+    },
+    {
+     "baslik": "M2 PBO/DSR taban hesabı (KYS-002 measured_partial)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-ay",
+     "kapi": "WP5-C DSR aracı inince R2 revizyonu",
+     "gerekce": "KYS-2026-002 status hâlâ measured_partial; PBO yarısı ölçüldü, DSR yarısı WP5-C'deki donmuş-çekim aracına bağımlı ve o araç henüz yok.",
+     "kanit": [
+      {
+       "dosya": "research/cards/KYS-2026-002-pbo-dsr-r1-taban.yaml",
+       "sembol_veya_alinti": "status: measured_partial"
+      }
+     ]
+    },
+    {
+     "baslik": "M11 KATMAN-4 alan merceği ~20 kontrol alanı (kova-6)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "Kova-6 salt-ölçüm taraması koşulmuş ve belgelenmiş: docs/TARAMA-KOVA6-ALAN-MERCEGI-2026-08-24.md — 6 kasıtlı-kırmızı enjeksiyonun altısı da doğru kırmızı yandı, meridian/ dokunulmadı (plana uygun).",
+     "kanit": [
+      {
+       "dosya": "docs/TARAMA-KOVA6-ALAN-MERCEGI-2026-08-24.md",
+       "sembol_veya_alinti": "Altı sahte bağlanma/kopma kaynağa geçici olarak enjekte edildi ... Altısı da kırmızı yandı"
+      }
+     ]
+    },
+    {
+     "baslik": "ajan-git MEKANİK kapısı (PATH-shim/wrapper)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "TSK-050 DONE (2026-09-01): ops/ajan_git_shim.sh dosyası repoda mevcut ve kurulu; ROADMAP.md kaydı doğruluyor.",
+     "bayat_iddia": "PRG-05 içindeki 'P2, süreç/araç kararı — operatör' ifadesi artık geçersiz; karar verilmiş ve araç teslim edilmiş.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "[TSK-050] ajan-git mekanik kapısı ... status: DONE(2026-09-01"
+      },
+      {
+       "dosya": "ops/ajan_git_shim.sh",
+       "sembol_veya_alinti": "TSK-050: git mutasyon kapısının MEKANİK v1'i"
+      }
+     ]
+    },
+    {
+     "baslik": "SB-2 drift_sinifi (MIRROR_DRIFT sebep-adlandırma)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "loop.py'de _drift_sinifi_adet fonksiyonu ve drift_sinifi alanı üretimde; commit 42474bb 'dalga-3 kod-güvenli: SB-2 MIRROR_DRIFT sebep sınıfı' ile inmiş.",
+     "kanit": [
+      {
+       "dosya": "meridian/loop.py",
+       "sembol_veya_alinti": "_drift_sinifi_adet"
+      }
+     ]
+    },
+    {
+     "baslik": "skill görüş canlı-kanıt (P3, R-figürleri kuru-koşu)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "A1'de canlı state/skill_gorusleri.jsonl + skill_gorus_pencereler.jsonl doluluğu sorulmalı",
+     "gerekce": "EDG-078 (2026-09-05) skill_gorus_pencereler.jsonl üretici kodunu eklemiş ama yerel checkout'ta bu dosyalar yok (state/ versiyonsuz, yerelden canlı hakkında sayı okunmaz — CLAUDE.md kuralı); bu soru A1'de sorulmalı.",
+     "kanit": [
+      {
+       "dosya": "meridian/loop.py",
+       "sembol_veya_alinti": "ops/skill_gorus_uret → skill_gorus_pencereler.jsonl, ardisik_pencere (commit 6bd307f)"
+      }
+     ]
+    },
+    {
+     "baslik": "RUNBOOK borcu: strateji sürüm terfisi prosedürü",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "Dosyanın kendi içindeki '[2026-08-23 KAPANDI]' notu: sözleşme dagit.sh başlığına taşınmış (RUNBOOK üretilmiş dosya, elle bölüm eklenmez).",
+     "kanit": [
+      {
+       "dosya": "PRG-05.md",
+       "sembol_veya_alinti": "[2026-08-23 KAPANDI — SON HAL 0e1c11a: sözleşme kaynağına taşındı"
+      }
+     ]
+    },
+    {
+     "baslik": "WP5-C: DSR girdi-serisi donmuş-çekim aracı",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-ay",
+     "kapi": "Rol-1 şema kararı (pnl-serisi damgası mı, ayrı betik mi)",
+     "gerekce": "validation_ledger 'seri' alanı hâlâ [[tarih, r_multiple]] biçiminde (ledgers.py sözleşmesi değişmemiş); pnl-serisi damgası da ayrı donmuş-çekim betiği de repoda yok.",
+     "kanit": [
+      {
+       "dosya": "meridian/ledgers.py",
+       "sembol_veya_alinti": "seri = [[kapanış_tarihi, gerçekleşen_R], ...]"
+      }
+     ]
+    },
+    {
+     "baslik": "WP5-D: M8 kararları Rol-1 turu (U1-U7)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "Rol-1 mimari kararı: U6 (kart-K ↔ DSR n_trials bağı)",
+     "gerekce": "U1/U2/U3/U7 zaten commit 490dc0f ('M8-U2/U3 kart hijyeni: 38 kart pending→gerçek trial_id + README üreticisi + v279 dup-anahtar çivisi') ile fiilen kapanmış; README endeksi ops/kart_endeksi_uret.py ile üretiliyor. Yalnız U6 (kart-K↔DSR n_trials bağı, DSR çıktısını değiştiren mimari karar) hâlâ açık — validation_trio n_trials'ı hâlâ aşınma-defteri+k_probes'tan alıyor, kart-K'ya bağlı değil.",
+     "bayat_iddia": "Maddenin '[2026-08-24 TASARIM-KAPANIŞI: kalem YAPILMAMIŞ]' ifadesi bugün geçerli değil — U2/U3 fiilen uygulanmış.",
+     "kanit": [
+      {
+       "dosya": "research/cards/README.md",
+       "sembol_veya_alinti": "ENDEKS: ÜRETİLEN BÖLÜM — ELLE DÜZENLEME YOK (ops/kart_endeksi_uret.py)"
+      },
+      {
+       "dosya": "meridian/analytics.py",
+       "sembol_veya_alinti": "validation_trio ... n_trials = sorgu + kp"
+      }
+     ]
+    },
+    {
+     "baslik": "20b YAPISAL: RESULT_PF_MIN=1.3 ↔ paket PF 1,1119",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "Kalem zaten dosyada KARAR'dan KAYIT'a düşürülmüş ('DÜZELTME: BU BİR KARAR KALEMİ DEĞİL, KAYIT' — EDG-2026-037/038 ölçümüyle eşik gevşetilmeyecek hükmü verilmiş); ek iş beklemiyor.",
+     "kanit": [
+      {
+       "dosya": "PRG-05.md",
+       "sembol_veya_alinti": "EŞİK TARTIŞMASI KAPANDI — RESULT_PF_MIN=1.3 GEVŞETİLMEZ"
+      }
+     ]
+    },
+    {
+     "baslik": "20c YÖNETİŞİM ASİMETRİSİ: slot/size çift-bağ çivisi",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "guard.py'de cift_bag_hukmu fonksiyonu ve CIFT_BAG_KEY='cift_bag_slot_boyut' uygulanmış — dosyanın planladığı 'goal'a ÇİFT-BAĞ ÇİVİSİ eklenir' kapanışı fiilen yapılmış.",
+     "bayat_iddia": "Metin bunu gelecek zamanlı bir kapanış planı olarak anlatıyor ('Kapanış: ... eklenir'); kod zaten mevcut.",
+     "kanit": [
+      {
+       "dosya": "meridian/guard.py",
+       "sembol_veya_alinti": "def cift_bag_hukmu(limits: dict, params: dict | None)"
+      }
+     ]
+    },
+    {
+     "baslik": "20d İNCE MARJLAR/İZLEME (CVaR marjı, hedef üçlüsü gevşek)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "canlanma koşulu: EDGE VERDICT CVaR yüzünden dönerse ya da hedef üçlüsü hükme girerse yeniden açılır",
+     "gerekce": "Kalem zaten '20b emsaliyle KAYIT sınıfına indirilir' kararıyla kapatılmış; iş üretmiyor, yalnız izleme notu olarak duruyor — beklenen davranış budur.",
+     "kanit": [
+      {
+       "dosya": "PRG-05.md",
+       "sembol_veya_alinti": "Kalem 20b emsaliyle KAYIT sınıfına indirilir (karar değil, BİLGİ)"
+      }
+     ]
+    },
+    {
+     "baslik": "WP5-F: KORUNUM-14/uyuyan_kurulum terminal sınıfı",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "operator",
+     "kapi": "—",
+     "gerekce": "watchdog.conservation_report artık uyuyan_kurulum ve uyuyan_olculemedi sayaçlarını hesaplıyor ve obs.log'a yazıyor — dosyanın 'dedektör-tarafı hâlâ YOK' notu artık bayat.",
+     "bayat_iddia": "'[2026-08-24 BİRLEŞTİR ... dedektör-tarafı uyuyan_kurulum terminal sınıfı bugün de HÂLÂ YOK]' ifadesi geçersiz; kod inmiş.",
+     "kanit": [
+      {
+       "dosya": "meridian/watchdog.py",
+       "sembol_veya_alinti": "uyuyan_kurulum, uyuyan_olculemedi = 0, 0"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "cephe": "PRG-03",
+   "cephe_durum_dogru": true,
+   "onerilen_cephe_durumu": "🔴 aktif (değişmedi) — ama gövde metninin ezici çoğunluğu artık TSK kimlikleriyle takip ediliyor: TSK-025 (28d) DONE, TSK-074 (hayalet-süzgeç) ACTIVE, TSK-076 (OPT Faz-1/2) GATED operatör kararıyla, TSK-062/072 GATED, TSK-063 (Faz-6 beş kilit) kanıt-şartlı ONAY bekliyor, TSK-077 (M2+M11 kalıntıları, kova-6 dahil) QUEUED. WP3-A/B/C'nin ayrıntı gövdesi fiilen tarihsel artefakt; §3 özet satırı bu TSK numaralarına atıfla kısaltılmalı, gövde §8 arşive taşınmalı.",
+   "cephe_ozet": "PRG-03.md'de 12 üst-düzey madde var (numaralı 28./10. başlıkları + 10 tane '- **' satırı). 3'ü zaten ✅ ile işaretli tarihçe (28g/h/i teşhisi, params_by_regime boş-harita kapanışı, Faz-5 kilidi v212 ölçümü) — atlandı. Kalan 9 madde değerlendirildi: 1'i (28-ana blok) kısmen kapandı kısmen açık (28a/28d kapandı, 28c/28e-i açık) → ACIK-KALSIN; 1'i (çapa-etiketi kuralı) genel CLAUDE.md kuralına aşıldı → DUSUR-ONER; 1'i (geçmiş-retlerin yeniden değerlendirilmesi) hâlâ yanıtsız → ACIK-KALSIN; 4'ü (OPT boru hattı, sıra artığı, M11 kova-6, M11 exploration/carried) artık ayrı TSK kalemlerine (TSK-076, TSK-077) devrolmuş → BIRLESTIR; 2'si (merdiven ölçümü, Faz-6 askıda notu) TSK-063'e devrolmuş → BIRLESTIR. Sonuç: cephenin 🔴 başlığı bugün de doğru ama iç gövde bakım/arşiv gerektiriyor.",
+   "alt_kalemler": [
+    {
+     "baslik": "28-ana blok: ÖĞRENME TIKANIKLIĞI (28a-28j)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-hafta",
+     "kapi": "TSK-025 (28d, DONE) + kart-önce (28c için kart yok)",
+     "gerekce": "28a EDG-2026-041 ile ölçüldü, v247 2026-08-23'te canlıda doğrulandı (28a tahtada H6) — bu alt-parça kapandı. 28d TSK-025 olarak DONE (2026-08-23, EDG-2026-048 NO-GO ile). Ama 28c ('already_failed' yalnız explore dalında, stop_loss_atr_mult 21 tekrar) için repo genelinde hiçbir düzeltme izi yok (grep boş); 28e-28i ölçüm bulguları da ayrı kapanış kaydı almamış. Madde toptan kapanmadı, karışık durumda.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-025 | 28d teşhisi ... status: DONE(2026-08-23·EDG-2026-048 NO-GO tüketiciyi kapattı)"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "28a tahtada H6] ... v247 CANLIDA — 08-22'de en az iki tam dağıtım indi"
+      },
+      {
+       "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+       "sembol_veya_alinti": "'already_failed' için sıfır eşleşme (grep) — 28c'ye ait bir kapanış kaydı bulunamadı"
+      }
+     ],
+     "bayat_iddia": "'28a GÖRÜNMEZ SÜZGEÇ (EN ACİL, HÂLÂ AKIYOR)' ifadesi bugün doğru değil — 28a 2026-08-14'te ölçüldü, 2026-08-23'te canlı dağıtımla kapandı (doc kendi içinde bunu zaten not düşmüş)."
+    },
+    {
+     "baslik": "ÇAPA ETİKETİ KURALI (repo/canlı A1 etiketi)",
+     "hukum": "DUSUR-ONER",
+     "oncelik": "belirsiz",
+     "kapi": "CLAUDE.md §2",
+     "gerekce": "WP3'e özgü çapa-etiketleme (repo/canlı A1) önerisi, genel proje kuralına dönüştü: CLAUDE.md §2 artık her dosya:satır çapasının SEMBOL olmasını (satır değil) proje çapında zorunlu kılıyor. WP3'e özel ayrı iz gereksiz.",
+     "kanit": [
+      {
+       "dosya": "CLAUDE.md",
+       "sembol_veya_alinti": "Çapa SATIR değil SEMBOL olmalı — satır kayar, CI kırar"
+      }
+     ],
+     "bayat_iddia": "—"
+    },
+    {
+     "baslik": "GEÇMİŞ RETLERİN YENİDEN-DEĞERLENDİRİLMESİ (560 örneklem)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "— (kart yok)",
+     "gerekce": "Doc kendi içinde 2026-08-31'de '🟡 DOĞRULANMADI' işaretlemiş; depoda bu sorunun ('hangi ret bugünkü 560 örneklemle ayakta kalır') yanıtlandığına dair kart veya günlük kaydı bulunamadı.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "🟡 DOĞRULANMADI (2026-08-31 denetimi — geçmiş retlerin yeniden değerlendirilip değerlendirilmediği ölçülemedi)"
+      }
+     ],
+     "bayat_iddia": "—"
+    },
+    {
+     "baslik": "OPT — parametre-evrim boru hattı (Faz-1/Faz-2)",
+     "hukum": "BIRLESTIR",
+     "oncelik": "operator",
+     "kapi": "TSK-076",
+     "gerekce": "Bu madde artık TSK-076 olarak takip ediliyor: GATED(28d/chop-bütçe kapalılığı operatör kararı); operatör 2026-09-03 sabah 'kapalı kalsın, OPT beklesin' demiş. WP3-B metnindeki 'öncelik: yüksek, ilk büyük iş' ifadesi artık geçerli değil.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-076 | OPT — parametre-evrim boru hattı (Faz-1 serbest, Faz-2 28d'ye bağımlı) ... | GATED(28d/chop-bütçe kapalılığı operatör kararı)"
+      }
+     ],
+     "bayat_iddia": "'öncelik: yüksek (karar penceresinden sonra ilk büyük iş)' bugün doğru değil — TSK-076 operatör kararıyla bilinçli olarak beklemede."
+    },
+    {
+     "baslik": "SIRA ARTIĞI — pencere sonrası hemen OPT Faz-1",
+     "hukum": "BIRLESTIR",
+     "oncelik": "operator",
+     "kapi": "TSK-076",
+     "gerekce": "'hemen OPT Faz-1' sıra notu TSK-076'nın bugünkü GATED durumuyla çelişiyor; sıra bilgisi TSK-076 kaydına devredilmeli, ayrı iz tek-kaynak yasasını ihlal eder.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-076 ... operatör 2026-09-03 sabah: kapalı kalsın, OPT beklesin"
+      }
+     ],
+     "bayat_iddia": "'kalan tek adım OPT Faz-1'dir' (2026-08-12) bugün doğru değil — adım operatör kararıyla GATED."
+    },
+    {
+     "baslik": "M11 kova-6: gölge-model terfi kapısı erişilemez",
+     "hukum": "BIRLESTIR",
+     "oncelik": "bu-ay",
+     "kapi": "TSK-077",
+     "gerekce": "M11 kova-6 taraması TSK-077 'WP5 metodoloji/eşik kalıntıları (M2+M11)' altında QUEUED; ROADMAP §5 satırı da 'M11 kova-6 taraması AYRI kart, sırada' diyor. WP3-B'de ayrıca tutmak tek-kaynak yasasını ihlal eder; bu bulgunun asıl sahibi PRG-05.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-077 WP5 metodoloji/eşik kalıntıları (M2+M11) | QUEUED"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "M11 kova-6 taraması AYRI kart, sırada"
+      }
+     ],
+     "bayat_iddia": "—"
+    },
+    {
+     "baslik": "M11 bulgusu — exploration/carried üretimi sıfır",
+     "hukum": "BIRLESTIR",
+     "oncelik": "bu-ay",
+     "kapi": "TSK-077",
+     "gerekce": "Doc kendisi bunu '25d ezilme zinciriyle aynı aile' diye işaretlemiş; M11 tarama ailesinin parçası olarak TSK-077 kalemi altında toplanmalı, WP3-B'de ayrı iz gereksiz.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "25d ezilme zincirinin (c-4 keşif kuraklığı) canlı ölçümlü teyidi ... ROADMAP-25d ile aynı aile"
+      }
+     ],
+     "bayat_iddia": "—"
+    },
+    {
+     "baslik": "MERDİVEN DURUMU ÖLÇÜLDÜ (2026-08-07, Faz-6 1/5)",
+     "hukum": "BIRLESTIR",
+     "oncelik": "operator",
+     "kapi": "TSK-063",
+     "gerekce": "Merdiven/Faz-6 kilit durumu artık TSK-063 satırında konsolide takip ediliyor ('bkz. TSK-063 — Faz-6 BEŞ KİLİT, kanıt-şartlı'); 2026-08-07 tarihli ham ölçüm notu ayrı iz olarak güncel değil, sonraki Faz-5 kilit ölçümüyle (v212) zaten aşılmış.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "TSK-063 | (bkz. TSK-063 — Faz-6 BEŞ KİLİT, kanıt-şartlı) (WP: WP3)"
+      }
+     ],
+     "bayat_iddia": "—"
+    },
+    {
+     "baslik": "ASKIDA: Faz-6 beş kilit + DSR revizyonu",
+     "hukum": "BIRLESTIR",
+     "oncelik": "operator",
+     "kapi": "TSK-063",
+     "gerekce": "Faz-6 beş kilidin kanıt-şartlı durumu ve DSR revizyon sorusu (1e-06→0,0391, kilit açıldı mı doğrulanmalı) TSK-063 ve §2 TAHTA satırında izleniyor: 'KANIT bacağı plana alındı 2026-08-31 akşam, ONAY masada' — hâlâ operatör onayı bekliyor, kapanmadı.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "Faz-6 beş kilit | kanıt-şartlı kilitler — açılış kararları; KANIT bacağı plana alındı 2026-08-31 akşam, ONAY masada"
+      }
+     ],
+     "bayat_iddia": "—"
+    }
+   ]
+  },
+  {
+   "cephe": "PRG-09",
+   "cephe_durum_dogru": false,
+   "onerilen_cephe_durumu": "🔶 (aktif — 🆕 artık doğru değil; QC girişi yapıldı, iki ölçüm kapandı, kalan iş fizibilite kuyruğu + yerel LEAN pilotu)",
+   "cephe_ozet": "PRG-09.md içinde 9 üst-düzey madde değerlendirildi ('- **' ile başlayan; hiçbiri ✅ ile işaretli değil, yani tarihçe satırı yok — hepsi teorik olarak açık görünüyor ama en az 3'ü 2026-09-03 tarihli TSK-046/EDG-021/⑤ ölçümleriyle fiilen kapanmış durumda). Başlıktaki 🆕 işareti 2026-08-13'ten beri değişmemiş; oysa 2026-09-03 sabahı operatör QC'ye girdi (TSK-046 DONE), EDG-021 ikinci koşumu bitti (ARŞİV hükmü indi) ve ⑤ RETIRED_SYMBOLS sondası 8/8 kapandı. Cephe dosyası bu üç kapanışı yansıtmıyor.",
+   "alt_kalemler": [
+    {
+     "baslik": "İlke: veri platformda serbest/çıkışta kilitli...",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Bu bir tasarım ilkesi/kapsam cümlesi, zaman damgalı bir görev değil; süresiz geçerli, hüküm gerektirmiyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "İlke: veri platformda serbest/çıkışta kilitli QC = platform-içi ölçüm + LEAN-yerel motor"
+      }
+     ]
+    },
+    {
+     "baslik": "FREE kuyruk (kart-önce, sırayla) 1-7",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-hafta",
+     "kapi": "2/3/4/6 FREE fizibilite ölçümü + 7 VIX/SPX platform-içi kapı kararı",
+     "gerekce": "Kuyruğun 5 kalemi (2,3,4,6,7) hâlâ ölçülmedi; ancak 1 ve 5 artık kapalı olduğu için madde metni bugünü tam anlatmıyor.",
+     "kanit": [
+      {
+       "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+       "sembol_veya_alinti": "EDG-021 ikinci koşum (v4, PIT S&P 500 evreni) ŞÜPHEDE-bilgisiz ARŞİV, EDG-016 canlıda kalır"
+      },
+      {
+       "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+       "sembol_veya_alinti": "Security Master delist sondası: 8 emekli sembol 8/8 emeklilik kararı ÇELİŞMEDİ; 5 kapandı"
+      }
+     ],
+     "bayat_iddia": "Madde 1 için hâlâ ikinci-koşum hakkı operatör kararı bekliyor diyor ama bu karar 2026-09-03'te verildi (ARŞİV) ve TSK-046/EDG-021 v4 kaydında işlendi. Madde 5 hâlâ açık kuyruk kalemi gibi listeleniyor ama 8/8 sonuçla kapandı (TSK-046 DONE notu)."
+    },
+    {
+     "baslik": "İkinci-motor pilotu (WP-H kolu): LEAN Apache-2.0 YEREL",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "makine kurulumu (dotnet SDK) + monorepo clone/build kararı (boyut L, ayrı tur)",
+     "gerekce": "Yerel dotnet-engine pilotu hâlâ başlamadı; TSK-046 kapanışı bu yolun gerekmediğini teyit etti (bulut yolu yeterli oldu), yani pilot fiilen ertelendi ama iptal edilmedi.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "[TSK-046] ... dotnet-engine yolu gerekmedi"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "toolchain hazır (colima+docker+lean 1.0.227 çalışıyor)"
+      }
+     ],
+     "bayat_iddia": "PRG-09.md KEŞİF paragrafındaki 'bu makinede dotnet YOK, docker YOK' ifadesi yanıltıcı: aynı tarihli TSK-051/046 kayıtları 'toolchain hazır (colima+docker+lean 1.0.227 çalışıyor)' diyor — docker (colima üzerinden) zaten kuruluydu, eksik olan yalnız çıplak dotnet SDK. İki ifade aynı cephede çelişiyor, düzeltilmeli."
+    },
+    {
+     "baslik": "AÇIK — operatör kararı (QC katman yükseltmesi; B-QC-LOGIN)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "operator",
+     "kapi": "operatör kararı: Researcher Seat $10/ay yükseltme + ücretli setler (Brain/Estimize/SmartInsider)",
+     "gerekce": "Ücretli katman/seat yükseltmesi kararı hâlâ verilmedi; FREE fizibilite kuyruk kalemleri tamamlanmadan da önü açılmıyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "katman yükseltmesi (Researcher Seat $10/ay — API/otomasyon kilidi ...)"
+      }
+     ],
+     "bayat_iddia": "Maddenin taşıdığı kimlik etiketi [B-QC-LOGIN] artık yanıltıcı: bu kimlik TSK-046'da DONE olarak kapandı (QC girişi + notebook koşumu anlamında), ama bu maddenin konusu olan ücretli seat yükseltme kararı tamamen ayrı ve hâlâ açık — aynı kimlik etiketinin iki farklı konuya bağlanması karışıklık üretiyor."
+    },
+    {
+     "baslik": "EXPLORER DERİN-OKUMA HÜKMÜ (Ek-D, 473 strateji)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Bu madde zaten tamamlanmış bir ölçüm-hükmü metnidir (473 strateji taraması, medyan istatistikleri, kart-kuyruğu revizesi) — docs/QC-EXPLORER-DERSLERI-EK-D.md dosyasında kayıtlı; açık bir yapılacak kalemi değil, geçmiş bulgunun kaydı.",
+     "kanit": [
+      {
+       "dosya": "docs/QC-EXPLORER-DERSLERI-EK-D.md",
+       "sembol_veya_alinti": "473 strateji, API-tam-envanter"
+      }
+     ]
+    },
+    {
+     "baslik": "LEARNING-SÜZGECİ HÜKMÜ (Ek-C)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Metodoloji karşılaştırması tamamlanmış bir hükümdür (ISL/BC101 taşınabilir değer belirlendi, sertifika/CV değeri sıfır sonucu net); yeni ölçüm gerektirmiyor.",
+     "kanit": [
+      {
+       "dosya": "docs/QC-LEARNING-SUZGECI-EK-C.md",
+       "sembol_veya_alinti": "R1 evren-yaşam-döngüsü + R2 SymbolData kalıbı + BC101 L5/L7"
+      }
+     ]
+    },
+    {
+     "baslik": "BİLEŞEN-DERS KARTLARI (2026-08-03 taraması, Ek-B)",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "bu-ay",
+     "kapi": "kart-önce ölçüm (rejim-kadranı, korelasyon-çarpanı, çıkış-mimarisi, dinamik-evren, bayrak-skoru)",
+     "gerekce": "Bu 5 ders-kartı adayı henüz kart-önce ölçülmedi; (b)-kovası (354/16/269+125) de aynı şekilde bekliyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "REJİM-KADRANI ... KORELASYON-ÇARPANI ... ÇIKIŞ-MİMARİSİ"
+      }
+     ],
+     "bayat_iddia": "Maddenin sonundaki 'AYRI TUR: Strategy Explorer taraması (hesap-kapılı ... OOS-cezalı skorla filtrelenmiş GERÇEK kazanan kümesi)' cümlesi bu tur henüz yapılmamış gibi duruyor; ama aynı dosyadaki EXPLORER DERİN-OKUMA HÜKMÜ maddesi bu taramanın zaten yapıldığını ve 473 stratejiyle sonuçlandığını gösteriyor — iki madde birbirini çürütüyor, biri güncellenmeli. Ayrıca korelasyon-çarpanının çalışan hâli olarak anılan HRP/452 kartı aynı dosyada YENİ olarak anılmış — WP11-A ile çapraz bağ kurulmalı (BIRLESTIR adayı, ama HRP kartının kendi durumu bu turda ayrıca doğrulanamadı → ölçülemedi)."
+    },
+    {
+     "baslik": "RED: canlı katman, log-scrape, K-grid devri, ML-eğitim, Benzinga, FREE lean-cli",
+     "hukum": "ACIK-KALSIN",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Yasak-kalemler listesi bir politika beyanıdır, süresi dolmaz; QC girişinin gerçekleşmesi bu yasakları geçersiz kılmıyor.",
+     "kanit": [
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "RED: canlı katman (sıfır yeni yetenek) log/scrape dışa-aktarım (ToS) ..."
+      }
+     ]
+    },
+    {
+     "baslik": "KEŞİF 2026-08-09 (docs/KESIF-WP-QC-2026-08-09.md)",
+     "hukum": "KAPAT-DONE",
+     "oncelik": "belirsiz",
+     "kapi": "—",
+     "gerekce": "Bu maddenin işaret ettiği açık uçlar (operatörün defteri koşması, 5'in tek kalan QC-adımı) 2026-09-03'te TSK-046 DONE ile fiilen kapandı; madde artık tarihi bir kayıttır, güncel açık-uç taşımıyor.",
+     "kanit": [
+      {
+       "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+       "sembol_veya_alinti": "QC (TSK-046 DONE): operatör Google hesabıyla girdi lean whoami başarılı, kimlik dosyası 600"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "[TSK-046] QC login + notebook koşumu kararı (C3) status: DONE(2026-09-03 ...)"
+      },
+      {
+       "dosya": "ROADMAP.md",
+       "sembol_veya_alinti": "[TSK-051] ... status: DROPPED(2026-09-01 operatör kararıyla TSK-046'ya konsolide ...)"
+      }
+     ],
+     "bayat_iddia": "'C2-4 LEAN hesapsız ... bu makinede dotnet YOK, docker YOK' ifadesi aynı gün açıklanan TSK-051 kaydıyla çelişiyor (colima+docker+lean CLI zaten çalışıyordu); ayrıca operatörün defteri koşması engeli artık aşıldı."
+    }
+   ]
+  }
+ ],
+ "masa": {
+  "kalemler": [
+   {
+    "baslik": "§5.0 konsolide işaret defteri — genel not/tablo yapısı",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "§5.0 OPERATÖR MASASI — konsolide işaret defteri"
+     }
+    ],
+    "oneri": "Yapısal referans defteri (kendi beyanıyla rozetsiz); kalsın, tekil kalem değil."
+   },
+   {
+    "baslik": "§5.0 satırı: hermes SOUL.md + config.yaml (elle kurulum + bakım penceresi)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "F9 raporu + deploy/hermes/"
+     }
+    ],
+    "oneri": "Bu turda F9/hermes canlı aktivasyon kanıtı bulunamadı (salt-okunur erişimle ölçülemedi) — kalsın."
+   },
+   {
+    "baslik": "§5.0 / kimlik tablosu: B-FINVIZ-TOKEN (TSK-044)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-044 ... status: OPERATOR ... (OPERATÖR 2026-09-05 09:1xZ: BEKLEMEDE — bedel aynen sürer.)"
+     }
+    ],
+    "oneri": "Hâlâ para kararı bekliyor, son operatör notu 2026-09-05 'beklemede' — kalsın (öncelik: belirsiz/operatör tetikli)."
+   },
+   {
+    "baslik": "§5.0 / kimlik tablosu: B-FMP-PLAN (TSK-045)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-045 ... status: OPERATOR ... (OPERATÖR 2026-09-05 09:1xZ: BEKLEMEDE)"
+     }
+    ],
+    "oneri": "Kalsın — para/kota kararı hâlâ operatörde."
+   },
+   {
+    "baslik": "§5.0 / kimlik tablosu: B-QC-LOGIN satırı hâlâ 🔴 AÇIK yazıyor ama TSK-046 zaten DONE",
+    "hala_bekliyor": false,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "| 🔴 AÇIK · `B-QC-LOGIN` | QC kimliği ... | anahtar/kimlik + operatör koşumu |"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-046 ... status: DONE(2026-09-03 · operatör QC girişi ... EDG-021 v4 ikinci koşum ve ⑤ Security Master delist sondası ... Rol-1 tarafından QC'de koşuldu — ⑤ 8/8 çelişmedi)"
+     }
+    ],
+    "oneri": "KAPAT-DONE — kimlik tablosundaki 🔴 AÇIK rozeti bayat, TSK-046 kanıtla kapanmış; satır ✅ KAPALI'ya taşınmalı."
+   },
+   {
+    "baslik": "§5.0 / kimlik tablosu: B-AJAN-GIT satırı hâlâ 🔴 AÇIK yazıyor ama TSK-050 zaten DONE",
+    "hala_bekliyor": false,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "| 🔴 AÇIK · `B-AJAN-GIT` | ajan-git mekanik kapısı ... KARAR VERİLDİ 2026-08-31 ... icra İCRA SIRASI ①'de, Rol-1 — kimlik araç inince kapanır |"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-050 ... status: DONE(2026-09-01 · `ops/ajan_git_shim.sh` → `~/.local/bin/git` kurulu+canlı doğrulandı ... 13 çivi v360 + 4/4 mutasyon)"
+     },
+     {
+      "dosya": "ops/ajan_git_shim.sh",
+      "sembol_veya_alinti": "dosya depoda mevcut"
+     }
+    ],
+    "oneri": "KAPAT-DONE — araç kurulup canlı doğrulandığı için 'kimlik araç inince kapanır' koşulu gerçekleşti; satır ✅ KAPALI'ya taşınmalı. Ayrıca ROADMAP.md:5477 'OPERATÖR (11)' listesindeki B-AJAN-GIT girişi de aynı bayat iddiayı taşıyor."
+   },
+   {
+    "baslik": "§5.0 / kimlik tablosu: Faz-6 beş kilit (B-FAZ6-KILIT / TSK-043)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "AÇIK (TAKVİM: Faz-5 örneklemi kendiliğinden dolar — 11/20)"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-043 ... status: GATED(dağıtımdan sonra `edge_verdict` çıktısının okunması)"
+     }
+    ],
+    "oneri": "Kalsın — örneklem hâlâ 11/20, beşinci kilit (INTRADAY_ARM) onayı hâlâ operatörde; öncelik: bu-ay/takvim-tetikli, aksiyon gerekmiyor."
+   },
+   {
+    "baslik": "§5.0 / kimlik tablosu: Sırlar (mimari madde 7, OpenBao/unseal)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "kademeli YOL-1 plana alındı 2026-08-31 akşam; OpenBao/unseal adımı operatörde"
+     }
+    ],
+    "oneri": "Bu turda ilerleme kanıtı bulunamadı — kalsın (belirsiz öncelik)."
+   },
+   {
+    "baslik": "§5.0 / kimlik tablosu: PIT mid-cap üst-sınır — veri-kapısı kararı",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "ADIM-0 DÜŞTÜ — kohort kurulamadı (PIT evren kaynağı yok) ... askıda:veri-kapısı (delist-bar kaynağı ya da S&P400/600 PIT üyelik gelirse yeniden açılır; §5-9)"
+     }
+    ],
+    "oneri": "Kalsın — B-DELIST-KAYNAK kararına bağımlı, hâlâ çözülmemiş."
+   },
+   {
+    "baslik": "Kimlik tablosu: B-AJAN-TAVAN (ajan tavanı 15)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "| 🔴 AÇIK · `B-AJAN-TAVAN` | ajan tavanı 15 (envanter-6) | karar (mevcut değer: 15) |"
+     }
+    ],
+    "oneri": "Kalsın — depoda 15'in değiştirilmesi yönünde bir karar kanıtı bulunamadı."
+   },
+   {
+    "baslik": "Kimlik tablosu: B-DELIST-KAYNAK (Massive/QC delist-bar kaynağı)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "| 🔴 AÇIK · `B-DELIST-KAYNAK` | Massive/QC delist-bar kaynağı kararı (envanter-9) | karar + para |"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-065 (İCRA SIRASI ⑤) — delist-bar kilidi (B-DELIST-KAYNAK) para kararına sayısal girdi."
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "EDG-2026-079/082 (2026-09-06): 'üye olup bugün listede olmayan (delist) isimleri EKLEYEMEZ (barları yok — TSK-065 B-DELIST-KAYNAK) → hâlâ üst-sınır'"
+     }
+    ],
+    "oneri": "Kalsın — güncel EDG-082/TSK-159 işi (2026-09-06) bu kararın hâlâ eksik olduğunu doğruluyor; öncelik operatörde, para kararı."
+   },
+   {
+    "baslik": "TSK-047 NOUS_MODEL / beyin çeşitliliği (C4)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+      "sembol_veya_alinti": "18:54Z — TSK-047 kök neden ve çözüm (kapı): ... routes.yaml'a `yedek-minimax`/`hizli-minimax` ... DAĞITIM #20"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-047 ... status: ACTIVE ... UYGULAMA OPERATÖRDE: pano sır formu."
+     }
+    ],
+    "oneri": "Kalsın — kapı-seviyesi teknik çözüm (kova-dışı son çare) 2026-09-05'te canlıya alındı, ama asıl karar (NOUS_MODEL=Gemma'ya geçiş / dolu-cevap kanıtı) hâlâ operatörün pano sır formunu doldurmasını bekliyor; bayat_iddia: madde metnindeki 2026-08-13 tarihli 'GEREKÇE GÜNCELLENDİ' bölümü artık eski, güncel gerekçe 18:54Z notunda."
+   },
+   {
+    "baslik": "TSK-046 QC login + notebook koşumu (C3)",
+    "hala_bekliyor": false,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-046 ... status: DONE(2026-09-03 · ... ⑤ 8/8 çelişmedi [AYNI 3 / AYRIK ≤3 gün 3 / QC süreklilik 2]; kanıt research/olcumler/qc_dogrulama/sonda_delist_8*.json)"
+     }
+    ],
+    "oneri": "KAPAT-DONE — zaten belgede DONE olarak işaretli ve kanıtlı; masa/kimlik tablosundaki eşleşen AÇIK rozeti (bkz. B-QC-LOGIN maddesi) düzeltilmeli."
+   },
+   {
+    "baslik": "TSK-050 ajan-git mekanik kapısı",
+    "hala_bekliyor": false,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-050 ... status: DONE(2026-09-01 · `ops/ajan_git_shim.sh` → `~/.local/bin/git` kurulu+canlı doğrulandı)"
+     },
+     {
+      "dosya": "ops/ajan_git_shim.sh",
+      "sembol_veya_alinti": "dosya mevcut, ~/.local/bin/git kurulu (rwxr-xr-x, Sep 1 17:30)"
+     }
+    ],
+    "oneri": "KAPAT-DONE — zaten belgede DONE; yalnız §5 kimlik tablosu/OPERATÖR(11) listesindeki bayat AÇIK referansları güncellenmeli."
+   },
+   {
+    "baslik": "TSK-051 QC LEAN CLI lean login — kimlik-bloklu",
+    "hala_bekliyor": false,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-051 ... status: DROPPED(2026-09-01·operatör kararıyla TSK-046'ya konsolide)"
+     }
+    ],
+    "oneri": "KAPAT-DONE (zaten DROPPED/konsolide olarak doğru işaretli, ek aksiyon yok)."
+   },
+   {
+    "baslik": "Numaralı envanter md.1 — B-NOUS-BEYIN eski gerekçe metni (2026-08-13)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "1. **[B-NOUS-BEYIN]** ... GEREKÇE GÜNCELLENDİ (2026-08-13, denetim F5) ... ⚠ Kalem KAPANMIŞ OLABİLİR — Rol-1 doğrulaması ister"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "kimlik tablosu: ✅ KAPALI · `B-NOUS-BEYIN` ... kapandı 2026-09-03"
+     }
+    ],
+    "oneri": "BIRLESTIR TSK-047 — B-NOUS-BEYIN kimliği zaten ✅ KAPALI olarak doğrulanmış (2026-09-03); bu 2026-08-13 tarihli eski gerekçe metni bayat, güncel konu artık ayrı kimlik TSK-047'de yaşıyor. Numaralı madde 1 metni TSK-047'ye yönlendirilip düşürülebilir."
+   },
+   {
+    "baslik": "Bakım-penceresi sırası: OB-1→WP2-D (equity_curve/seed_boundary)→OB-4 (restart→PBO damgalama)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+      "sembol_veya_alinti": "TSK-035 (c6b60b6) + suite #18: `ledgerstamp.seed_boundary` sırası çevrildi"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "[EXE-2026-004] cf-çıkış-sadakati (N4) — status: OPERATOR ... Aşama-2 eşiğe ULAŞILMADI → DONDU"
+     }
+    ],
+    "oneri": "WP2-D (seed_boundary) kod tarafı TSK-035 ile kapanmış görünüyor (kanıt: ledgerstamp sırası düzeltmesi) ama OB-4 (restart→PBO damgalama) ve aynı pencerede planlanan N4 (EXE-2026-004) hâlâ operatörün bakım penceresi onayını bekliyor — kalsın; Rol-1 WP2-D bacağının kapanış kanıtını netleştirip sırayı güncellemeli."
+   },
+   {
+    "baslik": "§5.0 satırı: B-QC-LOGIN masa girişi (lean login + makine kurulumu)",
+    "hala_bekliyor": false,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "| `B-QC-LOGIN` | `lean login` + makine kurulumu (dotnet/docker) | `§2` C2-4 LEAN satırı |"
+     }
+    ],
+    "oneri": "KAPAT-DONE — aynı gerekçeyle TSK-046 DONE; masa dizin satırı da güncellenmeli (asıl kayıt işaretçisi bayat kalmasın)."
+   },
+   {
+    "baslik": "§5.0 satırı: B-AJAN-GIT masa girişi (ajan git yetkisi kararı)",
+    "hala_bekliyor": false,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "| `B-AJAN-GIT` | ajan-git yetkisi kararı | `§5` kimlik tablosu satırı |"
+     }
+    ],
+    "oneri": "KAPAT-DONE — TSK-050 DONE ile aynı gerekçe; masa dizin satırı da işaretçisini güncellemeli."
+   },
+   {
+    "baslik": "🔒 BİLET SAHİPLERİ envanteri (bildirim kanalı, NOUS_MODEL, FMP planı, VIX, analist/NLP, FISV/PSKY)",
+    "hala_bekliyor": true,
+    "kanit": [
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "bildirim kanalı · NOUS_MODEL · FMP planı · VIX kaynağı [öncelik düşük] · analist/NLP verisi · FISV/PSKY"
+     }
+    ],
+    "oneri": "Kalsın — referans envanteri, ama 'bildirim kanalı' zaten Telegram ile kapanmış görünüyor (bkz. B-BILDIRIM-N1 ✅ KAPALI); satırdan çıkarılabilir (DUSUR-ONER: bildirim kanalı alt-maddesi)."
+   }
+  ]
+ },
+ "kartlar": {
+  "kartlar": [
+   {
+    "card_id": "EXE-2026-003",
+    "dosya_status": "measuring (research/cards/EXE-2026-003-golge-planli-kol.yaml — 2026-08-22 ARA HÜKÜM: pencere 2/20 seans, gözlenen her şey olumlu, kill tetiklenmedi)",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "ACIK-KALSIN — pencere (20 seans, v217 2026-08-16'da canlı) dolunca aynı betik yeniden koşulup nihai hüküm yazılacak. 2026-08-22'den beri (>2 hafta) ne kartta ne ROADMAP'te güncelleme yok; pencerenin fiilen dolup dolmadığı bu turda ölçülemedi (salt-okunur, state/ okunamaz) — bir sonraki turda kontrol edilmeli.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EXE-2026-003-golge-planli-kol.yaml",
+      "sembol_veya_alinti": "status: measuring ... ARA HÜKÜM (Rol-1): birincil ölçüt ÖLÇÜLEMEDİ — pencere 2/20 seans"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-072 | EXE-2026-003 ... | GATED(örneklem penceresinin 2/20'den dolması) | ... pencere dolması"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-069",
+    "dosya_status": "registered (research/cards/EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml — kod yok, ölçüm KODU yazılmadı)",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "ACIK-KALSIN — ancak sıra sorusu var: TSK-066'nın 2026-09-06 notu, bu kartın 'ölçüm kodu KOVA C sırasında' ifadesinin artık bayat olduğunu ve gerçek sıranın TSK-159 (PIT survivorship yeniden kurulumu) sonrasına geçtiğini söylüyor. Bir sonraki turda kod yazım sırası TSK-159 hükmüne göre teyit edilmeli.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml",
+      "sembol_veya_alinti": "status: registered"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "[TSK-066] ... DEĞ 2026-09-06 [ERTELE·operator] ... bayat: Kalem metnindeki 'ölçüm kodu KOVA C sırasında' ifadesi artık eksik/bayat: sıra netleşti"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-070",
+    "dosya_status": "registered (research/cards/EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml — kod yok)",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "ACIK-KALSIN — kod KOVA C sırasında hâlâ yazılmadı (069'dan sonra sırada olduğu belirtiliyordu; 071/072 zaten sırayı geçip 09-04'te ölçülüp kapandı, 069/070 hâlâ bekliyor). İlerleme kontrolü gerekir.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml",
+      "sembol_veya_alinti": "status: registered"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "Not (TSK-065): ... 2026-09-03 gece: KART YAZILDI EDG-2026-070 (operatör onayı bekler)"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-071",
+    "dosya_status": "measured_partial (research/cards/EDG-2026-071-hayalet-dugme-oneri-suzgeci.yaml — hukum_2026_09_04: KISMİ; K2 GEÇTİ, PK GEÇTİ, K1 ölçülemedi)",
+    "roadmap_status_uyumlu": false,
+    "hukum_bekliyor_mu": false,
+    "oneri": "KAPAT-DONE — ölçüm bitti, hüküm yazıldı (2026-09-04) VE uygulama kararı da işlendi: TSK-074 altında Seçenek A kablolandı (commit 7ed0f54, dağıtım #13), canlı sayaç kuruldu, okuma tarihi ~2026-09-18 planlı. §6/S6 dosyasındaki 'Kod YOK — operatör onayı bekler' ve status ACTIVE ifadeleri bayat; kart kapanan-kartlar bloğuna taşınmalı (sayaç okuma günü ayrı takip TSK-074'te).",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-071-hayalet-dugme-oneri-suzgeci.yaml",
+      "sembol_veya_alinti": "hukum_2026_09_04: > KISMİ (Rol-1, 2026-09-04 12:2xZ...)"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "TSK-074 | ... KABLOLANDI 2026-09-04 7ed0f54 (dağıtım #13): virgin_knobs tek boğazında reflect.hayalet_suzgeci ... SAYAÇ OKUMA ~2026-09-18"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-072",
+    "dosya_status": "measured (research/cards/EDG-2026-072-rejim-kosullu-cikis-onerisi.yaml — hukum_2026_09_04: KALDI, kill-list madde-1)",
+    "roadmap_status_uyumlu": false,
+    "hukum_bekliyor_mu": false,
+    "oneri": "KAPAT-DONE — kart KALDI hükmüyle kapandı; §5 kuralı gereği kriter yerinde düzeltilmeyip halef kart EDG-2026-073 (taze kontrol tabanı) açıldı ve O DA aynı gün ölçülüp KALDI hükmü aldı (sevk kapısı KAPALI, 'kanıtla kapalı'). §6/S6'daki 'Kod YOK — onay bekler; sevk kapısını açma dilimi' ifadesi bayat; her iki kart (072 ve halefi 073) kapanan-kartlar bloğuna taşınmalı.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-072-rejim-kosullu-cikis-onerisi.yaml",
+      "sembol_veya_alinti": "hukum_2026_09_04: > KALDI — kill-list madde-1 tetiklendi"
+     },
+     {
+      "dosya": "research/cards/EDG-2026-073-rejim-kosullu-cikis-r2-taze-kontrol.yaml",
+      "sembol_veya_alinti": "status: measured / hukum_2026_09_04"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "Not (TSK-079): ... 25c-1 KOVA C HÜKMÜ 2026-09-04: EDG-072 KALDI (şasi bayatlığı) → EDG-073 R2 KALDI ... sevk kapısı KAPALI, 'kanıtla kapalı' (commit ec701b3)"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-078",
+    "dosya_status": "measuring (research/cards/EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml — kod canlı #21 19:55Z 2026-09-05; ilk seans 2026-09-08; pencere 40 seans →~2026-11-03)",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "ACIK-KALSIN — pencere henüz başlamadı (2026-09-08'de başlıyor), hüküm ~2026-11-03'te (40 seans + ≥2 ardışık pencere şartı). Şimdilik beklemek dışında iş yok.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml",
+      "sembol_veya_alinti": "status: measuring # 2026-09-05 Rol-1 — kod canlı (#21, 19:55Z); ilk seans 2026-09-08; 40 seans (~2026-11-03) sonra hüküm"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-079",
+    "dosya_status": "measured (research/cards/EDG-2026-079-replay-defteri-pit-uyelik-denetimi.yaml — hukum_2026_09_05: K1 KALDI bant3 p=0,107, K2 GEÇTİ q=0,085, PK 3/3)",
+    "roadmap_status_uyumlu": false,
+    "hukum_bekliyor_mu": false,
+    "oneri": "KAPAT-DONE — ölçüm 2026-09-05'te bitti, hüküm yazıldı ve zincire işlendi: TSK-159 (born 2026-09-06, ACTIVE, 'EDG-079 hükmünün icrası') açıldı, halef ölçüm EDG-2026-082 de aynı gün ölçüldü. §6/S6 dosyasındaki 'PK üç sentetik işlem; ... ölçüm ajanı sırada' ifadesi bayat; kart kapanan-kartlar bloğuna taşınmalı, açık iş TSK-159 üzerinden takip edilmeli.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-079-replay-defteri-pit-uyelik-denetimi.yaml",
+      "sembol_veya_alinti": "hukum_2026_09_05: > (19:40Z Rol-1) GİRDİ: üç sha mekanik ✓ ... K1 TOHUM: n=885, sızıntı 95 → p = 0,1073 > 0,10 → BANT 3"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "[TSK-159] Tohum/replay defterinin PIT ÜYELİKLE yeniden kurulumu (survivorship) — EDG-079 hükmünün icrası ... status: ACTIVE · born: 2026-09-06"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-080",
+    "dosya_status": "measuring (research/cards/EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml — K1 GEÇTİ 3/3 16:10Z; K2 pilot penceresi 2026-09-07…09-13)",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "ACIK-KALSIN — K1 hükmü zaten yazılı (GEÇTİ); K2 (pilot) penceresi henüz başlamadı (09-07'de başlıyor), nihai hüküm 2026-09-13'te K2 + araçsız-istem PK sonrası yazılacak.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml",
+      "sembol_veya_alinti": "status: measuring # 2026-09-06 16:11Z Rol-1 — K1 GEÇTİ (3/3), K2 pilot 7 gece (2026-09-07…09-13)"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-081",
+    "dosya_status": "registered (research/cards/EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml alan başlığı) — ama içerik tutarsız: adım-1/adım-2 kod aynı gün canlıya alındı, gün-1 kapanış ölçümü zaten var (pending_consolidation 0, m2.7 426/426 başarı, K1 eşiği erken sağlandı)",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "ACIK-KALSIN — nihai hüküm 7 günlük pencere sonunda (~2026-09-20) K1+K2 birlikte yazılacak. Ayrı bulgu: kartın `status:` alanı ('registered', yorum: 'adım-1 köprü bugün') güncel içerikle (gün-1 kapanış, kod zaten canlı) tutarsız — bir sonraki dokunuşta 'measuring'e güncellenmeli (dosya-durum tutarsızlığı, hüküm eksikliği değil).",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml",
+      "sembol_veya_alinti": "status: registered   # 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün ... gun1_kapanis_2026_09_06: > (14:48Z Rol-1) pending_consolidation 0 ... K1 eşiği erken sağlandı"
+     },
+     {
+      "dosya": "git log (ce6f013/3cc6b00)",
+      "sembol_veya_alinti": "EDG-081 gün-1: m2.7 211 başarı / 0 hata, failover'a düşülmedi, pending 1257"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-083",
+    "dosya_status": "registered (alan yorumu: ön-kayıt) — ama içerik ilerlemiş: adım_1_kurulum tamam (16:24-16:36Z), gün-0 ölçüm yapılmış (uydurma toplam 87/88=%99), kullanim_1 (ilk gerçek kullanım, TSK-172/173/174 açılışına yol açtı) zaten kaydedilmiş",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "ACIK-KALSIN — nihai hüküm 7. günde (2026-09-13) uydurma oranı + gerçek-kullanım + bayatlık-oranı sütunuyla yazılacak. Ayrı bulgu: kartın `status:` alanı ('registered') güncel içerikle (kurulum+gün0+ilk gerçek kullanım zaten gerçekleşti) tutarsız — 'measuring'e güncellenmeli.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml",
+      "sembol_veya_alinti": "status: registered ... adim_1_kurulum_2026_09_06: > (16:24-16:36Z Rol-1) ... kullanim_1_2026_09_06: > (19:1xZ Rol-1) İLK GERÇEK KULLANIM ATFI"
+     },
+     {
+      "dosya": "ROADMAP.md",
+      "sembol_veya_alinti": "[TSK-160] ... 19:1xZ İLK GERÇEK KULLANIM: ... 4 DOĞRULANDI · 5 KISMEN · 13 DÜZELTİLMİŞ ... → TSK-172/173/174 açıldı"
+     }
+    ]
+   },
+   {
+    "card_id": "EDG-2026-084",
+    "dosya_status": "registered (research/cards/EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml — kurulum henüz yapılmadı, 2026-09-07 00:45Z'de planlı)",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "ACIK-KALSIN — kurulum 2026-09-07 00:45Z tek-atım (083'ün 00:10Z gece tazelemesinden sonra, paralel reflect yasak); 7 gün pencere (→2026-09-14) sonunda hüküm.",
+    "kanit": [
+     {
+      "dosya": "research/cards/EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml",
+      "sembol_veya_alinti": "status: registered   # 2026-09-06 Rol-1 — ön-kayıt; sayfalar 2026-09-07 00:45Z tek-atımla kurulur (kova taze), 7 gün pencere"
+     }
+    ]
+   },
+   {
+    "card_id": "RETRO-KUYRUK",
+    "dosya_status": "N/A — kart değil, S6 dosyasındaki README özet satırı (EAP/Insider/Short-interest/PEAD archived; çıkış paketi measured→shadow-accrual)",
+    "roadmap_status_uyumlu": true,
+    "hukum_bekliyor_mu": false,
+    "oneri": "DUSUR-ONER (aksiyon gerekmez) — bu satır zaten kapanmış/arşivlenmiş kalemlerin özetidir, aktif kart değildir; S6 aktif-kartlar listesinde yalnız bağlam için duruyor.",
+    "kanit": [
+     {
+      "dosya": "research/cards/README.md",
+      "sembol_veya_alinti": "üretilmiş kart endeksi (S6 dosyasındaki 'Retro kuyruk (README)' satırının kaynağı)"
+     }
+    ]
+   }
+  ]
+ }
+}

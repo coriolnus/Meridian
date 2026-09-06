@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **98** kart.
 
-### Kayıtlı — ölçüm bekliyor (16)
+### Kayıtlı — ölçüm bekliyor (14)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -41,12 +41,6 @@ Toplam **98** kart.
   · kart: `EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml`
 - **EDG-2026-070** (`registered`) — 
   · kart: `EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml`
-- **EDG-2026-081** (`registered`) — 
-  · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim ölçümünden sonra
-  · kart: `EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml`
-- **EDG-2026-083** (`registered`) — 
-  · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; sayfalar EDG-080 K1 yeşil + K2 POST'undan SONRA açılır
-  · kart: `EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml`
 - **EDG-2026-084** (`registered`) — 
   · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; sayfalar 2026-09-07 00:45Z tek-atımla kurulur (kova taze), 7 gün pencere
   · kart: `EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml`
@@ -57,7 +51,7 @@ Toplam **98** kart.
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
-### Ölçümde (6)
+### Ölçümde (8)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -74,6 +68,12 @@ Toplam **98** kart.
 - **EDG-2026-080** (`measuring`) — 
   · HÜKÜM: 2026-09-06 16:11Z Rol-1 — K1 GEÇTİ (3/3), K2 pilot 7 gece (2026-09-07…09-13); hüküm hukum_k1_2026_09_06
   · kart: `EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml`
+- **EDG-2026-081** (`measuring`) — 
+  · HÜKÜM: 2026-09-06 değerlendirme: adım-1/2 canlı, gün-1 ölçümü var; pencere ~2026-09-20 # 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim…
+  · kart: `EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml`
+- **EDG-2026-083** (`measuring`) — 
+  · HÜKÜM: 2026-09-06 değerlendirme: adım-1 tamam, gün-0 ölçüm + kullanım-1 kayıtlı; hüküm 2026-09-13
+  · kart: `EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml`
 - **EXE-2026-003** (`measuring`) — 4b gölge katmanı yalnız SİLAHLANMIŞ planların dakika-hassas dolumunu yazıyor (6 seansta 4 satır).
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`

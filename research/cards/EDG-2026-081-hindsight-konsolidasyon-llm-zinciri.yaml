@@ -5,7 +5,7 @@
 # LLM_LITELLMROUTER_CONFIG; litellm kurulu). Reflect m3'e ayrıldı (EDG-080) — konsolidasyon m3'ü TÜKETMEMELİ.
 
 card_id: EDG-2026-081
-status: registered   # 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim ölçümünden sonra
+status: measuring   # 2026-09-06 değerlendirme: adım-1/2 canlı, gün-1 ölçümü var; pencere ~2026-09-20   # 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim ölçümünden sonra
 family: hindsight_hafiza
 on_kayit: 2026-09-06
 ref: [EDG-2026-077, EDG-2026-080, TSK-157, TSK-145, TSK-144, EDG-2026-067]

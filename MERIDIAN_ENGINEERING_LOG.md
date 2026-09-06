@@ -2872,3 +2872,10 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   canlı sayaçta anahtar yok = teslim hatası 0. ÜÇÜNCÜ HATAM (aynı konuda): 'DÖRDÜNCÜ SESSİZ DELİK' yorumunu okuyup altındaki düzeltme
   kodunu okumadan 'kalan boşluk' yazdım. Kural: yorum tarihçedir, hüküm koddur — 'boşluk/kalan iş' iddiası kodun devamı + test + canlı
   grep üçlüsü olmadan yazılmaz (hafıza notu yorum-tarihce-kod-hukum).
+- **20:0x–20:5xZ — ROADMAP TAM YENİDEN DEĞERLENDİRME (operatör: "bütün kalemler, öneri havuzu ve aktif WP'ler dahil").** 52 açık TSK
+  (13 ajan) + 9 aktif cephe, §5 masa, 12 aktif kart (11 ajan), salt-okunur, 3,4M token, ~10 dk. TSK: 38 kalsın / 9 ertele / 5 kapat
+  (+TSK-047 kök neden çözülmüş) — her kaleme "hüküm·öncelik·kapı" notu; düşürme önerisi çıkmadı. Cepheler: PRG-06 🟢 (WP6 gövdeleri
+  kapalı), PRG-07 🔶, PRG-09 🔶 (QC BLOKE kalktı — TSK-046); PRG-05 gövdesi ağır bayat (13 madde tarihçe). §5: B-QC-LOGIN/B-AJAN-GIT
+  ✅ (kanıt TSK-046/050). §6: EDG-071/072/079 DONE (kart hükümleri Eylül 4-5'te yazılmıştı, endeks ACTIVE kalmıştı); EDG-081/083 status
+  measuring. Konsolide plan belgesi docs/degerlendirme/PLAN-KONSOLIDE-2026-09-06.md (8 tablo: gece · hafta · sırada · kapılı · masa ·
+  kapananlar · düşürme önerileri · riskler). Hafıza sayfaları ipucu olarak kullanıldı; kanıt depodan.

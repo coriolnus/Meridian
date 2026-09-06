@@ -9,7 +9,7 @@
 # UYDURMA ÖLÇÜMÜ bu kartın omurgası: sayfa "hatırlanan"dır, kural "ölçülen"dir — sayfadaki atıflar depoda doğrulanır, oran EŞİKTİR.
 
 card_id: EDG-2026-083
-status: registered   # 2026-09-06 Rol-1 — ön-kayıt; sayfalar EDG-080 K1 yeşil + K2 POST'undan SONRA açılır
+status: measuring   # 2026-09-06 değerlendirme: adım-1 tamam, gün-0 ölçüm + kullanım-1 kayıtlı; hüküm 2026-09-13
 family: hindsight_hafiza
 on_kayit: 2026-09-06
 ref: [EDG-2026-080, EDG-2026-067, TSK-142, TSK-060, TSK-091, TSK-160]
