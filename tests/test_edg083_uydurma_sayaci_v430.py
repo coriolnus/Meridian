@@ -29,10 +29,17 @@ yansıtır — ama sayfa dosyaları (JSON/`.md`) `tmp_path`te ÜRETİLİR (sahte
                                                    değişmez, bu kısa sha KALICI olarak çözülür)
   · sahte sha    `deadbeef1`                     (`git cat-file -e` ile ÇÖZÜLEMEZ — 128 döner)
 
+`yol` SINIFI — İKİ KADEMELİ DOĞRULAMA (Rol-1 ruling 2026-09-06, ölçümden ÖNCE, brief-uydurma-say-2):
+gözlem, pilot sayfadaki 9 doğrulanamayan atıftan 8'i ÇIPLAK dosya adıydı (`api.py`, `guard.py`, …) —
+depoda VAR ama dizinsiz yazılmıştı, bu UYDURMA değil EKSİK-BELİRTİLMİŞ atıftır. Ek sınama seti:
+  · dizinsiz gerçek `guard.py`         → `meridian/guard.py`ye basename ile DOĞRULANIR (`ad`)
+  · dizinli yanlış  `ops/guard.py`     → `/` içerdiği için `ad` DENENMEZ, doğrulanamaz kalır
+  · dizinsiz uydurma `olmayan_dosya_xyz.py` → hiçbir basename'e denk gelmez, doğrulanamaz
+
 MUTASYON KANITLARI (CLAUDE.md §6 — "çivi yeşili kanıt değildir"): bu dosyanın docstring'i turun
 SONUNDA, gerçek mutasyon koşumlarından SONRA güncellenir (rapor dosyasında ayrıca yazılı) —
-`atiflari_cikar`ın sınıf ayrımını kaldıran ve `oran` hesabını `toplam==0`da `0.0`a çeviren iki
-BAĞIMSIZ mutasyon, ilgili testleri KIRMIZI yapmalı.
+`atiflari_cikar`ın sınıf ayrımını kaldıran, `oran` hesabını `toplam==0`da `0.0`a çeviren VE
+`yol_dogrula`nın `ad` eşleşmesini kapatan ÜÇ BAĞIMSIZ mutasyon, ilgili testleri KIRMIZI yapmalı.
 
 ÇAPA YASAĞI: bu dosyada `dosya.py` + iki-nokta + rakam biçiminde (satır çapası) HİÇBİR atıf YOK
 — `test_capa_yasagi_bu_dosyalarda_satir_capasi_yok` bunu bu dosyanın VE ölçülen betiğin kendi
@@ -170,6 +177,95 @@ def test_sha_dogrula_gercek_ve_sahte():
     assert ok is True and hata is None
     ok, hata = o.sha_dogrula(KOK, SAHTE_SHA)
     assert ok is False and hata is None, "sahte sha bir HATA değil, doğrulanamayan bir SONUÇ"
+
+
+# =================================================================================================
+# `yol` SINIFI — İKİ KADEMELİ DOĞRULAMA (Rol-1 ruling 2026-09-06, ölçümden ÖNCE)
+# brief-uydurma-say-2.md: dizinsiz atıf ("guard.py") UYDURMA değil EKSİK-BELİRTİLMİŞtir; `ls_kume`
+# içinde basename'i eşleşen ≥1 dosya varsa DOĞRULANMIŞ sayılır. Atıfta `/` VARSA (`ops/guard.py`)
+# `ad` hiç denenmez — yanlış dizin = yanlış atıf, `meridian/guard.py`ye basename ile KAYMAZ.
+# =================================================================================================
+
+GERCEK_YOL_DIZINSIZ = "guard.py"
+GERCEK_YOL_DIZINSIZ_HEDEF = "meridian/guard.py"
+YANLIS_DIZINLI_YOL = "ops/guard.py"
+UYDURMA_YOL_DIZINSIZ = "olmayan_dosya_xyz.py"
+
+
+def test_on_kosul_yol_ad_eslesme_sinama_seti_depoda_iddia_ettigi_gibi():
+    """Sınama setinin taban iddiaları GERÇEK depoda doğru mu (test-taban sapması olmasın):
+    `guard.py`nin TEK karşılığı `meridian/guard.py`dir; `ops/guard.py` depoda YOKTUR; dizinsiz
+    `olmayan_dosya_xyz.py` hiçbir dosyanın basename'i DEĞİLDİR."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    basename_eslesenler = [p for p in ls_kume if p.rsplit("/", 1)[-1] == GERCEK_YOL_DIZINSIZ]
+    assert basename_eslesenler == [GERCEK_YOL_DIZINSIZ_HEDEF], basename_eslesenler
+    assert YANLIS_DIZINLI_YOL not in ls_kume
+    assert not any(p.rsplit("/", 1)[-1] == UYDURMA_YOL_DIZINSIZ for p in ls_kume)
+
+
+def test_yol_dogrula_a_dizinsiz_atif_basename_ile_dogrulanir_ad_eslesmesi_kaydedilir():
+    """(a) brief: `guard.py` (dizinsiz) → doğrulanır, eşleşen yol `meridian/guard.py`dir."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    tam, ad, ad_eslesenler = o.yol_dogrula(GERCEK_YOL_DIZINSIZ, ls_kume)
+    assert tam is False, "guard.py ls-files'ta TAM olarak yok, ad eşleşmesiyle doğrulanmalı"
+    assert ad is True
+    assert ad_eslesenler == [GERCEK_YOL_DIZINSIZ_HEDEF]
+
+
+def test_yol_dogrula_b_dizinli_yanlis_yol_ad_ile_KAYMAZ_dogrulanamaz():
+    """(b) brief: `ops/guard.py` (var olmayan dizinli yol) → doğrulanamaz — atıfta `/` olduğu için
+    `ad` hiç DENENMEZ; `meridian/guard.py`ye basename ile KAYMAZ (yanlış dizin = yanlış atıf)."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    assert o.yol_dogrula(YANLIS_DIZINLI_YOL, ls_kume) == (False, False, [])
+
+
+def test_yol_dogrula_c_dizinsiz_hicbir_yerde_yoksa_dogrulanamaz():
+    """(c) brief: `olmayan_dosya_xyz.py` → doğrulanamaz (ne tam ne ad eşleşmesi var)."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    assert o.yol_dogrula(UYDURMA_YOL_DIZINSIZ, ls_kume) == (False, False, [])
+
+
+def test_yol_dogrula_ls_kume_none_ise_ikisi_de_dogrulanamaz():
+    o = _yukle()
+    assert o.yol_dogrula(GERCEK_YOL_DIZINSIZ, None) == (False, False, [])
+
+
+def test_sayfa_olc_yol_sinifi_d_dogrulanan_tam_artı_ad_toplamina_esittir():
+    """(d) brief: toplam `dogrulanan` = tam + ad. Sayfa dört yol atıfı taşır: biri TAM
+    (`meridian/pitlaw.py`), biri AD ile (`guard.py`), biri hiçbiri (tam yol ama depoda yok), biri
+    hiçbiri (dizinsiz ama hiçbir yerde yok) — `dogrulanan` bu ikisinin ayrık TOPLAMI olmalı."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    roadmap_metni = (KOK / "ROADMAP.md").read_text(encoding="utf-8")
+    icerik = f"{GERCEK_YOL} · {GERCEK_YOL_DIZINSIZ} · {UYDURMA_YOL} · {UYDURMA_YOL_DIZINSIZ}"
+    sayfa = {"id": "yol-d", "kaynak_dosya": "yol-d.md", "content": icerik}
+    sonuc = o.sayfa_olc(sayfa, KOK, ls_kume, roadmap_metni, [])
+
+    yol_veri = sonuc["sinif_bazinda"]["yol"]
+    assert yol_veri["toplam"] == 4
+    assert yol_veri["dogrulanan_tam"] == 1
+    assert yol_veri["dogrulanan_ad"] == 1
+    assert yol_veri["dogrulanan"] == yol_veri["dogrulanan_tam"] + yol_veri["dogrulanan_ad"] == 2
+    assert yol_veri["ad_eslesmeleri"] == {GERCEK_YOL_DIZINSIZ: [GERCEK_YOL_DIZINSIZ_HEDEF]}
+    dogrulanamayan_yol_atiflari = {d["atif"] for d in sonuc["dogrulanamayan"] if d["sinif"] == "yol"}
+    assert dogrulanamayan_yol_atiflari == {UYDURMA_YOL, UYDURMA_YOL_DIZINSIZ}
+
+
+def test_calistir_beyan_alaninda_yol_ad_eslesme_kurali_cumlesi_var(tmp_path):
+    """Brief madde 3: çıktı JSON'unun `beyan` alanına Rol-1 ruling cümlesi eklenir."""
+    o = _yukle()
+    sonuc = o.calistir(sayfa_dizin=tmp_path, repo=KOK)
+    assert "basename eşleşmesiyle doğrulanır" in sonuc["beyan"]
+    assert "2026-09-06" in sonuc["beyan"]
 
 
 # =================================================================================================
@@ -378,3 +474,31 @@ def test_MUTASYON_toplam_sifirda_oran_sifira_cekilirse_uydurma_yasagi_testi_KIRM
             assert sonuc["oran"] is None
     finally:
         o.sayfa_olc = orijinal
+
+
+def test_MUTASYON_ad_eslesmesi_kapatilirsa_sayfa_olc_yol_ad_iddiasi_KIRMIZI_olur():
+    """ÜÇÜNCÜ BAĞIMSIZ mutasyon (Rol-1 ruling 2026-09-06): `yol_dogrula`yı `ad` eşleşmesini
+    KAPATAN (yalnız `tam` döndüren) bir sürümle mutasyona uğratırsak, (a)/(d) testlerinin ana
+    iddiası (`guard.py` `sayfa_olc` üzerinden `ad` ile doğrulanır, `dogrulanan_ad==1`) ÇÜRÜR —
+    testi TEKRAR YAZMADAN, mutasyonlu `yol_dogrula`yı `sayfa_olc` GERÇEKTEN çağırarak (fonksiyonun
+    içini KOPYALAMADAN) gösterilir (CLAUDE.md §6, 'çivi yeşili kanıt değildir')."""
+    o = _yukle()
+    ls_kume, _ = o.ls_files_getir(KOK)
+    roadmap_metni = (KOK / "ROADMAP.md").read_text(encoding="utf-8")
+    orijinal = o.yol_dogrula
+
+    def mutasyonlu_yol_dogrula(atif, ls_kume):
+        tam = bool(ls_kume is not None and atif in ls_kume)
+        return tam, False, []          # AD EŞLEŞMESİ MAHVEDİLDİ: her zaman kapalı
+
+    o.yol_dogrula = mutasyonlu_yol_dogrula
+    try:
+        sayfa = {"id": "yol-d", "kaynak_dosya": "yol-d.md",
+                 "content": f"{GERCEK_YOL} · {GERCEK_YOL_DIZINSIZ}"}
+        sonuc = o.sayfa_olc(sayfa, KOK, ls_kume, roadmap_metni, [])
+        yol_veri = sonuc["sinif_bazinda"]["yol"]
+        with pytest.raises(AssertionError):
+            assert yol_veri["dogrulanan_ad"] == 1
+            assert yol_veri["ad_eslesmeleri"] == {GERCEK_YOL_DIZINSIZ: [GERCEK_YOL_DIZINSIZ_HEDEF]}
+    finally:
+        o.yol_dogrula = orijinal
