@@ -1,0 +1,1031 @@
+[
+ {
+  "id": "TSK-157",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "EDG-2026-077 kartının 7 günlük ölçüm penceresi (2026-09-05 18:06Z → 2026-09-12) bitene kadar K1 (pending_consolidation eğrisi) ve K2 (llm-requests consolidation başarı/hata sınıfı) günlük izlenmeli, hüküm pencere sonunda AYNI turda karta + K defterine işlenmeli.",
+  "gerekce": "Kart status=measured/gün-1 aşamasında: EDG-081 zincirinin gün-1 ölçümü bugün girdi (m2.7 426-435 çağrı, hepsi başarı, failover'a düşülmedi, pending 2884→0); K1 eşiği (14. gün ≤345) 1. günde sağlandı ama kart penceresi henüz kapanmadı — CLAUDE.md §5 'eşik sonradan değişmez, hüküm pencere sonunda' kuralı gereği bugün kapatılamaz. Ayrıca konsolidasyonun minimax-m3'ten bugün 27 çağrı yemesi reflect/sayfa payını daralttığı için TSK-160/171 ile bütçe çakışması izlenmeli.",
+  "bayat_iddia": "—",
+  "birlestir_ile": "",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-077-hindsight-konsolidasyon-llm-minimax-kova-disi.yaml",
+    "sembol_veya_alinti": "status: measured   # 2026-09-06 Rol-1 — KALDI ... köprü m2.7 + zincir tasarımı → EDG-081"
+   },
+   {
+    "dosya": "git log",
+    "sembol_veya_alinti": "3cc6b00 EDG-081 gün-1: m2.7 211 başarı / 0 hata, failover'a düşülmedi, pending 1257"
+   }
+  ]
+ },
+ {
+  "id": "TSK-159",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "S5 (tohum değişimi) için operatör onayı: bakım penceresi seçilip, 'replay_seed_pit' damgalı yeni tohum (A varyantı önerilen) kurulmadan ve eski tohumla karşılaştırma raporu ROADMAP §7'ye işlenmeden kalem kapanmaz.",
+  "gerekce": "Motor tarafı (S2: backtest.replay/walk_forward'a opsiyonel `uyelik` süzgeci) ve ölçüm (S3: EDG-2026-082) zaten merge edilmiş ve kanıtlı — bu ikisi için iş bitmiş sayılabilir. Ama kartın kendi hükmü (S5) açıkça 'OPERATÖR onayı' bekliyor diyor; bu bekleyen karar dışında yapılacak mühendislik işi kalmamış görünüyor, dolayısıyla kalem operatör kararına asılı kalıyor.",
+  "bayat_iddia": "—",
+  "birlestir_ile": "",
+  "kanit": [
+   {
+    "dosya": "meridian/backtest.py",
+    "sembol_veya_alinti": "uyelik: Callable[[str], set[str]] | None = None) -> BacktestResult: ... TSK-159/EDG-2026-082"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-082-tohum-pit-uyelik-suzgeci-kiyasi.yaml",
+    "sembol_veya_alinti": "status: measured   # ... S5 tohum değişimi OPERATÖR"
+   }
+  ]
+ },
+ {
+  "id": "TSK-160",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "EDG-2026-083'ün 7 günlük penceresi (kurulum 2026-09-06) bitiminde uydurma oranı + gerçek-kullanım sayımı + 'bayatlık oranı' sütunu ile nihai hüküm karta yazılmalı; bu arada doğrulama turunda açılan TSK-172/173/174 alt kalemlerinin akıbeti (biri DONE, ikisi implementer'da) bu kartın hükmüne dahil edilmeli.",
+  "gerekce": "Kart status=registered, sayfalar bugün kuruldu ve İLK GERÇEK KULLANIM bugün (19:1xZ) gerçekleşti: 22 iddianın 4 DOĞRULANDI/5 KISMEN/13 BAYAT çıktığı ölçülmüş ve üç alt kalem (TSK-172/173/174) açılmış — sistem çalışıyor ama 7 günlük pencere henüz kapanmadı, dolayısıyla nihai hüküm erken olur.",
+  "bayat_iddia": "—",
+  "birlestir_ile": "",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml",
+    "sembol_veya_alinti": "status: registered   # 2026-09-06 Rol-1 — ön-kayıt"
+   },
+   {
+    "dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/kullanim/celiski_dogrulama_2026-09-06.json",
+    "sembol_veya_alinti": "(dosya var — 22 iddia doğrulama sonucu)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-174] ... status: DONE(2026-09-06·doğrulama: teslim-hatası sayacı ZATEN canlı ...)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-171",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "Kurulum betiği (kur_sayfalar84.sh) 2026-09-07 00:45Z tek-atımla çalıştırılmalı, kova/karşılıklı çakışma (083'ün 00:10Z tazelemesiyle) doğrulanmalı ve ardından 7 günlük pencerede uydurma oranı ≥%80 + gerçek kullanım ≥3/5 sayfa + minimax payı ≤30/gün eşikleri ölçülmeden kalem kapanmaz.",
+  "gerekce": "Kart status=registered (ön-kayıt); kurulum betiği/sayfalar84.json henüz depoda/A1'de doğrulanamadı (ölçülemedi — kurulum bu akşam/gece planlanmış, henüz gerçekleşmemiş). İş tanımlanmış ve onaylı (operatör 'hepsini uygula' demiş) ama icrası bu turun gündemi değil, gecelik tek-atımla olacak.",
+  "bayat_iddia": "—",
+  "birlestir_ile": "",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml",
+    "sembol_veya_alinti": "status: registered   # ... sayfalar 2026-09-07 00:45Z tek-atımla kurulur (kova taze), 7 gün pencere"
+   },
+   {
+    "dosya": "find sonucu",
+    "sembol_veya_alinti": "kur_sayfalar84.sh / sayfalar84.json depoda bulunamadı (A1'de olabilir, buradan ölçülemedi)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-128",
+  "hukum": "ERTELE",
+  "oncelik": "belirsiz",
+  "kapi": "learn (öğrenme kapısı) yeniden açılıp validation_ledger.jsonl'a satır düşmeye başladığında kırpma tasarımı ele alınır.",
+  "gerekce": "Kart metninin kendi ölçümü (2026-09-04 A1): dosya 1,08 MB / 398 satır, son yazım 2026-08-21, learn kapalı — günlük 1-5 satırlık büyüme yıllık ~1-2 MB'ye denk. MERIDIAN_ENGINEERING_LOG.md'de learn hâlâ kapalı görünüyor (ör. '2026-09-05 09:1xZ' ve sonraki günlüklerde 'learn kapalı' tekrarı, TSK-092 koruması); learn açıldığına dair hiçbir kanıt yok. Asıl büyüyen defterler (events/intraday_decisions) zaten ayrı kalem TSK-137'de ele alınmış ve büyük ölçüde koda bağlanmış durumda. İş geçerli ama bugün hiçbir aciliyeti yok; tetik net (learn açılışı).",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-128 What: 'validation_ledger.jsonl 1,08 MB / 398 satır ... learn kapalı ... ACİLİYET DÜŞÜK'"
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "'(learn kapalı, TSK-092)' — 2026-09-05 civarı günlük"
+   }
+  ]
+ },
+ {
+  "id": "TSK-131",
+  "hukum": "ERTELE",
+  "oncelik": "operator",
+  "kapi": "A1 /opt/veri kullanımı ≥120 G eşiğine ulaşana kadar bekle; bekçi (DISK_ESIK) sensörü canlıda erken haber verir, eşiğe gelince kalem operatör kararıyla açılır.",
+  "gerekce": "Kalem zaten status: GATED ve operatör 2026-09-04'te açıkça 'eşik 120G'ye dolarsa ele alırız, geri dolum devam etsin' demiş. Güncel ölçüm (dağıtım #16, 2026-09-05 14:05Z) /opt/veri 67 G < 110 G — sensör sessiz (beklenen). Bugün 2026-09-06, hafta sonu, disk kullanımı eşiğin çok altında; eylem gerektiren bir durum yok, mekanizma (watchdog.check_veri_disk_and_alarm, DISK_ESIK jetonu) zaten canlıda kod tamam.",
+  "bayat_iddia": "'kalan ~1.500 gün × ~95 MiB ≈ 140 G, boş 105 G — 2021 ortasında dolar' başlıktaki projeksiyon 2026-09-03 tarihli; güncel A1 verisiyle (67 G, dağıtım #16) yeniden hesap yapılmadı ama sensör zaten canlı ve operatör kararı bu haliyle geçerli — projeksiyonun kendisi eskiyor olabilir, gerçek karar disk gerçek doluluğuna göre otomatik erken uyarıyla verilecek.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-131 status: GATED(/opt/veri kullanımı ≥ 120 G — operatör 2026-09-04)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "'CANLI dağıtım #16 2026-09-05 14:05Z e8e9bf7: DISK_ESIK sensörü canlı; ilk poll uyarı yok (beklenen); 67 G < 110'"
+   }
+  ]
+ },
+ {
+  "id": "TSK-132",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-ay",
+  "kapi": "Eski sayfalar (index/runbook/landing/workflow.html) jetonlar.css'i yüklesin ya da üretici bu sayfalar için de --cikti ikinci hedefiyle blok üretsin; sayfa içinde elle-kopya '--x: #hex' tanımı 0 olduğunu doğrulayan çivi eklensin.",
+  "gerekce": "Dilim-1 (takımyıldızı JETONLAR rol adları, huni okuyucu beyanı, yön utility köprüsü) DONE (bab158f, 2026-09-04) — depo kanıtı: Huni.tsx içinde 'OKUYUCU BEYANI (TSK-132, 2026-09-04)' yorumu ve jetonlar.css'te huni-1/2/3 tanımları mevcut. Dilim-2 (eski sayfaların elle-kopya palet blokları, DİLİM-2 ÖLÇÜM 2026-09-05 17:18Z) hâlâ kod içermiyor: index.html 0 ayrışma ama runbook/landing/workflow üç kopya birbirinden de farklı (blok sha 482c62d3/8050ec50/f8fe6c91). Bugün için düşük öncelikli, kod yazılmamış açık iş kalıyor — tek-kaynak ihlali sürüyor.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-132 What: 'DİLİM-2 ÖLÇÜM 2026-09-05 17:18Z ... ÜÇ KOPYA BİRBİRİNDEN DE FARKLI ... Öncelik düşük — kod yok bugün'"
+   },
+   {
+    "dosya": "ui/src/pano/yuzeyler/kanban/Huni.tsx",
+    "sembol_veya_alinti": "'OKUYUCU BEYANI (TSK-132, 2026-09-04): --huni-1/2/3 OKUYUCUSUZ DEĞİL'"
+   }
+  ]
+ },
+ {
+  "id": "TSK-137",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "gelecek-hafta",
+  "kapi": "Ağustos ayı defteri (2026-08) planlı aylık bakımda (Ekim başı) kırpılıp arşive taşınmalı; bu adımı TSK-155'in manifest-bayatlık sensörü izliyor, ayrıca yeni bir kod işi gerekmiyor.",
+  "gerekce": "Adım-1 (kuyruk okuma + alerts önbelleği, 9c71bea) ve adım-2 (parquet arşivi + --kirp + birleşik görünüm, ea8ac3f) kod tamam ve canlıda; ilk gerçek kırpma 2026-09-05 14:10Z bakım penceresinde koşuldu (2026-07 ayı düşürüldü, defter 26,9 MB → 17,6 MB). Kartın kendi kaydettiği tek açık alt-iş (D4: /api/diagnostics'te intraday_decisions.jsonl'ın iki kez tam okunması) ayrı kalem TSK-155'te status: DONE (0a3ae8b, suite #25, dağıtım #17) olarak kapatılmış — ROADMAP'te doğrulandı. Kalan tek somut iş, Ağustos ayının rutin aylık kırpma döngüsünde arşivlenmesi; bu bir bekleyen rutin bakım adımı, yeni tasarım/kod gerektirmiyor.",
+  "bayat_iddia": "Kartın status alanı hâlâ 'QUEUED' yazıyor ama içerik (What alanındaki en son not) fiilen çoğu işin CANLI ve KOD TAMAM olduğunu gösteriyor — status alanı güncellenmemiş, bayat.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-137 What: 'CANLI İLK KIRPMA 2026-09-05 14:10Z ... defter 26,9 MB → 17,6 MB ... Ağustos ayı Ekim'de kırpılır (aylık bakım — TSK-155 manifest sensörü izler)'"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-155 status: DONE(2026-09-05 0a3ae8b suite #25; canlı dağıtım #17) ... 'çift okuma ölçüldü 44 ms/istek → api tek okuma'"
+   }
+  ]
+ },
+ {
+  "id": "TSK-151",
+  "hukum": "KAPAT-DONE",
+  "oncelik": "operator",
+  "kapi": "Sonraki gerçek hesap-kotası olayında hata_sinifi'nin 'dur' dönmesi canlıda bir kez gözle doğrulanır (opsiyonel, kapatmayı engellemez).",
+  "gerekce": "hata_sinifi() free-models-per-day/RateLimitError günlük-kota gövdesini 'dur' sınıfına çeviriyor (research/olcumler/edg067_hindsight_faz1/ingest067.py::hata_sinifi, satır ~63-101); v387 42/42 test + mutasyon 7/7 öttü (commit c291c29); A1 kopyası sha eşit (F9'a eklendi); MERIDIAN_ENGINEERING_LOG.md r3 kaydı 'TSK-151 sınıflaması doğru çalıştı (gecici_hata retry, dur=0)' diyor — canlı koşumda mekanizma doğrulandı (bu turda gerçek 429 hiç görülmedi, o yüzden 'dur' dalı fiilen ateşlenmedi ama kod+test+deploy tamam). ROADMAP status alanı hâlâ QUEUED yazıyor — bu bayat: kod/test/deploy üçü de kanıtla tamam.",
+  "bayat_iddia": "status: QUEUED — kanıt kod tamam + deploy + suite yeşil olduğunu gösteriyor, kalem fiilen kapanmış.",
+  "kanit": [
+   {
+    "dosya": "research/olcumler/edg067_hindsight_faz1/ingest067.py",
+    "sembol_veya_alinti": "hata_sinifi(status, govde) — 'free-models-per-day' → dur"
+   },
+   {
+    "dosya": "tests/test_ingest067_retry_v387.py",
+    "sembol_veya_alinti": "test_b5_gunluk_kota_500_hemen_durur_retry_yok, test_b6_gunluk_kota_permin_varyanti_gecici_retry_kalir"
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "\"TSK-151 sınıflaması doğru çalıştı (gecici_hata retry, dur=0)\""
+   }
+  ]
+ },
+ {
+  "id": "TSK-153",
+  "hukum": "KAPAT-DONE",
+  "oncelik": "operator",
+  "kapi": "Bir sonraki gerçek delist olayında SEMBOL_OLU_ADAY uyarısının fiilen tetiklendiği bir kez gözlenir (kapatmayı engellemeyen izleme kalemi).",
+  "gerekce": "watchdog.olu_isim_adaylari() ve check_olu_isim_and_alarm() son-bar-yaşı sensörünü uyguluyor (meridian/watchdog.py:4257, :4296); RETIRED_SYMBOLS'takiler zaten_emekli'ye ayrılıp uyarıya girmiyor; v416 6 test + mutasyon 5→50 öttü (commit 02c754f+5f12db0); dağıtım #16 ile canlı; MERIDIAN_ENGINEERING_LOG.md günlük özeti 'DISK_ESIK/SEMBOL_OLU_ADAY sessiz (beklenen)' diyor — false-positive yok, ilk poll beklenen davranışta. Kod+test+deploy tamam; yalnız gerçek bir delist'te fiilen ateşlendiğini görmek kalan (bloklayıcı değil, doğal olarak zamana bağlı).",
+  "bayat_iddia": "status: QUEUED — kod zaten tamam, deploy zaten canlı; 'ilk gerçek ateşleme bir sonraki delist'te' notu ileriye dönük gözlem, kapanışı engellemiyor.",
+  "kanit": [
+   {
+    "dosya": "meridian/watchdog.py",
+    "sembol_veya_alinti": "olu_isim_adaylari(), check_olu_isim_and_alarm(), zaten_emekli"
+   },
+   {
+    "dosya": "tests/test_olu_isim_adayi_v416.py",
+    "sembol_veya_alinti": "v416 6 test"
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "\"DISK_ESIK/SEMBOL_OLU_ADAY sessiz (beklenen)\""
+   }
+  ]
+ },
+ {
+  "id": "TSK-154",
+  "hukum": "KAPAT-DONE",
+  "oncelik": "operator",
+  "kapi": "Yok — kalemin kendi kapsamı (D1 boş satır reddi + D2 PIT beyanı) kapandı; alternatif kaynak (D3) ayrı kalem TSK-156 altında yürüyor.",
+  "gerekce": "D1 (boş değişiklik satırı yazımını reddet + obs.warn) ve D2 (as_of_pit_durumu PIT beyanı) commit 95d5be5 ile tamam; v419 4 test (mutasyon), v18/v238 üçlü imza; suite #26 10438/1 (bilinen v217 flake); dağıtım #18 ile canlı. D3 (alternatif kaynak) kalemin kendi metninde açıkça '[TSK-156]'ya taşındı ve TSK-156 şu an ACTIVE olarak bu işi (Historical components maddesi entegrasyonu) yürütüyor — aynı işi iki kalemde ayrı ayrı açık tutmak tek-kaynak yasasını ihlal eder.",
+  "bayat_iddia": "İş: '...değişiklik kaynağı için alternatif (ölç)' kısmı artık bu kalemin kapsamında değil — TSK-156'ya devredildi ve orada ilerliyor.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-154 satırı: \"D3: alternatif kaynak → [TSK-156]\""
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-156 satırı: \"TSK-154 D3 ölçümü: ana sayfanın 'Selected changes' tablosu kalktı...\""
+   }
+  ]
+ },
+ {
+  "id": "TSK-156",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "dilim-2(a) tasarımı (as_of tüketicisi + ikinci kaynak entegrasyonu + pitlaw sınıf kararı 'besleyeni kapalı'→'açık') karta bağlanıp kodlanmalı; EDG-2026-082 tohum-PIT-üyelik-süzgeci kıyası hükmü işlenmeli.",
+  "gerekce": "Kalem status ACTIVE; dilim-2(b) (pitlaw beyaz liste + as_of_pit okuyucu) canlıda (dağıtım #22, suite #30), ama dilim-2(a) (as_of'un gerçek tüketicisi + ikinci kaynak bağlanması) henüz kart-sonrası kod aşamasında değil — EDG-2026-079 ölçüldü (K1 kaldı survivorship şerhiyle, K2 geçti, PK 3/3) ve şu an EDG-2026-082 (tohum-PIT-üyelik-süzgeci kıyası, docs/TASARIM-PIT-EVREN-YENIDEN-TOHUMLAMA-2026-09-06.md) sürüyor. Bağlam da bunu doğruluyor: TSK-156/159 PIT zinciri S5 operatörde, hâlâ aktif.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-156: \"SIRADAKİ DİLİM-2: as_of TÜKETİCİSİ ... kod kart-sonrası\""
+   },
+   {
+    "dosya": "research/cards/EDG-2026-082-tohum-pit-uyelik-suzgeci-kiyasi.yaml",
+    "sembol_veya_alinti": "EDG-2026-082 kartı"
+   },
+   {
+    "dosya": "docs/TASARIM-PIT-EVREN-YENIDEN-TOHUMLAMA-2026-09-06.md",
+    "sembol_veya_alinti": "tasarım belgesi başlığı"
+   }
+  ]
+ },
+ {
+  "id": "TSK-060",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "EDG-2026-067 taban kıyası (kos_kiyas.sh) bugünkü koşumda tamamlanıp hüküm AYNI turda karta + K-defterine işlenmeli; ardından Türkçe recall kartı ve BOT RECALL kartı sırası açılır.",
+  "gerekce": "Kalem bugün fiilen uçuşta: ROADMAP satırı 2026-09-06 15:0x-15:5xZ 'KOŞUM BAŞLADI' diyor, r5 ingest timer'ı 2026-09-07 03:00Z'e kurulu, flashrank reranker değişimiyle recall süresi düşürülmüş (EDG-067 kurulum kaydı reranker_degisimi_2026_09_06), taban kıyası 'bugün' planlanmış. Bu, brief bağlamındaki 'EDG-067 kıyası koşuyor' notuyla birebir örtüşüyor — iş kapanmadı, aktif.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "satır 321: '2026-09-06 15:0x–15:5xZ KOŞUM BAŞLADI ... Taban indeksi kanary bitince kurulur; kıyas bugün.'"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-067-hindsight-faz1-bgem3-recall.yaml",
+    "sembol_veya_alinti": "status: registered"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-065-hindsight-faz1-kurulum-recall.yaml",
+    "sembol_veya_alinti": "status: retired  # 2026-09-01 — halef EDG-2026-067; hüküm YOK"
+   }
+  ],
+  "bayat_iddia": "—"
+ },
+ {
+  "id": "TSK-058",
+  "hukum": "KAPAT-DONE",
+  "oncelik": "belirsiz",
+  "kapi": "Kalan ölçüm/görüş işi (EDG-019 sonraki koşumlar, EDG-063 LLM sınıfı, kill#3/kill#4 pencere sayaçları) zaten ayrı kalemlere devretmiş durumda (TSK-078 Aşama A canlı, TSK-163 gated) — TSK-058'in kendi başlığındaki 'dalga' kapsamı (altyapı+ilk koşum) tamamlandı, ayrı kapı gerekmiyor.",
+  "gerekce": "ROADMAP kendi günlüğünde 'TSK-058 İMPLEMENTASYONU İNDİ' diye kayıtlı: SDD tam döngü (implementer→inceleme→2 fix turu→re-review ONAY), commit 697655a, 16/16 mutasyon kanıtı, meridian-skill-gorus.service/.timer F9'a kurulu (07:30Z), ilk resmi canlı koşum 2026-09-03'te yapılmış ve hüküm alınmış (EDG-019 hukum_2026_09_03, measured_partial). Devamındaki iş zaten kendi kartlarıyla (EDG-078 Aşama A dağıtım #21 canlı/measuring, EDG-2026-063 ayrı registered kart, TSK-163 gated) izleniyor; TSK-058'in kendisi ayrı bir açık kapı taşımıyor.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "satır 3493: '2026-09-01 — TSK-058 İMPLEMENTASYONU İNDİ (SDD tam döngü ... ) ... birim çifti meridian-skill-gorus.service/.timer (07:30Z) F9'a kayıtlı.'"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-019-skill-gorus-defteri.yaml",
+    "sembol_veya_alinti": "status: measured_partial   # 2026-09-03 Rol-1 — resmî koşum 1 yapıldı"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-063-skill-llm-ikinci-gorus.yaml",
+    "sembol_veya_alinti": "status: registered"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "satır 2449: 'AŞAMA A CANLI 19:57Z, dağıtım #21: EDG-078 measuring' (docs/TASARIM-SKILL-GORUS-TERFISI-2026-09-05.md)"
+   }
+  ],
+  "bayat_iddia": "'status: ACTIVE' (satır 333) ve İCRA SIRASI tablosundaki 'QUEUED' (satır 146) bugün için bayat — dalga zaten indi (2026-09-01), timer canlıda çalışıyor ve ilk resmi ölçüm alınmış; ayrıca 'FAZ C ... yarın 07:30Z' ifadesi 2026-09-01 tarihli, o 'yarın' çoktan geçti ve sonraki koşumlar/hüküm zaten kayıtlı."
+ },
+ {
+  "id": "TSK-064",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "gelecek-hafta",
+  "kapi": "Faz-0 (chmod 600 + envanter çivisi) ve Faz-1A/1B (LoadCredential/sops'a taşınma) tek dalgada uygulanmalı; OpenBao/unseal adımı hâlâ operatörde BEKLEMEDE-7 olarak bekliyor.",
+  "gerekce": "Son somut ilerleme 2026-09-03 gecesi 'REPO-TARAFI HAZIRLIK YAZILDI' (tasarım+envanter+sınıflandırma) — yalnız hazırlık, uygulama (Faz-0..1C) hiç koşulmamış ('canlıya dokunulmadı'). 2026-09-03'ten bugüne (2026-09-06) ROADMAP'te ilerleme kaydı yok; bugünkü bağlamda da (Hindsight/PIT/TSK-172-173 öncelikli) bu kalem gündemde değil, dolayısıyla bu hafta değil gelecek hafta işlenmesi makul.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "satır 350: 'REPO-TARAFI HAZIRLIK YAZILDI ... Canlıya dokunulmadı.' ... 'OpenBao/unseal adımı BEKLEMEDE-7'de operatörde.'"
+   },
+   {
+    "dosya": "docs/TASARIM-SIR-YOL1-2026-09-03.md",
+    "sembol_veya_alinti": "envanter [5 dosya, yalnız adlar; 16 sır / 32 ayar], sınıf A/B/C/D, Faz-0..1C"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "satır 2766: '[BEKLEMEDE-7] sır yönetimi — operatör \"şu an kalsın\"'"
+   }
+  ],
+  "bayat_iddia": "—"
+ },
+ {
+  "id": "TSK-066",
+  "hukum": "ERTELE",
+  "oncelik": "operator",
+  "kapi": "TSK-159 (tohum/replay defterinin PIT üyelikle yeniden kurulumu, survivorship) hükmü tamamlanıp EDG-079/EDG-082 zinciri kapanmadan TSK-066'nın (tick AN yeniden-kurulumu) ölçüm kodu yazılmaz — as_of tüketicisi zorunlu hale geldi.",
+  "gerekce": "Kalem kendi metninde bu düzeltmeyi zaten taşıyor: survivorship hükmü TSK-066'ya değil yeni açılan TSK-159'a ait, ve TSK-066'nın sinyal kümesi survivorship şerhli olduğu için TSK-159 önce gelmeli. TSK-159 bugün (2026-09-06) doğdu ve status ACTIVE — PIT zinciri (TSK-156/159) bağlam notunda da 'canlı, S5 operatörde' olarak doğrulanıyor. Kart EDG-2026-069 hâlâ 'kod YOK — operatör onayı bekler' durumunda; bağımlılık netleşmeden ölçüm koduna başlamak kart-öncesi kuralını (§5) ihlal eder.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "satır 383: 'DÜZELTME 01:08Z: EDG-079'un survivorship hükmü bu kaleme (tick AN yeniden kurulumu) değil YENİ kalem [TSK-159]'a aittir ... TSK-159 önce.'"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "satır 2580: '[TSK-159] ... status: ACTIVE · born: 2026-09-06'"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml",
+    "sembol_veya_alinti": "status: registered"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "satır 3398: 'kod YOK — operatör onayı bekler.'"
+   }
+  ],
+  "bayat_iddia": "Kalem metnindeki 'ölçüm kodu KOVA C sırasında' ifadesi artık eksik/bayat: sıra netleşti, TSK-066'dan önce TSK-159'un hükmü şart koşuluyor — bu bağımlılık kalemin doğuşunda (2026-08-31) yoktu, 2026-09-06'da (bugün) eklendi."
+ },
+ {
+  "id": "TSK-067",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "gelecek-hafta",
+  "kapi": "⑥a (EDG-2026-069, sinyal-tetik-dolum-tick-bacagi) ölçüm kodu KOVA C sırasında henüz koşmadı — TSK-067 kartı ancak ⑥a hükmü inince (ve kartın kendi IEX-temsiliyet kill-list maddesi ölçülünce) açılabilir.",
+  "gerekce": "TSK-067 (⑥b, işlem yönü + akış dengesizliği) için henüz research/cards altında hiçbir kart yok — QUEUED durumu doğru. Önkoşulu EDG-2026-069 (⑥a) 2026-09-03 15:11Z operatörce ACTIVE onaylandı ama 'ölçüm kodu KOVA C sırasında EDG-069/070/071'den sonra' notuyla henüz koşmadı (ROADMAP.md satır 3397-3400, 3410). Dolayısıyla TSK-067 bugün gerçekten sırada bekliyor, tamamlanmış/aşılmış değil.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "EDG-2026-069 status: ACTIVE ... ölçüm kodu KOVA C sırasında EDG-069/070/071'den sonra"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml",
+    "sembol_veya_alinti": "status: registered / notlar: Bu kart ÖLÇÜM koşmaz, ölçümü TANIMLAR. Kod yalnız operatör onayından sonra ..."
+   }
+  ]
+ },
+ {
+  "id": "TSK-068",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "gelecek-hafta",
+  "kapi": "TSK-067 (⑥b) gibi ⑥a (EDG-069) hükmünü bekliyor; ayrıca kendi kartı da henüz yazılmadı (kill-list, K grid, eşikler tanımsız).",
+  "gerekce": "TSK-068 (⑥c, spread dinamiği + icra zamanlaması) için de research/cards altında kart yok. Metindeki gerekçe ('her aday KENDİ kartından geçer; yeni sinyal yüzeyi pitlaw kaydına girer') zaten kart-önce disiplinini teyit ediyor — henüz kart açılmamışsa iş başlamamış demektir. TSK-067 ile aynı ⑥ zincirinin bir sonraki halkası; öncül tamamlanmadan bu kalem de ilerleyemez.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-068] ⑥c — spread dinamiği + icra zamanlaması — status: QUEUED · born: 2026-08-31"
+   },
+   {
+    "dosya": "research/cards",
+    "sembol_veya_alinti": "069/070/071/072/073/074/075/076/078 kartları mevcut, ⑥c'ye (spread/icra) karşılık gelen kart yok"
+   }
+  ]
+ },
+ {
+  "id": "TSK-063",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "Faz-6 BEŞ KİLİT'ten dördü kanıt biriktirmeye devam ediyor (Faz-5 örneklem 11/20); beşinci kilit zaten yalnızca operatörün INTRADAY_ARM onayında — kanıt tamamlanmadan ve operatör onayı gelmeden kapanmaz.",
+  "gerekce": "ROADMAP §5/§2 aynı GATED durumu bugün de teyit ediyor: 'Faz-6 zinciri 1/5 — açık olan tek kilit operatör onayı (INTRADAY_ARM)' ve 'B-FAZ6-KILIT: AÇIK — beş kilit dolunca INTRADAY_ARM + emir bacağı onayı'. Bağlam bilgisindeki TSK-172/173/174 bu kalemle ilgisiz (ayrı, bugün açılan kalemler); TSK-063'e dair yeni kanıt/hüküm bulunmadı.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "Faz-6 zinciri 1/5 — açık olan tek kilit operatör onayı (`INTRADAY_ARM`)."
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "🔴 AÇIK · `B-FAZ6-KILIT` | Faz-6 kapısı: beş kilit dolunca INTRADAY_ARM + emir bacağı onayı (envanter-5) | onay (kanıt-şartlı)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-126",
+  "hukum": "KAPAT-DONE",
+  "oncelik": "bu-hafta",
+  "kapi": "TSK-126'nın istediği teslim (H1 tasarım belgesi + operatör onayı) zaten var; devam eden uygulama işi kendi künyesi altında (EDG-2026-078) izleniyor — TSK-126'nın gövdesine yeni durum eklenmemeli.",
+  "gerekce": "Kalemin 'What' alanı açıkça 'İş: H1 tasarım belgesi ... kod YOK, önce belge ve onay' diyor. Bu iş 2026-09-05 16:12Z'de docs/TASARIM-SKILL-GORUS-TERFISI-2026-09-05.md ile TESLİM edildi, operatör 18:38Z'de 'Aç, önerilen paketle' diyerek 4 kararla onayladı, ve uygulama (Aşama A gölge sıralama kolu) ayrı bir kart olarak AÇILDI: EDG-2026-078 (status: measuring, 2026-09-05 kod canlı, dağıtım #21). CLAUDE.md §2 TAHTA kuralı da bunu gerektiriyor: 'İki aşamadaysa kalem İKİYE bölünür' — tasarım aşaması bitti, uygulama aşaması artık EDG-078 altında yaşıyor. TSK-126 status alanı hâlâ 'ACTIVE' yazıyor ama bu, tamamlanmış tasarım teslimiyle EDG-078'in operasyonel takibinin aynı kaleme yığılmasından kaynaklanıyor; kart disiplini gereği ayrılmalı.",
+  "bayat_iddia": "status: ACTIVE (aslında tasarım teslimi tamam, kalan iş başka künyede: EDG-2026-078)",
+  "kanit": [
+   {
+    "dosya": "docs/TASARIM-SKILL-GORUS-TERFISI-2026-09-05.md",
+    "sembol_veya_alinti": "dosya mevcut (ls doğrulaması)"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml",
+    "sembol_veya_alinti": "ref: [TSK-126, TSK-058, EDG-2026-019, EDG-2026-063, TSK-073] / status: measuring"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "KART EDG-2026-078 ön-kayıt; implementer ajan sırada; §6 endeksi."
+   }
+  ]
+ },
+ {
+  "id": "TSK-138",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "Bugünkü (2026-09-06) 22:04Z şef brifinginin canlı denetim kaydı (brifing_kural_denetimi olayı, `cevrilen`/`suzulen`/ilk_ihlal alanları) A1 events.jsonl'de okunup mekanik izinli-sözlük süzgecinin (D1-D3, c23a6a7) yanlış-pozitifi gerçekten sıfırladığı gözlenmeden ve DONE damgası o ölçümle yazılmadan kapanmaz.",
+  "gerekce": "Kod tamam ve canlıda (v385 +6, 82/82 yeşil, mutasyon 2; dağıtım #16 e8e9bf7, 2026-09-05 14:05Z) ama ROADMAP'in kendi son notu doğrulamayı '2026-09-06 22:04Z'ye' erteliyor; bugünkü git log'da (git log --oneline -20) TSK-138 için bu akşamki doğrulamaya dair hiçbir commit yok — canlı ölçüm henüz kayda geçmemiş.",
+  "bayat_iddia": "Kalem başlığındaki '2/2 ihlal, HAM teslim' ve İş maddesi (1)-(3) (14 denetimi sınıfla, veri_terimleri'ne ad ekle, çivi yaz) artık bayat: kök neden bulundu ve kod (D1/D2/D3) çoktan yazılıp dağıtıldı (c23a6a7); kalan tek soru bugünkü canlı doğrulama.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-138] ... doğrulama 2026-09-06 22:04Z."
+   },
+   {
+    "dosya": "ops/soul_denetimi.py",
+    "sembol_veya_alinti": "veri_terimleri"
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "TSK-138 (c23a6a7) + TSK-141 (36e5c87) + suite #21"
+   }
+  ]
+ },
+ {
+  "id": "TSK-142",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "gelecek-hafta",
+  "kapi": "EDG-2026-080 K2 pilotunun 7. günü (2026-09-13) sonunda eşiklerin (refresh op 5-8, failed(429-dışı)≤1/7, LLM çağrısı/refresh≤12, content_written+unchanged+preserved≥5/7, pano listeleme, minimax payı≤10/gün) geçip geçmediği ölçülüp TSK-142'nin 'Faz-2 yazma yolu KOVA B'ye' hükmü karta ve K defterine aynı turda yazılmadan kapanmaz.",
+  "gerekce": "research/cards/EDG-2026-080 status='measuring' — K1 3/3 geçti (56e296b commit, 2026-09-06 16:11Z) ve K2 pilotu (zihin modeli mm-0fb27056) 7 gece (09-07…09-13) sürüyor; ROADMAP'in kendi notu 'Sıradaki: 7. gün K2 hükmü' diyor, henüz yazılmadı.",
+  "bayat_iddia": "Kalem metnindeki 'reflect tool-calling canary'sinin ücretsiz modelde geçtiği kaydı YOK — önce o ölçülür' ve 'reflect KAPALI doğar' ifadeleri artık geçersiz: K1 kanary minimax-m3:free ile 3/3 geçti, K2 pilotu zaten açık.",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml",
+    "sembol_veya_alinti": "status: measuring   # 2026-09-06 16:11Z Rol-1 — K1 GEÇTİ (3/3), K2 pilot 7 gece (2026-09-07…09-13)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-142] ... Sıradaki: 7. gün K2 hükmü → 'Faz-2 yazma yolu KOVA B'ye'."
+   }
+  ]
+ },
+ {
+  "id": "TSK-144",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "r5 turu (A1 timer, 2026-09-07 03:00Z, kalan 8 gecici_hata dilimi) tamamlanıp banka/manifest sayımıyla 'kalan belge = 0' doğrulanmadan ve ingest067 bitiş beyanı (TSK-115 kapanışı) bu sayıyla yazılmadan kapanmaz.",
+  "gerekce": "r4 turu 2026-09-06 14:48Z'de kapandı ama 8 dilim hâlâ gecici_hata (HTTP 500 Nvidia aşırı yük) sınıfında bekliyor (exit 1 = 'başarısız dilim var'); r5 timer zaten kurulu ama henüz koşmadı.",
+  "bayat_iddia": "Kalem başlığındaki asıl tanı ('ilerleme defterinde yol biçimi r1/r2 arasında farklı → kalan belge sayısı ölçülemiyor', `ROADMAP.md%237` vs `#`) 2026-09-05 12:xx keşfinde YANLIŞ çıktı — `%237` korpusun gerçek dosya adıydı, sayım biçim sorunu değildi; retry/hata sınıflandırması da (İş maddesi 2) v387 çivisiyle koda geçti ve canlıya (A1 sha eşit) taşındı, artık açık soru yalnız r5'in bitip bitmediği.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "r5 timer ingest067-r5 2026-09-07 03:00Z kuruldu — kalan 8 dilim, Nvidia sakin saat."
+   },
+   {
+    "dosya": "tests/test_ingest067_retry_v387.py",
+    "sembol_veya_alinti": "test_ingest067_retry_v387"
+   }
+  ]
+ },
+ {
+  "id": "TSK-145",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-ay",
+  "kapi": "EDG-2026-081 zincirinin 14 günlük penceresi (2026-09-20) sonunda K1 (14. gün pending≤345) ve K2 (consolidation error/gün<200 ∧ r3 retain 429<%10) eşiklerinin ikisi de karta ve K defterine yazılmadan, 'konsolidasyon zinciri kalıcı, TSK-145 kapanır' hükmü verilemez.",
+  "gerekce": "research/cards/EDG-2026-081 status hâlâ 'registered'; gün-1 ölçümü (14:48Z) pending_consolidation'ı 2884'ten 0'a indirdi ve m2.7 426/426 başarıyla çalıştı, ama kartın kendi notu 'K1 eşiği erken sağlandı; hüküm 7 günlük pencere sonunda yazılır (K2 bedel + m2.7 tavanı gözlemi)' diyor — pencere kapanmadı.",
+  "bayat_iddia": "Kalem başlığındaki '1.026 bekleyen olgu, bir işlem 1.564 s [STUCK?], 24 saatte 15×429 — kota beklemesi mi takılma mı' tamamen bayat: 2026-09-05 KEŞİF+HÜKÜM'de STUCK'ın poller'ın 300s yaş işareti (takılma değil) ve gerçek sınıfın günlük OpenRouter kotası olduğu netleşti, HÜKÜM B ile konsolidasyon minimax'e taşındı ve kuyruk şu an (2026-09-06 14:48Z) 0'a indi — taban artık 1026 değil 0.",
+  "birlestir_ile": "EDG-2026-081 kartı TSK-145'i TSK-157 ile birlikte tek ölçüm penceresinde izliyor; ayrı roadmap kalemi olarak kalması önerilir ama hüküm aynı kart hükmüyle (2026-09-20) yazılmalı.",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml",
+    "sembol_veya_alinti": "gun1_kapanis_2026_09_06: pending_consolidation 0 (taban 2884) ... K1 eşiği erken sağlandı; hüküm 7 günlük pencere sonunda yazılır"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-145] Hindsight konsolidasyon kuyruğu: 1.026 bekleyen olgu ... HÜKÜM B 18:11Z: konsolidasyon LLM'i minimax'e alındı"
+   }
+  ]
+ },
+ {
+  "id": "TSK-104",
+  "hukum": "ERTELE",
+  "oncelik": "gelecek-hafta",
+  "kapi": "EXE-011 canlı ilk hafta birikimi tamamlanmalı (not_armed iç kırılımı, pano kovası kararı, E2 tavan izlemesi ancak o birikimle okunabilir).",
+  "gerekce": "TSK-019/EXE-2026-011 2026-09-02 gecesi DONE oldu (kart measured_partial, canlı ilk-hafta kolu açık); bugün 2026-09-06, yalnız 4 gün geçti — bağlamdaki EDG-081 'gün-1' notu da sistemin henüz bir haftalık canlı birikime ulaşmadığını doğruluyor. Trigger doğmadı, iş gereksiz değil; ~2026-09-09 civarı bir haftayı doldurunca yeniden bakılmalı.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-019: DONE(2026-09-02 gece ... kart measured_partial — canlı ilk-hafta kolu açık, TSK-104 tetiği o birikim)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-104: status: GATED(EXE-011 canlı ilk hafta birikimi)"
+   }
+  ],
+  "birlestir_ile": "—"
+ },
+ {
+  "id": "TSK-097",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "Operatörün çok-kullanıcı kimliğine geçme kararı gerekiyor; karar gelmeden paket açılmaz.",
+  "gerekce": "auth.py hâlâ tek-parola/tek-oturum modelinde (meridian/auth.py); operatör kararı 2026-09-02'de 'şimdilik hayır' idi ve bugüne kadar bunu değiştiren bir kanıt (repo, günlük, hafıza) bulunamadı. Kart bilinçli olarak paket-bütünlüğünü koruyor (kullanıcı adı alanı tek başına eklenmiyor).",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "meridian/auth.py",
+    "sembol_veya_alinti": "tek parola + oturum çerezi modeli (dosya adı/varlığı doğrulandı, kod ayrıntılı okunmadı)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-097: status: GATED(operatör çok-kullanıcıya geçme kararını verdiğinde)"
+   }
+  ],
+  "birlestir_ile": "—"
+ },
+ {
+  "id": "TSK-096",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "Operatör 'zamanla nasıl değişti' tipi bir soru sorup mevcut yüzeyler (/metrics, /api/summary, /api/diagnostics) cevaplayamadığında açılır.",
+  "gerekce": "meridian/api.py içinde /metrics, /api/summary, /api/diagnostics uçları bugün de var ve zaman-serisi toplayıcı olmadan çalışıyor; kartın kapısı olan 'trend sorusu doğdu ve cevaplanamadı' durumu bugünkü kanıtlarda (ROADMAP, günlük) görülmedi. Yasa 6/Bedel yasası gereği erken kurulum önerilmez.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "meridian/api.py",
+    "sembol_veya_alinti": "@app.get(\"/metrics\", response_class=PlainTextResponse)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-096: status: GATED(operatör bir soruyu \"zamanla nasıl değişti\" biçiminde sorduğunda ve mevcut yüzeyler cevaplayamadığında)"
+   }
+  ],
+  "birlestir_ile": "—"
+ },
+ {
+  "id": "TSK-010",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "Üç sınıftan biri doğmalı: cloud oturumlarının filoya programatik erişimi, botların birbirini yönetmesi, veya operatörün Claude Desktop'tan filo sürmesi.",
+  "gerekce": "meridian/mcp_server.py (ajan→sistem, salt-okunur) ve ops/filo.py bugün de mevcut ve orkestratör→filo boşluğunu dolduruyor; kart açıkça 'KOD YOK' diyor ve üç tetik sınıfından hiçbirinin bugün doğduğuna dair repo/günlük kanıtı yok.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "meridian/mcp_server.py",
+    "sembol_veya_alinti": "def serve(stdin=None, stdout=None) -> None:"
+   },
+   {
+    "dosya": "ops/filo.py",
+    "sembol_veya_alinti": "(dosya mevcut — orkestratör→filo köprüsü)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-010: status: GATED(yeni istemci filoya programatik erişim istediğinde: cloud oturumları · botların birbirini yönetmesi · operatörün Claude Desktop'tan filo sürmesi)"
+   }
+  ],
+  "birlestir_ile": "—"
+ },
+ {
+  "id": "TSK-161",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "belirsiz",
+  "kapi": "EDG-2026-083 kartının 7. gün hükmü (2026-09-13) çıkmadan brief işine başlanamaz — GATED durumu bugünkü kanıtla doğru.",
+  "gerekce": "Kart EDG-2026-083 status: registered, adim_1_kurulum_2026_09_06 ile 16:24-16:36Z kuruldu (sayfalar.json, uydurma_say.py v430); veri_penceresi 2026-09-06→2026-09-13, basari_tanimi hükmün 7. günde aynı turda karta+K defterine işleneceğini söylüyor. Bugün 2026-09-06 — pencerenin 1. günü, trigger henüz gerçekleşmedi. ROADMAP satırındaki status alanı (GATED, trigger 2026-09-13) kanıtla tutarlı; erken kapatma/düşürme için dayanak yok.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml",
+    "sembol_veya_alinti": "status: registered / veri_penceresi: \"2026-09-06 (K2 POST'u sonrası) … 2026-09-13\""
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-161] ... status: GATED(EDG-083 7. gün hükmü GEÇTİ) ... trigger: EDG-2026-083 hükmü GEÇTİ (2026-09-13)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-162",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "Triyaj adımına hafiza_sor.sh çağrısı eklenip 2 hafta sayım yapılması; kod gerektirmiyor, EDG-083/EDG-067 hükmüne bağlı değil.",
+  "gerekce": "Bu kalem diğer üçünden farklı: status QUEUED, trigger yok (GATED değil), disiplin+sayım işi olup kod/altyapı beklemiyor. Bugünkü bağlamda (hafta sonu, hindsight kartları 7 gün penceresinde) hemen başlatılabilir bir kalem; operatörün 'aktif kullan' talimatıyla (2026-09-06) uyumlu ve bağımsız yürüyebilir.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-162] ... status: QUEUED ... trigger: —"
+   }
+  ]
+ },
+ {
+  "id": "TSK-163",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "belirsiz",
+  "kapi": "Hem EDG-2026-083 7. gün hükmü (2026-09-13) HEM EDG-2026-067 taban-kıyası hükmü (henüz koşuyor) gerçekleşmeden BOT RECALL kartı açılamaz.",
+  "gerekce": "Çift kapı en kısıtlayıcısı henüz sağlanmadı: EDG-067 kıyas zinciri günlükte 'BAŞLADI' olarak görünüyor, sonuç/hüküm satırı yok (taban_recete_kararlari koşumdan önce donduruldu, 'koşum HENÜZ YOK' notu kartta duruyor). EDG-083 de 1. günde. İkisi de GEÇMEDEN bu M-L boyutlu kalemin implementasyonuna geçmek erken olur.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-067-hindsight-faz1-bgem3-recall.yaml",
+    "sembol_veya_alinti": "taban_recete_kararlari_2026_09_01: \"Ölçüm kodu indi ... koşumdan ÖNCE donduruldu\""
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "17:28Z — EDG-067 KIYAS ZİNCİRİ BAŞLADI (edg067-kiyas, kos_hepsi.sh: taban indeksi → primer koşum ... → varsayılan tipli koşum)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-164",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "belirsiz",
+  "kapi": "EDG-2026-083 7. gün hükmü (2026-09-13) GEÇTİ olmadan dördüncü sayfa (akıbet defteri) açılamaz.",
+  "gerekce": "Aynı EDG-2026-083 kartına bağlı GATED kalem; kart henüz 1. günde (registered, pencere 09-06→09-13). TSK-163'ün Ref'inde de bu kalem geçiyor, sıralama tutarlı — birleştirme gerekmiyor çünkü ayrı bir sayfa/ölçüt (öneri akıbeti) tanımlıyor, TSK-163 (bot ikinci görüşü) ile kapsamı örtüşmüyor.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml",
+    "sembol_veya_alinti": "veri_penceresi: \"2026-09-06 ... … 2026-09-13\""
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-164] ... status: GATED(EDG-083 GEÇTİ) ... trigger: EDG-2026-083 hükmü GEÇTİ (2026-09-13)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-016",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "belirsiz",
+  "kapi": "EDG-019'un kill#4 bekçisi resmi ölçülmeli VE EDG-063 'registered'dan gerçek bir ölçülmüş koşuma geçmeli — ikisi tamamlanmadan hermes öz-iyileştirme kapısı açılmaz.",
+  "gerekce": "Kart durumları bugün de gate koşulunu karşılamıyor: EDG-2026-019 status=measured_partial (2026-09-03 resmi koşum-1 yapıldı ama PK çıktıda yok, kill#4 bekçisi ölçülmedi), EDG-2026-063 status=registered (hiç ölçüm koşumu yapılmamış, yalnız ön-kayıt). TSK-016'nın tetiği 'EDG-019/063 taban ölçümü tamamlanınca' — 063 tarafı fiilen başlamamış. Bugünkü bağlamda da (EDG-080/083/084, EDG-067 kıyası, PIT S5) bu kapıya öncelik verilmiyor.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-019-skill-gorus-defteri.yaml",
+    "sembol_veya_alinti": "status: measured_partial   # 2026-09-03 Rol-1 — resmî koşum 1 yapıldı ... kill#4 bekçisi ölçülmedi → partial"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-063-skill-llm-ikinci-gorus.yaml",
+    "sembol_veya_alinti": "status: registered"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-016 ... status: GATED(EDG-019/063 taban ölçümü tamamlanınca)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-018",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "belirsiz",
+  "kapi": "Alarm katmanının ifade edemediği, saatlerin kritik olduğu ölçülmüş bir bulgu sınıfı doğmadan bu kayıt bir eyleme dönüşmez — kod yazılmaz, yalnız tetik kaydı olarak beklemede kalır.",
+  "gerekce": "Kalem zaten kendi metninde 'KOD YOK, yalnız gelecekteki tetik için kayıt' diyor; bugünkü bağlamda (EDG-080/083/084 hindsight kartları, EDG-067 kıyası, PIT zinciri S5) böyle bir olay-tetikli-geçiş gerektiren bulgu sınıfının ölçüldüğüne dair kanıt yok. Bu bir bekleyen tetik kaydı — üzerinde iş yapılmaması doğru, ama kayıt (ve gerekçesi) geçerliliğini koruyor, kapatılacak ya da düşürülecek bir şey değil.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-018 ... status: GATED(alarm katmanının ifade edemediği ... bulgu sınıfı doğarsa) ... What: ... KOD YOK."
+   }
+  ]
+ },
+ {
+  "id": "TSK-020",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-ay",
+  "kapi": "Kalan sıradaki kalemler (3→1→9) implementasyona devam eder; [UYGULA-3] bars→Parquet için tasarım belgesi zaten var (2026-09-06), sıradaki iş onun uygulanmasıdır.",
+  "gerekce": "9 kalemlik büyük bir backend kuyruğu, fiilen aktif ilerliyor: [UYGULA-8] xdist DONE (2026-09-01), [UYGULA-4] kalıcı-önbellek envanteri DONE (ölçüm 2026-09-05), [UYGULA-2] adım-1 DONE + adım-2 (parquet arşiv+kırpma) TSK-137'ye devredilip kod indi ve 2026-09-05 canlı ilk kırpma koşuldu. Kapatılacak durumda değil — hâlâ [UYGULA-3] (bars→Parquet, tasarım belgesi 2026-09-06 hazır), [UYGULA-1] (SQLite→WAL) ve [UYGULA-9] (Prometheus+Grafana) açık. Bugünkü operatör önceliği PIT zinciri/hindsight olduğundan bu-hafta değil ama sıra canlı, düşürülecek bir şey yok.",
+  "bayat_iddia": "Kalem başlığındaki sıra etiketi '4→2-adım2→3→1→9' güncelliğini kaybetmiş: dizideki ilk iki adım ([UYGULA-4] ve [UYGULA-2 adım-2]) zaten DONE/devredildi — kalan gerçek sıra yalnızca 3→1→9'dur; başlık bunu yansıtmıyor.",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[UYGULA-4] kalıcı-önbellek envanteri — DONE (ÖLÇÜM 2026-09-05 15:59Z A1)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[UYGULA-2] ... adım 2 KOD İNDİ 2026-09-03 gece ... OPERATÖR 2026-09-05 09:1xZ: UYGULA-2 adım-3 TSK-137 adım-2'ye devredildi"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-137 ... CANLI İLK KIRPMA 2026-09-05 14:10Z, Cumartesi bakım penceresi"
+   },
+   {
+    "dosya": "docs/TASARIM-BARS-PARQUET-DUCKDB-2026-09-06.md",
+    "sembol_veya_alinti": "TASARIM 02:32Z: ... strangler: CSV canlı önbellek kalır, ops/bar_arsivle.py ay/sembol parquet + manifest"
+   }
+  ]
+ },
+ {
+  "id": "TSK-093",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "belirsiz",
+  "kapi": "Tetik yalnızca bir skill'in aynı anda hem deterministik hem LLM (EDG-063) görüş satırı taşımaya başlamasıyla gerçekleşir — o ana kadar `rapor()` fail-closed (`uretici=None + karisik_uretici`) davranmaya devam eder ve kalem beklemede kalır.",
+  "gerekce": "EDG-2026-063 hâlâ status=registered — LLM gölge üreticisi (`--llm`) fiilen ölçüm/canlı koşuma girmemiş, dolayısıyla 'karışık üretici' (aynı skill'de hem det hem llm satırı) sınıfı bugün de doğmamış olmalı; evrenler ayrık kalıyor. Kalem kendi metninde de bunu doğru tanımlıyor: 'tetik gerçekleşmeden dokunmak spekülatif'. Bugünkü öncelikler (PIT S5, hindsight 7-gün pencere, EDG-067) bu kalemi öne almayı gerektirmiyor; kapatmak için de kanıt yok, çünkü tetik teorik olarak hâlâ geçerli.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-063-skill-llm-ikinci-gorus.yaml",
+    "sembol_veya_alinti": "status: registered"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-093 ... status: GATED(iki-üreticili skill doğuşu) ... rapor() bu hâli 'uretici=None + neden:karisik_uretici' ile beyan ediyor (fail-closed)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-165",
+  "hukum": "ERTELE",
+  "oncelik": "gelecek-hafta",
+  "kapi": "EDG-2026-083'ün 7 günlük ölçüm penceresi (2026-09-06→2026-09-13) tamamlanıp eşik (1)/(3)/(4) — üç sayfada içerik + gerçek-kullanım atfı + maliyet tavanı — okunmadan bu sayfa açılamaz.",
+  "gerekce": "Kalem zaten doğru şekilde GATED işaretli ve tetik tarihi (2026-09-13) bugünden (2026-09-06) 7 gün ileride; kart research/cards/EDG-2026-083-...yaml şu an status: registered, yalnız 'gün-0' ölçümü kayıtlı (olcum_gun0_2026_09_06: toplam 87/88 doğrulanan atıf, %99), 7. gün hükmü henüz yazılmamış. Bugün geçerli bir aksiyon yok; kapı tarihine kadar beklemek doğru.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml",
+    "sembol_veya_alinti": "status: registered / basari_tanimi: '(2) 7. gün uydurma oranı + gerçek-kullanım sayımı + maliyet sütunu ... (3) hüküm: eşik geçildiyse ... açılır'"
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "EDG-2026-083 ÖN-KAYIT ... üç talep-üzerine zihin modeli sayfası"
+   }
+  ],
+  "birlestir_ile": ""
+ },
+ {
+  "id": "TSK-166",
+  "hukum": "ERTELE",
+  "oncelik": "gelecek-hafta",
+  "kapi": "Aynı EDG-2026-083 hükmü (2026-09-13) — geçerse kart açılır, kalmazsa sayfalar kapatılır ve bu kalem düşer.",
+  "gerekce": "Kart hâlâ ölçüm penceresinde (bugün gün-0); TSK-166'nın kendisi doğrudan bu kartın çıktısına (üç sayfanın gerçek-kullanım + uydurma eşiğini geçmesi) bağlı, bağımsız bir gerekçesi yok. GATED etiketi ve tetik tarihi doğru; bugün için ek iş yok.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml",
+    "sembol_veya_alinti": "esikler.gecti: '7 günde: ... doğrulanan atıf oranı ... ∧ ≥2 sayfa ≥1 gerçek-kullanım atıfı ...'"
+   }
+  ],
+  "birlestir_ile": ""
+ },
+ {
+  "id": "TSK-167",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-ay",
+  "kapi": "Bağımsız gate yok, ama EDG-2026-067 (embedding/reranker recall — halen 'registered', kıyas bugün koşuyor) sonucu netleşip A1'deki minimax/CPU yükü (4 OCPU paylaşımlı, EDG-083+EDG-080 aynı anda kota tüketiyor) rahatlamadan yeni bir kalıcı arama yüzeyi inşa etmek riskli; TSK-091 (Hafıza sayfası) zaten DONE olduğundan bu üstüne eklenecek bir özellik.",
+  "gerekce": "Kod tabanında arama kutusu/semantik arama yüzeyi bulunamadı (meridian/web altında ilgisiz 'arama kutusu' referansları hariç); iş gerçekten yapılmamış ve status QUEUED doğru. TSK-091 (Hafıza sayfası) DONE olduğu için bu, üstüne kurulacak yeni bir özellik — ama EDG-067'nin (aynı recall altyapısı) kıyası bugün koşuyor, o bitmeden yeni bir tüketici eklemek kota/CPU rekabetini artırır.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-067-hindsight-faz1-bgem3-recall.yaml",
+    "sembol_veya_alinti": "status: registered"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-091 ... status: DONE(2026-09-02 ...)"
+   }
+  ],
+  "birlestir_ile": ""
+ },
+ {
+  "id": "TSK-168",
+  "hukum": "ERTELE",
+  "oncelik": "gelecek-hafta",
+  "kapi": "EDG-2026-083 hükmü (2026-09-13) GEÇTİ ise açılır — bu kalem doğrudan o kartın basari_tanimi(3)'ünde adı geçen ardıl kart olarak zaten tanımlı.",
+  "gerekce": "Kalem metninin kendisi 'Kart-önce' diyor ve tetik doğrudan EDG-083 hükmüne bağlanmış; kart research/cards/EDG-2026-083 içinde basari_tanimi maddesi (3) bu ardıl kalemi (defter özeti besleme) açıkça EDG-083 geçerse açılacak şekilde tanımlıyor — GATED doğru, bugün ek iş yok.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml",
+    "sembol_veya_alinti": "basari_tanimi: '... eşik geçildiyse sayfalar KALIR ve \"defter özeti besleme\" kartı ... açılır; kaldıysa sayfalar kapatılır'"
+   }
+  ],
+  "birlestir_ile": ""
+ },
+ {
+  "id": "TSK-012",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-ay",
+  "kapi": "Dalga-B (iki yönlü sohbet + ⌘K kanonik adres devri) İCRA SIRASI kuyruğuna resmen eklenip sırası gelmeli — bugün kuyruk TSK-172/173/174'e kadar ilerlemiş, dalga-B hâlâ ayrı bir İCRA SIRASI satırı olarak açılmamış.",
+  "gerekce": "dalga-A (zaman-çizelgesi) 2026-08-31'de DONE, kanıt: ROADMAP §8.T taşınması + TSK-058'in kendi trigger notu 'Ajan-A dalgası TSK-012 kapandı' (QUEUED'a geçti). Kalan dalga-B GATED duruyor ama satırın kendi tetik metni (satır 565: 'EDG-062 inişinden sonra') zaten 2026-08-31'de karşılandı (TSK-052/EDG-062 DONE, push 054f822) — yani tetik gerçekleşti ama iş hâlâ kuyruğa yerleştirilmedi; havuz metnindeki güncel tetik 'dalga-B penceresi (İCRA SIRASI)' bunu örtüyor. İş fiilen açık, sadece sıralama kararı bekliyor (Rol-1).",
+  "bayat_iddia": "Tablo satırı (ROADMAP.md ~565) trigger'ı 'EDG-062 inişinden sonra' yazıyor — bu tetik 2026-08-31'de zaten karşılandı, artık geçerli bir bekleme koşulu değil.",
+  "birlestir_ile": "",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-012 | pano 'Ajan' bölümü — ajan iletişim yüzeyi (dalga-B: sohbet) ... GATED(EDG-062 inişinden sonra ...)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-058 ... QUEUED (trigger karşılandı: Ajan-A dalgası TSK-012 kapandı)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-052] A·PIT/veri (EDG-062) — status: DONE(2026-08-31 · kart EDG-2026-062 measured ... push 054f822 ...)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-013",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "SENARYO-A (icra-anı quote kaydı, Alpaca IEX 30-kanal tavanı) için ölçüm ön-kayıt EDG-kartı açılmalı (kayıp oranı, IEX-quote/dolum tutarlılığı, disk-CPU, worker-etkisi kill'leriyle) — kart-önce kuralı gereği kod bundan önce yazılamaz; kart açma kararı operatörden bekliyor.",
+  "gerekce": "TSK-056/EDG-2026-066 (TICK-ARŞİV pilotu) DONE oldu ama o TAMAMEN FARKLI bir sınıf: S&P500+NDX için 2020'den bugüne GERİYE dönük tarihsel geri-dolum (IEX Exchange HIST pcap, DuckDB+Parquet, araştırma/replay amaçlı). TSK-013'ün konusu olan SENARYO-A (canlı icra-anı, yalnız günlük plan+pozisyon sembolleri için gerçek-zamanlı Alpaca IEX akış kaydı) hiç pilot edilmedi ve kart açılmadı — bu iki iş birbirini kapatmıyor, biri diğerinin yerine geçmiş değil.",
+  "bayat_iddia": "—",
+  "birlestir_ile": "",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "operatör 2026-09-03 sabah: BEKLEMEDE — Senaryo-A kart-önce önerisi ertelendi, reddedilmedi."
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-056] Tick Hüküm + Geri-Dolum (TICK-ARŞİV pilotu, EDG-2026-066) — status: DONE ... Pilot: S&P500+NDX · pencere 2020-01→bugün GERİYE doğru ..."
+   },
+   {
+    "dosya": "research/cards",
+    "sembol_veya_alinti": "ls research/cards/ içinde TSK-013/SENARYO-A adına açılmış bir EDG kartı bulunmadı (yalnız EDG-2026-066 var, o TSK-056'ya ait)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-014",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-hafta",
+  "kapi": "Bugün 2026-09-06 22:04Z şef brifinginin canlı denetim koşumu (dağıtım #16 sonrası HÜKÜM seçenek-D: VERİ bölgesi + izinli-sözlük süzgeci) A1 events.jsonl'da okunup TSK-014/TSK-138 kapanış kararı üçlü hükümle (grep/olay kaydı + gerçek koşum + kaynak alanı) verilmeli.",
+  "gerekce": "Kalem status: ACTIVE (ROADMAP.md satır 2734) — DONE değil. JSON'daki 'DONE damgası 2026-09-04 22:00Z gözlemine' notu ARA bir karardı, sonrasında (2026-09-05) yanlış-pozitif kök nedeni bulundu (denetçi istemi VERİ bloklarını hiç görmüyormuş), kod düzeltmesi c23a6a7 ile indi, dağıtım #16 (2026-09-05 14:05Z e8e9bf7) canlıya çıktı ama ilk LLM'li doğrulama koşumu 2026-09-05'te kotasız düştüğü için doğrulama bu akşama (2026-09-06 22:04Z) kaydı — iş fiilen sürüyor.",
+  "bayat_iddia": "Kalem metnindeki 'Karar: DONE damgası 2026-09-04 22:00Z gözlemine' ifadesi ve o gözlemin nihai olduğu izlenimi bayat — 2026-09-05'te aynı konuda yeni kök-neden bulgusu + kod değişikliği + yeni dağıtım (#16) geldi, iş ACTIVE durumda kaldı.",
+  "birlestir_ile": "",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-014] teslim-öncesi ikinci-görüş geçişi (SOUL kural denetimi) — status: ACTIVE ..."
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "(CANLI dağıtım #16 2026-09-05 14:05Z e8e9bf7: süzgeçli denetçi canlıda; ilk LLM'li koşum 22:04Z bugün KOTASIZ (llm_dustu beklenir) → doğrulama 2026-09-06 22:04Z.)"
+   },
+   {
+    "dosya": "ops/soul_denetimi.py",
+    "sembol_veya_alinti": "veri_terimleri (HÜKÜM seçenek D'nin uygulandığı süzgeç alanı, ROADMAP referansı)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-015",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "belirsiz",
+  "kapi": "Ajan-B (TSK-012 dalga-B, iki yönlü pano sohbeti) canlıya girip semantik-arama ihtiyacı gerçekten ölçülmeli; o âna kadar operatör vetosu açık kalır. Ayrıca TSK-163 (Bot Recall kartı) ile kapsam çakışması netleştirilmeli.",
+  "gerekce": "Kalemin kendi tetiği (Ajan-B canlıya girip semantik-arama ihtiyacı ölçülmesi) henüz gerçekleşmedi — Ajan-B (TSK-012 dalga-B) hâlâ GATED/kuyruğa girmemiş durumda, dolayısıyla TSK-015'in GATED statüsü hâlâ doğru. Ancak dört-aday değerlendirmesinin sonucu olan 'Hindsight kartla denenir' varsayımı kısmen aşıldı: Hindsight bağımsız bir yoldan (Rol-1'in kendi 'zihin modeli' / karar-öncesi recall ihtiyacı, EDG-2026-065/067/074/077/080/081 kartları, TSK-142/156/160-171 serisi) zaten aktif ölçülüyor ve kullanılıyor — fakat bu, Ajan-B'nin pano-sohbeti semantik-arama ihtiyacı için DEĞİL, farklı bir tüketici için. TSK-163 (Bot Recall kartı, GATED EDG-083∧EDG-067) bu konuda TSK-015 ile örtüşen bir kapsam açıyor; ikisinin operatör tarafından tek çatı altında mı yoksa ayrı mı tutulacağı netleşmemiş.",
+  "bayat_iddia": "JSON metnindeki 'Deneme kartsız başlayamaz' / 'tetiklenirse Hindsight ile denenir' ifadesi kısmen bayat — Hindsight zaten kartlarla (EDG-065/067/074/077/080/081) deneniyor ve aktif kullanımda; sadece TSK-015'in kendi tetikleyicisi olan Ajan-B senaryosu için değil.",
+  "birlestir_ile": "TSK-163 (Bot ikinci görüşü — BOT RECALL kartı) ile kapsam örtüşmesi operatörce değerlendirilmeli",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-015] ajan kalıcı hafızası ... status: GATED(Ajan-B inince semantik-arama ihtiyacı ölçülürse) ... trigger: Ajan-B canlıya girip semantik-arama ihtiyacı ölçülmesi"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-163] Bot ikinci görüşü — BOT RECALL kartı (tasarım §3: derlenmiş-sayfa / provider-autoRecall / hafızasız taban, üç kol) — status: GATED(EDG-083 GEÇTİ ∧ EDG-067 hükmü)"
+   },
+   {
+    "dosya": "MEMORY.md",
+    "sembol_veya_alinti": "Hindsight aktif kullanım — operatör 2026-09-06: arşiv bankası tam, Rol-1 her karar/kart/kök-neden öncesi A1'de hafiza_sor.sh recall koşar"
+   }
+  ]
+ },
+ {
+  "id": "TSK-169",
+  "hukum": "ERTELE",
+  "oncelik": "belirsiz",
+  "kapi": "EDG-2026-083 kartı hüküm alıp (GEÇTİ) Rol-1 günlüğünde ≥2 'kaynak: zihin modeli' atfı birikmeden A1'e Claude CLI kurulmaz.",
+  "gerekce": "Kartın kendi tetiği zaten net bir tarih taşıyor (2026-09-13) ve bugün o eşik gerçekleşmemiş: EDG-2026-083 hâlâ 'registered' durumunda, ölçüm/hüküm yok. Bağlamda da 'EDG-080/083/084 7 gün pencerede' deniyor — pencere henüz kapanmadı. Kalemi bugün ACIK-KALSIN diye bırakmak yerine ERTELE demek daha doğru: iş geçerli ama koşulu (kart hükmü + atıf sayımı) 2026-09-13'ten önce test edilemez.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "research/cards/EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml",
+    "sembol_veya_alinti": "status: registered   # 2026-09-06 Rol-1 — ön-kayıt; sayfalar EDG-080 K1 yeşil + K2 POST'undan SONRA açılır"
+   }
+  ]
+ },
+ {
+  "id": "TSK-170",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "bu-ay",
+  "kapi": "Bacak (a) 'denenenler defteri' tek sayfası ve mekanik çivi (yeni kartın ref'inde ilk-3 benzer KALDI'nın anılması zorunluluğu) henüz yazılmadı; bunlar tamamlanınca kalem kapanır.",
+  "gerekce": "Kalem metninin 'tek sayfa yok, kapı yok' ifadesi bugün eskimiş: bacak (b) artık yok değil — ops/kart_benzer.py yazıldı, TDD ile doğrulandı (2 mutasyon ayrı ayrı kırmızı verdi) ve main'e commit'lendi (4d48777); CLAUDE.md §2'ye yumuşak kapı satırı da eklendi. Geriye yalnız bacak (a) [tek sayfa] ve mekanik çivi [zorunlu ref anımı] kalıyor — kalem bütün olarak henüz kapanmadı ama kapsamı daralmış durumda.",
+  "bayat_iddia": "\"Bugün kısmen var: 83 kart hükümlü, §6 endeksi, DROPPED kalemler — ama tek sayfa yok, kapı yok\" ifadesindeki 'kapı yok' kısmı artık doğru değil; yumuşak kapı bugün CLAUDE.md'de var.",
+  "kanit": [
+   {
+    "dosya": "ops/kart_benzer.py",
+    "sembol_veya_alinti": "dosya mevcut, 4d48777 commit'inde main'e girmiş"
+   },
+   {
+    "dosya": "CLAUDE.md",
+    "sembol_veya_alinti": "\"Yeni kart açmak | `ops/kart_benzer.py --hipotez \\\"…\\\"` koştun mu? … (TSK-170, 2026-09-06: 19 KALDI + 2 NO-GO kart var…)\""
+   },
+   {
+    "dosya": ".superpowers/sdd/2026-09-06-tsk170/kart-benzer-report.md",
+    "sembol_veya_alinti": "YEŞİL. TDD tamamlandı … iki mutasyon ayrı ayrı KIRMIZI üreterek testlerin gerçekten ısırdığı gösterildi"
+   }
+  ]
+ },
+ {
+  "id": "TSK-172",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "api.py'deki literal '\"refetch_max\": 8' ve app.js'teki '|| 8' / '?? 8' / '8 adımlı' düşümleri kaldırılıp scheduler.DENSE_ATTEMPTS tek kaynağa bağlanmadan kapanmaz.",
+  "gerekce": "Ayrışma bugün hâlâ canlı kodda duruyor (api.py'de literal 8, app.js'te 4 ayrı düşüm noktası) ve implementer ajan şu an uçuşta (agentId a2d3499222d0d6788, ListAgents'ta 'running' — ~10 dk önce başlamış), rapor/commit henüz yok. Sevk zaten yapılmış olduğundan iş bu turun kapanışına bağlı.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "meridian/api.py",
+    "sembol_veya_alinti": "\"refetch_max\": 8"
+   },
+   {
+    "dosya": "meridian/web/app.js",
+    "sembol_veya_alinti": "const _sabirMax = pl.refetch_max || 8;"
+   },
+   {
+    "dosya": ".superpowers/sdd/2026-09-06-tsk172/progress.md",
+    "sembol_veya_alinti": "SEVK: TSK-172+173(a) implementer (sonnet, worktree taban origin/main=aff1996) agentId=a2d3499222d0d6788; … rapor report.md bekleniyor"
+   }
+  ]
+ },
+ {
+  "id": "TSK-173",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "loop.py'deki mirror gönderim yolunda 'acct sözlük AMA equity anahtarı yok/okunamıyor' dalı obs.alarm + _MirrorUnreachable ile kapatılmadan (a) kapanmaz; (b) [DD_VETO_MARGIN türetme] kalemin kendi metninde 'YAPILMAZ, tasarım gereği' diye zaten düşürülmüş.",
+  "gerekce": "Kod bugün hâlâ kalemin tarif ettiği hatalı satırı taşıyor: 'eq = float(acct[\"equity\"]) if acct and \"equity\" in acct else START_EQUITY' — 'yanıt var, equity yok' dalı sessizce 100k'ye düşüyor, alarm yok. Bu iş TSK-172 ile aynı implementer ajana (a2d3499222d0d6788) tek brief'te sevk edilmiş ve şu an uçuşta; henüz rapor/commit yok. (b) bacağı zaten kalem metninde düşürülmüş — o kısım için ek işlem gerekmiyor, yalnız (a) açık.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "eq = float(acct[\"equity\"]) if acct and \"equity\" in acct else START_EQUITY"
+   },
+   {
+    "dosya": "meridian/shadowlaw.py",
+    "sembol_veya_alinti": "DD_VETO_MARGIN: float = 0.08"
+   },
+   {
+    "dosya": ".superpowers/sdd/2026-09-06-tsk172/brief.md",
+    "sembol_veya_alinti": "İş 2 — TSK-173(a): 'yanıt var ama equity yok' sessiz 100k (doğrulama C17, recall 2026-09-05 önerisi)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-043",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "belirsiz",
+  "kapi": "Rol-1'in canlıda (A1) bir dağıtım sonrası `edge_verdict`/`m2m_durum`/`max_dd_alt_sinir` çıktısını gerçekten okuyup Faz-6 beş-kilitten birinin (EDGE_MAXDD_MAX=0,08 kıl payı) düşüp düşmediğini ölçmesi gerekiyor.",
+  "gerekce": "Kartın kendi metni tetiği açıkça 'dağıtım sonrası ölçüm (bu turda cloud klonundan ÖLÇÜLEMEDİ)' diye işaretliyor; bu değerlendirme de salt-okunur ve canlıya erişimsiz olduğundan aynı ölçüm bugün de yapılamadı. ROADMAP.md içinde (satır 3056-3058, 411) ek bir ölçüm veya 'kilit düştü' kaydı yok; MERIDIAN_ENGINEERING_LOG.md içinde `max_dd_alt_sinir`/`m2m_durum`/`edge_verdict` hiç geçmiyor — konu hâlâ açık ve kanıtsız. Kartın kendi beyanı bunun bir arıza değil kapının doğru çalışması olduğunu söylüyor, dolayısıyla acil değil ama kapanmamış.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "status: GATED(dağıtımdan sonra `edge_verdict` çıktısının okunması) ... trigger: dağıtım sonrası ölçüm (bu turda cloud klonundan ÖLÇÜLEMEDİ)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "🔴 AÇIK · `B-FAZ6-KILIT` | Faz-6 kapısı: beş kilit dolunca INTRADAY_ARM + emir bacağı onayı (envanter-5) | onay (kanıt-şartlı)"
+   }
+  ]
+ },
+ {
+  "id": "TSK-044",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "Operatörün FINVIZ Elite token satın alma/almama kararını vermesi gerekiyor (WP11-D uzlaştırması çözülmeden 'kesinlikle gereksiz' de denemez).",
+  "gerekce": "Bu depoda bugüne kadarki en güncel iz (MERIDIAN_ENGINEERING_LOG.md 2026-09-05 girişi) kalemi açıkça 'beklemede' listesine koyuyor: '044/045/064 beklemede'. ROADMAP.md kalem metninin kendisi de en güncel notu '(OPERATÖR 2026-09-05 09:1xZ: BEKLEMEDE — bedel aynen sürer.)' olarak taşıyor; bugünkü BAĞLAM notlarında (TSK-172/173/174, EDG-080/083/084) bu karara dair yeni bir hareket yok. Kanıt hâlâ karar verilmediğini gösteriyor, dolayısıyla açık kalmalı.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-044] FINVIZ Elite token satın alınsın mı (C1) — status: OPERATOR ... (OPERATÖR 2026-09-05 09:1xZ: BEKLEMEDE — bedel aynen sürer.)"
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "TSK-047 aç (nous PORTAL kanaryası minimax ile) · 044/045/064 beklemede."
+   }
+  ]
+ },
+ {
+  "id": "TSK-045",
+  "hukum": "ACIK-KALSIN",
+  "oncelik": "operator",
+  "kapi": "Operatörün FMP plan/kota yükseltmesi (ücretli plan) kararını vermesi gerekiyor.",
+  "gerekce": "Aynı 2026-09-05 log satırı bu kalemi de 'beklemede' olarak doğruluyor; ROADMAP metninin en güncel notu da aynı ifadeyi taşıyor. Bugünkü BAĞLAM'da FMP planı için yeni bir karar veya ölçüm anılmıyor; PIT zinciri (TSK-156/159) canlı olması bu karardan bağımsız bir konu. Kanıt karar verilmediğini gösteriyor.",
+  "bayat_iddia": "—",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "[TSK-045] FMP plan/kota yükseltmesi kararı (C2) — status: OPERATOR ... (OPERATÖR 2026-09-05 09:1xZ: BEKLEMEDE — bedel aynen sürer.)"
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "044/045/064 beklemede."
+   }
+  ]
+ },
+ {
+  "id": "TSK-047",
+  "hukum": "ERTELE",
+  "oncelik": "gelecek-hafta",
+  "kapi": "Haftalık `nous_eval` koşumunun (Pazartesi ~20:1xZ, bir sonraki koşum 2026-09-08 civarı) kapı (APISIX ai-proxy-multi + minimax son-çare rotası) üzerinden gerçekten dolu/gerçek cevap verdiğinin doğrulanması bekleniyor; doğrulama gelene kadar kart kapatılmamalı.",
+  "gerekce": "Kalemin kendi metni (en güncel not, 18:54Z 2026-09-05) kök nedeni bulup ÇÖZDÜĞÜNÜ anlatıyor: kapı istemci model alanını eziyordu, routes.yaml'a kova-dışı minimax son-çare rotası eklendi, dağıtım #20 + apisix_uygula --uygula/--denetle (drift 0) yapıldı, PORTAL kanaryası kimlik+yönlendirme+dolu-cevap ile geçti (MERIDIAN_ENGINEERING_LOG.md 18:54Z girişi bunu birebir doğruluyor). §5 KİMLİK TABLOSU'nda `B-NOUS-BEYIN` zaten ✅ KAPALI (2026-09-03 00:17 UTC) olarak işaretli. Geriye kalan tek somut açık uç, kartın kendi ifadesiyle 'haftalık nous_eval kapı üzerinden dolu cevap veriyor mu — doğrulama'; bu bir sonraki Pazartesi koşumunu bekliyor, bugün (Pazar öncesi hafta sonu, piyasa kapalı) ölçülecek bir şey yok. Statü alanı hâlâ 'ACTIVE' ve en eski not '(2026-09-05 09:1xZ: BEKLEMEDE — öğrenme açılıp örneklem büyüyünce yeniden bakılır)' diyor, ama bu not kronolojik olarak 18:54Z düzeltmesinden ÖNCEKİ bir ara-durumdur (günlükte 18:11Z→18:38Z→18:54Z ilerlemesi görülüyor) — kartın son hâli kararın zaten uygulandığını gösteriyor, dolayısıyla 'karar bekleniyor' çerçevesi bayat.",
+  "bayat_iddia": "Kalem metninin sonundaki 'Claude API anahtarı EKLE ya da NOUS_MODEL'i Google-DIŞI modele çevir kararı bekleniyor (sır yolu, koda yazılamaz)' ifadesi bayat — karar zaten verilip uygulandı: NOUS_MODEL zaten Google-dışı (nemotron/minimax), routes.yaml'a kova-dışı minimax son-çare rotası eklendi ve dağıtım #20 ile canlıya gitti, PORTAL kanaryası dolu-cevapla geçti (18:54Z kaydı).",
+  "kanit": [
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "KÖK NEDEN + ÇÖZÜM 18:54Z: ... routes.yaml'a kova-dışı :free son çare instance'ları ... dağıtım #20 + apisix_uygula --uygula/--denetle (drift 0); PORTAL kanaryası: nemotron 429 → gemma 429 → minimax 200 ... Kalan: haftalık nous_eval (Pazartesi ~20:1xZ) kapı üzerinden dolu cevap veriyor mu — doğrulama."
+   },
+   {
+    "dosya": "MERIDIAN_ENGINEERING_LOG.md",
+    "sembol_veya_alinti": "18:54Z — TSK-047 kök neden ve çözüm (kapı): ... routes.yaml'a `yedek-minimax`/`hizli-minimax` (:free, öncelik en ... kanarya 200 minimax 'MiniMax-M3 (Hermes); 17*3=51'."
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "✅ KAPALI · `B-NOUS-BEYIN` | NOUS_MODEL / beyin çeşitliliği — danışma yolu ölü mü ... ✅ kapandı 2026-09-03 00:17 UTC (Rol-1 ölçümü, A1-içi)"
+   }
+  ]
+ }
+]
