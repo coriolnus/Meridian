@@ -160,6 +160,10 @@ kurulum_kayitlari:
     değildir. Yedekler: /opt/hindsight/.env.bak-20260906-1523 (tavan öncesi), -1535 (flashrank öncesi). Recall cevabı artık
     ağırlıkla 'observation' tipi (document_id YOK) — hakem dosya kimliği ister: kıyasın Hindsight kolu için types süzgeci kararı
     koşum öncesi bu kayda eklenir (uydurma yasağı: şema/alan ölçülmeden karar yok).
+    EK 17:04Z: RERANKER_MAX_CANDIDATES_MID 100→60 ve HINDSIGHT_API_REFLECT_MAX_ITERATIONS=6 (EDG-083 sayfa tazelemeleri 600 s
+    duvarını aşıyordu) — kıyasın Hindsight kolu mid bütçede 60 adayla koşar (beyan; recall gecikmesi raporda yeniden ölçülür).
+    HAKEM KARARI (koşum öncesi): gözlemler document_id'siz → PRIMER koşum --recall-ek-json types=[world,experience]; varsayılan tipli
+    ikinci koşum rapor_varsayilan/ altında bilgi amaçlı, hüküm dışı (kos_hepsi.sh).
 
 olcum:
   soru_kumesi_donduruldu_2026_09_01: >
