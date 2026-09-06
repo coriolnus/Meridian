@@ -4767,6 +4767,10 @@ def api_diagnostics(request: Request, taze: int = 0):
     # TSK-116, 2026-09-03: karartma radarı CANLI evren yüzeyidir — 13 endeks-çıkışı sembol
     # taranmaz, LIVE_UNIVERSE kullanılır (REPLAY_UNIVERSE yalnız backtest/recompute'un).
     from .adapters.data import LIVE_UNIVERSE
+    # TSK-172, 2026-09-06: `_sched_mod` adı BİLEREK `sched` DEĞİL — birkaç satır aşağıda
+    # `sched = store.read_json("scheduler_status.json", {})` zaten o adı taşıyor (disk
+    # üzerindeki durum sözlüğü); modülün kendisi (sabit `DENSE_ATTEMPTS` buradan okunur) ayrı isim.
+    from . import scheduler as _sched_mod
     rc = store.read_json("broker_reconcile.json", {})
     pf = store.read_json("portfolio.json", {})
     mirror = store.read_json("mirror_orders.json", {})
@@ -5271,7 +5275,11 @@ def api_diagnostics(request: Request, taze: int = 0):
         # evren sapması: elle bakımlı 250'lik listede endeksten düşmüş isim var mı
         "universe_drift": store.read_json("universe_drift.json", None),
         "pipeline": {"cf_fidelity": store.read_json("cf_fidelity.json", None),
-                     "refetch_attempts": sched.get("refetch_attempts", 0), "refetch_max": 8,
+                     "refetch_attempts": sched.get("refetch_attempts", 0),
+                     # TSK-172, 2026-09-06: literal `8` yerine TEK gerçek kaynak — canlı sayaç
+                     # zaten `scheduler.DENSE_ATTEMPTS`i kullanıyor, pano payda burada AYRI bir 8
+                     # taşıyordu (davranış aynı, kaynak tekilleşti).
+                     "refetch_max": _sched_mod.DENSE_ATTEMPTS,
                      "last_refetch_session": sched.get("last_refetch_session"),
                      "earnings_attempts": sched.get("earnings_attempts", 0),
                      "quarantine": dq.get("tickers_failed") or [],
