@@ -224,3 +224,10 @@ hukum_2026_09_06: >
   zamanlaması beyanlıdır). Kaynak kontrolü (karar öncesi hafıza): recall 19:5xZ kill-list kuralları (eşik oynatılmaz, alt küme
   seçilmez) + kart_benzer selef EDG-065.
 
+ek_not_varsayilan_kosum_2026_09_06: >
+  (22:54Z) VARSAYILAN TİPLİ ikinci koşum (gözlemler dahil, --recall-ek-json yok; rapor sonuc_2026-09-06/varsayilan_*.json):
+  dosya-isabet@3 %0,0, bölüm-isabet@3 %0,0 (36/36), okunamayan_sonuc 106, p50/p95 44238/45198 ms.
+  Beklenen ve hüküm DIŞI: konsolidasyon sonrası ilk-3 gözlemlerle doluyor, gözlemin document_id'si YOK → hakem dosya kimliği
+  çıkaramıyor; bu yüzden primer koşum types=[world,experience] ile önden tanımlanmıştı. Sonuç primer hükmü DEĞİŞTİRMEZ; tersine
+  Hindsight'ın "arama" cevabının (gözlem) belge-adresli olmadığını ikinci kez gösterir.
+

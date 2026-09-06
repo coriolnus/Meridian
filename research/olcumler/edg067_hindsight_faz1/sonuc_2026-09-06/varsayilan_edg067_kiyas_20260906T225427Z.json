@@ -1,0 +1,599 @@
+{
+ "kart": "EDG-2026-067",
+ "uretim_ts": "2026-09-06T22:54:27Z",
+ "not": "Bu belge yalnız SAYI taşır. Kart eşikleriyle karşılaştırma Rol-1'e aittir.",
+ "soru_sayisi": 36,
+ "korpus": {
+  "head_commit": null,
+  "chunk_sayisi": null,
+  "kurulum_suresi_s": null,
+  "head_commit_neden": "taban indeksi künyesi bu koşumda okunmadı (taban kolu koşmadı mı?)",
+  "chunk_sayisi_neden": "taban indeksi künyesi bu koşumda okunmadı",
+  "kurulum_suresi_s_neden": "taban indeksi bu koşumda kurulmadı; süre yalnız taban_indeks.py koşumunda ölçülür"
+ },
+ "kollar": {
+  "hindsight": {
+   "genel": {
+    "n": 36,
+    "dosya_isabet_3": 0.0,
+    "bolum_isabet_3": 0.0
+   },
+   "tr": {
+    "n": 29,
+    "dosya_isabet_3": 0.0,
+    "bolum_isabet_3": 0.0
+   },
+   "en": {
+    "n": 7,
+    "dosya_isabet_3": 0.0,
+    "bolum_isabet_3": 0.0
+   },
+   "sinif_arsiv": {
+    "n": 15,
+    "dosya_isabet_3": 0.0,
+    "bolum_isabet_3": 0.0
+   },
+   "sinif_karar": {
+    "n": 13,
+    "dosya_isabet_3": 0.0,
+    "bolum_isabet_3": 0.0
+   },
+   "sinif_recete": {
+    "n": 8,
+    "dosya_isabet_3": 0.0,
+    "bolum_isabet_3": 0.0
+   },
+   "gecikme_ms": {
+    "p50": 44238.2,
+    "p95": 45198.149999999994
+   },
+   "okunamayan_sonuc": 106
+  }
+ },
+ "sorular": [
+  {
+   "id": "S-001",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 45540.0,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-002",
+   "dil": "tr",
+   "sinif": "recete",
+   "kol": "hindsight",
+   "gecikme_ms": 44467.2,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-003",
+   "dil": "en",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 43895.1,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-004",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 42124.4,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-005",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44391.1,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-007",
+   "dil": "en",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 41721.9,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-008",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 37681.4,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-009",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44743.5,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-010",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44149.1,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-012",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44486.1,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-013",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44062.5,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-014",
+   "dil": "en",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44151.2,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-016",
+   "dil": "tr",
+   "sinif": "recete",
+   "kol": "hindsight",
+   "gecikme_ms": 44211.8,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-018",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44858.8,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-020",
+   "dil": "tr",
+   "sinif": "recete",
+   "kol": "hindsight",
+   "gecikme_ms": 44411.7,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-021",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44411.9,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-022",
+   "dil": "en",
+   "sinif": "recete",
+   "kol": "hindsight",
+   "gecikme_ms": 44407.3,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-023",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 46650.8,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-024",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44011.6,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-025",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44247.9,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-026",
+   "dil": "tr",
+   "sinif": "recete",
+   "kol": "hindsight",
+   "gecikme_ms": 44349.8,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-027",
+   "dil": "en",
+   "sinif": "recete",
+   "kol": "hindsight",
+   "gecikme_ms": 45084.2,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-028",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44168.9,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-029",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44488.5,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-031",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44484.3,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-032",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44309.8,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-034",
+   "dil": "en",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44228.5,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-035",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44287.7,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-037",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 43809.8,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-039",
+   "dil": "tr",
+   "sinif": "recete",
+   "kol": "hindsight",
+   "gecikme_ms": 43864.6,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-040",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 42775.8,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-042",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44043.8,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-043",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44123.4,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-044",
+   "dil": "tr",
+   "sinif": "arsiv",
+   "kol": "hindsight",
+   "gecikme_ms": 44201.2,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-045",
+   "dil": "tr",
+   "sinif": "karar",
+   "kol": "hindsight",
+   "gecikme_ms": 44468.6,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    null,
+    null
+   ],
+   "okunamayan": 3
+  },
+  {
+   "id": "S-047",
+   "dil": "en",
+   "sinif": "recete",
+   "kol": "hindsight",
+   "gecikme_ms": 40605.7,
+   "dosya_isabet": false,
+   "bolum_isabet": false,
+   "ilk3_dosyalar": [
+    null,
+    "docs/SISTEM-DENETIMI-2026-08-02.md#3/10",
+    "docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md"
+   ],
+   "okunamayan": 1
+  }
+ ],
+ "hindsight_sema_yollari": [
+  "kimlik=document_id",
+  "metin=text"
+ ]
+}
