@@ -145,18 +145,27 @@ PIT_KAYNAKLAR: dict[tuple[str, str], str] = {
         "as_of_shares'in neden-kodlu biçimi; ölçülemeyen hücre None + neden",
     ("edgar_shares", "as_of_shares_series"):
         "np.searchsorted(filed, d, side='right')-1 — t gününden ÖNCEKİ son dosyalama",
+    ("constituents", "as_of"):
+        "değişiklik günlüğünü geriye sararak üyelik; besleyen Historical components tablosu "
+        "(oldid/sha damgalı, TSK-156 dilim-1 #19), rename eşlemeli; EDG-076 K2 fark 0; tüketici "
+        "backtest.replay(uyelik) (TSK-159 S2). SINIR: rename'ler tabloda satır değil "
+        "(SEMBOL_YENIDEN_ADLANDIRMA elle); günlük boşsa/önbellek eskiyse as_of güncel listeye "
+        "düşer = survivorship — `as_of_pit_durumu` bunu beyan eder",
 }
 
-# PIT SÖZLEŞMELİ AMA BESLEYENİ KAPALI — ÜÇÜNCÜ KOVA, ve gerekli. `constituents.as_of` değişiklik
-# günlüğünü geriye sararak üyeliği yeniden kurar (gerçek PIT iskelesi), AMA günlüğü dolduran
-# Wikipedia yolu bu kurulumda HTTP 403 alıyor (modül başlığında ölçülü) ve FMP dalı `changes`
-# üretmez. Günlük boşken `as_of(t)` GÜNCEL listeyi döner = survivorship. Beyaz listeye koymak
-# "sözleşme var" diye "veri PIT" demek olurdu; kara listeye koymak sözleşmeyi yok saymak olurdu.
-PIT_SOZLESMELI_BESLEYENI_KAPALI: dict[tuple[str, str], str] = {
-    ("constituents", "as_of"):
-        "as_of iskelesi gerçek, ama changes günlüğü boşken güncel listeye düşer (survivorship). "
-        "Üretim çağıranı bugün YOK; besleyen açılırsa PIT_KAYNAKLAR'a taşınır",
-}
+# PIT SÖZLEŞMELİ AMA BESLEYENİ KAPALI — ÜÇÜNCÜ KOVA. Konusu: as-of seçimi kodda OKUNUR (sözleşme
+# sağlam) ama VERİYE erişim şu an kapalı — sözleşme var diye "veri PIT" demek erken olurdu, kara
+# listeye koymak da sözleşmeyi yok saymak olurdu.
+#
+# BUGÜN BOŞ (2026-09-06, TSK-156 dilim-2) — VE BU BAŞARIDIR, EKSİKLİK DEĞİL (BILINEN_IHLALLER'in
+# boşluğuyla AYNI desen, § yukarıda). Tek sakini `("constituents", "as_of")` idi ve
+# `PIT_KAYNAKLAR`a TAŞINDI: besleyen artık AÇIK ölçüldü (TSK-156 dilim-1 #19 — `_fetch_hist_
+# changes` Wikipedia 'Historical components' tablosunu oldid/sha damgasıyla okur, EDG-076 K1
+# 28/28, K2 as_of fark 0; rename EQR→VMRK elle eşlemeli). Kova SİLİNMEDİ: kova tarihsel bir
+# SINIFTIR, bir sonraki "sözleşme var ama besleyeni kapalı" kaynak için açık durur — boş sözlük
+# üzerinde kayıt aramak (`in`, `.items()`) sessizce çalışmaya devam eder, dolayısıyla erken
+# doldurmak yerine BOŞ bırakmak dürüsttür (ölü yer tutucu çürüktür, § BILINEN_IHLALLER).
+PIT_SOZLESMELI_BESLEYENI_KAPALI: dict[tuple[str, str], str] = {}
 
 # ---------------------------------------------------------------------------
 # (2) İKİ DÜNYA — hangi modülde hangi hüküm koşar

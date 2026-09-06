@@ -35,8 +35,11 @@ gerçekten değişiklik sütunlarını taşımıyorsa (sütun eşleşmesi yok / 
 Üç alanı da boş olan satır (hayalet) hiçbir zaman `changes`e yazılmaz. (2) `as_of_pit_durumu(date)`
 değişiklik günlüğü boşken `as_of()`un GERÇEK tarihsel yeniden kurulum değil bugünkü listeye eşit
 survivorship döndüğünü BEYAN eder (`{"pit": False, "neden": "..."}`); `as_of()`un kendi dönüş
-biçimi (`list[str]`) DEĞİŞMEDİ — üretim çağıranı bugün yok (test_constituents_audit_v18.py'nin
-iki PIT testi + gerçek tüketici yok), pitlaw sınıfı `PIT_SOZLESMELI_BESLEYENI_KAPALI` AYNEN kalır.
+biçimi (`list[str]`) DEĞİŞMEDİ — üretim çağıranı bu depoda bugün de yok (test_constituents_audit_v18.py'nin
+iki PIT testi + gerçek tüketici yok). BU TARİHTEKİ (2026-09-05) pitlaw sınıfı `PIT_SOZLESMELI_
+BESLEYENI_KAPALI`ydı; TSK-156 dilim-2'de (2026-09-06, § (h) aşağıda) BAŞKA bir gerekçeyle
+(besleyenin açıklığı, üretim tüketicisi ayrı `backtest.replay` yolunda doğdu) `PIT_KAYNAKLAR`a
+taşındı — bu paragrafın kendisi taşınmadan ÖNCEKİ ölçümdür, tarihçe olarak bırakıldı.
 (f) TSK-156 dilim-1 (2026-09-05, kart EDG-2026-075/076,
 research/olcumler/edg075_sp500_tarihsel/sonuc_edg076_2026-09-05.json): `changes`in BİRİNCİL
 kaynağı artık AYRI bir sayfa, `HIST_URL` ("Historical_components_of_the_S%26P_500") —
@@ -58,11 +61,24 @@ defterini geriye uygular (`tarih > date` ise `yeni`→`eski`). Defter ELLE bakı
 adından ticker UYDURMAZ — `rename_adaylari()` `reason`de "(now X)" kalıbı taşıyan ama kayıtlı
 `tarih`iyle eşleşmeyen bir aday bulursa `obs.warn("sp500_rename_adayi", ...)` yazar, kayıt
 operatör tarafından ELLE açılır.
-PIT SINIFI DOKUNULMADI: `("constituents", "as_of")` bu turda da `PIT_SOZLESMELI_BESLEYENI_KAPALI`
-sınıfında KALDI. `pitlaw.sinif_turet` yalnız `PIT_DISI_KAYNAKLAR` kaydını ve YALNIZ karar/tarihsel
-modüllerdeki GERÇEK çağrı yerlerini kaynaktan tarar; `as_of`in üretimde HİÇBİR çağıranı yok (bu
-paragrafın (e) bendi hâlâ doğru), yani türetim mekanik olarak `None` (ölçülemedi) döner — beyaz
-listeye taşımayı DOĞRULAYACAK bir mekanik onay bu turda YOK, taşıma yapılmadı (rapor: Rol-1).
+PIT SINIFI GÜNCELLENDİ (TSK-156 dilim-2, 2026-09-06): `("constituents", "as_of")`
+`PIT_SOZLESMELI_BESLEYENI_KAPALI`dan `pitlaw.PIT_KAYNAKLAR`a (beyaz liste) TAŞINDI. Bu taşıma
+`pitlaw.sinif_turet`ten GELMEDİ — o mekanik yalnız `PIT_DISI_KAYNAKLAR` kaydını ve YALNIZ
+karar/tarihsel modüllerdeki GERÇEK çağrı yerlerini kaynaktan tarar; `as_of`in üretimde HİÇBİR
+çağıranı bu depoda yok (bu paragrafın (e) bendi hâlâ doğru: iki kalıcı test onu düz liste olarak
+okuyor), yani `sinif_turet` bu sembol için hâlâ `None` (ölçülemedi) döner ve öyle kalacaktır — o
+türetim SÖZLEŞMENİN VARLIĞINI değil KARAR BAĞINI ölçer. Taşımanın gerekçesi BAŞKA bir ölçümdür:
+besleyen artık AÇIK (TSK-156 dilim-1 #19 — `_fetch_hist_changes()` Wikipedia 'Historical
+components' tablosunu oldid/sha damgasıyla okur; EDG-076 K1 28/28, K2 as_of fark 0; rename
+EQR→VMRK elle eşlemeli, bkz. (f)/(g) bentleri ve `SEMBOL_YENIDEN_ADLANDIRMA`) ve gerçek üretim
+tüketicisi artık VAR (`backtest.replay(..., uyelik=...)`, TSK-159 S2, main dalında). Beyaz
+listenin kendi şartı (§ `pitlaw.PIT_KAYNAKLAR` başlığı) "kodda okunabilir bir as-of seçimi"dir,
+"üretimde karar bağı" değil — `as_of` bu şartı zaten karşılıyordu (değişiklik günlüğünü geriye
+sararak seçim yapar), eksik olan besleyenin açıklığıydı ve o bu turda ölçüldü. SINIR AYNEN
+KALDI: rename'ler `HIST_URL` tablosunda satır değildir (elle bakımlı `SEMBOL_YENIDEN_ADLANDIRMA`),
+değişiklik günlüğü boşsa/önbellek eskiyse `as_of()` yine güncel listeye düşer (survivorship) —
+`as_of_pit_durumu(date)` bu durumu KODDA beyan eder ve artık bir OKUYUCUSU vardır (aşağıdaki (h)
+bendi): `universe_drift()`ün `as_of_pit` alanı.
 (g) TSK-143 İKİNCİ revizyonu (2026-09-05, AYNI GÜN, operatör kararı — "hiç S&P 500 üyesi olmamış
 6 sembol canlı evrene geri döner"): `universe_drift()`ün `beyanli_disi` alanı artık
 `is_index_exited` DEĞİL `is_evren_disi_beyanli` (birleşim) üzerinden hesaplanır — ilki bu turda
@@ -70,7 +86,16 @@ YALNIZ gerçek S&P 500 çıkışlarına (4 kayıt) daraldığı için eski hâli
 altısı sessizce "beyansız" görünürdü. YENİ alan `hic_uye_canlida` (LIVE_UNIVERSE kesişim
 HIC_UYE_BEYANLI, 6 beklenir): bu altı sembol artık canlı taranıyor ama S&P 500 üyesi değil —
 BEYANLI, alarm ÜRETMEZ. `stale` formülü DEĞİŞMEDİ (hâlâ EVREN_DISI_BEYANLI birleşimi ∪
-RETIRED_SYMBOLS dışını sayar; EVREN_DISI_BEYANLI hâlâ 10 kayıtlık BİRLEŞİM)."""
+RETIRED_SYMBOLS dışını sayar; EVREN_DISI_BEYANLI hâlâ 10 kayıtlık BİRLEŞİM).
+(h) TSK-156 dilim-2 (2026-09-06): `universe_drift()`e `as_of_pit` alanı eklendi —
+`as_of_pit_durumu(bugün)`ün AYNEN dönüşü (Yasa 6: `as_of_pit_durumu`nun D2'den beri okuyucusu
+yoktu, ajan ölçümü 2026-09-05: api yalnız health()/universe_drift()/current() çağırıyordu). Hesap
+UCUZDUR (önbellekten okur, ağa çıkmaz) ve HER İKİ dalda (status ok/unknown) taşınır — üyelik
+kaynağı çökse bile beyanlı görünürlük kaybolmaz (aynı disiplin `hic_uye_canlida` için (g)'de).
+Okuyucu zinciri: `loop._universe_drift_check` `universe_drift()`in TAMAMINI `{**rep, "date": ...}`
+ile `state/universe_drift.json`a yazar (dokunulmadı) → `api.py` `/api/diagnostics` ucu o dosyayı
+BÜTÜN OLARAK okur (`store.read_json("universe_drift.json", None)`) — yani yeni alan ikinci bir
+kablo döşemeden pano yüzeyine ulaşır."""
 from __future__ import annotations
 import datetime as dt
 
@@ -475,11 +500,13 @@ def as_of(date: str) -> list[str]:
 def as_of_pit_durumu(date: str) -> dict:
     """BEYAN (TSK-154, D2): `as_of(date)`in dönüşü GERÇEK tarihsel yeniden kurulum mu, yoksa
     değişiklik günlüğü boş/kapsam-dışı olduğu için bugünkü listeye eşit survivorship mi? `as_of()`
-    kendisi bunu TAŞIMAZ — dönüş biçimi (`list[str]`) DEĞİŞMEDİ, çünkü üretim çağıranı bugün yok
-    (modül başlığı (e); iki kalıcı test `as_of()`u düz liste olarak okuyor). Okuyucu eklenirse
-    (`universe_drift`/`loop`/`pitlaw`) bu fonksiyon gerçek karara bağlanır; o güne kadar
-    `pitlaw.PIT_SOZLESMELI_BESLEYENI_KAPALI` sınıfı AYNEN kalır — bu fonksiyonun var oluşu o
-    sınıflandırmayı değiştirmez, yalnız beyanı koda taşır.
+    kendisi bunu TAŞIMAZ — dönüş biçimi (`list[str]`) DEĞİŞMEDİ, çünkü `as_of()`un kendi
+    üretim çağıranı bugün de yok (modül başlığı (e); iki kalıcı test `as_of()`u düz liste olarak
+    okuyor). OKUYUCU EKLENDİ (TSK-156 dilim-2, 2026-09-06, modül başlığı (h)): `universe_drift()`
+    bu fonksiyonu `as_of_pit` alanında AYNEN taşır. `pitlaw` sınıflandırması bu okuyucudan
+    BAĞIMSIZ ayrı ölçüldü — `("constituents","as_of")` artık `pitlaw.PIT_KAYNAKLAR`da (besleyen
+    açık, modül başlığı (f)); bu fonksiyonun var oluşu o sınıflandırmayı değiştirmez, yalnız
+    beyanı koda (ve şimdi bir okuyucuya) taşır.
 
     Döner: {"pit": bool, "neden": str|None, "changes_kaynak": str|None, "kaynak_sinifi": str|None,
     "changes_meta": dict|None}. `changes_kaynak` cache dosyasından AYNEN okunur (D1'de yazılan alan
@@ -543,7 +570,14 @@ def universe_drift() -> dict:
     delist olursa bu fonksiyon onu `stale`de GÖSTERMEZ — beyanlı olmak bu alarmı kalıcı olarak
     susturur. Bu kör nokta bilerek kabul edildi (aksi hâlde alarm eskisi gibi her gün geri gelir);
     delist tespiti `data._record_no_data`e (TSK-153, bu turun kapsamı DIŞINDA) devredildi. O
-    gelene kadar EVREN_DISI_BEYANLI'nin doğruluğu yalnız ELLE (bu defterin bakımıyla) korunur."""
+    gelene kadar EVREN_DISI_BEYANLI'nin doğruluğu yalnız ELLE (bu defterin bakımıyla) korunur.
+
+    YEDİNCİ ALAN — `as_of_pit` (TSK-156 dilim-2, 2026-09-06, modül başlığı (h)): bugünün
+    `as_of_pit_durumu()` beyanı AYNEN taşınır ({"pit", "neden", "changes_kaynak", "kaynak_sinifi",
+    "changes_meta"}). Bu fonksiyonun kendi PIT durumu DEĞİLDİR — `as_of(date)`in GERİYE DÖNÜK bir
+    tarihte gerçek yeniden kurulum mu yoksa survivorship mi ürettiğinin beyanıdır; okuyucu
+    (pano/alarm) bunu "güncel üyelik listesi güvenilir mi" ile KARIŞTIRMAMALIDIR — ikisi ayrı
+    sorudur. HER İKİ dalda (status ok/unknown) taşınır."""
     from . import data as _data
     REPLAY_UNIVERSE = _data.REPLAY_UNIVERSE
     # İKİNCİ, BAĞIMSIZ KANIT: üyelik kaynağı bu kurulumda ÇALIŞMIYOR (Wikipedia 403,
@@ -592,6 +626,14 @@ def universe_drift() -> dict:
     # hükümler taşır (biri "kaçtı", öteki "hiç girmedi ama beyanlı").
     hic_uye_canlida = sorted(t for t in _data.LIVE_UNIVERSE if t.upper() in _data.HIC_UYE_BEYANLI)
     members = current()
+    # YEDİNCİ KANIT — AS-OF'UN PIT DURUMU (TSK-156 dilim-2, 2026-09-06, modül başlığı (h)). Okuyucu
+    # eklendi: `as_of_pit_durumu` D2'den (TSK-154) beri BEYANI taşıyordu ama kimse okumuyordu (ajan
+    # ölçümü 2026-09-05). `current()`DAN SONRA çağrılır ki değişiklik günlüğü BU turun önbelleğiyle
+    # AYNI anlık görüntüden okunsun (`current()` günlük önbelleği tazeleyebilir — önce çağrılırsa
+    # `_cached()` dünün günlüğünü görebilir). Ucuzdur: ağa çıkmaz, yalnız önbellek dosyasını okur.
+    # HER İKİ dalda (ok/unknown) taşınır — üyelik kaynağı çökse bile bu beyan kaybolmaz (`hic_uye_
+    # canlida` ile AYNI disiplin, altıncı kanıt).
+    as_of_pit = as_of_pit_durumu(dt.date.today().isoformat())
     if not _plausible(members):
         return {"status": "unknown", "reason": _HEALTH.get("error") or "üyelik kaynağı yok",
                 "universe": len(REPLAY_UNIVERSE), "stale": [], "n_stale": 0,
@@ -599,7 +641,8 @@ def universe_drift() -> dict:
                 "hic_uye_canlida": hic_uye_canlida, "n_hic_uye_canlida": len(hic_uye_canlida),
                 "no_data": no_data, "n_no_data": len(no_data),
                 "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe,
-                "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live}
+                "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live,
+                "as_of_pit": as_of_pit}
     mset = {m.upper() for m in members}
     # BEYANSIZ sapma: güncel S&P 500'de YOK ve EVREN_DISI_BEYANLI/RETIRED'da da beyan edilmemiş.
     # RETIRED_SYMBOLS yapısal olarak REPLAY_UNIVERSE'de bulunmaz (yukarıdaki kesişmezlik hükmü),
@@ -614,4 +657,5 @@ def universe_drift() -> dict:
             "hic_uye_canlida": hic_uye_canlida, "n_hic_uye_canlida": len(hic_uye_canlida),
             "no_data": no_data, "n_no_data": len(no_data),
             "retired_n": len(_data.RETIRED_SYMBOLS), "retired_in_universe": retired_in_universe,
-            "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live}
+            "index_exited_n": len(_data.INDEX_EXITED), "index_exited_in_live": index_exited_in_live,
+            "as_of_pit": as_of_pit}
