@@ -67,3 +67,12 @@ adim_1_kopru_2026_09_06: >
   + MAX_RETRIES=1 + MAX_CONCURRENT=1; failover kuralı ölçüldü: üye kendi retry'ından sonra herhangi bir Exception'da (429 dahil) sıradakine
   geçer (multi_llm._should_failover). Uygulama: ilk kanary seti bitince restart (r3 birkaç isteği gecici_hata görebilir — beyanlı bedel).
 
+adim_2_zincir_2026_09_06: >
+  (01:06Z Rol-1) Zincir uygulandı: CONSOLIDATION_LLM_MODEL=m2.7 (birincil) + üyeler _1 nemotron-super · _2 nemotron-ultra · _3 gemma-4-26b
+  (hepsi openrouter) + STRATEGY {"mode":"failover"} + MAX_RETRIES=1 + MAX_CONCURRENT=1 + REFLECT_WALL_TIMEOUT=600. BEDEL/VAKA: üyeler
+  ana anahtarı DEVRALMIYOR — `_parse_llm_members` üye başına `_n_API_KEY` şart koşar; ilk restart 01:00:24Z'de ValueError ile 19 kez
+  yeniden başladı (~4 dk kesinti; r3 o pencerede gecici_hata gördü, kurtar 05:00Z yeniden kuyruğa alır). Anahtarlar sunucu içinde
+  kopyalandı (değer basılmadı), 01:04Z restart: beş model 'Connection verified' (nemotron retain, m3 reflect, m2.7 + super + ultra
+  konsolidasyon; gemma soft-verify). Failover kuralı: üye kendi retry'ından (1) sonra her Exception'da sıradakine. Ayrıca ilk kanary
+  setinin 3. denemesi restart'la kesildi (zaten yükte zaman aşımına gidiyordu; 04:30Z seti geçerli set).
+

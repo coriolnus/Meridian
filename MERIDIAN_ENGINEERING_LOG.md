@@ -2726,3 +2726,7 @@ HINDSIGHT_API_CONSOLIDATION_LLM_<n>_*, STRATEGY JSON, 'failover') + retry azaltm
 verdi (minimax 35 s / 2,6 s), araç yürütmesi boğuldu. Kanary 04:30Z'ye (gece-kanary080, curl 660 s) alındı; k2_pilot 05:35Z okur. r3: 'Upstream
 error from Nvidia: Service temporarily overloaded' 37/130 (kota değil). EDG-081 adım-1 köprü m2.7 çalışıyor (6/6). gece_ozet: hiç koşmamış
 timer'lar artık 'HENÜZ KOŞMADI' (Result=success yanılgısı giderildi), kanary080/router satırları eklendi.
+
+**01:06Z — EDG-081 adım-2 zincir canlı, bir kesintiyle:** üyeler ana anahtarı devralmıyor (`_n_API_KEY` zorunlu) → 01:00Z restart ValueError,
+19 yeniden başlatma, ~4 dk Hindsight kapalı (r3 birkaç gecici_hata); anahtarlar sunucu içinde kopyalandı, 01:04Z'de beş model doğrulandı.
+Ders hafızaya: zincir üyesi = ayrı anahtar satırı. Kanary 3. denemesi restart'la kesildi; geçerli set 04:30Z.
