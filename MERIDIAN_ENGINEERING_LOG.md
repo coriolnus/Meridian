@@ -2741,3 +2741,5 @@ kurtar 05:00Z, K2 05:35Z; sabah okuma.
 backtick satırını yine bozdu (078'in tekrarı) → düzeltildi, hafızaya kural. Operatör sorusu 'geri dolum': meridian-geridolum 2024-12-11'e
 ulaştı (2026-09-03'ten geriye), 864 gün parquet, 106 gün/24 s, 40 G / 147 G (islem 16 G + kotasyon_1s 23 G); 2020-01-01'e ~1245 gün ≈ 12 gün
 ve ~115 G daha → disk 2021 başında dolar; kapsam 662 sembol (PIT-S&P 2020→2026-06 640 + NDX 102 + evren 260). Operatör kararı (disk) açık.
+
+**02:32Z — TSK-020 UYGULA-3 tasarım belgesi:** bars CSV → ay/sembol parquet arşivi + DuckDB okuma yüzeyi (strangler; CSV canlı önbellek kalır); olay_sikistir/olay_sorgu emsali; iki operatör sorusu (sıra; canlı okuma yolu ayrı kart mı). Kod yok.
