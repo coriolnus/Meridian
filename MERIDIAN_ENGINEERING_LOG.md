@@ -2886,3 +2886,6 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   daralt-güvenli) → `--uygula` TAMAM (5/5 doğrulama, beyan bayt-özdeş). Not: ilk `runbook_uret.py --yaz` çağrısı geçersiz bayrakla
   düştü, `||` dalı yazmadı — üretici `--cikti` ile açıkça koşuldu. Kalan: v209 dersi tekrar — üretilmiş belgeye bağlı ölçüm artefaktı
   her RUNBOOK değişiminde yeniden üretilir; D6 sayıları için korpus farkı 1 satır (ihmal edilebilir, DESIGN.md dokunulmadı).
+- **22:01Z — AKŞAM BRİFİNGİ (TSK-138/014 doğrulaması):** teslim oldu (sef_brifingi_teslim, sıralama llm); SOUL kural denetimi
+  `denetlenemedi / llm_dustu` — denetçi cevabı iki çağrıda da JSON değil (şema dışı); kapıda 429/502 yok → kota değil, model şema
+  dışı. Seçenek-D süzgeci sınanamadı; iş: denetçi çağrısına JSON zorlaması + cevap veren model kimliği olay kaydına (ROADMAP TSK-138).
