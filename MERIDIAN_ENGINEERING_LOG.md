@@ -2721,3 +2721,8 @@ belge sayısı henüz 271. Not: gece_ozet 'Result=success' hiç koşmamış time
 üretirdi) — DEĞİŞTİRİLDİ: konsolidasyon m2.7 köprü, reflect m3 (EDG-080 ön-kayıt), restart 00:42Z üç model doğrulandı, EDG-074 kanary
 dosyaları kanary074_* olarak yedeklendi, kanary m3 ile 00:45Z'de koşuyor. EDG-081 ön-kayıt: Hindsight yerli çok-LLM zinciri (üyeler
 HINDSIGHT_API_CONSOLIDATION_LLM_<n>_*, STRATEGY JSON, 'failover') + retry azaltma; adım-0 biçim ölçümü sırada.
+
+**00:58Z — EDG-080 ilk kanary seti ÖLÇÜLEMEDİ (yük):** reflect 300 s wall-clock (load 14,6: r3 + konsolidasyon + reflect aynı 4 OCPU'da); model cevap
+verdi (minimax 35 s / 2,6 s), araç yürütmesi boğuldu. Kanary 04:30Z'ye (gece-kanary080, curl 660 s) alındı; k2_pilot 05:35Z okur. r3: 'Upstream
+error from Nvidia: Service temporarily overloaded' 37/130 (kota değil). EDG-081 adım-1 köprü m2.7 çalışıyor (6/6). gece_ozet: hiç koşmamış
+timer'lar artık 'HENÜZ KOŞMADI' (Result=success yanılgısı giderildi), kanary080/router satırları eklendi.

@@ -59,3 +59,13 @@ notlar: >
   (aynı), sonuçlar kanary_reflect_*.json'ı EZER — EDG-074 dosyaları önce kanary074_* olarak yedeklenir. K2 POST'u k2_pilot.sh mantığıyla
   ELLE (timer durdurulur). minimax tavanı 100/gün: konsolidasyon EDG-081 ile başka modele alınmazsa reflect kotası yok olur — bu kartın
   kill#5'i.
+
+kosum_notu_2026_09_06_0045: >
+  (00:58Z Rol-1) İLK KANARY SETİ (00:45:20Z) ÖLÇÜLEMEDİ — model değil YÜK: reflect wall-clock 300 s'de zaman aşımı (deneme 1 ve 2; llm-requests
+  reflect'te minimax-m3 'success' 35,5 s ve 2,6 s — model cevap verdi, sonrası araç yürütmesi (search/rerank, ONNX CPU) yükte boğuldu). O anda
+  load average 14,6 (4 OCPU): r3 ingest (nemotron retain, çoklu chunk) + konsolidasyon (m2.7) + reflect eşzamanlı; hindsight-api %190 CPU.
+  429 yok, 'Reflect requires a tool-calling model' yok → kill listesi tetiklenmedi, K harcanmadı. Karar: kanary SESSİZ SAATE alındı —
+  gece-kanary080 timer 04:30Z (kanary080.sh: curl -m 660, yük loglanır) + HINDSIGHT_API_REFLECT_WALL_TIMEOUT=600 (EDG-081 restart'ında);
+  k2_pilot 05:35Z aynı dosyaları okur. r3 hâlâ koşuyorsa 04:30Z'de de ölçülemeyebilir → gündüz tekrar. Ölçüm dersi: reflect kanaryası
+  ağır işlerle aynı saate KONMAZ; kart adım-0'a 'yük < 4' şartı eklenmeli (bu kartta eşik değil, ön şart — sonraki kartta).
+

@@ -58,3 +58,12 @@ notlar: >
   Retry/backoff: Hindsight CONSOLIDATION_LLM_MAX_RETRIES / INITIAL_BACKOFF / MAX_BACKOFF / MAX_CONCURRENT ayarları var — tavana çarpınca
   3×4 deneme yakılıyor; adım-1'de MAX_RETRIES=1 ve MAX_CONCURRENT=1 denenir (bedel ölçümü K2). 05:00Z kurtar timer'ı failed'ı yeniden kuyruğa
   alır (292). gece_ozet 'Result=success' hiç koşmamış timer için de success yazıyor — düzeltme ops notu.
+
+adim_1_kopru_2026_09_06: >
+  (00:58Z Rol-1) Köprü uygulandı 00:42Z (CONSOLIDATION_LLM_MODEL=minimax/minimax-m2.7:free; journal 'Connection verified' üç model: nemotron
+  [retain], m3 [reflect], m2.7 [consolidation]). İlk 12 dk: m2.7 6 başarı, 0 hata (yükte yavaş: load 10–14, r3 eşzamanlı); pending 1726→1678.
+  r3 retain hataları bu gece 37/130 'Upstream error from Nvidia: Service temporarily overloaded' (kota değil; TSK-151 gecici_hata sınıfı).
+  Adım-2 (zincir) hazır: HINDSIGHT_API_CONSOLIDATION_LLM_1..3_{PROVIDER,MODEL} (nemotron-super → ultra → gemma) + STRATEGY {"mode":"failover"}
+  + MAX_RETRIES=1 + MAX_CONCURRENT=1; failover kuralı ölçüldü: üye kendi retry'ından sonra herhangi bir Exception'da (429 dahil) sıradakine
+  geçer (multi_llm._should_failover). Uygulama: ilk kanary seti bitince restart (r3 birkaç isteği gecici_hata görebilir — beyanlı bedel).
+
