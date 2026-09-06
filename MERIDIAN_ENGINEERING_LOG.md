@@ -2753,3 +2753,6 @@ yaşam döngüsü), v145 walk_forward imzası (+uyelik bilinçli), v125 takvim-k
 tarama tavanı sabitine çevrildi); etkilenen küme 134 yeşil → push 1812cc4. EDG-082 ajanı ilk sevkte NEEDS_CONTEXT ile durdu (worktree tabanı
 origin/main; S2 push'suzdu) — doğru davranış, hafızaya kural. TSK-156 dilim-2 (b) merge 4befcfe (pitlaw beyaz liste + as_of_pit okuyucu).
 EDG-082 ölçüm ajanı ikinci sevk (taban 1812cc4).
+
+**04:08Z — r3 kapanışı (TSK-144) + EDG-082 kodu:** r3 36 dilim: 21 ok / 14 geçici (12 Nvidia aşırı yük, 2 benim restart'larım) / 1 kalıcı; 78 çağrı,
+3,3 saat; belge 285; 429 yok. EDG-082 ölçüm ajanı (ikinci sevk) 30 çivi ile teslim, merge ca392df; gerçek koşum yerel barlarla başladı.
