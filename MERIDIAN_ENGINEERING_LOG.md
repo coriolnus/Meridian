@@ -2833,3 +2833,8 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   sınanmadı (bugün kova boş: 4/4 429 ya da geçersiz kimlik — kimlikler .env'den alınmalı: nemotron-3-super-120b-a12b / ultra-550b-a55b /
   gemma-4-26b-a4b-it). 00:05Z tek-atım sonda (sonda_tool.sh) → sabah REFLECT failover zinciri kararı. Bugün için: reflect/sayfa YOK,
   recall (LLM'siz) serbest; kıyas zinciri etkilenmez.
+- **17:5xZ — TSK-170 (b) CANLIDA: `ops/kart_benzer.py`** (0223016; LLM'siz Jaccard + family bonusu; hüküm sınıfı YALNIZ §6'dan; eski
+  `thesis` şemasına düşüş; `verdict*` kapsam dışı). Gerçek koşumlar: reflect/kanary hipotezi → EDG-080 ACTIVE / EDG-074 KALDI / EDG-077
+  KALDI; PIT üyelik → EDG-079/082/075. CLAUDE.md §2'ye "yeni kart açmak" kapı satırı eklendi (yumuşak kapı; mekanik çivi sonraki dilim).
+  Bacak (a) "denenenler ve akıbeti" sayfası EDG-083 hükmüne kapılı. Operatör sorusuna cevap: liste bugün mekanik (§6: 19 KALDI, 2 NO-GO,
+  6 GEÇTİ, 10 sürüyor + 2 DROPPED), "neden/tekrar koşulu" sentezi sayfa işi.
