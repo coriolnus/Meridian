@@ -9,7 +9,7 @@
 # BOT RECALL BU KARTIN DEĞİL — ayrı kart (tasarım §6 Faz-2); burada botlara hiçbir erişim yok.
 
 card_id: EDG-2026-067
-status: registered
+status: measured   # 2026-09-06 22:28Z Rol-1 — KALDI (hukum_2026_09_06); sökülüm kararı operatörde (083/084 ile birlikte)
 family: arama_katmani_olcumu
 on_kayit: 2026-09-01
 selef: EDG-2026-065
@@ -199,3 +199,28 @@ basari_tanimi: >
     şişirilmez; ağ arızası ıskala değildir). (7) sorular.yaml içerik-çapası çivili
     (sha256 cf1c39bb…): dosya değişirse hüküm "yeni kart". Bağımlılık: sqlite-vec pip +
     enable_load_extension'lı sqlite3 + onnxruntime/tokenizers/PyYAML (A1'de kurulum ayrı adım).
+
+hukum_2026_09_06: >
+  KALDI (Rol-1, 22:4xZ). KOŞUM: A1 edg067-kiyas zinciri (kos_hepsi.sh) — taban indeksi 17:28→22:01Z (16.364 s, 3.582 chunk, 22,4 MB,
+  bge-m3 ONNX cls/1024/512, PENCERE 1500/ORTUSME 200, korpus HEAD ac824e1 = bankadaki ingest ile aynı paket) → PRİMER kıyas
+  22:01→22:28Z (36 soru, iki kol; Hindsight kolu --recall-ek-json types=[world,experience], mid bütçe, RERANKER_MAX_CANDIDATES_MID=60,
+  birincil reranker flashrank ms-marco-MultiBERT-L-12 — hepsi koşum ÖNCESİ kurulum kaydına beyanlı). SAYILAR (rapor
+  research/olcumler/edg067_hindsight_faz1/sonuc_2026-09-06/edg067_kiyas_20260906T222805Z.{json,md}):
+  bölüm-isabet@3 (ANA METRİK): Hindsight %0,0 · taban %27,8 → fark −27,8 pp (eşik ≥ +15 pp: KALDI); Hindsight ≥ %70: KALDI;
+  tr alt-küme Hindsight bölüm@3 %0,0 (eşik ≥ %60: KALDI; taban %34,5). Dosya-isabet@3 (yardımcı): Hindsight 5/36 = %13,9 · taban
+  20/36 = %55,6; tr 2/29 = %6,9 · 18/29 = %62,1; en 3/7 · 2/7. Gecikme p50/p95: Hindsight 43,6 s / 50,6 s · taban 0,62 s / 0,73 s.
+  okunamayan 0/0. Harness artefaktı ELENDİ: dilim ekleri (#n/m, %23) hakemde zaten soyuluyor; ek-soyulmuş yeniden puanlama
+  Rol-1 tarafından tekrar edildi → aynı sayılar (13,9 / 55,6; harness'in kaçırdığı isabet 0). Bölüm-isabetinin sıfır olması yapısal:
+  Hindsight ham pasaj değil damıtılmış olgu döndürüyor, doğrulama alıntısı/başlık birebir geçmiyor (kartta öngörülmüştü — bedel
+  yasası: bu yüzden dosya-isabet ayrıca raporlandı; o da 4× geride). KİRAZ TOPLAMA YOK: primer koşum ve hakem kuralı koşumdan önce
+  yazıldı; varsayılan tipli ikinci koşum (gözlemler dahil) bilgi amaçlı, hüküm dışı (rapor_varsayilan/ — ek not). BEYANLI BEDELLER
+  (Hindsight aleyhine, muhafazakâr): reranker v2-m3 yerine flashrank (CPU sınırı), 8 dilim ingest'te eksik, konsolidasyon sonrası
+  gözlemler primer koşumun dışında. Bu bedeller +27,8 pp + %0→%70 farkını açıklamaz. HÜKÜM: arama katmanı olarak Hindsight recall,
+  aynı gömme sınıfıyla kurulan yalın sqlite-vec tabanına karşı KALDI; basit çözüm kazanır (YAGNI). SONUÇLAR: (1) TSK-163 BOT RECALL
+  kartı recall temelinde AÇILMAZ; (2) TSK-167 pano araması taban yaklaşımıyla (sqlite-vec) tasarlanır; (3) TSK-162 triyajda recall
+  ikincil — belge bulmak için grep/taban, sentez için sayfa/reflect; (4) 'kurulum sökülür' maddesi: bu kartın tasarımında zihin
+  modeli sayfaları YOKTU — EDG-080/083/084 aynı kurulum üstünde farklı yeteneği (reflect/sentez) ölçüyor (pencere 09-13/14); sökme
+  kararı bu hükümle otomatik uygulanmaz, 083/084 hükümleriyle birlikte OPERATÖRE (yeni karar; kartın hükmü değişmez, sonucun
+  zamanlaması beyanlıdır). Kaynak kontrolü (karar öncesi hafıza): recall 19:5xZ kill-list kuralları (eşik oynatılmaz, alt küme
+  seçilmez) + kart_benzer selef EDG-065.
+

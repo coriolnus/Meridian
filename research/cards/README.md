@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **98** kart.
 
-### Kayıtlı — ölçüm bekliyor (14)
+### Kayıtlı — ölçüm bekliyor (13)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -32,8 +32,6 @@ Toplam **98** kart.
   · kart: `EDG-2026-063-skill-llm-ikinci-gorus.yaml`
 - **EDG-2026-064** (`registered`) — 
   · kart: `EDG-2026-064-merdiven-duvari-yeniden-sinama.yaml`
-- **EDG-2026-067** (`registered`) — 
-  · kart: `EDG-2026-067-hindsight-faz1-bgem3-recall.yaml`
 - **EDG-2026-068** (`registered`) — KART-ÖNCE ÖN-KAYDI (EXE-2026-009 emsali; bu kart bir replay taraması değil, kod-değişikliği sözleşmesidir).
   · HÜKÜM: 2026-09-02 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce, TSK-011)
   · kart: `EDG-2026-068-cf-kuyruk-tarihli.yaml`
@@ -78,7 +76,7 @@ Toplam **98** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (54)
+### Ölçüldü (55)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -188,6 +186,9 @@ Toplam **98** kart.
 - **EDG-2026-062** (`measured`) — 
   · HÜKÜM: 2026-08-31 hüküm: verdict_2026_08_31 bloğu
   · kart: `EDG-2026-062-pit-arsiv-baglamasi.yaml`
+- **EDG-2026-067** (`measured`) — 
+  · HÜKÜM: 2026-09-06 22:28Z Rol-1 — KALDI (hukum_2026_09_06); sökülüm kararı operatörde (083/084 ile birlikte)
+  · kart: `EDG-2026-067-hindsight-faz1-bgem3-recall.yaml`
 - **EDG-2026-071** (`measured_partial`) — 
   · kart: `EDG-2026-071-hayalet-dugme-oneri-suzgeci.yaml`
 - **EDG-2026-072** (`measured`) — 

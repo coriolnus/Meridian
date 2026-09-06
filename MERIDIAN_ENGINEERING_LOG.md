@@ -2889,3 +2889,12 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
 - **22:01Z — AKŞAM BRİFİNGİ (TSK-138/014 doğrulaması):** teslim oldu (sef_brifingi_teslim, sıralama llm); SOUL kural denetimi
   `denetlenemedi / llm_dustu` — denetçi cevabı iki çağrıda da JSON değil (şema dışı); kapıda 429/502 yok → kota değil, model şema
   dışı. Seçenek-D süzgeci sınanamadı; iş: denetçi çağrısına JSON zorlaması + cevap veren model kimliği olay kaydına (ROADMAP TSK-138).
+- **22:28–22:5xZ — EDG-067 KIYAS HÜKMÜ: KALDI.** Taban indeksi 4,5 sa (3.582 chunk), primer koşum 27 dk. Bölüm-isabet@3: Hindsight
+  %0,0 · taban %27,8 (−27,8 pp; eşik +15); dosya-isabet@3 %13,9 · %55,6; tr %0 · %34,5; p50 43,6 s · 0,62 s. Harness artefaktı
+  elendi (dilim ekleri hakemde soyuluyor; yeniden puanlama aynı). Yapısal: Hindsight damıtılmış olgu döndürüyor, pasaj değil — ana
+  metrik alıntı arıyor; dosya-isabeti de 4× geride. Beyanlı bedeller (flashrank, 8 eksik dilim, gözlemler dışarıda) farkı
+  açıklamıyor. SONUÇ: arama katmanı olarak Hindsight KALDI, basit çözüm (sqlite-vec) kazanır — TSK-163 recall temelinde açılmaz,
+  TSK-167 taban yaklaşımı, TSK-162 recall ikincil. 'Kurulum sökülür' maddesi: sayfalar (080/083/084) aynı kurulumda farklı yeteneği
+  ölçüyor → sökme kararı 09-13/14 hükümleriyle birlikte OPERATÖRDE (TSK-060 OPERATOR). Ders: bugün "hindsight'ı aktif kullan"
+  direktifi altında recall 5 kez sorgulandı; kaynaklı ama hedef belgeyi çoğunlukla ıskaladı — sayfa/reflect (sentez) işe yaradı,
+  recall (arama) yaramadı; ikisi ayrı yetenek.
