@@ -2735,3 +2735,9 @@ Ders hafızaya: zincir üyesi = ayrı anahtar satırı. Kanary 3. denemesi resta
 kalem TSK-159 (PIT üyelikle yeniden tohumlama) ve docs/TASARIM-PIT-EVREN-YENIDEN-TOHUMLAMA-2026-09-06.md (üyelik süzgeci `uyelik(d)`,
 asimetri beyanı: delist barları olmadan hâlâ üst sınır; EDG-082 taslağı K=2 varyant A/B; 3 operatör kararı). Gece: kanary080 04:30Z,
 kurtar 05:00Z, K2 05:35Z; sabah okuma.
+
+**02:30Z — operatör 'plana alıp devam et' → TSK-159 ölçüm bloğu başladı:** EDG-2026-082 ön-kayıt (K=2 varyant, tohum değişmez), motor süzgeci ajanı
+(backtest.replay/walk_forward `uyelik`, v427) uçuşta; S3 ölçüm kodu sırada; barlar yerelde (state/bars 260). Kart yazımında tırnaksız heredoc
+backtick satırını yine bozdu (078'in tekrarı) → düzeltildi, hafızaya kural. Operatör sorusu 'geri dolum': meridian-geridolum 2024-12-11'e
+ulaştı (2026-09-03'ten geriye), 864 gün parquet, 106 gün/24 s, 40 G / 147 G (islem 16 G + kotasyon_1s 23 G); 2020-01-01'e ~1245 gün ≈ 12 gün
+ve ~115 G daha → disk 2021 başında dolar; kapsam 662 sembol (PIT-S&P 2020→2026-06 640 + NDX 102 + evren 260). Operatör kararı (disk) açık.

@@ -1,0 +1,64 @@
+# EDG-2026-082 — Tohum/replay'in PIT üyelik süzgeciyle YENİDEN OYNATILMASI: eski tohum ↔ PIT-süzülmüş tohum, kapı hükümleri değişiyor mu — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-06 02:28Z (Rol-1, otonom; operatör "plana alıp devam et"). Zemin: EDG-079 (p=0,107 sızıntı: 42 geç-katılan, 14 çıkış-sonrası,
+# 39 hiç-üye), tasarım docs/TASARIM-PIT-EVREN-YENIDEN-TOHUMLAMA-2026-09-06.md. Bu kart YALNIZ ÖLÇER: tohum defteri DEĞİŞMEZ (S5 operatör +
+# bakım penceresi). ASİMETRİ BEYANI: üye-olmayanı düşürmek look-ahead seçimini kaldırır ama o tarihte üye olup bugün listede olmayan (delist,
+# barı yok — TSK-065) isimleri ekleyemez → PIT-süzülmüş tohum hâlâ ÜST SINIR; negatif/bilgisiz sonuç güçlü, pozitif "en iyi ihtimalle".
+
+card_id: EDG-2026-082
+status: registered   # 2026-09-06 Rol-1 — ön-kayıt; motor süzgeci (backtest.replay uyelik) + ölçüm kodu bu karttan SONRA
+family: evren_pit
+on_kayit: 2026-09-06
+ref: [TSK-159, EDG-2026-079, EDG-2026-076, TSK-156, TSK-143, TSK-065, EDG-2026-062, EDG-2026-070]
+
+hipotez: >
+  Aynı parametre seti ve takvimle (2022-01-01→2026-09-05) aday taraması işlem tarihindeki S&P 500 üyeliğiyle süzülünce (uyelik(t) = as_of(t);
+  açık pozisyon çıkışları süzülmez) sızan 95 işlemin tamamı düşer, işlem sayısı ~%10 azalır ve kapı hükümlerinin SINIFI (OOS composite
+  eşiği, DSR kapısı, PBO kapısı) DEĞİŞMEZ — survivorship ikinci derecedendir. Değişiyorsa hangi hükümler askıda kalır listelenir.
+
+k_registry: {registered_at: "2026-09-06", trial_ids: [EDG-082-A-sp500-yalniz, EDG-082-B-sp500-ve-hic-uye]}
+# K=2 (varyant): A = uyelik(t) = as_of(t) (saf S&P PIT; 6 hiç-üye HARİÇ) · B = as_of(t) ∪ HIC_UYE_BEYANLI (canlı evrenle tutarlı, 6 DAHİL).
+# Operatör kararı bekleniyor (tasarım §5-1); ikisi de ölçülür, hüküm iki satır. PK K'ya sayılmaz.
+
+girdi_kimligi:
+  barlar: "state/bars/*.csv (REPLAY_UNIVERSE 248 sembol) — versiyonlanmaz; ölçüm anında her dosyanın sha256'sı sonuc.json 'bar_manifesti'ne yazılır, tekrar koşumda eşitlik kontrolü"
+  uyelik: "constituents.as_of ile AYNI algoritma; girdi EDG-076 HTML (oldid 1370891103, sha 9909032c…) + donuk güncel liste (edg079 girdi/, sha a0cfccca…); rename eşlemesi SEMBOL_YENIDEN_ADLANDIRMA"
+  parametreler: "canlı strateji parametreleri + goal (config; ölçüm anında sonuc.json'a gömülür, sha'lı)"
+  eski_tohum: "research/olcumler/edg079_replay_pit_denetimi/girdi/trades_2026-09-05.json (885 replay_seed; kıyas çapası — yeniden oynatım eski tohumu BİREBİR üretmeyebilir: parametre/sürüm farkı ölçülür ve raporlanır)"
+
+adim_0_fizibilite: >
+  (a) uyelik=None ile replay, uyelik=lambda d: tüm evren ile replay BYTE-EŞİT işlem listesi verir (süzgeç yolu davranışı bozmuyor — çivi);
+  (b) uyelik=lambda d: set() → 0 işlem; (c) as_of her seans için kurulabiliyor (kuramama 0); (d) replay süresi ×2'yi aşmıyor (as_of önbellekli).
+
+olcum_plani:
+  - "Üç koşum: TABAN (uyelik=None) · A (as_of) · B (as_of ∪ HIC_UYE) — aynı params/goal/takvim; her koşum: işlem sayısı, avg_r, medyan R, kazanma oranı, OOS composite (walk_forward magnitude, canlı fold tanımı), DSR kapısı (validation.dsr_kapi), PBO kapısı (validation.pbo_kapi) hükümleri"
+  - "Sızan işlemler: TABAN'da EDG-079'un 95 sızıntısına karşılık gelen (ticker, tarih) çiftleri A'da var mı (beklenen 0); B'de hiç-üye 39'u var mı (beklenen ≈39)"
+  - "Kapı hüküm sınıfı: TABAN vs A ve TABAN vs B — üç kapının (OOS eşiği, DSR, PBO) sonucu aynı mı (3/3, 2/3, …)"
+  - "PK (yol-tutarlı): adım-0 (a)(b) — süzgeç tam açık = taban birebir, tam kapalı = 0 işlem; ayrışmıyorsa süzgeç çalışmıyor"
+
+esikler:
+  k1_gecti: "A: kapı hüküm sınıfı TABAN ile 3/3 aynı → 'survivorship ikinci dereceden; tohum PIT-süzgeçliyle DEĞİŞTİRİLEBİLİR (S5 operatör)'; 2/3 → 'kısmi: farklı kapı askıda'; ≤1/3 → 'replay hükümleri geçersiz, yeniden değerlendirme'"
+  k2_gecti: "B: aynı kural; A ile B arasındaki fark ayrıca raporlanır (6 hiç-üyenin etkisi)"
+  # eşikler donuk
+
+kill_list:
+  - "as_of kuramama > %5 seans → hüküm yok"
+  - "TABAN koşumu eski tohumla işlem sayısında > %25 sapıyorsa (parametre/sürüm farkı) → kıyas çapası geçersiz, önce sapma açıklanır"
+  - "replay süresi TABAN'ın ×2'sini aşarsa → önbellek düzeltilmeden hüküm yok"
+  - "PK tutmazsa hiçbir sayı yayılmaz"
+  - "Bu kart tohumu DEĞİŞTİRMEZ; değişim S5 ayrı bakım penceresi + operatör"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: aynı replay çağrısına uyelik=lambda d: tüm evren → TABAN ile byte-eşit; uyelik=lambda d: set() → 0 işlem. Gerçek A/B
+  koşumu aynı fonksiyonla; ayrı yol yazılmaz.
+
+veri_penceresi: "2022-01-01→2026-09-05; barlar state/bars (manifest sha'lı); canlı motor DEĞİL (saf hesap, state'e yazmaz); ağsız"
+
+basari_tanimi: >
+  A 3/3 (ve B raporlu) → TSK-159 S5 (tohum değişimi) operatör onayına hazır; pitlaw ('constituents','as_of') tüketiciyle 'PIT_KAYNAKLAR'a
+  (TSK-156 dilim-2 b). Kısmi → askıda kalan kapılar listelenir, tohum değişmez. Kaldı → replay hükümleri geçersiz, EDG-062 PIT (b) hattı.
+
+notlar: >
+  Motor: backtest.replay/walk_forward opsiyonel uyelik parametresi (Callable[[str], set[str]] | None; varsayılan None = bugünkü davranış
+  birebir; çivi). Ölçüm: research/olcumler/edg082_pit_tohum/olcum.py — barları state/bars csv'lerinden DOĞRUDAN okur (ağ yok, obs yok),
+  as_of'u edg075 olcum.py'den (araştırma) ya da constituents.as_of'tan kurar — ikisi fark 0 (EDG-076 K2). Replay saf hesaptır; koşum Rol-1'de,
+  ana checkout'ta. Not: kart yazımında tırnaksız heredoc backtick'li satırı bir kez bozdu, düzeltildi (hafıza: heredoc her zaman tırnaklı).
