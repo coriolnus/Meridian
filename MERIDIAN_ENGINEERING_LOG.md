@@ -2743,3 +2743,7 @@ ulaştı (2026-09-03'ten geriye), 864 gün parquet, 106 gün/24 s, 40 G / 147 G 
 ve ~115 G daha → disk 2021 başında dolar; kapsam 662 sembol (PIT-S&P 2020→2026-06 640 + NDX 102 + evren 260). Operatör kararı (disk) açık.
 
 **02:32Z — TSK-020 UYGULA-3 tasarım belgesi:** bars CSV → ay/sembol parquet arşivi + DuckDB okuma yüzeyi (strangler; CSV canlı önbellek kalır); olay_sikistir/olay_sorgu emsali; iki operatör sorusu (sıra; canlı okuma yolu ayrı kart mı). Kod yok.
+
+**03:02Z — TSK-159 S2 merge (9fc3e80) + çapa dersi:** ajan çivisinde `` `backtest.strat.scan_entry` `` çapası codelaw'da çürük çıktı (`strat` içe-aktarım
+takma adı, sembol değil) → `strategy.scan_entry` (17dd220); brief'lere 'takma ad çapa olamaz' cümlesi eklendi. S3 (EDG-082 ölçüm kodu) ve
+TSK-156 dilim-2 (b) ajanları paralel worktree'lerde; suite #29 ikisi birleşince.
