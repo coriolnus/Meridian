@@ -7,7 +7,7 @@
 # tazeleme (≈1/gün) bunun içinde; konsolidasyonun aynı modeli tüketmemesi şart (EDG-077 hükmü → EDG-081).
 
 card_id: EDG-2026-080
-status: registered   # 2026-09-06 Rol-1 — ön-kayıt; ayar + kanary bu karttan SONRA, aynı sabah (minimax tavanı taze)
+status: measuring   # 2026-09-06 16:11Z Rol-1 — K1 GEÇTİ (3/3), K2 pilot 7 gece (2026-09-07…09-13); hüküm hukum_k1_2026_09_06
 family: hindsight_hafiza
 on_kayit: 2026-09-06
 ref: [EDG-2026-074, TSK-142, TSK-157, EDG-2026-077, EDG-2026-067, TSK-060]
@@ -78,3 +78,18 @@ kosum_notu_2026_09_06_0430: >
   aday sayısı/ayarları) → kart notu; kanary gündüz, konsolidasyon durdurulmuş/kısılmış ve rerank sınırlanmışken tekrar (yeni kart gerekmez:
   eşik/K değişmedi, ölçülemedi tekrarı).
 
+hukum_k1_2026_09_06: >
+  K1 GEÇTİ (Rol-1, 16:11Z). Gündüz seti kanary080-gunduz (systemd-run) 15:41:19Z, yük 2,7 başlangıç, r5 ingest yok, konsolidasyon
+  pending 0; ÖN KOŞUL ZİNCİRİ AYNI GÜN: (a) 14:59Z recall 13+ dk — py-spy: local reranker torch CPU cross-encoder (bge-reranker-v2-m3),
+  aday sınırsız; (b) RERANKER_MAX_CANDIDATES 40/100/200 → 100 adayda hâlâ >360 s; (c) birincil reranker flashrank (ms-marco-MultiBERT-L-12)
+  + yedek rrf → recall S-001 mid 80,3 s / low 32,3 s (EDG-067 kurulum kaydı reranker_degisimi_2026_09_06). ÜÇ DENEME: 1) 15:50:27Z HTTP 200,
+  548 s, 8 tool_calls (search_observations ×2, recall ×5, expand ×1), 5 iterasyon, metin 5.522 kr, 148k token · 2) 16:01:03Z HTTP 200,
+  576 s, 8 tool_calls, metin 8.850 kr, 143k token · 3) 16:10:24Z HTTP 200, 501 s, 8 tool_calls, metin 6.002 kr, 153k token. Üçü de
+  'forced' (600 s duvarına yaklaşınca zorlanmış cevap) — eşik 3/3 HTTP 200 ∧ tool_calls ≥ 1 ∧ text ≠ boş SAĞLANDI; 429 yok,
+  'requires a tool-calling model' yok. Metin S-001 beklentisiyle örtüşüyor (PYTEST_EXIT=4 vakası, üçlü hüküm kuralı; grep'siz).
+  PK (araçsız istem) BU SETTE KOŞULMADI — 00:45Z/04:30Z setlerinde de yok; eksik: K2 penceresinde ilk gün koşulur, tutmazsa sayı yayılmaz.
+  K2: k2_pilot.sh elle tek sefer (timer yok) 16:11:09Z POST 200 → mental_model_id mm-0fb27056e93d4c45b302cdc6e62abc6a,
+  operation 9b76dd9b-a77f-4af1-8a70-c4b0b3d7e937 (name meridian-tekrarlanan-dersler, delta, cron 0 5 * * *, 82800 s, keep_trace).
+  Pencere 2026-09-07…09-13 (7 gece 05:00Z). BEDEL: her deneme ~9 dk ve ~145k giriş token'ı (ücretsiz model, ama 20/dk tavanı içinde);
+  reflect kalitesi flashrank reranker'a bağlı (v2-m3 bu kutuda ölçülemez). Kanıt: /home/ubuntu/gece-20260906/kanary_reflect_{1,2,3}.json,
+  k1_hukum.json, k2_pilot.log, k2_pilot_cevap.json; 04:30Z seti kanary080_0430_*.

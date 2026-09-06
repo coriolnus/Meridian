@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **97** kart.
 
-### Kayıtlı — ölçüm bekliyor (16)
+### Kayıtlı — ölçüm bekliyor (15)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -41,9 +41,6 @@ Toplam **97** kart.
   · kart: `EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml`
 - **EDG-2026-070** (`registered`) — 
   · kart: `EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml`
-- **EDG-2026-080** (`registered`) — 
-  · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; ayar + kanary bu karttan SONRA, aynı sabah (minimax tavanı taze)
-  · kart: `EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml`
 - **EDG-2026-081** (`registered`) — 
   · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim ölçümünden sonra
   · kart: `EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml`
@@ -57,7 +54,7 @@ Toplam **97** kart.
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
-### Ölçümde (5)
+### Ölçümde (6)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -71,6 +68,9 @@ Toplam **97** kart.
 - **EDG-2026-078** (`measuring`) — 
   · HÜKÜM: 2026-09-05 Rol-1 — kod canlı (#21, 19:55Z); ilk seans 2026-09-08; 40 seans (~2026-11-03) sonra hüküm
   · kart: `EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml`
+- **EDG-2026-080** (`measuring`) — 
+  · HÜKÜM: 2026-09-06 16:11Z Rol-1 — K1 GEÇTİ (3/3), K2 pilot 7 gece (2026-09-07…09-13); hüküm hukum_k1_2026_09_06
+  · kart: `EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml`
 - **EXE-2026-003** (`measuring`) — 4b gölge katmanı yalnız SİLAHLANMIŞ planların dakika-hassas dolumunu yazıyor (6 seansta 4 satır).
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`

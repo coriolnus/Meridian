@@ -2802,3 +2802,11 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
 - Kıyas hakem notu (TSK-060): recall cevabı artık ağırlıkla `observation` (document_id NULL, metadata {}; `source_memory_ids` sütunu
   var ama API cevabında ölçülmedi) → hakem dosya kimliği isteyen kıyasta Hindsight kolu primer koşum `types=[world,experience]`,
   varsayılan tipli ikinci koşum bilgi amaçlı (hüküm dışı). Taban indeksi kanary bitince (CPU çakışmasın) kurulur.
+- **16:10–16:11Z — K1 KANARY GEÇTİ, K2 ZİHİN MODELİ OLUŞTURULDU (EDG-080).** Üç deneme 3/3 HTTP 200, her biri 8 araç çağrısı
+  (search_observations ×2 + recall ×5 + expand ×1), 5 iterasyon, 548/576/501 s — üçü de 'forced' (600 s duvarına yaklaşınca zorlanmış
+  cevap), 143–153k giriş token'ı/deneme; metin S-001 beklentisiyle örtüşüyor (PYTEST_EXIT=4 vakası + üçlü hüküm, grep'siz). k2_pilot.sh
+  elle tek sefer (timer yok): K1_YESIL → POST 200, mm-0fb27056e93d4c45b302cdc6e62abc6a / op 9b76dd9b…; 7 gece penceresi 09-07…09-13.
+  Eksik: PK (araçsız istem) hiçbir sette koşulmadı → K2 gün-1'de. Kart status measuring, hüküm hukum_k1_2026_09_06; TSK-160 ACTIVE.
+- **16:1xZ — EDG-083 uydurma sayacı canlıda** (ajan worktree → merge 1037ff8, v430 20/0; deneme sayfasında 8 atıf/5 doğrulanan, üç uydurma
+  (olmayan yol, EDG-2026-999, v999) yakalandı). Ders: worktree içinden `git merge` kendi dalına birleştirir ("Already up to date") — merge
+  ANA checkout'tan atılır; `git worktree remove` cwd'yi silince kabuk kilitlenir, sonraki komut mutlak `cd` ile başlar.
