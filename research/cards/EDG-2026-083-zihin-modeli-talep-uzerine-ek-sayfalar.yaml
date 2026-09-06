@@ -107,4 +107,8 @@ kullanim_1_2026_09_06: >
   beyan sütunu, eşik değil): sayfa iddialarının 13/22'si BAYAT — banka eski durumları da 'olgu' olarak taşıyor, sayfa 'bugün' bilmiyor;
   uydurma oranı (%99) bunu YAKALAMAZ. Bayatlık = hafızanın yapısal sınırı → her sayfa okuması 'ölçülen'le doğrulanır (karar-oncesi-
   hafiza-kontrolu kuralı zaten böyle diyor).
+  DÜZELTME 19:3xZ (TSK-174 teşhisi): S2'nin #23/#48 iddiası ('bildirim kanalı yok') BAYATTI — kanal 2026-08-22'den beri canlı
+  (state/secrets.json), teslimler notify_sent.json'da; benim 19:06Z canlı ölçümüm de yanlış dosyaya (.env) baktı. Bayatlık + yanlış
+  ölçüm aynı satırda birleşti; doğru cevabı recall (A2 kanalı 08-22 canlı) VERMİŞTİ ve ilk okumada gözden kaçtı — 'karar öncesi hafıza
+  kontrolü' kuralının ikinci yarısı (bulguyu karara SOKMAK) burada ihlal edildi, günlüğe işlendi.
 

@@ -2857,3 +2857,12 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   DERS: hafıza 13/22 bayat iddia taşıdı — banka "o gün doğru olanı" olgu diye saklıyor, "bugün" bilmiyor; uydurma oranı (%99) bayatlığı
   ölçmez → sayfa okuması her zaman ölçülenle doğrulanır; 7. gün raporuna bayatlık sütunu (beyan). Kanıt: research/olcumler/
   edg083_zihin_modeli_ek_sayfalar/kullanim/celiski_dogrulama_2026-09-06.json.
+- **19:2x–19:3xZ — TEŞHİS: notify_undelivered sayacı neden durdu (operatör isteği).** Kaynak: recall 19:2xZ ("A2 kanalı 2026-08-22
+  canlı; sayaç yalnız kanal yok durumunda artar") + obs._maybe_notify okuması + canlı sayaçlar. HÜKÜM: arıza değil, tasarım gereği
+  donma — kanal 08-22'de canlıya alınınca 'kanal yok' dalı bir daha çalışmadı; son artış 08-23 16:57Z. Kanal CANLI: secrets.json'da
+  TELEGRAM_BOT_TOKEN+CHAT_ID (kimlik deposu .env DEĞİL); notify_sent.json teslimleri: MECHANISM_STALE 09-06 05:50Z · DATA_QUALITY 09-04 ·
+  MIRROR_DRIFT 09-03 · NAKED_POSITION 08-27; notify_delivery_failed 0; 95 alarm → 6 sa/jeton susturma (41 suppressed kaydı).
+  Kalan gerçek boşluk (obs.py 'DÖRDÜNCÜ SESSİZ DELİK'): send False dönerse hiçbir sayaç artmıyor → TSK-174 yeniden yazıldı (QUEUED,
+  Rol-1). İKİ HATAM: (1) 19:06Z 'kanal yok' ölçümüm .env'e baktı, kimlikler secrets.json'daydı (kimlik-uzayi-olculmeden-duvar-yok
+  dersi); (2) recall doğru cevabı vermişti (gözlem: kanal 08-22 canlı) ama ilk okumada karara sokmadım — karar-öncesi hafıza
+  kontrolünün ikinci yarısı. S2 sayfası da bayattı (08-22 öncesi durum). Operatöre verilen 'en ağır çelişki' hükmü GERİ ALINDI.
