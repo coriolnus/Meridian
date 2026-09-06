@@ -18,8 +18,14 @@ GİRDİ ŞEMASI. `--sayfa-dizin <dizin>`: her sayfa BİR dosya. `<id>.json` şem
 gövdesi `id` sayılır); `<id>.md` ham içeriktir (`id` = dosya adının gövdesi, `name`/`version` None).
 
 BEŞ ATIF SINIFI (kart `olcum_plani` 3. madde — hepsi RAPORDA AYRI sayılır):
-  1. `yol`   — depo-yolu görünümlü dizge (regex `YOL_RE`) → `git -C <repo> ls-files` kümesinde
-               TAM EŞLEŞME var mı (baştaki `./` soyulur, `%23`/`#`den sonrası soyulur).
+  1. `yol`   — depo-yolu görünümlü dizge (regex `YOL_RE`) → İKİ kademeli doğrulanır (Rol-1 ruling
+               2026-09-06, ÖLÇÜMDEN ÖNCE — kartın "depoda grep -F ile doğrulanır" ifadesinin
+               içinde): (a) `tam` — mevcut kural, `git -C <repo> ls-files` kümesinde TAM EŞLEŞME;
+               (b) `ad` — atıfta `/` YOKSA ve kümedeki bir dosyanın basename'i atıfla birebir
+               eşleşiyorsa doğrulanır (dizinsiz atıf EKSİK-BELİRTİLMİŞtir, UYDURMA değil). Atıfta
+               `/` VARSA `ad` hiç denenmez — yanlış dizinli atıf (`ops/guard.py` depoda yoksa)
+               `meridian/guard.py`ye basename ile KAYMAZ. `dogrulanan` = `tam` + `ad` (ikisi
+               ayrık sayılır); baştaki `./` soyulur, `%23`/`#`den sonrası soyulur.
   2. `kart`  — `EDG-2026-NNN` → `research/cards/EDG-2026-NNN-*.yaml` GLOB'u dolu mu.
   3. `kalem` — `TSK-NNN` → `ROADMAP.md` metninde `[TSK-NNN]` alt-dizgesi geçiyor mu.
   4. `civi`  — `vNNN` (üç haneli) → `tests/` içinde `*_vNNN.py` ile biten bir dosya var mı.
@@ -132,6 +138,26 @@ def sha_dogrula(repo, sha: str) -> tuple[bool, str | None]:
     return (r.returncode == 0), None
 
 
+def yol_dogrula(atif: str, ls_kume: frozenset[str] | None) -> tuple[bool, bool, list[str]]:
+    """`yol` sınıfı İKİ kademeli doğrulama (Rol-1 ruling 2026-09-06, ÖLÇÜMDEN ÖNCE — kart
+    `olcum_plani` 3. madde "depoda grep -F ile doğrulanır" ifadesinin İÇİNDE sayılır):
+    1. `tam` — mevcut kural: `ls_kume`de birebir eşleşme.
+    2. `ad`  — atıfta `/` YOKSA ve `ls_kume` içinde basename'i (son `/`den sonrası) atıfla BİREBİR
+       eşleşen ≥1 dosya varsa DOĞRULANMIŞ sayılır (dizinsiz atıf EKSİK-BELİRTİLMİŞtir, UYDURMA
+       değildir). Atıfta `/` VARSA `ad` hiç DENENMEZ — yanlış dizinli bir atıf (`ops/guard.py`
+       depoda yoksa) `meridian/guard.py`ye basename ile KAYMAZ: yanlış dizin = yanlış atıf.
+    Döner: `(tam, ad, ad_eslesenler)` — `ad_eslesenler` en çok 5 yol, sıralı; `tam` doğruysa ya da
+    atıfta `/` varsa `ad`/`ad_eslesenler` her zaman `(False, [])`dur (kategoriler AYRIK — çağıran
+    `dogrulanan = tam_sayisi + ad_sayisi`yı çift saymadan toplayabilsin diye)."""
+    if ls_kume is None:
+        return False, False, []
+    tam = atif in ls_kume
+    if tam or "/" in atif:
+        return tam, False, []
+    ad_eslesenler = sorted(p for p in ls_kume if p.rsplit("/", 1)[-1] == atif)
+    return False, bool(ad_eslesenler), ad_eslesenler[:5]
+
+
 def kart_dogrula(repo, kod: str) -> bool:
     dizin = pathlib.Path(repo) / "research" / "cards"
     if not dizin.is_dir():
@@ -190,6 +216,8 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
              hata_biriktirici: list) -> dict:
     """Bir sayfanın (`{'id','content',...}`) BEŞ sınıf atıfını çıkarır, her birini doğrular,
     sayfa başına `{toplam, dogrulanan, oran, oran_neden, sinif_bazinda, dogrulanamayan}` döner.
+    `sinif_bazinda['yol']` ayrıca (Rol-1 ruling 2026-09-06, ölçümden önce) `dogrulanan_tam`,
+    `dogrulanan_ad`, `ad_eslesmeleri` (`{atıf: [eşleşen yollar]}`, ad ile doğrulananlar için) taşır.
     `hata_biriktirici` (çağıranın listesi) `sha_dogrula`nın OSError kaynaklı mesajlarını TOPLAR —
     bu fonksiyon kendi başına bir global 'hata' alanı ÜRETMEZ, yalnız BİRİKTİRİR (Yasa 4)."""
     atiflar = atiflari_cikar(sayfa["content"])
@@ -203,9 +231,18 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
         s_toplam = len(kume)
         s_dogrulanan = 0
         s_dogrulanamayan: list[str] = []
+        s_dogrulanan_tam = 0
+        s_dogrulanan_ad = 0
+        s_ad_eslesmeleri: dict[str, list[str]] = {}
         for atif in sorted(kume):
             if sinif == "yol":
-                ok = bool(ls_kume is not None and atif in ls_kume)
+                tam, ad, ad_eslesenler = yol_dogrula(atif, ls_kume)
+                ok = tam or ad
+                if tam:
+                    s_dogrulanan_tam += 1
+                elif ad:
+                    s_dogrulanan_ad += 1
+                    s_ad_eslesmeleri[atif] = ad_eslesenler
             elif sinif == "kart":
                 ok = kart_dogrula(repo, atif)
             elif sinif == "kalem":
@@ -221,8 +258,14 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
             else:
                 s_dogrulanamayan.append(atif)
                 dogrulanamayan_liste.append({"sinif": sinif, "atif": atif})
-        sinif_bazinda[sinif] = {"toplam": s_toplam, "dogrulanan": s_dogrulanan,
-                                "dogrulanamayan": s_dogrulanamayan}
+        sinif_veri = {"toplam": s_toplam, "dogrulanan": s_dogrulanan,
+                     "dogrulanamayan": s_dogrulanamayan}
+        if sinif == "yol":
+            # Rol-1 ruling 2026-09-06 (ölçümden ÖNCE): tam+ad ayrık sayılır, dogrulanan == toplamı
+            sinif_veri["dogrulanan_tam"] = s_dogrulanan_tam
+            sinif_veri["dogrulanan_ad"] = s_dogrulanan_ad
+            sinif_veri["ad_eslesmeleri"] = s_ad_eslesmeleri
+        sinif_bazinda[sinif] = sinif_veri
         toplam += s_toplam
         dogrulanan += s_dogrulanan
 
@@ -237,10 +280,16 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
 
 
 def _toplami_hesapla(sayfa_sonuclari: list[dict]) -> dict:
+    """Sayfa sonuçlarını toplar. `yol` sınıfı için `dogrulanan_tam`/`dogrulanan_ad` sayfalar
+    arasında toplanır, `ad_eslesmeleri` birleştirilir (aynı atıf birden çok sayfada geçse eşleşen
+    yollar AYNIdır — `ls_kume`nin saf bir fonksiyonu — bu yüzden çakışma riski yoktur)."""
     toplam = 0
     dogrulanan = 0
     sinif_bazinda = {sinif: {"toplam": 0, "dogrulanan": 0, "dogrulanamayan": []}
                      for sinif in SINIF_SIRASI}
+    sinif_bazinda["yol"]["dogrulanan_tam"] = 0
+    sinif_bazinda["yol"]["dogrulanan_ad"] = 0
+    sinif_bazinda["yol"]["ad_eslesmeleri"] = {}
     dogrulanamayan_liste: list[dict] = []
     for s in sayfa_sonuclari:
         toplam += s["toplam"]
@@ -250,6 +299,11 @@ def _toplami_hesapla(sayfa_sonuclari: list[dict]) -> dict:
             sinif_bazinda[sinif]["dogrulanan"] += veri["dogrulanan"]
             sinif_bazinda[sinif]["dogrulanamayan"].extend(
                 {"sayfa": s["id"], "atif": a} for a in veri["dogrulanamayan"])
+            if sinif == "yol":
+                sinif_bazinda["yol"]["dogrulanan_tam"] += veri.get("dogrulanan_tam", 0)
+                sinif_bazinda["yol"]["dogrulanan_ad"] += veri.get("dogrulanan_ad", 0)
+                for atif, yollar in veri.get("ad_eslesmeleri", {}).items():
+                    sinif_bazinda["yol"]["ad_eslesmeleri"].setdefault(atif, yollar)
         dogrulanamayan_liste.extend({"sayfa": s["id"], **d} for d in s["dogrulanamayan"])
     oran = (dogrulanan / toplam) if toplam else None
     oran_neden = (None if toplam
@@ -291,7 +345,9 @@ def calistir(*, sayfa_dizin, repo) -> dict:
         "hata": sorted(set(hata_biriktirici)),
         "beyan": ("Bu betik HÜKÜM VERMEZ — eşik (kart EDG-2026-083 'esikler' alanı) burada GEÇMEZ, "
                  "Rol-1'in ayrı hükmüdür. 'yol' sınıfı git ls-files kümesine, 'sha' git cat-file'a "
-                 "bağlıdır; ikisi de --repo kökünde SALT-OKUNUR çalışır, ağa çıkılmaz."),
+                 "bağlıdır; ikisi de --repo kökünde SALT-OKUNUR çalışır, ağa çıkılmaz. "
+                 "yol: dizinsiz atıf basename eşleşmesiyle doğrulanır (Rol-1 ruling 2026-09-06, "
+                 "ölçümden önce)."),
     }
 
 
