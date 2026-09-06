@@ -1,0 +1,69 @@
+# EDG-2026-084 — Hindsight zihin modeli EK SAYFALARI II: üretici→okuyucu haritası · açık sorular · karar gerekçeleri · dağıtım
+# tarihçesi · ajan süreç hataları — ÖN-KAYIT 2026-09-06 18:3xZ (Rol-1). Operatör: "başka hangi zihin modeli işe yarayabilir" →
+# beş aday sunuldu → "hepsini uygula". EDG-083'ün ölçüm tasarımı AYNEN (uydurma oranı · gerçek kullanım · maliyet), sayfa kümesi
+# ve bütçe farklı → yeni kart (K grid çarpılmaz, 083'ün K=1'i korunur). PK/NK 083'ünkilerle ORTAK (aynı banka, aynı akış) — tekrar
+# kurulmaz, 083'ün PK/NK sonucu bu karta da kanıt sayılır (aynı gün, aynı ayar). Tazeleme SIRALI ve GECE (minimax kovası taze):
+# 2026-09-07 00:45Z tek-atım (083'ün 00:10Z S3/PK/NK tazelemesinden sonra); paralel reflect YASAK (083 vakası 16:24Z).
+
+card_id: EDG-2026-084
+status: registered   # 2026-09-06 Rol-1 — ön-kayıt; sayfalar 2026-09-07 00:45Z tek-atımla kurulur (kova taze), 7 gün pencere
+family: hindsight_hafiza
+on_kayit: 2026-09-06
+ref: [EDG-2026-083, EDG-2026-080, TSK-160, TSK-171, TSK-161, TSK-170]
+
+hipotez: >
+  Beş talep-üzerine sayfa — S4 üretici→okuyucu haritası (hangi birim/betik hangi dosyayı yazar, kim okur; okuyucusuz üretim ve
+  üreticisiz okuma listesi) · S5 açık sorular/ölçülmemişler (her biri için kapatacak ölçüm) · S6 karar gerekçeleri ve devrilenler ·
+  S7 dağıtım tarihçesi (ne gitti, ne kırıldı, hangi kapı yakaladı) · S8 ajan/oturum süreç hataları (reçeteli) — 7 günlük pencerede
+  (a) her sayfa ≥1 gerçek içerik üretir, (b) depoda/bankada/çalışma listesinde doğrulanan atıf oranı eşiği geçer, (c) en az üç sayfa
+  bir kararda/kart notunda/günlükte/ajan brief'inde KAYNAK olarak gösterilir, (d) bedel minimax payı içinde kalır; EK: S4 ya da S5
+  en az bir MEKANİK bekçi/ops adayı doğurur (okuyucusuz üretim ya da açık soru → çivi/ölçüm kalemi). Tutmazsa sayfalar kapatılır.
+
+k_registry: {registered_at: "2026-09-06", trial_ids: [EDG-084-ek-sayfalar-ii]}
+# K=1: beş sayfa tek denemenin beş ölçüm birimi; PK/NK EDG-083'ünkiler (ortak).
+
+adim_0_on_kosul: >
+  (a) EDG-083 adım-1 çalışır durumda: sayfa altyapısı (create + sıralı tazeleme) 2026-09-06'da S1 260 s / S2 140 s ile kanıtlı;
+  REFLECT_MAX_ITERATIONS=6, mid aday tavanı 60, flashrank reranker. (b) minimax-m3 kovası taze (00:00Z reset); gece sırası: 00:10Z
+  083 S3/PK/NK → 00:45Z bu kartın S4–S8'i (sıralı, her sayfa bitmeden sonraki açılmaz; yer tutucu 'Generating content…' içerik
+  DEĞİLDİR). (c) yük < 4. (d) uydurma sayacı R1–R3 (f20ef68) + donuk girdiler (bellek kimlikleri + mental model kimlikleri + çalışma
+  dosyaları — 083'ün gün-0 dersi: mental model id'leri listeye eklenir).
+
+olcum_plani:
+  - "S4–S8: POST /mental-models {id, name, source_query, max_tokens 4096, trigger: delta, refresh_cron YOK, refresh_after_consolidation false}; ilk içerik = create'in refresh op'u; sonraki tazelemeler talep üzerine"
+  - "her tazeleme: süre, LLM çağrısı, token (llm_requests) → maliyet sütunu; günlük minimax payı ≤ 30 (bu kart) — pilot ≤10 + 083 ≤15 ile toplam ≤ 55/gün"
+  - "uydurma sayımı: uydurma_say.py --bellek-kimlikleri (memory + mental model id) --calisma-dosyalari; sayfa başına ve toplam; sayfa anlık görüntüleri sayfalar/<tarih>/ + SHA256"
+  - "gerçek kullanım: 'kaynak: zihin modeli <ad>' atıfları (günlük/ROADMAP/kart/ajan brief); sahte-kullanım yasağı"
+  - "MEKANİK ADAY sayımı (S4/S5): sayfadan doğan ve Rol-1'in ROADMAP'e işlediği çivi/ops/ölçüm kalemi sayısı (kalem kimliğiyle)"
+  - "okuyucu: pano Hafıza › Zihin modelleri listesi; A1 sayfa_oku.sh; ajan brief'i (TSK-161 kapılı)"
+
+esikler:
+  gecti: "7 günde: (1) 5/5 sayfa ≥1 content_written ∧ (2) doğrulanan atıf oranı toplamda ≥ %80 ve hiçbir sayfada < %60 ∧ (3) ≥3 sayfa ≥1 gerçek-kullanım atıfı ∧ (4) tazeleme başına ≤ 12 çağrı, ≤ 600 s, kartın minimax payı ≤ 30/gün ∧ (5) S4 ya da S5'ten ≥1 mekanik aday ROADMAP'e işlenmiş"
+  # eşikler donuk; (5) bu kartın 083'ten farkı — sayfa bulgusu bekçiye dönüşmüyorsa 'okuma' değeri sınırlıdır
+
+kill_list:
+  - "EDG-083 gün-7 hükmü KALDI (uydurma ya da kullanım) → bu kart açık kalsa da yeni sayfa AÇILMAZ, mevcutlar hüküm için tamamlanır"
+  - "herhangi bir sayfada doğrulanan atıf oranı < %50 → sayfa kapatılır"
+  - "tazeleme 3 ardışık başarısız (429-dışı) → sayfa durur"
+  - "paralel reflect (aynı anda >1 refresh op) tespit edilirse o günün tazelemeleri ölçüme girmez (083 vakası)"
+  - "minimax günlük payı toplam (pilot+083+084) > 55 → o gün kalan tazelemeler ertelenir, K harcanmaz"
+  - "sayfa içeriği canlı karar yüzeyine bağlanırsa geçersiz"
+  - "PK/NK (083) tutmazsa hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  EDG-083'ün PK (pk-pit-civisi: 2026-08-31 + pitlaw + v341/v342) ve NK (nk-kripto-madencilik: 'bankada bilgi yok') sayfaları aynı
+  banka ve aynı akışta 00:10Z'de tazelenir; sonuçları bu kartın gün-0 kanıtıdır (ortak, tekrar kurulmaz — beyan).
+
+veri_penceresi: "2026-09-07 00:45Z (ilk kurulum) … 2026-09-14; banka meridian-arsiv; canlı motor DEĞİL"
+
+maliyet_sutunu_zorunlu: "tazeleme başına süre/çağrı/token · günlük minimax payı (pilot+083+084 birlikte) · sayfa okuma sayısı (GET/pano) · mekanik aday sayısı"
+
+basari_tanimi: >
+  (1) beş sayfa kurulu, ilk tazeleme kayıtlı, uydurma gün-0 sayımı sayfalar/2026-09-07/ altında · (2) 7. gün: uydurma + kullanım +
+  maliyet + mekanik aday sayımı research/olcumler/edg084_zihin_modeli_ek_sayfalar_ii/ altında (araç: 083'ün uydurma_say.py, kopya
+  yok) · (3) hüküm: geçtiyse S4/S5 bulguları çivi/ops kalemlerine dönüşür ve 'ajan brifingi' (TSK-161) S8'i girdi alır; kaldıysa
+  sayfalar kapatılır. Hüküm aynı turda karta + K defterine.
+
+notlar: >
+  Açılmayan adaylar (beyan): kota/maliyet sayfası (llm_requests SQL daha doğru), veri kaynakları/PIT sayfası (pitlaw raporu mekanik),
+  günlük özet (akşam brifing botu var). Bu kartla toplam sayfa 9 (pilot + 083'ün 3 + bu 5) — her biri okunmalı; okunmayan kapanır.

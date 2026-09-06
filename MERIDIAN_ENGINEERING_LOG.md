@@ -2838,3 +2838,7 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   KALDI; PIT üyelik → EDG-079/082/075. CLAUDE.md §2'ye "yeni kart açmak" kapı satırı eklendi (yumuşak kapı; mekanik çivi sonraki dilim).
   Bacak (a) "denenenler ve akıbeti" sayfası EDG-083 hükmüne kapılı. Operatör sorusuna cevap: liste bugün mekanik (§6: 19 KALDI, 2 NO-GO,
   6 GEÇTİ, 10 sürüyor + 2 DROPPED), "neden/tekrar koşulu" sentezi sayfa işi.
+- **18:3xZ — EDG-2026-084 ÖN-KAYIT + TSK-171 (operatör "hepsini uygula"):** beş ek sayfa (üretici→okuyucu haritası · açık sorular ·
+  karar gerekçeleri · dağıtım tarihçesi · ajan süreç hataları), 083 tasarımı + "mekanik aday" eşiği; tanımlar sayfalar84.json,
+  kur_sayfalar84.sh (yol-değişimli kopya), gece 00:45Z tek-atım (edg084-gece-kur) — sıra: 00:05Z araç sondası → 00:10Z 083 S3/PK/NK →
+  00:45Z 084 S4–S8 → 03:00Z r5 ingest → 03:30Z yedek → 05:00Z pilot cron. Günlük minimax bütçesi üç kart için ≤55 (kill).
