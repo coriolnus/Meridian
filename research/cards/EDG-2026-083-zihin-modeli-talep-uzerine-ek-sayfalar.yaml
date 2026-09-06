@@ -96,3 +96,15 @@ olcum_gun0_2026_09_06: >
   Sınıf dağılımı: S1 bellek 25/25 (gözlem kimlikleri), çalışma dosyası 2/2; S2 bellek 2/2, çalışma 4/4. Eşik (2) gün-0'da
   sağlanıyor (≥%80 toplam, sayfa min %60); eşik (1)/(3)/(4) 7. günde okunur. sonuc_gun0_2026-09-06.json + rapor_gun0_….md.
 
+kullanim_1_2026_09_06: >
+  (19:1xZ Rol-1) İLK GERÇEK KULLANIM ATFI — kaynak: zihin modeli meridian-hedef-sapma (S2, 16:4xZ sürümü) + recall ×3 (tek-kaynak
+  ihlalleri · belge↔kod ayrışması · çelişkili hükümler, 19:0xZ). Operatör sorusu "kalıcı hafıza ile çelişki yaratan durumları bulabilir
+  miyiz" → 22 kodla sınanabilir iddia → 11 salt-okunur doğrulayıcı ajan (Workflow, 1,1M token, 4 dk) → 4 DOĞRULANDI (C3 refetch_max
+  dört kopya · C7 max_position_r zarf-beyanlı · C9 K-03 asimetrisi beyanlı hüküm · C22 SuccessExitStatus repo+canlı) · 5 KISMEN
+  (C2 iki farklı tavan aynı adla · C12 DD_VETO_MARGIN literal ama tutarlı · C16 ölü alanlar test-tek-tüketici · C17 'yanıt var alan yok'
+  sessiz 100k · C18 app.js 215 `?? 0`) · 13 DÜZELTİLMİŞ. Canlı ölçüm: bildirim kanalı yok + notify_undelivered sayacı 08-23'ten beri
+  durmuş → TSK-174 (OPERATOR); TSK-172/173 açıldı. Kanıt: kullanim/celiski_dogrulama_2026-09-06.json. ÖLÇÜM DERSİ (7. gün raporuna
+  beyan sütunu, eşik değil): sayfa iddialarının 13/22'si BAYAT — banka eski durumları da 'olgu' olarak taşıyor, sayfa 'bugün' bilmiyor;
+  uydurma oranı (%99) bunu YAKALAMAZ. Bayatlık = hafızanın yapısal sınırı → her sayfa okuması 'ölçülen'le doğrulanır (karar-oncesi-
+  hafiza-kontrolu kuralı zaten böyle diyor).
+

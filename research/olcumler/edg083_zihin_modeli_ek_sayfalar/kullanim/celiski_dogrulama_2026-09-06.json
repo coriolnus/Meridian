@@ -1,0 +1,552 @@
+[
+ {
+  "id": "C1",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "Bugün MERIDIAN_BIND_HOST hem okunuyor hem YAZILIYOR: serve.sh içinde `export MERIDIAN_BIND_HOST=\"${MERIDIAN_BIND_HOST:-127.0.0.1}\"` satırı var ve uvicorn'a `--host os.environ['MERIDIAN_BIND_HOST']` ile geçiriliyor; deploy/oracle-a1/meridian.service içinde de `Environment=MERIDIAN_BIND_HOST=127.0.0.1` + `ExecStart=... --host ${MERIDIAN_BIND_HOST}` var. meridian/api.py:90-110 civarındaki yorum bu düzeltmeyi tarihiyle (denetim C1, 2026-08-02) belgeliyor: eskiden hiçbir başlatıcı yazmıyordu, şimdi ikisi de yazıyor ve varsayılan (127.0.0.1) davranışı korumuş. tests/test_kovab_kucuk_v165.py bu bağı çivi olarak sınıyor.",
+  "kanit": [
+   {
+    "dosya": "serve.sh",
+    "sembol_veya_alinti": "export MERIDIAN_BIND_HOST=\"${MERIDIAN_BIND_HOST:-127.0.0.1}\""
+   },
+   {
+    "dosya": "deploy/oracle-a1/meridian.service",
+    "sembol_veya_alinti": "Environment=MERIDIAN_BIND_HOST=127.0.0.1 / ExecStart=... --host ${MERIDIAN_BIND_HOST}"
+   },
+   {
+    "dosya": "meridian/api.py",
+    "sembol_veya_alinti": "KUSUR NEYDİ: bu kapı MERIDIAN_BIND_HOST'u okuyordu ama onu HİÇBİR başlatıcı YAZMIYORDU — ... ARTIK BELİRLİYOR"
+   },
+   {
+    "dosya": "meridian/auth_cli.py",
+    "sembol_veya_alinti": "host = os.environ.get(\"MERIDIAN_BIND_HOST\", \"127.0.0.1\")"
+   },
+   {
+    "dosya": "tests/test_kovab_kucuk_v165.py",
+    "sembol_veya_alinti": "serve.sh MERIDIAN_BIND_HOST için 127.0.0.1 VARSAYILANINI export etmiyor"
+   }
+  ],
+  "canli_kontrol_gerekli": true,
+  "not": "Repo düzeyinde çivi ve iki başlatıcı (serve.sh, meridian.service) tutarlı; A1'de fiilen KURULU/etkin birim dosyasının repodakiyle aynı olduğu (dagit sonrası) yalnız canlıda doğrulanabilir — repo kanıtı tek başına yeterli, canlı kontrol ek güvence içindir."
+ },
+ {
+  "id": "C2",
+  "hukum": "KISMEN",
+  "bugunku_durum": "Dört sayı var ama iddianın çerçevesi ('üçü ölü') yanlış: (1) state/goal.yaml max_sector_exposure_pct=40.0 CANLI ve KULLANILIYOR — guard.py `_chk('sector_cap', ...)` bunu isim-sayısı bazlı tavan olarak uygular (payda sector_cap_basis/max_open_positions). (2) state/bounds.yaml portfolio.sector_cap max=30.0 bir DEĞER değil, arama BANDININ üst-ucudur (yorum: '0 = kapalı, bant 25-30'); knob'un kendisi state/strategy.yaml'da YOK, yani p.get('portfolio.sector_cap',0) ile fiilen 0 (KAPALI) — bu Y3 NOTIONAL-payı tavanıdır, (1)'den FARKLI bir soruyu cevaplar. (3) guard.py'deki 25.0/6.0 (SECTOR_CAP_DEFAULT_PCT/HEAT_CAP_DEFAULT_PCT) artık KODDA YOK — 2026-08-23'te bilinçli olarak KALDIRILDI (mezar taşı yorumu + tests/test_wp6_kucuk_kalemler_v268.py 'sabitler geri gelemez' çivisi), yani 'ölü ama duruyor' değil 'kaldırılmış'. (4) Runtime 0, Y3 sector/heat notional-tavanının knob'suz varsayılanı olarak doğru — ama bu (1)'deki 40.0'ın aktif olmadığı anlamına gelmez; iki farklı tavan (isim-sayısı vs notional-pay) aynı adla anılıyor.",
+  "kanit": [
+   {
+    "dosya": "state/goal.yaml",
+    "sembol_veya_alinti": "max_sector_exposure_pct: 40.0"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "Sektör başına fiili isim tavanı = floor(payda × max_sector_exposure_pct/100)"
+   },
+   {
+    "dosya": "state/bounds.yaml",
+    "sembol_veya_alinti": "portfolio.sector_cap: {min: 0.0, max: 30.0, ...} # sektör NOTIONAL payı tavanı %; 0 = kapalı (bant 25-30)"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "MEZAR TAŞI: SECTOR_CAP_DEFAULT_PCT / HEAT_CAP_DEFAULT_PCT — KALDIRILDI (2026-08-23)"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "heat_pct_cap = float(p.get(\"portfolio.heat_cap\", 0) or 0)"
+   }
+  ],
+  "canli_kontrol_gerekli": true,
+  "not": "state/strategy.yaml'da portfolio.sector_cap/heat_cap anahtarı yok (grep boş) → yapısal olarak 0/kapalı sonucu repo kanıtıyla çıkarılabiliyor; ama 'karar yüzeyinde fiilen hangisi kullanılıyor' sorusunun canlı p sözlüğü (goal.yaml + operatör override) A1'de teyit edilmeli — repo sadece varsayılanı gösterir, olası runtime override'ı göstermez."
+ },
+ {
+  "id": "C3",
+  "hukum": "DOĞRULANDI",
+  "bugunku_durum": "refetch_max eşiği literal 8 olarak en az üç yerde ayrı ayrı yazılı: meridian/scheduler.py DENSE_ATTEMPTS=8 (adı farklı ama aynı eşiğin kaynağı), meridian/api.py \"refetch_max\": 8 (scheduler.DENSE_ATTEMPTS'e referans yok, api.py scheduler'ı import ediyor ama bu sabiti kullanmıyor), ve meridian/web/app.js içinde birden çok yerde `pl.refetch_max || 8` / `pl.refetch_max ?? 8` düşümü ve ayrıca sabit metinde \"8 adımlı sabır sayacı\" hardcode'u (satır ~7511). ui/src/pano tarafındaki TSX/TS ise kendi literal'ini taşımıyor, sadece API alanını (`refetch_max?: number`) tüketiyor — iddianın 'app.js ya da ui/src' ayracı doğru tarafa (app.js) düşüyor. Tek kaynak yok: dört ayrı dosyada aynı sayı bağımsız yazılmış, biri güncellenirse diğerleri sessizce ayrışır.",
+  "kanit": [
+   {
+    "dosya": "meridian/scheduler.py",
+    "sembol_veya_alinti": "DENSE_ATTEMPTS = 8"
+   },
+   {
+    "dosya": "meridian/api.py",
+    "sembol_veya_alinti": "\"refetch_attempts\": sched.get(\"refetch_attempts\", 0), \"refetch_max\": 8,"
+   },
+   {
+    "dosya": "meridian/web/app.js",
+    "sembol_veya_alinti": "const _sabirMax = pl.refetch_max || 8;"
+   },
+   {
+    "dosya": "meridian/web/app.js",
+    "sembol_veya_alinti": "<b>8 adımlı sabır sayacı</b>"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "api.py'nin scheduler modülünü zaten import ettiği (satır 415/5475/5483 civarı) ama DENSE_ATTEMPTS'i kullanmadığı görüldü — tek-kaynak ihlali kasıtsız görünüyor, mekanik bir bağ yok."
+ },
+ {
+  "id": "C4",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "state/goal.yaml limits bloğunda heat_hard_r: 5.0 ve heat_review_r: 3.5 anahtarları BUGÜN mevcut (dosya git-izli). meridian/guard.py bu anahtarları modül sabitlerine düşümle okuyor: `heat_hard_r = float(limits.get(\"heat_hard_r\", HEAT_HARD_R))` ve aynısı heat_review_r için — yani goal.yaml kanalından geçersiz kılınabiliyor, iddianın aksine. Ayrıca modül sabitinin kendisi de bugün 4.5 değil 5.0 (yorum satırı geçmişte 4,5 olduğunu ve operatör kararıyla zarf aritmetiğine eşitlendiğini kaydediyor — v166-c24 tutarlılık çivisiyle).",
+  "kanit": [
+   {
+    "dosya": "state/goal.yaml",
+    "sembol_veya_alinti": "heat_hard_r: 5.0                     # toplam açık risk (R) bunu AŞARSA → NO_GO (sert tavan)"
+   },
+   {
+    "dosya": "state/goal.yaml",
+    "sembol_veya_alinti": "heat_review_r: 3.5                  # toplam açık risk (R) bunu aşarsa → REVIEW (yumuşak bayrak)"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "heat_hard_r = float(limits.get(\"heat_hard_r\", HEAT_HARD_R))"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "HEAT_HARD_R = 5.0             # OPERATÖR KARARI: zarf aritmetiğine eşitlendi; fail-safe = operatör değerinin yedeği (eşitlik çivisi v166-c24)"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "Hafızadaki iddia muhtemelen 4,5R döneminden ve goal.yaml'a anahtarların henüz eklenmediği bir tarihten kalma; bugün hem anahtar hem override yolu mevcut, düzeltme mekanizması operatör kararı + v166-c24 tutarlılık çivisi."
+ },
+ {
+  "id": "C5",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "Bugün state/goal.yaml içinde backtest_gate, session_tz, style, schema_version anahtarları YOK — 2026-08-23 tarihli '25a' temizliğiyle dosyadan ve guard.GOAL_KEYS kümesinden birlikte kaldırılmış, yerlerinde 'MEZAR TAŞI' yorum blokları bırakılmış (envanter atfı: docs/DENETIM-OLU-BILESEN-ENVANTERI-2026-08-13). guard.py'deki GOAL_KEYS tanımı bugün bu dört adı içermiyor.",
+  "kanit": [
+   {
+    "dosya": "state/goal.yaml",
+    "sembol_veya_alinti": "# --- MEZAR TAŞI: schema_version · universe · style · session_tz — KALDIRILDI (2026-08-23) ---"
+   },
+   {
+    "dosya": "state/goal.yaml",
+    "sembol_veya_alinti": "# --- MEZAR TAŞI: backtest_gate — KALDIRILDI (2026-08-23) ---"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "GOAL_KEYS = {\"target_return_30d\", \"min_sharpe\", \"max_drawdown\", \"failure_below\", ...}  (schema_version/style/session_tz/backtest_gate YOK)"
+   },
+   {
+    "dosya": "tests/test_k5_paketi_v273.py",
+    "sembol_veya_alinti": "test_a1_kaldirilan_ust_anahtarlar_goal_yamlda_yok / test_b1_kaldirilan_adlar_hicbir_kod_dizgisinde_yok"
+   }
+  ],
+  "not": "İddia bir zamanlar (2026-08-23 öncesi) doğruydu — anahtarlar goal.yaml'da vardı ve GOAL_KEYS üyeliği dışında okuyucuları yoktu. Düzeltme mekanizması: anahtarları okumayı sağlamak yerine anahtarları TAMAMEN KALDIRMAK (ölü düğmeyi düğme olmaktan çıkarmak), sessiz-diriliş testiyle kilitlenmiş.",
+  "canli_kontrol_gerekli": false
+ },
+ {
+  "id": "C6",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "goal.limits.kill_switch_file anahtarı bugün goal.yaml'da yok (2026-08-23 mezar taşı) ve guard.LIMIT_KEYS'te de yok. config.py ve analytics.py dosyalarında bu ad yalnız açıklayıcı yorum metninde ('...sınıfındadır' örneği) geçiyor, kod okumuyor. health.py kill-switch yolunu STATE/\"HALT\" olarak SABİT kodluyor ve bu anahtara hiç bakmıyor — iddiadaki üç dosyanın davranışı (config/analytics yalnız ad biliyor, health okumuyor) bugün de aynen geçerli, ama artık goal.yaml'da anahtar da yok.",
+  "kanit": [
+   {
+    "dosya": "state/goal.yaml",
+    "sembol_veya_alinti": "# --- MEZAR TAŞI: kill_switch_file — KALDIRILDI (2026-08-23) ---"
+   },
+   {
+    "dosya": "meridian/health.py",
+    "sembol_veya_alinti": "return config.STATE / \"HALT\"  (kill-switch yolu sabit)"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "# ... `kill_switch_file` BU KÜMEDEN ve goal.yaml limits'ten düştü ..."
+   },
+   {
+    "dosya": "tests/test_k5_paketi_v273.py",
+    "sembol_veya_alinti": "test_a3_kill_switch_file_limitsten_dustu_halt_yolu_sabit"
+   }
+  ],
+  "not": "goal.yaml kendi yorumunda 'HİÇBİR KOD OKUMAZ' derken artık anahtarın kendisinin de var olmadığını, yalnız mezar taşı olarak kayıtlı olduğunu belirtiyor — iddia tarihsel olarak doğruydu, bugün anahtar zaten mevcut değil.",
+  "canli_kontrol_gerekli": false
+ },
+ {
+  "id": "C7",
+  "hukum": "DOĞRULANDI",
+  "bugunku_durum": "guard.py:623 position_size kontrolü plan.size_r > limits['max_position_r'] (goal.yaml:127 = 1.0) koşuluyla çalışıyor; ama fiili boyutu strateji yüzeyindeki position_size_r=0.5 (state/strategy.yaml) × derisk rampası ≤1.0 belirliyor, ölçülen size_r aralığı 0,25–0,97 — hiçbir plan 1.0R'a ulaşmıyor. guard.py'nin kendi yorumu (EZILEN-DAMGA[25b-2]) bunu '409 planlık kâğıt defterinde position_size 0/409 düştü' diye ölçüp doğruluyor ve kontrolü 'ZARF, BAĞLAYAN DEĞİL' (fail-safe, aktif bağlayan değil) olarak nitelendiriyor. Yani iddianın sayısal çekirdeği (1.0 tavan pratikte hiç bağlamıyor) bugün de geçerli.",
+  "kanit": [
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "_chk(\"position_size\", plan.get(\"size_r\", 0) > limits[\"max_position_r\"], ...)"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "EZILEN-DAMGA[25b-2] · limits.max_position_r + limits.max_daily_loss_pct — ZARF, BAĞLAYAN DEĞİL ... position_size 0/409 düştü"
+   },
+   {
+    "dosya": "state/goal.yaml",
+    "sembol_veya_alinti": "max_position_r: 1.0"
+   },
+   {
+    "dosya": "state/strategy.yaml",
+    "sembol_veya_alinti": "position_size_r: 0.5"
+   }
+  ],
+  "not": "Kod bunu bir 'hayalet kural/kusur' olarak DEĞİL, bilinçli tasarım kararı olarak sunuyor: guard.py:436-448 (CIFT_BAG_KEY / EZILEN-DAMGA yorumu) 2026-08-24 tarihli operatör hükmüyle position_size_r'nin bilerek LIMIT_KEYS'e alınmadığını, çiftin (max_open_positions ⟷ position_size_r) SOFT/REVIEW seviyesinde ayrı bir çivi (cift_bag_hukmu) ile izlendiğini, sert 1.0R tavanının ise 'yapılandırma/politika değişirse son savunma hattı' olarak KASITLI biçimde bırakıldığını belgeliyor. Yani mekanizma iddia edildiği gibi çalışıyor ama 'hayalet/gözden kaçmış kural' çerçevesi kodun kendi belgelediği niyetle çelişiyor — bu bir bilinmeyen boşluk değil, izlenen ve gerekçelendirilmiş bir zarf katmanı.",
+  "canli_kontrol_gerekli": false
+ },
+ {
+  "id": "C8",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "Bugün meridian/config.py::default_strategy() içinde position_size_r=0.5 yazıyor (1.0 değil) ve state/strategy.yaml'daki canlı değer de 0.5 — iki kaynak bugün AYNI, ayrışma yok. Fonksiyonun docstring'i tam olarak iddia edilen tarihsel arızayı anlatıyor: yedek eskiden 1.0 idi, state/strategy.yaml yok/boş/bozuk olduğunda load_strategy() sessizce o 1.0'a düşüyordu ve goal.yaml:123-125'teki 'position_size_r 1.0→0.5' beyanlı invaryantı tek dosya arızasıyla kırıyordu; bu artık 0.5 olarak düzeltilmiş ve üç dış tüketici (run.bootstrap_v01, mutation.build_state, sprint._reset_sandbox_state) de aynı değeri aldığı belirtiliyor.",
+  "kanit": [
+   {
+    "dosya": "meridian/config.py",
+    "sembol_veya_alinti": "default_strategy(): \"position_size_r\": 0.5,  # CANLIYLA HİZALI (0,5 — operatör kararı 2026-08-12)"
+   },
+   {
+    "dosya": "meridian/config.py",
+    "sembol_veya_alinti": "docstring: \"`position_size_r` NEDEN 1,0 DEĞİL 0,5 — bu yedek CANLIYLA AYRIŞIKTI.\""
+   },
+   {
+    "dosya": "state/strategy.yaml",
+    "sembol_veya_alinti": "position_size_r: 0.5"
+   }
+  ],
+  "not": "Düzeltme mekanizması: default_strategy() yedek değeri literal 0.5'e sabitlendi (goal.limits'ten türetilmedi — docstring bunun neden UYDURMA olacağını da gerekçeliyor) ve tests/test_wp2d_pano_beyani_v246.py::test_KALEM2_* ailesi üç arıza modunda (yok/boş/bozuk) yedek değerini ölçüp depoda strategy.yaml varsa canlı değerle birebir kıyaslıyor (sürüklenme dedektörü) — çivi dosyası okunmadı, adı config.py docstring'inden alıntılandı, doğrulanmadı.",
+  "canli_kontrol_gerekli": false
+ },
+ {
+  "id": "C9",
+  "hukum": "DOĞRULANDI",
+  "bugunku_durum": "bounds.yaml içinde position_size_r hâlâ {min:0.1, max:1.0, step:0.1} kum havuzu satırıyla duruyor ve guard.LIMIT_KEYS kümesine alınmamış; guard.py:52 LIMIT_KEYS = {\"autonomy_level\", \"max_position_r\", \"max_open_positions\", \"max_daily_loss_pct\", ...} içinde position_size_r YOK. guard.py:435-445 civarındaki 'ÇİFT-BAĞ ÇİVİSİ' bloğu iddiayı harfiyen doğruluyor ve HÜKÜM (2026-08-24, BAĞLAYICI) diye açıkça yazıyor: 'asimetri KAPATILMADI. position_size_r LIMIT_KEYS'e ALINMADI ve bounds.yaml satırına DOKUNULMADI'. Yani K-03 yönetişim asimetrisi bilinçli ve hâlâ yürürlükte bir tasarım kararı; NO_GO üretmiyor, REVIEW'a düşürüp gate_reasons'a yazıyor (veto değil insan kapısı).",
+  "kanit": [
+   {
+    "dosya": "state/bounds.yaml",
+    "sembol_veya_alinti": "position_size_r: {min: 0.1, max: 1.0, step: 0.1, type: float}"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "LIMIT_KEYS = {\"autonomy_level\", \"max_position_r\", \"max_open_positions\", \"max_daily_loss_pct\", ...}"
+   },
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "CIFT_BAG_KEY / HÜKÜM (2026-08-24, BAĞLAYICI): asimetri KAPATILMADI. position_size_r LIMIT_KEYS'e ALINMADI"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "Statik kod+config kanıtı yeterli; canlı state/strategy.yaml'daki fiili position_size_r değeri (0.5 olduğu iddia ediliyor) ayrı bir canlı-durum sorusu ama iddianın kendisi (yönetişim asimetrisi var mı) depo kanıtıyla tam doğrulanıyor."
+ },
+ {
+  "id": "C10",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "'AYNA TUTARLILIK YASASI' adı yalnız loop.py::_llm_veto_filter docstring'inde geçiyor ve orada iptal-doğrula-yoksa-tut mantığıyla uygulanıyor (obs.warn 'llm_veto_kept_mirror'). Ama entry_missed_limit dalı da AYRI bir mekanizmayla korunuyor: loop.py::daily_cycle içinde entry_missed_limit/gap_veto kararları verildikten ve meta['armed']=carried atandıktan HEMEN SONRA, yeni planlar aynaya gönderilmeden ÖNCE, KOŞULSUZ olarak _cancel_stale_entry_orders(dstr) çağrılıyor (loop.py). Bu fonksiyonun docstring'i tam bu senaryoyu tartışıyor: GTC emirler aktif iptal edilir (_cancel_mirror_entries → EV_STALE_ENTRIES_CANCELLED); TIF=day emirler zaten 'aynı akşam expired' olduğu için ayrıca düşürülmesine gerek yok ('TIF=day'de emir aynı akşam expired olduğu için o düşürme ZATEN oluyordu... bu satır taşıma mekanizmasını bozmuyor'). Yani iddianın öne sürdüğü 'day TIF emri düşmez' durumu bir açık değil, kod yorumunda BİLİNÇLİ ve gerekçeli bir tasarım kararı olarak belgelenmiş; ayrışma reconcile_broker_state (1.2) tarafından da DEAD görülüp plan silahlı kümeden düşürülerek ikinci bir savunma hattı oluşturuyor.",
+  "kanit": [
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "_llm_veto_filter / \"AYNA TUTARLILIK YASASI: plan Alpaca'ya gönderildiyse önce ORADA iptal doğrulanır\""
+   },
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "_cancel_stale_entry_orders / \"KAPSAM SINIRI — BEYANLI (TIF=day'e göre TEK davranış farkı)... DAY'de emir kendiliğinden sönerdi\""
+   },
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "meta[\"armed\"] = carried ... _cancel_stale_entry_orders(dstr)  (entry_missed_limit kararlarından hemen sonra, koşulsuz çağrı)"
+   },
+   {
+    "dosya": "tests/test_eod_supurme_kaniti_v265.py",
+    "sembol_veya_alinti": "test_kanit_var_kosdu / test_kanit_bayat_ihlal (kadans-tabanlı ayna temizliğinin çivileri)"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "Kaynak isimlendirme (iddianın 'AYNA TUTARLILIK YASASI LLM dalına uygulanmış ama entry_missed_limit'e uygulanmamış' çerçevesi) kısmen yanıltıcı: aynı AD taşıyan tek fonksiyon yalnız LLM vetosunda var, ama entry_missed_limit dalı FONKSİYONEL OLARAK eşdeğer bir korumaya (_cancel_stale_entry_orders + reconcile DEAD-düşürme) sahip — farklı mekanizma, aynı sonuç. tests/test_icra_gercekligi_v141.py bu spesifik cross-check'i (armed=carried + mirror iptali) doğrudan test etmiyor (yalnız broker.fill_entry mekaniğini test ediyor); asıl kanıt loop.py'nin kendi docstring'i + test_eod_supurme_kaniti_v265.py ailesi."
+ },
+ {
+  "id": "C11",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "İddianın yüzey gözlemi (ROADMAP'ta bir dönem geçen 'chop örneklemi 27 < 30, kapı ölçemiyor' notu) gerçekti ama sonucu ('o yüzden fren devre dışı') 2026-08-22/23 teşhisiyle çürütüldü: 'chop hiç oluşmadı' öncülü YANLIŞTI (birim karışıklığı — işlem sayımı gün diline çevrilmişti). Gerçek mekanizma bir ÖLÇÜM KAPISI arızası değil, BÜTÇE BAĞLAŞIMIdır: meridian/regime.py::exposure_score CHOP tabanını 45 verir, build_regime_json'da dd>=5 cezası -20 uygulanır (45-20=25), bu da params['regime.min_exposure_score'] varsayılanı 40'ın altında kaldığından exposure_budget_pct mekanik olarak 0'a düşer — chop işlemi yapısal olarak DOĞAMAZ (kapı 'ölçülemedi' dönüp freni devre dışı bırakmıyor; zaten başka bir mekanizma fren uyguluyor). Bu bulgu research/cards/EDG-2026-048-chop-tabani.yaml kartıyla ölçüldü (taban60 denemesi NO-GO: Δ −18.265,65$, CI 0-içi) ve ROADMAP.md TSK-025 'DONE(2026-08-23·EDG-2026-048 NO-GO tüketiciyi kapattı)' olarak kapatıldı; kalem artık 'chop bütçe-kapalılığı ÖLÇÜLMÜŞ POLİTİKA' statüsünde ve meridian/config.py:398-406'daki params_by_regime haritası bilerek boş bırakılmış. Yani bugünkü kodda ayrı bir '28 günlük chop örneklem kapısı' YOK; ROADMAP'taki '28d' etiketi bir teşhis/iş-kalemi kimliğiydi, canlı bir fren mekanizması değildi ve teşhisin kendisi kapandı.",
+  "kanit": [
+   {
+    "dosya": "meridian/regime.py",
+    "sembol_veya_alinti": "exposure_score() base={TREND_UP:80, CHOP:45, ...}; build_regime_json(): score=max(0,score-20) if dd>=5; budget = score if score>=min_exp else 0"
+   },
+   {
+    "dosya": "meridian/regime_trigger.py",
+    "sembol_veya_alinti": "DeferredRegimeBudgetTrigger, THRESHOLD_N = 30 — bu 'rejim başına min 30 kapanmış işlem' tetikleyicisi, iddiadaki '28 günlük' kapıyla aynı şey değil ve karar üretmiyor, yalnız olay basıyor"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-048-chop-tabani.yaml",
+    "sembol_veya_alinti": "verdict: 'NO-GO — ÖLÇÜLMÜŞ RET, KALEM KAPANIR... 28d kapısının @chop dilimi kapanır'"
+   },
+   {
+    "dosya": "meridian/config.py",
+    "sembol_veya_alinti": "\"params_by_regime\": {r: {} for r in VALID_REGIMES}  # DAMGA: bilerek boş, B-CHOP-BUTCE kapanmış"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "TSK-025 28d teşhisi — eşik düşürmek tıkanıklığı açmaz — status: DONE(2026-08-23·EDG-2026-048 NO-GO tüketiciyi kapattı)"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "Depo kanıtı yeterli; 'kapı ölçülemedi→fren yok' iddiasının doğru olmadığı hem kod (mekanik bütçe=0) hem kapanmış ROADMAP kalemiyle net. Canlı kontrol gerekmez çünkü chop_taban/min_exposure_score sabitleri koddan okunuyor, canlı veriye bağlı değil."
+ },
+ {
+  "id": "C12",
+  "hukum": "KISMEN",
+  "bugunku_durum": "Değer bugün doğru: goal.yaml max_drawdown=0.16 (satır 19: '0.08→0.16 OPERATÖR KARARI 2026-08-13'), shadowlaw.py'de DD_VETO_MARGIN = 0.08 = 0.16/2 — sayı güncel ve tutarlı. Ama iddianın 'türetilmeli' beklentisinin aksine bugün de kodda CANLI bir formül (goal.max_drawdown/2 hesaplayan bir satır) YOK — DD_VETO_MARGIN hâlâ shadowlaw.py:90'da elle yazılmış bir literal sabit ('DD_VETO_MARGIN: float = 0.08'), goal.yaml'dan runtime'da OKUNMUYOR. v238 zinciri (62727d6, max_drawdown 0.08→0.16 ile eşzamanlı) bu sabiti manuel olarak 0.04→0.08'e güncelledi ve o zamandan beri iki mekanizma sürüklenmeyi yakalıyor: (1) tests/test_dalga_w1_v216.py::test_C5_dd_veto_margin_goalun_TAM_YARISIDIR testi CI'da shadowlaw.DD_VETO_MARGIN == config.goal()['max_drawdown']/2 eşitliğini pytest.approx ile zorluyor; (2) meridian/watchdog.py'deki EQUIVALENT_TRUTHS['max_drawdown'] tanımı canlı süreçte goal.yaml:max_drawdown ile shadowlaw.DD_VETO_MARGIN'i 'yarisi' ilişkisiyle kıyaslayan bir sürüklenme dedektörü (kod içi yorum: 'Ölçüm sırasında bir kez AYRIK yakalandı — 0,04 iken goal 0,16 — ve sonraki okumada onarılmıştı; yani sürüklenme GERÇEK'). Yani: kapanma iddia edilen şey ('bir zamanlar 0.04 sabit kalmıştı, sonra düzeltildi') doğru VE tekrar sapmaya karşı test+watchdog kapısı kurulmuş, ama mimari olarak hâlâ 'derive edilen' değil 'elle senkron tutulan ve denetlenen' bir sabit — dolayısıyla ne tam DOĞRULANDI (hâlâ hardcoded) ne tam DÜZELTİLMİŞ (asla yeniden hardcoded-yanlış olamaz demek değil, yalnız test kırmızısı üretir) sayılabilir.",
+  "kanit": [
+   {
+    "dosya": "meridian/shadowlaw.py",
+    "sembol_veya_alinti": "DD_VETO_MARGIN: float = 0.08"
+   },
+   {
+    "dosya": "state/goal.yaml",
+    "sembol_veya_alinti": "max_drawdown: 0.16   # 0.08→0.16 (OPERATÖR KARARI 2026-08-13 penceresi)"
+   },
+   {
+    "dosya": "tests/test_dalga_w1_v216.py",
+    "sembol_veya_alinti": "test_C5_dd_veto_margin_goalun_TAM_YARISIDIR(): assert shadowlaw.DD_VETO_MARGIN == pytest.approx(float(config.goal()['max_drawdown'])/2.0)"
+   },
+   {
+    "dosya": "meridian/watchdog.py",
+    "sembol_veya_alinti": "EQUIVALENT_TRUTHS['max_drawdown']['kaynaklar']: [('goal.yaml:max_drawdown', ...), ..., ('shadowlaw.DD_VETO_MARGIN', ..., 'yarisi')] — yorum: 'Ölçüm sırasında bir kez AYRIK yakalandı (0,04 iken goal 0,16) ve sonraki okumada onarılmıştı'"
+   },
+   {
+    "dosya": "meridian/reflect.py",
+    "sembol_veya_alinti": "DD_VETO_MARGIN = shadowlaw.DD_VETO_MARGIN  # tek kaynak, kopya yok yorumu"
+   }
+  ],
+  "canli_kontrol_gerekli": true,
+  "not": "watchdog.py'deki EQUIVALENT_TRUTHS kıyası 'çalışma anına taşındı' deniyor — yani ayrışma canlı süreçte de denetleniyor olabilir; bunun canlıda gerçekten koşup alarm ürettiğini/üretmediğini görmek A1'de bir kontrol gerektirir (yalnız depo koduyla 'canlıda hiç sapmadı' garantisi verilemez)."
+ },
+ {
+  "id": "C13",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "Bugünkü koddaki (`meridian/hermes.py::warmup_budget_feedback`) mantık hâlâ 'duvar yalnız aşağı iner, `carpan < duvar` koşulu duvara ulaşınca (`duvar=1` durumunda `1 < 1`) hep False olur ve merdiven büyümeyi durdurur' şeklindedir — bu, docstring'de artık 'yukarı VE aşağı' diye YANLIŞ tarif edilmiyor: bugünkü docstring (satır ~1855-1877, 'YASA — DETERMİNİSTİK, TEK YÖNLÜ, GERİ DÖNÜŞLÜ') davranışı doğru anlatıyor (duvar yalnız aşağı iner, yeniden sınanmadan yükselmez). Ayrıca kilitlenme artık SESSİZ değil: `_kilitli` hesaplanıp `obs.log('warmup_merdiven_kilitli', ...)` ile her turda görünür kılınıyor (2026-08-24 teşhisinin doğrudan sonucu). Yani iddianın kaynağı olan 'docstring↔kod çelişkisi + sessiz duruş' 2026-08-24'te teşhis edilip (docs/TESHIS-2026-08-24-ISINMA-MERDIVENI.md) düzeltildi: docstring kodla eşleşecek şekilde yeniden yazıldı + görünürlük eklendi. Duvarın kendisinin yeniden sınanması (yükselebilmesi) ise henüz UYGULANMADI — EDG-2026-064 kartı 'status: registered', ölçüm koşulmamış; yani `1<1` matematiği hâlâ doğru ama artık BUG değil, belgelenmiş kasıtlı tasarım ve açık bir ölçüm kalemi.",
+  "kanit": [
+   {
+    "dosya": "meridian/hermes.py",
+    "sembol_veya_alinti": "warmup_budget_feedback (dal: `elif onceki[\"carpan\"] < min(int(duvar) if duvar else WARMUP_SCALE_MAX, WARMUP_SCALE_MAX):`)"
+   },
+   {
+    "dosya": "meridian/hermes.py",
+    "sembol_veya_alinti": "obs.log(\"warmup_merdiven_kilitli\", ...) — _kilitli hesaplaması ve gerekçe metni"
+   },
+   {
+    "dosya": "docs/TESHIS-2026-08-24-ISINMA-MERDIVENI.md",
+    "sembol_veya_alinti": "'1 < min(1, 8) → 1 < 1 → daima False. Merdiven ölür.' / 'Docstring \"merdiven yalnız yukarı\" diyor; ölçülen davranış yalnız aşağı.'"
+   },
+   {
+    "dosya": "research/cards/EDG-2026-064-merdiven-duvari-yeniden-sinama.yaml",
+    "sembol_veya_alinti": "status: registered — 'duvar ... yeniden sınanmamıştır' ölçümü henüz koşulmadı"
+   }
+  ],
+  "not": "Docstring/kod çelişkisi ve sessizlik giderildi (mekanizma: docstring yeniden yazımı + obs.log). Ancak duvarın matematiksel olarak yalnız aşağı inmesi (yükselme yolu yok) BUGÜN de doğru — artık kasıtlı, kart ile izlenen bir tasarım kararı. Canlıda şu an gerçekten kilitli mi (carpan=duvar=1) sorusu state/warmup_scale.json'a bakmayı gerektirir; repo bu dosyayı izlemiyor.",
+  "canli_kontrol_gerekli": true
+ },
+ {
+  "id": "C14",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "Üç kaynak bugün UYUMLU: `meridian/watchdog.py::EXPECTED` sözlüğünde tam 17 anahtar var (scheduler_poll...shadowlaw_drift); `docs/RUNBOOK.md` satırı '**17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)' der (RUNBOOK üretilmiş dosya, ops/runbook_uret.py ile kaynaktan türetiliyor). ROADMAP.md'de hâlâ 'F8 durum sözlüğü ... 15 bekçi mekanizması' ibaresi metinde GEÇİYOR ama her geçtiği yerde açıkça '2026-08-23: \"15\" bayat — F8 ölçümü 17' notuyla düzeltilmiş olarak işaretli (satır 706, 2204, 5541, 3800) — yani ROADMAP kendi içinde 15 sayısının BAYAT olduğunu ve gerçek sayının 17 olduğunu kayda geçirmiş durumda, aktif bir '15 der' iddiası değil tarihî iz.",
+  "kanit": [
+   {
+    "dosya": "meridian/watchdog.py",
+    "sembol_veya_alinti": "EXPECTED: dict[str, int] = {...} — 17 anahtar (scheduler_poll, hermes_poll, warmup_sprint, cf_advance, p5_calibrations, mirror_reconcile, crosscheck, earnings_refresh, arming_eval, shadow_fit, axis2_cycle, opinion_backfill, sprint_cadence, y4_collect, validation_report, massive_verify, shadowlaw_drift)"
+   },
+   {
+    "dosya": "docs/RUNBOOK.md",
+    "sembol_veya_alinti": "**17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)"
+   },
+   {
+    "dosya": "ROADMAP.md",
+    "sembol_veya_alinti": "'15 bekçi mekanizması **[2026-08-23: \"15\" bayat — F8 ölçümü 17]**' (PRG-08 satırı) ve '\"15\" sayısı bayat — F8 tasarım ölçümü 17 bekçi (kalem açık, sayı düzeltildi)' (satır 2204)"
+   }
+  ],
+  "not": "UI (ui/src/pano) içinde 'on yedi mekanizma' ya da sayısal bir bekçi-sayısı metni bulunamadı — statik grep ile ölçülemedi (böyle bir sayı panoda muhtemelen /api/diagnostics'ten canlı türetiliyor, sabit metin değil). UI iddiasının doğruluğu canlı pano ekranına bakmayı gerektirir.",
+  "canli_kontrol_gerekli": true
+ },
+ {
+  "id": "C15",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "Modülün kendi başlığı (E1 — GİRİŞ İCRA YASASI: TEK YASA, İKİ MOTOR) geçmişte tam olarak bu iddiayı doğruluyor: iç motor koşulsuz ertesi-açılış dolumu yaparken, ayna (Alpaca buy-stop bracket) `entry_trigger`'ın sinyal barı kapanışına eşitliğinden dolayı 'stop price must be greater than current price' ile reddediyordu (95/95 canlı satırda alpaca_fill_price yok). Bugün bu ayrışma kapatılmış: `broker.entry_law()/entry_limit_price()/entry_order_decision()` TEK yasa fonksiyonları hem `PaperBroker.fill_entry` (loop.py canlı döngü + backtest.py replay tarafından çağrılıyor, `atr`/`gap_at_submit` aynı yan tablodan besleniyor) hem de `adapters/alpaca.py::submit_plan` (canlı Alpaca emir gönderimi, `dec = entry_order_decision(...)` çağrısıyla `entry_limit`, `entry_type`, `tif` bizzat bu karardan geliyor) tarafından tüketiliyor. Dolum eşiği artık iki ayrı yerde değil tek fonksiyonda hesaplanıyor ve ikisi de aynı `next_open <= limit` / `dec['limit']` mantığını paylaşıyor.",
+  "kanit": [
+   {
+    "dosya": "meridian/broker.py",
+    "sembol_veya_alinti": "entry_law / entry_limit_price / entry_order_decision — 'YASA (tek yer, iki okuyucu — kopyalanmaz)'"
+   },
+   {
+    "dosya": "meridian/broker.py",
+    "sembol_veya_alinti": "PaperBroker.fill_entry — '_law = entry_law(); ... if next_open > _limit'"
+   },
+   {
+    "dosya": "meridian/backtest.py",
+    "sembol_veya_alinti": "broker.fill_entry(plan, per[t].loc[d, \"open\"], ..., atr=armed_atr.get(t), ...)"
+   },
+   {
+    "dosya": "meridian/adapters/alpaca.py",
+    "sembol_veya_alinti": "submit_plan — 'dec = entry_order_decision(trigger, ref_price=ref_price, atr=atr)'; 'entry_limit=dec[\"limit\"], entry_type=(...), tif=dec[\"tif\"]'"
+   },
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "res = alpaca.submit_plan(pl, _eq_boyut, size_mult=_smult, atr=_lw.get(\"atr\"), ref_price=_lw.get(\"ref_price\"))"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "Ölçüm yalnız statik kod okumasıyla yapıldı: her iki motorun AYNI fonksiyonları çağırdığı doğrulandı, ama canlı A1'de bu yolun bugün fiilen tetiklendiği (örn. son dolum satırlarında law/limit alanlarının dolu olduğu) ayrıca canlı veriyle teyit edilmedi — kod-yolu düzeyinde DÜZELTİLMİŞ, canlı davranış teyidi ayrı bir ölçümdür."
+ },
+ {
+  "id": "C16",
+  "hukum": "KISMEN",
+  "bugunku_durum": "İki ayrı iddia iç içe: (a) offset_kaynak/ref_kaynak/limit_bps/olay alanlarının üretimde tek tüketicisi testlerdir — bu BUGÜN DE DOĞRU: bu dört alan `entry_order_decision()` çıktısında üretiliyor ve `portfolio.json['entry_law']` yan tablosuna yazılıyor, ama `loop._entry_exec_write`'ın E2 defterine (`entry_execution.jsonl`) yazdığı satır yalnız limit/atr/law/emir_tipi(mode)/tif/gap_at_submit alanlarını seçiyor — bu dört alanı hiç taşımıyor; grep taraması da meridian/ ve web/app.js içinde bu üç ada (offset_kaynak, ref_kaynak, limit_bps) hiçbir üretim-kodu okuyucusu göstermiyor, yalnız 8 test dosyası ve bir donmuş fikstür bu adları taşıyor. (b) 'kod kendi yorumunda okuyucusu E2 diyor' kısmı ise ARTIK YANLIŞ: broker.py'deki 'ÖLÜ-ALAN DAMGASI[M11]' bloğu bunun tam tersini söylüyor — önceki beyanın çürük olduğunu ('ÖNCEKİ BEYAN ÇÜRÜKTÜ') açıkça itiraf edip bugünkü gerçek durumu (ölü alan, test-tek-tüketici) dürüstçe belgeliyor. Yani 'ölü' teşhisi DOĞRULANDI, 'çürük beyan hâlâ duruyor' teşhisi ise DÜZELTİLMİŞ.",
+  "kanit": [
+   {
+    "dosya": "meridian/broker.py",
+    "sembol_veya_alinti": "'ÖLÜ-ALAN DAMGASI[M11] · `olay` · `offset_kaynak` · `ref_kaynak` · `limit_bps` ... ÖNCEKİ BEYAN ÇÜRÜKTÜ (Ö-49 bayat-beyan sınıfı): iki yorum E2 defterini bu alanların OKUYUCUSU diye gösteriyordu ... Yani beyan bir okuyucu VAAT EDİYOR, kod onu üretmiyordu.'"
+   },
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "_entry_exec_write({..., \"limit\": _law_out.get(\"limit\"), \"atr\": _law_out.get(\"atr\"), \"law\": ..., \"emir_tipi\": _law_out.get(\"mode\"), \"tif\": ..., \"gap_at_submit\": ...})"
+   },
+   {
+    "dosya": "tests/test_mutborc_broker_entry_order_decision_v148.py",
+    "sembol_veya_alinti": "_ALANLAR (alan kümesi sözleşmesi)"
+   }
+  ],
+  "canli_kontrol_gerekli": true,
+  "not": "Kod-yolu düzeyinde E2 defterinin bu dört alanı hiç taşımadığı doğrulandı; canlı `entry_execution.jsonl` dosyasının bugünkü satırlarında bu alanların gerçekten yok olduğu (broker.py'nin kendi iddiası) ayrıca A1'de dosya içeriğiyle teyit edilmedi — bu kısım canli_kontrol_gerekli."
+ },
+ {
+  "id": "C17",
+  "hukum": "KISMEN",
+  "bugunku_durum": "meridian/loop.py'de (mirror gönderim yolu) iki ayrı dal var. (1) acct=None VE transport()['ok']=False (Alpaca'ya ulaşılamıyor) durumunda kod artık 100k'ye DÜŞMÜYOR: obs.alarm(ALARM_BROKER_REJECT,...) basıyor ve _MirrorUnreachable fırlatıp planları 'silahlı' bırakıyor — yorumlar bunun 2026-07-21 denetiminde bilinçli düzeltildiğini söylüyor. (2) Ama acct None DEĞİLSE (Alpaca'dan bir yanıt geldi) ve yanıt sözlüğünde 'equity' anahtarı yoksa (ör. sağlayıcı şeması değişirse) kod hâlâ `eq = float(acct['equity']) if acct and 'equity' in acct else START_EQUITY` satırıyla SESSİZCE 100_000'e (START_EQUITY) düşüyor — bu dala özel hiçbir obs.alarm/obs.warn çağrısı yok. Ardından `_eq_boyut = min(eq_now, eq)` iç defter equity'si 100k'den büyükse boyutlandırmayı sessizce 100k tabanına çeker. tests/ içinde alpaca.account() hiçbir yerde 'equity' anahtarı EKSİK bir sözlük döndürecek şekilde mock'lanmamış (hepsi ya None ya da equity içeren dict) — yani bu spesifik şema-değişikliği senaryosu test edilmemiş. Sonuç: iddia 'ulaşılamıyor' durumu için DÜZELTİLMİŞ, ama 'ulaşıldı fakat alan eksik/şema değişti' durumu için hâlâ aynen DOĞRU.",
+  "kanit": [
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "eq = float(acct[\"equity\"]) if acct and \"equity\" in acct else START_EQUITY"
+   },
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "acct is None and not alpaca.transport()[\"ok\"] -> obs.alarm(obs.ALARM_BROKER_REJECT, ...); raise _MirrorUnreachable()"
+   },
+   {
+    "dosya": "meridian/adapters/alpaca.py",
+    "sembol_veya_alinti": "def account() -> dict | None: ... None => hesap OKUNAMADI ... çağıran varsayılan bir sermayeye düşmeden önce transport()[\"ok\"]'e bakmalı"
+   },
+   {
+    "dosya": "tests/test_boyut_makbuzu_ayna_sermayesi_v257.py",
+    "sembol_veya_alinti": "eq_ayna alanı — makbuzda ayna sermayesi ayrı kaydedilir, ama testler acct'te 'equity' anahtarının EKSİK olduğu durumu mocklamıyor"
+   }
+  ],
+  "not": "Kod içi yorumlar bilinçli olarak 'ULAŞILAMADI ≠ 100k' ilkesini savunuyor ve ulaşılamama senaryosunu kapatmış; ancak 'yanıt geldi ama alan eksik' (şema değişikliği) senaryosu bu ilkenin dışında kalmış görünüyor ve orada sessiz 100k düşüşü hâlâ mevcut. Statik koda dayalı bir hüküm; canlı Alpaca yanıt şemasının fiilen değişip değişmediği bu depodan görülemez.",
+  "canli_kontrol_gerekli": false
+ },
+ {
+  "id": "C18",
+  "hukum": "KISMEN",
+  "bugunku_durum": "İki ayrı, paralel UI yüzeyi var. (a) Eski/canlı sunulan meridian/web/app.js (index.html'de `/app.js` olarak yükleniyor, 12.770 satır, hâlâ aktif commit alıyor): TAM OLARAK 215 `?? 0`/`|| 0` eşleşmesi taşıyor — memory'deki '~215' rakamıyla birebir örtüşüyor — ama bu tek dosyada; aynı dizindeki landing.js (3) ve palette.js (1) ile birlikte toplam 3 dosya, 9 değil. (b) 2026-08-24'te başlayan yeni Vite tabanlı pano (ui/src/, /pano yolunda sunuluyor, memory'nin 2026-08/09 tarihli ölçümünden SONRA doğdu) ayrı olarak 81 eşleşme taşıyor, 33 dosyaya yayılmış. app.js içinde örneklenen ~85+ eşleşme (sayaç tipi alanlar: `e.candidates ?? 0`, `e.cancelled ?? 0` vb.) doğrudan template literal içine, trn()/money() biçimlendiricisinden GEÇMEDEN yazılıyor — biçimlendirici atlanıyor iddiası bu alt küme için doğru. Ancak kodun kendisi bu ayrımı KÖRÜ KÖRÜNE yapmıyor: en az bir yerde (özet-hücre sayım mantığı) açık yorumla 'bu sıfır ÖLÇÜLMÜŞ bir sayımdır, uydurma değil — payda sıfırsa zaten DEĞER hiç basılmıyor' diye gerekçelendiriliyor; yani bazı ?? 0 kullanımları bilinçli/belgeli 'ölçülmüş-sıfır' tasarımı, hepsi kör fallback değil.",
+  "kanit": [
+   {
+    "dosya": "meridian/web/app.js",
+    "sembol_veya_alinti": "${e.candidates ?? 0} aday, ${e.armed ?? 0} silahlı"
+   },
+   {
+    "dosya": "meridian/web/app.js",
+    "sembol_veya_alinti": "ÜÇ HÜKÜM SAYIMDIR, ÖLÇÜM DEĞİL: ... yani 0 gerçekten \"ölçtük, sıfır çıktı\"dır ve `?? 0` bir uydurma değil"
+   },
+   {
+    "dosya": "meridian/web/index.html",
+    "sembol_veya_alinti": "<script src=\"/app.js\"></script>"
+   },
+   {
+    "dosya": "ui/src/pano/yuzeyler/bugun/KpiKartlari.tsx",
+    "sembol_veya_alinti": "yeni Vite/pano yüzeyi — ?? 0 / || 0 deseni burada da mevcut, ayrı ve daha küçük bir alt küme"
+   }
+  ],
+  "not": "Bugünkü tam sayım (bu depodaki statik grep ile): meridian/web/app.js=215, landing.js=3, palette.js=1 (eski yüzey, 3 dosya, toplam 219); ui/src (yeni /pano yüzeyi)=81 eşleşme, 33 dosya. '9 dosya' rakamı bugünkü dosya yapısıyla eşleşmiyor (muhtemelen ui/ göçünden ÖNCEki bir ölçüm); '~215' rakamı tek dosyada (app.js) hâlâ tam olarak doğrulanıyor. '~162 DOM'a yazılıyor' rakamını app.js için bağımsız doğrulayamadım (yaklaşık 85 doğrudan-template örneği saydım, tam 162'yi üreten kesin ölçüt belirsiz) — bu alt-sayı ÖLÇÜLEMEDİ.",
+  "canli_kontrol_gerekli": false
+ },
+ {
+  "id": "C19",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "bounds.yaml içinde exit.early_kill_pivot {min:0,max:1,step:1,int} tanımlı. guard.py::LIVE_DEAD_KNOBS sözlüğü BUGÜN BOŞ ve bunun nedeni açıkça belgelenmiş: 'pivot kablosu canlıya bağlandı' — loop.py, plan icra tablosuna pivot değerini (_pv) ekliyor ve broker.py::PaperBroker.fill_entry bunu ayrı `pivot` kwarg'ı olarak alıp Position nesnesine taşıyor; strategy.early_kill_pivot_exit bu Position.pivot alanını okuyarak canlıda da çalışıyor. guard.py'deki yorum satırı (`# \"exit.early_kill_pivot\": ...`) iddianın tarif ettiği eski/tarihsel açığın artık kod içinde canlı örneği olarak saklanan bir örnektir, aktif kısıtlama değildir.",
+  "kanit": [
+   {
+    "dosya": "meridian/guard.py",
+    "sembol_veya_alinti": "LIVE_DEAD_KNOBS: dict[str, str] = {}  # yorumda: 'LİSTE BUGÜN BOŞ VE BOŞ OLMASI DOĞRUDUR: pivot kablosu canlıya bağlandı'"
+   },
+   {
+    "dosya": "meridian/loop.py",
+    "sembol_veya_alinti": "_pv = float(c.get(\"pivot\") or 0.0); _plan_law[plan[\"id\"]] = {..., \"pivot\": (_pv if _pv > 0 else None)}"
+   },
+   {
+    "dosya": "meridian/broker.py",
+    "sembol_veya_alinti": "def fill_entry(self, plan: dict, next_open: float, ts: str, equity: float, ..., pivot: float = 0.0, ...)"
+   },
+   {
+    "dosya": "meridian/strategy.py",
+    "sembol_veya_alinti": "def early_kill_pivot_exit(bars: pd.DataFrame, position: dict, params: dict, bars_held: int) -> bool: ... if int(_f(params, \"exit.early_kill_pivot\", 0)) != 1:"
+   },
+   {
+    "dosya": "state/bounds.yaml",
+    "sembol_veya_alinti": "exit.early_kill_pivot:    {min: 0,   max: 1,   step: 1,   type: int}"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "guard.py'nin kendi yorumu bunu ikinci savunma hattı olarak tanımlıyor; birinci hat tests/test_kovab_ikimotor_v164 (motor-eşitliği çivisi) — bu test dosyasını içerik olarak açıp doğrulamadım, sadece varlığını grep ile teyit ettim (dosya adı üzerinden), bu nedenle ikinci-hat çivinin bugün de kırmızı üreteceğini iddia etmiyorum, yalnız kablonun kod yolunda var olduğunu doğruluyorum."
+ },
+ {
+  "id": "C20",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "meridian/run.py::worker() bugün EMEKLİ: gövdesi silinmiş, çağrılırsa obs.warn(\"retired_worker_invoked\") kaydı bırakıp SystemExit(2) ile YÜKSEK SESLE reddediyor; üç kusur (sessions[-1], dataset.load vs load_live, last_processed yarışı) artık kodda YOK çünkü fonksiyon gövdesi yok. Dockerfile CMD'i `uvicorn meridian.api:app` (MERIDIAN_AUTOSTART_CYCLE ile process-içi scheduler.start() kadansı); Dockerfile'ın kendi yorumu eski CMD'nin `python -m meridian.run` olduğunu ve emekli edildiğini açıkça anlatıyor. README.md da `python -m meridian.run` için '24/7 worker DEĞİLDİR' diye açıkça uyarıyor, yalnız --replay tohumlama örneği veriyor.",
+  "kanit": [
+   {
+    "dosya": "meridian/run.py",
+    "sembol_veya_alinti": "def worker(poll_seconds: int = 60) -> None: \"\"\"EMEKLİ (C3, 2026-08-02) — kadans KOŞMAZ, çağıranı zamanlayıcı yoluna YÖNLENDİRİR. ... raise SystemExit(2)\"\"\""
+   },
+   {
+    "dosya": "Dockerfile",
+    "sembol_veya_alinti": "# ESKİ CMD `python -m meridian.run` İDİ ve `run.worker()`ı çağırıyordu ... O yol bugün yüksek sesle reddeder ... CMD [\"uvicorn\", \"meridian.api:app\", ...]"
+   },
+   {
+    "dosya": "README.md",
+    "sembol_veya_alinti": "`python -m meridian.run` 24/7 worker DEĞİLDİR —"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "Dosya sistemi kanıtı yeterli; canlı A1'in fiilen uvicorn+scheduler ile koştuğunu bu depo salt-okunur incelemesiyle doğrulayamam (deploy birimi dosyaları depo içinde var ama gerçek çalışan süreç canlı kontrol gerektirir) — ama iddianın kendisi zaten kod/Dockerfile/README seviyesinde olduğu için canli_kontrol_gerekli=false verdim; A1'in fiilen bu CMD ile ayakta olduğunu teyit etmek istenirse o kısım canlı kontrol gerektirir."
+ },
+ {
+  "id": "C21",
+  "hukum": "DÜZELTİLMİŞ",
+  "bugunku_durum": "--violet ve --violet2 jetonları bugün ui/src/jetonlar.css veya meridian/web/tokens.json içinde YOK — tanımlı değiller. 2026-08-24 civarı 'seri merdiveni' rol-adı geçişiyle (test_renk_rolleri_v197.py: SERI_MERDIVEN artık ('--sapphire','--blue','--sky')) eski üçlü --accent/--violet/--tx3 → --blue/--violet/--violet2 → bugünkü --sapphire/--blue/--sky'a taşındı; --violet/--violet2 tamamen emekli edildi. --blue ise HÂLÂ tanımlı (ui/src/jetonlar.css: --blue: #006f94 / #7ac1ff) ve GERÇEK okuyucusu var: meridian/web/app.js içinde birden çok yerde `var(--blue)` (stroke/gradient renkleri, örn. app.js:488, 11159-11160) kullanılıyor. Yani iddianın 'tanımlı ama sıfır okuyucu' kısmı bugün --blue için YANLIŞ (okuyucusu var), --violet/--violet2 için ise konu dışı (artık tanımlı bile değiller, dolayısıyla 'tanımlı ama okuyucusuz' önermesi geçersiz — tanımlı olmayan bir şeyin okuyucu sayısı tartışılmaz). test_tasarim_token_v153.py ve test_wpp_p9_v171.py yorumları da bu tokenların bilinçli olarak ölü oldukları için değiştirildiğini teyit ediyor (v153:291 'ÖLÜYDÜ').",
+  "kanit": [
+   {
+    "dosya": "ui/src/jetonlar.css",
+    "sembol_veya_alinti": "--blue: #006f94  (ve --sapphire, --sky tanımları; --violet/--violet2 dosyada yok)"
+   },
+   {
+    "dosya": "meridian/web/app.js",
+    "sembol_veya_alinti": "stroke=\"var(--blue)\" (ör. 488. satır civarı, 11159-11160 civarı)"
+   },
+   {
+    "dosya": "tests/test_renk_rolleri_v197.py",
+    "sembol_veya_alinti": "SERI_MERDIVEN = (\"--sapphire\", \"--blue\", \"--sky\")  /  yorum: '(\"--blue\",\"--violet\",\"--violet2\") — eski adlar ...'"
+   },
+   {
+    "dosya": "tests/test_tasarim_token_v153.py",
+    "sembol_veya_alinti": "'SERİ MERDİVENİ JETON EKLEMEDİ ve bu bilinçli: --blue/--violet2 tanımlıydı ama ÖLÜYDÜ'"
+   }
+  ],
+  "canli_kontrol_gerekli": false,
+  "not": "CSS custom-property (tasarım jetonu) katmanıyla ilgili; ops/ CLI 'komut sözleşmesi' anlamında değil — repoda bu adlarla argparse/CLI bayrağı bulunamadı."
+ },
+ {
+  "id": "C22",
+  "hukum": "DOĞRULANDI",
+  "bugunku_durum": "deploy/oracle-a1/meridian.service dosyasının [Service] bölümünde `SuccessExitStatus=143` satırı bugün de mevcut, üstünde ~6 satırlık gerekçe bloğu var (SIGTERM→uv'nin 143 ile çıkışını 'başarı' sayma amacı). tests/test_dalga2_kucukler_v225.py bunu doğrudan çiviliyor: dosyayı `(REPO/'deploy'/'oracle-a1'/'meridian.service').read_text()` ile okuyup `test_kalem1_success_exit_status_143` fonksiyonunda `SuccessExitStatus` değerinin tam '143' olduğunu, gerekçe bloğunun >200 karakter olup 'OnFailure/SIGTERM/143/128+15' kanıtlarını içerdiğini ve bu ayarın kardeş servis dosyalarına SIZMADIĞINI (`test_...kardes...`) doğruluyor. dagit.sh (satır ~230, ~253) canlıya kurulumun KAYNAĞININ tam olarak `deploy/oracle-a1/*.service` (bu dosya dahil) olduğunu, `/etc/systemd/system/` altına kopyalandığını gösteriyor — yani repo tarafında 'hangi dosya, hangi test' sorusu net: dosya deploy/oracle-a1/meridian.service, test tests/test_dalga2_kucukler_v225.py.",
+  "kanit": [
+   {
+    "dosya": "deploy/oracle-a1/meridian.service",
+    "sembol_veya_alinti": "SuccessExitStatus=143"
+   },
+   {
+    "dosya": "tests/test_dalga2_kucukler_v225.py",
+    "sembol_veya_alinti": "def test_kalem1_success_exit_status_143(): ... assert degerler == [\"143\"]"
+   },
+   {
+    "dosya": "dagit.sh",
+    "sembol_veya_alinti": "for _bs in \"$REPO\"/deploy/oracle-a1/*.service; do ... /etc/systemd/system/$_ad"
+   }
+  ],
+  "canli_kontrol_gerekli": true,
+  "not": "Bu ölçüm dosyanın repodaki HALİNİ ve onu çiviye bağlayan testi doğrular. A1'deki /etc/systemd/system/meridian.service dosyasının bu içerikle GÜNCEL olarak dağıtılmış/kurulmuş olduğu (dagit çalıştı mı, daemon-reload yapıldı mı) repodan ölçülemez — bu kısım canlı_kontrol_gerekli=true olarak işaretlendi; A1'de `ssh ... systemctl cat meridian` ile ayrıca doğrulanmalı."
+ }
+]

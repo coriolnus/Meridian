@@ -2846,3 +2846,14 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   Uygulama: CLAUDE.md §2'ye "karar/ruling/ayar" kapı satırı (recall + sayfa + memory + kart_benzer, kaynak atfı zorunlu; atıfsız
   karar kontrol edilmemiş sayılır); hafıza notu karar-oncesi-hafiza-kontrolu. Gerekçe: bugün iki süreç hatası ve bir ölçüm hatası
   daha önce yaşanmış sınıflardı — hafıza vardı, bakılmadı.
+- **19:0x–19:2xZ — ÇELİŞKİ AVI (kaynak: zihin modeli meridian-hedef-sapma + recall ×3 — EDG-083 ilk gerçek-kullanım atfı).** Operatör:
+  "kalıcı hafıza ile çelişki yaratan durumları bulabilir miyiz". S2 sayfası 52 sapma kalemi + üç recall → 22 sınanabilir iddia → 11
+  salt-okunur ajan (Workflow) bugünkü kodda: **4 DOĞRULANDI · 5 KISMEN · 13 DÜZELTİLMİŞ.** Gerçek çelişkiler: refetch_max literal 8 dört
+  yerde (TSK-172); 'yanıt var ama equity alanı yok' dalında sessiz 100k + DD_VETO_MARGIN literal (TSK-173); canlıda bildirim kanalı YOK ve
+  notify_undelivered sayacı 2026-08-23'ten beri durmuş, 310 teslim-edilmemiş alarm (TSK-174 OPERATOR + Rol-1 teşhis). Beyanlı ve bilinçli
+  olanlar (çelişki değil): max_position_r zarf (EZILEN-DAMGA 25b-2), K-03 asimetrisi (ÇİFT-BAĞ çivisi hükmü 2026-08-24), ölü alanlar
+  (M11 damgası). Düzeltilmişler: BIND_HOST, heat_hard_r goal'da, ölü goal anahtarları mezar taşı, kill_switch_file, AYNA yasası, CHOP
+  teşhisi, warmup docstring, bekçi 17, tek yasa iki motor (entry_law), early_kill_pivot kablosu, run.worker emekli, --violet jetonları.
+  DERS: hafıza 13/22 bayat iddia taşıdı — banka "o gün doğru olanı" olgu diye saklıyor, "bugün" bilmiyor; uydurma oranı (%99) bayatlığı
+  ölçmez → sayfa okuması her zaman ölçülenle doğrulanır; 7. gün raporuna bayatlık sütunu (beyan). Kanıt: research/olcumler/
+  edg083_zihin_modeli_ek_sayfalar/kullanim/celiski_dogrulama_2026-09-06.json.
