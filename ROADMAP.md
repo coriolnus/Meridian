@@ -3412,6 +3412,10 @@ _**[2026-08-31 KONSOLİDASYON — BU LİSTE ENDEKSTİR.]** Satırlar kart duruml
 - **[BASE-2026-001] sistem-karnesi** — status: DONE(2026-08-01·GEÇTİ) · owner: rol1 · size: — · trigger: —
   What: Sistemin uçtan-uca karnesi (huni + getiri) ölçüldü.
   Why: KARNE HÜKMÜ verildi — +%2,5/4,5 yıl, sonuç 2024-bağımlı (getiri bir yıla yoğunlaşmış, kayıtlı caveat); huni üç-darboğaz gösterdi. Ref: research/cards/BASE-2026-001-sistem-karnesi.yaml (size ölçülemedi: kart S/M/L beyanı taşımıyor).
+- **[EDG-2026-067] hindsight-faz1-bgem3-recall** — status: DONE(2026-09-06·KALDI) · owner: rol1 · size: — · trigger: —
+  What: (HÜKÜM 2026-09-06 22:4xZ: recall taban-kıyası KALDI — bölüm-isabet@3 Hindsight %0,0 vs sqlite-vec taban %27,8 (−27,8 pp; eşik +15 pp ∧ ≥%70 ∧ tr ≥%60 üçü de kaldı); dosya-isabet@3 %13,9 vs %55,6; p50 43,6 s vs 0,62 s; 36 soru donuk (blob 89cd1e0), korpus HEAD ac824e1, taban 3.582 chunk 16.364 s. Harness artefaktı elendi. Sökülüm maddesi: sayfa kartları (080/083/084) aynı kurulumda → karar operatörde [TSK-060].)
+  Why: hafıza katmanının arama kısmının bedelini hak edip etmediğinin ilk mekanik sınavı; basit çözüm (YAGNI) kazandı — arama için sqlite-vec, sentez için sayfa/reflect ayrı yetenek.
+  Ref: research/cards/EDG-2026-067-hindsight-faz1-bgem3-recall.yaml; research/olcumler/edg067_hindsight_faz1/sonuc_2026-09-06/; EDG-2026-065 (selef, retired); TSK-060; TSK-163; TSK-167; TSK-162.
 - **[EDG-2026-069] sinyal-tetik-dolum-tick-bacagi** — status: ACTIVE · owner: rol1 · size: — · trigger: —
   What: (ONAY 2026-09-03 sabah, operatör K2 → ACTIVE: ölçüm kodu KOVA C sırasında; eşikler donuk.) ⑥a (TSK-066) ön-kayıt 2026-09-03 gece: tetik kırılma saniyesi → dolum gecikmesi (≤60 sn) ve kayması (≤15 bps), K=2 (+3×2 tanı), ADIM-0 fizibilite (n≥30, dolum_ts ≤%30 eksik), yol-tutarlı üç PK; kod YOK — operatör onayı bekler.
   Why: EDG-040 friksiyon sorusunun tick yarısı; tick arşivi 129 gün + trades.extra_json.dolum_ts ölçüldü.
