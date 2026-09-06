@@ -76,3 +76,9 @@ adim_2_zincir_2026_09_06: >
   konsolidasyon; gemma soft-verify). Failover kuralı: üye kendi retry'ından (1) sonra her Exception'da sıradakine. Ayrıca ilk kanary
   setinin 3. denemesi restart'la kesildi (zaten yükte zaman aşımına gidiyordu; 04:30Z seti geçerli set).
 
+gun1_olcum_2026_09_06: >
+  (05:51Z Rol-1) Zincir 01:04Z→05:5xZ: minimax-m2.7 211 başarı / 0 hata — m3'ün 100/gün tavanı m2.7'de (henüz) görülmedi (adım-0 b: tavan
+  ölçülmedi, ≥211/gün). Failover üyelerine hiç düşülmedi. pending 1726→1257 (kurtar 05:00Z failed 292→0 yeniden kuyruğa aldı, r3 +14 belge
+  ekledi), observations 4450→5175. Hız ~42 olgu/saat → kalan ~30 saat. K2 bedeli: bugün 0 boş deneme (dün 1632). Yük 3–4 (reflect kanaryası
+  hariç). Not: kanary sırasında yük 12'ye çıktı — konsolidasyon değil reflect'in kendi rerank'i (EDG-080 notu).
+
