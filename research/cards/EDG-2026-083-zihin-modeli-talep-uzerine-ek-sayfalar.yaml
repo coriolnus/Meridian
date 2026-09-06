@@ -92,7 +92,7 @@ olcum_gun0_2026_09_06: >
   f20ef68; kurallar R1–R3 ölçümden önce; donuk girdiler girdi/bellek_kimlikleri (16.936 memory id) + calisma_dosyalari (158),
   SHA256.txt; sayfa anlık görüntüleri sayfalar/2026-09-06_gun0/ + SHA256.txt): pilot 12/12 (%100) · S1 46/45 (%98; tek
   doğrulanamayan 'mm-0fb27056…' = pilot ZİHİN MODELİ kimliği — bellek listesi memory_units'ten, mental_models tablosu yok → 7. gün
-  ölçümünde kimlik listesine mental model id'leri de eklenir, kural şimdi yazıldı) · S2 30/30 (%100) · toplam 88/92 (%96).
+  ölçümünde kimlik listesine mental model id'leri de eklenir, kural şimdi yazıldı) · S2 30/30 (%100) · toplam 87/88 (%99; ilk özet 88/92 demişti — o sayıma kendi rapor/sonuç dosyalarım sayfa diye karışmıştı, donuk dizin sayımı esastır).
   Sınıf dağılımı: S1 bellek 25/25 (gözlem kimlikleri), çalışma dosyası 2/2; S2 bellek 2/2, çalışma 4/4. Eşik (2) gün-0'da
   sağlanıyor (≥%80 toplam, sayfa min %60); eşik (1)/(3)/(4) 7. günde okunur. sonuc_gun0_2026-09-06.json + rapor_gun0_….md.
 

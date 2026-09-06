@@ -2823,5 +2823,5 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
 - **Operatör "bütün önerilerini sıraya ekle" → §4 ÖNERİ HAVUZU TSK-161…169** (ajan brifingi sıkıştırma · triyajda recall · bot ikinci görüşü kartı · öneri akıbeti sayfası · CLAUDE.md bakım sayfası · haftalık geriye bakış · docs anlamsal arama · defter özeti besleme · A1 gece analist) + **TSK-170 "denenenler defteri" + mükerrer-deneme kapısı** (operatör sorusu: başarısızın yeniden denenmesini önleme). Çoğu EDG-083 hükmüne kapılı (GATED), TSK-162/167/170 QUEUED.
 - **17:5xZ — EDG-083 GÜN-0 UYDURMA SAYIMI (R1–R3 kuralları f20ef68 ile; donuk girdiler + sayfa anlık görüntüleri SHA256'lı):**
   pilot 12/12 · S1 45/46 (%98; tek açık: pilotun zihin-modeli kimliği — memory listesi mental model id taşımıyor, 7. günde eklenir)
-  · S2 30/30 · toplam 88/92 (%96). İlk sayımdaki %36–59 "uydurma" görünümü tamamen sınıflandırma eksiğiydi (bellek kimlikleri,
+  · S2 30/30 · toplam 87/88 (%99; sonuc_gun0 dosyası esas — ara sayımda kendi rapor dosyalarım sayfa diye sayılmıştı). İlk sayımdaki %36–59 "uydurma" görünümü tamamen sınıflandırma eksiğiydi (bellek kimlikleri,
   çıplak dosya adları, .jsonl kesmesi, tablo biçimli TSK); üç ruling ölçümden ÖNCE yazıldı. S3/PK/NK 00:10Z.
