@@ -10,7 +10,7 @@
 # config.py "consolidation_llm_model or llm_model"). Router DEĞİL doğrudan model adı: router rastgele seçer, künye tutmaz.
 
 card_id: EDG-2026-077
-status: registered   # 2026-09-05 Rol-1 — ön-kayıt; ayar değişikliği bu karttan SONRA (kart-önce), ilk ölçüm 05:00Z kurtar turu + 7 gün
+status: measured   # 2026-09-06 Rol-1 — KALDI (kill: minimax-m3:free'nin KENDİ günlük tavanı 100 istek + 20/dk — 'kova dışılık' kısmi); köprü m2.7 + zincir tasarımı → EDG-081
 family: hindsight_hafiza
 on_kayit: 2026-09-05
 ref: [TSK-157, TSK-145, TSK-142, TSK-095, TSK-060, EDG-2026-067, EDG-2026-074]
@@ -69,3 +69,17 @@ notlar: >
   ayardan devralınır; anahtar değeri hiçbir yerde basılmaz); systemctl restart hindsight-api. Router bilerek KULLANILMADI: rastgele
   model = künyesiz çıktı. m2.7 replay testinde m3'ten daha iyi kapsadı ama konsolidasyon için hız/kova dışılık yeter; m2.7 ayrı kart.
   Yan kayıt: 2026-09-05 17:5xZ Rol-1 komutu Postgres parolasını terminale düşürdü (süzgeç hatası) → TSK-158 parola döndürme (operatör).
+
+hukum_2026_09_06: >
+  (00:52Z Rol-1) KALDI — kill listesinin ruhu (minimax'in kotaya girmesi) gerçekleşti, imza farklı: 'free-models-per-day' değil
+  'limit_rpd/minimax/minimax-m3-…: Daily limit reached for minimax/minimax-m3:free via GMICloud (X-RateLimit-Limit 100)' + 'limited to
+  20 requests per minute'. Saatlik: 18h 61 başarı/48 hata · 19h 58/81 · 20h–23h 0 başarı / 378·389·388·394 hata (1632 boş deneme) ·
+  00:00Z sonrası temiz (00:08 100/100, 00:28 16/16; 00h 26 başarı). Net: 18:07Z→00:37Z 145 başarı; pending 2884→1726, failed 158→292
+  (kurtar 05:00Z yeniden kuyruğa alır), observations 3693→4450. Retain yolu nemotron'da kaldı (PK ayrışması ✓). Taban tablosu doğru,
+  premise yanlıştı: minimax ortak 1000/gün kovasının DIŞINDA ama kendi 100/gün tavanının İÇİNDE — 1726 bekleyen bu hızla ~3 hafta.
+  Yan bedel: Hindsight retry/backoff varsayılanlarıyla tavana çarpan her parti 3×4 deneme yakıyor (1632 hata / 145 başarı).
+  SONUÇ: ayar 'geri alınmaz', DEĞİŞTİRİLİR — r3 (00:05Z→) nemotron kovasını kullanırken konsolidasyonu nemotron'a döndürmek r3'ü
+  boğardı (dün 10:33Z'nin aynısı). Köprü: konsolidasyon → minimax-m2.7:free (GMICloud, aynı sınıf tavan BEKLENİR, ölçülecek), reflect →
+  minimax-m3:free (EDG-080; 3–4 çağrı/gün, m3 tavanı reflect'e ayrılır). Kalıcı çözüm EDG-2026-081: işlem-bazlı LiteLLM router zinciri
+  (m2.7 → nemotron-super → nemotron-ultra → gemma; 429'da düşüş) + gece bütçe ayrımı (r3 tavanı vs konsolidasyon payı). TSK-157 sürüyor.
+

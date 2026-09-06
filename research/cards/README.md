@@ -11,7 +11,7 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **93** kart.
+Toplam **95** kart.
 
 ### Kayıtlı — ölçüm bekliyor (15)
 
@@ -41,12 +41,12 @@ Toplam **93** kart.
   · kart: `EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml`
 - **EDG-2026-070** (`registered`) — 
   · kart: `EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml`
-- **EDG-2026-074** (`registered`) — 
-  · HÜKÜM: 2026-09-05 Rol-1 — ön-kayıt; K1 kanary 2026-09-06 00:02Z timer, K2 pilot yalnız K1 yeşilse
-  · kart: `EDG-2026-074-hindsight-reflect-kanary-zihin-modeli-pilotu.yaml`
-- **EDG-2026-077** (`registered`) — 
-  · HÜKÜM: 2026-09-05 Rol-1 — ön-kayıt; ayar değişikliği bu karttan SONRA (kart-önce), ilk ölçüm 05:00Z kurtar turu + 7 gün
-  · kart: `EDG-2026-077-hindsight-konsolidasyon-llm-minimax-kova-disi.yaml`
+- **EDG-2026-080** (`registered`) — 
+  · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; ayar + kanary bu karttan SONRA, aynı sabah (minimax tavanı taze)
+  · kart: `EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml`
+- **EDG-2026-081** (`registered`) — 
+  · HÜKÜM: 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim ölçümünden sonra
+  · kart: `EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -72,7 +72,7 @@ Toplam **93** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (51)
+### Ölçüldü (53)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -188,12 +188,18 @@ Toplam **93** kart.
   · kart: `EDG-2026-072-rejim-kosullu-cikis-onerisi.yaml`
 - **EDG-2026-073** (`measured`) — 
   · kart: `EDG-2026-073-rejim-kosullu-cikis-r2-taze-kontrol.yaml`
+- **EDG-2026-074** (`measured`) — 
+  · HÜKÜM: 2026-09-06 Rol-1 — K1 KALDI (kill#1: 'Reflect requires a tool-calling model' — nemotron araç çağrısını METİN olarak üretti, 429 değil); K2 açılmadı; model değişikliği →…
+  · kart: `EDG-2026-074-hindsight-reflect-kanary-zihin-modeli-pilotu.yaml`
 - **EDG-2026-075** (`measured_partial`) — 
   · HÜKÜM: 2026-09-05 Rol-1 — K1 KALDI (kart-veri hatası sınıfı, 7/14), K2 GEÇTİ, PK tuttu; yeni kart (EDG-076) doğrulanmış olay kümesiyle
   · kart: `EDG-2026-075-sp500-tarihsel-bilesenler-pit-kaynagi.yaml`
 - **EDG-2026-076** (`measured`) — 
   · HÜKÜM: 2026-09-05 Rol-1 — K1 28/28 GEÇTİ · K1n 6/6 GEÇTİ · K2 GEÇTİ · PK tuttu; rename sınırı ölçüldü (as_of(06-01) VMRK taşıyor, EQR değil)
   · kart: `EDG-2026-076-sp500-tarihsel-bilesenler-dogrulanmis-olay-kumesi.yaml`
+- **EDG-2026-077** (`measured`) — 
+  · HÜKÜM: 2026-09-06 Rol-1 — KALDI (kill: minimax-m3:free'nin KENDİ günlük tavanı 100 istek + 20/dk — 'kova dışılık' kısmi); köprü m2.7 + zincir tasarımı → EDG-081
+  · kart: `EDG-2026-077-hindsight-konsolidasyon-llm-minimax-kova-disi.yaml`
 - **EDG-2026-079** (`measured`) — 
   · HÜKÜM: 2026-09-05 Rol-1 — K1 KALDI (bant 3: p=0,107 > 0,10) · K2 GEÇTİ (q=0,085) · PK 3/3 tuttu; replay hükümleri survivorship şerhiyle ASKIDA, TSK-066 as_of ZORUNLU
   · kart: `EDG-2026-079-replay-defteri-pit-uyelik-denetimi.yaml`

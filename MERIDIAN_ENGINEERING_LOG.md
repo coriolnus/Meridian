@@ -2706,3 +2706,18 @@ hata), TSK-143 merge 0bff82e → tam suite #28 → dağıtım #21.
 19:55:49Z, Cumartesi):** TSK-143 (LIVE 244, 6 hiç-üye canlıda), EDG-078 Aşama A (gölge sıralama kolu + pencere sayacı; canlı ilk okuma dürüst
 'ölçülemedi — seans yok'), EDG-079 ölçüm kodu. healthz 200, journal temiz. Günün dağıtımları: #16 #17 #18 #19 #20 #21 (altı); tam suite 12 (#17–#28).
 Masa kararlarının dördü de aynı gün uygulandı: 126 (Aşama A canlı), 143 (canlı), 150 (b) (A1'de uygulandı), 047 (kapı kova-dışı son çare canlı).
+
+### 2026-09-06 gece/sabah (Rol-1, otonom) — gece zinciri okuması
+
+**00:39Z — gece_ozet:** K1 kanary (EDG-074) KALDI, kota değil: nemotron araç çağrısını metin olarak üretti → 'Reflect requires a tool-calling
+model' (kill#1) → K2 05:35Z'de atlanır; yeni kart EDG-080 (reflect=minimax-m3, dün doğrudan testte tool_calls üretmişti). Router dağılımı
+(kova taze, 20 çağrı): 10 farklı model, sınıflandırıcı ve 2,6B dahil; sonda iki modelde boş içerik → router künyeli hiçbir işe uygun değil
+(TSK-095 kapanış notu). EDG-077: 22:59–23:59Z minimax 429 (yeni sınıf 'limit_rpd…', 1632 hata / 145 başarı, failed 292) → 00:00Z sonrası
+temiz (00:08 100/100, 00:28 16/16) — minimax'in KENDİ günlük tavanı var; ölçüm sürüyor. r3: 00:05Z'den beri retain 75 başarı / 30 hata,
+belge sayısı henüz 271. Not: gece_ozet 'Result=success' hiç koşmamış timer için de success yazıyor — düzeltilecek.
+
+**00:53Z — EDG-077 KALDI → köprü + EDG-080/081:** minimax-m3 tavanı 100/gün + 20/dk ('limit_rpd … via GMICloud'); saatlik 18h 61/48 · 19h 58/81 ·
+20–23h 0 başarı/~390 hata. Ayar geri alınmadı (r3 nemotron kovasını kullanırken konsolidasyonu nemotron'a döndürmek dünkü boğulmayı yeniden
+üretirdi) — DEĞİŞTİRİLDİ: konsolidasyon m2.7 köprü, reflect m3 (EDG-080 ön-kayıt), restart 00:42Z üç model doğrulandı, EDG-074 kanary
+dosyaları kanary074_* olarak yedeklendi, kanary m3 ile 00:45Z'de koşuyor. EDG-081 ön-kayıt: Hindsight yerli çok-LLM zinciri (üyeler
+HINDSIGHT_API_CONSOLIDATION_LLM_<n>_*, STRATEGY JSON, 'failover') + retry azaltma; adım-0 biçim ölçümü sırada.

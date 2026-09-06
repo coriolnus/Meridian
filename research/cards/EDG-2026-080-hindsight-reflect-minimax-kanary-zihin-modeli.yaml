@@ -1,0 +1,61 @@
+# EDG-2026-080 — Hindsight REFLECT modeli minimax-m3:free: kanary (K1) + zihin modeli pilotu (K2) — EDG-074'ün halefi — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-06 00:41Z (Rol-1, otonom). EDG-074 K1 kanaryası 2026-09-06 00:02Z'de KALDI (kill#1): nemotron-3-ultra:free OpenRouter
+# taşıyıcısında araç çağrısını yapısal tool_calls yerine METİN olarak üretti ('Reflect requires a tool-calling model … produced no usable
+# tool call'), 429 değil. 2026-09-05 15:5xZ doğrudan OpenRouter testinde minimax-m3:free araç çağrısı ÜRETTİ (finish=tool_calls, 2 çağrı,
+# doğru argümanlar). Hindsight işlem-bazlı ayar: HINDSIGHT_API_REFLECT_LLM_MODEL (provider/anahtar devralınır); retain nemotron'da KALIR
+# (EDG-067 künyesi). minimax-m3:free'nin KENDİ günlük tavanı var: 100 istek/gün (GMICloud) + 20/dk — reflect kanary (3) + zihin modeli
+# tazeleme (≈1/gün) bunun içinde; konsolidasyonun aynı modeli tüketmemesi şart (EDG-077 hükmü → EDG-081).
+
+card_id: EDG-2026-080
+status: registered   # 2026-09-06 Rol-1 — ön-kayıt; ayar + kanary bu karttan SONRA, aynı sabah (minimax tavanı taze)
+family: hindsight_hafiza
+on_kayit: 2026-09-06
+ref: [EDG-2026-074, TSK-142, TSK-157, EDG-2026-077, EDG-2026-067, TSK-060]
+
+hipotez: >
+  (K1) minimax-m3:free Hindsight'ın reflect araç döngüsünü tamamlar (3/3 HTTP 200 ∧ trace.tool_calls ≥ 1 ∧ text ≠ boş). (K2) K1 yeşilse
+  bir zihin modeli (delta, gece refresh_cron "0 5 * * *", keep_trace) 7 gün boyunca minimax'in 100/gün tavanı içinde (pilot payı ≤ 10/gün)
+  tazelenir, okunabilir içerik üretir ve pano Hafıza yüzeyinde listelenir.
+
+k_registry: {registered_at: "2026-09-06", trial_ids: [EDG-080-k1-reflect-kanary-minimax, EDG-080-k2-zihin-modeli-pilot]}
+# K=2 (EDG-074'ün K1/K2'si aynı eşiklerle, model değişti). PK K'ya sayılmaz.
+
+adim_0_fizibilite: >
+  (a) .env'de HINDSIGHT_API_REFLECT_LLM_MODEL=minimax/minimax-m3:free + restart; journal 'Connection verified: openrouter/minimax/minimax-m3:free'
+  (reflect config); (b) llm-requests'te operation=reflect satırı model=minimax (yol ayrışması: retain nemotron, consolidation EDG-081 modeli);
+  (c) kanary anında minimax günlük tavanı taze (X-RateLimit-Remaining > 10 — ölçülür; 429 'limit_rpd' içeren deneme SAYILMAZ);
+  (d) sorular.yaml[0] aynı soru (EDG-074 ile bire bir kıyas).
+
+olcum_plani:
+  - "K1: 3 × POST /v1/default/banks/meridian-arsiv/reflect {query: sorular.yaml[0], budget: low, include: {tool_calls: {}, facts: {}}} 60 s aralıkla; HTTP, trace.tool_calls sayısı, text boş mu, hata imzası"
+  - "K1 PK (EDG-074 ile aynı): araçsız istem (include boş, bankada olmayan konu) → boş/'bilmiyorum' sınıfı; gerçek kanary tool_calls≥1 + olgu içerikli"
+  - "K2: POST /mental-models {name: meridian-tekrarlanan-dersler, source_query, trigger: delta / '0 5 * * *' / 82800 / keep_trace} yalnız K1 yeşilse, kanary sonrası aynı sabah (timer gece-k2-pilot DURDURULUR — çift POST yasak); 7 gün operations refresh_mental_model sayımı, llm-requests reflect model·durum, kota payı"
+  - "okuyucu: pano Hafıza › Bilgi tabanı modeli listeliyor mu; gece_ozet mental-models satırı"
+
+esikler:
+  k1_gecti: "3/3 deneme: HTTP 200 ∧ trace.tool_calls ≥ 1 ∧ text ≠ boş (429 'limit_rpd'/'per minute' içeren deneme sayılmaz, yeniden koşulur)"
+  k2_gecti: "7 günde refresh op 5–8 ∧ failed (429-dışı) ≤ 1/7 ∧ ort. LLM çağrısı/refresh ≤ 12 ∧ content_written+unchanged+preserved ≥ 5/7 ∧ effective_mode=delta ≥ 5/7 ∧ pano listeliyor ∧ pilotun minimax payı ≤ 10/gün"
+  # eşikler donuk (EDG-074'ten aynen; K2'ye minimax payı eklendi çünkü tavan 100/gün)
+
+kill_list:
+  - "K1: 429'suz herhangi bir denemede 'Reflect requires a tool-calling model' → KALDI; reflect için ücretsiz OpenRouter yolu kapanır, operatör kararı (ücretli/BYOK)"
+  - "K1: 3/3 429 (minimax tavanı) → ÖLÇÜLEMEDİ, sonraki 00:0xZ'de tekrar (K harcanmaz)"
+  - "K2: 7 günde refresh op > 14 → çift tetik, pilot durur"
+  - "K2: 3 ardışık delta_ops_failed → delta modu kaldı"
+  - "K2: pilotun minimax payı > 10/gün ya da minimax tavanı reflect'e kalmıyorsa (konsolidasyon aynı modeli yiyorsa) → pilot durur, EDG-081'e not"
+  - "PK tutmazsa hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  EDG-074 ile aynı yol-tutarlı PK: aynı uç, aynı banka, araçsız istem → boş/'bilmiyorum'; kanary → tool_calls≥1 + olgu içerikli.
+
+veri_penceresi: "K1: 2026-09-06 sabah (minimax tavanı taze: 00:00Z reset); K2: 2026-09-06…2026-09-12 (7 gece, 05:00Z cron); banka meridian-arsiv; canlı motor DEĞİL"
+
+basari_tanimi: >
+  K1 3/3 + PK ayrışık → K2 açılır (aynı sabah tek POST). K2 7. gün geçti + pano listeliyor → TSK-142 hükmü 'Faz-2 yazma yolu KOVA B'.
+  K1 kaldıysa ücretsiz OpenRouter yolu reflect için kapalı (iki model denendi) → operatör kararı.
+
+notlar: >
+  Ayar tek satır (.env) + restart (~95 s; konsolidasyon kaldığı yerden sürer). Kanary betiği /home/ubuntu/gece-20260906/kanary_reflect.sh
+  (aynı), sonuçlar kanary_reflect_*.json'ı EZER — EDG-074 dosyaları önce kanary074_* olarak yedeklenir. K2 POST'u k2_pilot.sh mantığıyla
+  ELLE (timer durdurulur). minimax tavanı 100/gün: konsolidasyon EDG-081 ile başka modele alınmazsa reflect kotası yok olur — bu kartın
+  kill#5'i.

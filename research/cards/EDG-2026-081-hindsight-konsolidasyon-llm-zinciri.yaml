@@ -1,0 +1,60 @@
+# EDG-2026-081 — Hindsight KONSOLİDASYON LLM ZİNCİRİ: köprü minimax-m2.7 + LiteLLM router (429'da düşüş) + gece bütçe ayrımı — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-06 00:52Z (Rol-1, otonom; EDG-077 KALDI: minimax-m3'ün kendi tavanı 100/gün + 20/dk). Bugün ölçülen: minimax m3 ve m2.7
+# ikisi de GMICloud üzerinden; m2.7 tavanı henüz ölçülmedi (aynı sınıf beklenir). Ortak 1000/gün kovası nemotron/gemma/… için; r3 ingest
+# (300 belge ≈ 300–600 çağrı) o kovadan yer. Hindsight işlem-bazlı 'litellmrouter' sağlayıcısını destekliyor (HINDSIGHT_API_CONSOLIDATION_
+# LLM_LITELLMROUTER_CONFIG; litellm kurulu). Reflect m3'e ayrıldı (EDG-080) — konsolidasyon m3'ü TÜKETMEMELİ.
+
+card_id: EDG-2026-081
+status: registered   # 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim ölçümünden sonra
+family: hindsight_hafiza
+on_kayit: 2026-09-06
+ref: [EDG-2026-077, EDG-2026-080, TSK-157, TSK-145, TSK-144, EDG-2026-067]
+
+hipotez: >
+  Konsolidasyon tek modele değil ZİNCİRE bağlanınca (m2.7 → nemotron-super → nemotron-ultra → gemma; 429/5xx'te düşüş; retry azaltılmış)
+  günlük gerçekleştirilen konsolidasyon çağrısı, her modelin kendi tavanı ve ortak kovanın r3'ten artan payıyla toplanır ve bekleyen
+  kuyruk 14 günde tabanın %20'sinin altına iner; boş 429 denemeleri (bedel) günde 200'ün altında kalır.
+
+k_registry: {registered_at: "2026-09-06", trial_ids: [EDG-081-k1-kuyruk-ilerleme-zincir, EDG-081-k2-bos-deneme-bedeli]}
+# K=2. Adım-1 (köprü m2.7 tek model) bu kartın ölçümüne 'zincir-öncesi taban' olarak girer, K harcamaz.
+
+taban_2026_09_06: {pending_consolidation: 1726, failed_consolidation: 292, total_observations: 4450, minimax_m3_gunluk_tavan: 100, m3_rpm: 20}
+
+adim_0_fizibilite: >
+  (a) HINDSIGHT_API_CONSOLIDATION_LLM_MODEL=minimax/minimax-m2.7:free ile restart → journal 'Connection verified: …m2.7'; ilk parti 429'suz;
+  (b) m2.7'nin günlük tavanı ÖLÇÜLÜR (ilk 'limit_rpd/minimax/minimax-m2.7' 429'unun saati ve o ana kadarki başarı sayısı);
+  (c) litellmrouter config biçimi Hindsight kaynağından okunur ve tek-modelli bir router ile doğrulama başarılı olur (adım-2 ön şartı);
+  (d) retain nemotron, reflect m3, konsolidasyon zincir — llm-requests'te üç ayrı model görünür.
+
+olcum_plani:
+  - "K1: gece_ozet /stats pending_consolidation günlük eğrisi (14 gün, 09-07…09-20) + llm-requests consolidation model·status günlük sayımı"
+  - "K2: consolidation status=error günlük sayı (429 imzası ayrı) — bedel; hedef < 200/gün"
+  - "m2.7 tavanı: ilk 429 saati + o güne kadar başarı sayısı (adım-0 b) — kartta sayı UYDURULMAZ"
+  - "r3 etkileşimi: r3 koşarken (00:05Z→) nemotron 429 alıyor mu (retain error sayısı) — zincir r3'ü boğmamalı"
+  - "PK (yol-tutarlı): aynı saatte llm-requests'te retain=nemotron ∧ reflect=m3 ∧ consolidation=zincir modeli (üç ayrı model, aynı defter)"
+
+esikler:
+  k1_gecti: "14. gün pending ≤ 345 (tabanın %20'si) ∧ haftalık eğri düşüş"
+  k2_gecti: "consolidation error/gün < 200 (7 günün ≥5'inde) ∧ r3 retain error (429) < %10"
+  # eşikler donuk
+
+kill_list:
+  - "m2.7 tavanı < 50/gün ölçülürse köprü anlamsız → doğrudan adım-2 (router)"
+  - "router zinciri r3'ün retain 429 oranını %10'un üstüne çıkarırsa → zincirden nemotron-ultra çıkarılır (bütçe ayrımı)"
+  - "litellmrouter doğrulaması (adım-0 c) başarısızsa adım-2 açılmaz; köprü + retry azaltma ile kalınır, kart 'kısmi'"
+  - "PK tutmazsa hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: llm-requests defterinde aynı saat diliminde retain=nemotron, reflect=minimax-m3, consolidation=(m2.7 | zincir üyesi) —
+  üç ayrı model görünmüyorsa ayar uygulanmamıştır.
+
+veri_penceresi: "2026-09-06 00:52Z (köprü) → 2026-09-20; banka meridian-arsiv; canlı motor DEĞİL; retain/reflect modelleri değişmez"
+
+basari_tanimi: >
+  K1+K2 geçti → konsolidasyon zinciri kalıcı, TSK-157/145 kapanır, TSK-060 taban kıyası konsolide bankayla. Kısmi → köprü+retry ile
+  devam, operatör: BYOK/ücretli seçenek. Kaldı → konsolidasyon nemotron'a, gece bütçe ayrımı (r3 tavanı düşürülür) ayrı karar.
+
+notlar: >
+  Retry/backoff: Hindsight CONSOLIDATION_LLM_MAX_RETRIES / INITIAL_BACKOFF / MAX_BACKOFF / MAX_CONCURRENT ayarları var — tavana çarpınca
+  3×4 deneme yakılıyor; adım-1'de MAX_RETRIES=1 ve MAX_CONCURRENT=1 denenir (bedel ölçümü K2). 05:00Z kurtar timer'ı failed'ı yeniden kuyruğa
+  alır (292). gece_ozet 'Result=success' hiç koşmamış timer için de success yazıyor — düzeltme ops notu.

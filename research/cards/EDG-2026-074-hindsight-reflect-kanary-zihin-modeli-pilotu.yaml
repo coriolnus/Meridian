@@ -8,7 +8,7 @@
 # tanım 0 → sayfa 0 (TSK-125 beyanla kapandı). Tasarım belgesi: reflect KAPALI doğar → ayrı kart + operatör kararı (bu kart).
 
 card_id: EDG-2026-074
-status: registered   # 2026-09-05 Rol-1 — ön-kayıt; K1 kanary 2026-09-06 00:02Z timer, K2 pilot yalnız K1 yeşilse
+status: measured   # 2026-09-06 Rol-1 — K1 KALDI (kill#1: 'Reflect requires a tool-calling model' — nemotron araç çağrısını METİN olarak üretti, 429 değil); K2 açılmadı; model değişikliği → EDG-080
 family: hindsight_hafiza
 on_kayit: 2026-09-05
 ref: [TSK-142, TSK-125, TSK-060, EDG-2026-067, TSK-145, TSK-095]
@@ -85,3 +85,18 @@ notlar: >
   Sonuç: kanary/r3 (Hindsight = nemotron) 00:00Z'yi beklemek ZORUNDA; sonda (router) beklemek zorunda değildi →
   erken koşum 15:5xZ'de atıldı (sonda_free_erken*), 00:03Z timer ikinci örnek olarak kalır. Model değişikliği bu
   kartta yok (EDG-067 künye şartı: yeni kart).
+
+hukum_2026_09_06: >
+  (00:39Z Rol-1, gece_ozet + kanary dosyaları) K1 KANARY KALDI — 429 DEĞİL. Kova taze (00:02Z; nemotron doğrudan 200). Üç deneme:
+  #1 HTTP 500 'Reflect requires a tool-calling model, but openrouter/nvidia/nemotron-3-ultra-550b-a55b:free produced no usable tool
+  call (the transport may not support function calling)' — modelin cevabı araç çağrısını yapısal tool_calls yerine METİN olarak
+  ('[[{"name": "search_observations", "parameters": {...}}]]') üretti; #2 HTTP 000 (istemci zaman aşımı/gövde yok — sayılmaz);
+  #3 #1 ile aynı sınıf. Kill#1 harfiyen: 'ReflectToolCallError / Reflect requires a tool-calling model → KALDI; model değişikliği YENİ
+  kart'. K2 pilot k2_pilot.sh tarafından 05:35Z'de ATLANACAK (K1_KALDI). Kanıt: /home/ubuntu/gece-20260906/kanary_reflect_*.json/.code,
+  hindsight journal 00:02:22Z 'Reflect tool-calling failure'. Ayrım: 2026-09-05 15:5xZ doğrudan OpenRouter testinde minimax-m3:free
+  tool_calls ÜRETTİ (finish=tool_calls, 2 çağrı); nemotron-ultra o testte 429 olduğu için sınanamamıştı — bugün sınandı, kaldı.
+  SONUÇ: reflect yüzeyi için nemotron-ultra:free (OpenRouter taşıyıcısı) ELVERİŞSİZ; Hindsight işlem-bazlı ayar (REFLECT_LLM_MODEL)
+  ile yalnız reflect'i minimax-m3:free'ye almak → EDG-2026-080 (yeni kart, aynı K1 eşiği, K2 pilot aynı şartla). Retain nemotron'da kalır.
+  Yan bulgular: openrouter/free dağılımı (kova taze, 20 çağrı) 10 farklı model (içerik-güvenlik sınıflandırıcısı 2, 2,6B model 3) —
+  router hiçbir künyeli iş için kullanılmaz; sonda: dots-3 ve cohere-north boş içerik (JSON kaldı) → TSK-095 kapanış notu.
+
