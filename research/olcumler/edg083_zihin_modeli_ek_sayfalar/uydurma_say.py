@@ -17,7 +17,9 @@ GİRDİ ŞEMASI. `--sayfa-dizin <dizin>`: her sayfa BİR dosya. `<id>.json` şem
 `{"id","name","version","content"}` (yalnız `content` ZORUNLU okunur — `id` yoksa dosya adının
 gövdesi `id` sayılır); `<id>.md` ham içeriktir (`id` = dosya adının gövdesi, `name`/`version` None).
 
-BEŞ ATIF SINIFI (kart `olcum_plani` 3. madde — hepsi RAPORDA AYRI sayılır):
+BEŞ ATIF SINIFI (kart `olcum_plani` 3. madde — hepsi RAPORDA AYRI sayılır; regex ÇIKARIMI hâlâ
+BEŞtir, aşağıdaki R1/R3(b) rulingları bu beşten İKİSİNİ (`sha`/`yol`) alt-sınıflara AYIRIR — yeni
+regex EKLENMEZ):
   1. `yol`   — depo-yolu görünümlü dizge (regex `YOL_RE`) → İKİ kademeli doğrulanır (Rol-1 ruling
                2026-09-06, ÖLÇÜMDEN ÖNCE — kartın "depoda grep -F ile doğrulanır" ifadesinin
                içinde): (a) `tam` — mevcut kural, `git -C <repo> ls-files` kümesinde TAM EŞLEŞME;
@@ -25,14 +27,41 @@ BEŞ ATIF SINIFI (kart `olcum_plani` 3. madde — hepsi RAPORDA AYRI sayılır):
                eşleşiyorsa doğrulanır (dizinsiz atıf EKSİK-BELİRTİLMİŞtir, UYDURMA değil). Atıfta
                `/` VARSA `ad` hiç denenmez — yanlış dizinli atıf (`ops/guard.py` depoda yoksa)
                `meridian/guard.py`ye basename ile KAYMAZ. `dogrulanan` = `tam` + `ad` (ikisi
-               ayrık sayılır); baştaki `./` soyulur, `%23`/`#`den sonrası soyulur.
-  2. `kart`  — `EDG-2026-NNN` → `research/cards/EDG-2026-NNN-*.yaml` GLOB'u dolu mu.
-  3. `kalem` — `TSK-NNN` → `ROADMAP.md` metninde `[TSK-NNN]` alt-dizgesi geçiyor mu.
+               ayrık sayılır); baştaki `./` soyulur, `%23`/`#`den sonrası soyulur. Uzantı listesi
+               (Rol-1 ruling 2026-09-06, brief-uydurma-say-3, R3a): `jsonl`/`csv`/`log`/`sqlite`/
+               `bak` eklendi VE uzantıdan sonra kelime-sınırı (`(?![A-Za-z0-9_])`) zorunlu —
+               eskiden `candidates.jsonl` içinden `candidates.json` KESİLİYORDU (uzantı listesi
+               `json`u `jsonl`in içinde buluyordu, sınır yoktu); artık tam atıf yakalanır.
+  2. `kart`  — `EDG-2026-NNN` → `research/cards/EDG-2026-NNN-*.yaml` GLOB'u dolu mu (DEĞİŞMEDİ —
+               R2'nin ROADMAP-metni gevşetmesi yalnız `kalem`edir, `kart`a SIÇRAMAZ).
+  3. `kalem` — `TSK-NNN` → `ROADMAP.md` metninde HERHANGİ BİÇİMDE geçiyor mu (Rol-1 ruling
+               2026-09-06, brief-uydurma-say-3, R2): eskiden yalnız `[TSK-NNN]` köşeli-parantez
+               biçimi arandığı için `**TSK-061**` (tabloda kalın biçim) yanlışlıkla UYDURMA
+               sayılıyordu — artık düz alt-dizge araması (`kod in roadmap_metni`) yeterli, çevresi
+               `[...]`/`**...**`/çıplak fark etmez.
   4. `civi`  — `vNNN` (üç haneli) → `tests/` içinde `*_vNNN.py` ile biten bir dosya var mı.
   5. `sha`   — 7-40 haneli salt-hex dizge (tamamı rakamsa ELENİR — düz sayı, sha DEĞİL) →
                `git -C <repo> cat-file -e <sha>^{commit}` (rc=0 → doğrulandı; rc≠0 → doğrulanamadı,
                bu bir HATA DEĞİL, sha'nın kendisi geçersiz/yok demektir).
 Aynı atıf bir sayfada birden çok geçerse TEK sayılır (`atiflari_cikar` küme döner).
+
+İKİ EK SINIF, `sha`/`yol`DAN TÜRETİLİR (Rol-1 ruling 2026-09-06, brief-uydurma-say-3 — regex
+EKLENMEZ, doğrulama SIRASINDA yeniden sınıflandırılır, çift SAYILMAZ):
+  6. `bellek` (R1) — bir `sha` adayı (7-40 hex) `--bellek-kimlikleri <dosya>` (satır başına bir
+               Hindsight bellek kimliği, tam uuid ya da hex) verilmişse ÖNCE bu kümede ÖNEK
+               eşleşmesi (adayın kümedeki bir satırın BAŞI olup olmadığı) aranır: eşleşirse sınıf
+               `bellek`, DOĞRULANMIŞ, `sha` yoluna (git cat-file) hiç GİRİLMEZ. Eşleşmezse mevcut
+               `sha` yolu aynen işler. Gözlem: sayfa "Gözlem `03b5fc34`" gibi ifadelerle commit
+               DEĞİL, A1 `memory_units.id` önekine atıf yapıyordu — bu UYDURMA değil YANLIŞ SINIF
+               idi. Dosya verilmemişse `bellek` raporda `None` + `bellek_neden` alanı dolar.
+  7. `calisma_dosyasi` (R3b) — bir `yol` adayı NE `tam` NE `ad` ile doğrulanabildiyse VE atıfta
+               `/` yoksa VE `--calisma-dosyalari <dosya>` (satır başına bir dosya adı; A1 `state/`
+               + `backups/` + `/opt/veri` listesi, ölçüm anında DONDURULMUŞ) verilmişse, atıfın
+               (zaten dizinsiz olduğu için kendisi = basename'i) bu kümede TAM eşleşiyorsa sınıf
+               `calisma_dosyasi`, DOĞRULANMIŞ (depo DIŞI ama GERÇEK — örn. `notify_undelivered.json`,
+               `state/`de yaşar, versiyonsuzdur). Liste verilmemişse `calisma_dosyasi` raporda
+               `None` + `calisma_dosyasi_neden` alanı dolar; bu durumda atıf `yol` sınıfında
+               doğrulanamayan kalır (eski davranış KORUNUR).
 
 UYDURMA YASAĞI: `oran` (`dogrulanan/toplam`) `toplam==0`da `None`dur, `0.0` DEĞİL — "hiç atıf
 yoktu" ile "atıfların hiçbiri doğrulanmadı" (bu durumda `oran=0.0`, GERÇEKTEN ölçüldü) FARKLI
@@ -64,7 +93,9 @@ SANDBOX = pathlib.Path(__file__).resolve().parent
 # SINIF REGEXLERİ (kart olcum_plani 3. madde — beşi de HEPSİ RAPORDA AYRI sayılır)
 # ======================================================================================
 
-YOL_RE = re.compile(r"[A-Za-z0-9_./-]+\.(?:py|md|yaml|yml|ts|tsx|sh|json|txt|css)")
+YOL_RE = re.compile(
+    r"[A-Za-z0-9_./-]+\.(?:py|md|yaml|yml|ts|tsx|sh|jsonl|json|txt|css|csv|log|sqlite|bak)"
+    r"(?![A-Za-z0-9_])")
 KART_RE = re.compile(r"EDG-2026-\d{3}")
 KALEM_RE = re.compile(r"TSK-\d{3}")
 CIVI_RE = re.compile(r"\bv\d{3}\b")
@@ -166,12 +197,17 @@ def kart_dogrula(repo, kod: str) -> bool:
 
 
 def kalem_dogrula(repo, kod: str, roadmap_metni: str | None = None) -> bool:
+    """Rol-1 ruling 2026-09-06 (brief-uydurma-say-3, R2): `kod` (`TSK-NNN`) `ROADMAP.md` metninde
+    HERHANGİ BİÇİMDE (köşeli parantez `[TSK-NNN]`, kalın `**TSK-NNN**`, çıplak) geçiyorsa
+    doğrulanmıştır — eski sürüm yalnız köşeli-parantez arıyordu, bu yüzden tabloda kalın yazılan
+    GERÇEK bir referansı (`TSK-061`) yanlışlıkla UYDURMA sayıyordu. `kart` (`EDG-2026-NNN`) bu
+    gevşetmenin DIŞINDA kalır — `kart_dogrula` hâlâ dosya varlığı ister, metin geçişi SAYILMAZ."""
     if roadmap_metni is None:
         yol = pathlib.Path(repo) / "ROADMAP.md"
         if not yol.exists():
             return False
         roadmap_metni = yol.read_text(encoding="utf-8")
-    return f"[{kod}]" in roadmap_metni
+    return kod in roadmap_metni
 
 
 def civi_dogrula(repo, kod: str) -> bool:
@@ -179,6 +215,40 @@ def civi_dogrula(repo, kod: str) -> bool:
     if not dizin.is_dir():
         return False
     return any(dizin.glob(f"*_{kod}.py"))
+
+
+def _satir_listesi_oku(yol) -> frozenset[str]:
+    """`--bellek-kimlikleri`/`--calisma-dosyalari` ortak girdi biçimi: satır başına BİR değer,
+    boş satırlar ve kenar boşlukları atılır. Dosyanın kendisi yoksa `FileNotFoundError` OLDUĞU
+    GİBİ yukarı fırlar — bu bir git/ağ çökmesi değil, operatörün yanlış yol vermesidir; Yasa 4'ün
+    'sessiz-yutma' kapsamı DIŞINDA kalır (yakalanıp gizlenecek bir şey yok, hemen görünür olmalı)."""
+    metin = pathlib.Path(yol).read_text(encoding="utf-8")
+    return frozenset(satir.strip() for satir in metin.splitlines() if satir.strip())
+
+
+def bellek_dogrula(atif: str, bellek_kume: frozenset[str] | None) -> bool:
+    """`bellek` sınıfı (R1, Rol-1 ruling 2026-09-06, brief-uydurma-say-3): `atif` (bir `sha`
+    adayı, 7-40 hex) `bellek_kume`deki (Hindsight bellek kimlik listesi) BİR satırın ÖN EKİYSE
+    (büyük/küçük harf duyarsız `startswith`) doğrulanmıştır — sayfa bellek kimliğini KISALTILMIŞ
+    yazar (`Gözlem 03b5fc34`), tam kimlik A1 `memory_units.id`dedir. Liste `None` ise (hiç
+    verilmemiş) HER ZAMAN `False` döner — bu durumda aday normal `sha` yoluna düşer, buraya hiç
+    girmemiş sayılmaz (çağıran `bellek_kume is None`u AYRICA kontrol eder)."""
+    if bellek_kume is None:
+        return False
+    atif_kucuk = atif.lower()
+    return any(m.lower().startswith(atif_kucuk) for m in bellek_kume)
+
+
+def calisma_dosyasi_dogrula(atif: str, calisma_kume: frozenset[str] | None) -> bool:
+    """`calisma_dosyasi` sınıfı (R3b, Rol-1 ruling 2026-09-06, brief-uydurma-say-3): dizinsiz bir
+    `yol` adayı ne `tam` ne `ad` ile doğrulanabildiyse, A1 `state/`+`backups/`+`/opt/veri`
+    listesinde (ölçüm anında DONDURULMUŞ, `--calisma-dosyalari`) TAM eşleşiyorsa doğrulanmıştır:
+    depo DIŞI ama GERÇEK bir çalışma dosyasıdır (`notify_undelivered.json` gibi), UYDURMA değil.
+    Liste `None` ise HER ZAMAN `False` döner — çağıran bu durumda atıfı `yol` sınıfında
+    doğrulanamayan bırakır (eski davranış korunur)."""
+    if calisma_kume is None:
+        return False
+    return atif in calisma_kume
 
 
 # ======================================================================================
@@ -213,22 +283,35 @@ def sayfalari_yukle(sayfa_dizin) -> list[dict]:
 # ======================================================================================
 
 def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: str | None,
-             hata_biriktirici: list) -> dict:
+             hata_biriktirici: list, *, bellek_kume: frozenset[str] | None = None,
+             calisma_dosyalari_kume: frozenset[str] | None = None) -> dict:
     """Bir sayfanın (`{'id','content',...}`) BEŞ sınıf atıfını çıkarır, her birini doğrular,
     sayfa başına `{toplam, dogrulanan, oran, oran_neden, sinif_bazinda, dogrulanamayan}` döner.
     `sinif_bazinda['yol']` ayrıca (Rol-1 ruling 2026-09-06, ölçümden önce) `dogrulanan_tam`,
     `dogrulanan_ad`, `ad_eslesmeleri` (`{atıf: [eşleşen yollar]}`, ad ile doğrulananlar için) taşır.
     `hata_biriktirici` (çağıranın listesi) `sha_dogrula`nın OSError kaynaklı mesajlarını TOPLAR —
-    bu fonksiyon kendi başına bir global 'hata' alanı ÜRETMEZ, yalnız BİRİKTİRİR (Yasa 4)."""
+    bu fonksiyon kendi başına bir global 'hata' alanı ÜRETMEZ, yalnız BİRİKTİRİR (Yasa 4).
+
+    `bellek_kume`/`calisma_dosyalari_kume` (Rol-1 ruling 2026-09-06, brief-uydurma-say-3, R1/R3b):
+    verilmişse (`None` DEĞİLSE) bir `sha` adayı önce `bellek_dogrula` ile, bir dizinsiz-ve-
+    doğrulanamayan `yol` adayı `calisma_dosyasi_dogrula` ile denenir; eşleşirse atıf o sınıfa
+    TAŞINIR (kaynak sınıfın `toplam`ına hiç GİRMEZ, çift SAYILMAZ) ve DAİMA doğrulanmış sayılır —
+    ruling eşleşmeyeni zaten eski yoluna (sha/yol doğrulanamayan) bırakır. Liste `None` ise ilgili
+    `sinif_bazinda` girdisi `None` olur, yanına `<sinif>_neden` alanı eklenir (uydurma yasağı:
+    'hiç denenmedi' ile '0 doğru' KARIŞTIRILMAZ)."""
     atiflar = atiflari_cikar(sayfa["content"])
     sinif_bazinda: dict[str, dict] = {}
     dogrulanamayan_liste: list[dict] = []
     toplam = 0
     dogrulanan = 0
+    bellek_aktif = bellek_kume is not None
+    calisma_aktif = calisma_dosyalari_kume is not None
+    bellek_toplam = 0
+    calisma_toplam = 0
 
     for sinif in SINIF_SIRASI:
         kume = atiflar[sinif]
-        s_toplam = len(kume)
+        s_toplam = 0
         s_dogrulanan = 0
         s_dogrulanamayan: list[str] = []
         s_dogrulanan_tam = 0
@@ -237,19 +320,38 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
         for atif in sorted(kume):
             if sinif == "yol":
                 tam, ad, ad_eslesenler = yol_dogrula(atif, ls_kume)
-                ok = tam or ad
+                if not (tam or ad) and calisma_aktif and "/" not in atif \
+                        and calisma_dosyasi_dogrula(atif, calisma_dosyalari_kume):
+                    # R3b: dizinsiz + depoda-yok + çalışma-dosyası listesinde VAR → bu atıf
+                    # 'yol' toplamına hiç girmez, 'calisma_dosyasi' sınıfına TAŞINIR (doğrulanmış)
+                    calisma_toplam += 1
+                    continue
+                s_toplam += 1
                 if tam:
                     s_dogrulanan_tam += 1
                 elif ad:
                     s_dogrulanan_ad += 1
                     s_ad_eslesmeleri[atif] = ad_eslesenler
-            elif sinif == "kart":
+                ok = tam or ad
+                if ok:
+                    s_dogrulanan += 1
+                else:
+                    s_dogrulanamayan.append(atif)
+                    dogrulanamayan_liste.append({"sinif": sinif, "atif": atif})
+                continue
+            if sinif == "sha" and bellek_aktif and bellek_dogrula(atif, bellek_kume):
+                # R1: bellek ÖNEK eşleşmesi git cat-file'dan ÖNCE denenir; eşleşen atıf 'sha'
+                # toplamına hiç girmez, 'bellek' sınıfına TAŞINIR (doğrulanmış, ağa çıkılmaz)
+                bellek_toplam += 1
+                continue
+            s_toplam += 1
+            if sinif == "kart":
                 ok = kart_dogrula(repo, atif)
             elif sinif == "kalem":
                 ok = kalem_dogrula(repo, atif, roadmap_metni)
             elif sinif == "civi":
                 ok = civi_dogrula(repo, atif)
-            else:  # sha
+            else:  # sha (bellek'e KAYMAYAN geri kalan)
                 ok, hata = sha_dogrula(repo, atif)
                 if hata:
                     hata_biriktirici.append(hata)
@@ -269,6 +371,24 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
         toplam += s_toplam
         dogrulanan += s_dogrulanan
 
+    if bellek_aktif:
+        sinif_bazinda["bellek"] = {"toplam": bellek_toplam, "dogrulanan": bellek_toplam,
+                                   "dogrulanamayan": []}
+        toplam += bellek_toplam
+        dogrulanan += bellek_toplam
+    else:
+        sinif_bazinda["bellek"] = None
+        sinif_bazinda["bellek_neden"] = "bellek kimlik listesi verilmedi"
+
+    if calisma_aktif:
+        sinif_bazinda["calisma_dosyasi"] = {"toplam": calisma_toplam, "dogrulanan": calisma_toplam,
+                                            "dogrulanamayan": []}
+        toplam += calisma_toplam
+        dogrulanan += calisma_toplam
+    else:
+        sinif_bazinda["calisma_dosyasi"] = None
+        sinif_bazinda["calisma_dosyasi_neden"] = "çalışma dosyası listesi verilmedi"
+
     oran = (dogrulanan / toplam) if toplam else None
     oran_neden = (None if toplam
                  else "sayfada hiçbir depo atıfı (yol/kart/kalem/civi/sha) bulunamadı — oran tanımsız, uydurulamaz")
@@ -282,7 +402,12 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
 def _toplami_hesapla(sayfa_sonuclari: list[dict]) -> dict:
     """Sayfa sonuçlarını toplar. `yol` sınıfı için `dogrulanan_tam`/`dogrulanan_ad` sayfalar
     arasında toplanır, `ad_eslesmeleri` birleştirilir (aynı atıf birden çok sayfada geçse eşleşen
-    yollar AYNIdır — `ls_kume`nin saf bir fonksiyonu — bu yüzden çakışma riski yoktur)."""
+    yollar AYNIdır — `ls_kume`nin saf bir fonksiyonu — bu yüzden çakışma riski yoktur).
+
+    `bellek`/`calisma_dosyasi` (R1/R3b, Rol-1 ruling 2026-09-06, brief-uydurma-say-3): bu ikisi
+    `calistir` düzeyinde TEK karara bağlıdır (`--bellek-kimlikleri`/`--calisma-dosyalari` ya
+    verilir ya verilmez, sayfa başına DEĞİŞMEZ) — ilk sayfanın durumuna bakmak yeterlidir, karışık
+    (bir sayfada dict bir sayfada `None`) durum hiç OLUŞMAZ."""
     toplam = 0
     dogrulanan = 0
     sinif_bazinda = {sinif: {"toplam": 0, "dogrulanan": 0, "dogrulanamayan": []}
@@ -290,11 +415,28 @@ def _toplami_hesapla(sayfa_sonuclari: list[dict]) -> dict:
     sinif_bazinda["yol"]["dogrulanan_tam"] = 0
     sinif_bazinda["yol"]["dogrulanan_ad"] = 0
     sinif_bazinda["yol"]["ad_eslesmeleri"] = {}
+
+    bellek_aktif = bool(sayfa_sonuclari) and sayfa_sonuclari[0]["sinif_bazinda"].get("bellek") is not None
+    if bellek_aktif:
+        sinif_bazinda["bellek"] = {"toplam": 0, "dogrulanan": 0, "dogrulanamayan": []}
+    else:
+        sinif_bazinda["bellek"] = None
+        sinif_bazinda["bellek_neden"] = "bellek kimlik listesi verilmedi"
+
+    calisma_aktif = bool(sayfa_sonuclari) and sayfa_sonuclari[0]["sinif_bazinda"].get("calisma_dosyasi") is not None
+    if calisma_aktif:
+        sinif_bazinda["calisma_dosyasi"] = {"toplam": 0, "dogrulanan": 0, "dogrulanamayan": []}
+    else:
+        sinif_bazinda["calisma_dosyasi"] = None
+        sinif_bazinda["calisma_dosyasi_neden"] = "çalışma dosyası listesi verilmedi"
+
     dogrulanamayan_liste: list[dict] = []
     for s in sayfa_sonuclari:
         toplam += s["toplam"]
         dogrulanan += s["dogrulanan"]
         for sinif, veri in s["sinif_bazinda"].items():
+            if veri is None or sinif.endswith("_neden"):
+                continue  # bellek/calisma_dosyasi liste verilmediyse: None + ayrı '_neden' alanı
             sinif_bazinda[sinif]["toplam"] += veri["toplam"]
             sinif_bazinda[sinif]["dogrulanan"] += veri["dogrulanan"]
             sinif_bazinda[sinif]["dogrulanamayan"].extend(
@@ -318,7 +460,10 @@ def _toplami_hesapla(sayfa_sonuclari: list[dict]) -> dict:
 # UÇTAN-UCA — `calistir` (CLI'nin de çağırdığı GERÇEK gövde)
 # ======================================================================================
 
-def calistir(*, sayfa_dizin, repo) -> dict:
+def calistir(*, sayfa_dizin, repo, bellek_kimlikleri=None, calisma_dosyalari=None) -> dict:
+    """`bellek_kimlikleri`/`calisma_dosyalari` (R1/R3b, brief-uydurma-say-3): `None` (varsayılan)
+    ise ilgili sınıf raporda `None`+`_neden` kalır (eski davranış). Bir yol verilmişse dosya
+    satır-satır okunur (`_satir_listesi_oku`) ve TÜM sayfalara AYNI küme uygulanır."""
     sayfa_dizin = pathlib.Path(sayfa_dizin)
     repo = pathlib.Path(repo)
     hata_biriktirici: list[str] = []
@@ -331,7 +476,11 @@ def calistir(*, sayfa_dizin, repo) -> dict:
     roadmap_yolu = repo / "ROADMAP.md"
     roadmap_metni = roadmap_yolu.read_text(encoding="utf-8") if roadmap_yolu.exists() else None
 
-    sayfa_sonuclari = [sayfa_olc(sayfa, repo, ls_kume, roadmap_metni, hata_biriktirici)
+    bellek_kume = _satir_listesi_oku(bellek_kimlikleri) if bellek_kimlikleri is not None else None
+    calisma_kume = _satir_listesi_oku(calisma_dosyalari) if calisma_dosyalari is not None else None
+
+    sayfa_sonuclari = [sayfa_olc(sayfa, repo, ls_kume, roadmap_metni, hata_biriktirici,
+                                  bellek_kume=bellek_kume, calisma_dosyalari_kume=calisma_kume)
                        for sayfa in sayfalar_ham]
     toplam = _toplami_hesapla(sayfa_sonuclari)
 
@@ -347,7 +496,13 @@ def calistir(*, sayfa_dizin, repo) -> dict:
                  "Rol-1'in ayrı hükmüdür. 'yol' sınıfı git ls-files kümesine, 'sha' git cat-file'a "
                  "bağlıdır; ikisi de --repo kökünde SALT-OKUNUR çalışır, ağa çıkılmaz. "
                  "yol: dizinsiz atıf basename eşleşmesiyle doğrulanır (Rol-1 ruling 2026-09-06, "
-                 "ölçümden önce)."),
+                 "ölçümden önce). R1-R3 (brief-uydurma-say-3, 2026-09-06): kalem TSK-NNN "
+                 "ROADMAP.md metninde HERHANGİ biçimde (köşeli parantez şart DEĞİL) geçiyorsa "
+                 "doğrulanmıştır; bellek --bellek-kimlikleri verilmişse bir sha adayı önce bu "
+                 "kümede önek aranarak doğrulanır (eşleşmezse eski sha yolu); calisma_dosyasi "
+                 "--calisma-dosyalari verilmişse depoda bulunamayan dizinsiz bir yol atıfının "
+                 "basename'i bu listede varsa doğrulanmıştır (depo dışı ama gerçek) — ikisi de "
+                 "liste verilmezse None + neden kalır."),
     }
 
 
@@ -389,9 +544,15 @@ def ana(argv=None) -> int:
     ap.add_argument("--repo", required=True)
     ap.add_argument("--cikti", required=True)
     ap.add_argument("--markdown", default=None)
+    ap.add_argument("--bellek-kimlikleri", default=None,
+                    help="R1: satır başına bir Hindsight bellek kimliği (tam uuid ya da hex)")
+    ap.add_argument("--calisma-dosyalari", default=None,
+                    help="R3b: satır başına bir dosya adı (A1 state/+backups/+/opt/veri, dondurulmuş)")
     ns = ap.parse_args(argv)
 
-    sonuc = calistir(sayfa_dizin=ns.sayfa_dizin, repo=ns.repo)
+    sonuc = calistir(sayfa_dizin=ns.sayfa_dizin, repo=ns.repo,
+                     bellek_kimlikleri=ns.bellek_kimlikleri,
+                     calisma_dosyalari=ns.calisma_dosyalari)
 
     cikti_yolu = pathlib.Path(ns.cikti)
     cikti_yolu.parent.mkdir(parents=True, exist_ok=True)
