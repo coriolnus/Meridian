@@ -82,3 +82,7 @@ gun1_olcum_2026_09_06: >
   ekledi), observations 4450→5175. Hız ~42 olgu/saat → kalan ~30 saat. K2 bedeli: bugün 0 boş deneme (dün 1632). Yük 3–4 (reflect kanaryası
   hariç). Not: kanary sırasında yük 12'ye çıktı — konsolidasyon değil reflect'in kendi rerank'i (EDG-080 notu).
 
+gun1_kapanis_2026_09_06: >
+  (14:48Z Rol-1) pending_consolidation 0 (taban 2884), failed 0, observations 5996 (+1.546 gün içinde); m2.7 426/426 başarı; failover üyeleri
+  hiç çağrılmadı; boş 429 denemesi 0. K1 eşiği erken sağlandı; hüküm 7 günlük pencere sonunda yazılır (K2 bedel + m2.7 tavanı gözlemi).
+

@@ -2770,3 +2770,10 @@ aday tavanı, sabit bütçe, reranker sağlayıcı) → TSK-142 gündüz deneyi 
 EDG-082 geçti (kısmi payda), TSK-159 S5 ve TSK-065 disk/delist kararları operatörde.
 
 **05:53Z — r4 başlatıldı (ingest067-r4, Pazar sabahı, nemotron kovası taze; r3'ün 14 geçicisi + kalanlar).** Dağıtım #22 A1'de doğrulandı (pitlaw ok, kova sozlesmeli_kapali 0, replay uyelik var). EDG-081 gün-1: m2.7 211 başarı/0 hata, 100/gün tavanı m2.7'de görülmedi. Otonom gece bloğu kapandı; kalan kararlar Masa'da.
+
+### 2026-09-06 öğleden sonra (Rol-1 = ai-trading-c7; eş oturum ai-trading-4b 14:46Z'de açıldı, rolü bilinmiyor) — canlı triyaj
+
+**14:48Z — triyaj:** yük 2,0; meridian/hindsight aktif; alarm 9 (hepsi bilinen MECHANISM_STALE, her restart'ta yeniden basılıyor). Konsolidasyon
+BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7 ok / 8 geçici (Nvidia 500) / 0 kalıcı; belge 285. TSK-141 gün
+özeti doğrulandı (4 satır/gün) → DONE. Geri dolum 2024-09-06'ya ulaştı; disk 56 G / 147 G; son 12 saatte 67 gün (~90 MB/gün) → kalan ~1180 gün
+≈ 9 gün, boş 91 G ≈ 1010 gün → disk ~2026-09-13'te dolar (2020-09 civarında). Operatör kararı (TSK-065/EDG-066 disk) 7 gün içinde gerekli.
