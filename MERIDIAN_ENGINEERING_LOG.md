@@ -2879,3 +2879,10 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   ✅ (kanıt TSK-046/050). §6: EDG-071/072/079 DONE (kart hükümleri Eylül 4-5'te yazılmıştı, endeks ACTIVE kalmıştı); EDG-081/083 status
   measuring. Konsolide plan belgesi docs/degerlendirme/PLAN-KONSOLIDE-2026-09-06.md (8 tablo: gece · hafta · sırada · kapılı · masa ·
   kapananlar · düşürme önerileri · riskler). Hafıza sayfaları ipucu olarak kullanıldı; kanıt depodan.
+- **20:4x–21:0xZ — TSK-172 + TSK-173(a) CANLIDA (dağıtım #23, 471c8bf).** Implementer (worktree) + fix turu 1 (app.js `!= null`
+  koruması — Number(null)=0 tuzağı, inceleme bulgusu) → merge 4478951 → SUITE #31: 1 failed / 10686 passed / exit 1, HEAD sabit;
+  tek kırmızı test_uiux_s1b_v154 t3 = üretilmiş RUNBOOK kaynaktan geride (BROKER_REJECT ateşleme yolu 3→4) → `ops/runbook_uret.py`
+  + tipografi korpus artefaktı (v209, RUNBOOK'a bağlı) yeniden üretildi (56/0) → push 471c8bf → dagit dry-run (sözleşmeler 5/0,
+  daralt-güvenli) → `--uygula` TAMAM (5/5 doğrulama, beyan bayt-özdeş). Not: ilk `runbook_uret.py --yaz` çağrısı geçersiz bayrakla
+  düştü, `||` dalı yazmadı — üretici `--cikti` ile açıkça koşuldu. Kalan: v209 dersi tekrar — üretilmiş belgeye bağlı ölçüm artefaktı
+  her RUNBOOK değişiminde yeniden üretilir; D6 sayıları için korpus farkı 1 satır (ihmal edilebilir, DESIGN.md dokunulmadı).
