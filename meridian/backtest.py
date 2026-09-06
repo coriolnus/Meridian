@@ -22,6 +22,7 @@ karartma kapısı "olculemedi_replay" beyanıyla susar — bugünün takvimi tar
 Saf hesap: state'e yazmaz; bar/goal okur, uyarılar obs'a bir kez düşer."""
 from __future__ import annotations
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 import pandas as pd
 
@@ -205,7 +206,8 @@ def _adv(df: pd.DataFrame, d, window: int = 20) -> float | None:
 def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame,
            goal: dict, start: str, end: str, strategy_version: int = 1,
            params_by_regime: dict | None = None,
-           with_gate_detail: bool = False) -> BacktestResult:
+           with_gate_detail: bool = False,
+           uyelik: Callable[[str], set[str]] | None = None) -> BacktestResult:
     """`start`–`end` arasını gün gün yeniden oynatır ve `BacktestResult` üretir.
 
     Her seans üç fazda işlenir — OPEN(D): bekleyen çıkışlar ve D-1'de silahlanan girişler;
@@ -214,6 +216,20 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     `params_by_regime` verilirse o günün rejimine göre parametre seti çözülür; `with_gate_detail`
     kapı ayrıntısını plan kaydına ekler. Dolmayan girişlerin nedenleri `entry_rejects`te,
     PIT takvimi olmadığı için susan karartma kapısı `earnings_gate`te sayılır.
+
+    `uyelik` (TSK-159/EDG-2026-082) — opsiyonel, tarih → sembol kümesi. Verilirse CLOSE(D)
+    fazındaki ADAY TARAMASINDA (`strat.scan_entry` döngüsü) `uyelik(str(d.date()))` kümesinde
+    olmayan semboller o seans için ATLANIR: taranmaz, silahlanmaz. `uyelik(d)` seans başına
+    (tarama gerçekten çalıştığında) BİR KEZ çağrılır, sembol başına DEĞİL. AÇIK POZİSYON
+    YÖNETİMİ (OPEN/INTRADAY fazları, trail, scale_out, `_touch_exit`, zaman-durağı) BU SÜZGEÇTEN
+    HİÇ GEÇMEZ — üyelikten çıkan bir sembolün açık pozisyonu, üyeliği hiç kaybetmemiş gibi normal
+    çıkış kurallarına göre yönetilmeye devam eder; süzgeç yalnız YENİ aday aramayı daraltır.
+    Kesitsel hesaplar (`rs_map`, sektör momentumu için `_srets`) da süzülmez — evrenin TAMAMIYLA
+    hesaplanır (bilinçli: göreli güç sıralamasının paydası bugünkü davranışla aynı kalır, EDG-082
+    kart notu). `uyelik=None` bugünkü davranışla BİREBİR AYNIDIR (özdeşlik çivisi:
+    `tests/test_replay_uyelik_suzgeci_v427.py`). ASİMETRİ BEYANI: `uyelik` üye-olmayanı
+    düşürebilir ama o tarihte üye olup barı artık evrende bulunmayan (delist) bir sembolü GERİ
+    GETİREMEZ — PIT-süzülmüş bir tohum bu yüzden hâlâ ÜST SINIRDIR, tam eşleşme değildir.
 
     SAF HESAP: state'e yazmaz; yalnız bar ve hedef sözleşmesi okur.
     """
@@ -454,11 +470,22 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                          "stop": p.stop, "trail_stop": p.trail_stop, "mark": _y3_mk.get(t)}
                         for t, p in broker.positions.items()]
 
+            # ÜYELİK SÜZGECİ (TSK-159/EDG-2026-082) — SEANS BAŞINA BİR KEZ çağrılır (sembol başına
+            # DEĞİL): tarama binlerce sembolü dolaşır, `uyelik`i döngü içinde çağırmak aynı tarih
+            # için tekrar tekrar aynı kümeyi kurdururdu (gereksiz + kartın "seans başına bir kez"
+            # şartını bozardı). `uyelik=None` → süzgeç KAPALI, `uyelik_set` de None kalır ve aşağıdaki
+            # kontrol hiç devreye girmez (bugünkü davranış BİREBİR).
+            uyelik_set = uyelik(str(d.date())) if uyelik is not None else None
             candidates = []
             for t, df_t in per.items():
                 if t in broker.positions or any(a["ticker"] == t for a in armed):
                     continue
                 if d not in df_t.index:      # güncellik: bayat kuyrukla tarama = hayalet/bayat tetik riski
+                    continue
+                if uyelik_set is not None and t not in uyelik_set:
+                    # üye değil → bu seans için taranmaz, silahlanmaz. Açık pozisyon YOKTUR bu
+                    # dalda (üstteki `t in broker.positions` kontrolü zaten elemiş olurdu) — yani bu
+                    # satır YALNIZ yeni aday aramayı daraltır, çıkış/yönetim yoluna hiç dokunmaz.
                     continue
                 sub = df_t.loc[:d].reset_index()
                 sig = strat.scan_entry(sub.tail(340), eff, rs_map.get(t, 50), ticker=t)
@@ -965,7 +992,8 @@ def balanced_fold_bounds(trades: list, hi: str, embargo_days: int = 0,
 def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
                  is_start: str, oos_start: str, oos_end: str, holdout_end: str,
                  strategy_version: int = 1, oos_folds: list | None = None, embargo_days: int = 0,
-                 params_by_regime: dict | None = None, eval_regime: str | None = None) -> dict:
+                 params_by_regime: dict | None = None, eval_regime: str | None = None,
+                 uyelik: Callable[[str], set[str]] | None = None) -> dict:
     """Replay once over [is_start, holdout_end]. Two-part gate:
       * MAGNITUDE — the full OOS window's composite score (min_sample-gated; None below the floor).
       * ROBUSTNESS — per-fold avg_r across SEVERAL purged+embargoed folds, so the edge can't hinge on
@@ -974,9 +1002,12 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
     eval_regime: grade ONLY trades tagged with that regime — the REPLAY itself is untouched
     (portfolio effects stay realistic); only the scoring population narrows. The min_sample floor then
     applies to the regime slice, so a thin regime honestly yields score=None (cannot ship) instead of a
-    noisy small-sample verdict. The caller must use the same eval_regime for incumbent AND candidate."""
+    noisy small-sample verdict. The caller must use the same eval_regime for incumbent AND candidate.
+    `uyelik` (TSK-159/EDG-2026-082) — tek `replay` çağrısına AYNEN geçirilir (bkz. `replay`
+    docstring'i); varsayılan None = bugünkü davranış BİREBİR. Diğer çağıranlar (reflect/öneri
+    yolları) bu parametreyi hiç kullanmaz ve DOKUNULMAZ."""
     res = replay(params, bars, index_bars, goal, is_start, holdout_end, strategy_version,
-                 params_by_regime=params_by_regime)
+                 params_by_regime=params_by_regime, uyelik=uyelik)
     graded = _regime_slice(res.trades, eval_regime)
     is_d = segment_score(graded, goal, is_start, oos_start, mtm_equity=res.equity)
     oos_d = segment_score(graded, goal, oos_start, oos_end, embargo_days, mtm_equity=res.equity)
