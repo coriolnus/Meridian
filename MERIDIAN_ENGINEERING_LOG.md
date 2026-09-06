@@ -2777,3 +2777,28 @@ EDG-082 geçti (kısmi payda), TSK-159 S5 ve TSK-065 disk/delist kararları oper
 BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7 ok / 8 geçici (Nvidia 500) / 0 kalıcı; belge 285. TSK-141 gün
 özeti doğrulandı (4 satır/gün) → DONE. Geri dolum 2024-09-06'ya ulaştı; disk 56 G / 147 G; son 12 saatte 67 gün (~90 MB/gün) → kalan ~1180 gün
 ≈ 9 gün, boş 91 G ≈ 1010 gün → disk ~2026-09-13'te dolar (2020-09 civarında). Operatör kararı (TSK-065/EDG-066 disk) 7 gün içinde gerekli.
+
+**15:0x–15:5xZ — TSK-060 başladı; Hindsight recall darboğazı bulundu ve aşıldı; K1 kanary gündüz; EDG-083 ön-kayıt**
+- Operatör: "hindsight artık bütün geçmiş verilere sahip olduğu için sen de çok aktif bir şekilde onu kullanmalısın" → hafıza kuralı
+  (hindsight-aktif-kullanim) + A1 `~/bin/hafiza_sor.sh` (LLM'siz recall; anahtar yalnız Authorization başlığında; `limit` API'ce
+  tanınmadığından gövde `query`+`budget`). r5 ingest timer'ı ingest067-r5 → 2026-09-07 03:00Z (kalan 8 dilim).
+- İLK canlı recall (14:59:37Z, mid bütçe, uzun tr soru) 13+ dk sürdü ve bitmedi; ssh koptu, [RECALL HTTP] satırı hiç yazılmadı.
+  py-spy dökümü (venv'e kuruldu): aktif iş parçacığı `reranker_0` → sentence_transformers CrossEncoder.predict → torch forward —
+  local sağlayıcı bge-reranker-v2-m3 TORCH CPU (model.safetensors, ONNX değil); DB boşta (pg_stat_activity temiz; hnsw ×3 + pgroonga
+  indeksleri var; memory_units 16.946 / links 169.505 / gözlem 6.001). 2026-09-01'de aynı sınıf soru 130–144 s idi; konsolidasyon
+  aday havuzunu büyüttü. Yük teşhisi (00:45Z/04:30Z notları) yarım doğruydu — asıl neden model sınıfı.
+- Operatör: "rerank tavanını koy, kanaryayı bugün koştur, sonra ek sayfa kartını aç". (1) `HINDSIGHT_API_RERANKER_MAX_CANDIDATES_{LOW,MID,HIGH}`
+  = 40/100/200 (varsayılan 0 = sınırsız), restart 15:23:49Z → S-001 mid 360 s'de yine bitmedi (100 aday). (2) Birincil reranker
+  flashrank (ms-marco-MultiBERT-L-12, ONNX, önbellek mevcut) + yedek rrf; local zincirden çıktı; restart 15:37:09Z →
+  S-001 mid 80,3 s (8 sonuç) / low 32,3 s (16 sonuç), sunucu [RECALL HTTP] ile aynı. Yedekler .env.bak-20260906-1523 / -1535.
+  Bedel (bedel yasası): reranker kalitesi MultiBERT-L-12'ye düşer; kıyas raporu bunu beyan eder. EDG-067 kurulum kaydı
+  `reranker_degisimi_2026_09_06`. Hafıza: hindsight-reranker-cpu-siniri.
+- K1 kanary gündüz tekrarı: `kanary080-gunduz` (systemd-run) 15:41:19Z, yük 2,7 başlangıç; 04:30Z seti kanary080_0430_* olarak
+  yedeklendi; k2 timer armed değil (0). Monitor logu izliyor; sonuç ayrı kayıt.
+- EDG-2026-083 ÖN-KAYIT (operatör sırası): üç talep-üzerine zihin modeli sayfası (bağımlılık haritası · hedef-sapma · arıza/kök-neden),
+  gece cron yok; omurga UYDURMA ORANI (sayfa atıfları depoda doğrulanır, ≥ %80) + gerçek-kullanım sayımı (Yasa 6) + minimax payı;
+  PK bilinen-cevaplı sayfa, NK banka-dışı konu. TSK-160 GATED (EDG-080 K1 + K2 POST). Kâr/zarar bu kartın dışında: banka belge
+  tabanlı, defter özeti besleme sonraki kart. A1'e Claude CLI: bir hafta gerçek kullanım kanıtı olmadan kurulmaz.
+- Kıyas hakem notu (TSK-060): recall cevabı artık ağırlıkla `observation` (document_id NULL, metadata {}; `source_memory_ids` sütunu
+  var ama API cevabında ölçülmedi) → hakem dosya kimliği isteyen kıyasta Hindsight kolu primer koşum `types=[world,experience]`,
+  varsayılan tipli ikinci koşum bilgi amaçlı (hüküm dışı). Taban indeksi kanary bitince (CPU çakışmasın) kurulur.

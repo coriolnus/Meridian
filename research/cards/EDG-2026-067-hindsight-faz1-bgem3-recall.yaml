@@ -147,6 +147,20 @@ kurulum_kayitlari:
     900→3600 sn'ye çekildi; gece LOG yeniden gönderilir = mükerrer kontrolü kendiliğinden
     ikinci kez sınanır.
 
+  reranker_degisimi_2026_09_06: >
+    (15:2x–15:40Z Rol-1, operatör "rerank tavanını koy") KURULUM SÖZLEŞMESİ (2) GÜNCELLEMESİ — seçim kaydı: konsolidasyon bittikten
+    sonra (5.996 gözlem, memory_units 16.946, memory_links 169.505) recall 13+ dk sürdü ve bitmedi (14:59:37Z çağrısı; istemci koptu).
+    py-spy dökümü: hindsight-api'nin aktif iş parçacığı reranker_0 → sentence_transformers CrossEncoder.predict → torch forward
+    (local sağlayıcı bge-reranker-v2-m3 TORCH CPU, ONNX değil; model.safetensors); DB boşta (pg_stat_activity temiz, hnsw+pgroonga
+    indeksleri var). HINDSIGHT_API_RERANKER_MAX_CANDIDATES_{LOW,MID,HIGH}=40/100/200 (varsayılan 0=sınırsız) + restart 15:23:49Z:
+    S-001 mid bütçe 360 s'de yine bitmedi (100 aday). Birincil reranker flashrank (ms-marco-MultiBERT-L-12, ONNX, cpu_mem_arena=false),
+    yedek rrf; local sağlayıcı zincirden çıkarıldı; restart 15:37:09Z. Ölçüm (S-001, sunucu [RECALL HTTP]): mid 80,3 s (8 sonuç) ·
+    low 32,3 s (16 sonuç); yük 4,4 (geri dolum pilot.py eşzamanlı, kalıcı yük). BEDEL (bedel yasası): cross-encoder kalitesi
+    MultiBERT-L-12'ye düşer — kıyas bu reranker'la koşar ve rapor bunu beyan eder; v2-m3 bu kutuda (4 OCPU, torch) ölçülebilir
+    değildir. Yedekler: /opt/hindsight/.env.bak-20260906-1523 (tavan öncesi), -1535 (flashrank öncesi). Recall cevabı artık
+    ağırlıkla 'observation' tipi (document_id YOK) — hakem dosya kimliği ister: kıyasın Hindsight kolu için types süzgeci kararı
+    koşum öncesi bu kayda eklenir (uydurma yasağı: şema/alan ölçülmeden karar yok).
+
 olcum:
   soru_kumesi_donduruldu_2026_09_01: >
     research/olcumler/edg067_hindsight_faz1/sorular.yaml — GIT BLOB

@@ -1,0 +1,75 @@
+# EDG-2026-083 — Hindsight zihin modeli EK SAYFALARI (talep üzerine tazeleme): bağımlılık haritası · hedef-sapma · arıza/kök-neden — ÖN-KAYIT
+# ÖN-KAYIT 2026-09-06 15:5xZ (Rol-1). Operatör 2026-09-06: "hindsight artık bütün geçmiş verilere sahip … çok aktif kullanmalısın";
+# "zamanlayıcıları beklemeden … açıkları ve yanlış kurguları … nelerin birbirine bağlı olduğunu"; "rerank tavanını koy, kanaryayı bugün
+# koştur, sonra ek sayfa kartını aç". EDG-080'in K2 pilotu TEK sayfa (meridian-tekrarlanan-dersler, gece cron). Bu kart ÜÇ EK sayfa,
+# tazeleme TALEP ÜZERİNE (elle refresh), okuyucu Rol-1 + pano. ÖN KOŞUL: EDG-080 K1 yeşil + K2 POST'u atılmış.
+# Altyapı bulgusu (bu kartın doğuşu, 2026-09-06 15:00–15:40Z): recall 13+ dk (torch CPU cross-encoder bge-reranker-v2-m3, aday SINIRSIZ;
+# py-spy: reranker_0 torch forward) → aday tavanı 40/100/200 YETMEDİ (100 adayda >360 s) → birincil reranker flashrank
+# (ms-marco-MultiBERT-L-12, ONNX), yedek rrf: S-001 mid 80,3 s / low 32,3 s. Sayfa tazelemesi reflect üstünden koşar; gecikme maliyet sütunudur.
+# UYDURMA ÖLÇÜMÜ bu kartın omurgası: sayfa "hatırlanan"dır, kural "ölçülen"dir — sayfadaki atıflar depoda doğrulanır, oran EŞİKTİR.
+
+card_id: EDG-2026-083
+status: registered   # 2026-09-06 Rol-1 — ön-kayıt; sayfalar EDG-080 K1 yeşil + K2 POST'undan SONRA açılır
+family: hindsight_hafiza
+on_kayit: 2026-09-06
+ref: [EDG-2026-080, EDG-2026-067, TSK-142, TSK-060, TSK-091, TSK-160]
+
+hipotez: >
+  Talep üzerine tazelenen üç zihin modeli sayfası (S1 bağımlılık haritası: açık ROADMAP kalemleri ve birbirine bağlılıkları ·
+  S2 hedef-sapma: hedef sözleşmesi ile fiili durum arasındaki açık farklar · S3 arıza/kök-neden haritası: canlı arızalar, kök
+  nedenleri ve tekrarları) 7 günlük pencerede (a) her tazelemede okunabilir içerik üretir, (b) sayfalardaki dosya/kart/kalem
+  atıflarının depoda doğrulanan oranı eşiği geçer (uydurma düşük), (c) en az iki sayfa Rol-1'in bir kararında, kart notunda ya da
+  günlük kaydında KAYNAK olarak gösterilir (gerçek kullanım, Yasa 6), (d) tazeleme bedeli minimax tavanının içinde kalır.
+  Dördü birden tutmazsa sayfalar Yasa 6 gereği kapatılır; grep + günlük yeter (YAGNI).
+
+k_registry: {registered_at: "2026-09-06", trial_ids: [EDG-083-talep-uzerine-ek-sayfalar]}
+# K=1: üç sayfa TEK denemenin üç ölçüm birimidir (ortak eşik, sayfa başına ayrı eşik yok); PK/NK K'ya sayılmaz.
+
+adim_0_on_kosul: >
+  (a) EDG-080 K1 yeşil (3/3) ve K2 POST'u atılmış — K1 kaldıysa bu kart AÇILMAZ (reflect çalışmıyorsa sayfa doğmaz).
+  (b) recall p50 < 120 s (mid bütçe) ölçülmüş — 2026-09-06 15:39Z: 80,3 s (mid) / 32,3 s (low), flashrank + tavan.
+  (c) minimax-m3:free günlük tavanı (100) taze; EDG-080 pilotu ≤10/gün + bu kart ≤15/gün → toplam ≤25/gün.
+  (d) tazeleme anında yük < 4 (4 OCPU) — ön şart, eşik değil (EDG-080 00:45Z ve 04:30Z dersleri).
+  (e) mental-models API gövdesi VARSAYILMAZ: ilk adım şema dökümü (GET /mental-models + bir POST'un ham cevabı) — tetik alanı
+  "yalnız elle refresh" biçimi oradan okunur; gece cron BU KARTTA YOK.
+
+olcum_plani:
+  - "S1/S2/S3: POST /v1/default/banks/meridian-arsiv/mental-models {name, source_query, keep_trace; refresh_cron YOK}; ilk içerik = elle refresh; sonraki tazelemeler TALEP ÜZERİNE (Rol-1 oturum başı ya da büyük commit sonrası)"
+  - "her tazeleme: op durumu, effective_mode, süre (s), LLM çağrısı, token → maliyet sütunu (llm-requests + mental-models/{id}/history)"
+  - "uydurma sayımı: her sayfanın son sürümünden dosya-yolu / EDG-kimliği / TSK-kimliği / commit-sha atıfları regex ile çıkarılır; her biri depoda grep -F ya da git cat-file ile doğrulanır; doğrulanan/toplam oranı sayfa başına ve toplamda"
+  - "gerçek kullanım: günlük/ROADMAP/kart notlarında 'kaynak: zihin modeli <ad> v<n>' biçimli atıf sayısı — sahte-kullanım yasağı: atıf yalnız sayfanın gerçekten okunup karara girdiği yerde yazılır"
+  - "okuyucu: pano Hafıza › Bilgi tabanı üç sayfayı listeler; oturum-başı okuma A1'de sayfa_oku.sh <ad> (LLM'siz GET)"
+
+esikler:
+  gecti: "7 günde: (1) üç sayfada da ≥1 content_written ∧ (2) doğrulanan atıf oranı toplamda ≥ %80 ve hiçbir sayfada < %60 ∧ (3) ≥2 sayfa ≥1 gerçek-kullanım atıfı ∧ (4) tazeleme başına LLM çağrısı ≤ 12, süre ≤ 600 s, kartın minimax payı ≤ 15/gün"
+  # eşikler donuk; EDG-080 K2 eşikleri sayfa başına devralınmadı — burada ölçülen şey 'kullanıldı mı ve uydurdu mu'dur
+
+kill_list:
+  - "EDG-080 K1 kaldı (tool-calling yok) → kart açılmadan emekli, hüküm 'ölçülemedi / ön koşul'"
+  - "herhangi bir sayfada doğrulanan atıf oranı < %50 → o sayfa derhal kapatılır (uydurma); kart KALDI adayı"
+  - "tazeleme 3 ardışık başarısız (429-dışı) → sayfa durur"
+  - "minimax tavanı reflect'e kalmıyorsa (konsolidasyon ya da başka tüketici) → tazeleme durur, EDG-081'e not"
+  - "reflect zaman aşımı (600 s) 3 tazelemede 2 → altyapı, K harcanmaz, ölçülemedi"
+  - "sayfa içeriği canlı karar yüzeyine (loop/guard/broker) bağlanırsa geçersiz — bu kart yalnız Rol-1/pano okuyucusu"
+  - "PK/NK tutmazsa hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI PK: dördüncü, bilinen-cevaplı sayfa (EDG-067 PK sorusu: "PIT çivisi hangi gün mekanikleşti, kanıt dosyası ne?") aynı uç ve
+  aynı akışla üretilir; içeriğinde 2026-08-31, pitlaw ve v341/v342 çivileri geçmeli. NEGATİF KONTROL: bankada olmayan konu ("Meridian'ın
+  kripto madenciliği kolu") sayfası → 'bilgi yok' sınıfı içerik ya da boş; olgu uydurursa NK kaldı → kart askıya.
+
+veri_penceresi: "2026-09-06 (K2 POST'u sonrası) … 2026-09-13; banka meridian-arsiv (285 belge, 5.996 gözlem, pending 0 — 2026-09-06 15:xxZ); canlı motor DEĞİL"
+
+maliyet_sutunu_zorunlu: "tazeleme başına süre / LLM çağrısı / token (llm-requests) · günlük minimax payı · tazeleme içindeki recall p50 · okuyucu sayısı (Rol-1 GET + pano)"
+
+basari_tanimi: >
+  (1) üç sayfa + PK + NK kurulmuş ve ilk tazeleme kayıtlı · (2) 7. gün uydurma oranı + gerçek-kullanım sayımı + maliyet sütunu
+  research/olcumler/edg083_zihin_modeli_ek_sayfalar/ altında · (3) hüküm: eşik geçildiyse sayfalar KALIR ve 'defter özeti besleme'
+  kartı (haftalık strateji/kart sonuç özetlerinin bankaya retain'i — "neyin para kazandırdığı" sorusunun DOĞRU yolu) açılır;
+  kaldıysa sayfalar kapatılır. Hüküm AYNI turda karta ve K defterine.
+
+notlar: >
+  Bu kart neyi ÖLÇMEZ: kâr/zarar. Banka belge tabanlıdır (günlük, ROADMAP kararları, kart hükümleri, docs); işlem defteri ve karne
+  bankada YOK — sayfadan gelen her sayı defterden doğrulanır ("hatırlanan değil ölçülen"). A1'e Claude CLI kurulumu bu kartın dışında:
+  sayfalar bir hafta gerçekten karar değiştirirse gece başsız 'analist' koşumu ayrı kart olur. Reranker değişimi (local→flashrank)
+  EDG-067 kurulum_kayitlari'na işlendi; taban kıyası o ayarla koşar.
