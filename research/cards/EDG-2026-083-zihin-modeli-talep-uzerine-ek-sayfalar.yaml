@@ -84,3 +84,15 @@ adim_1_kurulum_2026_09_06: >
   yeniden kurulum yük düşünce. Bu paralel set kill#5 sayımına GİRMEZ (beyan: çakışma benim betiğimin hatası, altyapı değil) — sıralı
   set ilk gerçek tazeleme sayılır. Pilot sayfa (EDG-080) aynı araçla 16/12 (%75): aracın gerçek sayfada çalıştığının kanıtı.
 
+olcum_gun0_2026_09_06: >
+  (17:5xZ Rol-1) SIRALI KURULUM: S1 260 s (8.491 kr), S2 140 s (12.363 kr) — REFLECT_MAX_ITERATIONS=6 + mid tavan 60 ile 600 s
+  duvarının altında. S3/PK/NK: minimax-m3 günlük tavanı 17:15Z'de doldu (limit_rpd; kendi tüketimim: K1+K2+paralel set+retry'lar
+  ≈100) → tazeleme 2026-09-07 00:10Z tek-atım (edg083-gece-tazele, sıralı). Kill#4 ("minimax tavanı reflect'e kalmıyorsa") BU GÜN
+  tetiklenmedi sayılır: tüketen konsolidasyon değil kartın kendi hatalı paralel seti (beyan). UYDURMA SAYIMI GÜN-0 (uydurma_say.py
+  f20ef68; kurallar R1–R3 ölçümden önce; donuk girdiler girdi/bellek_kimlikleri (16.936 memory id) + calisma_dosyalari (158),
+  SHA256.txt; sayfa anlık görüntüleri sayfalar/2026-09-06_gun0/ + SHA256.txt): pilot 12/12 (%100) · S1 46/45 (%98; tek
+  doğrulanamayan 'mm-0fb27056…' = pilot ZİHİN MODELİ kimliği — bellek listesi memory_units'ten, mental_models tablosu yok → 7. gün
+  ölçümünde kimlik listesine mental model id'leri de eklenir, kural şimdi yazıldı) · S2 30/30 (%100) · toplam 88/92 (%96).
+  Sınıf dağılımı: S1 bellek 25/25 (gözlem kimlikleri), çalışma dosyası 2/2; S2 bellek 2/2, çalışma 4/4. Eşik (2) gün-0'da
+  sağlanıyor (≥%80 toplam, sayfa min %60); eşik (1)/(3)/(4) 7. günde okunur. sonuc_gun0_2026-09-06.json + rapor_gun0_….md.
+
