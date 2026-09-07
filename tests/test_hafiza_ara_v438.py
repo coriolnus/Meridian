@@ -718,7 +718,15 @@ def test_timer_oncalendar_sozdizimi_ve_slotu():
     m = ONCALENDAR_RE.match(y["OnCalendar"][0])
     assert m, y["OnCalendar"][0]
     assert m.group(1) == "Sun", "haftalık slot Pazar (brief)"
-    assert (m.group(2), m.group(3), m.group(4)) == ("03", "30", "00")
+    # SLOT HÜKMÜ (Rol-1 2026-09-07 19:0xZ): brief 03:30Z demişti; A1 timer envanteri ölçüldü — hindsight-yedek.timer her gün
+    # 03:30Z (pg_dump) ve sprint penceresi [22:00,06:00) → aynı dakikada gömme = CPU/IO çakışması (reflect kanaryası load
+    # 14,6'da ölmüştü). Pazar 08:15Z: seans yok, sprint dışı, skill-gorus 07:30Z bitmiş, bekci 10:00Z'ye ≥1 sa pay.
+    # Çivi ÜÇ değişmezi ölçer, saati değil: (a) sprint penceresi dışında, (b) 03:30 değil, (c) 06:00–09:00 sessiz bandında.
+    saat, dakika = int(m.group(2)), int(m.group(3))
+    assert not (saat >= 22 or saat < 6), "sprint penceresi [22:00,06:00) içinde olamaz"
+    assert (saat, dakika) != (3, 30), "hindsight-yedek.timer ile aynı dakika olamaz"
+    assert 6 <= saat < 9, "sessiz bant 06:00–09:00 (skill-gorus 07:30 kısa; bekci 10:00)"
+    assert m.group(4) == "00"
 
 
 def test_timer_persistent_ve_fixedrandomdelay():
