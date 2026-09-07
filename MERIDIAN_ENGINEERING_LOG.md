@@ -2912,3 +2912,12 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   (içerik-özgü, geçici değil); banka 285 belge, pending 55; ingest bitti sayılır, kalan %1,1 ayrı kalem açılmadı. Yedek 03:30Z rc=0.
 - **05:00–05:2xZ — K2 pilot cron:** tetikledi, aralık kapısı (min_refresh_interval 82.800 s) tazelemeyi 15:20Z'ye erteledi (op 13edb4ee
   pending, next_retry_at = son tazeleme + 23 sa). Arıza değil, tetik+aralık semantiği; 7 günde 6–7 refresh beklenir. Gün-1 15:20Z'de okunur.
+
+### 2026-09-07 sabah (Rol-1) — S5 onayı ve plan
+- **Operatör: "S5 tohum değişimini onaylıyorum, A varyantı ile devam et."** Hafıza kontrolü: recall (equity_curve noktaları silinmez,
+  kırılma `reset_isaretleri`ne beyan; damga/ofset sıra bağımlılıkları), EDG-036 emsali (run.replay_seed harfi harfine koşulmaz — canlı
+  satırları siler; koruyucu prosedür + damgalar + sv ayrı uzay; equity_curve o gün yazılmamıştı), kart_benzer (EDG-079/082/036).
+  Canlı defter ölçüldü: 885 tohum (sv=90) + 16 live_paper (10 sv5, 6 sv3) = 901; plan 511; bar 260 sembol.
+- Ruling'ler plana yazıldı: kaynak=replay_seed KALIR (tasarımdaki 'replay_seed_pit' değeri 13 kaynak-kör tüketici yüzünden uygulanmadı —
+  ayrım tohum_parti + sv=91), eski tohum arşivlenir (çift sayım olmasın), reset işareti beyanla, yazım store kapısından, bakım
+  penceresi ≥20:45Z (seans dışı). Plan docs/superpowers/plans/2026-09-07-s5-tohum-pit.md (9764130); Task-1 implementer (opus) sevk.
