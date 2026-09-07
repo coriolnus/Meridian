@@ -109,3 +109,12 @@ ayar_notu_2026_09_07: >
   ürettiğini gösterdi; 09-06'da m3 tavanı 17:15Z'de doldu, sayfalar 429'a düştü. K2 kill#5 sayımı m3 çağrılarıyla sürer; zincire düşen
   çağrılar model kolonuyla ayrı raporlanır. Restart 01:11:33Z, hata 0, 'Connection verified' m3/m2.7/nemotron-super; uçuşta reflect yoktu.
 
+kosum_notu_k2_gun1_2026_09_07: >
+  (05:2xZ Rol-1) 05:00Z CRON TETİKLEDİ AMA TAZELEME ERTELENDİ: async_operations'ta otomatik refresh op 13edb4ee (created 05:02:22Z,
+  _automatic true) pending, next_retry_at = 2026-09-07 15:20:57Z = last_refreshed_at (09-06 16:20:57Z) + min_refresh_interval 82.800 s.
+  Yani tetik ("0 5 * * *") ve aralık kapısı (23 sa) birlikte çalışıyor: ilk cron, ilk tazelemeden 12,7 sa sonra geldiği için kapı
+  15:20Z'ye erteledi; sonraki günlerde tazeleme saati her gün ~1 sa öne kayarak 05:00Z'ye oturur. 7 gün penceresinde beklenen refresh
+  op 6–7 (eşik 5–8 içinde). Gün-1 refresh'i 15:20Z'de gözlenecek (model kolonu: m3 mü zincir mi). is_stale=true (last_memory_seen_at
+  09-06 16:11Z sonrası 55 pending olgu var). Dünkü 3 başarısız op (429, m3 tavanı) ve silinmiş modelin 'not found' op'u failed olarak
+  duruyor — sayıma girmez (kill#3 'refresh op > 14' sayımı yalnız pilot modelin op'larını sayar).
+
