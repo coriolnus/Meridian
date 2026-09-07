@@ -2933,3 +2933,18 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   bar yükleme `dataset.load()` üretim yolu → `obs` olayları (warmup_coverage_short, bar_source_upgrade 496 sembol, bar_ghost_round)
   canlı obs.log'a düştü — bilinçli Rol-1 koşumu (§2). Zamanlayıcılar: 13:47Z seans gözlemi · 15:27Z pilot kontrolü · 20:43Z pencere
   (oturum cron'u güvenilmez — memory; uyanışta CronList+date ile telafi). Push: dağıtım bildirimi gönderildi.
+- **Ruling 6 (08:58Z)**: kuru koşum `--bitis` verilmeden son endeks barını (09-04) alıyordu; `ledgerstamp.seed_boundary()` ölçümü
+  eski tohumun 2026-07-24'te bittiğini, canlı satırların 08-05'te başladığını gösterdi → yeni tohum canlı dönemle ÖRTÜŞMEMELİ:
+  `--bitis 2026-07-24`. İlk koşum (25 dk `timeout` ile kesildi) ve ikinci koşum (08:54Z, son-bar penceresi) durduruldu; üçüncü
+  koşum 08:58Z nohup ile doğru pencerede (Monitor izliyor). Kabul bandı n∈[800,884] (885×829/871 ±%5). Recall (low, 36 s) atfı plana.
+  DİKKAT: dagit rsync `--delete` — A1'deki `research/olcumler/edg082_pit_tohum/s5_2026-09-07/` yerel repoda YOK; rapor yazıldıktan
+  sonra ve HER dağıtımdan ÖNCE scp ile yerele çekilip commit'lenmeli, yoksa bir sonraki dağıtım raporu siler (Yasa 6).
+- **TSK-138 dilim-1 (09:1x–09:3xZ)**: hipotez (sef profil SOUL'unun "SESSIZ" kuralı denetçinin KATI JSON sözleşmesiyle çatışıyor —
+  `soul_denetimi` dosya-başı şerhi) DOĞRULANMADI; systematic-debugging Faz-1 gereği yalnız ölçüm aleti kuruldu: `Hukum.cevap_bas`
+  (katlanmış ilk 200 kr, `notify.scrub`), `gecir(model_kimligi=)`, sef profil künyesi config.yaml'dan (provider+default; kapının
+  ai-proxy-multi sabitlemesi yüzünden 'istenen', 'cevaplayan' değil — dilim-2 sorusu), okuyucu sef durum satırı + olay_sorgu.
+  v434 22 çivi, 11/11 mutasyon; kapsam 331 passed; merge 9894456; **dağıtım #25** 09:31:35Z sha 23b0904 healthz 200 (ops/ yalnız).
+  A1 sef kuru koşumu (operatör biçimi) 300 s'de zaman aşımı (model+denetçi çağrıları >5 dk) → yetim hermes süreci öldürüldü;
+  ilk gerçek ölçüm 22:04Z brifingi. Olay/gün 716/253/40 → 400 pencere yalnız önceki koşumun olayını okurken dar olabilir, aynı
+  koşumda yazılan olay her zaman pencere içinde. Sınıflandırıcı: arka plan dagit + komut gömülü cron reddedildi → ön plan dagit,
+  plana işaret eden cron (makul yol).
