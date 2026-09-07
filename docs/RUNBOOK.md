@@ -1361,6 +1361,17 @@ KULLANIM:
 ./sir_credential_gecis.sh --faz1 <ad>        → credential kanalı EKLE (ortam kanalı KALIR)
 ./sir_credential_gecis.sh --faz2 <ad>        → farksal ölçüm + ortam satırını KAPAT
 ./sir_credential_gecis.sh --geri-al <ad>     → ortam satırını geri yaz, drop-in'i kaldır
+./sir_credential_gecis.sh --faz1-hafiza      → FAZ-1A: motora TENANT credential'ı (54 drop-in)
+./sir_credential_gecis.sh --geri-al-hafiza   → 54 drop-in'i kaldır (vekil dosya yolunu kullanır)
+
+FAZ-1A NİYE BURADA VE NİYE YALNIZ İKİ ALT KOMUT. Hindsight'ın KENDİ geçişi (üç sır →
+`/etc/hindsight/creds/*`, `hindsight-api.service.d/50-creds.conf` + `hindsight-api-baslat.sh`)
+BAŞKA bir birime aittir ve bu betiğin sözleşmesi (`meridian` birimi, `/opt/meridian/.env`,
+`_kanit_nous`) oraya UYMAZ — genelleştirmeye zorlamak iki geçişi birbirinin rehinesi yapardı.
+Buraya YALNIZ motoru DÜŞÜREBİLECEK tek adım girdi: `54-hafiza-credential.conf` motorun birimine
+bir `LoadCredential=` satırı ekler ve kaynak dosya yoksa MOTOR HİÇ AÇILMAZ. O kapı belgeye değil
+koda yazılır (53'te olduğu gibi). Faz-2 (hindsight `.env`inden 3 satırın çıkarılması) hindsight
+tarafının işidir ve BU BETİKTE YOKTUR — burada olmayan şey, burada yapılmayacak şeydir.
 
 SIR DEĞERİ HİÇBİR YOLDA BASILMAZ VE ARGV'YE GİRMEZ. `ps` argv'yi makinedeki HERKESE gösterir;
 2026-09-02'de bir parola tam olarak bu sınıftan (URL-gömülü, süzgeç kara-listeliydi) terminale

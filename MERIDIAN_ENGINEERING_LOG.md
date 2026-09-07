@@ -2986,3 +2986,12 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   canlı kazandı, 390 eski-dönem plan miras — beyan), sızıntı 0, seed_boundary 07-24 eşleşti, eğri dokunulmadı; arşiv + DB yedeği; MU armed geri
   yüklendi; kimlik çakışması çıkmadı (yeniden numaralama gereksiz); `--kontrol` eski eşleme defterini hayalet buldu → arşivlendi. Worker
   19:44Z active/healthz 200, tick-watchdog geri. Rapor repoda. Sıradaki: dağıtım #26 + A1 kurulumları + S4 bar arşivi.
+- **Dağıtım #26** 20:01:20Z sha 2972f2e (ilk deneme 19:48Z [5c] pano artefaktı bayat — uctipleri.ts tip şerhi → `npm run build`, içerik aynı;
+  ikinci koşum TAMAM). A1: meridian-edg085-taban + hindsight-taban-tazele timer'ları kuruldu/etkin, örnekleyici test-ateşlendi (cpu 0,00 tatil,
+  healthz p50 1,5 ms); `~/bin/hafiza_ara.sh` ilk gerçek sorgu 17 s, 3/3 isabetli (TSK-162 +1). **S4 ÖLÇÜMÜ ÇÜRÜTTÜ**: ay/sembol parquet 70k
+  dosya, 480 s'de bitmedi, 134 MB (CSV 60) → hüküm `--bolum sembol` (Task 2 35c6dae, reviewer ONAY; sentetik: sembol 0,14× / ay 1,45× CSV).
+- **Operatör: "superpowers'ı kullanıyorsun değil mi"** → dürüst cevap: SDD iskeleti var, görev-başı bağımsız reviewer ve dal sonu inceleme
+  atlanmıştı (suite #34 tam bu yüzden 3 yasa çivisiyle kırıldı: v54 iz, v53 iki yazar, v56 alias → fix-1 18602ab beyanlarla). Kapatma: iki task
+  reviewer (bar bölümleme ONAY; T2 "RUNBOOK dışında ONAY") + gün sonu 5 teslim × 4 mercek çekişmeli inceleme workflow'u; hafıza kaydı.
+- **TSK-064 Task 2 merge** + RUNBOOK/korpus yeniden üretimi (bu commit); suite #35 sırada. A1 hazırlık ölçümü: hindsight_api `_FILE` desteği YOK
+  (sarmalayıcı B-sınıfı beyanlı), apisix key-auth kilidi aktif (401), `.env-apisix` 640 (Faz-0 bu gece).
