@@ -175,6 +175,8 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
 - Koşum her yerde `.venv/bin/python -m pytest` — worktree'lerde venv yok, sistem python'u pytest
   içermez; "koşamıyorum" ile "kırmızı" karışır.
 - Ajanlar eşzamanlı pytest koşmaz: `state/` paylaşımlı, fixture'lar çakışır. Dosya-ayrıklığı yetmez.
+  GEVŞETME (operatör 2026-09-07: "ajanlar pytest koşabilsin"): AYRI WORKTREE'lerdeki ajanlar eşzamanlı KAPSAM testi koşabilir
+  (her worktree kendi `state/`ini taşır); aynı checkout'ta yine yasak, tam suite yine tek ve Rol-1'de.
 - **Çivi yeşili kanıt değildir:** yeşilden sonra mutasyonla her çivinin hedeflediği dalı gerçekten
   ısırdığını göster (bir turda 4 çivi yanlış sebeple yeşildi). Ops aracı tesliminden önce aracı
   operatörün koşacağı BİÇİMDE bir kez koş — 18 çivi yeşilken `--uygula` sessizce yok sayılıyordu
