@@ -6,7 +6,7 @@
 # 2026-09-07 00:45Z tek-atım (083'ün 00:10Z S3/PK/NK tazelemesinden sonra); paralel reflect YASAK (083 vakası 16:24Z).
 
 card_id: EDG-2026-084
-status: registered   # 2026-09-06 Rol-1 — ön-kayıt; sayfalar 2026-09-07 00:45Z tek-atımla kurulur (kova taze), 7 gün pencere
+status: measuring   # 2026-09-07 01:1xZ — beş sayfa kuruldu (00:45–01:10Z), gün-0 sayımı kayıtlı; hüküm 2026-09-14
 family: hindsight_hafiza
 on_kayit: 2026-09-06
 ref: [EDG-2026-083, EDG-2026-080, TSK-160, TSK-171, TSK-161, TSK-170]
@@ -67,3 +67,17 @@ basari_tanimi: >
 notlar: >
   Açılmayan adaylar (beyan): kota/maliyet sayfası (llm_requests SQL daha doğru), veri kaynakları/PIT sayfası (pitlaw raporu mekanik),
   günlük özet (akşam brifing botu var). Bu kartla toplam sayfa 9 (pilot + 083'ün 3 + bu 5) — her biri okunmalı; okunmayan kapanır.
+
+adim_1_kurulum_2026_09_07: >
+  (01:1xZ Rol-1) edg084-gece-kur tek-atım 00:45Z, SIRALI (kur_sayfalar84.sh, yer tutucu kontrolü düzeltilmiş): S4 üretici→okuyucu 160 s /
+  12.219 kr · S5 açık sorular 221 s / 22.592 kr · S6 karar gerekçeleri 401 s / 12.470 kr · S7 dağıtım tarihçesi 141 s / 8.904 kr · S8 ajan
+  süreç hataları 561 s / 12.522 kr — 5/5 content_written, hepsi 600 s altında (6 iterasyon + mid tavan 60 + flashrank), paralel reflect YOK.
+  GÜN-0 UYDURMA (uydurma_say.py f20ef68; donuk girdiler girdi/*_2026-09-07.txt: 16.936 memory + 11 zihin modeli kimliği; anlık görüntüler
+  sayfalar/2026-09-07_sabah/ + SHA256; sonuç sayfalar/sonuc_2026-09-07_sabah.json): meridian-uretici-okuyucu-haritasi 69/83 (%83) ·
+  meridian-acik-sorular 93/96 (%97) · meridian-karar-gerekceleri 61/64 (%95) · meridian-dagitim-tarihcesi 23/24 (%96) · meridian-ajan-surec-hatalari 32/34 (%94);
+  11 sayfa toplam 449/478 (%94). Eşik (2) gün-0'da sağlanıyor. Doğrulanamayan sınıfı: `state/<dosya>` önekli GERÇEK çalışma dosyaları (S4'te 14 —
+  üretici→okuyucu sayfası tam da bu dosyaları listeliyor), pilot kimliği `mm-` öneksiz, `v248` (depoda yok), `push_code_a1.sh` (yok),
+  `PRODUCT.md/DESIGN.md` birleşik token, 16-hex iz kimliği. RULING R4 (ölçümden ÖNCE, 7. gün için): `state/`, `backups/`, `veri/` önekli
+  atıfta basename çalışma listesindeyse `calisma_dosyasi`; `mm-` öneki soyularak bellek listesiyle eşleşme. Kalanlar gerçek doğrulanamayan.
+  Reflect failover zinciri 01:11Z (m3 → m2.7 → nemotron-super) canlı — 7. gün minimax sayımı zincir üyelerini model kolonuyla ayrı sayar.
+

@@ -103,3 +103,9 @@ kosum_notu_k2_gun0_2026_09_06: >
   depo-dışı). Yalnız dizinsiz ad kuralı ÖNCESİ %25'ti — kural ölçümden ÖNCE, Rol-1 ruling (brief-uydurma-say-2.md). Bu sayı EDG-083'ün
   değil bu kartın gün-0 kanıtıdır; K2 eşiği 7. günde okunur. Gece cron 05:00Z (delta) 09-07'den itibaren.
 
+ayar_notu_2026_09_07: >
+  (01:11Z) REFLECT failover zinciri: HINDSIGHT_API_REFLECT_LLM_1 = minimax/minimax-m2.7:free (kendi kovası), _2 = nvidia/nemotron-3-super-120b-a12b:free
+  (ortak 1000 kova), STRATEGY failover; üyelere anahtar kopyalandı (EDG-081 dersi). Gerekçe: 00:05Z sonda üç modelin yapısal tool_calls
+  ürettiğini gösterdi; 09-06'da m3 tavanı 17:15Z'de doldu, sayfalar 429'a düştü. K2 kill#5 sayımı m3 çağrılarıyla sürer; zincire düşen
+  çağrılar model kolonuyla ayrı raporlanır. Restart 01:11:33Z, hata 0, 'Connection verified' m3/m2.7/nemotron-super; uçuşta reflect yoktu.
+
