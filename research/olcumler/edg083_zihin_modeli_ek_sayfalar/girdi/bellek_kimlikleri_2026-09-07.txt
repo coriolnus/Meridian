@@ -16934,9 +16934,14 @@ ffe6d36a-32c1-443c-9689-7e3fd3e440c4
 ffec60df-2ba7-4a60-9e29-69ebdee902b4
 ffecd4f0-97df-41c1-9bb1-37d4d11f90c6
 ffed2840-b2ba-425e-9793-b91ff7c2a35a
+meridian-acik-sorular
+meridian-ajan-surec-hatalari
 meridian-ariza-kok-neden
 meridian-bagimlilik-haritasi
+meridian-dagitim-tarihcesi
 meridian-hedef-sapma
+meridian-karar-gerekceleri
+meridian-uretici-okuyucu-haritasi
 mm-0fb27056e93d4c45b302cdc6e62abc6a
 nk-kripto-madencilik
 pk-pit-civisi

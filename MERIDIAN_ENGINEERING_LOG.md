@@ -2898,3 +2898,13 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   ölçüyor → sökme kararı 09-13/14 hükümleriyle birlikte OPERATÖRDE (TSK-060 OPERATOR). Ders: bugün "hindsight'ı aktif kullan"
   direktifi altında recall 5 kez sorgulandı; kaynaklı ama hedef belgeyi çoğunlukla ıskaladı — sayfa/reflect (sentez) işe yaradı,
   recall (arama) yaramadı; ikisi ayrı yetenek.
+
+### 2026-09-07 gece (Rol-1, otonom) — dokuz sayfa, reflect zinciri, kıyas kapanışı
+- **00:05Z araç sondası:** nemotron-super, nemotron-ultra, minimax-m2.7 doğrudan çağrıda yapısal tool_calls üretti; gemma 429.
+- **00:10Z EDG-083 tazeleme:** S3 180 s (22,3k kr), PK 120 s, NK 120 s; PK/NK GEÇTİ (karta işlendi).
+- **00:45Z EDG-084 kurulum:** S4–S8 sıralı, 5/5 içerik, 141–561 s (600 s altı); paralel reflect yok.
+- **01:11Z reflect failover zinciri** (m3 → m2.7 → nemotron-super; anahtar üyelere kopyalandı) — restart temiz, bağlantılar doğrulandı.
+- **01:1xZ 11 sayfa gün-1 uydurma sayımı:** 449/478 (%94); sayfa başına %82–100 (NK atıf yok, beklenen). Doğrulanamayanlar: `state/` önekli
+  gerçek çalışma dosyaları (S4'te 14 — sayfa tam da bu dosyaları listeliyor), `mm-` öneksiz pilot kimliği, v248, push_code_a1.sh,
+  birleşik token → R4 kuralı kartlara ölçümden önce yazıldı; sayaç güncellemesi ajanda. Sayfa anlık görüntüleri + sonuç SHA256'lı.
+- Kıyas zinciri 22:54Z bitti; EDG-067 KALDI hükmü ve varsayılan koşum notu daha önce işlendi. Taban indeksi TSK-167 için saklandı.
