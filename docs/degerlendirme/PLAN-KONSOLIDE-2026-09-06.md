@@ -13,7 +13,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | 22:04Z akşam brifingi | zamanlı | TSK-138 + TSK-014 doğrulaması (events.jsonl kayıtları) |
 | 00:05Z araç sondası | ✅ nemotron-super/ultra + m2.7 tool_calls; gemma 429 | ✅ reflect yedek zinciri 01:11Z canlı (m3→m2.7→nemotron-super) |
 | 00:10Z S3/PK/NK · 00:45Z S4–S8 | ✅ 00:17Z / 01:10Z, 8/8 içerik, 120–561 s | ✅ 11 sayfa gün-1 sayımı 449/478 (%94), PK/NK geçti; R4 kuralı 7. gün için kayıtlı |
-| 03:00Z ingest r5 · 03:30Z yedek · 05:00Z pilot cron | zamanlı | TSK-144 kapanışı; gece özeti |
+| 03:00Z ingest r5 · 03:30Z yedek · 05:00Z pilot cron | ✅ r5 04:15Z ok 4 / kalıcı 4 (TSK-144 DONE) · yedek rc=0 · pilot cron izlemede | sabah: pilot gün-1 kaydı |
 
 ## 2. Hafta — ölçüm pencereleri (dokunulmaz)
 
