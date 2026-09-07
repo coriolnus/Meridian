@@ -46,7 +46,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | TSK-162 triyajda recall | bu hafta | disiplin + 2 hafta sayım; kod yok |
 | TSK-020 [UYGULA-3] bars→Parquet | ✅ KOD MAIN'DE 09-07 13:5xZ (67b86f4: bar_arsivle + bar_sorgu, v435/v436) | dağıtım #26 S5 sonrası → S4 A1 ilk arşiv + kapsam raporu (Rol-1); 3.3 canlı yol ayrı kart |
 | TSK-167 pano anlamsal arama | ✅ dilim-1 KOD MAIN'DE 09-07 19:0xZ (hafiza_ara CLI + haftalık tazeleme birimi) | A1 kurulum + ilk sorgu dağıtım #26 sonrası; dilim-2 pano ucu |
-| TSK-064 sır yönetimi Faz-0/1A/1B (+Faz-2 Vault) | gelecek hafta | tek dalga; son basamak KARARLI: HashiCorp Vault, oto-unseal dosya |
+| TSK-064 sır yönetimi Faz-0/1A/1B (+Faz-2 Vault) | ✅ BUGÜN BAŞLADI (operatör): Task 1 (Faz-0 + 1B) main'de 09-07 19:3xZ, suite #33 yeşil | Task 2 (1A) sırada; A1 geçişi gece penceresi; Vault Faz-2 sonra |
 | TSK-137 Ağustos defteri kırpma | Ekim başı | aylık bakım |
 | TSK-132 palet artıkları | bu ay | eski sayfalar jetonlar.css |
 | TSK-012 dalga-B (pano sohbet) | bu ay | icra sırasına alınmalı |
