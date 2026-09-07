@@ -51,13 +51,18 @@ TÜRETİLEN iki ek sınıf + `kalem` gevşetmesi. Sınama seti (bu turda GERÇEK
 MUTASYON KANITLARI (CLAUDE.md §6 — "çivi yeşili kanıt değildir"): bu dosyanın docstring'i turun
 SONUNDA, gerçek mutasyon koşumlarından SONRA güncellenir (rapor dosyasında ayrıca yazılı) —
 `atiflari_cikar`ın sınıf ayrımını kaldıran, `oran` hesabını `toplam==0`da `0.0`a çeviren,
-`yol_dogrula`nın `ad` eşleşmesini kapatan VE `bellek_dogrula`yı HER ZAMAN `False` döndüren (R1
-KAPALI) DÖRT BAĞIMSIZ mutasyon, ilgili testleri KIRMIZI yapmalı. Dördüncüsü (R1) hem kendi
-`test_MUTASYON_R1_...` içinde (monkeypatch, self-contained) HEM DE bu turda GERÇEK kaynak dosyaya
-uygulanıp geri alınarak ayrıca doğrulandı: `bellek_dogrula` gövdesi `return False`a indirgenince
+`yol_dogrula`nın `ad` eşleşmesini kapatan, `bellek_dogrula`yı HER ZAMAN `False` döndüren (R1
+KAPALI) VE `yol_r4_calisma_basename`yi HER ZAMAN `None` döndüren (R4a KAPALI) BEŞ BAĞIMSIZ
+mutasyon, ilgili testleri KIRMIZI yapmalı. Dördüncüsü (R1) hem kendi `test_MUTASYON_R1_...`
+içinde (monkeypatch, self-contained) HEM DE bu turda GERÇEK kaynak dosyaya uygulanıp geri
+alınarak ayrıca doğrulandı: `bellek_dogrula` gövdesi `return False`a indirgenince
 `test_bellek_dogrula_onek_eslesirse_dogrular_liste_yoksa_daima_false` ve
 `test_sayfa_olc_bellek_listesi_verilince_atif_bellek_sinifinda_sayilir_sha_da_DEGIL` KIRMIZI oldu
-(2 failed), geri alınca 41 testin TAMAMI yeniden yeşile döndü.
+(2 failed), geri alınca 41 testin TAMAMI yeniden yeşile döndü. Beşincisi (R4a, Rol-1 ruling
+2026-09-07) da AYNI ÇİFT yöntemle doğrulandı: `yol_r4_calisma_basename` gövdesi `return None`a
+indirgenip GERÇEK kaynak dosyaya uygulanınca `test_sayfa_olc_r4a_state_onekli_calisma_dosyasi_
+dogrulanir_TDD_1` tek başına KIRMIZI oldu (`assert 1 == 0`), geri alınıp `__pycache__` temizlenince
+50 testin TAMAMI yeniden yeşile döndü (bkz. `test_MUTASYON_R4a_...` monkeypatch sürümü).
 
 ÇAPA YASAĞI: bu dosyada `dosya.py` + iki-nokta + rakam biçiminde (satır çapası) HİÇBİR atıf YOK
 — `test_capa_yasagi_bu_dosyalarda_satir_capasi_yok` bunu bu dosyanın VE ölçülen betiğin kendi
@@ -729,3 +734,176 @@ def test_MUTASYON_R1_bellek_dogrula_KAPATILIRSA_bellek_testi_KIRMIZI_olur():
             assert sonuc["sinif_bazinda"]["bellek"] == {"toplam": 1, "dogrulanan": 1, "dogrulanamayan": []}
     finally:
         o.bellek_dogrula = orijinal
+
+
+# =================================================================================================
+# R4 — (a) `yol` sınıfına ÖNEKLİ ÇALIŞMA DOSYASI genişlemesi, (b) `bellek`e mm- ÖNEKSİZ eşleşme
+# (Rol-1 ruling 2026-09-07, ÖLÇÜMDEN ÖNCE — S4 pilot sayfasının GERÇEK bulgusu): S4 sayfası
+# `state/equity_curve.json`, `state/portfolio.json` gibi 14 GERÇEK çalışma dosyasını ÖNEKLİ yazdı;
+# R3b (`calisma_dosyasi`) yalnız DİZİNSİZ atıfta çalıştığı için hiçbiri doğrulanamadı. Aynı turda
+# pilot zihin modeli kimliği `mm-0fb27056…` sayfada `0fb27056…` (ÖNEKSİZ) geçti ve bellek
+# listesindeki `mm-` önekli satırla eşleşmedi (eski `bellek_dogrula` yalnız satırın KENDİSİYLE
+# `startswith` deniyordu).
+# =================================================================================================
+
+R4_STATE_ONEKLI_GERCEK = "state/equity_curve.json"       # (1): state/ önekli, basename listede VAR
+R4_YANLIS_ONEK = "ops/equity_curve.json"                 # (2): yanlış önek → davranış değişmez
+R4_STATE_ONEKLI_LISTEDE_YOK = "state/olmayan.json"       # (3): state/ önekli, basename listede YOK
+R4_CALISMA_BASENAME = "equity_curve.json"
+R4_MM_TAM_KIMLIK = "mm-0fb27056e93d4c45b302cdc6e62abc6a"  # bellek listesindeki satır (mm- önekli)
+R4_MM_ONEKSIZ_ATIF = "0fb27056e93d4c45b302cdc6e62abc6a"   # sayfadaki atıf (mm- ÖNEKSİZ)
+
+
+def test_on_kosul_r4_sinama_seti_depoda_iddia_ettigi_gibi():
+    """Sınama setinin taban iddiaları GERÇEK depoda doğru mu (test-taban sapması olmasın):
+    `state/equity_curve.json`/`ops/equity_curve.json`/`state/olmayan.json` git ls-files'ta YOK;
+    `equity_curve.json` de depoda İZLENEN hiçbir dosyanın basename'i DEĞİL (`state/` versiyonsuz,
+    CLAUDE.md §1) — R4a'nın 'depoda yok' ön şartı bu sınama setinde GERÇEKTEN doğru."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    assert R4_STATE_ONEKLI_GERCEK not in ls_kume
+    assert R4_YANLIS_ONEK not in ls_kume
+    assert R4_STATE_ONEKLI_LISTEDE_YOK not in ls_kume
+    assert not any(p.rsplit("/", 1)[-1] == R4_CALISMA_BASENAME for p in ls_kume)
+
+
+def test_yol_r4_calisma_basename_onekli_atiflarda_basename_doner_baskasinda_none():
+    """`yol_r4_calisma_basename`: YALNIZ önek denetler — depoya/çalışma listesine HİÇ bakmaz (o
+    karar `sayfa_olc`de `calisma_dosyasi_dogrula` ile AYRICA verilir)."""
+    o = _yukle()
+    assert o.yol_r4_calisma_basename("state/equity_curve.json") == "equity_curve.json"
+    assert o.yol_r4_calisma_basename("backups/x/y/notify.json") == "notify.json"
+    assert o.yol_r4_calisma_basename("/opt/veri/z.csv") == "z.csv"
+    assert o.yol_r4_calisma_basename("veri/w.csv") == "w.csv"
+    assert o.yol_r4_calisma_basename("ops/equity_curve.json") is None
+    assert o.yol_r4_calisma_basename("equity_curve.json") is None  # dizinsiz — önek YOK, R3b'nin işi
+
+
+def test_sayfa_olc_r4a_state_onekli_calisma_dosyasi_dogrulanir_TDD_1():
+    """TDD (1): `state/equity_curve.json` + çalışma listesinde `equity_curve.json` →
+    `calisma_dosyasi`na TAŞINIR, doğrulanmış; `yol` toplamına HİÇ girmez; iz kaydı
+    `sinif_bazinda['yol']['calisma_eslesmeleri']`ye (önek+ad → basename) yazılır."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    roadmap_metni = (KOK / "ROADMAP.md").read_text(encoding="utf-8")
+    calisma_kume = frozenset({R4_CALISMA_BASENAME})
+    sayfa = {"id": "r4a-1", "kaynak_dosya": "r4a-1.md",
+             "content": f"Betik {R4_STATE_ONEKLI_GERCEK} dosyasını yazdı."}
+    sonuc = o.sayfa_olc(sayfa, KOK, ls_kume, roadmap_metni, [], calisma_dosyalari_kume=calisma_kume)
+
+    assert sonuc["sinif_bazinda"]["yol"]["toplam"] == 0, "R4a atıfı yol toplamına GİRMEMELİ"
+    assert sonuc["sinif_bazinda"]["calisma_dosyasi"] == {"toplam": 1, "dogrulanan": 1, "dogrulanamayan": []}
+    assert sonuc["sinif_bazinda"]["yol"]["calisma_eslesmeleri"] == {R4_STATE_ONEKLI_GERCEK: R4_CALISMA_BASENAME}
+    assert sonuc["toplam"] == 1
+    assert sonuc["dogrulanan"] == 1
+
+
+def test_sayfa_olc_r4a_yanlis_onek_davranis_DEGISMEZ_dogrulanamaz_TDD_2():
+    """TDD (2): `ops/equity_curve.json` (yanlış önek) → R4a genişlemesi hiç TETİKLENMEZ, atıf
+    eski davranışla `yol` sınıfında doğrulanamayan kalır."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    roadmap_metni = (KOK / "ROADMAP.md").read_text(encoding="utf-8")
+    calisma_kume = frozenset({R4_CALISMA_BASENAME})
+    sayfa = {"id": "r4a-2", "kaynak_dosya": "r4a-2.md",
+             "content": f"Betik {R4_YANLIS_ONEK} dosyasını yazdı."}
+    sonuc = o.sayfa_olc(sayfa, KOK, ls_kume, roadmap_metni, [], calisma_dosyalari_kume=calisma_kume)
+
+    assert sonuc["sinif_bazinda"]["yol"]["toplam"] == 1
+    assert sonuc["sinif_bazinda"]["yol"]["dogrulanan"] == 0
+    assert R4_YANLIS_ONEK in sonuc["sinif_bazinda"]["yol"]["dogrulanamayan"]
+    assert sonuc["sinif_bazinda"]["calisma_dosyasi"] == {"toplam": 0, "dogrulanan": 0, "dogrulanamayan": []}
+    assert sonuc["sinif_bazinda"]["yol"]["calisma_eslesmeleri"] == {}
+
+
+def test_sayfa_olc_r4a_onekli_ama_listede_yok_dogrulanamaz_TDD_3():
+    """TDD (3): `state/olmayan.json` — önek DOĞRU ama basename çalışma listesinde YOK →
+    doğrulanamaz, `yol` sınıfında kalır (uydurma sayılmaya devam eder)."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    roadmap_metni = (KOK / "ROADMAP.md").read_text(encoding="utf-8")
+    calisma_kume = frozenset({R4_CALISMA_BASENAME})
+    sayfa = {"id": "r4a-3", "kaynak_dosya": "r4a-3.md",
+             "content": f"Betik {R4_STATE_ONEKLI_LISTEDE_YOK} dosyasını yazdı."}
+    sonuc = o.sayfa_olc(sayfa, KOK, ls_kume, roadmap_metni, [], calisma_dosyalari_kume=calisma_kume)
+
+    assert sonuc["sinif_bazinda"]["yol"]["toplam"] == 1
+    assert sonuc["sinif_bazinda"]["yol"]["dogrulanan"] == 0
+    assert R4_STATE_ONEKLI_LISTEDE_YOK in sonuc["sinif_bazinda"]["yol"]["dogrulanamayan"]
+    assert sonuc["sinif_bazinda"]["calisma_dosyasi"] == {"toplam": 0, "dogrulanan": 0, "dogrulanamayan": []}
+
+
+def test_bellek_dogrula_r4b_mm_oneksiz_atif_mm_onekli_satirla_eslesir_TDD_4():
+    """TDD (4): bellek listesi `mm-0fb27056…`, sayfadaki atıf ÖNEKSİZ `0fb27056…` → doğrulanır —
+    eski kod bunu KAÇIRIYORDU (`mm-0fb27056…` `0fb27056…`yle BAŞLAMIYOR, önekler farklı)."""
+    o = _yukle()
+    bellek_kume = frozenset({R4_MM_TAM_KIMLIK})
+    assert o.bellek_dogrula(R4_MM_ONEKSIZ_ATIF, bellek_kume) is True
+    assert o.bellek_dogrula(R4_MM_ONEKSIZ_ATIF, None) is False
+    assert o.bellek_dogrula("hicbiryerdeyok99", bellek_kume) is False
+
+
+def test_sayfa_olc_r4b_mm_oneksiz_zihin_modeli_kimligi_bellek_dogrulanir():
+    """TDD (4) sayfa düzeyi: sayfadaki `0fb27056…` (mm- ÖNEKSİZ) + bellek listesi `mm-0fb27056…`
+    → `bellek` sınıfına TAŞINIR, doğrulanmış; `sha` toplamına HİÇ girmez."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    roadmap_metni = (KOK / "ROADMAP.md").read_text(encoding="utf-8")
+    bellek_kume = frozenset({R4_MM_TAM_KIMLIK})
+    sayfa = {"id": "r4b-1", "kaynak_dosya": "r4b-1.md",
+             "content": f"Pilot zihin modeli kimliği `{R4_MM_ONEKSIZ_ATIF}` referans alınıyor."}
+    sonuc = o.sayfa_olc(sayfa, KOK, ls_kume, roadmap_metni, [], bellek_kume=bellek_kume)
+
+    assert sonuc["sinif_bazinda"]["sha"]["toplam"] == 0, "bellek'e kayan atıf sha toplamına GİRMEMELİ"
+    assert sonuc["sinif_bazinda"]["bellek"] == {"toplam": 1, "dogrulanan": 1, "dogrulanamayan": []}
+    assert sonuc["toplam"] == 1
+    assert sonuc["dogrulanan"] == 1
+
+
+def test_calistir_beyan_alaninda_R4_cumlesi_var(tmp_path):
+    """(c): `beyan` alanına R4 (Rol-1 ruling 2026-09-07) cümlesi eklenir."""
+    o = _yukle()
+    sonuc = o.calistir(sayfa_dizin=tmp_path, repo=KOK)
+    assert "R4:" in sonuc["beyan"]
+    assert "2026-09-07" in sonuc["beyan"]
+    assert "mm-" in sonuc["beyan"]
+    assert "state/backups/veri" in sonuc["beyan"]
+
+
+# =================================================================================================
+# MUTASYON KANITI — R4(a) (CLAUDE.md §6, "çivi yeşili kanıt değildir")
+# =================================================================================================
+
+def test_MUTASYON_R4a_yol_r4_calisma_basename_KAPATILIRSA_TDD_1_KIRMIZI_olur():
+    """BEŞİNCİ BAĞIMSIZ mutasyon (R4a, brief R4 TDD şartı — '(a) dalını kapat, (1) kırmızı'):
+    `yol_r4_calisma_basename`yi HER ZAMAN `None` dönecek şekilde mutasyona uğratırsak (R4a KAPALI,
+    hiçbir önek hiç TANINMAZ, her aday eski 'yol doğrulanamadı' yoluna düşer),
+    `test_sayfa_olc_r4a_state_onekli_calisma_dosyasi_dogrulanir_TDD_1`ın ana iddiası
+    (`state/equity_curve.json` `calisma_dosyasi`na TAŞINIR, `yol` toplamına GİRMEZ) ÇÜRÜR — testi
+    TEKRAR YAZMADAN, mutasyonlu `yol_r4_calisma_basename`yi `sayfa_olc` GERÇEKTEN çağırarak
+    (fonksiyonun içini KOPYALAMADAN) gösterilir (CLAUDE.md §6)."""
+    o = _yukle()
+    ls_kume, hata = o.ls_files_getir(KOK)
+    assert hata is None
+    roadmap_metni = (KOK / "ROADMAP.md").read_text(encoding="utf-8")
+    calisma_kume = frozenset({R4_CALISMA_BASENAME})
+    orijinal = o.yol_r4_calisma_basename
+
+    def mutasyonlu_yol_r4_calisma_basename(atif):
+        return None  # R4(a) KAPALI: hiçbir önek hiç tanınmaz
+
+    o.yol_r4_calisma_basename = mutasyonlu_yol_r4_calisma_basename
+    try:
+        sayfa = {"id": "r4a-1", "kaynak_dosya": "r4a-1.md",
+                 "content": f"Betik {R4_STATE_ONEKLI_GERCEK} dosyasını yazdı."}
+        sonuc = o.sayfa_olc(sayfa, KOK, ls_kume, roadmap_metni, [], calisma_dosyalari_kume=calisma_kume)
+        with pytest.raises(AssertionError):
+            assert sonuc["sinif_bazinda"]["yol"]["toplam"] == 0
+            assert sonuc["sinif_bazinda"]["calisma_dosyasi"] == {"toplam": 1, "dogrulanan": 1, "dogrulanamayan": []}
+    finally:
+        o.yol_r4_calisma_basename = orijinal
