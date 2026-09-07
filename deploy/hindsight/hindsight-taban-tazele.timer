@@ -1,0 +1,75 @@
+# hindsight-taban-tazele.timer — hindsight-taban-tazele.service'i HAFTADA BİR tetikler.
+#
+# SLOT: PAZAR 03:30 UTC. Üç kısıt sırayla uygulandı; sonuncusu bir BEDEL olarak ödendi.
+#
+# ============================================================================================
+# (1) DİKKAT BÜTÇESİ DEĞİL, MAKİNE ÇEKİŞMESİ — bu birim kimseye mesaj YAZMAZ.
+# ============================================================================================
+# Telegram botlarından (`@sef` 22:00Z · `@bekci` 10:00Z · `@karne` Cumartesi 16:00Z) uzak
+# durmasının sebebi operatörün dikkati DEĞİL: bu birim sessizdir, yalnız journal'a yazar ve
+# arızası panodan (/api/infra `ActiveState=failed`) okunur. Uzaklık CPU içindir — üç bot da
+# `hermes -z` ile bir model çağırır ve o çağrılar 4 OCPU'lu kutuda gerçek yük üretir.
+#
+# ============================================================================================
+# (2) HAFTA GÜNÜ: PAZAR — ve bu, @karne'nin CUMARTESİ'sinden TÜRETİLDİ
+# ============================================================================================
+# `@karne` Cumartesi 16:00Z koşar ve `hermes -z` ile dört hükmü söze çevirir. Aynı güne
+# üç saatlik bir ONNX gömme koşumu koymak, haftanın en pahalı iki işini yan yana getirirdi.
+# Pazar, hafta içi seansların HİÇBİRİNE değmeyen ikinci gündür: ABD seansları Pzt–Cum, yani
+# Pazar 03:30Z'de ne kapanış turu ne de aynı-akşam bacağı vardır. Pazartesi açılışına da en
+# uzak noktadır — indeks, işlem haftası başlamadan tazelenmiş olur.
+#
+# ============================================================================================
+# (3) SAAT: 03:30Z — ÖDENMİŞ BİR BEDELLE (bedel yasası)
+# ============================================================================================
+# KAZANÇ: filodaki takvimli tetiklerin hepsinden uzak. ÖLÇÜLDÜ (birim dosyaları okundu,
+# 2026-09-07): meridian-backup 23:30Z · meridian-aylik-bucket-kopya ayın 3'ü 04:00Z ·
+# hindsight-yedek 03:30Z · @sef 22:00Z · @bekci 10:00Z · @karne Cmt 16:00Z.
+#
+# BEDEL 1 — SPRINT PENCERESİ. `meridian/sprint.py`nin `SPRINT_HOURS = (22, 6)` penceresi
+# [22:00, 06:00) ve 03:30 O PENCERENİN İÇİNDEDİR. Yani otomatik öğrenme sprinti koşuyorsa bu
+# birim onunla CPU paylaşır. Takas bilerek bu yönde yapıldı: pencerenin DIŞINDA kalan her saat
+# ya bir bot slotuna ya ABD seansına ya da yedek işlerine değiyordu, ve sprint tek kesilebilir
+# komşudur (deterministik koordinat inişi — kesilirse bir sonraki gece devam eder, bir teslimat
+# ya da bir emir kaybolmaz). Sınır OMP_NUM_THREADS=2 ile çekilir: birim 4 OCPU'nun yarısından
+# fazlasını almaz. TERSİ DE SAVUNULABİLİRDİ ve ölçüm ucuzdur — ilk koşumdan sonra `uptime` yükü
+# ve sprintin o geceki ilerlemesi bakılırsa takas sayıyla yeniden kurulabilir.
+# ÖNCÜL: reflect kanaryası CPU işleriyle çakışınca load 14,6'da 300 s'de ÖLMÜŞTÜ (2026-09-06) —
+# yani bu bedel bu depoda BİR KEZ gerçekleşmiş bir sınıftır, varsayımsal değil.
+#
+# BEDEL 2 — hindsight-yedek.timer DA 03:30 UTC'dir, ama HER GÜN. Yani haftada bir bu iki birim
+# aynı dakikada tetiklenir. Çakışma KABUL EDİLDİ: yedek bir `pg_dump | gzip`tir (G/Ç ağırlıklı,
+# dakikalar), tazeleme CPU ağırlıklıdır — farklı kaynaklar. Ayrıca `RandomizedDelaySec=300`
+# ikisini pratikte ayırır. Dakikayı kaydırarak "çözmek" mümkündü ama gerekçesiz bir sayı
+# üretirdi; çakışma ADIYLA yazıldı, saklanmadı.
+#
+# ÖLÇÜLEMEYEN, ve bu yüzden HÜKME SOKULMADI: A1'in TZ'si (sprint penceresi naive `datetime.now()`
+# ile, yani SUNUCU YERELİYLE karşılaştırılıyor; buradaki `UTC` mutlak). Yanlışsa bedel küçük —
+# iki iş aynı saate düşer ve ikisi de yavaşlar — doğrulaması ucuz: `timedatectl` bir kez okunur.
+[Unit]
+Description=EDG-067 taban indeksi tazeleme tetigi (HAFTALIK — Pazar, seans disi)
+
+# SLOT HÜKMÜ (Rol-1 2026-09-07 19:0xZ, hafıza: reflect-kanary-sessiz-saat + A1 timer envanteri): 03:30Z TERK EDİLDİ — sprint penceresi
+# [22:00,06:00) içindeydi ve hindsight-yedek.timer da her gün 03:30Z (aynı dakikada pg_dump + gömme = CPU/IO çakışması; reflect kanaryası
+# load 14,6'da ölmüştü). Pazar 08:15Z: seans yok, sprint dışı, skill-gorus 07:30Z (kısa) bitmiş, bekci 10:00Z'ye 1 sa 45 dk pay.
+[Timer]
+OnCalendar=Sun *-*-* 08:15:00 UTC
+# TELAFİ, VE BEDELİ AÇIKÇA ÖDENMİŞ. KAZANÇ: makine Pazar kapalıysa kaçan tetik sessizce
+# kaybolmaz — haftalık bir kadansta kaçan bir GÜN değil kaçan bir HAFTA telafi edilir ve indeks
+# o kadar daha bayatlar. BEDELİ: telafi koşumu hafta içine, yani ABD seansının açık olduğu bir
+# saate düşebilir ve üç saatlik bir CPU işini seans saatine taşıyabilir. Sonuç bir yanlış sayı
+# DEĞİLDİR (bu birim deftere yazmaz, yalnız indeks kurar) — en kötü hâl yavaşlamış bir seanstır.
+# Görünür bir yavaşlama, aylarca bayat kalan bir indeksten iyidir; takas bu yönde yapıldı.
+Persistent=true
+RandomizedDelaySec=300
+# FixedRandomDelay (TSK-152): dagit'in [4] adımındaki sistem-geneli `daemon-reload` rastgele payı
+# reload'da YENİDEN çeker ve tetiği erkene alabilir — gerekçenin TAMAMI ve A1 ölçümü
+# deploy/oracle-a1/meridian-backup.timer başlığındadır (tek kaynak).
+FixedRandomDelay=true
+
+[Install]
+WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — BU DOSYADA YAPILACAK BİR ŞEY YOK: timer birimlerinin [Service] bölümü olmaz,
+# sertleştirme süreç yürütmeye aittir ve tetiklenen birimde (hindsight-taban-tazele.service)
+# yapıldı. Aynı gerekçe meridian-karne.timer ve meridian-backup.timer'da da yazılıdır.
