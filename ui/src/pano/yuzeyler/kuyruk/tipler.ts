@@ -28,9 +28,9 @@ export interface KararKaydi {
   readonly not?: string;
 }
 
-/** Gelen kutusu öğesi. ÜÇ TÜRÜN BİRLEŞİMİ — tür başına alan kümesi farklı, hepsi opsiyonel. */
+/** Gelen kutusu öğesi. DÖRT TÜRÜN BİRLEŞİMİ — tür başına alan kümesi farklı, hepsi opsiyonel. */
 export interface OnayOgesi {
-  /** `"arming"` | `"skill_revision"` | `"skill_rec"`. Bilinmeyen tür de çizilir (uç yeni tür ekleyebilir). */
+  /** `"arming"` | `"skill_revision"` | `"skill_rec"` | `"sohbet_onerisi"`. Bilinmeyen tür de çizilir. */
   readonly type?: string;
   readonly id?: string;
   readonly title?: string;
@@ -46,6 +46,20 @@ export interface OnayOgesi {
   readonly ornek_yeterli?: boolean | null;
   readonly ornek_notu?: string | null;
   readonly karar_kaydi?: KararKaydi;
+  /* --- YALNIZ `sohbet_onerisi` (TSK-012 dalga-B; api.py::_bekleyen_sohbet_onerileri) ---
+     Bu dört alan gelen kutusunun ÖTEKİ türlerinde YOKTUR ve burada opsiyonel duruşları
+     bilinçli: uç öneriyi `tur`/`hedef`/`oturum`/`ts` ile veriyor, `evidence` ise
+     gerekçenin kısaltılmış hâli (`esc_ev`, 200 karakter). */
+  /** Öneri türü — DONUK sözlük (`plan_onayi` · `alarm_ack` · `not`). */
+  readonly tur?: string;
+  /** Önerinin hedefi: plan kimliği ya da alarm jetonu; `not` türünde boş olabilir. */
+  readonly hedef?: string;
+  /** Öneriyi doğuran sohbet oturumu — panonun sohbet geçmişiyle aynı kimlik uzayı. */
+  readonly oturum?: string;
+  /** Önerinin yazılma damgası (ISO). ÖTEKİ türlerde gelen kutusu damga TAŞIMAZ. */
+  readonly ts?: string;
+  /** Kaynağın kendi beyanı — `"sohbet"`. */
+  readonly kaynak?: string;
 }
 
 export interface OnayGovdesi {

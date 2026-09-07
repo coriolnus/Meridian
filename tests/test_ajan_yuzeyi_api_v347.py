@@ -811,6 +811,12 @@ _YUZEY_OKUYUCU = _KOK / "ui/src/pano/yuzeyler/ajan/filoOku.ts"
 _YUZEY_BILESEN = _KOK / "ui/src/pano/yuzeyler/ajan/Filo.tsx"
 _YUZEY_KABUK = _KOK / "ui/src/pano/yuzeyler/Ajan.tsx"
 _YUZEY_SOHBET = _KOK / "ui/src/pano/yuzeyler/ajan/SohbetHatti.tsx"
+# 2026-09-07 (TSK-012 dalga-B / B2): AÇIK yazma şeridi bu dosyada DEĞİL — Meridian sohbeti
+# ayrı bir muhatap ve ayrı bir defter (`state/sohbet.jsonl`). T2g artık iki dosyayı birden
+# ölçüyor: kilitli şerit (SohbetHatti) HÂLÂ kapalı mı, açık şerit (SohbetPaneli) gerçekten
+# `/api/sohbet`e mi gidiyor. Tek dosyaya bakan bir çivi, kilidin "başka yerde" açıldığını
+# göremez ve iki yönde de kör kalırdı.
+_YUZEY_SOHBET_PANEL = _KOK / "ui/src/pano/yuzeyler/ajan/SohbetPaneli.tsx"
 # 2026-08-31 (mesajlaşma göçü): `ajanlar: null` dalı `Filo.tsx`ten SOL SÜTUNA taşındı.
 # T2l'nin DAL KAPSAMI korunuyor, yalnız dilimlendiği dosya değişti — dosya-kapsamlı bir
 # "üç dizge var mı" kontrolüne düşürmek, bu dosyanın kendi B4 dersine (kimlik arayan çivi
@@ -889,7 +895,7 @@ def yuzey() -> dict[str, str]:
     for p in (_YUZEY_OKUYUCU, _YUZEY_BILESEN, _YUZEY_KABUK, _YUZEY_YANLISTE, _YUZEY_GRAMER):
         assert p.exists(), f"pano yüzeyi yok: {p} — uç okuyucusuz kaldı (YASA 6)"
     dallar = {"oku": _YUZEY_OKUYUCU, "bilesen": _YUZEY_BILESEN, "kabuk": _YUZEY_KABUK,
-              "sohbet": _YUZEY_SOHBET, "kayit": _YUZEY_KAYIT,
+              "sohbet": _YUZEY_SOHBET, "sohbet_panel": _YUZEY_SOHBET_PANEL, "kayit": _YUZEY_KAYIT,
               "yanliste": _YUZEY_YANLISTE, "gramer": _YUZEY_GRAMER}
     d = {ad: _soy(p.read_text(encoding="utf-8")) for ad, p in dallar.items()}
     d["hepsi"] = "\n".join(d[ad] for ad in ("oku", "bilesen", "kabuk", "yanliste"))
@@ -1018,17 +1024,56 @@ def test_T2f_olculemeyen_ajan_BOS_DURUM_gibi_cizilmiyor(yuzey):
         "boş bir kart operatöre ölçülmemiş bir sessizliği ölçülmüş gibi okutur")
 
 
-def test_T2g_sohbet_kutusu_HALA_KAPALI_ve_gerekce_TARIHLI(yuzey):
-    """DALGA-A SÖZLEŞMESİ: uç açıldı, KUTU AÇILMADI. Okuma yolunun varlığı yazma yolunu var
-    göstermez — üstelik artık yanındaki sekme gerçek konuşmaları çizdiği için kutuyu açmak daha
-    inandırıcı bir yalan olurdu. Gerekçe EKRANDA ölçülür (şerhte değil): operatör şerhi okumaz."""
+def test_T2g_kutu_MERIDIANDA_ACIK_otekilerde_KAPALI_ve_gerekce_TARIHLI(yuzey):
+    """SÖZLEŞME 2026-09-07'DE DEĞİŞTİ (TSK-012 dalga-B / B2) — ve DEĞİŞİMİN KAYDI BURADA.
+
+    ÖNCEKİ HÂL (dalga-A, 2026-08-31): "uç açıldı, KUTU AÇILMADI". Çivi ekranda üç şey arıyordu:
+    tarih · kutunun NE ZAMAN açılacağı ("dalga-B") · o gün açılan okuma ucunun adı. Gerekçe
+    doğruydu: okuma yolunun varlığı yazma yolunu var göstermez.
+
+    BUGÜNKÜ HÂL: yazma ucu GERÇEKTEN açıldı (`POST /api/sohbet`, dalga-B/B1, dağıtım #27) ve
+    kilit AÇILDI — ama YALNIZ kendi muhatabında (Meridian, `state/sohbet.jsonl`). `#öneri-hattı`
+    ve bot satırlarının ardında yazan bir uç HÂLÂ YOK; oradaki kutu kapalı KALIR. Çivi bu yüzden
+    silinmedi, İKİ YÖNLÜ hâle getirildi:
+      (a) kilitli şerit hâlâ kapalı VE hiçbir yere göndermiyor,
+      (b) açık şerit gerçekten `/api/sohbet`e gidiyor ve kabuk onu çiziyor.
+    (a)'sız bir çivi kilidin sessizce her yerde açılmasını kaçırırdı; (b)'siz bir çivi ise
+    "kutu açıldı" iddiasını ekranda ölçmeden kabul ederdi.
+
+    ESKİ İDDİANIN "dalga-B" ARAMASI DÜŞTÜ ve düşmesi gerekiyordu: o dizge "kutu İLERİDE açılacak"
+    demekti; bugün açılmış bir kutuyu hâlâ gelecekte göstermek, ekranda BAYAT bir hüküm bırakmak
+    olurdu. Yerine geçen iddia daha dar: gerekçe İKİ tarihi de (açılış turu + bugünkü hüküm)
+    ve açılan ucun ADINI taşımak zorunda."""
     ham = _YUZEY_SOHBET.read_text(encoding="utf-8")
-    assert "disabled" in ham and "InputGroupTextarea" in ham, "sohbet kutusu artık devre dışı değil"
+    assert "disabled" in ham and "InputGroupTextarea" in ham, (
+        "öteki muhatapların sohbet kutusu artık devre dışı değil — ardında yazan bir uç YOK, "
+        "kilidin orada da açılması 'daha inandırıcı bir yalan' olurdu")
+    # ÖLÇÜLEN ŞEY ÇAĞRIDIR, METİNDE GEÇEN AD DEĞİL: bu dosya `/api/sohbet`i ANLATIYOR
+    # (kilidin nerede açıldığını söylemek zorunda) ama ÇAĞIRMAMALI. Adı arayan bir iddia,
+    # doğru davranışı kırmızıya çevirirdi.
+    assert "apiPost" not in ham and "fetch(" not in ham, (
+        "kilitli şerit bir yere GÖNDERİYOR — devre dışı bir kutunun arkasında yazma yolu olamaz")
     s = yuzey["sohbet"]
     assert "2026-08-31" in s, "ekrandaki gerekçe TARİHSİZ — hangi turda ne değiştiği okunamaz"
-    assert "dalga-B" in s, "ekrandaki gerekçe kutunun NE ZAMAN açılacağını söylemiyor"
+    assert "2026-09-07" in s, (
+        "ekrandaki gerekçe kilidin AÇILDIĞI turu söylemiyor — operatör hâlâ 'hiç yazma yolu yok' "
+        "diye okur; şerhte yazması yetmez, operatör şerh okumaz")
+    assert "/api/sohbet" in s, (
+        "ekrandaki gerekçe AÇILAN ucun adını yazmıyor — 'başka nerede yazabilirim' sorusu cevapsız")
     assert "/api/ajanlar" in s, (
-        "ekrandaki gerekçe hâlâ 'hiçbir ajan ucu yok' diyor — bugün AÇILAN uç yazılmamış, metin bayat")
+        "ekrandaki gerekçe 2026-08-31'de açılan SALT OKUNUR ucu düşürmüş — metin bayat")
+
+    # (b) AÇIK ŞERİT GERÇEKTEN GÖNDERİYOR MU
+    panel = yuzey["sohbet_panel"]
+    assert 'apiPost("/api/sohbet"' in panel, (
+        "açık yazma şeridi `/api/sohbet`e GÖNDERMİYOR — kutu açıldı ama arkasında yol yok")
+    assert '"/api/sohbet/kota"' in panel, (
+        "kota rozeti kendi ucundan okunmuyor — kota panoda ölçülmeden çizilirse uydurma olur")
+    # ÇİZİM ARANIYOR, İTHALAT DEĞİL (mutasyonla ölçüldü 2026-09-07: `<MeridianSeridi …/>` JSX'i
+    # `null` ile değiştirildiğinde çıplak ad hâlâ import satırında duruyor ve isimsiz bir iddia
+    # YEŞİL kalıyordu — bu dosyanın kendi B4 dersinin ta kendisi).
+    assert "<MeridianSeridi" in yuzey["kabuk"] and "<MeridianAkisi" in yuzey["kabuk"], (
+        "kabuk açık şeridi/akışı hiç ÇİZMİYOR — bileşen var ama ekrana ulaşmıyor (YASA 6 kuzeni)")
 
 
 def test_T2h_filo_bolumu_KAYITLI_ve_derin_bag_calisiyor(yuzey):

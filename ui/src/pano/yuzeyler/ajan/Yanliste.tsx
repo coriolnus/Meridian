@@ -173,6 +173,9 @@ export function Yanliste({
   simdiMs,
   sahipsizAc,
   sahipsizSecili,
+  sohbetAc,
+  sohbetSecili,
+  sohbetAdi,
 }: {
   liste: readonly Muhatap[];
   seciliDilim: string | null;
@@ -187,6 +190,12 @@ export function Yanliste({
   simdiMs: number;
   sahipsizAc: () => void;
   sahipsizSecili: boolean;
+  /* MERİDİAN SOHBETİ (TSK-012 dalga-B) — sahipsiz satırının kardeşi: roster'dan
+     TÜREMEYEN, sabitlenmiş bir muhatap. `liste` içine katılmadı çünkü o liste
+     `GET /api/ajanlar` ölçümü; elle bir satır eklemek listenin anlamını bozardı. */
+  sohbetAc: () => void;
+  sohbetSecili: boolean;
+  sohbetAdi: string;
 }) {
   const ajanlar = liste.filter((m) => m.tur === "ajan");
   const kanallar = liste.filter((m) => m.tur === "kanal");
@@ -221,6 +230,35 @@ export function Yanliste({
           </p>
         ) : null}
       </div>
+
+      {/* SABİTLENMİŞ MUHATAP: MERİDİAN (TSK-012 dalga-B, 2026-09-07).
+          EN ÜSTTE ve SÜZGEÇTEN MUAF — çünkü bu satır bir ölçüm sonucu değil, panonun
+          KENDİ yazma yolu: aramada kaybolması, operatörün tek gönderme yüzeyini
+          kaybetmesi olurdu. Sayı ROZETİ YOK ve bu bilinçli: "kaç mesaj" sorusunun
+          cevabı ancak defteri çekince ölçülür, sol sütun onu çekmiyor — uydurulmuş
+          bir sayı yerine hiçbir sayı. */}
+      <button
+        type="button"
+        onClick={sohbetAc}
+        className={cn(
+          "mx-2.5 mt-1 flex shrink-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors",
+          sohbetSecili
+            ? "border-bilgi-h bg-bilgi-t text-foreground"
+            : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+        )}
+        aria-current={sohbetSecili ? "true" : undefined}
+      >
+        <span
+          className="grid size-6 shrink-0 place-items-center rounded-md border border-bilgi-h bg-bilgi-t font-semibold text-[11px] text-bilgi"
+          aria-hidden
+        >
+          ⌘
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-medium text-foreground">{sohbetAdi}</span>
+          <span className="block truncate text-[10px]">soru sor · /api/sohbet</span>
+        </span>
+      </button>
 
       {/* ŞU AN AKTİF — üç hâl ÜÇ AYRI KOVADA (K-1). Avatarlar yalnız ÖLÇÜLMÜŞ
           aktiflikten; ölçülemeyenler kendi cümlesini alır ve "boşluk" denmez. */}

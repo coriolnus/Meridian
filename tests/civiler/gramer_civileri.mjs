@@ -128,6 +128,22 @@ civi("sekme takımı muhataba göre kapanıyor (bota Defter, kanala Teslimler yo
   assert.equal(G.sekmeSec("kanal", "olcum"), "olcum");
   assert.equal(G.sekmeSec("sahipsiz", "sohbet"), "teslimler");
 });
+civi("MERİDİAN'IN TEK SEKMESİ var — hipotez panelleri ona sızmıyor (TSK-012 dalga-B)", () => {
+  // `defter`/`olcum` `state/hypotheses.jsonl`i çiziyor; Meridian'ın defteri `sohbet.jsonl`.
+  // Takıma sızsalardı, başka bir kaynağı bu muhatabınmış gibi göstermiş olurduk.
+  assert.equal(G.sekmeSec("meridian", "defter"), "sohbet");
+  assert.equal(G.sekmeSec("meridian", "teslimler"), "sohbet");
+  assert.deepEqual([...G.SEKME_TAKIMI.meridian], ["sohbet"]);
+});
+civi("Meridian dilimi ROSTER'DAN AYRI ve rotası kanonik biçimde yazılıyor", () => {
+  assert.equal(G.rotaYaz(G.SOHBET_DILIMI, "sohbet"), "/dashboard/chat/meridian.sohbet");
+  assert.deepEqual(G.rotaEsle("meridian.sohbet"), { muhatap: "meridian", sekme: "sohbet", eskiBag: false });
+  // `muhataplar()` YALNIZ ölçülen roster + hipotez kanalını döndürür; sohbet muhatabı
+  // oraya EKLENMEDİ (sahipsiz satırının kardeşi — `gramer.ts::SOHBET_DILIMI` şerhi).
+  const roster = G.muhataplar([{ ad: "sef", tur: "bot" }], "#oneri");
+  assert.equal(roster.some((m) => m.dilim === G.SOHBET_DILIMI), false,
+    "sohbet muhatabı roster listesine sızmış — liste 'ölçülen ajanlar' anlamını yitirir");
+});
 civi("DİFERANSİYEL: eski bağ haritası silinseydi `filo` düz dilim gibi okunurdu", () => {
   const yanlis = { muhatap: "filo", sekme: "sohbet", eskiBag: false };
   assert.notDeepEqual(G.rotaEsle("filo"), yanlis,

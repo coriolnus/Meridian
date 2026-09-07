@@ -46,7 +46,7 @@ import * as React from "react";
 
 import { toast } from "sonner";
 
-import { BookOpen, CandlestickChart, ExternalLink, RefreshCw, Search } from "lucide-react";
+import { BookOpen, CandlestickChart, ExternalLink, MessageSquarePlus, RefreshCw, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -67,6 +67,8 @@ import { yuzeyYolu } from "@/pano/alanlar";
 import { useBugun } from "@/pano/durum";
 import { gezinmeGruplari as sidebarItems } from "@/pano/gezinme";
 import {
+  AJANA_SOR_ANAHTARLARI,
+  AJANA_SOR_YOLU,
   ARAMA_ANAHTARLARI,
   BELGE_ANAHTARLARI,
   DIS_BELGELER,
@@ -77,6 +79,7 @@ import {
 } from "@/pano/komutlar";
 import { useRouter } from "@/pano/rota";
 import { OturumHatasi, apiGet } from "@/pano/veri";
+import { sohbetIstegiBirak } from "@/pano/yuzeyler/ajan/sohbet";
 import type { PiyasaGovdesi, PiyasaSatiri } from "@/pano/yuzeyler/sistem/uctipleri";
 
 type SearchItem = {
@@ -368,6 +371,37 @@ export function SearchDialog() {
           <CommandList>
             <CommandEmpty>{bosMetin}</CommandEmpty>
             {query ? renderGroups(searchItems) : renderGroups(recommendations)}
+
+            {/* ---- AJANA SOR — palet GÖNDERMEZ, GÖTÜRÜR ---------------------
+                    Yazılmış serbest metin sohbet girişine TAŞINIR ve orada durur:
+                    gönderme kararı ikinci bir eylemle, sohbet şeridinde veriliyor.
+                    Böylece "geri alınamaz icra palette olmaz" hükmü korunuyor —
+                    ayrıca sohbet zaten icra etmez (salt-okunur araçlar + bekleyen öneri).
+                    ODAK SİNYALİ ROTADAN GİTMEZ: operatör zaten sohbet adresindeyse
+                    `push` hash'i değiştirmez ve hiçbir olay doğmaz; istek kutusu
+                    (`sohbetIstegiBirak`) bu yüzden var. */}
+            <CommandSeparator />
+            <CommandGroup heading="Ajan">
+              <CommandItem
+                value="ajan sohbet meridian'a sor"
+                keywords={[...AJANA_SOR_ANAHTARLARI]}
+                onSelect={() => {
+                  sohbetIstegiBirak(query);
+                  handleOpenChange(false);
+                  router.push(AJANA_SOR_YOLU);
+                }}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <MessageSquarePlus />
+                  <span className="truncate">Meridian&apos;a sor…</span>
+                  <span className="truncate text-muted-foreground text-xs">
+                    {query.trim() === ""
+                      ? "Ajan yüzeyindeki sohbet girişine gider ve odaklanır"
+                      : `“${query.trim()}” sohbet girişine taşınır — GÖNDERİLMEZ, oradan sen gönderirsin`}
+                  </span>
+                </span>
+              </CommandItem>
+            </CommandGroup>
 
             {/* ---- SEMBOLLER — yalnız yazılmışken, çünkü 251 satırlık bir liste
                     paletin kendi amacını (daraltmak) yok ederdi. -------------- */}

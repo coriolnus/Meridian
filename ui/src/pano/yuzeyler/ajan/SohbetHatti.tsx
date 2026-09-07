@@ -35,7 +35,7 @@
    ============================================================================ */
 import { useMemo, useState } from "react";
 
-import { Bot, LockKeyhole, MessageSquareOff, ScrollText, Send, ShieldCheck } from "lucide-react";
+import { Bot, LockKeyhole, MessageSquareOff, MessageSquarePlus, ScrollText, ShieldCheck } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -390,11 +390,11 @@ function Cip({ etiket, deger }: { etiket: string; deger: string | null }) {
  *  konuşmanın yerini almıyor. Gerekçeyi tamamen kısaltmak, tarihini ve açılma
  *  şartını (dalga-B) ekrandan silmek olurdu; operatör şerh okumaz. */
 const YAZMA_GEREKCESI: Readonly<Record<"ajan" | "kanal", string>> = {
-  ajan: "Panodan ajana yazan uç yok — kutu bilerek kapalı",
+  ajan: "Bu bota yazan uç yok — Meridian sohbeti soldaki ⌘ satırında",
   kanal: "Öneriler panodan yazılmaz — üreteç yansıma turlarında konuşur, kapı ölçümle cevap verir",
 };
 
-export function YazmaSeridi({ hal }: { hal: "ajan" | "kanal" }) {
+export function YazmaSeridi({ hal, sohbeteGit }: { hal: "ajan" | "kanal"; sohbeteGit: () => void }) {
   return (
     <div className="flex shrink-0 flex-col gap-1.5 border-t bg-card px-4 py-2.5 sm:px-6">
       <InputGroup className="border-dashed opacity-70">
@@ -407,27 +407,37 @@ export function YazmaSeridi({ hal }: { hal: "ajan" | "kanal" }) {
         <InputGroupAddon align="block-end">
           <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <LockKeyhole className="size-3" aria-hidden />
-            gönderme ucu yok
+            bu muhatapta gönderme ucu yok
           </span>
-          <InputGroupButton type="button" variant="default" size="icon-sm" disabled className="ml-auto">
-            <Send />
-            <span className="sr-only">Gönder (devre dışı)</span>
+          <InputGroupButton
+            type="button"
+            variant="outline"
+            size="sm"
+            className="ml-auto h-6 px-2 text-[11px]"
+            onClick={sohbeteGit}
+          >
+            <MessageSquarePlus />
+            Meridian sohbetine geç
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
       <details className="text-[11px] text-muted-foreground">
-        <summary className="cursor-pointer text-primary">kutu neden kapalı?</summary>
+        <summary className="cursor-pointer text-primary">bu kutu neden hâlâ kapalı?</summary>
+        {/* TARİHÇE KORUNUYOR, HÜKÜM GÜNCELLENDİ (2026-09-07, dalga-B/B2): kilidin
+            gerekçesi "hiç yazma ucu yok" idi ve o cümle ARTIK DOĞRU DEĞİL — ama bu
+            İKİ muhatap için hâlâ doğru. Şerhi silmek, kilidin neden burada durduğunu
+            okunamaz yapardı; olduğu gibi bırakmak ise bayat bir hüküm yazmak olurdu. */}
         <p className="mt-1 leading-relaxed">
-          `meridian/api.py` içinde serbest metin kabul eden bir ajan ucu yok. En yakın olanlar mesaj
-          değil KUMANDA: `POST /api/hermes/reflect` gövdesiz bir yansıma turu başlatır,
-          `POST /api/hermes/{"{action}"}` yalnız `start` · `stop` · `backfill` ·
-          `sync_integrations` tanır.
+          2026-09-07'de panonun yazma yolu AÇILDI — ama bu muhataba değil:
+          `POST /api/sohbet` Meridian'ın kendi sohbet defterine (`state/sohbet.jsonl`) yazıyor.
+          Kilidi burada açsaydık, yazdığın mesajın cevabı BU akışta hiç görünmezdi: bu panel
+          {hal === "kanal" ? " `state/hypotheses.jsonl`i" : " `~/.hermes` konuşma defterini"} çiziyor.
         </p>
         <p className="mt-1 leading-relaxed">
-          2026-08-31'de OKUMA yolu açıldı: `GET /api/ajanlar` botların ve ana beynin gerçek
-          oturumlarını getiriyor (soldaki ajan satırları). O uç SALT OKUNUR — yazma yolu HÂLÂ yok.
-          Bu kutu dalga-B'de, hermes köprüsü ve duruş çivileriyle birlikte açılacak; köprüsüz
-          açmak, artık daha inandırıcı olan aynı yalanı söylemek olurdu.
+          Bu muhataba yazan bir uç hâlâ YOK. En yakın olanlar mesaj değil KUMANDA:
+          `POST /api/hermes/reflect` gövdesiz bir yansıma turu başlatır,
+          `POST /api/hermes/{"{action}"}` yalnız `start` · `stop` · `backfill` ·
+          `sync_integrations` tanır. 2026-08-31'de açılan `GET /api/ajanlar` ise SALT OKUNUR.
         </p>
       </details>
     </div>

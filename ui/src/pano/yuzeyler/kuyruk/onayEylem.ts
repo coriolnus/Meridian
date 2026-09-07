@@ -43,6 +43,7 @@
    ============================================================================ */
 import { apiPost, type GonderSonucu } from "../../gonder";
 import type { KuyrukOgesi } from "./onaylar";
+import { oneriGeriAlinamaz, oneriNedir, oneriUyarisi, sohbetKimligiMi } from "./sohbetOnerisi";
 import type { PlanOzeti } from "./tipler";
 
 /* --- YAZAN İSTEK ----------------------------------------------------------
@@ -118,6 +119,17 @@ export interface OnayHedefi {
    * Plan ucunda kavram başka: orada karar kaydı değil İCRA var — alan `null`.
    */
   readonly kapiAcar: boolean | null;
+  /**
+   * `kapiAcar`ın ekrandaki cümlesini EZEN metin (mevcut üç dalda `null`).
+   *
+   * NEDEN VAR (TSK-012 dalga-B): sohbet önerisinde `kapiAcar` teknik olarak `false` —
+   * `SO-` önekini HİÇBİR uygulama kapısı okumaz (api.py::KAPI_OKUYAN_ONEKLER). Ama o
+   * daldaki hazır cümle ("hayır — hiçbir kapı bu öneki okumaz") burada YANILTICI olurdu:
+   * icra ileride bir kapıdan değil, AYNI yanıtın içinden geçiyor (api.py::_sohbet_icra).
+   * Alanı `null` yapmak da yanlış olurdu — o dal "bu uç karar YAZMAZ" diyor, oysa yazıyor DA.
+   * Dördüncü hâl bu yüzden bir CÜMLE olarak taşınıyor, yeni bir bayrak olarak değil.
+   */
+  readonly kapiNotu: string | null;
   /** Uç L1+ istiyor mu? (`rev:`/`rec:` L0'da 403.) */
   readonly l1Gerekir: boolean;
   /** İKİ TIK ARASINDA OKUNAN CÜMLE — uçtan/plandan gelen GERÇEK alanlardan kurulur. */
@@ -222,6 +234,7 @@ export function onayHedefi(oge: KuyrukOgesi): HedefCozumu {
         // daha kötüsü, onaylayan) bir düğme olurdu.
         redVar: false,
         kapiAcar: null,
+        kapiNotu: null,
         l1Gerekir: false,
         nedir: parca.join(" "),
         geriAlinamaz: true,
@@ -262,6 +275,7 @@ export function onayHedefi(oge: KuyrukOgesi): HedefCozumu {
           kimlik: kk,
           redVar: true,
           kapiAcar: false,
+          kapiNotu: null,
           l1Gerekir: false,
           nedir:
             `\`${kk}\` kimliğine bir karar satırı yazar (approvals.jsonl). Bu öneri UYGULANABİLİR ` +
@@ -273,6 +287,71 @@ export function onayHedefi(oge: KuyrukOgesi): HedefCozumu {
         engel: null,
       };
     }
+  }
+
+  /* ---- SOHBET ÖNERİSİ: MEVCUT KARAR UCU, YENİ UÇ YOK --------------------
+     Kimlik `SO-<damga>-<n>` ve İKİ NOKTA TAŞIMAZ (sohbet.py::oneri_kimligi — bilinçli:
+     `api_approve` kimliği ilk `:`ten bölerek önek çıkarıyor). Bu yüzden aşağıdaki önek
+     ayrıştırması bu kimliği TANIMAZ ve dal ondan ÖNCE durur; sırayı çevirmek karar
+     yolunu "önek yok" gerekçesiyle kapatırdı (ölçüldü: `onek("SO-2026…") === null`).
+
+     L1 GEREKMEZ ve bu bir varsayım değil ÖLÇÜM: `api_approve` L0'da yalnız
+     `KAPI_OKUYAN_ONEKLER`i ve TANINMAYAN önekleri 403'le reddediyor; sohbet önerisini
+     ADIYLA istisna tutuyor (`_sohbet_onerisi is None` şartı), çünkü icrası L0'da zaten
+     çalışan operatör yollarının ta kendisi. */
+  if (oge.ayrinti.cesit === "sohbet") {
+    const sohbetKimligi = oge.ayrinti.oge.id ?? null;
+    if (!sohbetKimligi) {
+      return {
+        hedef: null,
+        engel:
+          "gelen kutusu bu sohbet önerisine `id` yazmamış — `POST /api/approvals/{approval_id}` " +
+          "kimliksiz çağrılamaz. Kimliği damgadan türetmek, `sohbet.oneri_kimligi`nin ürettiği " +
+          "dizgeden BAŞKA bir dizge üretme riski taşır (tek kaynak orası); gönderilmiyor.",
+      };
+    }
+    // KİMLİK BİÇİMİ DE KAPIDIR (fail-closed): bu dizge birazdan bir POST YOLUNA gömülecek.
+    // `sohbet.py::oneri_kimligi` biçimini tutmayan bir kimlik, defterin elle düzenlendiğini
+    // ya da ucun başka bir uzaya kaydığını gösterir; `api_approve` onu sohbet önerisi olarak
+    // TANIMAZ (`oneri_kimligi_mi` aynı deseni arıyor) ve karar tanınmayan bir öneke düşerdi.
+    if (!sohbetKimligiMi(sohbetKimligi)) {
+      return {
+        hedef: null,
+        engel:
+          `gelen kutusu bu satırı sohbet önerisi diye verdi ama kimliği (\`${sohbetKimligi}\`) ` +
+          `\`SO-<YYYYAAGGTSSDDSSZ>-<n>\` biçiminde DEĞİL. Uç bu kimliği sohbet önerisi olarak ` +
+          `tanımaz (sohbet.py::oneri_kimligi_mi aynı deseni arar); karar tanınmayan bir uzaya ` +
+          `yazılırdı. Gönderilmiyor — defteri kontrol et.`,
+      };
+    }
+    const oneriTuru = oge.ayrinti.tur;
+    const sohbetGeriAlinamaz = oneriGeriAlinamaz(oneriTuru);
+    return {
+      hedef: {
+        cesit: "defter",
+        yol: `/api/approvals/${encodeURIComponent(sohbetKimligi)}`,
+        kimlik: sohbetKimligi,
+        redVar: true,
+        // Teknik olarak doğru (`SO-` önekini hiçbir L1 kapısı okumaz); hazır cümlesi
+        // yanıltmasın diye `kapiNotu` ile eziliyor — alanın şerhine bak.
+        kapiAcar: false,
+        kapiNotu:
+          "İLGİSİZ — icra ileride bir kapıdan geçmez, AYNI yanıtın içinde koşar " +
+          "(api.py::_sohbet_icra). `SO-` önekini hiçbir L1 uygulama kapısı okumaz.",
+        l1Gerekir: false,
+        nedir: oneriNedir(sohbetKimligi, oneriTuru, oge.ayrinti.oge.hedef ?? null),
+        geriAlinamaz: sohbetGeriAlinamaz,
+        geriAlmaNotu: sohbetGeriAlinamaz
+          ? "GERİ ALINAMAZ VARSAY. Onay yalnız deftere YAZMAZ: `api_approve` kimliği sohbet " +
+            "önerisi olarak tanıdığında kararı yazar VE aynı yanıtta icrayı çağırır. " +
+            oneriUyarisi(oneriTuru) +
+            " Bu ekranda bir geri alma ucu bağlı DEĞİL; ne olduğunu ancak yanıtın `icra` alanı söyler."
+          : "Geri alınabilir: defter kararı. " +
+            oneriUyarisi(oneriTuru) +
+            " Defter salt-ekleme ve son satır kazanır — kararı sonradan çevirebilirsin.",
+      },
+      engel: null,
+    };
   }
 
   /* ---- GELEN KUTUSU KİMLİĞİYLE GİDEN ÖĞELER -----------------------------
@@ -318,6 +397,7 @@ export function onayHedefi(oge: KuyrukOgesi): HedefCozumu {
       kimlik,
       redVar: true,
       kapiAcar,
+      kapiNotu: null,
       l1Gerekir: kapiAcar,
       nedir: kapiAcar
         ? `\`${kimlik}\` kimliğine bir karar satırı yazar (approvals.jsonl). Konu: ${konu}. ` +
@@ -369,6 +449,20 @@ export interface DefterKararSonucu {
   readonly davranissal?: boolean;
   readonly not?: string;
   readonly kunye?: unknown;
+  /* --- YALNIZ SOHBET ÖNERİSİNDE (api.py::api_approve son bloğu) ---
+     `oneri` her kararda (onayda da rette de) gelir; `icra` YALNIZ `approve`da. İcranın
+     YOKLUĞU sessiz DEĞİLDİR: `not` türünde uç `{icra:"yok", neden:…}` döndürüyor, yani
+     "onayladım ama bir şey olmadı" hâli ADIYLA görünür. */
+  readonly oneri?: {
+    readonly tur?: string | null;
+    readonly hedef?: string | null;
+    readonly gerekce?: string | null;
+    readonly oturum?: string | null;
+  };
+  /** İcranın HAM dönüşü — kol başına ŞEKLİ FARKLI (`loop.operator_onay_ver` gövdesi ·
+   *  alarm ACK gövdesi · `{icra:"yok", neden}`). Tek bir şekle zorlamak, olmayan
+   *  alanları varmış gibi göstermek olurdu; bu yüzden `unknown` ve ekranda HAM basılır. */
+  readonly icra?: unknown;
 }
 
 /* --- HATA HÂLLERİ: HER KOD AYRI CÜMLE ------------------------------------- */
