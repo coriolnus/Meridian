@@ -21,6 +21,7 @@
    ayırmıştı, bkz. palette.js "BÖLÜM 1 — SAF ÇEKİRDEK").
    ============================================================================ */
 import { YUZEYLER, YUZEY_ANAHTARLARI, yuzeyYolu } from "./alanlar";
+import { SOHBET_DILIMI, rotaYaz } from "./yuzeyler/ajan/gramer";
 import type { PiyasaSatiri } from "./yuzeyler/sistem/uctipleri";
 
 /* ---------------------------------------------------------------------------
@@ -261,6 +262,29 @@ export const ARAMA_ANAHTARLARI: Readonly<Record<string, readonly string[]>> = ((
   }
   return m;
 })();
+
+/* ---------------------------------------------------------------------------
+   AJANA SOR — paletin TEK yazma-yönlü komutu (TSK-012 dalga-B, 2026-09-07)
+   ---------------------------------------------------------------------------
+   YAZMA SINIFI HÂLÂ PALETTE DEĞİL ve bu komut o kuralın istisnası DEĞİL: palet
+   hiçbir şey göndermez, yalnız GÖTÜRÜR ve yazılmış metni taşır. Gönderme kararı
+   sohbet şeridinde, operatörün ikinci bir eylemiyle veriliyor — `search-dialog.tsx`
+   başlığındaki "geri alınamaz icranın en kötü eşleşmesi hızlı erişimdir" hükmü
+   korunuyor. Zaten sohbet İCRA ETMEZ: salt-okunur araçlarla cevap verir, en fazla
+   onay kuyruğuna BEKLEYEN bir öneri bırakır.
+
+   ADRES `alanlar.ts` KAYDINDAN DEĞİL, AJAN GRAMERİNDEN GELİR: sohbet muhatabı bir
+   BÖLÜM değil, `chat` yüzeyinin içindeki bir muhatap (`<muhatap>.<sekme>`) — kayıt
+   sözlüğüne yeni bir kimlik eklemek, `alanlar.ts` sayaçlarını ve v288 paritesini
+   ilgilendiren bir karar olurdu (Rol-1 hükmü: o sayaçlara dokunulmaz).
+   --------------------------------------------------------------------------- */
+
+/** Paletin sohbete götürdüğü kanonik adres. TEK kaynak: `rotaYaz` + `SOHBET_DILIMI`. */
+export const AJANA_SOR_YOLU = rotaYaz(SOHBET_DILIMI, "sohbet");
+
+export const AJANA_SOR_ANAHTARLARI: readonly string[] = [
+  "ajan", "sor", "sohbet", "chat", "soru", "meridian", "neden", "aciklama", "sohbete git", "ask",
+];
 
 /* ---------------------------------------------------------------------------
    DIŞ BELGELER — panonun DIŞINDAKİ okuma yüzeyleri

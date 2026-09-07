@@ -52,6 +52,19 @@ export const KANAL_DILIMI = "oneri-hatti";
 /** Hiçbir profile denk düşmeyen teslim olayları — sol listenin hayalet satırı. */
 export const SAHIPSIZ_DILIMI = "sahipsiz-teslimler";
 
+/** MERİDİAN SOHBETİ (TSK-012 dalga-B, 2026-09-07) — `/api/sohbet`in muhatabı.
+ *
+ *  ROSTER'A GİRMEZ, `muhataplar()`a EKLENMEZ ve bu bilinçli: o liste `GET /api/ajanlar`
+ *  roster'ından TÜRÜYOR (artı hipotez kanalı) ve buraya elle bir satır eklemek, listenin
+ *  "ölçülen ajanlar" anlamını bozardı. Sahipsiz teslimler satırı da aynı sebeple listenin
+ *  DIŞINDA duruyor; bu dilim onun kardeşi.
+ *
+ *  NEDEN AYRI MUHATAP, NEDEN #öneri-hattı'nın KİLİDİ AÇILMADI: o kanalın akışı
+ *  `state/hypotheses.jsonl`ten geliyor. Oraya yazılan bir mesajın cevabı `sohbet.jsonl`e
+ *  düşerdi — yani operatör yazar, gönderir, cevabı O AKIŞTA hiç görmezdi. İki defteri tek
+ *  akışta birleştirmek ise aynı deftere iki gerçek uydurmak olurdu (bu yüzeyin ilk kuralı). */
+export const SOHBET_DILIMI = "meridian";
+
 export type SekmeAdi = "sohbet" | "teslimler" | "defter" | "olcum";
 
 export const SEKME_ETIKET: Readonly<Record<SekmeAdi, string>> = {
@@ -61,7 +74,7 @@ export const SEKME_ETIKET: Readonly<Record<SekmeAdi, string>> = {
   olcum: "Ölçüm",
 };
 
-export type MuhatapTuru = "kanal" | "ajan" | "sahipsiz";
+export type MuhatapTuru = "kanal" | "ajan" | "sahipsiz" | "meridian";
 
 /** SEKME TAKIMI MUHATABA GÖRE DEĞİŞİR (maket sözleşmesi): bir bota "Defter"
  *  sekmesi açmak, hipotez defterini o botun defteriymiş gibi gösterirdi — iki
@@ -70,6 +83,10 @@ export const SEKME_TAKIMI: Readonly<Record<MuhatapTuru, readonly SekmeAdi[]>> = 
   kanal: ["sohbet", "defter", "olcum"],
   ajan: ["sohbet", "teslimler"],
   sahipsiz: ["teslimler"],
+  // MERİDİAN'IN TEK SEKMESİ VAR ve bu bir eksiklik değil ölçüm: `/api/sohbet` tek bir
+  // defter (`sohbet.jsonl`) döndürüyor. "Defter"/"Ölçüm" sekmeleri hipotez hattının
+  // panelleri — buraya koymak, başka bir kaynağı bu muhatabınmış gibi göstermek olurdu.
+  meridian: ["sohbet"],
 };
 
 export function sekmeSec(tur: MuhatapTuru, istenen: SekmeAdi): SekmeAdi {

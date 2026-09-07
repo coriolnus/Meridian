@@ -149,9 +149,16 @@ export function KararPaneli({
       setAsama({ ad: "bitti", yon, basarili: true });
       toast.success(`Karar deftere yazıldı: ${g.decision ?? yon}`, {
         description:
-          g.davranissal === true
-            ? "satır BAĞLAYICI — L1+'ta uygulama kapısı bu kimliği arar"
-            : (g.not ?? "satır davranışsal değil — sistemin davranışı değişmedi"),
+          // SOHBET ÖNERİSİ ÖNCE SORULUR: o yanıtın `not` alanı "davranışsal değil" diyor
+          // (kimlik hiçbir L1 kapısını açmıyor) ve bu DOĞRU — ama icra AYNI yanıtta koştuğu
+          // için bildirim olarak YANILTICI olurdu. Ucun `icra` alanı asıl haberdir.
+          g.oneri !== undefined
+            ? g.icra === undefined
+              ? "icra alanı gelmedi — ret kararında beklenen hâl; onayda ise defteri kontrol et"
+              : `icra koştu (api.py::_sohbet_icra) — ayrıntı panelde: ${JSON.stringify(g.icra).slice(0, 160)}`
+            : g.davranissal === true
+              ? "satır BAĞLAYICI — L1+'ta uygulama kapısı bu kimliği arar"
+              : (g.not ?? "satır davranışsal değil — sistemin davranışı değişmedi"),
       });
     }
     // KUYRUK YENİDEN OKUNUR (iyimser güncelleme yerine yeniden ölçüm). Bu paneldeki
@@ -199,7 +206,12 @@ export function KararPaneli({
           )}
         </Satir>
         <Satir etiket="Uygulama kapısı açar mı">
-          {hedef.kapiAcar === null ? (
+          {/* HEDEFİN KENDİ CÜMLESİ VARSA O KAZANIR (`kapiNotu`): sohbet önerisinde üç
+              hazır daldan hiçbiri doğru değil — icra ileride bir kapıdan değil, aynı
+              yanıtın içinden geçiyor. Alanın gerekçesi `onayEylem.ts::OnayHedefi`de. */}
+          {hedef.kapiNotu !== null ? (
+            <span className="text-xs">{hedef.kapiNotu}</span>
+          ) : hedef.kapiAcar === null ? (
             <span className="text-xs">ilgisiz — bu uç karar YAZMAZ, İCRA eder</span>
           ) : hedef.kapiAcar ? (
             <span className="text-xs">EVET — satır L1+&apos;ta bir uygulamayı açar (davranışsal)</span>
@@ -475,17 +487,60 @@ export function KararPaneli({
               <span className="text-xs">
                 {defterSonuc.davranissal
                   ? "EVET — L1+'ta uygulama kapısı bu satırı arar"
-                  : "hayır — davranış DEĞİŞMEDİ"}
+                  : defterSonuc.oneri !== undefined
+                    ? // SOHBET ÖNERİSİ: sunucu `davranissal: false` diyor ve HAKLI (kimlik hiçbir
+                      // L1 kapısını açmaz) — ama "davranış DEĞİŞMEDİ" cümlesi burada YANLIŞ olurdu:
+                      // icra aynı yanıtta koştu. İki ayrı soru, iki ayrı cevap.
+                      "hayır — bu kimliği hiçbir L1 kapısı okumaz; AMA icra aynı yanıtta koştu (aşağıya bak)"
+                    : "hayır — davranış DEĞİŞMEDİ"}
               </span>
             )}
           </Satir>
           {defterSonuc.not ? (
             <p className="mt-2 rounded-md border bg-background p-2 text-sm leading-6">{defterSonuc.not}</p>
           ) : null}
+
+          {/* ---- SOHBET ÖNERİSİ: İCRA AYNI YANITTA GELİR --------------------
+              Buradaki blok UYDURMAZ, ucun gövdesini GÖSTERİR: `icra`nın şekli kola göre
+              değişiyor (plan onayı gövdesi · alarm ACK gövdesi · `{icra:"yok", neden}`),
+              tek bir şekle zorlamak olmayan alanları varmış gibi göstermek olurdu. */}
+          {defterSonuc.oneri === undefined ? null : (
+            <div className="mt-2 rounded-md border border-uyari-h bg-uyari-t p-3">
+              <div className="text-muted-foreground text-[11px] uppercase">Sohbet önerisi — ucun icra hükmü</div>
+              <Satir etiket="Öneri">
+                <span className="text-xs">
+                  {defterSonuc.oneri.tur ?? "tür yazılmadı"}
+                  {defterSonuc.oneri.hedef ? ` → ${defterSonuc.oneri.hedef}` : ""}
+                </span>
+              </Satir>
+              {defterSonuc.icra === undefined ? (
+                <p className="mt-1 text-sm leading-6">
+                  Yanıt `icra` alanı TAŞIMIYOR — ret kararında bu beklenen hâldir (icra yalnız
+                  `approve`da koşar). Onayladıysan bu bir KUSURDUR: defteri kontrol et.
+                </p>
+              ) : (
+                <pre className="mt-1 overflow-x-auto rounded-md border bg-background p-2 text-[11px] leading-5">
+                  {JSON.stringify(defterSonuc.icra, null, 2)}
+                </pre>
+              )}
+            </div>
+          )}
+
           <p className="mt-2 text-muted-foreground text-[11px] leading-4">
-            Karar YAZILDI — UYGULANMADI. Uç yalnız deftere satır ekler (api.py::api_approve sözleşmesi);
-            uygulamayı ayrı uçlar yapar (<code className="font-mono">POST /api/skills/revision</code> ·{" "}
-            <code className="font-mono">POST /api/skills/apply</code>) ve onlar bu ekranda bağlı DEĞİL.
+            {defterSonuc.oneri === undefined ? (
+              <>
+                Karar YAZILDI — UYGULANMADI. Uç yalnız deftere satır ekler (api.py::api_approve
+                sözleşmesi); uygulamayı ayrı uçlar yapar (
+                <code className="font-mono">POST /api/skills/revision</code> ·{" "}
+                <code className="font-mono">POST /api/skills/apply</code>) ve onlar bu ekranda bağlı DEĞİL.
+              </>
+            ) : (
+              <>
+                Karar YAZILDI ve sohbet önerilerinde icra AYNI yanıtta koşar (api.py::_sohbet_icra) —
+                yukarıdaki `icra` gövdesi ne olduğunu söyler. Bu, ötekilerden AYRI bir sözleşmedir:
+                orada karar yazılır, uygulama başka bir uçta kalır.
+              </>
+            )}
           </p>
         </div>
       ) : null}

@@ -3,7 +3,8 @@
    ----------------------------------------------------------------------------
    GELEN KUTUSU TEK UÇTAN GELMİYOR ve bu bir kaza değil, ölçülmüş bir gerçek:
 
-     · `/api/approvals.inbox`  → silahlanma ölçümü · skill revizyonu · Eksen-2 önerisi
+     · `/api/approvals.inbox`  → silahlanma ölçümü · skill revizyonu · Eksen-2 önerisi ·
+       SOHBET ÖNERİSİ (TSK-012 dalga-B, 2026-09-07: `type: "sohbet_onerisi"`, `kaynak: "sohbet"`)
      · `/api/today.todays_plans[onay_bekliyor]` → operatörün onayını bekleyen REVIEW planı
        (api.py::_onay_bekleyen_damgala — SUNUCU damgalar, pano yalnız bayrağı okur;
        ölçütü burada yeniden yazmak, aynı sorunun iki cevabını üretmek olurdu)
@@ -26,6 +27,7 @@
    iş İSTEMEZ. Bu ayrımı ekranda yapmazsak, kuyruk hiç azalmayan bir liste olur ve
    okunmayan bir liste alınmamış karar demektir.
    ============================================================================ */
+import { oneriBekleyen, oneriEtiketi, oneriTuruOku, oneriUyarisi, type SohbetOneriTuru } from "./sohbetOnerisi";
 import type {
   KararKaydi,
   OnayGovdesi,
@@ -38,12 +40,13 @@ import type {
   SkillRevizyonu,
 } from "./tipler";
 
-export type KuyrukTuru = "silahlanma" | "revizyon" | "oneri" | "plan" | "bilinmeyen";
+export type KuyrukTuru = "silahlanma" | "revizyon" | "oneri" | "sohbet" | "plan" | "bilinmeyen";
 
 export const TUR_ETIKET: Record<KuyrukTuru, string> = {
   silahlanma: "Silahlanma",
   revizyon: "Skill revizyonu",
   oneri: "Eksen-2 önerisi",
+  sohbet: "Sohbet önerisi",
   plan: "Plan onayı",
   bilinmeyen: "Bilinmeyen tür",
 };
@@ -59,6 +62,10 @@ export type KuyrukAyrinti =
     }
   | { readonly cesit: "revizyon"; readonly oge: OnayOgesi; readonly kayit: SkillRevizyonu | null }
   | { readonly cesit: "oneri"; readonly oge: OnayOgesi; readonly kayit: SkillOnerisi | null; readonly karar: KararKaydi | null }
+  /** SOHBET ÖNERİSİ (TSK-012 dalga-B). `tur` DONUK sözlükten çözülmüş hâli; sözlük dışı
+   *  bir değer `null` olur ve ekran bunu "tanınmayan tür" diye SÖYLER (sessizce
+   *  `not` sayıp zararsız göstermek fail-open olurdu). */
+  | { readonly cesit: "sohbet"; readonly oge: OnayOgesi; readonly tur: SohbetOneriTuru | null }
   | { readonly cesit: "plan"; readonly plan: PlanOzeti }
   | { readonly cesit: "bilinmeyen"; readonly oge: OnayOgesi };
 
@@ -117,6 +124,7 @@ function turCoz(tip: string | undefined): KuyrukTuru {
   if (tip === "arming") return "silahlanma";
   if (tip === "skill_revision") return "revizyon";
   if (tip === "skill_rec") return "oneri";
+  if (tip === "sohbet_onerisi") return "sohbet";
   return "bilinmeyen";
 }
 
@@ -276,6 +284,41 @@ export function kuyrugaCevir(
         eylemler,
         not: oge.note ?? null,
         ayrinti: { cesit: "oneri", oge, kayit, karar: oge.karar_kaydi ?? null },
+      });
+      continue;
+    }
+
+    if (tur === "sohbet") {
+      // TÜR DONUK SÖZLÜKTEN ÇÖZÜLÜR: uç `tur` alanını ham veriyor ve defter elle
+      // düzenlenebilir bir dosya — sözlük dışı bir değeri tanımak, onayın ne
+      // yapacağını BİLMEDEN karar düğmesi çizmek olurdu.
+      const oneriTuru = oneriTuruOku(oge.tur);
+      const hedefMetni = oge.hedef && oge.hedef.trim() !== "" ? oge.hedef : null;
+      ogeler.push({
+        kimlik,
+        tur,
+        baslik,
+        konu: hedefMetni === null ? oneriEtiketi(oneriTuru) : `${oneriEtiketi(oneriTuru)} → ${hedefMetni}`,
+        konuNeden: "gelen kutusu bu öğede `tur`/`hedef` alanı taşımıyor",
+        // DAMGA BU TÜRDE GELEN KUTUSUNDA VAR (api.py::_bekleyen_sohbet_onerileri `ts`
+        // yazıyor) — kardeş türlerin aksine ikinci bir uca sormaya gerek yok.
+        gelisIso: oge.ts ?? null,
+        gelisSaatli: true,
+        gelisNeden: "gelen kutusu bu öneride `ts` yazmadı — öneri satırının damgası okunamadı",
+        kanit,
+        bekleyen: oneriBekleyen(oneriTuru),
+        // UÇ YALNIZ KARARSIZ ÖNERİLERİ LİSTELER (`_bekleyen_sohbet_onerileri`: kararı
+        // verilmiş satır kutuya HİÇ girmez), yani listede görünen her öneri iş İSTER.
+        isIstiyor: true,
+        durgunNeden: null,
+        eylemler,
+        // NOT UYDURULMAZ, TÜRDEN TÜRETİLİR: `alarm_ack`in GLOBAL etkisi ve `not`un
+        // icrasızlığı satırın kendisinde okunmalı — çekmeceyi açmayan operatör de görsün.
+        // K-2: uçtan bir gün `note` gelirse `??` onu TÜR UYARISININ YERİNE geçirirdi ve
+        // `alarm_ack`in "BEKLEYEN TÜM alarmları kapatır" cümlesi satırdan sessizce
+        // düşerdi — ikisi BİRLEŞTİRİLİR, biri diğerini SİLMEZ.
+        not: oge.note ? `${oge.note} · ${oneriUyarisi(oneriTuru)}` : oneriUyarisi(oneriTuru),
+        ayrinti: { cesit: "sohbet", oge, tur: oneriTuru },
       });
       continue;
     }

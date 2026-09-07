@@ -51,6 +51,10 @@ const TUR_TONU: Record<KuyrukTuru, "iyi" | "uyari" | "kotu" | "notr" | "olculeme
   silahlanma: "uyari",
   revizyon: "notr",
   oneri: "notr",
+  // SOHBET ÖNERİSİ "uyarı" TONUNDA ve bu plan satırıyla aynı gerekçe: onayı ANINDA
+  // icra edebiliyor (`plan_onayi` bracket emir dener, `alarm_ack` bekleyen TÜM alarmları
+  // kapatır). Nötr çizmek, kayıt sınıfı bir satırla aynı ağırlıkta göstermek olurdu.
+  sohbet: "uyari",
   bilinmeyen: "kotu",
 };
 

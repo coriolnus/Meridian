@@ -58,7 +58,9 @@ const GRAFIK: ChartConfig = {
   kayit: { label: "karar verilmiş", color: "var(--chart-3)" },
 };
 
-const TUR_SIRASI: readonly KuyrukTuru[] = ["plan", "silahlanma", "revizyon", "oneri", "bilinmeyen"];
+/** Grafik ve sayım sırası. `sohbet` (TSK-012 dalga-B) plan/silahlanmadan SONRA, kayıt
+ *  sınıfı önerilerden ÖNCE: icra edebilen kalemler üstte, yalnız deftere yazanlar altta. */
+const TUR_SIRASI: readonly KuyrukTuru[] = ["plan", "silahlanma", "sohbet", "revizyon", "oneri", "bilinmeyen"];
 
 export function OnayKuyrugu() {
   const { bolum } = useRota();

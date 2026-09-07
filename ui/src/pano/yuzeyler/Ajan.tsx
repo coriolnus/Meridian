@@ -3,21 +3,34 @@
 /* ============================================================================
    AJAN — "ajana ne sorabilirim, ne cevap verdi?"
    ----------------------------------------------------------------------------
-   BU YÜZEYİN İLK CÜMLESİ BİR HAYIRDIR: sorunun ilk yarısına ("ne sorabilirim")
-   bugünkü cevap YOK. `meridian/api.py`nin 78 rotası tarandı (2026-08-25) —
-   panodan ajana serbest metin gönderen bir uç bulunmuyor. En yakın uçlar mesaj
-   değil kumandadır (`POST /api/hermes/reflect` gövdesiz tetik;
+   BU YÜZEYİN İLK CÜMLESİ BİR "HAYIR"DI — VE O HAYIR 2026-09-07'DE KAPANDI.
+   Tarihçe olduğu gibi duruyor, çünkü kilidin NEDEN yıllarca kapalı kaldığı hâlâ
+   bu dosyanın en önemli hükmü: 2026-08-25'te `meridian/api.py`nin 78 rotası
+   tarandı ve panodan ajana serbest metin gönderen bir uç YOKTU; en yakın uçlar
+   mesaj değil kumandaydı (`POST /api/hermes/reflect` gövdesiz tetik;
    `POST /api/hermes/{action}` yalnız start|stop|backfill|sync_integrations).
-   Bu yüzden yazma şeridi ÇİZİLİYOR ama KİLİTLİ ve nedeni şeridin içinde yazıyor
-   (`SohbetHatti.tsx::YazmaSeridi` — ÇAPA GÜNCELLENDİ 2026-08-31: `YazmaSeridi.tsx`
-   diye ayrı bir dosya bu turda kuruldu ve aynı turda konsolide edilip SİLİNDİ;
-   `Filo.tsx:35` doğru sembolü yazıyordu, iki şerh ayrışmıştı — inceleme Ö-8).
-   Çalışırmış gibi duran bir metin alanı, panonun
-   kurabileceği en sinsi yalandır: operatör yazar, gönderir, cevap bekler —
-   beklediği şey hiç olmamıştır.
+   Yazma şeridi bu yüzden ÇİZİLİYOR ama KİLİTLİ tutuldu — çalışırmış gibi duran
+   bir metin alanı, panonun kurabileceği en sinsi yalandır: operatör yazar,
+   gönderir, cevap bekler; beklediği şey hiç olmamıştır.
 
-   İKİ MUHATAP, İKİ KAYNAK, TEK GERÇEK — ve bu yüzey onları AYNI KABUKTA ama
-   AYRI muhataplar olarak tutar (mesajlaşma grameri, onaylı maket 2026-08-31):
+   BUGÜN (TSK-012 dalga-B, dağıtım #27) UÇ VAR: `POST /api/sohbet` sunucu tarafı
+   bir ajan döngüsünü çalıştırıyor, salt-okunur araçlarla defterlere bakıyor,
+   kaynak atfıyla cevap veriyor ve gerekirse onay kuyruğuna BEKLEYEN bir öneri
+   bırakıyor. Kilit bu yüzden AÇILDI — ama YALNIZ kendi muhatabında:
+     · MERİDİAN (`SOHBET_DILIMI`, sol listede sabit ⌘ satırı) → yazma şeridi AÇIK,
+       akışı `state/sohbet.jsonl` (`ajan/SohbetPaneli.tsx`).
+     · #öneri-hattı ve bot satırları → şerit HÂLÂ KİLİTLİ, çünkü onların ardında
+       yazan bir uç yok; şerhi silinmedi, GÜNCELLENDİ (`SohbetHatti::YazmaSeridi`).
+       Kilidi orada da açmak, artık daha inandırıcı olan aynı yalanı söylemek olurdu.
+   (ÇAPA NOTU 2026-08-31: `YazmaSeridi.tsx` diye ayrı bir dosya bir tur kuruldu ve
+   aynı turda konsolide edilip SİLİNDİ — iki şerh ayrışmıştı, inceleme Ö-8.)
+
+   ÜÇ MUHATAP, ÜÇ KAYNAK, TEK GERÇEK — ve bu yüzey onları AYNI KABUKTA ama
+   AYRI muhataplar olarak tutar (mesajlaşma grameri, onaylı maket 2026-08-31;
+   üçüncüsü 2026-09-07'de eklendi ve İKİSİYLE BİRLEŞMEDİ — aynı akışta iki defter
+   göstermek, aynı deftere iki gerçek uydurmak olurdu):
+     · Meridian — `state/sohbet.jsonl` (`GET/POST /api/sohbet`). Konuşan taraflar
+       OPERATÖR ve sunucu tarafı ajan döngüsü; tek muhatap, tek defter.
      · #öneri-hattı — `state/hypotheses.jsonl`. Konuşan taraf ÖNERİ ÜRETECİdir
        (`rationale`) ve cevap veren backtest/bekçi KAPISIdır (`status`).
        Uçları: `/api/agent` (karne + hipotezler + kalibrasyon) ve `/api/memory`
@@ -62,11 +75,13 @@ import { Filo, KaynakOzeti, SahipsizPaneli } from "./ajan/Filo";
 import { Grafikler } from "./ajan/Grafikler";
 import { HipotezDefteri } from "./ajan/HipotezDefteri";
 import { KanalAkisi, YazmaSeridi } from "./ajan/SohbetHatti";
+import { MeridianAkisi, MeridianSeridi, useSohbet, type SohbetDurumu } from "./ajan/SohbetPaneli";
 import { Yanliste, type Onizleme } from "./ajan/Yanliste";
 import { filoOku } from "./ajan/filoOku";
 import {
   KANAL_DILIMI,
   SAHIPSIZ_DILIMI,
+  SOHBET_DILIMI,
   SEKME_ETIKET,
   SEKME_TAKIMI,
   mesajToplami,
@@ -79,12 +94,16 @@ import {
   sekmeSec,
   sonTeslimTs,
   type Muhatap,
+  type MuhatapTuru,
   type SekmeAdi,
 } from "./ajan/gramer";
 import { Kapi, Olculemedi, bicimSayi, dizi, hipotezOku, metin, nesne, say, zamanMetni, type Hipotez } from "./ajan/ortak";
 import { bolumOzeti, hafizaAyristir } from "./hafiza/damitim";
 
 const KANAL_ADI = "#öneri-hattı";
+
+/** Sohbet muhatabının ekrandaki adı — TEK kaynak (sol liste + başlık aynı dizgeyi okur). */
+const MERIDIAN_ADI = "Meridian";
 
 /** ESKİ KAYIT KİMLİKLERİNİN ÇAPALARI — TEK KAYNAK.
  *
@@ -144,18 +163,29 @@ export function Ajan() {
   );
   const hedef = rotaEsle(bolum);
   const sahipsizAcik = hedef.muhatap === SAHIPSIZ_DILIMI;
+  // MERİDİAN SOHBETİ ROSTER'IN DIŞINDA (sahipsiz satırının kardeşi, `gramer.ts::SOHBET_DILIMI`):
+  // muhatap listesi `GET /api/ajanlar`tan TÜRÜYOR ve oraya elle satır eklemek listenin
+  // "ölçülen ajanlar" anlamını bozardı.
+  const sohbetAcik = hedef.muhatap === SOHBET_DILIMI;
+  // HOOK KOŞULSUZ ÇAĞRILIR (React kuralı); istekleri `acik` kapatıyor — kapalıyken
+  // `/api/sohbet` HİÇ çekilmez (Bedel yasası: okunmayan istek ödenmez).
+  const sohbet = useSohbet(sohbetAcik);
   // SEÇİM TÜM LİSTEDEN YAPILIR, SÜZÜLMÜŞTEN DEĞİL: arama kutusuna yazmak açık
   // sohbeti kapatmamalı — süzgeç listeyi daraltır, muhatabı düşürmez.
   // `listeOlculdu` AYRI TAŞINIR (inceleme Ö-2): roster okunamadığında HER ajan derin
   // bağı "listede yok" kovasına düşerdi ve ekran yanlış teşhis koyardı.
   const secim = muhatapSec(
     tumListe,
-    sahipsizAcik ? KANAL_DILIMI : hedef.muhatap,
+    sahipsizAcik || sohbetAcik ? KANAL_DILIMI : hedef.muhatap,
     sonAjan,
     yuk !== null && yuk.ajanlar !== null,
   );
   const secili = secim.muhatap;
-  const seciliTur = sahipsizAcik ? "sahipsiz" : (secili?.tur ?? "kanal");
+  const seciliTur: MuhatapTuru = sahipsizAcik
+    ? "sahipsiz"
+    : sohbetAcik
+      ? "meridian"
+      : (secili?.tur ?? "kanal");
   const sekme = sekmeSec(seciliTur, hedef.sekme);
 
   useEffect(() => {
@@ -177,7 +207,10 @@ export function Ajan() {
     el.scrollTop = el.scrollHeight;
     // `secili` kimliği `tumListe` belleğinden geliyor (`useMemo`), yani muhatap
     // gerçekten değişmedikçe sabit — bu bağımlılık döngü kurmaz.
-  }, [sekme, secili, ajan.veri, filo.veri]);
+    // SOHBET SATIR SAYISI DA BAĞIMLILIK (2026-09-07): Meridian'ın akışı `/api/agent`ten
+    // değil `/api/sohbet`ten besleniyor; onu listeye almasaydık gönderilen her yeni
+    // mesaj ekranın ALTINDA, görünmeyen yerde birikirdi.
+  }, [sekme, secili, ajan.veri, filo.veri, sohbet.satirlar.length, sohbet.gonderiliyor]);
 
   const gitMuhatap = (m: Muhatap) => {
     if (m.tur === "ajan") setSonAjan(m.dilim);
@@ -278,11 +311,14 @@ export function Ajan() {
             simdiMs={simdiMs}
             sahipsizAc={() => git(rotaYaz(SAHIPSIZ_DILIMI, "teslimler"))}
             sahipsizSecili={sahipsizAcik}
+            sohbetAc={() => git(rotaYaz(SOHBET_DILIMI, "sohbet"))}
+            sohbetSecili={sohbetAcik}
+            sohbetAdi={MERIDIAN_ADI}
           />
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <Baslik
-              sahipsiz={sahipsizAcik}
+              tur={seciliTur}
               m={secili}
               hipotezN={hipotezler.length}
               sekme={sekme}
@@ -291,8 +327,11 @@ export function Ajan() {
 
             {/* İKİ AYRI TEŞHİS, İKİ AYRI CÜMLE (inceleme Ö-2): "bu ad listede yok"
                 ile "listeyi hiç okuyamadım" aynı şey değildir. İkisini tek cümleye
-                indirmek, uç düştüğünde operatöre SAĞLAM bir yer imini sildirirdi. */}
-            {secim.bulunamayan === null ? null : secim.listeOlculemedi ? (
+                indirmek, uç düştüğünde operatöre SAĞLAM bir yer imini sildirirdi.
+                MERİDİAN/SAHİPSİZ AÇIKKEN ŞERİT ÇİZİLMEZ: o iki dilim roster'ın
+                DIŞINDA ve `muhatapSec`e kanal dilimi veriliyor — "bulunamayan"
+                hükmü zaten üretilmiyor, ama açıkça yazmak dalın niyetini korur. */}
+            {sahipsizAcik || sohbetAcik ? null : secim.bulunamayan === null ? null : secim.listeOlculemedi ? (
               <p className="shrink-0 border-uyari-h border-b bg-uyari-t px-4 py-1.5 text-[11px] text-uyari sm:px-6">
                 Ajan listesi okunamadı, bu adresin karşılığı ölçülemedi:{" "}
                 <code className="font-mono">{secim.bulunamayan}</code> — adres yanlış OLMAYABİLİR;
@@ -315,6 +354,7 @@ export function Ajan() {
             >
               <Govde
                 sahipsiz={sahipsizAcik}
+                sohbet={sohbetAcik ? sohbet : null}
                 m={secili}
                 sekme={sekme}
                 ajanDurumu={ajan}
@@ -336,7 +376,18 @@ export function Ajan() {
               />
             </div>
 
-            {sekme === "sohbet" ? <YazmaSeridi hal={seciliTur === "kanal" ? "kanal" : "ajan"} /> : null}
+            {/* YAZMA ŞERİDİ İKİ HÂLLİ (2026-09-07, dalga-B): Meridian'da AÇIK ve
+                gerçekten `/api/sohbet`e gönderir; öteki muhataplarda hâlâ KİLİTLİ,
+                çünkü onların ardında yazan bir uç yok — kilidi oralarda da açmak,
+                artık daha inandırıcı olan aynı yalanı söylemek olurdu. */}
+            {sohbetAcik ? (
+              <MeridianSeridi s={sohbet} />
+            ) : sekme === "sohbet" ? (
+              <YazmaSeridi
+                hal={seciliTur === "kanal" ? "kanal" : "ajan"}
+                sohbeteGit={() => git(rotaYaz(SOHBET_DILIMI, "sohbet"))}
+              />
+            ) : null}
           </div>
         </div>
       </div>
@@ -347,21 +398,27 @@ export function Ajan() {
 /* ---- MUHATAP BAŞLIĞI ------------------------------------------------------ */
 
 function Baslik({
-  sahipsiz,
+  tur,
   m,
   hipotezN,
   sekme,
   sekmeSecildi,
 }: {
-  sahipsiz: boolean;
+  /** Muhatabın TÜRÜ — ÇAĞIRANDAN gelir (tek kaynak). Eskiden burada `sahipsiz`
+   *  bayrağından yeniden türetiliyordu; dördüncü tür (`meridian`) gelince aynı
+   *  hükmün iki yerde hesaplanması sessiz ayrışma olurdu. */
+  tur: MuhatapTuru;
   m: Muhatap | null;
   hipotezN: number;
   sekme: SekmeAdi;
   sekmeSecildi: (s: SekmeAdi) => void;
 }) {
-  const tur = sahipsiz ? "sahipsiz" : (m?.tur ?? "kanal");
+  const sahipsiz = tur === "sahipsiz";
   const takim = SEKME_TAKIMI[tur];
-  const a = sahipsiz ? null : (m?.ajan ?? null);
+  // AJAN KÜNYELERİ YALNIZ AJAN TÜRÜNDE: kanal, sahipsiz ve Meridian satırlarının
+  // roster kaydı YOKTUR — `m.ajan` zaten `null` ama hükmü türden okumak, yarın
+  // beşinci bir tür geldiğinde de doğru kalır.
+  const a = tur === "ajan" ? (m?.ajan ?? null) : null;
   const teslimTs = a === null ? null : sonTeslimTs(a);
   const mesajN = a === null ? null : mesajToplami(a);
   const modelListesi = a === null ? null : penceredekiModeller(a);
@@ -370,8 +427,13 @@ function Baslik({
   // her zaman ekliyor, `muhatapSec` de bu yüzden hiç `null` döndürmüyor (inceleme
   // Kü-4). Dal yine de bir cümle taşır — TypeScript'in `Muhatap | null` tipini
   // sessizce `!` ile ezmek, bir gün kanal kaldırılırsa boş bir başlık üretirdi.
-  const ad = sahipsiz ? "sahipsiz teslimler" : (m?.ad ?? "muhatap listesi henüz çizilmedi");
-  const isaret = sahipsiz ? "📥" : (m?.isaret ?? "?");
+  const ad =
+    tur === "sahipsiz"
+      ? "sahipsiz teslimler"
+      : tur === "meridian"
+        ? MERIDIAN_ADI
+        : (m?.ad ?? "muhatap listesi henüz çizilmedi");
+  const isaret = tur === "sahipsiz" ? "📥" : tur === "meridian" ? "⌘" : (m?.isaret ?? "?");
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b bg-card px-4 py-2 sm:px-6">
@@ -379,7 +441,12 @@ function Baslik({
         className={cn(
           "grid size-8 shrink-0 place-items-center border bg-muted font-semibold text-xs",
           tur === "kanal" ? "rounded-lg border-bilgi-h bg-bilgi-t text-bilgi" : null,
-          a?.tur === "ana" || sahipsiz ? "rounded-lg" : tur === "kanal" ? null : "rounded-full",
+          tur === "meridian" ? "rounded-lg border-bilgi-h bg-bilgi-t text-bilgi" : null,
+          a?.tur === "ana" || sahipsiz || tur === "meridian"
+            ? "rounded-lg"
+            : tur === "kanal"
+              ? null
+              : "rounded-full",
         )}
       >
         {isaret}
@@ -396,11 +463,13 @@ function Baslik({
           <span>
             {sahipsiz
               ? "hiçbir ajana denk düşmeyen teslim olayları"
-              : tur === "kanal"
-                ? "öneri üreteci ile kapı hükümleri"
-                : a?.tur === "ana"
-                  ? "ana model · konuşma defteri"
-                  : "bot profili · konuşma defteri"}
+              : tur === "meridian"
+                ? "iki yönlü sohbet · `/api/sohbet` (salt-okunur araçlar, öneri yazabilir)"
+                : tur === "kanal"
+                  ? "öneri üreteci ile kapı hükümleri"
+                  : a?.tur === "ana"
+                    ? "ana model · konuşma defteri"
+                    : "bot profili · konuşma defteri"}
           </span>
           {a === null ? null : (
             <>
@@ -500,6 +569,7 @@ function Baslik({
  *  gösterdikleri içerik aynı — `filo` çapası artık ajan panelinin kendisi. */
 function Govde({
   sahipsiz,
+  sohbet,
   m,
   sekme,
   ajanDurumu,
@@ -512,6 +582,9 @@ function Govde({
   teslimleriAc,
 }: {
   sahipsiz: boolean;
+  /** Meridian sohbeti AÇIKSA durumu; kapalıysa `null`. Hook ÇAĞIRANDA yaşıyor
+   *  (yazma şeridi bu kabın dışında çiziliyor ve aynı durumu okuyor). */
+  sohbet: SohbetDurumu | null;
   m: Muhatap | null;
   sekme: SekmeAdi;
   ajanDurumu: ReturnType<typeof useApi<Record<string, unknown>>>;
@@ -527,6 +600,18 @@ function Govde({
     return (
       <div id={CAPA.filo} className="flex flex-1 flex-col">
         <SahipsizPaneli yuk={yuk} />
+      </div>
+    );
+  }
+
+  // MERİDİAN SOHBETİ — ESKİ ÇAPAYI KULLANIR (`bolum-sohbet`): v288 paritesi her
+  // kayıtlı bölüm kimliğinin ekranda bir `bolum-<kimlik>` çapası olmasını arıyor ve
+  // "sohbet" o kayıtlı dörtlüden biri. Yeni bir çapa icat etmek, kaydın saymadığı
+  // bir kimlik doğurmak olurdu (`alanlar.ts` sayaçlarına DOKUNULMUYOR).
+  if (sohbet !== null) {
+    return (
+      <div id={CAPA.sohbet} className="flex flex-1 flex-col">
+        <MeridianAkisi s={sohbet} />
       </div>
     );
   }

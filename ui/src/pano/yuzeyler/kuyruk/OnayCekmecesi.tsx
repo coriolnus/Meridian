@@ -31,6 +31,7 @@ import { KararPaneli } from "./KararPaneli";
 import { Deger, HukumRozet, Olculemedi, Satir, tarihMetni, zamanMetni } from "./parcalar";
 import type { KapiKontrolu, PlanAyrintisi } from "./onayEylem";
 import { TUR_ETIKET, type KuyrukOgesi } from "./onaylar";
+import { oneriEtiketi, oneriUyarisi } from "./sohbetOnerisi";
 import type { PlanOzeti } from "./tipler";
 
 /** Silahlanma ölçümünün `status` alanı bir HÜKÜMDÜR; tonu burada tek yerde eşlenir. */
@@ -568,6 +569,56 @@ export function OnayCekmecesi({
                       ) : null}
                     </div>
                   ) : null}
+                </Blok>
+              ) : null}
+
+              {oge.ayrinti.cesit === "sohbet" ? (
+                <Blok baslik="Sohbet önerisi (state/sohbet.jsonl turundan doğdu)">
+                  <div>
+                    <Satir etiket="Öneri türü">
+                      <span className="text-xs">
+                        {oneriEtiketi(oge.ayrinti.tur)}
+                        {oge.ayrinti.tur === null ? (
+                          <code className="ml-1 font-mono text-[11px]">
+                            {String(oge.ayrinti.oge.tur ?? "(tür alanı yok)")}
+                          </code>
+                        ) : (
+                          <code className="ml-1 font-mono text-[11px]">{oge.ayrinti.tur}</code>
+                        )}
+                      </span>
+                    </Satir>
+                    <Satir etiket="Hedef">
+                      {oge.ayrinti.oge.hedef && oge.ayrinti.oge.hedef.trim() !== "" ? (
+                        <code className="break-all font-mono text-xs">{oge.ayrinti.oge.hedef}</code>
+                      ) : (
+                        <span className="text-xs">
+                          yok — bu tür hedef taşımıyor (`not` bir kayıttır)
+                        </span>
+                      )}
+                    </Satir>
+                    <Satir etiket="Doğduğu oturum">
+                      {oge.ayrinti.oge.oturum ? (
+                        <code className="break-all font-mono text-xs">{oge.ayrinti.oge.oturum}</code>
+                      ) : (
+                        <Olculemedi
+                          neden="Öneriyi hangi sohbet oturumunun ürettiği kaydedilmemiş"
+                          teknik="gelen kutusu bu öğede `oturum` alanı taşımıyor"
+                          kisa
+                        />
+                      )}
+                    </Satir>
+                  </div>
+                  {/* ETKİ UYARISI KANITIN YANINDA, KARARIN ÜSTÜNDE: `alarm_ack`
+                      BEKLEYEN TÜM alarmları kapatıyor ve bu, satırın başlığından
+                      okunamaz (başlık tek bir hedef adı yazıyor). */}
+                  <p className="mt-2 rounded-md border border-uyari-h bg-uyari-t p-3 text-sm leading-6">
+                    {oneriUyarisi(oge.ayrinti.tur)}
+                  </p>
+                  <p className="mt-2 text-muted-foreground text-[11px] leading-4">
+                    Sohbet İCRA ETMEZ: bu satır `durum: "bekliyor"` olarak yazıldı
+                    (meridian/sohbet.py::_arac_oneri_yaz). Kararı sen verirsin ve icra, MEVCUT
+                    operatör yollarından geçer — ikinci bir onay yolu açılmadı.
+                  </p>
                 </Blok>
               ) : null}
 
