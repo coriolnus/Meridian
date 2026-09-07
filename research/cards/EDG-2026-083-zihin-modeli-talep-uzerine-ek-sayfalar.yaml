@@ -112,3 +112,13 @@ kullanim_1_2026_09_06: >
   ölçüm aynı satırda birleşti; doğru cevabı recall (A2 kanalı 08-22 canlı) VERMİŞTİ ve ilk okumada gözden kaçtı — 'karar öncesi hafıza
   kontrolü' kuralının ikinci yarısı (bulguyu karara SOKMAK) burada ihlal edildi, günlüğe işlendi.
 
+pk_nk_2026_09_07: >
+  (00:2xZ Rol-1) GECE TAZELEME (00:10Z tek-atım, sıralı, minimax kovası taze): S3 arıza/kök-neden 180 s / 22.322 kr · PK pk-pit-civisi
+  120 s / 2.825 kr · NK nk-kripto-madencilik 120 s / 2.232 kr; üçü de 600 s duvarının çok altında (6 iterasyon + mid tavan 60 ayarı).
+  POZİTİF KONTROL GEÇTİ: sayfa 2026-08-31 (×3), pitlaw (×2), v341/v342 (×2), test_pit_yasasi/test_pit_sinif (×2), DEVIR-PIT-CIVISI (×3)
+  — beklenen üç çapa da mevcut. NEGATİF KONTROL GEÇTİ: "Bankada bilgi yok" başlığı; sayfa yaptığı sorguları ve boş dönüşleri
+  listeliyor, ASIC/hash/GPU/BTC adları yalnız sorgu dizgileri olarak geçiyor, hiçbir olgu (donanım, gelir, hash gücü) uydurulmadı.
+  Yol-tutarlı: aynı uç, aynı akış, aynı ayar. Sonda 00:05Z (sonda_tool.log): nemotron-super, nemotron-ultra, minimax-m2.7 yapısal
+  tool_calls üretti (gemma 429) → reflect failover zinciri (m3 → m2.7 → nemotron-super) 084 kurulumu bitince uygulanır
+  (reflect_zincir_uygula.sh; kill#4 'minimax tavanı reflect'e kalmıyorsa' riskine karşı kapasite).
+
