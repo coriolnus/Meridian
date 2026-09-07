@@ -2982,3 +2982,7 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   soruyu cevapladı (ücretsiz zincir · TAM erişim araçla · okur + öneri yazar) → spec + kart EDG-2026-086 + B1 planı; B1 implementer uçuşta.
   S5: KAPI-0 `--kapi-atla` ile atlanmadı (RC=1) → ruling 8/9 (armed yan dosya, tick-watchdog timer durduruldu, systemd-run tetik; root
   /tmp'ye yazamadı → ubuntu nohup); zincir 18:19:50Z'de [c] uygulamaya girdi.
+- **S5 UYGULANDI 19:44:27Z** (84,5 dk replay): trades 901→859 (843 PIT tohum sv91 + 16 canlı bit-aynı), plans 511→1032 (642 yeni, 310 çakışmada
+  canlı kazandı, 390 eski-dönem plan miras — beyan), sızıntı 0, seed_boundary 07-24 eşleşti, eğri dokunulmadı; arşiv + DB yedeği; MU armed geri
+  yüklendi; kimlik çakışması çıkmadı (yeniden numaralama gereksiz); `--kontrol` eski eşleme defterini hayalet buldu → arşivlendi. Worker
+  19:44Z active/healthz 200, tick-watchdog geri. Rapor repoda. Sıradaki: dağıtım #26 + A1 kurulumları + S4 bar arşivi.

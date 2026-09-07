@@ -81,3 +81,9 @@ hukum_2026_09_06: >
   S5 (tohum değişimi, bakım penceresi, ledgerstamp 'replay_seed_pit') OPERATÖR onayına hazır; DSR/PBO yeniden tohumlama sonrası reflect'in
   kendi arama defteriyle doğal olarak yeniden ölçülür.
 
+s5_uygulama_2026_09_07: >
+  TSK-159 S5 (varyant A) CANLIDA: 2026-09-07 18:19:50–19:44:27Z (tatil günü), ops/tohum_pit_yenile.py --uygula --bitis 2026-07-24, girdiler
+  bu kartla AYNI sha (HTML 9909032c…, güncel liste a0cfccca…, params 795fd204…). Yeni tohum n=843 (eski 885; Δ-42 = kartın A/taban
+  farkıyla birebir), avg_r 0,0754 (eski 0,0763), kazanma %36,3, sızıntı 0 (eski tohumda 95 üye-olmayan); canlı 16 satır bit-aynı,
+  eğri noktaları dokunulmadı (işaret TD-20260907T181951Z), seed_boundary 2026-07-24 eşleşti. Arşiv backups/tohum-arsiv-20260907T181951Z.jsonl
+  (sha 970619df…). Rapor research/olcumler/edg082_pit_tohum/s5_2026-09-07/rapor.{json,md}. Kartın 'B raporlu; S5 OPERATÖR' notu kapandı.

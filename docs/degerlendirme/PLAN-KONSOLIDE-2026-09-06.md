@@ -57,7 +57,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Kalem | Tetik |
 |---|---|
 | TSK-161/163/164/165/166/168/169 (hafıza genişlemeleri) | EDG-083 hükmü GEÇTİ (09-13); 163 ayrıca EDG-067 |
-| TSK-066/067/068 (⑥ sinyal serisi) | TSK-159 S5 (bugün 20:45Z uygulanıyor) + EDG-069 hükmü (kod KOVA C sırasında) |
+| TSK-066/067/068 (⑥ sinyal serisi) | ✅ TSK-159 S5 UYGULANDI 09-07 19:44Z → kalan tetik EDG-069 hükmü (kod KOVA C sırasında) |
 | TSK-016/093 (skill öz-iyileştirme, karışık üretici) | EDG-019 kill#4 + EDG-063 ölçümü |
 | TSK-043/063 (Faz-6 kilitleri) | kanıt 11/20 + INTRADAY_ARM operatör onayı |
 | TSK-015/018/010/096/097/104 | tetik olayları (Ajan-B, alarm sınıfı, filo erişimi, trend sorusu, çok-kullanıcı, EXE-011 ilk hafta) |
@@ -67,7 +67,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 
 | Kalem | Karar |
 |---|---|
-| ~~TSK-159 S5~~ | ✅ sabah: A varyantı → icra §0 |
+| ~~TSK-159 S5~~ | ✅ UYGULANDI 19:44Z (843 PIT tohum + 16 canlı; sızıntı 0) |
 | TSK-060 Hindsight | ✅ **MELEZ**: sayfalar kalır, recall arama katmanı olmaktan çıkar, arama sqlite-vec (TSK-167); yürürlük 09-13/14 hükümlerine bağlı (KALDI → sök) |
 | TSK-044 FINVIZ Elite | ⏸ BEKLEMEDE (4.) — önce risk-azaltma/tavan kuralları |
 | TSK-045 FMP planı | ⏸ BEKLEMEDE (4.) — insider kanıt göstermeden para yok |
