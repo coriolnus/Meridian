@@ -11,7 +11,7 @@
 Description=Meridian EDG-085 taban örneklemi tetiği (hafta içi seans, 5 dk)
 
 [Timer]
-OnCalendar=Mon..Fri *-*-* 13..19:*/5:00 UTC
+OnCalendar=Mon..Fri *-*-* 13..19:00/5:00 UTC
 OnCalendar=Mon..Fri *-*-* 20:00,05:00 UTC
 OnCalendar=Mon..Fri *-*-* 13:25:00 UTC
 Persistent=false
