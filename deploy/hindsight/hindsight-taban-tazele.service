@@ -1,0 +1,139 @@
+# hindsight-taban-tazele.service — EDG-067 taban indeksini HAFTALIK olarak yeniden kurar
+# (TSK-167 dilim-1). Tetik YALNIZ hindsight-taban-tazele.timer'dır.
+#
+# NEDEN VAR. Taban indeksi bir HEAD fotoğrafıdır: künyesi `head_commit` taşır ve içerik o
+# commit'teki günlük + kartlar + docs'tur. Depo her gün ilerliyor, indeks ilerlemiyor — yani
+# tazelenmeyen bir indeks her hafta biraz daha "geçen ayın deposunu" arar ve BUNU HİÇBİR YERDE
+# SÖYLEMEZ. Arama CLI'ının künye satırı bayatlığı GÖRÜNÜR yapar; bu birim onu KAPATIR.
+#
+# ÜÇ ADIM, SIRA SÖZLEŞMEDİR:
+#   [1] manifest_uret.py — HEAD blob'larından korpus paketi (aşağıda ölçülmüş sözleşmesi)
+#   [2] taban_indeks.py  — paketi chunk'lar, bge-m3 ONNX ile gömer, sqlite-vec indeksi kurar
+#   [3] taban_terfi.py   — satır sayısı kapısı + atomik yerine koyma
+# `-` ÖNEKİ HİÇBİRİNDE YOK ve bu bilinçli: öneksiz ExecStart'lar ilk düşüşte DURUR, yani yarım
+# bir korpustan indeks kurulmaz ve bozuk bir indeks terfi kapısına hiç ulaşmaz. Öneki koysaydık
+# üç adım da koşar, birim ASLA `failed` görmez ve tazeleme kırıldığı gün panoda hiçbir şey
+# kırmızıya dönmezdi (meridian-karne.service'teki aynı muhakeme).
+#
+# ==================================================================================================
+# manifest_uret.py SÖZLEŞMESİ — KAYNAK OKUNARAK ÖLÇÜLDÜ (2026-09-07), TAHMİN EDİLMEDİ
+# ==================================================================================================
+# ARGÜMANLAR konumsaldır: argv[1] = ÇIKTI DİZİNİ, argv[2] = REPO KÖKÜ (verilmezse `git rev-parse
+# --show-toplevel` ile cwd'den türetilir — burada AÇIKÇA verilir, çünkü bir birimin cwd'sine
+# güvenmek sessiz bir bağımlılıktır).
+# NE PAKETLER (dördü de git HEAD BLOB'undan, çalışma ağacından DEĞİL):
+#   1. MERIDIAN_ENGINEERING_LOG.md
+#   2. ROADMAP.md'nin §7 kesiti — `ROADMAP.md%237` document_id'siyle (`%23` = `#`)
+#   3. research/cards/*.yaml  (README.md glob dışı)
+#   4. docs/**/*.md ve docs/*.md — docs/RUNBOOK.md HARİÇ (ÜRETİLMİŞ, beyanlı dışlama)
+# NE YAZAR: <çıktı>/korpus/… · <çıktı>/manifest.json · ve <çıktı>ın ÜST DİZİNİNE
+# ingest067_paket.tar.gz.
+#
+# İŞTE BU SON SATIR ÇIKTI DİZİNİNİ SEÇTİ. Çıktı doğrudan /opt/hindsight/ingest067 olsaydı tar
+# /opt/hindsight'a düşerdi — ReadWritePaths'in DIŞI, yani ProtectSystem=strict altında EROFS ve
+# adım [1] her hafta düşerdi. Bir alt dizin (…/ingest067/tazele) seçmek tar'ı
+# /opt/hindsight/ingest067/ içinde, yani yazılabilir alanda tutar.
+# İKİNCİ GEREKÇE, EN AZ O KADAR BAĞLAYICI: /opt/hindsight/ingest067 kartın DONMUŞ korpusudur
+# (EDG-067 kill maddesi "taban çizgi AYNI korpusla koşmazsa kıyas geçersiz"). Üstüne yazmak,
+# ölçümün kıyas artefaktını haftalık bir işe sessizce çöpe attırırdı. Tazeleme kendi alt dizininde
+# yaşar; kart artefaktı DOKUNULMADAN kalır.
+# ÖLÇÜLEMEYEN, ADIYLA: /opt/hindsight/ingest067 altında BUGÜN ne olduğu (ssh yok — ajan turu).
+# `tazele/` alt dizininin var olan bir adla çakışmadığı A1'de İLK KOŞUMDA doğrulanır.
+#
+# ==================================================================================================
+# BEDEL BEYANI (bedel yasası — kazanç ölçülüp bedel ölçülmezse körlük sessizdir)
+# ==================================================================================================
+#   · CPU: adım [2] 3.582 chunk'ı bge-m3 ONNX ile gömer. A1 4 OCPU; OMP_NUM_THREADS=2 yarısını
+#     bırakır. Süre ÖLÇÜLMEDİ (yerelde onnxruntime yok) — taban künyesindeki `kurulum_suresi_s`
+#     ilk koşumdan sonra gerçek sayıyı verir. Slot (Pazar 03:30Z) öğrenme sprintinin
+#     [22:00, 06:00) penceresinin İÇİNDEDİR; gerekçe ve takas timer dosyasında.
+#   · DİSK: tazeleme sırasında iki tam indeks (taban.sqlite + .yeni) ve terfiden sonra iki tam
+#     indeks (taban.sqlite + .onceki) yan yana durur, yani tepe kullanım indeks boyutunun İKİ
+#     KATIdır. `.onceki` TEK sürümdür (üçüncü kopya birikmez) — A1 diski sınırlı bir kaynak.
+#   · KORPUS PAKETİ: ingest067_paket.tar.gz her hafta AYNI ADLA üstüne yazılır, yani birikmez.
+#
+# KURULUM ELLE — F9 SINIFI. dagit bu iki dosyayı /etc/systemd/system'e TAŞIMAZ; kopyalama,
+# daemon-reload ve `.timer`ın enable'ı Rol-1'in adımıdır. dagit'in [F9] içerik kapısına
+# EKLENMEDİ: o liste dağıtım betiğinin dosya sahipliğinde ve bu tur ajan turudur (rapora
+# açık kalem).
+[Unit]
+Description=EDG-067 taban indeksi haftalik tazeleme (korpus paketi + bge-m3 gomme + terfi)
+# Ağ GEREKMEZ: korpus git HEAD blob'larından yerel depodan okunur, model dizini yereldir,
+# hiçbir adım dışarı çıkmaz. `After=network-online.target` YAZILMADI — gerekmediği hâlde
+# yazmak, birimi ilgisiz bir hedefin gecikmesine bağlamak olurdu.
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/meridian
+# TEK YERDE, İKİ ADIM İÇİN: hem ONNX oturumu (adım [2]) hem de altındaki BLAS çağrıları bu
+# değişkeni okur. A1 4 OCPU; yarısını bırakmak gece penceresindeki komşularla (sprint) çekişmeyi
+# sınırlar. Gerekçe AYRI satırda — `Environment=` satırında `#` YORUM DEĞİLDİR, systemd atamayı
+# boşluklardan bölüp geçersiz sayar ve değişken SESSİZCE boş kalır (2026-08-01 vakası).
+Environment=OMP_NUM_THREADS=2
+# TAVAN — ÖLÇÜLMEDİ, SEÇİLDİ ve seçimin gerekçesi yazılı: gömme süresi bu depoda hiç ölçülmedi
+# (yerelde onnxruntime yok). 3 saat, 3.582 chunk için iki OCPU'da GENİŞ bir üst sınırdır ve asıl
+# işi şudur: asılı bir koşum birimi SONSUZA dek `activating` bırakır; etkin bir oneshot'ken timer
+# BİR SONRAKİ tetiği ATLAR (TSK-014 Ö-5) — haftalık bir kadansta bu, kaçan bir HAFTA demektir.
+# İlk canlı koşumun `kurulum_suresi_s` künyesi bu sayıyı ölçülmüş bir değerle değiştirmelidir.
+TimeoutStartSec=10800
+# Bayat bir `.yeni` kalmışsa (geçen haftanın bırakılmış indeksi) adım [2] `HEDEF VAR` diyerek
+# DÜŞER — taban_indeks var olan bir db'nin üstüne bilerek yazmaz. Silme bu yüzden ÖN ADIMDIR,
+# adım [2]'nin içinde bir "üstüne yaz" bayrağı DEĞİL: o bayrak yarım bir indeksi sessizce
+# geçerli kılardı.
+ExecStartPre=/bin/rm -f /opt/hindsight/edg067/taban.sqlite.yeni
+# Geçen haftanın korpus dizini de silinir: manifestten DÜŞMÜŞ bir dosya (silinen bir kart, adı
+# değişen bir doc) diskte kalırsa paket dizini gerçeği yansıtmaz. `korpus_chunklari` yalnız
+# manifestteki kayıtları okuduğu için sonuç DOĞRU olurdu — ama dizinin kendisi yanıltıcı bir
+# kanıt hâline gelirdi ve bu tur tam da "artefakt ne diyor" sorusuna hizmet ediyor.
+ExecStartPre=/bin/rm -rf /opt/hindsight/ingest067/tazele
+ExecStart=/opt/hindsight/venv/bin/python /opt/meridian/research/olcumler/edg067_hindsight_faz1/manifest_uret.py /opt/hindsight/ingest067/tazele /opt/meridian
+ExecStart=/opt/hindsight/venv/bin/python /opt/meridian/research/olcumler/edg067_hindsight_faz1/taban_indeks.py --paket /opt/hindsight/ingest067/tazele --model-dir /opt/hindsight/hf-cache/hub/models--BAAI--bge-m3/snapshots/5617a9f61b028005a4858fdac845db406aefb181 --db /opt/hindsight/edg067/taban.sqlite.yeni
+ExecStart=/opt/hindsight/venv/bin/python /opt/meridian/research/olcumler/edg067_hindsight_faz1/taban_terfi.py --yeni /opt/hindsight/edg067/taban.sqlite.yeni --hedef /opt/hindsight/edg067/taban.sqlite --esik-oran 0.9
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti. Gerekçelerin TAM METNİ meridian.service'tedir; burada YALNIZ
+# ayrışan kalem yazılıdır. Sertleştirme birim DOĞARKEN yazılır: meridian-brifing.service bir tur
+# GECİKTİ ve o gecikme "filoda sertleştirmesi hiçbir yerde olmayan tek birim" hâlini doğurdu.
+# BU BİRİM NEDEN SERTLEŞTİRİLİR: ubuntu olarak koşar, depo ağacını okur, bir ONNX modelini
+# yürütür ve /opt/hindsight altına YAZAR — maruziyeti kardeşleriyle aynı sınıftadır.
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA — ReadWritePaths: SADECE iki dizin. Filodaki kardeşler /opt/meridian'ı açar; bu
+#     birim AÇMAZ ve bu bilinçli bir DARALTMADIR: üç adımın hiçbiri depoya yazmıyor.
+#       · manifest_uret.py — `git show HEAD:<yol>` ile OKUR (git salt-okunur), çıktısını
+#         /opt/hindsight/ingest067/tazele'ye yazar.
+#       · taban_indeks.py / taban_terfi.py — /opt/hindsight/edg067'ye yazar.
+#       · Üçü de `__main__` olarak koşar, yani içe aktarılan bir modül gibi `__pycache__`
+#         ÜRETMEZ; ve stdlib dışında hiçbir şey ithal etmezler.
+#     Depo yanlışlıkla yazılırsa EROFS alınır ve birim `failed` olur — GÖRÜNÜR bir arıza,
+#     sessiz bir sızıntı değil. Arıza asimetrisi bu yönde seçildi.
+#     ÇIKARIM, ÖLÇÜM DEĞİL: git'in bu ağaçta yazmaya HİÇ ihtiyaç duymadığı (ör. bir index
+#     kilidi) canlıda doğrulanmadı — ilk koşumun doğrulama kalemi.
+ReadWritePaths=/opt/hindsight/edg067 /opt/hindsight/ingest067
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# AĞA ÇIKMAZ — ve liste yine de kardeşlerle BİREBİR aynı bırakıldı: AF_UNIX yerel yollar için
+# gerekli, AF_INET/AF_INET6'yı sökmek bu birimi filodan AYRIŞTIRIR ve "hangi birim neyi taşıyor"
+# sorusunu tek tek okumadan cevaplanamaz hâle getirirdi (v174'ün ortak-set kapısının gerekçesi).
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+# [Install] BÖLÜMÜ BİLEREK YOK — tetik YALNIZ hindsight-taban-tazele.timer'dır. Burada bir
+# `WantedBy=multi-user.target` dursaydı `systemctl enable <service>` SESSİZCE başarılı olur ve
+# birime her açılışta bir koşum eklerdi: haftalık bir birimde bu, her yeniden başlatmanın bir
+# "hafta" üretmesi demektir. Bölüm yokken aynı komut "no installation config" diye DÜŞER —
+# operatör hatası sessiz davranış değişikliği değil, görünür bir hata olur.
