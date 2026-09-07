@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# bar_sorgu.py — ops/bar_arsivle.py'nin yazdığı ay/sembol bölümlü parquet bar arşivini DuckDB ile
+# bar_sorgu.py — ops/bar_arsivle.py'nin yazdığı bölümlü parquet bar arşivini DuckDB ile
 # sorgular (bellek içi; diske hiçbir DB dosyası yazılmaz). Arşivin YASA 6 OKUYUCUSU budur: bu araç
 # olmasaydı arşiv üretilmemiş sayılırdı. Salt okunur — hiçbir dosyaya yazmaz. Koşum:
 # .venv/bin/python ops/bar_sorgu.py --sorgu kapsam
@@ -13,13 +13,20 @@ cevaplanamıyordu. Üç hazır sorgu bu üç soruyu kapatır; `--sql` gerisini a
 
 GÖRÜNÜM: `barlar` — `read_parquet` üstünde `sembol` (dosya adından) ve `ay` (tarihten) türetilmiş
 iki ek sütun artı arşiv şemasının sekizi. Sembolün dosya ADINDAN gelmesi Task-1'in yerleşim
-sözleşmesidir (`<dizin>/AAAA-AA/<SEMBOL>.parquet`); `ay` ise İÇERİKTEN türer — dizin adına
-GÜVENİLMEZ, çünkü yanlış adlandırılmış bir dizin sessizce yanlış aya sayım yaptırırdı.
+sözleşmesidir; `ay` ise İÇERİKTEN türer — dizin adına GÜVENİLMEZ, çünkü yanlış adlandırılmış bir
+dizin sessizce yanlış aya sayım yaptırırdı. `ay`ın içerikten türemesi okuyucuyu YERLEŞİMDEN
+BAĞIMSIZ kılan şeydir: `--ay` süzgeci hiç dizin olmayan `sembol` yerleşiminde de çalışır.
 
-DOSYA LİSTESİ PYTHON TARAFINDA ÇIKARILIR (`<dizin>/*/*.parquet` deseni), tek bir glob dizgesi
-DuckDB'ye verilmez: aksi hâlde "arşiv boş" ile "arşiv yok" ayrımı DuckDB'nin hata metnine kalırdı
-ve araç boş bir tabloyu başarı gibi basardı. Boş arşiv AÇIK bir hükümdür (rc 1 + hangi aracın
-doldurması gerektiği).
+ÜÇ YERLEŞİM DE OKUNUR. Yazıcı `--bolum {sembol,yil,ay}` seçeneğini taşır (varsayılan `sembol`;
+gerekçesi A1'in S4 ölçümü — 70 bin küçük dosya), yani arşiv üç şekilden birinde olabilir:
+`<dizin>/<SEMBOL>.parquet` · `<dizin>/<YIL>/<SEMBOL>.parquet` ·
+`<dizin>/<AAAA-AA>/<SEMBOL>.parquet`. Okuyucu üçünü de tarar (`*.parquet` + `*/*.parquet`) ve HANGİSİ olduğunu SORMAZ: yerleşimi
+manifestten okuyup ona göre desen seçseydi, manifesti bozuk ya da eksik bir arşiv sessizce BOŞ
+görünürdü. Karışık yerleşim (aynı sembol iki desende) yazıcının bölüm kapısıyla engellenir.
+
+DOSYA LİSTESİ PYTHON TARAFINDA ÇIKARILIR, tek bir glob dizgesi DuckDB'ye verilmez: aksi hâlde
+"arşiv boş" ile "arşiv yok" ayrımı DuckDB'nin hata metnine kalırdı ve araç boş bir tabloyu başarı
+gibi basardı. Boş arşiv AÇIK bir hükümdür (rc 1 + hangi aracın doldurması gerektiği).
 
 TAKVİM İTHAL EDİLİR, KOPYALANMAZ. `bosluk` alt komutu XNYS seans kümesini
 `meridian.adapters.data`nın `_sessions` fonksiyonundan alır (kapsam sınırı da onun
@@ -101,10 +108,16 @@ def arsiv_dizini() -> pathlib.Path:
     return pathlib.Path(_config.STATE) / bar_arsivle.VARSAYILAN_HEDEF_ALT
 
 
+#: Yazıcının ürettiği ÜÇ yerleşimin desenleri — `sembol` düzeyi köktedir, `yil`/`ay` bir dizin
+#: altındadır. Desenler burada TEK yerde durur; `bolum` adlarının kendisi yazıcının sabitidir.
+YERLESIM_DESENLERI = ("*.parquet", "*/*.parquet")
+
+
 def parquet_dosyalari(dizin: pathlib.Path) -> list[pathlib.Path]:
-    """`<dizin>/AAAA-AA/*.parquet` — yerleşim Task-1'in sözleşmesidir. Sıralı döner ki sorgu
-    planı ve dolayısıyla satır sırası koşumdan koşuma kaymasın."""
-    return sorted(p for p in dizin.glob("*/*.parquet") if p.is_file())
+    """Arşivdeki parquet dosyaları — üç yerleşim de taranır (gerekçe modül başlığında).
+    Sıralı ve TEKİL döner ki sorgu planı ve satır sırası koşumdan koşuma kaymasın."""
+    return sorted({p for desen in YERLESIM_DESENLERI
+                   for p in dizin.glob(desen) if p.is_file()})
 
 
 def gorunum_sql(dosyalar: list[pathlib.Path]) -> str:
@@ -258,8 +271,9 @@ def main(argv: list[str] | None = None) -> int:
 
     dosyalar = parquet_dosyalari(dizin)
     if not dosyalar:
-        print(f"HATA: {dizin} altında `AAAA-AA/*.parquet` deseninde hiç dosya yok — arşiv BOŞ. "
-              f"Doldurmak için: `ops/bar_arsivle.py --hedef {dizin} --uygula`.", file=sys.stderr)
+        print(f"HATA: {dizin} altında {' ya da '.join(YERLESIM_DESENLERI)} deseninde hiç dosya "
+              f"yok — arşiv BOŞ. Doldurmak için: "
+              f"`ops/bar_arsivle.py --hedef {dizin} --uygula`.", file=sys.stderr)
         return 1
 
     con = olay_sorgu.baglanti_kur()
