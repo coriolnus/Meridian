@@ -2995,3 +2995,8 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   reviewer (bar bölümleme ONAY; T2 "RUNBOOK dışında ONAY") + gün sonu 5 teslim × 4 mercek çekişmeli inceleme workflow'u; hafıza kaydı.
 - **TSK-064 Task 2 merge** + RUNBOOK/korpus yeniden üretimi (bu commit); suite #35 sırada. A1 hazırlık ölçümü: hindsight_api `_FILE` desteği YOK
   (sarmalayıcı B-sınıfı beyanlı), apisix key-auth kilidi aktif (401), `.env-apisix` 640 (Faz-0 bu gece).
+- **Suite #35** 11042/0 (HEAD 2df9199) → push → **dağıtım #27** 20:48:05Z. **A1 S4 (sembol düzeni)**: 260 sembol · 1.352.236 satır · 23 MB /
+  261 dosya · 12 s (ay düzeni: 70k dosya, 134 MB, bitmedi). **TSK-064 Task 3**: Faz-0 chmod 600 · Faz-1B NOUS+KAPI faz1/faz2 (farksal ölçüm
+  geçti, .env'den çıktı, /proc environ 0) · Faz-1A hindsight creds ×3 + sarmalayıcı birim + 50-creds drop-in (health 200, banks 200) →
+  farksal ölçüm geçti → .env'den 3 sır çıktı (37 ayar) · meridian 54 drop-in, vekil 2 banka. Rotasyon beyanlı ertelendi. Reviewer'lar:
+  bar bölümleme ONAY, T2 RUNBOOK-dışı ONAY; gün sonu inceleme workflow'u sürüyor.

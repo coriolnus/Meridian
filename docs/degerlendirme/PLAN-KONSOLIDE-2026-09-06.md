@@ -15,6 +15,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Canlı triyaj (03Z+) | bilinen kalemler: `korumasiz_motor_disi_pozisyon` (ROADMAP'te), MECHANISM_STALE (16,6 gün, TSK-102 hükmü), massive/fmp uyarıları; bar uyarıları kendi kuru koşumumdan | yeni kalem yok |
 | Zamanlayıcılar (oturum cron'u) | 13:47Z · 15:27Z · 20:43Z (yalnız hatırlatıcı; prosedür planda) | oturum cron'u güvenilmez → uyanışta `date -u` ile telafi |
 | S5 kuru koşum sonucu (10:23Z) | ✅ KABUL: n 843 (band 800–884), sızıntı 0, avg_r ≈ aynı; rapor repoda (61904e3) | pencere İKİ PARÇA: 20:45Z durdur+yedek → 21:03Z uygula+id yeniden numaralama+başlat (nabız 900 s eşiği) |
+| Akşam (19:4x–20:5xZ) | ✅ S5 uygulandı · dağıtım #26 (20:01Z) + #27 (20:48Z) · TSK-167/EDG-085 birimleri A1'de · B1 sohbet backend main'de (fix-1 + suite #35) · TSK-064 Faz-0/1A/1B canlıda | 22:04Z brifing → TSK-138 ölçümü; B2 UI planı; Faz-1C/2 |
 | Operatör kararlarının icrası (11:57–12:5xZ) | ✅ EDG-2026-085 tick pilotu kartı (TSK-013 ACTIVE; ADIM-0 ölçüldü: sembol/gün maks 14, tek bağlantı → q-abonelik) · TSK-175 uyuyan yol belgesi (öncül bayat: 10 plan, VLO işlem, CRM keşif; öneri: kalsın + 2 hijyen) · TSK-064 §6 Vault Faz-2 eki (pinli ikili, file backend, loopback HTTP, Shamir 1/1 0400, ExecStartPost oto-unseal, Vault Agent template) | TSK-013 pilot kodu S5 + 09-13/14 sonrası; Faz-2 ayrı dalga (Faz-0/1 sonrası); uyuyan yol kararı yeniden sorulmaz |
 
 ## 1. Bu gece (uçuşta / zamanlanmış — bildirimli)
@@ -44,9 +45,9 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Kalem | Öncelik | Kapı |
 |---|---|---|
 | TSK-162 triyajda recall | bu hafta | disiplin + 2 hafta sayım; kod yok |
-| TSK-020 [UYGULA-3] bars→Parquet | ✅ KOD MAIN'DE 09-07 13:5xZ (67b86f4: bar_arsivle + bar_sorgu, v435/v436) | dağıtım #26 S5 sonrası → S4 A1 ilk arşiv + kapsam raporu (Rol-1); 3.3 canlı yol ayrı kart |
+| TSK-020 [UYGULA-3] bars→Parquet | ✅ CANLIDA: S4 A1 arşivi 260 sembol / 23 MB / 12 s (ay düzeni çürüdü → sembol düzeni, Task 2) | 3.3 canlı yol ayrı kart; tazeleme birimi sonraki dilim |
 | TSK-167 pano anlamsal arama | ✅ dilim-1 KOD MAIN'DE 09-07 19:0xZ (hafiza_ara CLI + haftalık tazeleme birimi) | A1 kurulum + ilk sorgu dağıtım #26 sonrası; dilim-2 pano ucu |
-| TSK-064 sır yönetimi Faz-0/1A/1B (+Faz-2 Vault) | ✅ BUGÜN BAŞLADI (operatör): Task 1 (Faz-0 + 1B) main'de 09-07 19:3xZ, suite #33 yeşil | Task 2 (1A) sırada; A1 geçişi gece penceresi; Vault Faz-2 sonra |
+| TSK-064 sır yönetimi Faz-0/1A/1B (+Faz-2 Vault) | ✅ **CANLIDA 09-07 20:5xZ**: NOUS/KAPI + hindsight ×3 LoadCredential, .env sır satırları çıktı, farksal ölçümler geçti | rotasyon beyanlı ertelendi (OpenRouter anahtarları operatörde); Faz-1C apisix/cp + Faz-2 Vault sonra |
 | TSK-137 Ağustos defteri kırpma | Ekim başı | aylık bakım |
 | TSK-132 palet artıkları | bu ay | eski sayfalar jetonlar.css |
 | TSK-012 dalga-B (pano sohbet) | bu ay | icra sırasına alınmalı |
