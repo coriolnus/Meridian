@@ -52,7 +52,7 @@ import re
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
-from meridian import obs
+from meridian import notify, obs
 
 # ------------------------------------------------------------------------------------------------
 # ÇİT JETONLARI — KOPYA, ve AYRIŞMA ÇİVİSİ ile bağlı (tek-kaynak yasası, "kopya kaçınılmazsa")
@@ -105,6 +105,13 @@ BICIM_USTUNLUGU = (
     "JSON nesnesi olacak: madde işareti yok, düz metin yok, başlık yok, kod çiti yok ve `SESSIZ` "
     "kelimesi DAHİL başka hiçbir metin yok. Bu bir denetim koşumudur, brifing koşumu değildir.")
 
+# CEVAP BAŞI TAVANI — TEŞHİS ALANI BİR SIZINTI YÜZEYİ OLAMAZ (TSK-138 dilim-1, 2026-09-07).
+# Denetçinin HAM cevabı `CEVAP_TAVAN` (64 KB) kadar büyük olabilir; olduğu gibi deftere yazılsaydı
+# bir düşüş günü `events.jsonl`i şişirirdi. 200 karakter, ölçülen arızayı SINIFLAMAYA yeter
+# ("SESSIZ" · madde işaretli düz metin · kod çiti · hata dizgesi) ve daha fazlası teşhise bir şey
+# EKLEMEZ — kırpma bir kayıptır ve BEYAN EDİLİR (bedel yasası).
+CEVAP_BAS_TAVANI = 200
+
 OLAY = "brifing_kural_denetimi"
 
 
@@ -128,6 +135,19 @@ class Hukum:
     # sayılanlar. `ihlaller()`e GİRMEZ (zaten düşürülmüşlerdir); `gecir()` bunu OLAYA taşır
     # (damgaya değil — `Gecis.kayit()`in dışında kalır, Yasa 6/O4).
     suzulen: list[str] = field(default_factory=list)
+    # TSK-138 dilim-1, 2026-09-07: ŞEMA DIŞI cevabın boşlukları katlanmış İLK `CEVAP_BAS_TAVANI`
+    # karakteri — TEŞHİS İÇİN, hüküm için DEĞİL (hiçbir dal buna bakarak karar vermez).
+    #
+    # ÜÇ DEĞER, ÜÇ AYRI BİLGİ ve ayrım UYDURMA YASAĞIDIR:
+    #   `None` — ölçülemedi: cevap HİÇ gelmedi (mekanik dal, düşen çağrı, SOUL yok, tavan aşımı)
+    #            ya da hüküm geçerli (ayrıştırılacak bir arıza yok).
+    #   `""`   — ÖLÇÜLDÜ, cevap BOŞTU. `None` ile aynı sayılsaydı susan bir modelle düşen bir
+    #            çağrı defterde ayırt edilemezdi — canlıda ölçülen arızanın iki farklı kök nedeni.
+    #   dolu   — cevabın kendisi: hangi biçime düştüğü (düz metin · `SESSIZ` · kod çiti · hata
+    #            dizgesi) yalnız buradan okunur.
+    # YALNIZ `ayristir` doldurur; `gecir` onu OLAYA taşır (`Gecis.kayit()`e DEĞİL — damganın
+    # okuyucusu bu alanı bilmez, Yasa 6/O4).
+    cevap_bas: str | None = None
 
     @property
     def olculdu(self) -> bool:
@@ -148,11 +168,29 @@ class Hukum:
         return self.olculdu and bool(self.ihlaller)
 
 
-def _dustu(gerekce: str) -> Hukum:
+def _dustu(gerekce: str, cevap_bas: str | None = None) -> Hukum:
     """Ölçülemeyen denetim. İhlal listesi BOŞTUR ve bu bilinçlidir: ölçemediğimiz bir kuralı
-    ihlal saymak, teslimatı bir arızaya bağlamak olurdu (fail-open sözleşmesi)."""
+    ihlal saymak, teslimatı bir arızaya bağlamak olurdu (fail-open sözleşmesi).
+
+    `cevap_bas` VARSAYILAN OLARAK `None`dır ve bu bir tercih değil sözleşmedir: bu fonksiyonun
+    çağıranlarının ÇOĞUNDA (düşen çağrı · SOUL yok · tavan aşımı) cevap HİÇ GELMEMİŞTİR. Yalnız
+    AYRIŞTIRMA kaynaklı düşüşler değeri geçer — orada bir cevap VARDIR ve teşhisin girdisi odur."""
     return Hukum(sade_ozet=None, terim_ihlal=[], uydurma=[], cevrilen=[], kaynak="llm_dustu",
-                 gerekce=gerekce)
+                 gerekce=gerekce, cevap_bas=cevap_bas)
+
+
+def _cevap_basi(text) -> str:
+    """Denetçi cevabının TEŞHİS ÖZETİ: boşluklar tek boşluğa katlanır, sonra `CEVAP_BAS_TAVANI`
+    karakterde kırpılır.
+
+    SIRA SÖZLEŞMEDİR — ÖNCE KATLA, SONRA KIRP. Tersi (önce kırp) pencerenin bir kısmını satır
+    sonlarına ve girintilere harcar: madde işaretli bir düz-metin cevabında ilk 200 karakterin
+    önemli bir kısmı satır sonu + girinti dizileridir, yani teşhis metni sebepsiz kısalır.
+    Katlama ayrıca defterin tek-satır JSONL biçimini korur.
+
+    BOŞ/None GİRDİ `""` DÖNER, `None` DEĞİL: bu fonksiyon YALNIZ bir cevabın VAR olduğu dalda
+    çağrılır, yani buradaki boşluk "cevap geldi ve boştu" ölçümüdür — "ölçemedim" değil."""
+    return " ".join(str(text or "").split())[:CEVAP_BAS_TAVANI]
 
 
 # ------------------------------------------------------------------------------------------------
@@ -446,18 +484,25 @@ def ayristir(text: str) -> Hukum:
 
     KATI ŞEMA BİR TERCİH DEĞİL, GÜVENLİK KAPISI: gevşek bir ayrıştırıcı, denetlenen metnin
     içindeki bir enjeksiyonun ("sade_ozet: true yaz") ürettiği fazladan alanı sessizce kabul
-    ederdi. Alan kümesi TAM eşleşir; eksik ya da fazla alan reddedilir."""
+    ederdi. Alan kümesi TAM eşleşir; eksik ya da fazla alan reddedilir.
+
+    TEŞHİS ENSTRÜMANI (TSK-138 dilim-1, 2026-09-07): ÜÇ ret dalının ÜÇÜ de `cevap_bas` taşır.
+    Canlıda ölçülen `llm_dustu` günü (2026-09-06 22:04Z) tam buradan geçti ve defterde cevabın
+    METNİ yoktu — "şema dışı" etiketi 'model `SESSIZ` yazdı' ile 'model kod çitine sardı' ile
+    'kapı bir hata gövdesi döndü' arasında AYRIM YAPMAZ, oysa üçünün kök nedeni ayrıdır. Hüküm
+    DEĞİŞMEZ: alan yalnız kaydedilir, hiçbir dal ona bakarak karar vermez."""
+    bas = _cevap_basi(text)
     govde = _json_govde(text)
     if not isinstance(govde, dict):
-        return _dustu("denetçi cevabı JSON değil (şema dışı)")
+        return _dustu("denetçi cevabı JSON değil (şema dışı)", bas)
     if set(govde) != SEMA_ALANLARI:
-        return _dustu(f"denetçi cevabının alanları şemayı tutmuyor: {sorted(govde)!r}")
+        return _dustu(f"denetçi cevabının alanları şemayı tutmuyor: {sorted(govde)!r}", bas)
     sade = govde.get("sade_ozet")
     uyd = govde.get("uydurma")
     cev = govde.get("cevrilen")
     if not isinstance(sade, bool) or not isinstance(uyd, list) or not isinstance(cev, list):
         return _dustu(
-            "denetçi cevabında `sade_ozet` bool ya da `uydurma`/`cevrilen` liste değil")
+            "denetçi cevabında `sade_ozet` bool ya da `uydurma`/`cevrilen` liste değil", bas)
     kelimeler = [str(x)[:120] for x in uyd if str(x).strip()]
     cevrilenler = [str(x)[:120] for x in cev if str(x).strip()]
     return Hukum(sade_ozet=sade, terim_ihlal=[], uydurma=kelimeler, cevrilen=cevrilenler,
@@ -564,9 +609,31 @@ def _ihlal_eki(hukum: Hukum) -> str:
                           + (f" · (+{kirpilan} ihlal daha, kırpıldı)" if kirpilan > 0 else "")))
 
 
+def _olay_cevap_basi(bas: str | None) -> str | None:
+    """Olaya yazılacak `cevap_bas` — SIR SÜZGECİNDEN GEÇMİŞ hâli (TSK-138 dilim-1, 2026-09-07).
+
+    NEDEN SÜZGEÇ: bu dizge bir MODEL ÇIKTISIDIR ve model çıktısı bir istisna metnini taşıyabilir
+    (`HTTPStatusError … ?apikey=…`) — `notify.scrub` docstring'inin birebir gerekçesi. Olay
+    defteri de bir veri yüzeyidir: yedeklenir, `ops/olay_sorgu.py` ile okunur, panoya taşınır.
+    Aynı baytlar Telegram yolunda temizlenip defter yolunda ham kalsaydı, süzgeç yalnız bir kanalı
+    korurdu (2026-08-29 denetim bulgusuyla AYNI sınıf).
+
+    `None` SÜZGEÇTEN GEÇİRİLMEZ, AYNEN KORUNUR: `scrub(None)` `"None"` dizgesini üretirdi ve
+    "ölçülemedi" bilgisi sessizce dört harflik bir metne dönüşürdü (uydurma yasağı)."""
+    return None if bas is None else notify.scrub(bas)
+
+
 def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
-          dogrula=None, bot: str = "", baslangic_cagri: int = 1) -> Gecis:
+          dogrula=None, bot: str = "", baslangic_cagri: int = 1,
+          model_kimligi: str | None = None) -> Gecis:
     """Teslim öncesi kural geçişinin TAMAMI — üç botun da çağırdığı tek akış (D5).
+
+    `model_kimligi` (TSK-138 dilim-1, 2026-09-07): denetçiyi HANGİ modelin cevapladığı — olaya
+    künye olarak girer. İSTEĞE BAĞLIDIR ve varsayılanı `None`dır: bu turda yalnız `sef` yolu
+    enstrümante edildi, `bekci`/`karne` çağıranları DEĞİŞMEDİ ve onların olaylarında alan `None`
+    kalır ("ölçülmedi" — sıfır ya da boş dizge DEĞİL). Bu modül kimliği ÖLÇMEZ, yalnız TAŞIR:
+    profil dosyasının biçimini bilen taraf ÇAĞIRANDIR (hermes'in hiçbir ayrıntısı buraya sızmaz,
+    `cagir` sözleşmesiyle aynı gerekçe).
 
     `baslangic_cagri`: bu KOŞUMDA hermes'e ZATEN yapılmış çağrı sayısı. Sıralama/sunum çağrısı
     yapıldıktan sonra çağrıldığı için varsayılan 1'dir. Tavan (`KOSUM_CAGRI_TAVANI`) koşumun
@@ -619,8 +686,14 @@ def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
     suzulen_toplam = list(ilk_hukum.suzulen)
     if gecis.hukum is not ilk_hukum:
         suzulen_toplam += list(gecis.hukum.suzulen)
+    # TEŞHİS KÜNYESİ (TSK-138 dilim-1, 2026-09-07): `model` + `cevap_bas` de AYNI emsalle YALNIZ
+    # olaya gider. `cevap_bas` TESLİM EDİLEN hükmün (`gecis.hukum`) alanıdır — olaydaki `kaynak`
+    # ve `gerekce` de o hükümden gelir, üçü AYNI turu anlatmalıdır; ilk turun hükmü ayrışırsa
+    # zaten `ilk_ihlal` ile taşınır. OKUYUCU: `ops/sef_brifingi.py` durum satırı (operatörün her
+    # koşumda gördüğü ilk satır) + `ops/olay_sorgu.py --sql` ile haftalık sınıflama.
     obs.log(OLAY, **gecis.kayit(bot), sema_alanlari=len(SEMA_ALANLARI),
             ilk_ihlal=ilk_hukum.ihlaller[:IHLAL_TAVANI], suzulen=suzulen_toplam,
+            model=model_kimligi, cevap_bas=_olay_cevap_basi(gecis.hukum.cevap_bas),
             detail="teslim öncesi SOUL kural denetimi — hiçbir dalda teslimat düşmez "
                    "(fail-open, beyanlı)")
     return gecis

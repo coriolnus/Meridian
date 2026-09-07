@@ -673,6 +673,61 @@ def _profil_evini_dogrula(yol: str) -> str | None:
     return None
 
 
+# PROFİL MODEL ALANLARI — ÖLÇÜLDÜ, VARSAYILMADI (TSK-138 dilim-1, 2026-09-07). Kaynak:
+# `deploy/hermes/profiles/sef/config.yaml`. `model:` bir EŞLEMEDİR ve iki aday alan taşır:
+#   `provider` — çağrının GİTTİĞİ yer (`custom:kapi`); kapı değişirse burası değişir.
+#   `default`  — künye (`nvidia/nemotron-…`); kapının `ai-proxy-multi` instance'ı `options.model`i
+#                SABİTLEDİĞİ için bu ad tel üzerinde EZİLEBİLİR — dosyanın kendi şerhi böyle
+#                diyor. Yani künye "gerçekten cevaplayan model" DEĞİL, "istemcinin istediği"dir;
+#                teşhis için yine de tek elimizdeki ad ve BU SINIR BEYAN EDİLİR.
+# İKİSİ BİRDEN yazılır çünkü tek başına hiçbiri yetmez: yalnız künye yazılsaydı sağlayıcı
+# openrouter'dan kapıya geçtiği gün defterdeki kimlik AYNI kalırdı, oysa çağrının gittiği yer
+# değişmiş olurdu (ve 2026-09-02'de tam bu göç yapıldı).
+MODEL_KIMLIK_ALANLARI = ("provider", "default")
+
+
+def _profil_model_kimligi(profil_evi) -> str | None:
+    """Profilin `config.yaml`ındaki model kimliği — `provider/model` biçiminde, ya da `None`.
+
+    NEDEN ÖLÇÜLÜR, KODA YAZILMAZ: modelin adı bu depoda ÜÇ kez değişti (super → ultra → kapı
+    arkası). Kodda bir kopya dursaydı defterdeki künye profilin gerçeğinden sessizce ayrışırdı
+    (tek-kaynak yasası) — ve teşhis alanının bütün değeri künyenin DOĞRU olmasındadır.
+
+    `None` = ÖLÇÜLEMEDİ ve bu bir tahminle DOLDURULMAZ (uydurma yasağı): yanlış bir model adı,
+    şema dışı cevabın kök nedenini yanlış modele yükler. Her düşüş dalı `obs.log` ile ADIYLA
+    kayda geçer (Yasa 4) — çağıran bu değeri denetim olayına künye olarak taşır, yani sessiz bir
+    `None` "model alanı yok" ile "config okunamadı" arasında ayrım bırakmazdı.
+
+    DÜZ DİZGE BİÇİMİ DE OKUNUR: profil dosyasının kendi şerhi `model:` alanının bir zamanlar düz
+    dizge olduğunu ve bunun bütçeyi sessizce düşürdüğünü söylüyor. O biçim geri gelirse kimlik
+    ÖLÇÜLEMEZ olmamalı — künye yine okunur, yalnız sağlayıcı yarısı yoktur."""
+    yol = Path(str(profil_evi or "")) / "config.yaml"
+    try:
+        cfg = yaml.safe_load(yol.read_text(encoding="utf-8"))
+    except Exception as e:
+        obs.log("sef_brifingi_profil_modeli_olculemedi", yol=str(yol),
+                neden=f"config.yaml okunamadı/ayrıştırılamadı: {repr(e)[:200]}",
+                detail="denetçi model kimliği ÖLÇÜLEMEDİ — olaya `None` yazılır, UYDURULMAZ")
+        return None
+    blok = cfg.get("model") if isinstance(cfg, dict) else None
+    if isinstance(blok, str):
+        return blok.strip() or None
+    if not isinstance(blok, dict):
+        obs.log("sef_brifingi_profil_modeli_olculemedi", yol=str(yol),
+                neden=f"`model` alanı yok ya da eşleme/dizge değil: {type(blok).__name__}",
+                detail="denetçi model kimliği ÖLÇÜLEMEDİ — olaya `None` yazılır, UYDURULMAZ")
+        return None
+    parcalar = [str(blok.get(ad)).strip() for ad in MODEL_KIMLIK_ALANLARI
+                if str(blok.get(ad) or "").strip()]
+    if not parcalar:
+        obs.log("sef_brifingi_profil_modeli_olculemedi", yol=str(yol),
+                neden=f"`model` eşlemesinde {list(MODEL_KIMLIK_ALANLARI)} alanlarının hiçbiri "
+                      f"dolu değil: {sorted(blok)}",
+                detail="denetçi model kimliği ÖLÇÜLEMEDİ — olaya `None` yazılır, UYDURULMAZ")
+        return None
+    return "/".join(parcalar)
+
+
 def _bas_oku(f, tavan: int = CEVAP_TAVAN) -> str:
     """Çocuğun stdout'unu BAŞTAN, tavanla sınırlı okur — cevap baştan başlar."""
     f.seek(0)
@@ -923,7 +978,11 @@ def _kural_gecisi(cevap: str, istem: str, ham: dict) -> tuple[str, str]:
         g = soul_denetimi.gecir(profil_evi=HERMES_PROFIL_HOME, ilk_metin=cevap, ilk_istem=istem,
                                 veri_terimleri=[k["ad"] for k in ham["olculemeyen"]],
                                 cagir=_profili_cagir, dogrula=lambda c: _cevap_makul(c, ham),
-                                bot=PROFIL_ADI)
+                                bot=PROFIL_ADI,
+                                # TSK-138 dilim-1: kimlik BURADA ölçülür, modülde DEĞİL —
+                                # `soul_denetimi` hermes profilinin biçimini bilmez ve bilmemeli
+                                # (`cagir` sözleşmesiyle aynı sınır).
+                                model_kimligi=_profil_model_kimligi(HERMES_PROFIL_HOME))
         ham["kural_beyani"] = g.beyan
         ham["kural_kaydi"] = g.kayit(PROFIL_ADI)      # damgayı `main` teslimattan SONRA yazar
         return (_ham_metin(ham), "ham") if g.metin is None else (g.metin, "llm")
@@ -1069,7 +1128,65 @@ def _durum_satiri(ham: dict) -> str:
     teslim = ", ".join(k["ad"] for k in ham["teslim_edilecek"]) or "yok"
     eksik = ", ".join(k["ad"] for k in ham["olculemeyen"]) or "yok"
     return (f"teslim edilecek kaynak: {teslim} · ölçülemeyen: {eksik} · "
-            f"kural denetimi: {_kural_denetimi_satiri()}")
+            f"kural denetimi: {_kural_denetimi_satiri()} · "
+            f"denetçi teşhisi: {_denetci_teshis_satiri()}")
+
+
+# DEFTER TARAMA PENCERESİ — teşhis okuyucusunun BEDELİ (bedel yasası, beyanlı). Defter üç botun
+# ortağıdır ve iki şef koşumu arasına başka olaylar düşer; pencere ne kadar dar olursa okuma o
+# kadar ucuz, "kayıt yok" ihtimali o kadar yüksektir. `store.read_jsonl` KUYRUKTAN okur, yani
+# maliyet dosya boyutuna değil bu sayıya bağlıdır. Pencerede kayıt bulunamazsa satır BUNU SÖYLER —
+# "denetim koşmadı" diye YORUMLAMAZ (uydurma yasağı: bulunamamak, olmamak değildir).
+DENETIM_OLAY_PENCERESI = 400
+
+
+def _son_denetim_olayi() -> dict:
+    """Defterdeki SON `brifing_kural_denetimi` olayı (bu botunki) — `{}` = pencerede yok.
+
+    OLAY ADI ÜRETİMDEN OKUNUR (`soul_denetimi.OLAY`), dizge olarak TEKRARLANMAZ: kopyalanan bir
+    olay adı ayrıştığında okuyucu sessizce hiçbir şey bulamaz ve Yasa 6'nın "okundu" iddiası
+    sözde kalırdı (tek-kaynak yasası).
+
+    BOT SÜZGECİ ZORUNLU: defter `@sef`/`@bekci`/`@karne` olaylarını AYNI ada yazar; süzgeçsiz bir
+    okuma `@karne`nin künyesini `@sef`in durum satırında gösterirdi."""
+    try:
+        olaylar = obs.recent(DENETIM_OLAY_PENCERESI)
+    except Exception as e:
+        # SESSİZ YUTMA DEĞİL: okuyucunun kendisi teslimatı DÜŞÜREMEZ (fail-open, `_kural_gecisi`
+        # ile aynı yapısal gerekçe) — bozuk/erişilemez bir defter yüzünden günün brifingi hiç
+        # gitmesin diye yakalanır ve düşüş ADIYLA deftere yazılmaya çalışılır.
+        obs.log("sef_brifingi_denetim_olayi_okunamadi", hata=repr(e)[:200],
+                detail="teşhis okuyucusu defteri okuyamadı — durum satırı yine basılır")
+        return {}
+    for e in reversed(olaylar):
+        if str(e.get("event")) == soul_denetimi.OLAY and str(e.get("bot")) == PROFIL_ADI:
+            return e
+    return {}
+
+
+def _denetci_teshis_satiri() -> str:
+    """Son denetim olayının `model` + `cevap_bas` alanlarının OKUNABİLİR hâli (YASA 6).
+
+    BU SATIR OLMADAN İKİ ALAN DA ÜRETİLMEMİŞ SAYILIR. `_kural_denetimi_satiri` DAMGAYI okur ve
+    damga bu iki alanı TAŞIMAZ (O4: damganın şeması donuk) — yani teşhis alanlarının okuyucusu
+    ayrı olmak ZORUNDA ve tek meşru kaynağı olay defteridir.
+
+    ÜÇ DEĞER ÜÇ AYRI BASILIR, çünkü ayrım tam okunduğu yerde kaybolursa hiç yapılmamıştır:
+    `None` → `ÖLÇÜLEMEDİ` (cevap hiç gelmedi / hüküm geçerliydi), `""` → `BOŞ` (cevap geldi ve
+    boştu), dolu → metnin kendi baytları (sır süzgecinden ZATEN geçmiş hâli)."""
+    olay = _son_denetim_olayi()
+    if not olay:
+        return f"son {DENETIM_OLAY_PENCERESI} olayda kayıt yok"
+    model = olay.get("model")
+    bas = olay.get("cevap_bas")
+    if bas is None:
+        bas_metni = "ÖLÇÜLEMEDİ"
+    elif str(bas) == "":
+        bas_metni = "BOŞ (cevap geldi, boştu)"
+    else:
+        bas_metni = str(bas)
+    return (f"model={model if model is not None else 'ÖLÇÜLEMEDİ'} · cevap başı={bas_metni} · "
+            f"ts={olay.get('ts') or 'BİLİNMİYOR'}")
 
 
 def _kural_denetimi_satiri() -> str:
