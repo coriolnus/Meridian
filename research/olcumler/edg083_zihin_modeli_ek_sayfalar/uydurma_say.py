@@ -63,6 +63,28 @@ EKLENMEZ, doğrulama SIRASINDA yeniden sınıflandırılır, çift SAYILMAZ):
                `None` + `calisma_dosyasi_neden` alanı dolar; bu durumda atıf `yol` sınıfında
                doğrulanamayan kalır (eski davranış KORUNUR).
 
+R4 (Rol-1 ruling 2026-09-07, ÖLÇÜMDEN ÖNCE — S4 pilot sayfasının GERÇEK bulgusu: sayfa 14 gerçek
+çalışma dosyasını `state/`/`backups/` ÖNEKLİ yazdı, R3b yalnız dizinsiz atıfta çalıştığı için
+hiçbiri doğrulanamadı; pilot zihin modeli kimliği `mm-0fb27056…` sayfada `0fb27056…` (öneksiz)
+geçti ve `bellek_kume`deki `mm-` önekli satırla eşleşmedi): `calisma_dosyasi` (R3b) ve `bellek`
+(R1) sınıflarına regex EKLEMEDEN İKİ dar genişleme:
+  (a) bir `yol` adayı `/` İÇERİYORSA (R3b'nin dizinsiz şartını karşılamaz) AMA `state/`,
+      `backups/`, `/opt/veri/` ya da `veri/` öneklerinden BİRİYLE başlıyorsa VE `tam` ile
+      doğrulanamıyorsa (depoda yok) VE basename'i (son `/`den sonrası) `--calisma-dosyalari`
+      listesinde VARSA → atıf `calisma_dosyasi` sınıfına TAŞINIR (R3b'deki gibi TEK sayılır,
+      `yol` toplamına hiç GİRMEZ). Başka bir önekle yanlış-dizinli atıf (`ops/olmayan.py` depoda
+      yoksa) bu genişlemeyi hiç TETİKLEMEZ — davranış AYNEN korunur (doğrulanamaz). Eşleşen
+      atıflar (önek+ad ÇİFTİ) `sinif_bazinda['yol']['calisma_eslesmeleri']` alanına yazılır —
+      `ad_eslesmeleri`nin YANINDA, aynı 'yol sınıfının açıkladığı ek bilgi' ilkesiyle (bu bir
+      Rol-1 sözleşme metni DEĞİL, ölçüm ajanının tasarım kararıdır: `calisma_dosyasi` sınıfının
+      kendi sözleşmesi — `{toplam,dogrulanan,dogrulanamayan}`, R3b'de ölçüldü — burada
+      DEĞİŞTİRİLMEZ, yeni alan `yol` sınıfının içine eklenir).
+  (b) `bellek_dogrula` artık `bellek_kume`deki bir satırın hem KENDİSİYLE hem de baştaki `mm-`
+      öneği SOYULMUŞ haliyle önek eşleşmesi dener. Eski kod yalnız `m.startswith(atif)`
+      deniyordu — liste satırı `mm-0fb27056…`, atıf öneksiz `0fb27056…` olunca bu hiç
+      eşleşmiyordu (önekler zaten farklıydı); satır `mm-` ile başlıyorsa `m[3:].startswith(atif)`
+      de denenince eşleşir.
+
 UYDURMA YASAĞI: `oran` (`dogrulanan/toplam`) `toplam==0`da `None`dur, `0.0` DEĞİL — "hiç atıf
 yoktu" ile "atıfların hiçbiri doğrulanmadı" (bu durumda `oran=0.0`, GERÇEKTEN ölçüldü) FARKLI
 şeylerdir; ilk durumda `oran_neden` alanı doldurulur.
@@ -104,6 +126,11 @@ SHA_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
 SINIF_REGEXLERI = {"yol": YOL_RE, "kart": KART_RE, "kalem": KALEM_RE, "civi": CIVI_RE, "sha": SHA_RE}
 SINIF_SIRASI = ("yol", "kart", "kalem", "civi", "sha")
 
+# R4(a) (Rol-1 ruling 2026-09-07, ölçümden önce): bu öneklerden biriyle BAŞLAYAN ve depoda
+# bulunamayan bir 'yol' adayı, basename'i --calisma-dosyalari listesindeyse calisma_dosyasi'na
+# taşınır — regex EKLENMEZ, yalnız bu sabit dörtlü önek listesiyle karşılaştırılır.
+R4_CALISMA_ONEKLERI = ("state/", "backups/", "/opt/veri/", "veri/")
+
 
 def _yol_normallestir(atif: str) -> str:
     """Baştaki `./`yi soyar, `%23`/`#`den (varsa, hangisi ÖNCE geliyorsa) sonrasını keser —
@@ -116,6 +143,19 @@ def _yol_normallestir(atif: str) -> str:
     if kesme_noktalari:
         atif = atif[: min(kesme_noktalari)]
     return atif
+
+
+def yol_r4_calisma_basename(atif: str) -> str | None:
+    """R4(a) (Rol-1 ruling 2026-09-07, ölçümden önce): `atif` `R4_CALISMA_ONEKLERI`den BİRİYLE
+    başlıyorsa basename'ini (son `/`den sonrası) döner, aksi halde `None`. Yalnız ÖNEK belirler —
+    depoda var/yok ya da `--calisma-dosyalari` listesinde olup olmadığına HİÇ bakmaz, o kararı
+    çağıran (`sayfa_olc`) `tam`/`calisma_dosyasi_dogrula` ile AYRICA verir; burası yanlış bir
+    öneği (`ops/olmayan.py` gibi) asla `None`DAN başka bir şeye çevirmez (brief: 'başka öneklerde
+    davranış değişmez')."""
+    for onek in R4_CALISMA_ONEKLERI:
+        if atif.startswith(onek):
+            return atif.rsplit("/", 1)[-1]
+    return None
 
 
 def atiflari_cikar(icerik: str) -> dict[str, set[str]]:
@@ -227,16 +267,27 @@ def _satir_listesi_oku(yol) -> frozenset[str]:
 
 
 def bellek_dogrula(atif: str, bellek_kume: frozenset[str] | None) -> bool:
-    """`bellek` sınıfı (R1, Rol-1 ruling 2026-09-06, brief-uydurma-say-3): `atif` (bir `sha`
-    adayı, 7-40 hex) `bellek_kume`deki (Hindsight bellek kimlik listesi) BİR satırın ÖN EKİYSE
-    (büyük/küçük harf duyarsız `startswith`) doğrulanmıştır — sayfa bellek kimliğini KISALTILMIŞ
-    yazar (`Gözlem 03b5fc34`), tam kimlik A1 `memory_units.id`dedir. Liste `None` ise (hiç
-    verilmemiş) HER ZAMAN `False` döner — bu durumda aday normal `sha` yoluna düşer, buraya hiç
-    girmemiş sayılmaz (çağıran `bellek_kume is None`u AYRICA kontrol eder)."""
+    """`bellek` sınıfı (R1, Rol-1 ruling 2026-09-06, brief-uydurma-say-3; R4(b) GENİŞLEMESİ Rol-1
+    ruling 2026-09-07, ölçümden önce): `atif` (bir `sha` adayı, 7-40 hex) `bellek_kume`deki
+    (Hindsight bellek kimlik listesi) BİR satırın ÖN EKİYSE (büyük/küçük harf duyarsız
+    `startswith`) doğrulanmıştır — sayfa bellek kimliğini KISALTILMIŞ yazar (`Gözlem 03b5fc34`),
+    tam kimlik A1 `memory_units.id`dedir. R4(b): satırın KENDİSİYLE eşleşme denendikten sonra,
+    satır `mm-` ile başlıyorsa AYRICA baştaki `mm-` SOYULMUŞ haliyle de önek aranır — pilot zihin
+    modeli kimliği sayfada `mm-`SİZ (`0fb27056…`) geçti, liste satırı `mm-0fb27056…` idi; eski kod
+    yalnız `m.startswith(atif)` denediği için (`mm-0fb27056…`nin `0fb27056…`yle BAŞLAMASI) hiç
+    eşleşmiyordu — önekler zaten FARKLIYDI. Liste `None` ise (hiç verilmemiş) HER ZAMAN `False`
+    döner — bu durumda aday normal `sha` yoluna düşer, buraya hiç girmemiş sayılmaz (çağıran
+    `bellek_kume is None`u AYRICA kontrol eder)."""
     if bellek_kume is None:
         return False
     atif_kucuk = atif.lower()
-    return any(m.lower().startswith(atif_kucuk) for m in bellek_kume)
+    for m in bellek_kume:
+        m_kucuk = m.lower()
+        if m_kucuk.startswith(atif_kucuk):
+            return True
+        if m_kucuk.startswith("mm-") and m_kucuk[len("mm-"):].startswith(atif_kucuk):
+            return True
+    return False
 
 
 def calisma_dosyasi_dogrula(atif: str, calisma_kume: frozenset[str] | None) -> bool:
@@ -288,7 +339,11 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
     """Bir sayfanın (`{'id','content',...}`) BEŞ sınıf atıfını çıkarır, her birini doğrular,
     sayfa başına `{toplam, dogrulanan, oran, oran_neden, sinif_bazinda, dogrulanamayan}` döner.
     `sinif_bazinda['yol']` ayrıca (Rol-1 ruling 2026-09-06, ölçümden önce) `dogrulanan_tam`,
-    `dogrulanan_ad`, `ad_eslesmeleri` (`{atıf: [eşleşen yollar]}`, ad ile doğrulananlar için) taşır.
+    `dogrulanan_ad`, `ad_eslesmeleri` (`{atıf: [eşleşen yollar]}`, ad ile doğrulananlar için) VE
+    (R4(a), Rol-1 ruling 2026-09-07, ölçümden önce) `calisma_eslesmeleri` (`{atıf: basename}`,
+    `state/`/`backups/`/`/opt/veri/`/`veri/` önekli + calisma_dosyasi'na TAŞINAN atıflar için —
+    `calisma_dosyasi` sınıfının kendi `{toplam,dogrulanan,dogrulanamayan}` sözleşmesi DEĞİŞMEZ,
+    bu iz kaydı `yol` sınıfının içinde tutulur) taşır.
     `hata_biriktirici` (çağıranın listesi) `sha_dogrula`nın OSError kaynaklı mesajlarını TOPLAR —
     bu fonksiyon kendi başına bir global 'hata' alanı ÜRETMEZ, yalnız BİRİKTİRİR (Yasa 4).
 
@@ -317,15 +372,25 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
         s_dogrulanan_tam = 0
         s_dogrulanan_ad = 0
         s_ad_eslesmeleri: dict[str, list[str]] = {}
+        s_calisma_eslesmeleri: dict[str, str] = {}
         for atif in sorted(kume):
             if sinif == "yol":
                 tam, ad, ad_eslesenler = yol_dogrula(atif, ls_kume)
-                if not (tam or ad) and calisma_aktif and "/" not in atif \
-                        and calisma_dosyasi_dogrula(atif, calisma_dosyalari_kume):
-                    # R3b: dizinsiz + depoda-yok + çalışma-dosyası listesinde VAR → bu atıf
-                    # 'yol' toplamına hiç girmez, 'calisma_dosyasi' sınıfına TAŞINIR (doğrulanmış)
-                    calisma_toplam += 1
-                    continue
+                if not (tam or ad) and calisma_aktif:
+                    if "/" not in atif and calisma_dosyasi_dogrula(atif, calisma_dosyalari_kume):
+                        # R3b: dizinsiz + depoda-yok + çalışma-dosyası listesinde VAR → bu atıf
+                        # 'yol' toplamına hiç girmez, 'calisma_dosyasi' sınıfına TAŞINIR (doğrulanmış)
+                        calisma_toplam += 1
+                        continue
+                    r4_basename = yol_r4_calisma_basename(atif)
+                    if r4_basename is not None \
+                            and calisma_dosyasi_dogrula(r4_basename, calisma_dosyalari_kume):
+                        # R4(a): state/backups/<opt-veri>/veri önekli + depoda-yok + basename
+                        # çalışma-dosyası listesinde VAR → aynen R3b gibi TAŞINIR, iz kaydı
+                        # 'yol' sınıfının calisma_eslesmeleri alanına yazılır (önek+ad → basename)
+                        calisma_toplam += 1
+                        s_calisma_eslesmeleri[atif] = r4_basename
+                        continue
                 s_toplam += 1
                 if tam:
                     s_dogrulanan_tam += 1
@@ -367,6 +432,10 @@ def sayfa_olc(sayfa: dict, repo, ls_kume: frozenset[str] | None, roadmap_metni: 
             sinif_veri["dogrulanan_tam"] = s_dogrulanan_tam
             sinif_veri["dogrulanan_ad"] = s_dogrulanan_ad
             sinif_veri["ad_eslesmeleri"] = s_ad_eslesmeleri
+            # R4(a) (Rol-1 ruling 2026-09-07, ölçümden önce): calisma_dosyasi'na TAŞINAN önekli
+            # atıfların iz kaydı — calisma_dosyasi sınıfının kendi {toplam,dogrulanan,
+            # dogrulanamayan} sözleşmesi bu alanla DEĞİŞMEZ (eski çivi testleri kırılmasın diye)
+            sinif_veri["calisma_eslesmeleri"] = s_calisma_eslesmeleri
         sinif_bazinda[sinif] = sinif_veri
         toplam += s_toplam
         dogrulanan += s_dogrulanan
@@ -415,6 +484,7 @@ def _toplami_hesapla(sayfa_sonuclari: list[dict]) -> dict:
     sinif_bazinda["yol"]["dogrulanan_tam"] = 0
     sinif_bazinda["yol"]["dogrulanan_ad"] = 0
     sinif_bazinda["yol"]["ad_eslesmeleri"] = {}
+    sinif_bazinda["yol"]["calisma_eslesmeleri"] = {}  # R4(a), Rol-1 ruling 2026-09-07
 
     bellek_aktif = bool(sayfa_sonuclari) and sayfa_sonuclari[0]["sinif_bazinda"].get("bellek") is not None
     if bellek_aktif:
@@ -446,6 +516,8 @@ def _toplami_hesapla(sayfa_sonuclari: list[dict]) -> dict:
                 sinif_bazinda["yol"]["dogrulanan_ad"] += veri.get("dogrulanan_ad", 0)
                 for atif, yollar in veri.get("ad_eslesmeleri", {}).items():
                     sinif_bazinda["yol"]["ad_eslesmeleri"].setdefault(atif, yollar)
+                for atif, basename in veri.get("calisma_eslesmeleri", {}).items():
+                    sinif_bazinda["yol"]["calisma_eslesmeleri"].setdefault(atif, basename)
         dogrulanamayan_liste.extend({"sayfa": s["id"], **d} for d in s["dogrulanamayan"])
     oran = (dogrulanan / toplam) if toplam else None
     oran_neden = (None if toplam
@@ -502,7 +574,10 @@ def calistir(*, sayfa_dizin, repo, bellek_kimlikleri=None, calisma_dosyalari=Non
                  "kümede önek aranarak doğrulanır (eşleşmezse eski sha yolu); calisma_dosyasi "
                  "--calisma-dosyalari verilmişse depoda bulunamayan dizinsiz bir yol atıfının "
                  "basename'i bu listede varsa doğrulanmıştır (depo dışı ama gerçek) — ikisi de "
-                 "liste verilmezse None + neden kalır."),
+                 "liste verilmezse None + neden kalır. "
+                 "R4: state/backups/veri önekli çalışma dosyaları listeyle, mm- öneksiz zihin "
+                 "modeli kimlikleri bellek listesiyle doğrulanır (Rol-1 ruling 2026-09-07, "
+                 "ölçümden önce)."),
     }
 
 
