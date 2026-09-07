@@ -11,9 +11,9 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **98** kart.
+Toplam **99** kart.
 
-### Kayıtlı — ölçüm bekliyor (12)
+### Kayıtlı — ölçüm bekliyor (13)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -40,6 +40,9 @@ Toplam **98** kart.
 - **EDG-2026-070** (`registered`) — 
   · HÜKÜM: 2026-09-07 10:16Z OPERATÖR ONAYI — ONAYLANDI, SIRAYA: ADIM-0 (kapsama ≥40 isim / ≥3 yıl) S5 + haftalık ölçüm pencereleri sonrası A1'de; kod bu onaydan sonra…
   · kart: `EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml`
+- **EDG-2026-085** (`registered`) — 
+  · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt (operatör K8); kod kart-önce, pilot S5 + haftalık pencereler sonrası
+  · kart: `EDG-2026-085-icra-ani-quote-kaydi-senaryo-a.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`

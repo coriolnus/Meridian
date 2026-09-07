@@ -1,0 +1,108 @@
+# EDG-2026-085 — Senaryo-A: icra-anı IEX quote kaydı (canlı websocket) — dolum kalitesi fizibilite pilotu
+# ÖN-KAYIT 2026-09-07 12:2x UTC (Rol-1; operatör kararı K8 aynı gün 10:39Z: "kartı aç, sıraya al"). Ölçüm KODU YOK —
+# kod bu karttan SONRA; pilot S5 (TSK-159) ve bu haftaki ölçüm pencereleri (EDG-080/083/084 hükümleri 09-13/14)
+# bittikten sonra A1'de kurulur. Para yok (Alpaca IEX akışı ücretsiz).
+# İSİM ÇAKIŞMASI UYARISI: `docs/TASARIM-13-INTRADAY-DOLUM-SOZLESMESI-2026-08-23.md` içindeki "A1/A2/A3" DAKİKA-BARI
+# aşamalarının kodlarıdır (A1 = EDG-2026-052'nin kendisi). Bu kartın "Senaryo-A"sı TSK-013'ün canlı tick/quote
+# ekseni — AYNI harf, FARKLI belge/veri yolu/ufuk. "A1 zaten yapıldı" yanlış-kapanışı bu satırla önlenir.
+# kart_benzer (2026-09-07 11:57Z): EDG-069 ACTIVE 0,14 · EDG-016 0,11 · EXE-010 0,06 · EDG-066 GEÇTİ 0,05 · EDG-052 0,05 ·
+# EXE-001 NO-GO sınıfı 0,04 (kartın status alanı measured + K1 şerhi: E1 yeniden açık) — hiçbiri aynı soruyu canlı
+# websocket ile sormadı; KALDI/NO-GO selef yok, ilişkiler `ref` ve aşağıdaki AYRIŞMA notunda.
+
+card_id: EDG-2026-085
+status: registered   # 2026-09-07 Rol-1 — ön-kayıt (operatör K8); kod kart-önce, pilot S5 + haftalık pencereler sonrası
+family: icra_ani_quote_kaydi
+on_kayit: 2026-09-07
+selef: null
+ref: [TSK-013, EDG-2026-069, EDG-2026-066, EDG-2026-052, EXE-2026-001, TSK-066, TSK-067,
+      "docs/TASARIM-13-INTRADAY-DOLUM-SOZLESMESI-2026-08-23.md §3-A1 (İSİM ÇAKIŞMASI — üst yorum)",
+      "meridian/marketstream.py::MarketStreamListener (tek bağlantı, yalnız bars kanalı)"]
+
+# AYRIŞMA (dört karttan) — bu kartın neden yeni olduğu:
+#  · EDG-069 / EDG-052: GEÇMİŞE dönük, ARŞİV-tabanlı mutabakat (T+1 IEX HIST tick / dakika-bar); ADIM-0'ları arşiv
+#    KAPSAMASINA bağlı. Senaryo-A CANLI ve İLERİYE dönük: yalnız o günkü plan + açık pozisyon sembolleri, yalnız
+#    gönderim→dolum penceresi; kapsama boşluğu taşımaz, sembol kapsamı dar (t/q kanalı 30 tavanı).
+#  · EDG-052 MİRAS RİSKİ: IEX (~%2-3 hacim) açılış dakikalarında NBBO icra fiyatlarını sistematik kaçırdı
+#    (bant-içi 9/30). Senaryo-A AYNI kaynağı kullanır → kill-list'e adıyla girer, yeniden ölçülmeden varsayılmaz.
+#  · EDG-066: FULL-MARKET (662 sembol) offline arşiv pilotu, 1/sn seyreltme ham spread değişimlerinin %69-85'ini
+#    kaçırıyordu; "işlem-anı anlık görüntü" tekniği bunun bir kısmını geri kazandırdı. Senaryo-A o tekniğin CANLI
+#    karşılığıdır (metodolojik selef; veri yolu değil).
+#  · EXE-2026-001: icra-PARAMETRESİ kartı (limit/gap grid'i, REPLAY), quote verisi kullanmaz; K1 şerhi (replay
+#    dinlenen limiti modellemiyor) ileride bu kartın gerçek bid-ask çıktısıyla sınanabilir — DoD'a GİRMEZ.
+# DEFTER GERÇEĞİ (ajan taraması 2026-09-07): meridian/{broker,loop,storage,ledgerstamp}.py içinde `bid`/`ask`/`quote`
+# alanı YOK; dolum tarafı `loop.py::_entry_exec_write` (E2 defteri) + `loop.py::_exit_fill_yamasi` (alpaca_fill_price,
+# dolum_ts → `storage._COLS` dışı, extra_json taşması). Senaryo-A'nın üreteceği alanlar da extra_json'a düşer; tipli
+# kolon ayrı şema kararıdır (kapsam dışı).
+
+hipotez: >
+  Senaryo-A pilot penceresinde (o günkü plan + açık pozisyon sembolleri; websocket `q` kanalı yalnız gönderim
+  anından dolum anına kadar), (a) quote'suz kalan dolum PAYI (kayıp oranı) tavanın altındadır VE (b) dolum fiyatı
+  o an kaydedilen [bid, ask] bandı içinde (±1 tick) kalan dolumların payı eşiğin üstündedir (IEX-quote/dolum
+  tutarlılığı) VE (c) ek disk/CPU ve worker gecikmesi ölçülebilir ve dondurulan tavanların altındadır.
+  (a)+(b) K'lı birincil ölçülerdir; (c) fizibilite kapısıdır (EDG-066 boyut/yoğunluk sınıfı, K sayılmaz).
+  İki yönlü bilgi: (b) düşerse hüküm "IEX quote icra referansı OLAMAZ" — bu da EDG-052 bulgusunu canlıda
+  doğrulayan, yayılabilir bir sonuçtur (TSK-067 as_of/kaynak sorusuna girdi).
+
+k_registry: {registered_at: "2026-09-07", trial_ids: [EDG-085-kayip-orani, EDG-085-tutarlilik-bant-ici]}
+# K=2. Tanı sütunları (yön-farkındalı yakınlık: long→ask, short→bid; sembol/saat kırılımı) K'ye 1×2 olarak çarpılır.
+
+adim_0_fizibilite: >
+  ZORUNLU, kod yazılmadan ÖNCE. (1) SEMBOL KAPSAMI — ÖLÇÜLDÜ 2026-09-07 12:1xZ (A1 salt-okunur, 2026-08-04..09-04,
+  13 plan günü; plan sembolleri ∪ açık live_paper pozisyonları): sembol/gün medyan 6 · p90 8 · maks 14 · 30'u aşan
+  gün 0 → t/q 30-kanal tavanının altında; tavan aşımı için öncelik sırası yine kaydedilir: açık pozisyon > silahlı
+  plan > diğer plan. (2) MİMARİ — ÖLÇÜLDÜ (`meridian/marketstream.py` üst şerhi): iex hesap başına TEK data bağlantısı
+  (ikincisi 406), abonelik yalnız `bars` (sembol-sınırsız), 30-tavan yalnız t/q kanallarına ait → Senaryo-A ÜÇÜNCÜ bir
+  dinleyici DEĞİL, mevcut `MarketStreamListener` bağlantısına pencere-süreli `q` abonelik ekleme/çıkarmasıdır
+  (subscribe/unsubscribe mesajı); bağlantı tekilliği bozulmaz. (3) TABAN — pilot ÖNCESİ 5 seans: A1 `/proc` CPU payı
+  (motor süreci), healthz p50/p95, `state/` günlük bayt artışı ölçülür ve rapora yazılır (eşik göreli tanımlıdır,
+  aşağıda). (4) PK-2 kaynağı — `adapters/alpaca.py`de tarihsel quote REST çağrısı YOK; ikinci kaynak ham WS olay
+  defteridir (kayıt ayrı dosyaya, sandbox dışı canlı state'e yazılmaz). Üçü de yazılmadan kod YOK.
+
+olcum_plani:
+  - "capture penceresi = [E2 'ayna' gönderim ts'i (loop.py::_entry_exec_write), dolum_ts (loop.py::_exit_fill_yamasi / giriş ts yaması)] + ±30 sn pay; pencere dışı quote TUTULMAZ (TSK-013 tanımı: yalnız icra anı)"
+  - "birincil-1 KAYIP ORANI: pencerede hiç quote yakalanamayan dolum payı (payda: o gün kapsamdaki tüm live_paper dolumları); nedeni sınıflı raporlanır (bağlantı kopması · tavan aşımı · abonelik gecikmesi · sembol IEX'te sessiz)"
+  - "birincil-2 TUTARLILIK: dolum fiyatı ∈ [bid − 1 tick, ask + 1 tick] (dolum anına en yakın quote; yön-farkındalı yakınlık tanı sütunu)"
+  - "fizibilite-1 DİSK: gün başı ek bayt (kayıt dosyası) — pilot 5 seans ortalaması"
+  - "fizibilite-2 CPU/WORKER: motor süreci CPU payı ve healthz p95 — ADIM-0 tabanına GÖRELİ delta; ölçüm primitifi `meridian/watchdog.py::veri_disk_report` + `/proc` deseni (psutil yok), yeniden icat edilmez"
+  - "tanı: sembol × saat-dilimi (açılış 13:30–14:00Z ayrı) kırılımı — EDG-052 açılış-dakikası bulgusunun canlı karşılığı; HÜKÜM DEĞİL"
+  - "her dolum için satır: plan_id, ticker, yön, gönderim_ts, dolum_ts, dolum_fiyat, quote_n, bid/ask (dolum anı), bant_ici, kayıp_nedeni — ayrı JSONL (okuyucu: rapor + EDG-069 çapraz)"
+
+esikler:
+  kayip_orani_ust: 0.30            # EDG-069 `dolum_ts_eksik_oran_ust` ANALOJİSİ (farklı mekanizma; aynı 'üçte birden fazlası kayıpsa ölçüm okunamaz' ilkesi)
+  tutarlilik_bant_ici_oran_alt: 0.95   # EDG-052 donuk eşiğiyle AYNI oran (OHLC bandı → bid-ask bandı ±1 tick); düşerse hüküm 'IEX quote icra referansı olamaz'
+  disk_gun_basi_mb_ust: 50         # ÜST-SINIR TÜRETİMİ: ≤14 sembol × ≤10 msg/sn × pencere ≤30 dk/gün × ~150 B ≈ 38 MB; EDG-066 full-market 1/sn seyreltilmiş gün 21–98 MiB (662 sembol) ile tutarlı
+  cpu_payi_delta_ust_pp: 5         # motor süreci CPU payı, ADIM-0 tabanına göre +5 puan (A1 4 OCPU; reflect/kıyas çakışma dersi)
+  healthz_p95_delta_ms_ust: 50     # ADIM-0 tabanına göre +50 ms (mevcut SLA yok — göreli eşik, mutlak sayı uydurulmadı)
+  n_uygun_alt: 30                  # dolum sayısı (EDG-052/EDG-042-K1 emsali) ∧ seans ≥10; dolmadan hüküm YOK (betimleyici ara-rapor serbest)
+
+kill_list:
+  - "ADIM-0 (1)-(4) yazılmadan kod → geçersiz (kart-önce)"
+  - "ikinci bir iex data bağlantısı açılır ve 406 alınırsa → mimari kilit; mevcut bağlantıya q-abonelik yolu DIŞINDA çözüm yok, kart yeniden yazılır"
+  - "kayıp/eşlenemeyen dolum SESSİZCE düşürülürse → geçersiz (EDG-052 kill#1 emsali; her biri nedeniyle raporlanır)"
+  - "kayıt canlı `state/` içine ya da E2/trades defterine yazarsa → geçersiz (EDG-052 kill#3 emsali; ayrı dosya, sandbox_state'li testler)"
+  - "IEX temsiliyeti (EDG-052 mirası) yeniden ölçülmeden 'quote güvenilir' yayılırsa → geçersiz"
+  - "eşik/pencere tanımı ölçüm sonrası değişirse → geçersiz (yeni kart)"
+  - "pozitif kontrol (üçlü) tutmazsa → hiçbir sayı yayılmaz"
+  - "worker etkisi tavanı aşılırsa (cpu +5pp ya da healthz p95 +50 ms) → pilot DURUR, q-abonelik kapatılır (fizibilite KALDI; birincil ölçüler o seans geçersiz)"
+
+pozitif_kontrol: >
+  YOL-TUTARLI, üçlü: (1) SENTETİK — bilinen sabit quote deseni test-double ile capture borusuna verilir; beklenen
+  kayıp 0, bant-içi %100, pencere dışı 0 satır (kimlik + pencere sınırı kontrolü). (2) GERÇEK — rastgele 5 canlı
+  dolum için capture satırı ham WS olay defteriyle ELLE eşlenir (ikinci kaynak = ham log; Alpaca REST quote uç
+  noktası kodda yok, eklenmez). (3) BAR ÇAPRAZI — pencere içi min(ask)/max(bid), aynı dakikanın marketstream
+  kapalı barının [low, high] bandında kalmalı (EDG-066/069 PK deseni). Üçü de yeşil değilse sayı yayılmaz.
+
+veri_penceresi: "ADIM-0 taban: pilot öncesi 5 seans · pilot: n_uygun_alt (30 dolum ∧ 10 seans) dolana kadar, en çok 20 seans — dolmazsa 'bilgisiz' arşiv; başlangıç: S5 (TSK-159) + EDG-080/083/084 hükümleri (09-13/14) sonrası, Rol-1 sıraya alır"
+
+basari_tanimi: >
+  ADIM-0 dört maddesi yazılmış + üç PK yeşil + dört eksen (kayıp, tutarlılık, disk, CPU/worker) sayıyla ve
+  neden-sınıflarıyla raporlanmış + K defterine 2 (+1×2 tanı) işlenmiş + hüküm Rol-1 tarafından aynı turda karta
+  yazılmış. EDG-066 emsali: başarı hipotezin tutması değil, dört eksenin dürüstçe ölçülmesidir; (b) düşerse
+  'IEX quote icra referansı olamaz' hükmü de başarıdır (TSK-067/kaynak kararına girdi).
+
+notlar: >
+  Kod yalnız bu kartın ADIM-0'ı yazıldıktan SONRA, `research/olcumler/edg085_icra_ani_quote/` altında; canlı kayıt
+  bileşeni (q-abonelik + JSONL yazar) motor dosyasına dokunacağı için implementer brief'i + tam suite + dağıtım
+  (Rol-1) gerektirir — kart o brief'in ölçüm sözleşmesidir. Bedel yasası: ölçüm hiçbir çıktıyı azaltmaz, yalnız
+  ekler; ama q-abonelik marketstream bağlantısına yük bindirir — fizibilite-2 tam bu bedeli ölçer.
+  Sonuç ne olursa olsun ÜCRETLİ bant (Senaryo-B) kararına sayısal girdi üretir (operatör K8: para yok).
