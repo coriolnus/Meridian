@@ -1,0 +1,148 @@
+# =================================================================================================
+# sir_envanteri.yaml — TSK-064 YOL-1 Faz-0: A1'deki sır YÜZEYİNİN çivilenmiş envanteri
+# =================================================================================================
+# YALNIZ AD TAŞIR. Bu dosyada hiçbir sır DEĞERİ yoktur ve olmayacaktır (spec §4 bedel maddesi:
+# "sır DEĞERİ hiçbir aşamada terminale/loga basılmaz"). Envanter üç soruyu yanıtlar — hangi dosya,
+# hangi DEĞİŞKEN ADLARI, bugün hangi kanal — ve dördüncüyü (hangi değer) hiç sormaz.
+#
+# NEDEN DOSYA. "Envanter" bir belgede kalırsa yalnız OKUNUR; burada MAKİNE OKUNUR hâlde durur ve
+# iki yerden zorlanır:
+#   (1) `tests/test_sir_credential_v439.py` bu dosyayı spec §1 tablosundan TÜRETİLEN ad listesiyle
+#       kıyaslar — spec'e yeni bir sır girer de envanter güncellenmezse çivi öter (ayrışma çivisi,
+#       tek-kaynak yasası: aynı gerçeğin iki kopyası sessizce ayrışır);
+#   (2) A1 geçiş penceresinde canlı `.env` dosyalarının `cut -d= -f1` ile alınan AD listesi buna
+#       karşı kıyaslanır — "belgede olmayan bir sır canlıda duruyor" hâli ancak böyle görülür.
+#
+# TEK KAYNAK: `kaynak_belge`. Buradaki her satır o belgenin §1 tablosundan türer; tablo değişirse
+# ÖNCE orası değişir, sonra burası — ters sıra çiviyi kırar ve doğrusu budur.
+#
+# SINIFLAR (spec §2 donuk sözlüğü):
+#   A · systemd-doğal süreç      → hedef: LoadCredential (sır ortama HİÇ girmez) — TAM kazanım
+#   B · docker-sarmalı süreç     → hedef: LoadCredential + ExecStart sarmalayıcı — YARIM kazanım,
+#                                   sır konteyner ortamında kalır; dürüstçe beyanlıdır
+#   C · hermes profil `.env`     → DEĞİŞMEZ (env_loader sözleşmesi); Faz-2'de Vault Agent kapsar
+#   D · yapılandırma (sır değil) → KALIR
+# `sir: false` satırları D sınıfıdır: dosyada dururlar ama taşınacak sır DEĞİLDİRLER; faz-2'nin
+# "sır dosyası ayrı, ayar dosyası ayrı" ayrımının ölçüsü onlardır.
+
+kaynak_belge: docs/TASARIM-SIR-YOL1-2026-09-03.md
+olcum: "2026-09-03 21:5x UTC — A1, yalnız DEĞİŞKEN ADLARI okundu (değer hiçbir terminale basılmadı)"
+
+dosyalar:
+
+  # ---- MOTOR ------------------------------------------------------------------------------------
+  # Faz-1B'nin hedefi: NOUS_API_KEY + KAPI_APIKEY → `LoadCredential`
+  # (`deploy/oracle-a1/meridian.service.d/53-nous-kapi-credential.conf`).
+  # MERIDIAN_DASH_TOKEN burada İKİNCİ KEZ duruyor (asıl kopya `.dash.env`te) — spec Bulgu-2:
+  # tek-kaynak ihlali; `.dash.env` faz-2'de kapanınca buradaki kopya da kalkmalıdır.
+  - yol: "/opt/meridian/.env"
+    mod: "600"
+    sahip: "ubuntu"
+    tuketici: "meridian.service"
+    sinif: "A"
+    kanal_bugun: "EnvironmentFile"
+    kanal_hedef: "LoadCredential"
+    degiskenler:
+      - ad: MERIDIAN_DASH_TOKEN
+        sir: true
+      - ad: NOUS_API_KEY
+        sir: true
+      - ad: KAPI_APIKEY
+        sir: true
+      - ad: NOUS_MODEL
+        sir: false
+      - ad: NOUS_ENDPOINT
+        sir: false
+      - ad: MERIDIAN_FMP_BASE
+        sir: false
+
+  # TSK-049'un faz-1'i BURADA canlı: `LoadCredential=dash_token:/etc/meridian/dash_token`
+  # (50-dash-credential.conf). Faz-2 (51-dash-env-kaldir.conf) boş `EnvironmentFile=` ile bu
+  # dosyanın okunmasını tümüyle keser — tek amaçlı dosya olduğu için satır silmek gerekmez.
+  - yol: "/opt/meridian/.dash.env"
+    mod: "600"
+    sahip: "ubuntu"
+    tuketici: "meridian.service"
+    sinif: "A"
+    kanal_bugun: "EnvironmentFile + LoadCredential (faz-1 paralel)"
+    kanal_hedef: "LoadCredential"
+    degiskenler:
+      - ad: MERIDIAN_DASH_TOKEN
+        sir: true
+
+  # ---- HAFIZA (hindsight-api) --------------------------------------------------------------------
+  # Faz-1A'nın hedefi (Task 2 kapsamı, bu turda DEĞİL). `ayar_sayisi` sır OLMAYAN 29 satırdır:
+  # faz-2'nin "32 → 3 + 29" ayrımının ölçüsü. TENANT anahtarını pano vekili DOSYADAN da okuyor
+  # (spec Bulgu-3) — o okuma yolu credential dizinine taşınacak.
+  - yol: "/opt/hindsight/.env"
+    mod: "600"
+    sahip: "ubuntu"
+    tuketici: "hindsight-api.service"
+    sinif: "A"
+    kanal_bugun: "EnvironmentFile"
+    kanal_hedef: "LoadCredential"
+    ayar_sayisi: 29
+    degiskenler:
+      - ad: HINDSIGHT_API_DATABASE_URL      # parola GÖMÜLÜ — 2026-09-02'de tam bu sınıf terminale düştü
+        sir: true
+      - ad: HINDSIGHT_API_LLM_API_KEY
+        sir: true
+      - ad: HINDSIGHT_API_TENANT_API_KEY
+        sir: true
+
+  # ---- DOCKER SARMALI (B sınıfı — yarım kazanım, beyanlı) ---------------------------------------
+  - yol: "/opt/hindsight/.env-cp"
+    mod: "600"
+    sahip: "root"
+    tuketici: "hindsight-cp.service (docker)"
+    sinif: "B"
+    kanal_bugun: "docker env-file"
+    kanal_hedef: "LoadCredential + ExecStart sarmalayıcı"
+    degiskenler:
+      - ad: HINDSIGHT_CP_ACCESS_KEY
+        sir: true
+      - ad: HINDSIGHT_CP_DATAPLANE_API_KEY
+        sir: true
+
+  # BULGU-1 (Faz-0'ın tek satırlık işi): bu dosya 640 — GRUP OKUYABİLİR, öteki sır dosyaları 600.
+  # docker'ın `EnvironmentFile`ını root okur, grup gerekmez. `faz0_hedef_mod` uygulanınca buradaki
+  # `mod` de 600'e çekilir (ölçüm tarihi güncellenerek — sayı taşıyan satır tarih taşır).
+  - yol: "/opt/apisix/.env-apisix"
+    mod: "640"
+    faz0_hedef_mod: "600"
+    sahip: "root"
+    tuketici: "apisix.service (docker, $env:// çözümü) · ops/apisix_uygula.py (admin anahtarı)"
+    sinif: "B"
+    kanal_bugun: "EnvironmentFile → docker run env"
+    kanal_hedef: "LoadCredential + ExecStart sarmalayıcı"
+    degiskenler:
+      - ad: APISIX_ADMIN_KEY
+        sir: true
+      - ad: OPENROUTER_API_KEY
+        sir: true
+      - ad: OPENROUTER_AUTH
+        sir: true
+      - ad: PANO_GIRIS_PAROLA
+        sir: true
+      - ad: BOT_KEY_BEKCI
+        sir: true
+      - ad: BOT_KEY_KARNE
+        sir: true
+      - ad: BOT_KEY_SEF
+        sir: true
+      - ad: BOT_KEY_MERIDIAN
+        sir: true
+
+  # ---- HERMES BOT PROFİLLERİ (C sınıfı — DEĞİŞMEZ) ----------------------------------------------
+  # `BOT_KEY_<AD>` bir ŞABLONDUR, tek bir değişken değil: her profil kendi `.env`inde kendi adını
+  # taşır. İzin ÖLÇÜLMEDİ (spec §1) — "600 sanıyorum" yazmak uydurma olurdu; ölçüldüğü gün girer.
+  - yol: "~/.hermes/profiles/<bekci,karne,sef>/.env"
+    mod: null                # ölçülmedi (uydurma yasağı: ölçülemeyen değer None + neden)
+    sahip: null              # ölçülmedi
+    tuketici: "hermes bot birimleri (timer'lı oneshot)"
+    sinif: "C"
+    kanal_bugun: "HERMES_HOME/.env (hermes env_loader)"
+    kanal_hedef: "DEĞİŞMEZ — Faz-2'de Vault Agent template ile kapsanır"
+    degiskenler:
+      - ad: BOT_KEY_<AD>
+        sir: true

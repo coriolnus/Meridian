@@ -121,7 +121,8 @@ export interface AlpacaGovdesi {
 
 export interface SirDurumu {
   readonly set?: boolean;
-  /** "env" | "file" | "gcp" — kurulu değilse null. */
+  /** "credential" | "env" | "file" | "gcp" — kurulu değilse null. Sıra motorun ÇÖZÜM sırasıdır
+   *  (`secrets.KAYNAKLAR`); "credential" 2026-09-07'de systemd LoadCredential geçişiyle geldi. */
   readonly source?: string | null;
   /** MASKELİ ipucu (`••••1234`). BU PANO ONU ÇİZMEZ — bkz. `Sirlar.tsx` başlığı. */
   readonly hint?: string | null;

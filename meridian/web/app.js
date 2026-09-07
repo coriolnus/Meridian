@@ -11959,7 +11959,11 @@ window.hermesCtl = async (action) => {
 };
 
 // ================= ayarlar / anahtarlar =================
-const SRC_TR = { env: "ortam değişkeni", file: "yerel kasa", gcp: "Secret Manager" };
+// KAYNAK SÖZLÜĞÜ `secrets.KAYNAKLAR`IN KOPYASIDIR ve kopya sessizce ayrışır: motorun çözüm sırası
+// 2026-09-07'de "credential" ile büyüdü (TSK-064 Faz-1B, systemd LoadCredential). Burası
+// güncellenmeseydi pano ham İngilizce adı basardı ve geçişin farksal ölçümünün pano ayağı —
+// "sır hangi kanaldan okunuyor?" — operatöre okunaksız görünürdü. Ayrışma çivisi v439'dadır.
+const SRC_TR = { credential: "systemd kasası", env: "ortam değişkeni", file: "yerel kasa", gcp: "Secret Manager" };
 const KEY_GROUPS = [
   ["Veri", "Piyasa taraması ve haber verisi. Yalnızca veri — işlem açmaz.", [
     ["FMP_API_KEY", "FMP anahtarı", "Financial Modeling Prep (stable API). Girince tarama + haber verisi açılır.", "fmp"],
