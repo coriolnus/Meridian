@@ -2256,6 +2256,14 @@ def _defter_tarama() -> dict:
         if not isinstance(rid, str) or not rid:
             atfedilemeyen += 1
             continue
+        # ÖNERİ SATIRI KARAR SATIRI DEĞİLDİR (TSK-012 dalga-B). Sohbet, aynı deftere `kaynak`
+        # taşıyan ve `decision` TAŞIMAYAN bir öneri satırı yazar. Onu "kararı okunamayan satır"
+        # saymak iki hata üretirdi: (a) öneri doğduğu anda kendi kendine "bozuk karar verilmiş"
+        # görünür ve gelen kutusundan DÜŞERDİ, (b) `bozuk` sayacı gerçek olmayan bir kirlilik
+        # bildirirdi. Ayrım DAR: `decision` alanı HİÇ YOKKEN ve satır bir kaynağı ADIYLA
+        # beyan ederken geçerlidir — `decision`ı olup okunamayan bir KARAR satırı hâlâ bozuktur.
+        if "decision" not in r and r.get("kaynak"):
+            continue
         k = kararlar.setdefault(rid, {"karar": None, "bozuk": 0, "ts": None, "reason": "",
                                       "satir": None})
         d = r.get("decision")
@@ -3254,13 +3262,17 @@ def api_alerts(request: Request):
     return {**yuk, "onbellekten": False}
 
 
-@app.post("/api/alerts/ack")
-def api_alerts_ack(request: Request):
-    """'Gördüm' işareti — hiçbir alarmı SİLMEZ, yalnız gelen kutusunun okunma sınırını ilerletir.
-    Kanalın YOKLUĞU bu işaretle kapanmaz (watchdog `notify_channel` satırı ayrı ve ACK'lenemez):
-    operatörün 'okudum'u bir bildirim kanalını var edemez."""
-    _auth(request)
-    from . import notify, memory, obs
+def _alarm_ack_uygula(*, ack_by: str = "operator", kanal: str = "pano") -> dict:
+    """ALARM ACK'İNİN TEK İCRA GÖVDESİ — uç nokta da, sohbet önerisinin onayı da BURADAN geçer.
+
+    NEDEN AYRI FONKSİYON (TSK-012 dalga-B): sohbet bir `alarm_ack` önerisi yazabiliyor ve o öneri
+    onaylandığında ACK'in GERÇEKTEN yapılması gerekiyor. Mantığı uç noktanın gövdesinde bırakıp
+    onay yolunda İKİNCİ bir kopya yazmak, `approvals.jsonl` bloğunun açıkça yasakladığı "ikinci
+    onay/icra yolu" sınıfı olurdu: iki gövde bir gün ayrışır ve hangisinin gerçek olduğu
+    ölçülemez hâle gelir. Gövde TEK; çağıran ADIYLA (`kanal`) kaydedilir.
+
+    `ack_by`/`kanal` UYDURULMAZ: kim ve hangi yoldan kapattı sorusunun cevabı çağırandan gelir."""
+    from . import memory, notify, obs
     _before = notify.inbox()
     # ACK ZAMANI 'ŞİMDİ' DEĞİL, GÖRÜLEN EN YENİ OLAYIN ZAMANIDIR. `now_iso()` yazmak
     # aynı-saniye yarışını operatörün aleyhine çözüyordu: gelen kutusu okunduktan SONRA, ACK
@@ -3269,7 +3281,7 @@ def api_alerts_ack(request: Request):
     # Sınır yalnız GERÇEKTEN GÖSTERİLMİŞ en yeni olaya kadar ilerler; ötesi görülmemiştir.
     _seen_max = max((str(g.get("last_ts") or "") for g in (_before.get("groups") or [])),
                     default="")
-    doc = {"ack_ts": _seen_max or memory.now_iso(), "ack_by": "operator",
+    doc = {"ack_ts": _seen_max or memory.now_iso(), "ack_by": ack_by,
            # SOĞURULAN YIĞIN: `notify_undelivered.json` KÜMÜLATİF bir sayaçtır ve
            # hiçbir zaman azalmaz; operatör hepsini okusa bile makullük satırı sonsuza dek kırmızı
            # kalıyordu — kalıcı kırmızı, hiç kırmızı olmamakla aynı bilgiyi taşır (kimse bakmaz).
@@ -3282,9 +3294,24 @@ def api_alerts_ack(request: Request):
     # sorusu cevapsız kalamaz. Kapanan alarm SAYISI da yazılır ki iz, eylemin büyüklüğünü taşısın.
     obs.log("alerts_acked", pending_before=_before.get("pending"),
             groups=len(_before.get("groups") or []), channel_configured=_before.get("channel_configured"),
-            ack_ts=doc["ack_ts"], absorbed=doc["absorbed"], ack_by=doc["ack_by"])
-    _diag_onbellek_bosalt("alerts_ack")
+            ack_ts=doc["ack_ts"], absorbed=doc["absorbed"], ack_by=doc["ack_by"], kanal=kanal)
     return {"acked": True, **doc, "inbox": notify.inbox()}
+
+
+@app.post("/api/alerts/ack")
+def api_alerts_ack(request: Request):
+    """'Gördüm' işareti — hiçbir alarmı SİLMEZ, yalnız gelen kutusunun okunma sınırını ilerletir.
+    Kanalın YOKLUĞU bu işaretle kapanmaz (watchdog `notify_channel` satırı ayrı ve ACK'lenemez):
+    operatörün 'okudum'u bir bildirim kanalını var edemez.
+
+    GÖVDE `_alarm_ack_uygula`DADIR: aynı icrayı sohbet önerisinin onay yolu da çağırır ve iki
+    kopya bir gün ayrışırdı (tek-kaynak yasası). Teşhis zarfı YARDIMCIDA DEĞİL ÇAĞRI YERİNDE
+    düşürülür — `_diag_onbellek_bosalt`ın kendi kuralı bu, ve envanter çivisi rota gövdesini
+    ölçtüğü için yardımcıya gömülen bir düşürme o çiviyi kör bırakırdı."""
+    _auth(request)
+    sonuc = _alarm_ack_uygula(ack_by="operator", kanal="pano")
+    _diag_onbellek_bosalt("alerts_ack")
+    return sonuc
 
 
 @app.post("/api/broker_reject/ack")
@@ -4205,6 +4232,11 @@ def _diag_onbellek_bosalt(neden: str) -> None:
       * yapılandırma: `/api/secrets/{name}` (POST+DELETE), `/api/skills/apply`,
         `/api/skills/revision` → pipeline.finviz, saglayicilar, ogrenme.eksen2
       * onay: `/api/approvals/{id}` → onay defteri + damıtılan dersler
+      * sohbet: `/api/sohbet` → YALNIZ bir ÖNERİ yazıldıysa (gelen kutusu sayacı kıpırdar);
+        soru-cevap turu tek başına teşhis yükünde hiçbir alanı değiştirmez ve zarfı düşürmez
+        (TSK-012 dalga-B). Sohbet önerisinin ONAYI zaten `/api/approvals/{id}` yolundan geçer;
+        `alarm_ack` kolu ise `/api/alerts/ack` ile AYNI icra gövdesini çağırır ve zarfı ORADA
+        değil ÇAĞRI YERİNDE düşürür — yardımcının kendi kuralı bu (çağrı yeri, rota sınıfı değil)
       * hafıza yazma: `/api/hindsight/islem/{eylem}`, `/api/hindsight/konsolidasyon/{eylem}`
         (TSK-111 dilim 1; ikinci yol düzeltme turu 1'de `…/kurtar`dan sözlükleşti) → BEDELİ
         AÇIKÇA TAŞINIR: `/api/diagnostics` yükü BUGÜN hiçbir
@@ -6260,6 +6292,11 @@ def api_approvals(request: Request):
             _oge["karar_kaydi"] = _karar_kaydi(str(rec.get("skill")), str(rec.get("action")),
                                                tarama=_tarama)
         inbox.append(_oge)
+    # SOHBET ÖNERİLERİ (TSK-012 dalga-B) — MEVCUT gelen kutusu biçiminde, HER SEVİYEDE. Ayrı bir
+    # liste açmak, operatöre "onay bekleyenler" sorusunun iki cevabını vermek olurdu.
+    if _tarama is None:
+        _tarama = _defter_tarama()
+    inbox.extend(_bekleyen_sohbet_onerileri(_tarama))
     lvl = config.limits()["autonomy_level"]
     return {"level": lvl, "inbox": inbox,
             "pending": store.read_jsonl(APPROVALS_LEDGER) if lvl >= 1 else [],
@@ -6512,10 +6549,17 @@ async def api_approve(approval_id: str, request: Request):
     TANINMAYAN ÖNEK L0'DA HÂLÂ 403: bağlamadığını KANITLAYAMADIĞIMIZ bir uzaya karar yazdırmak,
     fail-closed'ın tersi olurdu."""
     _auth(request)
+    from . import sohbet as _sohbet
     _onek = str(approval_id).split(":", 1)[0]
     _baglayici = _onek in KAPI_OKUYAN_ONEKLER
     _kapi_disi = _onek in (set(ONAY_ONEK.values()) - set(KAPI_OKUYAN_ONEKLER))
-    if config.limits()["autonomy_level"] < 1 and not _kapi_disi:
+    # SOHBET ÖNERİSİ (TSK-012 dalga-B): kimliği `sohbet.oneri_kimligi_mi` TANIR — biçimi burada
+    # ikinci kez ayrıştırmak, önek değiştiği gün sessiz bir ayrışma olurdu. Kimlik tanınsa bile
+    # defterde KARŞILIĞI yoksa sıradan bir karar satırı gibi işlenir: var olmayan bir öneriye
+    # icra bağlamak, fail-closed'ın tersi olurdu.
+    _sohbet_onerisi = (_sohbet.oneri_satiri(str(approval_id))
+                       if _sohbet.oneri_kimligi_mi(approval_id) else None)
+    if config.limits()["autonomy_level"] < 1 and not _kapi_disi and _sohbet_onerisi is None:
         raise HTTPException(status_code=403, detail="approvals are L1+ only; system is L0 paper")
     body = await request.json()
     decision = body.get("decision")
@@ -6549,7 +6593,156 @@ async def api_approve(approval_id: str, request: Request):
     if not _baglayici:
         yanit["not"] = KAYIT_KARARI_NOT
         yanit["kunye"] = satir.get("kunye")
+    if _sohbet_onerisi is not None:
+        # İCRA KARARDAN SONRA VE YALNIZ `approve`DA. Ret hiçbir şeyi yürürlüğe koymaz
+        # (`api_skill_revision`in `reject` kolu ile aynı sözleşme).
+        yanit["oneri"] = {k: _sohbet_onerisi.get(k) for k in ("tur", "hedef", "gerekce", "oturum")}
+        if str(decision or "").strip().lower() == "approve":
+            yanit["icra"] = _sohbet_icra(_sohbet_onerisi)
     return yanit
+
+
+# =================================================================================================
+# TSK-012 dalga-B — PANO SOHBETİ: `/api/sohbet` uçları + sohbet önerilerinin onay/icra yolu
+# =================================================================================================
+#
+# YETKİ SINIRI DEĞİŞMEDİ. Sohbet YALNIZ OKUR ve onay kuyruğuna BEKLEYEN bir öneri bırakır
+# (`meridian/sohbet.py` başlığı). Bu blok yeni bir onay yolu AÇMAZ: karar hâlâ `POST
+# /api/approvals/{id}`den geçer, icra hâlâ MEVCUT fonksiyonlardır (`loop.operator_onay_ver`,
+# `_alarm_ack_uygula`). Değişen tek şey, o kararın artık bir SOHBET ÖNERİSİNİ de kapsaması.
+#
+# L0 AYRIMI: `KAPI_OKUYAN_ONEKLER` L1'de bir UYGULAMA KAPISINI açan kimliklerdir ve L0'da
+# yazılamazlar. Sohbet önerisi o sınıfta DEĞİLDİR — icrası, bugün L0'da zaten çalışan operatör
+# yollarının (plan onayı, alarm ACK) ta kendisidir. L0'da 403 vermek özelliği ölü doğurur, üstelik
+# koruduğu bir şey olmazdı: operatör aynı işlemi panodaki mevcut düğmelerle zaten yapabiliyor.
+
+#: `sohbet.jsonl` — LİTERAL ad (`codelaw.artifact_graph` adları ancak böyle çözer; `_GORUS_DEFTERI`
+#: emsali). Sahibi `sohbet.SOHBET_DEFTERI`dir ve ayrışma ÇİVİLİDİR (v441).
+_SOHBET_DEFTERI = "sohbet.jsonl"
+
+
+def _sohbet_kunyesi() -> dict:
+    """Sohbet defterinin HACİM künyesi: kaç mesaj, hangi oturumlar, ilk/son damga.
+
+    HAM SATIR TAŞIMAZ (`_gorus_hacmi` emsali): geçmişin kendisi `sohbet.gecmis()`ten gelir ve
+    oturuma göre süzülür; burası "defter ne kadar dolu, hangi oturumlar var" sorusunu cevaplar.
+    Pano oturum seçicisini bununla çizer ve EDG-2026-086'nın SEANS sayımı (≥10 seans eşiği) aynı
+    listeden okunur — yani bu künye ölçümün girdisidir, süs değil."""
+    satirlar = store.read_jsonl(_SOHBET_DEFTERI)
+    oturumlar: dict[str, int] = {}
+    damgalar = []
+    for s in satirlar:
+        if not isinstance(s, dict):
+            continue
+        o = str(s.get("oturum") or "?")
+        oturumlar[o] = oturumlar.get(o, 0) + 1
+        if s.get("ts"):
+            damgalar.append(str(s["ts"]))
+    return {"n": len(satirlar), "oturumlar": dict(sorted(oturumlar.items())),
+            "oturum_n": len(oturumlar),
+            "ilk_ts": (min(damgalar) if damgalar else None),
+            "son_ts": (max(damgalar) if damgalar else None)}
+
+
+@app.post("/api/sohbet")
+async def api_sohbet(request: Request):
+    """Operatörün sorusu → sunucu tarafı ajan döngüsü → kaynak atıflı cevap.
+
+    BOŞ MESAJ 400: cevaplanacak bir soru yokken model çağırmak kotayı boşa harcar ve deftere
+    ölçüm değeri olmayan bir satır yazardı. Yanıt, `sohbet.jsonl` satırının TA KENDİSİDİR —
+    ikinci bir şekil ikinci bir gerçek olurdu."""
+    _auth(request)
+    from . import sohbet as _sohbet
+    try:
+        govde = await request.json()
+    except Exception:  # sessiz-yutma: gövde okunamazsa mesaj BOŞ sayılır ve alttaki kapı 400 ile reddeder — uydurma bir mesaj üretmektense dürüst ret
+        govde = {}
+    if not isinstance(govde, dict):
+        govde = {}
+    try:
+        satir = _sohbet.sohbet_dongusu(str(govde.get("mesaj") or ""),
+                                       str(govde.get("oturum") or ""))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if satir.get("oneri_id"):
+        # YALNIZ ÖNERİ YAZILDIYSA: gelen kutusu sayacı kıpırdadı. Soru-cevap turu teşhis yükünde
+        # hiçbir alanı değiştirmez ve zarfı boşuna düşürmek panoyu yavaşlatırdı (yardımcının notu).
+        _diag_onbellek_bosalt("sohbet_oneri")
+    return satir
+
+
+@app.get("/api/sohbet")
+def api_sohbet_gecmis(request: Request, oturum: str = "", n: int = 50):
+    """Sohbet geçmişi (oturuma göre) + defter künyesi + kota sayacı — panonun tek okuması."""
+    _auth(request)
+    from . import sohbet as _sohbet
+    return {"gecmis": _sohbet.gecmis(oturum or None, n=max(1, min(int(n), 200))),
+            "kunye": _sohbet_kunyesi(), "kota": _sohbet.kota_durumu(),
+            "oturum": oturum or None}
+
+
+@app.get("/api/sohbet/kota")
+def api_sohbet_kota(request: Request):
+    """Bugünkü sohbet çağrı sayacı. `bugun=None` ÖLÇÜLEMEDİ demektir, 0 DEĞİL."""
+    _auth(request)
+    from . import sohbet as _sohbet
+    return _sohbet.kota_durumu()
+
+
+def _sohbet_icra(oneri: dict) -> dict:
+    """Onaylanmış bir sohbet önerisinin icrası — HER KOL MEVCUT bir fonksiyonu çağırır.
+
+    İKİNCİ İCRA GÖVDESİ YAZILMAZ: `plan_onayi` panodaki onay düğmesiyle AYNI yasadan
+    (`loop.operator_onay_ver`) geçer, `alarm_ack` `/api/alerts/ack` ile AYNI gövdeden
+    (`_alarm_ack_uygula`). `not` türünün icrası YOKTUR ve bu bir eksiklik değil tanımdır —
+    yanıtta ADIYLA görünür ki operatör "onayladım ama bir şey olmadı" sanmasın."""
+    tur = str(oneri.get("tur") or "")
+    hedef = str(oneri.get("hedef") or "")
+    if tur == "plan_onayi":
+        from . import loop as _loop
+        sonuc = _loop.operator_onay_ver(hedef, kanal="sohbet")
+        _diag_onbellek_bosalt("sohbet_plan_onayi")
+        return sonuc
+    if tur == "alarm_ack":
+        sonuc = _alarm_ack_uygula(ack_by="operator", kanal="sohbet")
+        _diag_onbellek_bosalt("sohbet_alarm_ack")
+        return sonuc
+    if tur == "not":
+        return {"icra": "yok", "neden": "`not` türü bir kayıttır — yürürlüğe girecek bir eylem "
+                                        "taşımaz; karar defterde durur"}
+    # DONUK SÖZLÜK DIŞI TÜR BURAYA DÜŞEMEZ (`sohbet._arac_oneri_yaz` reddeder) — ama defter
+    # elle düzenlenebilir bir dosyadır ve sessiz bir "hiçbir şey olmadı" en kötü cevaptır.
+    obs.warn("sohbet_oneri_turu_taninmadi", tur=tur[:40], hedef=hedef[:60],
+             detail="onay defterinde tanınmayan sohbet öneri türü — İCRA YAPILMADI, karar kaydı "
+                    "yerinde duruyor")
+    return {"icra": "yok", "neden": f"tanınmayan öneri türü: {tur!r} — icra yapılmadı"}
+
+
+def _bekleyen_sohbet_onerileri(tarama: dict | None = None) -> list[dict]:
+    """Karar VERİLMEMİŞ sohbet önerileri, gelen kutusu biçiminde.
+
+    KARARI VERİLMİŞ ÖNERİ BEKLEMEZ: karar aynı deftere yazıldığı için ölçüt `_defter_tarama`nın
+    kendisidir — ikinci bir "durum" alanı güncellemek, satır defterini yerinde düzenlemek
+    (append-only sözleşmesinin ihlali) olurdu."""
+    from . import sohbet as _sohbet
+    satirlar = [r for r in store.read_jsonl(APPROVALS_LEDGER)
+                if isinstance(r, dict) and r.get("kaynak") == _sohbet.CAGRI_KIND]
+    if not satirlar:
+        return []
+    t = tarama if tarama is not None else _defter_tarama()
+    kararlar = t.get("kararlar") or {}
+    kutu = []
+    for r in satirlar:
+        oid = str(r.get("id") or "")
+        if (kararlar.get(oid) or {}).get("karar"):
+            continue
+        kutu.append({"type": "sohbet_onerisi", "id": oid, "kaynak": "sohbet",
+                     "title": f"Sohbet önerisi: {r.get('tur')} → {r.get('hedef') or '—'}",
+                     "evidence": esc_ev(r.get("gerekce")),
+                     "tur": r.get("tur"), "hedef": r.get("hedef"),
+                     "oturum": r.get("oturum"), "ts": r.get("ts"),
+                     "actions": ["approve", "reject"]})
+    return kutu
 
 
 # =================================================================================================
