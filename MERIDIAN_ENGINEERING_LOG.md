@@ -2921,3 +2921,15 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
 - Ruling'ler plana yazıldı: kaynak=replay_seed KALIR (tasarımdaki 'replay_seed_pit' değeri 13 kaynak-kör tüketici yüzünden uygulanmadı —
   ayrım tohum_parti + sv=91), eski tohum arşivlenir (çift sayım olmasın), reset işareti beyanla, yazım store kapısından, bakım
   penceresi ≥20:45Z (seans dışı). Plan docs/superpowers/plans/2026-09-07-s5-tohum-pit.md (9764130); Task-1 implementer (opus) sevk.
+- 08:2xZ Task-1 İNDİ (DONE_WITH_CONCERNS): `ops/tohum_pit_yenile.py` (906 satır) + `tests/test_tohum_pit_yenile_v433.py`
+  (256 passed kapsam + 212 bekçi; kırmızı-önce, 3 mutasyon ısırdı). Ajanın 4 sorusu + 2 sapması hükme bağlandı (plan §Task 1
+  hükümleri): T%05d çakışması → `--uygula` sonrası AYNI pencerede `ops/trade_id_yeniden_numarala.py` (seq ile ayırır: canlı
+  T00096… kimliğini KORUR, yeni-tohum çakışanları en büyük numaranın üstünden alır — tercih edilen sonuç); plan-id çakışmasında
+  canlı kazanır; plan ayrımı dört ölçüt; equity_curve.points dokunulmaz (beyanlı ayrışma, TSK-035/§2-18 kadanslı yazar kalemine
+  not); `load_strategy` + rapor sözleşmesi sapmaları kabul. Merge ANA checkout'tan (030d6d1), v433+bekçiler 167 passed, push 75a0d1f.
+- **Dağıtım #24** 08:27:12Z, sha 75a0d1f, healthz 200 — motor DEĞİŞMEDİ (471c8bf..HEAD `meridian/` diff boş; ops betiği + testler +
+  belgeler). Kuru koşum A1'de: girdiler ölçümle AYNI sha (HTML 9909032c…, güncel liste a0cfccca… — HTML git-İZSİZ, rsync taşıdı;
+  kart girdi sözleşmesi blob değil sha ile bağlı, EDG-082 ile aynı), `--rapor-dizin research/olcumler/edg082_pit_tohum/s5_2026-09-07`;
+  bar yükleme `dataset.load()` üretim yolu → `obs` olayları (warmup_coverage_short, bar_source_upgrade 496 sembol, bar_ghost_round)
+  canlı obs.log'a düştü — bilinçli Rol-1 koşumu (§2). Zamanlayıcılar: 13:47Z seans gözlemi · 15:27Z pilot kontrolü · 20:43Z pencere
+  (oturum cron'u güvenilmez — memory; uyanışta CronList+date ile telafi). Push: dağıtım bildirimi gönderildi.
