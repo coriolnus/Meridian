@@ -1,0 +1,408 @@
+{
+  "acik_sorular": [
+    "trade `id` (T%05d) yeniden numaralama BU BETİĞİN İŞİ DEĞİL: yeni tohum T00001'den başlar ve korunan canlı satırlarla çakışabilir — `dogrulama.trades_kimlik.cift_n` ölçer, düzeltmeyi `ops/trade_id_yeniden_numarala.py` yapar (Rol-1 kararı).",
+    "aynı kimlikte hem tohum hem canlı plan varsa TOHUM planı düşürülür (canlı kazanır); plan bu kararı yazmıyordu — `kiyas.plan_cakismasi` sayıyı taşır.",
+    "`--bitis` verilmezse endeks barlarının SON tarihi alınır; o tarih KISMİ bir seans olabilir (`dataset.load` aynı-akşam bacağını taşımaz ama önbellek taze olabilir) — Rol-1 son TAM seansı biliyorsa `--bitis` ile açıkça vermelidir.",
+    "`equity_curve.points` DOKUNULMADI (ruling 3): yeni tohumun eğrisi (`res.equity`) YAZILMADI, yani eğri hâlâ ESKİ tohumun noktalarını taşıyor. Bu bilinçli — ama defter ile eğri arasındaki bu ayrışma kayda değer bir açık kalemdir."
+  ],
+  "arac": "ops/tohum_pit_yenile.py",
+  "beyan": "Bu betik `run.replay_seed` ÇAĞIRMAZ (EDG-036 kill: canlı satırları siler, planları ezer, karneyi arşivler). Yazım yalnız `store` kapısından geçer; `scoreboard.json`, `candidates.jsonl`, `portfolio.json` ve `equity_curve.json:points` DOKUNULMAZ. Barlar ÜRETİM yolundan (`dataset.load`) gelir — EDG-082 ölçümü bilerek ayrı bir minimal temizlik (`temiz_bar_oku`) kullanmıştı, yani bu koşumun bar temizliği ölçümünkinden FARKLIDIR ve iki koşumun işlem sayıları birebir eşit çıkmayabilir. `uyelik` süzgeci üye-olmayanı düşürür ama delist barını GERİ GETİREMEZ: PIT tohum bir ÜST SINIRDIR (tasarım §2).",
+  "dogrulama": {
+    "calisti": false,
+    "neden": "kuru koşum — yazım yapılmadı, YAZIM SONRASI ölçüm YOK"
+  },
+  "gecerli": true,
+  "girdi_kimligi": {
+    "baslangic": "2022-01-01",
+    "bitis": "2026-07-24",
+    "bitis_kaynak": "--bitis",
+    "calisti": true,
+    "evren_n": 248,
+    "friksiyon_serhi": "slippage_bps=5 varsayımıyla üretildi; kanonik ölçütle ilk TCA ~7× iyimser çıktı (n=4, CI geniş). Tohum güncel PAKETİ temsil eder, gerçekleşen İCRAYI DEĞİL.",
+    "guncel_liste_n": 503,
+    "guncel_liste_sha256": "a0cfcccab994a6b9f427a0b7fffc8dee4f1dea1083e4b1da2b255bf37156d335",
+    "guncel_liste_yolu": "research/olcumler/edg079_replay_pit_denetimi/girdi/guncel_uyeler_2026-09-04.json",
+    "html_sha256": "9909032c1f815a017666c53ecf91bd00052074aaa73e28e2b6bb633b1dcd2871",
+    "html_yolu": "research/olcumler/edg075_sp500_tarihsel/ham/1370891103_9909032c1f815a01.html",
+    "index_n_seans": 1425,
+    "kart036": "/opt/meridian/research/cards/EDG-2026-036-tohum-yenileme.yaml",
+    "motor_kunye": {
+      "arac_surumleri": {
+        "blok_bootstrap_ci": "1.0",
+        "eb_kucult": "1.0",
+        "olay_disi_kiyas": "1.0",
+        "temiz_taban": "1.0"
+      },
+      "beyan": "git_head None ise ÖLÇÜLEMEDİ (neden alanında yazar) — boş dizgi ya da tahmin yazılmaz. kirli_agac True ise rapor bu SHA'dan YENİDEN ÜRETİLEMEZ: SHA o anki kodun değil atasının adıdır. arac_surumleri, raporun hangi ölçüm-aracı davranışıyla üretildiğini söyler (araç değişirse sürümü de değişir).",
+      "git_head": null,
+      "git_head_kisa": null,
+      "git_neden": "git rev-parse HEAD başarısız (rc=128): fatal: not a git repository (or any of the parent directories): .git",
+      "kirli_agac": null,
+      "olcum_araclari_surum": "2026-08-02"
+    },
+    "olcum_betigi": "/opt/meridian/research/olcumler/edg082_pit_tohum/olcum.py",
+    "params_sha256": "795fd2046cfeabe7117f360e46ce4d3c7dd36270fa1fbd83c45fcb62cf558626",
+    "strateji_surumu_canli": 5,
+    "tablo_meta": {
+      "eslenen": {
+        "cikan_ad": "Removed_Security",
+        "cikan_ticker": "Removed_Ticker",
+        "eklenen_ad": "Added_Security",
+        "eklenen_ticker": "Added_Ticker",
+        "neden": "Reason_Reason",
+        "tarih": "Effective Date_Effective Date"
+      },
+      "kolonlar_ham": [
+        "Effective Date_Effective Date",
+        "Added_Ticker",
+        "Added_Security",
+        "Removed_Ticker",
+        "Removed_Security",
+        "Reason_Reason",
+        "Refs_Refs"
+      ],
+      "n_hayalet_atlanan": 0,
+      "n_satir_gecerli": 407,
+      "n_satir_ham": 407,
+      "n_tablo": 2,
+      "n_tarih_ayristirilamadi": 0,
+      "tablo_index": 0
+    },
+    "tohum_strateji_surumu": 91
+  },
+  "kapi_0": {
+    "armed": [
+      "MU"
+    ],
+    "armed_n": 1,
+    "esik_s": 900.0,
+    "nabiz_bayat": false,
+    "nabiz_yasi_s": 1.7,
+    "nedenler": [
+      "kuru koşum: yazım istenmedi (`--uygula` yok)",
+      "nabız TAZE (1.675465sn < 900.0sn) — canlı worker koşuyor; tohum değişimi onun defterini altından çeker (run.replay_seed ile AYNI kapı)",
+      "1 silahlı plan var (MU) — defter değişimi o planların zeminini çeker"
+    ],
+    "not": "nabız yaşı ÖLÇÜLEMEZSE `health.stale` fail-closed BAYAT sayar — o hâlde kapı AÇILIR; Rol-1 worker'ı ayrıca `ops/stop-worker.sh` ile durdurmuş olmalıdır",
+    "uygula_istendi": false,
+    "uygula_izni": false
+  },
+  "kiyas": {
+    "calisti": true,
+    "delta": {
+      "avg_r": -0.0009,
+      "kazanma_orani": 0.0003,
+      "medyan_r": 0.018,
+      "n": -42,
+      "pnl_toplam": -2181.55
+    },
+    "eski_tohum": {
+      "avg_r": 0.0763,
+      "cikis_nedeni": {
+        "regime_flip": 171,
+        "stop": 379,
+        "stop_gap": 57,
+        "target": 99,
+        "target_gap": 27,
+        "time_stop": 152
+      },
+      "ilk_ts_close": "2022-01-10",
+      "kazanma_orani": 0.3627,
+      "medyan_r": -0.18,
+      "n": 885,
+      "olculemedi_r_n": 0,
+      "pnl_olculemedi_n": 0,
+      "pnl_toplam": 20684.69,
+      "sha256": "af19a09b97fc1a75b76f59a7d9c5480df30fad394474005633ae1ba8541273a9",
+      "son_ts_close": "2026-07-24",
+      "yil_bazinda": {
+        "2022": 39,
+        "2023": 183,
+        "2024": 259,
+        "2025": 216,
+        "2026": 188
+      }
+    },
+    "eski_tohum_sizinti": {
+      "beklenen": {
+        "n_hic_uye": 0,
+        "n_uye_olmayan": 0
+      },
+      "n_hic_uye": 39,
+      "n_islem": 885,
+      "n_uye_olmayan": 95,
+      "not": "varyant A hiç-üye 6 sembolü de HARİÇ tutar; ikisinin de 0 olması beklenir. ASİMETRİ (tasarım §2): süzgeç üye-olmayanı düşürür ama o tarihte üye olup barı artık evrende bulunmayan sembolü GERİ GETİREMEZ — PIT tohum bir ÜST SINIRDIR.",
+      "olculemedi_n": 0,
+      "ornek_uye_olmayan": [
+        {
+          "ticker": "MRVL",
+          "ts_open": "2022-01-12"
+        },
+        {
+          "ticker": "SPOT",
+          "ts_open": "2022-08-19"
+        },
+        {
+          "ticker": "DECK",
+          "ts_open": "2022-11-21"
+        },
+        {
+          "ticker": "APO",
+          "ts_open": "2023-01-27"
+        },
+        {
+          "ticker": "PINS",
+          "ts_open": "2023-02-03"
+        },
+        {
+          "ticker": "MRVL",
+          "ts_open": "2023-02-13"
+        },
+        {
+          "ticker": "MRVL",
+          "ts_open": "2023-02-24"
+        },
+        {
+          "ticker": "SPOT",
+          "ts_open": "2023-04-26"
+        },
+        {
+          "ticker": "PANW",
+          "ts_open": "2023-05-25"
+        },
+        {
+          "ticker": "MRVL",
+          "ts_open": "2023-05-30"
+        }
+      ]
+    },
+    "kapi": {
+      "calisti": true,
+      "dsr_kapi": {
+        "beyan": "kâğıt evrimi ölçüm aracıdır; ana defterin öğrenme hızı istatistiksel bir uyarıyla kısılmaz — uyarı KAYDEDİLİR (dsr_dusuk damgası)",
+        "deger": null,
+        "dsr_durum": "olculemedi",
+        "dsr_dusuk": null,
+        "esik": 0.95,
+        "hukum": "PAPER-ADVISORY — bloklamaz, YALNIZ damga",
+        "mod": "paper",
+        "neden": null,
+        "ret": false
+      },
+      "dsr_neden": "DSR yapısal olarak None: n_trials bu izole K=2 kıyasında ARAMA-tanımlı bir sayı değil (reflect._gate_eval aşınma-defteri+k_probes toplamının bir kopyası olmadan uydurulamaz) — dsr_kapi(None,...) GERÇEK 'olculemedi' şekli",
+      "n_trades_graded": 843,
+      "n_trades_total": 843,
+      "oos_durum": "olculdu",
+      "oos_score": 0.3004,
+      "pbo_kapi": {
+        "beyan": "süreç testi: aşırı-uydurulmuş bir SEÇİM SÜRECİNDEN çıkan aday kâğıda bile inmez. Ölçülemezken veto YOK (uygulanamayan kontrol veto olamaz) — ama gerçek-para bağlamında ölçülemeyen PBO da RET (fail-closed)",
+        "deger": null,
+        "durum": "olculemedi",
+        "esik": 0.2,
+        "hukum": "SERT — iki modda da (ölçülebilir olduğunda)",
+        "min_aday": 8,
+        "mod": "paper",
+        "n_aday": 0,
+        "n_kombinasyon": null,
+        "neden": null,
+        "olcum_nedeni": "defterde 0/8 aday — PBO tabanı dolmadı",
+        "ret": false
+      },
+      "pbo_neden": "PBO yapısal olarak olculemedi: validation_ledger.jsonl bu izole ölçümde okunmaz/yazılmaz, pbo_cscv(rows=[]) → defterde 0/8 aday — PBO tabanı dolmadı",
+      "sure_walk_forward_s": 2576.098
+    },
+    "not": "eşik YOK — hüküm Rol-1'in (kart EDG-2026-082 eşikleri). `eski_tohum_sizinti` kıyas çapasıdır: aynı üyelik fonksiyonu ESKİ tohuma uygulanınca kaç sızıntı görünüyor (EDG-079 hükmü: 885 satırda 95).",
+    "plan_cakismasi": {
+      "kimlikler": [
+        "P-2025-07-02-FCX",
+        "P-2025-07-02-MU",
+        "P-2025-07-02-ORCL",
+        "P-2025-07-03-SNPS",
+        "P-2025-07-08-PNC",
+        "P-2025-07-08-VLO",
+        "P-2025-07-10-CEG",
+        "P-2025-07-10-DAL",
+        "P-2025-07-10-LUV",
+        "P-2025-07-10-UAL",
+        "P-2025-07-14-MPWR",
+        "P-2025-07-15-AMD",
+        "P-2025-07-15-C",
+        "P-2025-07-16-GE",
+        "P-2025-07-16-MPWR",
+        "P-2025-07-16-ROK",
+        "P-2025-07-22-CMI",
+        "P-2025-07-22-MPWR",
+        "P-2025-07-23-WBD",
+        "P-2025-07-24-LHX"
+      ],
+      "n": 310
+    },
+    "sizinti": {
+      "beklenen": {
+        "n_hic_uye": 0,
+        "n_uye_olmayan": 0
+      },
+      "n_hic_uye": 0,
+      "n_islem": 843,
+      "n_uye_olmayan": 0,
+      "not": "varyant A hiç-üye 6 sembolü de HARİÇ tutar; ikisinin de 0 olması beklenir. ASİMETRİ (tasarım §2): süzgeç üye-olmayanı düşürür ama o tarihte üye olup barı artık evrende bulunmayan sembolü GERİ GETİREMEZ — PIT tohum bir ÜST SINIRDIR.",
+      "olculemedi_n": 0,
+      "ornek_uye_olmayan": []
+    },
+    "yeni_tohum": {
+      "avg_r": 0.0754,
+      "cikis_nedeni": {
+        "regime_flip": 162,
+        "stop": 369,
+        "stop_gap": 51,
+        "target": 94,
+        "target_gap": 23,
+        "time_stop": 144
+      },
+      "ilk_ts_close": "2022-01-10",
+      "kazanma_orani": 0.363,
+      "medyan_r": -0.162,
+      "n": 843,
+      "olculemedi_r_n": 0,
+      "pnl_olculemedi_n": 0,
+      "pnl_toplam": 18503.14,
+      "sha256": "7089f645ada56984f3a503eb6ebf8b23bce05257d6ef35878f76e5a0a0bfa13e",
+      "son_ts_close": "2026-07-24",
+      "yil_bazinda": {
+        "2022": 37,
+        "2023": 173,
+        "2024": 249,
+        "2025": 203,
+        "2026": 181
+      }
+    }
+  },
+  "mod": "kuru",
+  "onceki": {
+    "equity": {
+      "n_isaret": 1,
+      "n_nokta": 898
+    },
+    "eski_tohum": {
+      "avg_r": 0.0763,
+      "cikis_nedeni": {
+        "regime_flip": 171,
+        "stop": 379,
+        "stop_gap": 57,
+        "target": 99,
+        "target_gap": 27,
+        "time_stop": 152
+      },
+      "ilk_ts_close": "2022-01-10",
+      "kazanma_orani": 0.3627,
+      "medyan_r": -0.18,
+      "n": 885,
+      "olculemedi_r_n": 0,
+      "pnl_olculemedi_n": 0,
+      "pnl_toplam": 20684.69,
+      "sha256": "af19a09b97fc1a75b76f59a7d9c5480df30fad394474005633ae1ba8541273a9",
+      "son_ts_close": "2026-07-24",
+      "yil_bazinda": {
+        "2022": 39,
+        "2023": 183,
+        "2024": 259,
+        "2025": 216,
+        "2026": 188
+      }
+    },
+    "portfolio": {
+      "armed_n": 1,
+      "cash": 106366.84314200396,
+      "realized_pnl": 6366.84314200393
+    },
+    "trade_plans": {
+      "gate_checks_n": 511,
+      "llm_opinion_n": 390,
+      "sha256": "78d16f6dcbd357fdd7901b8372c29c468db20e0966a0a459757c810c080a98ca",
+      "tohum_partileri": [],
+      "toplam": 511
+    },
+    "trade_plans_ayrim": {
+      "eski_tohum_siniri": "2026-07-24",
+      "korunan_n": 390,
+      "siniri_olculemedi": false,
+      "tohum_n": 121
+    },
+    "trades": {
+      "belirsiz_n": 0,
+      "damgasiz_n": 0,
+      "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)",
+      "korunan_n": 16,
+      "korunan_sha256": "18ee6e53c6500b76c90999e74cda6e6599b2a733f4656eeabdb306940a14a16f",
+      "live_paper_n": 16,
+      "replay_seed_n": 885,
+      "tohum_partileri": [],
+      "tohum_sha256": "af19a09b97fc1a75b76f59a7d9c5480df30fad394474005633ae1ba8541273a9",
+      "toplam": 901,
+      "training_n": 885
+    }
+  },
+  "replay": {
+    "calisti": true,
+    "earnings_gate": {
+      "olculemedi_replay": 1361,
+      "pit_arsiv": {
+        "false": 239186,
+        "olculemedi": 0,
+        "true": 65140
+      },
+      "plan": 1361
+    },
+    "entry_rejects": {
+      "max_chase": 28,
+      "open_below_stop": 20
+    },
+    "n_aday": 1176,
+    "n_equity_nokta": 1143,
+    "n_islem": 843,
+    "n_plan_cakisma_dusen": 310,
+    "n_plan_ham": 1361,
+    "n_plan_tutulan": 952,
+    "not": "`equity` ve `candidates` çıktısı KULLANILMADI: eğri `points`ine ve `candidates.jsonl`a dokunulmuyor (ruling 3 + plan adım 5).",
+    "sure_s": 2558.709,
+    "uyelik_cagri_n": 661
+  },
+  "sozlesme": {
+    "damga_alanlari": [
+      "tohum_parti",
+      "pit_uyelik",
+      "varyant",
+      "params_sha256",
+      "guncel_liste_sha256",
+      "html_sha256",
+      "motor_kunye",
+      "motor_kunye_kirli",
+      "pencere",
+      "evren_n",
+      "friksiyon_serhi"
+    ],
+    "kartlar": [
+      "EDG-2026-082",
+      "EDG-2026-036"
+    ],
+    "kaynak_damgasi": "replay_seed",
+    "pit_uyelik": "as_of",
+    "plan": "docs/superpowers/plans/2026-09-07-s5-tohum-pit.md",
+    "tohum_parti": "EDG-082A-2026-09-07",
+    "tohum_surumu": 91,
+    "varyant": "A"
+  },
+  "yazim": {
+    "calisti": false,
+    "neden": "kuru koşum (`--uygula` verilmedi)",
+    "projeksiyon": {
+      "arsivlenecek_planlar_n": 121,
+      "arsivlenecek_trades_n": 885,
+      "korunacak_planlar_n": 390,
+      "korunacak_trades_n": 16,
+      "yeni_defter_n": 859,
+      "yeni_plan_defteri_n": 1032
+    }
+  },
+  "zaman": "2026-09-07T08:57:59+00:00"
+}
