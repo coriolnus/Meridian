@@ -11,8 +11,8 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | EDG-067 kıyas → TSK-060 hükmü | ✅ HÜKÜM 22:4xZ: KALDI (bölüm@3 %0 vs %27,8; dosya@3 %13,9 vs %55,6; p50 44 s vs 0,6 s) | TSK-060 OPERATOR: sökme kararı 083/084 hükümleriyle (09-13/14); TSK-163 recall temelinde açılmaz; TSK-167 sqlite-vec |
 | TSK-172 + TSK-173(a) | ✅ CANLIDA — dağıtım #23 471c8bf 20:57Z (suite #31 10686/1 → RUNBOOK+korpus yeniden üretildi) | kapandı |
 | 22:04Z akşam brifingi | zamanlı | TSK-138 + TSK-014 doğrulaması (events.jsonl kayıtları) |
-| 00:05Z araç sondası | zamanlı | tool_calls üreten ücretsiz model → reflect yedek zinciri (sabah) |
-| 00:10Z S3/PK/NK · 00:45Z S4–S8 | zamanlı, sıralı | sabah: dokuz sayfa uydurma tablosu + PK/NK + bayatlık sütunu |
+| 00:05Z araç sondası | ✅ nemotron-super/ultra + m2.7 tool_calls; gemma 429 | ✅ reflect yedek zinciri 01:11Z canlı (m3→m2.7→nemotron-super) |
+| 00:10Z S3/PK/NK · 00:45Z S4–S8 | ✅ 00:17Z / 01:10Z, 8/8 içerik, 120–561 s | ✅ 11 sayfa gün-1 sayımı 449/478 (%94), PK/NK geçti; R4 kuralı 7. gün için kayıtlı |
 | 03:00Z ingest r5 · 03:30Z yedek · 05:00Z pilot cron | zamanlı | TSK-144 kapanışı; gece özeti |
 
 ## 2. Hafta — ölçüm pencereleri (dokunulmaz)
