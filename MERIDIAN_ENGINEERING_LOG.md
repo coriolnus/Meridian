@@ -2908,3 +2908,5 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   gerçek çalışma dosyaları (S4'te 14 — sayfa tam da bu dosyaları listeliyor), `mm-` öneksiz pilot kimliği, v248, push_code_a1.sh,
   birleşik token → R4 kuralı kartlara ölçümden önce yazıldı; sayaç güncellemesi ajanda. Sayfa anlık görüntüleri + sonuç SHA256'lı.
 - Kıyas zinciri 22:54Z bitti; EDG-067 KALDI hükmü ve varsayılan koşum notu daha önce işlendi. Taban indeksi TSK-167 için saklandı.
+- **03:00–04:15Z — ingest067 r5 KAPANIŞ (TSK-144 DONE):** 8 dilim, ok 4 / geçici 4 — dört dilim üç turda aynı ProviderResponseError
+  (içerik-özgü, geçici değil); banka 285 belge, pending 55; ingest bitti sayılır, kalan %1,1 ayrı kalem açılmadı. Yedek 03:30Z rc=0.
