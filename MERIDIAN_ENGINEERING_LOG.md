@@ -2974,3 +2974,11 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   `13..19:*/5` sözdizimi reddedildi → `13..19:00/5`); TSK-132 dilim-1 implementer (opus, worktree) → merge 5e22383, **suite #32** 10813 passed /
   0 FAILED / exit 0 / HEAD eşit (11 dk, -n 4) — öncül çürüdü: sayfalar zaten tokens ile birebirdi, dilim saf mekanikleştirme; TSK-162 sayımı
   başladı (2 recall). Dağıtım #26 (ops/ + web/ + birimler) S5 penceresi SONRASI.
+- **Operatör "bugün başla" + "ajanlar pytest koşabilsin" (18:3xZ) → üç paralel implementer.** TSK-167 dilim-1 (hafiza_ara CLI + taban_terfi +
+  haftalık tazeleme; slot 03:30Z→Pazar 08:15Z Rol-1 hükmü, çivi üç değişmezi ölçer) merge 7fc4afc/0e798d3. **TSK-064 Task 1** (Faz-0 envanter
+  `deploy/sir_envanteri.yaml` + Faz-1B `secrets.credential_oku`, sıra credential→env→dosya→GCP; drop-in 53-nous-kapi-credential.conf;
+  `sir_credential_gecis.sh` durum/--faz1/--faz2/--geri-al; v439 43 çivi 6/6 mutasyon; pano `SRC_TR` credential karşılığı) merge a5b857d →
+  RUNBOOK (25. bölüm: yeni betik) + tipografi korpusu yeniden üretildi (üretilmiş belge zinciri), tam suite #33 sırada. TSK-012: operatör üç
+  soruyu cevapladı (ücretsiz zincir · TAM erişim araçla · okur + öneri yazar) → spec + kart EDG-2026-086 + B1 planı; B1 implementer uçuşta.
+  S5: KAPI-0 `--kapi-atla` ile atlanmadı (RC=1) → ruling 8/9 (armed yan dosya, tick-watchdog timer durduruldu, systemd-run tetik; root
+  /tmp'ye yazamadı → ubuntu nohup); zincir 18:19:50Z'de [c] uygulamaya girdi.

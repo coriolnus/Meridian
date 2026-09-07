@@ -41,7 +41,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **24 ops betiği** başlığıyla okundu
+- **25 ops betiği** başlığıyla okundu
 - **98 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -1340,6 +1340,38 @@ SHA256 YENİLEME (sürüm yükseltirken): yayıncının checksums dosyasından o
 curl -sSL https://github.com/benbjohnson/litestream/releases/download/v<SÜRÜM>/checksums.txt
 Sabit ELLE güncellenir ve turun commit'ine girer; betik onu İNTERNETTEN TAZELEMEZ (tazeleseydi
 kapı kapı olmaktan çıkar, "indirdiğimi indirdiğimle doğruladım" totolojisine dönerdi).
+```
+
+## `deploy/oracle-a1/sir_credential_gecis.sh` {#deploy-oracle-a1-sir-credential-gecis-sh}
+
+```
+=================================================================================================
+sir_credential_gecis.sh — motor sırlarını systemd LoadCredential kanalına taşır (TSK-064 Faz-1B)
+=================================================================================================
+SUNUCUDA (A1) KOŞAR — `deploy.sh`/`cutover.sh` ile aynı sözleşme. Otomatik ÇAĞRILMAZ: bakım
+penceresinde, operatör eliyle. `dash_token_credential.sh`in (TSK-049, pano token'ı) AD ALAN
+genelleştirilmişidir: orada tek bir sır ve tek amaçlı bir `.env` vardı, burada AYNI dosyada
+yaşayan İKİ sır + yapılandırma satırları var — bu fark faz-2'yi değiştirir (aşağıda).
+
+TANINAN ADLAR: NOUS_API_KEY · KAPI_APIKEY. Üçüncü bir ad bir YAZIM HATASIDIR ve reddedilir:
+sessizce hiçbir şey yapmak en kötü hâl olurdu, çünkü operatör "geçiş yapıldı" sanır.
+
+KULLANIM:
+./sir_credential_gecis.sh                    → DURUM (hiçbir şey değiştirmez; önce bunu koş)
+./sir_credential_gecis.sh --faz1 <ad>        → credential kanalı EKLE (ortam kanalı KALIR)
+./sir_credential_gecis.sh --faz2 <ad>        → farksal ölçüm + ortam satırını KAPAT
+./sir_credential_gecis.sh --geri-al <ad>     → ortam satırını geri yaz, drop-in'i kaldır
+
+SIR DEĞERİ HİÇBİR YOLDA BASILMAZ VE ARGV'YE GİRMEZ. `ps` argv'yi makinedeki HERKESE gösterir;
+2026-09-02'de bir parola tam olarak bu sınıftan (URL-gömülü, süzgeç kara-listeliydi) terminale
+düştü. Bu betikte değer YALNIZ 0600'lük geçici dosyalar üzerinden akar: `read -s` ile alınır,
+`cat` ile akıtılır; hiçbir `sed`/`awk` değişkenine, hiçbir komut satırına konmaz. Çivi:
+`tests/test_sir_credential_v439.py`.
+
+NEDEN FAZ-2 BURADA "SATIR SİLMEK": pano token'ı tek amaçlı `.dash.env`te yaşıyordu, o yüzden boş
+`EnvironmentFile=` sıfırlaması yetiyordu. `/opt/meridian/.env` ise sır DIŞINDA yapılandırma da
+taşır (NOUS_MODEL, NOUS_ENDPOINT, MERIDIAN_FMP_BASE); dosyanın okunmasını tümden kesmek onları da
+götürürdü. Faz-2 bu yüzden SATIR bazlıdır ve geri alma da satır bazlıdır.
 ```
 
 ## `deploy/oracle-a1/tick_watchdog.sh` {#deploy-oracle-a1-tick-watchdog-sh}
