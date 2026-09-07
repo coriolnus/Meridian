@@ -1,9 +1,12 @@
-"""secrets.py — sır erişiminin tek kapısı: env → yerel 0600 deposu → Secret Manager, ya da hiçbiri (Hard Rule 5).
+"""secrets.py — sır erişiminin tek kapısı: systemd credential → env → yerel 0600 deposu → Secret Manager, ya da hiçbiri (Hard Rule 5).
 
-NE YAPAR. `get(name)` bir sırrı SIRAYLA çözer: (1) süreç env'i, (2) yerel operatör deposu
+NE YAPAR. `get(name)` bir sırrı `KAYNAKLAR` SIRASIYLA çözer: (1) systemd credential dizini
+(`$CREDENTIALS_DIRECTORY/<ad>` — sır süreç ORTAMINA hiç girmez; TSK-064 Faz-1B, `credential_oku`),
+(2) süreç env'i, (3) yerel operatör deposu
 (`state/secrets.json`, chmod 0600, gitignore'lu — pano üzerinden girilen anahtarlar buraya düşer),
-(3) GCP Secret Manager (google-cloud-secret-manager + MERIDIAN_GCP_PROJECT kuruluysa). Env HER
-ZAMAN kazanır: dosya, bir env değerini sessizce ezemez. Yerel depo tek operatörün yerel L0
+(4) GCP Secret Manager (google-cloud-secret-manager + MERIDIAN_GCP_PROJECT kuruluysa). Credential
+kanalı env'i YENER (geçişin yönü ortamdan credential'a doğrudur; gerekçe `_fetch`te), env de
+dosyayı: dosya, bir env değerini sessizce ezemez. Yerel depo tek operatörün yerel L0
 kutusunda panodan anahtar yapıştırabilmesi içindir; VM'de anahtarların yeri Secret Manager'dır ve
 dosya oraya asla kopyalanmaz. 300 sn TTL'li süreç-içi önbellek; `clear_cache()` rotasyon sonrası
 anında tazeler.
@@ -29,6 +32,73 @@ from . import config
 
 TTL_SECONDS = 300
 _cache: dict[str, tuple[float, str | None]] = {}
+
+# ---- systemd CREDENTIAL KANALI (TSK-064 YOL-1 Faz-1B) ------------------------------------------
+#: `_fetch`in ÇÖZÜM SIRASI ve `status()["source"]`ın DONUK sözlüğü — TEK kaynak. Panonun Türkçe
+#: karşılık sözlüğü (`app.js`teki `SRC_TR`) bunun KOPYASIDIR; kopya sessizce ayrışmasın diye
+#: ayrışma çivisi `tests/test_sir_credential_v439.py`dedir (tek-kaynak yasası).
+KAYNAKLAR: tuple[str, ...] = ("credential", "env", "file", "gcp")
+
+#: systemd'nin credential dizinini bildirdiği ortam değişkeni (systemd ≥247).
+CREDENTIAL_DIZIN_ENV = "CREDENTIALS_DIRECTORY"
+
+
+def credential_oku(ad: str) -> str | None:
+    """`$CREDENTIALS_DIRECTORY/<ad>` dosyasındaki sırrı döner; kanal ya da değer yoksa `None`.
+
+    NEDEN BU KANAL. Bu depoda ortam ÇOCUKLARA AKAR (`serve.sh` uvicorn'u `env=os.environ` ile,
+    `hermes_composite` ajan alt süreçlerini devralınan ortamla doğurur), yani `EnvironmentFile`
+    ile verilen bir sır motor sürecinin VE onun doğurduğu her LLM ajan sürecinin
+    `/proc/<pid>/environ`ında okunur hâlde durur — 0600'lük bir dosyada saklanan sırrı, aynı
+    kullanıcı olarak koşan her alt sürecin ortamına dağıtmak kilidi takıp anahtarı kapının üstüne
+    bırakmaktır. `LoadCredential=` bunu YAPISAL olarak kapatır: systemd sırrı PID 1 olarak
+    (sandbox'tan ÖNCE) okur, `$CREDENTIALS_DIRECTORY` altına 0400 bir tmpfs dosyası bırakır, süreç
+    bitince siler. Gerekçenin tamamı:
+    `deploy/oracle-a1/meridian.service.d/53-nous-kapi-credential.conf`.
+
+    NEDEN BURADA (ve `api._read_dash_token`ta değil). TSK-049 aynı okumayı TEK sır için pano
+    tarafında yaptı; bu tur onu sır erişiminin TEK KAPISINA taşır, böylece `get` üzerinden okuyan
+    HER tüketici (`hermes._nous_headers` dahil) tek satır değişmeden kazanır. Kopyalanan şey
+    davranıştır, kod değil — pano okuyucusu kendi biçim toleransıyla yerinde kalır.
+
+    KİMLİK = AD. `LoadCredential=NOUS_API_KEY:/etc/meridian/nous_api_key` yazılır; credential
+    KİMLİĞİ sır ADIYLA aynıdır, kaynak DOSYA adı serbesttir. Kimlik ile ad ayrışsaydı okuyucu
+    dosyayı bulamaz ve kanal sessizce ölürdü (çivi: `test_sir_credential_v439.py`).
+
+    BİÇİM TOLERANSI, DAR. Sözleşme ÇIPLAK değerdir (`LoadCredential` dosyanın TAMAMINI taşır,
+    sondaki yeni satır serbest). Operatörün `.env` alışkanlığı `AD=deger`dir ve o satırın kaynağa
+    kopyalanması ÖNGÖRÜLEBİLİR bir kazadır, o yüzden YALNIZ İSTENEN adın öneki tanınır — başka bir
+    adın öneki yutulmaz, çünkü o "kaynak dosyalar karışmış" demektir ve sessizce düzeltmek arızayı
+    gizlerdi.
+
+    BOŞ DEĞER `None`'DIR: boş string dönmek "ayarlı ama değersiz" demek olurdu ve `_fetch` alt
+    kanallara HİÇ düşmezdi — sıfır ile "bilmiyorum" aynı şey değildir (uydurma yasağı)."""
+    kdir = os.environ.get(CREDENTIAL_DIZIN_ENV)
+    if not kdir:
+        return None
+    # AD BİR DOSYA ADIDIR, YOL DEĞİL: `../x` ya da mutlak bir yol, bu okuyucuyu credential
+    # dizininin dışından keyfi dosya okuyan bir ilkele çevirirdi ve adı ÇAĞIRAN verir.
+    if not ad or ad != os.path.basename(ad) or ad in (".", ".."):
+        return None
+    try:
+        with open(os.path.join(kdir, ad), encoding="utf-8") as fh:
+            ham = fh.read()
+    # Kanal GERÇEKTEN zorunluyken sessiz kalmayan yer systemd'nin KENDİSİDİR: `LoadCredential=`
+    # kaynak dosyası yoksa birim HİÇ başlamaz. Buradaki sessizliğin gizleyebileceği tek durum
+    # "bu kurulumda credential kanalı yok"tur ve onun doğru yanıtı alt kanallara düşmektir.
+    # sessiz-yutma: credential kanalı isteğe bağlı — dosya-yok/izin/kodlama hatası "bu kurulumda o kanal yok" demektir, alt kanala düşmek bugünkü davranışı birebir korur
+    except (OSError, ValueError):
+        return None
+    # ÖNCE `strip()` SONRA ilk satır: kaynağı `printf '%s\n'` yazar; kırpılmazsa değere görünmez
+    # bir `\n` yapışır ve `Authorization: Bearer <deger>\n` başlığı upstream'de 401 alır — en
+    # sinsi hâl budur ("ayarlı ama çalışmıyor", arıza ağda aranır).
+    satirlar = ham.strip().splitlines()
+    deger = satirlar[0].strip() if satirlar else ""
+    onek = f"{ad}="
+    if deger.startswith(onek):
+        deger = deger[len(onek):].strip()
+    return deger or None
+
 
 # The ONLY names a write may target. A POST for anything outside this set is refused — so the
 # dashboard can never be used to plant PATH, MERIDIAN_MODE, autonomy flags, etc. Data/paper keys
@@ -214,9 +284,22 @@ def _write_file(data: dict) -> None:
 
 # ---------------- read ----------------
 def _fetch(name: str) -> str | None:
-    """Sırrı ÖNBELLEKSİZ çözer, sırayla: (1) süreç env'i, (2) yerel 0600 deposu,
-    (3) `MERIDIAN_GCP_PROJECT` kuruluysa GCP Secret Manager. Hiçbiri veremezse None —
-    env HER ZAMAN kazanır ve değer hiçbir yolda loglanmaz."""
+    """Sırrı ÖNBELLEKSİZ çözer, `KAYNAKLAR` sırasıyla: (1) systemd credential dizini,
+    (2) süreç env'i, (3) yerel 0600 deposu, (4) `MERIDIAN_GCP_PROJECT` kuruluysa GCP Secret
+    Manager. Hiçbiri veremezse None; değer hiçbir yolda loglanmaz.
+
+    CREDENTIAL NEDEN ÖNCE (TSK-064 Faz-1B). Geçiş İKİ FAZLIDIR ve faz-1'de iki kanal AYNI ANDA
+    canlıdır (`EnvironmentFile` kalır, `LoadCredential` eklenir). Öncelik credential'da olmazsa
+    faz-2'de ortam kanalı kapandığında davranış SESSİZCE değişirdi; üstelik geçişin farksal
+    ölçümü (ortama SAHTE değer, credential'a gerçek değer → servis hâlâ iş yapıyor mu?) hangi
+    kanalın okunduğunu ancak bu sıra sayesinde ölçebilir. Aynı hüküm pano token'ında da yürürlükte
+    (`api._read_dash_token`) — orada BİR sır için verilmişti, burada tek kapıya taşındı.
+
+    ENV ARTIK İKİNCİ, AMA DOSYA/GCP'Yİ HÂLÂ YENER: alttaki üç basamağın kendi arasındaki sıra
+    DEĞİŞMEDİ, yalnız önlerine bir basamak eklendi."""
+    kv = credential_oku(name)
+    if kv:
+        return kv
     v = os.environ.get(name)
     if v:
         return v
@@ -296,8 +379,14 @@ def mask(value: str | None) -> str | None:
 
 
 def _source_of(name: str) -> str | None:
-    """Bu sır HANGİ kaynaktan geliyor: "env" | "file" | "gcp"; hiçbiri veremiyorsa None.
-    Sıra `_fetch` ile aynıdır — durum raporu gerçek çözüm sırasını yansıtsın diye."""
+    """Bu sır HANGİ kaynaktan geliyor — `KAYNAKLAR`daki adlardan biri; hiçbiri veremiyorsa None.
+
+    SIRA `_fetch` İLE AYNIDIR ve bu bir süs değil, ölçümün kendisidir: TSK-064'ün geçiş betiği
+    "uygulama hangi kanalı okuyor?" sorusunu bu yüzeyden sorar. İki sıra ayrışırsa durum raporu
+    GERÇEK çözümü değil eski sırayı anlatır ve farksal ölçüm yanlış kanalı onaylar — sırrın
+    ortamdan gerçekten çıktığı sanılırken çıkmamış olur (tek-kaynak yasası; çivi v439)."""
+    if credential_oku(name):
+        return "credential"
     if os.environ.get(name):
         return "env"
     if _read_file().get(name):
