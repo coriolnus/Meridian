@@ -13,7 +13,17 @@ Requires=postgresql.service
 Type=simple
 User=ubuntu
 EnvironmentFile=/opt/hindsight/.env
-ExecStart=/opt/hindsight/venv/bin/hindsight-api --host 127.0.0.1 --port 8888
+# ExecStart SARMALAYICIDIR (TSK-064 YOL-1 Faz-1A, 2026-09-07). Gerçek ikili sarmalayıcının
+# SON satırında `exec` edilir; arada yapılan tek iş, `$CREDENTIALS_DIRECTORY` altındaki üç sır
+# dosyasını hindsight-api'nin ortamına koymaktır (üçüncü parti süreç, sırrı ortamdan okur —
+# B sınıfı YARIM kazanım, gerekçesi `hindsight-api.service.d/50-creds.conf` şerhinde).
+# EnvironmentFile YUKARIDA KALIYOR ve bu bilinçli: faz-1'de iki kanal aynı anda canlıdır,
+# credential dosyası olmayan ad için ortam değeri OLDUĞU GİBİ geçerlidir. Faz-2'de `.env`ten
+# yalnız 3 SIR satırı çıkar, 29 ayar satırı kalır (boş `EnvironmentFile=` sıfırlaması
+# KULLANILAMAZ — dosya sır dışında yapılandırma da taşır).
+# SIRA: sarmalayıcı `/opt/meridian` altındadır ve depo dağıtımıyla gelir. Bu birim, depo
+# dağıtılmadan kurulursa `203/EXEC` ile ölür — önce `dagit.sh`, sonra birim kurulumu.
+ExecStart=/opt/meridian/deploy/hindsight/hindsight-api-baslat.sh
 Restart=on-failure
 RestartSec=5
 # kaynak çiti — A1'i koru (24 GB sonrası revizyon: 3G->8G; şişerse Meridian değil Hindsight ölür)

@@ -564,3 +564,385 @@ def test_H2_pano_sozlugu_KAYNAKLAR_ile_AYRISMAZ():
     m = re.search(r"const SRC_TR = \{([^}]*)\}", APP_JS.read_text(encoding="utf-8"))
     assert m, "app.js içinde SRC_TR bulunamadı"
     assert set(re.findall(r"(\w+):", m.group(1))) == set(secrets.KAYNAKLAR)
+
+
+# =================================================================================================
+# I) FAZ-1A — hindsight-api birimi + ExecStart sarmalayıcısı + pano vekilinin credential kanalı
+# =================================================================================================
+#
+# FAZ-1B'DEN AYRILAN NOKTA: motor sırlarını `secrets.get` okur, yani orada tek bir okuyucuyu
+# değiştirmek yetti. Hindsight-api ÜÇÜNCÜ PARTİ bir süreçtir ve sırrı `HINDSIGHT_API_*` ORTAM
+# değişkenlerinden okur — onun kaynağına dokunamayız. Bu yüzden kazanım YARIMDIR ve öyle beyan
+# edilir: `LoadCredential` sırrı systemd tarafında ortamdan çıkarır, sarmalayıcı ExecStart onu
+# hindsight-api'nin KENDİ ortamına geri koyar. Kazanılan: sır artık `/opt/hindsight/.env` diskinde
+# ve host biriminin `EnvironmentFile` ortamında DEĞİL, tmpfs'te 0400 bir dosyada yaşar; kaybedilen:
+# hindsight-api sürecinin `/proc/<pid>/environ`ında yine görünür (B sınıfı bedel, spec §2).
+# TAM kazanım upstream'in `_FILE` desteğine bağlı ve o ÖLÇÜLMEDİ — ölçülmemiş bir yeteneği "var"
+# saymak uydurma olurdu; ölçüm Rol-1'in A1 penceresinde (`hindsight-api --help` / kaynak).
+#
+# VEKİL BACAĞI (spec Bulgu-3) AYRIDIR VE TAM KAZANIMDIR: `meridian/api.py::_hafiza_anahtari` bugün
+# TENANT anahtarını `/opt/hindsight/.env` DOSYASINDAN okuyor. O okuma credential dizinine taşındı
+# (çiviler: `tests/test_hafiza_yuzeyi_v375.py` bölüm K) ve motor birimine kendi drop-in'i eklendi.
+
+HAFIZA_DROPIN = REPO / "deploy" / "hindsight" / "hindsight-api.service.d" / "50-creds.conf"
+HAFIZA_SARMALAYICI = REPO / "deploy" / "hindsight" / "hindsight-api-baslat.sh"
+HAFIZA_BIRIM = REPO / "deploy" / "hindsight" / "hindsight-api.service"
+VEKIL_DROPIN = REPO / "deploy" / "oracle-a1" / "meridian.service.d" / "54-hafiza-credential.conf"
+
+#: Faz-1A'nın taşıdığı üç sır. Ad → credential kaynak dosyası. Kaynak dosyanın ADI kimlikle
+#: BİREBİR aynıdır: `LoadCredential=<kimlik>:<kaynak>` sözleşmesinde `$CREDENTIALS_DIRECTORY`
+#: altındaki dosya adı `<kimlik>`tir ve okuyucular (sarmalayıcı + `secrets.credential_oku`) tam o
+#: adı arar. Ayrışırsa kanal SESSİZCE ölür — `.env` hâlâ okunduğu için hiçbir şey bozulmaz ve
+#: geçiş "yapıldı" sanılır (en pahalı hâl).
+FAZ1A = {ad: f"/etc/hindsight/creds/{ad}" for ad in (
+    "HINDSIGHT_API_DATABASE_URL",
+    "HINDSIGHT_API_LLM_API_KEY",
+    "HINDSIGHT_API_TENANT_API_KEY",
+)}
+
+#: Vekilin (motor süreci) okuduğu TEK ad — üçünün alt kümesi. Motor birimine DB parolasını ya da
+#: LLM anahtarını yüklemek, ihtiyacı olmayan bir sürece sır dağıtmak olurdu (en az yetki).
+VEKIL_ADI = "HINDSIGHT_API_TENANT_API_KEY"
+
+#: Sarmalayıcının A1'deki KOŞUM yolu. Depo `/opt/meridian`a dağıtılır (`dagit.sh` rsync), yani
+#: sarmalayıcı ayrı bir kurulum adımı GEREKTİRMEZ — emsal `meridian-tick-watchdog.service`
+#: (`ExecStart=/opt/meridian/deploy/oracle-a1/tick_watchdog.sh`). Ayrı bir yere kopyalansaydı
+#: depo kopyası ile canlı kopya sessizce ayrışırdı ve F9 kapısının göremediği bir sürüklenme
+#: doğardı (tek-kaynak yasası).
+SARMALAYICI_CANLI = "/opt/meridian/deploy/hindsight/hindsight-api-baslat.sh"
+
+
+def _sahte_hedef(tmp_path: pathlib.Path) -> pathlib.Path:
+    """Sarmalayıcının `exec` ettiği ikilinin SAHTESİ: aldığı ortamı bir dosyaya döker.
+
+    NEDEN GERÇEKTEN KOŞTURUYORUZ (§6 ops-aracı kapısı): sarmalayıcının METNİNİ okuyan bir çivi
+    "üç adı ortama koyuyor" cümlesini KANITLAYAMAZ — `export`un `set -u` altında sessizce
+    düşmesi, önek kırpmasının yanlış olması, döngünün hiç dönmemesi hep metinde DOĞRU görünür.
+    18 çivi yeşilken `--uygula`nın sessizce yok sayıldığı vaka (2026-08-30) tam bu sınıftı."""
+    hedef = tmp_path / "sahte-hindsight-api"
+    dokum = tmp_path / "cocuk-ortam.txt"
+    hedef.write_text(
+        "#!/bin/sh\n"
+        f': > "{dokum}"\n'
+        + "".join(f'printf "%s=%s\\n" {ad} "${{{ad}-<YOK>}}" >> "{dokum}"\n' for ad in FAZ1A)
+        + f'printf "ARGV=%s\\n" "$*" >> "{dokum}"\n',
+        encoding="utf-8")
+    hedef.chmod(0o755)
+    return hedef
+
+
+def _sarmalayici_kos(tmp_path: pathlib.Path, *, kred: dict[str, str] | None = None,
+                     ortam: dict[str, str] | None = None,
+                     kred_dizini: bool = True) -> tuple[subprocess.CompletedProcess, dict[str, str]]:
+    """Sarmalayıcıyı systemd'nin koşturacağı BİÇİMDE koşturur; `(süreç, çocuğun gördüğü ortam)`."""
+    hedef = _sahte_hedef(tmp_path)
+    env = dict(os.environ)
+    env.pop("CREDENTIALS_DIRECTORY", None)
+    for ad in FAZ1A:
+        env.pop(ad, None)
+    env["HINDSIGHT_API_BIN"] = str(hedef)
+    env.update(ortam or {})
+    if kred_dizini:
+        d = tmp_path / "credentials"
+        d.mkdir(exist_ok=True)
+        for ad, deger in (kred or {}).items():
+            (d / ad).write_text(deger, encoding="utf-8")
+        env["CREDENTIALS_DIRECTORY"] = str(d)
+    r = subprocess.run(["bash", str(HAFIZA_SARMALAYICI)], capture_output=True, text=True,
+                       env=env, cwd=str(tmp_path))
+    dokum = tmp_path / "cocuk-ortam.txt"
+    gorulen: dict[str, str] = {}
+    if dokum.exists():
+        for satir in dokum.read_text(encoding="utf-8").splitlines():
+            ad, _, deger = satir.partition("=")
+            gorulen[ad] = deger
+    return r, gorulen
+
+
+def test_I1_hafiza_dropin_UC_LoadCredential_satiri_tasir():
+    """Faz-1A'nın systemd ayağı. Üç sır TEK drop-in'de: birim ancak ÜÇ kaynak da varken açılır ve
+    geçiş tek restart'la biter — yarım kurulu (bir kaynağı olan) bir birim hiç doğmaz."""
+    assert HAFIZA_DROPIN.exists(), "deploy/hindsight/hindsight-api.service.d/50-creds.conf yok"
+    satirlar = {s.strip() for s in HAFIZA_DROPIN.read_text(encoding="utf-8").splitlines()
+                if s.strip().startswith("LoadCredential=")}
+    assert satirlar == {f"LoadCredential={ad}:{yol}" for ad, yol in FAZ1A.items()}
+
+
+def test_I2_hafiza_dropin_KIMLIGI_KAYNAK_DOSYA_ADIYLA_AYNI():
+    """`<kimlik>` `$CREDENTIALS_DIRECTORY` altındaki dosya adıdır ve okuyucular (sarmalayıcı +
+    `secrets.credential_oku`) tam o adı arar. Kaynak dosyanın adının da kimlikle aynı olması
+    ZORUNLU değildir ama seçilmiştir: iki ad ayrı olsaydı A1'de `ls /etc/hindsight/creds` çıktısı
+    ile `systemctl show -p LoadCredential` çıktısını insan gözüyle eşlemek gerekirdi."""
+    for satir in HAFIZA_DROPIN.read_text(encoding="utf-8").splitlines():
+        if satir.strip().startswith("LoadCredential="):
+            kimlik, _, kaynak = satir.split("=", 1)[1].partition(":")
+            assert kimlik in FAZ1A, kimlik
+            assert kaynak.rsplit("/", 1)[-1] == kimlik, satir
+
+
+def test_I3_hafiza_dropin_ORTAM_kanalini_KAPATMAZ():
+    """Faz-1 kanal EKLER, kapatmaz. `EnvironmentFile`a dokunan bir DİREKTİF faz-2 olurdu ve tek
+    başına kurulduğunda hindsight-api'yi 29 AYAR satırından da ederdi (`.env` sır DIŞINDA
+    yapılandırma taşır — `.dash.env`in tek-amaçlılığı burada YOK). Ölçüm YORUMU DEĞİL DİREKTİFİ
+    arar: `#` ile başlayan satır systemd için yoktur."""
+    direktifler = [s.strip() for s in HAFIZA_DROPIN.read_text(encoding="utf-8").splitlines()
+                   if s.strip() and not s.strip().startswith("#")]
+    assert not [s for s in direktifler if s.startswith("EnvironmentFile")]
+    assert direktifler[0] == "[Service]"
+
+
+def test_I4_sarmalayici_sozdizimi_gecerli():
+    """`bash -n` — teslimden önceki en ucuz kapı. Bu betik ExecStart'tır: sözdizimi hatası
+    hindsight-api'yi AÇILMAZ hâle getirir ve arıza bakım penceresinin ortasında çıkar."""
+    assert HAFIZA_SARMALAYICI.exists(), "deploy/hindsight/hindsight-api-baslat.sh yok"
+    r = subprocess.run(["bash", "-n", str(HAFIZA_SARMALAYICI)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+
+
+def test_I4b_sarmalayici_CALISTIRILABILIR():
+    """systemd `ExecStart`ı çalıştırır, yorumlamaz: exec biti yoksa birim `203/EXEC` ile ölür.
+    Git dosya modunu taşır — bu çivi o bitin commit'e girdiğini ölçer."""
+    assert os.access(HAFIZA_SARMALAYICI, os.X_OK), "exec biti yok (chmod +x) — systemd 203/EXEC verir"
+
+
+def test_I5_sarmalayici_UC_ADI_da_cocugun_ORTAMINA_koyar(tmp_path):
+    """ASIL İŞ. Üç credential dosyası da okunur, `AD=deger` öneki `secrets.credential_oku` ile
+    AYNI toleransla kırpılır ve değer çocuğun ortamına girer — hindsight-api sırrı oradan okur."""
+    r, gorulen = _sarmalayici_kos(tmp_path, kred={
+        "HINDSIGHT_API_DATABASE_URL": "postgresql://h:sahte-db-parolasi@127.0.0.1:5432/h\n",
+        "HINDSIGHT_API_LLM_API_KEY": "sahte-llm-anahtari-A1\n",
+        # `.env` alışkanlığıyla yazılmış kaynak — önek TANINIR (öngörülebilir operatör kazası).
+        "HINDSIGHT_API_TENANT_API_KEY": "HINDSIGHT_API_TENANT_API_KEY=sahte-tenant-anahtari\n",
+    })
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert gorulen["HINDSIGHT_API_DATABASE_URL"] == "postgresql://h:sahte-db-parolasi@127.0.0.1:5432/h"
+    assert gorulen["HINDSIGHT_API_LLM_API_KEY"] == "sahte-llm-anahtari-A1"
+    assert gorulen["HINDSIGHT_API_TENANT_API_KEY"] == "sahte-tenant-anahtari"
+
+
+def test_I6_credential_YOKKEN_mevcut_ORTAM_BOZULMAZ(tmp_path):
+    """İKİ KANAL AYNI ANDA CANLI (TSK-049 hükmü) — bu çivi o ilkenin ta kendisi. Faz-1'de
+    `EnvironmentFile` KALIR; sarmalayıcı eksik bir credential dosyasında ortamı SIFIRLARSA
+    (`export AD=`) ya da `unset` ederse, drop-in'in kurulduğu ilk restart hindsight-api'yi
+    parolasız bırakır — yani "hareketsiz olması gereken" faz servisi düşürür."""
+    r, gorulen = _sarmalayici_kos(
+        tmp_path,
+        kred={"HINDSIGHT_API_TENANT_API_KEY": "sahte-tenant-credentialdan\n"},
+        ortam={"HINDSIGHT_API_DATABASE_URL": "postgresql://h:sahte-env-parolasi@127.0.0.1/h",
+               "HINDSIGHT_API_LLM_API_KEY": "sahte-llm-envden"})
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert gorulen["HINDSIGHT_API_DATABASE_URL"] == "postgresql://h:sahte-env-parolasi@127.0.0.1/h"
+    assert gorulen["HINDSIGHT_API_LLM_API_KEY"] == "sahte-llm-envden"
+    # Credential kanalı, dosyası VAR olan adda ortamı YENER (faz-2'de ortam kapanınca davranış
+    # sessizce değişmesin diye — `secrets._fetch` sırasıyla aynı hüküm).
+    assert gorulen["HINDSIGHT_API_TENANT_API_KEY"] == "sahte-tenant-credentialdan"
+
+
+@pytest.mark.parametrize("icerik", ["", "\n", "   \n\n", "HINDSIGHT_API_LLM_API_KEY=\n"])
+def test_I6b_BOS_credential_dosyasi_ortami_EZMEZ(tmp_path, icerik):
+    """Boş/değersiz kaynak bir DEĞER değildir. `export AD=""` en kötü hâl olurdu: hindsight-api
+    "ayarlı ama boş" bir anahtarla açılır, upstream 401 verir ve arıza "yanlış anahtar" gibi
+    okunur — gerçek arıza "kaynak dosya boş"tur (`secrets.credential_oku` ile aynı hüküm)."""
+    r, gorulen = _sarmalayici_kos(tmp_path, kred={"HINDSIGHT_API_LLM_API_KEY": icerik},
+                                  ortam={"HINDSIGHT_API_LLM_API_KEY": "sahte-llm-envden"})
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert gorulen["HINDSIGHT_API_LLM_API_KEY"] == "sahte-llm-envden"
+
+
+def test_I6c_CREDENTIAL_DIZINI_HIC_YOKKEN_bugunku_davranis_BIREBIR(tmp_path):
+    """Drop-in kurulmadan dağıtılan sürüm (ve her yerel/CI koşumu) tam olarak bu hâldedir:
+    `$CREDENTIALS_DIRECTORY` yok. Sarmalayıcı hiçbir şey yapmadan hedefi `exec` etmeli — bir
+    hata dönerse birim, kanal kurulmadan ÖNCE ölürdü."""
+    r, gorulen = _sarmalayici_kos(tmp_path, kred_dizini=False,
+                                  ortam={"HINDSIGHT_API_LLM_API_KEY": "sahte-llm-envden"})
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert gorulen["HINDSIGHT_API_LLM_API_KEY"] == "sahte-llm-envden"
+    assert gorulen["HINDSIGHT_API_DATABASE_URL"] == "<YOK>"
+
+
+def test_I7_sarmalayici_DEGERI_BASMAZ(tmp_path):
+    """§4 bedel maddesi: sır DEĞERİ hiçbir aşamada terminale/loga basılmaz. Bu betiğin çıktısı
+    JOURNAL'dır — `set -x` ya da bir teşhis `echo`u, üç sırrı da `journalctl`e ve oradan her
+    okuyucuya taşırdı (2026-09-02'de bir DATABASE_URL parolası tam bu sınıftan düştü)."""
+    gizli = "sahte-cok-gizli-deger-9f3a1c"
+    r, _ = _sarmalayici_kos(tmp_path, kred={"HINDSIGHT_API_LLM_API_KEY": f"{gizli}\n"})
+    assert gizli not in (r.stdout + r.stderr), "SIR DEĞERİ journal'a basıldı"
+    metin = HAFIZA_SARMALAYICI.read_text(encoding="utf-8")
+    assert not re.search(r"^\s*set\s+-[a-z]*x", metin, flags=re.M), "`set -x` üç sırrı da journal'a döker"
+
+
+def test_I7b_sarmalayici_ADLARI_journal_a_yazar(tmp_path):
+    """YASA 6'NIN ÖTEKİ YÜZÜ: değer basılmaz ama HANGİ adın credential kanalından geldiği
+    basılır — okuyucu bakım penceresindeki operatördür (`journalctl -u hindsight-api`) ve
+    "kanal gerçekten okundu mu" sorusunun tek yerel cevabı budur. Ad sır değildir."""
+    r, _ = _sarmalayici_kos(tmp_path, kred={"HINDSIGHT_API_LLM_API_KEY": "sahte-llm\n"})
+    ciktı = r.stdout + r.stderr
+    assert "HINDSIGHT_API_LLM_API_KEY" in ciktı, ciktı
+    assert "HINDSIGHT_API_DATABASE_URL" not in ciktı, "okunmayan ad okunmuş gibi raporlandı"
+
+
+def test_I8_birim_ExecStart_SARMALAYICIYA_isaret_eder():
+    """Kablo çivisi: drop-in kusursuz, sarmalayıcı kusursuz olabilir ama birim hâlâ ikiliyi
+    DOĞRUDAN çağırıyorsa credential'lar hindsight-api'ye HİÇ ulaşmaz — ve `systemctl show
+    -p LoadCredential` yine dolu görünür, yani canary bile yanıltır."""
+    metin = HAFIZA_BIRIM.read_text(encoding="utf-8")
+    execler = [s.strip() for s in metin.splitlines() if s.strip().startswith("ExecStart=")]
+    assert execler == [f"ExecStart={SARMALAYICI_CANLI}"], execler
+
+
+def test_I8b_birim_EnvironmentFile_KALIR():
+    """Faz-1 hareketsizdir: `.env` okuması KALIR (29 ayar satırı oradan geliyor ve faz-2'de yalnız
+    3 SIR satırı çıkacak). Bu satırı bu turda silmek, geri-alımı olmayan bir faz-2 olurdu."""
+    metin = HAFIZA_BIRIM.read_text(encoding="utf-8")
+    assert "EnvironmentFile=/opt/hindsight/.env" in metin
+
+
+def test_I8c_sarmalayici_KENDI_KOSUM_YOLUNU_beyan_eder():
+    """TEK KAYNAK: birimin `ExecStart`ı ile sarmalayıcının başlığındaki kurulum yolu aynı dizgedir.
+    Ayrışırsa birim var olmayan bir dosyayı çağırır (`203/EXEC`) ve kimse nereye kurulacağını
+    bilemez. Yol sarmalayıcının KENDİ metninde yazılı olmalı — çünkü onu kuran insan onu okur."""
+    assert SARMALAYICI_CANLI in HAFIZA_SARMALAYICI.read_text(encoding="utf-8")
+
+
+def test_I9_ENVANTER_faz1A_adlariyla_AYRISMAZ():
+    """AYRIŞMA ÇİVİSİ (Faz-0'ın E bölümünün Faz-1A ayağı): drop-in'in taşıdığı adlar,
+    envanterin `/opt/hindsight/.env` altında SIR olarak saydığı adlarla BİREBİR aynı olmalı.
+    Spec'e dördüncü bir hindsight sırrı girer de drop-in güncellenmezse o sır faz-2'de `.env`ten
+    çıkarılamaz — ya da çıkarılır ve servis düşer."""
+    env = _envanter()
+    hs = next(d for d in env["dosyalar"] if d["yol"] == "/opt/hindsight/.env")
+    assert hs["sinif"] == "A"
+    assert {v["ad"] for v in hs["degiskenler"] if v["sir"]} == set(FAZ1A)
+
+
+def test_I10_vekil_dropin_TEK_adi_TASIR_ve_kaynak_YOLU_AYNI():
+    """EN AZ YETKİ + TEK KAYNAK. Motor birimi yalnız TENANT anahtarını yükler (DB parolasının ve
+    LLM anahtarının motorda işi yok), ve kaynak yolu hindsight drop-in'iyle AYNI dosyayı gösterir —
+    iki yol ayrışsaydı operatör iki kez üretir, ikisi rotasyonda sessizce ayrışırdı."""
+    assert VEKIL_DROPIN.exists(), "54-hafiza-credential.conf yok"
+    satirlar = {s.strip() for s in VEKIL_DROPIN.read_text(encoding="utf-8").splitlines()
+                if s.strip().startswith("LoadCredential=")}
+    assert satirlar == {f"LoadCredential={VEKIL_ADI}:{FAZ1A[VEKIL_ADI]}"}
+
+
+def test_I10b_vekil_dropin_KIMLIGI_OKUYUCUNUN_ARADIGI_AD():
+    """`api._hafiza_anahtari` `secrets.credential_oku(api.HAFIZA_KRED_ADI)` çağırır; drop-in başka
+    bir kimlik yazsaydı okuyucu dosyayı bulamaz, kanal SESSİZCE ölür ve `.env` hâlâ okunduğu için
+    hiçbir şey bozulmazdı — geçiş "yapıldı" sanılırdı (F4'ün Faz-1A'daki kardeşi)."""
+    from meridian import api
+    assert api.HAFIZA_KRED_ADI == VEKIL_ADI
+    kimlik = next(s.strip().split("=", 1)[1].split(":", 1)[0]
+                  for s in VEKIL_DROPIN.read_text(encoding="utf-8").splitlines()
+                  if s.strip().startswith("LoadCredential="))
+    assert kimlik == api.HAFIZA_KRED_ADI
+
+
+def test_I10c_vekil_dropin_53_u_EZMEZ():
+    """İKİ DROP-IN, TEK BİRİM: 53 (NOUS/KAPI) ve 54 (TENANT) aynı `meridian.service.d` altında.
+    systemd `LoadCredential=`i BİRİKTİRİR, ama bir dosyada BOŞ atama (`LoadCredential=`) listeyi
+    SIFIRLAR — 54 öyle bir satır taşısaydı 53'ün iki sırrı sessizce düşer ve motor açılmazdı."""
+    for satir in VEKIL_DROPIN.read_text(encoding="utf-8").splitlines():
+        s = satir.strip()
+        assert s != "LoadCredential=", "boş LoadCredential ataması 53'ün kimliklerini SIFIRLAR"
+
+
+def test_I11_betik_HAFIZA_dropinini_KAYNAKSIZ_KURMAZ(tmp_path):
+    """MOTORU DÜŞÜREN SINIF. `LoadCredential=` kaynağı yoksa birim HİÇ başlamaz — yani
+    54-hafiza-credential.conf'u `/etc/hindsight/creds/...` üretilmeden kurmak MOTORU kapatır.
+    Faz-1B'de aynı kapı `faz1` içinde kodlu; burada da kodlu olmalı, belgede değil."""
+    _, ortam = _sahte_ortam(tmp_path)
+    r = subprocess.run(["bash", str(BETIK), "--faz1-hafiza"], capture_output=True, text=True,
+                       env=ortam, cwd=str(tmp_path))
+    assert r.returncode != 0, r.stdout + r.stderr
+    assert FAZ1A[VEKIL_ADI] in (r.stdout + r.stderr), r.stdout + r.stderr
+
+
+def test_I11b_durum_HAFIZA_bacagini_da_raporlar(tmp_path):
+    """Operatörün koşacağı İLK komut iki bacağı da göstermeli: Faz-1B'nin iki adı ve Faz-1A'nın
+    vekil drop-in'i. Raporlamayan bir bacak "kurulu mu?" sorusunu VARSAYIMA bırakır."""
+    _, ortam = _sahte_ortam(tmp_path)
+    r = subprocess.run(["bash", str(BETIK)], capture_output=True, text=True,
+                       env=ortam, cwd=str(tmp_path))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "54-hafiza-credential.conf" in r.stdout
+    assert FAZ1A[VEKIL_ADI] in r.stdout
+
+
+def test_I11c_betik_HAFIZA_kaynak_YOLU_dropinle_AYNI():
+    """Tek-kaynak: aynı yol üç dosyada yazılı (hindsight drop-in, vekil drop-in, betik).
+    Çivi olmadan betiğin BEKLEDİĞİ dosya ile birimin OKUDUĞU dosya sessizce farklılaşır ve arıza
+    ancak restart anında çıkar (F2'nin Faz-1A'daki kardeşi)."""
+    assert FAZ1A[VEKIL_ADI] in BETIK.read_text(encoding="utf-8")
+
+
+def _hafiza_kaynagi(kok: pathlib.Path, icerik: str = "sahte-tenant-anahtari-A1\n") -> pathlib.Path:
+    """Sahte kökte `/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY` üretir (yalnız SAHTE değer)."""
+    d = kok / "etc/hindsight/creds"
+    d.mkdir(parents=True, exist_ok=True)
+    yol = d / VEKIL_ADI
+    yol.write_text(icerik, encoding="utf-8")
+    return yol
+
+
+def test_I11d_faz1_hafiza_KAYNAK_VARKEN_dropini_KURAR(tmp_path):
+    """OPS ARACI TESLİM KAPISI (§6): aracı, operatörün koşacağı BİÇİMDE bir kez koştur. Reddetme
+    dalı (I11) tek başına yeterli değildi — 18 çivi yeşilken `--uygula`nın sessizce yok sayıldığı
+    vaka (2026-08-30) tam olarak "mutlu yol hiç koşulmadı" sınıfıydı. Burada drop-in GERÇEKTEN
+    kopyalanır ve dosyanın yerinde olduğu ölçülür."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    _hafiza_kaynagi(kok)
+    r = subprocess.run(["bash", str(BETIK), "--faz1-hafiza"], capture_output=True, text=True,
+                       env=ortam, cwd=str(tmp_path))
+    assert r.returncode == 0, r.stdout + r.stderr
+    kurulu = kok / "etc/systemd/system/meridian.service.d" / VEKIL_DROPIN.name
+    assert kurulu.exists(), r.stdout + r.stderr
+    assert kurulu.read_text(encoding="utf-8") == VEKIL_DROPIN.read_text(encoding="utf-8")
+
+
+def test_I11e_faz1_hafiza_SIR_DEGERINI_BASMAZ(tmp_path):
+    """§4 bedel maddesi. Betik kaynak dosyayı VARLIK olarak yoklar, İÇERİĞİNİ okumaz — değer
+    terminale de journal'a da düşmez (2026-09-02 DATABASE_URL vakasının sınıfı)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    gizli = "sahte-cok-gizli-tenant-7c2b9e"
+    _hafiza_kaynagi(kok, f"{gizli}\n")
+    r = subprocess.run(["bash", str(BETIK), "--faz1-hafiza"], capture_output=True, text=True,
+                       env=ortam, cwd=str(tmp_path))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert gizli not in (r.stdout + r.stderr), "SIR DEĞERİ basıldı"
+
+
+def test_I11f_faz1_hafiza_MOTOR_ENV_ine_DOKUNMAZ(tmp_path):
+    """FAZ-1A bir DROP-IN adımıdır, bir `.env` adımı DEĞİL. Faz-1B'nin `_env_satiri_yaz` yolu
+    buraya sızarsa motorun `/opt/meridian/.env`i bir hindsight sırrıyla kirlenirdi — yani
+    kapatmaya çalıştığımız yüzeyi büyütürdük."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    _hafiza_kaynagi(kok)
+    envf = kok / "opt/meridian/.env"
+    envf.write_text("NOUS_MODEL=sahte-model\n", encoding="utf-8")
+    once = envf.read_text(encoding="utf-8")
+    r = subprocess.run(["bash", str(BETIK), "--faz1-hafiza"], capture_output=True, text=True,
+                       env=ortam, cwd=str(tmp_path))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert envf.read_text(encoding="utf-8") == once
+
+
+def test_I11g_geri_al_hafiza_YALNIZ_54_u_KALDIRIR(tmp_path):
+    """GERİ ALIM DAR OLMALI: 53 (motorun KENDİ sırları) bu geri alımdan etkilenmez — iki geçiş
+    ayrı pencerelerde koşar ve birinin geri alınması ötekini düşürmemelidir. Kaynak dosya da
+    SİLİNMEZ: geri almanın kendisi geri alınabilir kalır."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    kaynak = _hafiza_kaynagi(kok)
+    birim = kok / "etc/systemd/system/meridian.service.d"
+    (birim / DROPIN.name).write_text(DROPIN.read_text(encoding="utf-8"), encoding="utf-8")
+
+    r = subprocess.run(["bash", str(BETIK), "--faz1-hafiza"], capture_output=True, text=True,
+                       env=ortam, cwd=str(tmp_path))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert (birim / VEKIL_DROPIN.name).exists()
+
+    r = subprocess.run(["bash", str(BETIK), "--geri-al-hafiza"], capture_output=True, text=True,
+                       env=ortam, cwd=str(tmp_path))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert not (birim / VEKIL_DROPIN.name).exists(), "54 kaldırılmadı"
+    assert (birim / DROPIN.name).exists(), "53 DE kaldırıldı — geri alım dar değil"
+    assert kaynak.exists(), "credential kaynağı silindi — geri alım geri alınamaz oldu"

@@ -182,6 +182,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import os
 import pathlib
 
 import pytest
@@ -315,7 +316,14 @@ def _ag_kapali(monkeypatch):
 
 
 def _env_dosyasi(monkeypatch, tmp_path, anahtar: str | None = SAHTE_ANAHTAR) -> pathlib.Path:
-    """Sahte `/opt/hindsight/.env`. `anahtar=None` → dosya HİÇ yazılmaz (bu makinenin gerçek hâli)."""
+    """Sahte `/opt/hindsight/.env`. `anahtar=None` → dosya HİÇ yazılmaz (bu makinenin gerçek hâli).
+
+    CREDENTIAL KANALI DA KAPATILIR (TSK-064 Faz-1A). `_hafiza_anahtari` artık credential kanalını
+    ÖNCE okuyor; `$CREDENTIALS_DIRECTORY` ayarlı bir makinede (systemd altında koşan bir CI, ya da
+    bayat bir `export`) bu dosyanın çivileri SESSİZCE başka bir kanalı ölçerdi — ve "anahtar yok"
+    senaryoları yanlış yeşil verirdi. Kapatmayı isteyen testler onu KENDİ kurar (`kred` fixture'ı,
+    bölüm K). Fixture'ın kendisi çivili: `test_K0_env_fixture_credential_kanalini_KAPATIR`."""
+    monkeypatch.delenv("CREDENTIALS_DIRECTORY", raising=False)
     yol = tmp_path / "hindsight.env"
     if anahtar is not None:
         yol.write_text(f"# yorum satiri\nHINDSIGHT_API_TENANT_API_KEY={anahtar}\nBASKA=deger\n")
@@ -3642,3 +3650,198 @@ def test_webhook_suzgeci_TANIMAYAN_SEKILDE_govdeyi_GECIRMEZ(monkeypatch, tmp_pat
     assert g["govde"] is None, f"tanınmayan şekilde gövde geçti: {g}"
     assert _dolu(g["neden"]) and "süzülemediği" in g["neden"], g["neden"]
     assert WEBHOOK_SIRRI_SENTETIK not in r.text, "imza sırrı yanıta sızdı"
+
+
+# =================================================================================================
+# K. CREDENTIAL-ÖNCE OKUMA — TSK-064 YOL-1 Faz-1A (spec Bulgu-3)
+# =================================================================================================
+#
+# NEDEN BU BÖLÜM VAR. Spec §1 Bulgu-3: bu vekil Hindsight'ın TENANT anahtarını `/opt/hindsight/.env`
+# DOSYASINDAN okuyor. Faz-1A o sırrı systemd `LoadCredential` kanalına taşır ve faz-2'de `.env`ten
+# ÜÇ SATIR silinir — o an geldiğinde okuma yolu credential dizinine taşınmamışsa vekil sessizce
+# "anahtar yok" der ve pano Hafıza tablosunu kaybeder. Yani buradaki çiviler bir iyileştirmeyi
+# değil, BİR TARİHİ (faz-2 penceresi) karşılıyor.
+#
+# İKİ KANAL AYNI ANDA CANLI (TSK-049 hükmü, Faz-1B'de birebir): credential kanalı EKLENİR, `.env`
+# okuması KALIR ve credential ÖNCE okunur. Öncelik ters olsaydı faz-2'de dosya kanalı kapandığında
+# davranış SESSİZCE değişirdi — ve geçişin farksal ölçümü (eski kanala SAHTE değer, gerçek değer
+# yalnız yeni kanalda) hangi kanalın okunduğunu ölçemezdi.
+#
+# OKUYUCU KOPYALANMAZ, İTHAL EDİLİR: `secrets.credential_oku` (Faz-1B; sözleşmesi
+# `tests/test_sir_credential_v439.py` bölüm A'da çivili) biçim toleransının TEK kaynağıdır. İkinci
+# bir okuyucu yazmak, `AD=` öneki / boş dosya / kırpma kurallarının iki yerde sessizce ayrışması
+# demekti (tek-kaynak yasası).
+
+#: `.env` bacağının SAHTE değerinden FARKLI olmak ZORUNDA: iki kanal aynı değeri taşısaydı
+#: "credential kazandı" çivisi hiçbir şey ölçmezdi (farksal ölçümün testteki karşılığı).
+SAHTE_KRED_ANAHTAR = "sahte-hindsight-KREDENSIYAL-v375-Lp2Kx8Vn"
+
+
+def _kred_dizini(monkeypatch, tmp_path, **dosyalar: str) -> pathlib.Path:
+    """`CREDENTIALS_DIRECTORY`yi kuran yardımcı — systemd'nin yaptığının testteki karşılığı.
+
+    FIXTURE DEĞİL FONKSİYON, ve bu SIRA MESELESİ: `_env_dosyasi` credential kanalını KAPATIYOR
+    (hermetiklik, çivi K0). Bir fixture test gövdesinden ÖNCE koşardı ve `_env_dosyasi` onun
+    kurduğu kanalı hemen silerdi — çiviler yeşil kalır ama ölçtükleri hâl kurulmamış olurdu.
+    Fonksiyon olunca sıra ÇAĞRI YERİNDE görünür: önce `.env`, sonra credential.
+
+    Dosya vermeden çağrılabilir: "dizin var, dosya yok" tam olarak systemd'nin BAŞKA bir
+    credential yüklediği hâldir ve o hâl bir arıza değildir."""
+    d = tmp_path / "credentials"
+    d.mkdir(exist_ok=True)
+    for ad, icerik in dosyalar.items():
+        (d / ad).write_text(icerik, encoding="utf-8")
+    monkeypatch.setenv("CREDENTIALS_DIRECTORY", str(d))
+    return d
+
+
+def test_K0_env_fixture_credential_kanalini_KAPATIR(monkeypatch, tmp_path):
+    """FIXTURE'IN KENDİSİ ÖLÇÜLÜR. `_env_dosyasi` artık `CREDENTIALS_DIRECTORY`yi de siler; aksi
+    hâlde bu dosyanın çivileri, systemd credential'ı ayarlı bir makinede (systemd altında koşan
+    bir CI ya da bayat bir `export`) SESSİZCE başka bir kanalı ölçerdi — ve "anahtar yok"
+    senaryoları yanlış yeşil verirdi. Hermetiklik bir varsayım değil, ölçülen bir şeydir."""
+    monkeypatch.setenv("CREDENTIALS_DIRECTORY", str(tmp_path / "sizinti"))
+    _env_dosyasi(monkeypatch, tmp_path)
+    assert os.environ.get("CREDENTIALS_DIRECTORY") is None
+
+
+def test_K1_credential_ONCE_okunur_env_dosyasi_dururken(monkeypatch, tmp_path):
+    """FAZ-1'İN TA KENDİSİ: iki kanal da DOLU ve DEĞERLERİ FARKLI. Credential kazanmazsa faz-2'de
+    `.env` satırı silindiği an vekil anahtarsız kalırdı — üstelik o âna kadar her çivi yeşil."""
+    _env_dosyasi(monkeypatch, tmp_path, SAHTE_ANAHTAR)
+    _kred_dizini(monkeypatch, tmp_path,
+                 HINDSIGHT_API_TENANT_API_KEY=f"{SAHTE_KRED_ANAHTAR}\n")
+    assert api._hafiza_anahtari() == (SAHTE_KRED_ANAHTAR, None)
+
+
+def test_K2_credential_yokken_ENV_YOLU_BIREBIR(monkeypatch, tmp_path):
+    """GERİYE UYUM, TAHMİN DEĞİL KARŞILAŞTIRMA: credential kanalı yokken dönen ikili,
+    `_env_anahtari`nin döndürdüğünün AYNISI olmalı. Bugün canlıda geçerli olan tek hâl budur ve
+    faz-1 kurulmadan dağıtılan sürüm davranışı BİREBİR korumak zorundadır."""
+    yol = _env_dosyasi(monkeypatch, tmp_path, SAHTE_ANAHTAR)
+    assert api._hafiza_anahtari() == api._env_anahtari(str(yol), api.HAFIZA_ANAHTAR_ONEKI)
+    assert api._hafiza_anahtari() == (SAHTE_ANAHTAR, None)
+
+
+@pytest.mark.parametrize("icerik", ["", "\n", "   \n\n", "HINDSIGHT_API_TENANT_API_KEY=\n"])
+def test_K3_credential_BOSKEN_env_bacagina_DUSER(monkeypatch, tmp_path, icerik):
+    """Boş/değersiz bir credential dosyası bir DEĞER değildir. Buradan boş dizge dönmek en kötü
+    hâl olurdu: `Bearer ` gönderilir, upstream 401 verir ve arıza "yanlış anahtar" gibi okunur —
+    gerçek arıza "kaynak dosya boş"tur. Doğru davranış alt kanala düşmektir (v184 senaryo 5)."""
+    _env_dosyasi(monkeypatch, tmp_path, SAHTE_ANAHTAR)
+    _kred_dizini(monkeypatch, tmp_path, HINDSIGHT_API_TENANT_API_KEY=icerik)
+    assert api._hafiza_anahtari() == (SAHTE_ANAHTAR, None)
+
+
+def test_K3b_DIZIN_VAR_DOSYA_YOK_env_bacagina_DUSER(monkeypatch, tmp_path):
+    """systemd BAŞKA bir credential yüklediğinde dizin kurulur ama bu ad İÇİNDE OLMAZ (motor
+    biriminde 53-nous-kapi zaten iki kimlik yüklüyor — 54 kurulmadan önceki hâl tam budur).
+    Arıza değildir ve patlamamalıdır: doğru davranış `.env` bacağına düşmektir."""
+    _env_dosyasi(monkeypatch, tmp_path, SAHTE_ANAHTAR)
+    d = _kred_dizini(monkeypatch, tmp_path, NOUS_API_KEY="sahte-baska-bir-kimlik\n")
+    assert not (d / "HINDSIGHT_API_TENANT_API_KEY").exists()
+    assert api._hafiza_anahtari() == (SAHTE_ANAHTAR, None)
+
+
+def test_K4_credential_DOLU_env_dosyasi_YOKKEN_yeter(monkeypatch, tmp_path):
+    """FAZ-2'NİN HEDEF HÂLİ: `.env`te satır yok (hatta dosya yok), sır YALNIZ credential'da.
+    Bu çivi yeşil olmadan faz-2 koşulamaz — geçiş penceresinin farksal ölçümü aynı soruyu sorar."""
+    _env_dosyasi(monkeypatch, tmp_path, None)
+    _kred_dizini(monkeypatch, tmp_path,
+                 HINDSIGHT_API_TENANT_API_KEY=f"{SAHTE_KRED_ANAHTAR}\n")
+    assert api._hafiza_anahtari() == (SAHTE_KRED_ANAHTAR, None)
+
+
+def test_K5_neden_IKI_KANALI_da_anlatir(monkeypatch, tmp_path):
+    """ÖLÇÜLEMEZLİK YUTULMAZ VE YANLIŞ YERİ GÖSTERMEZ. Faz-2'den sonra `.env`te satır YOKTUR —
+    yalnız "`.env` içinde satır yok" diyen bir gerekçe operatörü SİLİNMİŞ satırı aramaya yollar.
+    Gerekçe her iki kanalın durumunu da taşır; sır DEĞERİ elbette taşımaz."""
+    yol = _env_dosyasi(monkeypatch, tmp_path, None)
+    _kred_dizini(monkeypatch, tmp_path)
+    deger, neden = api._hafiza_anahtari()
+    assert deger is None and _dolu(neden)
+    assert "credential" in neden.lower(), neden
+    assert str(yol) in neden, neden
+    assert api.HAFIZA_KRED_ADI in neden, neden
+
+
+def test_K5b_neden_credential_kanali_HIC_YOKKEN_bunu_soyler(monkeypatch, tmp_path):
+    """İki ayrı arıza, iki ayrı iş kalemi: "kanal hiç kurulmamış" (drop-in yok) ile "kanal var ama
+    bu ad içinde yok" (kaynak dosya eksik) AYNI cümleyle anlatılamaz — ilki bir kurulum adımı,
+    ikincisi bir dosya adımıdır. Ölçülemezliğin de sınıfı vardır."""
+    _env_dosyasi(monkeypatch, tmp_path, None)
+    _deger, kanalsiz = api._hafiza_anahtari()
+    assert "CREDENTIALS_DIRECTORY" in kanalsiz, kanalsiz
+
+    _kred_dizini(monkeypatch, tmp_path)
+    _deger, kanalli = api._hafiza_anahtari()
+    assert "CREDENTIALS_DIRECTORY" not in kanalli, kanalli
+    assert kanalli != kanalsiz, "iki ayrı ölçülemezlik sınıfı AYNI cümleyle anlatılıyor"
+
+
+def test_K5c_neden_SIR_DEGERI_TASIMAZ(monkeypatch, tmp_path):
+    """Gerekçe panoya çıkar (`/api/hindsight` gövdesindeki `neden` alanı). Kanal durumunu
+    anlatırken kaynak dosyanın İÇERİĞİNE dokunmaz — anlatılan şey VARLIK/YOKLUK, değer değil."""
+    _env_dosyasi(monkeypatch, tmp_path, None)
+    _kred_dizini(monkeypatch, tmp_path,
+                 HINDSIGHT_API_TENANT_API_KEY="   \n")   # boş sayılır → gerekçe dalı
+    _deger, neden = api._hafiza_anahtari()
+    assert SAHTE_ANAHTAR not in neden and SAHTE_KRED_ANAHTAR not in neden, neden
+
+
+def test_K6_kimlik_SIR_ADIYLA_AYNI_ve_onekten_TURER():
+    """`LoadCredential=<kimlik>:<kaynak>` — `<kimlik>` `$CREDENTIALS_DIRECTORY` altındaki DOSYA
+    ADIDIR. Vekilin aradığı ad ile drop-in'in yazdığı kimlik ayrışırsa okuyucu dosyayı BULAMAZ,
+    kanal SESSİZCE ölür ve `.env` hâlâ okunduğu için hiçbir şey bozulmaz — en pahalı hâl, çünkü
+    geçiş "yapıldı" sanılır. Ad ÜRETİLİR (önekten türer), ikinci kez YAZILMAZ."""
+    assert api.HAFIZA_KRED_ADI == "HINDSIGHT_API_TENANT_API_KEY"
+    assert api.HAFIZA_ANAHTAR_ONEKI == api.HAFIZA_KRED_ADI + "="
+
+
+def test_K7_okuyucu_secrets_KAPISINDAN_gecer(monkeypatch, tmp_path):
+    """İKİNCİ BİR OKUYUCU YOK. Biçim toleransı (`AD=` öneki, kırpma, boş=None)
+    `secrets.credential_oku` içinde TEK kaynaktır; burada kopyalansaydı iki kural sessizce
+    ayrışırdı. Ölçüm KABLOYU arar: o kapı çağrılmazsa çivi öter (tuzak, doğrudan davranış değil)."""
+    from meridian import secrets as _s
+    cagrilar: list[str] = []
+
+    def _tuzak(ad: str):
+        cagrilar.append(ad)
+        return SAHTE_KRED_ANAHTAR
+
+    _env_dosyasi(monkeypatch, tmp_path, SAHTE_ANAHTAR)
+    monkeypatch.setattr(_s, "credential_oku", _tuzak)
+    assert api._hafiza_anahtari() == (SAHTE_KRED_ANAHTAR, None)
+    assert cagrilar == [api.HAFIZA_KRED_ADI], cagrilar
+
+
+def test_K8_AD_ONEKLI_credential_kaynagi_taninir(monkeypatch, tmp_path):
+    """Operatörün `.env` alışkanlığı `AD=deger`dir ve o satırın credential kaynağına kopyalanması
+    ÖNGÖRÜLEBİLİR bir kazadır. Tolerans BURADA yazılmaz — `secrets.credential_oku`dan MİRAS ALINIR;
+    bu çivi mirasın gerçekten aktığını ölçer (ikinci bir ayrıştırma yolu yok)."""
+    _env_dosyasi(monkeypatch, tmp_path, None)
+    _kred_dizini(monkeypatch, tmp_path,
+                 HINDSIGHT_API_TENANT_API_KEY=f"HINDSIGHT_API_TENANT_API_KEY={SAHTE_KRED_ANAHTAR}\n")
+    assert api._hafiza_anahtari() == (SAHTE_KRED_ANAHTAR, None)
+
+
+@pytest.mark.parametrize("yol", UCLAR)
+def test_K9_KABLO_credential_degeri_TELE_cikar(monkeypatch, tmp_path, sandbox_state, yol):
+    """EN PAHALI YANLIŞ-YEŞİL SINIFI (v184 test 8'in dersi): okuyucu kusursuz çalışır ama uç hâlâ
+    eski değeri gönderir — saf fonksiyon ölçülür, KABLO ölçülmez. Burada iki kanal FARKLI değer
+    taşır ve giden `Authorization` başlığında CREDENTIAL değeri aranır; credential değeri yanıta
+    da sızmamalıdır (D bölümünün sızıntı çivisi bu kanal için de geçerlidir)."""
+    casus = _kurulum(monkeypatch, tmp_path, esleme=_tam_esleme(
+        **{"/memories/list": b'{"items": []}', "/memories/m1": b'{"id": "m1"}'}))
+    _kred_dizini(monkeypatch, tmp_path,
+                 HINDSIGHT_API_TENANT_API_KEY=f"{SAHTE_KRED_ANAHTAR}\n")
+
+    r = _client().get(yol)
+    assert r.status_code == 200, r.text
+    assert SAHTE_KRED_ANAHTAR not in r.text, "TENANT ANAHTARI PANOYA SIZDI"
+
+    kimlikli = [c for c in casus.cagrilar if "/v1/" in c["url"]]
+    assert kimlikli, "kimlikli hiçbir çağrı yapılmamış — kablo çivisi vakumda koşuyordu"
+    for c in kimlikli:
+        assert c["basliklar"].get("Authorization") == f"Bearer {SAHTE_KRED_ANAHTAR}", \
+            f"{c['url']}: credential kanalı KABLOLU DEĞİL — giden başlık: {c['basliklar']}"
