@@ -15,6 +15,17 @@
 #   ./sir_credential_gecis.sh --faz1 <ad>        → credential kanalı EKLE (ortam kanalı KALIR)
 #   ./sir_credential_gecis.sh --faz2 <ad>        → farksal ölçüm + ortam satırını KAPAT
 #   ./sir_credential_gecis.sh --geri-al <ad>     → ortam satırını geri yaz, drop-in'i kaldır
+#   ./sir_credential_gecis.sh --faz1-hafiza      → FAZ-1A: motora TENANT credential'ı (54 drop-in)
+#   ./sir_credential_gecis.sh --geri-al-hafiza   → 54 drop-in'i kaldır (vekil dosya yolunu kullanır)
+#
+# FAZ-1A NİYE BURADA VE NİYE YALNIZ İKİ ALT KOMUT. Hindsight'ın KENDİ geçişi (üç sır →
+# `/etc/hindsight/creds/*`, `hindsight-api.service.d/50-creds.conf` + `hindsight-api-baslat.sh`)
+# BAŞKA bir birime aittir ve bu betiğin sözleşmesi (`meridian` birimi, `/opt/meridian/.env`,
+# `_kanit_nous`) oraya UYMAZ — genelleştirmeye zorlamak iki geçişi birbirinin rehinesi yapardı.
+# Buraya YALNIZ motoru DÜŞÜREBİLECEK tek adım girdi: `54-hafiza-credential.conf` motorun birimine
+# bir `LoadCredential=` satırı ekler ve kaynak dosya yoksa MOTOR HİÇ AÇILMAZ. O kapı belgeye değil
+# koda yazılır (53'te olduğu gibi). Faz-2 (hindsight `.env`inden 3 satırın çıkarılması) hindsight
+# tarafının işidir ve BU BETİKTE YOKTUR — burada olmayan şey, burada yapılmayacak şeydir.
 #
 # SIR DEĞERİ HİÇBİR YOLDA BASILMAZ VE ARGV'YE GİRMEZ. `ps` argv'yi makinedeki HERKESE gösterir;
 # 2026-09-02'de bir parola tam olarak bu sınıftan (URL-gömülü, süzgeç kara-listeliydi) terminale
@@ -39,6 +50,12 @@ ETC="$KOK/etc/meridian"
 ENVF="$KOK/opt/meridian/.env"
 DASH_KRED="$KOK/etc/meridian/dash_token"
 DROPIN_AD=53-nous-kapi-credential.conf
+#: FAZ-1A'nın MOTOR ayağı (spec Bulgu-3): pano vekili Hindsight TENANT anahtarını okur ve o okuma
+#: `secrets.credential_oku` üzerinden credential dizinine taşındı (`api._hafiza_anahtari`).
+#: KAYNAK, hindsight biriminin okuduğu DOSYANIN TA KENDİSİDİR — iki yol ayrışsaydı operatör aynı
+#: sırrı iki kez üretir, ikisi ilk rotasyonda sessizce ayrışırdı. Çivi: v439 I10/I11c.
+HAFIZA_DROPIN_AD=54-hafiza-credential.conf
+HAFIZA_KRED="$KOK/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
 KAYNAK_DIR="$(cd "$(dirname "$0")" && pwd)/meridian.service.d"
 API="${SIR_GECIS_API:-http://127.0.0.1:8080}"
 
@@ -165,6 +182,9 @@ durum() {
     echo "      credential kaynağı ($k): $(sudo test -s "$k" 2>/dev/null && sudo stat -c '%a %U:%G' "$k" 2>/dev/null || echo YOK)"
     echo "      ortam kanalı ($ENVF): $(sudo grep -qs "^${ad}=" "$ENVF" && echo VAR || echo yok)"
   done
+  echo "  --- Faz-1A (pano vekili, Hindsight TENANT anahtarı) ---"
+  echo "  drop-in $HAFIZA_DROPIN_AD: $([ -f "$BIRIM/$HAFIZA_DROPIN_AD" ] && echo KURULU || echo yok)"
+  echo "      credential kaynağı ($HAFIZA_KRED): $(sudo test -s "$HAFIZA_KRED" 2>/dev/null && sudo stat -c '%a %U:%G' "$HAFIZA_KRED" 2>/dev/null || echo YOK)"
   echo "  servis: $(systemctl is-active meridian 2>/dev/null || true) · healthz: $(curl -s -o /dev/null -w '%{http_code}' "$API/healthz" 2>/dev/null || echo 000)"
   echo "  (değerler BASILMAZ — yalnız izin/varlık.)"
 }
@@ -283,6 +303,53 @@ faz2() {
 }
 
 # =================================================================================================
+# FAZ-1A — MOTOR AYAĞI. Yalnız drop-in kurar: kaynak dosyayı (`/etc/hindsight/creds/*`) hindsight
+# tarafının geçişi üretir ve bu betik onu ÜRETMEZ — üretseydi aynı sır iki yerden doğar ve hangi
+# kopyanın rotate edildiği ŞANSA kalırdı (tek-kaynak yasası).
+faz1_hafiza() {
+  echo "=== FAZ 1A: pano vekili → $HAFIZA_DROPIN_AD (dosya kanalı KALIR) ==="
+  _systemd_kapisi
+  [ -d "$KAYNAK_DIR" ] || die "drop-in kaynağı yok: $KAYNAK_DIR (depo güncel mi?)"
+  [ -f "$KAYNAK_DIR/$HAFIZA_DROPIN_AD" ] || die "drop-in dosyası yok: $KAYNAK_DIR/$HAFIZA_DROPIN_AD"
+
+  # KAPI, DEĞİŞİKLİKTEN ÖNCE. `LoadCredential=` kaynağı yoksa systemd birimi HİÇ BAŞLATMAZ — yani
+  # bu tek satır MOTORU kapatır. Aşağıdaki restart'ın geri alımı var, ama hiç girmemek daha ucuz:
+  # hindsight tarafı kurulmadan motora bir hindsight sırrı bağlanmaz.
+  sudo test -s "$HAFIZA_KRED" 2>/dev/null || die "credential kaynağı YOK/BOŞ: $HAFIZA_KRED
+     Bu satır kurulursa MOTOR HİÇ AÇILMAZ (LoadCredential kaynağı zorunludur). Önce hindsight
+     tarafı: /etc/hindsight/creds/* (0400 root) + hindsight-api.service.d/50-creds.conf.
+     Değişiklik YAPILMADI."
+
+  sudo install -d -m 0755 "$BIRIM"
+  sudo cp "$KAYNAK_DIR/$HAFIZA_DROPIN_AD" "$BIRIM/$HAFIZA_DROPIN_AD"
+  sudo systemctl daemon-reload
+  sudo systemctl restart meridian
+  if ! _servis_ayakta; then
+    echo "!! servis AÇILMADI — GERİ ALINIYOR"
+    sudo rm -f "$BIRIM/$HAFIZA_DROPIN_AD"
+    sudo systemctl daemon-reload; sudo systemctl restart meridian
+    die "faz 1A başarısız (drop-in kaldırıldı, eski hâle dönüldü). Günlük: journalctl -u meridian -n 50"
+  fi
+  oldu "drop-in kuruldu · servis ayakta · vekil TENANT anahtarını credential kanalından okuyor"
+  echo ">> Doğrula (pano): /api/hindsight gövdesinde bankalar DOLU, neden BOŞ olmalı."
+  echo ">> Farksal ölçüm hindsight tarafındadır: /opt/hindsight/.env satırına SAHTE değer konup"
+  echo "   pano hâlâ banka listeliyorsa okunan kanal credential'dır."
+}
+
+geri_al_hafiza() {
+  echo "=== GERİ ALMA (Faz-1A): $HAFIZA_DROPIN_AD kaldırılıyor ==="
+  # 53'e DOKUNULMAZ: iki drop-in ayrı yaşar ve motorun KENDİ sırlarının geçişi bu geri alımdan
+  # etkilenmez. Vekil, dosya bacağına (`/opt/hindsight/.env`) düşer — kod iki kanalı da okur.
+  sudo rm -f "$BIRIM/$HAFIZA_DROPIN_AD"
+  sudo rmdir "$BIRIM" 2>/dev/null || true
+  sudo systemctl daemon-reload
+  sudo systemctl restart meridian
+  _servis_ayakta || die "servis açılmadı — journalctl -u meridian -n 50"
+  oldu "drop-in kaldırıldı, servis ayakta (vekil /opt/hindsight/.env bacağını kullanıyor)"
+  echo "  · $HAFIZA_KRED SİLİNMEDİ (bilinçli: geri almanın kendisi geri alınabilir kalsın)."
+}
+
+# =================================================================================================
 geri_al() {
   local ad="$1" kred tmp
   _ad_dogrula "$ad"
@@ -325,6 +392,8 @@ case "${1:-}" in
   --faz1)    [ $# -ge 2 ] || die "kullanım: --faz1 <ad> — tanınanlar: $ADLAR"; faz1 "$2" ;;
   --faz2)    [ $# -ge 2 ] || die "kullanım: --faz2 <ad> — tanınanlar: $ADLAR"; faz2 "$2" ;;
   --geri-al) [ $# -ge 2 ] || die "kullanım: --geri-al <ad> — tanınanlar: $ADLAR"; geri_al "$2" ;;
+  --faz1-hafiza)    faz1_hafiza ;;
+  --geri-al-hafiza) geri_al_hafiza ;;
   "")        durum ;;
-  *)         die "bilinmeyen argüman: $1 (--faz1 <ad> | --faz2 <ad> | --geri-al <ad> | boş=durum)" ;;
+  *)         die "bilinmeyen argüman: $1 (--faz1 <ad> | --faz2 <ad> | --geri-al <ad> | --faz1-hafiza | --geri-al-hafiza | boş=durum)" ;;
 esac

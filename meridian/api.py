@@ -7927,6 +7927,13 @@ HAFIZA_TABAN_URL = "http://127.0.0.1:8888"
 # (`KAPI_ENV_DOSYASI` emsali birebir); testler monkeypatch'ler.
 HAFIZA_ENV_DOSYASI = "/opt/hindsight/.env"
 HAFIZA_ANAHTAR_ONEKI = "HINDSIGHT_API_TENANT_API_KEY="
+# CREDENTIAL KİMLİĞİ ÖNEKTEN TÜRER (TSK-064 Faz-1A, tek-kaynak yasası): `LoadCredential=<kimlik>:<kaynak>`
+# sözleşmesinde kimlik `$CREDENTIALS_DIRECTORY` altındaki DOSYA ADIDIR ve o ad sır adının TA
+# KENDİSİDİR. İkinci kez elle yazılsaydı iki kopya sessizce ayrışırdı ve okuyucu dosyayı
+# bulamazdı — kanal SESSİZCE ölür, `.env` hâlâ okunduğu için hiçbir şey bozulmaz ve geçiş
+# "yapıldı" sanılırdı (en pahalı hâl). Drop-in ile eşitliği çivili:
+# `deploy/oracle-a1/meridian.service.d/54-hafiza-credential.conf`, çivi v439 bölüm I.
+HAFIZA_KRED_ADI = HAFIZA_ANAHTAR_ONEKI.rstrip("=")
 # BEYAN, ZORLAYICI DEĞİL: zaman aşımını gerçekten uygulayan `_kapi_getir`in okuduğu
 # `KAPI_ZAMAN_ASIMI_S`dir. Sözleşme sabiti brief'te birebir verildiği için türetme yerine AYRIŞMA
 # ÇİVİSİ kuruldu (`test_zaman_asimi_kopyasi_ayrisirsa_isirir`): ikisi ayrışırsa gövdedeki beyan
@@ -8057,8 +8064,41 @@ def _env_anahtari(dosya: str, onek: str) -> tuple[str | None, str | None]:
 
 
 def _hafiza_anahtari() -> tuple[str | None, str | None]:
-    """Hindsight tenant anahtarı — `_env_anahtari`nin Hindsight bacağı."""
-    return _env_anahtari(HAFIZA_ENV_DOSYASI, HAFIZA_ANAHTAR_ONEKI)
+    """Hindsight tenant anahtarı: systemd credential kanalı ÖNCE, sonra `_env_anahtari` bacağı.
+
+    NEDEN İKİ KANAL (TSK-064 YOL-1 Faz-1A, spec Bulgu-3). Anahtar bugün `/opt/hindsight/.env`
+    DOSYASINDA yaşıyor ve bu vekil onu oradan okuyor. Faz-1A sırrı systemd `LoadCredential`
+    kanalına taşır (`54-hafiza-credential.conf`); faz-2'de `.env`ten ÜÇ SIR SATIRI silinir. Okuma
+    yolu o pencereden ÖNCE taşınmazsa vekil sessizce "anahtar yok" der ve pano Hafıza tablosunu
+    kaybeder — üstelik o âna kadar her çivi yeşildir.
+
+    CREDENTIAL NEDEN ÖNCE. Geçiş İKİ FAZLIDIR ve faz-1'de iki kanal AYNI ANDA canlıdır (dosya
+    okuması KALIR, credential EKLENİR). Öncelik credential'da olmazsa faz-2'de dosya kanalı
+    kapandığında davranış SESSİZCE değişirdi; üstelik geçişin farksal ölçümü (eski kanala SAHTE
+    değer, gerçek değer yalnız yenisinde → servis hâlâ iş yapıyor mu?) hangi kanalın okunduğunu
+    ancak bu sıra sayesinde ölçebilir. Aynı hüküm `secrets._fetch` ve `_read_dash_token`ta da
+    yürürlükte — kopyalanan şey DAVRANIŞ, kod değil.
+
+    OKUYUCU İTHAL EDİLİR, KOPYALANMAZ: biçim toleransı (`AD=` öneki, kırpma, boş=None) tek kaynak
+    `secrets.credential_oku`dadır. `secrets.get` KULLANILMAZ, bilerek: `get` env/`secrets.json`/GCP
+    basamaklarına da düşer ve bu ad ALLOWED'da değildir — motor ortamında `HINDSIGHT_API_*` diye
+    bir değişken YOKTUR ve varmış gibi aramak, panonun sır deposunu Hindsight'ın yapılandırmasına
+    bağlayan sahte bir kanal açardı.
+
+    GEREKÇE HER İKİ KANALI DA ANLATIR (arıza dalında). Faz-2'den sonra `.env`te satır YOKTUR;
+    yalnız "dosyada satır yok" diyen bir gerekçe operatörü SİLİNMİŞ satırı aramaya yollardı. İki
+    ölçülemezlik sınıfı da ayrılır: "kanal hiç kurulmamış" (drop-in yok) bir KURULUM adımı,
+    "kanal var ama bu ad içinde yok" bir DOSYA adımıdır. Gerekçe sır DEĞERİ taşımaz."""
+    kred = secrets_mod.credential_oku(HAFIZA_KRED_ADI)
+    if kred:
+        return kred, None
+    deger, neden = _env_anahtari(HAFIZA_ENV_DOSYASI, HAFIZA_ANAHTAR_ONEKI)
+    if deger:
+        return deger, None
+    kanal = (f"credential kanalında {HAFIZA_KRED_ADI} yok/boş"
+             if os.environ.get(secrets_mod.CREDENTIAL_DIZIN_ENV)
+             else "credential kanalı yok (CREDENTIALS_DIRECTORY ayarlı değil)")
+    return None, f"{kanal}; {neden}"
 
 
 def _hafiza_kacir(deger: str) -> str:
