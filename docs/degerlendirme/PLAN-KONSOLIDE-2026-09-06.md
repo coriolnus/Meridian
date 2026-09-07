@@ -44,7 +44,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Kalem | Öncelik | Kapı |
 |---|---|---|
 | TSK-162 triyajda recall | bu hafta | disiplin + 2 hafta sayım; kod yok |
-| TSK-020 [UYGULA-3] bars→Parquet | bu ay | tasarım belgesi var (2026-09-06); implementer |
+| TSK-020 [UYGULA-3] bars→Parquet | ✅ KOD MAIN'DE 09-07 13:5xZ (67b86f4: bar_arsivle + bar_sorgu, v435/v436) | dağıtım #26 S5 sonrası → S4 A1 ilk arşiv + kapsam raporu (Rol-1); 3.3 canlı yol ayrı kart |
 | TSK-167 pano anlamsal arama | bu ay | EDG-067 sonucu + A1 CPU; küçük ve ölçülebilir |
 | TSK-064 sır yönetimi Faz-0/1A/1B (+Faz-2 Vault) | gelecek hafta | tek dalga; son basamak KARARLI: HashiCorp Vault, oto-unseal dosya |
 | TSK-137 Ağustos defteri kırpma | Ekim başı | aylık bakım |

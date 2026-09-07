@@ -2965,3 +2965,7 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   Faz-2 eki (hükümler: pinli ikili + lisans kapısı, file backend, 127.0.0.1:8200 HTTP, Shamir 1/1 0400, ExecStartPost oto-unseal +
   VAULT_SEALED bekçi, Vault Agent template → LoadCredential/.env, AppRole secret-id dosyası beyanlı, GCP kanalı Faz-2c'ye kadar).
   S5 penceresi iki parça (nabız 900 s): 20:45Z durdur+yedek, 21:03Z uygula+id numaralama+başlat; zamanlayıcılar kuruldu.
+- **TSK-020 [UYGULA-3] 13:2x–13:5xZ** (operatör "konsolide plana otonom devam"): plan yazıldı (§5-1 şimdi, §5-2 canlı yol ayrı kart; pyarrow
+  yerel+A1'de YOK → DuckDB COPY), implementer (opus, worktree) Task 1+2: `ops/bar_arsivle.py` + `ops/bar_sorgu.py` + v435/v436 (43 çivi, 5/5
+  mutasyon); merge 67b86f4, kapsam 258 passed / FAILED 0. Beyanlı kaygılar ROADMAP notunda. Dağıtım #26 ve A1 ilk arşiv (S4) S5 penceresi
+  sonrasına — seans içinde worker restart edilmez.
