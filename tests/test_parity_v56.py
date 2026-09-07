@@ -263,6 +263,21 @@ DECLARED_ALIASES = {
     # kaynak iki alan AYRI kalmalı — mutabakat masası hangi sınıfın gerçekleştiğini söyler
     # (eksik kayıt → gönderim yolu onarımı; adet sapması → miktar mutabakatı; farklı eylemler).
     ("loop.py", "missing_on_alpaca", "qty_drift"),
+    # ALIAS DEĞİL, İKİ AYRI SORGU EKSENİNİN TEK ATIF ANAHTARINA İNMESİ (TSK-012 dalga-B,
+    # 2026-09-07). `sohbet.ARACLAR["plan_oku"]`ın şeması `anyOf: [required plan_id, required
+    # tarih]`tır: model YA bir plan KİMLİĞİ sorar ("P-2026-09-07-MU neden REVIEW aldı") YA da bir
+    # SEANS TARİHİ ("7 Eylül'de hangi planlar çıktı"). İkisi aynı kavramın iki adı DEĞİLDİR ve
+    # biri diğerinin yedeği hiç değildir — `_arac_plan_oku` gövdesi ikisi için AYRI süzgeç koşar
+    # (`r["id"] == plan_id` vs `r["date"] == tarih`) ve hiçbiri verilmediyse "eşleşme yok" der.
+    # Deseni yakalayan satır yalnızca KAYNAK ANAHTARI üreticisidir: cevabın `kaynaklar` listesine
+    # "hangi veriye bakıldı" diye TEK dizge yazılır ve model hangi ekseni kullandıysa o yazılır.
+    # Envanterdeki `("watchdog.py", "armed", "alpaca_submitted")` ve `("loop.py",
+    # "missing_on_alpaca", "qty_drift")` satırlarıyla AYNI sınıf; tarayıcının deseni
+    # (`X.get(a) or X.get(b)`) bunu bir şema takasından ayırt edemez, ayrım ancak burada YAZILI olur.
+    # İKİSİNİ TEK ALANA İNDİRMEK YASAK: `plan_id` ve `tarih` farklı doğrulama ve farklı kardinalite
+    # taşır (bir satır vs bir seansın tamamı); tek `hedef` alanına indirmek şemayı gevşetir ve
+    # modelin hangi ekseni istediğini SUNUCUNUN TAHMİN ETMESİNİ gerektirirdi (uydurma yasağı).
+    ("sohbet.py", "plan_id", "tarih"),
 }
 
 

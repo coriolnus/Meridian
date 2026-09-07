@@ -111,11 +111,23 @@ def test_every_mutating_endpoint_leaves_a_trace():
         # geçen "`api_halt` → `health.set_halt` deseni" cümlesi yüzünden ALT-DİZE TESADÜFÜYLE
         # geçiyordu (ölçüldü, 2026-08-26). Yani kardeş uç korunmuyordu, susturulmuştu. Kardeşi
         # `reddet` eklenirken tesadüf de kapatıldı: ikisi de artık adıyla beyanlı.
+        # ALARM ACK (TSK-012 dalga-B, 2026-09-07): `/api/alerts/ack` izini KAYBETMEDİ, TAŞIDI.
+        # Gövde `api._alarm_ack_uygula`ya ayrıştırıldı çünkü sohbet önerisinin onay yolu AYNI
+        # icrayı çağırmak zorunda; mantığı uçta bırakıp onay yolunda ikinci bir kopya yazmak
+        # `approvals.jsonl` bloğunun açıkça yasakladığı "ikinci onay/icra yolu" sınıfı olurdu.
+        # `alerts_acked` satırı (kim, kaç grup, hangi ack_ts, hangi `kanal`) o gövdede duruyor ve
+        # ÇAĞIRANI ADIYLA taşıyor — yani iz ZAYIFLAMADI, aksine artık hangi yoldan kapatıldığını
+        # da söylüyor. Uca ikinci bir `obs.log` koymak aynı olayı iki kez yazardı (tek-kaynak).
+        # TOKEN ÇAĞRI BİÇİMİNDE ("...uygula(") YAZILDI, ÇIPLAK AD OLARAK DEĞİL: bu dosyanın
+        # `onayla` vakasında ölçtüğü ALT-DİZE TESADÜFÜ sınıfını kapatır — docstring ve şerhlerde
+        # ad backtick içinde geçiyor (`_alarm_ack_uygula`) ve açık paranteze DEĞMİYOR, yani
+        # yalnız GERÇEK çağrı yerleri muafiyet alır.
         if any(k in b for k in ("secrets_mod.set", "secrets_mod.delete", "reflect_now",
                                 "hermes_runtime.start", "hermes_runtime.stop", "sprint.start",
                                 "sprint.stop", "skill_evolve.", "skills.apply_skill_action",
                                 "alpaca.submit_plan", "health.set_halt", "health.set_learn_halt",
-                                "_loop.operator_onay_ver", "_loop.operator_ret_ver")):
+                                "_loop.operator_onay_ver", "_loop.operator_ret_ver",
+                                "_alarm_ack_uygula(")):
             continue
         silent.append(path)
     assert not silent, f"iz bırakmayan mutasyon ucu: {silent}"

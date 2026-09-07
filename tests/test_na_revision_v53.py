@@ -212,6 +212,22 @@ def test_no_module_writes_another_modules_file():
         "data_quality.json": {"loop.py", "scheduler.py"},
         "strategy.yaml": {"sprint.py"},
         "events.jsonl": {"obs.py"},
+        # İKİ YAZAR, TEK KARAR YOLU (TSK-012 dalga-B, 2026-09-07). `sohbet.py` onay kuyruğuna
+        # `durum: "bekliyor"` bir ÖNERİ satırı ekler; `api.py` operatörün KARAR satırını ekler.
+        # AYNI DEFTER OLMASI TERCİH DEĞİL, SÖZLEŞME: `api.APPROVALS_LEDGER` bloğunun yazılı kararı
+        # "İKİNCİ ONAY YOLU AÇILMAZ" — sohbete ayrı bir öneri defteri vermek, kararı ayrı bir uçtan
+        # aldırmak ya da icrayı orada kopyalamak tam olarak o yasağın ihlali olurdu. Öneri ve karar
+        # tek zaman çizgisinde durur, `GET /api/approvals` gelen kutusu ikisini de aynı yerden okur.
+        # KAYIP-GÜNCELLEME RİSKİ YOK — ve bu, bu listedeki `portfolio.json`/`equity_curve.json`
+        # satırlarından YAPISAL olarak farklı: orada risk oku-değiştir-yaz'dan doğuyordu ve dosya
+        # kilidiyle kapatılmıştı. Burada oku-değiştir-yaz HİÇ YOK: iki yazar da yalnız
+        # `store.append_jsonl` ile SATIR EKLER, hiçbir satırı yerinde düzenlemez ya da silmez
+        # (defterin append-only sözleşmesi `_bekleyen_sohbet_onerileri`nin "ikinci bir durum alanı
+        # güncellenmez" kararında da yazılı). İki eklemenin birbirini ezmesi mümkün değildir.
+        # KİMLİK UZAYLARI AYRIK: sohbet satırları `sohbet.oneri_kimligi` önekini taşır ve
+        # `kaynak: "sohbet"` alanıyla imzalıdır — "hangi satırı kim yazdı" sorusu defterin
+        # KENDİSİNDEN cevaplanır, yazar listesini hatırlamayı gerektirmez.
+        "approvals.jsonl": {"api.py", "sohbet.py"},
     }
     unexpected = {k: sorted(v) for k, v in shared.items() if set(v) != allowed.get(k, set())}
     assert not unexpected, f"beyan edilmemiş ortak yazım (sahiplik belirsiz): {unexpected}"

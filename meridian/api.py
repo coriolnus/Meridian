@@ -6664,6 +6664,23 @@ async def api_sohbet(request: Request):
                                        str(govde.get("oturum") or ""))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    # İZ (korunum çivisi `test_every_mutating_endpoint_leaves_a_trace`): bu uç bir MUTASYONDUR —
+    # her tur `sohbet.jsonl`e bir satır ekler ve öneri yazıldıysa `approvals.jsonl`e de. İzsiz
+    # bırakmak, "bu öneri nereden çıktı / o gün kaç soru soruldu" sorusunu olay zaman çizgisinde
+    # cevapsız bırakırdı; kardeş uç `approval_decision`ın deseni.
+    # KÜNYE YAZILIR, İÇERİK YAZILMAZ. Mesajın ve cevabın METNİ olay defterine GİRMEZ: `events.jsonl`
+    # alarm/bildirim zincirinin de okuduğu ortak yüzeydir ve operatörün serbest metni orada bir
+    # sızıntı yüzeyi olurdu (aynı sebeple sır/jeton hiç geçmez). "Ne soruldu" sorusunun adresi
+    # `GET /api/sohbet` geçmişidir; buradaki iz "ne zaman, hangi oturumda, hangi modelle, ne
+    # büyüklükte" sorusunu cevaplar. Uzunluk ÖLÇÜLÜR (uydurulmaz) ve metnin kendisi değildir.
+    obs.log("sohbet_mesaj", oturum=satir.get("oturum"),
+            mesaj_uzunluk=len(str(satir.get("mesaj") or "")),
+            cevap_uzunluk=len(str(satir.get("cevap") or "")),
+            turlar=len(satir.get("turlar") or []),
+            kaynak_n=len(satir.get("kaynaklar") or []),
+            model=satir.get("model"), sure_s=satir.get("sure_s"),
+            kota_bugun=satir.get("kota_bugun"), oneri_id=satir.get("oneri_id"),
+            sema_disi_n=satir.get("sema_disi_n"), llm_dustu=satir.get("llm_dustu"))
     if satir.get("oneri_id"):
         # YALNIZ ÖNERİ YAZILDIYSA: gelen kutusu sayacı kıpırdadı. Soru-cevap turu teşhis yükünde
         # hiçbir alanı değiştirmez ve zarfı boşuna düşürmek panoyu yavaşlatırdı (yardımcının notu).
