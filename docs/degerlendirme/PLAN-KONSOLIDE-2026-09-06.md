@@ -79,6 +79,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | TSK-013 tick Senaryo-A | ✅ kart YAZILDI (EDG-2026-085); pilot kodu S5 + pencereler sonrası |
 | dormant_setup uyuyan yol | ⏸ "daha detaylı bakalım, şimdilik kalsın" → TSK-175 belgesi YAZILDI (öncül bayat; öneri: kalsın) — karar istendiğinde §4 tablosuyla |
 | §7 düşürme önerileri | ⏸ "daha sonra sor" |
+| **TSK-176 altyapı-kod (Terraform/Ansible)** | ❓ tasarım hazır (docs/TASARIM-ALTYAPI-KOD-2026-09-08.md §8): yön (Ansible dagit içine mi), APISIX→Terraform, state backend (HCP vs OCI S3), faz sırası A0→T1→A1→A2→T2→T3, ölü GCP yolu legacy'ye |
 | TSK-063 INTRADAY_ARM | sorulmadı — kanıt 11/20, dolunca sorulur |
 | B-DELIST-KAYNAK | sorulmadı — EDG-070 ADIM-0 sonucu girdi üretecek |
 | Remote Control | operatör tarafında; bu oturum hâlâ inactive |
