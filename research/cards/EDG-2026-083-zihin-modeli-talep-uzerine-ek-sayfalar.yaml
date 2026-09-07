@@ -126,4 +126,9 @@ olcum_gun1_2026_09_07: >
   (01:1xZ) GÜN-1 SAYIMI (11 sayfa, donuk girdiler 2026-09-07): S1 meridian-bagimlilik-haritasi 45/46 (%98) · S2 meridian-hedef-sapma 30/30 (%100) ·
   S3 meridian-ariza-kok-neden 75/78 (%96) · pilot mm-0fb27056e93d4c45b302cdc6e62abc6a 12/12 (%100) · PK pk-pit-civisi 9/11 (%82) · NK nk-kripto-madencilik 0/0 (—) (atıf yok — beklenen).
   Toplam 449/478 (%94). Kural R4 (EDG-084 adım-1 kaydı) bu karta da uygulanır. Reflect failover zinciri 01:11Z canlı.
+  R4 UYGULANDI (01:5xZ, 20a733c; aynı anlık görüntüler yeniden sayıldı — sonuc_2026-09-07_sabah_r4.json): 11 sayfa 460/478 (%96);
+  S1 46/46 · S2 30/30 · S3 76/78 · pilot 12/12 · PK 9/11 · S4 77/83 · S5 94/96 · S6 61/64 · S7 23/24 · S8 32/34. Kalan doğrulanamayanlar
+  gerçek: fundamentals.csv, /.hermes/config.yaml, scratchpad/roadmap_donusum.py, push_code_a1.sh, v248, PRODUCT.md/DESIGN.md,
+  e842246dcb29e7ad, adapters/fmp.py, skills/.usage.json, birkaç state/ dosyası (çalışma listesinde yok) — 7. gün için sınıflandırma
+  DONDU: bundan sonra kural değişikliği yok, yalnız sayım.
 
