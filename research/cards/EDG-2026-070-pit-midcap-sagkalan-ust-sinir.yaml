@@ -8,7 +8,7 @@
 # ihtimalle şu kadar"), "mid-cap'te de sağ / değil" DEĞİL. Delist-bar kilidi (B-DELIST-KAYNAK) açılırsa yeni kart.
 
 card_id: EDG-2026-070
-status: registered
+status: registered   # 2026-09-07 10:16Z OPERATÖR ONAYI — ONAYLANDI, SIRAYA: ADIM-0 (kapsama ≥40 isim / ≥3 yıl) S5 + haftalık ölçüm pencereleri sonrası A1'de; kod bu onaydan sonra `research/olcumler/edg070_pit_midcap/`
 family: pit_midcap_ust_sinir
 on_kayit: 2026-09-03
 selef: EDG-2026-018

@@ -38,6 +38,7 @@ Toplam **98** kart.
 - **EDG-2026-069** (`registered`) — 
   · kart: `EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml`
 - **EDG-2026-070** (`registered`) — 
+  · HÜKÜM: 2026-09-07 10:16Z OPERATÖR ONAYI — ONAYLANDI, SIRAYA: ADIM-0 (kapsama ≥40 isim / ≥3 yıl) S5 + haftalık ölçüm pencereleri sonrası A1'de; kod bu onaydan sonra…
   · kart: `EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)

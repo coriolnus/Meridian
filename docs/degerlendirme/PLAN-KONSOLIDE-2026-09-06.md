@@ -44,7 +44,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | TSK-162 triyajda recall | bu hafta | disiplin + 2 hafta sayım; kod yok |
 | TSK-020 [UYGULA-3] bars→Parquet | bu ay | tasarım belgesi var (2026-09-06); implementer |
 | TSK-167 pano anlamsal arama | bu ay | EDG-067 sonucu + A1 CPU; küçük ve ölçülebilir |
-| TSK-064 sır yönetimi Faz-0/1A/1B | gelecek hafta | tek dalga; OpenBao operatörde |
+| TSK-064 sır yönetimi Faz-0/1A/1B (+Faz-2 Vault) | gelecek hafta | tek dalga; son basamak KARARLI: HashiCorp Vault, oto-unseal dosya |
 | TSK-137 Ağustos defteri kırpma | Ekim başı | aylık bakım |
 | TSK-132 palet artıkları | bu ay | eski sayfalar jetonlar.css |
 | TSK-012 dalga-B (pano sohbet) | bu ay | icra sırasına alınmalı |
@@ -61,17 +61,24 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | TSK-015/018/010/096/097/104 | tetik olayları (Ajan-B, alarm sınıfı, filo erişimi, trend sorusu, çok-kullanıcı, EXE-011 ilk hafta) |
 | TSK-131 disk | /opt/veri ≥120 G (~09-13) |
 
-## 5. Operatör masası
+## 5. Operatör masası — 2026-09-07 10:12–11:22Z tek tek soruldu (10 karar)
 
 | Kalem | Karar |
 |---|---|
-| ~~TSK-159 S5~~ | ✅ KARAR VERİLDİ 09-07 sabah: A varyantı onaylandı → icra §0 |
-| TSK-060 Hindsight kurulumu | EDG-067 KALDI → sök / yalnız sayfalar için tut / recall'ı taban yaklaşımıyla değiştir — 083/084 hükümleriyle birlikte |
-| TSK-044 / TSK-045 | FINVIZ Elite / FMP plan — para kararı |
-| TSK-063 | INTRADAY_ARM onayı (kanıt dolunca) |
-| TSK-131 | disk 120 G eşiği yaklaşınca |
-| B-DELIST-KAYNAK, PIT mid-cap üst-sınır, B-AJAN-TAVAN, OpenBao | §5 kimlik tablosu, bekliyor |
-| Remote Control | bu oturumun (Meridian App Main) bağlanması — hâlâ inactive; push'lar telefona gitmiyor (dağıtım #24 bildirimi 'requested') |
+| ~~TSK-159 S5~~ | ✅ sabah: A varyantı → icra §0 |
+| TSK-060 Hindsight | ✅ **MELEZ**: sayfalar kalır, recall arama katmanı olmaktan çıkar, arama sqlite-vec (TSK-167); yürürlük 09-13/14 hükümlerine bağlı (KALDI → sök) |
+| TSK-044 FINVIZ Elite | ⏸ BEKLEMEDE (4.) — önce risk-azaltma/tavan kuralları |
+| TSK-045 FMP planı | ⏸ BEKLEMEDE (4.) — insider kanıt göstermeden para yok |
+| EDG-2026-070 mid-cap üst-sınır kartı | ✅ ONAYLANDI, sıraya (ADIM-0 S5 + pencereler sonrası) |
+| TSK-131 disk 120 G | ⏸ eşik günü yeniden sorulacak (bekçi 110 G) |
+| TSK-064 sır yönetimi son basamak | ✅ **HashiCorp Vault** (OpenBao değil), unseal otomatik — anahtar dosyası A1'de; BEKLEMEDE-7 kapandı |
+| B-AJAN-TAVAN | ✅ model kademeli: Sonnet 25 · Opus 10 · Haiku 40 |
+| TSK-013 tick Senaryo-A | ✅ kartı aç, sıraya (Rol-1 kart yazar; pilot pencereler sonrası) |
+| dormant_setup uyuyan yol | ⏸ "daha detaylı bakalım, şimdilik kalsın" → TSK-175 inceleme belgesi |
+| §7 düşürme önerileri | ⏸ "daha sonra sor" |
+| TSK-063 INTRADAY_ARM | sorulmadı — kanıt 11/20, dolunca sorulur |
+| B-DELIST-KAYNAK | sorulmadı — EDG-070 ADIM-0 sonucu girdi üretecek |
+| Remote Control | operatör tarafında; bu oturum hâlâ inactive |
 
 ## 6. Bugün kapananlar (kanıtlı)
 
@@ -80,7 +87,7 @@ TSK-151, TSK-153, TSK-154, TSK-058, TSK-126, TSK-047, TSK-174 (zaten uygulanmı�
 
 **09-07 sabah ilerleyenler (kapanmadı):** TSK-159 S5 Task-1 main'de + dağıtım #24 (uygulama 20:45Z); TSK-138 dilim-1 main'de + dağıtım #25 (ölçüm 22:04Z). Dağıtım sayacı: #23 → #25.
 
-## 7. Düşürme önerileri (karar operatörün — DROPPED yazılmadı)
+## 7. Düşürme önerileri (karar operatörün — DROPPED yazılmadı; 2026-09-07: 'daha sonra sor'; TSK-013 listeden çıktı — Senaryo-A kartı açılıyor)
 
 | Kalem | Gerekçe |
 |---|---|

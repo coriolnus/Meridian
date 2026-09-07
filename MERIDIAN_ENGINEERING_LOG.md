@@ -2948,3 +2948,11 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   ilk gerçek ölçüm 22:04Z brifingi. Olay/gün 716/253/40 → 400 pencere yalnız önceki koşumun olayını okurken dar olabilir, aynı
   koşumda yazılan olay her zaman pencere içinde. Sınıflandırıcı: arka plan dagit + komut gömülü cron reddedildi → ön plan dagit,
   plana işaret eden cron (makul yol).
+- **Kuru koşum SONUCU 10:23Z (85 dk, RC=0)**: n 885→843 (band [800,884], beklenti 842), avg_r 0,0763→0,0754, kazanma %36,3 aynı,
+  pnl$ 20.685→18.503; SIZINTI yeni 0 (eski 95 üye-olmayan); plan 121 düşer / 390 korunur; oos_score 0,3004. KABUL. Rapor repoda
+  (61904e3). KAPI-0 kuru koşumda 'nabız taze + 1 silahlı plan (MU)' — 20:45Z'de ölçülür.
+- **Operatör masası 10:12–11:22Z — 10 karar tek tek soruldu** (AskUserQuestion; sade dil): K1 TSK-060 MELEZ (09-13/14'e bağlı) ·
+  K2 FINVIZ BEKLEMEDE(4) · K3 FMP BEKLEMEDE(4) · K4 EDG-070 ONAY+sıra · K5 disk eşik günü sor · K6 **HashiCorp Vault** (OpenBao değil) +
+  K6b oto-unseal anahtar dosyası A1'de · K7 ajan tavanı MODEL KADEMELİ Sonnet 25/Opus 10/Haiku 40 · K8 TSK-013 Senaryo-A kartı aç ·
+  K9 dormant_setup "daha detaylı bakalım" → TSK-175 · K10 düşürmeler "daha sonra sor". ROADMAP/kart/konsolide plan/hafıza işlendi.
+  Sorulmayanlar: TSK-063 INTRADAY_ARM (kanıt 11/20), B-DELIST-KAYNAK (EDG-070 ADIM-0 girdi verecek).
