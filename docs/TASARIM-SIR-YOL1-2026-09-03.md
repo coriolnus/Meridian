@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-09-03 gece (Rol-1, operatör gece yetkisi; canlıya DOKUNULMADI — belge + envanter).
 **Emsal:** TSK-049 / `deploy/oracle-a1/dash_token_credential.sh` (pano token'ı: rotasyon + `LoadCredential`
-faz-1 canlı, faz-2 uygulama-şartlı). **Üst kayıt:** ROADMAP §4 mimari madde 7 (BEKLEMEDE-7: OpenBao/unseal
+faz-1 canlı, faz-2 uygulama-şartlı). **Üst kayıt:** ROADMAP §4 mimari madde 7 (BEKLEMEDE-7: OpenBao/unseal → 2026-09-07 KARARLI: HashiCorp Vault, §6
 adımı operatörde — bu belge o adımı GEREKTİRMEZ, ondan önceki basamaktır).
 
 ## 1. Envanter (2026-09-03 21:5x UTC, A1; yalnız DEĞİŞKEN ADLARI okundu — değerler hiçbir terminale basılmadı)
@@ -35,7 +35,7 @@ LoadCredential'a geçince vekilin okuma yolu `$CREDENTIALS_DIRECTORY`ye taşınm
 |---|---|---|---|
 | A · systemd-doğal süreçler (meridian, hindsight-api) | EnvironmentFile | **LoadCredential** (sır ortama girmez; `$CREDENTIALS_DIRECTORY/<ad>`) | emsal hazır; uygulama tarafı: `os.environ[...]` → credential dosyası okuyucu (tek yardımcı, iki serviste) |
 | B · docker-sarmalı süreçler (apisix, hindsight-cp) | EnvironmentFile → `docker run -e` | LoadCredential + ExecStart sarmalayıcı (`$CREDENTIALS_DIRECTORY`den okuyup `--env` verir; ortamda yine görünür ama HOST birimi ortamına girmez) | docker'ın kendi secret'ı swarm ister — YOK; yarım kazanım, dürüstçe beyan |
-| C · hermes profil `.env` | HERMES_HOME/.env | DEĞİŞMEZ (hermes env_loader sözleşmesi; TSK-105 ölçümü) | OpenBao (BEKLEMEDE-7) gelince yeniden |
+| C · hermes profil `.env` | HERMES_HOME/.env | DEĞİŞMEZ (hermes env_loader sözleşmesi; TSK-105 ölçümü) | Vault Agent template ile kapsanır (Faz-2, §6.3) — CLI kodu değişmez |
 | D · yapılandırma (sır değil) | EnvironmentFile | KALIR | sır/ayar ayrımı dosya düzeyinde: sır dosyası ayrı, ayar dosyası ayrı (hindsight `.env` 32 → 3 + 29) |
 
 ## 3. Fazlar (her faz kendi canary'si ve geri-alımıyla; hiçbiri bu belgeyle uygulanmaz)

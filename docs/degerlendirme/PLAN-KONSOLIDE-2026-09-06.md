@@ -14,6 +14,8 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Pazartesi seans | 13:30Z açılış | 13:47Z zamanlayıcı: EDG-078 gölge sıralama ilk seans, TSK-156 as_of ilk yazımı, TSK-143 20:32Z sessizlik |
 | Canlı triyaj (03Z+) | bilinen kalemler: `korumasiz_motor_disi_pozisyon` (ROADMAP'te), MECHANISM_STALE (16,6 gün, TSK-102 hükmü), massive/fmp uyarıları; bar uyarıları kendi kuru koşumumdan | yeni kalem yok |
 | Zamanlayıcılar (oturum cron'u) | 13:47Z · 15:27Z · 20:43Z (yalnız hatırlatıcı; prosedür planda) | oturum cron'u güvenilmez → uyanışta `date -u` ile telafi |
+| S5 kuru koşum sonucu (10:23Z) | ✅ KABUL: n 843 (band 800–884), sızıntı 0, avg_r ≈ aynı; rapor repoda (61904e3) | pencere İKİ PARÇA: 20:45Z durdur+yedek → 21:03Z uygula+id yeniden numaralama+başlat (nabız 900 s eşiği) |
+| Operatör kararlarının icrası (11:57–12:5xZ) | ✅ EDG-2026-085 tick pilotu kartı (TSK-013 ACTIVE; ADIM-0 ölçüldü: sembol/gün maks 14, tek bağlantı → q-abonelik) · TSK-175 uyuyan yol belgesi (öncül bayat: 10 plan, VLO işlem, CRM keşif; öneri: kalsın + 2 hijyen) · TSK-064 §6 Vault Faz-2 eki (pinli ikili, file backend, loopback HTTP, Shamir 1/1 0400, ExecStartPost oto-unseal, Vault Agent template) | TSK-013 pilot kodu S5 + 09-13/14 sonrası; Faz-2 ayrı dalga (Faz-0/1 sonrası); uyuyan yol kararı yeniden sorulmaz |
 
 ## 1. Bu gece (uçuşta / zamanlanmış — bildirimli)
 
@@ -73,8 +75,8 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | TSK-131 disk 120 G | ⏸ eşik günü yeniden sorulacak (bekçi 110 G) |
 | TSK-064 sır yönetimi son basamak | ✅ **HashiCorp Vault** (OpenBao değil), unseal otomatik — anahtar dosyası A1'de; BEKLEMEDE-7 kapandı |
 | B-AJAN-TAVAN | ✅ model kademeli: Sonnet 25 · Opus 10 · Haiku 40 |
-| TSK-013 tick Senaryo-A | ✅ kartı aç, sıraya (Rol-1 kart yazar; pilot pencereler sonrası) |
-| dormant_setup uyuyan yol | ⏸ "daha detaylı bakalım, şimdilik kalsın" → TSK-175 inceleme belgesi |
+| TSK-013 tick Senaryo-A | ✅ kart YAZILDI (EDG-2026-085); pilot kodu S5 + pencereler sonrası |
+| dormant_setup uyuyan yol | ⏸ "daha detaylı bakalım, şimdilik kalsın" → TSK-175 belgesi YAZILDI (öncül bayat; öneri: kalsın) — karar istendiğinde §4 tablosuyla |
 | §7 düşürme önerileri | ⏸ "daha sonra sor" |
 | TSK-063 INTRADAY_ARM | sorulmadı — kanıt 11/20, dolunca sorulur |
 | B-DELIST-KAYNAK | sorulmadı — EDG-070 ADIM-0 sonucu girdi üretecek |

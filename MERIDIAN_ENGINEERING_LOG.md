@@ -2956,3 +2956,12 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   K6b oto-unseal anahtar dosyası A1'de · K7 ajan tavanı MODEL KADEMELİ Sonnet 25/Opus 10/Haiku 40 · K8 TSK-013 Senaryo-A kartı aç ·
   K9 dormant_setup "daha detaylı bakalım" → TSK-175 · K10 düşürmeler "daha sonra sor". ROADMAP/kart/konsolide plan/hafıza işlendi.
   Sorulmayanlar: TSK-063 INTRADAY_ARM (kanıt 11/20), B-DELIST-KAYNAK (EDG-070 ADIM-0 girdi verecek).
+- **Kararların icrası 11:57–12:5xZ** (3 salt-okunur ajan + A1 sayımları): (1) `EDG-2026-085` Senaryo-A icra-anı IEX quote kaydı kartı —
+  K=2 (kayıp ≤0,30 · bant-içi ≥0,95) + fizibilite kapıları (disk ≤50 MB/gün türetilmiş · CPU +5pp · healthz p95 +50 ms göreli); ADIM-0
+  ölçüldü: sembol/gün medyan 6 / maks 14 (13 gün), marketstream TEK bağlantı (ikincisi 406) → q-abonelik aynı bağlantıya; isim çakışması
+  (TASARIM-13 A1/A2/A3) beyanlı; TSK-013 ACTIVE. (2) TSK-175 `UYUYAN-KURULUM-INCELEME-2026-09-07.md`: 7 Ağustos öncülü bayat — uyuyan 10,
+  REVIEW 6/NO_GO 3/GO 1, CRM GO keşifle silahlandı, VLO uyuyan planı skill zinciriyle işleme döndü (broker teyidi yok), unexplained 7 hepsi
+  normal; asıl tüketici terfi kapısı (2 terfi). Öneri: kalsın + pano etiketi/plan-seviyeli oran hijyeni; DONE(belge). (3) TSK-064 §6 Vault
+  Faz-2 eki (hükümler: pinli ikili + lisans kapısı, file backend, 127.0.0.1:8200 HTTP, Shamir 1/1 0400, ExecStartPost oto-unseal +
+  VAULT_SEALED bekçi, Vault Agent template → LoadCredential/.env, AppRole secret-id dosyası beyanlı, GCP kanalı Faz-2c'ye kadar).
+  S5 penceresi iki parça (nabız 900 s): 20:45Z durdur+yedek, 21:03Z uygula+id numaralama+başlat; zamanlayıcılar kuruldu.
