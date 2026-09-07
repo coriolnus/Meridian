@@ -281,7 +281,10 @@ def test_OPERATOR_KOSUMU_uctan_uca(tmp_path, sandbox_state, capsys):
     assert not hedef.exists(), "kuru koşum yazdı"
     assert bar_arsivle.main(
         ["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"]) == 0
-    assert (hedef / OCAK / "AAPL.parquet").is_file()
+    # VARSAYILAN yerleşim `sembol` (2026-09-07, A1 S4 ölçümünden sonra): dosya KÖKTEDİR,
+    # ay dizini YOKTUR. Operatörün bayraksız koşumu tam olarak bunu üretir.
+    assert (hedef / "AAPL.parquet").is_file()
+    assert not (hedef / OCAK).exists()
     capsys.readouterr()
 
     for argv in (["--sorgu", "kapsam"], ["--sorgu", "dikis"], ["--sorgu", "bosluk"],

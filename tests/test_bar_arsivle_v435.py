@@ -14,6 +14,12 @@ kapattığı sınıf. Sözleşme yine de KOMUT SATIRIdır: her çivi gerçek `ar
 hiçbir iç fonksiyon taklit edilmez (iki çivi hariç: yazıcıyı bozan mutasyon çivisi ve takvim
 çivisi, ki ikisi de bunu AÇIKÇA yapar).
 
+HER ÇAĞRI `--bolum ay` TAŞIR (2026-09-07, aynı gün içinde): A1'in S4 ölçümü ay/sembol
+bölümlemesini çürüttü (260 sembol × ~273 ay ≈ 70 bin dosya, 134 MB) ve VARSAYILAN yerleşim
+`sembol`e alındı. Bu dosya AY yerleşiminin çivi kümesidir ve öyle KALIR — bayrak eklendi ki
+ölçtüğü şey değişmesin. Varsayılanın kendisini ve öteki iki yerleşimi
+`tests/test_bar_arsivle_bolum_v442.py` çiviler.
+
 NEYİ ÇİVİLER (sınıf sınıf):
   1. VARSAYILAN KURU — `--uygula` verilmedikçe hedef dizine 1 BAYT yazılmaz (manifest dahil).
   2. ŞEMA DONUK VE TİPLİ — date DATE · o/h/l/c DOUBLE · volume BIGINT · kaynak VARCHAR ·
@@ -111,7 +117,7 @@ def _manifest(hedef):
 # ---------------------------------------------------------------------------------------------
 
 def test_KURU_kosum_HICBIR_BAYT_yazmaz(sandbox_state, kaynak, hedef, capsys):
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef)])
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay"])
     cikti = capsys.readouterr().out
     assert rc == 0, cikti
     assert not hedef.exists(), f"kuru koşum hedef dizini YARATTI: {_dosyalar(hedef)}"
@@ -121,7 +127,7 @@ def test_KURU_kosum_HICBIR_BAYT_yazmaz(sandbox_state, kaynak, hedef, capsys):
 
 def test_KURU_kosum_manifest_YAZMAZ(sandbox_state, kaynak, hedef):
     hedef.mkdir(parents=True)
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef)])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay"])
     assert _dosyalar(hedef) == [], "kuru koşum dosya bıraktı"
 
 
@@ -130,7 +136,8 @@ def test_KURU_kosum_manifest_YAZMAZ(sandbox_state, kaynak, hedef):
 # ---------------------------------------------------------------------------------------------
 
 def test_UYGULA_ay_sembol_bolumlemesi_yazar(sandbox_state, kaynak, hedef):
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                           "--bolum", "ay", "--uygula"])
     assert rc == 0
     assert _dosyalar(hedef) == [
         "2024-01/AAPL.parquet", "2024-01/MSFT.parquet", "2024-02/AAPL.parquet",
@@ -139,7 +146,8 @@ def test_UYGULA_ay_sembol_bolumlemesi_yazar(sandbox_state, kaynak, hedef):
 
 
 def test_SEMA_donuk_ve_tipli(sandbox_state, kaynak, hedef):
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
     con = duckdb.connect()
     try:
         sema = con.execute(
@@ -155,14 +163,16 @@ def test_SEMA_donuk_ve_tipli(sandbox_state, kaynak, hedef):
 
 
 def test_CSVde_OLMAYAN_sutun_UYDURULMAZ_NULL_kalir(sandbox_state, kaynak, hedef):
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
     satirlar = _oku(hedef / OCAK / "AAPL.parquet")
     assert len(satirlar) == 5
     assert all(s[6] is None and s[7] is None for s in satirlar), satirlar
 
 
 def test_EKSIK_SUTUN_beyani_manifestte(sandbox_state, kaynak, hedef):
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
     m = _manifest(hedef)
     assert m["eksik_sutunlar"]["AAPL"] == ["ayarlama_olcegi", "kaynak"]
     assert m["eksik_sutunlar"]["MSFT"] == ["ayarlama_olcegi", "kaynak"]
@@ -184,7 +194,7 @@ def test_SATIR_FARKINDA_rc5_ve_dosya_YERINE_KONMAZ(sandbox_state, kaynak, hedef,
         return gercek(con, df.iloc[:-1], hedef_dosya)      # bir satır DÜŞÜR
 
     monkeypatch.setattr(bar_arsivle, "_parquet_yaz", _eksik_yaz)
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay",
                            "--sembol", "AAPL", "--ay", OCAK, "--uygula"])
     hata = capsys.readouterr().err
     assert rc == 5, hata
@@ -211,7 +221,7 @@ def test_SATIR_SAYISI_kontrolu_TEK_BASINA_tasiyicidir(sandbox_state, kaynak, hed
         return gercek(con, pd.concat([df, ek], ignore_index=True), hedef_dosya)
 
     monkeypatch.setattr(bar_arsivle, "_parquet_yaz", _tekrarli_yaz)
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay",
                            "--sembol", "AAPL", "--ay", OCAK, "--uygula"])
     hata = capsys.readouterr().err
     assert rc == 5, hata
@@ -224,10 +234,12 @@ def test_SATIR_SAYISI_kontrolu_TEK_BASINA_tasiyicidir(sandbox_state, kaynak, hed
 # ---------------------------------------------------------------------------------------------
 
 def test_IKINCI_kosum_atlandi(sandbox_state, kaynak, hedef, capsys):
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
     capsys.readouterr()
     once = {p: p.stat().st_mtime_ns for p in hedef.rglob("*.parquet")}
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                           "--bolum", "ay", "--uygula"])
     cikti = capsys.readouterr().out
     assert rc == 0
     assert cikti.count("atlandı") == 3, cikti
@@ -235,9 +247,10 @@ def test_IKINCI_kosum_atlandi(sandbox_state, kaynak, hedef, capsys):
 
 
 def test_ZORLA_yeniden_yazar(sandbox_state, kaynak, hedef, capsys):
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
     capsys.readouterr()
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay",
                            "--uygula", "--zorla"])
     cikti = capsys.readouterr().out
     assert rc == 0
@@ -247,10 +260,11 @@ def test_ZORLA_yeniden_yazar(sandbox_state, kaynak, hedef, capsys):
 def test_KAYNAK_CSV_degisince_ATLANMAZ(sandbox_state, kaynak, hedef, capsys):
     """Manifest damgası yalnız dosyanın kendisini değil ÖLÇÜMÜ de taşır: CSV'ye satır eklenince
     ikinci koşum "atlandı" DEMEZ (yoksa arşiv sessizce bayatlardı)."""
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
     capsys.readouterr()
     _csv_yaz(kaynak, "msft.csv", _seanslar(OCAK, 5), baslangic=300.0)
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay",
                            "--sembol", "MSFT", "--uygula"])
     cikti = capsys.readouterr().out
     assert rc == 0
@@ -265,7 +279,8 @@ def test_KAYNAK_CSV_degisince_ATLANMAZ(sandbox_state, kaynak, hedef, capsys):
 def test_CSV_dokunulmaz(sandbox_state, kaynak, hedef):
     once = {p.name: (hashlib.sha256(p.read_bytes()).hexdigest(), p.stat().st_mtime_ns)
             for p in sorted(kaynak.glob("*.csv"))}
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
     sonra = {p.name: (hashlib.sha256(p.read_bytes()).hexdigest(), p.stat().st_mtime_ns)
              for p in sorted(kaynak.glob("*.csv"))}
     assert sonra == once
@@ -288,7 +303,8 @@ def test_ARSIVE_giren_satir_SANITIZE_ciktisidir(sandbox_state, tmp_path, hedef):
     satirlar.append(f"{g[4]},,,,,999")                                  # NaN fiyat
     (d / "aapl.csv").write_text("\n".join(satirlar) + "\n", encoding="utf-8")
 
-    rc = bar_arsivle.main(["--kaynak-dizin", str(d), "--hedef", str(hedef), "--uygula"])
+    rc = bar_arsivle.main(["--kaynak-dizin", str(d), "--hedef", str(hedef),
+                           "--bolum", "ay", "--uygula"])
     assert rc == 0
     ham = pd.read_csv(d / "aapl.csv")
     assert len(ham) == 7
@@ -300,7 +316,8 @@ def test_ARSIVE_giren_satir_SANITIZE_ciktisidir(sandbox_state, tmp_path, hedef):
 # ---------------------------------------------------------------------------------------------
 
 def test_MANIFEST_semasi_ve_sha256_diskle_esit(sandbox_state, kaynak, hedef):
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
     m = _manifest(hedef)
     assert set(m) >= {"uretim", "eksik_sutunlar", "semboller"}
     assert m["uretim"]["arac"] == "ops/bar_arsivle.py"
@@ -313,8 +330,9 @@ def test_MANIFEST_semasi_ve_sha256_diskle_esit(sandbox_state, kaynak, hedef):
 
 
 def test_MANIFEST_var_olan_sembolu_KORUR(sandbox_state, kaynak, hedef):
-    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--uygula"])
     bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                      "--bolum", "ay", "--uygula"])
+    bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay",
                       "--sembol", "MSFT", "--uygula", "--zorla"])
     m = _manifest(hedef)
     assert set(m["semboller"]) == {"AAPL", "MSFT"}, "tek sembollü koşum manifesti EZDİ"
@@ -325,7 +343,8 @@ def test_MANIFEST_var_olan_sembolu_KORUR(sandbox_state, kaynak, hedef):
 # ---------------------------------------------------------------------------------------------
 
 def test_GIRDI_YOK_rc1(sandbox_state, tmp_path, hedef, capsys):
-    rc = bar_arsivle.main(["--kaynak-dizin", str(tmp_path / "yok"), "--hedef", str(hedef)])
+    rc = bar_arsivle.main(["--kaynak-dizin", str(tmp_path / "yok"), "--hedef", str(hedef),
+                           "--bolum", "ay"])
     assert rc == 1
     assert "bulunamadı" in capsys.readouterr().err
 
@@ -333,33 +352,35 @@ def test_GIRDI_YOK_rc1(sandbox_state, tmp_path, hedef, capsys):
 def test_BOS_DIZIN_rc1(sandbox_state, tmp_path, hedef, capsys):
     bos = tmp_path / "bos"
     bos.mkdir()
-    rc = bar_arsivle.main(["--kaynak-dizin", str(bos), "--hedef", str(hedef)])
+    rc = bar_arsivle.main(["--kaynak-dizin", str(bos), "--hedef", str(hedef), "--bolum", "ay"])
     assert rc == 1
     assert "csv" in capsys.readouterr().err.lower()
 
 
 def test_BOZUK_AY_bicimi_rc2(sandbox_state, kaynak, hedef, capsys):
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--ay", "2024/1"])
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                           "--bolum", "ay", "--ay", "2024/1"])
     assert rc == 2
     assert "AAAA-AA" in capsys.readouterr().err
 
 
 def test_BILINMEYEN_SEMBOL_rc1(sandbox_state, kaynak, hedef, capsys):
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay",
                            "--sembol", "ZZZZ"])
     assert rc == 1
     assert "ZZZZ" in capsys.readouterr().err
 
 
 def test_SEMBOL_ve_AY_suzgeci(sandbox_state, kaynak, hedef):
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--bolum", "ay",
                            "--sembol", "AAPL", "--ay", SUBAT, "--uygula"])
     assert rc == 0
     assert _dosyalar(hedef) == ["2024-02/AAPL.parquet", bar_arsivle.MANIFEST_ADI]
 
 
 def test_JSON_kipi_satir_JSON_basar(sandbox_state, kaynak, hedef, capsys):
-    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef), "--json"])
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                           "--bolum", "ay", "--json"])
     cikti = capsys.readouterr().out.strip().splitlines()
     assert rc == 0 and len(cikti) == 3
     kayitlar = [json.loads(s) for s in cikti]
@@ -371,6 +392,6 @@ def test_VARSAYILAN_dizinler_configten_turer(sandbox_state, capsys):
     """`--kaynak-dizin`/`--hedef` verilmezse yollar `config.BARS`/`config.STATE`ten TÜRER
     (kopya sabit yazılsaydı sandbox yaması onları ıskalardı — ve canlıda iki kaynak ayrışırdı)."""
     _csv_yaz(sandbox_state / "bars", "aapl.csv", _seanslar(OCAK, 3))
-    rc = bar_arsivle.main(["--uygula"])
+    rc = bar_arsivle.main(["--bolum", "ay", "--uygula"])
     assert rc == 0, capsys.readouterr().err
     assert (sandbox_state / "barlar" / OCAK / "AAPL.parquet").exists()
