@@ -2969,3 +2969,8 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   yerel+A1'de YOK → DuckDB COPY), implementer (opus, worktree) Task 1+2: `ops/bar_arsivle.py` + `ops/bar_sorgu.py` + v435/v436 (43 çivi, 5/5
   mutasyon); merge 67b86f4, kapsam 258 passed / FAILED 0. Beyanlı kaygılar ROADMAP notunda. Dağıtım #26 ve A1 ilk arşiv (S4) S5 penceresi
   sonrasına — seans içinde worker restart edilmez.
+- **EDG-085 ADIM-0 (3) + TSK-132 dilim-1 + TSK-162 (13:5x–14:3xZ)**: taban örnekleyici (`research/olcumler/edg085_icra_ani_quote/taban_orneklem.sh`
+  + `deploy/oracle-a1/meridian-edg085-taban.{service,timer}`, takvim ifadesi A1'de `systemd-analyze calendar` ile doğrulandı, ilk deneme
+  `13..19:*/5` sözdizimi reddedildi → `13..19:00/5`); TSK-132 dilim-1 implementer (opus, worktree) → merge 5e22383, **suite #32** 10813 passed /
+  0 FAILED / exit 0 / HEAD eşit (11 dk, -n 4) — öncül çürüdü: sayfalar zaten tokens ile birebirdi, dilim saf mekanikleştirme; TSK-162 sayımı
+  başladı (2 recall). Dağıtım #26 (ops/ + web/ + birimler) S5 penceresi SONRASI.
