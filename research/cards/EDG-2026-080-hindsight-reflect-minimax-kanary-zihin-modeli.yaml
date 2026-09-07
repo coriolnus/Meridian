@@ -118,3 +118,8 @@ kosum_notu_k2_gun1_2026_09_07: >
   09-06 16:11Z sonrası 55 pending olgu var). Dünkü 3 başarısız op (429, m3 tavanı) ve silinmiş modelin 'not found' op'u failed olarak
   duruyor — sayıma girmez (kill#3 'refresh op > 14' sayımı yalnız pilot modelin op'larını sayar).
 
+kosum_notu_k2_gun1_tazeleme: >
+  2026-09-07 15:20:57Z (Rol-1 ölçümü A1 llm_requests/mental_models, 16:30Z): min_refresh_interval ertelemesi sonrası tazeleme KOŞTU —
+  refresh_mental_model 3 çağrı (2,0 s/150 tok · 6,7 s/241 tok · 13,5 s/2.829 tok) + mental_model_delta_ops 1 çağrı (31,8 s/4.387 tok),
+  hepsi minimax/minimax-m3:free success; toplam ≈54 s LLM, ≈7,6k çıktı jetonu; sayfa last_refreshed_at 15:24:08Z. Gün-1 kaydı: model
+  kolonu m3 (zincir yedeğe düşmedi), 429/hata 0. Uydurma sayımı 7. gün (09-13) sayfa anlık görüntüsüyle (kurallar dondu, R4).
