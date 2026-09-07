@@ -4,16 +4,27 @@ Kaynak: 52 açık TSK + 9 aktif cephe + §5 operatör masası + 12 aktif kart, 2
 hafıza sayfaları (S1 bağımlılık, S2 hedef-sapma) ipucu olarak kullanıldı, kanıt olarak DEĞİL (13/22 iddia bayat çıktı). Hüküm Rol-1'in;
 DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; o anki sırayı ve kapıları tek sayfada verir.
 
+## 0. Güncelleme — 2026-09-07 sabah (09:5xZ, Rol-1)
+
+| Kalem | Durum | Kapı / sonraki adım |
+|---|---|---|
+| TSK-159 S5 tohum değişimi (A) | ✅ OPERATÖR ONAYI (sabah) → plan 9764130 · Task-1 `ops/tohum_pit_yenile.py` + v433 main'de (030d6d1) · **dağıtım #24** 75a0d1f 08:27Z · ruling 1-6 (kaynak=replay_seed kalır, sv=91, arşiv, eğri dokunulmaz, store kapısı, **bitiş = eski tohum sınırı 2026-07-24** — canlı dönemle örtüşmez) | A1 kuru koşum 08:58Z'den beri (Monitor) → rapor kabul bandı n∈[800,884], sızıntı 0 → rapor **scp+commit** (dagit `--delete` siler) → **20:45Z pencere**: worker stop → DB yedek → `--uygula` → `trade_id_yeniden_numarala` (canlı T00096… korunur) → start/healthz → ROADMAP/kart/günlük |
+| TSK-138 brifing denetçisi (dilim-1 teşhis) | ✅ main'de (9894456) ve **dağıtım #25** 23b0904 09:31Z: olaya `model` künyesi + `cevap_bas` (süzgeçli 200 kr); v434 22 çivi 11/11 mutasyon | ilk gerçek ölçüm **22:04Z** brifingi → hipotez (SOUL "SESSIZ" ↔ JSON) doğrulanırsa dilim-2 (istem sertleştirme / ayrı denetçi profili); künye 'istenen model'dir, 'cevaplayan' değil (kapı sabitliyor) |
+| EDG-080 K2 pilot gün-1 | 05:00Z cron → min_refresh_interval ile **15:20:57Z**'ye ertelendi (op 13edb4ee pending) | 15:27Z zamanlayıcı: llm_requests/mental_models kontrolü → kart kaydı |
+| Pazartesi seans | 13:30Z açılış | 13:47Z zamanlayıcı: EDG-078 gölge sıralama ilk seans, TSK-156 as_of ilk yazımı, TSK-143 20:32Z sessizlik |
+| Canlı triyaj (03Z+) | bilinen kalemler: `korumasiz_motor_disi_pozisyon` (ROADMAP'te), MECHANISM_STALE (16,6 gün, TSK-102 hükmü), massive/fmp uyarıları; bar uyarıları kendi kuru koşumumdan | yeni kalem yok |
+| Zamanlayıcılar (oturum cron'u) | 13:47Z · 15:27Z · 20:43Z (yalnız hatırlatıcı; prosedür planda) | oturum cron'u güvenilmez → uyanışta `date -u` ile telafi |
+
 ## 1. Bu gece (uçuşta / zamanlanmış — bildirimli)
 
 | Kalem | Durum | Kapı / sonraki adım |
 |---|---|---|
 | EDG-067 kıyas → TSK-060 hükmü | ✅ HÜKÜM 22:4xZ: KALDI (bölüm@3 %0 vs %27,8; dosya@3 %13,9 vs %55,6; p50 44 s vs 0,6 s) | TSK-060 OPERATOR: sökme kararı 083/084 hükümleriyle (09-13/14); TSK-163 recall temelinde açılmaz; TSK-167 sqlite-vec |
 | TSK-172 + TSK-173(a) | ✅ CANLIDA — dağıtım #23 471c8bf 20:57Z (suite #31 10686/1 → RUNBOOK+korpus yeniden üretildi) | kapandı |
-| 22:04Z akşam brifingi | zamanlı | TSK-138 + TSK-014 doğrulaması (events.jsonl kayıtları) |
+| 22:04Z akşam brifingi (06) | ✅ teslim; denetçi 2/2 şema dışı → llm_dustu, HAM teslim (model/cevap ölçülemedi) | → TSK-138 dilim-1 enstrümanı canlıda (#25); 07 akşamı ilk ölçüm |
 | 00:05Z araç sondası | ✅ nemotron-super/ultra + m2.7 tool_calls; gemma 429 | ✅ reflect yedek zinciri 01:11Z canlı (m3→m2.7→nemotron-super) |
 | 00:10Z S3/PK/NK · 00:45Z S4–S8 | ✅ 00:17Z / 01:10Z, 8/8 içerik, 120–561 s | ✅ 11 sayfa gün-1 sayımı 449/478 (%94), PK/NK geçti; R4 kuralı 7. gün için kayıtlı |
-| 03:00Z ingest r5 · 03:30Z yedek · 05:00Z pilot cron | ✅ r5 04:15Z ok 4 / kalıcı 4 (TSK-144 DONE) · yedek rc=0 · pilot cron izlemede | sabah: pilot gün-1 kaydı |
+| 03:00Z ingest r5 · 03:30Z yedek · 05:00Z pilot cron | ✅ r5 04:15Z ok 4 / kalıcı 4 (TSK-144 DONE) · yedek rc=0 · pilot cron tetikledi, tazeleme 15:20Z'ye ertelendi (semantik) | 15:27Z kontrol (§0) |
 
 ## 2. Hafta — ölçüm pencereleri (dokunulmaz)
 
@@ -23,7 +34,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | EDG-083 üç sayfa (TSK-160) · EDG-084 beş sayfa (TSK-171) | 09-13 · 09-14 | uydurma + gerçek kullanım + bayatlık; toplam minimax ≤55/gün |
 | EDG-081 konsolidasyon zinciri (TSK-157) | ~09-12/20 | konsolidasyon m3'ten 27 çağrı yedi — kill#5 gözlemi |
 | EDG-078 gölge sıralama (TSK-126→078) | 40 seans, ~11-03 | ilk seans 09-08 |
-| TSK-156 as_of ilk yazımı · TSK-143 sessizlik · EXE-003 20 seans | Pazartesi | |
+| TSK-156 as_of ilk yazımı · TSK-143 sessizlik · EXE-003 20 seans | Pazartesi (BUGÜN 09-07) | 13:47Z zamanlayıcı; S5 penceresi seans DIŞI (20:45Z) |
 | EDG-042 haftalık koşum #5 (PRG-01 23b, B4) | 09-12 | dört kova eşik altı; sıradaki koşum |
 
 ## 3. Sırada (kapı açık, Rol-1)
@@ -44,7 +55,7 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Kalem | Tetik |
 |---|---|
 | TSK-161/163/164/165/166/168/169 (hafıza genişlemeleri) | EDG-083 hükmü GEÇTİ (09-13); 163 ayrıca EDG-067 |
-| TSK-066/067/068 (⑥ sinyal serisi) | TSK-159 S5 + EDG-069 hükmü (kod KOVA C sırasında) |
+| TSK-066/067/068 (⑥ sinyal serisi) | TSK-159 S5 (bugün 20:45Z uygulanıyor) + EDG-069 hükmü (kod KOVA C sırasında) |
 | TSK-016/093 (skill öz-iyileştirme, karışık üretici) | EDG-019 kill#4 + EDG-063 ölçümü |
 | TSK-043/063 (Faz-6 kilitleri) | kanıt 11/20 + INTRADAY_ARM operatör onayı |
 | TSK-015/018/010/096/097/104 | tetik olayları (Ajan-B, alarm sınıfı, filo erişimi, trend sorusu, çok-kullanıcı, EXE-011 ilk hafta) |
@@ -54,18 +65,20 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 
 | Kalem | Karar |
 |---|---|
-| TSK-159 S5 | tohum değişimi (A varyantı önerilen), bakım penceresi |
+| ~~TSK-159 S5~~ | ✅ KARAR VERİLDİ 09-07 sabah: A varyantı onaylandı → icra §0 |
 | TSK-060 Hindsight kurulumu | EDG-067 KALDI → sök / yalnız sayfalar için tut / recall'ı taban yaklaşımıyla değiştir — 083/084 hükümleriyle birlikte |
 | TSK-044 / TSK-045 | FINVIZ Elite / FMP plan — para kararı |
 | TSK-063 | INTRADAY_ARM onayı (kanıt dolunca) |
 | TSK-131 | disk 120 G eşiği yaklaşınca |
 | B-DELIST-KAYNAK, PIT mid-cap üst-sınır, B-AJAN-TAVAN, OpenBao | §5 kimlik tablosu, bekliyor |
-| Remote Control | bu oturumun (Meridian App Main) bağlanması |
+| Remote Control | bu oturumun (Meridian App Main) bağlanması — hâlâ inactive; push'lar telefona gitmiyor (dağıtım #24 bildirimi 'requested') |
 
 ## 6. Bugün kapananlar (kanıtlı)
 
 TSK-151, TSK-153, TSK-154, TSK-058, TSK-126, TSK-047, TSK-174 (zaten uygulanmış), TSK-172, TSK-173 (dağıtım #23); §6 EDG-071 (KISMİ→GEÇTİ notlu), EDG-072 (KALDI), EDG-079 (KALDI, icrası TSK-159);
 §5 B-QC-LOGIN, B-AJAN-GIT ✅; cepheler PRG-06 🟢, PRG-07/09 🔶; PRG-05 gövdesinde 13, PRG-02'de 3, PRG-08'de 2, PRG-09'da 3 madde tarihçe.
+
+**09-07 sabah ilerleyenler (kapanmadı):** TSK-159 S5 Task-1 main'de + dağıtım #24 (uygulama 20:45Z); TSK-138 dilim-1 main'de + dağıtım #25 (ölçüm 22:04Z). Dağıtım sayacı: #23 → #25.
 
 ## 7. Düşürme önerileri (karar operatörün — DROPPED yazılmadı)
 
@@ -81,3 +94,4 @@ TSK-151, TSK-153, TSK-154, TSK-058, TSK-126, TSK-047, TSK-174 (zaten uygulanmı�
 
 minimax 100/gün üç kart arasında (tavan 55); A1 4 OCPU — reflect/kıyas/geri dolum sıralı; hafıza bayatlığı — sayfa okuması ölçülenle doğrulanır (CLAUDE.md §2 kapısı);
 ssh izleyicileri kopuyor — kısa yoklama deseni; bugünkü okuma hataları (yorum≠kod, kimlik deposu) hafızada.
+YENİ (09-07): dagit rsync `--delete` A1'deki repo-dışı ölçüm çıktısını siler (S5 raporu önce scp+commit); sef brifingi kuru koşumu >300 s (model+denetçi çağrıları) — A1'de `timeout` ile koşulmaz, yetim hermes bırakır; oto-mod sınıflandırıcısı arka plan dagit'i ve komut gömülü cron'u reddediyor (ön plan / plana işaret eden cron).
