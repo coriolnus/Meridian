@@ -1,0 +1,28 @@
+# meridian-edg085-taban.service — EDG-2026-085 ADIM-0 (3) pilot-öncesi taban örneklemi (tek atım; timer tetikler).
+# Ne yapar: research/olcumler/edg085_icra_ani_quote/taban_orneklem.sh — motor CPU payı (10 sn), /healthz p50/maks,
+# load1, state/ bayt → /opt/veri/olcum/edg085/taban.jsonl (repo DIŞI; dagit --delete'ten korunur). Yalnız OKUR
+# (/proc, curl, du) ve tek dosyaya ekler; canlı state/'e yazmaz. Okuyucu: kartın fizibilite-2 eşik türetimi (Rol-1).
+# Süre: ≈12 sn (10 sn CPU penceresi + 5 curl). Kurulum günü elle test-ateşlenir (CLAUDE.md §9: "kurulu ≠ çalışır").
+[Unit]
+Description=Meridian EDG-085 taban örneklemi (CPU/healthz/disk, seans içi 5 dk)
+After=meridian.service
+# Requires DEĞİL: worker durmuşken de örnek alınır (cpu_pct null + neden) — "worker yoktu" bilgisi de taban verisidir.
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/meridian
+ExecStart=/usr/bin/bash /opt/meridian/research/olcumler/edg085_icra_ani_quote/taban_orneklem.sh
+TimeoutStartSec=60
+# H3 sertleştirme (meridian-karne.service emsali; loopback curl için AF_INET gerekli)
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/veri/olcum
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service
+# /proc/<pid>/stat okuması için ProtectProc kapalı bırakıldı (varsayılan) — motor süreci başka kullanıcı (ubuntu aynı).

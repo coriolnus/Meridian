@@ -1,0 +1,23 @@
+# meridian-edg085-taban.timer — EDG-2026-085 ADIM-0 (3) taban örneklemi: hafta içi, seans penceresi, 5 dk'da bir.
+#
+# SLOT: Pzt–Cum 13:25–20:05 UTC (NYSE 13:30–20:00 UTC EDT; EST'de 14:30–21:00 — kart penceresi kurulum gününde
+# `timedatectl` + takvimle doğrulanır, DST geçişinde satır GENİŞLETİLİR, daraltılmaz: seans dışı örnek "boş seans
+# tabanı" olarak ayrıca değerlidir). 5 dk: kartın fizibilite eşiği göreli (ADIM-0 tabanına delta) — daha sık örnek
+# taban dağılımını daraltmaz, yalnız dosya büyütür (12 sn × 80 örnek/gün ≈ 16 dk CPU/gün, ihmal edilebilir).
+# Persistent=false — kaçan örnek telafi EDİLMEZ: seans dışına düşen telafi örneği taban dağılımını kirletir
+# (Bedel yasası: kaçan 5 dk'lık bir nokta, yanlış saate düşmüş bir noktadan ucuzdur).
+# FixedRandomDelay — dagit daemon-reload'u rastgele payı yeniden çekmesin (TSK-152, meridian-backup.timer gerekçesi).
+[Unit]
+Description=Meridian EDG-085 taban örneklemi tetiği (hafta içi seans, 5 dk)
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 13..19:*/5:00 UTC
+OnCalendar=Mon..Fri *-*-* 20:00,05:00 UTC
+OnCalendar=Mon..Fri *-*-* 13:25:00 UTC
+Persistent=false
+RandomizedDelaySec=20
+FixedRandomDelay=true
+AccuracySec=15
+
+[Install]
+WantedBy=timers.target

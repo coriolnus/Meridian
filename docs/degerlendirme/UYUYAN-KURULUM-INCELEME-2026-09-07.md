@@ -91,6 +91,9 @@ kuraklığın nedeni bütçe değil, GO'nun nadirliği + REVIEW onayının hiç 
 - **Durum: olduğu gibi kalsın** — 7 Ağustos'un gerekçesi (arkadan bağsız, açıklanamayan 14) bugün ölçülemiyor; yol, kurulum terfi kapısını
   besliyor ve o kapı kanıtla çalıştı. (a) için terfi eşiği zaten var (30 karşı-olgusal işlem + avg_r), kart-önce o kapının kendisidir;
   (c) terfi mekanizmasını öldürür.
+- Düzeltme 13:5xZ (kod okundu): pano Muhafaza raporu satırı `açıklanamayan N · uyuyan-kurulum K` ile PLAN-seviyeli paydayı ZATEN basıyor ve
+  "Uyuyan kurulumlar · silahlanma ölçümü" başlığı kurulum-seviyeli olduğunu söylüyor → hijyen-(i) daralır: yalnız "uyuyan → işleme dönen n"
+  sayısı eksik (watchdog alanı + pano; motor dosyası → tam suite). Değeri düşük; TSK-175 kapsamından çıkarıldı, istenirse ayrı kalem.
 - **İki hijyen işi (S, otonom uygulanabilir, sermaye etkisi yok):** (i) pano kartı etiketini "kurulum terfi oranı" yap, plan-seviyeli
   "uyuyan: işleme dönen / toplam" satırını payda-beyanlı ekle (KORUNUM-KOK §4-3 harfi); (ii) `conservation_report`'ta uyuyan kovasının
   okuyucusu var (rapor alanı) — bilgi olayı yalnız ihlalde yazılıyor, bu tasarım gereği; not düşülür, değişiklik yok.
