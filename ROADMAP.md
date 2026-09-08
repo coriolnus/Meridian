@@ -3059,37 +3059,20 @@ masa kalemleri İCRA SIRASI'na alındı — dizin satırları yerinde, icra işa
 önüne `**[B-…]**` kondu; aynı konu §5'te birden çok konumda yaşıyorsa — kova bloğu + numaralı
 envanter — hepsi AYNI kimliği taşır. Kimlikler kalıcıdır; blok kapansa da kimlik yeniden kullanılmaz.):**
 
+> Kapanmış 19 kimlik satırı 2026-09-08'de §8'e taşındı (arşiv alt bölümü: `§5 OPERATÖR BLOKLARINDAN ARŞİVE — kapanmış kararlar (taşındı 2026-09-08; tam metin korunur, SİLME YOK)` → "A · KİMLİK TABLOSU KAPANIŞLARI"). Kalan satırlar (AÇIK/kararsız) burada duruyor; başlık satırı korunur.
+
 | kimlik | tek-cümle konu | beklediği şey (karar/anahtar/pencere) |
 |---|---|---|
-| ✅ KAPALI · `B-RUNBOOK-KAPSAM` | RUNBOOK üreticisinin onaylı betik kümesine `dagit.sh` eklensin mi (sürüm-terfisi sözleşmesi belgeye girsin diye; emsal: seçenek-C genişlemesi operatör onaylıydı) | operatör kararı (evet/hayır — tek satır BETIK_KUMESI değişikliği) |
-| ✅ KAPALI · `B-PENCERE-KAYDIR` | canlı tarama/emir penceresinin ~13:45 UTC'ye kaydırılması (23e; `EDG-2026-047` Ö1 ateşledi: risk −%42, bedel medyan +4,65 bps) | operatör kararı — strateji-kimliği değişikliği; EVET derse kart-önce uygulanır |
-| ✅ KAPALI · `B-CHOP-BUTCE` | chop bütçe-kapalılığı: kasıtlı politika mı (A) yan etki mi (B) — brief `docs/KARAR-BRIEF-CHOP-BUTCE-2026-08-22.md`; Rol-1 tavsiyesi: üçüncü yol (@chop üretimini kes + 'chop tabanı kartıyla açılır' notu) | operatör kararı (A / B / üçüncü yol) |
-| ✅ KAPALI · `B-KORUMA-KUR` | çıplak motor pozisyonlarının korumasının panodan `koruma_kur` ile yeniden kurulması (KOVA-1/A1) | operatör icrası (tek oturum) — tahta 2026-08-22: ölçümle kapandı (korumasız 0/7), blok tarihçe |
-| ✅ KAPALI · `B-BILDIRIM-N1` | Telegram/webhook bildirim kanalı kimliği (KOVA-1/A2 · envanter-2 · OB-1) | kanal anahtarı — ✅ kapandı 2026-08-22, Telegram canlı |
-| ✅ KAPALI · `B-PULLBACK-SILAH` | pullback ailesi `ARMED_SETUPS`ten çıksın mı (KOVA-2/B1) | karar — ✅ verildi 2026-08-22 (A: silahsızlandırıldı); dağıtım 043 sonrası suite'le |
-| ✅ KAPALI · `B-KORUMA-POLITIKA` | koruma yeniden-kurulumunun kalıcı politikası (KOVA-2/B2) | karar — ✅ verildi 2026-08-17 (c); teslim bacağı `B-BILDIRIM-N1` |
-| ✅ KAPALI · `B-E1-LIMIT` | E1 limit bacağı canlıda açılsın mı (KOVA-2/B4) | karar — ✅ verildi 2026-08-22 (A+C: kapalı kalır); açık argüman `EDG-2026-043`te |
-| ✅ KAPALI · `B-FAZ6-HUKUM` | Faz-6 `sonuc_hukmu` yapısal kapalılığı (KOVA-2/B3) | hiçbir şey — karar değil, bilgi |
 | 🔴 AÇIK · `B-FINVIZ-TOKEN` | FINVIZ Elite token satın alınsın mı (KOVA-3/C1 · envanter-8) | para kararı (WP11-D uzlaştırması çözülmeden "kesinlikle gereksiz" denemez) |
 | 🔴 AÇIK · `B-FMP-PLAN` | FMP plan/kota yükseltmesi — Y4 penceresi (KOVA-3/C2 · envanter-3 + envanter-7) | para kararı |
-| ✅ KAPALI (değerlendirme 2026-09-06: TSK-046 DONE 2026-09-03) · `B-QC-LOGIN` | QC kimliği (`lean login` ya da dotnet-engine kararı) + FREE defterin koşulması (KOVA-3/C3 · yeni-blok C2-4 · envanter-11) | anahtar/kimlik + operatör koşumu |
 | ✅ KAPALI · `B-NOUS-BEYIN` | NOUS_MODEL / beyin çeşitliliği — danışma yolu ölü mü (KOVA-3/C4 · envanter-1) | ✅ kapandı 2026-09-03 00:17 UTC (Rol-1 ölçümü, A1-içi): motor zinciri NOUS_ENDPOINT=kapı `/llm/v1` + NOUS_MODEL nemotron:free + KAPI_APIKEY; `/llm/v1/models` 200 (sayaç, motor_meridian) ve gerçek chat canary kapıdan **200** (provider Nvidia, 28 token) — yol DİRİ; "ölü" teşhisi ücretsiz tavan dolu pencerelerinde 502 görmekten kaynaklanıyordu (B-TAVAN-502 politikası) |
-| ✅ KAPALI · `B-SYSTEMD-143` | systemd `SuccessExitStatus=143` (OB-2) | ✅ yapıldı 2026-08-09 — tarihçe |
-| ✅ KAPALI · `B-DASH-CRED` | DASH-TOKEN LoadCredential faz-1 etkinleştirme | bakım penceresi |
-| ✅ KAPALI (değerlendirme 2026-09-06: TSK-050 DONE 2026-09-01, ops/ajan_git_shim.sh) · `B-AJAN-GIT` | ajan-git mekanik kapısı (PATH-shim/wrapper) | ~~süreç/araç kararı~~ KARAR VERİLDİ 2026-08-31 akşam (masa→plan taşıması): icra İCRA SIRASI ①'de, Rol-1 — kimlik araç inince kapanır |
-| ✅ KAPALI · `B-ORACLE-TASIMA` | Oracle sunucu taşıma (envanter-4; Faz-6 ön şartı) | operatör aksiyonu/pencere |
 | 🔴 AÇIK · `B-FAZ6-KILIT` | Faz-6 kapısı: beş kilit dolunca INTRADAY_ARM + emir bacağı onayı (envanter-5) | onay (kanıt-şartlı) |
 - **[TSK-043] Faz-6 kilidi meşru biçimde düşebilir — kadanslı yazarın yan etkisi** — status: GATED(dağıtımdan sonra `edge_verdict` çıktısının okunması) · born: 2026-08-14 · owner: rol1 · size: S · trigger: dağıtım sonrası ölçüm (bu turda cloud klonundan ÖLÇÜLEMEDİ)
   What: (DEĞ 2026-09-06 [ACIK-KALSIN·belirsiz] kapı: Rol-1'in canlıda (A1) bir dağıtım sonrası `edge_verdict`/`m2m_durum`/`max_dd_alt_sinir` çıktısını gerçekten okuyup Faz-6 beş-kilitten birinin (EDGE_MAXDD_MAX=0,08 kıl pay) `equity_curve` kadanslı yazarı devreye girince `analytics._realized_drawdown`ın m2m bacağı körlükten çıkıyor — `m2m_durum` "donem_disi"→"olculdu", `max_dd_alt_sinir` False oluyor; ajanın ölçtüğü %8,04, `EDGE_MAXDD_MAX=0,08`i kıl payı aşıyor → dağıtımdan sonra bir Faz-6 kilidi düşebilir.
   Why: BU BİR ARIZA DEĞİL, KAPININ ÇALIŞMASIDIR — hiçbir eşiğe dokunulmadı, sistem ilk kez ölçebildiği bir şeyi ölçüyor (EDG-037 `RESULT_PF_MIN` emsali: "kilidin kapalı kalması ARIZA DEĞİL KORUMA"). Operatör bilgilendirmesi sınıfı — B-FAZ6-KILIT ailesi.
   Ref: v245-D ölçümü; sahibi WP5/WP2; §4-36'dan taşındı 2026-08-23 (operatör E-turu kararı 2/12). eski: §4-36 · Ö-36.
 
-| ✅ KAPALI · `B-AJAN-TAVAN` | ajan tavanı 15 (envanter-6) | ✅ karar 2026-09-07 10:37Z (operatör): MODEL KADEMELİ tavan — Sonnet 25 · Opus 10 · Haiku 40 (Haiku ajanları kullanılabilir); tek sayı 15 kalktı; implementasyon yine turda tek ajan (rol kuralı) |
 | 🔴 AÇIK · `B-DELIST-KAYNAK` | Massive/QC delist-bar kaynağı kararı (envanter-9) | karar + para (QC platform-içi VEYA Massive plan) |
-| ✅ KAPALI · `B-OCI-BUCKET` | OCI Object Storage bucket + S3-uyumlu anahtar — Litestream aşama-2 (envanter-10) | hesap/anahtar |
-| ✅ KAPALI · `B-DD-ESIK` | `goal.max_drawdown` ↔ ölçülen dd gerilimi (envanter-12) | ✅ çözüldü 2026-08-13 (0,16) — tarihçe |
-| ✅ KAPALI · `B-TAVAN-502` | hepsi-ücretsiz kararının bedeli: OpenRouter günlük ücretsiz-model tavanı dolunca kapı zinciri 502 döner, botlar o koşumu boş geçer | ✅ karar 2026-09-02 akşam (A): olduğu gibi kalır — 502 bilinçli ve sayaçta görünür, sabah bütçesiyle düzelir; "sessiz atla" varyantı bedel ölçümü istediği için AÇILMADI |
-| ✅ KAPALI · `B-PG-ROTASYON` | Hindsight Postgres parolası 2026-09-02'de Rol-1 terminaline düştü (DATABASE_URL süzgeç kaçağı; DB yalnız 127.0.0.1) | ✅ karar (A) + icra 2026-09-02 18:08 UTC (operatör tek-satırı): ALTER USER + .env + restart; kanıt (Rol-1, A1): eski parola reddedildi, yeni `select 1` = 1, yedek birimi `User=postgres` (peer, etkilenmez), health 200 |
 **[2026-08-30 KİMLİK DENETİMİ — 22 kimliğin 14'ü KAPALI, 7'si AÇIK, 1'i DOĞRULANAMADI.]**
 Rozetler yukarıdaki tabloya işlendi (satır metinleri korundu, başına durum kondu). Kapalı
 sayılanların kanıtı — hepsi **bu depoda** doğrulandı, canlı gerektiren üçü ayrıca işaretlidir:
@@ -3137,16 +3120,7 @@ silahsızlanması (karar 2026-08-22: A) · `B2` koruma politikası (karar 2026-0
 limit bacağı (karar 2026-08-22: A+C) · `B3` Faz-6 `sonuc_hukmu` (karar değil bilgiydi).
 Gövdeleri tam metniyle `§8.O`/B'de.
 
-**AMA KOVA BOŞ DEĞİL — 2026-08-29/30'da İKİ YENİ KARAR DOĞDU ve hiçbir bölüme işlenmemişti
-(bu turda eklendi; kalıcı `B-…` kimliğini Rol-1 atar):**
-
-| kalem | kaynak | operatörden beklenen |
-|---|---|---|
-| ✅ **KARAR VERİLDİ 2026-08-31 · `EXE-2026-009` P-2 — kontrol kolu yapısal olarak BOŞ, öneri tetiği inşaen erişilemez** _(kimlik ATANMADI)_ | kart `EXE-2026-009` bloğu `acik_kalemler_2026_08_29`; ölçüm `research/olcumler/edg042_teshis_pencere_damgasi_2026-08-29/` | tetiğin kıyas tabanı: **(a)** damgasız kaydırma-öncesi küme AYRI+BEYANLI taban mı (kart revizyonu, kill#2'ye dikkat) · **(b)** A/B için pencere dönüşümlü mü koşsun · **(c)** tetik tek-kollu eşiğe mi bağlansın. Üçü de KART İŞİDİR; ölçüm başladıktan sonra eşiği kodda değiştirmek kill#2'yi tetikler → ✅ **KARAR 2026-08-31 (operatör, 85-aktarımı): kalem Rol-1'e DEVREDİLDİ** — (a)/(b)/(c) seçenekleri P-3 ölçümüyle AŞILDI: yol `ts` anahtarı (P-3 emsali; kontrol n=15 eşiği geçer, tedavi ~4 hf). Kill#3 çerçevesi kart revizyonu ister; icra kaydı §2 TAHTA satırında |
-| ✅ **KARAR VERİLDİ 2026-08-31 · `EDG-2026-042` P-3 — K1 karışık örneklem** _(operatör: AYRIK/`ts`, ara işaret yok; kayıt Ö-54 satırı + kart bloğu `p3_karar_ayrik_ts_2026_08_31` + `docs/KARAR-P3-K1-AYRIK-TS-2026-08-31.md`)_ | `docs/HAZIRLIK-P3-K1-KARISIK-ORNEKLEM-2026-08-30.md`; commit `dcef1c6` | karışık-örneklem kararı; ileriye dönük hız yalnız 1345 yolu (pooled ~6,5 hafta / ayrık ~14 hafta) |
-
-_(`P-1` KAPANDI 2026-08-30: damga gönderim anına bağlandı — `90f6cdc`, dağıtım `dcef1c6`;
-kill#3 istisnası kartta ADIYLA kayıtlı — `83bc47b`.)_
+> Kapanmış 2 karar (`EXE-2026-009` P-2 · `EDG-2026-042` P-3, + `P-1` kapanış notu) 2026-09-08'de §8'e taşındı (arşiv alt bölümü: `§5 OPERATÖR BLOKLARINDAN ARŞİVE — kapanmış kararlar (taşındı 2026-09-08; tam metin korunur, SİLME YOK)` → "B · KOVA 2 — YENİ KARARLAR (2026-08-29/30)").
 
 #### KOVA 3 — ERİŞİM / KİMLİK (para ya da hesap gerektiren)
 
@@ -3160,10 +3134,7 @@ kill#3 istisnası kartta ADIYLA kayıtlı — `83bc47b`.)_
   Why: beklerken bedel — Y4 içeriden-işlem penceresi günde tek sayfa (~100 dosyalama, evren isabeti ~6/100) ile ancak 3 yıl BEKLEYEREK dolar.
   Ref: kimlik `B-FMP-PLAN` (§5 KİMLİK TABLOSU) · bağımlı: EDG-2026-011 (askı).
 
-- **[TSK-046] QC login + notebook koşumu kararı (C3)** — status: DONE(2026-09-03 · operatör QC girişi [Google hesabı, Reset My Token] + lean CLI onayı; EDG-021 v4 ikinci koşum ve ⑤ Security Master delist sondası Rol-1 tarafından QC'de koşuldu — ⑤ 8/8 çelişmedi [AYNI 3 / AYRIK ≤3 gün 3 / QC süreklilik 2]; kanıt research/olcumler/qc_dogrulama/sonda_delist_8*.json + wp-qc-5 belgesi; dotnet-engine yolu gerekmedi) · born: 2026-08-31 · owner: operator · size: S · trigger: —
-  What: (2026-09-03 08:1xZ: QC ADIMLARI KOŞTU — EDG-021 v4 ikinci koşum tamam [C-11 kapandı]; ⑤ Security Master sondası düzeltilmiş haliyle koşuluyor; yol = `lean cloud push` + Chrome'da mevcut kernel oturumuna bağlı küçük çıktı defteri [research.ipynb 64.000 kr sınırı ölçüldü]. TSK-046 kapanışı sonda sonucuyla.) (2026-09-03 07:15Z: OPERATÖR GİRİŞ YAPTI — `lean whoami` ✓, kimlik dosyası 600; QC ücretsiz hesapta API jetonu 'Reset My Token' ile alındı ["Request Token Information" ücretli-org uyarısı verdi]; operatör CLI ile bulut kullanımına ONAY verdi [KEŞİF 2026-08-09 RED notunun üstüne operatör kararı]; ölçüm: `lean cloud pull` ücretsiz hesapta ÇALIŞTI [Fat Apricot Koala: research.ipynb + main.py + defter_021.py]; Research defteri CLI'dan koşulamaz → yol: Rol-1 `lean cloud push` ile yükler, operatör tek hücreyi web'de koşar. Sıradaki: EDG-021 v4 [C-11] + Security Master sondası.) (operatör 2026-09-03 sabah: OPERATÖR QC GİRİŞİNİ YAPACAK; sonra Rol-1 Security Master sondası + EDG-021 ikinci koşumu.) `lean login` (QC "Fat Apricot Koala") YA DA dotnet-engine yolu kararı; ayrıca FREE defterin operatör tarafından KOŞULMASI bekleniyor. Konsolide detay (eski TSK-051'den, kök fizibilite 2026-08-09): toolchain hazır (colima+docker+lean 1.0.227 çalışıyor), `lean init` QC User id+API token istiyor (`~/.lean/credentials`); kimliksiz alternatif dotnet-engine (LEAN Apache-2.0 local, QC'siz) ama monorepo clone+build = L-boyut ayrı tur.
-  Why: toolchain hazır (colima+docker+lean 1.0.227) ama `lean init` QC User id+API token istiyor — kimlik-bloklu. Beklerken bedel: ⑤ RETIRED çapraz-doğrulamasının tek kalan QC-adımı (1 hücrelik Security Master sondası) ve EDG-021 2. koşumu bekliyor.
-  Ref: kimlik `B-QC-LOGIN` (§5 KİMLİK TABLOSU) · bağımlı: WP9 · WP4 delist-bar hattı · TSK-051 buraya konsolide (operatör kararı 2026-09-01).
+> Kapanmış 1 karar (`TSK-046` QC login + notebook koşumu, DONE) 2026-09-08'de §8'e taşındı (arşiv alt bölümü: `§5 OPERATÖR BLOKLARINDAN ARŞİVE — kapanmış kararlar (taşındı 2026-09-08; tam metin korunur, SİLME YOK)` → "C · KOVA 3 — TSK-046").
 
 - **[TSK-047] NOUS_MODEL / beyin çeşitliliği — danışma yolu ölü olabilir mi (C4)** — status: DONE(2026-09-06·değerlendirme: kök neden + çözüm 2026-09-05 — kapı model alanını eziyordu, kova-dışı son-çare rotası, dağıtım #20, portal kanaryası minimax 200; beyin çeşitliliği ölçümü ayrı kalem isterse yeni TSK) · born: 2026-08-31 · owner: rol1 · size: S · trigger: —
   What: (DEĞ 2026-09-06 [ERTELE·gelecek-hafta] kapı: Haftalık `nous_eval` koşumunun (Pazartesi ~20:1xZ, bir sonraki koşum 2026-09-08 civarı) kapı (APISIX ai-proxy-multi + minimax son-çare rotası) üzerinden gerçekten dolu/ge | bayat: Kalem metninin sonundaki 'Claude API anahtarı EKLE ya da NOUS_MODEL'i Google-DIŞI modele çevir karar) (KÖK NEDEN + ÇÖZÜM 18:54Z: nous ve TÜM kapı LLM trafiği (botlar, review, backfill) APISIX ai-proxy-multi üzerinden gider ve kapı istemcinin model alanını EZER — instance'lar nemotron→gemma, ikisi de ortak kovada → kota dolunca (10:33Z) her çağrı 502; NOUS_MODEL değeri kapı yolunda ETKİSİZ. Çözüm: routes.yaml'a kova-dışı :free son çare instance'ları (yedek-minimax / hizli-minimax, öncelik en düşük), v361 zinciri güncellendi, dağıtım #20 + apisix_uygula --uygula/--denetle (drift 0); PORTAL kanaryası: nemotron 429 → gemma 429 → minimax 200, cevap 'MiniMax-M3 (Hermes); 17*3=51' (kimlik+yönlendirme+dolu cevap ✓). Beyin çeşitliliği: nous=nemotron/minimax (Google-dışı) vs gemini — ayrık. Kalan: haftalık nous_eval (Pazartesi ~20:1xZ) kapı üzerinden dolu cevap veriyor mu — doğrulama.) (OPERATÖR 18:38Z: AÇ. Ölçüm: NOUS_MODEL=nemotron-3-ultra:free PORTAL (127.0.0.1:9080) — Google-DIŞI zaten; ama nemotron ortak günlük kovada (bugün 429) ve son 30 gün agent_calls: nous_eval 2, reflect(gemini) 18 — nous_eval satırı model=gemini-flash-latest yazıyor (nous ayağı mı düştü, gemini mi cevapladı? ölçülecek). Plan: PORTAL kanaryası minimax-m3:free ile (kimlik+yönlendirme+dolu cevap), geçerse NOUS_MODEL=minimax-m3:free, NOUS_FALLBACK_MODEL=nemotron-ultra:free (kova dışı birincil, Google-dışı); haftalık nous_eval ile doğrulama.) (OPERATÖR 2026-09-05 09:1xZ: BEKLEMEDE — öğrenme açılıp örneklem büyüyünce yeniden bakılır.) (operatör 2026-09-03 sabah: BEKLEMEDE — karar ertelendi, bedel aynen sürer.) Claude API anahtarı EKLE ya da `NOUS_MODEL`i Google-DIŞI modele çevir kararı bekleniyor (sır yolu, koda yazılamaz).
@@ -3186,22 +3157,7 @@ durur — WP2-D, ACİL) → **OB-4 restart→PBO (M2) damgalama**;** N4 cf
 çıkış-sadakati (EXE-2026-004 Aşama-2, saatler, state'e yazar) aynı pencerede.
 
 **YENİ OPERATÖR BLOKLARI (WP turlarından toplandı — eski §8 numaralı listesi + envanter tablosu altta):**
-- **[TSK-048] systemd `SuccessExitStatus=143` — temiz-durdurmayı FAILED saymasın** — status: DONE(2026-08-09·operatör doğruladı) · born: 2026-08-09 · owner: rol1 · size: S · trigger: —
-  What: canlı `SuccessExitStatus=143` doğrulandı (`Result=success`, active/running, NRestarts=0) — restart exit-143'ü artık "FAILED" SAYMIYOR.
-  Why: N1 bildirim kanalının (OB-1) ön-şartıydı — açıldığında temiz-durdurma yanlış-alarm boğmayacak (gerçek çöküş SIGKILL=137/SIGSEGV=139 hâlâ OnFailure'a gider).
-  Ref: kimlik `B-SYSTEMD-143` (§5 KİMLİK TABLOSU, OB-2).
-- **[TSK-049] DASH-TOKEN LoadCredential faz-1 etkinleştirme** — status: DONE(2026-09-01·canlı ölçüm) · born: 2026-08-03 (born tahmini: madde metninde tarih yok; repo dosya kanıtı `dash_token_credential.sh` mtime) · owner: operator · size: S · trigger: —
-  What: drop-in'ler (`deploy/oracle-a1/meridian.service.d/` — faz-1 LoadCredential + faz-2 ortam-kanalı-sıfır) + `dash_token_credential.sh` (rotasyon/kurulum/doğrulama/geri-alma). Göç ajanı dosya varlığını doğruladı ama canlı aktivasyonu ölçemedi (GATED önerdi).
-  Why: Rol-1 canlı ölçümü 2026-09-01 gece (ssh, salt-okunur): `meridian.service` (worker+dashboard) ACTIVE ve `LoadCredential` SET — faz-1 canlıda fiilen etkin; kimlik tablosunun "✅ KAPALI" hükmü kanıtla teyit edildi. Not: makinede ayrıca INACTIVE bir `meridian-dash.service` birimi duruyor — infra-simetri kalemine ilk somut vaka olarak devredildi.
-  Ref: kimlik `B-DASH-CRED` (§5 KİMLİK TABLOSU) · canlı ölçüm 2026-09-01.
-- **[TSK-050] ajan-git mekanik kapısı — PATH-shim/wrapper gerekiyor** — status: DONE(2026-09-01 · `ops/ajan_git_shim.sh` → `~/.local/bin/git` kurulu+canlı doğrulandı [stash RED rc=86, günlük komutlar saydam]; 13 çivi v360 + 4/4 mutasyon + kurulu-kopya ayrışma çivisi. KAPSAM BEYANI: yalnız evrensel-yasaklar mekanik — `stash` her biçimi + `add -A/--all/.`; oturum-kimlikli ayrım [ajan-commit engeli] ortamdan ÖLÇÜLEMEZ çıktı — spike 2026-09-01: Rol-1 ile ajan Bash'i aynı env işaretlerini taşıyor [CHILD_SESSION=1, AI_AGENT=…_agent] — o genişleme bilgi-tabanlı onay ister, ayrı karar. CLAUDECODE!=1 ortamı saydam geçer: operatör terminali etkilenmez; kaçış MERIDIAN_GIT_BYPASS=1) · born: 2026-08-26 (born tahmini: bu maddenin metninde tarih yok; CLAUDE.md §2 git satırındaki 2026-08-26 vakasıyla eşleşiyor) · owner: rol1 · size: S · trigger: —
-  What: yasak bugün yalnız CLAUDE.md sözleşmesiyle duruyor — `dagit.sh` yalnız DAĞITIMI kapıyor, `git stash`ın pre-stash kancası yok; kapı ancak PATH-shim/wrapper'la mekanikleşir.
-  Why: gece 2 ajan `git stash` koşup hasar verdi (hayalet dizin süpürüldü). Karar 2026-08-31 akşam verildi (masa→plan taşıması): İCRA SIRASI ①'de, Rol-1 — kimlik araç inince kapanır. CLAUDE.md §2'de ayrıca 2 zararsız-itirafla salt-okunur beyaz liste ajanlara AÇILDI (2026-08-31 gevşetmesi) — bu madde MEKANİK kapıyı (mutasyon engeli) kapsar, o gevşeme yalnız salt-okunur erişimi kapsıyordu.
-  Ref: kimlik `B-AJAN-GIT` (§5 KİMLİK TABLOSU) · İCRA SIRASI ①.
-- **[TSK-051] QC LEAN CLI `lean login` — kimlik-bloklu (C2-4)** — status: DROPPED(2026-09-01·operatör kararıyla TSK-046'ya konsolide — aynı B-QC-LOGIN kimliği, örtüşen içerik) · born: 2026-08-09 · owner: operator · size: S · trigger: —
-  What: toolchain hazır (colima+docker+lean 1.0.227 kurulu/çalışıyor) AMA `lean init` QC User id+API token istiyor (`~/.lean/credentials`) — LEAN CLI yolu kimlik-bloklu. Operatör `lean login` (QC Fat Apricot Koala) yaparsa CLI tam-impl açılır. Alternatif (kimliksiz): CLI'sız dotnet-engine (LEAN Apache-2.0 local, QC'siz) — ama LEAN monorepo git-clone + dotnet-build = L-boyut ayrı tur.
-  Why: karar — `lean login` (kolay) mı, dotnet-engine (bağımsız, daha büyük iş) mı.
-  Ref: aynı kimlik `B-QC-LOGIN` — bkz. TSK-046 (QC login + notebook koşumu, KOVA-3/C3); içerik örtüşüyor, konsolidasyon Rol-1'e önerilir. Fizibilite 2026-08-09.
+> Kapanmış 4 karar (`TSK-048`·`TSK-049`·`TSK-050`·`TSK-051`, hepsi DONE/DROPPED) 2026-09-08'de §8'e taşındı (arşiv alt bölümü: `§5 OPERATÖR BLOKLARINDAN ARŞİVE — kapanmış kararlar (taşındı 2026-09-08; tam metin korunur, SİLME YOK)` → "D · YENİ OPERATÖR BLOKLARI — TSK-048…051").
 
 **EKSİK OPERATÖR ENVANTERİ (eski §8 — kanonik liste 1-11 + §8.1 tablosu; numaralar korunur):**
 
@@ -5874,3 +5830,75 @@ inmişti ama gövdeleri havuzda duruyordu. Metin **AYNEN**; havuzda tek satırl�
   `cevap_veren_model()`) · WP7-31b (`active_model()` uydurma koruması) · WP7-40 (`nous_eval` künye
   alanları, XS) — dört kalem tek "künye turu" olarak kapanır. Kalan mini-iş hafta-1 partisinde.
   Belge: `docs/ELEME-WP7-2026-08-23.md` §6.**]**
+
+### §5 OPERATÖR BLOKLARINDAN ARŞİVE — kapanmış kararlar (taşındı 2026-09-08; tam metin korunur, SİLME YOK)
+
+Operatör kararı (2026-09-08): "kapanan kararları arşiv kısmına almak daha mantıklı." `§5 OPERATÖR BLOKLARI`'nda ✅ KAPALI / ✅ KARAR VERİLDİ / `DONE` / `DROPPED` rozeti taşıyan ve üzerinde açık bir aksiyon/soru KALMAYAN 26 girdi (19 kimlik-tablosu satırı + 2 KOVA-2 kararı + 1 KOVA-3 kalemi [`TSK-046`] + 4 "YENİ OPERATÖR BLOKLARI" kalemi [`TSK-048`..`TSK-051`]) buraya **AYNEN** taşındı; `§5`'te her taşınan blok yerine tarihli birer tek-satır işaret kondu. AÇIK/BEKLEMEDE/kararsız kalan girdiler (`B-FINVIZ-TOKEN`, `B-FMP-PLAN`, `B-FAZ6-KILIT`, `B-DELIST-KAYNAK`, `B-NOUS-BEYIN` [kararsız — bkz. aşağıdaki not], `TSK-043`, `TSK-044`, `TSK-045`) `§5`'te YERİNDE kaldı.
+
+**`B-NOUS-BEYIN` taşınmadı — kararsız:** kimlik-tablosu satırı ✅ KAPALI diyor (2026-09-03 Rol-1 ölçümü) ve `§5 KOVA-3` `TSK-047` de DONE(2026-09-06); AMA satırın hemen altındaki 2026-08-30 tarihli şerh "bilerek KAPALI SAYILMADI" diyor ve bu şerh silinmemiş, çelişki `§5`'te henüz çözülmemiş görünüyor durumda kaldı. Bu taşımanın kapsamı yalnız AÇIKÇA çelişkisiz kapanmış girdilerdir; `B-NOUS-BEYIN` bu ölçütü karşılamadığı için `§5`'te BIRAKILDI — nihai hüküm Rol-1'e bırakılır.
+
+#### A · KİMLİK TABLOSU KAPANIŞLARI (19 satır — `§5.0` KİMLİK TABLOSU'ndan)
+
+| kimlik | tek-cümle konu | beklediği şey (karar/anahtar/pencere) |
+|---|---|---|
+| ✅ KAPALI · `B-RUNBOOK-KAPSAM` | RUNBOOK üreticisinin onaylı betik kümesine `dagit.sh` eklensin mi (sürüm-terfisi sözleşmesi belgeye girsin diye; emsal: seçenek-C genişlemesi operatör onaylıydı) | operatör kararı (evet/hayır — tek satır BETIK_KUMESI değişikliği) |
+| ✅ KAPALI · `B-PENCERE-KAYDIR` | canlı tarama/emir penceresinin ~13:45 UTC'ye kaydırılması (23e; `EDG-2026-047` Ö1 ateşledi: risk −%42, bedel medyan +4,65 bps) | operatör kararı — strateji-kimliği değişikliği; EVET derse kart-önce uygulanır |
+| ✅ KAPALI · `B-CHOP-BUTCE` | chop bütçe-kapalılığı: kasıtlı politika mı (A) yan etki mi (B) — brief `docs/KARAR-BRIEF-CHOP-BUTCE-2026-08-22.md`; Rol-1 tavsiyesi: üçüncü yol (@chop üretimini kes + 'chop tabanı kartıyla açılır' notu) | operatör kararı (A / B / üçüncü yol) |
+| ✅ KAPALI · `B-KORUMA-KUR` | çıplak motor pozisyonlarının korumasının panodan `koruma_kur` ile yeniden kurulması (KOVA-1/A1) | operatör icrası (tek oturum) — tahta 2026-08-22: ölçümle kapandı (korumasız 0/7), blok tarihçe |
+| ✅ KAPALI · `B-BILDIRIM-N1` | Telegram/webhook bildirim kanalı kimliği (KOVA-1/A2 · envanter-2 · OB-1) | kanal anahtarı — ✅ kapandı 2026-08-22, Telegram canlı |
+| ✅ KAPALI · `B-PULLBACK-SILAH` | pullback ailesi `ARMED_SETUPS`ten çıksın mı (KOVA-2/B1) | karar — ✅ verildi 2026-08-22 (A: silahsızlandırıldı); dağıtım 043 sonrası suite'le |
+| ✅ KAPALI · `B-KORUMA-POLITIKA` | koruma yeniden-kurulumunun kalıcı politikası (KOVA-2/B2) | karar — ✅ verildi 2026-08-17 (c); teslim bacağı `B-BILDIRIM-N1` |
+| ✅ KAPALI · `B-E1-LIMIT` | E1 limit bacağı canlıda açılsın mı (KOVA-2/B4) | karar — ✅ verildi 2026-08-22 (A+C: kapalı kalır); açık argüman `EDG-2026-043`te |
+| ✅ KAPALI · `B-FAZ6-HUKUM` | Faz-6 `sonuc_hukmu` yapısal kapalılığı (KOVA-2/B3) | hiçbir şey — karar değil, bilgi |
+| ✅ KAPALI (değerlendirme 2026-09-06: TSK-046 DONE 2026-09-03) · `B-QC-LOGIN` | QC kimliği (`lean login` ya da dotnet-engine kararı) + FREE defterin koşulması (KOVA-3/C3 · yeni-blok C2-4 · envanter-11) | anahtar/kimlik + operatör koşumu |
+| ✅ KAPALI · `B-SYSTEMD-143` | systemd `SuccessExitStatus=143` (OB-2) | ✅ yapıldı 2026-08-09 — tarihçe |
+| ✅ KAPALI · `B-DASH-CRED` | DASH-TOKEN LoadCredential faz-1 etkinleştirme | bakım penceresi |
+| ✅ KAPALI (değerlendirme 2026-09-06: TSK-050 DONE 2026-09-01, ops/ajan_git_shim.sh) · `B-AJAN-GIT` | ajan-git mekanik kapısı (PATH-shim/wrapper) | ~~süreç/araç kararı~~ KARAR VERİLDİ 2026-08-31 akşam (masa→plan taşıması): icra İCRA SIRASI ①'de, Rol-1 — kimlik araç inince kapanır |
+| ✅ KAPALI · `B-ORACLE-TASIMA` | Oracle sunucu taşıma (envanter-4; Faz-6 ön şartı) | operatör aksiyonu/pencere |
+| ✅ KAPALI · `B-AJAN-TAVAN` | ajan tavanı 15 (envanter-6) | ✅ karar 2026-09-07 10:37Z (operatör): MODEL KADEMELİ tavan — Sonnet 25 · Opus 10 · Haiku 40 (Haiku ajanları kullanılabilir); tek sayı 15 kalktı; implementasyon yine turda tek ajan (rol kuralı) |
+| ✅ KAPALI · `B-OCI-BUCKET` | OCI Object Storage bucket + S3-uyumlu anahtar — Litestream aşama-2 (envanter-10) | hesap/anahtar |
+| ✅ KAPALI · `B-DD-ESIK` | `goal.max_drawdown` ↔ ölçülen dd gerilimi (envanter-12) | ✅ çözüldü 2026-08-13 (0,16) — tarihçe |
+| ✅ KAPALI · `B-TAVAN-502` | hepsi-ücretsiz kararının bedeli: OpenRouter günlük ücretsiz-model tavanı dolunca kapı zinciri 502 döner, botlar o koşumu boş geçer | ✅ karar 2026-09-02 akşam (A): olduğu gibi kalır — 502 bilinçli ve sayaçta görünür, sabah bütçesiyle düzelir; "sessiz atla" varyantı bedel ölçümü istediği için AÇILMADI |
+| ✅ KAPALI · `B-PG-ROTASYON` | Hindsight Postgres parolası 2026-09-02'de Rol-1 terminaline düştü (DATABASE_URL süzgeç kaçağı; DB yalnız 127.0.0.1) | ✅ karar (A) + icra 2026-09-02 18:08 UTC (operatör tek-satırı): ALTER USER + .env + restart; kanıt (Rol-1, A1): eski parola reddedildi, yeni `select 1` = 1, yedek birimi `User=postgres` (peer, etkilenmez), health 200 |
+
+#### B · KOVA 2 — YENİ KARARLAR (2026-08-29/30; `EXE-2026-009` P-2 · `EDG-2026-042` P-3 + `P-1` notu)
+
+**AMA KOVA BOŞ DEĞİL — 2026-08-29/30'da İKİ YENİ KARAR DOĞDU ve hiçbir bölüme işlenmemişti
+(bu turda eklendi; kalıcı `B-…` kimliğini Rol-1 atar):**
+
+| kalem | kaynak | operatörden beklenen |
+|---|---|---|
+| ✅ **KARAR VERİLDİ 2026-08-31 · `EXE-2026-009` P-2 — kontrol kolu yapısal olarak BOŞ, öneri tetiği inşaen erişilemez** _(kimlik ATANMADI)_ | kart `EXE-2026-009` bloğu `acik_kalemler_2026_08_29`; ölçüm `research/olcumler/edg042_teshis_pencere_damgasi_2026-08-29/` | tetiğin kıyas tabanı: **(a)** damgasız kaydırma-öncesi küme AYRI+BEYANLI taban mı (kart revizyonu, kill#2'ye dikkat) · **(b)** A/B için pencere dönüşümlü mü koşsun · **(c)** tetik tek-kollu eşiğe mi bağlansın. Üçü de KART İŞİDİR; ölçüm başladıktan sonra eşiği kodda değiştirmek kill#2'yi tetikler → ✅ **KARAR 2026-08-31 (operatör, 85-aktarımı): kalem Rol-1'e DEVREDİLDİ** — (a)/(b)/(c) seçenekleri P-3 ölçümüyle AŞILDI: yol `ts` anahtarı (P-3 emsali; kontrol n=15 eşiği geçer, tedavi ~4 hf). Kill#3 çerçevesi kart revizyonu ister; icra kaydı §2 TAHTA satırında |
+| ✅ **KARAR VERİLDİ 2026-08-31 · `EDG-2026-042` P-3 — K1 karışık örneklem** _(operatör: AYRIK/`ts`, ara işaret yok; kayıt Ö-54 satırı + kart bloğu `p3_karar_ayrik_ts_2026_08_31` + `docs/KARAR-P3-K1-AYRIK-TS-2026-08-31.md`)_ | `docs/HAZIRLIK-P3-K1-KARISIK-ORNEKLEM-2026-08-30.md`; commit `dcef1c6` | karışık-örneklem kararı; ileriye dönük hız yalnız 1345 yolu (pooled ~6,5 hafta / ayrık ~14 hafta) |
+
+_(`P-1` KAPANDI 2026-08-30: damga gönderim anına bağlandı — `90f6cdc`, dağıtım `dcef1c6`;
+kill#3 istisnası kartta ADIYLA kayıtlı — `83bc47b`.)_
+
+#### C · KOVA 3 — TSK-046 (QC login + notebook koşumu, DONE 2026-09-03)
+
+**[TSK-046] QC login + notebook koşumu kararı (C3)** — status: DONE(2026-09-03 · operatör QC girişi [Google hesabı, Reset My Token] + lean CLI onayı; EDG-021 v4 ikinci koşum ve ⑤ Security Master delist sondası Rol-1 tarafından QC'de koşuldu — ⑤ 8/8 çelişmedi [AYNI 3 / AYRIK ≤3 gün 3 / QC süreklilik 2]; kanıt research/olcumler/qc_dogrulama/sonda_delist_8*.json + wp-qc-5 belgesi; dotnet-engine yolu gerekmedi) · born: 2026-08-31 · owner: operator · size: S · trigger: —
+  What: (2026-09-03 08:1xZ: QC ADIMLARI KOŞTU — EDG-021 v4 ikinci koşum tamam [C-11 kapandı]; ⑤ Security Master sondası düzeltilmiş haliyle koşuluyor; yol = `lean cloud push` + Chrome'da mevcut kernel oturumuna bağlı küçük çıktı defteri [research.ipynb 64.000 kr sınırı ölçüldü]. TSK-046 kapanışı sonda sonucuyla.) (2026-09-03 07:15Z: OPERATÖR GİRİŞ YAPTI — `lean whoami` ✓, kimlik dosyası 600; QC ücretsiz hesapta API jetonu 'Reset My Token' ile alındı ["Request Token Information" ücretli-org uyarısı verdi]; operatör CLI ile bulut kullanımına ONAY verdi [KEŞİF 2026-08-09 RED notunun üstüne operatör kararı]; ölçüm: `lean cloud pull` ücretsiz hesapta ÇALIŞTI [Fat Apricot Koala: research.ipynb + main.py + defter_021.py]; Research defteri CLI'dan koşulamaz → yol: Rol-1 `lean cloud push` ile yükler, operatör tek hücreyi web'de koşar. Sıradaki: EDG-021 v4 [C-11] + Security Master sondası.) (operatör 2026-09-03 sabah: OPERATÖR QC GİRİŞİNİ YAPACAK; sonra Rol-1 Security Master sondası + EDG-021 ikinci koşumu.) `lean login` (QC "Fat Apricot Koala") YA DA dotnet-engine yolu kararı; ayrıca FREE defterin operatör tarafından KOŞULMASI bekleniyor. Konsolide detay (eski TSK-051'den, kök fizibilite 2026-08-09): toolchain hazır (colima+docker+lean 1.0.227 çalışıyor), `lean init` QC User id+API token istiyor (`~/.lean/credentials`); kimliksiz alternatif dotnet-engine (LEAN Apache-2.0 local, QC'siz) ama monorepo clone+build = L-boyut ayrı tur.
+  Why: toolchain hazır (colima+docker+lean 1.0.227) ama `lean init` QC User id+API token istiyor — kimlik-bloklu. Beklerken bedel: ⑤ RETIRED çapraz-doğrulamasının tek kalan QC-adımı (1 hücrelik Security Master sondası) ve EDG-021 2. koşumu bekliyor.
+  Ref: kimlik `B-QC-LOGIN` (§5 KİMLİK TABLOSU) · bağımlı: WP9 · WP4 delist-bar hattı · TSK-051 buraya konsolide (operatör kararı 2026-09-01).
+
+#### D · YENİ OPERATÖR BLOKLARI — TSK-048…051 (systemd 143 · DASH-TOKEN · ajan-git şim · QC login konsolidasyonu)
+
+**[TSK-048] systemd `SuccessExitStatus=143` — temiz-durdurmayı FAILED saymasın** — status: DONE(2026-08-09·operatör doğruladı) · born: 2026-08-09 · owner: rol1 · size: S · trigger: —
+  What: canlı `SuccessExitStatus=143` doğrulandı (`Result=success`, active/running, NRestarts=0) — restart exit-143'ü artık "FAILED" SAYMIYOR.
+  Why: N1 bildirim kanalının (OB-1) ön-şartıydı — açıldığında temiz-durdurma yanlış-alarm boğmayacak (gerçek çöküş SIGKILL=137/SIGSEGV=139 hâlâ OnFailure'a gider).
+  Ref: kimlik `B-SYSTEMD-143` (§5 KİMLİK TABLOSU, OB-2).
+
+**[TSK-049] DASH-TOKEN LoadCredential faz-1 etkinleştirme** — status: DONE(2026-09-01·canlı ölçüm) · born: 2026-08-03 (born tahmini: madde metninde tarih yok; repo dosya kanıtı `dash_token_credential.sh` mtime) · owner: operator · size: S · trigger: —
+  What: drop-in'ler (`deploy/oracle-a1/meridian.service.d/` — faz-1 LoadCredential + faz-2 ortam-kanalı-sıfır) + `dash_token_credential.sh` (rotasyon/kurulum/doğrulama/geri-alma). Göç ajanı dosya varlığını doğruladı ama canlı aktivasyonu ölçemedi (GATED önerdi).
+  Why: Rol-1 canlı ölçümü 2026-09-01 gece (ssh, salt-okunur): `meridian.service` (worker+dashboard) ACTIVE ve `LoadCredential` SET — faz-1 canlıda fiilen etkin; kimlik tablosunun "✅ KAPALI" hükmü kanıtla teyit edildi. Not: makinede ayrıca INACTIVE bir `meridian-dash.service` birimi duruyor — infra-simetri kalemine ilk somut vaka olarak devredildi.
+  Ref: kimlik `B-DASH-CRED` (§5 KİMLİK TABLOSU) · canlı ölçüm 2026-09-01.
+
+**[TSK-050] ajan-git mekanik kapısı — PATH-shim/wrapper gerekiyor** — status: DONE(2026-09-01 · `ops/ajan_git_shim.sh` → `~/.local/bin/git` kurulu+canlı doğrulandı [stash RED rc=86, günlük komutlar saydam]; 13 çivi v360 + 4/4 mutasyon + kurulu-kopya ayrışma çivisi. KAPSAM BEYANI: yalnız evrensel-yasaklar mekanik — `stash` her biçimi + `add -A/--all/.`; oturum-kimlikli ayrım [ajan-commit engeli] ortamdan ÖLÇÜLEMEZ çıktı — spike 2026-09-01: Rol-1 ile ajan Bash'i aynı env işaretlerini taşıyor [CHILD_SESSION=1, AI_AGENT=…_agent] — o genişleme bilgi-tabanlı onay ister, ayrı karar. CLAUDECODE!=1 ortamı saydam geçer: operatör terminali etkilenmez; kaçış MERIDIAN_GIT_BYPASS=1) · born: 2026-08-26 (born tahmini: bu maddenin metninde tarih yok; CLAUDE.md §2 git satırındaki 2026-08-26 vakasıyla eşleşiyor) · owner: rol1 · size: S · trigger: —
+  What: yasak bugün yalnız CLAUDE.md sözleşmesiyle duruyor — `dagit.sh` yalnız DAĞITIMI kapıyor, `git stash`ın pre-stash kancası yok; kapı ancak PATH-shim/wrapper'la mekanikleşir.
+  Why: gece 2 ajan `git stash` koşup hasar verdi (hayalet dizin süpürüldü). Karar 2026-08-31 akşam verildi (masa→plan taşıması): İCRA SIRASI ①'de, Rol-1 — kimlik araç inince kapanır. CLAUDE.md §2'de ayrıca 2 zararsız-itirafla salt-okunur beyaz liste ajanlara AÇILDI (2026-08-31 gevşetmesi) — bu madde MEKANİK kapıyı (mutasyon engeli) kapsar, o gevşeme yalnız salt-okunur erişimi kapsıyordu.
+  Ref: kimlik `B-AJAN-GIT` (§5 KİMLİK TABLOSU) · İCRA SIRASI ①.
+
+**[TSK-051] QC LEAN CLI `lean login` — kimlik-bloklu (C2-4)** — status: DROPPED(2026-09-01·operatör kararıyla TSK-046'ya konsolide — aynı B-QC-LOGIN kimliği, örtüşen içerik) · born: 2026-08-09 · owner: operator · size: S · trigger: —
+  What: toolchain hazır (colima+docker+lean 1.0.227 kurulu/çalışıyor) AMA `lean init` QC User id+API token istiyor (`~/.lean/credentials`) — LEAN CLI yolu kimlik-bloklu. Operatör `lean login` (QC Fat Apricot Koala) yaparsa CLI tam-impl açılır. Alternatif (kimliksiz): CLI'sız dotnet-engine (LEAN Apache-2.0 local, QC'siz) — ama LEAN monorepo git-clone + dotnet-build = L-boyut ayrı tur.
+  Why: karar — `lean login` (kolay) mı, dotnet-engine (bağımsız, daha büyük iş) mı.
+  Ref: aynı kimlik `B-QC-LOGIN` — bkz. TSK-046 (QC login + notebook koşumu, KOVA-3/C3); içerik örtüşüyor, konsolidasyon Rol-1'e önerilir. Fizibilite 2026-08-09.
