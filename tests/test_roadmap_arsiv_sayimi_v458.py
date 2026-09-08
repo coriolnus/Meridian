@@ -1,4 +1,6 @@
-"""v455 · §8 ARŞİV MADDELERİ PANODA SAYILIR — liste imsiz arşiv grameri.
+# NUMARA TAŞIMASI 2026-09-08 (Rol-1): v455 → v458 — v455 aynı gün üç teslimde birden alınmıştı (soul_denetimi_rota v455 önce merge oldu;
+# arama_api v455 başka worktree'de). Az-çapalı taraf taşındı (CLAUDE.md §2 vNNN kimlik kuralı); çivi içerikleri değişmedi.
+"""v458 (eski v455, taşındı 2026-09-08) · §8 ARŞİV MADDELERİ PANODA SAYILIR — liste imsiz arşiv grameri.
 
 ÖLÇÜLEN ARIZA (2026-09-08). O gün 107 kapanmış TSK maddesi `§2 TAHTA` ve `§4 ÖNERİ HAVUZU`ndan
 `§8 ARŞİV`e taşındı (`### §8.T.2` / `### §8.H.2` alt bölümleri; aynı gün `§8.K` ve "OPERATÖR
