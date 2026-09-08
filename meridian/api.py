@@ -2184,6 +2184,37 @@ KAPI_OKUYAN_ONEKLER = frozenset({"rev", "rec"})
 KAYIT_KARARI_NOT = ("kayıt-önerisi; karar defterde, davranış DEĞİŞMEZ — gerçek aksiyon knob/kapı "
                     "düzeyindedir (bkz. motor_ici_esik_asan)")
 
+#: SOHBET ÖNERİSİNİN İCRA EDEN TÜRLERİNİN künyesi. `KAYIT_KARARI_NOT`un aynısını yazmak YALAN
+#: OLURDU (inceleme bulgusu, 2026-09-08): aynı yanıtın `icra` alanı planı gerçekten onaylıyor ya
+#: da alarmı gerçekten kapatıyorken "davranış DEĞİŞMEZ" demek, operatörü "hiçbir şey olmadı"
+#: sanmaya sürükler ve `approvals.jsonl`deki karar kaydı KALICI olarak yanlış künye taşırdı.
+SOHBET_KARARI_NOT = ("sohbet önerisi: onay İCRA eder — plan_onayi → mevcut plan onay yolu, "
+                     "alarm_ack → ACK; sonucu `icra` alanı (yanıt) ve `icra_ok` (defter) taşır")
+
+#: SOHBET ÖNERİSİNİN REDDİNİN künyesi (çekişmeli inceleme TUR-2, 2026-09-08). Ret HİÇBİR ŞEY
+#: İCRA ETMEZ; künye türden değil KARARDAN türemeli. Eskiden `reject` de "onay İCRA eder"
+#: künyesini alıyordu ve defter salt-ekleme olduğu için o cümle KALICIYDI: sicili yarın okuyan,
+#: hiçbir şey yapmamış bir satırı "bir kapı açtı" diye okurdu.
+SOHBET_RED_NOT = "sohbet önerisi REDDEDİLDİ — icra YOK, karar defterde durur"
+
+#: Sohbet öneri türlerinden İCRA ÜRETENLER. `not` türü BİLEREK dışarıdadır: onun icrası yoktur
+#: ve künyesi kayıt künyesi kalır (ters yönde yalan söylememek için). Sözlük `sohbet.ONERI_TURLERI`
+#: DONUK demetinin alt kümesidir ve ayrışma ÇİVİLİDİR (v444).
+SOHBET_ICRA_EDEN_TURLER = frozenset({"plan_onayi", "alarm_ack"})
+
+#: SOHBET KARAR SATIRININ İKİ BOOLEAN'I — ÜÇ HÂLİ BİRLİKTE KODLARLAR ve hiçbiri tek başına
+#: okunmaz (çekişmeli inceleme TUR-2, 2026-09-08):
+#:   * `icra_eder=False, icra_ok=False` → İCRA DENENMEDİ (ret, ya da `not` türü),
+#:   * `icra_eder=True,  icra_ok=True`  → denendi ve BAŞARDI,
+#:   * `icra_eder=True,  icra_ok=False` → denendi ve DÜŞTÜ; `not` alanı "icra DÜŞTÜ: …" ekiyle
+#:     sebebi taşır (`loop.operator_onay_ver` istisna atmaz, `{"ok": False, "kod": 404/409}` döner).
+#: `davranissal` BU İKİSİNDEN AYRI BİR SORUYU cevaplar ve anlamı DEĞİŞMEDİ: "bu kimliği bir L1+
+#: UYGULAMA KAPISI okur mu" (`KAPI_OKUYAN_ONEKLER`). `SO-…` kimliklerini hiçbir kapı okumaz, yani
+#: sohbet satırında `davranissal` HER ZAMAN False'tur — pano (`KararPaneli.tsx`, `OnayDefteri.tsx`,
+#: `web/app.js`) tam da o anlamı okuyor ve alanı burada "icra etti mi"ye çevirmek panoya ölçülmüş
+#: bir YANLIŞ CÜMLE kurdururdu. İcra gerçeği bu iki alanla ve `not` künyesiyle söylenir.
+SOHBET_KARAR_ALANLARI = ("icra_eder", "icra_ok")
+
 
 def onay_kimligi(tur: str, ad: str) -> str:
     """Gelen kutusu öğesinin KİMLİĞİ — hem listeleyen uç hem kapı buradan üretir (tek kaynak).
@@ -2243,6 +2274,7 @@ def _defter_tarama() -> dict:
     GÖRÜNÜM TARAFI KARAR VERMEZ: bu fonksiyon yalnız OKUR. Kapı hâlâ `_onay_kapisi`dir ve
     fail-closed davranışı orada; buradan dönen `ts`/`reason`/`satir` alanları SADECE ekrana çıkar.
     """
+    from . import sohbet as _sohbet          # öneri satırı muafiyetinin sahibi (tek kaynak)
     try:
         satirlar = store.read_jsonl(APPROVALS_LEDGER)
     except Exception as e:
@@ -2260,9 +2292,15 @@ def _defter_tarama() -> dict:
         # taşıyan ve `decision` TAŞIMAYAN bir öneri satırı yazar. Onu "kararı okunamayan satır"
         # saymak iki hata üretirdi: (a) öneri doğduğu anda kendi kendine "bozuk karar verilmiş"
         # görünür ve gelen kutusundan DÜŞERDİ, (b) `bozuk` sayacı gerçek olmayan bir kirlilik
-        # bildirirdi. Ayrım DAR: `decision` alanı HİÇ YOKKEN ve satır bir kaynağı ADIYLA
-        # beyan ederken geçerlidir — `decision`ı olup okunamayan bir KARAR satırı hâlâ bozuktur.
-        if "decision" not in r and r.get("kaynak"):
+        # bildirirdi.
+        # AYRIM ÜÇ KOŞULLUDUR (daraltma 2026-09-08, inceleme bulgusu): `decision` HİÇ YOK **ve**
+        # kaynak ADIYLA sohbet **ve** kimlik bir SOHBET ÖNERİSİ kimliği. Eski hâli `r.get(
+        # "kaynak")` doğruluk testiydi: `kaynak` alanı taşıyan HERHANGİ bir satır — yarın başka
+        # bir üreticinin yarım kalmış, gerçekten BOZUK satırı da — sessizce eleniyordu ve
+        # defterin kirliliği `bozuk`/`atfedilemeyen` sayaçlarına hiç girmeden görünmez oluyordu.
+        # Yorumdaki iddia ("sohbet satırı") ile kodun kapsamı ancak böyle aynı şeyi söyler.
+        if ("decision" not in r and r.get("kaynak") == _sohbet.CAGRI_KIND
+                and _sohbet.oneri_kimligi_mi(rid)):
             continue
         k = kararlar.setdefault(rid, {"karar": None, "bozuk": 0, "ts": None, "reason": "",
                                       "satir": None})
@@ -6559,47 +6597,116 @@ async def api_approve(approval_id: str, request: Request):
     # icra bağlamak, fail-closed'ın tersi olurdu.
     _sohbet_onerisi = (_sohbet.oneri_satiri(str(approval_id))
                        if _sohbet.oneri_kimligi_mi(approval_id) else None)
+    # SOHBET ÖNERİSİNİN KÜNYESİ KARARDAN VE İCRA SONUCUNDAN GELİR — `davranissal`DAN DEĞİL
+    # (çekişmeli inceleme TUR-2, 2026-09-08). Önceki tur icra gerçeğini `davranissal: True` ile
+    # söylemişti; o alanın MEVCUT anlamı "bir L1+ uygulama kapısı bu satırı okur mu"dur
+    # (`KAPI_OKUYAN_ONEKLER = {rev, rec}`, `test_karar_kaydi_v240` ile çivili) ve `SO-…` kimliğini
+    # HİÇBİR kapı okumaz — pano (`KararPaneli.tsx`/`OnayDefteri.tsx`) tam o anlamı okuduğu için
+    # ölçülebilir biçimde YANLIŞ cümle kuruyordu. `davranissal` ARTIK DOKUNULMAZ; icra gerçeği
+    # `SOHBET_KARAR_ALANLARI` (`icra_eder`/`icra_ok`) ve `not` künyesiyle söylenir.
+    _icra_eden_tur = (_sohbet_onerisi is not None
+                      and str(_sohbet_onerisi.get("tur") or "") in SOHBET_ICRA_EDEN_TURLER)
     if config.limits()["autonomy_level"] < 1 and not _kapi_disi and _sohbet_onerisi is None:
         raise HTTPException(status_code=403, detail="approvals are L1+ only; system is L0 paper")
     body = await request.json()
     decision = body.get("decision")
     reason = body.get("reason", "")
+    _onaylandi = str(decision or "").strip().lower() == "approve"
+    # ÜÇ KÜNYE, ÜÇ HÂL: ret (icra YOK) · icra eden onay · `not` türünün onayı (kayıt). Ret künyesi
+    # TÜRDEN değil KARARDAN türer; aksi hâlde reddedilen bir `plan_onayi` satırı sicilde kalıcı
+    # olarak "onay İCRA eder" diye dururdu.
+    _sohbet_not = None
+    if _sohbet_onerisi is not None:
+        if not _onaylandi:
+            _sohbet_not = SOHBET_RED_NOT
+        elif _icra_eden_tur:
+            _sohbet_not = SOHBET_KARARI_NOT
+        else:
+            _sohbet_not = KAYIT_KARARI_NOT   # `not` türü: icra YOK, künye kayıt künyesi kalır
+    _icra_eder = bool(_icra_eden_tur and _onaylandi)
     satir = {"id": approval_id, "decision": decision, "reason": reason, "ts": memory.now_iso()}
-    if not _baglayici:
+    if not _baglayici or _sohbet_not is not None:
         # KAYIT SATIRI KENDİNİ BEYAN EDER: defteri sonradan okuyan (insan ya da kapı) bu satırın
-        # hiçbir icrayı açmadığını satırın KENDİSİNDEN görmeli — "hangi önekti?" diye hatırlamak
-        # zorunda kalmamalı. `davranissal: False` bir yorum değil, defterin kendi künyesi.
-        satir["davranissal"] = False
-        satir["not"] = KAYIT_KARARI_NOT
+        # bir icrayı açıp açmadığını satırın KENDİSİNDEN görmeli — "hangi önekti?" diye hatırlamak
+        # zorunda kalmamalı. `davranissal` bir yorum değil, defterin kendi künyesi.
+        satir["davranissal"] = _baglayici
+        satir["not"] = _sohbet_not or KAYIT_KARARI_NOT
     if _onek == ONAY_ONEK["skill_rec_kayit"]:
         # KARAR ANINDAKİ KANIT KÜNYESİ — SUNUCU ÖLÇER, İSTEMCİ BEYAN ETMEZ. Künyeyi gövdeden almak,
         # "kararın dayandığı kanıt"ı karar verenin kendi iddiasına bırakmak olurdu; ayrıca panonun
         # o an ekranda tuttuğu bayat bir künye deftere gerçekmiş gibi girerdi.
         satir["kunye"] = _kayit_karar_kunyesi(approval_id)
-    store.append_jsonl(APPROVALS_LEDGER, satir)
-    # Operatör kararı OLAY defterine de düşer: onay/ret, alarmların ve döngü olaylarının yanında
-    # tek bir zaman çizgisinde okunabilmeli (N/A sorgusu, 2026-07-21).
-    obs.log("approval_decision", approval_id=approval_id, decision=str(decision)[:40],
-            has_reason=bool(reason), davranissal=_baglayici)
-    if reason:
-        memory.distill_lessons()
-    # L0'da 403 YUKARIDA fırladı (zarf düşmez); buraya gelen istek onay defterine satır yazmıştır.
-    _diag_onbellek_bosalt("approval_decision")
     # YANIT KENDİ SINIRINI SÖYLER: "ok: true" tek başına "yapıldı" gibi okunur ve bir
     # kayıt-önerisinde bu YANLIŞ GÜVEN üretirdi — operatör davranışın değiştiğini sanırdı. Alan
     # her kararda taşınır (bağlayıcıda da), çünkü "davranışsal mı" sorusunun cevabı istemcinin
     # kimlik önekini kendi ayrıştırmasına bırakılamaz.
     yanit = {"ok": True, "id": approval_id, "decision": decision, "davranissal": _baglayici}
-    if not _baglayici:
-        yanit["not"] = KAYIT_KARARI_NOT
-        yanit["kunye"] = satir.get("kunye")
     if _sohbet_onerisi is not None:
         # İCRA KARARDAN SONRA VE YALNIZ `approve`DA. Ret hiçbir şeyi yürürlüğe koymaz
         # (`api_skill_revision`in `reject` kolu ile aynı sözleşme).
         yanit["oneri"] = {k: _sohbet_onerisi.get(k) for k in ("tur", "hedef", "gerekce", "oturum")}
-        if str(decision or "").strip().lower() == "approve":
-            yanit["icra"] = _sohbet_icra(_sohbet_onerisi)
+        satir["icra_eder"] = _icra_eder
+        icra = None
+        if _onaylandi:
+            try:
+                icra = _sohbet_icra(_sohbet_onerisi)
+            except Exception as e:
+                # İCRA İSTİSNASI KARARI YUTAMAZ. Defter satırı icradan SONRA yazıldığı için burada
+                # yükseltmek operatörün kararını KAYBETTİRİRDİ (satır hiç yazılmazdı). İstisna
+                # sessiz DEĞİLDİR (Yasa 4): olaya adıyla düşer, yanıtın `icra` alanı ok:false ile
+                # döner ve defter künyesi "icra DÜŞTÜ" ekini alır.
+                obs.warn("sohbet_icra_istisnasi", approval_id=approval_id,
+                         tur=str(_sohbet_onerisi.get("tur") or "")[:40],
+                         error=f"{type(e).__name__}: {e}",
+                         detail="onaylanan sohbet önerisinin icrası İSTİSNA attı — karar defterde "
+                                "KALIR ve künyesi düşüşü beyan eder")
+                icra = {"ok": False, "kod": 500,
+                        "neden": f"icra istisna attı: {type(e).__name__}: {str(e)[:200]}"}
+            yanit["icra"] = icra
+        # `icra_ok` YALNIZ GERÇEKTEN DENENEN İCRANIN HÜKMÜDÜR; denenmediyse False ve o hâli
+        # `icra_eder=False` ile birlikte okumak gerekir (bkz. SOHBET_KARAR_ALANLARI).
+        satir["icra_ok"] = bool(_icra_eder and (icra or {}).get("ok"))
+        if _icra_eder and not satir["icra_ok"]:
+            # `loop.operator_onay_ver` istisna ATMAZ: plan defterde yoksa 404, NO_GO/REVIEW-dışı/
+            # HALT/pozisyon çakışmasında 409 döner. Künye o hâlde ters yöne yalan söylerdi.
+            satir["not"] = f"{satir['not']} | icra DÜŞTÜ: {_icra_dusus_ozeti(icra)}"
+    # DEFTER SATIRI İCRADAN SONRA YAZILIR (çekişmeli inceleme TUR-2): künye icra SONUCUNU
+    # bilmeden yazılırsa `ok:false` dönen bir icra sicilde KALICI olarak "İCRA eder" diye durur.
+    # Kilit `_arac_oneri_yaz`ınkiyle AYNI addır: sohbet öneri sayacı ile bu append aynı deftere
+    # bakar ve iki yazıcının biri kilitsizse dışlama hiç yoktur.
+    with store.file_lock(APPROVALS_LEDGER):
+        store.append_jsonl(APPROVALS_LEDGER, satir)
+    if not _baglayici or _sohbet_not is not None:
+        # YANIT ↔ DEFTER TEK KAYNAK: ikisi ayrı cümle kursaydı, yarın birinin "uygulandı" imâsı
+        # taşımasıyla biterdi. İkisi de `satir`in künyesinden okunur — "icra DÜŞTÜ" eki dahil.
+        yanit["not"] = satir["not"]
+        yanit["kunye"] = satir.get("kunye")
+    for _alan in SOHBET_KARAR_ALANLARI:
+        if _alan in satir:
+            yanit[_alan] = satir[_alan]
+    # Operatör kararı OLAY defterine de düşer: onay/ret, alarmların ve döngü olaylarının yanında
+    # tek bir zaman çizgisinde okunabilmeli (N/A sorgusu, 2026-07-21).
+    obs.log("approval_decision", approval_id=approval_id, decision=str(decision)[:40],
+            has_reason=bool(reason), davranissal=_baglayici,
+            icra_eder=satir.get("icra_eder"), icra_ok=satir.get("icra_ok"))
+    if reason:
+        memory.distill_lessons()
+    # L0'da 403 YUKARIDA fırladı (zarf düşmez); buraya gelen istek onay defterine satır yazmıştır.
+    _diag_onbellek_bosalt("approval_decision")
     return yanit
+
+
+def _icra_dusus_ozeti(icra: dict | None) -> str:
+    """Düşen bir icranın DEFTERE giren tek satırlık özeti — `kod` + `neden` (kesik, uydurmasız).
+
+    Sonuç sözlüğü boşsa "sebep ölçülemedi" denir: sessiz bir boşluk, defteri sonradan okuyana
+    "sebep yoktu" diye görünürdü."""
+    d = icra or {}
+    kod = d.get("kod")
+    neden = str(d.get("neden") or "").strip()
+    if not neden:
+        neden = "sebep ölçülemedi (icra sonucu `neden` alanı taşımadı)"
+    return f"kod={kod if kod is not None else '?'} — {neden[:240]}"
 
 
 # =================================================================================================
@@ -6652,6 +6759,8 @@ async def api_sohbet(request: Request):
     ölçüm değeri olmayan bir satır yazardı. Yanıt, `sohbet.jsonl` satırının TA KENDİSİDİR —
     ikinci bir şekil ikinci bir gerçek olurdu."""
     _auth(request)
+    from starlette.concurrency import run_in_threadpool   # dar kullanımlı import fonksiyonda
+
     from . import sohbet as _sohbet
     try:
         govde = await request.json()
@@ -6660,8 +6769,18 @@ async def api_sohbet(request: Request):
     if not isinstance(govde, dict):
         govde = {}
     try:
-        satir = _sohbet.sohbet_dongusu(str(govde.get("mesaj") or ""),
-                                       str(govde.get("oturum") or ""))
+        # THREAD HAVUZU ZORUNLU (inceleme bulgusu, 2026-09-08). `sohbet_dongusu` uçtan uca
+        # SENKRONDUR: `_kapi_cagir` senkron `httpx.post` (ZAMAN_ASIMI_S=180) ile zincirdeki her
+        # modeli sırayla dener ve `hafiza_ara` aracı `subprocess.run(timeout=180)` ile bekler.
+        # `async def` bir rotanın gövdesinde doğrudan çağrılsaydı bu bekleyişler olay döngüsünün
+        # KENDİ ipliğinde geçerdi ve `serve.sh` uvicorn'u tek işçi/tek döngü koştuğu için AYNI
+        # anda basılan `/api/control/halt`, `/api/alerts/ack` dahil hiçbir uç yanıt veremezdi.
+        # Emsal aynı dosyadadır: `hafiza_recall` uçları bloklayıcı gövdeyi böyle devrediyor.
+        # `sohbet_dongusu` SENKRON KALIR: çiviler (v440) enjekte edilebilir senkron sahte
+        # modellere bağlıdır; async'e çevirmek onları sessizce koroutine borçlu bırakırdı.
+        satir = await run_in_threadpool(_sohbet.sohbet_dongusu,
+                                        str(govde.get("mesaj") or ""),
+                                        str(govde.get("oturum") or ""))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     # İZ (korunum çivisi `test_every_mutating_endpoint_leaves_a_trace`): bu uç bir MUTASYONDUR —
@@ -6673,7 +6792,11 @@ async def api_sohbet(request: Request):
     # sızıntı yüzeyi olurdu (aynı sebeple sır/jeton hiç geçmez). "Ne soruldu" sorusunun adresi
     # `GET /api/sohbet` geçmişidir; buradaki iz "ne zaman, hangi oturumda, hangi modelle, ne
     # büyüklükte" sorusunu cevaplar. Uzunluk ÖLÇÜLÜR (uydurulmaz) ve metnin kendisi değildir.
-    obs.log("sohbet_mesaj", oturum=satir.get("oturum"),
+    # `mesgul` ALANI İZDE DE VARDIR (2026-09-08): kilit meşgulken uç 200 döner ama HİÇBİR tur
+    # koşmaz ve `sohbet.jsonl`e satır yazılmaz. Bayrak olmasaydı olay defterinde bu deneme,
+    # cevaplanmış bir mesajdan ayırt edilemezdi (model=None, turlar=0 bir MODEL ARIZASINDA da
+    # öyle görünür) — "kaç istek meşgule düştü" sorusunun tek okunabilir kaynağı burasıdır.
+    obs.log("sohbet_mesaj", oturum=satir.get("oturum"), mesgul=bool(satir.get("mesgul")),
             mesaj_uzunluk=len(str(satir.get("mesaj") or "")),
             cevap_uzunluk=len(str(satir.get("cevap") or "")),
             turlar=len(satir.get("turlar") or []),
@@ -6755,7 +6878,13 @@ def _bekleyen_sohbet_onerileri(tarama: dict | None = None) -> list[dict]:
             continue
         kutu.append({"type": "sohbet_onerisi", "id": oid, "kaynak": "sohbet",
                      "title": f"Sohbet önerisi: {r.get('tur')} → {r.get('hedef') or '—'}",
-                     "evidence": esc_ev(r.get("gerekce")),
+                     # GEREKÇE KIRPILMAZ (inceleme bulgusu, 2026-09-08). `esc_ev` 200 karakterde
+                     # keser; öteki gelen kutusu öğelerinde bu doğru, çünkü orada `evidence` bir
+                     # ÖZETTİR ve tam metnin başka bir adresi var. Sohbet satırında `gerekce`
+                     # operatörün KARAR VERECEĞİ metnin KENDİSİDİR ve başka adresi yoktur —
+                     # yarısını göstermek kararı sakat bırakırdı. Tavan tek kaynaktan gelir:
+                     # yazan taraf (`sohbet._arac_oneri_yaz`) zaten 800 karakterde kesiyor.
+                     "evidence": str(r.get("gerekce") or ""),
                      "tur": r.get("tur"), "hedef": r.get("hedef"),
                      "oturum": r.get("oturum"), "ts": r.get("ts"),
                      "actions": ["approve", "reject"]})
