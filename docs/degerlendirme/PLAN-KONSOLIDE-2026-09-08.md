@@ -41,7 +41,7 @@
 
 | Kalem | Durum | Kapı / sonraki adım |
 |---|---|---|
-| TSK-064 sır yönetimi (Vault) | D5+D6 bağımsız incelemesi koşuyor (09:04Z) | İnceleme bitince donmuş suite → merge → dağıtım #31 |
+| TSK-064 sır yönetimi (Vault) | ✅ OpenRouter rotasyonu 12:19Z TAMAM (14 kopya, kanıtlar günlükte; dağıtım #32) | Eski anahtar iptali operatörde; Faz-2 Vault (T3) sırada |
 | TSK-176 altyapı-kod (Terraform+Ansible) | A1 fazı Task 2 ajanı koşuyor | Task 2/3 bitişi → inceleme+merge → T1; T2/T3 öncesi operatör kısa onayı |
 
 ## 2. Ölçüm pencereleri (dokunulmaz)
@@ -110,7 +110,7 @@
 
 | Karar | Ne soruluyor | Kapı |
 |---|---|---|
-| TSK-064 icra | OpenRouter'ın iki yeni anahtarıyla `sudo ./deploy/oracle-a1/sir_rotasyon.sh --openrouter` (A1, bakım penceresi) | Anahtarlar üretildi (09-08 sabah); iki deneme (06:13Z, 07:23Z) betik hatasıyla geri alındı, dosyalar yedekle birebir; D5+D6 incelemede → dağıtım #31 → Rol-1 "hazır" der, operatör aynı komutu koşar |
+| TSK-064 icra | ✅ 12:19Z operatör koştu: 14 kopya, negatif kontroller RET, kapı 200, envanter 14 EŞİT, Hindsight yeni anahtarla 2/2 | Eski iki anahtarı OpenRouter panosunda iptal et (bekleyen tek adım) |
 | TSK-131 disk | 120G'de ne yapalım: dur / disk büyüt / sıkıştır | Operatör 09-07: "eşik günü yeniden sor" (~09-13) |
 | TSK-063 Faz-6 | INTRADAY_ARM'ı açalım mı | Önce dört kilit kanıtla dolmalı (Faz-5 örneklem 11/20); sonra sorulacak |
 | TSK-044 FINVIZ Elite | Ücretli token alalım mı | BEKLEMEDE 4. kez (09-07 10:13Z); yeni kanıt yokken sorulmaz |
