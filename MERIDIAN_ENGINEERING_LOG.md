@@ -3041,3 +3041,4 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   birimi 22:00'de başlamadı (çakışma yok) → dilim-2 adayı: hızlı model / 240 s / cevaplayan model. Bayat oturum cron'ları silindi (4).
 - **Kapanış:** SendMessage bu oturumda kapalı → tur-2/3 için taze ajanlar aynı worktree'de (hafıza notu). Sırada: etkilenen küme → UI build →
   dağıtım #28 → push → operatöre gece özeti.
+- **Dağıtım #28** 01:42:45Z sha df8502c (kuru koşum: 9 ölü GCP dosyası A1'den silindi, F9 birebir, F10 anomali yok; [3] uv sync --no-default-groups; healthz 200; [5c] artefakt taze; [5b] kod-tazelik ✓). Canlı doğrulama: worker/barsarchive/tick-watchdog/hindsight-api/apisix aktif, `/api/sohbet/kota` `dolu` alanı, sır kaynakları credential, nous kanıtı ok. EDG-2026-086 ölçüm penceresi bu dağıtımla başlar. Push: suite #36 hükmü (11244/1-beklenen) + RUNBOOK regen + etkilenen küme 352/0.
