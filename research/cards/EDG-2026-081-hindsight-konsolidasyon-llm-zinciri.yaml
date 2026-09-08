@@ -86,3 +86,8 @@ gun1_kapanis_2026_09_06: >
   (14:48Z Rol-1) pending_consolidation 0 (taban 2884), failed 0, observations 5996 (+1.546 gün içinde); m2.7 426/426 başarı; failover üyeleri
   hiç çağrılmadı; boş 429 denemesi 0. K1 eşiği erken sağlandı; hüküm 7 günlük pencere sonunda yazılır (K2 bedel + m2.7 tavanı gözlemi).
 
+sapma_notu_2026_09_08: >
+  (09:5xZ Rol-1) ÖN-KAYIT SAPMASI: zincir 2026-09-08 sabahı zorunlu değişti — minimax m2.7/m3 :free OpenRouter'da ücretli oldu (404).
+  CONSOLIDATION artık nemotron-3-ultra birincil, üyeler super → ultra → gemma-26b (429); REFLECT ling-3.0-flash-fin zinciri (EDG-077/074 notları).
+  K1/K2 eşikleri minimax tavanı varsayımıyla yazılmıştı; 09-08 sonrası gözlemler farklı zincire aittir. Hüküm turunda (~09-20) pencere iki
+  parçaya bölünerek okunur (09-05→09-08 minimax, 09-08→ yeni zincir); eşik/pencere DEĞİŞMEZ, sapma raporlanır (uydurma yasağı: karışık pencereden tek sayı yayılmaz).
