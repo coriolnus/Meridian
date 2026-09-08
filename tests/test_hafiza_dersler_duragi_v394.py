@@ -86,9 +86,20 @@ def soy_metin(metin: str) -> str:
 
 
 def test_hafiza_KAYITTA_dokuz_bolum_VAR():
+    """SAYIM ARTIK BURADA DEĞİL — VE BU BİR GEVŞETME DEĞİL, TEK-KAYNAK DÜZELTMESİ
+    (TSK-167 dilim-2, 2026-09-08): Hafıza'ya ONUNCU durak eklendi (`hafiza-arama`) ve
+    `len(...) == 9` sabiti o gün YANLIŞ hâle geldi. Toplamı iki dosyada tutmak, bir
+    sonraki durakta ikisinin sessizce ayrışması demekti; toplamın tek sahibi bundan
+    böyle `tests/test_arama_ui_v460.py::test_kayitta_ONUNCU_bolum_hafiza_arama`.
+
+    BU ÇİVİNİN KENDİ SORUSU DEĞİŞMEDİ: "dersler kayıtta VAR mı ve DOKUZUNCU sırada mı".
+    Konum sabiti korundu — TSK-118'in ölçtüğü şey buydu, bir toplam değil."""
     kimlikler = _memory_bolumler_kimlikleri()
     assert kimlikler.count("hafiza-dersler") == 1, "hafiza-dersler kaydı yok ya da tekil değil"
-    assert len(kimlikler) == 9, f"YUZEYLER.memory.bolumler dokuz değil: {len(kimlikler)} ({kimlikler})"
+    assert kimlikler.index("hafiza-dersler") == 8, (
+        f"hafiza-dersler dokuzuncu sırada değil: {kimlikler}"
+    )
+    assert len(kimlikler) >= 9, f"kayıt dokuzun altına düşmüş: {len(kimlikler)} ({kimlikler})"
 
 
 def test_dersler_kaydinin_BASLIK_VE_SORUSU():
@@ -100,15 +111,20 @@ def test_dersler_kaydinin_BASLIK_VE_SORUSU():
 
 
 def test_gorunum_LISTESINDE_dokuz_kimlik_dogru_SIRAYLA():
+    """ÖNEK KONTROLÜ (TSK-167 dilim-2, 2026-09-08): liste ONUNCU durakla büyüdü
+    (`hafiza-arama`, SONA). Bu çivinin ölçtüğü şey ilk DOKUZUN sırasıdır — CP
+    paritesinin sekizi artı TSK-118'in dokuzuncusu. Tam listeyi burada da yazmak,
+    her yeni durakta iki dosyada iki kez düzeltilen (ve bir gün yalnız birinde
+    düzeltilen) bir kopya olurdu; kuyruğun sahibi `test_arama_ui_v460.py`."""
     g = soy(GORUNUMLER)
     m = re.search(r"HAFIZA_GORUNUMLERI\s*=\s*\[(.*?)\]\s*as const", g, re.S)
     assert m, "HAFIZA_GORUNUMLERI dizisi okunamadı — desen bayat"
     kimlikler = re.findall(r'"(hafiza-[a-z]+)"', m.group(1))
-    assert kimlikler == [
+    assert kimlikler[:9] == [
         "hafiza-anasayfa", "hafiza-bellekler", "hafiza-bilgi", "hafiza-recall",
         "hafiza-reflect", "hafiza-belgeler", "hafiza-varliklar", "hafiza-yapilandirma",
         "hafiza-dersler",
-    ], f"sıra ya da küme bozuk: {kimlikler}"
+    ], f"ilk dokuzun sırası ya da kümesi bozuk: {kimlikler}"
 
 
 def test_govde_TABLOSUNDA_dersler_govdesi_VAR():

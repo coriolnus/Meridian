@@ -106,6 +106,7 @@ import { useRota } from "../../rota";
 import { NABIZ_MS, useApi, type Durum } from "../../veri";
 import { Olculemedi } from "../sistem/parcalar";
 import { AnaSayfa } from "./AnaSayfa";
+import { Arama } from "./Arama";
 import { Bellekler } from "./Bellekler";
 import { Belgeler } from "./Belgeler";
 import { BilgiTabani } from "./BilgiTabani";
@@ -144,6 +145,11 @@ const GOVDELER: Record<HafizaGorunumu, ComponentType<GorunumOzellikleri>> = {
   "hafiza-varliklar": Varliklar,
   "hafiza-yapilandirma": Yapilandirma,
   "hafiza-dersler": Dersler,
+  /* `hafiza-arama` (TSK-167 dilim-2, 2026-09-08) aynı disiplinle eklendi. Gövde
+     `GorunumOzellikleri`nin ÜÇÜNÜ de alır ama YALNIZ `kayit`i okur — `bank` bu
+     görünümde anlamsızdır (kaynak hafıza bankası değil, deponun taban indeksi) ve
+     bu etkisizlik ekranda BEYAN edilir (Rol-1 hükmü K3, `Arama.tsx` başlığı). */
+  "hafiza-arama": Arama,
 };
 
 /** Banka kimliklerini gövdeden çıkarır — kimliksiz satır sayılmaz, uydurulmaz. */

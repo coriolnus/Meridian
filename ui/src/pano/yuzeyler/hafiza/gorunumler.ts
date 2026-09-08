@@ -50,6 +50,11 @@ export const HAFIZA_GORUNUMLERI = [
   // Meridian'ın kendi eklediği, sırası CP `sidebar.tsx::navItems`ten OKUNMADI —
   // sekiz durağın SIRASI hâlâ birebir, bu yalnız SONA eklendi (gerekçe `alanlar.ts`).
   "hafiza-dersler",
+  // ONUNCU DURAK DA CP PARİTESİNDEN DEĞİL (TSK-167 dilim-2, 2026-09-08, Rol-1 hükmü K7):
+  // `hafiza-arama` deponun sqlite-vec taban indeksini okur (`GET /api/arama`), hafıza
+  // bankasını DEĞİL — CP `sidebar.tsx`inde karşılığı yok. Dokuzuncuyla aynı disiplin:
+  // ilk sekizin SIRASI hâlâ birebir, bu da yalnız SONA eklendi (gerekçe `alanlar.ts`).
+  "hafiza-arama",
 ] as const;
 
 export type HafizaGorunumu = (typeof HAFIZA_GORUNUMLERI)[number];

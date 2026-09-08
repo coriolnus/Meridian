@@ -46,7 +46,7 @@ import * as React from "react";
 
 import { toast } from "sonner";
 
-import { BookOpen, CandlestickChart, ExternalLink, MessageSquarePlus, RefreshCw, Search } from "lucide-react";
+import { BookOpen, CandlestickChart, ExternalLink, FileSearch, MessageSquarePlus, RefreshCw, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -70,6 +70,8 @@ import {
   AJANA_SOR_ANAHTARLARI,
   AJANA_SOR_YOLU,
   ARAMA_ANAHTARLARI,
+  BELGELERDE_ARA_ANAHTARLARI,
+  BELGELERDE_ARA_YOLU,
   BELGE_ANAHTARLARI,
   DIS_BELGELER,
   kapanisMetni,
@@ -79,6 +81,7 @@ import {
 } from "@/pano/komutlar";
 import { useRouter } from "@/pano/rota";
 import { OturumHatasi, apiGet } from "@/pano/veri";
+import { aramaIstegiBirak } from "@/pano/yuzeyler/hafiza/aramaMantigi";
 import { sohbetIstegiBirak } from "@/pano/yuzeyler/ajan/sohbet";
 import type { PiyasaGovdesi, PiyasaSatiri } from "@/pano/yuzeyler/sistem/uctipleri";
 
@@ -398,6 +401,39 @@ export function SearchDialog() {
                     {query.trim() === ""
                       ? "Ajan yüzeyindeki sohbet girişine gider ve odaklanır"
                       : `“${query.trim()}” sohbet girişine taşınır — GÖNDERİLMEZ, oradan sen gönderirsin`}
+                  </span>
+                </span>
+              </CommandItem>
+            </CommandGroup>
+
+            {/* ---- BELGELERDE ARA — AYNI HÜKÜM, İKİNCİ MUHATAP -------------
+                    (TSK-167 dilim-2, 2026-09-08) Palet yine GÖNDERMEZ, GÖTÜRÜR:
+                    yazılmış metin Hafıza → Arama kutusuna TAŞINIR ve orada durur.
+                    Buradaki ek gerekçe ölçülü — uç her sorguda A1'in 4 OCPU'sunda
+                    yeni bir ONNX gömme oturumu kuruyor; paletten ateşlenen bir arama
+                    o bedeli panonun en sık açılan yüzeyine taşırdı.
+                    AYRI KOMUT, "Meridian'a sor…"UN KOPYASI DEĞİL: sohbet BANKAYA ve
+                    modele sorar, bu ise DEPO BELGELERİNE (sqlite-vec taban indeksi,
+                    LLM yok). İkisini tek satırda birleştirmek, iki ayrı kaynağı tek
+                    şey sanmak olurdu. ---------------------------------------- */}
+            <CommandSeparator />
+            <CommandGroup heading="Belgeler · /api/arama">
+              <CommandItem
+                value="belgelerde ara docs gunluk roadmap kart"
+                keywords={[...BELGELERDE_ARA_ANAHTARLARI]}
+                onSelect={() => {
+                  aramaIstegiBirak(query);
+                  handleOpenChange(false);
+                  router.push(BELGELERDE_ARA_YOLU);
+                }}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <FileSearch />
+                  <span className="truncate">Belgelerde ara…</span>
+                  <span className="truncate text-muted-foreground text-xs">
+                    {query.trim() === ""
+                      ? "Hafıza → Arama kutusuna gider ve odaklanır"
+                      : `“${query.trim()}” arama kutusuna taşınır — ARANMAZ, oradan sen ararsın`}
                   </span>
                 </span>
               </CommandItem>

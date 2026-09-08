@@ -223,6 +223,13 @@ const BOLUM_EK: Readonly<Record<string, readonly string[]>> = {
   // kayıtlı bir görünüm (`alanlar.ts::YUZEYLER.memory.bolumler`, sayaç 42'den
   // 43'e bilerek çıktı) ve tam da o dokuzuncu durak — ama sayılan, uydurma değil.
   "hafiza-dersler": ["ders", "lesson", "lessons.md", "damitim"],
+  // ONUNCU DURAK (TSK-167 dilim-2, 2026-09-08, Rol-1 hükmü K7). Anahtarlar operatörün
+  // AKLINDAKİ kelimeyi taşır: bu görünüm "hafıza"ya değil DEPO BELGELERİNE sorar, o
+  // yüzden "belge", "docs", "gunluk", "roadmap", "kart" burada — "recall"/"bank" DEĞİL
+  // (onlar bankaya soran görünümün kelimeleri ve ikisini karıştırmak operatörü yanlış
+  // kaynağa gönderirdi). Değerler KATLANMIŞ (ö/ü/ş yok), tablonun geri kalanıyla aynı.
+  "hafiza-arama": ["arama", "ara", "belge", "belgelerde ara", "docs", "gunluk", "roadmap",
+                   "kart", "indeks", "semantik", "grep", "nerede yaziyor"],
 };
 
 const YUZEY_EK: Readonly<Record<string, readonly string[]>> = {
@@ -284,6 +291,35 @@ export const AJANA_SOR_YOLU = rotaYaz(SOHBET_DILIMI, "sohbet");
 
 export const AJANA_SOR_ANAHTARLARI: readonly string[] = [
   "ajan", "sor", "sohbet", "chat", "soru", "meridian", "neden", "aciklama", "sohbete git", "ask",
+];
+
+/* ---------------------------------------------------------------------------
+   BELGELERDE ARA — paletin İKİNCİ metin-taşıyan komutu (TSK-167 dilim-2, 2026-09-08)
+   ---------------------------------------------------------------------------
+   AYNI HÜKÜM, AYNI DESEN: palet hiçbir şey GÖNDERMEZ, yalnız GÖTÜRÜR ve yazılmış
+   metni taşır ("geri alınamaz icranın en kötü eşleşmesi hızlı erişimdir" —
+   `search-dialog.tsx` başlığı). Burada ikinci bir gerekçe daha var ve ölçülü: uç her
+   sorguda A1'in 4 OCPU'sunda yeni bir ONNX gömme oturumu kurar; paletten ateşlenen
+   bir arama, her tuş vuruşunda bir süreç doğurma riskini panonun en sık kullanılan
+   yüzeyine taşırdı. Sorguyu operatör Arama görünümünde, İKİNCİ bir eylemle koşturur.
+
+   ADRES `alanlar.ts` KAYDINDAN TÜRER — `AJANA_SOR_YOLU`dan farklı olarak: sohbet
+   muhatabı bir bölüm DEĞİL (`<muhatap>.<sekme>` grameri), arama ise gerçek bir bölüm
+   kimliği (`hafiza-arama`, kayıtta ONUNCU). Adresi elle yazmak, kayıt değiştiğinde
+   çalışan ama yanlış yere giden bir bağ bırakırdı — bu deponun sinsi sınıfı.
+
+   METİN ADRESTE TAŞINMAZ: `gorunumler.ts::sekmeliYol` bugün TEK sorgu anahtarı biliyor
+   (`sekme`) ve ikincisini sessizce düşürürdü (ölçülmüş sınır); ayrıca operatörün
+   serbest metnini adres çubuğuna yazmak geçmişte ve yer imlerinde kalıcı bir kopya
+   bırakırdı. Taşıyıcı bu yüzden istek kutusudur (`hafiza/arama.ts::aramaIstegiBirak`).
+   --------------------------------------------------------------------------- */
+
+/** Paletin arama görünümüne götürdüğü kanonik adres. TEK kaynak: `yuzeyYolu` + kayıt kimliği. */
+export const BELGELERDE_ARA_YOLU = yuzeyYolu("memory", "hafiza-arama");
+
+export const BELGELERDE_ARA_ANAHTARLARI: readonly string[] = [
+  "belge", "belgelerde ara", "docs", "gunluk", "roadmap", "kart", "arama", "ara",
+  "indeks", "nerede yaziyor", "grep",
 ];
 
 /* ---------------------------------------------------------------------------
