@@ -65,6 +65,9 @@
 # Ayrıca: `--geri-al` kendi yedeğini alır, ÖTEKİ adın YERİNDE duran `.env` satırına dokunmaz
 # (credential kaynağı rotasyondan sonra bayat olabilir) ve `$ad`ın satırını geri yazamadıysa
 # drop-in'i KALDIRMADAN durur (yoksa sır iki kanaldan birden düşerdi).
+#
+# `_kaynak_ozeti`nin kullandığı `stat -c` GNU coreutils'e özgüdür (BSD/macOS'ta yok) — bu betik
+# YALNIZ A1'de (Ubuntu, GNU) koşar; başka bir yerdeki "izin okunamadı" düşüşü ARIZA değildir.
 set -euo pipefail
 
 # TEST KANCASI — YALNIZ ÇİVİ İÇİN. Boşken (üretimdeki tek hâl) yollar mutlaktır; v439 çivisi burayı
@@ -156,6 +159,17 @@ _env_satiri_dolu_mu() {
        | tr -d '[:space:]' | wc -c | tr -d ' ')" != "0" ]
 }
 
+# `durum` için `.env` ORTAM KANALI ÖZETİ — `_env_satiri_dolu_mu`nun raporlama kardeşi. Üç hâl
+# AYRI: yok · DEĞERSİZ (satır var, değer yok) · VAR. Eski rapor `grep -qs "^${ad}="` kullanıyordu,
+# yani DEĞERSİZ bir satır (`${ad}=`) de eşleşip "VAR" basıyordu — oysa `_env_satiri_dolu_mu` (ve
+# ona bağlı `geri_al` kapısı) aynı satırı "ayarlı DEĞİL" sayar. Rapor kapının ölçtüğü şeyi
+# ÖLÇMELİDİR (tek-kaynak yasası): 2026-09-08 yeniden incelemesinde ölçüldü.
+_env_kanali_ozeti() {
+  local ad="$1"
+  sudo grep -qs "^${ad}=" "$ENVF" || { echo yok; return 0; }
+  if _env_satiri_dolu_mu "$ad"; then echo VAR; else echo "DEĞERSİZ (satır var, değer yok)"; fi
+}
+
 # `durum` için TEK SATIRLIK KAYNAK ÖZETİ. Üç hâl AYRI: yok · var-ama-boş · dolu. Eski rapor
 # `test -s` kullanıyordu, yani olay günü 1 baytlık satır sonuyla yazılmış kaynakları "hazır"
 # gösteriyordu — rapor, kapıların ölçtüğü şeyle AYNI şeyi ölçmeli (tek-kaynak yasası). Boyut da
@@ -190,8 +204,7 @@ _deger_dosyala() {
   # yürürlükte olduğunu ölçemiyoruz — tahmin etmek uydurmadır, betik durur. (Yalnız `.env`
   # kipinde: credential kaynağı tek satırlıktır ve orada "ikinci satır" bir kaynak sınıfı değil.)
   if [ "$kip" = "env" ]; then
-    # sessiz-yutma: `grep -c` EŞLEŞME YOKKEN rc 1 döner ve `set -e` altında betiği burada düşürürdü; yutulan tek şey o rc'dir — sayının kendisi (0/1/N) hemen aşağıdaki kapıda ölçülüyor
-    n="$(sudo grep -c "^${ad}=" "$src" 2>/dev/null || true)"
+    n="$(sudo grep -c "^${ad}=" "$src" 2>/dev/null || true)"  # sessiz-yutma: `grep -c` eşleşme yokken rc 1 döner ve `set -e` altında betiği burada düşürürdü; yutulan tek şey o rc'dir — sayının kendisi (0/1/N) hemen aşağıdaki kapıda ölçülüyor
     [ "${n:-0}" -le 1 ] 2>/dev/null || die "ÇİFT SATIR: $src içinde ${n} adet '^${ad}=' satırı var
      — hangisi yürürlükte belirsiz (systemd SONuncuyu okur, bu betik ilkini). Önce fazlası elle
      silinir, sonra --faz1 $ad. HİÇBİR dosya değiştirilmedi."
@@ -210,8 +223,7 @@ _env_yedekle() {
   local etiket="$1" taban hedef n=0
   sudo install -d -m 0700 "$YEDEK_DIR" \
     || die "yedek dizini açılamadı: $YEDEK_DIR — değişiklik YAPILMADI"
-  # sessiz-yutma: chown yalnız root olarak anlamlıdır ve dizin izni (0700) zaten bir satır üstte zorlanıyor; testteki sahte kökte root YOKTUR
-  sudo chown root:root "$YEDEK_DIR" 2>/dev/null || true
+  sudo chown root:root "$YEDEK_DIR" 2>/dev/null || true  # sessiz-yutma: chown yalnız root olarak anlamlıdır ve dizin izni (0700) zaten bir satır üstte zorlanıyor; testteki sahte kökte root YOKTUR
   taban="$YEDEK_DIR/.env.bak-$etiket-$(date -u +%Y%m%dT%H%M%SZ)"
   hedef="$taban"
   while sudo test -e "$hedef"; do
@@ -223,8 +235,7 @@ _env_yedekle() {
   # İZİN KISMA SESSİZ GEÇİLMEZ: yedek `.env`in tam kopyasıdır, yani sırrı düz metin taşır.
   # 0400'e düşürülemeyen bir yedek, geçişin kapatmaya çalıştığı okuma yüzeyini AÇIK bırakır.
   sudo chmod 0400 "$hedef" || die "$hedef izni 0400'e kısılamadı — değişiklik YAPILMADI"
-  # sessiz-yutma: yukarıdaki gerekçenin aynısı — sahiplik root'suz ortamda değiştirilemez, izin kapısı bir satır üstte ZORLANIYOR
-  sudo chown root:root "$hedef" 2>/dev/null || true
+  sudo chown root:root "$hedef" 2>/dev/null || true  # sessiz-yutma: yukarıdaki gerekçenin aynısı — sahiplik root'suz ortamda değiştirilemez, izin kapısı bir satır üstte ZORLANIYOR
   oldu "yedek: $hedef (0400 root:root · dizin 0700)"
 }
 
@@ -277,8 +288,7 @@ _olcum_kurtar() {
   local k="$1"
   if sudo test -e "$k.olcum-yedek"; then sudo mv -f "$k.olcum-yedek" "$k"; fi
   if sudo test -e "$ENVF.olcum-yedek"; then sudo mv -f "$ENVF.olcum-yedek" "$ENVF"; fi
-  # sessiz-yutma: restart'ın hatası bastırılır çünkü asıl geri alma iki `mv`dir ve onların hatası bastırılmaz; restart zaten bir sonraki elle koşumda tekrarlanır
-  sudo systemctl restart meridian >/dev/null 2>&1 || true
+  sudo systemctl restart meridian >/dev/null 2>&1 || true  # sessiz-yutma: restart'ın hatası bastırılır çünkü asıl geri alma iki `mv`dir ve onların hatası bastırılmaz; restart zaten bir sonraki elle koşumda tekrarlanır
 }
 
 # `.env` içindeki `<ad>=` satırını `<deger dosyası>`nın içeriğiyle DEĞİŞTİRİR (yoksa ekler).
@@ -287,20 +297,20 @@ _olcum_kurtar() {
 _env_satiri_yaz() {
   local ad="$1" src="$2" yeni
   yeni="$(mktemp)"; chmod 600 "$yeni"
-  sudo grep -v "^${ad}=" "$ENVF" > "$yeni" 2>/dev/null || true
+  sudo grep -v "^${ad}=" "$ENVF" > "$yeni" 2>/dev/null || true  # sessiz-yutma: `.env` yalnız `${ad}=` satırından ibaretse -v hiçbir satır basmaz, rc 1 döner — geçerli bir durum, hata değil
   printf '%s=' "$ad" >> "$yeni"          # printf KABUK BUILTIN'i — argv'ye giden bir süreç yok
   sudo cat "$src" >> "$yeni"
   sudo install -m 600 "$yeni" "$ENVF"
-  sudo chown ubuntu:ubuntu "$ENVF" 2>/dev/null || true
+  sudo chown ubuntu:ubuntu "$ENVF" 2>/dev/null || true  # sessiz-yutma: chown yalnız root/sudo ortamında anlamlıdır; testteki sahte kökte ubuntu kullanıcısı yoktur, dosya zaten install ile doğru izinle yazıldı
   rm -f "$yeni"
 }
 
 _env_satiri_sil() {
   local ad="$1" yeni
   yeni="$(mktemp)"; chmod 600 "$yeni"
-  sudo grep -v "^${ad}=" "$ENVF" > "$yeni" 2>/dev/null || true
+  sudo grep -v "^${ad}=" "$ENVF" > "$yeni" 2>/dev/null || true  # sessiz-yutma: `.env` yalnız `${ad}=` satırından ibaretse -v hiçbir satır basmaz, rc 1 döner — geçerli bir durum, hata değil
   sudo install -m 600 "$yeni" "$ENVF"
-  sudo chown ubuntu:ubuntu "$ENVF" 2>/dev/null || true
+  sudo chown ubuntu:ubuntu "$ENVF" 2>/dev/null || true  # sessiz-yutma: chown yalnız root/sudo ortamında anlamlıdır; testteki sahte kökte ubuntu kullanıcısı yoktur, dosya zaten install ile doğru izinle yazıldı
   rm -f "$yeni"
 }
 
@@ -328,7 +338,7 @@ _kanit_nous() {
     printf '"\n'
     printf 'url = "%s/api/secrets/test/nous"\n' "$API"
   } > "$cfg"
-  cvp="$(curl -K "$cfg" 2>/dev/null || true)"
+  cvp="$(curl -K "$cfg" 2>/dev/null || true)"  # sessiz-yutma: curl bağlantı hatasında (servis kapalı/negatif kontrol penceresi) rc≠0 döner; bu bir ATAMADIR ve `set -e` altında betiği düşürürdü — aşağıdaki case zaten OK dışını YOK sayıyor
   rm -f "$cfg"
   case "$cvp" in
     *'"ok": true'*|*'"ok":true'*) echo OK ;;
@@ -359,7 +369,10 @@ durum() {
   echo "=== DURUM (TSK-064 Faz-1B) ==="
   echo "  systemd sürümü: $(systemctl --version 2>/dev/null | head -1)"
   echo "  drop-in $DROPIN_AD: $([ -f "$BIRIM/$DROPIN_AD" ] && echo KURULU || echo yok)"
-  echo "  LoadCredential (yürürlükte): $(systemctl show meridian -p LoadCredential --value 2>/dev/null || true)"
+  # `|| true` KALDIRILDI (2026-09-08 yeniden inceleme): substitüsyon bir `echo` argümanının
+  # İÇİNDE — `set -e` yalnız DIŞ komutun (`echo`, hep 0 döner) rc'sine bakar, iç substitüsyonun
+  # rc'si hiç ölçülmez; `|| true` burada FONKSİYONSUZ bir kalıntıydı (ölçüldü: errexit testi).
+  echo "  LoadCredential (yürürlükte): $(systemctl show meridian -p LoadCredential --value 2>/dev/null)"
   # RAPOR, KAPILARIN ÖLÇTÜĞÜ ŞEYİ ÖLÇER. Kalıntı dururken faz-1/faz-2/geri-alma ÇIKIŞ 2 ile durur;
   # bunu söylemeyen bir "durum" operatörü sağlıklı sanıp o üç komuta yollar. `durum` SALT-OKUNURDUR:
   # durmaz, SÖYLER. Yol basılır, değer basılmaz (dosyalar sır taşır, adları taşımaz).
@@ -373,12 +386,14 @@ durum() {
     k="$(_kaynak_yolu "$ad")"
     echo "  $ad"
     echo "      credential kaynağı ($k): $(_kaynak_ozeti "$k")"
-    echo "      ortam kanalı ($ENVF): $(sudo grep -qs "^${ad}=" "$ENVF" && echo VAR || echo yok)"
+    echo "      ortam kanalı ($ENVF): $(_env_kanali_ozeti "$ad")"
   done
   echo "  --- Faz-1A (pano vekili, Hindsight TENANT anahtarı) ---"
   echo "  drop-in $HAFIZA_DROPIN_AD: $([ -f "$BIRIM/$HAFIZA_DROPIN_AD" ] && echo KURULU || echo yok)"
   echo "      credential kaynağı ($HAFIZA_KRED): $(_kaynak_ozeti "$HAFIZA_KRED")"
-  echo "  servis: $(systemctl is-active meridian 2>/dev/null || true) · healthz: $(curl -s -o /dev/null -w '%{http_code}' "$API/healthz" 2>/dev/null || echo 000)"
+  # `|| true` (systemctl is-active için) KALDIRILDI: aynı gerekçe — echo argümanı içindeki
+  # substitüsyonun rc'si dış komutun rc'sini etkilemez, `set -e`yi hiç tetiklemezdi.
+  echo "  servis: $(systemctl is-active meridian 2>/dev/null) · healthz: $(curl -s -o /dev/null -w '%{http_code}' "$API/healthz" 2>/dev/null || echo 000)"
   echo "  (değerler BASILMAZ — yalnız izin/varlık.)"
 }
 
@@ -404,7 +419,7 @@ faz1() {
   # (TSK-049 hükmü: rotasyon + kanal geçişi aynı pencerede; OpenRouter anahtarları operatörde
   # olduğu için burada ZORLANMAZ, beyanla ertelenebilir).
   printf '  %s için YENİ değer (boş = .env icindeki mevcut degeri tasi): ' "$ad" >&2
-  read -s -r _girilen || true
+  read -s -r _girilen || true  # sessiz-yutma: stdin EOF'ta (interaktif olmayan koşum) read rc≠0 döner; boş girdi zaten aşağıda "mevcut değeri taşı" dalına düşer, read'in kendi rc'si anlamsız
   echo >&2
   if [ -n "${_girilen:-}" ]; then
     printf '%s\n' "$_girilen" > "$tmp"
@@ -423,7 +438,7 @@ faz1() {
   #    PID 1 olarak, sandbox'tan ÖNCE okur. En dar izin, işi gören izindir.
   sudo install -d -m 0755 "$ETC"
   sudo install -m 0400 "$tmp" "$kred"
-  sudo chown root:root "$kred" 2>/dev/null || true
+  sudo chown root:root "$kred" 2>/dev/null || true  # sessiz-yutma: chown yalnız root olarak anlamlıdır; testteki sahte kökte root yoktur, dosya zaten install ile doğru izinle yazıldı
   oldu "credential kaynağı yazıldı: $kred (0400 root:root)"
 
   # 2) ORTAM KANALI DA AYNI DEĞERE ÇEKİLİR. Faz 1'de iki kanal birden canlıdır; ayrı değer
@@ -517,8 +532,7 @@ faz2() {
   echo "  · negatif kontrol: İKİ kanal da sahte — kanıt YOK demeli"
   _env_satiri_yaz "$ad" "$sahte"
   sudo install -m 0400 "$sahte" "$kred"
-  # sessiz-yutma: chown yalnız root olarak anlamlıdır ve sahiplik zaten bir sonraki satırdaki restart + kanıt turunda dolaylı ölçülür; testteki sahte kökte root yoktur
-  sudo chown root:root "$kred" 2>/dev/null || true
+  sudo chown root:root "$kred" 2>/dev/null || true  # sessiz-yutma: chown yalnız root olarak anlamlıdır ve sahiplik zaten bir sonraki satırdaki restart + kanıt turunda dolaylı ölçülür; testteki sahte kökte root yoktur
   sudo systemctl restart meridian
   _servis_ayakta || die "negatif kontrol sırasında servis açılmadı"
   neg="$(_kanit_nous)"
@@ -614,7 +628,7 @@ geri_al_hafiza() {
   # 53'e DOKUNULMAZ: iki drop-in ayrı yaşar ve motorun KENDİ sırlarının geçişi bu geri alımdan
   # etkilenmez. Vekil, dosya bacağına (`/opt/hindsight/.env`) düşer — kod iki kanalı da okur.
   sudo rm -f "$BIRIM/$HAFIZA_DROPIN_AD"
-  sudo rmdir "$BIRIM" 2>/dev/null || true
+  sudo rmdir "$BIRIM" 2>/dev/null || true  # sessiz-yutma: dizin boş değilse (53-nous-kapi-credential.conf duruyorsa) rmdir başarısız olur ve bu DOĞRU davranıştır — kaldırılması gereken tek dosya bir üstteki satırda kaldırıldı
   sudo systemctl daemon-reload
   sudo systemctl restart meridian
   _servis_ayakta || die "servis açılmadı — journalctl -u meridian -n 50"
@@ -704,8 +718,7 @@ geri_al() {
   #    kanalını HER İKİ sır için kapatır. Bilerek: yarım kurulu bir birim (bir kaynağı olan, öteki
   #    olmayan) hiç açılmazdı; geri almanın da bütün olması gerekir.
   sudo rm -f "$BIRIM/$DROPIN_AD"
-  # sessiz-yutma: dizin boş değilse (54 drop-in'i duruyorsa) rmdir başarısız olur ve bu DOĞRU davranıştır — kaldırılması gereken tek dosya bir üstteki satırda kaldırıldı
-  sudo rmdir "$BIRIM" 2>/dev/null || true
+  sudo rmdir "$BIRIM" 2>/dev/null || true  # sessiz-yutma: dizin boş değilse (54 drop-in'i duruyorsa) rmdir başarısız olur ve bu DOĞRU davranıştır — kaldırılması gereken tek dosya bir üstteki satırda kaldırıldı
   sudo systemctl daemon-reload
   sudo systemctl restart meridian
   if _servis_ayakta; then

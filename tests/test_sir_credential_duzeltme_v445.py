@@ -44,6 +44,17 @@ açtı: negatif kontrolün `.olcum-yedek`leri (gerçek değerin diskteki TEK kop
       penceresinde servis düşerse trap'in DEĞERLERİ GERİ GETİRMESİ · `--faz2 KAPI_APIKEY`
       (kapı kilidi 401 / kilit yok / uç okunamıyor).
 
+TUR 3 (2026-09-08 gece) — ÇEKİŞMELİ İNCELEMENİN BLOKLAYICI OLMAYAN BULGULARI (B4 turu).
+  L1. `durum`ın "ortam kanalı" satırı `grep -qs "^ad="` ile ölçüyordu: DEĞERSİZ bir satır
+      (`${ad}=`) da eşleşip "VAR" basardı, oysa kapılar (`_env_satiri_dolu_mu`) onu "ayarlı
+      DEĞİL" sayar. Üç hâl AYRI: yok · DEĞERSİZ (satır var, değer yok) · VAR.
+  L2. Betikte tur-1 öncesinden kalma 10 İŞARETSİZ `|| true` vardı (6'sı önceki satırda gerekçeli,
+      10'u hiç gerekçesiz). Her biri ya aynı satırda `# sessiz-yutma: <≥20 karakter>` işareti
+      aldı ya da (yutma gerekmiyordu — `echo "...$(...)"` içinde errexit zaten tetiklenmez)
+      kaldırıldı; TÜM işaretler aynı satıra taşındı ki nail tek bir tutarlı regex ölçsün.
+  L3. `stat -c` GNU coreutils'e özgüdür; betiğin BAŞLIĞINA (A1/GNU dışında koşulmaz) tek satır
+      beyan eklendi.
+
 SIR DEĞERİ YOK: buradaki her değer SAHTEDİR ve adında öyle yazar. Betik A1'de koşar; bu dosya
 A1'e HİÇ dokunmaz — her şey `SIR_GECIS_KOK` sahte kökü + PATH şimleri (sudo/systemctl/curl/date)
 ile ölçülür (v439'un G bölümündeki desen).
@@ -1044,3 +1055,93 @@ def test_K1e_durum_OLCUM_KALINTISINI_raporlar(tmp_path):
     assert str(ey) in r.stdout and str(ky) in r.stdout, r.stdout
     assert _agac(kok) == once, "durum diske yazdı"
     assert KURTARMA_NOUS not in cikti, "SIR DEĞERİ basıldı"
+
+
+# =================================================================================================
+# L) TUR 3 (2026-09-08 gece) — bloklayıcı olmayan bulgular (B4 iç incelemesi)
+# =================================================================================================
+
+def test_L1_durum_ortam_kanali_UC_HAL_ayirir(tmp_path):
+    """B4/L1. `durum`ın "ortam kanalı" satırı `grep -qs "^ad="` ile ölçüyordu: bu yalnız SATIRIN
+    var olup olmadığını söyler, DEĞERİNİ değil. DEĞERSİZ bir satır (`KAPI_APIKEY=`) da eşleşip
+    "VAR" basardı, oysa `_env_satiri_dolu_mu` (ve ona bağlı `geri_al` K2e hükmü) aynı satırı
+    "ayarlı DEĞİL" sayar — rapor kapının ölçtüğü şeyi ÖLÇMELİYDİ (tek-kaynak yasası). Üç hâl
+    AYRI ölçülür: yok · DEĞERSİZ (satır var, değer yok) · VAR."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    envf = kok / "opt/meridian/.env"
+
+    # Hâl 1: NOUS_API_KEY satırı DOLU, KAPI_APIKEY satırı HİÇ YOK.
+    envf.write_text("NOUS_API_KEY=stub-deger\n", encoding="utf-8")
+    r1 = _kos(tmp_path, ortam)
+    assert r1.returncode == 0, r1.stdout + r1.stderr
+    satirlar1 = [ln for ln in r1.stdout.splitlines() if "ortam kanalı (" in ln]
+    assert len(satirlar1) == 2, r1.stdout  # ADLAR sırası: NOUS_API_KEY, sonra KAPI_APIKEY
+    assert satirlar1[0].rstrip().endswith(": VAR"), "dolu satır VAR demeli: " + satirlar1[0]
+    assert satirlar1[1].rstrip().endswith(": yok"), "hiç olmayan satır yok demeli: " + satirlar1[1]
+
+    # Hâl 2: NOUS_API_KEY satırı HİÇ YOK, KAPI_APIKEY satırı VAR ama DEĞERSİZ. Bu OLAYIN KENDİSİ:
+    # eski ölçüm burada da "VAR" derdi.
+    envf.write_text("KAPI_APIKEY=\n", encoding="utf-8")
+    r2 = _kos(tmp_path, ortam)
+    assert r2.returncode == 0, r2.stdout + r2.stderr
+    satirlar2 = [ln for ln in r2.stdout.splitlines() if "ortam kanalı (" in ln]
+    assert len(satirlar2) == 2, r2.stdout
+    assert satirlar2[0].rstrip().endswith(": yok"), "hiç olmayan satır yok demeli: " + satirlar2[0]
+    assert "DEĞERSİZ" in satirlar2[1], "değersiz satır DEĞERSİZ demeli: " + satirlar2[1]
+    assert not satirlar2[1].rstrip().endswith(": VAR"), \
+        "DEĞERSİZ satır eskisi gibi VAR görünüyor: " + satirlar2[1]
+
+
+#: Betikte gerçek (yorum-dışı) `|| true` işaretlemesi için nail regex'i — L2'nin TEK KAYNAĞI.
+#: Aynı satırda `# sessiz-yutma:` + en az 20 karakterlik gerekçe ARANIR; önceki/sonraki satırdaki
+#: bir yorum SAYILMAZ (v445 B4/L2 hükmü: "işaretli olanlar aynı satırda taşır").
+_ISARETLI_TRUE = re.compile(r"\|\|\s*true\b.*?#\s*sessiz-yutma:\s*(.*)$")
+
+
+def _betikte_isaretsiz_true_satirlari(metin: str) -> list[tuple[int, str]]:
+    isaretsiz = []
+    for i, ln in enumerate(metin.splitlines(), start=1):
+        if ln.strip().startswith("#"):
+            continue  # tam satır yorum — "|| true" burada METİN olarak geçebilir, kod değildir
+        if "|| true" not in ln:
+            continue
+        m = _ISARETLI_TRUE.search(ln)
+        if not m or len(m.group(1).strip()) < 20:
+            isaretsiz.append((i, ln))
+    return isaretsiz
+
+
+def test_L2_betikte_ISARETSIZ_true_YOK(tmp_path):
+    """B4/L2. Tur-1 öncesinden kalan 10 işaretsiz `|| true` vardı (bkz. modül başlığı); her biri
+    ya gerekçeli `# sessiz-yutma: <≥20 karakter>` işareti aldı ya da (yutma gerekmiyordu) kaldırıldı.
+    Nail: betikte işaretsiz `|| true` sayısı SIFIR. "İşaretli" AYNI SATIRDA `# sessiz-yutma:`
+    taşımak demektir — önceki satırdaki bir yorum bu nail için saymaz, çünkü kaynak metinden
+    mekanik olarak (regex ile) doğrulanabilir olması gerekir."""
+    metin = BETIK.read_text(encoding="utf-8")
+    isaretsiz = _betikte_isaretsiz_true_satirlari(metin)
+    assert not isaretsiz, "işaretsiz '|| true' satırları: " + repr(isaretsiz)
+
+
+def test_L2b_betikte_EN_AZ_bir_isaretli_true_var(tmp_path):
+    """L2'nin pozitif tabanı (bedel yasası): nail'in 'sıfır işaretsiz' hükmü betikteki TÜM
+    `|| true`leri kaldırarak da 'geçebilir' — bu durumda nail hiçbir şey ölçmüyor demektir.
+    Betikte gerçekten gerekli kaçışlar (ör. `grep -c` rc 1) kalmalı ve İŞARETLİ olmalı."""
+    metin = BETIK.read_text(encoding="utf-8")
+    isaretli = [ln for ln in metin.splitlines()
+                if not ln.strip().startswith("#") and "|| true" in ln
+                and _ISARETLI_TRUE.search(ln)]
+    assert len(isaretli) >= 10, "beklenenden az işaretli '|| true' — pozitif taban çürüdü mü: " \
+        + repr(isaretli)
+
+
+def test_L3_basligin_stat_c_GNU_ozgu_beyani_var(tmp_path):
+    """B4/L3. `_kaynak_ozeti`nin kullandığı `stat -c` GNU coreutils'e özgüdür (BSD/macOS'ta
+    yok); betik YALNIZ A1'de (Ubuntu/GNU) koşar. Beyan BAŞLIK BLOĞUNDA (kod başlamadan ÖNCE,
+    `set -euo pipefail`ten önce) olmalı — orası RUNBOOK'a üretilen kısımdır ve operatörün ilk
+    okuduğu yerdir."""
+    metin = BETIK.read_text(encoding="utf-8")
+    assert "set -euo pipefail" in metin, "beklenmeyen betik biçimi"
+    baslik = metin.split("set -euo pipefail", 1)[0]
+    assert "GNU" in baslik, "başlıkta GNU'ya özgü olduğu beyan edilmemiş: stat -c"
+    assert "stat -c" in baslik, "başlık `stat -c`den hiç söz etmiyor"
+    assert "A1" in baslik, "başlık betiğin YALNIZ A1'de koştuğunu söylemiyor"
