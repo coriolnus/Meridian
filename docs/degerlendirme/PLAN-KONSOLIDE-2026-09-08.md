@@ -42,7 +42,7 @@
 | Kalem | Durum | Kapı / sonraki adım |
 |---|---|---|
 | TSK-064 sır yönetimi (Vault) | ✅ OpenRouter rotasyonu 12:19Z TAMAM (14 kopya, kanıtlar günlükte; dağıtım #32) | Eski anahtar iptali operatörde; Faz-2 Vault (T3) sırada |
-| TSK-176 altyapı-kod (Terraform+Ansible) | A1 fazı Task 2 ajanı koşuyor | Task 2/3 bitişi → inceleme+merge → T1; T2/T3 öncesi operatör kısa onayı |
+| TSK-176 altyapı-kod (Terraform+Ansible) | A1 fazı Task 1-3 main'de (13:2xZ); ilk playbook `--check` A1'e karşı temiz | Task 4: ilk gerçek dağıtım (#33) operatör gözetiminde → sonra T1 APISIX→Terraform |
 
 ## 2. Ölçüm pencereleri (dokunulmaz)
 
