@@ -1,0 +1,33 @@
+---
+# TSK-176 Faz A0 Task 2 — systemd drop-in'leri (fazlı sertleştirme + credential geçişleri).
+#
+# Bu dosyalar bugüne dek HİÇBİR betikle kurulmuyordu: `h3_tur2_sertlestir.sh` ve
+# `sir_credential_gecis.sh` tek seferlik GEÇİŞ betikleridir (geçişler bitti, betikler geri-alım
+# için duruyor) ve dagit `[1c]` drop-in'leri yalnız RAPORLUYORDU. Yani taze bir A1 kurulumu
+# sertleştirme ve credential drop-in'leri OLMADAN doğardı. Rol bu boşluğu kapatır.
+#
+# DAHA GÜÇLÜ SIR SÖZLEŞMESİ: bu drop-in'ler sırrın DEĞERİNİ değil, systemd'nin credential
+# kanalını (LoadCredential=…) taşır (memory loadcredential-kanali). Kopyalanan dosyalarda
+# parola/anahtar YOKTUR — `deploy/` altındaki dosyanın kendisi git'te izlidir.
+- name: Drop-in dizinleri
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ dropin_dizinleri }}"
+
+# `with_fileglob` ara dizinde `*` KABUL ETMEZ (fileglob lookup dizin adını
+# `find_file_in_search_path` ile çözer; ölçüldü 2026-09-08) — bu yüzden `dropin_kaynaklari`
+# dizin başına bir desen taşır ve wildcard yalnız dosya adındadır. Hedef dizin adı ile kaynak
+# desenin ana dizini arasındaki ayrışmayı v451 çivisi ölçer.
+- name: Drop-in dosyaları (glob'dan; hedef dizin dosya yolundan türer)
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item | dirname | basename }}/{{ item | basename }}"
+    owner: root
+    group: root
+    mode: "0644"
+  with_fileglob: "{{ dropin_kaynaklari }}"
+  notify: daemon-reload

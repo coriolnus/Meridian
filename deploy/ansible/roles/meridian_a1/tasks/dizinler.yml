@@ -1,0 +1,49 @@
+---
+# TSK-176 Faz A0 Task 2 — dizinler (deploy.sh 8 + 9a-c + sır dizinleri).
+#
+# Bot kum havuzlarının depo tarafında karşılığı YOKTUR ve olamaz: dagit.sh rsync'i `/var`ı
+# ANKORLU dışlar (aksi hâlde `--delete` botun biriktirdiği her şeyi her dağıtımda silerdi) ve
+# `.gitignore` da `/var/` taşır — dizini canlıda birinin yaratması ŞART (deploy.sh 9a'nın
+# gerekçesi). 0700 + sahip `ubuntu`: `sudo bash deploy.sh` ile koşulan bir kurulumda dizin
+# ROOT'un oluyordu ve birim (`User=ubuntu`) kendi kum havuzuna SESSİZCE yazamıyordu — ham-brifing
+# düşüş yolu tam bu arızayı maskeler. Ansible'da sahiplik VARSAYILMAZ, ZORLANIR.
+# MOD 0700, 0755 DEĞİL (TUR 2, K9): `meridian-backup.service` bu dizini her koşumda
+# `ExecStartPre=/bin/chmod 700 /home/ubuntu/backups` ile sertleştiriyor — arşivde secrets var
+# (birim başlığı: "secrets arşive girer → 0700/0600 disiplini korunur"). Rol 0755 yazarken iki
+# yazar aynı dizini ters yönde çekiyordu: kalıcı salınım. Bedeli yalnız gürültü değil, (a)
+# idempotency KANITI (2. koşum changed=0) çürür, (b) yedek arşivi her playbook koşumu ile bir
+# sonraki timer atışı arasında dünyaya okunur kalır. Değer birim dosyasından TÜRETİLİR ve
+# `tests/test_ansible_a0_v451.py::test_yedek_dizini_modu_birim_chmodu_ile_esit` ikisini kıyaslar.
+# (Plan taslağındaki "ubuntu 0755" satırı bu ölçümle çürüdü — rapora yazıldı.)
+- name: Yedek hedefi (meridian-backup.timer ilk atışta var olmalı)
+  ansible.builtin.file:
+    path: "/home/{{ meridian_kullanici }}/backups"
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+
+- name: Bot kum havuzları (her bot kendi artefaktının TEK yazarı — §9.3)
+  ansible.builtin.file:
+    path: "{{ repo_kok }}/var/bots/{{ item }}"
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+  loop: "{{ bot_adlari }}"
+
+- name: Sır dizini /etc/meridian (DEĞER yazılmaz — yalnız dizin; A1 ölçümü root:root 0755)
+  ansible.builtin.file:
+    path: /etc/meridian
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Sır dizini /etc/hindsight/creds (A1 ölçümü root:root 0755)
+  ansible.builtin.file:
+    path: /etc/hindsight/creds
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

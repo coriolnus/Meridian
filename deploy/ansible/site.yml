@@ -1,0 +1,26 @@
+---
+# TSK-176 Faz A0 — `meridian_a1` playbook. dagit.sh'a DOKUNMAZ (A0 yalnız VM-içi kurulum
+# yakınsaması); A1 fazında dagit'in yerine geçecek (docs/TASARIM-ALTYAPI-KOD-2026-09-08.md §8 K1).
+# Rol-1 DIŞINDA kimse A1'e karşı koşmaz (CLAUDE.md §2/§9) — bu dosya yalnız
+# `--syntax-check`/`ansible-lint` ile ajan turlarında ölçülür, gerçek koşum Rol-1'e aittir.
+- name: Meridian A1 — VM-içi durum yakınsaması (paketler · birimler · drop-in'ler · polkit · hermes · denetim)
+  hosts: meridian
+  become: true
+  gather_facts: true
+  pre_tasks:
+    - name: Check-mode yalancı-yeşil beyanı
+      ansible.builtin.debug:
+        msg: >-
+          check-mode (--check --diff) 'command'/'shell' görevlerini ATLAR ve register'a bağlı
+          koşulları check modda değerlendirmez; 'temiz' hükmü yalnız copy/file/systemd_service gibi
+          check-mode destekleyen modüller için geçerlidir (TASARIM-ALTYAPI-KOD-2026-09-08.md §2.1).
+      when: ansible_check_mode
+  # `service_facts` KALDIRILDI (TUR 2, K8 — Yasa 6). Toplanıyordu ama HİÇBİR görev
+  # `ansible_facts.services`i okumuyordu; üstelik görevin adı ("kadans kapısı + F10 anomali
+  # kapısı için fact") var olmayan iki okuyucu iddia ediyordu. Kadans kapısı bilerek
+  # `systemctl is-enabled` ile ölçülüyor (Rol-1 hükmü 4: fact toplayıcı .timer birimlerini
+  # vermeyebilir); F10 anomalisi ise BİLEREK düzeltilmiyor, yani okunacak bir kapı yok.
+  # Okunmayan artefakt üretilmemişten farksızdır — ve yanlış iddia taşıyan bir görev adı,
+  # okuyanı olmayan bir çıktıdan daha zararlıdır.
+  roles:
+    - meridian_a1

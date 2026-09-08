@@ -1,0 +1,33 @@
+---
+# TSK-176 Faz A0 Task 2 — sistem paketleri + redis + unattended-upgrades (deploy.sh 1).
+#
+# redis-server ŞART, opsiyonel değil: meridian/hotstate.py sıcak durumu (heartbeat, mrd:bars ring)
+# Redis'te tutar, meridian/barsarchive.py o ring'i diske arşivler. Redis yoksa arşivci her turda
+# "REDIS YOK" deyip boşa döner ve dakikalık barlar TEMELLİ kaybolur (deploy.sh başlığındaki
+# gerekçenin aynısı). Ubuntu paketi VARSAYILAN OLARAK yalnız 127.0.0.1 dinler — bu rol
+# /etc/redis/redis.conf'a DOKUNMAZ (dokunmak A1'in public IP'sinde parolasız Redis açmak olurdu).
+- name: Sistem paketleri (apt)
+  ansible.builtin.apt:
+    name: "{{ apt_paketleri }}"
+    state: present
+    update_cache: true
+    # 3600 sn: aynı saatte ikinci koşum apt indeksini yeniden çekmez (idempotency turunun
+    # "changed=0" hedefi apt cache'i yüzünden gürültüye boğulmasın).
+    cache_valid_time: 3600
+
+- name: Redis servisi (enable + started — deploy.sh 1 `enable --now` ile birebir)
+  # redis-server uzun ömürlü MERIDIAN servisi DEĞİLDİR (restart yasağı listesi meridian/
+  # barsarchive/litestream/hindsight/apisix birimlerini kapsar); deploy.sh onu her koşuda
+  # `enable --now` ile açıyordu ve `started` yalnız DURUYORSA başlatır (restart DEĞİL).
+  ansible.builtin.systemd_service:
+    name: redis-server
+    enabled: true
+    state: started
+
+- name: Gözetimsiz güncelleme politikası (52meridian-unattended-upgrades)
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../oracle-a1/52meridian-unattended-upgrades"
+    dest: /etc/apt/apt.conf.d/52meridian-unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"

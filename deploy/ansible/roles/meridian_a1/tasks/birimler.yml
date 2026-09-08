@@ -1,0 +1,139 @@
+---
+# TSK-176 Faz A0 Task 2 — systemd birim dosyaları + kadans kapısı + enable (deploy.sh 6a-f, 10, 11a-c).
+#
+# BİRİM LİSTESİ ELLE YAZILMAZ: kaynak `defaults/main.yml::birim_kaynaklari` glob'larıdır ve
+# `tests/test_ansible_a0_v451.py` o glob'ların deploy/ altındaki HER `*.service`/`*.timer`
+# dosyasını kapsadığını ölçer. dagit `[1c]`/F9'un kör noktası (`.timer`'lar ve hindsight birimleri
+# taranmıyordu) tam burada kapanır — elle liste tutulduğu sürece yeni bir birim sessizce dışarıda
+# kalır ve bunu kimse görmez.
+#
+# RESTART YOK: hiçbir uzun ömürlü servise `state` verilmez. `enabled: true` birim dosyasının
+# yürürlüğe girmesini SAĞLAMAZ (çalışan süreç eski dosyayla koşmaya devam eder) — bu BİLİNÇLİ:
+# restart bakım penceresinin ve dagit.sh'ın işidir (memory bakim-penceresi-tick-watchdog).
+
+# ---------------------------------------------------------------------------------------------
+# KADANS KAPISI (deploy.sh 6c-e/11a-c) — brifing/bekçi/karne
+# ---------------------------------------------------------------------------------------------
+# NEDEN `command`, `service_facts` DEĞİL (Rol-1 hükmü 4): `ansible_facts.services` timer birimlerini
+# vermeyebilir (fact toplayıcı .service'leri listeler); kapı timer'ın `is-enabled` durumuna
+# bakıyor. Ölçemediğimiz bir fact'e dayanan kapı SESSİZCE hep-açık ya da hep-kapalı olurdu.
+# `failed_when` ELLE yazılır (`failed_when: false` ve `ignore_errors` Yasa 4 gereği YASAK):
+# `systemctl is-enabled` etkin birimde 0, etkin olmayanda 1, HİÇ VAR OLMAYAN birimde 4
+# ('not-found') döner; başka bir çıkış kodu (2 = geçersiz argüman vb.) GERÇEK arızadır ve
+# playbook'u DÜŞÜRMELİDİR.
+#
+# rc=4 KABUL EDİLİR (TUR 2, K2): eski liste `[0, 1]` idi ve taze bir A1'de — yani birim
+# dosyalarının henüz /etc/systemd/system'a kurulmadığı, ROLÜN VAR OLUŞ SEBEBİ olan senaryoda —
+# playbook bu dosyanın İLK görevinde ölüyordu: hiçbir birim kopyalanmıyor, dropinler/polkit/
+# hermes/sağlık hiç koşmuyordu. Daha kötüsü README'nin verdiği kaçış yolu (`-e brifing_devri=true`)
+# da erişilemezdi, çünkü ölçüm görevi bayrağa bakmadan koşuyordu (artık `when` ile bakıyor).
+# "Birim yok" = "etkin değil"dir; harita zaten boş dizgeyle fail-closed davranır.
+# ÖLÇÜLMEDİ (dürüst beyan): rc eşlemesi systemd belgesinden alındı, A1'de ÖLÇÜLMEDİ (ajan ssh
+# yapmaz). Rol-1 ilk koşumda `systemctl is-enabled yok-bir-birim.timer; echo $?` ile doğrular.
+- name: Kadans timer'larının etkinliğini ölç (brifing/bekçi/karne)  # noqa: command-instead-of-module
+  # noqa gerekçesi: `systemd_service` modülü bir birimi ETKİNLEŞTİRİR, DURUMUNU SORMAZ; burada
+  # istenen tam olarak "hiçbir şeyi değiştirmeden oku"dur (`changed_when: false`).
+  ansible.builtin.command:
+    cmd: "systemctl is-enabled {{ item }}.timer"
+  loop: "{{ kadans_birimleri }}"
+  register: kadans_durum
+  changed_when: false
+  failed_when: kadans_durum.rc not in [0, 1, 4]
+  # Devir bayrağı verildiyse ölçüme GEREK YOK: kapı zaten açık. Ölçümü koşulsuz bırakmak,
+  # belgelenen kaçış yolunu ölçüm görevinin arkasına hapsediyordu.
+  when: not (brifing_devri | bool)
+
+- name: Kadans etkinlik haritası (tek ölçüm, tek kaynak — aşağıdaki her kapı bunu okur)
+  ansible.builtin.set_fact:
+    # `results | default([])`: ölçüm görevi atlandığında (devir bayrağı) `kadans_durum` yalnız
+    # `skipped` taşır ve `results` hiç doğmaz. `default('')` ise check-mode içindir: `command`
+    # görevleri ATLANIR (site.yml pre_tasks beyanı) ve `stdout` doğmaz — harita boş dizgelerle
+    # dolar, kapı KAPALI davranır (fail-closed).
+    kadans_etkin: >-
+      {{ dict(kadans_birimleri | zip(kadans_durum.results | default([]) | map(attribute='stdout', default='') | map('trim') | list)) }}
+
+- name: Kadans kapısı KAPALI — dokunulmayan birimler (neden ADIYLA basılır)
+  ansible.builtin.debug:
+    msg: >-
+      DOKUNULMADI: {{ item }}.service + {{ item }}.timer — timer durumu
+      '{{ kadans_etkin[item] | default("(ölçülemedi)") }}' ('enabled' değil) ve brifing_devri
+      kapalı. Günlük/haftalık Telegram teslimatını AÇMAK bir OPERATÖR KARARIDIR; bu playbook onu
+      kendiliğinden vermez. Devretmek için: -e brifing_devri=true
+  loop: "{{ kadans_birimleri }}"
+  when:
+    - not (brifing_devri | bool)
+    - (kadans_etkin[item] | default('')) != 'enabled'
+
+# ---------------------------------------------------------------------------------------------
+# BİRİM DOSYALARI
+# ---------------------------------------------------------------------------------------------
+# TEK GÖREV, TEK KAYNAK: kadans birimleri ayrı bir kopya göreviyle ele alınMAZ — ayrı görev,
+# kaynak dizini ikinci kez yazmak (`…/oracle-a1/meridian-brifing.service`) demekti ve iki liste
+# sessizce ayrışırdı. Kapı `when` içinde, dosya-adından türeyen `birim_adi` üzerinden işler.
+- name: Birim dosyaları (glob'dan; kadans üçlüsü kapıya tabi)
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item | basename }}"
+    owner: root
+    group: root
+    mode: "0644"
+  with_fileglob: "{{ birim_kaynaklari }}"
+  vars:
+    birim_adi: '{{ item | basename | regex_replace("\.(service|timer)$", "") }}'
+  # `| bool` ŞART (TUR 2, K2): `-e brifing_devri=false` ansible'da DİZGEdir ve boş olmayan dizge
+  # TRUTHY'dir — ölçüldü: bayrak `false` verildiğinde kapı AÇILIYORDU, yani operatör kapıyı
+  # kapalı tutmak için yazdığı komutla tam tersini yapıyordu. Süzgeç defaults'taki gerçek bool
+  # değeri etkilemez, yalnız komut satırından gelen dizgeyi doğru çevirir.
+  when: >-
+    (birim_adi not in kadans_birimleri)
+    or (brifing_devri | bool)
+    or ((kadans_etkin[birim_adi] | default('')) == 'enabled')
+  notify: daemon-reload
+
+# Birim dosyası kopyalandıysa systemd'ye OKUTULMADAN `enable` etmek, systemd'nin diskteki eski
+# görüntüsüyle sembolik bağ kurmak demektir. Handler'ı burada bilerek boşaltıyoruz.
+- name: Handler'ları burada boşalt (daemon-reload, enable'dan ÖNCE)
+  ansible.builtin.meta: flush_handlers
+
+# ---------------------------------------------------------------------------------------------
+# ETKİNLEŞTİRME — `state` YOK (TASARIM §4.4: F10 enabled+inactive anomalisi bilerek DURDURULUR)
+# ---------------------------------------------------------------------------------------------
+- name: Uzun ömürlü servisler — yalnız enable (start/restart YASAK)
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+  loop: "{{ etkin_birimler }}"
+
+- name: Timer'lar — enable + started (kadans üçlüsü kapıya tabi)
+  # `state: started` timer için güvenlidir: timer'ı başlatmak hedef birimi ÇALIŞTIRMAZ, yalnız
+  # zamanlayıcıyı kurar (deploy.sh 10'un `enable --now`'ı ile birebir).
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: "{{ etkin_timerlar }}"
+  vars:
+    birim_adi: '{{ item | regex_replace("\.timer$", "") }}'
+  when: >-
+    (birim_adi not in kadans_birimleri)
+    or (brifing_devri | bool)
+    or ((kadans_etkin[birim_adi] | default('')) == 'enabled')
+
+- name: BİLEREK disabled kalan birimler — rol dokunmadı (Yasa 6, sessiz atlama yok)
+  ansible.builtin.debug:
+    msg: >-
+      DOKUNULMADI (bilinçli, A1 ölçümü): {{ devre_disi_birimler | join(', ') }} — bu birimler
+      canlıda `disabled` ve öyle kalmalı; `meridian-aylik-bucket-kopya` yalnız timer'ıyla,
+      `meridian-learn` ise elle tetiklenir.
+
+# deploy.sh 6j'nin karşılığı. BURADA, birimlerin yanında: rsync tabanlı dağıtım (dagit.sh)
+# izinleri her zaman taşımaz ve `Type=oneshot` bir birim ExecStart'ını çalıştıramazsa 203/EXEC
+# ile düşer — bekçi SESSİZCE ölür. Sağlık dosyasında değil birim dosyasında olmasının nedeni:
+# bu bir HÜKÜM değil, bir birimin çalıştırılabilirlik ÖN KOŞULUdur.
+- name: Tick-watchdog betiği çalıştırılabilir (0755)
+  ansible.builtin.file:
+    path: "{{ repo_kok }}/deploy/oracle-a1/tick_watchdog.sh"
+    state: file
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0755"

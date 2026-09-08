@@ -1,0 +1,66 @@
+---
+# TSK-176 Faz A0 Task 2 — hermes yapılandırması (deploy.sh 5, 6h-i, 12).
+#
+# KURULUM BU ROLDE YOKTUR ve bu bir KARARDIR (A0 envanteri Bulgu 5): deploy.sh 5 hermes'i
+# ağdan indirdiği betiği doğrudan kabuğa borulayarak kuruyordu — sürüm pini yok, sha kapısı yok.
+# Doğrulanmamış bir ikiliyi otomatik kurmak, ajanın beynini tedarik zincirine açık bırakmaktır.
+# A0'da rol yalnız ÖLÇER ve REÇETE basar; kurulum operatör kararıdır. Kurulu değilse sistem
+# BOZUK DEĞİLDİR: Meridian deterministik öneriye düşer (RUNBOOK Bölüm D) — ama sessizce değil.
+- name: Hermes dizini
+  ansible.builtin.file:
+    path: "{{ hermes_dizin }}"
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+
+# ÜZERİNE YAZAR AMA YEDEKLER (`backup: true`): `hermes config set` ve profil işlemleri BU
+# DOSYALARA canlıda yazar, yani gerçekten kaybedilecek içerik olabilir (deploy.sh 6i'nin
+# `cp -n` + damga çiftinin Ansible karşılığı; damga çözünürlüğü modülün işi).
+- name: Hermes brifingi (SOUL.md) ve güvenlik duruşu (config.yaml)
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../hermes/{{ item }}"
+    dest: "{{ hermes_dizin }}/{{ item }}"
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0644"
+    backup: true
+  loop:
+    - SOUL.md
+    - config.yaml
+
+- name: Hermes ikilisi aranıyor (meridian/hermes.py::_hermes_bin sırası)
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ hermes_ikili_yollari }}"
+  register: hermes_ikili_stat
+
+- name: Hermes ikilisi DURUM raporu (kapı DEĞİL — rapor)
+  ansible.builtin.debug:
+    msg: >-
+      {% set bulunanlar = hermes_ikili_stat.results
+         | selectattr('stat.exists', 'defined') | selectattr('stat.exists') | map(attribute='item') | list %}
+      {% if bulunanlar %}
+      hermes kurulu: {{ bulunanlar | join(', ') }} — beyin zincirinin nous bacağı kurulabilir durumda.
+      {% else %}
+      hermes KURULU DEĞİL ve bu rol onu KURMAZ (sürüm/sha kapısı yok — bilinçli sınır).
+      Etki: nous bacağı ikili olmadan çalışmaz; Meridian deterministik öneriye düşer (döngü durmaz).
+      Reçete (operatör, A1'de elle): resmi hermes-agent kurulumunu SÜRÜM PİNLİ ve sha doğrulamalı
+      koş, ardından `hermes --version` ile çalıştığını ölç ("kurulu" != "çalışır").
+      {% endif %}
+
+- name: Bot profil dizinleri (deploy.sh 12 — ROL DIŞI, yalnız rapor)
+  ansible.builtin.stat:
+    path: "{{ hermes_dizin }}/profiles/{{ item }}"
+  loop: "{{ bot_adlari }}"
+  register: hermes_profil_stat
+
+- name: Bot profil raporu (profil kurulumu OPERATÖR kararıdır — `hermes profile install`)
+  ansible.builtin.debug:
+    msg: >-
+      Profil durumu:
+      {% for r in hermes_profil_stat.results %}
+      {{ r.item }}={{ 'var' if (r.stat.exists | default(false)) else 'YOK' }}{{ ', ' if not loop.last else '' }}
+      {% endfor %}
+      — 'YOK' arıza değildir: profilsiz bot HAM modda koşar (ölçülebilir davranış farkı),
+      profil kurulumu bu rolün DIŞINDADIR (CLAUDE.md: yeni ajan kimliği operatör kararı).

@@ -1,0 +1,128 @@
+---
+# TSK-176 Faz A0 Task 2 — uv + Meridian venv'i (deploy.sh 2-3).
+
+# KAPI-0 (Rol-1 hükmü 3): `uv_surum` defaults'ta ÖLÇÜLMEMİŞ nöbetçi değerle (`OLCULECEK`) doğar.
+# Ajan A1'e ssh yapamaz (CLAUDE.md §3), uydurma yasağı da tahmini yasaklar — o yüzden değer
+# BOŞ değil, AÇIKÇA ölçülmemiş işaretlidir ve playbook onu görünce DURUR. Sürümsüz installer
+# URL'si her koşumda başka bir uv kurabilirdi (A0 envanteri Bulgu 5: tedarik-zinciri kapısı yok).
+- name: KAPI — uv sürümü ve installer sha'sı ölçülmüş mü (nöbetçi değer canlıya gidemez)
+  ansible.builtin.assert:
+    that:
+      - uv_surum is defined
+      - uv_surum | length > 0
+      - uv_surum != "OLCULECEK"
+      - uv_installer_sha256 is defined
+      - uv_installer_sha256 | length > 0
+      - uv_installer_sha256 != "OLCULECEK"
+    fail_msg: >-
+      uv tedarik değerleri ölçülmemiş (uv_surum={{ uv_surum }},
+      uv_installer_sha256={{ uv_installer_sha256 }}). Rol-1 A1'de `uv --version` ölçüp sürümü
+      yazar, ardından `https://astral.sh/uv/<sürüm>/install.sh`i indirip `sha256sum` ile
+      özetini ölçer ve ikisini de defaults'a (deploy/ansible/roles/meridian_a1/defaults/main.yml)
+      geçirir. Ajan A1'e ssh yapmaz, ağa da çıkmaz — bu yüzden değerler tahmin EDİLMEZ.
+    success_msg: "uv sürümü pinli: {{ uv_surum }} (installer sha256 kapılı)"
+
+- name: Kurulu uv ikilisi var mı
+  ansible.builtin.stat:
+    path: "{{ uv_ikili }}"
+  register: uv_stat
+
+# TEDARİK KAPISI, deploy.sh'a göre DARALTILDI: `curl … | sh` yerine önce dosya İNDİRİLİR (sürüm
+# pinli URL), sha256 ile DOĞRULANIR, sonra çalıştırılır — indirilen betik diskte kalır ve olay
+# sonrası okunabilir (litestream_kur.sh'ın `get_url checksum=` deseninin aynısı).
+#
+# TUR 2 (K12) — ÜÇ DÜZELTME, hepsi ÖLÇÜLMÜŞ bir davranışa dayanıyor. ansible-core 2.18.19
+# `modules/get_url.py`: `checksum` verilmediğinde ve `force` varsayılan (false) iken, dest VARSA
+# modül dest'in mtime'ıyla KOŞULLU GET atar (`last_mod_time`) ve 304 dönerse
+# `module.exit_json(changed=False)` ile HİÇBİR yazma/chmod/chown yapmadan çıkar — yani diskte
+# önceden duran dosya OLDUĞU GİBİ KALIR. Eski hâlde dest `/tmp/uv-install-<sürüm>.sh` idi:
+# `/tmp` dünyaya yazılabilir (sticky bit dosya YARATMAYI engellemez), ad `defaults`tan tahmin
+# edilebilir ve o dosya bir sonraki görevde `ubuntu` olarak ÇALIŞTIRILIYORDU.
+#   (a) dest kök-dışı yazılamayan bir dizine alındı (root:root 0755 — `ubuntu` okur/çalıştırır,
+#       yazamaz). RULING'DEN SAPMA, gerekçesiyle: inceleme `/root/…` (0700 root) önermişti; o
+#       yolda `become_user: ubuntu` betiği ÇALIŞTIRAMAZ (/root'a giremez) ve kurulum root'a
+#       yapılırsa uv `ubuntu`nun ev dizinine root sahipli dosyalar bırakırdı.
+#   (b) `force: true` — 304 dalı hiç kurulmaz, dosya her koşumda yeniden yazılır.
+#   (c) `checksum: sha256:…` — indirilen içerik doğrulanır; değer nöbetçiyken KAPI-0 durdurur.
+- name: Installer dizini (root:root — yalnız root yazar, ubuntu çalıştırır)
+  ansible.builtin.file:
+    path: "{{ uv_installer_dizini }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: not uv_stat.stat.exists
+
+- name: Resmi uv installer'ı indir (sürüm pinli URL + sha256 kapısı)
+  ansible.builtin.get_url:
+    url: "https://astral.sh/uv/{{ uv_surum }}/install.sh"
+    dest: "{{ uv_installer_dizini }}/uv-install-{{ uv_surum }}.sh"
+    checksum: "sha256:{{ uv_installer_sha256 }}"
+    force: true
+    owner: root
+    group: root
+    mode: "0755"
+  when: not uv_stat.stat.exists
+
+- name: Uv kurulumu — yalnız ikili yoksa (`creates` ile idempotent)
+  ansible.builtin.command:
+    cmd: "{{ uv_installer_dizini }}/uv-install-{{ uv_surum }}.sh"
+    creates: "{{ uv_ikili }}"
+  become: true
+  become_user: "{{ meridian_kullanici }}"
+  environment:
+    HOME: "/home/{{ meridian_kullanici }}"
+  when: not uv_stat.stat.exists
+
+# `uv sync --frozen`: uv.lock'tan bire bir kurar (aarch64 wheel'leri; derleme yok).
+# changed_when ÖLÇÜLDÜ (2026-09-08, uv 0.11.28, yalıtılmış örnek proje — scratchpad/olcum):
+#   1. koşum (değişiklik VAR): stderr "Installed 1 package", stdout BOŞ
+#   2. koşum (değişiklik YOK): stderr "Resolved … / Checked 1 package", stdout BOŞ
+# Yani karar STDERR'den okunur; stdout bacağı yalnız ileri sürümlerde akış değişirse diye
+# duruyor (A1'deki uv sürümü ölçülmedi — `uv_surum` KAPI-0'da Rol-1 tarafından yazılacak).
+#
+# BAYRAK (TUR 2, K3): bayraksız `uv sync --frozen` DEV GRUBUNU A1'e kurar ve dagit `[3]`ün
+# bilinçli kararını (dev grubu canlıya KURULMAZ, 2026-08-01) sessizce ters çevirirdi. Bayrak
+# `defaults::uv_sync_bayrak`tan gelir ve v451 çivisi onun dagit.sh'takilerden biri olduğunu ölçer.
+- name: Meridian bağımlılıkları (uv sync --frozen, dev grubu HARİÇ)
+  ansible.builtin.command:
+    cmd: "{{ uv_ikili }} sync --frozen {{ uv_sync_bayrak }}"
+    chdir: "{{ repo_kok }}"
+  become: true
+  become_user: "{{ meridian_kullanici }}"
+  environment:
+    HOME: "/home/{{ meridian_kullanici }}"
+  register: uv_sync
+  changed_when: >-
+    ('Installed' in uv_sync.stderr) or ('Uninstalled' in uv_sync.stderr)
+    or ('Installed' in uv_sync.stdout) or ('Uninstalled' in uv_sync.stdout)
+
+# Yasa 6 (TUR 2, K11): `changed=1` SESSİZ kalmaz. Bu görev KOŞAN meridian/meridian-barsarchive
+# süreçlerinin altındaki venv'i değiştirir, ama rol sözleşme gereği hiçbir şeyi restart etmez —
+# süreç ilk import'larını yapmış modüller için eski kodla devam eder, geç/koşullu import edilen
+# bir yol yeni sürümü yükler (aynı süreç içinde karışık sürüm); kaldırma bacağında geç import
+# doğrudan ImportError verir. deploy.sh bu riski adım 15'in koşulsuz restart'ıyla kapatıyordu ve
+# o adım A0'a BİLEREK geçmedi — o hâlde riskin okunur bir çıktısı olmak zorunda.
+- name: Venv değişti mi (restart kararı bu rolün DIŞINDA — okunur olmak zorunda)  # noqa: no-handler
+  # noqa gerekçesi: `no-handler` kuralı "changed'e bakan görev handler olsun" der; burada bu
+  # YANLIŞ olurdu. (1) Bu bir EYLEM değil RAPOR: handler'a taşımak mesajı oyunun sonuna atar ve
+  # onu doğuran görevden koparır. (2) Rolün handler kümesi SÖZLEŞMEDİR — yalnız `daemon-reload`
+  # ve `polkit-yeniden-baslat` (v451 çivisi üçüncüyü kırmızı yapar); kısıt tam da "restart
+  # handler'ı bir notify satırıyla sessizce sızmasın" diye var.
+  ansible.builtin.debug:
+    msg: >-
+      VENV DEĞİŞTİ — /opt/meridian/.venv `uv sync` ile güncellendi; KOŞAN meridian ve
+      meridian-barsarchive süreçleri hâlâ ESKİ kodla çalışıyor olabilir (geç import edilen
+      modüller yeni sürümü yükler; kaldırılan paket ImportError verir). Bu rol hiçbir uzun
+      ömürlü servisi restart ETMEZ — restart bakım penceresine ve dagit.sh'a aittir.
+  when: uv_sync.changed
+
+# "kurulu != çalışır": venv'in varlığı içe aktarmanın çalıştığını KANITLAMAZ (yarım wheel, kırık
+# uzantı, eksik grup). deploy.sh 3'ün import doğrulamasının aynısı.
+- name: Venv doğrulaması — import meridian.api, meridian.loop
+  ansible.builtin.command:
+    cmd: "{{ repo_kok }}/.venv/bin/python -c 'import meridian.api, meridian.loop'"
+    chdir: "{{ repo_kok }}"
+  become: true
+  become_user: "{{ meridian_kullanici }}"
+  changed_when: false

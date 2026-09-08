@@ -1,0 +1,56 @@
+---
+# TSK-176 Faz A0 — sır DOSYASI denetimi (deploy.sh 6j/7'nin denetim yarısı).
+#
+# ZİNCİRDEKİ YERİ SÖZLEŞMEDİR (TUR 2, K1): bu dosya `dropinler.yml`den ÖNCE koşar. Kopyalanacak
+# drop-in'lerin beşi (`meridian.service.d/50-dash-credential.conf`, `51-dash-env-kaldir.conf`,
+# `53-nous-kapi-credential.conf`, `54-hafiza-credential.conf`, `hindsight-api.service.d/
+# 50-creds.conf`) `LoadCredential=` taşır ve dosyaların KENDİ başlıkları şunu yazar: "BU DOSYA
+# KENDİLİĞİNDEN ETKİN DEĞİLDİR … LoadCredential= kaynak dosyası YOKSA systemd birimi BAŞLATMAZ."
+# Yani sır dosyaları eksikken bu drop-in'leri kurmak, meridian.service'i (ve hindsight-api'yi)
+# başlatılamaz hâle getirmektir — rolün "hiçbir şeyi bozmadan yakınsa" sözleşmesinin tersi.
+# Denetim burada DURDURUR: birim dosyaları o noktada kurulmuştur, credential kanalı ise
+# kaynağı doğrulanmadan AÇILMAZ.
+#
+# SIR DEĞERİ BU ROLDE YOKTUR: rol hiçbir sır üretmez (deploy.sh 7'nin `openssl rand -hex 24`
+# üretimi A0'a GEÇMEDİ), yazmaz, okumaz. Yalnız DOSYANIN varlığı/izni/sahibi denetlenir; eksikse
+# playbook DURUR ve hangi betiğin koşulacağını söyler. Üretim koşumlarında `-v` üstü YASAK
+# (`no_log` `-vvv`'yi etkilemez — TASARIM §2.1, sır süzgeci ilkesi).
+
+- name: Sır dosyaları — stat (İÇERİK OKUNMAZ; checksum/mime/attr KAPALI)
+  ansible.builtin.stat:
+    path: "{{ item.yol }}"
+    # get_checksum: true (varsayılan) dosyayı BAŞTAN SONA OKUR — sır dosyasında bu, değeri
+    # ansible'ın bellek/log yoluna sokmak demektir. Denetim yalnız metadata ister.
+    get_checksum: false
+    get_mime: false
+    get_attributes: false
+  loop: "{{ zorunlu_sir_dosyalari }}"
+  loop_control:
+    label: "{{ item.yol }}"
+  register: sir_stat
+  no_log: true
+
+# `no_log` BU görevde BİLEREK YOK: burada basılan her şey (yol, mod, sahip) zaten depoda,
+# `defaults/main.yml` içinde açık yazılıdır — DEĞER değildir. `no_log: true` koysaydık düşen
+# assert'in tek çıktısı "output has been hidden" olurdu ve operatör hangi dosyanın eksik
+# olduğunu ÖĞRENEMEZDİ (Yasa 6: okunmayan artefakt üretilmemişten farksızdır).
+- name: Sır dosyaları — varlık + izin + sahip kapısı
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists
+      - item.stat.mode == item.item.mod
+      - item.stat.pw_name == item.item.sahip
+    fail_msg: >-
+      SIR DOSYASI DENETİMİ DÜŞTÜ: {{ item.item.yol }} —
+      beklenen mod={{ item.item.mod }} sahip={{ item.item.sahip }};
+      ölçülen exists={{ item.stat.exists }}
+      mod={{ item.stat.mode | default('(yok)') }} sahip={{ item.stat.pw_name | default('(yok)') }}.
+      SONUCU: credential drop-in'leri KURULMADI (bilerek) — kurulsalardı meridian.service
+      `LoadCredential=` kaynağı olmadan başlatılamaz hâle gelirdi.
+      REÇETE (DEĞER bu rolde ÜRETİLMEZ): /etc/meridian/* ve /etc/hindsight/creds/* için
+      `bash deploy/oracle-a1/sir_credential_gecis.sh`; /opt/meridian/.dash.env için
+      `bash deploy/oracle-a1/dash_token_credential.sh`.
+    success_msg: "{{ item.item.yol }}: var, {{ item.item.mod }}, {{ item.item.sahip }}"
+  loop: "{{ sir_stat.results }}"
+  loop_control:
+    label: "{{ item.item.yol }}"

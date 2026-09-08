@@ -1,0 +1,31 @@
+---
+# TSK-176 Faz A0 Task 2 — `meridian_a1` handler'ları.
+#
+# YALNIZ İKİ HANDLER VARDIR ve bu bir KISITTIR, eksiklik değil (plan Global Constraints + Rol-1
+# hükmü 5): A0 hiçbir uzun ömürlü servisi (meridian, meridian-barsarchive, meridian-litestream,
+# hindsight-api, hindsight-cp, apisix, apisix-etcd) yeniden BAŞLATMAZ. Restart kararı bakım
+# penceresine ve dagit.sh'a aittir (memory bakim-penceresi-tick-watchdog: tick-watchdog timer'ı
+# 45 dk bayatlıkta worker'ı yeniden başlatır; habersiz restart o kapıyla çakışır).
+# `tests/test_ansible_a0_v451.py::test_handlerlar_yalniz_iki_tane` bu kümeyi ölçer — üçüncü bir
+# handler eklemek çiviyi kırar.
+#
+# `listen` KİMLİKTİR, `name` İNSAN METNİ: bildirim adları (`daemon-reload`,
+# `polkit-yeniden-baslat`) planda ve Rol-1 hükmünde BU HÂLİYLE geçiyor ve görev dosyalarındaki
+# `notify:` satırları onları kullanır; `name` ise ansible-lint `name[casing]` kuralı gereği büyük
+# harfle başlamak zorunda. İkisini ayırmak, kimliği lint biçimine kurban etmemenin yoludur.
+- name: Systemd birim tanımlarını yeniden oku
+  listen: daemon-reload
+  # Birim dosyası/drop-in değiştiğinde systemd'ye YALNIZ yeniden okutur; hiçbir birimi durdurmaz,
+  # başlatmaz, restart etmez.
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Polkit'i yeniden başlat
+  listen: polkit-yeniden-baslat
+  # deploy.sh 6g polkit'i HER koşuda restart ediyordu; burada BİLEREK daraltıldı: yalnız kural
+  # dosyası gerçekten değiştiğinde (notify) restart edilir. polkit uzun ömürlü Meridian servisi
+  # DEĞİLDİR (sistem servisi) — kural değişikliğinin yürürlüğe girmesi için restart şarttır,
+  # aksi hâlde `meridian-sprint@` tetiği NoNewPrivileges altında sessizce yetkisiz kalırdı.
+  ansible.builtin.systemd_service:
+    name: polkit
+    state: restarted

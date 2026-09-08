@@ -1,0 +1,87 @@
+---
+# TSK-176 Faz A0 — sağlık hükmü (deploy.sh 16). "kurulu != çalışır".
+#
+# İKİ TUR 2 DÜZELTMESİ BURADA BULUŞUR:
+#
+# K5 — KAPININ SEMANTİĞİ. Eski hâl koşulsuzdu: rol hiçbir uzun ömürlü servisi BAŞLATMAZ
+# (`etkin_birimler` görevinde `state` YOK, F10 kararı), ama sonunda `meridian.service` aktif
+# olmasını ŞART koşuyordu. Taze/soğuk bir A1'de — yani rolün ilan edilmiş birincil senaryosunda —
+# yakınsama tamamen başarılıyken playbook "failed" derdi ve rolün bunu düzeltmesi kısıtı gereği
+# imkânsızdı; operatör her koşumda kırmızı görüp kapıyı kendisi geçersiz sayardı. Görmezden
+# gelinen kapı, kapı değildir. Yeni semantik: kapı `beklenen_aktif` ile açılır/kapanır ve
+# KAPANDIĞI ADIYLA BASILIR. Soğuk kurulum / bakım penceresi: `-e beklenen_aktif=false`.
+#
+# K4 — CHECK-MODE. `command`/`shell` check-mode'da ATLANIR ve register'da `stdout` hiç doğmaz;
+# ona dayanan bir assert boş dizgeyle karşılaşıp "hiç ölçülmemiş bir şey hakkında" arıza beyan
+# ederdi. README'nin İLK ops komutu (`--check --diff`) tam bu yüzden HER ZAMAN kırmızı bitiyordu.
+# Ölçüm yapılamayan bir modda kapı KAPI DEĞİL, açıkça "ÖLÇÜLMEDİ" raporudur.
+#
+# `delegate_to` YOK ve gerekmez: playbook ZATEN hedefte koşuyor, 127.0.0.1 A1'in kendisidir
+# (healthz yalnız A1 içinden erişilir — dagit [5] ile aynı kısıt).
+
+# ÖNCE ÖLÇ, SONRA HÜKÜM VER: aktiflik durumu hem kapının teşhis metnini hem de kapı kapalıyken
+# basılan raporu besler. Ölçüm görevi kapıya TABİ DEĞİLDİR — `-e beklenen_aktif=false` ile koşan
+# operatör de servisin ne durumda olduğunu görmelidir.
+- name: Meridian servisi aktif mi (ÖLÇÜM — hüküm bir sonraki görevde)  # noqa: command-instead-of-module
+  # noqa gerekçesi: `systemd_service` bir birimi BAŞLATIR; burada istenen "hiçbir şeyi
+  # değiştirmeden sor"dur. `is-active` aktifken 0, aktif değilken 3 döner; başka çıkış kodu
+  # gerçek arızadır (`failed_when: false`/`ignore_errors` Yasa 4 gereği YASAK).
+  ansible.builtin.command:
+    cmd: systemctl is-active meridian.service
+  register: meridian_aktif
+  changed_when: false
+  failed_when: meridian_aktif.rc not in [0, 3]
+
+- name: KAPI — meridian.service aktif olmalı
+  ansible.builtin.assert:
+    that:
+      - meridian_aktif.stdout | trim == 'active'
+    fail_msg: >-
+      meridian.service AKTİF DEĞİL (durum: {{ meridian_aktif.stdout | default('(ölçülemedi)') | trim }}).
+      Bu rol hiçbir uzun ömürlü servisi başlatmaz/restart etmez (bakım penceresi kararı) —
+      teşhis: `journalctl -u meridian -n 100`; başlatma kararı operatörün/dagit.sh'ındır.
+      Soğuk kurulum/bakım koşumuysa kapıyı `-e beklenen_aktif=false` ile kapatın.
+    success_msg: "meridian.service: active"
+  when: (beklenen_aktif | bool) and (not ansible_check_mode)
+
+- name: Sağlık kontrolü — healthz 200
+  # SINIR, açık beyan: healthz nabız 900 sn'den eskiyse 503 döner ("bayat ama süreç canlı" —
+  # meridian/api.py::healthz). Döngü her turda nabzı tazeler (bar işlenmese de), yani 503 normal
+  # işleyişte beklenmez; beklenirse bu görev DÜŞER ve bu FAIL-CLOSED tercih bilinçlidir.
+  ansible.builtin.uri:
+    url: "{{ saglik_url }}"
+    method: GET
+    status_code: 200
+    return_content: false
+  register: saglik
+  until: saglik.status == 200
+  retries: "{{ saglik_deneme }}"
+  delay: "{{ saglik_bekleme }}"
+  changed_when: false
+  when: (beklenen_aktif | bool) and (not ansible_check_mode)
+
+# Yasa 6 + bedel yasası: atlanan kapı SESSİZ kalmaz. "Ölçmedim" ile "ölçtüm, iyiydi" aynı
+# görünmemeli — atlama nedeni ve o an ölçülebilen durum ADIYLA basılır.
+- name: Sağlık kapısı ATLANDI — neden (kapı kapalıyken tek çıktı budur)
+  ansible.builtin.debug:
+    msg: >-
+      SAĞLIK KAPISI ATLANDI — neden:
+      {{ 'check-mode (--check): command görevleri koşmaz, healthz sorgulanmaz' if ansible_check_mode
+         else '-e beklenen_aktif=false verildi (soğuk kurulum / bakım penceresi)' }}.
+      Ölçülebilen durum: meridian.service =
+      {{ meridian_aktif.stdout | default('(check-mode: ölçülmedi)') | trim }}.
+      Bu ATLAMA bir sağlık HÜKMÜ DEĞİLDİR: "kurulu != çalışır" sorusu cevapsız kalmıştır.
+  when: (not (beklenen_aktif | bool)) or ansible_check_mode
+
+- name: Timer envanteri  # noqa: command-instead-of-module
+  # RAPOR, KAPI DEĞİL (Rol-1 hükmü 6): timer'ların "next elapse" değeri kadans kararına bağlıdır
+  # ve kapalı bir kadans arıza DEĞİLDİR — düşürmek yanlış alarm üretirdi.
+  ansible.builtin.command:
+    cmd: systemctl list-timers --no-pager --no-legend
+  register: timer_envanteri
+  changed_when: false
+  failed_when: timer_envanteri.rc not in [0, 1]
+
+- name: Timer raporu
+  ansible.builtin.debug:
+    msg: "{{ timer_envanteri.stdout_lines | default(['(check-mode: command atlandı)']) }}"
