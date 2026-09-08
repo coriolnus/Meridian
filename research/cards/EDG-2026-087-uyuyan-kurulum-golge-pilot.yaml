@@ -1,0 +1,66 @@
+# EDG-2026-087 — Uyuyan kurulum (dormant_setup) planlarının GÖLGE İCRA pilotu: sermaye riski olmadan n≥30 örneklem
+# ÖN-KAYIT 2026-09-08 16:2x UTC (Rol-1). Operatör kararı 2026-09-08 16:0xZ: "icraya bağla (kartla)" → Rol-1 uyarısı: EDG-2026-049
+# (2026-08-24) aynı bağlamayı karşı-olguyla ölçüp NO-GO vermişti (n=6, 6/6 kayıp, −4,725R, CI95 sıfırı içeriyor) → operatör
+# "önerilerini uygula": ARDIL kart, farklı tasarım — gerçek emir YOK, gölge defter; bağlama kararı hüküm sonrası operatöre döner.
+# kart_benzer (16:0xZ): EDG-2026-049 selef (dormant_karsi_olgu, NO-GO) · EDG-2026-025 (dormant karne momentum_burst, çelişkili kanıt)
+# · EDG-2026-010 KALDI (trend pullback) · EDG-2026-068 (cf karşı-olgusal bileşim — kod-değişikliği-önce emsali). DERS (049): dormant
+# dilimi küçük (n=6) ve negatif; bu kart örneklemi büyütür, CANLI DEĞİŞMEZ. TSK-175 inceleme belgesi §8 düzeltmesi bu kartı işaret eder.
+
+card_id: EDG-2026-087
+status: registered   # 2026-09-08 Rol-1 — ön-kayıt; gölge defteri kodu (B1) bu karttan SONRA; pencere dağıtımından itibaren
+family: dormant_golge_pilot
+on_kayit: 2026-09-08
+selef: EDG-2026-049
+ref: [TSK-175, EDG-2026-049, EDG-2026-025, "docs/degerlendirme/UYUYAN-KURULUM-INCELEME-2026-09-07.md (§8 düzeltme)",
+      "docs/POLITIKA-ARSENAL.md (GO okuma çıtası: kart-önce + n≥30 ∧ CI-alt>0 + operatör imzası)",
+      "memory/uyuyan-kurulum-yolu (31 plan / 0 işlem / 1 GO — önden bağlı arkadan bağsız)"]
+
+hipotez: >
+  Uyuyan-kurulum yolunun ürettiği planlar (dormant_setup; hüküm GO/REVIEW/NO_GO fark etmeksizin HEPSİ), gerçek emir üretmeyen bir GÖLGE
+  İCRA defterinde planın kendi giriş/çıkış kurallarıyla izlendiğinde, n≥30 plan biriktiğinde (a) toplam R'nin blok-bootstrap CI95 alt sınırı
+  > 0 ve (b) kazanma oranı ≥ %40 çıkar. Çıkarsa "icraya bağlama" kararı kanıtla operatöre döner (ARSENAL çıtası); çıkmazsa EDG-049'un
+  "teşhis-katmanı" damgası tazelenir ve yol olduğu gibi kalır. Kart CANLI SERMAYEYİ DEĞİŞTİRMEZ.
+
+k_registry: {registered_at: "2026-09-08", trial_ids: [EDG-087-toplam-R-CI, EDG-087-kazanma-orani]}
+# K=2 birincil. Kurulum başına kırılım (episodic_pivot/pead/…) TANI (K'ye 1×n_kurulum sayılmaz; hüküm toplamda).
+
+olcum_plani:
+  - "gölge defteri: state/golge_icra.jsonl (B1 implementer yazar; okuyucu = bu kartın sayım betiği + pano 'Uyuyan kurulumlar' kartı — Yasa 6); satır: {plan_id, kurulum, hukum, ts_plan, giris_fiyat (planın giriş kuralı: ilk uygun bar açılışı), cikis_fiyat, cikis_neden (planın kendi stop/hedef/zaman kuralı — canlı çıkış motoruyla AYNI fonksiyon), R, bar_n, kaynak_bar_hash}"
+  - "giriş yalnız plan hükmünden BAĞIMSIZ: dormant planların tamamı gölgeye girer (GO 1 / REVIEW 13 / NO_GO 17 dağılımı tanı olarak raporlanır)"
+  - "sayım: research/olcumler/edg087_golge_pilot/sayim.py — toplam R, blok-bootstrap CI95 (EDG-049 ile aynı blok uzunluğu), kazanma oranı, PF; kurulum kırılımı tanı"
+  - "kontrol (yol-tutarlı): aynı pencerede canlı NORMAL planlar gölge defterinden de geçirilir; gölge R ile gerçek icra R'si farkı ≤ komisyon+kayma payı (goal/bounds'taki değerler) — gölge motorunun gerçek yolla tutarlılığı"
+  - "bedel: gölge defteri boyutu ve yazım sıklığı (satır/gün) raporlanır; canlı worker'a ek LLM/ağ çağrısı SIFIR (yalnız bar verisi)"
+
+esikler:
+  n_alt_plan: 30                 # ∧ pencere ≤45 gün; dolmadan hüküm YOK (betimleyici ara-rapor serbest)
+  ci_alt_R_ust: 0.0              # blok-bootstrap CI95 alt sınırı > 0 (EDG-049 ile aynı ölçüt)
+  kazanma_alt: 0.40
+  pencere_gun_ust: 45            # dolmazsa 'bilgisiz' arşiv (n<30 ile hüküm yazılmaz — 049 dersi)
+  golge_gercek_fark_R_ust: 0.05  # kontrol: |gölge R − gerçek R| ortalaması ≤ 0,05R ∧ komisyon+kayma payı içinde; tutmazsa PK düşer
+
+kill_list:
+  - "gölge defteri herhangi bir GERÇEK emir/plan onayı/silahlanma üretirse → geçersiz + özellik kapatılır (sıfır tolerans)"
+  - "dormant ÜRETİM mantığına (arming._dormant_setups, plan doğumu) dokunulursa → geçersiz (yalnız gölge izleme eklenir)"
+  - "çıkış kuralı canlı çıkış motoruyla aynı fonksiyondan gelmezse → geçersiz (yol-tutarlılık; 049 kill#3 sınıfı)"
+  - "eşik/pencere/n sonradan değişmez; n<30 ile hüküm yazılmaz (049'un ikinci düşme sebebi)"
+  - "kontrol PK'sı (gölge≈gerçek) tutmazsa → hiçbir sayı yayılmaz"
+  - "bar kaynağı PIT değilse (kaynak_bar_hash arşiv barına bağlı değilse) → geçersiz (pitlaw: tarihsel yeniden yürütme SIFIR TOLERANS)"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: (1) SENTETİK — 5 sahte plan, bilinen fiyat yolu (stop/hedef/zaman üçü de tetiklenen senaryolar) → gölge R'ler el
+  hesabıyla birebir (sayım betiği kimlik kontrolü). (2) GERÇEK — canlı NORMAL yolun son 10 gerçek işlemi gölge motorundan geçirilir; gölge
+  R − gerçek R farkı komisyon+kayma payı içinde (esikler.golge_gercek_fark_R_ust). (3) SELEF — EDG-049'un 6 dormant planı gölgede yeniden
+  yürütülür → aynı işaret (6/6 kayıp) çıkmalı; çıkmazsa gölge motoru ile 049 karşı-olgusu ayrışıyor demektir → harness kör sayılır.
+
+veri_penceresi: "B1 dağıtımından itibaren n≥30 dormant plan ∧ ≤45 gün (memory: ~31 plan / ~5 hafta hızıyla ~35-45 gün); PK (1)/(3) B1 çivilerinde, (2) ilk 10 gerçek işlemde"
+
+basari_tanimi: >
+  Üç PK yeşil + K=2 (+kurulum kırılımı tanı) sayıyla raporlanmış + hüküm Rol-1 tarafından aynı turda karta ve K defterine. GEÇER →
+  operatöre 'uyuyan planları icraya bağlama' kararı (ARSENAL çıtası: kart-önce + n≥30 ∧ CI-alt>0 + operatör imzası; bağlama AYRI kart-önce
+  iş). KALIR → EDG-049 hükmü tazelenir ('teşhis-katmanı'), TSK-175 kapanır, gölge defteri okuyucusuz kalmamak için kapatılır (Yasa 6).
+
+notlar: >
+  Neden karşı-olgu (049) yerine ileriye dönük gölge: 049 geçmiş 31 planı donmuş şaside yeniden yürüttü (n=6 dormant dilim); bu kart ileriye
+  dönük, planlar doğdukça izler — örneklem büyür, seçim yanlılığı (yalnız hüküm alanlar) yok. Bedel yasası: gölge defteri yeni bir state
+  dosyası = yeni okuyucu şart (pano kartı + sayım); okuyucusuz kalırsa TSK-178 sınıfına düşer. B1 planı bu karttan sonra yazılır
+  (docs/superpowers/plans/2026-09-08-golge-pilot-b1.md); kod meridian/ (motor) → tam suite.
