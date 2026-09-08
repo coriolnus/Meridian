@@ -106,3 +106,11 @@ A1: `state/meridian.db` (trade_plans 511 · trades · portfolio), `state/arming_
 `watchdog.conservation_report()`, `strategy.ARMED_SETUPS`, `arming._dormant_setups()`. Repo: `docs/KORUNUM-KOK-2026-08-07.md`;
 `meridian/{loop,guard,arming,counterfactual,cf_backfill,watchdog,hermes}.py`; `meridian/web/app.js` uyuyan kartı;
 `tests/test_korunum_uyuyan_kurulum_v283.py`; ROADMAP §2 TAHTA 🔒 satırı, TSK-175. Hafıza: `uyuyan-kurulum-yolu` (güncellendi 2026-09-07).
+
+## 8. Düzeltme (Rol-1, 2026-09-08 16:1xZ) — EDG-2026-049 bu belgede ANILMAMIŞTI
+
+Bu belge yazılırken hafıza kontrolü eksik kaldı: uyuyan planların icraya bağlanması **EDG-2026-049** (`dormant_karsi_olgu`, measured
+2026-08-24) ile zaten ölçülmüş ve **NO-GO** çıkmıştı — karşı-olgu Δ = −3.121 $, CI95 sıfırı içeriyor, dormant dilim n=6 < 30, 6/6 kayıp
+(−4,725R). Operatör 2026-09-08 "icraya bağla (kartla)" dedi; kart kuralı gereği aynı hipotez yeniden ölçülmez → ARDIL kart **EDG-2026-087
+gölge pilot** (sermaye yok; uyuyan planlar kâğıt üstünde "icra edilmiş gibi" izlenir; n≥30 ∧ CI-alt>0 dolunca bağlama kararı operatöre döner;
+kill-list EDG-049'un altı kaybını taşır). Bu belgenin §6 önerisi ("olduğu gibi kalsın") o kartın hükmüne kadar geçerli.
