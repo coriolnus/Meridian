@@ -109,9 +109,12 @@ elle unseal seçilmedi. BEKLEMEDE-7 kapandı. Faz-0/1A/1B/1C AYNEN ve ÖNCE (tek
   `secret_id_num_uses=0`, `secret_id_ttl=0` (dönmez; rotasyonu elle, `vault write -f auth/approle/role/agent/secret-id`). Beyan: aynı
   makinede iki kök-dosya (unseal.key + agent.secret-id) — operatörün "anahtar dosyası A1'de" kararıyla aynı güven sınıfı; response-wrapping
   eklenmez (tek makine, taşıma yok).
-- **GCP Secret Manager:** `meridian/secrets.py::_fetch` üçüncü adımı Faz-2 canary geçene kadar KALIR (iki kanal aynı anda canlı ilkesi);
-  kapatma Faz-2c'de ayrı ölçümle (`secrets.status` hangi kanaldan okuduğunu söyler — farksal ölçüm). `deploy/push_secret.sh` yerine
-  `deploy/vault_sir_koy.sh` (aynı `read -s` disiplini: değer argv/log'a girmez) — eski betik Faz-2c'ye kadar kalır.
+- **GCP Secret Manager — KANAL KAPANDI (IaC-K5, 2026-09-07), bu madde artık TARİHÇEDİR.** Bu belge 2026-09-03'te
+  `meridian/secrets.py::_fetch`in bulut basamağının "Faz-2 canary geçene kadar KALIR"ını yazıyordu (iki kanal aynı anda canlı ilkesi) ve
+  kapatmayı Faz-2c'ye erteliyordu. Operatör kararı o beklemeyi geçersiz kıldı: basamak SİLİNDİ ve `secrets.KAYNAKLAR` üç adımdır
+  (credential → env → dosya). **Faz-2c'nin "eski kanalı kapat" adımı düştü**; kapatılacak bir kanal yok. `deploy/push_secret.sh` de
+  SİLİNDİ — yerine gelecek yazıcı yine `deploy/vault_sir_koy.sh`tir (aynı `read -s` disiplini: değer argv/log'a girmez), ama artık
+  "eski betik Faz-2c'ye kadar kalır" diye bir geçiş penceresi YOKTUR. Çivi: `tests/test_gcp_yolu_kaldirildi_v448.py`.
 - Politikalar: tüketici başına ayrı policy (`meridian-motor`, `hindsight-api`, `apisix`, `hermes-<profil>`) — yalnız kendi yolunu okur;
   `ALLOWED` frozenset'i (secrets.py) Vault yol listesinin TEK kaynağı olur (tek-kaynak yasası: policy dosyaları ondan üretilir, çivi ile).
 
@@ -119,9 +122,10 @@ elle unseal seçilmedi. BEKLEMEDE-7 kapandı. Faz-0/1A/1B/1C AYNEN ve ÖNCE (tek
 - **Geri alım:** `vault-agent` durdur → Agent'ın ürettiği dosyalar yerine elle son bilinen iyi kopya (Agent yazmadan önce alınan `.bak`,
   0400) → tüketiciler LoadCredential/.env ile aynen okur; `vault.service` durdurulsa bile tüketiciler etkilenmez (dosya kanalı). Bu, iki-kanal
   ilkesinin Faz-2 hâlidir: Vault kanalı EKLENİR, dosya kanalı zaten hedef biçimdir.
-- **Canary (farksal ölçüm, `dash_token_credential.sh::faz2` deseni):** Vault'a gerçek değer, eski kaynağa (GCP/env) sahte değer → tüketici
+- **Canary (farksal ölçüm, `dash_token_credential.sh::faz2` deseni):** Vault'a gerçek değer, eski kaynağa sahte değer → tüketici
   200 veriyorsa dosyayı GERÇEKTEN Agent yazıyor; `/proc/<pid>/environ` grep 0; `vault status` Sealed false; `systemctl show <birim> -p
-  LoadCredential`.
+  LoadCredential`. **ESKİ AYAK ARTIK ENV/DOSYADIR** (IaC-K5, 2026-09-07): tasarım "GCP/env" diyordu, bulut ayağı silindi — farksal ölçümün
+  karşı tarafı ortam değişkeni ya da `state/secrets.json`dur. Var olmayan bir kanala sahte değer koymaya çalışmak canary'yi tanımsız kılardı.
 - **Kapılar:** lisans (6.1) · disk ölçümü · `ss -ltnp` yalnız 127.0.0.1 · üç birim elle test-ateşleme · tam suite (secrets.py policy
   üretimi + çivi) · dağıtım reçetesi (§9) — Agent'a bağlama adımı meridian/hindsight restart'ı ister, worker o an durur (seans dışı pencere).
 - **Bedel yasası:** kazanç = merkezi kasa, rotasyon, denetim izi, bot profillerinin de kapsanması; bedel = iki yeni süreç (CPU/RAM ölçülür),

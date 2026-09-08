@@ -16,7 +16,7 @@ envanteri (1 ajan: dagit.sh, serve.sh, deploy/*, ops/* altyapı betikleri, CI, g
 
 | Katman | Araç | Yerine geçtiği şey | Kalan |
 |---|---|---|---|
-| Bulut kaynakları (A1 VM, /opt/veri blok hacmi, nesne deposu, NSG/güvenlik listesi, IAM; ileride Vault KMS/IAM) | **Terraform, import-first** | Oracle konsolundan elle yapılan her şey + ölü `deploy/gcp_provision.sh`'ın OCI eşdeğeri | VM-içi hiçbir şey |
+| Bulut kaynakları (A1 VM, /opt/veri blok hacmi, nesne deposu, NSG/güvenlik listesi, IAM; ileride Vault KMS/IAM) | **Terraform, import-first** | Oracle konsolundan elle yapılan her şey + silinen GCP sağlama betiğinin OCI eşdeğeri | VM-içi hiçbir şey |
 | **APISIX kapı yapılandırması** (rota, upstream, tüketici anahtarı, eklenti, TLS) | **Terraform `apisix` sağlayıcısı** (rework-space-com, APISIX 3.15 test) | `ops/apisix_uygula.py` + `apisix_ssl_yukle.py` (kendi yazdığımız "PUT + drift denetimi") | `deploy/apisix/routes.yaml` HCL'e döner; drift = `plan -detailed-exitcode` |
 | **Vault (Faz-2) YAPILANDIRMASI** (mount, policy, AppRole, KV) | **Terraform `vault` sağlayıcısı** + ephemeral kaynaklar | (henüz yok) | Vault'un KURULUMU Ansible rolü |
 | VM-içi durum: paketler, systemd birimleri/timer'lar/drop-in'ler, polkit, unattended-upgrades, venv'ler, docker konteynerleri (APISIX/etcd/Hindsight-CP), litestream, model önbelleği, bot kum havuzları, sır dosyaları 0400 | **Ansible rolü (tek host)** | `deploy/oracle-a1/deploy.sh` (694 satır), dagit `[1c]` "yalnız raporla" duruşu + elle `install` (bu gece 4 birim + 3 drop-in), `litestream_kur.sh`'ın sha kapısı (`get_url checksum`), `docker run --rm` ExecStart'ları (`docker_container`), hermes config "üzerine yazma+yedekle" (`copy backup`) | **Postgres kurulumu** (repoda hiç yok — ölçüldü, ilk kez kod hâline gelir) |
@@ -133,7 +133,7 @@ mevcut v-çivi ailesi). `ansible.cfg`: `host_key_checking=True`, pipelining, mut
 | **Postgres kurulumu** (repoda YOK) | A1'de elle (ölçülemedi) | — | **İLK KEZ KODA GİRER** (`apt` + `postgresql_*`) | DR için kritik boşluk |
 | hermes profilleri (`hermes profile install`) | elle, bilinçli | — | Teknik olarak uygun, **ELLE KALIR** (CLAUDE.md: yeni ajan kimliği operatör kararı) | — |
 | `meridian-backup`, `litestream.yml`, `aylik_bucket_kopya.py`+birim, `ops/pull-a1-backups.sh` (Mac launchd) | timer/elle | bucket: **Terraform** (`oci_objectstorage_bucket` import) | birimler: **YERİNE GEÇER**; Mac launchd: kalır | — |
-| `deploy/gcp_provision.sh`, `connect.sh`, `monitoring.sh`, `install_hermes.sh`, `push_secret.sh`, `state_backup/restore.sh` (GCS), `Caddyfile` | **ÖLÜ GCP yolu** (kanonik değil; Caddy A1'de koşmuyor) | (GCP'de olsaydı Terraform'un en saf örneği) | — | Emekli et/`deploy/legacy/`'ye taşı (tek-kaynak: iki TLS-ingress tasarımı — Caddy vs APISIX 9443 — netleşmeli) |
+| ~~Ölü GCP yolu: sağlama/tünel/alarm/Hermes-kurucu/sır-yazıcı/GCS-yedek çifti + Caddy yapılandırması~~ | **SİLİNDİ (IaC-K5, 2026-09-07)** — sekiz dosya + `meridian.secrets`in dördüncü kanalı | — | — | Kapandı: TLS-ingress tek tasarım (APISIX); güvenlik başlıklarının tek kaynağı `meridian/api.py::GUVENLIK_BASLIKLARI`; çivi `tests/test_gcp_yolu_kaldirildi_v448.py` |
 | `.github/workflows/ci.yml` (duman testi) | CI | github sağlayıcısı (repo ayarları) — isteğe bağlı | — | CD yok, kalır |
 | `serve.sh`, `ops/kapilar.sh` | yerel/gate | — | — | Kalır |
 | Bulut: A1 instance, blok hacim, bucket, NSG, IAM; ileride Vault KMS | konsol (elle), RUNBOOK'ta hacim adımı YOK | **YERİNE GEÇER (import)** | `oracle.oci` mümkün ama tercih değil | Belge boşluğu (hacim) Terraform ile kapanır |
@@ -189,7 +189,11 @@ AppRole parametreleri; `ansible.posix.mount`; Molecule/aarch64; Ubuntu 24.04 `re
 ## 8. Operatör kararları
 1. **Yön:** Ansible dagit'in İÇİNE (öneri) mi, yerine mi? 2. **APISIX** yapılandırması Terraform'a geçsin mi (apisix_uygula.py emekli)? 3. **State
 backend:** HCP Terraform ücretsiz (yeni hesap) mi, OCI S3-uyumlu (kilit testi) mi? 4. **Sıra:** A0 → T1 → A1 → A2 → T2 → T3 (öneri) — hangi
-adıma kadar onay? 5. **Ölü GCP yolu** (`deploy/gcp_*`, Caddyfile) `deploy/legacy/`'ye taşınsın mı?
+adıma kadar onay? 5. ~~**Ölü GCP yolu** `deploy/legacy/`'ye taşınsın mı?~~ **KARAR VERİLDİ
+(IaC-K5, 2026-09-07): legacy'ye TAŞINMADI, TAMAMEN SİLİNDİ** — sekiz dosya ve `meridian.secrets`in
+dördüncü (bulut) kanalı kaldırıldı; sıra artık credential → env → dosya. Taşıma reddedildi çünkü
+`deploy/legacy/` okuyucusu olmayan bir raf olurdu (Yasa 6) ve ölü reçeteler orada da belgelerden
+atıf almaya devam ederdi. Çivi: `tests/test_gcp_yolu_kaldirildi_v448.py`.
 
 ## Ek-A — Kaynaklar (okunanlar)
 developer.hashicorp.com/terraform: /docs, /language/import, /language/resources/ephemeral, /language/state, /language/backend/s3|local,

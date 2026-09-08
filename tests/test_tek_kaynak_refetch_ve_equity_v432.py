@@ -114,11 +114,13 @@ def test_d_api_diagnostics_refetch_max_scheduler_ile_ESIT(sandbox_state, monkeyp
 def mirror_ortami(sandbox_state, monkeypatch):
     """`mirror_submit_armed`ı çağrılabilir kılar: sahte Alpaca kimliği + saat pencere İÇİNE
     donar (emsal: `tests/test_kovab_icra_v161.py::paper`) — bu dosyanın çivileri gönderim
-    MEKANİĞİNİ değil equity-okuma DALINI ölçer, pencerenin kendisini değil."""
+    MEKANİĞİNİ değil equity-okuma DALINI ölçer, pencerenin kendisini değil.
+
+    Çözüm sırası credential → ortam → `state/secrets.json` (2026-09-07): sahte kimlik ORTAMA konur ve dosya
+    basamağını yener; credential basamağını `conftest.sandbox_state` kapatır (tek yer — v439 `test_J1`)."""
     from meridian import secrets as secrets_mod
     monkeypatch.setenv("ALPACA_PAPER_KEY", FAKE_KEY)
     monkeypatch.setenv("ALPACA_PAPER_SECRET", FAKE_SECRET)
-    monkeypatch.delenv("MERIDIAN_GCP_PROJECT", raising=False)
     secrets_mod.clear_cache()
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     alpaca._note(True)

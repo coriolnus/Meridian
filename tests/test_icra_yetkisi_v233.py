@@ -102,11 +102,13 @@ class SahteHttpx:
 
 @pytest.fixture
 def ayna(sandbox_state, monkeypatch):
-    """Sahte kimlik + `alpaca_paper` arka ucu + httpx kayıt edicisi. Gerçek istemci hiç kurulmaz."""
+    """Sahte kimlik + `alpaca_paper` arka ucu + httpx kayıt edicisi. Gerçek istemci hiç kurulmaz.
+
+    Çözüm sırası credential → ortam → `state/secrets.json` (2026-09-07): sahte kimlik ORTAMA konur ve dosya
+    basamağını yener; credential basamağını `conftest.sandbox_state` kapatır (tek yer — v439 `test_J1`)."""
     from meridian import secrets as secrets_mod
     monkeypatch.setenv("ALPACA_PAPER_KEY", FAKE_KEY)
     monkeypatch.setenv("ALPACA_PAPER_SECRET", FAKE_SECRET)
-    monkeypatch.delenv("MERIDIAN_GCP_PROJECT", raising=False)
     secrets_mod.clear_cache()
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     monkeypatch.setattr(alpaca, "paper_available", lambda: True)

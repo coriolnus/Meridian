@@ -30,7 +30,16 @@ import datetime as dt
 import json
 import sys
 
-# Tokens matched by deploy/monitoring.sh log filters. Keep these strings stable.
+# JETON DİZGELERİ SABİT KALMALI — düzyazı değil KALICI KİMLİK. İki ÖLÇÜLMÜŞ kopar (2026-09-08):
+# (1) DİSKE YAZILMIŞ SÖZLÜK ANAHTARLARI — `notify_sent.json` / `notify_undelivered.json` jetonu
+# ANAHTAR, `state/events.jsonl` `alarm` ALANI olarak taşır; ad değişirse birikmiş sayaçlar öksüz
+# kalır ve `watchdog.parity_report` yanlış sayı okur. (2) PANONUN OLAY YÜZEYLERİ — `app.js`
+# `OLAY_YUZEYLERI` jeton listeleri ELLE yazılmış literaldir, buradan TÜREMEZ (8 blok / 16 literal);
+# ad değişirse olay çekmecesi o jeton için sessizce boşalır. Parite çivisi:
+# `tests/test_uiux_s1b_v154.py::test_t3_capa_kurali_tek_ve_donusumsuz`. Kod tarafındaki eşleşme
+# ALT-DİZGE DEĞİLDİR (eski şerh öyle diyordu, ölçüldü ve yanlıştı): `_maybe_notify` argümanı
+# `NOTIFY_TOKENS` KÜMESİNDE arar, `notify.inbox` olayın `alarm` ALANINI aynı kümeye sorar. Teslim
+# zinciri modül docstring'indedir, burada tekrarlanmaz.
 ALARM_HEARTBEAT_STALE = "HEARTBEAT_STALE"
 ALARM_ROLLBACK = "ROLLBACK"
 ALARM_CIRCUIT_BREAKER = "CIRCUIT_BREAKER"
@@ -340,7 +349,15 @@ def _mandal_yakala(token: str, fields: dict) -> dict | None:
 
 
 def alarm(token: str, message: str, **fields) -> dict:
-    """Emit an alarm line whose text CONTAINS the token monitoring.sh searches for."""
+    """Alarm satırı jetonu İKİ yerde taşır: yapılandırılmış `alarm` ALANINDA ve satır METNİNDE.
+
+    KOD TARAFI ALANI OKUR, metni değil — `notify.inbox` `alarm` alanını `NOTIFY_TOKENS` kümesinde
+    arar, `_maybe_notify` de argümanı. Metindeki kopyayı ALT-DİZGE olarak eşleyen bir tüketici
+    KODU bugün YOKTUR (eski şerh önce silinen GCP log filtresini, sonra adsız bir "alt-dizge
+    eşleyici"yi gösteriyordu; ikisi de ölçüldü, ikisi de yanlıştı). Kopyanın okuyucusu İNSANDIR:
+    journald satırına bakan operatör — depoda o jetonu grep'leyen YAZILI bir reçete de yok
+    (ölçüldü 2026-09-08). Kopya yine de çivilidir:
+    `tests/test_orgu2_v103.py::test_alarm_satiri_ham_jetonu_TASIR`."""
     fields["alarm"] = token
     fields["message"] = message
     try:
@@ -350,7 +367,7 @@ def alarm(token: str, message: str, **fields) -> dict:
     if _m is not None:
         return _m                          # bilinen-aktif durum: satır yok, sayaç state/alarm_mandal.json'ta
     _maybe_notify(token, message)
-    # the raw token appears in the printed line so a plain substring filter matches
+    # jeton basılan satırın metnine de girer — okuyucusu insandır, kod değil (docstring'de ölçülü)
     return _emit("alarm", f"{token} {message}", fields)
 
 

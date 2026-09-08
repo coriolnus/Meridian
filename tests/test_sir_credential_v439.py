@@ -18,7 +18,7 @@ tamamı: `deploy/oracle-a1/meridian.service.d/53-nous-kapi-credential.conf`.
 
 BÖLÜMLER
   A. `secrets.credential_oku` sözleşmesi — v184'ün yedi senaryosunun GENELLEŞTİRİLMİŞİ.
-  B. Çözüm SIRASI: credential → env → dosya → GCP (credential ÖNCE; faz-2'de ortam kapanınca
+  B. Çözüm SIRASI: credential → env → dosya (credential ÖNCE; faz-2'de ortam kapanınca
      davranış sessizce değişmesin diye).
   C. `status()` kanal beyanı — geçiş betiğinin farksal ölçümünün OKUYUCUSU.
   D. `hermes._nous_headers` DEĞİŞMEDEN kazanır (kablo ölçümü).
@@ -67,11 +67,13 @@ def kred(tmp_path, monkeypatch):
 
 @pytest.fixture()
 def temiz(monkeypatch, tmp_path):
-    """Dört kanalı da kapatır: credential dizini yok, GCP projesi yok, yerel depo boş bir tmp'de.
-    Önbellek iki uçta da temizlenir — `get` 300 sn TTL'lidir ve komşu test kirletebilir."""
+    """Üç kanalı da kapatır: credential dizini yok, ortamda ad yok, yerel depo boş bir tmp'de.
+    Önbellek iki uçta da temizlenir — `get` 300 sn TTL'lidir ve komşu test kirletebilir.
+
+    DÖRDÜNCÜ KANAL YOK (IaC-K5, 2026-09-07): zincirin sonundaki bulut basamağı kapandı, o yüzden
+    burada kapatılacak bir bulut ayarı da kalmadı. Çivi: `tests/test_gcp_yolu_kaldirildi_v448.py`."""
     from meridian import config
     monkeypatch.delenv("CREDENTIALS_DIRECTORY", raising=False)
-    monkeypatch.delenv("MERIDIAN_GCP_PROJECT", raising=False)
     monkeypatch.setattr(config, "STATE", tmp_path / "bos_state")
     secrets.clear_cache()
     yield
@@ -159,7 +161,7 @@ def test_A6_yol_gecisi_engellenir(kred):
 
 
 # =================================================================================================
-# B) ÇÖZÜM SIRASI — credential → env → dosya → GCP
+# B) ÇÖZÜM SIRASI — credential → env → dosya
 # =================================================================================================
 
 def test_B1_credential_ortami_YENER(kred, monkeypatch):
@@ -552,15 +554,20 @@ def test_G6_betik_DEGERI_ARGV_ye_KOYMAZ():
 # =================================================================================================
 
 def test_H1_KAYNAKLAR_cozum_sirasini_anlatir():
-    """Sözlük donuk: `status()["source"]` yalnız bu dört değerden birini döner ve sıra ÇÖZÜM
-    sırasıdır (credential → env → dosya → GCP)."""
-    assert secrets.KAYNAKLAR == ("credential", "env", "file", "gcp")
+    """Sözlük donuk: `status()["source"]` yalnız bu ÜÇ değerden birini döner ve sıra ÇÖZÜM
+    sırasıdır (credential → env → dosya).
+
+    DÖRDÜNCÜ AD DÜŞTÜ (IaC-K5, 2026-09-07): zincirin sonundaki bulut basamağı, sistem o buluttan
+    A1'e taşındığı gün ulaşılamaz olmuştu ama sözlükte duruyordu — yani `status()` operatöre
+    ÜRETİLEMEYECEK bir kaynak adı vaat ediyordu. Yönü ölçen çivi v448'dedir."""
+    assert secrets.KAYNAKLAR == ("credential", "env", "file")
 
 
 def test_H2_pano_sozlugu_KAYNAKLAR_ile_AYRISMAZ():
     """Pano `SRC_TR` ile kaynak adını Türkçeye çevirir; o sözlük `KAYNAKLAR`ın KOPYASIDIR ve
     kopya sessizce ayrışır. "credential" eklenip pano güncellenmezse operatör kanalı ADIYLA
-    göremez ve farksal ölçümün pano ayağı körleşir (tek-kaynak yasası)."""
+    göremez ve farksal ölçümün pano ayağı körleşir (tek-kaynak yasası). Ayrışma İKİ YÖNLÜDÜR ve
+    ikinci yön 2026-09-07'de gerçekten kullanıldı: bir kanal DÜŞTÜĞÜNDE de eşitlik tutmalı."""
     m = re.search(r"const SRC_TR = \{([^}]*)\}", APP_JS.read_text(encoding="utf-8"))
     assert m, "app.js içinde SRC_TR bulunamadı"
     assert set(re.findall(r"(\w+):", m.group(1))) == set(secrets.KAYNAKLAR)
@@ -946,3 +953,65 @@ def test_I11g_geri_al_hafiza_YALNIZ_54_u_KALDIRIR(tmp_path):
     assert not (birim / VEKIL_DROPIN.name).exists(), "54 kaldırılmadı"
     assert (birim / DROPIN.name).exists(), "53 DE kaldırıldı — geri alım dar değil"
     assert kaynak.exists(), "credential kaynağı silindi — geri alım geri alınamaz oldu"
+
+
+# =================================================================================================
+# J · FİKSTÜR SÖZLEŞMESİ — sandbox'lı bir test operatörün GERÇEK credential'ını okuyamaz
+# =================================================================================================
+#
+# ÖLÇÜLMÜŞ BOŞLUK (çekişmeli inceleme, 2026-09-08). Beş fikstür (`test_authority_boundaries_v77::
+# paper_secrets`, `test_kovab_icra_v161::paper`, `test_icra_yetkisi_v233::ayna`,
+# `test_wpe_dolum_boslugu_v234::ayna`, `test_tek_kaynak_refetch_ve_equity_v432::mirror_ortami`)
+# sahte Alpaca kimliğini ORTAM DEĞİŞKENİYLE kurup docstring'lerinde "gerçek anahtar okunmaz" diye
+# YAZILI bir güvence veriyordu. Ama çözüm sırası 2026-09-07'de credential → env → dosya oldu: env
+# artık zincirin BAŞI DEĞİL. `CREDENTIALS_DIRECTORY` kurulu bir ortamda (A1 birimi içinde koşan bir
+# pytest, ya da `sir_credential_gecis.sh` geçişi yeniden üretilirken) `secrets.get("ALPACA_PAPER_KEY")`
+# sahte değeri DEĞİL operatörün GERÇEK credential dosyasını okurdu — hem güvence tutmaz hem gerçek
+# bir sır bir testin içine girer.
+#
+# ONARIM TEK YERDE: `tests/conftest.py::sandbox_state` kanalı kapatır (`monkeypatch.delenv`).
+# ÖLÇÜLDÜ: `sandbox_state` AUTOUSE DEĞİLDİR (düz `@pytest.fixture`) — yani kapanış "her teste"
+# değil, "sandbox isteyen her teste" uygulanır. Beş fikstürün BEŞİ de `sandbox_state`e bağlıdır
+# (ölçüldü), yani kapsam onlar için tamdır; sandbox istemeyen bir test zaten `config.STATE`e de
+# dokunamaz ve sır okumaz. Kapsamın bu sınırı burada YAZILI, çünkü sessiz bir sınır sessiz bir
+# boşluktur.
+
+
+def test_J1_sandbox_state_CREDENTIAL_KANALINI_KAPATIR(monkeypatch, request):
+    """Fikstürün güvencesi ÖLÇÜLÜR: sandbox açıldığında credential dizini ortamdan DÜŞER.
+
+    NEDEN `getfixturevalue` İLE, düz bir parametreyle DEĞİL: bu testin ölçmek istediği kaza,
+    ortamda ZATEN bir `CREDENTIALS_DIRECTORY` varken sandbox'ın açılmasıdır. Fikstürü parametre
+    olarak istesem o kurulum test gövdesinden ÖNCE koşardı ve değişkeni ben sonra kurardım —
+    yani ölçüm ters yönde olurdu ve `delenv` silinse bile YEŞİL kalırdı (bu dosyanın kovaladığı
+    yanlış-yeşil sınıfı). Burada sıra gerçek sırayla aynıdır: önce kirli ortam, sonra sandbox.
+
+    Bu ayrım olmadan iddia yapısal olarak kırmızıya dönemezdi: geliştirme makinesinde
+    `CREDENTIALS_DIRECTORY` zaten kurulu değil, yani "yok" demek hiçbir şey kanıtlamazdı."""
+    sizinti = "/tmp/sahte-credential-dizini-v439"
+    monkeypatch.setenv("CREDENTIALS_DIRECTORY", sizinti)
+    assert os.environ.get("CREDENTIALS_DIRECTORY") == sizinti, "ön koşul kurulamadı"
+
+    request.getfixturevalue("sandbox_state")
+
+    assert os.environ.get("CREDENTIALS_DIRECTORY") is None, (
+        "`sandbox_state` credential kanalını KAPATMIYOR. Çözüm sırası credential → env → dosya "
+        "olduğundan, sahte kimliği env'e koyan her fikstürün güvencesi ('gerçek anahtar okunmaz') "
+        "bu kapanışa bağlıdır — kapanmazsa operatörün GERÇEK sırrı bir testin içine girer.")
+
+
+def test_J2_env_ile_kurulan_sahte_kimlik_GERCEKTEN_okunur(monkeypatch, request):
+    """Kapanışın YÖNÜ de ölçülür: kanal kapandıktan sonra env basamağı gerçekten kazanır.
+
+    `delenv` fazlasını da silseydi (ör. env basamağını bozacak bir temizlik) beş fikstür sessizce
+    sahte kimliği kaybeder ve broker testleri "kimlik yok" dalına düşerdi — yeşilden yeşile geçen,
+    ama artık BAŞKA bir şey ölçen bir suite. Bu iddia o sapmayı kırmızıya çevirir."""
+    monkeypatch.setenv("CREDENTIALS_DIRECTORY", "/tmp/sahte-credential-dizini-v439")
+    request.getfixturevalue("sandbox_state")
+    monkeypatch.setenv("ALPACA_PAPER_KEY", "SAHTE-ANAHTAR-J2")
+    secrets.clear_cache()
+    try:
+        assert secrets.get("ALPACA_PAPER_KEY") == "SAHTE-ANAHTAR-J2"
+        assert secrets._source_of("ALPACA_PAPER_KEY") == "env"
+    finally:
+        secrets.clear_cache()

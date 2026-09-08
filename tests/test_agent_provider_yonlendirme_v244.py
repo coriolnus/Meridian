@@ -22,7 +22,7 @@ BU DOSYA ÇİVİLER:
 KİMLİK YÜZEYİ (bu turun asıl kararı, kaynakta da çivili): soru "Meridian'ın anahtarı var mı" değil
 "ALT SÜREÇ olarak koşan CLI bir anahtar GÖREBİLİYOR mu"dur. CLI iki yüzey görür — süreç ortamı
 (`env={**os.environ, ...}` ile miras) ve kendi `~/.hermes/.env` dosyası. `secrets.get` BİLEREK
-kullanılmadı: zinciri env'den sonra `state/secrets.json` + GCP'ye bakar ve o iki kaynak alt sürece
+kullanılmadı: zinciri env'in yanında systemd credential dizinine + `state/secrets.json`a bakar ve o iki kaynak alt sürece
 HİÇ GEÇMEZ — kasada anahtar varken True derdi, CLI ise anahtarsız kalırdı. Bu tam olarak bu turun
 kapattığı sınıftır ("ayar yapıldı sanılıyor, ulaşılamıyor").
 """
@@ -184,7 +184,7 @@ def test_kaynak_saglayici_adi_SABITTE_yasar():
 
 
 def test_kaynak_kimlik_yuzeyi_SECRETS_DEGIL():
-    """SSoT KİLİDİ: `secrets.get` bu kapıda YANLIŞ CEVAP verir (kasa ve GCP alt sürece geçmez).
+    """SSoT KİLİDİ: `secrets.get` bu kapıda YANLIŞ CEVAP verir (kasa ve credential dizini alt sürece geçmez).
     Ölçülen iki yüzey — süreç ortamı + `~/.hermes/.env` — kaynakta kilitli."""
     kod = _govde(hermes._agent_slug_provider_ready)
     assert "secrets." not in kod, "kimlik CLI'nin GÖREMEDİĞİ bir yüzeyden okunuyor"

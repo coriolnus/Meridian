@@ -314,7 +314,6 @@ def test_skill_script_refuses_fetch_without_a_key_instead_of_pretending(tmp_path
     import sys
     env = dict(os.environ)
     env.pop("FINVIZ_API_KEY", None)
-    env.pop("MERIDIAN_GCP_PROJECT", None)
     env["MERIDIAN_ROOT"] = str(tmp_path)
     r = subprocess.run([sys.executable, str(_script_path()), "--filters", "cap_small", "--fetch"],
                        capture_output=True, text=True, timeout=120, env=env)

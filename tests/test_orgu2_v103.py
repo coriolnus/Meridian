@@ -438,7 +438,13 @@ def test_flip_YOKKEN_alarm_YOK(sandbox_state):
 
 
 def test_alarm_satiri_ham_jetonu_TASIR(sandbox_state, capsys):
-    """monitoring.sh düz altdizge arar: jeton basılan satırda GÖRÜNMELİ."""
+    """Jeton basılan satırın METNİNDE de GÖRÜNMELİ — yapılandırılmış `alarm` alanına ek olarak.
+
+    GEREKÇE İKİ KEZ TAZELENDİ ve ikincisi ölçümdür (2026-09-08): eşleyen taraf önce silinmiş GCP
+    log filtresi, sonra "`notify.send` + `notify.inbox` alt-dizge eşler" diye yazılıydı; ölçüldü,
+    ikisi de yanlış — kod tarafı `alarm` ALANINI `obs.NOTIFY_TOKENS` kümesinde arar, satır metnini
+    tarayan bir tüketici KODU yok. Metindeki kopyanın okuyucusu journald satırına bakan insandır ve
+    çivi tam olarak onu korur: alan ile metin ayrıştığında operatörün gördüğü satır jetonsuz kalır."""
     _terfi_defteri()
     analytics.llm_opinion_calibration()
 

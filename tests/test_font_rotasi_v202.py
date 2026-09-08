@@ -1,8 +1,9 @@
 """FONT SUNUM ROTASI — `/fonts/*.woff2` (D5, 2026-08-07).
 
 NİYE VAR. D4 turu yazı tipini kendi-barındırmaya aldı: iki `.woff2` `meridian/web/fonts/` altına
-kondu, üç yüzeye yerel yollu `@font-face` yazıldı, ve `deploy/Caddyfile` CSP'sinden
-`fonts.googleapis.com` + `fonts.gstatic.com` DÜŞTÜ. Yapılmayan tek şey rotaydı ve o eksik
+kondu, üç yüzeye yerel yollu `@font-face` yazıldı, ve CSP'den
+`fonts.googleapis.com` + `fonts.gstatic.com` DÜŞTÜ (politika o tarihte vekil yapılandırmasındaydı;
+v203'te uygulamaya, `meridian/api.py::CSP_POLITIKASI`ya alındı). Yapılmayan tek şey rotaydı ve o eksik
 ölçülmüştü: `/fonts/recursive-sans-vf.woff2` → 404, `/fonts/recursive-mono-vf.woff2` → 404
 (tests/test_yazitipi_v201.py'nin KATI xfail'i). Bu depoda `StaticFiles` montajı BİLEREK yok
 (`meridian/api.py`, "STATİK BETİKLER TEK TEK YÖNLENDİRİLİR" notu), yani bir dosyayı diske koymak

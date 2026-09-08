@@ -8,8 +8,8 @@ statik rota notları "dağıtım CSP'si `script-src 'self'`" derken hep aynı ya
     curl -D- http://127.0.0.1:8080/    →  ne Content-Security-Policy, ne X-Frame-Options,
                                           ne X-Content-Type-Options.  HİÇBİRİ.
 
-Sebep tek cümlede: başlıklar YALNIZ `deploy/Caddyfile`'da tanımlıydı ve **A1'de Caddy koşmuyor**
-(`systemctl is-active caddy` → inactive, `/etc/caddy/Caddyfile` yok). Yani üç test dosyasının
+Sebep tek cümlede: başlıklar YALNIZ ters vekilin (Caddy) yapılandırmasında tanımlıydı ve
+**A1'de Caddy koşmuyor** (`systemctl is-active caddy` → inactive). Yani üç test dosyasının
 GEREKÇESİ doğruydu, dayandıkları YASA ise üretimde hiç yürürlükte değildi. Bu deponun baskın
 kusur sınıfı: kurulu ≠ çalışır.
 
@@ -17,8 +17,9 @@ BU DOSYA O BOŞLUĞU KAPALI TUTAR ve dört ayrı gerilemeyi adlandırır:
 
   Ç1  BAŞLIK GERÇEKTEN GİDİYOR MU — her yüzeyde, ölçülerek. "Middleware yazıldı" bir vaat;
       ölçülen şey `TestClient` yanıtının başlık sözlüğüdür.
-  Ç2  DEĞER CADDYFILE'LA BİREBİR Mİ — iki kaynak (uygulama + atıl vekil referansı) DİZE
-      EŞİTLİĞİYLE bağlanır. Bağlanmazsa "aynı politika" iddiası zamanla sessizce yalan olur.
+  Ç2  TANIM TEK Mİ — politikayı tanımlayan İKİNCİ bir yüzey (vekil yapılandırması, birim
+      dosyası, dağıtım betiği) OLMAMALI. Bu iddia 2026-09-07'de HEDEF DEĞİŞTİRDİ; gerekçesi
+      Ç2 bölümünün başında yazılı.
   Ç3  POLİTİKA GEVŞEDİ Mİ — `script-src`'de `unsafe-inline`/`unsafe-eval` yok, `font-src`'de
       dış host yok, `frame-ancestors 'none'` duruyor. (D4 sertleştirmesi geri alınamaz.)
   Ç4  VARLIK YOLU BOZULDU MU — ETag pazarlığı, gövdesiz 304 ve önbellek yasası AYNEN duruyor.
@@ -40,7 +41,38 @@ from fastapi.testclient import TestClient
 from meridian.api import CSP_POLITIKASI, GUVENLIK_BASLIKLARI, app
 
 KOK = pathlib.Path(__file__).resolve().parents[1]
-CADDY_YOL = KOK / "deploy" / "Caddyfile"
+
+#: Ç2 taramasının AĞAÇLARI: politikayı UYGULAMA DIŞINDA tanımlayabilecek yüzeyler.
+#: KAPSAM DIŞI SINIFLAR ADIYLA YAZILIDIR (tur-2 — docstring kapsamı olduğundan geniş gösteriyordu):
+#:   · `tests/` — bir test başlık adını BEKLENEN DEĞER olarak taşır ve bu bir tanım değildir.
+#:   · `docs/`, `research/`, `MERIDIAN_ENGINEERING_LOG.md` — tarih kaydı.
+#:   · `meridian/` — tanımın KENDİ yeri; "ikinci tanım" ölçümünün konusu değil, öznesi.
+#:   · `.md`/`.html`/`.txt` uzantıları — düzyazı. `deploy/README-oracle.md` bugün `Referrer-Policy`
+#:     ve `Permissions-Policy` adlarını GEÇİRİYOR ve bu doğrudur: orada anlatılan şey "burada
+#:     tanımlı DEĞİL"dir. Düzyazıyı kapsama almak, doğru cümleyi kırmızıya çevirirdi.
+VEKIL_AGACLARI = ("deploy", "ops", ".github")
+
+#: Depo KÖKÜNDEKİ dağıtım yüzeyleri. Tur-2'de eklendi ve gerekçesi ÖLÇÜLMÜŞTÜR: aynı IaC-K5 turu
+#: `docker-compose.yml`i ve `Dockerfile`ı DÜZENLEDİ, yani ikisinin de canlı dağıtım yüzeyi olduğu
+#: kabul edilmişti — ama Ç2 taraması onları görmüyordu. Biri `docker-compose.yml`e bir vekil/etiket
+#: üzerinden başlık eklerse ya da `Dockerfile`a bir `ENV` yazarsa ikinci CANLI tanım doğar ve çivi
+#: yeşil kalırdı. (Kök `deploy.sh` bu listede YOK çünkü tur-2'de SİLİNDİ — v448 `SILINEN_YOLLAR`.)
+VEKIL_KOK_DOSYALARI = ("docker-compose.yml", "Dockerfile")
+
+#: Taramanın gireceği uzantılar. Uzantısız dosyalar da dahildir (`Caddyfile` gibi adlar uzantısız
+#: olur) — dışlamak, taramanın kaçırmak için en olası olduğu sınıfı kaçırmak olurdu. `.py` tur-2'de
+#: eklendi: `ops/` altında 33 Python aracı var ve biri (`ops/apisix_uygula.py`) APISIX
+#: yapılandırmasını GERÇEKTEN etcd'ye PUT ediyor — oraya yazılacak bir `response-rewrite` bloğu
+#: uygulamanın başlığını SET semantiğiyle ezerdi ve eski kapsam onu hiç görmezdi.
+VEKIL_UZANTILARI = ("", ".conf", ".yaml", ".yml", ".json", ".sh", ".service", ".toml", ".py")
+
+#: POZİTİF KONTROL TABANI. ÖLÇÜLDÜ 2026-09-08: 109 dosya (deploy 61 + ops 45 + .github 1 + kök 2 —
+#: `.py` ve kök yüzeyleri eklendikten sonra; eski kapsam 71'di). Eşik ÖLÇÜMÜN KENDİSİ DEĞİL: bu bir
+#: çırçır değil KÖRLÜK ALARMIdır (emsal `test_capa_uyusmasi_v373.py::test_CANLI_TARAMA_SESSIZCE_BOS_DEGIL`)
+#: — sayıya yapıştırmak, dosya silen her meşru temizliği kırmızıya çevirirdi. 60, "tarayıcı onlarca
+#: dosyayı gerçekten görüyor" demeye yeter ve yanlış-kök/yanlış-uzantı arızasının ürettiği sıfırı
+#: kaçırmaz.
+VEKIL_TARAMA_ASGARI = 60
 
 
 @pytest.fixture
@@ -77,8 +109,8 @@ def test_her_yuzey_TUM_guvenlik_basliklarini_alir(istemci, yol):
     r = istemci.get(yol)
     for ad, beklenen in GUVENLIK_BASLIKLARI.items():
         assert ad.lower() in {k.lower() for k in r.headers}, (
-            f"{yol} ({r.status_code}): `{ad}` başlığı YOK. Politika yalnız deploy/Caddyfile'da "
-            f"tanımlıysa ve vekil koşmuyorsa — A1'deki durum buydu — hiçbir şey zorlanmaz.")
+            f"{yol} ({r.status_code}): `{ad}` başlığı YOK. Politika yalnız vekilde tanımlıysa "
+            f"ve vekil koşmuyorsa — A1'deki durum buydu — hiçbir şey zorlanmaz.")
         assert r.headers[ad] == beklenen, (
             f"{yol}: `{ad}` değeri sapmış.\n  gelen   : {r.headers[ad]!r}\n"
             f"  beklenen: {beklenen!r}")
@@ -124,70 +156,216 @@ def test_404_ve_bilinmeyen_yol_da_baslik_alir(istemci):
 
 
 def test_HSTS_uygulama_katmanindan_GONDERILMEZ(istemci):
-    """`Strict-Transport-Security` vekilde KALIR ve bu bir eksiklik değil, bir doğruluk kararıdır.
+    """HSTS'i YALNIZ TLS'i sonlandıran katman gönderebilir — ve bugün o katman onu GÖNDERMİYOR.
 
     Uygulama loopback'te düz HTTP konuşur. HSTS'i düz HTTP üzerinden göndermek RFC 6797 §8.1'e
     göre tarayıcının YOK SAYDIĞI bir gürültüdür; TLS'i kimin sonlandırdığını bilen tek katman
     vekildir. Yanlış katmandan gönderilen bir başlık, "gönderiliyor" diye işaretlenip hiçbir şey
-    yapmadığında ölçümü kirletir."""
+    yapmadığında ölçümü kirletir. Bu test o yüzden başlığın BURADAN çıkmadığını ölçer.
+
+    NE OLMADIĞI DA YAZILI (tur-2 düzeltmesi — tek-kaynak yasası). Bu docstring "HSTS vekilde
+    KALIR" diyordu; aynı dosyanın ~70 satır aşağısı ise doğru olanı söylüyor: vekil yapılandırması
+    IaC-K5 ile silindi ve iki kalem de bugün HİÇBİR yapılandırmada tanımlı DEĞİL. Bir dosyada iki
+    zıt hüküm, borcu sulandırır: sonraki tur ilkini okur ve HSTS'in bir yerde durduğunu sanar.
+    Borcun tek kaydı `test_vekile_AIT_iki_kalem_ACIK_BORC_olarak_YAZILI`dır."""
     assert "strict-transport-security" not in {k.lower() for k in istemci.get("/").headers}
     assert "Strict-Transport-Security" not in GUVENLIK_BASLIKLARI
 
 
-# ===================== Ç2 · CADDYFILE İLE BİREBİR (tek kaynak çivisi) =====================
+# ===================== Ç2 · TANIM TEK Mİ (tek kaynak çivisi) =====================
+#
+# HEDEF DEĞİŞTİ, ÇİVİ SİLİNMEDİ (IaC-K5, operatör kararı 2026-09-07 — bedel yasası).
+#
+# ESKİ HÂL: politikanın vekil tarafında ATIL (yorumlu) bir referans kopyası duruyordu ve buradaki
+# üç test onu okuyordu — değerin sözlükle DİZE EŞİTLİĞİ, kopyanın ETKİN OLMAMASI, ve vekile ait
+# iki kalemin (`Strict-Transport-Security`, `-Server`) orada AÇIK kalması. Ölü GCP yolu silinirken
+# o dosya da düştü, yani üç iddianın da OKUYACAĞI kaynak yok.
+#
+# NE KAYBEDİLDİ, açıkça (bedel yasası — kazanç ölçülüp bedel ölçülmezse körlük sessizdir):
+#   (a) "iki kopya ayrıştı mı" ölçümü. Yerine gelen iddia daha güçlüdür — ayrışacak İKİNCİ bir
+#       kopyanın hiç VAR OLMAMASI — ama aynı şey değildir ve öyle yazılıyor.
+#   (b) `Strict-Transport-Security` ile `-Server`ın bir dosyada YAZILI durduğunun ölçümü. Bu
+#       GERÇEK bir kayıptır: bugün ikisi de hiçbir yapılandırmada tanımlı değil. Kaybı ölçülebilir
+#       tutmanın tek dürüst yolu, borcun KENDİSİNİ ölçmektir (`test_vekile_AIT_iki_kalem…`).
+#
+# NEDEN "İKİNCİ TANIM YOK" DOĞRU SÜREKÇİ: bir vekilde `header <ad> <değer>` (Caddy) ya da
+# `response-rewrite` (APISIX) SET semantiğindedir — ikinci bir canlı tanım uygulamanınkini
+# SESSİZCE ezer. Eskiden kapı "kopya ayrışmasın" diyordu; şimdi "kopya doğmasın" diyor.
 
-def _caddy_satir(ad: str) -> tuple[str, bool] | None:
-    """Caddyfile'daki `<Ad> "<değer>"` satırını bul → (değer, yorumda_mı). Yoksa None."""
-    m = re.search(rf'^([\t ]*)(#?)[\t ]*{re.escape(ad)}[\t ]+"([^"]*)"',
-                  CADDY_YOL.read_text(encoding="utf-8"), re.M)
-    return (m.group(3), m.group(2) == "#") if m else None
+
+def _vekil_dosyalari():
+    """Dağıtımda GERÇEKTEN okunan yapılandırma/betik yüzeylerini gezer.
+
+    Kapsam `VEKIL_AGACLARI` × `VEKIL_UZANTILARI` + `VEKIL_KOK_DOSYALARI` ile YAZILIDIR: sessiz bir
+    kapsam daralması (ör. yeni bir uzantının unutulması, ya da `deploy/`nin bir gün yeniden
+    adlandırılması — tasarım belgesi Ansible/Terraform geçişini zaten planlıyor) bu testi bir gün
+    hiçbir şey ölçmeden yeşil bırakırdı ve o hâl, testin hiç olmamasından kötüdür. O yüzden
+    `if not kok.is_dir(): continue` bir SESSİZ ATLAMA olmaktan çıkarıldı: aşağıdaki
+    `test_vekil_taramasi_SESSIZCE_BOS_DEGIL` üreticinin gerçekten dosya bulduğunu ÖLÇER."""
+    for agac in VEKIL_AGACLARI:
+        kok = KOK / agac
+        if not kok.is_dir():
+            continue
+        for p in sorted(kok.rglob("*")):
+            if p.is_file() and p.suffix in VEKIL_UZANTILARI:
+                yield p
+    for ad in VEKIL_KOK_DOSYALARI:
+        p = KOK / ad
+        if p.is_file():
+            yield p
+
+
+def test_vekil_taramasi_SESSIZCE_BOS_DEGIL():
+    """POZİTİF KONTROL: Ç2'nin tarayıcısı canlı ağaçta gerçekten dosya BULUYOR.
+
+    NEDEN AYRI BİR ÇİVİ: `_vekil_dosyalari` var olmayan bir kökü sessizce atlar. `deploy/` ya da
+    `ops/` bir gün taşınır/yeniden adlandırılırsa üretici SIFIR dosya döner ve Ç2'nin İKİ iddiası
+    da (`ikinci_kez_TANIMLANMAMIS`, `politikasi_metni_yalniz_uygulamada`) hiçbir şey taramadan
+    GEÇER — koruma sessizce ölür. Üreticinin kendi docstring'i bu hâli "testin hiç olmamasından
+    kötüdür" diye ADLANDIRIYORDU ama ÖLÇMÜYORDU; adlandırılmış ve ölçülmemiş bir risk, ölçülmemiş
+    bir risktir."""
+    n = len(list(_vekil_dosyalari()))
+    assert n >= VEKIL_TARAMA_ASGARI, (
+        f"vekil taraması yalnız {n} dosya gördü (asgari {VEKIL_TARAMA_ASGARI}, ölçülen taban "
+        f"2026-09-08: 109). Kök taşınmış ya da uzantı süzgeci daralmış olabilir — Ç2'nin iki "
+        f"iddiası bu hâlde HİÇBİR ŞEY ölçmeden yeşil yanar.")
 
 
 @pytest.mark.parametrize("ad", sorted(GUVENLIK_BASLIKLARI))
-def test_caddyfile_referans_degeri_api_pydekiyle_BIREBIR(ad):
-    """İki kaynak DİZE EŞİTLİĞİYLE bağlıdır — "aynı politika" bir iddia değil, bir ölçüm olsun.
+def test_baslik_UYGULAMA_DISINDA_ikinci_kez_TANIMLANMAMIS(ad):
+    """Her başlığın tanımı TEK yerdedir: `meridian/api.py::GUVENLIK_BASLIKLARI`.
 
-    Vekil kopyası bugün ATIL (yorumda). Atıl olması sürüklenmeyi zararsız YAPMAZ: Caddy bir gün
-    devreye alınırsa açılacak olan o satırdır, ve o an ayrışmış bir değer uygulamanınkini SET
-    semantiğiyle sessizce EZER. Kapı bu yüzden burada, sürüklenmenin ucunda değil."""
-    bulunan = _caddy_satir(ad)
-    assert bulunan is not None, (
-        f"deploy/Caddyfile'da `{ad}` referans satırı YOK. Silinmişse tek-kaynak çivisi de "
-        f"silinmiş demektir; satır atıl (yorumlu) hâlde DURMALI.")
-    deger, _ = bulunan
-    assert deger == GUVENLIK_BASLIKLARI[ad], (
-        f"`{ad}` iki kaynakta AYRIŞTI:\n  api.py  : {GUVENLIK_BASLIKLARI[ad]!r}\n"
-        f"  Caddyfile: {deger!r}\nDeğiştirilecek şey varsa api.py'deki sözlüktedir; "
-        f"Caddyfile satırı onun atıl kopyasıdır.")
+    Vekil/birim/betik ağacında bir başlık ADI geçiyorsa iki hâlden biridir ve ikisi de kapıyı
+    hak eder: ya ikinci bir CANLI tanım doğmuştur (uygulamanınkini SET semantiğiyle ezer), ya da
+    yeni bir ATIL kopya (v203'ün ilk turunda tam olarak bu vardı ve sürüklenme riski oradaydı).
+    Bugün yüzey TEMİZ ve testin işi onu temiz tutmaktır."""
+    kirli = [p.relative_to(KOK) for p in _vekil_dosyalari()
+             if ad in p.read_text(encoding="utf-8", errors="replace")]
+    assert not kirli, (
+        f"`{ad}` uygulama DIŞINDA da geçiyor: {kirli}. Vekil başlık yönergeleri SET'tir — "
+        f"ikinci tanım uygulamanın yazdığını sessizce ezer. Tek kaynak: "
+        f"`meridian/api.py::GUVENLIK_BASLIKLARI`.")
 
 
-@pytest.mark.parametrize("ad", sorted(GUVENLIK_BASLIKLARI))
-def test_caddyfile_kopyasi_ATIL_yani_yorumda(ad):
-    """Vekil kopyası ETKİN OLMAMALI — yoksa iki CANLI tanım olur.
+def test_CSP_politikasi_metni_yalniz_uygulamada_gecer():
+    """Politika METNİNİN kendisi de ikinci bir yerde durmamalı — ad taraması bunu kaçırırdı.
 
-    Caddy'de `header <ad> <değer>` bir SET'tir: vekil etkinleştirildiğinde üstteki kopya
-    uygulamanınkini değiştirir. İki canlı tanım = zamanla ayrışan iki yasa, ve ayrışmanın yönü
-    tahmin edilemez (biri sertleşir, öteki gevşer, tarayıcı gevşeyeni görür)."""
-    deger, yorumda = _caddy_satir(ad)
-    assert yorumda, (
-        f"deploy/Caddyfile'da `{ad}` satırı AÇILMIŞ. Vekil devreye alınırsa bu satır uygulamanın "
-        f"yazdığı başlığı EZER ve sürüklenme sessizce üretime çıkar. Yoruma geri al; "
-        f"canlı tanım `meridian/api.py::GUVENLIK_BASLIKLARI`.")
+    Bir yapılandırma başlığı adsız yazabilir (Lua `ngx.header`, bir `curl` örneği, bir birim
+    dosyasının `Environment=` satırı). Ayrışmanın gerçekten sinsi hâli budur: adı aramakla
+    bulunmaz, çünkü orada duran şey DEĞERDİR."""
+    parca = "default-src 'self'"
+    kirli = [p.relative_to(KOK) for p in _vekil_dosyalari()
+             if parca in p.read_text(encoding="utf-8", errors="replace")]
+    assert not kirli, f"CSP metni uygulama dışında da geçiyor: {kirli}"
 
 
-def test_vekile_AIT_kalemler_Caddyfile_da_ETKIN_kalir():
-    """`Strict-Transport-Security` ve `-Server` vekilde AÇIK kalmalı — taşınmadılar, düşmediler.
+def test_vekile_AIT_iki_kalem_ACIK_BORC_olarak_YAZILI():
+    """`Strict-Transport-Security` ve `-Server` artık HİÇBİR dosyada tanımlı değil — ve bu
+    olgunun kendisi yazılı durmak zorundadır (YASA 4: sessiz yutma yok).
 
-    Yoruma alma turunun en olası kazası hepsini birden kapatmaktı; o hâlde TLS'i sonlandıran
-    katmanın tek yapabildiği iki şey de sessizce kaybolurdu."""
-    caddy = CADDY_YOL.read_text(encoding="utf-8")
-    hsts = _caddy_satir("Strict-Transport-Security")
-    assert hsts is not None and not hsts[1], (
-        "Strict-Transport-Security yorumda ya da yok — uygulama onu GÖNDEREMEZ (düz HTTP), "
-        "yani bu satır kapanırsa HSTS hiçbir katmanda kalmaz")
-    assert re.search(r"^[\t ]*-Server[\t ]*$", caddy, re.M), (
-        "`-Server` düşmüş: sunucu parmak izini silen tek yer vekildi (uygulama katmanındaki "
-        "karşılığı ASGI sunucusunun anahtarıdır ve api.py'de AÇIK BORÇ olarak yazılı)")
+    Eski çivi ikisinin vekilde AÇIK kaldığını ölçüyordu; vekil yapılandırması silinince o ölçüm
+    de düştü. Beyanı ölçmeyi bırakırsak kayıp SESSİZ olur: bir gün TLS yeniden sonlandırılır,
+    kimse HSTS'i hatırlamaz ve "eskiden vardı" cümlesi hiçbir yerde durmaz. Bu yüzden ölçülen
+    şey artık DAVRANIŞ değil BORCUN KAYDI: api.py'nin güvenlik başlığı notu iki kalemi de ADIYLA
+    anmak ve bugün nerede olduklarını söylemek zorunda."""
+    kaynak = (KOK / "meridian" / "api.py").read_text(encoding="utf-8")
+    bas = kaynak.index("# ---- GÜVENLİK BAŞLIKLARI")
+    not_metni = kaynak[bas:kaynak.index("CSP_POLITIKASI = (", bas)]
+    for kalem in ("Strict-Transport-Security", "-Server"):
+        assert kalem in not_metni, (
+            f"`{kalem}` güvenlik başlığı notunda ARTIK anılmıyor. İkisi de hiçbir yapılandırmada "
+            f"tanımlı değil; adları buradan da düşerse kayıt tamamen kaybolur.")
+    assert "bedel yasası" in not_metni, (
+        "kaybedilen ölçüm (vekil kopyasıyla dize eşitliği) notta beyan edilmemiş")
+    assert "Strict-Transport-Security" not in GUVENLIK_BASLIKLARI, (
+        "HSTS uygulama sözlüğüne SIZMIŞ — düz HTTP'de tarayıcı onu yok sayar (RFC 6797 §8.1)")
+
+
+def test_CSP_DISI_iki_baslik_DEGERI_de_civili():
+    """`Referrer-Policy` ve `Permissions-Policy` DEĞERLERİ bağımsız olarak çivilenir.
+
+    ÜÇÜNCÜ KAYIP (tur-2'de ölçüldü; tur-1'in bedel beyanı iki kalem sayıyordu, üç olmalıydı).
+    Silinen vekil kopyasıyla DİZE EŞİTLİĞİ çivisi BEŞ başlığın değerini sözlükten BAĞIMSIZ bir
+    literale bağlıyordu. Yerine gelen Ç2 yalnız "ikinci tanım doğmasın" der (değer ölçmez) ve Ç1
+    yanıtı `GUVENLIK_BASLIKLARI`nın KENDİSİYLE kıyaslar — değer sapması için totoloji. `X-Frame-Options`
+    ("DENY") ve `X-Content-Type-Options` ("nosniff") başka testlerde bağımsız olarak hâlâ çivili;
+    bu iki başlık ise ÖLÇÜLDÜ: `api.py` dışında hiçbir yerde geçmiyorlardı.
+
+    NE OLURDU: biri `Referrer-Policy`yi `unsafe-url` yapsın — tam URL, sorgu dizesiyle birlikte
+    üçüncü tarafa gider; ya da `Permissions-Policy` değerini boşaltsın — kamera/mikrofon/konum
+    yetenekleri açılır. İkisinde de v203, v448, v201 ve test_web_csp_uyum dahil TÜM küme yeşil
+    kalırdı. Değerler burada literal yazılıdır ve bu KOPYA DEĞİL ÇİVİDİR: sözlükten türetilseydi
+    yine totoloji olurdu (bkz. yukarıdaki Ç1 notu)."""
+    assert GUVENLIK_BASLIKLARI["Referrer-Policy"] == "no-referrer", (
+        "Referrer-Policy gevşemiş — `no-referrer` dışındaki her değer yol adlarını (ve `unsafe-url` "
+        "hâlinde tam URL'i) üçüncü tarafa sızdırır")
+    izinler = dict(
+        parca.strip().split("=", 1)
+        for parca in GUVENLIK_BASLIKLARI["Permissions-Policy"].split(",")
+    )
+    assert set(izinler) == {"geolocation", "microphone", "camera", "payment", "usb"}, (
+        f"Permissions-Policy direktif kümesi değişmiş: {sorted(izinler)} — panonun hiçbirine "
+        f"ihtiyacı yok; bir direktifin DÜŞMESİ o yeteneği sessizce açar")
+    acik = [ad for ad, deger in izinler.items() if deger != "()"]
+    assert not acik, f"Permissions-Policy'de AÇIK bırakılmış yetenek(ler): {acik}"
+
+
+def _rota_bloklari(routes: str) -> dict[str, str]:
+    """`routes.yaml` → {rota kimliği: o rotanın gövdesi}. Kimlik TÜRETİLİR, elle yazılmaz."""
+    return {p.split("\n", 1)[0].strip(): p for p in re.split(r"\n\s*- id: ", routes)[1:]}
+
+
+def test_ingress_XFORWARDED_sozlesmesi_VEKIL_YAPILANDIRMASINDA_yazili():
+    """DÖRDÜNCÜ KAYIP ve onun onarımı (tur-2): `X-Forwarded-Proto`/`-For` sözleşmesinin TEK kaydı
+    silinen vekil yapılandırmasıydı; şimdi kayıt `deploy/apisix/routes.yaml` pano-ingress bloğunda.
+
+    NEDEN GERÇEK BİR RİSK, düzyazı değil: `api._secure_cookie` oturum çerezinin `Secure` işaretini
+    `x-forwarded-proto`dan okur — ingress o başlığı İLETMEZSE uygulama şemayı düz `http` görür ve
+    çerez HTTPS altında `Secure`suz çıkar. `api._client_ip` ise hız sınırı anahtarını
+    `x-forwarded-for`dan okur — iletilmezse tüm istekler tek vekil IP'sinde toplanır ve IP başına
+    kilit anlamını yitirir. Eski kayıt vekil dosyasının `header_up` satırlarındaydı ve gerekçesi
+    oracıkta yazılıydı; dosya gidince ölçüm de gitti (tur-1'in bedel beyanı bu kalemi saymadı).
+
+    ÖLÇÜLEN ŞEY BEYANIN KENDİSİDİR, DAVRANIŞ DEĞİL — ve bu ayrım dürüstçe yazılmalı: APISIX'in bu
+    başlıkları varsayılan olarak ekleyip eklemediği CANLIDA ÖLÇÜLMEDİ. O ölçüm yapılana kadar
+    doğru duruş, yükümlülüğü vekil yapılandırmasının kendi dosyasında yazılı tutmaktır."""
+    routes = (KOK / "deploy" / "apisix" / "routes.yaml").read_text(encoding="utf-8")
+    bas = routes.index("- id: pano-ingress")
+    blok = routes[bas:routes.index("- id: ", bas + 10)]
+    for kalem in ("X-Forwarded-Proto", "X-Forwarded-For", "_secure_cookie", "_client_ip"):
+        assert kalem in blok, (
+            f"pano-ingress bloğu `{kalem}`i anmıyor — silinen vekil yapılandırmasının taşıdığı "
+            f"yükümlülük yeni kaynağa TAŞINMAMIŞ demektir (bedel yasası)")
+    assert "ölçülmedi" in blok or "ÖLÇÜLMEDİ" in blok, (
+        "APISIX'in bu başlıkları varsayılan eklediği ÖLÇÜLMEDİ — beyan bu belirsizliği taşımak "
+        "zorunda (uydurma yasağı)")
+    # KARŞI-KANIT AYRIŞMASIN (tur-3): aynı dosyada XFF'i `proxy-rewrite` ile SİLEN rotalar var ve
+    # "ölçülmedi" beyanı onları anmadan eksikti — ölçümü yapacak kişinin ilk kanıtı orası. Kural
+    # tek yönlüdür ve TÜRETİLİR: silen HER rota şerhte ADIYLA anılmalı; yenisi doğarsa burası
+    # kırmızı yanar ve beyan tazelenir (elle liste tutmak, listenin eskimesi demektir).
+    kaldiran = sorted(rid for rid, govde in _rota_bloklari(routes).items()
+                      if re.search(r"remove:\s*\[[^\]]*X-Forwarded-For", govde))
+    assert kaldiran, (
+        "hiçbir rota `X-Forwarded-For`u silmiyor — ya yapılandırma değişti ya da bu tarama "
+        "kırıldı; iki hâlde de aşağıdaki iddia hiçbir şey ölçmeden geçerdi")
+    eksik = [rid for rid in kaldiran if rid not in blok]
+    assert not eksik, (
+        f"XFF'i silen rota(lar) pano-ingress şerhinde ANILMIYOR: {eksik}. Şerh, ölçümü yapacak "
+        f"kişiye aynı dosyadaki karşı-kanıtı göstermek zorunda (bedel yasası: kayıt tek yerde "
+        f"tutuluyorsa eksik kayıt körlüktür).")
+    cfg = (KOK / "deploy" / "apisix" / "config.yaml").read_text(encoding="utf-8")
+    for ayar in ("real_ip", "trusted_addresses"):
+        assert ayar not in cfg, (
+            f"`config.yaml` artık `{ayar}` taşıyor — pano-ingress şerhinin 'böyle bir ayar YOK "
+            f"(ölçüldü 2026-09-08)' cümlesi ARTIK YANLIŞ; şerh ölçümle birlikte güncellenmeli")
+
+    api_src = (KOK / "meridian" / "api.py").read_text(encoding="utf-8")
+    for fn in ("def _secure_cookie", "def _client_ip"):
+        govde = api_src[api_src.index(fn):]
+        docstring = govde[:govde.index('"""', govde.index('"""') + 3)]
+        assert "routes.yaml" in docstring, (
+            f"`{fn}` docstring'i sözleşmenin KAYNAĞINI göstermiyor — okuyucu 'bu başlık nereden "
+            f"geliyor, kim iletmek zorunda' sorusunu cevaplayamaz")
 
 
 # ===================== Ç3 · POLİTİKA GEVŞEDİ Mİ =====================

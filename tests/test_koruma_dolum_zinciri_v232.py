@@ -94,7 +94,6 @@ def ayna(sandbox_state, monkeypatch):
     from meridian import secrets as secrets_mod
     monkeypatch.setenv("ALPACA_PAPER_KEY", FAKE_KEY)
     monkeypatch.setenv("ALPACA_PAPER_SECRET", FAKE_SECRET)
-    monkeypatch.delenv("MERIDIAN_GCP_PROJECT", raising=False)
     secrets_mod.clear_cache()
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     monkeypatch.setattr(alpaca, "paper_available", lambda: True)

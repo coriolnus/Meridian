@@ -1,6 +1,7 @@
 """Panonun dağıtım CSP'siyle uyumlu KALDIĞINI koruyan testler.
 
-NİYE VAR: `deploy/Caddyfile` `script-src 'self'` gönderiyor. O başlık yalnız harici olmayan
+NİYE VAR: uygulama `script-src 'self'` gönderiyor (`meridian/api.py::CSP_POLITIKASI`; başlığı
+yazan katman v203'te vekilden uygulamaya alındı). O başlık yalnız harici olmayan
 `<script>` bloklarını değil, SATIR İÇİ OLAY ÖZNİTELİKLERİNİ de (`onclick`, `oninput`, …)
 bloklar. Bu ayrım gözden kaçtı ve bir süre boyunca CSP satırı "script-src 'self'" diyordu
 ama pano 40 satır içi öznitelik taşıyordu — o hâliyle dağıtılsaydı **pano çizilir, hiçbir
@@ -18,7 +19,6 @@ import re
 import pytest
 
 WEB = pathlib.Path(__file__).resolve().parents[1] / "meridian" / "web"
-CADDY = pathlib.Path(__file__).resolve().parents[1] / "deploy" / "Caddyfile"
 
 # Tarayıcının çalıştırdığı her şey. `.html` içindeki `<style>` blokları style-src'ye tabidir
 # ve orada `unsafe-inline` BİLEREK duruyor (app.js satır içi stil üretiyor) — bu dosya
@@ -125,17 +125,24 @@ def test_kayitli_her_eylem_tanimli():
 
 
 def test_csp_script_src_gevsetilmemis():
-    """Caddyfile'ın script-src'sinde `unsafe-inline` OLMAMALI.
+    """Yürürlükteki CSP'nin `script-src`inde `unsafe-inline` OLMAMALI.
+
+    HEDEF DEĞİŞTİ (IaC-K5, 2026-09-07): bu iddia vekil yapılandırmasındaki ATIL kopyayı
+    okuyordu ve o dosya ölü GCP yoluyla birlikte silindi. Okuduğu şey zaten yanlış kaynaktı —
+    v203'ün açtığı boşluğun ta kendisi: atıl bir kopyanın sıkı olması, GÖNDERİLEN başlığın sıkı
+    olduğunu göstermez. Artık CANLI tanım ölçülüyor, yani ölçüm hem sürüyor hem GÜÇLENDİ.
+    `pytest.skip` dalı da düştü: kaynak artık ithal edilen bir sabittir, "dosya yoksa atla"
+    kaçağı bir sessiz-yeşil yoluydu.
 
     Bu satıra `unsafe-inline` eklemek zorunda kalındıysa sebep neredeyse kesinlikle bir
     yere satır içi `onclick`in geri gelmesidir — doğru çözüm başlığı gevşetmek değil,
     eylemi kaydetmektir. (style-src'deki `unsafe-inline` ayrı bir borçtur ve BU TESTİN
     KAPSAMINDA DEĞİLDİR.)
     """
-    if not CADDY.exists():
-        pytest.skip("deploy/Caddyfile yok")
-    m = re.search(r"script-src ([^;]+);", CADDY.read_text())
-    assert m, "Caddyfile'da script-src yönergesi bulunamadı"
+    from meridian.api import CSP_POLITIKASI
+
+    m = re.search(r"script-src ([^;]+)", CSP_POLITIKASI)
+    assert m, f"CSP'de script-src yönergesi bulunamadı: {CSP_POLITIKASI!r}"
     assert "unsafe-inline" not in m.group(1), (
         f"script-src gevşetilmiş: {m.group(1).strip()!r}. "
         "Satır içi bir işleyici geri gelmiş olabilir — testleri yukarıdan oku."

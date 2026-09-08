@@ -2200,9 +2200,9 @@ _quiet_flag_ok = True          # süreç-içi öğrenme: bir kez 'desteklenmiyor
 #     (1) süreç ortamı — `_agent_call._kos` alt süreci `env={**os.environ, ...}` ile doğurur,
 #     (2) `~/.hermes/.env` — CLI'nın KENDİ kimlik dosyası (Gemini ayağı da bu dosyadan besleniyor;
 #         `_agent_env_has_key` aynı dosyayı zaten bu amaçla okuyor).
-#   `secrets.get("OPENROUTER_API_KEY")` BİLEREK KULLANILMADI: `secrets` zinciri env'den SONRA
-#   `state/secrets.json` ve GCP Secret Manager'a bakar ve o iki kaynak alt sürece HİÇ GEÇMEZ —
-#   yani kasada anahtar varken `secrets.get` True derdi, CLI ise anahtarsız kalırdı. Bu tam olarak
+#   `secrets.get("OPENROUTER_API_KEY")` BİLEREK KULLANILMADI: `secrets` zinciri env'den ÖNCE
+#   systemd credential dizinine, SONRA `state/secrets.json`a bakar ve o iki kaynak alt sürece HİÇ
+#   GEÇMEZ — yani kasada anahtar varken `secrets.get` True derdi, CLI ise anahtarsız kalırdı. Bu tam olarak
 #   bu turun kapattığı sınıftır ("ayar yapıldı sanılıyor, ulaşılamıyor"): yanlış yüzeye bakan bir
 #   kapı, arızayı düzeltmek yerine ADINI değiştirirdi. Env kolu zaten kapsanıyor — `secrets.get`in
 #   BİRİNCİ kaynağı da os.environ'dır, biz doğrudan oraya bakınca aynı vakayı doğru gerekçeyle

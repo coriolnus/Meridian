@@ -258,30 +258,50 @@ if _CORS:
 # ---- GÜVENLİK BAŞLIKLARI — UYGULAMA KATMANI --------------------------------
 # ÖLÇÜLEN BOŞLUK, varsayılan DEĞİL. Canlı A1'de `curl -D- http://127.0.0.1:8080/` HİÇBİR güvenlik
 # başlığı döndürmüyordu: ne `Content-Security-Policy`, ne `X-Frame-Options`, ne
-# `X-Content-Type-Options`. Sebep tek cümlede: bu başlıklar YALNIZ `deploy/Caddyfile`'da tanımlıydı
-# ve **A1'de Caddy koşmuyor** (`systemctl is-active caddy` → inactive; `/etc/caddy/Caddyfile` yok).
-# Yani depo boyunca "CSP-self yasası" diye anılan — ve ÜÇ ayrı test dosyasının (test_web_csp_uyum,
-# test_yazitipi_v201, test_font_rotasi_v202) gerekçesini dayadığı — şey üretimde hiçbir başlıkla
-# ZORLANMIYORDU. Testler doğruydu; yasa yoktu. Bu deponun en sık kusur sınıfı: kurulu ≠ çalışır.
+# `X-Content-Type-Options`. Sebep tek cümlede: bu başlıklar YALNIZ ters vekilin (Caddy)
+# yapılandırmasında tanımlıydı ve **A1'de Caddy koşmuyor** (`systemctl is-active caddy` →
+# inactive). Yani depo boyunca "CSP-self yasası" diye anılan — ve ÜÇ ayrı test dosyasının
+# (test_web_csp_uyum, test_yazitipi_v201, test_font_rotasi_v202) gerekçesini dayandığı — şey
+# üretimde hiçbir başlıkla ZORLANMIYORDU. Testler doğruydu; yasa yoktu. Bu deponun en sık kusur
+# sınıfı: kurulu ≠ çalışır.
 #
-# NEDEN UYGULAMA KATMANI TEK KAYNAK (ve vekil değil): ters vekil bir DAĞITIM TERCİHİDİR — bugün
-# yok, yarın Caddy olur, öbür gün nginx ya da bir yük dengeleyici olur. Uygulamanın güvenlik
-# duruşu o tercihten BAĞIMSIZ olmalı: başlığı uygulamanın kendisi yazarsa loopback'ten, SSH
-# tünelinden, docker-compose'tan, `serve.sh`ten ve bir gün vekilden gelen her istek AYNI politikayı
-# görür. Vekile bağlı bir yasa, vekil olmayan her ortamda SESSİZCE yoktur — ve bugün tam olarak o
-# durumdayız. Vekilde kalması GEREKEN iki kalem `deploy/Caddyfile`'da AÇIK kaldı, gerekçesi orada:
-# `Strict-Transport-Security` (TLS'i sonlandıran katmanın bilgisi; düz HTTP'de tarayıcı zaten yok
-# sayar) ve `-Server` (aşağıda "AÇIK BORÇ" notu).
+# NEDEN UYGULAMA KATMANI TEK KAYNAK (ve vekil değil): ters vekil bir DAĞITIM TERCİHİDİR — dün
+# Caddy'ydi, bugün APISIX, yarın başka bir yük dengeleyici olur. Uygulamanın güvenlik duruşu o
+# tercihten BAĞIMSIZ olmalı: başlığı uygulamanın kendisi yazarsa loopback'ten, SSH tünelinden,
+# `serve.sh`ten ve bir gün vekilden gelen her istek AYNI politikayı görür. Vekile bağlı bir yasa,
+# vekil olmayan her ortamda SESSİZCE yoktur — ve o durum bu kurulumda bir kez GERÇEKTEN yaşandı.
 #
-# ÇAKIŞMA/ZAYIFLATMA: Caddy'nin `header <ad> <değer>` biçimi SET'tir, yani üstteki vekil kopyası
-# uygulamanınkini SESSİZCE değiştirir. İki canlı tanım, zamanla ayrışan iki yasa demektir. Bu
-# yüzden Caddyfile'daki beş satır YORUMA ALINDI: değerleri ATIL bir REFERANS kopyası olarak durur
-# (gerekçe metniyle birlikte) ve `tests/test_guvenlik_basliklari_v203.py` iki kaynağı DİZE
-# EŞİTLİĞİYLE çiviler — biri değişip öteki kalırsa test kırılır. (Yan kazanç: Caddyfile'ı okuyan
-# ESKİ iki bekçi — test_web_csp_uyum ve test_yazitipi_v201 — artık ATIL kopyayı ölçüyor, yani tek
-# başlarına api.py'nin gevşemesini göremezlerdi; o boşluğu kapatan şey bu dize-eşitliği kapısıdır.)
+# TEK KAYNAK ARTIK GERÇEKTEN TEK (IaC-K5, operatör kararı 2026-09-07). v203 turu vekil kopyasını
+# YORUMA ALIP `tests/test_guvenlik_basliklari_v203.py` ile bu sözlüğe DİZE EŞİTLİĞİYLE çivilemişti;
+# o kapı, ölü bir kopyanın sürüklenip bir gün açılmasına karşıydı (vekilde `header <ad> <değer>`
+# bir SET'tir — açılan kopya uygulamanınkini SESSİZCE ezerdi). Ölü GCP yolu silinirken vekil
+# yapılandırmasının kendisi de düştü, yani kopya artık YOK: eşitlik ölçülemez, ama ölçümün
+# KORUDUĞU şey daha güçlü bir hâle geçti — ikinci bir tanımın hiç VAR OLMAMASI (çivi: v448).
 #
-# ---- CSP: DİREKTİFLER CADDYFILE'DAN SADAKATLE TAŞINDI, HİÇBİRİ UYDURULMADI ----
+# BEDEL AÇIK YAZILIR (bedel yasası). Kaybedilen ölçüm "iki kopya ayrıştı mı"ydı; onunla birlikte
+# vekile AİT iki kalemin bir yerde YAZILI durduğunun ölçümü de düştü: `Strict-Transport-Security`
+# (TLS'i sonlandıran katmanın bilgisi — düz HTTP'de tarayıcı zaten yok sayar) ve sunucu parmak
+# izini silen `-Server`. İkisi de bugün hiçbir dosyada tanımlı DEĞİL ve bu bir gerileme değil bir
+# olgudur: TLS'i sonlandıran katman artık APISIX'tir. Yeniden bir vekil kurulursa bu iki kalem
+# ELDEN yazılır; `-Server`ın uygulama-katmanı karşılığı aşağıda "AÇIK BORÇ" olarak duruyor.
+#
+# BEDEL SAYIMI TAMAMLANDI (tur-2, 2026-09-08 — ilk beyan İKİ kalem sayıyordu, DÖRT çıktı; eksik
+# sayılmış bir bedel, ölçülmemiş bir bedeldir):
+#   (3) `Referrer-Policy` ve `Permissions-Policy` DEĞERLERİNİN bağımsız çivisi. Silinen kopya beş
+#       başlığın değerini sözlükten BAĞIMSIZ bir literale bağlıyordu; yerine gelen Ç2 yalnız
+#       "ikinci tanım doğmasın" der, Ç1 ise yanıtı sözlüğün KENDİSİYLE kıyaslar (değer sapması
+#       için totoloji). `X-Frame-Options`/`X-Content-Type-Options` başka testlerde bağımsız olarak
+#       çiviliydi, bu ikisi HİÇBİR yerde. ONARILDI:
+#       `tests/test_guvenlik_basliklari_v203.py::test_CSP_DISI_iki_baslik_DEGERI_de_civili`.
+#   (4) `X-Forwarded-Proto`/`X-Forwarded-For` sözleşmesi. Silinen dosyanın `header_up` satırları bu
+#       yükümlülüğün TEK yazılı kaydıydı ve gerekçesi oracıkta duruyordu (`_secure_cookie` Secure
+#       işaretini, `_client_ip` hız sınırı anahtarını oradan okur). ONARILDI: kayıt
+#       `deploy/apisix/routes.yaml` pano-ingress bloğuna taşındı, iki fonksiyonun docstring'i
+#       kaynağı gösteriyor; çivi `tests/test_guvenlik_basliklari_v203.py` içinde
+#       `test_ingress_XFORWARDED_sozlesmesi_VEKIL_YAPILANDIRMASINDA_yazili` adıyla durur.
+#       AÇIK: APISIX'in bu başlıkları varsayılan eklediği CANLIDA ÖLÇÜLMEDİ.
+#
+# ---- CSP: DİREKTİFLER VEKİL YAPILANDIRMASINDAN SADAKATLE TAŞINDI, HİÇBİRİ UYDURULMADI ----
 # `script-src 'self'` — GERÇEKTEN karşılanıyor (iki arıza kapatıldı: landing.html +
 #   workflow.html satır içi `<script>` taşıyordu → landing.js/workflow.js'e alındı; app.js'te 34 +
 #   index.html'de 6 = 40 satır içi olay özniteliği vardı → olay delegasyonuna çevrildi, `data-act`
@@ -314,7 +334,9 @@ CSP_POLITIKASI = (
     "form-action 'self'"
 )
 
-# TEK KAYNAK. `deploy/Caddyfile`'daki karşılıkları yorumdadır ve testle bu sözlüğe çivilidir.
+# TEK KAYNAK, ve artık TEK kopya: politikanın vekil tarafındaki atıl referansı IaC-K5 (2026-09-07)
+# ile düştü. Değiştirilecek bir şey varsa BURADADIR; çivi `tests/test_gcp_yolu_kaldirildi_v448.py`
+# ikinci bir tanımın doğmadığını ölçer.
 GUVENLIK_BASLIKLARI: dict[str, str] = {
     "Content-Security-Policy": CSP_POLITIKASI,
     # Tıklama hırsızlığı: HALT ve Flatten tek tıkla iş gören düğmeler; görünmez bir iframe içinde
@@ -448,7 +470,12 @@ def _autostart():
 def _client_ip(request: Request) -> str:
     """Ters vekil arkasındayken gerçek istemci X-Forwarded-For'un İLK girdisidir. Bu değere
     YALNIZ hız sınırı için güvenilir, yetkilendirme için ASLA — başlık istemci tarafından
-    uydurulabilir. Uydurulursa saldırgan kendi kilidini atlatır ama başkasını kilitleyemez
+    uydurulabilir.
+
+    BAŞLIĞI KİM İLETİR: ingress'in yükümlülüğüdür ve KAYDI `deploy/apisix/routes.yaml`ın
+    pano-ingress bloğundadır (IaC-K5'te oraya taşındı; eski kayıt silinen vekil yapılandırmasının
+    `header_up` satırlarındaydı). İletilmezse bu fonksiyon her isteği tek vekil IP'sinde toplar ve
+    kilit IP başına olmaktan çıkar — sessizce, çünkü kod yine bir değer döndürür. Uydurulursa saldırgan kendi kilidini atlatır ama başkasını kilitleyemez
     (kilit IP başınadır, global değil), yani kötüye kullanımın tavanı kendi hızını artırmaktır."""
     xff = request.headers.get("x-forwarded-for", "")
     if xff:
@@ -678,7 +705,8 @@ def appjs(request: Request):
 # düşen her dosyayı — yedek, taslak, .orig — sessizce yayına açar. Ad ad yazmak sıkıcı ama
 # yayına ne çıktığı okunabilir kalır.
 #
-# NEDEN SATIR İÇİ DEĞİL DE DOSYA: dağıtım CSP'si `script-src 'self'` (deploy/Caddyfile).
+# NEDEN SATIR İÇİ DEĞİL DE DOSYA: dağıtım CSP'si `script-src 'self'` — kaynağı yukarıdaki
+# güvenlik başlığı sözlüğüdür (`meridian/api.py::GUVENLIK_BASLIKLARI`).
 # Satır içi bloklar üretimde bloklanır — landing ve workflow bu yüzden dışarı taşındı; o iki
 # sayfa aksi hâlde canlıda ölü açılırdı (workflow'un tüm diyagramı script'te üretiliyor).
 @app.get("/theme.js")
@@ -1217,7 +1245,12 @@ def _secure_cookie(request: Request) -> bool:
     """Çerez `Secure` işaretlenmeli mi? TLS altındaysak evet. Ters vekil arkasında bağlantı
     sunucuya düz HTTP gelir, gerçek şemayı `X-Forwarded-Proto` taşır. localhost'ta geliştirirken
     `Secure` koymak çerezi TAMAMEN kullanılamaz yapardı (tarayıcı http'de göndermez), o yüzden
-    şemaya bakılır — kapatma anahtarına değil."""
+    şemaya bakılır — kapatma anahtarına değil.
+
+    BAŞLIĞI KİM İLETİR: ingress'in yükümlülüğüdür ve KAYDI `deploy/apisix/routes.yaml`ın
+    pano-ingress bloğundadır (IaC-K5'te oraya taşındı; eski kayıt silinen vekil yapılandırmasının
+    `header_up` satırlarındaydı). İletilmezse HTTPS altında bile şema `http` görünür ve oturum
+    çerezi `Secure`SUZ verilir — arıza sessizdir, çünkü giriş çalışmaya devam eder."""
     proto = request.headers.get("x-forwarded-proto", "") or request.url.scheme
     return proto == "https"
 
@@ -6078,8 +6111,8 @@ async def api_alpaca_koruma_kur(request: Request):
 #
 # İKİ YOL VARDI ve seçilmeyeni de yazılı kalsın: (a) /halt'a CSP'yi `'sha256-…'` kaynağıyla
 # genişleterek göndermek — `'unsafe-inline'` değil, yani sözleşmeyi ihlal etmezdi, AMA o sayfayı
-# ötekilerden AYRI bir politikaya bağlardı: iki politika, zamanla ayrışan iki yasa, ve "birebir
-# Caddyfile" ölçümü tam da orada anlamını yitirirdi. (b) betiği aynı-origin bir rotaya almak —
+# ötekilerden AYRI bir politikaya bağlardı: iki politika, zamanla ayrışan iki yasa, ve "tek
+# kaynak" ölçümü tam da orada anlamını yitirirdi. (b) betiği aynı-origin bir rotaya almak —
 # `script-src 'self'`i GERÇEKTEN karşılamak. (b) seçildi; bu, landing.html ve workflow.html için
 # 2026-08-01'de verilen kararın ve tests/test_web_csp_uyum.py'nin söylediğinin AYNISI.
 #
@@ -8290,8 +8323,8 @@ def _hafiza_anahtari() -> tuple[str | None, str | None]:
     yürürlükte — kopyalanan şey DAVRANIŞ, kod değil.
 
     OKUYUCU İTHAL EDİLİR, KOPYALANMAZ: biçim toleransı (`AD=` öneki, kırpma, boş=None) tek kaynak
-    `secrets.credential_oku`dadır. `secrets.get` KULLANILMAZ, bilerek: `get` env/`secrets.json`/GCP
-    basamaklarına da düşer ve bu ad ALLOWED'da değildir — motor ortamında `HINDSIGHT_API_*` diye
+    `secrets.credential_oku`dadır. `secrets.get` KULLANILMAZ, bilerek: `get` env ve
+    `secrets.json` basamaklarına da düşer ve bu ad ALLOWED'da değildir — motor ortamında `HINDSIGHT_API_*` diye
     bir değişken YOKTUR ve varmış gibi aramak, panonun sır deposunu Hindsight'ın yapılandırmasına
     bağlayan sahte bir kanal açardı.
 

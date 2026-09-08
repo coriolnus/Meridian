@@ -1,15 +1,22 @@
-"""secrets.py — sır erişiminin tek kapısı: systemd credential → env → yerel 0600 deposu → Secret Manager, ya da hiçbiri (Hard Rule 5).
+"""secrets.py — sır erişiminin tek kapısı: systemd credential → env → yerel 0600 deposu, ya da hiçbiri (Hard Rule 5).
 
 NE YAPAR. `get(name)` bir sırrı `KAYNAKLAR` SIRASIYLA çözer: (1) systemd credential dizini
 (`$CREDENTIALS_DIRECTORY/<ad>` — sır süreç ORTAMINA hiç girmez; TSK-064 Faz-1B, `credential_oku`),
 (2) süreç env'i, (3) yerel operatör deposu
-(`state/secrets.json`, chmod 0600, gitignore'lu — pano üzerinden girilen anahtarlar buraya düşer),
-(4) GCP Secret Manager (google-cloud-secret-manager + MERIDIAN_GCP_PROJECT kuruluysa). Credential
-kanalı env'i YENER (geçişin yönü ortamdan credential'a doğrudur; gerekçe `_fetch`te), env de
-dosyayı: dosya, bir env değerini sessizce ezemez. Yerel depo tek operatörün yerel L0
-kutusunda panodan anahtar yapıştırabilmesi içindir; VM'de anahtarların yeri Secret Manager'dır ve
-dosya oraya asla kopyalanmaz. 300 sn TTL'li süreç-içi önbellek; `clear_cache()` rotasyon sonrası
-anında tazeler.
+(`state/secrets.json`, chmod 0600, gitignore'lu — pano üzerinden girilen anahtarlar buraya düşer).
+Credential kanalı env'i YENER (geçişin yönü ortamdan credential'a doğrudur; gerekçe `_fetch`te),
+env de dosyayı: dosya, bir env değerini sessizce ezemez. Yerel depo tek operatörün yerel L0
+kutusunda panodan anahtar yapıştırabilmesi içindir; A1'de anahtarların yeri systemd credential
+kanalıdır ve dosya oraya asla kopyalanmaz. 300 sn TTL'li süreç-içi önbellek; `clear_cache()`
+rotasyon sonrası anında tazeler.
+
+DÖRDÜNCÜ BASAMAK KAPANDI (IaC-K5, operatör kararı 2026-09-07). Zincirin sonunda bir BULUT sır
+deposu basamağı vardı; sistem 2026-08'de o buluttan Oracle A1'e taşındığı gün o basamak
+ULAŞILAMAZ oldu ama koddan düşmedi. Bıraktığı şey ölü kod değil ölü BEYAN'dı: `status()` var
+olmayan bir kanalı adıyla raporlayabiliyordu, pano onun için Türkçe karşılık taşıyordu ve
+`pyproject.toml` kurulmamış bir istemciyi beyan ediyordu — yani "sır nereden geliyor" sorusunun
+cevabı bir ihtimalle YANLIŞ olabiliyordu ve bu tam da TSK-064'ün farksal ölçümünün dayandığı
+yüzeydi. Çivi: `tests/test_gcp_yolu_kaldirildi_v448.py`.
 
 DEĞİŞMEZLER. DEĞER ASLA LOGLANMAZ: hata yollarında yalnız hatanın TÜRÜ kaydedilir, içerik/anahtar
 asla; `status()`/`mask()` en fazla maskeli ipucu (son 4 karakter) gösterir. Yazım BEYAZ
@@ -21,7 +28,7 @@ kapılıdır). Dosya izni OKURKEN de denetlenir: sahibi dışına açık `secret
 kez uyarılır (`secrets_file_permissions`); okunamayan dosya "hiç sır yapılandırılmamış" gibi
 görünmez, türüyle uyarılır (YASA 4).
 
-OKUR/YAZAR. `state/secrets.json` (atomik yazım, 0600); env ve Secret Manager salt-okunur."""
+OKUR/YAZAR. `state/secrets.json` (atomik yazım, 0600); credential dizini ve env salt-okunur."""
 from __future__ import annotations
 import json
 import os
@@ -37,7 +44,7 @@ _cache: dict[str, tuple[float, str | None]] = {}
 #: `_fetch`in ÇÖZÜM SIRASI ve `status()["source"]`ın DONUK sözlüğü — TEK kaynak. Panonun Türkçe
 #: karşılık sözlüğü (`app.js`teki `SRC_TR`) bunun KOPYASIDIR; kopya sessizce ayrışmasın diye
 #: ayrışma çivisi `tests/test_sir_credential_v439.py`dedir (tek-kaynak yasası).
-KAYNAKLAR: tuple[str, ...] = ("credential", "env", "file", "gcp")
+KAYNAKLAR: tuple[str, ...] = ("credential", "env", "file")
 
 #: systemd'nin credential dizinini bildirdiği ortam değişkeni (systemd ≥247).
 CREDENTIAL_DIZIN_ENV = "CREDENTIALS_DIRECTORY"
@@ -285,8 +292,7 @@ def _write_file(data: dict) -> None:
 # ---------------- read ----------------
 def _fetch(name: str) -> str | None:
     """Sırrı ÖNBELLEKSİZ çözer, `KAYNAKLAR` sırasıyla: (1) systemd credential dizini,
-    (2) süreç env'i, (3) yerel 0600 deposu, (4) `MERIDIAN_GCP_PROJECT` kuruluysa GCP Secret
-    Manager. Hiçbiri veremezse None; değer hiçbir yolda loglanmaz.
+    (2) süreç env'i, (3) yerel 0600 deposu. Hiçbiri veremezse None; değer hiçbir yolda loglanmaz.
 
     CREDENTIAL NEDEN ÖNCE (TSK-064 Faz-1B). Geçiş İKİ FAZLIDIR ve faz-1'de iki kanal AYNI ANDA
     canlıdır (`EnvironmentFile` kalır, `LoadCredential` eklenir). Öncelik credential'da olmazsa
@@ -295,8 +301,14 @@ def _fetch(name: str) -> str | None:
     kanalın okunduğunu ancak bu sıra sayesinde ölçebilir. Aynı hüküm pano token'ında da yürürlükte
     (`api._read_dash_token`) — orada BİR sır için verilmişti, burada tek kapıya taşındı.
 
-    ENV ARTIK İKİNCİ, AMA DOSYA/GCP'Yİ HÂLÂ YENER: alttaki üç basamağın kendi arasındaki sıra
-    DEĞİŞMEDİ, yalnız önlerine bir basamak eklendi."""
+    ENV ARTIK İKİNCİ, AMA DOSYAYI HÂLÂ YENER: alttaki basamakların kendi arasındaki sıra
+    DEĞİŞMEDİ, yalnız önlerine bir basamak eklendi.
+
+    ZİNCİR ÜÇ BASAMAKTA BİTER (IaC-K5, 2026-09-07). Sonda bir BULUT sır deposu basamağı vardı ve
+    o basamak `except Exception` ile sarılıydı — yani istemci kurulu değilken, kimlik yokken ya
+    da çağrı düşerken hepsi AYNI cevabı veriyordu: None. Üç ayrı dünya tek bir sessizliğe
+    çöküyordu ve "sır ayarlı ama okunamıyor" ile "sır yok" ayırt edilemiyordu. Bulut zaten
+    2026-08'de terk edilmişti; basamağı düşürmek o sessizliği de düşürür."""
     kv = credential_oku(name)
     if kv:
         return kv
@@ -306,16 +318,6 @@ def _fetch(name: str) -> str | None:
     fv = _read_file().get(name)
     if fv:
         return str(fv)
-    project = os.environ.get("MERIDIAN_GCP_PROJECT")
-    if project:
-        try:
-            from google.cloud import secretmanager  # optional dep, present only on the VM
-            client = secretmanager.SecretManagerServiceClient()
-            path = f"projects/{project}/secrets/{name}/versions/latest"
-            resp = client.access_secret_version(request={"name": path})
-            return resp.payload.data.decode("utf-8").strip()
-        except Exception:  # sessiz-yutma: geç bağlanan yardımcı modül/çağrı; asıl karar bu değere bağlı değil ve çağıran yokluğu yedek değerle karşılıyor
-            return None
     return None
 
 
@@ -391,8 +393,6 @@ def _source_of(name: str) -> str | None:
         return "env"
     if _read_file().get(name):
         return "file"
-    if os.environ.get("MERIDIAN_GCP_PROJECT") and get(name):
-        return "gcp"
     return None
 
 

@@ -1701,7 +1701,7 @@ def _reconcile_gunu_atlandi(sinif: str, dstr: str, takvim=None) -> None:
     # kalıyordu ve 2026-08-06→25 arasında iç motor ile aynanın adet sapması 19 GÜN görülmedi
     # (BKNG kitapta 43, brokerde 22). Kod kırık değildi; ÖLÇÜM koşmuyordu ve koşmama hâli iyi
     # huylu bir hiçlik gibi raporlanıyordu. Token MECHANISM_STALE — yeni token uydurulmadı,
-    # monitoring.sh zaten bunu arıyor ve olgu birebir odur: bir mekanizma bayat.
+    # bildirim zinciri (notify/inbox) zaten bu jetonu eşliyor ve olgu birebir odur: bir mekanizma bayat.
     if _hic or (_gun is not None and _gun >= RECONCILE_BAYAT_ISLEM_GUNU):
         obs.alarm("MECHANISM_STALE",
                   ("mutabakat HİÇ koşmamış — pozisyon sapması hiç ölçülmedi"

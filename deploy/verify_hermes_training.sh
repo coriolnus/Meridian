@@ -23,7 +23,7 @@ SK=$(find skills -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 echo "── 2. BRAIN: Claude vs deterministic ─────────────────────────────"
 BRAIN=$("$PY" -c "from meridian import secrets; print('claude' if (secrets.get('HERMES_API_KEY') or secrets.get('ANTHROPIC_API_KEY')) else 'deterministic')" 2>/dev/null)
 if [ "$BRAIN" = "claude" ]; then ok "HERMES/ANTHROPIC key resolves → full skill reasoning (Claude)"
-else no "no Claude key → free deterministic proposer only (attribution-based Axis-2)."; info "push it: PROJECT_ID=<p> deploy/push_secret.sh HERMES_API_KEY  +  export MERIDIAN_GCP_PROJECT=<p>"; fi
+else no "no Claude key → free deterministic proposer only (attribution-based Axis-2)."; info "set it: dashboard → Ayarlar/anahtarlar (state/secrets.json, 0600), or systemd LoadCredential — see deploy/oracle-a1/sir_credential_gecis.sh"; fi
 "$PY" -c "from meridian import secrets; import sys; sys.exit(0 if secrets.present('FMP_API_KEY') else 1)" 2>/dev/null \
   && ok "FMP_API_KEY resolves (screeners enabled)" || info "· FMP_API_KEY not set (data skills stay off — optional)"
 
@@ -42,7 +42,7 @@ info "closed trades Hermes can reflect on: $TR"
 echo "── 4. PROCESSES: exactly ONE Hermes, dashboard up ────────────────"
 NH=$(pgrep -fc "meridian.hermes --loop" 2>/dev/null || echo 0)
 if [ "${NH:-0}" = "1" ]; then ok "one standalone Hermes loop running (tmux)"
-elif [ "${NH:-0}" = "0" ]; then no "no Hermes loop running — start: bash deploy/install_hermes.sh"
+elif [ "${NH:-0}" = "0" ]; then no "no Hermes loop running — start: .venv/bin/python -m meridian.hermes --loop (installer script removed, IaC-K5 2026-09-07)"
 else no "MULTIPLE Hermes loops ($NH) — kill extras (double-reflect risk)"; fi
 
 # ---- ÇİFT-HERMES MUHAFIZI: ARTIK SUNUCUYU ÖLÇÜYOR (K1, 2026-07-30) -------------------------

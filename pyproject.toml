@@ -39,7 +39,7 @@ dependencies = [
 # Live broker path — installed but NEVER imported unless MERIDIAN_MODE=live AND MERIDIAN_I_ACCEPT_RISK=true
 live = ["alpaca-py>=0.20"]
 # Hermes brain — the Anthropic SDK. Installed LAST on the VM (§7); the deterministic proposer runs without it.
-brain = ["anthropic>=0.40", "google-cloud-secret-manager>=2.20"]
+brain = ["anthropic>=0.40"]
 dev = ["pytest>=8.0"]
 
 [build-system]

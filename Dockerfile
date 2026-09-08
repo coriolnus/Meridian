@@ -18,10 +18,12 @@ ENV UV_SYSTEM_PYTHON=1 \
 WORKDIR /opt/meridian
 
 # deps first for layer caching
-COPY pyproject.toml ./
+# BULUT SIR İSTEMCİSİ DÜŞTÜ (IaC-K5, 2026-09-07): `meridian.secrets` zinciri systemd credential →
+# ortam → `state/secrets.json`; hiçbir modül `google.cloud`u ithal etmiyor. Kurulmuş ama okunmayan
+# bir bağımlılık `uv audit` tedarik-zinciri kapısına okuyucusuz bir yüzey ekler (Yasa 6).
 RUN uv pip install --system \
     fastapi uvicorn "pandas>=2.1" "numpy>=1.26" pyyaml httpx aiofiles \
-    pandas-market-calendars rich jinja2 google-cloud-secret-manager
+    pandas-market-calendars rich jinja2
 
 # app + skills + immutable config
 COPY meridian ./meridian

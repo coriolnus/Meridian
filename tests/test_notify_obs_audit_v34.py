@@ -82,7 +82,7 @@ def test_o1b_every_alarm_constant_is_classified():
 def test_alarm_line_contains_the_raw_token(sandbox_state, capsys):
     obs.alarm(obs.ALARM_DATA_QUALITY, "sbux barı küçüldü")
     out = capsys.readouterr().out
-    assert "DATA_QUALITY" in out                       # monitoring.sh düz altdizge arıyor
+    assert "DATA_QUALITY" in out                       # satır metnindeki kopya: okuyucusu insan (obs.alarm)
     ev = store.read_jsonl("events.jsonl")[-1]
     assert ev["level"] == "alarm" and ev["alarm"] == "DATA_QUALITY"
 

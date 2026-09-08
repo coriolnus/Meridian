@@ -4,8 +4,12 @@
 # düzeltilmiş üç kusuru taşıyan İKİNCİ bir kadans uygulaması; bugün emekli ve yönlendiriyor.
 # Kanonik kadans A1'deki ile AYNI yoldur: uvicorn + `MERIDIAN_AUTOSTART_CYCLE=1` (süreç-içi
 # `scheduler.start()`), bkz. deploy/oracle-a1/meridian.service.
-# Secrets come from Secret Manager via the VM service account (roles/secretmanager.secretAccessor),
-# not from a copied .env. The dashboard binds to localhost only — reach it over an IAP SSH tunnel.
+# SIRLAR: `meridian.secrets` zinciri systemd credential → env → `state/secrets.json` (0600). Bu
+# compose dosyası A1'in KANONİK yolu DEĞİL (K1: bayat, geri alınabilirlik için durur) ve sır
+# değerlerini kendisi taşımaz. Eskiden buradan bir bulut sır deposu projesi geçiliyordu; o kanal
+# IaC-K5 (2026-09-07) ile kapandı, o yüzden değişken de düştü — okunmayan bir ortam değişkenini
+# geçirmek "ayar yapıldı" sanılan ölü bir kablo bırakırdı.
+# Pano yalnız localhost'a bağlanır — dışarıdan erişim SSH tüneliyledir.
 services:
   worker:
     build: .
@@ -14,12 +18,11 @@ services:
     environment:
       MERIDIAN_MODE: "paper"                 # L0. Never live without §8 gates + two hand-set flags.
       MERIDIAN_I_ACCEPT_RISK: "false"
-      MERIDIAN_GCP_PROJECT: "${MERIDIAN_GCP_PROJECT}"
       MERIDIAN_AUTOSTART_CYCLE: "1"          # ROLÜ BU BELİRLER: api süreç-içi scheduler.start() bağlar
       CYCLE_POLL_SECONDS: "300"              # A1 birimiyle aynı aralık — iki yerde iki tanım olmasın
       TZ: "America/New_York"
     volumes:
-      - ./state:/opt/meridian/state           # the ONLY mutable dir; nightly-synced to GCS
+      - ./state:/opt/meridian/state           # the ONLY mutable dir; A1'de gece yedeği + litestream replikası
     command: ["uvicorn", "meridian.api:app", "--host", "127.0.0.1", "--port", "8080"]
     healthcheck:                               # liveness: heartbeat is being written & fresh
       test: ["CMD", "python", "-c", "import json,datetime as dt,sys; hb=json.load(open('/opt/meridian/state/heartbeat.json')); sys.exit(0 if (dt.datetime.now(dt.timezone.utc)-dt.datetime.fromisoformat(hb['ts'])).total_seconds()<1200 else 1)"]
@@ -36,7 +39,6 @@ services:
       # `MERIDIAN_AUTOSTART_CYCLE` BİLEREK YOK: bu süreç salt-okuma panosudur. Ayarlansaydı iki
       # süreç aynı kadansı koşar ve state'e iki yazar biner — worker ile AYNI imaj, AYNI komut,
       # rolü ayıran TEK şey bu değişkendir.
-      MERIDIAN_GCP_PROJECT: "${MERIDIAN_GCP_PROJECT}"
       MERIDIAN_DASH_TOKEN: "${MERIDIAN_DASH_TOKEN:-}"
       TZ: "America/New_York"
     volumes:
