@@ -474,9 +474,11 @@ def test_C4a_MUTASYON_eski_davranista_yazma_yutulurdu(tmp_path):
     ile `--uygula` birlikte verilince eski kod yalnız `--kontrol` dalına girerdi (rc'ye BAKMAKSIZIN
     hiçbir zaman yazardı). Burada doğrudan `_sayfa_kipi`yi (kontrol=True, uygula=True) ile
     çağırıp dosyanın YAZILMADIĞINI (eski sessiz-yutma) gösteriyoruz — bu YENİ `main()` kapısının
-    NEDEN gerekli olduğunun kanıtı."""
-    p = tmp_path / "runbook.html"
-    metin = (WEB / "runbook.html").read_text(encoding="utf-8")
+    NEDEN gerekli olduğunun kanıtı. Kaynak `workflow.html` — TSK-132 dilim-2'den (2026-09-08)
+    SONRA blok kipini taşıyan sayfa; `runbook.html` artık `<link>` okuyor (bkz. `_bayat_sayfa_446`
+    docstring'i)."""
+    p = tmp_path / "workflow.html"
+    metin = (WEB / "workflow.html").read_text(encoding="utf-8")
     bozuk = metin.replace("--bg: #fafafa;", "--bg: #fafaf0;", 1)
     p.write_text(bozuk, encoding="utf-8")
     once = p.read_text(encoding="utf-8")
@@ -511,10 +513,10 @@ def test_C4b_sayfa_kipinde_ATLANAN_uyarisi_basar(tmp_path, monkeypatch, capsys):
 def test_C4c_ON_DOGRULAMA_yok_sayfada_hicbir_sey_YAZMADAN_durur(tmp_path):
     """Bulgu: çok-sayfalı `--uygula`da N. sayfa arızalıysa 1..N-1 ZATEN yazılmış olurdu. Ön
     doğrulama TÜM sayfalar için biter, sonra yazma başlar — birinci sayfa bayat olsa bile
-    ikinci sayfa YOK diye komut YAZMADAN durmalı."""
-    p1 = tmp_path / "runbook.html"
+    ikinci sayfa YOK diye komut YAZMADAN durmalı. Kaynak `workflow.html` (bkz. yukarıdaki not)."""
+    p1 = tmp_path / "workflow.html"
     p1.write_text(
-        (WEB / "runbook.html").read_text(encoding="utf-8").replace(
+        (WEB / "workflow.html").read_text(encoding="utf-8").replace(
             "--bg: #fafafa;", "--bg: #fafaf0;", 1), encoding="utf-8")
     once = p1.read_text(encoding="utf-8")
     p2 = tmp_path / "yok.html"
@@ -537,17 +539,19 @@ def test_C4c_KISMI_yazim_devam_eder_ve_N_M_yazildi_ozeti(tmp_path):
     BEDELİ): `os.replace` hedef dosyanın kipine değil DİZİN yazma iznine bakar, yani salt-okunur
     bir hedef DOSYA artık yazımı ENGELLEMEZ. Kazanç (yarım/kesik dosya imkânsız) bu bedelle
     alındı; bedel burada AÇIKÇA ölçülür ve `--uygula`nın izin-reddi dalı salt-okunur bir DİZİNLE
-    ısırılır."""
+    ısırılır. İKİ KAYNAK DA `workflow.html` — TSK-132 dilim-2'den (2026-09-08) SONRA blok kipini
+    taşıyan TEK sayfa; iki BAĞIMSIZ dosya adı (`p1`/`p2`) yeterli, ayrı bir GERÇEK şablon sayfa
+    gerekmez (`_sayfa_kipi` içerikle çalışır, dosya adıyla değil)."""
     p1 = tmp_path / "runbook.html"
     p1.write_text(
-        (WEB / "runbook.html").read_text(encoding="utf-8").replace(
+        (WEB / "workflow.html").read_text(encoding="utf-8").replace(
             "--bg: #fafafa;", "--bg: #fafaf0;", 1), encoding="utf-8")
     once1 = p1.read_text(encoding="utf-8")
     kilitli = tmp_path / "kilitli"
     kilitli.mkdir()
     p2 = kilitli / "landing.html"
     p2.write_text(
-        (WEB / "landing.html").read_text(encoding="utf-8").replace(
+        (WEB / "workflow.html").read_text(encoding="utf-8").replace(
             "--bg: #fafafa;", "--bg: #fafaf0;", 1), encoding="utf-8")
     once2 = p2.read_text(encoding="utf-8")
 
@@ -1166,8 +1170,16 @@ def test_K5d_manifest_EKSIK_ile_CAST_karari_AYNI_cerceveden_turer(sandbox_state,
 # K2 — `ops/jeton_css_uret.py::_sayfa_kipi` sayfa yazımı ATOMİK değildi (YÜKSEK)
 # ==================================================================================================
 
-def _bayat_sayfa_446(hedef: pathlib.Path, ad: str = "runbook.html") -> pathlib.Path:
-    """Gerçek bir yüzeyin BAYAT kopyası (jeton bloğu tokens.json ile ayrışmış)."""
+def _bayat_sayfa_446(hedef: pathlib.Path, ad: str = "workflow.html") -> pathlib.Path:
+    """Gerçek bir yüzeyin BAYAT kopyası (jeton bloğu tokens.json ile ayrışmış).
+
+    VARSAYILAN `workflow.html` — TSK-132 dilim-2'den (2026-09-08) SONRA blok kipini (HTML'e
+    enjekte edilmiş `:root`) taşıyan TEK sayfa. `runbook.html`/`landing.html` artık `<link
+    href="/jetonlar.css">` okuyor ve kendi `--bg: #fafafa;` bildirimi TAŞIMIYOR — eski varsayılan
+    (`runbook.html`) burada kullanılsaydı `.replace()` SESSİZCE no-op olurdu (mutasyon
+    UYGULANMAZ) ve K2'nin atomik-yazım çivileri `main()`in yazma dalını HİÇ tetiklemeden yeşile
+    dönerdi — yanlış sebeple yeşil, mutasyonun ısırmadığı bir çivi (2026-08-30 dersiyle AYNI
+    sınıf)."""
     p = hedef / ad
     p.write_text((WEB / ad).read_text(encoding="utf-8").replace(
         "--bg: #fafafa;", "--bg: #fafaf0;", 1), encoding="utf-8")

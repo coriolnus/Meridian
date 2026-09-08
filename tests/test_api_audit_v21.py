@@ -142,6 +142,19 @@ def test_p1c_public_get_allowlist():
              # listesiyle önleniyordu; burada tek literal yol olduğu için o yüzey hiç DOĞMUYOR.
              # Çivi: tests/test_favicon_v320.py (geometri v0 + rota + beş yüzey).
              "/favicon.svg",
+             # /jetonlar.css (TSK-132 dilim-2, 2026-09-08): STATİK BETİKLERLE (theme.js/palette.js)
+             # AYNI SINIF — FileResponse ile diskten dönen sabit bir dosya, sıfır state okuması,
+             # sıfır veri ucu. YETKİ İSTEYEMEZ: `/landing`/`/runbook` GİRİŞ EKRANINDAN ÖNCE
+             # çizilir ve bu dosyayı `<link>` ile o anda ister — 401 dönseydi üç yüzey de
+             # (index/landing/runbook, ölçüldü) JETONSUZ, yani rengi/tipografisi TANIMSIZ açılırdı
+             # (aynı gerekçe `/theme.js`/`/palette.js`/`/fonts/{ad}` için yukarıda yazılı).
+             # MARUZİYET YENİ DEĞİL, KÜÇÜLDÜ: bu bayt dizisi bir tur öncesine kadar HER sayfanın
+             # KENDİ `<style>`i İÇİNDE, satır içi ve YİNE yetkisiz duruyordu (dilim-1); dilim-2
+             # onu HTML'den TEK bir dosyaya taşıdı, yetki sınıfı DEĞİŞMEDİ.
+             # SIZDIRDIĞI VERİ: yok — renk/boşluk/tipografi jetonları, `meridian/web/tokens.json`
+             # SSoT'undan üretilir (`ops/jeton_css_uret.py --dosya`), sır taşımaz.
+             # Çiviler: tests/test_jeton_eski_sayfalar_v437.py · tests/test_jeton_birligi_v208.py.
+             "/jetonlar.css",
              "/eski"} | set(api.KIMLIK_UCLARI)
     public = {r["path"] for r in _routes() if r["verb"] == "GET" and not r["authed"]}
     assert public <= allow, f"beklenmedik yetkisiz GET: {public - allow}"

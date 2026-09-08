@@ -736,6 +736,23 @@ def palettejs(request: Request):
     return _statik(request, "palette.js", "application/javascript")
 
 
+# JETON DOSYASI (TSK-132 dilim-2, 2026-09-08). Eski yüzeylerin (landing/runbook/…) `<link
+# rel="stylesheet" href="/jetonlar.css">` ile yüklediği TEK, PAYLAŞILAN dosya — dilim-1'in
+# HTML'e enjekte edilen kopyasının (N sayfa = N fiziksel kopya) yerine geçer. Yol AD AD
+# yazılmak ZORUNDA — yukarıdaki montaj-yasağı notu burada da geçerli.
+#
+# `ops/jeton_css_uret.py::dosya_blogu()` ÜRETİR, `meridian/web/jetonlar.css`e YAZAR — bu dosya
+# `ui/src/jetonlar.css` (panonun/Vite'ın okuduğu, `uret()`in çıktısı) İLE AYNI DOSYA DEĞİLDİR:
+# adı aynı ama seçici grameri FARKLI (`ops/jeton_css_uret.py`nin DOSYA KİPİ notuna bkz. — eski
+# sayfalar `theme.js`in kurduğu `data-theme="gece"` okur, pano `data-theme="dark"`/`.dark`).
+# CSP `style-src 'self'` — bu rota AYNI origin'den servis eder, `<link>` bloklanmaz.
+@app.get("/jetonlar.css")
+def jetonlar_css(request: Request):
+    """`/jetonlar.css` ucu: eski sayfaların paylaşılan jeton dosyasını ETag/304 ile döndürür
+    (salt-okuma). Çiviler: tests/test_jeton_eski_sayfalar_v437.py · tests/test_web_csp_uyum.py."""
+    return _statik(request, "jetonlar.css", "text/css")
+
+
 # ---- YENİ PANO (studio-admin göçü, 2026-08-25) ------------------------------
 # ÜÇ ROTA: sayfa, tercih önyükleyicisi, derleme varlıkları. Eski panonun rotaları
 # (`/`, `/app.js`, `/palette.js`, …) YERİNDE DURUYOR — göç bitene kadar iki pano yan
