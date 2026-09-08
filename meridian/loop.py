@@ -2593,6 +2593,39 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         except Exception as e:
             obs.warn("shadow_variants_failed", error=f"{type(e).__name__}: {e}")
 
+        # ---- 2.5 GÖLGE İCRA (EDG-2026-088): uyuyan planların SERMAYESİZ karşı-olgusu -----------
+        # NİÇİN VAR: uyuyan (`dormant_setup`) planlar bugün önden bağlı, arkadan bağsız — doğuyor,
+        # kapı hükmü alıyor ve orada kalıyorlar (31 plan / 0 işlem). Gölge defteri onları CANLI
+        # çıkış yasalarıyla ileriye taşır ve R üretir. GERÇEK EMİR YOK: `golge_icra` hiçbir emir/
+        # onay/silahlanma yüzeyine ulaşmaz (kart kill#1, motorun kendi çivileri).
+        # NEREDE: 2.4'ün yanında, P3 `pipeline_run` açıklığının DIŞINDA — ölçüm katmanının
+        # süresi/arızası denetlenen planlama açıklığının karnesine karışmaz (aynı gerekçe 2.4'te).
+        # KOL KAPSAMI (Rol-1 hükmü 7): uyuyan planların TAMAMI + O SEANS SİLAHLANANLAR. İkincisi
+        # kontrol kolunun (PK 2) tek üretilebilir biçimidir: `adim` ileri yürür, geriye SARAMAZ
+        # (`son_seans` tektir), yani gerçek işlemin gölge eşleniği ancak plan DOĞDUĞU seansta
+        # yakalanırsa doğar. Silahlanmayan normal planlar gölgeye GİRMEZ — "tüm normal planların
+        # sürekli gölgelenmesi" bedeli ~50× olurdu ve kart onu istemiyor.
+        # BEDEL: ek ağ/LLM çağrısı SIFIR — `per`/`eff`/`regime_ok` zaten bellekte; `bars_of`
+        # ikinci bir yükleyici değil, `per`in kendisine bakan bir çağrılabilir. `per.get` (`per[t]`
+        # değil): evrende olmayan bir sembol KeyError değil `bar_yok` ölçümü üretir.
+        # ARIZA GÖLGEDE KALIR: bu blok düşerse günlük tur aynen devam eder (planlar ZATEN diske
+        # yazıldı) ve arıza ADIYLA görünür — motorun kendisinde bilerek hiç `except` yoktur.
+        try:
+            from . import golge_icra as _gi
+            _silahli_tk = {a["ticker"] for a in meta["armed"]}
+            # PARANTEZ YÜKLÜDÜR, SÜS DEĞİL: `test_parity_v56::_alias_scan` `X.get(a) or X.get(b)`
+            # metnini bir ŞEMA TAKASI (aynı olgunun iki adı) sanar. Burada ikinci terim bir ÜYELİK
+            # sınamasıdır (`… in _silahli_tk`) ve Python zaten `or`u `in`den sonra bağlar — yani
+            # tarayıcının eşlediği metin bir ifade bile değildir. Parantez o ayrımı KAYNAKTA yazar;
+            # kaldırılırsa v56 kırılır ve envantere olmayan bir takas beyan edilmek zorunda kalınır.
+            _golge_planlar = [p for p in plans
+                              if p.get("dormant_setup") or (p.get("ticker") in _silahli_tk)]
+            _gi.adim(dstr, planlar=_golge_planlar, bars_of=lambda t: per.get(t),
+                     regime_ok=regime_ok, params=eff)
+        except Exception as e:
+            obs.warn("golge_icra_failed", error=f"{type(e).__name__}: {e}",
+                     detail="gölge icra defteri bu seansı ATLADI — canlı tur etkilenmedi")
+
     if not _p2_kostu:
         # YASA 4: P2 koşmayınca near-miss gölge bacağı da koşmaz — bugüne dek bu
         # sessizdi ve "defterde near-miss neden yok?" sorusu iki hafta cevapsız kaldı. Sebep

@@ -278,6 +278,23 @@ DECLARED_ALIASES = {
     # taşır (bir satır vs bir seansın tamamı); tek `hedef` alanına indirmek şemayı gevşetir ve
     # modelin hangi ekseni istediğini SUNUCUNUN TAHMİN ETMESİNİ gerektirirdi (uydurma yasağı).
     ("sohbet.py", "plan_id", "tarih"),
+    # ALIAS DEĞİL, İKİ AYRI ÖLÇÜLEMEME SINIFININ ÖNCELİK ZİNCİRİ (EDG-2026-088 gölge pilot,
+    # 2026-09-08). `golge_icra.ozet` K paydasına GİRMEYEN her satır için tek bir `neden` dizgesi
+    # üretir ve kaynağı şu zincirdir: `r.get("olculemedi") or r.get("giris_reddi") or "R_yok"`.
+    # İki alan AYNI olgunun iki adı DEĞİLDİR ve biri diğerinin yedeği hiç değildir:
+    #   · `olculemedi`   = PIT çapası kurulamadı (bar eksik/hane eksik → `kaynak_bar_hash=None`).
+    #                      Satır bir ÖLÇÜM ARIZASIDIR; barlar gelirse aynı plan ölçülebilir.
+    #   · `giris_reddi`  = giriş TEK ATIMDA gerçekleşmedi ve nedeni ADIYLA biliniyor
+    #                      (`tetik_gelmedi` · `limit_asildi` · `acilis_stop_altinda` · `bar_yok`).
+    #                      Satır bir SONUÇTUR: plan gölgeye girdi, tetiği gelmedi, R yoktur.
+    # Defterde İKİSİ DE AYRI ALAN olarak durur (`golge_icra.SATIR_ALANLARI`) ve öyle kalmalıdır:
+    # tek alana indirmek "ölçemedim" ile "ölçtüm, giriş olmadı"yı aynı kovaya atardı — kartın
+    # `olculemeyen` tanısı tam olarak bu ikisini AYIRMAK için var (uydurma yasağı: sıfır ile
+    # bilmiyorum aynı şey değildir). Zincir yalnız PANO/API'nin tek satırlık gösterim alanını
+    # üretir; sayım betiği ham alanları okur. `("hermes.py", "calls", "olculemeyen")` ve
+    # `("loop.py", "missing_on_alpaca", "qty_drift")` satırlarıyla AYNI sınıf — tarayıcının deseni
+    # (`X.get(a) or X.get(b)`) önceliği takastan ayırt edemez, ayrım ancak burada YAZILI olur.
+    ("golge_icra.py", "olculemedi", "giris_reddi"),
 }
 
 

@@ -4854,6 +4854,51 @@ def api_audit_trail(request: Request, sembol: str = "", verdict: str = "", limit
     }
 
 
+# ---- GÖLGE İCRA DEFTERİ (EDG-2026-088) — YASA 6'NIN DIŞ OKUYUCUSU ------------------------------
+# `meridian/golge_icra.py` iki artefakt YAZAR (`golge_icra.jsonl`, `golge_icra_acik.json`) ve
+# kendi okuyucularını (`kayit_al`/`acik_kayit`/`ozet`) taşır. `codelaw.artifact_graph` "kendi
+# yazdığını kendi okuyan modül TÜKETİCİ DEĞİLDİR" der: dış okuyucu OLMASAYDI iki defter de
+# `unread` kalır ve üretilmemiş artefakttan ayırt edilemezdi. Dış okuyucu BURASIDIR.
+#
+# ADLAR NİÇİN LİTERAL, `golge_icra.DEFTER` DEĞİL (ÖLÇÜLDÜ, 2026-09-08): `artifact_graph` STATİK
+# bir graftır; bir `store` çağrısının ilk argümanı `mod.SABIT` biçimindeyse adı yalnız modüller
+# arası sabit tablosundan çözebilir ve o tablo ÇAKIŞAN adları düşürür (`codelaw._global_consts`:
+# "yanlış çözmektense unresolved demek dürüsttür"). `DEFTER` adı `meridian/mukerrerlik.py`de de
+# tanımlıdır → `store.read_jsonl(golge_icra.DEFTER)` canlı ağaçta `ad_cozulemedi`dir ve Yasa 6
+# SESSİZCE açık kalırdı. Literal kopyanın bedeli AYRIŞMA riskidir ve o risk çiviyle kapatılır:
+# `tests/test_golge_icra_kadans_v457.py::test_civi4_api_LITERALLERI_sabitlerle_AYRISMAZ` hem
+# literalleri sabitlerle karşılaştırır hem de çakışmanın HÂLÂ var olduğunu ölçer (çakışma
+# kalkarsa gerekçe bayatlar ve çivi bunu söyler). Emsal ve aynı gerekçe: `earnings_pit`,
+# `nous_fisler`, `trend_book.json`.
+GOLGE_ICRA_KUYRUK = 50     # ham satır penceresi: pano kartı son işlemleri gösterir, defterin TAMAMINI değil
+
+
+def _golge_icra_karne() -> dict:
+    """Gölge icra defterinin pano/api yükü: BETİMLEYİCİ özet + ham okuyucuların çıktısı.
+
+    HÜKÜM YOK. Eşik hükmü (CI, kazanma oranı, GEÇER/KALIR) sayım betiğinin ve Rol-1'in işidir;
+    bir pano ucunun hüküm cümlesi üretmesi kart eşiğini kartın DIŞINDA ikinci kez yorumlamak
+    olurdu. `ozet()` de bilerek hiçbir hüküm döndürmez (motorun kendi çivisi).
+
+    İKİ OKUMA, TEK YANIT: `ozet()` defterin tamamını okur (K paydası ve dağılımlar için); buradaki
+    iki literal okuma ham satırları ve açık pozisyon belgesini yüke koyar. Aynı istekte iki okuma
+    anı doğar ve arada bir yazım olsaydı ayrışabilirlerdi — pencere BİLİNÇLİ olarak dardır:
+    defteri yazan tek yer `loop.daily_cycle`in gölge kancasıdır ve seansta BİR kez yazar."""
+    from . import golge_icra as _gi
+    return {**_gi.ozet(),
+            "satirlar": store.read_jsonl("golge_icra.jsonl", limit=GOLGE_ICRA_KUYRUK),
+            "acik": store.read_json("golge_icra_acik.json", {})}
+
+
+@app.get("/api/golge-icra")
+def api_golge_icra(request: Request):
+    """Uyuyan kurulumların gölge icra defteri (EDG-2026-088) — betimleyici, hükümsüz.
+
+    YETKİ ZORUNLU: defter strateji davranışını (hangi kurulum, hangi tetik, hangi çıkış) taşır."""
+    _auth(request)
+    return _golge_icra_karne()
+
+
 @app.get("/api/diagnostics")
 def api_diagnostics(request: Request, taze: int = 0):
     """Faz 1 — Teşhis API'si: diskte zaten duran tüm operasyon telemetrisini TEK uçta toplar.
@@ -5241,6 +5286,12 @@ def api_diagnostics(request: Request, taze: int = 0):
                   # devredildi"). Devir BURADA tamamlandı ve o beyan satırı KALDIRILDI — varyant
                   # başına son karar + kümülatif ayrışma sayısı panoya çıkar.
                   "shadow_variants": an.shadow_variant_summary(),
+                  # UYUYAN KURULUM GÖLGE İCRASI (EDG-2026-088): pano kartının EVİ.
+                  # Komşusu `shadow_variants` — ikisi de "sermaye riski olmadan ölçülen karşı-olgu"
+                  # ailesidir ve operatör onları yan yana okur. UI kutusu B2'nin işidir; backend
+                  # özeti burada hazırdır (Rol-1 hükmü 6). Yük BETİMLEYİCİDİR: n<30 ya da pencere
+                  # dolmamışken hiçbir eşik hükmü taşımaz — 049'un ikinci düşme sebebi buydu.
+                  "golge_icra": _golge_icra_karne(),
                   # HERMES KARNESİ: beynin KENDİ tahmin isabeti + ölü aileleri + hiç
                   # denenmemiş düğmeleri + bileşik kuyruk durumu. Aynı sözlük evidence_pack yoluyla
                   # PROMPT'a da giriyor — pano ve beyin AYNI karneyi görür (iki gerçek olmasın).
