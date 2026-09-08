@@ -996,6 +996,29 @@ veriyordu; başlık bunun tersini iddia ediyordu — ölçülen ile yazılan ayr
 `/api/roadmap` ölçümü İSTEĞE BAĞLIDIR: token yoksa "ölçülemedi: token yok" yazılır ve akış
 DURMAZ (uydurma yasağı: ölçülemeyen sayı uydurulmaz).
 
+--------------------------------------------------------------------------------------------
+RSYNC İKİLİSİ — SEÇİM VE LEHÇE KAPISI ([00], tur 4, TSK-177).
+
+ÖLÇÜLDÜ (Rol-1, 2026-09-08, A1'e karşı İLK `--kuru` koşumu): macOS `/usr/bin/rsync` openrsync'tir
+(protokol 29) ve A1 GNU rsync 3.2.7 ile PROTOKOL UYUMSUZDUR — `--from0 --files-from` ön-taraması
+A1 tarafında `ABORTING due to invalid path from sender: degerlendirme/PLAN-KONSOLIDE-2026-09-06.md`
++ `rsync error: protocol incompatibility (code 2)` verdi. Betik o gün DOĞRU durdu (`DURDU: rsync
+ÇIKIŞ 2`, fail-closed, sıfır yazım) ama kök sebep bir LEHÇE farkıydı, kapı eksikliği değil.
+`brew install rsync` (GNU 3.5.0, `/opt/homebrew/bin/rsync`) ile AYNI koşum TEMİZ geçti.
+
+SEÇİM SIRASI TEK YERDEDİR ([00] adımı — git durumundan bağımsız, betiğin İLK gate'i):
+1. `RSYNC_BIN` ortam değişkeni verilmişse O kullanılır (testlerin şim geçersiz kılma yolu ve
+operatörün elle belirtme yolu — Tek-kaynak yasası: seçim ikinci bir yerde tekrarlanmaz).
+2. Yoksa `/opt/homebrew/bin/rsync` ÇALIŞTIRILABİLİRSE O kullanılır — bu Mac'te GNU rsync'in
+kurulu olduğu bilinen konum.
+3. Yoksa `command -v rsync` (PATH'teki ilk `rsync`).
+Seçilen ikilinin `--version` İLK SATIRI `openrsync` içeriyorsa betik DURUR — KURU koşumda DAHİ:
+yanlış lehçeyle "ön-tarama temiz geçti" sanıp `--uygula`ya geçmek, A1'de aynı `ABORTING`i
+üretirdi; kuru koşumun "hiçbir bayt yazmama" güvencesi lehçe uyuşmazlığını GÖSTERMEZ. Reçete
+basılır: `brew install rsync`. Mevcut davranışlara (iki faz, silme tavanı, `--checksum`)
+DOKUNULMAZ — bu kapı yalnız HANGİ `rsync` ikilisinin çağrıldığını belirler.
+--------------------------------------------------------------------------------------------
+
 KULLANIM
 bash ops/belge_esitle.sh                 # KURU koşum (VARSAYILAN) — hiçbir yere yazmaz
 bash ops/belge_esitle.sh --kuru          # aynısı, açıkça
