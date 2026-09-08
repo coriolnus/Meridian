@@ -63,3 +63,6 @@ notlar: >
   B1 (meridian/sohbet.py + /api/sohbet) implementer brief'i bu kartın ölçüm sözleşmesini taşır: sohbet.jsonl alanları ölçüm planındaki
   sayımların girdisidir (Yasa 6 okuyucusu = bu kart + pano geçmişi). Bedel yasası: sohbet bot kovasından pay alır (120/gün), dolu pencerede
   sohbet de düşer; bu bedel kota ölçüsüyle görünür. Model zinciri: tool_calls yapısal üretenler (EDG-074 dersi), gemma zincire girmez.
+  2026-09-08 (Rol-1): B1 düzeltme turu (v444, 3 tur) + B2 UI main'de; ölçüm penceresi dağıtım #28'den itibaren başlar. B3 sayaç planı:
+  docs/superpowers/plans/2026-09-08-pano-sohbet-b3.md — sohbet.jsonl'e tur başına `cikti_atiflari` (sayı/kimlik/yol/sembol kümesi) EKLENİR (payda için;
+  alan ek, eşik/pencere/kill-list DEĞİŞMEZ). Bedel: B1 tur-3 ile ikinci eşzamanlı mesaj sıraya girmez, `mesgul` ile reddedilir (kota paydasına girmez).

@@ -18,6 +18,18 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | Akşam (19:4x–20:5xZ) | ✅ S5 uygulandı · dağıtım #26 (20:01Z) + #27 (20:48Z) · TSK-167/EDG-085 birimleri A1'de · B1 sohbet backend main'de (fix-1 + suite #35) · TSK-064 Faz-0/1A/1B canlıda | 22:04Z brifing → TSK-138 ölçümü; B2 UI planı; Faz-1C/2 |
 | Operatör kararlarının icrası (11:57–12:5xZ) | ✅ EDG-2026-085 tick pilotu kartı (TSK-013 ACTIVE; ADIM-0 ölçüldü: sembol/gün maks 14, tek bağlantı → q-abonelik) · TSK-175 uyuyan yol belgesi (öncül bayat: 10 plan, VLO işlem, CRM keşif; öneri: kalsın + 2 hijyen) · TSK-064 §6 Vault Faz-2 eki (pinli ikili, file backend, loopback HTTP, Shamir 1/1 0400, ExecStartPost oto-unseal, Vault Agent template) | TSK-013 pilot kodu S5 + 09-13/14 sonrası; Faz-2 ayrı dalga (Faz-0/1 sonrası); uyuyan yol kararı yeniden sorulmaz |
 
+## 0b. Güncelleme — 2026-09-08 gece (21:4x–0x:xxZ, Rol-1, operatör uyurken tam otonom)
+
+| Kalem | Durum | Kapı / sonraki adım |
+|---|---|---|
+| Credential olayı (21:4xZ) | ✅ kapandı: KAPI/NOUS geri yüklendi, `/api/secrets` iki ad `kaynak=credential`; kök `_deger_dosyala` → betik 3 turda düzeltildi (v445, 3c27dbb) | sabah A1 doğrulaması (`--durum`) |
+| Rotasyon (22:10–22:16Z) | ✅ 4 sır döndü (KAPI · tenant ×3 kopya · Postgres parola · dash token), çift kanıt; 15 `.env.bak` → `/root/meridian-env-yedek` | **OpenRouter ×2 operatörde**: `sudo ./sir_rotasyon.sh --openrouter` (v447) — tick-watchdog timer durdur |
+| Gün sonu inceleme düzeltme turu | ✅ A (sohbet/api v444) · B (sir_credential v445) · C (ops v446) main'de; her teslim 4-mercek çekişmeli inceleme + kapsamlı yeniden inceleme (tur 2/3) | E (GCP temizliği v448) tur-3 · D (sir_rotasyon v447) yeniden inceleme → merge → RUNBOOK/korpus → tam suite → **dağıtım #28** |
+| TSK-012 B2 UI | ✅ main'de (234681e) + kota kapısı; B3 planı yazıldı | dağıtım #28 → EDG-086 penceresi başlar; B3 Task 1 (motor) sonraki tur |
+| TSK-176 IaC | ✅ 5 kararla yeniden fazlandı (A-1→A0→A1→T1→A2→T2→T3); A-1 (GCP sil) E'de; A0 Ansible rolü (v451) tur-2 incelemede | A0 merge → `uv sync` → A1'e `--check --diff` (Rol-1) → 2. koşum changed=0 |
+| TSK-138 ilk ölçüm | ✅ 22:05Z: denetlenemedi/llm_dustu, yeniden-üretim 150 s'de bitmedi (iç bütçe 120 s), 5 ilk_ihlal, teslim HAM | dilim-2 adayı ROADMAP'te (hızlı model / 240 s / cevaplayan model ölçümü) |
+| Bayat oturum cron'ları | ✅ 4'ü silindi | — |
+
 ## 1. Bu gece (uçuşta / zamanlanmış — bildirimli)
 
 | Kalem | Durum | Kapı / sonraki adım |

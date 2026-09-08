@@ -20,12 +20,12 @@ envanteri (1 ajan: dagit.sh, serve.sh, deploy/*, ops/* altyapı betikleri, CI, g
 | **APISIX kapı yapılandırması** (rota, upstream, tüketici anahtarı, eklenti, TLS) | **Terraform `apisix` sağlayıcısı** (rework-space-com, APISIX 3.15 test) | `ops/apisix_uygula.py` + `apisix_ssl_yukle.py` (kendi yazdığımız "PUT + drift denetimi") | `deploy/apisix/routes.yaml` HCL'e döner; drift = `plan -detailed-exitcode` |
 | **Vault (Faz-2) YAPILANDIRMASI** (mount, policy, AppRole, KV) | **Terraform `vault` sağlayıcısı** + ephemeral kaynaklar | (henüz yok) | Vault'un KURULUMU Ansible rolü |
 | VM-içi durum: paketler, systemd birimleri/timer'lar/drop-in'ler, polkit, unattended-upgrades, venv'ler, docker konteynerleri (APISIX/etcd/Hindsight-CP), litestream, model önbelleği, bot kum havuzları, sır dosyaları 0400 | **Ansible rolü (tek host)** | `deploy/oracle-a1/deploy.sh` (694 satır), dagit `[1c]` "yalnız raporla" duruşu + elle `install` (bu gece 4 birim + 3 drop-in), `litestream_kur.sh`'ın sha kapısı (`get_url checksum`), `docker run --rm` ExecStart'ları (`docker_container`), hermes config "üzerine yazma+yedekle" (`copy backup`) | **Postgres kurulumu** (repoda hiç yok — ölçüldü, ilk kez kod hâline gelir) |
-| Uygulama dağıtımı (kod) | **dagit.sh KALIR, içi Ansible'a devredilir** | `[2]` rsync → `synchronize`, `[3]` uv sync → `command creates/changed_when`, `[4]` bakım penceresi → `systemd` + `block/rescue`, `[5]` healthz → `uri until/retries` | Kapılar: temiz ağaç, uv audit, lint-imports, dev-grubu, [1b] versiyonlu state farkı, F9/F10, [5a-5c], [B] dağıtım kaydı, RUNBOOK zinciri |
+| Uygulama dağıtımı (kod) | **Ansible playbook dagit.sh'ın YERİNE** (operatör kararı K1, 2026-09-07): `[2]-[5]` gövdesi VE kapılar `pre_tasks`/`assert` olarak; geçiş süresince `dagit.sh` = playbook'u çağıran ince sarmalayıcı (bir sürüm), sonra silinir | `[2]` rsync → `synchronize`, `[3]` uv sync → `command creates/changed_when`, `[4]` bakım penceresi → `systemd` + `block/rescue`, `[5]` healthz → `uri until/retries` | Kapılar: temiz ağaç, uv audit, lint-imports, dev-grubu, [1b] versiyonlu state farkı, F9/F10, [5a-5c], [B] dağıtım kaydı, RUNBOOK zinciri |
 | İlk önyükleme (boş VM) | **cloud-init user-data** (yalnız köprü: ssh anahtarı, python3, ubuntu+NOPASSWD, blok hacim mount) | RUNBOOK Bölüm A/B elle adımları | Sonrası Ansible |
 | Bot profilleri (`hermes profile install`), sır DEĞERİ üretimi/rotasyonu | **ELLE (operatör kararı, tasarım gereği)** | — | Faz-2 Vault Agent template ile dağıtım |
 
 **Tek cümle:** Terraform üç şeyin yerine geçer (bulut kaynakları, APISIX yapılandırması, Vault yapılandırması); Ansible `deploy.sh`'ın ve
-dagit'in "kurulum" gövdesinin yerine geçer; Meridian'ın disiplin kapıları ikisine de taşınmaz, dagit.sh'ın sarmalayıcı olarak kalmasıyla korunur.
+dagit'in "kurulum" gövdesinin yerine geçer; Meridian'ın disiplin kapıları playbook'un `pre_tasks`/`assert` bloklarına TAŞINIR (K1: dagit.sh emekli) — kapı listesi §4, hiçbiri düşmez; ölü GCP yolu SİLİNİR (K5).
 
 ---
 
@@ -154,18 +154,20 @@ mevcut v-çivi ailesi). `ansible.cfg`: `host_key_checking=True`, pipelining, mut
 
 ---
 
-## 5. Önerilen mimari ve fazlar (kart-önce değil — altyapı; ROADMAP kalemleri + operatör sıra onayı)
+## 5. Mimari ve fazlar — OPERATÖR KARARLARIYLA YENİDEN FAZLANDI (2026-09-07 21:34–21:39Z; §8)
 | Faz | Ne | Yerine geçtiği | Boyut | Ön-koşul |
 |---|---|---|---|---|
+| **A-1** | TEMİZLİK: ölü GCP yolu TAMAMEN silinir (`deploy/gcp_provision.sh`, `connect.sh`, `monitoring.sh`, `install_hermes.sh`, `push_secret.sh`, `state_backup.sh`, `state_restore.sh`, `Caddyfile`) + `secrets.get` GCP kanalı kapanır (KAYNAKLAR = credential·env·file); Caddyfile'a çivili CSP eşitlik testi api.py sözlüğünü tek kaynak alır | Ölü yol; sahte 4. sır kanalı | S | Motor dosyası → tam suite (K5; implementer 2026-09-07 22:3xZ) |
 | **A0** | `deploy/ansible/` iskeleti: inventory (tek host), ansible.cfg, rol `meridian_a1` (packages · venv · units/timers/drop-ins/polkit · sandbox · hermes-config · litestream · docker-konteynerler · secrets-copy · healthcheck); `ansible-lint`; pytest çivisi: rolün ürettiği birim dosyaları == `deploy/` kaynakları (tek kaynak — `.j2` YOK, `copy` ile aynı dosya) | `deploy.sh`, dagit `[1c]` elle install, `litestream_kur.sh`, ham `docker run` | M | Ansible kurulumu (Mac `pipx`), A1'de python3 var; `--check` yalancı-yeşil beyanı |
-| **A1** | dagit.sh `[2]-[5]` gövdesi → `ansible-playbook … --tags dagit` çağrısı (kapılar bash'te kalır; RSYNC_EXC → synchronize exclude tek kaynaktan üretilir; `[B]` kayıt aynen) | dagit'in içi | S-M | A0 |
+| **A1** | **dagit.sh'ın YERİNE playbook** (K1): `[2]-[5]` gövdesi + KAPILAR (temiz ağaç, uv audit, lint-imports, dev-grubu, `[1b]` versiyonlu state farkı, F9/F10, `[5a-5c]` pano artefakt/mtime, `[B]` dağıtım kaydı, RUNBOOK zinciri) `pre_tasks`/`assert`/`block-rescue` olarak; RSYNC_EXC → `synchronize` exclude tek kaynaktan; geçişte `dagit.sh` ince sarmalayıcı (bir sürüm, `--dry-run` = `--check --diff` + yalancı-yeşil beyanı), sonra silinir; CLAUDE.md §2 dagit satırı playbook'a döner | dagit.sh'ın tamamı | M | A0; check-mode yalancı yeşil beyanı |
 | **A2** | Postgres kurulumu + Hindsight venv/birimleri role girer; **DR tatbikatı**: boş VM (yerel VM/lima ya da ikinci A1 kapasite varsa) → cloud-init köprü → rol → yedekten `meridian.db`+creds geri yükleme → healthz | Repoda olmayan Postgres adımı; RUNBOOK elle adımları | M | A0; yedek geri-yükleme reçetesi |
 | **T1** | Terraform `altyapi/apisix/`: `routes.yaml` → HCL (route/upstream/consumer/plugin/ssl), `apisix` sağlayıcısı pinli; `terraform plan -detailed-exitcode` = drift denetimi; `apisix_uygula.py` emekli (testleri taşınır) | `ops/apisix_uygula.py`, `apisix_ssl_yukle.py` | S-M | Sağlayıcı bakım riski beyanı; admin anahtarı env/ephemeral |
-| **T2** | Terraform `altyapi/oci/`: import (instance, volume+attachment, bucket, NSG/security list, IAM); backend kararı (HCP ücretsiz vs OCI S3 — kilit testi); Instance Principal; `altyapi.sh` (plan/apply reçetesi) + CLAUDE.md §2 satırı; drift timer | Konsol adımları; RUNBOOK hacim boşluğu | M | Lisans/OpenTofu kararı; state backend testi |
-| **T3** | Faz-2 Vault: kurulum Ansible rolü (pinli ikili+sha, birim, oto-unseal betiği) + Terraform `vault` sağlayıcısı (mount/policy/AppRole/KV, policy'ler `secrets.ALLOWED`'dan üretilir) + Vault Agent template → LoadCredential dosyaları; sırlar ephemeral | Elle Vault yapılandırması; `sir_credential_gecis.sh` (geri-alım için kalır) | M-L | TSK-064 §6; T2 (IAM/NSG) |
+| **T2** | Terraform `altyapi/oci/`: import (instance, volume+attachment, bucket, NSG/security list, IAM); **backend = HCP Terraform ücretsiz katman** (K3: uzak state + kilit + run geçmişi; HashiCorp hesabı operatörde, VCS plan-only CI mümkün); Instance Principal; `altyapi.sh` (plan/apply reçetesi) + CLAUDE.md §2 satırı; drift timer; **apply öncesi kısa operatör onayı** (K4) | Konsol adımları; RUNBOOK hacim boşluğu | M | HCP hesabı; lisans (BSL) beyanı |
+| **T3** | Faz-2 Vault: kurulum Ansible rolü (pinli ikili+sha, birim, oto-unseal betiği) + Terraform `vault` sağlayıcısı (mount/policy/AppRole/KV, policy'ler `secrets.ALLOWED`'dan üretilir) + Vault Agent template → LoadCredential dosyaları; sırlar ephemeral | Elle Vault yapılandırması; `sir_credential_gecis.sh` (geri-alım için kalır) | M-L | TSK-064 §6; T2 (IAM/NSG); **kurulum öncesi kısa operatör onayı** (K4) |
 | **T4** (isteğe bağlı) | `github` sağlayıcısı: dal koruması, Actions sırları | elle repo ayarları | S | — |
-Sıra önerisi: A0 → T1 → A1 → A2 (DR) → T2 → T3 → T4. Gerekçe: A0/T1 hemen ölçülebilir kazanç (elle kurulum + kapı yapılandırması), T2
-bedeli en yüksek belirsizlik (state backend, kapasite), T3 Vault'a bağlı.
+**Onaylı sıra (K4, hepsi onaylı):** A-1 → A0 → A1 → T1 → A2 (DR) → T2 → T3 → T4 (sonra). T2 `apply` ve T3 kurulum öncesi kısa onay; diğer fazlar onaysız ilerler.
+Gerekçe: A1 (dagit'in yerine) A0'dan hemen sonra — kazanç ölçülebilir olduğu anda alınır (elle kurulum + dağıtım gövdesi tek yol); T1 kapı
+yapılandırması; T2 bedeli en yüksek belirsizlik (kapasite), backend kararı verildiği için artık test değil hesap işi; T3 Vault'a bağlı.
 
 ---
 
@@ -186,10 +188,12 @@ Postgres'in A1'e nasıl kurulduğu (repoda yok); A1'de kaç OCI kaynağı var (k
 OCI Customer Secret Key; Workload Identity/OIDC; BSL FAQ tam metni; `synchronize`/`command` check-mode davranışı; `community.hashi_vault`
 AppRole parametreleri; `ansible.posix.mount`; Molecule/aarch64; Ubuntu 24.04 `requiretty`; apisix sağlayıcısının son commit tarihi.
 
-## 8. Operatör kararları
-1. **Yön:** Ansible dagit'in İÇİNE (öneri) mi, yerine mi? 2. **APISIX** yapılandırması Terraform'a geçsin mi (apisix_uygula.py emekli)? 3. **State
-backend:** HCP Terraform ücretsiz (yeni hesap) mi, OCI S3-uyumlu (kilit testi) mi? 4. **Sıra:** A0 → T1 → A1 → A2 → T2 → T3 (öneri) — hangi
-adıma kadar onay? 5. **Ölü GCP yolu** (`deploy/gcp_*`, Caddyfile) `deploy/legacy/`'ye taşınsın mı?
+## 8. Operatör kararları — VERİLDİ (2026-09-07 21:34–21:39Z; kaynak: operatör AskUserQuestion cevapları, scratchpad kararlar defteri; hafıza: `vault-sir-yonetimi-karari`, `operator-para-kararlari` ile çelişki yok)
+1. **Yön → DAGIT'İN YERİNE.** Playbook her şeyi yapar; kapılar `pre_tasks`/`assert` olarak yeniden yazılır, `dagit.sh` emekli (geçişte ince sarmalayıcı bir sürüm). Bedel: check-mode yalancı yeşili beyanlı; geçiş süresince iki yol.
+2. **APISIX → TERRAFORM (geçsin).** `routes.yaml` → HCL; `apisix_uygula.py` bir sürüm geri-alım için kalır; sağlayıcı pinli; anahtarlar ephemeral/Vault.
+3. **State backend → HCP Terraform ücretsiz katman.** Uzak state + kilit + run geçmişi; yeni HashiCorp hesabı operatörde; VCS plan-only CI mümkün.
+4. **Sıra/onay → HEPSİ ONAYLI:** A-1 → A0 → A1 → T1 → A2 → T2 → T3 (→ T4 sonra). T2 `apply` ve T3 kurulum öncesi kısa onay.
+5. **Ölü GCP yolu → TAMAMEN SİL** (legacy/'ye taşıma yok): sekiz dosya + `secrets.get` GCP kanalı (motor → tam suite). Faz A-1 olarak §5'e eklendi.
 
 ## Ek-A — Kaynaklar (okunanlar)
 developer.hashicorp.com/terraform: /docs, /language/import, /language/resources/ephemeral, /language/state, /language/backend/s3|local,
