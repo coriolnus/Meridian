@@ -95,7 +95,8 @@ def test_p1c_public_get_allowlist():
     # gövdesinin İÇİNDE, aynı yetkisiz yanıtta, satır içi bir `<script>` olarak duruyordu.
     # ÇIKARMA SEBEBİ GÜVENLİK ve tam olarak `/landing.js` + `/workflow.js` satırlarındaki sebep:
     # CSP artık GERÇEKTEN gönderiliyor (`meridian/api.py::GUVENLIK_BASLIKLARI`; daha önce yalnız
-    # deploy/Caddyfile'da tanımlıydı ve A1'de Caddy koşmadığı için hiç zorlanmıyordu) ve
+    # ters vekilin yapılandırmasında tanımlıydı ve A1'de o vekil koşmadığı için hiç
+    # zorlanmıyordu — yapılandırma IaC-K5, 2026-09-07 ile silindi) ve
     # `script-src 'self'` gövdeli blokları BLOKLAR — bırakılsaydı ACİL DURDURMA düğmesi canlıda
     # sessizce ölürdü (sayfa çizilir, tıklanır, hiçbir şey olmaz).
     # YETKİ İSTEYEMEZ: `/halt` telefon için, oturum düşmüşken açılabilmesi gereken panik yüzeyidir;

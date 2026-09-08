@@ -181,9 +181,15 @@ uv run python -m meridian.reflect --auto                                  # dete
   (timer), tick-watchdog, litestream; ayrıntı `deploy/oracle-a1/` + `docs/RUNBOOK.md`.
 - **Yedekler:** A1 gece tar'ı → operatör makinesine çekilir (`ops/pull-a1-backups.sh`, LaunchAgent).
 - **Acil durdurma:** panodaki büyük kırmızı düğme = `state/HALT` dosyası; kaldırınca devam eder.
-- `Dockerfile`/`docker-compose.yml`/`deploy.sh` + GCP betikleri **BAYATTIR** (K1, 2026-07-30):
-  geri alınabilirlik için durur; ölçülmüş üç sapması düzeltilmeden kullanılamaz (eski README
-  notu `docs/` denetimlerinde ve dosya başlarında yaşar).
+- `Dockerfile`/`docker-compose.yml` **BAYATTIR** (K1, 2026-07-30): geri alınabilirlik için durur;
+  ölçülmüş üç sapması düzeltilmeden kullanılamaz (eski README notu `docs/` denetimlerinde ve dosya
+  başlarında yaşar). Kök `deploy.sh` ise onlarla AYNI SINIFTA DEĞİLDİ ve **SİLİNDİ** (IaC-K5,
+  2026-09-07; ölçüldü ve silindi 2026-09-08): gövdesi baştan sona GCP idi —
+  `gcloud compute scp --tunnel-through-iap` ile bir GCE VM'ine kod itip orada `docker compose up`
+  koşuyordu. "Bayat docker yolu" diye anılması onu ÇALIŞTIRILABİLİR bırakıyordu; üç ortam
+  değişkeni verip koşan biri gerçekten bulut kaynağına dokunurdu. Yanındaki GCP betikleri de
+  **SİLİNDİ** (aynı karar): sistem 2026-08'de A1'e taşındı, o yol ölüydü ve `meridian.secrets`in
+  dördüncü kanalı da onunla birlikte kapandı. Çivi: `tests/test_gcp_yolu_kaldirildi_v448.py`.
 
 ## Test & doğrulama
 

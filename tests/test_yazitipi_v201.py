@@ -35,7 +35,6 @@ import pytest
 KOK = pathlib.Path(__file__).resolve().parents[1]
 WEB = KOK / "meridian" / "web"
 FONTLAR = WEB / "fonts"
-CADDY = KOK / "deploy" / "Caddyfile"
 DESIGN = KOK / "DESIGN.md"
 OLCUM = KOK / "research" / "olcumler" / "yazi_tipi_2026-08-07"
 TARAYICI = OLCUM / "tarayici"
@@ -149,8 +148,8 @@ def tarayici_olcumu():
 def test_hicbir_yuzey_DIS_ORIGINDEN_yazi_tipi_cekmez(ad):
     """Google Fonts (ya da herhangi bir CDN) referansı hiçbir yüzeyde OLMAMALI.
 
-    Bu tur öncesi üç yüzey de `fonts.googleapis.com`a `<link>` atıyordu ve `deploy/Caddyfile`
-    CSP'si tam olarak bunu barındırmak için iki dış host taşıyordu — yani
+    Bu tur öncesi üç yüzey de `fonts.googleapis.com`a `<link>` atıyordu ve yürürlükteki
+    CSP tam olarak bunu barındırmak için iki dış host taşıyordu — yani
     `docs/TASARIM-YONU-2026-08-07.md` §5'in "CSP dış font-host'a izin vermez" cümlesi bir
     BEYANDI, ölçüm değil. Artık ölçülüyor."""
     kaynak = _yorumsuz(_oku(ad))
@@ -177,8 +176,14 @@ def test_hicbir_yuzey_CANLI_bildirimde_Geist_tasimaz(ad):
     assert not kirli, f"{ad}: CANLI bildirimde Geist duruyor → {kirli}"
 
 
-def test_caddyfile_CSP_dis_font_hostu_TASIMAZ():
+def test_yururlukteki_CSP_dis_font_hostu_TASIMAZ():
     """`font-src` ve `style-src` hiçbir dış host taşımamalı — ve bu iki host GERİ EKLENMEMELİ.
+
+    HEDEF DEĞİŞTİ (IaC-K5, 2026-09-07): bu iddia vekil yapılandırmasındaki ATIL CSP kopyasını
+    okuyordu; o dosya ölü GCP yoluyla silindi. Okunan kaynak zaten yanlıştı — atıl bir kopyanın
+    dar olması, GÖNDERİLEN başlığın dar olduğunu göstermez (v203'ün ölçtüğü boşluk birebir buydu).
+    Artık canlı sabit ölçülüyor: ölçüm sürüyor ve GÜÇLENİYOR. Kaybedilen tek şey "atıl kopya da
+    dar mı" sorusudur ve kopya artık yok, yani sorunun kendisi düştü.
 
     D4'ten ÖNCE:
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com
@@ -187,13 +192,10 @@ def test_caddyfile_CSP_dis_font_hostu_TASIMAZ():
         style-src 'self' 'unsafe-inline'
         font-src  'self'
     """
-    assert CADDY.is_file(), "deploy/Caddyfile YOK — CSP sözleşmesi ölçülemez"
-    metin = CADDY.read_text(encoding="utf-8")
-    m = re.search(r'Content-Security-Policy\s+"([^"]+)"', metin)
-    assert m, "Caddyfile'da Content-Security-Policy başlığı bulunamadı"
-    csp = m.group(1)
+    from meridian.api import CSP_POLITIKASI
+
     yonergeler = {}
-    for parca in csp.split(";"):
+    for parca in CSP_POLITIKASI.split(";"):
         parca = parca.strip()
         if parca:
             ad, *degerler = parca.split()
@@ -212,7 +214,7 @@ def test_caddyfile_CSP_dis_font_hostu_TASIMAZ():
 
     # Bütün CSP'de font/stil için dış host kalmadığının ikinci, bağımsız okuması.
     for host in ("fonts.googleapis.com", "fonts.gstatic.com"):
-        assert host not in csp, f"CSP'de {host} hâlâ var"
+        assert host not in CSP_POLITIKASI, f"CSP'de {host} hâlâ var"
 
 
 # ===================== Ç2 · @font-face SÖZLEŞMESİ =====================

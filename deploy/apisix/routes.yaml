@@ -161,6 +161,30 @@ rotalar:
     # api.py::_auth ~80 uçta). Kapıdaki basic-auth İKİ ölçülmüş arıza üretti: Safari fetch-401
     # döngüsü (yerel kimlik kutusu) + kapı-401'inin uygulamada "oturum düştü" yanlış sınıfı.
     # Kapının işi bu yüzeyde: hız sınırı + gövde tavanı + sayaç.
+    #
+    # INGRESS `X-Forwarded-Proto` ve `X-Forwarded-For` İLETMEK ZORUNDA — bu bir stil tercihi değil,
+    # uygulamanın iki güvenlik kararının GİRDİSİ (kayıt buraya IaC-K5'te taşındı: sözleşmenin tek
+    # yazılı kaydı silinen Caddy yapılandırmasının `header_up` satırlarıydı ve dosyayla birlikte
+    # düştü — bedel yasası):
+    #   * `meridian/api.py::_secure_cookie` oturum çerezinin `Secure` işaretini `x-forwarded-proto`
+    #     ile karar verir. Başlık gelmezse uygulama şemayı düz `http` görür ve çerez HTTPS altında
+    #     `Secure`SUZ çıkar — yani düz metin bir bağlantıda da gönderilebilir hâle gelir.
+    #   * `meridian/api.py::_client_ip` hız sınırı anahtarını `x-forwarded-for`un İLK girdisinden
+    #     alır. Gelmezse tüm istekler tek vekil IP'sinde toplanır: "IP başına kilit" anlamını
+    #     yitirir (uygulama içi kilit; kapının kendi `limit-req`i ayrı bir katmandır).
+    # APISIX'in bu iki başlığı VARSAYILAN olarak ekleyip eklemediği CANLIDA ÖLÇÜLMEDİ (2026-09-08).
+    # Ölçülene kadar doğru duruş yükümlülüğü burada YAZILI tutmaktır; ölçüm yapıldığında sonucu bu
+    # şerhe tarihiyle yazın — gerekirse `proxy-rewrite` ile açıkça set edilir.
+    #
+    # ÖLÇÜMÜ YAPACAK KİŞİYE, AYNI DOSYADAKİ KARŞI-KANIT (2026-09-08): üç rota — `llm-danisma`,
+    # `llm-hizli`, `llm-models` — `proxy-rewrite.headers.remove` ile `X-Forwarded-For`u ÜSTELİK
+    # SİLİYOR ve yanındaki şerh gerekçeyi "ai-proxy varsayılanı istemci header'larını iletir" diye
+    # yazıyor. Yani boru hattında XFF'in VAR olduğuna dair yerel kanıt zaten burada; silme
+    # ihtiyacının doğması onun geldiğine işarettir. BU KANIT YETMEZ ve karıştırılmamalı: o üç rota
+    # İSTEMCİDEN GELENİ upstream'e taşımama kararıdır, buradaki soru ise APISIX'in pano
+    # upstream'ine NE SET ETTİĞİdir — ayrı soru, ölçümü hâlâ yapılmadı. `deploy/apisix/config.yaml`
+    # tarafında `real_ip` / `trusted_addresses` benzeri bir ayar YOK (ölçüldü 2026-09-08), yani
+    # bugün açık bir yapılandırma kararı da yok; ölçümün ilk durağı bu iki yerdir.
     # uri /* — llm/fmp/metrics rotaları daha uzun önekle önce eşleşir (radixtree).
     uri: /*
     plugins:

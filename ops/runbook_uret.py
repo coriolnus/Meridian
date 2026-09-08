@@ -22,8 +22,8 @@ ONAYLI KAYNAK SÖZLEŞMESİ (WP0 §6.3 — operatör onayı):
      betiğin NE OLDUĞUNU söyler; gövde ateşlemesi hangi ALARMI ele aldığını — iki AYRI boyut,
      ve ikincisi başlıkta jetonun adı geçmese de (keepalive'de geçmez) koddan türer.
 
-SÖZLEŞME DIŞI KAYNAK YOK. `deploy/*.sh` (üst düzey; monitoring.sh dahil) bilerek DIŞARIDA —
-onaylı küme yukarıdaki DÖRT maddedir. Bu sınır belgede de yazar; sessiz bir kapsam genişlemesi,
+SÖZLEŞME DIŞI KAYNAK YOK. Üst düzey `deploy/*.sh` (bugün `hermes_api.sh` ve
+`verify_hermes_training.sh`) bilerek DIŞARIDA — onaylı küme yukarıdaki DÖRT maddedir. Bu sınır belgede de yazar; sessiz bir kapsam genişlemesi,
 "runbook'un kaynağı ne" sorusunu bir daha cevaplanamaz hale getirirdi.
 
 UYDURMA YASAĞI (anayasa 1'in bu dosyadaki karşılığı). Bir alanın kaynağı yoksa o alan
@@ -578,8 +578,9 @@ def uret() -> str:
         "  jetonun Çözüm alanına eşlenir — başlıkta adı geçmese bile koddan türer (ör.",
         "  `ops/keepalive.sh` → `MECHANISM_STALE`)",
         "",
-        "**Kapsam dışı, bilerek:** `deploy/*.sh` (üst düzey, `monitoring.sh` dahil) onaylı kümede",
-        "değil. Sessiz bir kapsam genişlemesi yerine sınır burada yazılı duruyor.",
+        "**Kapsam dışı, bilerek:** üst düzey `deploy/*.sh` (`hermes_api.sh`,",
+        "`verify_hermes_training.sh`) onaylı kümede değil. Sessiz bir kapsam genişlemesi yerine",
+        "sınır burada yazılı duruyor.",
         "",
         "**Eşleştirme kuralı — LİTERAL AD GEÇİŞİ.** Bir bölüme betik/günlük maddesi ancak o metinde",
         "bölümün adı harfi harfine geçiyorsa iliştirilir. Anlamsal/bulanık eşleştirme YOK: bir",

@@ -636,9 +636,10 @@ def _orphan_state_files() -> dict:
         # OKUYUCU TESTİ: ELLE BEYAZ LİSTE DEĞİL, KAYNAK TARAMASI. Bu kesitteki dosyalar `store.*`
         # dışından okunuyor (config.py yaml yükler, secrets kendi erişimini kullanır), yani
         # `codelaw.artifact_graph` onları GÖREMEZ ve "okuyucusu yok" demek yanlış olur. Elle bir
-        # beyaz liste tutmak ise tam olarak bu turda onarılan hastalığın (monitoring.sh'ın 3/11
-        # jetonu, NOTIFY_TOKENS'ın eski el listesi) yeniden üretilmesi olurdu: liste eskir, dedektör
-        # sessizce kurt masalı anlatır. Bunun yerine denetimin KENDİ kullandığı kanıt yöntemi
+        # beyaz liste tutmak ise tam olarak bu turda onarılan hastalığın (eski GCP log filtresinin
+        # 11 jetondan yalnız 3'ünü tanıması — betik IaC-K5 ile silindi; NOTIFY_TOKENS'ın eski el
+        # listesi) yeniden üretilmesi olurdu: liste eskir, dedektör sessizce kurt masalı anlatır.
+        # Bunun yerine denetimin KENDİ kullandığı kanıt yöntemi
         # uygulanır — adı kaynak ağacında ARA. `bars_cboe_backup`/`server.log` bulgusu tam böyle
         # kurulmuştu (grep → 0 sonuç); `bounds.yaml`/`goal.yaml` ise onlarca yerde geçer.
         _src_text = _source_corpus()

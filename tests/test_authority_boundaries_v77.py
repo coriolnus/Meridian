@@ -100,10 +100,12 @@ class HttpRecorder:
 
 @pytest.fixture
 def paper_secrets(sandbox_state, monkeypatch):
-    """Sahte kimlik bilgileri env üzerinden (env, dosya ve GCP'yi yener → gerçek anahtar okunmaz)."""
+    """Sahte kimlik bilgileri env üzerinden — gerçek anahtar okunmaz.
+
+    Çözüm sırası credential → ortam → `state/secrets.json` (2026-09-07): sahte kimlik ORTAMA konur ve dosya
+    basamağını yener; credential basamağını `conftest.sandbox_state` kapatır (tek yer — v439 `test_J1`)."""
     monkeypatch.setenv("ALPACA_PAPER_KEY", FAKE_KEY)
     monkeypatch.setenv("ALPACA_PAPER_SECRET", FAKE_SECRET)
-    monkeypatch.delenv("MERIDIAN_GCP_PROJECT", raising=False)
     secrets_mod.clear_cache()
     yield
     secrets_mod.clear_cache()

@@ -180,8 +180,9 @@ def main() -> int:
                 dists = [aday]
             else:
                 # ADAY EŞLEME — ÖLÇÜM DEĞİL, ETİKETİ BUNU SÖYLER. `alpaca` modülünü `alpaca-py`
-                # dağıtımı, `google`ı `google-cloud-secret-manager` verir; ikisi de KURULU
-                # OLMADIĞI için metadata'da yok. Beyan edilmiş dağıtımlar arasında modül adıyla
+                # dağıtımı verir ve KURULU OLMADIĞI için metadata'da yok (aynı sınıfın ikinci
+                # örneği `google` → bulut sır istemcisiydi; o beyan IaC-K5, 2026-09-07 ile
+                # düştü). Beyan edilmiş dağıtımlar arasında modül adıyla
                 # BAŞLAYAN varsa aday olarak GÖSTERİLİR — ama hüküm buna dayanmaz.
                 beyan = ana | dev | {d for e in ekstralar.values() for d in e}
                 adaylar = sorted(d for d in beyan if d == aday or d.startswith(aday + "-"))

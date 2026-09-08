@@ -14,8 +14,8 @@ Yerelde tek koruma `--host 127.0.0.1` idi. Genel bir IP'de o koruma yoktur. Bu y
 
 | Katman | Ne yapar |
 |---|---|
-| Caddy + Let's Encrypt | Trafiği şifreler; parola ve oturum çerezi ağda açık gitmez |
-| Oracle Security List | 80/443 dışında her şey kapalı; **8080 asla açılmaz** |
+| TLS sonlandıran vekil (APISIX, `deploy/apisix/`) | **BUGÜNKÜ HÂL (ölçüldü 2026-09-08): TLS 9443'te, kendi-imzalı geçici sertifika, DIŞ AÇILIŞ YAPILMADI** — host iptables yalnız 22'ye izin veriyor, pano-ingress rotası "Faz 3". Katmanın *hedefi* trafiği şifrelemek; bugün dışarıdan erişilen bir yüzey yok |
+| Oracle Security List | **HEDEF DURUM:** 80/443 dışında her şey kapalı; **8080 asla açılmaz.** Bugün açık olan tek giriş 22'dir (dış açılış operatörün konsol adımıyla olur) |
 | uvicorn 127.0.0.1'de | Pano internete doğrudan hiç bağlanmaz, yalnız vekil erişir |
 | `meridian.auth` | Parola (scrypt) + imzalı HttpOnly oturum çerezi |
 | `api._auth` | Oturumsuz her `/api/*` isteği 401 |
@@ -65,17 +65,32 @@ bilmeden. İzin buranın tek savunması.
 
 ---
 
-## 3 · Caddy (TLS)
+## 3 · TLS (ters vekil)
 
-`deploy/Caddyfile` içindeki `meridian.ORNEK-ALAN-ADIN.com` ve e-posta alanlarını doldur, sonra:
+**Caddy reçetesi SİLİNDİ (IaC-K5, 2026-09-07).** Bu bölüm bir Caddy yapılandırma dosyasını
+kopyalamayı anlatıyordu; o dosya A1'de hiçbir zaman koşmadı (`systemctl is-active caddy` →
+inactive) ve ölü GCP dağıtım yoluyla birlikte depodan kaldırıldı. Koşmayan bir katmanı anlatan
+bir reçete, güvenlik duruşu hakkında YANLIŞ güvence verir — bu deponun ölçülmüş kusur sınıfı.
 
-```bash
-sudo cp deploy/Caddyfile /etc/caddy/Caddyfile && sudo systemctl reload caddy
-```
+Bugün TLS'i sonlandıran katman APISIX'tir: yapılandırma `deploy/apisix/` altında, sertifika
+yükleme yolu `ops/apisix_ssl_yukle.py`. **Ölçülmüş hâl (2026-09-08), reçete değil:** ssl dinleyicisi
+**9443**tedir (443 DEĞİL — imajın nginx'i root olmayan kullanıcıda koşuyor ve <1024 bind'ı
+"Permission denied" ile konteyneri düşürüyordu, ölçüldü 2026-09-01), yüklü sertifika **kendi-imzalı
+ve geçicidir**, ve **dış açılış YAPILMADI**: dış dünya iki ayrı kapıyla kapalı (host iptables yalnız
+22 + OCI güvenlik listesi). Yani "trafiği şifreler" cümlesi bir HEDEFTİR; bugün dışarıdan gelen
+şifreli bir trafik yoktur.
 
-**Alan adı şart.** Caddy çıplak bir IP için Let's Encrypt sertifikası alamaz. Alternatif
-`tls internal`'dir ama o zaman tarayıcı her seferinde uyarı verir ve o uyarıyı tıklayıp geçme
+**Alan adı şart.** Çıplak bir IP için Let's Encrypt sertifikası alınamaz. Alternatif kendi-imzalı
+bir sertifikadır ama o zaman tarayıcı her seferinde uyarı verir ve o uyarıyı tıklayıp geçme
 alışkanlığı, gerçek bir ortadaki-adam saldırısını fark etme yeteneğini kalıcı olarak yok eder.
+**Bugün kurulu olan tam da budur** — kendi-imzalı geçici sertifika; alan adı kararı verilip certbot
+koşulana kadar bu uyarı yaşayacak, ve dış açılış o adımdan ÖNCE yapılmamalı.
+
+**Güvenlik başlıkları burada DEĞİL:** CSP/XFO/nosniff/Referrer-Policy/Permissions-Policy'nin tek
+kaynağı uygulamadır (`meridian/api.py::GUVENLIK_BASLIKLARI`) — vekilde ikinci bir tanım açmak
+uygulamanınkini SET semantiğiyle sessizce ezer. `Strict-Transport-Security` ise yalnız TLS'i
+sonlandıran katmanın bilebileceği bir şeydir ve bugün hiçbir dosyada tanımlı DEĞİL: vekil
+yeniden kurulursa elden eklenmesi gereken kalem budur.
 
 ---
 

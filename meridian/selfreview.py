@@ -180,7 +180,8 @@ def mechanism_failed(name: str, err: BaseException) -> None:
     """Mekanizma çıktı ÜRETEMEDİ. Üç ayrı iz bırakılır ki bir daha sessizce ölmesin:
     (1) sağlık defterinde üst üste düşüş sayacı, (2) panonun okuduğu DİKKAT listesinde bir satır
     (boş rapor artık 'her şey sakin' diye okunamaz), (3) MECHANISM_STALE alarmı — bu jeton
-    obs.NOTIFY_TOKENS içindedir (pano açılmadan operatöre gider) ve monitoring.sh onu grepler."""
+    `obs.NOTIFY_TOKENS` KÜMESİNDEDİR, yani `obs._maybe_notify` onu küme üyeliğiyle tanır ve pano
+    açılmadan operatöre gider (eşleşme küme üyeliğidir, satır metninde alt-dizge DEĞİL)."""
     detail = f"{type(err).__name__}: {err}"[:200]
     box = {"streak": 1}
 

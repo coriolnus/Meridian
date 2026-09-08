@@ -34,6 +34,9 @@ FAKE_SECRET = "SKKOVABFAKESECRET2233445566778899"
 def paper(sandbox_state, monkeypatch):
     """Sahte kimlik + `alpaca_paper` arka ucu; taşıma SAĞLIKLI kabul edilir.
 
+    Çözüm sırası credential → ortam → `state/secrets.json` (2026-09-07): sahte kimlik ORTAMA konur ve dosya
+    basamağını yener; credential basamağını `conftest.sandbox_state` kapatır (tek yer — v439 `test_J1`).
+
     Saat pencere İÇİNE donar (EXE-009+K2): giriş gönderimi artık sabah tetik penceresine bağlı;
     buradaki çiviler gönderim/iptal MEKANİĞİNİ ölçer, pencereyi değil — koşum saatinden bağımsız
     kalsınlar (pencerenin kendi çivileri test_pencere_kaydirma_v272'de)."""
@@ -42,7 +45,6 @@ def paper(sandbox_state, monkeypatch):
     from meridian import secrets as secrets_mod
     monkeypatch.setenv("ALPACA_PAPER_KEY", FAKE_KEY)
     monkeypatch.setenv("ALPACA_PAPER_SECRET", FAKE_SECRET)
-    monkeypatch.delenv("MERIDIAN_GCP_PROJECT", raising=False)
     secrets_mod.clear_cache()
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     alpaca._note(True)

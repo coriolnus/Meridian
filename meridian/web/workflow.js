@@ -1,8 +1,9 @@
 /* ============================================================================
    Bu dosya HTML'in içinden ÇIKARILDI (2026-08-01), yeniden yazılmadı.
-   SEBEP: dağıtım CSP'si `script-src 'self'` (deploy/Caddyfile). Satır içi
-   script üretimde bloklanır — bu blok HTML'de kalsaydı sayfa canlıda ölü
-   açılırdı. Davranış birebir korundu; tek değişiklik dosyanın yeri.
+   SEBEP: dağıtım CSP'si `script-src 'self'` — kaynağı motorun güvenlik başlığı
+   sözlüğüdür (`meridian/api.py::GUVENLIK_BASLIKLARI`). Satır içi script üretimde
+   bloklanır — bu blok HTML'de kalsaydı sayfa canlıda ölü açılırdı. Davranış
+   birebir korundu; tek değişiklik dosyanın yeri.
    ============================================================================ */
 
 // ic: düğüm işaretleri artık ÇİZİLMİYOR — kanonda doymuş emoji kaçak bir tuhaflık.

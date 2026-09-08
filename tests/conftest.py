@@ -820,7 +820,26 @@ def _hotstate_off_by_default(request):
 
 @pytest.fixture
 def sandbox_state(tmp_path, monkeypatch):
-    """Redirect all state I/O to a temp dir. Clears config + module caches so nothing leaks between tests."""
+    """Redirect all state I/O to a temp dir. Clears config + module caches so nothing leaks between tests.
+
+    SIR KANALLARI DA SANDBOX'A GİRER (2026-09-08). `meridian.secrets` çözüm sırası 2026-09-07'de
+    systemd credential → ortam → dosya oldu, yani CREDENTIAL zincirin BAŞIDIR. Sahte kimliği
+    ORTAMA koyan fikstürler (`test_authority_boundaries_v77::paper_secrets`,
+    `test_kovab_icra_v161::paper`, `test_icra_yetkisi_v233::ayna`,
+    `test_wpe_dolum_boslugu_v234::ayna`, `test_tek_kaynak_refetch_ve_equity_v432::mirror_ortami`)
+    docstring'lerinde "gerçek anahtar okunmaz" diye YAZILI bir güvence veriyor — ve o güvence,
+    `CREDENTIALS_DIRECTORY` kurulu bir ortamda (A1 birimi içinde koşan bir pytest, ya da
+    `sir_credential_gecis.sh` geçişi yeniden üretilirken) TUTMAZDI: `secrets.get` sahte değeri
+    değil operatörün gerçek credential dosyasını okurdu. `config.STATE`i sandbox'a alıp sır
+    zincirinin ilk basamağını dışarıda bırakmak, izolasyonu yarım bırakmaktır.
+
+    NEDEN BURADA, BEŞ FİKSTÜRDE DEĞİL (tek-kaynak): aynı savunmanın beş kopyası sessizce ayrışır
+    ve altıncı fikstür yazan onu hiç bilmez. NOT: bu fikstür AUTOUSE DEĞİLDİR (ölçüldü) — kapanış
+    "her teste" değil "sandbox isteyen her teste" uygulanır; sandbox istemeyen bir test zaten
+    `config.STATE`e de dokunmaz. Çivi:
+    `tests/test_sir_credential_v439.py::test_J1_sandbox_state_CREDENTIAL_KANALINI_KAPATIR`."""
+    import meridian.secrets as _secrets
+    monkeypatch.delenv(_secrets.CREDENTIAL_DIZIN_ENV, raising=False)
     state = tmp_path / "state"
     (state / "history").mkdir(parents=True)
     (state / "bars").mkdir(parents=True)

@@ -11,8 +11,8 @@
 <script src="/theme.js"></script>
 <!-- YAZI TİPİ KENDİ-BARINDIRILIR (D4, 2026-08-07). Bu üç satır bir <link rel="stylesheet">
      DEĞİL: Google Fonts CDN'ine giden `preconnect` + `stylesheet` üçlüsü KALDIRILDI ve
-     `deploy/Caddyfile`'ın CSP'sinden `fonts.googleapis.com` (style-src) ile
-     `fonts.gstatic.com` (font-src) DÜŞTÜ. Yani bu değişiklik bir maliyet değil bir
+     CSP'den `fonts.googleapis.com` (style-src) ile `fonts.gstatic.com` (font-src)
+     DÜŞTÜ (politikanın kaynağı: `meridian/api.py::GUVENLIK_BASLIKLARI`). Yani bu değişiklik bir maliyet değil bir
      SERTLEŞTİRME: pano artık hiçbir üçüncü-taraf origin'e bağlanmıyor.
      `preload` CRUCIAL ve `crossorigin` ZORUNLU: font istekleri her zaman CORS kipindedir,
      öznitelik olmadan tarayıcı dosyayı İKİ KEZ indirir (biri preload, biri @font-face). -->

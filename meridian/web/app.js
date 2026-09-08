@@ -1103,7 +1103,8 @@ window.temaDegistir = () => {
 };
 
 // ---- OLAY DELEGASYONU — satır içi onclick/oninput'un yerine ----------------------------------
-// NEDEN: dağıtım CSP'si (deploy/Caddyfile) `script-src 'self'` olmalı, ve o başlık satır içi
+// NEDEN: dağıtım CSP'si `script-src 'self'` olmalı (kaynak: `meridian/api.py::GUVENLIK_BASLIKLARI`),
+// ve o başlık satır içi
 // OLAY ÖZNİTELİKLERİNİ de bloklar — sadece <script> bloklarını değil. Ölçüldü: app.js'te 34,
 // index.html'de 6 öznitelik vardı. O CSP ile dağıtım yapılsaydı pano ÇİZİLİR ama hiçbir düğme
 // iş görmezdi: gezinme, çekmece, KRİZ grubu ve HALT dahil. Sessizce ölü bir acil durdurma,
@@ -11963,7 +11964,10 @@ window.hermesCtl = async (action) => {
 // 2026-09-07'de "credential" ile büyüdü (TSK-064 Faz-1B, systemd LoadCredential). Burası
 // güncellenmeseydi pano ham İngilizce adı basardı ve geçişin farksal ölçümünün pano ayağı —
 // "sır hangi kanaldan okunuyor?" — operatöre okunaksız görünürdü. Ayrışma çivisi v439'dadır.
-const SRC_TR = { credential: "systemd kasası", env: "ortam değişkeni", file: "yerel kasa", gcp: "Secret Manager" };
+// Aynı gün zincirin SONUNDAKİ bulut basamağı da düştü (IaC-K5): sistem 2026-08'de o buluttan A1'e
+// taşınmıştı, yani buradaki karşılık motorun ARTIK ÜRETEMEYECEĞİ bir kaynak adını bekliyordu —
+// ölü kod değil, operatöre var olmayan bir kanal vaat eden ölü BEYAN. Çivi v448'de.
+const SRC_TR = { credential: "systemd kasası", env: "ortam değişkeni", file: "yerel kasa" };
 const KEY_GROUPS = [
   ["Veri", "Piyasa taraması ve haber verisi. Yalnızca veri — işlem açmaz.", [
     ["FMP_API_KEY", "FMP anahtarı", "Financial Modeling Prep (stable API). Girince tarama + haber verisi açılır.", "fmp"],

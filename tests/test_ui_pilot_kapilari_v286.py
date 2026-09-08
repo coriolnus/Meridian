@@ -138,7 +138,7 @@ def test_G2c_artefakt_TAZELIK_kapisi_dagitta_VAR():
 
 
 def test_G2d_uretilen_sayfa_CSP_uyumlu():
-    """Dağıtım CSP'si `script-src 'self'` (deploy/Caddyfile). Satır içi `<script>` ve satır
+    """Dağıtım CSP'si `script-src 'self'` (`meridian/api.py::CSP_POLITIKASI`). Satır içi `<script>` ve satır
     içi işleyici ÜRETİMDE BLOKLANIR — sayfa canlıda ölü açılır. Bu arıza bu depoda İKİ KEZ
     yaşandı: landing.html + workflow.html satır içi `<script>` taşıyordu → landing.js/
     workflow.js'e alındı. Kayıt `meridian/api.py`in CSP blokunda (satır ÇAPASI YOK —

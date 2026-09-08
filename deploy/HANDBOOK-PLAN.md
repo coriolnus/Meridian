@@ -29,7 +29,8 @@
 > | H23 | `j`/`k` satır gezinmesi (uçlarda sarmaz, `--navh` payı, üç koruma sınandı) | `app.js` |
 >
 > **Bu tur ortaya çıkan, planda OLMAYAN beş kusur** (beşi de düzeltildi):
-> 1. **CSP dağıtımı kırardı — iki ayrı yoldan.** `deploy/Caddyfile` `script-src 'self'` diyordu.
+> 1. **CSP dağıtımı kırardı — iki ayrı yoldan.** `deploy/Caddyfile` (SİLİNDİ — IaC-K5, 2026-09-07;
+>    başlıkların tek kaynağı artık `meridian/api.py`) `script-src 'self'` diyordu.
 >    (a) `landing.html` + `workflow.html` satır içi `<script>` taşıyordu — workflow'un TÜM
 >    diyagramı o blokta üretiliyor, sayfa bomboş açılırdı. → `landing.js` / `workflow.js`.
 >    (b) **Daha ağırı:** 40 satır içi olay özniteliği (`onclick`/`oninput`). CSP bunları da
