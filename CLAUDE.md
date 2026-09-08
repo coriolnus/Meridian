@@ -30,11 +30,11 @@ kuralı silmeden/gevşetmeden önce o kaydı oku. Sayı taşıyan her satır öl
 | `research/cards/` | Ölçüm ön-kayıt kartları |
 | `state/` | Çalışma durumu — versiyonlanmaz; istisna `goal.yaml`, `bounds.yaml` (izli, SSoT) |
 | `backups/`, `.env`, `.dash.env` | Versiyonlanmaz, sır içerir — asla commit'lenmez |
-| `deploy/` | A1 systemd birimleri + hermes bot profilleri (`deploy/hermes/profiles/<ad>/`) |
+| `deploy/` | A1 systemd birimleri + hermes bot profilleri (`deploy/hermes/profiles/<ad>/`); `deploy/ansible/`: A0 rolü (`site.yml`) + dağıtım playbook'u (`dagit.yml`, 17 kapı) + tek-kaynak listeler; koleksiyon `ansible-galaxy collection install -r deploy/ansible/requirements.yml` |
 | `docs/RUNBOOK.md` | **ÜRETİLMİŞ** (`ops/runbook_uret.py`) — elle düzenlenmez, birleştirilmez |
 | `MERIDIAN_ENGINEERING_LOG.md` | Gerekçe + vaka arşivi; bu dosyadaki künyelerin hedefi |
 | `serve.sh` | Canlı servis — yerelde koşma (çift-emir riski) |
-| `dagit.sh` | Dağıtım — cwd'ye bakmaz, HER ZAMAN ana checkout HEAD'ini iter |
+| `dagit.sh` | Dağıtım — bir sürümlük İNCE SARMALAYICI (2026-09-08): `deploy/ansible/dagit.yml`e yönlendirir (`--dry-run` = `--check --diff`); kapılar ve listeler ORADA (`deploy/ansible/vars/dagit_vars.yml` tek kaynak). Cwd'ye bakmaz, HER ZAMAN ana checkout (`$HOME/AI-Trading`) HEAD'ini iter |
 | `.claude/` | **VERSİYONLANMAZ** (`.gitignore`) → cloud klonuna GİTMEZ. Kural taşıması gereken her şey BU dosyada olmalı (vaka 2026-08-26) |
 
 Canlı: A1 Oracle, `ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87`. A1'e komut her zaman ssh
@@ -56,7 +56,7 @@ Kurallar burada tetiklenir. Sol sütundaki şeyi yapmak üzereysen sağ sütunu 
 | `sleep`, `while`, `until`, `watch` | Bekleme döngüsü mü kuruyorum? Yasak (§7) — ön planda da arka planda da. |
 | `git` (HERHANGİ komut) | Rol-1 miyim? YAN oturum için salt-okunur dahil yasak (tırmanma vakası 2026-08-26). AJAN yalnız BEYAZ LİSTE okur: `log·show·blame·diff·rev-parse·status` — `stash` dahil mutasyon yapan HER ŞEY yasak (stash okuma DEĞİLDİR). Gevşetme 2026-08-31: 2 zararsız-itiraf + inceleme kalitesi ölçümüyle, operatör onayı. |
 | `git add -A` / `git add .` | Hiçbir zaman (vaka a94d425). |
-| `dagit.sh` (dry-run dahil) | Rol-1 miyim? `git status --porcelain` boş mu? Worker durdu mu? |
+| `dagit.sh` / `ansible-playbook … dagit.yml` (kuru koşum dahil) | Rol-1 miyim? `git status --porcelain` boş mu? Worker durdu mu? `ansible.posix` koleksiyonu kurulu mu? Kip bayrağı TEK mi (çelişen çift → çıkış 2, playbook çağrılmaz)? |
 | "Dağıtıma hazır" cümlesi | Rol-1 değilsem yazmam. |
 | `research/` altına ölçüm kodu | `research/cards/` altında kart var mı? Yoksa kod yok. |
 | Bir karar / ruling / ayar değişikliği yazmak | Kalıcı hafızayı kontrol ettin mi (A1 `~/bin/hafiza_sor.sh` recall + ilgili zihin modeli sayfası + memory/ + `ops/kart_benzer.py`) ve kaynağı karara yazdın mı ("kaynak: recall/sayfa/memory" ya da "hafıza: benzer kayıt yok")? Atıfsız karar kontrol edilmemiş sayılır (operatör direktifi 2026-09-06). |
@@ -226,7 +226,7 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
 - Dağıtım yalnız Rol-1. Yan/ajan dağıtmaz, "hazır" demez — `dagit.sh` NEREDEN çağrılırsa çağrılsın
   ana checkout'un O ANKİ HEAD'ini iter, senin ağacını değil; "ağacım temiz" bir güvence DEĞİLDİR
   (vaka 2026-08-26).
-- Reçete: temiz ağaç → `--dry-run` oku → mtime kontrolü → worker durdur → dağıt → doğrula → log.
+- Reçete: temiz ağaç → `--dry-run` oku (= playbook `--check --diff`; `*deleting` satırları ve PLAY RECAP `failed=0`) → mtime kontrolü → worker durdur → dağıt → doğrula → log. İlk gerçek playbook dağıtımı OPERATÖR GÖZETİMİNDE (2026-09-08, TSK-176 Task 4).
   Dağıtım kaydına o ANKİ main HEAD'i yaz — beyan edilen sha ile giden sha ayrıştı (vaka EDG-016).
 - Yeni systemd birimi kurulduğu gün elle test-ateşlenir: "kurulu" ≠ "çalışır" (fail-notify H9'dan
   beri sessiz arızalıydı — vaka 2026-08-30).
