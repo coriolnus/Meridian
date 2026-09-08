@@ -19,8 +19,11 @@
 # OMP_NUM_THREADS=2: kos_taban.sh emsali. A1 4 OCPU'dur ve ONNX oturumu varsayılanda hepsini
 # alır; arama etkileşimli koşar, yani gece işleriyle (sprint, geri dolum) aynı anda tetiklenebilir.
 #
-# ÇIKIŞ KODU: `exec` ile CLI'ın kendi kodu (0 sonuç / 1 girdi-uzantı arızası / 2 kullanım)
-# DEĞİŞMEDEN dışarı çıkar — kabuk araya kendi kodunu koymaz.
+# ÇIKIŞ KODU: 0 sonuç · 1 girdi-uzantı arızası · 2 kullanım · 3 ölçülemedi (model/şema ayrışması)
+# `exec` sayesinde CLI'ın kendi kodu DEĞİŞMEDEN dışarı çıkar — kabuk araya kendi kodunu koymaz.
+# Sözleşmenin KAYNAĞI CLI başlığıdır (hafiza_ara.py, "ÇIKIŞ KODU SÖZLEŞMESİ" bloğu); burası
+# İKİNCİ kopyadır ve v446 çivisi ikisini BİRLİKTE ölçer — 3 eklenip biri güncellenmeseydi,
+# sarmalayıcıya bakan operatör 3'ü tanımazdı (tek-kaynak yasası, kaçınılmaz kopya + çivi).
 #
 # KULLANIM: hafiza_ara.sh [-k 5] [--dosya docs/] [--json] "<soru>"
 set -euo pipefail

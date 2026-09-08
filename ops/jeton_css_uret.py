@@ -24,6 +24,19 @@ SAYFA KİPİ (TSK-132 dilim-1, 2026-09-07) — eski yüzeylerin (runbook/landing
 `--sayfa` tekrarlanabilir. `--uygula` YALNIZ sayfa kipinde anlamlıdır ve sayfasız verilirse
 kullanım hatasıdır (çıkış 2) — sessizce yok saymak, operatöre yazdım hissi verip hiçbir şey
 yazmamak olurdu (ops aracı vakası 2026-08-30). `--sayfa` ile `--cikti` birlikte verilemez.
+`--kontrol --uygula` de birlikte verilemez (çıkış 2): biri SORAR, diğeri YAZAR ve sessiz bir
+öncelik kuralı `--uygula`yı yutardı.
+
+SAYFA KİPİNDE ÇIKIŞ 1 İKİ ANLAM TAŞIR ve ayrımı stderr satırı yapar (bulgu 2026-09-08):
+`--kontrol` ile 1 = BAYAT (hiçbir şey yazılmadı); `--uygula` ile 1 = KISMİ YAZIM — en az bir
+sayfa G/Ç arızasıyla düştü ve stderr'de `UYGULANDI: N/M yazıldı` özeti durur. rc 1'i koşulsuz
+"hiçbir şey yazılmadı" diye okuyan bir sarmalayıcı kirli bir ağacı temiz sanırdı.
+
+SAYFA YAZIMI ATOMİKTİR (geçici ad + `os.replace`, `ops/bar_arsivle.py::yaz_ve_dogrula` deseni):
+`Path.write_text` dosyayı yazmadan ÖNCE truncate eder, yani gerçek bir G/Ç arızası (disk dolu,
+kota) hedefi KESİK bırakır ve "yazılamadı" mesajı 'dosyaya dokunulmadı' diye okunurdu (ölçüldü:
+28.688 baytlık runbook.html 20.000 baytta koparıldı). Artık okuyucu ya eski ya yeni dosyayı
+görür, yarısını asla.
 İKİ KİP, İKİ BİÇİM — bilerek: `jetonlar.css` seçiciyi boşlukla yazar (`:root {`), sayfa bloğu
 boşluksuz (`:root{`), çünkü `tests/test_tasarim_token_v153.py`nin ham-renk linti jeton bloğunu
 `":root{"` LİTERALİYLE keser ve boşluklu biçim o kesiciyi düşürür. Fark çivilidir
@@ -38,9 +51,11 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import os
 import pathlib
 import re
 import sys
+import tempfile
 
 KOK = pathlib.Path(__file__).resolve().parents[1]
 JETONLAR = KOK / "meridian" / "web" / "tokens.json"
@@ -272,9 +287,58 @@ def sayfa_uygula(yol: pathlib.Path, blok: str) -> tuple[bool, str]:
     return yeni == metin, yeni
 
 
+def _atlanan_bas(atlanan: list[str]) -> None:
+    """Atlanan jetonları stderr'e basar — HER İKİ kip (klasik `uret()` yolu ve sayfa kipi) AYNI
+    uyarıyı basar (bulgu C4b, 2026-09-08): eskiden yalnız klasik yol basıyordu, sayfa kipi
+    `_kovalar()`'ın döndürdüğü `atlanan` listesini sessizce atıyordu — `--sayfa … --uygula`
+    tanınmayan şekle sahip bir jetonu üç sayfanın bloğundan da EKSİK yazardı ve operatöre hiçbir
+    uyarı gitmezdi (Yasa 6 / uydurma yasağı ihlali: tek belirti sonradan CSS'te tanımsız kalan
+    `var(--jeton)` olurdu)."""
+    if not atlanan:
+        return
+    print(f"ATLANAN {len(atlanan)} jeton (şekli tanınmadı — UYDURULMADI):", file=sys.stderr)
+    for x in atlanan:
+        print(f"  {x}", file=sys.stderr)
+
+
+def _atomik_yaz(yol: pathlib.Path, metin: str) -> None:
+    """Aynı dizinde geçici ada yaz → `os.replace` ile yerine koy. Arızada hedefe DOKUNULMAZ ve
+    geçici dosya SİLİNİR.
+
+    KOPYA MI? `meridian.store._atomic_write` bu deseni ZATEN taşıyor ve `ops/bar_arsivle.py` onu
+    İTHAL ediyor. Burada ithal edilmedi ve gerekçe ÖLÇÜLDÜ: bu araç pytest DIŞINDA, elle ve
+    `ui/package.json` üzerinden koşar; `meridian.store` `meridian.config`/`meridian.storage`
+    zincirini (ve `meridian.obs`ı) sürece sokar, yani her jeton üretimi canlı yerel deftere satır
+    düşürebilirdi (CLAUDE.md §2, 3 vaka 2026-08-30). Sözleşme tek satırdır ve davranışsal olarak
+    çivilidir (v446 K2); ayrışma riski, motor paketini bir CSS üreticisine bağlama bedelinden
+    KÜÇÜKTÜR."""
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    fd, gecici = tempfile.mkstemp(dir=str(yol.parent), prefix=f".{yol.name}-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(metin)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(gecici, yol)
+    except BaseException:
+        if os.path.exists(gecici):
+            try:
+                os.unlink(gecici)
+            except OSError:  # sessiz-yutma: temizlik EN İYİ ÇABAdır, asıl istisna yukarı fırlatılmaya devam ediyor ve hüküm onundur
+                pass
+        raise
+
+
 def _sayfa_kipi(sayfalar: list[pathlib.Path], kontrol: bool, uygula: bool) -> int:
-    blok, _ = sayfa_blogu()
-    bayat = 0
+    blok, atlanan = sayfa_blogu()
+    _atlanan_bas(atlanan)
+
+    # ÖN DOĞRULAMA — TÜMÜ ÖNCE, YAZMA SONRA (bulgu C4c, 2026-09-08). Doğrulama (dosya var mı,
+    # `sayfa_denetimi`de eşlenemeyen ad var mı) sayfaların TAMAMI için burada biter; yazma pasosu
+    # ancak HİÇBİRİ reddedilmeden başlar. Aksi hâlde N. sayfadaki bir doğrulama arızası (yazım
+    # hatalı yol, eşlenemeyen ad) 1..N-1 sayfaları ZATEN diske yazılmış bir anda komutu durdurur
+    # ve hiçbir stderr satırı bunu söylemezdi — operatör exit kodunu "hiçbir şey yazılmadı" diye
+    # okuyup CLAUDE.md §9'daki "temiz ağaç" varsayımıyla devam edebilirdi.
     for p in sayfalar:
         if not p.is_file():
             print(f"YOK: {p}", file=sys.stderr)
@@ -286,6 +350,11 @@ def _sayfa_kipi(sayfalar: list[pathlib.Path], kontrol: bool, uygula: bool) -> in
                   f"ops/jeton_css_uret.py içindeki ESKI_AD_ESLEME'ye gerekçesiyle yaz.",
                   file=sys.stderr)
             return 2
+
+    bayat = 0
+    yazilan = 0
+    yazilamayan = 0
+    for p in sayfalar:
         guncel, yeni = sayfa_uygula(p, blok)
         if guncel:
             print(f"GÜNCEL: {p}")
@@ -294,13 +363,30 @@ def _sayfa_kipi(sayfalar: list[pathlib.Path], kontrol: bool, uygula: bool) -> in
         if kontrol:
             print(f"BAYAT: {p} tokens.json ile ayrışmış", file=sys.stderr)
         elif uygula:
-            p.write_text(yeni, encoding="utf-8")
+            try:
+                _atomik_yaz(p, yeni)
+            except OSError as e:
+                # KISMİ YAZIM GÖRÜNÜR OLSUN (bulgu C4c): ön doğrulama TÜMÜNÜ geçse bile gerçek
+                # bir G/Ç arızası (disk dolu, izin reddi) tek bir sayfada olabilir — o zaman
+                # DİĞER sayfalar atlanmaz, her sayfa BAĞIMSIZ denenir ve durumu AYRI basılır.
+                # "yazılamadı" ARTIK 'dosyaya DOKUNULMADI' demektir (K2, atomik yazım): eski
+                # `write_text` gövdesinde aynı mesaj kesilmiş bir dosyanın üstünü örtüyordu.
+                print(f"HATA {p}: yazılamadı (dosyaya DOKUNULMADI) — {type(e).__name__}: {e}",
+                      file=sys.stderr)
+                yazilamayan += 1
+                continue
             print(f"yazıldı: {p}")
+            yazilan += 1
         else:
             eski = p.read_text(encoding="utf-8")
             sys.stdout.writelines(difflib.unified_diff(
                 eski.splitlines(True), yeni.splitlines(True),
                 fromfile=str(p), tofile=f"{p} (üretilmiş)"))
+
+    if uygula and yazilamayan:
+        print(f"UYGULANDI: {yazilan}/{bayat} yazıldı — {yazilamayan} sayfa HATA verdi "
+              "(yukarıda); kısmi yazım SESSİZ değildir.", file=sys.stderr)
+        return 1
     return 1 if (kontrol and bayat) else 0
 
 
@@ -318,6 +404,16 @@ def main(argv: list[str] | None = None) -> int:
         print("KULLANIM: --sayfa ile --cikti birlikte verilemez (iki hedef, tek üretim)",
               file=sys.stderr)
         return 2
+    if a.kontrol and a.uygula:
+        # ÇAKIŞAN BAYRAK KOMBİNASYONU AÇIKÇA REDDEDİLİR (bulgu C4a, 2026-09-08): eskiden ikisi
+        # birlikte verilince argparse'ta çakışma tanımı OLMADIĞI için `_sayfa_kipi` sessizce
+        # yalnız `--kontrol` dalına girip YAZMIYORDU — operatöre `--uygula`nın yok sayıldığına
+        # dair hiçbir uyarı gitmezdi (2026-08-30 vakasıyla AYNI sınıf: "sessizce yok sayılan
+        # bayrak"). Diğer çakışan kombinasyonlarla (--sayfa+--cikti, --uygula sayfasız) TUTARLI
+        # olsun diye bu da KULLANIM hatasıdır (çıkış 2), sessiz bir öncelik kuralı DEĞİL.
+        print("KULLANIM: --kontrol ile --uygula birlikte verilemez (biri SORAR, diğeri YAZAR — "
+              "sessizce biri diğerini geçersiz kılmaz)", file=sys.stderr)
+        return 2
     if a.uygula and not a.sayfa:
         print("KULLANIM: --uygula yalnız --sayfa kipinde anlamlıdır", file=sys.stderr)
         return 2
@@ -326,10 +422,7 @@ def main(argv: list[str] | None = None) -> int:
 
     a.cikti = VARSAYILAN_CIKTI if a.cikti is None else a.cikti
     css, atlanan = uret()
-    if atlanan:
-        print(f"ATLANAN {len(atlanan)} jeton (şekli tanınmadı — UYDURULMADI):", file=sys.stderr)
-        for x in atlanan:
-            print(f"  {x}", file=sys.stderr)
+    _atlanan_bas(atlanan)
 
     if a.kontrol:
         if not a.cikti.exists():
