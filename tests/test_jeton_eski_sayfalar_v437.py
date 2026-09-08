@@ -472,3 +472,21 @@ def test_MUTASYON_BLOK_GERI_KONURSA_KIRMIZI(ad, tmp_path):
     p = tmp_path / ad
     p.write_text(bozuk, encoding="utf-8")
     assert jcu.main(["--sayfa", str(p), "--kontrol"]) == 2
+
+
+def test_JETONLAR_CSS_ROTA_CONTENT_TYPE_TEXT_CSS(sandbox_state):
+    """TSK-132 dilim-2 inceleme çivisi: GET /jetonlar.css → 200, content-type text/css.
+
+    LİNK_SAYFALAR (`runbook.html`/`landing.html`) bu dosyayı <link rel="stylesheet"> ile okur.
+    Rota `text/plain` dönerse tarayıcı CSS olarak PARSLAMAMAZ, sayfanın stil uygulanmaz — 645 çivi
+    yanlış sebeple yeşil kaldı (dilim-2 incelemesi: nosniff altında sessiz regresyon riski)."""
+    from fastapi.testclient import TestClient
+    from meridian import api
+
+    client = TestClient(api.app)
+    res = client.get("/jetonlar.css")
+
+    assert res.status_code == 200, f"rota bulunamadı: {res.status_code}"
+    assert res.headers.get("content-type", "").startswith("text/css"), \
+        f"content-type yanlış: {res.headers.get('content-type')}"
+    assert "--" in res.text, "gövde CSS jetonları içermeli"
