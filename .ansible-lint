@@ -1,0 +1,16 @@
+# TSK-176 Faz A0 — ansible-lint yapılandırması (production profile hedefi, CLAUDE.md §2 satırı:
+# "Çivi 4" bunu `production` profiliyle temiz bekler).
+#
+# TEK istisna, GEREKÇELİ (Yasa 4 sessiz-yutma yasağının lint karşılığı — kaçış AÇIK işaretlenir):
+# var-naming[no-role-prefix] production profilinde FATAL'dır ve rol değişkenlerinin
+# `meridian_a1_` önekini ister. Bu depoda değişken adları (`repo_kok`, `meridian_kullanici`,
+# `brifing_devri`, `bot_adlari`, `birim_kaynaklari`, `dropin_dizinleri`, `zorunlu_sir_dosyalari`)
+# docs/superpowers/plans/2026-09-08-ansible-a0.md Task 1 "Interfaces (Produces)" bölümünde
+# TANIMLI ve Task 2'nin TÜM görev dosyaları (paketler/dizinler/venv/birimler/dropinler/hermes/
+# denetim) bu adları AYNEN referans alır (tek-kaynak yasası: arayüz sözleşmesi plan belgesidir).
+# Task 1'de bu adları `meridian_a1_*`e çevirmek plan yazıldıktan SONRA arayüzü kırar ve Task 2'yi
+# yanlış adlarla başlatır — bu yüzden kural burada, adıyla ve gerekçesiyle, bilinçli olarak
+# atlanır; başka hiçbir kural atlanmaz (profil yine "production").
+profile: production
+skip_list:
+  - var-naming[no-role-prefix]

@@ -1,0 +1,47 @@
+---
+# TSK-176 Faz A0 Task 2 — `meridian_a1` görev zinciri.
+#
+# SIRA SÖZLEŞMEDİR, süs değil:
+#   paketler     → redis/docker/unattended olmadan sonraki hiçbir adım anlamlı değil
+#   dizinler     → birimler ve kum havuzları var olmayan dizine yazamaz
+#   venv         → birimlerin ExecStart'ı .venv/bin/python'a bakar; venv'siz enable edilen birim
+#                  ilk atışta 203/EXEC ile düşerdi
+#   birimler     → drop-in'ler var olmayan birimin .d dizinine yazılmaz
+#   sir_denetimi → DROP-IN'LERDEN ÖNCE (TUR 2, K1). Kopyalanan drop-in'lerin beşi
+#                  `LoadCredential=` taşır ve dosyaların kendi başlıkları şunu yazar: "kaynak
+#                  dosya YOKSA systemd birimi BAŞLATMAZ". Yani sırsız bir hosta bu drop-in'leri
+#                  koymak, çalışan (ya da çalışacak) meridian.service'i başlatılamaz hâle
+#                  getirmektir. Denetim burada DURUR ve hangi betiğin koşulacağını söyler;
+#                  birim dosyaları o noktada zaten kurulmuş olur (yarım değil, kapılı yakınsama).
+#   dropinler    → polkit/hermes'ten önce: sertleştirme + credential kanalı yerinde olsun
+#   polkit       → sprint tetiği ve birim anahtarı
+#   hermes       → beyin zinciri yapılandırması (ikili kurulumu ROL DIŞI)
+#   saglik       → EN SONDA: "kurulu != çalışır" hükmü (koşullu kapı, bkz. `beklenen_aktif`)
+# `tests/test_ansible_a0_v451.py::test_gorev_zinciri_tam_ve_sirali` ve
+# `::test_sir_denetimi_dropinlerden_once_kosar` bu listeyi ölçer.
+- name: Sistem paketleri
+  ansible.builtin.import_tasks: paketler.yml
+
+- name: Dizinler ve kum havuzları
+  ansible.builtin.import_tasks: dizinler.yml
+
+- name: Uv ve Meridian venv'i
+  ansible.builtin.import_tasks: venv.yml
+
+- name: Systemd birimleri ve kadans kapısı
+  ansible.builtin.import_tasks: birimler.yml
+
+- name: Sır dosyası denetimi (credential drop-in'lerinin ÖN KOŞULU)
+  ansible.builtin.import_tasks: sir_denetimi.yml
+
+- name: Systemd drop-in'leri
+  ansible.builtin.import_tasks: dropinler.yml
+
+- name: Polkit kuralları
+  ansible.builtin.import_tasks: polkit.yml
+
+- name: Hermes yapılandırması
+  ansible.builtin.import_tasks: hermes.yml
+
+- name: Sağlık kontrolü ("kurulu != çalışır")
+  ansible.builtin.import_tasks: saglik.yml

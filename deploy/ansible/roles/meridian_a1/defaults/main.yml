@@ -1,0 +1,212 @@
+---
+# TSK-176 Faz A0 Task 1 — `meridian_a1` rolü varsayılanları (iskelet).
+# Görevler (paketler/dizinler/venv/birimler/dropin'ler/polkit/hermes/denetim) Task 2'de eklenir;
+# bu dosya onların TEK KAYNAĞI olacak değerleri şimdiden tanımlar — kayıtsız kapı yüzeyi/tarayıcı
+# doğduğu gün çivi ötsün diye envanter buraya, koda değil (tek-kaynak yasası, CLAUDE.md §4).
+
+# --- hedef makine ---
+repo_kok: /opt/meridian
+meridian_kullanici: ubuntu
+# Brifing/bekçi/karne kadans kapısı (deploy.sh 6c-e/11a-c) — timer zaten `enabled` DEĞİLSE bu
+# `false` iken dosya kopyalanmaz/enable edilmez; `-e brifing_devri=true` ile bilerek devrilir.
+brifing_devri: false
+bot_adlari:
+  - sef
+  - bekci
+  - karne
+
+# --- birim kaynakları (with_fileglob ile Task 2'de tüketilir; ELLE liste YOK — tek-kaynak) ---
+# `playbook_dir` = deploy/ansible (site.yml'in bulunduğu dizin); Global Constraints'teki
+# `src: "{{ playbook_dir }}/../oracle-a1/…"` deseniyle AYNI derinlik (tek-kaynak: iki yerde ayrı
+# derinlik yazılırsa biri sessizce boş glob döner — plan taslağındaki "../../" iki seviye derindi,
+# gerçek dizin ağacında (deploy/ansible/roles/meridian_a1'den DEĞİL, playbook_dir'den ölçüldüğünde)
+# bir seviyeye düzeltildi; tests/test_ansible_a0_v451.py bu glob'ları RESOLVE EDİP gerçek dosya
+# kümesiyle kıyaslar — yanlış derinlik boş küme üretir ve çivi kırmızı olurdu).
+birim_kaynaklari:
+  - "{{ playbook_dir }}/../oracle-a1/*.service"
+  - "{{ playbook_dir }}/../oracle-a1/*.timer"
+  - "{{ playbook_dir }}/../hindsight/*.service"
+  - "{{ playbook_dir }}/../hindsight/*.timer"
+  - "{{ playbook_dir }}/../apisix/*.service"
+
+# --- drop-in dizinleri (basename; Task 2'de her biri için with_fileglob `*.conf`) ---
+dropin_dizinleri:
+  - meridian.service.d
+  - meridian-tick-watchdog.service.d
+  - meridian-fail-notify.service.d
+  - meridian-litestream.service.d
+  - hindsight-api.service.d
+
+# --- zorunlu sır dosyaları (Task 2 denetim.yml: yalnız stat+assert, DEĞER üretmez/okumaz) ---
+zorunlu_sir_dosyalari:
+  - yol: /etc/meridian/dash_token
+    sahip: root
+    mod: "0400"
+  - yol: /etc/meridian/nous_api_key
+    sahip: root
+    mod: "0400"
+  - yol: /etc/meridian/kapi_apikey
+    sahip: root
+    mod: "0400"
+  - yol: /etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL
+    sahip: root
+    mod: "0400"
+  - yol: /etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY
+    sahip: root
+    mod: "0400"
+  - yol: /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY
+    sahip: root
+    mod: "0400"
+  - yol: /opt/meridian/.dash.env
+    sahip: ubuntu
+    mod: "0600"
+
+# ==============================================================================================
+# Task 2 (görev dosyaları) eklemeleri — 2026-09-08. Değerlerin kaynağı ADIYLA yazılıdır:
+#   "deploy.sh N"  → deploy/oracle-a1/deploy.sh'ın o adımı (davranış birebir taşınıyor)
+#   "A1 ölçümü"    → scratchpad/a1_birim_envanteri.txt (Rol-1, 2026-09-07 22:3xZ canlı ölçüm)
+# ==============================================================================================
+
+# --- apt paketleri (deploy.sh 1 + A1 ölçümü; Postgres A2 fazında, BU ROLDE YOK) ---
+apt_paketleri:
+  - curl
+  - ca-certificates
+  - rsync
+  - redis-server
+  - docker.io
+  - jq
+  - git
+  - unattended-upgrades
+
+# --- uv (venv.yml) ---
+# SÜRÜM PİNİ: resmi installer sürümsüz URL'den çekilirse her koşum farklı uv kurabilir (tedarik
+# zinciri kapısı yok — A0 envanteri Bulgu 5). Değer A1'de ÖLÇÜLMEDİ: ajan A1'e ssh yapmaz
+# (CLAUDE.md §3), uydurma yasağı gereği tahmin de yazılmaz. Rol-1 A1'de `uv --version` koşup bu
+# satırı doldurur; `venv.yml` ilk görevi `OLCULECEK` değerinde DURUR (assert) — yani bu sabit
+# yanlışlıkla canlıya gidemez.
+uv_surum: "OLCULECEK"
+uv_ikili: "/home/{{ meridian_kullanici }}/.local/bin/uv"
+
+# TEDARİK KAPISI (TUR 2, K12). `get_url` checksum verilmediğinde ve `force` varsayılan (false)
+# iken, dest VARSA koşullu GET atar; 304 dönerse DİSKTEKİ DOSYAYI KORUR (ansible-core 2.18.19
+# `modules/get_url.py` kaynağından ölçüldü). Bu yüzden installer artık (a) dünyaya-yazılabilir
+# OLMAYAN bir dizine iner, (b) `force: true` ile HER koşumda yeniden yazılır, (c) sha256 ile
+# doğrulanır. Değer ÖLÇÜLMEDİ: sürüm (`uv_surum`) belli olmadan sürüm-pinli installer'ın sha'sı
+# da bilinemez ve ajan ağa çıkmaz — uydurma yasağı gereği nöbetçi değerde durur, KAPI-0 denetler.
+uv_installer_sha256: "OLCULECEK"
+# Dizin root:root 0755 — yalnız root yazabilir, `ubuntu` okuyup çalıştırabilir. `/tmp` OLMAZ:
+# sticky bit dosya YARATMAYI engellemez, tahmin edilebilir adla önceden konmuş bir betik 304
+# yolunda korunur ve `ubuntu` olarak ÇALIŞTIRILIRDI.
+uv_installer_dizini: /usr/local/lib/meridian
+# `uv sync` DEV GRUBUNU A1'e kurmaz — dagit.sh `[3]` ile TEK KAYNAK (karar 2026-08-01: kazanç
+# yalnız disk değil DENETİM YÜZEYİ; `uv audit` kapısı yalnız canlıda koşan koda ait CVE'lerle
+# dağıtım bloklayabilmeli). Değer dagit.sh'ın TABAN bayrağıdır (`SYNC_BAYRAK="--no-dev"`): her uv
+# sürümünde vardır. dagit ayrıca koşum anında `uv sync --help`e sorup `--no-default-groups`a
+# yükseliyor; rol A1'e ssh yapamadığı için o sondayı ATAMAZ ve tabanı taşır (ikisi de ÖLÇÜLEN
+# aynı 17 paketi kaldırıyor — dagit.sh [3] şerhi). Rol-1 A1'de ölçtükten sonra yükseltebilir.
+uv_sync_bayrak: "--no-dev"
+
+# --- kadans kapısına tabi birimler (deploy.sh 6c-e/11a-c; brifing/bekçi/karne) ---
+# Birim ADI (uzantısız): `<ad>.service` + `<ad>.timer` çiftinin ikisi de kapıya tabidir.
+kadans_birimleri:
+  - meridian-brifing
+  - meridian-bekci
+  - meridian-karne
+
+# --- enable edilecek servisler (A1 ölçümü: `enabled`) — `state` VERİLMEZ (F10 anomalisi
+# Meridian'da bilerek DURDURULUR: enabled+inactive sessizce "düzeltilmez", TASARIM §4.4) ---
+etkin_birimler:
+  - meridian.service
+  - meridian-barsarchive.service
+  - meridian-litestream.service
+  - apisix.service
+  - apisix-etcd.service
+  - hindsight-api.service
+  - hindsight-cp.service
+
+# --- enable + started timer'lar (A1 ölçümü: 11 timer `enabled`) ---
+etkin_timerlar:
+  - meridian-backup.timer
+  - meridian-tick-watchdog.timer
+  - meridian-skill-gorus.timer
+  - meridian-edg085-taban.timer
+  - meridian-geridolum.timer
+  - meridian-aylik-bucket-kopya.timer
+  - hindsight-yedek.timer
+  - hindsight-taban-tazele.timer
+  - meridian-brifing.timer
+  - meridian-bekci.timer
+  - meridian-karne.timer
+
+# --- A1'de BİLEREK disabled kalan birimler (A1 ölçümü) — rol bunlara DOKUNMAZ, yalnız raporlar
+# (Yasa 6: "dokunmadım" da okunabilir bir çıktı olmalı; sessiz atlama körlüktür) ---
+devre_disi_birimler:
+  - meridian-learn.service
+  - meridian-aylik-bucket-kopya.service
+
+# --- drop-in KAYNAK glob'ları (dropinler.yml; `birim_kaynaklari` ile AYNI şekil) ---
+# `dropin_dizinleri` HEDEFteki dizin adlarıdır; bu liste KAYNAK dosyaları verir. İkisi ayrışırsa
+# rol ya boş dizin yaratır ya da bir drop-in'i hiç kopyalamaz → `tests/test_ansible_a0_v451.py`
+# ikisinin (dizin adı ↔ glob'un ana dizini) EŞİT olduğunu ölçer (tek-kaynak yasası: iki liste,
+# tek gerçek, aralarında çivi). Wildcard YALNIZ dosya adında: `fileglob` lookup'ı dizin adını
+# `find_file_in_search_path` ile çözer, ara dizinde `*` çalışmaz — ölçüldü (2026-09-08, yerel
+# `query('fileglob')` koşumu: ara-`*` desenleri UYARI basıp boş döner, dosya-adı `*` 10 conf bulur).
+dropin_kaynaklari:
+  - "{{ playbook_dir }}/../oracle-a1/meridian.service.d/*.conf"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-tick-watchdog.service.d/*.conf"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-fail-notify.service.d/*.conf"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-litestream.service.d/*.conf"
+  - "{{ playbook_dir }}/../hindsight/hindsight-api.service.d/*.conf"
+
+# --- polkit kuralları (deploy.sh 6g + A1 ölçümü: /etc/polkit-1/rules.d'de 50 ve 51) ---
+polkit_kaynaklari:
+  - "{{ playbook_dir }}/../oracle-a1/50-meridian-sprint.rules"
+  - "{{ playbook_dir }}/../oracle-a1/51-meridian-birim-anahtari.rules"
+
+# --- hermes (hermes.yml) ---
+hermes_dizin: "/home/{{ meridian_kullanici }}/.hermes"
+# meridian/hermes.py::_hermes_bin arama sırası (deploy.sh 5 ile aynı üç yol; PATH bacağı ajanın
+# ölçemeyeceği bir şeydir, o yüzden mutlak yollar).
+hermes_ikili_yollari:
+  - "/home/{{ meridian_kullanici }}/.hermes/bin/hermes"
+  - "/home/{{ meridian_kullanici }}/.local/bin/hermes"
+  - "/usr/local/bin/hermes"
+
+# --- sağlık kontrolü (deploy.sh 16) ---
+saglik_url: "http://127.0.0.1:8080/healthz"
+saglik_deneme: 5
+saglik_bekleme: 3
+# SAĞLIK KAPISININ SEMANTİĞİ (TUR 2, K5): "servis çalışıyorsa sağlıklı olmalı".
+# Koşulsuz `active` şartı rolün kendi sözleşmesiyle çelişiyordu: rol hiçbir uzun ömürlü servisi
+# BAŞLATMAZ (F10 kararı, `state` verilmez), dolayısıyla taze/soğuk bir A1'de yakınsama tamamen
+# başarılıyken bile kapı "failed" derdi ve rolün bunu düzeltmesi imkânsızdı — görmezden gelinen
+# kapı, kapı değildir. Soğuk kurulum ve bakım penceresi koşumu: `-e beklenen_aktif=false`
+# (kapı KAPANIR, atlandığı ADIYLA basılır — sessiz atlama yok).
+beklenen_aktif: true
+
+# --- dagit F9 beyanı ∖ rol kapsamı: BEYANLI istisnalar (TUR 2, K10) ---
+# `dagit.sh::F9_LISTE` "canlıya giden repo dosyaları"nın tek kaynağıdır. Rol bu dosyaları
+# TAŞIMAZ; boşluk yasak değil ama BEYANLI olmak zorunda (bedel yasası: kazanç sayıldı, kayıp da
+# sayılmalı). Gerekçeler README "Bu rolün YAPMADIKLARI" bölümünde; hepsi A1 fazına açık kalem.
+# `tests/test_ansible_a0_v451.py::test_f9_beyani_rol_kapsami_ve_beyanli_istisnalarla_ortusur`
+# bu listenin F9 ∖ kapsam kümesine TAM EŞİT olduğunu ölçer: yeni bir F9 dosyası eklendiğinde ya
+# rol onu taşır ya da buraya yazılır — sessiz üçüncü yol yok.
+f9_rol_disi:
+  # Enable edilen birimlerin yapılandırma dosyaları (A1 fazı: ya role, ya kendi betiğine).
+  - deploy/apisix/config.yaml
+  - deploy/oracle-a1/litestream.yml
+  - deploy/oracle-a1/geridolum.py
+  # Geri-dolum ölçüm artefaktları (research/ altında; birim değil, veri/işçi betiği).
+  - research/olcumler/edg066_tick_arsiv/pilot.py
+  - research/olcumler/edg066_tick_arsiv/kapsam.txt
+  # Bot profilleri: kurulumu `hermes profile install` ile olur ve yeni ajan kimliği OPERATÖR
+  # kararıdır (hermes.yml şerhi) — rol yalnız varlıklarını RAPORLAR.
+  - deploy/hermes/profiles/sef/distribution.yaml
+  - deploy/hermes/profiles/sef/config.yaml
+  - deploy/hermes/profiles/sef/SOUL.md
+  - deploy/hermes/profiles/bekci/distribution.yaml
+  - deploy/hermes/profiles/bekci/config.yaml
+  - deploy/hermes/profiles/bekci/SOUL.md
+  - deploy/hermes/profiles/karne/distribution.yaml
+  - deploy/hermes/profiles/karne/config.yaml
+  - deploy/hermes/profiles/karne/SOUL.md

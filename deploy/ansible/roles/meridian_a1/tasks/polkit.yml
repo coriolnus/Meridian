@@ -1,0 +1,22 @@
+---
+# TSK-176 Faz A0 Task 2 — polkit kuralları (deploy.sh 6g + A1 ölçümü).
+#
+# 50-meridian-sprint.rules: worker `NoNewPrivileges=true` altında koştuğu için `sudo` (setuid)
+# root'a yükselemez ve sprint birimini tetikleyemezdi; kural yalnız `ubuntu` kullanıcısına,
+# yalnız `meridian-sprint@*` birimleri için manage-units izni verir — `NoNewPrivileges=no`
+# tavizini VERMEDEN (H3 koruma kalemi yerinde kalır).
+# 51-meridian-birim-anahtari.rules: A1'de canlı (ölçüldü), deploy.sh onu HİÇ kurmuyordu —
+# taze kurulumda eksik kalırdı. Rol ikisini de tek kaynaktan kurar.
+#
+# DAVRANIŞ FARKI, BİLEREK (README'de de yazılı): deploy.sh polkit'i HER koşuda restart ediyordu;
+# burada restart yalnız kural dosyası GERÇEKTEN değiştiğinde (handler) olur. Her koşuda restart
+# idempotent değildir ve idempotency turunun (2. koşum changed=0) kanıtını yok ederdi.
+- name: Polkit kuralları
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/polkit-1/rules.d/{{ item | basename }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ polkit_kaynaklari }}"
+  notify: polkit-yeniden-baslat
