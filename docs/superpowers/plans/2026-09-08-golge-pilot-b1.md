@@ -3,7 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development. Steps use checkbox syntax.
 
 **Goal:** `meridian/golge_icra.py` (gölge defteri + motor: dormant plan → giriş (ilk uygun bar açılışı) → çıkış (CANLI çıkış
-fonksiyonu) → R) + worker kadansı + `meridian/api.py` okuyucusu + `research/olcumler/edg087_golge_pilot/sayim.py`.
+fonksiyonu) → R) + worker kadansı + `meridian/api.py` okuyucusu + `research/olcumler/edg088_golge_pilot/sayim.py`.
 Sermaye riski YOK; canlı davranış DEĞİŞMEZ.
 **Kart (SPEC, bağlayıcı):** `research/cards/EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml` — ölçüm planı, eşikler
 (n≥30 · CI-alt>0 · kazanma≥0,40 · pencere ≤120 gün · |gölge−gerçek| ≤0,05R), kill-list, üç PK.
@@ -84,7 +84,7 @@ INTRADAY(D) scale_out+dokunuş → CLOSE(D) `strategy.manage_position`+arm; "YAS
 **Interfaces (Produces):**
 - `KART = "EDG-2026-088"` · `DEFTER = "golge_icra.jsonl"` (kapanan gölge işlemler) ·
   `ACIK = "golge_icra_acik.json"` (açık gölge pozisyonlar + `son_seans`).
-- `N_ALT = 30` · `CI_ALT_R = 0.0` · `KAZANMA_ALT = 0.40` · `PENCERE_GUN = 45` · `FARK_R_UST = 0.05` (kart sabitleri).
+- `N_ALT = 30` · `CI_ALT_R = 0.0` · `KAZANMA_ALT = 0.40` · `PENCERE_GUN = 120` · `FARK_R_UST = 0.05` (kart sabitleri).
 - `adim(dstr: str, *, planlar: list[dict], bars_of, regime_ok: bool, params: dict, simdi=None) -> dict`
   — BİR seans. Faz sırası `shadow_lifecycle.step`ten alınır ve kaynağı ADIYLA yazılır (ileri-dönüklük yok):
   OPEN(D) bekleyen çıkışlar + giriş (planın giriş kuralı = İLK UYGUN BAR AÇILIŞI) → INTRADAY(D) dokunuş çıkışı
@@ -160,14 +160,14 @@ Backend özeti her iki durumda da bu task'ta hazır olur.
 
 ---
 
-### Task 3 — `research/olcumler/edg087_golge_pilot/sayim.py` — implementer
-**Files:** Create `research/olcumler/edg087_golge_pilot/sayim.py` + `README.md` (komut satırı + alan sözlüğü) ·
-Test `tests/test_edg087_sayim_v457.py`.
-**Komut satırı:** `.venv/bin/python research/olcumler/edg087_golge_pilot/sayim.py --defter state/golge_icra.jsonl
+### Task 3 — `research/olcumler/edg088_golge_pilot/sayim.py` — implementer
+**Files:** Create `research/olcumler/edg088_golge_pilot/sayim.py` + `README.md` (komut satırı + alan sözlüğü) ·
+Test `tests/test_edg088_sayim_v461.py` (v457 kadans çivisine gitti; v458 bayatladı — Task 3 raporu §2).
+**Komut satırı:** `.venv/bin/python research/olcumler/edg088_golge_pilot/sayim.py --defter state/golge_icra.jsonl
 --cikti <json> [--markdown <md>] [--baslangic <ISO>] [--pk3 <edg049 kesiti>]`
 **Interfaces (Consumes):** `meridian.golge_icra` (alan sözlüğü + kart sabitleri İTHAL, kopyalanmaz) ·
 `meridian.olcum_araclari.blok_bootstrap_ci` (ya da 049 reçetesi — Rol-1 kararı 1) · `state/trades.jsonl` (PK 2).
-**Ölçüler (JSON):** `n`, `pencere: {ilk_ts, gun, doldu}` (n≥30 ∧ ≤45 gün), `toplam_r`, `ci: {lo, hi, yontem, blok,
+**Ölçüler (JSON):** `n`, `pencere: {ilk_ts, gun, doldu}` (n≥30 ∧ ≤120 gün), `toplam_r`, `ci: {lo, hi, yontem, blok,
 B, tohum}`, `kazanma_orani`, `pf`, **tanı:** `kurulum_kirilimi`, `hukum_dagilimi` (GO/REVIEW/NO_GO),
 `cikis_neden_dagilimi`, **kontrol PK (2):** `{n_cift, ort_fark_r, komisyon_kayma_payi, gecti}`,
 **PK (3):** `{n: 6, kayip: 6, toplam_r, esles: bool}`, **bedel:** `{satir_gun, bayt}`, `olculemeyen: [...]`.
@@ -243,3 +243,6 @@ K=2 birincildir (`EDG-088-toplam-R-CI`, `EDG-088-kazanma-orani`); kurulum kırı
 6. **Pano kartı:** backend özeti (`/api/golge-icra` + diagnostics bloğu) bu planda (Yasa 6 okuyucusu); UI kutusu B2 (ayrı, `Golge.tsx` komşusu). `golge_icra_acik.json` `ozet()` üzerinden okunur (ayrı okuyucu gerekmez — artifact_graph aynı okuyucuyu görür; ölçülecek, görmüyorsa api'ye açık okuma eklenir).
 7. **Kontrol kolu:** yalnız GERÇEK işlemler: B1'de son 10 gerçek işlem bir kez yeniden yürütülür + her yeni gerçek işlem kapandığında gölge eşleniği bir kez (ucuz, n küçük). Tüm normal planların sürekli gölgelenmesi YOK (bedel ~50×).
 8. **`scale_out`:** çıkış yolu üçlüsünden `manage_position` + `_touch_exit` çağrılır; `scale_out` yalnız `PaperBroker` durumundan bağımsız saf fonksiyonla çağrılabiliyorsa dahil (ölç); değilse BEYANLI SAPMA (kısmi satışsız R) ve PK (2) toleransı olduğu gibi kalır — düşerse dürüstçe düşer.
+
+### Rol-1 düzeltme notu (2026-09-08 19:00Z)
+Plan metnindeki `edg087` yolu, `45` gün ve `v457` sayım çivisi bayattı (Task 1/2/3 raporlarının üç kez işaretlediği kalem); kart EDG-2026-088 ile eşitlendi: yol `edg088_golge_pilot`, pencere 120 gün, sayım çivisi v461. PK (3) hükmü kartın `notlar` alanında (şasi koşumu TSK-179 alt kalemi).

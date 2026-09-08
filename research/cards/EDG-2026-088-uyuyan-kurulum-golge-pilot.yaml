@@ -27,7 +27,7 @@ k_registry: {registered_at: "2026-09-08", trial_ids: [EDG-088-toplam-R-CI, EDG-0
 olcum_plani:
   - "gölge defteri: state/golge_icra.jsonl (B1 implementer yazar; okuyucu = bu kartın sayım betiği + pano 'Uyuyan kurulumlar' kartı — Yasa 6); satır: {plan_id, kurulum, hukum, ts_plan, giris_fiyat (planın giriş kuralı: ilk uygun bar açılışı), cikis_fiyat, cikis_neden (planın kendi stop/hedef/zaman kuralı — canlı çıkış motoruyla AYNI fonksiyon), R, bar_n, kaynak_bar_hash}"
   - "giriş yalnız plan hükmünden BAĞIMSIZ: dormant planların tamamı gölgeye girer (GO 1 / REVIEW 13 / NO_GO 17 dağılımı tanı olarak raporlanır)"
-  - "sayım: research/olcumler/edg087_golge_pilot/sayim.py — toplam R, blok-bootstrap CI95 (EDG-049 ile aynı blok uzunluğu), kazanma oranı, PF; kurulum kırılımı tanı"
+  - "sayım: research/olcumler/edg088_golge_pilot/sayim.py — toplam R, blok-bootstrap CI95 (esikler.ci_yontem: olcum_araclari.blok_bootstrap_ci, moving block n^(1/3) — 049 ay-kümeliydi, AYNI DEĞİL; düzyazı 2026-09-08 Rol-1 düzeltmesi, Task 3 kaygı 1-2), kazanma oranı, PF; kurulum kırılımı tanı"
   - "kontrol (yol-tutarlı; Rol-1 hükmü 7): yalnız GERÇEK işlemler — B1'de son 10 gerçek işlem bir kez + her yeni gerçek işlem kapandığında gölge eşleniği bir kez (tüm normal planların sürekli gölgelenmesi YOK, bedel ~50×); gölge R ile gerçek icra R'si farkı ≤ komisyon+kayma payı (goal/bounds'taki değerler) — gölge motorunun gerçek yolla tutarlılığı"
   - "bedel: gölge defteri boyutu ve yazım sıklığı (satır/gün) raporlanır; canlı worker'a ek LLM/ağ çağrısı SIFIR (yalnız bar verisi)"
 
@@ -66,3 +66,10 @@ notlar: >
   dosyası = yeni okuyucu şart (pano kartı + sayım); okuyucusuz kalırsa TSK-178 sınıfına düşer. B1 planı bu karttan sonra yazılır
   (docs/superpowers/plans/2026-09-08-golge-pilot-b1.md); kod meridian/ (motor) → tam suite.
   Plan: docs/superpowers/plans/2026-09-08-golge-pilot-b1.md (Rol-1 hükümleri 1-8 planın sonunda).
+  2026-09-08 19:00Z (Rol-1) B1 TESLİM SONRASI HÜKÜM — PK (3) SELEF ayağı: Task 3 ölçtü, 049'un 6 planı sayaç/çivi ölçeğinde YENİDEN DOĞURULAMAZ
+  (evaluate_pullback rs_rating kapısı kesitsel, 049 artefaktında rs yok, tam replay şasisi + evren barları ister; rapor_golge_b1_t3 §6). KARAR: (b) DEĞİL —
+  basari_tanimi 'üç PK yeşil' DURUR (eşik/tanım sonradan gevşetilmez); PK (3) bugün `esles=None` = KOŞULMADI (kör değil: kör = ayrışma).
+  Şasi koşumu TSK-179 alt kalemi olarak pencere hükmünden ÖNCE yapılır (replay şasisi 049 künyesiyle, kart-önce iş DEĞİL — bu kartın PK'sı);
+  pencere kapanışında PK (3) hâlâ None ise hüküm YAZILMAZ, kart 'PK eksik' ile bekler. Pencere B1 dağıtım damgasıyla açılır (ayrı not).
+  Sayaç bulguları kabul: CI ortalama aralığı, toplam n×ortalama TÜRETİLMİŞ (işaret sınaması aynı); PK (2) üç değerli, pay goal.yaml'dan
+  (bugün 0,0168R < 0,05R tavanı → bağlayıcı olan pay). hafıza: A1 recall 8 sonuç, doğrudan emsal yok; memory: EDG-049 NO-GO dersi (n<30 hüküm yok).
