@@ -30,6 +30,16 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | TSK-138 ilk ölçüm | ✅ 22:05Z: denetlenemedi/llm_dustu, yeniden-üretim 150 s'de bitmedi (iç bütçe 120 s), 5 ilk_ihlal, teslim HAM | dilim-2 adayı ROADMAP'te (hızlı model / 240 s / cevaplayan model ölçümü) |
 | Bayat oturum cron'ları | ✅ 4'ü silindi | — |
 
+### 0c. Sabah için operatör masası (2026-09-08, Rol-1 gece kapanışı)
+
+| Sıra | Kalem | Komut / karar | Not |
+|---|---|---|---|
+| 1 | **OpenRouter ×2 rotasyonu** | A1: tick-watchdog timer durdur → `sudo ./deploy/oracle-a1/sir_rotasyon.sh --envanter` → `--openrouter` (iki anahtarı dashboard'dan üret, `read -s` ile yapıştır) → timer geri | Betik canlıda HİÇ koşulmadı (3 inceleme turu, 170 çivi); NOUS için varlık kanıtı, OPENROUTER için kapıdan gerçek chat kanıtı; çıkış 2 = ölçülemedi/geri alındı. Notlar: rapor_D "Sabah operatör notları" |
+| 2 | **A1 fazı (dagit → playbook) sevki** | plan `docs/superpowers/plans/2026-09-08-ansible-a1-dagit.md`; ilk playbook dağıtımı sen izlerken | dokuz test dagit iç yapısına çivili; A0 rolü A1'de changed=0 |
+| 3 | **Dağıtım #29** (B3 sohbet sayacı + TSK-064 küçükler) | gece bitirilirse Rol-1 dağıtır; bitmezse sabah | motor değişikliği → tam suite |
+| 4 | **bar_arsivle ilk `--uygula`** | A1'de 260 sembol yeniden yazım (ARAC_SURUMU göçü) — bakım penceresi | hepsi-ya-hiç manifest |
+| 5 | TSK-138 dilim-2 kararı | hızlı model (nemotron-super) mi, iç bütçe 240 s mi | iki gün iki düşüş sınıfı |
+
 ## 1. Bu gece (uçuşta / zamanlanmış — bildirimli)
 
 | Kalem | Durum | Kapı / sonraki adım |
