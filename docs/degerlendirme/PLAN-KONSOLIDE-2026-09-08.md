@@ -122,7 +122,6 @@
 | Remote Control | Bu oturum/istemci bağlantısı | Genel olarak açık (09-06) ama bu istemci "inactive" notu var — ölçülemedi |
 | Düşürme onayları | PRG-02 kitap yazımı · PRG-03 çapa satırı · PRG-05 M1 kirlenmesi · §6 retro kuyruk | Dördü de "daha sonra sor" (09-07) |
 
-**Cevaplananlar (tarihçe, tek satır):** B-RUNBOOK-KAPSAM · B-PENCERE-KAYDIR · B-CHOP-BUTCE · B-KORUMA-KUR · B-BILDIRIM-N1 · B-PULLBACK-SILAH · B-KORUMA-POLITIKA · B-E1-LIMIT · B-ORACLE-TASIMA · B-OCI-BUCKET · B-DD-ESIK (0.16) · B-TAVAN-502 (A) · B-PG-ROTASYON · B-AJAN-TAVAN (Sonnet 25/Opus 10/Haiku 40) · TSK-046 QC login · TSK-047 beyin çeşitliliği · TSK-048 · TSK-049 · TSK-050 · TSK-064 ürün (Vault) · TSK-060 MELEZ · TSK-013 kart aç · TSK-159 S5 onayı · TSK-176 K1-K5 · EDG-070 kart onayı.
 **Bayat satırlar:** B-FAZ6-HUKUM (karar değil, bilgi) · TSK-013 §7 düşürme satırı.
 **Ölçülemedi:** hermes SOUL.md + config.yaml masa satırı — F9 raporu bu oturumdan okunmadı; ayrı kalem mi yoksa üç profilin dizin kaydı mı belirsiz, Rol-1 netleştirmeli.
 
@@ -173,3 +172,9 @@
 ## Envanter dışı (okuyucu ölçemedi)
 
 Yok — envanterdeki eksik kimlik listesi boş geldi; bu belgede her açık TSK bir kez geçer.
+
+## 10. Arşiv — kapanmış kararlar (operatör kararı 2026-09-08: kapananlar arşivde durur; §5 yalnız açık kararları taşır)
+
+**Cevaplananlar (tarihçe, tek satır):** B-RUNBOOK-KAPSAM · B-PENCERE-KAYDIR · B-CHOP-BUTCE · B-KORUMA-KUR · B-BILDIRIM-N1 · B-PULLBACK-SILAH · B-KORUMA-POLITIKA · B-E1-LIMIT · B-ORACLE-TASIMA · B-OCI-BUCKET · B-DD-ESIK (0.16) · B-TAVAN-502 (A) · B-PG-ROTASYON · B-AJAN-TAVAN (Sonnet 25/Opus 10/Haiku 40) · TSK-046 QC login · TSK-047 beyin çeşitliliği · TSK-048 · TSK-049 · TSK-050 · TSK-064 ürün (Vault) · TSK-060 MELEZ · TSK-013 kart aç · TSK-159 S5 onayı · TSK-176 K1-K5 · EDG-070 kart onayı.
+
+ROADMAP tarafında aynı ilke: §5.0 operatör masasındaki kapanmış girdiler §8 ARŞİV alt bölümüne taşınır (2026-09-08), tam metin korunur.
