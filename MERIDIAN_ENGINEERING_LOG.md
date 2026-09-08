@@ -3000,3 +3000,44 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
   geçti, .env'den çıktı, /proc environ 0) · Faz-1A hindsight creds ×3 + sarmalayıcı birim + 50-creds drop-in (health 200, banks 200) →
   farksal ölçüm geçti → .env'den 3 sır çıktı (37 ayar) · meridian 54 drop-in, vekil 2 banka. Rotasyon beyanlı ertelendi. Reviewer'lar:
   bar bölümleme ONAY, T2 RUNBOOK-dışı ONAY; gün sonu inceleme workflow'u sürüyor.
+
+### 2026-09-08 gece (Rol-1, operatör uyurken tam otonom, 21:4x–02:xxZ) — credential olayı, rotasyon, inceleme düzeltme turu, A0
+
+- **OLAY (21:4xZ, kapandı):** `sir_credential_gecis.sh --faz1` boş-girdi yolunda `_deger_dosyala` `.env`in hep 1. satırını okudu → NOUS/KAPI
+  credential dosyaları 1 bayt; `[ -s ]` "\n"ı dolu saydı; `--faz2` farksal ölçüm OK dedi (kanıt anahtara bağlı değildi); NOUS yedeği KAPI'nin
+  aynı-dakika yedek adıyla ezildi. Geri yükleme: KAPI `.env.bak`, NOUS `state/secrets.json`; servis-içi `GET /api/secrets` iki ad
+  `kaynak=credential`. KÖK: inceleme raporu (aynı hatayı olaydan önce bulmuştu) OKUNMADAN betik canlıda koşuldu → hafıza `loadcredential-kanali`.
+- **ROTASYON (22:10–22:16Z, operatör "rotasyonu şimdi yapalım, anahtarları sen hazırla"):** A1'de üretilebilen dört sır döndü, her biri çift
+  kanıtla (yeni→200 / eski→401; Postgres eski parola FATAL): KAPI_APIKEY=BOT_KEY_MERIDIAN (apisix `$env://` → restart şart) · Hindsight tenant
+  (creds + `/opt/hindsight/.key` [hafiza_sor.sh] + `.env-cp` DATAPLANE [hindsight-cp] — envanterde OLMAYAN iki kopya ölçüldü) · Postgres
+  `hindsight` parolası + DATABASE_URL · MERIDIAN_DASH_TOKEN (+ yerel `.env`). Yedek `/root/sir-yedek-20260907T221032Z/`; 15 `.env.bak-*`
+  `/root/meridian-env-yedek/` (0400 root). **BEKLEYEN: iki farklı OpenRouter anahtarı** (NOUS_API_KEY: credential + secrets.json · OPENROUTER_API_KEY:
+  apisix ×2 + hindsight LLM + hermes ×3 = 6 kopya) — Chrome bağlı değil, provisioning anahtarı yok → sabah operatör dashboard'dan üretir,
+  `sudo ./deploy/oracle-a1/sir_rotasyon.sh --openrouter` (v447; tick-watchdog timer durdur; notlar rapor_D). Tuzaklar: `install -o u -g g`;
+  root glob `sudo sh -c`; Bash cwd kalıcı (worktree'de `cd` sonrası merge yanlış yerde koştu → `git -C`); **commit mesajında backtick zsh'de
+  komut ikamesi** (D merge'inde `sudo sir_rotasyon` yerelde denendi, parola isteyip düştü) → hafıza `commit-mesaji-backtick-zsh`.
+- **Gün sonu inceleme (108 ajan) → düzeltme turu:** 44 → 37 ayakta (3'ü bayat). Beş teslim ayrı worktree'lerde (§6 gevşetmesiyle eşzamanlı
+  kapsam testi), her biri 4-mercek × 2-çürütücü workflow + kapsamlı yeniden inceleme + tur 2/3: **A** sohbet/api v444 (28 ayakta → 7 kök;
+  threadpool + park etmeyen kilit `mesgul`; DuckDB `enable_external_access=false` + materyalizasyon 0,047 s + bellek/thread/zaman tavanı;
+  **canlıda hiç çalışmayan `olay_sorgu` (`parquetler=` TypeError) ve `bar_sorgu` (görünüm yok) araçları düzeltildi**; onay künyesi `davranissal`
+  korunur + `icra_eder`/`icra_ok`/`SOHBET_RED_NOT`; kota her ayak + `dolu`) · **B** sir_credential_gecis v445 (13 → 7 kök + 3 bloklayıcı:
+  `^ad=` kip, `_dolu_mu`, yedek `/root/meridian-env-yedek` ad+saniye, faz2 pozitif taban + NEGATİF kontrol + kalıntı-yedek kapısı (asla rm),
+  geri_al satır-yerinde/değerli ise ezmez) · **C** ops v446 (21 → 8 kök; dikiş penceresi tüm seride + kapı süzgeçsiz; içerik-hash idempotency
+  + ARAC_SURUMU 2026-09-08.1 (**A1 ilk `--uygula` 260 sembolü yeniden yazar — bakım penceresi**); jeton_css_uret atomik yazım; hafiza_ara çıkış 3;
+  timer tek anlatı) · **D** sir_rotasyon v447 (22+4 → 11 kök: root modeli, psql stdin + DSN kanıtı, NOUS negatif kontrolü `_fetch` zincirini
+  modelleyen şimle DELETE/POST api kopyası, `--kuru` anahtar istemez, dizin izni dokunmaz, J8 flaky → TMPDIR sözleşmesi; 170 çivi ×2 koşum) ·
+  **E** GCP temizliği v448 (18+4 → 10 kök: 8+1 dosya silindi (kök `deploy.sh` dahil), KAYNAKLAR credential·env·file, Caddyfile CSP çivisi tek
+  kaynağa, conftest `sandbox_state` credential dizinini kapatıyor, kök yüzeyler `.env.example`/`Dockerfile` temiz, v448 tarama izlenen ağaç
+  (kardeş worktree'ler değil), obs.py şerhi gerçek tüketiciye). Düşen bulgular: A9 rapor ayrışması (kendi eklemem), C5b sapması.
+  dagit RSYNC_EXC `.env.*` (YB-4). **Suite #36** (A/B/C/E + B2 main'de, -n 4, 12 dk): 11244 passed, tek kırmızı beklenen RUNBOOK ayrışması (v154 T3)
+  → bu commit'te RUNBOOK + tipografi korpusu yeniden üretildi.
+- **TSK-012 B2 UI** main'de (234681e; reviewer bloklayıcı 0, K-1 kota kapısı tur-1; T2g iki yönlü — Rol-1 onayı). Kapı ihlali itirafı:
+  `mapfile` macOS bash 3.2'de yok → boş dizi → tam suite yanlışlıkla başladı, %3'te durduruldu (worktree). B3 sayaç planı yazıldı.
+- **TSK-176 IaC:** beş operatör kararıyla yeniden fazlandı (A-1→A0→A1→T1→A2→T2→T3(→T4)); **A-1** (GCP sil) E ile main'de; **A0 Ansible rolü**
+  `meridian_a1` (v451, 29+2 → 14 kök → 3 bloklayıcı; 44 çivi) main'de ve **A1'e uygulandı**: `--check --diff` ok=32 changed=2 (yorum-farklı 5 birim
+  + hermes mod farkı → rol 0644/0600 ölçüme çekildi), gerçek koşum changed=2 (5 birim kopyası + daemon-reload + `uv sync --no-dev`), **2. koşum
+  changed=0**; restart yok, healthz 200. uv 0.12.0 + installer sha pinli; ansible.cfg kökte (`stdout_callback=yaml` community ister → default).
+- **TSK-138 ilk ölçüm** (22:05:31Z): denetlenemedi/llm_dustu, yeniden-üretim 150 s'de bitmedi (iç bütçe 120 s), 5 ilk_ihlal, teslim HAM; sprint
+  birimi 22:00'de başlamadı (çakışma yok) → dilim-2 adayı: hızlı model / 240 s / cevaplayan model. Bayat oturum cron'ları silindi (4).
+- **Kapanış:** SendMessage bu oturumda kapalı → tur-2/3 için taze ajanlar aynı worktree'de (hafıza notu). Sırada: etkilenen küme → UI build →
+  dağıtım #28 → push → operatöre gece özeti.

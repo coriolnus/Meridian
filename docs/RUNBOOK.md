@@ -21,8 +21,9 @@ Onaylı kaynaklar (WP0 §6.3, operatör onayı) — bunların DIŞINDA hiçbir y
   jetonun Çözüm alanına eşlenir — başlıkta adı geçmese bile koddan türer (ör.
   `ops/keepalive.sh` → `MECHANISM_STALE`)
 
-**Kapsam dışı, bilerek:** `deploy/*.sh` (üst düzey, `monitoring.sh` dahil) onaylı kümede
-değil. Sessiz bir kapsam genişlemesi yerine sınır burada yazılı duruyor.
+**Kapsam dışı, bilerek:** üst düzey `deploy/*.sh` (`hermes_api.sh`,
+`verify_hermes_training.sh`) onaylı kümede değil. Sessiz bir kapsam genişlemesi yerine
+sınır burada yazılı duruyor.
 
 **Eşleştirme kuralı — LİTERAL AD GEÇİŞİ.** Bir bölüme betik/günlük maddesi ancak o metinde
 bölümün adı harfi harfine geçiyorsa iliştirilir. Anlamsal/bulanık eşleştirme YOK: bir
@@ -41,7 +42,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **25 ops betiği** başlığıyla okundu
+- **26 ops betiği** başlığıyla okundu
 - **98 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -55,7 +56,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Belirti
 
-- Neden ayrı bir sınıf: Tokens matched by deploy/monitoring.sh log filters. Keep these strings stable. *(kaynak: `meridian/obs.py`)*
+- Neden ayrı bir sınıf: JETON DİZGELERİ SABİT KALMALI — düzyazı değil KALICI KİMLİK. İki ÖLÇÜLMÜŞ kopar (2026-09-08): (1) DİSKE YAZILMIŞ SÖZLÜK ANAHTARLARI — `notify_sent.json` / `notify_undelivered.json` jetonu ANAHTAR, `state/events.jsonl` `alarm` ALANI olarak taşır; ad değişirse birikmiş sayaçlar öksüz kalır ve `watchdog.parity_report` yanlış sayı okur. (2) PANONUN OLAY YÜZEYLERİ — `app.js` `OLAY_YUZEYLERI` jeton listeleri ELLE yazılmış literaldir, buradan TÜREMEZ (8 blok / 16 literal); ad değişirse olay çekmecesi o jeton için sessizce boşalır. Parite çivisi: `tests/test_uiux_s1b_v154.py::test_t3_capa_kurali_tek_ve_donusumsuz`. Kod tarafındaki eşleşme ALT-DİZGE DEĞİLDİR (eski şerh öyle diyordu, ölçüldü ve yanlıştı): `_maybe_notify` argümanı `NOTIFY_TOKENS` KÜMESİNDE arar, `notify.inbox` olayın `alarm` ALANINI aynı kümeye sorar. Teslim zinciri modül docstring'indedir, burada tekrarlanmaz. *(kaynak: `meridian/obs.py`)*
 
 ### Teşhis adımları
 
@@ -1383,6 +1384,122 @@ NEDEN FAZ-2 BURADA "SATIR SİLMEK": pano token'ı tek amaçlı `.dash.env`te ya�
 `EnvironmentFile=` sıfırlaması yetiyordu. `/opt/meridian/.env` ise sır DIŞINDA yapılandırma da
 taşır (NOUS_MODEL, NOUS_ENDPOINT, MERIDIAN_FMP_BASE); dosyanın okunmasını tümden kesmek onları da
 götürürdü. Faz-2 bu yüzden SATIR bazlıdır ve geri alma da satır bazlıdır.
+
+2026-09-07 OLAYI VE BURADAN ÇIKAN DÖRT KAPI (çivi: `tests/test_sir_credential_duzeltme_v445.py`).
+`--faz1 <ad>` istemine BOŞ geçilince değer `.env`ten TAŞINIR; o yol `.env`in 1. SATIRINI okuyordu
+(satır ADRESİ), `^<ad>=` DESENİNİ değil. Canlı `.env`in 1. satırı boştu: credential dosyaları
+1 baytlık satır sonuyla yazıldı, `.env` satırları değersiz kaldı, `--faz2` farksal ölçümü SAHTE
+geçti ve dakika çözünürlüklü yedek adı ikinci koşumda ilkini EZDİ. Bugünkü hâl:
+1. DEĞER ADIYLA ARANIR. `.env` kaynağında yalnız `^<ad>=` satırı; satır yoksa değer YOKTUR.
+2. BOŞ DEĞER DEĞER DEĞİLDİR. Boşluk dışı en az bir karakter yoksa betik DURUR ve o ana kadar
+HİÇBİR şey yazılmamıştır (`test -s` "1 bayt = dolu" derdi).
+3. YEDEK EZİLMEZ. Ad + saniye çözünürlüklü damga, çakışmada `.1`/`.2`.
+4. ÖLÇÜMÜN ÖLÇÜMÜ. Faz-2 önce NEGATİF KONTROL koşar: iki kanal da SAHTEYKEN kanıt YOK demeli.
+Kanıt her koşulda OK diyorsa farksal ölçüm bir tiyatrodur — betik "ölçülemedi" deyip durur
+(uydurma yasağı) ve ortam satırına DOKUNMAZ. Bedeli bir ek restart + doğrulamadır.
+
+2026-09-08 — YUKARIDAKİ DÖRT KAPININ AÇTIĞI YÜZEYLER (çekişmeli inceleme; çivi: v445 K1..K7).
+Negatif kontrol iki kanalı da sahteye çeker; o pencerede gerçek değerin diskteki TEK kopyası
+`.olcum-yedek` dosyalarıdır. Buradan üç kural doğdu:
+5. `.olcum-yedek` SİLİNMEZ. Faz-2 ve --geri-al bu dosyalar dururken HİÇBİR ŞEY yapmaz ve
+ÇIKIŞ 2 ile kurtarma komutlarını basar (çıkış 1 "geçiş başarısız", 2 "önce elle kurtar").
+Kesintiye uğramış tur yeniden koşulursa eski kod o kopyaları ilk iş olarak siliyordu.
+6. POZİTİF TABAN. Negatif kontrolün "YOK"u ancak kanıt ucu koşum ÖNCESİNDE OK diyorsa bir şey
+söyler; "hep-YOK" hâlinde faz-2 ölçmediği bir nedeni ("faz-2 erken") iddia ederdi.
+7. YEDEK SIRDIR. `.env` yedekleri artık `/root/meridian-env-yedek` altında (0700 dizin, 0400
+root:root): `.env`in yanındaki 0600 ubuntu kopya, faz-2 ortam satırını kapattıktan SONRA
+bile sırrı servis kullanıcısına açık düz metinde bırakıyordu.
+Ayrıca: `--geri-al` kendi yedeğini alır, ÖTEKİ adın YERİNDE duran `.env` satırına dokunmaz
+(credential kaynağı rotasyondan sonra bayat olabilir) ve `$ad`ın satırını geri yazamadıysa
+drop-in'i KALDIRMADAN durur (yoksa sır iki kanaldan birden düşerdi).
+```
+
+## `deploy/oracle-a1/sir_rotasyon.sh` {#deploy-oracle-a1-sir-rotasyon-sh}
+
+```
+=================================================================================================
+sir_rotasyon.sh — A1 sırlarının ROTASYONU (DEĞER değişir, KANAL değişmez)
+=================================================================================================
+SUNUCUDA (A1) KOŞAR — `deploy.sh`/`cutover.sh`/`sir_credential_gecis.sh` ile aynı sözleşme.
+Otomatik ÇAĞRILMAZ: bakım penceresinde, operatör eliyle. KARDEŞİNDEN FARKI: `sir_credential_gecis.sh`
+bir sırrın KANALINI taşır (ortam → LoadCredential); bu betik kanala DOKUNMAZ, sırrın DEĞERİNİ
+döndürür ve o değerin BÜTÜN KOPYALARINI aynı pencerede eşitler.
+
+NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-3 kopyası var ve
+kopyalar AYRI dosyalarda yaşıyor (credential kaynağı · `.env` satırı · docker env-file · bot
+profili). Elle rotasyonda kaçınılmaz tek hata "bir kopyayı unutmak"tır ve o hata SESSİZDİR:
+yeniden başlatılan birim çalışır, unutulan kopyayı okuyan öteki birim ilk çağrısında 401 alır.
+Betik kopya listesini SABİT taşır (`--kopyalar`), hepsini tek pencerede yazar, sonra ölçer.
+
+KULLANIM — BETİK ROOT OLARAK KOŞAR (alt komut ZORUNLU; her biri TEK sırrı döndürür):
+sudo ./sir_rotasyon.sh --envanter     → kopyaların VARLIĞI + birbirine EŞİTLİĞİ (yalnız bool)
+./sir_rotasyon.sh --kopyalar          → kopya sözleşmesi (üretim yolları; envanter çivisinin
+kaynağı). TEK root İSTEMEYEN alt komut: hiçbir dosya
+açmaz, yalnız gömülü tabloyu basar.
+sudo ./sir_rotasyon.sh --kapi         → KAPI_APIKEY (kapı tüketici anahtarı `motor_meridian`)
+sudo ./sir_rotasyon.sh --tenant       → HINDSIGHT_API_TENANT_API_KEY
+sudo ./sir_rotasyon.sh --db           → Postgres `hindsight` rol parolası
+sudo ./sir_rotasyon.sh --dash         → MERIDIAN_DASH_TOKEN
+sudo ./sir_rotasyon.sh --openrouter   → OpenRouter anahtarları (operatör YAPIŞTIRIR, `read -s`)
+... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
+başlayacağını listeler, HİÇBİR ŞEY yazmaz
+
+NİYE ROOT — VE NİYE BU BİR AYRINTI DEĞİL. Betik iki iş yapar: 0400 root dosyalarını YAZAR ve o
+dosyalardan türettiği kanıt GİRDİLERİNİ (curl `-K` yapılandırması, `PGPASSFILE`, SQL dosyası)
+başka bir sürece OKUTUR. İlk tur bu iki yarıyı AYRI kimliklere bölmüştü: yazan taraf
+`sudo python3` (root, 0600), okuyan taraf (`curl`, `psql`) çağıranın kimliği (ubuntu). Root'un
+yazdığı 0600 dosyayı ubuntu AÇAMAZ: `curl -K` "cannot read config" ile düşer, `_curl_kod`
+`000` döner ve HER kanıt 000 olur. Sonuç sessiz değil ama geçtir: `--kapi`/`--dash`/`--tenant`
+sırrı DÖNDÜRÜR, sonra kanıtı ölçemeyip çıkış 2 verir (bakım penceresi doğrulanmamış bir
+rotasyonla kapanır); `--openrouter` negatif kontrolde durur ve rotasyon hiç YAPILAMAZ. Kapı bu
+yüzden ÜST DÜZEYDE ve MEKANİKTİR: `id -u` 0 değilse betik ilk satırda durur. İçerideki `sudo`
+önekleri KALIR — root altında no-op'turlar ve betiği kardeşleriyle (`deploy.sh`, `cutover.sh`)
+aynı okunur biçimde tutarlar. `mod=koru`/`sahip=koru` satırları (ubuntu sahipli hermes
+profilleri, `/opt/hindsight/.key`) root altında da MEVCUT sahip ve izinle yazılır: root'un
+yazıyor olması, dosyayı root'a DEVRETMEK değildir.
+
+DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
+URL-güvenli. `--tenant`: `openssl rand -hex 32` → 64 hex. Üretimden SONRA uzunluk denetlenir;
+boş ya da yalnız boşluk olan değer bir ARIZADIR (bir kez ölçüldü: boş credential dosyası birimi
+sessizce yetkisiz bıraktı) ve betik durur. `--openrouter` üretmez: iki anahtarı operatör
+OpenRouter panosunda üretir ve buraya `read -s` ile yapıştırır.
+
+SIR DEĞERİ HİÇBİR YOLA BASILMAZ. Ne terminale, ne loga, ne argv'ye. Hash de basılmaz: bir
+sha256'nın ilk sekiz hanesi "değeri sızdırmayan bir kimlik" gibi görünür ama iki koşumu
+birbirine bağlayan bir izdir ve bu betikte hiçbir işi yoktur. Basılan tek şey KARAR'dır:
+"yazıldı" · "EŞİT/AYRI" · "200/401" · "ölçülemedi". Değer YALNIZ 0600 geçici dosyalar ve
+`curl -K` yapılandırma dosyaları üzerinden akar (2026-09-02 vakası: URL-gömülü parola argv'den
+terminale düştü). Kanıt: `tests/test_sir_rotasyon_v447.py`.
+
+KANIT SÖZLEŞMESİ — İKİ HÜKÜM, İKİSİ BİRDEN. Bir rotasyon "yeni anahtar 200 döndü" ile
+KANITLANMAZ: kilit yürürlükte değilse yanlış anahtar da 200 döner ve ölçüm bir tiyatrodur.
+Her alt komut İKİ ölçüm yapar: POZİTİF (yeni değer → 200 / `ok:true` / `1`) ve NEGATİF (eski ya
+da bilerek bozuk değer → 401/402 / `ok:false` / FATAL). İkisi AYRIŞMAZSA kanıt anahtara bağlı
+DEĞİLDİR; betik "ölçülemedi" der ve ÇIKIŞ 2 verir — uydurma yasağı, "geçti" demez.
+`--openrouter`de negatif kontrol YAZIMDAN ÖNCE koşar (bilerek bozuk değer, trap ile geri alınır):
+kanıt anahtara bağlı değilse operatörün TAZE anahtarı hiç yazılmaz ve boşa harcanmaz.
+
+GERİ-DÜŞÜŞ ZİNCİRİ — NOUS BACAĞININ İNCE YERİ. Motor sırrı TEK yerden okumaz:
+`meridian/secrets.py::_fetch` sırayla credential → süreç ortamı → `state/secrets.json` → GCP
+dener (meridian.service'te ortam basamağı ölüdür; drop-in `51-dash-env-kaldir.conf`). Yani
+credential'ı boşaltmak TEK BAŞINA hiçbir şey ölçmez: motor bir sonraki basamaktaki eski ama
+HÂLÂ GEÇERLİ kopyaya düşer, `ping_brain` ok:true döner ve negatif kontrol "kanıt anahtara bağlı
+değil" hükmüne varıp ÇIKIŞ 2 verirdi — rotasyon hiç yapılamazdı. Bu yüzden boşluk ölçümü İKİ ucu
+birden kapatır: credential kaynağı BOŞALTILIR ve motorun kendi deposundaki kopya `DELETE
+/api/secrets/<ad>` ile SİLİNİR. İkisi de yedeklidir ve trap her yolda geri koyar. Aynı gerekçe
+POZİTİF tarafta da geçerlidir: NOUS'un yeni değeri önce YALNIZ credential kaynağına yazılır,
+kanıt ölçülür, depo kopyası ANCAK ONDAN SONRA eşitlenir — yoksa pozitif kanıt da hangi kanalın
+okunduğunu söylemezdi.
+
+YEDEK. Her koşum ÖNCE `/root/sir-yedek-<UTC ts>-<alt komut>/` (0700 root) altına dokunacağı her
+dosyayı `cp -p` ile alır. Ad SANİYE taşır: aynı sırrı gün içinde iki kez döndürmek ilk yedeği
+EZMEZ. Geri alma reçetesi RUNBOOK'ta değil burada, çünkü okunacağı an bu betiğin çıktısıdır:
+`sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat.
+
+YAPMADIKLARI (burada olmayan şey, burada yapılmayacak şeydir): kanal geçişi yapmaz (o
+`sir_credential_gecis.sh`); drop-in kurmaz; Vault'a dokunmaz; operatörün YEREL `.env` kopyasını
+eşitlemez (Rol-1'in işi, kapsam dışı); pano parola oturumunu etkilemez (ayrı sır).
+=================================================================================================
 ```
 
 ## `deploy/oracle-a1/tick_watchdog.sh` {#deploy-oracle-a1-tick-watchdog-sh}

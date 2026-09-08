@@ -3,7 +3,7 @@
  "h2a": "HEARTBEAT_STALE",
  "h2b": "`ops/kapilar.sh`",
  "govde": [
-  "Neden ayrı bir sınıf: Tokens matched by deploy/monitoring.sh log filters. Keep these strings stable. *(kaynak: `meridian/obs.py`)*",
+  "Neden ayrı bir sınıf: JETON DİZGELERİ SABİT KALMALI — düzyazı değil KALICI KİMLİK. İki ÖLÇÜLMÜŞ kopar (2026-09-08): (1) DİSKE YAZILMIŞ SÖZLÜK ANAHTARLARI — `notify_sent.json` / `notify_undelivered.json` jetonu ANAHTAR, `state/events.jsonl` `alarm` ALANI olarak taşır; ad değişirse birikmiş sayaçlar öksüz kalır ve `watchdog.parity_report` yanlış sayı okur. (2) PANONUN OLAY YÜZEYLERİ — `app.js` `OLAY_YUZEYLERI` jeton listeleri ELLE yazılmış literaldir, buradan TÜREMEZ (8 blok / 16 literal); ad değişirse olay çekmecesi o jeton için sessizce boşalır. Parite çivisi: `tests/test_uiux_s1b_v154.py::test_t3_capa_kurali_tek_ve_donusumsuz`. Kod tarafındaki eşleşme ALT-DİZGE DEĞİLDİR (eski şerh öyle diyordu, ölçüldü ve yanlıştı): `_maybe_notify` argümanı `NOTIFY_TOKENS` KÜMESİNDE arar, `notify.inbox` olayın `alarm` ALANINI aynı kümeye sorar. Teslim zinciri modül docstring'indedir, burada tekrarlanmaz. *(kaynak: `meridian/obs.py`)*",
   "Kodda `obs.alarm` ateşleme yeri BULUNAMADI — jeton tanımlı ama hiçbir yol onu üretmiyor. Bu bir bulgudur: ya mekanizma kablolanmamış, ya jeton emekli.",
   "Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`."
  ]
