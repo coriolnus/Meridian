@@ -749,6 +749,7 @@ normal konumları kapalıdır ve açık olmaları bir sapmadır.
 
 ### Çözüm / betik
 
+- `deploy/oracle-a1/sir_rotasyon.sh` — başlığında `nabız` geçiyor.
 - `deploy/oracle-a1/tick_watchdog.sh` — başlığında `nabız` geçiyor.
 - **BU OTURUMDA BULUNAN + ÇÖZÜLEN** → **ARAMA HAVUZU 13 GÜNDÜR SIFIR SONUÇ ÜRETTİ — TAVAN İŞTEN KISAYDI (2026-08-25; sınıf: "eşik, ÖLÇTÜĞÜ mekanizmadan değil BAŞKA bir mekanizmadan türetildi"):** `arama_havuzu_zaman_asimi` olaylarının TAMAMINDA (2026-08-12'den beri **61 olayın 61'i**) `biten=0`. Şüphe kilitlenme/ açlık/OOM/`nice(15)`e gitti; ÜÇÜ DE DEĞİL. Canlı adliye: işçiler ÇALIŞIYOR — 487337 `R` durumunda %99,8 CPU, 487340 `S` + `wchan=anon_pipe_read`. **KÖK NEDEN: tavan tek bir işten KISA.** İş başına walk-forward üç bağımsız kaynakta ölçüldü — 45 başarılı prefill turu (duvar×işçi/n) **2279-3042 sn**, ardışık `hermes_search_probe` farkı **2487-3185 sn**, reflect.py'nin kendi notu **2532 sn** — tavan ise **1800 sn**. İlk bitiş tavana yetişemediği için `biten=0` bir arıza BELİRTİSİ değil ARİTMETİK ZORUNLULUKTU. Havuz 08-12'ye kadar ÇALIŞIYORDU (94 başarılı prefill, sonuncusu 08-12T07:40 n=10); tavan o gün indi (`becb03b`, "asılı-arama öz-onarımı") ve ilk aşım 08-12T11:40'ta geldi. **TÜRETİM NEREDE KAYDI:** gerekçe "incumbent-walk ~90 sn ÖLÇÜLÜDÜR × 20" diyordu; o ~90 sn `hermes.py`de PANONUN bekleme süresi için düşülmüş bir nottur ve BAŞKA bir hesabı anlatır. Doğru sayı ölçülmemiş değildi — `events.jsonl`da 94 satırdı, bakılmamıştı. **İKİNCİ, BAĞIMSIZ KUSUR (`_havuzu_oldur` hiçbir işçiyi öldürmüyordu):** `shutdown()` gövdesinin sonunda koşulsuz `self._processes = None` var (`wait` bayrağına BAKMAZ, CPython 3.12); yakalama sonra yapıldığı için `getattr(ex, "_processes", {})` varsayılana DÜŞMEZ (öznitelik var, değeri None) → `None.values()` → `AttributeError` → alttaki `except Exception: pass` yutar → `terminate()` HİÇ ÇAĞRILMAZ. Yutucunun gerekçesi bunu "sürüm değişimi" uç durumu sayıyordu; **TEK durummuş**. Bedel her atalet olayında iki süreç: biri sonucunu kimsenin okumayacağı bir hesapta tam çekirdek yakıyor, öbürü `anon_pipe_read`de, ikisi ~225 MB. ÖMÜR DE ÖLÇÜLDÜ: 20:05'te ikisi de gitmişti — terk edilişten sonra ~47-69 dk (kabaca elde kalan bir walk-forward), `terminate()` koştuğu için değil işleri bitip kuyruk yıkıldığı için. Yani kalıcı sızıntı DEĞİL, atalet başına ~1 saat tam çekirdek + ~450 MB — tam da sıralı yedek yolun CPU istediği pencerede. **YAYILIM:** aramanın verimi de aynı gün çöktü — `evaluated` 26/34'ten TAM 2'ye indi (tavanın yediği 1800 sn'den sonra `MERIDIAN_SEARCH_MAX_MIN=60` penceresine yalnız iki taze sonda sığıyor); 179 `hermes_search_start` karşısında 60 `done`, kayıp 119'un **70'i tek sonda bile koşturamadı**; biten SON arama 2026-08-21 18:02. **ÇİVİLER:** `test_havuz_oldurme_kacagi_v317` (davranışsal — atalete çarpan havuzun işçileri ölmüş olmalı; düzenek çivisi: işçiler doğmazsa KURULUMDA düşer, sessiz-yeşil yok) ve `test_havuz_atalet_tavani_v318` (üç bacaklı; ortadaki bilerek DAVRANIŞSAL — gerçek (iş, tavan) oranını 1/10000 ölçekte GERÇEK `_havuz_sonuclari`ndan geçirir, çünkü sabit karşılaştırması totoloji olurdu; üçüncü bacak yasanın İPTAL EDİLMEDİĞİNİ sınar). Dört mutasyonun dördü de yakalandı. Tavan artık kaynakta ADLANDIRILMIŞ bir ölçümden türüyor (`HAVUZ_IS_SURESI_OLCULEN_SN=3185 × HAVUZ_ATALET_MARJI=3` → 9555 sn = 2,65 sa), bayatlık eşiğinin (6 sa) ALTINDA — kurtarma hâlâ aynı gece penceresinde. **SIRA BAĞI:** v318 v302'siz DAĞITILAMAZ — bekleyiş artık bekçi penceresinin kat kat üstünde sürebildiğinden, nabız kuantumlanmamış olsaydı v318 bayat-geçişi ortadan kaldırmaz BÜYÜTÜRDÜ. **AÇIK KALAN (ölçüldü, bu turda kapatılmadı):** (1) `clear_wf_caches()` sonda+incumbent önbelleğini HER seans bar tazelemesinde SİLİYOR — kalıcı sıcak önbellek yok, yani her gün 8-10 taze walk-forward sıfırdan; "08-18→08-23 önbellek-isabetliydi" okuması yanlıştı, 0 sn'lik farklar KALICI önbelleğin değil ÇALIŞAN havuz ön-dolgusunun imzasıydı ve 08-12'de o durdu. (2) `_havuz_tavani` 2026-07-30'da 4 işçiden 2'ye düştü (`cpu-2`, A1'de 4 OCPU) ve iş süresini ~1100-1430 sn'den ~2280-3040 sn'ye çıkardı — brief'teki "865-1276 → 2259-3185" basamağı budur, 08-06 değil 07-30'dur ve tavanı imkânsız kılan asıl olaydır. (3) Bugünkü `probe_prefill` aşımları ISINMA SPRİNTİNDEN geliyor (`hermes_runtime` → `coordinate_descent_search`), `hermes.search` sarmalayıcısından değil — o yüzden `hermes_search_start` damgası düşmüyor; "bugün 0 arama" okuması bu yüzden yanıltıcı.
 - **KALICI RİSKLER / DERSLER** → **hermes_poll MECHANISM_STALE — ÜÇÜNCÜ TEKRAR, KÖK NEDEN BULUNDU (2026-08-25, v302+v303):** `mekanizma gecikti: hermes_poll — 0.5 sa (pencere 0.5 sa)` alarmı 2026-08-06'dan beri günde tam bir kez ötüyordu (canlıda 134 kayıt). Çok-mercekli soruşturma (5 bulucu + 3 şüpheci); ilk hipotez ÜÇ ŞÜPHECİNİN ÜÇÜ tarafından da ÇÜRÜTÜLDÜ — asıl bulgu çürütmelerde çıktı. KÖK NEDEN: `beat("hermes_poll")` yalnız 3 yerde ve hepsi `hermes_runtime.py` (176/193/488); `reflect.py`de ve `hermes.py`de HİÇ YOK. Nabız "iş bitti"ye bağlıydı, oysa havuz bekleyişi tanım gereği "hiçbir iş bitmeyen" penceredir. Isınma dalında İLK nabza kadar ÜÇ ağır faz nabızsız koşuyordu: (1) `prefill_incumbents` havuz bekleyişi — tek blokta `_cf.wait(1800)`; (2) atalet sonrası SIRALI incumbent yedeği (canlıda 5065 sn / 2 walk-forward); (3) `_parallel_prefill_probes` havuz bekleyişi — 1800 sn daha. (1) YAPISAL olarak yamanamıyordu: `prefill_incumbents` satır 167'de çağrılıyor, `_nabiz` satır 170'te TANIMLANIYOR. Üstüne `HAVUZ_ATALET_SN=1800` (reflect.py) ile `EXPECTED["hermes_poll"]=1800` (watchdog.py) BİREBİR EŞİT → havuz ataleti her çarptığında pencere tanım gereği tam doluyor, bayat-geçiş GARANTİ. Alarm bekçi kusuru DEĞİL: kör bir fazı doğru bildiriyordu. KESKİN KANIT: 2026-08-24'te alarm 01:59:48'de, `arama_havuzu_zaman_asimi biten=0` olayı 02:00:08'de — 20 sn sonra; sonda döngüsü hiç başlamamıştı. NEDEN ÜÇ KEZ YANLIŞ TEŞHİS: metindeki "0.5 sa" bir SESSİZLİK UZUNLUĞU DEĞİL, TESPİT GECİKMESİ TAVANI. `check_and_alarm` 300 sn'lik poll'da koşar, histerezis mandalı tekrarı keser → kaydedilen değer hep İLK TESPİT anındaki gap → (1800, 2100] → 0,5 veya 0,6. 134 kaydın 113'ü (%84) bu ikisi. Gerçek sessizlikler ölçüldüğünde 2,1-2,8 sa, bir vakada 15,2 sa. Mesaj arızanın büyüklüğünü GİZLİYORDU. Ayrıca "günde tam bir kez" bir mekanizma periyodu değil `GUNLUK_ALARM_TAVANI=1`in imzasıdır (mandal kontrolü tavan kontrolünden ÖNCE gelir; tavan öncesi günde 4-14 alarm vardı). ÇÖZÜM (pencere GENİŞLETİLMEDİ, alarm SUSTURULMADI — watchdog.py (satır çapası tarihsel, RUNBOOK'ta kaldırıldı) ikisini de reddediyor; eşitlik de KIRILMADI çünkü iki sabit iki ayrı türetimden geliyor): · v302 — nabız artık "iş bitti" değil "iplik canlı": havuz bekleyişi `HAVUZ_NABIZ_SN=60` kuantumlarına bölündü, her kuantumda `canlilik()` ateşleniyor. TOPLAM-ATALET YASASI DEĞİŞMEDİ (kurtarma hâlâ 1800'de). Kanca üç kör fazın üçüne de geçirildi; `_nabiz` tanımı `prefill_incumbents` çağrısının ÜSTÜNE taşındı (yapısal kusurun kendisiydi). · v303 — mesaj artık aşımı çözünen bir birimde yazıyor ve rakamın İLK TESPİT değeri olduğunu İTİRAF ediyor. Yeni `mechanism_stale_since.json` + `mechanism_recovered` olayı: sessizliğin GERÇEK uzunluğu bittiğinde ölçülüp yazılıyor (eskiden geriye dönük ÖLÇÜLEMEZdi — `watchdog_alarm_gunluk.json` gün dönüşünde sıfırlanır, `mechanism_beats.json` yalnız SON damgayı tutar). `gap_h` korundu (okuyucuları api.py (satır çapası tarihsel, RUNBOOK'ta kaldırıldı)/3285, selfreview.py (satır çapası tarihsel, RUNBOOK'ta kaldırıldı)). Çiviler v302 (9 test) + v303 (4 test); SEKİZ mutasyonla sınandı, ikisi ilk turda HAYATTA KALDI (prefill kancası ve ilk-tespit uyarısı) ve çiviler sertleştirildi. AÇIK KALAN (ölçülmedi, devredildi): taze walk-forward 2026-08-06 civarında neden yavaşladı (865-1276 sn → 2259-3185 sn), ve 08-23→08-24 arasında ısınma önbelleğini ne geçersizleştirdi.
@@ -1488,11 +1489,27 @@ Otomatik ÇAĞRILMAZ: bakım penceresinde, operatör eliyle. KARDEŞİNDEN FARKI
 bir sırrın KANALINI taşır (ortam → LoadCredential); bu betik kanala DOKUNMAZ, sırrın DEĞERİNİ
 döndürür ve o değerin BÜTÜN KOPYALARINI aynı pencerede eşitler.
 
-NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-3 kopyası var ve
+NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-12 kopyası var ve
 kopyalar AYRI dosyalarda yaşıyor (credential kaynağı · `.env` satırı · docker env-file · bot
-profili). Elle rotasyonda kaçınılmaz tek hata "bir kopyayı unutmak"tır ve o hata SESSİZDİR:
-yeniden başlatılan birim çalışır, unutulan kopyayı okuyan öteki birim ilk çağrısında 401 alır.
+profili · LLM failover zincirinin ÜYE satırları). Elle rotasyonda kaçınılmaz tek hata "bir
+kopyayı unutmak"tır ve o hata SESSİZDİR: yeniden başlatılan birim çalışır, unutulan kopyayı
+okuyan öteki birim ilk çağrısında 401 alır.
 Betik kopya listesini SABİT taşır (`--kopyalar`), hepsini tek pencerede yazar, sonra ölçer.
+
+HAFIZA FAILOVER ZİNCİRİ — ÜYE ANAHTARI ANA ANAHTARI DEVRALMAZ. Hindsight'ın reflect ve
+konsolidasyon yüzeyleri 2026-09-06'dan beri çok-LLM failover zinciriyle koşuyor
+(EDG-2026-080/081) ve zincirin HER ÜYESİ kendi `HINDSIGHT_API_<yüzey>_LLM_<n>_API_KEY` satırını
+okur — "provider/anahtar devralınır" YALNIZ birincil model içindir. Ölçüm 2026-09-08 08:0xZ
+(A1, yalnız AD okundu): `/opt/hindsight/.env` altı üye satırı taşıyor (REFLECT _1.._3 ·
+CONSOLIDATION _1.._3) ve altısı da OPENROUTER_API_KEY değerinin birebir kopyası. Tabloda
+olmasalardı `--openrouter` creds dosyasını döndürür, üyeler ESKİ anahtarla kalır ve eski anahtar
+iptal edildiği an üyeler 401 alıp zincir SESSİZCE birincile düşerdi — yani bu betiğin var olma
+gerekçesindeki "unutulan kopya" sınıfının tam kendisi. Altısı da tabloya girdi; OPENROUTER
+artık 12 kopya (NOUS 2).
+BEYANLI KABUL: birincilin anahtarı (`/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY`) AYRI ve
+LoadCredential kanalındadır; ÜYE satırları değeri `.env` içinde tutar, yani hafızanın bu kanalı
+B SINIFIDIR (yarım kazanım) ve öyle beyan edilir — kanalı taşımak bu betiğin işi DEĞİL
+(`sir_credential_gecis.sh`), ama değeri döndürmek işidir.
 
 KULLANIM — BETİK ROOT OLARAK KOŞAR (alt komut ZORUNLU; her biri TEK sırrı döndürür):
 sudo ./sir_rotasyon.sh --envanter     → kopyaların VARLIĞI + birbirine EŞİTLİĞİ (yalnız bool)
@@ -1506,6 +1523,21 @@ sudo ./sir_rotasyon.sh --dash         → MERIDIAN_DASH_TOKEN
 sudo ./sir_rotasyon.sh --openrouter   → OpenRouter anahtarları (operatör YAPIŞTIRIR, `read -s`)
 ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 başlayacağını listeler, HİÇBİR ŞEY yazmaz
+
+ÖN KOŞUL — `meridian-tick-watchdog.timer` DURDURULUR (kalıcı kayıt `bakim-penceresi-tick-watchdog`).
+Timer 45 dk bayat nabızda worker'ı yeniden başlatır; bu betik meridian'ı `--openrouter`de ÜÇ kez
+yeniden başlatır ve HER restart `/healthz`i dakikalarca 503 (bayat) yapar. Timer pencerenin
+ortasında ateşlenirse ölçüm SEBEPSİZ "ölçülemedi" verir ve bunun sebebi betiğin çıktısından ASLA
+anlaşılmaz — yani teşhis edilemeyen bir arıza. Pencerenin başında ve sonunda:
+sudo systemctl stop meridian-tick-watchdog.timer     # BAŞTA
+sudo systemctl start meridian-tick-watchdog.timer    # SONDA
+`--kuru` bu satırı da basar (kuru koşum operatörün koşacağı İLK komuttur).
+
+TAVANI YÜKSELTMEK GEREKİRSE — DÜZ `sudo` ORTAM DEĞİŞKENİNİ DÜŞÜRÜR. sudo'nun varsayılan
+`env_reset`i `HAZIR_TAVAN_S_*`/`SIR_ROT_*`ı temizler, yani aşağıdaki "operatör tavanı ÖLÇEREK
+yükseltebilir" sözleşmesi BELGELENEN çağrı biçiminde (`sudo ./sir_rotasyon.sh …`) çalışmaz.
+Güvenli biçim (çivi bu satırı koddaki varsayılandan TÜRETEREK arar):
+sudo env HAZIR_TAVAN_S_hindsight_api=300 ./deploy/oracle-a1/sir_rotasyon.sh --openrouter
 
 NİYE ROOT — VE NİYE BU BİR AYRINTI DEĞİL. Betik iki iş yapar: 0400 root dosyalarını YAZAR ve o
 dosyalardan türettiği kanıt GİRDİLERİNİ (curl `-K` yapılandırması, `PGPASSFILE`, SQL dosyası)
@@ -1546,12 +1578,33 @@ HAZIRLIK BEKLEME — KANIT ZAMANA DA BAĞLIDIR. `systemctl restart` DÖNMESİ, b
 anlamına gelmez. 2026-09-08 06:13Z'de `--openrouter`in ilk canlı koşumu tam buradan düştü:
 negatif kontrol üç birimi yeniden başlattı ve hemen ölçtü, meridian henüz ayakta olmadığı için
 curl `000` döndü ve betik (doğru biçimde) "ÖLÇÜM ARIZASI" deyip geri aldı — hiçbir zarar yok,
-ama rotasyon da yok. Her yeniden başlatmadan sonra birimin sağlık ucu YOKLANIR: meridian
-`/healthz`, hindsight-api `/health`, apisix `/healthz`; 2 s aralıkla en çok 60 s
-(`HAZIR_BEKLE_ARALIK_S` / `HAZIR_BEKLE_TAVAN_S` ile ölçerek değiştirilebilir). Ölçülen açılış
-süreleri 2026-09-08: meridian 6-8 s · hindsight 3-10 s · apisix 5-10 s. Beklenen süre ÇIKTIYA
-BASILIR. Tavan aşılırsa betik "hazır" demez, `ölçülemedi` der ve çıkış 2 verir. Sağlık ucu
-tanımlı OLMAYAN birim (`hindsight-cp.service`) beklenmez ve hazır SAYILMAZ — satır bunu söyler.
+ama rotasyon da yok. Her yeniden başlatmadan sonra birimin sağlık ucu YOKLANIR.
+
+"HAZIR" BİRİM BAŞINA TANIMLIDIR — 200 ŞARTI HER YÜZEY İÇİN DOĞRU DEĞİLDİR. İKİNCİ canlı deneme
+(2026-09-08 07:2x-07:4xZ, A1) iki AYRI kökten düştü ve ikisi de bu tanımın içindedir:
+· meridian `/healthz` yeniden başlatmadan sonra DAKİKALARCA `503` döner; gövde
+`{"status":"stale","heartbeat_age_seconds":…}`. Worker açılışta ağır bar tazelemesi yapar
+ve o sırada nabız YAZILMAZ — ama API AYAKTADIR: aynı anda `/api/secrets/test/nous` cevap
+verir. Yani meridian için hazırlık şartı "HTTP cevabı var" (`000` DEĞİL); `200` nabız
+TAZELİĞİNİN ölçüsüdür, ayakta olmanın değil. 200 şartı koşmak, sağlıklı ama meşgul bir
+motoru "ölü" saymaktır. `apisix` `/healthz` rotası meridian'a PROXY'dir → aynı gövde, aynı
+hüküm. hindsight-api `/health` KENDİ sürecidir ve orada `200` gerçekten hazırlıktır.
+· hindsight-api'nin ölçülen açılışı ~60 s'dir (07:34:18 restart → 07:35:18 "Application
+startup complete"), yani 60 s'lik ORTAK tavan SINIRDA: ilk deneme tam oradan
+"hazırlık bekleme aşıldı: hindsight-api … 000" ile düştü. Tavan bu yüzden birim başınadır —
+hindsight-api 300 s, ötekiler 60 s. 300'ün gerekçesi 2026-09-08 08:07:06→08:08:45 ölçümüdür:
+açılış 99 s, yani 180 s yalnız 1,8× paydı ve NEGATİF KONTROLDEKİ (bilerek bozuk anahtarlı)
+açılış yolu HİÇ ölçülmedi. Dar tavanın bedeli ucuz değildir: aşım, birimleri bozuk değerle
+bırakan kurtarma yoluna sokar (bkz. `_negatif_restart_kurtarma`).
+Kabul ölçütü ve tavan TEK yerde yaşar (`_hazir_uc` · `_hazir_tavan`); `--kuru` İKİSİNİ DE basar.
+2 s aralıkla yoklanır (`HAZIR_BEKLE_ARALIK_S` · `HAZIR_BEKLE_TAVAN_S` ·
+`HAZIR_TAVAN_S_hindsight_api` ile ölçerek değiştirilebilir). Ölçülen açılışlar 2026-09-08:
+meridian 6-8 s (HTTP cevabı; 200 çok daha geç) · hindsight-api ~60 s (200) · apisix 5-10 s.
+Süre ÇIKTIYA BASILIR ve 200 GELMEDEN hazır sayılan birimin satırı bunu SÖYLER
+("hazır: meridian 7 s (healthz 503 — nabız bayat, API ayakta)") — sessizce geçmek, ölçülmemiş
+bir tazeliği ölçülmüş göstermek olurdu. Tavan aşılırsa betik "hazır" demez, `ölçülemedi` der ve
+çıkış 2 verir. Sağlık ucu tanımlı OLMAYAN birim (`hindsight-cp.service`) beklenmez ve hazır
+SAYILMAZ — satır bunu söyler.
 
 GERİ-DÜŞÜŞ ZİNCİRİ — NOUS BACAĞININ İNCE YERİ. Motor sırrı TEK yerden okumaz:
 `meridian/secrets.py::_fetch` sırayla credential → süreç ortamı → `state/secrets.json` → GCP
