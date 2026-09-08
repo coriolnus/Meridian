@@ -111,7 +111,7 @@ Slot (onaylı): akıbet-dalgası kapanır kapanmaz, skill-görüşten önce. Boy
 
 Kapanmış (DONE/DROPPED) TSK maddeleri §2/§4'ten §8 alt bölümlerine (`§8.T.2`, `§8.H.2`, `§8.O`, `§8.K` …) TAM METİNLE taşınır.
 §8'de madde başlığı LİSTE İMSİZ yazılır: `**[TSK-###] Başlık** — status: DONE(…) · born: … · owner: … · size: … · trigger: —`
-(başında `- ` YOK — v351 r13 muafiyeti: §8'de `- **[` biçimi bulunmaz). Pano ayrıştırıcısı (`/api/roadmap`, v455) §8'deki bu satırları
+(başında `- ` YOK — v351 r13 muafiyeti: §8'de `- **[` biçimi bulunmaz). Pano ayrıştırıcısı (`/api/roadmap`, v458) §8'deki bu satırları
 ARŞİV MADDESİ olarak sayar: `section` = §8, kova status'tan (DONE/DROPPED → kapalı; başka status → belirsiz + neden). Yaşayan
 bölümlerde (§2/§4/§5/§6) liste imsiz satır madde SAYILMAZ. §8'de TABLO satırı bırakılmaz (v343: §8 tablo satırı şema sayılır) —
 taşınan tahta satırları düz metne çevrilir. Başlıkta `*` karakteri şema gramerini bozar (TSK-134 vakası, `×` ile yazıldı).

@@ -271,7 +271,7 @@ def test_g_section_alani_bolumun_KENDISINDEN_geliyor():
     """`section` uydurulmaz: maddenin bulunduğu KÖK bölümün numarasıdır.
 
     KAPSAM GENİŞLEDİ 2026-09-08 (bilinçli şema kararı, çivisi
-    `tests/test_roadmap_arsiv_sayimi_v455.py`): o gün 107 kapanmış TSK maddesi `§2`/`§4`ten
+    `tests/test_roadmap_arsiv_sayimi_v458.py`): o gün 107 kapanmış TSK maddesi `§2`/`§4`ten
     `§8 ARŞİV`e taşındı ve orada LİSTE İMSİZ yazılır (`**[TSK-046] Ad** — status: …`), çünkü
     v351'in bölüm muafiyeti §8'de `- **[` biçimini yasaklar. Ayrıştırıcı o biçimi tanımadığı
     için 107 kalem PANODAN KAYBOLMUŞTU — ne açık ne kapalı kovada. `§8` artık şema TAŞIYAN

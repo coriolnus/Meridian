@@ -490,7 +490,7 @@ def test_roadmap_madde_sayisi_dosyadaki_madde_sayisiyla_tutarli(sandbox_state):
     """Ayrıştırıcı sessizce yarısını düşürmemeli: gövdedeki madde sayısı dosyadaki üst-düzey
     madde işareti sayısına EŞİT olmalı (kaynak sayımı burada bağımsız yapılır).
 
-    2026-09-08 EKİ — İKİNCİ MADDE BİÇİMİ (`§8 ARŞİV`, çivisi `tests/test_roadmap_arsiv_sayimi_v455.py`):
+    2026-09-08 EKİ — İKİNCİ MADDE BİÇİMİ (`§8 ARŞİV`, çivisi `tests/test_roadmap_arsiv_sayimi_v458.py`):
     o gün 107 kapanmış TSK maddesi `§2`/`§4`ten `§8`e taşındı ve arşivde satır LİSTE İMİ
     TAŞIMAZ (`**[TSK-046] Ad** — status: …`), çünkü v351'in bölüm muafiyeti §8'de `- **[`
     biçimini yasaklar. Bağımsız sayım o grameri de ölçmek ZORUNDA: ölçmezse bu çivi ucun
