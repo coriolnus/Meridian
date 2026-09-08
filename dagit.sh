@@ -152,52 +152,12 @@ for _sf in $STATE_VERSIYONLU; do
   diff -u "$STATE_TMP/$_sf" "$REPO/state/$_sf" | head -30 || true
   # ANAHTAR DÜZEYİ HÜKÜM. Yaprak yollara düzleştirilir (bounds: `entry.min_score.min`; goal:
   # `execution_v2.limit_pct_cap`) — iç içe blokları da kapsar. Son satır makine-okunur HÜKÜM'dür.
-  _hukum="$(uv run python - "$STATE_TMP/$_sf" "$REPO/state/$_sf" <<'PY'
-import sys, yaml
-
-
-def duz(d, on=""):
-    """Yaprak yollara düzleştir — iç içe blok (goal.execution_v2) da anahtar düzeyinde kıyaslansın."""
-    out = {}
-    if isinstance(d, dict):
-        for k, v in d.items():
-            yol = f"{on}{k}"
-            if isinstance(v, dict):
-                out.update(duz(v, yol + "."))
-            else:
-                out[yol] = v
-    return out
-
-
-try:
-    canli = duz(yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {})
-    repo = duz(yaml.safe_load(open(sys.argv[2], encoding="utf-8")) or {})
-except Exception as e:
-    # AYRIŞTIRILAMAYAN DOSYA "fark yok" DEĞİLDİR: hüküm verilemedi → ENGEL (fail-closed).
-    print(f"      YAML okunamadı: {type(e).__name__}: {e}")
-    print("HUKUM=ENGEL")
-    raise SystemExit(0)
-
-canli_fazla = sorted(set(canli) - set(repo))          # canlıda VAR, repoda YOK → elle değişiklik
-repo_yeni = sorted(set(repo) - set(canli))            # repoda VAR, canlıda YOK → w_turnover sınıfı
-deger = sorted(k for k in set(canli) & set(repo) if canli[k] != repo[k])
-if repo_yeni:
-    print(f"      repoda YENİ (canlı hiç görmedi): {', '.join(repo_yeni[:12])}"
-          + (f" (+{len(repo_yeni) - 12})" if len(repo_yeni) > 12 else ""))
-if deger:
-    print(f"      DEĞER farkı: " + ", ".join(f"{k}: canlı={canli[k]!r} repo={repo[k]!r}"
-                                             for k in deger[:8])
-          + (f" (+{len(deger) - 8})" if len(deger) > 8 else ""))
-if not (repo_yeni or deger or canli_fazla):
-    print("      anahtar/değer düzeyinde fark YOK — ayrım yalnız yorum/biçim")
-if canli_fazla:
-    print(f"      CANLIDA REPO-DIŞI ANAHTAR: {', '.join(canli_fazla[:12])}"
-          + (f" (+{len(canli_fazla) - 12})" if len(canli_fazla) > 12 else ""))
-    print("HUKUM=ENGEL")
-else:
-    print("HUKUM=KOPYALA")
-PY
-)" || _hukum="$_HUKUM_DUSTU"
+  # ANAHTAR DÜZEYİ HÜKÜM DOSYADA (TSK-176 A1): gövde `ops/state_fark_hukmu.py`ye çıkarıldı —
+  # playbook (`deploy/ansible/dagit.yml`) aynı hükmü verecek ve gömülü çok-satır python bir
+  # Ansible görevinde YASAK (A0 kuralı + 2026-07-30 IndentationError vakası). TEK KAYNAK:
+  # dagit ve playbook AYNI dosyayı çağırır, ikisi ayrışamaz.
+  _hukum="$(uv run python ops/state_fark_hukmu.py "$STATE_TMP/$_sf" "$REPO/state/$_sf")" \
+    || _hukum="$_HUKUM_DUSTU"
   echo "$_hukum" | grep -v '^HUKUM=' || true
   if [[ "$(echo "$_hukum" | grep '^HUKUM=' | tail -1)" == "HUKUM=KOPYALA" ]]; then
     echo "      → KOPYALANACAK (bakım penceresinde, durdurma sonrası/başlatma öncesi)"
@@ -605,57 +565,38 @@ echo "=== [5/5] doğrulama ==="
 # (/api/diagnostics; doğrusu /api/hermes.learning). Sınıf [5b]'nin "active ≠ yeni kod"unun
 # uç-katmanı eşi: "200 döndü ≠ doğru gövde döndü".
 #
-# ÜÇ UÇ BİLEREK SEÇİLDİ (D2, brief 2026-09-05): alarm/öğrenme/performans üçlüsü. `DOGRULAMA_UCLARI`
-# TEK yerde durur (aşağıdaki ssh gövdesinde; biçim `<yol>|<nokta-ayraçlı-anahtar-yolu>|<beklenen-
-# tip>`, tip boşsa yalnız anahtarın VARLIĞI ölçülür — `equity_curve_beyani.tohum_siniri` ölçülü
-# İSTİSNA: değeri canlıda GERÇEKTEN `None` olabilir (sınır henüz kurulmamışsa), tip zorlanmaz).
-# Kontrol TAMAMEN ssh İÇİNDE koşar — curl 127.0.0.1:8080 yalnız A1'in kendisinden erişilir (healthz
+# ÜÇ UÇ BİLEREK SEÇİLDİ (D2, brief 2026-09-05): alarm/öğrenme/performans üçlüsü. Biçim
+# `<yol>|<nokta-ayraçlı-anahtar-yolu>|<beklenen-tip>`, tip boşsa yalnız anahtarın VARLIĞI ölçülür —
+# `equity_curve_beyani.tohum_siniri` ölçülü İSTİSNA: değeri canlıda GERÇEKTEN `None` olabilir
+# (sınır henüz kurulmamışsa), tip zorlanmaz.
+# Kontrol TAMAMEN ssh İÇİNDE koşar — uç 127.0.0.1:8080 yalnız A1'in kendisinden erişilir (healthz
 # ile AYNI kısıt). Token DEĞERİ hiçbir echo/printf/tee argümanına GİRMEZ (dagit çıktısı günlüğe
 # kopyalanıyor; sır süzgeci yalnız beyaz-liste adlar basar) — yalnız VAR/YOK hükmü döner. Uç
-# gövdeleri de dışarı SIZMAZ: python3 -c ssh oturumunun İÇİNDE koşar, yalnız VAR/YOK basar.
-# /api/hermes ağır olabilir: curl -m 90.
+# gövdeleri de dışarı SIZMAZ: JSON A1'de ayrıştırılır, yalnız VAR/YOK basılır.
+# /api/hermes ağır olabilir: istek zaman aşımı 90 sn (`dogrulama_anahtar.py::ZAMAN_ASIMI_SN`).
 #
 # FAIL-CLOSED / FAIL-OPEN AYRIMI BİLİNÇLİ: anahtar eksikse (yetkisiz/eski gövde) [5b] gibi DÜŞER —
 # beyan ([B]) yazılmaz, çünkü "dağıtıldı" cümlesi doğrulanamamış bir gövdeye dayanırdı. Token
 # DOSYASI okunamazsa DÜŞMEZ (⚠ ölçülemedi) — token yerel geliştirme makinesinde de olmayabilir ve
 # bu durumda ölçüm YOKTUR, "ihlal" DEĞİLDİR (uydurma yasağı: ölçülemeyen None + neden).
-echo "=== [5a/5] doğrulama-token anahtar kontrolü ==="
-_DOGRULAMA_CIKTI="$("${SSH[@]}" bash -s <<'REMOTE'
-set -u
-T=$(grep -E "^MERIDIAN_DASH_TOKEN=" /opt/meridian/.dash.env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
-if [ -z "$T" ]; then
-  echo "OLCULEMEDI token yok"
-  exit 0
-fi
+# UÇ LİSTESİ ARTIK YEREL VE ADLI (TSK-176 A1): eskiden uzak kabuk gövdesinin İÇİNDE yaşıyordu,
+# yani hem playbook'tan hem çividen görünmezdi. Biçim `<yol>|<anahtar-yolu>|<beklenen-tip>`; tip
+# boşsa yalnız VARLIK ölçülür. TEK KAYNAK GEÇİŞİ: `deploy/ansible/vars/dagit_vars.yml`teki
+# `dogrulama_uclari` ile ayrışması v452 A3 çivisinde KIRMIZIDIR (Task 3'te bu kopya silinir).
 DOGRULAMA_UCLARI="/api/alerts|pending|int
 /api/hermes|learning.hayalet_suzulen_n|
 /api/performance|equity_curve_beyani.tohum_siniri|"
-echo "$DOGRULAMA_UCLARI" | while IFS='|' read -r yol anahtar tip; do
-  [ -z "$yol" ] && continue
-  govde=$(curl -s -m 90 -H "x-meridian-token: $T" "http://127.0.0.1:8080$yol")
-  sonuc=$(printf '%s' "$govde" | python3 -c "
-import json, sys
-yol = '$anahtar'.split('.')
-tip = '$tip'
-try:
-    d = json.load(sys.stdin)
-except Exception:
-    print('YOK'); sys.exit(0)
-cur = d
-ok = True
-for k in yol:
-    if not isinstance(cur, dict) or k not in cur:
-        ok = False
-        break
-    cur = cur[k]
-if ok and tip == 'int' and not isinstance(cur, int):
-    ok = False
-print('VAR' if ok else 'YOK')
-")
-  echo "$sonuc|$yol|$anahtar"
-done
-REMOTE
-)"
+echo "=== [5a/5] doğrulama-token anahtar kontrolü ==="
+# Kontrol TAMAMEN A1'in İÇİNDE koşar — uçlar yalnız 127.0.0.1:8080'den erişilir (healthz ile AYNI
+# kısıt). Betik `python3` ile çağrılır (`uv` DEĞİL): /opt/meridian ortamı dev grubunu taşımaz.
+_DOGRULAMA_ARG=""
+while IFS= read -r _uc; do
+  [ -z "$_uc" ] && continue
+  _DOGRULAMA_ARG="$_DOGRULAMA_ARG --uc '$_uc'"
+done <<< "$DOGRULAMA_UCLARI"
+_DOGRULAMA_RC=0
+_DOGRULAMA_CIKTI="$("${SSH[@]}" "python3 /opt/meridian/deploy/oracle-a1/dogrulama_anahtar.py$_DOGRULAMA_ARG")" \
+  || _DOGRULAMA_RC=$?
 if [ "$_DOGRULAMA_CIKTI" = "OLCULEMEDI token yok" ]; then
   echo "  ⚠ ölçülemedi: token yok (yerel geliştirme makinesinde de olabilir — fail-open)"
 else
@@ -667,8 +608,12 @@ else
       echo "  ✗ $_yol — $_anahtar yok (yetkisiz/eski gövde?)"
     fi
   done
-  if echo "$_DOGRULAMA_CIKTI" | grep -q "^YOK"; then
-    echo "  DAĞITIM DURDU: doğrulama-token anahtar kontrolü ihlalde — beyan ([B]) yazılmaz."
+  # HÜKÜM ÇIKIŞ KODUNDAN OKUNUR, çıktıyı ikinci kez grep'lemekten DEĞİL (tek kaynak): betik
+  # ihlalde 1 döner. ssh'ın KENDİ arızası da sıfır-dışıdır ve aynı yere düşer — ölçülemeyen
+  # doğrulama 'temiz' sayılmaz (fail-closed, bu depodaki genel yasa).
+  if [ "$_DOGRULAMA_RC" -ne 0 ]; then
+    echo "  DAĞITIM DURDU: doğrulama-token anahtar kontrolü ihlalde/ölçülemedi (rc=$_DOGRULAMA_RC)"
+    echo "  — beyan ([B]) yazılmaz."
     exit 1
   fi
 fi
@@ -723,23 +668,21 @@ fi
 # anlamsız bir güvence vermektir — tam da [5b]'nin düzelttiği hata sınıfı (YASA 6).
 # Betik ve üretim yolu DURUYOR (silinmedi): göç sırasında bir rol jetonuna geri dönmek
 # gerekirse köprü yerinde. Geri açılacaksa ÖNCE bir okuyucusu olmalı.
-_ART="$REPO/meridian/web/pano.html"
+# GÖVDE DOSYADA (TSK-176 A1): iki-platform `stat`/`find` sarmalı `ops/artefakt_tazelik.py`ye
+# çıkarıldı — playbook bu kapıyı Play 1'de (localhost) koşturacak ve gömülü çok-satır kabuk bir
+# Ansible görevinde YASAK. ÇIKIŞ KODU SÖZLEŞMESİ: 0 taze · 1 BAYAT (dağıtım DURUR) · 2 ÖLÇÜLEMEDİ.
+# 2'de dağıtım SÜRER (artefakt henüz derlenmemiş olabilir — ölçüm boşluğu, arıza değil), ama
+# betik "taze" DEMEZ: eski kabuk gövdesi ölçemediğinde "TAMAM" basıyordu, o cümle dürüstleşti.
 if [ -d "$REPO/ui" ]; then
   echo "=== [5c/5] artefakt tazeliği (pano) ==="
-  if [ ! -f "$_ART" ]; then
-    echo "  ATLANDI pano artefaktı yok (henüz derlenmedi) — kapı ölçülemedi, dağıtım sürüyor"
-  else
-    _art_m=$(stat -f %m "$_ART" 2>/dev/null || stat -c %Y "$_ART")
-    _kay_m=$(find "$REPO/ui" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' -o -name '*.html' -o -name '*.json' \) \
-             -not -path '*/node_modules/*' -exec stat -f %m {} \; 2>/dev/null | sort -rn | head -1)
-    [ -z "$_kay_m" ] && _kay_m=$(find "$REPO/ui" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' -o -name '*.html' -o -name '*.json' \) \
-             -not -path '*/node_modules/*' -printf '%T@\n' 2>/dev/null | cut -d. -f1 | sort -rn | head -1)
-    if [ -n "$_kay_m" ] && [ "$_art_m" -lt "$_kay_m" ]; then
-      echo "  IHLAL artefakt BAYAT: pano.html $_art_m < ui/ kaynak $_kay_m"
-      echo "  onarım: cd ui && npm run build   (sonra dagit'i tekrar koş — rsync idempotent)"
-      exit 1
-    fi
-    echo "  TAMAM artefakt kaynağından taze"
+  _ART_RC=0
+  uv run python ops/artefakt_tazelik.py --repo "$REPO" || _ART_RC=$?
+  # 0 ve 2 DIŞINDA HER ŞEY DURDURUR (fail-closed): 1 bayatlık hükmüdür, ama 127/2'den büyük bir
+  # kod betiğin KOŞAMADIĞI anlamına gelir ve koşamayan kapı 'geçildi' sayılamaz. Eski gömülü
+  # gövdede bu koruma `set -e`den geliyordu; çağrı `|| rc=$?` ile yakalandığı için AÇIK yazılır.
+  if [ "$_ART_RC" != "0" ] && [ "$_ART_RC" != "2" ]; then
+    echo "  DAĞITIM DURDU: [5c] artefakt tazeliği (çıkış $_ART_RC)"
+    exit 1
   fi
 fi
 
@@ -763,32 +706,23 @@ fi
 # GERÇEK hâli odur (operatör kararı 2026-08-24). Onarım: birimi döndür, betiği tekrar koş
 # (rsync idempotent).
 echo "=== [5b/5] kod-tazelik değişmezi (süreç ≥ kaynak) ==="
-_tazelik="$("${SSH[@]}" '
-  yeni=$(find /opt/meridian/meridian -name "*.py" -printf "%T@\n" 2>/dev/null | sort -rn | head -1)
-  yeni_ad=$(find /opt/meridian/meridian -name "*.py" -printf "%T@ %p\n" 2>/dev/null | sort -rn | head -1 | cut -d" " -f2-)
-  [ -z "$yeni" ] && { echo "OLCULEMEDI kaynak-mtime-okunamadi"; exit 0; }
-  for u in $(systemctl list-units --type=service --state=running --no-legend --plain 2>/dev/null \
-             | awk "{print \$1}" | grep "^meridian"); do
-    es=$(systemctl show "$u" -p ExecStart --value 2>/dev/null)
-    case "$es" in *"/opt/meridian"*python*|*"/opt/meridian"*|*uv*) ;; *) continue ;; esac
-    case "$es" in *litestream*) continue ;; esac
-    bas=$(systemctl show "$u" -p ExecMainStartTimestampMonotonic --value 2>/dev/null)
-    bas_epoch=$(date -u -d "$(systemctl show "$u" -p ExecMainStartTimestamp --value)" +%s 2>/dev/null)
-    [ -z "$bas_epoch" ] && { echo "OLCULEMEDI $u sureç-baslangici-okunamadi"; continue; }
-    if [ "${bas_epoch%.*}" -lt "${yeni%.*}" ]; then
-      yas=$(( ${yeni%.*} - ${bas_epoch%.*} ))
-      # TSK-140 (2026-09-04): KUM-HAVUZU birimi (birim dosyasının KENDİ beyanı: Description
-      # "kum havuzunda") başlangıç kodunu taşır ve bitince yeni kodla açılır — bu IHLAL değil
-      # BEKLENEN durumdur; beyana ([B] sandbox_eski_kod) yazılır, kapı düşmez. Ad listesi YOK:
-      # işaret birimden türer, yarın eklenen kum-havuzu birimi de aynı yoldan geçer.
-      acik=$(systemctl show "$u" -p Description --value 2>/dev/null)
-      case "$acik" in
-        *"kum havuzunda"*) echo "BEKLENEN $u $yas $yeni_ad" ;;
-        *)                 echo "IHLAL $u $yas $yeni_ad" ;;
-      esac
-    fi
-  done')"
-if [ -z "$_tazelik" ]; then
+# GÖVDE DOSYADA (TSK-176 A1): uzak kabuk `deploy/oracle-a1/kod_tazelik.sh`e çıkarıldı (playbook
+# onu `script:` ile koşturacak). Betik rsync ile A1'e ZATEN inmiştir ([2] adımı) — bu satır
+# dağıtılan kopyayı çağırır, yani ölçen kod ile dağıtılan kod aynı sürümdür.
+# ÇIKIŞ KODU: 0 = IHLAL yok · 1 = en az bir IHLAL. Çıktı satırları aşağıda operatöre çevrilir ve
+# `BEKLENEN` satırları [B] beyanının `sandbox_eski_kod` alanını doğurur (TSK-140).
+_TAZELIK_RC=0
+_tazelik="$("${SSH[@]}" "bash /opt/meridian/deploy/oracle-a1/kod_tazelik.sh")" || _TAZELIK_RC=$?
+if [ "$_TAZELIK_RC" -ne 0 ] && [ -z "$_tazelik" ]; then
+  # ÖLÇÜLEMEDİ ≠ TEMİZ (fail-closed): betik tek satır bile basmadan sıfır-dışı döndüyse ölçüm
+  # YAPILAMAMIŞTIR (ssh düştü, betik A1'e inmedi, bash yok…). Eski gömülü gövdede bu korumayı
+  # `set -e` veriyordu — çağrı artık `|| rc=$?` ile yakalandığı için AÇIK yazılır; aksi hâlde
+  # yarı-etkili bir dağıtım "koşan her birim yeni kodu taşıyor" diye damgalanırdı.
+  echo "  !! [5b] ÖLÇÜLEMEDİ (çıkış $_TAZELIK_RC, çıktı boş) — kod-tazelik betiği koşamadı."
+  echo "     Beyan ([B]) YAZILMAZ: ölçülemeyen değişmez 'sağlandı' sayılmaz."
+  echo "     Bak: ssh ubuntu@$IP 'bash /opt/meridian/deploy/oracle-a1/kod_tazelik.sh'"
+  exit 1
+elif [ -z "$_tazelik" ]; then
   echo "  ✓ koşan tüm meridian birimleri dağıtılan kodu taşıyor"
 else
   echo "$_tazelik" | while read -r _d _u _y _f; do
@@ -800,7 +734,9 @@ else
       echo "  ⚠ ölçülemedi: $_u $_y"
     fi
   done
-  if echo "$_tazelik" | grep -q "^IHLAL"; then
+  # HÜKÜM ÇIKIŞ KODUNDAN (tek kaynak): çıktıyı ikinci kez grep'lemek, betik ile dagit'in
+  # ayrı ayrı hüküm vermesi demekti.
+  if [ "$_TAZELIK_RC" -ne 0 ]; then
     echo "  ——————————————————————————————————————————————————————————————"
     echo "  DAĞITIM YARI-ETKİLİ: kod diskte, süreç eski. Beyan YAZILMADI —"
     echo "  \`state/dagitim.json\` koşan sistemin gerçek hâlini (eski sha) söylemeyi sürdürüyor."

@@ -1,0 +1,179 @@
+---
+# deploy/ansible/vars/dagit_vars.yml — TSK-176 Faz A1: dağıtım playbook'unun TEK-KAYNAK listeleri.
+#
+# NE İÇİN VAR. `deploy/ansible/dagit.yml` (Task 2) `dagit.sh`ın kapılarını devralır; kapıların
+# okuduğu DÖRT liste burada yaşar. Geçiş süresince (Task 3'e kadar) `dagit.sh` kendi kopyasını
+# TUTAR ve iki kopyanın ayrışmasını `tests/test_ansible_dagit_v452.py` bölüm A KIRMIZI yapar
+# (Tek-kaynak yasası: kopya kaçınılmazsa türetme + ayrışma çivisi). Task 3'te dagit.sh listeleri
+# SİLİNİR ve bu dosya tek kaynak kalır.
+#
+# ÜRETİM DEĞİL, TAŞIMA: bu dosyanın ilk hâli `dagit.sh`tan MAKİNEYLE çıkarıldı (elle kopyalama
+# bir liste taşımasında en sık ölçülen hata sınıfıdır), sonra gerekçeler yanına yazıldı.
+# Gerekçelerin TAMAMI `dagit.sh`ın ilgili bölüm başlığındadır — burada yalnız SINIF adı durur.
+
+# =================================================================================================
+# rsync dışlama listesi — `dagit.sh` RSYNC_EXC ile BİREBİR (28 öğe, ölçüldü 2026-09-08)
+# =================================================================================================
+# `--delete` ile koşan bir rsync'te bu liste bir KONFOR değil bir GÜVENLİK sınırıdır: listede
+# olmayan her canlı-sahipli dizin dağıtımda SİLİNİR. Sınıflar (her biri ölçülmüş bir vaka):
+#   * canlı-sahipli defter/yedek : state · backups · /var (bot kum havuzu, 2026-08-29)
+#   * sır                        : .env · .env.* · .dash.env (2026-08-01: --delete .dash.env'i SİLDİ)
+#   * araç katmanı / harness     : .claude · .agents · .codex · .superpowers · .impeccable …
+#   * scratch                    : scratchpad · scratch-* (2026-08-24: scratch-panov2 canlıya gidiyordu)
+#   * derleme                    : node_modules · ui/node_modules · /ui (artefakt gider, kaynak GİTMEZ)
+#   * ölçüm ham çıktısı          : research/olcumler/*/{seanslar.json,run.stderr.log,state}
+# ANKORLU DESENLER (`/var`, `/ui`) BİLİNÇLİDİR: baştaki `/` rsync'te "transfer kökü" demektir —
+# ileride doğacak bir `ui/src/var/` ya da `meridian/web/ui/` sessizce dağıtım dışı kalmasın.
+# UYARI: rsync `.gitignore` OKUMAZ, yalnız bu listeyi okur — iki mekanizma AYRI ve birini
+# kapatmak ötekini kapatmaz.
+rsync_disla:
+  - ".venv"
+  - ".git"
+  - "state"
+  - "backups"
+  - "/var"
+  - "scratchpad"
+  - "scratch-*"
+  - ".superpowers"
+  - "__pycache__"
+  - ".claude"
+  - ".hypothesis"
+  - "mutants"
+  - ".pytest_cache"
+  - ".env"
+  - ".env.*"
+  - ".dash.env"
+  - ".agents"
+  - ".codex"
+  - ".github"
+  - "skills-lock.json"
+  - ".impeccable"
+  - ".import_linter_cache"
+  - "research/olcumler/*/seanslar.json"
+  - "research/olcumler/*/run.stderr.log"
+  - "research/olcumler/*/state"
+  - "node_modules"
+  - "ui/node_modules"
+  - "/ui"
+
+# =================================================================================================
+# [F9] dagit-kapsamı-dışı canlı artefaktlar — içerik kapısı (39 çift, ölçüldü 2026-09-08)
+# =================================================================================================
+# Bu dosyalar rsync kapsamının DIŞINDA yaşar ve ELLE kurulur (`deploy/oracle-a1/deploy.sh`).
+# Kapı içerik kıyaslar, RAPORLAR — engellemez: kurulum bakım penceresinin işidir, hüküm operatörün.
+# `repo` DEPO KÖKÜNE görelidir, `canli` MUTLAK yoldur (göreli bir canlı yol A1'in o anki cwd'sine
+# göre çözülür ve kapı yanlış dosyayı kıyaslardı).
+# ETİKET TAM REPO YOLUDUR, basename DEĞİL: `config.yaml`/`SOUL.md`/`distribution.yaml` her hermes
+# profilinde bir kez geçer — basename raporu HANGİ profilin ayrıştığını söyleyemezdi (v266).
+f9_ciftleri:
+  - repo: "deploy/oracle-a1/meridian-sprint@.service"
+    canli: "/etc/systemd/system/meridian-sprint@.service"
+  - repo: "deploy/oracle-a1/50-meridian-sprint.rules"
+    canli: "/etc/polkit-1/rules.d/50-meridian-sprint.rules"
+  - repo: "deploy/hermes/SOUL.md"
+    canli: "/home/ubuntu/.hermes/SOUL.md"
+  - repo: "deploy/hermes/config.yaml"
+    canli: "/home/ubuntu/.hermes/config.yaml"
+  - repo: "deploy/oracle-a1/meridian-tick-watchdog.service"
+    canli: "/etc/systemd/system/meridian-tick-watchdog.service"
+  - repo: "deploy/oracle-a1/meridian-tick-watchdog.timer"
+    canli: "/etc/systemd/system/meridian-tick-watchdog.timer"
+  - repo: "deploy/oracle-a1/litestream.yml"
+    canli: "/etc/litestream.yml"
+  - repo: "deploy/oracle-a1/meridian-aylik-bucket-kopya.service"
+    canli: "/etc/systemd/system/meridian-aylik-bucket-kopya.service"
+  - repo: "deploy/oracle-a1/meridian-aylik-bucket-kopya.timer"
+    canli: "/etc/systemd/system/meridian-aylik-bucket-kopya.timer"
+  - repo: "deploy/oracle-a1/meridian-brifing.service"
+    canli: "/etc/systemd/system/meridian-brifing.service"
+  - repo: "deploy/oracle-a1/meridian-brifing.timer"
+    canli: "/etc/systemd/system/meridian-brifing.timer"
+  - repo: "deploy/oracle-a1/meridian-bekci.service"
+    canli: "/etc/systemd/system/meridian-bekci.service"
+  - repo: "deploy/oracle-a1/meridian-bekci.timer"
+    canli: "/etc/systemd/system/meridian-bekci.timer"
+  - repo: "deploy/hermes/profiles/sef/distribution.yaml"
+    canli: "/home/ubuntu/.hermes/profiles/sef/distribution.yaml"
+  - repo: "deploy/hermes/profiles/sef/config.yaml"
+    canli: "/home/ubuntu/.hermes/profiles/sef/config.yaml"
+  - repo: "deploy/hermes/profiles/sef/SOUL.md"
+    canli: "/home/ubuntu/.hermes/profiles/sef/SOUL.md"
+  - repo: "deploy/hermes/profiles/bekci/distribution.yaml"
+    canli: "/home/ubuntu/.hermes/profiles/bekci/distribution.yaml"
+  - repo: "deploy/hermes/profiles/bekci/config.yaml"
+    canli: "/home/ubuntu/.hermes/profiles/bekci/config.yaml"
+  - repo: "deploy/hermes/profiles/bekci/SOUL.md"
+    canli: "/home/ubuntu/.hermes/profiles/bekci/SOUL.md"
+  - repo: "deploy/oracle-a1/meridian-karne.service"
+    canli: "/etc/systemd/system/meridian-karne.service"
+  - repo: "deploy/oracle-a1/meridian-karne.timer"
+    canli: "/etc/systemd/system/meridian-karne.timer"
+  - repo: "deploy/hermes/profiles/karne/distribution.yaml"
+    canli: "/home/ubuntu/.hermes/profiles/karne/distribution.yaml"
+  - repo: "deploy/hermes/profiles/karne/config.yaml"
+    canli: "/home/ubuntu/.hermes/profiles/karne/config.yaml"
+  - repo: "deploy/hermes/profiles/karne/SOUL.md"
+    canli: "/home/ubuntu/.hermes/profiles/karne/SOUL.md"
+  - repo: "deploy/hindsight/hindsight-api.service"
+    canli: "/etc/systemd/system/hindsight-api.service"
+  - repo: "deploy/hindsight/hindsight-yedek.service"
+    canli: "/etc/systemd/system/hindsight-yedek.service"
+  - repo: "deploy/hindsight/hindsight-yedek.timer"
+    canli: "/etc/systemd/system/hindsight-yedek.timer"
+  - repo: "deploy/hindsight/hindsight-cp.service"
+    canli: "/etc/systemd/system/hindsight-cp.service"
+  - repo: "deploy/oracle-a1/geridolum.py"
+    canli: "/opt/veri/geridolum.py"
+  - repo: "deploy/oracle-a1/meridian-geridolum.service"
+    canli: "/etc/systemd/system/meridian-geridolum.service"
+  - repo: "deploy/oracle-a1/meridian-geridolum.timer"
+    canli: "/etc/systemd/system/meridian-geridolum.timer"
+  - repo: "research/olcumler/edg066_tick_arsiv/pilot.py"
+    canli: "/opt/veri/pilot.py"
+  - repo: "research/olcumler/edg066_tick_arsiv/kapsam.txt"
+    canli: "/opt/veri/kapsam.txt"
+  - repo: "deploy/oracle-a1/meridian-skill-gorus.service"
+    canli: "/etc/systemd/system/meridian-skill-gorus.service"
+  - repo: "deploy/oracle-a1/meridian-skill-gorus.timer"
+    canli: "/etc/systemd/system/meridian-skill-gorus.timer"
+  - repo: "deploy/apisix/config.yaml"
+    canli: "/opt/apisix/config.yaml"
+  - repo: "deploy/apisix/apisix.service"
+    canli: "/etc/systemd/system/apisix.service"
+  - repo: "deploy/apisix/apisix-etcd.service"
+    canli: "/etc/systemd/system/apisix-etcd.service"
+  - repo: "deploy/oracle-a1/52meridian-unattended-upgrades"
+    canli: "/etc/apt/apt.conf.d/52meridian-unattended-upgrades"
+
+# =================================================================================================
+# [5a] doğrulama-token anahtar kontrolü uçları (TSK-148 — dağıtım #13 vakası, 2026-09-04 20:04Z)
+# =================================================================================================
+# healthz YALNIZ "200 döndü" der, GÖVDEYİ doğrulamaz: token'sız istek de 200 döner, gövdesi
+# `{"detail": ...}` olur. Üç uç BİLEREK seçildi (D2, 2026-09-05): alarm / öğrenme / performans.
+# `tip` BOŞSA yalnız anahtarın VARLIĞI ölçülür — `equity_curve_beyani.tohum_siniri` ölçülü
+# İSTİSNADIR: değeri canlıda GERÇEKTEN `None` olabilir (sınır henüz kurulmamışsa).
+# SIRA BİLGİ TAŞIR: çıktı bu sırayla okunur (v452 A3 liste eşitliği ölçer, küme değil).
+dogrulama_uclari:
+  - yol: "/api/alerts"
+    anahtar: "pending"
+    tip: "int"
+  - yol: "/api/hermes"
+    anahtar: "learning.hayalet_suzulen_n"
+    tip: ""
+  - yol: "/api/performance"
+    anahtar: "equity_curve_beyani.tohum_siniri"
+    tip: ""
+
+# =================================================================================================
+# [4] bakım penceresi birim adayları (TSK-092 semantiği)
+# =================================================================================================
+# YALNIZ bu üçü durur/başlar. hindsight/apisix/litestream/timer'lara DOKUNULMAZ.
+# İki türetim, tek liste: "ne durdurulmalı" `is-active != inactive`, "ne başlatılmalı"
+# `is-enabled == enabled` — istenen durum systemd'nin KENDİ beyanıdır, sabit bir `start` paketi
+# operatörün `disable --now` bıraktığı birimi İKİ gece üst üste geri açmıştı (2026-08-31 + 09-01).
+# Aday KÜMESİ sabittir (2026-08-24 `meridian-learn` UNUTMA vakası); sabitlenemeyen şey stop/start
+# SATIRIdır.
+birim_adaylari:
+  - "meridian"
+  - "meridian-barsarchive"
+  - "meridian-learn"
