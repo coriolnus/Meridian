@@ -35,6 +35,8 @@
 | TSK-014 | "DONE damgası 09-04 gözlemine" ifadesi bayat; 09-05/06/07'de yeni arıza sınıfları çıktı |
 | TSK-013 (§7 düşürme satırı) | anlamsız — kart 09-07'de açıldı, listeden çıktı |
 
+> **Güncelleme 10:1xZ:** bayat satırların 17/19'u ROADMAP'te düzeltildi (a3bc203; TSK-013 zaten güncel, TSK-162 canlı sayaç ölçülemedi); kapanmış 107 TSK maddesi + 26 operatör kararı §8 arşive taşındı (a9d1fc6, f839063) — §2/§4/§5 artık yalnız açık kalemleri taşıyor. EDG-081'e ön-kayıt sapması notu (3a597e2).
+
 ## 1. Uçuşta
 
 | Kalem | Durum | Kapı / sonraki adım |
