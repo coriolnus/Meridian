@@ -42,7 +42,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **27 ops betiği** başlığıyla okundu
+- **28 ops betiği** başlığıyla okundu
 - **98 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -823,6 +823,189 @@ start  : arşivciyi ayrı bir süreçte başlatır (nohup, kabuk kapansa da yaş
 stop   : pidfile sahibini durdurur (SIGTERM → barsarchive KeyboardInterrupt yolunda temiz kapanır)
 status : koşuyor mu + arşiv özeti (YASA 6 tüketicisi: `--ozet`)
 once   : tek tur koş ve çık (duman testi / cron); Redis yoksa çıkış kodu 2
+```
+
+## `ops/belge_esitle.sh` {#ops-belge-esitle-sh}
+
+```
+belge_esitle.sh — BELGE EŞİTLEME YOLU: belgeleri DAĞITIMDAN BAĞIMSIZ olarak canlıya taşır
+(TSK-177, operatör onayı 2026-09-08).
+
+NEDEN VAR. Panonun `/api/roadmap` ucu A1'deki `/opt/meridian/ROADMAP.md` KOPYASINI okur,
+depodakini değil. Bugüne kadar bir yazım düzeltmesinin panoda görünmesi için tam dağıtım hattı
+koşuyordu: tedarik-zinciri + mimari + import kapıları, worker DURDURMA, `uv sync`, yeniden
+başlatma — ve motor kaynağına dokunulmuş bir turda bunlardan önce ~9 dakikalık tam suite
+hükmü. Bir virgül için canlı motoru durdurmak, bedeli faydasından büyük bir törendi ve
+pratikte belge düzeltmelerinin canlıya GİTMEMESİNE yol açtı. Bu betik o bedeli kaldırır: yalnız
+belge taşır — hiçbir birimi durdurmaz, hiçbir servisi yeniden başlatmaz, `uv sync` çağırmaz.
+
+BU BİR DAĞITIM DEĞİLDİR ve dağıtımın yerine GEÇMEZ. Motor sürümü canlıya YALNIZ ./dagit.sh ile
+çıkar (o betiğin başlığındaki SÜRÜM TERFİSİ SÖZLEŞMESİ değişmedi). Bu yolun taşıyabileceği
+şeyler aşağıda TEK dizidir (`BELGE_KUMESI`) ve `[0d]` kapısı yasak sınıfı ÇALIŞMA ANINDA ölçer:
+`.py`/`.sh` uzantısı ile `meridian/`, `ops/`, `deploy/`, `ui/`, `state/` ve `*.env*` bu yoldan
+GEÇEMEZ. "Bu betik yalnız belge taşır" bir niyet beyanı değil, ölçülen bir kapıdır.
+
+BELGE KÜMESİ: ROADMAP.md · MERIDIAN_ENGINEERING_LOG.md · docs/ (alt dizinleriyle;
+`docs/RUNBOOK.md` ÜRETİLMİŞ ama commit'li olduğu için kümededir — canlıdaki kopya depodakiyle
+aynı olmalı) · research/cards/ (ölçüm kartları + üretilmiş README.md).
+
+--------------------------------------------------------------------------------------------
+AKTARIM KÜMESİ GİT'TEN TÜRER (tur 3, 2026-09-08).
+
+rsync `.gitignore` OKUMAZ. Tur-2 bu boşluğu bir KAPIYLA kapatıyordu ([0c]: kümede izli olmayan
+TEK dosya varsa DUR) ve o kapı ana checkout'ta ölçüldüğünde operatörün İLK kuru koşumunu
+durduruyordu (`docs/mutasyon/.2026-08-01.ham.log`, `.gitignore` kaynaklı). Kapı doğruydu ama
+yanlış katmandaydı: artık aktarılacak yolların LİSTESİ `git ls-files -z` çıktısıdır ve rsync'e
+`--files-from` + `--from0` ile verilir. İzlenmeyen ya da yok sayılan bir dosya listede YOKTUR,
+yani rsync onu HİÇ GÖRMEZ — koruma kapıdan YAPIYA taşındı.
+Bu yüzden `[0c]` bir kapı değil, bir RAPORdur: "disk ≠ git" bilgisi (hangi dosya aktarılmayacak)
+basılır ve akış DURMAZ. Liste git INDEX'inden gelir; [0a] (temiz ağaç) index ile diskin aynı
+olduğunu zaten garanti eder, yani listedeki bir yol diskte eksik olamaz.
+
+İKİ FAZ — VE NEDENİ ÖLÇÜLDÜ (openrsync 2.6.9-uyumlu, yerel sahne, 2026-09-08):
+$ rsync -a --delete --from0 --files-from=<liste> ./docs/ dst/docs/
+>f+++++++ alt/K.md            ← hedefteki `eski.md` ve `alt/ESKI.md` DURDU: 0 silme
+`--files-from` verildiğinde rsync hedef dizinleri TARAMAZ; `--delete` sessizce ölür. Tek çağrıda
+birleştirilseydi hayalet temizliği "yeşil görünüp" hiç koşmazdı (kazanç ölçülüp bedel
+ölçülmeseydi görülmezdi — bedel yasası). Bu yüzden:
+FAZ-1 AKTARIM — `--files-from`/`--from0` (git listesi), `--delete` YOKTUR. `--checksum` da
+BURADA verilir (Rol-1 hükmü, A1 GNU rsync 3.2.7 ölçümü, 2026-09-08 — aşağıya
+bak, `_cagri_kur`).
+FAZ-2 SİLME   — SALT-SİLME geçişi: `--delete --max-delete=N --existing --ignore-existing`.
+`--existing` yeni DOSYA yaratmaz, `--ignore-existing` var olan DOSYAYI
+güncellemez — DOSYA aktarımı YOK (ölçüldü). Ama openrsync'te salt-silme
+geçişi eksik alt DİZİNLERİ yaratabilir ve var olan dizinlerin mtime'ını
+güncelleyebilir (ölçüldü, tur-3: `docs/mutasyon/` boş dizin olarak oluştu,
+`.d..t....` satırı) — "sıfır aktarım" iddiası DOSYA düzeyinde doğru, DİZİN
+düzeyinde değil. GNU man'i "(including directories)" der; A1'deki ilk kuru
+koşumda doğrula. Yalnız DİZİN girdileri için.
+SIRA: önce TÜM aktarımlar, sonra TÜM silmeler. Silme geri alınamayan yarıdır — bir aktarım
+düşerse hiçbir silme koşmamış olur.
+FAZ-2'nin ölçütü DİSKTİR, git değil (rsync'e ikinci bir liste veremeyiz; yukarıdaki ölçüm).
+BEDELİ AÇIKÇA: diskte duran ama izli OLMAYAN bir dosya, hedefteki adaşını silinmekten KORUR.
+`[0c]` raporu tam olarak o dosyaları basar — bu körlük sessiz değildir.
+
+SEMBOLİK BAĞ: `--no-links` her çağrıda verilir; ölçüldü — bağ AKTARILMAZ (`skipping non-regular
+file`, çıkış 0). Tur-2'de `docs/mutlak.py -> /etc/passwd` biçimli bir bağ dört kapının hepsini
+geçip canlıya bağ olarak gidiyordu (`cL+++++++`). Artık iki savunma var: izlenmeyen bağ zaten
+listede yoktur, İZLİ bir bağ ise `--no-links` ile atlanır ve `[0d]` onu "atlandı: N bağ" diye
+RAPOR eder (durdurmaz — taşınmayan bir şey zarar veremez, ama sessiz de kalmaz).
+
+--------------------------------------------------------------------------------------------
+SİLME KAPSAMI — bu betiğin en pahalı sınıfı, DÖRT KATLI kapatıldı (tur 2-3, 2026-09-08).
+
+ÖLÇÜLEN KAZA (tur-1 kodu, openrsync, yerel sahne):
+$ rsync -a --relative --delete ./research/cards  dst/
+*deleting research/olcumler/edg075/state/seans_DEPODA_YOK.json
+*deleting research/edgar_facts/facts.json          ← 7 silme, yalnız 1'i kümede
+`research/cards` İKİ SEVİYELİDİR: `--relative` hedefte `research/` dizinini "ima edilen dizin"
+olarak yaratır ve `--delete` onu da budar. A1'de `research/` ~290 MB'tır; bunun yalnız ~952
+KB'ı (`research/cards`) belge kümesindedir. Kalanı (`olcumler`, `edgar_facts`, `pit_universe`)
+git'te KARŞILIĞI OLMAYAN, canlı-sahipli veridir — `dagit.sh`ın `RSYNC_EXC` listesi onları
+dağıtımdan bilerek DIŞLAR. Geri dönüşü git'ten OLMAYAN sınıf.
+
+(1) YAPISAL — `--relative` KULLANILMAZ. Her küme girdisi kendi çağrılarını alır ve hedef yolu
+AÇIK yazılır (`./docs/` → `<uzak>/docs/`). İma edilen dizin sınıfı böylece hiç DOĞMAZ;
+`--delete` yalnız o alt ağacın içini budayabilir. Kök DOSYALAR `--delete` ALMAZ (kök
+kapsamlı bir silme `/opt/meridian`ın tamamını budardı).
+(2) BAYRAK — `--no-implied-dirs` yine de verilir; biri gün gelip `--relative`e dönerse ikinci
+savunma olarak orada durur (güvenlik bir lehçenin davranışına bırakılamaz).
+(3) TAVAN — `--max-delete=N`. N = aktarım listesindeki İZLİ dosya sayısının %10'u, en az 5.
+TAVAN HER rsync ÇAĞRISINA (küme girdisindeki HER DİZİNE) AYRI verilir — TEK bir TOPLAM
+bütçe DEĞİLDİR. Bugünkü kümede iki dizin girdisi vardır (`docs`, `research/cards`), yani
+gerçek üst sınır N+N'dir; TOPLAM üzerinde ikinci bir eşik YOKTUR (ÖLÇÜLDÜ: docs 5 +
+research/cards 5 hayalet, tavan 5 → çıkış 0, 10'u da silindi). Rapor bunu ÇAĞRI BAŞINA
+satırlarla + tavansız bir toplamla gösterir: `silinecek (<dizin>): N (tavan T)` her
+silme çağrısı için ayrı, `silinecek toplam: N` tavan iddiası TAŞIMADAN.
+Tavan aşılırsa rsync 25 ile çıkar ve betik `DURDU: silme tavanı aşıldı` + çıkış 1 der.
+ÖLÇÜLDÜ: tavan ÖN-TARAMADA (`-n`) da 25 verir ve hedefte tek bayt değişmez — yani "kaynak
+boş / kök yanlış" hâli hiçbir şey silinmeden yakalanır. (Gerçek koşumda rsync tavana
+kadar siler sonra durur; ön-tarama ZORUNLU olduğu için o hâle normalde gelinmez.)
+(4) KAPI — her `*deleting` satırının yolu, kümeden TÜRETİLEN silme kapsamına karşı ölçülür.
+İKİ ayak: kapsam öneki tutmayan yol · `..` TAŞIYAN yol (ön ek eklenmiş bir yol bile
+`docs/../research/...` ile kapsamdan çıkabilir). Tek ihlal `DURDU: silme kapsamı dışı
+yol` + çıkış 1 demektir. Kapı HEM ön-taramada HEM gerçek koşumda çalışır.
+ÜÇÜNCÜ bir "mutlak yol" ayağı tur-2'de vardı ve ÖLÇÜLDÜ Kİ ÖLÜYDÜ (mutasyonla: kaldırınca
+hiçbir çivi ötmüyordu). Sebebi: rapor ön eki MUTLAK yola da ekleniyordu (`docs//etc/passwd`)
+ve o dize kapsam önekiyle BAŞLADIĞI için kapıyı geçiyordu. Ayak kaldırıldı, asıl hata
+düzeltildi: `_onekle` mutlak yola ön ek EKLEMEZ, böylece mutlak yol kapsam ayağına takılır
+(bir mutlak yol hiçbir zaman `docs/` ile başlayamaz). Ölçüldü: openrsync `*deleting`
+yollarını her zaman HEDEFE GÖRE basar (hedef mutlak yolla verildiğinde bile) — mutlak yol
+bugün gözlenen bir hâl değil, kapının kapattığı bir sınıftır.
+
+`*deleting` satırlarının yolları HEDEFE GÖREdir (rsync onları dizin-içi basar); rapor onlara
+küme girdisinin ön ekini EKLER, yani operatör `research/cards/EMEKLI.yaml` görür, `EMEKLI.yaml`
+değil — hangi ağaçtan silindiği raporda kaybolmaz. Ön ek YALNIZ yol taşıyan satırlara eklenir
+(itemize ve `*deleting`): rsync uyarı ve `--max-delete` bildirimini de STDOUT'a basar (ölçüldü)
+ve onlara ön ek eklemek metni bozardı.
+
+HEDEFTEKİ ARA DİZİN: ölçüldü (openrsync, 2026-09-08) — `<uzak>/research/` yoksa rsync onu
+SESSİZCE yaratır ve çıkış 0 verir. Tur-2 başlığı "rsync düşer ve betik DURUR" diyordu; bu
+YANLIŞTI ve kaldırıldı. Bedeli açıkça yazılır: `MERIDIAN_A1_DIR` yanlış yazılırsa bu betik
+canlıda yeni bir ağaç kurup "TAMAM" der — hedef dizin operatörün doğrulayacağı şeydir.
+
+KURU KOŞUM ARTEFAKTI (tur-3 inceleme Z3, ölçüldü openrsync 2026-09-08): kuru koşumda hedef
+dizin yoksa rsync liste dışını da sayabilir; uygulamada sızmaz (ölçüldü). Hedef alt ağaç
+(ör. `research/cards/`) HİÇ yoksa, `-n` ön-taramasında SALT-SİLME geçişi TEK BAŞINA koşarken
+`--existing` henüz var olmayan bir hedefe karşı YOK SAYILAN (izlenmeyen) dosyaları bile
+"aktarılacak" (`<f…`) diye raporlayabilir — `dosya_n` bu yüzden şişebilir (gerçek izli yoldan
+FAZLA görünür). `--uygula`da SIZMAZ: AKTARIM fazı hedef dizini ÖNCE yaratır, SİLME fazı ondan
+SONRA `--existing` ile koşar ve yok sayılan dosya hiçbir zaman yaratılmaz/silinmez — bu satırı
+görürsen SIZINTI değil, hedef ağacın (henüz) eksik olduğunun işaretidir. `[0c]` raporundaki
+"rsync bu yolları hiç görmez" cümlesi AKTARIM fazı için doğrudur; bu kuru-koşum istisnası
+yalnız SİLME fazına ve yalnız hedef alt ağaç eksikken doğar.
+--------------------------------------------------------------------------------------------
+
+`--delete` TÜRETİLİR, ikinci bir listeden okunmaz (Tek-kaynak yasası: aynı gerçeğin iki kopyası
+sessizce ayrışır). Küme girdisi bir DİZİNSE silme fazı vardır — git'te silinmiş bir belge
+canlıda hayalet olarak kalmasın; bir DOSYAysa YOKTUR. Silme kapsamı listesi de aynı diziden türer.
+
+KAPILAR — sırayla, ilk kırmızıda `DURDU:` + çıkış 1:
+[0a] çalışma ağacı temiz (`status --porcelain` boş) — yarım iş canlıya gitmez.
+[0b] HEAD push'lanmış (`rev-list --count origin/main..HEAD` = 0). Yalnız A1'de duran bir
+belge, hiçbir klonun göremediği bir gerçektir: cloud oturumları GitHub'daki hâli görür ve
+canlı ile depo sessizce ayrışırdı. `fetch` DÜŞERSE kapı geçilmiş SAYILMAZ (fail-closed).
+[0c] aktarım listesi git'ten türetilir. KAPI DEĞİL, RAPOR — istisnası: küme girdisi diskte
+YOKSA ya da bir kök DOSYA git'te İZLİ DEĞİLSE durur (o girdi hiç taşınmazken "eşitlendi"
+demek, taşınmayanı taşınmış bildirmek olurdu).
+[0d] aktarım listesinde yasak sınıf dosya YOK (yukarıdaki liste) — hem küme dizisi hem
+listedeki her yol. Sembolik bağlar burada RAPOR edilir (aktarılmazlar).
+[1]  silme kapsamı kapısı + silme tavanı (yukarıdaki (3) ve (4)).
+
+ÇIKIŞ KODLARI: 0 = geçti (kuru koşum ya da doğrulanmış eşitleme) · 1 = DURDU (kapı, silme
+kapsamı ihlali, silme tavanı ya da rsync'in kendi sıfır-dışı çıkışı) · 2 = eşitlendi ama
+DOĞRULANAMADI (ROADMAP sha ayrışık ya da ölçülemedi; beyan yazılamadı) · 3 = kullanım hatası.
+2 de bir BAŞARISIZLIKTIR: ölçülemeyen eşitleme "eşitlendi" sayılmaz.
+rsync sıfır-dışı çıkarsa aktarım YARIM kalmış olabilir; o ana kadarki itemize izi SİLİNMEZ,
+basılır ve yolu yazılır (kayıtsız kısmi yazım, Yasa 6 sınıfı bir körlüktür).
+
+BEYAN VE OKUYUCULARI (Yasa 6). `--uygula` sonunda A1'e `state/belge_esitleme.json` yazılır (TEK
+satır: esitlenen_sha · esitlendi_utc · esitleyen_host · dosya_n · silinen_n), geçici ad + `mv`
+ile ATOMİK, ardından geri okunup bayt kıyası yapılır. Dosya `state/` altındadır, yani `dagit.sh`
+rsync'i ona DOKUNMAZ — doğru yer: bir dağıtım, belge eşitlemesinin kaydını ezmemeli.
+OKUYUCU 1 — BU BETİK: her koşum `[3]` adımında son eşitleme kaydını A1'den okuyup BASAR.
+OKUYUCU 2 — PANO: `/api/roadmap` yanıtının `belge_esitleme` alanı (TSK-177 dilim 2; ayrı bir
+worktree'de hazır, uç bu dosyayı okuyup panoya "son eşitleme" satırı olarak basar).
+Yani beyan üretilip tüketilmeyen bir kanıt değildir; okuyucuları kaldırılırsa bu satır da
+kaldırılmalıdır.
+
+SIR: token hiçbir satıra BASILMAZ, ssh argümanına KONULMAZ **ve A1'de `curl`ün argümanına da
+GİRMEZ** — uzak istek `curl --config -` ile kurulur, yani başlık uzak sürecin stdin'inden
+okunur ve `ps aux` çıktısında görünmez. (Tur-1'de uzak kabuk `$_t`yi genişletip `curl`e argüman
+veriyordu; başlık bunun tersini iddia ediyordu — ölçülen ile yazılan ayrışmıştı.)
+`/api/roadmap` ölçümü İSTEĞE BAĞLIDIR: token yoksa "ölçülemedi: token yok" yazılır ve akış
+DURMAZ (uydurma yasağı: ölçülemeyen sayı uydurulmaz).
+
+KULLANIM
+bash ops/belge_esitle.sh                 # KURU koşum (VARSAYILAN) — hiçbir yere yazmaz
+bash ops/belge_esitle.sh --kuru          # aynısı, açıkça
+bash ops/belge_esitle.sh --uygula        # ön-tarama + eşitle + beyan + doğrulama
+bash ops/belge_esitle.sh --kok <yol>     # depo kökünü değiştir (test / ikinci checkout)
+
+ROL: Rol-1. Yan oturum ve ajan KOŞMAZ — canlıya yazan her yol ./dagit.sh ile aynı yetki
+sınıfındadır. KÖK VARSAYILANI `$HOME/AI-Trading`tir ve bu ./dagit.sh ile bilinçli olarak
+AYNIDIR: betiğin nereden çağrıldığına bakmak, bir worktree'nin kendi ağacını canlıya
+eşitlemesine kapı açardı.
 ```
 
 ## `ops/ci_duman.sh` {#ops-ci-duman-sh}
