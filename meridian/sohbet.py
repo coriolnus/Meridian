@@ -24,6 +24,13 @@ DEĞİŞMEZLER — hiçbir istem, model ya da araç bunları gevşetemez:
     DEĞİLDİR" der (`ops/soul_denetimi.py` grameri — jetonlar oradan TÜREMEZ, oraya EŞİTTİR ve
     eşitlik çivilidir).
   * ŞEMA DIŞI ÇAĞRI REDDEDİLİR VE SAYILIR (`sema_disi_n`); modele hata METNİ döner, araç KOŞMAZ.
+  * ARAÇ ÇIKTISININ METNİ SAKLANMAZ, ATIF KÜMESİ SAKLANIR (B3, 2026-09-08). Kartın uydurma
+    sayımının PAYDASI araç çıktısıdır ("cevabı tek başına okuyan sayım geçersiz" — kill-list),
+    ama 8 KB × 6 tur × 100+ mesajlık ham metni deftere yazmak hem satırı şişirir hem de sır
+    yüzeyini büyütürdü. Onun yerine BAŞARILI her araç çağrısından çıkarılan literal atıf kümesi
+    (`cikti_atiflari`: sayı · kimlik · yol · sembol) tur satırına yazılır. Şema-dışı ve arızalı
+    çağrıda alan HİÇ doğmaz — okunmamış veri payda değildir. Alan DEFTERDE kalır ama
+    `GET /api/sohbet` yanıtından KIRPILIR (bedel yasası; sayaç defteri doğrudan okur).
   * KOTA ÇAĞRININ KENDİ KAYDINDAN SAYILIR (`agent_calls.jsonl`, `kind="sohbet"`) —
     `skill_gorus_llm.kota_durumu` deseni. Ölçülemeyen kota DOLMAMIŞ SAYILMAZ: model çağrılmaz.
     KAPI HER AYAK ÖNCESİ SORULUR (mesaj başında bir kez DEĞİL): kotanın birimi ayak denemesidir,
@@ -43,6 +50,7 @@ EDG-2026-086'nın B3 sayımıdır; `approvals.jsonl`inki `GET /api/approvals` ge
 from __future__ import annotations
 
 import datetime as dt
+import functools
 import json
 import os
 import re
@@ -892,53 +900,298 @@ def _bos_arguman_normalize(args):
 # =================================================================================================
 # ARAÇ ÇIKTISI — SÜZGEÇ → KESİT (BEYANLI) → ÇİT
 # =================================================================================================
-def arac_bloku(ad: str, ham: str) -> str:
-    """Araç çıktısının MODELE GİDEN biçimi. Sıra önemlidir: önce sır süzgeci (kesitin sınırına
-    denk gelen bir sır yarım kalıp maskeyi atlatmasın), sonra kesit + kesinti BEYANI, en sonda
-    çit (jeton etkisizleştirmesi `_veri_bloku`nun içindedir)."""
+def arac_kesiti(ham) -> tuple[str, int]:
+    """(modele giden VERİ kesiti, kesilen satır sayısı). Sıra önemlidir: önce sır süzgeci —
+    kesitin sınırına denk gelen bir sır yarım kalıp maskeyi atlatmasın.
+
+    NEDEN AYRI FONKSİYON (B3): kesit İKİ tüketiciye gider — çitlenip modele (`arac_bloku`) ve
+    atıf çıkarıcısına (`cikti_atiflari`). Süzgeç+kesit mantığının ikinci bir kopyası sessizce
+    ayrışırdı; ATIFIN PAYDASI ile MODELİN GÖRDÜĞÜ metnin ayrışması ise ölçümü geçersiz yapardı."""
     temiz = notify.scrub(str(ham))
-    if len(temiz) > ARAC_CIKTI_TAVANI:
-        kalan = temiz[ARAC_CIKTI_TAVANI:]
-        temiz = temiz[:ARAC_CIKTI_TAVANI] + f"\n…({kalan.count(chr(10)) + 1} satır daha kesildi)"
-    return _veri_bloku(ad, temiz)
+    if len(temiz) <= ARAC_CIKTI_TAVANI:
+        return temiz, 0
+    kalan = temiz[ARAC_CIKTI_TAVANI:]
+    return temiz[:ARAC_CIKTI_TAVANI], kalan.count("\n") + 1
+
+
+def _bloklastir(ad: str, kesit: str, kesilen: int) -> str:
+    """Kesiti MODELE GİDEN biçime sokar: kesinti BEYANI + çit. Montaj TEK YERDE — `arac_bloku` ile
+    `_arac_kos`un başarı kolu aynı metni iki ayrı yerde kursaydı sessizce ayrışırlardı."""
+    return _veri_bloku(ad, f"{kesit}\n…({kesilen} satır daha kesildi)" if kesilen else kesit)
+
+
+def arac_bloku(ad: str, ham: str) -> str:
+    """Araç çıktısının MODELE GİDEN biçimi: süzgeç → kesit → kesinti beyanı → çit (jeton
+    etkisizleştirmesi `_veri_bloku`nun içindedir)."""
+    return _bloklastir(ad, *arac_kesiti(ham))
+
+
+# =================================================================================================
+# ÇIKTI ATIFLARI — EDG-2026-086'nın uydurma sayımının PAYDASI
+# =================================================================================================
+#: Atıf sınıfları — DONUK. Kartın `olcum_plani` 2. maddesi ("cevaptaki her sayı, kimlik, dosya
+#: yolu, sembol için 'araç çıktısında literal geçiyor mu'") bu dörtlüden TÜRER.
+ATIF_SINIFLARI = ("sayi", "kimlik", "yol", "sembol")
+
+#: Sınıf başına saklanan öğe tavanı. Defter satırı 100+ mesaj × 6 tur büyür; sınırsız bir küme
+#: satırı (ve `GET /api/sohbet` yanıtını) şişirirdi. TAŞMA SESSİZ DEĞİLDİR: `cikti_atif_kesildi`
+#: bayrağı turda beyan edilir, sayaç o turu "payda EKSİK" olarak okuyabilir.
+ATIF_SINIF_TAVANI = 200
+
+#: SAYI — tam/ondalık, NORMAL biçim. Üç ret kuralı, üçü de ÖLÇÜMÜN YÖNÜNÜ korur:
+#:   * `(?<![\w.\-%])` — bir harf/rakam/nokta/tire/yüzde işaretinin ARDINDAN gelen rakam dizisi
+#:     sayı DEĞİLDİR: `T00842`nin "00842"si, `EDG-2026-086`nın "2026"sı, `%12`nin "12"si kimliğin
+#:     ya da türetilmiş bir oranın PARÇASIDIR. Paydaya sızsalardı uydurma oranı hak etmeden
+#:     DÜŞERDİ (eksik/şişkin payda eşiği geçme yönünde yanlıdır — EXE-2026-006 sınıfı).
+#:   * `(?<!\d,)` + `(?!,\d)` — `1,103` AYIRT EDİLEMEZ: Türkçe ondalık virgülü ile binlik ayracı
+#:     aynı karakterdir. İki yorumdan birini seçmek, cevap "1,103" derken araç çıktısı "1.103"
+#:     dediğinde SAHTE UYDURMA üretirdi. Bu biçim sayı sınıfına HİÇ girmez; sayaç onu `belirsiz`
+#:     kovasında sayar (uydurma yasağı: ölçülemeyen değer uydurma DEĞİLDİR).
+#:   * `(?![\d.%])` — `1.103R` gibi son-ek taşıyan değerlerde sayı okunur ama `12.5.3` (sürüm)
+#:     ya da `12.5%` okunmaz.
+#:   * YÜZDE BAĞLAMI — `%12`, `yüzde 12`, `12 %`, `YÜZDE 12` ve çok boşluklu yazımları AYNI
+#:     SEMANTİK DEĞERİN yazım varyantlarıdır ve hepsi TÜRETİLMİŞ orandır: araç çıktısında literal
+#:     geçmeleri beklenmez. Tur-1'de yalnız `%12` eleniyordu, tur-2'de `[Yy]üzde ` eklendi ve
+#:     `YÜZDE 12` ile `yüzde  12` hâlâ sayı sınıfına giriyordu; aynı değerin yazımına göre iki
+#:     ayrı kovaya düşmesi ölçüm değil ölçüm ARTEFAKTIdır (yeniden inceleme, 2026-09-08).
+#:     BOŞLUK TAVANI ÜÇTÜR VE BEYANLIDIR: Python `re` DEĞİŞKEN GENİŞLİKLİ geriye bakış derlemez
+#:     (`(?<!yüzde\s+)` derlenmez), o yüzden ret kuralı sabit genişlikli üç geriye bakışa açılır.
+#:     Dört ve daha fazla boşluk ölçülmemiş bir KALINTIdır; sayaçtaki `BELIRSIZ_RE` AYNI tavanı
+#:     taşır, böylece iki kova her genişlikte AYRIK kalır (ayrıklık çivisi v450'de).
+#: BAŞTA TİRE = NEGATİF: ` -2.4` okunur (eşleşme tireden BAŞLAR), `EDG-2026` okunmaz (eşleşme
+#: rakamdan başlar ve önündeki tire ret kuralına takılır).
+SAYI_RE = re.compile(
+    r"(?<![\w.\-%])(?<!\d,)"
+    r"(?<!(?:[Yy]üzde|YÜZDE)\s)(?<!(?:[Yy]üzde|YÜZDE)\s\s)(?<!(?:[Yy]üzde|YÜZDE)\s\s\s)"
+    r"(?<!%\s)(?<!%\s\s)(?<!%\s\s\s)"
+    r"-?\d+(?:\.\d+)?(?![\d.%])(?!,\d)(?!\s{0,3}%)")
+
+#: KİMLİK — sistemin KENDİ ürettiği kimlikler. `T\d{5,}` uzunluğu SABİTLEMEZ çünkü işlem kimlik
+#: sayacı da sabitlemez (`f"T{n:05d}"` biçimi 100.000'de altı haneye taşar). `SO-…` deseni
+#: `oneri_kimligi`nin ÜRETTİĞİ biçimdir ve eşitliği çividedir (v449) — kopya değil türev.
+KIMLIK_RE = re.compile(r"(?<![A-Za-z0-9])(?:T\d{5,}"
+                       r"|P-\d{4}-\d{2}-\d{2}(?:-[A-Za-z0-9_]+)+"
+                       r"|EDG-\d{4}-\d{3}"
+                       r"|TSK-\d{3}"
+                       r"|SO-\d{8}T\d{6}Z-\d+)(?![A-Za-z0-9])")
+
+#: YOL — depo-yolu görünümlü dizge. Desen EDG-2026-083'ün `uydurma_say` ailesinden UYARLANDI
+#: (kart `ref` alanı bunu adıyla söyler). KOPYA DEĞİLDİR: o kartın kendi sözleşmesi kendi
+#: ölçümünde DONMUŞTUR ve `research/` altındaki bir betik `meridian/`e ithal EDİLEMEZ (bağımlılık
+#: yönü). Bu satır EDG-2026-086'nın KENDİ donmuş sözleşmesidir; iki kart ayrı ayrı yaşar.
+YOL_RE = re.compile(
+    r"[A-Za-z0-9_./-]+\.(?:py|md|yaml|yml|ts|tsx|sh|jsonl|json|txt|css|csv|log|sqlite|bak)"
+    r"(?![A-Za-z0-9_])")
+
+#: SEMBOL ADAYI — 2-5 harfli büyük harf dizisi. Tek başına bir sınıf DEĞİLDİR: aday ancak
+#: EVRENLE KESİŞİRSE sembol sayılır (aksi hâlde "VERI", "SQL", "GO" gibi her kısaltma sembol
+#: olurdu ve payda gürültüyle şişerdi).
+#:
+#: SINIRLAR UNICODE'DUR (çekişmeli inceleme, 2026-09-08). Tur-1'in `(?<![A-Za-z0-9])` sınırı YALNIZ
+#: ASCII'ydi ve Türkçe büyük harfleri (Ç Ğ İ Ö Ş Ü) SINIR sayıyordu: `GEÇTİ` → `GE`+`T`, `DEĞİL` →
+#: `DE`+`T`. Sohbetin cevap dili Türkçe, araç çıktısı ASCII/JSON olduğu için bu parçalar PAYDA
+#: tarafında hiç geçmez — her Türkçe büyük harfli sözcük bir-iki SAHTE uydurma üretiyordu ve kartın
+#: DONUK 0,05 eşiği tek başına bu artefaktla aşılabilirdi. `[^\W\d_]` "herhangi bir Unicode harf"
+#: demektir; lookaround'lar artık harf sınırını dilden bağımsız görür.
+SEMBOL_ADAY_RE = re.compile(r"(?<![^\W\d_])[A-Z]{2,5}(?![^\W\d_])")
+
+#: TEK HARFLİ ADAY — YALNIZ `belirsiz_semboller` kullanır. Sınırı harf-VEYA-RAKAMdır (`[^\W_]`):
+#: `20260908T120000Z` gibi damgaların içindeki `T` bir sembol adayı DEĞİL, kimliğin parçasıdır.
+SEMBOL_TEK_HARF_RE = re.compile(r"(?<![^\W_])[A-Z](?![^\W_])")
+
+#: SEMBOL SINIFININ ASGARİ UZUNLUĞU. Evrende `T`, `V`, `F`, `C`, `D`, `O` tek harfleri ile `MA`,
+#: `SO`, `MU`, `CI`, `DE`, `ON`, `PM` gibi iki harfli semboller VAR (ölçüldü 2026-09-08) ve bunlar
+#: Türkçe metnin gündelik parçalarıdır: "K defterine", "SO-…" öneki, "MU planı", "CI kırmızı".
+#: Sembol sayılsalardı araç çıktısında geçmedikleri için doğrudan UYDURMA olurlardı; sessizce
+#: atılsalardı ölçüm KÖR olurdu. Kısa kesişimler bu yüzden `belirsiz` kovasına gider — uydurma
+#: yasağının "ölçülemeyen değer 0 DEĞİLDİR" maddesi. Daraltma ÖLÇÜM PENCERESİ AÇILMADAN yapıldı;
+#: kartın eşiği ve penceresi DEĞİŞMEDİ (kart yalnız sınıf tanımını `olcum_plani`na bırakır).
+SEMBOL_ASGARI_UZUNLUK = 3
+
+#: BAĞLAM ÇAPASI — "bu büyük harfli dizge gerçekten bir TICKER mı" sorusunun ölçülebilir cevabı.
+#: ASGARİ UZUNLUK SINIFI KÜÇÜLTTÜ, KAPATMADI (ölçüldü 2026-09-08: evrenin 248 sembolünün 142'si ÜÇ
+#: harfli). `DAL` (Delta Air Lines) bu deponun KENDİ sözlüğünde günlük bir kelimedir ("dal ucu",
+#: "dal kapanışı"); `HAL` ve `TER` de öyle. Unicode sınırı yalnız Türkçe harfe KOMŞU hâlleri
+#: (`HALİ`, `TERİM`) kapattı — tek başına büyük harfle yazılmış hâllerini değil, ve o hâller araç
+#: çıktısında geçmedikleri için DOĞRUDAN uydurma olurdu (20 satırlık bir pencerede tek bir "DAL
+#: kapandı" cümlesi donuk 0,05 eşiğini oynatabilir).
+#: ÜÇ ÇAPA, HEPSİ AYNI SATIRDA ARANIR: `$` öneki · fiyat biçimi (`12.5`, `47,20`) · "sembol"
+#: kelimesi. Çapasız aday `belirsiz` kovasına gider — ölçülemeyen değer uydurma DEĞİLDİR.
+#: KALINTI BEYANI: "HAL hissesi" gibi başka bir bağlam sözcüğü çapa SAYILMAZ; körlüğün büyüklüğü
+#: sayacın `belirsiz` kovasında ADIYLA durur (bedel yasası).
+SEMBOL_CAPA_RE = re.compile(r"\$|\d+[.,]\d+|sembol", re.IGNORECASE)
+
+
+@functools.lru_cache(maxsize=1)
+def _evren_sembolleri() -> frozenset[str]:
+    """Sembol sınıfının TEK KAYNAĞI — ÖLÇÜLDÜ (2026-09-08, bu depo): `meridian/universe.py` diye
+    bir modül YOKTUR ve `state/universe.json` diye bir dosya da YOKTUR. Kod-sahipli tek liste
+    `adapters.data.REPLAY_UNIVERSE`dur (`state/finviz_universe.json` onun keşif kaynağının GÜNLÜK
+    ÖNBELLEĞİdir, SSoT değil). Ayrışma çivisi v449'dadır.
+
+    İTHALAT GEÇ: `adapters.data` ağır bir modüldür ve sohbet modülü onu başka hiçbir yerde
+    kullanmaz; ilk atıf çıkarımında bir kez yüklenir ve küme önbelleğe alınır (evren süreç ömrü
+    boyunca sabittir). İthalat düşerse İSTİSNA YÜKSELİR — sessizce boş küme dönmek sembol
+    sınıfını KÖR yapardı ve körlük ölçümde sıfırdan ayırt edilemezdi (uydurma yasağı)."""
+    from .adapters import data as _data
+    return frozenset(str(t).upper() for t in _data.REPLAY_UNIVERSE)
+
+
+def _sembol_kovalari(govde: str, kume: frozenset[str], capa_gerek: bool,
+                     ek_capa: str) -> tuple[set[str], set[str]]:
+    """(SEMBOL sayılan adaylar, ÇAPASIZ kaldığı için BELİRSİZ sayılan adaylar) — evrenle kesişmiş.
+
+    İKİ KOVA TEK YERDE AYRILIR: `cikti_atiflari` ile `belirsiz_semboller` aynı bölmeyi iki kez
+    yazsaydı sınıflar sessizce ÖRTÜŞÜR ve aynı atıf hem paydada hem "ölçülemeyen" kovasında
+    sayılırdı (çift sayım). Ayrıklık burada tanım gereğidir.
+
+    ÇAPA SATIR BAŞINA ARANIR: araç çıktısı da cevap da çok satırlıdır ve bir satırın fiyatı
+    diğerinin sembolünü çapalamaz. Aday BİR satırda bile çapalıysa sembol sayılır."""
+    capali: set[str] = set()
+    capasiz: set[str] = set()
+    ek_kume = {m.group(0) for m in SEMBOL_ADAY_RE.finditer(str(ek_capa or ""))}
+    for hat in govde.splitlines():
+        adaylar = {m.group(0) for m in SEMBOL_ADAY_RE.finditer(hat)
+                   if len(m.group(0)) >= SEMBOL_ASGARI_UZUNLUK}
+        if not adaylar:
+            continue
+        if not capa_gerek or SEMBOL_CAPA_RE.search(hat):
+            capali |= adaylar
+        else:
+            capali |= {a for a in adaylar if a in ek_kume}
+            capasiz |= {a for a in adaylar if a not in ek_kume}
+    capali &= kume
+    return capali, (capasiz & kume) - capali
+
+
+def cikti_atiflari(metin: str, *, evren: frozenset[str] | None = None,
+                   capa_gerek: bool = False, ek_capa: str = "") -> dict[str, list[str]]:
+    """Bir metinden DÖRT SINIFTA literal atıf kümesi (tekilleştirilmiş, sıralı, deterministik).
+
+    AYNI ÇIKARICI İKİ TARAFTA (tek-kaynak yasası): `sohbet_dongusu` bunu ARAÇ ÇIKTISINA uygular
+    ve sonucu tur satırına yazar (PAYDA); EDG-2026-086'nın sayacı aynı fonksiyonu CEVABA uygular
+    ve turların birleşik kümesinde arar (PAY). İki taraf ayrı ayrı yazılsaydı sınıf tanımları
+    sessizce ayrışır ve "uydurma" sayısı çıkarıcı farkını ölçerdi.
+
+    HER SINIF METNİN TAMAMINI AYRI TARAR (EDG-2026-083 `uydurma_say` deseni): sınıflar birbirini
+    MASKELEMEZ, çünkü `research/cards/EDG-2026-086-….yaml` gibi bir dizge hem bir `yol` hem de
+    içindeki `EDG-2026-086` kimliğidir ve ikisi de cevapta ayrı ayrı atıf olarak geçebilir.
+
+    `evren` yalnız `sembol` sınıfını belirler; verilmezse `_evren_sembolleri()` (ölçülmüş tek
+    kaynak). Çiviler sahte evren enjekte eder — testin evreni canlı listeye bağlanmasın diye.
+
+    `capa_gerek` SEMBOL SINIFININ BAĞLAM KAPISIDIR ve VARSAYILAN OLARAK KAPALIDIR — ASİMETRİ
+    BİLEREKTİR VE YÖNÜ ÖLÇÜLÜDÜR (yeniden inceleme, 2026-09-08). Araç çıktısı `indent=1` ile
+    basılan JSON'dur ve sembol kendi satırında, fiyatından AYRI durur (`"ticker": "HAL",`); kapı
+    PAYDA tarafında da koşsaydı sembol paydadan düşer, cevaptaki ÇAPALI yazımı ("$HAL 12.5")
+    dayanaksız görünür ve SAHTE bir uydurma doğardı. Payda GENİŞ kalır (yanlış pozitif üretmez),
+    PAY dar olur: kapıyı yalnız sayaç, yalnız CEVAP tarafında açar. `ek_capa` o satırın KAYNAK
+    künyeleridir — model sembolü gerçekten sorgulamışsa cevaptaki düz yazımı da sembol sayılır.
+
+    SIR: bu fonksiyon SÜZGEÇTEN GEÇMİŞ metinle çağrılır (`arac_kesiti` scrub'ı ÖNCE uygular).
+    Süzgeç sonrası bir sır değeri `***`tır ve hiçbir sınıfa girmez (çivi v449)."""
+    govde = str(metin or "")
+    sonuc: dict[str, list[str]] = {}
+
+    sonuc["sayi"] = sorted({m.group(0) for m in SAYI_RE.finditer(govde)})
+    sonuc["kimlik"] = sorted({m.group(0) for m in KIMLIK_RE.finditer(govde)})
+    sonuc["yol"] = sorted({m.group(0) for m in YOL_RE.finditer(govde)})
+
+    kume = _evren_sembolleri() if evren is None else frozenset(evren)
+    sonuc["sembol"] = sorted(_sembol_kovalari(govde, kume, capa_gerek, ek_capa)[0])
+    return sonuc
+
+
+def belirsiz_semboller(metin: str, *, evren: frozenset[str] | None = None,
+                       capa_gerek: bool = False, ek_capa: str = "") -> list[str]:
+    """ÖLÇÜLEMEYEN sembol adayları: evrenle kesişen ama sembol sınıfına GİREMEYEN dizgeler — kısa
+    olanlar (`SEMBOL_ASGARI_UZUNLUK`tan) ve `capa_gerek` açıkken BAĞLAM ÇAPASI bulunmayanlar.
+
+    NEDEN AYRI BİR FONKSİYON, NEDEN `cikti_atiflari`NIN İÇİNDE DEĞİL: `cikti_atiflari`nin anahtar
+    kümesi `ATIF_SINIFLARI`dır ve o küme hem defter satırının hem paydanın ŞEKLİDİR — beşinci bir
+    anahtar iki tarafta da şekli değiştirirdi. Kısa adayların paydada işi de yoktur: cevap tarafında
+    hiç sembol sayılmadıkları için uydurma da olamazlar. Bu fonksiyon YALNIZ SAYAÇ tarafında,
+    "kaç ölçülemeyen atıf gördük" sorusuna cevap olarak çağrılır (EDG-2026-086 `belirsiz` kovası).
+
+    Sıfır yerine `belirsiz` DEMEK ZORUNDAYIZ: "MU planı" cümlesindeki `MU` ölçülemeyen bir attır,
+    ölçülüp sıfır bulunmuş bir değer değil (uydurma yasağı)."""
+    govde = str(metin or "")
+    kume = _evren_sembolleri() if evren is None else frozenset(evren)
+    kisa = {m.group(0) for m in SEMBOL_ADAY_RE.finditer(govde)
+            if len(m.group(0)) < SEMBOL_ASGARI_UZUNLUK}
+    kisa |= {m.group(0) for m in SEMBOL_TEK_HARF_RE.finditer(govde)}
+    return sorted((kisa & kume) | _sembol_kovalari(govde, kume, capa_gerek, ek_capa)[1])
+
+
+def _atif_birlestir(biriken: dict[str, set[str]], yeni: dict[str, list[str]]) -> None:
+    """Bir turdaki BAŞARILI araç çağrılarının atıf kümelerini sınıf başına birleştirir."""
+    for sinif in ATIF_SINIFLARI:
+        biriken[sinif].update(yeni.get(sinif) or ())
+
+
+def _atif_dondur(biriken: dict[str, set[str]]) -> tuple[dict[str, list[str]], list[str]]:
+    """(sınıf başına sıralı liste, TAVANI AŞAN SINIFLARIN ADLARI). Kesme sıralamadan SONRA yapılır
+    — aynı çıktı aynı kümeyi versin diye (deterministik kesit, rastgele değil).
+
+    BEYAN SINIF BAŞINADIR, SATIR BAŞINA DEĞİL (çekişmeli inceleme, 2026-09-08). Tur-1 tek bir
+    `True` yazıyordu ve sayaç onu görünce SATIRIN TAMAMINI ölçüm dışına atıyordu: `sayi` taşan bir
+    `bar_sorgu` cevabında `kimlik`/`yol`/`sembol` paydaları TAM olduğu hâlde ölçülmüyordu. Asıl
+    zarar SEÇİM YANLILIĞIydı — en çok sayı taşıyan, yani uydurma riski en yüksek cevaplar tam da
+    elenenlerdi ve oran DONUK 0,05 eşiğini geçme yönünde hak etmeden düşüyordu."""
+    cikti: dict[str, list[str]] = {}
+    kesilen: list[str] = []
+    for sinif in ATIF_SINIFLARI:
+        deger = sorted(biriken[sinif])
+        if len(deger) > ATIF_SINIF_TAVANI:
+            deger = deger[:ATIF_SINIF_TAVANI]
+            kesilen.append(sinif)
+        cikti[sinif] = deger
+    return cikti, kesilen
 
 
 def _arac_kos(ad: str, ham_arg, baglam: dict,
-              araclar: dict[str, Arac]) -> tuple[str, bool, bool]:
-    """(modele dönecek metin, ŞEMA-DIŞI mıydı, KAYNAK ATFI üretilir mi).
+              araclar: dict[str, Arac]) -> tuple[str, bool, bool, str | None]:
+    """(modele dönecek metin, ŞEMA-DIŞI mıydı, KAYNAK ATFI üretilir mi, ATIF PAYDASI kesiti).
 
     ÜÇ AYRI HÂL, ÜÇ AYRI SONUÇ — tek sayaca katlamak teşhisi çökertirdi:
       * şema-dışı çağrı → `sema_disi=True`, atıf YOK (model yanlış konuştu),
       * `AracReddi` / araç arızası → `sema_disi=False`, atıf YOK (veri OKUNMADI),
-      * başarılı çağrı → atıf VAR (cevaptaki değerlerin paydası bu satırdır)."""
+      * başarılı çağrı → atıf VAR (cevaptaki değerlerin paydası bu satırdır).
+
+    DÖRDÜNCÜ DÖNÜŞ (B3) YALNIZ BAŞARILI ÇAĞRIDA DOLUDUR ve ÇİTSİZ, KESİNTİ BEYANISIZ VERİNİN
+    kendisidir: çit jetonu (`<<<VERI:ad>>>`) ile kesinti beyanı (`…(N satır daha kesildi)`) MODELE
+    giden metnin parçasıdır ama VERİ DEĞİLDİR — beyandaki N'i paydaya katmak, cevapta o sayının
+    geçmesi hâlinde "araç çıktısında var" hükmü verdirir ve uydurmayı hak etmeden düşürürdü."""
     arac = araclar.get(ad)
     if arac is None:
         return (arac_bloku(ad or "bilinmeyen",
                            f"ARAÇ KAYITLI DEĞİL: {ad!r}. Kayıtlı araçlar: "
-                           f"{', '.join(sorted(araclar))}. Beyaz liste DONUKTUR."), True, False)
+                           f"{', '.join(sorted(araclar))}. Beyaz liste DONUKTUR."),
+                True, False, None)
     args = ham_arg
     if isinstance(args, str):
         try:
             args = json.loads(args or "{}")
         except (ValueError, TypeError) as e:
             return (arac_bloku(ad, f"argümanlar JSON olarak ayrıştırılamadı: "
-                                   f"{type(e).__name__}: {e}"), True, False)
+                                   f"{type(e).__name__}: {e}"), True, False, None)
     args = _bos_arguman_normalize(args)
     red = _sema_dogrula(arac.sema, args)
     if red:
-        return (arac_bloku(ad, f"ŞEMA DIŞI ÇAĞRI — {red}"), True, False)
+        return (arac_bloku(ad, f"ŞEMA DIŞI ÇAĞRI — {red}"), True, False, None)
     try:
         ciktı = arac.cagir(args, baglam)
     except AracReddi as e:
         # İSTEK REDDEDİLDİ, ARIZA YOK: gerekçe modele döner ama hiçbir veri okunmadığı için
         # kaynak atfı ÜRETİLMEZ (uydurma sayımının paydası boş atıfla şişmesin).
-        return (arac_bloku(ad, str(e)), False, False)
+        return (arac_bloku(ad, str(e)), False, False, None)
     except Exception as e:
         obs.warn("sohbet_arac_hatasi", arac=ad, error=f"{type(e).__name__}: {e}",
                  detail="araç gövdesi hata verdi — hata METNE dönüşür, döngü ölmez (mcp_server "
                         "deseni); şema-dışı SAYILMAZ, kaynak atfı da üretilmez")
-        return (arac_bloku(ad, f"araç hatası: {type(e).__name__}: {e}"), False, False)
-    return (arac_bloku(ad, ciktı), False, True)
+        return (arac_bloku(ad, f"araç hatası: {type(e).__name__}: {e}"), False, False, None)
+    kesit, kesilen = arac_kesiti(ciktı)
+    return (_bloklastir(ad, kesit, kesilen), False, True, kesit)
 
 
 # =================================================================================================
@@ -1209,14 +1462,22 @@ def _sohbet_turu(mesaj: str, oturum: str, *, model_cagir=None,
         tur["tool_calls"] = len(cagrilar)
         mesajlar.append({"role": "assistant", "content": msg.get("content") or "",
                          "tool_calls": cagrilar})
+        # ATIF PAYDASI TUR BAŞINA BİRİKİR (B3). Sözlük ANCAK ilk BAŞARILI çağrıda doğar: şema-dışı
+        # ya da arızalı bir turda boş bir `cikti_atiflari` alanı yazmak, "araç çıktısı vardı ama
+        # içinde hiçbir değer yoktu" demek olurdu — oysa hiç veri OKUNMADI. İki hâl tek şekle
+        # katlanırsa sayaç paydayı olmayan turlarla şişirir.
+        tur_atif: dict[str, set[str]] | None = None
         for c in cagrilar:
             fn = (c or {}).get("function") or {}
             ad = str(fn.get("name") or "")
-            metin, sema_disi, atif = _arac_kos(ad, fn.get("arguments"), baglam, kayit)
+            metin, sema_disi, atif, kesit = _arac_kos(ad, fn.get("arguments"), baglam, kayit)
             if sema_disi:
                 tur["sema_disi"] += 1
                 sema_disi_n += 1
             if atif:
+                if tur_atif is None:
+                    tur_atif = {sinif: set() for sinif in ATIF_SINIFLARI}
+                _atif_birlestir(tur_atif, cikti_atiflari(kesit or ""))
                 arac = kayit.get(ad)
                 args = fn.get("arguments")
                 if isinstance(args, str):
@@ -1228,6 +1489,10 @@ def _sohbet_turu(mesaj: str, oturum: str, *, model_cagir=None,
                     kaynaklar.append({"arac": ad, "anahtar": arac.anahtar(args or {})})
             mesajlar.append({"role": "tool", "tool_call_id": (c or {}).get("id"),
                              "name": ad, "content": metin})
+        if tur_atif is not None:
+            tur["cikti_atiflari"], _kesilen = _atif_dondur(tur_atif)
+            if _kesilen:
+                tur["cikti_atif_kesildi"] = _kesilen
     else:
         cevap = (f"tur tavanı ({max_tur()}) doldu — araç döngüsü durduruldu ve cevap ÜRETİLMEDİ. "
                  "Soruyu daralt ya da doğrudan bir araç sonucu iste.")
@@ -1263,12 +1528,37 @@ def _kaydet(*, ts, oturum, mesaj, cevap, turlar, kaynaklar, model, sure_s, jeton
     return satir
 
 
+def atif_alanini_kirp(satir: dict) -> dict:
+    """`cikti_atiflari`nı SERVİS KOPYASINDAN çıkarır; DOSYADAKİ satır olduğu gibi kalır.
+
+    BEDEL YASASI (çekişmeli inceleme, 2026-09-08). Alan `ATIF_SINIF_TAVANI` × 4 sınıf = tur başına
+    800 dizgeye kadar büyüyebilir ve `GET /api/sohbet` `n`i 200'e kadar servis eder; pano bu ucu
+    düzenli okur. Alanın KAZANCI (uydurma sayımının paydası) ölçülüydü, BEDELİ ölçüsüzdü. Sayaç
+    defteri `--defter` ile DOĞRUDAN okur — uca hiç ihtiyacı yok, o yüzden bedel sıfırlandı.
+    `cikti_atif_kesildi` KALIR: dört öğelik bir beyandır ve okuyana "bu turun paydası eksikti"
+    der.
+
+    AD GENELDİR ÇÜNKÜ İKİNCİ ÇAĞIRAN `api.py`DEDİR (yeniden inceleme, 2026-09-08): tur-2'de yalnız
+    `gecmis` (GET) kırpıyordu ve `POST /api/sohbet` ham satırı döndürüyordu — aynı nesnenin ÜÇ
+    şekli (dosya · GET · POST) oluşmuştu. Kırpma tek gövdedir; iki uç ONU çağırır."""
+    turlar = satir.get("turlar")
+    if not isinstance(turlar, list) or not any(
+            isinstance(t, dict) and "cikti_atiflari" in t for t in turlar):
+        return satir
+    kopya = dict(satir)
+    kopya["turlar"] = [{k: v for k, v in t.items() if k != "cikti_atiflari"}
+                       if isinstance(t, dict) else t for t in turlar]
+    return kopya
+
+
 def gecmis(oturum: str | None = None, n: int = 50) -> list[dict]:
     """Son `n` sohbet satırı; `oturum` verilirse yalnız o oturumunkiler (eskiden yeniye).
 
     OKUYUCU BURADADIR (Yasa 6): `GET /api/sohbet` bu fonksiyonu servis eder ve EDG-2026-086'nın
-    B3 sayımı aynı satırları okur."""
+    B3 sayımı aynı satırları — defterden, bu fonksiyondan GEÇMEDEN — okur.
+
+    ATIF KÜMESİ SERVİS EDİLMEZ (`atif_alanini_kirp`, bedel gerekçesi orada)."""
     satirlar = [r for r in store.read_jsonl(SOHBET_DEFTERI) if isinstance(r, dict)]
     if oturum:
         satirlar = [r for r in satirlar if str(r.get("oturum") or "") == str(oturum)]
-    return satirlar[-max(1, int(n)):]
+    return [atif_alanini_kirp(r) for r in satirlar[-max(1, int(n)):]]

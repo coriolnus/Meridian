@@ -6789,8 +6789,11 @@ async def api_sohbet(request: Request):
     """Operatörün sorusu → sunucu tarafı ajan döngüsü → kaynak atıflı cevap.
 
     BOŞ MESAJ 400: cevaplanacak bir soru yokken model çağırmak kotayı boşa harcar ve deftere
-    ölçüm değeri olmayan bir satır yazardı. Yanıt, `sohbet.jsonl` satırının TA KENDİSİDİR —
-    ikinci bir şekil ikinci bir gerçek olurdu."""
+    ölçüm değeri olmayan bir satır yazardı. Yanıt, `sohbet.jsonl` satırının GET ucuyla AYNI
+    ŞEKLİDİR — iki uç ayrı şey döndürseydi ikinci bir gerçek olurdu: `cikti_atiflari` alanı iki
+    uçta da kırpılır (`sohbet.atif_alanini_kirp`, bedel gerekçesi orada), DOSYADA durur ve
+    sayacın okuduğu yer dosyadır. Tur-2'de yalnız GET kırpılmıştı; POST tur başına 4 sınıf × 200
+    dizgeye kadar bir alanı HER mesaj yanıtında panoya taşıyordu (yeniden inceleme, 2026-09-08)."""
     _auth(request)
     from starlette.concurrency import run_in_threadpool   # dar kullanımlı import fonksiyonda
 
@@ -6841,7 +6844,9 @@ async def api_sohbet(request: Request):
         # YALNIZ ÖNERİ YAZILDIYSA: gelen kutusu sayacı kıpırdadı. Soru-cevap turu teşhis yükünde
         # hiçbir alanı değiştirmez ve zarfı boşuna düşürmek panoyu yavaşlatırdı (yardımcının notu).
         _diag_onbellek_bosalt("sohbet_oneri")
-    return satir
+    # KIRPMA İZDEN SONRA: `obs.log` satırın TAM hâlini ölçer (tur/kaynak sayıları), uç KOPYAYI
+    # döndürür — kırpma KOPYA üzerindedir ve deftere yazılmış satır etkilenmez.
+    return _sohbet.atif_alanini_kirp(satir)
 
 
 @app.get("/api/sohbet")
