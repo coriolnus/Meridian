@@ -322,13 +322,32 @@ def _envanter() -> dict:
 
 def test_E0_spec_ayristirici_POZITIF_KONTROL():
     """Ayrıştırıcının kendisi ölçülür: sıfır/boş bir sonuç, çivinin "her şey eşit" demesine yol
-    açardı (boş küme boş kümeye eşittir — yasanın en sessiz arızası)."""
+    açardı (boş küme boş kümeye eşittir — yasanın en sessiz arızası).
+
+    SAYILAR NİYE ELLE YAZILI (ve YAML'dan TÜRETİLMİYOR): bu çivinin İŞİ tam olarak budur. `E3`
+    zaten spec ↔ envanter eşitliğini ölçüyor; beklenen sayı da YAML'dan türetilseydi ikisi
+    BİRLİKTE boşalabilir ve üç dosya da (spec · yaml · çivi) "her şey uyuşuyor" derdi. Elle
+    yazılmış sayı bu zincirin TEK dış çapasıdır — ve çapa ölçümle birlikte GÜNCELLENİR, yoksa
+    bayatlar (inceleme D7/Y1: hükmün yarısı işlenmiş, sayı 28'de kalmıştı)."""
     spec, ayar, siniflar = _spec_tablosu()
-    assert len(spec) == 6, spec
-    assert sum(len(v) for v in spec.values()) == 21
+    # D7 (2026-09-08 09:3xZ): 6 → 7 dosya, 21 → 28 ad. Üç hindsight sırrı `/opt/hindsight/.env`ten
+    # `/etc/hindsight/creds/<AD>`ye TAŞINDI (Faz-1A tamamlandı; `.env`de satır sayısı 0) ve o
+    # dosya AYRI bir satır oldu; `.env`e failover zincirinin ALTI üye anahtarı girdi; hermes
+    # profillerine `OPENROUTER_API_KEY` eklendi.
+    # D8 (2026-09-08 10:0xZ + 10:5xZ, Rol-1 ölçümü): 28 → 25 ad. `/opt/meridian/.env`in ÜÇ sırrı
+    # (NOUS_API_KEY · KAPI_APIKEY · MERIDIAN_DASH_TOKEN) o dosyada ARTIK YOK — üçünün de satır
+    # sayısı 0 ve sonek taraması hiçbir sır adı bulmadı. DOSYA SAYISI 7'de KALDI: dosya duruyor,
+    # yalnız üç YAPILANDIRMA değişkeni taşıyor ("dosya yok" ≠ "dosyada sır yok").
+    # `ayar` 29'da KALDI ve bu bir ölçüm DEĞİL bir BEYANDIR: 2026-09-08'de yalnız sır ADLARININ
+    # varlığı ölçüldü, ayar satırları YENİDEN SAYILMADI (uydurma yasağı).
+    assert len(spec) == 7, spec
+    assert sum(len(v) for v in spec.values()) == 25
     assert ayar == 29 and siniflar == {"A", "B", "C", "D"}
-    assert ("NOUS_API_KEY", True) in spec["/opt/meridian/.env"]
+    # SIR süzgecinin kendisi de pozitif kontrol ister: `sir` her yerde False dönseydi (regex
+    # bozulsa) aşağıdaki "motor `.env`te sır YOK" ölçümü yanlış sebeple yeşil kalırdı.
+    assert ("HINDSIGHT_API_LLM_API_KEY", True) in spec["/etc/hindsight/creds/<AD>"]
     assert ("NOUS_MODEL", False) in spec["/opt/meridian/.env"]
+    assert not [a for a, s in spec["/opt/meridian/.env"] if s], spec["/opt/meridian/.env"]
 
 
 def test_E1_envanter_dosyasi_VAR_ve_kaynagini_gosterir():
@@ -378,13 +397,28 @@ def test_E5_AYAR_SAYISI_ve_SINIFLAR_spec_ten():
 
 
 def test_E6_FAZ1B_hedefi_envanterde_A_SINIFI():
-    """Bu turun taşıdığı iki ad envanterde `/opt/meridian/.env` altında, SIR ve A sınıfı olmalı —
-    B/C sınıfı bir sırrı `LoadCredential`a taşımak yarım kazanımdır ve öyle beyan edilir (§2)."""
+    """ÇAPA TAŞINDI (D8, 2026-09-08 10:0xZ + 10:5xZ Rol-1 ölçümü) — `test_I9`un Faz-1B'deki
+    kardeşi. Bu çivi eskiden "iki ad `/opt/meridian/.env` altında SIR olarak duruyor mu" diye
+    soruyordu; Faz-1B 2026-09-07 gecesi TAMAMLANDI ve iki ad o dosyada ARTIK YOK (satır sayısı 0,
+    sonek taraması boş). Çiviyi eski yerinde bırakmak "geçiş yapılmamış" bir dünyayı ölçmek
+    olurdu — ve o dünya artık yok.
+
+    ÜÇ AYAK, üçü de gerekli:
+      (a) dosya satırı DURUYOR ve A sınıfı — dosya silinmedi, yalnız sırları çıktı; sınıf harfi
+          §2'nin donuk sözlüğünden gelir ve tüketici hâlâ systemd-doğal bir süreçtir;
+      (b) `.env` satırında SIR KALMADI — taşınmış bir sırrı envanterde saymak, faz-2'nin
+          "3 + 29" ayrımını bayat bir sayıyla besler (D7/Y1'in tam olarak yakaladığı hâl);
+      (c) iki ad ROTASYON bloğunda credential KAYNAK yollarıyla YAŞIYOR — "nerede YOK" tek
+          başına yarım gerçektir; (b) tek başına, envanterden iki adın kazayla silinmesini de
+          yeşil görürdü."""
     env = _envanter()
     motor = next(d for d in env["dosyalar"] if d["yol"] == "/opt/meridian/.env")
     assert motor["sinif"] == "A"
     adlar = {v["ad"] for v in motor["degiskenler"] if v["sir"]}
-    assert set(FAZ1B) <= adlar
+    assert not adlar, f"taşınmış bir sır hâlâ motor `.env` satırında sayılıyor — envanter bayat: {adlar}"
+    kopyalar = {(k["sir"], k["yol"]) for k in env["rotasyon_kopyalari"]["kopyalar"]}
+    for ad, yol in FAZ1B.items():
+        assert (ad, yol) in kopyalar, f"{ad} credential kaynağı rotasyon tablosunda yok: {yol}"
 
 
 # =================================================================================================
@@ -812,14 +846,21 @@ def test_I8c_sarmalayici_KENDI_KOSUM_YOLUNU_beyan_eder():
 
 
 def test_I9_ENVANTER_faz1A_adlariyla_AYRISMAZ():
-    """AYRIŞMA ÇİVİSİ (Faz-0'ın E bölümünün Faz-1A ayağı): drop-in'in taşıdığı adlar,
-    envanterin `/opt/hindsight/.env` altında SIR olarak saydığı adlarla BİREBİR aynı olmalı.
-    Spec'e dördüncü bir hindsight sırrı girer de drop-in güncellenmezse o sır faz-2'de `.env`ten
-    çıkarılamaz — ya da çıkarılır ve servis düşer."""
+    """AYRIŞMA ÇİVİSİ (Faz-0'ın E bölümünün Faz-1A ayağı): drop-in'in taşıdığı adlar, envanterin
+    o üç sırrı SIR olarak saydığı dosya satırıyla BİREBİR aynı olmalı. Spec'e dördüncü bir
+    hindsight sırrı girer de drop-in güncellenmezse o sır credential kanalına HİÇ girmez.
+
+    ÇAPA TAŞINDI (D7, 2026-09-08 09:3xZ ölçümü): Faz-1A geçişi 2026-09-07'de TAMAMLANDI ve üç ad
+    `/opt/hindsight/.env`te ARTIK YOK (satır sayısı 0). Çiviyi eski yerinde bırakmak, "geçiş
+    yapılmamış" bir dünyayı ölçmek olurdu — ve o dünya artık yok. İki yön birden ölçülür:
+    adlar credential kaynağı satırında VAR, `.env` satırında YOK."""
     env = _envanter()
+    kaynak = next(d for d in env["dosyalar"] if d["yol"] == "/etc/hindsight/creds/<AD>")
+    assert kaynak["kanal_bugun"] == "LoadCredential"
+    assert {v["ad"] for v in kaynak["degiskenler"] if v["sir"]} == set(FAZ1A)
     hs = next(d for d in env["dosyalar"] if d["yol"] == "/opt/hindsight/.env")
-    assert hs["sinif"] == "A"
-    assert {v["ad"] for v in hs["degiskenler"] if v["sir"]} == set(FAZ1A)
+    assert not (set(FAZ1A) & {v["ad"] for v in hs["degiskenler"]}), \
+        "taşınmış bir sır hâlâ `.env` satırında sayılıyor — envanter bayat"
 
 
 def test_I10_vekil_dropin_TEK_adi_TASIR_ve_kaynak_YOLU_AYNI():
