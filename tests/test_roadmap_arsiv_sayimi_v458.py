@@ -9,7 +9,7 @@ BLOKLARINDAN ARŞİVE" bloğu da doğdu). Taşıma sırasında satır biçimi B�
 
     **[TSK-046] Başlık** — status: DONE(2026-09-03 · …) · born: … · owner: … · size: … · trigger: —
 
-çünkü `tests/test_roadmap_standart_v351.py::test_r13_bolum_muafiyeti_*` §8'de `- **[` biçimini
+çünkü `tests/test_roadmap_standart_v351.py::test_r13_bolum_muafiyeti_gercek_dosya_disi_bolumler_madde_uretmez` ve `tests/test_roadmap_standart_v351.py::test_r13_bolum_muafiyeti_sentetik_ihlal_yakalanmaz` §8'de `- **[` biçimini
 YASAKLAR (muaf bölüm; yaşayan bölüm gramerinin oraya sızması yanlış-pozitif kaynağıdır).
 
 Bedeli tek cümlede: `/api/roadmap` ayrıştırıcısı maddeyi YALNIZ `- `/`* ` işaretli satırdan
