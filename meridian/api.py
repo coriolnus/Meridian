@@ -10061,6 +10061,26 @@ _ROADMAP_STATUS_SINIFI = {s: ("KAPALI" if s in ("DONE", "DROPPED") else "AÇIK")
 # BAŞKA satırda" der. İkisini aynı kovaya koymak, ölçülen iki ayrı olguyu tek isim altında
 # gizlerdi — ve `belirsiz`e koymak daha kötüsü olurdu: satır durumunu SÖYLÜYOR, ölçülmemiş değil.
 _ROADMAP_DURUM_KOVALARI = ("kapali", "bloke", "askida", "acik", "belirsiz", "atif")
+# §8 ARŞİV — MADDE LİSTE İMSİZ YAZILIR, VE BU BİLİNÇLİ BİR ŞEMA GENİŞLETMESİDİR (2026-09-08).
+#
+# O gün 107 kapanmış TSK maddesi `§2 TAHTA` ve `§4 ÖNERİ HAVUZU`ndan `§8 ARŞİV`e taşındı
+# (`§8.T.2` / `§8.H.2` alt bölümleri). Arşivde satır LİSTE İMİ TAŞIMAZ —
+# `**[TSK-046] Başlık** — status: DONE(…) · born: … · owner: … · size: … · trigger: —` —
+# çünkü `tests/test_roadmap_standart_v351.py`in bölüm-muafiyeti çivisi §8'de `- **[` biçimini
+# YASAKLAR (yaşayan bölüm grameri muaf bölüme sızarsa yanlış pozitif üretir).
+#
+# ÖLÇÜLEN BEDEL: bu ayrıştırıcı maddeyi yalnız `- `/`* ` işaretinden tanıyordu, dolayısıyla
+# taşınan 107 kalem panodan KAYBOLDU — §2 66→52, §4 127→36 düşerken §8 72'de KALDI ve kapanan
+# iş ne açık ne kapalı kovada göründü ("tablo hâlâ güncel değil", operatör 2026-09-08).
+# Kapanmış işi HİÇBİR kovada göstermemek, bu deponun uydurma yasağının aynası: sayı yanlış
+# değil, YOK — ve yokluğu ekranda "iş azaldı" diye okunuyordu.
+#
+# KAPI DAR TUTULDU: liste imsiz satır YALNIZ §8'de madde sayılır. Yaşayan bölümlerde madde
+# `- **[` ile başlar (spec §1) ve orada da saymak iki grameri birleştirir, v351'in muafiyet
+# süzgeciyle sessizce çelişirdi. Kova eşlemesi AYRICALIKSIZ: arşiv maddesi `kapali`ya
+# `status: DONE/DROPPED` alanından düşer, "§8'de duruyor" olmasından DEĞİL — sözlük dışı bir
+# status arşivde de `belirsiz` + `status_neden` verir.
+_ROADMAP_ARSIV_BOLUMU = "§8"
 
 
 def _roadmap_alanlari(govde: str) -> tuple[list[str], dict[str, str]]:
@@ -10348,6 +10368,17 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
             acik = {"satir": i, "girinti": girinti, "_ham": [govde]}
             hedef["maddeler"].append(acik)
             continue
+        # §8 ARŞİV MADDESİ — LİSTE İMSİZ ŞEMA SATIRI (2026-09-08). Gerekçesi ve ölçümü
+        # `_ROADMAP_ARSIV_BOLUMU` sabitinin üstündeki şerhtedir. Gramer İKİNCİ KEZ YAZILMAZ:
+        # aynı `_ROADMAP_SEMA_BASLIK` deseni kullanılır (tek-kaynak yasası) — yalnız liste imi
+        # şartı düşer ve bölüm kapısı eklenir.
+        if (l.startswith("**[") and yigin
+                and yigin[0][1].get("no") == _ROADMAP_ARSIV_BOLUMU
+                and _ROADMAP_SEMA_BASLIK.match(l.strip())):
+            acik = {"satir": i, "girinti": 0, "_ham": [l.strip()]}
+            # `yigin` doluysa `_aktif()` None olamaz — arşiv maddesi başlıksız önsöze düşemez.
+            _aktif()["maddeler"].append(acik)
+            continue
         if l.lstrip().startswith(">"):
             acik = None            # alıntı bloğu maddenin devamı değildir (§2'nin doğrulama bloğu)
             continue
@@ -10617,7 +10648,11 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
                 "olup alanları tutmayan satır AYRI sayılır (`sayim.sema.ihlal_n`, bölümde "
                 "`sema_ihlal` listesi). `born` YALNIZ bullet biçiminde vardır; §6 kart endeksi "
                 "ve §2 tablo satırları born taşımaz ve alan null kalır — uydurulmaz. "
-                "`status` null ise `status_neden` DOLUdur.")}
+                "`status` null ise `status_neden` DOLUdur. "
+                "§8 ARŞİV'de madde LİSTE İMSİZ yazılır (`**[KİMLİK] Ad** — status: …`) ve o "
+                "biçim YALNIZ §8'de madde sayılır (2026-09-08 arşiv taşıması, 107 kalem); "
+                "yaşayan bölümlerde madde `- **[` ile başlar. Arşiv maddesi ayrıcalıklı "
+                "DEĞİLDİR: kovası `status` alanından gelir, bölümünden değil.")}
 
 
 def _roadmap_say(bolumler: list) -> dict:
