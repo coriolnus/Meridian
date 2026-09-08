@@ -36,12 +36,21 @@ BÖLÜMLER
   K. TUR 2 — çekişmeli incelemenin 11 kökü (ayrıcalık modeli · üç hâl · DSN kanıtı · izinler)
   L. TUR 3 — yeniden incelemenin kalan kökleri (DSN yüzde-çözümü · curl kodu · envanter süsü ·
      `--kuru` kapsamı · motor API gövdesinin JSON kaçışı)
+  M. TUR 4 — HAZIRLIK BEKLEME (canlı vaka 2026-09-08 06:13Z: restart döndü, birim dinlemiyordu)
 
 TUR 3'ÜN ANA DERSİ (K bölümünün dersinin ikinci yarısı): şim bir kanalı MODELLEMİYORSA o kanalın
 arızası ÖLÇÜLEMEZ. `SIM_CURL` motorun sır zincirini tek dosyadan üretiyordu; gerçek motor
 credential → ortam → `state/secrets.json` sırasını izler ve tohum dünyası o dosyayı ZATEN
 taşıyordu. Yani `test_K4a` yeşildi ama betik canlıda çıkış 2 verecekti — çivi yanlış sebeple
 yeşil (§6). Zincir modellendiği anda K4a/H1/H3 kırmızıya döndü; düzeltme ondan sonra yazıldı.
+
+TUR 4'ÜN DERSİ AYNI DERSİN ÜÇÜNCÜ BİÇİMİ, BU KEZ ZAMAN EKSENİNDE. 2026-09-08 06:13Z'de betiğin
+İLK canlı koşumu (`--openrouter`) düştü: negatif kontrol üç birimi yeniden başlattı ve HEMEN
+ölçtü, meridian henüz dinlemiyordu → curl 000 → `OLCULEMEDI(http=000)` → geri alma. 54 çivi
+bunu göremedi çünkü `SIM_SYSTEMCTL` restart'ı ANINDA hazır sayıyordu: modellenmeyen kanal bu kez
+bir mantık değil SAATTİ. Şim artık her `restart`ta birime bir "ulaşılamaz çağrı" bütçesi
+(`SAHTE_HAZIR_N`) yazar ve `curl` bütçe bitene kadar O BİRİMİN HER UCUNDA 000 döner — canlı
+vakanın tam modeli: ölçüm `/healthz`e değil `/api/secrets/test/nous`a gitmişti.
 """
 from __future__ import annotations
 
@@ -150,7 +159,12 @@ for d in kalan:
 '''
 
 SIM_SYSTEMCTL = '''#!/usr/bin/env python3
-"""`restart` systemd'nin yaptığını yapar: LoadCredential kaynağını /run/credentials altına koyar."""
+"""`restart` systemd'nin yaptığını yapar: LoadCredential kaynağını /run/credentials altına koyar.
+
+AYRICA HAZIRLIK BÜTÇESİ YAZAR (`SAHTE_HAZIR_N`, varsayılan 0 = anında hazır). systemd'nin
+`restart`ı DÖNDÜĞÜNDE birim henüz dinlemiyor olabilir — 2026-09-08 06:13Z'de canlıda tam bu
+oldu. Bütçe o pencerenin modelidir: `curl` bütçe bitene kadar O BİRİME giden HER çağrıda
+bağlanamaz. Modellenmeyen bir pencere ölçülemez (tur-3'ün dersi, zaman ekseninde)."""
 import os, shutil, sys
 KOK = os.environ["SIR_ROT_KOK"]
 KRED = {
@@ -173,6 +187,8 @@ if len(a) >= 2 and a[0] == "restart":
     birim = a[1]
     with open(os.path.join(KOK, ".sahte", "systemctl.log"), "a") as fh:
         fh.write(birim + "\\n")
+    with open(os.path.join(KOK, ".sahte", "butce_" + birim), "w") as fh:
+        fh.write(os.environ.get("SAHTE_HAZIR_N", "0"))
     hedef_dizin = os.path.join(KOK, "run", "credentials", birim)
     for kimlik, kaynak in KRED.get(birim, {}).items():
         os.makedirs(hedef_dizin, exist_ok=True)
@@ -194,6 +210,11 @@ SAHTE_MOTOR_OLU=1 → MOTORUN TAMAMI ölü (`/api/…` uçlarının HEPSİ). İl
 görünüyordu — şimin betiğin varsaydığı dünyayı modellemesi (tur-2'nin kendi dersi).
 SAHTE_PING_GOVDESIZ=1 → motor AYAKTA ve 200 döner ama gövde YOK: `OLCULEMEDI(govde-yok)` dalının
 dünya tarafındaki karşılığı (araya giren vekil, kesik yanıt).
+SAHTE_HAZIR_N=<n> → yeniden başlatılan her birim ilk n çağrıda ULAŞILAMAZ (000 + çıkış 7), sonra
+normal. Bütçeyi `systemctl restart` yazar, burası TÜKETİR ve tüketim UÇTAN BAĞIMSIZDIR: canlı
+vakada 000'ı alan uç `/healthz` değil `/api/secrets/test/nous`tu. `SAHTE_MOTOR_OLU` bu bayrağın
+YERİNE GEÇMEZ — o "API yüzeyi ölü" der ve `/healthz`e dokunmaz; ikisini tek bayrağa bağlamak
+K4c'nin ölçtüğü dalı (ölü motorda mutantın yazması) örterdi.
 
 GERÇEK curl DAVRANIŞI: bağlanamasa bile `-w '%{http_code}'` çıktısını (`000`) basar VE 7 ile
 düşer. Yerel ölçüm 2026-09-08: `curl … || echo 000` → `000000`. Şim stdout'a hiçbir şey
@@ -230,6 +251,30 @@ def env_alan(yol, alan):
     except OSError:
         return None
     return None
+
+
+def hazir_butce(url):
+    """Birim yeniden başladıktan sonra HEMEN dinlemez. `systemctl restart` her birime bir
+    "ulaşılamaz çağrı" bütçesi yazar; buradaki her çağrı bütçeyi bir azaltır ve bütçe bitene
+    kadar curl BAĞLANAMAZ — hangi uç olursa olsun. Eşleme HOST üzerindendir: test kökü her
+    birime ayrı bir sahte host verir (motor · hafiza · kapi)."""
+    for ad, kok_url in (("meridian.service", os.environ.get("SIR_ROT_API", "")),
+                        ("hindsight-api.service", os.environ.get("SIR_ROT_HINDSIGHT", "")),
+                        ("apisix.service", os.environ.get("SIR_ROT_KAPI_KOK", ""))):
+        if not kok_url or not url.startswith(kok_url):
+            continue
+        yol = os.path.join(KOK, ".sahte", "butce_" + ad)
+        try:
+            with open(yol, encoding="utf-8") as fh:
+                kalan = int(fh.read() or 0)
+        except (OSError, ValueError):
+            kalan = 0
+        if kalan <= 0:
+            return False
+        with open(yol, "w", encoding="utf-8") as fh:
+            fh.write(str(kalan - 1))
+        return True
+    return False
 
 
 DEPO = KOK + "/opt/meridian/state/secrets.json"
@@ -281,6 +326,15 @@ with open(cfg, encoding="utf-8") as fh:
             ad, _, deger = v.partition(": ")
             basliklar[ad.lower()] = deger
 
+with open(os.path.join(KOK, ".sahte", "url.log"), "a") as fh:
+    fh.write(url + "\\n")          # hangi UCUN kaç kez yoklandığı ölçülebilsin (M bölümü)
+
+if hazir_butce(url):
+    # Birim henüz AYAKTA DEĞİL. Gerçek curl bağlanamazsa `%{http_code}` (000) basar VE 7 ile düşer.
+    sys.stdout.write("000")
+    sys.stderr.write("curl: (7) Failed to connect\\n")
+    sys.exit(7)
+
 if os.environ.get("SAHTE_MOTOR_OLU") == "1" and "/api/" in url:
     # MOTORUN TAMAMI ölü: `/api/secrets/test/nous` de, `/api/secrets/<ad>` yazma/silme ucu de
     # AYNI süreçtedir. Gerçek curl kodu (000) basar VE 7 ile düşer.
@@ -312,8 +366,8 @@ elif url.endswith("/api/secrets/test/nous"):
 elif url.endswith("/v1/default/banks"):
     bek = "Bearer " + (oku("/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY") or "")
     kod = "200" if KOR or basliklar.get("authorization") == bek else "401"
-elif url.endswith("/health"):
-    kod = "200"
+elif url.endswith("/health") or url.endswith("/healthz"):
+    kod = "200"          # hazırlık uçları: hazır olan birim 200 der (ulaşılamama YUKARIDA modellendi)
 elif "/api/secrets" in url:
     yetkili = KOR or basliklar.get("x-meridian-token") == oku("/etc/meridian/dash_token")
     kod = "200" if yetkili else "401"
@@ -467,6 +521,7 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     (kok / ".sahte/pg_hedef").write_text("127.0.0.1 5432 hindsight hindsight\n")
     (kok / ".sahte/argv.log").write_text("")
     (kok / ".sahte/systemctl.log").write_text("")
+    (kok / ".sahte/url.log").write_text("")
 
     binn = tmp_path / "bin"
     binn.mkdir()
@@ -481,10 +536,16 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     # `TMPDIR=tmp_path`: `mktemp -d` bunu onurlandırır, yani 0700 çalışma dizini KOŞUMUN KENDİ
     # tmp_path'i altında doğar. İlk turda J8 paylaşılan `/tmp`i glob'luyordu ve komşu süreçlerin
     # dizinlerini görüyordu — `-n 4` altında flaky bir çivi, yani hüküm olmayan bir hüküm.
+    # `HAZIR_BEKLE_*`: bekleme penceresi ÇİVİ İÇİN sıkıştırılır (üretimde 2 s / 60 s). Sıkıştırma
+    # sözleşmeyi değiştirmesin diye üretim varsayılanları M0'da AYRICA ölçülür — yoksa biri
+    # varsayılanı 0'a çekse bütün M bölümü yine yeşil kalırdı.
     ortam = dict(os.environ, PATH=f"{binn}:{os.environ['PATH']}", SIR_ROT_KOK=str(kok),
                  SIR_ROT_API="http://motor", SIR_ROT_HINDSIGHT="http://hafiza",
-                 SIR_ROT_KAPI="http://kapi/llm/v1", SAHTE_UID="0", TMPDIR=str(tmp_path))
-    for bayrak in ("SAHTE_KOR", "SAHTE_MOTOR_OLU", "SAHTE_RM_KIRIK", "SAHTE_PING_GOVDESIZ"):
+                 SIR_ROT_KAPI="http://kapi/llm/v1", SIR_ROT_KAPI_KOK="http://kapi",
+                 HAZIR_BEKLE_ARALIK_S="0.01", HAZIR_BEKLE_TAVAN_S="2",
+                 SAHTE_UID="0", TMPDIR=str(tmp_path))
+    for bayrak in ("SAHTE_KOR", "SAHTE_MOTOR_OLU", "SAHTE_RM_KIRIK", "SAHTE_PING_GOVDESIZ",
+                   "SAHTE_HAZIR_N"):
         ortam.pop(bayrak, None)
     return kok, ortam
 
@@ -1217,7 +1278,12 @@ def test_K1c_MUT_root_kapisi_kalkarsa_HER_KANIT_000(tmp_path):
     """K1'in ısırdığı dal — ve şimin gerçek kimlik farkını TEMSİL ETTİĞİNİN kanıtı. Kapı
     mutasyonla etkisizleştirilip betik ubuntu olarak koşturulunca: yazım TAMAMLANIR (sır DÖNER),
     ama `curl -K` root'un 0600 cfg'sini açamaz ve her kanıt 000 olur → çıkış 2. İlk turun 54
-    çivisinin hiçbiri bunu göremiyordu; şimdi görüyor."""
+    çivisinin hiçbiri bunu göremiyordu; şimdi görüyor.
+
+    TUR 4'TE ARIZA NOKTASI ÖNE KAYDI: kimlik kırıldığında ilk 000'ı `_farksal` değil hazırlık
+    yoklaması alır (`_hazir_bekle`, `--dash` için `/healthz`) ve koşum ORADA durur. Sınıf aynı
+    (curl cfg'yi açamıyor → 000 → "ölçülemedi"), yalnız daha erken yakalanıyor; hüküm bu yüzden
+    tek bir çağrı yerine değil, "çıkış 2 + ÖLÇÜLEMEDİ + HTTP 000" üçlüsüne bağlıdır."""
     kok, ortam = _sahte_ortam(tmp_path)
     ortam["SAHTE_UID"] = "1000"
     m = _mutant(tmp_path, ('_UID="$(id -u)"', '_UID=0   # MUTASYON: kapı etkisiz'))
@@ -1910,3 +1976,167 @@ def test_L4c_ROOT_kapisi_OLMAYAN_bir_bicimi_ONERMEZ(tmp_path):
     assert "--envanter --kuru" not in r.stderr, r.stderr
     r2 = _kos(BETIK, ortam, "--dash")
     assert "sudo ./sir_rotasyon.sh --dash --kuru" in r2.stderr, r2.stderr
+
+
+# =================================================================================================
+# M) TUR 4 — HAZIRLIK BEKLEME ("restart döndü" ≠ "birim dinliyor")
+# =================================================================================================
+# CANLI VAKA 2026-09-08 06:13Z (A1, betiğin İLK gerçek koşumu, `--openrouter`): `_negatif_kontrol`
+# üç birimi yeniden başlattı ve HEMEN ölçtü (`_nous_hali` → `/api/secrets/test/nous`); meridian
+# henüz ayakta olmadığı için curl `000` döndü → `OLCULEMEDI(http=000)` → "ÖLÇÜM ARIZASI" → geri
+# alma. Dosyalar yedekle aynı kaldı (zarar YOK) ama rotasyon YAPILAMADI. Betik doğru davrandı;
+# eksik olan ZAMANDI.
+#
+# ÇİVİLERİN GÖREMEME SEBEBİ ŞİMDEYDİ, MANTIKTA DEĞİL (tur-3'ün dersinin zaman eksenindeki hâli):
+# `SIM_SYSTEMCTL` restart'ı ANINDA hazır sayıyordu. Artık her `restart` birime bir "ulaşılamaz
+# çağrı" bütçesi yazar (`SAHTE_HAZIR_N`) ve `SIM_CURL` bütçe bitene kadar O BİRİMİN HER UCUNDA
+# 000 döner — vakada 000'ı alan uç `/healthz` DEĞİL ölçüm ucuydu, model bu yüzden uçtan bağımsız.
+
+
+def _url_gunlugu(kok: pathlib.Path) -> list[str]:
+    """Şimin gördüğü URL'lerin sırası — "yoklama gerçekten döndü mü" ancak böyle ölçülür.
+    `argv.log` bunu söyleyemez: URL argv'de değil `-K` yapılandırma dosyasındadır."""
+    return (kok / ".sahte/url.log").read_text(encoding="utf-8").split()
+
+
+def test_M0_URETIM_VARSAYILANLARI_ve_UC_HARITASI_betikte():
+    """Çivi ortamı bekleme penceresini SIKIŞTIRIR (0,01 s / 2 s) — sıkıştırmasaydı tek bir
+    aşım çivisi bir dakika sürerdi. Sıkıştırma SÖZLEŞMEYİ değiştirmemelidir: üretim
+    varsayılanları burada ölçülür. Bu satır olmasaydı biri betikteki tavanı 0'a çekse M
+    bölümünün tamamı yine yeşil kalır, canlıda ise hiç beklenmezdi."""
+    metin = BETIK.read_text(encoding="utf-8")
+    assert 'HAZIR_BEKLE_ARALIK_S="${HAZIR_BEKLE_ARALIK_S:-2}"' in metin
+    assert 'HAZIR_BEKLE_TAVAN_S="${HAZIR_BEKLE_TAVAN_S:-60}"' in metin
+    # Üç birim, üç uç. Ölçüm 2026-09-08 (A1, elle rotasyon): meridian 6-8 s · hindsight 3-10 s ·
+    # apisix 5-10 s — tavan (60 s) o ölçünün ~6 katıdır.
+    assert '$API/healthz' in metin and '$HINDSIGHT/health' in metin
+    assert '$KAPI_KOK/healthz' in metin
+    # Kapının PORTU tek yerde yaşar: `KAPI_UC` kökten türetilir (tek-kaynak yasası).
+    assert 'KAPI_UC="${SIR_ROT_KAPI:-$KAPI_KOK/llm/v1}"' in metin
+
+
+def test_M1_restart_sonrasi_HAZIR_beklenir_ve_SURE_BASILIR(tmp_path):
+    """(a) Birim üç çağrı boyunca ulaşılamaz, dördüncüde 200. Koşum GEÇER ve beklenen süre
+    çıktıya BASILIR — basılmayan bir sayı ölçülmemiş bir sayıdır.
+
+    YOKLAMANIN GERÇEKTEN DÖNDÜĞÜ ölçülür: `/healthz` dört kez çağrılmalı. Tek çağrı sayılsaydı
+    "bekleyen betik" ile "bir kez bakıp geçen betik" ayırt edilemezdi."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["SAHTE_HAZIR_N"] = "3"
+    r = _kos(BETIK, ortam, "--dash")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert re.search(r"hazır: meridian \d+ s", r.stdout), r.stdout
+    saglik = [u for u in _url_gunlugu(kok) if u.endswith("/healthz")]
+    assert len(saglik) == 4, saglik
+    # Bekleme bir SÜS değil: asıl kanıt ondan SONRA ölçülür ve geçer.
+    assert "pano /api/secrets: yeni→200 · eski→401" in r.stdout, r.stdout
+
+
+def test_M2_CANLI_VAKA_openrouter_ARTIK_gecer(tmp_path):
+    """(a) — vakanın kendisi. `--openrouter` beş kez yeniden başlatır ve negatif kontrolün
+    ölçümü restart'ın HEMEN ardından koşar. Aynı dünyada (N=3) rotasyon tamamlanır ve BEŞ turun
+    ÜÇ birimi de beklenmiş olur: 15 "hazır" satırı. Sayı pinlenir çünkü bir tur sessizce
+    beklemeden geçerse hüküm yine 000'a bağlı kalırdı (K10a'nın sıra pinlemesiyle aynı gerekçe)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["SAHTE_HAZIR_N"] = "3"
+    r = _kos(BETIK, ortam, "--openrouter", girdi=f"{YENI_NOUS}\n{YENI_OR}\n")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "negatif kontrol (NOUS_API_KEY, yöntem=bos): → RET" in r.stdout
+    assert "negatif kontrol (OPENROUTER_API_KEY, yöntem=bozuk): → RET" in r.stdout
+    assert (kok / "etc/meridian/nous_api_key").read_text().strip() == YENI_NOUS
+    assert r.stdout.count("✓ hazır: ") == 15, r.stdout
+
+
+def test_M3_UCU_OLMAYAN_birim_HAZIR_SAYILMAZ_ve_bunu_SOYLER(tmp_path):
+    """`hindsight-cp.service` bir sağlık ucu sunmuyor (2026-09-08 itibarıyla ölçülmedi). Sessizce
+    "hazır" saymak, ölçülmemiş bir şeyi ölçülmüş göstermek olurdu (uydurma yasağı); satır
+    kapsamını BEYAN eder. Ölçülen ötekiler beklenir."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["SAHTE_HAZIR_N"] = "2"
+    r = _kos(BETIK, ortam, "--tenant")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "hazırlık yoklaması YOK: hindsight-cp.service" in r.stdout
+    assert "hazır SAYILMADI" in r.stdout
+    assert "hazır: hindsight-api" in r.stdout and "hazır: meridian" in r.stdout
+    assert len([u for u in _url_gunlugu(kok) if u.endswith("/health")]) == 3
+    assert len([u for u in _url_gunlugu(kok) if u.endswith("/healthz")]) == 3
+
+
+def test_M4_TAVAN_asilirsa_OLCULEMEDI_ve_HICBIR_KALICI_YAZIM(tmp_path):
+    """(b) Birim hiç açılmaz. Betik "hazır" DEMEZ: ölçemediğini söyler, çıkış 2 verir ve negatif
+    kontrolün geçici yazımı trap ile geri alınır — operatörün TAZE anahtarı hiç yazılmaz.
+
+    N TAVANIN ALTINDA BİR SAYI OLAMAZ. 99 yoklama hızlı bir makinede 2 s'lik tavana varmadan
+    biterdi ve çivi renk değiştirirdi; flaky bir çivi hüküm değildir (J8 dersi). Bu yüzden N
+    tavanın ulaşamayacağı kadar büyük seçilir ve hüküm SÜREYE değil DAVRANIŞA bağlanır."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["SAHTE_HAZIR_N"] = "999999"
+    once = _dosya_imzalari(kok)
+    r = _kos(BETIK, ortam, "--openrouter", girdi=f"{YENI_NOUS}\n{YENI_OR}\n")
+    assert r.returncode == 2, (r.returncode, r.stdout + r.stderr)
+    assert "hazırlık bekleme aşıldı" in r.stderr and "apisix.service" in r.stderr, r.stderr
+    assert "HTTP 000" in r.stderr, r.stderr
+    assert "✓ hazır: " not in r.stdout, r.stdout
+    sonra = _dosya_imzalari(kok)
+    degisen = {y for y in set(once) | set(sonra) if once.get(y) != sonra.get(y)}
+    kalici = {y for y in degisen if "sir-yedek-" not in y and "/run/credentials/" not in y}
+    assert not kalici, f"rotasyon hedefine kalıcı yazım var: {kalici}"
+    ham = "\n".join(p.read_text(encoding="utf-8", errors="ignore") for p in kok.rglob("*")
+                    if p.is_file() and ".sahte" not in str(p))
+    assert YENI_NOUS not in ham and YENI_OR not in ham, "taze anahtar diske düştü"
+    assert (kok / "etc/meridian/nous_api_key").read_text().strip() == ESKI["nous"]
+    assert _depo(kok)["NOUS_API_KEY"] == ESKI["nous"], "depo kopyası geri alınmadı"
+
+
+@pytest.mark.parametrize("alt,bekleyen", [("--kapi", 2), ("--tenant", 2), ("--db", 1),
+                                          ("--dash", 1), ("--openrouter", 3)])
+def test_M7_KURU_KOSUM_bekleme_BEDELINI_de_soyler(tmp_path, alt, bekleyen):
+    """BEDEL YASASI. Bekleme bakım penceresine SÜRE ekler; kuru koşum operatörün koşacağı İLK
+    komuttur ve o süreyi orada görmelidir (C2'nin "hangi birimler" sorusunun ikinci yarısı).
+
+    BEKLENEN BİRİM SAYISI BETİĞİN KENDİ ÇIKTISINDAN türetilir — birim tablosunun ikinci bir
+    kopyasını buraya yazmak tek-kaynak yasasının yasakladığı hâldir. Çivinin kendi İDDİASI
+    yalnız `bekleyen`dir: kaç birimin ÖLÇÜLMÜŞ bir sağlık ucu var (A1 haritası, 2026-09-08)."""
+    _, ortam = _sahte_ortam(tmp_path)
+    r = _kos(BETIK, ortam, alt, "--kuru")
+    assert r.returncode == 0, r.stdout + r.stderr
+    birimler = r.stdout.split("yeniden başlatılacak:")[1].splitlines()[0].split()
+    satir = [x for x in r.stdout.splitlines() if x.startswith("  hazırlık beklemesi:")]
+    assert len(satir) == 1, r.stdout
+    # HER birim satırda görünür: ucu OLAN uçla, OLMAYAN "beklenmez" beyanıyla — sessiz atlama yok.
+    assert satir[0].count("→") == len(birimler), (satir, birimler)
+    assert satir[0].count("/health") == bekleyen, satir
+    assert satir[0].count("(sağlık ucu YOK, beklenmez)") == len(birimler) - bekleyen, satir
+    assert "en çok 2 s" in r.stdout, "tavan betiğin SABİTİNDEN basılmıyor (ikinci kopya riski)"
+
+
+def test_M5_MUT_hazir_bekle_KALKARSA_M1_kirmizi(tmp_path):
+    """(c) M1'in ısırdığı dal. İki çağrı yeri de mutasyonla kaldırılır; aynı dünyada (N=3)
+    `--dash`in kanıtı restart'ın hemen ardından koşar, 000 alır ve betik durur."""
+    _, ortam = _sahte_ortam(tmp_path)
+    ortam["SAHTE_HAZIR_N"] = "3"
+    m = _mutant(tmp_path,
+                ('  _kredensiyel_denetle "$alt"\n  _hazir_bekle "$alt"\n',
+                 '  _kredensiyel_denetle "$alt"\n'),
+                ('  _hazir_bekle "$1"\n}', '  :\n}'))
+    r = _kos(m, ortam, "--dash")
+    assert r.returncode == 2, (r.returncode, r.stdout + r.stderr)
+    assert "hazır: meridian" not in r.stdout, "mutasyon ısırmıyor — M1 yanlış sebeple yeşil"
+    assert "YENİ değerle HTTP 000" in r.stderr, r.stderr
+
+
+def test_M6_MUT_hazir_bekle_KALKARSA_CANLI_VAKA_geri_doner(tmp_path):
+    """(c) M2'nin ısırdığı dal — ve aynı zamanda vakanın yeniden üretimi. Mutant, 2026-09-08
+    06:13Z'de canlıda görülen METNİ üretir: negatif kontrolün ölçümü `OLCULEMEDI(http=000)`
+    döner ve betik "ÖLÇÜM ARIZASI" deyip rotasyonu yapmadan durur."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["SAHTE_HAZIR_N"] = "3"
+    m = _mutant(tmp_path,
+                ('  _kredensiyel_denetle "$alt"\n  _hazir_bekle "$alt"\n',
+                 '  _kredensiyel_denetle "$alt"\n'),
+                ('  _hazir_bekle "$1"\n}', '  :\n}'))
+    r = _kos(m, ortam, "--openrouter", girdi=f"{YENI_NOUS}\n{YENI_OR}\n")
+    assert r.returncode == 2, (r.returncode, r.stdout + r.stderr)
+    assert "ÖLÇÜM ARIZASI → OLCULEMEDI(http=000)" in r.stderr, r.stderr
+    assert (kok / "etc/meridian/nous_api_key").read_text().strip() == ESKI["nous"], \
+        "mutasyon ısırmıyor — M2 yanlış sebeple yeşil"

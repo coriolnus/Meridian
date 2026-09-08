@@ -61,6 +61,17 @@
 # `--openrouter`de negatif kontrol YAZIMDAN ÖNCE koşar (bilerek bozuk değer, trap ile geri alınır):
 # kanıt anahtara bağlı değilse operatörün TAZE anahtarı hiç yazılmaz ve boşa harcanmaz.
 #
+# HAZIRLIK BEKLEME — KANIT ZAMANA DA BAĞLIDIR. `systemctl restart` DÖNMESİ, birimin DİNLEDİĞİ
+# anlamına gelmez. 2026-09-08 06:13Z'de `--openrouter`in ilk canlı koşumu tam buradan düştü:
+# negatif kontrol üç birimi yeniden başlattı ve hemen ölçtü, meridian henüz ayakta olmadığı için
+# curl `000` döndü ve betik (doğru biçimde) "ÖLÇÜM ARIZASI" deyip geri aldı — hiçbir zarar yok,
+# ama rotasyon da yok. Her yeniden başlatmadan sonra birimin sağlık ucu YOKLANIR: meridian
+# `/healthz`, hindsight-api `/health`, apisix `/healthz`; 2 s aralıkla en çok 60 s
+# (`HAZIR_BEKLE_ARALIK_S` / `HAZIR_BEKLE_TAVAN_S` ile ölçerek değiştirilebilir). Ölçülen açılış
+# süreleri 2026-09-08: meridian 6-8 s · hindsight 3-10 s · apisix 5-10 s. Beklenen süre ÇIKTIYA
+# BASILIR. Tavan aşılırsa betik "hazır" demez, `ölçülemedi` der ve çıkış 2 verir. Sağlık ucu
+# tanımlı OLMAYAN birim (`hindsight-cp.service`) beklenmez ve hazır SAYILMAZ — satır bunu söyler.
+#
 # GERİ-DÜŞÜŞ ZİNCİRİ — NOUS BACAĞININ İNCE YERİ. Motor sırrı TEK yerden okumaz:
 # `meridian/secrets.py::_fetch` sırayla credential → süreç ortamı → `state/secrets.json` → GCP
 # dener (meridian.service'te ortam basamağı ölüdür; drop-in `51-dash-env-kaldir.conf`). Yani
@@ -94,7 +105,20 @@ KOK="${SIR_ROT_KOK:-}"
 #: kanca DEĞİL sözleşmedir: A1'de portlar sabittir, çivi başka portta koşar.
 API="${SIR_ROT_API:-http://127.0.0.1:8080}"
 HINDSIGHT="${SIR_ROT_HINDSIGHT:-http://127.0.0.1:8888}"
-KAPI_UC="${SIR_ROT_KAPI:-http://127.0.0.1:9080/llm/v1}"
+#: Kapının KÖKÜ ayrı bir sabittir çünkü iki AYRI uç kullanılır: kanıt `/llm/v1/…`, hazırlık
+#: yoklaması `/healthz`. Port TEK yerde yaşasın diye `KAPI_UC` kökten TÜRETİLİR — iki yere
+#: yazılmış bir port sessizce ayrışırdı (tek-kaynak yasası).
+KAPI_KOK="${SIR_ROT_KAPI_KOK:-http://127.0.0.1:9080}"
+KAPI_UC="${SIR_ROT_KAPI:-$KAPI_KOK/llm/v1}"
+
+#: HAZIRLIK BEKLEME penceresi. Ölçüm 2026-09-08 (A1, elle rotasyon penceresi): meridian
+#: `/healthz` 6-8 s, hindsight `/health` 3-10 s, apisix `/healthz` 5-10 s. Tavan o ölçümün ~6
+#: katıdır: dar tavan sağlıklı ama yavaş bir açılışı "ölçülemedi" sayar, geniş tavan bakım
+#: penceresini uzatır. Ortamdan geçilebilir olmaları kanca DEĞİL sözleşmedir (uçlarla aynı
+#: gerekçe): yükün yüksek olduğu bir pencerede operatör tavanı ÖLÇEREK yükseltebilir, ve çivi
+#: bekleme dalını dakikalar sürmeden koşabilir.
+HAZIR_BEKLE_ARALIK_S="${HAZIR_BEKLE_ARALIK_S:-2}"
+HAZIR_BEKLE_TAVAN_S="${HAZIR_BEKLE_TAVAN_S:-60}"
 
 ISLIK=""          # 0700 çalışma dizini (değer taşıyan geçici dosyalar YALNIZ burada yaşar)
 YEDEK=""          # bu koşumun yedek dizini
@@ -771,6 +795,57 @@ _yeniden_baslat() {
     sudo systemctl restart "$b" || die "$b yeniden başlamadı — journalctl -u $b -n 50"
   done
   _kredensiyel_denetle "$alt"
+  _hazir_bekle "$alt"
+}
+
+# =================================================================================================
+# HAZIRLIK BEKLEME — "restart döndü" ile "birim dinliyor" AYNI ŞEY DEĞİLDİR
+# =================================================================================================
+# VAKA 2026-09-08 06:13Z (A1, `--openrouter`in İLK canlı koşumu): `_negatif_kontrol` üç birimi
+# yeniden başlattı ve HEMEN ölçtü (`_nous_hali` → `/api/secrets/test/nous`). meridian henüz
+# dinlemiyordu → curl `000` → `OLCULEMEDI(http=000)` → "ÖLÇÜM ARIZASI" → geri alma. Dosyalar
+# yedekle aynı kaldı (zarar YOK) ama ROTASYON YAPILAMADI: pencere ölçüm arızasıyla kapandı.
+# Betik doğru davrandı (uydurma yasağı: ulaşılamamayı "reddedildi" saymadı) — EKSİK olan tek şey
+# ZAMANDI. v447 bunu göremedi çünkü `systemctl` şimi restart'ı ANINDA hazır sayıyordu; yani
+# çivilerin kör olduğu kanal SAATTİ, mantık değil (§6: şim modellemiyorsa arıza ölçülemez).
+#
+# BEKLEME YOKLAMALIDIR AMA SINIRLIDIR. Tavan aşılırsa `olcum_yok`: betik "hazır" DEMEZ,
+# ölçemediğini söyler ve çıkış 2 verir. Süre BASILIR — bir sonraki turda tavanın ölçüye uygun
+# olup olmadığı tartışılabilsin diye (basılmayan bir sayı, ölçülmemiş bir sayıdır).
+#
+# UCU OLMAYAN BİRİM HAZIR SAYILMAZ, BEKLENMEZ: `hindsight-cp.service` bir sağlık ucu sunmuyor
+# (2026-09-08 itibarıyla ölçülmedi) ve satır bunu SÖYLER. Sessizce "hazır" saymak, ölçülmemiş
+# bir şeyi ölçülmüş göstermek olurdu.
+_hazir_uc() {
+  case "$1" in
+    meridian.service)      echo "$API/healthz" ;;
+    hindsight-api.service) echo "$HINDSIGHT/health" ;;
+    apisix.service)        echo "$KAPI_KOK/healthz" ;;
+    *) return 1 ;;
+  esac
+}
+
+_hazir_bekle() {
+  local alt="$1" b uc bas kod gecen
+  for b in $(_birimler "$alt"); do
+    if ! uc="$(_hazir_uc "$b")"; then
+      echo "  · hazırlık yoklaması YOK: $b (sağlık ucu tanımlı değil — beklenmedi, hazır SAYILMADI)"
+      continue
+    fi
+    bas="$(date +%s)"
+    while :; do
+      kod="$(_kod "-" "$uc" "-" "-")"
+      if [ "$kod" = "200" ]; then break; fi
+      gecen=$(( $(date +%s) - bas ))
+      if [ "$gecen" -ge "$HAZIR_BEKLE_TAVAN_S" ]; then
+        olcum_yok "hazırlık bekleme aşıldı: $b $uc → HTTP $kod
+     ($HAZIR_BEKLE_TAVAN_S s içinde 200 gelmedi.) Birim AYAKTA DEĞİL ya da yüzeye ulaşılamıyor;
+     buradan sonra ölçmek 'ulaşılamadı'yı 'anahtar reddedildi' saymak olurdu."
+      fi
+      sleep "$HAZIR_BEKLE_ARALIK_S"
+    done
+    oldu "hazır: ${b%.service} $(( $(date +%s) - bas )) s"
+  done
 }
 
 # `/run/credentials/<birim>/<kimlik>` boyutu > 1 mi. Dizin YOKSA bu bir ölçüm arızasıdır, "sorun
@@ -853,7 +928,7 @@ _nous_hali() {
 # ALT KOMUTLAR
 # =================================================================================================
 _kuru_rapor() {
-  local alt="$1" _alt sir tur yol alan _m _s onek
+  local alt="$1" _alt sir tur yol alan _m _s onek uc hb=""
   echo "=== KURU KOŞUM: --$alt (HİÇBİR ŞEY YAZILMADI) ==="
   while read -r _alt sir tur yol alan _m _s onek; do
     [ "$_alt" = "$alt" ] || continue
@@ -865,6 +940,15 @@ _kuru_rapor() {
     esac
   done < <(_kopyalar)
   echo "  yeniden başlatılacak: $(_birimler "$alt")"
+  # BEDEL YASASI: bekleme bakım penceresine SÜRE ekler ve o süre kuru raporda BEYAN EDİLİR —
+  # "hangi birimler yeniden başlayacak" sorusunun cevabı artık "ve ne kadar bekleyebilir"i de
+  # içerir. Liste `_hazir_uc`tan TÜRETİLİR: ikinci bir yerde yazılsaydı sessizce ayrışırdı.
+  for _alt in $(_birimler "$alt"); do
+    if uc="$(_hazir_uc "$_alt")"; then hb="$hb ${_alt%.service}→$uc"
+    else hb="$hb ${_alt%.service}→(sağlık ucu YOK, beklenmez)"; fi
+  done
+  echo "  hazırlık beklemesi:$hb"
+  echo "    (her uç için $HAZIR_BEKLE_ARALIK_S s aralıkla en çok $HAZIR_BEKLE_TAVAN_S s; aşımda ÖLÇÜLEMEDİ)"
   echo "  yedek dizini: $KOK/root/sir-yedek-<UTC ts>-$alt"
 }
 
@@ -1049,6 +1133,10 @@ _yeniden_baslat_sessiz() {
     sudo systemctl restart "$b" >/dev/null 2>&1 || true   # sessiz-yutma: negatif kontrol
     # SIRASINDA bozuk değerle bir birim açılmayabilir; bu beklenen hâldir ve ölçümün kendisidir.
   done
+  # SESSİZ olan RESTART'tır, BEKLEME DEĞİL. Negatif kontrolün ölçümü tam da burada, restart'ın
+  # HEMEN ardından yapılır (vaka 2026-09-08) — bekleme atlanırsa "bozuk değerle reddedildi" ile
+  # "birim henüz ayakta değil" aynı `000`a düşer ve ikisi AYNI ŞEY DEĞİLDİR.
+  _hazir_bekle "$1"
 }
 
 # Model ADI sır DEĞİLDİR ama kanıtın ön şartıdır: modelsiz bir `chat/completions` gövdesi kapıdan
