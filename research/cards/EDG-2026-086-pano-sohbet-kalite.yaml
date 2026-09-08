@@ -66,3 +66,9 @@ notlar: >
   2026-09-08 (Rol-1): B1 düzeltme turu (v444, 3 tur) + B2 UI main'de; ölçüm penceresi dağıtım #28'den itibaren başlar. B3 sayaç planı:
   docs/superpowers/plans/2026-09-08-pano-sohbet-b3.md — sohbet.jsonl'e tur başına `cikti_atiflari` (sayı/kimlik/yol/sembol kümesi) EKLENİR (payda için;
   alan ek, eşik/pencere/kill-list DEĞİŞMEZ). Bedel: B1 tur-3 ile ikinci eşzamanlı mesaj sıraya girmez, `mesgul` ile reddedilir (kota paydasına girmez).
+  2026-09-08 04:1xZ (Rol-1): B3 SAYAÇ HAZIR (87689e0): research/olcumler/edg086_pano_sohbet/sayim.py (--defter --cikti --markdown --baslangic --kart --onaylar); payda =
+  araç çıktısı atıf kümesi + operatör mesajı atıfları (mesaj yankısı uydurma değil; mesaj_kaynakli tanı). SINIF TANIMLARI PENCERE AÇILMADAN DARALTILDI
+  (dağıtım #29 öncesi; sonradan değişmez): sembol = ≥3 harf, Unicode sınırlı, bağlam çapalı ($/fiyat/'sembol'/kaynak anahtarı), ≤2 harf → belirsiz;
+  belirsiz = yüzde/%, binlik nokta, kısa sembol adayları (belirsiz_pay raporlanır — hüküm turunda uydurma oranı belirsiz_pay ile birlikte okunur);
+  araç disiplini oranı ÇAĞRI paydalı (tur paydalı tanı); sistem metni (llm_dustu/mesgul/kota/tur tavanı) ölçüm dışı; boş-payda (model konuştu,
+  araç okumadı) satırlarında her atıf uydurma. Sentetik PK 20 satır 3/2/1 (v450). Pencere: dağıtım #29'dan itibaren 10 seans ∧ ≥100 mesaj.
