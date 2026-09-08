@@ -1482,6 +1482,17 @@ DEĞİLDİR; betik "ölçülemedi" der ve ÇIKIŞ 2 verir — uydurma yasağı, 
 `--openrouter`de negatif kontrol YAZIMDAN ÖNCE koşar (bilerek bozuk değer, trap ile geri alınır):
 kanıt anahtara bağlı değilse operatörün TAZE anahtarı hiç yazılmaz ve boşa harcanmaz.
 
+HAZIRLIK BEKLEME — KANIT ZAMANA DA BAĞLIDIR. `systemctl restart` DÖNMESİ, birimin DİNLEDİĞİ
+anlamına gelmez. 2026-09-08 06:13Z'de `--openrouter`in ilk canlı koşumu tam buradan düştü:
+negatif kontrol üç birimi yeniden başlattı ve hemen ölçtü, meridian henüz ayakta olmadığı için
+curl `000` döndü ve betik (doğru biçimde) "ÖLÇÜM ARIZASI" deyip geri aldı — hiçbir zarar yok,
+ama rotasyon da yok. Her yeniden başlatmadan sonra birimin sağlık ucu YOKLANIR: meridian
+`/healthz`, hindsight-api `/health`, apisix `/healthz`; 2 s aralıkla en çok 60 s
+(`HAZIR_BEKLE_ARALIK_S` / `HAZIR_BEKLE_TAVAN_S` ile ölçerek değiştirilebilir). Ölçülen açılış
+süreleri 2026-09-08: meridian 6-8 s · hindsight 3-10 s · apisix 5-10 s. Beklenen süre ÇIKTIYA
+BASILIR. Tavan aşılırsa betik "hazır" demez, `ölçülemedi` der ve çıkış 2 verir. Sağlık ucu
+tanımlı OLMAYAN birim (`hindsight-cp.service`) beklenmez ve hazır SAYILMAZ — satır bunu söyler.
+
 GERİ-DÜŞÜŞ ZİNCİRİ — NOUS BACAĞININ İNCE YERİ. Motor sırrı TEK yerden okumaz:
 `meridian/secrets.py::_fetch` sırayla credential → süreç ortamı → `state/secrets.json` → GCP
 dener (meridian.service'te ortam basamağı ölüdür; drop-in `51-dash-env-kaldir.conf`). Yani

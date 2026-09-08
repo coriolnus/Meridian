@@ -285,14 +285,14 @@ def test_rota_semasi_birebir_gercek_routes_yaml(monkeypatch, tmp_path, sandbox_s
     assert set(danisma["zincir"][0]) == {"ad", "model", "oncelik", "auth_referansi"}
     # TSK-047 (2026-09-05): kova-DIŞI :free son çare eklendi — ücretli DEĞİL, v361 "hepsi ücretsiz" hükmü
     # aynen; ölçüm: nemotron+gemma aynı günlük kovada (10:33Z sonrası 502), minimax kova dışı (200).
-    assert [z["ad"] for z in danisma["zincir"]] == ["birincil-nemotron", "yedek-gemma", "yedek-minimax"]
+    assert [z["ad"] for z in danisma["zincir"]] == ["birincil-nemotron", "yedek-gemma", "yedek-super"]   # 2026-09-08: minimax :free ücretli oldu (404) → son-çare nemotron-super (operatör kararı)
     assert all(z.get("model", "").endswith(":free") for z in danisma["zincir"] if z.get("model")), "ücretli instance yasak (v361)"
     assert danisma["zincir"][0]["model"] == "nvidia/nemotron-3-ultra-550b-a55b:free"
     assert danisma["zincir"][0]["oncelik"] == 10
 
     # llm-hizli aynı vakada kardeş rotaydı; kapsanmazsa yarı ölçüm olurdu.
     hizli = next(r for r in g["rotalar"] if r["id"] == "llm-hizli")
-    assert [z["ad"] for z in hizli["zincir"]] == ["hizli-gemma", "hizli-minimax"]   # TSK-047 kova-dışı :free yedek
+    assert [z["ad"] for z in hizli["zincir"]] == ["hizli-gemma", "hizli-super"]   # 2026-09-08: minimax :free 404 → yedek nemotron-super (TSK-047 kova-dışı yedek KALMADI)
 
 
 def test_tum_ai_proxy_instance_modelleri_ucretsiz():
