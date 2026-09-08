@@ -2913,7 +2913,17 @@ def test_P5_MUT_ESKI_TRAP_bicimi_temizligi_YUTAR_ve_kodu_BOZAR(tmp_path):
     assert kok.exists()
 
 
-# --- P6: `_kredensiyeller` ↔ drop-in `LoadCredential=` (ayrışma çivisi) ---------------------------
+# --- P6: `_kredensiyeller` + `_oneshot_kredensiyeller` ↔ drop-in `LoadCredential=` -----------------
+# TUR 2 (P6, 2026-09-08): `meridian-brifing.service.d/54-kapi-credential.conf` eklendi (A0 genel
+# drop-in mekanizmasından, TSK-176/TSK-138 dilim-2) ve P6 KIRMIZI oldu — birim `_kredensiyeller`
+# tablosunda YOKTU. Rol-1 hükmü: birim `Type=oneshot` + timer-tetiklidir, `_kredensiyeller`in
+# ölçümü ("restart sonrası `/run/credentials/…` boyutu") ona UYGULANAMAZ (rotasyon penceresi bu
+# birimi yeniden başlatmaz — timer bir sonraki tetikte kaynağı KENDİSİ okur, hermes profilleriyle
+# AYNI karar). Betiğe AYRI bir tablo eklendi: `_oneshot_kredensiyeller` (bkz. şerhi). P6 şimdi
+# İKİ tabloyu BİRLEŞTİRİP drop-in çiftleriyle eşitler VE her çiftin DOĞRU tabloda olduğunu birim
+# dosyasındaki `Type=oneshot`/eşleşen `.timer` VARLIĞINDAN ölçer — elle bir "bu birim oneshot"
+# listesi YAZILMAZ, yoksa yarın yeni bir oneshot drop-in yanlış tabloya (ya da tam tersi, restart
+# edilen bir birim oneshot tablosuna) sessizce girip P6'nın kör kalmasına yol açardı.
 
 def _betik_kredensiyelleri() -> set[tuple[str, str]]:
     """Betiğin `_kredensiyeller` heredoc'u → {(birim, kimlik)}. Tablo bir SABİTTİR (alt komut
@@ -2927,22 +2937,103 @@ def _betik_kredensiyelleri() -> set[tuple[str, str]]:
     return cikti
 
 
+def _betik_oneshot_kredensiyelleri() -> dict[str, dict[str, str]]:
+    """Betiğin `_oneshot_kredensiyeller` heredoc'u → {birim: {kimlik: kaynak}}. `_kredensiyeller`
+    okuyucusundan AYRI bir ayrıştırıcı (dört sütun — kaynak yolu da taşınır, çünkü bu tablonun
+    doğrulaması restart'a değil KAYNAK dosyasına bakar). Heredoc'un HİÇ olmaması (tablo henüz
+    boşsa) bir arıza DEĞİLDİR — üç nokta (…) beklemek yerine boş sözlük döner."""
+    ham = BETIK.read_text(encoding="utf-8")
+    isaret = "<<'ONESHOT_KRED_SON'\n"
+    assert isaret in ham, "_oneshot_kredensiyeller heredoc işareti betikte YOK"
+    govde = ham.split(isaret, 1)[1].split("\nONESHOT_KRED_SON\n", 1)[0]
+    harita: dict[str, dict[str, str]] = {}
+    for satir in govde.splitlines():
+        _alt, birim, kimlik, kaynak = satir.split()
+        harita.setdefault(birim, {})[kimlik] = kaynak
+    return harita
+
+
+def _birim_dizin_haritasi() -> dict[str, pathlib.Path]:
+    """Her DROP-IN biriminin YAŞADIĞI dizin — `<birim>.service.d/`in KARDEŞİDİR (systemd'nin
+    kendi sözleşmesi: `<birim>` unit dosyası AYNI dizinde durur). `_birim_oneshot_mu` global
+    `deploy/**/<birim>` araması YERİNE bu haritayı kullanır: depoda AYNI ADDA birden fazla
+    `.service` dosyası olabilir (ölçüldü — `deploy/meridian.service`: K1/2026-07-30 kalıntısı,
+    docker-compose devri; canlı birim `deploy/oracle-a1/meridian.service`tir) ve global arama
+    `sorted()` sırasına göre YANLIŞ dosyayı seçebilirdi — kalıntı dosya da `Type=oneshot`
+    taşıyor, yani canlı `meridian.service`i (Type=simple) YANLIŞ oneshot sınıflardı."""
+    harita: dict[str, pathlib.Path] = {}
+    for conf in sorted(KOK_DEPO.glob("deploy/**/*.service.d/*.conf")):
+        birim = conf.parent.name[: -len(".d")]
+        harita.setdefault(birim, conf.parent.parent / birim)
+    return harita
+
+
+def _birim_oneshot_mu(birim: str) -> bool:
+    """Uzun ömürlü ↔ oneshot ayrımı UNIT DOSYASINDAN ölçülür, ELLE bir liste değil (P6 ruling,
+    Rol-1 2026-09-08). Dosya `_birim_dizin_haritasi` ile TEK adaya daraltılır (bkz. şerhi), sonra
+    İKİ bağımsız işaret sınanır — biri ölçülmezse öteki ölçsün diye:
+      · birimin KENDİ `.service` dosyasında `Type=oneshot` satırı,
+      · AYNI ADI taşıyan bir `.timer` dosyasının AYNI dizinde VARLIĞI (timer-tetikli
+        kardeşlerin hepsi bu depoda `Type=oneshot`dur, ama ikinci işaret bağımsız bir kanıt
+        hattıdır — TEK işarete bağlı kalmak onu da elle bir liste hâline getirirdi)."""
+    dizin = _birim_dizin_haritasi().get(birim)
+    assert dizin is not None, f"birim {birim} hiçbir drop-in dizininin kardeşi değil"
+    assert dizin.is_file(), f"birim dosyası YOK: {dizin}"
+    metin = dizin.read_text(encoding="utf-8")
+    if re.search(r"^Type=oneshot\s*$", metin, re.MULTILINE):
+        return True
+    taban = birim[: -len(".service")] if birim.endswith(".service") else birim
+    return any(dizin.parent.glob(f"{taban}.timer"))
+
+
 def test_P6_KREDENSIYEL_tablosu_DROPINLERLE_AYRISMAZ():
     """ORTA-7. Şerh "Kimlikler drop-in'lerdeki `LoadCredential=<kimlik>:<kaynak>` ile BİREBİR
     aynıdır" diyor ama bunu bir ÇİVİ değil, inceleme eliyle doğrulamıştı. Ayrışmanın belirtisi
     yine HİÇBİR ŞEY: betik bir dosyaya yazar, systemd BAŞKA bir kimliği arar ve arıza ancak ilk
     gerçek çağrıda görünür. İki yön de ölçülür (tek yön, silinen bir satırı görmezdi).
 
+    İKİ TABLO BİRLEŞİR (TUR 2): `_kredensiyeller` (uzun ömürlü, restart+`/run/credentials`
+    doğrulaması) ve `_oneshot_kredensiyeller` (`Type=oneshot`+timer, restart YOK) AYNI drop-in
+    kümesinin İKİ AYRIK parçasıdır — biri diğerini kapsayamaz, ikisi kesişmez.
+
+    SINIF ÖLÇÜMÜ: her çiftin DOĞRU tabloda olduğu `_birim_oneshot_mu` ile (unit dosyasından)
+    doğrulanır — bir oneshot birim yanlışlıkla uzun-ömürlü tabloya girerse rotasyon onu
+    yeniden başlatmayan bir birimde `/run/credentials` arar ve HİÇ ÖLÇEMEZ; tersi olsaydı
+    (uzun ömürlü birim oneshot tabloya) o birim restart+doğrulama olmadan sessizce atlanırdı.
+
     ÜÇÜNCÜ AYAK: drop-in'in KAYNAK YOLU kopya tablosunda bir `dosya`/`url` hedefi olmalı — yoksa
     rotasyon systemd'nin okuduğu dosyayı hiç yazmaz ve credential ESKİ değerde kalır."""
     dropin = {(b, k) for b, d in KRED_KAYNAKLARI.items() for k in d}
-    betik = _betik_kredensiyelleri()
+    betik_uzun = _betik_kredensiyelleri()
+    oneshot_tablo = _betik_oneshot_kredensiyelleri()
+    betik_oneshot = {(b, k) for b, d in oneshot_tablo.items() for k in d}
+    assert not (betik_uzun & betik_oneshot), (
+        f"AYNI (birim, kimlik) çifti İKİ tabloda birden: {sorted(betik_uzun & betik_oneshot)} — "
+        "bir drop-in ya uzun ömürlü ya oneshot doğrulamasından geçer, İKİSİNDEN BİRDEN değil")
+    betik = betik_uzun | betik_oneshot
     assert betik, "kredensiyel tablosu BOŞ — ayrıştırıcı kör (pozitif kontrol)"
     assert betik == dropin, (f"betikte fazla: {sorted(betik - dropin)} · "
                              f"drop-in'de fazla: {sorted(dropin - betik)}")
+    for birim, kimlik in sorted(betik_uzun):
+        assert not _birim_oneshot_mu(birim), (
+            f"{birim} ÖLÇÜLDÜĞÜNDE oneshot (Type=oneshot/eşleşen .timer) ama '{kimlik}' UZUN "
+            "ÖMÜRLÜ tabloda (_kredensiyeller) — restart+/run/credentials doğrulaması bu birimde "
+            "hiç YAPILAMAZ (rotasyon penceresinde restart edilmez)")
+    for birim, kimlik in sorted(betik_oneshot):
+        assert _birim_oneshot_mu(birim), (
+            f"{birim} ÖLÇÜLDÜĞÜNDE uzun ömürlü (ne Type=oneshot ne eşleşen .timer) ama "
+            f"'{kimlik}' ONESHOT tabloda (_oneshot_kredensiyeller) — restart+/run/credentials "
+            "doğrulamasından GEREKSİZ YERE kaçırılıyor")
     hedefler = {x["yol"] for x in _betik_kopyalari() if x["tur"] in ("dosya", "url")}
     kaynaklar = {k for d in KRED_KAYNAKLARI.values() for k in d.values()}
     assert kaynaklar <= hedefler, f"rotasyonun YAZMADIĞI credential kaynağı: {kaynaklar - hedefler}"
+    # oneshot tablonun KAYNAK sütunu da aynı ⊆ kurala tabidir — yoksa rotasyon bu birimin okuduğu
+    # dosyayı hiç yazmaz ve kaynak ESKİ değerde donar (oneshot birim restart olmadığı için bu
+    # sessizce sonsuza kadar sürer, uzun-ömürlü birimlerin aksine bir sonraki restart'ta bile
+    # düzelmez).
+    oneshot_kaynaklar = {k for d in oneshot_tablo.values() for k in d.values()}
+    assert oneshot_kaynaklar <= hedefler, \
+        f"rotasyonun YAZMADIĞI oneshot credential kaynağı: {oneshot_kaynaklar - hedefler}"
 
 
 # --- P7-P9: kuru raporun ve şerhin operatöre söyledikleri -----------------------------------------

@@ -59,10 +59,22 @@ WEB = KOK / "meridian" / "web"
 BU_TEST = pathlib.Path(__file__).name
 
 REFERANS = "index.html"
-# KOPYA YÜZEYLER — referanstan jeton takımını AYNEN alanlar. `index.html` listede yok
-# çünkü o karşılaştırmanın ÖLÇÜTÜ; kendisiyle karşılaştırmak boş bir yeşil olurdu.
-KOPYALAR = ["landing.html", "workflow.html", "runbook.html"]
-YUZEYLER = [REFERANS] + KOPYALAR
+# BLOK KOPYALARI — referanstan jeton takımını KENDİ `<style>`i İÇİNDE, İNLİNE alanlar.
+# `index.html` listede yok çünkü o karşılaştırmanın ÖLÇÜTÜ; kendisiyle karşılaştırmak boş bir
+# yeşil olurdu. TSK-132 dilim-2 (2026-09-08): `landing.html`/`runbook.html` BURADAN ÇIKTI —
+# artık kendi bloklarını taşımıyorlar (aşağı bkz. LINK_YUZEYLERI).
+KOPYALAR = ["workflow.html"]
+# LİNK YÜZEYLERİ — TSK-132 dilim-2: kendi `:root` bloğunu TAŞIMAZ, paylaşılan
+# `meridian/web/jetonlar.css`i `<link>` ile yükler (ops/jeton_css_uret.py::dosya_blogu()).
+LINK_YUZEYLERI = ["landing.html", "runbook.html"]
+# DEĞER KARŞILAŞTIRMASI (Ç1) — bu girdilerin KENDİ `:root` bloklarını REFERANS'la kıyaslar.
+# `jetonlar.css` LİNK_YUZEYLERI'nin PAYLAŞTIĞI dosyadır: ikisi AYNI dosyayı okuduğu için ayrı
+# ayrı kıyaslamak yalnız aynı sonucu tekrarlardı — dosyanın KENDİSİ TEK BİR KEZ kıyaslanır.
+DEGER_KARSILASTIRMA = KOPYALAR + ["jetonlar.css"]
+# TÜM HTML YÜZEYLERİ — theme.js yükleme / mono @font-face gibi YAPISAL çiviler jeton DEĞERİNİN
+# NEREDEN geldiğine bakmaz, yalnız sayfanın DOĞRU MEKANİZMAYA bağlı olduğuna; dördü de (blok ya
+# da link kipinde) buraya girer. `jetonlar.css` bir HTML sayfası DEĞİL, burada YOK.
+YUZEYLER = [REFERANS] + KOPYALAR + LINK_YUZEYLERI
 
 GUNDUZ_SEC = ":root"
 GECE_SEC = ':root[data-theme="gece"]'
@@ -122,8 +134,16 @@ def _jetonlar(govde: str) -> dict[str, str]:
             for m in _JETON.finditer(govde)}
 
 
+def _jeton_kaynagi(ad: str) -> str:
+    """Bu yüzeyin `:root` bloklarının GERÇEK kaynağı. LİNK_YUZEYLERI kendi bloğunu taşımaz —
+    değeri okuyan herkes (tarayıcı dahil) `jetonlar.css`e gider, bu yüzden ÖLÇÜM de oraya
+    gider. Diğer her şey (BLOK KOPYALARI + REFERANS) kendi dosyasında kalır — bu TEK satır
+    "hangi dosyaya bak" sorusunun cevabıdır; iki kez yazılmaz."""
+    return "jetonlar.css" if ad in LINK_YUZEYLERI else ad
+
+
 def _tek_blok(ad: str, sec: str) -> dict[str, str]:
-    eslesen = [g for s, g in _bloklar(_oku(ad)) if s == sec]
+    eslesen = [g for s, g in _bloklar(_oku(_jeton_kaynagi(ad))) if s == sec]
     assert len(eslesen) == 1, (
         f"{ad}: `{sec}` bloğu {len(eslesen)} adet, 1 bekleniyordu.\n"
         f"İKİ blok = iki gerçek kaynak: hangisinin kazandığı sıraya bağlı kalır ve bir "
@@ -161,7 +181,7 @@ def _ayrisma_raporu(ad: str, zemin: str, ref: dict, kendi: dict) -> str:
 
 # ======================= Ç1 · JETON KÜMESİ VE DEĞERLERİ =======================
 
-@pytest.mark.parametrize("ad", KOPYALAR)
+@pytest.mark.parametrize("ad", DEGER_KARSILASTIRMA)
 def test_gunduz_jeton_takimi_referansla_BIREBIR(ad):
     """GÜNDÜZ `:root` — ad kümesi VE değerler `index.html` ile birebir aynı.
 
@@ -172,7 +192,7 @@ def test_gunduz_jeton_takimi_referansla_BIREBIR(ad):
     assert not rapor, rapor
 
 
-@pytest.mark.parametrize("ad", KOPYALAR)
+@pytest.mark.parametrize("ad", DEGER_KARSILASTIRMA)
 def test_gece_jeton_takimi_referansla_BIREBIR(ad):
     """GECE `:root[data-theme="gece"]` — ad kümesi VE değerler birebir aynı.
 
@@ -200,21 +220,33 @@ def test_dort_yuzey_ayni_jeton_SAYISINI_tasiyor():
 
 # ======================= Ç2 · BLOK DÜZENİ VE EMEKLİ ADLAR =======================
 
-@pytest.mark.parametrize("ad", YUZEYLER)
+@pytest.mark.parametrize("ad", [REFERANS] + KOPYALAR + ["jetonlar.css"])
 def test_yuzeyde_tam_iki_root_blogu_var(ad):
-    """Her yüzeyde TAM İKİ `:root` bloğu: bir gündüz + bir gece, başka yok.
+    """Her BLOK KAYNAĞINDA (index.html + workflow.html'in KENDİ dosyası, LİNK_YUZEYLERI'nin
+    PAYLAŞTIĞI `jetonlar.css`) TAM İKİ `:root` bloğu: bir gündüz + bir gece, başka yok.
 
     Üçüncü bir blok (ya da `@media` içine saklanmış ikinci bir gündüz) demek, aynı jetonun
-    iki yerde tanımlanması demektir; biri güncellenir, öteki sessizce eskir."""
+    iki yerde tanımlanması demektir; biri güncellenir, öteki sessizce eskir. `landing.html`/
+    `runbook.html`in KENDİ dosyasında artık HİÇ blok yok (bkz. aşağıdaki test) — bu yüzden
+    onlar burada değil, `jetonlar.css` üzerinden dolaylı ölçülüyorlar."""
     secililer = [s for s, _ in _bloklar(_oku(ad))]
     assert secililer == [GUNDUZ_SEC, GECE_SEC], (
         f"{ad}: `:root` blokları {secililer} — beklenen tam olarak "
         f"[{GUNDUZ_SEC!r}, {GECE_SEC!r}] (bu sırayla; gece bloğu gündüzü EZER).")
 
 
-@pytest.mark.parametrize("ad", YUZEYLER)
+@pytest.mark.parametrize("ad", LINK_YUZEYLERI)
+def test_LINK_yuzeyde_KENDI_root_blogu_YOK(ad):
+    """`test_yuzeyde_tam_iki_root_blogu_var`nun link-kipi karşılığı: LİNK_YUZEYLERI kendi
+    `<style>`i içinde HİÇ `:root` bloğu taşımamalı — taşırsa `jetonlar.css`in YANINDA ikinci
+    (ve sessizce ayrışabilen) bir kaynak demektir, tam olarak dilim-2'nin kaldırdığı kusur."""
+    secililer = [s for s, _ in _bloklar(_oku(ad))]
+    assert secililer == [], f"{ad}: link kipine geçti ama HÂLÂ kendi `:root` bloğu taşıyor: {secililer}"
+
+
+@pytest.mark.parametrize("ad", YUZEYLER + ["jetonlar.css"])
 def test_emekli_jetonlar_geri_gelmemis(ad):
-    """`--pm-pos` / `--pm-neg` BİLDİRİMİ hiçbir yüzeyde olmamalı.
+    """`--pm-pos` / `--pm-neg` BİLDİRİMİ hiçbir yüzeyde (`jetonlar.css` dahil) olmamalı.
 
     Bu ikisi rol katmanı öncesinin yön sözlüğüydü. D1 index.html'te yerlerine
     `--yon-arti-zemin`/`--yon-eksi-zemin` koydu; landing ve workflow'da emekli edilmediler

@@ -16,6 +16,10 @@
    gösteriyordu). TSK-118 (2026-09-03, operatör K8: "dokuzuncu nav durağı aç") 42'yi
    43'e çıkardı: dersler Bilgi Tabanı'nın ÜÇÜNCÜ SEKMESİ olmaktan çıkıp kendi görünümüne
    (`hafiza-dersler`) taşındı — ikinci bir taşıma, ilk taşımanın devamı değil.
+   TSK-167 dilim-2 (2026-09-08, Rol-1 hükmü K7) 43'ü 44'e çıkardı: Hafıza'nın ONUNCU durağı
+   `hafiza-arama` — bir TAŞIMA değil, YENİ bir okuyucu (`GET /api/arama`, deponun sqlite-vec
+   taban indeksi). Bu satırdaki sayı ölçüm tarihi taşır ve DONDURULMAZ; tek otoriter sayım
+   kaydın kendisidir (`tests/test_arama_ui_v460.py` onuncu durağı, v288 pariteyi ölçer).
    Şablonda karşılığı OLMAYAN iki yüzey var:
    `gateway` (Kapı, TSK-090) ve `memory` (Hafıza, TSK-091) — yukarıdaki "birebir
    eşleşme" cümlesi göç turunun ölçümüdür, bugünün sözleşmesi değil. İkisi de şablondan
@@ -44,6 +48,7 @@ import {
   Database,
   DoorOpen,
   Eye,
+  FileSearch,
   FileText,
   FlaskConical,
   Fingerprint,
@@ -321,6 +326,13 @@ export const YUZEYLER = {
          eskiden Bilgi Tabanı'nın üçüncü sekmesiydi, bileşen (`MeridianDersleri.tsx`) aynı
          dosyada duruyor, yalnız çağrıldığı yer (`Dersler.tsx` görünüm gövdesi) değişti. */
       { kimlik: "hafiza-dersler", baslik: "Meridian dersleri", soru: "Sistem kendi derslerinden ne damıttı?", ikon: GraduationCap },
+      /* TSK-167 dilim-2 (2026-09-08, Rol-1 hükmü K7: "arama görünümü Hafıza yüzeyinin onuncu
+         durağı") — DOKUZUNCUYLA AYNI GEREKÇE, AYNI YER: CP paritesinden DEĞİL, SONA eklendi.
+         Kaynağı da kardeşlerinden ayrı ve bu ekranda yazılı: hafıza bankası değil, deponun
+         git-HEAD blob'larından haftalık kurulan sqlite-vec taban indeksi (EDG-2026-067).
+         İKON `Search` DEĞİL (`hafiza-recall` onu taşıyor): iki ayrı soruyu sol gezinmede aynı
+         işaretle çizmek, "bankaya sor" ile "belgelerde ara"yı tek şeye benzetirdi. */
+      { kimlik: "hafiza-arama", baslik: "Arama", soru: "Bu soruya hangi belgeler yakın?", ikon: FileSearch },
     ],
   },
 

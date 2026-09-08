@@ -6,7 +6,7 @@
 fonksiyonu) → R) + worker kadansı + `meridian/api.py` okuyucusu + `research/olcumler/edg087_golge_pilot/sayim.py`.
 Sermaye riski YOK; canlı davranış DEĞİŞMEZ.
 **Kart (SPEC, bağlayıcı):** `research/cards/EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml` — ölçüm planı, eşikler
-(n≥30 · CI-alt>0 · kazanma≥0,40 · pencere ≤45 gün · |gölge−gerçek| ≤0,05R), kill-list, üç PK.
+(n≥30 · CI-alt>0 · kazanma≥0,40 · pencere ≤120 gün · |gölge−gerçek| ≤0,05R), kill-list, üç PK.
 **Selef:** `research/cards/EDG-2026-049-uyuyan-kurulum-karsi-olgu.yaml` (NO-GO; n=6, 6/6 kayıp, −4,725R) ·
 `research/olcumler/edg049_dormant_2026-08-23/olcum.py` (eşlenik ay-kümeli bootstrap, B=5000, seed=20260812, birim=AY).
 **Plan emsali:** `docs/superpowers/plans/2026-09-07-pano-sohbet-b1.md` · `docs/superpowers/plans/2026-09-08-pano-sohbet-b3.md` (sayım task biçimi).
@@ -65,7 +65,7 @@ INTRADAY(D) scale_out+dokunuş → CLOSE(D) `strategy.manage_position`+arm; "YAS
 - **Motor KAPI YÜZEYİ DEĞİLDİR.** `golge_icra` GO/REVIEW/NO_GO DÖNDÜRMEZ — plandaki `gate_verdict`i tüketir.
   Böylece `pitlaw.KAPI_SOZLESMELERI` / `SINYAL_SOZLESMELERI` kaydına girmez; çivi bunu kaynak taramasıyla mühürler
   (kayıtsız kapı yüzeyi doğarsa `pitlaw` çivisi zaten öter).
-- **Eşik/pencere/n DONUK.** n_alt=30 · ci_alt_R_ust=0,0 · kazanma_alt=0,40 · pencere_gun_ust=45 ·
+- **Eşik/pencere/n DONUK.** n_alt=30 · ci_alt_R_ust=0,0 · kazanma_alt=0,40 · pencere_gun_ust=120 ·
   golge_gercek_fark_R_ust=0,05 kodda SABİT ve kart kimliğiyle etiketli (`KART = "EDG-2026-088"`); env/parametre ile
   gevşetilemez (emsal: `meridian/faz5_cikis.py` kart sabitleri bloğu). n<30 ile hüküm yazılmaz.
 - **Okuyucu ŞART (Yasa 6).** Yeni her artefakt için `meridian/` içinde DIŞ okuyucu: `meridian/api.py` →
@@ -196,7 +196,7 @@ K=2 birincildir (`EDG-088-toplam-R-CI`, `EDG-088-kazanma-orani`); kurulum kırı
 - [ ] merge → **tam suite** (arka planda, `-n 4`, donmuş ağaç; hüküm ÜÇLÜ: `FAILED|ERROR` boş + "N passed" + `PYTEST_EXIT=0`)
 - [ ] `codelaw`/`pitlaw`/`ledgers` raporları yeşil (yeni artefaktın okuyucusu var; yeni kapı yüzeyi YOK)
 - [ ] dağıtım (akşam penceresi; `git status --porcelain` boş, worker durmuş, tek kip bayrağı)
-- [ ] karta `notlar`: "B1 dağıtıldı <tarih>; pencere BU TARİHTEN itibaren n≥30 ∧ ≤45 gün" + ROADMAP TSK-175 notu
+- [ ] karta `notlar`: "B1 dağıtıldı <tarih>; pencere BU TARİHTEN itibaren n≥30 ∧ ≤120 gün" + ROADMAP TSK-175 notu
 - [ ] PK (2)'nin GERÇEK ayağı ilk 10 gerçek işlemde; pencere dolunca `sayim.py` koşumu → hüküm AYNI TURDA karta + K defterine
 - [ ] KALIR hükmü çıkarsa: gölge defteri okuyucusuz kalmasın diye ÖZELLİK KAPATILIR (kart `basari_tanimi`, Yasa 6)
 

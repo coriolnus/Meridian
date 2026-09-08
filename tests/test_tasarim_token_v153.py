@@ -651,8 +651,18 @@ def _css_govdeleri(css: str) -> str:
     Seçiciler dışarıda kalır — yoksa `#gate-pw2-wrap` gibi bir id seçicisi renk sanılır.
 
     PARAMETRELEŞTİ (2026-08-07): `CSS` globaline (yani index.html'e) sabitti. Kapsamı altı
-    yüzeye çıkaran değişikliğin tek yapısal engeli buydu."""
+    yüzeye çıkaran değişikliğin tek yapısal engeli buydu.
+
+    LİNK KİPİNDEKİ YÜZEY BLOK TAŞIMAZ (TSK-132 dilim-2, 2026-09-08 — `_enjekte_kural`nin
+    kendi yorumunun ÖNCEDEN yazdığı senaryo: "jeton blokları bir gün taşınırsa tek kalan diş
+    bu olur"). `landing.html` artık kendi `:root`unu taşımıyor (`<link
+    href="/jetonlar.css">` okuyor); seçici css'te YOKSA çıkaracak bir şey de yoktur —
+    `.index()` burada patlamak yerine SESSİZCE atlar (silinecek jeton bloğu SIFIR olduğu
+    için bu "sessiz-yutma" değil, ölçülmüş bir hâldir: index.html/workflow.html hâlâ blok
+    taşıdığı için onlarda bu dal HİÇ tetiklenmez, davranış değişmez)."""
     for sel in (":root{", ':root[data-theme="gece"]'):
+        if sel not in css:
+            continue
         i = css.index(sel)
         j = css.index("{", i)
         k = css.index("}", j)

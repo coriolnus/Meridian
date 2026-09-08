@@ -16,16 +16,30 @@ KULLANIM
     python ops/jeton_css_uret.py --kontrol          # yazMA; diskteki dosya güncel mi (çıkış 1 = bayat)
     python ops/jeton_css_uret.py --cikti /yol.css   # başka hedefe yaz
 
-SAYFA KİPİ (TSK-132 dilim-1, 2026-09-07) — eski yüzeylerin (runbook/landing/workflow.html)
-`<style>` içindeki jeton bloğunu da BU dosya üretir:
-    python ops/jeton_css_uret.py --sayfa meridian/web/runbook.html            # KURU koşum: diff basar, YAZMAZ
-    python ops/jeton_css_uret.py --sayfa meridian/web/runbook.html --uygula   # yaz
+SAYFA KİPİ (TSK-132 dilim-1, 2026-09-07) — eski yüzeylerin (workflow.html) `<style>` içindeki
+jeton bloğunu da BU dosya üretir:
+    python ops/jeton_css_uret.py --sayfa meridian/web/workflow.html            # KURU koşum: diff basar, YAZMAZ
+    python ops/jeton_css_uret.py --sayfa meridian/web/workflow.html --uygula   # yaz
     python ops/jeton_css_uret.py --sayfa … --sayfa … --kontrol                # bayat mı (çıkış 1 = bayat)
 `--sayfa` tekrarlanabilir. `--uygula` YALNIZ sayfa kipinde anlamlıdır ve sayfasız verilirse
 kullanım hatasıdır (çıkış 2) — sessizce yok saymak, operatöre yazdım hissi verip hiçbir şey
 yazmamak olurdu (ops aracı vakası 2026-08-30). `--sayfa` ile `--cikti` birlikte verilemez.
 `--kontrol --uygula` de birlikte verilemez (çıkış 2): biri SORAR, diğeri YAZAR ve sessiz bir
-öncelik kuralı `--uygula`yı yutardı.
+öncelik kuralı `--uygula`yı yutardı. `--sayfa` bir LİNK sayfasını da (aşağı bkz.) tanır —
+öyle bir sayfada blok YOKTUR, `--uygula` onun için bir NO-OP'tur (yazacak bir şey yok, yalnız
+doğrular) ve `--kontrol` onu "GÜNCEL (bağlantılı)" der.
+
+DOSYA KİPİ (TSK-132 dilim-2, 2026-09-08) — SAYFA kipi HTML'e bir blok ENJEKTE eder ve bu N
+sayfa için N (özdeş) fiziksel kopya demektir; dilim-1 kopyaların AYRIŞMASINI önledi ama
+kopyanın kendisini kaldırmadı. DOSYA kipi bunu bitirir: eski sayfalar `<link rel="stylesheet"
+href="/jetonlar.css">` ile TEK bir üretilmiş dosyayı okur, hiçbir kopya kalmaz.
+    python ops/jeton_css_uret.py --dosya --kontrol   # meridian/web/jetonlar.css bayat mı
+    python ops/jeton_css_uret.py --dosya             # yaz (varsayılan --cikti; --uygula GEREKMEZ)
+`--dosya`, VARSAYILAN olarak `meridian/web/jetonlar.css`e yazar; `--cikti` ile başka bir hedef
+verilebilir. `--dosya` ile `--sayfa` birlikte verilemez (çıkış 2) — iki AYRI üretim kipidir.
+`--dosya`nın ürettiği dosya `ui/src/jetonlar.css` (panonun, `uret()`in çıktısı) İLE AYNI DOSYA
+DEĞİLDİR: ikisi AYNI ADI taşır ama FARKLI seçici grameri kullanır (aşağıdaki İKİ KİP, İKİ
+BİÇİM notunun devamı — `dosya_blogu()`nun kendi docstring'i ayrımı tam anlatır).
 
 SAYFA KİPİNDE ÇIKIŞ 1 İKİ ANLAM TAŞIR ve ayrımı stderr satırı yapar (bulgu 2026-09-08):
 `--kontrol` ile 1 = BAYAT (hiçbir şey yazılmadı); `--uygula` ile 1 = KISMİ YAZIM — en az bir
@@ -287,6 +301,111 @@ def sayfa_uygula(yol: pathlib.Path, blok: str) -> tuple[bool, str]:
     return yeni == metin, yeni
 
 
+# ============================ DOSYA KİPİ (TSK-132 dilim-2, 2026-09-08) ============================
+# SAYFA KİPİ (üstteki) bloğu HTML'İN İÇİNE enjekte eder — dilim-1'in çözümü, ama HÂLÂ N fiziksel
+# kopya üretir (N sayfa = N kez AYNI bayt; dilim-1 yalnız kopyaların AYRIŞMASINI önledi, kopyanın
+# kendisini kaldırmadı). Dilim-2 kopyayı TAMAMEN kaldırır: sayfalar `<link rel="stylesheet"
+# href="/jetonlar.css">` ile TEK bir üretilmiş dosyayı okur.
+#
+# BU DOSYA `ui/src/jetonlar.css` (`uret()`in çıktısı, panonun/Vite'ın okuduğu) DEĞİLDİR — AYNI ADI
+# taşır ama FARKLI SEÇİCİ GRAMERİ üretir, ve bu KASITLI: ÖLÇÜLDÜ (`meridian/web/theme.js`), eski
+# sayfalar (index/landing/runbook/workflow) `data-theme="gece"`/`"gunduz"` DAMGALAR; pano
+# (`ui/src`, TSK-117) `data-theme="dark"`/`.dark` okur. `uret()`in gece bloğu `[data-theme="dark"],
+# .dark` seçicisiyle üretilir — bu seçici `data-theme="gece"` ile HİÇ eşleşmez. Yani eski bir
+# sayfayı `ui/src/jetonlar.css`e bağlamak GÜNDÜZ paletini doğru yükler ama GECE bloğunu SESSİZCE
+# hiç açmaz (hata yok, yalnız `data-theme="gece"` iken hâlâ gündüz renkleri çizilir) — tam olarak
+# `--nav-bg` vakasının (v208) sınıfı, yeni bir kılıkta. `dosya_blogu()` bu yüzden `uret()`i DEĞİL,
+# `sayfa_blogu()`nun ZATEN doğru seçici gramerini (`:root` + `:root[data-theme="gece"]`) taşır —
+# TEK farkı HTML'e SPLICE edilecek işaretlerin (`SAYFA_ISARET_BAS/SON`) OLMAMASI: bu metin bir
+# .html'e enjekte edilmez, kendi başına bağımsız bir .css dosyasıdır. Servis rotası:
+# `meridian/api.py::jetonlar_css()` (`/jetonlar.css`, `WEB / "jetonlar.css"`).
+DOSYA_BASLIK = """/* ÜRETİLDİ — ELLE DÜZENLEME. Kaynak: meridian/web/tokens.json (SSoT).
+   Üreten: `python ops/jeton_css_uret.py --dosya` (yaz) · `--dosya --kontrol` (bayat mı, çıkış
+   1 = bayat) · deterministik, damgasız (her koşu aynı bayt).
+   Bu dosyayı düzenlersen bir sonraki üretim değişikliği siler; jetonu tokens.json'da değiştir.
+
+   TSK-132 dilim-2 (2026-09-08): eski sayfaların (landing/runbook/…) `<link rel="stylesheet"
+   href="/jetonlar.css">` ile yüklediği PAYLAŞILAN dosya — dilim-1'in HTML'e enjekte edilen
+   kopyasının (N sayfa = N kopya) yerine geçer: N sayfa artık TEK bu dosyayı, TEK link ile okur.
+   `ui/src/jetonlar.css` (pano/Vite, `uret()`) İLE KARIŞTIRILMASIN: AYNI ADI taşır, AYNI
+   `_kovalar()`tan (tokens.json) türer, ama FARKLI seçici grameri kullanır — pano
+   `data-theme="dark"`/`.dark` okur, bu dosya eski sayfaların `theme.js`inin kurduğu
+   `data-theme="gece"`yi (ölçüldü, ops/jeton_css_uret.py modül başlığındaki DOSYA KİPİ notu).
+   Yanlış dosyaya link vermek gece temasını SESSİZCE öldürür — hata yok, yalnız hiç açılmaz.
+   Çiviler: tests/test_jeton_eski_sayfalar_v437.py (blok == üretici çıktısı, link kipi dahil) ·
+            tests/test_jeton_birligi_v208.py (dört yüzey aynı takım). */
+"""
+
+VARSAYILAN_DOSYA_CIKTI = KOK / "meridian" / "web" / "jetonlar.css"
+
+
+def dosya_blogu() -> tuple[str, list[str]]:
+    """(css, atlananlar) — `SAYFA_LINK_ETIKETI` ile yüklenen BAĞIMSIZ dosyanın metni.
+    `sayfa_blogu()` ile AYNI kovaları (`_kovalar()` ← tokens.json) ve AYNI seçici gramerini
+    (`SAYFA_GUNDUZ_SEC`/`SAYFA_GECE_SEC`) kullanır; TEK fark satır-içi enjeksiyon işaretlerinin
+    (`SAYFA_ISARET_BAS/SON`) ve `SAYFA_BASLIK`in OLMAMASI — bu metin bir .html'e SPLICE edilmez,
+    kendi başına bir .css dosyasıdır ve kendi başlığını (`DOSYA_BASLIK`) taşır."""
+    kova, atlanan = _kovalar()
+    takma_gunduz = [(eski, f"var({rol})") for eski, rol in ESKI_AD_ESLEME.items()]
+    css = (DOSYA_BASLIK
+        + _blok(SAYFA_GUNDUZ_SEC, kova["kok"] + kova["gunduz"] + takma_gunduz,
+                SAYFA_SON_BILDIRIMLER[SAYFA_GUNDUZ_SEC], bosluk="")
+        + _blok(SAYFA_GECE_SEC, kova["gece"] + takma_gunduz,
+                SAYFA_SON_BILDIRIMLER[SAYFA_GECE_SEC], bosluk=""))
+    return css, atlanan
+
+
+#: Eski sayfaların DOSYA KİPİNE geçtiğini gösteren kanonik etiket. `_sayfa_kipi` bunu ARAR: bir
+#: sayfada `SAYFA_ISARET_BAS` yoksa ama bu etiket VARSA, o sayfa LİNK kipindedir (blok kipi
+#: DEĞİL) — `--kontrol`/`--uygula` ona göre davranır (aşağı bkz. `sayfa_baglantili_mi`).
+SAYFA_LINK_ETIKETI = '<link rel="stylesheet" href="/jetonlar.css">'
+
+#: `var(--ad)` KULLANIMLARINI bulur — `_SAYFA_JETON` (yukarıda) yalnız BİLDİRİMLERİ (`--ad:`)
+#: bulur, bu ise OKUMALARI. Link kipindeki bir sayfanın kendi bloğu YOK; denetlenecek şey artık
+#: "bildirilen adlar" değil "kullanılan adlar ⊆ dosyanın bildirdiği adlar" sorusudur.
+#:
+#: YALNIZ TEK-ARGÜMANLI ÇAĞRI (`var(--ad)`), İKİ-ARGÜMANLI DEĞİL (`var(--ad, yedek)`) — ÖLÇÜLDÜ
+#: (2026-09-08): dört yüzeydeki (index/landing/runbook/workflow) HER iki-argümanlı `var()`
+#: çağrısı (`--cols`, `--conf`, `--navh`, `--kmc`, `--fill`, `--isaret`) bir JETON değil, satır
+#: içi `style="--cols:2"` ile kurulan YERLEŞİM parametresidir — kendi yedeği zaten kendi
+#: tanımıdır, `jetonlar.css`e hiç ihtiyaç duymaz (v437'nin de aynı ayrımı yaptığı yer:
+#: "gövdedeki `style=\"--cols:2\"` … palet değil yerleşim parametresi"). Tek-argümanlı bir
+#: çağrının YEDEĞİ YOKTUR — tanımsızsa tarayıcı sessizce `initial` değere düşer, yani bu ayrım
+#: gevşetme değil TAM DA uydurma yasağının aradığı çizgidir.
+_VAR_KULLANIM = re.compile(r"var\(\s*(--[a-zA-Z0-9_-]+)\s*\)")
+
+
+def sayfa_baglantili_mi(metin: str) -> bool:
+    """Sayfa İŞARETLİ BLOK yerine kanonik `<link>`i mi taşıyor? İki kip birbirini dışlar — hem
+    blok hem link aynı adı iki kaynaktan besler (tek-kaynak yasası ihlali), bu yüzden
+    `_sayfa_kipi` önce blok (`SAYFA_ISARET_BAS`) arar, YOKSA link arar."""
+    return SAYFA_ISARET_BAS not in metin and SAYFA_LINK_ETIKETI in metin
+
+
+def sayfa_cakismasi_mi(metin: str) -> bool:
+    """Hem İŞARETLİ BLOK hem kanonik `<link>` AYNI ANDA var mı? Bu, tek-kaynak yasasının en
+    sessiz ihlal biçimidir: blok TAZE olsa (sayfa_blogu() ile bayt-eşit) bile, linkin VARLIĞI
+    ikinci bir kaynağın orada durduğunu gösterir — biri güncellenir, öteki fark edilmeden kalır.
+    `_sayfa_kipi` bunu blok/link ayrımından ÖNCE arar ve REDDEDER (`sayfa_baglantili_mi` blok
+    varsa link'i hiç GÖRMEZ, yani bu çakışmayı KENDİ BAŞINA yakalayamaz — ayrı bir kapı gerekir)."""
+    return SAYFA_ISARET_BAS in metin and SAYFA_LINK_ETIKETI in metin
+
+
+def baglanti_denetimi(metin: str) -> list[str]:
+    """Link kipindeki bir sayfa için hata listesi (boş = temiz) — `sayfa_denetimi`nin link kipi
+    karşılığı. Sayfanın KULLANDIĞI (`var(--x)`) her ad, `dosya_blogu()`nun (yani `_kovalar()`ın,
+    yani tokens.json'ın) bildirdiği kümenin ALT KÜMESİ olmalı — aksi hâlde tanımsız değere düşer
+    (uydurma yasağı, `sayfa_denetimi` ile AYNI ilke, blok yerine link için)."""
+    kova, _ = _kovalar()
+    bilinen = {ad for kutu in kova.values() for ad, _ in kutu} | set(ESKI_AD_ESLEME)
+    govde = _CSS_YORUM.sub(" ", metin)
+    kullanilan = {ad for ad in _VAR_KULLANIM.findall(govde)}
+    eslenemeyen = sorted(kullanilan - bilinen)
+    if not eslenemeyen:
+        return []
+    return [f"jetonlar.css'te tanımı OLMAYAN değişken kullanımı: {eslenemeyen}"]
+
+
 def _atlanan_bas(atlanan: list[str]) -> None:
     """Atlanan jetonları stderr'e basar — HER İKİ kip (klasik `uret()` yolu ve sayfa kipi) AYNI
     uyarıyı basar (bulgu C4b, 2026-09-08): eskiden yalnız klasik yol basıyordu, sayfa kipi
@@ -339,22 +458,58 @@ def _sayfa_kipi(sayfalar: list[pathlib.Path], kontrol: bool, uygula: bool) -> in
     # hatalı yol, eşlenemeyen ad) 1..N-1 sayfaları ZATEN diske yazılmış bir anda komutu durdurur
     # ve hiçbir stderr satırı bunu söylemezdi — operatör exit kodunu "hiçbir şey yazılmadı" diye
     # okuyup CLAUDE.md §9'daki "temiz ağaç" varsayımıyla devam edebilirdi.
+    #
+    # SINIFLANDIRMA (TSK-132 dilim-2): burada AYRICA her sayfanın BLOK mu LİNK mi olduğuna karar
+    # verilir. `kip[p] == "link"` sayfalar yazma pasosunda ATLANIR (aşağıda) — onların "kaynağı"
+    # bu sayfa DEĞİL, paylaşılan `jetonlar.css`dir (`--dosya` ile üretilir/denetlenir).
+    kip: dict[pathlib.Path, str] = {}
     for p in sayfalar:
         if not p.is_file():
             print(f"YOK: {p}", file=sys.stderr)
             return 2
-        eslenemeyen = sayfa_denetimi(p.read_text(encoding="utf-8"))
+        metin = p.read_text(encoding="utf-8")
+        if sayfa_cakismasi_mi(metin):
+            print(f"REDDEDİLDİ {p}: HEM işaretli blok HEM kanonik <link> var — iki kaynak "
+                  "aynı jetonu besliyor (tek-kaynak yasası ihlali), blok TAZE olsa bile. "
+                  "Bloğu kaldır (link kipine geçmiş demektir) ya da linki kaldır (hâlâ blok "
+                  "kipindeyse).", file=sys.stderr)
+            return 2
+        if sayfa_baglantili_mi(metin):
+            hatalar = baglanti_denetimi(metin)
+            if hatalar:
+                print(f"REDDEDİLDİ {p}: " + "; ".join(hatalar), file=sys.stderr)
+                return 2
+            kip[p] = "link"
+            continue
+        try:
+            eslenemeyen = sayfa_denetimi(metin)
+        except ValueError as e:
+            # NE BLOK NE LİNK: `sayfa_denetimi` → `_sayfa_bolgesi` burada ValueError fırlatır
+            # (ör. bir sayfadan kanonik `<link>` SİLİNDİYSE, artık ne işaretli blok ne eski
+            # elle-kopya `:root{`/`:root[data-theme="gece"]{` ikilisi kalır). Yakalanmazsa bu
+            # istisna `main()`i UÇURUR — operatöre çıplak bir traceback, "REDDEDİLDİ" DEĞİL.
+            # Diğer red dallarıyla AYNI dilde konuşsun diye burada da rc 2 + stderr satırı.
+            print(f"REDDEDİLDİ {p}: {e}", file=sys.stderr)
+            return 2
         if eslenemeyen:
             print(f"REDDEDİLDİ {p}: bölgede tokens.json'da karşılığı OLMAYAN ad(lar) "
                   f"{eslenemeyen} — sessizce düşürülmez. Karşılığını ölç ve "
                   f"ops/jeton_css_uret.py içindeki ESKI_AD_ESLEME'ye gerekçesiyle yaz.",
                   file=sys.stderr)
             return 2
+        kip[p] = "blok"
 
     bayat = 0
     yazilan = 0
     yazilamayan = 0
     for p in sayfalar:
+        if kip[p] == "link":
+            # LİNK KİPİ: bu sayfanın kendi bloğu yok, yazacak bir şey yok — `baglanti_denetimi`
+            # yukarıda zaten temiz bulduğu için burada yalnız raporlanır. `--uygula` onun için
+            # bir NO-OP'tur (CLAUDE.md'nin "sessizce yok sayma" yasağı burada İHLAL EDİLMEZ:
+            # rapor satırı "bağlantılı" der, "yazıldı" demez — hangi dalda olduğu açık).
+            print(f"GÜNCEL (bağlantılı): {p}")
+            continue
         guncel, yeni = sayfa_uygula(p, blok)
         if guncel:
             print(f"GÜNCEL: {p}")
@@ -398,8 +553,16 @@ def main(argv: list[str] | None = None) -> int:
                     help="jeton bloğu üretilecek HTML yüzeyi (tekrarlanabilir)")
     ap.add_argument("--uygula", action="store_true",
                     help="sayfa kipinde YAZ (varsayılan kuru koşum: diff basar)")
+    ap.add_argument("--dosya", action="store_true",
+                    help="pano'nun (`ui/src/jetonlar.css`, `uret()`) DEĞİL, eski sayfaların "
+                         "`<link>` ile yüklediği bağımsız dosyayı (`dosya_blogu()`) üret/denetle "
+                         f"— varsayılan çıktı: {VARSAYILAN_DOSYA_CIKTI}")
     a = ap.parse_args(argv)
 
+    if a.sayfa and a.dosya:
+        print("KULLANIM: --sayfa ile --dosya birlikte verilemez (iki AYRI üretim kipi: biri "
+              "HTML'e enjekte eder, öteki bağımsız bir dosya üretir)", file=sys.stderr)
+        return 2
     if a.sayfa and a.cikti is not None:
         print("KULLANIM: --sayfa ile --cikti birlikte verilemez (iki hedef, tek üretim)",
               file=sys.stderr)
@@ -420,8 +583,12 @@ def main(argv: list[str] | None = None) -> int:
     if a.sayfa:
         return _sayfa_kipi(a.sayfa, a.kontrol, a.uygula)
 
-    a.cikti = VARSAYILAN_CIKTI if a.cikti is None else a.cikti
-    css, atlanan = uret()
+    if a.dosya:
+        a.cikti = VARSAYILAN_DOSYA_CIKTI if a.cikti is None else a.cikti
+        css, atlanan = dosya_blogu()
+    else:
+        a.cikti = VARSAYILAN_CIKTI if a.cikti is None else a.cikti
+        css, atlanan = uret()
     _atlanan_bas(atlanan)
 
     if a.kontrol:

@@ -736,6 +736,23 @@ def palettejs(request: Request):
     return _statik(request, "palette.js", "application/javascript")
 
 
+# JETON DOSYASI (TSK-132 dilim-2, 2026-09-08). Eski yüzeylerin (landing/runbook/…) `<link
+# rel="stylesheet" href="/jetonlar.css">` ile yüklediği TEK, PAYLAŞILAN dosya — dilim-1'in
+# HTML'e enjekte edilen kopyasının (N sayfa = N fiziksel kopya) yerine geçer. Yol AD AD
+# yazılmak ZORUNDA — yukarıdaki montaj-yasağı notu burada da geçerli.
+#
+# `ops/jeton_css_uret.py::dosya_blogu()` ÜRETİR, `meridian/web/jetonlar.css`e YAZAR — bu dosya
+# `ui/src/jetonlar.css` (panonun/Vite'ın okuduğu, `uret()`in çıktısı) İLE AYNI DOSYA DEĞİLDİR:
+# adı aynı ama seçici grameri FARKLI (`ops/jeton_css_uret.py`nin DOSYA KİPİ notuna bkz. — eski
+# sayfalar `theme.js`in kurduğu `data-theme="gece"` okur, pano `data-theme="dark"`/`.dark`).
+# CSP `style-src 'self'` — bu rota AYNI origin'den servis eder, `<link>` bloklanmaz.
+@app.get("/jetonlar.css")
+def jetonlar_css(request: Request):
+    """`/jetonlar.css` ucu: eski sayfaların paylaşılan jeton dosyasını ETag/304 ile döndürür
+    (salt-okuma). Çiviler: tests/test_jeton_eski_sayfalar_v437.py · tests/test_web_csp_uyum.py."""
+    return _statik(request, "jetonlar.css", "text/css")
+
+
 # ---- YENİ PANO (studio-admin göçü, 2026-08-25) ------------------------------
 # ÜÇ ROTA: sayfa, tercih önyükleyicisi, derleme varlıkları. Eski panonun rotaları
 # (`/`, `/app.js`, `/palette.js`, …) YERİNDE DURUYOR — göç bitene kadar iki pano yan
@@ -6918,6 +6935,59 @@ def api_sohbet_kota(request: Request):
     return _sohbet.kota_durumu()
 
 
+@app.get("/api/arama")
+async def api_arama(request: Request, soru: str = "", k: str | None = None,
+                    dosya: str | None = None):
+    """Depo belgelerinde anlamsal arama — EDG-067 taban indeksinin PANO OKUYUCUSU (TSK-167).
+
+    YETKİLİ, ÇÜNKÜ VERİ UCU: depo içeriğini (günlük, kartlar, docs) döndürür. Yetkisiz GET beyaz
+    listesine (`test_api_audit_v21`) GİRMEZ — o listedeki her satır bir sır TAŞIMAYAN statik
+    dosyadır; burası tam tersi.
+
+    ARIZA ZARFI 200 + `neden` (K1 hükmü, `api_hindsight_recall` emsali): 503 dönseydi pano
+    yüzeyi kararır ve operatör "arama yok" ile "arama bozuk"u ayırt edemezdi. AMA "boş sonuç"
+    ile "ölçülemedi" AYRI alanlardan okunur: `sonuclar: []` bir BULGUdur (eşik yok, sıralama saf
+    mesafedir), `sonuclar: None` + `neden` bir ARIZAdır.
+
+    400'LER SÜRECİ HİÇ DOĞURMADAN VERİLİR: boş soru (aranacak şey yok), sayı olmayan `k`
+    (`arama.k_kelepcele` fırlatır — sessizce varsayılana oturmak "10 istedim 5 geldi" yalanı
+    olurdu) ve korpus dışı `dosya` öneki (`arama.dosya_onegi_gecerli`). Üçünün de bedeli A1'de
+    bir ONNX oturumudur ve o bedel ödenmeden reddedilir.
+
+    KELEPÇE SUNUCUDA (istemciye güven yok): `k` 1..`arama.K_TAVANI` aralığına çekilir.
+
+    THREAD HAVUZU ZORUNLU (`api_sohbet`in ölçülmüş gerekçesi): gövde bir alt süreci bekler
+    (`ARAMA_ZAMAN_ASIMI_S`) ve olay döngüsünün kendi ipliğinde beklerse tek işçili uvicorn'da
+    `/api/control/halt` dahil hiçbir uç yanıt veremez.
+
+    İZ: KÜNYE YAZILIR, İÇERİK YAZILMAZ (`api_sohbet` deseni). Operatörün serbest metni
+    `events.jsonl`a girmez — o defteri alarm/bildirim zinciri de okur ve orası bir sızıntı yüzeyi
+    olurdu. Uzunluk ÖLÇÜLÜR, metnin kendisi değildir. `dosya` bir KAPALI LİSTE değeridir (serbest
+    metin değil), o yüzden künyede adıyla durur: "hangi önekle arandı" sorusunun tek kaynağı bu.
+    İKİNCİ BİR SAYAÇ DOSYASI TUTULMAZ (K5): gün içi çağrı sayısı bu künyeden SAYILIR."""
+    _auth(request)
+    from starlette.concurrency import run_in_threadpool   # dar kullanımlı import fonksiyonda
+
+    from . import arama as _arama
+    soru_temiz = str(soru or "").strip()
+    if not soru_temiz:
+        raise HTTPException(status_code=400, detail="boş soru — aranacak bir şey yok")
+    try:
+        k_deger = _arama.K_VARSAYILAN if k is None or k == "" else _arama.k_kelepcele(k)
+    except (TypeError, ValueError) as e:
+        raise HTTPException(status_code=400,
+                            detail=f"geçersiz k ({e}) — 1..{_arama.K_TAVANI} arası bir sayı")
+    if dosya not in (None, "") and not _arama.dosya_onegi_gecerli(dosya):
+        raise HTTPException(status_code=400,
+                            detail=f"korpus dışı dosya öneki: {dosya!r} — beyaz liste: "
+                                   f"{', '.join(_arama.KORPUS_ONEKLERI)}")
+    sonuc = await run_in_threadpool(_arama.ara, soru_temiz, k_deger, dosya or None)
+    obs.log("arama_sorgu", k=k_deger, n=sonuc.get("n"), sure_s=sonuc.get("sure_s"),
+            korpus_disi_n=sonuc.get("korpus_disi_n"), mesgul=bool(sonuc.get("mesgul")),
+            soru_uzunluk=len(soru_temiz), dosya=dosya or None, neden=sonuc.get("neden"))
+    return sonuc
+
+
 def _sohbet_icra(oneri: dict) -> dict:
     """Onaylanmış bir sohbet önerisinin icrası — HER KOL MEVCUT bir fonksiyonu çağırır.
 
@@ -10112,6 +10182,26 @@ _ROADMAP_STATUS_SINIFI = {s: ("KAPALI" if s in ("DONE", "DROPPED") else "AÇIK")
 # BAŞKA satırda" der. İkisini aynı kovaya koymak, ölçülen iki ayrı olguyu tek isim altında
 # gizlerdi — ve `belirsiz`e koymak daha kötüsü olurdu: satır durumunu SÖYLÜYOR, ölçülmemiş değil.
 _ROADMAP_DURUM_KOVALARI = ("kapali", "bloke", "askida", "acik", "belirsiz", "atif")
+# §8 ARŞİV — MADDE LİSTE İMSİZ YAZILIR, VE BU BİLİNÇLİ BİR ŞEMA GENİŞLETMESİDİR (2026-09-08).
+#
+# O gün 107 kapanmış TSK maddesi `§2 TAHTA` ve `§4 ÖNERİ HAVUZU`ndan `§8 ARŞİV`e taşındı
+# (`§8.T.2` / `§8.H.2` alt bölümleri). Arşivde satır LİSTE İMİ TAŞIMAZ —
+# `**[TSK-046] Başlık** — status: DONE(…) · born: … · owner: … · size: … · trigger: —` —
+# çünkü `tests/test_roadmap_standart_v351.py`in bölüm-muafiyeti çivisi §8'de `- **[` biçimini
+# YASAKLAR (yaşayan bölüm grameri muaf bölüme sızarsa yanlış pozitif üretir).
+#
+# ÖLÇÜLEN BEDEL: bu ayrıştırıcı maddeyi yalnız `- `/`* ` işaretinden tanıyordu, dolayısıyla
+# taşınan 107 kalem panodan KAYBOLDU — §2 66→52, §4 127→36 düşerken §8 72'de KALDI ve kapanan
+# iş ne açık ne kapalı kovada göründü ("tablo hâlâ güncel değil", operatör 2026-09-08).
+# Kapanmış işi HİÇBİR kovada göstermemek, bu deponun uydurma yasağının aynası: sayı yanlış
+# değil, YOK — ve yokluğu ekranda "iş azaldı" diye okunuyordu.
+#
+# KAPI DAR TUTULDU: liste imsiz satır YALNIZ §8'de madde sayılır. Yaşayan bölümlerde madde
+# `- **[` ile başlar (spec §1) ve orada da saymak iki grameri birleştirir, v351'in muafiyet
+# süzgeciyle sessizce çelişirdi. Kova eşlemesi AYRICALIKSIZ: arşiv maddesi `kapali`ya
+# `status: DONE/DROPPED` alanından düşer, "§8'de duruyor" olmasından DEĞİL — sözlük dışı bir
+# status arşivde de `belirsiz` + `status_neden` verir.
+_ROADMAP_ARSIV_BOLUMU = "§8"
 
 
 def _roadmap_alanlari(govde: str) -> tuple[list[str], dict[str, str]]:
@@ -10399,6 +10489,17 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
             acik = {"satir": i, "girinti": girinti, "_ham": [govde]}
             hedef["maddeler"].append(acik)
             continue
+        # §8 ARŞİV MADDESİ — LİSTE İMSİZ ŞEMA SATIRI (2026-09-08). Gerekçesi ve ölçümü
+        # `_ROADMAP_ARSIV_BOLUMU` sabitinin üstündeki şerhtedir. Gramer İKİNCİ KEZ YAZILMAZ:
+        # aynı `_ROADMAP_SEMA_BASLIK` deseni kullanılır (tek-kaynak yasası) — yalnız liste imi
+        # şartı düşer ve bölüm kapısı eklenir.
+        if (l.startswith("**[") and yigin
+                and yigin[0][1].get("no") == _ROADMAP_ARSIV_BOLUMU
+                and _ROADMAP_SEMA_BASLIK.match(l.strip())):
+            acik = {"satir": i, "girinti": 0, "_ham": [l.strip()]}
+            # `yigin` doluysa `_aktif()` None olamaz — arşiv maddesi başlıksız önsöze düşemez.
+            _aktif()["maddeler"].append(acik)
+            continue
         if l.lstrip().startswith(">"):
             acik = None            # alıntı bloğu maddenin devamı değildir (§2'nin doğrulama bloğu)
             continue
@@ -10668,7 +10769,11 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
                 "olup alanları tutmayan satır AYRI sayılır (`sayim.sema.ihlal_n`, bölümde "
                 "`sema_ihlal` listesi). `born` YALNIZ bullet biçiminde vardır; §6 kart endeksi "
                 "ve §2 tablo satırları born taşımaz ve alan null kalır — uydurulmaz. "
-                "`status` null ise `status_neden` DOLUdur.")}
+                "`status` null ise `status_neden` DOLUdur. "
+                "§8 ARŞİV'de madde LİSTE İMSİZ yazılır (`**[KİMLİK] Ad** — status: …`) ve o "
+                "biçim YALNIZ §8'de madde sayılır (2026-09-08 arşiv taşıması, 107 kalem); "
+                "yaşayan bölümlerde madde `- **[` ile başlar. Arşiv maddesi ayrıcalıklı "
+                "DEĞİLDİR: kovası `status` alanından gelir, bölümünden değil.")}
 
 
 def _roadmap_say(bolumler: list) -> dict:

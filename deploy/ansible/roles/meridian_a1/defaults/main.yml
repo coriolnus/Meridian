@@ -36,6 +36,7 @@ dropin_dizinleri:
   - meridian-fail-notify.service.d
   - meridian-litestream.service.d
   - hindsight-api.service.d
+  - meridian-brifing.service.d
 
 # --- zorunlu sır dosyaları (Task 2 denetim.yml: yalnız stat+assert, DEĞER üretmez/okumaz) ---
 zorunlu_sir_dosyalari:
@@ -159,6 +160,7 @@ dropin_kaynaklari:
   - "{{ playbook_dir }}/../oracle-a1/meridian-fail-notify.service.d/*.conf"
   - "{{ playbook_dir }}/../oracle-a1/meridian-litestream.service.d/*.conf"
   - "{{ playbook_dir }}/../hindsight/hindsight-api.service.d/*.conf"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-brifing.service.d/*.conf"
 
 # --- polkit kuralları (deploy.sh 6g + A1 ölçümü: /etc/polkit-1/rules.d'de 50 ve 51) ---
 polkit_kaynaklari:
