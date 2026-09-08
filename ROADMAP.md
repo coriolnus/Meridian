@@ -2364,8 +2364,9 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 > 2026-09-08 (operatör kararı: kapananlar arşivde): bu bölümdeki kapanmış 93 TSK maddesi TAM METİNLE `§8.H.2` alt bölümüne taşındı; burada yalnız AÇIK maddeler (ACTIVE/QUEUED/INTERIM/GATED/OPERATOR) kalır.
 
-- **[TSK-177] Belge eşitleme yolu — ROADMAP/docs/kart endeksi güncellemesi dağıtımdan BAĞIMSIZ canlıya (pano dinamik ama dağıtılmış kopyayı okuyor)** — status: QUEUED · born: 2026-09-08 · owner: rol1 · size: S · trigger: —
+- **[TSK-177] Belge eşitleme yolu — ROADMAP/docs/kart endeksi güncellemesi dağıtımdan BAĞIMSIZ canlıya (pano dinamik ama dağıtılmış kopyayı okuyor)** — status: ACTIVE · born: 2026-09-08 · owner: rol1 · size: S · trigger: —
   What: `ops/belge_esitle.sh` (ya da `dagit.sh --belge`): yalnız `ROADMAP.md`, `docs/`, `research/cards/README.md` ve `docs/degerlendirme/` A1'e rsync (restart yok, suite yok, motor dosyası taşınmaz; [0a] temiz ağaç + push'lanmış HEAD kapısı; beyan `state/belge_esitleme.json` sha+utc); Rol-1 her belge push'unda koşar. Seçenek B (sonra): A1 timer GitHub main'den yalnız bu dosyaları çeker (token gerekir — Faz-2 Vault sonrası).
+  What-ek: (DEĞ 2026-09-08 [Rol-1]: operatör onayı 11:0xZ 'evet' → implementer izole worktree'de, `ops/belge_esitle.sh` + v453; sonra inceleme → merge → RUNBOOK → ilk gerçek koşum.)
   Why: operatör 2026-09-08 10:4xZ: pano ROADMAP grafikleri arşiv taşımasından sonra eski sayıları gösterdi — pano `/api/roadmap` dağıtılmış kopyayı okur, belge düzeltmeleri dağıtım #31'i (worker restart) beklemek zorunda kaldı; 'bu maddelerin güncellenmesi dağıtımdan bağımsız dinamik olmalı'. Ref: v343 pano şeması · dağıtım #31 0a8f7a4 · konsolide plan 2026-09-08.
 
 - **[TSK-128] validation_ledger.jsonl sınırsız büyüyor: LEDGER_CAP yalnız okuma penceresi, dosya kırpması yok (ret_seri ile satır ~2×)** — status: QUEUED · born: 2026-09-03 · owner: rol1 · size: S · trigger: —
