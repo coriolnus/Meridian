@@ -19,15 +19,17 @@
 # `cp -n` + damga çiftinin Ansible karşılığı; damga çözünürlüğü modülün işi).
 - name: Hermes brifingi (SOUL.md) ve güvenlik duruşu (config.yaml)
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../hermes/{{ item }}"
-    dest: "{{ hermes_dizin }}/{{ item }}"
+    src: "{{ playbook_dir }}/../hermes/{{ item.ad }}"
+    dest: "{{ hermes_dizin }}/{{ item.ad }}"
     owner: "{{ meridian_kullanici }}"
     group: "{{ meridian_kullanici }}"
-    mode: "0644"
+    # MOD ÖLÇÜLDÜ (2026-09-08 A1 `stat`): SOUL.md 0644, config.yaml 0600 — `--check --diff`te
+    # tek fark mod idi; canlı sertleştirme (config 0600) korunur, SOUL herkese okunur kalır.
+    mode: "{{ item.mode }}"
     backup: true
   loop:
-    - SOUL.md
-    - config.yaml
+    - { ad: SOUL.md, mode: "0644" }
+    - { ad: config.yaml, mode: "0600" }
 
 - name: Hermes ikilisi aranıyor (meridian/hermes.py::_hermes_bin sırası)
   ansible.builtin.stat:

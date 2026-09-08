@@ -1548,7 +1548,16 @@ def _src_adaylari(gorev: dict, src: str, defaults: dict) -> list[pathlib.Path]:
         return [pathlib.Path(sablon)]
     ogeler = _dongu_ogeleri(gorev, defaults)
     assert ogeler is not None, f"şablonlu src'nin döngüsü çözülemedi: {src!r}"
-    return [pathlib.Path(ortam.from_string(sablon).render(item=_yol_coz(str(o)))) for o in ogeler]
+
+    def _oge(o):
+        # Döngü öğesi sözlük olabilir (`{ ad: …, mode: … }` — hermes.yml, öğe başına mod;
+        # ölçüldü 2026-09-08 A1: SOUL.md 0644, config.yaml 0600): `item.ad` şablonu için
+        # sözlük olduğu gibi verilir, dizge değerleri yol-çözümünden geçer.
+        if isinstance(o, dict):
+            return {k: (_yol_coz(str(v)) if isinstance(v, str) else v) for k, v in o.items()}
+        return _yol_coz(str(o))
+
+    return [pathlib.Path(ortam.from_string(sablon).render(item=_oge(o))) for o in ogeler]
 
 
 def test_literal_src_kaynaklari_diskte_var():
