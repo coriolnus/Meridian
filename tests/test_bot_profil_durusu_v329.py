@@ -17,6 +17,14 @@ PROFIL_KOKU = KOK / "deploy" / "hermes" / "profiles"
 
 GEREKLI_DENY = ["*dagit.sh*", "*git push*", "*git commit*", "*systemctl*", "*serve.sh*"]
 
+# TEK KAYNAK (TSK-176 Faz A1 Task 3, 2026-09-08): `dagit.sh` ince SARMALAYICIYA indi; listeler
+# `deploy/ansible/vars/dagit_vars.yml`e taşındı ve sökücüleri v452'de TEKLEŞTİ — buraya
+# KOPYALANMAZ, ithal edilir.
+from tests.test_ansible_dagit_v452 import (  # noqa: E402
+    f9_ciftleri as _f9_ciftleri,
+    rsync_disla as _rsync_disla,
+)
+
 
 def _profiller() -> list[pathlib.Path]:
     if not PROFIL_KOKU.is_dir():
@@ -559,10 +567,9 @@ def test_DAGITIM_BOTUN_TEK_YAZILABILIR_DIZININI_SILMEZ():
     depoda YOK; dışlanmazsa HER dağıtım botun biriktirdiği her şeyi SİLER — yani §9.3'ün
     "her bot kendi artefaktının tek yazarı" sözleşmesinin taşıyıcısı yok olur. Depo bu
     sınıfı zaten tanıyor: `state/` ve `backups/` tam bu yüzden dışlama listesinde."""
-    dagit = (KOK / "dagit.sh").read_text(encoding="utf-8")
-    exc = dagit.split("RSYNC_EXC=", 1)[1].split("\n", 1)[0] if "RSYNC_EXC=" in dagit else ""
-    assert "--exclude '/var'" in exc, (
-        "`/var` RSYNC_EXC'te YOK — her `dagit.sh --uygula` botun tek yazılabilir dizinini "
+    # TAŞIMA (Task 3): kaynak dagit.sh `RSYNC_EXC` dizisiydi → `dagit_vars.yml::rsync_disla`.
+    assert "/var" in set(_rsync_disla()), (
+        "`/var` dışlama listesinde YOK — her gerçek dağıtım botun tek yazılabilir dizinini "
         "SİLER ve bot her gün sıfırdan başlar. ANKORLU biçim şart (`/var`, `/ui` gibi): "
         "ankorsuz `var` ileride doğacak bir `ui/src/var/` yolunu da sessizce dağıtım dışı "
         "bırakırdı")
@@ -671,15 +678,13 @@ def _profil_yolu_atamasi(profil: pathlib.Path) -> list[str]:
 
 
 def _f9_listesi() -> list[tuple[str, str]]:
-    """`dagit.sh` `F9_LISTE`sindeki (repo yolu, canlı yol) çiftleri.
+    """[F9] (repo yolu, canlı yol) çiftleri.
 
-    STATİK DİZGE OLARAK ayrıştırılır ve bu bilinçlidir: liste kabukta döngüyle ÜRETİLSEYDİ
-    kapsamayı ölçen çiviler (burası ve v266'daki başlık çivisi) neyi koruduklarını STATİK
-    OLARAK göremezdi — kapının kendisi kör kalmasa da kapıyı koruyan çivi kör kalırdı."""
-    metin = (KOK / "dagit.sh").read_text(encoding="utf-8")
-    govde = metin.split('F9_LISTE="', 1)[1].split('"', 1)[0]
-    return [(ln.split("|")[0].strip(), ln.split("|")[1].strip())
-            for ln in govde.strip().splitlines() if "|" in ln]
+    STATİK VERİ OLARAK okunur ve bu bilinçlidir: liste koşum anında ÜRETİLSEYDİ kapsamayı ölçen
+    çiviler (burası ve v266'daki başlık çivisi) neyi koruduklarını STATİK OLARAK göremezdi —
+    kapının kendisi kör kalmasa da kapıyı koruyan çivi kör kalırdı.
+    TAŞIMA (Task 3): kaynak dagit.sh `F9_LISTE` dizgesiydi → `dagit_vars.yml::f9_ciftleri`."""
+    return list(_f9_ciftleri())
 
 
 @pytest.mark.parametrize("profil", _profiller(), ids=lambda p: p.name)

@@ -23,6 +23,11 @@ KOK = pathlib.Path(__file__).resolve().parent.parent
 CFG = KOK / "deploy/hermes/config.yaml"
 DAGIT = KOK / "dagit.sh"
 
+# TEK KAYNAK (TSK-176 Faz A1 Task 3, 2026-09-08): `dagit.sh` ince SARMALAYICIYA indi; listeler
+# `deploy/ansible/vars/dagit_vars.yml`e taşındı ve sökücüleri v452'de TEKLEŞTİ — buraya
+# KOPYALANMAZ, ithal edilir.
+from tests.test_ansible_dagit_v452 import f9_ciftleri as _f9_ciftleri  # noqa: E402
+
 GEREKLI_DENY = ["*dagit.sh*", "*git push*", "*git commit*", "*systemctl*", "*serve.sh*"]
 
 
@@ -89,7 +94,10 @@ def test_yapilandirmada_SIR_YOK():
 
 
 def test_dagit_F9_bu_dosyayi_IZLIYOR():
-    """Depoda beyan edilen duruş, canlıdakiyle karşılaştırılmıyorsa beyan bir dilektir."""
-    metin = DAGIT.read_text(encoding="utf-8")
-    assert "deploy/hermes/config.yaml|/home/ubuntu/.hermes/config.yaml" in metin, (
-        "F9_LISTE config.yaml'ı izlemiyor — canlı duruş sessizce sürüklenebilir")
+    """Depoda beyan edilen duruş, canlıdakiyle karşılaştırılmıyorsa beyan bir dilektir.
+
+    TAŞIMA (TSK-176 Faz A1 Task 3, 2026-09-08): kaynak dagit.sh `F9_LISTE` dizgesiydi →
+    `deploy/ansible/vars/dagit_vars.yml::f9_ciftleri`. İddia aynı: bu dosya izleniyor mu."""
+    cift = ("deploy/hermes/config.yaml", "/home/ubuntu/.hermes/config.yaml")
+    assert cift in set(_f9_ciftleri()), (
+        "[F9] listesi config.yaml'ı izlemiyor — canlı duruş sessizce sürüklenebilir")

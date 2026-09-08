@@ -1,780 +1,117 @@
 #!/usr/bin/env bash
-# dagit.sh — Meridian GENEL dağıtım betiği (WP-H/H2 kapılı). Tek-seferlik gece betiklerinin
-# (dagitim_gece*.sh) yerine standart yol: her dağıtım BU sırayla geçer.
-#   [0] uv audit (tedarik-zinciri kapısı — kırmızıysa DAĞITIM YOK)
-#   [0c] lint-imports (mimari sözleşmeler — WP-H/H4; kırmızıysa DAĞITIM YOK)
-#   [0d] import taraması (dev-grubu daraltması hâlâ güvenli mi — WP-H; kırmızıysa DAĞITIM YOK)
-#   [1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
-#   [1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
-#   [F9] dagit-kapsamı-dışı canlı artefaktlar (sprint@ birimi · polkit kuralı · SOUL.md ·
-#        hermes config.yaml · tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya
-#        service+timer · brifing service+timer · @sef profili: distribution.yaml+config.yaml+SOUL.md):
-#        içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
-#   [F10] birim istenen-durum ANOMALİSİ: enabled + inactive birim varsa DUR (rc 3; çare `start` ya da
-#        `disable --now`) — rsync/stop'tan ÖNCE, kuru koşumda da (TSK-092, 2026-09-03; çivi v367)
-#   [2] rsync (state/backups/.venv/.git HARİÇ)
-#   [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
-#   [4] bakım penceresi: durdur → versiyonlu state kopyası ([1b] KOPYALA dediyse) → başlat
-#   [5] doğrulama: servisler active + healthz 200 + son olay yaşı
-#   [B] dağıtım-beyanı: canlıya state/dagitim.json (deployed_sha + damga — P0-b, ortamlar-arası #2)
-# Kullanım: ./dagit.sh            → dry-run'a kadar gider, ONAY İSTER
-#           ./dagit.sh --uygula   → tam dağıtım
+# dagit.sh — Meridian dağıtımının İNCE SARMALAYICISI. EMEKLİ OLACAK (TSK-176 Faz A1, 2026-09-08).
 #
-# SÜRÜM TERFİSİ SÖZLEŞMESİ (WP5-B; bu başlık tek kaynak — RUNBOOK üreticisi kapsamına alınması
-# ayrı karar [B-RUNBOOK-KAPSAM]): canlıya yeni sürüm YALNIZ bu betikle çıkar; `git push` dağıtım
-# DEĞİLDİR (cloud görünürlüğü). Dağıtılan tepe [0a]'da DAGIT_SHA olarak donar ve [B] beyanına
-# yazılır. GERİ ALMA: önceki commit'e dönüp (`git checkout <sha>`) aynı akışı koşmak — state'e
-# dokunulmaz; [1b] kopyası yalnız onayla yapıldığından goal/bounds geri-alması da aynı kapıdan.
-# ÖLÇÜM 2026-08-23: git-izli state YALNIZ goal.yaml+bounds.yaml (`git ls-files state/`) — ayrı bir
-# "versiyonlu-state adımı" bilerek YOK, [1b] kapsıyor.
+# BU BETİK ARTIK KAPI TAŞIMIYOR. Dağıtımın on yedi kapısı — [0a] [0b] [0c] [0d] [1] [1b] [1c]
+# [F9] [F10] [2] [3] [4] [5] [5a] [5c] [5b] [B] — `deploy/ansible/dagit.yml` playbook'una TAŞINDI
+# (Task 2, 2026-09-08). Listelerin (dosya-dışlama sınıfları, [F9] çiftleri, [5a] uçları, birim
+# adayları) TEK KAYNAĞI `deploy/ansible/vars/dagit_vars.yml`dir; kapı gövdelerinin tek kaynağı
+# `ops/state_fark_hukmu.py`, `ops/artefakt_tazelik.py`, `deploy/oracle-a1/dogrulama_anahtar.py`,
+# `deploy/oracle-a1/kod_tazelik.sh` dosyalarıdır. Buradaki kopyalar SİLİNDİ — iki kaynak sessizce
+# ayrışır (tek-kaynak yasası) ve ayrışan taraf her zaman okunmayan taraftır.
+#
+# NEDEN BİR SÜRÜM DAHA YAŞIYOR (K1 geçiş kararı): operatörün ve belgelerin parmak hafızası
+# `./dagit.sh`tır; kapılar taşınırken çağrı adresini de aynı turda değiştirmek, ilk gerçek
+# playbook dağıtımının arıza yüzeyini iki katına çıkarırdı. Sarmalayıcı yalnız YÖNLENDİRİR:
+# kendi kapısı, kendi listesi, kendi ölçümü YOKTUR. Bir sürüm sonra SİLİNİR ve komut satırı
+# `ansible-playbook`a döner (Task 4 / ROADMAP TSK-176 A1).
+#
+# Kullanım (repo kökünden ya da başka bir dizinden — fark etmez, aşağıya bak):
+#   ./dagit.sh                       → kuru koşum (playbook `--check --diff`)
+#   ./dagit.sh --dry-run             → aynısı, açık yazılmış hâli
+#   ./dagit.sh --uygula              → gerçek dağıtım (aynı playbook, `--check`siz)
+#   ./dagit.sh --uygula --kirli-gec  → + `-e kirli_gec=true` (kirli ağaç BEYANLI istisnası)
+# Bilinmeyen bayrak → kullanım basılır ve ÇIKIŞ 2 (sessizce "kuru koşum" varsayılmaz: yanlış
+# yazılmış bir `--uygla`nın kuru koşuma düşmesi, operatöre dağıttığını sandırırdı).
+# Kip bayrağı (`--dry-run` / `--uygula`) EN FAZLA BİR KEZ verilir; ikincisi de ÇIKIŞ 2'dir.
+# "Son bayrak kazanır" davranışı `./dagit.sh --dry-run --uygula`yı UYARISIZ gerçek dağıtıma
+# çevirirdi (ters sıra ise kuru koşuma): aynı komut satırı, iki farklı dünya. Belirsizlik
+# burada canlıya YAZMA yönüne çözülüyordu — tek başına `--kirli-gec`i reddetme gerekçesinin
+# aynısı, pahalı yönde (inceleme bulgusu B1, 2026-09-08).
+#
+# CWD'YE BAKMAZ: dağıtılan ağaç HER ZAMAN ana checkout'tur (`$HOME/AI-Trading`), bu betiğin
+# çağrıldığı dizin değil (CLAUDE.md §9, vaka 2026-08-26 — "ağacım temiz" bir güvence DEĞİLDİR).
+# Playbook aynı kuralı `repo_kok_yerel` ile taşır ve ana-checkout kapısını [0a]'da kendisi ölçer;
+# başka bir checkout'tan dağıtım BEYANLIDIR (`-e worktree_gec=true`) ve [B] beyanına yazılır.
+#
+# SÜRÜM TERFİSİ SÖZLEŞMESİ (WP5-B; bu başlık tek kaynak — RUNBOOK üreticisi kapsamına 2026-08-23
+# K4 kararıyla alındı): canlıya yeni sürüm YALNIZ bu yoldan çıkar; `git push` dağıtım DEĞİLDİR
+# (cloud görünürlüğü). Dağıtılan tepe playbook'un [0a] kapısında donar ve [B] beyanına yazılır.
+# GERİ ALMA: önceki commit'e dönüp (`git checkout <sha>`) aynı akışı koşmak — state'e dokunulmaz;
+# versiyonlu state kopyası ([1b]) yalnız hükümle yapıldığından goal/bounds geri-alması da aynı
+# kapıdan geçer.
 set -euo pipefail
-KEY="$HOME/.ssh/oci-a1.key"; IP="130.61.126.87"; REPO="$HOME/AI-Trading"
-SSH=(ssh -i "$KEY" -o ConnectTimeout=15 ubuntu@"$IP")
-RSYNC_EXC=(--exclude '.venv' --exclude '.git' --exclude 'state' --exclude 'backups' --exclude '/var' --exclude 'scratchpad' --exclude 'scratch-*' --exclude '.superpowers' --exclude '__pycache__' --exclude '.claude' --exclude '.hypothesis' --exclude 'mutants' --exclude '.pytest_cache' --exclude '.env' --exclude '.env.*' --exclude '.dash.env' --exclude '.agents' --exclude '.codex' --exclude '.github' --exclude 'skills-lock.json' --exclude '.impeccable' --exclude '.import_linter_cache' --exclude 'research/olcumler/*/seanslar.json' --exclude 'research/olcumler/*/run.stderr.log' --exclude 'research/olcumler/*/state' --exclude 'node_modules' --exclude 'ui/node_modules' --exclude '/ui')  # + DERLEME SINIFI (2026-08-24, shadcn pilotu): `npm install` on binlerce dosya yazar ve rsync onları .gitignore'a BAKMADAN taşır — `scratch-panov2` vakasının aynısı, iki mekanizma AYRI. Canlıya giden ARTEFAKT'tır (`meridian/web/pilot-*`), kaynak DEĞİL: `/ui` altındaki TSX/config canlıda okuyucusuzdur (YASA 6). `/ui` ANKORLU — `meridian/web/ui/` gibi bir alt yol yanlışlıkla düşmesin.  # + ÖLÇÜM HAM ÇIKTILARI (2026-08-10, ROADMAP §2 madde-1): .gitignore rsync'i ETKİLEMEZ — ham seans dökümü/betik-state/stderr yeniden-üretilebilir (olcum*.py deterministik), canlıda okuyucusu yok; özet sonuc.json + olcum*.py TAŞINIR  # + HARNESS ARTEFAKTLARI (2026-08-06): worktree-oturum kalıntıları dagit'i dry-run'da boğdu  # + ARAÇ ÖNBELLEKLERİ (2026-08-07): .impeccable/hook.cache.json (kökte VE meridian/web/ altında) ile .import_linter_cache/ kuru koşumda göründü — 306ab56'nın hükmü bunları kapsamıyordu. İkisi de araç katmanı: canlıda karşılığı yok, hiçbir test okumuyor, ama tool-layer sızıntısı aynı sınıf.  # SIR SINIFI (2026-08-01 vakası): rsync --delete A1-yerel .dash.env'i SİLDİ — sırlar dağıtıma binmez; kanal systemd credential (`deploy/oracle-a1/sir_credential_gecis.sh`), eski bulut yazıcısı IaC-K5 ile silindi; `.env.*` (2026-09-08): faz-2 ölçüm yedeği `.env.olcum-yedek` ve `.env.bak-*` `--delete` ile silinirdi — ölçüldü (B incelemesi YB-4), kurtarma kopyası dağıtımla yok olmasın  # + SCRATCH SINIFI (2026-08-24 vakası): `scratch-panov2/` kuru koşumda 5 girdiyle CANLIYA GİDİYORDU. Yerelde .gitignore'lu ama RSYNC GITIGNORE OKUMAZ, yalnız bu listeyi okur — iki mekanizma ayrı ve birini kapatmak ötekini kapatmaz. `scratchpad` zaten listedeydi; `scratch-*` globu sınıfı kapatır.  # + BOT KUM HAVUZU SINIFI (2026-08-29): `/var` — botların TEK yazılabilir dizini (`var/bots/<ad>`, spec §9.3 safe-root). Depoda YOK, canlıda VAR: dışlanmasaydı `--delete` her dağıtımda botun biriktirdiği her şeyi SİLERDİ — `state`/`backups` ile BİREBİR aynı sınıf (canlı-sahipli, repo-sahipli değil). ANKORLU (`/var`, `/ui` gibi): ileride bir `ui/src/var/` doğarsa onu sessizce dağıtım dışı bırakmasın.
 
-echo "=== [0a/5] git temiz-ağaç kapısı ==="
+# ANA CHECKOUT — LİTERAL, TÜRETİLMEZ (çivi: tests/test_ansible_dagit_v452.py B12).
+REPO="$HOME/AI-Trading"
+PLAYBOOK="deploy/ansible/dagit.yml"
+ENVANTER="deploy/ansible/inventory.ini"
+# Yorumlayıcı da proje ortamından: sistem python'unda ansible YOKTUR ve "koşamıyorum" ile
+# "kapı kırmızı" birbirine karışır (CLAUDE.md §6'nın `.venv/bin/python` kuralıyla aynı sınıf).
+ANSIBLE="$REPO/.venv/bin/ansible-playbook"
+
+_kullanim() {
+  echo "Kullanım: ./dagit.sh [--dry-run]              → kuru koşum ($PLAYBOOK --check --diff)"
+  echo "          ./dagit.sh --uygula                 → gerçek dağıtım"
+  echo "          ./dagit.sh --uygula --kirli-gec     → + -e kirli_gec=true"
+  echo "          (--kirli-gec tek başına verilmez: hangi modda koşacağı belirsiz kalır)"
+  echo "          (kip bayrağı EN FAZLA bir kez: --dry-run/--uygula birlikte ya da iki kez YOK)"
+}
+
+MOD=""
+KIRLI_GEC=false
+_KIP_ILK=""   # İLK kip bayrağının METNİ — hata mesajı operatörün yazdığı bayrağı anmalı.
+
+# KİP BAYRAĞI KAPISI (inceleme bulgusu B1, 2026-09-08): ikinci bir kip bayrağı komut satırını
+# belirsiz yapar. Eski döngü MOD'u üzerine yazıyordu, yani SON bayrak kazanıyordu: sıraya bağlı
+# olarak aynı çağrı bir kez kuru koşum, bir kez GERÇEK DAĞITIM oluyordu ve hiçbir uyarı yoktu.
+_kip_kapisi() {
+  if [[ -n "$_KIP_ILK" ]]; then
+    echo "!! Kip bayrağı EN FAZLA bir kez verilir: '$_KIP_ILK' seçiliyken '$1' geldi."
+    echo "   'Son bayrak kazanır' YOK — hangi modda koşacağı belirsiz kalır."
+    _kullanim
+    exit 2
+  fi
+  _KIP_ILK="$1"
+}
+
+for _arg in "$@"; do
+  case "$_arg" in
+    --dry-run) _kip_kapisi "$_arg"; MOD="dry" ;;
+    --uygula)  _kip_kapisi "$_arg"; MOD="uygula" ;;
+    --kirli-gec) KIRLI_GEC=true ;;
+    *)
+      echo "!! Bilinmeyen bayrak: $_arg"
+      _kullanim
+      exit 2
+      ;;
+  esac
+done
+if [[ -z "$MOD" && "$KIRLI_GEC" == true ]]; then
+  echo "!! --kirli-gec yalnız --uygula ya da --dry-run ile birlikte verilir."
+  _kullanim
+  exit 2
+fi
+# Bayraksız çağrı = kuru koşum. Eski betiğin davranışı BİREBİR korunur (docs/RUNBOOK.md ve
+# operatör alışkanlığı `./dagit.sh`i "göster, dokunma" diye tanır); değişen tek şey kuru koşumu
+# artık playbook'un `--check`inin yapmasıdır.
+[[ -z "$MOD" ]] && MOD="dry"
+
+echo "=== dagit.sh EMEKLİ OLACAK — deploy/ansible/dagit.yml'e yönlendiriyor; bir sürüm sonra silinir ==="
+echo "  kapılar, listeler ve gövdeler playbook'ta; bu betik yalnız çağrıyı kurar."
+
+if [[ ! -x "$ANSIBLE" ]]; then
+  echo "!! DURDU: ansible-playbook yok ($ANSIBLE) — kur: uv sync --group dev"
+  echo "   Koleksiyon da gerekir: ansible-galaxy collection install -r deploy/ansible/requirements.yml"
+  exit 1
+fi
+
+KOMUT=("$ANSIBLE" -i "$ENVANTER" "$PLAYBOOK")
+[[ "$MOD" == "dry" ]] && KOMUT+=(--check)
+KOMUT+=(--diff)
+[[ "$KIRLI_GEC" == true ]] && KOMUT+=(-e kirli_gec=true)
+
 cd "$REPO"
-KIRLI_GEC=false   # dağıtım-beyanına ([B]) yazılır: true = istisna GERÇEKTEN kullanıldı (bayrak
-                  # temiz ağaçla verilmişse istisna işlememiştir ve beyan false kalır)
-if [[ -n "$(git status --porcelain)" ]]; then
-  if [[ "${2:-}" == "--kirli-gec" || "${1:-}" == "--kirli-gec" ]]; then
-    echo "  ⚠ KİRLİ AĞAÇLA dağıtım (bilinçli --kirli-gec)"; git status --short | head -10
-    KIRLI_GEC=true
-  else
-    echo "!! Çalışma ağacı KİRLİ — önce commit'le (yarım-iş canlıya gitmesin)."
-    echo "   Bilinçli istisna için: ./dagit.sh --uygula --kirli-gec"; git status --short | head -15; exit 1
-  fi
-fi
-echo "  ✓ dağıtılacak commit: $(git rev-parse --short HEAD) — $(git log -1 --format=%s | head -c 60)"
-# BEYAN İÇİN BURADA DONDURULUR ([B] adımında değil): 660dc10 dersi — paralel oturum trafiği ana
-# checkout'u dağıtım SIRASINDA taşıyabilir; beyan "dağıtımın kapılardan geçtiği andaki tepe"yi
-# söylemeli, betiğin bittiği andakini değil.
-DAGIT_SHA="$(git rev-parse HEAD)"
-
-echo "=== [0b/5] uv audit (tedarik-zinciri kapısı) ==="
-uv audit --preview-features audit-command || { echo "!! AUDIT KIRMIZI — dağıtım İPTAL"; exit 1; }
-
-# [0c] MİMARİ SÖZLEŞMELER (WP-H/H4, 2026-07-31). Neden DAĞITIM kapısı: bu sözleşmelerin ihlali
-# derleme hatası vermez, test kırmazsa görünmez ve canlıya SESSİZCE gider. En pahalı hâli döngüsel
-# import'tur — süreç AÇILIRKEN patlar, yani arıza dağıtımdan dakikalar sonra, bakım penceresi
-# kapandıktan sonra ortaya çıkar. 2 saniyelik bir kapı, o gecenin tamamını kurtarır.
-# `uv run` KULLANILIR (çıplak `lint-imports` değil): dev bağımlılığı yalnız proje ortamındadır ve
-# çıplak çağrı, aracın kurulu OLMADIĞI bir kabukta "command not found" ile — yani kapı hiç
-# koşmadan — geçilmiş sayılırdı.
-echo "=== [0c/5] lint-imports (mimari sözleşme kapısı) ==="
-uv run lint-imports || {
-  echo "!! MİMARİ SÖZLEŞME KIRILDI — dağıtım İPTAL."
-  echo "   Sözleşmeler: pyproject.toml [tool.importlinter]. İstisna eklemek bir borç kaydıdır."
-  exit 1
-}
-
-# [0d] DEV-DARALTMASI HÂLÂ GÜVENLİ Mİ? (WP-H, 2026-08-03). Adım [3] A1'e dev grubunu KURMAZ.
-# Bu daraltmanın tek dayanağı "çalışma yolunda sıfır dev-import" iddiasıydı ve o iddia bir kez,
-# elle, KAYITSIZ ölçülmüştü. Yarın `meridian/` içine bir `import hypothesis` girerse daraltma
-# canlıyı SESSİZCE düşürür — üstelik testler YEŞİL kalır (yerelde paket KURULUDUR), arıza yalnız
-# A1'de, süreç açılırken, bakım penceresi kapandıktan sonra görünür. Tam olarak [0c]'nin kapattığı
-# sınıf, başka bir kapıdan. Ölçüm ucuz (~1 sn) ve HÜKMÜ makine verir.
-# ÇIKIŞ KODU SÖZLEŞMESİ: 0 = daraltma güvenli · 1 = dev paketi çalışma yolunda · 2 = ölçülemedi.
-# 2 de ENGELDİR: ölçülemeyen daraltma 'güvenli' sayılmaz (fail-closed — bu depodaki genel yasa).
-echo "=== [0d/5] import taraması (dev-grubu daraltma kapısı) ==="
-uv run python ops/import_tarama.py --sessiz || {
-  echo "!! DEV-DARALTMASI ARTIK GÜVENLİ DEĞİL — dağıtım İPTAL."
-  echo "   Tam rapor: uv run python ops/import_tarama.py"
-  echo "   Ya import'u çalışma yolundan çıkar, ya paketi ANA bağımlılığa taşı (ikisi de bilinçli)."
-  exit 1
-}
-
-echo "=== [1/5] rsync DRY-RUN ==="
-# SIGPIPE SINIFI (2026-08-12 vakası): eski hali `rsync … | head -40` idi — liste 40 satırı AŞINCA
-# head boruyu erken kapatır, rsync SIGPIPE/rc-20 ile ölür ve `set -o pipefail` dağıtımı [1]'de
-# sessizce düşürür. Kusur ancak tarihin en uzun transfer listesinde göründü (v237 turu: 81 ölçüm
-# artefaktı + kartlar). Tampon dosya rsync'in GERÇEK çıkış kodunu korur; head canlı boruya değil
-# dosyaya bakar — gerçek rsync hataları (23/24/12…) eskisi gibi dağıtımı durdurur.
-DRY_TMP="$(mktemp)"
-rsync -azin --delete "${RSYNC_EXC[@]}" -e "ssh -i $KEY" "$REPO"/ ubuntu@"$IP":/opt/meridian/ > "$DRY_TMP"
-head -40 "$DRY_TMP"
-_dry_n="$(wc -l < "$DRY_TMP" | tr -d ' ')"
-rm -f "$DRY_TMP"
-echo "--- (yukarısı ilk 40 satır; toplam $_dry_n satır; boşsa fark yok) ---"
-
-# =================================================================================================
-# [1b] VERSİYONLU STATE DOSYALARI — canlı ↔ repo farkı (2026-08-02)
-# =================================================================================================
-# NEDEN VAR — CANLI VAKA, sınıf: "doğru dışlama, yanlış kapsam". `state/` rsync'ten HARİÇTİR ve bu
-# DOĞRUDUR (canlı defter dağıtımla ezilemez). Ama `state/` altında iki dosya defter değil
-# YAPILANDIRMADIR ve c783442'den beri VERSİYONDADIR: `goal.yaml` + `bounds.yaml`. Dışlama onları da
-# kapsayınca repo ile canlı SESSİZCE ayrıştı:
-#   2026-08-01'de `entry.w_turnover` bounds'a indi (kart EDG-2026-016, hüküm SUCCESS) — A1'e HİÇ
-#   GİTMEDİ. Makine o düğmeyi canlıda HİÇ ÖRNEKLEMEDİ. "Sıfır örnekleme"nin İKİNCİ kök nedeni
-#   budur; birincisi (emekli `spy_sma_gate` satırının arama uzayını işgal etmesi) aynı gün bulundu.
-#   İkisi birbirinin aynası: biri hükümsüz bir ekseni örnekletiyordu, diğeri gerçek bir ekseni hiç
-#   doğurmuyordu. Bir dağıtım betiğinin taşıdığını sandığı ama taşımadığı şey, taşımadığını bildiği
-#   şeyden tehlikelidir.
-#
-# YASA — İKİ DALLI, ÇÜNKÜ SSoT TEK YÖNLÜ DEĞİL: repo bu iki dosyanın kaynağıdır, AMA canlı taraf
-# elle değiştirilmiş olabilir (operatör kalemi) ve o değişiklik SESSİZCE EZİLEMEZ.
-#   * canlıda REPO-DIŞI anahtar YOK  → fark repo'nun ilerlemesidir → bakım penceresinde kopyala.
-#   * canlıda REPO-DIŞI anahtar VAR  → KOPYALAMA. Kırmızı uyarı bas, hükmü operatöre bırak.
-# AYRIM ANAHTAR DÜZEYİNDE, HAM SATIR DÜZEYİNDE DEĞİL: bu dosyalar yorum ağırlıklıdır (mezar taşları,
-# kanıt blokları) ve repo tarafında bir yorumun yeniden yazılması `diff`te "canlıda olup repoda
-# olmayan satır" gibi görünür. Satır bazlı bir kapı her yorum düzenlemesinde ENGEL derdi, yani hiç
-# kopyalamazdı — kapı olmayan bir kapı. Anahtar/değer bazlı hüküm, "canlıda elle eklenmiş bir
-# düğme" ile "repoda yeniden yazılmış bir yorum"u ayırt eder.
-#
-# DOSYA LİSTESİ GİT'TEN TÜRETİLİR, elle yazılmaz: yarın üçüncü bir state dosyası versiyona alınırsa
-# bu adım onu kendiliğinden kapsar. Elle liste, tam da bu turda kapatılan kopukluğun kendisiydi.
-echo "=== [1b/5] versiyonlu state farkı (canlı ↔ repo) ==="
-STATE_TMP="$(mktemp -d)"; trap 'rm -rf "$STATE_TMP"' EXIT
-STATE_VERSIYONLU="$(git ls-files state/ | sed 's|^state/||')"
-STATE_KOPYALA=""; STATE_ENGEL=""     # bash 3.2: boş DİZİ + `set -u` patlar → boşluklu dizge
-# HÜKÜM SÜRECİNİN KENDİSİ DÜŞERSE (uv/python yok, ortam bozuk) SONUÇ "fark yok" DEĞİLDİR: ölçüm
-# yapılamadı demektir ve ölçülemeyen hüküm 'temiz' sayılmaz — fail-closed, operatöre.
-_HUKUM_DUSTU="      hüküm süreci DÜŞTÜ (uv run python) — ölçülemedi, fail-closed
-HUKUM=ENGEL"
-# AÇIK `if` — `[[ … ]] && echo` DEĞİL: `set -e` altında koşul YANLIŞ olduğunda liste 1 döner ve o
-# ifade betiğin SON komutu hâline geldiği gün dağıtım sessizce burada biter. Dağıtım betiğinde
-# "bugün çalışıyor ama bir satır eklenince susar" sınıfına yer yok.
-if [[ -z "${STATE_VERSIYONLU// /}" ]]; then
-  echo "  (versiyonlu state dosyası yok — adım boş geçildi)"
-fi
-for _sf in $STATE_VERSIYONLU; do
-  if ! "${SSH[@]}" "cat /opt/meridian/state/$_sf" > "$STATE_TMP/$_sf" 2>/dev/null; then
-    # Dosya canlıda YOKSA/okunamıyorsa uygulama zaten açılamaz (`config.goal()` FileNotFoundError
-    # atar) — bu bir dağıtım farkı değil bir ARIZA. Kopyalayıp üstünü örtmek, arızayı görünmez
-    # kılardı; hüküm operatörün.
-    echo "  ⚠ $_sf: CANLIDA OKUNAMADI — kopyalama YOK (arıza sınıfı, dağıtım farkı değil)"
-    STATE_ENGEL="$STATE_ENGEL $_sf"; continue
-  fi
-  if cmp -s "$STATE_TMP/$_sf" "$REPO/state/$_sf"; then
-    echo "  ✓ $_sf: canlı ile repo BİREBİR"; continue
-  fi
-  echo "  --- $_sf: FARK VAR (diff canlı→repo, ilk 30 satır) ---"
-  diff -u "$STATE_TMP/$_sf" "$REPO/state/$_sf" | head -30 || true
-  # ANAHTAR DÜZEYİ HÜKÜM. Yaprak yollara düzleştirilir (bounds: `entry.min_score.min`; goal:
-  # `execution_v2.limit_pct_cap`) — iç içe blokları da kapsar. Son satır makine-okunur HÜKÜM'dür.
-  # ANAHTAR DÜZEYİ HÜKÜM DOSYADA (TSK-176 A1): gövde `ops/state_fark_hukmu.py`ye çıkarıldı —
-  # playbook (`deploy/ansible/dagit.yml`) aynı hükmü verecek ve gömülü çok-satır python bir
-  # Ansible görevinde YASAK (A0 kuralı + 2026-07-30 IndentationError vakası). TEK KAYNAK:
-  # dagit ve playbook AYNI dosyayı çağırır, ikisi ayrışamaz.
-  _hukum="$(uv run python ops/state_fark_hukmu.py "$STATE_TMP/$_sf" "$REPO/state/$_sf")" \
-    || _hukum="$_HUKUM_DUSTU"
-  echo "$_hukum" | grep -v '^HUKUM=' || true
-  if [[ "$(echo "$_hukum" | grep '^HUKUM=' | tail -1)" == "HUKUM=KOPYALA" ]]; then
-    echo "      → KOPYALANACAK (bakım penceresinde, durdurma sonrası/başlatma öncesi)"
-    STATE_KOPYALA="$STATE_KOPYALA $_sf"
-  else
-    echo "      !! KOPYALANMAYACAK — canlı taraf elle değiştirilmiş görünüyor. HÜKÜM OPERATÖRÜN:"
-    echo "         canlı satırı kasıtlıysa önce repoya al; değilse elle eşitle. Sessizce EZİLMEZ."
-    STATE_ENGEL="$STATE_ENGEL $_sf"
-  fi
-done
-if [[ -n "${STATE_ENGEL// /}" ]]; then
-  echo "  ⚠ operatöre bırakılan:$STATE_ENGEL"
-fi
-
-# [1c] SİSTEM BİRİMİ AYRIKLIĞI (2026-08-14, YAŞANMIŞ VAKA). rsync `/opt/meridian/`e yazar; systemd'nin
-# OKUDUĞU dosya `/etc/systemd/system/`dedir ve dagit onu KURMAZ. O gece `deploy/oracle-a1/meridian.service`e
-# `Environment=MERIDIAN_AGENT_RPD=600` eklendi, suite geçti, dağıtım "TAMAM" dedi — ve ayar ETKİSİZ kaldı;
-# arıza yalnızca worker'ın `/proc/<pid>/environ`ına elle bakılınca görüldü. Sessiz etkisizlik, yanlış
-# ayardan beterdir: operatör değişikliğin yürürlükte olduğunu SANIR.
-#
-# NEDEN KURMUYOR, YALNIZ SÖYLÜYOR: birim kurmak `sudo` + `daemon-reload` + RESTART demektir; restart
-# bakım penceresinin konusudur ve [4]'ün hükmüne aittir. Kapı burada bir KARAR vermez, GÖRÜNÜRLÜK üretir.
-#
-# AYRIM YÖNERGE DÜZEYİNDE ([1b]'nin dersi): bu dosyalar yorum ağırlıklıdır (mezar taşları, kanıt
-# blokları). Ham `diff` her yorum düzenlemesinde bağırırdı, yani kimse bakmaz olurdu. Karşılaştırma
-# YALNIZ yönerge satırlarında (`Anahtar=değer`); yorum farkı sessiz nottur.
-echo "=== [1c/5] sistem birimi ayrıklığı (repo ↔ /etc) ==="
-BIRIM_AYRIK=""
-_yonergeler() { grep -E '^[A-Za-z][A-Za-z0-9]*=' "$1" 2>/dev/null | sed 's/[[:space:]]*$//' | sort; }
-for _bs in "$REPO"/deploy/oracle-a1/*.service; do
-  [[ -e "$_bs" ]] || continue
-  _ad="$(basename "$_bs")"
-  _canli_tmp="$(mktemp)"
-  if ! "${SSH[@]}" "cat /etc/systemd/system/$_ad" > "$_canli_tmp" 2>/dev/null; then
-    echo "  ⚠ $_ad: /etc/systemd/system'de YOK (hiç kurulmamış)"
-    BIRIM_AYRIK="$BIRIM_AYRIK $_ad"; rm -f "$_canli_tmp"; continue
-  fi
-  if diff <(_yonergeler "$_bs") <(_yonergeler "$_canli_tmp") > /dev/null 2>&1; then
-    # yorum farkı önemsizdir ama SESSİZ de kalmaz — "aynı" derken neyi kastettiğimiz yazılı olsun
-    if diff -q "$_bs" "$_canli_tmp" > /dev/null 2>&1; then echo "  ✓ $_ad: birebir"
-    else echo "  ✓ $_ad: YÖNERGELER aynı (yalnız yorum farkı)"; fi
-  else
-    echo "  ⚠ $_ad: YÖNERGE FARKI — repodaki değişiklik ETKİSİZ:"
-    diff <(_yonergeler "$_canli_tmp") <(_yonergeler "$_bs") | grep -E '^[<>]' | sed 's/^/      /'
-    BIRIM_AYRIK="$BIRIM_AYRIK $_ad"
-  fi
-  rm -f "$_canli_tmp"
-done
-if [[ -n "$BIRIM_AYRIK" ]]; then
-  echo "  ——————————————————————————————————————————————————————————————"
-  echo "  BU DEĞİŞİKLİKLER YÜRÜRLÜKTE DEĞİL. Kurmak OPERATÖR/BAKIM işidir:"
-  for _ad in $BIRIM_AYRIK; do
-    echo "    ssh ubuntu@$IP 'sudo cp -p /etc/systemd/system/$_ad /etc/systemd/system/$_ad.bak-\$(date -u +%Y%m%dT%H%M%SZ) && sudo install -m 0644 /opt/meridian/deploy/oracle-a1/$_ad /etc/systemd/system/$_ad && sudo systemctl daemon-reload'"
-  done
-  echo "  Ardından ilgili servis RESTART ister (bakım penceresi) ve etki"
-  echo "  /proc/<MainPID>/environ üzerinden DOĞRULANMALIDIR — 'kurdum' ≠ 'yürürlükte'."
-  echo "  ——————————————————————————————————————————————————————————————"
-fi
-
-# =================================================================================================
-# [F9] DAGİT-KAPSAMI-DIŞI CANLI ARTEFAKTLAR — içerik kapısı (denetim §F9 2026-08-13; kablo 2026-08-23)
-# =================================================================================================
-# AŞAĞIDAKİ ARTEFAKTLAR rsync kapsamının DIŞINDA yaşar ve ELLE kurulur (deploy/oracle-a1/
-# deploy.sh). SAYI BURADA YAZILI DEĞİL, `F9_LISTE`DE SAYILIR — düzyazıya gömülü bir sayım
-# (eskiden "DÖRT ARTEFAKT" yazıyordu, liste 11'e çıkmıştı) tam da bu kapının kapatmak için var
-# olduğu sürüklenmenin belgeye vurmuş hâlidir. TEK KAYNAK `F9_LISTE`; bu liste onun okunur özeti:
-#   * meridian-sprint@.service  → /etc/systemd/system/     (v241 — sprint'in kendi cgroup birimi)
-#   * 50-meridian-sprint.rules  → /etc/polkit-1/rules.d/   (v241 — NoNewPrivileges altında tetik izni)
-#   * deploy/hermes/SOUL.md     → ~ubuntu/.hermes/SOUL.md  (v242 — hermes brifingi)
-#   * deploy/hermes/config.yaml → ~ubuntu/.hermes/config.yaml  (v326 — ajan güvenlik duruşu:
-#     approvals/deny + guard kancası + skills.external_dirs)
-#   * meridian-tick-watchdog.service + .timer → /etc/systemd/system/  (asılı-tick bekçisi)
-#   * litestream.yml → /etc/litestream.yml (kurulum litestream_kur.sh — 2026-08-23 eklendi)
-#   * meridian-aylik-bucket-kopya.service + .timer → /etc/systemd/system/  (E-kod [4] 2026-08-23:
-#     aylık bar-arşivi bucket kopyası; kurulumu birim başlığında)
-#   * meridian-brifing.service + .timer → /etc/systemd/system/  (v327 — `@sef`in kadansı,
-#     22:00 UTC; boşken sessiz, arızada `failed`)
-#   * meridian-bekci.service + .timer → /etc/systemd/system/  (Faz 3 — `@bekci`nin kadansı,
-#     10:00 UTC. AYRI BİR TETİK, brifing'e ikinci bir ExecStart DEĞİL: iki bot ayrı artefaktın
-#     sahibi ve biri düşerse öteki koşmalı — gerekçenin tamamı birim başlığında)
-#   * meridian-karne.service + .timer → /etc/systemd/system/  (Faz 4 — `@karne`nin kadansı,
-#     HAFTALIK: Cumartesi 16:00 UTC. Gün bir tercih DEĞİL — hesap defteri iki kez okuyup
-#     kıyaslıyor ve araya düşen bir işlem eklemesi hükmü fail-closed olarak ÖLÇÜLEMEDİ'ye
-#     çeviriyor, o yüzden slot seansın OLMADIĞI güne konur; gerekçenin tamamı timer başlığında)
-#   * @sef, @bekci ve @karne profilleri: her biri distribution.yaml + config.yaml + SOUL.md →
-#     ~ubuntu/.hermes/profiles/<ad>/ (Faz 2, 3 ve 4 — bot roster'ın ilk üç Hermes profili).
-#   * hindsight-api.service + hindsight-yedek.service/.timer → /etc/systemd/system/  (EDG-2026-065
-#     Faz-1 kurulumu 2026-08-31 — bellek API'si + gecelik pg_dump. /opt/hindsight/.env F9'DA
-#     DEĞİL: sır taşır, repoda yalnız deploy/hindsight/env.iskelet durur, kıyaslanacak çift yok)
-#   * hindsight-cp.service → /etc/systemd/system/  (EDG-2026-067 yükseltmesi 2026-09-01 — CP UI,
-#     docker 0.9.2-pinli imaj, YALNIZ 127.0.0.1:9999 + ssh tüneli; /opt/hindsight/.env-cp de
-#     .env gibi F9-DIŞI sırdır)
-#   * meridian-skill-gorus.service/.timer → /etc/systemd/system/  (TSK-058 FAZ C 2026-09-01 —
-#     görüş kuyruğunun seans-dışı üreticisi, günlük 07:30 UTC; yalnız deterministik yol, LLM
-#     gölge üreticinin zamanlanması ayrı kalem)
-#   * apisix config.yaml → /opt/apisix/ + apisix.service + apisix-etcd.service →
-#     /etc/systemd/system/  (TSK-089 tek-kapı Faz 1, 2026-09-01 — operatör kur izni; imajlar
-#     PİNLİ apache/apisix:3.18.0-debian + quay etcd v3.5.21; 9080/9180/2379 YALNIZ 127.0.0.1;
-#     /opt/apisix/.env-apisix F9-DIŞI sırdır [admin anahtarı + OPENROUTER_AUTH]; rotaların
-#     SSoT'u deploy/apisix/routes.yaml — dagit rsync alanında, F9 çifti değil; uygulama
-#     ops/apisix_uygula.py [--uygula|--denetle drift])
-#   * deploy/oracle-a1/52meridian-unattended-upgrades → /etc/apt/apt.conf.d/52meridian-unattended-upgrades
-#     (TSK-149, 2026-09-05 — A1 unattended-upgrades duruşunu varsayılana yaslanmaktan BEYANLI
-#     dosyaya çıkarır: Automatic-Reboot + Automatic-Reboot-WithUsers "false" AÇIKÇA yazılı,
-#     Allowed-Origins'e dokunmaz [SSoT 50unattended-upgrades kalır], Package-Blacklist BİLİNÇLİ
-#     BOŞ [Seçenek B reddedildi]. Kurulum ELLE, Rol-1: `sudo install -m 0644
-#     deploy/oracle-a1/52meridian-unattended-upgrades
-#     /etc/apt/apt.conf.d/52meridian-unattended-upgrades`; sonrası restart istemez — apt.conf.d
-#     her apt-daily-upgrade koşumunda yeniden okunur)
-#     BURADA BİR İNCELİK VAR: rsync depo tarafını (`deploy/hermes/profiles/<ad>/`) canlıya
-#     TAŞIR, ama F9'un kıyasladığı şey o değil KURULU KOPYAdır — profil canlıya `hermes profile
-#     install` ile varır ve o komut operatörün kararıdır (yeni bir ajan kimliği doğurur). Yani
-#     "repoda güncel" ile "botun okuduğu dosya güncel" AYRI iki gerçektir; kapının ölçtüğü
-#     ikincisidir. Roster yediye kadar büyüyecek ve liste her profilde ELLE genişler: bu bir
-#     kabul, bir unutma değil — kapsamayı `_profiller()`ten TÜRETEN çivi (v329) unutmayı
-#     kırmızıya çevirir.
-# Bu, OB-2'yi doğuran "kurulu ≠ çalışır" sınıfıdır: repo ilerler, canlı kopya yerinde sayar ve
-# hiçbir kapı bağırmazdı — denetim ölçtü: dagit'te bu dosyalara sıfır atıf vardı. [1c] yalnız
-# *.service YÖNERGELERİNİ kıyaslar; bu kapı LİSTEDEKİ HER dosyanın TAM İÇERİĞİNİ kıyaslar
-# (timer/polkit/brifing/yapılandırma [1c]'nin tür kapsamının dışındadır, yorum-düzeyi
-# sürüklenme de burada görünür).
-#
-# KAPI RAPORLAR, ENGELLEMEZ — BİLİNÇLİ: bu artefaktlar dagit'in kopyalama kapsamında DEĞİL;
-# ayrıklıkta dağıtımı durdurmak, elle-kurulum akışını (bakım penceresi + daemon-reload + doğrulama)
-# dagit'e kilitlerdi. Kapının işi sürüklenmeyi GÖRÜNÜR yapmaktır; hüküm operatörün. Karşılaştırma
-# [1b]'nin idiomuyla (`ssh cat | cmp` — karşılaştırma tek yerde, iki tarafta ayrı sha aracı
-# aranmaz); "içerik-sha kapısı" sınıf adıdır, ölçü bayt-özdeşliktir (sha eşitliğinden güçlü).
-echo "=== [F9] dagit-kapsamı-dışı canlı artefaktlar (içerik kapısı) ==="
-F9_AYRIK=""; F9_OLCULEMEDI=""     # bash 3.2: boş DİZİ + `set -u` patlar → boşluklu dizge ([1b] gibi)
-F9_LISTE="
-deploy/oracle-a1/meridian-sprint@.service|/etc/systemd/system/meridian-sprint@.service
-deploy/oracle-a1/50-meridian-sprint.rules|/etc/polkit-1/rules.d/50-meridian-sprint.rules
-deploy/hermes/SOUL.md|/home/ubuntu/.hermes/SOUL.md
-deploy/hermes/config.yaml|/home/ubuntu/.hermes/config.yaml
-deploy/oracle-a1/meridian-tick-watchdog.service|/etc/systemd/system/meridian-tick-watchdog.service
-deploy/oracle-a1/meridian-tick-watchdog.timer|/etc/systemd/system/meridian-tick-watchdog.timer
-deploy/oracle-a1/litestream.yml|/etc/litestream.yml
-deploy/oracle-a1/meridian-aylik-bucket-kopya.service|/etc/systemd/system/meridian-aylik-bucket-kopya.service
-deploy/oracle-a1/meridian-aylik-bucket-kopya.timer|/etc/systemd/system/meridian-aylik-bucket-kopya.timer
-deploy/oracle-a1/meridian-brifing.service|/etc/systemd/system/meridian-brifing.service
-deploy/oracle-a1/meridian-brifing.timer|/etc/systemd/system/meridian-brifing.timer
-deploy/oracle-a1/meridian-bekci.service|/etc/systemd/system/meridian-bekci.service
-deploy/oracle-a1/meridian-bekci.timer|/etc/systemd/system/meridian-bekci.timer
-deploy/hermes/profiles/sef/distribution.yaml|/home/ubuntu/.hermes/profiles/sef/distribution.yaml
-deploy/hermes/profiles/sef/config.yaml|/home/ubuntu/.hermes/profiles/sef/config.yaml
-deploy/hermes/profiles/sef/SOUL.md|/home/ubuntu/.hermes/profiles/sef/SOUL.md
-deploy/hermes/profiles/bekci/distribution.yaml|/home/ubuntu/.hermes/profiles/bekci/distribution.yaml
-deploy/hermes/profiles/bekci/config.yaml|/home/ubuntu/.hermes/profiles/bekci/config.yaml
-deploy/hermes/profiles/bekci/SOUL.md|/home/ubuntu/.hermes/profiles/bekci/SOUL.md
-deploy/oracle-a1/meridian-karne.service|/etc/systemd/system/meridian-karne.service
-deploy/oracle-a1/meridian-karne.timer|/etc/systemd/system/meridian-karne.timer
-deploy/hermes/profiles/karne/distribution.yaml|/home/ubuntu/.hermes/profiles/karne/distribution.yaml
-deploy/hermes/profiles/karne/config.yaml|/home/ubuntu/.hermes/profiles/karne/config.yaml
-deploy/hermes/profiles/karne/SOUL.md|/home/ubuntu/.hermes/profiles/karne/SOUL.md
-deploy/hindsight/hindsight-api.service|/etc/systemd/system/hindsight-api.service
-deploy/hindsight/hindsight-yedek.service|/etc/systemd/system/hindsight-yedek.service
-deploy/hindsight/hindsight-yedek.timer|/etc/systemd/system/hindsight-yedek.timer
-deploy/hindsight/hindsight-cp.service|/etc/systemd/system/hindsight-cp.service
-deploy/oracle-a1/geridolum.py|/opt/veri/geridolum.py
-deploy/oracle-a1/meridian-geridolum.service|/etc/systemd/system/meridian-geridolum.service
-deploy/oracle-a1/meridian-geridolum.timer|/etc/systemd/system/meridian-geridolum.timer
-research/olcumler/edg066_tick_arsiv/pilot.py|/opt/veri/pilot.py
-research/olcumler/edg066_tick_arsiv/kapsam.txt|/opt/veri/kapsam.txt
-deploy/oracle-a1/meridian-skill-gorus.service|/etc/systemd/system/meridian-skill-gorus.service
-deploy/oracle-a1/meridian-skill-gorus.timer|/etc/systemd/system/meridian-skill-gorus.timer
-deploy/apisix/config.yaml|/opt/apisix/config.yaml
-deploy/apisix/apisix.service|/etc/systemd/system/apisix.service
-deploy/apisix/apisix-etcd.service|/etc/systemd/system/apisix-etcd.service
-deploy/oracle-a1/52meridian-unattended-upgrades|/etc/apt/apt.conf.d/52meridian-unattended-upgrades"
-for _cift in $F9_LISTE; do
-  # ETİKET TAM REPO YOLUDUR, BASENAME DEĞİL (denetim, Faz 3 dal turu 2026-08-30). İki profille
-  # `config.yaml` üç kez, `SOUL.md` üç kez, `distribution.yaml` iki kez listede: "⚠ config.yaml:
-  # AYRIK" satırı HANGİ profilin ayrıştığını SÖYLEMEZ ve kapı sürüklenmeyi görür ama anlatamaz.
-  # Bu, `deploy.sh` BAŞLIĞINDA kapatılan sınıfın (v266 çivisi) kapının KENDİ çıktısındaki hâliydi.
-  _f9_repo="${_cift%%|*}"; _f9_canli="${_cift##*|}"; _f9_ad="$_f9_repo"
-  if [[ ! -f "$REPO/$_f9_repo" ]]; then
-    # Repo tarafı yoksa kıyas zemini yok — bu bir sürüklenme hükmü değil, LİSTENİN bayatlamasıdır.
-    echo "  ⚠ $_f9_ad: ölçülemedi — REPODA YOK ($_f9_repo); kapı listesi bayat, listeyi güncelle"
-    F9_OLCULEMEDI="$F9_OLCULEMEDI $_f9_ad"; continue
-  fi
-  _f9_tmp="$(mktemp)"
-  # Önce düz cat; düşerse `sudo -n cat` (polkit rules.d dizini çoğu kurulumda root-dışına kapalıdır;
-  # -n: parola sorusu ssh altında asılı kalmasın — NOPASSWD yoksa dal temiz düşer, aşağıda ayrışır).
-  if ! "${SSH[@]}" "cat $_f9_canli" > "$_f9_tmp" 2>/dev/null && \
-     ! "${SSH[@]}" "sudo -n cat $_f9_canli" > "$_f9_tmp" 2>/dev/null; then
-    # ÖLÇÜLEMEYEN ne "aynı"dır ne "ayrık" (uydurma yasağı) — ama nedeni AYRIŞTIRILIR: yok mu,
-    # okunamıyor mu? İkisi farklı iş kalemidir (kurulum vs. erişim/sudo arızası).
-    if "${SSH[@]}" "sudo -n test -e $_f9_canli" 2>/dev/null; then
-      echo "  ⚠ $_f9_ad: ölçülemedi — canlıda VAR ama OKUNAMADI (izin/sudo); elle bak: $_f9_canli"
-    else
-      echo "  ⚠ $_f9_ad: ölçülemedi — canlıda DOSYA YOK ($_f9_canli); hiç kurulmamış olabilir," \
-           "kurulum elle: deploy/oracle-a1/deploy.sh"
-    fi
-    F9_OLCULEMEDI="$F9_OLCULEMEDI $_f9_ad"; rm -f "$_f9_tmp"; continue
-  fi
-  if cmp -s "$_f9_tmp" "$REPO/$_f9_repo"; then
-    echo "  ✓ $_f9_ad: canlı ile repo BİREBİR"
-  else
-    echo "  ⚠ $_f9_ad: AYRIK — repodaki hâli canlıda DEĞİL (rsync bu dosyayı TAŞIMAZ; elle kurulum ister)"
-    diff -u "$_f9_tmp" "$REPO/$_f9_repo" | head -12 || true
-    F9_AYRIK="$F9_AYRIK $_f9_ad"
-  fi
-  rm -f "$_f9_tmp"
-done
-if [[ -n "${F9_AYRIK// /}" ]]; then
-  echo "  ——————————————————————————————————————————————————————————————"
-  echo "  [F9] AYRIK ARTEFAKT VAR:$F9_AYRIK"
-  echo "  dagit bunları TAŞIMAZ; kurulum elle + bakım penceresi (deploy/oracle-a1/deploy.sh"
-  echo "  ilgili adımları; birimler daemon-reload ister). Dağıtım ENGELLENMEDİ — özet sonda tekrarlanır."
-  echo "  ——————————————————————————————————————————————————————————————"
-fi
-
-echo "=== [F10] birim istenen-durum ANOMALİSİ (enabled + inactive) ==="
-# TSK-092 R-0 (2026-09-03). [4] penceresi iki türetim koşuyor — "ne durdurulmalı" (`is-active`)
-# ve "ne başlatılmalı" (`is-enabled`). Bu kapı ÜÇÜNCÜ, AYRI bir soruyu sorar: ölçülen dünya kendi
-# içinde TUTARLI mı? `enabled + inactive` hâli bir SİMPLE birimde tutarsızlıktır.
-# ÖLÇÜLDÜ (A1, 2026-09-03 09:40Z): üç aday birim de `Type=simple` + `Restart=always` ve
-# `TriggeredBy=` BOŞ — hiçbiri bir zamanlayıcının tetiklediği kısa-ömürlü birim değil. Dolayısıyla
-# "enabled ama şu an koşmuyor" iki şeyden biridir: (a) elle `stop` edilmiştir — o zaman kalıcı
-# niyet `disable --now` ile BEYAN edilmeliydi; (b) start-limit'e çarpıp DÜŞMÜŞTÜR — o zaman bir
-# ARIZA vardır. İki hâlde de [4] penceresi birimi `is-enabled`dan türetip sessizce DİRİLTİR:
-# operatörün niyeti ya da arızanın kendisi, "✓ başlatıldı" satırının altında MASKELENİR.
-# KAPININ YERİ BİLİNÇLİ — rsync'ten ve stop'tan ÖNCE, kuru koşum çıkışının da ÖNCESİNDE ("erken
-# gerçek"): rsync'ten sonra düşseydi diskte yeni, süreçte eski kod kalırdı ([5b]'nin sınıfı) ve
-# kuru koşum anomaliyi hiç göremezdi. Kapı yalnız OKUR; hiçbir birimi durdurmaz/başlatmaz.
-# OVERRIDE BAYRAĞI YOK, bilinçli: "bugünlük geç" bayrağı olan kapı ilk haftada sessizleşir —
-# anomali, iki çareden biriyle BİLİNÇLİ bir hâle çevrilerek geçilir. Çivi: v367 [F10] ailesi.
-_ENABLED_INAKTIF="$("${SSH[@]}" 'for u in meridian meridian-barsarchive meridian-learn; do
-  if [ "$(systemctl is-enabled "$u" 2>/dev/null)" = "enabled" ] &&
-     [ "$(systemctl is-active "$u" 2>/dev/null)" = "inactive" ]; then printf "%s " "$u"; fi; done')"
-if [[ -n "${_ENABLED_INAKTIF// /}" ]]; then
-  echo "  !! ENABLED ama INACTIVE:$_ENABLED_INAKTIF"
-  echo "     Bu, Type=simple + Restart=always bir birimin normal hâli DEĞİLDİR (ölçüldü 2026-09-03:"
-  echo "     üç aday birimin üçü de simple/always, TriggeredBy= boş). Ya elle durduruldu (niyet"
-  echo "     beyan edilmemiş) ya da start-limit'e çarpıp düştü (arıza). Dağıtım devam etseydi [4]"
-  echo "     penceresi bu birimi is-enabled'dan türetip SESSİZCE diriltir ve olayı maskelerdi."
-  echo "     Çare (birim başına birini seç, sonra ./dagit.sh'i yeniden koş):"
-  for _anom in $_ENABLED_INAKTIF; do
-    echo "       · beklenmeyen düşüşse : sudo systemctl start $_anom      (önce neden:" \
-         "journalctl -u $_anom -n 50 --no-pager)"
-    echo "       · kalıcı kapalılıksa  : sudo systemctl disable --now $_anom"
-  done
-  echo "     DAĞITIM DURDU (çıkış 3). Override bayrağı YOK — anomali bilinçli hâle çevrilmeden geçilmez."
-  exit 3
-fi
-echo "  ✓ enabled+inactive birim yok (istenen durum ile o anki durum tutarlı)"
-
-if [[ "${1:-}" != "--uygula" ]]; then
-  # KURU KOŞUMDA YALNIZ DIFF: yukarıdaki blok hiçbir şey yazmadı (tek yazımı $STATE_TMP'ye okuma).
-  # Kopyalama --uygula'ya ve BAKIM PENCERESİNE bağlıdır — koşan bir worker'ın altından yapılandırma
-  # değiştirmek, dağıtımın kendisinden daha sinsi bir yarış üretirdi.
-  echo ">> KURU KOŞUM BİTTİ. Tam dağıtım için: ./dagit.sh --uygula"; exit 0
-fi
-
-echo "=== [2/5] rsync ==="
-rsync -az --delete "${RSYNC_EXC[@]}" -e "ssh -i $KEY" "$REPO"/ ubuntu@"$IP":/opt/meridian/
-echo "  ✓"
-
-# [3] DEV GRUBU A1'E KURULMAZ (karar 2026-08-01, ölçümü 2026-08-03'te kalıcılaştı): çalışma
-# yolunda sıfır dev-import — hüküm [0d]'de HER DAĞITIMDA yeniden ölçülür, burada yalnız uygulanır.
-# Kaldırılan 17 dağıtım (geçişli): pytest, hypothesis, import-linter+grimp, mutmut+libcst+textual…
-# Kazanç yalnız disk değil DENETİM YÜZEYİ: [0b] `uv audit` kapısı artık yalnız A1'de GERÇEKTEN
-# koşan koda ait CVE'lerle dağıtım bloklayabilir; bir test aracının CVE'si canlı dağıtımı durduramaz.
-#
-# BAYRAK KOŞUM ANINDA ÖLÇÜLÜR, VARSAYILMAZ. `--no-default-groups` semantik olarak daha dayanıklıdır:
-# `--no-dev` YALNIZ `dev` grubunu eler, yani `tool.uv.default-groups` yarın ikinci bir grupla
-# büyürse o grup A1'e SESSİZCE sızar (daraltma sanılan yerde daraltma olmaz). Ama o bayrağın
-# A1'deki uv sürümünde VAR OLDUĞU buradan görülemez ve olmayan bir bayrak dağıtımı bakım
-# penceresinin ortasında düşürürdü. Yardım çıktısına SORULUR; yoksa `--no-dev`e düşülür — bugün
-# ikisi de ÖLÇÜLEN aynı 17 paketi kaldırıyor (ops/import_tarama.py), yani düşüş bedava.
-SYNC_BAYRAK="--no-dev"
-if "${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; uv sync --help 2>/dev/null | grep -q -- "--no-default-groups"'; then
-  SYNC_BAYRAK="--no-default-groups"
-fi
-echo "=== [3/5] uv sync --frozen $SYNC_BAYRAK (dev grubu HARİÇ) ==="
-"${SSH[@]}" "export PATH=\"\$HOME/.local/bin:\$PATH\"; cd /opt/meridian && uv sync --frozen $SYNC_BAYRAK -q && echo '  ✓'"
-
-echo "=== [4/5] bakım penceresi ==="
-# `meridian-learn` 2026-08-24'te LİSTEYE GİRDİ. Birim 2026-08-17'de doğdu ve bu betikte `learn`
-# kelimesi HİÇ geçmiyordu — bilinçli dışlama değil UNUTMA. Bedeli ölçüldü: 12:30Z dağıtımı
-# ısınma telemetrisini diske indirdi ama süreç 00:34:40'tan beri eski bytecode'u koşuyordu
-# (11 sa 19 dk), ve doğrulama "active" dediği için kimse görmedi.
-# RESTART UCUZ, ÖLÇÜLDÜ: sonda önbelleği diske yazılıyor (`reflect.PROBE_DISK_FILE`), döngü
-# 300 sn'de bir uyanıyor, birim `Restart=always`. Kaybedilen en fazla o anki turun taze hesabı.
-#
-# İSTENEN-DURUM KORUMASI (TSK-092; vaka ×2: 2026-08-31 + 2026-09-01). Sabit üçlü `start` paketi
-# operatörün disabled+stopped bıraktığı learn'ü İKİ gece üst üste geri açtı — "dağıtım sonrası
-# kontrol" insana yaslanıyordu ve insan atladı. Yasa: istenen durum systemd'nin KENDİ beyanıdır
-# (`is-enabled`); pencere aktifi durdurur ama yalnız `enabled` olanı geri başlatır, atlananı
-# ADIYLA söyler. Beyanlı bedel: operatörün ELLE başlattığı disabled birim pencereden sonra kapalı
-# kalır — kalıcılık isteyen `enable` eder (pano birim-anahtarı da tam bu sözlükle konuşur).
-_BIRIM_ADAYLARI="meridian meridian-barsarchive meridian-learn"
-_BASLAT="$("${SSH[@]}" 'for u in meridian meridian-barsarchive meridian-learn; do
-  if [ "$(systemctl is-enabled "$u" 2>/dev/null)" = "enabled" ]; then printf "%s " "$u"; fi; done')"
-# AÇIK `if` — `[ … ] && printf` DEĞİL (satır ~132 doktrininin UZAK-kabuk hâli; vaka 2026-09-02
-# sabah penceresi, İLK gerçek koşum): son eleman disabled olunca `&&` kalıbı döngüyü 1 ile
-# bitirir, ssh 1 döner ve yerel `set -e` bu atamada betiği [4] başlığından hemen sonra SESSİZCE
-# öldürür — rsync inmiş, restart/beyan kalmıştı (diskte yeni, süreçte eski kod). ssh'ın GERÇEK
-# arızası yine yüksek sesli kalır: bağlantı düşerse liste boş döner ve alttaki çekirdek-birim
-# kapısı dağıtımı adıyla durdurur. Çivi: test_dagit_istenen_durum_v367 (davranışsal, sahte systemctl).
-if [[ " $_BASLAT" != *" meridian "* ]]; then
-  echo "  !! ÇEKİRDEK BİRİM 'meridian' enabled DEĞİL — motoru kapalı bırakacak pencere sessiz olamaz."
-  echo "     Bilinçliyse önce birimi enable et ya da bu dağıtımı elle yürüt. DAĞITIM DURDU."
-  exit 1
-fi
-# DURDURMA LİSTESİ DE TÜRETİLİR (TSK-092 (a), 2026-09-03). Sabit üçlü `stop` paketi zaten
-# `inactive` olan birime de stop gönderiyordu: gürültü ("Failed to stop"/no-op) ve daha kötüsü
-# YANLIŞ BEYAN — pencere çıktısı "✓ durdu" der, oysa o birim pencereye hiç girmemişti.
-# BU KAPININ VERMEDİĞİ KORUMA, AÇIKÇA (düzeltme turu 1, inceleme Ö-3, 2026-09-03): stop'u
-# atlamak, elle durdurulmuş bir birimi pencereden korumaz — `inactive` ama `enabled` bir birim
-# başlatma listesine `is-enabled`den GİRER ve pencere sonunda YİNE başlatılırdı; kalıcı
-# kapalılığın tek beyanı `disable`dır. Buradaki kazanç yalnız yanlış "✓ durdu" beyanının ve
-# gürültünün kalkmasıdır. O hâlin KENDİSİ artık ayrı bir kapıda DUR sayılıyor ([F10], R-0).
-# Ölçüt `!= inactive`, `= active` DEĞİL:
-# `activating`/`deactivating`/`failed` hâllerinde süreç ya da artık durum vardır ve durdurmak
-# GÜVENLİ yöndür — yalnız temiz `inactive` atlanır. Aday KÜMESİ üçlü kalır (2026-08-24 `learn`
-# unutma vakası); sabitlenemeyen şey stop SATIRIdır.
-# AÇIK `if` — `[ … ] && printf` DEĞİL: son eleman inactive olunca `&&` kalıbı uzak kabuğu 1 ile
-# bitirir ve yerel `set -e` bu atamada betiği sessizce öldürür (v367 vakası, 2026-09-02 sabahı).
-# ssh'ın GERÇEK arızası burada sessiz kalmaz: yukarıdaki çekirdek-birim kapısı `_BASLAT` boşken
-# dağıtımı zaten adıyla durdurdu. Çivi: test_dagit_istenen_durum_v367 (sahte systemctl, iki dünya).
-_DURDUR="$("${SSH[@]}" 'for u in meridian meridian-barsarchive meridian-learn; do
-  if [ "$(systemctl is-active "$u" 2>/dev/null)" != "inactive" ]; then printf "%s " "$u"; fi; done')"
-if [[ -n "${_DURDUR// /}" ]]; then
-  "${SSH[@]}" "sudo systemctl stop $_DURDUR && echo '  ✓ durdu:' $_DURDUR"
-else
-  echo "  · durdurulacak aktif birim YOK (aday üçlünün üçü de inactive) — stop gönderilmedi"
-fi
-for _u in $_BIRIM_ADAYLARI; do
-  # BEDEL YASASI TERSİNDEN (düzeltme turu 1, inceleme K-5, 2026-09-03): üçü de inactive iken
-  # operatör AYNI olguyu dört satırda okuyordu — yukarıdaki `else` dalı zaten "aktif birim YOK"
-  # diyor. Birim-başına satır yalnız KISMİ atlamada bilgi taşır; tam atlamada gürültüdür.
-  if [[ -n "${_DURDUR// /}" ]] && [[ " $_DURDUR" != *" $_u "* ]]; then
-    echo "  · $_u: pencere öncesi inactive — stop gönderilmedi (TSK-092)"
-  fi
-  if [[ " $_BASLAT" != *" $_u "* ]] && [[ "$_BASLAT" != "$_u "* ]]; then
-    echo "  · $_u: disabled — istenen duruma saygı, pencere sonunda başlatılmadı (TSK-092)"
-  fi
-done
-
-# VERSİYONLU STATE KOPYASI — DURDURMA SONRASI, BAŞLATMA ÖNCESİ (2026-08-02). Yer bilinçli:
-#   * durdurmadan ÖNCE olsaydı, koşan worker yapılandırmayı okurken altından değişirdi (yarı-okuma
-#     + `config.goal()` lru_cache'i eski değerle donmuş süreç = iki gerçek aynı anda).
-#   * başlatmadan SONRA olsaydı yeni süreç ESKİ yapılandırmayla açılır, dosya sonradan değişir ve
-#     etkisi bir sonraki restart'a kadar GÖRÜNMEZDİ — tam olarak bu adımın kapattığı sessizlik.
-# Hüküm [1b]'de verildi; burada yalnız UYGULANIR (karar ile icra ayrı yerlerde durur).
-#
-# YEDEK NEREYE YAZILIR — `backups/state/`, `state/` DEĞİL (2026-08-07, MAKULLÜK bulgusu 1).
-# Buradaki `cp` yedeği `state/$_sf.bak-$_damga` diye, yani DEDEKTÖRÜN TARADIĞI DİZİNİN İÇİNE
-# yazıyordu. Sonucu ölçüldü: `yeniden_hesap:orphan_state_files` canlıda 7 dosya sayıyordu ve
-# altısı bu satırın (ve bir bakım-penceresi `sed`inin) artığıydı — her dağıtım kartı bir satır
-# daha kalabalıklaştırıyor, gerçek bir "üretilip tüketilmeyen kanıt" bulgusu o gürültüde
-# kayboluyordu. Dedektörün desenini gevşetmek YANLIŞ onarım olurdu (bekçiyi kör etmek); doğru
-# onarım artığın KAYNAĞINI taşımaktır — yedek hâlâ alınır, yalnız yeri değişir.
-# `backups/` rsync'ten HARİÇTİR (satır 18): yedekler dağıtımla ne ezilir ne silinir, ve A1'de kalır.
-# GERİ DÖNÜŞ YOLU AYNEN DURUYOR — yalnız adresi değişti:
-#   ssh … "cp -p /opt/meridian/backups/state/goal.yaml.bak-<damga> /opt/meridian/state/goal.yaml"
-if [[ -n "${STATE_KOPYALA// /}" ]]; then
-  _damga="$(date -u +%Y%m%d%H%M)"
-  _yedek_dizin="/opt/meridian/backups/state"
-  "${SSH[@]}" "mkdir -p $_yedek_dizin"
-  for _sf in $STATE_KOPYALA; do
-    # GERİ ALINABİLİRLİK ÖNCE: birim migrasyonunun (adım 6) dersi — üstüne yazmadan önce yedekle.
-    "${SSH[@]}" "cp -p /opt/meridian/state/$_sf $_yedek_dizin/$_sf.bak-$_damga"
-    scp -q -i "$KEY" "$REPO/state/$_sf" ubuntu@"$IP":/opt/meridian/state/"$_sf"
-    # KOPYALANDIĞI DOĞRULANIR, VARSAYILMAZ: uzak dosya yerel dosyayla BAYT-ÖZDEŞ mi? (`cmp` ile —
-    # iki tarafta farklı md5 araçları aramaya gerek yok, karşılaştırma tek yerde yapılır.)
-    if "${SSH[@]}" "cat /opt/meridian/state/$_sf" | cmp -s - "$REPO/state/$_sf"; then
-      echo "  ✓ state/$_sf CANLIYA KOPYALANDI (yedek: backups/state/$_sf.bak-$_damga) — bayt-özdeş doğrulandı"
-    else
-      echo "  !! state/$_sf kopyalandı AMA doğrulanamadı — yedek: backups/state/$_sf.bak-$_damga"
-      echo "     DAĞITIM DURDU (servisler DURMUŞ hâlde): yapılandırma belirsizken başlatmak, hangi"
-      echo "     yasayla koştuğu bilinmeyen bir motor demektir. Yedeği geri koy ya da elle eşitle:"
-      echo "     ssh ubuntu@$IP \"cp -p $_yedek_dizin/$_sf.bak-$_damga /opt/meridian/state/$_sf\""
-      exit 1
-    fi
-  done
-else
-  echo "  · versiyonlu state kopyası YOK (fark yok ya da [1b] operatöre bıraktı)"
-fi
-
-# Başlatma listesi YUKARIDA is-enabled'dan türetildi (TSK-092) — bu satırda birim adı sabitlenemez.
-#
-# BU `daemon-reload` SİSTEM-GENELİDİR (TSK-152, 2026-09-05) — yalnız $_BASLAT'ı değil, A1'de
-# YÜKLÜ HER timer'ı yeniden hesaplatır. `RandomizedDelaySec` taşıyan filo timer'ları (bekci/
-# brifing/karne/backup/aylik-bucket-kopya/skill-gorus) bu yüzden `FixedRandomDelay=true` taşır —
-# belgeli systemd riski, reload'da rastgele payın YENİDEN ÇEKİLİP tetiği erkene çekmesidir.
-# ÖLÇÜLDÜ (A1, dağıtım #13/#14/#15 reload anları 2026-09-04 20:02:55Z/22:08:16Z/22:36:11Z/
-# 22:42:49Z): o dört anın hiçbirinde bir RandomizedDelaySec timer'ı beklenmedik ateşlemedi —
-# "her daemon-reload 3/3 ateşliyor" öncülü bu ölçümde DOĞRULANMADI (gerekçenin tamamı
-# deploy/oracle-a1/meridian-backup.timer başlığında); `FixedRandomDelay=true` yine de eklendi
-# çünkü zararsız ve belgelenmiş riski ölçülemeden kapatıyor.
-"${SSH[@]}" "sudo systemctl daemon-reload && sudo systemctl start $_BASLAT && sleep 8 && systemctl is-active $_BASLAT | tr '\n' ' '; echo"
-
-echo "=== [5/5] doğrulama ==="
-"${SSH[@]}" 'curl -s -o /dev/null -w "healthz: %{http_code}\n" http://127.0.0.1:8080/healthz;
-  tail -1 /opt/meridian/state/events.jsonl | head -c 200; echo'
-
-# =================================================================================================
-# [5a] DOĞRULAMA-TOKEN ANAHTAR KONTROLÜ (TSK-148, 2026-09-05 — dağıtım #13 vakası, 2026-09-04 20:04Z)
-# =================================================================================================
-# healthz YALNIZ "200 döndü" der, GÖVDEYİ doğrulamaz: token'sız istek de çoğu zaman 200 döner,
-# gövdesi `{"detail": ...}` (yetkisiz cevap) olur. Rol-1 elle doğrularken tam bunu yaşadı: token'sız
-# `/api/alerts` çağrısı "pending None" diye okundu (sahte "boş"), hayalet sayacı yanlış uçta arandı
-# (/api/diagnostics; doğrusu /api/hermes.learning). Sınıf [5b]'nin "active ≠ yeni kod"unun
-# uç-katmanı eşi: "200 döndü ≠ doğru gövde döndü".
-#
-# ÜÇ UÇ BİLEREK SEÇİLDİ (D2, brief 2026-09-05): alarm/öğrenme/performans üçlüsü. Biçim
-# `<yol>|<nokta-ayraçlı-anahtar-yolu>|<beklenen-tip>`, tip boşsa yalnız anahtarın VARLIĞI ölçülür —
-# `equity_curve_beyani.tohum_siniri` ölçülü İSTİSNA: değeri canlıda GERÇEKTEN `None` olabilir
-# (sınır henüz kurulmamışsa), tip zorlanmaz.
-# Kontrol TAMAMEN ssh İÇİNDE koşar — uç 127.0.0.1:8080 yalnız A1'in kendisinden erişilir (healthz
-# ile AYNI kısıt). Token DEĞERİ hiçbir echo/printf/tee argümanına GİRMEZ (dagit çıktısı günlüğe
-# kopyalanıyor; sır süzgeci yalnız beyaz-liste adlar basar) — yalnız VAR/YOK hükmü döner. Uç
-# gövdeleri de dışarı SIZMAZ: JSON A1'de ayrıştırılır, yalnız VAR/YOK basılır.
-# /api/hermes ağır olabilir: istek zaman aşımı 90 sn (`dogrulama_anahtar.py::ZAMAN_ASIMI_SN`).
-#
-# FAIL-CLOSED / FAIL-OPEN AYRIMI BİLİNÇLİ: anahtar eksikse (yetkisiz/eski gövde) [5b] gibi DÜŞER —
-# beyan ([B]) yazılmaz, çünkü "dağıtıldı" cümlesi doğrulanamamış bir gövdeye dayanırdı. Token
-# DOSYASI okunamazsa DÜŞMEZ (⚠ ölçülemedi) — token yerel geliştirme makinesinde de olmayabilir ve
-# bu durumda ölçüm YOKTUR, "ihlal" DEĞİLDİR (uydurma yasağı: ölçülemeyen None + neden).
-# UÇ LİSTESİ ARTIK YEREL VE ADLI (TSK-176 A1): eskiden uzak kabuk gövdesinin İÇİNDE yaşıyordu,
-# yani hem playbook'tan hem çividen görünmezdi. Biçim `<yol>|<anahtar-yolu>|<beklenen-tip>`; tip
-# boşsa yalnız VARLIK ölçülür. TEK KAYNAK GEÇİŞİ: `deploy/ansible/vars/dagit_vars.yml`teki
-# `dogrulama_uclari` ile ayrışması v452 A3 çivisinde KIRMIZIDIR (Task 3'te bu kopya silinir).
-DOGRULAMA_UCLARI="/api/alerts|pending|int
-/api/hermes|learning.hayalet_suzulen_n|
-/api/performance|equity_curve_beyani.tohum_siniri|"
-echo "=== [5a/5] doğrulama-token anahtar kontrolü ==="
-# Kontrol TAMAMEN A1'in İÇİNDE koşar — uçlar yalnız 127.0.0.1:8080'den erişilir (healthz ile AYNI
-# kısıt). Betik `python3` ile çağrılır (`uv` DEĞİL): /opt/meridian ortamı dev grubunu taşımaz.
-_DOGRULAMA_ARG=""
-while IFS= read -r _uc; do
-  [ -z "$_uc" ] && continue
-  _DOGRULAMA_ARG="$_DOGRULAMA_ARG --uc '$_uc'"
-done <<< "$DOGRULAMA_UCLARI"
-_DOGRULAMA_RC=0
-_DOGRULAMA_CIKTI="$("${SSH[@]}" "python3 /opt/meridian/deploy/oracle-a1/dogrulama_anahtar.py$_DOGRULAMA_ARG")" \
-  || _DOGRULAMA_RC=$?
-if [ "$_DOGRULAMA_CIKTI" = "OLCULEMEDI token yok" ]; then
-  echo "  ⚠ ölçülemedi: token yok (yerel geliştirme makinesinde de olabilir — fail-open)"
-else
-  echo "$_DOGRULAMA_CIKTI" | while IFS='|' read -r _durum _yol _anahtar; do
-    [ -z "$_durum" ] && continue
-    if [ "$_durum" = "VAR" ]; then
-      echo "  ✓ $_yol — $_anahtar var"
-    else
-      echo "  ✗ $_yol — $_anahtar yok (yetkisiz/eski gövde?)"
-    fi
-  done
-  # HÜKÜM ÇIKIŞ KODUNDAN OKUNUR, çıktıyı ikinci kez grep'lemekten DEĞİL (tek kaynak): betik
-  # ihlalde 1 döner. ssh'ın KENDİ arızası da sıfır-dışıdır ve aynı yere düşer — ölçülemeyen
-  # doğrulama 'temiz' sayılmaz (fail-closed, bu depodaki genel yasa).
-  if [ "$_DOGRULAMA_RC" -ne 0 ]; then
-    echo "  DAĞITIM DURDU: doğrulama-token anahtar kontrolü ihlalde/ölçülemedi (rc=$_DOGRULAMA_RC)"
-    echo "  — beyan ([B]) yazılmaz."
-    exit 1
-  fi
-fi
-
-# ARTIK BEKÇİSİ (2026-08-07). Bu betiğin yedeği artık `state/` dışına düşüyor — ama `state/`e
-# yedek bırakan TEK yol bu değildi: canlıda `earnings.csv.sedbak` ve `earnings.csv.<damga>.bak`
-# bir bakım penceresindeki elle `sed`den kalmıştı. Onların kaynağı bir betik değil bir ALIŞKANLIK,
-# yani kodla kapatılamaz — GÖRÜNÜR kılınabilir. Burada yalnız SORULUR (salt okuma, hiçbir şey
-# taşınmaz): pencere kapanırken artık varsa operatör onu aynı oturumda görür, bir hafta sonra
-# makullük kartında değil.
-echo "--- state/ artık kontrolü (salt okuma) ---"
-_ARTIK="$("${SSH[@]}" "find /opt/meridian/state -maxdepth 1 -type f \\( -name '*.bak-*' -o -name '*.sedbak' -o -name '*.bak' \\) 2>/dev/null | sed 's|.*/||' | sort" || true)"
-if [[ -z "${_ARTIK// /}" ]]; then
-  echo "  ✓ state/ temiz — yedek artığı yok"
-else
-  echo "$_ARTIK" | sed 's/^/  · /'
-  echo "  ⚠ yedek artığı VAR → orphan_state_files dedektörü bunları sayar."
-  echo "    Temizlik (TAŞIR, silmez): bash ops/state_yetim_temizle.sh   # kuru koşu; sonra --uygula"
-fi
-
-# [F9 ÖZETİ] DAĞITIM ÖZETİNE TAŞINIR: kapı [F9] kuru-koşum tarafında koştu ve bulgusunu orada
-# bastı; burada bir kez daha yazılır ki "DAĞITIM TAMAM" satırını okuyan göz onu kaçırmasın —
-# raporlanan ama görülmeyen sürüklenme, hiç raporlanmamış gibidir.
-if [[ -n "${F9_AYRIK// /}" || -n "${F9_OLCULEMEDI// /}" ]]; then
-  echo "--- [F9] dagit-kapsamı-dışı artefakt özeti ---"
-  if [[ -n "${F9_AYRIK// /}" ]];      then echo "  ⚠ AYRIK (repo ≠ canlı):$F9_AYRIK"; fi
-  if [[ -n "${F9_OLCULEMEDI// /}" ]]; then echo "  ⚠ ölçülemedi:$F9_OLCULEMEDI"; fi
-  echo "  Kurulum elle + bakım penceresi: deploy/oracle-a1/deploy.sh (dagit bu dosyaları taşımaz)."
-fi
-
-# =================================================================================================
-# [B] DAĞITIM-BEYANI (P0-b — docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md §4.2). Ortamlar-arası #2
-# ("repo-ağacı ↔ canlı-ağacı hangi tepede?") bugüne dek dedektörün YAPISAL kör noktasıydı: süreç-içi
-# hiçbir kıyas iki ortamı aynı anda göremez. Kapısı bu beyandır: dagit her başarılı dağıtımın
-# =================================================================================================
-# [5c] ARTEFAKT TAZELİĞİ — derleme adımı [5b]'nin varsayımını KIRAR
-# =================================================================================================
-# [5b] "dağıtılan dosya = kaynak" varsayar ve Python için bu DOĞRU. Ama shadcn göçüyle araya bir
-# DERLEME girdi: canlıya giden `meridian/web/pano*` artefaktı, `ui/` altındaki kaynaktan ÜRETİLİR.
-# Kaynak değişip `npm run build` koşmazsa canlı sessizce bayat kalır ve [5b] bunu GÖREMEZ — o
-# Python mtime'ına bakar, artefaktı hiç tanımaz. Bu, `meridian-learn`de yaşadığımız SESSİZ
-# ETKİSİZLİĞİN aynısıdır: doğru bir cümle, anlamsız bir güvence.
-#
-# DEĞİŞMEZ:  mtime(meridian/web/pano.html)  >=  en yeni mtime(ui/ altındaki kaynak)
-#
-# YERELDE ölçülür (dağıtımdan ÖNCE), çünkü onarım da yerel: `cd ui && npm run build`. Canlıda
-# ölçmenin anlamı yok — orada kaynak zaten yok (rsync `/ui`yi dışlıyor).
-# ~~JETON KÖPRÜSÜ AYRICA ÖLÇÜLÜR: `ops/jeton_css_uret.py --kontrol`~~ — 2026-08-25'te DÜŞTÜ.
-# Köprü `ui/src/jetonlar.css`i üretiyordu ve o dosyayı yalnız pilotun `stil.css`i okuyordu.
-# studio-admin göçüyle jeton katmanı ŞABLONUNKİ oldu (`src/tema.css`); `jetonlar.css`in artık
-# HİÇ okuyucusu yok. Okuyucusu olmayan bir dosyanın tazeliğini ölçmek, doğru bir cümleyle
-# anlamsız bir güvence vermektir — tam da [5b]'nin düzelttiği hata sınıfı (YASA 6).
-# Betik ve üretim yolu DURUYOR (silinmedi): göç sırasında bir rol jetonuna geri dönmek
-# gerekirse köprü yerinde. Geri açılacaksa ÖNCE bir okuyucusu olmalı.
-# GÖVDE DOSYADA (TSK-176 A1): iki-platform `stat`/`find` sarmalı `ops/artefakt_tazelik.py`ye
-# çıkarıldı — playbook bu kapıyı Play 1'de (localhost) koşturacak ve gömülü çok-satır kabuk bir
-# Ansible görevinde YASAK. ÇIKIŞ KODU SÖZLEŞMESİ: 0 taze · 1 BAYAT (dağıtım DURUR) · 2 ÖLÇÜLEMEDİ.
-# 2'de dağıtım SÜRER (artefakt henüz derlenmemiş olabilir — ölçüm boşluğu, arıza değil), ama
-# betik "taze" DEMEZ: eski kabuk gövdesi ölçemediğinde "TAMAM" basıyordu, o cümle dürüstleşti.
-if [ -d "$REPO/ui" ]; then
-  echo "=== [5c/5] artefakt tazeliği (pano) ==="
-  _ART_RC=0
-  uv run python ops/artefakt_tazelik.py --repo "$REPO" || _ART_RC=$?
-  # 0 ve 2 DIŞINDA HER ŞEY DURDURUR (fail-closed): 1 bayatlık hükmüdür, ama 127/2'den büyük bir
-  # kod betiğin KOŞAMADIĞI anlamına gelir ve koşamayan kapı 'geçildi' sayılamaz. Eski gömülü
-  # gövdede bu koruma `set -e`den geliyordu; çağrı `|| rc=$?` ile yakalandığı için AÇIK yazılır.
-  if [ "$_ART_RC" != "0" ] && [ "$_ART_RC" != "2" ]; then
-    echo "  DAĞITIM DURDU: [5c] artefakt tazeliği (çıkış $_ART_RC)"
-    exit 1
-  fi
-fi
-
-# =================================================================================================
-# [5b] KOD-TAZELİK DEĞİŞMEZİ — "active" ≠ "yeni kodu koşuyor"
-# =================================================================================================
-# ÖLÇÜLEN VAKA (2026-08-24). [5] doğrulaması "iki birim de active" dedi ve bu DOĞRUYDU; ama
-# `meridian-learn` 00:34:40'tan beri koşuyordu ve en yeni kaynak 11:53:16'ydı. Yani doğru bir
-# cümle, ANLAMSIZ bir güvence verdi: `active`, sürecin hangi kodu taşıdığı hakkında hiçbir şey
-# söylemez. Yarı-etkili bir dağıtım "TAMAM" damgası aldı.
-#
-# DEĞİŞMEZ:  süreç başlangıcı  ≥  en yeni  /opt/meridian/meridian/**/*.py  mtime'ı
-#
-# KAPSAM ELLE SAYILMAZ, ExecStart'TAN TÜRETİLİR. Birim adlarını buraya yazsaydık yarın eklenen
-# bir birim aynı sessizlikle unutulurdu — düzeltmek istediğimiz sınıfın ta kendisi. Kural:
-# `running` durumda VE ExecStart'ı /opt/meridian altından python/uv koşan her birim. Bu sayede
-# `meridian-litestream` (litestream ikilisi, Python değil) kendiliğinden DIŞARIDA kalır.
-#
-# NEDEN [B]'DEN ÖNCE: beyan `state/dagitim.json`a "bu sha canlıda" yazar. Süreçlerden biri eski
-# kodu koşuyorsa o cümle YANLIŞTIR. Kapı önce düşerse dosya eski sha'da kalır — koşan sistemin
-# GERÇEK hâli odur (operatör kararı 2026-08-24). Onarım: birimi döndür, betiği tekrar koş
-# (rsync idempotent).
-echo "=== [5b/5] kod-tazelik değişmezi (süreç ≥ kaynak) ==="
-# GÖVDE DOSYADA (TSK-176 A1): uzak kabuk `deploy/oracle-a1/kod_tazelik.sh`e çıkarıldı (playbook
-# onu `script:` ile koşturacak). Betik rsync ile A1'e ZATEN inmiştir ([2] adımı) — bu satır
-# dağıtılan kopyayı çağırır, yani ölçen kod ile dağıtılan kod aynı sürümdür.
-# ÇIKIŞ KODU: 0 = IHLAL yok · 1 = en az bir IHLAL. Çıktı satırları aşağıda operatöre çevrilir ve
-# `BEKLENEN` satırları [B] beyanının `sandbox_eski_kod` alanını doğurur (TSK-140).
-_TAZELIK_RC=0
-_tazelik="$("${SSH[@]}" "bash /opt/meridian/deploy/oracle-a1/kod_tazelik.sh")" || _TAZELIK_RC=$?
-if [ "$_TAZELIK_RC" -ne 0 ] && [ -z "$_tazelik" ]; then
-  # ÖLÇÜLEMEDİ ≠ TEMİZ (fail-closed): betik tek satır bile basmadan sıfır-dışı döndüyse ölçüm
-  # YAPILAMAMIŞTIR (ssh düştü, betik A1'e inmedi, bash yok…). Eski gömülü gövdede bu korumayı
-  # `set -e` veriyordu — çağrı artık `|| rc=$?` ile yakalandığı için AÇIK yazılır; aksi hâlde
-  # yarı-etkili bir dağıtım "koşan her birim yeni kodu taşıyor" diye damgalanırdı.
-  echo "  !! [5b] ÖLÇÜLEMEDİ (çıkış $_TAZELIK_RC, çıktı boş) — kod-tazelik betiği koşamadı."
-  echo "     Beyan ([B]) YAZILMAZ: ölçülemeyen değişmez 'sağlandı' sayılmaz."
-  echo "     Bak: ssh ubuntu@$IP 'bash /opt/meridian/deploy/oracle-a1/kod_tazelik.sh'"
-  exit 1
-elif [ -z "$_tazelik" ]; then
-  echo "  ✓ koşan tüm meridian birimleri dağıtılan kodu taşıyor"
-else
-  echo "$_tazelik" | while read -r _d _u _y _f; do
-    if [ "$_d" = "IHLAL" ]; then
-      echo "  ✗ $_u — süreç kaynaktan $(( _y / 60 )) dk ESKİ (en yeni: $_f)"
-    elif [ "$_d" = "BEKLENEN" ]; then
-      echo "  ⚠ beklenen: $_u — kum-havuzu süreci başlangıç kodunu taşır ($(( _y / 60 )) dk eski; bitince yeni kodla açılır) — beyana yazılır (TSK-140)"
-    else
-      echo "  ⚠ ölçülemedi: $_u $_y"
-    fi
-  done
-  # HÜKÜM ÇIKIŞ KODUNDAN (tek kaynak): çıktıyı ikinci kez grep'lemek, betik ile dagit'in
-  # ayrı ayrı hüküm vermesi demekti.
-  if [ "$_TAZELIK_RC" -ne 0 ]; then
-    echo "  ——————————————————————————————————————————————————————————————"
-    echo "  DAĞITIM YARI-ETKİLİ: kod diskte, süreç eski. Beyan YAZILMADI —"
-    echo "  \`state/dagitim.json\` koşan sistemin gerçek hâlini (eski sha) söylemeyi sürdürüyor."
-    echo "  Onarım: sudo systemctl restart <birim>  →  ardından ./dagit.sh --uygula (rsync idempotent)"
-    echo "  ——————————————————————————————————————————————————————————————"
-    exit 1
-  fi
-fi
-
-# SONUNDA canlıya `state/dagitim.json` yazar. OKUYUCUSU (YASA 6): envanter/denetim turlarının
-# ortamlar-arası kıyası + "canlıda hangi sha koşuyor" sorusunu soran operatör (660dc10 dersinin
-# kalıcılaşması: beyan, kapılardan geçen tepeyi [0a]'da dondurulmuş DAGIT_SHA'dan söyler).
-#
-# CANLI STATE'E YAZIM — BİLİNÇLİ İSTİSNA: "canlı worker koşarken state'e yazma" yasağının konusu
-# worker'ın OKUDUĞU/YAZDIĞI defter ve yapılandırma dosyalarıdır; dağıtım anı zaten bakım anıdır ve
-# `dagitim.json`u hiçbir canlı süreç okumaz/yazmaz (salt dağıtım kaydı — okuyucusu yukarıda).
-# Yazım yine de ATOMİKTİR (tmp + mv): yarım JSON, ortamlar-arası kapıyı "ölçülemedi"ye değil
-# YANLIŞ hükme götürürdü. Yazıldığı bayt-özdeş DOĞRULANIR ([1b] kopya disiplini, satır ~298).
-# TSK-140 (2026-09-04): [5b]'nin BEKLENEN saydığı kum-havuzu birimleri beyana girer — "bu sha
-# canlıda" cümlesinin dürüst dipnotu: şu süreçler hâlâ başlangıç kodunu taşıyor. Okuyucu: bir
-# sonraki dağıtımın [5b] çıktısı ve günlük (Yasa 6). Boşsa [] — "yok" ile "ölçülmedi" ayrılır.
-_sandbox_json="[$(printf '%s\n' "${_tazelik:-}" | awk '$1=="BEKLENEN"{printf "%s\"%s\"", (n++?",":""), $2}')]"
-echo "=== [B] dağıtım-beyanı (state/dagitim.json → canlı) ==="
-_beyan_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-_beyan_host="$(hostname)"
-_beyan_tmp="$(mktemp)"
-printf '{"deployed_sha": "%s", "dagitildi_utc": "%s", "dagitan_host": "%s", "kirli_gec_kullanildi": %s, "sandbox_eski_kod": %s}\n' \
-  "$DAGIT_SHA" "$_beyan_utc" "$_beyan_host" "$KIRLI_GEC" "$_sandbox_json" > "$_beyan_tmp"
-sed 's/^/  /' "$_beyan_tmp"   # aynı beyan dağıtım çıktısına da basılır (yerel kopya dosyaya YAZILMAZ:
-                              # repoda state dosyası biriktirmek [1b]'nin kapattığı ayrışmayı geri açar)
-if "${SSH[@]}" "cat > /opt/meridian/state/.dagitim.json.tmp && mv /opt/meridian/state/.dagitim.json.tmp /opt/meridian/state/dagitim.json" < "$_beyan_tmp" \
-   && "${SSH[@]}" "cat /opt/meridian/state/dagitim.json" | cmp -s - "$_beyan_tmp"; then
-  echo "  ✓ beyan canlıya yazıldı — bayt-özdeş doğrulandı"
-else
-  # ENGEL DEĞİL — dağıtım bu noktada ZATEN tamam ([4] başlattı, [5] doğruladı); beyanın yazılamaması
-  # dağıtımı geri almaz, yalnız ortamlar-arası kıyası BU TUR İÇİN kör bırakır. Sessiz de bırakılmaz.
-  echo "  !! BEYAN YAZILAMADI/DOĞRULANAMADI — ortamlar-arası kıyas bu dağıtımı GÖREMEZ."
-  echo "     Elle yaz (yukarıdaki JSON'la): ssh ubuntu@$IP 'cat > /opt/meridian/state/dagitim.json'"
-fi
-rm -f "$_beyan_tmp"
-echo "=== DAĞITIM TAMAM ==="
+echo "  ${KOMUT[*]}"
+# ÇIKIŞ KODU AYNEN DÖNER: `set -e` altında son komutun kodu betiğin kodudur. Playbook'un hükmünü
+# yeniden yorumlayan bir katman (özet basıp 0 dönen bir sarmalayıcı) kapıları sessizce açardı.
+"${KOMUT[@]}"

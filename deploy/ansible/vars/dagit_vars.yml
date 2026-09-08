@@ -218,6 +218,12 @@ rsync_opts_disla: "{{ rsync_disla | map('regex_replace', '^', '--exclude=') | li
 # Bu yüzden burada `goal.yaml`/`bounds.yaml` YAZMIYOR: `git ls-files state/` çıktısı Play 1'de
 # `state_versiyonlu_ham`a register edilir, bu ifade onu `state/` önekinden arındırır.
 #
+# NEDEN GİT BUNLARI BİLİYOR (kaynak, Task 3'te taşındı — dagit.sh'ın [1b] şerhindeydi ve
+# sarmalayıcıya inerken düşecekti): `state/` .gitignore'ludur; `goal.yaml` + `bounds.yaml` bu
+# kuralın BİLİNÇLİ istisnasıdır ve c783442 ile versiyona ALINDI (ölü-negasyon düzeltmesi).
+# Yani "git'ten türet" bir kolaylık değil, o kararın doğrudan sonucudur: kararı taşıyan commit
+# kaydedilmezse, türetmenin neden güvenilir olduğu bir daha okunamaz (YASA 6; çivi v172).
+#
 # `default` YOK, BİLİNÇLİ (fail-closed): register doğmadan bu değişkene dokunulursa ifade
 # PATLAR. `| default([])` yazsaydık, ölçüm hiç yapılmamışken "versiyonlu state dosyası yok"
 # hükmü doğar ve goal/bounds ayrışması bir daha HİÇ görülmezdi — 2026-08-01'de `entry.w_turnover`

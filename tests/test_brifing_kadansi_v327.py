@@ -262,9 +262,13 @@ def test_TIMER_KIS_SAATINDE_DE_KAPANISTAN_SONRA():
 
 
 def test_dagit_F9_birimleri_IZLIYOR():
-    metin = (KOK / "dagit.sh").read_text(encoding="utf-8")
+    """TAŞIMA (TSK-176 Faz A1 Task 3, 2026-09-08): kaynak dagit.sh `F9_LISTE` dizgesiydi →
+    `deploy/ansible/vars/dagit_vars.yml::f9_ciftleri`. İddia aynı."""
+    from tests.test_ansible_dagit_v452 import f9_ciftleri
+    kume = set(f9_ciftleri())
     for ad in ("meridian-brifing.service", "meridian-brifing.timer"):
-        assert f"deploy/oracle-a1/{ad}|/etc/systemd/system/{ad}" in metin, f"F9 {ad}'i izlemiyor"
+        assert (f"deploy/oracle-a1/{ad}", f"/etc/systemd/system/{ad}") in kume, \
+            f"[F9] {ad}'i izlemiyor"
 
 
 # ---- DÜZELTME TURU 1 (2026-08-29 denetimi) — iki çivi, ikisi de "öneri KALICI kaybolabilir" ----

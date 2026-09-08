@@ -96,8 +96,19 @@ def _pilot_gerekli():
 ARAC_ZINCIRI = ["node_modules", "ui/node_modules"]
 
 
+# TAŞIMA KAYDI (TSK-176 Faz A1 Task 3, 2026-09-08): rsync dışlama listesi ve [5c] artefakt
+# tazelik kapısı `dagit.sh`tan `deploy/ansible/vars/dagit_vars.yml` + `deploy/ansible/dagit.yml`e
+# taşındı; `dagit.sh` ince bir sarmalayıcıya indi. Aşağıdaki üç çivi AYNI İDDİAYI ölçer.
+from tests.test_ansible_dagit_v452 import (  # noqa: E402
+    gorev_etiketleri as _dagit_etiketleri,
+    gorev_metni as _dagit_gorev_metni,
+    gorevler as _dagit_gorevleri,
+    rsync_disla as _rsync_disla,
+)
+
+
 def _rsync_dislamalari() -> set[str]:
-    return set(re.findall(r"--exclude '([^']*)'", DAGIT.read_text()))
+    return set(_rsync_disla())
 
 
 @pytest.mark.parametrize("desen", ARAC_ZINCIRI)
@@ -106,7 +117,7 @@ def test_G2a_arac_zinciri_CANLIYA_SIZMAZ(desen):
     okuyucusu yoktur ve rsync onu .gitignore'a bakmadan taşır."""
     dis = _rsync_dislamalari()
     assert desen in dis or any(d.rstrip("/") == desen.rstrip("/") for d in dis), (
-        f"dagit.sh rsync dışlama listesinde '{desen}' YOK — kurulum canlıya sızar. "
+        f"rsync dışlama listesinde '{desen}' YOK — kurulum canlıya sızar. "
         f"UYARI: .gitignore YETMEZ, rsync onu okumaz (2026-08-24 scratch-panov2 vakası).")
 
 
@@ -115,7 +126,7 @@ def test_G2b_pilot_KAYNAGI_canliya_gitmez_ARTEFAKT_gider():
     okuyucusuz durur (YASA 6) ve dağıtım yüzeyini gereksiz büyütür."""
     dis = _rsync_dislamalari()
     assert any(d.strip("/") in ("ui", "ui/*") for d in dis), (
-        "dagit.sh 'ui' kaynağını dışlamıyor — derlenmemiş kaynak canlıya gider")
+        "dağıtım 'ui' kaynağını dışlamıyor — derlenmemiş kaynak canlıya gider")
     # Artefakt DIŞLANMAMALI: dışlanırsa sayfa canlıda 404 olur ve bunu kimse görmez.
     for yasak in ("pano.html", "pano-assets", "meridian/web/pano*"):
         assert yasak not in dis, f"artefakt '{yasak}' dışlanmış — sayfa canlıda doğmaz"
@@ -130,11 +141,16 @@ def test_G2c_artefakt_TAZELIK_kapisi_dagitta_VAR():
         mtime(artefakt) >= max(mtime(ui/ altındaki kaynaklar))
     """
     _pilot_gerekli()
-    s = DAGIT.read_text()
-    assert "ARTEFAKT TAZELİĞİ" in s, (
-        "dagit.sh'te artefakt tazelik kapısı YOK — kaynak değişip build koşmazsa canlı "
+    # TAŞIMA (Task 3): kapı `dagit.sh`taki iki-platform `stat` gövdesiydi; gövde
+    # `ops/artefakt_tazelik.py`ye, kapının kendisi playbook'un [5c] görevlerine taşındı.
+    besc = [g for g in _dagit_gorevleri() if "5c" in _dagit_etiketleri(g)]
+    assert besc, (
+        "dağıtımda [5c] artefakt tazelik kapısı YOK — kaynak değişip build koşmazsa canlı "
         "sessizce bayat kalır ve [5b] bunu göremez (o Python mtime'ına bakar)")
-    assert "pano.html" in s, "tazelik kapısı pano artefaktını tanımıyor"
+    s = "\n".join(_dagit_gorev_metni(g) for g in besc)
+    assert "ops/artefakt_tazelik.py" in s, "[5c] kapısı ölçüm betiğini çağırmıyor"
+    assert "pano" in s, "tazelik kapısı pano artefaktını tanımıyor"
+    assert "ARTEFAKT" in s.upper(), "kapının adı artefakt tazeliğinden söz etmiyor"
 
 
 def test_G2d_uretilen_sayfa_CSP_uyumlu():
