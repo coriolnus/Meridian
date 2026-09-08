@@ -4,6 +4,8 @@ Kaynak: 52 açık TSK + 9 aktif cephe + §5 operatör masası + 12 aktif kart, 2
 hafıza sayfaları (S1 bağımlılık, S2 hedef-sapma) ipucu olarak kullanıldı, kanıt olarak DEĞİL (13/22 iddia bayat çıktı). Hüküm Rol-1'in;
 DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; o anki sırayı ve kapıları tek sayfada verir.
 
+> **2026-09-08 09:0xZ:** ROADMAP'in tamamından çıkarılmış TAM konsolide plan → `PLAN-KONSOLIDE-2026-09-08.md` (44 açık madde, cepheler, operatör masası, pencereler, bağımlılık zinciri). Bu dosya sabah masası (§0–0d) ve 09-06 tarihçesi için kalır.
+
 ## 0. Güncelleme — 2026-09-07 sabah (09:5xZ, Rol-1)
 
 | Kalem | Durum | Kapı / sonraki adım |
