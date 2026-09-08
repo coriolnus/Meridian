@@ -91,6 +91,18 @@ koşumda P11 YEŞİL kaldı: liste alınamadığında DURDURAN hata dalı İKİ 
 kök-dosya girdileri için ayrı ayrı) ve mutasyon yalnız birini kaldırınca çivi ÖTEKİ kopya
 sayesinde yeşil kalıyordu. Aynı gerçeğin iki kopyası yalnız sessizce AYRIŞMAKLA kalmaz, birbirini
 ÖRTEREK bir çiviyi de kör eder. Hata dalı TEKE indirildi (`_liste_rc`), P11 ısırdı.
+
+TUR-4 — [00] RSYNC İKİLİSİ SEÇİMİ (CANLI BULGU, Rol-1 2026-09-08). macOS `/usr/bin/rsync`
+openrsync'tir (protokol 29); A1 GNU rsync 3.2.7 ile `--from0 --files-from` protokol UYUMSUZDUR
+(A1'de `ABORTING due to invalid path from sender` + `protocol incompatibility (code 2)` — betik
+DOĞRU durdu, fail-closed, ama sebep bir lehçe farkıydı). Yeni bir gate: seçim sırası `RSYNC_BIN` →
+`/opt/homebrew/bin/rsync` (varsa) → `command -v rsync`; seçilen ikili openrsync ise KURU koşumda
+DAHİ durur. `sahne` fikstürü artık `RSYNC_BIN`i varsayılan olarak `kutu/rsync` şimine SABİTLER —
+yoksa bu geliştirme makinesindeki GERÇEK `/opt/homebrew/bin/rsync` (GNU 3.5.0, kurulu) [00]'ın
+2. ayağından sessizce seçilir ve ONLARCA şim tabanlı çivi körleşirdi (`_iz(sahne, "rsync")` hep
+boş kalırdı — ölçülmeden önce bu tuzağa bizzat düşüldü, düzeltildi). `sahne_gercek_rsync` bunu
+POP eder — [G3]'ün asıl ölçtüğü şey budur. [G] üç çivi: G1 (RSYNC_BIN seçiliyor mu), G2 (openrsync
+reddi + sıfır transfer), G3 (gerçek sahne GNU seçiyor ve basıyor).
 """
 
 from __future__ import annotations
@@ -242,6 +254,34 @@ if [ "$KURU" = "1" ]; then exit "${SIM_RSYNC_RC_KURU:-0}"; fi
 exit "${SIM_RSYNC_RC:-0}"
 """
 
+#: [00] G1 — RSYNC_BIN'in GERÇEKTEN kullanıldığını ölçmenin tek yolu, varsayılan `kutu/rsync`
+#: şiminden (RSYNC_SIM, SIM_RSYNC_IZ'e yazar) AYRI bir iz taşıyan İKİNCİ bir GNU-biçimli şimdir.
+#: `--version` çağrıldığını da AYRI bir dosyaya işaretler (RSYNC_SIM bunu bilinçli YAZMAZ —
+#: yukarıdaki gerekçeye bak — o yüzden aynı izi paylaşamaz).
+RSYNC_BIN_ALT_SIM = r"""#!/bin/sh
+if [ "$1" = "--version" ]; then
+  : > "$SIM_RSYNC_BIN_VERSIYON_IZ"
+  echo "rsync  version 3.9.9-ALT  protocol version 31"
+  exit 0
+fi
+printf '%s\n' "$*" >> "$SIM_RSYNC_BIN_IZ"
+exit 0
+"""
+
+#: [00] G2 — GERÇEK openrsync'in ÖLÇÜLMÜŞ `--version` metnini AYNEN üretir (bu Mac,
+#: `/usr/bin/rsync --version`, 2026-09-08: "openrsync: protocol version 29" ilk satır). Herhangi
+#: bir aktarım/silme argümanıyla çağrılırsa da bunu bir ize yazar — [00] kapısı onu hiç
+#: ÇAĞIRMAMALIDIR (betik `--version`den SONRA, ilk transfer çağrısından ÖNCE durur).
+RSYNC_OPENRSYNC_SIM = r"""#!/bin/sh
+if [ "$1" = "--version" ]; then
+  echo "openrsync: protocol version 29"
+  echo "rsync version 2.6.9 compatible"
+  exit 0
+fi
+printf '%s\n' "$*" >> "$SIM_RSYNC_OPENRSYNC_IZ"
+exit 0
+"""
+
 CURL_SIM = r"""#!/bin/sh
 # Sahte curl: KENDİ argv'sini ve stdin'ini AYRI izlere yazar. İki iz ayrı olmalı — token'ın
 # argv'de OLMADIĞI ile stdin'den GEÇTİĞİ birbirinden bağımsız iki iddiadır.
@@ -326,6 +366,13 @@ def sahne(tmp_path):
         "SIM_CURL_IZ": str(izler["curl"]),
         "SIM_YASAK_KOK": str(REPO.parent if REPO.name != "AI-Trading" else REPO),
         "SIM_GERCEK_GIT": gercek_git,
+        # RSYNC_BIN ŞİMİ SABİTLER (TSK-177 tur 4, [00] gate'i): seçim sırası artık
+        # RSYNC_BIN → /opt/homebrew/bin/rsync (varsa) → PATH. İkinci ayak bu geliştirme
+        # makinesinde GERÇEKTEN VAR (GNU 3.5.0) — RSYNC_BIN verilmeseydi şim sahnesi sessizce
+        # GERÇEK rsync'e kayardı ve `_iz(sahne, "rsync")` hep boş kalırdı (körlük, Yasa 6 sınıfı).
+        # RSYNC_BIN, [00]'ın KENDİ öncelik sırasının EN TEPESİ olduğu için bu, gerçek operatör
+        # akışını da ölçer: G1 çivisi.
+        "RSYNC_BIN": str(kutu / "rsync"),
     }
     # Kilit GERÇEK ana checkout'u hedefler: bu dosya bir worktree'den de koşuyor olabilir ve
     # worktree ana checkout'un ALTINDADIR, yani tek kök ikisini de kapatır.
@@ -993,6 +1040,10 @@ def sahne_gercek_rsync(sahne):
 
     for d in (sahne["ort"], sahne["tam_ort"]):
         d["MERIDIAN_A1_DIR"] = str(uzak)
+        # RSYNC_BIN burada KALDIRILIR: şim dosyası az önce silindi, yol artık YOK — [00]
+        # seçim sırasının 2./3. ayağını (`/opt/homebrew/bin/rsync` → PATH) GERÇEKTEN ölçmenin
+        # tek yolu, 1. ayağın (RSYNC_BIN) burada BOŞ olmasıdır (G3 çivisi).
+        d.pop("RSYNC_BIN", None)
     sahne["gercek_rsync"] = gercek_rsync
     return sahne
 
@@ -1251,3 +1302,78 @@ def test_F4_MUTLAK_deleting_yolu_DURDURUR_ve_ON_EK_ALMAZ(sahne):
     assert "docs//etc/passwd" not in r.stdout, \
         "mutlak yola ön ek eklenmiş — kapsam ayağı onu 'kapsam içi' sanardı"
     assert list(sahne["uzak"].iterdir()) == [], "ön-taramada durmadı, uzak tarafa yazıldı"
+
+
+# =================================================================================================
+# [G] RSYNC İKİLİSİ SEÇİMİ — [00] gate'i (tur 4, TSK-177, CANLI BULGU 2026-09-08)
+#
+# ÖLÇÜLEN OLAY: Rol-1'in İLK `--kuru` koşumu A1'e karşı `protocol incompatibility (code 2)` ile
+# çıkış 2 verdi (macOS `/usr/bin/rsync` = openrsync, A1 = GNU rsync 3.2.7). Betik o gün DOĞRU
+# durdu (fail-closed), ama sebep bir LEHÇE farkıydı — [00] bu lehçeyi ÇALIŞMA ANINDA ölçer.
+# =================================================================================================
+
+def test_G1_RSYNC_BIN_verilince_O_IKILI_KULLANILIR(sahne, tmp_path):
+    """(a) Seçim sırasının 1. ayağı: `RSYNC_BIN` verildiğinde betik gerçekten ONU çağırır — hem
+    `--version` sorgusunda hem TÜM transfer çağrılarında. `sahne` zaten varsayılan olarak
+    `RSYNC_BIN`i `kutu/rsync`e sabitliyor (aksi hâlde bu makinede KURULU GERÇEK
+    `/opt/homebrew/bin/rsync` [00]'ın 2. ayağından sessizce seçilirdi ve ONLARCA şim tabanlı çivi
+    körleşirdi); burada AYRI bir ikinci şimle override edilerek "verilen ikili KULLANILIYOR MU"
+    sorusu doğrudan ölçülür."""
+    ikili = sahne["kutu"] / "rsync-alt"
+    _yaz_sim(sahne["kutu"], "rsync-alt", RSYNC_BIN_ALT_SIM)
+    versiyon_iz = tmp_path / "rsync_bin_versiyon.iz"
+    cagri_iz = tmp_path / "rsync_bin_cagri.iz"
+    cagri_iz.touch()
+
+    r = _kos(sahne, RSYNC_BIN=str(ikili),
+              SIM_RSYNC_BIN_VERSIYON_IZ=str(versiyon_iz), SIM_RSYNC_BIN_IZ=str(cagri_iz))
+    _kilit_otmedi(r)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert versiyon_iz.exists(), "RSYNC_BIN --version ile hiç SORGULANMADI"
+    cagrilar = [s for s in cagri_iz.read_text(encoding="utf-8").splitlines() if s.strip()]
+    assert len(cagrilar) == 6, f"kuru koşumda 6 çağrı bekleniyordu (C1 deseni): {cagrilar}"
+    assert not _iz(sahne, "rsync"), \
+        "VARSAYILAN şim (kutu/rsync) de çağrılmış — RSYNC_BIN göz ardı edilmiş"
+    assert f"rsync: {ikili} —" in r.stdout, f"basılan yol RSYNC_BIN ile eşleşmiyor:\n{r.stdout}"
+
+
+def test_G2_openrsync_SECILIRSE_KURU_KOSUMDA_DAHI_DURUR_ve_SIFIR_TRANSFER(sahne, tmp_path):
+    """(b) CANLI BULGUNUN ÇİVİSİ. macOS'un openrsync'i A1 GNU rsync ile protokol uyumsuz —
+    seçilen ikilinin `--version` ilk satırı `openrsync` içeriyorsa betik hiçbir transfer çağrısı
+    yapmadan durmalı, VARSAYILAN modda (kuru) bile: yanlış lehçeyle 'ön-tarama temiz geçti'
+    sanmak A1'de aynı `ABORTING`e kadar gizli kalırdı."""
+    ikili = sahne["kutu"] / "rsync-openrsync"
+    _yaz_sim(sahne["kutu"], "rsync-openrsync", RSYNC_OPENRSYNC_SIM)
+    cagri_iz = tmp_path / "rsync_openrsync_cagri.iz"
+    cagri_iz.touch()
+
+    r = _kos(sahne, RSYNC_BIN=str(ikili), SIM_RSYNC_OPENRSYNC_IZ=str(cagri_iz))
+    _kilit_otmedi(r)
+    assert r.returncode == 1, f"openrsync KABUL EDİLDİ (rc={r.returncode})\n{r.stdout}"
+    assert "DURDU:" in r.stdout and "openrsync" in r.stdout
+    assert "brew install rsync" in r.stdout, "reçete basılmıyor"
+    assert cagri_iz.read_text(encoding="utf-8").strip() == "", \
+        f"openrsync REDDEDİLDİ ama transfer çağrısı yapılmış: {cagri_iz.read_text()!r}"
+    assert not _iz(sahne, "rsync"), "varsayılan şim de çağrılmış"
+    assert ">> KURU KOŞUM BİTTİ" not in r.stdout, "openrsync reddi kuru koşum başarısı gibi bitmiş"
+
+
+def test_G3_gercek_sahnede_SECILEN_IKILI_GNU_ve_BASILIR(sahne_gercek_rsync):
+    """(c) `sahne_gercek_rsync` GERÇEK sistemin `rsync`ini kullanır (RSYNC_BIN boşaltılmıştır —
+    fikstüre bak). Bu Mac'te GNU rsync artık `/opt/homebrew/bin/rsync`tedir (Rol-1'in
+    `brew install rsync`i, 2026-09-08); [00] onu seçmeli ve raporda basmalıdır — sistem
+    varsayılanı `/usr/bin/rsync` (openrsync) DEĞİL."""
+    s = sahne_gercek_rsync
+    r = _kos(s)
+    _kilit_otmedi(r)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "✓ GNU rsync seçildi:" in r.stdout, f"[00] gate'i geçmemiş:\n{r.stdout}"
+    m = re.search(r"^\s*rsync: (\S+) — (.+)$", r.stdout, re.M)
+    assert m, f"kullanılan rsync ve sürümü basılmıyor:\n{r.stdout}"
+    assert "openrsync" not in m.group(2), f"GERÇEK sahnede openrsync seçilmiş: {m.group(2)}"
+    homebrew = pathlib.Path("/opt/homebrew/bin/rsync")
+    if homebrew.is_file() and os.access(homebrew, os.X_OK):
+        assert m.group(1) == str(homebrew), (
+            "[00] 2. ayağı (`/opt/homebrew/bin/rsync`) atlanmış, farklı bir ikili seçilmiş: "
+            f"{m.group(1)}"
+        )
