@@ -207,3 +207,175 @@ döner ("bayat ama süreç canlı") ve playbook DÜŞER.
 barsarchive süreçleri eski kodla; restart bakım penceresine ait" satırını basar. Rol restart
 ETMEZ: `deploy.sh` 15'in koşulsuz restart'ı A0'a bilerek geçmedi, o hâlde riskin okunur bir
 çıktısı olmak zorundadır (Yasa 6).
+
+---
+
+# `dagit.yml` — dağıtım playbook'u (TSK-176 Faz A1)
+
+`site.yml` A1'in **VM-içi durumunu** yakınsatır (paketler, birimler, drop-in'ler). `dagit.yml`
+bundan ayrı bir iştir: **kodu canlıya taşır** — yani `dagit.sh`ın kapılarını, davranış birebir,
+Ansible'a taşır. Plan: `docs/superpowers/plans/2026-09-08-ansible-a1-dagit.md`.
+
+**Geçiş süresince İKİ YOL yan yana durur (K1):** `dagit.sh` hâlâ koşabilir ve aynı dört gövdeyi
+(`ops/state_fark_hukmu.py`, `ops/artefakt_tazelik.py`, `deploy/oracle-a1/dogrulama_anahtar.py`,
+`deploy/oracle-a1/kod_tazelik.sh`) çağırır. **İlk gerçek dağıtım operatör gözetimindedir.**
+
+## Koleksiyon bağımlılığı (koşumdan ÖNCE, bir kez)
+
+`dagit.yml` `[1]`/`[2]` adımlarında `ansible.posix.synchronize` kullanır; bu modül `ansible-core`
+ile **gelmez** ve kurulu değilken `--syntax-check` bile düşer.
+
+```sh
+ansible-galaxy collection install -r deploy/ansible/requirements.yml
+```
+
+Koleksiyon **kullanıcı düzeyine** kurulur (`~/.ansible/collections`) — depoya yazmaz, dolayısıyla
+dagit'in temiz-ağaç/mtime kapılarını tetiklemez. Sürüm `requirements.yml`de **tam** pinlidir;
+`tests/test_ansible_dagit_v452.py` B11a pinin tam sürüm olduğunu, B11b de kurulu sürümün pinle
+aynı olduğunu ölçer. Bu makinede ölçülen tuzak (2026-09-08): çıplak komut
+`CERTIFICATE_VERIFY_FAILED` ile düşerse `SSL_CERT_FILE`ı venv'in certifi'sine verin (komutun
+tamamı `requirements.yml` başlığında).
+
+## Ops sözleşmesi — komut satırı (repo kökünden)
+
+```sh
+# Kuru koşum. dagit.sh'ın `./dagit.sh` (bayraksız) hâlinin karşılığı.
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/dagit.yml --check --diff
+
+# Gerçek dağıtım (aynı komut --check'siz). dagit.sh'ın `--uygula` hâli.
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/dagit.yml
+
+# Kirli ağaçla BEYANLI istisna — dagit.sh'ın `--kirli-gec` bayrağı.
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/dagit.yml -e kirli_gec=true
+
+# Başka bir checkout'u dağıtmak (BEYANLI): worktree ise ikinci bayrak da ZORUNLU.
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/dagit.yml \
+  -e repo_kok_yerel=/yol/checkout -e worktree_gec=true
+
+# Kapı envanteri (A1'e BAĞLANMAZ — ajan da koşabilir).
+ansible-playbook --list-tasks -i deploy/ansible/inventory.ini deploy/ansible/dagit.yml
+ansible-playbook --syntax-check -i deploy/ansible/inventory.ini deploy/ansible/dagit.yml
+ansible-lint deploy/ansible/dagit.yml
+```
+
+## Kapılar — liste DÜŞMEZ
+
+| Kapı | Ne sorar | Düşürür mü |
+|---|---|---|
+| `[0a]` | dağıtım kaynağı **ana checkout** mu; çalışma ağacı temiz mi; **dağıtılan tepe (`DAGIT_SHA`) burada donar** | evet (`-e worktree_gec=true` / `-e kirli_gec=true` ile beyanlı geçilir) |
+| `[0b]` | `uv audit` — tedarik zinciri | evet |
+| `[0c]` | `uv run lint-imports` — mimari sözleşmeler | evet |
+| `[0d]` | `ops/import_tarama.py` — dev-daraltması hâlâ güvenli mi | evet (rc 2 = ölçülemedi de ENGEL) |
+| `[5c]` | pano artefaktı kaynağından taze mi (`ops/artefakt_tazelik.py`) | rc 1 evet (kuru koşumda UYARI) · **rc 2 = ölçülemedi, sürer** |
+| `[1]` | rsync kuru koşum — ne değişecek, ne SİLİNECEK | hayır (rapor) |
+| `[1b]` | versiyonlu state farkı; hüküm `ops/state_fark_hukmu.py` | hayır (KOPYALA/ENGEL) |
+| `[1c]` | repo birimi ↔ `/etc/systemd/system` yönerge farkı | **evet** — çare `site.yml`; kadans birimlerinin (brifing/bekçi/karne) hiç kurulmamış olması RAPOR |
+| `[F9]` | rsync kapsamı DIŞINDAKİ 39 artefaktın içerik kıyası | hayır (görünürlük) |
+| `[F10]` | `enabled + inactive` anomalisi | evet (override bayrağı YOK) |
+| `[2]` | rsync `--delete` (28 dışlama sınıfı) | — |
+| `[3]` | `uv sync --frozen` (dev grubu HARİÇ) | evet |
+| `[4]` | bakım penceresi: durdur → state kopyası → başlat (`block`/`rescue`) | evet, reçeteyle |
+| `[5]` | healthz (200 · 503 = bayat nabız) + son olay satırı | **hayır (rapor)** — hüküm `[5a]`/`[5b]`de |
+| `[5a]` | doğrulama-token anahtar kontrolü (uç gövdesi doğru mu) | evet · **token yoksa fail-open** |
+| `[5b]` | kod-tazelik değişmezi ("active" ≠ "yeni kodu koşuyor") | evet — beyan YAZILMAZ |
+| `[B]` | `state/dagitim.json` beyanı (5 alan, bayt-özdeş doğrulanır) | hayır (yazılamazsa yüksek sesle) |
+
+Çivi: `tests/test_ansible_dagit_v452.py` bölüm B — B1 her etiketi bir görev **adında** arar,
+B9 `[4]` stop/start kapılarının **yönünü** Jinja ile çözerek altı senaryoda ölçer.
+
+## Check-mode'da ne ÖLÇÜLÜR, ne ÖLÇÜLMEZ
+
+`command`/`shell`/`script` görevleri check-mode'da **atlanır**. Bu yüzden kapılar ikiye ayrılır:
+
+* **Kuru koşumda da GERÇEKTEN ölçülenler** (`check_mode: false`, hepsi salt okuma):
+  `[0a]` `[0b]` `[0c]` `[0d]` `[1]` `[1b]` `[1c]` `[F9]` `[F10]`. dagit.sh'ın kuru koşumu da
+  bunları koşuyordu; playbook'un kuru koşumu ondan zayıf olamaz.
+* **`[5c]` kuru koşumda ÖLÇÜLÜR ama DURDURMAZ.** dagit.sh'ın kuru koşumu `[5c]`yi hiç koşmuyordu
+  (kuru koşum `exit 0` ile biter, `[5c]` bloğu dağıtımın sonundadır) — bu playbook onu Play 1'e
+  aldığı için kuru koşumda da ölçer. Bayat artefakt kuru koşumda **uyarı** basar (`cd ui &&
+  npm run build`), dağıtımı yalnız **gerçek** koşumda durdurur. Gerekçe: `[5c]` kuru koşumu
+  düşürseydi `[1]`/`[1b]`/`[1c]`/`[F9]`/`[F10]` — A1 hakkında sorulan her şey — hiç ölçülmezdi.
+* **Atlananlar, her biri "ÖLÇÜLMEDİ" diye ADIYLA raporlar:** `[3]` `[4]` `[5]` `[5a]` `[5b]` `[B]`.
+  Atlanan kapı bir sağlık hükmü DEĞİLDİR — soru cevapsız kalmıştır. Çivi: v452 B14 (`when: not
+  ansible_check_mode` taşıyan HER kapının aynı etiketli bir "ÖLÇÜLMEDİ" karşılığı vardır).
+
+`[2]` rsync check-mode'da kendiliğinden `--dry-run` ile koşar (canlıya yazmaz). `[4]` penceresinin
+modülleri (`systemd_service`, `copy`) check-mode'da hiçbir şeyi değiştirmez.
+
+## `dagit.sh`a göre BEYANLI farklar (ölçüldü 2026-09-08)
+
+1. **`[5c]`nin yeri.** dagit.sh'ta `[5a]` ile `[5b]` arasında, yani dağıtımdan **sonra** koşar;
+   burada yerel kapılara alındı. Ölçüm ve onarım (`cd ui && npm run build`) zaten yereldir;
+   erken koşmak bayat artefaktı rsync'ten önce yakalar. Çıkış kodu sözleşmesi aynen korunur.
+2. **`[3]` bayrağı.** dagit.sh koşum anında `uv sync --help`e sorup `--no-default-groups`a
+   yükselir; playbook A0 defaults'undaki taban bayrağı (`uv_sync_bayrak`, `--no-dev`) kullanır —
+   ikisi de ÖLÇÜLEN aynı 17 paketi kaldırıyor. Yükseltme Rol-1'in kararıdır, sondanın değil.
+3. **`[B]` yazımı.** `copy: content:` **kullanılmaz** (v451 Çivi 3a `deploy/ansible/` altındaki
+   her YAML'da modül argümanı `content:`i yasaklar, `.j2` de yasaktır). Yazım dagit.sh'ın kendi
+   iki adımıyla yapılır: `tee <tmp>` + `mv <tmp> <hedef>` (atomiklik korunur), sonra `slurp` ile
+   bayt-özdeşlik doğrulanır. JSON `to_json` ile kurulur: alan adları ve sırası dagit.sh'ın
+   `printf` şablonuyla aynıdır (B7); tek fark `sandbox_eski_kod` dizisinde 2+ öğe varken
+   ayraçtan sonra bir boşluk olmasıdır (`["a", "b"]` ↔ `["a","b"]`) — okuyucular JSON ayrıştırır,
+   anlam aynıdır.
+4. **`[F10]`/`[4]` ölçümü `service_facts` ile DEĞİL `systemctl` ile yapılır.** Ölçüldü (modül
+   kaynağı okundu): `service_facts` systemd toplayıcısı `state`i `running` / `stopped` diye iki
+   kovaya indirir ve `inactive` · `activating` · `deactivating` ayrımını **kaybeder**. dagit.sh'ın
+   ölçütü tam olarak `is-active == inactive` (ve `[4]`ünki `!= inactive`) olduğu için fact'lerle
+   yazılsaydı `[4]`ün durdurma kümesi güvensiz yönde daralırdı.
+5. **`[1b]` hüküm süreci düşerse** dagit.sh her dosya için `ENGEL` varsayıyordu; playbook aynı
+   sonucu `block`/`rescue` ile üretir (tüm farklı dosyalar ENGEL) ve nedeni ADIYLA basar.
+6. **`[1c]` artık DURDURUR** (plan Architecture kararı; dagit.sh yalnız raporluyordu). İki koldan
+   yalnız biri düşürür: **yönerge farkı** durdurur (2026-08-14 "sessiz etkisizlik" vakası),
+   **kadans birimlerinin** (brifing/bekçi/karne) hiç kurulmamış olması RAPORdur — A0 rolü onları
+   `brifing_devri: false` iken BİLEREK kurmaz ve durduran bir kapı, çaresi kendisinde olmayan bir
+   kapı olurdu. `fail_msg` hangi `Anahtar=değer` satırlarının ayrık olduğunu **listeler**
+   (dagit.sh `diff | grep '^[<>]'` ile aynı bilgi) ve kadans kaçışını adıyla yazar
+   (`site.yml … -e brifing_devri=true`).
+7. **Kuru koşumda `[5c]` ÖLÇÜLÜR** (yukarıdaki check-mode bölümü): dagit.sh'ın kuru koşumu onu hiç
+   koşmuyordu. Kazanç: bayat artefakt kuru koşumda GÖRÜNÜR. Bedel ölçüldü ve ödenmedi: kuru
+   koşumda kapı DÜŞÜRMEZ, yalnız uyarır.
+8. **Dağıtım kaynağı `~/AI-Trading`** (dagit.sh `REPO="$HOME/AI-Trading"` ile birebir), playbook'un
+   bulunduğu ağaç DEĞİL. `[0a]` bunu bir kapıyla ölçer: bu playbook'un durduğu git ağacı ana
+   checkout değilse dağıtım DURUR; bilinçli istisna `-e worktree_gec=true` ve o istisna `[B]`
+   beyanına **altıncı alan** olarak yazılır (`worktree_gec`). Gerekçe CLAUDE.md §9: "dagit.sh
+   NEREDEN çağrılırsa çağrılsın ana checkout'un O ANKİ HEAD'ini iter, senin ağacını değil;
+   'ağacım temiz' bir güvence DEĞİLDİR" (vaka 2026-08-26). Bayrağın adı DAR, anlamı GENİŞtir:
+   `-e repo_kok_yerel=<worktree OLMAYAN başka checkout>` ile koşulduğunda da istenir ve beyana
+   `true` yazılır — okunuşu "ana checkout DIŞINDAN dağıtıldı"dır, "worktree'den" değil. Ad
+   değişikliği beyan sözleşmesini (`worktree_gec` alanı, v452 B7/B12) etkiler: Rol-1 kalemi.
+9. **`[5]` healthz bir KAPI DEĞİLDİR** — dagit.sh gibi yalnız RAPOR eder (`status_code: [200, 503]`,
+   `retries` YOK). 503 = "nabız bayat, süreç canlı" belgeli hâlidir ve ADIYLA basılır; hüküm
+   `[5a]`/`[5b]`dedir. Kapı olsaydı, 503 döndüren bir turda `[5a]`/`[5b]`/`[B]` hiç koşmaz ve yeni
+   kod canlıdayken `state/dagitim.json` eski sha'da kalırdı — `[B]`nin var olma sebebi olan
+   ortamlar-arası kıyas tam da o turda kör kalırdı. **Sınır BEYANLI** (ölçüldü, sentetik `uri`
+   koşumu 2026-09-08): 200/503 DIŞINDAKİ bir kod ya da bağlantı hatası `uri` sözleşmesi gereği
+   play'i DÜŞÜRÜR (`[5a]`/`[5b]`/`[B]` koşmaz); dagit.sh bileşik ssh komutunu `; echo` ile
+   bitirdiği için hiçbir kodda durmuyordu. Tam birebirlik `failed_when: false` isterdi — o
+   YASAK (Yasa 4), bu yüzden fark ödeniyor ve burada yazılı.
+10. **`[B]` beyanı ALTI alan yazar**: dagit.sh'ın beş alanı (ad ve SIRA aynı) + `worktree_gec`
+   (madde 8). Geçiş süresince dagit.sh beş alan yazmayı sürdürür; okuyucular (meridian/api.py
+   `dagitim`, pano Gözetim satırı) JSON ayrıştırır ve bilmedikleri alanı görmezden gelir.
+11. **`[F9]` ayrık dosyada `diff -u … | head -12` GÖVDESİ BASILMAZ** — playbook yalnız ayrık
+   YOLLARI listeler. Bilinçli: `[F9]` listesi `config.yaml`/`SOUL.md` sınıfı dosyalar taşır ve
+   satır gövdesi sır sızdırabilir (`slurp` içeriği zaten kontrolcüde, basmak ayrı bir karardır).
+   BEDEL ÖDENDİ ve yazıldı: operatör "hangi dosya ayrık"ı görür, "nerede ayrık"ı görmez —
+   `diff` elle koşulur. Gövdenin sızdırmayan bir özetiyle (bayt sayısı / hangi taraf yeni)
+   değiştirilmesi Rol-1 kalemidir.
+
+> Bu liste ile davranış arasındaki bağ ÖLÇÜLÜR: her maddenin playbook'ta bir `# BEYANLI-FARK n`
+> şerhi vardır ve kıyas İKİ YÖNLÜDÜR (v452 `test_B18_…`) — listeden madde düşerse de, playbook'a
+> şerhli bir sapma eklenip listeye yazılmazsa da çivi kırılır. Sayı vererek sunulan eksik bir
+> liste, okuyucuya "başka fark yok" hükmünü verdirir.
+
+## Sır
+
+`.dash.env` token'ı **hiçbir Ansible değişkenine girmez**: `[5a]` betiği `.dash.env`i A1'in kendi
+içinde okur (`--env-dosya` varsayılanı) ve yalnız `VAR|<yol>|<anahtar>` / `YOK|…` hükmü döner. Uç
+gövdeleri de süreç içinde ayrıştırılır. Token'ı `slurp` + `no_log` ile kontrolcüye taşımak bu
+güvenceden **zayıf** olurdu (sır ağdan geçer ve belleğe girer) — bu yüzden taşınmıyor.
+
+**Token'ı `ubuntu` okur, root DEĞİL.** `[5a]` ve `[5b]` `script:` görevleri `become: false` taşır
+(dagit.sh ikisini de `ssh ubuntu@…` ile koşturuyordu): `.dash.env` `ubuntu`nun 0600 dosyasıdır ve
+`/proc/<pid>` okuması da root gerektirmez. Play 2 `become: true` olduğu için bu satır olmasaydı
+iki betik sessizce ROOT koşardı — en az yetki burada bir tercih değil, birebirliğin parçasıdır.
+Çivi: v452 B15 (her `script:` görevinde `become: false`).

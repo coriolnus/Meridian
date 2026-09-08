@@ -20,6 +20,20 @@ literal küme ile hiç kesişmiyordu ve bu dosyanın eski başlığı "7 birim �
 koşuyor" diye ÖLÇÜLMEMİŞ bir kapsama iddia ediyordu. Tarama artık `tasks/*.yml` + `handlers/
 main.yml`in TAMAMINI gezer ve `loop`/`with_*` ifadelerini `defaults/main.yml`ten çözer.
 
+TSK-176 FAZ A1 TASK 2 DÜZENLEMESİ (2026-09-08) — `deploy/ansible/dagit.yml` doğdu ve bu dosyanın
+taraması `deploy/ansible/` altındaki HER YAML'ı gezdiği için onu da kapsıyor. Üç değişiklik,
+gerekçeleri `test_uzun_omurlu_birimler_restart_edilmiyor` docstring'inde AYRINTILI:
+  (a) şablon/döngü çözümü artık `vars/dagit_vars.yml`i de okur (`_cozum_degiskenleri`) — yoksa
+      `loop: "{{ birim_adaylari }}"` "çözülemedi" ile çiviyi HEDEFİ DIŞINDA kırıyordu;
+  (b) birim adları kıyastan önce `.service`e normalize edilir — `birim_adaylari` uzantısız yazar
+      ve normalize edilmeden kesişim HER ZAMAN boş çıkardı (sahte yeşil, K6/K11 sınıfı);
+  (c) (b)'nin sonucu olarak `dagit.yml` bu ÇİVİDEN çıkarıldı (`RESTART_TARAMASI_DISI`): o dosya
+      BAKIM PENCERESİDİR ve stop/start onun işidir; yüzeyi `tests/test_ansible_dagit_v452.py`
+      B3 ile DAHA DAR ölçülür. Dışlama yalnız bu çividedir — Çivi 3a (yasak desenler),
+      Çivi 1 (parse/syntax) ve Çivi 4 (ansible-lint) `dagit.yml`i aynen kapsar.
+Mutasyonla ölçüldü (2026-09-08): rolün `etkin_birimler` görevine `state: started` eklendiğinde
+çivi hâlâ KIRMIZI oluyor — düzenleme onu körleştirmedi.
+
 ÖLÇÜLEMEYEN/BİLİNEN SINIR — dürüst beyan: `ansible-playbook`/`ansible-lint` önce KOŞAN
 yorumlayıcının yanında (`Path(sys.executable).parent`, yani `.venv/bin` — pyproject/uv.lock'un
 PİNLEDİĞİ sürüm), sonra PATH'te aranır; hiçbirinde yoksa çivi `pytest.fail` ile PATLAR
@@ -98,6 +112,29 @@ def _yaml_dosyalari() -> list[pathlib.Path]:
 def _defaults_veri() -> dict:
     veri = yaml.safe_load(DEFAULTS_YML.read_text(encoding="utf-8"))
     assert isinstance(veri, dict), f"{DEFAULTS_YML}: kök düğüm dict değil"
+    return veri
+
+
+#: TSK-176 Faz A1 (Task 2): `deploy/ansible/` altında ARTIK İKİ değişken kaynağı var — A0 rolünün
+#: defaults'ı ve `dagit.yml`in `vars/dagit_vars.yml`i. Şablon çözen çiviler ikisini birden okur;
+#: yoksa yeni playbook'un `loop: "{{ birim_adaylari }}"` ifadesi "çözülemedi" ile ÇİVİYİ kırar
+#: (hedefini değil). Dosya yoksa (A0-öncesi ağaç) sessizce atlanır — varlığı ayrıca v452 B0'da.
+DAGIT_VARS_YML = ANSIBLE_DIZIN / "vars" / "dagit_vars.yml"
+
+#: Uzun-ömürlü birim restart yasağının taranmayacağı dosyalar — GEREKÇE `_dongu_ogeleri`i
+#: kullanan çivinin docstring'inde (c) maddesindedir: `dagit.yml` bakım penceresidir ve kendi
+#: (daha dar) çivisini `tests/test_ansible_dagit_v452.py` B3'te taşır.
+#: TUR 2 (inceleme, 2026-09-08): dışlama DOSYA ADINA değil TAM YOLA bağlıdır — ad bazlıyken
+#: `deploy/ansible/` altında ileride doğacak HERHANGİ bir `dagit.yml` (ör. bir rolün kendi
+#: görev dosyası) sessizce taranmaz olurdu; muafiyet tek ve ADRESLİ olmak zorundadır.
+RESTART_TARAMASI_DISI = {"deploy/ansible/dagit.yml"}
+
+
+def _cozum_degiskenleri() -> dict:
+    """Şablon/döngü çözümü için birleşik değişken kümesi (rol defaults + dagit vars)."""
+    veri = dict(_defaults_veri())
+    if DAGIT_VARS_YML.is_file():
+        veri.update(yaml.safe_load(DAGIT_VARS_YML.read_text(encoding="utf-8")) or {})
     return veri
 
 
@@ -441,14 +478,36 @@ def test_uzun_omurlu_birimler_restart_edilmiyor():
     `with_*` ifadeleri `defaults/main.yml`ten ÇÖZÜLÜR ve tarama `tasks/*.yml` + `handlers/
     main.yml` + `site.yml`in tamamını gezer.
 
-    ÇÖZÜLEMEYEN ŞABLON = KIRMIZI: bir systemd görevinin adı şablonluysa ve döngüsü defaults'tan
-    çözülemiyorsa çivi ölçemediğini SÖYLER (sessizce atlamaz — kör çivi yasağı).
+    ÇÖZÜLEMEYEN ŞABLON = KIRMIZI: bir systemd görevinin adı şablonluysa ve döngüsü değişken
+    kaynaklarından çözülemiyorsa çivi ölçemediğini SÖYLER (sessizce atlamaz — kör çivi yasağı).
+
+    TSK-176 Faz A1 Task 2 (2026-09-08) — İKİ DÜZELTME, ikisi de çiviyi GÜÇLENDİRİR:
+
+      (a) DEĞİŞKEN KAYNAĞI GENİŞLEDİ. `deploy/ansible/dagit.yml` döngülerini
+          `vars/dagit_vars.yml`den okur (`birim_adaylari`); yalnız rol defaults'una bakan eski
+          çözücü onu ÇÖZEMİYOR ve çivi "ölçemedim" ile kırmızı oluyordu — yani yeni bir
+          playbook doğduğu gün çivi hedefini değil kendini kırıyordu.
+
+      (b) BİRİM ADI NORMALİZE EDİLİYOR. `birim_adaylari` birimleri UZANTISIZ yazar
+          (`meridian`), `UZUN_OMURLU_BIRIMLER` ise `.service` uzantılıdır. Normalize edilmeden
+          kesişim HER ZAMAN boş çıkardı: çivi yeşil kalır ama YANLIŞ SEBEPLE — tam da bu
+          dosyanın TUR 2'de kapattığı sahte-yeşil sınıfı (K6/K11). systemd'de uzantısız ad
+          `.service` demektir; kıyas da o sözlükle yapılır.
+
+    (b) doğrudan (c)'yi gerektirir: `dagit.yml` BAKIM PENCERESİDİR ve `[4]` adımında bu
+    birimleri DURDURUP BAŞLATMAK onun İŞİdir (README: "Restart kararı bakım penceresi/dagit'e
+    aittir"). Bu çivi A0 ROLÜNÜ ölçer; `dagit.yml`in stop/start yüzeyi
+    `tests/test_ansible_dagit_v452.py` B3 çivisiyle DAHA DAR ölçülür (yalnız `birim_adaylari`,
+    şablon ÇÖZÜLEREK). Dışlama YALNIZ BU çividedir — yasak-desen taraması (Çivi 3a:
+    `ignore_errors` · `failed_when: false` · `content:` · `.j2`) `dagit.yml`i AYNEN kapsar.
     """
-    defaults = _defaults_veri()
+    degiskenler = _cozum_degiskenleri()
     ortam = _jinja_ortami()
     bulunanlar: list[str] = []
     olculemeyenler: list[str] = []
     for dosya in _yaml_dosyalari():
+        if dosya.resolve().relative_to(REPO_KOK).as_posix() in RESTART_TARAMASI_DISI:
+            continue
         veri = yaml.safe_load(dosya.read_text(encoding="utf-8"))
         if veri is None:
             continue
@@ -465,11 +524,12 @@ def test_uzun_omurlu_birimler_restart_edilmiyor():
                 if "{{" not in ham_ad:
                     adlar = {ham_ad}
                 else:
-                    ogeler = _dongu_ogeleri(dugum, defaults)
+                    ogeler = _dongu_ogeleri(dugum, degiskenler)
                     if ogeler is None:
                         olculemeyenler.append(f"{dosya}: name={ham_ad!r} — döngü çözülemedi")
                         continue
                     adlar = {ortam.from_string(ham_ad).render(item=o) for o in ogeler}
+                adlar = {a if "." in a else f"{a}.service" for a in adlar}
                 kesisim = adlar & UZUN_OMURLU_BIRIMLER
                 if kesisim and durum in ("restarted", "started"):
                     bulunanlar.append(

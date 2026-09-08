@@ -1,0 +1,34 @@
+---
+# deploy/ansible/requirements.yml — TSK-176 Faz A1: `dagit.yml`in dış koleksiyon bağımlılığı.
+#
+# NEDEN VAR. `deploy/ansible/dagit.yml` [1]/[2] adımlarında `ansible.posix.synchronize` kullanır —
+# rsync'in Ansible karşılığı ve dagit.sh'ın `rsync -az --delete` satırının BİREBİR taşındığı yer.
+# Bu modül ansible-core ile GELMEZ (çekirdek yalnız `ansible.builtin.*` taşır); kurulmadığında
+# `--syntax-check` bile "couldn't resolve module" ile düşer, yani kapı doğduğu gün ölü doğar.
+#
+# NEDEN TAM SÜRÜM PİNİ, `>=` DEĞİL. Pinsiz bir koleksiyon dağıtım aracının davranışını KURULUM
+# GÜNÜNE bağlar: aynı playbook iki makinede iki farklı `synchronize` sürümüyle koşar ve fark ancak
+# bakım penceresinde görülür — depodaki uv.lock disiplininin (`uv sync --frozen`) aynısı, başka bir
+# katmanda. `tests/test_ansible_dagit_v452.py` B11a pinin TAM SÜRÜM olduğunu, B11b de KURULU
+# sürümün bu dosyayla AYNI olduğunu ölçer ("pinledim" ile "kurulu" aynı şey değildir).
+#
+# SÜRÜM ÖLÇÜLDÜ, seçilmedi (2026-09-08): `ansible-galaxy collection install ansible.posix` o gün
+# galaxy'den `2.2.2`yi getirdi; pin o ÖLÇÜLEN sürümdür. Yükseltme bir KARARDIR (Rol-1): sürümü
+# burada değiştir, sonra kurulumu tekrarla — iki adım ayrı, çünkü B11b ikisinin ayrışmasını görür.
+#
+# KURULUM (kullanıcı düzeyine gider — `~/.ansible/collections`; depoya YAZMAZ, dolayısıyla
+# dagit'in mtime/temiz-ağaç kapılarını tetiklemez):
+#
+#     ansible-galaxy collection install -r deploy/ansible/requirements.yml
+#
+# BU MAKİNEDE ÖLÇÜLEN TUZAK (2026-09-08): çıplak komut `CERTIFICATE_VERIFY_FAILED` ile düştü —
+# galaxy'ye giden istek sistemin kök sertifika deposunu bulamıyor. Çare (venv'in certifi'si):
+#
+#     SSL_CERT_FILE="$(.venv/bin/python -c 'import certifi;print(certifi.where())')" \
+#       .venv/bin/ansible-galaxy collection install -r deploy/ansible/requirements.yml
+#
+# OKUYUCU (YASA 6): yukarıdaki kurulum komutu (operatör/Rol-1) · `deploy/ansible/README.md`
+# "Koleksiyon bağımlılığı" bölümü · `tests/test_ansible_dagit_v452.py` B11a/B11b.
+collections:
+  - name: ansible.posix
+    version: "2.2.2"
