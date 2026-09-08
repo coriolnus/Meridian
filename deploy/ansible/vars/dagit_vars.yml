@@ -177,3 +177,77 @@ birim_adaylari:
   - "meridian"
   - "meridian-barsarchive"
   - "meridian-learn"
+
+# =================================================================================================
+# TÜRETİLEN DEĞERLER (TSK-176 Faz A1 Task 2 eklemesi, 2026-09-08)
+# =================================================================================================
+# Yukarıdaki dört liste VERİdir; aşağıdakiler o veriden ya da ortamdan TÜRER. Ayrımın nedeni
+# tek-kaynak yasasıdır: türetilen bir değer ELLE yazıldığı anda ikinci bir kaynak olur ve
+# sessizce ayrışır. `deploy/ansible/dagit.yml` bunları `vars_files` ile okur.
+
+# --- kontrolcü (yerel) depo kökü ------------------------------------------------------------
+# dagit.sh 31: `REPO="$HOME/AI-Trading"` — CWD'ye BAKMAZ. Bu satır onun BİREBİR karşılığıdır.
+#
+# NEDEN `playbook_dir | dirname | dirname` DEĞİL (TUR 2 düzeltmesi, inceleme K1, 2026-09-08):
+# o türetme playbook NEREDEN çağrılırsa çağrılsın ÇAĞIRAN ağacı dağıtırdı. Bir worktree'de
+# commit edilmiş ama BİRLEŞMEMİŞ bir dal, temiz ağaçla [0a]'dan geçer, [1]/[2] rsync onu canlıya
+# taşır ve [B] beyanı o sha'yı `deployed_sha` diye yazar — ana checkout'un tepesi canlıya HİÇ
+# gitmez. CLAUDE.md §1/§9 tam olarak bunu yasaklar: "dagit.sh NEREDEN çağrılırsa çağrılsın ana
+# checkout'un O ANKİ HEAD'ini iter, senin ağacını değil; 'ağacım temiz' bir güvence DEĞİLDİR
+# (vaka 2026-08-26)". Yani [0a] temiz-ağaç kapısı bu kuralın zorlayıcısı OLAMAZ — kendisi de o
+# yanlış ağaçta ölçülürdü.
+#
+# BEYANLI GEÇİŞ İKİ AŞAMALIDIR: (a) başka bir checkout'u dağıtmak için `-e repo_kok_yerel=<yol>`;
+# (b) o yol bir worktree ise ayrıca `-e worktree_gec=true` — kapı `dagit.yml` Play 1'dedir ve
+# istisna [B] beyanına `worktree_gec` alanı olarak YAZILIR (sessiz istisna, istisna değildir).
+# Çivi: tests/test_ansible_dagit_v452.py B12 (ifade `playbook_dir` türevi OLAMAZ + kapı yönü
+# dört senaryoda Jinja ile çözülerek ölçülür).
+repo_kok_yerel: "{{ lookup('env', 'HOME') ~ '/AI-Trading' }}"
+
+# --- [1]/[2] rsync dışlama bayrakları -------------------------------------------------------
+# `rsync_disla` (VERİ) → `--exclude=<öğe>` (BAYRAK). Türetme burada TEK yerde durur; iki
+# `synchronize` görevi de bu listeyi okur. Elle yazılsaydı [1] kuru koşumu ile [2] gerçek
+# koşumu farklı dışlamalarla koşabilir ve fark ancak `--delete` bir dosyayı SİLDİKTEN sonra
+# görülürdü. Çivi: tests/test_ansible_dagit_v452.py B8 (ifadeyi ÇÖZER, metin aramaz).
+rsync_opts_disla: "{{ rsync_disla | map('regex_replace', '^', '--exclude=') | list }}"
+
+# --- [1b] versiyonlu state dosyaları --------------------------------------------------------
+# BEŞİNCİ LİSTE, AMA LİSTE DEĞİL — TÜRETME. dagit.sh'ın [1b] şerhi: "DOSYA LİSTESİ GİT'TEN
+# TÜRETİLİR, elle yazılmaz: yarın üçüncü bir state dosyası versiyona alınırsa bu adım onu
+# kendiliğinden kapsar. Elle liste, tam da bu turda kapatılan kopukluğun kendisiydi."
+# Bu yüzden burada `goal.yaml`/`bounds.yaml` YAZMIYOR: `git ls-files state/` çıktısı Play 1'de
+# `state_versiyonlu_ham`a register edilir, bu ifade onu `state/` önekinden arındırır.
+#
+# `default` YOK, BİLİNÇLİ (fail-closed): register doğmadan bu değişkene dokunulursa ifade
+# PATLAR. `| default([])` yazsaydık, ölçüm hiç yapılmamışken "versiyonlu state dosyası yok"
+# hükmü doğar ve goal/bounds ayrışması bir daha HİÇ görülmezdi — 2026-08-01'de `entry.w_turnover`
+# canlıya hiç gitmediğinde olan tam olarak buydu (sessiz kapsam boşluğu).
+#
+# `hostvars['localhost']`: ölçüm Play 1'de (kontrolcüde) yapılır, tüketim Play 2'de (A1). Ansible
+# vars_files'ı GEÇ (kullanım anında) çözer; bu ifade her iki play'de de o an geçerli değeri verir.
+state_versiyonlu_onek: "state/"
+state_versiyonlu: >-
+  {{ hostvars['localhost'].state_versiyonlu_ham.stdout_lines
+     | map('regex_replace', '^' ~ state_versiyonlu_onek, '') | list }}
+
+# --- [B] dağıtım-beyanı damgası -------------------------------------------------------------
+# dagit.sh `[4]`: `_damga="$(date -u +%Y%m%d%H%M)"` — yedek dosya adının UTC damgası.
+# `ansible_date_time.iso8601` UTC'dir (`2026-09-08T09:16:59Z`), `iso8601_basic_short` ise YEREL
+# saattir (aynı anda `20260908T121659`, +03) — ÖLÇÜLDÜ 2026-09-08. Yanlış alanı seçmek yedek
+# adına yerel saat yazardı ve geri-alma reçetesindeki dosya adı tutmazdı; bu yüzden damga
+# `iso8601`den kırpılır, "basic_short"tan DEĞİL.
+dagitim_damgasi: >-
+  {{ (hostvars['localhost'].ansible_date_time.iso8601 | regex_replace('[-:TZ]', ''))[0:12] }}
+
+# --- [1c] kadans kapısına tabi birim DOSYALARI ----------------------------------------------
+# TÜRETME (TUR 2, inceleme K5, 2026-09-08). A0 rolünün `kadans_birimleri` listesi birim ADIdır
+# (uzantısız); [1c] `/etc/systemd/system/<ad>.service` dosyalarına bakar. İki yerde `.service`
+# yazmak iki kaynak demektir — burada TEK yerde türetilir.
+#
+# NEDEN GEREKLİ: A0 rolünün kadans kapısı (`brifing_devri: false`) brifing/bekçi/karne
+# birimlerini BİLEREK KURMAZ. [1c] "repo birimlerinin hepsi /etc'de olacak" derse ilk kuru koşum
+# tam burada kilitlenir ve bastığı reçete (`site.yml`) o birimleri kuramaz — çaresi kendisinde
+# olmayan bir kapı. Bu yüzden AYRIM: yönerge FARKI (2026-08-14 sessiz etkisizlik vakası) DURDURUR;
+# kadans biriminin HİÇ KURULMAMIŞ olması RAPORdur. Çivi: v452 B17 senaryo tablosu.
+kadans_birim_dosyalari: >-
+  {{ kadans_birimleri | map('regex_replace', '$', '.service') | list }}

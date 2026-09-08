@@ -1,0 +1,1468 @@
+---
+# deploy/ansible/dagit.yml — TSK-176 Faz A1: `dagit.sh`ın KAPILARI, davranış birebir, playbook'ta.
+#
+# Spec: docs/TASARIM-ALTYAPI-KOD-2026-09-08.md §2/§4/§5/§8 K1. Plan:
+# docs/superpowers/plans/2026-09-08-ansible-a1-dagit.md. Kapıların GEREKÇELERİ `dagit.sh`ın ilgili
+# bölüm başlıklarındadır — buradaki `name:` satırları o başlıkların ÖZETİDİR, ikinci kaynağı değil.
+#
+# KAPI LİSTESİ DÜŞMEZ (plan Global Constraints):
+#   [0a] temiz ağaç + DAGIT_SHA'nın DONMASI   [0b] uv audit          [0c] lint-imports
+#   [0d] import taraması                      [1]  rsync kuru koşum  [1b] versiyonlu state farkı
+#   [1c] sistem birimi ayrıklığı              [F9] kapsam-dışı artefakt içerik kapısı
+#   [F10] enabled+inactive anomalisi          [2]  rsync             [3]  uv sync --frozen
+#   [4]  bakım penceresi                      [5]  doğrulama         [5a] token anahtar kontrolü
+#   [5c] artefakt tazeliği                    [5b] kod-tazelik değişmezi   [B] dağıtım-beyanı
+# Çivi: `tests/test_ansible_dagit_v452.py` bölüm B (B1 her etiketi görev ADInda arar).
+#
+# KİM KOŞAR: A1'e karşı YALNIZ Rol-1 (CLAUDE.md §2/§9). Ajan/yan oturum yalnız `--syntax-check` ve
+# `ansible-lint` koşar. İLK GERÇEK DAĞITIM OPERATÖR GÖZETİMİNDEDİR (plan sevk kararı, K1: geçiş
+# süresince dagit.sh ve bu playbook İKİ YOL olarak yan yana durur).
+#
+# ÖN KOŞUL: `ansible-galaxy collection install -r deploy/ansible/requirements.yml`
+# ([1]/[2] `ansible.posix.synchronize` kullanır; koleksiyon çekirdekle GELMEZ).
+#
+# ---------------------------------------------------------------------------------------------
+# GÖMÜLÜ ÇOK-SATIR PYTHON/BASH YOK (A0 kuralı + 2026-07-30 IndentationError vakası). Dört gövde
+# DOSYADA yaşar ve dagit.sh geçiş süresince AYNI dosyaları çağırır (tek kaynak, ayrışamazlar):
+#   [1b] ops/state_fark_hukmu.py · [5c] ops/artefakt_tazelik.py
+#   [5a] deploy/oracle-a1/dogrulama_anahtar.py · [5b] deploy/oracle-a1/kod_tazelik.sh
+#
+# ÖLÇÜLEMEDİ JETONLARININ İŞLENMESİ (Task 2 kararı, 2026-09-08). İki betik "ölçemedim" diyebilir
+# ve bu "temiz" DEĞİLDİR ama "ihlal" de değildir (uydurma yasağı):
+#   * [5c] `ops/artefakt_tazelik.py` rc 2 = ÖLÇÜLEMEDİ → `failed_when` rc'yi {0,2} DIŞINDA düşürür
+#     (dagit.sh'ın `[ rc != 0 ] && [ rc != 2 ]` dalıyla BİREBİR); rc 2 ayrı bir `debug` ile
+#     operatöre ADIYLA basılır. Sessiz geçilmez, ama dağıtımı da durdurmaz.
+#   * [5b] `kod_tazelik.sh` `OLCULEMEDI <ne>` satırlarını rc 0 ile döndürür → kapı DÜŞMEZ,
+#     satırlar `debug` ile basılır; hüküm ÇIKIŞ KODUNDAN okunur (tek kaynak — çıktıyı ikinci kez
+#     grep'lemek betik ile playbook'un ayrı ayrı hüküm vermesi olurdu).
+#   * [5a] `dogrulama_anahtar.py` `OLCULEMEDI token yok` + rc 0 = FAIL-OPEN (token yerel makinede
+#     olmayabilir); `OLCULEMEDI yonlendirme <kod>` + rc 1 = FAIL-CLOSED. Ayrım betiğin çıkış
+#     kodundadır ve burada yalnız UYGULANIR.
+# Kural tek cümlede: ÖLÇÜLEMEDİ hiçbir yerde `failed_when: false` ile yutulmaz (Yasa 4) — ya
+# betiğin sözleşmesindeki rc ile taşınır ya da ADIYLA basılır.
+#
+# CHECK-MODE (`--check --diff`) BEYANI: `command`/`shell`/`script` görevleri check-mode'da ATLANIR.
+# Kapılar bu yüzden iki sınıfa ayrılır: SALT-OKUMA ölçümleri `check_mode: false` taşır ve kuru
+# koşumda da GERÇEKTEN ölçer (dagit.sh'ın kuru koşumu [0b]/[0c]/[0d]/[F10]'u koşuyordu —
+# playbook'un kuru koşumu ondan zayıf olamaz); canlıyı DEĞİŞTİREN adımlar ([3]/[4]/[5]/[5a]/[5b]/
+# [B]) atlanır ve her biri "check-mode'da ÖLÇÜLMEDİ" diye ADIYLA rapor eder (A0 K4 deseni).
+# ÖLÇÜLDÜ (TUR 2, 2026-09-08): dagit.sh'ın kuru koşumu [5c]'yi koşMUYORDU (kuru koşum satır
+# 412'de `exit 0` ile biter, [5c] bloğu 652'dedir) — bu playbook onu kuru koşumda da ÖLÇER, ama
+# orada UYARIdır (aşağıdaki [5c] şerhi); dağıtımı yalnız GERÇEK koşumda durdurur.
+#
+# BEYANLI SIRA FARKI (dagit.sh'a göre): [5c] artefakt tazeliği dagit.sh'ta [5a] ile [5b] ARASINDA,
+# yani dağıtımdan SONRA koşar; burada Play 1'e (yerel kapılar) alınmıştır — plan Architecture'ın
+# kararı. Ölçüm ve onarım (`cd ui && npm run build`) zaten YERELDİR; erken koşmak bayat bir
+# artefaktı rsync'ten ÖNCE yakalar. Hüküm ve çıkış kodu sözleşmesi aynen korunur.
+#
+# BEYANLI FARK ŞERHLERİ (TUR 3, yeniden inceleme Y2, 2026-09-08): README'nin
+# "## `dagit.sh`a göre BEYANLI farklar" bölümündeki numaralı HER madde, bu dosyada
+# `# BEYANLI-FARK <no>` şerhiyle GERÇEKLEŞTİĞİ YERİ gösterir. Kıyas İKİ YÖNLÜ ve ÇİVİLİDİR
+# (v452 B18): listeden bir madde düşerse de, şerhli bir sapma listeye yazılmazsa da suite
+# kırmızıya döner. Sayı vererek sunulan eksik bir liste, okuyucuya "başka fark yok"
+# hükmünü verdirir — tur-1 ve tur-2 incelemelerinin aynı bulgusu.
+
+- name: "Meridian dağıtımı — YEREL KAPILAR ([0a] [0b] [0c] [0d] [5c])"
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    # İKİ KAYNAK, İKİSİ DE TEKİL: listeler `dagit_vars.yml`de, A1 ortak değerleri (`repo_kok`,
+    # `meridian_kullanici`, `uv_sync_bayrak`, `saglik_url`, `uv_ikili`) A0 rolünün defaults'ında.
+    # Rol defaults'unu KOPYALAMAK yerine OKUMAK bilinçlidir: `uv_sync_bayrak` iki yerde yazılsaydı
+    # biri "dev grubu A1'e kurulmaz" kararını sessizce ters çevirirdi (A0 TUR 2, K3).
+    - vars/dagit_vars.yml
+    - roles/meridian_a1/defaults/main.yml
+  vars:
+    # Kirli ağaçla dağıtım BEYANLI istisnadır: `-e kirli_gec=true`. dagit.sh'ın `--kirli-gec`
+    # bayrağının karşılığı; beyana ([B]) yalnız GERÇEKTEN kullanıldıysa `true` girer.
+    kirli_gec: false
+    # Worktree'den (ya da ana checkout DIŞINDAN) dağıtım da BEYANLI istisnadır: `-e
+    # worktree_gec=true`. Gerekçe aşağıdaki kapının şerhinde; beyana ([B]) `worktree_gec` alanı
+    # olarak GERÇEKTEN kullanıldığı hâliyle girer.
+    worktree_gec: false
+  tasks:
+    - name: "[B] Beyan olguları — YALNIZ `min` alt kümesi toplanır"
+      # `gather_facts: false` + hedefli `setup`: beyanın iki alanı (`dagitildi_utc`,
+      # `dagitan_host`) olgudan gelir, gerisi gerekmez. ÖLÇÜLDÜ (2026-09-08): `min` alt kümesi
+      # 42 anahtar verir ve ikisini de taşır — `ansible_date_time.iso8601` (UTC, dagit.sh'ın
+      # `date -u +%Y-%m-%dT%H:%M:%SZ` biçiminin AYNISI) ve `ansible_nodename` (`hostname`
+      # çıktısının aynısı; `ansible_hostname` KISA addır ve dagit'inkinden farklı olurdu).
+      ansible.builtin.setup:
+        gather_subset:
+          - min
+
+    # =========================================================================================
+    # [0a] DAĞITIM KAYNAĞI: ANA CHECKOUT + TEMİZ AĞAÇ + DAGIT_SHA'NIN DONMASI
+    # =========================================================================================
+    # ANA CHECKOUT KAPISI (TUR 2, inceleme K1, 2026-09-08). dagit.sh CWD'ye BAKMAZ
+    # (`REPO="$HOME/AI-Trading"`, satır 31) ve CLAUDE.md §1/§9 bunu bir KURAL olarak taşır:
+    # "dagit.sh NEREDEN çağrılırsa çağrılsın ana checkout'un O ANKİ HEAD'ini iter, senin ağacını
+    # değil; 'ağacım temiz' bir güvence DEĞİLDİR (vaka 2026-08-26)". Playbook'un ilk hâli depo
+    # kökünü `playbook_dir`den türetiyordu: bir worktree'de commit edilmiş ama BİRLEŞMEMİŞ dal
+    # temiz ağaçla [0a]'dan geçer, canlıya gider ve [B] onu `deployed_sha` diye yazardı.
+    # İKİ ÖLÇÜM, TEK KAPI: (a) `repo_kok_yerel` GERÇEKTEN bir git ağacının kökü mü; (b) bu
+    # playbook'un DURDUĞU ağaç aynı kök mü. (b) worktree'yi yakalar — worktree'de
+    # `--show-toplevel` worktree'nin KENDİ kökünü verir, ana checkout'unkini değil.
+    - name: "[0a] Dağıtım kaynağının ağacı (ana checkout)"  # noqa: command-instead-of-module
+      # noqa gerekçesi: `ansible.builtin.git` depo KLONLAR; burada istenen "bu yol hangi git
+      # ağacının kökü" sorusudur (salt okuma). rc≠0 (git ağacı değil) DAĞITIMI DURDURUR.
+      ansible.builtin.command:
+        cmd: git -C {{ repo_kok_yerel }} rev-parse --show-toplevel
+      register: toplevel_ana
+      changed_when: false
+      check_mode: false
+
+    - name: "[0a] Bu playbook'un durduğu ağaç"  # noqa: command-instead-of-module
+      ansible.builtin.command:
+        cmd: git -C {{ playbook_dir }} rev-parse --show-toplevel
+      register: toplevel_playbook
+      changed_when: false
+      check_mode: false
+
+    # BEYANLI-FARK 8
+    - name: "[0a] KAPI — dağıtım kaynağı ANA CHECKOUT'tur (worktree'den dağıtım BEYANLI)"
+      ansible.builtin.assert:
+        that:
+          - ((toplevel_ana.stdout | trim) == repo_kok_yerel
+             and (toplevel_playbook.stdout | trim) == repo_kok_yerel)
+            or (worktree_gec | bool)
+        fail_msg: >-
+          playbook ana checkout dışından koşuluyor; bilinçli istisna -e worktree_gec=true.
+          Dağıtım kaynağı: {{ repo_kok_yerel }} (git kökü: {{ toplevel_ana.stdout | trim }}) ·
+          bu playbook'un ağacı: {{ toplevel_playbook.stdout | trim }}.
+          Birleşmemiş bir dal canlıya gitmesin diye kapı BURADA durur (CLAUDE.md §9, vaka
+          2026-08-26): işi commit'leyip ana checkout'a birleştirin ve dağıtımı ORADAN koşun.
+          Başka bir checkout'u bilerek dağıtacaksanız: `-e repo_kok_yerel=<yol>`; o yol bir
+          worktree ise ayrıca `-e worktree_gec=true` (beyana [B] `worktree_gec` olarak yazılır).
+        success_msg: "dağıtım kaynağı ana checkout ({{ repo_kok_yerel }})"
+
+    - name: "[0a] Worktree istisnası GERÇEKTEN kullanıldı mı (beyana [B] bu değer girer)"
+      # Bayrak ana checkout'tan verilmişse istisna İŞLEMEMİŞTİR ve beyan `false` kalır —
+      # `kirli_gec_kullanildi` ile aynı desen: beyan NİYETİ değil OLANI söyler.
+      ansible.builtin.set_fact:
+        worktree_gec_kullanildi: >-
+          {{ ((toplevel_playbook.stdout | trim) != repo_kok_yerel
+              or (toplevel_ana.stdout | trim) != repo_kok_yerel)
+             and (worktree_gec | bool) }}
+
+    - name: "[0a] Git temiz-ağaç kapısı — ÖLÇÜM"  # noqa: command-instead-of-module
+      # noqa gerekçesi: `ansible.builtin.git` bir depoyu KLONLAR/CHECKOUT eder; burada istenen
+      # "hiçbir şeyi değiştirmeden çalışma ağacının durumunu sor"dur (`changed_when: false`).
+      ansible.builtin.command:
+        cmd: git status --porcelain
+        chdir: "{{ repo_kok_yerel }}"
+      register: git_durum
+      changed_when: false
+      check_mode: false
+
+    - name: "[0a] KAPI — yarım iş canlıya gitmez (istisna: -e kirli_gec=true)"
+      ansible.builtin.assert:
+        that:
+          - (git_durum.stdout | trim | length == 0) or (kirli_gec | bool)
+        fail_msg: >-
+          Çalışma ağacı KİRLİ — önce commit'le (yarım iş canlıya gitmesin).
+          Kirli satırlar: {{ git_durum.stdout_lines | length }} adet →
+          {{ git_durum.stdout_lines[:15] | join(' | ') }}
+          Bilinçli istisna: aynı komuta `-e kirli_gec=true` ekleyin (beyana [B] yazılır).
+        success_msg: "çalışma ağacı temiz"
+
+    - name: "[0a] Kirli-geç istisnası GERÇEKTEN kullanıldı mı (beyana [B] bu değer girer)"
+      # Bayrak temiz ağaçla verilmişse istisna İŞLEMEMİŞTİR ve beyan `false` kalır — dagit.sh'ın
+      # `KIRLI_GEC=false` başlangıcı + yalnız kirli dalda `true` ataması ile birebir.
+      ansible.builtin.set_fact:
+        kirli_gec_kullanildi: "{{ (git_durum.stdout | trim | length > 0) and (kirli_gec | bool) }}"
+
+    - name: "[0a] Dağıtılacak tepe — DAGIT_SHA BURADA DONAR ([B] adımında DEĞİL)"
+      # 660dc10 dersi: paralel oturum trafiği ana checkout'u dağıtım SIRASINDA taşıyabilir; beyan
+      # "dağıtımın kapılardan geçtiği andaki tepe"yi söylemeli, playbook'un bittiği andakini değil.
+      ansible.builtin.command:
+        cmd: git rev-parse HEAD
+        chdir: "{{ repo_kok_yerel }}"
+      register: dagit_sha_ham
+      changed_when: false
+      check_mode: false
+
+    - name: "[0a] DAGIT_SHA olgusu"
+      ansible.builtin.set_fact:
+        dagit_sha: "{{ dagit_sha_ham.stdout | trim }}"
+
+    # =========================================================================================
+    # [1b] VERSİYONLU STATE DOSYA LİSTESİ — GİT'TEN TÜRETİLİR (elle liste YOK)
+    # =========================================================================================
+    - name: "[1b] Versiyonlu state dosyaları — `git ls-files state/` (elle liste YOK)"  # noqa: command-instead-of-module
+      # noqa gerekçesi: `ansible.builtin.git` modülü depo KLONLAR, dosya LİSTELEMEZ.
+      # Ölçüm YEREL kapıda yapılır ki liste Play 2'ye tek bir kaynaktan gitsin; `dagit_vars.yml`
+      # `state_versiyonlu`yu bu register'dan türetir (o dosyadaki gerekçe: elle liste, 2026-08-01
+      # `entry.w_turnover` sessizliğinin ta kendisiydi).
+      ansible.builtin.command:
+        cmd: git ls-files state/
+        chdir: "{{ repo_kok_yerel }}"
+      register: state_versiyonlu_ham
+      changed_when: false
+      check_mode: false
+
+    - name: "[1b] Kapsanan versiyonlu state dosyaları (kapsam SESSİZ kalmaz)"
+      # Yasa 6 + bedel yasası: [1b]'nin kapsamı bir LİSTE değil bir TÜRETMEDİR ve türetilen
+      # kapsamın sessiz kalması, tam olarak 2026-08-01'de `entry.w_turnover`ı canlıya hiç
+      # götürmeyen sessizliğin sınıfıdır. Operatör hangi dosyaların kapsandığını BURADA görür.
+      ansible.builtin.debug:
+        msg: >-
+          [1b] `git ls-files state/` → {{ state_versiyonlu_ham.stdout_lines }}
+          ({{ state_versiyonlu_ham.stdout_lines | length }} dosya; Play 2 bunu
+          `state_versiyonlu` olarak okur — boşsa adım boş geçilir).
+
+    # =========================================================================================
+    # [0b] [0c] [0d] — TEDARİK ZİNCİRİ / MİMARİ SÖZLEŞME / DEV-DARALTMASI
+    # =========================================================================================
+    # ÖLÇÜM ve HÜKÜM AYRI GÖREVLERDE (üç kapıda da). Tek görevde `failed_when: rc != 0` yazmak
+    # kapıyı kurardı ama dagit.sh'ın bastığı ONARIM REÇETESİNİ kaybederdi — operatör yalnız ham
+    # çıkış kodunu görürdü. `failed_when` yalnız SÖZLEŞME DIŞI çıkış kodlarını (araç KOŞAMADI)
+    # düşürür; ihlal hükmü `assert`tedir ve reçeteyi taşır. Her iki yol da fail-closed'dır:
+    # sıfır-dışı hiçbir çıkış kodu dağıtımı sürdürmez (dagit.sh `|| exit 1` ile birebir).
+    - name: "[0b] uv audit (tedarik-zinciri kapısı) — ÖLÇÜM"
+      ansible.builtin.command:
+        cmd: uv audit --preview-features audit-command
+        chdir: "{{ repo_kok_yerel }}"
+      register: uv_audit
+      changed_when: false
+      check_mode: false
+      failed_when: uv_audit.rc not in [0, 1]
+
+    - name: "[0b] KAPI — audit kırmızıysa DAĞITIM İPTAL"
+      ansible.builtin.assert:
+        that:
+          - uv_audit.rc == 0
+        fail_msg: >-
+          AUDIT KIRMIZI — dağıtım İPTAL. {{ uv_audit.stdout_lines | default([]) }}
+          Bulgu canlıda GERÇEKTEN koşan bağımlılıklara aittir: [3] dev grubunu A1'e kurmaz,
+          yani bu kapı bir test aracının CVE'siyle değil yalnız çalışan kodun CVE'siyle öter.
+        success_msg: "[0b] uv audit temiz"
+
+    - name: "[0c] lint-imports (mimari sözleşme kapısı) — ÖLÇÜM"
+      # `uv run` KULLANILIR (çıplak `lint-imports` DEĞİL): dev bağımlılığı yalnız proje
+      # ortamındadır ve çıplak çağrı, aracın kurulu OLMADIĞI bir kabukta "command not found" ile —
+      # yani kapı hiç KOŞMADAN — geçilmiş sayılırdı. En pahalı ihlal döngüsel import'tur: süreç
+      # AÇILIRKEN patlar, yani bakım penceresi kapandıktan sonra.
+      ansible.builtin.command:
+        cmd: uv run lint-imports
+        chdir: "{{ repo_kok_yerel }}"
+      register: lint_imports
+      changed_when: false
+      check_mode: false
+      failed_when: lint_imports.rc not in [0, 1]
+
+    - name: "[0c] KAPI — mimari sözleşme kırıldıysa DAĞITIM İPTAL"
+      ansible.builtin.assert:
+        that:
+          - lint_imports.rc == 0
+        fail_msg: >-
+          MİMARİ SÖZLEŞME KIRILDI — dağıtım İPTAL.
+          {{ lint_imports.stdout_lines | default([]) }}
+          Sözleşmeler: pyproject.toml [tool.importlinter]. İstisna eklemek bir BORÇ KAYDIDIR.
+        success_msg: "[0c] mimari sözleşmeler sağlam"
+
+    - name: "[0d] Import taraması (dev-grubu daraltma kapısı) — ÖLÇÜM"
+      # ÇIKIŞ KODU SÖZLEŞMESİ (ops/import_tarama.py): 0 = daraltma güvenli · 1 = dev paketi
+      # çalışma yolunda · 2 = ölçülemedi. 2 de ENGELDİR: ölçülemeyen daraltma "güvenli"
+      # sayılmaz (fail-closed). Adım [3] A1'e dev grubunu KURMAZ ve o daraltmanın tek dayanağı
+      # bu ölçümdür — yarın `meridian/` içine bir `import hypothesis` girerse daraltma canlıyı
+      # SESSİZCE düşürür ve testler YEŞİL kalır (yerelde paket KURULUDUR).
+      ansible.builtin.command:
+        cmd: uv run python ops/import_tarama.py --sessiz
+        chdir: "{{ repo_kok_yerel }}"
+      register: import_tarama
+      changed_when: false
+      check_mode: false
+      failed_when: import_tarama.rc not in [0, 1, 2]
+
+    - name: "[0d] KAPI — dev-daraltması artık güvenli değilse DAĞITIM İPTAL"
+      ansible.builtin.assert:
+        that:
+          - import_tarama.rc == 0
+        fail_msg: >-
+          DEV-DARALTMASI ARTIK GÜVENLİ DEĞİL (çıkış {{ import_tarama.rc }}
+          {{ '= ÖLÇÜLEMEDİ; ölçülemeyen daraltma güvenli sayılmaz'
+             if import_tarama.rc == 2 else '= dev paketi çalışma yolunda' }}).
+          {{ import_tarama.stdout_lines | default([]) }}
+          Tam rapor: `uv run python ops/import_tarama.py`. Ya import'u çalışma yolundan çıkarın,
+          ya paketi ANA bağımlılığa taşıyın (ikisi de bilinçli).
+        success_msg: "[0d] dev-daraltması güvenli"
+
+    # =========================================================================================
+    # [5c] ARTEFAKT TAZELİĞİ — derleme adımı [5b]'nin varsayımını KIRAR
+    # =========================================================================================
+    # BEYANLI-FARK 1
+    - name: "[5c] `ui/` kaynak ağacı var mı (kapı KOŞULLU — dagit.sh `[ -d $REPO/ui ]`)"
+      ansible.builtin.stat:
+        path: "{{ repo_kok_yerel }}/ui"
+      register: ui_dizin
+      check_mode: false
+
+    - name: "[5c] Artefakt tazeliği (pano) — mtime(pano.html) >= en yeni mtime(ui/ kaynak)"
+      # ÇIKIŞ KODU HÜKÜMDÜR: 0 TAMAM · 1 BAYAT (dağıtım DURUR) · 2 ÖLÇÜLEMEDİ (dağıtım SÜRER,
+      # ama "taze" DENMEZ). `failed_when` bu sözleşmeyi birebir taşır: 0/2 dışındaki her kod
+      # betiğin KOŞAMADIĞI anlamına gelir ve koşamayan kapı "geçildi" sayılamaz.
+      # KURU KOŞUMDA UYARI, GERÇEK KOŞUMDA KAPI (TUR 2, inceleme K6, 2026-09-08). dagit.sh'ın
+      # kuru koşumu [5c]'yi HİÇ koşmuyordu (kuru koşum satır 412'de `exit 0`, [5c] bloğu 652'de)
+      # ama GERÇEK koşumunda DURDURUYORDU. Playbook [5c]'yi Play 1'e aldığı için kuru koşumda da
+      # ölçer — bu bir KAZANÇTIR, ama bedeli ölçülmeden alınamaz: `ui/` düzenlenmiş ve
+      # `npm run build` henüz koşmamışken (UI turlarının normal ara hâli) kuru koşum Play 1'de
+      # düşerdi ve [1]/[1b]/[1c]/[F9]/[F10] — yani A1 hakkında SORULAN HER ŞEY — hiç ölçülmezdi.
+      # Bu yüzden kuru koşumda BAYAT bir artefakt UYARIdır (aşağıdaki debug), gerçek koşumda
+      # dağıtımı DURDURUR (dagit.sh ile birebir).
+      ansible.builtin.command:
+        cmd: uv run python ops/artefakt_tazelik.py --repo {{ repo_kok_yerel }}
+        chdir: "{{ repo_kok_yerel }}"
+      register: artefakt_tazelik
+      changed_when: false
+      check_mode: false
+      failed_when: (artefakt_tazelik.rc not in [0, 2]) and not ansible_check_mode
+      when: ui_dizin.stat.exists
+
+    # BEYANLI-FARK 7
+    - name: "[5c] KURU KOŞUM UYARISI — artefakt BAYAT (gerçek dağıtım BURADA DURUR)"
+      ansible.builtin.debug:
+        msg: >-
+          [5c] BAYAT (çıkış 1): {{ artefakt_tazelik.stdout_lines | default([]) | join(' / ') }}
+          — kuru koşum SÜRÜYOR (A1 kapıları ölçülebilsin diye), ama GERÇEK dağıtım tam burada
+          DURACAK. Onarım: `cd ui && npm run build`.
+      when:
+        - ansible_check_mode
+        - ui_dizin.stat.exists
+        - artefakt_tazelik.rc | default(0) == 1
+
+    - name: "[5c] ÖLÇÜLEMEDİ — artefakt tazeliği hüküm veremedi (dağıtım sürer, 'taze' DENMEZ)"
+      # Bedel yasası: kapının sessizce geçilmesi ile ölçülüp geçilmesi AYNI görünmemeli.
+      ansible.builtin.debug:
+        msg: >-
+          [5c] ÖLÇÜLEMEDİ (çıkış 2): {{ artefakt_tazelik.stdout_lines | default([]) | join(' / ') }}
+          — artefakt henüz derlenmemiş olabilir (ölçüm boşluğu, arıza DEĞİL). Dağıtım SÜRÜYOR
+          ama "artefakt kaynağından taze" cümlesi BU TUR İÇİN kurulmadı.
+      when:
+        - ui_dizin.stat.exists
+        - artefakt_tazelik.rc | default(0) == 2
+
+- name: "Meridian dağıtımı — A1 ([1] [1b] [1c] [F9] [F10] [2] [3] [4] [5] [5a] [5b] [B])"
+  hosts: meridian
+  become: true
+  gather_facts: false
+  vars_files:
+    - vars/dagit_vars.yml
+    - roles/meridian_a1/defaults/main.yml
+  vars:
+    # Akümülatörlerin BAŞLANGIÇ değerleri (bash 3.2'de boş dizi + `set -u` patladığı için
+    # dagit.sh boşluklu dizge kullanıyordu; burada gerçek liste kullanılabilir).
+    state_engel: []
+    state_farkli: []
+    state_kopyala: []
+    birim_ayrik: []
+    birim_ayrik_fark: []
+    f9_ayrik: []
+    # [B] BEKLENEN İÇERİK — TEK YERDE (TUR 2, inceleme K2, 2026-09-08). `satir_sonu` ÇİFT
+    # TIRNAKLI bir YAML skaleridir ve GERÇEK bir satır sonu taşır; folded (`>-`) bir skalerin
+    # içine yazılan `'\n'` Ansible'da İKİ KARAKTERDİR ve bayt kıyası HER KOŞUMDA yanlış çıkardı
+    # (ölçüldü: kapı "BEYAN YAZILAMADI" dalını basıyordu, yazım başarılıyken bile).
+    # Beklenen içerik yazan görevle kıyas görevinin İKİSİ tarafından da BURADAN okunur: iki ayrı
+    # yerde kurulsaydı biri sessizce ayrışır ve kıyas kendi kopyasını doğrulardı.
+    #
+    # SON FİLTRE `| string` ZORUNLUDUR — ÖLÇÜLDÜ (2026-09-08, ansible-core 2.18.19). Ansible bir
+    # şablonun SONUCU `{`/`[` ile başlıyorsa onu `Json2Python` ile GERÇEK bir dict/list'e çevirir
+    # (`ansible/template/native_helpers.py::ansible_eval_concat`) — `true/false/null` dahil. O
+    # dönüşüm olursa `tee`ye giden değer bir dict olur ve modül onu Python REPR'i olarak yazar:
+    # `{'deployed_sha': 'abc', 'kirli_gec_kullanildi': False}` — TEK TIRNAKLI, `False` büyük
+    # harfli, yani GEÇERSİZ JSON. Kaçış: son işlem `STRING_TYPE_FILTERS` üyesi bir filtre olmalı
+    # (`string`, `to_json`, …); o zaman sonuç `NativeJinjaText` olarak korunur ve literal_eval
+    # HİÇ çağrılmaz. `~ satir_sonu` birleştirmesi `to_json`un korumasını DÜŞÜRÜR — bu yüzden
+    # zincirin sonunda `| string` durur. Çivi: v452 B13 (gerçek `ansible-playbook` koşumu).
+    satir_sonu: "\n"
+    beyan_metni: "{{ ((dagitim_beyani | to_json) ~ satir_sonu) | string }}"
+  pre_tasks:
+    - name: "Check-mode yalancı-yeşil beyanı"
+      ansible.builtin.debug:
+        msg: >-
+          check-mode (--check --diff) 'command'/'shell'/'script' görevlerini ATLAR. Bu koşumda
+          [3] uv sync, [5] healthz, [5a] token anahtar kontrolü, [5b] kod-tazelik ve [B] beyanı
+          ÖLÇÜLMEZ; [1] rsync kuru koşumu, [1b]/[1c]/[F9] içerik kıyasları ve [F10] anomali
+          kapısı `check_mode: false` ile GERÇEKTEN ölçülür. "Temiz" hükmü yalnız ölçülen
+          kapılar içindir (TASARIM-ALTYAPI-KOD-2026-09-08.md §2.1).
+      when: ansible_check_mode
+
+  tasks:
+    # =========================================================================================
+    # [1] RSYNC KURU KOŞUM — ne değişecek, GÖZLE onay
+    # =========================================================================================
+    - name: "[1] rsync KURU KOŞUM (--dry-run --itemize-changes; çıktı KESİLMEZ)"
+      # SIGPIPE SINIFI (2026-08-12 vakası): dagit.sh'ın eski hâli `rsync … | head -40` idi ve
+      # liste 40 satırı aşınca `head` boruyu erken kapatıyor, rsync SIGPIPE ile ölüyor,
+      # `pipefail` dağıtımı [1]'de SESSİZCE düşürüyordu. Ansible çıktıyı register'a alır — boru
+      # yok, `head` yok, rsync'in GERÇEK çıkış kodu korunur.
+      # `become: false`: rsync `ubuntu` olarak koşar (dagit.sh ile birebir; `/opt/meridian`
+      # ubuntu'ya aittir ve `synchronize` zaten `become` ile çalışmaz).
+      ansible.posix.synchronize:
+        src: "{{ repo_kok_yerel }}/"
+        dest: "{{ repo_kok }}/"
+        mode: push
+        delete: true
+        rsync_opts: "{{ rsync_opts_disla + ['--dry-run', '--itemize-changes'] }}"
+      become: false
+      register: rsync_kuru
+      changed_when: false
+      check_mode: false
+
+    - name: "[1] Kuru koşum özeti — SİLİNECEKLER ayrı basılır (--delete'in bedeli görünür olsun)"
+      ansible.builtin.debug:
+        msg: >-
+          [1] toplam {{ rsync_kuru.stdout_lines | default([]) | length }} satır;
+          SİLİNECEK: {{ rsync_kuru.stdout_lines | default([]) | select('search', 'deleting') | list }}
+          (boşsa fark yok). Tam liste: `-v` ile koşum çıktısında.
+
+    # =========================================================================================
+    # [1b] VERSİYONLU STATE DOSYALARI — canlı ↔ repo farkı (2026-08-02)
+    # =========================================================================================
+    # YASA İKİ DALLI: canlıda REPO-DIŞI anahtar YOKSA fark repo'nun ilerlemesidir → bakım
+    # penceresinde kopyalanır; VARSA kopyalanmaz, hüküm operatöründür. Ayrım ANAHTAR düzeyinde
+    # (ham satır düzeyinde değil): dosyalar yorum ağırlıklıdır ve satır bazlı bir kapı her yorum
+    # düzenlemesinde ENGEL derdi — yani hiç kopyalamazdı, kapı olmayan bir kapı.
+    - name: "[1b] Canlı state dosyası okunabiliyor mu (okunamayan ARIZA sınıfıdır, fark DEĞİL)"
+      ansible.builtin.stat:
+        path: "{{ repo_kok }}/state/{{ item }}"
+      loop: "{{ state_versiyonlu }}"
+      register: state_canli_stat
+      check_mode: false
+
+    - name: "[1b] Okunabilir / okunamayan ayrımı"
+      # Dosya canlıda YOKSA uygulama zaten açılamaz (`config.goal()` FileNotFoundError atar) —
+      # bu bir dağıtım farkı değil bir ARIZA. Kopyalayıp üstünü örtmek arızayı görünmez kılardı.
+      ansible.builtin.set_fact:
+        state_okunabilir: >-
+          {{ state_canli_stat.results | selectattr('stat.exists') | map(attribute='item') | list }}
+        state_engel: >-
+          {{ state_canli_stat.results | rejectattr('stat.exists') | map(attribute='item') | list }}
+
+    - name: "[1b] Canlı içerik"
+      ansible.builtin.slurp:
+        src: "{{ repo_kok }}/state/{{ item }}"
+      loop: "{{ state_okunabilir }}"
+      register: state_canli_icerik
+      check_mode: false
+
+    - name: "[1b] Repo içerik (kontrolcüde)"
+      ansible.builtin.slurp:
+        src: "{{ repo_kok_yerel }}/state/{{ item }}"
+      loop: "{{ state_okunabilir }}"
+      delegate_to: localhost
+      become: false
+      register: state_repo_icerik
+      check_mode: false
+
+    - name: "[1b] İçerik haritaları (tek ölçüm, tek kaynak — aşağıdaki her adım bunları okur)"
+      ansible.builtin.set_fact:
+        state_canli_b64: >-
+          {{ dict(state_okunabilir | zip(state_canli_icerik.results | map(attribute='content'))) }}
+        state_repo_b64: >-
+          {{ dict(state_okunabilir | zip(state_repo_icerik.results | map(attribute='content'))) }}
+
+    - name: "[1b] FARK VAR MI — bayt kıyası (`cmp -s` idiomunun karşılığı)"
+      ansible.builtin.set_fact:
+        state_farkli: "{{ state_farkli + [item] }}"
+      loop: "{{ state_okunabilir }}"
+      when: state_canli_b64[item] != state_repo_b64[item]
+
+    - name: "[1b] Hüküm için geçici dizin (kontrolcüde — dagit.sh `mktemp -d` ile birebir)"
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: meridian-state
+      delegate_to: localhost
+      become: false
+      run_once: true
+      register: state_tmp
+      changed_when: false
+      check_mode: false
+      when: state_farkli | length > 0
+
+    - name: "[1b] Farklı canlı dosyaları kontrolcüye indir (hüküm YERELDE verilir)"
+      # `check_mode: false`: kuru koşum da hüküm ÜRETMELİ (dagit.sh'ın `--dry-run`ı [1b] diff'ini
+      # basıyordu). Yazım YALNIZ `mktemp -d` dizinine gider — depoya ve canlıya değil.
+      ansible.builtin.fetch:
+        src: "{{ repo_kok }}/state/{{ item }}"
+        dest: "{{ state_tmp.path }}/"
+        flat: true
+      loop: "{{ state_farkli }}"
+      check_mode: false
+
+    - name: "[1b] HÜKÜM — `ops/state_fark_hukmu.py` (gömülü python YOK; dagit.sh ile AYNI dosya)"
+      block:
+        - name: "[1b] Anahtar düzeyi hüküm çağrısı (argv: canlı, repo)"
+          ansible.builtin.command:
+            argv:
+              - uv
+              - run
+              - python
+              - "{{ repo_kok_yerel }}/ops/state_fark_hukmu.py"
+              - "{{ state_tmp.path }}/{{ item }}"
+              - "{{ repo_kok_yerel }}/state/{{ item }}"
+            chdir: "{{ repo_kok_yerel }}"
+          loop: "{{ state_farkli }}"
+          delegate_to: localhost
+          become: false
+          register: state_hukum
+          changed_when: false
+          check_mode: false
+      rescue:
+        # BEYANLI-FARK 5
+        - name: "[1b] Hüküm süreci DÜŞTÜ — ölçülemedi, FAIL-CLOSED (hepsi ENGEL)"
+          # dagit.sh `_HUKUM_DUSTU` dalıyla birebir: hüküm süreci düşerse sonuç "fark yok"
+          # DEĞİLDİR, "ölçüm yapılamadı"dır ve ölçülemeyen hüküm 'temiz' sayılmaz. Dağıtım
+          # SÜRER (dagit.sh da sürerdi) ama hiçbir dosya kopyalanmaz — hüküm operatöründür.
+          ansible.builtin.set_fact:
+            state_hukum: {}
+            state_engel: "{{ state_engel + state_farkli }}"
+
+        - name: "[1b] Hüküm süreci düştü — operatöre"
+          ansible.builtin.debug:
+            msg: >-
+              [1b] HÜKÜM SÜRECİ DÜŞTÜ (uv run python) — {{ state_farkli | join(', ') }} için
+              ölçüm YOK. Kopyalama YAPILMADI (fail-closed). İndirilen canlı kopyalar geçici
+              dizinle birlikte SİLİNİR (aşağıdaki `always` — dagit.sh `trap rm -rf` ile
+              birebir); elle ölçüm: `ssh ubuntu@<A1> "cat {{ repo_kok }}/state/<dosya>"
+              > /tmp/<dosya>` → `uv run python ops/state_fark_hukmu.py /tmp/<dosya>
+              state/<dosya>`.
+
+      always:
+        - name: "[1b] Geçici dizin SİLİNİR (dagit.sh `trap 'rm -rf $STATE_TMP' EXIT` karşılığı)"
+          # TUR 3 (yeniden inceleme Y2c, 2026-09-08): dizin HİÇ silinmiyordu ve kontrolcünün
+          # `/tmp`inde canlı `goal.yaml`/`bounds.yaml` kopyaları HER dağıtımda birikiyordu.
+          # `always`: hüküm süreci düşse de (rescue kolu) temizlik koşar — dagit.sh'ın `EXIT`
+          # trap'i de her yolda temizler. `check_mode: false`: dizini açan `tempfile` görevi de
+          # `check_mode: false` taşır, yani KURU KOŞUMDA GERÇEKTEN açılır; silme kuru koşumda
+          # atlanırsa artık her kuru koşumda birikirdi. Yazım YALNIZ kontrolcünün geçici
+          # dizinine dokunur — canlıya ve depoya DEĞİL.
+          ansible.builtin.file:
+            path: "{{ state_tmp.path }}"
+            state: absent
+          delegate_to: localhost
+          become: false
+          run_once: true
+          check_mode: false
+          when: state_tmp.path is defined
+
+    - name: "[1b] KOPYALA hükmü verilenler (son `HUKUM=` satırı — dagit.sh `grep|tail -1` ile aynı)"
+      ansible.builtin.set_fact:
+        state_kopyala: "{{ state_kopyala + [item.item] }}"
+      loop: "{{ state_hukum.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item | default('?') }}"
+      when: >-
+        (item.stdout_lines | default([]) | select('match', '^HUKUM=') | list | last | default(''))
+        == 'HUKUM=KOPYALA'
+
+    - name: "[1b] ENGEL hükmü verilenler — canlı taraf elle değiştirilmiş görünüyor"
+      ansible.builtin.set_fact:
+        state_engel: "{{ state_engel + [item.item] }}"
+      loop: "{{ state_hukum.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item | default('?') }}"
+      when: >-
+        (item.stdout_lines | default([]) | select('match', '^HUKUM=') | list | last | default(''))
+        != 'HUKUM=KOPYALA'
+
+    - name: "[1b] Hüküm raporu (gerekçe satırları operatöre — `HUKUM=` satırı makineye)"
+      ansible.builtin.debug:
+        msg: >-
+          BİREBİR: {{ state_okunabilir | difference(state_farkli) }} ·
+          KOPYALANACAK (bakım penceresinde): {{ state_kopyala }} ·
+          OPERATÖRE BIRAKILAN: {{ state_engel }} — bu dosyalar SESSİZCE EZİLMEZ; canlı satır
+          kasıtlıysa önce repoya alın, değilse elle eşitleyin.
+          Gerekçeler:
+          {{ state_hukum.results | default([])
+             | map(attribute='stdout_lines') | flatten
+             | reject('match', '^HUKUM=') | list }}
+
+    # =========================================================================================
+    # [1c] SİSTEM BİRİMİ AYRIKLIĞI (2026-08-14 vakası: sessiz etkisizlik)
+    # =========================================================================================
+    # rsync `/opt/meridian`e yazar; systemd'nin OKUDUĞU dosya `/etc/systemd/system/`dedir.
+    # O gece bir `Environment=` satırı eklendi, suite geçti, dağıtım "TAMAM" dedi — ve ayar
+    # ETKİSİZ kaldı. Kapı A0 rolünün YAKINSADIĞI durumu ASSERT eder: ayrıksa "önce site.yml".
+    - name: "[1c] Repo birim dosyaları (kontrolcüde)"
+      ansible.builtin.find:
+        paths: "{{ repo_kok_yerel }}/deploy/oracle-a1"
+        patterns: "*.service"
+        file_type: file
+      delegate_to: localhost
+      become: false
+      register: birim_repo
+      check_mode: false
+
+    - name: "[1c] Birim adları"
+      ansible.builtin.set_fact:
+        birim_adlari: "{{ birim_repo.files | map(attribute='path') | map('basename') | sort | list }}"
+
+    - name: "[1c] /etc/systemd/system'de kurulu mu"
+      ansible.builtin.stat:
+        path: "/etc/systemd/system/{{ item }}"
+      loop: "{{ birim_adlari }}"
+      register: birim_etc_stat
+      check_mode: false
+
+    - name: "[1c] Kurulu / hiç kurulmamış ayrımı"
+      ansible.builtin.set_fact:
+        birim_kurulu: >-
+          {{ birim_etc_stat.results | selectattr('stat.exists') | map(attribute='item') | list }}
+        birim_kurulmamis: >-
+          {{ birim_etc_stat.results | rejectattr('stat.exists') | map(attribute='item') | list }}
+
+    - name: "[1c] Repo tarafı içerik"
+      ansible.builtin.slurp:
+        src: "{{ repo_kok_yerel }}/deploy/oracle-a1/{{ item }}"
+      loop: "{{ birim_kurulu }}"
+      delegate_to: localhost
+      become: false
+      register: birim_repo_icerik
+      check_mode: false
+
+    - name: "[1c] /etc tarafı içerik"
+      ansible.builtin.slurp:
+        src: "/etc/systemd/system/{{ item }}"
+      loop: "{{ birim_kurulu }}"
+      register: birim_etc_icerik
+      check_mode: false
+
+    - name: "[1c] Yönerge listeleri — TEK ÖLÇÜM (`when` de fark metni de BUNU okur)"
+      # Karşılaştırma YALNIZ `Anahtar=değer` satırlarında: birim dosyaları yorum ağırlıklıdır
+      # (mezar taşları, kanıt blokları) ve ham `diff` her yorum düzenlemesinde bağırırdı.
+      # Çıkarma ifadesi TEK YERDE durur: kapının koşulu ile fail_msg'in bastığı fark aynı
+      # listeden gelir — iki kopya sessizce ayrışır ve kapı bir farkı bastırırken başkasını
+      # basardı (tek-kaynak yasası).
+      ansible.builtin.set_fact:
+        birim_yonergeleri: >-
+          {{ birim_yonergeleri | default({}) | combine({item.0: {
+               'repo': ((item.1.content | b64decode).splitlines()
+                        | select('match', '^[A-Za-z][A-Za-z0-9]*=')
+                        | map('regex_replace', '[ \t]+$', '') | sort | list),
+               'etc': ((item.2.content | b64decode).splitlines()
+                       | select('match', '^[A-Za-z][A-Za-z0-9]*=')
+                       | map('regex_replace', '[ \t]+$', '') | sort | list)}}) }}
+      loop: "{{ birim_kurulu | zip(birim_repo_icerik.results, birim_etc_icerik.results) | list }}"
+      loop_control:
+        label: "{{ item.0 }}"
+
+    - name: "[1c] AYRIK birimler + HANGİ yönergenin ayrık olduğu"
+      # BEDEL YASASI (TUR 2, inceleme K5): dagit.sh ayrık birimde `diff … | grep '^[<>]'` ile
+      # SATIRI basıyordu ve dağıtımı DURDURMUYORDU. Playbook kapıyı sertleştirdi (plan kararı);
+      # çıktıyı da kısarsa operatör en sert anda en az bilgiyle kalır ve farkı görmek için ayrıca
+      # A1'e ssh atar. İki taraf zaten `slurp` edilmiş durumda — ek ölçüm maliyeti SIFIR.
+      ansible.builtin.set_fact:
+        birim_ayrik: "{{ birim_ayrik + [item] }}"
+        birim_ayrik_fark: >-
+          {{ birim_ayrik_fark + [item ~ ': ' ~ (birim_yonergeleri[item].repo
+             | symmetric_difference(birim_yonergeleri[item].etc) | sort | list)] }}
+      loop: "{{ birim_kurulu }}"
+      when: birim_yonergeleri[item].repo != birim_yonergeleri[item].etc
+
+    - name: "[1c] Kadans birimi HİÇ KURULMAMIŞ — RAPOR (kapı DÜŞÜRMEZ)"
+      # A0 rolünün kadans kapısı (`brifing_devri: false`) brifing/bekçi/karne birimlerini
+      # BİLEREK kurmaz. Bunu bir DURDURUCU yapmak, çaresi kendisinde olmayan bir kapı üretirdi:
+      # basılan reçete (`site.yml`) o birimleri ancak `-e brifing_devri=true` ile kurar.
+      ansible.builtin.debug:
+        msg: >-
+          [1c] kadans birimi /etc'de YOK:
+          {{ birim_kurulmamis | intersect(kadans_birim_dosyalari) }} — A0 rolünün kadans kapısı
+          kapalıysa BEKLENEN hâldir (kurulum: site.yml `-e brifing_devri=true`). Dağıtım SÜRÜYOR.
+      when: (birim_kurulmamis | intersect(kadans_birim_dosyalari)) | length > 0
+
+    # BEYANLI-FARK 6
+    - name: "[1c] KAPI — repo birimi ile /etc AYRIK olamaz (yakınsama A0 rolünün işidir)"
+      ansible.builtin.assert:
+        that:
+          - (birim_ayrik | length == 0)
+            and ((birim_kurulmamis | difference(kadans_birim_dosyalari)) | length == 0)
+        fail_msg: >-
+          SİSTEM BİRİMİ AYRIK — repodaki değişiklik YÜRÜRLÜKTE DEĞİL.
+          Yönerge farkı olanlar: {{ birim_ayrik }} · AYRIK YÖNERGELER: {{ birim_ayrik_fark }} ·
+          hiç kurulmamışlar (kadans DIŞI):
+          {{ birim_kurulmamis | difference(kadans_birim_dosyalari) }}.
+          Çare (kurulum bu playbook'un işi DEĞİL, A0 rolünündür):
+          `ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml`
+          — kadans birimleri (brifing/bekçi/karne) için aynı komuta `-e brifing_devri=true`
+          eklenir, yoksa rol onları BİLEREK kurmaz ve bu kapı yeniden düşer.
+          Ardından ilgili servis RESTART ister (bakım penceresi) ve etki
+          /proc/<MainPID>/environ üzerinden DOĞRULANMALIDIR — "kurdum" != "yürürlükte".
+        success_msg: "repo birimleri ile /etc yönergeleri aynı"
+
+    # =========================================================================================
+    # [F9] DAGİT-KAPSAMI-DIŞI CANLI ARTEFAKTLAR — içerik kapısı (RAPORLAR, ENGELLEMEZ)
+    # =========================================================================================
+    # Bu dosyalar rsync kapsamının DIŞINDA yaşar ve ELLE kurulur (`deploy/oracle-a1/deploy.sh`).
+    # Kapı sürüklenmeyi GÖRÜNÜR yapar; hüküm operatörün — kurulum bakım penceresinin işidir ve
+    # dagit'e kilitlenmiş bir kurulum kapısı ilk haftada sessizleşirdi.
+    - name: "[F9] Repo tarafı var mı (yoksa kıyas ZEMİNİ yok — liste bayat demektir)"
+      ansible.builtin.stat:
+        path: "{{ repo_kok_yerel }}/{{ item.repo }}"
+      loop: "{{ f9_ciftleri }}"
+      loop_control:
+        label: "{{ item.repo }}"
+      delegate_to: localhost
+      become: false
+      register: f9_repo_stat
+      check_mode: false
+
+    - name: "[F9] Canlı tarafı var mı"
+      ansible.builtin.stat:
+        path: "{{ item.canli }}"
+      loop: "{{ f9_ciftleri }}"
+      loop_control:
+        label: "{{ item.repo }}"
+      register: f9_canli_stat
+      check_mode: false
+
+    - name: "[F9] Ölçülebilir çiftler ve ölçülemeyenler (neden AYRIŞTIRILIR)"
+      # ÖLÇÜLEMEYEN ne "aynı"dır ne "ayrık" (uydurma yasağı) — ama nedeni ayrıştırılır: repo
+      # tarafı yoksa LİSTE bayatlamıştır, canlı tarafı yoksa artefakt HİÇ KURULMAMIŞtır.
+      # İkisi farklı iş kalemidir.
+      ansible.builtin.set_fact:
+        f9_olculebilir: >-
+          {{ f9_ciftleri | zip(f9_repo_stat.results, f9_canli_stat.results)
+             | selectattr('1.stat.exists') | selectattr('2.stat.exists')
+             | map(attribute='0') | list }}
+        f9_repo_yok: >-
+          {{ f9_ciftleri | zip(f9_repo_stat.results) | rejectattr('1.stat.exists')
+             | map(attribute='0.repo') | list }}
+        f9_canli_yok: >-
+          {{ f9_ciftleri | zip(f9_repo_stat.results, f9_canli_stat.results)
+             | selectattr('1.stat.exists') | rejectattr('2.stat.exists')
+             | map(attribute='0.repo') | list }}
+
+    - name: "[F9] Repo içerik"
+      ansible.builtin.slurp:
+        src: "{{ repo_kok_yerel }}/{{ item.repo }}"
+      loop: "{{ f9_olculebilir }}"
+      loop_control:
+        label: "{{ item.repo }}"
+      delegate_to: localhost
+      become: false
+      register: f9_repo_icerik
+      check_mode: false
+
+    - name: "[F9] Canlı içerik"
+      ansible.builtin.slurp:
+        src: "{{ item.canli }}"
+      loop: "{{ f9_olculebilir }}"
+      loop_control:
+        label: "{{ item.repo }}"
+      register: f9_canli_icerik
+      check_mode: false
+
+    # BEYANLI-FARK 11
+    - name: "[F9] AYRIK artefaktlar (bayt-özdeşlik; etiket TAM REPO YOLUdur, basename DEĞİL)"
+      # v266 dersi: `config.yaml`/`SOUL.md`/`distribution.yaml` her hermes profilinde bir kez
+      # geçer — basename raporu HANGİ profilin ayrıştığını söyleyemezdi.
+      ansible.builtin.set_fact:
+        f9_ayrik: "{{ f9_ayrik + [item.0.repo] }}"
+      loop: "{{ f9_olculebilir | zip(f9_repo_icerik.results, f9_canli_icerik.results) | list }}"
+      loop_control:
+        label: "{{ item.0.repo }}"
+      when: item.1.content != item.2.content
+
+    - name: "[F9] Özet — dagit bu dosyaları TAŞIMAZ (dağıtım ENGELLENMEZ)"
+      ansible.builtin.debug:
+        msg: >-
+          [F9] AYRIK (repo != canlı): {{ f9_ayrik }} ·
+          ölçülemedi (REPODA YOK — kapı listesi bayat): {{ f9_repo_yok }} ·
+          ölçülemedi (CANLIDA YOK — hiç kurulmamış olabilir): {{ f9_canli_yok }}.
+          Kurulum elle + bakım penceresi: `deploy/oracle-a1/deploy.sh`; birimler
+          `daemon-reload` ister. Dağıtım DURMADI — bu bir GÖRÜNÜRLÜK kapısıdır.
+
+    # =========================================================================================
+    # [F10] BİRİM İSTENEN-DURUM ANOMALİSİ (enabled + inactive) — TSK-092 R-0
+    # =========================================================================================
+    # `enabled + inactive` hâli bir Type=simple + Restart=always birimde TUTARSIZLIKTIR (ölçüldü
+    # A1, 2026-09-03: üç aday da simple/always, `TriggeredBy=` boş). İki şeyden biridir:
+    # (a) elle `stop` edilmiş — kalıcı niyet `disable --now` ile BEYAN edilmeliydi; (b)
+    # start-limit'e çarpıp DÜŞMÜŞ — bir ARIZA. İki hâlde de [4] penceresi birimi `is-enabled`dan
+    # türetip sessizce DİRİLTİR ve olayı MASKELER. OVERRIDE BAYRAĞI YOK, bilinçli.
+    #
+    # NEDEN `service_facts` DEĞİL (Task 2 kararı, ölçüldü 2026-09-08 — modül kaynağı okundu):
+    # `service_facts` systemd toplayıcısı `state` alanını `list-units`in SUB sütunundan türetir
+    # ve `running` DIŞINDAKİ HER ŞEYİ `stopped` diye tek kovaya atar — `inactive`, `activating`,
+    # `deactivating` ayırt EDİLMEZ. dagit.sh'ın ölçütü ise tam olarak `is-active == inactive`
+    # (ve [4]'ünki `!= inactive`). Fact'lerle yazılsaydı [4]'ün durdurma kümesi GÜVENSİZ yönde
+    # daralırdı (`activating` bir birim durdurulmazdı). Bu yüzden ölçüm `systemctl` ile,
+    # dagit.sh'ın sözlüğüyle BİREBİR yapılır.
+    # BEYANLI-FARK 4
+    - name: "[F10] Aday birimlerin ETKİNLİĞİ (is-enabled)"  # noqa: command-instead-of-module
+      # noqa gerekçesi: `systemd_service` bir birimi ETKİNLEŞTİRİR, DURUMUNU SORMAZ (modül
+      # `state`/`enabled`/`masked`/`daemon_reload`dan en az birini ZORUNLU kılar — ölçüldü).
+      # rc: 0 enabled · 1 disabled/static · 4 birim YOK.
+      ansible.builtin.command:
+        cmd: "systemctl is-enabled {{ item }}"
+      loop: "{{ birim_adaylari }}"
+      register: f10_enabled
+      changed_when: false
+      check_mode: false
+      failed_when: f10_enabled.rc not in [0, 1, 4]
+
+    - name: "[F10] Aday birimlerin AKTİFLİĞİ (is-active)"  # noqa: command-instead-of-module
+      # noqa gerekçesi: yukarıdakiyle aynı — salt okuma. rc: 0 active · 3 inactive/failed.
+      ansible.builtin.command:
+        cmd: "systemctl is-active {{ item }}"
+      loop: "{{ birim_adaylari }}"
+      register: f10_active
+      changed_when: false
+      check_mode: false
+      failed_when: f10_active.rc not in [0, 1, 3, 4]
+
+    - name: "[F10] Anomali listesi"
+      ansible.builtin.set_fact:
+        f10_anomali: >-
+          {{ birim_adaylari
+             | zip(f10_enabled.results | map(attribute='stdout') | map('trim'),
+                   f10_active.results | map(attribute='stdout') | map('trim'))
+             | selectattr('1', 'equalto', 'enabled')
+             | selectattr('2', 'equalto', 'inactive')
+             | map(attribute='0') | list }}
+
+    - name: "[F10] KAPI — enabled+inactive birim varsa DAĞITIM DURUR (override bayrağı YOK)"
+      ansible.builtin.assert:
+        that:
+          - f10_anomali | length == 0
+        fail_msg: >-
+          ENABLED ama INACTIVE: {{ f10_anomali }}. Bu, Type=simple + Restart=always bir birimin
+          normal hâli DEĞİLDİR. Ya elle durduruldu (niyet beyan edilmemiş) ya da start-limit'e
+          çarpıp düştü (arıza). Dağıtım devam etseydi [4] penceresi bu birimi is-enabled'dan
+          türetip SESSİZCE diriltir ve olayı maskelerdi.
+          Çare (birim başına birini seç, sonra dağıtımı yeniden koş):
+          beklenmeyen düşüşse `sudo systemctl start <birim>` (önce neden:
+          `journalctl -u <birim> -n 50 --no-pager`); kalıcı kapalılıksa
+          `sudo systemctl disable --now <birim>`.
+        success_msg: "enabled+inactive birim yok (istenen durum ile o anki durum tutarlı)"
+
+    # =========================================================================================
+    # [2] RSYNC — canlıya YAZAR
+    # =========================================================================================
+    - name: "[2] rsync (state/backups/.venv/.git ve vars'taki 28 sınıf HARİÇ)"
+      # check-mode'da `synchronize` kendiliğinden `--dry-run` ekler — bu adım kuru koşumda
+      # canlıya YAZMAZ. `--delete` ile koştuğu için dışlama listesi bir GÜVENLİK sınırıdır
+      # (`.dash.env` 2026-08-01'de tam bu yüzden silinmişti); liste `dagit_vars.yml`de TEK.
+      ansible.posix.synchronize:
+        src: "{{ repo_kok_yerel }}/"
+        dest: "{{ repo_kok }}/"
+        mode: push
+        delete: true
+        rsync_opts: "{{ rsync_opts_disla }}"
+      become: false
+
+    # =========================================================================================
+    # [3] uv sync --frozen — DEV GRUBU A1'E KURULMAZ
+    # =========================================================================================
+    # BEYANLI-FARK 2
+    - name: "[3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır): {{ uv_sync_bayrak }}"
+      # Karar 2026-08-01: kazanç yalnız disk değil DENETİM YÜZEYİ — [0b] `uv audit` kapısı ancak
+      # A1'de GERÇEKTEN koşan koda ait CVE'lerle dağıtımı bloklayabilmeli.
+      # BEYANLI DARALTMA: dagit.sh koşum anında `uv sync --help`e sorup `--no-default-groups`a
+      # yükseliyor; burada A0 defaults'undaki TABAN bayrak (`--no-dev`) kullanılır — ikisi de
+      # ÖLÇÜLEN aynı 17 paketi kaldırıyor (dagit.sh [3] şerhi + A0 defaults `uv_sync_bayrak`).
+      # Yükseltme Rol-1'in A1'de ölçtükten sonraki KARARIDIR, playbook'un sondası değil.
+      ansible.builtin.command:
+        cmd: "{{ uv_ikili }} sync --frozen {{ uv_sync_bayrak }}"
+        chdir: "{{ repo_kok }}"
+      become: true
+      become_user: "{{ meridian_kullanici }}"
+      environment:
+        HOME: "/home/{{ meridian_kullanici }}"
+      register: uv_sync
+      changed_when: >-
+        ('Installed' in uv_sync.stderr) or ('Uninstalled' in uv_sync.stderr)
+        or ('Installed' in uv_sync.stdout) or ('Uninstalled' in uv_sync.stdout)
+      # Check-mode duruşu AÇIKÇA beyanlıdır (v452 B16): `command` check-mode'da zaten atlanır,
+      # ama "atlandığı için sessiz" ile "atlanacağı yazıldığı için sessiz" aynı şey değildir —
+      # beyansız bir görev, ileride `check_mode: false` eklenip canlıya yazmaya başlayabilir.
+      when: not ansible_check_mode
+
+    - name: "[3] Bağımlılık değişimi — RAPOR (Yasa 6: `changed` sessiz kalmaz)"
+      # A0 rolünde bu satırın gerekçesi yazılı: `uv sync` KOŞAN süreçlerin altındaki venv'i
+      # değiştirir. Burada risk [4]'ün restart'ıyla kapanır — ama kapandığı GÖRÜNÜR olmalı,
+      # yoksa "hiçbir şey değişmedi" ile "değişti ve restart kapattı" aynı görünürdü.
+      ansible.builtin.debug:
+        msg: >-
+          [3] bağımlılıklar {{ 'DEĞİŞTİ' if uv_sync.changed else 'zaten güncel' }}
+          — koşan süreçler [4] penceresinde yeniden başlatılacak.
+      when: not ansible_check_mode
+
+    - name: "[3] check-mode'da ÖLÇÜLMEDİ — bağımlılıklar senkronlanmadı"
+      ansible.builtin.debug:
+        msg: >-
+          [3] `uv sync --frozen` check-mode'da ATLANDI. "Bağımlılıklar güncel" hükmü BU KOŞUMDA
+          KURULMADI — kuru koşum bu soruyu cevaplamaz.
+      when: ansible_check_mode
+
+    # =========================================================================================
+    # [4] BAKIM PENCERESİ — durdur → versiyonlu state kopyası → başlat
+    # =========================================================================================
+    - name: "[4] BAKIM PENCERESİ (TSK-092: istenen durum systemd'nin KENDİ beyanıdır)"
+      block:
+        - name: "[4] Pencere ölçümü — ETKİNLİK (is-enabled)"  # noqa: command-instead-of-module
+          # noqa gerekçesi: salt okuma (bkz. [F10]). Ölçüm rsync'ten SONRA yeniden yapılır —
+          # dagit.sh de [4] listelerini bu noktada türetir; [F10]'un ölçümü kapı içindi.
+          ansible.builtin.command:
+            cmd: "systemctl is-enabled {{ item }}"
+          loop: "{{ birim_adaylari }}"
+          register: pencere_enabled_ham
+          changed_when: false
+          check_mode: false
+          failed_when: pencere_enabled_ham.rc not in [0, 1, 4]
+
+        - name: "[4] Pencere ölçümü — AKTİFLİK (is-active)"  # noqa: command-instead-of-module
+          # noqa gerekçesi: salt okuma (bkz. [F10]).
+          ansible.builtin.command:
+            cmd: "systemctl is-active {{ item }}"
+          loop: "{{ birim_adaylari }}"
+          register: pencere_active_ham
+          changed_when: false
+          check_mode: false
+          failed_when: pencere_active_ham.rc not in [0, 1, 3, 4]
+
+        - name: "[4] Pencere haritaları (tek ölçüm, tek kaynak — stop ve start bunları okur)"
+          ansible.builtin.set_fact:
+            pencere_etkin: >-
+              {{ dict(birim_adaylari
+                 | zip(pencere_enabled_ham.results | map(attribute='stdout') | map('trim'))) }}
+            pencere_aktif: >-
+              {{ dict(birim_adaylari
+                 | zip(pencere_active_ham.results | map(attribute='stdout') | map('trim'))) }}
+
+        - name: "[4] KAPI — çekirdek birim `meridian` enabled DEĞİLSE pencere sessiz olamaz"
+          ansible.builtin.assert:
+            that:
+              - pencere_etkin['meridian'] == 'enabled'
+            fail_msg: >-
+              ÇEKİRDEK BİRİM 'meridian' enabled DEĞİL (durum:
+              '{{ pencere_etkin['meridian'] | default('(ölçülemedi)') }}') — motoru kapalı
+              bırakacak bir pencere sessiz olamaz. Bilinçliyse önce birimi `enable` edin ya da
+              bu dağıtımı elle yürütün. DAĞITIM DURDU.
+            success_msg: "çekirdek birim `meridian` enabled"
+
+        - name: "[4] DURDUR — YALNIZ `inactive` OLMAYAN aday (TSK-092 (a))"
+          # Ölçüt `!= inactive`, `= active` DEĞİL: `activating`/`deactivating`/`failed`
+          # hâllerinde süreç ya da artık durum VARDIR ve durdurmak GÜVENLİ yöndür; yalnız temiz
+          # `inactive` atlanır. Sabit üçlü `stop` paketi zaten inactive olan birime de stop
+          # gönderiyordu: gürültü ve daha kötüsü YANLIŞ BEYAN ("✓ durdu", oysa pencereye hiç
+          # girmemişti). Aday KÜMESİ sabittir (2026-08-24 `meridian-learn` UNUTMA vakası).
+          ansible.builtin.systemd_service:
+            name: "{{ item }}"
+            state: stopped
+          loop: "{{ birim_adaylari }}"
+          when: pencere_aktif[item] != 'inactive'
+
+        - name: "[4] Durdurulmayan aday — pencere öncesi inactive (TSK-092)"
+          ansible.builtin.debug:
+            msg: "{{ item }}: pencere öncesi inactive — stop gönderilmedi (TSK-092)"
+          loop: "{{ birim_adaylari }}"
+          when: pencere_aktif[item] == 'inactive'
+
+        # -----------------------------------------------------------------------------------
+        # [1b] VERSİYONLU STATE KOPYASI — DURDURMA SONRASI, BAŞLATMA ÖNCESİ (2026-08-02)
+        # Yer bilinçli: durdurmadan ÖNCE olsaydı koşan worker yapılandırmayı okurken altından
+        # değişirdi (`config.goal()` lru_cache'i eski değerle donmuş süreç = iki gerçek aynı
+        # anda); başlatmadan SONRA olsaydı yeni süreç ESKİ yapılandırmayla açılır ve etki bir
+        # sonraki restart'a kadar GÖRÜNMEZDİ. Hüküm [1b]'de verildi, burada yalnız UYGULANIR.
+        # -----------------------------------------------------------------------------------
+        - name: "[4] Yedek dizini — `backups/state`, `state/` DEĞİL (2026-08-07 MAKULLÜK bulgusu)"
+          # Yedek `state/`in İÇİNE yazıldığında `yeniden_hesap:orphan_state_files` dedektörü
+          # canlıda 7 dosya sayıyordu ve altısı bu satırın artığıydı — gerçek bulgular o
+          # gürültüde kayboluyordu. `backups/` rsync'ten HARİÇtir: yedekler ne ezilir ne silinir.
+          ansible.builtin.file:
+            path: "{{ repo_kok }}/backups/state"
+            state: directory
+            mode: "0755"
+          become: false
+          when: state_kopyala | length > 0
+
+        - name: "[4] Üstüne yazmadan ÖNCE yedekle (geri alınabilirlik önce)"
+          ansible.builtin.copy:
+            src: "{{ repo_kok }}/state/{{ item }}"
+            dest: "{{ repo_kok }}/backups/state/{{ item }}.bak-{{ dagitim_damgasi }}"
+            remote_src: true
+            mode: preserve
+          loop: "{{ state_kopyala }}"
+          become: false
+
+        - name: "[4] Versiyonlu state kopyası — repo → canlı"
+          ansible.builtin.copy:
+            src: "{{ repo_kok_yerel }}/state/{{ item }}"
+            dest: "{{ repo_kok }}/state/{{ item }}"
+            mode: "0644"
+          loop: "{{ state_kopyala }}"
+          become: false
+
+        - name: "[4] Kopya BAYT-ÖZDEŞ mi — okunur, VARSAYILMAZ"
+          ansible.builtin.slurp:
+            src: "{{ repo_kok }}/state/{{ item }}"
+          loop: "{{ state_kopyala }}"
+          register: state_kopya_dogrulama
+          when: not ansible_check_mode
+
+        - name: "[4] KAPI — doğrulanamayan kopya ile servis BAŞLATILMAZ"
+          # Yapılandırma belirsizken başlatmak, hangi yasayla koştuğu bilinmeyen bir motor
+          # demektir. Servisler bu noktada DURMUŞ hâldedir ve rescue reçeteyi basar.
+          ansible.builtin.assert:
+            that:
+              - item.content == state_repo_b64[item.item]
+            fail_msg: >-
+              state/{{ item.item }} kopyalandı AMA bayt-özdeş DOĞRULANAMADI. Yedek:
+              {{ repo_kok }}/backups/state/{{ item.item }}.bak-{{ dagitim_damgasi }}
+            success_msg: "state/{{ item.item }} bayt-özdeş doğrulandı"
+          loop: "{{ state_kopya_dogrulama.results | default([]) }}"
+          loop_control:
+            label: "{{ item.item | default('?') }}"
+          when: not ansible_check_mode
+
+        - name: "[4] Versiyonlu state kopyası YOK (fark yok ya da [1b] operatöre bıraktı)"
+          ansible.builtin.debug:
+            msg: "[4] kopyalanan versiyonlu state dosyası yok; operatöre bırakılan: {{ state_engel }}"
+          when: state_kopyala | length == 0
+
+        - name: "[4] daemon-reload — SİSTEM-GENELİ (TSK-152)"
+          # Yalnız başlatılacakları değil, A1'de YÜKLÜ HER timer'ı yeniden hesaplatır.
+          # `RandomizedDelaySec` taşıyan filo timer'ları bu yüzden `FixedRandomDelay=true`
+          # taşır (belgeli systemd riski: reload'da rastgele payın yeniden çekilmesi).
+          ansible.builtin.systemd_service:
+            daemon_reload: true
+
+        - name: "[4] BAŞLAT — YALNIZ `enabled` aday (istenen duruma saygı, TSK-092)"
+          # Sabit üçlü `start` paketi operatörün `disable --now` bıraktığı `meridian-learn`i İKİ
+          # gece üst üste geri açtı (2026-08-31 + 09-01). Beyanlı bedel: operatörün ELLE
+          # başlattığı disabled birim pencereden sonra kapalı kalır — kalıcılık isteyen `enable`
+          # eder (pano birim-anahtarı da tam bu sözlükle konuşur).
+          ansible.builtin.systemd_service:
+            name: "{{ item }}"
+            state: started
+          loop: "{{ birim_adaylari }}"
+          when: pencere_etkin[item] == 'enabled'
+
+        - name: "[4] Başlatılmayan aday — disabled, istenen duruma saygı (TSK-092)"
+          ansible.builtin.debug:
+            msg: "{{ item }}: disabled — pencere sonunda başlatılmadı (TSK-092)"
+          loop: "{{ birim_adaylari }}"
+          when: pencere_etkin[item] != 'enabled'
+
+        - name: "[4] Oturma payı — 8 sn (dagit.sh `sleep 8` ile birebir)"
+          # Bir yoklama DÖNGÜSÜ değil, tek atımlık bekleme: `Restart=always` bir birim start
+          # sonrası hemen `active` görünmeyebilir ve ölçüm o boşlukta yanlış okurdu.
+          ansible.builtin.wait_for:
+            timeout: 8
+          when: not ansible_check_mode
+
+        - name: "[4] Pencere sonrası durum — RAPOR (dagit.sh da burada yalnız BASAR)"  # noqa: command-instead-of-module
+          # noqa gerekçesi: salt okuma. BEYANLI SINIR: bu bir KAPI değildir — hüküm [5]
+          # healthz'de ve [5b] kod-tazelik değişmezindedir. dagit.sh'ın davranışı birebir.
+          ansible.builtin.command:
+            cmd: "systemctl is-active {{ item }}"
+          loop: "{{ birim_adaylari }}"
+          register: pencere_sonrasi
+          changed_when: false
+          check_mode: false
+          failed_when: pencere_sonrasi.rc not in [0, 1, 3, 4]
+
+        - name: "[4] Pencere sonrası durum özeti"
+          ansible.builtin.debug:
+            msg: >-
+              [4] pencere sonrası:
+              {{ dict(birim_adaylari
+                 | zip(pencere_sonrasi.results | map(attribute='stdout') | map('trim'))) }}
+
+        - name: "[4] check-mode'da ÖLÇÜLMEDİ — pencere AÇILMADI"
+          # `systemd_service`/`copy` check-mode'da hiçbir şeyi değiştirmez, `slurp` doğrulaması
+          # ve 8 sn'lik oturma payı ATLANIR. Kuru koşum "pencere sorunsuz kapandı" DEMEZ.
+          ansible.builtin.debug:
+            msg: >-
+              [4] bakım penceresi check-mode'da AÇILMADI: hiçbir birim durdurulmadı/başlatılmadı,
+              versiyonlu state kopyası yazılmadı ve bayt-özdeşlik doğrulanmadı. "Pencere temiz
+              kapanır" cümlesi BU KOŞUMDA kurulmadı.
+          when: ansible_check_mode
+
+      rescue:
+        - name: "[4] REÇETE — pencere yarıda kaldı, servisler DURMUŞ olabilir"
+          ansible.builtin.debug:
+            msg:
+              - "BAKIM PENCERESİ DÜŞTÜ. Hangi adımda düştüğü yukarıdaki hata satırındadır."
+              - >-
+                Servisler DURMUŞ hâlde KALMIŞ OLABİLİR — elle başlatma:
+                `sudo systemctl start {{ birim_adaylari | join(' ') }}`
+                (yalnız `is-enabled` = enabled olanları başlatın: istenen durum systemd'nin
+                kendi beyanıdır, TSK-092).
+              - >-
+                Versiyonlu state kopyası yarıda kaldıysa yedek yerinde:
+                `{{ repo_kok }}/backups/state/<dosya>.bak-{{ dagitim_damgasi }}` →
+                geri koyma: `cp -p {{ repo_kok }}/backups/state/<dosya>.bak-{{ dagitim_damgasi }}
+                {{ repo_kok }}/state/<dosya>`
+              - >-
+                Beyan ([B]) YAZILMADI: `state/dagitim.json` koşan sistemin gerçek hâlini
+                (eski sha) söylemeyi sürdürüyor. Onarım sonrası dağıtımı tekrar koşun
+                (rsync idempotent).
+
+        - name: "[4] DAĞITIM DURDU — yarım pencere 'başarılı' sayılmaz"
+          ansible.builtin.fail:
+            msg: >-
+              [4] bakım penceresi düştü; yukarıdaki reçete uygulanmadan bu dağıtım TAMAM
+              sayılamaz. Sessiz yutma YASAK (Yasa 4) — bu `fail` o yasanın karşılığıdır.
+
+    # =========================================================================================
+    # [5] DOĞRULAMA — healthz + son olay satırı
+    # =========================================================================================
+    # BEYANLI-FARK 9
+    - name: "[5] Doğrulama — healthz (RAPOR: dagit.sh da burada yalnız BASAR)"
+      # DAVRANIŞ dagit.sh ile BİREBİR (TUR 2 düzeltmesi, inceleme K4, 2026-09-08). dagit.sh 556:
+      # `curl -s -o /dev/null -w "healthz: %{http_code}\n"` — `-f` YOK, çıkış kodu okunmaz;
+      # yani [5] hiçbir zaman bir KAPI olmadı, hüküm [5a] ve [5b]'dedir. İlk hâli `status_code:
+      # 200` + `until/retries` ile bunu bir kapıya çevirmişti; bedeli ölçüldü: healthz'in
+      # BELGELİ "nabız 900 sn'den eski" hâli 503 döndürür ve o turda [5a]/[5b]/[B] HİÇ koşmazdı —
+      # yeni kod canlıda çalışırken `state/dagitim.json` eski sha'da kalırdı, yani [B]'nin var
+      # olma sebebi olan ortamlar-arası kıyas tam da o turda kör kalırdı.
+      # Uç yalnız A1'in içinden erişilir. 503 bir ARIZA DEĞİL, adlandırılmış bir DURUMDUR.
+      ansible.builtin.uri:
+        url: "{{ saglik_url }}"
+        method: GET
+        status_code: [200, 503]
+        return_content: false
+      register: saglik
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: "[5] healthz durumu — ADIYLA (sessiz 503 yok)"
+      ansible.builtin.debug:
+        msg: >-
+          {{ '[5] healthz: 200 (nabız taze)' if saglik.status == 200
+             else '[5] healthz: 503 — worker nabzı bayat (>900 sn); süreç canlı olabilir.
+                   HÜKÜM BURADA DEĞİL: kod tazeliği [5b] değişmezinde ölçülür ve orada DURUR.' }}
+      when: not ansible_check_mode
+
+    - name: "[5] check-mode'da ÖLÇÜLMEDİ — healthz sorulmadı"
+      ansible.builtin.debug:
+        msg: >-
+          [5] healthz check-mode'da SORULMADI (uç A1'in içinden çağrılır) ve son olay satırı da
+          bu koşumun hükmü değildir. "Canlı ayakta" cümlesi BU KOŞUMDA kurulmadı.
+      when: ansible_check_mode
+
+    - name: "[5] Doğrulama — son olay satırı (defterin nabzı)"
+      ansible.builtin.command:
+        cmd: "tail -1 {{ repo_kok }}/state/events.jsonl"
+      register: son_olay
+      changed_when: false
+      check_mode: false
+      failed_when: son_olay.rc not in [0, 1]
+
+    - name: "[5] Son olay"
+      ansible.builtin.debug:
+        msg: "[5] son olay: {{ (son_olay.stdout | default(''))[:200] }}"
+
+    # =========================================================================================
+    # [5a] DOĞRULAMA-TOKEN ANAHTAR KONTROLÜ (TSK-148 — dağıtım #13 vakası)
+    # =========================================================================================
+    # healthz YALNIZ "200 döndü" der, GÖVDEYİ doğrulamaz: token'sız istek de çoğu zaman 200
+    # döner, gövdesi `{"detail": ...}` olur. Sınıf [5b]'nin "active != yeni kod"unun uç-katmanı
+    # eşidir. SIR: token DEĞERİ hiçbir Ansible değişkenine GİRMEZ — betik `.dash.env`i A1'in
+    # KENDİ İÇİNDE okur (`--env-dosya` varsayılanı) ve yalnız VAR/YOK hükmü döner; uç gövdeleri
+    # de süreç içinde ayrıştırılır, hiçbir yerde basılmaz. `slurp` + `no_log` ile token'ı
+    # kontrolcüye TAŞIMAK bu güvenceden ZAYIF olurdu (sır ağdan geçer, belleğe girer).
+    - name: "[5a] Doğrulama-token anahtar kontrolü (script — gömülü python YOK)"
+      ansible.builtin.script:
+        # YOL `repo_kok_yerel`DEN (TUR 3, yeniden inceleme Y4, 2026-09-08): dağıtılan kod ile
+        # doğrulama betikleri AYNI ağaçtan gelmeli. `playbook_dir` türevi, `-e repo_kok_yerel=…`
+        # ya da `-e worktree_gec=true` ile koşulan bir turda kodu BİR ağaçtan, doğrulamayı
+        # BAŞKA ağaçtan alırdı — ve "canlıda hangi ağacın sha'sı" sorusunu ikiye bölerdi.
+        cmd: >-
+          {{ repo_kok_yerel }}/deploy/oracle-a1/dogrulama_anahtar.py
+          {% for uc in dogrulama_uclari %} --uc '{{ uc.yol }}|{{ uc.anahtar }}|{{ uc.tip }}'{% endfor %}
+        executable: /usr/bin/python3
+      # EN AZ YETKİ, dagit.sh ile BİREBİR (TUR 2, inceleme K7): dagit.sh bu kontrolü
+      # `ssh ubuntu@…` ile, yani `ubuntu` olarak koşturur (`sudo` YOK). Play 2 `become: true`
+      # olduğu için beyansız bir `script` ROOT koşardı; oysa betik yalnız `.dash.env`i (ubuntu'nun
+      # 0600 dosyası) okur ve 127.0.0.1'e istek atar — root yetkisi GEREKMEZ.
+      become: false
+      register: dogrulama
+      changed_when: false
+      failed_when: dogrulama.rc not in [0, 1]
+      when: not ansible_check_mode
+
+    - name: "[5a] Uç raporu (VAR/YOK — gövde SIZMAZ)"
+      ansible.builtin.debug:
+        msg: "[5a] {{ dogrulama.stdout_lines | default([]) }}"
+      when: not ansible_check_mode
+
+    - name: "[5a] ÖLÇÜLEMEDİ — token yok (FAIL-OPEN, beyanlı)"
+      # Token DOSYASI okunamazsa DÜŞMEZ: token yerel geliştirme makinesinde de olmayabilir ve
+      # o durumda ölçüm YOKTUR, "ihlal" DEĞİLDİR (uydurma yasağı). Jeton TAM EŞİTLİKLE
+      # karşılaştırılır — betiğin `OLCULEMEDI` sabiti çağıranın SÖZLEŞMESİDİR.
+      ansible.builtin.debug:
+        msg: >-
+          [5a] ÖLÇÜLEMEDİ: token yok (fail-open). Uç gövdeleri BU KOŞUMDA doğrulanmadı —
+          "doğru gövde döndü" cümlesi kurulmadı.
+      when:
+        - not ansible_check_mode
+        - (dogrulama.stdout | default('') | trim) == 'OLCULEMEDI token yok'
+
+    - name: "[5a] KAPI — anahtar eksikse DAĞITIM DURUR (beyan [B] YAZILMAZ)"
+      # HÜKÜM ÇIKIŞ KODUNDAN okunur, çıktıyı ikinci kez grep'lemekten DEĞİL (tek kaynak).
+      # `OLCULEMEDI yonlendirme <kod>` de buraya düşer: 3xx bir ÖLÇÜM sayılmaz (fail-closed) —
+      # yönlendirme izlenseydi pano token'ı `Location`daki hosta giderdi.
+      ansible.builtin.assert:
+        that:
+          - dogrulama.rc == 0
+        fail_msg: >-
+          [5a] doğrulama-token anahtar kontrolü İHLALDE/ÖLÇÜLEMEDİ (rc={{ dogrulama.rc }}):
+          {{ dogrulama.stdout_lines | default([]) }} — beyan ([B]) YAZILMAZ, çünkü "dağıtıldı"
+          cümlesi doğrulanamamış bir gövdeye dayanırdı.
+        success_msg: "[5a] üç ucun da beklenen anahtarı VAR"
+      when: not ansible_check_mode
+
+    - name: "[5a] check-mode'da ÖLÇÜLMEDİ — uç gövdeleri doğrulanmadı"
+      ansible.builtin.debug:
+        msg: "[5a] `script` check-mode'da ATLANDI; uç gövdeleri BU KOŞUMDA doğrulanmadı."
+      when: ansible_check_mode
+
+    - name: "[5a] state/ artık kontrolü (SALT OKUMA — hiçbir şey taşınmaz/silinmez)"
+      # ARTIK BEKÇİSİ (2026-08-07): `state/`e yedek bırakan tek yol bu playbook değil, bir
+      # ALIŞKANLIK (elle `sed` yedekleri). Kodla kapatılamaz, GÖRÜNÜR kılınabilir — pencere
+      # kapanırken operatör onu aynı oturumda görür, bir hafta sonra makullük kartında değil.
+      ansible.builtin.find:
+        paths: "{{ repo_kok }}/state"
+        patterns:
+          - "*.bak-*"
+          - "*.sedbak"
+          - "*.bak"
+        file_type: file
+        recurse: false
+      register: state_artik
+      check_mode: false
+
+    - name: "[5a] state/ artık raporu"
+      ansible.builtin.debug:
+        msg: >-
+          {{ 'state/ temiz — yedek artığı yok'
+             if (state_artik.files | length == 0)
+             else 'state/ yedek artığı VAR: '
+                  ~ (state_artik.files | map(attribute='path') | map('basename') | sort | list)
+                  ~ ' → orphan_state_files dedektörü bunları sayar. Temizlik (TAŞIR, silmez):'
+                  ~ ' bash ops/state_yetim_temizle.sh (kuru koşu; sonra --uygula)' }}
+
+    # =========================================================================================
+    # [5b] KOD-TAZELİK DEĞİŞMEZİ — "active" != "yeni kodu koşuyor"
+    # =========================================================================================
+    # ÖLÇÜLEN VAKA (2026-08-24): [5] "iki birim de active" dedi ve bu DOĞRUYDU; ama
+    # `meridian-learn` 11 sa 19 dk boyunca eski bytecode'u koşuyordu. Doğru bir cümle, ANLAMSIZ
+    # bir güvence. DEĞİŞMEZ: süreç başlangıcı >= en yeni `<kök>/meridian/**/*.py` mtime'ı.
+    # NEDEN [B]'DEN ÖNCE: beyan "bu sha canlıda" yazar; süreçlerden biri eski kodu koşuyorsa o
+    # cümle YANLIŞTIR ve dosya eski sha'da kalmalıdır (operatör kararı 2026-08-24).
+    - name: "[5b] Kod-tazelik değişmezi (script — gömülü kabuk YOK)"
+      # ÇIKIŞ KODU: 0 = IHLAL yok · 1 = en az bir IHLAL. `failed_when` yalnız SÖZLEŞME DIŞI
+      # kodları düşürür; hüküm bir sonraki assert'tedir (böylece IHLAL satırları operatöre
+      # BASILABİLİR — sessiz bir `fail` reçetesiz kalırdı).
+      ansible.builtin.script:
+        # YOL `repo_kok_yerel`DEN — gerekçe [5a]'daki şerhte (yeniden inceleme Y4).
+        cmd: "{{ repo_kok_yerel }}/deploy/oracle-a1/kod_tazelik.sh {{ repo_kok }}"
+        executable: /bin/bash
+      # EN AZ YETKİ, dagit.sh ile BİREBİR (TUR 2, inceleme K7): dagit.sh bunu da `ubuntu` olarak
+      # koşturur. Betik `systemctl show` + `/proc/<pid>` okur ve kaynak mtime'ı gezer — hepsi
+      # `ubuntu`ya açıktır; root koşum sessiz bir yetki genişlemesi olurdu.
+      become: false
+      register: kod_tazelik
+      changed_when: false
+      failed_when: kod_tazelik.rc not in [0, 1]
+      when: not ansible_check_mode
+
+    - name: "[5b] Bulgu satırları (IHLAL / BEKLENEN / OLCULEMEDI)"
+      # `OLCULEMEDI <ne>` satırları rc 0 ile gelir: kapı DÜŞMEZ ama satır ADIYLA basılır —
+      # ölçülemeyen değişmez 'sağlandı' sayılmaz (uydurma yasağı).
+      ansible.builtin.debug:
+        msg: >-
+          {{ '[5b] koşan tüm meridian birimleri dağıtılan kodu taşıyor'
+             if (kod_tazelik.stdout_lines | default([]) | length == 0)
+             else '[5b] bulgular: ' ~ (kod_tazelik.stdout_lines | default([])) }}
+      when: not ansible_check_mode
+
+    - name: "[5b] Kum-havuzu birimleri → beyanın `sandbox_eski_kod` alanı (TSK-140)"
+      # BEKLENEN = birimin KENDİ beyanı (Description "kum havuzunda"): süreç başlangıç kodunu
+      # taşır ve bitince yeni kodla açılır. IHLAL değil; "bu sha canlıda" cümlesinin dürüst
+      # dipnotudur. Boşsa [] — "yok" ile "ölçülmedi" ayrılır.
+      ansible.builtin.set_fact:
+        sandbox_eski_kod: >-
+          {{ kod_tazelik.stdout_lines | default([])
+             | select('match', '^BEKLENEN\s')
+             | map('regex_replace', '^BEKLENEN\s+(\S+).*$', '\1') | list }}
+
+    - name: "[5b] KAPI — IHLAL varsa DAĞITIM YARI-ETKİLİ (beyan [B] YAZILMAZ)"
+      ansible.builtin.assert:
+        that:
+          - kod_tazelik.rc == 0
+        fail_msg: >-
+          DAĞITIM YARI-ETKİLİ: kod diskte, süreç eski.
+          {{ '[5b] ÖLÇÜLEMEDİ (çıktı BOŞ, rc=' ~ kod_tazelik.rc ~ ') — betik koşamadı; ölçülemeyen
+             değişmez sağlandı sayılmaz. Bak: bash ' ~ repo_kok ~ '/deploy/oracle-a1/kod_tazelik.sh'
+             if (kod_tazelik.stdout_lines | default([]) | length == 0)
+             else 'Bulgular: ' ~ (kod_tazelik.stdout_lines | default([])) }}
+          Beyan YAZILMADI — `state/dagitim.json` koşan sistemin gerçek hâlini (eski sha)
+          söylemeyi sürdürüyor. Onarım: `sudo systemctl restart <birim>` → ardından dağıtımı
+          tekrar koşun (rsync idempotent).
+        success_msg: "[5b] koşan her birim dağıtılan kodu taşıyor"
+      when: not ansible_check_mode
+
+    - name: "[5b] check-mode'da ÖLÇÜLMEDİ — süreç/kaynak yaşı sorulmadı"
+      ansible.builtin.debug:
+        msg: >-
+          [5b] `script` check-mode'da ATLANDI. "Koşan her birim yeni kodu taşıyor" cümlesi BU
+          KOŞUMDA kurulmadı — ve [B] beyanı da yazılmayacak.
+      when: ansible_check_mode
+
+    # =========================================================================================
+    # [F9] ÖZET TEKRARI — dağıtımın SONUNDA (dagit.sh'ın ikinci özetiyle birebir)
+    # =========================================================================================
+    # dagit.sh özeti İKİ KEZ basar ve nedenini kendi metninde yazar ("Dağıtım ENGELLENMEDİ —
+    # özet sonda tekrarlanır"): kapı yukarıda koştu ve bulgusunu orada bastı, ama uzun bir
+    # dağıtım çıktısında o satırlar "DAĞITIM TAMAM"ı okuyan gözün çok üstünde kalır.
+    # Raporlanan ama GÖRÜLMEYEN sürüklenme, hiç raporlanmamış gibidir (bedel yasası; tur-3
+    # yeniden incelemesi Y2a — tekrar playbook'ta DÜŞMÜŞTÜ).
+    - name: "[F9] Özet (tekrar) — dağıtım sonu, ilk özet çıktının çok yukarısında kaldı"
+      ansible.builtin.debug:
+        msg: >-
+          [F9] AYRIK (repo != canlı): {{ f9_ayrik }} ·
+          ölçülemedi (REPODA YOK — kapı listesi bayat): {{ f9_repo_yok }} ·
+          ölçülemedi (CANLIDA YOK — hiç kurulmamış olabilir): {{ f9_canli_yok }}.
+          dagit bu dosyaları TAŞIMAZ; kurulum elle + bakım penceresi:
+          `deploy/oracle-a1/deploy.sh` (birimler `daemon-reload` ister).
+      when:
+        - (f9_ayrik | length > 0) or (f9_repo_yok | length > 0) or (f9_canli_yok | length > 0)
+        - not ansible_check_mode
+
+    - name: "[F9] Dağıtım-sonu tekrarı BASILMADI — kuru koşumda dağıtım yok"
+      ansible.builtin.debug:
+        msg: >-
+          [F9] dağıtım-sonu tekrarı check-mode'da BASILMADI (dagit.sh'ın kuru koşumu da `exit 0`
+          ile [F9] kapısından sonra biter). Yukarıdaki [F9] özeti bu koşumun hükmüdür.
+      when:
+        - (f9_ayrik | length > 0) or (f9_repo_yok | length > 0) or (f9_canli_yok | length > 0)
+        - ansible_check_mode
+
+    # =========================================================================================
+    # [B] DAĞITIM-BEYANI (P0-b; ortamlar-arası #2)
+    # =========================================================================================
+    # OKUYUCU (YASA 6): envanter/denetim turlarının ortamlar-arası kıyası + "canlıda hangi sha
+    # koşuyor" sorusunu soran operatör. Süreç-içi hiçbir kıyas iki ortamı aynı anda göremez;
+    # kapısı bu beyandır.
+    #
+    # CANLI STATE'E YAZIM — BİLİNÇLİ İSTİSNA: "canlı worker koşarken state'e yazma" yasağının
+    # konusu worker'ın OKUDUĞU/YAZDIĞI defter ve yapılandırmadır; `dagitim.json`u hiçbir canlı
+    # süreç okumaz/yazmaz ve dağıtım anı zaten bakım anıdır.
+    #
+    # NEDEN `copy: content:` DEĞİL (Task 2 kararı, 2026-09-08): `tests/test_ansible_a0_v451.py`
+    # Çivi 3a `deploy/ansible/` altındaki HER YAML'da modül argümanı `content:`i YASAKLAR
+    # (satır içi içerik/sır sınıfı) ve `.j2` şablonu da yasaktır. Yazım bu yüzden dagit.sh'ın
+    # KENDİ iki adımıyla yapılır: `cat > <tmp> && mv <tmp> <hedef>` → `tee` + `mv`. Atomiklik
+    # (tmp + mv) korunur: yarım JSON, ortamlar-arası kapıyı "ölçülemedi"ye değil YANLIŞ hükme
+    # götürürdü.
+    # BEYANLI-FARK 10
+    - name: "[B] Dağıtım-beyanı — BEŞ ALAN (dagit.sh printf şablonuyla aynı ad ve sıra) + 1"
+      # ALTINCI ALAN `worktree_gec` BEYANLI UZANTIDIR (TUR 2, inceleme K1, 2026-09-08): ana
+      # checkout kapısının bilinçli istisnası KULLANILDIYSA beyan onu söyler. Kayıt bırakmayan
+      # bir istisna, istisna değildir — "canlıda hangi ağacın sha'sı koşuyor" sorusu aksi hâlde
+      # ancak canlıdaki kodu okuyarak cevaplanabilirdi. İlk beş alanın adı ve SIRASI dagit.sh
+      # `printf` şablonuyla AYNIDIR (v452 B7; uzantı `BEYAN_EK_ALANLARI`nda ADIYLA listelidir).
+      ansible.builtin.set_fact:
+        dagitim_beyani:
+          deployed_sha: "{{ hostvars['localhost'].dagit_sha }}"
+          dagitildi_utc: "{{ hostvars['localhost'].ansible_date_time.iso8601 }}"
+          dagitan_host: "{{ hostvars['localhost'].ansible_nodename }}"
+          kirli_gec_kullanildi: "{{ hostvars['localhost'].kirli_gec_kullanildi | bool }}"
+          sandbox_eski_kod: "{{ sandbox_eski_kod | default([]) }}"
+          worktree_gec: "{{ hostvars['localhost'].worktree_gec_kullanildi | bool }}"
+
+    - name: "[B] Beyan (operatör çıktısına da basılır — yerel kopya dosyaya YAZILMAZ)"
+      # Repoda state dosyası biriktirmek [1b]'nin kapattığı ayrışmayı geri açardı.
+      ansible.builtin.debug:
+        msg: "{{ dagitim_beyani | to_json }}"
+
+    # BEYANLI-FARK 3
+    - name: "[B] Beyanı geçici dosyaya yaz (atomik yazımın 1. adımı)"
+      # YAZILAN BAYT ile KIYASLANAN BAYT tek kaynaktan gelir (`beyan_metni`, play `vars`ı).
+      # `stdin_add_newline: false`: modülün kendi satır sonunu eklemesi, beklenen içerikle
+      # yazılanı sessizce ayrıştırırdı — satır sonu `beyan_metni`nin İÇİNDEDİR (dagit.sh'ın
+      # `printf '…\n'` şablonuyla aynı bayt).
+      ansible.builtin.command:
+        argv:
+          - tee
+          - "{{ repo_kok }}/state/.dagitim.json.tmp"
+        stdin: "{{ beyan_metni }}"
+        stdin_add_newline: false
+      become: false
+      changed_when: true
+      when:
+        - not ansible_check_mode
+        - beyan_metni is string
+
+    - name: "[B] Beyanı yerine al (atomik yazımın 2. adımı — yarım JSON okunamaz)"
+      ansible.builtin.command:
+        argv:
+          - mv
+          - "{{ repo_kok }}/state/.dagitim.json.tmp"
+          - "{{ repo_kok }}/state/dagitim.json"
+      become: false
+      changed_when: true
+      when:
+        - not ansible_check_mode
+        - beyan_metni is string
+
+    - name: "[B] BEYAN YAZILMADI — beyan METİN değil (yerel-tip dönüşümü)"
+      # Yukarıdaki `| string` düşerse beyan bir dict olur ve yazılsaydı `state/dagitim.json`
+      # GEÇERSİZ JSON taşırdı — ortamlar-arası kıyas "ölçemedi" değil YANLIŞ hüküm verirdi
+      # (okuyucu: meridian/api.py `dagitim` alanı + pano Gözetim satırı). Yazmamak ve YÜKSEK
+      # SESLE söylemek, sessizce bozuk yazmaktan iyidir.
+      ansible.builtin.debug:
+        msg: >-
+          [B] BEYAN YAZILMADI: beyan metni {{ beyan_metni | type_debug }} tipinde — Ansible'ın
+          yerel-tip dönüşümü JSON'u nesneye çevirmiş (play `vars`: `beyan_metni` zincirinin
+          sonunda `| string` olmalı). `state/dagitim.json` eski sha'da KALDI; onarımdan sonra
+          dağıtımı tekrar koşun (rsync idempotent).
+      when:
+        - not ansible_check_mode
+        - beyan_metni is not string
+
+    - name: "[B] Yazılan beyan okunur"
+      # `beyan_metni is string` KOŞULU DA BURADA (TUR 3, yeniden inceleme Y6, 2026-09-08):
+      # yukarıdaki `tee`/`mv` atlandığında (beyan METİN değilse) bu `slurp` hedefi HİÇ
+      # yazılmamış olabilir — taze bir hostta görev "file not found" ile DÜŞER ve zaten
+      # yüksek sesle raporlanmış bir kol, bir ARIZAYA dönüşürdü. Yazılmayan beyan bir arıza
+      # değil, ADIYLA basılmış bir hükümdür.
+      ansible.builtin.slurp:
+        src: "{{ repo_kok }}/state/dagitim.json"
+      register: beyan_canli
+      when:
+        - not ansible_check_mode
+        - beyan_metni is string
+
+    - name: "[B] Beyan BAYT-ÖZDEŞ mi — ENGEL DEĞİL, ama SESSİZ de değil"
+      # Dağıtım bu noktada ZATEN tamamdır ([4] başlattı, [5] doğruladı); beyanın yazılamaması
+      # dağıtımı geri almaz, yalnız ortamlar-arası kıyası BU TUR İÇİN kör bırakır.
+      # KIYAS `beyan_metni` İLEDİR (TUR 2 düzeltmesi, inceleme K2, 2026-09-08). İlk hâli
+      # beklenen içeriği BURADA yeniden kuruyordu (`(dagitim_beyani | to_json) ~ '\n'`) ve o
+      # `'\n'` FOLDED bir skalerin içindeydi: Ansible onu satır sonuna ÇEVİRMEZ, iki karakter
+      # olarak taşır — yani kıyas HER KOŞUMDA yanlış çıkar ve kapı, yazım başarılıyken bile
+      # "YAZILAMADI" derdi. Beklenen içerik artık tek yerde (play `vars`: `beyan_metni`).
+      ansible.builtin.debug:
+        msg: >-
+          {{ '[B] beyan canlıya yazıldı — bayt-özdeş doğrulandı'
+             if ((beyan_canli.content | b64decode) == beyan_metni)
+             else '[B] BEYAN YAZILAMADI/DOĞRULANAMADI — ortamlar-arası kıyas bu dağıtımı GÖREMEZ.
+                   Elle yaz (yukarıdaki JSON ile): ssh ubuntu@<A1> "cat > '
+                  ~ repo_kok ~ '/state/dagitim.json"' }}
+      # `beyan_metni is string`: kıyas, okunmamış bir `slurp`un üzerinden yapılamaz (Y6).
+      when:
+        - not ansible_check_mode
+        - beyan_metni is string
+
+    - name: "[B] check-mode'da YAZILMADI — beyan eski sha'da kaldı"
+      ansible.builtin.debug:
+        msg: >-
+          [B] beyan check-mode'da YAZILMADI. `state/dagitim.json` koşan sistemin o anki hâlini
+          söylemeyi sürdürüyor — kuru koşum bir dağıtım DEĞİLDİR.
+      when: ansible_check_mode
