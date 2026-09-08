@@ -40,6 +40,19 @@ DROPPED yalnız öneri, karar operatörün. Bu belge ROADMAP'in yerine geçmez; 
 | 4 | **bar_arsivle ilk `--uygula`** | A1'de 260 sembol yeniden yazım (ARAC_SURUMU göçü) — bakım penceresi | hepsi-ya-hiç manifest |
 | 5 | TSK-138 dilim-2 kararı | hızlı model (nemotron-super) mi, iç bütçe 240 s mi | iki gün iki düşüş sınıfı |
 
+### 0d. Sabah güncellemesi (2026-09-08 06:1x–08:4xZ, Rol-1; operatör direktifleri: rotasyon şimdi · A1 fazı şimdi · bar göçü şimdi · "ikisi birden")
+
+| §0c sırası | Kalem | Durum | Kapı / sonraki adım |
+|---|---|---|---|
+| 1 | OpenRouter ×2 rotasyonu | ⏳ İKİ deneme geri aldı (06:13Z hazırlık beklemeden ölçtü → D4 `_hazir_bekle`, dağıtım #30 3403ee3 07:17Z; 07:23Z hindsight-api 60 s tavanını aştı → D5 birim-başı hazırlık + dar restart, rapor hazır) + D6 (Hindsight failover üyelerinin 6 anahtar kopyası `_kopyalar` tablosunda YOKTU — rotasyon sonrası üyeler eski anahtarla kalırdı) implementer'da | D6 → tarama → merge → RUNBOOK → **dağıtım #31** → operatöre "hazır" + aynı komut; eski anahtarlar hâlâ geçerli, dosyalar yedekle birebir |
+| 2 | A1 fazı (dagit → playbook) | ✅ Task 1 MAIN'DE 20d3c59 (tur 2; çekişmeli inceleme 11 ayakta → 6 kök; en ağırı: `kod_tazelik.sh` A1'de hiç ölçmüyordu, BSD-önce stat) + RUNBOOK f2205db | Task 2 (`dagit.yml` 17 kapı) + Task 3 (sarmalayıcı + 9 test taşıması) implementer'ları; ilk playbook dağıtımı operatör gözetiminde; notlar plan dosyasında |
+| 3 | Dağıtım #29 | ✅ 04:33Z d3b1752 (suite #37 11466/0); EDG-086 penceresi açık | — |
+| 4 | bar_arsivle `--uygula` | ✅ 06:3xZ 260/260 kaynak_hash, 12 s, idempotent | — |
+| 5 | TSK-138 dilim-2 | anlatıldı; karar bekliyor: yeniden-üretim nemotron-super (120 s bütçe) + "cevaplayan model" ölçümü | operatör kararı |
+| — | Ücretsiz model kayması | minimax m3/m2.7 :free ÜCRETLİ (404) → kapı yedekleri super (3403ee3); Gemma ×2 429 ("Gemma'yı unut"); Hindsight reflect ultra→super→**ling-3.0-flash-fin** zinciri (nemotron ailesi reflect'te araç çağrısını METİN üretti = EDG-074 sınıfı; sabahki "ultra" seçeneği hafıza kontrolsüzdü — EDG-077/074 notları) | kalite R4 okuması açık kalem; sohbet zinciri varsayılanı kozmetik (kapı model alanını yok sayar) |
+| — | Zihin modelleri | ✅ "ikisi birden": 10 sayfaya günlük cron 05:00Z (min 82800 s) + 11/11 elle tazelendi (08:25Z; yeni zincir 51/52 çağrı) | yarın 05:00Z ilk otomatik tazeleme kontrolü |
+| — | Push | ✅ main = origin (f2205db) | — |
+
 ## 1. Bu gece (uçuşta / zamanlanmış — bildirimli)
 
 | Kalem | Durum | Kapı / sonraki adım |
