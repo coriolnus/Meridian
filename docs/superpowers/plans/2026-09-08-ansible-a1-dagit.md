@@ -80,3 +80,9 @@ her taşıma aynı iddiayı korur; taşıma kaydı dosya başlığına), `docs/R
 
 ### Task 4 — Rol-1: merge → tam suite → `./dagit.sh --dry-run` (= playbook `--check --diff`) A1'e → **ilk gerçek dağıtım OPERATÖR GÖZETİMİNDE** (bakım penceresi) → RUNBOOK/CLAUDE.md
 → bir sürüm sonra dagit.sh silinir (ROADMAP TSK-176 A1 DONE).
+
+## Task 1 kapanış notları (Rol-1, 2026-09-08 08:3xZ) — Task 2/3 brief'lerine taşınacak
+- Merge 20d3c59 (tur 2; çekişmeli inceleme 11 ayakta → 6 kök kapandı, yeniden inceleme 8/8 mutasyon). Ayrıntı: scratchpad `inceleme_H.json`, `inceleme_H_tur2.md`.
+- Task 2: `state_versiyonlu` beşinci liste `dagit_vars.yml`de YOK (git ls-files türevi) — Task 2 kapsamı. `kod_tazelik.sh`/`artefakt_tazelik.py` `OLCULEMEDI*` satırları `exit 0`/rc 2 ile döner (eski davranış birebir); playbook bu jetonları uyarı/`failed_when` olarak işlemeli (karar Task 2'de). `dagit.sh` [5a] "yetkisiz/eski gövde?" gerekçe cümlesi yönlendirme jetonunda yanıltıcı (hüküm doğru, cümle eski) — sarmalayıcı yazılırken düzeltilir. `systemctl` hiç yoksa `kod_tazelik.sh` rc 0 döner (birebir; kabul).
+- Task 3: v266 artık v452'den `KOD_TAZELIK_CAGRI` ithal ediyor (döngüsüz: v266 → {v367, v452}); v452 A1–A3 `dagit.yml`e taşınırken bu ithal de taşınır. `KOD_TAZELIK_CAGRI` çağrı BİÇİMİNİ sabitler (satır başı atama + `${SSH[@]}` + tam yol) — bilinçli katılık.
+- Mikro kalem: v452 `_GNU_STAT_SIM` ilk satırı `File:` yerine `Inodes:` olmalı ki A4d6 üretimde ateşlenen `*[!0-9]*` kolunu ölçsün (bugün iki kol aynı cümleyi basıyor, sahte-yeşil yok).

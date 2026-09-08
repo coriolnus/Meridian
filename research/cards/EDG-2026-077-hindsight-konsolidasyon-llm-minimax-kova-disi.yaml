@@ -85,3 +85,9 @@ hukum_2026_09_06: >
   2026-09-08 07:1xZ (Rol-1): minimax m3/m2.7 :free OpenRouter'da ÜCRETLİ oldu (404 'unavailable for free' — doğrudan ölçüldü; Hindsight reflect 06:15Z üç denemede 404).
   Operatör kararı: REFLECT + CONSOLIDATION → nvidia/nemotron-3-ultra-550b-a55b:free, REFLECT_LLM_1 (yedek slot) → nemotron-super; kapı son-çare yedekleri → nemotron-super.
   Bu kartın minimax ölçümü tarihçedir; yeni modelle konsolidasyon kalitesi yeniden ölçülmedi (açık kalem).
+  2026-09-08 08:1xZ (Rol-1, DÜZELTME): "REFLECT → nemotron-ultra" kararı EDG-074'ün ölçülmüş hükmüne (reflect için ultra ELVERİŞSİZ) çarptı — seçenek
+  hafıza kontrolü yapılmadan sunulmuştu. Canlı: 11 sayfalık elle tazelemede 6 op 3 retry sonrası FAILED (ReflectToolCallError: araç çağrısı METİN
+  '[[{"name":"search_mental_models"…'); super'a alınınca AYNI sınıf (4 op daha). Sonda (13 ücretsiz araç-beyanlı model × 2, reflect biçimli tools):
+  yapısal 2/2 → ling-3.0-flash-fin (1,0 s) · ling-3.0-flash-sante · cohere/north-mini-code · dots-3-note-preview; nemotron ultra 1/2 (58 s) /
+  super 0/2 (overloaded); gemma+poolside 429; lightning timeout; inkling 403. REFLECT = ling-fin → ling-sante → cohere → dots (failover);
+  CONSOLIDATION ultra'da kaldı (delta_ops araçsız, 2/2 başarılı). Kalite ölçülmedi (açık kalem: yeni modelle sayfa içeriği R4 emsali elle okunur).

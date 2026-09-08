@@ -100,3 +100,6 @@ hukum_2026_09_06: >
   Yan bulgular: openrouter/free dağılımı (kova taze, 20 çağrı) 10 farklı model (içerik-güvenlik sınıflandırıcısı 2, 2,6B model 3) —
   router hiçbir künyeli iş için kullanılmaz; sonda: dots-3 ve cohere-north boş içerik (JSON kaldı) → TSK-095 kapanış notu.
 
+  2026-09-08 08:1xZ (Rol-1): K1 sınıfı YENİDEN görüldü — minimax ücretli olunca reflect ultra'ya (sonra super'a) alındı, 10 op ReflectToolCallError
+  ile düştü (araç çağrısı metin). Bu kartın hükmü (ultra elverişsiz) karar öncesi okunmamıştı. Yeni reflect zinciri EDG-077 notunda (ling-3.0-flash-fin
+  birincil). Yan bulgu düzeltmesi: dots-3 ve cohere-north bugünkü sondada yapısal tool_calls üretti (o günkü boş içerik sürekli değil).

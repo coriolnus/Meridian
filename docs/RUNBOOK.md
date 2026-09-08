@@ -42,7 +42,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **26 ops betiği** başlığıyla okundu
+- **27 ops betiği** başlığıyla okundu
 - **98 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -1312,6 +1312,66 @@ SAYILMAZ (drop-in'deki dikkat kalemi: polkit UID'ye bakar, yeteneğe değil — 
 betik test-ateşlemesini kendisi koşar; bildirimin TELEFONA düştüğünü operatör doğrular.
 GERİ ALMA: ./h3_tur2_sertlestir.sh --geri-al <birim> → iki conf da silinir + daemon-reload
 (drop-in'in meziyeti budur: geri alma bir dosya silmek kadar ucuz; birim dosyasına dokunulmaz).
+```
+
+## `deploy/oracle-a1/kod_tazelik.sh` {#deploy-oracle-a1-kod-tazelik-sh}
+
+```
+deploy/oracle-a1/kod_tazelik.sh — [5b] KOD-TAZELİK DEĞİŞMEZİ: "active" ≠ "yeni kodu koşuyor".
+
+NE ÖLÇER:  süreç başlangıcı  >=  en yeni  <kök>/meridian/**/*.py  mtime'ı
+
+ÖLÇÜLEN VAKA (2026-08-24). Dağıtım doğrulaması "iki birim de active" dedi ve bu DOĞRUYDU; ama
+`meridian-learn` 00:34:40'tan beri koşuyordu ve en yeni kaynak 11:53:16'ydı. Doğru bir cümle,
+ANLAMSIZ bir güvence verdi: `active`, sürecin hangi KODU taşıdığı hakkında hiçbir şey söylemez.
+Yarı-etkili bir dağıtım "TAMAM" damgası aldı.
+
+KAPSAM ELLE SAYILMAZ, ExecStart'TAN TÜRETİLİR. Birim adları yazılsaydı yarın eklenen bir birim
+aynı sessizlikle unutulurdu — düzeltilmek istenen sınıfın ta kendisi. Kural: `running` durumda VE
+ExecStart'ı kurulum kökünden python/uv koşan her `meridian*` birimi. `meridian-litestream`
+(litestream ikilisi, Python değil) kendiliğinden DIŞARIDA kalır.
+
+KUM HAVUZU İSTİSNASI (TSK-140, 2026-09-04): birim dosyasının KENDİ beyanı (Description "kum
+havuzunda") varsa süreç başlangıç kodunu taşır ve bitince yeni kodla açılır — bu IHLAL değil
+BEKLENEN'dir; çağıran onu dağıtım beyanına (`sandbox_eski_kod`) yazar, kapı DÜŞMEZ. Ad listesi
+YOK: işaret birimden türer, yarın eklenen kum-havuzu birimi de aynı yoldan geçer.
+
+NEREDEN GELDİ: gövde `dagit.sh`ın [5b] adımında `ssh '<çok satırlı kabuk>'` olarak gömülüydü.
+TSK-176 Faz A1'de dosyaya çıkarıldı — `deploy/ansible/dagit.yml` bunu `script:` ile koşturacak
+ve gömülü çok-satır kabuk bir Ansible görevinde YASAK (A0 kuralı + 2026-07-30 IndentationError
+vakası). Taşımada İKİ beyanlı değişiklik var, ölçüldü 2026-09-08:
+(1) Kullanılmayan `bas=$(systemctl show … ExecMainStartTimestampMonotonic)` ataması DÜŞTÜ —
+hiçbir satır onu okumuyordu (YASA 6: okuyucusuz yazım yok).
+(2) mtime taraması İKİ PLATFORMLU: önce GNU `find -printf` (A1'in yolu — eski gömülü
+gövdenin TEK yolu), boş dönerse BSD `find -exec stat -f`. İkinci dal betiğin geliştirici
+makinesinde de ÖLÇÜLEBİLMESİ içindir — çiviyi platforma bağımlı kılmak, "koşamıyorum"
+ile "temiz"i karıştırmaktır.
+
+SIRA BİR AYRINTI DEĞİL, KAPININ KENDİSİ (düzeltme turu 2, ölçüldü 2026-09-08). İlk yazımda
+sonda BSD-ÖNCELİKLİydi ve kapı A1'de HİÇ ÖLÇMÜYORDU: GNU'da `stat -f` FORMAT DEĞİL
+`--file-system`tir, yani `stat -f '%m %N' <dosya>` başarısız OLMAZ — format dizgesi bir operand
+sayılıp stderr'e hata düşer (`2>/dev/null` yutar), gerçek dosya için dosya-sistemi raporu
+STDOUT'a basılır. `_ENYENI` boş dönmediği için GNU yedeği hiç koşmaz, `_YENI` sayı yerine
+`Inodes:` olur ve `[ N -lt "Inodes:" ]` hata verip YANLIŞ döner: kapı her koşumda "temiz" der.
+İki onarım birlikte gerekir — sıra TERSİNE, ve türetilen değer SAYISAL KAPIdan geçer: sıra tek
+başına yarınki bir biçim değişikliğine karşı yine kör kalırdı (uydurma yasağı: ölçülemeyen
+değer "temiz" DEĞİLDİR).
+
+KULLANIM:  bash deploy/oracle-a1/kod_tazelik.sh [kurulum-kökü]     (varsayılan /opt/meridian)
+
+ÇIKTI — satır başına bir bulgu (bulgu yoksa hiçbir satır):
+IHLAL     <birim> <yaş-sn> <en-yeni-kaynak>   süreç eski kodu koşuyor
+BEKLENEN  <birim> <yaş-sn> <en-yeni-kaynak>   kum-havuzu birimi (TSK-140)
+OLCULEMEDI <ne>                                ölçüm yapılamadı — "temiz" DEĞİLDİR
+ÇIKIŞ KODU: 0 = IHLAL yok (dağıtım sürer) · 1 = en az bir IHLAL (çağıran DURUR, beyan yazılmaz)
+
+NEDEN BEYANDAN ÖNCE KOŞAR: beyan `state/dagitim.json`a "bu sha canlıda" yazar. Süreçlerden biri
+eski kodu koşuyorsa o cümle YANLIŞTIR. Kapı önce düşerse dosya eski sha'da kalır — koşan
+sistemin GERÇEK hâli odur (operatör kararı 2026-08-24). Onarım: birimi döndür, dağıtımı tekrar
+koş (rsync idempotent).
+
+OKUYUCU (YASA 6): dagit.sh [5b] adımı · deploy/ansible/dagit.yml (Task 2) ·
+tests/test_ansible_dagit_v452.py bölüm A4d.
 ```
 
 ## `deploy/oracle-a1/litestream_kur.sh` {#deploy-oracle-a1-litestream-kur-sh}
