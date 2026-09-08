@@ -26,11 +26,16 @@ DEĞİŞMEZLER — hiçbir istem, model ya da araç bunları gevşetemez:
   * ŞEMA DIŞI ÇAĞRI REDDEDİLİR VE SAYILIR (`sema_disi_n`); modele hata METNİ döner, araç KOŞMAZ.
   * KOTA ÇAĞRININ KENDİ KAYDINDAN SAYILIR (`agent_calls.jsonl`, `kind="sohbet"`) —
     `skill_gorus_llm.kota_durumu` deseni. Ölçülemeyen kota DOLMAMIŞ SAYILMAZ: model çağrılmaz.
+    KAPI HER AYAK ÖNCESİ SORULUR (mesaj başında bir kez DEĞİL): kotanın birimi ayak denemesidir,
+    tek bir mesaj tur×zincir kadar çağrı üretebilir ve tavanı fark edilmeden aşabilirdi
+    (inceleme bulgusu, 2026-09-08).
 
 OKUR: `state/` (trade_plans, portfolio, regime, events, agent_calls, approvals), `research/cards/`,
 `MERIDIAN_ENGINEERING_LOG.md`, `ops/olay_sorgu.py` + `ops/bar_sorgu.py` (muhafız İTHAL edilir,
 kopyalanmaz) ve A1'de `deploy/hindsight/hafiza_ara.sh` alt süreci. `secrets.json`/`.env` HİÇBİR
-araçta okunmaz.
+araçta okunmaz — ve bu artık bir NİYET DEĞİL, ÖLÇÜLMÜŞ BİR KAPIDIR: `olay_sorgu`nun DuckDB
+bağlantısı görünüm materyalize edildikten sonra `enable_external_access=false` ile kapanır
+(`_harici_erisimi_kapat`), yani serbest SELECT dosya sistemine hiç uzanamaz.
 
 YASA 6 — OKUYUCU: `sohbet.jsonl`in dış okuyucusu `GET /api/sohbet` (pano geçmişi) ve
 EDG-2026-086'nın B3 sayımıdır; `approvals.jsonl`inki `GET /api/approvals` gelen kutusudur.
@@ -42,6 +47,7 @@ import json
 import os
 import re
 import subprocess
+import threading
 import time
 import typing
 
@@ -75,6 +81,41 @@ ARAC_CIKTI_TAVANI = 8 * 1024        # araç çıktısının modele giden kesiti 
 CEVAP_TAVANI_KR = 20_000            # modelden okunan metin tavanı
 ZAMAN_ASIMI_S = float(os.environ.get("SOHBET_TIMEOUT_S", "180"))
 MAX_TOKENS = int(os.environ.get("SOHBET_MAX_TOKENS", "4096"))
+
+#: SQL ARAÇLARININ KAYNAK TAVANLARI (inceleme bulgusu, 2026-09-08). `olay_sorgu` model yazımı
+#: SQL'i CANLI API işçisinin ipliğinde koşturur; `ops/olay_sorgu.py::SERTLESTIRME` yalnız temp
+#: dizinini, iki eklenti bayrağını ve saat dilimini ayarlar — bellek ve süre SINIRSIZDI. Ölçüldü
+#: (duckdb 1.5.5, bu makine): `duckdb.connect()` varsayılanı `memory_limit` sistem RAM'inin
+#: ~%80'i, `threads` = çekirdek sayısı. A1 dört çekirdeklidir ve `serve.sh` TEK uvicorn işçisi
+#: koşar: sınırsız bir çapraz-birleştirme panonun tamamını (halt/ack dahil) düşürebilirdi.
+SORGU_BELLEK_TAVANI = os.environ.get("SOHBET_SQL_BELLEK", "512MB")
+SORGU_IPLIK_TAVANI = 1
+#: Kullanıcı/model SQL'inin duvar-saati tavanı. Aşımda `con.interrupt()` → `AracReddi` (ARIZA
+#: DEĞİL ret: hiçbir satır okunmadı, kaynak atfı da üretilmez).
+SORGU_TAVANI_S = float(os.environ.get("SOHBET_SQL_TAVANI_S", "20"))
+
+#: SOHBET TURLARI SERİLEŞTİRİLİR (inceleme bulgusu, 2026-09-08). `api_sohbet` gövdeyi
+#: `run_in_threadpool`e devrettiği günden beri iki `POST /api/sohbet` GERÇEKTEN paralel koşuyor
+#: (öncesinde tek olay döngüsünde zorunlu olarak sıraya giriyorlardı). O eşzamanlılığın KAZANCI
+#: sıfırdır — yüzey tek operatörlüdür — ama BEDELİ ölçülmüştür: (a) `_arac_oneri_yaz` kimliği
+#: "say → ekle" ile üretir ve aynı saniyede iki iplik AYNI `SO-…` kimliğini yazabilir, (b) kota
+#: kapısı "oku → çağır → yaz" dizisidir ve iki iplik aynı kalanı görüp tavanı aşabilir.
+#: KİLİT PARK ETMEZ (`acquire(blocking=False)`, yeniden inceleme 2026-09-08). İlk hâli sıraya
+#: sokuyordu ve o sıra ÖLÇÜLEBİLİR bir bedel taşıyordu: `api_sohbet` gövdeyi `run_in_threadpool`e
+#: verdiği için bekleyen her istek paylaşılan anyio iş havuzunun BİR JETONUNU tutuyor (ölçüldü:
+#: anyio 4.14.2 varsayılanı 40 jeton) ve kilidin en kötü tutuluşu `max_tur() × zincir ×
+#: ZAMAN_ASIMI_S`tir. Yığılan istekler (UI yeniden-deneme fırtınası, takılmış upstream) havuzu
+#: tüketip `api.py`deki 90+ SENKRON rotanın tamamını susturabilirdi — tur-1'in olay döngüsünden
+#: kaldırdığı sınıfın iş havuzuna taşınmış hâli.
+#: BEDEL BEYANI (Bedel yasası): KAZANILAN — bekleyen iplik yok, jeton tutulmuyor, cevap ANINDA
+#: dönüyor. KAYBEDİLEN — ikinci mesaj artık SIRAYA GİRMİYOR, REDDEDİLİYOR: operatör onu birinci
+#: tur bitince ELLE tekrar göndermek zorunda (`MESGUL_CEVABI` bunu ADIYLA söyler). Tek operatörlü
+#: bir yüzeyde bu, hem sıradan hem de yanlış planı icra eden bir kimlik çakışmasından ucuzdur.
+_SOHBET_KILIDI = threading.Lock()
+
+#: Kilit başkasındayken dönen cevabın METNİ (tek kaynak: uç, pano ve çivi hep bunu okur).
+MESGUL_CEVABI = ("meşgul — bir sohbet turu zaten sürüyor. O tur bitince mesajı tekrar gönder: "
+                 "model ÇAĞRILMADI, kota harcanmadı ve deftere satır yazılmadı.")
 
 #: Zincir: tool_calls'ı YAPISAL üreten modeller (EDG-074 dersi: nemotron-ultra araç çağrısını
 #: METİN olarak üretmişti; gemma zincire GİRMEZ — 00:05Z sondasında 429).
@@ -170,7 +211,12 @@ def kota_durumu() -> dict:
 
     HALKA TAŞMASI DÜRÜSTÇE BEYAN EDİLİR: telemetri defteri halkasaldır. Defter tavana dolmuşken
     en eski satır da bugüne aitse sayım bir ALT SINIRDIR → `bugun=None` ve sohbet KOŞMAZ:
-    ölçülemeyen bir kota, dolmamış sayılamaz."""
+    ölçülemeyen bir kota, dolmamış sayılamaz.
+
+    `dolu` ALANI `_kota_cevabi(kota) is not None` İLE BİREBİR AYNI HÜKÜMDEN TÜRER (tek kaynak,
+    B2 UI incelemesi bulgusu 2026-09-08): pano bu alanı okuyup `dolu === true` iken sohbet
+    girişini kapatıyor. Ayrı bir eşik hesabı (`bugun >= tavan` burada TEKRAR yazılsaydı)
+    döngünün gerçek kapı kararıyla sessizce ayrışabilirdi — `_kota_cevabi`nin KENDİSİ çağrılır."""
     from . import agent_telemetry as at
     rows = [r for r in store.read_jsonl(CAGRI_DEFTERI) if isinstance(r, dict)]
     bugun = dt.datetime.now(dt.timezone.utc).date().isoformat()
@@ -179,11 +225,14 @@ def kota_durumu() -> dict:
     en_eski = min((str(r.get("ts") or "") for r in rows), default="")
     tavan = kota_tavani()
     if rows and len(rows) >= at.CAGRI_SATIR_TAVANI and en_eski.startswith(bugun):
-        return {"bugun": None, "kalan": None, "tavan": tavan, "defter_n": len(rows),
+        kota = {"bugun": None, "kalan": None, "tavan": tavan, "defter_n": len(rows),
                 "neden": ("telemetri halkası (%d satır) bugünün içinde dolmuş — bugünkü çağrı "
                           "sayımı ALT SINIRDIR, kota ÖLÇÜLEMEDİ" % len(rows))}
-    return {"bugun": n, "kalan": max(0, tavan - n), "tavan": tavan, "defter_n": len(rows),
-            "neden": None}
+    else:
+        kota = {"bugun": n, "kalan": max(0, tavan - n), "tavan": tavan, "defter_n": len(rows),
+                "neden": None}
+    kota["dolu"] = _kota_cevabi(kota) is not None
+    return kota
 
 
 # =================================================================================================
@@ -264,74 +313,296 @@ def _arac_alarm_oku(args: dict, baglam: dict | None = None) -> str:
     return _json(notify.inbox(limit=max(1, min(n, 60))))
 
 
+def _sorgu_sinirlari(con) -> None:
+    """SQL araçlarının bağlantısına BELLEK ve İPLİK tavanı koyar (`SORGU_BELLEK_TAVANI` sabitleri).
+
+    NEDEN (inceleme bulgusu, 2026-09-08). Model yazımı SQL canlı API işçisinin ipliğinde koşar;
+    `ops/olay_sorgu.py::SERTLESTIRME` bir KUM HAVUZU değil bir DAVRANIŞ ayarıdır (temp dizini,
+    eklenti bayrakları, saat dilimi) ve kaynak tavanı TAŞIMAZ. Tavansız bir çapraz-birleştirme
+    (`SELECT count(*) FROM olaylar a, olaylar b, olaylar c`) A1'in RAM'ini ve dört çekirdeğini
+    tüketir; `serve.sh` TEK işçi koştuğu için pano bütünüyle cevapsız kalırdı.
+
+    BEDEL BEYANI (Bedel yasası): `threads=1` meşru büyük sorguyu YAVAŞLATIR ve `memory_limit`
+    gerçekten büyük bir birleştirmeyi "Out of Memory" ile DÜŞÜRÜR. Kaybedilen budur ve dürüsttür:
+    bu araç bir analitik ambar değil, sohbetin okuma penceresidir — düşen sorgunun metni modele
+    döner, döngü ölmez. Tavanlar ortamdan (`SOHBET_SQL_BELLEK`) ayarlanabilir ki A1'de ölçülen
+    bir ihtiyaç kodu değiştirmeden karşılanabilsin."""
+    con.execute(f"SET memory_limit='{SORGU_BELLEK_TAVANI}'")
+    con.execute(f"SET threads={int(SORGU_IPLIK_TAVANI)}")
+
+
+class _ZamanTavani:
+    """`with _ZamanTavani(con):` — gövde `SORGU_TAVANI_S`i aşarsa `con.interrupt()` ile kesilir.
+
+    ÖLÇÜLDÜ (duckdb 1.5.5, 2026-09-08): `interrupt()` ayrı bir iplikten çağrıldığında koşan sorgu
+    `duckdb.InterruptException` ile düşer (`SELECT sum(x) FROM range(1e11)` 0,51 s'de kesildi).
+    Zamanlayıcı gövde biterken HER KOŞULDA iptal edilir; aksi hâlde geç ateşlenen bir `interrupt`
+    AYNI bağlantıdaki BİR SONRAKİ sorguyu keserdi.
+
+    Bayrak (`asildi`) çağırana "kesen biz miydik" sorusunu cevaplatır: `InterruptException`ı
+    tavana YAZMAK, başka bir sebeple gelen bir kesintiyi uydurmak olurdu."""
+
+    def __init__(self, con, saniye: float | None = None):
+        self._con = con
+        self._saniye = float(SORGU_TAVANI_S if saniye is None else saniye)
+        self._zamanlayici: threading.Timer | None = None
+        self.asildi = False
+
+    def _kes(self) -> None:
+        self.asildi = True
+        self._con.interrupt()
+
+    def __enter__(self) -> "_ZamanTavani":
+        self._zamanlayici = threading.Timer(self._saniye, self._kes)
+        self._zamanlayici.daemon = True
+        self._zamanlayici.start()
+        return self
+
+    def __exit__(self, *_) -> bool:
+        if self._zamanlayici is not None:
+            self._zamanlayici.cancel()
+        return False
+
+
+#: Kapının kapattığı görünüm ve materyalizasyon sırasında kullanılan ARA tablo adı. Görünüm hemen
+#: kendi adına yeniden adlandırılır; ara ad yalnız bu üç ifadelik geçiş boyunca vardır.
+_MAT_GORUNUM = "olaylar"
+_MAT_TABLO = f"_{_MAT_GORUNUM}_materyalize"
+
+
+def _harici_erisimi_kapat(con) -> None:
+    """`olaylar` görünümünü MATERYALİZE eder, sonra bağlantının DOSYA SİSTEMİ erişimini KAPATIR.
+
+    NEDEN (EDG-2026-086 güvenlik bulgusu, 2026-09-08). `ops.olay_sorgu.select_kapisi` bir YAZMA
+    muhafızıdır, KUM HAVUZU DEĞİL — ve bunu kendi başlığında beyan eder: `SELECT * FROM
+    read_csv('/etc/hosts')` meşru bir SELECT'tir ve GEÇER. O sözleşme "bu yüzey bir bota/panoya
+    bağlanırsa okuma yüzeyi de sınırlanmalıdır" diye biter; TSK-012 dalga-B tam da o bağlamayı
+    yaptı: sorgunun çıktısı artık ÜÇÜNCÜ TARAF bir model sağlayıcıya gidiyor. Ad kara listesi
+    (`read_\\w+`, `glob`, …) yarın eklenen bir tablo fonksiyonunu ve `SELECT * FROM '/etc/passwd'`
+    biçimindeki dizge-literal kaynağını KAÇIRIRDI; DuckDB'nin kendi ayarı ikisini de kapsar.
+
+    ÖLÇÜLDÜ (duckdb 1.5.5, 2026-09-08):
+      * `SET enable_external_access=false` sonrası `read_text`/`read_blob`/`read_csv_auto`/`glob`/
+        `read_json_objects` ve dizge-literal kaynak PermissionException veriyor;
+      * ayar GERİ AÇILAMIYOR ("Cannot enable external access while database is running") — yani
+        kullanıcı SQL'i kapıyı kendi arkasından açamaz;
+      * `olaylar` bir GÖRÜNÜMDÜR ve TEMBELDİR: ayar kapandıktan sonra defteri YENİDEN okumaya
+        kalkar ve meşru sorgu da düşer. SIRA BU YÜZDEN ZORUNLUDUR — önce satırlar tabloya alınır.
+
+    BEDEL ÖLÇÜLDÜ (Bedel yasası): materyalizasyon canlı defter ölçeğinde (28.000 satır / 8,3 MB)
+    0,05 s ve satırlar bellekte tutulur; çivi `tests/test_sohbet_duzeltme_v444.py`de 2 s tavanıyla
+    pinlidir. Kaybedilen şey tembellik: eskiden 200 satırlık `fetchmany` erken çıkabiliyordu.
+
+    BEDEL İKİ DÜNYADA ÖLÇÜLÜR (inceleme bulgusu, 2026-09-08). `olaylar` görünümü jsonl İLE
+    `state/olaylar/*.parquet` ARŞİVİNİN BİRLEŞİMİDİR (`ops.olay_sorgu.gorunumu_kur`); ilk ölçüm
+    arşivin BOŞ olduğu kum havuzunda yapılmıştı ve üretimdeki şekli hiç görmüyordu. Çivi artık
+    arşivli varyantı da (sentetik `state/olaylar/…parquet`) aynı tavanla ölçer. Arşiv AYLIK
+    BÜYÜR ve bu tavan onunla birlikte yaşlanır: CANLI ölçüm dağıtımda Rol-1'in işidir (A1'de bir
+    kez ölçülür ve karta yazılır) — buradaki sayı sentetik ölçeğin hükmüdür, canlının değil.
+
+    TEK ÇAĞIRAN `_arac_olay_sorgu`DUR VE GÖRÜNÜM ADI ARTIK PARAMETRE DEĞİLDİR (yeniden inceleme,
+    2026-09-08). `bar_sorgu` bir süre bu kapıdan geçiyordu; kaldırıldı, gerekçesi
+    `_arac_bar_sorgu`nun başlığındadır (özeti: orada modelin denetimindeki hiçbir metin SQL'e
+    ulaşmıyor, yani kapı SIFIR saldırı yüzeyi kapatıp aylık büyüyen arşivi materyalize ettiriyordu).
+    Parametre, çağıranı kalmadığı gün düştü: kullanılmayan bir genellik yarın "burası da geçiyor"
+    diye okunurdu. Serbest SQL alan İKİNCİ bir araç doğduğu gün parametre geri gelir — ve o gün
+    bedeli ölçülmüş bir gerekçeyle gelir."""
+    con.execute(f"CREATE TABLE {_MAT_TABLO} AS SELECT * FROM {_MAT_GORUNUM}")
+    con.execute(f"DROP VIEW {_MAT_GORUNUM}")
+    con.execute(f"ALTER TABLE {_MAT_TABLO} RENAME TO {_MAT_GORUNUM}")
+    con.execute("SET enable_external_access=false")
+
+
 def _arac_olay_sorgu(args: dict, baglam: dict | None = None) -> str:
-    """`state/events.jsonl` üzerinde YALNIZ SELECT. Muhafız `ops.olay_sorgu`dan İTHALDİR."""
+    """`state/events.jsonl` üzerinde YALNIZ SELECT. Muhafız `ops.olay_sorgu`dan İTHALDİR.
+
+    İKİ KAPI, İKİ SORU: `select_kapisi` "bu sorgu YAZAR MI?" diye sorar (tek ifade, SELECT tipi);
+    `_harici_erisimi_kapat` "bu sorgu DOSYA OKUYABİLİR Mİ?" sorusunu motora sordurur. İkincisi
+    olmadan birincisi keyfi yerel dosya okumasına açıktı.
+
+    ATIF YALNIZ GERÇEKTEN OKUNAN SATIRA VERİLİR (inceleme bulgusu, 2026-09-08). Eskiden çözümleme
+    hataları (katalog/binder) METİN olarak dönüyordu; `_arac_kos` normal dönüşü BAŞARI sayıp
+    `atif=True` verdiği için hiç veri okunmamış bir çağrı `kaynaklar` listesine giriyor ve
+    EDG-2026-086'nın uydurma sayımının PAYDASINI şişiriyordu. Artık HİÇBİR hata yolu metinle
+    dönmez: muhafız sınıfı hatalar `AracReddi`, gerisi olduğu gibi YÜKSELİR (`_arac_kos` ikisinde
+    de `atif=False` verir ve hata metnini modele yine gösterir). "0 satır" DÖNEN bir sorgu ise
+    OKUNMUŞ sayılır — sıfır bir ölçümdür, hata değil."""
     sql = str(args.get("sql") or "")
     kapi = _select_kapisi()
     if kapi is None:
-        return "ölçülemedi: ops/olay_sorgu.py import edilemedi (SELECT muhafızı yok, sorgu KOŞMADI)"
+        # "ÖLÇÜLEMEDİ" DE BİR ATIFSIZ DÖNÜŞTÜR (K5). Metin dönüşü `_arac_kos`ta BAŞARI sayılır ve
+        # `kaynaklar`a satır yazdırırdı — hiçbir veri okunmadığı hâlde. `AracReddi` sınıfı tam da
+        # "istek karşılanmadı, veri OKUNMADI" demektir; metin modele aynen gider.
+        raise AracReddi("ölçülemedi: ops/olay_sorgu.py import edilemedi (SELECT muhafızı yok, "
+                        "sorgu KOŞMADI)")
+    import duckdb
+
     import ops.olay_sorgu as _os_mod
     con = _os_mod.baglanti_kur()
+    tavan = _ZamanTavani(con)
     try:
         red = kapi(con, sql)
         if red:
             raise AracReddi(f"SORGU REDDEDİLDİ (yalnız SELECT): {red}")
+        _sorgu_sinirlari(con)
         defter = config.STATE / "events.jsonl"
-        _os_mod.gorunumu_kur(con, defter, parquetler=_os_mod.parquet_dosyalari(
-            _os_mod.arsiv_dizini(defter)))
-        cur = con.execute(sql)
-        basliklar = [d[0] for d in (cur.description or [])]
-        satirlar = cur.fetchmany(200)
+        with tavan:
+            _os_mod.gorunumu_kur(con, defter, _os_mod.arsiv_dizini(defter))
+            _harici_erisimi_kapat(con)
+            cur = con.execute(sql)
+            basliklar = [d[0] for d in (cur.description or [])]
+            satirlar = cur.fetchmany(200)
         return _json({"sutunlar": basliklar,
                       "satirlar": [list(s) for s in satirlar], "n": len(satirlar)})
     except AracReddi:
         raise                              # muhafız reddi bir ARIZA değildir — sınıfı korunur
+    except duckdb.InterruptException as e:
+        if not tavan.asildi:
+            raise                          # kesinti BİZDEN gelmediyse tavan iddiası uydurma olur
+        obs.warn("sohbet_olay_sorgu_zaman_tavani", sql=sql[:120],
+                 oturum=str((baglam or {}).get("oturum") or "")[:40], tavan_s=SORGU_TAVANI_S,
+                 detail="sorgu zaman tavanını aştı — bağlantı kesildi, sorgu REDDEDİLDİ "
+                        "(tek uvicorn işçisi: tavansız sorgu panonun tamamını düşürebilirdi)")
+        raise AracReddi(f"SORGU REDDEDİLDİ (zaman tavanı {SORGU_TAVANI_S:g} s aşıldı): sorgu "
+                        "kesildi ve HİÇBİR satır okunmadı — soruyu daralt (süzgeç/LIMIT ekle)"
+                        ) from e
+    except duckdb.PermissionException as e:
+        # HARİCİ ERİŞİM KAPALI: sorgu dosya sistemine uzandı ve DuckDB durdurdu. Bu bir ARIZA
+        # DEĞİL, MUHAFIZ REDDİDİR — sınıfı `AracReddi` olmalı ki (a) kaynak atfı üretilmesin
+        # (uydurma sayımının paydası boş atıfla şişmesin), (b) modele "hata oldu" değil
+        # "reddedildi" densin. Metin YOLU taşır, İÇERİĞİ değil: yolu zaten model yazdı.
+        obs.warn("sohbet_olay_sorgu_harici_erisim", sql=sql[:120],
+                 oturum=str((baglam or {}).get("oturum") or "")[:40],
+                 error=f"{type(e).__name__}: {str(e)[:200]}",
+                 detail="sorgu dosya sistemine uzandı — harici erişim KAPALI, sorgu REDDEDİLDİ "
+                        "(sızıntı sınıfı: araç çıktısı üçüncü taraf modele gider)")
+        raise AracReddi("SORGU REDDEDİLDİ (harici erişim KAPALI): bu araç YALNIZ `olaylar` "
+                        f"görünümünü okur, dosya sistemine erişemez — {str(e)[:200]}") from e
+    except (duckdb.CatalogException, duckdb.BinderException) as e:
+        # ÇÖZÜMLEME HATASI = HİÇ SATIR OKUNMADI. Tanınmayan uzantılı bir dizge-literal kaynak
+        # (`SELECT * FROM '/tmp/x.txt'`) burada düşer (ölçüldü, duckdb 1.5.5: BinderException —
+        # replacement scan devreye girmez, dosya HİÇ AÇILMAZ); yanlış yazılmış bir tablo/sütun adı
+        # da öyle. İkisi de "veri okundu" DEĞİLDİR: sınıfı `AracReddi` olmalı ki kaynak atfı
+        # üretilmesin. Metin modele yine döner — model neyi düzeltmesi gerektiğini görür.
+        obs.warn("sohbet_olay_sorgu_cozumlenemedi", sql=sql[:120],
+                 oturum=str((baglam or {}).get("oturum") or "")[:40],
+                 error=f"{type(e).__name__}: {str(e)[:200]}",
+                 detail="sorgu çözümlenemedi (katalog/binder) — HİÇBİR satır okunmadı, sorgu "
+                        "REDDEDİLDİ ve kaynak atfı ÜRETİLMEDİ")
+        raise AracReddi("SORGU REDDEDİLDİ (çözümlenemedi): sorgu HİÇ KOŞMADI ve hiçbir satır "
+                        f"okunmadı — {type(e).__name__}: {str(e)[:200]}") from e
     except Exception as e:
+        # ARIZA: sınıfı `AracReddi` DEĞİLDİR ve öyle etiketlemek yalan olurdu. YÜKSELTİLİR —
+        # `_arac_kos` onu ADIYLA metne çevirir, `sema_disi` SAYMAZ ve kaynak atfı ÜRETMEZ.
+        # Eskiden burada metin döndürülüyordu ve o dönüş "başarılı çağrı" sayılıyordu.
         obs.warn("sohbet_olay_sorgu_hatasi", error=f"{type(e).__name__}: {e}",
-                 detail="sorgu koşarken hata — metin modele döner, döngü ölmez")
-        return f"sorgu hatası: {type(e).__name__}: {e}"
+                 detail="sorgu koşarken hata — metin modele döner (atıfsız), döngü ölmez")
+        raise
     finally:
         con.close()
 
 
 def _arac_bar_sorgu(args: dict, baglam: dict | None = None) -> str:
-    """Tick/bar arşivinin hazır sorguları (`ops.bar_sorgu`: kapsam · dikis · bosluk)."""
+    """Tick/bar arşivinin hazır sorguları (`ops.bar_sorgu`: kapsam · dikis · bosluk).
+
+    SIRA `ops/bar_sorgu.py::main` İLE AYNIDIR VE BU ZORUNLUDUR (inceleme bulgusu, 2026-09-08).
+    Araç CANLIDA HİÇ ÇALIŞMIYORDU, üstelik iki ayrı sebeple — ikisi de ÖLÇÜLDÜ (duckdb 1.5.5):
+
+      * `gorunum_sql(dosyalar)` ÇIPLAK bir `SELECT … FROM read_parquet(…)` METNİDİR, görünüm
+        DEĞİL. Eski gövde onu `con.execute(...)` ile koşup ATIYOR, sonra `… FROM barlar` diye
+        soruyordu → `CatalogException: Table with name barlar does not exist`. Görünümü CLI kurar
+        (`CREATE OR REPLACE TEMP VIEW barlar AS …`) ve burada da o kurulur.
+      * `bosluk` kolu `sorgu_bosluk(..., span=None)` çağırıyordu; fonksiyonun ilk satırı
+        `lo, hi = span` → `TypeError`. Span'in kaynağı `takvim_yukle(con)`dur ve o çağrı aynı
+        zamanda sorgunun ihtiyaç duyduğu `seanslar` geçici tablosunu kurar. Takvim ölçülemezse
+        araç "ölçülemedi" der: "0 eksik" basmak bilmediğimizi bilir gibi göstermek olurdu (CLI'nin
+        rc 4 beyanının aynısı).
+
+    Bu, `olay_sorgu`da bulunan `gorunumu_kur(..., parquetler=…)` kusurunun BİREBİR KARDEŞİDİR:
+    ret yollarını sınayan çiviler gövdeye hiç ulaşmadığı için sınıf iki kez doğdu. Üç kolun da
+    GERÇEKTEN koştuğunu ölçen pozitif kontrol çivileri v444'tedir.
+
+    DIŞ ERİŞİM KAPISI BURADA YOKTUR VE BU BİR EKSİKLİK DEĞİL, ÖLÇÜLMÜŞ BİR KARARDIR (yeniden
+    inceleme, 2026-09-08). Bu araç SERBEST SQL ALMAZ ve tüketici yüzeyin TAMAMI sayıldı: `sorgu`
+    beyaz listeden dal seçer (`_bs.SORGULAR`), `sembol` ve `ay` BAĞLI PARAMETRE olarak gider,
+    `n` `int()`e zorlanır, görünüm metni ise dosya sistemi glob'undan (`parquet_dosyalari`) doğar.
+    Modelin denetimindeki HİÇBİR metin bu bağlantının SQL'ine ulaşmaz — `enable_external_access`i
+    kapatmak burada ERİŞİLEBİLİR SIFIR yüzeyi kapatırdı. BEDELİ ise sıfır değildi ve TARİHLİYDİ:
+    `barlar` `read_parquet` üstünde TEMBEL bir görünümdür, kapı kapanmadan önce MATERYALİZE
+    edilmek zorundaydı — yani bir `min/max/count` bile arşivin tamamını, üstelik `_sorgu_sinirlari`
+    ile AYNI `memory_limit` bütçesinden belleğe alıyordu; arşiv EDG-066 geri dolumuyla aylık büyür.
+    Kazanç ölçüldü (sıfır), bedel ölçüldü (büyüyor) → kapı kaldırıldı (Bedel yasası).
+
+    ASIL KAPI ŞEMADIR: `test_bar_sorgu_semasinda_SERBEST_SQL_alani_YOK` (v444) "serbest SQL yok"
+    beyanının KENDİSİNİ kilitler. `ops/bar_sorgu.py`de bir `--sql` kolu ZATEN var; o kol bir gün
+    bu şemaya taşınırsa çivi öter ve dış erişim kapısı O GÜN, ölçülmüş bir gerekçeyle geri konur.
+    KAYNAK TAVANLARI KALIR: `_sorgu_sinirlari` ve `_ZamanTavani` serbest SQL'e değil KAYNAK
+    TÜKENİŞİNE bağlıdır (tek uvicorn işçisi) ve büyük bir arşiv taraması onları burada da hak eder.
+    `olay_sorgu`da kapı KALIR — orada modelin yazdığı serbest SELECT gerçekten koşar."""
     try:
         import ops.bar_sorgu as _bs
     except Exception as e:
-        return f"ölçülemedi: ops/bar_sorgu.py import edilemedi ({type(e).__name__}: {e})"
+        # "ÖLÇÜLEMEDİ" DE ATIFSIZ DÖNER (K5, kardeş aracın gerekçesi): metin dönüşü `_arac_kos`ta
+        # BAŞARI sayılıyor ve hiç veri okunmamış bir çağrı `kaynaklar`a giriyordu.
+        raise AracReddi(f"ölçülemedi: ops/bar_sorgu.py import edilemedi "
+                        f"({type(e).__name__}: {e})") from e
     ad = str(args.get("sorgu") or "kapsam")
     if ad not in _bs.SORGULAR:
         raise AracReddi(f"bilinmeyen sorgu {ad!r} — izinli: {', '.join(_bs.SORGULAR)}")
     dizin = _bs.arsiv_dizini()
     dosyalar = _bs.parquet_dosyalari(dizin)
     if not dosyalar:
-        return f"ölçülemedi: arşiv dizininde parquet yok ({dizin})"
-    con = None
+        raise AracReddi(f"ölçülemedi: arşiv dizininde parquet yok ({dizin}) — bar arşivi bu "
+                        "makinede kurulu değil; 'veri yok' SONUCU DEĞİLDİR")
+    import duckdb
+
+    import ops.olay_sorgu as _os_mod
+    con = _os_mod.baglanti_kur()           # SERTLESTIRME: temp dizini, eklenti bayrakları, UTC
+    tavan = _ZamanTavani(con)
     try:
-        import duckdb
-        con = duckdb.connect()
-        con.execute(_bs.gorunum_sql(dosyalar))
+        _sorgu_sinirlari(con)
+        con.execute(f"CREATE OR REPLACE TEMP VIEW barlar AS {_bs.gorunum_sql(dosyalar)}")
         sembol = str(args.get("sembol") or "").upper() or None
         ay = str(args.get("ay") or "") or None
         n = max(1, min(int(args.get("n") or 100), 500))
-        if ad == "kapsam":
-            satirlar = _bs.sorgu_kapsam(con, sembol, ay, n)
-        elif ad == "dikis":
-            satirlar = _bs.sorgu_dikis(con, sembol, ay, n)
-        else:
-            satirlar = _bs.sorgu_bosluk(con, sembol, ay, n, None)
+        with tavan:
+            span = None
+            if ad == "bosluk":
+                # TAKVİM SORGUDAN ÖNCE YÜKLENİR: `takvim_yukle` yalnız `span`i döndürmez, sorgunun
+                # `JOIN seanslar` ile okuduğu geçici tabloyu da KURAR — CLI (`::main`) ile aynı
+                # sıra (tek-kaynak). `span` da oradan gelir; `sorgu_bosluk`un ilk satırı `lo, hi =
+                # span`dır ve `None` geçerse `TypeError` verir (bu araç canlıda öyle düşüyordu).
+                seans_n, span = _bs.takvim_yukle(con)
+                if not seans_n or not span:
+                    raise AracReddi(
+                        "ölçülemedi: XNYS seans takvimi yüklenemedi "
+                        "(`pandas_market_calendars` yok ya da düştü) — `bosluk` hüküm VERMEZ; "
+                        "'0 eksik' basmak bilmediğimizi bilir gibi göstermek olurdu")
+            if ad == "kapsam":
+                satirlar = _bs.sorgu_kapsam(con, sembol, ay, n)
+            elif ad == "dikis":
+                satirlar = _bs.sorgu_dikis(con, sembol, ay, n)
+            else:
+                satirlar = _bs.sorgu_bosluk(con, sembol, ay, n, span)
         return _json({"sorgu": ad, "basliklar": _bs.BASLIKLAR.get(ad),
                       "satirlar": [list(s) for s in satirlar]})
     except AracReddi:
         raise                              # muhafız reddi bir ARIZA değildir — sınıfı korunur
+    except duckdb.InterruptException as e:
+        if not tavan.asildi:
+            raise
+        obs.warn("sohbet_bar_sorgu_zaman_tavani", sorgu=ad, tavan_s=SORGU_TAVANI_S,
+                 detail="bar sorgusu zaman tavanını aştı — kesildi, REDDEDİLDİ")
+        raise AracReddi(f"SORGU REDDEDİLDİ (zaman tavanı {SORGU_TAVANI_S:g} s aşıldı): hiçbir "
+                        "satır okunmadı — `sembol`/`ay` ile daralt") from e
     except Exception as e:
+        # ARIZA YÜKSELİR (kardeş aracın gerekçesi): metin dönüşü `_arac_kos`ta BAŞARI sayılıyor ve
+        # hiç veri okunmamış bir çağrı kaynak atfı üretiyordu.
         obs.warn("sohbet_bar_sorgu_hatasi", sorgu=ad, error=f"{type(e).__name__}: {e}",
-                 detail="bar sorgusu koşarken hata — metin modele döner, döngü ölmez")
-        return f"sorgu hatası: {type(e).__name__}: {e}"
+                 detail="bar sorgusu koşarken hata — metin modele döner (atıfsız), döngü ölmez")
+        raise
     finally:
-        if con is not None:
-            con.close()
+        con.close()
 
 
 def _hafiza_betigi() -> str:
@@ -474,12 +745,21 @@ def _arac_oneri_yaz(args: dict, baglam: dict | None = None) -> str:
                             "kapatılacak bir alarm bulunamadı")
     ts = _simdi_iso()
     damga = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    onceki = sum(1 for r in store.read_jsonl(ONAY_DEFTERI)
-                 if isinstance(r, dict) and r.get("kaynak") == CAGRI_KIND)
-    satir = {"ts": ts, "id": oneri_kimligi(damga, onceki + 1), "kaynak": CAGRI_KIND,
-             "tur": tur, "hedef": hedef, "gerekce": gerekce[:800], "durum": "bekliyor",
-             "oturum": str(baglam.get("oturum") or "")}
-    store.append_jsonl(ONAY_DEFTERI, satir)
+    # SAY-VE-YAZ ATOMİKTİR (inceleme bulgusu, 2026-09-08). Kimlik defterdeki sohbet satırlarının
+    # SAYIMINDAN türer ve damga SANİYE çözünürlüklüdür: sayım ile ekleme arasında bir başka
+    # yazıcı araya girerse iki ÖNERİ AYNI `SO-…` kimliğini alır. Sonucu sessiz değil TEHLİKELİdir:
+    # `oneri_satiri` defteri TERSTEN tarayıp SON eşleşeni döndürdüğü için operatörün gelen
+    # kutusunda gördüğü öneriyi onaylaması ÖTEKİNİN hedefini icra ettirebilirdi.
+    # İKİ KATMAN, İKİ TEHDİT: `_SOHBET_KILIDI` aynı süreçteki iki sohbet turunu (thread havuzu)
+    # serileştirir; `file_lock` SÜREÇ DIŞI yazıcıya karşıdır — `api_approve` aynı deftere karar
+    # satırı ekler ve depo `fcntl.flock` tabanlı kilidini `store.file_lock` ile zaten sunuyor.
+    with store.file_lock(ONAY_DEFTERI):
+        onceki = sum(1 for r in store.read_jsonl(ONAY_DEFTERI)
+                     if isinstance(r, dict) and r.get("kaynak") == CAGRI_KIND)
+        satir = {"ts": ts, "id": oneri_kimligi(damga, onceki + 1), "kaynak": CAGRI_KIND,
+                 "tur": tur, "hedef": hedef, "gerekce": gerekce[:800], "durum": "bekliyor",
+                 "oturum": str(baglam.get("oturum") or "")}
+        store.append_jsonl(ONAY_DEFTERI, satir)
     baglam["oneri_id"] = satir["id"]
     obs.log("sohbet_oneri_yazildi", oneri_id=satir["id"], tur=tur, hedef=hedef[:60],
             oturum=satir["oturum"])
@@ -591,6 +871,24 @@ def _sema_dogrula(sema: dict, args) -> str | None:
     return None
 
 
+def _bos_arguman_normalize(args):
+    """`arguments` YOK/`null` gelen çağrıyı BOŞ NESNEYE çevirir; hükmü ŞEMA verir.
+
+    NEDEN (EDG-074 ailesi, ölçülmüş kusur): zincirdeki free-tier modeller parametresiz bir araç
+    için (`pano_ozeti`, `pozisyon_oku`) `arguments` alanını JSON `null` gönderiyor ya da hiç
+    göndermiyor. Eski yol `_sema_dogrula(sema, None)`a düşüp "argümanlar bir JSON NESNESİ olmalı"
+    diyordu: operatörün "pano özeti nedir" sorusu ŞEMA DIŞI sayılıp cevapsız kalıyordu — oysa
+    şema `properties: {}` ile HİÇBİR alan istemiyor.
+
+    BURADA İKİNCİ BİR KAPI YOK, VE BU ÖLÇÜLDÜ. "Şema bir şey gerektiriyorsa `None` kalsın" diye
+    bir kol yazmak cazipti; ama `_sema_dogrula({...required/anyOf...}, {})` o çağrıyı ZATEN
+    reddediyor — üstelik DAHA İYİ bir metinle ("zorunlu alan eksik: card_id" vs "argümanlar bir
+    JSON NESNESİ olmalı"). O kol hiçbir mutasyonun ısıramayacağı ölü bir daldı (aynı turda
+    `_arac_oneri_yaz`ın ikinci kapısı için ölçülen sınıf); tek kapı ŞEMADIR ve negatif çiviler
+    (`kart_oku`/`plan_oku` + `null`) bunu ADIYLA gösterir."""
+    return {} if args is None else args
+
+
 # =================================================================================================
 # ARAÇ ÇIKTISI — SÜZGEÇ → KESİT (BEYANLI) → ÇİT
 # =================================================================================================
@@ -625,6 +923,7 @@ def _arac_kos(ad: str, ham_arg, baglam: dict,
         except (ValueError, TypeError) as e:
             return (arac_bloku(ad, f"argümanlar JSON olarak ayrıştırılamadı: "
                                    f"{type(e).__name__}: {e}"), True, False)
+    args = _bos_arguman_normalize(args)
     red = _sema_dogrula(arac.sema, args)
     if red:
         return (arac_bloku(ad, f"ŞEMA DIŞI ÇAĞRI — {red}"), True, False)
@@ -679,14 +978,27 @@ def _kapi_cagir(mesajlar: list[dict], araclar: list[dict], *, note: str = CAGRI_
 
     MUHASEBE: her AYAK `agent_calls.jsonl`e `kind="sohbet"` satırı yazar (kota o satırlardan
     sayılır). `spend.record` YALNIZ sağlayıcı `usage` bildirdiğinde çağrılır: 429'un jeton
-    sayısı YOKTUR ve 0 yazmak ölçülmemişi ölçülmüş göstermek olurdu (uydurma yasağı)."""
+    sayısı YOKTUR ve 0 yazmak ölçülmemişi ölçülmüş göstermek olurdu (uydurma yasağı).
+
+    KOTA AYAK BAŞINA SORULUR (2026-09-08 düzeltmesi): kotanın BİRİMİ ayak denemesidir, o hâlde
+    kapısı da ayak başına olmalı — zincirin ilk iki ayağı her turda düşerse tek bir mesaj tavanı
+    fark edilmeden aşabiliyordu. Kota döngü ortasında dolarsa `out["kota_engeli"]` DOLU döner:
+    çağıran bunu bir MODEL ARIZASI (`llm_dustu`) ile karıştırmasın diye ayrı bir alandır."""
     import httpx
 
     from . import agent_telemetry as at, hermes, secrets, spend
     base = (secrets.get("NOUS_ENDPOINT") or hermes.NOUS_DEFAULT_ENDPOINT).rstrip("/")
     out: dict = {"mesaj": None, "model": None, "jeton_giris": None, "jeton_cikis": None,
-                 "neden": {}}
+                 "neden": {}, "kota_engeli": None, "kota": None}
     for deneme, model in enumerate(model_zinciri(), start=1):
+        kota = kota_durumu()
+        engel = _kota_cevabi(kota)
+        if engel is not None:
+            out["kota_engeli"], out["kota"] = engel, kota
+            out["neden"][model] = "kota_doldu"
+            obs.log("sohbet_kota_kapisi_zincir", model=model, deneme=deneme,
+                    bugun=kota["bugun"], tavan=kota["tavan"])
+            break
         govde: dict = {"model": model, "messages": mesajlar, "max_tokens": MAX_TOKENS}
         if araclar:
             govde["tools"] = araclar
@@ -760,6 +1072,26 @@ def sohbet_dongusu(mesaj: str, oturum: str, *, model_cagir=None,
                    araclar: dict[str, Arac] | None = None, simdi: str | None = None) -> dict:
     """Bir operatör mesajını cevaplar: kota kapısı → en çok `max_tur()` model turu → defter satırı.
 
+    TURLAR DIŞLAMALIDIR AMA SIRAYA GİRMEZ (`_SOHBET_KILIDI`; gerekçe ve BEDEL BEYANI sabitin
+    yanındadır). `api_sohbet` gövdeyi `run_in_threadpool`e devrettiğinden beri iki istek gerçekten
+    paralel koşuyor; bu yüzeyde eşzamanlılığın kazancı yok, kaybı VAR (öneri kimliği çakışması,
+    kota kapısının TOCTOU'su). Kilit `blocking=False` alınır: alınamazsa MODEL HİÇ ÇAĞRILMADAN
+    `MESGUL_CEVABI` döner (HTTP 200 + `mesgul: True`) ve `sohbet.jsonl`e SATIR YAZILMAZ —
+    cevaplanmamış bir deneme, "bugün kaç mesaj soruldu" sayımının paydasına girmemelidir.
+
+    OLAY DÖNGÜSÜ BEYANI ÖLÇÜLENE İNDİRİLMİŞTİR (yeniden inceleme, 2026-09-08). Eskiden burada
+    "`/api/control/halt` dahil HER UÇ bu bekleme boyunca cevap verir" yazıyordu; `halt` için
+    doğru (o rota `async def`), "her uç" için ÖLÇÜLEBİLİR biçimde YANLIŞTI: `api.py`deki senkron
+    rotalar (`/api/alerts/ack`, `/api/sohbet/kota`, …) aynı anyio iş havuzunda koşar ve kilitte
+    park eden her sohbet ipliği o havuzdan bir jeton tutardı. Park kalktığı için beyan da düştü.
+
+    KİLİT GÖVDENİN TAMAMINI SARAR, YALNIZ YAZIMLARI DEĞİL: korunan şey "iki satır iç içe geçmesin"
+    değil, "kota oku → model çağır → telemetri yaz" ve "öneri say → öneri yaz" DİZİLERİdir; yalnız
+    yazımı kilitlemek TOCTOU'yu açık bırakırdı.
+
+    KOTA KAPISI HER TURUN ÖNÜNDEDİR, yalnız mesajın başında değil; döngü ortasında dolarsa cevap
+    kotayı ADIYLA beyan eder ve o ana kadarki turlar defter satırında KALIR (ölçüm girdisi).
+
     `model_cagir(mesajlar, arac_semalari) -> dict` ENJEKTE EDİLEBİLİR; çiviler sahte model verir
     ve bu yüzden testler hiçbir gerçek kapı çağrısı YAPMAZ. Varsayılan `_kapi_cagir`dır.
 
@@ -767,7 +1099,45 @@ def sohbet_dongusu(mesaj: str, oturum: str, *, model_cagir=None,
     servis eder; ikinci bir şekil ikinci bir gerçek olurdu."""
     mesaj = str(mesaj or "").strip()
     if not mesaj:
+        # BOŞ MESAJ KİLİDİN DIŞINDA REDDEDİLİR: 400'lük bir isteğin, sürmekte olan meşru bir turu
+        # "meşgul" cevabıyla gölgelemesi (ve 4xx yerine 200 dönmesi) yanlış olurdu — cevaplanacak
+        # bir soru yokken kilidin hâli sorunun cevabını değiştirmez.
         raise ValueError("boş mesaj — cevaplanacak bir soru yok")
+    if not _SOHBET_KILIDI.acquire(blocking=False):
+        return _mesgul_satiri(mesaj, oturum, simdi)
+    try:
+        return _sohbet_turu(mesaj, oturum, model_cagir=model_cagir, araclar=araclar, simdi=simdi)
+    finally:
+        _SOHBET_KILIDI.release()
+
+
+def _mesgul_satiri(mesaj: str, oturum: str, simdi: str | None = None) -> dict:
+    """Kilit başkasındayken dönen cevap: defter SATIRININ ŞEKLİNDE, ama DEFTERE YAZILMADAN.
+
+    ŞEKİL `DEFTER_ALANLARI`DIR ÇÜNKÜ UÇ BU SÖZLÜĞÜ AYNEN SERVİS EDER: pano bir sohbet cevabının
+    alanlarını okur ve ikinci bir şekil ikinci bir gerçek olurdu. `mesgul` bir EKTİR — okuyan
+    yüzey "bu bir cevap değil, bir hâl bildirimi" ayrımını ADIYLA yapabilsin diye.
+
+    YAZILMAZ, ÇÜNKÜ ÖLÇÜM PAYDASI: `sohbet.jsonl` "kaç mesaj cevaplandı" sorusunun kaynağıdır
+    (EDG-2026-086 B3 sayımı + `GET /api/sohbet` geçmişi). Reddedilen bir deneme cevaplanmış bir
+    mesaj değildir; onu deftere yazmak sayımı sessizce şişirirdi. İZ KAYBOLMAZ: uç `obs.log`a
+    `mesgul` bayrağıyla bir `sohbet_mesaj` satırı yazar (Yasa 6).
+
+    `kota_bugun` ÖLÇÜLÜR, UYDURULMAZ: sayaç okunabiliyor (ölçüldü: 4.000 satırlık defterin tam
+    okuması 8,1 ms, 2026-09-08) ve `kota_durumu` ölçemediği hâlde zaten `None` döndürür."""
+    return {"ts": simdi or _simdi_iso(), "oturum": str(oturum or "").strip() or gunun_oturumu(),
+            "mesaj": mesaj, "cevap": MESGUL_CEVABI, "turlar": [], "kaynaklar": [], "model": None,
+            "sure_s": 0.0, "jeton_giris": None, "jeton_cikis": None,
+            "kota_bugun": kota_durumu().get("bugun"), "oneri_id": None, "sema_disi_n": 0,
+            "llm_dustu": False, "mesgul": True}
+
+
+def _sohbet_turu(mesaj: str, oturum: str, *, model_cagir=None,
+                 araclar: dict[str, Arac] | None = None, simdi: str | None = None) -> dict:
+    """`sohbet_dongusu`nun gövdesi — `_SOHBET_KILIDI` TUTULURKEN koşar (tek çağıran oradadır).
+
+    AYRI FONKSİYON, ÇÜNKÜ KİLİT SÖZLEŞMENİN PARÇASI: gövdeyi doğrudan çağıran ikinci bir yol
+    açılırsa serileştirme sessizce kaybolurdu; ad `_` ile başlar ve tek çağrı yeri çividedir."""
     oturum = str(oturum or "").strip() or gunun_oturumu()
     kayit = ARACLAR if araclar is None else araclar
     cagir = model_cagir or _kapi_cagir
@@ -795,7 +1165,20 @@ def sohbet_dongusu(mesaj: str, oturum: str, *, model_cagir=None,
     mesajlar: list[dict] = [{"role": "system", "content": SISTEM_ISTEMI},
                             {"role": "user", "content": mesaj}]
     cevap = None
-    for _ in range(max_tur()):
+    for tur_no in range(max_tur()):
+        if tur_no:
+            # KOTA HER AYAK ÖNCESİ YENİDEN ÖLÇÜLÜR (2026-09-08 düzeltmesi). Eskiden yalnız mesaj
+            # başında sorulurdu: `kalan=1` iken kabul edilen TEK mesaj, max_tur()×model_zinciri()
+            # kadar (varsayılanda 18) gerçek çağrı üretip filo kovasını durdurulmadan tüketebilirdi.
+            # İlk turun ölçümü döngüden ÖNCE yapıldı — burada tekrarlamak aynı sayımı iki kez
+            # okumak olurdu.
+            kota = kota_durumu()
+            engel = _kota_cevabi(kota)
+            if engel is not None:
+                obs.log("sohbet_kota_kapisi", oturum=oturum, bugun=kota["bugun"],
+                        tavan=kota["tavan"], tur=tur_no)
+                cevap = engel
+                break                      # O ANA KADARKİ turlar defter satırında KALIR
         tt = time.perf_counter()
         sonuc = cagir(mesajlar, semalar) or {}
         tur = {"model": sonuc.get("model"), "tool_calls": 0, "sema_disi": 0,
@@ -806,6 +1189,12 @@ def sohbet_dongusu(mesaj: str, oturum: str, *, model_cagir=None,
             if sonuc.get(alan) is not None:
                 jetonlar[kova].append(int(sonuc[alan]))
         msg = sonuc.get("mesaj")
+        if msg is None and sonuc.get("kota_engeli"):
+            # ZİNCİR AYAĞI KOTADA DURDU — bu bir MODEL ARIZASI DEĞİLDİR. `llm_dustu` işaretlemek
+            # teşhisi çökertirdi: "sağlayıcı düştü" ile "hakkımız bitti" iki ayrı olgu.
+            kota = sonuc.get("kota") or kota
+            cevap = str(sonuc["kota_engeli"])
+            break
         if msg is None:
             llm_dustu = True
             sebepler = ", ".join(f"{m}: {s}" for m, s in (sonuc.get("neden") or {}).items())
@@ -854,7 +1243,13 @@ def _kaydet(*, ts, oturum, mesaj, cevap, turlar, kaynaklar, model, sure_s, jeton
     """`sohbet.jsonl` satırını yazar ve AYNI sözlüğü döndürür (tek şekil, tek gerçek).
 
     JETON TOPLAMI ÖLÇÜLENLERİN TOPLAMIDIR: hiçbir ayak `usage` bildirmediyse alan None kalır —
-    0 yazmak "ölçtük, sıfırdı" demek olurdu."""
+    0 yazmak "ölçtük, sıfırdı" demek olurdu.
+
+    APPEND KİLİT ALTINDADIR (inceleme bulgusu, 2026-09-08): `store.append_jsonl` çıplak
+    `open(path, "a")`dır ve bu satır büyüktür — operatörün `mesaj`ı ile `cevap` (`CEVAP_TAVANI_KR`
+    = 20.000 karakter) varsayılan ~8 KB metin tamponunu aşıp BİRDEN ÇOK `write()`e bölünebilir.
+    İki yazıcı aynı anda yazarsa satırlar iç içe geçer ve defterin O SATIRI ölçülemez hâle gelir
+    (`GET /api/sohbet` ve EDG-2026-086'nın B3 sayımı aynı satırları okur)."""
     satir = {
         "ts": ts, "oturum": oturum, "mesaj": mesaj, "cevap": cevap, "turlar": turlar,
         "kaynaklar": kaynaklar, "model": model, "sure_s": round(float(sure_s), 3),
@@ -863,7 +1258,8 @@ def _kaydet(*, ts, oturum, mesaj, cevap, turlar, kaynaklar, model, sure_s, jeton
         "kota_bugun": kota.get("bugun"), "oneri_id": oneri_id,
         "sema_disi_n": sema_disi_n, "llm_dustu": llm_dustu,
     }
-    store.append_jsonl(SOHBET_DEFTERI, satir)
+    with store.file_lock(SOHBET_DEFTERI):
+        store.append_jsonl(SOHBET_DEFTERI, satir)
     return satir
 
 
