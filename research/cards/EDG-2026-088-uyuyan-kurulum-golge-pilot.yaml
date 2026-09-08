@@ -1,4 +1,4 @@
-# EDG-2026-087 — Uyuyan kurulum (dormant_setup) planlarının GÖLGE İCRA pilotu: sermaye riski olmadan n≥30 örneklem
+# EDG-2026-088 — Uyuyan kurulum (dormant_setup) planlarının GÖLGE İCRA pilotu: sermaye riski olmadan n≥30 örneklem (EDG-087'nin ardılı: pencere 45→120 gün)
 # ÖN-KAYIT 2026-09-08 16:2x UTC (Rol-1). Operatör kararı 2026-09-08 16:0xZ: "icraya bağla (kartla)" → Rol-1 uyarısı: EDG-2026-049
 # (2026-08-24) aynı bağlamayı karşı-olguyla ölçüp NO-GO vermişti (n=6, 6/6 kayıp, −4,725R, CI95 sıfırı içeriyor) → operatör
 # "önerilerini uygula": ARDIL kart, farklı tasarım — gerçek emir YOK, gölge defter; bağlama kararı hüküm sonrası operatöre döner.
@@ -6,11 +6,11 @@
 # · EDG-2026-010 KALDI (trend pullback) · EDG-2026-068 (cf karşı-olgusal bileşim — kod-değişikliği-önce emsali). DERS (049): dormant
 # dilimi küçük (n=6) ve negatif; bu kart örneklemi büyütür, CANLI DEĞİŞMEZ. TSK-175 inceleme belgesi §8 düzeltmesi bu kartı işaret eder.
 
-card_id: EDG-2026-087
-status: archived     # 2026-09-08 16:5xZ Rol-1 — ÖLÇÜM BAŞLAMADAN arşiv: veri_penceresi (45 gün) bayat hıza (7 Ağustos kümülatif) dayanıyordu; ölçülen hız 10 plan/40 gün → ardıl EDG-2026-088 (120 gün). Eşik değişmez kuralı: yeni pencere = yeni kart.
+card_id: EDG-2026-088
+status: registered   # 2026-09-08 Rol-1 — ön-kayıt; gölge defteri kodu (B1) bu karttan SONRA; pencere dağıtımından itibaren
 family: dormant_golge_pilot
-on_kayit: 2026-09-08
-selef: EDG-2026-049
+on_kayit: 2026-09-08   # 16:5xZ (087: 16:2xZ)
+selef: EDG-2026-087   # 087 ölçüm başlamadan arşivlendi (pencere öncülü bayat); 087'nin selefi EDG-2026-049 (NO-GO)
 ref: [TSK-175, EDG-2026-049, EDG-2026-025, "docs/degerlendirme/UYUYAN-KURULUM-INCELEME-2026-09-07.md (§8 düzeltme)",
       "docs/POLITIKA-ARSENAL.md (GO okuma çıtası: kart-önce + n≥30 ∧ CI-alt>0 + operatör imzası)",
       "memory/uyuyan-kurulum-yolu (31 plan / 0 işlem / 1 GO — önden bağlı arkadan bağsız)"]
@@ -21,7 +21,7 @@ hipotez: >
   > 0 ve (b) kazanma oranı ≥ %40 çıkar. Çıkarsa "icraya bağlama" kararı kanıtla operatöre döner (ARSENAL çıtası); çıkmazsa EDG-049'un
   "teşhis-katmanı" damgası tazelenir ve yol olduğu gibi kalır. Kart CANLI SERMAYEYİ DEĞİŞTİRMEZ.
 
-k_registry: {registered_at: "2026-09-08", trial_ids: [EDG-087-toplam-R-CI, EDG-087-kazanma-orani]}
+k_registry: {registered_at: "2026-09-08", trial_ids: [EDG-088-toplam-R-CI, EDG-088-kazanma-orani]}
 # K=2 birincil. Kurulum başına kırılım (episodic_pivot/pead/…) TANI (K'ye 1×n_kurulum sayılmaz; hüküm toplamda).
 
 olcum_plani:
@@ -35,7 +35,8 @@ esikler:
   n_alt_plan: 30                 # ∧ pencere ≤45 gün; dolmadan hüküm YOK (betimleyici ara-rapor serbest)
   ci_alt_R_ust: 0.0              # blok-bootstrap CI95 alt sınırı > 0 (EDG-049 ile aynı ölçüt)
   kazanma_alt: 0.40
-  pencere_gun_ust: 45            # dolmazsa 'bilgisiz' arşiv (n<30 ile hüküm yazılmaz — 049 dersi)
+  pencere_gun_ust: 120           # ölçülen hız 10 plan/40 gün (~1,7/hafta) → n≥30 için ~18 hafta; dolmazsa 'bilgisiz' arşiv (n<30 ile hüküm yazılmaz — 049 dersi)
+  ci_yontem: "meridian/olcum_araclari.blok_bootstrap_ci (moving block, n^(1/3), tohum 11, B=2000)"   # donuk (Rol-1 hükmü 1)
   golge_gercek_fark_R_ust: 0.05  # kontrol: |gölge R − gerçek R| ortalaması ≤ 0,05R ∧ komisyon+kayma payı içinde; tutmazsa PK düşer
 
 kill_list:
@@ -52,7 +53,7 @@ pozitif_kontrol: >
   R − gerçek R farkı komisyon+kayma payı içinde (esikler.golge_gercek_fark_R_ust). (3) SELEF — EDG-049'un 6 dormant planı gölgede yeniden
   yürütülür → aynı işaret (6/6 kayıp) çıkmalı; çıkmazsa gölge motoru ile 049 karşı-olgusu ayrışıyor demektir → harness kör sayılır.
 
-veri_penceresi: "B1 dağıtımından itibaren n≥30 dormant plan ∧ ≤45 gün (memory: ~31 plan / ~5 hafta hızıyla ~35-45 gün); PK (1)/(3) B1 çivilerinde, (2) ilk 10 gerçek işlemde"
+veri_penceresi: "B1 dağıtımından itibaren n≥30 KAPANAN gölge işlem ∧ ≤120 gün (ölçülen hız: inceleme belgesi §2, 10 plan / 40 gün); PK (1)/(3) B1 çivilerinde, (2) son 10 gerçek işlem + her yeni gerçek işlem"
 
 basari_tanimi: >
   Üç PK yeşil + K=2 (+kurulum kırılımı tanı) sayıyla raporlanmış + hüküm Rol-1 tarafından aynı turda karta ve K defterine. GEÇER →
@@ -64,3 +65,4 @@ notlar: >
   dönük, planlar doğdukça izler — örneklem büyür, seçim yanlılığı (yalnız hüküm alanlar) yok. Bedel yasası: gölge defteri yeni bir state
   dosyası = yeni okuyucu şart (pano kartı + sayım); okuyucusuz kalırsa TSK-178 sınıfına düşer. B1 planı bu karttan sonra yazılır
   (docs/superpowers/plans/2026-09-08-golge-pilot-b1.md); kod meridian/ (motor) → tam suite.
+  Plan: docs/superpowers/plans/2026-09-08-golge-pilot-b1.md (Rol-1 hükümleri 1-8 planın sonunda).

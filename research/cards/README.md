@@ -11,7 +11,7 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **101** kart.
+Toplam **102** kart.
 
 ### Kayıtlı — ölçüm bekliyor (15)
 
@@ -46,9 +46,9 @@ Toplam **101** kart.
 - **EDG-2026-086** (`registered`) — 
   · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt; B1 backend + B2 UI bu karttan sonra; ölçüm penceresi B2 dağıtımından itibaren
   · kart: `EDG-2026-086-pano-sohbet-kalite.yaml`
-- **EDG-2026-087** (`registered`) — 
+- **EDG-2026-088** (`registered`) — 
   · HÜKÜM: 2026-09-08 Rol-1 — ön-kayıt; gölge defteri kodu (B1) bu karttan SONRA; pencere dağıtımından itibaren
-  · kart: `EDG-2026-087-uyuyan-kurulum-golge-pilot.yaml`
+  · kart: `EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -251,7 +251,7 @@ Toplam **101** kart.
   · HÜKÜM: R1 penceresi PBO = 0.6286 (motorun kendi pbo_cscv'si; n_aday=179, n_gozlem=207, 8 blok, 70 kombinasyon, ort_oos_sira=0.4018; deterministik — iki koşum aynı md5;…
   · kart: `KYS-2026-002-pbo-dsr-r1-taban.yaml`
 
-### Arşiv (16)
+### Arşiv (17)
 
 - **EDG-2026-001** (`archived`) — Fiyatın 52-hafta zirvesine yakınlığı, çapa (anchoring) yanlılığı nedeniyle ileri getiriyi öngörür; yatırımcılar zirveye yakın iyi habere eksik tepki…
   · HÜKÜM: 2026-07-31: 9/9 hücre anlamsız (tarih-kümeli bootstrap; en iyi cf@20 IC=0.037 CI[-0.030,+0.100]); panel tanısı aralık-kısıtı artefaktını dışladı (işaret tez yönünde bile…
@@ -298,6 +298,9 @@ Toplam **101** kart.
 - **EDG-2026-021** (`archived`) — EDG-016 (turnover ana-etkisi, YAŞAYAN) sağkalan-evrende ölçüldü ve şerhi kalıcıydı: "hayatta-kalma yanlılığı pozitif bulguda yukarı-çarpıtır, bu…
   · HÜKÜM: 2026-09-03 KARAR (operatör + Rol-1, kartın kill#1 kuralı): ŞÜPHEDE-bilgisiz → ARŞİV; EDG-016 canlıda kalır, ağırlık DEĞİŞMEZ; ikinci koşum hakkı kullanıldı (v4 PIT…
   · kart: `EDG-2026-021-qc-delist-dogrulama.yaml`
+- **EDG-2026-087** (`archived`) — 
+  · HÜKÜM: 2026-09-08 16:5xZ Rol-1 — ÖLÇÜM BAŞLAMADAN arşiv: veri_penceresi (45 gün) bayat hıza (7 Ağustos kümülatif) dayanıyordu; ölçülen hız 10 plan/40 gün → ardıl EDG-2026-088…
+  · kart: `EDG-2026-087-uyuyan-kurulum-golge-pilot.yaml`
 - **KYS-2026-001** (`archived`) — EAP ölçümünün yan bulgusu (2026-07-31): herhangi bir olay penceresinde evrenin ort.
   · HÜKÜM: 2026-08-02 ~22:30 TR — ARŞİV (Rol-1 hükmü; kill#1 tetiklendi): İki yüzeyde de fark CI-0-içi VE |fark|<10bps: Y1 @20 −0,06bps [−2,06,+2,60] · Y2 @20 +0,27bps…
   · kart: `KYS-2026-001-kiyas-kirlenmesi.yaml`
