@@ -9,23 +9,56 @@ adımı operatörde — bu belge o adımı GEREKTİRMEZ, ondan önceki basamakt�
 
 | Dosya | mod / sahip | Değişken | Sır mı? | Tüketici | Kanal bugün |
 |---|---|---|---|---|---|
-| `/opt/meridian/.env` | 600 / ubuntu | MERIDIAN_DASH_TOKEN | SIR (tekrar: `.dash.env`) | meridian.service | EnvironmentFile (+ LoadCredential faz-1 paralel) |
-| | | NOUS_API_KEY | SIR | meridian.service (Nous istemcisi) | EnvironmentFile |
-| | | KAPI_APIKEY | SIR (kapı tüketici anahtarı `motor_meridian`) | meridian.service | EnvironmentFile |
-| | | NOUS_MODEL · NOUS_ENDPOINT · MERIDIAN_FMP_BASE | yapılandırma | meridian.service | EnvironmentFile |
+| `/opt/meridian/.env` | 600 / ubuntu | NOUS_MODEL · NOUS_ENDPOINT · MERIDIAN_FMP_BASE | yapılandırma (sır kalmadı — ölçüldü 2026-09-08 10:5xZ) | meridian.service | EnvironmentFile |
 | `/opt/meridian/.dash.env` | 600 / ubuntu | MERIDIAN_DASH_TOKEN | SIR | meridian.service | EnvironmentFile (faz-2'de kapanacak) |
-| `/opt/hindsight/.env` | 600 / ubuntu | HINDSIGHT_API_DATABASE_URL (parola gömülü) | SIR | hindsight-api.service | EnvironmentFile |
-| | | HINDSIGHT_API_LLM_API_KEY | SIR | hindsight-api.service | EnvironmentFile |
-| | | HINDSIGHT_API_TENANT_API_KEY | SIR | hindsight-api.service · (pano vekili `meridian/api.py` dosyayı okur) | EnvironmentFile + dosya okuma |
+| `/opt/hindsight/.env` | 600 / ubuntu | HINDSIGHT_API_REFLECT_LLM_1_API_KEY · HINDSIGHT_API_REFLECT_LLM_2_API_KEY · HINDSIGHT_API_REFLECT_LLM_3_API_KEY | SIR ×3 (hafıza failover zinciri, 2026-09-06'dan beri; her üye OPENROUTER anahtarının birebir kopyası) | hindsight-api.service | EnvironmentFile |
+| | | HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY · HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY · HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY | SIR ×3 (aynı zincirin konsolidasyon yüzeyi) | hindsight-api.service | EnvironmentFile |
 | | | diğer 29 (LLM/embedder/reranker/DB havuzu/…) | yapılandırma | hindsight-api.service | EnvironmentFile |
+| `/etc/hindsight/creds/<AD>` | 0400 / root | HINDSIGHT_API_DATABASE_URL · HINDSIGHT_API_LLM_API_KEY · HINDSIGHT_API_TENANT_API_KEY | SIR ×3 (dosyanın ADI değişkenin adıdır) | hindsight-api.service (LoadCredential + ExecStart sarmalayıcı) · meridian.service (pano vekili, yalnız TENANT) | LoadCredential |
 | `/opt/hindsight/.env-cp` | 600 / root | HINDSIGHT_CP_ACCESS_KEY · HINDSIGHT_CP_DATAPLANE_API_KEY | SIR | hindsight-cp.service (docker) | docker env-file |
 | `/opt/apisix/.env-apisix` | **640** / root | APISIX_ADMIN_KEY · OPENROUTER_API_KEY · OPENROUTER_AUTH · PANO_GIRIS_PAROLA · BOT_KEY_{BEKCI,KARNE,SEF,MERIDIAN} | SIR ×8 | apisix.service (docker, `$env://` çözümü) · `ops/apisix_uygula.py` (admin anahtarı) | EnvironmentFile → docker run env |
-| `~/.hermes/profiles/<bekci,karne,sef>/.env` | (ölçülmedi) | BOT_KEY_<AD> | SIR | hermes bot birimleri (timer'lı oneshot) | HERMES_HOME/.env (hermes env_loader) |
+| `~/.hermes/profiles/<bekci,karne,sef>/.env` | (ölçülmedi) | BOT_KEY_<AD> · OPENROUTER_API_KEY | SIR | hermes bot birimleri (timer'lı oneshot) | HERMES_HOME/.env (hermes env_loader) |
+
+**ÖLÇÜM GÜNCELLEMESİ — 2026-09-08 (A1, yalnız AD varlığı okundu; değer basılmadı).** Tablo
+2026-09-03 ölçümüdür ve üç yerde EKSİLDİ/ARTTI. Satırlar tarihiyle birlikte düzeltildi, çünkü bu
+tablo bir arşiv değil, `deploy/sir_envanteri.yaml` ile çivilenmiş TEK KAYNAKtır ve bayat bir tek
+kaynak, ayrışma çivisini "her şey uyuşuyor" diye yeşil tutar:
+1. **`/opt/hindsight/.env`den ÜÇ SIR ÇIKTI.** `HINDSIGHT_API_DATABASE_URL` ·
+   `HINDSIGHT_API_LLM_API_KEY` · `HINDSIGHT_API_TENANT_API_KEY` bu dosyada ARTIK YOK (09:3xZ
+   ölçümü: üçünün de satır sayısı 0); Faz-1A/`LoadCredential` geçişi 2026-09-07'de tamamlandı ve
+   üçü yalnız `/etc/hindsight/creds/<AD>` kaynak dosyalarında + `/run/credentials` altında yaşıyor.
+   Bu yüzden yeni bir dosya satırı açıldı — "nerede YOK" ile "nerede VAR" iki ayrı gerçektir.
+2. **`/opt/hindsight/.env`e ALTI SIR GİRDİ.** Hafıza failover zincirinin üye anahtarları
+   (EDG-2026-080/081, 2026-09-06). Zincir ÜYESİ ana anahtarı DEVRALMAZ: her üye kendi
+   `_API_KEY` satırını okur ve altısı da OpenRouter anahtarının birebir kopyasıdır — yani
+   rotasyon kapsamına GİRERLER (`deploy/oracle-a1/sir_rotasyon.sh --kopyalar`).
+3. **hermes profillerine `OPENROUTER_API_KEY` eklendi** (ölçüm 2026-09-07 22:0xZ; `sir_envanteri.yaml`
+   rotasyon bloğunda beyanlıydı, §1'de açık kalemdi).
+4. **`/opt/meridian/.env`den ÜÇ SIR ÇIKTI.** `NOUS_API_KEY` · `KAPI_APIKEY` ·
+   `MERIDIAN_DASH_TOKEN` bu dosyada ARTIK YOK — Rol-1 ölçümü, A1, 2026-09-08 10:0xZ ve 10:5xZ:
+   üçünün de satır sayısı **0**, ve `_TOKEN|_API_KEY|_APIKEY|_SECRET|_PASSWORD|_PAROLA` sonek
+   taramasında bu dosyada **hiçbir** sır adı bulunamadı (yalnız ADLAR okundu; değer basılmadı).
+   Üçü yalnız kendi kanallarında yaşıyor: NOUS/KAPI `LoadCredential`
+   (`/etc/meridian/{nous_api_key,kapi_apikey}`, Faz-1B 2026-09-07 gecesi tamamlandı),
+   `MERIDIAN_DASH_TOKEN` ise `.dash.env` + `/etc/meridian/dash_token` (TSK-049 faz-1).
+   Dosya satırı KALDI — dosya duruyor ve üç YAPILANDIRMA değişkeni taşıyor; "dosya yok" ile
+   "dosyada sır yok" iki ayrı gerçektir ve faz-2'nin ayrımı ikincisine bakar.
+
+**ÖLÇÜLMEYEN, DOLAYISIYLA DEĞİŞTİRİLMEYEN TEK SATIR (uydurma yasağı):** `diğer 29` ayar
+sayısı 2026-09-03 ölçümüdür ve 2026-09-08'de YENİDEN SAYILMADI — yalnız sır ADLARININ varlığı
+ölçüldü. (Bu paragrafın 2026-09-08 sabahki ikinci maddesi — `/opt/meridian/.env`in
+`NOUS_API_KEY`/`KAPI_APIKEY` satırları — 10:5xZ'de ÖLÇÜLDÜ ve yukarıdaki 4. madde onun yerini
+aldı: ölçülmüş bir gerçeği "ölçülmedi" diye beyan etmek, bayat tek kaynağın en sessiz hâliydi.)
 
 **Bulgu-1 (hemen):** `.env-apisix` 640 — grup okuyabilir; diğer sır dosyaları 600. Tek satır: `chmod 600`
 (docker `EnvironmentFile`'ı root okur, grup gerekmez). Sabah penceresinde, F9 beyanıyla.
-**Bulgu-2:** MERIDIAN_DASH_TOKEN iki dosyada (motor `.env` + `.dash.env`) — tek-kaynak ihlali; faz-2'de
-`.dash.env` kapanınca motor `.env`'deki kopya da kalkmalı (TSK-049 faz-2 şartı: uygulama tarafı).
+**Bulgu-2 (KAPANDI — ölçüldü 2026-09-08 10:5xZ):** MERIDIAN_DASH_TOKEN 2026-09-03'te iki dosyadaydı
+(motor `.env` + `.dash.env`) — tek-kaynak ihlali. Motor `.env`'deki kopya ARTIK YOK (satır sayısı 0),
+yani bulgunun istediği şey olmuş durumda; `.dash.env` + `/etc/meridian/dash_token` ikilisi TSK-049
+faz-2'nin kendi kalemidir ve bu bulguya değil ona bakar. NOT: motorun KENDİ sır deposu
+(`state/secrets.json`) hâlâ bir `MERIDIAN_DASH_TOKEN` kopyası taşır — o kopya rotasyon tablosunda
+BEYAN DIŞIDIR ve `sir_rotasyon.sh --envanter` onu her koşumda bağırır (beyanlı, kalıcı kayıt
+2026-09-06: kimlikler `secrets.json`da yaşar).
 **Bulgu-3:** hindsight TENANT_API_KEY'i pano vekili DOSYADAN okuyor (`meridian/api.py::_env_anahtari`);
 LoadCredential'a geçince vekilin okuma yolu `$CREDENTIALS_DIRECTORY`ye taşınmalı (kod değişikliği, tam suite).
 

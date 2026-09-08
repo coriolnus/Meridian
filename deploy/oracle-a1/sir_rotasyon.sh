@@ -7,11 +7,27 @@
 # bir sırrın KANALINI taşır (ortam → LoadCredential); bu betik kanala DOKUNMAZ, sırrın DEĞERİNİ
 # döndürür ve o değerin BÜTÜN KOPYALARINI aynı pencerede eşitler.
 #
-# NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-3 kopyası var ve
+# NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-12 kopyası var ve
 # kopyalar AYRI dosyalarda yaşıyor (credential kaynağı · `.env` satırı · docker env-file · bot
-# profili). Elle rotasyonda kaçınılmaz tek hata "bir kopyayı unutmak"tır ve o hata SESSİZDİR:
-# yeniden başlatılan birim çalışır, unutulan kopyayı okuyan öteki birim ilk çağrısında 401 alır.
+# profili · LLM failover zincirinin ÜYE satırları). Elle rotasyonda kaçınılmaz tek hata "bir
+# kopyayı unutmak"tır ve o hata SESSİZDİR: yeniden başlatılan birim çalışır, unutulan kopyayı
+# okuyan öteki birim ilk çağrısında 401 alır.
 # Betik kopya listesini SABİT taşır (`--kopyalar`), hepsini tek pencerede yazar, sonra ölçer.
+#
+# HAFIZA FAILOVER ZİNCİRİ — ÜYE ANAHTARI ANA ANAHTARI DEVRALMAZ. Hindsight'ın reflect ve
+# konsolidasyon yüzeyleri 2026-09-06'dan beri çok-LLM failover zinciriyle koşuyor
+# (EDG-2026-080/081) ve zincirin HER ÜYESİ kendi `HINDSIGHT_API_<yüzey>_LLM_<n>_API_KEY` satırını
+# okur — "provider/anahtar devralınır" YALNIZ birincil model içindir. Ölçüm 2026-09-08 08:0xZ
+# (A1, yalnız AD okundu): `/opt/hindsight/.env` altı üye satırı taşıyor (REFLECT _1.._3 ·
+# CONSOLIDATION _1.._3) ve altısı da OPENROUTER_API_KEY değerinin birebir kopyası. Tabloda
+# olmasalardı `--openrouter` creds dosyasını döndürür, üyeler ESKİ anahtarla kalır ve eski anahtar
+# iptal edildiği an üyeler 401 alıp zincir SESSİZCE birincile düşerdi — yani bu betiğin var olma
+# gerekçesindeki "unutulan kopya" sınıfının tam kendisi. Altısı da tabloya girdi; OPENROUTER
+# artık 12 kopya (NOUS 2).
+# BEYANLI KABUL: birincilin anahtarı (`/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY`) AYRI ve
+# LoadCredential kanalındadır; ÜYE satırları değeri `.env` içinde tutar, yani hafızanın bu kanalı
+# B SINIFIDIR (yarım kazanım) ve öyle beyan edilir — kanalı taşımak bu betiğin işi DEĞİL
+# (`sir_credential_gecis.sh`), ama değeri döndürmek işidir.
 #
 # KULLANIM — BETİK ROOT OLARAK KOŞAR (alt komut ZORUNLU; her biri TEK sırrı döndürür):
 #   sudo ./sir_rotasyon.sh --envanter     → kopyaların VARLIĞI + birbirine EŞİTLİĞİ (yalnız bool)
@@ -25,6 +41,21 @@
 #   sudo ./sir_rotasyon.sh --openrouter   → OpenRouter anahtarları (operatör YAPIŞTIRIR, `read -s`)
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
+#
+# ÖN KOŞUL — `meridian-tick-watchdog.timer` DURDURULUR (kalıcı kayıt `bakim-penceresi-tick-watchdog`).
+# Timer 45 dk bayat nabızda worker'ı yeniden başlatır; bu betik meridian'ı `--openrouter`de ÜÇ kez
+# yeniden başlatır ve HER restart `/healthz`i dakikalarca 503 (bayat) yapar. Timer pencerenin
+# ortasında ateşlenirse ölçüm SEBEPSİZ "ölçülemedi" verir ve bunun sebebi betiğin çıktısından ASLA
+# anlaşılmaz — yani teşhis edilemeyen bir arıza. Pencerenin başında ve sonunda:
+#   sudo systemctl stop meridian-tick-watchdog.timer     # BAŞTA
+#   sudo systemctl start meridian-tick-watchdog.timer    # SONDA
+# `--kuru` bu satırı da basar (kuru koşum operatörün koşacağı İLK komuttur).
+#
+# TAVANI YÜKSELTMEK GEREKİRSE — DÜZ `sudo` ORTAM DEĞİŞKENİNİ DÜŞÜRÜR. sudo'nun varsayılan
+# `env_reset`i `HAZIR_TAVAN_S_*`/`SIR_ROT_*`ı temizler, yani aşağıdaki "operatör tavanı ÖLÇEREK
+# yükseltebilir" sözleşmesi BELGELENEN çağrı biçiminde (`sudo ./sir_rotasyon.sh …`) çalışmaz.
+# Güvenli biçim (çivi bu satırı koddaki varsayılandan TÜRETEREK arar):
+#   sudo env HAZIR_TAVAN_S_hindsight_api=300 ./deploy/oracle-a1/sir_rotasyon.sh --openrouter
 #
 # NİYE ROOT — VE NİYE BU BİR AYRINTI DEĞİL. Betik iki iş yapar: 0400 root dosyalarını YAZAR ve o
 # dosyalardan türettiği kanıt GİRDİLERİNİ (curl `-K` yapılandırması, `PGPASSFILE`, SQL dosyası)
@@ -65,12 +96,33 @@
 # anlamına gelmez. 2026-09-08 06:13Z'de `--openrouter`in ilk canlı koşumu tam buradan düştü:
 # negatif kontrol üç birimi yeniden başlattı ve hemen ölçtü, meridian henüz ayakta olmadığı için
 # curl `000` döndü ve betik (doğru biçimde) "ÖLÇÜM ARIZASI" deyip geri aldı — hiçbir zarar yok,
-# ama rotasyon da yok. Her yeniden başlatmadan sonra birimin sağlık ucu YOKLANIR: meridian
-# `/healthz`, hindsight-api `/health`, apisix `/healthz`; 2 s aralıkla en çok 60 s
-# (`HAZIR_BEKLE_ARALIK_S` / `HAZIR_BEKLE_TAVAN_S` ile ölçerek değiştirilebilir). Ölçülen açılış
-# süreleri 2026-09-08: meridian 6-8 s · hindsight 3-10 s · apisix 5-10 s. Beklenen süre ÇIKTIYA
-# BASILIR. Tavan aşılırsa betik "hazır" demez, `ölçülemedi` der ve çıkış 2 verir. Sağlık ucu
-# tanımlı OLMAYAN birim (`hindsight-cp.service`) beklenmez ve hazır SAYILMAZ — satır bunu söyler.
+# ama rotasyon da yok. Her yeniden başlatmadan sonra birimin sağlık ucu YOKLANIR.
+#
+# "HAZIR" BİRİM BAŞINA TANIMLIDIR — 200 ŞARTI HER YÜZEY İÇİN DOĞRU DEĞİLDİR. İKİNCİ canlı deneme
+# (2026-09-08 07:2x-07:4xZ, A1) iki AYRI kökten düştü ve ikisi de bu tanımın içindedir:
+#   · meridian `/healthz` yeniden başlatmadan sonra DAKİKALARCA `503` döner; gövde
+#     `{"status":"stale","heartbeat_age_seconds":…}`. Worker açılışta ağır bar tazelemesi yapar
+#     ve o sırada nabız YAZILMAZ — ama API AYAKTADIR: aynı anda `/api/secrets/test/nous` cevap
+#     verir. Yani meridian için hazırlık şartı "HTTP cevabı var" (`000` DEĞİL); `200` nabız
+#     TAZELİĞİNİN ölçüsüdür, ayakta olmanın değil. 200 şartı koşmak, sağlıklı ama meşgul bir
+#     motoru "ölü" saymaktır. `apisix` `/healthz` rotası meridian'a PROXY'dir → aynı gövde, aynı
+#     hüküm. hindsight-api `/health` KENDİ sürecidir ve orada `200` gerçekten hazırlıktır.
+#   · hindsight-api'nin ölçülen açılışı ~60 s'dir (07:34:18 restart → 07:35:18 "Application
+#     startup complete"), yani 60 s'lik ORTAK tavan SINIRDA: ilk deneme tam oradan
+#     "hazırlık bekleme aşıldı: hindsight-api … 000" ile düştü. Tavan bu yüzden birim başınadır —
+#     hindsight-api 300 s, ötekiler 60 s. 300'ün gerekçesi 2026-09-08 08:07:06→08:08:45 ölçümüdür:
+#     açılış 99 s, yani 180 s yalnız 1,8× paydı ve NEGATİF KONTROLDEKİ (bilerek bozuk anahtarlı)
+#     açılış yolu HİÇ ölçülmedi. Dar tavanın bedeli ucuz değildir: aşım, birimleri bozuk değerle
+#     bırakan kurtarma yoluna sokar (bkz. `_negatif_restart_kurtarma`).
+# Kabul ölçütü ve tavan TEK yerde yaşar (`_hazir_uc` · `_hazir_tavan`); `--kuru` İKİSİNİ DE basar.
+# 2 s aralıkla yoklanır (`HAZIR_BEKLE_ARALIK_S` · `HAZIR_BEKLE_TAVAN_S` ·
+# `HAZIR_TAVAN_S_hindsight_api` ile ölçerek değiştirilebilir). Ölçülen açılışlar 2026-09-08:
+# meridian 6-8 s (HTTP cevabı; 200 çok daha geç) · hindsight-api ~60 s (200) · apisix 5-10 s.
+# Süre ÇIKTIYA BASILIR ve 200 GELMEDEN hazır sayılan birimin satırı bunu SÖYLER
+# ("hazır: meridian 7 s (healthz 503 — nabız bayat, API ayakta)") — sessizce geçmek, ölçülmemiş
+# bir tazeliği ölçülmüş göstermek olurdu. Tavan aşılırsa betik "hazır" demez, `ölçülemedi` der ve
+# çıkış 2 verir. Sağlık ucu tanımlı OLMAYAN birim (`hindsight-cp.service`) beklenmez ve hazır
+# SAYILMAZ — satır bunu söyler.
 #
 # GERİ-DÜŞÜŞ ZİNCİRİ — NOUS BACAĞININ İNCE YERİ. Motor sırrı TEK yerden okumaz:
 # `meridian/secrets.py::_fetch` sırayla credential → süreç ortamı → `state/secrets.json` → GCP
@@ -117,13 +169,24 @@ KAPI_UC="${SIR_ROT_KAPI:-$KAPI_KOK/llm/v1}"
 #: penceresini uzatır. Ortamdan geçilebilir olmaları kanca DEĞİL sözleşmedir (uçlarla aynı
 #: gerekçe): yükün yüksek olduğu bir pencerede operatör tavanı ÖLÇEREK yükseltebilir, ve çivi
 #: bekleme dalını dakikalar sürmeden koşabilir.
+#: TAVAN BİRİM BAŞINADIR ÇÜNKÜ AÇILIŞ SÜRELERİ BİR MERTEBE AYRIŞIYOR (ölçüm 2026-09-08 07:3xZ,
+#: A1): hindsight-api `/health` 200'ü restart'tan ~60 s sonra verir — ortak 60 s tavanı SINIRDIR
+#: ve ikinci canlı deneme tam oradan düştü. 300 = ölçüm + pay: aynı gün 08:07:06→08:08:45 açılışı
+#: 99 s ölçüldü, yani 180 yalnız 1,8× paydı. Ötekiler (meridian · apisix) "HTTP
+#: cevabı" ölçütüyle saniyeler içinde geçer; onlara da 180 vermek, gerçekten ölü bir birimi üç kat
+#: uzun beklemek olurdu — geniş tavanın bedelini bakım penceresi öder.
 HAZIR_BEKLE_ARALIK_S="${HAZIR_BEKLE_ARALIK_S:-2}"
 HAZIR_BEKLE_TAVAN_S="${HAZIR_BEKLE_TAVAN_S:-60}"
+HAZIR_TAVAN_S_hindsight_api="${HAZIR_TAVAN_S_hindsight_api:-300}"
 
 ISLIK=""          # 0700 çalışma dizini (değer taşıyan geçici dosyalar YALNIZ burada yaşar)
 YEDEK=""          # bu koşumun yedek dizini
 KURU=0            # --kuru: hiçbir yazım yok
 GERI_AL_LISTESI=""  # negatif kontrolün geri alacağı <yedek>|<hedef> çiftleri
+#: NEGATİF KONTROLÜN BOZUK/BOŞ DEĞERLE YENİDEN BAŞLATTIĞI BİRİMLER. Dosyaları geri almak YETMEZ:
+#: birim değeri AÇILIŞTA okur (apisix `$env://` çözümünü yalnız açılışta yapar, systemd
+#: `LoadCredential`ı yalnız açılışta kopyalar). Trap bu kümeyi geri almadan SONRA yeniden başlatır.
+NK_BIRIMLER=""
 
 die()      { echo "!! $*" >&2; exit 1; }
 olcum_yok(){ echo "!! ÖLÇÜLEMEDİ: $*" >&2; exit 2; }
@@ -164,24 +227,83 @@ openrouter NOUS_API_KEY api /api/secrets/NOUS_API_KEY - - - -
 openrouter OPENROUTER_API_KEY env /opt/apisix/.env-apisix OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /opt/apisix/.env-apisix OPENROUTER_AUTH koru koru Bearer
 openrouter OPENROUTER_API_KEY dosya /etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY - 0400 root:root -
+openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_REFLECT_LLM_1_API_KEY koru koru -
+openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_REFLECT_LLM_2_API_KEY koru koru -
+openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_REFLECT_LLM_3_API_KEY koru koru -
+openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY koru koru -
+openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY koru koru -
+openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/bekci/.env OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/karne/.env OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/sef/.env OPENROUTER_API_KEY koru koru -
 KOPYA_SON
 }
 
-#: Yeniden başlatma SIRASI önemlidir ve bu tablo o sıradır: kapıyı (apisix) motordan ÖNCE
-#: yeniden başlatmazsan motor yeni anahtarla eski kapıya konuşur ve ilk turda 401 alır.
-#: `$env://` çözümünü apisix YALNIZ açılışta yapar — reload YETMEZ, RESTART gerekir.
-_birimler() {
+#: SIR → TÜKETİCİ BİRİMLER. Rotasyon bir sırrın DEĞERİNİ okuyan birimi yeniden başlatır; okumayanı
+#: DEĞİL. Ölçüm 2026-09-08 07:3xZ (A1): `--openrouter`in NOUS negatif kontrolü ÜÇ birimi birden
+#: yeniden başlatıyordu, oysa `NOUS_API_KEY`i YALNIZ motor tüketir (kapı isteğin Authorization'ını
+#: upstream'e geçirmez, hafıza NOUS okumaz). İki gereksiz restart demek — hindsight ~60 s açıldığı
+#: için — bakım penceresinde iki uzun ve KARŞILIKSIZ bekleme demektir; üstelik ölçülmek istenen
+#: sırla ilgisi olmayan iki birimi kesintiye uğratır.
+#: KAYNAK: `deploy/sir_envanteri.yaml` → `rotasyon_kopyalari.kopyalar[].tuketici`. Kopya tablosu
+#: BİRİM SÜTUNU TAŞIMAZ (satırın anlamı "hangi DOSYA"dır, "hangi BİRİM" değil), o yüzden harita
+#: burada ayrıca yaşar ve envanterle AYRIŞMA ÇİVİSİYLE bağlanır (v447 N bölümü): türetilemeyen
+#: kopya çivisiz bırakılmaz.
+#: RESTART İSTEMEYEN TÜKETİCİLER BEYANLIDIR (bedel yasası — sessiz atlama, ölçülmemiş atlamadır):
+#: hermes bot profilleri (bekci·karne·sef) ve `brifing/learn/sprint@` timer'lı ONESHOT'tur, yeni
+#: değeri bir sonraki tetikte okur; `postgres` parolayı `ALTER ROLE` ile anında alır; motorun
+#: kendi sır deposu (`/api/secrets/…`) meridian sürecinin İÇİDİR, ayrı bir birim değildir.
+_sir_birimleri() {
   case "$1" in
-    kapi)       echo "apisix.service meridian.service" ;;
-    tenant)     echo "hindsight-api.service hindsight-cp.service meridian.service" ;;
-    db)         echo "hindsight-api.service" ;;
-    dash)       echo "meridian.service" ;;
-    openrouter) echo "apisix.service hindsight-api.service meridian.service" ;;
+    KAPI_APIKEY)                  echo "apisix.service meridian.service" ;;
+    HINDSIGHT_API_TENANT_API_KEY) echo "hindsight-api.service hindsight-cp.service meridian.service" ;;
+    HINDSIGHT_DB_PAROLA)          echo "hindsight-api.service" ;;
+    MERIDIAN_DASH_TOKEN)          echo "meridian.service" ;;
+    NOUS_API_KEY)                 echo "meridian.service" ;;
+    OPENROUTER_API_KEY)           echo "apisix.service hindsight-api.service" ;;
     *) return 1 ;;
   esac
+}
+
+#: Yeniden başlatma SIRASI bir BAĞIMLILIK sırasıdır, alfabe değil: kapıyı (apisix) motordan ÖNCE
+#: yeniden başlatmazsan motor yeni anahtarla eski kapıya konuşur ve ilk turda 401 alır.
+#: `$env://` çözümünü apisix YALNIZ açılışta yapar — reload YETMEZ, RESTART gerekir. Sıra TEK
+#: yerde yaşar: birim kümesi nereden gelirse gelsin (alt komutun tamamı ya da tek bir sırrın
+#: tüketicileri) buradan geçer, yani "sıra" ile "küme" birbirinden bağımsız değişebilir.
+_BIRIM_SIRASI="apisix.service hindsight-api.service hindsight-cp.service meridian.service"
+
+#: Verilen birimleri bağımlılık sırasına dizer ve TEKİLLEŞTİRİR: iki sır aynı birimi tüketebilir
+#: (`--openrouter`de meridian NOUS'tan, hindsight-api OPENROUTER'dan gelir) ve aynı birimi iki kez
+#: yeniden başlatmak bir kesintiyi iki kez ödemektir.
+_sirala() {
+  local b g cikti=""
+  for b in $_BIRIM_SIRASI; do
+    for g in "$@"; do
+      if [ "$g" = "$b" ]; then cikti="${cikti:+$cikti }$b"; break; fi
+    done
+  done
+  [ -n "$cikti" ] || return 1
+  echo "$cikti"
+}
+
+#: ALT KOMUTUN birim kümesi TÜRETİLİR: o alt komutun kopya tablosundaki sırların tüketicilerinin
+#: birleşimi. Elle yazılmış ikinci bir tablo `_sir_birimleri` ile sessizce ayrışırdı (tek-kaynak
+#: yasası) — ve ayrışmanın belirtisi "bir birim yeniden başlatılmadı"dır, yani hiçbir şey.
+#: v447 beş alt komutun çıktısını AYNEN pinler: türetme yanlışsa çivi öter.
+_birimler() {
+  local alt="$1" _alt sir _rest onceki="" tuketici hepsi=""
+  while read -r _alt sir _rest; do
+    [ "$_alt" = "$alt" ] || continue
+    [ "$sir" != "$onceki" ] || continue
+    onceki="$sir"
+    tuketici="$(_sir_birimleri "$sir")" \
+      || die "sır $sir için tüketici birim haritası YOK (_sir_birimleri) — hangi birimin yeniden
+     başlayacağı ÖLÇÜLEMEZ; kopya tablosuna sır eklenirken harita da eklenir (v447 N bölümü)."
+    hepsi="$hepsi $tuketici"
+  done < <(_kopyalar)
+  [ -n "$hepsi" ] || return 1
+  # shellcheck disable=SC2086
+  _sirala $hepsi
 }
 
 #: `<birim> <credential kimliği>` — yeniden başlatmadan SONRA `/run/credentials/<birim>/<kimlik>`
@@ -223,6 +345,10 @@ TARA_SON
 #: kimlikleri `.env`de değil BURADA yaşar). Kopya tablosundaki tek `api` satırı (NOUS_API_KEY)
 #: bu depoya yazar; depoda duran BAŞKA bir döndürülen ad, rotasyonun yazmadığı bir kopyadır.
 #: TANIM YUKARIDA, çünkü artık YALNIZ envanterin değil YEDEĞİN ve NEGATİF KONTROLÜN de girdisi.
+#: KAPSAM BEYANI: bu depo `_aranan_adlar` listesiyle taranır, `.env`lerin sır-adı SÖZLÜĞÜYLE
+#: DEĞİL — JSON'un anahtar uzayı `.env` alan uzayından ayrıdır ve buradaki BAŞKA sırlar (Alpaca,
+#: FMP, Telegram) bu betiğin döndürdüğü sırlar değildir. Yani depoda tablonun hiç duymadığı bir
+#: ADLA duran bir kopya bu taramaya GÖRÜNMEZ; sözlüğü buraya da bağlamak ayrı bir ölçüm işidir.
 SECRETS_JSON="/opt/meridian/state/secrets.json"
 
 #: `_disk_yolu <tür> <yol>` → kopyanın DİSKTEKİ karşılığı; karşılığı olmayan türde 1 döner.
@@ -261,7 +387,7 @@ _islik_kur() {
   # (Bu şerh 2026-09-08'de koda uyduruldu: K9 düzeltmesinden sonra "bilerek yutuluyor" diyen
   # eski metin kodu ARTIK ANLATMIYORDU — işaretli bir gerekçenin koddan ayrışması ileri
   # düzeltmelerde kopyalanır ve kabukta hiçbir çivi bunu yakalamaz: `codelaw` yalnız `*.py` tarar.)
-  trap '_temizle' EXIT
+  trap '_cikis' EXIT
   cat > "$ISLIK/yardimci.py" <<'PY_SON'
 """sir_rotasyon.sh'in dosya yazma/okuma yardımcısı — DEĞER YALNIZ DOSYADAN OKUNUR.
 
@@ -314,8 +440,14 @@ def _pgpass_alan(deger: str) -> str:
 
 
 def _deger_dosyadan(yol: str) -> str:
-    """Değer dosyası: TEK satır, sondaki yeni satır kırpılır. Boş/yalnız-boşluk bir ARIZADIR."""
-    d = _oku(yol).strip("\r\n")
+    """Değer dosyası: TEK satır, BAŞTAKİ VE SONDAKİ BOŞLUKLAR kırpılır. Boş/yalnız-boşluk ARIZADIR.
+
+    İlk biçim yalnız `\r\n` kırpıyordu. Panodan yapıştırılan bir anahtarın sonundaki tek boşluk
+    12 kopyaya AYNEN yazılır, upstream reddeder ve rotasyon kanıt aşamasında düşer — yani
+    "yanlış anahtar" ile "doğru anahtar + bir boşluk" AYNI belirtiyi verir ve teşhis yanılır.
+    Kırpma bir kolaylık değil ÖLÇÜMÜN ÖN ŞARTIDIR. (Operatör yolunda `read -rs` zaten IFS
+    kırpması yapar; bu kapı değer dosyasının ÖTEKİ kaynaklarını da kapsar.)"""
+    d = _oku(yol).strip()
     if not d.strip():
         sys.exit("değer dosyası BOŞ — yazım yapılmadı")
     return d
@@ -537,6 +669,24 @@ def main(argv: list[str]) -> None:
             print("OKUNAMADI")
             return
         print("VAR" if isinstance(veri, dict) and ad in veri else "YOK")
+    elif op == "alanlar":            # <hedef> → dosyadaki `^AD=` ALAN ADLARI (DEĞER BASILMAZ)
+        # Beyan dışı taramanın DÖRDÜNCÜ kaynağı. Tablodan türeyen ad listesi yalnız BİLİNEN adları
+        # görür; dosyanın KENDİ alan adlarını okumak, tablonun hiç duymadığı bir kopyayı da
+        # görünür kılar (2026-09-08: hafıza failover üyeleri tam bu körlükte yaşıyordu).
+        # `=` işaretinin YALNIZ SOLU basılır; sağ taraf hiçbir çıktıya girmez.
+        try:
+            ham = _oku(argv[2])
+        except OSError:
+            # sessiz-yutma: dosya YOKLUĞU burada bir bulgu DEĞİLDİR — çağıran (`_beyan_disi_tara`)
+            # varlığı ZATEN `test -f` ile ölçtü ve yokluğu ORADA beyan eder. Boş liste dönmek
+            # "taranacak alan yok" demektir, bir hatayı gizlemek değil.
+            return
+        gorulen = set()
+        for satir in ham.splitlines():
+            m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=", satir)
+            if m and m.group(1) not in gorulen:
+                gorulen.add(m.group(1))
+                print(m.group(1))
     elif op == "alan-var":           # <hedef> <alan>  → dosyada `^alan=` var mı (bool)
         hedef, alan = argv[2:4]
         try:
@@ -568,6 +718,35 @@ _temizle() {
   return 0
 }
 
+# GERİ ALMA REÇETESİ HER YOLDA BASILIR — başarıda DA arızada DA. İlk biçimde reçete her alt
+# komutun SON satırıydı, yani YALNIZ başarıda basılıyordu ve tam da en çok gerektiği hâlde
+# susuyordu: taze anahtar kopyalara YAZILDIKTAN sonra kanıt aşamasında durulursa (yapıştırmada
+# bir boşluk → upstream RET → çıkış 2) ekranda geri alma yolu YOKTU. Yedek dizininin YOLU daha
+# önce basılmıştır, ama "yol basıldı" ile "ne yapacağı yazıldı" AYNI ŞEY DEĞİLDİR.
+# `$YEDEK` boşken (kuru koşum · `--envanter` · yedek alınmadan düşen koşum) HİÇBİR ŞEY basılmaz:
+# olmayan bir yedeği göstermek, olmayan bir güvence vermek olurdu.
+_geri_alma_recetesi() {
+  [ -n "$YEDEK" ] || return 0
+  local birimler
+  # sessiz-yutma: `_birimler` bilinmeyen bir alt komutta `die` eder ve o hata METNİ burada hükme
+  # GİRMEZ — burası çıkış YOLUDUR, hüküm çoktan verilmiştir ve reçetenin susması, hükümden daha
+  # pahalıya mal olurdu. Yutulan tek şey stderr metnidir; ÖLÇÜLEMEDİ hâli sessiz DEĞİL, görünür
+  # bir dizgeyle beyan edilir (aşağıdaki `(birim listesi ölçülemedi)`).
+  birimler="$(_birimler "$ALT" 2>/dev/null || echo '(birim listesi ölçülemedi)')"
+  echo ">> GERİ ALMA (bu koşum YEDEK aldı — başarıda da arızada da geçerli):
+     sudo cp -p $YEDEK/<yol> /<yol>   (yedek ağacı üretim yollarını AYNEN taşır)
+     sonra yeniden başlat: $birimler" >&2
+  return 0
+}
+
+# ÇIKIŞ YOLU TEK FONKSİYONDUR. `trap 'birinci; ikinci' EXIT` içinde `birinci` `exit` ederse
+# `ikinci` HİÇ KOŞMAZ (bash EXIT-trap semantiği, ölçüldü 2026-09-08) — iki iş yan yana yazıldığı
+# an, ikincisi birincinin arıza yoluna REHİN olur.
+_cikis() {
+  _geri_alma_recetesi
+  _temizle
+}
+
 # `sudo python3` — yardımcı root olarak koşar (0400 credential dosyalarını okur/yazar).
 py() { sudo python3 "$ISLIK/yardimci.py" "$@"; }
 
@@ -595,12 +774,20 @@ _curl_kod() {
 # 0700 root: yedek de sır taşır ve bir yedek dosyası, kaynağından daha gevşek izinliyse rotasyonun
 # kazandığını yedek geri verir.
 _yedek_al() {
-  local alt="$1" yol hedef
-  YEDEK="$KOK/root/sir-yedek-$(date -u +%Y%m%dT%H%M%SZ)-$alt"
-  [ ! -e "$YEDEK" ] || die "yedek dizini ZATEN VAR: $YEDEK (aynı saniyede ikinci koşum?)"
+  local alt="$1" yol hedef aday
+  # SIRA: aday → YARAT → ata. `YEDEK` globaldir ve `_geri_alma_recetesi`nin TEK kapısıdır
+  # (`[ -n "$YEDEK" ]`), yani atama "yedek ALINDI" beyanıdır. Atamayı `install -d`den ÖNCE
+  # yapmak o beyanı yalana çevirirdi: dizin doğmadan (disk dolu · yetki · aynı saniyede ikinci
+  # koşum) düşen bir koşumda EXIT trap ">> GERİ ALMA (bu koşum YEDEK aldı…)" basar ve operatör
+  # VAR OLMAYAN bir dizinden geri koymaya çalışır — reçetenin kendi şerhinin yasakladığı hâl.
+  # Ölçüldü (inceleme D7/Y2, 2026-09-08): `install` şimi düşürüldü → dizin HİÇ doğmadı, reçete
+  # YİNE basıldı, çıkış 1. Çivi: `test_P14`.
+  aday="$KOK/root/sir-yedek-$(date -u +%Y%m%dT%H%M%SZ)-$alt"
+  [ ! -e "$aday" ] || die "yedek dizini ZATEN VAR: $aday (aynı saniyede ikinci koşum?)"
   # `install -o <kullanıcı> -g <grup>` — İKİ AYRI BAYRAK. Tek `-o root:root` HATA verir
   # (ölçüldü 2026-09-07: `install: invalid user`), ve o hata `set -e` altında pencereyi yakar.
-  sudo install -d -m 0700 -o root -g root "$YEDEK"
+  sudo install -d -m 0700 -o root -g root "$aday"
+  YEDEK="$aday"
   while read -r _alt _sir tur yol alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
     # `api` satırının disk karşılığı da YEDEKLENİR (bkz. `_disk_yolu`): negatif kontrol o kopyayı
@@ -658,7 +845,9 @@ _oku_gizli() {
   : > "$cikti"; chmod 600 "$cikti"
   if [ -n "$girilen" ]; then printf '%s\n' "$girilen" > "$cikti"; fi
   unset girilen
-  grep -q '[^[:space:]]' "$cikti" 2>/dev/null
+  # `2>/dev/null` KALKTI (D7 DÜŞÜK-9): dosya iki satır yukarıda `: > "$cikti"` ile ZATEN
+  # yaratılıyor, yani yönlendirme ÖLÜ koddu — işaretsiz bir kaçış, gerçek bir kaçış gibi okunur.
+  grep -q '[^[:space:]]' "$cikti"
 }
 
 # =================================================================================================
@@ -788,14 +977,21 @@ _api_sil() {
 # =================================================================================================
 # YENİDEN BAŞLATMA + CREDENTIAL DENETİMİ
 # =================================================================================================
+# `_yeniden_baslat <alt> [birim…]` — birim kümesi VERİLMEZSE alt komutun tamamı. Verilebilir
+# olması bir kolaylık değil KAPSAM sözleşmesidir: `--openrouter` iki anahtardan yalnız birini
+# döndürebilir ve o turda ötekinin birimini yeniden başlatmak karşılıksız bir kesintidir.
 _yeniden_baslat() {
-  local alt="$1" b
-  for b in $(_birimler "$alt"); do
+  local alt="$1"; shift
+  local birimler b
+  if [ "$#" -gt 0 ]; then birimler="$*"; else birimler="$(_birimler "$alt")"; fi
+  for b in $birimler; do
     adim "yeniden başlat: $b"
     sudo systemctl restart "$b" || die "$b yeniden başlamadı — journalctl -u $b -n 50"
   done
-  _kredensiyel_denetle "$alt"
-  _hazir_bekle "$alt"
+  # shellcheck disable=SC2086
+  _kredensiyel_denetle "$alt" $birimler
+  # shellcheck disable=SC2086
+  _hazir_bekle $birimler
 }
 
 # =================================================================================================
@@ -816,49 +1012,113 @@ _yeniden_baslat() {
 # UCU OLMAYAN BİRİM HAZIR SAYILMAZ, BEKLENMEZ: `hindsight-cp.service` bir sağlık ucu sunmuyor
 # (2026-09-08 itibarıyla ölçülmedi) ve satır bunu SÖYLER. Sessizce "hazır" saymak, ölçülmemiş
 # bir şeyi ölçülmüş göstermek olurdu.
+# `<uç> <kabul ölçütü> <200 GELMEDEN hazır sayılınca basılacak açıklama>` — üçü de birim başına ve
+# TEK yerde. Kabul ölçütü uçtan ayrı bir tabloda yaşasaydı ikisi sessizce ayrışır, betik bir ucu
+# yanlış ölçütle yoklardı (tek-kaynak yasası).
 _hazir_uc() {
   case "$1" in
-    meridian.service)      echo "$API/healthz" ;;
-    hindsight-api.service) echo "$HINDSIGHT/health" ;;
-    apisix.service)        echo "$KAPI_KOK/healthz" ;;
+    meridian.service)      echo "$API/healthz http nabız bayat, API ayakta" ;;
+    hindsight-api.service) echo "$HINDSIGHT/health 200 -" ;;
+    apisix.service)        echo "$KAPI_KOK/healthz http meridian'a proxy, kapı ayakta" ;;
     *) return 1 ;;
   esac
 }
 
+# KABUL ÖLÇÜTÜ — iki ölçüt AYNI ŞEY DEĞİLDİR ve karıştırmanın bedeli canlıda ölçüldü
+# (2026-09-08 07:2x-07:4xZ):
+#   200  → yüzey gerçekten 200 demeli. hindsight-api `/health` KENDİ sürecidir: 200'ün başka bir
+#          anlamı yoktur, gevşetmek "ayakta" ile "cevap veriyor"u karıştırmak olurdu.
+#   http → HTTP cevabı YETER (kod ne olursa olsun `000` değilse süreç dinliyordur). meridian
+#          `/healthz` NABZIN tazeliğini raporlar (`503` = `{"status":"stale"}`) — açılışta ağır
+#          bar tazelemesi yapan SAĞLIKLI bir motor dakikalarca 503 döner, ama API ayaktadır ve
+#          `/api/secrets/test/nous` aynı anda cevap verir. `apisix` `/healthz` aynı gövdeye
+#          proxy'dir, aynı ölçüte tabidir.
+# `000` iki ölçütte de hazır DEĞİLDİR: curl hiç bağlanamadıysa ortada bir yüzey yoktur.
+_hazir_mi() {
+  case "$1" in
+    200)  [ "$2" = "200" ] ;;
+    http) [ "$2" != "000" ] ;;
+    *) die "bilinmeyen hazırlık kabul ölçütü: $1 (yalnız '200' ve 'http' tanımlı)" ;;
+  esac
+}
+
+_kabul_metni() {
+  case "$1" in
+    200)  echo "HTTP 200" ;;
+    http) echo "HERHANGİ bir HTTP cevabı (000 değil)" ;;
+    *) die "bilinmeyen hazırlık kabul ölçütü: $1" ;;
+  esac
+}
+
+# Birim başına TAVAN (bkz. başlıktaki ölçüm): hindsight-api'nin 200'ü ~60 s sonra gelir ve ortak
+# 60 s tavanı sınırdaydı; ötekiler "HTTP cevabı" ölçütüyle saniyeler içinde geçer.
+_hazir_tavan() {
+  case "$1" in
+    hindsight-api.service) echo "$HAZIR_TAVAN_S_hindsight_api" ;;
+    *)                     echo "$HAZIR_BEKLE_TAVAN_S" ;;
+  esac
+}
+
+# `_hazir_bekle <birim…>` — kümeyi ÇAĞIRAN verir (bkz. `_yeniden_baslat`): negatif kontrol yalnız
+# ölçtüğü sırrın tüketicilerini bekler, alt komutun tamamını DEĞİL.
 _hazir_bekle() {
-  local alt="$1" b uc bas kod gecen
-  for b in $(_birimler "$alt"); do
-    if ! uc="$(_hazir_uc "$b")"; then
+  local b satir uc kabul aciklama tavan bas kod gecen
+  for b in "$@"; do
+    if ! satir="$(_hazir_uc "$b")"; then
       echo "  · hazırlık yoklaması YOK: $b (sağlık ucu tanımlı değil — beklenmedi, hazır SAYILMADI)"
       continue
     fi
+    uc="${satir%% *}"; satir="${satir#* }"; kabul="${satir%% *}"; aciklama="${satir#* }"
+    tavan="$(_hazir_tavan "$b")"
     bas="$(date +%s)"
     while :; do
       kod="$(_kod "-" "$uc" "-" "-")"
-      if [ "$kod" = "200" ]; then break; fi
+      if _hazir_mi "$kabul" "$kod"; then break; fi
       gecen=$(( $(date +%s) - bas ))
-      if [ "$gecen" -ge "$HAZIR_BEKLE_TAVAN_S" ]; then
+      if [ "$gecen" -ge "$tavan" ]; then
         olcum_yok "hazırlık bekleme aşıldı: $b $uc → HTTP $kod
-     ($HAZIR_BEKLE_TAVAN_S s içinde 200 gelmedi.) Birim AYAKTA DEĞİL ya da yüzeye ulaşılamıyor;
-     buradan sonra ölçmek 'ulaşılamadı'yı 'anahtar reddedildi' saymak olurdu."
+     ($tavan s içinde $(_kabul_metni "$kabul") gelmedi.) Birim AYAKTA DEĞİL ya da yüzeye
+     ulaşılamıyor; buradan sonra ölçmek 'ulaşılamadı'yı 'anahtar reddedildi' saymak olurdu."
       fi
       sleep "$HAZIR_BEKLE_ARALIK_S"
     done
-    oldu "hazır: ${b%.service} $(( $(date +%s) - bas )) s"
+    gecen=$(( $(date +%s) - bas ))
+    # 200 GELMEDEN hazır sayıldıysa satır bunu SÖYLER: kabul ölçütü gevşek OLABİLİR, ölçümün
+    # beyanı gevşek OLAMAZ. "hazır: meridian 7 s" ile "hazır: meridian 7 s (healthz 503 — nabız
+    # bayat, API ayakta)" aynı cümle değildir ve operatör ikincisini görmek zorundadır.
+    if [ "$kod" = "200" ]; then
+      oldu "hazır: ${b%.service} $gecen s"
+    else
+      oldu "hazır: ${b%.service} $gecen s (${uc##*/} $kod — $aciklama)"
+    fi
   done
 }
 
 # `/run/credentials/<birim>/<kimlik>` boyutu > 1 mi. Dizin YOKSA bu bir ölçüm arızasıdır, "sorun
 # yok" değildir: birim LoadCredential ile açılmadıysa sır ortamdan geliyordur ve rotasyon başka
 # bir kanalı ölçmüş olur.
+# `_kredensiyel_denetle <alt> <yeniden başlatılan birim…>` — YALNIZ yeniden başlatılan birimler
+# ölçülür. Başlatılmayan birimin `/run/credentials` içeriği bu turda DEĞİŞMEDİ; onu ölçüp "dolu"
+# demek, başka bir turun ölçümünü bu tura yazmaktır.
 _kredensiyel_denetle() {
-  local alt="$1" _alt birim kimlik yol boyut
+  local alt="$1"; shift
+  local _alt birim kimlik yol boyut
   while read -r _alt birim kimlik; do
     [ "$_alt" = "$alt" ] || continue
+    case " $* " in *" $birim "*) ;; *) continue ;; esac
     yol="$KOK/run/credentials/$birim/$kimlik"
     sudo test -e "$yol" || olcum_yok "credential dosyası YOK: /run/credentials/$birim/$kimlik
      ($birim LoadCredential ile açılmadı — rotasyon başka bir kanalı ölçmüş olurdu)"
-    boyut="$(sudo stat -c %s "$yol" 2>/dev/null || sudo stat -f %z "$yol")"
+    # GNU (`-c %s`) / BSD (`-f %z`) geri düşüşü — ve İKİSİ DE düşebilir (eksik/kısıtlı `stat`).
+    # `|| true` OLMADAN `set -e` koşumu ÇIKIŞ 1 ile keserdi ve tasarlanan `olcum_yok` (çıkış 2)
+    # hiç koşmazdı: "ölçemedim" ile "arıza" AYNI HÜKÜM DEĞİLDİR ve bu betiğin bütün sözleşmesi
+    # o ayrımdır.
+    boyut="$(sudo stat -c %s "$yol" 2>/dev/null || sudo stat -f %z "$yol" 2>/dev/null || true)"
+    # sessiz-yutma: iki biçimin HATA METNİ hükme girmez (her sistemde biri zaten düşer); hüküm
+    # ÇIKTININ BOŞ olup olmamasıdır ve tam aşağıda ölçülür.
+    [ -n "$boyut" ] || olcum_yok "credential BOYUTU ÖLÇÜLEMEDİ (stat'ın GNU ve BSD biçimlerinin
+     İKİSİ de düştü): /run/credentials/$birim/$kimlik — dolu mu boş mu bilinmiyor ve 'dolu'
+     saymak kanıt UYDURMAK olurdu."
     [ "${boyut:-0}" -gt 1 ] || olcum_yok "credential BOŞ (boyut $boyut): /run/credentials/$birim/$kimlik"
     oldu "credential dolu: /run/credentials/$birim/$kimlik ($boyut bayt)"
   done < <(_kredensiyeller)
@@ -927,8 +1187,23 @@ _nous_hali() {
 # =================================================================================================
 # ALT KOMUTLAR
 # =================================================================================================
+#: NEGATİF KONTROLLÜ ALT KOMUTLAR — restart ÇARPANININ TEK KAYNAĞI. Buradaki her ad için gerçek
+#: koşumda her birim ÜÇ kez yeniden başlar (negatif kontrolün BOZMA turu + GERİ ALMA turu +
+#: POZİTİF tur) ve her restart'ın ardından hazırlık beklenir; ötekilerde BİR kez. Liste bir
+#: KOPYADIR (asıl gerçek `_negatif_kontrol` çağrı yerleridir) ve kopya kaçınılmaz olduğu için
+#: AYRIŞMA ÇİVİSİYLE bağlıdır: `test_P15` betiğin kendi kaynağındaki çağrı yerlerini sayar.
+_NK_ALT_KOMUTLARI="openrouter"
+
+# Kaç kez yeniden başlayacağı KURU RAPORDA yazılır (bedel yasası, inceleme D7/Y4): birim başına
+# tek bir "tavan: 300 s" satırı okuyan operatör "en fazla 300 s" diye anlar, oysa `--openrouter`
+# penceresinde ölçülen gerçek 3 × 300 s'dir (PROBE3, 2026-09-08: apisix 3 · hindsight-api 3 ·
+# meridian 3 restart). Kazanç (kısa satır) ölçülüp bedeli (gizlenen bekleme) ölçülmeyen hâl.
+_restart_carpani() {
+  case " $_NK_ALT_KOMUTLARI " in *" $1 "*) echo 3 ;; *) echo 1 ;; esac
+}
+
 _kuru_rapor() {
-  local alt="$1" _alt sir tur yol alan _m _s onek uc hb=""
+  local alt="$1" _alt sir tur yol alan _m _s onek satir uc kabul onceki="" carpan tavan
   echo "=== KURU KOŞUM: --$alt (HİÇBİR ŞEY YAZILMADI) ==="
   while read -r _alt sir tur yol alan _m _s onek; do
     [ "$_alt" = "$alt" ] || continue
@@ -940,15 +1215,46 @@ _kuru_rapor() {
     esac
   done < <(_kopyalar)
   echo "  yeniden başlatılacak: $(_birimler "$alt")"
+  # Hangi sırrın hangi birimi tetiklediği BURADA görünür — çünkü gerçek koşumda yeniden başlayan
+  # küme alt komutun tamamı DEĞİL, YAZILAN sırların tüketicileridir (`--openrouter` iki anahtardan
+  # yalnız birini döndürebilir; negatif kontrol zaten tek sırrın tüketicileriyle koşar).
+  echo "  sır → tüketici birimler (gerçek koşumda YALNIZ yazılan sırrınki yeniden başlar):"
+  while read -r _alt sir tur yol alan _m _s onek; do
+    [ "$_alt" = "$alt" ] || continue
+    [ "$sir" != "$onceki" ] || continue
+    onceki="$sir"
+    echo "    · $sir → $(_sir_birimleri "$sir")"
+  done < <(_kopyalar)
   # BEDEL YASASI: bekleme bakım penceresine SÜRE ekler ve o süre kuru raporda BEYAN EDİLİR —
-  # "hangi birimler yeniden başlayacak" sorusunun cevabı artık "ve ne kadar bekleyebilir"i de
-  # içerir. Liste `_hazir_uc`tan TÜRETİLİR: ikinci bir yerde yazılsaydı sessizce ayrışırdı.
+  # "hangi birimler yeniden başlayacak" sorusunun cevabı artık "hangi ÖLÇÜTLE ve ne kadar
+  # bekleyebilir"i de içerir. Üç sütun da `_hazir_uc`/`_hazir_tavan`tan TÜRETİLİR: ikinci bir
+  # yerde yazılsaydı kuru rapor gerçekte koşacak şeyi ANLATMAZDI.
+  carpan="$(_restart_carpani "$alt")"
+  echo "  hazırlık beklemesi (her uç $HAZIR_BEKLE_ARALIK_S s aralıkla yoklanır; aşımda ÖLÇÜLEMEDİ).
+     BEDEL: bu alt komutta her birim $carpan kez yeniden başlar ve her restart'ın ardından
+     hazırlık beklenir — satırdaki tavan BİR restart içindir, en kötü hâl $carpan katıdır:"
   for _alt in $(_birimler "$alt"); do
-    if uc="$(_hazir_uc "$_alt")"; then hb="$hb ${_alt%.service}→$uc"
-    else hb="$hb ${_alt%.service}→(sağlık ucu YOK, beklenmez)"; fi
+    if satir="$(_hazir_uc "$_alt")"; then
+      uc="${satir%% *}"; satir="${satir#* }"; kabul="${satir%% *}"
+      tavan="$(_hazir_tavan "$_alt")"
+      echo "    · ${_alt%.service} → $uc  kabul: $(_kabul_metni "$kabul")  tavan: $tavan s × $carpan restart = en kötü $((tavan * carpan)) s"
+    else
+      echo "    · ${_alt%.service} → (sağlık ucu YOK, beklenmez)"
+    fi
   done
-  echo "  hazırlık beklemesi:$hb"
-  echo "    (her uç için $HAZIR_BEKLE_ARALIK_S s aralıkla en çok $HAZIR_BEKLE_TAVAN_S s; aşımda ÖLÇÜLEMEDİ)"
+  # ÖN KOŞUL BURADA DA YAZILIR, ÇÜNKÜ KURU KOŞUM OPERATÖRÜN İLK KOMUTUDUR. `meridian-tick-watchdog.timer`
+  # 45 dk bayat nabızda worker'ı yeniden başlatır (kalıcı kayıt); bu betik meridian'ı defalarca
+  # yeniden başlatır ve her restart nabzı dakikalarca bayat bırakır. Timer pencerenin ortasında
+  # ateşlenirse ölçüm SEBEPSİZ "ölçülemedi" verir — ve sebebi çıktıda GÖRÜNMEZ.
+  echo "  ÖN KOŞUL: sudo systemctl stop meridian-tick-watchdog.timer (sonda geri aç)"
+  # TAVAN YÜKSELTME BİÇİMİ ETKİN DEĞERDEN TÜRETİLİR: literal bir sayı basmak, operatöre KENDİ
+  # ortamındaki tavanı değil bir sabiti okuturdu. Satır YALNIZ hindsight-api yeniden başlıyorsa
+  # basılır — ilgisiz bir tavanı önermek kuru raporu gürültüyle doldurmaktır (bedel yasası).
+  case " $(_birimler "$alt") " in
+    *" hindsight-api.service "*)
+      echo "  tavanı yükseltmek gerekirse (DÜZ sudo ortam değişkenini DÜŞÜRÜR):"
+      echo "    sudo env HAZIR_TAVAN_S_hindsight_api=$(_hazir_tavan hindsight-api.service) ./deploy/oracle-a1/sir_rotasyon.sh --$alt" ;;
+  esac
   echo "  yedek dizini: $KOK/root/sir-yedek-<UTC ts>-$alt"
 }
 
@@ -1059,13 +1365,91 @@ _negatif_geri_al() {
   local cift yedek hedef basarisiz=""
   for cift in $GERI_AL_LISTESI; do
     yedek="${cift%%|*}"; hedef="${cift#*|}"
-    sudo rm -f "$hedef"
-    sudo cp -p "$yedek" "$hedef" || basarisiz="$basarisiz $hedef"   # sessiz-yutma DEĞİL: hata
-    # BİRİKTİRİLİR ve aşağıda bağırılır; burada durmak öteki dosyaları geri alınmamış bırakırdı.
+    # HEDEF ASLA ARADAN KALDIRILMAZ. İlk biçim `rm -f "$hedef"` + `cp -p` yazıyordu ve `cp`
+    # düştüğünde hedef HİÇ YOK kalıyordu. `/etc/meridian/nous_api_key` bir `LoadCredential`
+    # KAYNAĞIDIR ve kaynak dosya YOKSA systemd birimi HİÇ BAŞLATMAZ (drop-in'lerin kendi şerhi):
+    # yani "bozuk değer taşıyor olabilir" diye teşhis edilen hâlin gerçeği "birim bir daha
+    # AÇILMIYOR" olurdu. Yeni yol yan dosyaya yazıp ATOMİK `mv` ile yerine koyar; `cp` düşerse
+    # hedef ESKİ hâliyle YERİNDE durur. `rm -f` gerekmez: 0400 bir hedefin üzerine yazma izni
+    # DOSYANIN değil DİZİNİNDİR ve `mv -f` onu kullanır.
+    if sudo cp -p "$yedek" "$hedef.yeni" && sudo mv -f "$hedef.yeni" "$hedef"; then
+      :
+    else
+      sudo rm -f "$hedef.yeni" || true   # sessiz-yutma: yarım kalan yan dosyanın silinememesi
+      # asıl hükmü (GERİ ALMA BAŞARISIZ) DEĞİŞTİRMEZ ve o hüküm hemen aşağıda bağırılır.
+      basarisiz="$basarisiz $hedef"      # sessiz-yutma DEĞİL: hata BİRİKTİRİLİR — burada durmak
+      # öteki dosyaları geri alınmamış bırakırdı.
+    fi
   done
   GERI_AL_LISTESI=""
-  [ -z "$basarisiz" ] || die "GERİ ALMA BAŞARISIZ:$basarisiz
-     Bu dosyalar BİLEREK BOZUK değer taşıyor olabilir. Yedekten elle geri koy: $YEDEK"
+  # `die` DEĞİL `return 1`: bu fonksiyon EXIT trap'in İÇİNDEN de çağrılır ve trap içinde `exit`
+  # etmek, arkasından gelen TEMİZLİĞİ yutar (bkz. `_negatif_trap`). Hükmü çağıran verir.
+  [ -z "$basarisiz" ] || { echo "!! GERİ ALMA BAŞARISIZ:$basarisiz
+     Bu dosyalar BİLEREK BOZUK değer taşıyor OLABİLİR. Yedekten elle geri koy: $YEDEK
+     Bir kaynak dosya YOKSA birim BAŞLAMAZ (LoadCredential sözleşmesi): ÖNCE dosyayı geri koy,
+     SONRA yeniden başlat." >&2; return 1; }
+  return 0
+}
+
+# GERİ ALMADAN SONRA YENİDEN BAŞLATMA — BLOKLAYICI bir körlüğün kapanışı (inceleme 2026-09-08).
+# Negatif kontrol hedeflere BİLEREK bozuk/boş değer yazar ve birimleri O DEĞERLE yeniden başlatır.
+# Hazırlık beklemesi aşılırsa (`olcum_yok`, çıkış 2) trap DOSYALARI geri alıyor ama BİRİMLERİ
+# yeniden başlatmıyordu. Ölçülen hâl: `/run/credentials/meridian.service/NOUS_API_KEY` BOŞ,
+# `/run/credentials/hindsight-api.service/HINDSIGHT_API_LLM_API_KEY` `sahte-…` — yani canlıda
+# hafıza zinciri ve kapı bilerek bozuk anahtarla koşmaya DEVAM ediyordu (apisix `$env://`
+# çözümünü yalnız açılışta yapar). Operatörün gördüğü tek cümle "hazırlık bekleme aşıldı"ydı ve
+# "hiçbir kalıcı yazım yok" disiplinini bilen bir okuyucuya "bir şey olmadı" diye okunur.
+# HAZIRLIK BEKLENMEZ: trap içinden ikinci bir `olcum_yok` çağırmak, ölçüm arızasını temizliğin
+# önüne koymak olurdu. Restart ATILIR ve BAĞIRILARAK BEYAN EDİLİR; doğrulama operatörün bir
+# sonraki komutudur.
+# DOĞRULAMA İKİ SORUDUR ve ilk biçim YANLIŞ OLANI öneriyordu (inceleme D7/Y3): `--envanter`
+# DOSYALARI kıyaslar, "birim ayakta mı"yı ÖLÇMEZ — ve bu dalda dosyalar ZATEN geri alınmıştır,
+# yani envanter her hâlükârda EŞİT der. Bu dalın gerçek arıza sınıfı "birim açılmıyor"dur ve
+# önerilen doğrulama ona YAPISAL OLARAK KÖRDÜ: yanlış bir güven üretiyordu. İki soru artık
+# SIRALI basılır ve önce birim sorulur. Çivi: `test_P1`in son iki assert'ü.
+_negatif_restart_kurtarma() {
+  local b basarisiz=""
+  [ -n "$NK_BIRIMLER" ] || return 0
+  for b in $NK_BIRIMLER; do
+    sudo systemctl restart "$b" || basarisiz="$basarisiz $b"   # sessiz-yutma DEĞİL: hata
+    # BİRİKTİRİLİR ve aşağıda ELLE REÇETEYLE bağırılır; ilk düşen birimde durmak ötekileri
+    # bilerek bozuk değerde bırakırdı.
+  done
+  if [ -z "$basarisiz" ]; then
+    echo "!! BU BİRİMLER BİLEREK BOZUK/BOŞ DEĞERLE AÇILMIŞTI ve dosyalar geri alındıktan sonra
+     yeniden başlatıldı: $NK_BIRIMLER
+     (Hazırlık BEKLENMEDİ — trap içinde ölçüm yapılmaz.)
+     DOĞRULAMA İKİ SORUDUR, ÖNCE BİRİNCİSİ:
+       1) birim AYAKTA mı: sudo systemctl is-active $NK_BIRIMLER
+                           sudo journalctl -u <birim> -n 50 --no-pager
+       2) dosyalar EŞİT mi: sudo $0 --envanter
+     --envanter DOSYALARI kıyaslar, birimin AÇILDIĞINA KÖRDÜR: bu dalda dosyalar zaten geri
+     alınmıştır, yani tek başına yanlış bir güven üretir." >&2
+  else
+    echo "!! YENİDEN BAŞLATILAMADI:$basarisiz
+     BU BİRİMLER HÂLÂ BİLEREK BOZUK/BOŞ DEĞERLE KOŞUYOR OLABİLİR. ELLE:
+     sudo systemctl restart$basarisiz
+     sonra AYAKTA mı: sudo systemctl is-active$basarisiz
+                      sudo journalctl -u <birim> -n 50 --no-pager" >&2
+  fi
+  NK_BIRIMLER=""
+  return 0
+}
+
+# TRAP GÖVDESİ TEK FONKSİYONDUR — biçim tercihi değil, ÖLÇÜLMÜŞ bir sözleşme. `trap 'a; b' EXIT`
+# içinde `a` `exit` ederse `b` HİÇ KOŞMAZ ve çıkış kodu `a`nınkine döner. İlk biçim
+# `trap '_negatif_geri_al; _temizle' EXIT` idi ve `_negatif_geri_al` başarısızlıkta `die`
+# ediyordu, yani: (a) `_temizle` HİÇ çağrılmıyor → operatörün TAZE anahtarlarını taşıyan 0700
+# çalışma dizini diskte kalıyor ve "SİLİNEMEDİ" uyarısı bile basılmıyordu (K9a'nın kapattığı
+# sessizlik bu yoldan geri geliyordu); (b) "2 = ölçülemedi" sözleşmesi tam da EN KÖTÜ hâlde 1'e
+# bozuluyordu. Sıra da sözleşmedir: önce dosyalar, sonra birimler, sonra temizlik.
+_negatif_trap() {
+  local hata=0
+  _negatif_geri_al || hata=1
+  _negatif_restart_kurtarma
+  _cikis
+  [ "$hata" = 0 ] || exit 2
+  return 0
 }
 
 # `_negatif_kontrol <alt> <sır> <ölçüm fn> <yöntem>` — ölçüm fonksiyonu OK/RET/OLCULEMEDI döndürür.
@@ -1079,7 +1463,12 @@ _negatif_geri_al() {
 #           Bu bir VARLIK kanıtıdır ve öyle BEYAN EDİLİR — değer-doğruluğu kanıtı DEĞİLDİR.
 _negatif_kontrol() {
   local alt="$1" sir="$2" olcum="$3" yontem="${4:-bozuk}" _alt _sir tur yol _alan mod sahip _o
-  local sahte="$ISLIK/sahte" sonuc
+  local sahte="$ISLIK/sahte" sonuc birimler
+  # KAPSAM: yalnız BU SIRRIN tüketicileri yeniden başlar. Alt komutun tamamını başlatmak, ölçümle
+  # ilgisi olmayan birimleri İKİ kez (boz + geri-al) kesintiye uğratır ve her seferinde hazırlık
+  # beklemesi ödetir — hindsight ~60 s açılıyor (ölçüm 2026-09-08 07:3xZ).
+  birimler="$(_sir_birimleri "$sir")" || die "negatif kontrol: $sir için tüketici birim haritası YOK"
+  echo "  · yeniden başlatılacak (yalnız $sir tüketicileri): $birimler"
   printf 'sahte-%s\n' "$(openssl rand -hex 8)" > "$sahte"; chmod 600 "$sahte"
   GERI_AL_LISTESI=""
   while read -r _alt _sir tur yol _alan mod sahip _o; do
@@ -1093,7 +1482,7 @@ _negatif_kontrol() {
     GERI_AL_LISTESI="$GERI_AL_LISTESI $ISLIK/nk-$(echo "$yol" | tr '/' '_')|$KOK$yol"
   done < <(_kopyalar)
   # shellcheck disable=SC2064
-  trap '_negatif_geri_al; _temizle' EXIT
+  trap '_negatif_trap' EXIT
   if [ "$yontem" = bos ]; then
     while read -r _alt _sir tur yol _alan mod sahip _o; do
       [ "$_alt" = "$alt" ] && [ "$_sir" = "$sir" ] || continue
@@ -1112,11 +1501,21 @@ _negatif_kontrol() {
   else
     _yaz "$alt" "$sir" "$sahte" "dosya env url"
   fi
-  _yeniden_baslat_sessiz "$alt"
+  # BU SATIRDAN SONRA BİRİMLER BİLEREK BOZUK/BOŞ DEĞERLE KOŞUYOR. Küme trap'in görebileceği bir
+  # global'e YAZILIR: her çıkış yolu (hazırlık aşımı · `set -e` · `olcum_yok`) dosyaları geri
+  # aldıktan SONRA bu birimleri yeniden başlatmak ZORUNDADIR — yoksa "hiçbir kalıcı yazım yok"
+  # cümlesi DİSK için doğru, ÇALIŞAN SÜREÇ için yanlış olur (bkz. `_negatif_restart_kurtarma`).
+  NK_BIRIMLER="$birimler"
+  # shellcheck disable=SC2086
+  _yeniden_baslat_sessiz $birimler
   sonuc="$($olcum)"
-  _negatif_geri_al
-  _yeniden_baslat_sessiz "$alt"
-  trap '_temizle' EXIT
+  # `exit 2` — geri alma başarısızlığı bir ÖLÇÜM ARIZASIDIR (çıkış 2), bir `die` (çıkış 1)
+  # değil; ve `exit` EXIT trap'i ateşler, yani temizlik + kurtarma yine koşar.
+  _negatif_geri_al || exit 2
+  # shellcheck disable=SC2086
+  _yeniden_baslat_sessiz $birimler
+  NK_BIRIMLER=""
+  trap '_cikis' EXIT
   case "$sonuc" in
     RET) oldu "negatif kontrol ($sir, yöntem=$yontem): → RET (kanıt anahtara BAĞLI)" ;;
     OK)  olcum_yok "negatif kontrol ($sir, yöntem=$yontem): bozuk/boş değerle de OK geldi — kanıt
@@ -1129,14 +1528,14 @@ _negatif_kontrol() {
 
 _yeniden_baslat_sessiz() {
   local b
-  for b in $(_birimler "$1"); do
+  for b in "$@"; do
     sudo systemctl restart "$b" >/dev/null 2>&1 || true   # sessiz-yutma: negatif kontrol
     # SIRASINDA bozuk değerle bir birim açılmayabilir; bu beklenen hâldir ve ölçümün kendisidir.
   done
   # SESSİZ olan RESTART'tır, BEKLEME DEĞİL. Negatif kontrolün ölçümü tam da burada, restart'ın
   # HEMEN ardından yapılır (vaka 2026-09-08) — bekleme atlanırsa "bozuk değerle reddedildi" ile
   # "birim henüz ayakta değil" aynı `000`a düşer ve ikisi AYNI ŞEY DEĞİLDİR.
-  _hazir_bekle "$1"
+  _hazir_bekle "$@"
 }
 
 # Model ADI sır DEĞİLDİR ama kanıtın ön şartıdır: modelsiz bir `chat/completions` gövdesi kapıdan
@@ -1144,6 +1543,8 @@ _yeniden_baslat_sessiz() {
 # önce: `$( )` içinden `exit` yalnız alt kabuğu bitirir ve gerekçe kaybolurdu.
 MODEL=""
 _model_gerekli() {
+  # sessiz-yutma: dosya YOK ya da okunamıyorsa `sed`in hata metni hükme GİRMEZ — hüküm MODEL'in
+  # boş kalıp kalmadığıdır ve bir satır aşağıda `olcum_yok` ile ölçülür.
   MODEL="$(sudo sed -n 's/^NOUS_MODEL=//p' "$KOK/opt/meridian/.env" 2>/dev/null | head -1 | tr -d '\r\n"')"
   [ -n "$MODEL" ] || olcum_yok "NOUS_MODEL okunamadı (/opt/meridian/.env) — kapı kanıtı YAPILAMAZ"
 }
@@ -1174,7 +1575,7 @@ openrouter() {
   # KURU KAPISI `_oku_gizli` ÇAĞRILARININ ÜSTÜNDE. Altındayken `--openrouter --kuru` bir kuru
   # koşum DEĞİLDİ: iki gerçek anahtar istiyor, boş bırakılınca "yapacak iş yok" deyip çıkış 1
   # veriyordu — yani rotasyonun ÖN-BAKIŞI ancak taze anahtar yapıştırarak alınabiliyordu.
-  # Kuru raporun değere ihtiyacı YOKTUR: 8 kopya da, birim listesi de kopya tablosundan gelir.
+  # Kuru raporun değere ihtiyacı YOKTUR: 14 kopya da, birim listesi de kopya tablosundan gelir.
   [ "$KURU" = 0 ] || { _kuru_rapor openrouter; return 0; }
   local nous_var=0 or_var=0
   _oku_gizli "NOUS_API_KEY (motor)" "$ISLIK/nous" && nous_var=1 || nous_var=0
@@ -1208,7 +1609,20 @@ openrouter() {
   # Sıra: yaz → restart (+credential doluluk denetimi) → ölç → ancak sonra depoyu eşitle.
   [ "$nous_var" = 0 ] || { _yaz openrouter NOUS_API_KEY "$ISLIK/nous" "dosya"; }
   [ "$or_var" = 0 ]   || { _yaz openrouter OPENROUTER_API_KEY "$ISLIK/orkey"; }
-  _yeniden_baslat openrouter
+  # POZİTİF KANIT RESTART'I DA TÜKETİCİYE BAĞLIDIR: YALNIZ yazılan sırların tüketicileri yeniden
+  # başlar. Operatör tek anahtar döndürüyorsa ötekinin birimini kesintiye uğratmak karşılıksız bir
+  # kesinti + karşılıksız bir hazırlık beklemesidir (ölçüm 2026-09-08 07:3xZ).
+  local poz=""
+  [ "$nous_var" = 0 ] || poz="$poz $(_sir_birimleri NOUS_API_KEY)"
+  [ "$or_var" = 0 ]   || poz="$poz $(_sir_birimleri OPENROUTER_API_KEY)"
+  # shellcheck disable=SC2086
+  poz="$(_sirala $poz)"
+  if [ "$or_var" = 1 ]; then
+    echo "  · KAPSAM: hermes profilleri (bekci·karne·sef) yeniden BAŞLATILMAZ — timer'lı oneshot"
+    echo "    birimlerdir, yeni değeri bir sonraki tetikte okurlar (dosyaları YAZILDI)."
+  fi
+  # shellcheck disable=SC2086
+  _yeniden_baslat openrouter $poz
 
   if [ "$or_var" = 1 ]; then
     local hal; hal="$(_kapi_chat_hali)"
@@ -1269,7 +1683,7 @@ _envanter_esitlik() {
 }
 
 # ARANAN ADLAR — kopya tablosundan TÜRETİLİR, elle yazılmaz (elle yazılan liste tablodan ayrışır).
-# Üç kaynak: (1) sır KİMLİĞİ (`$2`) — `.env`lerde çoğu sır kendi adıyla yaşar; (2) `env` kopyanın
+# Üç kaynak (DÖRDÜNCÜSÜ tablodan türeMEZ ve aşağıda, `_dosya_adaylari`da yaşar): (1) sır KİMLİĞİ (`$2`) — `.env`lerde çoğu sır kendi adıyla yaşar; (2) `env` kopyanın
 # ALAN adı (`$5`); (3) `dosya`/`url` kopyasının DOSYA ADI — bir `LoadCredential` kaynağı değişkenin
 # ADINI taşır (`/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY`), yani o ad bir `.env`de geçiyorsa
 # beyan dışı bir kopyadır. Yalnız ALAN adlarını aramak, sırrın kendi adıyla duran kopyalarına
@@ -1280,6 +1694,43 @@ _aranan_adlar() {
     $3=="env" {print $5}
     $3=="dosya" || $3=="url" { n=split($4,a,"/"); if (a[n] ~ /^[A-Z][A-Z0-9_]*$/) print a[n] }
   ' | sort -u
+}
+
+# SIR ADI SÖZLÜĞÜ — taramanın DÖRDÜNCÜ kaynağı ve tek ELLE yazılmış parçası. Yukarıdaki üç kaynak
+# tablodan TÜRER, yani yalnız BİLİNEN adları görür — ve tam bu körlük ölçüldü (2026-09-08 08:0xZ):
+# `/opt/hindsight/.env`in altı failover ÜYE anahtarı hiçbir kopyanın kimliği, alanı ya da dosya adı
+# değildi, dolayısıyla "tabloda olmayan kopyayı bulurum" beyanı o sınıfta BOŞTU. Aileyi (`_1_`,
+# `_2_`, …) elle listelemek aynı körlüğü bir SONRAKİ üyede tekrarlardı; onun yerine dosyanın KENDİ
+# alan adları okunur (`py alanlar`) ve sır ADI GİBİ görünen her alan tabloya karşı sınanır.
+# SÖZLÜK BİLEREK DAR — ve bu bir KAPSAM BEYANIDIR, bir eksiklik değil: `*_KEY` (`BOT_KEY_*`,
+# `APISIX_ADMIN_KEY`, `HINDSIGHT_CP_ACCESS_KEY`) ve `*_PAROLA` (`PANO_GIRIS_PAROLA`) biçimleri bu
+# betiğin DÖNDÜRDÜĞÜ sırlar değildir; hepsini "beyan dışı kopya" diye bağırmak gerçek bulguyu
+# gürültüde boğardı (bedel yasası). Sözlüğe uymayan bir sır adı bu taramaya GÖRÜNMEZ.
+# BEDEL ÖLÇÜLDÜ, VARSAYILMADI — Rol-1, A1, 2026-09-08 (7 taranan dosya, YALNIZ ADLAR okundu):
+# sözlüğün DIŞINDA kalan üçüncü-taraf adları `HINDSIGHT_CP_ACCESS_KEY` · `APISIX_ADMIN_KEY` ·
+# `PANO_GIRIS_PAROLA`; HİÇBİRİ `_API_KEY`/`_TOKEN`/`_SECRET`/`_PASSWORD` sonekli DEĞİL, yani
+# sözlüğün canlıdaki gürültüsü SIFIRDIR ve sözlük OLDUĞU GİBİ kalır. (İnceleme 2026-09-08 bu
+# sözlüğün üçüncü-taraf anahtarlarını da bağırabileceğini işaret etmişti; ölçüm riskin BUGÜN
+# gerçekleşmediğini söylüyor — "gerçekleşemez" demiyor.) Ölçüm `_taranan_dosyalar` kümesine
+# BAĞLIDIR: kümeye yeni bir dosya girerse bedel YENİDEN ölçülür; sözlük ölçümsüz genişletilmez.
+_SIR_ADI_SONEKLERI="_API_KEY _TOKEN _SECRET _PASSWORD"
+
+_sir_adi_mi() {
+  local s
+  for s in $_SIR_ADI_SONEKLERI; do
+    case "$1" in *"$s") return 0 ;; esac
+  done
+  return 1
+}
+
+# Bir dosyada SINANACAK adlar: tablodan türeyen üç kaynak ∪ dosyanın KENDİ sır-adı alanları.
+_dosya_adaylari() {
+  local a
+  { _aranan_adlar
+    while read -r a; do
+      if _sir_adi_mi "$a"; then printf '%s\n' "$a"; fi
+    done < <(py alanlar "$1")
+  } | sort -u
 }
 
 # Tabloda OLMAYAN bir kopya, ilk rotasyondan sonra sessizce ESKİ değeri taşıyan bir kopyadır.
@@ -1293,7 +1744,7 @@ _beyan_disi_tara() {
       _kopyalar | awk -v d="$dosya" -v a="$alan" '$3=="env" && $4==d && $5==a {b=1} END{exit !b}' && continue
       echo "  !! BEYAN DIŞI KOPYA: $dosya [$alan] — rotasyon bu kopyayı YAZMIYOR"
       bulundu=1
-    done < <(_aranan_adlar)
+    done < <(_dosya_adaylari "$KOK$dosya")
   done < <(_taranan_dosyalar)
   [ "$bulundu" = 0 ] && echo "  beyan dışı kopya YOK" || true   # sessiz-yutma: `[ ]` yanlışsa
   # `set -e` koşumu keserdi; bulgu ZATEN yukarıda basıldı ve envanter raporu bitmelidir.

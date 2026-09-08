@@ -31,24 +31,25 @@ olcum: "2026-09-03 21:5x UTC — A1, yalnız DEĞİŞKEN ADLARI okundu (değer h
 dosyalar:
 
   # ---- MOTOR ------------------------------------------------------------------------------------
-  # Faz-1B'nin hedefi: NOUS_API_KEY + KAPI_APIKEY → `LoadCredential`
-  # (`deploy/oracle-a1/meridian.service.d/53-nous-kapi-credential.conf`).
-  # MERIDIAN_DASH_TOKEN burada İKİNCİ KEZ duruyor (asıl kopya `.dash.env`te) — spec Bulgu-2:
-  # tek-kaynak ihlali; `.dash.env` faz-2'de kapanınca buradaki kopya da kalkmalıdır.
+  # ÖLÇÜM GÜNCELLEMESİ 2026-09-08 10:0xZ + 10:5xZ (spec §1 "ÖLÇÜM GÜNCELLEMESİ" 4. maddesi):
+  # bu dosyanın ÜÇ sırrı (NOUS_API_KEY · KAPI_APIKEY · MERIDIAN_DASH_TOKEN) ARTIK BURADA DEĞİL —
+  # üçünün de satır sayısı 0 ölçüldü ve sonek taraması (`_TOKEN|_API_KEY|_APIKEY|…`) bu dosyada
+  # hiçbir sır adı bulmadı. Faz-1B (NOUS/KAPI → `LoadCredential`,
+  # `deploy/oracle-a1/meridian.service.d/53-nous-kapi-credential.conf`) 2026-09-07 gecesi
+  # tamamlandı; `MERIDIAN_DASH_TOKEN` `.dash.env` + `/etc/meridian/dash_token` ikilisinde yaşıyor
+  # (TSK-049 faz-1) ve spec Bulgu-2'nin istediği "motor `.env`teki kopya kalksın" olmuş durumda.
+  # DOSYA SATIRI KALDI: dosya duruyor ve ÜÇ YAPILANDIRMA değişkeni taşıyor — "dosya yok" ile
+  # "dosyada sır yok" iki ayrı gerçektir; faz-2'nin "sır dosyası ayrı, ayar dosyası ayrı" ayrımı
+  # tam olarak bu hâlin ölçüsüdür. Sınıf "A" KALIR (tüketici systemd-doğal süreçtir), ama artık
+  # taşınacak bir sırrı olmadığı için `kanal_hedef` bir HEDEF değil bir BEYANDIR.
   - yol: "/opt/meridian/.env"
     mod: "600"
     sahip: "ubuntu"
     tuketici: "meridian.service"
     sinif: "A"
-    kanal_bugun: "EnvironmentFile"
-    kanal_hedef: "LoadCredential"
+    kanal_bugun: "EnvironmentFile (yalnız yapılandırma; sır 0 — ölçüldü 2026-09-08 10:5xZ)"
+    kanal_hedef: "DEĞİŞMEZ — taşınacak sır kalmadı (Faz-1B tamamlandı 2026-09-07)"
     degiskenler:
-      - ad: MERIDIAN_DASH_TOKEN
-        sir: true
-      - ad: NOUS_API_KEY
-        sir: true
-      - ad: KAPI_APIKEY
-        sir: true
       - ad: NOUS_MODEL
         sir: false
       - ad: NOUS_ENDPOINT
@@ -71,17 +72,53 @@ dosyalar:
         sir: true
 
   # ---- HAFIZA (hindsight-api) --------------------------------------------------------------------
-  # Faz-1A'nın hedefi (Task 2 kapsamı, bu turda DEĞİL). `ayar_sayisi` sır OLMAYAN 29 satırdır:
-  # faz-2'nin "32 → 3 + 29" ayrımının ölçüsü. TENANT anahtarını pano vekili DOSYADAN da okuyor
-  # (spec Bulgu-3) — o okuma yolu credential dizinine taşınacak.
+  # ÖLÇÜM GÜNCELLEMESİ 2026-09-08 (spec §1 "ÖLÇÜM GÜNCELLEMESİ" notu): bu dosyanın ÜÇ sırrı
+  # (DATABASE_URL · LLM_API_KEY · TENANT_API_KEY) ARTIK BURADA DEĞİL — Faz-1A/LoadCredential
+  # geçişi 2026-09-07'de tamamlandı ve üçü aşağıdaki `/etc/hindsight/creds/<AD>` girdisine taşındı.
+  # Yerlerine hafıza failover zincirinin ALTI ÜYE anahtarı girdi (2026-09-06, EDG-2026-080/081):
+  # zincir üyesi ana anahtarı DEVRALMAZ, her üye kendi satırını okur ve altısı da OpenRouter
+  # anahtarının birebir kopyasıdır — yani `sir_rotasyon.sh --openrouter` kapsamındadırlar.
+  # SINIF B'YE ÇEKİLDİ: kalan sırların tüketicisi docker-sarmalı hindsight-api'dir ve sır o
+  # sürecin ortamında yaşar (yarım kazanım, spec §2). Eski "A" etiketi taşınan üç sır içindi.
+  # `ayar_sayisi` 2026-09-03 ölçümüdür ve 2026-09-08'de YENİDEN SAYILMADI (yalnız sır adlarının
+  # varlığı ölçüldü) — sayı taşıyan satır ölçüm tarihini taşır.
   - yol: "/opt/hindsight/.env"
     mod: "600"
     sahip: "ubuntu"
     tuketici: "hindsight-api.service"
-    sinif: "A"
+    sinif: "B"
     kanal_bugun: "EnvironmentFile"
-    kanal_hedef: "LoadCredential"
+    kanal_hedef: "DEĞİŞMEZ — üye anahtarları `.env`de kalır (B sınıfı, beyanlı); Faz-2'de Vault Agent template"
     ayar_sayisi: 29
+    degiskenler:
+      - ad: HINDSIGHT_API_REFLECT_LLM_1_API_KEY
+        sir: true
+      - ad: HINDSIGHT_API_REFLECT_LLM_2_API_KEY
+        sir: true
+      - ad: HINDSIGHT_API_REFLECT_LLM_3_API_KEY
+        sir: true
+      - ad: HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY
+        sir: true
+      - ad: HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY
+        sir: true
+      - ad: HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY
+        sir: true
+
+  # ---- HAFIZA CREDENTIAL KAYNAKLARI (Faz-1A TAMAMLANDI, 2026-09-07) -----------------------------
+  # Dosyanın ADI değişkenin ADIDIR: `LoadCredential=<kimlik>:<kaynak>` sözleşmesinde ikisi birebir
+  # aynı olmak zorundadır (v439 I6/I9, v447 P6). Bu üç dosya `sir_rotasyon.sh`in de hedefidir
+  # (`--tenant`, `--db`, `--openrouter`) — rotasyon systemd'nin OKUDUĞU dosyayı yazmazsa
+  # credential ESKİ değerde kalır ve arıza ilk gerçek çağrıda görünür.
+  # SINIF B: TENANT bacağı motorda (pano vekili) A sınıfıdır ama aynı dosyayı docker-sarmalı
+  # hindsight-api de tüketir; dosya EN ZAYIF kazanımla etiketlenir, yoksa yarım kazanım TAM
+  # görünürdü (spec §2 bedel maddesi).
+  - yol: "/etc/hindsight/creds/<AD>"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "hindsight-api.service (LoadCredential + ExecStart sarmalayıcı) · meridian.service (pano vekili, yalnız TENANT)"
+    sinif: "B"
+    kanal_bugun: "LoadCredential"
+    kanal_hedef: "LoadCredential (ULAŞILDI); Faz-2'de Vault Agent kaynağı olur"
     degiskenler:
       - ad: HINDSIGHT_API_DATABASE_URL      # parola GÖMÜLÜ — 2026-09-02'de tam bu sınıf terminale düştü
         sir: true
@@ -146,6 +183,11 @@ dosyalar:
     degiskenler:
       - ad: BOT_KEY_<AD>
         sir: true
+      # ÖLÇÜM 2026-09-07 22:0xZ: profillerin her biri OpenRouter anahtarının bir kopyasını da
+      # taşıyor. Rotasyon bloğunda 2026-09-08'den beri beyanlıydı, §1'de AÇIK KALEMDİ; spec
+      # güncellemesiyle birlikte buraya da girdi (tek-kaynak yasası iki yönlüdür).
+      - ad: OPENROUTER_API_KEY
+        sir: true
 
 # =================================================================================================
 # ROTASYON KOPYALARI — ölçüm 2026-09-07 22:0xZ (A1, elle rotasyon penceresi; yalnız AD ve YOL)
@@ -164,15 +206,15 @@ dosyalar:
 # ve bu blokta `tur:` alanlarıyla beyanlı dururlar — kanal beyanı olmadan "envanterde yok" ile
 # "dosya değil" aynı görünürdü.
 #
-# AÇIK KALEM (2026-09-07): `/opt/hindsight/.key` ve hermes profillerindeki `OPENROUTER_API_KEY`
-# `kaynak_belge` §1 tablosunda YOKTUR (tablo 2026-09-03 ölçümü). §1'e girmeleri belge düzenlemesi
-# ister ve `.key` için §2'nin DONUK sınıf sözlüğünde (A/B/C/D) karşılığı yoktur: bir kabuk
-# okuyucusunun (`~/bin/hafiza_sor.sh`) düz dosyası ne systemd-doğal (A), ne docker (B), ne hermes
-# profili (C), ne de ayar (D). Sözlüğü esnetmek yerine burada beyanla duruyorlar — sınıf ataması
-# spec turunun işidir (Rol-1).
+# AÇIK KALEM (2026-09-07 · KISMEN KAPANDI 2026-09-08): hermes profillerindeki `OPENROUTER_API_KEY`
+# artık `dosyalar:` bloğunda ve §1 tablosunda (spec "ÖLÇÜM GÜNCELLEMESİ" notu). AÇIK KALAN TEK
+# SATIR `/opt/hindsight/.key`tir: §2'nin DONUK sınıf sözlüğünde (A/B/C/D) karşılığı yoktur — bir
+# kabuk okuyucusunun (`~/bin/hafiza_sor.sh`) düz dosyası ne systemd-doğal (A), ne docker (B), ne
+# hermes profili (C), ne de ayar (D). Sözlüğü esnetmek yerine burada beyanla duruyor; sınıf
+# ataması spec turunun işidir (Rol-1).
 
 rotasyon_kopyalari:
-  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı)"
+  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi"
   kaynak_betik: "deploy/oracle-a1/sir_rotasyon.sh"
 
   kopyalar:
@@ -294,6 +336,67 @@ rotasyon_kopyalari:
       mod: "400"
       sahip: "root"
       tuketici: "hindsight-api.service (LLM çağrıları)"
+    # HAFIZA FAILOVER ZİNCİRİNİN ÜYE ANAHTARLARI — ölçüm 2026-09-08 08:0xZ (A1, yalnız AD okundu).
+    # Zincir üyesi ana anahtarı DEVRALMAZ: her üye kendi `_API_KEY` satırını okur ve altısı da
+    # OPENROUTER_API_KEY değerinin birebir kopyasıdır. Tabloda olmasalardı rotasyon creds
+    # dosyasını döndürür, üyeler ESKİ anahtarla kalır ve eski anahtar iptal edildiği an zincir
+    # sessizce birincile düşerdi. `dosyalar:` bloğuna GİRMEZLER: orası spec §1 tablosuna çivili
+    # (v439 E3, BİREBİR eşitlik) ve spec bu satırları henüz taşımıyor — açık kalem, Rol-1'e.
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/opt/hindsight/.env"
+      alan: HINDSIGHT_API_REFLECT_LLM_1_API_KEY
+      mod: null                # korunur (dosya 600 ubuntu — `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "hindsight-api.service (reflect failover zincir üyesi 1)"
+      not: "üye ana anahtarı DEVRALMAZ (EDG-2026-080/081); spec §1 tablosunda YOK — açık kalem"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/opt/hindsight/.env"
+      alan: HINDSIGHT_API_REFLECT_LLM_2_API_KEY
+      mod: null                # korunur (dosya 600 ubuntu — `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "hindsight-api.service (reflect failover zincir üyesi 2)"
+      not: "üye ana anahtarı DEVRALMAZ (EDG-2026-080/081); spec §1 tablosunda YOK — açık kalem"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/opt/hindsight/.env"
+      alan: HINDSIGHT_API_REFLECT_LLM_3_API_KEY
+      mod: null                # korunur (dosya 600 ubuntu — `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "hindsight-api.service (reflect failover zincir üyesi 3)"
+      not: "üye ana anahtarı DEVRALMAZ (EDG-2026-080/081); spec §1 tablosunda YOK — açık kalem"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/opt/hindsight/.env"
+      alan: HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY
+      mod: null                # korunur (dosya 600 ubuntu — `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "hindsight-api.service (konsolidasyon failover zincir üyesi 1)"
+      not: "üye ana anahtarı DEVRALMAZ (EDG-2026-080/081); spec §1 tablosunda YOK — açık kalem"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/opt/hindsight/.env"
+      alan: HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY
+      mod: null                # korunur (dosya 600 ubuntu — `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "hindsight-api.service (konsolidasyon failover zincir üyesi 2)"
+      not: "üye ana anahtarı DEVRALMAZ (EDG-2026-080/081); spec §1 tablosunda YOK — açık kalem"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/opt/hindsight/.env"
+      alan: HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY
+      mod: null                # korunur (dosya 600 ubuntu — `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "hindsight-api.service (konsolidasyon failover zincir üyesi 3)"
+      not: "üye ana anahtarı DEVRALMAZ (EDG-2026-080/081); spec §1 tablosunda YOK — açık kalem"
+
     - alt_komut: openrouter
       sir: OPENROUTER_API_KEY
       tur: env
