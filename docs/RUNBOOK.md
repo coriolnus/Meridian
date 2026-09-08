@@ -1701,34 +1701,46 @@ journal satırı "Started meridian.service" = 19:05:18 — birebir.
 ## `dagit.sh` {#dagit-sh}
 
 ```
-dagit.sh — Meridian GENEL dağıtım betiği (WP-H/H2 kapılı). Tek-seferlik gece betiklerinin
-(dagitim_gece*.sh) yerine standart yol: her dağıtım BU sırayla geçer.
-[0] uv audit (tedarik-zinciri kapısı — kırmızıysa DAĞITIM YOK)
-[0c] lint-imports (mimari sözleşmeler — WP-H/H4; kırmızıysa DAĞITIM YOK)
-[0d] import taraması (dev-grubu daraltması hâlâ güvenli mi — WP-H; kırmızıysa DAĞITIM YOK)
-[1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
-[1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
-[F9] dagit-kapsamı-dışı canlı artefaktlar (sprint@ birimi · polkit kuralı · SOUL.md ·
-hermes config.yaml · tick-watchdog service+timer · litestream.yml · aylık-bucket-kopya
-service+timer · brifing service+timer · @sef profili: distribution.yaml+config.yaml+SOUL.md):
-içerik kapısı — sürüklenmeyi RAPORLAR, engellemez
-[F10] birim istenen-durum ANOMALİSİ: enabled + inactive birim varsa DUR (rc 3; çare `start` ya da
-`disable --now`) — rsync/stop'tan ÖNCE, kuru koşumda da (TSK-092, 2026-09-03; çivi v367)
-[2] rsync (state/backups/.venv/.git HARİÇ)
-[3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
-[4] bakım penceresi: durdur → versiyonlu state kopyası ([1b] KOPYALA dediyse) → başlat
-[5] doğrulama: servisler active + healthz 200 + son olay yaşı
-[B] dağıtım-beyanı: canlıya state/dagitim.json (deployed_sha + damga — P0-b, ortamlar-arası #2)
-Kullanım: ./dagit.sh            → dry-run'a kadar gider, ONAY İSTER
-./dagit.sh --uygula   → tam dağıtım
+dagit.sh — Meridian dağıtımının İNCE SARMALAYICISI. EMEKLİ OLACAK (TSK-176 Faz A1, 2026-09-08).
 
-SÜRÜM TERFİSİ SÖZLEŞMESİ (WP5-B; bu başlık tek kaynak — RUNBOOK üreticisi kapsamına alınması
-ayrı karar [B-RUNBOOK-KAPSAM]): canlıya yeni sürüm YALNIZ bu betikle çıkar; `git push` dağıtım
-DEĞİLDİR (cloud görünürlüğü). Dağıtılan tepe [0a]'da DAGIT_SHA olarak donar ve [B] beyanına
-yazılır. GERİ ALMA: önceki commit'e dönüp (`git checkout <sha>`) aynı akışı koşmak — state'e
-dokunulmaz; [1b] kopyası yalnız onayla yapıldığından goal/bounds geri-alması da aynı kapıdan.
-ÖLÇÜM 2026-08-23: git-izli state YALNIZ goal.yaml+bounds.yaml (`git ls-files state/`) — ayrı bir
-"versiyonlu-state adımı" bilerek YOK, [1b] kapsıyor.
+BU BETİK ARTIK KAPI TAŞIMIYOR. Dağıtımın on yedi kapısı — [0a] [0b] [0c] [0d] [1] [1b] [1c]
+[F9] [F10] [2] [3] [4] [5] [5a] [5c] [5b] [B] — `deploy/ansible/dagit.yml` playbook'una TAŞINDI
+(Task 2, 2026-09-08). Listelerin (dosya-dışlama sınıfları, [F9] çiftleri, [5a] uçları, birim
+adayları) TEK KAYNAĞI `deploy/ansible/vars/dagit_vars.yml`dir; kapı gövdelerinin tek kaynağı
+`ops/state_fark_hukmu.py`, `ops/artefakt_tazelik.py`, `deploy/oracle-a1/dogrulama_anahtar.py`,
+`deploy/oracle-a1/kod_tazelik.sh` dosyalarıdır. Buradaki kopyalar SİLİNDİ — iki kaynak sessizce
+ayrışır (tek-kaynak yasası) ve ayrışan taraf her zaman okunmayan taraftır.
+
+NEDEN BİR SÜRÜM DAHA YAŞIYOR (K1 geçiş kararı): operatörün ve belgelerin parmak hafızası
+`./dagit.sh`tır; kapılar taşınırken çağrı adresini de aynı turda değiştirmek, ilk gerçek
+playbook dağıtımının arıza yüzeyini iki katına çıkarırdı. Sarmalayıcı yalnız YÖNLENDİRİR:
+kendi kapısı, kendi listesi, kendi ölçümü YOKTUR. Bir sürüm sonra SİLİNİR ve komut satırı
+`ansible-playbook`a döner (Task 4 / ROADMAP TSK-176 A1).
+
+Kullanım (repo kökünden ya da başka bir dizinden — fark etmez, aşağıya bak):
+./dagit.sh                       → kuru koşum (playbook `--check --diff`)
+./dagit.sh --dry-run             → aynısı, açık yazılmış hâli
+./dagit.sh --uygula              → gerçek dağıtım (aynı playbook, `--check`siz)
+./dagit.sh --uygula --kirli-gec  → + `-e kirli_gec=true` (kirli ağaç BEYANLI istisnası)
+Bilinmeyen bayrak → kullanım basılır ve ÇIKIŞ 2 (sessizce "kuru koşum" varsayılmaz: yanlış
+yazılmış bir `--uygla`nın kuru koşuma düşmesi, operatöre dağıttığını sandırırdı).
+Kip bayrağı (`--dry-run` / `--uygula`) EN FAZLA BİR KEZ verilir; ikincisi de ÇIKIŞ 2'dir.
+"Son bayrak kazanır" davranışı `./dagit.sh --dry-run --uygula`yı UYARISIZ gerçek dağıtıma
+çevirirdi (ters sıra ise kuru koşuma): aynı komut satırı, iki farklı dünya. Belirsizlik
+burada canlıya YAZMA yönüne çözülüyordu — tek başına `--kirli-gec`i reddetme gerekçesinin
+aynısı, pahalı yönde (inceleme bulgusu B1, 2026-09-08).
+
+CWD'YE BAKMAZ: dağıtılan ağaç HER ZAMAN ana checkout'tur (`$HOME/AI-Trading`), bu betiğin
+çağrıldığı dizin değil (CLAUDE.md §9, vaka 2026-08-26 — "ağacım temiz" bir güvence DEĞİLDİR).
+Playbook aynı kuralı `repo_kok_yerel` ile taşır ve ana-checkout kapısını [0a]'da kendisi ölçer;
+başka bir checkout'tan dağıtım BEYANLIDIR (`-e worktree_gec=true`) ve [B] beyanına yazılır.
+
+SÜRÜM TERFİSİ SÖZLEŞMESİ (WP5-B; bu başlık tek kaynak — RUNBOOK üreticisi kapsamına 2026-08-23
+K4 kararıyla alındı): canlıya yeni sürüm YALNIZ bu yoldan çıkar; `git push` dağıtım DEĞİLDİR
+(cloud görünürlüğü). Dağıtılan tepe playbook'un [0a] kapısında donar ve [B] beyanına yazılır.
+GERİ ALMA: önceki commit'e dönüp (`git checkout <sha>`) aynı akışı koşmak — state'e dokunulmaz;
+versiyonlu state kopyası ([1b]) yalnız hükümle yapıldığından goal/bounds geri-alması da aynı
+kapıdan geçer.
 ```
 
 ## `ops/filo.py` {#ops-filo-py}
