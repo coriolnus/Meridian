@@ -10684,6 +10684,62 @@ def _roadmap_ozetle(bolumler: list) -> list:
     return [_b(b) for b in bolumler]
 
 
+# ---- BELGE EŞİTLEME BEYANI (`state/belge_esitleme.json`) ----------------------------------
+# NE OKUR: `ops/belge_esitle.sh` belge kümesini (yol haritası + docs + kart README) A1'e rsync
+# ettikten SONRA tek satırlık bir beyan yazar — hangi sha, ne zaman, hangi makineden, kaç dosya
+# taşındı/silindi. Motor tarafında bu dosyanın HİÇBİR okuyucusu yoktu ve
+# `recompute._orphan_state_files` onu haklı olarak "üretilip tüketilmeyen kanıt" sayıyordu
+# (YASA 6: okuyucusuz yazım yok).
+#
+# NEDEN BEYAN DEĞİL GERÇEK OKUYUCU: adı `codelaw.DECLARED_SINKS`e yazmak dosyayı okunur yapmaz,
+# yalnız bekçiyi susturur — ve operatör panoda "şu an hangi belge A1'de duruyor?" sorusunun
+# cevabını görmemeye devam ederdi. Bekçiyi gevşetmek de aynı hastalığın öteki yüzüdür.
+#
+# NEDEN BU UÇ: eşitlenen kümenin baş aktörü yol haritası belgesidir ve bu uç tam onu servis eder.
+# Tazeliği ayrı bir uca koymak, aynı gerçeği iki yerden okutmak olurdu (tek-kaynak yasası).
+#
+# BİÇİM DOĞRULANMAZ, VARLIK DOĞRULANIR: alanların DEĞER biçimini (sha 40 hex mi, damga `Z` ile mi
+# bitiyor) burada yeniden tarif etmek, yazıcının sözleşmesinin İKİNCİ bir kopyasını yaratırdı ve
+# iki kopya sessizce ayrışır. Ölçülen tek şey "beş alan da VAR mı"dır; eksikse değer UYDURULMAZ,
+# `None` + neden döner. BEDELİ ADIYLA: biçimi bozuk (ör. kırpılmış sha) bir beyan buradan
+# GEÇER ve panoda olduğu gibi görünür — yani bu uç bir doğrulayıcı değil, bir AYNADIR.
+_BELGE_ESITLEME_ADI = "belge_esitleme.json"
+_BELGE_ESITLEME_ALANLARI = ("esitlenen_sha", "esitlendi_utc", "esitleyen_host",
+                            "dosya_n", "silinen_n")
+#: "dosya okunamadı" ile "dosyanın içeriği JSON `null`" ayrımı için nöbetçi — `store.read_json`
+#: ikisinde de varsayılana düşer ve varsayılan `None` olsaydı iki AYRI arıza tek gerekçeye inerdi.
+_BELGE_ESITLEME_YOK = object()
+
+
+def _belge_esitleme_beyani() -> tuple[dict | None, str | None]:
+    """(beyan, neden) — beyan okunabildiyse `neden` `None`dır, okunamadıysa beyan `None`dır ve
+    neden ADIYLA söylenir. Sessiz `None` bu deponun uydurma yasağının ihlalidir: "ölçemedim" ile
+    "eşitleme hiç yapılmadı" panoda aynı görünürdü.
+
+    SALT OKUMA. Dosyanın tek yazarı `ops/belge_esitle.sh`tir; burası ona DOKUNMAZ.
+    Yol `config.STATE` üzerinden çözülür (ucun kendi `state/` mekanizması) ve içerik
+    `store.read_json` ile okunur — statik graf okuyucuyu ancak bu kapıdan görür."""
+    yol = Path(config.STATE) / _BELGE_ESITLEME_ADI
+    try:
+        var = yol.is_file()
+    except OSError as e:  # sessiz-yutma: SESSİZ DEĞİL — yol yoklanamadıysa neden gövdeye ADIYLA yazılır; sessiz olan hâl, yoklanamayan bir yolu "dosya yok" diye raporlamak olurdu
+        return None, f"beyan dosyası yoklanamadı ({type(e).__name__}): {e}"
+    if not var:
+        return None, "dosya yok"
+    ham = store.read_json(_BELGE_ESITLEME_ADI, _BELGE_ESITLEME_YOK)
+    if ham is _BELGE_ESITLEME_YOK:
+        return None, ("beyan dosyası var ama okunamadı ya da JSON'u bozuk — `store.read_json` "
+                      "varsayılana düştü ve `state_file_unreadable` uyarısını bastı")
+    if not isinstance(ham, dict):
+        return None, (f"beyan bir JSON NESNESİ değil ({type(ham).__name__}) — yazıcının sözleşmesi "
+                      "tek satırlık bir nesnedir; gövdeyi olduğu gibi göstermek onu beyan sanmak olurdu")
+    eksik = [a for a in _BELGE_ESITLEME_ALANLARI if a not in ham]
+    if eksik:
+        return None, ("beyanda eksik alan: " + ", ".join(eksik) +
+                      " — yarım beyan TAM gibi gösterilmez (uydurma yasağı)")
+    return {a: ham[a] for a in _BELGE_ESITLEME_ALANLARI}, None
+
+
 @app.get("/api/roadmap")
 def api_roadmap(request: Request, bolum: str | None = None, tam: int = 0, ozet: int = 0):
     """ROADMAP.md → tahta. SALT OKUNUR; yazma ucu YOKTUR (dosya insan tarafından düzenlenir).
@@ -10700,16 +10756,27 @@ def api_roadmap(request: Request, bolum: str | None = None, tam: int = 0, ozet: 
     DOSYA YOKSA 200 + `hata` + `yol` döner, 404 DEĞİL: 404'ün gövdesi FastAPI zarfıdır ve panonun
     `useApi` üç-hâl ayrımında yalnız "hata" olarak görünürdü — operatör HANGİ yolun okunamadığını
     göremezdi. Burada `bolumler: null`tır (boş liste DEĞİL: boş liste 'yol haritası boş' diye
-    okunur, oysa ölçülen şey 'dosyayı bulamadım')."""
+    okunur, oysa ölçülen şey 'dosyayı bulamadım').
+
+    BELGE EŞİTLEME BEYANI GÖVDEDE: `belge_esitleme` (+ okunamadıysa `belge_esitleme_neden`)
+    tahtanın A1'deki kopyasının hangi sha ile, ne zaman eşitlendiğini söyler — belgenin KENDİSİ
+    burada, tazeliği başka bir uçta olsaydı operatör iki yüzeyi elle eşleştirmek zorunda kalırdı.
+    Beyan ÖNBELLEĞE GİRMEZ: `_ROADMAP_CACHE` yol haritası dosyasının damgasına bağlıdır, oysa
+    eşitleme beyanı o dosya hiç değişmeden tazelenir — önbelleğe koysaydık pano bayat bir
+    eşitleme damgasını taze diye gösterirdi."""
     _auth(request)
+    besitleme, besitleme_neden = _belge_esitleme_beyani()
     p = _roadmap_yolu()
     try:
         st = p.stat()
         metin = p.read_text(encoding="utf-8")
     except OSError as e:
+        # BEYAN BU DALDA DA TAŞINIR: yol haritası dosyası okunamadığında "A1'de hangi belge var?"
+        # sorusu daha da yakıcıdır — beyanı yalnız mutlu yola koymak, tam gerektiği anda susardı.
         return {"ok": False, "bolumler": None,
                 "hata": f"ROADMAP dosyası okunamadı ({type(e).__name__}): {e}",
-                "yol": str(p)}
+                "yol": str(p),
+                "belge_esitleme": besitleme, "belge_esitleme_neden": besitleme_neden}
     import datetime as _dt
     mtime = _dt.datetime.fromtimestamp(st.st_mtime, _dt.timezone.utc).isoformat(timespec="seconds")
     kok = Path(config.ROOT)
@@ -10734,6 +10801,7 @@ def api_roadmap(request: Request, bolum: str | None = None, tam: int = 0, ozet: 
                "ozet_beyani": ("madde `ham` gövdeleri ve tablo hücreleri SÖKÜLDÜ; başlık, durum ve "
                                "yapı duruyor. Gövde için `?ozet=0` (varsayılan) ya da `?bolum=§N`")}
     yuk = {**yuk, "ok": True,
+           "belge_esitleme": besitleme, "belge_esitleme_neden": besitleme_neden,
            "suzgec": {"bolum": bolum, "tam": bool(tam), "ozet": bool(ozet),
                       "eslesen_bolum_n": len(yuk["bolumler"]), "toplam_bolum_n": len(bolumler)}}
     return yuk
