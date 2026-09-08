@@ -2366,6 +2366,10 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
 
 > 2026-09-08 (operatör kararı: kapananlar arşivde): bu bölümdeki kapanmış 93 TSK maddesi TAM METİNLE `§8.H.2` alt bölümüne taşındı; burada yalnız AÇIK maddeler (ACTIVE/QUEUED/INTERIM/GATED/OPERATOR) kalır.
 
+- **[TSK-179] Uyuyan kurulum GÖLGE İCRA pilotu (EDG-2026-088): dormant planlar gerçek emir olmadan izlenir; n≥30 ∧ CI-alt>0 dolunca icraya bağlama kararı operatöre döner** — status: ACTIVE · born: 2026-09-08 · owner: rol1 · size: M · trigger: —
+  What: Operatör 2026-09-08 16:0xZ 'icraya bağla (kartla)' → EDG-2026-049 NO-GO (08-24) çarpışması → 'önerilerini uygula': ardıl kart EDG-2026-087 (16:2xZ) → pencere öncülü bayat (ölçülen hız 10 plan/40 gün) → EDG-2026-088 (120 gün). Plan docs/superpowers/plans/2026-09-08-golge-pilot-b1.md (Task 1 golge_icra motoru implementer'da; Task 2 loop kancası + /api/golge-icra; Task 3 sayım; Task 4 Rol-1 merge/suite/dağıtım). Kill#1: gerçek emir/onay/silahlanma SIFIR TOLERANS.
+  Why: TSK-175 inceleme belgesi EDG-049'u anmamıştı (§8 düzeltmesi); sermaye riski olmadan örneklem büyütmek 049'un n=6 körlüğünü kapatır. Ref: EDG-2026-049 · EDG-2026-087 · EDG-2026-088 · TSK-175.
+
 - **[TSK-178] Yetim state bekçisi 2026-08-31'den beri kırmızı: bot damga dosyaları (bekci/karne/oneri/sef_brifingi_damga.json, oneri_akibet.jsonl) okuyucusuz görünüyor** — status: QUEUED · born: 2026-09-08 · owner: rol1 · size: S · trigger: —
   What: `recompute._orphan_state_files` ok=False (5 dosya); yazar/okuyucu aynı `ops/*_brifingi.py` modülünde (statik graf modül-içi okumayı göremez — `monotonic_amnesty.json` emsali) ya da gerçek okuyucu yok (`oneri_akibet.jsonl`?). Her dosya için ÖLÇ: okuyan modül var mı; varsa `codelaw.DECLARED_SINKS` gerekçeli beyan, yoksa okuyucu (pano/brifing özeti) ya da yazımı kaldır. Bekçi alarmı MECHANISM_STALE 08-31 20:55Z'den beri.
   Why: canlı bekçi kırmızıyken yeni yetim (bugün `belge_esitleme.json` gibi) ayırt edilemez — alarm gürültüde boğulur (VLO dersi). Ref: events.jsonl orphan_state_files 08-12/08-25/08-31 · TSK-177 dilim-2 okuyucu emsali.
