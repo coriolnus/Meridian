@@ -28,11 +28,11 @@ olcum_plani:
   - "gölge defteri: state/golge_icra.jsonl (B1 implementer yazar; okuyucu = bu kartın sayım betiği + pano 'Uyuyan kurulumlar' kartı — Yasa 6); satır: {plan_id, kurulum, hukum, ts_plan, giris_fiyat (planın giriş kuralı: ilk uygun bar açılışı), cikis_fiyat, cikis_neden (planın kendi stop/hedef/zaman kuralı — canlı çıkış motoruyla AYNI fonksiyon), R, bar_n, kaynak_bar_hash}"
   - "giriş yalnız plan hükmünden BAĞIMSIZ: dormant planların tamamı gölgeye girer (GO 1 / REVIEW 13 / NO_GO 17 dağılımı tanı olarak raporlanır)"
   - "sayım: research/olcumler/edg087_golge_pilot/sayim.py — toplam R, blok-bootstrap CI95 (EDG-049 ile aynı blok uzunluğu), kazanma oranı, PF; kurulum kırılımı tanı"
-  - "kontrol (yol-tutarlı): aynı pencerede canlı NORMAL planlar gölge defterinden de geçirilir; gölge R ile gerçek icra R'si farkı ≤ komisyon+kayma payı (goal/bounds'taki değerler) — gölge motorunun gerçek yolla tutarlılığı"
+  - "kontrol (yol-tutarlı; Rol-1 hükmü 7): yalnız GERÇEK işlemler — B1'de son 10 gerçek işlem bir kez + her yeni gerçek işlem kapandığında gölge eşleniği bir kez (tüm normal planların sürekli gölgelenmesi YOK, bedel ~50×); gölge R ile gerçek icra R'si farkı ≤ komisyon+kayma payı (goal/bounds'taki değerler) — gölge motorunun gerçek yolla tutarlılığı"
   - "bedel: gölge defteri boyutu ve yazım sıklığı (satır/gün) raporlanır; canlı worker'a ek LLM/ağ çağrısı SIFIR (yalnız bar verisi)"
 
 esikler:
-  n_alt_plan: 30                 # ∧ pencere ≤45 gün; dolmadan hüküm YOK (betimleyici ara-rapor serbest)
+  n_alt_plan: 30                 # KAPANAN gölge işlem; ∧ pencere ≤120 gün (pencere_gun_ust); dolmadan hüküm YOK (betimleyici ara-rapor serbest)
   ci_alt_R_ust: 0.0              # blok-bootstrap CI95 alt sınırı > 0 (EDG-049 ile aynı ölçüt)
   kazanma_alt: 0.40
   pencere_gun_ust: 120           # ölçülen hız 10 plan/40 gün (~1,7/hafta) → n≥30 için ~18 hafta; dolmazsa 'bilgisiz' arşiv (n<30 ile hüküm yazılmaz — 049 dersi)
