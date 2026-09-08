@@ -520,10 +520,23 @@ def test_UC_BOT_DA_AYNI_MODULU_CAGIRIR(bot):
     assert "soul_denetimi" in src, f"@{bot} kural denetimine bağlanmamış"
     assert "soul_denetimi.gecir(" in src, f"@{bot} akışı kopyalamış (ortak `gecir` çağrılmıyor)"
     # SIR DİSİPLİNİ: denetçi istemi de ÜÇÜNCÜ TARAFA gider ve denetlenen metin `_kaynak_oku`nun
-    # `repr(e)`sini taşıyabilir (`?apikey=…`). Tek geçerli çağrı yolu `_profili_cagir`dır —
-    # `scrub` ORADADIR. Başka bir çağrılabilir geçirmek egress'i sessizce çitin dışına çıkarırdı.
-    assert "cagir=_profili_cagir" in src, (
-        f"@{bot} denetçiyi `_profili_cagir` DIŞINDA bir yoldan çağırıyor — `notify.scrub` atlandı")
+    # `repr(e)`sini taşıyabilir (`?apikey=…`). Geçerli çağrı yolu `notify.scrub` UYGULAYAN yoldur;
+    # başka bir çağrılabilir geçirmek egress'i sessizce çitin dışına çıkarırdı.
+    #
+    # LİSTE GENİŞLEDİ, KAPI GEVŞEMEDİ (TSK-138 dilim-2, 2026-09-08). `@sef`in denetçi çağrısı
+    # operatör kararıyla kapının HIZLI rotasına taşındı (`_denetci_cagir`) — hermes CLI yolunda
+    # çağrı başına rota tutamağı YOK ve yanıt gövdesindeki `model` alanı o yoldan OKUNAMAZ
+    # (ikisinin de ölçümü `ops/sef_brifingi.py`nin rota bölümünde). Kapı bir AD listesine
+    # dönüşseydi gevşerdi; o yüzden ad KABUL EDİLİR ve o adın gövdesinde `notify.scrub`ın
+    # GERÇEKTEN çağrıldığı AYRICA ölçülür — çitin yeri değişti, çit değil.
+    izinli = {"sef": ("_denetci_cagir", "_profili_cagir")}.get(bot, ("_profili_cagir",))
+    secilen = [ad for ad in izinli if f"cagir={ad}" in src]
+    assert secilen, (
+        f"@{bot} denetçiyi {list(izinli)} DIŞINDA bir yoldan çağırıyor — `notify.scrub` atlandı")
+    for ad in secilen:
+        govde = src.split(f"def {ad}(", 1)[-1].split("\ndef ", 1)[0]
+        assert "notify.scrub(" in govde, (
+            f"@{bot} denetçi yolu `{ad}` `notify.scrub` UYGULAMIYOR — sır çiti delindi")
 
 
 def _bot_kur(tmp_path, monkeypatch, request, ad):

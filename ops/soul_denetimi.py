@@ -148,6 +148,17 @@ class Hukum:
     # YALNIZ `ayristir` doldurur; `gecir` onu OLAYA taşır (`Gecis.kayit()`e DEĞİL — damganın
     # okuyucusu bu alanı bilmez, Yasa 6/O4).
     cevap_bas: str | None = None
+    # TSK-138 dilim-2, 2026-09-08: denetçiyi GERÇEKTEN cevaplayan modelin adı — yanıt gövdesinin
+    # `model` alanından. `Hukum.gerekce`nin yanındaki `model` künyesi İSTENEN adı taşır ve kapı
+    # (`ai-proxy-multi`) istemcinin model alanını EZDİĞİ için ikisi AYRIŞIR: 2026-09-08'de ultra
+    # isteniyor, super cevaplıyor. Teşhis tam o farktan okunur — tek alan tutulsaydı "şema dışı
+    # cevabı hangi model yazdı" sorusu cevapsız kalırdı (bu modülün dilim-1'deki bütün gerekçesi).
+    #
+    # `None` = ÖLÇÜLMEDİ, ve bu UYDURULMAZ: istenen künyeyi buraya kopyalamak defterin "super
+    # cevapladı" demesini sağlardı, oysa ölçüm HİÇ yapılmamış olurdu. Bu modül değeri ÖLÇMEZ,
+    # yalnız TAŞIR — HTTP gövdesinin biçimini bilen taraf ÇAĞIRANDIR (`cagir` sözleşmesiyle aynı
+    # sınır: hermes'in ya da kapının hiçbir ayrıntısı buraya sızmaz).
+    cevaplayan_model: str | None = None
 
     @property
     def olculdu(self) -> bool:
@@ -168,15 +179,21 @@ class Hukum:
         return self.olculdu and bool(self.ihlaller)
 
 
-def _dustu(gerekce: str, cevap_bas: str | None = None) -> Hukum:
+def _dustu(gerekce: str, cevap_bas: str | None = None,
+           cevaplayan_model: str | None = None) -> Hukum:
     """Ölçülemeyen denetim. İhlal listesi BOŞTUR ve bu bilinçlidir: ölçemediğimiz bir kuralı
     ihlal saymak, teslimatı bir arızaya bağlamak olurdu (fail-open sözleşmesi).
 
     `cevap_bas` VARSAYILAN OLARAK `None`dır ve bu bir tercih değil sözleşmedir: bu fonksiyonun
     çağıranlarının ÇOĞUNDA (düşen çağrı · SOUL yok · tavan aşımı) cevap HİÇ GELMEMİŞTİR. Yalnız
-    AYRIŞTIRMA kaynaklı düşüşler değeri geçer — orada bir cevap VARDIR ve teşhisin girdisi odur."""
+    AYRIŞTIRMA kaynaklı düşüşler değeri geçer — orada bir cevap VARDIR ve teşhisin girdisi odur.
+
+    `cevaplayan_model` de AYNI sözleşmededir (TSK-138 dilim-2): düşen bir çağrıda ölçüm YOKTUR.
+    DÜŞEN ÇAĞRI DALI YİNE DEĞERİ GEÇER ve bu bir tutarsızlık değil ÖLÇÜMDÜR: kapı 200 dönüp
+    gövdesi şemayı tutmadığında `model` alanı OKUNMUŞTUR ve "hangi model bozuk cevap yazdı"
+    sorusunun tek cevabı odur — dilim-1'in `cevap_bas` ile kapattığı boşluğun ikinci yarısı."""
     return Hukum(sade_ozet=None, terim_ihlal=[], uydurma=[], cevrilen=[], kaynak="llm_dustu",
-                 gerekce=gerekce, cevap_bas=cevap_bas)
+                 gerekce=gerekce, cevap_bas=cevap_bas, cevaplayan_model=cevaplayan_model)
 
 
 def _cevap_basi(text) -> str:
@@ -524,7 +541,28 @@ def mekanik_hukum(metin, veri_terimleri) -> Hukum | None:
                  gerekce="terim korunumu MEKANİK olarak ihlal edildi — denetçi çağrılmadı")
 
 
-def denetle(profil_evi, metin, veri_terimleri, *, cagir=None, veri: str | None = None) -> Hukum:
+def _cevaplayan(oku) -> str | None:
+    """Çağıranın ölçtüğü "cevaplayan model" — okunamıyorsa `None` (TSK-138 dilim-2, 2026-09-08).
+
+    `oku` ÇAĞIRANIN fonksiyonudur ve bu modül onun gövdesini bilmez. Bir TEŞHİS alanının okuması
+    denetimin kendisini DÜŞÜREMEZ: fail-open sözleşmesi, ölçüm aletinin arızasının teslimatı
+    kesmesine izin vermez. Düşüş sessiz DEĞİLDİR — değer `None` kalır ve olayda "ölçülmedi" diye
+    görünür, ki bu tam olarak olan bitendir.
+
+    `None` dönen bir `oku` ile HİÇ verilmemiş bir `oku` AYNI sonucu verir ve bu bilinçlidir:
+    `bekci`/`karne` çağıranları bu turda DEĞİŞMEDİ, onların olaylarında alan `None` kalır."""
+    if oku is None:
+        return None
+    try:
+        deger = oku()
+    except Exception:  # sessiz-yutma: teşhis okuyucusunun arızası denetimi ve teslimatı DÜŞÜREMEZ (fail-open); sonuç `None` olarak olaya "ölçülmedi" diye zaten yazılır
+        return None
+    metin = str(deger or "").strip()
+    return metin or None
+
+
+def denetle(profil_evi, metin, veri_terimleri, *, cagir=None, veri: str | None = None,
+            cevaplayan_oku=None) -> Hukum:
     """Bir metnin SOUL üslup hükmü. `cagir(istem) -> str` çağıranın profil çağrısıdır (üç botta
     da `_profili_cagir`), böylece bu modül hermes'in hiçbir ayrıntısını bilmez.
 
@@ -551,8 +589,13 @@ def denetle(profil_evi, metin, veri_terimleri, *, cagir=None, veri: str | None =
     except Exception as e:
         # SESSİZ YUTMA DEĞİL: gerekçe hükme yazılır, `gecir` onu `obs.log`a ve gövdedeki BEYAN
         # satırına taşır. Denetçinin düşmesi teslimatı DÜŞÜRMEZ (fail-open sözleşmesi).
-        return _dustu(f"denetçi çağrısı düştü: {repr(e)[:200]}")
-    return _sozluk_suz(ayristir(cevap), veri=veri, uslup=uslup)
+        return _dustu(f"denetçi çağrısı düştü: {repr(e)[:200]}",
+                      cevaplayan_model=_cevaplayan(cevaplayan_oku))
+    # OKUMA ÇAĞRIDAN HEMEN SONRA (TSK-138 dilim-2): çağıranın tutucusu HER çağrıda sıfırlanır,
+    # yani araya giren bir yeniden-üretim çağrısının modeli bu hükme SIZAMAZ. Sıra bozulursa
+    # ölçüm aleti kendi arızasını gizler — bir önceki turun modeli düşen tura yazılırdı.
+    return replace(_sozluk_suz(ayristir(cevap), veri=veri, uslup=uslup),
+                   cevaplayan_model=_cevaplayan(cevaplayan_oku))
 
 
 # ------------------------------------------------------------------------------------------------
@@ -625,7 +668,7 @@ def _olay_cevap_basi(bas: str | None) -> str | None:
 
 def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
           dogrula=None, bot: str = "", baslangic_cagri: int = 1,
-          model_kimligi: str | None = None) -> Gecis:
+          model_kimligi: str | None = None, cevaplayan_oku=None) -> Gecis:
     """Teslim öncesi kural geçişinin TAMAMI — üç botun da çağırdığı tek akış (D5).
 
     `model_kimligi` (TSK-138 dilim-1, 2026-09-07): denetçiyi HANGİ modelin cevapladığı — olaya
@@ -634,6 +677,13 @@ def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
     kalır ("ölçülmedi" — sıfır ya da boş dizge DEĞİL). Bu modül kimliği ÖLÇMEZ, yalnız TAŞIR:
     profil dosyasının biçimini bilen taraf ÇAĞIRANDIR (hermes'in hiçbir ayrıntısı buraya sızmaz,
     `cagir` sözleşmesiyle aynı gerekçe).
+
+    `cevaplayan_oku` (TSK-138 dilim-2, 2026-09-08): argümansız bir okuma — çağıranın SON denetçi
+    çağrısında ölçtüğü CEVAPLAYAN model adı. `model_kimligi` ile aynı sınırdadır ve ikisi AYRI
+    alandır çünkü AYRI şeyi ölçerler: biri istemcinin İSTEDİĞİ künye (profil dosyasından), öteki
+    kapının GERÇEKTEN çalıştırdığı model (yanıt gövdesinden). Kapı istemcinin model alanını
+    ezdiği için ikisi ayrışır ve teşhisin tamamı o farktadır. İSTEĞE BAĞLI, varsayılanı `None`:
+    `bekci`/`karne` çağıranları bu turda DEĞİŞMEDİ.
 
     `baslangic_cagri`: bu KOŞUMDA hermes'e ZATEN yapılmış çağrı sayısı. Sıralama/sunum çağrısı
     yapıldıktan sonra çağrıldığı için varsayılan 1'dir. Tavan (`KOSUM_CAGRI_TAVANI`) koşumun
@@ -660,7 +710,8 @@ def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
             return mek, sayac
         if sayac >= KOSUM_CAGRI_TAVANI:
             return _dustu(f"koşum çağrı tavanı aşıldı ({sayac}/{KOSUM_CAGRI_TAVANI})"), sayac
-        return denetle(profil_evi, metin, veri_terimleri, cagir=cagir, veri=veri), sayac + 1
+        return denetle(profil_evi, metin, veri_terimleri, cagir=cagir, veri=veri,
+                       cevaplayan_oku=cevaplayan_oku), sayac + 1
 
     hukum, n = _denetle(ilk_metin, n)
     ilk_hukum = hukum         # D3 (TSK-138): İLK TURUN hükmü — event'e ayrı taşınır, damgaya değil
@@ -694,6 +745,15 @@ def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
     obs.log(OLAY, **gecis.kayit(bot), sema_alanlari=len(SEMA_ALANLARI),
             ilk_ihlal=ilk_hukum.ihlaller[:IHLAL_TAVANI], suzulen=suzulen_toplam,
             model=model_kimligi, cevap_bas=_olay_cevap_basi(gecis.hukum.cevap_bas),
+            # `cevaplayan_model` de AYNI emsalle YALNIZ olaya gider (TSK-138 dilim-2, 2026-09-08).
+            # SÜZGEÇ YOK ve bu ölçülmüş bir ayrımdır: bu değer bir MODEL ÇIKTISI değil, kapının
+            # kendi yanıt zarfındaki alandır — `cevap_bas`ın süzgeç gerekçesi (model metni bir
+            # istisna dizgesi taşıyabilir) burada geçerli değildir. Değeri ÇAĞIRAN ölçer ve
+            # ölçemediğinde `None` bırakır; `""` ile `None` ayrımı burada YOKTUR, çünkü "kapı boş
+            # bir model adı döndürdü" ile "alan hiç yoktu" aynı teşhise çıkar — çağıran ikisini de
+            # ADIYLA ayrı bir olaya yazar. OKUYUCU: `ops/sef_brifingi.py` durum satırı +
+            # `ops/olay_sorgu.py --sql` ile iki gecelik rota ölçümü (TSK-138 dilim-2).
+            cevaplayan_model=gecis.hukum.cevaplayan_model,
             detail="teslim öncesi SOUL kural denetimi — hiçbir dalda teslimat düşmez "
                    "(fail-open, beyanlı)")
     return gecis
@@ -711,6 +771,9 @@ def _yeniden(*, profil_evi, ilk_metin, ilk_istem, hukum, cagir, dogrula, sayac, 
     except Exception as e:
         # SESSİZ YUTMA DEĞİL: `llm_dustu` hükmü gerekçesiyle deftere ve gövdedeki beyan satırına
         # düşer. İLK metin yine gider — yeniden-üretimin düşmesi teslimatı düşüremez.
+        # `cevaplayan_model` BURADA GEÇİLMEZ ve `None` kalır (TSK-138 dilim-2): bu çağrı bir
+        # DENETİM değil bir ÜRETİM çağrısıdır; ilk turun ölçtüğü modeli buraya taşımak, teslim
+        # edilen hükmün modeli SANILIRDI — oysa teslim edilen hüküm tam da ölçülemeyen budur.
         return _sonuc(ilk_metin, _dustu(f"yeniden-üretim çağrısı düştü: {repr(e)[:200]}"),
                       sayac + 1, False)
     sayac += 1
