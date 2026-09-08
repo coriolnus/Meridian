@@ -177,7 +177,7 @@ rotalar:
     # şerhe tarihiyle yazın — gerekirse `proxy-rewrite` ile açıkça set edilir.
     #
     # ÖLÇÜMÜ YAPACAK KİŞİYE, AYNI DOSYADAKİ KARŞI-KANIT (2026-09-08): üç rota — `llm-danisma`,
-    # `llm-hizli`, `llm-models` — `proxy-rewrite.headers.remove` ile `X-Forwarded-For`u ÜSTELİK
+    # `llm-hizli`, `llm-gemma31`, `llm-models` — `proxy-rewrite.headers.remove` ile `X-Forwarded-For`u ÜSTELİK
     # SİLİYOR ve yanındaki şerh gerekçeyi "ai-proxy varsayılanı istemci header'larını iletir" diye
     # yazıyor. Yani boru hattında XFF'in VAR olduğuna dair yerel kanıt zaten burada; silme
     # ihtiyacının doğması onun geldiğine işarettir. BU KANIT YETMEZ ve karıştırılmamalı: o üç rota
@@ -258,6 +258,71 @@ rotalar:
                 Authorization: "$env://OPENROUTER_AUTH"
             options:
               model: minimax/minimax-m3:free
+            override:
+              endpoint: https://openrouter.ai/api/v1/chat/completions
+          # ÜCRETLİ SON-ÇARE KALDIRILDI (operatör kararı 2026-09-02 ~14:50 UTC "onlar da gitsin, hepsi
+          # ücretsiz olsun") — llm-danisma'daki şerhin eşi; yalnız :free kalır.
+
+  - id: llm-gemma31
+    # GEMMA-31 SONDA ROTASI (2026-09-08, operatör: "gemma'nın iki modeli ile de dene" — TSK-138 dilim-2 yeniden-üretim
+    # model kıyası). Kapı modeli ROTA ile seçer (istek gövdesindeki `model` yok sayılır — ölçüldü 2026-09-08 06:3xZ: beş
+    # farklı `model` isteğine de birincil nemotron-ultra cevap verdi). İkinci ücretsiz Gemma: google/gemma-4-31b-it:free;
+    # yedek aynı ailenin 26b'si. Kaldırma: kıyas bitince bu blok silinir (llm-hizli kalır).
+    # Hafif model rotası: kısa/mekanik işler + kapının kendi smoke'u. Ölçülen ders (kurulum
+    # günü): nemotron-550b free ucu dakikalarca boğulabiliyor — kapı sağlığı ağır modelin
+    # sağlığıyla ölçülmez; bu rota o ayrımı taşır.
+    uri: /llm/gemma31/v1/chat/completions
+    plugins:
+      prometheus: {}   # yukarıdaki notla aynı: sayaç ancak açık yazılınca doğar
+      # Köprü + `hide_credentials`: gerekçe llm-danisma'da, TEK YERDE (TSK-105). Gövde birebir
+      # aynıdır ve aynı olmak ZORUNDADIR — botun hangi rotaya gittiği çağrı sınıfına bağlı,
+      # kimlik yolu değişmemeli. (Kopya kaçınılmaz: APISIX plugin gövdeleri rota-başınadır;
+      # ayrışma çivisi v376'nın parametreli köprü çivileridir — üç rotayı aynı kapıdan geçirir.)
+      serverless-pre-function:
+        phase: rewrite
+        functions:
+          - |
+            return function(conf, ctx)
+                local h = ngx.req.get_headers()
+                if not h["apikey"] then
+                    local auth = h["Authorization"] or h["authorization"]
+                    if type(auth) == "string" and auth:sub(1, 7) == "Bearer " then
+                        ngx.req.set_header("apikey", auth:sub(8))
+                    end
+                end
+            end
+      key-auth:                # F4-B kilidi 2026-09-02: geçerli tüketici anahtarı şart (apikey başlığı)
+        hide_credentials: true   # doğrulanan anahtar upstream'e GİTMEZ (gerekçe: llm-danisma)
+      consumer-restriction:
+        whitelist: [bot_bekci, bot_karne, bot_sef, motor_meridian]
+      proxy-rewrite:
+        uri: /llm/v1/chat/completions
+        headers:
+          remove: ["Authorization", "X-Forwarded-For", "X-Real-IP"]
+      ai-proxy-multi:
+        fallback_strategy: ["http_429", "http_5xx"]
+        instances:
+          - name: gemma31-birincil
+            provider: openai-compatible
+            priority: 10
+            weight: 1
+            auth:
+              header:
+                Authorization: "$env://OPENROUTER_AUTH"
+            options:
+              model: google/gemma-4-31b-it:free
+            override:
+              endpoint: https://openrouter.ai/api/v1/chat/completions
+          # KOVA-DIŞI SON-ÇARE (TSK-047, 2026-09-05) — llm-danisma'daki yedek-minimax'in eşi; :free.
+          - name: gemma31-yedek-26b
+            provider: openai-compatible
+            priority: 1
+            weight: 1
+            auth:
+              header:
+                Authorization: "$env://OPENROUTER_AUTH"
+            options:
+              model: google/gemma-4-26b-a4b-it:free
             override:
               endpoint: https://openrouter.ai/api/v1/chat/completions
           # ÜCRETLİ SON-ÇARE KALDIRILDI (operatör kararı 2026-09-02 ~14:50 UTC "onlar da gitsin, hepsi
