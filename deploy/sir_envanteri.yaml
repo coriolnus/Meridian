@@ -146,3 +146,178 @@ dosyalar:
     degiskenler:
       - ad: BOT_KEY_<AD>
         sir: true
+
+# =================================================================================================
+# ROTASYON KOPYALARI — ölçüm 2026-09-07 22:0xZ (A1, elle rotasyon penceresi; yalnız AD ve YOL)
+# =================================================================================================
+# NİYE AYRI BİR BLOK. Yukarıdaki `dosyalar:` bloğu `kaynak_belge` §1 tablosundan TÜRER ve ona
+# çivilenmiştir (v439 E2/E3: dosya ve ad listeleri BİREBİR eşit). Buradaki liste BAŞKA bir gerçeği
+# taşır — "bir sırrın DEĞERİ döndüğünde hangi dosyalar aynı pencerede yazılmalı" — ve onun tek
+# kaynağı `deploy/oracle-a1/sir_rotasyon.sh --kopyalar` çıktısıdır. İki listeyi tek bloğa
+# sıkıştırmak, iki farklı kaynağı tek yerde ayrıştırırdı: §1 tablosu 2026-09-03 ölçümüdür ve
+# Faz-1B'nin ürettiği `/etc/*` credential kaynaklarını HENÜZ tanımaz.
+#
+# ÇİVİ (v447): `--kopyalar` çıktısındaki her `dosya`/`env`/`url` satırı burada olmak ZORUNDA ve
+# BURADAKİ her satır orada olmak zorunda — yani iki liste EŞİT. Tek yön (⊆) yeterli değildi:
+# betikten bir kopya SİLİNSEYDİ envanter onu taşımaya devam eder, "rotasyon bu dosyayı yazıyor"
+# beyanı sessizce yalan olurdu. `api` ve `sql` satırları DOSYA DEĞİLDİR (motor ucu / ALTER ROLE)
+# ve bu blokta `tur:` alanlarıyla beyanlı dururlar — kanal beyanı olmadan "envanterde yok" ile
+# "dosya değil" aynı görünürdü.
+#
+# AÇIK KALEM (2026-09-07): `/opt/hindsight/.key` ve hermes profillerindeki `OPENROUTER_API_KEY`
+# `kaynak_belge` §1 tablosunda YOKTUR (tablo 2026-09-03 ölçümü). §1'e girmeleri belge düzenlemesi
+# ister ve `.key` için §2'nin DONUK sınıf sözlüğünde (A/B/C/D) karşılığı yoktur: bir kabuk
+# okuyucusunun (`~/bin/hafiza_sor.sh`) düz dosyası ne systemd-doğal (A), ne docker (B), ne hermes
+# profili (C), ne de ayar (D). Sözlüğü esnetmek yerine burada beyanla duruyorlar — sınıf ataması
+# spec turunun işidir (Rol-1).
+
+rotasyon_kopyalari:
+  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı)"
+  kaynak_betik: "deploy/oracle-a1/sir_rotasyon.sh"
+
+  kopyalar:
+    - alt_komut: kapi
+      sir: KAPI_APIKEY
+      tur: dosya
+      yol: "/etc/meridian/kapi_apikey"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "meridian.service (LoadCredential=KAPI_APIKEY)"
+    - alt_komut: kapi
+      sir: KAPI_APIKEY
+      tur: env
+      yol: "/opt/apisix/.env-apisix"
+      alan: BOT_KEY_MERIDIAN
+      mod: null                # korunur (mevcut izin okunur) — bkz. `dosyalar:` bloğundaki satır
+      sahip: null
+      tuketici: "apisix.service ($env:// çözümü — RESTART gerekir, reload yetmez)"
+
+    - alt_komut: tenant
+      sir: HINDSIGHT_API_TENANT_API_KEY
+      tur: dosya
+      yol: "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "hindsight-api.service (50-creds) · meridian.service (54 drop-in) — AYNI dosya"
+    - alt_komut: tenant
+      sir: HINDSIGHT_API_TENANT_API_KEY
+      tur: dosya
+      yol: "/opt/hindsight/.key"
+      alan: null
+      mod: "600"
+      sahip: "ubuntu"
+      tuketici: "~/bin/hafiza_sor.sh (kabuk okuyucu; LLM'siz recall)"
+      not: "spec §1 tablosunda YOK — açık kalem (yukarıdaki şerh)"
+    - alt_komut: tenant
+      sir: HINDSIGHT_API_TENANT_API_KEY
+      tur: env
+      yol: "/opt/hindsight/.env-cp"
+      alan: HINDSIGHT_CP_DATAPLANE_API_KEY
+      mod: null                # korunur
+      sahip: null
+      tuketici: "hindsight-cp.service (docker env-file)"
+
+    - alt_komut: db
+      sir: HINDSIGHT_DB_PAROLA
+      tur: sql
+      yol: "hindsight"         # DOSYA DEĞİL: `ALTER ROLE hindsight PASSWORD` (psql -f, sonra silinir)
+      alan: null
+      mod: null
+      sahip: null
+      tuketici: "postgres"
+    - alt_komut: db
+      sir: HINDSIGHT_DB_PAROLA
+      tur: url
+      yol: "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL"
+      alan: null
+      mod: null                # korunur
+      sahip: null
+      tuketici: "hindsight-api.service — YALNIZ parola alanı değişir, query korunur"
+
+    - alt_komut: dash
+      sir: MERIDIAN_DASH_TOKEN
+      tur: dosya
+      yol: "/etc/meridian/dash_token"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "meridian.service (LoadCredential=dash_token)"
+    - alt_komut: dash
+      sir: MERIDIAN_DASH_TOKEN
+      tur: env
+      yol: "/opt/meridian/.dash.env"
+      alan: MERIDIAN_DASH_TOKEN
+      mod: null                # korunur
+      sahip: null
+      tuketici: "brifing/learn/sprint@ birimleri (EnvironmentFile, başlangıçta okunur)"
+
+    - alt_komut: openrouter
+      sir: NOUS_API_KEY
+      tur: dosya
+      yol: "/etc/meridian/nous_api_key"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "meridian.service (LoadCredential=NOUS_API_KEY)"
+    - alt_komut: openrouter
+      sir: NOUS_API_KEY
+      tur: api
+      yol: "/api/secrets/NOUS_API_KEY"   # DOSYA DEĞİL: motor ucu (POST, gövde dosyadan)
+      alan: null
+      mod: null
+      sahip: null
+      tuketici: "meridian yerel sır deposu"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/opt/apisix/.env-apisix"
+      alan: OPENROUTER_API_KEY
+      mod: null                # korunur
+      sahip: null
+      tuketici: "apisix.service (upstream)"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/opt/apisix/.env-apisix"
+      alan: OPENROUTER_AUTH
+      onek: "Bearer"           # değerin başına `Bearer ` gelir — tırnak biçimi korunur
+      mod: null
+      sahip: null
+      tuketici: "apisix.service (upstream Authorization başlığı)"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: dosya
+      yol: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "hindsight-api.service (LLM çağrıları)"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes/profiles/bekci/.env"
+      alan: OPENROUTER_API_KEY
+      mod: null                # ölçülmedi (uydurma yasağı) — yazımda MEVCUT izin korunur
+      sahip: null
+      tuketici: "hermes bekci profili"
+      not: "spec §1 tablosunda bu dosyanın YALNIZ BOT_KEY_<AD>'i var — açık kalem"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes/profiles/karne/.env"
+      alan: OPENROUTER_API_KEY
+      mod: null
+      sahip: null
+      tuketici: "hermes karne profili"
+      not: "spec §1 tablosunda bu dosyanın YALNIZ BOT_KEY_<AD>'i var — açık kalem"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes/profiles/sef/.env"
+      alan: OPENROUTER_API_KEY
+      mod: null
+      sahip: null
+      tuketici: "hermes sef profili"
+      not: "spec §1 tablosunda bu dosyanın YALNIZ BOT_KEY_<AD>'i var — açık kalem"
