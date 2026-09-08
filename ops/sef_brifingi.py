@@ -122,7 +122,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from meridian import hermes as _hermes_modulu                # noqa: E402
-from meridian import memory, notify, obs, store              # noqa: E402
+from meridian import memory, notify, obs, secrets, store     # noqa: E402
 from ops import alarm_backlog_digest as _alarm_kaynak        # noqa: E402
 from ops import oneri_brifingi as _oneri_kaynak              # noqa: E402
 from ops import soul_denetimi                                # noqa: E402
@@ -830,6 +830,248 @@ def _profili_cagir(prompt: str) -> str:
 
 
 # ================================================================================================
+# DENETÇİ ÇAĞRISI — KAPI ROTASI (TSK-138 dilim-2, operatör kararı 2026-09-08 16:0xZ)
+# ================================================================================================
+# NE ÖLÇÜLDÜ: 2026-09-07T22:05:31Z denetim olayı `hukum=denetlenemedi · kaynak=llm_dustu ·
+# cagri_n=3` — YENİDEN-ÜRETİM çağrısı `PROFIL_TIMEOUT_S` duvarına çarptı. Aynı gün kapı ölçümü:
+# `/llm/hizli/v1/chat/completions` 200 + `choices` ~1 sn, `/llm/v1/chat/completions` 89 sn +
+# "overloaded" 502 gövdesi. Kapı istek gövdesindeki `model` alanını YOK SAYAR (routes.yaml
+# `ai-proxy-multi` → `options.model` sabit), yani "hızlı model" bir model ADI DEĞİL bir ROTA
+# URL'sidir. Karar: denetçinin İKİ çağrısı da hızlı rotaya, iç bütçe 120 sn KALIR, ve cevabı
+# hangi modelin verdiği ÖLÇÜLÜR — iki gece.
+#
+# NEDEN AYRI BİR ÇAĞRI YOLU, PROFİL AYARI DEĞİL — ÖLÇÜLDÜ (yerel hermes v0.18.2 kaynağı; canlı
+# v0.19.0, sürüm farkı BEYAN EDİLİR). Profil `model.provider: custom:kapi` diyor:
+#   * `runtime_provider._get_named_custom_provider` ADLANDIRILMIŞ girdiyi bulduğu an `base_url`u
+#     O GİRDİDEN alır; `_resolve_named_custom_runtime`in `explicit_base_url` dalı YALNIZ ÇIPLAK
+#     `custom` içindir ve adlandırılmış girdi onu HİÇ görmez. `CUSTOM_BASE_URL` de o çıplak dala
+#     aittir. (Çıplak dal zaten kullanılamazdı: anahtar `key_env`den DEĞİL host'tan türetilirdi.)
+#   * `runtime_provider.resolve_requested_provider` config'in `model.provider`ını
+#     `HERMES_INFERENCE_PROVIDER`dan ÖNCE okur — ortamdan sağlayıcı da çevrilemez.
+# Yani hermes CLI yolunda ÇAĞRI BAŞINA rota tutamağı YOKTUR; rota ancak profilin `config.yaml`ı
+# değişip DAĞITILARAK döner. İkinci şart tek başına da belirleyicidir: hermes yalnız METNİ basar,
+# yanıt gövdesindeki `model` alanı (cevaplayan modelin tek dürüst kaynağı) o yoldan OKUNAMAZ.
+#
+# BEDEL (bedel yasası — kazanç ölçülüp bedel ölçülmezse körlük sessizdir):
+#   1. TÜKETİCİ KİMLİĞİ DEĞİŞİR: `bot_sef` yerine `motor_meridian` (`KAPI_APIKEY`). İkisi de
+#      `deploy/apisix/routes.yaml`ın HER İKİ LLM rotasında whitelist'te. `BOT_KEY_SEF` bu sürece
+#      HİÇ ULAŞMAZ ve bu bilinçlidir: birim dosyası model anahtarı taşımaz (kendi şerhi), anahtar
+#      profilin KENDİ `.env`indedir ve onu harness'a taşımak sır yüzeyini genişletirdi.
+#   2. SİSTEM PROMPTU DARALIR: hermes'in derlediği tam metin yerine profilin KENDİ `SOUL.md`si
+#      gider (koşum anında, hermes'in okuduğu AYNI dosyadan — tek-kaynak). KAYBEDİLEN: hermes'in
+#      taban promptu ve araç listesi. Araç YÜZEYİ genişlemez, DARALIR: profilde bütün takımlar
+#      zaten kapalı ve bu çağrı hiç `tools` göndermez.
+#   3. DIŞ DUVAR KALKAR: bu yolda `PROFIL_TIMEOUT_S` (150 sn) yoktur, bütçe tam `MODEL_TIMEOUT_S`
+#      (120 sn) olur. Birimin `TimeoutStartSec` tavanı bundan KÜÇÜLMEZ, yani kapı hesabı bozulmaz.
+#   4. ÖLÇÜLEMEYEN KAPI SESSİZCE KAPANMAZ: kök ya da anahtar ölçülemezse yol BUGÜNKÜ davranışa
+#      (hermes profili) düşer ve düşüş ADIYLA deftere yazılır.
+DENETIM_ROTA_ENV = "SOUL_DENETIM_ROTA"
+# Rota → kapı yolu. `profil` bir URL DEĞİL, bu turdan ÖNCEKİ davranıştır (hermes CLI) ve TAM geri
+# alma yoludur: iki değerli bir bayrak yalnız rotayı geri alır, doğrudan HTTP yolunu bırakırdı.
+DENETIM_ROTALARI = {"hizli": "/llm/hizli/v1", "danisma": "/llm/v1", "profil": None}
+VARSAYILAN_DENETIM_ROTASI = "hizli"
+# Kapı kökünün profil `base_url`undan kesildiği yer. Kök KODA YAZILMAZ (tek-kaynak yasası): port
+# ya da host bir gün değişirse gömülü bir sabit denetimi sessizce öldürürdü.
+KAPI_ROTA_ONEKI = "/llm/"
+# Kapının `key-auth` eklentisi tüketiciyi BU BAŞLIKTAN tanır. `Authorization: Bearer` köprüsü de
+# aynı sonuca varır ama yalnız `apikey` YOKKEN çalışır — başlığı doğrudan yazmak bir dolaylama
+# katmanını hiç açmaz. DEĞER hiçbir log/olay/çıktıya girmez.
+KAPI_BASLIK = "apikey"
+KAPI_SIR_ADI = "KAPI_APIKEY"
+
+# SON DENETÇİ ÇAĞRISINDA CEVAP VEREN MODEL — `_denetci_cagir` yazar, `_cevaplayan_model_oku` okur.
+# NEDEN MODÜL DÜZEYİNDE BİR TUTUCU: `soul_denetimi`nin `cagir` sözleşmesi tek bir DİZGE döndürür
+# ve o sözleşme üç botun ortağıdır; dönüş tipini genişletmek `bekci`/`karne` yollarını da
+# değiştirirdi. Tutucu HER çağRIDA sıfırlanır — sıfırlanmasaydı düşen bir turda bir ÖNCEKİ turun
+# modeli okunur, ölçüm aleti kendi arızasını gizlerdi (çivi: v455 B4).
+_SON_CEVAPLAYAN_MODEL: str | None = None
+
+
+def _denetci_rotasi() -> str:
+    """Denetçi çağrısının rotası. Varsayılan HIZLI; tanınmayan değer ADIYLA kayda geçer.
+
+    YAZIM HATASI SESSİZ BİR DAVRANIŞ DEĞİŞİKLİĞİ OLAMAZ (Yasa 4): `hızlı` (Türkçe ı) yazan bir
+    operatör kayıt olmadan varsayılana düşerdi ve iki gecelik ölçüm sebebini bilmeden bozulurdu.
+    Düşülen yer yine VARSAYILANDIR, çünkü tanınmayan bir değer bir tercih değil bir hatadır ve
+    hatanın cezası ölçümün durması olmamalıdır."""
+    ham = (os.environ.get(DENETIM_ROTA_ENV) or "").strip()
+    if not ham:
+        return VARSAYILAN_DENETIM_ROTASI
+    if ham not in DENETIM_ROTALARI:
+        obs.log("sef_brifingi_denetci_rotasi_taninmadi", deger=ham,
+                gecerli=sorted(DENETIM_ROTALARI),
+                detail=f"{DENETIM_ROTA_ENV} tanınmadı — VARSAYILAN rota kullanıldı, denetim "
+                       "durmadı")
+        return VARSAYILAN_DENETIM_ROTASI
+    return ham
+
+
+def _profil_config(profil_evi) -> dict | None:
+    """Profilin `config.yaml`ı — eşleme değilse/okunamıyorsa `None` (sessiz, çağıran ADLANDIRIR).
+
+    NEDEN BURADA LOG YOK: iki çağıranın ("model künyesi ölçülemedi" · "kapı kökü ölçülemedi")
+    düşüş anlamları AYRIDIR ve tek bir olay adı ikisini aynı satıra yazardı — teşhis tam o
+    ayrımda yaşıyor."""
+    yol = Path(str(profil_evi or "")) / "config.yaml"
+    try:
+        cfg = yaml.safe_load(yol.read_text(encoding="utf-8"))
+    except Exception:  # sessiz-yutma: DEĞİL — dönüş `None` ve ÇAĞIRAN onu kendi olay adıyla deftere yazar; istisnanın metni burada bir şey söylemez, hangi ÖLÇÜMÜN düştüğü söyler
+        return None
+    return cfg if isinstance(cfg, dict) else None
+
+
+def _kapi_koku(profil_evi) -> tuple[str | None, str | None]:
+    """`(kök, neden)` — kapının şema+host+port kökü, profilin KENDİ `config.yaml`ından ÖLÇÜLÜR.
+
+    `providers.kapi.base_url` (`http://127.0.0.1:9080/llm/v1`) `/llm/` önekinden kesilir; kalan
+    kök her iki rotanın da önüne gelir. KÖK KODA YAZILMAZ: gömülü bir sabit, profil bir gün portu
+    ya da host'u değiştirdiğinde denetimi sessizce yanlış uca gönderirdi — ve bu depoda kapı
+    adresi bir kez ZATEN taşındı (openrouter → 127.0.0.1:9080, 2026-09-02).
+
+    Ölçülemeyen kök UYDURULMAZ: `None` + neden döner, çağıran profil yoluna düşer."""
+    cfg = _profil_config(profil_evi)
+    if cfg is None:
+        return None, "profil `config.yaml` okunamadı ya da eşleme değil"
+    girdi = ((cfg.get("providers") or {}).get("kapi")
+             if isinstance(cfg.get("providers"), dict) else None)
+    if not isinstance(girdi, dict):
+        return None, "`providers.kapi` girdisi yok ya da eşleme değil"
+    base = str(girdi.get("base_url") or "").strip()
+    kesim = base.find(KAPI_ROTA_ONEKI)
+    if kesim <= 0:
+        return None, f"`providers.kapi.base_url` `{KAPI_ROTA_ONEKI}` taşımıyor: {base!r}"
+    return base[:kesim], None
+
+
+def _profil_model_adi(profil_evi) -> str | None:
+    """Profilin `model.default` künyesi — istek gövdesine yazılan ad.
+
+    KAPI BU ALANI EZER (routes.yaml `ai-proxy-multi` → `options.model`), yani değer telde
+    belirleyici DEĞİLDİR; yine de gönderilir çünkü OpenAI-uyumlu şema onu zorunlu tutar. Kodda bir
+    kopya DURMAZ: profil adı üç kez değişti ve gömülü bir ad profilden sessizce ayrışırdı."""
+    cfg = _profil_config(profil_evi)
+    blok = (cfg or {}).get("model")
+    if isinstance(blok, str):
+        return blok.strip() or None
+    if isinstance(blok, dict):
+        return str(blok.get("default") or "").strip() or None
+    return None
+
+
+def _profil_max_tokens(profil_evi) -> int | None:
+    """Profilin `model.max_tokens` değeri — istek gövdesine AYNEN taşınır (TSK-138 dilim-2 B-2).
+
+    ELLE SAYI YAZILMAZ (tek-kaynak yasası): rota kapıya taşındığında bütçeyi buraya bir sabit
+    olarak gömmek, profil bir gün değiştiğinde istek gövdesini profilden SESSİZCE ayrıştırırdı —
+    bu depoda kapı adresi bir kez ZATEN böyle ayrıştı (2026-09-02). ÖLÇÜLEMEYEN BİR DEĞER "makul
+    bir varsayılan" (ör. `MODEL_TIMEOUT_S`ten türetilmiş bir sayı) İLE DOLDURULMAZ — uydurma
+    yasağı: `120 sn bütçe` bir ZAMAN sınırıdır, `max_tokens` bir JETON sınırıdır, ikisi arasında
+    ölçülmüş bir dönüşüm yoktur. Ölçülemezse `None` döner ve ÇAĞIRAN bunu kök/anahtar ölçülemediği
+    dalla AYNI şekilde ele alır: kapı rotası ÖLÇÜLEMEDİ sayılır, çağrı hermes profil yoluna düşer
+    ve düşüş ADIYLA deftere yazılır (DURMAZ — teslimat bu dalda da düşmez)."""
+    cfg = _profil_config(profil_evi)
+    blok = (cfg or {}).get("model")
+    if not isinstance(blok, dict):
+        return None
+    deger = blok.get("max_tokens")
+    if isinstance(deger, bool) or not isinstance(deger, int) or deger <= 0:
+        return None
+    return deger
+
+
+def _soul_sistem_metni(profil_evi) -> str | None:
+    """Profilin `SOUL.md`si — doğrudan çağrının sistem mesajı. Yoksa `None`.
+
+    HERMES'İN OKUDUĞU AYNI DOSYA (`prompt_builder.load_soul_md` `HERMES_HOME/SOUL.md` okur), yani
+    kimlik bu yolda da TEK KAYNAKTAN gelir. Kopyalanmış bir persona metni, SOUL.md değiştiği gün
+    sessizce ayrışırdı — bu deponun baskın hata deseni.
+
+    YENİDEN-ÜRETİM İÇİN ZORUNLU: o çağrı bir BRİFİNG üretir ve metin `@sef` sesiyle yazılmalıdır.
+    Denetim çağrısı için ise `soul_denetimi.BICIM_USTUNLUGU` zaten istemin İLK cümlesinde biçim
+    çelişkisini çözüyor — yani kimliği taşımak denetimin şemasını bozmaz."""
+    try:
+        metin = (Path(str(profil_evi or "")) / "SOUL.md").read_text(encoding="utf-8").strip()
+    except Exception:  # sessiz-yutma: DEĞİL — `None` dönüşü çağıranda ADIYLA olaya yazılır; ayrıca `soul_denetimi.uslup_blogu` AYNI dosyayı okuyamadığında denetim zaten `llm_dustu` olur
+        return None
+    return metin or None
+
+
+def _cevaplayan_model_oku() -> str | None:
+    """SON denetçi çağrısında GERÇEKTEN cevap veren model — ölçülmediyse `None`."""
+    return _SON_CEVAPLAYAN_MODEL
+
+
+def _denetci_cagir(prompt: str) -> str:
+    """SOUL denetçisinin çağrısı — kapının seçilen rotasına DOĞRUDAN gider (TSK-138 dilim-2).
+
+    SIRALAMA ÇAĞRISI BURADAN GEÇMEZ: günün brifingini üreten çağrı `_profili_cagir` ile hermes
+    profilinde KALIR. Taşınan yalnız denetim + yeniden-üretimdir — operatör kararının kapsamı bu.
+
+    İSTEM `notify.scrub`TAN GEÇER: model çağrısı bir VERİ ÇIKIŞIDIR ve kaynak okuması keyfi bir
+    istisnanın `repr(e)`sini brifinge koyabilir (`?apikey=…`). Aynı baytların bir kanalda temiz,
+    ötekinde ham gitmesi 2026-08-29 denetim bulgusunun ta kendisiydi.
+
+    DÜŞÜŞ YOLU BİR KONFOR DEĞİL SÖZLEŞMEDİR: kök, anahtar ya da `max_tokens` ölçülemezse BUGÜNKÜ
+    (ölçülmüş, çalışan) hermes yoluna dönülür ve düşüş ADIYLA deftere yazılır. Denetim sessizce
+    kapanmaz — ve ÖLÇÜLEMEYEN bir jeton tavanı "makul bir varsayılan"la DOLDURULMAZ (uydurma
+    yasağı): bu dal, kök/anahtar ölçülemediğindeki AYNI düşüşü, aynı sebeple paylaşır."""
+    global _SON_CEVAPLAYAN_MODEL
+    _SON_CEVAPLAYAN_MODEL = None                 # ÖNCE sıfırla: bayat ölçüm sızamaz (v455 B4)
+    rota = _denetci_rotasi()
+    if DENETIM_ROTALARI[rota] is None:
+        return _profili_cagir(prompt)
+
+    kok, neden = _kapi_koku(HERMES_PROFIL_HOME)
+    anahtar = (secrets.get(KAPI_SIR_ADI) or "").strip()
+    azami_jeton = _profil_max_tokens(HERMES_PROFIL_HOME)
+    if not kok or not anahtar or azami_jeton is None:
+        if neden is None and not anahtar:
+            neden = f"`{KAPI_SIR_ADI}` sırrı yok ya da boş"
+        if neden is None and azami_jeton is None:
+            neden = "profil `model.max_tokens` ÖLÇÜLEMEDİ (elle sayı yazılmaz)"
+        obs.log("sef_brifingi_denetci_rota_dustu", rota=rota,
+                neden=neden,
+                detail="denetçi kapı rotası ÖLÇÜLEMEDİ — çağrı hermes profil yoluna döndü, "
+                       "denetim yapılmaya devam eder (cevaplayan model ölçülemez)")
+        return _profili_cagir(prompt)
+
+    import httpx
+    govde = {"messages": [], "model": _profil_model_adi(HERMES_PROFIL_HOME) or "",
+             "max_tokens": azami_jeton}
+    sistem = _soul_sistem_metni(HERMES_PROFIL_HOME)
+    if sistem:
+        govde["messages"].append({"role": "system", "content": sistem})
+    govde["messages"].append({"role": "user", "content": notify.scrub(prompt)})
+    r = httpx.post(f"{kok}{DENETIM_ROTALARI[rota]}/chat/completions",
+                   headers={KAPI_BASLIK: anahtar, "Content-Type": "application/json"},
+                   json=govde, timeout=MODEL_TIMEOUT_S)
+    r.raise_for_status()
+    d = r.json()
+    # CEVAPLAYAN MODEL — YANIT GÖVDESİNDEN. İstenen künyeyi buraya kopyalamak en ucuz yanlıştı:
+    # defter "ultra cevapladı" derdi, oysa kapı zinciri super'e düşmüş olabilir (uydurma yasağı).
+    cevaplayan = str((d or {}).get("model") or "").strip()
+    if cevaplayan:
+        _SON_CEVAPLAYAN_MODEL = cevaplayan
+    else:
+        obs.log("sef_brifingi_cevaplayan_model_olculemedi", rota=rota,
+                neden="kapı yanıt gövdesinde `model` alanı yok ya da boş",
+                detail="cevaplayan model ÖLÇÜLEMEDİ — olaya `None` yazılır, UYDURULMAZ")
+    ch = ((d or {}).get("choices") or [{}])[0] or {}
+    metin = str((ch.get("message") or {}).get("content") or "").strip()
+    bitis = str(ch.get("finish_reason") or "")
+    # KESİLME KONTROLÜ METİN KONTROLÜNDEN ÖNCE — `meridian/hermes.py::_nous_text`teki sıranın
+    # aynısı ve aynı ölçülmüş kusurun kapağı: kesilen cevap BOŞ DEĞİLDİR, o yüzden "boş mu"
+    # sorusu onu HİÇ yakalamaz ve yarım metin `ayristir`a gidip "şema dışı" diye kaydedilirdi —
+    # biçim suçlanır, asıl arıza (bütçe) görünmez kalırdı.
+    if bitis == "length":
+        raise RuntimeError(f"kapı cevabı KESİLDİ (finish_reason=length, rota={rota})")
+    if not metin:
+        raise RuntimeError(f"kapı 200 döndü ama içerik YOK (finish_reason={bitis or '?'}, "
+                           f"rota={rota})")
+    return metin
+
+
+# ================================================================================================
 # SIRALAMA — modelin cevabı ÖNCE sınanır, sonra teslim edilir
 # ================================================================================================
 
@@ -977,12 +1219,22 @@ def _kural_gecisi(cevap: str, istem: str, ham: dict) -> tuple[str, str]:
     try:
         g = soul_denetimi.gecir(profil_evi=HERMES_PROFIL_HOME, ilk_metin=cevap, ilk_istem=istem,
                                 veri_terimleri=[k["ad"] for k in ham["olculemeyen"]],
-                                cagir=_profili_cagir, dogrula=lambda c: _cevap_makul(c, ham),
+                                # TSK-138 dilim-2 (2026-09-08): DENETÇİ çağrısı kapının seçilen
+                                # rotasına gider; SIRALAMA çağrısı (`sirala` içinde) hermes
+                                # profilinde KALIR. Rota ölçülemezse `_denetci_cagir` kendisi
+                                # profil yoluna düşer — burada ikinci bir dal YOK (tek karar
+                                # noktası, iki yerde kurulan bir eşik ayrışırdı).
+                                cagir=_denetci_cagir,
+                                dogrula=lambda c: _cevap_makul(c, ham),
                                 bot=PROFIL_ADI,
                                 # TSK-138 dilim-1: kimlik BURADA ölçülür, modülde DEĞİL —
                                 # `soul_denetimi` hermes profilinin biçimini bilmez ve bilmemeli
                                 # (`cagir` sözleşmesiyle aynı sınır).
-                                model_kimligi=_profil_model_kimligi(HERMES_PROFIL_HOME))
+                                model_kimligi=_profil_model_kimligi(HERMES_PROFIL_HOME),
+                                # dilim-2: İSTENEN künyenin (yukarıda) yanına GERÇEKTEN cevaplayan
+                                # model. Kapı istemcinin model alanını ezdiği için ikisi ayrışır ve
+                                # iki gecelik rota ölçümü tam o farktan okunur.
+                                cevaplayan_oku=_cevaplayan_model_oku)
         ham["kural_beyani"] = g.beyan
         ham["kural_kaydi"] = g.kayit(PROFIL_ADI)      # damgayı `main` teslimattan SONRA yazar
         return (_ham_metin(ham), "ham") if g.metin is None else (g.metin, "llm")
@@ -1165,7 +1417,13 @@ def _son_denetim_olayi() -> dict:
 
 
 def _denetci_teshis_satiri() -> str:
-    """Son denetim olayının `model` + `cevap_bas` alanlarının OKUNABİLİR hâli (YASA 6).
+    """Son denetim olayının `model` + `cevaplayan_model` + `cevap_bas` alanlarının OKUNABİLİR
+    hâli (YASA 6).
+
+    `cevaplayan_model` (TSK-138 dilim-2, 2026-09-08) `model`in YANINDA basılır, YERİNE DEĞİL:
+    biri istemcinin İSTEDİĞİ künye (profil dosyasından), öteki kapının GERÇEKTEN çalıştırdığı
+    model (yanıt gövdesinden). Kapı istemcinin model alanını ezdiği için ikisi ayrışır — tek
+    alan basılsaydı iki gecelik rota ölçümünün cevabı okunamazdı.
 
     BU SATIR OLMADAN İKİ ALAN DA ÜRETİLMEMİŞ SAYILIR. `_kural_denetimi_satiri` DAMGAYI okur ve
     damga bu iki alanı TAŞIMAZ (O4: damganın şeması donuk) — yani teşhis alanlarının okuyucusu
@@ -1178,6 +1436,7 @@ def _denetci_teshis_satiri() -> str:
     if not olay:
         return f"son {DENETIM_OLAY_PENCERESI} olayda kayıt yok"
     model = olay.get("model")
+    cevaplayan = olay.get("cevaplayan_model")
     bas = olay.get("cevap_bas")
     if bas is None:
         bas_metni = "ÖLÇÜLEMEDİ"
@@ -1185,8 +1444,9 @@ def _denetci_teshis_satiri() -> str:
         bas_metni = "BOŞ (cevap geldi, boştu)"
     else:
         bas_metni = str(bas)
-    return (f"model={model if model is not None else 'ÖLÇÜLEMEDİ'} · cevap başı={bas_metni} · "
-            f"ts={olay.get('ts') or 'BİLİNMİYOR'}")
+    return (f"model={model if model is not None else 'ÖLÇÜLEMEDİ'} · "
+            f"cevaplayan={cevaplayan if cevaplayan is not None else 'ÖLÇÜLEMEDİ'} · "
+            f"cevap başı={bas_metni} · ts={olay.get('ts') or 'BİLİNMİYOR'}")
 
 
 def _kural_denetimi_satiri() -> str:
