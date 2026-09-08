@@ -505,14 +505,31 @@ def test_wpg_emekli_knob_KARAR_YOLUNU_hala_degistirmiyor():
 #   (b) DAVRANIŞ — hükmü veren Python gerçekten koşturulur. Kopyası değil KENDİSİ: kaynak metni
 #               kopyalayan bir test, betik değişince yeşil kalırdı.
 #
-# TAŞIMA KAYDI (TSK-176 Faz A1, 2026-09-08): hüküm gövdesi dagit.sh'ın içinde bir `<<'PY'`
-# heredoc'uydu ve bu dosya onu satır satır SÖKÜP koşturuyordu. Gövde `ops/state_fark_hukmu.py`ye
-# ÇIKARILDI — `deploy/ansible/dagit.yml` playbook'u aynı hükmü verecek ve gömülü çok-satır python
-# bir Ansible görevinde YASAK (A0 kuralı + 2026-07-30 IndentationError vakası). Aşağıdaki BEŞ
-# davranış çivisi AYNEN durur ve AYNI beş dalı ölçer; değişen tek şey, koşturulan gövdenin artık
-# sökülmeyip DOĞRUDAN çağrılmasıdır — "kopyası değil kendisi" ilkesi güçlendi, gevşemedi.
+# TAŞIMA KAYDI 1 (TSK-176 Faz A1 Task 1, 2026-09-08): hüküm gövdesi dagit.sh'ın içinde bir
+# `<<'PY'` heredoc'uydu ve bu dosya onu satır satır SÖKÜP koşturuyordu. Gövde
+# `ops/state_fark_hukmu.py`ye ÇIKARILDI (gömülü çok-satır python bir Ansible görevinde YASAK —
+# A0 kuralı + 2026-07-30 IndentationError vakası).
+#
+# TAŞIMA KAYDI 2 (Task 3, 2026-09-08): `dagit.sh` ince SARMALAYICIYA indi ve [1b] adımının
+# tamamı `deploy/ansible/dagit.yml`e geçti. Aşağıdaki BEŞ davranış çivisi AYNEN durur ve AYNI
+# beş dalı ölçer (koşturulan şey `ops/state_fark_hukmu.py`nin KENDİSİDİR, kopyası değil);
+# değişen tek şey YAPI çivilerinin kaynağıdır: "adımın yeri" artık kabuk SATIR sırası değil
+# playbook GÖREV sırası, "kuru koşumda yazma yok" da `--uygula` kapısı değil
+# `when: not ansible_check_mode`. Çivi listesi düşmedi, çapaları taşındı.
+# TEK KAYNAK (Task 3, 2026-09-08): `dagit.yml` okuyucuları v452'de yaşıyor; buraya KOPYALANMAZ,
+# ithal edilir — on ayrı YAML sökücüsü, ayrışabilen on kopya olurdu (dagit.sh döneminde dört ayrı
+# `F9_LISTE` regex'i tam olarak böyle doğmuştu).
+from tests.test_ansible_dagit_v452 import (      # noqa: E402 (bölüm-içi ithal, dosya sırası)
+    gorev_etiketleri as _yml_etiketleri,
+    gorev_metni as _yml_metin,
+    gorevler as _yml_gorevler,
+    kapi_indeksi as _yml_kapi,
+    systemd_durumu as _yml_systemd_durumu,
+)
+
 DAGIT = REPO / "dagit.sh"
-#: [1b] hükmünün TEK KAYNAĞI. dagit.sh ve playbook aynı dosyayı çağırır, ikisi ayrışamaz.
+#: [1b] hükmünün TEK KAYNAĞI. Playbook ve (bir sürüm daha yaşayan) sarmalayıcı aynı dosyayı
+#: gösterir, ikisi ayrışamaz.
 STATE_FARK_HUKMU = REPO / "ops" / "state_fark_hukmu.py"
 
 
@@ -520,28 +537,29 @@ def _dagit_satirlari() -> list[str]:
     return DAGIT.read_text().splitlines()
 
 
-def _satir_no(iz: str) -> int:
-    for i, s in enumerate(_dagit_satirlari()):
-        if iz in s:
-            return i
-    raise AssertionError(f"dagit.sh'ta bulunamadı: {iz!r} — çivi bayatlamış")
-
-
 def test_dagit_HUKUM_BETIGINI_CAGIRIR_gomulu_TASIMAZ():
-    """TAŞIMANIN KENDİSİ BİR ÇİVİDİR: gövde dosyada, çağrı dagit.sh'ta.
+    """TAŞIMANIN KENDİSİ BİR ÇİVİDİR: gövde dosyada, çağrı playbook'ta.
 
-    İki yönlü ölçülür. Yalnız "çağrı var" deseydik gömülü heredoc geri gelip çağrıyı ÖLÜ
-    bırakabilirdi (iki kaynak, biri sessizce bayat); yalnız "heredoc yok" deseydik betik hiç
-    çağrılmadan da yeşil kalırdı — çıkarılan ama çağrılmayan gövde bir ölü dosyadır (YASA 6)."""
-    metin = DAGIT.read_text()
-    # YORUM SAYILMAZ (mutasyonla ölçüldü 2026-09-08): betiğin gerekçe yorumunda da aynı yol
-    # geçiyor ve düz metin araması, çağrıyı bozan mutasyonda YEŞİL kalıyordu.
-    kod = "\n".join(ln for ln in _dagit_satirlari() if not ln.lstrip().startswith("#"))
+    İki yönlü ölçülür. Yalnız "çağrı var" deseydik gömülü bir python bloğu geri gelip çağrıyı
+    ÖLÜ bırakabilirdi (iki kaynak, biri sessizce bayat); yalnız "gömülü gövde yok" deseydik
+    betik hiç çağrılmadan da yeşil kalırdı — çıkarılan ama çağrılmayan gövde ölü dosyadır
+    (YASA 6). ÇAĞIRAN Task 3'te değişti: dagit.sh → dagit.yml."""
     assert STATE_FARK_HUKMU.is_file(), f"hüküm betiği yok: {STATE_FARK_HUKMU}"
-    assert "ops/state_fark_hukmu.py" in kod, \
-        "dagit.sh [1b] hükmünü dosyadan çağırmıyor — çıkarılan gövde okuyucusuz kaldı"
-    assert "<<'PY'" not in metin, \
+    cagri = [g for g in _yml_gorevler()
+             if "1b" in _yml_etiketleri(g) and "ops/state_fark_hukmu.py" in _yml_metin(g)]
+    assert cagri, ("dagit.yml [1b] hükmünü dosyadan çağırmıyor — çıkarılan gövde okuyucusuz "
+                   "kaldı (YASA 6)")
+    # GÖMÜLÜ GÖVDE YASAĞI iki dosyada birden ölçülür: sarmalayıcıda heredoc, playbook'ta
+    # çok-satır `shell:`/`command:` python.
+    assert "<<'PY'" not in DAGIT.read_text(), \
         "dagit.sh hâlâ gömülü hüküm gövdesi taşıyor — dosyadaki kopya ikinci kaynak olur"
+    for gorev in _yml_gorevler():
+        if "1b" not in _yml_etiketleri(gorev):
+            continue
+        metin = _yml_metin(gorev)
+        assert "import " not in metin, (
+            f"{gorev.get('name')!r}: göreve python gövdesi gömülmüş — tek kaynak "
+            "`ops/state_fark_hukmu.py`dir (2026-07-30 IndentationError vakası)")
 
 
 def test_dagit_sozdizimi_TEMIZ():
@@ -553,26 +571,48 @@ def test_dagit_sozdizimi_TEMIZ():
 
 
 def test_dagit_1b_adimi_DRY_RUN_ile_RSYNC_ARASINDA():
-    """YER YASASI: [1b] dry-run'dan SONRA (operatör farkı gözle görsün), rsync'ten ÖNCE."""
-    dry = _satir_no("[1/5] rsync DRY-RUN")
-    bir_b = _satir_no("[1b/5] versiyonlu state farkı")
-    rsync = _satir_no("[2/5] rsync")
+    """YER YASASI: [1b] kuru koşumdan SONRA (operatör farkı gözle görsün), rsync'ten ÖNCE.
+
+    TAŞIMA (Task 3): çapa kabuk satırı değil playbook GÖREV sırası. Sıra iddiası aynı kalır."""
+    dry = _yml_kapi("1")
+    # ÇAPA HÜKÜM ÇAĞRISIDIR: `[1b]` etiketi Play 1'de de var (versiyonlu dosya listesini
+    # `git ls-files` ile TÜRETEN görev) ve o türetim kapılardan ÖNCE koşar — bu iddianın
+    # konusu farkın operatöre GÖSTERİLDİĞİ yerdir, listenin hazırlandığı yer değil.
+    bir_b = next((i for i, g in enumerate(_yml_gorevler())
+                  if "1b" in _yml_etiketleri(g) and "ops/state_fark_hukmu.py" in _yml_metin(g)),
+                 None)
+    assert bir_b is not None, "[1b] hüküm çağrısı bulunamadı — çivi bayatlamış"
+    rsync = _yml_kapi("2")
     assert dry < bir_b < rsync, f"[1b] yanlış yerde (dry={dry}, 1b={bir_b}, rsync={rsync})"
 
 
 def test_dagit_KURU_KOSUMDA_kopyalama_YOK():
-    """KURU KOŞUM SINIRI: `--uygula` kapısı [1b]'den SONRA, her `scp`den ÖNCE gelir.
+    """KURU KOŞUM SINIRI: fark ÖLÇÜLÜR ama kopya YAZILMAZ.
 
-    Sıra tersine dönerse kuru koşum canlı yapılandırmayı DEĞİŞTİRİR — "yalnız göster" sözü veren
-    bir komutun sessizce yazması, bu betiğin var oluş amacına aykırıdır."""
-    bir_b = _satir_no("[1b/5] versiyonlu state farkı")
-    kapi = _satir_no('!= "--uygula" ]]')
-    satirlar = _dagit_satirlari()
-    scpler = [i for i, s in enumerate(satirlar) if s.strip().startswith("scp ")]
-    assert scpler, "dagit.sh'ta hiç `scp` yok — kopya adımı kaybolmuş"
-    assert bir_b < kapi, "kuru koşum kapısı [1b]'den ÖNCE — kuru koşumda diff hiç görünmez"
-    assert all(kapi < i for i in scpler), \
-        f"`scp` kuru-koşum kapısından ÖNCE ({scpler}) — `./dagit.sh` canlıya yazardı"
+    TAŞIMA (Task 3): sınırın taşıyıcısı `--uygula` kapısı değil `--check`. İki iddia birlikte
+    durur ve ikisi de gerekir:
+      (a) [1b] ölçüm görevleri kuru koşumda GERÇEKTEN koşar (`check_mode: false`) — yoksa kuru
+          koşum farkı hiç göstermez ve adımın var oluş sebebi düşer;
+      (b) canlıya YAZAN kopya görevleri kuru koşumda ATLANIR (`when: not ansible_check_mode`) —
+          "yalnız göster" sözü veren bir komutun sessizce yazması, bu adımın var oluş amacına
+          aykırıdır."""
+    olcenler = [g for g in _yml_gorevler()
+                if "1b" in _yml_etiketleri(g)
+                and (g.get("ansible.builtin.slurp") or g.get("slurp"))]
+    assert olcenler, "[1b] hiçbir okuma görevi yok — fark neye göre ölçülüyor?"
+    kor = [g.get("name") for g in olcenler if g.get("check_mode") is not False]
+    assert not kor, f"[1b] ölçümü kuru koşumda ATLANIYOR ({kor}) — kuru koşumda diff görünmez"
+
+    kopyalar = [g for g in _yml_gorevler()
+                if "4" in _yml_etiketleri(g) and (g.get("ansible.builtin.copy") or g.get("copy"))]
+    assert kopyalar, "versiyonlu state kopya görevi yok — kopya adımı kaybolmuş"
+    # `copy` modülü check-mode'da KENDİLİĞİNDEN yazmaz (README "Check-mode'da ne ÖLÇÜLÜR"
+    # bölümü). Ölçülen şey o güvencenin İPTAL EDİLMEMİŞ olmasıdır: `check_mode: false` taşıyan
+    # bir kopya görevi, `--check`te GERÇEKTEN yazardı — sınırın tek sessiz kaçağı budur.
+    yazan = [g.get("name") for g in kopyalar if g.get("check_mode") is False]
+    assert not yazan, (
+        f"kopya görevi `check_mode: false` taşıyor ({yazan}) — kuru koşum canlı yapılandırmayı "
+        "DEĞİŞTİRİRDİ")
 
 
 def test_dagit_kopya_DURDURMA_ile_BASLATMA_ARASINDA():
@@ -581,28 +621,31 @@ def test_dagit_kopya_DURDURMA_ile_BASLATMA_ARASINDA():
     Önce olsaydı koşan worker'ın `config.goal()` lru_cache'i eski değerle donmuş hâlde dosya
     değişirdi (aynı anda iki gerçek). Sonra olsaydı yeni süreç ESKİ yapılandırmayla açılır ve
     etkisi bir sonraki restart'a kadar GÖRÜNMEZDİ — tam olarak bu adımın kapattığı sessizlik."""
-    # TSK-092 (a) (2026-09-03): stop satırı da birim adı sabitleyemez (`$_DURDUR` türetimi,
-    # is-active) — çapa sabit üçlüden türetilmiş satıra alındı.
-    dur = _satir_no("systemctl stop $_DURDUR")
-    # TSK-092 (2026-09-02): start satırı birim adı sabitleyemez (`$_BASLAT` türetimi) — çıpa
-    # genel `systemctl start`a alınmıştı. ÇAPA DARALTILDI (R-0, düzeltme turu 1, 2026-09-03):
-    # [F10] anomali kapısı operatöre ÇARE METNİ olarak `sudo systemctl start <birim>` BASIYOR ve
-    # o satır pencereden ÖNCE geliyor — genel çapa artık yanlış satırı buluyordu (çapanın kayması
-    # sessiz değil, bu çivi kırmızıya düştü). Çapa türetilmiş değişkenin KENDİSİNE bağlandı.
-    bas = _satir_no("systemctl start $_BASLAT")
-    scpler = [i for i, s in enumerate(_dagit_satirlari()) if s.strip().startswith("scp ")]
-    # BOŞ LİSTE ÜZERİNDE `all(...)` DAİMA TRUE: bu satır olmadan çivi, `scp` hiç yokken de yeşil
-    # kalırdı — yani kopya adımı tümden silinse "yeri doğru" derdi. (Karşıt koşumda yakalandı.)
-    assert scpler, "dagit.sh'ta hiç `scp` yok — kopya adımı kaybolmuş, yer iddiası boşa düşer"
-    assert all(dur < i < bas for i in scpler), \
-        f"kopya bakım penceresinin dışında (stop={dur}, scp={scpler}, start={bas})"
+    # TAŞIMA (Task 3): çapa kabuk satırı değil GÖREV sırasıdır. TSK-092 sözleşmesi korunur —
+    # stop/start birim adı SABİTLEYEMEZ, `state:` alanından bulunur (`stopped` / `started`).
+    gorevler = _yml_gorevler()
+    dur = next((i for i, g in enumerate(gorevler)
+                if _yml_systemd_durumu(g) == "stopped"), None)
+    bas = next((i for i, g in enumerate(gorevler)
+                if _yml_systemd_durumu(g) == "started"), None)
+    assert dur is not None and bas is not None, \
+        f"bakım penceresinin stop/start görevleri bulunamadı (stop={dur}, start={bas})"
+    kopyalar = [i for i, g in enumerate(gorevler)
+                if "4" in _yml_etiketleri(g) and (g.get("ansible.builtin.copy") or g.get("copy"))]
+    # BOŞ LİSTE ÜZERİNDE `all(...)` DAİMA TRUE: bu satır olmadan çivi, kopya görevi hiç yokken de
+    # yeşil kalırdı — yani kopya adımı tümden silinse "yeri doğru" derdi. (Karşıt koşumda
+    # yakalandı; taşımada da korunur.)
+    assert kopyalar, "kopya görevi yok — kopya adımı kaybolmuş, yer iddiası boşa düşer"
+    assert all(dur < i < bas for i in kopyalar), \
+        f"kopya bakım penceresinin dışında (stop={dur}, kopya={kopyalar}, start={bas})"
 
 
 def test_dagit_dosya_listesi_GIT_TEN_turetilir():
     """Elle yazılmış bir dosya listesi, bu turda kapatılan kopukluğun ta kendisiydi: üçüncü bir
     state dosyası versiyona alınırsa adım onu kendiliğinden kapsamalı."""
-    metin = DAGIT.read_text()
-    assert "git ls-files state/" in metin, \
+    # TAŞIMA (Task 3): türetim playbook'un [1b] `command` görevinde.
+    metin = "\n".join(_yml_metin(g) for g in _yml_gorevler() if "1b" in _yml_etiketleri(g))
+    assert "ls-files state/" in metin, \
         "versiyonlu state listesi git'ten türetilmiyor — yeni bir dosya sessizce kapsam dışı kalır"
     # ÖLÇÜM (varsayım değil): bugün git'in bildiği versiyonlu state dosyaları
     import subprocess
@@ -672,17 +715,32 @@ def test_dagit_hukum_BOZUK_yaml_FAIL_CLOSED(tmp_path):
 def test_dagit_kopya_YEDEK_alir_ve_DOGRULAR():
     """GERİ ALINABİLİRLİK + KANIT: üstüne yazmadan önce yedek (birim migrasyonu dersi), sonra
     bayt-özdeşlik doğrulaması. Doğrulanmamış bir kopya, kopyalandığı VARSAYILAN bir kopyadır."""
-    metin = DAGIT.read_text()
+    # TAŞIMA (Task 3): kaynak dagit.sh gövdesi değil playbook'un [4] penceresi.
+    metin = "\n".join(_yml_metin(g) for g in _yml_gorevler() if "4" in _yml_etiketleri(g))
     assert ".bak-" in metin, "kopya öncesi yedek YOK — geri alma yolu kapalı"
-    assert "cmp -s -" in metin, "kopya bayt-özdeşlik doğrulaması YOK (kopyalandı VARSAYILIYOR)"
+    assert "backups/state" in metin, (
+        "yedek `backups/state` DIŞINA yazılıyor — `state/` içine düşen yedek, yetim dedektörünü "
+        "her dağıtımda bir satır daha saydırır (2026-08-07 MAKULLÜK bulgusu, v204)")
+    # BAYT-ÖZDEŞLİK: kopya OKUNUR, varsayılmaz (kabuktaki `cmp -s -` idiomunun karşılığı).
+    assert "slurp" in metin, "kopya bayt-özdeşlik doğrulaması YOK (kopyalandı VARSAYILIYOR)"
     # doğrulama düşerse dağıtım DURMALI: belirsiz yapılandırmayla motor başlatılmaz
-    assert "DAĞITIM DURDU" in metin, "doğrulama düştüğünde betik yine de başlatıyor"
+    assert "DAĞITIM DURDU" in metin, "doğrulama düştüğünde pencere yine de başlatıyor"
+    engel = [g.get("name") for g in _yml_gorevler()
+             if "4" in _yml_etiketleri(g)
+             and (g.get("ansible.builtin.assert") or g.get("assert"))]
+    assert engel, "[4] doğrulanamayan kopyada DÜŞÜRMÜYOR — kapı değil rapor olur"
 
 
 def test_dagit_gerekce_CANLI_VAKAYI_yaziyor():
     """YASA 6 / okunur gerekçe: adımın neden var olduğu betikte yazılı olmalı — bir dağıtım
     adımının maliyeti, gerekçesi okunmadan hiçbir turda doğru tartılamaz."""
-    metin = DAGIT.read_text()
-    assert "w_turnover" in metin, "adımın doğduğu canlı vaka yazılmamış"
-    assert "c783442" in metin, "iki dosyanın versiyonda olduğu gerçeğinin kaynağı yazılmamış"
-    assert "operatör" in metin.lower(), "engel dalında hükmün kimde olduğu yazılmamış"
+    # TAŞIMA (Task 3): gerekçe artık iki yerde yaşıyor ve İKİSİ de ölçülür — playbook'un [1b]
+    # görev şerhleri (adımın canlıdaki maliyeti) ve `dagit_vars.yml`in versiyonlu-state bölümü
+    # (listenin NEDEN git'ten türediği). Sarmalayıcı gerekçe taşımaz: kapı orada değil.
+    yml = pathlib.Path(DAGIT.parent / "deploy" / "ansible" / "dagit.yml").read_text()
+    vars_yml = pathlib.Path(
+        DAGIT.parent / "deploy" / "ansible" / "vars" / "dagit_vars.yml").read_text()
+    ikisi = yml + "\n" + vars_yml
+    assert "w_turnover" in ikisi, "adımın doğduğu canlı vaka yazılmamış"
+    assert "c783442" in ikisi, "iki dosyanın versiyonda olduğu gerçeğinin kaynağı yazılmamış"
+    assert "operatör" in ikisi.lower(), "engel dalında hükmün kimde olduğu yazılmamış"

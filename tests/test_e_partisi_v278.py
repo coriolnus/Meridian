@@ -305,9 +305,12 @@ def test_4g_PUT_govdesi_ve_uzunlugu_ISTEKTE_birlikte_durur(tmp_path):
 def test_4f_kurulum_ELLE_ve_F9_kapisinda_kayitli():
     """F9 SINIFI: dagit bu iki dosyayı TAŞIMAZ. Kapıya yazılmazsa 'repo ilerler, canlı yerinde
     sayar ve kimse bağırmaz' (OB-2'yi doğuran sınıf) buraya da geri gelir."""
-    dagit = (REPO / "dagit.sh").read_text(encoding="utf-8")
+    # TAŞIMA (TSK-176 Faz A1 Task 3, 2026-09-08): [F9] listesi dagit.sh'tan
+    # `deploy/ansible/vars/dagit_vars.yml`e taşındı; iddia aynı, kaynak değişti.
+    from tests.test_ansible_dagit_v452 import f9_ciftleri
+    kume = set(f9_ciftleri())
     for ad in ("meridian-aylik-bucket-kopya.service", "meridian-aylik-bucket-kopya.timer"):
-        assert f"deploy/oracle-a1/{ad}|/etc/systemd/system/{ad}" in dagit, \
+        assert (f"deploy/oracle-a1/{ad}", f"/etc/systemd/system/{ad}") in kume, \
             f"[F9] içerik kapısında kayıtlı değil: {ad}"
         assert (ORACLE / ad).is_file()
     r = subprocess.run(["bash", "-n", str(REPO / "dagit.sh")], capture_output=True, text=True)

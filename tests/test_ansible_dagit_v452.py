@@ -7,12 +7,20 @@ Constraints) SABİT verildi; ölçüldü (2026-09-08, `ls tests/`): `v45x` aral�
 
 KAPSAM — BÖLÜM A (Task 1). İki iddia ailesi:
 
-  A1..A3  TEK KAYNAK GEÇİŞİNİN KÖPRÜSÜ. `deploy/ansible/vars/dagit_vars.yml` bugün dagit.sh'ın
-          listelerinin İKİNCİ kopyasıdır ve iki kopya sessizce ayrışır (Tek-kaynak yasası).
-          Geçiş süresince (Task 3'e kadar) ayrışmayı bu çiviler KIRMIZI yapar: küme eşitliği
-          hem yön hem içerik ölçer. Task 3'te dagit.sh listeleri SİLİNİNCE bu üç çivi
-          `dagit.yml`e taşınır — iddia (playbook ile dagit aynı listeyi kullanır) korunur,
-          kaynak değişir.
+  A1..A3  TEK KAYNAK. `deploy/ansible/vars/dagit_vars.yml` listelerin TEK kaynağıdır.
+          TAŞIMA KAYDI (Task 3, 2026-09-08): bu üç çivi Task 1/2 boyunca bir KÖPRÜYDÜ — vars
+          listesi ile dagit.sh'ın kendi kopyası KÜME olarak eşit mi diye sorarlardı. Task 3'te
+          dagit.sh ince sarmalayıcıya indi ve listeleri SİLİNDİ; köprünün bir ucu kalmadı.
+          İddia DÜŞMEDİ, YÖNÜ DEĞİŞTİ: artık "ikinci kopya GERİ GELMEDİ" (dagit.sh'ta liste
+          yok — C1) + "tek kaynak yapısal olarak sağlam" (liste/çift/sıra sözleşmeleri) ölçülür.
+          Playbook'un bu listeleri GERÇEKTEN kullandığı ayrıca B8/B3'te ölçülür.
+
+  A5..A7  SARMALAYICI (Task 3, 2026-09-08). `dagit.sh` artık kapı taşımaz: `--dry-run|--uygula|
+          --kirli-gec`i `deploy/ansible/dagit.yml` çağrısına çevirir ve BAŞKA HİÇBİR ŞEY yapmaz.
+          A6 gövdenin GERÇEKTEN gittiğini (C1), A7 çağrının GERÇEKTEN kurulduğunu (C3) ölçer —
+          ikincisi betiği sahte bir `ansible-playbook` ŞİMİYLE koşturur ve argv'yi okur
+          (CLAUDE.md §6: "aracı operatörün koşacağı BİÇİMDE bir kez koş" — 18 çivi yeşilken
+          `--uygula` sessizce yok sayılıyordu). GERÇEK `ansible-playbook` HİÇ koşturulmaz.
 
   A4      DÖRT BETİK GERÇEKTEN KOŞAR. Gömülü çok-satır python/bash dosyaya çıkarıldı (A0 kuralı
           + 2026-07-30 IndentationError vakası). Çıkarılan gövde, ÇAĞRILMADIĞI sürece bir kopya
@@ -55,6 +63,7 @@ sunucu testin KENDİ `http.server`ıdır (127.0.0.1, rastgele port). `kod_tazeli
 from __future__ import annotations
 
 import http.server
+import itertools
 import json
 import os
 import pathlib
@@ -102,12 +111,135 @@ def _dagit_cagri_satirlari() -> list[str]:
     return [ln for ln in _dagit_kod_satirlari() if not re.match(r"\s*(echo|printf)\b", ln)]
 
 
-#: [5b] ÇAĞRISININ BİÇİMİ — satır başı atama, `${SSH[@]}` sarmalı, betiğin tam yolu. İddia bir
-#: dizgenin metinde GEÇMESİNE değil ÇAĞRININ KENDİSİNE bağlanır (yukarıdaki mutasyon kaydı).
+#: [5b] ÇAĞRISININ BİÇİMİ. İddia bir dizgenin metinde GEÇMESİNE değil ÇAĞRININ KENDİSİNE
+#: bağlanır (yukarıdaki mutasyon kaydı).
+#: TAŞIMA KAYDI (Task 3, 2026-09-08): çağrı dagit.sh'ın `_tazelik="$("${SSH[@]}" "bash …")"`
+#: satırıydı ve regex o KABUK biçimini sabitliyordu. Sarmalayıcı hiçbir kapıyı koşturmaz;
+#: [5b]'nin tek çağıranı `deploy/ansible/dagit.yml`in `script:` görevidir. Regex o çağrının
+#: biçimini sabitler: yol `repo_kok_yerel`DEN türer (dağıtılan kod ile doğrulama betiği AYNI
+#: ağaçtan gelmeli — TUR 3 Y4 hükmü), `playbook_dir` türevi ya da çıplak bir yol DEĞİL.
 #: TEK KAYNAK: `tests/test_dagit_f9_beyan_v266.py` bunu İTHAL eder, kopyalamaz.
 KOD_TAZELIK_CAGRI = re.compile(
-    r'^\s*_tazelik="\$\("\$\{SSH\[@\]\}"\s+'
-    r'"bash /opt/meridian/deploy/oracle-a1/kod_tazelik\.sh"\)"')
+    r"\{\{\s*repo_kok_yerel\s*\}\}/deploy/oracle-a1/kod_tazelik\.sh(\s|$)")
+
+
+def script_cmdleri() -> list[str]:
+    """`dagit.yml`deki her `script:` görevinin `cmd` metni (ÇÖZÜLMEMİŞ şablon).
+
+    TEK KAYNAK (Task 3): `[5a]`/`[5b]` gövdelerinin çağrıldığını ölçen çiviler bu listeyi okur;
+    `tests/test_dagit_f9_beyan_v266.py` onu İTHAL eder, kopyalamaz. Ayrıştırma YAML'dir, metin
+    araması değil: bir yorumda geçen yol bir çağrı DEĞİLDİR (v266 ailesinin ölçülmüş dersi)."""
+    cikti: list[str] = []
+    for gorev in _tum_gorevler():
+        args = gorev.get("ansible.builtin.script") or gorev.get("script")
+        if isinstance(args, dict):
+            cikti.append(str(args.get("cmd", "")))
+        elif isinstance(args, str):
+            cikti.append(args)
+    return cikti
+
+
+# -------------------------------------------------------------------------------------------------
+# TAŞINAN ÇİVİLERİN ORTAK OKUYUCULARI (Task 3, 2026-09-08) — TEK KAYNAK.
+# `dagit.sh` gövdesini SÖKEN çiviler (v172 · v266 · v367 · v451 · v329 · v286 · v204 · v326 · v327 ·
+# v278) playbook'a taşındı. Her dosya kendi YAML ayrıştırıcısını yazsaydı, on ayrı sökücü ayrışabilen
+# on kopya olurdu — dagit.sh döneminde tam olarak bu olmuştu (dört ayrı `F9_LISTE` regex'i).
+# Bu yüzden okuyucular BURADA yaşar ve taşınan çiviler onları İTHAL eder, kopyalamaz.
+# -------------------------------------------------------------------------------------------------
+def gorevler() -> list[dict]:
+    """`dagit.yml`in bütün görevleri (play + `block`/`rescue` içi), dosya sırasında."""
+    return _tum_gorevler()
+
+
+def gorev_etiketleri(gorev: dict) -> set[str]:
+    """Görevin SAHİBİ olduğu kapı, küme olarak (`{"5b"}` gibi) — adın İLK etiketi.
+
+    SAHİPLİK ≠ ATIF: bir görev adı başka bir kapıya atıf yapabilir ("[5a] KAPI — … (beyan [B]
+    YAZILMAZ)"). Bütün etiketleri toplayan bir okuyucu o atfı sahiplik sanar ve `[B]` çivileri
+    `[5a]` görevini beyan görevi diye ölçerdi (ölçüldü, taşıma turu 2026-09-08)."""
+    etiket = _birincil_etiket(gorev)
+    return {etiket} if etiket else set()
+
+
+def gorev_metni(gorev: dict) -> str:
+    """Görevin YAML dökümü — jeton/reçete cümlesi gibi METİN iddiaları için."""
+    return yaml.safe_dump(gorev, allow_unicode=True, default_flow_style=False)
+
+
+def rsync_disla() -> list[str]:
+    """rsync dışlama sınıfları — TEK KAYNAK `dagit_vars.yml::rsync_disla`."""
+    liste = _vars()["rsync_disla"]
+    assert isinstance(liste, list) and liste, "`rsync_disla` liste değil ya da boş"
+    return list(liste)
+
+
+def birim_adaylari() -> list[str]:
+    """[4] penceresinin aday birimleri — TEK KAYNAK `dagit_vars.yml::birim_adaylari`."""
+    liste = _vars()["birim_adaylari"]
+    assert isinstance(liste, list) and liste, "`birim_adaylari` liste değil ya da boş"
+    return list(liste)
+
+
+def dogrulama_uclari() -> list[tuple[str, str, str]]:
+    """[5a] uçları (yol, anahtar, tip) — TEK KAYNAK `dagit_vars.yml::dogrulama_uclari`."""
+    ham = _vars()["dogrulama_uclari"]
+    assert isinstance(ham, list) and ham, "`dogrulama_uclari` liste değil ya da boş"
+    return [(u["yol"], u["anahtar"], u.get("tip") or "") for u in ham]
+
+
+def kapi_indeksi(etiket: str) -> int:
+    """Etiketi taşıyan İLK görevin sırası. Kapı SIRASI iddialarının tek ölçüsü."""
+    for i, gorev in enumerate(gorevler()):
+        if etiket in gorev_etiketleri(gorev):
+            return i
+    raise AssertionError(f"dagit.yml'de `[{etiket}]` etiketli görev yok — çivi bayatlamış")
+
+
+def playbook_degiskenleri() -> dict:
+    """`vars_files`in çözülmüş hâli (dagit_vars + A0 defaults) — Jinja değerlendirmesi için."""
+    return dict(_degiskenler())
+
+
+def when_degerlendir(ifade, degiskenler: dict) -> bool:
+    """Bir görevin `when` ifadesini GERÇEKTEN Jinja ile değerlendirir.
+
+    Metin araması bir kapının YÖNÜNÜ ölçemez (`!= 'inactive'` ile `== 'inactive'` aynı
+    dizgeleri taşır); ters çevrilmiş bir kapı metin çivisiyle YEŞİL kalırdı."""
+    return _when_degerlendir(ifade, degiskenler)
+
+
+def jinja_cozumle(ifade: str, degiskenler: dict):
+    """Bir Jinja ifadesini (ör. `[F10]` anomali listesi) çözer ve Python değerini döndürür."""
+    return _cozumle(ifade, degiskenler)
+
+
+def systemd_durumu(gorev: dict) -> str | None:
+    """Bir `systemd_service`/`systemd` görevinin İSTEDİĞİ `state` (stopped/started/restarted).
+
+    TSK-092 sözleşmesi birim ADINI sabitlemeyi yasaklar (`is-active`/`is-enabled`ten türer);
+    o yüzden pencere görevlerinin çapası ad DEĞİL, istenen DURUMDUR."""
+    args = _modul_args(gorev, _SYSTEMD_ANAHTARLARI)
+    return str(args.get("state")) if isinstance(args, dict) and "state" in args else None
+
+
+def beyan_indeksi() -> int:
+    """[B] beyanını KURAN görevin sırası (`dagitim_beyani` `set_fact`i).
+
+    `[B]` etiketli İLK görev Play 1'dedir ve yalnız `date`/`hostname` OLGULARINI toplar (beyan
+    onları okur). "Beyan [5]'ten sonra yazılır" iddiasının çapası o olgu toplama görevi olamaz —
+    olgu, dağıtımdan ÖNCE toplanır ve toplanması bir beyan DEĞİLDİR."""
+    for i, gorev in enumerate(gorevler()):
+        args = gorev.get("ansible.builtin.set_fact") or gorev.get("set_fact")
+        if isinstance(args, dict) and "dagitim_beyani" in args:
+            return i
+    raise AssertionError("dagit.yml'de `dagitim_beyani` kuran `set_fact` yok — çivi bayatlamış")
+
+
+def son_kapi_indeksi(etiket: str) -> int:
+    """Etiketi taşıyan SON görevin sırası (bir kapının bitişini ölçen iddialar için)."""
+    bulunan = [i for i, g in enumerate(gorevler()) if etiket in gorev_etiketleri(g)]
+    assert bulunan, f"dagit.yml'de `[{etiket}]` etiketli görev yok — çivi bayatlamış"
+    return bulunan[-1]
 
 
 def _vars() -> dict:
@@ -132,34 +264,36 @@ def test_A0_task1_dosyalari_YERINDE():
 
 
 # =================================================================================================
-# A1 — `rsync_disla` == dagit.sh `RSYNC_EXC`
+# A1 — `rsync_disla` TEK KAYNAK (dagit.sh'ta ikinci kopya YOK)
 # =================================================================================================
-def _dagit_rsync_exc() -> list[str]:
-    """`RSYNC_EXC=( … )` dizisinin `--exclude '…'` öğeleri (dizi gövdesinden, yorumdan DEĞİL)."""
-    metin = _dagit_metin()
-    m = re.search(r"^RSYNC_EXC=\((.*?)\)", metin, re.M | re.S)
-    assert m, "dagit.sh'ta `RSYNC_EXC=(` bulunamadı — çivi bayatlamış"
-    return re.findall(r"--exclude '([^']*)'", m.group(1))
+#: dagit.sh'ta bir daha DOĞMAMASI gereken liste/kapı izleri. TAŞIMA KAYDI (Task 3, 2026-09-08):
+#: her biri bir zamanlar bu betiğin gövdesindeydi ve A1..A3 onları vars'la kıyaslıyordu; artık
+#: TEK kaynak `dagit_vars.yml`dir ve betikte bir kopyanın YENİDEN belirmesi, kıyası kimsenin
+#: yapmadığı sessiz bir ikinci kaynak demektir (tek-kaynak yasası).
+SARMALAYICI_YASAK_IZLER = (
+    "RSYNC_EXC", "F9_LISTE", "DOGRULAMA_UCLARI", "_BIRIM_ADAYLARI", "SYNC_BAYRAK",
+    "--exclude", "uv audit", "lint-imports", "rsync ", "scp ", "systemctl", "ssh ",
+    "git rev-parse", "git status", "<<'PY'", "<<'REMOTE'",
+)
 
 
-def test_A1_rsync_disla_dagit_ile_AYNI_KUME():
-    """TEK KAYNAK KÖPRÜSÜ: vars listesi ile dagit.sh listesi KÜME olarak eşit (sıra bağımsız).
+def test_A1_rsync_disla_TEK_KAYNAK_ve_dagit_sh_kopyasi_YOK():
+    """TAŞIMA (Task 3): iddia "iki liste eşit" değil "tek liste var".
 
-    Yön İKİ TARAFLI ölçülür. Yalnız "vars ⊆ dagit" ölçseydik vars'a fazladan bir dışlama
-    (canlıda okuyucusu olan bir dizin) sessizce girebilir ve playbook onu dağıtımdan
-    düşürürdü — `/ui` ile `meridian/web/pano*` arasındaki fark tam olarak budur. Yalnız
-    "dagit ⊆ vars" ölçseydik dagit'e eklenen yeni bir sınıf (2026-08-24 `scratch-*`)
-    playbook'ta AÇIK kalırdı."""
-    dagit_kume = set(_dagit_rsync_exc())
+    Önceki hâl bir KÖPRÜYDÜ (vars ⟷ dagit.sh `RSYNC_EXC`, küme eşitliği iki yönlü). Sarmalayıcı
+    turunda köprünün bir ucu SİLİNDİ; ölçülen şey artık (a) vars tarafının yapısal sağlamlığı —
+    liste, yinelemesiz — ve (b) ikinci kopyanın GERİ GELMEMESİ. (b) olmadan biri yarın dagit.sh'a
+    bir `--exclude` dizisi geri koyar, playbook onu okumaz ve iki dağıtım yolu farklı şeyi
+    taşır: köprüyü kuran vakanın (2026-08-24 `scratch-*`) tam kendisi."""
     vars_liste = _vars()["rsync_disla"]
-    assert isinstance(vars_liste, list), "`rsync_disla` liste değil"
+    assert isinstance(vars_liste, list) and vars_liste, "`rsync_disla` liste değil ya da boş"
     vars_kume = set(vars_liste)
     assert len(vars_liste) == len(vars_kume), \
         f"`rsync_disla` yinelenen öğe taşıyor: {sorted(x for x in vars_liste if vars_liste.count(x) > 1)}"
-    assert vars_kume == dagit_kume, (
-        "rsync dışlama listesi AYRIŞTI — playbook ile dagit.sh farklı şeyi dağıtır.\n"
-        f"  yalnız dagit.sh'ta: {sorted(dagit_kume - vars_kume)}\n"
-        f"  yalnız vars'ta    : {sorted(vars_kume - dagit_kume)}")
+    metin = _dagit_metin()
+    assert "RSYNC_EXC" not in metin and "--exclude" not in metin, (
+        "dagit.sh yeniden bir dışlama listesi taşıyor — TEK KAYNAK `dagit_vars.yml::rsync_disla`; "
+        "ikinci kopyayı kimse kıyaslamaz ve iki dağıtım yolu farklı şeyi taşır")
 
 
 def test_A1b_rsync_disla_SINIF_KURUCULARI_hala_listede():
@@ -175,88 +309,234 @@ def test_A1b_rsync_disla_SINIF_KURUCULARI_hala_listede():
         assert kurucu in vars_kume, f"`rsync_disla`da sınıf kurucusu eksik: {kurucu!r}"
 
 
-# =================================================================================================
-# A2 — `f9_ciftleri` == dagit.sh `F9_LISTE`
-# =================================================================================================
-def _dagit_f9() -> list[tuple[str, str]]:
-    govde = _dagit_metin().split('F9_LISTE="', 1)[1].split('"', 1)[0]
-    return [(ln.split("|", 1)[0].strip(), ln.split("|", 1)[1].strip())
-            for ln in govde.strip().splitlines() if "|" in ln]
+#: `rsync_disla`nın DONMUŞ SÖZLEŞMESİ — 28 dışlama sınıfı (ölçüldü 2026-09-08).
+#: TEK-KAYNAK YASASI (CLAUDE.md §4): "aynı gerçeğin iki kopyası sessizce ayrışır — sayı/liste/kural
+#: TEK kaynaktan türetilir; kopya kaçınılmazsa TÜRETME + AYRIŞMA ÇİVİSİ". Task 3'e kadar kıyasın
+#: öteki ucu dagit.sh'ın `RSYNC_EXC` dizisiydi ve küme eşitliği iki yönlü ölçülüyordu; o dizi
+#: silinince liste kıyassız kaldı. ÖLÇÜLDÜ (inceleme bulgusu B2, 2026-09-08): listeden
+#: `.hypothesis` silindiğinde 233 çivi YEŞİL kaldı — A1'in yinelemesizliği, A1b'nin on kurucusu
+#: ve v329/v204/v286 hiçbiri görmedi. Bu tuple o kaçınılmaz kopyadır; aşağıdaki çivi ayrışma
+#: çivisi: bir sınıfın DÜŞMESİ de EKLENMESİ de bir karar olur, taşımanın yan etkisi değil.
+#: (Büyütme yasak değil, BEYANLI: yeni sınıf eklenirken bu tuple da güncellenir.)
+#: SIRA çivilenmez (A3'ten farkı): `--exclude` üretimi bu listeyi KÜME gibi okur, sıra bilgi
+#: taşımaz; A3'te ise çıktı uçların sırasıyla okunuyordu.
+RSYNC_DISLA_SOZLESMESI = (
+    '.venv',
+    '.git',
+    'state',
+    'backups',
+    '/var',
+    'scratchpad',
+    'scratch-*',
+    '.superpowers',
+    '__pycache__',
+    '.claude',
+    '.hypothesis',
+    'mutants',
+    '.pytest_cache',
+    '.env',
+    '.env.*',
+    '.dash.env',
+    '.agents',
+    '.codex',
+    '.github',
+    'skills-lock.json',
+    '.impeccable',
+    '.import_linter_cache',
+    'research/olcumler/*/seanslar.json',
+    'research/olcumler/*/run.stderr.log',
+    'research/olcumler/*/state',
+    'node_modules',
+    'ui/node_modules',
+    '/ui',
+)
 
 
-def test_A2_f9_ciftleri_dagit_ile_AYNI_KUME():
-    """[F9] çiftleri (repo yolu → canlı yol) iki kaynakta BİREBİR aynı.
+def test_A1c_rsync_disla_DONMUS_SOZLESMEDEN_AYRISMADI():
+    """Dışlama sınıfı kümesi donmuş sözleşmeyle AYNI — düşen de eklenen de KIRMIZI.
+
+    A1b bir TABANDI (on kurucu sınıf) ve tabanın dışındaki on sekiz sınıf ölçüsüzdü: `.env.*`
+    düşerse `--delete` kurtarma kopyalarını siler (2026-09-08 YB-4 bulgusunun sınıfı),
+    `research/olcumler/*/seanslar.json` düşerse ölçüm artefaktı canlıya sürüklenir. Sessiz
+    silinme, listenin ölçülen tek yarısının dışında kalıyordu."""
+    vars_liste = rsync_disla()
+    dusen = sorted(set(RSYNC_DISLA_SOZLESMESI) - set(vars_liste))
+    eklenen = sorted(set(vars_liste) - set(RSYNC_DISLA_SOZLESMESI))
+    assert not dusen, (
+        f"`rsync_disla`dan dışlama sınıfı DÜŞTÜ: {dusen} — her sınıf ölçülmüş bir canlı olaydan "
+        "doğdu; kaldırma bir KARARDIR ve `RSYNC_DISLA_SOZLESMESI` ile birlikte yazılır")
+    assert not eklenen, (
+        f"`rsync_disla`ya beyansız sınıf EKLENDİ: {eklenen} — bir dışlama, o yolun canlıya HİÇ "
+        "gitmemesi demektir; sözleşmeye de yazılmalı ki kıyas kalsın")
+    assert len(vars_liste) == len(RSYNC_DISLA_SOZLESMESI), (
+        f"`rsync_disla` uzunluğu {len(vars_liste)}, sözleşme {len(RSYNC_DISLA_SOZLESMESI)} — "
+        "küme eşit ama liste değil: yinelenen öğe var (A1 de bunu ölçer)")
+
+
+# =================================================================================================
+# A2 — `f9_ciftleri` TEK KAYNAK (dagit.sh'ta ikinci kopya YOK)
+# =================================================================================================
+def f9_ciftleri() -> list[tuple[str, str]]:
+    """[F9] (repo yolu, canlı yol) çiftlerinin TEK KAYNAĞI: `dagit_vars.yml::f9_ciftleri`.
+
+    TAŞIMA KAYDI (Task 3, 2026-09-08): kaynak dagit.sh'ın `F9_LISTE` dizgesiydi ve dört ayrı
+    test dosyası onu KENDİ regex'iyle söküyordu (v266 · v329 · v451 · burası). Liste vars'a
+    taşındı; sökücü de TEK yerde toplandı — dört ayrı ayrıştırıcı, ayrışabilen dört kopyaydı."""
+    ham = _vars()["f9_ciftleri"]
+    assert isinstance(ham, list) and ham, "`f9_ciftleri` liste değil ya da boş"
+    return [(c["repo"], c["canli"]) for c in ham]
+
+
+def test_A2_f9_ciftleri_TEK_KAYNAK_ve_dagit_sh_kopyasi_YOK():
+    """[F9] çiftleri (repo yolu → canlı yol) TEK kaynakta ve YİNELEMESİZ.
 
     Çift olarak ölçülür, yalnız repo yolu olarak değil: canlı hedefi yanlış yazılmış bir çift
     kapıyı "canlıda DOSYA YOK" dalına düşürür ve sürüklenme her dağıtımda ölçülemedi
-    gürültüsüne dönüşür — kapının sessizleşmesinin en sessiz biçimi."""
-    dagit_kume = set(_dagit_f9())
-    ham = _vars()["f9_ciftleri"]
-    assert isinstance(ham, list) and ham, "`f9_ciftleri` liste değil ya da boş"
-    vars_ciftler = [(c["repo"], c["canli"]) for c in ham]
+    gürültüsüne dönüşür — kapının sessizleşmesinin en sessiz biçimi. TAŞIMA (Task 3): eşitlik
+    köprüsünün yerini "ikinci kopya geri gelmedi" iddiası aldı."""
+    vars_ciftler = f9_ciftleri()
     vars_kume = set(vars_ciftler)
     assert len(vars_ciftler) == len(vars_kume), "`f9_ciftleri` yinelenen çift taşıyor"
-    assert vars_kume == dagit_kume, (
-        "[F9] listesi AYRIŞTI — playbook ile dagit.sh farklı artefakt kümesini izler.\n"
-        f"  yalnız dagit.sh'ta: {sorted(dagit_kume - vars_kume)}\n"
-        f"  yalnız vars'ta    : {sorted(vars_kume - dagit_kume)}")
+    assert "F9_LISTE" not in _dagit_metin(), (
+        "dagit.sh yeniden bir [F9] listesi taşıyor — TEK KAYNAK `dagit_vars.yml::f9_ciftleri`")
 
 
 def test_A2b_f9_repo_taraflari_GERCEKTEN_VAR():
     """Listeye uydurma bir yol girmesin: repo tarafı yoksa kapı kendi "REPODA YOK" dalına düşer
     ve her dağıtımda ölçülemedi basar (v266'nın kurucu çivisiyle aynı gerekçe)."""
-    yok = [c["repo"] for c in _vars()["f9_ciftleri"] if not (REPO / c["repo"]).is_file()]
+    yok = [repo for repo, _ in f9_ciftleri() if not (REPO / repo).is_file()]
     assert not yok, f"`f9_ciftleri` repo tarafı diskte yok: {yok}"
 
 
 def test_A2c_f9_canli_yollari_MUTLAK():
     """Canlı yol MUTLAK olmalı — göreli bir yol `slurp`/`cat` çağrısında A1'in o anki cwd'sine
     göre çözülür ve kapı yanlış dosyayı kıyaslar (sessiz yanlış hüküm)."""
-    goreli = [c["canli"] for c in _vars()["f9_ciftleri"] if not c["canli"].startswith("/")]
+    goreli = [canli for _, canli in f9_ciftleri() if not canli.startswith("/")]
     assert not goreli, f"`f9_ciftleri` canlı yolu mutlak değil: {goreli}"
 
 
-# =================================================================================================
-# A3 — `dogrulama_uclari` == dagit.sh `DOGRULAMA_UCLARI`
-# =================================================================================================
-def _dagit_dogrulama_uclari() -> list[tuple[str, str, str]]:
-    govde = _dagit_metin().split('DOGRULAMA_UCLARI="', 1)[1].split('"', 1)[0]
-    cikti = []
-    for ln in govde.strip().splitlines():
-        if not ln.strip():
-            continue
-        parca = ln.split("|")
-        assert len(parca) == 3, f"DOGRULAMA_UCLARI satırı üç alanlı değil: {ln!r}"
-        cikti.append((parca[0].strip(), parca[1].strip(), parca[2].strip()))
-    return cikti
+#: `f9_ciftleri`nin DONMUŞ SÖZLEŞMESİ — 39 (repo yolu, canlı yol) çifti (ölçüldü 2026-09-08).
+#: Gerekçe A1c ile aynı sınıf (tek-kaynak yasası, CLAUDE.md §4: kopya kaçınılmazsa türetme +
+#: ayrışma çivisi): kıyasın öteki ucu dagit.sh'ın `F9_LISTE` dizgesiydi, silindi. ÖLÇÜLDÜ
+#: (inceleme bulgusu B2, 2026-09-08): `deploy/apisix/apisix-etcd.service` çifti listeden
+#: silindiğinde 282 çivi YEŞİL kaldı — [F9] "raporlar, engellemez" olduğu için o artefaktın
+#: sürüklenmesi bir daha HİÇ ölçülmezdi ve bu SESSİZ olurdu (kapının sessizleşmesi, kapının
+#: kırmızıya dönmesinden pahalıdır). SIRA çivilenmez: [F9] raporu çiftleri tek tek basar,
+#: sıra bilgi taşımaz — ölçülen şey KÜMEdir.
+F9_CIFTLERI_SOZLESMESI = (
+    ('deploy/oracle-a1/meridian-sprint@.service', '/etc/systemd/system/meridian-sprint@.service'),
+    ('deploy/oracle-a1/50-meridian-sprint.rules', '/etc/polkit-1/rules.d/50-meridian-sprint.rules'),
+    ('deploy/hermes/SOUL.md', '/home/ubuntu/.hermes/SOUL.md'),
+    ('deploy/hermes/config.yaml', '/home/ubuntu/.hermes/config.yaml'),
+    ('deploy/oracle-a1/meridian-tick-watchdog.service', '/etc/systemd/system/meridian-tick-watchdog.service'),
+    ('deploy/oracle-a1/meridian-tick-watchdog.timer', '/etc/systemd/system/meridian-tick-watchdog.timer'),
+    ('deploy/oracle-a1/litestream.yml', '/etc/litestream.yml'),
+    ('deploy/oracle-a1/meridian-aylik-bucket-kopya.service',
+     '/etc/systemd/system/meridian-aylik-bucket-kopya.service'),
+    ('deploy/oracle-a1/meridian-aylik-bucket-kopya.timer',
+     '/etc/systemd/system/meridian-aylik-bucket-kopya.timer'),
+    ('deploy/oracle-a1/meridian-brifing.service', '/etc/systemd/system/meridian-brifing.service'),
+    ('deploy/oracle-a1/meridian-brifing.timer', '/etc/systemd/system/meridian-brifing.timer'),
+    ('deploy/oracle-a1/meridian-bekci.service', '/etc/systemd/system/meridian-bekci.service'),
+    ('deploy/oracle-a1/meridian-bekci.timer', '/etc/systemd/system/meridian-bekci.timer'),
+    ('deploy/hermes/profiles/sef/distribution.yaml', '/home/ubuntu/.hermes/profiles/sef/distribution.yaml'),
+    ('deploy/hermes/profiles/sef/config.yaml', '/home/ubuntu/.hermes/profiles/sef/config.yaml'),
+    ('deploy/hermes/profiles/sef/SOUL.md', '/home/ubuntu/.hermes/profiles/sef/SOUL.md'),
+    ('deploy/hermes/profiles/bekci/distribution.yaml',
+     '/home/ubuntu/.hermes/profiles/bekci/distribution.yaml'),
+    ('deploy/hermes/profiles/bekci/config.yaml', '/home/ubuntu/.hermes/profiles/bekci/config.yaml'),
+    ('deploy/hermes/profiles/bekci/SOUL.md', '/home/ubuntu/.hermes/profiles/bekci/SOUL.md'),
+    ('deploy/oracle-a1/meridian-karne.service', '/etc/systemd/system/meridian-karne.service'),
+    ('deploy/oracle-a1/meridian-karne.timer', '/etc/systemd/system/meridian-karne.timer'),
+    ('deploy/hermes/profiles/karne/distribution.yaml',
+     '/home/ubuntu/.hermes/profiles/karne/distribution.yaml'),
+    ('deploy/hermes/profiles/karne/config.yaml', '/home/ubuntu/.hermes/profiles/karne/config.yaml'),
+    ('deploy/hermes/profiles/karne/SOUL.md', '/home/ubuntu/.hermes/profiles/karne/SOUL.md'),
+    ('deploy/hindsight/hindsight-api.service', '/etc/systemd/system/hindsight-api.service'),
+    ('deploy/hindsight/hindsight-yedek.service', '/etc/systemd/system/hindsight-yedek.service'),
+    ('deploy/hindsight/hindsight-yedek.timer', '/etc/systemd/system/hindsight-yedek.timer'),
+    ('deploy/hindsight/hindsight-cp.service', '/etc/systemd/system/hindsight-cp.service'),
+    ('deploy/oracle-a1/geridolum.py', '/opt/veri/geridolum.py'),
+    ('deploy/oracle-a1/meridian-geridolum.service', '/etc/systemd/system/meridian-geridolum.service'),
+    ('deploy/oracle-a1/meridian-geridolum.timer', '/etc/systemd/system/meridian-geridolum.timer'),
+    ('research/olcumler/edg066_tick_arsiv/pilot.py', '/opt/veri/pilot.py'),
+    ('research/olcumler/edg066_tick_arsiv/kapsam.txt', '/opt/veri/kapsam.txt'),
+    ('deploy/oracle-a1/meridian-skill-gorus.service', '/etc/systemd/system/meridian-skill-gorus.service'),
+    ('deploy/oracle-a1/meridian-skill-gorus.timer', '/etc/systemd/system/meridian-skill-gorus.timer'),
+    ('deploy/apisix/config.yaml', '/opt/apisix/config.yaml'),
+    ('deploy/apisix/apisix.service', '/etc/systemd/system/apisix.service'),
+    ('deploy/apisix/apisix-etcd.service', '/etc/systemd/system/apisix-etcd.service'),
+    ('deploy/oracle-a1/52meridian-unattended-upgrades', '/etc/apt/apt.conf.d/52meridian-unattended-upgrades'),
+)
 
 
-def test_A3_dogrulama_uclari_dagit_ile_AYNI():
-    """[5a] üç ucu (yol|anahtar|tip) iki kaynakta aynı — ve SIRA da aynı.
+def test_A2d_f9_ciftleri_DONMUS_SOZLESMEDEN_AYRISMADI():
+    """[F9] izlenen çift kümesi donmuş sözleşmeyle AYNI — düşen de eklenen de KIRMIZI.
+
+    A2/A2b/A2c çiftlerin BİÇİMİNİ ölçüyordu (yinelemesiz · repo tarafı diskte var · canlı yol
+    mutlak); üçü de listeden bir çiftin sessizce düşmesine KÖRDÜR. Kapsam bir karardır: her
+    çift, canlıya elle konmuş bir dosyanın repo ile ayrışmasını yakalamak için eklendi."""
+    vars_ciftler = f9_ciftleri()
+    dusen = sorted(set(F9_CIFTLERI_SOZLESMESI) - set(vars_ciftler))
+    eklenen = sorted(set(vars_ciftler) - set(F9_CIFTLERI_SOZLESMESI))
+    assert not dusen, (
+        f"`f9_ciftleri`nden çift DÜŞTÜ: {dusen} — o artefaktın sürüklenmesi bir daha ölçülmez "
+        "ve [F9] engellemediği için bu SESSİZDİR; kapsam daraltma `F9_CIFTLERI_SOZLESMESI` ile "
+        "birlikte yazılır")
+    assert not eklenen, (
+        f"`f9_ciftleri`ne beyansız çift EKLENDİ: {eklenen} — sözleşmeye de yazılmalı (yeni çift "
+        "iyi bir şeydir; ölçüsüz olması değil)")
+    assert len(vars_ciftler) == len(F9_CIFTLERI_SOZLESMESI), (
+        f"`f9_ciftleri` uzunluğu {len(vars_ciftler)}, sözleşme {len(F9_CIFTLERI_SOZLESMESI)} — "
+        "küme eşit ama liste değil: yinelenen çift var (A2 de bunu ölçer)")
+
+
+# =================================================================================================
+# A3 — `dogrulama_uclari` TEK KAYNAK (dagit.sh'ta ikinci kopya YOK)
+# =================================================================================================
+#: [5a] uçlarının DONMUŞ sözleşmesi (yol, anahtar, tip) — SIRAYLA.
+#: TAŞIMA KAYDI (Task 3, 2026-09-08): kıyasın öteki ucu dagit.sh'ın `DOGRULAMA_UCLARI` dizgesiydi
+#: ve o dizge silindi. Sıra burada BİLGİ taşır (alarm/öğrenme/performans üçlüsü, D2 2026-09-05)
+#: ve çıktı bu sırayla okunur; bu yüzden kıyasın öteki ucu YOK OLMAZ, ÇİVİYE DONAR: sözleşmenin
+#: değişmesi bir karar olmalıdır, bir yan etki değil. Küme değil LİSTE eşitliği ölçülür.
+DOGRULAMA_UCLARI_SOZLESMESI = (
+    ("/api/alerts", "pending", "int"),
+    ("/api/hermes", "learning.hayalet_suzulen_n", ""),
+    ("/api/performance", "equity_curve_beyani.tohum_siniri", ""),
+)
+
+
+def test_A3_dogrulama_uclari_SOZLESMEYE_UYAR_ve_dagit_sh_kopyasi_YOK():
+    """[5a] üç ucu (yol|anahtar|tip) donmuş sözleşmeyle AYNI — ve SIRA da aynı.
 
     Sıra burada bilgi taşır: uçlar alarm/öğrenme/performans üçlüsü olarak BİLEREK seçildi
     (D2, 2026-09-05) ve çıktı bu sırayla okunur. Küme eşitliği yerine liste eşitliği, sıranın
     sessizce dönmesini de kırmızı yapar."""
-    dagit_liste = _dagit_dogrulama_uclari()
     ham = _vars()["dogrulama_uclari"]
     assert isinstance(ham, list) and ham, "`dogrulama_uclari` liste değil ya da boş"
     vars_liste = [(u["yol"], u["anahtar"], u.get("tip") or "") for u in ham]
-    assert vars_liste == dagit_liste, (
-        "[5a] doğrulama uçları AYRIŞTI.\n"
-        f"  dagit.sh: {dagit_liste}\n"
+    assert vars_liste == list(DOGRULAMA_UCLARI_SOZLESMESI), (
+        "[5a] doğrulama uçları sözleşmeden AYRIŞTI.\n"
+        f"  sözleşme: {list(DOGRULAMA_UCLARI_SOZLESMESI)}\n"
         f"  vars    : {vars_liste}")
+    assert "DOGRULAMA_UCLARI" not in _dagit_metin(), (
+        "dagit.sh yeniden bir [5a] uç listesi taşıyor — TEK KAYNAK "
+        "`dagit_vars.yml::dogrulama_uclari`")
 
 
-def test_A3b_birim_adaylari_dagit_ile_AYNI():
-    """`birim_adaylari` üçlüsü dagit.sh'ın `_BIRIM_ADAYLARI`sıyla aynı.
+def test_A3b_birim_adaylari_UCLU_ve_dagit_sh_kopyasi_YOK():
+    """`birim_adaylari` üçlüsü: meridian · meridian-barsarchive · meridian-learn.
 
     Aday KÜMESİ 2026-08-24'te bir UNUTMA vakasıyla büyüdü (`meridian-learn` birim doğdu, dagit'te
-    adı hiç geçmiyordu; süreç 11 sa 19 dk eski bytecode koştu). İki kaynağa çıkan bir listede
-    aynı unutma bir kez daha mümkün — bu çivi onu kırmızı yapar."""
-    m = re.search(r'^_BIRIM_ADAYLARI="([^"]*)"', _dagit_metin(), re.M)
-    assert m, "dagit.sh'ta `_BIRIM_ADAYLARI` bulunamadı — çivi bayatlamış"
-    assert _vars()["birim_adaylari"] == m.group(1).split(), (
-        f"birim adayları ayrıştı: vars={_vars()['birim_adaylari']} dagit={m.group(1).split()}")
+    adı hiç geçmiyordu; süreç 11 sa 19 dk eski bytecode koştu). TAŞIMA (Task 3): kıyasın öteki
+    ucu (`_BIRIM_ADAYLARI`) silindi, yerini o vakadan doğan üçlünün KENDİSİ aldı — küme daralırsa
+    çivi kırmızıdır, büyürse de (yeni birim beyansız pencereye girmez)."""
+    assert _vars()["birim_adaylari"] == ["meridian", "meridian-barsarchive", "meridian-learn"], (
+        f"birim adayları değişti: {_vars()['birim_adaylari']} — pencerenin kapsamı bir KARARDIR "
+        "(2026-08-24 unutma vakası); değişiklik bu çiviyle birlikte yazılır")
+    assert "_BIRIM_ADAYLARI" not in _dagit_metin(), (
+        "dagit.sh yeniden bir birim aday listesi taşıyor — TEK KAYNAK "
+        "`dagit_vars.yml::birim_adaylari`")
 
 
 # =================================================================================================
@@ -845,24 +1125,32 @@ def test_A5a_dagit_GOMULU_govdeleri_TASIMIYOR():
             f"dagit.sh hâlâ gömülü gövde taşıyor ({isaret}) — dosyaya çıkarılan kopya ikinci kaynak"
 
 
-def test_A5b_dagit_DORT_BETIGI_CAGIRIYOR():
+def test_A5b_DORT_BETIK_PLAYBOOKTAN_CAGRILIYOR():
     """Çıkarılan gövde ÇAĞRILMAZSA ölü dosyadır (YASA 6: okuyucusuz yazım yok).
 
-    İDDİA ÇAĞRI BİÇİMİNE BAĞLI (düzeltme turu 2): yorumları elemek yetmiyordu — [5b]'nin
-    onarım reçetesi `echo` satırı aynı yolu taşıyor ve çağrı bozulunca çivi yeşil kalıyordu.
-    `echo`/`printf` satırları da elenir; [5b] için ayrıca çağrının BİÇİMİ ölçülür."""
-    kod = "\n".join(_dagit_cagri_satirlari())
-    for yol in ("ops/state_fark_hukmu.py", "ops/artefakt_tazelik.py",
-                "deploy/oracle-a1/dogrulama_anahtar.py", "deploy/oracle-a1/kod_tazelik.sh"):
-        assert yol in kod, (
-            f"dagit.sh {yol} betiğini KOD satırında çağırmıyor — dosya okuyucusuz kaldı "
-            "(gerekçe yorumunda ya da operatöre basılan bir `echo`da adının geçmesi bir "
-            "çağrı DEĞİLDİR)")
+    TAŞIMA KAYDI (Task 3, 2026-09-08): çağıran dagit.sh'tı ve bu çivi onun KOD satırlarını
+    tarıyordu (yorum ve `echo` satırları elenerek — iki mutasyon turunun dersi). Sarmalayıcı
+    hiçbir kapıyı koşturmaz; dört betiğin TEK çağıranı `deploy/ansible/dagit.yml`dir. İddia
+    AYNI ("çıkarılan gövdenin okuyucusu var"), aranan yer değişti — ve YAML PARSE metin
+    aramasından güçlüdür: bir yorumda geçen yol artık yapısal olarak çağrı sayılamaz.
+
+    ÇAĞIRMA BİÇİMİ üç modülde ayrışır ve üçü de ölçülür: `[1b]`/`[5c]` kontrolcüde `command`,
+    `[5a]`/`[5b]` A1'de `script`."""
+    komut_metni = "\n".join(_komut_metni(g) for g in _tum_gorevler())
+    script_metni = "\n".join(script_cmdleri())
+    for yol, nerede, govde in (
+            ("ops/state_fark_hukmu.py", "command", komut_metni),
+            ("ops/artefakt_tazelik.py", "command", komut_metni),
+            ("deploy/oracle-a1/dogrulama_anahtar.py", "script", script_metni),
+            ("deploy/oracle-a1/kod_tazelik.sh", "script", script_metni)):
+        assert yol in govde, (
+            f"dagit.yml {yol} betiğini bir `{nerede}:` görevinde ÇAĞIRMIYOR — dosya okuyucusuz "
+            "kaldı (gerekçe yorumunda adının geçmesi bir çağrı DEĞİLDİR)")
         assert (REPO / yol).is_file(), f"çağrılan betik diskte yok: {yol}"
-    assert any(KOD_TAZELIK_CAGRI.match(s) for s in _dagit_cagri_satirlari()), (
-        "[5b] çağrısı beklenen BİÇİMDE yok: `_tazelik=\"$(\"${SSH[@]}\" \"bash "
-        "/opt/meridian/deploy/oracle-a1/kod_tazelik.sh\")\"` — kapı ssh sarmalını kaybetmiş "
-        "olabilir (yerelde koşan bir kapı canlıyı ÖLÇMEZ)")
+    assert any(KOD_TAZELIK_CAGRI.search(c) for c in script_cmdleri()), (
+        "[5b] çağrısı beklenen BİÇİMDE yok: `{{ repo_kok_yerel }}/deploy/oracle-a1/"
+        "kod_tazelik.sh` — yol `playbook_dir` türevine ya da çıplak bir yola kaymış olabilir "
+        "(dağıtılan kod ile doğrulama betiği AYNI ağaçtan gelmeli)")
 
 
 def test_A5c_dagit_sozdizimi_TEMIZ():
@@ -872,19 +1160,259 @@ def test_A5c_dagit_sozdizimi_TEMIZ():
     assert r.returncode == 0, f"dagit.sh sözdizimi bozuk:\n{r.stderr}"
 
 
-def test_A5d_dagit_KURU_KOSUMDA_yazan_cagri_YOK():
-    """Kuru koşum sınırı korunur: `--uygula` kapısından ÖNCE canlıya yazan bir çağrı olmamalı.
-    Çıkarılan betikler bu sınırı taşımaz — [1b] hükmü kapıdan ÖNCE (salt okuma), kopya SONRA."""
-    # yorumlar VE operatöre basılan `echo`lar SAYILMAZ: sıra iddiası ÇAĞRI sırasıdır. Düz dizge
-    # araması [5b]'nin onarım reçetesi `echo`unu bulup çivinin hedefini kaçırıyordu (ölçüldü).
-    satirlar = _dagit_cagri_satirlari()
-    kapi = next(i for i, s in enumerate(satirlar) if '!= "--uygula" ]]' in s)
-    hukum = next(i for i, s in enumerate(satirlar) if "ops/state_fark_hukmu.py" in s)
-    assert hukum < kapi, "[1b] hüküm çağrısı kuru koşum kapısından SONRA — kuru koşumda diff yok"
-    kod_tazelik = next((i for i, s in enumerate(satirlar) if KOD_TAZELIK_CAGRI.match(s)), None)
-    assert kod_tazelik is not None, "[5b] çağrısı beklenen biçimde yok — sıra ölçülemez"
-    assert kod_tazelik > kapi, "[5b] çağrısı kuru koşumda koşuyor — canlı süreçleri sorguluyor"
+def test_A5d_SARMALAYICI_kuru_kosumu_playbookun_CHECKINE_devreder():
+    """Kuru koşum sınırı korunur — ama artık sarmalayıcının değil playbook'un kapısıyla.
 
+    TAŞIMA KAYDI (Task 3, 2026-09-08): eski hâl dagit.sh'ın ÇAĞRI SIRASINI ölçüyordu ([1b]
+    hükmü `--uygula` kapısından ÖNCE, [5b] SONRA). Gövde gitti, sıra diye ölçülecek bir şey
+    kalmadı; sınırın taşıyıcısı `--check`tir. İki iddia birlikte durur:
+      (a) sarmalayıcının KENDİSİ canlıya yazan hiçbir fiil taşımaz (bu çivi),
+      (b) playbook'un her yazan görevi `not ansible_check_mode` bekler (`test_B16_…`).
+    (b) olmadan (a) yetmez: `--check`i doğru geçiren bir sarmalayıcı, kapısı olmayan bir
+    playbook'a yine dağıttırırdı."""
+    kod = "\n".join(_dagit_cagri_satirlari())
+    for fiil in ("scp ", "rsync ", "systemctl", "ssh ", " tee ", "mv ", "rm -rf"):
+        assert fiil not in kod, (
+            f"sarmalayıcı KOD satırında canlıya dokunan bir fiil taşıyor ({fiil!r}) — "
+            "sarmalayıcı yalnız çağrıyı kurar; kapı da yazım da playbook'un işidir")
+    assert "--check" in _dagit_metin(), \
+        "sarmalayıcıda `--check` geçmiyor — kuru koşum sınırının taşıyıcısı kayıp"
+
+
+# =================================================================================================
+# A6 — SARMALAYICI: gövde GERÇEKTEN gitti (C1)
+# =================================================================================================
+def test_A6_dagit_sh_SARMALAYICI_govde_KALMADI():
+    """C1: dagit.sh'ta kapı gövdesi, liste ya da canlıya dokunan bir çağrı KALMADI.
+
+    NEDEN TEK TEK SAYILIR (bedel yasası): "sarmalayıcı oldu" bir cümledir; ölçüsü, taşınan her
+    sınıfın izinin GİTMESİDİR. Bir tanesi kalırsa iki dağıtım yolu doğar (biri playbook'un
+    kapısından geçer, öteki geçmez) ve hangisinin koştuğu çağrı biçimine bağlı kalır — geçişin
+    kapatmak için var olduğu sınıfın ta kendisi.
+
+    ÖLÇÜ DOSYANIN TAMAMIDIR, kod satırları değil: bir gerekçe yorumunda duran `RSYNC_EXC`
+    listesi de ikinci kaynaktır (okuyan biri onu güncel sanır). Betiğin başlığı bu yüzden
+    kapıları ETİKETLERİYLE anar (`[0b]`, `[2]`), araç adlarıyla değil."""
+    metin = _dagit_metin()
+    kalan = [iz for iz in SARMALAYICI_YASAK_IZLER if iz in metin]
+    assert not kalan, (
+        f"dagit.sh hâlâ taşınmış gövde/liste izi taşıyor: {kalan} — kapılar "
+        "`deploy/ansible/dagit.yml`de, listeler `deploy/ansible/vars/dagit_vars.yml`de")
+    # POZİTİF KONTROL: yasak izlerin yokluğu, dosyanın BOŞ olmasıyla da sağlanırdı.
+    assert "deploy/ansible/dagit.yml" in metin, "sarmalayıcı playbook'u hiç anmıyor"
+    assert "EMEKLİ OLACAK" in metin, \
+        "emeklilik uyarısı yok — operatör kalıcı bir arayüz sanır (geçiş SESSİZLEŞİR)"
+
+
+# =================================================================================================
+# A7 — SARMALAYICI: çağrı GERÇEKTEN kurulur (C3, `ansible-playbook` ŞİMİYLE)
+# =================================================================================================
+# YÖNTEM. `dagit.sh` `REPO="$HOME/AI-Trading"` ile ana checkout'u LİTERAL gösterir (B12) ve
+# yorumlayıcıyı `$REPO/.venv/bin/ansible-playbook`tan alır. Sahne bu iki gerçeğin üstüne kurulur:
+# `HOME` geçici bir dizine çevrilir, `<HOME>/AI-Trading/.venv/bin/ansible-playbook` sahte bir
+# betik olur ve argv'yi bir dosyaya yazar. Böylece GERÇEK `ansible-playbook` HİÇ koşmaz, A1'e
+# hiçbir bağlantı açılmaz — ama ölçülen şey betiğin operatörün koşacağı BİÇİMDEKİ davranışıdır
+# (CLAUDE.md §6: 18 çivi yeşilken `--uygula` sessizce yok sayılıyordu).
+# Şim argv'nin YANINA `$PWD`yi de yazar: sarmalayıcının `cd "$REPO"`su ancak playbook'un
+# HANGİ DİZİNDEN koştuğu kaydedilirse ölçülebilir (inceleme bulgusu B3, 2026-09-08 — o satır
+# silindiğinde 175 çivi yeşil kalmıştı, çünkü sahne betiği zaten ana checkout'tan koşturuyordu).
+_SIM = ('#!/usr/bin/env bash\n'
+        'printf "%s\\n" "$@" > "$ARGV_DOSYA"\n'
+        'printf "%s\\n" "$PWD" > "$PWD_DOSYA"\n'
+        'exit "${SIM_RC:-0}"\n')
+
+
+_SAHNE_SAYAC = itertools.count()
+
+
+def _sahne(tmp_path, *, sim: bool = True):
+    """Sahte HOME + (istenirse) `ansible-playbook` şimi. (env, argv_dosya, kök) döndürür.
+
+    Her çağrı KENDİ sahnesini kurar (sayaçlı alt dizin): aynı testte iki koşum yapan çiviler
+    (A7d'nin negatif kontrolü) ikinci koşumda birincinin argv dosyasını okusaydı, "bayrak
+    verilmeyince de geçiyor" iddiası kendi artığını ölçerdi."""
+    ev = tmp_path / f"sahne{next(_SAHNE_SAYAC)}" / "ev"
+    kok = ev / "AI-Trading"
+    (kok / ".venv" / "bin").mkdir(parents=True)
+    argv_dosya = ev.parent / "argv.txt"
+    pwd_dosya = ev.parent / "pwd.txt"
+    if sim:
+        p = kok / ".venv" / "bin" / "ansible-playbook"
+        p.write_text(_SIM, encoding="utf-8")
+        p.chmod(0o755)
+    env = dict(os.environ, HOME=str(ev), ARGV_DOSYA=str(argv_dosya), PWD_DOSYA=str(pwd_dosya))
+    return env, argv_dosya, kok
+
+
+def _kos_dagit(tmp_path, *bayraklar, sim: bool = True, sim_rc: int | None = None,
+               cwd=None, sahne=None):
+    """dagit.sh'ı şimli sahnede koştur → (rc, stdout+stderr, argv listesi).
+
+    `cwd`: betiğin çağrıldığı dizin — varsayılan sahnenin ana checkout'udur (operatörün olağan
+    yeri). Depo DIŞI bir dizin vermek `cd "$REPO"`yu ölçülebilir yapar (A7k). `sahne`: hazır
+    kurulmuş bir sahne; şimin `$PWD` kaydını okuyacak çivi sahnenin yollarına ihtiyaç duyar."""
+    env, argv_dosya, kok = sahne if sahne is not None else _sahne(tmp_path, sim=sim)
+    if sim_rc is not None:
+        env["SIM_RC"] = str(sim_rc)
+    r = subprocess.run(["bash", str(DAGIT), *bayraklar], capture_output=True, text=True,
+                       env=env, cwd=str(cwd if cwd is not None else kok), timeout=60)
+    argv = argv_dosya.read_text(encoding="utf-8").splitlines() if argv_dosya.exists() else []
+    return r.returncode, r.stdout + r.stderr, argv
+
+
+def test_A7a_dry_run_playbooku_CHECK_DIFF_ile_cagirir(tmp_path):
+    """`--dry-run` → `-i <envanter> <playbook> --check --diff`. Dördü de ölçülür.
+
+    `--check` kuru koşumun TEK taşıyıcısıdır (A5d); `--diff` olmadan operatör "ne değişecek"i
+    göremez ve kuru koşum bir "geçti/geçmedi" satırına iner — kapının var oluş sebebi budur."""
+    rc, cikti, argv = _kos_dagit(tmp_path, "--dry-run")
+    assert rc == 0, f"kuru koşum düştü: rc={rc}\n{cikti}"
+    assert "deploy/ansible/dagit.yml" in argv, f"playbook argv'de yok: {argv}"
+    assert "deploy/ansible/inventory.ini" in argv, f"envanter argv'de yok: {argv}"
+    assert "-i" in argv and argv[argv.index("-i") + 1] == "deploy/ansible/inventory.ini", \
+        f"`-i` envanteri göstermiyor: {argv}"
+    assert "--check" in argv, f"kuru koşumda `--check` YOK — canlıya YAZARDI: {argv}"
+    assert "--diff" in argv, f"kuru koşumda `--diff` YOK — ne değişeceği görünmez: {argv}"
+
+
+def test_A7b_bayraksiz_cagri_KURU_KOSUM(tmp_path):
+    """BİREBİRLİK: eski betikte `./dagit.sh` (bayraksız) kuru koşumdu ve RUNBOOK/operatör
+    alışkanlığı o adresi taşıyor. Bayraksız çağrının sessizce GERÇEK dağıtıma dönmesi, geçişin
+    ödeyebileceği en pahalı bedeldi."""
+    rc, cikti, argv = _kos_dagit(tmp_path)
+    assert rc == 0, f"bayraksız koşum düştü: rc={rc}\n{cikti}"
+    assert "--check" in argv, f"bayraksız çağrı GERÇEK dağıtıma düştü: {argv}"
+
+
+def test_A7c_uygula_CHECKSIZ_kosar_ama_DIFF_kalir(tmp_path):
+    """`--uygula` → aynı komut `--check`siz; `--diff` KALIR (dağıtımda da ne değiştiği basılır).
+
+    NEGATİF KONTROL ŞART: `--check`in VARLIĞINI ölçen bir çivi tek başına, betik her koşumda
+    `--check` verse de yeşil kalırdı — yani gerçek dağıtım hiç koşmazdı ve bunu kimse görmezdi."""
+    rc, cikti, argv = _kos_dagit(tmp_path, "--uygula")
+    assert rc == 0, f"uygula koşumu düştü: rc={rc}\n{cikti}"
+    assert "--check" not in argv, f"`--uygula` hâlâ `--check` veriyor — dağıtım KOŞMAZ: {argv}"
+    assert "--diff" in argv, f"`--uygula`da `--diff` düşmüş: {argv}"
+
+
+def test_A7d_kirli_gec_extra_var_olarak_gecer(tmp_path):
+    """`--kirli-gec` → `-e kirli_gec=true`. Playbook'un [0a] istisnası TAM BU ADLA okunur ve
+    [B] beyanına `kirli_gec_kullanildi` olarak girer; ad kayarsa istisna sessizce ETKİSİZ olur
+    ve operatör kirli ağaçla dağıttığını sanarak temiz-ağaç kapısına takılır."""
+    rc, cikti, argv = _kos_dagit(tmp_path, "--uygula", "--kirli-gec")
+    assert rc == 0, f"kirli-geç koşumu düştü: rc={rc}\n{cikti}"
+    assert "-e" in argv and "kirli_gec=true" in argv, f"`-e kirli_gec=true` yok: {argv}"
+    assert argv[argv.index("-e") + 1] == "kirli_gec=true", f"`-e` yanlış değeri gösteriyor: {argv}"
+    # NEGATİF: bayrak verilmeyince değişken de GEÇMEZ (aksi hâlde her dağıtım kirli-geçerdi).
+    _rc2, _c2, argv2 = _kos_dagit(tmp_path, "--uygula")
+    assert not any("kirli_gec" in a for a in argv2), \
+        f"`--kirli-gec` verilmeden de geçiyor — istisna her dağıtımda AÇIK: {argv2}"
+
+
+def test_A7e_kirli_gec_TEK_BASINA_kullanim_ve_CIKIS_2(tmp_path):
+    """`--kirli-gec` tek başına: hangi modda koşacağı belirsizdir → kullanım + çıkış 2.
+
+    Sessizce kuru koşuma düşmek, operatöre "istisnayı kullandım" dedirtip hiçbir şey
+    dağıtmamak olurdu; sessizce `--uygula`ya düşmek ise tam tersi ve çok daha pahalısı."""
+    rc, cikti, argv = _kos_dagit(tmp_path, "--kirli-gec")
+    assert rc == 2, f"tek başına `--kirli-gec` çıkış {rc} verdi (2 bekleniyordu)\n{cikti}"
+    assert not argv, f"kullanım hatasında playbook ÇAĞRILDI: {argv}"
+    assert "Kullanım" in cikti, f"kullanım metni basılmadı:\n{cikti}"
+
+
+def test_A7f_bilinmeyen_bayrak_KULLANIM_ve_CIKIS_2(tmp_path):
+    """Bilinmeyen bayrak → kullanım + çıkış 2, playbook HİÇ çağrılmaz.
+
+    ÖLÇÜLEN SINIF: yanlış yazılmış bir `--uygla` sessizce kuru koşuma düşseydi, operatör
+    dağıttığını sanardı ve `state/dagitim.json` eski sha'da kalırdı — [B]'nin var olma sebebi
+    olan ortamlar-arası kıyas tam o turda yalan söylerdi."""
+    rc, cikti, argv = _kos_dagit(tmp_path, "--uygla")
+    assert rc == 2, f"bilinmeyen bayrak çıkış {rc} verdi (2 bekleniyordu)\n{cikti}"
+    assert not argv, f"bilinmeyen bayrakta playbook ÇAĞRILDI: {argv}"
+    assert "Kullanım" in cikti, f"kullanım metni basılmadı:\n{cikti}"
+
+
+def test_A7g_ansible_playbook_YOKSA_DURUR(tmp_path):
+    """Araç kurulu değilse DURUR (çıkış 1) ve reçeteyi basar — "koşamadım" ile "kapı temiz"
+    aynı sessizliğe gömülmez (CLAUDE.md §6'nın `.venv` kuralıyla aynı sınıf)."""
+    rc, cikti, argv = _kos_dagit(tmp_path, "--dry-run", sim=False)
+    assert rc == 1, f"araç yokken çıkış {rc} verdi (1 bekleniyordu)\n{cikti}"
+    assert not argv, "araç yokken bir şey çağrıldı"
+    assert "DURDU" in cikti and "ansible-playbook" in cikti, f"reçete basılmadı:\n{cikti}"
+
+
+@pytest.mark.parametrize("kod", [0, 1, 2, 3])
+def test_A7h_playbook_cikis_kodu_AYNEN_doner(tmp_path, kod):
+    """Sarmalayıcı hüküm VERMEZ, TAŞIR: playbook'un çıkış kodu aynen döner.
+
+    Özet basıp 0 dönen bir sarmalayıcı, playbook'un bütün kapılarını sessizce açardı — ve
+    bunu yalnız bir dağıtım sonrası fark ederdik (kapı listesi DÜŞMEZ, ama düşürme GÜCÜ de
+    düşmemeli)."""
+    rc, cikti, _argv = _kos_dagit(tmp_path, "--uygula", sim_rc=kod)
+    assert rc == kod, f"playbook rc={kod} verdi, sarmalayıcı {rc} döndü\n{cikti}"
+
+
+def test_A7i_banner_HER_KOSUMDA_basilir(tmp_path):
+    """Emeklilik uyarısı operatöre HER koşumda görünür — bir sürüm sonra silinecek bir aracın
+    sessizce kalıcı sanılması, geçişin en olası arıza biçimidir."""
+    for bayraklar in ((), ("--dry-run",), ("--uygula",)):
+        _rc, cikti, _argv = _kos_dagit(tmp_path, *bayraklar)
+        assert "EMEKLİ OLACAK" in cikti and "deploy/ansible/dagit.yml" in cikti, \
+            f"banner basılmadı ({bayraklar}):\n{cikti}"
+
+
+@pytest.mark.parametrize("bayraklar", [
+    ("--dry-run", "--uygula"),
+    ("--uygula", "--dry-run"),
+    ("--dry-run", "--dry-run"),
+    ("--uygula", "--uygula"),
+    ("--uygula", "--kirli-gec", "--dry-run"),
+])
+def test_A7j_IKINCI_KIP_BAYRAGI_kullanim_ve_CIKIS_2(tmp_path, bayraklar):
+    """İkinci kip bayrağı → kullanım + çıkış 2; playbook HİÇ çağrılmaz (argv boş).
+
+    ÖLÇÜLMÜŞ KUSUR (inceleme bulgusu B1, 2026-09-08): ayrıştırma döngüsü `MOD`u üzerine
+    yazıyordu, yani SON bayrak kazanıyordu. `./dagit.sh --dry-run --uygula` rc 0 ile
+    `--check`SİZ koşuyordu — operatör kuru koşum yazdığını sanırken GERÇEK DAĞITIM; ters sıra
+    ise kuru koşuma düşüyordu. Aynı iki bayrak, sıraya bağlı iki farklı dünya ve hiçbir uyarı.
+    Bu, tek başına `--kirli-gec`i çıkış 2 yapan gerekçenin (A7e) ta kendisidir, ama belirsizlik
+    orada ucuz, burada CANLIYA YAZMA yönünde çözülüyordu.
+
+    Tekrar eden aynı bayrak da (`--dry-run --dry-run`) çıkış 2'dir: kip iki kez yazılmışsa
+    komut satırı iki reçeteden birleştirilmiştir ve hangisinin kastedildiği ölçülemez.
+    NEGATİF KONTROL: tek kip bayrağının hâlâ rc 0 verdiğini A7a/A7b/A7c/A7d ölçüyor — bu çivi
+    tek başına, betiği her çağrıda çıkış 2 vermeye çeviren bir mutasyonda da yeşil kalırdı."""
+    rc, cikti, argv = _kos_dagit(tmp_path, *bayraklar)
+    assert rc == 2, f"{list(bayraklar)} çıkış {rc} verdi (2 bekleniyordu)\n{cikti}"
+    assert not argv, f"çelişkili/tekrarlı kip bayrağında playbook ÇAĞRILDI: {argv}"
+    assert "Kullanım" in cikti, f"kullanım metni basılmadı:\n{cikti}"
+
+
+def test_A7k_KOSUM_DIZINI_ANA_CHECKOUTA_cevrilir(tmp_path):
+    """`cd "$REPO"`: sarmalayıcı NEREDEN çağrılırsa çağrılsın ana checkout'tan koşar.
+
+    CLAUDE.md §9'un taşıyıcısı budur: "dagit.sh cwd'ye bakmaz, HER ZAMAN ana checkout HEAD'ini
+    iter" (vaka 2026-08-26 — "ağacım temiz" bir güvence DEĞİLDİR). Göreli `-i <envanter>` ve
+    playbook yolları o `cd`ye bağlıdır: satır düşerse bir worktree'den yapılan çağrı o ağacın
+    playbook'unu bulur ve operatör ana checkout'u dağıttığını sanır.
+
+    ÖLÇÜLDÜ (inceleme bulgusu B3, 2026-09-08): `cd "$REPO"` silindiğinde 175 çivi YEŞİL kaldı —
+    A7 sahnesi betiği zaten ana checkout'tan koşturduğu için `cd`nin varlığı GÖRÜNMÜYORDU.
+    Bu çivi depo DIŞI bir dizinden koşar ve şimin kaydettiği `$PWD`yi okur; ölçüm argv'de değil
+    çalışma dizinindedir (argv'deki yollar göreli olduğu için ikisi ayrı gerçektir)."""
+    sahne = _sahne(tmp_path)
+    env, _argv_dosya, kok = sahne
+    disari = tmp_path / "depo_disi_dizin"
+    disari.mkdir()
+    rc, cikti, argv = _kos_dagit(tmp_path, "--dry-run", sahne=sahne, cwd=disari)
+    assert rc == 0, f"depo dışından koşum düştü: rc={rc}\n{cikti}"
+    assert argv, f"playbook hiç çağrılmadı:\n{cikti}"
+    pwd_dosya = pathlib.Path(env["PWD_DOSYA"])
+    assert pwd_dosya.is_file(), "şim `$PWD` kaydını yazmadı — sahne bozuk, ölçüm yapılmadı"
+    pwd = pathlib.Path(pwd_dosya.read_text(encoding="utf-8").strip())
+    assert pwd.resolve() == kok.resolve(), (
+        f"playbook ana checkout'tan DEĞİL `{pwd}` dizininden koştu — `cd \"$REPO\"` kayıp; "
+        "başka bir ağaçtan çağrı o ağacın playbook'unu koşardı (CLAUDE.md §9)")
 
 # =================================================================================================
 # BÖLÜM B (Task 2) — `deploy/ansible/dagit.yml` playbook'u
@@ -1052,6 +1580,11 @@ def _jinja_ortami():
     ortam.filters["union"] = lambda a, b: list(a) + [x for x in b if x not in a]
     ortam.filters["symmetric_difference"] = lambda a, b: sorted(
         [x for x in a if x not in b] + [x for x in b if x not in a])
+    # `zip`/`trim`: [F10] anomali listesi ve [4] pencere haritaları bunlarla kurulur (v367'nin
+    # taşınan davranış çivileri onları GERÇEKTEN değerlendirir). Ansible'ın `zip`i Python'unkiyle
+    # aynı semantiktir (en kısa diziye kırpar) — burada da öyle.
+    ortam.filters["zip"] = lambda a, *b: [tuple(t) for t in zip(a, *b)]
+    ortam.filters["trim"] = lambda s: str(s).strip()
     return ortam
 
 
@@ -1365,16 +1898,23 @@ def test_B6_5a_5b_script_dosyalari_task1inkiler():
 
 
 # =================================================================================================
-# B7 — [B] beyanı dagit.sh printf şablonuyla AYNI BEŞ ALAN
+# B7 — [B] beyanı DONMUŞ beş alanla AYNI (ad ve SIRA)
 # =================================================================================================
+#: [B] beyanının DONMUŞ beş alanı — SIRAYLA.
+#: TAŞIMA KAYDI (Task 3, 2026-09-08): kaynak dagit.sh'ın `printf '{"deployed_sha": "%s", …}'`
+#: şablonuydu ve bu çivi onu söküyordu. Sarmalayıcı beyan yazmaz; şablon silindi. Alan adları
+#: bir ARAYÜZDÜR (okuyucular: `/api/diagnostics`in dağıtım bloğu, pano Gözetim satırı, envanter
+#: turlarının ortamlar-arası kıyası) ve kıyas ALAN ADIYLA okur — bu yüzden kıyasın öteki ucu
+#: yok olmaz, ÇİVİYE DONAR: adın ya da sıranın değişmesi bir sözleşme kararıdır, yan etki değil.
+BEYAN_ALANLARI = ("deployed_sha", "dagitildi_utc", "dagitan_host", "kirli_gec_kullanildi",
+                  "sandbox_eski_kod")
+
+
 def _dagit_beyan_alanlari() -> list[str]:
-    """dagit.sh'ın [B] `printf` şablonundaki JSON alan adları — SIRAYLA."""
-    m = re.search(r"printf '(\{[^\n]*\})\\n'", _dagit_metin())
-    assert m, "dagit.sh'ta [B] printf şablonu bulunamadı — çivi bayatlamış"
-    return re.findall(r'"([a-z_]+)":', m.group(1))
+    return list(BEYAN_ALANLARI)
 
 
-#: Beyanın dagit.sh printf'ine göre BEYANLI uzantısı (TUR 2, inceleme K1 hükmü 2026-09-08):
+#: Beyanın donmuş beş alanına göre BEYANLI uzantısı (TUR 2, inceleme K1 hükmü 2026-09-08):
 #: `worktree_gec` — ana-checkout kapısının bilinçli istisnası KULLANILDIYSA beyana girer.
 #: Kapının kendisi bir kayıt bırakmasaydı, "hangi ağaç dağıtıldı" sorusu ancak canlıdaki kodu
 #: okuyarak cevaplanabilirdi (2026-08-26 vaka sınıfı). Uzantı LİSTELİDİR: adı buraya YAZILMAYAN
@@ -1382,15 +1922,15 @@ def _dagit_beyan_alanlari() -> list[str]:
 BEYAN_EK_ALANLARI = ("worktree_gec",)
 
 
-def test_B7_B_beyani_dagit_printf_ile_AYNI_BES_ALAN():
-    """Beyanın alan kümesi VE SIRASI dagit.sh ile aynı (ortamlar-arası kıyasın sözleşmesi).
+def test_B7_B_beyani_DONMUS_BES_ALANLA_AYNI():
+    """Beyanın alan kümesi VE SIRASI donmuş sözleşmeyle aynı (ortamlar-arası kıyasın API'si).
 
     Okuyucu (Yasa 6) envanter/denetim turlarının ortamlar-arası kıyasıdır ve o kıyas ALAN
-    ADIYLA okur: bir alanın adı değişirse kıyas sessizce 'ölçemedi'ye düşer. Sıra da ölçülür —
-    iki üreticinin (dagit.sh printf · playbook) geçiş süresince kıyaslanabilir beyan üretmesi
-    Task 3'e kadar tek güvencedir."""
+    ADIYLA okur: bir alanın adı değişirse kıyas sessizce 'ölçemedi'ye düşer. Sıra da ölçülür.
+    TAŞIMA (Task 3): kıyasın öteki ucu dagit.sh'ın `printf` şablonuydu; şablon silinince
+    sözleşme `BEYAN_ALANLARI` sabitine DONDU — iddia aynı, kaynağı artık bir karar."""
     beklenen = _dagit_beyan_alanlari()
-    assert len(beklenen) == 5, f"dagit.sh printf'inde 5 alan bekleniyordu: {beklenen}"
+    assert len(beklenen) == 5, f"beyan sözleşmesinde 5 alan bekleniyordu: {beklenen}"
     adaylar = []
     for gorev in _tum_gorevler():
         if "B" not in _etiketler(gorev):
@@ -1404,7 +1944,7 @@ def test_B7_B_beyani_dagit_printf_ile_AYNI_BES_ALAN():
     assert adaylar, f"[B] beyanını kuran `set_fact` yok ya da alanları farklı; beklenen: {beklenen}"
     for alanlar in adaylar:
         assert alanlar[:len(beklenen)] == beklenen, (
-            f"[B] ilk beş alanın SIRASI dagit.sh printf'inden farklı: {alanlar} != {beklenen}")
+            f"[B] ilk beş alanın SIRASI beyan sözleşmesinden farklı: {alanlar} != {beklenen}")
         ek = tuple(alanlar[len(beklenen):])
         assert ek == BEYAN_EK_ALANLARI[:len(ek)] and set(ek) <= set(BEYAN_EK_ALANLARI), (
             f"[B] beyanında BEYANSIZ ek alan: {ek} — izinli uzantı: {BEYAN_EK_ALANLARI} "
@@ -1741,7 +2281,7 @@ def test_B13_B_beyani_BAYT_OZDES_kiyasi_GERCEK_ansible_ile(tmp_path):
         "    dogru_satir_sonu: \"\\n\"\n"
         f"    hedef: {json.dumps(str(hedef))}\n"
         "  tasks:\n"
-        "    - name: Beyan olgusu (alanlar dagit.sh printf sablonundan)\n"
+        "    - name: Beyan olgusu (alanlar BEYAN_ALANLARI sozlesmesinden)\n"
         "      ansible.builtin.set_fact:\n"
         "        dagitim_beyani:\n"
         f"{gorevler}\n"
@@ -1913,9 +2453,10 @@ _YAZAN_KOMUT = re.compile(r"(^|\s|/)(tee|mv|cp|rm|install|chmod|chown|ln)\s|uv\s
 def test_B16_check_modda_canliya_yazan_gorev_YOK():
     """Play 2'nin her `command`/`shell`/`script` görevi check-mode duruşunu BEYAN eder.
 
-    `tests/test_ansible_dagit_v452.py::test_A5d_dagit_KURU_KOSUMDA_yazan_cagri_YOK` dagit.sh
-    için aynı iddiayı ölçüyor ve Task 3'te dagit.sh gövdesi silinince ÖLECEK; bu çivi onun
-    playbook karşılığıdır (kapı listesi düşmez — çivi listesi de düşmez).
+    `test_A5d_SARMALAYICI_kuru_kosumu_playbookun_CHECKINE_devreder` sarmalayıcı için AYNI
+    sınıfın öteki yarısını ölçer (Task 3'te dagit.sh gövdesi silindi ve sıra iddiası oradan
+    buraya taşındı); bu çivi playbook karşılığıdır. İkisi birlikte gerekir: `--check`i doğru
+    geçiren bir sarmalayıcı, kapısı olmayan bir playbook'a yine dağıttırırdı.
 
     KURAL İKİ DALLI ve beyan ZORUNLU: bir komut görevi ya `check_mode: false` taşır (kuru
     koşumda da koşar → SALT OKUMA olmak zorundadır) ya da `when: not ansible_check_mode`

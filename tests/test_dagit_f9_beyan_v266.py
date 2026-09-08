@@ -26,44 +26,69 @@ hangi alanlar, hangi sıra) ve sözleşmenin her maddesi bir vaka/denetim kaydı
 """
 from __future__ import annotations
 
-import json
 import pathlib
 import re
 import subprocess
 
 # TEK KAYNAK (düzeltme turu 1, inceleme K-2, 2026-09-03): `_X="$("${SSH[@]}" '…')"` yapısal
-# sözleşmesinin sökücüsü v367'de yaşıyor; buraya KOPYALANMAZ, ithal edilir.
-from tests.test_dagit_istenen_durum_v367 import _snippet
-
-# TEK KAYNAK (düzeltme turu 2, 2026-09-08): [5b] çağrısının BİÇİMİ v452'de yaşıyor; buraya
-# KOPYALANMAZ, ithal edilir. Düz `"<yol>" in kod` iddiası ısırmıyordu — aynı yol [5b]'nin onarım
-# reçetesi `echo` satırında da geçiyor ve gerçek çağrı bozulunca üç çivi de yeşil kalıyordu.
-from tests.test_ansible_dagit_v452 import KOD_TAZELIK_CAGRI
+# sözleşmesinin sökücüsü v367'de yaşıyordu.
+# TAŞIMA (TSK-176 Faz A1 Task 3, 2026-09-08): o kabuk sözleşmesi SİLİNDİ (dagit.sh sarmalayıcı) —
+# [4] penceresinin aday kümesi artık `dagit_vars.yml::birim_adaylari`, türetimi de playbook'un
+# `when` ifadeleri. v367 kendi çivilerini oraya taşıdı; sökücü ithali de onunla düştü.
+#
+# TEK KAYNAK (düzeltme turu 2, 2026-09-08 · Task 3'te yenilendi): [5b] çağrısının BİÇİMİ ve
+# `dagit.yml` okuyucuları v452'de yaşıyor; buraya KOPYALANMAZ, ithal edilir. Düz `"<yol>" in kod`
+# iddiası ısırmıyordu ve on ayrı YAML sökücüsü, ayrışabilen on kopya olurdu.
+from tests.test_ansible_dagit_v452 import (
+    KOD_TAZELIK_CAGRI,
+    beyan_indeksi,
+    birim_adaylari as _vars_birim_adaylari,
+    dogrulama_uclari as _vars_dogrulama_uclari,
+    f9_ciftleri,
+    gorev_metni,
+    gorevler,
+    gorev_etiketleri,
+    kapi_indeksi,
+    script_cmdleri,
+    son_kapi_indeksi,
+)
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 DAGIT = REPO / "dagit.sh"
 ORACLE = REPO / "deploy" / "oracle-a1"
 
-# TAŞIMA KAYDI (TSK-176 Faz A1, 2026-09-08). [5a] ve [5b] kapılarının GÖVDELERİ dagit.sh'ın
-# içinde gömülü uzak kabuk/python bloklarıydı ve bu dosya iddialarını o metinde arıyordu.
-# Gövdeler DOSYAYA çıkarıldı (playbook `script:` ile aynı dosyaları koşturacak; gömülü çok-satır
-# gövde bir Ansible görevinde YASAK — A0 kuralı + 2026-07-30 IndentationError vakası). Aşağıdaki
-# beş çivi AYNI İDDİALARI ölçer; değişen tek şey, iddianın hangi dosyada aranacağıdır. Kapının
-# YERİ ve ÇAĞRISI hâlâ dagit.sh'ta, uygulaması betikte: iki taraf da çivili, aksi hâlde biri
+# TAŞIMA KAYDI 1 (TSK-176 Faz A1 Task 1, 2026-09-08). [5a] ve [5b] kapılarının GÖVDELERİ
+# dagit.sh'ın içinde gömülü uzak kabuk/python bloklarıydı ve bu dosya iddialarını o metinde
+# arıyordu. Gövdeler DOSYAYA çıkarıldı (gömülü çok-satır gövde bir Ansible görevinde YASAK —
+# A0 kuralı + 2026-07-30 IndentationError vakası).
+#
+# TAŞIMA KAYDI 2 (Task 3, 2026-09-08) — BU DOSYANIN TAMAMINI İLGİLENDİRİR. `dagit.sh` ince bir
+# SARMALAYICIYA indi: on yedi kapının hepsi `deploy/ansible/dagit.yml`e, listeler
+# `deploy/ansible/vars/dagit_vars.yml`e taşındı. Aşağıdaki çivilerin HİÇBİRİ silinmedi ve
+# hiçbirinin İDDİASI değişmedi — değişen tek şey, iddianın hangi kaynakta ölçüldüğüdür:
+#   * `F9_LISTE` dizgesi        → `dagit_vars.yml::f9_ciftleri` (sökücü v452'de, ithal edilir)
+#   * kapı YERİ (`_satir_no`)   → `dagit.yml` görev SIRASI (`kapi_indeksi`)
+#   * `exit 1` / `exit` yokluğu → görevin `assert`/`fail` taşıyıp taşımaması
+#   * `printf` beyan şablonu    → `[B]` `set_fact` + `to_json` görevleri
+# Kapının UYGULAMASI hâlâ betikte, ÇAĞRISI playbook'ta: iki taraf da çivili, aksi hâlde biri
 # sessizce ötekinden koparabilirdi (çağrısız betik = ölü dosya; betiksiz çağrı = kırık kapı).
 DOGRULAMA_ANAHTAR = ORACLE / "dogrulama_anahtar.py"
 KOD_TAZELIK = ORACLE / "kod_tazelik.sh"
 
 
-def _satirlar() -> list[str]:
-    return DAGIT.read_text().splitlines()
+def _etiketli_metin(etiket: str) -> str:
+    """Bir kapının BÜTÜN görevlerinin YAML dökümü — jeton/dal iddialarının aranacağı yer.
+
+    TAŞIMA (Task 3): eski karşılığı dagit.sh'ta iki `echo "=== ["` başlığı arasındaki satır
+    aralığıydı ve sınır bir kez kaymıştı ([F10] araya girince, R-0 2026-09-03). Etiketle
+    seçim sınırı kaymaz: bir görev ya o kapıyı taşır ya taşımaz."""
+    parcalar = [gorev_metni(g) for g in gorevler() if etiket in gorev_etiketleri(g)]
+    assert parcalar, f"dagit.yml'de `[{etiket}]` etiketli görev yok — çivi bayatlamış"
+    return "\n".join(parcalar)
 
 
-def _satir_no(iz: str) -> int:
-    for i, s in enumerate(_satirlar()):
-        if iz in s:
-            return i
-    raise AssertionError(f"dagit.sh'ta bulunamadı: {iz!r} — çivi bayatlamış")
+def _etiketli_gorevler(etiket: str) -> list[dict]:
+    return [g for g in gorevler() if etiket in gorev_etiketleri(g)]
 
 
 # =================================================================================================
@@ -87,7 +112,7 @@ def test_f9_KURUCU_ARTEFAKTLAR_hala_listede():
     docstring "DÖRT ARTEFAKT / BEŞ dosya" diyordu — düzyazıya gömülü bir sayım, hem de sayım
     gömmeyi yasaklayan çivinin yanıbaşında (denetim 2026-08-29).
     """
-    metin = DAGIT.read_text()
+    kume = set(f9_ciftleri())          # TAŞIMA (Task 3): kaynak `dagit_vars.yml::f9_ciftleri`
     for repo_yol, canli_yol in [
         ("deploy/oracle-a1/meridian-sprint@.service", "/etc/systemd/system/meridian-sprint@.service"),
         ("deploy/oracle-a1/50-meridian-sprint.rules", "/etc/polkit-1/rules.d/50-meridian-sprint.rules"),
@@ -97,7 +122,7 @@ def test_f9_KURUCU_ARTEFAKTLAR_hala_listede():
         ("deploy/oracle-a1/meridian-tick-watchdog.timer",
          "/etc/systemd/system/meridian-tick-watchdog.timer"),
     ]:
-        assert f"{repo_yol}|{canli_yol}" in metin, f"[F9] listesinde eksik/yanlış çift: {repo_yol}"
+        assert (repo_yol, canli_yol) in kume, f"[F9] listesinde eksik/yanlış çift: {repo_yol}"
         # Repo tarafı GERÇEKTEN var — listeye uydurma bir yol girmesin (kapı kendi "REPODA YOK"
         # dalına düşer ve her dağıtımda ölçülemedi gürültüsü üretirdi).
         assert (REPO / repo_yol).is_file(), f"[F9] repo tarafı yok: {repo_yol}"
@@ -137,15 +162,14 @@ def test_f9_LISTESININ_TAMAMI_deploy_sh_BASLIGINDA_ADLANDIRILIR():
     başlıkta OLMAYAN yasaktır. TERS YÖN ayrı ölçülür (profil dosyalarının listeye GİRMESİ:
     tests/test_bot_profil_durusu_v329.py::test_F9_PROFILIN_UC_DOSYASINI_IZLIYOR).
     """
-    dagit = DAGIT.read_text()
-    govde = dagit.split('F9_LISTE="', 1)[1].split('"', 1)[0]
-    yollar = [ln.split("|")[0].strip() for ln in govde.strip().splitlines() if "|" in ln]
-    assert yollar, "F9_LISTE ayrıştırılamadı — çivi kendi hedefini kaybetmiş"
+    # TAŞIMA (Task 3): kaynak `F9_LISTE` dizgesiydi, artık `dagit_vars.yml::f9_ciftleri`.
+    yollar = [repo for repo, _ in f9_ciftleri()]
+    assert yollar, "[F9] listesi boş — çivi kendi hedefini kaybetmiş"
 
     baslik = (ORACLE / "deploy.sh").read_text().split("set -euo pipefail", 1)[0]
     eksik = [y for y in yollar if y not in baslik]
     assert not eksik, (
-        "F9_LISTE'de olup deploy.sh BAŞLIĞINDA TAM REPO YOLUYLA geçmeyen artefakt(lar): "
+        "`f9_ciftleri`de olup deploy.sh BAŞLIĞINDA TAM REPO YOLUYLA geçmeyen artefakt(lar): "
         + ", ".join(eksik)
         + " — dagit sürüklenmeyi raporlar ama operatörün okuduğu kurulum başlığı onlardan "
         "HİÇ söz etmiyor. Ölçü koşulsuz TAM YOLDUR: basename eşlemesi, aynı adı taşıyan "
@@ -164,43 +188,68 @@ def test_f9_CIKTISI_ARTEFAKTI_TEKIL_ADLANDIRIR():
     `SOUL.md` üç kez listede. Operatör "⚠ config.yaml: AYRIK" satırından HANGİ profilin
     ayrıştığını okuyamaz — yani kapı sürüklenmeyi görür ama SÖYLEYEMEZ.
 
-    ÇİVİ ETİKETİ SİMÜLE EDER, ssh KOŞMAZ: `_f9_ad` ataması okunur, `F9_LISTE`nin her çifti için
-    etiket üretilir ve etiketlerin TEKİL olması şart koşulur. Tanınmayan bir atama biçimi de
-    kırmızıdır — bir üçüncü biçimin sessizce geçmesi, çivinin kendi hedefini kaybetmesidir."""
-    metin = DAGIT.read_text()
-    govde = metin.split('F9_LISTE="', 1)[1].split('"', 1)[0]
-    ciftler = [ln.split("|", 1) for ln in govde.strip().splitlines() if "|" in ln]
-    assert ciftler, "F9_LISTE ayrıştırılamadı — çivi kendi hedefini kaybetmiş"
+    TAŞIMA (Task 3, 2026-09-08): etiket eskiden dagit.sh'ın `_f9_ad="…"` ataması, üretim de bir
+    kabuk döngüsüydü; çivi o atamanın BİÇİMİNİ tanıyordu. Playbook'ta etiketin iki yeri var ve
+    ikisi de ölçülür: (a) `loop_control.label` — operatörün koşum sırasında GÖRDÜĞÜ satır, ve
+    (b) `f9_ayrik` listesine EKLENEN değer — özetin bastığı ad. İkisi de TAM REPO YOLU olmalı;
+    biri `basename`e düşerse rapor yine "hangi profil?" sorusunu cevaplayamaz. İddia aynı,
+    ölçülen yüzey artık iki tane (eskiden bir kabuk değişkeniydi)."""
+    yollar = [repo for repo, _ in f9_ciftleri()]
+    assert yollar, "[F9] listesi boş — çivi kendi hedefini kaybetmiş"
 
-    atama = re.search(r'_f9_ad="([^"]*)"', metin)
-    assert atama, "`_f9_ad` ataması bulunamadı — kapının etiketi başka bir yerden geliyor"
-    kalip = atama.group(1)
-    if "basename" in kalip:
-        etiketler = [pathlib.PurePath(repo.strip()).name for repo, _ in ciftler]
-    elif kalip.strip() in ("$_f9_repo", "${_f9_repo}"):
-        etiketler = [repo.strip() for repo, _ in ciftler]
-    else:
-        raise AssertionError(f"`_f9_ad` biçimi tanınmadı ({kalip!r}) — çivi bunu ÖLÇEMEZ; "
-                             "yeni biçimi buraya ekle, sessizce geçirme")
-
-    yinelenen = sorted({e for e in etiketler if etiketler.count(e) > 1})
+    yinelenen = sorted({y for y in yollar if yollar.count(y) > 1})
     assert not yinelenen, (
         "[F9] raporu ve özeti artefaktları AYIRT EDİLEMEYEN adlarla anıyor: "
-        + ", ".join(f"{e} ×{etiketler.count(e)}" for e in yinelenen)
+        + ", ".join(f"{y} ×{yollar.count(y)}" for y in yinelenen)
         + " — operatör hangi profilin ayrıştığını çıktıdan okuyamaz. Ölçü, başlıkta olduğu gibi "
         "TAM REPO YOLUDUR.")
-    for satir in ("$_f9_ad: AYRIK", "$_f9_ad: canlı ile repo BİREBİR"):
-        assert satir in metin, f"[F9] rapor satırı etiketi kullanmıyor: {satir!r}"
+
+    f9_gorevleri = _etiketli_gorevler("F9")
+    etiketli = [g for g in f9_gorevleri if isinstance(g.get("loop_control"), dict)
+                and "label" in g["loop_control"]]
+    assert etiketli, ("[F9] döngülerinin hiçbiri `loop_control.label` taşımıyor — operatör "
+                      "koşum sırasında hangi artefaktın ölçüldüğünü göremez")
+    for gorev in etiketli:
+        etiket = str(gorev["loop_control"]["label"])
+        assert "basename" not in etiket and ".repo" in etiket, (
+            f"{gorev.get('name')!r}: döngü etiketi TAM REPO YOLU değil ({etiket!r}) — "
+            "aynı adı taşıyan kardeş dosyalar (config.yaml · SOUL.md · distribution.yaml her "
+            "profilde bir kez) ayırt edilemez")
+    ayrik = [g for g in f9_gorevleri if "f9_ayrik" in gorev_metni(g) and (
+        g.get("ansible.builtin.set_fact") or g.get("set_fact"))]
+    assert ayrik, "[F9] `f9_ayrik` listesini kuran görev yok — özet neyi basacak?"
+    for gorev in ayrik:
+        # ÖLÇÜ ARGÜMANDIR, AD DEĞİL: görevin kendi adı "basename DEĞİL" diye yazıyor ve adı da
+        # tarayan bir çivi KENDİ gerekçesine takılıp her zaman kırmızı verirdi (yorum tarihçe,
+        # kod hüküm — 2026-09-06).
+        args = gorev.get("ansible.builtin.set_fact") or gorev.get("set_fact")
+        assert "basename" not in str(args), (
+            f"{gorev.get('name')!r}: ayrık listesine `basename` yazılıyor — özet artefaktı "
+            "AYIRT EDİLEMEYEN adla anar")
+        assert ".repo" in str(args), (
+            f"{gorev.get('name')!r}: ayrık listesine TAM REPO YOLU yazılmıyor: {args}")
 
 
 def test_f9_YERI_kuru_kosumda_da_gorunur():
-    """YER YASASI: [F9] `--uygula` kapısından ÖNCE koşar — sürüklenme raporu kuru koşumda da
-    görünmeli (operatör dağıtmadan önce görsün), ve [1c]'den SONRA (birim-yönerge kapısının
-    reçetesine atıf yapar, sıra ters dönerse anlatı kopar)."""
-    bir_c = _satir_no("[1c/5] sistem birimi ayrıklığı")
-    f9 = _satir_no("[F9] dagit-kapsamı-dışı canlı artefaktlar (içerik kapısı)")
-    kapi = _satir_no('!= "--uygula" ]]')
-    assert bir_c < f9 < kapi, f"[F9] yanlış yerde (1c={bir_c}, F9={f9}, uygula-kapısı={kapi})"
+    """YER YASASI: [F9] kuru koşumda da GÖRÜNÜR (operatör dağıtmadan önce görsün) ve [1c]'den
+    SONRA koşar (birim-yönerge kapısının reçetesine atıf yapar, sıra ters dönerse anlatı kopar).
+
+    TAŞIMA (Task 3): "kuru koşumdan önce" iddiasının taşıyıcısı dagit.sh'ın `--uygula` kapısıydı;
+    playbook'ta kuru koşumun sınırı `--check`tir ve bir kapının kuru koşumda KOŞTUĞUNU söyleyen
+    şey `check_mode: false`tur. İkisi de ölçülür: sıra ([1c] < [F9] < [2]) ve ölçüm görevlerinin
+    check-mode'da GERÇEKTEN koştuğu."""
+    bir_c = kapi_indeksi("1c")
+    f9 = kapi_indeksi("F9")
+    rsync = kapi_indeksi("2")
+    assert bir_c < f9 < rsync, f"[F9] yanlış yerde (1c={bir_c}, F9={f9}, rsync={rsync})"
+    olcenler = [g for g in _etiketli_gorevler("F9")
+                if (g.get("ansible.builtin.stat") or g.get("stat")
+                    or g.get("ansible.builtin.slurp") or g.get("slurp"))]
+    assert olcenler, "[F9] hiçbir ölçüm görevi yok — kapı neye bakıyor?"
+    kor = [g.get("name") for g in olcenler if g.get("check_mode") is not False]
+    assert not kor, (
+        f"[F9] ölçüm görevleri kuru koşumda ATLANIYOR ({kor}) — `check_mode: false` yok; "
+        "sürüklenme yalnız gerçek dağıtımda görünürdü, yani dağıtmadan önce hiç")
 
 
 def test_f9_RAPORLAR_engellemez():
@@ -212,32 +261,43 @@ def test_f9_RAPORLAR_engellemez():
     girdi — çivi F9'un sözünü bozuldu sandı. Ölçülen şey F9'un KENDİ bloğudur; sınır artık bir
     sonraki `=== [` başlığıdır. Kapının BLOKLAMASI gereken bir gün gelirse yer değil söz değişir
     ve bu çivi yine kırmızıya düşer."""
-    satirlar = _satirlar()
-    bas = _satir_no("[F9] dagit-kapsamı-dışı canlı artefaktlar (içerik kapısı)")
-    son = next((i for i, s in enumerate(satirlar)
-                if i > bas and s.startswith('echo "=== [')), None)
-    assert son is not None, "[F9] bloğunu bitiren `=== [` başlığı yok — çivi bayat"
-    blok = satirlar[bas:son]
-    ihlal = [s for s in blok if re.search(r"\bexit\s+\d", s) and not s.lstrip().startswith("#")]
-    assert not ihlal, f"[F9] bloğunda engel var — kapı 'raporlar, engellemez' sözünü bozdu: {ihlal}"
+    ihlal = [g.get("name") for g in _etiketli_gorevler("F9")
+             if any(g.get(a) is not None for a in ("ansible.builtin.assert", "assert",
+                                                   "ansible.builtin.fail", "fail"))]
+    assert not ihlal, (
+        f"[F9] görevlerinde `assert`/`fail` var — kapı 'raporlar, engellemez' sözünü bozdu: "
+        f"{ihlal}")
 
 
 def test_f9_OLCULEMEDI_dali_var():
     """UYDURMA YASAĞI: canlıdan okunamayan dosya ne 'aynı'dır ne 'ayrık' — kapının açık bir
     'ölçülemedi' dalı var ve nedeni ayrıştırıyor (dosya yok ↔ okunamadı: farklı iş kalemleri)."""
-    metin = DAGIT.read_text()
-    assert "F9_OLCULEMEDI" in metin
-    assert "canlıda DOSYA YOK" in metin, "yok-dalı kayıp — 'hiç kurulmamış' hâli sessizleşir"
-    assert "VAR ama OKUNAMADI" in metin, "izin-dalı kayıp — sudo/izin arızası 'yok' sanılır"
+    metin = _etiketli_metin("F9")
+    # İKİ AYRI OLGU (kabuktaki `F9_OLCULEMEDI` sayacının karşılığı): nedeni ayrıştırır.
+    for olgu in ("f9_repo_yok", "f9_canli_yok"):
+        assert olgu in metin, f"[F9] ölçülemedi dalı kayıp: {olgu}"
+    assert "REPODA YOK" in metin, "liste-bayat dalı kayıp — kapı kendi kaynağına kör kalır"
+    assert "CANLIDA YOK" in metin, "yok-dalı kayıp — 'hiç kurulmamış' hâli sessizleşir"
 
 
 def test_f9_OZETI_dagitim_sonunda_tekrarlanir():
     """Kapı kuru-koşum tarafında konuşur; ayrıklık dağıtım ÖZETİNDE bir kez daha yazılır —
     raporlanan ama görülmeyen sürüklenme, hiç raporlanmamış gibidir. Özet 'DAĞITIM TAMAM'dan önce."""
-    ozet = _satir_no("[F9] dagit-kapsamı-dışı artefakt özeti")
-    tamam = _satir_no('echo "=== DAĞITIM TAMAM ===')   # yorum satırındaki geçiş değil, basılan satır
-    kapi = _satir_no('!= "--uygula" ]]')
-    assert kapi < ozet < tamam, "özet yanlış yerde — --uygula tarafında ve TAMAM'dan önce olmalı"
+    ozetler = [i for i, g in enumerate(gorevler())
+               if "F9" in gorev_etiketleri(g) and (g.get("ansible.builtin.debug") or g.get("debug"))
+               and "AYRIK" in gorev_metni(g)]
+    assert len(ozetler) >= 2, (
+        f"[F9] özeti yalnız {len(ozetler)} kez basılıyor — dağıtım sonu tekrarı düşmüş; "
+        "raporlanan ama görülmeyen sürüklenme, hiç raporlanmamış gibidir")
+    assert ozetler[-1] > son_kapi_indeksi("5b"), \
+        "[F9] tekrar özeti [5b]'den ÖNCE — dağıtımın SONUNDA olmalı"
+    assert ozetler[-1] < beyan_indeksi(), \
+        "[F9] tekrar özeti [B] beyanından SONRA — beyan çıktının son sözü olmalı"
+    # "--uygula TARAFINDA": tekrar yalnız GERÇEK dağıtımda basılır (kuru koşumda ilk özet zaten
+    # birkaç satır yukarıdadır; orada tekrar, gürültüdür — bedel yasası).
+    tekrar = gorevler()[ozetler[-1]]
+    assert "not ansible_check_mode" in gorev_metni(tekrar), \
+        "[F9] tekrar özeti kuru koşumda da basılıyor — dagit.sh kuru koşumda tekrar BASMIYORDU"
 
 
 # =================================================================================================
@@ -246,60 +306,84 @@ def test_f9_OZETI_dagitim_sonunda_tekrarlanir():
 def test_beyan_DORT_ALAN_ve_hedef_yol():
     """Beyanın sözleşmesi (ENVANTER §4.2): dört alan + canlı hedef `state/dagitim.json`.
     Alan adları ortamlar-arası kıyasın okuyacağı API'dir — sessizce değişemez."""
-    metin = DAGIT.read_text()
-    assert "/opt/meridian/state/dagitim.json" in metin, "beyanın canlı hedefi kayıp"
+    metin = _etiketli_metin("B")
+    assert "state/dagitim.json" in metin, "beyanın canlı hedefi kayıp"
+    assert "repo_kok" in metin, (
+        "beyan hedefi canlı köke (`repo_kok` = /opt/meridian) bağlı değil — kontrolcüye yazan "
+        "bir beyan, ortamlar-arası kıyasın ölçmek istediği ŞEYİ ölçmez")
     for alan in ("deployed_sha", "dagitildi_utc", "dagitan_host", "kirli_gec_kullanildi"):
         assert alan in metin, f"beyan alanı kayıp: {alan}"
 
 
 def test_beyan_JSON_bicimi_GECERLI():
-    """Beyan printf şablonu GERÇEKTEN koşturulur (kopyası değil kendisi — v172 dersi) ve çıktı
-    json.loads'tan geçer: yarım/bozuk JSON, ortamlar-arası kapıyı yanlış hükme götürürdü."""
-    satir = next(s for s in _satirlar() if s.strip().startswith("printf '{"))
-    sablon = satir.split("printf ")[1].split("' ")[0].strip("'")
-    if sablon.endswith("\\n"):
-        sablon = sablon[:-2]                                     # printf kaçışı JSON'un parçası değil
-    # TSK-140 (2026-09-04): beşinci yuva `sandbox_eski_kod` JSON DİZİSİDİR (tırnaksız) — kum-havuzu
-    # birimleri başlangıç kodunu taşırken beyan "bu sha canlıda" cümlesine dürüst dipnot düşer.
-    ornek = (sablon.replace("%s", "X", 3).replace("%s", "false", 1)   # dördüncü %s bool yuvası
-             .replace("%s", '["meridian-sprint@x.service"]'))         # beşinci %s dizi yuvası
-    veri = json.loads(ornek)
-    assert set(veri) == {"deployed_sha", "dagitildi_utc", "dagitan_host", "kirli_gec_kullanildi",
-                         "sandbox_eski_kod"}
-    assert veri["kirli_gec_kullanildi"] is False, "bool yuvası tırnaklı — beyan tipi bozuk"
-    assert veri["sandbox_eski_kod"] == ["meridian-sprint@x.service"], "dizi yuvası tırnaklı/bozuk"
-    metin = DAGIT.read_text()
+    """Beyanın TİPLERİ korunur: `kirli_gec_kullanildi` BOOL, `sandbox_eski_kod` DİZİ.
+
+    TAŞIMA (Task 3, 2026-09-08): eski hâl dagit.sh'ın `printf` şablonunu söküp yuvalarını
+    doldurarak `json.loads`tan geçiriyordu. Şablon silindi; JSON'u playbook `to_json` ile kurar
+    (BAYT düzeyinde gerçek `ansible` ile ölçen çivi: v452 `test_B13_…`). Burada korunan iddia
+    TİP iddiasıdır ve o iddia YAML'da yaşar: `| bool` filtresi düşerse `kirli_gec_kullanildi`
+    `"False"` diye TIRNAKLI bir dizgeye döner ve `/api/diagnostics` okuyucusu (v274) onu her
+    zaman DOĞRU sayar — sessiz yanlış hüküm.
+
+    TSK-140 (2026-09-04): beşinci alan `sandbox_eski_kod` JSON DİZİSİDİR — kum-havuzu birimleri
+    başlangıç kodunu taşırken beyan "bu sha canlıda" cümlesine dürüst dipnot düşer."""
+    beyan = [g for g in _etiketli_gorevler("B")
+             if isinstance(g.get("ansible.builtin.set_fact") or g.get("set_fact"), dict)
+             and "dagitim_beyani" in (g.get("ansible.builtin.set_fact") or g.get("set_fact"))]
+    assert beyan, "[B] beyanını kuran `set_fact` yok"
+    alanlar = (beyan[0].get("ansible.builtin.set_fact")
+               or beyan[0].get("set_fact"))["dagitim_beyani"]
+    assert set(alanlar) >= {"deployed_sha", "dagitildi_utc", "dagitan_host",
+                            "kirli_gec_kullanildi", "sandbox_eski_kod"}
+    assert "| bool" in str(alanlar["kirli_gec_kullanildi"]), (
+        "`kirli_gec_kullanildi` bool'a ÇEVRİLMİYOR — Jinja çıktısı dizgedir ve beyan "
+        '"False" yazar; JSON okuyucusu onu HER ZAMAN doğru sayar')
+    assert "default([])" in str(alanlar["sandbox_eski_kod"]).replace(" ", ""), (
+        "`sandbox_eski_kod` boş dala düşünce TANIMSIZ kalır — 'yok' ile 'ölçülmedi' ayrımı "
+        "kaybolur (uydurma yasağı)")
+    # JSON'un KENDİSİ `to_json` ile kurulur (dizge birleştirme değil): elle kurulan bir JSON,
+    # tırnak kaçışı gereken bir birim adında yarım dosya üretirdi.
+    metin = _etiketli_metin("B")
+    assert "to_json" in metin, "[B] JSON'u `to_json` ile kurmuyor — elle dizge birleştirme"
     # TAŞIMA (TSK-176 A1): ayrımı YAPAN satır artık `kod_tazelik.sh`ta, ayrımı BEYANA ÇEVİREN
     # satır dagit.sh'ta. İkisi de ölçülür — jeton (`BEKLENEN`) iki tarafta AYNI dizge olmazsa
     # kum-havuzu birimleri beyandan sessizce düşerdi (TSK-140 dipnotu boşalır, kimse görmez).
     assert '"kum havuzunda"' in KOD_TAZELIK.read_text(), \
         "[5b] kum-havuzu ayrımı birimin KENDİ beyanından (Description) türemiyor (TSK-140)"
-    assert "BEKLENEN" in KOD_TAZELIK.read_text() and "BEKLENEN" in metin, \
+    # JETON İKİ TARAFTA AYNI DİZGE: ayrımı YAPAN satır `kod_tazelik.sh`ta, ayrımı BEYANA
+    # ÇEVİREN görev [5b]'de. Ayrışırlarsa kum-havuzu birimleri beyandan sessizce düşer
+    # (TSK-140 dipnotu boşalır, kimse görmez).
+    besb = _etiketli_metin("5b")
+    assert "BEKLENEN" in KOD_TAZELIK.read_text() and "BEKLENEN" in besb, \
         "`BEKLENEN` jetonu iki tarafta aynı değil — beyan dipnotu sessizce boşalır"
-    assert "_sandbox_json" in metin and "sandbox_eski_kod" in metin
+    assert "sandbox_eski_kod" in besb, \
+        "[5b] bulgusu beyanın `sandbox_eski_kod` alanına hiç bağlanmıyor"
 
 
 def test_beyan_YERI_basarili_dagitimin_sonunda():
     """Beyan [5] doğrulamadan SONRA yazılır ('başarılı dağıtım' beyanı — [4]/[5]'ten önce yazılsa
     düşen bir dağıtım da beyan bırakır, beyan yalan söylerdi) ve sha [0a]'da DONDURULUR
     (660dc10 dersi: paralel oturum main'i dağıtım sırasında taşıyabilir)."""
-    dondur = _satir_no('DAGIT_SHA="$(git rev-parse HEAD)"')
-    kapi_0a = _satir_no("[0b/5] uv audit")
-    dogrulama = _satir_no("[5/5] doğrulama")
-    beyan = _satir_no("[B] dağıtım-beyanı (state/dagitim.json")
-    assert dondur < kapi_0a, "DAGIT_SHA [0a]'da dondurulmuyor — beyan betik-sonu tepesini söyler"
+    dondur = next((i for i, g in enumerate(gorevler())
+                   if "0a" in gorev_etiketleri(g) and "dagit_sha" in gorev_metni(g)), None)
+    assert dondur is not None, "`dagit_sha` [0a]'da hiç dondurulmuyor — çivi bayatlamış"
+    kapi_0b = kapi_indeksi("0b")
+    dogrulama = kapi_indeksi("5")
+    beyan = beyan_indeksi()
+    assert dondur < kapi_0b, "dagit_sha [0a]'da dondurulmuyor — beyan koşum-sonu tepesini söyler"
     assert dogrulama < beyan, "beyan [5]'ten önce — başarısız dağıtım da beyan bırakırdı"
 
 
 def test_beyan_ATOMIK_ve_dogrulamali():
     """tmp + mv (atomik) ve yazım sonrası bayt-özdeş doğrulama ([1b] kopya disiplini). Doğrulama
     düşerse ENGEL DEĞİL uyarı: dağıtım o noktada zaten tamam, beyansızlık dağıtımı geri almaz."""
-    metin = DAGIT.read_text()
-    assert ".dagitim.json.tmp" in metin and "mv /opt/meridian/state/.dagitim.json.tmp" in metin
+    metin = _etiketli_metin("B")
+    assert ".dagitim.json.tmp" in metin, "geçici dosya yok — yazım atomik değil"
+    assert "- mv" in metin, "`mv` ile yerine alma yok — yarım JSON okunabilir kalır"
     assert "BEYAN YAZILAMADI" in metin, "yazım arızası sessiz — uyarı dalı kayıp"
-    bas = _satir_no("[B] dağıtım-beyanı (state/dagitim.json")
-    blok = _satirlar()[bas:]
-    ihlal = [s for s in blok if re.search(r"\bexit\s+1", s) and not s.lstrip().startswith("#")]
+    ihlal = [g.get("name") for g in _etiketli_gorevler("B")
+             if any(g.get(a) is not None for a in ("ansible.builtin.assert", "assert",
+                                                   "ansible.builtin.fail", "fail"))]
     assert not ihlal, f"beyan bloğu dağıtımı düşürüyor — beyan kayıt içindir, kapı değil: {ihlal}"
 
 
@@ -412,16 +496,22 @@ def test_bakim_penceresi_ogrenme_birimini_KAPSAR():
     tümden DÜŞMESİN) artık İKİ aday kümesinde ölçülür: `_DURDUR` (is-active) ve `_BASLAT`
     (is-enabled). Learn birinden düşerse pencere ona kör olur — 2026-08-24 unutma sınıfı geri gelir.
 
-    SNIPPET SÖKÜCÜSÜ İTHAL EDİLİR (düzeltme turu 1, inceleme K-2, 2026-09-03): aynı yapısal
-    sözleşmenin regex'i v367'de ve burada AYRI AYRI yazılıydı — üçü ayrışsa hangi çivinin haklı
-    olduğu belirsizleşirdi (tek-kaynak yasası, çivilerin kendisi için de geçerli). v384'ün
-    v381'den ithal etme kalıbının aynısı."""
-    for _ad, _kaynak in (("_DURDUR", "is-active"), ("_BASLAT", "is-enabled")):
-        snippet = _snippet(_ad)
-        assert _kaynak in snippet, f"{_ad} türetimi {_kaynak} okumuyor"
-        assert "meridian-learn" in snippet, \
-            f"{_ad} aday kümesinde meridian-learn yok — pencere learn'e kör"
-    assert DAGIT.read_text().count("meridian-learn") >= 2
+    SÖZLEŞME ÜÇÜNCÜ KEZ DEĞİŞTİ (TSK-176 Faz A1 Task 3, 2026-09-08): pencere artık dagit.sh'ta
+    değil `deploy/ansible/dagit.yml`de. Aday KÜMESİ tek kaynağa (`dagit_vars.yml::birim_adaylari`)
+    çıktı, türetim de iki `systemctl` ölçümü + iki `when` ifadesi oldu. Çivinin 2026-08-24 ruhu
+    AYNEN korunur ve yine İKİ kümede ölçülür: learn aday listesinde OLMALI ve pencerenin hem
+    durdurma hem başlatma kolu O LİSTEDEN türemeli. Kolların YÖNÜ ayrıca Jinja ile çözülerek
+    ölçülür (v452 B9) — burada ölçülen şey KAPSAMdır."""
+    adaylar = _vars_birim_adaylari()
+    assert "meridian-learn" in adaylar, \
+        "aday kümesinde meridian-learn yok — pencere learn'e kör (2026-08-24 unutma vakası)"
+    for etiket, kaynak in (("4", "is-active"), ("4", "is-enabled")):
+        metin = _etiketli_metin(etiket)
+        assert kaynak in metin, f"[4] penceresi {kaynak} ölçümünü taşımıyor"
+    # KAPSAM LİSTEDEN TÜRER: stop/start döngüleri sabit bir birim paketi üzerinde koşamaz.
+    pencere = _etiketli_metin("4")
+    assert "birim_adaylari" in pencere, \
+        "[4] penceresi aday listesinden türemiyor — sabit paket, 2026-08-24 unutma sınıfını açar"
 
 
 def test_kod_tazelik_kapisi_VAR_ve_BEYANDAN_ONCE():
@@ -430,30 +520,30 @@ def test_kod_tazelik_kapisi_VAR_ve_BEYANDAN_ONCE():
     Kapı [B] dağıtım-beyanından ÖNCE düşmeli: beyan `state/dagitim.json`a "bu sha canlıda" yazar
     ve süreçlerden biri eski kodu koşuyorsa bu cümle YANLIŞTIR. Önce düşerse dosya eski sha'da
     kalır — koşan sistemin GERÇEK hâli odur (operatör kararı, 2026-08-24)."""
-    metin = DAGIT.read_text()
-    assert "[5b/" in metin, "kod-tazelik kapısı [5b] yok"
-    # İDDİA ÇAĞRI BİÇİMİNE BAĞLI (düzeltme turu 2): yorumları elemek YETMEZ — aynı yol [5b]
-    # fail-closed bloğunun onarım reçetesi `echo`unda da geçiyor ve gerçek çağrı bozulunca bu
-    # çivi YEŞİL kalıyordu (mutasyonla ölçüldü 2026-09-08). Ölçülen şey ÇAĞRININ KENDİSİDİR.
-    assert any(KOD_TAZELIK_CAGRI.match(s) for s in _satirlar()), (
-        "[5b] gövdesi KOD satırında çağrılmıyor — kapı adı duruyor, ölçüm yok (çıkarılan betik "
-        "ölü dosya olur; gerekçe yorumunda ya da operatöre basılan bir `echo`da adının geçmesi "
-        "bir çağrı DEĞİLDİR)")
+    # İDDİA ÇAĞRI BİÇİMİNE BAĞLI (düzeltme turu 2): metinde yolun GEÇMESİ bir çağrı değildir —
+    # aynı yol onarım reçetesinde de geçiyordu ve gerçek çağrı bozulunca bu çivi YEŞİL kalıyordu
+    # (mutasyonla ölçüldü 2026-09-08). TAŞIMA (Task 3): çağrı artık playbook'un `script:`
+    # görevidir; YAML PARSE, metin aramasından güçlüdür — bir yorumdaki yol yapısal olarak
+    # çağrı sayılamaz.
+    assert any(KOD_TAZELIK_CAGRI.search(c) for c in script_cmdleri()), (
+        "[5b] gövdesi bir `script:` görevinde çağrılmıyor — kapı adı duruyor, ölçüm yok "
+        "(çıkarılan betik ölü dosya olur)")
     govde = KOD_TAZELIK.read_text()
     assert "ExecMainStartTimestamp" in govde, (
         "kapı süreç başlangıcını okumuyor — 'active' cümlesi bu kusuru göremez")
     # KAPSAM TÜRETİLİR, YAZILMAZ: birim adları elle sayılsaydı yarın eklenen birim unutulurdu.
     assert "ExecStart" in govde, "kapsam ExecStart'tan türetilmiyor — unutma sınıfı açık kalır"
-    # ÇAPA `echo` SATIRINA BAĞLI: düz `"[B] dağıtım-beyanı"` dizgisi dosyanın BAŞINDAKİ
-    # içindekiler yorumunda da geçiyor (satır ~15) ve çivi orayı bulup sahte kırmızı verdi
-    # (2026-08-24, ilk yazımda). Aranan şey adımın KENDİSİ, ondan söz eden satır değil.
-    i_kapi, i_beyan = _satir_no("[5b/"), _satir_no('echo "=== [B] dağıtım-beyanı')
+    # ÇAPA ETİKETE BAĞLI (Task 3): eski hâl `echo "=== [5b/"` satırını arıyordu ve dosyanın
+    # BAŞINDAKİ içindekiler yorumu bir kez sahte kırmızı vermişti. Görev etiketi kaymaz.
+    i_kapi, i_beyan = kapi_indeksi("5b"), beyan_indeksi()
     assert i_kapi < i_beyan, (
-        f"[5b] kapısı beyandan SONRA (satır {i_kapi} > {i_beyan}) — yarı-etkili bir dağıtım "
+        f"[5b] kapısı beyandan SONRA ({i_kapi} > {i_beyan}) — yarı-etkili bir dağıtım "
         f"'tamam' diye damgalanır")
     # Kapı ENGELLER (F9'un tersine): yarı-etkili dağıtım sessizce geçemez.
-    blok = "\n".join(_satirlar()[i_kapi:i_beyan])
-    assert "exit 1" in blok, "[5b] ihlalde exit 1 vermiyor — kapı değil rapor olur"
+    engel = [g for g in _etiketli_gorevler("5b")
+             if g.get("ansible.builtin.assert") or g.get("assert")
+             or g.get("ansible.builtin.fail") or g.get("fail")]
+    assert engel, "[5b] ihlalde DÜŞÜRMÜYOR (`assert`/`fail` yok) — kapı değil rapor olur"
 
 
 # =================================================================================================
@@ -470,22 +560,20 @@ def test_dogrulama_uclari_UC_GIRDI_ve_SIRA_korunur():
     """(1) `DOGRULAMA_UCLARI` üç uç taşır (alarm/öğrenme/performans — D2: elle sayılmasın diye
     TEK sabitte durur) ve yeni blok healthz'in hemen ardına, [5b]/[B]'den ÖNCE girmiş — sıra
     [5] → [5b] → [B] bozulmamış."""
-    metin = DAGIT.read_text()
-    assert "DOGRULAMA_UCLARI" in metin, "token'lı anahtar kontrolü sabiti yok — [5a] eklenmemiş"
-    govde = metin.split('DOGRULAMA_UCLARI="', 1)[1].split('"', 1)[0]
-    uclar = [ln for ln in govde.strip().splitlines() if "|" in ln]
-    assert len(uclar) == 3, f"DOGRULAMA_UCLARI üç uç taşımalı (bulunan: {len(uclar)}): {uclar}"
-    kod = "\n".join(ln for ln in _satirlar() if not ln.lstrip().startswith("#"))
-    assert "deploy/oracle-a1/dogrulama_anahtar.py" in kod, \
-        "[5a] gövdesi KOD satırında çağrılmıyor — uç listesi duruyor ama kimse ölçmüyor"
+    # TAŞIMA (Task 3): sabit `dagit_vars.yml::dogrulama_uclari`; çağrı playbook `script:`inde.
+    uclar = _vars_dogrulama_uclari()
+    assert len(uclar) == 3, f"`dogrulama_uclari` üç uç taşımalı (bulunan: {len(uclar)}): {uclar}"
+    assert any("deploy/oracle-a1/dogrulama_anahtar.py" in c for c in script_cmdleri()), \
+        "[5a] gövdesi bir `script:` görevinde çağrılmıyor — uç listesi duruyor ama kimse ölçmüyor"
     assert "x-meridian-token" in DOGRULAMA_ANAHTAR.read_text(), \
         "kontrol x-meridian-token başlığını taşımıyor"
 
-    dogrulama = _satir_no("[5/5] doğrulama")
-    kod_tazelik = _satir_no("[5b/")
-    beyan = _satir_no('echo "=== [B] dağıtım-beyanı')
-    assert dogrulama < kod_tazelik < beyan, (
-        f"sıra bozuk: [5]={dogrulama}, [5b]={kod_tazelik}, [B]={beyan} — [5a] yanlış yere girmiş")
+    dogrulama = kapi_indeksi("5")
+    uc_kontrolu = kapi_indeksi("5a")
+    kod_tazelik = kapi_indeksi("5b")
+    beyan = beyan_indeksi()
+    assert dogrulama < uc_kontrolu < kod_tazelik < beyan, (
+        f"sıra bozuk: [5]={dogrulama}, [5a]={uc_kontrolu}, [5b]={kod_tazelik}, [B]={beyan}")
 
 
 def test_dogrulama_token_degeri_ciktiya_BASILMAZ():
@@ -497,10 +585,15 @@ def test_dogrulama_token_degeri_ciktiya_BASILMAZ():
     govde = DOGRULAMA_ANAHTAR.read_text()
     assert ".dash.env" in govde and "MERIDIAN_DASH_TOKEN" in govde, \
         "token okuma satırı .dash.env'den MERIDIAN_DASH_TOKEN okumuyor"
-    # KABUK TARAFI: dagit.sh token değerini artık bir değişkene ALMAZ (okuma A1'de, betiğin
-    # içinde) — yine de eski desen geri gelirse yakalansın diye tarama DURUYOR.
-    ihlal = [s for s in _satirlar() if re.search(r"\b(echo|printf|tee)\b.*\$T\b", s)]
-    assert not ihlal, f"token değeri ($T) bir echo/printf/tee argümanında basılıyor: {ihlal}"
+    # ÇAĞIRAN TARAFI (Task 3'te dagit.sh'tan playbook'a taşındı): token DEĞERİ hiçbir görev
+    # argümanına girmez — betik onu A1'de kendisi okur. Playbook'un `[5a]` görevleri yalnız UÇ
+    # LİSTESİNİ ve betik yolunu taşır; bir gün `.dash.env` değeri bir `-e`/`debug`a sızarsa
+    # dagit çıktısı günlüğe kopyalandığı için sır süzgecinin BEYAZ LİSTESİ dışına düşerdi.
+    besa = _etiketli_metin("5a")
+    for sizinti in ("MERIDIAN_DASH_TOKEN", ".dash.env"):
+        assert sizinti not in besa, (
+            f"[5a] görevleri token kaynağını ({sizinti}) kendi argümanına almış — okuma A1'de, "
+            "betiğin İÇİNDE kalmalı")
     # PYTHON TARAFI: token değeri hiçbir `print` argümanına girmiyor. Davranışsal ikizi
     # tests/test_ansible_dagit_v452.py içindeki A4c5 çivisidir — o çivi değeri GERÇEKTEN
     # koşturup çıktıda arar, bu çivi deseni metinde yasaklar.
@@ -517,12 +610,13 @@ def test_dogrulama_FAIL_OPEN_ve_FAIL_CLOSED_dallari_VAR():
     ÖLÇÜM [5a] BLOĞUYLA SINIRLI (mutasyonla ölçüldü, TSK-148): dosya genelinde "ölçülemedi" ve
     "✗" ARAMAK yanlış-yeşil verir — [5b]/[5c] kendi "ölçülemedi"/"IHLAL" dallarını ZATEN taşıyor,
     onlardan biri kırılmasa bile bu çivi hedefine kör kalır ve yeşil kalırdı."""
-    bas = _satir_no("[5a/5] doğrulama-token anahtar kontrolü")
-    son = _satir_no("ARTIK BEKÇİSİ")   # [5a] bloğunu bitiren, ÖNCEDEN var olan bir sonraki başlık
-    blok = "\n".join(_satirlar()[bas:son])
-    assert "ölçülemedi" in blok and "token yok" in blok, "[5a] fail-open dalı (ölçülemedi) yok"
-    assert "✗" in blok, "[5a] fail-closed dalı (✗) yok"
-    assert "exit 1" in blok, "[5a] anahtar eksikken exit 1 vermiyor — kapı değil rapor olur"
+    # BLOK SINIRI ETİKETTEN (Task 3): eski sınır iki `echo` başlığı arasıydı ve bir kez kaymıştı.
+    blok = _etiketli_metin("5a")
+    assert "ÖLÇÜLEMEDİ" in blok and "token yok" in blok, "[5a] fail-open dalı (ölçülemedi) yok"
+    engel = [g for g in _etiketli_gorevler("5a")
+             if g.get("ansible.builtin.assert") or g.get("assert")
+             or g.get("ansible.builtin.fail") or g.get("fail")]
+    assert engel, "[5a] anahtar eksikken DÜŞÜRMÜYOR — kapı değil rapor olur"
     # FAIL-OPEN DALI BETİKTE: token okunamazsa `OLCULEMEDI token yok` basılır ve ÇIKIŞ 0 verilir;
     # dagit.sh o jetonu TAM EŞİTLİKLE tanır ve dağıtımı sürdürür. İddia (dağıtım DÜŞMEZ) aynı,
     # iki parçası iki dosyada — ikisi de burada ölçülür, yoksa biri sessizce ötekinden kopar.
@@ -550,10 +644,9 @@ def test_dogrulama_FAIL_OPEN_ve_FAIL_CLOSED_dallari_VAR():
 def test_f9_unattended_upgrades_LISTEDE():
     """Yeni artefakt F9_LISTE'de doğru çiftle var; repo tarafı GERÇEKTEN dosya (uydurma yasağı:
     listeye var olmayan bir yol girerse kapı her dağıtımda 'ölçülemedi' gürültüsü üretir)."""
-    metin = DAGIT.read_text()
-    cift = ("deploy/oracle-a1/52meridian-unattended-upgrades"
-            "|/etc/apt/apt.conf.d/52meridian-unattended-upgrades")
-    assert cift in metin, "[F9] listesinde unattended-upgrades beyanı eksik"
+    cift = ("deploy/oracle-a1/52meridian-unattended-upgrades",
+            "/etc/apt/apt.conf.d/52meridian-unattended-upgrades")
+    assert cift in set(f9_ciftleri()), "[F9] listesinde unattended-upgrades beyanı eksik"
     assert (ORACLE / "52meridian-unattended-upgrades").is_file(), \
         "F9 repo tarafı yok: deploy/oracle-a1/52meridian-unattended-upgrades"
 

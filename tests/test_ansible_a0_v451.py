@@ -81,6 +81,15 @@ DEFAULTS_YML = ROL_DIZIN / "defaults" / "main.yml"
 ANSIBLE_CFG = REPO_KOK / "ansible.cfg"
 DAGIT_SH = REPO_KOK / "dagit.sh"
 
+# TEK KAYNAK (Task 3, 2026-09-08): `dagit_vars.yml`/`dagit.yml` sökücüleri v452'de yaşıyor;
+# buraya KOPYALANMAZ, ithal edilir (dagit.sh döneminde `F9_LISTE`nin DÖRT ayrı regex'i vardı).
+from tests.test_ansible_dagit_v452 import (  # noqa: E402
+    f9_ciftleri as _f9_ciftleri,
+    gorev_etiketleri as _dagit_etiketleri,
+    gorevler as _dagit_gorevleri,
+)
+
+
 # README.md "Bilinen ölü/silinmeli dosyalar" ile TEK KAYNAK: ikisi de üst dizinde (deploy/ altı,
 # oracle-a1/hindsight/apisix DIŞI), rolün kaynağı DEĞİL. Silinmeleri bu turun kapsamı dışında.
 OLU_BIRIM_DOSYALARI = {
@@ -1221,20 +1230,36 @@ def test_kadans_olcumu_devir_bayraginda_atlanir():
 
 
 def test_uv_sync_bayragi_dagit_ile_tek_kaynak():
-    """K3: `uv sync --frozen` (bayraksız) DEV GRUBUNU A1'e kurar — dagit `[3]`ün tersi.
+    """K3: `uv sync --frozen` (bayraksız) DEV GRUBUNU A1'e kurar — dağıtım `[3]`ünün tersi.
 
-    dagit.sh dev grubunu bilerek eler (karar 2026-08-01): kazanç yalnız disk değil DENETİM
-    YÜZEYİdir (`uv audit` kapısı yalnız canlıda koşan koda ait CVE'lerle dağıtım bloklayabilir).
-    Rol aynı hostta aynı venv'i yönetiyorsa aynı bayrağı taşımalıdır; iki kaynak sessizce ayrışır.
-    """
-    dagit_metni = DAGIT_SH.read_text(encoding="utf-8")
-    dagit_bayraklari = set(re.findall(r'SYNC_BAYRAK="(--[a-z0-9-]+)"', dagit_metni))
-    assert dagit_bayraklari, "dagit.sh'ta `SYNC_BAYRAK` ataması bulunamadı — çivi kaynağını yitirdi"
+    Dağıtım dev grubunu bilerek eler (karar 2026-08-01): kazanç yalnız disk değil DENETİM
+    YÜZEYİdir (tedarik-zinciri kapısı yalnız canlıda koşan koda ait CVE'lerle dağıtım
+    bloklayabilir). Rol aynı hostta aynı venv'i yönetiyorsa aynı bayrağı taşımalıdır.
+
+    TAŞIMA KAYDI (TSK-176 Faz A1 Task 3, 2026-09-08): kıyasın öteki ucu dagit.sh'ın
+    `SYNC_BAYRAK="--no-dev"` ataması, yani İKİNCİ bir kaynaktı ve bu çivi ayrışmayı ölçüyordu.
+    dagit.sh sarmalayıcıya indi; `deploy/ansible/dagit.yml` [3] adımı bayrağı ROLÜN KENDİ
+    defaults'undan (`uv_sync_bayrak`) okur. İki kaynak TEKE indi — ama iddia düşmedi, GÜÇLENDİ:
+    ayrışmanın ölçüldüğü yer artık "iki değer eşit mi" değil "dağıtım gerçekten O DEĞİŞKENİ mi
+    kullanıyor" sorusudur. Literal bir bayrak yazılırsa (ör. `uv sync --frozen --no-dev`) iki
+    kaynak sessizce geri doğar ve bu çivi kırmızıya düşer."""
     defaults = _defaults_veri()
     bayrak = defaults["uv_sync_bayrak"]
-    assert bayrak in dagit_bayraklari, (
-        f"rolün bayrağı dagit.sh'takilerden farklı: {bayrak!r} ∉ {sorted(dagit_bayraklari)}"
-    )
+    assert re.fullmatch(r"--[a-z0-9-]+", str(bayrak)), \
+        f"`uv_sync_bayrak` bir bayrak değil: {bayrak!r}"
+    dagit_yml = (REPO_KOK / "deploy" / "ansible" / "dagit.yml").read_text(encoding="utf-8")
+    uc_gorevleri = [g for g in _dagit_gorevleri()
+                    if "3" in _dagit_etiketleri(g)
+                    and (g.get("ansible.builtin.command") or g.get("command"))]
+    assert uc_gorevleri, "dagit.yml'de [3] `uv sync` görevi bulunamadı — çivi kaynağını yitirdi"
+    for gorev in uc_gorevleri:
+        cmd = str((gorev.get("ansible.builtin.command") or gorev.get("command")))
+        assert "uv_sync_bayrak" in cmd, (
+            f"dağıtımın [3] adımı bayrağı defaults'tan almıyor: {cmd!r} — literal bir bayrak "
+            "ikinci kaynaktır ve rolle sessizce ayrışır")
+        assert str(bayrak) not in cmd, (
+            f"dağıtımın [3] adımı bayrağı LİTERAL yazıyor ({bayrak!r}): {cmd!r}")
+    assert "uv_sync_bayrak" in dagit_yml, "dagit.yml `uv_sync_bayrak` değişkenini hiç anmıyor"
     sync = _tek(
         [
             g
@@ -1560,16 +1585,19 @@ def _rol_kapsami() -> set[str]:
 
 
 def _f9_kaynaklari() -> set[str]:
-    metin = DAGIT_SH.read_text(encoding="utf-8")
-    blok = re.search(r'F9_LISTE="\n(.*?)"\n', metin, flags=re.DOTALL)
-    assert blok, "dagit.sh'ta F9_LISTE bloğu bulunamadı — çivi kaynağını yitirdi"
-    return {satir.split("|", 1)[0].strip() for satir in blok.group(1).splitlines() if satir.strip()}
+    """[F9] listesinin REPO tarafı.
+
+    TAŞIMA KAYDI (TSK-176 Faz A1 Task 3, 2026-09-08): kaynak dagit.sh'ın `F9_LISTE` dizgesiydi ve
+    bu dosya onu KENDİ regex'iyle söküyordu (dört ayrı sökücüden biri). Liste
+    `deploy/ansible/vars/dagit_vars.yml`e taşındı, sökücü de v452'de TEKLEŞTİ — burada ithal
+    edilir, kopyalanmaz. İddia (rolün kapsamadığı her F9 dosyası BEYANLI olmalı) aynen durur."""
+    return {repo for repo, _ in _f9_ciftleri()}
 
 
 def test_f9_beyani_rol_kapsami_ve_beyanli_istisnalarla_ortusur():
     """K10: rol, config'i taşınmayan birimleri ENABLE ediyordu ve bunu hiçbir yerde beyan etmiyordu.
 
-    dagit F9 listesi "canlıya giden repo dosyaları"nın TEK KAYNAĞIdır. Rolün kapsamadığı her F9
+`f9_ciftleri` "canlıya giden repo dosyaları"nın TEK KAYNAĞIdır. Rolün kapsamadığı her F9
     dosyası bir kapsam boşluğudur; boşluk YASAK değildir ama BEYANLI olmak zorundadır
     (`defaults/main.yml::f9_rol_disi` + README gerekçesi). Beyansız boşluk = bedel yasası ihlali:
     kazanç (birim dosyaları tek kaynaktan) sayıldı, kayıp (config'siz enable) sayılmadı.

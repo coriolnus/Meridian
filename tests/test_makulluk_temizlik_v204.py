@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import subprocess
 
 import pytest
@@ -37,37 +38,58 @@ OLCUM = REPO / "research" / "olcumler" / "makulluk_2026-08-07"
 
 
 # =================================================================================================
-# A) dagit.sh — YEDEK ARTIK `state/` İÇİNE DÜŞMÜYOR
+# A) DAĞITIM — YEDEK ARTIK `state/` İÇİNE DÜŞMÜYOR
 # =================================================================================================
-def _dagit() -> str:
-    return (REPO / "dagit.sh").read_text()
+# TAŞIMA KAYDI (TSK-176 Faz A1 Task 3, 2026-09-08): [4] penceresinin yedek adımı ve rsync
+# dışlama listesi `dagit.sh`tan `deploy/ansible/dagit.yml` + `deploy/ansible/vars/dagit_vars.yml`e
+# taşındı; `dagit.sh` ince bir sarmalayıcıya indi. Üç çivi de AYNI İDDİAYI ölçer — değişen tek
+# şey kaynaktır. Sökücüler v452'de tek kaynaktır, buraya kopyalanmaz.
+from tests.test_ansible_dagit_v452 import (  # noqa: E402
+    gorev_etiketleri as _dagit_etiketleri,
+    gorev_metni as _dagit_gorev_metni,
+    gorevler as _dagit_gorevleri,
+    rsync_disla as _rsync_disla,
+)
+
+
+def _pencere() -> str:
+    """[4] bakım penceresi görevlerinin YAML dökümü (eski `dagit.sh` gövdesinin karşılığı)."""
+    parcalar = [_dagit_gorev_metni(g) for g in _dagit_gorevleri() if "4" in _dagit_etiketleri(g)]
+    assert parcalar, "dagit.yml'de [4] etiketli görev yok — çivi bayatlamış"
+    return "\n".join(parcalar)
 
 
 def test_dagit_yedegi_state_DISINA_yazar():
-    """KÖK ONARIMI: `cp -p …/state/$_sf …/state/$_sf.bak-$_damga` satırı her dağıtımda dedektörün
-    taradığı dizine bir dosya bırakıyordu. Yedek hâlâ alınır — yalnız yeri `backups/state/`."""
-    src = _dagit()
-    assert "/opt/meridian/backups/state" in src, "yedek dizini betikte geçmiyor"
-    assert "mkdir -p $_yedek_dizin" in src, "hedef dizin oluşturulmuyor — ilk dağıtımda cp düşer"
-    # ASIL ÇİVİ: state/ içine yedek yazan desen GERİ GELMESİN.
-    assert "/opt/meridian/state/$_sf.bak-" not in src, \
-        "yedek yine state/ içine yazılıyor — orphan dedektörü her dağıtımda bir satır daha sayar"
+    """KÖK ONARIMI: yedek satırı her dağıtımda dedektörün taradığı dizine bir dosya bırakıyordu.
+    Yedek hâlâ alınır — yalnız yeri `backups/state/`."""
+    src = _pencere()
+    assert "backups/state" in src, "yedek dizini pencerede geçmiyor"
+    assert "ansible.builtin.file" in src, \
+        "hedef dizin oluşturulmuyor — ilk dağıtımda kopya düşer"
+    # ASIL ÇİVİ: state/ içine yedek yazan desen GERİ GELMESİN. ÖLÇÜ HEDEF YOLUDUR, düz metin
+    # DEĞİL: doğru yol (`backups/state/…bak-`) yanlış olanı (`state/…bak-`) ALT DİZGE olarak
+    # içerir — düz arama bu çiviyi HER ZAMAN kırmızı yapardı (kendi hedefini kaçıran çivi).
+    kotu = [ln.strip() for ln in src.splitlines()
+            if ".bak-" in ln and "backups/state" not in ln]
+    assert not kotu, (
+        f"yedek `backups/state` DIŞINA yazılıyor ({kotu}) — orphan dedektörü her dağıtımda bir "
+        "satır daha sayar (2026-08-07 MAKULLÜK bulgusu)")
 
 
 def test_dagit_mesajlari_YENİ_yolu_gosterir():
     """Mesaj eski yolu gösterirse operatör yedeği yanlış yerde arar; geri dönüş yolu kâğıt üstünde
     kalır. (Bu tur onarılan sınıfın kendisi: doğru iş, yanlış adres.)"""
-    src = _dagit()
-    assert "yedek: backups/state/$_sf.bak-$_damga" in src, "başarı mesajı eski yolu gösteriyor"
-    assert src.count("yedek: backups/state/") >= 2, "hata dalında da yeni yol yazmalı"
-    assert "cp -p $_yedek_dizin/$_sf.bak-$_damga /opt/meridian/state/$_sf" in src, \
+    src = _pencere()
+    assert src.count("backups/state") >= 2, \
+        "yeni yol yalnız bir kez geçiyor — hata/reçete dalında da yazmalı"
+    assert "cp -p" in src and "backups/state" in src, \
         "GERİ DÖNÜŞ KOMUTU yazılı değil — yedek almak, geri koymayı bilmeden yarım bir güvencedir"
 
 
 def test_backups_rsync_disinda_kalir():
     """Yedek dizini dağıtıma binmemeli: `rsync --delete` onları A1'de SİLERDİ (2026-08-01'de
     `.dash.env` tam olarak böyle gitti). Dışlama listesi bu güvencenin taşıyıcısı."""
-    assert "--exclude 'backups'" in _dagit()
+    assert "backups" in set(_rsync_disla())
 
 
 # =================================================================================================
