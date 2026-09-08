@@ -244,9 +244,20 @@ def test_T2_etiket_deger_mesafesi_TEK_kanaldan(ad):
         f"{ad}: .pm-cell `gap` bildiriyor — mesafe iki kanaldan gelir ve toplanır")
 
 
+# LİNK KİPİNDEKİ YÜZEYLER (TSK-132 dilim-2, 2026-09-08) — `landing.html`/`runbook.html` artık
+# kendi jeton bloklarını TAŞIMIYOR, `<link href="/jetonlar.css">` ile PAYLAŞILAN dosyayı okuyor
+# (ops/jeton_css_uret.py::dosya_blogu()). `test_T3_tanimsiz_jeton_YOK` "aynı DOSYADA tanımlı"
+# diyordu — artık doğru soru "sayfanın GERÇEKTE okuduğu kaynakta tanımlı" (tarayıcı neyi
+# çözümlüyorsa test de onu ölçmeli). `index.html`/`workflow.html` BİLEREK DIŞARIDA: onlar
+# jetonlar.css'i YÜKLEMİYOR, yani oradaki bir ad KAZARA orada tanımlıysa bile ÇALIŞMA ZAMANINDA
+# çözülmez — bu ikisi için hâlâ "aynı dosyada" doğru sorudur.
+_BAGLANTILI_YUZEYLER = {"landing.html", "runbook.html"}
+
+
 @pytest.mark.parametrize("ad", ["index.html", "landing.html", "workflow.html", "runbook.html"])
 def test_T3_tanimsiz_jeton_YOK(ad):
-    """Kullanılan her `var(--x)` aynı dosyada tanımlı olmalı. Tanımsız jeton SESSİZ düşer.
+    """Kullanılan her `var(--x)` aynı dosyada (ya da link kipinde `jetonlar.css`te) tanımlı
+    olmalı. Tanımsız jeton SESSİZ düşer.
 
     Ölçülen vaka: `--r-md` tek yerde kullanılıyordu, dört jeton bloğunun DÖRDÜNDE de tanımı
     yoktu; yarıçap sessizce 0'a düşüyor ve 16px'lik bir kabın içinde kare köşeli ikinci
@@ -258,6 +269,9 @@ def test_T3_tanimsiz_jeton_YOK(ad):
     # alıntı bir kullanım değildir. Soyulmazsa çivi kendi belge geleneğini suçlar.
     s = _YORUM_BLOK.sub("", ham)
     tanimli = set(re.findall(r"(--[a-z0-9-]+)\s*:", s))
+    if ad in _BAGLANTILI_YUZEYLER:
+        jetonlar_css = _YORUM_BLOK.sub("", (KOK / "jetonlar.css").read_text())
+        tanimli |= set(re.findall(r"(--[a-z0-9-]+)\s*:", jetonlar_css))
     # ÇALIŞMA ZAMANINDA YAZILAN JETONLAR: app.js bazılarını ölçüp `setProperty` ile yazar
     # (`--navh` nav'ın gerçek yüksekliği, `--conf`/`--fill`/`--kmc` hücre doluluğu). Bunlar
     # CSS'te tanımlı DEĞİL ama tanımsız da değil — yazarı JS.

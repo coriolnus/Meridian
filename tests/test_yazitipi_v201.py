@@ -314,8 +314,17 @@ def test_jetonlar_DAGITILAN_YUZLERE_bagli_ve_yedekler_KORUNDU(ad):
 
     Yedek yığınının kalması şart: `font-display:block` üç saniyelik bir pencere tanır ve o
     pencere dolarsa tarayıcı yedeğe düşer. Yedeksiz bir `--mono`, dosya bir gün gelmediğinde
-    rakam sütununu ORANSAL bir yüze düşürür — hizanın sessizce ölmesi."""
+    rakam sütununu ORANSAL bir yüze düşürür — hizanın sessizce ölmesi.
+
+    LİNK KİPİ (TSK-132 dilim-2, 2026-09-08): `landing.html` artık `--sans`/`--mono`'yu KENDİ
+    dosyasında bildirmiyor — `<link href="/jetonlar.css">` ile paylaşılan dosyayı okuyor
+    (ops/jeton_css_uret.py::dosya_blogu()). `kaynak`a o dosyanın metnini de eklemek, tarayıcının
+    GERÇEKTEN çözümlediği kaynağı ölçmenin tek yolu; `workflow.html`/`index.html` hâlâ kendi
+    bloğunu taşıyor, onlarda bu ek metin fazladan bir eşleşme YARATMAZ (regex ilk eşleşmeyi
+    döndürür ve iki kaynak da AYNI değeri taşır — v437'nin bayt-eşitlik çivisiyle garanti)."""
     kaynak = _yorumsuz(_oku(ad))
+    if ad == "landing.html":
+        kaynak += "\n" + _yorumsuz((WEB / "jetonlar.css").read_text(encoding="utf-8"))
     sans = re.search(r"--sans\s*:\s*([^;]+);", kaynak)
     mono = re.search(r"--mono\s*:\s*([^;]+);", kaynak)
     assert sans and mono, f"{ad}: --sans / --mono jetonu bulunamadı"
