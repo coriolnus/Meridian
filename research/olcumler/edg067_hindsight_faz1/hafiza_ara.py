@@ -31,6 +31,14 @@ mesajı AYNEN basıp 1 döner. A1 sarmalayıcısı: `deploy/hindsight/hafiza_ara
     0 — koşum tamamlandı (sonuç BOŞ olabilir: "sonuç yok" bir BULGUdur, arıza değil)
     1 — girdi/uzantı arızası; `taban_hazirla`nın mesajı stderr'e AYNEN basılır
     2 — kullanım hatası (argparse)
+    3 — ÖLÇÜLEMEDİ: model/şema ayrışması (gömme boyutu beklenenden farklı, `boyut_dogrula`nın
+        `ValueError`ı). stderr'e `ölçülemedi: <neden>` öneğiyle basılır.
+        NEDEN 3, NEDEN 2 DEĞİL (bulgu K4, 2026-09-08): brief bu sınıf için 2 demişti, ama 2 bu
+        modülde ZATEN argparse kullanım hatasına ayrılmış (v438 `test_gercek_surecte_soru_
+        eksikse_rc2`) — aynı sayıyı iki farklı reçeteye vermek, sarmalayıcının "komutu yanlış
+        yazdım" ile "indeks modelle ayrışmış" arasında ayrım yapmasını imkânsız kılardı.
+        NEDEN 1 DEĞİL: 1 GİRDİ arızasıdır (dosya yok, uzantı yüklenemedi) ve reçetesi "yolu
+        düzelt / uzantıyı kur"dur; 3'ün reçetesi "indeksi modelle YENİDEN kur"dur.
 
 KULLANIM
     hafiza_ara.py --db /opt/hindsight/edg067/taban.sqlite --model-dir <bge-m3 onnx> \
@@ -48,6 +56,15 @@ _BURASI = pathlib.Path(__file__).resolve().parent
 #: Tablo görünümünde metin kesitinin tavanı (karakter). Terminal satırı bir chunk'ın tamamını
 #: (pencere 1500 karakter) taşıyamaz; `--json` ham metni KESMEDEN verir, yani bedel ödenmez.
 KESIT_TAVANI = 240
+
+#: KIRPMA İŞARETİ — kaç KARAKTERİN düştüğünü söyler ve TAVANIN İÇİNDE durur (bulgu K8,
+#: 2026-09-08). Eskiden kesme SESSİZDİ: okuyucu (operatör ve `meridian/sohbet.py::
+#: _arac_hafiza_ara` üzerinden model) 241 karakterlik bir chunk ile 20.000 karakterlik bir
+#: chunk'ı AYIRT EDEMİYORDU — Yasa 4'ün sessiz-yutma sınıfı ve bedel yasasının "ne kaybettiğini
+#: de ölç" hükmü. BİRİM KARAKTER, satır DEĞİL: `kesit` metni tek satıra KATLAR, orada "satır"
+#: diye bir şey kalmaz. İşaret tavanın İÇİNDE uygulanır, yani v438'in `len(kesit) <=
+#: KESIT_TAVANI` değişmezi KIRILMAZ (ölçüldü: o değişmez `<=`dır, `==` değil).
+KESIT_ISARETI = "…(+%d kr)"
 
 #: `--dosya` süzgeci ISTEMCI TARAFINDADIR: vec0 KNN sorgusu `dosya_yolu`na göre daraltılamaz
 #: (`en_yakin`in SQL'i tek MATCH + k alır). O yüzden k×4 aday çekilip süzülür. Kat SEÇİLDİ,
@@ -98,8 +115,27 @@ KUNYE_ALANLARI = ("uretim_ts", "head_commit", "chunk_sayisi", "dosya_sayisi")
 
 def kesit(metin, tavan=KESIT_TAVANI):
     """Tek satıra katlanmış, tavanla sınırlı metin. Katlama ŞART: chunk'lar markdown gövdesidir
-    ve ham hâlleri satır sonu taşır — tablonun bir satırı sessizce üçe bölünürdü."""
-    return " ".join(str(metin).split())[:tavan]
+    ve ham hâlleri satır sonu taşır — tablonun bir satırı sessizce üçe bölünürdü.
+
+    KIRPMA GÖRÜNÜRDÜR (gerekçe `KESIT_ISARETI`nde): tavana sığan metin OLDUĞU GİBİ döner (sığan
+    her kesite sonek koymak tabloyu gürültüyle doldurur ve sinyali anlamsızlaştırırdı); kırpılan
+    metin `…(+N kr)` ile biter ve TOPLAM uzunluk tavanı AŞMAZ.
+
+    KESİM NOKTASI SABİT NOKTA İLE BULUNUR: işaretin uzunluğu düşen karakter SAYISINA, sayı ise
+    kesim noktasına bağlıdır (öz-göndergeli). Birkaç yineleme rakam basamağı değişse bile
+    oturur; oturmazsa son `[:tavan]` tavanı KOŞULSUZ garanti eder."""
+    duz = " ".join(str(metin).split())
+    if len(duz) <= tavan:
+        return duz
+    kesim = tavan
+    for _ in range(4):
+        aday = tavan - len(KESIT_ISARETI % (len(duz) - kesim))
+        if aday == kesim:
+            break
+        kesim = aday
+    if kesim < 1:
+        return duz[:tavan]
+    return (duz[:kesim] + KESIT_ISARETI % (len(duz) - kesim))[:tavan]
 
 
 def mesafe_yaz(deger):
@@ -116,12 +152,29 @@ def kunye_satiri(kunye):
         "%s=%s" % (alan, kunye.get(alan)) for alan in KUNYE_ALANLARI)
 
 
+#: GÖRÜNÜR KAÇIŞ karakteri — `AYIRAC` (" · ") bir SÜTUN İÇİNDE geçerse `_alanlar`-tarzı
+#: `split(AYIRAC, 4)` ayrıştırıcısı sütunu YANLIŞ yerden keser (bulgu C5a, 2026-09-08).
+#: `bolum` alanı `taban_indeks.py::bolumlere_ayir`'ın ürettiği ham markdown başlığıdır ve depo
+#: kendi başlıklarında (ör. "### C.1 · Limit tavanını...") AYNI diziyi taşıyabilir. Sıradan bir
+#: boşlukla değiştirmek de kaymayı önlerdi ama iki farklı ayıracı görsel olarak AYIRT EDİLEMEZ
+#: kılardı; '‧' (U+2027, FIGURE SPACE değil FIGÜR NOKTASI) okuyucuya "burada bir kaçış var"
+#: sinyalini taşır.
+KACIS_NOKTASI = "‧"
+
+
+def _kacir(deger) -> str:
+    """Bir alan İÇİNDEKİ `AYIRAC` dizisini görünür biçimde kaçırır. YALNIZ SON OLMAYAN
+    sütunlara uygulanır (`kesit` zaten son sütundur ve `split(AYIRAC, 4)`in maxsplit sözleşmesi
+    son parçayı bölmeden bırakır — kaçış orada gereksizdir)."""
+    return str(deger).replace(AYIRAC, f" {KACIS_NOKTASI} ")
+
+
 def tablo_satiri(sira, sonuc):
     return AYIRAC.join((
         str(sira),
         mesafe_yaz(sonuc.get("mesafe")),
-        str(sonuc.get("dosya")),
-        str(sonuc.get("bolum")),
+        _kacir(sonuc.get("dosya")),
+        _kacir(sonuc.get("bolum")),
         kesit(sonuc.get("metin", "")),
     ))
 
@@ -157,6 +210,13 @@ def main(argv=None):
 
     try:
         kunye, ortam, kapat = taban_hazirla(a.db, a.model_dir)
+    except ValueError as e:
+        # ÖLÇÜLEMEZLİK, GİRDİ ARIZASI DEĞİL (bulgu K4, 2026-09-08): `taban_indeks.py::
+        # boyut_dogrula` model/şema ayrışmasını (gömme boyutu beklenenden farklı) BU sınıfla
+        # fırlatır. Reçetesi "indeksi modelle yeniden kur"dur ve rc 1'in ("yolu düzelt")
+        # reçetesinden AYRIDIR — sarmalayıcı ikisini ancak farklı kodlarla ayırabilir.
+        print("ölçülemedi: %s" % e, file=sys.stderr)
+        return 3
     except (RuntimeError, FileNotFoundError, sqlite3.Error) as e:
         # SESSİZ DEĞİL: mesaj AYNEN stderr'e gider ve çıkış kodu 1 olur. Sarmalanmaz, çünkü
         # `vec_baglan` iki arızayı (uzantı desteği yok / sqlite_vec kurulu değil) BİLEREK ayrı
@@ -167,9 +227,14 @@ def main(argv=None):
     try:
         istenen = a.k * ADAY_KATI if a.dosya else a.k
         ham = taban_sorgu(ortam, a.soru, istenen)
+    except ValueError as e:
+        # Aynı ayrım sorgu katmanında da geçerli (K4): `boyut_dogrula` burada da düşebilir ve
+        # ÖLÇÜLEMEZLİK sınıfıdır — önekli, rc 3.
+        print("ölçülemedi: %s" % e, file=sys.stderr)
+        return 3
     except (RuntimeError, sqlite3.Error) as e:
-        # Aynı sınıf, aynı hüküm: sorgu katmanının arızası da girdi arızasıdır (indeks şeması
-        # bozuk, vec0 tablosu yok). Yutulmaz — metin aynen basılır, 1 dönülür.
+        # Girdi arızası (indeks şeması bozuk, vec0 tablosu yok): yutulmaz — metin AYNEN basılır,
+        # 1 dönülür.
         print(str(e), file=sys.stderr)
         return 1
     finally:

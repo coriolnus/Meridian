@@ -1,6 +1,9 @@
 # hindsight-taban-tazele.timer — hindsight-taban-tazele.service'i HAFTADA BİR tetikler.
 #
-# SLOT: PAZAR 03:30 UTC. Üç kısıt sırayla uygulandı; sonuncusu bir BEDEL olarak ödendi.
+# SLOT: PAZAR 08:15 UTC. Üç kısıt sırayla uygulandı; SAAT seçimi bir kez revize edildi — ilk
+# seçimin (terk edilen) tam metni dosya sonundaki TARİHÇE bloğundadır, burada YALNIZ güncel
+# gerekçe anlatılır (tek anlatı — aynı kararın iki çelişen kopyası tek-kaynak yasasının tam
+# yasakladığı durumdur).
 #
 # ============================================================================================
 # (1) DİKKAT BÜTÇESİ DEĞİL, MAKİNE ÇEKİŞMESİ — bu birim kimseye mesaj YAZMAZ.
@@ -16,42 +19,62 @@
 # `@karne` Cumartesi 16:00Z koşar ve `hermes -z` ile dört hükmü söze çevirir. Aynı güne
 # üç saatlik bir ONNX gömme koşumu koymak, haftanın en pahalı iki işini yan yana getirirdi.
 # Pazar, hafta içi seansların HİÇBİRİNE değmeyen ikinci gündür: ABD seansları Pzt–Cum, yani
-# Pazar 03:30Z'de ne kapanış turu ne de aynı-akşam bacağı vardır. Pazartesi açılışına da en
+# Pazar günü boyunca ne kapanış turu ne de aynı-akşam bacağı vardır. Pazartesi açılışına da en
 # uzak noktadır — indeks, işlem haftası başlamadan tazelenmiş olur.
 #
 # ============================================================================================
-# (3) SAAT: 03:30Z — ÖDENMİŞ BİR BEDELLE (bedel yasası)
+# (3) SAAT: 08:15Z — SPRİNT PENCERESİ DIŞI, ÇAKIŞMASIZ (bedel yasası)
 # ============================================================================================
-# KAZANÇ: filodaki takvimli tetiklerin hepsinden uzak. ÖLÇÜLDÜ (birim dosyaları okundu,
-# 2026-09-07): meridian-backup 23:30Z · meridian-aylik-bucket-kopya ayın 3'ü 04:00Z ·
-# hindsight-yedek 03:30Z · @sef 22:00Z · @bekci 10:00Z · @karne Cmt 16:00Z.
+# KAZANÇ: filodaki takvimli tetiklerin hepsinden uzak VE öğrenme sprintinin [22:00, 06:00)
+# penceresinin TAMAMEN DIŞINDA.
 #
-# BEDEL 1 — SPRINT PENCERESİ. `meridian/sprint.py`nin `SPRINT_HOURS = (22, 6)` penceresi
-# [22:00, 06:00) ve 03:30 O PENCERENİN İÇİNDEDİR. Yani otomatik öğrenme sprinti koşuyorsa bu
-# birim onunla CPU paylaşır. Takas bilerek bu yönde yapıldı: pencerenin DIŞINDA kalan her saat
-# ya bir bot slotuna ya ABD seansına ya da yedek işlerine değiyordu, ve sprint tek kesilebilir
-# komşudur (deterministik koordinat inişi — kesilirse bir sonraki gece devam eder, bir teslimat
-# ya da bir emir kaybolmaz). Sınır OMP_NUM_THREADS=2 ile çekilir: birim 4 OCPU'nun yarısından
-# fazlasını almaz. TERSİ DE SAVUNULABİLİRDİ ve ölçüm ucuzdur — ilk koşumdan sonra `uptime` yükü
-# ve sprintin o geceki ilerlemesi bakılırsa takas sayıyla yeniden kurulabilir.
-# ÖNCÜL: reflect kanaryası CPU işleriyle çakışınca load 14,6'da 300 s'de ÖLMÜŞTÜ (2026-09-06) —
-# yani bu bedel bu depoda BİR KEZ gerçekleşmiş bir sınıftır, varsayımsal değil.
+# FİLO ENVANTERİ BAŞI — BAŞKA birimlerin saatleri (ÖLÇÜLDÜ: birim dosyaları okundu, 2026-09-07).
+# Bu blok BU birimin slotunu ANLATMAZ; çakışma kıyasının KAYNAĞIdır ve çivi burayı saat
+# denetiminden MUAF tutar (aksi hâlde envanter, tek-anlatı kuralı yüzünden ölçülmüş sayılarını
+# kaybederdi — bedel yasası, bulgu 2026-09-08):
+#   meridian-backup 23:30Z · meridian-aylik-bucket-kopya ayın 3'ü 04:00Z · @sef 22:00Z ·
+#   @bekci 10:00Z · @karne Cmt 16:00Z · skill-gorus 07:30Z (kısa) ·
+#   hindsight-yedek.timer HER GÜN 03:30Z — sayı O BİRİMİN KENDİ DOSYASINDAN okundu; bu birimle
+#   aynı dakikaya DÜŞMÜYOR ve 03:30'un BU birim için terk gerekçesi aşağıdaki TARİHÇE'dedir.
+# FİLO ENVANTERİ SONU
 #
-# BEDEL 2 — hindsight-yedek.timer DA 03:30 UTC'dir, ama HER GÜN. Yani haftada bir bu iki birim
-# aynı dakikada tetiklenir. Çakışma KABUL EDİLDİ: yedek bir `pg_dump | gzip`tir (G/Ç ağırlıklı,
-# dakikalar), tazeleme CPU ağırlıklıdır — farklı kaynaklar. Ayrıca `RandomizedDelaySec=300`
-# ikisini pratikte ayırır. Dakikayı kaydırarak "çözmek" mümkündü ama gerekçesiz bir sayı
-# üretirdi; çakışma ADIYLA yazıldı, saklanmadı.
+# 08:15Z yukarıdakilerin hiçbiriyle aynı dakikada değil ve sessiz bir bantta (06:00–09:00) durur:
+# skill-gorus 07:30Z (kısa) bitmiş olur, bekci 10:00Z'ye 1 sa 45 dk pay kalır.
+#
+# BEDEL: bkz. aşağıdaki `Persistent=true` yorumu — TELAFİ koşumu kaçan bir tetiği hafta içine,
+# yani ABD seansının açık olduğu bir saate taşıyabilir. Bu birim deftere yazmaz, yalnız indeks
+# kurar — en kötü hâl yavaşlamış bir seanstır, aylarca bayat kalan bir indeksten iyidir.
 #
 # ÖLÇÜLEMEYEN, ve bu yüzden HÜKME SOKULMADI: A1'in TZ'si (sprint penceresi naive `datetime.now()`
 # ile, yani SUNUCU YERELİYLE karşılaştırılıyor; buradaki `UTC` mutlak). Yanlışsa bedel küçük —
 # iki iş aynı saate düşer ve ikisi de yavaşlar — doğrulaması ucuz: `timedatectl` bir kez okunur.
+#
+# ============================================================================================
+# TARİHÇE (terk edildi, neden)
+# ============================================================================================
+# İlk seçim PAZAR 03:30 UTC'ydi. Gerekçesi yukarıdaki (3)'teki KAZANÇ kümesiyle aynıydı
+# (filodaki takvimli tetiklerin hepsinden uzaklık). BEDELİ İKİ TANEYDİ VE İKİSİ DE KABUL
+# EDİLMİŞTİ: (a) 03:30, öğrenme sprintinin [22:00, 06:00) penceresinin İÇİNDEYDİ — sprint tek
+# kesilebilir komşu sayılıp takas bilerek bu yönde yapılmıştı; (b) hindsight-yedek.timer DA HER
+# GÜN 03:30 UTC'dir, yani haftada bir bu iki birim aynı dakikada tetiklenirdi (yedek G/Ç ağırlıklı,
+# tazeleme CPU ağırlıklı — farklı kaynaklar, ayrıca RandomizedDelaySec=300 ikisini pratikte
+# ayırır — çakışma o zaman KABUL EDİLMİŞTİ, saklanmamıştı).
+#
+# TERK GEREKÇESİ (Rol-1 2026-09-07 19:0xZ, hafıza: reflect-kanary-sessiz-saat + A1 timer
+# envanteri): reflect kanaryası CPU işleriyle çakışınca load 14,6'da 300 s'de ÖLMÜŞTÜ
+# (2026-09-06) — yani (a) bedeli varsayımsal değil, bu depoda BİR KEZ GERÇEKLEŞMİŞ bir sınıf.
+# Bu ölçüm 03:30'u TERK ETTİRDİ; yeni slot yukarıdaki (3)'te anlatılan 08:15Z'dir.
+# ============================================================================================
+# TARİHÇE SONU
+# ============================================================================================
+
 [Unit]
 Description=EDG-067 taban indeksi tazeleme tetigi (HAFTALIK — Pazar, seans disi)
 
-# SLOT HÜKMÜ (Rol-1 2026-09-07 19:0xZ, hafıza: reflect-kanary-sessiz-saat + A1 timer envanteri): 03:30Z TERK EDİLDİ — sprint penceresi
-# [22:00,06:00) içindeydi ve hindsight-yedek.timer da her gün 03:30Z (aynı dakikada pg_dump + gömme = CPU/IO çakışması; reflect kanaryası
-# load 14,6'da ölmüştü). Pazar 08:15Z: seans yok, sprint dışı, skill-gorus 07:30Z (kısa) bitmiş, bekci 10:00Z'ye 1 sa 45 dk pay.
+# SLOT HÜKMÜ (Rol-1 2026-09-07 19:0xZ, hafıza: reflect-kanary-sessiz-saat + A1 timer envanteri):
+# önceki seçim (tam metni yukarıdaki TARİHÇE bloğunda) sprint penceresi ve hindsight-yedek
+# çakışması yüzünden TERK EDİLDİ. Pazar 08:15Z: seans yok, sprint dışı, skill-gorus 07:30Z
+# (kısa) bitmiş, bekci 10:00Z'ye 1 sa 45 dk pay.
 [Timer]
 OnCalendar=Sun *-*-* 08:15:00 UTC
 # TELAFİ, VE BEDELİ AÇIKÇA ÖDENMİŞ. KAZANÇ: makine Pazar kapalıysa kaçan tetik sessizce

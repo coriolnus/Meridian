@@ -40,7 +40,9 @@ bilmediğimiz bir şeyi bilir gibi göstermek olurdu.
 `dikis` VE ÖLÇÜLEMEZLİK. `ayarlama_olcegi` bugün arşivde HER ZAMAN NULL'dur, çünkü canlı CSV
 önbelleğinde o sütun YOKTUR (Task-1 manifestinin `eksik_sutunlar` beyanı). Bu durumda alt komut
 BOŞ SONUÇ DÖNDÜRMEZ gibi davranmaz — "ÖLÇÜLEMEDİ" beyanını manifestten okuyup stderr'e basar ve
-0 satır gösterir. Sessiz boş sonuç, "dikiş yok" YALANIdır.
+0 satır gösterir. Sessiz boş sonuç, "dikiş yok" YALANIdır. BEYANIN KAPSAMI ARŞİVİN TAMAMIDIR,
+seçilen küme DEĞİL (bulgu K1, 2026-09-08): süzülmüş kümede sayan bir kapı, ay sınırındaki gerçek
+bir ölçek kesilmesini "cevaplanamaz" diye örterdi — cevap tam da düzeltilmiş sorguda dururken.
 
 SELECT MUHAFIZI İTHALDİR. `--sql` yalnız TEK bir SELECT kabul eder ve kapının kendisi
 `ops/olay_sorgu.py`nin `select_kapisi` fonksiyonudur (DuckDB'nin kendi ayrıştırıcısıyla
@@ -127,9 +129,18 @@ def gorunum_sql(dosyalar: list[pathlib.Path]) -> str:
             f"FROM read_parquet({liste}, hive_partitioning=false, filename=true)")
 
 
-def _suzgec(sembol: str | None, ay: str | None) -> tuple[str, list]:
-    """(WHERE parçası, parametreler). Süzgeç SQL'e METİN olarak gömülmez — argv'den gelen bir
-    sembol adı sorguyu bozabilirdi."""
+def _suzgec_kosullari(sembol: str | None, ay: str | None) -> tuple[list[str], list]:
+    """SÜZGEÇ GRAMERİ — TEK KAYNAK (bulgu K6, 2026-09-08). (koşul listesi, parametreler).
+
+    `kapsam`/`bosluk`/`_kapsam_disi_uyar` bu grameri `_suzgec` metnini üreterek kullanır;
+    `dikis` ise koşulları DIŞ `WHERE`ine kendisi diziyor (pencere hesabı içeride, süzgeç
+    dışarıda). `olcek_olculdu_mu` bu grameri BİLEREK kullanmaz: kapı TÜM arşivde ölçer (K1,
+    2026-09-08 — süzülmüş kümede sayan kapı ay-sınırı dikişini kaçırıyordu). İki tüketici, İKİ FARKLI BİÇİM ama TEK gramer: kurallar burada
+    yazılırsa `--yil` gibi üçüncü bir süzgeç ya da sembol normalizasyonundaki bir değişiklik
+    tüm alt komutlara AYNI ANDA iner. Kopyalansaydı `dikis` sessizce eski kuralla süzerdi ve
+    hiçbir çivi bunu görmezdi.
+
+    Süzgeç SQL'e METİN olarak gömülmez — argv'den gelen bir sembol adı sorguyu bozabilirdi."""
     kosullar, parametreler = [], []
     if sembol:
         kosullar.append("sembol = ?")
@@ -137,6 +148,12 @@ def _suzgec(sembol: str | None, ay: str | None) -> tuple[str, list]:
     if ay:
         kosullar.append("ay = ?")
         parametreler.append(ay)
+    return kosullar, parametreler
+
+
+def _suzgec(sembol: str | None, ay: str | None) -> tuple[str, list]:
+    """(WHERE parçası, parametreler) — `_suzgec_kosullari`nın METİN sarmalayıcısı."""
+    kosullar, parametreler = _suzgec_kosullari(sembol, ay)
     return (" WHERE " + " AND ".join(kosullar)) if kosullar else "", parametreler
 
 
@@ -151,25 +168,49 @@ def sorgu_kapsam(con: duckdb.DuckDBPyConnection, sembol, ay, n) -> list[tuple]:
         f"{nerede} GROUP BY sembol ORDER BY sembol LIMIT {int(n)}", parametreler).fetchall()
 
 
-def olcek_olculdu_mu(con: duckdb.DuckDBPyConnection, sembol, ay) -> int:
-    """Seçilen kümede `ayarlama_olcegi` DOLU kaç satır var? 0 ise dikiş sorusu ÖLÇÜLEMEZ."""
-    nerede, parametreler = _suzgec(sembol, ay)
-    ek = " AND ayarlama_olcegi IS NOT NULL" if nerede else " WHERE ayarlama_olcegi IS NOT NULL"
-    return int(con.execute(f"SELECT count(*) FROM barlar{nerede}{ek}",
-                           parametreler).fetchone()[0])
+def olcek_olculdu_mu(con: duckdb.DuckDBPyConnection) -> int:
+    """ARŞİVİN TAMAMINDA `ayarlama_olcegi` DOLU kaç satır var? 0 ise dikiş sorusu ÖLÇÜLEMEZ.
+
+    KAPI SÜZGEÇSİZDİR (bulgu K1, 2026-09-08). Eskiden `--sembol`/`--ay` ile SÜZÜLMÜŞ kümede
+    sayıyordu ve bu, `sorgu_dikis`in pencereyi tüm seriye taşıyarak kapattığı sınıfı KAPIDAN
+    geri sokuyordu: `ayarlama_olcegi` Ocak'ta DOLU, Şubat'ta hiç yazılmamışsa (kısmi geri-dolum)
+    `--ay <Şubat>` süzülmüş kümede 0 DOLU satır sayar, "bu arşivde cevaplanamaz" denir ve
+    `sorgu_dikis` HİÇ çağrılmazdı — oysa Şubat'ın ilk seansı GERÇEK bir dikiştir
+    (onceki_olcek=1.0 → olcek=NULL). Kapı ile sorgunun ölçtüğü küme artık AYNI kaynaktan
+    (süzgeçsiz `barlar`) gelir; beyan yalnız "arşivin TAMAMINDA hiç dolu ölçek yok" hâlinde
+    doğrudur ve yalnız o hâlde basılır."""
+    return int(con.execute(
+        "SELECT count(*) FROM barlar WHERE ayarlama_olcegi IS NOT NULL").fetchone()[0])
 
 
 def sorgu_dikis(con: duckdb.DuckDBPyConnection, sembol, ay, n) -> list[tuple]:
     """`ayarlama_olcegi` bir ÖNCEKİ BARA göre değişen günler. İlk bar dikiş DEĞİLDİR (öncesi
-    yok — `onceki_olcek IS NULL` satırı hüküm taşımaz, ölçülemezlik taşır)."""
-    nerede, parametreler = _suzgec(sembol, ay)
+    yok — `onceki_olcek IS NULL` satırı hüküm taşımaz, ölçülemezlik taşır).
+
+    LAG PENCERESİ TÜM (FİLTRESİZ) SERİ ÜZERİNDE HESAPLANIR; `--sembol`/`--ay` yalnız SONUÇ
+    satırlarına (pencere hesaplandıktan SONRA, dış WHERE'de) uygulanır (bulgu C1, 2026-09-08).
+    Filtre İÇERİ alınsaydı (`FROM barlar{nerede}` ile pencereden ÖNCE) `--ay` ay-sınırındaki
+    GERÇEK bir dikişi kaçırırdı: filtrelenmiş kümede ayın ilk günü artık o PARTITION'ın kendisi
+    ilk satırı olur, `onceki_olcek` NULL çıkar ve dış `WHERE onceki_olcek IS NOT NULL` bu satırı
+    SESSİZCE elerdi — 0 satır "bu ayda dikiş yok" sanılırdı, oysa yalnız filtre yüzünden
+    GÖRÜNMEZ olmuştur. `PARTITION BY sembol` çok-sembollü sahnede de korunur: bir sembolün SON
+    günü ile başka bir sembolün İLK günü asla dikiş SAYILMAZ (pencere sembol sınırını aşmaz).
+
+    DIŞ SÜZGEÇ GRAMERİ KOPYALANMAZ, `_suzgec_kosullari`ndan alınır (bulgu K6, 2026-09-08):
+    ilk düzeltme `sembol = ?` / `ay = ?` kurallarını buraya ELLE kopyalamıştı ve o an aynı
+    gerçeğin ikinci kaynağı doğdu — `_suzgec`e eklenecek üçüncü bir süzgeç dört alt komutta
+    uygulanır, `dikis`te SESSİZCE uygulanmazdı (tek-kaynak yasası). Biçim ayrı (burada dış
+    WHERE'e ekleniyor, orada metin üretiliyor), GRAMER tek."""
+    suzgec_kosullari, dis_parametreler = _suzgec_kosullari(sembol, ay)
+    dis_kosullar = ["onceki_olcek IS NOT NULL",
+                    "olcek IS DISTINCT FROM onceki_olcek"] + suzgec_kosullari
     return con.execute(
         "SELECT sembol, tarih, onceki_olcek, olcek FROM ("
-        "  SELECT sembol, date AS tarih, ayarlama_olcegi AS olcek, "
+        "  SELECT sembol, ay, date AS tarih, ayarlama_olcegi AS olcek, "
         "         lag(ayarlama_olcegi) OVER (PARTITION BY sembol ORDER BY date) AS onceki_olcek "
-        f"  FROM barlar{nerede}) AS _d "
-        "WHERE onceki_olcek IS NOT NULL AND olcek IS DISTINCT FROM onceki_olcek "
-        f"ORDER BY sembol, tarih LIMIT {int(n)}", parametreler).fetchall()
+        "  FROM barlar) AS _d "
+        f"WHERE {' AND '.join(dis_kosullar)} "
+        f"ORDER BY sembol, tarih LIMIT {int(n)}", dis_parametreler).fetchall()
 
 
 def takvim_yukle(con: duckdb.DuckDBPyConnection) -> tuple[int, tuple]:
@@ -305,7 +346,8 @@ def main(argv: list[str] | None = None) -> int:
                 if args.sorgu == "kapsam":
                     satirlar = sorgu_kapsam(con, args.sembol, args.ay, n)
                 elif args.sorgu == "dikis":
-                    dolu = olcek_olculdu_mu(con, args.sembol, args.ay)
+                    # SÜZGEÇSİZ kapı (K1): beyan yalnız arşivin TAMAMI boşken doğrudur.
+                    dolu = olcek_olculdu_mu(con)
                     if dolu == 0:
                         _olculemedi_beyani(dizin)
                         satirlar = []
@@ -347,7 +389,7 @@ def _olculemedi_beyani(dizin: pathlib.Path) -> None:
               file=sys.stderr)
         eksik = {}
     ilgili = sorted({s for s, sutunlar in eksik.items() if "ayarlama_olcegi" in (sutunlar or [])})
-    print("ÖLÇÜLEMEDİ: seçilen kümede `ayarlama_olcegi` DOLU tek satır yok — dikiş sorusu bu "
+    print("ÖLÇÜLEMEDİ: arşivin TAMAMINDA `ayarlama_olcegi` DOLU tek satır yok — dikiş sorusu bu "
           "arşivde cevaplanamaz. Gerekçe kaynağı manifestteki `eksik_sutunlar` beyanıdır "
           f"(sütunu eksik sembol sayısı: {len(ilgili)}); canlı CSV önbelleğinde o sütun YOKTUR. "
           "0 satır 'dikiş yok' DEMEK DEĞİLDİR.", file=sys.stderr)

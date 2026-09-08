@@ -69,8 +69,15 @@ def satir_say(yol):
     korumaya çalıştığı arızada AÇARDI (eski 100, "yeni 0" → oran 0 → bırak; ama tablo hiç
     okunamadıysa hüküm "bırak" değil "ölçemedim"dir)."""
     yol = pathlib.Path(yol)
+    # KAÇIŞSIZ YOL ENJEKSİYONU KAPANDI (bulgu C5c, 2026-09-08): `"file:%s?mode=ro" % yol` yolu
+    # HİÇBİR kaçışlamadan URI gövdesine gömüyordu — yol bir `?`/`#` taşırsa (`/tmp/x?mode=rwc`
+    # gibi) sonuç çok-anlamlı bir dizgeye (`file:/tmp/x?mode=rwc?mode=ro`) dönüşür ve SQLite'ın
+    # URI ayrıştırıcısı bunu beklenmedik biçimde yorumlayabilir — "terfi kararı hedefe ASLA
+    # yazmaz" garantisini (yukarıdaki SAYIM_TABLOSU yorumu) tehlikeye atardı. `Path.as_uri()`
+    # RFC 3986 percent-encoding uygular; yol içeriğinden bağımsız salt-okunur açılış sağlar.
     try:
-        db = sqlite3.connect("file:%s?mode=ro" % yol, uri=True)
+        uri = yol.resolve().as_uri() + "?mode=ro"
+        db = sqlite3.connect(uri, uri=True)
     except sqlite3.Error as e:
         raise ValueError("SATIR SAYIMI ÖLÇÜLEMEDİ: %s açılamadı (%s: %s)"
                          % (yol, type(e).__name__, e)) from e
@@ -89,7 +96,11 @@ def terfi_et(yeni, hedef, onceki_ek=ONCEKI_EK):
     SIRA ÖNEMLİ. Önce `os.link` (sert bağ), sonra `os.replace`: bu sırada hedef ADI hiçbir an
     KAYBOLMAZ — eşzamanlı bir arama koşumu ya eski ya yeni indeksi görür, "dosya yok"u değil.
     Ters sırada (`mv hedef onceki` + `mv yeni hedef`) araya düşen her okuyucu FileNotFound alırdı
-    ve o pencere haftada bir, gecenin 03:30'unda, kimsenin bakmadığı anda açılırdı."""
+    ve o pencere haftada bir, tetiğin düştüğü dakikada, kimsenin bakmadığı anda açılırdı. SLOT
+    SAATİ BURAYA YAZILMAZ (bulgu K7, 2026-09-08): saat `deploy/hindsight/hindsight-taban-tazele
+    .timer`ın `OnCalendar=` yönergesinde yaşar ve buradaki üçüncü bir kopya, o dosyada slot
+    değişince sessizce eskirdi — nitekim ESKİMİŞTİ: burada terk edilmiş bir slot saati yazılıydı
+    ve timer'daki gerçek slotla ayrışmıştı."""
     yeni, hedef = pathlib.Path(yeni), pathlib.Path(hedef)
     onceki = hedef.with_name(hedef.name + onceki_ek)
     if hedef.exists():

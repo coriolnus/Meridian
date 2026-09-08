@@ -45,8 +45,9 @@
 # ==================================================================================================
 #   · CPU: adım [2] 3.582 chunk'ı bge-m3 ONNX ile gömer. A1 4 OCPU; OMP_NUM_THREADS=2 yarısını
 #     bırakır. Süre ÖLÇÜLMEDİ (yerelde onnxruntime yok) — taban künyesindeki `kurulum_suresi_s`
-#     ilk koşumdan sonra gerçek sayıyı verir. Slot (Pazar 03:30Z) öğrenme sprintinin
-#     [22:00, 06:00) penceresinin İÇİNDEDİR; gerekçe ve takas timer dosyasında.
+#     ilk koşumdan sonra gerçek sayıyı verir. Slot (Pazar 08:15Z) öğrenme sprintinin
+#     [22:00, 06:00) penceresinin DIŞINDADIR; güncel gerekçe VE terk edilen ilk seçimin
+#     TARİHÇESİ timer dosyasındadır (tek kaynak — burada tekrarlanmaz).
 #   · DİSK: tazeleme sırasında iki tam indeks (taban.sqlite + .yeni) ve terfiden sonra iki tam
 #     indeks (taban.sqlite + .onceki) yan yana durur, yani tepe kullanım indeks boyutunun İKİ
 #     KATIdır. `.onceki` TEK sürümdür (üçüncü kopya birikmez) — A1 diski sınırlı bir kaynak.

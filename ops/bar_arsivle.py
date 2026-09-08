@@ -83,13 +83,30 @@ kalır ama manifestte kaydı olmaz — yani bir sonraki koşum onları "yeni" sa
 Bu bilinçli: yarım bir manifest, taşımadığı bir "doğrulandı" iddiası taşırdı; yeniden yazmanın
 bedeli ise yalnız CPU'dur (çıktı içerik olarak aynıdır).
 
-IDEMPOTENCY KIYASI = MANİFEST KAYDI + DOSYANIN SHA256'SI. Bir (sembol, parça) ancak şunların HEPSİ
-doğruysa "atlandı" olur: hedef dosya var · manifestte kaydı var · kayıttaki satır/ilk/son/kapanış
-ölçümü BUGÜNKÜ CSV'nin sanitize edilmiş ölçümüyle aynı · kayıttaki sha256 diskteki dosyanın
-sha256'sı. Son koşul dosyanın elle değiştirilmediğini, öncekiler KAYNAĞIN değişmediğini ölçer.
-BİLİNEN BEDEL: parquet baytları DuckDB sürümüyle değişebilir, yani sürüm yükseltmesinden sonraki
-ilk koşum her ayı YENİDEN YAZAR. Kardeş `ops/olay_sikistir.py` bu yüzden bayt kıyasından kaçınır
-— orada yanlış bir KIRMIZI doğardı; burada sonuç yalnız bir yeniden yazımdır ve arşiv değişmez.
+IDEMPOTENCY KIYASI = MANİFEST KAYDI + KAYNAK İÇERİK HASH'İ + DOSYANIN SHA256'SI. Bir (sembol,
+parça) ancak şunların HEPSİ doğruysa "atlandı" olur: hedef dosya var · manifestte kaydı var ·
+kayıttaki `kaynak_hash` BUGÜNKÜ CSV'nin sanitize edilmiş İÇERİĞİNİN (TÜM sütunlar, satır satır)
+hash'iyle aynı · kayıttaki sha256 diskteki dosyanın sha256'sı. Son koşul dosyanın elle
+değiştirilmediğini, öncekiler KAYNAĞIN değişmediğini ölçer. KIYAS İÇERİK HASH'İNE DAYANIR, yalnız
+dört ÖZET istatistiğe (satır/ilk/son/kapanış toplamı) DEĞİL (bulgu C3, 2026-09-08): toplamı
+KORUYAN bir OHLCV revizyonu (ör. bir gün open +1.0, başka gün -1.0) eski dört-özet kıyasını
+YANILTIRDI — satır sayısı, ilk/son gün ve kapanış toplamı DEĞİŞMEDEN kalırdı ve arşiv düzeltilmiş
+veriyi asla almazdı; içerik hash'i HER hücre değişikliğini yakalar. MANİFEST KAYDI `kaynak_hash` TAŞIR, `kapanis_toplami` TAŞIMAZ: ikincisinin
+manifestteki okuyucusu kalmadı ve okunmayan artefakt üretilmemişten farksızdır (Yasa 6, bulgu
+K5c 2026-09-08); doğrulamadaki kıyası AYNEN sürüyor. BİLİNEN BEDEL: parquet
+baytları DuckDB sürümüyle değişebilir, yani sürüm yükseltmesinden sonraki ilk koşum her ayı
+YENİDEN YAZAR.
+
+GÖÇ BEDELİ, BEYANLI (bedel yasası — bulgu K5b, 2026-09-08). `kaynak_hash` alanı OLMAYAN bir
+manifest kaydı (sürüm 2026-09-07.2 ve öncesi) kıyası GEÇEMEZ, yani sözleşme değişikliğinden
+sonraki İLK `--uygula` arşivin TAMAMINI bir kez yeniden yazar — A1'de ölçüldü (2026-09-07
+manifesti, 260 sembol, ~23 MB) ve manifest hepsi-ya-hiç yazıldığı için o turda TEK bir doğrulama
+farkı bütün turu düşürür. Koşum bunu SESSİZ yapmaz: `kaynak_hash`siz kayıtların sayısı ve
+gerekçesi ("eski sözleşme … yeniden yazılıyor") koşum sonunda stderr'e düşer, yoksa 260 satırlık
+"yazıldı" listesi arıza gibi okunurdu. İKİNCİ BEDEL: hash `pandas.util.hash_pandas_object`in
+BAYT BİÇİMİNE bağlıdır (yerelde pandas 3.0.3, 2026-09-08), yani bir pandas yükseltmesi
+aynı tam yeniden yazımı bir kez daha tetikler — DuckDB sürüm bedeliyle aynı sınıf, aynı kabul. Kardeş `ops/olay_sikistir.py` bu yüzden bayt kıyasından kaçınır — orada yanlış bir
+KIRMIZI doğardı; burada sonuç yalnız bir yeniden yazımdır ve arşiv değişmez.
 
 WORKER KOŞARKEN GÜVENLİDİR: CSV'ler yalnız OKUNUR, hedef AYRI bir dizindir (`state/barlar/`) ve
 her dosya önce aynı dizinde geçici bir ada yazılıp `os.replace` ile yerine konur — okuyucu ya
@@ -144,7 +161,10 @@ from ops import olay_sorgu                                   # noqa: E402
 #: dosyanın kendisinden okunabilsin (şema değişirse bu artar ve eski arşiv AYIRT EDİLEBİLİR).
 #: 2026-09-07.2 — bölümleme seçeneği + manifestin `bolum` beyanı (sürüm 2026-09-07.1 YALNIZ
 #: ay/sembol yerleşimi yazardı ve manifestinde `bolum` alanı YOKTU).
-ARAC_SURUMU = "2026-09-07.2"
+#: 2026-09-08.1 — kayıtlara `kaynak_hash` GİRDİ, `kapanis_toplami` ÇIKTI (bulgu K5, 2026-09-08).
+#: Aynı sınıf değişiklik: idempotency kıyasının sözleşmesi değişti, yani bir kaydın HANGİ
+#: kıyasla doğrulandığı ancak bu damgadan ayırt edilebilir. Göç bedeli modül başlığında.
+ARAC_SURUMU = "2026-09-08.1"
 ARAC_ADI = "ops/bar_arsivle.py"
 
 MANIFEST_ADI = "manifest.json"
@@ -187,6 +207,15 @@ BASLIKLAR = ["sembol", "parca", "satir", "bayt", "durum", "dosya"]
 #: `sum(close)` kıyasının toleransı — gerekçe modül başlığında ("DOĞRULAMA TAŞIYICIDIR").
 KAPANIS_REL_TOL = 1e-9
 
+#: `_olc`un ürettiği ama MANİFESTE YAZILMAYAN ölçümler (Yasa 6 — okuyucusuz yazım yok).
+#: `kapanis_toplami` yazım-anı doğrulamasının (`_dogrula`) taşıyıcı ikinci kanıtıdır ve orada
+#: BELLEK İÇİNDE okunur; idempotency kıyası `kaynak_hash` + dosya `sha256`ına geçtikten sonra
+#: (bulgu C3, 2026-09-08) manifestteki kopyasının okuyucusu KALMADI — ölçüldü (depo geneli grep,
+#: 2026-09-08: alan yalnız bu dosyada üretilip yine bu dosyada kıyaslanıyor; manifestten okuyan
+#: kod ya da çivi YOK). Her koşum her sembol için okunmayan bir alan yazıyordu; alan DEFTERDEN
+#: düşürüldü, DOĞRULAMADAN değil (bulgu K5c, 2026-09-08).
+MANIFEST_DISI_OLCUMLER = ("kapanis_toplami",)
+
 
 # ---------------------------------------------------------------------------------------------
 # Kaynak tarafı
@@ -219,13 +248,21 @@ def kaynak_dosyalari(kaynak: pathlib.Path,
 
 
 def csv_oku(yol: pathlib.Path, sembol: str) -> tuple[pd.DataFrame, list[str]]:
-    """CSV → `sanitize_bars` çıktısı + o dosyada EKSİK olan arşiv sütunları (ölçülür, sayılmaz).
+    """CSV → `sanitize_bars` çıktısı + o çıktıda EKSİK olan arşiv sütunları (ölçülür, sayılmaz).
 
     `parse_dates=["date"]` canlı okuma yolunun (`load_bars`) yaptığının aynısıdır: `sanitize_bars`
-    komşuluk ve takvim kıyaslarını tarih tipinde yapar, metin üzerinde yapamaz."""
+    komşuluk ve takvim kıyaslarını tarih tipinde yapar, metin üzerinde yapamaz.
+
+    `eksik` SANİTİZE EDİLMİŞ çerçeveden ölçülür, HAM `read_csv` çıktısından DEĞİL (bulgu K5d,
+    2026-09-08). Manifestin `eksik_sutunlar` beyanı ile parquet'in NULL sütunları AYNI soruya
+    verilen İKİ cevaptır ve `_secim_sql` CAST kararını sanitize edilmiş çerçeveden alır: ikisi
+    ayrı çerçeveden ölçülseydi `sanitize_bars` bir gün bir sütun düşürdüğünde manifest "eksik
+    değil" derken parquet NULL yazardı — C2'nin kapattığını iddia ettiği tam senaryo, sessizce
+    geri gelirdi (tek-kaynak yasası). Bugün ayrışmıyor olmaları YAZILI OLMAYAN bir değişmezdi;
+    artık türetme TEK noktadadır ve çivisi vardır."""
     ham = pd.read_csv(yol, parse_dates=["date"])
-    eksik = sorted(set(SUTUNLAR) - set(ham.columns))
     temiz, _rapor = sanitize_bars(ham, sembol)
+    eksik = sorted(set(SUTUNLAR) - set(temiz.columns))
     return temiz, eksik
 
 
@@ -302,13 +339,22 @@ def temizle_uygula(hedef: pathlib.Path, yollar: list[pathlib.Path]) -> tuple[int
 # Parquet yazımı ve doğrulama
 # ---------------------------------------------------------------------------------------------
 
-def _secim_sql(kaynak_adi: str) -> str:
+def _secim_sql(kaynak_adi: str, mevcut_sutunlar) -> str:
     """Şemayı DONDURAN SELECT. Var olmayan sütun `CAST(NULL AS <tip>)` olur — sıfır ya da
-    yer tutucu bir değer DEĞİL (uydurma yasağı)."""
+    yer tutucu bir değer DEĞİL (uydurma yasağı).
+
+    `mevcut_sutunlar` ÇAĞIRANIN DataFrame'inin GERÇEK sütun kümesidir — statik `CSV_SUTUNLARI`
+    sabitine BAKILMAZ (bulgu C2, 2026-09-08): o sabit `csv_oku`'nun ölçtüğü `eksik` kümesinden
+    BAĞIMSIZ bir ikinci karar noktasıydı ve ileride CSV'ye gerçek bir `kaynak`/`ayarlama_olcegi`
+    sütunu eklenirse, manifest onu 'eksik değil' diye doğru beyan ederken bu fonksiyon yine de
+    sabit tuple'a bakıp NULL yazardı — iki karar aynı soruyu bağımsız cevaplayıp sessizce
+    ayrışırdı (tek-kaynak yasası). `CSV_SUTUNLARI` artık YALNIZ dokümantasyon/varsayılan amaçlı
+    durur; CAST kararı burada TÜRETİLİR."""
+    mevcut = set(mevcut_sutunlar)
     parcalar = []
     for s in SUTUNLAR:
         tip = SUTUN_TIPLERI[s]
-        if s in CSV_SUTUNLARI:
+        if s in mevcut:
             parcalar.append(f"CAST({s} AS {tip}) AS {s}")
         else:
             parcalar.append(f"CAST(NULL AS {tip}) AS {s}")
@@ -338,8 +384,9 @@ def _parquet_yaz(con: duckdb.DuckDBPyConnection, df: pd.DataFrame,
     hedef_dosya.parent.mkdir(parents=True, exist_ok=True)
     con.register("_bar_kaynak", df)
     try:
-        con.execute(f"COPY ({_secim_sql('_bar_kaynak')}) TO {olay_sorgu.sql_metni(hedef_dosya)} "
-                    "(FORMAT PARQUET, COMPRESSION ZSTD)")
+        con.execute(
+            f"COPY ({_secim_sql('_bar_kaynak', df.columns)}) TO "
+            f"{olay_sorgu.sql_metni(hedef_dosya)} (FORMAT PARQUET, COMPRESSION ZSTD)")
     finally:
         con.unregister("_bar_kaynak")
     return hedef_dosya.stat().st_size
@@ -361,6 +408,31 @@ def _dogrula(beklenen: dict, olculen: dict) -> str | None:
     if a is not None and not math.isclose(a, b, rel_tol=KAPANIS_REL_TOL):
         return f"kapanış toplamı tutmadı — CSV(sanitize) {a!r}, parquet {b!r}"
     return None
+
+
+def kaynak_icerik_hash(dilim: pd.DataFrame) -> str:
+    """(sembol, parça) KAYNAĞININ İÇERİK hash'i — TÜM sütunlar, `date`e göre sıralı satır satır
+    (bulgu C3, 2026-09-08). `atlanir_mi` kıyası buna dayanır: satır/ilk/son/kapanış TOPLAMI
+    özet istatistikleri AYNI kalıp tek bir hücreyi (ör. bir günün `open`/`high`/`low`/`volume`
+    değeri) değiştiren bir OHLCV revizyonu o dört özeti KORUR ama bu hash'i DEĞİŞTİRİR —
+    `pandas.util.hash_pandas_object` her sütunun ham DEĞERLERİNİ (metne çevirmeden, biçim
+    belirsizliği taşımadan) hash'ler, yani kayan nokta biçimlendirme farkı gürültü ÜRETMEZ.
+
+    AKIŞA SÜTUN ADI VE UZUNLUĞU DA GİRER (bulgu K5a, 2026-09-08). Yalnız değer hash'lenirse üst
+    akış CSV yazıcısının bir yeniden adlandırması (`volume` → `hacim`, DEĞERLER AYNI) bu hash'i
+    DEĞİŞTİRMEZ: kapı "atlandı" der, parquet yeniden yazılmaz, ama `main()` `eksik_sutunlar`ı
+    koşulsuz günceller — manifest "volume eksik" derken parquet gerçek volume taşır ve o beyanın
+    okuyucusu VARDIR (`ops/bar_sorgu.py::_olculemedi_beyani`). Ad `\0` ile sonlandırılır, uzunluk
+    8 baytlık sabit alanla önce yazılır: ikisi de ALAN AYRIMIdır — bitişik iki sütunun bayt
+    akışının başka bir sütun kümesiyle çakışması (sınır belirsizliği) böyle kapanır."""
+    sirali = dilim.sort_values("date").reset_index(drop=True)
+    h = hashlib.sha256()
+    for kolon in sirali.columns:
+        degerler = pd.util.hash_pandas_object(sirali[kolon], index=False).values.tobytes()
+        h.update(str(kolon).encode("utf-8") + b"\0")
+        h.update(len(degerler).to_bytes(8, "little"))
+        h.update(degerler)
+    return h.hexdigest()
 
 
 def sha256_dosya(yol: pathlib.Path) -> str:
@@ -452,18 +524,18 @@ def manifest_guncelle(hedef: pathlib.Path, yeni_kayitlar: dict, eksik_sutunlar: 
                 json.dumps(mevcut, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
 
-def atlanir_mi(kayit: dict | None, beklenen: dict, hedef_dosya: pathlib.Path) -> bool:
+def atlanir_mi(kayit: dict | None, kaynak_hash: str, hedef_dosya: pathlib.Path) -> bool:
     """Bu (sembol, parça) yeniden yazılmadan geçilebilir mi? Koşullar modül başlığında
-    ("IDEMPOTENCY KIYASI") sayılıdır — hepsi birden."""
+    ("IDEMPOTENCY KIYASI") sayılıdır — hepsi birden.
+
+    KIYAS `kaynak_hash`e (İÇERİK hash'i, `kaynak_icerik_hash`) DAYANIR — dört özet istatistiğe
+    (satır/ilk/son/kapanış toplamı) DEĞİL (bulgu C3, 2026-09-08: özetler toplamı KORUYAN bir
+    OHLCV revizyonunu kaçırırdı). Disk sha256 kontrolü AYRI ve HÂLÂ VAR: biri KAYNAĞIN
+    (`kaynak_hash`), diğeri HEDEF DOSYANIN elle değiştirilmediğini ölçer — ikisi FARKLI
+    sorulardır ve biri diğerinin yerine geçemez."""
     if not kayit or not hedef_dosya.is_file():
         return False
-    for alan in ("satir", "ilk", "son"):
-        if kayit.get(alan) != beklenen[alan]:
-            return False
-    a, b = beklenen["kapanis_toplami"], kayit.get("kapanis_toplami")
-    if (a is None) != (b is None):
-        return False
-    if a is not None and not math.isclose(a, b, rel_tol=KAPANIS_REL_TOL):
+    if kayit.get("kaynak_hash") != kaynak_hash:
         return False
     return kayit.get("sha256") == sha256_dosya(hedef_dosya)
 
@@ -568,6 +640,7 @@ def main(argv: list[str] | None = None) -> int:
     yeni_kayitlar: dict = {}
     eksik_sutunlar: dict = {}
     farklar: list[str] = []
+    goc_kayitlari: list[str] = []      # `kaynak_hash`siz (eski sözleşme) manifest kayıtları
     csv_bayt = 0                       # BEDEL payda: yalnız satır ÜRETEN CSV'ler sayılır
     try:
         for yol in dosyalar:
@@ -599,15 +672,22 @@ def main(argv: list[str] | None = None) -> int:
                 try:
                     con.register("_bar_beklenen", dilim)
                     try:
-                        beklenen = _olc(con, _secim_sql("_bar_beklenen"))
+                        beklenen = _olc(con, _secim_sql("_bar_beklenen", dilim.columns))
                     finally:
                         con.unregister("_bar_beklenen")
                 except duckdb.Error as e:
                     print(f"HATA: ölçüm düştü ({etiket}): {e}", file=sys.stderr)
                     return 4
+                kaynak_hash = kaynak_icerik_hash(dilim)
 
                 kayit = kayit_al(manifest, args.bolum, sembol, parca)
-                if not args.zorla and atlanir_mi(kayit, beklenen, hedef_dosya):
+                # GÖÇ GÖRÜNÜR OLSUN (bulgu K5b): `kaynak_hash` alanı OLMAYAN bir kayıt eski
+                # sözleşmeyle yazılmıştır ve deterministik olarak yeniden yazılır. Neden
+                # SAYILIR, satır satır BASILMAZ: 260 sembollük bir arşivde 260 ek satır bedeli
+                # kendisi gürültü olurdu — özet tek satırda, koşum sonunda düşer.
+                if kayit and "kaynak_hash" not in kayit:
+                    goc_kayitlari.append(sembol if parca is None else f"{sembol} {parca}")
+                if not args.zorla and atlanir_mi(kayit, kaynak_hash, hedef_dosya):
                     satirlar.append({"sembol": sembol, "parca": parca,
                                      "satir": beklenen["satir"],
                                      "bayt": hedef_dosya.stat().st_size,
@@ -636,7 +716,11 @@ def main(argv: list[str] | None = None) -> int:
                                      "dosya": str(hedef_dosya)})
                     continue
 
-                govde = {"sha256": sha256_dosya(hedef_dosya), "bayt": bayt, **beklenen}
+                # `MANIFEST_DISI_OLCUMLER` DEFTERE GİRMEZ (Yasa 6, gerekçe sabitin yanında).
+                govde = {"sha256": sha256_dosya(hedef_dosya), "kaynak_hash": kaynak_hash,
+                         "bayt": bayt,
+                         **{a: d for a, d in beklenen.items()
+                            if a not in MANIFEST_DISI_OLCUMLER}}
                 if parca is None:
                     yeni_kayitlar[sembol] = govde
                 else:
@@ -654,6 +738,13 @@ def main(argv: list[str] | None = None) -> int:
 
     bas = olay_sorgu.json_bas if args.json_kipi else olay_sorgu.tablo_bas
     bas(BASLIKLAR, [tuple(s[b] for b in BASLIKLAR) for s in satirlar], sys.stdout)
+
+    if goc_kayitlari:
+        ornek = ", ".join(goc_kayitlari[:5]) + (" …" if len(goc_kayitlari) > 5 else "")
+        print(f"GÖÇ (bir kerelik, sürüm {ARAC_SURUMU}): {len(goc_kayitlari)} (sembol, parça) "
+              f"kaydı eski sözleşme ile yazılmıştı (`kaynak_hash` alanı YOK) — yeniden "
+              f"yazılıyor. Bu bir ARIZA DEĞİLDİR: kıyas sözleşmesi değişti, içerik değil. "
+              f"Örnek: {ornek}", file=sys.stderr)
 
     _bedel_bas(args.bolum, satirlar, csv_bayt, args.ay is not None)
 
