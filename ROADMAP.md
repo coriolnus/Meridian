@@ -1622,6 +1622,8 @@ sertleştirme, ölü/ezilen bileşenlerin budanması ve "aynı gerçek iki yerde
   Kademe B: kalan TÜM JSON yazımlarına merkezî atomik-rename + flock (store.py'de tek kapı —
   "süreç-içi kilit" tehlike sınıfı yapısal kapanır). events.jsonl JSONL KALIR (append-only doğru
   biçim). Öğrenme-katmanı dosyaları (hypotheses/validation_ledger) Kademe C'ye ertelendi.
+  (tek kaynak: §4 TSK-020 maddesi; 2026-09-08 eşitlendi — Kademe A/B/C durumunun gövdesi burada,
+  UYGULA-1 alt-maddesi yalnız atıf taşır, ayrıntı tekrarlanmaz.)
 - **✅ KAPALI (hüküm yazılı — Litestream/PRAGMA/DuckLake yeniden değerlendirildi ve karara bağlandı)** · **H10 Litestream/PRAGMA/DuckLake hükmü (SQLite onayı sonrası yeniden değerlendirildi):**
   PRAGMA seti → H9 storage.py'ye gömülü (UYGULA) · Litestream v0.5 → UYGULA-AŞAMALI: önce
   file-replica (ikinci disk yolu + mevcut Mac-pull kapsar; RPO günler→dakikalar), OCI Object
@@ -2474,7 +2476,13 @@ _**[2026-08-31 KONSOLİDASYON — HAVUZ GİRDİSİ ROZET TAŞIMAZ.]** Burası ba
   · [UYGULA-8] pytest-xdist spike — **DONE (2026-09-01):** `-n 4` pyproject'e pinlendi (~9 dk, 2 temiz koşum, 8.344 test, 0 paralellik kırmızısı — `xdist_group` gerekmedi); tarihçe: tetik ~26 dk × günde 6+ koşumla ateşlenmişti, ilk sıra olarak koştu.
   · [UYGULA-9] gecikme telemetrisi — Prometheus+Grafana (pano-SQLite alternatifi elendi); kill-kriteri yeniden çapalama AYRI KART ister.
   Why: PIT-(b) uygulaması (EDG-2026-062) bu kuyruğun ÖNÜNDE — operatör kararı daha eski.
-  Ref: operatör 2026-08-31 brainstorm kapanışı; sıra 8→4→2→1→3→9 (5/6 tetik kaydı, 7 beklemede).
+  Ref: operatör 2026-08-31 brainstorm kapanışı; sıra 8→4→2→1→3→9 (5/6 tetik kaydı, 7 beklemede) —
+  bu ORİJİNAL sıra; madde başlığındaki REVİZE sıra `4→2-adım2→3→1→9` (operatör 2026-09-01 gece)
+  bunun yerine geçti. (DEĞ 2026-09-08 [Rol-1]: iki sıra da kaynaklı — 8→4→2→1→3→9 (2026-08-31,
+  bu satır) / 4→2-adım2→3→1→9 (2026-09-01 revize, başlık). İkisi de kısmen bayat: UYGULA-1
+  Kademe A+B, UYGULA-4, UYGULA-8 DONE; UYGULA-2 adım-3 TSK-137'ye devredildi (2026-09-05) —
+  kalan açık kalemler (UYGULA-3 · TETİKLİ-5 · TETİKLİ-6 · UYGULA-9) arasında hangi sıranın şu an
+  geçerli olduğu bu turda ÖLÇÜLEMEDİ; ROL-1 KARARI GEREKİR — uydurulmadı.)
 - **[TSK-093] Skill-görüş karışık-üretici ileri kalemleri** — status: GATED(iki-üreticili skill doğuşu) · born: 2026-09-01 · owner: rol1 · size: S · trigger: bir skill'in hem det hem llm satır taşımaya başlaması (uretici_kirilimi'nde aynı skill iki kovada)
   What: (DEĞ 2026-09-06 [ACIK-KALSIN·belirsiz] kapı: Tetik yalnızca bir skill'in aynı anda hem deterministik hem LLM (EDG-063) görüş satırı taşımaya başlamasıyla gerçekleşir — o ana kadar `rapor()` fail-closed (`uretici=Non) iki kalem — (1) `_anahtar` üretici taşımıyor: iki-üreticili skill'de deterministik yol, llm gölge satırlarını "zaten_var" sayıp atlar (skill'in det ölçümü kendi gölgeleriyle susturulur); tekilleştirme anahtarı DONUK olduğundan değişiklik göç planı ister. (2) `api._gorus_kuyrugu` sayaç için tam kesit yükünü ayrıştırıyor (mertebe farkı yok bugün; okuyucu sayısı artarsa hafif okuyucu).
   Why: TSK-058 fix-turu-2 re-review bulguları (2026-09-01); bugün evrenler ayrık — karışık üretici YOK, rapor() bu hâli `uretici=None + neden:karisik_uretici` ile beyan ediyor (fail-closed). Tetik gerçekleşmeden dokunmak spekülatif.
