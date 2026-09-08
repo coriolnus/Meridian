@@ -323,6 +323,41 @@ openrouter hindsight-api.service HINDSIGHT_API_LLM_API_KEY
 KRED_SON
 }
 
+#: ONESHOT TÜKETİCİ KREDENSİYELLERİ — `_kredensiyeller()`den BİLEREK AYRI bir tablo (Rol-1 hükmü,
+#: TSK-138 dilim-2 P6 kırmızısı; bkz. `deploy/oracle-a1/meridian-brifing.service.d/
+#: 54-kapi-credential.conf`). `_kredensiyeller()`in ölçümü ("restart sonrası
+#: `/run/credentials/<birim>/<kimlik>` boyutu > 1") `Type=oneshot` + timer-tetikli bir birime
+#: UYGULANAMAZ: rotasyon penceresi böyle bir birimi YENİDEN BAŞLATMAZ (hermes profilleri ve
+#: `brifing/learn/sprint@`nin `EnvironmentFile` kanalıyla ZATEN BEYANLI olan "restart istemeyen
+#: tüketici" kararının LoadCredential kanalındaki karşılığı, bkz. `_sir_birimleri` şerhi) ve
+#: `/run/credentials/<birim>/` yalnız o birimin KENDİ koşumu SIRASINDA var olur — rotasyon
+#: penceresinde hiçbir zaman gözlenemez. Bu yüzden `_kredensiyel_denetle` bu tabloyu OKUMAZ:
+#: doğrulama restart+`/run`a değil, KAYNAK dosyasına bakar (aynı dosya zaten `_kopyalar()`daki
+#: `dosya`/`url` satırının hedefidir ve DEĞER ÜRETİMİ sonrası uzunluk denetiminden geçer — bkz.
+#: başlıktaki "DEĞER ÜRETİMİ"). Sütunlar: <alt komut> <birim> <kimlik> <kaynak yolu> — kaynak
+#: yolu BURADA (uzun ömürlü tablo taşımaz) çünkü doğrulama ONA bakar, restart'a değil.
+#: `tests/test_sir_rotasyon_v447.py::test_P6` iki tabloyu BİRLEŞTİREREK drop-in çiftleriyle iki
+#: yönlü eşitler VE her çiftin doğru tabloda olduğunu birim dosyasındaki `Type=oneshot`/eşleşen
+#: `.timer` VARLIĞINDAN ölçer — elle liste DEĞİL: sınıf yanlışsa çivi öter.
+_oneshot_kredensiyeller() {
+  cat <<'ONESHOT_KRED_SON'
+kapi meridian-brifing.service KAPI_APIKEY /etc/meridian/kapi_apikey
+ONESHOT_KRED_SON
+}
+
+#: `--kuru`/`--envanter` PAYLAŞTIĞI YAZICI (tek-kaynak yasası: iki basım noktası ayrı yazılsaydı
+#: biri güncellenir öteki unutulurdu). `$1` BOŞSA (envanter) HER satır basılır; DOLUYSA (kuru)
+#: yalnız o alt komutun satırları. `_kredensiyel_denetle`nin ÖLÇMEDİĞİ bu birimleri sessizce
+#: atlamak bedel yasasının yasakladığı hâl olurdu — operatör "bu birim neden yeniden başlamadı"
+#: sorusunu burada, açıkça yazılı görür.
+_oneshot_yazdir() {
+  local sadece="${1:-}" _alt birim kimlik _kaynak
+  while read -r _alt birim kimlik _kaynak; do
+    [ -z "$sadece" ] || [ "$_alt" = "$sadece" ] || continue
+    echo "    · oneshot tüketici: $birim — sonraki tetikte okur"
+  done < <(_oneshot_kredensiyeller)
+}
+
 #: BEYAN DIŞI KOPYA TARAMASI — bedel yasasının bu betikteki karşılığı. Kopya tablosu bir BEYANDIR;
 #: beyan gerçeği kendiliğinden doğrulamaz. `--envanter` bu dosyaların hepsinde döndürülen ADLARI
 #: arar ve tabloda OLMAYAN bir eşleşme bulursa bağırır: rotasyonun görmediği bir kopya, ilk
@@ -1204,6 +1239,7 @@ _restart_carpani() {
 
 _kuru_rapor() {
   local alt="$1" _alt sir tur yol alan _m _s onek satir uc kabul onceki="" carpan tavan
+  local _ONESHOT_SATIR
   echo "=== KURU KOŞUM: --$alt (HİÇBİR ŞEY YAZILMADI) ==="
   while read -r _alt sir tur yol alan _m _s onek; do
     [ "$_alt" = "$alt" ] || continue
@@ -1225,6 +1261,16 @@ _kuru_rapor() {
     onceki="$sir"
     echo "    · $sir → $(_sir_birimleri "$sir")"
   done < <(_kopyalar)
+  # ONESHOT TÜKETİCİLER — AYRI BAŞLIK satırıyla basılır, "sır → tüketici birimler" bloğuna
+  # KARIŞTIRILMAZ: N10 çivisi o bloğu "    · " önekiyle SÜRDÜRÜR sayar (satırı "sir → birimler"
+  # diye ayrıştırır) ve önekli-ama-başlıksız bir oneshot satırı o ayrıştırıcıyı YANLIŞ BÖLER.
+  # Bölüm YALNIZ bu alt komutta oneshot tüketici VARSA basılır (bedel yasası — ilgisiz bir
+  # başlığı her alt komutta göstermek kuru raporu gürültüyle doldurmaktır).
+  _ONESHOT_SATIR="$(_oneshot_yazdir "$alt")"
+  if [ -n "$_ONESHOT_SATIR" ]; then
+    echo "  oneshot tüketiciler (restart kümesi DIŞI — rotasyon bunları yeniden başlatmaz):"
+    echo "$_ONESHOT_SATIR"
+  fi
   # BEDEL YASASI: bekleme bakım penceresine SÜRE ekler ve o süre kuru raporda BEYAN EDİLİR —
   # "hangi birimler yeniden başlayacak" sorusunun cevabı artık "hangi ÖLÇÜTLE ve ne kadar
   # bekleyebilir"i de içerir. Üç sütun da `_hazir_uc`/`_hazir_tavan`tan TÜRETİLİR: ikinci bir
@@ -1770,6 +1816,12 @@ _secrets_json_tara() {
 envanter() {
   echo "=== SIR KOPYA ENVANTERİ (yalnız VARLIK ve EŞİTLİK; DEĞER ve HASH BASILMAZ) ==="
   _envanter_esitlik
+  echo "  --- oneshot tüketiciler (restart kümesi DIŞI — sonraki tetikte okur) ---"
+  local _oneshot_satir
+  _oneshot_satir="$(_oneshot_yazdir)"
+  # `_beyan_disi_tara`daki "YOK" satırıyla AYNI kalıp: tablo BUGÜN boş olabilir (henüz hiçbir
+  # oneshot LoadCredential drop-in'i yok) ve bu bir arıza değil, bir DURUM beyanıdır.
+  if [ -n "$_oneshot_satir" ]; then echo "$_oneshot_satir"; else echo "  oneshot tüketici YOK"; fi
   _beyan_disi_tara
   _secrets_json_tara
   echo "  --- yedekler (/root/sir-yedek-*) ---"
