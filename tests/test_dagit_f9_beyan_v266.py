@@ -35,9 +35,24 @@ import subprocess
 # sözleşmesinin sökücüsü v367'de yaşıyor; buraya KOPYALANMAZ, ithal edilir.
 from tests.test_dagit_istenen_durum_v367 import _snippet
 
+# TEK KAYNAK (düzeltme turu 2, 2026-09-08): [5b] çağrısının BİÇİMİ v452'de yaşıyor; buraya
+# KOPYALANMAZ, ithal edilir. Düz `"<yol>" in kod` iddiası ısırmıyordu — aynı yol [5b]'nin onarım
+# reçetesi `echo` satırında da geçiyor ve gerçek çağrı bozulunca üç çivi de yeşil kalıyordu.
+from tests.test_ansible_dagit_v452 import KOD_TAZELIK_CAGRI
+
 REPO = pathlib.Path(__file__).resolve().parent.parent
 DAGIT = REPO / "dagit.sh"
 ORACLE = REPO / "deploy" / "oracle-a1"
+
+# TAŞIMA KAYDI (TSK-176 Faz A1, 2026-09-08). [5a] ve [5b] kapılarının GÖVDELERİ dagit.sh'ın
+# içinde gömülü uzak kabuk/python bloklarıydı ve bu dosya iddialarını o metinde arıyordu.
+# Gövdeler DOSYAYA çıkarıldı (playbook `script:` ile aynı dosyaları koşturacak; gömülü çok-satır
+# gövde bir Ansible görevinde YASAK — A0 kuralı + 2026-07-30 IndentationError vakası). Aşağıdaki
+# beş çivi AYNI İDDİALARI ölçer; değişen tek şey, iddianın hangi dosyada aranacağıdır. Kapının
+# YERİ ve ÇAĞRISI hâlâ dagit.sh'ta, uygulaması betikte: iki taraf da çivili, aksi hâlde biri
+# sessizce ötekinden koparabilirdi (çağrısız betik = ölü dosya; betiksiz çağrı = kırık kapı).
+DOGRULAMA_ANAHTAR = ORACLE / "dogrulama_anahtar.py"
+KOD_TAZELIK = ORACLE / "kod_tazelik.sh"
 
 
 def _satirlar() -> list[str]:
@@ -254,8 +269,13 @@ def test_beyan_JSON_bicimi_GECERLI():
     assert veri["kirli_gec_kullanildi"] is False, "bool yuvası tırnaklı — beyan tipi bozuk"
     assert veri["sandbox_eski_kod"] == ["meridian-sprint@x.service"], "dizi yuvası tırnaklı/bozuk"
     metin = DAGIT.read_text()
-    assert 'BEKLENEN' in metin and '"kum havuzunda"' in metin, \
+    # TAŞIMA (TSK-176 A1): ayrımı YAPAN satır artık `kod_tazelik.sh`ta, ayrımı BEYANA ÇEVİREN
+    # satır dagit.sh'ta. İkisi de ölçülür — jeton (`BEKLENEN`) iki tarafta AYNI dizge olmazsa
+    # kum-havuzu birimleri beyandan sessizce düşerdi (TSK-140 dipnotu boşalır, kimse görmez).
+    assert '"kum havuzunda"' in KOD_TAZELIK.read_text(), \
         "[5b] kum-havuzu ayrımı birimin KENDİ beyanından (Description) türemiyor (TSK-140)"
+    assert "BEKLENEN" in KOD_TAZELIK.read_text() and "BEKLENEN" in metin, \
+        "`BEKLENEN` jetonu iki tarafta aynı değil — beyan dipnotu sessizce boşalır"
     assert "_sandbox_json" in metin and "sandbox_eski_kod" in metin
 
 
@@ -412,10 +432,18 @@ def test_kod_tazelik_kapisi_VAR_ve_BEYANDAN_ONCE():
     kalır — koşan sistemin GERÇEK hâli odur (operatör kararı, 2026-08-24)."""
     metin = DAGIT.read_text()
     assert "[5b/" in metin, "kod-tazelik kapısı [5b] yok"
-    assert "ExecMainStartTimestamp" in metin, (
+    # İDDİA ÇAĞRI BİÇİMİNE BAĞLI (düzeltme turu 2): yorumları elemek YETMEZ — aynı yol [5b]
+    # fail-closed bloğunun onarım reçetesi `echo`unda da geçiyor ve gerçek çağrı bozulunca bu
+    # çivi YEŞİL kalıyordu (mutasyonla ölçüldü 2026-09-08). Ölçülen şey ÇAĞRININ KENDİSİDİR.
+    assert any(KOD_TAZELIK_CAGRI.match(s) for s in _satirlar()), (
+        "[5b] gövdesi KOD satırında çağrılmıyor — kapı adı duruyor, ölçüm yok (çıkarılan betik "
+        "ölü dosya olur; gerekçe yorumunda ya da operatöre basılan bir `echo`da adının geçmesi "
+        "bir çağrı DEĞİLDİR)")
+    govde = KOD_TAZELIK.read_text()
+    assert "ExecMainStartTimestamp" in govde, (
         "kapı süreç başlangıcını okumuyor — 'active' cümlesi bu kusuru göremez")
     # KAPSAM TÜRETİLİR, YAZILMAZ: birim adları elle sayılsaydı yarın eklenen birim unutulurdu.
-    assert "ExecStart" in metin, "kapsam ExecStart'tan türetilmiyor — unutma sınıfı açık kalır"
+    assert "ExecStart" in govde, "kapsam ExecStart'tan türetilmiyor — unutma sınıfı açık kalır"
     # ÇAPA `echo` SATIRINA BAĞLI: düz `"[B] dağıtım-beyanı"` dizgisi dosyanın BAŞINDAKİ
     # içindekiler yorumunda da geçiyor (satır ~15) ve çivi orayı bulup sahte kırmızı verdi
     # (2026-08-24, ilk yazımda). Aranan şey adımın KENDİSİ, ondan söz eden satır değil.
@@ -447,7 +475,11 @@ def test_dogrulama_uclari_UC_GIRDI_ve_SIRA_korunur():
     govde = metin.split('DOGRULAMA_UCLARI="', 1)[1].split('"', 1)[0]
     uclar = [ln for ln in govde.strip().splitlines() if "|" in ln]
     assert len(uclar) == 3, f"DOGRULAMA_UCLARI üç uç taşımalı (bulunan: {len(uclar)}): {uclar}"
-    assert "x-meridian-token" in metin, "kontrol x-meridian-token başlığını taşımıyor"
+    kod = "\n".join(ln for ln in _satirlar() if not ln.lstrip().startswith("#"))
+    assert "deploy/oracle-a1/dogrulama_anahtar.py" in kod, \
+        "[5a] gövdesi KOD satırında çağrılmıyor — uç listesi duruyor ama kimse ölçmüyor"
+    assert "x-meridian-token" in DOGRULAMA_ANAHTAR.read_text(), \
+        "kontrol x-meridian-token başlığını taşımıyor"
 
     dogrulama = _satir_no("[5/5] doğrulama")
     kod_tazelik = _satir_no("[5b/")
@@ -462,11 +494,18 @@ def test_dogrulama_token_degeri_ciktiya_BASILMAZ():
     AST DEĞİL — SHELL METİN REGEX'İ (v266 ailesinin yöntemi): dagit çıktısı günlüğe kopyalanıyor
     ve sır süzgeci yalnız BEYAZ-LİSTE adlar basar — token değeri o listede DEĞİL, yani hiçbir
     çıktı satırına girmemesi gerekir (D1: "değer HİÇBİR ÇIKTIYA basılmaz")."""
-    metin = DAGIT.read_text()
-    assert ".dash.env" in metin and "MERIDIAN_DASH_TOKEN" in metin, \
+    govde = DOGRULAMA_ANAHTAR.read_text()
+    assert ".dash.env" in govde and "MERIDIAN_DASH_TOKEN" in govde, \
         "token okuma satırı .dash.env'den MERIDIAN_DASH_TOKEN okumuyor"
+    # KABUK TARAFI: dagit.sh token değerini artık bir değişkene ALMAZ (okuma A1'de, betiğin
+    # içinde) — yine de eski desen geri gelirse yakalansın diye tarama DURUYOR.
     ihlal = [s for s in _satirlar() if re.search(r"\b(echo|printf|tee)\b.*\$T\b", s)]
     assert not ihlal, f"token değeri ($T) bir echo/printf/tee argümanında basılıyor: {ihlal}"
+    # PYTHON TARAFI: token değeri hiçbir `print` argümanına girmiyor. Davranışsal ikizi
+    # tests/test_ansible_dagit_v452.py içindeki A4c5 çivisidir — o çivi değeri GERÇEKTEN
+    # koşturup çıktıda arar, bu çivi deseni metinde yasaklar.
+    basim = [ln for ln in govde.splitlines() if re.search(r"\bprint\(.*\btoken\b", ln)]
+    assert not basim, f"token değeri bir print argümanında geçiyor: {basim}"
 
 
 def test_dogrulama_FAIL_OPEN_ve_FAIL_CLOSED_dallari_VAR():
@@ -484,7 +523,13 @@ def test_dogrulama_FAIL_OPEN_ve_FAIL_CLOSED_dallari_VAR():
     assert "ölçülemedi" in blok and "token yok" in blok, "[5a] fail-open dalı (ölçülemedi) yok"
     assert "✗" in blok, "[5a] fail-closed dalı (✗) yok"
     assert "exit 1" in blok, "[5a] anahtar eksikken exit 1 vermiyor — kapı değil rapor olur"
-    assert "exit 0" in blok, "[5a] token okunamazken exit 0 (fail-open) vermiyor"
+    # FAIL-OPEN DALI BETİKTE: token okunamazsa `OLCULEMEDI token yok` basılır ve ÇIKIŞ 0 verilir;
+    # dagit.sh o jetonu TAM EŞİTLİKLE tanır ve dağıtımı sürdürür. İddia (dağıtım DÜŞMEZ) aynı,
+    # iki parçası iki dosyada — ikisi de burada ölçülür, yoksa biri sessizce ötekinden kopar.
+    govde = DOGRULAMA_ANAHTAR.read_text()
+    assert "OLCULEMEDI token yok" in govde and "OLCULEMEDI token yok" in blok, \
+        "[5a] fail-open jetonu iki tarafta AYNI dizge değil — sözleşme sessizce ayrıştı"
+    assert "return 0" in govde, "[5a] betiği token okunamazken 0 (fail-open) döndürmüyor"
 
 
 # =================================================================================================

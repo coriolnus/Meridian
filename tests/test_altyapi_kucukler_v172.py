@@ -502,9 +502,18 @@ def test_wpg_emekli_knob_KARAR_YOLUNU_hala_degistirmiyor():
 #   (a) YAPI  — adımın YERİ (kuru koşum sınırı, durdur/başlat arası) ve sözdizimi. Yer yanlışsa
 #               adım ya koşan worker'ın altından yapılandırma değiştirir ya da etkisi bir sonraki
 #               restart'a kadar görünmez; ikisi de sessizdir.
-#   (b) DAVRANIŞ — hükmü veren gömülü Python, dagit.sh'tan ÇIKARILIP gerçekten koşturulur. Kopyası
-#               değil KENDİSİ: kaynak metni kopyalayan bir test, betik değişince yeşil kalırdı.
+#   (b) DAVRANIŞ — hükmü veren Python gerçekten koşturulur. Kopyası değil KENDİSİ: kaynak metni
+#               kopyalayan bir test, betik değişince yeşil kalırdı.
+#
+# TAŞIMA KAYDI (TSK-176 Faz A1, 2026-09-08): hüküm gövdesi dagit.sh'ın içinde bir `<<'PY'`
+# heredoc'uydu ve bu dosya onu satır satır SÖKÜP koşturuyordu. Gövde `ops/state_fark_hukmu.py`ye
+# ÇIKARILDI — `deploy/ansible/dagit.yml` playbook'u aynı hükmü verecek ve gömülü çok-satır python
+# bir Ansible görevinde YASAK (A0 kuralı + 2026-07-30 IndentationError vakası). Aşağıdaki BEŞ
+# davranış çivisi AYNEN durur ve AYNI beş dalı ölçer; değişen tek şey, koşturulan gövdenin artık
+# sökülmeyip DOĞRUDAN çağrılmasıdır — "kopyası değil kendisi" ilkesi güçlendi, gevşemedi.
 DAGIT = REPO / "dagit.sh"
+#: [1b] hükmünün TEK KAYNAĞI. dagit.sh ve playbook aynı dosyayı çağırır, ikisi ayrışamaz.
+STATE_FARK_HUKMU = REPO / "ops" / "state_fark_hukmu.py"
 
 
 def _dagit_satirlari() -> list[str]:
@@ -518,12 +527,21 @@ def _satir_no(iz: str) -> int:
     raise AssertionError(f"dagit.sh'ta bulunamadı: {iz!r} — çivi bayatlamış")
 
 
-def _gomulu_hukum_betigi() -> str:
-    """dagit.sh'ın İÇİNDEKİ hüküm betiğini çıkar (<<'PY' … PY)."""
-    satirlar = _dagit_satirlari()
-    bas = next(i for i, s in enumerate(satirlar) if "<<'PY'" in s)
-    son = next(i for i, s in enumerate(satirlar[bas + 1:], start=bas + 1) if s == "PY")
-    return "\n".join(satirlar[bas + 1:son])
+def test_dagit_HUKUM_BETIGINI_CAGIRIR_gomulu_TASIMAZ():
+    """TAŞIMANIN KENDİSİ BİR ÇİVİDİR: gövde dosyada, çağrı dagit.sh'ta.
+
+    İki yönlü ölçülür. Yalnız "çağrı var" deseydik gömülü heredoc geri gelip çağrıyı ÖLÜ
+    bırakabilirdi (iki kaynak, biri sessizce bayat); yalnız "heredoc yok" deseydik betik hiç
+    çağrılmadan da yeşil kalırdı — çıkarılan ama çağrılmayan gövde bir ölü dosyadır (YASA 6)."""
+    metin = DAGIT.read_text()
+    # YORUM SAYILMAZ (mutasyonla ölçüldü 2026-09-08): betiğin gerekçe yorumunda da aynı yol
+    # geçiyor ve düz metin araması, çağrıyı bozan mutasyonda YEŞİL kalıyordu.
+    kod = "\n".join(ln for ln in _dagit_satirlari() if not ln.lstrip().startswith("#"))
+    assert STATE_FARK_HUKMU.is_file(), f"hüküm betiği yok: {STATE_FARK_HUKMU}"
+    assert "ops/state_fark_hukmu.py" in kod, \
+        "dagit.sh [1b] hükmünü dosyadan çağırmıyor — çıkarılan gövde okuyucusuz kaldı"
+    assert "<<'PY'" not in metin, \
+        "dagit.sh hâlâ gömülü hüküm gövdesi taşıyor — dosyadaki kopya ikinci kaynak olur"
 
 
 def test_dagit_sozdizimi_TEMIZ():
@@ -595,13 +613,12 @@ def test_dagit_dosya_listesi_GIT_TEN_turetilir():
 
 
 def _hukum(canli: str, repo: str, tmp_path) -> tuple[str, str]:
-    """Gömülü hüküm betiğini GERÇEKTEN koştur; (HUKUM, insan metni) döndür."""
+    """Hüküm betiğini GERÇEKTEN koştur (dagit.sh'ın ve playbook'un çağırdığı DOSYAYI, kopyasını
+    değil); (HUKUM, insan metni) döndür."""
     import subprocess, sys
-    betik = tmp_path / "hukum.py"
-    betik.write_text(_gomulu_hukum_betigi())
     a, b = tmp_path / "canli.yaml", tmp_path / "repo.yaml"
     a.write_text(canli); b.write_text(repo)
-    r = subprocess.run([sys.executable, str(betik), str(a), str(b)],
+    r = subprocess.run([sys.executable, str(STATE_FARK_HUKMU), str(a), str(b)],
                        capture_output=True, text=True)
     assert r.returncode == 0, f"hüküm betiği patladı:\n{r.stderr}"
     satirlar = r.stdout.splitlines()
