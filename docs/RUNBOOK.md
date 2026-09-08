@@ -1412,6 +1412,9 @@ bile sırrı servis kullanıcısına açık düz metinde bırakıyordu.
 Ayrıca: `--geri-al` kendi yedeğini alır, ÖTEKİ adın YERİNDE duran `.env` satırına dokunmaz
 (credential kaynağı rotasyondan sonra bayat olabilir) ve `$ad`ın satırını geri yazamadıysa
 drop-in'i KALDIRMADAN durur (yoksa sır iki kanaldan birden düşerdi).
+
+`_kaynak_ozeti`nin kullandığı `stat -c` GNU coreutils'e özgüdür (BSD/macOS'ta yok) — bu betik
+YALNIZ A1'de (Ubuntu, GNU) koşar; başka bir yerdeki "izin okunamadı" düşüşü ARIZA değildir.
 ```
 
 ## `deploy/oracle-a1/sir_rotasyon.sh` {#deploy-oracle-a1-sir-rotasyon-sh}
