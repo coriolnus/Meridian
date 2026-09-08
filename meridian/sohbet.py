@@ -614,9 +614,14 @@ def _arac_bar_sorgu(args: dict, baglam: dict | None = None) -> str:
 
 
 def _hafiza_betigi() -> str:
-    """Hindsight arama sarmalayıcısının yolu (`SOHBET_HAFIZA_ARA`, varsayılan A1 kurulumu)."""
-    return (os.environ.get("SOHBET_HAFIZA_ARA")
-            or str(config.ROOT / "deploy" / "hindsight" / "hafiza_ara.sh"))
+    """Arama sarmalayıcısının yolu — çözüm `arama.betik_yolu`na DEVREDİLDİ (K2, 2026-09-08).
+
+    İKİ ÇÖZÜCÜ TUTULMAZ: pano ucu (TSK-167 dilim-2) aynı betiği çağırıyor ve env adı ya da
+    varsayılan yol değiştiği gün iki kopya sessizce ayrışırdı — sohbet aracı bir betiği, uç
+    başkasını koşar ve İKİSİ DE "çalışıyor" derdi. Ortam değişkeninin ADI (`SOHBET_HAFIZA_ARA`)
+    kasten korundu: bu yüzeyin çivisi (v440) onu monkeypatch'liyor."""
+    from . import arama            # dar kullanımlı import fonksiyonda (dosya konvansiyonu)
+    return arama.betik_yolu()
 
 
 def _arac_hafiza_ara(args: dict, baglam: dict | None = None) -> str:

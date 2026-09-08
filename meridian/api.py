@@ -6884,6 +6884,59 @@ def api_sohbet_kota(request: Request):
     return _sohbet.kota_durumu()
 
 
+@app.get("/api/arama")
+async def api_arama(request: Request, soru: str = "", k: str | None = None,
+                    dosya: str | None = None):
+    """Depo belgelerinde anlamsal arama — EDG-067 taban indeksinin PANO OKUYUCUSU (TSK-167).
+
+    YETKİLİ, ÇÜNKÜ VERİ UCU: depo içeriğini (günlük, kartlar, docs) döndürür. Yetkisiz GET beyaz
+    listesine (`test_api_audit_v21`) GİRMEZ — o listedeki her satır bir sır TAŞIMAYAN statik
+    dosyadır; burası tam tersi.
+
+    ARIZA ZARFI 200 + `neden` (K1 hükmü, `api_hindsight_recall` emsali): 503 dönseydi pano
+    yüzeyi kararır ve operatör "arama yok" ile "arama bozuk"u ayırt edemezdi. AMA "boş sonuç"
+    ile "ölçülemedi" AYRI alanlardan okunur: `sonuclar: []` bir BULGUdur (eşik yok, sıralama saf
+    mesafedir), `sonuclar: None` + `neden` bir ARIZAdır.
+
+    400'LER SÜRECİ HİÇ DOĞURMADAN VERİLİR: boş soru (aranacak şey yok), sayı olmayan `k`
+    (`arama.k_kelepcele` fırlatır — sessizce varsayılana oturmak "10 istedim 5 geldi" yalanı
+    olurdu) ve korpus dışı `dosya` öneki (`arama.dosya_onegi_gecerli`). Üçünün de bedeli A1'de
+    bir ONNX oturumudur ve o bedel ödenmeden reddedilir.
+
+    KELEPÇE SUNUCUDA (istemciye güven yok): `k` 1..`arama.K_TAVANI` aralığına çekilir.
+
+    THREAD HAVUZU ZORUNLU (`api_sohbet`in ölçülmüş gerekçesi): gövde bir alt süreci bekler
+    (`ARAMA_ZAMAN_ASIMI_S`) ve olay döngüsünün kendi ipliğinde beklerse tek işçili uvicorn'da
+    `/api/control/halt` dahil hiçbir uç yanıt veremez.
+
+    İZ: KÜNYE YAZILIR, İÇERİK YAZILMAZ (`api_sohbet` deseni). Operatörün serbest metni
+    `events.jsonl`a girmez — o defteri alarm/bildirim zinciri de okur ve orası bir sızıntı yüzeyi
+    olurdu. Uzunluk ÖLÇÜLÜR, metnin kendisi değildir. `dosya` bir KAPALI LİSTE değeridir (serbest
+    metin değil), o yüzden künyede adıyla durur: "hangi önekle arandı" sorusunun tek kaynağı bu.
+    İKİNCİ BİR SAYAÇ DOSYASI TUTULMAZ (K5): gün içi çağrı sayısı bu künyeden SAYILIR."""
+    _auth(request)
+    from starlette.concurrency import run_in_threadpool   # dar kullanımlı import fonksiyonda
+
+    from . import arama as _arama
+    soru_temiz = str(soru or "").strip()
+    if not soru_temiz:
+        raise HTTPException(status_code=400, detail="boş soru — aranacak bir şey yok")
+    try:
+        k_deger = _arama.K_VARSAYILAN if k is None or k == "" else _arama.k_kelepcele(k)
+    except (TypeError, ValueError) as e:
+        raise HTTPException(status_code=400,
+                            detail=f"geçersiz k ({e}) — 1..{_arama.K_TAVANI} arası bir sayı")
+    if dosya not in (None, "") and not _arama.dosya_onegi_gecerli(dosya):
+        raise HTTPException(status_code=400,
+                            detail=f"korpus dışı dosya öneki: {dosya!r} — beyaz liste: "
+                                   f"{', '.join(_arama.KORPUS_ONEKLERI)}")
+    sonuc = await run_in_threadpool(_arama.ara, soru_temiz, k_deger, dosya or None)
+    obs.log("arama_sorgu", k=k_deger, n=sonuc.get("n"), sure_s=sonuc.get("sure_s"),
+            korpus_disi_n=sonuc.get("korpus_disi_n"), mesgul=bool(sonuc.get("mesgul")),
+            soru_uzunluk=len(soru_temiz), dosya=dosya or None, neden=sonuc.get("neden"))
+    return sonuc
+
+
 def _sohbet_icra(oneri: dict) -> dict:
     """Onaylanmış bir sohbet önerisinin icrası — HER KOL MEVCUT bir fonksiyonu çağırır.
 
