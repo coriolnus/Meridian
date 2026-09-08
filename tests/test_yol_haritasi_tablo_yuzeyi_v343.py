@@ -268,7 +268,15 @@ def test_f2_madde_kimlikleri_tekil_tablo_satirlari_ATIF_tasiyabilir():
 
 
 def test_g_section_alani_bolumun_KENDISINDEN_geliyor():
-    """`section` uydurulmaz: maddenin bulunduğu KÖK bölümün numarasıdır."""
+    """`section` uydurulmaz: maddenin bulunduğu KÖK bölümün numarasıdır.
+
+    KAPSAM GENİŞLEDİ 2026-09-08 (bilinçli şema kararı, çivisi
+    `tests/test_roadmap_arsiv_sayimi_v455.py`): o gün 107 kapanmış TSK maddesi `§2`/`§4`ten
+    `§8 ARŞİV`e taşındı ve orada LİSTE İMSİZ yazılır (`**[TSK-046] Ad** — status: …`), çünkü
+    v351'in bölüm muafiyeti §8'de `- **[` biçimini yasaklar. Ayrıştırıcı o biçimi tanımadığı
+    için 107 kalem PANODAN KAYBOLMUŞTU — ne açık ne kapalı kovada. `§8` artık şema TAŞIYAN
+    bölümler kümesinin üyesidir; küme ELLE genişletildi çünkü listenin kendisi bir karardır
+    (spec §3 kapsamı + bu tarihli ek), ölçümün türevi değil."""
     yuk = _yuk()
     bulunan = set()
     for kok in yuk["bolumler"]:
@@ -280,9 +288,10 @@ def test_g_section_alani_bolumun_KENDISINDEN_geliyor():
                     assert s["section"] == no, (
                         f"[{s['id']}] `section`={s['section']!r} ama kalem {no!r} altında bulundu")
                     bulunan.add(no)
-    assert bulunan == {"§2", "§4", "§5", "§6"}, (
+    assert bulunan == {"§2", "§4", "§5", "§6", "§8"}, (
         f"şema taşıyan bölümler ölçümle uyuşmuyor: {sorted(x or '?' for x in bulunan)} "
-        "— 2026-09-01 göçü §2/§4/§5/§6'yı çevirmişti (spec §3 kapsamı)")
+        "— 2026-09-01 göçü §2/§4/§5/§6'yı çevirmişti (spec §3 kapsamı), 2026-09-08 arşiv "
+        "taşıması §8'i ekledi (liste imsiz arşiv maddesi)")
 
 
 def test_h_sema_alanlarinin_hepsinin_OKUYUCUSU_var(kaynaklar: str):

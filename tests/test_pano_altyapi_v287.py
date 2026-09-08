@@ -488,11 +488,32 @@ def test_roadmap_gercek_dosyayi_okur(sandbox_state):
 
 def test_roadmap_madde_sayisi_dosyadaki_madde_sayisiyla_tutarli(sandbox_state):
     """Ayrıştırıcı sessizce yarısını düşürmemeli: gövdedeki madde sayısı dosyadaki üst-düzey
-    madde işareti sayısına EŞİT olmalı (kaynak sayımı burada bağımsız yapılır)."""
+    madde işareti sayısına EŞİT olmalı (kaynak sayımı burada bağımsız yapılır).
+
+    2026-09-08 EKİ — İKİNCİ MADDE BİÇİMİ (`§8 ARŞİV`, çivisi `tests/test_roadmap_arsiv_sayimi_v455.py`):
+    o gün 107 kapanmış TSK maddesi `§2`/`§4`ten `§8`e taşındı ve arşivde satır LİSTE İMİ
+    TAŞIMAZ (`**[TSK-046] Ad** — status: …`), çünkü v351'in bölüm muafiyeti §8'de `- **[`
+    biçimini yasaklar. Bağımsız sayım o grameri de ölçmek ZORUNDA: ölçmezse bu çivi ucun
+    KAZANIMINI "sessizce fazladan saydı" diye rapor eder ve doğru davranışı geri aldırırdı.
+    Gramerin burada ikinci kez yazılması bilinçli — tek-kaynak yasasının izin verdiği yol
+    (kopya + ayrışma çivisi): uçtaki desen değişip bu kopya değişmezse test KIRILIR."""
     metin = (REPO / "ROADMAP.md").read_text(encoding="utf-8")
     # kod bloklarını çıkar: içlerindeki `- ` madde DEĞİLDİR
     disi = re.sub(r"```.*?```", "", metin, flags=re.S)
-    beklenen = len([l for l in disi.split("\n") if re.match(r"^\s*[-*] \S", l)])
+    satirlar = disi.split("\n")
+    beklenen = len([l for l in satirlar if re.match(r"^\s*[-*] \S", l)])
+
+    # §8 ARŞİV'in liste imsiz şema satırları — bölüm sınırı `## §N …` kök başlıklarından
+    # ölçülür (alt başlıklar `### §8.T.2 …` kökün numarasını devralır).
+    kok_no = None
+    for l in satirlar:
+        baslik = re.match(r"^## (?:(§[0-9∞]+)\b)?", l)
+        if l.startswith("## "):
+            kok_no = baslik.group(1) if baslik else None
+            continue
+        if kok_no == "§8" and re.match(r"^\*\*\[[^\]]+\]\s+[^*]*\*\*\s+—\s+", l.rstrip()):
+            beklenen += 1
+
     yuk = _client().get("/api/roadmap").json()
     assert yuk["sayim"]["madde_n"] == beklenen, (
         f"ayrıştırıcı {yuk['sayim']['madde_n']} madde saydı, dosyada {beklenen} var")
