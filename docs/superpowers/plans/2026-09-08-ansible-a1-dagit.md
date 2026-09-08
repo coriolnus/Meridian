@@ -28,7 +28,7 @@ yalnız aktif olanlara `stopped`, [1b] KOPYALA kararı varsa `backups/state/<sf>
 DURMUŞ hâlde, reçete basılır), `daemon_reload`, yalnız enabled olanlara `started`, 8 s sonra `is-active`; `rescue`: reçete + `fail` (sessiz değil);
 [5] healthz `uri` + son olay satırı; [5a] `script: deploy/oracle-a1/dogrulama_anahtar.py` (YENİ: dagit'teki gömülü python + uç listesi `dogrulama_uclari`
 vars'tan; "OLCULEMEDI token yok" fail-open beyanlı; YOK → `fail`, beyan yazılmaz); state/ artık kontrolü (rapor); [5b] `script: deploy/oracle-a1/kod_tazelik.sh`
-(YENİ: dagit'teki gömülü uzak betik dosyaya; IHLAL → `fail`, BEKLENEN → `sandbox_eski_kod` listesi); [B] beyan: `copy content=` JSON (`deployed_sha`,
+(YENİ: dagit'teki gömülü uzak betik dosyaya; IHLAL → `fail`, BEKLENEN → `sandbox_eski_kod` listesi); [B] beyan: JSON dosyası (Rol-1 düzeltmesi 2026-09-08: `copy content=` DEĞİL — v451 Çivi 3a `content:` gövdesini yasaklar; `tee` stdin + `mv` atomik yazım, beklenen metin tek `set_fact`ten) (`deployed_sha`,
 `dagitildi_utc` (localhost'ta `date -u` fact), `dagitan_host`, `kirli_gec_kullanildi`, `sandbox_eski_kod`) → `state/dagitim.json` + `slurp` bayt kıyası.
 Check-mode: Play 1 kapıları koşar; Play 2'de `synchronize` kuru koşum yapar, `command`/`script` görevleri ATLANIR ve `debug` "check-mode'da ÖLÇÜLMEDİ" der
 (A0 K4 deseni). **dagit.sh (sarmalayıcı, bir sürüm):** `--dry-run` → `ansible-playbook deploy/ansible/dagit.yml --check --diff`; `--uygula` → aynı komut
