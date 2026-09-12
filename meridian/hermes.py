@@ -2669,9 +2669,13 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         # değil, `streak` artarsa gerçek bir kota arızası sahte bir tabandan başlar.
         sinif = "yetki_reddi"
         cooled = brain_pause("agent", f"yetki_reddi:{kind}", BRAIN_COOLDOWN_BASE_S)
+        # `cooldown_s` BU olaya YAZILMAZ (Rol-1 hükmü 2026-09-13, inceleme ORTA-1): bekçi
+        # gruplama imzası oynak alanı görünce grubu düşürür; yetki reddinin görünür kalması
+        # soğuma süresinin bu satırda tekrarından değerlidir — süre zaten `agent_call_empty`
+        # olayında (`cooldown_s`) ve `brain_pause` defterinde duruyor (tek-kaynak).
         obs.warn("agent_yetki_reddi", kind=kind, http=yetki_http, imza=yetki_imza,
                  model=models[-1] or "varsayılan", chain=len(models), returncode=son_rc,
-                 cooldown_s=round(cooled, 1),
+                 cooldown_taban_s=BRAIN_COOLDOWN_BASE_S,     # SABİT: soğumanın sınıfı, ölçülen süresi değil
                  ham_stdout=_ham_ozet(son_stdout), ham_stderr=_ham_ozet(son_stderr),
                  detail=AGENT_YETKI_HUKMU)
     elif yedek_sustu:

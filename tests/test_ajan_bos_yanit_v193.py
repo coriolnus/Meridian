@@ -246,8 +246,13 @@ def test_401_ayri_yetki_olayi_basar_ve_sinifi_yetki_reddidir(ajan):
     # taşır, yani bu dalda hiçbir teşhis bilgisi KAYBOLMAZ.
     assert _events("review_fallback_empty") == [], \
         "401 'yedek model sustu' DEĞİLDİR — yanlış anlatan satır basılmamalı"
-    for alan in ("kind", "model", "chain", "cooldown_s"):
+    for alan in ("kind", "model", "chain", "cooldown_taban_s"):
         assert alan in ev[0], f"kaybolan `review_fallback_empty` satırının `{alan}` alanı taşınmalı"
+    # Rol-1 hükmü (2026-09-13, inceleme ORTA-1): ÖLÇÜLEN `cooldown_s` bu olaya YAZILMAZ — bekçi
+    # gruplama imzası oynak alanı görünce satırı `durum:` görünürlüğünden düşürür; soğumanın SABİT
+    # tabanı taşınır, ölçülen süre `agent_call_empty`de kalır (tek-kaynak). Mutasyon: alan geri
+    # konursa bu satır öter.
+    assert "cooldown_s" not in ev[0], "oynak `cooldown_s` yetki olayına sızmış — bekçi imzası bozulur"
 
 
 def test_403_ve_ciplak_forbidden_ayni_sinifa_duser_kod_uydurulmaz(ajan, monkeypatch):
