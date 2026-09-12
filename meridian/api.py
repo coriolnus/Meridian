@@ -4900,11 +4900,23 @@ def _golge_icra_karne() -> dict:
     İKİ OKUMA, TEK YANIT: `ozet()` defterin tamamını okur (K paydası ve dağılımlar için); buradaki
     iki literal okuma ham satırları ve açık pozisyon belgesini yüke koyar. Aynı istekte iki okuma
     anı doğar ve arada bir yazım olsaydı ayrışabilirlerdi — pencere BİLİNÇLİ olarak dardır:
-    defteri yazan tek yer `loop.daily_cycle`in gölge kancasıdır ve seansta BİR kez yazar."""
+    defteri yazan tek yer `loop.daily_cycle`in gölge kancasıdır ve seansta BİR kez yazar.
+
+    ARIZA GÖLGEDE KALIR — OKUYUCU TARAFI DA (2026-09-12, inceleme M4-07/M2-08). `store.read_jsonl`
+    yalnız JSON-BOZUK satırı atar; geçerli JSON ama ŞEMA-bozuk bir satır (elle düzenleme, eski
+    sürüm, ikinci yazıcı) `ozet()`in `float(r["R"])`ine kadar gelir ve bu uç PAYLAŞILANDIR:
+    `/api/diagnostics`in TAMAMI 500 dönerdi (üstelik 45 sn önbellek arızayı maskelerdi). Kanca
+    tarafında `loop` zaten aynı ilkeyi uyguluyor; simetrisi buradadır."""
     from . import golge_icra as _gi
-    return {**_gi.ozet(),
-            "satirlar": store.read_jsonl("golge_icra.jsonl", limit=GOLGE_ICRA_KUYRUK),
-            "acik": store.read_json("golge_icra_acik.json", {})}
+    try:
+        return {**_gi.ozet(),
+                "satirlar": store.read_jsonl("golge_icra.jsonl", limit=GOLGE_ICRA_KUYRUK),
+                "acik": store.read_json("golge_icra_acik.json", {})}
+    except Exception as e:  # sessiz-yutma: gölge defteri ŞEMA-bozuksa arıza ADIYLA yüke girer ve paylaşılan teşhis ucu ayakta kalır — sessiz `pass` değil, `hata` alanı + `obs.warn`
+        obs.warn("golge_icra_karne_failed", error=f"{type(e).__name__}: {e}",
+                 detail="gölge defteri okunamadı — kart yükü ARIZA damgasıyla döndü; "
+                        "/api/diagnostics ve /api/golge-icra ayakta")
+        return {"kart": _gi.KART, "n": None, "hata": f"{type(e).__name__}: {e}"}
 
 
 @app.get("/api/golge-icra")

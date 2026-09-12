@@ -290,11 +290,12 @@ DECLARED_ALIASES = {
     # Defterde İKİSİ DE AYRI ALAN olarak durur (`golge_icra.SATIR_ALANLARI`) ve öyle kalmalıdır:
     # tek alana indirmek "ölçemedim" ile "ölçtüm, giriş olmadı"yı aynı kovaya atardı — kartın
     # `olculemeyen` tanısı tam olarak bu ikisini AYIRMAK için var (uydurma yasağı: sıfır ile
-    # bilmiyorum aynı şey değildir). Zincir yalnız PANO/API'nin tek satırlık gösterim alanını
-    # üretir; sayım betiği ham alanları okur. `("hermes.py", "calls", "olculemeyen")` ve
-    # `("loop.py", "missing_on_alpaca", "qty_drift")` satırlarıyla AYNI sınıf — tarayıcının deseni
-    # (`X.get(a) or X.get(b)`) önceliği takastan ayırt edemez, ayrım ancak burada YAZILI olur.
-    ("golge_icra.py", "olculemedi", "giris_reddi"),
+    # bilmiyorum aynı şey değildir).
+    # BEYAN 2026-09-12'de KALDIRILDI (satır silindi, tarihçe burada kaldı): öncelik zinciri artık
+    # `or` ifadesi değil, `golge_icra.olculemeyen_neden` içinde ADLI dallardan oluşan bir
+    # fonksiyondur ve iki okuyucu (motorun `ozet`i + sayım betiği) onu İTHAL eder. Tarayıcının
+    # deseni (`X.get(a) or X.get(b)`) artık o dosyada eşleşmiyor; beyanı bırakmak "artık var
+    # olmayan takas" ihlali üretirdi (`test_declared_aliases_still_exist` bunu ölçtü).
 }
 
 

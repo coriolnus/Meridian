@@ -138,15 +138,6 @@ def test_civi1_IKINCI_POLL_ayni_seansta_YENI_SATIR_yazmaz(seeded):
         assert ikinci_doc[k] == ilk_doc[k], f"ikinci poll `{k}` alanını değiştirdi"
 
 
-#: Kancanın kol süzgeci — kaynaktan BİREBİR. Testin hem varlığını hem DAVRANIŞINI ölçmesi için
-#: burada metin olarak durur: aşağıdaki çivi onu önce kaynakta arar, sonra sentetik planlar
-#: üzerinde KOŞTURUR. Yalnız adı ("_golge_planlar" var mı) aramak yetmez — mutasyon turunda
-#: `_golge_planlar = list(plans)` ad kontrolünü yeşil geçti (M-c ISIRMADI, 2026-09-08).
-_KOL_SUZGECI = ('[p for p in plans\n'
-                '                              if p.get("dormant_setup") '
-                'or (p.get("ticker") in _silahli_tk)]')
-
-
 def test_civi1_KANCA_uyuyan_ve_GERCEK_ISLEM_kollarini_ayirir():
     """KOL KAPSAMI (Rol-1 hükmü 7): gölgeye giren küme uyuyan planlar + O SEANS SİLAHLANAN
     planlardır — "tüm normal planların sürekli gölgelenmesi" (bedel ~50×) DEĞİL.
@@ -154,24 +145,32 @@ def test_civi1_KANCA_uyuyan_ve_GERCEK_ISLEM_kollarini_ayirir():
     Silahlanan plan gerçek işlem olur; kontrol kolunun (PK 2) gölge eşleniği ancak plan DOĞDUĞU
     seansta yakalanırsa üretilebilir — `adim` ileri yürür, geriye saramaz (`son_seans` tektir).
 
-    ÇİVİ İKİ AYAKLIDIR: (a) ifade kaynakta BİREBİR duruyor mu, (b) o ifade GERÇEKTEN eliyor mu.
-    (b) olmadan süzgeci `list(plans)`a çevirmek çiviyi yeşil bırakıyordu."""
+    DAVRANIŞLA SINANIR (tur 2, inceleme M4-02). Eski çivi (a) süzgeç METNİNİ kaynakta arıyor,
+    (b) pozitif kontrolü TESTİN KENDİ SABİTİ üzerinde `eval` ediyordu — yani üretim kodunu değil
+    kendini doğruluyordu ve `planlar=plans` mutantı üç çiviyi de yeşil geçiyordu. Süzgeç artık
+    ÜRETİMDE adlı bir fonksiyondur (`loop.golge_kapsami`) ve burada DOĞRUDAN koşturulur.
+    """
+    planlar = [{"id": "P-1", "ticker": "AAA", "dormant_setup": True},    # uyuyan → GİRER
+               {"id": "P-2", "ticker": "BBB", "dormant_setup": False},   # silahlandı → GİRER
+               {"id": "P-3", "ticker": "CCC", "dormant_setup": False},   # ne uyuyan ne silahlı
+               {"id": "P-4", "ticker": "BBB", "dormant_setup": False}]   # AYNI SEMBOL, silahsız
+    silahli = [{"id": "P-2", "ticker": "BBB"}]
+    secilen = [p["id"] for p in loop.golge_kapsami(planlar, silahli)]
+    assert secilen == ["P-1", "P-2"], \
+        f"süzgeç ELEMİYOR ya da TICKER eşliyor (M1-05: kimlikle eşlenmeli): {secilen}"
+
+    # KİMLİKSİZ SİLAHLI KAYIT kimseyi içeri almaz (boş kimlik bir eşleşme DEĞİLDİR).
+    assert loop.golge_kapsami(planlar, [{"ticker": "BBB"}]) == [planlar[0]]
+    assert loop.golge_kapsami([], silahli) == [] and loop.golge_kapsami(planlar, []) == [planlar[0]]
+
+    # KAYNAK PİNİ: kanca gerçekten bu fonksiyonu çağırıyor ve `adim`a ONUN çıktısını veriyor.
     src = inspect.getsource(loop.daily_cycle)
-    assert _KOL_SUZGECI in src, "kol süzgeci kancada BİREBİR durmuyor — kapsam sessizce kaymış"
-    assert 'a["ticker"] for a in meta["armed"]' in src, \
-        "silahlı küme `meta[\"armed\"]`den TÜRETİLMİYOR — ikinci bir silahlanma yasası doğmuş"
+    assert 'golge_kapsami(plans, meta["armed"])' in src, \
+        "kanca kol kapsamını üretimin fonksiyonundan almıyor — ikinci bir süzgeç doğmuş"
+    assert "planlar=_golge_planlar" in src, "`adim`a süzülmemiş plan listesi geçiyor olabilir"
     assert src.count("girise_uygun(") == 2, \
         "kanca `girise_uygun`u yeniden çağırmış (üretim yüklemi ikinci kez yorumlanıyor) — " \
         "silahlanma yasası TEK yerdedir ve gölge onu OKUR, yeniden UYGULAMAZ"
-
-    # POZİTİF KONTROL: ÜRETİMİN KENDİ İFADESİ sentetik planlar üzerinde koşturulur.
-    ns = {"plans": [{"ticker": "AAA", "dormant_setup": True},    # uyuyan       → GİRER
-                    {"ticker": "BBB", "dormant_setup": False},   # silahlandı   → GİRER (kontrol)
-                    {"ticker": "CCC", "dormant_setup": False}],  # ne uyuyan ne silahlı → ELENİR
-          "_silahli_tk": {"BBB"}}
-    secilen = eval(" ".join(_KOL_SUZGECI.split()), {"__builtins__": {}}, ns)  # noqa: S307
-    assert [p["ticker"] for p in secilen] == ["AAA", "BBB"], \
-        f"süzgeç ELEMİYOR — normal planların TAMAMI gölgeye giriyor (bedel ~50×): {secilen}"
 
 
 # ==================================================================================================
@@ -216,9 +215,16 @@ def test_civi2_KANCA_kendi_try_except_ini_TASIR_ve_P3_acikligina_YAZMAZ():
 # ==================================================================================================
 def test_civi3_GOLGE_ADIMI_hicbir_AG_veya_LLM_yuzeyine_DOKUNMAZ(sandbox_state, monkeypatch):
     """PATLAYICI SAHTELER: `hermes`, `spend`, `httpx`, `requests` modülleri erişildiği ANDA patlar.
-    Gölge adımı tam bir seans koşar ve hiçbirine dokunmaz; `ozet` bedeli 0 olarak RAPORLAR.
+    Gölge adımı tam bir seans koşar ve hiçbirine dokunmaz.
 
-    "Ölçtüm, sıfır" ile "hiç bakmadım" ayrı olgulardır: bedel alanları özet sözleşmesinde durur."""
+    İKİ AYRI İDDİA, İKİ AYRI GÜÇ (netleştirme 2026-09-12, inceleme M4-12):
+      · SAHTE AĞI — `sys.modules` yaması yalnız TAZE ithalleri keser; modül üstünde ZATEN bağlı
+        referanslar (`strategy`, `broker`) gerçek modülleri tutar. Yani bu çivi "gölge adımı
+        içinde YENİ bir ağ/LLM modülü ithal edilmiyor" der; ithal KAPANIŞININ temizliği ayrı
+        ölçümdür (`test_civi3_KANCA_kaynaginda_ag_LLM_harcama_adi_GECMEZ` + motorun ithal çivisi).
+      · `bedel.ag_cagri` / `llm_cagri` — bunlar SAYAÇ DEĞİL, YAPISAL SIFIR BEYANIDIR: `ozet`
+        sözleşmesinde literal 0 olarak durur. `== 0` iddiası bir ölçüm değil, beyanın yerinde
+        durduğunun kontrolüdür (totolojik olduğu BİLİNEREK tutulur: alan kaybolursa öter)."""
     class _Bomba(types.ModuleType):
         def __getattr__(self, ad):
             raise AssertionError(f"GÖLGE KATMANI AĞ/LLM YÜZEYİNE DOKUNDU: {self.__name__}.{ad}")
@@ -311,6 +317,21 @@ def test_civi5_BOS_DEFTER_kanit_yok_der_sifir_uydurmaz(sandbox_state, monkeypatc
     assert j["satirlar"] == [] and isinstance(j["acik"], dict)
 
 
+#: HÜKÜM JETONLARI, HER BİRİ İKİ BİÇİMİYLE. TÜRKÇE KATLAMA TUZAKLIDIR ve tek bir dönüşüm iki
+#: yönü birden kapatamaz (ölçüldü, inceleme M4-11): `"eşik".upper()` → `EŞIK` (noktalı İ ASLA
+#: doğmaz, yani büyük harf listesi küçük harfli kaynağı KAÇIRIR), `"KALIR".casefold()` → `kalir`
+#: (dotless ı kaybolur, yani küçük harf listesi büyük harfli kaynağı kaçırır). Bu yüzden jeton
+#: çiftleri ADIYLA yazılır ve metinde ikisi de aranır.
+_YASAK_HUKUM = (("eşik", "EŞİK"), ("esik", "ESIK"), ("geçti", "GEÇTİ"), ("gecti", "GECTI"),
+                ("geçer", "GEÇER"), ("gecer", "GECER"), ("kalır", "KALIR"), ("kalir", "KALIR"),
+                ("başarılı", "BAŞARILI"), ("basarili", "BASARILI"))
+
+
+def _hukum_sizintisi(metin: str) -> list[str]:
+    """Metinde geçen yasak hüküm jetonları (bulunma sırasına göre) — boş liste = sızıntı yok."""
+    return [j for cift in _YASAK_HUKUM for j in cift if j in metin]
+
+
 def test_civi5_PENCERE_DOLMADAN_hicbir_ESIK_HUKMU_metni_YOK(sandbox_state, monkeypatch):
     """n<30 iken hüküm cümlesi yazmak, 049'un ikinci düşme sebebiydi. Uç BETİMLEYİCİDİR.
 
@@ -323,9 +344,35 @@ def test_civi5_PENCERE_DOLMADAN_hicbir_ESIK_HUKMU_metni_YOK(sandbox_state, monke
     assert j["pencere"]["doldu"] is False
     assert not (set(j) & {"hukum", "verdict", "gecti", "sonuc", "karar", "esik_hukmu"}), \
         f"uç bir KARAR alanı taşıyor: {sorted(set(j) & {'hukum', 'verdict', 'gecti', 'sonuc', 'karar', 'esik_hukmu'})}"
-    ham = r.text.upper()
-    for yasak in ("GEÇER", "GECER", "KALIR", "EŞİK", "BAŞARILI", "BASARILI", "GEÇTİ"):
-        assert yasak not in ham, f"pencere dolmadan hüküm metni sızdı: {yasak}"
+    assert _hukum_sizintisi(r.text) == [], f"pencere dolmadan hüküm metni sızdı: {r.text[:400]}"
+    # POZİTİF KONTROL: süzgeç ÖLÜ DEĞİL — küçük harfli Türkçe kaynağı da yakalar.
+    assert _hukum_sizintisi("eşik geçti") == ["eşik", "geçti"]
+    assert _hukum_sizintisi("EŞİK GEÇTİ") == ["EŞİK", "GEÇTİ"]
+
+
+def test_G3_SEMA_BOZUK_satir_PAYLASILAN_teshis_ucunu_DUSURMEZ(sandbox_state, monkeypatch):
+    """M4-07/M2-08: `ozet()` içindeki `float(r["R"])` çıplaktı ve `/api/diagnostics`in TAMAMINI
+    500'e düşürebiliyordu (45 sn önbellek arızayı ayrıca maskelerdi).
+
+    `store.read_jsonl` yalnız JSON-BOZUK satırı atar; geçerli JSON ama ŞEMA-bozuk bir satır
+    (elle düzenleme, eski sürüm, ikinci yazıcı) okuyucuya kadar gelir. Arıza artık ADIYLA yükün
+    içindedir — sessiz `pass` değil, Yasa 4 işaretli dal.
+    """
+    store.append_jsonl(gi.DEFTER, {"plan_id": "P-bozuk", "R": "abc", "kol": "dormant",
+                                   "kaynak_bar_hash": "x" * 64,
+                                   "bar_kaynak": gi.BAR_KAYNAKLARI[0]})
+    c, _api, token = _istemci(monkeypatch)
+
+    r = c.get("/api/diagnostics?taze=1", headers={"x-meridian-token": token})
+    assert r.status_code == 200, r.text
+    blok = r.json()["mlops"]["golge_icra"]
+    assert blok["n"] is None and blok["kart"] == gi.KART
+    assert blok["hata"].startswith("ValueError"), blok["hata"]
+    assert "shadow_variants" in r.json()["mlops"], "komşu blok arızadan etkilendi"
+
+    g = c.get("/api/golge-icra", headers={"x-meridian-token": token})
+    assert g.status_code == 200 and g.json()["hata"].startswith("ValueError")
+    assert _olaylar("golge_icra_karne_failed"), "arıza SESSİZ yutuldu"
 
 
 def test_civi5_DIAGNOSTICS_mlops_blogu_pano_kartinin_EVIDIR(sandbox_state, monkeypatch):
@@ -363,9 +410,21 @@ def test_civi6_uyuyan_URETIM_yuklemleri_BAYTI_BAYTINA_ayni():
 
 
 def test_civi6_LOOP_diffi_TEK_CAGRI_BLOGUDUR():
-    """`loop.py`de gölge motorunun adı YALNIZ kancada geçer; ikinci bir çağrı yeri yoktur."""
-    assert LOOP_KAYNAK.count("golge_icra") == 3, \
-        "gölge adı loop.py'de beklenenden farklı sayıda geçiyor (import + adim + uyarı adı)"
+    """`loop.py`de gölge motorunun KOD geçişi tektir: bir ithal + bir uyarı adı + bir çağrı.
+
+    SAYIM AST İLEDİR, METİNLE DEĞİL (tur 2, inceleme M4-13). Eski çivi `count("golge_icra") == 3`
+    diyordu ve gerekçesi ("import + adim + uyarı adı") YANLIŞTI: `_gi.adim(` metni "golge_icra"
+    İÇERMEZ, üçüncü eşleşme bir ŞERH satırıydı. Yani bir yorum düzenlemesi çiviyi yanıltıcı
+    mesajla kırıyordu; şerhler artık sayılmıyor.
+    """
+    import ast as _ast
+    agac = _ast.parse(LOOP_KAYNAK)
+    ithal = [a.name for n in _ast.walk(agac) if isinstance(n, _ast.ImportFrom)
+             for a in n.names if a.name == "golge_icra"]
+    assert ithal == ["golge_icra"], f"gölge motoru {len(ithal)} kez ithal ediliyor"
+    uyari = [n for n in _ast.walk(agac)
+             if isinstance(n, _ast.Constant) and n.value == "golge_icra_failed"]
+    assert len(uyari) == 1, "gölge arıza uyarısı tek yerde değil"
     assert LOOP_KAYNAK.count("_gi.adim(") == 1, "ikinci bir gölge çağrısı doğmuş"
     src = inspect.getsource(loop.daily_cycle)
     assert src.count("_scan_tail(") == 2, "kanca üçüncü bir tarama dilimi reçetesi ekledi"

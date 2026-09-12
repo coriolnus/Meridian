@@ -30,7 +30,7 @@ import pathlib
 import re
 from dataclasses import dataclass, field
 
-from . import codelaw, store
+from . import codelaw, golge_icra, store
 
 # Plan kimliği: canlı döngü, backtest ve cf_backfill'in ORTAK anahtarı. Bu formatın dışındaki bir
 # kimlik, cf↔gerçek birleştirmesini imkânsız kılar (canlıda tam olarak bu oldu).
@@ -406,6 +406,27 @@ CONTRACTS: dict[str, Contract] = {
              "uzunluğu, `kirpildi` ise kırpılıp kırpılmadığını taşır — beyansız bir kırpma, kısa "
              "bir hatayı kırpılmış uzun bir hatadan ayırt edilemez yapardı. Defter 300 satırlık "
              "HALKADIR: eski satırlar düşer ve düşüş `agent_trace_pruned` olayıyla duyurulur"),
+    # GÖLGE İCRA DEFTERİ (EDG-2026-088). Açık kalem olarak doğmuştu (üç teslim raporunda da
+    # beyanlı), 2026-09-12'de kapandı. ALAN LİSTESİ KOPYA DEĞİL TÜRETMEDİR: motorun şeması
+    # `golge_icra.SATIR_ALANLARI`nda TEK YERDE yazılıdır ve her satır alanların TAMAMINI taşır
+    # (ölçülemeyen alan `None`, "yok" değil) — bu yüzden `required` o demetin kendisidir. İkinci
+    # bir alan listesi yazmak, tam olarak bu sözleşmenin var olma sebebi olan sessiz ayrışmayı
+    # üretirdi.
+    # `golge_icra_acik.json` SÖZLEŞMEYE GİRMEZ: o bir DEFTER değil DURUM dosyasıdır (açık
+    # pozisyonlar + bekleyen girişler + `son_seans` + pencere beyanı; tek belge, satır yok).
+    # `CONTRACTS` satır şemasını ve birleştirme anahtarını çiviler; durum belgesinin ne satırı ne
+    # anahtarı vardır, "zorunlu alan" dili ona uymaz ve `validate_live` onu okuyamaz.
+    "golge_icra.jsonl": Contract(
+        required=golge_icra.SATIR_ALANLARI,
+        writers=("golge_icra.py",),
+        key="plan_id", key_format=PLAN_ID_RE,
+        consumers=("api", "research/olcumler/edg088_golge_pilot/sayim.py"),
+        note="UYUYAN KURULUM GÖLGE İCRASI — SIFIR EMİR YETKİSİ. Satırı `golge_icra._satir` kurar "
+             "ve `adim` diske yazar; başka yazar YOKTUR (kart kill#1). Alanlar "
+             "`golge_icra.SATIR_ALANLARI`ndan TÜRETİLİR. Aynı `plan_id` ile İKİNCİ bir satır "
+             "MÜKERRERDİR ve okuyucuda kapanır (`golge_icra.tekillestir`, plan başına SON satır): "
+             "yazım sırası bilerek 'satırlar önce, ACIK sonra'dır — çökme kayıp değil mükerrer "
+             "üretsin diye"),
 }
 
 _WRITE_CALLS = ("write_json", "write_jsonl", "append_jsonl", "merge_dated_jsonl",

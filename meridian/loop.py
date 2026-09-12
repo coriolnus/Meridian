@@ -1711,6 +1711,35 @@ def _reconcile_gunu_atlandi(sinif: str, dstr: str, takvim=None) -> None:
                   esik=RECONCILE_BAYAT_ISLEM_GUNU)
 
 
+def golge_kapsami(planlar: list[dict], silahlilar: list[dict]) -> list[dict]:
+    """EDG-2026-088 gölge defterine GİRECEK plan kümesi (Rol-1 hükmü 7).
+
+    KAPSAM: uyuyan (`dormant_setup`) planların TAMAMI + O SEANS SİLAHLANANLAR. İkincisi kontrol
+    kolunun (PK 2) tek üretilebilir biçimidir: `golge_icra.adim` ileri yürür, geriye SARAMAZ
+    (`son_seans` tektir), yani gerçek işlemin gölge eşleniği ancak plan DOĞDUĞU seansta
+    yakalanırsa doğar. Silahlanmayan normal planlar gölgeye GİRMEZ — "tüm normal planların
+    sürekli gölgelenmesi" bedeli ~50× olurdu ve kart onu istemiyor.
+
+    EŞLEME KİMLİKLEDİR, TICKER'LA DEĞİL (düzeltme 2026-09-12, inceleme M1-05). `meta["armed"]`
+    önceki seanstan TAŞINAN planları da içerir; sembol eşlemesi, aynı hisse için bugün doğan ama
+    hiç silahlanmamış bir planı `kontrol` damgasıyla gölgeye sokardı — kol etiketi yanlış olurdu
+    ve PK (2) eşleşmesi `plan_id` ile yapıldığı için o satır çift bile kurmazdı (sessiz gürültü).
+
+    NEDEN AYRI FONKSİYON: kapsam kuralı bir YASADIR ve davranışla sınanmalıdır. Kanca gövdesindeki
+    liste kavrayışı yalnız METİNLE pimlenebiliyordu; `planlar=plans` mutantı üç çiviyi de yeşil
+    geçiyordu (ölçüldü 2026-09-08).
+
+    PARANTEZ YÜKLÜDÜR, SÜS DEĞİL: `test_parity_v56::_alias_scan` `X.get(a) or X.get(b)` metnini
+    bir ŞEMA TAKASI (aynı olgunun iki adı) sanar. Burada ikinci terim bir ÜYELİK sınamasıdır
+    (`… in _silahli_id`) ve Python zaten `or`u `in`den sonra bağlar — yani tarayıcının eşlediği
+    metin bir ifade bile değildir. Parantez o ayrımı KAYNAKTA yazar; kaldırılırsa v56 kırılır ve
+    envantere olmayan bir takas beyan edilmek zorunda kalınır.
+    """
+    _silahli_id = {str(a.get("id")) for a in (silahlilar or []) if a.get("id")}
+    return [p for p in (planlar or [])
+            if p.get("dormant_setup") or (str(p.get("id")) in _silahli_id)]
+
+
 def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> dict:
     """Process the latest closed trading day. Returns a summary dict."""
     # goal/bounds lru_cache'i uzun ömürlü süreçte dosyayı DONDURUYORDU: operatörün goal.yaml'da
@@ -2612,14 +2641,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         # yazıldı) ve arıza ADIYLA görünür — motorun kendisinde bilerek hiç `except` yoktur.
         try:
             from . import golge_icra as _gi
-            _silahli_tk = {a["ticker"] for a in meta["armed"]}
-            # PARANTEZ YÜKLÜDÜR, SÜS DEĞİL: `test_parity_v56::_alias_scan` `X.get(a) or X.get(b)`
-            # metnini bir ŞEMA TAKASI (aynı olgunun iki adı) sanar. Burada ikinci terim bir ÜYELİK
-            # sınamasıdır (`… in _silahli_tk`) ve Python zaten `or`u `in`den sonra bağlar — yani
-            # tarayıcının eşlediği metin bir ifade bile değildir. Parantez o ayrımı KAYNAKTA yazar;
-            # kaldırılırsa v56 kırılır ve envantere olmayan bir takas beyan edilmek zorunda kalınır.
-            _golge_planlar = [p for p in plans
-                              if p.get("dormant_setup") or (p.get("ticker") in _silahli_tk)]
+            _golge_planlar = golge_kapsami(plans, meta["armed"])
             _gi.adim(dstr, planlar=_golge_planlar, bars_of=lambda t: per.get(t),
                      regime_ok=regime_ok, params=eff)
         except Exception as e:

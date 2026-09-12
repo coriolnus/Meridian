@@ -213,18 +213,134 @@ def test_civi4_giris_ALTINCI_satir_toplami_DEGISTIRIR(sandbox_state):
 
 
 def test_civi4_giris_redlerinin_TAMAMI_adiyla_ayrisir(sandbox_state):
-    """Kalan iki red dalı: limit tavanı aşıldı · açılış planlanan stopun ALTINDA."""
-    bars = {"GGG": _seri({D1: (120.0, 125.0, 119.0, 124.0)}),      # limit = 100·1,04 = 104
-            "HHH": _seri({D1: (94.0, 101.0, 93.0, 100.5)})}        # tetik geldi ama açılış < stop
+    """Kalan iki red dalı: limit tavanı aşıldı · DOLUM planlanan stopun ALTINDA.
+
+    TUR 2 (A1, stop-al semantiği): `acilis_stop_altinda` artık AÇILIŞLA değil DOLUMLA ölçülür.
+    Tetiği olan bir planda dolum `max(açılış, tetik) > stop` olduğu için bu dal YALNIZ tetiği
+    ölçülemeyen (`tetik=0`) planda ateşler — sahne ona göre kuruldu (eski sahne "açılış 94, tetik
+    100" idi ve yeni yasada GİRİŞ üretir: tetikten dolum 100 > stop 95).
+    """
+    bars = {"GGG": _seri({D1: (120.0, 125.0, 119.0, 124.0)}),      # gap tavanı = 100·1,04 = 104
+            "HHH": _seri({D1: (94.0, 101.0, 93.0, 100.5)})}        # tetiksiz plan: dolum = açılış
     bo = _bars_of(bars)
-    gi.adim(D0, planlar=[_plan("P-g", "GGG"), _plan("P-h", "HHH")], bars_of=bo,
+    gi.adim(D0, planlar=[_plan("P-g", "GGG"), _plan("P-h", "HHH", trig=0.0)], bars_of=bo,
             regime_ok=True, params=PARAMS)
     gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
     sat = {r["plan_id"]: r for r in gi.kayit_al()}
-    assert sat["P-g"]["giris_reddi"] == "limit_asildi"
+    # SIRA ÜRETİMİN SIRASIDIR: `fill_entry` önce max-chase, sonra limit tavanı sınar. Bugünkü
+    # yapılandırmada ikisi AYNI fiyatta bağlar (%4), yani bu sahnede ÖNCE gap kapısı ateşler;
+    # `limit_asildi` dalı daha sıkı bir tavanla ölçülür (A1 limit çivisi).
+    assert sat["P-g"]["giris_reddi"] == "gap_asildi"
     assert sat["P-h"]["giris_reddi"] == "acilis_stop_altinda"
     assert all(sat[p]["R"] is None and sat[p]["cikis_neden"] == gi.GIRIS_YOK for p in sat)
     assert set(gi.GIRIS_REDLERI) >= {sat[p]["giris_reddi"] for p in sat}
+
+
+# ================ ÇİVİ 4b — GİRİŞ KURALI: STOP-AL (Rol-1 hükmü A1, inceleme M2-01) ==============
+def _giris_kosusu(bar, *, trig=100.0, stop=95.0, pid="P-x", tk="XXX"):
+    """Tek plan: D0'da doğar, D1'de giriş denenir. Dönüş: (`ACIK` belgesi, plan_id→satır)."""
+    bars = {tk: _seri({D1: bar})}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan(pid, tk, trig=trig, stop=stop)], bars_of=bo,
+            regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    return gi.acik_kayit(), {r["plan_id"]: r for r in gi.kayit_al()}
+
+
+def test_A1_open_TETIGIN_ALTINDA_ise_dolum_TETIKTEN_yazilir(sandbox_state):
+    """M2-01'in ileri-bakışı KAPANDI: karar `high ≥ tetik` ile verilip dolum açılıştan yazılıyordu.
+
+    Açılış anında günün yükseği BİLİNMEZ; `open < tetik ≤ high` günlerinde tetiğin ALTINDAN dolum
+    yazmak K1/K2'yi yukarı yanlı yapardı. Stop-al semantiğinde dolum `max(açılış, tetik)`tır.
+    """
+    doc, sat = _giris_kosusu((98.0, 103.0, 97.0, 102.0))          # açılış 98 < tetik 100 ≤ high 103
+    poz = doc["acik"]["P-x"]
+    assert poz["giris_fiyat"] == pytest.approx(100.0), "dolum tetiğin ALTINDAN yazıldı"
+    assert poz["r_per_share"] == pytest.approx(5.0), "R paydası ham açılıştan kuruldu"
+    assert sat == {}, "giriş olduğu hâlde satır yazıldı"
+
+
+def test_A1_open_TETIGIN_USTUNDE_ise_dolum_ACILISTAN_yazilir(sandbox_state):
+    """Boşluklu açılış: `açılış ≥ tetik` ise dolum AÇILIŞTIR (stop emri boşlukta açılıştan dolar)."""
+    doc, _ = _giris_kosusu((101.0, 103.0, 100.0, 102.0))
+    assert doc["acik"]["P-x"]["giris_fiyat"] == pytest.approx(101.0)
+    assert doc["acik"]["P-x"]["r_per_share"] == pytest.approx(6.0)
+
+
+def test_A1_high_TETIGE_ULASMAZSA_giris_YOKTUR(sandbox_state):
+    """Tetiğe hiç dokunulmayan günde stop emri dolmaz — R None, neden ADIYLA."""
+    doc, sat = _giris_kosusu((95.5, 96.0, 94.0, 95.0))
+    assert not doc["acik"], doc["acik"]
+    assert sat["P-x"]["giris_reddi"] == "tetik_gelmedi" and sat["P-x"]["R"] is None
+
+
+def test_A1_limit_tavani_DOLUM_fiyatina_uygulanir_ACILISA_DEGIL(sandbox_state, monkeypatch):
+    """Tavan DOLUM fiyatıyla ölçülür. Yasa üretimden OKUNUR: `limit_pct_cap` %1'e çekilince
+    tavan 101 olur ve tetiğin %2 üstünde açılan bar reddedilir; aynı yasada tetiğin ALTINDA
+    açılan bar tetikten (100 ≤ 101) DOLAR — yani kapı dolum fiyatına bakar."""
+    # YASA DEĞİL YAPILANDIRMA yamalanır: `entry_law` düğmeyi `config.goal()`tan okur. Önbellek
+    # SEVİYESİNE (`_goal_cached`) yazılır — `config.goal`ın kendisini değiştirmek `cache_clear`
+    # özniteliğini düşürür ve `sandbox_state` kapanışını kırardı (ölçüldü).
+    from meridian import config
+    monkeypatch.setattr(config, "_goal_cached",
+                        lambda: {"execution_v2": {"limit_pct_cap": 0.01}})
+    _, sat = _giris_kosusu((102.0, 105.0, 101.0, 104.0))          # dolum 102 > tavan 101
+    assert sat["P-x"]["giris_reddi"] == "limit_asildi", sat
+
+    store.write_jsonl(gi.DEFTER, [])
+    store.write_json(gi.ACIK, {})
+    doc, sat2 = _giris_kosusu((98.0, 103.0, 97.0, 102.0))         # dolum 100 ≤ tavan 101
+    assert sat2 == {}, sat2
+    assert doc["acik"]["P-x"]["giris_fiyat"] == pytest.approx(100.0)
+
+
+def test_F3_BEYANLI_SAPMALAR_besincisi_REJIM_KAPISINI_yazar():
+    """M1-01 çürütüldü ama BEYANSIZDI: sapma listesine (5) olarak girdi.
+
+    Beyan, adını söylemeyen bir beyan değildir: gölge kolunun KÜRESEL (sıkı) rejim kapısıyla
+    ölçüldüğü ve canlı keşif sondasının gevşek kapısının UYGULANMADIĞI başlıkta yazılı olmalı.
+    """
+    ham = _kaynak()
+    bas = ham.index("BEYANLI KAPSAM SAPMALARI")
+    blok = ham[bas:ham.index("OKUR:", bas)]
+    assert "(5)" in blok, "beşinci sapma beyanı kayboldu"
+    for jeton in ("regime_ok", "keşif"):
+        assert jeton in blok, f"beyan `{jeton}` sözcüğünü taşımıyor — sapma adıyla yazılmamış"
+
+
+def test_F2_GAP_MUHAFIZI_uretimin_SABITIYLE_aynalanir(sandbox_state):
+    """M1-09: üretim `fill_entry` İKİ kapı uygular (max-chase + limit tavanı); gölge yalnız
+    limiti sınıyordu. `limit_pct_cap` %4'ün üstüne çıkarılırsa gölge girer, canlı reddederdi —
+    sapma gölge LEHİNE, yani beyanlı sapmaların TERSİ yönde. Sabit broker'dan İTHAL edilir.
+    """
+    from meridian import broker as brk
+    _, sat = _giris_kosusu((106.0, 110.0, 105.0, 109.0))      # tetik 100 → gap tavanı 104
+    assert sat["P-x"]["giris_reddi"] == "gap_asildi", sat
+    assert "gap_asildi" in gi.GIRIS_REDLERI
+
+    # ÜRETİM AYNI SAHNEDE AYNI KAPIYI UYGULAR — kıyas ÖLÇÜLÜR, varsayılmaz.
+    red: dict = {}
+    b = brk.PaperBroker(equity=100_000.0, slippage_bps=0.0, commission_per_share=0.0)
+    b.fill_entry({"id": "P-x", "ticker": "XXX", "entry_trigger": 100.0, "stop": 95.0,
+                  "profit_target": 110.0, "size_r": 1.0},
+                 next_open=106.0, ts="2026-07-02", equity=100_000.0, reject_out=red)
+    assert red.get("reason") == "max_chase", red
+    assert red.get("tavan_pct") == brk.MAX_ENTRY_GAP_PCT
+
+
+def test_A1_satir_GIRIS_KURALINI_adiyla_tasir(sandbox_state):
+    """Sapma BEYANLIDIR ve satırdadır: okuyucu hangi giriş yasasıyla ölçüldüğünü defterden bilir."""
+    bars = {"XXX": _seri({D1: (98.0, 103.0, 97.0, 102.0), D2: (99.0, 99.0, 90.0, 91.0)})}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-x", "XXX")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    sat = gi.kayit_al()[0]
+    assert "giris_kurali" in gi.SATIR_ALANLARI
+    assert sat["giris_kurali"] == gi.GIRIS_KURALI == "stop_al"
+    # Dolum tetikten (100), stop 95 → R = (95 − 100)/5 = −1,0 (ham açılıştan olsaydı −0,6 çıkardı)
+    assert sat["giris_fiyat"] == pytest.approx(100.0)
+    assert sat["R"] == pytest.approx(-1.0, abs=1e-9)
 
 
 # ============================ ÇİVİ 1 — KILL#1 SIFIR EMİR ========================================
@@ -384,31 +500,34 @@ def test_civi3_motorun_yazdigi_artefaktlar_TAM_OLARAK_iki_defterdir():
 
 
 def test_civi3_YASA6_bugun_ACIK_ve_kapatan_sey_DIS_OKUYUCUDUR(tmp_path):
-    """YASA 6'NIN AÇIK KALEMİ, BEYANLA DEĞİL ÖLÇÜMLE.
+    """YASA 6'NIN MEKANİĞİ, BEYANLA DEĞİL ÖLÇÜMLE — SENTETİK AĞAÇTA.
 
-    Bu görev (B1 Task 1) motoru doğurur ama okuyucusunu doğurmaz: dış okuyucu `meridian/api.py` →
-    `golge_icra.ozet()` Task 2'nindir. Dolayısıyla BUGÜN canlı ağaçta iki artefakt `unread`tır ve
-    `tests/test_codelaw_v59.py` ile `tests/test_golge_v2_yasam_dongusu_v132.py`nin genel ihlal
-    çivileri KIRMIZIDIR. Bu bilinen ve ADI KONMUŞ bir açık kalemdir.
+    KAPSAM GÜNCELLENDİ (2026-09-12, inceleme M4-10). Docstring'in eski hâli "BUGÜN canlı ağaçta
+    iki artefakt `unread`tır ve v59/v132 KIRMIZIDIR" diyordu; o açık kalem Task 2'de KAPANDI
+    (`meridian/api.py` → `_golge_icra_karne`). Bu çivi canlı hükmü VERMEZ: canlı ölçüm
+    `tests/test_golge_icra_kadans_v457.py` içindeki dış-okuyucu çivisidir. Burada ölçülen şey
+    codelaw'ın DAVRANIŞIDIR: okuyucusuz bir ağaçta iki ad `violations`ta doğar, `ozet`i çağıran
+    tek bir dış modül eklenince İKİSİ DE düşer — yani ihlalin sebebi gerçekten okuyucu
+    eksikliğidir, başka bir şey değil.
 
-    `DECLARED_SINKS` BİLEREK KULLANILMADI: beyan "bu artefaktın üretimde okuyucusu YOK" demektir ve
-    burada YANLIŞ olurdu — okuyucu var, henüz yazılmadı. Yanlış beyan, Task 2 okuyucuyu ekleyince
-    `stale_sinks` ihlaline dönerdi; yani muafiyet borcu kapatmaz, sınıfını değiştirirdi.
+    `DECLARED_SINKS` BİLEREK KULLANILMADI: beyan "bu artefaktın üretimde okuyucusu YOK" demektir
+    ve YANLIŞ olurdu — okuyucu vardır.
 
-    ÇİVİ ŞUNU ÖLÇER: ihlalin sebebi GERÇEKTEN dış okuyucu eksikliğidir. Motorun KENDİ kaynağı
-    sentetik bir ağaca kopyalanır; okuyucusuz hâlde iki ad `violations`tadır, `ozet`i çağıran tek
-    bir dış modül eklenince İKİSİ DE düşer. Task 2 tam olarak o modülü canlıya koyar.
+    TASLAK LİTERAL AD OKUR: canlı ağaçta `store.read_jsonl(golge_icra.DEFTER)` biçimi ÇÖZÜLMEZ
+    (`codelaw._global_consts` çakışan `DEFTER` adını düşürür — `mukerrerlik.py` aynı adı taşır),
+    o yüzden gerçek `api.py` de literal yazar. Taslak onu AYNI biçimde kurar ki sentetik ölçüm
+    canlı biçimin provası olsun.
     """
     (tmp_path / "golge_icra.py").write_text(_kaynak(), encoding="utf-8")
     okuyucusuz = codelaw.artifact_graph(str(tmp_path))
     assert sorted(okuyucusuz["violations"]) == sorted([gi.ACIK, gi.DEFTER]), \
         okuyucusuz["violations"]
 
-    (tmp_path / "api.py").write_text(                       # Task 2'nin dış okuyucusunun taslağı
+    (tmp_path / "api.py").write_text(                       # dış okuyucunun CANLI biçimdeki provası
         "from . import golge_icra, store\n"
         "def golge_icra_ucu():\n"
-        "    store.read_jsonl(golge_icra.DEFTER)\n"
-        "    store.read_json(golge_icra.ACIK, {})\n"
+        f'    store.read_jsonl("{gi.DEFTER}")\n'
+        f'    store.read_json("{gi.ACIK}", {{}})\n'
         "    return golge_icra.ozet()\n", encoding="utf-8")
     okuyuculu = codelaw.artifact_graph(str(tmp_path))
     assert okuyuculu["violations"] == [], okuyuculu["violations"]
@@ -438,18 +557,38 @@ def test_civi5_giris_D_ARTI_BIR_ACILISINDA_olur(sandbox_state):
     assert poz["giris_ts"] == D1 and poz["giris_fiyat"] == 101.0, poz
 
 
-def test_civi5_D0_KAPANISI_ve_CIKIS_SONRASI_barlar_sonucu_DEGISTIRMEZ(sandbox_state, tmp_path):
-    """İki koşum, iki ağaç: (a) D0 barları uçurulmuş, (b) çıkıştan SONRAKİ barlar uçurulmuş.
-    Satırlar (yazım anı hariç) BİREBİR aynı kalmalı — aksi hâlde motor geleceğe bakıyordur."""
-    temiz = _pk1_kosusu()
+def test_civi5_D0_KAPANISI_GIRISTE_kullanilmaz(sandbox_state):
+    """D0 (plan doğum) barı GİRİŞ kararını ve fiyatını DEĞİŞTİRMEZ — ileri-dönüklük yok.
 
+    KAPSAM DARALTILDI (tur 2, inceleme M4-05): D0 barı YÖNETİM geçmişinde MEŞRUDUR
+    (`manage_position` ATR'yi giriş öncesi barlardan da kurar) ve tur 2'den beri PIT çapasına
+    GİRER. Bu yüzden bu çivi artık `kaynak_bar_hash` eşitliği İSTEMEZ — onun değişmesi doğru
+    davranıştır ve kendi çivisi vardır (`test_D_GIRIS_ONCESI_bar_degisince_HASH_DEGISIR`).
+    Eskiden hash de kıyasa giriyordu ve çivi "çapa eksik" olgusunu ERDEM diye mühürlüyordu.
+    """
+    temiz = _pk1_kosusu()
     kirli = _pk1_bars()
     for tk in kirli:
-        # D0 KAPANIŞI: girişte kullanılmamalı → uçur.
         kirli[tk] = pd.concat([kirli[tk], pd.DataFrame(
             [{"open": 500.0, "high": 900.0, "low": 1.0, "close": 700.0, "volume": 1.0}],
             index=pd.DatetimeIndex([pd.Timestamp(D0)], name="date"))]).sort_index()
-        # ÇIKIŞ SONRASI: pencerenin son gününden sonraki bar → hiçbir satıra dokunmamalı.
+
+    store.write_jsonl(gi.DEFTER, [])
+    store.write_json(gi.ACIK, {})
+    ikinci = _pk1_kosusu(bars=kirli)
+
+    disarida = {"ts", "kaynak_bar_hash"}
+    for pid in temiz:
+        a = {k: v for k, v in temiz[pid].items() if k not in disarida}
+        b = {k: v for k, v in ikinci[pid].items() if k not in disarida}
+        assert a == b, f"{pid}: D0 kapanışı giriş/çıkış sonucunu değiştirdi\n{a}\n{b}"
+
+
+def test_civi5_CIKIS_SONRASI_barlar_sonucu_ve_CAPAYI_DEGISTIRMEZ(sandbox_state):
+    """Çıkıştan SONRAKİ barlar hiçbir satıra dokunmaz — hash DAHİL (tüketilmemiş bar çapada yok)."""
+    temiz = _pk1_kosusu()
+    kirli = _pk1_bars()
+    for tk in kirli:
         kirli[tk] = pd.concat([kirli[tk], pd.DataFrame(
             [{"open": 5.0, "high": 9.0, "low": 0.5, "close": 7.0, "volume": 1.0}],
             index=pd.DatetimeIndex([pd.Timestamp("2026-07-10")], name="date"))]).sort_index()
@@ -464,6 +603,89 @@ def test_civi5_D0_KAPANISI_ve_CIKIS_SONRASI_barlar_sonucu_DEGISTIRMEZ(sandbox_st
         assert a == b, f"{pid}: ileri-dönük bar sonucu değiştirdi\n{a}\n{b}"
 
 
+# ============================ D — PIT ÇAPASININ KAPSAMI (M2-03 / M4-05) =========================
+def _capa_kosusu(seri):
+    """AAA tek planı: D0 doğum → D1 giriş → D2 sert stop. Dönüş: kapanan satır."""
+    bo = _bars_of({"AAA": seri})
+    gi.adim(D0, planlar=[_plan("P-a", "AAA")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    return gi.kayit_al()[0]
+
+
+def test_D_GIRIS_ONCESI_bar_degisince_HASH_DEGISIR(sandbox_state):
+    """Çapa TÜKETİLEN pencereyi kapsar: yönetim yasası giriş ÖNCESİ barları da okur.
+
+    `strategy.manage_position` ilk satırda `ind.atr(df, ATR_PERIOD)` çağırır ve ATR bir EWM'dir —
+    yani trail/breakeven kararı giriş öncesi barlara BAĞLIDIR. Çapa yalnız pozisyon ömrünü
+    kapsasaydı, giriş öncesi bir OHLC hanesi değişip çıkışı kaydırabilir ve `kaynak_bar_hash` AYNI
+    kalırdı: PIT doğrulaması sessizce yanlış-pozitif verirdi.
+    """
+    ilk = _capa_kosusu(_pk1_bars()["AAA"])
+    store.write_jsonl(gi.DEFTER, [])
+    store.write_json(gi.ACIK, {})
+
+    kirli = _pk1_bars()["AAA"].copy()
+    onceki = kirli.index[kirli.index < pd.Timestamp(D1)][-1]      # GİRİŞ barından bir ÖNCEKİ bar
+    kirli.loc[onceki, "high"] = float(kirli.loc[onceki, "high"]) + 1.0
+    ikinci = _capa_kosusu(kirli)
+
+    assert ikinci["R"] == ilk["R"], "senaryo değişti — kıyas artık çapayı ölçmüyor"
+    assert ikinci["kaynak_bar_hash"] != ilk["kaynak_bar_hash"], \
+        "giriş öncesi bar çapada YOK — PIT kapsamı tüketilen pencereden DAR"
+    assert ilk["bar_n"] == gi.LOOKBACK_BAR + 2, ilk["bar_n"]   # ısınma + giriş barı + çıkış barı
+
+
+def test_D_ISINMA_PENCERESI_DISINDAKI_bar_hash_i_DEGISTIRMEZ(sandbox_state):
+    """Kapsam TANIMLIDIR, sonsuz değil: `LOOKBACK_BAR`dan geride kalan bar çapaya GİRMEZ.
+
+    Çapayı tüm geçmişe açmak `bar_n`i ve ACIK belgesini sınırsız şişirirdi; pencere yönetim
+    yasasının ÖLÇÜLEN geriye bakışından türetilir (`strategy.ATR_PERIOD` + 1).
+    """
+    ilk = _capa_kosusu(_pk1_bars()["AAA"])
+    store.write_jsonl(gi.DEFTER, [])
+    store.write_json(gi.ACIK, {})
+
+    kirli = _pk1_bars()["AAA"].copy()
+    uzak = kirli.index[0]                                        # 30 bar geride — pencere DIŞI
+    kirli.loc[uzak, "high"] = float(kirli.loc[uzak, "high"]) + 5.0
+    ikinci = _capa_kosusu(kirli)
+    assert ikinci["kaynak_bar_hash"] == ilk["kaynak_bar_hash"], \
+        "çapa ısınma penceresinden DAHA geriye uzanıyor — kapsam tanımsız"
+
+
+def test_D_CAPA_BEDELI_ACIK_belgesinde_OLCULUR(sandbox_state):
+    """BEDEL YASASI: kapsam genişledi — ne KAYBEDİLDİĞİ de ölçülür.
+
+    Bedel `ACIK` belgesindedir (açık pozisyon başına `LOOKBACK_BAR` kesit); DEFTER satırı
+    büyümez çünkü hash sabit uzunlukta bir sha256'dır. ÖLÇÜLEN (2026-09-12, bu sahnede):
+    ısınma kesitleri 930 bayt/pozisyon, ACIK belgesinin tamamı 1.649 bayt (tek açık pozisyon). Canlıda aynı anda
+    açık gölge pozisyon sayısı kadar çarpılır (bugün ≤ birkaç düzine) — üst sınır burada çivili.
+    """
+    bars = {"AAA": _pk1_bars()["AAA"]}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-a", "AAA")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    poz = gi.acik_kayit()["acik"]["P-a"]
+    assert len(poz["tuketilen"]) == gi.LOOKBACK_BAR + 1, "ısınma penceresi taşınmıyor"
+    isinma_bayt = len(json.dumps(poz["tuketilen"][:gi.LOOKBACK_BAR]))
+    print(f"\nD-BEDEL ÖLÇÜMÜ: ısınma kesitleri {isinma_bayt} bayt/pozisyon · "
+          f"ACIK belgesi {len(json.dumps(gi.acik_kayit()))} bayt")
+    assert isinma_bayt < 1500, f"ısınma bedeli beklenenden büyük: {isinma_bayt} bayt"
+
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    sat = gi.kayit_al()[0]
+    assert len(sat["kaynak_bar_hash"]) == 64, "defter satırı sabit uzunlukta çapa taşımıyor"
+
+
+def test_D_LOOKBACK_BAR_yonetim_yasasindan_TURETILIR():
+    """Sabit ELLE yazılmaz: ATR periyodu üretimin kendi sabitinden okunur (tek-kaynak)."""
+    assert gi.LOOKBACK_BAR == strategy.ATR_PERIOD + 1
+
+
+# ============================ ÇİVİ 6 — PIT / kaynak_bar_hash (devam) ============================
+
+
 # ============================ ÇİVİ 6 — PIT / kaynak_bar_hash ====================================
 def test_civi6_bar_hash_ayni_barlar_AYNI_tek_hane_FARKLI():
     kesit = [["AAA", "2026-07-02", 101.0, 103.0, 100.0, 101.0, 2_000_000.0]]
@@ -473,6 +695,48 @@ def test_civi6_bar_hash_ayni_barlar_AYNI_tek_hane_FARKLI():
         bozuk = [list(kesit[0])]
         bozuk[0][i] = bozuk[0][i] + 0.01
         assert gi.bar_hash(bozuk) != gi.bar_hash(kesit), f"hane {i} hash'i değiştirmedi"
+
+
+#: ALTIN ÖZET — bilinen iki kesitin sha256'sı. BİLİNÇLİ DONMA: hash SÖZLEŞMESİ (kesit biçimi,
+#: ayraç, `repr(float(x))` gösterimi, satır sonu, kesit sırası) değişirse bu çivi BİLEREK kırılır
+#: ve değişiklik bir karar olur — sessizce yeni bir çapa kuşağı doğmaz. Değer ÖLÇÜLDÜ (2026-09-12).
+G2_ALTIN_OZET = "fb4c43dd4d78aafa7cc491ab917c9af507a4f11ac6e6b14225fe560963d53592"
+G2_K1 = ["AAA", "2026-07-02", 101.0, 103.0, 100.0, 101.0, 2_000_000.0]
+G2_K2 = ["BBB", "2026-07-03", 50.0, 51.0, 49.0, 50.5, 1_000_000.0]
+
+
+def test_G2_bar_hash_ICERIGI_her_haneyi_ve_kesit_SIRASINI_kapsar():
+    """M4-04: çivi tek kesitin yalnız SAYISAL hanelerini oynatıyordu.
+
+    Hayatta kalan mutantlar adıyla: hash satırından `tk, tarih`i düşürmek · ilk kesitten sonra
+    `break` · kesitleri sıralamak. Üçü de artık ısırır.
+    """
+    temel = gi.bar_hash([G2_K1, G2_K2])
+    assert temel is not None
+
+    for hangi in (0, 1):                      # BİRİNCİ ve İKİNCİ kesit — ikisi de hash'e girer
+        for i in range(7):                    # ticker (0) ve tarih (1) DAHİL her hane
+            bozuk = [list(G2_K1), list(G2_K2)]
+            bozuk[hangi][i] = (bozuk[hangi][i] + 0.5 if i >= 2
+                               else str(bozuk[hangi][i]) + "X")
+            assert gi.bar_hash(bozuk) != temel, f"kesit {hangi} hane {i} hash'i değiştirmedi"
+
+    assert gi.bar_hash([G2_K2, G2_K1]) != temel, "kesit SIRASI hash'e girmiyor"
+    assert gi.bar_hash([G2_K1]) != temel, "ikinci kesit hash'e girmiyor (erken `break` mutantı)"
+    assert temel == G2_ALTIN_OZET, "hash SÖZLEŞMESİ değişti — bu bir karardır, sessiz olamaz"
+
+
+def test_G2_PK1_satirlarinin_bar_n_degerleri_CIVILIDIR(sandbox_state):
+    """`bar_n` hiçbir çivide iddia edilmiyordu: `_kesit_ekle`nin tekilleştirmesi ölçüsüzdü.
+
+    ISINMA + ÖMÜR: giriş barından geriye `LOOKBACK_BAR` ısınma barı, sonra giriş barı ve ömür
+    barları. AAA/BBB girişte + çıkışta iki bar, CCC/DDD üç bar (kapanış kararı ERTESİ açılışta
+    icra edilir), EEE hiç girmedi → yalnız baktığı tek bar.
+    """
+    sat = _pk1_kosusu()
+    lb = gi.LOOKBACK_BAR
+    assert {pid: sat[pid]["bar_n"] for pid in sorted(sat)} == {
+        "P-a": lb + 2, "P-b": lb + 2, "P-c": lb + 3, "P-d": lb + 2, "P-e": 1}
 
 
 def test_civi6_eksik_hane_ve_bos_kume_hash_URETMEZ():
@@ -578,8 +842,46 @@ def test_civi8_dormant_ve_normal_plan_KOL_ile_ayrisir(sandbox_state):
     assert sat["P-a"]["kol"] == "dormant" and sat["P-b"]["kol"] == "kontrol"
     ozet = gi.ozet()
     assert ozet["kol_kirilimi"] == {"dormant": 1, "kontrol": 1}
-    assert ozet["hukum_dagilimi"] == {"GO": 1, "NO_GO": 1}, \
+    assert ozet["giren_hukum_dagilimi"] == {"GO": 1, "NO_GO": 1}, \
         "hüküm ELEME değil TANIdır: NO_GO planı da gölgeye girer (kart)"
+
+
+def test_A2_K_paydasi_YALNIZ_dormant_kolunu_sayar(sandbox_state):
+    """M3-01/M4-01: kontrol kolu PK (2)'nin sadakat ölçüsüdür, kartın hipotezinin PAYDASI değil.
+
+    Aynı defterde iki kol: K bir satır sayar (uyuyan), kontrol satırı TANIda görünür ama
+    n/toplam_r/kazanma_orani'na KARIŞMAZ.
+    """
+    bars = {"AAA": _pk1_bars()["AAA"], "BBB": _pk1_bars()["BBB"]}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-a", "AAA", dormant=True),
+                         _plan("P-b", "BBB", dormant=False)],
+            bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    sat = {r["plan_id"]: r for r in gi.kayit_al()}
+    assert sat["P-a"]["R"] is not None and sat["P-b"]["R"] is not None, "iki kol da kapanmadı"
+
+    ozet = gi.ozet()
+    assert ozet["n"] == 1, "kontrol kolu K paydasına karıştı"
+    assert ozet["n_kontrol"] == 1, "kontrol kolu hiç sayılmıyor — tanı kayboldu"
+    # Uyuyan kol AAA'dır: sert stop → R = −1. Kontrol kolu BBB (+1,5) toplama GİRMEZ.
+    assert ozet["toplam_r"] == pytest.approx(-1.0, abs=1e-9)
+    assert ozet["kazanma_orani"] == pytest.approx(0.0)
+    assert ozet["giren_n"] == 2 and ozet["kol_kirilimi"] == {"dormant": 1, "kontrol": 1}
+
+
+def test_A2_sayilir_yuklemi_OLCULDU_ile_KOL_u_BIRLIKTE_sorar():
+    """Yüklem TEK YERDE yazılıdır ve iki şartı da taşır (sayım betiği bunu İTHAL eder)."""
+    olculmus = {"kol": "dormant", "R": 0.5, "kaynak_bar_hash": "a" * 64,
+                "bar_kaynak": gi.BAR_KAYNAKLARI[0]}
+    assert gi.sayilir(olculmus) is True
+    assert gi.sayilir({**olculmus, "kol": "kontrol"}) is False, "kol süzgeci yok"
+    assert gi.sayilir({**olculmus, "R": None}) is False
+    assert gi.sayilir({**olculmus, "kaynak_bar_hash": None}) is False
+    assert gi.sayilir({**olculmus, "bar_kaynak": "foo"}) is False, "bar kaynağı süzgeci yok"
+    # `olculdu` kol SORMAZ: kontrol kolunun PK (2) paydası bu yüklemle kurulur.
+    assert gi.olculdu({**olculmus, "kol": "kontrol"}) is True
 
 
 # ============================ ÇİVİ 9 — İDEMPOTENS ===============================================
@@ -648,6 +950,243 @@ def test_ozet_acik_pozisyonlari_ve_bekleyen_girisleri_SAYAR(sandbox_state):
     assert gi.ozet()["n_bekleyen_giris"] == 1 and gi.ozet()["n_acik"] == 0
     gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
     assert gi.ozet()["n_acik"] == 1 and gi.ozet()["n_bekleyen_giris"] == 0
+
+
+# ============================ C — DEFTER BÜTÜNLÜĞÜ (M1-02/03/07, M2-04, M4-06/09) ===============
+def test_C1_DEFTER_ONCE_ACIK_SONRA_yazilir_cokme_KAYIP_uretmez(sandbox_state, monkeypatch):
+    """Yazım sırası: satırlar ÖNCE diske, `ACIK` SONRA.
+
+    Ters sırada (eski hâl) iki yazım arasındaki bir çökme KALICI KAYIP üretirdi: `son_seans`
+    ilerlemiş, kapanan pozisyon `acik`ten düşmüş, satır hiç yazılmamış ve idempotens kapısı
+    seansı yeniden koşturmaz. Yeni sırada aynı çökme MÜKERRER üretir — ve mükerrer okuyucuda
+    kapanır (`plan_id` başına son satır), kayıp kapanmaz.
+    """
+    bars = {"AAA": _pk1_bars()["AAA"]}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-a", "AAA")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+
+    gercek_write = store.write_json
+
+    def _patla(ad, *a, **k):
+        if ad == gi.ACIK:
+            raise RuntimeError("ACIK yazımı düştü (sentetik çökme)")
+        return gercek_write(ad, *a, **k)
+
+    monkeypatch.setattr(store, "write_json", _patla)
+    with pytest.raises(RuntimeError):
+        gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    monkeypatch.setattr(store, "write_json", gercek_write)
+
+    assert len(gi.kayit_al()) == 1, "satır ACIK yazımından ÖNCE diske düşmemiş — KAYIP riski"
+    assert gi.acik_kayit()["son_seans"] == D1, "ACIK ilerlemiş ama satır yazılmamış olabilirdi"
+
+
+def test_C1_MUKERRER_plan_id_TEKILLESTIRILIR_son_satir_kazanir(sandbox_state):
+    """Çökme sonrası yeniden koşum aynı planı iki kez yazabilir; okuyucu TEKİLLEŞTİRİR."""
+    bars = {"AAA": _pk1_bars()["AAA"]}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-a", "AAA")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    ilk = gi.kayit_al()[0]
+    ikinci = {**ilk, "R": ilk["R"] + 0.25}
+    store.write_jsonl(gi.DEFTER, [ilk, ikinci])
+
+    o = gi.ozet()
+    assert o["n"] == 1, "mükerrer satır K paydasını şişirdi"
+    assert o["toplam_r"] == pytest.approx(ikinci["R"], abs=1e-9), "son satır kazanmadı"
+    assert o["mukerrer_n"] == 1, "mükerrerlik TANIda görünmüyor"
+
+
+def test_C2_ATLANAN_SEANS_satirda_IZ_birakir_ve_K_disina_duser(sandbox_state):
+    """Kancanın koşmadığı seans (HALT / bütçe 0 / kitap dolu / `golge_icra_failed`) İZSİZ kalmaz.
+
+    Atlanan günde dokunulan stop görülmez ve `bars_held` eksik sayılır; satır yine de TAM çapayla
+    K'ye girerse ölçüm delikli bir kümeyi tam gibi damgalar.
+    """
+    bars = {"CCC": _seri({D1: (101.0, 103.0, 100.0, 101.0),
+                          D2: (101.0, 102.0, 100.0, 101.0),
+                          D3: (100.5, 101.0, 100.0, 100.5),
+                          "2026-07-07": (99.0, 99.0, 90.0, 91.0)})}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-c", "CCC")], bars_of=bo, regime_ok=True,
+            params={"exit.time_stop_days": 9})
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params={"exit.time_stop_days": 9})
+    # D2 ve D3 ATLANDI (kanca koşmadı) — sonraki çağrı doğrudan 2026-07-07'dir.
+    gi.adim("2026-07-07", planlar=[], bars_of=bo, regime_ok=True,
+            params={"exit.time_stop_days": 9})
+
+    doc = gi.acik_kayit()
+    assert doc["atlanan_seanslar"], "atlanan seans ACIK belgesinde iz bırakmadı"
+    sat = gi.kayit_al()
+    assert len(sat) == 1 and sat[0]["R"] is not None, sat
+    assert sat[0]["kaynak_bar_hash"] is None, "delikli kesit TAM çapa gibi damgalandı"
+    assert (sat[0]["olculemedi"] or "").startswith("seans_atlandi:"), sat[0]["olculemedi"]
+    assert gi.ozet()["n"] == 0, "atlanan seanslı satır K paydasına girdi"
+
+
+def test_C3_tek_eksik_gun_bar_eksik_BIR_sayilir(sandbox_state):
+    """M1-07: bekleyen çıkışı olan pozisyonda eksik gün faz 1a + faz 2'de İKİ KEZ sayılıyordu."""
+    bars = {"KKK": _seri({D1: (101.0, 103.0, 100.0, 101.0),      # giriş
+                          D3: (99.0, 99.0, 90.0, 91.0)})}        # D2 BARI YOK
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-k", "KKK")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=False, params=PARAMS)   # kapanışta regime_flip
+    assert gi.acik_kayit()["acik"]["P-k"]["bekleyen_cikis"] == "regime_flip"
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)    # bar YOK
+    gi.adim(D3, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    sat = gi.kayit_al()
+    assert len(sat) == 1, sat
+    assert sat[0]["olculemedi"] == "bar_eksik:1", "tek eksik gün iki kez sayıldı"
+
+
+def test_C4_HASH_kurulamayinca_NEDENI_adiyla_yazilir(sandbox_state):
+    """M2-04: `eksik_bar == 0` iken hash None dönerse satır NEDENSİZ K dışına düşüyordu."""
+    hacimsiz = _seri({D1: (101.0, 103.0, 100.0, 101.0),
+                      D2: (99.0, 99.0, 90.0, 91.0)}).drop(columns=["volume"])
+    bo = _bars_of({"VVV": hacimsiz})
+    gi.adim(D0, planlar=[_plan("P-v", "VVV")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    sat = gi.kayit_al()[0]
+    assert sat["kaynak_bar_hash"] is None and sat["R"] is not None
+    assert sat["olculemedi"] == "hash_yok:hane_eksik", sat["olculemedi"]
+    o = gi.ozet()
+    assert o["n"] == 0 and [x["neden"] for x in o["olculemeyen"]] == ["hash_yok:hane_eksik"]
+
+
+def test_C5_BAR_KAYNAGI_kume_disi_ise_ADIM_REDDEDER(sandbox_state):
+    """M4-09: `BAR_KAYNAKLARI` kapalı küme diye BEYANLI ama hiçbir yerde ZORLANMIYORDU."""
+    bo = _bars_of({"AAA": _pk1_bars()["AAA"]})
+    with pytest.raises(ValueError) as e:
+        gi.adim(D0, planlar=[_plan("P-a", "AAA")], bars_of=bo, regime_ok=True, params=PARAMS,
+                bar_kaynak="foo")
+    assert "bar_kaynak" in str(e.value)
+    for ad in gi.BAR_KAYNAKLARI:                      # POZİTİF KONTROL: kapı her şeyi reddetmiyor
+        store.write_json(gi.ACIK, {})
+        gi.adim(D0, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS, bar_kaynak=ad)
+
+
+def test_C5_KUME_DISI_bar_kaynagi_satiri_K_disinda_birakir(sandbox_state):
+    """Deftere (eski sürüm / elle) küme dışı bir kaynak düşerse satır K'ye GİRMEZ, ADIYLA düşer."""
+    bars = {"AAA": _pk1_bars()["AAA"]}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-a", "AAA")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    bozuk = {**gi.kayit_al()[0], "bar_kaynak": "elle_yazilmis"}
+    store.write_jsonl(gi.DEFTER, [bozuk])
+    o = gi.ozet()
+    assert o["n"] == 0, "beyanlı küme dışı kaynaklı satır K paydasına girdi"
+    assert o["olculemeyen"][0]["neden"].startswith("bar_kaynak_bilinmiyor:"), o["olculemeyen"]
+
+
+# ============================ B — PENCERE SAATİ (M1-08 / M2-02) =================================
+def test_B_pencere_saati_ACIK_BEYANINDAN_olculur_ilk_satirdan_DEGIL(sandbox_state, monkeypatch):
+    """Pencere kökü DAĞITIM anıdır (ilk `adim` seansı), defterin ilk satırının yazım anı DEĞİL.
+
+    Kart penceresi "B1 dağıtımından itibaren ≤120 gün"dür. Kök ilk satıra bağlanınca geçen gün
+    SİSTEMATİK olarak eksik sayılıyordu (ilk kapanış dağıtımdan günler/haftalar sonra doğar) →
+    `suresi_doldu` geç, `doldu` erken: "eşiği hak etmeden geçme" yönünde yanlı.
+    SAHNE: pencere D0'da açılır, ilk satır 10 gün SONRA yazılır → geçen gün 10 olmalı, 0 değil.
+    """
+    import datetime as dt
+
+    from meridian import barclock
+    bars = {"AAA": _pk1_bars()["AAA"]}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-a", "AAA")], bars_of=bo, regime_ok=True, params=PARAMS)
+    assert gi.acik_kayit()["pencere_baslangic"] == D0, "pencere beyanı ilk adımda yazılmadı"
+
+    yazim = dt.datetime(2026, 7, 11, tzinfo=dt.timezone.utc)      # D0 + 10 gün
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS, simdi=yazim)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS, simdi=yazim)
+    assert gi.acik_kayit()["pencere_baslangic"] == D0, "sonraki adım pencere beyanını EZDİ"
+
+    monkeypatch.setattr(barclock, "now", lambda: yazim)
+    p = gi.ozet()["pencere"]
+    assert p["baslangic"] == D0 and p["baslangic_kaynagi"] == "acik.pencere_baslangic"
+    assert p["gecen_gun"] == 10, "saat defterin ilk satırından sayılmış"
+    assert str(p["ilk_satir_ts"]).startswith("2026-07-11"), p
+    assert p["suresi_doldu"] is False and p["doldu"] is False
+
+
+def test_B_pencere_BEYANI_YOKSA_gecen_gun_None_ve_NEDEN_adiyla(sandbox_state):
+    """Beyan yoksa saat UYDURULMAZ: `gecen_gun` None + adlı neden (0 ya da "ilk satır" DEĞİL)."""
+    p = gi.ozet()["pencere"]
+    assert p["baslangic"] is None and p["gecen_gun"] is None
+    assert p["doldu"] is False and p["suresi_doldu"] is False
+    assert p["neden"], "pencere ölçülemedi ama nedeni yazılmadı"
+
+
+def test_B_bedel_satir_gun_PAY_ve_PAYDA_ayni_pencereden(sandbox_state, monkeypatch):
+    """Bedel yasası: pay (pencere içi satır) ile payda (pencere günü) AYNI pencereyi ölçer.
+
+    Pencere dışı bir satır paya girerse satır/gün şişer ve "bedel ölçüldü" iddiası yanlış sayı
+    taşır.
+    """
+    import datetime as dt
+
+    from meridian import barclock
+    yazim = dt.datetime(2026, 7, 11, tzinfo=dt.timezone.utc)
+    bars = {"AAA": _pk1_bars()["AAA"]}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-a", "AAA")], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS, simdi=yazim)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS, simdi=yazim)
+    # PENCERE ÖNCESİ bir satır defterin başına elle konur (eski kuşak / geri dolum artefaktı).
+    eski = dict(gi.kayit_al()[0])
+    eski.update({"plan_id": "P-eski", "ts": "2026-01-02T00:00:00+00:00"})
+    store.write_jsonl(gi.DEFTER, [eski] + gi.kayit_al())
+
+    monkeypatch.setattr(barclock, "now", lambda: yazim)
+    o = gi.ozet()
+    assert o["pencere"]["gecen_gun"] == 10
+    assert o["bedel"]["satir_gun"] == pytest.approx(1 / 10, abs=1e-9), \
+        "pay pencere DIŞI satırı da saymış (pay/payda ayrı pencereler)"
+
+
+# ============================ H — DEFTER SÖZLEŞMESİ (ledgers) ===================================
+def test_H_golge_defteri_SOZLESMEDE_ve_alanlar_SEMADAN_turetilir(sandbox_state):
+    """Açık kalem kapandı: gölge defteri `ledgers.CONTRACTS`ta.
+
+    ALANLAR KOPYA DEĞİL TÜRETME: sözleşme motorun şemasının KENDİSİNİ taşır — ikinci bir alan
+    listesi, tam olarak bu sözleşmenin var olma sebebi olan sessiz ayrışmayı üretirdi.
+    """
+    from meridian import ledgers
+    c = ledgers.CONTRACTS[gi.DEFTER]
+    assert c.required is gi.SATIR_ALANLARI, "alan listesi KOPYALANMIŞ (türetme değil)"
+    assert c.writers == ("golge_icra.py",) and c.key == "plan_id"
+    assert gi.ACIK not in ledgers.CONTRACTS, "durum belgesi defter sözleşmesine sokulmuş"
+
+    # MOTORUN YAZDIĞI GERÇEK SATIR sözleşmeye uyar (fikstür değil, üreticinin kendi satırı).
+    bars = {"AAA": _pk1_bars()["AAA"]}
+    bo = _bars_of(bars)
+    gi.adim(D0, planlar=[_plan("P-2026-07-01-AAA", "AAA")], bars_of=bo, regime_ok=True,
+            params=PARAMS)
+    gi.adim(D1, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    gi.adim(D2, planlar=[], bars_of=bo, regime_ok=True, params=PARAMS)
+    assert ledgers.validate_row(gi.DEFTER, gi.kayit_al()[0]) == []
+    assert ledgers.validate_live(gi.DEFTER)["ok"] is True
+
+
+def test_H_golge_yazari_STATIK_TARAMADA_gorunur():
+    """`writer_violations`: beyan edilen yazar gerçekten yazıyor, beyan edilmeyen yazar yok."""
+    from meridian import ledgers
+    v = ledgers.writer_violations()
+    assert gi.DEFTER not in v, v.get(gi.DEFTER)
+    assert "golge_icra.py" in ledgers.declared_writers().get(gi.DEFTER, set())
+
+
+def test_H_ACIK_belgesinin_sozlesme_DISI_kalma_gerekcesi_YAZILI():
+    """Muafiyet BEYANLA olur: durum belgesinin neden defter sayılmadığı şerhte yazılı."""
+    from meridian import ledgers
+    ham = pathlib.Path(ledgers.__file__).read_text(encoding="utf-8")
+    bas = ham.index(f'"{gi.DEFTER}": Contract(')
+    blok = ham[max(0, bas - 1500):bas]
+    assert gi.ACIK in blok and "DURUM" in blok.upper(), \
+        "ACIK belgesinin sözleşme dışı kalma gerekçesi yazılmamış"
 
 
 # ============================ YASA 4 / ÇAPA YASASI ==============================================

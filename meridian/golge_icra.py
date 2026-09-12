@@ -46,14 +46,33 @@ BEYANLI KAPSAM SAPMALARI (ölçüldü — sessiz değil, yazılı).
       etkisi ölçülmüştür: canlı `exit.scale_out_frac` varsayılanı 0'dır ve kısmi satış canlıda
       hiç ateşlememiştir; düğme açılırsa gölge ile canlı AYRIŞIR ve kontrol PK'sı bunu düşürerek
       gösterir — dürüstçe düşer. Çivi: bu iki saflık ölçümü teste çakılıdır.
-  (3) GİRİŞ TETİĞİ SINANIR. Üretimin `PaperBroker.fill_entry`i tetik testi YAPMAZ (silahlı planı
-      ertesi açılışta koşulsuz doldurur); burada "İLK UYGUN BAR" tanımı tetiği ister, bu yüzden
-      barın en yükseği tetiğe ulaşmadıysa giriş olmaz. Sapma TEK YÖNLÜDÜR ve muhafazakârdır:
-      üretimden DAHA AZ giriş üretir, gölgeyi iyimser göstermez.
+  (3) GİRİŞ: İLK UYGUN BAR + STOP-AL DOLUMU. Üretimin `PaperBroker.fill_entry`i tetik testi
+      YAPMAZ (silahlı planı ertesi açılışta koşulsuz doldurur); burada "İLK UYGUN BAR" tanımı
+      tetiği ister — barın en yükseği tetiğe ulaşmadıysa giriş olmaz. Dolum fiyatı bir BUY-STOP
+      emrinin fiyatıdır: `max(açılış, tetik)`. Açılış tetiğin altındaysa emir tetikte tetiklenir
+      ve tetikten dolar; boşluklu açılışta (açılış ≥ tetik) açılıştan dolar.
+      NEDEN BÖYLE (düzeltme 2026-09-12, inceleme M2-01): eski hâl kararı `high ≥ tetik` ile
+      veriyor ama dolumu `open`dan yazıyordu. Açılış anında günün YÜKSEĞİ bilinmez; `open < tetik
+      ≤ high` günlerinde bu, tetiğin ALTINDAN dolum yazmak (ve `high < tetik` günlerini günün
+      sonucunu bilerek elemek) demekti — K1 (toplam R/CI) ve K2 (kazanma oranı) YUKARI yanlı
+      olurdu. Sapma artık ADIYLA beyanlıdır ve her satırda `giris_kurali` alanında durur; yönü
+      tek taraflı DEĞİL, TANIMLIDIR: üretimden daha az giriş (tetik şartı) + tetik-altı dolum
+      YOK. Üretimin gap/limit/stop-altı kapıları aynen çağrılır (bkz. `_girisi_dene`).
   (4) PİVOT YOKTUR. İcra girdileri (`atr`, `pivot`) plan sözlüğünde değil `meta["entry_law"]` yan
       tablosundadır ve o tablo yalnız silahlı+REVIEW planlar için tutulur — uyuyan planda YOKTUR.
       `pivot=0.0` üretimin "bilinmiyor" değeridir ve erken itlaf dalı dürüstçe ateşlemez; `atr=None`
       ile giriş limiti yalnız yüzde tavanıyla kurulur (uydurma ATR yok).
+  (5) REJİM KAPISI KÜRESELDİR. Dormant kolu KÜRESEL `regime_ok` ile ölçülür (karşı-olgu NORMAL
+      icra yoludur: "bu planlar normal slotta işlem görseydi ne olurdu"); canlı KEŞİF SONDASININ
+      gevşek kapısı (`loop.daily_cycle`: keşif pozisyonları için rejim adı trend_up/chop ise
+      bütçe 0 olsa bile `regime_ok` sayılır) gölgeye UYGULANMAZ. Uyuyan plan canlıda BUGÜN yalnız
+      keşif sondası olarak silahlanabildiği için bu bir sapmadır ve ADIYLA yazılıdır: gölge kolu
+      SIKI kapıyla ölçülür, yani bütçe-0 seanslarında açık gölge pozisyonları `regime_flip` ile
+      kapanır. Yön TEK TARAFLI DEĞİLDİR (erken çıkış kazananı da keser, kaybedeni de) ve kartın
+      hipotezi "uyuyan kurulumlar NORMAL yolda R kazandırır mıydı" sorusudur — gevşek kapıyı
+      kullanmak o soruyu keşif sondasının sorusuna çevirirdi. Kontrol kolu (PK 2) gerçek işlemin
+      ikizidir ve gerçek işlemler de küresel kapıyla yönetilir; keşif kökenli gerçek işlemlerde
+      bu sapma PK (2)'de fark olarak GÖRÜNÜR (gizlenmez).
 
 OKUR: çağıranın geçirdiği barlar/rejim/etkin düğmeler + kendi iki dosyası.
 YAZAR: yalnız `DEFTER` (kapanan gölge satırları) ve `ACIK` (açık gölge pozisyonlar + `son_seans`).
@@ -83,6 +102,19 @@ DEFTER = "golge_icra.jsonl"        # kapanan gölge işlemler (satır başına b
 ACIK = "golge_icra_acik.json"      # açık gölge pozisyonlar + bekleyen girişler + `son_seans`
 
 SEMA = 1
+
+#: PIT ÇAPASININ ISINMA PENCERESİ — çıkış yasasının GİRİŞ ÖNCESİNE uzanan geriye bakışı.
+#: ÖLÇÜLDÜ (`strategy.manage_position` gövdesi, 2026-09-12): giriş öncesine uzanan TEK okuma
+#: `ind.atr(df, ATR_PERIOD)`tır (Wilder EWM; `min_periods=ATR_PERIOD`, true range bir önceki
+#: kapanışı da ister → `ATR_PERIOD + 1` bar). Diğer geriye dönük pencereler ömre KELEPÇELİDİR ve
+#: girişin öncesine geçemez: chandelier `iloc[-min(chand_lb, max(1, bars_held)):]`, giveback
+#: `iloc[-bars_held:]`, erken itlaf yalnız son kapanış. `_touch_exit` tek bara bakar.
+#: Sabit ÜRETİMDEN türetilir: ATR periyodu orada değişirse çapa penceresi kendiliğinden kayar
+#: (ikinci bir "14" kopyası yazmak, iki yorumun sessizce ayrışması demekti).
+#: EWM teorik olarak tüm geçmişe bağlıdır; kapsam bu yüzden SONSUZ değil TANIMLIDIR ve sınırı
+#: burada ADIYLA durur — çapayı tüm seriye açmak `bar_n`i ve `ACIK` belgesini sınırsız şişirirdi.
+LOOKBACK_BAR = strategy.ATR_PERIOD + 1
+
 KOLLAR = ("dormant", "kontrol")            # `kol` alanının kapalı kümesi
 BAR_KAYNAKLARI = ("state/bars", "arsiv")   # PIT çapasının kaynağı (canlı yol | tarihsel yeniden yürütme)
 
@@ -91,17 +123,21 @@ BAR_KAYNAKLARI = ("state/bars", "arsiv")   # PIT çapasının kaynağı (canlı 
 #: varsayılanıyla sessizce dolar ve "yazılmadı" ile "ölçülemedi" ayrımı kaybolurdu.
 SATIR_ALANLARI: tuple[str, ...] = (
     "ts", "plan_id", "ticker", "kurulum", "hukum", "kol", "ts_plan",
-    "giris_ts", "giris_fiyat", "stop", "hedef",
+    "giris_ts", "giris_fiyat", "stop", "hedef", "giris_kurali",
     "cikis_ts", "cikis_fiyat", "cikis_neden", "R", "bar_n",
     "kaynak_bar_hash", "bar_kaynak", "strategy_version",
     "giris_reddi", "olculemedi",
 )
 
+#: GİRİŞ YASASININ ADI — her satırda durur. Okuyucu, satırın hangi dolum semantiğiyle üretildiğini
+#: defterden bilir; kural değişirse eski satırlar ESKİ adıyla kalır ve iki kuşak karışmaz.
+GIRIS_KURALI = "stop_al"
+
 #: GİRİŞİN OLMAMA NEDENLERİ — kapalı küme. `cikis_neden` bu satırlarda daima `GIRIS_YOK`tur
 #: (sınıf), `giris_reddi` ise ADIDIR (tanı). İkisini tek alana sıkıştırmak, çıkış sebebi
 #: dağılımını (sayım betiğinin ham maddesi) giriş redleriyle karıştırırdı.
 GIRIS_YOK = "giris_yok"
-GIRIS_REDLERI = ("tetik_gelmedi", "limit_asildi", "acilis_stop_altinda", "bar_yok")
+GIRIS_REDLERI = ("tetik_gelmedi", "gap_asildi", "limit_asildi", "acilis_stop_altinda", "bar_yok")
 
 #: İşlenmiş plan kimliklerinin BEYANLI tavanı. Aynı planın iki kez gölgeye girmesini engelleyen
 #: küme süresiz büyüseydi `ACIK` dosyası tek yönlü şişerdi; tavan aşıldığında en ESKİ kimlikler
@@ -110,8 +146,9 @@ ISLENEN_TAVANI = 2000
 
 
 def _bos_belge(simdi=None) -> dict:
-    """Boş gölge belgesi: şema, kart kimliği, kuruluş anı ve üç boş kova."""
+    """Boş gölge belgesi: şema, kart kimliği, kuruluş anı, PENCERE BEYANI ve üç boş kova."""
     return {"schema": SEMA, "kart": KART, "kurulus": _ts(simdi), "son_seans": None,
+            "pencere_baslangic": None, "atlanan_seanslar": [],
             "bekleyen_giris": {}, "acik": {}, "islenen": []}
 
 
@@ -152,6 +189,15 @@ def bar_hash(kesitler) -> str | None:
     return ozet.hexdigest() if n else None
 
 
+def _capa_nedeni(kesitler) -> str:
+    """`bar_hash` None döndüyse NEDENİ: hiç kesit yok mu, yoksa bir HANE mi eksik?
+
+    "Ölçülemedi" adsız bırakılamaz: hacim sütunu olmayan bir kaynak ile hiç bar tüketmemiş bir
+    plan aynı hükmü alır ama AYNI OLGU değildir.
+    """
+    return "kesit_yok" if not kesitler else "hane_eksik"
+
+
 def _kesit_ekle(poz: dict, kesit) -> None:
     """Kesiti TÜKETİLENLERE ekler — AYNI SEANS İKİ KEZ SAYILMAZ.
 
@@ -176,9 +222,34 @@ def _bar_kesiti(df, d: pd.Timestamp, ticker: str):
     r = df.loc[d]
     bar = {"open": float(r["open"]), "high": float(r["high"]),
            "low": float(r["low"]), "close": float(r["close"])}
+    return bar, _kesit_kur(r, d, ticker)
+
+
+def _kesit_kur(r, d, ticker: str) -> list:
+    """Tek bar satırından hash kesiti — `(ticker, tarih, o, h, l, c, hacim)`.
+
+    TEK YAZIM: hem seans barı (`_bar_kesiti`) hem ısınma barları (`_isinma_kesitleri`) bu kurucuyu
+    çağırır; iki kesit biçimi ayrışsaydı aynı bar iki farklı hash üretirdi.
+    """
     hacim = float(r["volume"]) if "volume" in r.index else None
-    kesit = [str(ticker), str(d.date()), bar["open"], bar["high"], bar["low"], bar["close"], hacim]
-    return bar, kesit
+    return [str(ticker), str(pd.Timestamp(d).date()), float(r["open"]), float(r["high"]),
+            float(r["low"]), float(r["close"]), hacim]
+
+
+def _isinma_kesitleri(df, d: pd.Timestamp, ticker: str, n: int = LOOKBACK_BAR) -> list:
+    """Giriş barından ÖNCEKİ `n` barın kesitleri (ATR ısınma penceresi) — yoksa boş liste.
+
+    NEDEN ÇAPADA (inceleme M2-03/M4-05): CLOSE(D) fazı `strategy.manage_position`a `df.loc[:d]`in
+    TAMAMINI verir ve trail/breakeven kararı `ind.atr(df, ATR_PERIOD)` üzerinden kurulur. Giriş
+    öncesi bir barın OHLC'si değişirse ATR → trail → çıkış (fiyat/neden/R) değişebilir; çapa o
+    barları kapsamasaydı `kaynak_bar_hash` AYNI kalır ve PIT doğrulaması sessizce yanlış-pozitif
+    verirdi. Pencere `.iloc` ile DEĞİL maske + `tail` ile alınır: yinelenen indeks damgası
+    (`.loc` iki satır döndürür) bu yolda satırı patlatmaz.
+    """
+    if df is None or n <= 0:
+        return []
+    onceki = df[df.index < d]
+    return [_kesit_kur(r, t, ticker) for t, r in onceki.tail(int(n)).iterrows()]
 
 
 # ==================================================================================================
@@ -224,6 +295,12 @@ def adim(dstr: str, *, planlar: list[dict], bars_of, regime_ok: bool, params: di
     damgasından `kol` türetir; hangi planların geçirileceği (kart: uyuyan planların TAMAMI + kontrol
     kolunda yalnız gerçek işlemler) çağıranın kararıdır.
     """
+    # BAR KAYNAĞI KAPALI KÜMEDİR VE ZORLANIR (inceleme M4-09): küme "beyanlı" olup denetlenmezse
+    # PIT çapasının KAYNAĞI bir etiketten ibaret kalır ve kill#6 mekanik kancasız olur. Uydurma
+    # yasağının tersi değil aynısı: bilinmeyen bir kaynak adı sessizce deftere yazılamaz.
+    if bar_kaynak not in BAR_KAYNAKLARI:
+        raise ValueError(f"bar_kaynak beyanlı kümede değil: {bar_kaynak!r} "
+                         f"(geçerli: {list(BAR_KAYNAKLARI)})")
     doc = acik_kayit()
     son = doc.get("son_seans")
     if son is not None and str(dstr) <= str(son):
@@ -235,7 +312,29 @@ def adim(dstr: str, *, planlar: list[dict], bars_of, regime_ok: bool, params: di
     acik: dict = dict(doc.get("acik") or {})
     bekleyen: dict = dict(doc.get("bekleyen_giris") or {})
     islenen: list = list(doc.get("islenen") or [])
+    atlanan_seanslar: list = list(doc.get("atlanan_seanslar") or [])
     satirlar: list[dict] = []
+
+    # ---- 0. ATLANAN SEANS İZİ (inceleme M1-02) -----------------------------------------------
+    # Kanca P2 kapısının İÇİNDEDİR: HALT / bozuk veri / bütçe 0 / kitap dolu turlarında — ve
+    # `golge_icra_failed` ile düşen turlarda — `adim` HİÇ çağrılmaz. O seansların barları açık
+    # pozisyonlar tarafından TÜKETİLMEZ: dokunulan stop görülmez, `bars_held` eksik sayılır. Eski
+    # hâlde satır yine de TAM çapayla K'ye giriyordu; yani delikli bir küme tam gibi damgalanıyordu.
+    # Artık delik ADIYLA sayılır ve satır K DIŞINA düşer (hash None).
+    if son is not None:
+        atlanan_gunler: set[str] = set()
+        for poz in acik.values():
+            df = bars_of(poz["ticker"])
+            if df is None:
+                continue
+            ara = [t for t in df.index if pd.Timestamp(son) < t < d]
+            if not ara:
+                continue
+            poz["eksik_bar"] = int(poz.get("eksik_bar") or 0) + len(ara)
+            poz["atlanan_bar"] = int(poz.get("atlanan_bar") or 0) + len(ara)
+            atlanan_gunler.update(str(t.date()) for t in ara)
+        if atlanan_gunler:
+            atlanan_seanslar = sorted(set(atlanan_seanslar) | atlanan_gunler)
 
     # ---- 1a. OPEN(D): bir önceki kapanışın çıkış kararları ----------------------------------
     # Karar TEK ATIMLIKTIR (üretimde `pending_exits` her seans boşaltılır): barı olmayan bir gün
@@ -248,7 +347,9 @@ def adim(dstr: str, *, planlar: list[dict], bars_of, regime_ok: bool, params: di
             continue
         bar, kesit = _bar_kesiti(bars_of(poz["ticker"]), d, poz["ticker"])
         if bar is None:
-            poz["eksik_bar"] = int(poz.get("eksik_bar") or 0) + 1
+            # SAYAÇ BURADA ARTMAZ (inceleme M1-07): pid `acik`ten DÜŞMEDİĞİ için aynı eksik gün
+            # faz 2'de yeniden görülür ve orada BİR KEZ sayılır. İki artış, tek eksik güne
+            # `bar_eksik:2` yazdırıyordu — K üyeliği doğruydu ama tanı sayısı yanlıştı.
             continue
         _kesit_ekle(poz, kesit)
         satirlar.append(_kapanis_satiri(poz, dstr, bar["open"], str(neden), simdi, bar_kaynak))
@@ -315,12 +416,23 @@ def adim(dstr: str, *, planlar: list[dict], bars_of, regime_ok: bool, params: di
     # DÜZ SÖZLÜK KURULUR, OKUNAN NESNE MUTASYONA UĞRATILMAZ: `store.read_json` köken takibi açıkken
     # okuduğunu bir sarmalayıcıya koyar; onu yerinde değiştirip geri yazmak, yazım yolunu okuma
     # katmanının açık/kapalı olmasına bağlardı.
-    store.write_json(ACIK, {"schema": SEMA, "kart": KART,
-                            "kurulus": doc.get("kurulus") or _ts(simdi),
-                            "son_seans": str(dstr), "bekleyen_giris": bekleyen,
-                            "acik": acik, "islenen": islenen})
+    # PENCERE BEYANI (kart: "B1 DAĞITIMINDAN itibaren ≤120 gün"). İlk `adim` hangi SEANSTA
+    # koştuysa pencerenin kökü odur ve bir daha DEĞİŞMEZ. Kökü defterin ilk satırından okumak
+    # (eski hâl) saati sistematik olarak geç başlatıyordu: ilk kapanış dağıtımdan günler-haftalar
+    # sonra doğar, yani `gecen_gun` eksik sayılır ve `doldu` hak edilmeden True olabilirdi.
+    # SIRA: SATIRLAR ÖNCE, `ACIK` SONRA (inceleme M1-03/M4-06). İki yazım tek işlem DEĞİLDİR
+    # (`append_jsonl` düz ekleme, `write_json` kilit+atomik) ve aradaki bir çökme eski sırada
+    # KALICI KAYIP üretiyordu: `son_seans` ilerlemiş, kapanan pozisyon `acik`ten düşmüş, satır
+    # hiç yazılmamış — ve idempotens kapısı o seansı bir daha koşturmaz. Yeni sırada aynı çökme
+    # MÜKERRER üretir; mükerrer okuyucuda kapanır (`tekillestir`), kayıp kapanmaz.
     for satir in satirlar:
         store.append_jsonl(DEFTER, satir)
+    store.write_json(ACIK, {"schema": SEMA, "kart": KART,
+                            "kurulus": doc.get("kurulus") or _ts(simdi),
+                            "pencere_baslangic": doc.get("pencere_baslangic") or str(dstr),
+                            "atlanan_seanslar": atlanan_seanslar,
+                            "son_seans": str(dstr), "bekleyen_giris": bekleyen,
+                            "acik": acik, "islenen": islenen})
     return {"seans": str(dstr), "atlandi": None, "son_seans": str(dstr),
             "yeni_satir": len(satirlar), "yeni_plan": yeni,
             "acik": len(acik), "bekleyen_giris": len(bekleyen)}
@@ -352,25 +464,36 @@ def _girisi_dene(kayit: dict, d: pd.Timestamp, dstr: str, bars_of, simdi, bar_ka
     yazılmaz. `atr=None` çünkü icra girdileri uyuyan planın yan tablosunda YOKTUR; limit o zaman
     yalnız yüzde tavanıyla bağlar ve bu üretimin kendi davranışıdır.
     """
-    bar, kesit = _bar_kesiti(bars_of(kayit["ticker"]), d, kayit["ticker"])
+    df = bars_of(kayit["ticker"])
+    bar, kesit = _bar_kesiti(df, d, kayit["ticker"])
     if bar is None:
         return _giris_yok_satiri(kayit, dstr, "bar_yok", [], simdi, bar_kaynak,
                                  olculemedi="bar_yok"), None
     tetik, stop = float(kayit["tetik"]), float(kayit["stop"])
     if tetik > 0 and bar["high"] < tetik:
         return _giris_yok_satiri(kayit, dstr, "tetik_gelmedi", [kesit], simdi, bar_kaynak), None
-    acilis = bar["open"]
-    if tetik > 0 and acilis > brk.entry_limit_price(tetik, None):
+    # STOP-AL DOLUMU (beyanlı sapma 3): buy-stop emri tetikte tetiklenir ve tetikten dolar;
+    # açılış zaten tetiğin üstündeyse (boşluk) açılıştan dolar. Tetik ÖLÇÜLEMEMİŞSE (`0.0`)
+    # tetik yasası hiç uygulanmaz ve üretimin davranışı kalır: açılıştan dolum.
+    dolum = max(bar["open"], tetik) if tetik > 0 else bar["open"]
+    # GAP MUHAFIZI — ÜRETİMİN KENDİ SABİTİYLE (`broker.MAX_ENTRY_GAP_PCT`), kopya değil İTHAL.
+    # `fill_entry` bu kapıyı limit tavanından ÖNCE uygular; sıra korunur ki iki motorun REDDİ aynı
+    # ADI taşısın. Bugünkü yapılandırmada ikisi aynı fiyatta bağlar (%4) — ama `limit_pct_cap`
+    # goal'de %10'a kadar açılabilir ve o zaman gölge girer, canlı reddederdi (sapma gölge LEHİNE).
+    if tetik > 0 and dolum > tetik * (1.0 + brk.MAX_ENTRY_GAP_PCT):
+        return _giris_yok_satiri(kayit, dstr, "gap_asildi", [kesit], simdi, bar_kaynak), None
+    if tetik > 0 and dolum > brk.entry_limit_price(tetik, None):
         return _giris_yok_satiri(kayit, dstr, "limit_asildi", [kesit], simdi, bar_kaynak), None
-    if acilis <= stop:
+    if dolum <= stop:
         return _giris_yok_satiri(kayit, dstr, "acilis_stop_altinda", [kesit], simdi,
                                  bar_kaynak), None
     poz = {k: kayit[k] for k in ("plan_id", "ticker", "kurulum", "hukum", "kol", "ts_plan",
                                  "stop", "hedef", "strategy_version")}
-    poz.update({"giris_ts": str(dstr), "giris_fiyat": acilis, "trail_stop": stop,
-                "r_per_share": acilis - stop, "pivot": 0.0, "bars_held": 0,
-                "hi_water": acilis, "lo_water": acilis, "pre_scale_stop": None,
-                "bekleyen_cikis": None, "eksik_bar": 0, "tuketilen": [kesit]})
+    poz.update({"giris_ts": str(dstr), "giris_fiyat": dolum, "trail_stop": stop,
+                "r_per_share": dolum - stop, "pivot": 0.0, "bars_held": 0,
+                "hi_water": dolum, "lo_water": dolum, "pre_scale_stop": None,
+                "bekleyen_cikis": None, "eksik_bar": 0, "atlanan_bar": 0,
+                "tuketilen": _isinma_kesitleri(df, d, kayit["ticker"]) + [kesit]})
     return None, poz
 
 
@@ -404,6 +527,7 @@ def _giris_yok_satiri(kayit: dict, dstr: str, red: str, kesitler: list, simdi, b
     return _satir(ts=_ts(simdi), plan_id=kayit["plan_id"], ticker=kayit["ticker"],
                   kurulum=kayit["kurulum"], hukum=kayit["hukum"], kol=kayit["kol"],
                   ts_plan=kayit["ts_plan"], stop=kayit["stop"], hedef=kayit["hedef"],
+                  giris_kurali=GIRIS_KURALI,
                   cikis_ts=str(dstr), cikis_neden=GIRIS_YOK, R=None,
                   bar_n=len(kesitler), kaynak_bar_hash=bar_hash(kesitler),
                   bar_kaynak=bar_kaynak, strategy_version=kayit["strategy_version"],
@@ -420,17 +544,97 @@ def _kapanis_satiri(poz: dict, dstr: str, cikis: float, neden: str, simdi,
     rps = float(poz["r_per_share"])
     r = round((float(cikis) - float(poz["giris_fiyat"])) / rps, 6) if rps > 0 else None
     eksik = int(poz.get("eksik_bar") or 0)
+    atlanan = int(poz.get("atlanan_bar") or 0)
     kesitler = poz.get("tuketilen") or []
+    h = None if eksik else bar_hash(kesitler)
+    # NEDEN ÜÇ DALLI: "seans atlandı" (kanca hiç koşmadı), "bar eksik" (seans koştu, bar yoktu) ve
+    # "hash kurulamadı" (barlar tamdı ama bir HANE eksikti — ör. hacim sütunu yok) AYRI olgulardır.
+    # Üçüncüsü eskiden `olculemedi=None` ile sessizce K dışına düşüyordu: NEDENSİZ ölçülemezlik.
+    olcum_nedeni = (f"seans_atlandi:{atlanan}" if atlanan else
+                    f"bar_eksik:{eksik}" if eksik else
+                    f"hash_yok:{_capa_nedeni(kesitler)}" if h is None else None)
     return _satir(ts=_ts(simdi), plan_id=poz["plan_id"], ticker=poz["ticker"],
                   kurulum=poz["kurulum"], hukum=poz["hukum"], kol=poz["kol"],
                   ts_plan=poz["ts_plan"], giris_ts=poz["giris_ts"],
                   giris_fiyat=round(float(poz["giris_fiyat"]), 4), stop=float(poz["stop"]),
-                  hedef=float(poz["hedef"]), cikis_ts=str(dstr),
+                  hedef=float(poz["hedef"]), giris_kurali=GIRIS_KURALI, cikis_ts=str(dstr),
                   cikis_fiyat=round(float(cikis), 4), cikis_neden=str(neden), R=r,
-                  bar_n=len(kesitler),
-                  kaynak_bar_hash=(None if eksik else bar_hash(kesitler)),
+                  bar_n=len(kesitler), kaynak_bar_hash=h,
                   bar_kaynak=bar_kaynak, strategy_version=poz["strategy_version"],
-                  olculemedi=(f"bar_eksik:{eksik}" if eksik else None))
+                  olculemedi=olcum_nedeni)
+
+
+# ==================================================================================================
+# K PAYDASI — TEK KAYNAK. Motorun `ozet`i de sayım betiği de BU yüklemleri çağırır.
+# ==================================================================================================
+def olculdu(satir: dict) -> bool:
+    """Satırın R'si ÖLÇÜLMÜŞ, PIT çapası TAM ve bar kaynağı BEYANLI kümeden mi?
+    (Kol sormaz — iki kol için de aynı ölçüt.)
+
+    Tetiği hiç gelmeyen plan (`R=None`) ve çapası yarım kalan satır (`kaynak_bar_hash=None`)
+    TANIdır: ölçülmemiştir, üzerine hiçbir hüküm kurulamaz. `bar_kaynak` şartı kill#6'nın okuyucu
+    tarafıdır: `adim` küme dışı bir kaynağı zaten reddeder, ama deftere BAŞKA bir yoldan (eski
+    sürüm, elle düzenleme, ikinci yazıcı) düşmüş bir satır K'ye sessizce giremez.
+    """
+    return (satir.get("R") is not None and bool(satir.get("kaynak_bar_hash"))
+            and satir.get("bar_kaynak") in BAR_KAYNAKLARI)
+
+
+def sayilir(satir: dict) -> bool:
+    """Satır K paydasına girer mi? `kol == dormant` ∧ `olculdu`.
+
+    KOL SÜZGECİ YÜKLÜDÜR (düzeltme 2026-09-12, inceleme M3-01/M4-01). Kartın hipotezi YALNIZ
+    uyuyan planlar içindir; kontrol kolu (o seans silahlanan normal planların gölge eşlenikleri)
+    PK (2)'nin SADAKAT ölçüsüdür, K popülasyonu DEĞİL. Kol süzülmeyince canlı strateji kolunun
+    R'si hipotezin paydasına karışıyordu ve n≥30 eşiği kontrol satırlarıyla dolabiliyordu —
+    "eşiği hak etmeden geçme" yönünde yanlı.
+
+    TEK YAZIM: sayım betiği bu fonksiyonu İTHAL EDER (`sayim.sayilir is golge_icra.sayilir`),
+    ikinci kez yazmaz.
+    """
+    return satir.get("kol") == KOLLAR[0] and olculdu(satir)
+
+
+def olculemeyen_neden(satir: dict) -> str:
+    """Ölçülemeyen satırın NEDENİ — tek sözlük, iki okuyucu (`ozet` ve sayım betiği).
+
+    Öncelik: satırın kendi `olculemedi` damgası → giriş reddi → beyanlı küme dışı bar kaynağı →
+    çapasızlık (R ölçülmüşken) → R'nin hiç ölçülmemiş olması. "Çapa yok" ile "R yok" AYRI
+    olgulardır ve tek ada sıkıştırılırsa okuyucu hangisinin olduğunu defterden bilemez.
+    """
+    if satir.get("olculemedi"):
+        return str(satir["olculemedi"])
+    if satir.get("giris_reddi"):
+        return str(satir["giris_reddi"])
+    if satir.get("bar_kaynak") not in BAR_KAYNAKLARI:
+        return f"bar_kaynak_bilinmiyor:{satir.get('bar_kaynak')!r}"
+    return "capa_yok" if satir.get("R") is not None else "R_yok"
+
+
+def tekillestir(satirlar: list[dict]) -> tuple[list[dict], int]:
+    """`plan_id` başına SON satır + MÜKERRER sayısı. Sıra korunur.
+
+    NEDEN OKUYUCUDA (inceleme M1-03/M4-06): yazım sırası artık "satırlar önce, `ACIK` sonra"dır
+    ve bu, çökmeyi KAYIPTAN MÜKERRERE çevirir. Mükerrer yalnız okuyucuda kapanabilir: her plan tam
+    bir satır üretir, yeniden koşum onu AYNI plan kimliğiyle yazar, son yazım en güncel olandır.
+    `plan_id`siz satır (şema bozuk) tekilleştirmeye GİRMEZ — ortak boş anahtar altında birbirini
+    yerdi.
+    """
+    out: list[dict] = []
+    indeks: dict[str, int] = {}
+    mukerrer = 0
+    for r in satirlar:
+        pid = str(r.get("plan_id") or "")
+        if not pid:
+            out.append(r)
+            continue
+        if pid in indeks:
+            out[indeks[pid]] = r
+            mukerrer += 1
+        else:
+            indeks[pid] = len(out)
+            out.append(r)
+    return out, mukerrer
 
 
 # ==================================================================================================
@@ -443,43 +647,77 @@ def ozet(gun: int = PENCERE_GUN) -> dict:
     hüküm cümlesi üretmesi, eşiği kartın dışında ikinci kez yorumlamak olurdu. Burada yalnız
     sayılar, dağılımlar, pencere durumu, bedel ve ÖLÇÜLEMEYENLER vardır.
 
-    K PAYDASI (kart hükmü 5): KAPANAN ve R'si ÖLÇÜLMÜŞ satırlar. Tetiği hiç gelmeyen plan
-    (`giris_yok`, `R=None`) ve PIT çapası yarım kalan satır (`kaynak_bar_hash=None`) TANIdır,
-    paydada değildir — eksik K, eşiği hak etmeden geçme yönünde yanlıdır.
+    K PAYDASI (kart hükmü 5) = `sayilir`: UYUYAN KOLUN kapanan ve R'si ÖLÇÜLMÜŞ satırları. Tetiği
+    hiç gelmeyen plan (`giris_yok`, `R=None`), PIT çapası yarım kalan satır
+    (`kaynak_bar_hash=None`) ve KONTROL kolu TANIdır, paydada değildir — eksik K, eşiği hak
+    etmeden geçme yönünde yanlıdır; kontrol kolu ise BAŞKA bir popülasyondur (PK 2'nin sadakat
+    ölçüsü) ve hipotezin paydasına karışırsa ölçü geçersizleşir.
+
+    İKİ KÜME, İKİ DAĞILIM: `hukum_dagilimi`/`kurulum_kirilimi`/`cikis_neden_dagilimi` K'nin,
+    `giren_*` ve `kol_kirilimi` gölgeye GİREN tüm satırların dağılımıdır.
     """
-    satirlar = kayit_al()
+    satirlar, mukerrer_n = tekillestir(kayit_al())
     doc = acik_kayit()
-    sayilan = [r for r in satirlar
-               if r.get("R") is not None and r.get("kaynak_bar_hash")]
+    sayilan = [r for r in satirlar if sayilir(r)]
     olculemeyen = [{"plan_id": r.get("plan_id"), "kol": r.get("kol"),
-                    "neden": r.get("olculemedi") or r.get("giris_reddi") or "R_yok"}
-                   for r in satirlar
-                   if r.get("R") is None or not r.get("kaynak_bar_hash")]
+                    "neden": olculemeyen_neden(r)}
+                   for r in satirlar if not olculdu(r)]
     n = len(sayilan)
+    n_kontrol = len([r for r in satirlar if r.get("kol") == KOLLAR[1] and olculdu(r)])
     rler = [float(r["R"]) for r in sayilan]
     kazanan = [x for x in rler if x > 0]
     kaybeden = [x for x in rler if x < 0]
-    baslangic = min((str(r.get("ts")) for r in satirlar if r.get("ts")), default=None)
+    ilk_satir_ts = min((str(r.get("ts")) for r in satirlar if r.get("ts")), default=None)
+    baslangic = doc.get("pencere_baslangic")
     gecen = _gecen_gun(baslangic)
+    pencere_neden = None
+    if not baslangic:
+        pencere_neden = ("pencere beyanı YOK (`acik.pencere_baslangic`) — gölge adımı hiç "
+                         "koşmamış ya da belge eski şemada; geçen gün ÖLÇÜLEMEDİ (0 DEĞİL)")
+    elif gecen is None:
+        pencere_neden = f"pencere beyanı ayrıştırılamadı ({baslangic!r}) — geçen gün ÖLÇÜLEMEDİ"
+    # BEDELİN PAYI DA PAYDASI DA AYNI PENCEREDEN: pencere dışı (eski kuşak/geri dolum) satırlar
+    # paya girseydi satır/gün şişerdi ve "bedel ölçüldü" iddiası yanlış sayı taşırdı.
+    pencere_ici = ([r for r in satirlar if str(r.get("ts") or "")[:10] >= str(baslangic)]
+                   if baslangic else [])
     return {
         "kart": KART,
         "n": n,
+        "n_kontrol": n_kontrol,
+        "mukerrer_n": mukerrer_n,
+        "atlanan_seanslar": list(doc.get("atlanan_seanslar") or []),
         "n_acik": len(doc.get("acik") or {}),
         "n_bekleyen_giris": len(doc.get("bekleyen_giris") or {}),
         "son_seans": doc.get("son_seans"),
         "toplam_r": round(sum(rler), 6) if n else None,
         "kazanma_orani": round(len(kazanan) / n, 4) if n else None,
         "pf": (round(sum(kazanan) / abs(sum(kaybeden)), 4) if kaybeden else None),
+        # K DAĞILIMLARI (payda = `sayilan`, yani dormant ∧ ölçülmüş)
         "hukum_dagilimi": _dagilim(sayilan, "hukum"),
         "kurulum_kirilimi": _dagilim(sayilan, "kurulum"),
-        "kol_kirilimi": _dagilim(sayilan, "kol"),
         "cikis_neden_dagilimi": _dagilim(sayilan, "cikis_neden"),
-        "pencere": {"baslangic": baslangic, "gun": int(gun), "gecen_gun": gecen,
+        # GİREN DAĞILIMLARI (payda = gölgeye giren TÜM satırlar). Kartın tanı maddesi
+        # ("dormant planların TAMAMI gölgeye girer, GO/REVIEW/NO_GO dağılımı tanı olarak
+        # raporlanır") bu popülasyonu sorar; K dağılımı ona cevap VEREMEZ çünkü girişi hiç
+        # olmayan plan K'de yoktur.
+        "giren_n": len(satirlar),
+        "kol_kirilimi": _dagilim(satirlar, "kol"),
+        "giren_hukum_dagilimi": _dagilim(satirlar, "hukum"),
+        "giren_kurulum_kirilimi": _dagilim(satirlar, "kurulum"),
+        "pencere": {"baslangic": baslangic,
+                    "baslangic_kaynagi": ("acik.pencere_baslangic" if baslangic else None),
+                    "ilk_satir_ts": ilk_satir_ts, "gun": int(gun), "gecen_gun": gecen,
                     "doldu": bool(n >= N_ALT and gecen is not None and gecen <= int(gun)),
-                    "suresi_doldu": bool(gecen is not None and gecen > int(gun))},
-        "bedel": {"satir_gun": (round(len(satirlar) / gecen, 3)
+                    "suresi_doldu": bool(gecen is not None and gecen > int(gun)),
+                    "neden": pencere_neden},
+        "bedel": {"satir_gun": (round(len(pencere_ici) / gecen, 3)
                                 if gecen and gecen > 0 else None),
                   "bayt": _defter_bayti(),
+                  # YAPISAL SIFIR BEYANI, SAYAÇ DEĞİL: motorun ithal kapanışında ağ/LLM yüzeyi
+                  # YOKTUR (`barclock`·`broker`·`store`·`strategy` → hiçbiri httpx/hermes/spend
+                  # görmez) ve `adim` hiçbir istek yapmaz. Buraya bir sayaç koymak, ölçülmeyen
+                  # bir şeyi "ölçtüm" gibi sunardı; alan beyanın KENDİSİDİR ve çivisi alanın
+                  # yerinde durduğunu kontrol eder (inceleme M4-12).
                   "ag_cagri": 0, "llm_cagri": 0},
         "olculemeyen": olculemeyen,
     }
