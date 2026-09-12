@@ -529,12 +529,21 @@ def test_UC_BOT_DA_AYNI_MODULU_CAGIRIR(bot):
     # (ikisinin de ölçümü `ops/sef_brifingi.py`nin rota bölümünde). Kapı bir AD listesine
     # dönüşseydi gevşerdi; o yüzden ad KABUL EDİLİR ve o adın gövdesinde `notify.scrub`ın
     # GERÇEKTEN çağrıldığı AYRICA ölçülür — çitin yeri değişti, çit değil.
-    izinli = {"sef": ("_denetci_cagir", "_profili_cagir")}.get(bot, ("_profili_cagir",))
+    # ÇİTİN YERİ İKİNCİ KEZ DEĞİŞTİ (TSK-138 dilim-2 TAMAMLAMA, 2026-09-12): rota gövdesi
+    # `ops/denetci_rota.py::DenetciRota.cagir`e taşındı ve ÜÇ bot da onu kullanır (`_ROTA.cagir`;
+    # sef'te `_denetci_cagir` ince bir devirdir). `notify.scrub` artık O gövdede ölçülür — bir bot
+    # kendi HTTP kopyasını yazarsa (ad listesi dışı bir çağrılabilir) bu çivi yine öter.
+    izinli = {"sef": ("_denetci_cagir", "_ROTA.cagir", "_profili_cagir")}.get(
+        bot, ("_ROTA.cagir", "_profili_cagir"))
     secilen = [ad for ad in izinli if f"cagir={ad}" in src]
     assert secilen, (
         f"@{bot} denetçiyi {list(izinli)} DIŞINDA bir yoldan çağırıyor — `notify.scrub` atlandı")
+    ortak = (KOK / "ops" / "denetci_rota.py").read_text(encoding="utf-8")
     for ad in secilen:
-        govde = src.split(f"def {ad}(", 1)[-1].split("\ndef ", 1)[0]
+        if ad in ("_ROTA.cagir", "_denetci_cagir"):
+            govde = ortak.split("    def cagir(", 1)[-1]
+        else:
+            govde = src.split(f"def {ad}(", 1)[-1].split("\ndef ", 1)[0]
         assert "notify.scrub(" in govde, (
             f"@{bot} denetçi yolu `{ad}` `notify.scrub` UYGULAMIYOR — sır çiti delindi")
 

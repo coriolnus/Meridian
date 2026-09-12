@@ -119,6 +119,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from meridian import hermes as _hermes_modulu                # noqa: E402
 from meridian import notify, obs, store                      # noqa: E402
 from ops import bekci_tarama as _tarama_kaynak               # noqa: E402
+from ops import denetci_rota                                 # noqa: E402
 from ops import soul_denetimi                                # noqa: E402
 
 # Tarama penceresi. Görev 1'in varsayılanıyla AYNI ve bilerek: pencereyi burada bağımsızca
@@ -858,6 +859,15 @@ def _sureci_oldur(p) -> None:
         pass
 
 
+# TSK-138 dilim-2 TAMAMLAMA (2026-09-12): denetçi çağrısı kapı rotasına gider — ÖLÇÜM (A1 events,
+# 09-09/09-10 10:0xZ): bu botun denetçisi "profil 150 sn'de bitmedi" ile düşüyordu, çünkü dilim-2
+# rotayı yalnız `@sef`e vermişti. Gövde ortak: `ops/denetci_rota.py`. Geç bağlama: `_profili_cagir`
+# ve `HERMES_PROFIL_HOME` çağrı anında çözülür (sahte profil çivileri modül niteliğini yamalar).
+_ROTA = denetci_rota.DenetciRota(profil_evi=lambda: HERMES_PROFIL_HOME,
+                                 profil_cagir=lambda p: _profili_cagir(p),
+                                 olay_oneki="bekci_brifingi", model_timeout_s=MODEL_TIMEOUT_S)
+
+
 def _profili_cagir(prompt: str) -> str:
     """`bekci` profilini TEK ATIŞLIK çağırır ve ham metnini döndürür.
 
@@ -1061,8 +1071,10 @@ def _kural_gecisi(cevap: str, istem: str, ham: dict) -> tuple[str, str]:
     try:
         g = soul_denetimi.gecir(profil_evi=HERMES_PROFIL_HOME, ilk_metin=cevap, ilk_istem=istem,
                                 veri_terimleri=[b["ad"] for b in _olculemeyenler(ham)],
-                                cagir=_profili_cagir, dogrula=lambda c: _cevap_makul(c, ham),
-                                bot=PROFIL_ADI)
+                                cagir=_ROTA.cagir, dogrula=lambda c: _cevap_makul(c, ham),
+                                bot=PROFIL_ADI,
+                                model_kimligi=denetci_rota.profil_model_kimligi(HERMES_PROFIL_HOME, "bekci_brifingi"),
+                                cevaplayan_oku=_ROTA.cevaplayan_oku)
         ham["kural_beyani"] = g.beyan
         return ("", "ham") if g.metin is None else (g.metin, "llm")
     except Exception as e:  # sessiz-yutma: SESSİZ DEĞİL, SİNYALLİ — düşüş hem `obs.log` ile ADIYLA deftere hem gövdedeki BEYAN satırına geçer; yakalama tek amaç içindir: geçiş katmanının kendisi teslimatı DÜŞÜREMEZ (fail-open sözleşmesi, inceleme K-1)

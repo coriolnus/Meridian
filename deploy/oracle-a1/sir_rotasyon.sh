@@ -342,6 +342,8 @@ KRED_SON
 _oneshot_kredensiyeller() {
   cat <<'ONESHOT_KRED_SON'
 kapi meridian-brifing.service KAPI_APIKEY /etc/meridian/kapi_apikey
+kapi meridian-bekci.service KAPI_APIKEY /etc/meridian/kapi_apikey
+kapi meridian-karne.service KAPI_APIKEY /etc/meridian/kapi_apikey
 ONESHOT_KRED_SON
 }
 
