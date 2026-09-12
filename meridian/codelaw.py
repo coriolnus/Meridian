@@ -602,6 +602,26 @@ DECLARED_SINKS: dict[str, str] = {
                   "olmadığını söylüyordu ve `stale_sinks` bunu YAPISAL olarak göremezdi — "
                   "tetikleyicisi `unread` bayrağıdır, tek `store` okuması aynı modülde olduğu için "
                   "`unread` True kalıyor ve muafiyet 'geçerli' görünüyordu",
+    # --- TSK-178 (2026-09-12): bot damga dosyaları — yazar VE okuyucu aynı `ops/` modülünde ------
+    # `artifact_graph` yalnız `meridian/` kökünü tarar; `ops/<bot>_brifingi.py` içindeki
+    # `store.update_json(DAMGA_DOSYA, …)` yazımı ve `store.read_json(DAMGA_DOSYA, …)` okumaları
+    # (kadans/sessizlik sayacı/son brifing künyesi) statik grafta GÖRÜNMEZ — `pool_exhausted_seen`
+    # sınıfı. Bekçi 2026-08-31'den beri bu dördünü "üretilip tüketilmeyen kanıt" sayıyordu (alarm
+    # gürültüde boğulur — VLO dersi). `oneri_akibet.jsonl` BURADA DEĞİL: motor okuyucusu var
+    # (`mukerrerlik`), alarm da onu saymıyordu. Beyan ↔ kaynak örtüşmesi v463 çivisiyle ölçülür
+    # (dosya adı sabiti, yazım, okuma); ops modülü okumayı bırakırsa çivi öter, beyan çürür.
+    "bekci_brifingi_damga.json": "yazar ve okuyucu `ops/bekci_brifingi.py` (store.update_json ile "
+        "damgalar, store.read_json ile kalem defteri + sessizlik sayacını okur); `ops/` kökü statik "
+        "grafta taranmaz — okuyucu VAR, dış modül değil (TSK-178, v463)",
+    "karne_brifingi_damga.json": "yazar ve okuyucu `ops/karne_brifingi.py` (store.update_json / "
+        "store.read_json — haftalık karne damgası ve kadans); `ops/` kökü statik grafta taranmaz "
+        "(TSK-178, v463)",
+    "oneri_brifingi_damga.json": "yazar ve okuyucu `ops/oneri_brifingi.py` (store.update_json ile "
+        "damgalar, store.read_json ile son damgayı okur — mükerrer öneri kapısı); `sef_brifingi` "
+        "adını yalnız şerhte anar; `ops/` kökü statik grafta taranmaz (TSK-178, v463)",
+    "sef_brifingi_damga.json": "yazar ve okuyucu `ops/sef_brifingi.py` (store.update_json ile "
+        "damgalar; store.read_json ile son brifing, kural denetimi ve sessizlik sayacını okur); "
+        "`ops/` kökü statik grafta taranmaz (TSK-178, v463)",
 }
 
 
