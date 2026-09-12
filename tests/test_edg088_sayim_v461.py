@@ -295,6 +295,25 @@ def test_A3_surtunme_alani_YOKSA_pay_None_ve_NEDEN_adiyla(tmp_path):
     assert any("PK (2)" in x for x in sonuc["olculemeyen"]), sonuc["olculemeyen"]
 
 
+def test_A3b_kucuk_R_paydasi_HASSASIYETSIZ_pay_None_ve_NEDEN_adiyla(tmp_path):
+    """Rol-1 hükmü (tur-2 kaygı 4): |r_multiple| < R_MULTIPLE_ALT → payda türetilmez, pay None.
+
+    Hangi üretim değişikliğinde kırılır: alt sınır kaldırılır ya da 0'a çekilirse — küçük-R çiftte
+    3 ondalık yuvarlama paydayı şişirir ve uydurulmuş bir pay PK (2)'ye girer."""
+    golge, gercek = _kontrol_defteri(0.001)
+    kucuk = dict(gercek[0]); kucuk["r_multiple"] = 0.01; kucuk["pnl_dollars"] = 10.0   # payda 1000 $, |R| < R_MULTIPLE_ALT
+    s = _sayim()
+    assert 0 < s.R_MULTIPLE_ALT <= 0.1
+    defter = _defter_yaz(tmp_path / "state" / "golge_icra.jsonl", golge)
+    _defter_yaz(tmp_path / "state" / "trades.jsonl", [kucuk])
+    sonuc = s.calistir(defter=defter, kart=KART_YOLU, goal=GOAL_YOLU)
+    k = sonuc["kontrol"]
+    assert k["komisyon_kayma_payi"] is None and k["gecti"] is None
+    assert k["n_payi_olculemeyen"] == 1, k
+    nedenler = k.get("pay_olculemeyen_nedenleri") or []
+    assert any("R_MULTIPLE_ALT" in str(x) for x in nedenler), (nedenler, sonuc["olculemeyen"])
+
+
 def _pk2_kosum(tmp_path, fark, ek_golge=(), ek_gercek=()):
     golge, gercek = _kontrol_defteri(fark)
     golge = list(golge) + list(ek_golge)

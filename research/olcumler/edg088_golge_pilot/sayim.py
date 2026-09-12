@@ -245,6 +245,12 @@ def _dagilim(satirlar: list[dict], alan: str) -> dict:
 # PK (2) — KONTROL KOLU (gölge ≈ gerçek)
 # ==================================================================================================
 #: PAYIN KAYNAĞI — raporda ADIYLA durur ki okuyucu hangi formülün konuştuğunu bilsin.
+# R PAYDASI HASSASİYET ALT SINIRI (Rol-1 hükmü 2026-09-12, tur-2 kaygı 4): payda `pnl_dollars /
+# r_multiple` ile TÜRETİLİR ve `r_multiple` defterde 3 ondalıktır — |R| küçüldükçe yuvarlama
+# hatası paydayı şişirir (|R|=0,02'de ≤ %2,5, |R|=0,005'te %10). Altındaki çiftlerde pay ÖLÇÜLEMEDİ
+# sayılır (None + adlı neden), uydurulmuş bir pay PK (2)'yi yanlış sebeple düşürmesin/geçirmesin.
+R_MULTIPLE_ALT = 0.02
+
 PAY_KAYNAGI = ("gerçek işlem satırının kaymalı fiyatları (`entry`/`exit`) ÜRETİMİN kayma "
                "uygulaması tersine çevrilerek ham fiyata döndürülür; sürtünmesiz R ile "
                "sürtünmeli R'nin farkı alınır. Kayma oranı ve hisse başı komisyon "
@@ -300,6 +306,9 @@ def _friksiyon_payi(goal: dict, gercek: dict) -> tuple[float | None, str | None]
     if r_mult == 0 or not math.isfinite(r_mult) or not math.isfinite(pnl):
         return None, ("gerçek satırın `r_multiple`ı 0 ya da sayı değil — R paydası "
                       "(`pnl_dollars / r_multiple`) TÜRETİLEMEDİ")
+    if abs(r_mult) < R_MULTIPLE_ALT:
+        return None, (f"gerçek satırın |r_multiple|={abs(r_mult):.3f} < {R_MULTIPLE_ALT} — 3 ondalıklı "
+                      "R ile türetilen payda hassasiyetsiz, pay ÖLÇÜLEMEDİ (R_MULTIPLE_ALT)")
     risk_dollars = pnl / r_mult
     if not (risk_dollars > 0) or not math.isfinite(risk_dollars):
         return None, "R paydası (`pnl_dollars / r_multiple`) pozitif çıkmadı — pay ÖLÇÜLEMEDİ"
