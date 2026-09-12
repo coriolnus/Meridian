@@ -73,7 +73,7 @@ notlar: >
   pencere kapanışında PK (3) hâlâ None ise hüküm YAZILMAZ, kart 'PK eksik' ile bekler. Pencere B1 dağıtım damgasıyla açılır (ayrı not).
   Sayaç bulguları kabul: CI ortalama aralığı, toplam n×ortalama TÜRETİLMİŞ (işaret sınaması aynı); PK (2) üç değerli, pay goal.yaml'dan
   (bugün 0,0168R < 0,05R tavanı → bağlayıcı olan pay). hafıza: A1 recall 8 sonuç, doğrudan emsal yok; memory: EDG-049 NO-GO dersi (n<30 hüküm yok).
-  PENCERE AÇILDI — B1 dağıtıldı  (dağıtım #37, main dce388c: Task 1-3 + tur-2 düzeltmeleri + R_MULTIPLE_ALT; 94 ajanlık çekişmeli
+  PENCERE AÇILDI — B1 dağıtıldı 2026-09-12T22:08:34Z (dağıtım #37, main dce388c: Task 1-3 + tur-2 düzeltmeleri + R_MULTIPLE_ALT; 94 ajanlık çekişmeli
   inceleme 6 onaylı → tur-2 28 kalem → tek Sonnet dar inceleme MERGE HAZIR; suite #41 12018/0). EDG-2026-088 penceresi BU ANDAN itibaren açıktır:
   n ≥ 30 KAPANAN gölge işlem ∧ ≤ 120 gün (kapanış en geç 2027-01-10). Sayaç `research/olcumler/edg088_golge_pilot/sayim.py`, `--baslangic` = bu
   damga (motor ACIK'e `pencere_baslangic` ilk seansta yazar; çelişirse --baslangic kazanır). Ölçülen hız (10 plan / 40 gün) ile n=30 beklentisi
