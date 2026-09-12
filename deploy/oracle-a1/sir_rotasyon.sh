@@ -7,7 +7,7 @@
 # bir sırrın KANALINI taşır (ortam → LoadCredential); bu betik kanala DOKUNMAZ, sırrın DEĞERİNİ
 # döndürür ve o değerin BÜTÜN KOPYALARINI aynı pencerede eşitler.
 #
-# NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-12 kopyası var ve
+# NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-13 kopyası var ve
 # kopyalar AYRI dosyalarda yaşıyor (credential kaynağı · `.env` satırı · docker env-file · bot
 # profili · LLM failover zincirinin ÜYE satırları). Elle rotasyonda kaçınılmaz tek hata "bir
 # kopyayı unutmak"tır ve o hata SESSİZDİR: yeniden başlatılan birim çalışır, unutulan kopyayı
@@ -23,7 +23,8 @@
 # olmasalardı `--openrouter` creds dosyasını döndürür, üyeler ESKİ anahtarla kalır ve eski anahtar
 # iptal edildiği an üyeler 401 alıp zincir SESSİZCE birincile düşerdi — yani bu betiğin var olma
 # gerekçesindeki "unutulan kopya" sınıfının tam kendisi. Altısı da tabloya girdi; OPENROUTER
-# artık 12 kopya (NOUS 2).
+# artık 13 kopya (NOUS 2). 2026-09-13: +1 GLOBAL `/home/ubuntu/.hermes/.env` — motorun
+# `hermes._agent_call` yolu; 09-08 rotasyonu onu atladı, akşam inceleme 4 gün 401 aldı (TSK-181).
 # BEYANLI KABUL: birincilin anahtarı (`/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY`) AYRI ve
 # LoadCredential kanalındadır; ÜYE satırları değeri `.env` içinde tutar, yani hafızanın bu kanalı
 # B SINIFIDIR (yarım kazanım) ve öyle beyan edilir — kanalı taşımak bu betiğin işi DEĞİL
@@ -236,6 +237,7 @@ openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_CONSOLIDATIO
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/bekci/.env OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/karne/.env OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/sef/.env OPENROUTER_API_KEY koru koru -
+openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/.env OPENROUTER_API_KEY koru koru -
 KOPYA_SON
 }
 
@@ -374,6 +376,7 @@ _taranan_dosyalar() {
 /home/ubuntu/.hermes/profiles/bekci/.env
 /home/ubuntu/.hermes/profiles/karne/.env
 /home/ubuntu/.hermes/profiles/sef/.env
+/home/ubuntu/.hermes/.env
 TARA_SON
 }
 
@@ -1623,7 +1626,7 @@ openrouter() {
   # KURU KAPISI `_oku_gizli` ÇAĞRILARININ ÜSTÜNDE. Altındayken `--openrouter --kuru` bir kuru
   # koşum DEĞİLDİ: iki gerçek anahtar istiyor, boş bırakılınca "yapacak iş yok" deyip çıkış 1
   # veriyordu — yani rotasyonun ÖN-BAKIŞI ancak taze anahtar yapıştırarak alınabiliyordu.
-  # Kuru raporun değere ihtiyacı YOKTUR: 14 kopya da, birim listesi de kopya tablosundan gelir.
+  # Kuru raporun değere ihtiyacı YOKTUR: 15 kopya da, birim listesi de kopya tablosundan gelir.
   [ "$KURU" = 0 ] || { _kuru_rapor openrouter; return 0; }
   local nous_var=0 or_var=0
   _oku_gizli "NOUS_API_KEY (motor)" "$ISLIK/nous" && nous_var=1 || nous_var=0

@@ -98,7 +98,10 @@ UYE_ALANLARI = tuple(f"HINDSIGHT_API_{yuzey}_LLM_{n}_API_KEY"
 #: istemeyen `--kopyalar` yüzeyi) ve ikisine ayrı ayrı yazılmış bir sayı sessizce ayrışır: bu tur
 #: A0 17'den 23'e çekilince K1e 17'de KALDI ve kırmızı verdi (tek-kaynak yasası, ölçüldü
 #: 2026-09-08). 17 + hafıza failover zincirinin ALTI üye anahtarı = 23.
-KOPYA_SAYISI = 23
+#: 2026-09-13: +1 = 24 — GLOBAL `/home/ubuntu/.hermes/.env` (motorun `hermes._agent_call` yolu);
+#: 09-08 rotasyonu bu kopyayı ATLADI, akşam inceleme 4 gün 401 aldı (TSK-181). Sayı elle değil
+#: keşifle büyüdü: eksik kopya sessizce eski anahtarla yaşar — bu pin tam onu ölçer.
+KOPYA_SAYISI = 24
 
 
 # =================================================================================================
@@ -602,6 +605,11 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
             f"HERMES_HOME=/home/ubuntu/.hermes/profiles/{p}\n"
             f"BOT_KEY_{p.upper()}=sahte-{p}\n"
             f"OPENROUTER_API_KEY={ESKI['or']}\n")
+    # GLOBAL hermes env (2026-09-13, TSK-181): motorun `hermes._agent_call` (review/generic) yolu
+    # profil değil BU dosyayı okur; 09-08 rotasyonu onu atladı ve eski anahtar 4 gün 401 aldı.
+    (kok / "home/ubuntu/.hermes/.env").write_text(
+        "HERMES_HOME=/home/ubuntu/.hermes\n"
+        f"OPENROUTER_API_KEY={ESKI['or']}\n")
     # MOTORUN KENDİ SIR DEPOSU — `.env` değil JSON. `NOUS_API_KEY` kopya tablosunda `api` satırıyla
     # BEYANLIDIR; `MERIDIAN_DASH_TOKEN` beyan DIŞIDIR (kalıcı kayıt 2026-09-06: kimlikler burada
     # yaşar) ve `--envanter` onu bulmak zorundadır. Değerler SAHTEDİR ve hiçbir yere basılmaz.
@@ -1079,6 +1087,8 @@ def test_H1_openrouter_IKI_read_s_ve_ON_DORT_kopya(tmp_path):
     for p in ("bekci", "karne", "sef"):
         assert _env_alan(kok / f"home/ubuntu/.hermes/profiles/{p}/.env",
                          "OPENROUTER_API_KEY") == YENI_OR
+    # 15. kopya (2026-09-13): GLOBAL hermes env — atlanırsa motorun inceleme çağrısı 401'de kalır
+    assert _env_alan(kok / "home/ubuntu/.hermes/.env", "OPENROUTER_API_KEY") == YENI_OR
     assert "/api/secrets/NOUS_API_KEY" in (kok / ".sahte/argv.log").read_text()
 
 
@@ -2536,6 +2546,9 @@ def test_N11_RESTART_ISTEMEYEN_tuketiciler_BEYANLI():
         "postgres",                                          # parolayı ALTER ROLE ile anında alır
         "meridian yerel sır deposu",                         # meridian sürecinin İÇİ
         "~/bin/hafiza_sor.sh (kabuk okuyucu; LLM'siz recall)",  # kabuk okuyucu, birim değil
+        # 2026-09-13 (TSK-181): motorun CLI çağrısı her seferinde dosyayı okur — birim değil,
+        # restart yok; atlanınca akşam inceleme 4 gün 401'de kaldı (envantere bu yüzden girdi)
+        "hermes CLI GLOBAL env — motorun hermes._agent_call yolu (kind=review/generic; timer'sız, restart gerekmez)",
     }
     servissiz = {k["tuketici"] for k in _envanter_kopyalari()
                  if not re.search(r"[a-z0-9-]+\.service", k["tuketici"])}
@@ -2692,13 +2705,14 @@ def test_O7_SERHTEKI_KOPYA_SAYILARI_tablodan_OLCULUR():
     or_kopya = len([x for x in k if x["sir"] == "OPENROUTER_API_KEY"])
     nous_kopya = len([x for x in k if x["sir"] == "NOUS_API_KEY"])
     alt_kopya = len([x for x in k if x["alt"] == "openrouter"])
-    assert or_kopya == 12 and nous_kopya == 2 and alt_kopya == 14, (or_kopya, nous_kopya, alt_kopya)
+    # 2026-09-13: OPENROUTER 12 → 13 (GLOBAL /home/ubuntu/.hermes/.env, TSK-181), alt toplam 14 → 15
+    assert or_kopya == 13 and nous_kopya == 2 and alt_kopya == 15, (or_kopya, nous_kopya, alt_kopya)
     # D7 DÜŞÜK-10: başlıktaki "her sırrın 2-12 kopyası var" ARALIĞI da elle yazılmış bir sayıydı.
     # Bugün doğruydu ama O7'nin türetmesine BAĞLI değildi — tablo büyüdüğünde sessizce eskiyecek
     # tek satır oydu.
     sayim = {s: len([x for x in k if x["sir"] == s]) for s in {x["sir"] for x in k}}
     en_az, en_cok = min(sayim.values()), max(sayim.values())
-    assert (en_az, en_cok) == (2, 12), sayim
+    assert (en_az, en_cok) == (2, 13), sayim      # 2026-09-13: OPENROUTER 13 (global hermes env)
     assert f"her sırrın {en_az}-{en_cok} kopyası var" in metin, \
         "başlık şerhindeki kopya ARALIĞI tabloyla ayrıştı"
     assert f"OPENROUTER artık {or_kopya} kopya (NOUS {nous_kopya})." in metin, \
@@ -2719,7 +2733,7 @@ def test_O8_MUT_tablo_BUYURSE_serh_sayisi_AYRISIR(tmp_path):
     k = _betik_kopyalari(m)
     metin = _serh_metni(m)
     or_kopya = len([x for x in k if x["sir"] == "OPENROUTER_API_KEY"])
-    assert or_kopya == 13, k
+    assert or_kopya == 14, k     # 13 gerçek (2026-09-13: +global hermes env) + 1 mutant
     assert f"artık {or_kopya} kopya" not in metin, \
         "şerh sayısı mutasyonla birlikte kaydı — O7 tabloyu değil kendini ölçüyor"
     sayim = {s: len([x for x in k if x["sir"] == s]) for s in {x["sir"] for x in k}}

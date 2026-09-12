@@ -424,3 +424,12 @@ rotasyon_kopyalari:
       sahip: null
       tuketici: "hermes sef profili"
       not: "spec §1 tablosunda bu dosyanın YALNIZ BOT_KEY_<AD>'i var — açık kalem"
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes/.env"
+      alan: OPENROUTER_API_KEY
+      mod: null
+      sahip: null
+      tuketici: "hermes CLI GLOBAL env — motorun hermes._agent_call yolu (kind=review/generic; timer'sız, restart gerekmez)"
+      not: "KEŞİF 2026-09-12: 09-08 rotasyonu bu kopyayı ATLADI (envanterde yoktu) → akşam inceleme çağrısı 401 'User not found', self_review/validation/nous_eval 4 gün atlandı (TSK-181). Değer profillerden farklı ELE ALINMAZ: aynı OpenRouter anahtarı"
