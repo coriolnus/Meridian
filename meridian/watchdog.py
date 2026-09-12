@@ -4032,8 +4032,9 @@ def check_eod_supurme_and_alarm() -> dict:
 # (ROADMAP.md TSK-131, 2026-09-05): geri dolum DEVAM, ama "kendimize koyduğumuz 120 G dolarsa ele
 # alırız" — o tavan `deploy/oracle-a1/geridolum.py::TAVAN_BAYT` (`120 * 1000**3`) sabitinde durur
 # ve TEK KAYNAKTIR, burada KOPYALANMAZ. Bu bekçinin işi o karardan ÖNCE haber vermek: eşiği
-# `VERI_DISK_ESIK_G` operatörün 120 G kararının 10 G ERKEN uyarısıdır (120-10=110) — bağımsız
-# uydurulmuş bir sayı değil, aynı kararın önündeki bir nokta.
+# `VERI_DISK_ESIK_G` 2026-09-05'te operatörün 120 G kararının 10 G ERKEN uyarısıydı (110);
+# 2026-09-12'de geri dolum tavanda DURDU ve operatör eşiği 140 G'ye taşıdı ("(a) dur") — sabit
+# artık geri dolumun değil, diskteki başka büyümenin bekçisidir (uydurulmuş sayı değil, karar).
 #
 # ÖLÇÜM (2026-09-05, bu turun D1'i): `grep -rn "disk_usage|statvfs|/opt/veri|df " meridian/
 # watchdog.py meridian/*.py ops/bekci_tarama.py ops/bekci_brifingi.py deploy/oracle-a1/
@@ -4066,9 +4067,11 @@ def check_eod_supurme_and_alarm() -> dict:
 # =============================================================================================
 
 VERI_DISK_YOLU = "/opt/veri"             # A1 gerçeği (ayrı disk sdb) — yerelde/CI'da YOK
-VERI_DISK_ESIK_G = 110                    # operatör 120 G kararının (ROADMAP TSK-131,
-                                          # geridolum.py::TAVAN_BAYT — TEK KAYNAK) 10 G ERKEN
-                                          # uyarısı; 120 DEĞİŞİRSE bu sabit ELLE yeniden ölçülür
+VERI_DISK_ESIK_G = 140                    # operatör 2026-09-12 "(a) dur, eşiği 140 G'ye taşı":
+                                          # geri dolum 120 GB tavanında (TAVAN-DOLDU, 09-12) durdu;
+                                          # bu eşik artık o kararın erken uyarısı DEĞİL, diskteki
+                                          # DİĞER büyümenin bekçisidir (toplam 157 G, 17 G pay).
+                                          # Tarihçe: 2026-09-05 → 110 (120 G kararının 10 G öncesi).
 
 
 def veri_disk_report() -> dict:

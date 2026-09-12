@@ -6,7 +6,7 @@ geridolum.py` tek isabeti `geridolum.py::_bos_disk_bayt` idi — geri dolumun KE
 (ham-geçici alan <25 G kalınca dur). Hiçbir sensör /opt/veri'nin TOPLAM kullanımını izleyip
 OPERATÖRE önceden haber vermiyordu. Operatör kararı (ROADMAP TSK-131, 2026-09-05): geri dolum
 DEVAM, 120 G tavanında (`deploy/oracle-a1/geridolum.py::TAVAN_BAYT` — TEK KAYNAK) ele alınır; bu
-bekçi o karardan 10 G ÖNCE (110 G) haber verir.
+bekçi o karardan 10 G ÖNCE (110 G) haber verirdi; 2026-09-12 operatör kararı '(a) dur, eşiği 140 G'ye taşı' → sabit 140 (geri dolum 120 GB tavanında durdu; eşik artık diğer büyümenin bekçisi).
 
 SÖZLEŞME (bu dosya çiviler):
   * `watchdog.veri_disk_report()` → {var, kullanilan_g, toplam_g, bos_g, esik_g, esik_asildi,
@@ -69,6 +69,8 @@ def diskli(sandbox_state, monkeypatch, tmp_path):
 
 
 def _kullanimi_ayarla(monkeypatch, kullanilan_g: float, toplam_g: float = 147.0) -> None:
+    # Sahneler `VERI_DISK_ESIK_G`ye GÖRELİ yazılır (2026-09-12: sabit 110→140 olunca literal 115 sessizce
+    # "eşik altı" olmuştu — mandal çivisi sahte kırmızı). Eşiğin kendisi ölçülmez, sahnenin konumu ölçülür.
     monkeypatch.setattr(watchdog.shutil, "disk_usage",
                          lambda _yol: _kullanim(kullanilan_g, toplam_g))
 
@@ -76,24 +78,24 @@ def _kullanimi_ayarla(monkeypatch, kullanilan_g: float, toplam_g: float = 147.0)
 # ---- (1) eşik aşıldı → BİR alarm ------------------------------------------------------------
 
 def test_esik_asildi_bir_alarm(diskli, alarmlar, monkeypatch):
-    _kullanimi_ayarla(monkeypatch, 111.0)
+    _kullanimi_ayarla(monkeypatch, watchdog.VERI_DISK_ESIK_G + 1)
     rep = watchdog.check_veri_disk_and_alarm()
     assert rep["var"] is True
-    assert rep["kullanilan_g"] == 111.0
+    assert rep["kullanilan_g"] == float(watchdog.VERI_DISK_ESIK_G + 1)
     assert rep["esik_asildi"] is True
     assert len(alarmlar) == 1
     assert alarmlar[0]["token"] == "DISK_ESIK"
-    assert alarmlar[0]["kullanilan_g"] == 111.0
+    assert alarmlar[0]["kullanilan_g"] == float(watchdog.VERI_DISK_ESIK_G + 1)
     assert alarmlar[0]["esik_g"] == watchdog.VERI_DISK_ESIK_G
 
 
 # ---- (2) eşik altı → alarm yok -------------------------------------------------------------
 
 def test_esik_altinda_alarm_yok(diskli, alarmlar, monkeypatch):
-    _kullanimi_ayarla(monkeypatch, 100.0)
+    _kullanimi_ayarla(monkeypatch, watchdog.VERI_DISK_ESIK_G - 10)
     rep = watchdog.check_veri_disk_and_alarm()
     assert rep["var"] is True
-    assert rep["kullanilan_g"] == 100.0
+    assert rep["kullanilan_g"] == float(watchdog.VERI_DISK_ESIK_G - 10)
     assert rep["esik_asildi"] is False
     assert alarmlar == []
 
@@ -117,7 +119,7 @@ def test_yol_yok_none_ve_neden(sandbox_state, alarmlar, monkeypatch, tmp_path):
 # ---- (4) aynı gün ikinci çağrı → mandal (tekrar yok) ----------------------------------------
 
 def test_ayni_gun_ikinci_cagri_mandallanir(diskli, alarmlar, monkeypatch):
-    _kullanimi_ayarla(monkeypatch, 111.0)
+    _kullanimi_ayarla(monkeypatch, watchdog.VERI_DISK_ESIK_G + 1)
     watchdog.check_veri_disk_and_alarm()
     watchdog.check_veri_disk_and_alarm()               # AYNI gün, AYNI eşik aşımı — tekrar YOK
     assert len(alarmlar) == 1, "günlük tavan aşıldı: ikinci çağrı yeni satır ÜRETMEMELİ (mandal)"
