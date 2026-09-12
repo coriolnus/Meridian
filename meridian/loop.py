@@ -1291,6 +1291,51 @@ def _max_trade_num(rows: list[dict]) -> int:
     return maks
 
 
+def _last_id_kalicila(yeni: int) -> tuple[bool, str | None]:
+    """Yükseltilmiş `last_id`yi kitaba KALICI yazar — YALNIZ o alana dokunarak. Döner:
+    `(kalici_yazildi, neden)`; `neden` yalnız olağandışı dalda doludur.
+
+    NEDEN `_save_broker` DEĞİL (ölçülmüş engel, tercih değil): bu yazım `_load_broker`ın
+    ORTASINDA, sayaç yükseltildiği ANDA koşar — o noktada `b.positions` HENÜZ DOLDURULMAMIŞTIR
+    (döngü birkaç satır aşağıda). `_save_broker` sahiplendiği 15 alanı `b`/`meta`dan yazdığı için
+    kitabın AÇIK POZİSYONLARINI boş sözlükle ezerdi; `meta` da henüz kurulmuş değildir. Bu yüzden
+    dar yazım: aynı store kapısı, tek alan.
+
+    AYNI KAPI: `_save_broker` ile AYNI `store.update_json` → `file_lock(PORTFOLIO)` yolundan
+    geçer, yani (a) Hermes görüş damgası / api gönderim ucu gibi öbür kitap yazarlarıyla aynı
+    kilidi paylaşır, (b) `store` damgasını (`rev`/`updated_at`) ilerletir — `watchdog`ın
+    DAMGASIZ YAZIM bekçisi bu yazımı "dışarıdan sessiz değişim" sanmaz.
+
+    BEYAN GÜVENLİĞİ: `update_json` diskteki belgeyi kilit altında okur ve burada YALNIZ `last_id`
+    değişir; `sermaye_resetleri` dahil her yabancı anahtar yerinde kalır (2026-08-04 vakasının
+    sınıfı) — bu yüzden `_save_broker`ın beyan ratchet'ine burada gerek YOKTUR: geriletilebilecek
+    bir alana hiç dokunulmuyor.
+
+    OKUYANI (Yasa 6): yazılan alan `_load_broker`ın kendi bir sonraki okumasıdır (`st["last_id"]`)
+    ve `_persist_trade`in çarpışma reddi aynı sayaçtan türer; `kalici_yazildi` alanını okuyan ise
+    `tests/test_trade_id_carpisma_v417.py` D5 çivisi ve olay defterini tarayan operatördür."""
+    sonuc: dict = {}
+
+    def _yama(doc):
+        if not isinstance(doc, dict):
+            # Kitap okunamadı/sözlük değil: dar yazımın korumasız bir tam-yazıma dönüşmesi
+            # YANLIŞ olurdu (yabancı anahtarları uydurmak olur). `_save_broker` bu durumu
+            # kendi alarm dalında zaten işler; burada yalnız hükmü dürüst bırakırız.
+            sonuc["neden"] = "belge_sozluk_degil"
+            return False
+        mevcut = doc.get("last_id", 0)
+        if isinstance(mevcut, (int, float)) and int(mevcut) >= yeni:
+            # Başka bir yazar (tur-sonu `_save_broker`, ops onarımı) araya girip sayacı ZATEN
+            # hedefe/ötesine taşımış: kayıt doğru, ikinci yazım gereksiz.
+            sonuc["neden"] = "zaten_ileride"
+            return False
+        doc["last_id"] = yeni
+        return True
+
+    store.update_json(PORTFOLIO, _yama, None)
+    return sonuc.get("neden") != "belge_sozluk_degil", sonuc.get("neden")
+
+
 def _load_broker() -> tuple[PaperBroker, dict]:
     """Kitabı diskten yükler: `(PaperBroker, meta)`.
 
@@ -1303,7 +1348,15 @@ def _load_broker() -> tuple[PaperBroker, dict]:
     kaldı, canlı sayaç T00096'dan devam edip zaten var olan seed id'leriyle çarpıştı (16 çift).
     Sayaç defterin gerisindeyse (yükleneni AŞAN bir id zaten yazılmışsa) BURADA yükseltilir ve
     sessiz değil — `obs.warn("trade_id_carpismasi", ...)` (Yasa 4). Sayaç defterden İLERİDEYSE
-    (normal durum) dokunulmaz."""
+    (normal durum) dokunulmaz.
+
+    TSK-180 (2026-09-12): yükseltme artık BELLEKTE KALMIYOR — `_last_id_kalicila` ile AYNI ANDA
+    diske de iner ve uyarı `kalici_yazildi` hükmünü taşır. ÖLÇÜLEN VAKA: canlıda 09-08 15:44Z'den
+    beri her ~5 dk AYNI uyarı basıldı (`last_id`=901, defter azamisi T00909). Bu fonksiyonun
+    ÜRETİMDEKİ TEK çağıranı `daily_cycle`dır ve `daily_cycle` yüklemeden hemen sonra seans zaten
+    işlenmişse (`meta["last_date"] == dstr`) `{"status": "noop"}` ile ERKEN DÖNER: tur-sonu yazımı
+    `_save_broker` o tick'te HİÇ KOŞMAZ, düzeltme diske inmez, bir sonraki tick aynı uyarıyı
+    yeniden basar. Tekrar eden uyarı GERÇEK bir çarpışmayı gizler — Yasa 4 gürültüsü."""
     goal = config.goal()
     slip = float(goal.get("slippage_bps", 5))
     comm = float(goal.get("commission_per_share", 0.0))
@@ -1314,8 +1367,12 @@ def _load_broker() -> tuple[PaperBroker, dict]:
         last_id = int(st.get("last_id", 0))
         defter_maks = _max_trade_num(store.read_jsonl("trades.jsonl"))
         if defter_maks > last_id:
+            # KALICILAŞTIR, SONRA HÜKÜM VER: uyarı yazımın GERÇEK sonucunu taşır. Ters sırada
+            # "yazıldı" iddiası ölçülmeden basılırdı (uydurma yasağı).
+            kalici, kalici_neden = _last_id_kalicila(defter_maks)
             obs.warn("trade_id_carpismasi", eski=f"T{last_id:05d}", yeni=f"T{defter_maks:05d}",
-                     sebep="last_id sayacı defterin gerisinde")
+                     sebep="last_id sayacı defterin gerisinde",
+                     kalici_yazildi=kalici, kalici_neden=kalici_neden)
             last_id = defter_maks
         b._id = last_id
         from .broker import Position

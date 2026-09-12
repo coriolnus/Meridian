@@ -23,7 +23,15 @@ RULING (Rol-1, TSK-150 brief) İKİ KAPI, TEK KAYNAK (`loop._max_trade_num`):
        maksimumundan KÜÇÜKSE (kökün TAM eşleşmesi: genişleyen tohum ama donmuş `last_id`)
        yükseltilir + AYNI warn. Sayaç defterden İLERİDEYSE (normal durum) DOKUNULMAZ.
 
-BU DOSYA DÖRT DURUMU ÇİVİLER + BİR AST TARİPWIRE:
+EK RULING (TSK-180, 2026-09-12) — D2'NİN YARIM KALAN YARISI: D2 sayacı yalnız BELLEKTE
+yükseltiyordu. `_load_broker`ın üretimdeki TEK çağıranı `loop.daily_cycle`dır ve o, seans zaten
+işlenmişse yüklemeden hemen sonra `{"status": "noop"}` ile ERKEN DÖNER — tur-sonu `_save_broker`
+o tick'te hiç koşmaz. Sonuç canlıda ölçüldü: 09-08 15:44Z'den 09-12'ye kadar her ~5 dk AYNI
+uyarı (`last_id`=901, defter azamisi T00909). Hüküm: yükseltme ANINDA `loop._last_id_kalicila`
+ile kalıcı yazılır (aynı `store.update_json`/`file_lock(PORTFOLIO)` kapısı, YALNIZ `last_id`
+alanı) ve uyarı `kalici_yazildi` hükmünü taşır.
+
+BU DOSYA ALTI DURUMU ÇİVİLER + BİR AST TARİPWIRE:
   (1) D1 — kapanışta üretilen id defterde varsa: T00097'YE DEVAM EDİLMEZ, defter maksimumu+1
       (T00887 gibi) alınır + warn.
   (2) D2 — `_load_broker`de `last_id` defter maksimumunun altındaysa yükseltilir + warn.
@@ -32,12 +40,21 @@ BU DOSYA DÖRT DURUMU ÇİVİLER + BİR AST TARİPWIRE:
   (4) AST TRİPWIRE: `meridian/` içinde trades'i (ya da başka bir satır listesini) bracket-
       subscript `{t["id"]: t for t in ...}` biçiminde anahtarlayan kod YOK (bugün 0 — bu test
       0'ı KORUR; `meridian.topviews` içindeki yerel `plan_by_id` sözlüğü `.get("id")` kullanır, bu ŞEKİL DEĞİL, dokunulmaz).
+  (5) D5 — TSK-180: yükseltme DİSKE iner (`kalici_yazildi: True`) ve kitabın `last_id` DIŞINDAKİ
+      hiçbir alanına (yabancı `sermaye_resetleri` dahil) dokunulmaz.
+  (6) D6 — TSK-180 VAKANIN KENDİSİ: ikinci yükleme SESSİZ — "her tick yeniden uyar" döngüsü biter.
 
 MUTASYON (bu oturumda ELLE doğrulandı, kalıcı test DEĞİL — CLAUDE.md §6 "çivi yeşili kanıt
 değildir"): `loop._persist_trade` içindeki `if any(r.get("id") == trade.get("id") ...)` bloğu
 geçici olarak `if False and ...` yapılınca `test_D1_kapanista_carpisma_defter_maksimumuna_siçrar`
 KIRMIZI oldu (id `T00096` olarak kaldı, defterde ikinci bir `T00096` yazıldı); yama geri
 alınıp `meridian/__pycache__/loop.*.pyc` silindikten sonra tekrar YEŞİL doğrulandı.
+MUTASYON (TSK-180, 2026-09-12, ELLE): (a) `_last_id_kalicila` içindeki `store.update_json(...)`
+çağrısı `pass` ile değiştirilince D5 (`KeyError`/disk 901'de kaldı) VE D6 (`assert 2 == 1` —
+ikinci uyarı, canlının tam semptomu) KIRMIZI oldu; (b) `_yama` içine `doc["cash"] = 0.0`
+eklenince D5'in dar-yazım çivisi "dar yazım `cash` alanına DOKUNMAMALIYDI" ile KIRMIZI oldu.
+Her iki yama YEDEK KOPYADAN geri alındı (sha256 eşit) ve `__pycache__` silinip yeniden YEŞİL
+doğrulandı.
 
 HİÇBİR TEST CANLI STATE'E YAZMAZ: hepsi `sandbox_state` üzerinden koşar (D4 hariç — o saf statik
 kaynak taraması, hiçbir I/O yapmaz).
@@ -200,3 +217,75 @@ def test_D4_ast_tripwire_trades_id_ile_anahtarlanmiyor():
         f"bir satır listesini bracket-subscript {{X['id']: X}} ile anahtarlayan kod bulundu: "
         f"{ihlaller} — id gerçek anahtar DEĞİLDİR (storage.py::_COLS[TRADES]), 16 çarpışan çift "
         f"böyle bir okumada SESSİZCE tek satıra düşer")
+
+
+# =================================================================================================
+# (5-6) TSK-180 — YÜKSELTİLEN SAYAÇ KALICI YAZILIR (uyarı her tick tekrarlamaz)
+# =================================================================================================
+# ÖLÇÜM (A1, 2026-09-12): 09-08 15:44Z'den beri her ~5 dk AYNI `trade_id_carpismasi` uyarısı
+# basılıyordu — DB `portfolio.last_id` = 901, defterin gerçek azamisi T00909 (S5 yeniden
+# tohumlaması). ÇAĞIRAN ZİNCİRİ ölçüldü: `_load_broker`ın ÜRETİMDEKİ TEK çağıranı
+# `loop.daily_cycle`dır (`meridian/run.py`, `meridian/sprint_run.py`, `meridian/scheduler.py`
+# onu çağırır); `daily_cycle` yüklemeden hemen sonra `meta["last_date"] == dstr` ise
+# `{"status": "noop"}` ile ERKEN DÖNER ve tur-sonu yazımı `loop._save_broker` O TİCK'TE HİÇ
+# KOŞMAZ. Yani D2 yükseltmesi yalnız BELLEKTE yaşıyor, disk 901'de kalıyor, bir sonraki tick
+# aynı uyarıyı yeniden basıyordu (Yasa 4 gürültüsü: tekrar eden uyarı GERÇEK çarpışmayı gizler).
+#
+# HÜKÜM: yükseltme gerçekleştiği anda sayaç TEK yerde — `loop._last_id_kalicila` —
+# `_save_broker` ile AYNI store kapısından (`store.update_json` → `file_lock(PORTFOLIO)`)
+# kalıcı yazılır ve YALNIZ `last_id` alanına dokunulur. `_save_broker`ın kendisi burada
+# ÇAĞRILAMAZ (ölçülmüş engel): yükseltme anında `b.positions` HENÜZ DOLDURULMAMIŞTIR ve
+# `_save_broker` sahiplendiği 15 alanı yazdığı için kitabın açık pozisyonlarını BOŞ sözlükle
+# ezerdi — dar yazım bir tercih değil, yapısal zorunluluk.
+def _pf_defteri_geride(last_id: int) -> dict:
+    """Canlının ölçülen şekli: kitap `last_id`de donmuş, defterde daha büyük T-numarası var.
+    `sermaye_resetleri` KASITLI olarak eklenir — dar yazımın yabancı anahtarlara dokunmadığı
+    (2026-08-04 vakasının sınıfı) aynı çivide ölçülür."""
+    return {"cash": 100_000.0, "realized_pnl": 12.5, "last_id": last_id,
+            "positions": {"AAA": {"plan_id": "P1", "ticker": "AAA", "side": "long",
+                                  "entry": 100.0, "stop": 95.0, "trail_stop": 95.0,
+                                  "target": 115.0, "qty": 10, "r_per_share": 5.0,
+                                  "risk_dollars": 50.0, "size_r": 1.0,
+                                  "ts_open": "2026-09-01"}},
+            "armed": [], "pending_exits": {}, "last_date": "2026-09-12",
+            "day_start_equity": 100_000.0, loop.MIRROR_EXIT_KEY: {},
+            "sermaye_resetleri": [{"amount": 1.0, "date": "2026-08-01"}]}
+
+
+def test_D5_yukseltilen_sayac_KALICI_yazilir_ve_kitap_kalanina_dokunmaz(sandbox_state):
+    store.append_jsonl(ledgerstamp.LEDGER, _seed_satir("T00909", "SEED", "2026-09-02"))
+    store.write_json(loop.PORTFOLIO, _pf_defteri_geride(901))
+
+    b, _meta = loop._load_broker()
+
+    assert b._id == 909, "ön koşul: D2 yükseltmesi BELLEKTE oldu"
+    uyari = _uyarilar()
+    assert len(uyari) == 1, "sessiz yutma YOK — Yasa 4"
+    assert uyari[0]["kalici_yazildi"] is True, (
+        "uyarı KALICILIK hükmünü taşımalı: 'yükselttim' ile 'yükselttim ve yazdım' aynı satırda "
+        "ayırt edilemezse dört gün boyunca kimse farkı göremez")
+
+    disk = store.read_json(loop.PORTFOLIO, {})
+    assert disk["last_id"] == 909, "yükseltme DİSKE indi — aksi halde her tick yeniden uyarır"
+    # DAR YAZIM: `last_id` DIŞINDA hiçbir alan değişmedi (sahiplenilen de, yabancı da).
+    beklenen = _pf_defteri_geride(909)
+    for alan in ("cash", "realized_pnl", "positions", "armed", "pending_exits", "last_date",
+                 "day_start_equity", "sermaye_resetleri"):
+        assert disk[alan] == beklenen[alan], f"dar yazım `{alan}` alanına DOKUNMAMALIYDI"
+
+
+def test_D6_ikinci_yukleme_sessiz_her_tick_uyarisi_biter(sandbox_state):
+    """VAKANIN KENDİSİ. `daily_cycle`ın noop dalı `_save_broker`ı hiç çağırmadığı için ikinci
+    tick birinciyle AYNI defteri okur: kalıcılık olmazsa uyarı SONSUZA KADAR tekrarlar."""
+    store.append_jsonl(ledgerstamp.LEDGER, _seed_satir("T00909", "SEED", "2026-09-02"))
+    store.write_json(loop.PORTFOLIO, _pf_defteri_geride(901))
+
+    b1, _ = loop._load_broker()                 # tick 1 — yükseltme + kalıcı yazım
+    assert b1._id == 909
+    assert len(_uyarilar()) == 1
+
+    b2, _ = loop._load_broker()                 # tick 2 — AYNI defter, `_save_broker` koşmadı
+    assert b2._id == 909, "sayaç diskten 909 olarak geldi"
+    assert len(_uyarilar()) == 1, (
+        "İKİNCİ uyarı basıldı — yükseltme kalıcı DEĞİL; canlıda bu, 09-08'den beri her ~5 dk "
+        "tekrarlayan `trade_id_carpismasi` gürültüsünün ta kendisiydi")
