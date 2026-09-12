@@ -568,6 +568,14 @@ SINK_TABANI = frozenset({
     # tüketici zinciri codelaw.DECLARED_SINKS gerekçesinde yazılı: rapor() → api._eksen2_gorus →
     # /api/skills → pano Araçlar sekmesi.
     "golge_siralama.jsonl", "skill_gorus_pencereler.jsonl",
+    # v463'TE BEYANLI GÜNCELLENDİ (2026-09-12, TSK-178) — DÖRT yeni muafiyet: bot damga dosyaları.
+    # Yazar VE okuyucu aynı `ops/<bot>_brifingi.py` modülü (store.update_json / store.read_json:
+    # kadans, sessizlik sayacı, son brifing künyesi); `artifact_graph` yalnız `meridian/` kökünü
+    # tarar, `ops/` modül-içi okumayı GÖREMEZ — `pool_exhausted_seen.json` sınıfı. Bekçi 08-31'den
+    # beri bu dördünü yetim sayıyordu. Beyan↔kaynak örtüşmesi tests/test_yetim_damga_beyani_v463.py
+    # ile ölçülür (dosya adı sabiti, yazım, okuma, pozitif kontrollü yetim taraması).
+    "bekci_brifingi_damga.json", "karne_brifingi_damga.json",
+    "oneri_brifingi_damga.json", "sef_brifingi_damga.json",
 })
 
 
