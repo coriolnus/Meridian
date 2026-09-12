@@ -20,11 +20,31 @@ YEREL ÖLÇÜM (kurulu hermes-agent v0.18.2, 2026-08-06 — tahmin değil, koşu
      hata modelden ÖNCE olduğu için zincirin İKİNCİ modeli de aynen düşer, ve çıktıda ne kota ne
      yapılandırma imzası vardır.
 
-Bu dosya üç sözleşmeyi kilitler:
+EK VAKA (TSK-181(b), A1 canlı defter 09-08 15:44Z → 09-12): ham kanıt (2) DÜŞTÜ ama YETMEDİ —
+her akşam `agent_call_empty kind=review cooldown_sinifi=fallback_empty cooldown_s=900
+ham_stdout="HTTP 401: User not found."`. İptal edilmiş bir OpenRouter anahtarı (rotasyonun
+atladığı GLOBAL hermes env kopyası). 401 metni yalnız `ham_stdout` alanının İÇİNDEydi ve olayın
+SINIFI "yedek model sustu" diyordu; dört gün kimse görmedi, öz-inceleme/validation/nous_eval
+sessizce atlandı. Yani "ham kanıtı sakla" sözleşmesinin kör noktası SINIFLANDIRMAdır: yanlış
+sınıf, doğru ham veriyi görünmez kılar.
+
+Bu dosya DÖRT sözleşmeyi kilitler:
   1. Ön-uçuş skill hatası KENDİ sınıfıdır: bütçe iade edilir, soğuma YAZILMAZ, düşen adlar
      listeden çıkarılıp çağrı BİR KEZ yeniden koşulur (ceza değil onarım).
   2. Boş çağrının HAM KANITI deftere düşer (rc + stdout/stderr özeti) — ve sır sızdırmadan.
   3. Regresyon: imza YOKSA davranış birebir eski (kurtarma yolu masum bir boşluğu ele geçirmez).
+  4. 401/403 KENDİ SINIFIDIR (`cooldown_sinifi="yetki_reddi"`) ve KENDİ OLAYINI basar
+     (`agent_yetki_reddi`) — `massive_yetki_reddi` deseninin ajan-hattı ikizi. Ceza düz
+     penceredir (üstel DEĞİL) ve zincir uzunluğuna BAKMAZ; kod okunur, uydurulmaz; 5xx eski
+     sınıfta kalır.
+
+MUTASYON (TSK-181(b), 2026-09-12, ELLE — CLAUDE.md §6 "çivi yeşili kanıt değildir"):
+  (a) `yetki = _agent_yetki_reddi(...)` → `yetki = None`: 401 olayı, 403 kodu ve tek-modelli
+      zincir penceresi çivilerinin ÜÇÜ birden KIRMIZI.
+  (b) `brain_pause(..., BRAIN_COOLDOWN_BASE_S)` → `brain_stand_down(...)`: düz-pencere çivisi
+      `assert 1 == 0` (streak) ile KIRMIZI.
+  (c) kod bulunamayınca `None` yerine `401` döndürmek: "kod uydurulmaz" çivisi KIRMIZI.
+  Üç yama da YEDEK KOPYADAN geri alındı (sha256 eşit) ve `__pycache__` silinip yeniden YEŞİL.
 
 Alt süreç ve ağ SAPLIDIR; fikstürlerde gerçek anahtar/token YOKTUR.
 """
@@ -187,3 +207,100 @@ def test_ham_ozet_maskeleme_kirpmadan_once_kosar():
     anahtar = "AIzaSy" + "Q7" * 20
     ozet = hermes._ham_ozet("dolgu " * 40 + anahtar)
     assert anahtar[:40] not in ozet and anahtar[:24] not in ozet
+
+
+# ================================================================================================
+# 4) TSK-181(b) — 401/403 YETKİ REDDİ KENDİ SINIFIDIR (görünür olay + düz pencere)
+# ================================================================================================
+# ÖLÇÜLEN (A1 canlı defter, 09-08 → 09-12): her akşam `agent_call_empty kind=review
+# cooldown_sinifi=fallback_empty cooldown_s=900 ham_stdout="HTTP 401: User not found."`.
+# İptal edilmiş bir OpenRouter anahtarı (rotasyonun atladığı global hermes env kopyası). 401 metni
+# YALNIZ `ham_stdout` alanının içinde yaşıyordu; olayın sınıfı "yedek model sustu" diyordu ve
+# 4 gün boyunca kimse görmedi — öz-inceleme/validation/nous_eval sessizce atlandı.
+# EMSAL: `meridian/adapters/massive.py::_yetki_reddi_yaz` aynı olguyu (`massive_yetki_reddi`)
+# KENDİ olayı + kendi hükmüyle basar ve bekçi brifingine `durum:` damgasıyla girer. Bu blok o
+# deseni ajan hattına BİREBİR taşır.
+YETKI_401 = "HTTP 401: User not found.\n"
+YETKI_403 = "HTTP 403: Forbidden\n"
+SUNUCU_500 = "HTTP 500: Internal Server Error\n"
+
+
+def test_401_ayri_yetki_olayi_basar_ve_sinifi_yetki_reddidir(ajan):
+    """401 bir PLAN/YETKİ HÜKMÜDÜR: aynı anahtarla atılan ikinci istek tanımı gereği aynı cevabı
+    alır. `fallback_empty` ("hat çalıştı, model sustu") sınıfı bunu YANLIŞ anlatıyordu."""
+    ajan.sonuclar = [_Kosum(1, YETKI_401, "")]
+    assert hermes._agent_call("istem", kind="review") is None
+
+    ev = _events("agent_yetki_reddi")
+    assert len(ev) == 1, "yetki reddi KENDİ olayını basmalı — ham_stdout içinde gömülü kalmamalı"
+    assert ev[0]["kind"] == "review" and ev[0]["http"] == 401 and ev[0]["returncode"] == 1
+    assert len(ev[0]["detail"]) >= 20 and "geçici arıza DEĞİL" in ev[0]["detail"]   # YASA 4
+
+    bos = _events("agent_call_empty")[-1]
+    assert bos["cooldown_sinifi"] == "yetki_reddi"
+    assert bos["ham_stdout"].startswith("HTTP 401"), "ham kanıt YERİNDE KALIR (v193 sözleşmesi)"
+
+    # BEDEL ÖLÇÜLÜR (bedel yasası): `review_fallback_empty` bu turda ARTIK BASILMIYOR. Kaybedilen
+    # satırın gerekçesi olgusal olarak yanlıştı ("hat çalıştı, model sustu" — oysa hat yetki
+    # katmanında reddedildi); yerine geçen olay aynı alanların üstüne `http`/`imza`/`returncode`
+    # taşır, yani bu dalda hiçbir teşhis bilgisi KAYBOLMAZ.
+    assert _events("review_fallback_empty") == [], \
+        "401 'yedek model sustu' DEĞİLDİR — yanlış anlatan satır basılmamalı"
+    for alan in ("kind", "model", "chain", "cooldown_taban_s"):
+        assert alan in ev[0], f"kaybolan `review_fallback_empty` satırının `{alan}` alanı taşınmalı"
+    # Rol-1 hükmü (2026-09-13, inceleme ORTA-1): ÖLÇÜLEN `cooldown_s` bu olaya YAZILMAZ — bekçi
+    # gruplama imzası oynak alanı görünce satırı `durum:` görünürlüğünden düşürür; soğumanın SABİT
+    # tabanı taşınır, ölçülen süre `agent_call_empty`de kalır (tek-kaynak). Mutasyon: alan geri
+    # konursa bu satır öter.
+    assert "cooldown_s" not in ev[0], "oynak `cooldown_s` yetki olayına sızmış — bekçi imzası bozulur"
+
+
+def test_403_ve_ciplak_forbidden_ayni_sinifa_duser_kod_uydurulmaz(ajan, monkeypatch):
+    """403 aynı sınıftır. Kod OKUNUR, UYDURULMAZ: gövdede 401/403 sayısı yoksa `http` None olur —
+    "Unauthorized" metnine bakıp 401 yazmak ölçülmemiş bir sayı basmak olurdu (uydurma yasağı)."""
+    ajan.sonuclar = [_Kosum(1, YETKI_403, "")]
+    assert hermes._agent_call("istem", kind="review") is None
+    assert _events("agent_yetki_reddi")[-1]["http"] == 403
+
+    assert hermes._agent_yetki_reddi("Error: Unauthorized", "") == (None, "unauthorized")
+    assert hermes._agent_yetki_reddi("HTTP 401: User not found.", "") == (401, "http 401")
+    assert hermes._agent_yetki_reddi("her şey yolunda", "") is None
+    assert hermes._agent_yetki_reddi(SUNUCU_500, "") is None
+
+
+def test_yetki_reddinde_soguma_DUZ_penceredir_ustel_merdivene_binmez(ajan):
+    """Yeniden deneme fırtınası YOK, ama 6 saatlik kota kilidi de YOK: iptal edilmiş anahtar bir
+    kota olgusu değildir, `streak` artmamalı. Düz pencere = `BRAIN_COOLDOWN_BASE_S`."""
+    ajan.sonuclar = [_Kosum(1, YETKI_401, "")]
+    assert hermes._agent_call("istem", kind="review") is None
+
+    rem = hermes.brain_cooldown("agent")
+    assert 0 < rem <= hermes.BRAIN_COOLDOWN_BASE_S, f"düz kısa pencere beklenir (kalan={rem})"
+    satir = store.read_json(hermes.BRAIN_COOLDOWN_FILE, {})["agent"]
+    assert satir["streak"] == 0, "yetki reddi üstel havuz merdivenine BİNMEZ"
+    assert _events("agent_call_empty")[-1]["cooldown_s"] <= hermes.BRAIN_COOLDOWN_BASE_S
+
+
+def test_tek_modelli_zincirde_de_pencere_kurulur_yeniden_deneme_firtinasi_yok(ajan, monkeypatch):
+    """KÖR NOKTA, ÖLÇÜLDÜ: `fallback_empty` dalı `len(models) > 1` ister. Yedeği ayarlanmamış bir
+    zincirde 401 alınca ESKİ kod HİÇBİR soğuma yazmıyordu (`cooldown_sinifi=None`) — her poll aynı
+    iptal edilmiş anahtarla yeni bir süreç doğururdu. Yetki sınıfı zincir uzunluğuna BAKMAZ."""
+    monkeypatch.setattr(hermes.secrets, "get", lambda k: {"NOUS_MODEL": BIRINCI}.get(k))
+    ajan.sonuclar = [_Kosum(1, YETKI_401, "")]
+    assert hermes._agent_call("istem", kind="review") is None
+
+    assert len(ajan.runs) == 1, "önkoşul: zincir TEK modelli"
+    assert _events("agent_call_empty")[-1]["cooldown_sinifi"] == "yetki_reddi"
+    assert hermes.brain_cooldown("agent") > 0, "tek modelli zincirde de pencere kurulmalı"
+
+
+def test_REGRESYON_500_eski_sinifta_kalir_yetki_olayi_BASILMAZ(ajan):
+    """POZİTİF KONTROLÜN İKİZİ: yetki imzası YOKSA davranış BİREBİR eski. 5xx geçici bir arızadır;
+    onu yetki hükmü sınıfına almak, bu turun düzelttiği hatanın AYNASI olurdu."""
+    ajan.sonuclar = [_Kosum(1, SUNUCU_500, "")]
+    assert hermes._agent_call("istem", kind="review") is None
+
+    assert _events("agent_yetki_reddi") == [], "5xx yetki reddi DEĞİLDİR"
+    bos = _events("agent_call_empty")[-1]
+    assert bos["cooldown_sinifi"] == "fallback_empty", "eski sınıf aynen korunur"
+    assert _events("review_fallback_empty"), "eski olay da aynen korunur"

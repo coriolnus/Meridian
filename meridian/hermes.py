@@ -2103,6 +2103,55 @@ def _agent_quota_sign(stdout: str, stderr: str) -> str | None:
     return m.group(1) if m else None
 
 
+# ---- YETKİ REDDİ İMZALARI (TSK-181(b)) ----------------------------------------
+# CANLI VAKA (A1, 09-08 15:44Z → 09-12): her akşam `agent_call_empty kind=review
+# cooldown_sinifi=fallback_empty cooldown_s=900 ham_stdout="HTTP 401: User not found."`. Kök:
+# iptal edilmiş bir OpenRouter anahtarı (rotasyonun atladığı GLOBAL hermes env kopyası). 401
+# metni YALNIZ `ham_stdout` alanının İÇİNDE yaşıyordu ve olayın SINIFI "yedek model sustu"
+# diyordu — dört gün kimse görmedi; öz-inceleme / validation / nous_eval sessizce atlandı.
+# NEDEN AYRI SINIF: 401/403 bir PLAN/YETKİ HÜKMÜdür, geçici arıza DEĞİL. `fallback_empty`in
+# ölçtüğü olgu ("hat çalıştı, model sustu") burada YANLIŞTIR: hat yetki katmanında reddedildi,
+# model hiç konuşmadı. Aynı anahtarla atılacak ikinci istek tanımı gereği aynı cevabı alır, yani
+# çözüm bir bekleme penceresi değil SIR ENVANTERİ / ROTASYON KOPYASI kontrolüdür.
+# EMSAL VE TEK DESEN: `meridian/adapters/massive.py::_yetki_reddi_yaz` (`massive_yetki_reddi`)
+# aynı olguyu aynı cümleyle basar; bu yol onun ajan-hattı ikizidir.
+AGENT_YETKI_SIGNS = ("http 401", "http 403", "user not found", "unauthorized", "forbidden")
+
+
+def _agent_yetki_reddi(stdout: str, stderr: str) -> tuple[int | None, str] | None:
+    """Boş cevabın gövdesinde 401/403 YETKİ REDDİ imzası var mı? Varsa `(http_kodu|None, imza)`,
+    yoksa None.
+
+    `_agent_quota_sign` / `_agent_unconfigured_sign` ile AYNI disiplin: YALNIZ boş-cevap yolunda
+    çağrılır. Dolu bir modelin cevabı "unauthorized" kelimesini geçirebilir ve orada hiçbir arıza
+    yoktur; sınıflandırmayı cevabın VARLIĞINDAN bağımsız yapmak konuşan bir modeli 'yetkisiz'
+    ilan ederdi.
+
+    KOD OKUNUR, UYDURULMAZ: gövdede kelime sınırıyla `401`/`403` YOKSA `http` None döner. Çıplak
+    bir "Unauthorized" metnine bakıp 401 yazmak, ölçülmemiş bir sayıyı deftere basmak olurdu
+    (uydurma yasağı) — ve sır rotasyonu teşhisi tam da o sayıya bakarak yapılıyor.
+
+    KÖR NOKTA, KAPATILMADI, BEYAN EDİLDİ: imza taraması METİNDEDİR. Yetki reddini 401/403 demeden
+    ve bu beş kelimeden hiçbirini kullanmadan bildiren bir üst-akış (örn. yalnız `{"error":
+    {"code": "invalid_api_key"}}`) BU YOLDA GÖRÜNMEZ; o hâlde olay eski `fallback_empty`
+    sınıfında kalır — yani körlük eskisi kadardır, daha fazlası değil."""
+    import re as _re
+    hay = f"{stdout or ''}\n{stderr or ''}".lower()
+    imza = next((s for s in AGENT_YETKI_SIGNS if s in hay), None)
+    if imza is None:
+        return None
+    m = _re.search(r"\b(401|403)\b", hay)
+    return (int(m.group(1)) if m else None), imza
+
+
+AGENT_YETKI_HUKMU = ("401/403 plan/yetki hükmüdür, geçici arıza DEĞİL — aynı anahtarla atılan "
+                     "ikinci istek tanımı gereği aynı cevabı alır; bekleme penceresi bunu "
+                     "ÇÖZMEZ. Sır envanteri / rotasyon kopyası kontrol edilmeli: ajan hattı "
+                     "GLOBAL hermes ortamındaki anahtarı da kullanır ve rotasyon o kopyayı "
+                     "atlayabilir (TSK-181). Hat bu pencerede yeniden denenir ama aynı anahtarla "
+                     "aynı cevabı alacaktır — kapanan şey öz-inceleme/validation/nous_eval'dir.")
+
+
 # ---- HAM ÇIKTI ÖZETİ — KÖRLÜĞÜN SONU ------------------------------------------
 # CANLI VAKA: `agent_call kind=review model=gemini-3.5-flash attempt=1 empty=true tool_calls=-1`
 # → yedek de boş → `review_fallback_empty`. Defterde bu üç satırdan BAŞKA hiçbir şey yoktu ve
@@ -2604,9 +2653,32 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
     # üstel merdivene bindirmek 6 saatlik bir kilit üretiyor ve kotası dolmamış BİRİNCİ modeli de
     # kapsıyordu. Ayrım imzaya dayanır — tahmine değil.
     kota_imza = _agent_quota_sign(son_stdout, son_stderr)
-    yedek_sustu = len(models) > 1 and not kota_imza
+    # YETKİ REDDİ EN ÜSTTE SINIFLANIR (TSK-181(b)): 401/403 alındığında ne "kota bitti" ne de
+    # "model sustu" ÖLÇÜLMÜŞTÜR — istek yetki katmanında reddedildi, üst-akışın kota durumu
+    # hakkında elimizde hiçbir kanıt yok. Öbür iki sınıfın hükmünü buraya uygulamak, dört gün
+    # süren körlüğün ta kendisiydi.
+    yetki = _agent_yetki_reddi(son_stdout, son_stderr)
+    yetki_http, yetki_imza = yetki if yetki else (None, None)
+    yedek_sustu = len(models) > 1 and not kota_imza and not yetki
     cooled, sinif = 0.0, None
-    if yedek_sustu:
+    if yetki:
+        # DÜZ PENCERE, ÜSTEL MERDİVEN DEĞİL — ve ZİNCİR UZUNLUĞUNA BAKMADAN. Ölçülen kör nokta:
+        # `fallback_empty` dalı `len(models) > 1` ister; yedeği ayarlanmamış bir zincirde 401
+        # alındığında HİÇBİR soğuma yazılmıyordu (`cooldown_sinifi=None`) ve her poll aynı iptal
+        # edilmiş anahtarla yeni bir süreç doğuruyordu. Ceza üstel DE olamaz: bu bir kota olgusu
+        # değil, `streak` artarsa gerçek bir kota arızası sahte bir tabandan başlar.
+        sinif = "yetki_reddi"
+        cooled = brain_pause("agent", f"yetki_reddi:{kind}", BRAIN_COOLDOWN_BASE_S)
+        # `cooldown_s` BU olaya YAZILMAZ (Rol-1 hükmü 2026-09-13, inceleme ORTA-1): bekçi
+        # gruplama imzası oynak alanı görünce grubu düşürür; yetki reddinin görünür kalması
+        # soğuma süresinin bu satırda tekrarından değerlidir — süre zaten `agent_call_empty`
+        # olayında (`cooldown_s`) ve `brain_pause` defterinde duruyor (tek-kaynak).
+        obs.warn("agent_yetki_reddi", kind=kind, http=yetki_http, imza=yetki_imza,
+                 model=models[-1] or "varsayılan", chain=len(models), returncode=son_rc,
+                 cooldown_taban_s=BRAIN_COOLDOWN_BASE_S,     # SABİT: soğumanın sınıfı, ölçülen süresi değil
+                 ham_stdout=_ham_ozet(son_stdout), ham_stderr=_ham_ozet(son_stderr),
+                 detail=AGENT_YETKI_HUKMU)
+    elif yedek_sustu:
         # Kısa pencere havuzun durumundan BAĞIMSIZ kurulur ve bunun iki ayrı gerekçesi var:
         # (i) havuz ne derse desin, susan yedek hakkında söylediği şey ölçülmemiştir; (ii) havuz
         # işareti bayat olduğu için düştüğünde eski kod HİÇ soğuma yazmıyordu — yani (1) numaralı
@@ -2619,6 +2691,13 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         sinif = "pool_exhausted"
         cooled = brain_stand_down("agent", f"pool_exhausted:{exhausted}")
     if yedek_sustu:
+        # BEDEL, ÖLÇÜLDÜ (bedel yasası): `yedek_sustu` artık yetki reddini DIŞLADIĞI için 401/403
+        # turlarında bu satır ARTIK BASILMIYOR — kaybedilen budur. Kaybın nedeni satırın yanlış
+        # olmasıdır: "çıktıda KOTA İMZASI YOK → hat çalıştı, model sustu" cümlesi 401 için
+        # OLGUSAL OLARAK YANLIŞTIR (hat yetki katmanında reddedildi). Yerine geçen
+        # `agent_yetki_reddi` KESİN OLARAK DAHA FAZLA taşır: aynı `kind`/`model`/`chain`/
+        # `cooldown_s` alanlarının üstüne `http`, `imza`, `returncode` ve ham stdout/stderr.
+        # Yani bu dalda gürültü azalmadı, bir satır DAHA DOĞRU bir satırla değişti.
         obs.warn("review_fallback_empty", kind=kind, model=models[-1] or "varsayılan",
                  chain=len(models), pool_exhausted=exhausted, cooldown_s=round(cooled, 1),
                  detail=f"yedek model boş döndü ve çıktıda KOTA İMZASI YOK — bu 'kota bitti' değil, "
