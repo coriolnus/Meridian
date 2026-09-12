@@ -48,7 +48,7 @@ pozitif_kontrol: >
   ayna-satırı doğar, sınıfı not_armed; silahlanıp gönderilen kardeş plan ayna-satırı ALMAZ.
   Tek-fonksiyon birim çağrısı PK sayılmaz; kanca gerçek EOD yolundan tetiklenir.
 k_registry: {registered_at: "2026-09-02", trial_ids: [EXE-011-eod-ayna]}
-status: measured_partial   # 2026-09-02 Rol-1 — FİKSTÜR KOLU ÖLÇÜLDÜ + hüküm aşağıda; CANLI İLK-HAFTA KOLU AÇIK (dağıtım sonrası birikim)
+status: measured   # 2026-09-12 Rol-1 — fikstür + canlı ilk-hafta kolu ölçüldü (canli_kol_2026_09_12); hüküm sınırı: canlı davranış hükmü n=2 ile betimleyici
 fikstur_kolu_2026_09_02:
   pozitif_kontrol: "ATEŞLEDİ — test_a1 (v372): silahlandırılmayan plan GERÇEK EOD yolundan geçirildi, ayna-satırı not_armed doğdu; gönderilen kardeş plan satır ALMADI; mutasyon-1 ile ısırma kanıtlı"
   sonuc: "v372 16 çivi passed / PYTEST_EXIT=0 (SDD: inceleme + 2 düzeltme turu sonrası); success_metric'in fikstür cümlesi SAĞLANDI — her plan tam bir sonuç izi (JOIN tekilliği), sınıf dağılımı kayıtlı alanlardan, haftalık rapor week.donusum + /api/diagnostics.selfreview_summary taşıyor"
@@ -70,3 +70,12 @@ beyanli_sinirlar: >
   daraltılmış çerçevedir; uygulamada plan alanları üçüncü bir AYIRT EDİLEBİLİR sınıf gösterirse
   bu yeni sınıf sözlüğe EKLENMEZ — olculemedi'ye sayılır ve yeni kartla açılır (eşik-sonradan
   değişmez ilkesinin sözlük karşılığı).
+canli_kol_2026_09_12: >
+  (22:53Z Rol-1) CANLI İLK-HAFTA KOLU ÖLÇÜLDÜ (A1 state/entry_execution.jsonl, pencere 2026-09-02 dağıtımı → 09-12): ayna-satırı BİRİKİYOR —
+  2 satır (09-09 P-…, 09-11 P-2026-09-10-SWKS), ikisi de sınıf not_armed (gate_verdict REVIEW / NO_GO; red_nedeni dolu), olculemedi 0,
+  armed_not_submitted 0; TEKİLLİK 0 ihlal (karar∩ayna plan_id boş); geri-dolum yok (satır ts = seans kapanışı). Payda DEFTERDEN OKUNUYOR:
+  09-02'den beri 10 karar satırı / 9 dolum / 2 ayna. OKUYUCU (Yasa 6) VAR: self_review.json `donusum` bloğu (plan_n 6, dolum_n 4, oran 0,667,
+  sinif_dagilimi) — ama o dosya 2026-09-08 20:17Z'de kalmış (BAYAT TÜREV alarmı 09-09'dan beri; ayrı arıza, TSK-181), yani rapor son iki
+  ayna-satırını henüz taşımıyor. HÜKÜM: success_metric'in canlı cümlesi SAĞLANDI (birikim + payda), kill 4/4 tetiklenmedi; status measured.
+  Gözlem: 10 günde 2 ayna-satırı — dönüşmeyen plan kütlesi küçük, sınıf tek (not_armed); TSK-104'ün 'not_armed iç kırılımı' ihtiyacı
+  ancak n büyüyünce anlamlı (ön-kayıt pencere kararı TSK-104'te). hafıza: ölçüm kaydı, ayar/eşik değişikliği yok — recall koşulmadı.
