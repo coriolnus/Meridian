@@ -71,14 +71,20 @@ def _olculen_dokuz() -> list[tuple[str, int, str]]:
             for satir, rol, _ad in _store_cagri_yerleri(d)]
 
 
-def _bararchive_desen_satiri() -> int:
-    """`bararchive`in f-string adlı `append_jsonl` çağrısının satırı — TAZE ölçülür."""
-    src = (REPO / "meridian" / "bararchive.py").read_text()
+def _desen_satiri(dosya: str) -> int:
+    """Bir modüldeki f-string adlı `append_jsonl` çağrısının satırı — TAZE ölçülür (satır çapası
+    donmaz). Tekil olmalı: iki desenli çağrı, desen katmanının tek-yazma-kapısı varsayımını kırar."""
+    src = (REPO / "meridian" / dosya).read_text()
     satirlar = [n.lineno for n in ast.walk(ast.parse(src))
                 if isinstance(n, ast.Call) and getattr(n.func, "attr", None) == "append_jsonl"
                 and n.args and isinstance(n.args[0], ast.JoinedStr)]
-    assert len(satirlar) == 1, f"desenli `append_jsonl` tekil değil: {satirlar}"
+    assert len(satirlar) == 1, f"{dosya}: desenli `append_jsonl` tekil değil: {satirlar}"
     return satirlar[0]
+
+
+def _bararchive_desen_satiri() -> int:
+    """`bararchive`in f-string adlı `append_jsonl` çağrısının satırı — TAZE ölçülür."""
+    return _desen_satiri("bararchive.py")
 
 
 # ---------------------------------------------------------------------------
@@ -362,7 +368,14 @@ def test_intraday_bars_DECLARED_gorunuyor_desen_katmaninda():
     (artefakt sözlüğüne girmiyor) ama artık SAHİPSİZ değil."""
     g = codelaw.artifact_graph()
     # Yazım yerinin DOSYASI ölçüt, satırı taze ölçülür (bararchive.py'ye satır eklenebilir).
+    # 2026-09-13, EDG-2026-085 (TSK-013 tick pilotu): İKİNCİ bir desen beyanı doğdu —
+    # `quotecapture`in TEK yazma kapısı (kayıt dizini + gün defteri adı) `_joined_glob`ta geniş bir
+    # glob'a iner. TABAN BURADA GÜNCELLENDİ ÇÜNKÜ EKLEME BEYANLIDIR: kaydın kendisi
+    # `codelaw.DECLARED_SINK_PATTERNS` içinde gerekçesi + `sinanamaz` alanıyla duruyor ve o desenin
+    # çağrı yerlerinin YALNIZ quotecapture olduğu `tests/test_quote_capture_v465.py` D3 çivisinde
+    # ölçülüyor (geniş anahtarın bedeli sessiz kalmasın diye). Satırlar taze ölçülür.
     assert g["declared_patterns"] == {
+        "*/edg085_*.jsonl": [f"quotecapture.py:{_desen_satiri('quotecapture.py')}"],
         "intraday_bars/*.jsonl": [f"bararchive.py:{_bararchive_desen_satiri()}"]}
     assert g["orphan_patterns"] == [], "kodda karşılığı olmayan desen beyanı: ölü muafiyet"
 
@@ -597,7 +610,10 @@ def test_ihlal_seti_GERILEMEDI():
         "(artefakta gerçek dış okuyucu geldi ya da artefakt öldü) bu dosyadaki `SINK_TABANI` "
         "BEYANLA güncellenir — sessiz düşüş, muafiyetin neden kalktığını kayıtsız bırakır.")
     # v215: iki yeni kayıt AÇIK ve SAYILI. Beyan eklemek serbest değil, gerekçelidir.
-    assert len(codelaw.DECLARED_SINK_PATTERNS) == 1 and len(codelaw.HUMAN_INVOKED_SINKS) == 1
+    # 2026-09-13 (EDG-2026-085 tick pilotu): desen beyanı 1 → 2. Sayı BEYANLA yükseldi; ikinci
+    # kayıt `quotecapture`in kayıt dizini yazımıdır ve devir şartı (pilot bitince bayrak kapanır,
+    # satır kaldırılır) kendi `sinanamaz` alanında yazılıdır.
+    assert len(codelaw.DECLARED_SINK_PATTERNS) == 2 and len(codelaw.HUMAN_INVOKED_SINKS) == 1
     assert r["stale_claims"] == [] and r["orphan_patterns"] == []
     assert r["ok"] is True, r
 

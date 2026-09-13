@@ -664,6 +664,34 @@ DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
                      "farkı budur: sınanamayan iddia gizlenmez, işaretlenir. DEVİR ŞARTI: Faz-5/6 "
                      "ölçümü arşivi okuduğu gün BU SATIR KALDIRILMALI ve gerçek tüketici yazılmalı.",
     },
+    "*/edg085_*.jsonl": {
+        "sinif": "dis_okuyucu_arastirma",
+        "gerekce": "EDG-2026-085 SENARYO-A İCRA-ANI QUOTE KAYDI (tick pilotu, 20 seans). YAZAN: "
+                   "`quotecapture` modülünün TEK yazma kapısı — `store.append_jsonl` çağrısı, adı "
+                   "kayıt dizini + `edg085_` LİTERAL öneki + gün defteri adından (gün ya da ham "
+                   "önekli gün) kurulan bir f-string; dosyalar `edg085_<gün>.jsonl` ve "
+                   "`edg085_ham_<gün>.jsonl`. Dizin YALNIZ MERIDIAN_EDG085_KAYIT_DIZIN ortam "
+                   "değişkeninden gelir, MUTLAK olmak zorundadır (göreli değer reddedilir: "
+                   "`store._path` onu state/ altına bağlardı) ve state/ DIŞIDIR (kart kill#4; "
+                   "A1'de /opt/veri altında, dağıtımın --delete kapsamına girmez); değişken boşsa "
+                   "TEK BAYT yazılmaz. Yazım ayrıca BAYRAKLIDIR (MERIDIAN_QUOTE_CAPTURE, "
+                   "varsayılan '0'). OKUYAN: EDG-085 rapor aracı "
+                   "(research/olcumler/edg085_icra_ani_quote, Rol-1 salt-okur) — kayıt + ham "
+                   "defterinden kartın dört eksenini hesaplar. Pilot bitince bayrak KAPANIR "
+                   "(kill#8) ve yazım durur.",
+        "sinanamaz": "OKUYUCU MOTOR DIŞINDADIR: `artifact_graph` ve `declared_claims` yalnız "
+                     "`meridian` kökünü tarar, research/ altındaki aracı GÖREMEZ — iddia bugünkü "
+                     "çağrı analiziyle sınanamaz ve bu yüzden `unverifiable_claims` kovasında "
+                     "ADIYLA raporlanır. DESENİN GENİŞLİĞİ DE BEYANDIR (bedel yasası): "
+                     "`edg085_` öneki anahtarı `*/*.jsonl`den `*/edg085_*.jsonl`e DARALTTI (dal "
+                     "sonu incelemesi K1, 2026-09-13), ama SIFIRLAMADI — `_joined_glob` kayıt "
+                     "dizinini ve gün adını çözemediği için iki `*` kalır ve aynı f-string şekline "
+                     "düşen BAŞKA bir yazar hâlâ sessizce bu beyanın altına girebilirdi; "
+                     "`tests/test_quote_capture_v465.py` D3 çivisi desenin çağrı yerlerinin YALNIZ "
+                     "quotecapture olduğunu ölçer ve ikinci yazar girdiği gün kırmızı olur. "
+                     "DEVİR ŞARTI: kart EDG-2026-085 hükmü inip bayrak kapandığı gün BU SATIR "
+                     "KALDIRILMALI (ya da hüküm kaydına atıfla yenilenmeli, Rol-1).",
+    },
 }
 
 #: ÇAĞIRANI İNSAN OLAN DEFTER. Disiplin: "çağıranı YOK" ile "çağıranı İNSAN" ayrı
