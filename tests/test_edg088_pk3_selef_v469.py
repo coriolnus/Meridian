@@ -33,7 +33,6 @@ fikstürün kusuru olurdu. Bu yüzden takvim TEK KAYNAKTAN (`adapters.data._sess
 """
 from __future__ import annotations
 
-import importlib.util
 import json
 import pathlib
 
@@ -67,10 +66,9 @@ def _modul():
     """Ölçüm betiğini modül olarak yükle. `research/` bir paket DEĞİLDİR (ölçümler birbirinden
     yalıtık dizinlerdir), o yüzden dosya yolundan yüklenir — `sys.path`e research/ eklemek
     ölçüm dizinlerini birbirinin ithal alanına sokardı."""
-    spec = importlib.util.spec_from_file_location("pk3_selef_v469", BETIK)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    # HAM `exec_module` YASAK (v334: bayat `__pycache__` kaynağın önüne geçebilir) — ortak yükleyici.
+    from tests.conftest import betikten_modul_yukle
+    return betikten_modul_yukle(BETIK, "pk3_selef_v469")
 
 
 @pytest.fixture()
