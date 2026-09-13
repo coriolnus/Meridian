@@ -85,3 +85,10 @@ kurulum_kaydi_2026_09_13: >
   PK (3) NEGATİF: 7. gün okunur (NK sayfası 'bankada yok' kalmalı; PK-PIT sayfası bilinen cevabı korumalı).
   PENCERE AÇILDI 2026-09-13T10:23:08Z → 7 gün → HÜKÜM 2026-09-20 (≥05:30Z; 21:30Z retain'ler 09-13…09-19, cron 05:00Z 09-14…09-20).
   Bedel (tanı): retain LLM 672 token (total_tokens), süre 5,5 dk (ilk sağlayıcı hatası dahil). Maliyet kolonu 7. gün.
+
+gun_1_sayimi_2026_09_13: >
+  (Rol-1, 11:5xZ; araç research/olcumler/edg089_retain_akisi/sayim.py, A1 salt-okur) K1: 2026-09-13 `defter_ozeti_retain`
+  sonuc=retain (1 olay, items 1; 10:23:08Z test-ateşleme — timer 21:30Z ikinci tetikte `zaten_var` beklenir, gün yine
+  DOLU sayılır); memory_units 17.259 (pencere öncesi 17.243, +16). K2: `refresh_mental_model` async işlemi 09-13'te
+  11 completed (10:30Z bakım turu 11 sayfayı tazeledi; 09-07'den beri süren 'up-to-date' kilidi bir belgeyle açıldı).
+  Gün-1 iki kolda DOLU. Araç her gün aynı tabloyu basar; hüküm 2026-09-20'de basari_tanimi ile (sayı = sayım, hüküm değil).
