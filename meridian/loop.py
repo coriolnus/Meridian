@@ -2172,7 +2172,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                  for t, dfp in per.items() if len(dfp.loc[:d]) > 22}
         rj["leading_sectors"] = regime_mod.sector_momentum(srets, SECTORS)
         store.write_json("regime.json", rj)
-    regime_ok = rj["regime"] in ("trend_up", "chop") and rj["exposure_budget_pct"] > 0
+    regime_ok = regime_mod.regime_ok(rj)   # KÜRESEL kapı — yüklemin TEK evi `regime.regime_ok`
     eff = config.resolve_params(params, strat_cfg.get("params_by_regime"), rj["regime"])  # regime-conditional
 
     for t in list(b.positions.keys()):
@@ -2182,7 +2182,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             # ALAN DAMGASI[M11·Ö-8]'in "KABLO CANLI" yarımı BURASIDIR (damga bloğu
             # `_carry_armed_without_bar` üstünde): diskten gelen keşif bayrağı çıkış rejim
             # kapısını GEVŞETİR. Üretim kurak — çivi: test_pano_durustluk_v280::test_f9_*.
-            pos_regime_ok = (rj["regime"] in ("trend_up", "chop")) if getattr(pos, "exploration", False) else regime_ok
+            # GEVŞEK DAL: yalnız rejim ÜYELİĞİ (bütçe SORULMAZ) — `regime.regime_ok`un bir varyantı
+            # DEĞİL, bu çağıranın kendi hükmü; küme yine tek kaynaktan (`REGIME_OK_REJIMLERI`) gelir.
+            # TEK SATIR KALIR: v280 `test_f9_kesif_kablosu_hala_canli` bu atamayı TEK satırda arar
+            # (`pos_regime_ok = … getattr(pos, "exploration"`); sarmak damgayı sessizce bayatlatır.
+            pos_regime_ok = (rj["regime"] in regime_mod.REGIME_OK_REJIMLERI) if getattr(pos, "exploration", False) else regime_ok
             dec = strat.manage_position(df_t, {"entry": pos.entry, "stop": pos.stop,
                     "trail_stop": pos.trail_stop, "r_per_share": pos.r_per_share,
                     # SÖZLÜĞÜN İKİNCİ KOPUKLUĞU. Pivot fill_entry'e geçse bile bu sözlükte
