@@ -1,0 +1,28 @@
+version: 3
+params:
+  entry.rs_rating_min: 70
+  entry.pivot_proximity_pct: 2.3
+  entry.min_volume_ratio: 1.5
+  entry.min_score: 60
+  exit.profit_target_r: 2.5
+  exit.time_stop_days: 15
+  exit.trail_atr_mult: 2.5
+  exit.breakeven_r: 1.0
+  stop_loss_atr_mult: 2.0
+  position_size_r: 1.0
+  regime.min_exposure_score: 40
+  exit.giveback_pct: 0.0
+  exit.chandelier_lookback: 0
+  entry.max_ext_atr: 0.0
+  entry.rs_dual_horizon: 0
+  exit.scale_out_r: 2.0
+  exit.scale_out_frac: 0.0
+  entry.w_prox: 0.15
+parent: 2
+note: "coordinate-descent: entry.w_prox None\u21920.15 (OOS None\u2192None)"
+changed_variable: entry.w_prox
+params_by_regime:
+  trend_up: {}
+  trend_down: {}
+  chop: {}
+  high_vol: {}

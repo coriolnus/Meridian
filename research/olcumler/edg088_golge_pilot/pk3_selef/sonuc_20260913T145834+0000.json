@@ -1,0 +1,972 @@
+{
+ "satirlar": [
+  {
+   "plan_id_049": "P-2023-02-13-V",
+   "ticker": "V",
+   "dogum_gunu": "2023-02-13",
+   "plan_id_golge": "P-2023-02-13-V-pullback",
+   "r_049": -0.78,
+   "r_golge": -0.79618,
+   "kayip_049": true,
+   "kayip_golge": true,
+   "cikis_neden_049": "regime_flip",
+   "cikis_neden_golge": "regime_flip",
+   "giris_ts_049": "2023-02-14",
+   "giris_ts_golge": "2023-02-14",
+   "cikis_ts_049": "2023-02-21",
+   "cikis_ts_golge": "2023-02-21",
+   "skor_049": 80,
+   "skor_golge": 80,
+   "isaret_esit": true,
+   "kaynak_bar_hash": "61e7fe9b5a133f03600c186079992cfb94882507472c48998cfa74a9e21c50e0",
+   "bar_kaynak": "state/bars",
+   "olculemedi": null
+  },
+  {
+   "plan_id_049": "P-2023-05-10-ZBH",
+   "ticker": "ZBH",
+   "dogum_gunu": "2023-05-10",
+   "plan_id_golge": "P-2023-05-10-ZBH-pullback",
+   "r_049": -1.013,
+   "r_golge": -1.0,
+   "kayip_049": true,
+   "kayip_golge": true,
+   "cikis_neden_049": "stop",
+   "cikis_neden_golge": "stop",
+   "giris_ts_049": "2023-05-11",
+   "giris_ts_golge": "2023-05-11",
+   "cikis_ts_049": "2023-05-23",
+   "cikis_ts_golge": "2023-05-23",
+   "skor_049": 90,
+   "skor_golge": 90,
+   "isaret_esit": true,
+   "kaynak_bar_hash": "20c79d19a43f5b78c247f42eb92a5f80e700841d4f8aac2b7b744bebeebe5487",
+   "bar_kaynak": "state/bars",
+   "olculemedi": null
+  },
+  {
+   "plan_id_049": "P-2025-01-06-WBD",
+   "ticker": "WBD",
+   "dogum_gunu": "2025-01-06",
+   "plan_id_golge": "P-2025-01-06-WBD-pullback",
+   "r_049": -0.349,
+   "r_golge": -0.385217,
+   "kayip_049": true,
+   "kayip_golge": true,
+   "cikis_neden_049": "regime_flip",
+   "cikis_neden_golge": "regime_flip",
+   "giris_ts_049": "2025-01-07",
+   "giris_ts_golge": "2025-01-07",
+   "cikis_ts_049": "2025-01-08",
+   "cikis_ts_golge": "2025-01-08",
+   "skor_049": 96,
+   "skor_golge": 96,
+   "isaret_esit": true,
+   "kaynak_bar_hash": "f3c5b41e4d03e9f22c0d61812badf71fa71420a1aa928a59a373aed36cd5a5bf",
+   "bar_kaynak": "state/bars",
+   "olculemedi": null
+  },
+  {
+   "plan_id_049": "P-2025-01-30-LNG",
+   "ticker": "LNG",
+   "dogum_gunu": "2025-01-30",
+   "plan_id_golge": "P-2025-01-30-LNG-pullback",
+   "r_049": -1.0,
+   "r_golge": -1.0,
+   "kayip_049": true,
+   "kayip_golge": true,
+   "cikis_neden_049": "stop",
+   "cikis_neden_golge": "stop",
+   "giris_ts_049": "2025-01-31",
+   "giris_ts_golge": "2025-01-31",
+   "cikis_ts_049": "2025-02-06",
+   "cikis_ts_golge": "2025-02-06",
+   "skor_049": 93,
+   "skor_golge": 93,
+   "isaret_esit": true,
+   "kaynak_bar_hash": "878f1d4b4a8114a9867b9d0dc1978a149f6e790b91d3493aca47147b94073699",
+   "bar_kaynak": "state/bars",
+   "olculemedi": null
+  },
+  {
+   "plan_id_049": "P-2026-04-28-OXY",
+   "ticker": "OXY",
+   "dogum_gunu": "2026-04-28",
+   "plan_id_golge": "P-2026-04-28-OXY-pullback",
+   "r_049": -1.112,
+   "r_golge": -1.114849,
+   "kayip_049": true,
+   "kayip_golge": true,
+   "cikis_neden_049": "stop_gap",
+   "cikis_neden_golge": "stop_gap",
+   "giris_ts_049": "2026-04-29",
+   "giris_ts_golge": "2026-04-29",
+   "cikis_ts_049": "2026-05-07",
+   "cikis_ts_golge": "2026-05-07",
+   "skor_049": 97,
+   "skor_golge": 97,
+   "isaret_esit": true,
+   "kaynak_bar_hash": "d443938b6074d18444ba92a5684af40f9f8be3e3c2f2e22ca146f25e5bc7214d",
+   "bar_kaynak": "state/bars",
+   "olculemedi": null
+  },
+  {
+   "plan_id_049": "P-2026-06-11-F",
+   "ticker": "F",
+   "dogum_gunu": "2026-06-11",
+   "plan_id_golge": "P-2026-06-11-F-pullback",
+   "r_049": -0.471,
+   "r_golge": -0.467525,
+   "kayip_049": true,
+   "kayip_golge": true,
+   "cikis_neden_049": "regime_flip",
+   "cikis_neden_golge": "regime_flip",
+   "giris_ts_049": "2026-06-12",
+   "giris_ts_golge": "2026-06-12",
+   "cikis_ts_049": "2026-06-29",
+   "cikis_ts_golge": "2026-06-29",
+   "skor_049": 84,
+   "skor_golge": 84,
+   "isaret_esit": true,
+   "kaynak_bar_hash": "c8681fa11fbcf9904b65f3498c46c5be598655a62ce50cbd582717ee82fc466c",
+   "bar_kaynak": "state/bars",
+   "olculemedi": null
+  }
+ ],
+ "durum": "eslesti",
+ "esles": true,
+ "n_ref": 6,
+ "n_olculen": 6,
+ "n_kayip_049": 6,
+ "n_kayip_golge": 6,
+ "toplam_r_049": -4.725,
+ "toplam_r_golge": -4.763771,
+ "toplam_r_fark": -0.038771,
+ "kart": "EDG-2026-088",
+ "pozitif_kontrol": 3,
+ "kurulum": "pullback",
+ "olculdu_utc": "2026-09-13T14:58:34+00:00",
+ "kaynak": {
+  "yol": "research/olcumler/edg049_dormant_2026-08-23/islemler_tam_dormant_acik.json",
+  "sha256": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+  "beklenen_toplam_r_049": -4.725
+ },
+ "parametre_kaynagi": {
+  "yol": "/Users/erdemozturk/AI-Trading/.claude/worktrees/tsk179/research/olcumler/edg088_golge_pilot/pk3_selef/params_donmus/strategy.yaml",
+  "yol_goreli": "research/olcumler/edg088_golge_pilot/pk3_selef/params_donmus/strategy.yaml",
+  "sha256": {
+   "goal.yaml": "099590dedee1ccf2ce2fd731965df1fb122548676423d5fd644c211549567043",
+   "strategy.yaml": "9f3e4732315abe5200d03a31c790a9a84f2914df70c2521280224610c1123f79",
+   "bounds.yaml": "3e810b547ca95f9a0b718129b12d07b260826bbd0a55389a0b410cd219d33515"
+  },
+  "kunye": "/Users/erdemozturk/AI-Trading/.claude/worktrees/tsk179/research/olcumler/edg032c_taban_2026-08-22/TABAN_KUNYESI.json",
+  "taban": "edg032c — B1-sonrası dünya DONMUŞ TABANI",
+  "dondurma_utc": "2026-08-22T20:45:39+00:00",
+  "hucre": {
+   "slot": 20,
+   "position_size_r": 0.5,
+   "heat_hard_r": 5.0
+  },
+  "strategy_version": 3,
+  "params_by_regime_bos": true
+ },
+ "bar_kaynagi": {
+  "dizin": "/Users/erdemozturk/AI-Trading/state/bars",
+  "etiket": "state/bars",
+  "arsiv_parquet": null,
+  "beyan": "kart Rol-1 hükmü 2 tarihsel yolda state/barlar parquet arşivini ister; yerelde o dizin YOK (ölçüldü) → state/bars CSV kabul"
+ },
+ "evren": {
+  "n_sembol": 248,
+  "endeks": "SPY",
+  "kunye_n_sembol": 251,
+  "beyan": "edg032c künyesi 251 sembol kaydeder; bugünkü önbellek farkı emekli semboller (adapters.data.RETIRED_SYMBOLS) — kesitsel rs_map paydası 049'unkiyle BİREBİR AYNI DEĞİLDİR"
+ },
+ "sapmalar": [
+  "plan kimliği: uyuyan planda kurulum ekli (P-<tarih>-<sembol>-<kurulum>)",
+  "icra semantiği: 049 portföy replay'i (kayma/komisyon, açılıştan dolum) — gölge plan düzeyinde, stop-al dolumu; büyüklük değil İŞARET kıyaslanır",
+  "evren: 248 ≠ 251 (emekli semboller) — rs_map paydası ayrışabilir"
+ ],
+ "seans_tavani": 120,
+ "golge": {
+  "P-2023-02-13-V": {
+   "plan_id_049": "P-2023-02-13-V",
+   "ticker": "V",
+   "dogum_gunu": "2023-02-13",
+   "dogum_tani": {
+    "seans": "2023-02-13",
+    "plan_n": 3,
+    "evren_n": 247,
+    "sembol_bari_var": true,
+    "rejim": "chop",
+    "exposure_budget_pct": 45,
+    "seansta_dogan_kurulumlar": [
+     "exhaustion_hammer",
+     "pullback"
+    ]
+   },
+   "plan": {
+    "id": "P-2023-02-13-V-pullback",
+    "date": "2023-02-13",
+    "ticker": "V",
+    "side": "long",
+    "entry_trigger": 228.88,
+    "stop": 217.9277,
+    "targets": [
+     252.3305
+    ],
+    "size_r": 0.4,
+    "r_multiple_expected": 2.14,
+    "regime_at_plan": "chop",
+    "sector": "financials",
+    "score": 80,
+    "setup": "pullback",
+    "dormant_setup": true,
+    "profit_target": 252.3305,
+    "strategy_version": 3,
+    "skill_chain": [
+     "pullback-screener",
+     "position-sizer",
+     "pre-trade-discipline-gate"
+    ],
+    "gate_verdict": "REVIEW",
+    "gate_reasons": [
+     "'financials' bugünün lider sektörlerinde değil (tech, comms, consumer)",
+     "R:R 2.1 marjinal"
+    ]
+   },
+   "golge_tani": {
+    "seans_n": 6,
+    "adimlar": [
+     {
+      "seans": "2023-02-13",
+      "rejim": "chop",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 0
+     },
+     {
+      "seans": "2023-02-14",
+      "rejim": "chop",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-02-15",
+      "rejim": "chop",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-02-16",
+      "rejim": "chop",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-02-17",
+      "rejim": "chop",
+      "regime_ok": false,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-02-21",
+      "rejim": "chop",
+      "regime_ok": false,
+      "yeni_satir": 1,
+      "acik": 0
+     }
+    ],
+    "atlanan_seanslar": []
+   },
+   "satir": {
+    "ts": "2026-09-13T14:58:22.807387+00:00",
+    "plan_id": "P-2023-02-13-V-pullback",
+    "ticker": "V",
+    "kurulum": "pullback",
+    "hukum": "REVIEW",
+    "kol": "dormant",
+    "ts_plan": "2023-02-13",
+    "giris_ts": "2023-02-14",
+    "giris_fiyat": 228.88,
+    "stop": 217.9277,
+    "hedef": 252.3305,
+    "giris_kurali": "stop_al",
+    "cikis_ts": "2023-02-21",
+    "cikis_fiyat": 220.16,
+    "cikis_neden": "regime_flip",
+    "R": -0.79618,
+    "bar_n": 20,
+    "kaynak_bar_hash": "61e7fe9b5a133f03600c186079992cfb94882507472c48998cfa74a9e21c50e0",
+    "bar_kaynak": "state/bars",
+    "strategy_version": 3,
+    "giris_reddi": null,
+    "olculemedi": null
+   }
+  },
+  "P-2023-05-10-ZBH": {
+   "plan_id_049": "P-2023-05-10-ZBH",
+   "ticker": "ZBH",
+   "dogum_gunu": "2023-05-10",
+   "dogum_tani": {
+    "seans": "2023-05-10",
+    "plan_n": 3,
+    "evren_n": 248,
+    "sembol_bari_var": true,
+    "rejim": "trend_up",
+    "exposure_budget_pct": 60,
+    "seansta_dogan_kurulumlar": [
+     "breakout_vcp",
+     "pullback"
+    ]
+   },
+   "plan": {
+    "id": "P-2023-05-10-ZBH-pullback",
+    "date": "2023-05-10",
+    "ticker": "ZBH",
+    "side": "long",
+    "entry_trigger": 137.42,
+    "stop": 132.0907,
+    "targets": [
+     149.318
+    ],
+    "size_r": 0.45,
+    "r_multiple_expected": 2.23,
+    "regime_at_plan": "trend_up",
+    "sector": "health",
+    "score": 90,
+    "setup": "pullback",
+    "dormant_setup": true,
+    "profit_target": 149.318,
+    "strategy_version": 3,
+    "skill_chain": [
+     "pullback-screener",
+     "position-sizer",
+     "pre-trade-discipline-gate"
+    ],
+    "gate_verdict": "REVIEW",
+    "gate_reasons": [
+     "'health' bugünün lider sektörlerinde değil (consumer, reits, staples)",
+     "R:R 2.2 marjinal"
+    ]
+   },
+   "golge_tani": {
+    "seans_n": 10,
+    "adimlar": [
+     {
+      "seans": "2023-05-10",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 0
+     },
+     {
+      "seans": "2023-05-11",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-05-12",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-05-15",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-05-16",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-05-17",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-05-18",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-05-19",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-05-22",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2023-05-23",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 1,
+      "acik": 0
+     }
+    ],
+    "atlanan_seanslar": []
+   },
+   "satir": {
+    "ts": "2026-09-13T14:58:25.190294+00:00",
+    "plan_id": "P-2023-05-10-ZBH-pullback",
+    "ticker": "ZBH",
+    "kurulum": "pullback",
+    "hukum": "REVIEW",
+    "kol": "dormant",
+    "ts_plan": "2023-05-10",
+    "giris_ts": "2023-05-11",
+    "giris_fiyat": 137.42,
+    "stop": 132.0907,
+    "hedef": 149.318,
+    "giris_kurali": "stop_al",
+    "cikis_ts": "2023-05-23",
+    "cikis_fiyat": 132.0907,
+    "cikis_neden": "stop",
+    "R": -1.0,
+    "bar_n": 24,
+    "kaynak_bar_hash": "20c79d19a43f5b78c247f42eb92a5f80e700841d4f8aac2b7b744bebeebe5487",
+    "bar_kaynak": "state/bars",
+    "strategy_version": 3,
+    "giris_reddi": null,
+    "olculemedi": null
+   }
+  },
+  "P-2025-01-06-WBD": {
+   "plan_id_049": "P-2025-01-06-WBD",
+   "ticker": "WBD",
+   "dogum_gunu": "2025-01-06",
+   "dogum_tani": {
+    "seans": "2025-01-06",
+    "plan_n": 2,
+    "evren_n": 248,
+    "sembol_bari_var": true,
+    "rejim": "trend_up",
+    "exposure_budget_pct": 60,
+    "seansta_dogan_kurulumlar": [
+     "momentum_burst",
+     "pullback"
+    ]
+   },
+   "plan": {
+    "id": "P-2025-01-06-WBD-pullback",
+    "date": "2025-01-06",
+    "ticker": "WBD",
+    "side": "long",
+    "entry_trigger": 10.83,
+    "stop": 9.9993,
+    "targets": [
+     12.6495
+    ],
+    "size_r": 0.48,
+    "r_multiple_expected": 2.19,
+    "regime_at_plan": "trend_up",
+    "sector": "comms",
+    "score": 96,
+    "setup": "pullback",
+    "dormant_setup": true,
+    "profit_target": 12.6495,
+    "strategy_version": 3,
+    "skill_chain": [
+     "pullback-screener",
+     "position-sizer",
+     "pre-trade-discipline-gate"
+    ],
+    "gate_verdict": "REVIEW",
+    "gate_reasons": [
+     "R:R 2.2 marjinal"
+    ]
+   },
+   "golge_tani": {
+    "seans_n": 3,
+    "adimlar": [
+     {
+      "seans": "2025-01-06",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 0
+     },
+     {
+      "seans": "2025-01-07",
+      "rejim": "chop",
+      "regime_ok": false,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2025-01-08",
+      "rejim": "chop",
+      "regime_ok": false,
+      "yeni_satir": 1,
+      "acik": 0
+     }
+    ],
+    "atlanan_seanslar": []
+   },
+   "satir": {
+    "ts": "2026-09-13T14:58:27.403560+00:00",
+    "plan_id": "P-2025-01-06-WBD-pullback",
+    "ticker": "WBD",
+    "kurulum": "pullback",
+    "hukum": "REVIEW",
+    "kol": "dormant",
+    "ts_plan": "2025-01-06",
+    "giris_ts": "2025-01-07",
+    "giris_fiyat": 10.83,
+    "stop": 9.9993,
+    "hedef": 12.6495,
+    "giris_kurali": "stop_al",
+    "cikis_ts": "2025-01-08",
+    "cikis_fiyat": 10.51,
+    "cikis_neden": "regime_flip",
+    "R": -0.385217,
+    "bar_n": 17,
+    "kaynak_bar_hash": "f3c5b41e4d03e9f22c0d61812badf71fa71420a1aa928a59a373aed36cd5a5bf",
+    "bar_kaynak": "state/bars",
+    "strategy_version": 3,
+    "giris_reddi": null,
+    "olculemedi": null
+   }
+  },
+  "P-2025-01-30-LNG": {
+   "plan_id_049": "P-2025-01-30-LNG",
+   "ticker": "LNG",
+   "dogum_gunu": "2025-01-30",
+   "dogum_tani": {
+    "seans": "2025-01-30",
+    "plan_n": 5,
+    "evren_n": 248,
+    "sembol_bari_var": true,
+    "rejim": "trend_up",
+    "exposure_budget_pct": 60,
+    "seansta_dogan_kurulumlar": [
+     "breakout_vcp",
+     "momentum_burst",
+     "pullback"
+    ]
+   },
+   "plan": {
+    "id": "P-2025-01-30-LNG-pullback",
+    "date": "2025-01-30",
+    "ticker": "LNG",
+    "side": "long",
+    "entry_trigger": 230.2,
+    "stop": 217.9106,
+    "targets": [
+     255.904
+    ],
+    "size_r": 0.465,
+    "r_multiple_expected": 2.09,
+    "regime_at_plan": "trend_up",
+    "sector": "energy",
+    "score": 93,
+    "setup": "pullback",
+    "dormant_setup": true,
+    "profit_target": 255.904,
+    "strategy_version": 3,
+    "skill_chain": [
+     "pullback-screener",
+     "position-sizer",
+     "pre-trade-discipline-gate"
+    ],
+    "gate_verdict": "REVIEW",
+    "gate_reasons": [
+     "R:R 2.1 marjinal"
+    ]
+   },
+   "golge_tani": {
+    "seans_n": 6,
+    "adimlar": [
+     {
+      "seans": "2025-01-30",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 0
+     },
+     {
+      "seans": "2025-01-31",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2025-02-03",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2025-02-04",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2025-02-05",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2025-02-06",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 1,
+      "acik": 0
+     }
+    ],
+    "atlanan_seanslar": []
+   },
+   "satir": {
+    "ts": "2026-09-13T14:58:29.684264+00:00",
+    "plan_id": "P-2025-01-30-LNG-pullback",
+    "ticker": "LNG",
+    "kurulum": "pullback",
+    "hukum": "REVIEW",
+    "kol": "dormant",
+    "ts_plan": "2025-01-30",
+    "giris_ts": "2025-01-31",
+    "giris_fiyat": 231.34,
+    "stop": 217.9106,
+    "hedef": 255.904,
+    "giris_kurali": "stop_al",
+    "cikis_ts": "2025-02-06",
+    "cikis_fiyat": 217.9106,
+    "cikis_neden": "stop",
+    "R": -1.0,
+    "bar_n": 20,
+    "kaynak_bar_hash": "878f1d4b4a8114a9867b9d0dc1978a149f6e790b91d3493aca47147b94073699",
+    "bar_kaynak": "state/bars",
+    "strategy_version": 3,
+    "giris_reddi": null,
+    "olculemedi": null
+   }
+  },
+  "P-2026-04-28-OXY": {
+   "plan_id_049": "P-2026-04-28-OXY",
+   "ticker": "OXY",
+   "dogum_gunu": "2026-04-28",
+   "dogum_tani": {
+    "seans": "2026-04-28",
+    "plan_n": 3,
+    "evren_n": 248,
+    "sembol_bari_var": true,
+    "rejim": "trend_up",
+    "exposure_budget_pct": 60,
+    "seansta_dogan_kurulumlar": [
+     "exhaustion_hammer",
+     "momentum_burst",
+     "pullback"
+    ]
+   },
+   "plan": {
+    "id": "P-2026-04-28-OXY-pullback",
+    "date": "2026-04-28",
+    "ticker": "OXY",
+    "side": "long",
+    "entry_trigger": 58.61,
+    "stop": 54.4649,
+    "targets": [
+     67.5105
+    ],
+    "size_r": 0.485,
+    "r_multiple_expected": 2.15,
+    "regime_at_plan": "trend_up",
+    "sector": "energy",
+    "score": 97,
+    "setup": "pullback",
+    "dormant_setup": true,
+    "profit_target": 67.5105,
+    "strategy_version": 3,
+    "skill_chain": [
+     "pullback-screener",
+     "position-sizer",
+     "pre-trade-discipline-gate"
+    ],
+    "gate_verdict": "REVIEW",
+    "gate_reasons": [
+     "'energy' bugünün lider sektörlerinde değil (tech, financials, reits)",
+     "R:R 2.1 marjinal"
+    ]
+   },
+   "golge_tani": {
+    "seans_n": 8,
+    "adimlar": [
+     {
+      "seans": "2026-04-28",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 0
+     },
+     {
+      "seans": "2026-04-29",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-04-30",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-05-01",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-05-04",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-05-05",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-05-06",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-05-07",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 1,
+      "acik": 0
+     }
+    ],
+    "atlanan_seanslar": []
+   },
+   "satir": {
+    "ts": "2026-09-13T14:58:31.993642+00:00",
+    "plan_id": "P-2026-04-28-OXY-pullback",
+    "ticker": "OXY",
+    "kurulum": "pullback",
+    "hukum": "REVIEW",
+    "kol": "dormant",
+    "ts_plan": "2026-04-28",
+    "giris_ts": "2026-04-29",
+    "giris_fiyat": 59.34,
+    "stop": 54.4649,
+    "hedef": 67.5105,
+    "giris_kurali": "stop_al",
+    "cikis_ts": "2026-05-07",
+    "cikis_fiyat": 53.905,
+    "cikis_neden": "stop_gap",
+    "R": -1.114849,
+    "bar_n": 22,
+    "kaynak_bar_hash": "d443938b6074d18444ba92a5684af40f9f8be3e3c2f2e22ca146f25e5bc7214d",
+    "bar_kaynak": "state/bars",
+    "strategy_version": 3,
+    "giris_reddi": null,
+    "olculemedi": null
+   }
+  },
+  "P-2026-06-11-F": {
+   "plan_id_049": "P-2026-06-11-F",
+   "ticker": "F",
+   "dogum_gunu": "2026-06-11",
+   "dogum_tani": {
+    "seans": "2026-06-11",
+    "plan_n": 7,
+    "evren_n": 248,
+    "sembol_bari_var": true,
+    "rejim": "trend_up",
+    "exposure_budget_pct": 60,
+    "seansta_dogan_kurulumlar": [
+     "breakout_vcp",
+     "exhaustion_hammer",
+     "momentum_burst",
+     "pead",
+     "pullback"
+    ]
+   },
+   "plan": {
+    "id": "P-2026-06-11-F-pullback",
+    "date": "2026-06-11",
+    "ticker": "F",
+    "side": "long",
+    "entry_trigger": 14.71,
+    "stop": 13.3197,
+    "targets": [
+     17.5515
+    ],
+    "size_r": 0.42,
+    "r_multiple_expected": 2.04,
+    "regime_at_plan": "trend_up",
+    "sector": "consumer",
+    "score": 84,
+    "setup": "pullback",
+    "dormant_setup": true,
+    "profit_target": 17.5515,
+    "strategy_version": 3,
+    "skill_chain": [
+     "pullback-screener",
+     "position-sizer",
+     "pre-trade-discipline-gate"
+    ],
+    "gate_verdict": "REVIEW",
+    "gate_reasons": [
+     "R:R 2.0 marjinal"
+    ]
+   },
+   "golge_tani": {
+    "seans_n": 12,
+    "adimlar": [
+     {
+      "seans": "2026-06-11",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 0
+     },
+     {
+      "seans": "2026-06-12",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-15",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-16",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-17",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-18",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-22",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-23",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-24",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-25",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-26",
+      "rejim": "chop",
+      "regime_ok": false,
+      "yeni_satir": 0,
+      "acik": 1
+     },
+     {
+      "seans": "2026-06-29",
+      "rejim": "trend_up",
+      "regime_ok": true,
+      "yeni_satir": 1,
+      "acik": 0
+     }
+    ],
+    "atlanan_seanslar": []
+   },
+   "satir": {
+    "ts": "2026-09-13T14:58:34.306198+00:00",
+    "plan_id": "P-2026-06-11-F-pullback",
+    "ticker": "F",
+    "kurulum": "pullback",
+    "hukum": "REVIEW",
+    "kol": "dormant",
+    "ts_plan": "2026-06-11",
+    "giris_ts": "2026-06-12",
+    "giris_fiyat": 14.71,
+    "stop": 13.3197,
+    "hedef": 17.5515,
+    "giris_kurali": "stop_al",
+    "cikis_ts": "2026-06-29",
+    "cikis_fiyat": 14.06,
+    "cikis_neden": "regime_flip",
+    "R": -0.467525,
+    "bar_n": 26,
+    "kaynak_bar_hash": "c8681fa11fbcf9904b65f3498c46c5be598655a62ce50cbd582717ee82fc466c",
+    "bar_kaynak": "state/bars",
+    "strategy_version": 3,
+    "giris_reddi": null,
+    "olculemedi": null
+   }
+  }
+ }
+}
