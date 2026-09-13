@@ -307,34 +307,48 @@ def test_kusur4c_hedefin_ALTINDAKI_kismi_satis_hala_calisiyor():
 # =================================================================================================
 
 def test_r_tabani_adet_yuvarlanmasi_gercek_riski_deklare_r_altina_indiriyor():
-    """KARAKTERİZASYON (kusur değil ama R BİR BİRİM DEĞİL): risk_dollars = size_r·%1·equity SABİT
-    kalır, adet ise AŞAĞI yuvarlanır → gerçek maksimum kayıp deklare 1R'den küçüktür.
-    ELDE HESAP: equity 100k, risk$ = 1000. giriş 100 (slipaj 0), stop 73.415 → R/hisse 26.585
-    → adet = floor(1000/26.585) = 37... pahalı isimde adet küçüldükçe hata büyür.
-    CANLI DEFTERDEN: T00105 (TDG, adet=2) gerçek risk 53.2$ / deklare 69.6$ = 0.764 — tam stop'a
-    giden işlem −1.0R değil −0.76R yazar. 129 satırın 6'sı deklare 1R'nin %90'ından azını
-    riske ediyor; oran dağılımı 0.764 … 1.033, yani R satırdan satıra 35% oynuyor."""
+    """TSK-187: PAYDA GİRİŞ RİSKİ — bu testin karakterize ettiği R SAPMASI R SÜTUNUNDA KAPANDI.
+
+    ESKİ KARAKTERİZASYON (2026-09-13 ÖNCESİ): payda `risk_dollars` (= size_r·%1·equity) SABİT
+    kalıyor, adet AŞAĞI yuvarlanıyordu → tam stop'a giden işlem −1,0R değil −0,9836R yazıyordu
+    (canlı defterden T00105/TDG: 53,2$/69,6$ = 0,764; 129 satırın 6'sı deklare 1R'nin %90'ından
+    azını riske ediyordu, oran 0,764 … 1,033).
+
+    BUGÜN: payda `qty_taban · r_per_share` — yani GERÇEKTEN alınan risk. Tam stop TAM −1,000R'dir
+    ve R artık satırdan satıra oynamaz.
+    ELDE HESAP: equity 100k, bütçe 1.000$. giriş 100 (slipaj 0), stop 73,415 → R/hisse 26,585
+      adet = floor(1000/26,585) = 37 ; payda = 37 · 26,585 = 983,645 $
+      pnl  = 37 · (73,415 − 100) = −983,645 $ ;  R = −983,645 / 983,645 = −1,000
+
+    BÜTÇE SAPMASI DURUYOR ve ÖLÇÜLMEYE DEVAM EDİYOR: `risk_dollars` (1.000$) hâlâ gerçek riskin
+    (983,645$) üstündedir — bu bir MARUZİYET/boyutlama olgusudur (kitap 1R'lik bütçenin tamamını
+    kullanamaz) ve R'nin birimi olmaktan çıkmıştır. İkisi ayrı şeydir; test ikisini de tutar."""
     b = _clean_broker()
     pos = b.fill_entry(_plan(stop=73.415), next_open=100.0, ts="d0", equity=100_000)
     assert pos.qty == 37 and pos.r_per_share == pytest.approx(26.585)
-    gercek_risk = pos.qty * pos.r_per_share                     # 983.6
-    assert gercek_risk < pos.risk_dollars
+    gercek_risk = pos.qty * pos.r_per_share                     # 983.645 = YENİ payda
+    assert pos.qty_taban == pos.qty and pos.r_payda_usd() == pytest.approx(gercek_risk, abs=1e-9)
+    assert gercek_risk < pos.risk_dollars                       # bütçe sapması DURUYOR (maruziyet)
     row = b.close_position("AAA", 73.415, "stop", "d1")
-    assert row["r_multiple"] == pytest.approx(-gercek_risk / 1000.0, abs=1e-3)
-    assert row["r_multiple"] > -1.0, "tam stop −1.0R'den DAHA AZ zarar yazıyor (yuvarlama)"
-    # bilinen sapmanın SINIRI: bir hisselik yuvarlama payından fazlası olmamalı
+    assert row["r_multiple"] == pytest.approx(-1.0, abs=1e-9), "tam stop TAM −1R yazmalı"
+    assert row["r_payda_usd"] == pytest.approx(gercek_risk, abs=0.01)
+    # bilinen BÜTÇE sapmasının SINIRI: bir hisselik yuvarlama payından fazlası olmamalı
     assert 1.0 - gercek_risk / pos.risk_dollars <= pos.r_per_share / pos.risk_dollars + 1e-9
 
 
 def test_r_tabani_adv_etkisi_gercek_riski_deklare_r_ustune_cikariyor():
-    """KUSUR (küçük ama gerçek): likidite etkisi fiyatı yukarı iter ama risk$ TABAN fiyattan
-    yeniden türetilir → gerçek risk deklare R'yi AŞAR.
-    ELDE HESAP: equity 100k, risk$ 1000, giriş 100, stop 95, adv = 10_000 hisse.
+    """TSK-187: "AYNI SATIRDA İKİ FARKLI R TABANI" KUSURU KAPANDI — ama bütçe aşımı DURUYOR.
+
+    ELDE HESAP: equity 100k, bütçe 1000$, giriş 100, stop 95, adv = 10_000 hisse.
       taban dolum = 100, adet = floor(1000/5) = 200; ADV tavanı = %2·10_000 = 200 → tam tavanda.
       katılım = 200/10_000 = %2 → etki = 0.10·0.02 = %0.2 → dolum = 100.20, R/hisse = 5.20.
       GERÇEK risk = 200·5.20 = 1040$  ama  risk_dollars = 200·(100−95) = 1000$  → %4 AŞIM.
-      Sonuç: tam stop −1.04R yazar ve AYNI satırda mae_r = 1.000 çıkar — bir satırda İKİ FARKLI R.
-    Bu test aşımı SINIRLAR: IMPACT_COEF/ADV_CAP_PCT büyürse sessizce büyümesin."""
+      R paydası (TSK-187) = qty_taban · R/hisse = 1040$ → tam stop −1040/1040 = −1,000R,
+      ve mae_r = (100,20 − 95)/5,20 = 1,000 → İKİ SÜTUN ARTIK AYNI TABANDA.
+      (TSK-187 ÖNCESİ: R = −1040/1000 = −1,04R iken mae_r = 1,000 — bir satırda iki farklı R.)
+    AŞIM ÖLÇÜLMEYE DEVAM EDİYOR: `risk_dollars` taban dolumdan türer ve gerçek riski %4 ALTINDA
+    gösterir — artık R'nin birimi değil, BÜTÇE/maruziyet muhasebesinin sapmasıdır. Bu test onu
+    SINIRLAR: IMPACT_COEF/ADV_CAP_PCT büyürse sessizce büyümesin."""
     b = _clean_broker()
     pos = b.fill_entry(_plan(), next_open=100.0, ts="d0", equity=100_000, adv=10_000)
     assert pos.qty == int(ADV_CAP_PCT * 10_000) == 200
@@ -344,10 +358,11 @@ def test_r_tabani_adv_etkisi_gercek_riski_deklare_r_ustune_cikariyor():
     ex = b._touch_exit(pos, {"open": 99.0, "high": 99.5, "low": 95.0})   # tam stop'ta çıkış
     assert ex == (95.0, "stop")
     row = b.close_position("AAA", *ex, "d1")
-    assert row["r_multiple"] == pytest.approx(-1.04, abs=1e-6)   # payda: risk_dollars (taban dolum)
+    assert row["r_multiple"] == pytest.approx(-1.0, abs=1e-6)    # payda: qty_taban · r_per_share
     assert row["mae_r"] == pytest.approx(1.0, abs=1e-6)          # payda: r_per_share (etkili dolum)
-    #  ↑ AYNI SATIRDA İKİ FARKLI R TABANI: aynı olay bir sütunda −1.04R, ötekinde 1.000R.
-    assert asim <= 0.05, "likidite etkisi deklare riski %5'ten fazla aşamaz"
+    #  ↑ AYNI TABAN: aynı olay iki sütunda da 1,000R büyüklüğünde (TSK-187).
+    assert row["r_payda_usd"] == pytest.approx(1040.0, abs=0.01)
+    assert asim <= 0.05, "likidite etkisi BÜTÇE muhasebesini %5'ten fazla aşamaz"
 
 
 def test_r_orijinal_stopa_gore_olculur_trail_e_gore_degil():

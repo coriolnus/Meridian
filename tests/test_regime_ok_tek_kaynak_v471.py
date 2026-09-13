@@ -199,8 +199,20 @@ def test_tek_GOVDE_var():
 # `regime_flip` — yüklemin replay'de gerçekten okunduğu tek yol.
 MINI_EVREN_TICKERS = ("AAPL", "MSFT", "NVDA", "JPM", "XOM", "UNH")
 REPLAY_PENCERE = ("2022-01-03", "2023-04-28")
-REPLAY_OZET_SHA256 = "93475dc96637028d790bc5a02608423e73a68df4acf3a943d3510cae4f70d6ff"
-#: ↑ ÖLÇÜLDÜ 2026-09-13, TSK-184 ÖNCESİ `backtest.py` ile (literal yüklem satırı hâlâ yerinde).
+#: TSK-184 KUŞAĞININ İMZASI — ÖLÇÜLDÜ 2026-09-13, TSK-184 ÖNCESİ `backtest.py` ile (literal yüklem
+#: satırı hâlâ yerinde). ARTIK GEÇERLİ DEĞİL; tarihî kayıt olarak DURUYOR, aşağıda okunuyor.
+REPLAY_OZET_SHA256_TSK184 = "93475dc96637028d790bc5a02608423e73a68df4acf3a943d3510cae4f70d6ff"
+
+#: YENİDEN TABANLANDI — ÖLÇÜLDÜ 2026-09-14, TSK-187 (R paydası: bütçe → hisse-başı giriş riski).
+#: NEDEN YENİ BİR SAYI MEŞRU. Bu çapanın işi "TSK-184'ün yüklem sadeleştirmesi defteri
+#: DEĞİŞTİRMEDİ" cümlesini ölçmekti; TSK-187 ise defteri BİLEREK değiştirir ve değişiklik iki
+#: yerden gelir: (1) işlem satırına iki YENİ alan girer (`r_payda`, `r_payda_usd`), (2) `r_multiple`
+#: paydası `risk_dollars` (girişte donan bütçe) yerine `qty_taban × r_per_share`tır ve `qty` aşağı
+#: yuvarlandığı için bu payda bütçeden KÜÇÜKtür — replay'de bile |R| bir tık büyür. Yani eski imza
+#: "geriledi" değil, ÖLÇTÜĞÜ DÜNYA değişti. Sayı sonucu gördükten sonra GEVŞETİLMEDİ: eşit derecede
+#: sıkı bir bayt-özdeşliktir, yalnız yeni kuşakta ölçülmüştür ve iki koşumda birebir aynı çıktı.
+#: Çapanın ISIRDIĞI `test_replay_smoke_YUKLEMI_GERCEKTEN_OKUR` ile ayrıca ölçülüdür (değişmedi).
+REPLAY_OZET_SHA256 = "376a6135fbaefa2109b69ff581808bc982f1099abf4dbc29cbdd97d66e623d64"
 
 
 def _mini_evren(n=340, seed=4):
@@ -231,6 +243,22 @@ def _ozet(res) -> str:
 
 def test_replay_defteri_BAYT_OZDES():
     assert _ozet(_replay_smoke()) == REPLAY_OZET_SHA256
+
+
+def test_TSK187_kusak_degisimi_ADIYLA_kayitlidir():
+    """Eski imza ÜZERİNE YAZILMADI, yanına kondu ve OKUNUYOR (Yasa 6: okuyucusuz kayıt yok).
+
+    İki imzanın FARKLI olması TSK-187'nin replay defterini gerçekten değiştirdiğinin ölçüsüdür;
+    eşit çıksaydı yeniden tabanlama gerekçesiz (ve bu satır bir süs) olurdu. Tur-2'de ölçülen
+    defter satırı ayrıca yeni damgayı TAŞIR — imza yalnız "bir şey değişti" demez, NE değiştiğini
+    gösterir."""
+    assert REPLAY_OZET_SHA256 != REPLAY_OZET_SHA256_TSK184
+    res = _replay_smoke()
+    assert res.trades, "replay defteri boş — bayt-özdeşlik çapası kör ölçüyor olurdu"
+    from meridian import broker as brk
+    damgalar = {t.get("r_payda") for t in res.trades}
+    assert damgalar == {brk.R_PAYDA_GIRIS}, damgalar
+    assert all(t.get("r_payda_usd") is not None for t in res.trades)
 
 
 def test_replay_smoke_YUKLEMI_GERCEKTEN_OKUR():

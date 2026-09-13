@@ -1375,9 +1375,10 @@ def _load_broker() -> tuple[PaperBroker, dict]:
                      kalici_yazildi=kalici, kalici_neden=kalici_neden)
             last_id = defter_maks
         b._id = last_id
-        from .broker import Position
+        from .broker import Position, qty_taban_goc
         for t, p in st.get("positions", {}).items():
-            b.positions[t] = Position(**p)
+            # TSK-187 GÖÇÜ: eski kayıtta `qty_taban` yok → `qty`ye eşitlenir (tek kaynak: broker).
+            b.positions[t] = Position(**qty_taban_goc(p, kaynak="loop._load_broker"))
     return b, (st or {"armed": [], "pending_exits": {}, "last_date": None,
                       "day_start_equity": START_EQUITY, MIRROR_EXIT_KEY: {}})
 
@@ -3459,10 +3460,16 @@ def _adet_benimse(broker, sym: str, kitap_qty: float, ayna_qty: float,
     if poz is None:
         kayit["neden"] = "iç kitapta pozisyon bulunamadı (anlık görüntü ile kitap ayrışmış olabilir)"
         _yaz(); return None
+    # TSK-187: `qty_taban` ADEDİN YANINDA benimsenir. Taban geride kalırsa R paydası girişteki
+    # 17 hissenin riskinde donar, pay ise 38 hisseyle büyür — ayrışmanın ta kendisi (kart
+    # EDG-2026-091). `scale_out` tabana dokunmaz; BENİMSEME dokunur, çünkü burada değişen
+    # pozisyonun GERÇEKTEN taşıdığı adettir, bir bacağın bankalanması değil.
     if hasattr(poz, "qty"):
         poz.qty = yeni
+        poz.qty_taban = yeni
     elif isinstance(poz, dict):
         poz["qty"] = yeni
+        poz["qty_taban"] = yeni
     else:
         kayit["neden"] = f"pozisyon nesnesi adet taşımıyor ({type(poz).__name__}) — benimseme YAPILMADI"
         _yaz(); return None

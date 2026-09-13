@@ -34,6 +34,8 @@ for _p in (str(KOK), str(SANDBOX)):
         sys.path.insert(0, _p)
 
 import pk2_gercek as pk2  # noqa: E402
+import sayim  # noqa: E402  — birim kapısının TEK sahibi; `pk2_gercek` de onu çağırır
+from meridian import broker as brk  # noqa: E402  — R payda damgası MOTORUN sabiti (TSK-187)
 from meridian import golge_icra as gi  # noqa: E402  — ısınma eşiği MOTORUN sabiti
 
 DONMUS_GIRDI = SANDBOX / "pk2_gercek" / "girdi" / "a1_gercek_islemler_2026-09-13.json"
@@ -110,14 +112,21 @@ def _sentetik_plan(ticker: str, tetik: float, stop: float, hedef: float) -> dict
 
 
 def _sentetik_islem(ticker: str, r: float, giris: float, cikis: float, qty: int,
-                    neden: str, ciplak: bool) -> dict:
+                    neden: str, ciplak: bool, damga: str | None = brk.R_PAYDA_GIRIS) -> dict:
     """Gerçek işlem satırı — `broker.PaperBroker.close_position` alan kümesiyle aynı adlar.
 
     `entry`/`exit` KAYMALI fiyatlardır (giriş `×(1+slip)`, çıkış `×(1−slip)`, slip 5 bps);
     `pnl_dollars` o fiyatlardan türer. Payı `sayim._friksiyon_payi` bu alanlardan ölçer.
+
+    R PAYDA DAMGASI (TSK-187) `extra_json`a girer — çünkü `close_position` onu TİPSİZ alan olarak
+    yazar ve `storage` tipsiz alanı oraya düşürür. Damga sentetik sahnenin süsü DEĞİL: `sayim`in
+    birim kapısı onu arar ve damgasız satır PK (2) kıyasının DIŞINDA kalır. `damga=None` o ESKİ
+    kuşağı (bütçe paydalı, TSK-187 öncesi) kurar.
     """
     e, x = round(giris * 1.0005, 4), round(cikis * 0.9995, 4)
     extra = {"skill_chain": ["x"], "broker_teyit": "teyitli"}
+    if damga is not None:
+        extra["r_payda"] = damga
     if not ciplak:
         extra.update({"alpaca_fill_price": x, "mirror_divergence": 0.0005,
                       "dolum_ts": f"{D_GIRIS}T13:35:00Z"})
@@ -207,6 +216,21 @@ def test_A2_son_10_gercek_islem_TAM_ve_kume_DONUK():
     assert tuple(t["ticker"] for t in secilen) == pk2.BEKLENEN_TICKERLAR
     # 11-12 (LLY, BDX) YEDEKTİR ve kümeye girmez.
     assert {"LLY", "BDX"}.isdisjoint({t["ticker"] for t in secilen})
+
+
+def test_A2_DONMUS_girdi_TSK187_ONCESI_kusaktir_ve_R_KIYASINA_giremez():
+    """BEDEL YASASI (TSK-187 tur 2). Donmuş A1 girdisi 2026-09-13 çekimidir — payda değişikliğinden
+    ÖNCE kapanmış işlemler, yani `r_payda` damgası TAŞIMAZ. `sayim.kontrol_olc`in birim kapısı bu
+    on satırı R kıyasının DIŞINDA bırakır: PK (2) bu donmuş girdide artık "ölçülemedi"dir
+    (`birim_eski_n`), "geçti/kaldı" DEĞİL. Bu bir kayıptır ve SAYILIR — gizlenirse kapı sessizce
+    bir PK'yı boşaltmış olurdu. Yeni bir donmuş çekim geldiğinde bu çivi kırmızıya döner ve kartın
+    PK (2) ayağı damgalı kuşakla YENİDEN ölçülmelidir.
+    """
+    veri = pk2.girdi_oku(DONMUS_GIRDI)
+    secilen = pk2.son_n_gercek(veri["trades"])
+    damgalar = [sayim.r_payda_damgasi(t) for t in secilen]
+    assert damgalar == [None] * len(secilen), damgalar
+    assert all(d != brk.R_PAYDA_GIRIS for d in damgalar)
 
 
 def test_A2_kume_ayrisirsa_BLOK():
