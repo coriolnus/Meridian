@@ -327,6 +327,35 @@ def test_temp_directory_bosaltilmis(tmp_path):
     assert json.loads(r.stdout.splitlines()[0])["deger"] == ""
 
 
+def test_memory_limit_varsayilan_ortam_yokken(tmp_path, monkeypatch):
+    """`OLAY_SORGU_BELLEK` ayarlanmamışken bağlantı varsayılan 1GB tavanını taşır (TSK-012).
+
+    Varsayılan `meridian/sohbet.py::SORGU_BELLEK_TAVANI`nin 512MB'ından BİLEREK FARKLIDIR —
+    bu araç operatörün A1'de ELLE koştuğu bir CLI'dır, sohbetinki canlı API işçisinin HER isteğinde
+    açılan dar bir bütçedir (gerekçe `ops/olay_sorgu.py::SERTLESTIRME` şerhinde)."""
+    monkeypatch.delenv("OLAY_SORGU_BELLEK", raising=False)
+    p = _defter_yaz(tmp_path)
+    r = kos("--dosya", str(p), "--sql", "SELECT current_setting('memory_limit') AS deger",
+            "--json")
+    assert r.returncode == 0, r.stderr
+    # DuckDB `current_setting` BAYT tabanlı bir insan-okur biçime döner (1.5.5, ölçüldü):
+    # '1GB' == 1_000_000_000 bayt == 953,674... MiB (ikili birime yuvarlanır) — "1.0 GiB" DEĞİL.
+    assert json.loads(r.stdout.splitlines()[0])["deger"] == "953.6 MiB"
+
+
+def test_memory_limit_ortam_degiskeninden_okunur(tmp_path, monkeypatch):
+    """`OLAY_SORGU_BELLEK` verilince bağlantı ONU taşır — varsayılandan FARKLI bir değerle
+    ölçülür ki test kendi başına varsayılana rastlantıyla eşit bir aday seçmiş olmasın."""
+    monkeypatch.setenv("OLAY_SORGU_BELLEK", "256MB")
+    p = _defter_yaz(tmp_path)
+    r = kos("--dosya", str(p), "--sql", "SELECT current_setting('memory_limit') AS deger",
+            "--json")
+    assert r.returncode == 0, r.stderr
+    deger = json.loads(r.stdout.splitlines()[0])["deger"]
+    assert deger == "244.1 MiB", deger
+    assert deger != "953.6 MiB"          # varsayılanın (1GB) DuckDB-biçimli karşılığı
+
+
 # ---------------------------------------------------------------------------------------------
 # 7. ÇIKIŞ KODU SÖZLEŞMESİ — dört vakanın DÖRDÜ de çivili
 # ---------------------------------------------------------------------------------------------
