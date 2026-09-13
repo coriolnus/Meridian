@@ -1,0 +1,20 @@
+
+adim_0_kaydi_2026_09_13: >
+  (Rol-1, 11:3xZ) ADIM-0 (3) TABAN — /opt/veri/olcum/edg085/taban.jsonl, 349 örnek: 09-07 5 (kurulum günü, seans
+  dışı) + 09-08/09/10/11 86'şar (13:00–20:05Z, 5 dk). GEÇERLİ eksenler (4 seans, n=344): healthz p50 medyan 1,5 ms ·
+  p95 1,9 ms; healthz maks p95 2,9 ms (tekil sıçramalar 121 ms 09-08, 60 ms 09-09); load1 medyan 0,55 (09-08/09 ~2,0:
+  hafıza ingest/kanary yükü, 09-10/11 ~0,02); state/ artışı 18,1–18,9 MB/seans (bars_intraday dahil).
+  GEÇERSİZ eksen: cpu_pct_tek_cekirdek 344/344 örnekte 0,00 — örnekleyici meridian.service MainPID'ini ölçüyordu
+  ve o pid `uv run` SARMALAYICISIDIR; python çocuğu aynı anda ~%4 taşıyordu (82,6 s CPU / 2.019 s, 09-13 10:56Z).
+  UYDURMA YASAĞI: bu 4 seansın CPU tabanı None (neden: yanlış süreç ölçüldü). DÜZELTME (aynı gün): taban_orneklem.sh
+  CPU kaynağı → cgroup system.slice/meridian.service/cpu.stat usage_usec (yeni alan `cpu_kaynak: "cgroup"`; eski
+  satırlar alansız = geçersiz, okuyucu bunları ELER). CPU tabanı YENİDEN 5 seans (2026-09-14..09-18; düzeltme
+  09-13 dağıtımıyla canlı). healthz/disk tabanı 4 seans yeterli sayılır (eşikler göreli, dağılım dar), 5. seans
+  raporda eklenir. SONUÇ: pilot (q-abonelik BAYRAĞI) EN ERKEN 2026-09-21 açılır; kod o tarihe kadar bayrak-KAPALI
+  canlıya iner (varsayılan-kapalı bayrak emsali: TSK-074 hayalet süzgeci, EDG-078 Aşama B). Eşikler DEĞİŞMEDİ
+  (cpu +5pp, healthz p95 +50 ms — tabana göreli).
+  ADIM-0 (4) PK-2 KAYNAĞI — motor, kayıt penceresi boyunca gelen `q` çerçevelerini kapsama/halka süzgecinden
+  GEÇİRMEDEN `ham_<gün>.jsonl`e düşürür (kayıt satırları `<gün>.jsonl`; ikisi de /opt/veri/olcum/edg085/kayit —
+  repo ve state/ DIŞI, dagit --delete'ten korunur); PK-2 rastgele 5 dolumun kayıt satırını ham çerçeveyle elle eşler.
+  (1) ve (2) 09-07 kaydında. Kod planı: docs/superpowers/plans/2026-09-13-tick-pilot-senaryo-a.md (Rol-1 yazdı;
+  implementer sevki Opus tek ajan, Fable ajanı 0).
