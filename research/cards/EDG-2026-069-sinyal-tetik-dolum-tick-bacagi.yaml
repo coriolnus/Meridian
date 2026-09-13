@@ -12,7 +12,7 @@
 #   · bar-tabanlı giriş friksiyonu emsali: EDG-2026-038 kanonik ölçüt (giriş medyan +29,0 bps, n=4).
 
 card_id: EDG-2026-069
-status: registered
+status: askiya_veri_kapisi   # 2026-09-13 Rol-1: ADIM-0 DÜŞTÜ (n_uygun 11 < 30 · dolum_ts eksik 0,54 > 0,30) — KILL DEĞİL, veri kilidi; bkz. adim_0_2026_09_13
 family: sinyal_tetik_dolum_tick
 on_kayit: 2026-09-03
 selef: null
@@ -84,3 +84,20 @@ notlar: >
   edg069_tetik_dolum/` altında, `sandbox_state`li, canlı deftere yazmadan. Tick arşivi şu an 129
   gün; geri-dolum 2020'ye doğru sürüyor — pencere büyüdükçe ADIM-0 yeniden ölçülür. Bedel yasası:
   bu ölçüm hiçbir çıktıyı azaltmaz, yalnız ekler.
+
+adim_0_2026_09_13: >
+  (Rol-1, 11:5xZ, A1 salt-okur; operatör önceliği ⑥a — TSK-066 teyidi 09-12) ARŞİV TARAFI TAM: /opt/veri/tick
+  islem/ + kotasyon_1s/ 1.332 gün (2020-09-15 → 2026-09-03; geri dolum 2020'ye ulaştı), kapsam 664 sembol, arşiv
+  günlerindeki 21 live_paper sembolünün 21'i kapsamda, arşiv dışı işlem günü yalnız 1 (2026-09-08 MU — arşiv 09-03'te
+  bitiyor, ileri dolum sürüyor). İŞLEM TARAFI DAR: trades.kaynak=live_paper n=24 (S5 09-07 yeniden tohumlama sonrası
+  defter: 843 replay_seed + 24 canlı), extra_json.dolum_ts TAŞIYAN 11, n_uygun (dolum_ts ∧ arşiv günü) = 11 < 30;
+  dolum_ts eksik oranı 13/24 = 0,54 > 0,30 → KAPI DÜŞTÜ, status askiya_veri_kapisi (kill değil). EKSİKLİK HARİTASI:
+  (a) 8 Ağustos işlemi (NUE·ALL·VLO·MRK·MRNA·HUM·MRVL·LLY, 08-06..08-20 açılış, 08-27'den ÖNCE kapanış) — `dolum_ts`
+  görünürlük alanı (E-kod [5], `loop._exit_fill_yamasi`) 08-2x'te doğdu, bu işlemler yamayı hiç görmedi; yapısal, kendi
+  başına dolmaz; (b) 5 Eylül işlemi (BDX 09-08 · MRNA/DE/MPC/MU 09-11 kapanış) dolum_ts VE alpaca_fill_price YOK —
+  09-11 çıplak ayna pozisyonu sınıfı (B2; Pazartesi 13:35Z reconcile doğrulaması), yama koşmadıysa kalıcı eksik.
+  HIZ: canlı işlem ~2–3/hafta (EXE-011 canlı kol 09-02→09-12: 9 dolum) → dolum_ts'li 30 işlem en erken ~2026-10-15.
+  HIZLANDIRICI (öneri, ROADMAP §4 TSK-182): geçmiş live_paper dolumlarının dolum_ts/alpaca_fill_price'ının Alpaca emir
+  geçmişinden (filled_at, broker olgusu; as-of damgalı, retro-hesap değil) geri doldurulması — (a)+(b) 13 işlem dolarsa
+  n_uygun 24'e çıkar, eksik oranı 0'a iner; yine de 30 için ~3 hafta canlı birikim gerekir. ADIM-0 tekrarı kart AÇMAZ;
+  yeniden ölçüm 2026-10-15 ya da TSK-182 sonrası (hangisi önce). Manifest sha'ları o ölçümde kurulum kaydına yazılır.
