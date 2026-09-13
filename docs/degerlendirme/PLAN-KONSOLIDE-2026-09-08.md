@@ -218,3 +218,41 @@ Bedel (09-12 21:0xZ → 09-13 10:34Z): Opus ×3 (634k + 231k + 361k), Sonnet ×3
 | Suite'ler | #45 | #46 12188/0 · #47 12224/1 (v334 → delta yeşil) · #48 12294/0 — hepsi push'lu |
 
 Bedel (10:34Z → 17:3xZ): Opus ×10 (~2,7M; TSK-013 ×2 · TSK-012b ×2 · PK(3) ×2 · TSK-183 · TSK-184 · PK(2) ×2), Sonnet ×15 (~2,9M; 2'si geri alınan implementer, 13 inceleme), Fable ajanı 0. Operatör düzeltmesi 12:5xZ: kod yazan her ajan Opus (CLAUDE.md §3 + hafıza). Rol-1 hataları: sahte kart dosyası (`cat >>` yanlış ad, düzeltildi), pipeline'lı commit kapısı (bozuk betik push'landı, düzeltildi, hafıza).
+
+## 3d. KONSOLİDE SIRA — 2026-09-13 21:31Z (Rol-1; operatör "açık TSK/PRG'leri konsolide plana al, full otonom devam")
+
+Kaynak ROADMAP (§2/§4/§6, HEAD e0ce06f): §8 dışı 25 ACTIVE · 18 GATED · 5 QUEUED · 8 OPERATOR. Bu bölüm gövde KOPYALAMAZ (tek-kaynak): yalnız kimlik + kapı + sıra. Gövdeler ROADMAP'te.
+
+**Bugün kapananlar (main'de, push'lu, dağıtım #42 canlı 21:03Z):** TSK-012 · TSK-132 · TSK-157 (DROPPED) · TSK-177 · TSK-182 · TSK-183 · TSK-184 · TSK-185 · EDG-088 PK(3)/PK(2) · EDG-090 (KALDI) · EDG-091 (KALDI, kaynak ölçüldü) · EDG-070 (askıya). Operatör kararları (21:1xZ): R paydası (b) → TSK-187; TSK-065 ücretsiz kaynak → EDG-092; üç canlı işlem yapıldı (TSK-182 uygula · Faz-1C · esitle).
+
+**A. Uçuşta / bu gece (Rol-1 sırası, saat kapılı):**
+
+| # | Kalem | Adım | Kapı |
+|---|---|---|---|
+| 1 | TSK-187 R paydası | Opus implementer uçuşta → Sonnet inceleme → merge → tam suite #50 | dağıtım #43 Pzt 20:05Z sonrası |
+| 2 | TSK-186 korpus tazeleme | test-ateşleme 21:10Z başladı (disk kipi OK) | Result=success + künye 28bc237 → DONE |
+| 3 | TSK-138 / TSK-014 | 22:00Z şef brifingi `brifing_kural_denetimi` ölçümü | cevaplayan_model dolu · 150 s düşüşü yok |
+| 4 | TSK-181 | 22:00Z brifingde `agent_yetki_reddi` 0 (esitle sonrası) | kanıt → DONE |
+| 5 | TSK-020 UYGULA-3 | 22:03Z bar-arşiv ilk timer tetiği | Result=success |
+| 6 | EDG-069 / TSK-066 | TSK-182 uygula SONRASI ADIM-0 yeniden ölçümü (`giris_dolum_ts`) — bu gece | n_uygun ≥30 ∧ eksik ≤0,30 → TSK-066 açılır, ardından TSK-067/068 (QUEUED) |
+| 7 | EDG-089 gün sayımı | 21:30Z retain zaten_var ✓; k2 1 gün | hüküm 09-20 |
+
+**B. Yarın (09-14) sırası:** 05:30Z EDG-084 hükmü → TSK-171 (+TSK-160) kapanış · 13:40Z DE/MPC/MRNA/MU ayna dolumu · TSK-180 daily_cycle kanıtı → DONE · 20:05Z sonrası dağıtım #43 (TSK-187) · 20:3xZ akşam döngüsü kanıtları.
+
+**C. Kapı açık, operatör/sır/dağıtım gerektirmeyen — sırayla (Opus ≤3 eş zamanlı):**
+
+| # | Kalem | Ne | Boyut |
+|---|---|---|---|
+| 1 | TSK-020 Kademe C | UYGULA-3/1/9 kalanı: gövdedeki 'Kademe C' tasarımı (brainstorming → plan) | M |
+| 2 | TSK-104 (a) | kırılım kartı — n≥20 birikince (A1 sayımı) | S |
+| 3 | EDG-092 aşama-2 | bilinen olay kümesi (≥20, S&P DJI URL'li) — Rol-1 turu, sonra Opus ölçüm | S+S |
+| 4 | TSK-167 kapanış | indeks tazelenince (TSK-186) künye/kapsama notu → DONE adayı | S |
+| 5 | TSK-162 | 09-21 recall sayımı | — |
+| 6 | TSK-176 T1 APISIX→Terraform | OCI kimliği operatörde → tasarım belgesi önce (kod yok) | M |
+
+**D. Kapılı (tetik bekleyen) — değişmedi:** EDG-089 hükmü 09-20 → TSK-142/161/163/164/165/166/169/170; EDG-081 09-20 → TSK-145; TSK-137 Ekim; TSK-128 learn; TSK-063 kilitler 11/20; TSK-015/016/018/093/096/097/010 tetik yok; TSK-066 → (A-6).
+
+**E. Operatör masası (açık):** TSK-063 INTRADAY_ARM (kanıt dolunca) · TSK-044/045 ücretli veri (kanıt yokken sorulmaz) · TSK-175 uyuyan kurulum (inceleme belgesi masada) · TSK-097/096/010 (tetik) · Remote Control ölçülemedi · eski OpenRouter anahtarlarının panoda iptali (TSK-064) · EDG-091 geriye dönük R yeniden hesabı (ayrı karar, şimdilik yok).
+
+**F. Cepheler (PRG) — kimlik eşlemesi:** PRG-01 İcra → TSK-179/187/182/069/066-068 · PRG-03 Öğrenme → TSK-060/168/142/145 (EDG-089/081) · PRG-04 Veri/Evren → TSK-065/EDG-092, TSK-131 (kapalı) · PRG-05 Ölçüm → TSK-104/138/014/162, EDG-084 · PRG-06 Bütünlük → TSK-064/176/186/020/137 · PRG-07 Skill → EDG-078 penceresi · PRG-08 Pano → TSK-012 (kapandı), TSK-104(b) · PRG-09 QC → kalem yok (fizibilite kuyruğu operatör) · PRG-11 Strateji → TSK-179 (gölge pilotu). PRG-02/10 KAPALI.
+
