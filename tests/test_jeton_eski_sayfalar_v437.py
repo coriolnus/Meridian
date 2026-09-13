@@ -38,13 +38,31 @@ sayfa, N link. `workflow.html` KAPSAM DIŞI bırakıldı (dilim-2 brief'i böyle
 blok taşıyor — bu dosyanın (a)/(d)/(e)/(f) bölümleri artık YALNIZ `workflow.html`e bakar,
 `runbook.html`/`landing.html` yeni bir bölüme (g) taşındı.
 
-`index.html` DE KAPSAM DIŞI BIRAKILDI — ÖLÇÜLEREK, brief'in "üç sayfa" varsayımının AKSİNE:
+~~`index.html` DE KAPSAM DIŞI BIRAKILDI — ÖLÇÜLEREK, brief'in "üç sayfa" varsayımının AKSİNE:
 index.html'in `:root` blokları dilim-1'de HİÇ üretime alınmamıştı (bu dosyanın `SAYFALAR`ı hep
 runbook/landing/workflow'du) ve kendi başına 550+ satırlık, TEK yerde duran tasarım gerekçesiyle
 (DIRECTION CONTRACT, font ölçümü, gece paleti türetimi) İÇ İÇE geçmiş durumda — mekanik bir
 `<link>` taşıması o gerekçeyi ya siler (bedel yasası ihlali) ya da 550 satırı yorum olarak
 sayfada bırakıp değerleri jetonlar.css'e taşımak gibi çok daha büyük, AYRI bir dal gerektirir.
-Karar Rol-1'e devredildi (devir brief'i, rapor: TSK132 dilim-2 raporu).
+Karar Rol-1'e devredildi (devir brief'i, rapor: TSK132 dilim-2 raporu).~~ — DİLİM-3'TE ÇÖZÜLDÜ,
+aşağı bkz. Kayıt SİLİNMEDİ: bu paragrafın TEŞHİSİ (gerekçe iç içe, mekanik taşıma onu siler)
+DOĞRUYDU; düşen yalnız HÜKMÜ (o yüzden "ayrı bir dal" değil, ayrı bir DİLİM oldu).
+
+TSK-132 DİLİM-3 (2026-09-13) — `index.html` BLOK KİPİNE GEÇTİ. Yukarıdaki paragrafın çözemediği
+şey "anlatıyı nereye koyacağız" sorusuydu; cevap onu SİLMEK değil TAŞIMAK oldu: jeton bölgesindeki
+56 yorum bloğu (504 satır tasarım gerekçesi — KARAR-2026-08-24-B, huni jetonları, rol/değer
+katmanı, tip rampası, gece türetimi) `docs/TASARIM-JETON-ANLATISI-INDEX-2026-09-13.md`ye BİREBİR
+taşındı ve bölge üreticinin işaretli bloğuyla değiştirildi. `index.html` artık `SAYFALAR`dadır
+(blok kipi, `workflow.html` ile aynı sınıf); LİNK kipine (dilim-2'nin `<link>` yolu) geçiş BU
+DİLİMİN DIŞINDADIR ve ayrı bir karar ister.
+
+DİLİM-3'ÜN DEĞER ÖLÇÜMÜ (taşıma anı, 2026-09-13): taşımadan ÖNCEKİ `index.html` (commit
+8921102c) ile SONRAKİ üretilmiş blok, v153'ün kesicisiyle çıkarılan sözlükler üzerinden
+karşılaştırıldı — gündüz 129/129, gece 96/96, 225/225 ad ve değer BİREBİR; fazla 0, eksik 0,
+ayrık 0. O karşılaştırmanın REFERANSI (taşıma öncesi index.html) artık YALNIZ git tarihçesinde
+durur; bu yüzden ayakta kalan çivi kendi kendini ölçen bir kıyas değil, aşağıdaki
+`test_HICBIR_DEGER_DEGISMEDI_tokens_json_COZULEN_referansiyla`dır (alias zinciri ↔
+`cozulen-deger`).
 
 `ui/src/jetonlar.css` (panonun/Vite'ın okuduğu, `uret()`in çıktısı) İLE `meridian/web/jetonlar.css`
 (bu dosyanın "dosya kipi" çıktısı, `dosya_blogu()`) KARIŞTIRILMASIN: AYNI ADI taşırlar ama FARKLI
@@ -54,7 +72,9 @@ tam anlatır.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib
+import json
 import pathlib
 import re
 import subprocess
@@ -65,8 +85,10 @@ import pytest
 KOK = pathlib.Path(__file__).resolve().parents[1]
 WEB = KOK / "meridian" / "web"
 URETICI = KOK / "ops" / "jeton_css_uret.py"
-# BLOK SAYFALAR — dilim-1'in çözümünü (HTML'e enjekte edilmiş blok) HÂLÂ taşıyanlar.
-SAYFALAR = ("workflow.html",)
+# BLOK SAYFALAR — dilim-1'in çözümünü (HTML'e enjekte edilmiş blok) taşıyanlar.
+# `index.html` DİLİM-3'te (2026-09-13) buraya KATILDI: eski elle-kopya bölgesi üretime alındı,
+# anlatısı `docs/TASARIM-JETON-ANLATISI-INDEX-2026-09-13.md`ye taşındı (bkz. modül başlığı).
+SAYFALAR = ("index.html", "workflow.html")
 # LİNK SAYFALAR — dilim-2'nin taşıdığı, `<link href="/jetonlar.css">` okuyanlar (aşağı bkz. (g)).
 LINK_SAYFALAR = ("runbook.html", "landing.html")
 # DOSYA — LİNK_SAYFALAR'ın PAYLAŞTIĞI, `--dosya` ile üretilen bağımsız CSS dosyası.
@@ -77,6 +99,20 @@ jcu = importlib.import_module("ops.jeton_css_uret")
 
 def _oku(ad: str) -> str:
     return (WEB / ad).read_text(encoding="utf-8")
+
+
+def _tokens_duz(dugum=None, yol=()):
+    """tokens.json'ı (yol, jeton) çiftlerine indirir. `jeton_css_uret._gez` ile AYNI ağacı
+    gezer ama YOLU da döndürür — tema ayrımı (`tema/gece/...`) yoldan okunur."""
+    if dugum is None:
+        dugum = json.loads((WEB / "tokens.json").read_text(encoding="utf-8"))
+    if isinstance(dugum, dict) and "$value" in dugum:
+        yield yol, dugum
+        return
+    if isinstance(dugum, dict):
+        for k, v in dugum.items():
+            if not k.startswith("$"):
+                yield from _tokens_duz(v, yol + (k,))
 
 
 def _bolge(metin: str) -> str:
@@ -125,34 +161,81 @@ def test_SAYFA_BLOGU_ve_DOSYA_BLOGU_AYNI_GOVDEYI_tasiyor():
     assert sayfa_govde == dosya_govde, "sayfa_blogu() ve dosya_blogu() gövdesi ayrışmış"
 
 
-def test_HICBIR_DEGER_DEGISMEDI_index_html_referansiyla():
-    """BEDEL ÖLÇÜMÜ (bedel yasası). Bu dilim mekanikleştirmedir; GÖRÜNÜR bir palet değişikliği
-    getirmemesi gerekir. Üretilen bloğun her jeton değeri, index.html'in (v153 ile tokens.json'a
-    çivili) kendi bloklarındaki değerle aynı olmalı — aksi hâlde 'yalnız mekanikleştirme' beyanı
-    yanlış olur ve sayfalar sessizce yeni bir palete geçer."""
+def _blok_sozlukleri() -> tuple[dict[str, str], dict[str, str]]:
+    """Üretilen bloğun (gündüz, gece) jeton sözlükleri — yorumlar sıyrılmış.
+    TEK KAYNAK: aşağıdaki iki ölçüm de bunu okur, kesiciyi ikinci kez kurmaz."""
     blok, _ = jcu.sayfa_blogu()
-    index = _oku("index.html")
-    yorumsuz = re.sub(r"/\*.*?\*/", " ", index, flags=re.S)
+    yorumsuz = re.sub(r"/\*.*?\*/", " ", blok, flags=re.S)
 
-    def jetonlar(govde: str) -> dict[str, str]:
+    def govde(sec: str) -> str:
+        i = yorumsuz.index(sec + "{")
+        j = yorumsuz.index("{", i)
+        return yorumsuz[j + 1:yorumsuz.index("\n}", j)]
+
+    def jetonlar(g: str) -> dict[str, str]:
         return {m.group(1): re.sub(r"\s+", " ", m.group(2)).strip()
-                for m in re.finditer(r"(--[a-zA-Z0-9-]+)\s*:\s*([^;}]+)", govde)}
+                for m in re.finditer(r"(--[a-zA-Z0-9-]+)\s*:\s*([^;}]+)", g)}
 
-    def blok_govde(metin: str, sec: str) -> str:
-        i = metin.index(sec + "{")
-        j = metin.index("{", i)
-        return metin[j + 1:metin.index("\n}", j)]
+    return jetonlar(govde(jcu.SAYFA_GUNDUZ_SEC)), jetonlar(govde(jcu.SAYFA_GECE_SEC))
 
-    blok_yorumsuz = re.sub(r"/\*.*?\*/", " ", blok, flags=re.S)
-    for sec in (jcu.SAYFA_GUNDUZ_SEC, jcu.SAYFA_GECE_SEC):
-        uretilen = jetonlar(blok_govde(blok_yorumsuz, sec))
-        referans = jetonlar(blok_govde(yorumsuz, sec))
-        ayrik = sorted(k for k in set(uretilen) & set(referans) if uretilen[k] != referans[k])
-        assert not ayrik, "\n".join(
-            f"{sec} --{k}: üretilen={uretilen[k]!r} index.html={referans[k]!r}" for k in ayrik)
-        assert set(uretilen) == set(referans), (
-            f"{sec} ad kümesi index.html ile ayrışmış: "
-            f"fazla={sorted(set(uretilen) - set(referans))} eksik={sorted(set(referans) - set(uretilen))}")
+
+def _coz(ad: str, tablo: dict[str, str], derinlik: int = 0) -> str | None:
+    """Bloğun KENDİ sözlüğü içinde `var(--x)` zincirini sonuna kadar izler. Zincir bloğun
+    dışına çıkarsa (tanımsız ad) None döner — o, tarayıcıda sessizce `initial`e düşen dal."""
+    d = tablo.get(ad)
+    if d is None or derinlik > 10:
+        return None if derinlik > 10 else d
+    m = re.fullmatch(r"var\((--[a-zA-Z0-9-]+)\)", d.strip())
+    return _coz(m.group(1), tablo, derinlik + 1) if m else d
+
+
+def test_HICBIR_DEGER_DEGISMEDI_tokens_json_COZULEN_referansiyla():
+    """BEDEL ÖLÇÜMÜ (bedel yasası). Bu dilim mekanikleştirmedir; GÖRÜNÜR bir palet değişikliği
+    getirmemesi gerekir.
+
+    REFERANS DEĞİŞTİ — DİLİM-3 (2026-09-13). Eskiden referans `index.html`in KENDİ elle yazılmış
+    bloklarıydı. Dilim-3'te o bloklar ÜRETİLMİŞ hâle geldi, yani aynı kıyas artık üretilen bloğu
+    üretilen blokla karşılaştırırdı: BOŞ bir yeşil. Referans bu yüzden tokens.json'ın KENDİ
+    ÇÖZÜLMÜŞ değer beyanına (`$extensions.org.meridian.css.cozulen-deger`) taşındı ve ölçüm
+    ANLAMLI bir eksene oturdu: üretim `literal` alanını yazar (rol jetonlarında bir `var()`
+    alias'ı), `cozulen-deger` ise o zincirin UCUNDA olması gereken değeri BEYAN eder. İkisi
+    ayrışırsa — üreticinin kendi başlığındaki vakanın sınıfı: "`hex` / `literal` /
+    `cozulen-deger` alanları birbirinden ayrıştı" — sayfa, kaydının söylediğinden BAŞKA bir
+    rengi çizer ve hiçbir şey ötmezdi.
+
+    Taşıma ANININ 225/225 ölçümü (taşıma öncesi index.html ↔ sonrası blok) modül başlığındadır;
+    onun referansı artık yalnız git tarihçesinde durur ve bir çivi tarafından TEKRARLANAMAZ
+    (uydurma yasağı: ölçülemeyen şey çivi olarak yazılmaz)."""
+    gunduz, gece = _blok_sozlukleri()
+    gece_tablo = dict(gunduz, **gece)
+    beyan = {}
+    for yol, tk in _tokens_duz():
+        ext = tk.get("$extensions", {}).get("org.meridian.css", {})
+        if ext.get("cozulen-deger") is not None:
+            tema = yol[1] if yol[0] in ("tema", "rol") else "kok"
+            beyan[(tema, ext["var"])] = ext["cozulen-deger"]
+    assert beyan, "tokens.json'da `cozulen-deger` beyanı YOK — bu ölçüm kör kaldı"
+    ayrik = []
+    for (tema, ad), bekleniyor in sorted(beyan.items()):
+        cozulen = _coz(ad, gece_tablo if tema == "gece" else gunduz)
+        if cozulen != bekleniyor:
+            ayrik.append(f"{tema} {ad}: blok zinciri {cozulen!r} ↔ "
+                         f"tokens.json cozulen-deger {bekleniyor!r}")
+    assert not ayrik, "\n".join(ayrik)
+
+
+def test_URETILEN_BLOKTA_TANIMSIZ_var_ZINCIRI_YOK():
+    """`cozulen-deger` beyanı OLMAYAN jetonlar (değer katmanı) için ölçülebilen şey şudur:
+    bloğun HİÇBİR jetonu bloğun DIŞINA çıkan bir `var()` zincirine bağlanmamalı. Böyle bir
+    zincir tarayıcıda sessizce `initial` değere düşer (hata yok, yalnız yanlış renk) — ve bu,
+    `--nav-bg` vakasının (v208) mekanizmasıyla aynı sınıftır."""
+    gunduz, gece = _blok_sozlukleri()
+    kirik = []
+    for etiket, tablo in (("gündüz", gunduz), ("gece", dict(gunduz, **gece))):
+        for ad in sorted(tablo):
+            if _coz(ad, tablo) is None:
+                kirik.append(f"{etiket} {ad}: `var()` zinciri blok DIŞINA çıkıyor")
+    assert not kirik, "\n".join(kirik)
 
 
 # ======================= (b) --kontrol BAYATLIK KAPISI =======================
@@ -242,17 +325,23 @@ def test_ESLEME_TAKMA_ADI_URETIR(monkeypatch):
 
 # ======================= (d) BLOK/SAYFA DIŞINDA JETON TANIMI YOK =======================
 
+def _blok_disi_ham_renkler(metin: str) -> list[str]:
+    """İşaretli bloğun DIŞINDA kalan `--x: #hex` tanımları. TEK KAYNAK: aşağıdaki çivi ve onun
+    mutasyonu AYNI kesiciyi çağırır — mutasyon kendi kopyasını ısırsaydı, gerçek kesici
+    daralınca çivi sessizce körleşir ve mutasyon yine de yeşil kalırdı."""
+    i, j = jcu._sayfa_bolgesi(metin)
+    dis = metin[:i] + metin[j:]
+    dis = re.sub(r"/\*.*?\*/", " ", re.sub(r"<!--.*?-->", " ", dis, flags=re.S), flags=re.S)
+    return [m.group(0) for m in re.finditer(r"--[a-zA-Z0-9-]+\s*:\s*#[0-9a-fA-F]{3,8}\b", dis)]
+
+
 @pytest.mark.parametrize("ad", SAYFALAR)
 def test_ISARETLI_BLOK_DISINDA_ham_renkli_jeton_tanimi_YOK(ad):
     """İkinci bir sözlük doğmasın: işaretli bloğun DIŞINDA `--x: #hex` tanımı olamaz. Böyle bir
     tanım üretimin kapsamı dışında kalır, yani tokens.json değiştiğinde geride kalır — tam olarak
     bu dilimin kaldırdığı kusur sınıfı. (Ham renk TAŞIMAYAN bildirimler, ör. gövdedeki
     `style="--cols:2"`, kapsam dışı: onlar palet değil yerleşim parametresi.)"""
-    metin = _oku(ad)
-    i, j = jcu._sayfa_bolgesi(metin)
-    dis = metin[:i] + metin[j:]
-    dis = re.sub(r"/\*.*?\*/", " ", re.sub(r"<!--.*?-->", " ", dis, flags=re.S), flags=re.S)
-    bulunan = [m.group(0) for m in re.finditer(r"--[a-zA-Z0-9-]+\s*:\s*#[0-9a-fA-F]{3,8}\b", dis)]
+    bulunan = _blok_disi_ham_renkler(_oku(ad))
     assert not bulunan, f"{ad}: işaretli blok dışında jeton tanımı {bulunan}"
 
 
@@ -490,3 +579,135 @@ def test_JETONLAR_CSS_ROTA_CONTENT_TYPE_TEXT_CSS(sandbox_state):
     assert res.headers.get("content-type", "").startswith("text/css"), \
         f"content-type yanlış: {res.headers.get('content-type')}"
     assert "--" in res.text, "gövde CSS jetonları içermeli"
+
+
+# ======================= (h) ANLATI BELGESİ (TSK-132 dilim-3) =======================
+# `index.html`in jeton bölgesi üretime alınırken oradaki 56 yorum bloğu (504 satır tasarım
+# gerekçesi) SİLİNMEDİ, `docs/TASARIM-JETON-ANLATISI-INDEX-2026-09-13.md`ye BİREBİR taşındı.
+# Taşımanın bedeli ölçülmeden kabul edilemez (bedel yasası): "gürültüyü azalttık" demek, ne
+# KAYBEDİLDİĞİ ölçülmeden bir kazanç beyanı değildir. Aşağıdaki çiviler kaybın SIFIR olduğunu
+# değil — o, taşıma anının tek seferlik ölçümüdür — belgenin BUGÜN hâlâ orada ve BOZULMAMIŞ
+# olduğunu ölçer: belge sessizce kırpılırsa gerekçe ikinci kez, bu sefer fark edilmeden ölür.
+
+ANLATI = KOK / "docs" / "TASARIM-JETON-ANLATISI-INDEX-2026-09-13.md"
+#: Belgedeki verbatim gövdeleri kesen desen. Anlatı metninde ``` DİZİSİ YOKTUR (ölçüldü, taşıma
+#: anı) — yani çit güvenli bir sınırdır ve bu kesici belgenin kendi beyanıyla aynı gövdeyi görür.
+_ANLATI_BLOK = re.compile(r"^```css\n(.*?)\n```$", re.M | re.S)
+_ANLATI_SHA = re.compile(r"ANLATI-SHA256 \| `([0-9a-f]{64})`")
+_ANLATI_SAYI = re.compile(r"Anlatı bloğu \| (\d+)")
+
+
+def _anlati_bloklari(metin: str) -> list[str]:
+    return _ANLATI_BLOK.findall(metin)
+
+
+def test_ANLATI_BELGESI_VAR_ve_TARIHCE_OLDUGUNU_SOYLUYOR():
+    """YASA 6 — okuyucusuz yazım yok, ve OKUNAN ŞEYİN NE OLDUĞU yazılı olmalı. Belge, hükmün
+    KENDİSİNDE olmadığını (SSoT `tokens.json`, blok üretilmiş) açıkça söylemeli: söylemezse bir
+    sonraki okuyucu emekli bir değeri yürürlükteki hüküm sanar — bu deponun `--pm-pos` vakasıyla
+    aynı sınıf, yalnız kod yerine belge tarafında."""
+    assert ANLATI.is_file(), f"anlatı belgesi YOK: {ANLATI}"
+    metin = ANLATI.read_text(encoding="utf-8")
+    assert "TARİHÇEDİR" in metin, "belge kendini tarihçe olarak beyan etmiyor"
+    assert "tokens.json" in metin, "belge yürürlükteki hükmün NEREDE olduğunu söylemiyor"
+    assert "index.html" in metin, "belge kaynağını söylemiyor"
+
+
+def test_ANLATI_BELGESI_SHA_BEYANI_ICERIGIYLE_ESIT():
+    """BEYAN ↔ İÇERİK KİLİDİ. Belge kendi anlatı gövdesinin sha256'sını BEYAN eder; bu çivi onu
+    yeniden hesaplar. Kaynak (index.html'in eski yorumları) artık YOK, yani belge tek nüshadır ve
+    sessiz bir kırpma/`düzeltme` hiçbir yerde ötmezdi. Ölçülen şey 'metin doğru mu' değil —
+    o soruyu kimse cevaplayamaz — 'metin taşındığı günden beri AYNI mı'dır."""
+    metin = ANLATI.read_text(encoding="utf-8")
+    m = _ANLATI_SHA.search(metin)
+    assert m, "belgede ANLATI-SHA256 beyanı yok"
+    bloklar = _anlati_bloklari(metin)
+    assert bloklar, "belgede ```css anlatı bloğu bulunamadı — kesici mi bozuldu, belge mi?"
+    hesap = hashlib.sha256("\n".join(bloklar).encode("utf-8")).hexdigest()
+    assert hesap == m.group(1), (
+        f"anlatı gövdesi beyanla ayrışmış: beyan={m.group(1)} hesap={hesap} "
+        f"({len(bloklar)} blok). Belge elle düzenlendiyse beyan da yeniden hesaplanmalı — ve "
+        f"o düzenleme bir TARİHÇEYİ değiştirmek demektir, önce gerekçesi yazılmalı.")
+
+
+def test_ANLATI_BELGESI_BLOK_SAYISI_BEYANI_DOGRU():
+    """İkinci beyan: blok SAYISI. sha256 tek bir bloğun silinmesini de yakalar, ama hata
+    mesajı 'ayrıştı' der; bu satır 'kaç blok kaldı' sorusuna ayrı ve okunur bir cevap verir."""
+    metin = ANLATI.read_text(encoding="utf-8")
+    m = _ANLATI_SAYI.search(metin)
+    assert m, "belgede blok sayısı beyanı yok"
+    assert len(_anlati_bloklari(metin)) == int(m.group(1)), (
+        f"beyan {m.group(1)} blok, belgede {len(_anlati_bloklari(metin))}")
+
+
+def test_ANLATI_index_htmlDEN_TASINDI_KOPYA_KALMADI():
+    """GÖÇ ÇİVİSİ, İKİ YÖNLÜ. Taşınan anlatı (a) belgede OLMALI, (b) `index.html`de KALMAMALI.
+    Tek yönlü ölçüm iki sessiz arızayı kaçırırdı: belge boşsa "temizledik" kazanç gibi görünür
+    (bedel ölçülmemiş olur); metin iki yerde birden durursa tek-kaynak yasası ihlal edilir ve
+    biri güncellenip öteki bayatlar.
+
+    Örnekler ELLE seçilmiş ÜÇ ayırt edici cümledir, anlatının tamamı DEĞİL: tamamını buraya
+    kopyalamak belgeyi ikinci kez çoğaltmak olurdu (aynı yasa). Bütünlüğü sha256 çivisi ölçer;
+    bu satır TAŞIMANIN KENDİSİNİ ölçer."""
+    belge = ANLATI.read_text(encoding="utf-8")
+    index = _oku("index.html")
+    ornekler = ("MONO ARTIK YALNIZ ÖLÇÜLEN DEĞERDE",
+                "GECE PALETİ TÜRETİLDİ VE ÖYLE DAMGALANDI",
+                "HUNİ BASAMAK RENKLERİ")
+    for ornek in ornekler:
+        assert ornek in belge, f"anlatı belgeye taşınmamış: {ornek!r}"
+        assert ornek not in index, (
+            f"anlatı index.html'de DE duruyor: {ornek!r} — tek-kaynak yasası: taşındıysa "
+            f"kopyası kalmaz, kalacaksa taşınmamıştır")
+
+
+@pytest.mark.parametrize("ad", SAYFALAR)
+def test_ISARETLI_BLOK_DISINDA_SERBEST_CSS_YORUMU_yok_SAYILMADI(ad):
+    """Üretilen blok, bölgedeki HER ŞEYİ değiştirir — yorumlar dahil. Bu çivi bölgede üreticinin
+    KENDİ başlığı DIŞINDA bir yorum kalmadığını ölçer: kalsaydı, bir sonraki üretim onu sessizce
+    silerdi (üretilmiş dosya elle düzenlenmez kuralının sayfa-içi hâli) ve yazan kişi bunu ancak
+    diff'te fark ederdi."""
+    i, j = jcu._sayfa_bolgesi(_oku(ad))
+    bolge = _oku(ad)[i:j]
+    yorumlar = re.findall(r"/\*.*?\*/", bolge, re.S)
+    yabanci = [y for y in yorumlar
+               if y not in (jcu.SAYFA_ISARET_BAS, jcu.SAYFA_ISARET_SON, jcu.SAYFA_BASLIK)]
+    assert not yabanci, f"{ad}: üretilmiş bloğun içinde üreticiye ait OLMAYAN yorum: {yabanci}"
+
+
+def test_MUTASYON_ANLATI_SHA_BOZULURSA_KIRMIZI(tmp_path):
+    """MUTASYON: belgenin beyan ettiği sha'yı boz → çivi KIRMIZI olmalı. Beyan/içerik kilidinin
+    GERÇEKTEN ısırdığını gösterir; yeşil tek başına kanıt değildir (bir turda 4 çivi yanlış
+    sebeple yeşildi, 2026-08-30)."""
+    metin = ANLATI.read_text(encoding="utf-8")
+    m = _ANLATI_SHA.search(metin)
+    assert m, "ön koşul: beyan var"
+    bozuk = metin.replace(m.group(1), "0" * 64, 1)
+    assert bozuk != metin, "mutasyon uygulanamadı"
+    hesap = hashlib.sha256("\n".join(_anlati_bloklari(bozuk)).encode("utf-8")).hexdigest()
+    assert hesap != _ANLATI_SHA.search(bozuk).group(1), "mutasyon ısırmadı"
+
+
+def test_MUTASYON_ANLATI_BLOGU_SILINIRSE_KIRMIZI():
+    """MUTASYON: bir anlatı bloğunu sil → hem sha hem sayı çivisi kırmızı. Kırpma sessiz
+    olmasın diye İKİ beyan da ısırtılır."""
+    metin = ANLATI.read_text(encoding="utf-8")
+    bloklar = _anlati_bloklari(metin)
+    assert len(bloklar) >= 2, "ön koşul: en az iki blok"
+    kirpik = metin.replace(f"```css\n{bloklar[-1]}\n```", "", 1)
+    assert len(_anlati_bloklari(kirpik)) == len(bloklar) - 1, "mutasyon blok silmedi"
+    beyan = _ANLATI_SHA.search(kirpik).group(1)
+    assert hashlib.sha256("\n".join(_anlati_bloklari(kirpik)).encode()).hexdigest() != beyan
+    assert int(_ANLATI_SAYI.search(kirpik).group(1)) != len(_anlati_bloklari(kirpik))
+
+
+def test_MUTASYON_INDEX_BLOK_DISINA_ham_renk_EKLENIRSE_KIRMIZI(tmp_path):
+    """MUTASYON: `index.html`in işaretli bloğu DIŞINA bir `--x: #hex` tanımı ekle → (d)
+    bölümünün çivisi kırmızı olmalı. İkinci bir sözlüğün doğuşu tam olarak böyle görünür:
+    tek satır, hiçbir hata, ve tokens.json değiştiğinde geride kalan bir renk."""
+    metin = _oku("index.html")
+    assert _blok_disi_ham_renkler(metin) == [], "ön koşul: ağaçtaki index.html temiz"
+    _, j = jcu._sayfa_bolgesi(metin)
+    bozuk = metin[:j] + "\n  --kacak-renk: #abcdef;\n" + metin[j:]
+    assert _blok_disi_ham_renkler(bozuk) == ["--kacak-renk: #abcdef"], \
+        f"mutasyon ısırmadı: {_blok_disi_ham_renkler(bozuk)}"

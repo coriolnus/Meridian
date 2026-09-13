@@ -563,8 +563,13 @@ def test_parola_etiketleri_MICRO_basamaginda():
     # ÖLÇÜLEN İDDİA "10" SABİTİ DEĞİL, TEK SAHİPLİK: mikro-etiket basamağını kendi jetonundan
     # alır ve o jeton rampanın kapak basamağıyla AYNI olmalı — iki ayrı 11px doğarsa idiom
     # yine ikiye bölünür ve bu çivinin varlık sebebi tam olarak o bölünmeyi engellemek.
-    m_l = re.search(r"--label-size:(\d+)px", INDEX)
-    m_c = re.search(r"--t-cap:(\d+)px", INDEX)
+    # BOŞLUĞA TOLERANSLI (TSK-132 dilim-3, 2026-09-13): `index.html`in jeton bloğu artık
+    # `ops/jeton_css_uret.py` tarafından üretiliyor ve üretim bildirimi `--ad: değer;` diye,
+    # iki nokta ÜSTÜNDEN SONRA BOŞLUKLA yazıyor. Eski elle-kopya biçimi boşluksuzdu; bu desen
+    # o biçime çivilenmişti ve taşımada NONE döndü. ÖLÇÜLEN İDDİA DEĞİŞMEDİ (basamak değeri +
+    # tek sahiplik) — değişen yalnız ayrıştırıcının boşluk körlüğü; biçim bir iddia değildir.
+    m_l = re.search(r"--label-size:\s*(\d+)px", INDEX)
+    m_c = re.search(r"--t-cap:\s*(\d+)px", INDEX)
     assert m_l and m_c, "etiket/kapak basamağı jetonu bulunamadı"
     assert m_l.group(1) == m_c.group(1), (
         f"Label basamağı ({m_l.group(1)}px) rampanın kapak basamağından ({m_c.group(1)}px) "

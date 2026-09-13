@@ -407,7 +407,11 @@ def test_yeni_kod_YENI_RENK_JETONU_ACMAZ():
     # esikHal'in ürettiği sınıflar rol katmanından.
     assert '"sev-1"' in _fn("esikHal") and '"sev-2"' in _fn("esikHal")
     # index.html'de yeni bir token tanımı DOĞMADI (v208 dört-yüzey birliği): sev/yon/mod aynen.
-    assert INDEX.count("--sev-1:var(--red);") == 2      # gündüz + gece bloğu (v208 emsali)
+    # BOŞLUĞA TOLERANSLI (TSK-132 dilim-3, 2026-09-13): jeton bloğu artık üretiliyor
+    # (`ops/jeton_css_uret.py`) ve bildirimi `--ad: değer;` diye BOŞLUKLU yazıyor; bu sayım
+    # eski elle-kopya biçimine (boşluksuz) çivilenmişti ve taşımada 0 döndü. ÖLÇÜLEN İDDİA
+    # AYNI: `--sev-1` rol jetonu `--red`e bağlı ve TAM İKİ blokta (gündüz + gece) bildirilmiş.
+    assert len(re.findall(r"--sev-1:\s*var\(--red\);", INDEX)) == 2  # gündüz + gece (v208 emsali)
 
 
 def test_CSP_satir_ici_olay_ozniteligi_YOK():
