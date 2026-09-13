@@ -179,6 +179,42 @@ def build_regime_json(index_bars: pd.DataFrame, params: dict, date: str) -> dict
     return out
 
 
+#: KÜRESEL REJİM KAPISININ AÇIK REJİMLERİ — `regime_ok`un TEK sabiti. Modülün kendi rejim
+#: adlarından türer, ikinci bir literal DEĞİLDİR: bir rejim yeniden adlandırılırsa burası da
+#: onunla taşınır. Kapalı kalanlar `TREND_DOWN` ve `HIGH_VOL`.
+REGIME_OK_REJIMLERI = (TREND_UP, CHOP)
+
+
+def regime_ok(rj: dict) -> bool:
+    """KÜRESEL rejim kapısı: o seans YENİ RİSK alınabilir mi?
+
+    YÜKLEMİN TEK EVİ. 2026-09-13'e (TSK-184) kadar bu ifade DÖRT yerde BİREBİR kopyaydı —
+    `backtest.replay` (tarihsel replay döngüsü), `loop.daily_cycle` (canlı günlük döngü),
+    `shadow_lifecycle._seed` (gölge-v2 replay tohumu) ve EDG-2026-088 PK (3) ölçüm şasisi
+    (`research/olcumler/edg088_golge_pilot/pk3_selef.py`, `rejim_of` — beyanlı 4. kopya, çünkü
+    ithal edilecek tek kaynağı YOKTU). Dördü aynı gerçeği söylüyordu; TEK-KAYNAK YASASI'nın
+    ölçtüğü sınıf tam da budur — kopya sessizce ayrışır ve BURADA ayrışma, bir motorun chop'ta
+    işlem açıp ötekinin açmaması demektir (`regime_flip` çıkışları bu kapıdan doğar). Ayrışma
+    çivisi: `tests/test_regime_ok_tek_kaynak_v471.py`.
+
+    KAPI SIKIDIR ve bu fonksiyon KÜRESEL hükümdür. Keşif sondasının GEVŞEK dalı (`exploration`
+    bayraklı açık pozisyonun çıkış kapısı bütçeye BAKMAZ) bu yüklemin bir varyantı değildir,
+    çağıranın kendi dalıdır ve orada kalır — buraya bir `gevsek=True` parametresi eklemek iki
+    ayrı hükmü tek gövdeye sıkıştırır ve çağıranın hangisini istediğini görünmez yapardı.
+
+    EKSİK ALAN DAVRANIŞI KORUNDU (ölçüldü 2026-09-13, taşımadan ÖNCE):
+      · `regime` yoksa → `KeyError("regime")`
+      · `regime` AÇIK bir rejimken `exposure_budget_pct` yoksa → `KeyError("exposure_budget_pct")`
+      · `regime` KAPALI bir rejimken ikinci alan HİÇ okunmaz (kısa devre) → `False`, KeyError YOK
+    `rj.get(...)` ile sessizce False döndürmek bir DAVRANIŞ DEĞİŞİKLİĞİ olurdu: bozuk/eksik bir
+    rejim belgesi "kapı kapalı" diye yutulur, motor gürültüsüz yanlış karar verirdi (YASA 4).
+    Bu yüzden yüklem `bool(...)` ile de sarılmaz — dönüş, taşımadan önceki ifadenin AYNISIDIR.
+
+    SAF: I/O yok, saat yok, durum yok. Girdi `build_regime_json` çıktısıdır (`regime` ve
+    `exposure_budget_pct` alanları)."""
+    return rj["regime"] in REGIME_OK_REJIMLERI and rj["exposure_budget_pct"] > 0
+
+
 # ==================================================================================================
 # Y3 REJİM/RİSK DÖRTLÜSÜ — İKİ PİYASA GÖSTERGESİ
 # ==================================================================================================

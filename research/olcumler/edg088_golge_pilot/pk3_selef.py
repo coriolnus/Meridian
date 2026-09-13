@@ -291,17 +291,23 @@ def dogur(d: pd.Timestamp, per: dict, idx: pd.DataFrame, taban: dict, goal: dict
 def rejim_of(idx: pd.DataFrame, d: pd.Timestamp, params: dict) -> tuple[dict, bool]:
     """O seansın rejim belgesi ve KÜRESEL `regime_ok` kapısı.
 
-    `regime.build_regime_json` ÇAĞRILIR (kopyalanmaz); `regime_ok` yüklemi ise motorda bir
-    FONKSİYON değil bir İFADEDİR ve üç üreticide (`backtest.replay`, `loop.daily_cycle`,
-    `shadow_lifecycle._seed`) BİREBİR aynı biçimde yazılıdır — ithal edilecek tek kaynağı yoktur,
-    o yüzden burada aynı biçimde yeniden yazıldı ve bu satır o BEYANDIR. Kapı SIKIDIR: keşif
-    sondasının gevşek dalı gölgeye uygulanmaz (`golge_icra` beyanlı sapma 5).
+    İKİSİ DE ÜRETİMDEN İTHAL EDİLİR, KOPYALANMAZ: `regime.build_regime_json` belgeyi,
+    `regime.regime_ok` kapıyı verir. BEYANIN TARİHÇESİ: 2026-09-13'e (TSK-184) kadar `regime_ok`
+    motorda bir FONKSİYON değil bir İFADEydi ve üç üreticide (`backtest.replay`,
+    `loop.daily_cycle`, `shadow_lifecycle._seed`) birebir yazılıydı; ithal edilecek tek kaynağı
+    olmadığı için bu betik onu BEYANLA yeniden yazmıştı (4. kopya). TSK-184 yüklemi
+    `regime.regime_ok` gövdesine taşıdı — beyan DÜŞTÜ, kopya KALKTI; ölçüm artık motorun
+    kararını birebir aynı gövdeden okur (ayrışma çivisi
+    `tests/test_regime_ok_tek_kaynak_v471.py` bu betiği de tarar).
+
+    Kapı SIKIDIR: keşif sondasının gevşek dalı gölgeye uygulanmaz (`golge_icra` beyanlı sapma 5)
+    — o dal `loop.daily_cycle`ın kendi hükmüdür, küresel yüklemin bir varyantı değil.
     """
     from meridian import regime as regime_mod
 
     dstr = str(pd.Timestamp(d).date())
     rj = regime_mod.build_regime_json(idx.loc[:d].reset_index(), params, dstr)
-    return rj, (rj["regime"] in ("trend_up", "chop") and rj["exposure_budget_pct"] > 0)
+    return rj, regime_mod.regime_ok(rj)
 
 
 def golgeden_gecir(plan: dict, d0: pd.Timestamp, per: dict, idx: pd.DataFrame, taban: dict,

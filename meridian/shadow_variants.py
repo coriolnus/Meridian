@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import os
 
-from . import barclock, earnings, guard, obs, skills, store, strategy
+from . import barclock, earnings, guard, obs, regime as regime_mod, skills, store, strategy
 from .broker import derisk_mult, max_positions_at
 
 # Varsayılan AÇIK: tek yan etkisi kendi defterine yazmaktır (4b ile aynı gerekçe). Kapatma anahtarı
@@ -400,8 +400,15 @@ def record_cycle(date: str, tickers: list, *, tail_of, rs_of, sector_of, max_cor
             from . import shadow_lifecycle as _sl
             _sl.run_cycle(date, tickers=tickers, tail_of=tail_of, rs_of=rs_of, sector_of=sector_of,
                           max_corr_of=max_corr_of, eff=eff, regime=regime,
+                          # BEYANLI SAPMA (TSK-184, 2026-09-13): bu YEDEK dal `regime.regime_ok`
+                          # DEĞİLDİR ve olmamalıdır. Küresel yüklem SIKIDIR — eksik alanda
+                          # KeyError atar; burada `regime` sözlüğü çağıranın verdiği serbest bir
+                          # sözlüktür ve dal `.get` ile HOŞGÖRÜLÜdür (eksik/None alan → False).
+                          # Sıkı yükleme çevirmek davranışı değiştirirdi: KeyError dıştaki
+                          # `except`e düşer, gölge-v2 turu SESSİZCE atlanırdı. Ayrışan yalnız
+                          # HOŞGÖRÜ; açık rejim KÜMESİ tek kaynaktan gelir (TEK-KAYNAK YASASI).
                           regime_ok=bool(regime_ok) if regime_ok is not None
-                          else (regime.get("regime") in ("trend_up", "chop")
+                          else (regime.get("regime") in regime_mod.REGIME_OK_REJIMLERI
                                 and (regime.get("exposure_budget_pct") or 0) > 0),
                           goal=goal, limits=limits, version=version, bars=bars,
                           index_bars=index_bars, sigs_by_variant=sigs_by_variant,

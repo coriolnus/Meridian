@@ -475,7 +475,7 @@ def _seed(doc: dict, date: str, *, bars: dict, index_bars, eff: dict, goal: dict
         srets = {t: float(df.loc[:d]["close"].iloc[-1] / df.loc[:d]["close"].iloc[-22] - 1.0)
                  for t, df in bars.items() if len(df.loc[:d]) > 22}
         rj["leading_sectors"] = regime_mod.sector_momentum(srets, SECTORS)
-        regime_ok = rj["regime"] in ("trend_up", "chop") and rj["exposure_budget_pct"] > 0
+        regime_ok = regime_mod.regime_ok(rj)   # KÜRESEL kapı — yüklemin TEK evi `regime.regime_ok`
         rets = {t: float(df.loc[:d]["close"].iloc[-1] / df.loc[:d]["close"].iloc[-1 - strategy.RS_LOOKBACK] - 1.0)
                 for t, df in bars.items()
                 if d in df.index and len(df.loc[:d]) > strategy.RS_LOOKBACK + 1}

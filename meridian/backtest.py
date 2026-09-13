@@ -406,7 +406,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
         _srets = {t: float(df.loc[:d]["close"].iloc[-1] / df.loc[:d]["close"].iloc[-22] - 1.0)
                   for t, df in per.items() if len(df.loc[:d]) > 22}
         rj["leading_sectors"] = regime_mod.sector_momentum(_srets, SECTORS)
-        regime_ok = rj["regime"] in ("trend_up", "chop") and rj["exposure_budget_pct"] > 0
+        regime_ok = regime_mod.regime_ok(rj)   # KÜRESEL kapı — yüklemin TEK evi `regime.regime_ok`
         # regime-conditional params: base params overlaid with this regime's overrides (no-op if none)
         eff = config.resolve_params(params, params_by_regime, rj["regime"])
         # PIT DİKİŞİNİN SEVKİ (EDG-2026-062). Replay TAMAMEN tarihseldir: `strategy.scan_entry` →
