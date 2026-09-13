@@ -34,7 +34,9 @@ import sys
 
 import argparse
 
-SANDBOX = pathlib.Path(__file__).resolve().parent
+# A1'de dosya deploy edilmeden `ssh a1 python3 - --repo /opt/meridian --cikti … < adim0_kapsama.py` ile (stdin)
+# koşabilsin: `__file__` stdin'de tanımsızdır → SANDBOX cwd'ye düşer, `--repo`/`--cikti` açık verilir.
+SANDBOX = pathlib.Path(__file__).resolve().parent if "__file__" in globals() else pathlib.Path.cwd()
 _ARGS = argparse.ArgumentParser(description="EDG-2026-070 ADIM-0 kapsama haritası (salt-okur; hüküm YOK)")
 _ARGS.add_argument("--repo", type=pathlib.Path, default=SANDBOX.parents[2],
                    help="depo kökü (A1: /opt/meridian; varsayılan: bu dosyanın üç üstü)")
