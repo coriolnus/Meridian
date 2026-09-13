@@ -409,3 +409,36 @@ export function kuyrugaCevir(
     damgaNeden,
   };
 }
+
+/* ============================================================================
+   ONAY DEFTERİ SATIRININ İCRA KESİTİ — `approvals.jsonl`, sohbet kararı
+   ----------------------------------------------------------------------------
+   DEFTER SATIRI TİPLİ GELMİYOR ve gelemez: `OnayGovdesi.pending` salt-ekleme bir
+   JSONL'in ham sözlükleridir (`Record<string, unknown>`), yani hiçbir alan garanti
+   DEĞİL. Bu arayüz o ham satırın OKUNABİLEN dilimini tipler; okuyucusu
+   `icra_rozeti.ts` ve onun tek müşterisi `OnayDefteri.tsx`.
+
+   ALAN ADLARI SUNUCUYLA BİREBİR, ÇEVİRİ YOK: sunucu `SOHBET_KARAR_ALANLARI`
+   demetini (`icra_eder`/`icra_ok`) hem yanıta hem deftere aynı adlarla yazıyor.
+   Burada Türkçeleştirmek ya da kısaltmak, ad değiştiği gün ayrışmayı SESSİZ
+   yapardı — pano boş bir alan okur ve "alan yok" der, oysa alan oradadır.
+
+   ÜÇ HÂL İKİ BOOLEAN'DA KODLU ve hiçbiri TEK BAŞINA okunmaz (sunucu kaydının
+   kendi beyanı):
+     · `icra_eder=false`               → icra DENENMEDİ (ret, ya da `not` türü),
+     · `icra_eder=true, icra_ok=true`  → denendi ve BAŞARDI,
+     · `icra_eder=true, icra_ok=false` → denendi ve DÜŞTÜ; `not` künyesi
+       "… | icra DÜŞTÜ: …" ekiyle sebebi taşır.
+   `davranissal` BUNLARDAN AYRI BİR SORUNUN cevabıdır ("bu kimliği bir L1+ uygulama
+   kapısı okur mu") ve sohbet satırında HER ZAMAN `false`tur — ikisini tek sütunda
+   karıştırmak, defteri okuyan operatöre icra ETMİŞ bir kararı "icra açmaz" diye
+   göstermek olurdu (B1 açık kalemi).
+   ============================================================================ */
+export interface DefterIcraKesiti {
+  /** İcra DENENDİ mi? Sunucu bunu yalnız sohbet öneri satırlarına yazar. */
+  readonly icra_eder?: boolean;
+  /** Denenen icra BAŞARDI mı? `icra_eder=false` iken HER ZAMAN `false` — tek başına okunmaz. */
+  readonly icra_ok?: boolean;
+  /** Satırın KÜNYESİ — cümleyi sunucu kurar, pano taşır. Düşüşte "icra DÜŞTÜ: …" ekini içerir. */
+  readonly not?: string;
+}
