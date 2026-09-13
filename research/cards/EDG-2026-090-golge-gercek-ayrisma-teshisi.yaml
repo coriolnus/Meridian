@@ -76,3 +76,12 @@ notlar: >
   Kod yalnız bu karttan sonra `research/olcumler/edg090_golge_ayrisma/` altında (sandbox/tmp state, canlı deftere yazmaz; pk2_gercek
   ve _ortak yardımcıları İTHAL edilir). Bedel yasası: ölçüm hiçbir çıktıyı azaltmaz. Operatör bilgilendirmesi: akşam özeti push'u
   (2026-09-13) — "gölge pilotu harness'ı gerçek yoldan 0,3 R sapıyor, sayı yayılmıyor, teşhis kartı açıldı".
+
+aday_d_notu_2026_09_13: >
+  (Rol-1, 17:4xZ; kaynak: PK(2) inceleme raporu, Sonnet — bağımsız türetim) Dördüncü aday neden: gerçek işlemin `pnl_dollars /
+  r_multiple / qty`den geri türetilen RİSK MESAFESİ (VRTX ~13,17 $) plan satırındaki `stop` mesafesinin (~29,03 $) ~2,2× ALTINDA —
+  yalnız MU ve VRTX'te, yani hüküm kümesindeki en büyük iki |Δ R|'de. Gölge motoru plan.stop ile R hesaplarken canlı yol daha dar
+  bir stop (E2 ATR'li kurulum / koruma stop / trailing?) kullanmış olabilir → aynı fiyat yolu farklı R verir. Bu ADIM-0 verisinden
+  (donmuş girdi) ölçülebilir: her işlem için türetilen risk mesafesi vs plan.stop mesafesi oranı — TANI sütunu (K harcamaz);
+  ablasyon B (E2 ATR enjeksiyonu) bunu kısmen kapsar, kapsamıyorsa kalan fark sınıfına 'canlı stop ≠ plan.stop (kaynağı loop.py)'
+  eklenir. K grid DEĞİŞMEDİ (3); eşikler değişmedi.
