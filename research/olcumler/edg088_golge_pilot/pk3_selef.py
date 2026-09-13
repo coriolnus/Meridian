@@ -82,6 +82,20 @@ import sys
 import pandas as pd
 import yaml
 
+# TAVUK-YUMURTA BOOTSTRAP: yolu kuran yardımcının KENDİSİ yolda olmalı. Bu üç satır yalnız BU
+# dizini yola koyar; depo kökünü (ve dolayısıyla `import meridian`in hangi ağaca düşeceğini)
+# `_ortak.yolu_kur` kurar — iki ölçüm betiğinde de AYNI yardımcı (tur-1 §Kaygı 9: `meridian`
+# bu makinede KURULU ve kurulu kopya ANA CHECKOUT'u gösteriyor; kök yolda önce gelmezse bir
+# worktree'den koşan bu betik sessizce BAŞKA bir ağacın motorunu ölçerdi).
+_SANDBOX = pathlib.Path(__file__).resolve().parent
+if str(_SANDBOX) not in sys.path:
+    sys.path.insert(0, str(_SANDBOX))
+
+import _ortak  # noqa: E402  — iki ölçüm betiğinin PAYLAŞTIĞI yardımcılar (tek-kaynak yasası)
+
+#: Çözülen `(depo kökü, ölçüm dizini)` — sonuç künyesindeki `motor_yolu` bunun ÖLÇÜLEN sonucudur.
+YOL = _ortak.yolu_kur(__file__)
+
 KART = "EDG-2026-088"
 PK = 3
 KURULUM = "pullback"          # PK (3)'ün dilimi — kart ve Rol-1 hükmü ile DONUK
@@ -117,9 +131,10 @@ SOZLESME_DOSYALARI = ("goal.yaml", "strategy.yaml", "bounds.yaml")
 PARAMS_DONMUS_ADI = "pk3_selef/params_donmus"
 
 
-class Blok(Exception):
-    """Ölçüm ön şartı tutmadı — koşum BAŞLAMAZ (çıkış 1). Sessiz devam etmek, ölçülmemiş bir
-    tabanı ölçülmüş gibi raporlamak olurdu."""
+#: Ölçüm ön şartı tutmadı — koşum BAŞLAMAZ (çıkış 1). Sınıf `_ortak`ta yaşar ve BURADA yalnız
+#: ADLANDIRILIR: `pk3_selef.Blok`, `pk2_gercek.Blok` ve yardımcıların attığı istisna AYNI NESNE
+#: olmalı, yoksa `except Blok` bir betikte yakalar ötekinde geçirirdi (tek-kaynak yasası).
+Blok = _ortak.Blok
 
 
 # ==================================================================================================
@@ -447,10 +462,9 @@ def kos(kaynak: pathlib.Path, bars_dizin: pathlib.Path, params_yolu: pathlib.Pat
     """
     from meridian import config
 
-    kok = pathlib.Path(__file__).resolve().parents[3]
-    if state_dizin.resolve() == (kok / "state") or (kok / "state") in state_dizin.resolve().parents:
-        raise Blok(f"--state-dizin deponun state/ ağacının altında: {state_dizin} — canlı deftere "
-                   f"yazım yasak, geçici bir dizin ver")
+    # CANLI STATE KAPISI — TEK KAYNAK (`_ortak.state_izni`). Kapı burada satır içindeydi ve
+    # `pk2_gercek` aynı üç satırı ikinci kez taşıyordu; iki kopya sessizce ayrışırdı.
+    state_dizin = _ortak.state_izni(state_dizin, _ortak.depo_koku(__file__))
 
     taban = donmus_parametreler(params_yolu, kunye_p)
     donmus_dizin = params_yolu.resolve().parent
@@ -507,7 +521,8 @@ def kos(kaynak: pathlib.Path, bars_dizin: pathlib.Path, params_yolu: pathlib.Pat
         "kaynak": {"yol": str(kaynak), "sha256": sha256(kaynak),
                    "beklenen_toplam_r_049": BEKLENEN_TOPLAM_R},
         "parametre_kaynagi": {"yol": str(params_yolu),
-                              "yol_goreli": _depo_goreli(params_yolu, kok),
+                              "yol_goreli": _depo_goreli(params_yolu,
+                                                         _ortak.depo_koku(__file__)),
                               "sha256": taban["sha256"],
                               "kunye": taban["kunye_yolu"], "taban": taban["kunye_taban"],
                               "dondurma_utc": taban["kunye_dondurma"], "hucre": taban["hucre"],
