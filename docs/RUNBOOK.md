@@ -1631,6 +1631,26 @@ KULLANIM:
 ./sir_credential_gecis.sh --geri-al <ad>     → ortam satırını geri yaz, drop-in'i kaldır
 ./sir_credential_gecis.sh --faz1-hafiza      → FAZ-1A: motora TENANT credential'ı (54 drop-in)
 ./sir_credential_gecis.sh --geri-al-hafiza   → 54 drop-in'i kaldır (vekil dosya yolunu kullanır)
+./sir_credential_gecis.sh --faz1-apisix      → FAZ-1C: kapı ADMIN anahtarının credential kaynağı
+./sir_credential_gecis.sh --geri-al-apisix   → o kaynağı kaldır (araç `.env-apisix` yedeğine döner)
+
+FAZ-1C NİYE BURADA VE NİYE DROP-IN YOK (TSK-064, spec §3 madde 4). `ops/apisix_uygula.py` kapının
+Admin API anahtarını bugün `/opt/apisix/.env-apisix`ten okuyor; Faz-1C onu 0400 root bir
+CREDENTIAL KAYNAĞINDAN (`/etc/meridian/apisix_admin_key`) okutur. Bu alt komut O KAYNAĞI yaratır
+ve BAŞKA HİÇBİR ŞEY YAPMAZ:
+· `.env-apisix` satırına DOKUNULMAZ. Kardeş fazlarda ortam satırı kapatılacak bir KOPYAdır;
+burada DEĞİL: o satırı kapının KENDİSİ okur (`config.yaml` `${{APISIX_ADMIN_KEY}}` çözümü,
+`--env-file`). Silmek kapıyı açılmaz hâle getirirdi — yani burada "faz-2" YOKTUR ve olmayan
+bir faz bu betikte de yoktur (burada olmayan şey, burada yapılmayacak şeydir).
+· DROP-IN KURULMAZ. Kaynağı okuyan şey bir systemd birimi değil, operatörün ELİYLE koştuğu bir
+ops aracıdır (`sudo python3 ops/apisix_uygula.py …`); `LoadCredential=` kimsenin işine
+yaramaz ve kurulsaydı kaynağı olmayan bir birim HİÇ AÇILMAZDI. apisix'in kendi sarmalayıcı
+ExecStart'ı (spec §3.4'ün öteki yarısı) AYRI bir iştir ve bu betikte YOKTUR.
+· RESTART YOK. Hiçbir birim bu dosyayı okumaz; aracın bir sonraki koşumu kanalı kendisi ölçer
+ve okuduğu KANALI stderr'e bildirir (`apisix_uygula.kanal_bildir`).
+KAYNAK DEĞERİ `.env-apisix`teki MEVCUT değerden taşınır — `^APISIX_ADMIN_KEY=` DESENİYLE, satır
+ADRESİYLE değil (2026-09-07 olayının 1. maddesi; o dosyanın 1. satırı bir YORUMDUR). Rotasyon bu
+betiğin işi değildir: değeri döndürmek `sir_rotasyon.sh --apisix-admin`in işidir.
 
 FAZ-1A NİYE BURADA VE NİYE YALNIZ İKİ ALT KOMUT. Hindsight'ın KENDİ geçişi (üç sır →
 `/etc/hindsight/creds/*`, `hindsight-api.service.d/50-creds.conf` + `hindsight-api-baslat.sh`)
@@ -1728,6 +1748,10 @@ sudo ./sir_rotasyon.sh --tenant       → HINDSIGHT_API_TENANT_API_KEY
 sudo ./sir_rotasyon.sh --db           → Postgres `hindsight` rol parolası
 sudo ./sir_rotasyon.sh --dash         → MERIDIAN_DASH_TOKEN
 sudo ./sir_rotasyon.sh --openrouter   → OpenRouter anahtarları (operatör YAPIŞTIRIR, `read -s`)
+sudo ./sir_rotasyon.sh --apisix-admin → APISIX_ADMIN_KEY (kapı ADMIN API anahtarı; `--kapi`
+DEĞİL: o kapının TÜKETİCİ anahtarıdır, bu kapının
+YÖNETİM anahtarıdır — ayrı sır, ayrı yüzey, ayrı kopya
+kümesi. TSK-064 Faz-1C, spec §3 madde 4.)
 ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 başlayacağını listeler, HİÇBİR ŞEY yazmaz
 sudo ./sir_rotasyon.sh --<alt> --esitle → EŞİTLEME (TSK-181, 2026-09-13): değer ÜRETİLMEZ, SORULMAZ,
