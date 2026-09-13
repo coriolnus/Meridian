@@ -553,15 +553,15 @@ if __name__ == "__main__":
     r = main()
     # BİRLEŞİK KAPI (EDG-070 eki): yerel arşiv (eksen B) + Alpaca sondası (eksen E) — kartın kaynak sırası
     # "yerel → Alpaca → yoksa düşer" iki basamağın BİRLEŞİMİYLE okunur. Sonda çağrılmadıysa birleşik = yerel.
-    _e = rapor.get("E_alpaca_sondasi") or {}
+    _e = r.get("E_alpaca_sondasi") or {}
     _e_n = _e.get("bar_donen_n")
     if isinstance(_e_n, int):
-        _yerel_yil = rapor["B_cikmis_isimler_ekseni"]["bar_gecmisi_yil_uyelik_ici"]["ort"]
-        _n_yerel = rapor["kapi_sayilari"]["B_kapsanan_isim_n"]
+        _yerel_yil = r["B_cikmis_isimler_ekseni"]["bar_gecmisi_yil_uyelik_ici"]["ort"]
+        _n_yerel = r["kapi_sayilari"]["B_kapsanan_isim_n"]
         _e_ort = (_e.get("bar_gecmisi_yil") or {}).get("ort")
         _birlesik_n = _n_yerel + _e_n
         _birlesik_ort = (((_yerel_yil or 0) * _n_yerel + (_e_ort or 0) * _e_n) / _birlesik_n) if _birlesik_n else None
-        rapor["kapi_sayilari"]["birlesik"] = {
+        r["kapi_sayilari"]["birlesik"] = {
             "kaynaklar": ["yerel bar arşivi (üyelik-içi yıl)", "Alpaca IEX tarihsel sondası (2016 tabanı, alt sınır)"],
             "kapsanan_isim_n": _birlesik_n,
             "ort_bar_yil": _birlesik_ort,
@@ -572,7 +572,7 @@ if __name__ == "__main__":
             "not": "yıl ortalaması iki kaynağın ağırlıklı ortalamasıdır; Alpaca yılı ALT SINIRDIR (2016 tabanı). Hüküm Rol-1'in (karta yazılır).",
         }
     else:
-        rapor["kapi_sayilari"]["birlesik"] = {"kapsanan_isim_n": None,
+        r["kapi_sayilari"]["birlesik"] = {"kapsanan_isim_n": None,
                                              "neden": "Alpaca sondası çağrılmadı ya da ölçülemedi — birleşik kapı yalnız yerel arşivle okunur (yukarıdaki alanlar)"}
     out = ARGV.cikti or (SANDBOX / "kapsama_haritasi.json")
     with open(out, "w") as f:
