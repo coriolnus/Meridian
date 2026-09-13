@@ -309,8 +309,31 @@ export interface SeansIciBlogu {
   readonly akis_boslugu?: Record<string, unknown> | null;
 }
 
+/** E2 defterinin "seyrelme (ayna)" kovası — `analytics._seyrelme_kovasi`, `/api/diagnostics`
+ *  gövdesinde `icra.slipaj.seyrelme`.
+ *
+ *  NE SAYAR: gönderim kapısına HİÇ ulaşmamış, yani doluma DÖNÜŞMEMİŞ planlar
+ *  (`loop._ayna_seyrelme_yaz` yazar). Kova dolum/ret oranlarının ve iç motorun kill paydasının
+ *  DIŞINDADIR — bu ekranda da ayrı bir satır olarak durur, sayaçlarla TOPLANMAZ.
+ *
+ *  `n === null` "ölçülmedi" (defter boş), `n === 0` "ölçüldü, dönüşmeyen plan yok". İkisi AYRI
+ *  çizilir; `undefined` ise alan gövdede hiç yok demektir (üçüncü hâl). */
+export interface SeyrelmeKovasi {
+  readonly n?: number | null;
+  /** DONUK sözlük: `not_armed` · `armed_not_submitted` · `olculemedi`. Defter boşken `null`. */
+  readonly sinif_dagilimi?: Readonly<Record<string, number>> | null;
+  readonly karar_dagilimi?: Readonly<Record<string, number>> | null;
+  /** Sözlük DIŞI sınıf taşıyan satır sayısı — sessizce katlanmaz, ADIYLA durur. */
+  readonly sinif_disi_n?: number | null;
+  readonly son_ts?: string | null;
+  readonly pencere_gun?: number | null;
+  readonly durum?: string;
+}
+
 export interface TeshisGovdesi {
   readonly onbellekten?: boolean;
   readonly hesaplama_ts?: string;
   readonly intraday?: SeansIciBlogu;
+  /** Yalnız okuduğumuz dal: E2 özetinin seyrelme kovası. */
+  readonly icra?: { readonly slipaj?: { readonly seyrelme?: SeyrelmeKovasi } };
 }

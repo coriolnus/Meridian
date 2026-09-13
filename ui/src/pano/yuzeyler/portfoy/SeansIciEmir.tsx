@@ -39,7 +39,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 
 import { adet as adetBicim, Olculemedi, para, sayi } from "./olcum";
-import type { AlpacaHesabi, BrokerEmri, KorumaHukmu, SeansIciBlogu } from "./tipler";
+import type { AlpacaHesabi, BrokerEmri, KorumaHukmu, SeansIciBlogu, SeyrelmeKovasi } from "./tipler";
 
 /* KORUMA HÜKMÜNÜN ÜÇ DİZGESİ — `alpaca.KORUMA_VAR/KORUMA_YOK/KORUMA_OLCULEMEDI` ile
    BİREBİR aynı olmak ZORUNDA. Dizge kayarsa üç dal da sessizce düşer ve ekran her
@@ -165,13 +165,71 @@ function KirpmaSayisi({ v, alan }: { v: number | undefined; alan: string }) {
   return <span className="tabular-nums">{v}</span>;
 }
 
+/** SEYRELME (AYNA) — TEK SATIR, SAYAÇLARLA TOPLANMAZ.
+ *
+ *  NEDEN BU KARTTA: kovanın iki sınıfı (`not_armed` = silahlı kümeye hiç girmedi,
+ *  `armed_not_submitted` = silahlıydı, gönderim kapısına hiç girmedi) tam olarak bu kartın
+ *  sorusunun öteki yüzüdür — "EOD işleme hazır plan" sayacı KAÇ planın hazır olduğunu söyler,
+ *  bu satır kaç planın oraya HİÇ ULAŞMADIĞINI.
+ *
+ *  NEDEN AYRI SATIR, SAYAÇ DEĞİL: kova `/api/diagnostics.icra.slipaj` özetinde dolum/ret
+ *  oranlarının ve kill paydasının DIŞINDADIR (`analytics._seyrelme_kovasi`). Sayaç ızgarasına
+ *  koymak onu kardeşleriyle toplanabilir gibi gösterirdi; toplanamaz.
+ *
+ *  ÜÇ HÂL AYRI ÇİZİLİR: alan gövdede YOK (kablo/şema) · `n === null` ölçülmedi (defter boş) ·
+ *  sayı ölçüldü (0 dâhil — "baktık, dönüşmeyen plan yok"). İkincisini 0 diye basmak, ölçülmemiş
+ *  bir pencereyi "seyrelme yok" diye okutmak olurdu. */
+function SeyrelmeSatiri({ s }: { s: SeyrelmeKovasi | undefined }) {
+  if (s === undefined || s.n === undefined) {
+    return (
+      <p className="text-muted-foreground text-xs">
+        Seyrelme (ayna):{" "}
+        <Olculemedi
+          kisaMetin="—"
+          neden="Kapı öncesi seyrelme bildirilmedi"
+          teknik="`/api/diagnostics.icra.slipaj.seyrelme` gövdede yok"
+        />
+      </p>
+    );
+  }
+  if (s.n === null) {
+    return (
+      <p className="text-muted-foreground text-xs">
+        Seyrelme (ayna):{" "}
+        <Olculemedi
+          kisaMetin="—"
+          neden={s.durum ?? "E2 defteri boş — seyrelme ÖLÇÜLMEDİ (0 değil)"}
+          teknik="`seyrelme.n` null — defter boşken 0 basmak 'hiçbir plan seyrelmedi' demek olurdu"
+        />
+      </p>
+    );
+  }
+  const d = s.sinif_dagilimi ?? {};
+  const disi = s.sinif_disi_n ?? 0;
+  return (
+    <p className="text-muted-foreground text-xs" title={s.durum}>
+      Seyrelme (ayna): <span className="tabular-nums font-medium text-foreground">{s.n}</span>
+      {" · not_armed "}
+      <span className="tabular-nums">{d.not_armed ?? 0}</span>
+      {" · armed_not_submitted "}
+      <span className="tabular-nums">{d.armed_not_submitted ?? 0}</span>
+      {d.olculemedi ? <> {"· ölçülemedi "}<span className="tabular-nums">{d.olculemedi}</span></> : null}
+      {disi > 0 ? <> {"· sözlük dışı "}<span className="tabular-nums">{disi}</span></> : null}
+      {typeof s.pencere_gun === "number" ? <span className="ml-1">({s.pencere_gun} günlük pencere)</span> : null}
+    </p>
+  );
+}
+
 export function SeansIciEmir({
   intraday,
+  seyrelme,
   emirler,
   emirNedeni,
   hesap,
 }: {
   intraday: SeansIciBlogu | undefined;
+  /** `/api/diagnostics.icra.slipaj.seyrelme` — kapı öncesi dönüşmeme sayımı (E2 defteri). */
+  seyrelme?: SeyrelmeKovasi;
   /** `/api/alpaca.account.open_orders` — hesap bloğu null ise `null` (ayna yok). */
   emirler: readonly BrokerEmri[] | null;
   emirNedeni: string;
@@ -276,6 +334,10 @@ export function SeansIciEmir({
               </p>
             </>
           )}
+          {/* KOŞULUN DIŞINDA (bilerek): seyrelme `intraday` bloğundan DEĞİL `icra.slipaj`tan
+              gelir. İçeri alsaydık `intraday` yokken sayı ölçülmüş olsa bile ekrana HİÇ
+              gelmezdi — bir bloğun arızası ötekinin ölçümünü sessizce yutardı. */}
+          <SeyrelmeSatiri s={seyrelme} />
         </CardContent>
       </Card>
 

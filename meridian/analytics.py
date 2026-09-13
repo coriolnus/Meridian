@@ -4476,6 +4476,10 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
     (`motor="kapi"`, yazan `loop._armed_drop_row`). O satırlar hiç icra edilmemiş — kapıda düşmüş —
     silahlı planlardır; oran/eşik üretmezler ve kill paydasının DIŞINDADIR (bkz. bölüm 4).
 
+    BEŞİNCİ KOVA da aynı sınıftandır: `seyrelme` (`motor="ayna_seyrelme"`, yazan
+    `loop._ayna_seyrelme_yaz`) — kapıya HİÇ ulaşmamış, yani dönüşmemiş planların sayımı. O satırlar
+    da hiçbir oranın payını ya da PAYDASINI kaydırmaz; bkz. bölüm 6 ve `_seyrelme_kovasi`.
+
     `n=0` bir kusur DEĞİL bir DURUMDUR ve öyle yazılır: defter bugün doğdu, ilk satırlar ilk
     `alpaca_paper` döngüsünde düşer. Boş defterden ortalama üretmek (0.0 bps) "slipaj yok" demek
     olurdu."""
@@ -4588,7 +4592,65 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
                 "ÖLÇÜM olarak durur. `ayna_fill=None` + `ic=fill` satırları ayna dolumunun henüz "
                 "uzlaştırılmadığı (aynı gün) hâli de olabilir — pencere ilerledikçe kapanır."),
     }
+    # --- 6) SEYRELME (AYNA): KAPI ÖNCESİ DÖNÜŞMEME — AYRI KOVA, PAYDA KORUNUR -----------------
+    out["seyrelme"] = _seyrelme_kovasi(rows, days, bool(tum))
     return out
+
+
+def _seyrelme_kovasi(rows: list, days: int | None, defter_dolu: bool) -> dict:
+    """AYNA-SATIRLARININ KENDİ SAYIMI — hiçbir oranın payında ya da PAYDASINDA DEĞİL.
+
+    KOVANIN TANIMI YAZARIN ALANLARINDAN ÖLÇÜLDÜ (uydurma yasağı), tarif edilmedi:
+      `motor` = `loop.AYNA_SEYRELME_MOTOR` ("ayna_seyrelme") → kovaya ÜYELİĞİ bu alan belirler.
+                `ayna` kovası TAM EŞİTLİKLE süzer, yani bu satırlar oraya HİÇ girmez; `startswith`
+                yazmak dolum/ret paydasını sessizce şişirir ve kill eşiğini kaydırırdı.
+      `karar`  = `loop.AYNA_SEYRELME_KARAR` ("donusmedi") → bir İCRA hükmü değil DÖNÜŞÜM hükmü;
+                 `karar_dagilimi` bu alanı sayar ve tek değer taşıması BEKLENİR.
+      `red_sinifi` ∈ `loop.AYNA_SEYRELME_SINIFLARI` → kırılımı ÜRETEN alan budur.
+      `red_nedeni` SERBEST METİNdir ve SAYILMAZ: her satırda tekil olduğu için ondan kova üretmek
+                 n=1'lik sahte bir dağılım basardı (alt-neden kırılımı ayrı kartın işi).
+
+    TEK KAYNAK: sözlük `loop`tan İTHAL edilir, kopyalanmaz — ikinci bir nüsha sessizce ayrışır ve
+    bir gün var olmayan bir sınıfı sayardı. Aynı defterin ikinci okuyucusu `selfreview` haftalık
+    dönüşüm satırıdır; iki okuyucunun AYNI satırları AYNI sayması davranışsal çiviyle bağlıdır
+    (`tests/test_e2_seyrelme_kovasi_v477.py`).
+
+    SIFIR İLE "BİLMİYORUM" AYRI: defter BOŞsa alanlar `None` + neden — 0 basmak "hiçbir plan
+    seyrelmedi" demek olurdu. Defter DOLU ama pencerede ayna-satırı yoksa 0 DÜRÜSTTÜR: baktık ve
+    bulamadık. (Aynı ayrımın kardeşi `selfreview._donusum_ozeti`te yazılı.)"""
+    from . import loop as _loop          # gecikmeli ithal: loop da analytics'i dalında ithal eder
+    if not defter_dolu:
+        return {
+            "n": None, "sinif_dagilimi": None, "karar_dagilimi": None, "sinif_disi_n": None,
+            "son_ts": None, "pencere_gun": days,
+            "durum": ("E2 defteri BOŞ — kapı-öncesi seyrelme ÖLÇÜLMEDİ (0 DEĞİL: sıfır 'hiçbir "
+                      "plan seyrelmedi' der, ölçülmemiş defter hiçbir şey demez)"),
+            "not": _SEYRELME_NOT,
+        }
+    satirlar = [r for r in rows if r.get("motor") == _loop.AYNA_SEYRELME_MOTOR]
+    dagilim = {s: 0 for s in _loop.AYNA_SEYRELME_SINIFLARI}   # DONUK sözlük: üçü de yazılır
+    disi = 0
+    for r in satirlar:
+        s = str(r.get("red_sinifi") or "")
+        if s in dagilim:
+            dagilim[s] += 1
+        else:
+            disi += 1        # sözlük DIŞI değer sessizce katlanmaz, ADIYLA sayılır
+    damgalar = [str(r["ts"]) for r in satirlar if r.get("ts")]
+    return {
+        "n": len(satirlar), "sinif_dagilimi": dagilim, "karar_dagilimi": _sayac(satirlar, "karar"),
+        "sinif_disi_n": disi, "son_ts": (max(damgalar) if damgalar else None),
+        "pencere_gun": days,
+        "durum": (f"ölçüldü — pencerede {len(satirlar)} ayna-satırı "
+                  f"({'dönüşmeyen plan var' if satirlar else 'bakıldı, dönüşmeyen plan yok'})"),
+        "not": _SEYRELME_NOT,
+    }
+
+
+_SEYRELME_NOT = (
+    "Bu satırlar bir İCRA KARARI DEĞİLDİR: plan gönderim kapısına HİÇ ulaşmadı. `ayna`/`ic`/`kapi` "
+    "kovalarının ve dolum/ret oranlarının DIŞINDADIR — paydayı büyütmek kill eşiğini kod "
+    "değişikliğiyle sessizce kaydırırdı (kill-list dokunulmazdır; kart EXE-2026-011 · EXE-2026-001).")
 
 
 def _sayac(rows: list, alan: str) -> dict:
