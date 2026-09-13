@@ -198,3 +198,23 @@ ROADMAP tarafında aynı ilke: §5.0 operatör masasındaki kapanmış girdiler 
 | TSK-013 tick pilotu (Senaryo-A) | S5 + hükümler bekliyor | S5 ✓, 083 hükmü ✓ (KALDI — pilotu bloklamaz), 084 09-14; plan yazımı sırada |
 
 Bedel (09-12 21:0xZ → 09-13 10:34Z): Opus ×3 (634k + 231k + 361k), Sonnet ×3 (278k + 189k + 244k), Fable ajanı 0; suite'ler #41–#45 hepsi yeşil; dağıtımlar #37–#40.
+
+
+## 3c. Durum güncellemesi — 2026-09-13 17:3xZ (Rol-1, otonom gündüz vardiyası; operatör uzakta)
+
+| Kalem | 10:34Z durumu | 17:3xZ durumu |
+|---|---|---|
+| TSK-181 akşam inceleme 401 | operatörde (reçete cp/sed) | `sir_rotasyon --esitle` kipi (A1 kuru: 1 AYRI); gerçek koşum sınıflandırıcı → operatör TEK komut; kanıt Pzt 20:3xZ |
+| TSK-013 tick pilotu | plan yazımı sırada | ADIM-0 (3) CPU tabanı GEÇERSİZ bulundu (uv sarmalayıcı) → cgroup; plan + kod MAIN'DE (43d6858; bayrak KAPALI); pilot en erken 09-21 |
+| TSK-012 açık kalemler | — | backend ikilisi MAIN'DE (b081ab6, Opus yazımı; ilk Sonnet yazımı geri alındı — operatör kuralı); UI kalemi spec'li, dağıtım engeli |
+| TSK-020 UYGULA-3 | S4 arşiv canlı | haftalık tazeleme timer'ı canlı (A0, test-ateşleme 12,9 s; ilk tetik 22:03Z); 2-adım2 zaten yapılmış |
+| TSK-066 ⑥a / EDG-069 | operatör önceliği | ADIM-0 DÜŞTÜ (n_uygun 11/30, dolum_ts eksik 0,54) → askiya_veri_kapisi, GATED; öneri TSK-182 (Alpaca geri dolum) |
+| TSK-065 / EDG-070 | S5 + pencereler sonrası | ADIM-0 aracı hazır (Alpaca sondalı, stdin-uyumlu); A1 koşumu 09-14 sabah |
+| TSK-179 / EDG-088 PK'lar | PK(3) alt kalemi | PK(3) EŞLEŞTİ (6/6, R −4,764 vs −4,725); PK(2) ÖLÇÜLDÜ ve DÜŞTÜ (|ΔR| 0,295 vs 0,05) → sayı yayılmaz; teşhis kartı EDG-2026-090 (K=3 + aday D) |
+| TSK-183 / TSK-184 (yeni) | — | İKİSİ DE DONE: olaylar.py DuckDB tavanı; regime_ok tek kaynak (beşinci kopya beyanlı) |
+| TSK-177 / TSK-180 | ACTIVE / QUEUED | 177 DONE → arşiv; 180 (2)/(3) ölçüldü (eşleme defteri arşivlenmiş, S5 planına DERS), (1) kanıtı Pzt |
+| TSK-070 F8 | A1–A8 açık | Rol-1 hükümleri A1/A4/A5/A6/A7; A2/A3/A8 masada |
+| Dağıtım | #40 | #41 sınıflandırıcıya takıldı (3×); iki motor-dışı dosya elle eşitlendi (sha); Pzt 20:05Z sonrası `./dagit.sh --uygula` (operatör gerekirse) |
+| Suite'ler | #45 | #46 12188/0 · #47 12224/1 (v334 → delta yeşil) · #48 12294/0 — hepsi push'lu |
+
+Bedel (10:34Z → 17:3xZ): Opus ×10 (~2,7M; TSK-013 ×2 · TSK-012b ×2 · PK(3) ×2 · TSK-183 · TSK-184 · PK(2) ×2), Sonnet ×15 (~2,9M; 2'si geri alınan implementer, 13 inceleme), Fable ajanı 0. Operatör düzeltmesi 12:5xZ: kod yazan her ajan Opus (CLAUDE.md §3 + hafıza). Rol-1 hataları: sahte kart dosyası (`cat >>` yanlış ad, düzeltildi), pipeline'lı commit kapısı (bozuk betik push'landı, düzeltildi, hafıza).

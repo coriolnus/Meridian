@@ -246,3 +246,8 @@ K=2 birincildir (`EDG-088-toplam-R-CI`, `EDG-088-kazanma-orani`); kurulum kırı
 
 ### Rol-1 düzeltme notu (2026-09-08 19:00Z)
 Plan metnindeki `edg087` yolu, `45` gün ve `v457` sayım çivisi bayattı (Task 1/2/3 raporlarının üç kez işaretlediği kalem); kart EDG-2026-088 ile eşitlendi: yol `edg088_golge_pilot`, pencere 120 gün, sayım çivisi v461. PK (3) hükmü kartın `notlar` alanında (şasi koşumu TSK-179 alt kalemi).
+
+## PK durumu (2026-09-13, Rol-1)
+- PK (1) sentetik: B1 çivili (v44x). **PK (3) selef: EŞLEŞTİ** — `research/olcumler/edg088_golge_pilot/pk3_selef.py` (donmuş edg032c parametreleri git-izli `pk3_selef/params_donmus/`), 6/6 kayıp, R −4,764 vs −4,725; kart `pk3_hukmu_2026_09_13`.
+- **PK (2) gerçek ayağı: ÖLÇÜLDÜ ve DÜŞTÜ** — `pk2_gercek.py` (donmuş A1 girdisi `pk2_gercek/girdi/`, canlı v5 parametreleri), son 10 işlem: ort |ΔR| 0,295 / 0,479 vs 0,05; PANW gölgede girmedi, VRTX 1,27 (gerçek risk mesafesi plan.stop'un 2,2× altında), CF/NOW giriş-tutma ayrışması. Kill#5: pencereden SAYI YAYILMAZ; teşhis kartı **EDG-2026-090** (ablasyon A/B/C + aday D). Gölge motoru güncellemesi ancak 090 hükmüyle.
+- Ortak yardımcı `_ortak.py` (Blok/state_izni/yolu_kur) iki betikte tek kaynak; worktree PYTHONPATH tuzağı kapalı.
