@@ -25,6 +25,28 @@ KIRMIZI'dır; her düşüşlü tur bedel özeti basar (kaç gün düştü / 2. d
 Kalıcı-geçici arıza sınıfı ayrımı YALNIZ mesajdadır: sınıf rc'den ölçülemez, karar ona
 bağlanmaz. Kilit/tavan/pencere/defter mantığı DEĞİŞMEDİ.
 
+İLERİ dolum (TSK-188, 2026-09-14): arşiv 2026-09-03'te durdu — İKİ kök neden, ikisi de
+ölçüldü (A1 journal + defter sayımı, 2026-09-13):
+  (1) TAZE-BOŞ GÜN O KOŞUMDA BİR DAHA DENENMİYORDU. Atlanan günler bir SET idi. Tek koşum
+      (PID 306299) 09-05→09-10 günlerce sürdü; her yeni iş günü 00:0xZ'de bir kez denendi,
+      IEX pcap ~09:20Z'de yayımlandığı için "boş döndü" cevabı geldi ve gün sete girdi —
+      yayımlandıktan sonra AÇILMADI. Kalıcı kayıt da yok (gecilen.jsonl'de değil): gün ne
+      işlendi ne atlandı, kayboldu. Artık atlanan gün SAATİYLE tutulur ve TAZE_YENIDEN_SN
+      dolunca AYNI koşumda yeniden denenir. Kalıcı defter dalı (yaş > TAZE_GUN → hist-boş)
+      DEĞİŞMEDİ.
+  (2) 120 GB TAVANI İLERİ GÜNLERİ DE KESİYORDU. Tavan kontrolü gün seçiminden önceydi, koşum
+      gün SEÇMEDEN çıkıyordu; operatörün 09-12 kararı ("geri dolum dursun") böylece T-1
+      dolumunu da durdurdu ve canlı tick arşivi 10 gün büyümedi. Artık tavan yalnız GERİ
+      günleri keser; ileri günler yalnız DISK_PAYI_BAYT kapısına tabidir. TAVAN_BAYT ve
+      TAZE_GUN DEĞİŞMEDİ — eşik kararı ayrı kalemdir (operatör 2026-09-12).
+  İLERİ/GERİ SINIRI SABİTTİR, ÖLÇÜM DEĞİL (Rol-1 kararı 2026-09-14, tur 2): ILERI_PENCERE_BASI.
+  İlk sürüm sınırı "defterin en büyük günü" diye ÖLÇÜYORDU ve boşluğu KAPATMIYORDU: T-1
+  işlendiği an defterin tepesi oraya taşınıyor, arada kalan 09-04..T-2 "geri" sayılıp tavanla
+  kesiliyordu — koşum ne kadar sürerse sürsün boşluğun yalnız en yeni ISCI günü doluyordu.
+  Sabit sınırla 09-04..T-1 arasındaki TÜM eksik iş günleri, KESİNTİLİ koşumlarda da (defterde
+  yalnız 09-11 varken 09-04..09-10 hâlâ ileridir), ISCI=2'şer dolar; 09-03 ve öncesi geri
+  dolumdur ve tavan onları keser.
+
 Hüküm/okuyucu (Yasa 6): stdout → journald (birim düşerse /api/infra 'arizali' sınıflar —
 failed'in okuyucusu var); kalıcı defter /opt/veri/tick/manifest.jsonl (pilot yazar) +
 gecilen.jsonl (tatil/veri-yok günleri, bu sürücü yazar).
@@ -37,6 +59,7 @@ import json
 import pathlib
 import subprocess
 import sys
+import time
 
 KOK = pathlib.Path("/opt/veri")
 PY = KOK / "pilot-venv" / "bin" / "python"
@@ -51,6 +74,26 @@ ISCI = 2
 # DISK_PAYI) AYNEN — kesintisizlik kaynak çitlerini gevşetmez.
 SEANS_KILIDI = False
 TAZE_GUN = 5                        # bundan yeni boş HIST cevabı "henüz yayımlanmadı" sayılır
+# TSK-188 kök neden 1: taze-boş gün bu kadar bekledikten sonra AYNI koşumda yeniden denenir.
+# 6 saat, ölçülmüş yayım gecikmesinden gelir: koşum turu 00:0xZ'de boş cevap alıyordu, pcap
+# ~09:20Z'de yayımlanıyor (manifest ts örneği 2026-09-04T09:23Z) — 6 saatlik bekleme aynı iş
+# gününde en az bir kez yayım SONRASINA denk gelir, ve HIST'i gereksiz dövmez.
+TAZE_YENIDEN_SN = 6 * 3600
+# TSK-188 tur 2 — İLERİ (canlı) pencerenin SABİT başı; TEK KAYNAK, defterden ÖLÇÜLMEZ.
+# Operatörün 2026-09-12 "geri dolum dursun" kararı 120 GB tavanındaki GERİ pencereyi kapsar;
+# 09-04 (son arşiv günü 2026-09-03 + 1) ve sonrası CANLI penceredir ve tavandan bağımsız
+# (yalnız DISK_PAYI_BAYT kapısına tabi) doldurulur. Bir OPERATÖR SINIRIDIR, bir ayar değil:
+# ileri kaydırmak 09-04..sınır arasını sessizce tavana geri verir (çivi: v483).
+ILERI_PENCERE_BASI = dt.date(2026, 9, 4)
+
+
+def _simdi_sn() -> float:
+    """Bekleme ölçümünün TEK saat kaynağı (testler bunu sahteler).
+
+    monotonic, duvar saati DEĞİL: koşum günlerce sürer ve bir NTP adımı duvar saatini geri
+    alsa bekleyen gün ya erken dirilir ya da süresi hiç dolmaz. Takvim kararları (yaş,
+    TAZE_GUN) duvar saatinde kalır — onlar TARİH sorar, SÜRE değil."""
+    return time.monotonic()
 
 
 def _isci_baslat(g: str) -> subprocess.Popen:
@@ -74,11 +117,15 @@ def _ariza_sinifi(cikti: str) -> str:
     return "sınıf bilinmiyor (kalıcı olabilir)"
 
 
-def _sonuc_isle(g: str, p: subprocess.Popen, bugun: dt.date, atlanan: set[str]) -> tuple[str, str]:
+def _sonuc_isle(g: str, p: subprocess.Popen, bugun: dt.date, atlanan: dict[str, float],
+                simdi: float) -> tuple[str, str]:
     """Bir işçinin bitişini işler: 'tamam' | 'gecildi' | 'taze' | 'cokme' + ham çıktı.
 
     manifest.jsonl'i pilot yazar; gecilen.jsonl yazımı burada ve TSK-087'de DEĞİŞMEDİ —
-    HIST boş-gün dalı çökme SAYILMAZ, dolayısıyla yeniden denenmez."""
+    HIST boş-gün dalı çökme SAYILMAZ, dolayısıyla ANINDA yeniden denenmez.
+
+    TSK-188: `atlanan` artık set değil `{gün: saat}` — atlanış anı TURUN başındaki `simdi`dir
+    (işçinin bitiş anı değil): bekleme, günün en son DENENDİĞİ andan ölçülür."""
     cikti, _ = p.communicate()
     son = cikti.strip().splitlines()[-3:] if cikti.strip() else ["<çıktı yok>"]
     if p.returncode == 0:
@@ -93,8 +140,9 @@ def _sonuc_isle(g: str, p: subprocess.Popen, bugun: dt.date, atlanan: set[str]) 
                     "gun": g, "neden": "hist-bos (tatil/yarım gün)"}) + "\n")
             print(f"geçildi: {g} — HIST boş, yaş {yas} gün (tatil sayıldı)", flush=True)
             return "gecildi", cikti
-        atlanan.add(g)   # bu koşumda atla, kalıcı kayıt YOK — sonraki koşum yine dener
-        print(f"taze-boş: {g} — henüz yayımlanmamış olabilir, kalıcı kayıt yok", flush=True)
+        atlanan[g] = simdi   # kalıcı kayıt YOK; TAZE_YENIDEN_SN dolunca bu koşum yine dener
+        print(f"taze-boş: {g} — henüz yayımlanmamış olabilir, kalıcı kayıt yok; "
+              f"{TAZE_YENIDEN_SN // 3600} saat sonra bu koşumda yeniden denenecek", flush=True)
         return "taze", cikti
     return "cokme", cikti
 
@@ -155,6 +203,26 @@ def islenmis() -> set[str]:
     return done
 
 
+def taze_bekleyen(atlanan: dict[str, float], simdi: float) -> set[str]:
+    """Hâlâ bekleme süresindeki taze-boş günler — `done` kümesine bunlar eklenir.
+
+    Süresi DOLAN gün kümeden düşer ve gün seçimine geri girer (TSK-188 kök neden 1). Filtreyi
+    burada tutmanın sebebi tek-kaynak: `sonraki_gunler` bir günü yalnız `done` kümesi üzerinden
+    dışlar — iki ayrı dışlama yolu olsaydı biri sessizce ötekinden ayrışırdı."""
+    return {g for g, ts in atlanan.items() if simdi - ts < TAZE_YENIDEN_SN}
+
+
+def ileri_gun(g: str) -> bool:
+    """`g` CANLI (ileri) pencerede mi — yani ILERI_PENCERE_BASI ve sonrası mı.
+
+    Tanım DEFTERE BAKMAZ: sınır sabittir (tek-kaynak yasası — sabit ile ölçüm yan yana
+    dursaydı biri sessizce ötekinden ayrışırdı). Karşılaştırma ISO-8601 dizgesi üzerinde
+    yapılır; o sıralama kronolojiktir. Sınır KAPSAYICIDIR: pencere başının kendisi ileri
+    gündür, bir önceki iş günü (son arşiv günü) değil. Kesinti dayanıklılığı bundan gelir —
+    defter yalnız 09-11'i taşısa bile 09-04..09-10 ileri kalır ve tavan onu kesmez."""
+    return g >= ILERI_PENCERE_BASI.isoformat()
+
+
 def sonraki_gunler(n: int, done: set[str]) -> list[str]:
     out: list[str] = []
     g = dt.date.today() - dt.timedelta(days=1)
@@ -177,25 +245,38 @@ def main() -> int:
         print(f"KIRMIZI: {PILOT} ya da {KAPSAM} yok — kurulum eksik", flush=True)
         return 1
 
-    atlanan: set[str] = set()   # taze-boş günler — bu KOŞUM içinde tekrar denenmez
+    # taze-boş günler → son atlanış saati; TAZE_YENIDEN_SN dolunca bu koşumda yeniden denenir
+    atlanan: dict[str, float] = {}
     while True:
         bugun = dt.date.today()   # koşum günlerce sürebilir — her turda tazelenir
+        simdi = _simdi_sn()
         if SEANS_KILIDI and rth_yakin():
             print("seans penceresi (ya da <35 dk kala) — tur açılmadı, çıkılıyor")
             return 0
+
+        # TSK-188 kök neden 2: gün SEÇİMİ tavan kapısından ÖNCE gelir — "hangi günler ileri"
+        # sorusu ancak seçimden sonra sorulabilir. Kapı sırası (tavan → disk → boş-pencere)
+        # ve geri dalın mesajı DEĞİŞMEDİ; değişen, tavanın artık ileri günleri kesmemesi.
+        kalici = islenmis()                       # manifest + gecilen: defterin kendisi
+        done = kalici | taze_bekleyen(atlanan, simdi)
+        gunler = sonraki_gunler(ISCI, done)
+        ileri = [g for g in gunler if ileri_gun(g)]
+
         kullanilan = tick_bayt()
         if kullanilan >= TAVAN_BAYT:
             (KOK / "tick" / "TAVAN-DOLDU").write_text(
                 f"{dt.datetime.now(dt.timezone.utc).isoformat()} kullanılan={kullanilan}\n")
-            print(f"TAVAN: {kullanilan / 1e9:.1f} GB >= 120 GB — çıkılıyor (karar operatörün)")
-            return 0
+            if not ileri:
+                print(f"TAVAN: {kullanilan / 1e9:.1f} GB >= 120 GB — çıkılıyor (karar operatörün)")
+                return 0
+            print(f"TAVAN aşıldı: yalnız ileri günler dolduruluyor ({', '.join(ileri)}) — "
+                  f"{kullanilan / 1e9:.1f} GB, geri dolum durdu (karar operatörün)", flush=True)
+            gunler = ileri
         if bos_bayt() < DISK_PAYI_BAYT:
             print(f"KIRMIZI: disk payı < {DISK_PAYI_BAYT / 1e9:.0f} GB — ham geçiciler sığmaz",
                   flush=True)
             return 1
 
-        done = islenmis() | atlanan
-        gunler = sonraki_gunler(ISCI, done)
         if not gunler:
             print("PENCERE-TAMAM: 2020-01-01'e kadar tüm iş günleri işlendi/geçildi")
             (KOK / "tick" / "PENCERE-TAMAM").write_text(
@@ -211,7 +292,7 @@ def main() -> int:
         dusen: list[tuple[str, str]] = []
         yeniden: list[tuple[str, subprocess.Popen]] = []
         for g, p in surecler:
-            durum, cikti = _sonuc_isle(g, p, bugun, atlanan)
+            durum, cikti = _sonuc_isle(g, p, bugun, atlanan, simdi)
             if durum == "cokme":
                 sinif = _ariza_sinifi(cikti)
                 dusen.append((g, sinif))
@@ -223,7 +304,7 @@ def main() -> int:
         gecildi2: list[str] = []    # retry 'boş döndü'ye denk geldi — geçiş DEĞİL, atlama
         kalan: list[tuple[str, str]] = []
         for g, p in yeniden:
-            durum, cikti = _sonuc_isle(g, p, bugun, atlanan)
+            durum, cikti = _sonuc_isle(g, p, bugun, atlanan, simdi)
             if durum == "cokme":
                 sinif = _ariza_sinifi(cikti)
                 kalan.append((g, sinif))
