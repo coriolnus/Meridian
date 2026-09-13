@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **103** kart.
 
-### Kayıtlı — ölçüm bekliyor (14)
+### Kayıtlı — ölçüm bekliyor (13)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -44,9 +44,6 @@ Toplam **103** kart.
 - **EDG-2026-086** (`registered`) — 
   · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt; B1 backend + B2 UI bu karttan sonra; ölçüm penceresi B2 dağıtımından itibaren
   · kart: `EDG-2026-086-pano-sohbet-kalite.yaml`
-- **EDG-2026-088** (`registered`) — 
-  · HÜKÜM: 2026-09-08 Rol-1 — ön-kayıt; gölge defteri kodu (B1) bu karttan SONRA; pencere dağıtımından itibaren
-  · kart: `EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -54,7 +51,7 @@ Toplam **103** kart.
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
-### Ölçümde (8)
+### Ölçümde (9)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -74,6 +71,9 @@ Toplam **103** kart.
 - **EDG-2026-084** (`measuring`) — 
   · HÜKÜM: 2026-09-07 01:1xZ — beş sayfa kuruldu (00:45–01:10Z), gün-0 sayımı kayıtlı; hüküm 2026-09-14
   · kart: `EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml`
+- **EDG-2026-088** (`measuring`) — 
+  · HÜKÜM: 2026-09-13 Rol-1: pencere B1 dağıtımıyla (#37 dce388c, 2026-09-12T22:08:34Z) AÇIK — `pencere_kaydi_2026_09_12`; önceki: registered (2026-09-08 ön-kayıt; gölge defteri…
+  · kart: `EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml`
 - **EDG-2026-089** (`measuring`) — 
   · HÜKÜM: 2026-09-13 10:3xZ Rol-1 — kurulum canlı (dağıtım #40, timer 21:30Z etkin), PK(2) GERÇEK yeşil, PENCERE AÇIK 2026-09-13T10:23:08Z → hüküm 2026-09-20
   · kart: `EDG-2026-089-hindsight-retain-akisi-yeni-pencere.yaml`
