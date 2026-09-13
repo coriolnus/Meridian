@@ -88,7 +88,8 @@ Kurallar burada tetiklenir. Sol sütundaki şeyi yapmak üzereysen sağ sütunu 
 **Model rolü (KİM):** Fable = mimari, brief, denetim, kök-neden, ops betiği, doküman; uygulama kodu
 yazmaz. Opus = brief kapsamında implementasyon. **KOD YAZAN HER AJAN OPUS'tur** — düzeltme turu ve
 "küçük" backend kalemi dahil; Sonnet yalnız inceleme/rapor/salt-okur ölçüm, Haiku yalnız mekanik katman;
-model tavanları (Opus ≤10 · Sonnet ≤25 · Haiku ≤40) SINIRDIR, rol dağıtımı değil (vaka 2026-09-13). Tur başına tek konsolide brief; brief dosya
+model tavanları (Opus ≤10 · Sonnet ≤25 · Haiku ≤40) EŞ ZAMANLI koşan ajan sayısıdır — günlük
+toplam değil, rol dağıtımı da değil (operatör 2026-09-13). Tur başına tek konsolide brief; brief dosya
 sahipliğini söyler.
 
 **Konum (NEREDE), modelden bağımsız:** Rol-1 (ana checkout, orkestratör, TEK) · Yan oturum · Ajan.
