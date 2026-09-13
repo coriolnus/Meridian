@@ -14,6 +14,9 @@ kuralı silmeden/gevşetmeden önce o kaydı oku. Sayı taşıyan her satır öl
    worktree/ikinci terminal/cloud klonu ise **yan oturum**; subagent isen **ajan**.
 3. Bu turda geçemeyeceğin kapıları listele (§3 matrisi). Örn. "Ajanım: git yok, dağıtım yok,
    tam suite yok, kartsız ölçüm yok, pytest dışı koşum yok."
+4. Rol-1 isen A1'de `~/bin/sayfa_oku.sh meridian-hedef-sapma` (LLM'siz GET) oku; sayfa bir karara
+   girerse o kararın yanına `kaynak: zihin modeli <ad> v<n>` yaz, girmezse yazma (sahte-kullanım yasağı).
+   Kural EDG-2026-089 penceresinin ön şartıdır (operatör (b) melez+retain, 2026-09-13); kaldırılırsa kart KALIR.
 
 **Muafiyet kuralı:** "Bu kural bana uygulanmaz" diye düşünüyorsan, bu düşünce dur-ve-sor nedenidir.
 Ölçülmüş ihlallerin hepsi muafiyet iddiasıyla başladı (vaka 2026-08-26).

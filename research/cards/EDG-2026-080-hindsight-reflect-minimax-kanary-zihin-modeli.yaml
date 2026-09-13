@@ -139,3 +139,5 @@ hukum_k2_2026_09_13: >
   Uydurma sayımı 7. gün (pilot sayfası, R4 kuralları, uydurma_say.py f20ef68): 48/51 (%94,1) — gün-0 %75'ten yukarı (basename kuralı sonrası);
   bu kartın eşiği değil, EDG-083'ün ölçüsü. basari_tanimi sonucu: K2 GEÇMEDİ → TSK-142 'Faz-2 yazma yolu KOVA B' hükmü AÇILMAZ; kart notu ROADMAP'e.
   hafıza: A1 recall koşulmadı (hüküm ölçümden türedi, ayar değişikliği yok); memory: hindsight-islem-bazli-model-ayari (REFLECT zinciri kaydı).
+  KARAR (operatör 2026-09-13 08:55Z, verbatim '(b) melez+retain, devam et'): sökme YOK; sayfalar durur, retain akışı TSK-168 ile kurulur, yeni pencere
+  EDG-2026-089 kartıyla ölçülür (bu kartın eşiği/hükmü DEĞİŞMEZ — halef kart). Öncülleri kapatan iki ön şart 089'da: retain akışı canlı + oturum-başı okuma kuralı.

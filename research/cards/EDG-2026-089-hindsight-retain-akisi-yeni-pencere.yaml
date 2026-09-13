@@ -1,0 +1,72 @@
+# EDG-2026-089 — Hindsight RETAIN AKIŞI (günlük defter özeti) + zihin modeli sayfalarının YENİ 7 günlük penceresi — EDG-083/080-K2'nin halefi
+# ÖN-KAYIT 2026-09-13 06:0xZ (Rol-1; operatör kararı aynı sabah, verbatim: "(b) melez+retain, devam et").
+# NEDEN HALEF: EDG-083 (KALDI, 2026-09-13) ve EDG-080 K2 (KALDI) bir 'girdisiz banka' ölçtü — bankaya son olgu 2026-09-07 04:28Z girdi, 7 gece
+# delta tazeleme haklı olarak 'up-to-date' dedi; gerçek-kullanım haftası da 09-08 kazasıyla kayıptı. Eşikler sonradan DEĞİŞMEZ (CLAUDE.md §5):
+# öncülü kapatan iki ön şartla (retain akışı canlı + oturum-başı okuma kuralı) YENİ kart, eski kartlar KALDI olarak durur.
+# kart_benzer (06:0xZ): EDG-083 KALDI (selef) · EDG-080 K2 KALDI · EDG-077 KALDI (konsolidasyon model kotası) · EDG-074 KALDI (reflect araç
+# döngüsü, nemotron-ultra) · EDG-067 KALDI (recall arama katmanı) — DERS: (i) sayfalar ancak banka BÜYÜRKEN tazelenir; (ii) reflect zinciri
+# tool_calls'ı yapısal üreten modellerle kurulur (bugün ling-3.0-flash ailesi); (iii) recall arama katmanı değildir — arama sqlite-vec (TSK-167).
+
+card_id: EDG-2026-089
+status: registered   # 2026-09-13 Rol-1 — ön-kayıt; kurulum (TSK-168 retain betiği + timer + CLAUDE.md §0 okuma kuralı) bu karttan SONRA; pencere ilk başarılı retain'den itibaren
+family: hindsight_hafiza
+on_kayit: 2026-09-13
+selef: EDG-2026-083
+ref: [TSK-060, TSK-168, TSK-142, EDG-2026-080, EDG-2026-083, EDG-2026-084, EDG-2026-077, EDG-2026-074, EDG-2026-067,
+      "docs/TASARIM-HINDSIGHT-ENTEGRASYON-2026-08-31.md", "research/olcumler/edg083_zihin_modeli_ek_sayfalar/uydurma_say.py (f20ef68 — aynı araç, kopya yok)"]
+
+hipotez: >
+  (i) Harness'in her gün yazdığı ve bankaya RETAIN ettiği defter özeti belgesi (document_id=gün; her sayı defterden, kaynak yoluyla; LLM özet
+  ÜRETMEZ) bankayı her gün büyütür ve (ii) oturum-başı sayfa okuma kuralı (CLAUDE.md §0-4) yürürlükteyken, ilk başarılı retain'den itibaren
+  7 günlük pencerede: (K1) retain kadansı 7/7 gün başarılı ∧ memory_units her gün artar; (K2) pilot sayfa (meridian-tekrarlanan-dersler)
+  OTOMATİK (cron, elle DEĞİL) ≥5/7 gece tazelenir, failed (429-dışı) ≤1/7, effective_mode=delta ≥5/7 (EDG-080 K2 eşikleri AYNEN);
+  (K3) 11 sayfada doğrulanan atıf oranı toplamda ≥%80 ve hiçbir sayfa <%60 (EDG-083 (2) AYNEN) ∧ gerçek-kullanım ≥2 sayfa
+  ('kaynak: zihin modeli <ad> v<n>' atfı günlük/ROADMAP/kart/brief'te; sahte-kullanım yasağı: yalnız karara giren okuma yazılır).
+
+k_registry: {registered_at: "2026-09-13", trial_ids: [EDG-089-retain-kadans, EDG-089-k2-otomatik-tazeleme, EDG-089-sayfa-uydurma-kullanim]}
+# K=3. Üçü de birincil: retain olmadan sayfa sorusu ölçülemez; K2 kolu 080'in yeniden ölçümüdür (yeni pencere = yeni kart); K3 083'ün.
+
+olcum_plani:
+  - "kurulum (TSK-168, kart-sonrası): ops/defter_ozeti_retain.py — girdi: karne (haftalık/günlük sayılar), o gün hüküm alan kartlar (status/hukum_* alanı değişen), dağıtım beyanı (state/dagitim.json), alarm sayımı (events.jsonl gün), EXE-011 dönüşüm satırı (entry_execution.jsonl); çıktı: ≤4.000 karakter Markdown, her satır 'sayı (kaynak yolu)'; sır süzgeci notify.scrub; Hindsight retain (retain_async, document_id=meridian-gunluk-ozet-YYYY-MM-DD, blob-sha alanı); aynı gün iki kez retain YOK (idempotent — bankada document_id sorgusu ya da beyanlı damga)"
+  - "timer: meridian-defter-ozeti-retain.timer günlük 21:30Z (akşam döngüsü + brifingler sonrası), oneshot; kimlik LoadCredential (hindsight tenant anahtarı, mevcut 54-hafiza-credential deseni); kurulduğu gün elle test-ateşlenir (CLAUDE.md §9)"
+  - "K1 sayımı: A1 hindsight DB async_operations (operation_type retain, status) + memory_units günlük count; hedef 7/7 ∧ artış ≥1/gün"
+  - "K2 sayımı: async_operations refresh_mental_model (task_payload mm-0fb27056…) — otomatik (elle tetik olmayan) op sayısı, failed sınıfı, delta_ops_applied; 080 K2 sözleşmesiyle aynı"
+  - "K3 sayımı: 7. gün sayfa anlık görüntüleri (sayfa_oku.sh yolu, JSON) + uydurma_say.py f20ef68 (R1–R4 donuk; bellek id listesi memory_units + mental_models, calisma_dosyalari state listesi) → research/olcumler/edg089_retain_yeni_pencere/; gerçek-kullanım: 'kaynak: zihin modeli' atıf sayımı (grep, günlük/ROADMAP/kartlar/scratch brief'leri)"
+  - "maliyet kolonu (tanı): retain başına LLM çağrı/token (hindsight llm-requests), reflect tazeleme başına çağrı; kota: OpenRouter ücretsiz zincir (ling ailesi), bot kovasından pay ölçülür"
+
+esikler:
+  k1_retain_gun: 7                 # 7/7 gün retain op success ∧ memory_units artış ≥1/gün (dolmayan gün = KALDI; bilgisiz değil, akış arızası)
+  k2_otomatik_refresh_alt: 5       # /7 gece; failed (429-dışı) ≤1; effective_mode=delta ≥5/7 — EDG-080 K2 AYNEN
+  k3_dogrulanan_oran_alt: 0.80     # toplam; sayfa başına ≥0.60 — EDG-083 (2) AYNEN
+  k3_gercek_kullanim_sayfa_alt: 2  # ≥2 farklı sayfa ≥1 atıf — EDG-083 (3) AYNEN
+  n_alt_gun: 7                     # pencere dolmadan hüküm YOK (betimleyici ara-rapor serbest)
+
+kill_list:
+  - "kart-önce: retain betiği bu karttan ÖNCE yazılırsa → geçersiz (kart 2026-09-13 06:0xZ; kod sonra)"
+  - "özet belgeyi LLM üretirse (harness dışı özet) ya da bir sayı defterden değil elle/tahminle yazılırsa → geçersiz (uydurma yasağı)"
+  - "retain belgesi sır/kimlik değeri taşırsa (notify.scrub süzgeci atlanırsa) → geçersiz + akış KAPATILIR (tek istisna yok)"
+  - "elle tazeleme K2 otomatik sayımına girerse → ölçüm geçersiz (080'in hatası tekrarlanmaz: elle tetik ayrı kolon)"
+  - "eşik/pencere/n sonradan değişmez; K1 dolmayan gün pencereyi UZATMAZ (arıza = KALDI, yeni kart)"
+  - "oturum-başı okuma kuralı (CLAUDE.md §0-4) pencere içinde kaldırılırsa/uygulanmazsa K3 kullanım kolu 'ölçülemedi' değil KALDI sayılır (kural kartın ön şartı)"
+  - "pozitif kontrol tutmazsa → hiçbir sayı yayılmaz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: (1) SENTETİK (çivi, kurulumla birlikte) — sahte defter satırlarından bilinen 5 sayı + 1 gizli sır dizisi: üretici belgesinde
+  5 sayı kaynak yoluyla VAR, sır dizisi YOK (scrub), aynı gün ikinci çağrı retain ETMEZ (idempotens). (2) GERÇEK — ilk retain'den sonra
+  A1'de memory_units sayısı artar ∧ retain op status success (sayı bu kartın kurulum kaydına). (3) NEGATİF — 'NK — kripto madenciliği (bankada
+  yok)' sayfası pencere sonunda hâlâ 'bankada yok' hükmünü taşır (retain yeni konu icat etmiyor); PK-PIT çivisi sayfası bilinen cevabı korur.
+
+veri_penceresi: "İlk başarılı retain'den (kurulum günü, en geç 2026-09-21) itibaren 7 gün (hüküm günü retain+7); banka meridian-arsiv; canlı motor DEĞİL; elle tazeleme YASAK (pencere içi tek istisna: kurulum günü PK(2) ateşlemesi, sayıma girmez)"
+
+basari_tanimi: >
+  Üç PK yeşil + K1/K2/K3 sayıyla (model/maliyet kolonuyla) raporlanmış + hüküm Rol-1 aynı turda karta + K defterine. GEÇTİ → TSK-060
+  MELEZ kalıcı; dokuz kapılı kalem (TSK-161/163/164/165/166/169/170 + TSK-142 + TSK-168 kapanış) açılır. KALDI → operatöre sökme kararı
+  yeniden, ama kolon kolon: retain akışı çalışıp sayfalar tazelendiği hâlde kullanım/uydurma düştüyse 'sayfalar' kalır, retain çalışmadıysa
+  'akış' kalır — iki ayrı hüküm cümlesi yazılır (bir kartın iki sorusu birbirine karışmaz).
+
+notlar: >
+  Bedel yasası: günde 1 retain belgesi = Hindsight retain LLM çıkarımı (ücretsiz zincir) + banka büyümesi (~1 belge/gün, ≤4 KB) — kota kolonu
+  ölçülür. Yasa 6 okuyucusu: retain edilen belgeyi sayfalar (reflect delta) okur ve pano Hafıza › Bilgi tabanı listeler; betiğin kendi damgası
+  varsa okuyucusu bu kartın K1 sayımıdır (DECLARED_SINKS gerekçesiyle). EDG-084 (09-14 hükmü) bu kartın penceresinde AYRICA ölçülmez —
+  084'ün beş sayfası 11 sayfalık K3 kümesinin içindedir. hafıza: kart_benzer 5 KALDI akrabası selef/ref'te; memory hindsight-aktif-kullanim
+  (operatör 09-06 direktifi) + hindsight-islem-bazli-model-ayari (reflect zinciri) okundu.

@@ -146,3 +146,5 @@ hukum_2026_09_13: >
   basari_tanimi sonucu 'kaldıysa sayfalar kapatılır' + TSK-060 'KALDI ise tamamen sökülür' — İKİSİ DE OPERATÖR KARARINA bırakıldı (geri alınması
   pahalı kurulum; öncül bulgusu: girdisiz banka). Rol-1 önerisi: sayfalar DURSUN, retain akışı (TSK-168 kart-önce) ile yeni pencere; kanıt yoksa sök.
   K defteri: EDG-083-talep-uzerine = KALDI (K=1). hafıza: memory hindsight-aktif-kullanim (operatör 09-06 'aktif kullan' direktifi — bu hafta uygulanamadı, itiraf).
+  KARAR (operatör 2026-09-13 08:55Z, verbatim '(b) melez+retain, devam et'): sökme YOK; sayfalar durur, retain akışı TSK-168 ile kurulur, yeni pencere
+  EDG-2026-089 kartıyla ölçülür (bu kartın eşiği/hükmü DEĞİŞMEZ — halef kart). Öncülleri kapatan iki ön şart 089'da: retain akışı canlı + oturum-başı okuma kuralı.
