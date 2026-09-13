@@ -113,3 +113,14 @@ duzeltme_2026_09_13_alan_semantigi: >
   alan ailesiyle: n_uygun = `giris_dolum_ts` taşıyan ∧ arşiv günü; eksik oranı = giriş alanı eksik / live_paper n. Tahmin
   YOK: TSK-182 `--uygula` sonrası sayılır. `olcum_plani` maddelerindeki "dolum_ts" atıfları o zaman `giris_dolum_ts` okunur
   (eşik/kill değişmedi; alan adı düzeltmesi ölçüm sözleşmesini değiştirmez, kaynağını doğrular).
+
+adim_0_yeniden_2026_09_13: >
+  (Rol-1, 21:33Z, A1 salt-okur; TSK-182 `--uygula` 21:18:59Z SONRASI, alan ailesi `extra_json.giris_dolum_ts` — düzeltme
+  kaydındaki tanımla) live_paper n=24; `giris_dolum_ts` taşıyan 22; EKSİK 2 (ALL 08-07 · VLO 08-10 — Alpaca kapalı emir
+  penceresinde plan kimliği yok, TSK-182 eşleşmedi) → eksik oranı 2/24 = 0,083 ≤ 0,30 KAPI-2 GEÇTİ (11:5xZ'deki 0,54 yanlış
+  alanla ölçülmüştü, düzeltme kaydı). n_uygun = giris_dolum_ts ∧ arşiv günü = 21 (MU T00909 09-08 arşiv dışı: islem/ son gün
+  2026-09-03) < 30 → KAPI-1 DÜŞÜYOR. status askiya_veri_kapisi KALIR; neden artık alan eksikliği DEĞİL, ÖRNEKLEM: eşik için
+  ≥9 yeni live_paper kapanışı (+ arşivin ileri dolumu) gerekir — tahmini 2–4 hafta, kart açmaz, ADIM-0 tekrarı. NOT (arıza
+  adayı): tick arşivi `islem/` 09-03'te bitiyor, 09-04..09-11 seansları yok — ileri dolum durmuş olabilir (TAVAN-DOLDU işareti
+  09-12); Rol-1 ayrıca ölçüyor (geridolum birimi journal).
+
