@@ -8,10 +8,12 @@ defter DEĞİL bir GÖRÜNÜMDÜR — tek kaynak olaylardır, burada yalnız "ne
 kusurun tekrarını tek satıra toplar (anahtar varsa ticker ile İNCELTİR, mesaj yedeğinde bilinen
 ticker'ı normalize eder — kaba birleşme de yanlış bölme de ölçülüp düzeltilmiş iki ayrı hataydı).
 
-DEĞİŞMEZLER. Sır disiplini: `scrub()` giden metinden BİLİNEN sır değerlerini (secrets.ALLOWED)
-siler — bu modül dışarıya veri gönderen TEK yoldur ve "asla sır göndermez" iddiasının uygulaması
-tam budur (iddia bir dönem docstring'de vardı, uygulaması yoktu). Teslimat başarısızlığı sessiz
-kalmaz (`notify_delivery_failed`): "telefonuma bildirim gelmedi" ile "zaten alarm yoktu" ayırt
+DEĞİŞMEZLER. Sır disiplini: `scrub()` giden metinden İKİ katmanla temizler — (a) BİLİNEN sır
+DEĞERLERİ (secrets.ALLOWED) ve (b) bilinmeyen sırrı BİÇİMİNDEN tanıyan desen süzgeci
+(`_SIR_DESENLERI`) — bu modül dışarıya veri gönderen TEK yoldur ve "asla sır göndermez"
+iddiasının uygulaması tam budur (iddia bir dönem docstring'de vardı, uygulaması yoktu; sonra
+yalnız (a) vardı ve rotasyon-arası bir anahtar süzgecin ORTASINDAN geçiyordu). Teslimat
+başarısızlığı sessiz kalmaz (`notify_delivery_failed`): "telefonuma bildirim gelmedi" ile "zaten alarm yoktu" ayırt
 edilebilmelidir. "Operatöre ulaştı" ile "operatör GÖRDÜ" ayrı şeylerdir; ikincisini yalnız ACK
 kanıtlar. Kapıyı geçen plan (`new_plan`) alarm değil BİLGİ sınıfıdır — obs alarm zinciri onu
 asla itmez, tetiği üretim döngüsüdür.
@@ -22,6 +24,7 @@ MERIDIAN_WEBHOOK_URL. Okur: `events.jsonl`; yazar: yalnız ağ kanalları (dosya
 `alerts_ack.json`u yazan pano ucudur)."""
 from __future__ import annotations
 import json
+import re
 import urllib.request
 
 from . import secrets
@@ -127,12 +130,69 @@ def inbox(limit: int = 60) -> dict:
             "window_oldest_ts": _oldest or None}
 
 
+# ---- DESEN SÜZGECİ: BİLİNMEYEN SIRRI BİÇİMİNDEN TANI ----------------------------------------
+# NEDEN İKİNCİ BİR KATMAN. Değer maskesi yalnız BİLDİĞİMİZ sırrı siler: `secrets.ALLOWED`da adı
+# geçen ve O ANDA okunabilen değeri. Süzgeçten geçmeyen üç sınıf ölçüldü — (a) rotasyon ARASI
+# anahtar (eskisi artık okunmaz, metinde hâlâ durur), (b) hiç bizim olmayan bir kimlik (bir
+# upstream hata dizgisindeki `Authorization: Bearer …`), (c) sır DEĞERİNİ değil onu TAŞIYAN
+# kalıbı gösteren satır (`?apikey=…`, `postgres://kullanıcı:parola@…`, bir birim dökümündeki
+# `X_SECRET=…`). Kalıcı kayıt aynı sınıfı adıyla taşıyor: KEY/SECRET/PASS kara-listesi
+# `DATABASE_URL`i kaçırdı ve parola terminale düştü (2026-09-02).
+#
+# DESEN DAR TUTULUR — BEDEL YASASI. Bu süzgeç yalnız bildirim metnine değil, dışarıya giden HER
+# dizgeye uygulanır (arama korpusu, sohbet araç çıktısı, denetçi istemi). Aşırı geniş bir desen
+# sızıntıyı değil ALARMIN KENDİSİNİ okunmaz kılar: tur jetonları (`T00901`), plan kimlikleri
+# (`P-2026-09-13-AAPL-1`), sha kısaltmaları, durum kodları ve adresler maskelenmemelidir. Sınır
+# `tests/test_notify_sir_deseni_v467.py`de NEGATİF KONTROL olarak ölçülür; genişletme ayrı bir
+# karardır ve bedeli orada ölçülür.
+#
+# SATIR BİÇİMİ (ad, derlenmiş desen, değişim). AD çivilerin ve gelecek bir teşhisin okuduğu
+# alandır (Yasa 6: okuyucusu v467). DEĞİŞİM satırda DURUR çünkü desen başına FARKLIDIR: hepsini
+# tek bir `***` ile değiştirmek komşu metni yerdi — `Bearer` öneki, sorgu parametresinin ADI ve
+# URL şeması maskeden SONRA da okunabilir kalmalı ("hangi kimlik sızdı" sorusunun tek ipucu).
+_SIR_DESENLERI: tuple[tuple[str, re.Pattern, str], ...] = (
+    # OpenRouter anahtarı: sabit önek + 64 onaltılık karakter. Biçim tek başına kimliktir.
+    ("openrouter", re.compile(r"sk-or-v1-[0-9a-f]{64}"), "***"),
+    # `Authorization: Bearer …` — ÖNEK KORUNUR, jeton gider. 16 karakter tabanı "Bearer token
+    # eksik" gibi düzyazıyı dışarıda bırakır (ölçüldü: v467 zararsız-metin çivisi).
+    ("bearer", re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]{16,}"), "Bearer ***"),
+    # URL sorgu parametresi: parametre ADI kalır, DEĞER gider.
+    ("url_sorgu", re.compile(r"(?i)([?&](?:api[_-]?key|apikey|token|secret|password|passwd|pwd"
+                             r"|access[_-]?key)=)[^&\s\"']+"), r"\1***"),
+    # URL-gömülü kimlik (`DATABASE_URL` sınıfı): kullanıcı ADI da maskelenir — o da bir kimliktir.
+    # `[^@/\s]+` yol ayıracını DIŞLAR: `https://host:443/a@b` bir kimlik değildir (ölçüldü).
+    ("url_kimlik", re.compile(r"://[^:/\s]+:[^@/\s]+@"), "://***:***@"),
+    # Env/birim dökümü satırı. DEĞİŞKEN ADI TAM KORUNUR (ad sır değildir; hangi kimliğin sızdığını
+    # söyleyen ve rotasyon kararını veren TEK bilgidir), yalnız değer maskelenir. Kapanış tırnağı
+    # DEĞİŞİMİN DIŞINDA kalırsa `X="***"` yerine `X=***"` gibi bir artık kalırdı — bu yüzden
+    # tırnaklar desenin İÇİNDE tüketilir. ≥8 karakter eşiği değer maskesiyle AYNI (`TELEGRAM_
+    # CHAT_ID=42` gibi satırlar okunur kalır). Önek listesi BEYAN EDİLMİŞTİR: öneksiz bir ad
+    # (`X_KEY=…`) bu katmandan geçer ve o sınır v467'de açıkça çivilidir.
+    # AYIRAÇ DA KORUNUR (2. grup): desen hem `=` hem `:` kabul eder ve değişim ne yazıldıysa onu
+    # geri yazar. Sabit `=` yazılsaydı bir JSON/YAML dökümü maskelendikten sonra BİÇİMİNİ
+    # kaybederdi (`"X_TOKEN": "…"` → `X_TOKEN=***`) — sızıntı değil, ama maskelenmiş metin
+    # orijinalin OKUNABİLİR hâli olmalıdır. Ayıracın çevresindeki boşluk gruba dahildir.
+    ("env_satiri", re.compile(r"(?i)\b((?:ALPACA|OPENROUTER|NOUS|TELEGRAM|MERIDIAN|HINDSIGHT)"
+                              r"[A-Z_]*(?:KEY|TOKEN|SECRET|PAROLA|PASSWORD))"
+                              r"(\s*[=:]\s*)[\"']?[^\s\"']{8,}[\"']?"), r"\1\2***"),
+)
+
+
 def scrub(text: str) -> str:
-    """Giden metinden BİLİNEN sır değerlerini temizle.
+    """Giden metinden sırları temizle: önce BİLİNEN değerler, sonra sır BİÇİMLERİ.
 
     Bu modül dışarıya veri gönderen TEK yol. Bir alarm metni bir gün bir hata dizgisini taşırsa
     (ör. 'HTTPStatusError ... ?apikey=…'), o anahtar Telegram'a/webhook'a gider — yani sır, kendi
-    makinemizden ÇIKAR. 'Asla sır göndermez' iddiası docstring'de vardı, uygulaması yoktu."""
+    makinemizden ÇIKAR. 'Asla sır göndermez' iddiası docstring'de vardı, uygulaması yoktu.
+
+    SIRA ÖNEMLİDİR: değer maskesi ÖNCE koşar. Bilinen bir değer zaten `***`e döndüğünde desen
+    katmanının ona dokunacak bir şeyi kalmaz; ters sırada desen önce metni yeniden yazar ve
+    `text.replace` ile aranan ham değer artık orada olmadığı için bilinen-değer katmanı SESSİZCE
+    hiçbir şey bulmazdı (iki katmanın aynı sırrı iki farklı biçimde görmesi hâli).
+
+    SAF FONKSİYONDUR — olay YAZMAZ. `arama` ve `sohbet` onu satır satır çağırır; her maskeleme
+    bir `obs` olayı üretseydi hem defter bu çağrılarla dolardı hem de "sır taşıyan bir metin
+    vardı" bilgisi ayrı bir yere iz bırakırdı. Çivi: v467."""
     out = str(text)
     for name in getattr(secrets, "ALLOWED", ()):
         try:
@@ -141,6 +201,8 @@ def scrub(text: str) -> str:
             v = None
         if v and len(str(v)) >= 8:
             out = out.replace(str(v), "***")
+    for _ad, desen, degisim in _SIR_DESENLERI:
+        out = desen.sub(degisim, out)
     return out
 
 

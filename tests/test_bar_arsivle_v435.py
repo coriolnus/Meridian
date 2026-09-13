@@ -395,3 +395,47 @@ def test_VARSAYILAN_dizinler_configten_turer(sandbox_state, capsys):
     rc = bar_arsivle.main(["--bolum", "ay", "--uygula"])
     assert rc == 0, capsys.readouterr().err
     assert (sandbox_state / "barlar" / OCAK / "AAPL.parquet").exists()
+
+
+# ---------------------------------------------------------------------------------------------
+# 10. PAYLAŞILAN BELLEK TAVANI (inceleme bulgusu 1, TSK-012 düzeltme turu 2026-09-13)
+#
+# `ops/olay_sorgu.py::BELLEK_TAVANI` bu aracın da tavanıdır ve bu araç onun ASIL müşterisidir:
+# arşiv kaynağı bu makinede 260 CSV / 1.350.678 satırdır (ölçüm 2026-09-13) ve `temp_directory`
+# BOŞ olduğu için dar bir tavanda taşan bir sorgu yavaşlamaz, OOM ile DÜŞER. Beyan ŞERHTEYDİ;
+# bu çivi onu DAVRANIŞA bağlar.
+#
+# Bu araç `--sql` yüzeyi taşımadığı için tavan ÇIKTIDAN okunamaz: bağlantının KENDİSİ ölçülür.
+# Sarmalayıcı gerçek kapıyı çağırır (taklit yok) ve açılan bağlantıya `current_setting` sorar —
+# yani ölçülen şey aracın GERÇEKTEN kullandığı bağlantıdır. Sarmalayıcı hiç çağrılmazsa liste
+# boş kalır ve çivi öter: "araç kapıyı kullanıyor mu" da aynı ölçümün içindedir.
+# ---------------------------------------------------------------------------------------------
+
+def test_ARSIVLEYICININ_BAGLANTISI_paylasilan_bellek_tavanini_TASIR(
+        sandbox_state, kaynak, hedef, monkeypatch):
+    from ops import olay_sorgu
+
+    olculen: list[str] = []
+    gercek_kapi = olay_sorgu.baglanti_kur_cli
+
+    def _sarmal():
+        con = gercek_kapi()
+        olculen.append(str(con.execute("SELECT current_setting('memory_limit')").fetchone()[0]))
+        return con
+
+    monkeypatch.setattr(bar_arsivle.olay_sorgu, "baglanti_kur_cli", _sarmal)
+    rc = bar_arsivle.main(["--kaynak-dizin", str(kaynak), "--hedef", str(hedef),
+                           "--bolum", "ay", "--uygula"])
+    assert rc == 0
+    assert olculen, "arşivleyici bağlantıyı paylaşılan kapıdan AÇMIYOR"
+
+    ref = duckdb.connect()
+    try:
+        ref.execute(f"SET memory_limit='{olay_sorgu.BELLEK_TAVANI}'")
+        beklenen = str(ref.execute("SELECT current_setting('memory_limit')").fetchone()[0])
+        tavansiz = str(duckdb.connect().execute(
+            "SELECT current_setting('memory_limit')").fetchone()[0])
+    finally:
+        ref.close()
+    assert olculen[0] == beklenen, olculen
+    assert olculen[0] != tavansiz, "tavan HİÇ uygulanmamış (duckdb varsayılanı RAM'in ~%80'i)"

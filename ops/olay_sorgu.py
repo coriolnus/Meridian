@@ -71,8 +71,12 @@ TRUE'dur — bir sorgu bilinmeyen bir fonksiyona dokunduğunda DuckDB AĞDAN ekl
 ikisi de kapatılır. `TimeZone` varsayılanı MAKİNENİN yerelidir (bu makinede `Europe/Istanbul`,
 ölçüldü) — ofsetsiz bir `ts` o dilime göre çözülürdü ve aynı defter iki makinede iki farklı AYA
 düşerdi (ölçüldü: naif `2026-03-01T02:00:00` → Istanbul'da `2026-02`, UTC'de `2026-03`);
-`UTC`ye sabitlenir. Yerel bir defter okuyucusunun ne diske dökmeye, ne ağa çıkmaya, ne de
-makinenin saat diliminden sonuç almaya işi vardır.
+`UTC`ye sabitlenir. `memory_limit` varsayılanı sistem RAM'inin ~%80'idir (6,3 GiB, bu makine) —
+bu araç A1'de canlı uvicorn ile AYNI makinede elle koşar, o yüzden `OLAY_SORGU_BELLEK`
+(varsayılan 2GB) ile tavanlanır. Yerel bir defter okuyucusunun ne diske dökmeye, ne ağa çıkmaya,
+ne makinenin saat diliminden sonuç almaya, ne de makinenin bütün RAM'ini istemeye işi vardır.
+Tavan BOZUK yazılırsa araç ham traceback ile düşmez: biçim kapıda ölçülür ve kullanım hatası
+koduyla (2) gerekçeli dönülür (aşağıdaki `BELLEK_BICIMI`).
 
 SQL YÜZEYİ. `olaylar` görünümü şu sütunları verir — adlar defterin KENDİ sözlüğüdür
 (`ts`/`level`/`event`), uydurulmadı:
@@ -98,8 +102,8 @@ KULLANIM:
 BEDEL (metin kipi): `detay` sütunu okunur kalsın diye 100 karakterde KESİLİR ve kesik `…` ile
 GÖRÜNÜR olur. Kaybedilen hiçbir şey yok değil — geri alma yolu `--json`, orada kesme yapılmaz.
 
-ÇIKIŞ KODU: 0 = sorgu koştu · 2 = kullanım/dosya hatası · 3 = SQL reddedildi (SELECT değil)
-           · 4 = sorgu DuckDB'de düştü
+ÇIKIŞ KODU: 0 = sorgu koştu · 2 = kullanım/dosya hatası (BOZUK `OLAY_SORGU_BELLEK` dahil)
+           · 3 = SQL reddedildi (SELECT değil) · 4 = sorgu DuckDB'de düştü
 """
 
 from __future__ import annotations
@@ -107,6 +111,7 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json as _json
+import os
 import pathlib
 import re
 import sys
@@ -129,26 +134,124 @@ IZINLI_ILK_JETON = {"SELECT", "WITH", "FROM", "TABLE", "VALUES"}
 
 DETAY_TAVAN = 100  # metin kipinde `detay` kesme sınırı; `--json` kesmez
 
+#: BELLEK TAVANI (TSK-012, 2026-09-13). Ölçüldü: tavansız bir bağlantıda duckdb varsayılanı
+#: sistem RAM'inin ~%80'idir (bu makinede 6,3 GiB; A1'de 24 GB'ın ~%80'i). Bu araç A1'de ELLE,
+#: canlı `serve.sh` uvicorn'uyla AYNI dört çekirdekli makinede koşar — tavansız bir çapraz-
+#: birleştirme paneli de düşürürdü.
+#:
+#: BU TAVAN PAYLAŞILAN BİR YÜZEYDİR — DÖRT ARACIN TAVANIDIR, BİRİNİN DEĞİL. `baglanti_kur`u
+#: `ops/olay_sikistir.py`, `ops/bar_sorgu.py` ve `ops/bar_arsivle.py` da çağırır (aşağıdaki
+#: `SERTLESTIRME` şerhi ve v436/v435/v379 çivileri); buraya yazılan değer ONLARDA DA yürür ve
+#: onların iş yükü bu aracınkinden BÜYÜKTÜR. Ölçüm (2026-09-13, bu makine): bar CSV kaynağı
+#: 260 dosya / 1.350.678 satır (`cat state/bars/*.csv | wc -l`) ve arşiv sorguları bunun
+#: tamamını tarayabilir. `temp_directory` BOŞ olduğu için diske taşma yolu KAPALIDIR: dar bir
+#: tavanda taşan sorgu yavaşlamaz, "Out of Memory" ile DÜŞER. Taban bu yüzden 1GB'dan 2GB'a
+#: çıkarıldı (TSK-012 düzeltme turu) — hâlâ tavandır, duckdb varsayılanının çok altındadır.
+#: YÜKSELTME YOLU KOD DEĞİŞTİRMEDEN AÇIKTIR: `OLAY_SORGU_BELLEK=4GB python ops/olay_sorgu.py …`
+#: (aynı değişken bar araçları için de geçerlidir — tek ad, tek tavan).
+#:
+#: TEK-KAYNAK İSTİSNASI, BEYANLI (iki tavan BİLEREK ayrıdır, kopya DEĞİLDİR):
+#:   * `meridian/sohbet.py::SORGU_BELLEK_TAVANI` (`SOHBET_SQL_BELLEK`, 512MB) MODEL yazımı SQL'i
+#:     CANLI API işçisinin ipliğinde koşturur — orada tavan DAR olmalıdır ve sohbet onu
+#:     `baglanti_kur`DAN SONRA uygular, yani buradaki değeri bilerek EZER (daraltır).
+#:   * BURASI operatörün elle koşturduğu CLI'dır: tek kullanıcı, kendi kabuğu, arşivin tamamını
+#:     tarayan meşru bir `--sql` sorgusu olabilir. O yüzden taban daha GENİŞTİR (1GB).
+#: Sabiti ithal ETMEK yasaktır: bu betik `meridian`ı import etmez (başlıktaki izolasyon şartı —
+#: `meridian.obs`a ulaşan pytest-dışı bir koşum canlı yerel deftere YAZAR). Beyan bu yüzden
+#: ŞERHLE yapılır ve `meridian/sohbet.py` tarafında da simetriği durur; ayrışma çivisi v355'te.
+#:
+#: BEDEL BEYANI (Bedel yasası): `memory_limit` gerçekten büyük bir birleştirmeyi "Out of Memory"
+#: ile DÜŞÜRÜR ve `temp_directory` BOŞ olduğu için diske taşma (spill) yolu da kapalıdır — yani
+#: kaybedilen, RAM'e sığmayan meşru bir sorgunun YAVAŞ ama başarılı bitişidir. Geri alma yolu
+#: kodu değiştirmeden açıktır: `OLAY_SORGU_BELLEK=4GB python ops/olay_sorgu.py …`.
+#: `threads` tavanı BİLEREK KONMADI: sohbetteki `threads=1` tek uvicorn işçisini korumak içindi;
+#: elle koşan operatörün dört çekirdeği kullanması meşrudur ve yavaşlatmanın karşılığı yoktur.
+BELLEK_ENV_AD = "OLAY_SORGU_BELLEK"
+BELLEK_TAVANI = os.environ.get(BELLEK_ENV_AD, "2GB")
+
+#: TAVAN BİÇİMİ KAPIDA ÖLÇÜLÜR (inceleme bulgusu, TSK-012 düzeltme turu 2026-09-13). İki ayrı
+#: arıza sınıfı ÖLÇÜLDÜ (duckdb 1.5.5, doğrulama eklenmeden önceki davranış):
+#:   * `OLAY_SORGU_BELLEK=2 gigabayt` → `SET memory_limit` DuckDB hatası verir, çağrı `main`in
+#:     try bloğunun DIŞINDA olduğu için HAM TRACEBACK sızar ve süreç 1 ile çıkar — aracın kendi
+#:     belgelediği 0/2/3/4 sözleşmesinin DIŞINDA bir kod.
+#:   * `OLAY_SORGU_BELLEK=-2GB` → DuckDB KABUL EDER ve tavan "16383.9 PiB" olur: araç rc 0 ile
+#:     koşar, hiçbir şey ötmez, ama KORUMANIN KENDİSİ SESSİZCE KAPANMIŞTIR. Sinsi olan budur.
+#: Desen bir işaret kabul etmez ve birim listesi DONUKTUR; `\s*` grupları süs değildir: ' 2 GB '
+#: DuckDB'ce kabul edilir (ölçüldü), reddedilseydi kapı meşru bir değeri kırardı (Bedel yasası).
+#: ÖLÇÜLEN SINIR, BEYANLI: `TiB` bu listede YOKTUR (DuckDB kabul ederdi) — çivi v355'te.
+BELLEK_BICIMI = re.compile(r"^\s*\d+(\.\d+)?\s*(KB|MB|GB|TB|KiB|MiB|GiB)\s*$", re.IGNORECASE)
+
+
+class BellekTavaniHatasi(ValueError):
+    """Bozuk `OLAY_SORGU_BELLEK`. `ValueError`DIR, `SystemExit` DEĞİLDİR — ve bu bir KARARDIR:
+    `baglanti_kur` bir KÜTÜPHANE fonksiyonudur ve onu `meridian/sohbet.py` CANLI API işçisinin
+    ipliğinde de çağırır. Orada `_arac_kos`un `except Exception` kalkanı araç arızasını metne
+    çevirir ("döngü ölmez"); `SystemExit` BaseException olduğu için o kalkanı DELER ve bir ortam
+    değişkeni yazım hatası canlı isteği düşürürdü. Süreci öldürme kararı CLI'nın kararıdır ve
+    `baglanti_kur_cli`de, TEK YERDE verilir."""
+
 
 #: Bağlantı sertleştirme ayarları. DEĞERLER ÖLÇÜLDÜ (duckdb 1.5.5 varsayılanları): temp_directory
-#: '.tmp' (CWD-göreli — operatörün dizinine döker), iki eklenti bayrağı da True (ağdan indirir).
+#: '.tmp' (CWD-göreli — operatörün dizinine döker), iki eklenti bayrağı da True (ağdan indirir),
+#: `memory_limit` RAM'in ~%80'i (yukarıdaki gerekçe).
 #: `SET` ifadeleri bağlantı açılır açılmaz, HERHANGİ bir kullanıcı sorgusundan ÖNCE koşar.
 #: `TimeZone` 2026-09-03'te eklendi (adım 2): ay anahtarı UTC olmalı; varsayılan makine yerelidir
 #: ve ofsetsiz bir `ts` makineye göre başka aya düşerdi (başlıktaki ölçüm).
+#: BU TABLO TEK KAYNAKTIR: `ops/olay_sikistir.py`, `ops/bar_sorgu.py` ve `ops/bar_arsivle.py`
+#: bağlantılarını `baglanti_kur` üzerinden açar — buraya eklenen ayar ONLARDA DA yürür.
 SERTLESTIRME = (
     "SET temp_directory=''",
     "SET autoinstall_known_extensions=false",
     "SET autoload_known_extensions=false",
     "SET TimeZone='UTC'",
+    f"SET memory_limit='{BELLEK_TAVANI}'",
 )
 
 
+def bellek_tavani_dogrula(deger: str | None = None) -> None:
+    """`OLAY_SORGU_BELLEK` biçimini ölçer; uymuyorsa `BellekTavaniHatasi` atar.
+
+    `deger=None` modül sabitini ÇAĞRI ANINDA okur (varsayılan argümana bağlanmaz): sabit
+    yamalanırsa doğrulama ile `SERTLESTIRME` aynı değeri görmeye devam etsin.
+
+    MESAJ TEK KAYNAKTIR ve üç şeyi birden taşır: DEĞİŞKEN ADI (operatör neyi düzeltecek),
+    VERİLEN DEĞER (neyi yanlış yazdı) ve BEKLENEN BİÇİM (nasıl yazacak). Değer MASKELENMEZ:
+    bu bir ölçü birimi dizgesidir, sır değildir — maskelenirse mesaj teşhis etmeyi bırakır."""
+    deger = BELLEK_TAVANI if deger is None else deger
+    if BELLEK_BICIMI.match(deger):
+        return
+    raise BellekTavaniHatasi(
+        f"{BELLEK_ENV_AD} biçimi tanınmadı — verilen: {deger!r}; beklenen: <sayı><birim>, "
+        f"birim KB|MB|GB|TB|KiB|MiB|GiB (örn. '2GB', '512MB', '1.5GiB'). İşaret ve birimsiz "
+        f"değer KABUL EDİLMEZ: '-2GB' DuckDB'ce kabul edilir ve tavanı SESSİZCE yok ederdi.")
+
+
 def baglanti_kur() -> duckdb.DuckDBPyConnection:
-    """Bellek içi bağlantı açar ve `SERTLESTIRME` ayarlarını uygular (Yasa 6 + dış bağımlılık)."""
+    """Bellek içi bağlantı açar ve `SERTLESTIRME` ayarlarını uygular (Yasa 6 + dış bağımlılık).
+
+    KÜTÜPHANE KATMANI: bozuk tavanda `BellekTavaniHatasi` ATAR, süreci öldürmez (canlı çağıran
+    `meridian/sohbet.py`; gerekçe sınıfın docstring'inde). CLI çağıranlar `baglanti_kur_cli`."""
+    bellek_tavani_dogrula()         # SET'ten ÖNCE: bozuk değer ham DuckDB hatasına dönüşmesin
     con = duckdb.connect()          # BELLEK İÇİ: diske hiçbir DB dosyası yazılmaz
     for s in SERTLESTIRME:
         con.execute(s)
     return con
+
+
+def baglanti_kur_cli() -> duckdb.DuckDBPyConnection:
+    """`baglanti_kur`un KOMUT SATIRI kapısı: bozuk tavanı gerekçeyle stderr'e yazar ve KULLANIM
+    HATASI koduyla (2) çıkar.
+
+    TEK YER, DÖRT ARAÇ: `ops/olay_sorgu.py`, `ops/olay_sikistir.py`, `ops/bar_sorgu.py` ve
+    `ops/bar_arsivle.py` bu kapıdan geçer ve dördünün de belgelediği sözleşmede 2 = kullanım
+    hatasıdır. Eşleme her `main()`de ayrı ayrı yazılsaydı dört kopya sessizce ayrışırdı."""
+    try:
+        return baglanti_kur()
+    except BellekTavaniHatasi as e:
+        # Sinyalli (Yasa 4): gerekçe stderr'e YAZILIR. `SystemExit(2)` yığın izi BASMAZ — yığın
+        # izi "hangi env değişkenini nasıl yazacağım" sorusunu cevaplamaz, mesaj cevaplar.
+        print(f"HATA: {e}", file=sys.stderr)
+        raise SystemExit(2) from None
 
 
 def sql_metni(yol: pathlib.Path) -> str:
@@ -479,7 +582,7 @@ def main(argv: list[str] | None = None) -> int:
 
     arsiv = None if args.yalniz_jsonl else (args.parquet_dizin or arsiv_dizini(args.dosya))
 
-    con = baglanti_kur()
+    con = baglanti_kur_cli()      # CLI kapısı: bozuk `OLAY_SORGU_BELLEK` → gerekçe + çıkış 2
     try:
         try:
             kaynak = gorunumu_kur(con, args.dosya, arsiv)

@@ -24,6 +24,7 @@ GERÇEK DEFTERE DOKUNULMAZ: her çivi `tmp_path` altına kendi sentetik jsonl'in
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -55,13 +56,23 @@ def _defter_yaz(dizin: pathlib.Path, satirlar=SATIRLAR, bozuk: int = 0) -> pathl
     return p
 
 
-def kos(*argv: str, cwd: pathlib.Path | None = None) -> subprocess.CompletedProcess:
-    """Aracı OPERATÖRÜN koşacağı biçimde çağırır: komut satırı, `main()` değil."""
+def kos(*argv: str, cwd: pathlib.Path | None = None,
+        ortam: dict[str, str] | None = None) -> subprocess.CompletedProcess:
+    """Aracı OPERATÖRÜN koşacağı biçimde çağırır: komut satırı, `main()` değil.
+
+    `ortam`: operatörün kabuğunda vereceği ek ortam değişkenleri (ör. `OLAY_SORGU_BELLEK`).
+    MEVCUT ortamın ÜSTÜNE biner, yerine geçmez — `PATH`siz bir koşum aracı bulamazdı ve
+    "ölçüm kırmızı" ile "araç koşamadı" karışırdı."""
+    env = None
+    if ortam:
+        env = dict(os.environ)
+        env.update(ortam)
     return subprocess.run(
         [sys.executable, str(ARAC), *argv],
         capture_output=True,
         text=True,
         cwd=str(cwd or KOK),
+        env=env,
     )
 
 
@@ -325,6 +336,204 @@ def test_temp_directory_bosaltilmis(tmp_path):
             "--json")
     assert r.returncode == 0, r.stderr
     assert json.loads(r.stdout.splitlines()[0])["deger"] == ""
+
+
+# ---------------------------------------------------------------------------------------------
+# 6b. BELLEK TAVANI (TSK-012 açık kalem 2)
+#
+# ÖLÇÜLEN BOŞLUK: sertleştirme temp dizinini, iki eklenti bayrağını ve saat dilimini ayarlıyordu
+# ama `memory_limit` YOKTU → duckdb varsayılanı sistem RAM'inin ~%80'i. Bu araç A1'de ELLE, canlı
+# uvicorn ile AYNI makinede koşar (4 OCPU / 24 GB): tavansız bir çapraz-birleştirme panoyu
+# düşürebilirdi. Tavan ORTAMDAN ayarlanabilir ki A1'de ölçülen bir ihtiyaç kodu değiştirmeden
+# karşılanabilsin. Değer duckdb'nin KENDİ biçimiyle ölçülür (`current_setting`), yazdığımız
+# dizgeyle değil: "SET koştu" ile "tavan YÜRÜDÜ" ayrı iddialardır.
+# ---------------------------------------------------------------------------------------------
+
+def _bellek_ayari(tmp_path, ortam=None) -> str:
+    p = _defter_yaz(tmp_path)
+    r = kos("--dosya", str(p), "--sql", "SELECT current_setting('memory_limit') AS deger",
+            "--json", ortam=ortam)
+    assert r.returncode == 0, r.stderr
+    return str(json.loads(r.stdout.splitlines()[0])["deger"])
+
+
+#: DUCKDB İKİ BİRİM SİSTEMİ KULLANIR — ÖLÇÜLDÜ (1.5.5, 2026-09-13): girdi 'GB'/'MB' ONLUKTUR
+#: (10^9 / 10^6 bayt), rapor ise İKİLİDİR (GiB/MiB). Bu yüzden '2GB' → "1.8 GiB", '256MB' →
+#: "244.1 MiB". Beklenen değerler bu yüzden TAHMİN değil ÖLÇÜM'dür; "2.0 GiB" yazan bir çivi
+#: doğru kodda kırmızı olurdu (ve '1GB' → "1.0 GiB" varsayımıyla ilk yazımında oldu).
+BEKLENEN_VARSAYILAN_BELLEK = "1.8 GiB"          # `OLAY_SORGU_BELLEK` verilmediğinde: '2GB'
+BEKLENEN_ORTAM_BELLEGI = "244.1 MiB"            # `OLAY_SORGU_BELLEK=256MB` verildiğinde
+
+
+def test_bellek_tavani_varsayilan_2GB(tmp_path):
+    """Ortam değişkeni VERİLMEDİĞİNDE varsayılan tavan yürür — ve bu 6,3 GiB'lik (RAM'in ~%80'i)
+    duckdb varsayılanı DEĞİLDİR. Değer duckdb'nin KENDİ biçimiyle ölçülür.
+
+    TABAN 1GB→2GB YÜKSELTİLDİ (TSK-012 düzeltme turu, 2026-09-13). Gerekçe ÖLÇÜLDÜ: bu bağlantı
+    `ops/bar_sorgu.py` ve `ops/bar_arsivle.py` ile PAYLAŞILIR ve bar arşivi bu makinede 1.350.678
+    satırdır (260 CSV, başlıklar dahil; `cat state/bars/*.csv | wc -l`, 2026-09-13). `temp_
+    directory` BOŞ olduğu için diske taşma yolu kapalıdır: 1GB'da taşan bir birleştirme YAVAŞLAMAZ,
+    OOM ile DÜŞER. Tavan hâlâ tavandır — 6,3 GiB'lik duckdb varsayılanının çok altındadır."""
+    assert _bellek_ayari(tmp_path) == BEKLENEN_VARSAYILAN_BELLEK
+
+
+def test_bellek_tavani_ORTAM_DEGISKENIYLE_ayarlanir(tmp_path):
+    """`OLAY_SORGU_BELLEK` verildiğinde O değer yürür — operatör A1'de tavanı kod değiştirmeden
+    daraltıp genişletebilmeli (geri alma yolu)."""
+    assert _bellek_ayari(tmp_path, {"OLAY_SORGU_BELLEK": "256MB"}) == BEKLENEN_ORTAM_BELLEGI
+
+
+def test_bellek_tavani_sohbetin_tavaniyla_AYNI_KAYNAKTAN_GELMEZ():
+    """TEK-KAYNAK İSTİSNASI, BEYANLI. `meridian/sohbet.py` kendi bağlantısına 512MB koyar; bu
+    araç 1GB'a kadar açıktır ve İKİSİ BİLEREK AYRIDIR (canlı API işçisi ile elle koşan CLI aynı
+    bütçeyi paylaşmaz). Kopya DEĞİL, iki ayrı karardır — ve bu çivi ayrılığın BEYAN EDİLDİĞİNİ
+    ölçer: iki dosya birbirine şerhle atıf vermezse ayrılık bir gün "unutulmuş kopya" sanılır."""
+    kaynak = ARAC.read_text(encoding="utf-8")
+    assert "OLAY_SORGU_BELLEK" in kaynak
+    assert "SOHBET_SQL_BELLEK" in kaynak, (
+        "sorgulayıcı sohbetin tavanına şerhle atıf vermiyor — ayrılık beyansız kalır")
+    sohbet_kaynak = (KOK / "meridian" / "sohbet.py").read_text(encoding="utf-8")
+    assert "OLAY_SORGU_BELLEK" in sohbet_kaynak, (
+        "sohbet CLI tavanına şerhle atıf vermiyor — beyan tek yönlü kalır")
+    assert "import meridian" not in kaynak and "from meridian" not in kaynak, (
+        "beyan ŞERHLE yapılır, İTHALLE değil: ops betiği meridian'a ulaşırsa obs sızıntısı açılır")
+
+
+def test_bellek_tavani_serhi_PAYLASILAN_YUZEYI_ADIYLA_beyan_eder():
+    """ŞERH BİR ARAYÜZ BEYANIDIR. `BELLEK_TAVANI` yalnız bu aracın değil, `baglanti_kur`u çağıran
+    ÜÇ ops aracının daha tavanıdır; hangi araçların paylaştığı ADIYLA yazılmazsa taban bir gün
+    "yalnız olay sorgulayıcısının işi" sanılarak daraltılır ve bar araçları sessizce OOM olur.
+    Yükseltme yolu da ADIYLA yazılır: `OLAY_SORGU_BELLEK` kodu değiştirmeden tavanı açar."""
+    kaynak = ARAC.read_text(encoding="utf-8")
+    for beyan in ("ops/bar_sorgu.py", "ops/bar_arsivle.py", "ops/olay_sikistir.py",
+                  "OLAY_SORGU_BELLEK=4GB"):
+        assert beyan in kaynak, f"paylaşılan yüzey/yükseltme yolu beyansız: {beyan}"
+
+
+# ---------------------------------------------------------------------------------------------
+# 6c. BOZUK TAVAN BİÇİMİ — ÇIKIŞ KODU SÖZLEŞMESİNİN İÇİNDE KALIR (inceleme bulgusu 2, 2026-09-13)
+#
+# ÖLÇÜLEN BOŞLUK: `OLAY_SORGU_BELLEK=2 gigabayt` gibi bir değer `SET memory_limit='…'` anında
+# DuckDB hatası veriyordu; `con = baglanti_kur()` çağrısı `main()`in try bloğunun DIŞINDA
+# durduğu için hata HAM TRACEBACK olarak sızıyor ve süreç 1 ile çıkıyordu — aracın kendi
+# belgelediği 0/2/3/4 sözleşmesinin DIŞINDA bir kod. Bozuk bir ortam değişkeni bir KULLANIM
+# HATASIDIR; kodu 2'dir.
+#
+# DEĞER BASILIR: maskelenmez, çünkü bu bir ölçü birimi dizgesidir (sır değil) ve operatör neyi
+# yanlış yazdığını göremezse mesaj teşhis etmez.
+# ---------------------------------------------------------------------------------------------
+
+#: HER DEĞER ÖLÇÜLDÜ (duckdb 1.5.5, 2026-09-13 — doğrulama EKLENMEDEN ÖNCEKİ davranış):
+#:   '2 gigabayt' → rc 1 + ham traceback · '2GBB' → rc 1 + ham traceback  (sözleşme DIŞI)
+#:   '-2GB'       → rc 0 ve `memory_limit` = "16383.9 PiB"                (TAVAN SESSİZCE YOK OLUR)
+#: İkinci sınıf daha sinsidir: araç KOŞAR, hiçbir şey ötmez, ama korumanın kendisi kapanmıştır.
+BOZUK_TAVANLAR = ["2 gigabayt", "2GBB", "GB", "2", "", "512 MB fazlası", "-2GB"]
+#: '2 GB' (iç boşluk) ve '  2GB  ' (dış boşluk) DuckDB'ce KABUL EDİLİR (ölçüldü) — desendeki
+#: `\s*` grupları bu yüzden vardır, süs değildirler. '700KB' BİLEREK DIŞARIDA: biçimi geçerlidir
+#: ama o tavanda `gorunumu_kur` OOM olur ve rc 2'yi BAŞKA bir gerekçeyle (defter okunamadı)
+#: döndürür — "biçim geçerli" ile "tavan yeterli" ayrı hükümlerdir.
+GECERLI_TAVANLAR = ["2GB", "512MB", "1.5GiB", "2gb", "  2GB  ", "2 GB", "1TB", "256MiB"]
+
+
+def _taze_arac(monkeypatch, deger: str | None):
+    """`ops/olay_sorgu.py`yi KAYNAKTAN TAZE yükler — `BELLEK_TAVANI` ortamı İMPORT ANINDA okur,
+    yani env'i değiştirmek tek başına yetmez. `sys.modules`a kaydedilmez: `ops.olay_sorgu`nun
+    önbellekteki kopyası (ve onu tutan bar araçları) bu çividen ETKİLENMEZ."""
+    if deger is None:
+        monkeypatch.delenv("OLAY_SORGU_BELLEK", raising=False)
+    else:
+        monkeypatch.setenv("OLAY_SORGU_BELLEK", deger)
+    return betikten_modul_yukle(ARAC, "olay_sorgu_taze")
+
+
+@pytest.mark.parametrize("bozuk", BOZUK_TAVANLAR)
+def test_BOZUK_tavan_rc2_ve_gerekce_ADI_DEGERI_BICIMI_tasir(tmp_path, bozuk):
+    """Operatörün koşacağı BİÇİMDE: bozuk `OLAY_SORGU_BELLEK` → rc 2 (kullanım hatası),
+    stderr'de DEĞİŞKEN ADI + VERİLEN DEĞER + BEKLENEN BİÇİM, stdout BOŞ. Ham traceback YOK:
+    yığın izi operatöre "hangi env değişkenini nasıl yazacağım" sorusunu cevaplamaz."""
+    p = _defter_yaz(tmp_path)
+    r = kos("--dosya", str(p), "--sorgu", "son", ortam={"OLAY_SORGU_BELLEK": bozuk})
+    assert r.returncode == 2, f"rc={r.returncode} · stderr={r.stderr!r}"
+    assert r.stdout == "", r.stdout
+    assert "OLAY_SORGU_BELLEK" in r.stderr, r.stderr
+    assert repr(bozuk) in r.stderr, f"verilen değer basılmadı: {r.stderr!r}"
+    for birim in ("KB", "MB", "GB", "TB", "KiB", "MiB", "GiB"):
+        assert birim in r.stderr, f"beklenen biçimde {birim} yok: {r.stderr!r}"
+    assert "Traceback" not in r.stderr, r.stderr
+
+
+@pytest.mark.parametrize("gecerli", GECERLI_TAVANLAR)
+def test_GECERLI_tavan_bicimleri_KABUL_edilir(tmp_path, gecerli):
+    """Kapının BEDELİ ölçülür (Bedel yasası): doğrulama meşru bir değeri reddederse kazanılan
+    şey teşhis değil, kaybedilen şey aracın kendisidir. Ondalık ('1.5GiB'), küçük harf ('2gb'),
+    dış boşluk ('  2GB  ') ve yedi birimin hepsi GEÇER — ve DuckDB de kabul eder (rc 0)."""
+    p = _defter_yaz(tmp_path)
+    r = kos("--dosya", str(p), "--sorgu", "son", ortam={"OLAY_SORGU_BELLEK": gecerli})
+    assert r.returncode == 0, f"rc={r.returncode} · stderr={r.stderr!r}"
+
+
+def test_bozuk_tavan_KUTUPHANE_yolunda_SystemExit_ATMAZ(monkeypatch):
+    """TASARIM KARARI, ÖLÇÜLDÜ. `baglanti_kur` bir KÜTÜPHANE fonksiyonudur ve onu `meridian/
+    sohbet.py` CANLI API işçisinin ipliğinde de çağırır. Orada `_arac_kos`un `except Exception`
+    kalkanı araç arızasını metne çevirir ("döngü ölmez"); `SystemExit` BaseException'dır ve o
+    kalkanı DELERDİ — bir ortam değişkeni yazım hatası canlı istek ipliğini düşürürdü.
+    Bu yüzden kütüphane katmanı `BellekTavaniHatasi(ValueError)` ATAR, süreci ÖLDÜRMEZ."""
+    mod = _taze_arac(monkeypatch, "2 gigabayt")
+    with pytest.raises(Exception) as ei:            # ← canlı yoldaki kalkanın TA KENDİSİ
+        mod.baglanti_kur()
+    assert isinstance(ei.value, mod.BellekTavaniHatasi), type(ei.value)
+    assert isinstance(ei.value, ValueError), type(ei.value)
+    assert not isinstance(ei.value, SystemExit), (
+        "kütüphane katmanı süreci öldürüyor — canlı `except Exception` kalkanı delinir")
+    assert "OLAY_SORGU_BELLEK" in str(ei.value) and "'2 gigabayt'" in str(ei.value), str(ei.value)
+
+
+def test_CLI_KAPISI_ayni_hatayi_cikis_kodu_2ye_cevirir(monkeypatch, capsys):
+    """Çıkış kodu eşlemesi TEK YERDE, `baglanti_kur_cli`dedir: dört aracın dördü de aynı kapıdan
+    geçer, dördünün de sözleşmesinde 2 = kullanım hatasıdır. Kapı stderr'e yazar (Yasa 4: sessiz
+    yutma yok) ve `SystemExit(2)` atar."""
+    mod = _taze_arac(monkeypatch, "2 gigabayt")
+    with pytest.raises(SystemExit) as ei:
+        mod.baglanti_kur_cli()
+    assert ei.value.code == 2, ei.value.code
+    assert "OLAY_SORGU_BELLEK" in capsys.readouterr().err
+
+
+def test_NEGATIF_TAVAN_reddedilir_SESSIZ_KORUMA_KAYBI(tmp_path):
+    """KAPININ ASIL KAZANCI BU VAKADA ÖLÇÜLÜR. `OLAY_SORGU_BELLEK=-2GB` DuckDB'ce KABUL EDİLİYOR
+    ve `memory_limit`i "16383.9 PiB" yapıyordu (ölçüldü 2026-09-13): araç rc 0 ile koşuyor, hiçbir
+    şey ötmüyor, ama tavan PRATİKTE KALKMIŞ oluyordu — koruma sessizce kayboluyordu. Desen bir
+    işaret kabul etmez; bu yüzden değer kapıda ÖLÜR."""
+    p = _defter_yaz(tmp_path)
+    r = kos("--dosya", str(p), "--sql", "SELECT current_setting('memory_limit') AS deger",
+            "--json", ortam={"OLAY_SORGU_BELLEK": "-2GB"})
+    assert r.returncode == 2, f"rc={r.returncode} · stdout={r.stdout!r}"
+    assert "PiB" not in r.stdout, r.stdout
+
+
+def test_TiB_REDDEDILIR_OLCULEN_SINIR(tmp_path):
+    """ÖLÇÜLEN SINIR, gizlenmiş değil BEYAN EDİLMİŞ boşluk (X_KEY deseninin kardeşi). DuckDB'nin
+    kendi hata metni dört ikili birim sayar (KiB, MiB, GiB, TiB) ama bu kapının birim listesi
+    Rol-1'in hükmettiği listedir ve TiB TAŞIMAZ: `4TiB` yazan bir operatör rc 2 alır. Bedel
+    ölçülmüştür ve küçüktür (bu araç 24 GB'lık bir makinede koşar); genişletme AYRI bir karardır
+    ve bu çivi kararın bugünkü hâlini GÖRÜNÜR kılar — sessiz bırakılsaydı bir gün "araç bozuk"
+    diye teşhis edilirdi."""
+    p = _defter_yaz(tmp_path)
+    r = kos("--dosya", str(p), "--sorgu", "son", ortam={"OLAY_SORGU_BELLEK": "4TiB"})
+    assert r.returncode == 2, f"rc={r.returncode} · stderr={r.stderr!r}"
+    assert "'4TiB'" in r.stderr, r.stderr
+
+
+def test_CANLI_YOL_cli_kapisindan_GECMEZ():
+    """Beyanın öteki yarısı: `meridian/sohbet.py` süreç öldüren kapıyı KULLANMAZ. Bu çivi bir gün
+    biri "tek tip olsun" diye canlı yolu `baglanti_kur_cli`ye çevirirse öter."""
+    sohbet_kaynak = (KOK / "meridian" / "sohbet.py").read_text(encoding="utf-8")
+    # ŞERH KOD DEĞİLDİR: `baglanti_kur_cli` adı sohbet.py'nin BEYAN şerhinde geçer (ve geçmesi
+    # gerekir — ayrım orada anlatılıyor). Ölçülen şey ÇAĞRI'dır, yani kod satırları.
+    kod = "\n".join(s for s in sohbet_kaynak.splitlines() if not s.lstrip().startswith("#"))
+    assert "baglanti_kur_cli" not in kod, (
+        "canlı API yolu CLI kapısından geçiyor — bozuk bir env değeri uvicorn işçisini düşürür")
+    assert "_os_mod.baglanti_kur()" in kod, "canlı yol kütüphane çağrısını kaybetti"
 
 
 # ---------------------------------------------------------------------------------------------

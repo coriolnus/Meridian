@@ -458,7 +458,7 @@ def main(argv: list[str] | None = None) -> int:
 
     hedef = args.hedef or olay_sorgu.arsiv_dizini(args.dosya)
 
-    con = olay_sorgu.baglanti_kur()
+    con = olay_sorgu.baglanti_kur_cli()   # CLI kapısı: bozuk tavan → gerekçe + çıkış 2 (v355)
     try:
         kaynak_sql = olay_sorgu.jsonl_kaynak_sql(args.dosya)
         try:

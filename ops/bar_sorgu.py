@@ -317,7 +317,7 @@ def main(argv: list[str] | None = None) -> int:
               f"`ops/bar_arsivle.py --hedef {dizin} --uygula`.", file=sys.stderr)
         return 1
 
-    con = olay_sorgu.baglanti_kur()
+    con = olay_sorgu.baglanti_kur_cli()   # CLI kapısı: bozuk tavan → gerekçe + çıkış 2 (v355)
     try:
         try:
             con.execute(f"CREATE OR REPLACE TEMP VIEW barlar AS {gorunum_sql(dosyalar)}")
