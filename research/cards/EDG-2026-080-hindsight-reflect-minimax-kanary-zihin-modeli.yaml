@@ -7,7 +7,7 @@
 # tazeleme (≈1/gün) bunun içinde; konsolidasyonun aynı modeli tüketmemesi şart (EDG-077 hükmü → EDG-081).
 
 card_id: EDG-2026-080
-status: measuring   # 2026-09-06 16:11Z Rol-1 — K1 GEÇTİ (3/3), K2 pilot 7 gece (2026-09-07…09-13); hüküm hukum_k1_2026_09_06
+status: measured   # 2026-09-13 05:2xZ Rol-1 — K1 GEÇTİ (hukum_k1_2026_09_06), K2 KALDI (hukum_k2_2026_09_13: 7 gecede 1 otomatik tazeleme — banka girdisiz)
 family: hindsight_hafiza
 on_kayit: 2026-09-06
 ref: [EDG-2026-074, TSK-142, TSK-157, EDG-2026-077, EDG-2026-067, TSK-060]
@@ -123,3 +123,19 @@ kosum_notu_k2_gun1_tazeleme: >
   refresh_mental_model 3 çağrı (2,0 s/150 tok · 6,7 s/241 tok · 13,5 s/2.829 tok) + mental_model_delta_ops 1 çağrı (31,8 s/4.387 tok),
   hepsi minimax/minimax-m3:free success; toplam ≈54 s LLM, ≈7,6k çıktı jetonu; sayfa last_refreshed_at 15:24:08Z. Gün-1 kaydı: model
   kolonu m3 (zincir yedeğe düşmedi), 429/hata 0. Uydurma sayımı 7. gün (09-13) sayfa anlık görüntüsüyle (kurallar dondu, R4).
+hukum_k2_2026_09_13: >
+  KALDI (Rol-1, 05:29Z). PENCERE 2026-09-07…09-13 (7 gece, 05:00Z cron) KAPANDI; 7. gece kaydı: hindsight-api journal 05:00:51Z
+  'Scheduled mental model refresh: scheduled 0 model(s), 11 up-to-date'. SAYILAR (A1 hindsight DB async_operations, task_payload mm-0fb27056…):
+  OTOMATİK refresh op 1/7 (09-07 05:02Z, delta_ops_applied 8, content_written 12.962 kr) — eşik 5–8: KALDI · failed (429-dışı) 1 (09-08 07:40Z,
+  ReflectToolCallError sınıfı, retry 3 — Rol-1'in elle model sondası sırasında) — eşik ≤1/7: sağlandı · ELLE tazeleme 2 (09-08 07:57Z, 08:08Z;
+  content_written 22.942 / 25.854 kr) — otomatik sayıma girmez · content_written+unchanged+preserved 3/7 (1 otomatik + 2 elle) — eşik ≥5/7: KALDI ·
+  effective_mode=delta 3/7 — eşik ≥5/7: KALDI · ort. LLM çağrısı/refresh: ÖLÇÜLEMEDİ (result_metadata çağrı sayısı taşımıyor; keep_trace izi bu
+  turda okunmadı) · minimax payı: ÖLÇÜLEMEZ — minimax-m3:free 2026-09-08 sabahı OpenRouter'da ücretli oldu (404), reflect zinciri ling-3.0-flash
+  ailesine döndü (EDG-081 notu); kill#5'in öncülü (minimax tavanı) pencere ortasında ortadan kalktı · pano listeliyor: EVET (/api/hindsight/zihin-modelleri).
+  ÖNCÜL BULGUSU (sebep, mazeret değil): bankaya SON olgu 2026-09-07 04:28Z (ingest r5) girdi; 09-07…09-13 arası SIFIR yeni memory_unit → delta modu
+  her gece haklı olarak 'up-to-date' dedi ve tazeleme kurmadı. Yani K2 'model tazeleme kadansını taşıyabiliyor mu' sorusunu DEĞİL, 'girdisiz
+  bankada delta doğru davranıyor mu' sorusunu ölçtü (cevap: evet). Eşik/pencere sonradan değişmez — hüküm KALDI; yeniden ölçüm ancak bir retain
+  akışı (TSK-168 defter özeti besleme ya da bot autoRetain) canlıyken YENİ kartla. K defteri: EDG-080-k2 = KALDI (K=2, ikinci deneme yok).
+  Uydurma sayımı 7. gün (pilot sayfası, R4 kuralları, uydurma_say.py f20ef68): 48/51 (%94,1) — gün-0 %75'ten yukarı (basename kuralı sonrası);
+  bu kartın eşiği değil, EDG-083'ün ölçüsü. basari_tanimi sonucu: K2 GEÇMEDİ → TSK-142 'Faz-2 yazma yolu KOVA B' hükmü AÇILMAZ; kart notu ROADMAP'e.
+  hafıza: A1 recall koşulmadı (hüküm ölçümden türedi, ayar değişikliği yok); memory: hindsight-islem-bazli-model-ayari (REFLECT zinciri kaydı).

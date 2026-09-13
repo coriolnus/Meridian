@@ -56,7 +56,7 @@ Toplam **102** kart.
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
-### Ölçümde (9)
+### Ölçümde (7)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -70,15 +70,9 @@ Toplam **102** kart.
 - **EDG-2026-078** (`measuring`) — 
   · HÜKÜM: 2026-09-05 Rol-1 — kod canlı (#21, 19:55Z); ilk seans 2026-09-08; 40 seans (~2026-11-03) sonra hüküm
   · kart: `EDG-2026-078-skill-gorus-golge-siralama-kolu.yaml`
-- **EDG-2026-080** (`measuring`) — 
-  · HÜKÜM: 2026-09-06 16:11Z Rol-1 — K1 GEÇTİ (3/3), K2 pilot 7 gece (2026-09-07…09-13); hüküm hukum_k1_2026_09_06
-  · kart: `EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml`
 - **EDG-2026-081** (`measuring`) — 
   · HÜKÜM: 2026-09-06 değerlendirme: adım-1/2 canlı, gün-1 ölçümü var; pencere ~2026-09-20 # 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim…
   · kart: `EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml`
-- **EDG-2026-083** (`measuring`) — 
-  · HÜKÜM: 2026-09-06 değerlendirme: adım-1 tamam, gün-0 ölçüm + kullanım-1 kayıtlı; hüküm 2026-09-13
-  · kart: `EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml`
 - **EDG-2026-084** (`measuring`) — 
   · HÜKÜM: 2026-09-07 01:1xZ — beş sayfa kuruldu (00:45–01:10Z), gün-0 sayımı kayıtlı; hüküm 2026-09-14
   · kart: `EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml`
@@ -86,7 +80,7 @@ Toplam **102** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (55)
+### Ölçüldü (57)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -220,9 +214,15 @@ Toplam **102** kart.
 - **EDG-2026-079** (`measured`) — 
   · HÜKÜM: 2026-09-05 Rol-1 — K1 KALDI (bant 3: p=0,107 > 0,10) · K2 GEÇTİ (q=0,085) · PK 3/3 tuttu; replay hükümleri survivorship şerhiyle ASKIDA, TSK-066 as_of ZORUNLU
   · kart: `EDG-2026-079-replay-defteri-pit-uyelik-denetimi.yaml`
+- **EDG-2026-080** (`measured`) — 
+  · HÜKÜM: 2026-09-13 05:2xZ Rol-1 — K1 GEÇTİ (hukum_k1_2026_09_06), K2 KALDI (hukum_k2_2026_09_13: 7 gecede 1 otomatik tazeleme — banka girdisiz)
+  · kart: `EDG-2026-080-hindsight-reflect-minimax-kanary-zihin-modeli.yaml`
 - **EDG-2026-082** (`measured`) — 
   · HÜKÜM: 2026-09-06 Rol-1 — A: ölçülebilen kapı 1/1 aynı (DSR/PBO yapısal ölçülemedi), sızıntı A'da 0; B raporlu; S5 tohum değişimi OPERATÖR
   · kart: `EDG-2026-082-tohum-pit-uyelik-suzgeci-kiyasi.yaml`
+- **EDG-2026-083** (`measured`) — 
+  · HÜKÜM: 2026-09-13 05:2xZ Rol-1 — KALDI (hukum_2026_09_13): uydurma %95,7 GEÇTİ, içerik 3/3 GEÇTİ, gerçek-kullanım 1 sayfa (eşik ≥2) KALDI; sökme kararı OPERATÖRDE (TSK-060)
+  · kart: `EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml`
 - **EXE-2026-001** (`measured`) — İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra modelleri koşuyor ve ayna gap durumunda reddediliyor…
   · HÜKÜM: 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
   · kart: `EXE-2026-001-entry-execution.yaml`

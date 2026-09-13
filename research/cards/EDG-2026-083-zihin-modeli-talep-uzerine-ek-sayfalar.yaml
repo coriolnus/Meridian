@@ -9,7 +9,7 @@
 # UYDURMA ÖLÇÜMÜ bu kartın omurgası: sayfa "hatırlanan"dır, kural "ölçülen"dir — sayfadaki atıflar depoda doğrulanır, oran EŞİKTİR.
 
 card_id: EDG-2026-083
-status: measuring   # 2026-09-06 değerlendirme: adım-1 tamam, gün-0 ölçüm + kullanım-1 kayıtlı; hüküm 2026-09-13
+status: measured   # 2026-09-13 05:2xZ Rol-1 — KALDI (hukum_2026_09_13): uydurma %95,7 GEÇTİ, içerik 3/3 GEÇTİ, gerçek-kullanım 1 sayfa (eşik ≥2) KALDI; sökme kararı OPERATÖRDE (TSK-060)
 family: hindsight_hafiza
 on_kayit: 2026-09-06
 ref: [EDG-2026-080, EDG-2026-067, TSK-142, TSK-060, TSK-091, TSK-160]
@@ -131,4 +131,18 @@ olcum_gun1_2026_09_07: >
   gerçek: fundamentals.csv, /.hermes/config.yaml, scratchpad/roadmap_donusum.py, push_code_a1.sh, v248, PRODUCT.md/DESIGN.md,
   e842246dcb29e7ad, adapters/fmp.py, skills/.usage.json, birkaç state/ dosyası (çalışma listesinde yok) — 7. gün için sınıflandırma
   DONDU: bundan sonra kural değişikliği yok, yalnız sayım.
-
+hukum_2026_09_13: >
+  KALDI (Rol-1, 05:29Z) — üç eşikten ikisi geçti, üçüncüsü kaldı. PENCERE 2026-09-06…09-13 KAPANDI (7. gün 05:00Z slotu: '11 up-to-date').
+  (1) İÇERİK: S1 3 / S2 3 / S3 3 tamamlanmış tazeleme (pencere içi, son 09-08 08:08Z; TALEP ÜZERİNE tasarım gereği elle) → GEÇTİ.
+  (2) UYDURMA (uydurma_say.py f20ef68, R1–R4 donuk; girdi/bellek_kimlikleri_2026-09-13 17.243 memory + 11 mental model id, calisma_dosyalari 138;
+  sayfalar/2026-09-13_gun7/ + SHA256.txt; sonuc_2026-09-13_gun7.json): 11 sayfa 582 atıf / 557 doğrulanan = %95,7 (eşik ≥%80: GEÇTİ); en düşük sayfa
+  pk-pit-civisi 9/11 = %81,8 (eşik sayfa başına ≥%60: GEÇTİ); S1 61/61 %100 · S2 34/34 %100 · S3 63/68 %92,6. Gün-0 %99 → gün-7 %95,7:
+  düşüş 09-08 elle tazelemelerde gelen yeni atıflardan (S3 5, uretici-okuyucu 6 doğrulanamayan) — depo-dışı/sonradan değişen yollar sınıfı, rapor md'de.
+  (3) GERÇEK KULLANIM: 'kaynak: zihin modeli <ad>' atfı — günlük 1 (S2, 2026-09-06), ROADMAP/kartlarda başka sayfa YOK → 1 sayfa (eşik ≥2 sayfa): KALDI.
+  DÜRÜSTLÜK NOTU: pencerenin Rol-1 oturumları 09-08 akşamı 11,18M token'lık inceleme kazasıyla kesildi (09-09…09-11 hiç oturum yok); oturum-başı
+  sayfa okuma alışkanlığı hiç sınanamadı — ölçüm gerçek, hafta atipik. Eşik değişmez, hüküm KALDI; yeniden ölçüm YENİ kartla ve iki ön şartla:
+  (a) bankaya retain akışı (09-07'den beri sıfır giriş — sayfalar tazelenemez), (b) oturum-başı okuma kuralının CLAUDE.md'de zorunlu adım olması.
+  MALİYET: pencere içi tazelemeler 09-08 elle (ling zinciri, ücretsiz), kota etkisi ölçülmedi (EDG-081 kolonu).
+  basari_tanimi sonucu 'kaldıysa sayfalar kapatılır' + TSK-060 'KALDI ise tamamen sökülür' — İKİSİ DE OPERATÖR KARARINA bırakıldı (geri alınması
+  pahalı kurulum; öncül bulgusu: girdisiz banka). Rol-1 önerisi: sayfalar DURSUN, retain akışı (TSK-168 kart-önce) ile yeni pencere; kanıt yoksa sök.
+  K defteri: EDG-083-talep-uzerine = KALDI (K=1). hafıza: memory hindsight-aktif-kullanim (operatör 09-06 'aktif kullan' direktifi — bu hafta uygulanamadı, itiraf).

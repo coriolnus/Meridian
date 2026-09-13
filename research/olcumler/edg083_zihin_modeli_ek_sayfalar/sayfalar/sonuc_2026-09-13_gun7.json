@@ -1,0 +1,1662 @@
+{
+  "beyan": "Bu betik HÜKÜM VERMEZ — eşik (kart EDG-2026-083 'esikler' alanı) burada GEÇMEZ, Rol-1'in ayrı hükmüdür. 'yol' sınıfı git ls-files kümesine, 'sha' git cat-file'a bağlıdır; ikisi de --repo kökünde SALT-OKUNUR çalışır, ağa çıkılmaz. yol: dizinsiz atıf basename eşleşmesiyle doğrulanır (Rol-1 ruling 2026-09-06, ölçümden önce). R1-R3 (brief-uydurma-say-3, 2026-09-06): kalem TSK-NNN ROADMAP.md metninde HERHANGİ biçimde (köşeli parantez şart DEĞİL) geçiyorsa doğrulanmıştır; bellek --bellek-kimlikleri verilmişse bir sha adayı önce bu kümede önek aranarak doğrulanır (eşleşmezse eski sha yolu); calisma_dosyasi --calisma-dosyalari verilmişse depoda bulunamayan dizinsiz bir yol atıfının basename'i bu listede varsa doğrulanmıştır (depo dışı ama gerçek) — ikisi de liste verilmezse None + neden kalır. R4: state/backups/veri önekli çalışma dosyaları listeyle, mm- öneksiz zihin modeli kimlikleri bellek listesiyle doğrulanır (Rol-1 ruling 2026-09-07, ölçümden önce).",
+  "girdi": {
+    "n_sayfa": 11,
+    "repo": "/Users/erdemozturk/AI-Trading",
+    "sayfa_dizin": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7",
+    "sayfa_dosyalari": [
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-acik-sorular.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-ajan-surec-hatalari.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-ariza-kok-neden.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-bagimlilik-haritasi.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-dagitim-tarihcesi.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-hedef-sapma.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-karar-gerekceleri.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-uretici-okuyucu-haritasi.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/mm-0fb27056e93d4c45b302cdc6e62abc6a.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/nk-kripto-madencilik.json",
+      "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/pk-pit-civisi.json"
+    ]
+  },
+  "hata": [],
+  "olcum_zamani": "2026-09-13T05:26:46+00:00",
+  "sayfalar": {
+    "meridian-acik-sorular": {
+      "dogrulanamayan": [
+        {
+          "atif": "/opt/meridian/ops/meridian-guard.sh",
+          "sinif": "yol"
+        },
+        {
+          "atif": "fundamentals.csv",
+          "sinif": "yol"
+        },
+        {
+          "atif": "state/equity_curve.json",
+          "sinif": "yol"
+        }
+      ],
+      "dogrulanan": 110,
+      "id": "meridian-acik-sorular",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-acik-sorular.json",
+      "oran": 0.973451,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 61,
+          "toplam": 61
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 4,
+          "toplam": 4
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 3,
+          "toplam": 3
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "DEVIR-PIT-CIVISI-2026-08-30.md": [
+              "docs/DEVIR-PIT-CIVISI-2026-08-30.md"
+            ],
+            "OLCUM-MODEL-BUTCESI-2026-08-27.md": [
+              "docs/OLCUM-MODEL-BUTCESI-2026-08-27.md"
+            ],
+            "RUNBOOK.md": [
+              "deploy/oracle-a1/RUNBOOK.md",
+              "docs/RUNBOOK.md"
+            ],
+            "analytics.py": [
+              "meridian/analytics.py"
+            ],
+            "api.py": [
+              "meridian/api.py"
+            ],
+            "auth_cli.py": [
+              "meridian/auth_cli.py"
+            ],
+            "bararchive.py": [
+              "meridian/bararchive.py"
+            ],
+            "bounds.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/bounds.yaml",
+              "state/bounds.yaml"
+            ],
+            "config.py": [
+              "meridian/config.py"
+            ],
+            "earnings_8k_tarihleri.csv": [
+              "research/edgar_facts/earnings_8k_tarihleri.csv"
+            ],
+            "goal.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+              "state/goal.yaml"
+            ],
+            "guard.py": [
+              "meridian/guard.py"
+            ],
+            "health.py": [
+              "meridian/health.py"
+            ],
+            "hermes.py": [
+              "meridian/hermes.py"
+            ],
+            "islemler_cmb.json": [
+              "research/olcumler/edg032_final_paket_2026-08-12/islemler_cmb.json"
+            ],
+            "loop.py": [
+              "meridian/loop.py"
+            ],
+            "notify.py": [
+              "meridian/notify.py"
+            ],
+            "recompute.py": [
+              "meridian/recompute.py"
+            ],
+            "reflect.py": [
+              "meridian/reflect.py"
+            ],
+            "scheduler.py": [
+              "meridian/scheduler.py"
+            ],
+            "score.py": [
+              "meridian/score.py"
+            ],
+            "shadow_variants.py": [
+              "meridian/shadow_variants.py"
+            ],
+            "store.py": [
+              "meridian/store.py"
+            ],
+            "test_brifing_kadansi_v327.py": [
+              "tests/test_brifing_kadansi_v327.py"
+            ],
+            "test_icra_gercekligi_v141.py": [
+              "tests/test_icra_gercekligi_v141.py"
+            ],
+            "test_sef_brifingi_v330.py": [
+              "tests/test_sef_brifingi_v330.py"
+            ],
+            "watchdog.py": [
+              "meridian/watchdog.py"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [
+            "/opt/meridian/ops/meridian-guard.sh",
+            "fundamentals.csv",
+            "state/equity_curve.json"
+          ],
+          "dogrulanan": 37,
+          "dogrulanan_ad": 27,
+          "dogrulanan_tam": 10,
+          "toplam": 40
+        }
+      },
+      "toplam": 113
+    },
+    "meridian-ajan-surec-hatalari": {
+      "dogrulanamayan": [
+        {
+          "atif": "/.hermes/config.yaml",
+          "sinif": "yol"
+        },
+        {
+          "atif": "state/equity_curve.json",
+          "sinif": "yol"
+        }
+      ],
+      "dogrulanan": 44,
+      "id": "meridian-ajan-surec-hatalari",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-ajan-surec-hatalari.json",
+      "oran": 0.956522,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 8,
+          "toplam": 8
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 5,
+          "toplam": 5
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "RUNBOOK.md": [
+              "deploy/oracle-a1/RUNBOOK.md",
+              "docs/RUNBOOK.md"
+            ],
+            "api.py": [
+              "meridian/api.py"
+            ],
+            "auth_cli.py": [
+              "meridian/auth_cli.py"
+            ],
+            "bounds.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/bounds.yaml",
+              "state/bounds.yaml"
+            ],
+            "config.py": [
+              "meridian/config.py"
+            ],
+            "dbmigrate.py": [
+              "meridian/dbmigrate.py"
+            ],
+            "deploy.sh": [
+              "deploy/oracle-a1/deploy.sh"
+            ],
+            "earnings_8k_tarihleri.csv": [
+              "research/edgar_facts/earnings_8k_tarihleri.csv"
+            ],
+            "goal.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+              "state/goal.yaml"
+            ],
+            "guard.py": [
+              "meridian/guard.py"
+            ],
+            "notify.py": [
+              "meridian/notify.py"
+            ],
+            "pull-a1-backups.sh": [
+              "ops/pull-a1-backups.sh"
+            ],
+            "run.py": [
+              "meridian/run.py"
+            ],
+            "scheduler.py": [
+              "meridian/scheduler.py"
+            ],
+            "store.py": [
+              "meridian/store.py"
+            ],
+            "test_icra_gercekligi_v141.py": [
+              "tests/test_icra_gercekligi_v141.py"
+            ],
+            "watchdog.py": [
+              "meridian/watchdog.py"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [
+            "/.hermes/config.yaml",
+            "state/equity_curve.json"
+          ],
+          "dogrulanan": 27,
+          "dogrulanan_ad": 17,
+          "dogrulanan_tam": 10,
+          "toplam": 29
+        }
+      },
+      "toplam": 46
+    },
+    "meridian-ariza-kok-neden": {
+      "dogrulanamayan": [
+        {
+          "atif": "/.hermes/config.yaml",
+          "sinif": "yol"
+        },
+        {
+          "atif": "/opt/meridian/ops/meridian-guard.sh",
+          "sinif": "yol"
+        },
+        {
+          "atif": "scratchpad/roadmap_donusum.py",
+          "sinif": "yol"
+        },
+        {
+          "atif": "state/equity_curve.json",
+          "sinif": "yol"
+        },
+        {
+          "atif": "e842246dcb29e7ad",
+          "sinif": "sha"
+        }
+      ],
+      "dogrulanan": 63,
+      "id": "meridian-ariza-kok-neden",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-ariza-kok-neden.json",
+      "oran": 0.926471,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 24,
+          "toplam": 24
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 3,
+          "toplam": 3
+        },
+        "sha": {
+          "dogrulanamayan": [
+            "e842246dcb29e7ad"
+          ],
+          "dogrulanan": 5,
+          "toplam": 6
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "api.py": [
+              "meridian/api.py"
+            ],
+            "auth_cli.py": [
+              "meridian/auth_cli.py"
+            ],
+            "data.py": [
+              "meridian/adapters/data.py"
+            ],
+            "dbmigrate.py": [
+              "meridian/dbmigrate.py"
+            ],
+            "deploy.sh": [
+              "deploy/oracle-a1/deploy.sh"
+            ],
+            "earnings_8k_tarihleri.csv": [
+              "research/edgar_facts/earnings_8k_tarihleri.csv"
+            ],
+            "goal.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+              "state/goal.yaml"
+            ],
+            "meridian-guard.sh": [
+              "ops/meridian-guard.sh"
+            ],
+            "pull-a1-backups.sh": [
+              "ops/pull-a1-backups.sh"
+            ],
+            "recompute.py": [
+              "meridian/recompute.py"
+            ],
+            "run.py": [
+              "meridian/run.py"
+            ],
+            "test_icra_gercekligi_v141.py": [
+              "tests/test_icra_gercekligi_v141.py"
+            ],
+            "watchdog.py": [
+              "meridian/watchdog.py"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [
+            "/.hermes/config.yaml",
+            "/opt/meridian/ops/meridian-guard.sh",
+            "scratchpad/roadmap_donusum.py",
+            "state/equity_curve.json"
+          ],
+          "dogrulanan": 26,
+          "dogrulanan_ad": 13,
+          "dogrulanan_tam": 13,
+          "toplam": 30
+        }
+      },
+      "toplam": 68
+    },
+    "meridian-bagimlilik-haritasi": {
+      "dogrulanamayan": [],
+      "dogrulanan": 61,
+      "id": "meridian-bagimlilik-haritasi",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-bagimlilik-haritasi.json",
+      "oran": 1.0,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 34,
+          "toplam": 34
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 3,
+          "toplam": 3
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "RUNBOOK.md": [
+              "deploy/oracle-a1/RUNBOOK.md",
+              "docs/RUNBOOK.md"
+            ],
+            "TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md": [
+              "docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md"
+            ],
+            "analytics.py": [
+              "meridian/analytics.py"
+            ],
+            "api.py": [
+              "meridian/api.py"
+            ],
+            "earnings_8k_tarihleri.csv": [
+              "research/edgar_facts/earnings_8k_tarihleri.csv"
+            ],
+            "goal.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+              "state/goal.yaml"
+            ],
+            "loop.py": [
+              "meridian/loop.py"
+            ],
+            "meridian-guard.sh": [
+              "ops/meridian-guard.sh"
+            ],
+            "mirror_stream.py": [
+              "meridian/mirror_stream.py"
+            ],
+            "reflect.py": [
+              "meridian/reflect.py"
+            ],
+            "test_icra_gercekligi_v141.py": [
+              "tests/test_icra_gercekligi_v141.py"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [],
+          "dogrulanan": 18,
+          "dogrulanan_ad": 11,
+          "dogrulanan_tam": 7,
+          "toplam": 18
+        }
+      },
+      "toplam": 61
+    },
+    "meridian-dagitim-tarihcesi": {
+      "dogrulanamayan": [
+        {
+          "atif": "push_code_a1.sh",
+          "sinif": "yol"
+        }
+      ],
+      "dogrulanan": 23,
+      "id": "meridian-dagitim-tarihcesi",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-dagitim-tarihcesi.json",
+      "oran": 0.958333,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 3,
+          "toplam": 3
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 5,
+          "toplam": 5
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "SKILL.md": [
+              "deploy/hermes/skills/meridian-olcum/SKILL.md",
+              "skills/_emekli/breadth-chart-analyst/SKILL.md",
+              "skills/_emekli/breakout-trade-planner/SKILL.md",
+              "skills/_emekli/cot-contrarian-detector/SKILL.md",
+              "skills/_emekli/dividend-growth-pullback-screener/SKILL.md"
+            ],
+            "deploy.sh": [
+              "deploy/oracle-a1/deploy.sh"
+            ],
+            "pull-a1-backups.sh": [
+              "ops/pull-a1-backups.sh"
+            ],
+            "run.py": [
+              "meridian/run.py"
+            ],
+            "scheduler.py": [
+              "meridian/scheduler.py"
+            ],
+            "sprint.py": [
+              "meridian/sprint.py"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [
+            "push_code_a1.sh"
+          ],
+          "dogrulanan": 13,
+          "dogrulanan_ad": 6,
+          "dogrulanan_tam": 7,
+          "toplam": 14
+        }
+      },
+      "toplam": 24
+    },
+    "meridian-hedef-sapma": {
+      "dogrulanamayan": [],
+      "dogrulanan": 34,
+      "id": "meridian-hedef-sapma",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-hedef-sapma.json",
+      "oran": 1.0,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 5,
+          "toplam": 5
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 3,
+          "toplam": 3
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "RUNBOOK.md": [
+              "deploy/oracle-a1/RUNBOOK.md",
+              "docs/RUNBOOK.md"
+            ],
+            "analytics.py": [
+              "meridian/analytics.py"
+            ],
+            "api.py": [
+              "meridian/api.py"
+            ],
+            "auth_cli.py": [
+              "meridian/auth_cli.py"
+            ],
+            "bounds.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/bounds.yaml",
+              "state/bounds.yaml"
+            ],
+            "config.py": [
+              "meridian/config.py"
+            ],
+            "goal.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+              "state/goal.yaml"
+            ],
+            "guard.py": [
+              "meridian/guard.py"
+            ],
+            "health.py": [
+              "meridian/health.py"
+            ],
+            "run.py": [
+              "meridian/run.py"
+            ],
+            "scheduler.py": [
+              "meridian/scheduler.py"
+            ],
+            "score.py": [
+              "meridian/score.py"
+            ],
+            "shadow_variants.py": [
+              "meridian/shadow_variants.py"
+            ],
+            "test_icra_gercekligi_v141.py": [
+              "tests/test_icra_gercekligi_v141.py"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [],
+          "dogrulanan": 22,
+          "dogrulanan_ad": 14,
+          "dogrulanan_tam": 8,
+          "toplam": 22
+        }
+      },
+      "toplam": 34
+    },
+    "meridian-karar-gerekceleri": {
+      "dogrulanamayan": [
+        {
+          "atif": "PRODUCT.md/DESIGN.md",
+          "sinif": "yol"
+        },
+        {
+          "atif": "v248",
+          "sinif": "civi"
+        },
+        {
+          "atif": "e842246dcb29e7ad",
+          "sinif": "sha"
+        }
+      ],
+      "dogrulanan": 80,
+      "id": "meridian-karar-gerekceleri",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-karar-gerekceleri.json",
+      "oran": 0.963855,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 32,
+          "toplam": 32
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "civi": {
+          "dogrulanamayan": [
+            "v248"
+          ],
+          "dogrulanan": 6,
+          "toplam": 7
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 6,
+          "toplam": 6
+        },
+        "sha": {
+          "dogrulanamayan": [
+            "e842246dcb29e7ad"
+          ],
+          "dogrulanan": 6,
+          "toplam": 7
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "EDG-2026-048-chop-tabani.yaml": [
+              "research/cards/EDG-2026-048-chop-tabani.yaml"
+            ],
+            "KARAR-2026-08-23-YEDI-KARAR.md": [
+              "docs/KARAR-2026-08-23-YEDI-KARAR.md"
+            ],
+            "TASARIM-YONU-2026-08-24-PANO-V2.md": [
+              "docs/TASARIM-YONU-2026-08-24-PANO-V2.md"
+            ],
+            "api.py": [
+              "meridian/api.py"
+            ],
+            "auth_cli.py": [
+              "meridian/auth_cli.py"
+            ],
+            "backtest.py": [
+              "meridian/backtest.py"
+            ],
+            "config.py": [
+              "meridian/config.py"
+            ],
+            "goal.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+              "state/goal.yaml"
+            ],
+            "hermes.py": [
+              "meridian/hermes.py"
+            ],
+            "intraday_cycle.py": [
+              "meridian/intraday_cycle.py"
+            ],
+            "loop.py": [
+              "meridian/loop.py"
+            ],
+            "meridian-guard.sh": [
+              "ops/meridian-guard.sh"
+            ],
+            "run.py": [
+              "meridian/run.py"
+            ],
+            "test_authority_boundaries_v77.py": [
+              "tests/test_authority_boundaries_v77.py"
+            ],
+            "test_icra_gercekligi_v141.py": [
+              "tests/test_icra_gercekligi_v141.py"
+            ],
+            "test_sef_brifingi_v330.py": [
+              "tests/test_sef_brifingi_v330.py"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [
+            "PRODUCT.md/DESIGN.md"
+          ],
+          "dogrulanan": 27,
+          "dogrulanan_ad": 16,
+          "dogrulanan_tam": 11,
+          "toplam": 28
+        }
+      },
+      "toplam": 83
+    },
+    "meridian-uretici-okuyucu-haritasi": {
+      "dogrulanamayan": [
+        {
+          "atif": "adapters/fmp.py",
+          "sinif": "yol"
+        },
+        {
+          "atif": "skills/.usage.json",
+          "sinif": "yol"
+        },
+        {
+          "atif": "state/equity_curve.json",
+          "sinif": "yol"
+        },
+        {
+          "atif": "state/portfolio.json",
+          "sinif": "yol"
+        },
+        {
+          "atif": "state/short_interest_float.json",
+          "sinif": "yol"
+        },
+        {
+          "atif": "state/trade_plans.jsonl",
+          "sinif": "yol"
+        }
+      ],
+      "dogrulanan": 78,
+      "id": "meridian-uretici-okuyucu-haritasi",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/meridian-uretici-okuyucu-haritasi.json",
+      "oran": 0.928571,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 26,
+          "toplam": 26
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 18,
+          "toplam": 18
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "RUNBOOK.md": [
+              "deploy/oracle-a1/RUNBOOK.md",
+              "docs/RUNBOOK.md"
+            ],
+            "SOUL.md": [
+              "deploy/hermes/SOUL.md",
+              "deploy/hermes/profiles/bekci/SOUL.md",
+              "deploy/hermes/profiles/karne/SOUL.md",
+              "deploy/hermes/profiles/sef/SOUL.md"
+            ],
+            "analytics.py": [
+              "meridian/analytics.py"
+            ],
+            "api.py": [
+              "meridian/api.py"
+            ],
+            "auth_cli.py": [
+              "meridian/auth_cli.py"
+            ],
+            "bararchive.py": [
+              "meridian/bararchive.py"
+            ],
+            "barfeed.py": [
+              "meridian/barfeed.py"
+            ],
+            "bounds.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/bounds.yaml",
+              "state/bounds.yaml"
+            ],
+            "config.py": [
+              "meridian/config.py"
+            ],
+            "dbmigrate.py": [
+              "meridian/dbmigrate.py"
+            ],
+            "events.jsonl": [
+              "research/olcumler/edg050_pead_2026-08-23/_state/events.jsonl",
+              "research/olcumler/edg053_gelir_momentumu_2026-08-24/_state/events.jsonl"
+            ],
+            "goal.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+              "state/goal.yaml"
+            ],
+            "guard.py": [
+              "meridian/guard.py"
+            ],
+            "health.py": [
+              "meridian/health.py"
+            ],
+            "loop.py": [
+              "meridian/loop.py"
+            ],
+            "reflect.py": [
+              "meridian/reflect.py"
+            ],
+            "scheduler.py": [
+              "meridian/scheduler.py"
+            ],
+            "store.py": [
+              "meridian/store.py"
+            ],
+            "trades.jsonl": [
+              "tests/fikstur/vaka_2026-08-04_sermaye_beyani_silinmesi/kare_oncesi/defter/trades.jsonl"
+            ],
+            "watchdog.py": [
+              "meridian/watchdog.py"
+            ]
+          },
+          "calisma_eslesmeleri": {
+            "state/cf_open.json": "cf_open.json",
+            "state/entry_execution.jsonl": "entry_execution.jsonl",
+            "state/fmp_usage.json": "fmp_usage.json",
+            "state/insider_signals.json": "insider_signals.json",
+            "state/insider_trades.json": "insider_trades.json",
+            "state/notify_undelivered.json": "notify_undelivered.json",
+            "state/short_interest.json": "short_interest.json",
+            "state/strategy.yaml": "strategy.yaml"
+          },
+          "dogrulanamayan": [
+            "adapters/fmp.py",
+            "skills/.usage.json",
+            "state/equity_curve.json",
+            "state/portfolio.json",
+            "state/short_interest_float.json",
+            "state/trade_plans.jsonl"
+          ],
+          "dogrulanan": 32,
+          "dogrulanan_ad": 20,
+          "dogrulanan_tam": 12,
+          "toplam": 38
+        }
+      },
+      "toplam": 84
+    },
+    "mm-0fb27056e93d4c45b302cdc6e62abc6a": {
+      "dogrulanamayan": [
+        {
+          "atif": "equity_curve.json",
+          "sinif": "yol"
+        },
+        {
+          "atif": "scoreboard.json",
+          "sinif": "yol"
+        },
+        {
+          "atif": "state/equity_curve.json",
+          "sinif": "yol"
+        }
+      ],
+      "dogrulanan": 48,
+      "id": "mm-0fb27056e93d4c45b302cdc6e62abc6a",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/mm-0fb27056e93d4c45b302cdc6e62abc6a.json",
+      "oran": 0.941176,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 7,
+          "toplam": 7
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 4,
+          "toplam": 4
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 7,
+          "toplam": 7
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 2,
+          "toplam": 2
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "RUNBOOK.md": [
+              "deploy/oracle-a1/RUNBOOK.md",
+              "docs/RUNBOOK.md"
+            ],
+            "analytics.py": [
+              "meridian/analytics.py"
+            ],
+            "api.py": [
+              "meridian/api.py"
+            ],
+            "auth_cli.py": [
+              "meridian/auth_cli.py"
+            ],
+            "bounds.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/bounds.yaml",
+              "state/bounds.yaml"
+            ],
+            "counterfactuals.jsonl": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/counterfactuals.jsonl"
+            ],
+            "earnings_8k_tarihleri.csv": [
+              "research/edgar_facts/earnings_8k_tarihleri.csv"
+            ],
+            "goal.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+              "state/goal.yaml"
+            ],
+            "guard.py": [
+              "meridian/guard.py"
+            ],
+            "health.py": [
+              "meridian/health.py"
+            ],
+            "meridian-guard.sh": [
+              "ops/meridian-guard.sh"
+            ],
+            "reflect.py": [
+              "meridian/reflect.py"
+            ],
+            "run.py": [
+              "meridian/run.py"
+            ],
+            "scheduler.py": [
+              "meridian/scheduler.py"
+            ],
+            "spend.py": [
+              "meridian/spend.py"
+            ],
+            "test_icra_gercekligi_v141.py": [
+              "tests/test_icra_gercekligi_v141.py"
+            ],
+            "test_sef_brifingi_v330.py": [
+              "tests/test_sef_brifingi_v330.py"
+            ],
+            "trades.jsonl": [
+              "tests/fikstur/vaka_2026-08-04_sermaye_beyani_silinmesi/kare_oncesi/defter/trades.jsonl"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [
+            "equity_curve.json",
+            "scoreboard.json",
+            "state/equity_curve.json"
+          ],
+          "dogrulanan": 24,
+          "dogrulanan_ad": 18,
+          "dogrulanan_tam": 6,
+          "toplam": 27
+        }
+      },
+      "toplam": 51
+    },
+    "nk-kripto-madencilik": {
+      "dogrulanamayan": [],
+      "dogrulanan": 7,
+      "id": "nk-kripto-madencilik",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/nk-kripto-madencilik.json",
+      "oran": 1.0,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "bounds.yaml": [
+              "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/bounds.yaml",
+              "state/bounds.yaml"
+            ],
+            "guard.py": [
+              "meridian/guard.py"
+            ],
+            "run.py": [
+              "meridian/run.py"
+            ],
+            "test_authority_boundaries_v77.py": [
+              "tests/test_authority_boundaries_v77.py"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [],
+          "dogrulanan": 6,
+          "dogrulanan_ad": 4,
+          "dogrulanan_tam": 2,
+          "toplam": 6
+        }
+      },
+      "toplam": 7
+    },
+    "pk-pit-civisi": {
+      "dogrulanamayan": [
+        {
+          "atif": "fundamentals.csv",
+          "sinif": "yol"
+        },
+        {
+          "atif": "meridian-arsiv_research/cards/EDG-2026-065-hindsight-faz1-kurulum-recall.yaml",
+          "sinif": "yol"
+        }
+      ],
+      "dogrulanan": 9,
+      "id": "pk-pit-civisi",
+      "kaynak_dosya": "research/olcumler/edg083_zihin_modeli_ek_sayfalar/sayfalar/2026-09-13_gun7/pk-pit-civisi.json",
+      "oran": 0.818182,
+      "oran_neden": null,
+      "sinif_bazinda": {
+        "bellek": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "calisma_dosyasi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "civi": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "kalem": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "kart": {
+          "dogrulanamayan": [],
+          "dogrulanan": 1,
+          "toplam": 1
+        },
+        "sha": {
+          "dogrulanamayan": [],
+          "dogrulanan": 0,
+          "toplam": 0
+        },
+        "yol": {
+          "ad_eslesmeleri": {
+            "DEVIR-PIT-CIVISI-2026-08-30.md": [
+              "docs/DEVIR-PIT-CIVISI-2026-08-30.md"
+            ],
+            "codelaw.py": [
+              "meridian/codelaw.py"
+            ],
+            "earnings_8k_tarihleri.csv": [
+              "research/edgar_facts/earnings_8k_tarihleri.csv"
+            ]
+          },
+          "calisma_eslesmeleri": {},
+          "dogrulanamayan": [
+            "fundamentals.csv",
+            "meridian-arsiv_research/cards/EDG-2026-065-hindsight-faz1-kurulum-recall.yaml"
+          ],
+          "dogrulanan": 8,
+          "dogrulanan_ad": 3,
+          "dogrulanan_tam": 5,
+          "toplam": 10
+        }
+      },
+      "toplam": 11
+    }
+  },
+  "toplam": {
+    "dogrulanamayan": [
+      {
+        "atif": "/opt/meridian/ops/meridian-guard.sh",
+        "sayfa": "meridian-acik-sorular",
+        "sinif": "yol"
+      },
+      {
+        "atif": "fundamentals.csv",
+        "sayfa": "meridian-acik-sorular",
+        "sinif": "yol"
+      },
+      {
+        "atif": "state/equity_curve.json",
+        "sayfa": "meridian-acik-sorular",
+        "sinif": "yol"
+      },
+      {
+        "atif": "/.hermes/config.yaml",
+        "sayfa": "meridian-ajan-surec-hatalari",
+        "sinif": "yol"
+      },
+      {
+        "atif": "state/equity_curve.json",
+        "sayfa": "meridian-ajan-surec-hatalari",
+        "sinif": "yol"
+      },
+      {
+        "atif": "/.hermes/config.yaml",
+        "sayfa": "meridian-ariza-kok-neden",
+        "sinif": "yol"
+      },
+      {
+        "atif": "/opt/meridian/ops/meridian-guard.sh",
+        "sayfa": "meridian-ariza-kok-neden",
+        "sinif": "yol"
+      },
+      {
+        "atif": "scratchpad/roadmap_donusum.py",
+        "sayfa": "meridian-ariza-kok-neden",
+        "sinif": "yol"
+      },
+      {
+        "atif": "state/equity_curve.json",
+        "sayfa": "meridian-ariza-kok-neden",
+        "sinif": "yol"
+      },
+      {
+        "atif": "e842246dcb29e7ad",
+        "sayfa": "meridian-ariza-kok-neden",
+        "sinif": "sha"
+      },
+      {
+        "atif": "push_code_a1.sh",
+        "sayfa": "meridian-dagitim-tarihcesi",
+        "sinif": "yol"
+      },
+      {
+        "atif": "PRODUCT.md/DESIGN.md",
+        "sayfa": "meridian-karar-gerekceleri",
+        "sinif": "yol"
+      },
+      {
+        "atif": "v248",
+        "sayfa": "meridian-karar-gerekceleri",
+        "sinif": "civi"
+      },
+      {
+        "atif": "e842246dcb29e7ad",
+        "sayfa": "meridian-karar-gerekceleri",
+        "sinif": "sha"
+      },
+      {
+        "atif": "adapters/fmp.py",
+        "sayfa": "meridian-uretici-okuyucu-haritasi",
+        "sinif": "yol"
+      },
+      {
+        "atif": "skills/.usage.json",
+        "sayfa": "meridian-uretici-okuyucu-haritasi",
+        "sinif": "yol"
+      },
+      {
+        "atif": "state/equity_curve.json",
+        "sayfa": "meridian-uretici-okuyucu-haritasi",
+        "sinif": "yol"
+      },
+      {
+        "atif": "state/portfolio.json",
+        "sayfa": "meridian-uretici-okuyucu-haritasi",
+        "sinif": "yol"
+      },
+      {
+        "atif": "state/short_interest_float.json",
+        "sayfa": "meridian-uretici-okuyucu-haritasi",
+        "sinif": "yol"
+      },
+      {
+        "atif": "state/trade_plans.jsonl",
+        "sayfa": "meridian-uretici-okuyucu-haritasi",
+        "sinif": "yol"
+      },
+      {
+        "atif": "equity_curve.json",
+        "sayfa": "mm-0fb27056e93d4c45b302cdc6e62abc6a",
+        "sinif": "yol"
+      },
+      {
+        "atif": "scoreboard.json",
+        "sayfa": "mm-0fb27056e93d4c45b302cdc6e62abc6a",
+        "sinif": "yol"
+      },
+      {
+        "atif": "state/equity_curve.json",
+        "sayfa": "mm-0fb27056e93d4c45b302cdc6e62abc6a",
+        "sinif": "yol"
+      },
+      {
+        "atif": "fundamentals.csv",
+        "sayfa": "pk-pit-civisi",
+        "sinif": "yol"
+      },
+      {
+        "atif": "meridian-arsiv_research/cards/EDG-2026-065-hindsight-faz1-kurulum-recall.yaml",
+        "sayfa": "pk-pit-civisi",
+        "sinif": "yol"
+      }
+    ],
+    "dogrulanan": 557,
+    "oran": 0.957045,
+    "oran_neden": null,
+    "sinif_bazinda": {
+      "bellek": {
+        "dogrulanamayan": [],
+        "dogrulanan": 193,
+        "toplam": 193
+      },
+      "calisma_dosyasi": {
+        "dogrulanamayan": [],
+        "dogrulanan": 37,
+        "toplam": 37
+      },
+      "civi": {
+        "dogrulanamayan": [
+          {
+            "atif": "v248",
+            "sayfa": "meridian-karar-gerekceleri"
+          }
+        ],
+        "dogrulanan": 30,
+        "toplam": 31
+      },
+      "kalem": {
+        "dogrulanamayan": [],
+        "dogrulanan": 10,
+        "toplam": 10
+      },
+      "kart": {
+        "dogrulanamayan": [],
+        "dogrulanan": 20,
+        "toplam": 20
+      },
+      "sha": {
+        "dogrulanamayan": [
+          {
+            "atif": "e842246dcb29e7ad",
+            "sayfa": "meridian-ariza-kok-neden"
+          },
+          {
+            "atif": "e842246dcb29e7ad",
+            "sayfa": "meridian-karar-gerekceleri"
+          }
+        ],
+        "dogrulanan": 27,
+        "toplam": 29
+      },
+      "yol": {
+        "ad_eslesmeleri": {
+          "DEVIR-PIT-CIVISI-2026-08-30.md": [
+            "docs/DEVIR-PIT-CIVISI-2026-08-30.md"
+          ],
+          "EDG-2026-048-chop-tabani.yaml": [
+            "research/cards/EDG-2026-048-chop-tabani.yaml"
+          ],
+          "KARAR-2026-08-23-YEDI-KARAR.md": [
+            "docs/KARAR-2026-08-23-YEDI-KARAR.md"
+          ],
+          "OLCUM-MODEL-BUTCESI-2026-08-27.md": [
+            "docs/OLCUM-MODEL-BUTCESI-2026-08-27.md"
+          ],
+          "RUNBOOK.md": [
+            "deploy/oracle-a1/RUNBOOK.md",
+            "docs/RUNBOOK.md"
+          ],
+          "SKILL.md": [
+            "deploy/hermes/skills/meridian-olcum/SKILL.md",
+            "skills/_emekli/breadth-chart-analyst/SKILL.md",
+            "skills/_emekli/breakout-trade-planner/SKILL.md",
+            "skills/_emekli/cot-contrarian-detector/SKILL.md",
+            "skills/_emekli/dividend-growth-pullback-screener/SKILL.md"
+          ],
+          "SOUL.md": [
+            "deploy/hermes/SOUL.md",
+            "deploy/hermes/profiles/bekci/SOUL.md",
+            "deploy/hermes/profiles/karne/SOUL.md",
+            "deploy/hermes/profiles/sef/SOUL.md"
+          ],
+          "TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md": [
+            "docs/TASARIM-VIRGIN-KNOB-SUZGECI-2026-08-22.md"
+          ],
+          "TASARIM-YONU-2026-08-24-PANO-V2.md": [
+            "docs/TASARIM-YONU-2026-08-24-PANO-V2.md"
+          ],
+          "analytics.py": [
+            "meridian/analytics.py"
+          ],
+          "api.py": [
+            "meridian/api.py"
+          ],
+          "auth_cli.py": [
+            "meridian/auth_cli.py"
+          ],
+          "backtest.py": [
+            "meridian/backtest.py"
+          ],
+          "bararchive.py": [
+            "meridian/bararchive.py"
+          ],
+          "barfeed.py": [
+            "meridian/barfeed.py"
+          ],
+          "bounds.yaml": [
+            "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/bounds.yaml",
+            "state/bounds.yaml"
+          ],
+          "codelaw.py": [
+            "meridian/codelaw.py"
+          ],
+          "config.py": [
+            "meridian/config.py"
+          ],
+          "counterfactuals.jsonl": [
+            "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/counterfactuals.jsonl"
+          ],
+          "data.py": [
+            "meridian/adapters/data.py"
+          ],
+          "dbmigrate.py": [
+            "meridian/dbmigrate.py"
+          ],
+          "deploy.sh": [
+            "deploy/oracle-a1/deploy.sh"
+          ],
+          "earnings_8k_tarihleri.csv": [
+            "research/edgar_facts/earnings_8k_tarihleri.csv"
+          ],
+          "events.jsonl": [
+            "research/olcumler/edg050_pead_2026-08-23/_state/events.jsonl",
+            "research/olcumler/edg053_gelir_momentumu_2026-08-24/_state/events.jsonl"
+          ],
+          "goal.yaml": [
+            "research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/goal.yaml",
+            "state/goal.yaml"
+          ],
+          "guard.py": [
+            "meridian/guard.py"
+          ],
+          "health.py": [
+            "meridian/health.py"
+          ],
+          "hermes.py": [
+            "meridian/hermes.py"
+          ],
+          "intraday_cycle.py": [
+            "meridian/intraday_cycle.py"
+          ],
+          "islemler_cmb.json": [
+            "research/olcumler/edg032_final_paket_2026-08-12/islemler_cmb.json"
+          ],
+          "loop.py": [
+            "meridian/loop.py"
+          ],
+          "meridian-guard.sh": [
+            "ops/meridian-guard.sh"
+          ],
+          "mirror_stream.py": [
+            "meridian/mirror_stream.py"
+          ],
+          "notify.py": [
+            "meridian/notify.py"
+          ],
+          "pull-a1-backups.sh": [
+            "ops/pull-a1-backups.sh"
+          ],
+          "recompute.py": [
+            "meridian/recompute.py"
+          ],
+          "reflect.py": [
+            "meridian/reflect.py"
+          ],
+          "run.py": [
+            "meridian/run.py"
+          ],
+          "scheduler.py": [
+            "meridian/scheduler.py"
+          ],
+          "score.py": [
+            "meridian/score.py"
+          ],
+          "shadow_variants.py": [
+            "meridian/shadow_variants.py"
+          ],
+          "spend.py": [
+            "meridian/spend.py"
+          ],
+          "sprint.py": [
+            "meridian/sprint.py"
+          ],
+          "store.py": [
+            "meridian/store.py"
+          ],
+          "test_authority_boundaries_v77.py": [
+            "tests/test_authority_boundaries_v77.py"
+          ],
+          "test_brifing_kadansi_v327.py": [
+            "tests/test_brifing_kadansi_v327.py"
+          ],
+          "test_icra_gercekligi_v141.py": [
+            "tests/test_icra_gercekligi_v141.py"
+          ],
+          "test_sef_brifingi_v330.py": [
+            "tests/test_sef_brifingi_v330.py"
+          ],
+          "trades.jsonl": [
+            "tests/fikstur/vaka_2026-08-04_sermaye_beyani_silinmesi/kare_oncesi/defter/trades.jsonl"
+          ],
+          "watchdog.py": [
+            "meridian/watchdog.py"
+          ]
+        },
+        "calisma_eslesmeleri": {
+          "state/cf_open.json": "cf_open.json",
+          "state/entry_execution.jsonl": "entry_execution.jsonl",
+          "state/fmp_usage.json": "fmp_usage.json",
+          "state/insider_signals.json": "insider_signals.json",
+          "state/insider_trades.json": "insider_trades.json",
+          "state/notify_undelivered.json": "notify_undelivered.json",
+          "state/short_interest.json": "short_interest.json",
+          "state/strategy.yaml": "strategy.yaml"
+        },
+        "dogrulanamayan": [
+          {
+            "atif": "/opt/meridian/ops/meridian-guard.sh",
+            "sayfa": "meridian-acik-sorular"
+          },
+          {
+            "atif": "fundamentals.csv",
+            "sayfa": "meridian-acik-sorular"
+          },
+          {
+            "atif": "state/equity_curve.json",
+            "sayfa": "meridian-acik-sorular"
+          },
+          {
+            "atif": "/.hermes/config.yaml",
+            "sayfa": "meridian-ajan-surec-hatalari"
+          },
+          {
+            "atif": "state/equity_curve.json",
+            "sayfa": "meridian-ajan-surec-hatalari"
+          },
+          {
+            "atif": "/.hermes/config.yaml",
+            "sayfa": "meridian-ariza-kok-neden"
+          },
+          {
+            "atif": "/opt/meridian/ops/meridian-guard.sh",
+            "sayfa": "meridian-ariza-kok-neden"
+          },
+          {
+            "atif": "scratchpad/roadmap_donusum.py",
+            "sayfa": "meridian-ariza-kok-neden"
+          },
+          {
+            "atif": "state/equity_curve.json",
+            "sayfa": "meridian-ariza-kok-neden"
+          },
+          {
+            "atif": "push_code_a1.sh",
+            "sayfa": "meridian-dagitim-tarihcesi"
+          },
+          {
+            "atif": "PRODUCT.md/DESIGN.md",
+            "sayfa": "meridian-karar-gerekceleri"
+          },
+          {
+            "atif": "adapters/fmp.py",
+            "sayfa": "meridian-uretici-okuyucu-haritasi"
+          },
+          {
+            "atif": "skills/.usage.json",
+            "sayfa": "meridian-uretici-okuyucu-haritasi"
+          },
+          {
+            "atif": "state/equity_curve.json",
+            "sayfa": "meridian-uretici-okuyucu-haritasi"
+          },
+          {
+            "atif": "state/portfolio.json",
+            "sayfa": "meridian-uretici-okuyucu-haritasi"
+          },
+          {
+            "atif": "state/short_interest_float.json",
+            "sayfa": "meridian-uretici-okuyucu-haritasi"
+          },
+          {
+            "atif": "state/trade_plans.jsonl",
+            "sayfa": "meridian-uretici-okuyucu-haritasi"
+          },
+          {
+            "atif": "equity_curve.json",
+            "sayfa": "mm-0fb27056e93d4c45b302cdc6e62abc6a"
+          },
+          {
+            "atif": "scoreboard.json",
+            "sayfa": "mm-0fb27056e93d4c45b302cdc6e62abc6a"
+          },
+          {
+            "atif": "state/equity_curve.json",
+            "sayfa": "mm-0fb27056e93d4c45b302cdc6e62abc6a"
+          },
+          {
+            "atif": "fundamentals.csv",
+            "sayfa": "pk-pit-civisi"
+          },
+          {
+            "atif": "meridian-arsiv_research/cards/EDG-2026-065-hindsight-faz1-kurulum-recall.yaml",
+            "sayfa": "pk-pit-civisi"
+          }
+        ],
+        "dogrulanan": 240,
+        "dogrulanan_ad": 149,
+        "dogrulanan_tam": 91,
+        "toplam": 262
+      }
+    },
+    "toplam": 582
+  }
+}
