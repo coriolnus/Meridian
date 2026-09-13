@@ -447,7 +447,11 @@ def retain_et(taban: str, banka: str, kimlik: str, belge: str,
         # sessiz-yutma: gövde JSON değilse retain'in OLUP OLMADIĞI bilinmez; `operation_id` YOK
         # (None) döner ve bu bir ihlal değil ölçülemezliktir — POST'un kendisi 2xx aldığı için
         # `neden` doldurulmaz, sinyal olaya `operation_id=None` olarak çıkar (uydurma yasağı).
-        obs.warn(f"{OLAY}_yanit_ayristirilamadi", hata=f"{type(e).__name__}")
+        # TEK olay adı (inceleme ORTA-2): ikinci bir ad okuyucusuz kalırdı; POST 2xx döndü, yani
+        # retain OLDU ama operation_id okunamadı — aynı olay, `hata` alanı dolu.
+        obs.warn(OLAY, gun=gun, document_id=kimlik, sonuc="retain", items=1,
+                 karakter=len(belge), operation_id=None,
+                 hata=f"yanıt ayrıştırılamadı: {type(e).__name__}")
         yanit = {}
     if not isinstance(yanit, dict):
         yanit = {}
@@ -497,6 +501,10 @@ def main(argv=None) -> int:
         return CIKIS_HATA
 
     belge = belge_uret(gun, a.kok)
+    # İKİNCİ SAVUNMA HATTI (inceleme ORTA-1, 2026-09-13): `notify.scrub` yalnız `secrets.ALLOWED`
+    # adlarını maskeler; tenant anahtarı o kümede DEĞİL. Belge bir defter satırından o değeri
+    # taşırsa (hata metni, yanlış yerleştirilmiş env) bankaya sızardı (kill#3 sıfır tolerans).
+    belge = _maskele(belge, anahtar)
     kimlik = belge_kimligi(gun)
 
     var, neden = belge_var_mi(a.taban_url, a.banka, kimlik, anahtar)

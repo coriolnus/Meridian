@@ -619,7 +619,7 @@ def test_h1_taban_url_ve_KRED_ADI_pano_vekiliyle_AYRISMAZ(betik):
     assert betik.KRED_ADI == api.HAFIZA_KRED_ADI
 
 
-def test_g6_SuccessExitStatus_2_ve_timer_ETKIN_LISTEDE():
+def test_g7_SuccessExitStatus_2_ve_timer_ETKIN_LISTEDE():
     """Rol-1 hükümleri 2026-09-13 (implementer kaygı 2/3): aynı gün ikinci tetik idempotens sonucudur,
     `failed` değil (`SuccessExitStatus=2`); kadans operatör (b) kararıyla AÇIK — timer `etkin_timerlar`da.
     Hangi üretim değişikliğinde kırılır: satır silinirse (gün-1 sahte failed) ya da timer listeden düşerse (K1 hiç dolmaz)."""
@@ -629,3 +629,26 @@ def test_g6_SuccessExitStatus_2_ve_timer_ETKIN_LISTEDE():
     blok = defaults[defaults.index("etkin_timerlar:"):]
     blok = blok[:blok.index("\n\n")]
     assert "meridian-defter-ozeti-retain.timer" in blok, "timer etkin listede değil — kadans açılmaz, K1 dolmaz"
+
+
+def test_a4_TENANT_ANAHTARI_defterden_belgeye_ve_POST_govdesine_SIZMAZ(betik, kok, monkeypatch):
+    """İnceleme ORTA-1 (2026-09-13): `notify.scrub` yalnız `secrets.ALLOWED` adlarını maskeler, tenant
+    anahtarı o kümede DEĞİL — betiğin kendi `_maskele`si belgeye uygulanır. Defterdeki bir alarm
+    metni anahtar DEĞERİNİ taşıyor; POST gövdesi onu taşımamalı (kill#3 sıfır tolerans).
+    Hangi üretim değişikliğinde kırılır: `_maskele(belge, anahtar)` çağrısı kaldırılırsa."""
+    # Alarm bölümü yalnız SINIF SAYAR (metin belgeye girmez) — sızıntı vektörü belgeye GİREN bir
+    # alan olmalı: kartın `status` yorumu (hüküm ilk 160 karakter) belgeye aynen taşınır.
+    (kok / "research" / "cards" / "EDG-2026-997-sizinti.yaml").write_text(
+        f"card_id: EDG-2026-997\nstatus: measured   # {GUN} Rol-1 — hata metni: {TENANT_ANAHTAR}\n"
+        "thesis: Sızıntı denemesi.\n", encoding="utf-8")
+    kayit = _casus(monkeypatch, {
+        f"GET {TABAN}/v1/default/banks/meridian-arsiv/documents/": _yok_404,
+        f"POST {TABAN}/v1/default/banks/meridian-arsiv/memories":
+            _Cevap(200, json.dumps({"success": True, "items_count": 1,
+                                    "operation_ids": ["op-9"]}).encode()),
+    })
+    rc = betik.main(["--uygula", "--gun", GUN, "--kok", str(kok)])
+    assert rc == 0, rc
+    govde = kayit[1]["govde"].decode()
+    assert "EDG-2026-997" in govde, "sahne belgeye girmedi — çivi hiçbir şey ölçmüyor (pozitif kontrol)"
+    assert TENANT_ANAHTAR not in govde, "tenant anahtarı POST gövdesine SIZDI"
