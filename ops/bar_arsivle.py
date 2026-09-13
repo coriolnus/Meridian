@@ -635,7 +635,7 @@ def main(argv: list[str] | None = None) -> int:
             manifest_guncelle(hedef, {}, {}, args.bolum, sifirla=True)
             manifest = manifest_oku(hedef)
 
-    con = olay_sorgu.baglanti_kur()
+    con = olay_sorgu.baglanti_kur_cli()   # CLI kapısı: bozuk tavan → gerekçe + çıkış 2 (v355)
     satirlar: list[dict] = []
     yeni_kayitlar: dict = {}
     eksik_sutunlar: dict = {}

@@ -38,11 +38,28 @@ import pathlib
 import subprocess
 import sys
 
+import duckdb
 import pytest
+
+from ops import olay_sorgu as _olay_sorgu
 
 KOK = pathlib.Path(__file__).resolve().parents[1]
 SIKISTIR = KOK / "ops" / "olay_sikistir.py"
 SORGU = KOK / "ops" / "olay_sorgu.py"
+
+
+def _duckdb_bellek_raporu(deger: str) -> str:
+    """DuckDB'nin `memory_limit` için KENDİ raporladığı dizge (girdi ONLUK 'GB', rapor İKİLİ
+    'GiB'). Beklenen değer burada LİTERAL YAZILMAZ: tek kaynak `olay_sorgu.BELLEK_TAVANI`dır ve
+    ikinci bir literal taban değişince sessizce ayrışırdı (v355 literali PİNDİR, bu türetmedir).
+    ARACIN İTHALİ ÖLÇÜM DEĞİLDİR: aracın kendisi bu dosyada yine yalnız `subprocess` ile koşar —
+    `ops/olay_sorgu.py` `meridian`ı ithal etmediği için sabit okumak obs yüzeyi açmaz."""
+    con = duckdb.connect()
+    try:
+        con.execute(f"SET memory_limit='{deger}'")
+        return str(con.execute("SELECT current_setting('memory_limit')").fetchone()[0])
+    finally:
+        con.close()
 
 
 # ---------------------------------------------------------------------------------------------
@@ -486,10 +503,15 @@ def test_sikistirici_cwd_ye_tmp_dizini_dokmez(tmp_path):
     ("autoload_known_extensions", ("false", False)),
     ("TimeZone", ("UTC",)),
     ("temp_directory", ("",)),
+    # BEŞİNCİ AYAR (TSK-012, 2026-09-13): `memory_limit`. Beklenen dizge aracın KENDİ
+    # sabitinden TÜRETİLİR (literal v355'te pinlidir; ikinci literal sessizce ayrışırdı).
+    ("memory_limit", (_duckdb_bellek_raporu(_olay_sorgu.BELLEK_TAVANI),)),
 ])
-def test_sorgu_sertlestirmesi_dort_ayarda_da_yurur(tmp_path, ayar, beklenen):
-    """Sertleştirme TEK KAYNAKTAN gelir (`olay_sorgu.SERTLESTIRME`) ve dördü de ölçülür.
-    `TimeZone` bu turda EKLENDİ: ay anahtarının makineye göre kaymaması ona bağlı."""
+def test_sorgu_sertlestirmesi_bes_ayarda_da_yurur(tmp_path, ayar, beklenen):
+    """Sertleştirme TEK KAYNAKTAN gelir (`olay_sorgu.SERTLESTIRME`) ve beşi de ölçülür.
+    `TimeZone` 2026-09-03'te EKLENDİ: ay anahtarının makineye göre kaymaması ona bağlı.
+    `memory_limit` 2026-09-13'te eklendi ve TABAN 2GB'dır: bu bağlantı `ops/bar_sorgu.py` ve
+    `ops/bar_arsivle.py` ile PAYLAŞILIR, bar arşivi taramaları 1GB'da OOM olurdu."""
     p = _defter_yaz(tmp_path)
     r = sorgula("--dosya", str(p), "--sql", f"SELECT current_setting('{ayar}') AS deger", "--json")
     assert r.returncode == 0, r.stderr

@@ -31,12 +31,14 @@ GERÇEK ARŞİVE DOKUNULMAZ: her çivi `sandbox_state` altında koşar, arşivin
 from __future__ import annotations
 
 import json
+import pathlib
 
 import duckdb
 import pytest
 
 from meridian.adapters import data as _data
 from ops import bar_arsivle, bar_sorgu, olay_sorgu
+from tests.conftest import betikten_modul_yukle
 
 
 OCAK = "2024-01"
@@ -302,3 +304,95 @@ def test_N_TAVANI_gorunur(arsiv, capsys):
     assert rc == 0
     assert yakala.out.count("AAPL") + yakala.out.count("MSFT") == 1
     assert "tavan" in yakala.err.lower()
+
+
+# ---------------------------------------------------------------------------------------------
+# 6. PAYLAŞILAN BELLEK TAVANI — `OLAY_SORGU_BELLEK` BU ARAÇTA DA YÜRÜR
+#    (inceleme bulgusu 1, TSK-012 düzeltme turu 2026-09-13)
+#
+# ÖLÇÜLEN BOŞLUK: `ops/olay_sorgu.py::BELLEK_TAVANI` bir ŞERHLE "bar araçlarında da yürür" diye
+# beyan ediliyordu ama HİÇBİR ÇİVİ bunu ölçmüyordu — beyan ile davranış arasındaki bağ yalnız
+# okumaya dayanıyordu. Bu bölüm bağı DAVRANIŞLA kurar: ortam değişkeni `ops/bar_sorgu.py`nin
+# KENDİ bağlantısında `memory_limit` olarak görünür mü?
+#
+# NEDEN MODÜL DEĞİŞTİRİLİYOR: `BELLEK_TAVANI` ortamı İMPORT ANINDA okur. `subprocess` bu dosyada
+# YASAKTIR (başlıktaki ölçülmüş gerekçe: araç `meridian.obs`a ulaşır ve sandbox yaması süreç
+# içidir), o yüzden ortam değişkeni kurulup AYNI DOSYA kaynaktan TAZE yüklenir ve `bar_sorgu`nun
+# tuttuğu modül referansı o taze kopyayla değiştirilir. Sahte bir nesne DEĞİL, aynı dosyanın
+# kendisidir: değişen tek şey import anındaki ortam okumasıdır — yani ölçülmek istenen şey.
+# `sys.modules`a kaydedilmez; `ops.olay_sorgu`nun önbellekteki kopyası ve onun `select_kapisi`
+# kimliği (v436'nın kendi çivisi) ETKİLENMEZ.
+# ---------------------------------------------------------------------------------------------
+
+def _taze_olay_sorgu(monkeypatch, deger: str):
+    monkeypatch.setenv("OLAY_SORGU_BELLEK", deger)
+    taze = betikten_modul_yukle(pathlib.Path(olay_sorgu.__file__), "olay_sorgu_taze")
+    monkeypatch.setattr(bar_sorgu, "olay_sorgu", taze)
+    return taze
+
+
+def _duckdb_raporu(sql: str | None) -> str:
+    """DuckDB'nin KENDİ raporladığı `memory_limit` dizgesi. Beklenen değer v355'te LİTERAL olarak
+    pinlidir ('2GB' → "1.8 GiB", ölçüldü); burada İKİNCİ bir literal yazmak tek-kaynak yasasını
+    çiğnerdi, o yüzden beklenen değer duckdb'nin kendisinden TÜRETİLİR."""
+    con = duckdb.connect()
+    try:
+        if sql:
+            con.execute(sql)
+        return str(con.execute("SELECT current_setting('memory_limit')").fetchone()[0])
+    finally:
+        con.close()
+
+
+def test_OLAY_SORGU_BELLEK_bar_sorgunun_baglantisinda_da_yurur(arsiv, capsys, monkeypatch):
+    """`OLAY_SORGU_BELLEK=4GB` verildiğinde `ops/bar_sorgu.py`nin bağlantısı 4GB eşdeğerini
+    raporlar — çünkü bağlantıyı `olay_sorgu.baglanti_kur_cli` açar. İKİ hüküm birden: değer
+    duckdb'nin '4GB' için raporladığıyla AYNI, ve tavansız varsayılandan (RAM'in ~%80'i) FARKLI —
+    ikincisi olmasaydı "ayar hiç uygulanmadı" hâli de yeşil görünürdü."""
+    hedef, _ = arsiv
+    _taze_olay_sorgu(monkeypatch, "4GB")
+    rc = bar_sorgu.main(["--dizin", str(hedef), "--sql",
+                         "SELECT current_setting('memory_limit') AS deger", "--json"])
+    yakala = capsys.readouterr()
+    assert rc == 0, yakala.err
+    olculen = json.loads(yakala.out.splitlines()[0])["deger"]
+    assert olculen == _duckdb_raporu("SET memory_limit='4GB'"), olculen
+    assert olculen != _duckdb_raporu(None), "tavan HİÇ uygulanmamış (duckdb varsayılanı)"
+
+
+def test_VARSAYILAN_tavan_bar_sorguda_da_yurur(arsiv, capsys, monkeypatch):
+    """Ortam değişkeni VERİLMEDİĞİNDE de tavan yürür: paylaşılan taban (2GB) bu aracın
+    bağlantısında da geçerlidir — bar arşivi taramaları bu tabanın asıl müşterisidir."""
+    hedef, _ = arsiv
+    monkeypatch.delenv("OLAY_SORGU_BELLEK", raising=False)
+    taze = betikten_modul_yukle(pathlib.Path(olay_sorgu.__file__), "olay_sorgu_taze")
+    monkeypatch.setattr(bar_sorgu, "olay_sorgu", taze)
+    rc = bar_sorgu.main(["--dizin", str(hedef), "--sql",
+                         "SELECT current_setting('memory_limit') AS deger", "--json"])
+    yakala = capsys.readouterr()
+    assert rc == 0, yakala.err
+    olculen = json.loads(yakala.out.splitlines()[0])["deger"]
+    assert olculen == _duckdb_raporu(f"SET memory_limit='{taze.BELLEK_TAVANI}'"), olculen
+    assert olculen != _duckdb_raporu(None), "tavan HİÇ uygulanmamış (duckdb varsayılanı)"
+
+
+def test_BOZUK_tavan_bar_sorguda_da_cikis_2(arsiv, monkeypatch):
+    """Kapı PAYLAŞILDIĞI için davranış da paylaşılır: bozuk `OLAY_SORGU_BELLEK` bu araçta da
+    KULLANIM HATASIdır (2) — `ops/bar_sorgu.py`nin kendi belgelediği sözleşmeyle aynı kod.
+    Ham DuckDB hatası ya da 1 ile çıkış DEĞİL."""
+    hedef, _ = arsiv
+    _taze_olay_sorgu(monkeypatch, "2 gigabayt")
+    with pytest.raises(SystemExit) as ei:
+        bar_sorgu.main(["--dizin", str(hedef), "--sorgu", "kapsam"])
+    assert ei.value.code == 2, ei.value.code
+
+
+def test_BAR_ARACLARI_ayni_baglanti_kapisini_PAYLASIR():
+    """Tek-kaynak: üç ops aracı da bağlantıyı `ops/olay_sorgu.py`nin KAPISINDAN açar; hiçbiri
+    kendi `duckdb.connect()`ini kurmaz. Kurulsaydı sertleştirme (temp dizini, eklenti bayrakları,
+    UTC, bellek tavanı) o araçta SESSİZCE yürümezdi."""
+    for arac in (bar_sorgu, bar_arsivle):
+        kaynak = pathlib.Path(arac.__file__).read_text(encoding="utf-8")
+        kod = "\n".join(s for s in kaynak.splitlines() if not s.lstrip().startswith("#"))
+        assert "olay_sorgu.baglanti_kur_cli()" in kod, f"{arac.__name__} kapıyı kullanmıyor"
+        assert "duckdb.connect(" not in kod, f"{arac.__name__} kendi bağlantısını kuruyor"
