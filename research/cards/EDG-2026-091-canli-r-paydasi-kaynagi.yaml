@@ -1,0 +1,79 @@
+# EDG-2026-091 — CANLI `r_multiple` PAYDASI KAYNAĞI (plan.stop mu, dolum-anı stop mu, kapanış-anı sıkılaştırılmış stop mu?) ve gölge/replay paritesi
+# ÖN-KAYIT 2026-09-13 19:5x UTC (Rol-1; operatör uzakta). Ölçüm KODU YOK — kod bu karttan SONRA.
+# NEDEN VAR: EDG-2026-090 ablasyonu (2026-09-13) gölge↔gerçek farkının ~%96'sını "risk paydası" sınıfına ayrıştırdı (ort |Δ payda|
+# 0,2416 vs |Δ fiyat| 0,0112; özdeşlik 7/7). A1 salt-okur ön ölçümü (Rol-1, 19:4xZ, Alpaca kapalı emirler nested): VRTX
+# P-2026-09-02: plan.stop 530,34 = broker SL bacağı stop_price 530,34 (AYNI), plan riski |557,02−530,34| = 26,68 $, ama canlı
+# r_multiple −2,277 ve pnl/qty'den türetilen payda 13,17 $ (2,03×); MU 59,95 vs 59,30 (1,01×), REGN 43,07 vs 41,19 (1,05×), ECL 11,77 vs
+# 11,62 (1,01×). Yani VRTX'te broker stop'u değişmemişken canlı defterin R birimi yarıya inmiş — kaynak canlı R HESABI (kapanış anında
+# sıkılaştırılmış eff_stop mesafesi? koruma/trailing? `risk_at_entry` alanı?) olabilir; gölge/replay R'yi plan/giriş riskiyle
+# hesaplıyor (PK(3) birebir tuttu). Ayrıca VRTX `trades.entry` 559,37 ≠ broker parent dolumu 556,94 ve `trades.exit` 529,38 ≠ SL dolumu
+# 522,72 — defter fiyatları iç model, broker dolumları ayrı (EXE-007 sınıfı: 'kaynak=live_paper' broker teyidi değildir).
+# kart_benzer (19:4xZ): EXE-008/006/043 limit bacağı (NO-GO/kapalı — farklı soru, ref), EXE-005 dinlenen limit GEÇTİ, EDG-045 stop-slip,
+# EXE-001 NO-GO (iç defter ↔ canlı ayna farklı icra), EXE-007 defter broker teyidi — KALDI/NO-GO selef bu soruda YOK.
+
+card_id: EDG-2026-091
+status: registered   # 2026-09-13 Rol-1 — ön-kayıt; ADIM-0 kod okuması + A1 çekimi (24 canlı işlem) kart-önce
+family: canli_r_paydasi
+on_kayit: 2026-09-13
+selef: EDG-2026-090
+ref: [EDG-2026-090, EDG-2026-088, EXE-2026-007, EXE-2026-001, EDG-2026-045, TSK-179,
+      "meridian/loop.py (canlı kapanış → trades satırı r_multiple)", "meridian/broker.py::PaperBroker (eff_stop, _touch_exit, koruma)",
+      "meridian/golge_icra.py::_kapanis_satiri (gölge R)", "research/olcumler/edg090_golge_ayrisma/ (ablasyon sonucu)"]
+
+hipotez: >
+  Canlı defterin `r_multiple` paydası, gölge/replay'in kullandığı PLAN/GİRİŞ riskinden (|giriş − plan.stop|) sistematik olarak FARKLI
+  bir mesafedir (aday: kapanış anındaki sıkılaştırılmış eff_stop mesafesi ya da koruma-stop mesafesi) ve bu fark, stop'u
+  sıkılaştırılmış işlemlerde R büyüklüğünü şişirir/küçültür → canlı karneler (avg_r, PF) replay'le KARŞILAŞTIRILAMAZ hâle gelir.
+  Ölçüt: 24 canlı işlemde payda_turetilen / plan_riski oranı; oran ≠ 1 olan işlemlerin payı ve o işlemlerde stop-sıkılaştırma
+  olayının (koruma/trailing/replace_order_stop) varlığı. Hipotez tutarsa (oran≠1 ∧ sıkılaştırma birlikte ≥ %80) kaynak kanıtlanmış
+  olur ve DÜZELTME kararı (payda = giriş riski, TEK KAYNAK; ya da beyanlı iki alan) operatöre gider; tutmazsa kaynak başka
+  (fiyat modeli / qty / pnl hesabı) → tanı raporu.
+
+k_registry: {registered_at: "2026-09-13", trial_ids: [EDG-091-r-paydasi-orani]}
+# K=1 (tek hücre: oran dağılımı + sıkılaştırma eşleşmesi). Sembol/kurulum kırılımı TANI (K'ye 1×1 çarpılır).
+
+adim_0_fizibilite: >
+  ZORUNLU, ölçümden ÖNCE: (1) KOD OKUMASI — canlı `r_multiple` hangi fonksiyonda, hangi payda ile hesaplanıyor (`loop`/`broker`
+  kapanış yolu; `risk`/`eff_stop`/`plan.stop` hangisi), gölge (`golge_icra._kapanis_satiri`) ve replay (`backtest`) aynı mı — üç
+  yolun payda tanımı yan yana tablo; (2) A1 ÇEKİMİ (salt-okur, donmuş, git-izli): 24 canlı işlem (trades + plan satırları +
+  extra_json + E2) + Alpaca kapalı emirler (nested: parent dolum, SL/TP bacağı stop/limit/dolum) + `replace_order_stop` /
+  koruma olayları (events.jsonl: stop değişikliği olayları — ad ÖLÇ); (3) her işlem için payda_turetilen = |pnl_dollars /
+  (r_multiple × qty)| (r≠0), plan_riski, oran; sıfır-R işlemler (|r|<R_MULTIPLE_ALT) tanıda. Kapı: oranı hesaplanabilen işlem ≥ 15.
+  Düşerse askiya_veri_kapisi.
+
+olcum_plani:
+  - "birincil: oran = payda_turetilen / plan_riski dağılımı (medyan, p10/p90); oran ∉ [0,95, 1,05] olan işlem payı"
+  - "eşleşme: oran≠1 işlemlerinde stop sıkılaştırma olayı var mı (events/koruma/replace_order_stop); 2×2 tablo"
+  - "üç yol paydası (canlı/gölge/replay) kod okumasıyla; ayrışma varsa ADIYLA (tek-kaynak yasası ihlali tespiti)"
+  - "tanı: defter fiyatı (trades.entry/exit) vs broker dolumu (parent/bacak filled_avg) farkı bps (EXE-007 sınıfı) — hüküm değil"
+  - "tanı: sembol × kurulum kırılımı"
+
+esikler:
+  oran_bant: [0.95, 1.05]          # tasarım seçimi: yuvarlama/dolum farkı payı
+  siklastirma_eslesme_alt: 0.80    # oran≠1 işlemlerin ≥%80'inde sıkılaştırma olayı → kaynak kanıtlanmış
+  n_oran_alt: 15                   # ADIM-0 kapısı
+
+kill_list:
+  - "ADIM-0 düşer → askiya_veri_kapisi (kill değil)"
+  - "canlı motorun R hesabı ölçüm sırasında DEĞİŞTİRİLİRSE → geçersiz (ölçüm önce, düzeltme ayrı kalem + operatör)"
+  - "girdi donmuş dizinin SHA256SUMS'ı tutmazsa → geçersiz"
+  - "PK tutmazsa → hiçbir sayı yayılmaz"
+  - "eşik/pencere sonradan değişmez"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: (1) SENTETİK — bilinen giriş/stop/çıkış/qty ile r_multiple kurulup payda_turetilen = plan_riski (oran 1,000) ve
+  sıkılaştırılmış stop'la oran ≠ 1 el hesabıyla birebir; (2) GERÇEK — ECL/REGN/MU (oran ≈1) ve VRTX (2,03) ön ölçümü betikle
+  birebir; (3) ÇAPRAZ — replay'den bir işlemin R'si aynı formülle plan riskine oran 1,000 vermeli (replay yolu kontrol).
+
+veri_penceresi: "DONMUŞ: canlı işlemler 2026-08-06..09-11 (24) + Alpaca kapalı emirler aynı pencere — A1 çekimi git-izli, SHA256SUMS; pencere büyümez (yeni işlemler = ardıl kart)"
+
+basari_tanimi: >
+  ADIM-0 geçmiş + üç PK yeşil + oran dağılımı ve sıkılaştırma eşleşmesi tablosu + üç yolun payda tanımı kod atfıyla + hüküm Rol-1
+  tarafından karta ve K defterine (1 +1 tanı). Hüküm 'kaynak kanıtlandı' ise düzeltme kararı (canlı R paydası tek kaynak) OPERATÖRE
+  (karne tarihçesini değiştirir — geriye dönük yeniden hesap ayrı karar); 'kanıtlanmadı' ise tanı raporu ve EDG-088 PK(2) eşiğinin
+  kalan bedelle yeniden tanımı yeni kartta.
+
+notlar: >
+  Kod yalnız bu karttan sonra `research/olcumler/edg091_r_paydasi/` altında (tmp state, canlı deftere yazmaz; pk2/_ortak yardımcıları
+  ithal). Bu kart canlı motoru DEĞİŞTİRMEZ (kill#2) — ölçer. Bedel yasası: yalnız ekler. EDG-088 gölge penceresi bu kart hükmüne kadar
+  'harness doğrulanmamış' kalır (kill#5: sayı yayılmaz).

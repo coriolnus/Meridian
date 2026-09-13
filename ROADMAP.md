@@ -2999,6 +2999,10 @@ _**[2026-08-31 KONSOLİDASYON — BU LİSTE ENDEKSTİR.]** Satırlar kart duruml
   What: (18:0xZ ÖLÇÜM KODU SEVK: tek Opus, worktree edg090 — `research/olcumler/edg090_golge_ayrisma/ablasyon.py`, ablasyonlar ölçüm tarafında sarmalama ile, golge_icra üretim kodu değişmez; v473.) EDG-088 PK(2) düşüşünün (ort |ΔR| 0,295 vs 0,05) ablasyonla teşhisi — A giriş semantiği · B E2 ATR enjeksiyonu · C manage_position paritesi; K=3 (+1 tanı); girdi DONMUŞ (pk2_gercek/girdi, SHA256SUMS); kod kart-önce `research/olcumler/edg090_golge_ayrisma/`. Ön-kayıt 2026-09-13 17:1xZ.
   Why: kill#5 — PK tutmazsa gölge penceresinden sayı yayılmaz; hangi nedenin ne kadar taşıdığı ölçülmeden gölge motoru güncellenemez.
   Ref: EDG-2026-088 `pk2_hukmu_2026_09_13` · EDG-2026-045 · TSK-179.
+- **[EDG-2026-091] canli-r-paydasi-kaynagi** — status: ACTIVE · owner: rol1 · size: — · trigger: —
+  What: EDG-090'ın ayrıştırdığı 'risk paydası' sınıfının (~%96) kaynağı: canlı `r_multiple` paydası plan/giriş riski mi, kapanış-anı sıkılaştırılmış stop mesafesi mi (VRTX 2,03× — broker SL stop'u plan.stop ile AYNI iken); gölge/replay paritesi; K=1 (+1 tanı); ADIM-0 kod okuması + A1 çekimi (24 işlem + Alpaca nested emirler + stop değişikliği olayları). Ön-kayıt 2026-09-13 19:5xZ.
+  Why: canlı karneler (avg_r/PF) replay'le karşılaştırılamaz hâle gelebilir; EDG-088 PK(2) düşüşünün kökü; düzeltme kararı operatöre.
+  Ref: EDG-2026-090 · EDG-2026-088 · EXE-2026-007 · loop/broker kapanış yolu.
 
 **⑤ RETIRED çapraz-doğrulama (`research/qc_dogrulama/`, 2026-08-09; üç kaynak):** 8 emekli sembol
 (ANSS/DFS/FI/HES/IPG/K/PARA/WBA) — **yerel SP500-üyeliği 8/8 tutarlı** (her sembol delist gününden
