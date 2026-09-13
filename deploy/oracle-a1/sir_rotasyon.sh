@@ -42,6 +42,12 @@
 #   sudo ./sir_rotasyon.sh --openrouter   → OpenRouter anahtarları (operatör YAPIŞTIRIR, `read -s`)
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
+#   sudo ./sir_rotasyon.sh --<alt> --esitle → EŞİTLEME (TSK-181, 2026-09-13): değer ÜRETİLMEZ, SORULMAZ,
+#                                           BASILMAZ; sırrın tablodaki İLK satırı (REFERANS) okunur, AYRI
+#                                           düşen dosya/env/url kopyalarına yazılır (api/sql kanalları
+#                                           beyanla atlanır), yedek alınır, RESTART YAPILMAZ (tüketici
+#                                           birimler basılır); kanıt: envanter yeniden EŞİT + (--openrouter)
+#                                           kapı chat 200. `--kuru` ile birleşir. Bkz. `esitle` şerhi.
 #
 # ÖN KOŞUL — `meridian-tick-watchdog.timer` DURDURULUR (kalıcı kayıt `bakim-penceresi-tick-watchdog`).
 # Timer 45 dk bayat nabızda worker'ı yeniden başlatır; bu betik meridian'ı `--openrouter`de ÜÇ kez
@@ -918,40 +924,48 @@ _dizin_hazirla() {
   oldu "dizin YARATILDI: $(dirname "$yol") (0755 root:root — A1'de ölçülen hâl)"
 }
 
+# TEK SATIR YAZIMI — `_yaz` (rotasyon: alt komutun TÜM kopyaları, yeni değer) ile `esitle` (yalnız
+# AYRI satırlar, referans değer) AYNI yoldan yazar; iki yazım yolu sessizce ayrışmasın diye gövde
+# TEKtir (tek-kaynak yasası, 2026-09-13). Parametreler kopya tablosunun sütunları + değer dosyası.
+_yaz_satir() {
+  local sir="$1" tur="$2" yol="$3" alan="$4" mod="$5" sahip="$6" onek="$7" dgr="$8" hedef
+  hedef="$KOK$yol"
+  case "$tur" in
+    dosya) _dizin_hazirla "$(dirname "$hedef")" "$yol"
+           # `koru` satırında ÖN-YARATMA YOK. İlk turda hedef `: | sudo tee` ile yaratılıyordu
+           # ve bu, yardımcıdaki "mod=koru ama dosya YOK → dur" kapısını ÖLÜ KOD yapıyordu:
+           # eksik bir `/opt/hindsight/.key` sessizce 0644 root olarak YENİDEN DOĞUYOR, yani
+           # rotasyon korumaya çalıştığı izni kendi eliyle gevşetiyordu. Hedef yoksa MEVCUT
+           # izin OKUNAMAZ; okunamayan izni uydurmak yerine durulur.
+           case "$mod/$sahip" in
+             *koru*) sudo test -e "$hedef" \
+                       || die "mod/sahip=koru ama hedef YOK: $yol — mevcut izin okunamaz, yazım YAPILMADI" ;;
+           esac
+           # `mod`/`sahip` AÇIK olan satırlarda ön-yaratmaya GEREK de yok: `_atomik_yaz` dosyayı
+           # hedef dizinde `mkstemp` + `chmod <mod>` + `os.replace` ile kendisi kurar, yani dosya
+           # daha ilk anından itibaren doğru izinle var olur (0644'lük bir ara hâl hiç doğmaz).
+           py yaz-dosya "$hedef" "$dgr" "$mod" "$sahip" "$onek"
+           oldu "yazıldı: $yol (mod=$mod sahip=$sahip)" ;;
+    env)   sudo test -f "$hedef" || die "hedef dosya YOK: $yol — yazım yapılamaz"
+           py yaz-env "$hedef" "$alan" "$dgr" "$mod" "$sahip" "$onek"
+           oldu "yazıldı: $yol ($alan=, tırnak biçimi korundu)" ;;
+    url)   sudo test -f "$hedef" || die "hedef dosya YOK: $yol — yazım yapılamaz"
+           py yaz-url "$hedef" "$dgr" "$mod" "$sahip"
+           oldu "yazıldı: $yol (YALNIZ parola alanı; kullanıcı/host/port/db/query korundu)" ;;
+    sql)   _sql_uygula "$yol" "$dgr" ;;
+    api)   _api_yaz "$sir" "$yol" "$dgr" ;;
+    *)     die "bilinmeyen kopya türü: $tur" ;;
+  esac
+}
+
 _yaz() {
   local alt="$1" sadece_sir="${2:-}" dgr="${3:-$ISLIK/yeni}" tur_suzgeci="${4:-}"
-  local _alt sir tur yol alan mod sahip onek hedef
+  local _alt sir tur yol alan mod sahip onek
   while read -r _alt sir tur yol alan mod sahip onek; do
     [ "$_alt" = "$alt" ] || continue
     [ -z "$sadece_sir" ] || [ "$sir" = "$sadece_sir" ] || continue
     if [ -n "$tur_suzgeci" ]; then case " $tur_suzgeci " in *" $tur "*) ;; *) continue ;; esac; fi
-    hedef="$KOK$yol"
-    case "$tur" in
-      dosya) _dizin_hazirla "$(dirname "$hedef")" "$yol"
-             # `koru` satırında ÖN-YARATMA YOK. İlk turda hedef `: | sudo tee` ile yaratılıyordu
-             # ve bu, yardımcıdaki "mod=koru ama dosya YOK → dur" kapısını ÖLÜ KOD yapıyordu:
-             # eksik bir `/opt/hindsight/.key` sessizce 0644 root olarak YENİDEN DOĞUYOR, yani
-             # rotasyon korumaya çalıştığı izni kendi eliyle gevşetiyordu. Hedef yoksa MEVCUT
-             # izin OKUNAMAZ; okunamayan izni uydurmak yerine durulur.
-             case "$mod/$sahip" in
-               *koru*) sudo test -e "$hedef" \
-                         || die "mod/sahip=koru ama hedef YOK: $yol — mevcut izin okunamaz, yazım YAPILMADI" ;;
-             esac
-             # `mod`/`sahip` AÇIK olan satırlarda ön-yaratmaya GEREK de yok: `_atomik_yaz` dosyayı
-             # hedef dizinde `mkstemp` + `chmod <mod>` + `os.replace` ile kendisi kurar, yani dosya
-             # daha ilk anından itibaren doğru izinle var olur (0644'lük bir ara hâl hiç doğmaz).
-             py yaz-dosya "$hedef" "$dgr" "$mod" "$sahip" "$onek"
-             oldu "yazıldı: $yol (mod=$mod sahip=$sahip)" ;;
-      env)   sudo test -f "$hedef" || die "hedef dosya YOK: $yol — yazım yapılamaz"
-             py yaz-env "$hedef" "$alan" "$dgr" "$mod" "$sahip" "$onek"
-             oldu "yazıldı: $yol ($alan=, tırnak biçimi korundu)" ;;
-      url)   sudo test -f "$hedef" || die "hedef dosya YOK: $yol — yazım yapılamaz"
-             py yaz-url "$hedef" "$dgr" "$mod" "$sahip"
-             oldu "yazıldı: $yol (YALNIZ parola alanı; kullanıcı/host/port/db/query korundu)" ;;
-      sql)   _sql_uygula "$yol" "$dgr" ;;
-      api)   _api_yaz "$sir" "$yol" "$dgr" ;;
-      *)     die "bilinmeyen kopya türü: $tur" ;;
-    esac
+    _yaz_satir "$sir" "$tur" "$yol" "$alan" "$mod" "$sahip" "$onek" "$dgr"
   done < <(_kopyalar)
 }
 
@@ -1835,15 +1849,113 @@ envanter() {
 }
 
 # =================================================================================================
+# EŞİTLEME — AYRI DÜŞMÜŞ KOPYAYI REFERANSA TAŞI (`--<alt> --esitle`; TSK-181, 2026-09-13)
+# =================================================================================================
+# NİYE VAR. Rotasyon YALNIZ yeni değerle yazar (`--openrouter` iki anahtarı operatörden ister).
+# 09-08 rotasyonu GLOBAL `/home/ubuntu/.hermes/.env` kopyasını ATLADI (tabloda yoktu); kopya
+# 09-13'te tabloya girdi ama "var olan referansı bu kopyaya taşı" işi için yol YOKTU: ya operatör
+# yeni bir anahtar üretip 15 kopyayı yeniden döndürecek (karşılıksız rotasyon + eski anahtar
+# iptali), ya da biri değeri ELLE kopyalayacaktı — ve Rol-1 A1'de sır DEĞERİ taşıyan hiçbir komut
+# koşamaz (sınıflandırıcı üç kez kapattı; kalıcı kayıt `loadcredential-kanali`). Bu betik koşar,
+# komut değer taşımaz. Eşitleme, betiğin var olma gerekçesindeki "unutulan kopya" sınıfının
+# ONARIMIDIR: değer ne üretilir, ne sorulur, ne basılır — referans kopyadan (sırrın tablodaki İLK
+# satırı) OKUNUR, AYRI olanlara YAZILIR, envanter yeniden ölçülür.
+# KAPSAM: `dosya`/`env`/`url` kopyaları. `api` (motor deposu) ve `sql` (ALTER ROLE) kanalları
+# okunamaz → karşılaştırılamaz → BEYANLA atlanır (o kanalların değeri rotasyon yoluyla yazılır).
+# RESTART YOK: tablo hangi DOSYANIN hangi BİRİM tarafından okunduğunu bilmez (satır = dosya, birim
+# değil); sırrın tüketici birimleri BASILIR, yeniden başlatma kararı operatörün/Rol-1'in. Bugünkü
+# vakada tüketici hermes CLI'dır (timer'sız, her çağrıda dosyayı okur — restart gerekmez).
+# KANIT: (1) `_envanter_esitlik <alt>` → AYRI satır KALMAMALI (kalırsa çıkış 2). (2) `--openrouter`
+# için kapı `chat/completions` 200+choices: referansın UPSTREAM'de geçerli olduğu — kapı referans
+# kopyayı okur; referans geçersizse eşitleme KÖTÜ bir değeri yaymıştır ve çıkış 2 + geri alma
+# reçetesi (yedek alındı) bunu SÖYLER. Diğer alt komutlarda değer-doğruluğu eşitlemeyle ÖLÇÜLMEZ
+# (None) ve satır bunu beyan eder — kanıt yüzeyi rotasyon yolundadır.
+# İKİ GEÇİŞ: ilk geçiş yalnız ÖLÇER (kuru koşum burada biter), ikinci geçiş yalnız AYRI'yı yazar.
+esitle() {
+  local alt="$1" _alt sir tur yol alan mod sahip onek etiket sonuc onceki=""
+  local ref_tur ref_yol ref_alan ref_onek n_ayri=0 n_esit=0 n_atlanan=0 sirlar=""
+  echo "=== EŞİTLEME: --$alt (referans kopya → AYRI kopyalar; DEĞER üretilmez, sorulmaz, BASILMAZ) ==="
+  while read -r _alt sir tur yol alan mod sahip onek; do
+    [ "$_alt" = "$alt" ] || continue
+    etiket=""; [ "$alan" = "-" ] || etiket=" [$alan]"
+    if [ "$sir" != "$onceki" ]; then
+      onceki="$sir"
+      case "$tur" in api|sql) die "referans kopya okunamayan kanalda: $sir ($tur) — tablo sırası bozuk" ;; esac
+      sonuc="$(py var "$tur" "$KOK$yol" "$alan")"
+      [ "$sonuc" = "VAR" ] || die "referans kopya $sonuc: $yol$etiket ($sir) — eşitleme KAYNAĞI yok, yazım YAPILMADI"
+      ref_tur="$tur"; ref_yol="$yol"; ref_alan="$alan"; ref_onek="$onek"
+      echo "  $sir · $yol$etiket → REFERANS"
+      continue
+    fi
+    case "$tur" in
+      api|sql) echo "  $sir · $yol → ATLANDI ($tur kanalı okunamaz; eşitleme kapsam dışı — rotasyon yolu yazar)"
+               n_atlanan=$((n_atlanan+1)); continue ;;
+    esac
+    sonuc="$(py esit "$ref_tur" "$KOK$ref_yol" "$ref_alan" "$ref_onek" "$tur" "$KOK$yol" "$alan" "$onek")"
+    case "$sonuc" in
+      "EŞİT") n_esit=$((n_esit+1)); echo "  $sir · $yol$etiket → EŞİT (dokunulmaz)" ;;
+      AYRI)   n_ayri=$((n_ayri+1)); echo "  $sir · $yol$etiket → AYRI → YAZILACAK"
+              case " $sirlar " in *" $sir "*) ;; *) sirlar="$sirlar $sir" ;; esac ;;
+      *)      die "kopya $sonuc: $yol$etiket ($sir) — eşitleme yarım kalırdı, yazım YAPILMADI" ;;
+    esac
+  done < <(_kopyalar)
+  echo "  ölçüm: $n_esit eşit · $n_ayri ayrı · $n_atlanan kapsam dışı"
+  if [ "$n_ayri" = 0 ]; then
+    oldu "AYRI kopya YOK — yapacak iş yok (yedek alınmadı, hiçbir şey yazılmadı)"; return 0
+  fi
+  if [ "$KURU" != 0 ]; then
+    echo "  KURU KOŞUM: $n_ayri kopya yazılırdı — HİÇBİR ŞEY YAZILMADI"; return 0
+  fi
+  _yedek_al "$alt"
+  # 2. GEÇİŞ — yazım: YALNIZ AYRI satırlar. Değer referanstan işlik dosyasına çıkarılır (0600 root,
+  # argv'ye girmez) ve satır `_yaz_satir` ile rotasyonla AYNI yoldan yazılır.
+  onceki=""
+  while read -r _alt sir tur yol alan mod sahip onek; do
+    [ "$_alt" = "$alt" ] || continue
+    if [ "$sir" != "$onceki" ]; then
+      onceki="$sir"; ref_tur="$tur"; ref_yol="$yol"; ref_alan="$alan"; ref_onek="$onek"
+      py cikar "$ref_tur" "$KOK$ref_yol" "$ref_alan" "$ref_onek" "$ISLIK/ref_$sir"
+      continue
+    fi
+    case "$tur" in api|sql) continue ;; esac
+    sonuc="$(py esit "$ref_tur" "$KOK$ref_yol" "$ref_alan" "$ref_onek" "$tur" "$KOK$yol" "$alan" "$onek")"
+    [ "$sonuc" = "AYRI" ] || continue
+    _yaz_satir "$sir" "$tur" "$yol" "$alan" "$mod" "$sahip" "$onek" "$ISLIK/ref_$sir"
+  done < <(_kopyalar)
+  adim "kanıt 1: envanter yeniden ölçümü (--$alt)"
+  local rapor; rapor="$(_envanter_esitlik "$alt")"
+  echo "$rapor"
+  if printf '%s\n' "$rapor" | grep -q "→ AYRI"; then
+    olcum_yok "eşitleme sonrası hâlâ AYRI kopya var (yukarıda) — yedek: $YEDEK"
+  fi
+  oldu "envanter: --$alt kopyaları EŞİT"
+  echo "  yeniden başlatma YAPILMADI (eşitleme sözleşmesi). Yazılan sırların tüketici birimleri:"
+  for sir in $sirlar; do echo "    · $sir → $(_sir_birimleri "$sir")"; done
+  echo "    (yazılan kopya bir birimin okuduğu dosyaysa o birim yeniden başlatılmalı; timer'lı oneshot ve"
+  echo "     hermes CLI sonraki çağrıda okur — TSK-181 vakası: /home/ubuntu/.hermes/.env → hermes CLI, restart yok)"
+  case "$alt" in
+    openrouter)
+      adim "kanıt 2: referans değer upstream'de geçerli mi (kapı chat/completions)"
+      _model_gerekli
+      local hal; hal="$(_kapi_chat_hali)"
+      [ "$hal" = "OK" ] || olcum_yok "kapı chat/completions → $hal (OK bekleniyordu) — REFERANS upstream'de geçersiz olabilir; eşitleme KÖTÜ bir değeri yaymış olabilir, yedekten geri al: $YEDEK"
+      oldu "kapı kanıtı: chat/completions 200 · gövdede choices (referans değer upstream'de GEÇERLİ)" ;;
+    *) echo "  değer-doğruluğu bu alt komutta eşitlemeyle ÖLÇÜLMEZ (None) — kanıt yüzeyi rotasyon yolundadır (--$alt)." ;;
+  esac
+}
+
+# =================================================================================================
 KURU=0
+ESITLE=0
 ALT=""
 for _a in "$@"; do
   case "$_a" in
     --kuru) KURU=1 ;;
+    --esitle) ESITLE=1 ;;
     --kapi|--tenant|--db|--dash|--openrouter|--envanter|--kopyalar)
       [ -z "$ALT" ] || die "iki alt komut verildi: --$ALT ve $_a — her koşum TEK sır döndürür"
       ALT="${_a#--}" ;;
-    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --envanter | --kopyalar [| --kuru])" ;;
+    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --envanter | --kopyalar [| --kuru | --esitle])" ;;
   esac
 done
 [ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --envanter | --kopyalar (+ --kuru)"
@@ -1857,6 +1969,10 @@ case "$ALT" in
   kapi|tenant|db|dash|openrouter) KURU_ONERILIR=1 ;;
   *) [ "$KURU" = 0 ] || echo "!! --kuru bu alt komutta ETKİSİZDİR: --$ALT zaten hiçbir şey yazmaz." >&2 ;;
 esac
+# `--esitle` YALNIZ rotasyon alt komutlarıyla anlamlıdır: neyi eşitleyeceği kopya tablosunun
+# alt komut sütunundan gelir; `--envanter --esitle` ne ölçer ne yazar — sessiz kabul yerine dur.
+[ "$ESITLE" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
+  || die "--esitle yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter (+ --esitle [--kuru]); --$ALT ile anlamsız"
 
 # `--kopyalar` gömülü tabloyu basar: hiçbir dosya açmaz, hiçbir uca konuşmaz, hiçbir şey yazmaz —
 # ve çivinin sözleşme yüzeyidir. Root kapısının ÜSTÜNDE durması bilinçlidir: kapıyı buraya da
@@ -1883,6 +1999,7 @@ _KURU_ONERI=""
      kimlikle okutmak HER kanıtı 000 yapar ve rotasyon doğrulanamaz."
 
 _islik_kur
+if [ "$ESITLE" = 1 ]; then esitle "$ALT"; exit 0; fi
 case "$ALT" in
   kapi)       kapi ;;
   tenant)     tenant ;;

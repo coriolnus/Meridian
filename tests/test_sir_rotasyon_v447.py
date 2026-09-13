@@ -3248,3 +3248,143 @@ def test_P15_KURU_RAPOR_RESTART_CARPANINI_da_beyan_eder(tmp_path):
     assert r2.returncode == 0, r2.stdout + r2.stderr
     assert "her birim 1 kez yeniden başlar" in r2.stdout, r2.stdout
     assert "× 3 restart" not in r2.stdout, r2.stdout
+
+
+# =================================================================================================
+# Q) TUR 8 — EŞİTLEME (`--<alt> --esitle`): AYRI düşmüş kopyayı REFERANSA taşı (TSK-181, 2026-09-13)
+# =================================================================================================
+# NİYE VAR: 09-08 rotasyonu GLOBAL `/home/ubuntu/.hermes/.env` kopyasını ATLADI (tabloda yoktu);
+# 09-13'te tabloya girdi ama tablo yalnız YENİ değerle yazar (`--openrouter` operatörden iki anahtar
+# ister). "Var olan referansı ayrı düşmüş kopyaya taşı" işi betikte YOKTU ve Rol-1 A1'de sır DEĞERİ
+# taşıyan hiçbir komut koşamaz (sınıflandırıcı, üç kez). Eşitleme değeri ne üretir, ne sorar, ne
+# basar: referans kopyadan (sırrın tablodaki İLK satırı) okur, AYRI olanlara yazar, envanteri
+# yeniden ölçer, `--openrouter`de kapı kanıtını alır. Restart YAPMAZ, tüketicileri BASAR.
+# Tohumun ölçülen ayrışma hâli: `/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY` = ESKI["llm"]
+# (I1'in "gerçek ayrışma" sahnesi) — eşitleme onu DA referansa çeker; Q1 bunu iki yazım sayar.
+GLOBAL_HERMES = "home/ubuntu/.hermes/.env"
+BAYAT_OR = "SAHTE-BAYAT-OR-0000"
+
+
+def _global_ayir(kok: pathlib.Path) -> pathlib.Path:
+    """TSK-181 sahnesi: global hermes env ESKİ (bayat) anahtarla kalmış, referans yeni."""
+    yol = kok / GLOBAL_HERMES
+    yol.write_text("HERMES_HOME=/home/ubuntu/.hermes\n"
+                   f"OPENROUTER_API_KEY={BAYAT_OR}\n", encoding="utf-8")
+    return yol
+
+
+def _hepsi_esit(kok: pathlib.Path) -> None:
+    (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").write_text(ESKI["or"] + "\n")
+
+
+def test_Q1_esitle_AYRI_kopyalari_referansa_yazar_ESIT_olanlara_DOKUNMAZ(tmp_path):
+    kok, ortam = _sahte_ortam(tmp_path)
+    yol = _global_ayir(kok)
+    sef = kok / "home/ubuntu/.hermes/profiles/sef/.env"
+    sef_once = sef.read_text(encoding="utf-8")
+    r = _kos(BETIK, ortam, "--openrouter", "--esitle")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert _env_alan(yol, "OPENROUTER_API_KEY") == ESKI["or"], "global hermes env referansa çekilmedi"
+    assert (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").read_text().strip() == ESKI["or"]
+    assert "/home/ubuntu/.hermes/.env [OPENROUTER_API_KEY] → AYRI → YAZILACAK" in r.stdout
+    assert r.stdout.count("yazıldı:") == 2, r.stdout          # YALNIZ iki AYRI kopya
+    assert sef.read_text(encoding="utf-8") == sef_once, "EŞİT kopyaya dokunuldu"
+    assert "HERMES_HOME=/home/ubuntu/.hermes\n" in yol.read_text(encoding="utf-8"), "komşu satır bozuldu"
+    assert "kopyaları EŞİT" in r.stdout and "choices" in r.stdout, "iki kanıt da basılmalı"
+    assert "yeniden başlatma YAPILMADI" in r.stdout
+    assert not _birim_sirasi(kok), "eşitleme restart yapmaz"
+
+
+def test_Q2_esitle_KURU_hicbir_sey_yazmaz_ama_AYRI_listesini_basar(tmp_path):
+    kok, ortam = _sahte_ortam(tmp_path)
+    yol = _global_ayir(kok)
+    r = _kos(BETIK, ortam, "--openrouter", "--esitle", "--kuru")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert _env_alan(yol, "OPENROUTER_API_KEY") == BAYAT_OR, "kuru koşum YAZDI"
+    assert "AYRI → YAZILACAK" in r.stdout and "HİÇBİR ŞEY YAZILMADI" in r.stdout
+    assert "yazıldı:" not in r.stdout
+    assert not list((kok / "root").glob("sir-yedek-*")), "kuru koşum yedek almaz"
+
+
+def test_Q3_esitle_AYRI_yoksa_yapacak_is_yok_ve_YEDEK_alinmaz(tmp_path):
+    kok, ortam = _sahte_ortam(tmp_path)
+    _hepsi_esit(kok)
+    r = _kos(BETIK, ortam, "--openrouter", "--esitle")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "AYRI kopya YOK" in r.stdout and "yazıldı:" not in r.stdout
+    assert not list((kok / "root").glob("sir-yedek-*"))
+
+
+def test_Q4_esitle_yalniz_ROTASYON_alt_komutlariyla(tmp_path):
+    _, ortam = _sahte_ortam(tmp_path)
+    r = _kos(BETIK, ortam, "--envanter", "--esitle")
+    assert r.returncode != 0 and "esitle" in r.stderr
+    r = _kos(BETIK, ortam, "--esitle")
+    assert r.returncode != 0, "alt komutsuz --esitle kabul edildi"
+
+
+def test_Q5_esitle_DEGER_ve_HASH_basmaz(tmp_path):
+    kok, ortam = _sahte_ortam(tmp_path)
+    _global_ayir(kok)
+    r = _kos(BETIK, ortam, "--openrouter", "--esitle")
+    # test kökü (macOS rastgele tmp yolu) çıktıda YEDEK dizini olarak geçer — sır değil, sahne;
+    # entropi süzgecinden ÖNCE soyulur (I2'nin `--envanter`i yedek almadığı için buna gerek yoktu)
+    cikti = (r.stdout + r.stderr).replace(str(tmp_path), "<TMP>")
+    # yedek dizininin adı deterministik damga taşır (`sir-yedek-<UTC>T..Z-<alt>`): küçük+büyük+rakam
+    # üçlüsünü doğal olarak taşır ve sır değildir — biçimiyle soyulur, kalan her belirteç sınanır
+    cikti = re.sub(r"sir-yedek-\d{8}T\d{6}Z-[a-z]+", "sir-yedek-<TS>", cikti)
+    for d in list(ESKI.values()) + [BAYAT_OR]:
+        assert d not in cikti, "tohum değeri çıktıya düştü"
+    # I2 ile AYNI entropi süzgeci
+    for belirtec in re.findall(r"[A-Za-z0-9_+/=-]{20,}", cikti):
+        assert not (re.search(r"[a-z]", belirtec) and re.search(r"[A-Z]", belirtec)
+                    and re.search(r"[0-9]", belirtec)), f"rastgele görünen dizge: {belirtec}"
+
+
+def test_Q6_esitle_YEDEK_alir_ve_bayat_degeri_yedekte_tutar(tmp_path):
+    kok, ortam = _sahte_ortam(tmp_path)
+    _global_ayir(kok)
+    r = _kos(BETIK, ortam, "--openrouter", "--esitle")
+    assert r.returncode == 0, r.stdout + r.stderr
+    yedek = _yedek_dizini(kok)
+    assert yedek.name.endswith("-openrouter")
+    assert _env_alan(yedek / GLOBAL_HERMES, "OPENROUTER_API_KEY") == BAYAT_OR
+
+
+def test_Q7_esitle_REFERANS_upstream_de_RET_ise_cikis_2_ve_geri_alma_recetesi(tmp_path):
+    """Referans kendisi geçersizse eşitleme kötü bir değeri YAYMIŞTIR; betik bunu susturamaz:
+    kapı kanıtı RET → çıkış 2 + geri alma reçetesi (yedek alındı). Şimde `sahte-` önekli
+    OpenRouter anahtarı upstream reddi (401) üretir."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    _global_ayir(kok)
+    kotu = "sahte-gecersiz-or-2026"
+    (kok / "opt/apisix/.env-apisix").write_text(
+        (kok / "opt/apisix/.env-apisix").read_text(encoding="utf-8")
+        .replace(f'OPENROUTER_API_KEY="{ESKI["or"]}"', f'OPENROUTER_API_KEY="{kotu}"')
+        .replace(f'OPENROUTER_AUTH="Bearer {ESKI["or"]}"', f'OPENROUTER_AUTH="Bearer {kotu}"'),
+        encoding="utf-8")
+    r = _kos(BETIK, ortam, "--openrouter", "--esitle")
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "RET" in r.stderr and ">> GERİ ALMA" in r.stderr
+
+
+def test_Q8_esitle_referans_BOS_ise_yazim_YAPILMAZ(tmp_path):
+    kok, ortam = _sahte_ortam(tmp_path)
+    yol = _global_ayir(kok)
+    (kok / "etc/meridian/nous_api_key").write_text("\n")      # openrouter alt komutunun İLK referansı
+    r = _kos(BETIK, ortam, "--openrouter", "--esitle")
+    assert r.returncode != 0 and "referans kopya" in r.stderr
+    assert _env_alan(yol, "OPENROUTER_API_KEY") == BAYAT_OR, "referans boşken yazıldı"
+    assert not list((kok / "root").glob("sir-yedek-*")), "yazım yokken yedek alındı"
+
+
+def test_Q9_MUT_esitle_yazimi_atlanirsa_Q1_kirmizi(tmp_path):
+    """Mutasyon kanıtı: eşitlemenin tek yazım satırı susturulursa global env BAYAT kalır ve
+    envanter yeniden ölçümü AYRI görür → çıkış 2. Q1 bu dalı ısırıyor."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    yol = _global_ayir(kok)
+    m = _mutant(tmp_path, ('_yaz_satir "$sir" "$tur" "$yol" "$alan" "$mod" "$sahip" "$onek" "$ISLIK/ref_$sir"',
+                           ': # MUTANT: yazım yok'))
+    r = _kos(m, ortam, "--openrouter", "--esitle")
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert _env_alan(yol, "OPENROUTER_API_KEY") == BAYAT_OR
