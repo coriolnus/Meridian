@@ -8,7 +8,7 @@
 # ihtimalle şu kadar"), "mid-cap'te de sağ / değil" DEĞİL. Delist-bar kilidi (B-DELIST-KAYNAK) açılırsa yeni kart.
 
 card_id: EDG-2026-070
-status: registered   # 2026-09-07 10:16Z OPERATÖR ONAYI — ONAYLANDI, SIRAYA: ADIM-0 (kapsama ≥40 isim / ≥3 yıl) S5 + haftalık ölçüm pencereleri sonrası A1'de; kod bu onaydan sonra `research/olcumler/edg070_pit_midcap/`
+status: askiya_veri_kapisi   # 2026-09-13 19:06Z ADIM-0 A1'de KOŞULDU ve DÜŞTÜ (eksen A: mid-cap kohortu kaynaktan İNMİYOR; eksen B: yerel bar 12/40) → kill-list madde 1, kayıt adim_0_hukmu_2026_09_13; ÖNCEKİ: registered — 2026-09-07 10:16Z OPERATÖR ONAYI — ONAYLANDI, SIRAYA: ADIM-0 (kapsama ≥40 isim / ≥3 yıl) S5 + haftalık ölçüm pencereleri sonrası A1'de; kod bu onaydan sonra `research/olcumler/edg070_pit_midcap/`
 family: pit_midcap_ust_sinir
 on_kayit: 2026-09-03
 selef: EDG-2026-018
@@ -75,3 +75,17 @@ notlar: >
   `sandbox_state`li. EDG-018'in kendisi askıda KALIR (aynı kartta eşik/kapsam düzeltilmez — CLAUDE.md
   §5); bu kart onun veri-kaynağı-değişti tekrarıdır. Sonuç ne olursa olsun B-DELIST-KAYNAK para
   kararına sayısal girdi üretir.
+
+adim_0_hukmu_2026_09_13:
+  tarih: "2026-09-13T19:06Z"
+  hukum: "ADIM-0 DÜŞTÜ → askiya_veri_kapisi (kill-list madde 1: kill DEĞİL). Ölçüm BAŞLAMADI; teslim = kapsama haritası (basari_tanimi'nin 'düşüp kapsama haritası teslim edilmiş — bu da başarıdır' kolu)."
+  kaynak: "research/olcumler/edg070_pit_midcap/kapsama_haritasi_a1_2026-09-13.json — git blob 7e846f429211cc13d03ff9cb7ac15c20b776ed48 (sha256 aacdb0751ba255ae…); A1 /opt/meridian koşumu, stdin kipi (betik deploy edilmeden), `--alpaca-sonda -1`; kart_sha256 acf5922e…, uyelik_csv_sha256 39a9202c… (dosya içinde)"
+  eksen_A_kohort: "KURULAMADI — sp500_uyelik_tarihi.csv bir LARGE-CAP endeksinin üyelik geçmişidir (yalnız date+tickers, boyut/piyasa-değeri alanı YOK); depoda S&P MidCap 400 ya da başka bir mid-cap PIT üyelik geçmişi YOK → kartın 'pit_midcap_survivor' evreni HİÇBİR bar kaynağıyla kurulamaz. Kartın bu evreni EDG-018'den devraldığı ve kaynağını hiç ölçmediği ortaya çıktı (ön-kayıt kusuru; eşik/kohort YERİNDE DÜZELTİLMEZ — yeni kart)."
+  eksen_B_yerel_bar: "S&P 500'e en az bir kez girmiş 1206 isimden son anlık görüntüde (2026-06-30) olmayan 703 'çıkmış' ismin yerel arşivde barı olan 12'si (%1,7; tamamı 2024–2026 çıkışı) — eşik 40 ALTINDA (kapı düşer); ort bar yılı 13,3 (eşik 3 üstünde)."
+  eksen_E_alpaca_sondasi: "barsız 691 ismin TAMAMI sondalandı (örneklem DEĞİL): bar dönen 370/691 (delist isimler dahil: TWTR·SIVB·FRC·FB·ATVI·XLNX); ilk-bar TABANI 2020-07-27 (285/370) — kartın 6. satırındaki '2016'ya kadar' varsayımı BU KOHORTTA ÜRETİLMEDİ (adaptör sayfalıyor: page_token + limit 10000 → taban kaynağa ait, adaptöre değil); bar geçmişi ort 4,31 yıl · medyan 5,46 · p10 0,93 · maks 6,12."
+  birlesik_kapi: "kapsanan 382 isim (≥40) ∧ ort 4,59 yıl (≥3) → birleşik kapı sayısal olarak GEÇER; ancak eksen A yokken bu 'çıkmış S&P 500 ismi' kohortu için geçer, kartın hipotez evreni (mid-cap sağkalan) için DEĞİL — hükmü değiştirmez."
+  delist_boslugu: "EDG-016 panel penceresinde (2009-08-04+) endeksten çıkan 350 isimden yerel arşivde barı olan 12 (kayıp oranı 0,966); Alpaca IEX ile 2020-07-27 sonrası kısmen kapanır (delist isimler dahil) — B-DELIST-KAYNAK kararına sayısal girdi."
+  ardil_ve_karar_girdisi: "(1) Mid-cap PIT üyelik KAYNAĞI olmadan bu aile hiçbir bar kaynağıyla koşamaz — kaynak kararı OPERATÖRDE (TSK-065/B-DELIST-KAYNAK; ücretsiz varyant önce: S&P 400 üyelik değişiklik tarihçesi EDG-062 EDGAR-çapası deseniyle, PIT as-of alanı korunarak). (2) Delist-bar kilidi 2020-07-27'den itibaren Alpaca IEX ile KISMEN AÇIK → kill-list madde 5 gereği ancak YENİ kartla (üst-sınır → gerçek ölçüm), pencere 2020-07-27+ ile sınırlı; bu kartta açılmaz."
+  hafiza: "A1 recall koşulmadı — hüküm ölçüm dosyasından MEKANİK (kill-list madde 1), takdir alanı yok; hafıza notu 'alpaca-a1-uzerinden' (2016 tabanı) bu ölçümle düzeltildi. Kaynak: kapsama_haritasi_a1_2026-09-13.json."
+  k_defteri: "K harcanmadı — 0/2 (+0 tanı); ölçüm başlamadı."
+  surec_notu: "İlk A1 koşumu argparse KURULURKEN düştü (stdin kipinde `SANDBOX.parents[2]` IndexError; ikinci kusur: `python -` `__file__`ı '<stdin>' olarak tanımlar, `in globals()` sınaması stdin'i dosya sanıyordu) → betik düzeltildi, çivi tests/test_edg070_adim0_stdin_kipi_v480.py (4; iki mutasyon ısırdı), ikinci koşum RC 0."

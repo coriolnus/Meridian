@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **105** kart.
 
-### Kayıtlı — ölçüm bekliyor (15)
+### Kayıtlı — ölçüm bekliyor (14)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -35,9 +35,6 @@ Toplam **105** kart.
 - **EDG-2026-068** (`registered`) — KART-ÖNCE ÖN-KAYDI (EXE-2026-009 emsali; bu kart bir replay taraması değil, kod-değişikliği sözleşmesidir).
   · HÜKÜM: 2026-09-02 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce, TSK-011)
   · kart: `EDG-2026-068-cf-kuyruk-tarihli.yaml`
-- **EDG-2026-070** (`registered`) — 
-  · HÜKÜM: 2026-09-07 10:16Z OPERATÖR ONAYI — ONAYLANDI, SIRAYA: ADIM-0 (kapsama ≥40 isim / ≥3 yıl) S5 + haftalık ölçüm pencereleri sonrası A1'de; kod bu onaydan sonra…
-  · kart: `EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml`
 - **EDG-2026-085** (`registered`) — 
   · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt (operatör K8); kod kart-önce, pilot S5 + haftalık pencereler sonrası
   · kart: `EDG-2026-085-icra-ani-quote-kaydi-senaryo-a.yaml`
@@ -312,7 +309,7 @@ Toplam **105** kart.
   · HÜKÜM: 2026-08-02 ~22:30 TR — ARŞİV (Rol-1 hükmü; kill#1 tetiklendi): İki yüzeyde de fark CI-0-içi VE |fark|<10bps: Y1 @20 −0,06bps [−2,06,+2,60] · Y2 @20 +0,27bps…
   · kart: `KYS-2026-001-kiyas-kirlenmesi.yaml`
 
-### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (7)
+### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (8)
 
 - **EDG-2026-011** (`askida`) — Aynı gün üretilen adaylar arasında "in-play" olanlar (kazanç-katalizörü yakınlığı + yüksek rvol) diğer adaylardan daha iyi ileri getiri/isabet taşır…
   · HÜKÜM: 2026-08-01 ~10:40 — kill#3 ASKI (K HARCANMADI): in-play aday-gün ÜST SINIRI bile 11-12 << 150.
@@ -332,6 +329,9 @@ Toplam **105** kart.
 - **EDG-2026-069** (`askiya_veri_kapisi`) — 
   · HÜKÜM: 2026-09-13 Rol-1: ADIM-0 DÜŞTÜ (n_uygun 11 < 30 · dolum_ts eksik 0,54 > 0,30) — KILL DEĞİL, veri kilidi; bkz.
   · kart: `EDG-2026-069-sinyal-tetik-dolum-tick-bacagi.yaml`
+- **EDG-2026-070** (`askiya_veri_kapisi`) — 
+  · HÜKÜM: 2026-09-13 19:06Z ADIM-0 A1'de KOŞULDU ve DÜŞTÜ (eksen A: mid-cap kohortu kaynaktan İNMİYOR; eksen B: yerel bar 12/40) → kill-list madde 1, kayıt…
+  · kart: `EDG-2026-070-pit-midcap-sagkalan-ust-sinir.yaml`
 
 <!-- ENDEKS: SON -->
 

@@ -35,17 +35,28 @@ import sys
 import argparse
 
 # A1'de dosya deploy edilmeden `ssh a1 python3 - --repo /opt/meridian --cikti … < adim0_kapsama.py` ile (stdin)
-# koşabilsin: `__file__` stdin'de tanımsızdır → SANDBOX cwd'ye düşer, `--repo`/`--cikti` açık verilir.
-SANDBOX = pathlib.Path(__file__).resolve().parent if "__file__" in globals() else pathlib.Path.cwd()
+# koşabilsin: `__file__` stdin'de "<stdin>"dir → SANDBOX cwd'ye düşer, `--repo`/`--cikti` açık verilir (ZORUNLU).
+# `python -` KİPİNDE `__file__` TANIMLIDIR ve "<stdin>" değerini taşır (globals() sınaması bu yüzden
+# stdin'i dosya sanıyordu — ikinci kusur, aynı gün); kip `__file__`ın DEĞERİNDEN ölçülür.
+STDIN_KIPI = globals().get("__file__") in (None, "<stdin>")
+SANDBOX = pathlib.Path.cwd() if STDIN_KIPI else pathlib.Path(__file__).resolve().parent
+# stdin kipinde VARSAYILAN YOL YOK: cwd'nin "üç üstü" anlamsızdır ve A1'de `/opt/meridian`ın iki üstü
+# olduğu için `parents[2]` argparse KURULURKEN IndexError verdi (vaka 2026-09-13 19:1xZ, ilk A1 koşumu).
+# `--repo` ve `--cikti` açık verilmek ZORUNDA (kullanım hatası = çıkış 2; cwd'ye sessizce yazılmaz).
+_REPO_VARSAYILAN = None if STDIN_KIPI else SANDBOX.parents[2]
 _ARGS = argparse.ArgumentParser(description="EDG-2026-070 ADIM-0 kapsama haritası (salt-okur; hüküm YOK)")
-_ARGS.add_argument("--repo", type=pathlib.Path, default=SANDBOX.parents[2],
-                   help="depo kökü (A1: /opt/meridian; varsayılan: bu dosyanın üç üstü)")
+_ARGS.add_argument("--repo", type=pathlib.Path, default=_REPO_VARSAYILAN,
+                   help="depo kökü (A1: /opt/meridian; dosya kipinde varsayılan: bu dosyanın üç üstü; stdin kipinde ZORUNLU)")
 _ARGS.add_argument("--cikti", type=pathlib.Path, default=None,
-                   help="kapsama_haritasi.json yolu (varsayılan: bu klasör)")
+                   help="kapsama_haritasi.json yolu (dosya kipinde varsayılan: bu klasör; stdin kipinde ZORUNLU)")
 _ARGS.add_argument("--alpaca-sonda", type=int, default=0, dest="alpaca_sonda",
                    help="barı OLMAYAN çıkmış isimlerden en çok N tanesi için Alpaca IEX tarihsel bar sondası "
                         "(A1-içi; 0 = çağrı YOK). Kartın ikinci kaynak basamağı.")
 ARGV = _ARGS.parse_args()
+if ARGV.repo is None:
+    _ARGS.error("stdin kipinde --repo zorunlu (A1: --repo /opt/meridian)")
+if STDIN_KIPI and ARGV.cikti is None:
+    _ARGS.error("stdin kipinde --cikti zorunlu (cwd'ye sessizce yazılmaz)")
 REPO = ARGV.repo.resolve()
 UYELIK = REPO / "research" / "pit_universe" / "sp500_uyelik_tarihi.csv"
 BARS = REPO / "state" / "bars"
