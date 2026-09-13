@@ -93,3 +93,14 @@ pk3_hukmu_2026_09_13: >
   `notlar` bloğundaki "PK (3) esles=None = KOŞULMADI" cümlesi bu kayıtla BAYAT: üç PK'dan (3) YEŞİL; (1) B1 çivili,
   (2) gerçek ayağı ilk 10 gerçek işlemde. K harcanmadı (PK). Kod bfce287 (Opus tur-1+2, Sonnet inceleme + dar yeniden
   inceleme), tam suite #47 12224/1 (v334 yükleyici → c658865 delta yeşil).
+
+pk2_hukmu_2026_09_13: >
+  (Rol-1, 17:1xZ) PK (2) GERÇEK AYAĞI — ÖLÇÜLDÜ ve KALDI (`gecti=False`). Girdi DONMUŞ (pk2_gercek/girdi/, SHA256SUMS: son 12 canlı
+  işlem + plan satırları + E2, 13 sembol A1 bar CSV'si 09-11'e kadar, canlı strategy.yaml v5 + goal/bounds; parametre uyumu v5=v5).
+  Son 10 işlem: 9/10 ölçüldü (PANW gölgede girmedi: tetik_gelmedi), hüküm çifti 6/10 (3 sıfır-R işlem `sayim.R_MULTIPLE_ALT` kapısı
+  dışı — tanı), ort |gölge R − gerçek R| 0,295 (hepsi) · 0,479 (doğrulanmış dolum) vs eşik 0,05 (FARK_R_UST); VRTX tek başına 1,27
+  (gerçek stop_gap −2,277 / gölge −1,011), NOW 0,99 (gerçek −0,009 / gölge −1,0), CF 0,36 (tutma 2 vs 6 seans). Çıplak sınıf alan
+  ölçümüyle {doğrulanmış 6, kısmi 1, çıplak 3}, düşürülmedi. Sonuç: pk2_gercek/sonuc_20260913T164520+0000.json (kill#5: MD rapor
+  işlem başına sayı basmaz). SONUÇ: kill#5 gereği bu pencereden SAYI YAYILMAZ; harness gerçek yolu 0,05 R içinde yeniden üretmiyor
+  — üç aday neden (giriş semantiği · E2 ATR enjeksiyonu · manage_position paritesi) ölçülmedi → teşhis kartı EDG-2026-090 (ablasyon,
+  K=3, aynı donmuş girdi). Pencere sayımı SÜRER (n≥30 birikimi), hüküm PK(2) geçmeden yazılmaz. K harcanmadı (PK). Eşik değişmedi.

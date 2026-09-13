@@ -1,0 +1,78 @@
+# EDG-2026-090 — gölge icra motoru ↔ gerçek canlı yol AYRIŞMA TEŞHİSİ (EDG-088 PK(2) düşüşünün ablasyonu)
+# ÖN-KAYIT 2026-09-13 17:1x UTC (Rol-1; operatör uzakta, "roadmap'e full otonom devam"). Ölçüm KODU YOK — kod bu karttan SONRA.
+# NEDEN VAR: EDG-088 PK (2) gerçek ayağı 2026-09-13'te ÖLÇÜLDÜ ve DÜŞTÜ (research/olcumler/edg088_golge_pilot/pk2_gercek/
+# sonuc_20260913T164520+0000.json): son 10 canlı işlemde ort |gölge R − gerçek R| 0,295 (hepsi) / 0,479 (doğrulanmış dolum)
+# vs eşik 0,05 (golge_icra.FARK_R_UST); farkı VRTX taşıyor (|Δ| 1,27: gerçek stop_gap −2,277 vs gölge −1,011), PANW gölgede
+# HİÇ GİRMEDİ (tetik_gelmedi; gerçek yol girdi), CF/NOW giriş fiyatı ve tutma süresi ayrıştı (gerçek 2 seans / gölge 6; gerçek
+# −0,009 / gölge −1,0). Kill#5 (EDG-088) gereği gölge penceresinden SAYI YAYILMAZ; PK(2) geçene kadar pilot ölçüm 'harness
+# doğrulanmamış' durumundadır. Rapor üç aday nedeni ADIYLA verdi ama hangisinin ne kadar taşıdığını ÖLÇMEDİ — bu kart onu ölçer.
+# kart_benzer (2026-09-13 17:0xZ): EDG-045 friksiyon_olcumu 0,29 (replay bar-içi stop dolumu eff_stop varsayımı — AYNI sınıf, ref)
+# · EDG-069 0,15 · EDG-085 0,13 · EXE-007 0,11 (kaynak damgası broker teyidi değil) — KALDI/NO-GO selef YOK.
+
+card_id: EDG-2026-090
+status: registered   # 2026-09-13 Rol-1 — ön-kayıt; kod kart-önce; ADIM-0 (girdi donmuş: pk2_gercek/girdi + sonuc_…164520) hazır
+family: golge_gercek_ayrisma
+on_kayit: 2026-09-13
+selef: null
+ref: [EDG-2026-088, EDG-2026-045, EXE-2026-007, TSK-179, "research/olcumler/edg088_golge_pilot/pk2_gercek/sonuc_20260913T164520+0000.json",
+      "meridian/golge_icra.py::adim", "meridian/broker.py::PaperBroker._touch_exit", "meridian/loop.py::_entry_exec_write (E2 ATR/limit)"]
+
+hipotez: >
+  Gölge motorunun gerçek canlı yoldan sapması ÜÇ ayrıştırılabilir nedene bölünür ve ablasyonla ölçülür: (A) GİRİŞ SEMANTİĞİ —
+  üretim ertesi açılışta koşulsuz doldurur (E2 'ayna' + limit), gölge "ilk uygun seans/tetik" bekler (PANW girmedi; VRTX/CF/NOW
+  giriş fiyatı farkı); (B) E2 ATR/LİMİT ENJEKSİYONU — gerçek yolda limit kurulumu E2'nin ATR'siyle, gölgede ATR enjekte
+  edilmiyor (CF/NOW); (C) `manage_position` AYRIŞMASI — çıkış kararı/tutma süresi (CF gölgede 6 seans, gerçekte 2; NOW gölgede
+  tam −1R, gerçekte −0,009R). Hipotez: A+B+C ablasyonla kapatıldığında ort |Δ R| (doğrulanmış dolumlu işlemlerde) ≤ 0,05'e iner
+  (EDG-088 PK(2) eşiği); inmezse kalan fark GERÇEK DOLUM (broker gap/slip) sınıfıdır ve gölge motorunun modelleyemeyeceği
+  ölçülmüş bir bedeldir (EDG-045 sınıfı) → EDG-088 PK(2) eşiği o bedelle YENİ kartta yeniden tanımlanır (bu kart eşiği değiştirmez).
+
+k_registry: {registered_at: "2026-09-13", trial_ids: [EDG-090-ablasyon-A-giris, EDG-090-ablasyon-B-atr, EDG-090-ablasyon-C-manage]}
+# K=3 (her ablasyon bir birincil ölçü: o neden kapatılınca ort |Δ R|'de düşüş). Birleşik (A+B+C) hüküm TANI'dır, K'ye 1 çarpılarak yazılır.
+
+adim_0_fizibilite: >
+  HAZIR (2026-09-13): girdi DONMUŞ ve git-izli — research/olcumler/edg088_golge_pilot/pk2_gercek/girdi/ (son 12 canlı işlem + plan
+  satırları + E2, 13 sembol A1 bar CSV'si 2026-09-11'e kadar, canlı strategy.yaml v5 + goal/bounds; SHA256SUMS 17 satır) ve taban
+  sonucu sonuc_20260913T164520 (9/10 ölçülen, 6/10 hüküm çifti). Kapı: hüküm çifti n ≥ 6 (bugün 6 — tam sınırda; `sayim.R_MULTIPLE_ALT`
+  dışı 3 sıfır-R işlem tanı sütununda kalır). n < 6'ya düşerse status → askiya_veri_kapisi. Ek girdi GEREKMEZ; ablasyonlar aynı
+  donmuş girdiyle koşar (kart eşiği/penceresi değişmez; yeni gerçek işlem eklenmez — ekleme = yeni kart).
+
+olcum_plani:
+  - "taban: pk2_gercek.py mevcut koşumu (ort |Δ| hepsi 0,295 · doğrulanmış 0,479; işlem başına Δ tablosu) — YENİDEN ÜRETİLİR (bayt-eş)"
+  - "ablasyon A (giriş semantiği): gölge girişi üretimle AYNI kurala çekilir — plan D+1 açılışında koşulsuz dolum, E2 limit/aynadan; PANW girer; ort |Δ| ölçülür"
+  - "ablasyon B (ATR enjeksiyonu): E2 satırındaki ATR/limit gölgeye enjekte edilir (motorun beyanlı sapması 4 kapanır); ort |Δ|"
+  - "ablasyon C (manage_position paritesi): gölge çıkış kararı canlı `manage_position` + `_touch_exit` zinciriyle bire bir (scale_out beyanlı); tutma süresi ve çıkış nedeni eşleşme oranı; ort |Δ|"
+  - "birleşik A+B+C: ort |Δ| ve kalan fark işlem başına (VRTX gap dolumu ayrı satır: gerçek dolum − gölge dolum, bps) — TANI"
+  - "her ablasyon için işlem başına Δ tablosu ve çıkış-nedeni eşleşmesi; ölçülemeyen işlem ADIYLA (kill#3 emsali)"
+  - "kalan fark sınıfı beyanı: 'broker gap/slip' (EDG-045) · 'bar kaynağı' · 'parametre kuşağı' — hangisi, ölçülmüş kanıtla"
+
+esikler:
+  ort_fark_r_ust: 0.05             # EDG-088 PK(2) eşiği AYNEN (golge_icra.FARK_R_UST) — birleşik ablasyonun hedefi
+  ablasyon_dusus_alt_r: 0.05       # bir ablasyonun 'katkısı var' sayılması için ort |Δ|'de en az 0,05 R düşüş (tasarım seçimi, ön-kayıt)
+  n_hukum_cifti_alt: 6             # ADIM-0 kapısı (bugünkü n)
+
+kill_list:
+  - "girdi donmuş dizinin SHA256SUMS'ı tutmazsa → geçersiz (EDG-059 emsali; girdi git blob'u)"
+  - "ablasyon gölge motorunun ÜRETİM yolunu (loop/broker) değiştirirse → geçersiz (yalnız gölge tarafı ablasyona girer; canlı karar yolu dokunulmaz)"
+  - "PK tutmazsa → hiçbir sayı yayılmaz"
+  - "eşik/pencere/işlem kümesi sonradan değişirse → geçersiz (yeni kart)"
+  - "ölçülemeyen işlem sessizce düşürülürse → geçersiz"
+
+pozitif_kontrol: >
+  YOL-TUTARLI, üçlü: (1) SENTETİK — bilinen barlarla iki sahte işlem: ablasyon A/B/C kapalıyken gölge R el hesabıyla birebir, üçü
+  açıkken de aynı (sentetikte sapma yok → ablasyon bir şeyi BOZMAZ); (2) TABAN YENİDEN ÜRETİM — mevcut pk2 sonucu ablasyonsuz
+  koşumla bayt-eş (duvar-saati hariç); (3) TERS KONTROL — ablasyon C'yi bilerek YANLIŞ (çıkış kuralını ters) uygulayınca ort |Δ|
+  ARTMALI (ölçüm yönü kanıtı). Üçü de yeşil değilse sayı yayılmaz.
+
+veri_penceresi: "DONMUŞ: pk2_gercek/girdi (son 12 canlı işlem, 2026-08-19..09-11) — pencere büyümez; yeni işlemlerle yeniden ölçüm = ardıl kart"
+
+basari_tanimi: >
+  ADIM-0 kapısı tutmuş + üç PK yeşil + üç ablasyon ve birleşik sonuç işlem başına tabloyla raporlanmış + kalan fark sınıfı kanıtla
+  beyan edilmiş + K defterine 3 (+1 tanı) + hüküm Rol-1 tarafından aynı turda karta. Hipotezin tutması başarı değildir; hangi
+  nedenin ne kadar taşıdığının ÖLÇÜLMÜŞ olması başarıdır. Sonuç EDG-088'e girdi: PK(2) geçer hâle gelirse (birleşik ≤0,05) gölge
+  motoru o ablasyonlarla GÜNCELLENİR (ayrı kod kalemi, motor dosyası → tam suite) ve PK(2) yeniden koşar; gelmezse EDG-088 PK(2)
+  eşiği kalan bedelle yeni kartta yeniden tanımlanır.
+
+notlar: >
+  Kod yalnız bu karttan sonra `research/olcumler/edg090_golge_ayrisma/` altında (sandbox/tmp state, canlı deftere yazmaz; pk2_gercek
+  ve _ortak yardımcıları İTHAL edilir). Bedel yasası: ölçüm hiçbir çıktıyı azaltmaz. Operatör bilgilendirmesi: akşam özeti push'u
+  (2026-09-13) — "gölge pilotu harness'ı gerçek yoldan 0,3 R sapıyor, sayı yayılmıyor, teşhis kartı açıldı".
