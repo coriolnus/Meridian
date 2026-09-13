@@ -17,6 +17,26 @@
 #   ./sir_credential_gecis.sh --geri-al <ad>     → ortam satırını geri yaz, drop-in'i kaldır
 #   ./sir_credential_gecis.sh --faz1-hafiza      → FAZ-1A: motora TENANT credential'ı (54 drop-in)
 #   ./sir_credential_gecis.sh --geri-al-hafiza   → 54 drop-in'i kaldır (vekil dosya yolunu kullanır)
+#   ./sir_credential_gecis.sh --faz1-apisix      → FAZ-1C: kapı ADMIN anahtarının credential kaynağı
+#   ./sir_credential_gecis.sh --geri-al-apisix   → o kaynağı kaldır (araç `.env-apisix` yedeğine döner)
+#
+# FAZ-1C NİYE BURADA VE NİYE DROP-IN YOK (TSK-064, spec §3 madde 4). `ops/apisix_uygula.py` kapının
+# Admin API anahtarını bugün `/opt/apisix/.env-apisix`ten okuyor; Faz-1C onu 0400 root bir
+# CREDENTIAL KAYNAĞINDAN (`/etc/meridian/apisix_admin_key`) okutur. Bu alt komut O KAYNAĞI yaratır
+# ve BAŞKA HİÇBİR ŞEY YAPMAZ:
+#   · `.env-apisix` satırına DOKUNULMAZ. Kardeş fazlarda ortam satırı kapatılacak bir KOPYAdır;
+#     burada DEĞİL: o satırı kapının KENDİSİ okur (`config.yaml` `${{APISIX_ADMIN_KEY}}` çözümü,
+#     `--env-file`). Silmek kapıyı açılmaz hâle getirirdi — yani burada "faz-2" YOKTUR ve olmayan
+#     bir faz bu betikte de yoktur (burada olmayan şey, burada yapılmayacak şeydir).
+#   · DROP-IN KURULMAZ. Kaynağı okuyan şey bir systemd birimi değil, operatörün ELİYLE koştuğu bir
+#     ops aracıdır (`sudo python3 ops/apisix_uygula.py …`); `LoadCredential=` kimsenin işine
+#     yaramaz ve kurulsaydı kaynağı olmayan bir birim HİÇ AÇILMAZDI. apisix'in kendi sarmalayıcı
+#     ExecStart'ı (spec §3.4'ün öteki yarısı) AYRI bir iştir ve bu betikte YOKTUR.
+#   · RESTART YOK. Hiçbir birim bu dosyayı okumaz; aracın bir sonraki koşumu kanalı kendisi ölçer
+#     ve okuduğu KANALI stderr'e bildirir (`apisix_uygula.kanal_bildir`).
+# KAYNAK DEĞERİ `.env-apisix`teki MEVCUT değerden taşınır — `^APISIX_ADMIN_KEY=` DESENİYLE, satır
+# ADRESİYLE değil (2026-09-07 olayının 1. maddesi; o dosyanın 1. satırı bir YORUMDUR). Rotasyon bu
+# betiğin işi değildir: değeri döndürmek `sir_rotasyon.sh --apisix-admin`in işidir.
 #
 # FAZ-1A NİYE BURADA VE NİYE YALNIZ İKİ ALT KOMUT. Hindsight'ın KENDİ geçişi (üç sır →
 # `/etc/hindsight/creds/*`, `hindsight-api.service.d/50-creds.conf` + `hindsight-api-baslat.sh`)
@@ -93,6 +113,13 @@ DROPIN_AD=53-nous-kapi-credential.conf
 #: sırrı iki kez üretir, ikisi ilk rotasyonda sessizce ayrışırdı. Çivi: v439 I10/I11c.
 HAFIZA_DROPIN_AD=54-hafiza-credential.conf
 HAFIZA_KRED="$KOK/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
+#: FAZ-1C (kapı admin anahtarı). ÜÇ YÜZEY AYNI İKİ YOLU KONUŞUR ve ayrışmaları çiviyle bağlıdır
+#: (`tests/test_apisix_admin_credential_v476.py` E1/E2/E3): burası kaynağı YARATIR,
+#: `ops/apisix_uygula.py` onu OKUR, `sir_rotasyon.sh --apisix-admin` DEĞERİNİ döndürür. Ayrışırsa
+#: geçiş "yapıldı" raporlanır, araç yedekten okumaya devam eder — sessiz bir yarım geçiş.
+APISIX_KRED="$KOK/etc/meridian/apisix_admin_key"
+APISIX_ENVF="$KOK/opt/apisix/.env-apisix"
+APISIX_ALAN="APISIX_ADMIN_KEY"
 KAYNAK_DIR="$(cd "$(dirname "$0")" && pwd)/meridian.service.d"
 API="${SIR_GECIS_API:-http://127.0.0.1:8080}"
 #: `.env` YEDEKLERİNİN YERİ. `.env`in yanında DEĞİL: yedek `.env`in TAM KOPYASIDIR, yani sırrı
@@ -153,10 +180,17 @@ _dolu_mu() {
 # `.env`teki `<ad>=` satırının DEĞERİ var mı? `_dolu_mu`nun satır ölçeğindeki kardeşi ve aynı
 # hükmü taşır: `<ad>=` (değersiz) satır "ayarlı" DEĞİLDİR. Değerin KENDİSİ hiçbir değişkene
 # girmez — yalnız boşluk-dışı karakterlerinin SAYISI okunur (`ps` argv'yi herkese gösterir).
-_env_satiri_dolu_mu() {
-  local ad="$1"
-  [ "$(sudo sed -n "/^${ad}=/{s/^${ad}=//;p;q;}" "$ENVF" 2>/dev/null \
+_dosya_alani_dolu_mu() {
+  local dosya="$1" ad="$2"
+  [ "$(sudo sed -n "/^${ad}=/{s/^${ad}=//;p;q;}" "$dosya" 2>/dev/null \
        | tr -d '[:space:]' | wc -c | tr -d ' ')" != "0" ]
+}
+
+# `$ENVF`e sabitlenmiş kardeşi. GÖVDE TEK (`_dosya_alani_dolu_mu`): Faz-1C aynı ölçümü BAŞKA bir
+# dosyada (`.env-apisix`) yapıyor ve iki `sed` deseni ayrı ayrı yazılsaydı sessizce ayrışırlardı —
+# biri "değersiz satır ayarlı DEĞİLDİR" derken öteki "ayarlı" derdi (tek-kaynak yasası).
+_env_satiri_dolu_mu() {
+  _dosya_alani_dolu_mu "$ENVF" "$1"
 }
 
 # `durum` için `.env` ORTAM KANALI ÖZETİ — `_env_satiri_dolu_mu`nun raporlama kardeşi. Üç hâl
@@ -363,6 +397,34 @@ _kapi_kilidi_olc() {
   esac
 }
 
+# --- FAZ-1C RAPOR YARDIMCILARI -------------------------------------------------------------------
+# `_env_kanali_ozeti`nin `.env-apisix` karşılığı: üç hâl AYRI (yok · DEĞERSİZ · VAR). Ayrı bir
+# fonksiyon çünkü ölçtüğü DOSYA farklıdır; ölçüm GÖVDESİ ortaktır (`_dosya_alani_dolu_mu`).
+_apisix_kanal_ozeti() {
+  sudo grep -qs "^${APISIX_ALAN}=" "$APISIX_ENVF" || { echo yok; return 0; }
+  if _dosya_alani_dolu_mu "$APISIX_ENVF" "$APISIX_ALAN"; then
+    echo VAR
+  else
+    echo "DEĞERSİZ (satır var, değer yok)"
+  fi
+}
+
+# RAPOR, ARACIN ÖLÇTÜĞÜ ŞEYİ ÖLÇER (tek-kaynak yasası — L1 dersinin Faz-1C'deki karşılığı).
+# `ops/apisix_uygula.py::anahtar_kanali` credential'ı ÖNCE dener, boşsa yedeğe düşer; bu satır o
+# sırayı AYNEN söyler. Söylemeyen bir rapor, operatörü "geçiş yapıldı" varsayımına bırakırdı.
+# KAPSAM BEYANI: bu betik `sudo` ile koşar ve 0400 root kaynağı okuyabilir; ARAÇ operatörün
+# koştuğu kimlikte koşar. Yani "kaynak dolu" ile "araç onu okuyabiliyor" AYNI ŞEY DEĞİLDİR —
+# satır bunu söyler, çünkü aradaki fark tam olarak bir izin hatasıdır ve "anahtar yok" gibi görünür.
+_apisix_okunacak_kanal() {
+  if _dolu_mu "$APISIX_KRED"; then
+    echo "credential ($APISIX_KRED) — ARAÇ da root olmalı: sudo python3 ops/apisix_uygula.py …"
+  elif _dosya_alani_dolu_mu "$APISIX_ENVF" "$APISIX_ALAN"; then
+    echo "YEDEK ($APISIX_ENVF [$APISIX_ALAN]) — Faz-1C henüz uygulanmadı"
+  else
+    echo "YOK (iki kanal da boş/okunamadı) — araç durur"
+  fi
+}
+
 # =================================================================================================
 durum() {
   local k kalinti
@@ -391,6 +453,13 @@ durum() {
   echo "  --- Faz-1A (pano vekili, Hindsight TENANT anahtarı) ---"
   echo "  drop-in $HAFIZA_DROPIN_AD: $([ -f "$BIRIM/$HAFIZA_DROPIN_AD" ] && echo KURULU || echo yok)"
   echo "      credential kaynağı ($HAFIZA_KRED): $(_kaynak_ozeti "$HAFIZA_KRED")"
+  # FAZ-1C. "yedek kanal" DENİR, "ortam kanalı" DEĞİL — ve bu bir üslup tercihi değil: o satır
+  # kapatılacak bir kopya DEĞİL, kapının KENDİ okuduğu kanaldır (bkz. başlıktaki Faz-1C bloğu).
+  # Drop-in satırı YOK çünkü kaynağı okuyan bir BİRİM yok (okuyan `ops/apisix_uygula.py`).
+  echo "  --- Faz-1C (kapı admin anahtarı, ops/apisix_uygula.py) ---"
+  echo "      credential kaynağı ($APISIX_KRED): $(_kaynak_ozeti "$APISIX_KRED")"
+  echo "      yedek kanal ($APISIX_ENVF) [$APISIX_ALAN]: $(_apisix_kanal_ozeti)"
+  echo "      okunacak kanal: $(_apisix_okunacak_kanal)"
   # `|| true` (systemctl is-active için) KALDIRILDI: aynı gerekçe — echo argümanı içindeki
   # substitüsyonun rc'si dış komutun rc'sini etkilemez, `set -e`yi hiç tetiklemezdi.
   echo "  servis: $(systemctl is-active meridian 2>/dev/null) · healthz: $(curl -s -o /dev/null -w '%{http_code}' "$API/healthz" 2>/dev/null || echo 000)"
@@ -637,6 +706,67 @@ geri_al_hafiza() {
 }
 
 # =================================================================================================
+# FAZ-1C — KAPI ADMIN ANAHTARININ CREDENTIAL KAYNAĞI (TSK-064, spec §3 madde 4)
+# =================================================================================================
+# Gerekçenin tamamı başlıktaki "FAZ-1C NİYE BURADA VE NİYE DROP-IN YOK" bloğundadır; burada
+# YALNIZ uygulaması durur (ikinci bir anlatı, ayrışabilir ikinci bir kopya olurdu).
+faz1_apisix() {
+  local tmp
+  echo "=== FAZ 1C: $APISIX_ALAN → credential kaynağı (yedek kanal KALIR) ==="
+  # AYNI KAPI: yarıda kalmış bir ölçüm turunda `.env`ler ölçümün SAHTE değerini taşıyabilir ve
+  # buradan doğan kaynak o sahte değeri 0400 bir dosyaya YAZARDI (2026-09-08 ölçümü).
+  _olcum_kalintisi_kapisi
+  sudo test -f "$APISIX_ENVF" || die "yedek kanal dosyası YOK: $APISIX_ENVF
+     Kaynak değeri oradan TAŞINIR; dosya yoksa taşınacak bir değer de yoktur. HİÇBİR dosya
+     değiştirilmedi."
+
+  tmp="$(mktemp)"; chmod 600 "$tmp"
+  trap 'rm -f "$tmp"' EXIT
+  # DEĞER ADIYLA ARANIR (`env` kipi): `^APISIX_ADMIN_KEY=` DESENİ, satır ADRESİ DEĞİL. Bu dosyanın
+  # 1. satırı bir YORUMDUR ve "1. satırı al" tahmini tam olarak 2026-09-07 olayının kendisidir.
+  # `env` kipi ÇİFT SATIRDA da durur: yürürlükteki değer SONuncudur, okuyan İLKİNİ alır ve hangisi
+  # olduğu ÖLÇÜLEMEZ.
+  _deger_dosyala "$APISIX_ENVF" "$APISIX_ALAN" "$tmp" env
+  # `[ -s ]` YETMEZ: 1 baytlık satır sonu kapıyı geçer ve boş bir "değer" 0400 kaynağa yazılırdı.
+  # Bu satıra kadar HİÇBİR yazım yapılmamıştır — reddedilen geçiş hiçbir iz bırakmaz.
+  _dolu_mu "$tmp" || die "$APISIX_ALAN için DEĞER YOK — $APISIX_ENVF içinde ^${APISIX_ALAN}=
+     satırı yok ya da değersiz. HİÇBİR dosya değiştirilmedi."
+
+  sudo install -d -m 0755 "$ETC"
+  # HEDEF ÖNCE KALDIRILIR. `install` hedefi `O_TRUNC` ile AÇAR ve 0400 bir dosyaya yazma izni
+  # DOSYANIN değil DİZİNİNDİR — ikinci koşum "Permission denied" ile düşerdi (aynı sınıf
+  # `sir_rotasyon.sh::_negatif_geri_al` şerhinde ölçülü). Aradaki pencere ZARARSIZDIR: bu dosya
+  # bir `LoadCredential` kaynağı DEĞİLDİR (hiçbir birim onu açılışta aramaz) ve araç o anda
+  # yedek kanaldan okur.
+  sudo rm -f "$APISIX_KRED"
+  sudo install -m 0400 "$tmp" "$APISIX_KRED"
+  sudo chown root:root "$APISIX_KRED" 2>/dev/null || true  # sessiz-yutma: chown yalnız root olarak anlamlıdır; testteki sahte kökte root yoktur, dosya zaten install ile doğru izinle yazıldı
+  rm -f "$tmp"; trap - EXIT
+  oldu "credential kaynağı yazıldı: $APISIX_KRED (0400 root:root; değer BASILMADI)"
+  echo "  · $APISIX_ENVF satırına DOKUNULMADI — o satırı kapının KENDİSİ okur (config.yaml)."
+  echo "  · drop-in kurulmadı, hiçbir birim yeniden başlatılmadı (kaynağı okuyan bir birim YOK)."
+  echo ">> Doğrula: sudo python3 ops/apisix_uygula.py --denetle   # stderr'deki 'admin anahtarı"
+  echo "   kanalı:' satırı $APISIX_KRED demeli (YEDEK derse araç kaynağı OKUYAMIYOR — izin?)."
+}
+
+geri_al_apisix() {
+  echo "=== GERİ ALMA (Faz-1C): $APISIX_KRED kaldırılıyor ==="
+  _olcum_kalintisi_kapisi
+  # KAPI, KALDIRMADAN ÖNCE. Kaldırmak credential kanalını KAPATMAKTIR; yedek kanal da
+  # yok/değersizse sır HİÇBİR kanaldan okunamaz ve arıza ancak bir sonraki `--uygula` denemesinde
+  # görünür — yani bakım penceresi kapandıktan SONRA. `geri_al`ın drop-in kapısıyla aynı hüküm:
+  # ölçemediğin bir güvenceyi vermektense durmak.
+  _dosya_alani_dolu_mu "$APISIX_ENVF" "$APISIX_ALAN" \
+    || die "yedek kanal YOK/DEĞERSİZ: $APISIX_ENVF [$APISIX_ALAN]
+     Kaynak KALDIRILMADI — kaldırılsaydı $APISIX_ALAN hiçbir kanaldan okunamaz ve
+     ops/apisix_uygula.py bir sonraki koşumda dururdu. Önce yedek satırı geri yaz."
+  sudo rm -f "$APISIX_KRED"
+  sudo test ! -e "$APISIX_KRED" || die "kaynak SİLİNEMEDİ: $APISIX_KRED"
+  oldu "credential kaynağı kaldırıldı; araç $APISIX_ENVF [$APISIX_ALAN] yedeğine döner"
+  echo "  · hiçbir birim yeniden başlatılmadı (kaynağı okuyan bir birim YOK)."
+}
+
+# =================================================================================================
 geri_al() {
   local ad="$1" kred tmp a sayi=0 yazilan="" yerinde="" ad_tamam=0
   _ad_dogrula "$ad"
@@ -736,6 +866,8 @@ case "${1:-}" in
   --geri-al) [ $# -ge 2 ] || die "kullanım: --geri-al <ad> — tanınanlar: $ADLAR"; geri_al "$2" ;;
   --faz1-hafiza)    faz1_hafiza ;;
   --geri-al-hafiza) geri_al_hafiza ;;
+  --faz1-apisix)    faz1_apisix ;;
+  --geri-al-apisix) geri_al_apisix ;;
   "")        durum ;;
-  *)         die "bilinmeyen argüman: $1 (--faz1 <ad> | --faz2 <ad> | --geri-al <ad> | --faz1-hafiza | --geri-al-hafiza | boş=durum)" ;;
+  *)         die "bilinmeyen argüman: $1 (--faz1 <ad> | --faz2 <ad> | --geri-al <ad> | --faz1-hafiza | --geri-al-hafiza | --faz1-apisix | --geri-al-apisix | boş=durum)" ;;
 esac
