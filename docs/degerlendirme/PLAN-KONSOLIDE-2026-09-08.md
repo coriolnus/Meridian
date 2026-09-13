@@ -180,3 +180,21 @@ Yok — envanterdeki eksik kimlik listesi boş geldi; bu belgede her açık TSK 
 **Cevaplananlar (tarihçe, tek satır):** B-RUNBOOK-KAPSAM · B-PENCERE-KAYDIR · B-CHOP-BUTCE · B-KORUMA-KUR · B-BILDIRIM-N1 · B-PULLBACK-SILAH · B-KORUMA-POLITIKA · B-E1-LIMIT · B-ORACLE-TASIMA · B-OCI-BUCKET · B-DD-ESIK (0.16) · B-TAVAN-502 (A) · B-PG-ROTASYON · B-AJAN-TAVAN (Sonnet 25/Opus 10/Haiku 40) · TSK-046 QC login · TSK-047 beyin çeşitliliği · TSK-048 · TSK-049 · TSK-050 · TSK-064 ürün (Vault) · TSK-060 MELEZ · TSK-013 kart aç · TSK-159 S5 onayı · TSK-176 K1-K5 · EDG-070 kart onayı.
 
 ROADMAP tarafında aynı ilke: §5.0 operatör masasındaki kapanmış girdiler §8 ARŞİV alt bölümüne taşınır (2026-09-08), tam metin korunur.
+
+## 3b. Durum güncellemesi — 2026-09-13 10:34Z (Rol-1, otonom gece+gündüz vardiyası)
+
+| Kalem | 09-08 durumu | 09-13 durumu |
+|---|---|---|
+| TSK-159 / TSK-156 / TSK-043 | kayıt eksik / kapanış yazımı / ölçülmemiş | ÜÇÜ DE DONE (§8 arşiv); TSK-066 kapısı Rol-1 teyidiyle açıldı (⑥a operatör önceliği bekler) |
+| TSK-138 SOUL denetçisi dilim-2 | iki gecedir düşüyor | Rota ortak modüle taşındı, bekci/karne bağlandı (#36); gece-1: bekçi mekanik kapıda kaldı, sef 22:0xZ ölçülür |
+| TSK-131 disk kararı | tetik bekliyor | Ateşlendi → operatör (a) dur, eşik 140 G (#37); DONE |
+| TSK-104 seyrelme paketi | EXE-011 birikimi | EXE-011 canlı kolu measured (2 ayna-satırı), tetik ateşlendi → QUEUED; TSK-181 (bayat türevler) önce |
+| TSK-060 Hindsight / 083-084-080 hükümleri | 09-13/14 | EDG-080 K2 KALDI, EDG-083 KALDI (girdisiz banka + kullanım 1 sayfa); operatör (b) melez+retain → TSK-168 CANLI (#40), EDG-089 penceresi 09-13 10:23Z → 09-20; dokuz kapılı kalem 089'a bağlı; EDG-084 hükmü 09-14 |
+| TSK-167 arama | dilim-1 canlı | Dilim-2 canlı (#35): /api/arama + pano arama kutusu; ilk gerçek sorgu 3,4 s |
+| TSK-175/179 gölge pilot | kart yazıldı | B1 canlı (#37), EDG-088 penceresi 09-12 22:08Z açık (n≥30 ∧ ≤120 gün); PK(3) şasi alt kalemi |
+| TSK-178 yetim damga bekçisi | QUEUED | DONE (#38: DECLARED_SINKS ×4 + v463) |
+| TSK-180 / TSK-181 (yeni) | — | 180: trade-id sayacı kalıcı (#39, kalan: S5 hayalet eşleme); 181: kök neden = rotasyonun atladığı global hermes env (401) → envanter/betik güncellendi, A1 dosya adımı OPERATÖRDE; 401/403 artık `agent_yetki_reddi` olayı (#39) |
+| TSK-132 dilim-3 | dilim-2 | Ölçüldü: index.html üç çivinin referansı → ayrı plan, düşük öncelik |
+| TSK-013 tick pilotu (Senaryo-A) | S5 + hükümler bekliyor | S5 ✓, 083 hükmü ✓ (KALDI — pilotu bloklamaz), 084 09-14; plan yazımı sırada |
+
+Bedel (09-12 21:0xZ → 09-13 10:34Z): Opus ×3 (634k + 231k + 361k), Sonnet ×3 (278k + 189k + 244k), Fable ajanı 0; suite'ler #41–#45 hepsi yeşil; dağıtımlar #37–#40.
