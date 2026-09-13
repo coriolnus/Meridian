@@ -39,6 +39,8 @@ dropin_dizinleri:
   - meridian-brifing.service.d
   - meridian-bekci.service.d
   - meridian-karne.service.d
+  # TSK-168 (EDG-2026-089): günlük defter özeti retain birimi — tenant anahtarı LoadCredential'dan.
+  - meridian-defter-ozeti-retain.service.d
 
 # --- zorunlu sır dosyaları (Task 2 denetim.yml: yalnız stat+assert, DEĞER üretmez/okumaz) ---
 zorunlu_sir_dosyalari:
@@ -142,6 +144,10 @@ etkin_timerlar:
   - meridian-brifing.timer
   - meridian-bekci.timer
   - meridian-karne.timer
+  - meridian-defter-ozeti-retain.timer   # TSK-168 / EDG-2026-089: kadans operatör kararıyla AÇIK (2026-09-13 '(b) melez+retain');
+                                         # rol birim+drop-in'i kopyalar ve timer'ı enable eder; kurulum günü elle test-ateşleme Rol-1'de
+                                         # (CLAUDE.md §9 "kurulu ≠ çalışır"), pencere ilk başarılı retain damgasıyla açılır.
+
 
 # --- A1'de BİLEREK disabled kalan birimler (A1 ölçümü) — rol bunlara DOKUNMAZ, yalnız raporlar
 # (Yasa 6: "dokunmadım" da okunabilir bir çıktı olmalı; sessiz atlama körlüktür) ---
@@ -165,6 +171,7 @@ dropin_kaynaklari:
   - "{{ playbook_dir }}/../oracle-a1/meridian-brifing.service.d/*.conf"
   - "{{ playbook_dir }}/../oracle-a1/meridian-bekci.service.d/*.conf"
   - "{{ playbook_dir }}/../oracle-a1/meridian-karne.service.d/*.conf"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-defter-ozeti-retain.service.d/*.conf"
 
 # --- polkit kuralları (deploy.sh 6g + A1 ölçümü: /etc/polkit-1/rules.d'de 50 ve 51) ---
 polkit_kaynaklari:

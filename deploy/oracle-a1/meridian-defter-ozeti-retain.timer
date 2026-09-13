@@ -1,0 +1,41 @@
+# meridian-defter-ozeti-retain.timer — meridian-defter-ozeti-retain.service'i günde bir tetikler.
+#
+# SAAT SEÇİMİ: 21:30 UTC (kart `olcum_plani` ikinci maddesinin sözleşmesi). GEREKÇE, iki komşu
+# kadanstan ölçülerek: özet AKŞAM DÖNGÜSÜ VE BRİFİNGLERDEN SONRA yazılmalı ki o günün defter
+# satırları (kapanan işlemler, alarm satırları, giriş icra kararları) ZATEN düşmüş olsun —
+# erken bir tetik, yarım bir günü "günün özeti" diye bankaya yazardı ve o yanlışlık düzeltilemez
+# (belge idempotenttir: aynı gün ikinci kez retain EDİLMEZ).
+# KOMŞULAR (bu depodan okundu, A1'de ÖLÇÜLMEDİ — ajan A1'e ssh yapmaz):
+#   meridian-brifing.timer 22:00 UTC · meridian-backup.timer 23:30 UTC
+# 21:30 ikisinin de ÖNÜNDEDİR ve bu BİLİNÇLİDİR: brifing hesaplanmış çıktıları TESLİM eder, bu
+# birim onları OKUMAZ — defterlerden okur ve defterler EOD turuyla dolar. ABD kapanışı EDT'de
+# 20:00 UTC, EST'de 21:00 UTC; aynı-akşam bacağı kapanış + 16 dk'da açılır (scheduler'ın
+# `SAME_EVENING_DELAY_MIN` sabiti). Yani EDT'de tetiğe 1 sa 14 dk, EST'de 14 dk pay kalır.
+# EST PAYI DAR, VE BU ÖLÇÜLMEMİŞ BİR RİSKTİR (uydurma yasağı — "EOD turu biter" bir ÇIKARIM
+# olurdu): dar payda kaybedilen şey o günün SON satırlarıdır, belgenin kendisi değil. Pencere
+# içinde günlük belgelerde eksik satır görülürse doğru hamle saati değiştirmek değil, ÖLÇMEKTİR
+# (ve saat bir sözleşmedir: kart penceresi boyunca değişmez).
+# VM'in TZ'si ÖNEMSİZ — OnCalendar açıkça UTC diyor.
+[Unit]
+Description=Meridian günlük defter özeti retain tetiği (günlük, akşam döngüsünden sonra)
+
+[Timer]
+OnCalendar=*-*-* 21:30:00 UTC
+# Makine kapalıysa açılışta telafi edilir — kaçan tetik sessizce kaybolmaz. BEDELİ AÇIK: telafi
+# koşumu AYNI GÜNE denk gelirse ve belge zaten retain edilmişse betik çıkış 2 verir ve birim
+# `failed` görünür (gerekçe: birim dosyasının "ÇIKIŞ KODU ↔ systemd" bölümü). Kadansın DOLMASI,
+# sessiz bir başarı iddiasından daha değerlidir: K1 "7/7 gün" sorar.
+Persistent=true
+# 120 s — brief sözleşmesi. Tetik dakikası filodaki başka bir işle tam olarak çakışmasın diye;
+# kardeşlerdeki 300 s'ten dar, çünkü bu birimin penceresi (brifing 22:00'ye kadar) 30 dakikadır.
+RandomizedDelaySec=120
+# FixedRandomDelay (TSK-152): dagit'in sistem-geneli `daemon-reload`u rastgele payı yeniden çekip
+# tetiği erkene çekebilir — gerekçenin TAMAMI ve A1 ölçümü meridian-backup.timer başlığındadır.
+FixedRandomDelay=true
+
+[Install]
+WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — BU DOSYADA YAPILACAK BİR ŞEY YOK: timer birimlerinin `[Service]` bölümü olmaz,
+# sertleştirme süreç yürütmeye aittir ve tetiklenen birimde yapıldı. Aynı gerekçe
+# meridian-brifing.timer ve meridian-backup.timer'da da yazılıdır.
