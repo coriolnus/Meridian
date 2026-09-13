@@ -150,15 +150,22 @@ DETAY_TAVAN = 100  # metin kipinde `detay` kesme sınırı; `--json` kesmez
 #: YÜKSELTME YOLU KOD DEĞİŞTİRMEDEN AÇIKTIR: `OLAY_SORGU_BELLEK=4GB python ops/olay_sorgu.py …`
 #: (aynı değişken bar araçları için de geçerlidir — tek ad, tek tavan).
 #:
-#: TEK-KAYNAK İSTİSNASI, BEYANLI (iki tavan BİLEREK ayrıdır, kopya DEĞİLDİR):
+#: TEK-KAYNAK İSTİSNASI, BEYANLI (ÜÇ tavan BİLEREK ayrıdır, kopya DEĞİLDİR):
 #:   * `meridian/sohbet.py::SORGU_BELLEK_TAVANI` (`SOHBET_SQL_BELLEK`, 512MB) MODEL yazımı SQL'i
 #:     CANLI API işçisinin ipliğinde koşturur — orada tavan DAR olmalıdır ve sohbet onu
 #:     `baglanti_kur`DAN SONRA uygular, yani buradaki değeri bilerek EZER (daraltır).
+#:   * `meridian/olaylar.py::BELLEK_VARSAYILAN` (`OLAYLAR_BELLEK`, 1GB + `threads=1`; TSK-183,
+#:     2026-09-13) ÜÇÜNCÜ KOPYADIR: motorun BİRLEŞİK DEFTER GÖRÜNÜMÜ (`tum_olaylar()`) kendi
+#:     DuckDB bağlantısını açar — `watchdog.integrity_report`, `selfreview.build` ve
+#:     `ops/alarm_backlog_digest.py` onu çağırır, yani o da canlı işçinin ipliğindedir. Bozuk
+#:     bir ortam değerinde o yüzey İSTİSNA ATMAZ: `obs.warn` + varsayılana düşer (gerekçe orada).
 #:   * BURASI operatörün elle koşturduğu CLI'dır: tek kullanıcı, kendi kabuğu, arşivin tamamını
-#:     tarayan meşru bir `--sql` sorgusu olabilir. O yüzden taban daha GENİŞTİR (1GB).
+#:     tarayan meşru bir `--sql` sorgusu olabilir. O yüzden taban daha GENİŞTİR (2GB).
 #: Sabiti ithal ETMEK yasaktır: bu betik `meridian`ı import etmez (başlıktaki izolasyon şartı —
-#: `meridian.obs`a ulaşan pytest-dışı bir koşum canlı yerel deftere YAZAR). Beyan bu yüzden
-#: ŞERHLE yapılır ve `meridian/sohbet.py` tarafında da simetriği durur; ayrışma çivisi v355'te.
+#: `meridian.obs`a ulaşan pytest-dışı bir koşum canlı yerel deftere YAZAR) ve `meridian/` de
+#: kendi üstündeki bir `ops/` betiğini import ETMEZ (katman yönü). Beyan bu yüzden ŞERHLE yapılır
+#: ve her iki `meridian` tarafında da simetriği durur; ayrışma çivileri v355 + v470'tedir
+#: (v470 çekirdek sertleştirmeyi ve biçim desenini ÜÇ yüzeyde EŞİT ölçer).
 #:
 #: BEDEL BEYANI (Bedel yasası): `memory_limit` gerçekten büyük bir birleştirmeyi "Out of Memory"
 #: ile DÜŞÜRÜR ve `temp_directory` BOŞ olduğu için diske taşma (spill) yolu da kapalıdır — yani
