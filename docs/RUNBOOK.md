@@ -1730,6 +1730,12 @@ sudo ./sir_rotasyon.sh --dash         → MERIDIAN_DASH_TOKEN
 sudo ./sir_rotasyon.sh --openrouter   → OpenRouter anahtarları (operatör YAPIŞTIRIR, `read -s`)
 ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 başlayacağını listeler, HİÇBİR ŞEY yazmaz
+sudo ./sir_rotasyon.sh --<alt> --esitle → EŞİTLEME (TSK-181, 2026-09-13): değer ÜRETİLMEZ, SORULMAZ,
+BASILMAZ; sırrın tablodaki İLK satırı (REFERANS) okunur, AYRI
+düşen dosya/env/url kopyalarına yazılır (api/sql kanalları
+beyanla atlanır), yedek alınır, RESTART YAPILMAZ (tüketici
+birimler basılır); kanıt: envanter yeniden EŞİT + (--openrouter)
+kapı chat 200. `--kuru` ile birleşir. Bkz. `esitle` şerhi.
 
 ÖN KOŞUL — `meridian-tick-watchdog.timer` DURDURULUR (kalıcı kayıt `bakim-penceresi-tick-watchdog`).
 Timer 45 dk bayat nabızda worker'ı yeniden başlatır; bu betik meridian'ı `--openrouter`de ÜÇ kez
