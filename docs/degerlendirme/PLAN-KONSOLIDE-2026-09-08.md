@@ -255,7 +255,7 @@ _Güncelleme 22:09Z: A-2 korpus gömmesi sürüyor (1 s+); A-3/A-4 şef brifingi
 
 **D. Kapılı (tetik bekleyen) — değişmedi:** EDG-089 hükmü 09-20 → TSK-142/161/163/164/165/166/169/170; EDG-081 09-20 → TSK-145; TSK-137 Ekim; TSK-128 learn; TSK-063 kilitler 11/20; TSK-015/016/018/093/096/097/010 tetik yok; TSK-066 → (A-6).
 
-**E. Operatör masası (açık):** TSK-063 INTRADAY_ARM (kanıt dolunca) · TSK-044/045 ücretli veri (kanıt yokken sorulmaz) · TSK-175 uyuyan kurulum (inceleme belgesi masada) · TSK-097/096/010 (tetik) · Remote Control ölçülemedi · eski OpenRouter anahtarlarının panoda iptali (TSK-064) · EDG-091 geriye dönük R yeniden hesabı (ayrı karar, şimdilik yok).
+**E. Operatör masası (açık):** ⚠ YENİ 23:16Z — /opt/veri diski: ileri dolum düzeltmesi çalışınca boş alan DISK_PAYI (25 G) eşiğine iner, yarından itibaren ileri dolum KIRMIZI ile durur → karar: ISCI=1 + pay 15 G (kod) / en eski geri günleri sil (~18 G) / hacmi büyüt (bkz. TSK-188 notu) · TSK-063 INTRADAY_ARM (kanıt dolunca) · TSK-044/045 ücretli veri (kanıt yokken sorulmaz) · TSK-175 uyuyan kurulum (inceleme belgesi masada) · TSK-097/096/010 (tetik) · Remote Control ölçülemedi · eski OpenRouter anahtarlarının panoda iptali (TSK-064) · EDG-091 geriye dönük R yeniden hesabı (ayrı karar, şimdilik yok).
 
 **F. Cepheler (PRG) — kimlik eşlemesi:** PRG-01 İcra → TSK-179/187/182/069/066-068 · PRG-03 Öğrenme → TSK-060/168/142/145 (EDG-089/081) · PRG-04 Veri/Evren → TSK-065/EDG-092, TSK-131 (kapalı) · PRG-05 Ölçüm → TSK-104/138/014/162, EDG-084 · PRG-06 Bütünlük → TSK-064/176/186/020/137 · PRG-07 Skill → EDG-078 penceresi · PRG-08 Pano → TSK-012 (kapandı), TSK-104(b) · PRG-09 QC → kalem yok (fizibilite kuyruğu operatör) · PRG-11 Strateji → TSK-179 (gölge pilotu). PRG-02/10 KAPALI.
 
