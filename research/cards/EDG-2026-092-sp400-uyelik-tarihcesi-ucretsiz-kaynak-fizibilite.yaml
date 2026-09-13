@@ -1,0 +1,76 @@
+# EDG-2026-092 — S&P MidCap 400 üyelik tarihçesi ÜCRETSİZ kamu kaynağından PIT-doğru kurulabilir mi (FİZİBİLİTE)
+# ÖN-KAYIT 2026-09-13 21:3xZ (Rol-1, otonom; OPERATÖR KARARI aynı gece: "ücretsiz kaynaktan kur, düşük öncelik"
+# — TSK-065 / EDG-070 askiya_veri_kapisi hükmünün ardılı). Kod YOK; kart-önce; sıranın sonunda.
+# NEDEN: EDG-070 ADIM-0 (2026-09-13) mid-cap kohortunun HİÇBİR bar kaynağıyla kurulamadığını ölçtü: depoda S&P 400
+# üyelik geçmişi yok. Alpaca IEX 2020-07-27'den itibaren delist isimlerin barını da veriyor (EDG-070 eksen E) — kaynak
+# gelirse sağkalan-üst-sınır ölçümü 2020-07+ penceresinde YENİ kartla mümkün.
+# EMSAL (kart_benzer + recall, 2026-09-13): EDG-075 (Wikipedia S&P 500 tarihsel bileşenler) K1 KALDI — kart-veri sayım
+# hatası sınıfı, kaynak değil; EDG-076 doğrulanmış olay kümesiyle (28/28, S&P DJI yürürlük tarihleri) GEÇTİ → yöntem bu
+# karta AYNEN taşınır. Hindsight recall [5]: "S&P400/600 PIT üyelik için ücretsiz küme yok; 13(f) CUSIP eşlemesi ya da
+# ücretli" (2026-09-02) — bu kart o iddiayı ÖLÇER (Wikipedia 'List of S&P 400 companies' değişiklik tablosu + S&P DJI
+# duyuruları), çürütemezse kalem kapanır (operatör: ücretli yol ÖNERİLMİYOR).
+
+card_id: EDG-2026-092
+status: registered   # 2026-09-13 21:3xZ ön-kayıt AŞAMA 1/2 — bilinen_olaylar (≥20, S&P DJI yürürlük tarihli) eklenmeden ÖLÇÜM BAŞLAMAZ (kill madde 1)
+family: evren_pit
+on_kayit: 2026-09-13
+selef: EDG-2026-070
+ref: [EDG-2026-070, EDG-2026-018, EDG-2026-075, EDG-2026-076, TSK-065, B-DELIST-KAYNAK]
+
+hipotez: >
+  S&P MidCap 400 üyelik DEĞİŞİKLİKLERİ (giriş/çıkış, yürürlük tarihiyle) ücretsiz kamu kaynağından — birincil aday
+  Wikipedia "List of S&P 400 companies" maddesinin değişiklik tablosu (oldid ile dondurulmuş ham HTML), doğrulama S&P DJI
+  basın duyuruları — 2020-07-27 (Alpaca IEX bar tabanı, EDG-070 ölçümü) → bugün penceresinde PIT-doğru (yürürlük ≠ duyuru,
+  yeniden-adlandırma ≠ değişiklik, as-of okuma) yeniden kurulabilir: bağımsız kaynaktan alınmış bilinen olay kümesinin
+  ≥ %90'ı tabloda doğru tarih (±1 iş günü) ve doğru yönle bulunur. Tutarsa mid-cap PIT kohortu (as-of günlük üyelik)
+  2020-07+ için üretilir ve EDG-070'in halefi (sağkalan üst-sınır, gerçek delist barlarıyla) yeni kartla açılır; tutmazsa
+  ücretsiz yol KAPANIR, kalem TSK-065 düşer (ücretli yol operatör kararı, bu kartta ÖNERİLMEZ).
+
+k_registry: {registered_at: "2026-09-13", trial_ids: [EDG-092-sp400-bilinen-olay-kapsama]}
+# K=1: bilinen olay kümesi kapsama oranı. as-of tutarlılığı (K2 sınıfı) ve gelecek-olay negatif kontrolü PK'dır, K değil.
+
+adim_0_fizibilite: >
+  (1) Kaynak var mı: Wikipedia S&P 400 maddesinde değişiklik tablosu VAR mı, sütunları (tarih · eklenen · çıkarılan ·
+  gerekçe) EDG-075 ayrıştırıcısıyla eşleşiyor mu, satır sayısı ve tarih aralığı; ham HTML curl + oldid ile dondurulur
+  (httpx 403 — hafıza wikipedia-cekim-httpx-403), sha256 karta. (2) Pencere: 2020-07-27 → ölçüm günü satır sayısı ≥ 60
+  değilse (S&P 400 yılda ~30-50 değişiklik) kaynak EKSİK → askiya. (3) Güncel liste: bağımsız kaynaktan bugünkü 400 üye
+  (S&P DJI/ETF sağlayıcı fact sheet) — as-of(bugün) ile kıyas kapısı. Bilinen olay kümesi (≥20 olay: sembol · yön ·
+  yürürlük tarihi · S&P DJI duyuru URL'si) bu karta AŞAMA-2 ön-kayıt olarak eklenir; ölçüm kodu ondan sonra.
+
+olcum_plani:
+  - "EDG-076 betiğinin (research/olcumler/edg075_sp500_tarihsel/olcum.py) S&P 400 tablosuna parametrik kopyası: as_of(t) fonksiyonu, olay kümesi KARTTAN okunur (kart_beyan_n = olculen_n çivisi)"
+  - "K1: bilinen_olaylar kapsama oranı (tabloda var ∧ yön doğru ∧ |tarih farkı| ≤ 1 iş günü) / n"
+  - "PK-1 (negatif): yürürlüğü gelecekte olan duyurulmuş olaylar (gelecek_olaylar) tabloda YÜRÜRLÜK satırı taşımamalı ve as_of(bugün) onları içermemeli — duyuru≠yürürlük"
+  - "PK-2 (rename sınırı): en az 2 yeniden-adlandırma vakası — değişiklik olarak SAYILMAMALI, as_of yeni adı taşımalı (EDG-076 VMRK emsali)"
+  - "PK-3 (as-of tutarlılık): as_of(bugün) ∩ bağımsız güncel liste ≥ %98 (ETF fact sheet / S&P DJI); sapanlar adıyla"
+  - "tanı: 2020-07-27 sonrası çıkan isimlerin Alpaca IEX bar kapsaması (EDG-070 eksen E deseni) — hüküm değil, halef kartın ADIM-0 girdisi"
+
+esikler:
+  bilinen_olay_kapsama_alt: 0.90     # K1; EDG-076'da S&P 500 için 28/28 ölçüldü — mid-cap tablosu daha seyrek olabilir, %90 tasarım seçimi
+  bilinen_olay_n_alt: 20             # olay kümesi en az 20 (giriş+çıkış karışık, ≥ 4 farklı yürürlük tarihi)
+  pencere_satir_alt: 60              # ADIM-0 kapısı: 2020-07-27+ tablo satırı
+  guncel_liste_kesisim_alt: 0.98     # PK-3
+
+kill_list:
+  - "bilinen_olaylar kart YAML'ında bağımsız kaynaktan (S&P DJI duyurusu URL'li) dolmadan ölçüm kodu yazılmaz/koşmaz — hafıza: kart-bilinen-olay-kumesi-bagimsiz-kaynak"
+  - "ham HTML oldid+sha256 ile dondurulmamışsa → geçersiz (EDG-075 emsali)"
+  - "PK-1/2/3'ten biri düşerse → hiçbir kapsama sayısı yayılmaz (kaynak PIT-doğru değil)"
+  - "ADIM-0 (2) satır tabanı düşerse → askiya_veri_kapisi (kill değil); ücretli yol bu kartta AÇILMAZ"
+  - "eşik/pencere/olay kümesi sonradan değişmez (olay kümesi AŞAMA-2'de bir kez eklenir, sonra donuk)"
+
+pozitif_kontrol: >
+  YOL-TUTARLI: (1) aynı betik EDG-076'nın S&P 500 olay kümesi + ham HTML'iyle koşunca 28/28 kayıtlı sonucu YENİDEN
+  ÜRETMELİ (kod yolu kontrolü); (2) PK-1/2/3 yukarıda; (3) rastgele 5 olay için tablo satırı ELLE (ham HTML'de) doğrulanır.
+
+veri_penceresi: "2020-07-27 (Alpaca IEX delist-bar tabanı, EDG-070 adim_0_hukmu) → ölçüm günü; ham HTML tek oldid ile DONMUŞ; olay kümesi AŞAMA-2'de donar"
+
+basari_tanimi: >
+  ADIM-0 geçmiş + olay kümesi kartta (≥20, URL'li) + PK üçlüsü yeşil + K1 raporlanmış + hüküm Rol-1 tarafından aynı turda
+  karta + K defterine. K1 GEÇTİ → mid-cap PIT kohortu (as-of günlük, 2020-07+) üretilir ve EDG-070 halefi kart (sağkalan
+  üst-sınır, gerçek delist barları) açılır; KALDI → ücretsiz yol kapanır, TSK-065 DROPPED, ücretli yol operatöre yalnız
+  ölçülen boşluk sayısıyla sunulur (para kararı — hafıza operator-para-kararlari).
+
+notlar: >
+  Öncelik DÜŞÜK (operatör 2026-09-13): TSK-179/187, EDG-089 penceresi ve dağıtımlar önce. Kod ancak AŞAMA-2 olay kümesi
+  eklendikten sonra `research/olcumler/edg092_sp400_uyelik/` altında; ham HTML .gitignore + sha karta (EDG-075 deseni).
+  Bedel: 1 Rol-1 turu (olay kümesi derleme, S&P DJI duyuruları) + 1 Opus + 1 Sonnet.
