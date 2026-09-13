@@ -104,3 +104,13 @@ pk2_hukmu_2026_09_13: >
   işlem başına sayı basmaz). SONUÇ: kill#5 gereği bu pencereden SAYI YAYILMAZ; harness gerçek yolu 0,05 R içinde yeniden üretmiyor
   — üç aday neden (giriş semantiği · E2 ATR enjeksiyonu · manage_position paritesi) ölçülmedi → teşhis kartı EDG-2026-090 (ablasyon,
   K=3, aynı donmuş girdi). Pencere sayımı SÜRER (n≥30 birikimi), hüküm PK(2) geçmeden yazılmaz. K harcanmadı (PK). Eşik değişmedi.
+
+pk2_birim_esitligi_2026_09_13: >
+  (Rol-1, 23:41Z, KARAR — eşik/tanım DEĞİŞMEZ) EDG-090/091 ölçümü PK(2) farkının ~%96'sının BİRİM farkı olduğunu gösterdi
+  (canlı R paydası dolar bütçesi, gölge hisse-başı giriş riski). Operatör kararı (b) → TSK-187 (main 15f52db): canlı R paydası
+  hisse-başı giriş riski + satır damgası `extra_json.r_payda="giris_riski"`. PK(2) kıyası ancak EŞ BİRİMLİ çiftlerle anlamlıdır:
+  `sayim.py::kontrol_olc` yalnız damgalı gerçek satırları kıyaslar, damgasız (TSK-187 öncesi) satırlar `birim_eski_n` olarak
+  raporlanır ve kıyasa girmez; eş-birim çift yokken `gecti=None` (False değil — 'ölçülemedi'). FARK_R_UST 0,05 ve
+  R_MULTIPLE_ALT değişmedi. Sonuç: pk2_gercek 164520 sonucu (KALDI) birim-karışık kümeye aitti; PK(2) yeniden koşumu dağıtım #43
+  sonrası damgalı yeni kapanışlarla (kill#5 sürer: o güne kadar sayı yayılmaz). Pencere sayımı (n≥30) devam eder.
+
