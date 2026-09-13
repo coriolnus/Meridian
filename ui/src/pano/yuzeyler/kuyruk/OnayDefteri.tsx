@@ -13,12 +13,20 @@
    `davranissal: false` SATIRIN KENDİ KÜNYESİDİR: defteri okuyan, o kararın hiçbir
    icrayı açmadığını satırdan görmeli. Sütun bu yüzden var; alan yoksa "ölçülemedi"
    yazılır, "davranışsal" varsayılmaz.
+
+   AMA `davranissal` TEK BAŞINA SÜTUNUN CEVABI DEĞİL: cevapladığı soru "bu kimliği bir
+   L1+ uygulama kapısı okur mu"dur ve sohbet önerisinin kimliğini HİÇBİR kapı okumaz —
+   alan o satırlarda her zaman `false` gelir. Sütun yalnız ona baktığı sürece, onaylanmış
+   ve GERÇEKTEN koşmuş bir `plan_onayi`/`alarm_ack` kararını "icra açmaz" diye gösteriyordu.
+   İcra gerçeği sunucunun AYRI iki alanında (`icra_eder`/`icra_ok`) ve künyesinde (`not`)
+   duruyor; sütun artık önce onlara bakıyor (`icra_rozeti.ts`), yoksa eski dallanmaya düşüyor.
    ============================================================================ */
 import { BookLock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+import { ICRA_ACMAZ_METNI, icraRozeti } from "./icra_rozeti";
 import { BolumKart, Olculemedi, zamanMetni } from "./parcalar";
 
 /** Ham defter satırının okunabilen kesiti. Alanların hiçbiri garanti DEĞİL (JSONL). */
@@ -96,6 +104,10 @@ export function OnayDefteri({
                   const kimlik = alan(s, "id");
                   const karar = alan(s, "decision");
                   const davranissal = s["davranissal"];
+                  // ÖNCELİK İCRA GERÇEĞİNDE: satır icra alanları taşıyorsa cümleyi ONLAR kurar.
+                  // `null` dönüşü "icra yok" DEĞİL "bu satırda ölçülemedi"dir — o hâlde eski
+                  // `davranissal` dallanması aynen koşar (defterde sohbet-dışı satırlar da var).
+                  const icra = icraRozeti(s);
                   return (
                     <TableRow key={`${kimlik ?? "?"}#${i}`}>
                       <TableCell className="whitespace-nowrap align-top text-xs tabular-nums">
@@ -116,7 +128,14 @@ export function OnayDefteri({
                         )}
                       </TableCell>
                       <TableCell className="align-top">
-                        {davranissal === undefined ? (
+                        {icra !== null ? (
+                          // KÜNYE UÇTAN: `title` sunucunun kendi cümlesidir ("… | icra DÜŞTÜ: …"
+                          // eki dahil). Künye yoksa `undefined` geçilir — boş bir tooltip
+                          // açmaktansa hiç açmamak dürüsttür.
+                          <Badge variant={icra.varyant} title={icra.title ?? undefined}>
+                            {icra.metin}
+                          </Badge>
+                        ) : davranissal === undefined ? (
                           // ALANIN YOKLUĞU "DAVRANIŞSAL" DEMEK: sunucu `davranissal:false`ı yalnız
                           // kapı-bağlamayan satırlara yazıyor. Yine de VARSAYMIYORUZ — yokluğu
                           // olduğu gibi söylüyoruz, çünkü yarın yazım kuralı değişebilir.
@@ -127,7 +146,7 @@ export function OnayDefteri({
                             alan yok
                           </span>
                         ) : davranissal === false ? (
-                          <Badge variant="outline">kayıt — icra açmaz</Badge>
+                          <Badge variant="outline">{ICRA_ACMAZ_METNI}</Badge>
                         ) : (
                           <Badge variant="secondary">kapı-bağlayıcı</Badge>
                         )}
