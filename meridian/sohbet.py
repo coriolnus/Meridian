@@ -97,18 +97,23 @@ MAX_TOKENS = int(os.environ.get("SOHBET_MAX_TOKENS", "4096"))
 #: ~%80'i, `threads` = çekirdek sayısı. A1 dört çekirdeklidir ve `serve.sh` TEK uvicorn işçisi
 #: koşar: sınırsız bir çapraz-birleştirme panonun tamamını (halt/ack dahil) düşürebilirdi.
 #:
-#: İKİ TAVAN, İKİ KARAR — TEK-KAYNAK İSTİSNASI BEYANLIDIR (TSK-012, 2026-09-13). `ops/
+#: ÜÇ TAVAN, ÜÇ KARAR — TEK-KAYNAK İSTİSNASI BEYANLIDIR (TSK-012, 2026-09-13). `ops/
 #: olay_sorgu.py` artık KENDİ tavanını taşıyor (`OLAY_SORGU_BELLEK`, varsayılan 2GB — taban
 #: 1GB'dan yükseltildi, çünkü o bağlantıyı bar arşivi araçları da paylaşır ve arşiv bu makinede
 #: 1.350.678 satırdır): orası operatörün elle koşturduğu CLI'dır ve daha geniş bir tabanı hak
 #: eder. Bozuk bir tavan değerinde o dosyanın KÜTÜPHANE katmanı `BellekTavaniHatasi(ValueError)`
 #: atar, `SystemExit` DEĞİL — buradaki `_arac_kos` kalkanı (`except Exception`) onu metne
 #: çevirir ve döngü ölmez; süreç öldüren kapı (`baglanti_kur_cli`) YALNIZ CLI'nındır ve bu dosya
-#: onu ÇAĞIRMAZ (çivi: v355). BURASI model yazımı
-#: SQL'i canlı işçi ipliğinde koşturur, o yüzden DAR kalır. Ayrılık kopya değil karardır ve
-#: `_sorgu_sinirlari` `baglanti_kur`DAN SONRA çağrılarak CLI değerini bilerek EZER — sıra
+#: onu ÇAĞIRMAZ (çivi: v355). ÜÇÜNCÜ TAVAN `meridian/olaylar.py::BELLEK_VARSAYILAN`dır
+#: (`OLAYLAR_BELLEK`, 1GB + `threads=1`; TSK-183, 2026-09-13): motorun birleşik defter görünümü
+#: (`tum_olaylar()`) KENDİ DuckDB bağlantısını açar ve o da canlı işçinin ipliğindedir — ama
+#: orası bir OKUMA yüzeyidir, bozuk ortam değerinde istisna bile atmaz (`obs.warn` + varsayılana
+#: düşer; gerekçe o dosyada). BURASI model yazımı
+#: SQL'i canlı işçi ipliğinde koşturur, o yüzden ÜÇÜNÜN EN DARIDIR. Ayrılık kopya değil karardır
+#: ve `_sorgu_sinirlari` `baglanti_kur`DAN SONRA çağrılarak CLI değerini bilerek EZER — sıra
 #: değişirse canlı tavan sessizce 2GB'a genişlerdi. Çiviler: v444 (canlı tavan ≤512MB) + v355
-#: (CLI tavanı + iki yönlü beyan).
+#: (CLI tavanı + iki yönlü beyan) + v470 (üç yüzeyin sertleştirme ÇEKİRDEĞİ eşit: temp_directory,
+#: iki eklenti bayrağı, TimeZone — `_sorgu_sinirlari` daraltması çekirdeğe DOKUNMAZ).
 SORGU_BELLEK_TAVANI = os.environ.get("SOHBET_SQL_BELLEK", "512MB")
 SORGU_IPLIK_TAVANI = 1
 #: Kullanıcı/model SQL'inin duvar-saati tavanı. Aşımda `con.interrupt()` → `AracReddi` (ARIZA

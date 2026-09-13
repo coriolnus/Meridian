@@ -17,8 +17,8 @@ STATİK + DAVRANIŞSAL olarak çivilenmiştir: pytest DIŞI koşan bir CLI arac�
 canlı deftere YAZAR (3 vaka, 2026-08-30). Bu modül TERSİNE `meridian.store`/`meridian.config`e
 bağlıdır (motorun "birleşik görünüm" ihtiyacı budur) — yani iki gövdeyi TEK gövdeye indirmek ya
 CLI aracının meridian'a bağlanmasını (kapıyı kırar) ya da bu modülün ops/ scriptini import etmesini
-(katman yönü ters döner — `pyproject.toml [tool.importlinter]` `meridian.*` üstüne `ops.*`
-BAĞIMLILIĞI zaten YOK, motor kendi üstündeki bir betiği import ETMEMELİDİR) gerektirirdi. İkisi de
+(katman yönü ters döner — motor kendi üstündeki bir betiği import ETMEMELİDİR; bunu bugün
+import-linter DEĞİL, v470'in kaynak-metni taraması denetler — `[tool.importlinter]` `ops`a değinmez) gerektirirdi. İkisi de
 mevcut, korunan bir sözleşmeyi kırar. Bu yüzden İKİ AYRI GÖVDE, AYNI KURALI ayrı ortamlarda
 (CLI'nin kendi bağımsız DuckDB bağlantısı / motorun paylaşılan `store` okuması) uygular — TEK-KAYNAK
 YASASININ "kopya kaçınılmazsa türetme + ayrışma çivisi" istisnası budur. Ayrışma riski
@@ -55,7 +55,9 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import os
 import pathlib
+import re
 
 import duckdb
 
@@ -65,15 +67,60 @@ _EVENTS = "events.jsonl"
 _ARSIV_ALT_DIZIN = "olaylar"
 _UTC = _dt.timezone.utc
 
+#: BELLEK VE İPLİK TAVANI — ÜÇÜNCÜ KOPYA, BEYANLI (TSK-183, 2026-09-13).
+#:
+#: ÖLÇÜLEN BOŞLUK: bu bağlantı `duckdb.connect()` varsayılanıyla açılıyordu — `memory_limit`
+#: sistem RAM'inin ~%80'i, `threads` çekirdek sayısı, `TimeZone` MAKİNENİN yereli (ölçüldü,
+#: duckdb 1.5.5, bu makine: '6.3 GiB' / 8 / 'Europe/Istanbul'). Bu kod CANLI uvicorn işçisinin
+#: ipliğinde koşar: `tum_olaylar()`u `watchdog.integrity_report`, `selfreview.build` ve
+#: `ops/alarm_backlog_digest.py` çağırır. A1 dört çekirdeklidir ve `serve.sh` TEK işçi koşar —
+#: tavansız bir arşiv taraması panonun tamamını cevapsız bırakabilirdi. `threads=1` gerekçesi
+#: `meridian/sohbet.py::SORGU_IPLIK_TAVANI` ile AYNIDIR: tek işçinin ipliği dört çekirdeği
+#: kendi okuması için kapatmamalı. BEDELİ (bedel yasası): büyük bir tarama artık TEK iplikte
+#: koşar — dört-çekirdekli varsayılana göre en kötü ~4× yavaş; bugünkü yük (A1 2026-09-13:
+#: arşiv 724 KB + defter 19,5 MB) için ölçülebilir fark beklenmez, ölçülmedi (None); yük
+#: büyürse `OLAYLAR_IPLIK` benzeri bir env kanalı açılır, sabit sessizce yükseltilmez.
+#:
+#: TEK-KAYNAK İSTİSNASI, BEYANLI — ÜÇ TAVAN, ÜÇ KARAR, KOPYA DEĞİL:
+#:   * `ops/olay_sorgu.py::BELLEK_TAVANI` (`OLAY_SORGU_BELLEK`, 2GB) operatörün ELLE koşturduğu
+#:     CLI'ındır ve bar arşivi araçlarıyla paylaşılır — tabanı bilerek GENİŞTİR.
+#:   * `meridian/sohbet.py::SORGU_BELLEK_TAVANI` (`SOHBET_SQL_BELLEK`, 512MB) MODEL yazımı SQL'i
+#:     canlı istek ipliğinde koşturur — bilerek EN DARDIR.
+#:   * BURASI motorun kendi defter okumasıdır: girdi jsonl + aylık parquet arşividir (olay
+#:     defteri 27–56k satır/ay), sorgu iki VARCHAR sütunun düz taramasıdır. 1GB sohbetle aynı
+#:     sınıfta, CLI'dan dardır — ve duckdb varsayılanının çok altındadır.
+#: SABİT İTHAL EDİLEMEZ, BEYAN ŞERHLEDİR: `ops/olay_sorgu.py` `meridian`ı import ETMEZ (obs
+#: sızıntısı kapısı, çivi v355) ve bu modül de `ops/` betiğini import ETMEZ (katman yönü:
+#: motor `ops/` betiğini ithal etmez — denetimi v470 kaynak-metni taraması, import-linter değil). Yani
+#: üç liste YAPISAL olarak ayrıdır; ayrışma ÖLÇÜLÜR: `tests/test_olaylar_tavan_v470.py`
+#: (biçim deseni eşitliği + üç bağlantının çekirdek ayar eşitliği + karşılıklı atıf).
+BELLEK_ENV_AD = "OLAYLAR_BELLEK"
+BELLEK_VARSAYILAN = "1GB"
+IPLIK_TAVANI = 1
+
+#: BİÇİM DOĞRULAMASI — `ops/olay_sorgu.py::BELLEK_BICIMI` İLE AYNEN AYNI DESEN (ithal edilemez;
+#: yukarıdaki yön yasağı). İki ÖLÇÜLMÜŞ arıza sınıfını tutar (v355 ölçümü, duckdb 1.5.5):
+#: '2 gigabayt' → `SET memory_limit` DuckDB hatası verir; '-2GB' → duckdb KABUL EDER ve tavan
+#: "16383.9 PiB" olur, yani KORUMA SESSİZCE KAPANIR (sinsi olan budur). `\s*` grupları süs
+#: değildir: ' 2 GB ' duckdb'ce kabul edilir, reddedilseydi kapı meşru bir değeri kırardı.
+BELLEK_BICIMI = re.compile(r"^\s*\d+(\.\d+)?\s*(KB|MB|GB|TB|KiB|MiB|GiB)\s*$", re.IGNORECASE)
+
 # `ops/olay_sorgu.py::SERTLESTIRME` İLE AYNI DEĞERLER (ölçüldü, duckdb 1.5.5) — bağımsız
 # uygulama, aynı gerekçe: `temp_directory` varsayılanı CWD-göreli '.tmp' (operatörün/servisin
 # çalıştığı dizine sessizce döker), eklenti oto-indirme varsayılanı TRUE (yerel bir defter
-# okuyucusunun ağ yüzeyi olmamalı). `TimeZone` burada GEREKSİZ: ay/UTC dönüşümü `_ay_anahtari`
-# saf Python'dadır, DuckDB bağlantısı yalnız parquet DOSYA OKUMA için kullanılır.
+# okuyucusunun ağ yüzeyi olmamalı).
+# `TimeZone` 2026-09-13'te EKLENDİ ve BUGÜNKÜ DAVRANIŞI DEĞİŞTİRMEZ — ölçüldü: bu bağlantının
+# TEK sorgusu `SELECT ay, ham FROM read_parquet(...)`tır, iki sütun da VARCHAR'dır ve SQL
+# tarafında hiçbir `ts` aya çevrilmez (ay/UTC dönüşümü `_ay_anahtari`de, saf Python'da). O hâlde
+# NEDEN: ayar ÜÇ YÜZEYİN PAYLAŞTIĞI ÇEKİRDEĞİN parçasıdır (`ops/olay_sorgu.py::SERTLESTIRME`
+# ve onun üzerinden `meridian/sohbet.py`) ve çekirdeğin AYNI olması ayrışma çivisinin ölçtüğü
+# şeydir; ayrıca bu modülde bir gün SQL'e taşınacak bir ay/ts süzgeci (bugün son-işlem, saf
+# Python) makinenin yerel saatiyle konuşup iki makinede iki farklı ay üretemez.
 _SERTLESTIRME = (
     "SET temp_directory=''",
     "SET autoinstall_known_extensions=false",
     "SET autoload_known_extensions=false",
+    "SET TimeZone='UTC'",
 )
 
 
@@ -98,9 +145,69 @@ def _sql_metni(yol: pathlib.Path) -> str:
     return "'" + str(yol).replace("'", "''") + "'"
 
 
+def _bellek_tavani() -> str:
+    """Yürüyen bellek tavanı. `OLAYLAR_BELLEK` ÇAĞRI ANINDA okunur; biçimi tutmuyorsa UYARI
+    yazılır ve VARSAYILANA düşülür — istisna ATILMAZ.
+
+    NEDEN İSTİSNA DEĞİL (kardeşinden BİLEREK ayrılan tek nokta): `ops/olay_sorgu.py` bir
+    KÜTÜPHANE+CLI ikilisidir ve bozuk tavanda `BellekTavaniHatasi(ValueError)` atar — orada
+    çağıran ya operatörün kabuğudur ya da `meridian/sohbet.py`in `except Exception` kalkanıdır.
+    BURASI canlı teşhis yüzeyinin OKUMA yoludur: `watchdog.integrity_report` bir istisnayı
+    yalıtır ama dedektörleri arşivsiz yavaş yola düşürür, `selfreview.build` ve
+    `ops/alarm_backlog_digest.py` ise RAPORU tamamen kaybeder. Bir ortam değişkeni yazım
+    hatasının bedeli "haftalık rapor üretilmedi" olmamalı.
+    DÜŞÜŞ BEYANLIDIR, SESSİZ DEĞİL (uydurma yasağı + Yasa 4): tavan SINIRSIZA değil
+    VARSAYILANA düşer ve `obs.warn` ADI, VERİLEN DEĞERİ ve BEKLENEN BİÇİMİ taşır — operatör
+    neyi nasıl düzelteceğini uyarının kendisinden okur. Değer MASKELENMEZ: bu bir ölçü birimi
+    dizgesidir, sır değildir.
+    ÇAĞRI ANINDA OKUMA, import anında DEĞİL: tavan `_baglanti_kur`un her çağrısında ölçülür,
+    yani birim dosyasında değişen bir değer süreç yeniden başlar başlamaz yürür ve çivi tarafı
+    modülü yeniden yüklemek zorunda kalmaz (import anında yazılan bir `obs.warn` ise motorun
+    her import zincirine sızardı)."""
+    deger = os.environ.get(BELLEK_ENV_AD, BELLEK_VARSAYILAN)
+    if BELLEK_BICIMI.match(deger):
+        return deger
+    from . import obs
+    obs.warn("olaylar_bellek_tavani_bicimsiz", deger=deger,
+             beklenen="<sayı><birim>, birim KB|MB|GB|TB|KiB|MiB|GiB (örn. '1GB', '512MB')",
+             dusulen=BELLEK_VARSAYILAN, degisken=BELLEK_ENV_AD,
+             detail=f"{BELLEK_ENV_AD} biçimi tanınmadı — DuckDB bağlantısı VARSAYILAN tavanla "
+                    f"({BELLEK_VARSAYILAN}) açıldı, tavansız DEĞİL. İşaretli değer ('-2GB') "
+                    f"DuckDB'ce kabul edilir ve tavanı sessizce yok ederdi.")
+    return BELLEK_VARSAYILAN
+
+
+def _kaynak_tavanlari() -> tuple[str, ...]:
+    """Bağlantının KAYNAK tavanları — `_SERTLESTIRME`den AYRI durur çünkü değerleri ÇAĞRI
+    ANINDA (ortamdan) ölçülür; çekirdek sertleştirme ise donuktur ve üç yüzeyde AYNIDIR."""
+    return (f"SET memory_limit='{_bellek_tavani()}'", f"SET threads={int(IPLIK_TAVANI)}")
+
+
 def _baglanti_kur() -> duckdb.DuckDBPyConnection:
+    """Bellek içi bağlantı: çekirdek sertleştirme + kaynak tavanları (yukarıdaki gerekçeler).
+
+    BEDEL BEYANI (Bedel yasası). Tavan bedava değildir: RAM'e sığmayan MEŞRU bir arşiv taraması
+    artık yavaşlamaz, `duckdb.OutOfMemoryException` ("Out of Memory Error…") ile DÜŞER —
+    `temp_directory` BOŞ olduğu için diske taşma yolu da kapalıdır (ölçüldü, duckdb 1.5.5: dar
+    tavanda taşan sorgu tam bu istisnayı atar ve mesajı geçici dizin olmadığını söyler).
+    İstisna `tum_olaylar`dan çağırana AYNEN çıkar — yutulmaz, yarım liste dönmez (Yasa 4: yarım
+    bir defter 'tüm tarih' iddiasını sessizce yalana çevirirdi; çivi v470).
+    OKUYUCULAR BUNU NASIL KARŞILIYOR — ÖLÇÜLDÜ (2026-09-13, üç çağıranın üçü de GÖRÜNÜR):
+      * `watchdog.integrity_report`: paylaşılan okuma try/except ile yalıtılmış →
+        `obs.warn("integrity_shared_events_read_failed")` + her dedektör kendi (arşivsiz,
+        kırpılmış) okumasına düşer. Hüküm üretilir, kapsam kaybı UYARIYLA görünür.
+      * `selfreview.build`: kendi kalkanı YOK. Haftalık yolda `selfreview.weekly()` onu
+        `mechanism_failed("self_review", …)` ile ALARMLAR ve yükseltir; `scheduler` da
+        `obs.warn("selfreview_failed")` yazar ve haftayı 'yapıldı' İŞARETLEMEZ (yeniden dener).
+        Emekli `/api/selfreview` ucunda ise istisna HTTP 500 olur — `/api/diagnostics`
+        `self_review.json`ı dosyadan okur, bu yoldan ETKİLENMEZ.
+      * `ops/alarm_backlog_digest.py`: `ozet_kur()` `main()`in kalkanı dışındadır → ham
+        traceback + çıkış 1, yani aracın 0/1/2 sözleşmesinin DIŞINDA bir kod (operatörün
+        terminalinde GÖRÜNÜR ama gerekçesiz). AÇIK KALEM, bu turun kapsamı DEĞİL.
+    GERİ ALMA YOLU KOD DEĞİŞTİRMEDEN AÇIKTIR: `OLAYLAR_BELLEK=4GB` (systemd birim dosyasında
+    `Environment=`), süreç yeniden başlar başlamaz yürür."""
     con = duckdb.connect()
-    for s in _SERTLESTIRME:
+    for s in _SERTLESTIRME + _kaynak_tavanlari():
         con.execute(s)
     return con
 
