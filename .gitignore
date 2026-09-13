@@ -103,3 +103,6 @@ ui/tsconfig.tsbuildinfo
 /var/
 research/olcumler/*/smoke/
 research/olcumler/*/duman/
+
+# sembolik bağ da yakalansın (sondaki / yalnız gerçek dizinle eşleşir — 2026-09-13 worktree vakası)
+ui/node_modules
