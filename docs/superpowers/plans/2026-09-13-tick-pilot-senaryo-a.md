@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12, asyncio + `websockets` (mevcut `streamhealth.run_stream` sürücüsü), Alpaca data WS (`quotes` kanalı, `T:"q"` mesajı: `S, bp, bs, ap, as, bx, ax, c, t, z`), JSONL, pytest (`sandbox_state`), DuckDB/sqlite3 (rapor aracı okuma), mevcut `store`/`obs`/`codelaw` sözleşmeleri.
 
-**Spec:** `research/cards/EDG-2026-085-icra-ani-quote-kaydi.yaml` (hipotez, K=2, eşikler, kill-list, üç PK, ADIM-0 kayıtları 09-07 + 09-13). Ad çakışması uyarısı: `docs/TASARIM-13-INTRADAY-DOLUM-SOZLESMESI-2026-08-23.md` §3'teki "A1/A2/A3" DAKİKA-BARI aşamalarıdır; bu planın "Senaryo-A"sı canlı quote eksenidir (kart üst yorumu). Bu plan kartın sözleşmesini KODA çevirir; eşik/pencere/kill tanımı karttan alınır, burada DEĞİŞTİRİLMEZ.
+**Spec:** `research/cards/EDG-2026-085-icra-ani-quote-kaydi-senaryo-a.yaml` (hipotez, K=2, eşikler, kill-list, üç PK, ADIM-0 kayıtları 09-07 + 09-13). Ad çakışması uyarısı: `docs/TASARIM-13-INTRADAY-DOLUM-SOZLESMESI-2026-08-23.md` §3'teki "A1/A2/A3" DAKİKA-BARI aşamalarıdır; bu planın "Senaryo-A"sı canlı quote eksenidir (kart üst yorumu). Bu plan kartın sözleşmesini KODA çevirir; eşik/pencere/kill tanımı karttan alınır, burada DEĞİŞTİRİLMEZ.
 
 ## Global Constraints
 
@@ -93,7 +93,7 @@ Ham satırı (`edg085_ham_<gün>.jsonl`): gelen `q` mesajı sözlüğü `json.du
 
 ```python
 """test_quote_capture_v465.py — EDG-2026-085 Senaryo-A: icra-anı quote kaydı (halka · pencere · abone · yazıcı ·
-marketstream q yolu · mirror kancası). Kart: research/cards/EDG-2026-085-icra-ani-quote-kaydi.yaml."""
+marketstream q yolu · mirror kancası). Kart: research/cards/EDG-2026-085-icra-ani-quote-kaydi-senaryo-a.yaml."""
 import asyncio, datetime as dt, json, pathlib
 import pytest
 from meridian import quotecapture as qc
